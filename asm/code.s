@@ -115680,7 +115680,10 @@ sub_80384DC: @ 0x080384DC
 	ldr r2, _08038528 @ =0x00008640
 	adds r0, r2, #0
 	strh r0, [r1]
-	adds r3, r3, #0
+	# this expands to adds r3, r3, #0, but for some reason the compiler changes it
+	# from 1b 1c to 00 33, which is not correct
+	.byte 0x1b
+	.byte 0x1c
 	mov r8, r8
 	mov r8, r8
 	mov r8, r8
@@ -116591,7 +116594,10 @@ _08038BC2:
 	ldr r1, _08038C1C @ =0x00008640
 	adds r0, r1, #0
 	strh r0, [r2]
-	adds r3, r3, #0
+	# this expands to adds r3, r3, #0, but for some reason the compiler changes it
+	# from 1b 1c to 00 33, which is not correct
+	.byte 0x1b
+	.byte 0x1c
 	mov r8, r8
 	mov r8, r8
 	mov r8, r8
@@ -117359,7 +117365,10 @@ sub_8039198: @ 0x08039198
 	ldr r3, _080391E0 @ =0x00008640
 	adds r0, r3, #0
 	strh r0, [r2]
-	adds r3, r3, #0
+	# this expands to adds r3, r3, #0, but for some reason the compiler changes it
+	# from 1b 1c to 00 33, which is not correct
+	.byte 0x1b
+	.byte 0x1c
 	mov r8, r8
 	mov r8, r8
 	mov r8, r8
@@ -117387,7 +117396,10 @@ sub_80391E8: @ 0x080391E8
 	ldr r2, _08039210 @ =0x00008640
 	adds r0, r2, #0
 	strh r0, [r1]
-	adds r3, r3, #0
+	# this expands to adds r3, r3, #0, but for some reason the compiler changes it
+	# from 1b 1c to 00 33, which is not correct
+	.byte 0x1b
+	.byte 0x1c
 	mov r8, r8
 	mov r8, r8
 	mov r8, r8
@@ -121314,3 +121326,4 @@ sub_803B0A8: @ 0x0803B0A8
 	strb r2, [r0, #0x12]
 	str r3, [r0, #8]
 	bx lr
+	.align 2, 0
