@@ -58,3 +58,6 @@ Temporary Items
 *.dump
 build
 tools
+kappa-db.json
+context
+decomp.yaml

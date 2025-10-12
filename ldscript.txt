@@ -5,6 +5,8 @@ SECTIONS
     ROM :
 	ALIGN(4)
 	{
+        build/crashbandicootxs/asm/crt0.o(.text);
+        build/crashbandicootxs/src/main.o(.text);
         build/crashbandicootxs/asm/code.o(.text);
 
         /* Data */
