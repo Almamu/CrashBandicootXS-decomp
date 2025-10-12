@@ -4,5 +4,6 @@
 #include "./types.h"
 #include "./io_reg.h"
 #include "./defines.h"
+#include "./dma_macros.h"
 
 #endif /* __GBA_H__ */

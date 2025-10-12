@@ -1,6 +1,13 @@
 OUTPUT_ARCH(arm)
 SECTIONS
 {
+    . = 0x02000000;
+    EWRAM (NOLOAD) :
+    ALIGN(4)
+    {
+        INCLUDE "sym_ewram.txt"
+    }
+
     . = 0x03000000;
     IWRAM (NOLOAD) :
     ALIGN(4)
@@ -15,8 +22,10 @@ SECTIONS
         build/crashbandicootxs/asm/crt0.o(.text);
         build/crashbandicootxs/src/main.o(.text);
         build/crashbandicootxs/asm/code_1.o(.text);
-        build/crashbandicootxs/src/irq.o(.text);
+        build/crashbandicootxs/src/memory.o(.text);
         build/crashbandicootxs/asm/code_2.o(.text);
+        build/crashbandicootxs/src/irq.o(.text);
+        build/crashbandicootxs/asm/code_3.o(.text);
 
         /* Data */
         build/crashbandicootxs/data/data.o(.rodata);

@@ -1,1 +1,7 @@
 . = 0x00000000; IntrMain_Buffer = .;
+. = 0x000007CC; mem_iwram_heap = .;
+. = 0x000007D0; mem_ewram_heap = .;
+. = 0x000007D4; gUnknown_030007D4 = .;
+. = 0x00001638; gUnknown_03001638 = .;
+. = 0x0000164C; gUnknown_0300164C = .;
+. = 0x00007E00; iwram_end = .;
