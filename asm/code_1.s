@@ -3,7 +3,7 @@
 .syntax unified
 .arm
 
-#if !NON_MATCHING
+.if NON_MATCHING == 0
 	thumb_func_start mem_heap_init
 mem_heap_init: @ 0x080001CC
 	push {r4, r5, lr}
@@ -242,7 +242,7 @@ _08000390:
 	pop {r4, r5, r6, r7}
 	pop {r0}
 	bx r0
-#endif
+.endif
 	.align 2, 0
 _0800039C:
 	.byte 0x03, 0x1C, 0x00, 0x2B
@@ -251,7 +251,7 @@ _0800039C:
 	.byte 0x0A, 0xD0, 0x02, 0x48, 0x02, 0x68, 0x91, 0x68, 0x03, 0xE0, 0x00, 0x00, 0xD0, 0x07, 0x00, 0x03
 	.byte 0x89, 0x68, 0x88, 0x68, 0x90, 0x42, 0xFB, 0xD1, 0x70, 0x47, 0x00, 0x00
 
-#if !NON_MATCHING
+.if NON_MATCHING == 0
 	thumb_func_start mem_free_bytes
 mem_free_bytes: @ 0x080003DC
 	push {r4, r5, lr}
@@ -311,4 +311,4 @@ _08000430:
 	.align 2, 0
 _08000438: .4byte 0x030007CC
 _0800043C: .4byte 0x030007D0
-#endif
+.endif
