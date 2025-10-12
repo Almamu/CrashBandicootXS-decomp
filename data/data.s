@@ -1,4 +1,4 @@
-.section data
+.section .rodata
 
 .global gUnknown_0803AF2E
 gUnknown_0803AF2E:

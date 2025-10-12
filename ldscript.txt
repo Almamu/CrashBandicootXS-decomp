@@ -10,7 +10,7 @@ SECTIONS
         build/crashbandicootxs/asm/code.o(.text);
 
         /* Data */
-        build/crashbandicootxs/data/data.o(.data);
+        build/crashbandicootxs/data/data.o(.rodata);
 
 	} = 0
 

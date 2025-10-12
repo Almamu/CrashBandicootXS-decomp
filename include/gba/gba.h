@@ -2,5 +2,6 @@
 #define __GBA_H__
 
 #include "./types.h"
+#include "./io_reg.h"
 
 #endif /* __GBA_H__ */

@@ -50,10 +50,6 @@ DATA_ASM_OBJS := $(patsubst $(DATA_ASM_SUBDIR)/%.s,$(DATA_ASM_BUILDDIR)/%.o,$(DA
 OBJS := $(C_OBJS) $(ASM_OBJS) $(DATA_ASM_OBJS)
 OBJS_REL := $(patsubst $(OBJ_DIR)/%,%,$(OBJS))
 
-src/agb_sram.o: CC1FLAGS := -O1 -mthumb-interwork
-src/test.o: CC1FLAGS := -O0 -mthumb-interwork
-
-
 #### Main Targets ####
 
 compare: $(ROM)
@@ -72,7 +68,7 @@ $(ELF): $(OBJS) $(LDSCRIPT)
 	$(LD) -T $(LDSCRIPT) -Map $(MAP) $(OBJS) tools/agbcc/lib/libgcc.a tools/agbcc/lib/libc.a -o $@
 
 %.gba: %.elf
-	$(OBJCOPY) -O binary --pad-to 0x8400000 $< $@
+	$(OBJCOPY) -O binary $< $@
 
 $(C_BUILDDIR)/%.o : $(C_SUBDIR)/%.c
 	$(CPP) $(CPPFLAGS) $< | $(CC1) $(CC1FLAGS) -o $(C_BUILDDIR)/$*.s
