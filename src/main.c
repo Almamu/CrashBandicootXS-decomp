@@ -33,6 +33,7 @@ s32 AgbMain(void) {
     return 0;
 }
 
+#if NON_MATCHING
 s32 mem_heap_init(s32 arg0) {
     u32 start = gUnknown_03001638;
     s32 end = &iwram_end;
@@ -68,7 +69,6 @@ s32 mem_heap_init(s32 arg0) {
     return 0;
 }
 
-#if NON_MATCHING
 static void inline mem_collect_heap(struct unk* heap) {
     struct unk* var_r3;
     struct unk* temp_r0;

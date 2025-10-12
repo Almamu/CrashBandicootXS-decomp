@@ -4,6 +4,84 @@
 .arm
 
 #if !NON_MATCHING
+	thumb_func_start mem_heap_init
+mem_heap_init: @ 0x080001CC
+	push {r4, r5, lr}
+	sub sp, #8
+	ldr r3, _08000254 @ =0x03001638
+	ldr r4, _08000258 @ =0x03007E00
+	subs r4, r4, r3
+	subs r4, r4, r0
+	movs r5, #0
+	str r5, [sp]
+	ldr r2, _0800025C @ =0x040000D4
+	mov r0, sp
+	str r0, [r2]
+	str r3, [r2, #4]
+	lsrs r0, r4, #2
+	movs r1, #0x85
+	lsls r1, r1, #0x18
+	orrs r0, r1
+	str r0, [r2, #8]
+	ldr r0, [r2, #8]
+	add r0, sp, #4
+	strh r5, [r0]
+	str r0, [r2]
+	movs r1, #0x80
+	lsls r1, r1, #0x12
+	str r1, [r2, #4]
+	ldr r0, _08000260 @ =0x81020000
+	str r0, [r2, #8]
+	ldr r0, [r2, #8]
+	ldr r0, _08000264 @ =0x030007CC
+	str r3, [r0]
+	adds r0, r3, #0
+	adds r0, #0x14
+	str r0, [r3, #8]
+	str r0, [r3, #0xc]
+	movs r2, #1
+	str r2, [r3, #4]
+	str r5, [r3]
+	str r0, [r3, #0x10]
+	str r5, [r0, #4]
+	str r3, [r0, #0xc]
+	str r3, [r0, #8]
+	subs r4, #0x14
+	str r4, [r3, #0x14]
+	ldr r0, _08000268 @ =0x030007D0
+	str r1, [r0]
+	adds r0, r1, #0
+	adds r0, #0x14
+	str r0, [r1, #8]
+	str r0, [r1, #0xc]
+	str r2, [r1, #4]
+	str r5, [r1]
+	str r0, [r1, #0x10]
+	str r5, [r0, #4]
+	str r1, [r0, #0xc]
+	str r1, [r0, #8]
+	ldr r0, _0800026C @ =0x0003FFEC
+	str r0, [r1, #0x14]
+	movs r0, #0xc0
+	lsls r0, r0, #0x18
+	bl mem_free_bytes
+	ldr r1, _08000270 @ =0x030007D4
+	str r0, [r1]
+	movs r0, #0
+	add sp, #8
+	pop {r4, r5}
+	pop {r1}
+	bx r1
+	.align 2, 0
+_08000254: .4byte 0x03001638
+_08000258: .4byte 0x03007E00
+_0800025C: .4byte 0x040000D4
+_08000260: .4byte 0x81020000
+_08000264: .4byte 0x030007CC
+_08000268: .4byte 0x030007D0
+_0800026C: .4byte 0x0003FFEC
+_08000270: .4byte 0x030007D4
+
 	thumb_func_start mem_collect
 mem_collect: @ 0x08000274
 	push {r4, r5, r6, r7, lr}

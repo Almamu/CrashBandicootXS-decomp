@@ -1,7 +1,7 @@
 #include "core.h"
 
 extern void nullsub_10();
-extern u32 IntrMain_Buffer IWRAM_DATA;
+extern u32 IntrMain_Buffer;
 
 u32 irq_setup() {
     u32* intrbuffer = &IntrMain_Buffer;
