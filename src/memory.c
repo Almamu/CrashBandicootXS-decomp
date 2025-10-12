@@ -1,6 +1,7 @@
 #include "core.h"
 #include "memory.h"
 
+#if NON_MATCHING
 static s32 inline mem_free_bytes_for_heap (struct unk* heap) {
     s32 result;
     struct unk* current;
@@ -30,3 +31,4 @@ s32 mem_free_bytes(s32 arg0) {
     
     return result;
 }
+#endif

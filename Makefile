@@ -20,6 +20,12 @@ CC1FLAGS := -mthumb-interwork -Wimplicit -Wparentheses -O1 -fhex-asm
 CPPFLAGS := -I tools/agbcc/include -iquote include -nostdinc -undef
 ASFLAGS  := -mcpu=arm7tdmi -mthumb-interwork -I asminclude
 
+#### Custom flags to alter compilation output ####
+ifeq($(NON_MATCHING),1)
+	CC1FLAGS += -D NON_MATCHING=1
+	CPPFLAGS += -D NON_MATCHING=1
+	ASFLAGS += -D NON_MATCHING=1
+endif
 
 #### Files ####
 OBJ_DIR:= build/crashbandicootxs

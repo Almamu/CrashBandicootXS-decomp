@@ -68,6 +68,7 @@ s32 mem_heap_init(s32 arg0) {
     return 0;
 }
 
+#if NON_MATCHING
 static void inline mem_collect_heap(struct unk* heap) {
     struct unk* var_r3;
     struct unk* temp_r0;
@@ -123,3 +124,4 @@ void mem_collect(s32 arg0) {
         mem_collect_heap(mem_ewram_heap);
     }
 }
+#endif
