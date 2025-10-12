@@ -3,7 +3,7 @@
 extern s32 sub_80001CC(s32);                               /* extern */
 extern void sub_8000518();                                    /* extern */
 extern void sub_80005D0();                                    /* extern */
-extern s32 sub_80005DC();                                  /* extern */
+extern u32 irq_setup();                                  /* extern */
 extern void sub_8000620();                                    /* extern */
 extern s32 sub_8026EEC();                                  /* extern */
 
@@ -15,7 +15,7 @@ s32 AgbMain(void) {
     REG_BLDY = 0x10;
     REG_DISPCNT = DISPCNT_MODE_0;
 
-    if (sub_80001CC(0x400) != 0 || sub_80005DC() != 0) {
+    if (sub_80001CC(0x400) != 0 || irq_setup() != 0) {
         return -1;
     }
     
