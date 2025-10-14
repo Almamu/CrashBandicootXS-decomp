@@ -9,15 +9,15 @@ sub_8000440: @ 0x08000440
 	adds r3, r0, #0
 	cmp r1, #0
 	bge _08000454
-	ldr r0, _0800044C @ =gUnknown_030007CC
+	ldr r0, _0800044C @ =mem_iwram_heap
 	b _08000456
 	.align 2, 0
-_0800044C: .4byte gUnknown_030007CC
+_0800044C: .4byte mem_iwram_heap
 _08000450:
 	movs r0, #0
 	b _080004A4
 _08000454:
-	ldr r0, _08000468 @ =gUnknown_030007D0
+	ldr r0, _08000468 @ =mem_ewram_heap
 _08000456:
 	ldr r4, [r0]
 	adds r3, #0x13
@@ -28,7 +28,7 @@ _08000456:
 	ldr r1, [r2, #0xc]
 	b _08000472
 	.align 2, 0
-_08000468: .4byte gUnknown_030007D0
+_08000468: .4byte mem_ewram_heap
 _0800046C:
 	cmp r2, r1
 	beq _08000450
@@ -72,16 +72,16 @@ sub_80004AC: @ 0x080004AC
 	adds r1, r0, #0
 	cmp r1, #0
 	beq _0800050E
-	ldr r0, _080004C0 @ =gUnknown_030007CC
+	ldr r0, _080004C0 @ =mem_iwram_heap
 	ldr r0, [r0]
 	cmp r1, r0
 	blo _080004C4
 	adds r4, r0, #0
 	b _080004C8
 	.align 2, 0
-_080004C0: .4byte gUnknown_030007CC
+_080004C0: .4byte mem_iwram_heap
 _080004C4:
-	ldr r0, _08000514 @ =gUnknown_030007D0
+	ldr r0, _08000514 @ =mem_ewram_heap
 	ldr r4, [r0]
 _080004C8:
 	adds r3, r1, #0
@@ -126,7 +126,7 @@ _0800050E:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_08000514: .4byte gUnknown_030007D0
+_08000514: .4byte mem_ewram_heap
 
 	thumb_func_start sub_8000518
 sub_8000518: @ 0x08000518
