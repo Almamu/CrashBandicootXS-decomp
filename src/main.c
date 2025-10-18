@@ -1,7 +1,7 @@
 #include "core.h"
 #include "memory.h"
 
-s32 mem_heap_init(s32);
+s32 mem_heap_init(u32);
 extern void sub_8000518();                                    /* extern */
 extern void sub_80005D0();                                    /* extern */
 extern u32 irq_setup();                                  /* extern */
@@ -33,42 +33,43 @@ s32 AgbMain(void) {
     return 0;
 }
 
-#if NON_MATCHING
-s32 mem_heap_init(s32 arg0) {
+static inline void mem_free_bytes_update (s32 flags) {
+    s32 result = mem_free_bytes(flags);
+    gUnknown_030007D4 = result;
+}
+
+static inline void mem_heap_init_section (struct unk* first, struct unk* second, int length) {
+    first->next = second;
+    first->tail = second;
+    first->status = MEMORY_STATUS_USED;
+    first->size = 0;
+    first->unk10 = second;
+    second->status = MEMORY_STATUS_FREE;
+    second->tail = first;
+    second->next = first;
+    second->size = length - sizeof(struct unk);
+}
+
+s32 mem_heap_init (u32 arg0) {
     u32 start = gUnknown_03001638;
-    s32 end = &iwram_end;
-    s32 iwram_size_left = end - start - arg0;
+    u32 end = &iwram_end;
+    u32 iwram_size_left = end - start - arg0;
 
     // zero-out the regions we're going to use
     DmaClear32(3, gUnknown_03001638, iwram_size_left);
     DmaFill16(3, 0, EWRAM_START, EWRAM_SIZE);
 
     // and initialize them with some defaults
-    mem_iwram_heap = gUnknown_03001638;
-    gUnknown_03001638[0].next = &gUnknown_03001638[1];
-    gUnknown_03001638[0].tail = &gUnknown_03001638[1];
-    gUnknown_03001638[0].status = MEMORY_STATUS_USED;
-    gUnknown_03001638[0].size = 0;
-    gUnknown_03001638[0].unk10 = &gUnknown_03001638[1];
-    gUnknown_03001638[1].status = MEMORY_STATUS_FREE;
-    gUnknown_03001638[1].tail = &gUnknown_03001638[0];
-    gUnknown_03001638[1].next = &gUnknown_03001638[0];
-    gUnknown_03001638[1].size = iwram_size_left - sizeof(struct unk);
-    mem_ewram_heap = EWRAM_START; // gUnknown_02000000
-    mem_ewram_heap[0].next = &mem_ewram_heap[1];
-    mem_ewram_heap[0].tail = &mem_ewram_heap[1];
-    mem_ewram_heap[0].status = MEMORY_STATUS_USED;
-    mem_ewram_heap[0].size = 0;
-    mem_ewram_heap[0].unk10 = &mem_ewram_heap[1];
-    mem_ewram_heap[1].status = MEMORY_STATUS_FREE;
-    mem_ewram_heap[1].tail = &mem_ewram_heap[0];
-    mem_ewram_heap[1].next = &mem_ewram_heap[0];
-    mem_ewram_heap[1].size = EWRAM_SIZE - sizeof(struct unk);
-    gUnknown_030007D4 = mem_free_bytes(0xC0000000);
+    mem_iwram_heap_pointer = &gUnknown_03001638;
+    mem_heap_init_section (mem_iwram_heap_pointer, &gUnknown_03001638[1], iwram_size_left);
+    mem_ewram_heap_pointer = EWRAM_START;
+    mem_heap_init_section (mem_ewram_heap_pointer, &mem_ewram_heap_pointer[1], EWRAM_SIZE);
+    mem_free_bytes_update(0xC0000000);
     
     return 0;
 }
 
+#if NON_MATCHING
 static void inline mem_collect_heap(struct unk* heap) {
     struct unk* var_r3;
     struct unk* temp_r0;

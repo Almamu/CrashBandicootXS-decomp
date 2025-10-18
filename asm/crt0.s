@@ -17,7 +17,7 @@ init_vector:
 	ldr sp, _08000120 @ =gUnknown_03007F00
 	mov r0, #0xff
 	svc #0x10000
-	ldr sp, _08000124 @ =gUnknown_03007E00
+	ldr sp, _08000124 @ =iwram_end
 	ldr r2, _08000138 @ =0x040000D4
 	ldr r0, _0800012C @ =gStaticData_087E55E4
 	str r0, [r2]
@@ -35,7 +35,7 @@ init_vector:
 	b init_vector
 	.align 2, 0
 _08000120: .4byte gUnknown_03007F00
-_08000124: .4byte gUnknown_03007E00
+_08000124: .4byte iwram_end
 _08000128: .4byte gUnknown_03007FA0
 _0800012C: .4byte gStaticData_087E55E4
 _08000130: .4byte gUnknown_030009E8
