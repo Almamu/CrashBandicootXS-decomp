@@ -1,0 +1,31 @@
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  pull_request_target:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    name: Crash Bandicoot XS European
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install build-essential binutils-arm-none-eabi gcc-arm-none-eabi
+
+    - name: Checkout agbcc
+      uses: actions/checkout@v5
+      with:
+        path: agbcc
+        repository: SAT-R/agbcc
+      
+    - name: Install agbcc
+      working-directory: agbcc
+      run: ./build.sh && ./install.sh ../
+
+    - name: Fetch baserom
+      run: curl -o baserom.gba -u '${{ secrets.BASEROM_USERNAME }}:${{ secrets.BASEROM_PASSWORD }}' ${{ secrets.BASEROM_URL }}
+      
+    - name: Build and compare
+      run: make

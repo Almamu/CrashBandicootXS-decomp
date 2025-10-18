@@ -1,5 +1,7 @@
 This project assumes you already are familiar with a Linux Terminal.
 
+You must have a copy of Crash Bandicoot XS (Europe) named `baserom.gba`.
+
 # Build pre-requirements
 ## Windows (WSL)/Debian/Ubuntu
 ### Packages
