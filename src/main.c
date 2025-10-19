@@ -68,6 +68,7 @@ s32 mem_heap_init (u32 arg0) {
     
     return 0;
 }
+
 #if NON_MATCHING == 1
 static inline void mem_collect_join_blocks (
     struct mem_block* into, struct mem_block* from, struct mem_heap* boundary) {
@@ -83,12 +84,12 @@ static inline void mem_collect_join_blocks (
     }
 }
 
-static inline void mem_collect_heap (struct mem_heap* start) {
-    struct mem_block* block = &start->base.header;
+static inline void mem_collect_heap (struct mem_heap_header* start) {
+    struct mem_block* heapblock = &start->header;
     struct mem_block* current;
 
     // most likely mem_heap and mem_heap_block are somewhat similar in the header
-    for (current = block->next; block != current; current = current->next) {
+    for (current = heapblock->next; heapblock != current; current = current->next) {
         struct mem_block* relative;
         struct mem_heap* boundary;
         struct mem_block* block;
