@@ -38,15 +38,15 @@ static inline void mem_free_bytes_update (s32 flags) {
     gUnknown_030007D4 = result;
 }
 
-static inline void mem_heap_init_section (struct mem_heap_header* first, struct mem_heap_block* block, int length) {
-    first->next = block;
-    first->tail = block;
-    first->status = MEMORY_STATUS_USED;
-    first->size = 0;
+static inline void mem_heap_init_section (struct mem_heap_header* first, struct mem_block* block, int length) {
+    first->header.next = block;
+    first->header.tail = block;
+    first->header.status = MEMORY_STATUS_USED;
+    first->header.size = 0;
     first->unk10 = block;
     block->status = MEMORY_STATUS_FREE;
-    block->tail = first;
-    block->next = first;
+    block->tail = &first->header;
+    block->next = &first->header;
     block->size = length - sizeof(struct mem_heap_header);
 }
 
@@ -61,68 +61,69 @@ s32 mem_heap_init (u32 arg0) {
 
     // and initialize them with some defaults
     mem_iwram_heap_pointer = &gUnknown_03001638;
-    mem_heap_init_section (mem_iwram_heap_pointer, &mem_iwram_heap_pointer->mainblock, iwram_size_left);
+    mem_heap_init_section (&mem_iwram_heap_pointer->base, &mem_iwram_heap_pointer->mainblock, iwram_size_left);
     mem_ewram_heap_pointer = EWRAM_START;
-    mem_heap_init_section (mem_ewram_heap_pointer, &mem_ewram_heap_pointer->mainblock, EWRAM_SIZE);
+    mem_heap_init_section (&mem_ewram_heap_pointer->base, &mem_ewram_heap_pointer->mainblock, EWRAM_SIZE);
     mem_free_bytes_update(0xC0000000);
     
     return 0;
 }
-#if NON_MATCHING 1
-static inline struct unk* mem_collect_something (struct unk* into, struct unk* from, struct unk* boundary) {
-    struct unk* temporal;
+#if NON_MATCHING == 1
+static inline void mem_collect_join_blocks (
+    struct mem_block* into, struct mem_block* from, struct mem_heap* boundary) {
+    struct mem_block* temporal;
 
     into->size += from->size;
     temporal = from->next;
     into->next = temporal;
     temporal->tail = into;
 
-    if (from == boundary->unk10) {
-        boundary->unk10 = into;
+    if (from == boundary->base.unk10) {
+        boundary->base.unk10 = into;
     }
-
-    return into;
 }
-    
-static inline void mem_collect_heap (struct unk* start) {
-    struct unk* current;
 
-    for (current = start->next; current != start; current = current->next) {
-        struct unk* boundary;
-        struct unk* block;
-        struct unk* relative;
-        struct unk** test;
+static inline void mem_collect_heap (struct mem_heap* start) {
+    struct mem_block* block = &start->base.header;
+    struct mem_block* current;
+
+    // most likely mem_heap and mem_heap_block are somewhat similar in the header
+    for (current = block->next; block != current; current = current->next) {
+        struct mem_block* relative;
+        struct mem_heap* boundary;
+        struct mem_block* block;
+        u8* buffer;
         
         if (current->next->status != MEMORY_STATUS_COLLECT) {
             continue;
         }
 
-        test = &current->unk10;
+        buffer = current->buffer;
         
-        if (test == NULL) {
+        if (buffer == NULL) {
             continue;
         }
 
         // looks like the ewram and the iwram are treated as contiguos
-        if ((u32) test >= (u32) mem_iwram_heap_pointer) {
+        if ((u32) buffer >= (u32) mem_iwram_heap_pointer) {
             boundary = mem_iwram_heap_pointer;
         } else {
             boundary = mem_ewram_heap_pointer;
         }
 
-        //TODO: FIND A BETTER WAY OF DESCRIBING THIS INDIRECTION?
-        block = test - 0x04;
+        block = (struct mem_block*) (buffer - sizeof (struct mem_block));
         block->status = MEMORY_STATUS_FREE;
         relative = block->tail;
 
         if (relative->status == MEMORY_STATUS_FREE) {
-            block = mem_collect_something (relative, block, boundary);
+            mem_collect_join_blocks (relative, block, boundary);
+            block = relative;
         }
 
         relative = block->next;
         
         if (relative->status == MEMORY_STATUS_FREE) {
-            mem_collect_something (block, relative, boundary);
+            mem_collect_join_blocks (block, relative, boundary);
         }
     }
 }

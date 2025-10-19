@@ -3,11 +3,11 @@
 
 static inline u32 mem_free_bytes_for_heap (struct mem_heap* heap) {
     u32 result = 0;
-    struct mem_heap_block* current = heap->base.next;
+    struct mem_block* current = heap->base.header.next;
 
     while (current != heap) {
         if (current->status == MEMORY_STATUS_FREE) {
-            result += current->size - sizeof (struct mem_heap_block);
+            result += current->size - sizeof (struct mem_block);
         }
         
         current = current->next;
