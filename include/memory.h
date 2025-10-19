@@ -11,7 +11,7 @@ struct mem_block {
 
 struct mem_heap_header {
     struct mem_block header;
-    struct mem_block* unk10; // 0x10
+    struct mem_block* nextFreeBlock; // 0x10
 };
 
 struct mem_heap {

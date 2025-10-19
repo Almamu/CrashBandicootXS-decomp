@@ -46,6 +46,7 @@ DATA_ASM_BUILDDIR = $(OBJ_DIR)/$(DATA_ASM_SUBDIR)
 $(shell mkdir -p $(C_BUILDDIR) $(ASM_BUILDDIR) $(DATA_ASM_BUILDDIR))
 
 C_SRCS := $(wildcard $(C_SUBDIR)/*.c)
+C_ASMS := $(patsubst $(C_SUBDIR)/%.c,$(C_BUILDDIR)/%.s,$(C_SRCS))
 C_OBJS := $(patsubst $(C_SUBDIR)/%.c,$(C_BUILDDIR)/%.o,$(C_SRCS))
 
 ASM_SRCS := $(wildcard $(ASM_SUBDIR)/*.s)
@@ -63,7 +64,7 @@ compare: $(ROM)
 	sha1sum -c checksum.sha1
 
 clean:
-	$(RM) $(ROM) $(ELF) $(MAP) $(OBJS) src/*.s
+	$(RM) $(ROM) $(ELF) $(MAP) $(OBJS) $(C_ASMS)
 
 tidy:
 	rm -f $(ROM) $(ELF) $(MAP)
