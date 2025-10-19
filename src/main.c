@@ -38,91 +38,102 @@ static inline void mem_free_bytes_update (s32 flags) {
     gUnknown_030007D4 = result;
 }
 
-static inline void mem_heap_init_section (struct unk* first, struct unk* second, int length) {
-    first->next = second;
-    first->tail = second;
+static inline void mem_heap_init_section (struct mem_heap_header* first, struct mem_heap_block* block, int length) {
+    first->next = block;
+    first->tail = block;
     first->status = MEMORY_STATUS_USED;
     first->size = 0;
-    first->unk10 = second;
-    second->status = MEMORY_STATUS_FREE;
-    second->tail = first;
-    second->next = first;
-    second->size = length - sizeof(struct unk);
+    first->unk10 = block;
+    block->status = MEMORY_STATUS_FREE;
+    block->tail = first;
+    block->next = first;
+    block->size = length - sizeof(struct mem_heap_header);
 }
 
 s32 mem_heap_init (u32 arg0) {
-    u32 start = gUnknown_03001638;
+    u32 start = &gUnknown_03001638;
     u32 end = &iwram_end;
     u32 iwram_size_left = end - start - arg0;
 
     // zero-out the regions we're going to use
-    DmaClear32(3, gUnknown_03001638, iwram_size_left);
+    DmaClear32(3, &gUnknown_03001638, iwram_size_left);
     DmaFill16(3, 0, EWRAM_START, EWRAM_SIZE);
 
     // and initialize them with some defaults
     mem_iwram_heap_pointer = &gUnknown_03001638;
-    mem_heap_init_section (mem_iwram_heap_pointer, &gUnknown_03001638[1], iwram_size_left);
+    mem_heap_init_section (mem_iwram_heap_pointer, &mem_iwram_heap_pointer->mainblock, iwram_size_left);
     mem_ewram_heap_pointer = EWRAM_START;
-    mem_heap_init_section (mem_ewram_heap_pointer, &mem_ewram_heap_pointer[1], EWRAM_SIZE);
+    mem_heap_init_section (mem_ewram_heap_pointer, &mem_ewram_heap_pointer->mainblock, EWRAM_SIZE);
     mem_free_bytes_update(0xC0000000);
     
     return 0;
 }
+#if NON_MATCHING 1
+static inline struct unk* mem_collect_something (struct unk* into, struct unk* from, struct unk* boundary) {
+    struct unk* temporal;
 
-#if NON_MATCHING
-static void inline mem_collect_heap(struct unk* heap) {
-    struct unk* var_r3;
-    struct unk* temp_r0;
-    struct unk* temp_r2;
-    struct unk* current;
-    struct unk* var_r4;
+    into->size += from->size;
+    temporal = from->next;
+    into->next = temporal;
+    temporal->tail = into;
+
+    if (from == boundary->unk10) {
+        boundary->unk10 = into;
+    }
+
+    return into;
+}
     
-    current = heap->next;
-    while (current != heap) {
-        if (current->status == MEMORY_STATUS_COLLECT) {
-            temp_r0 = current->unk10;
-            if (temp_r0 != NULL) {
-                temp_r2 = heap;
-                if ((u32) temp_r0 >= (u32) temp_r2) {
-                    var_r4 = temp_r2;
-                } else {
-                    var_r4 = heap;
-                }
-                var_r3 = temp_r0 - 0x10;
-                var_r3->status = MEMORY_STATUS_FREE;
-                temp_r2 = var_r3->tail;
-                if (temp_r2->status == MEMORY_STATUS_FREE) {
-                    temp_r2->size = temp_r2->size + var_r3->size;
-                    temp_r0 = var_r3->next;
-                    temp_r2->next = temp_r0;
-                    temp_r0->tail = temp_r2;
-                    if (var_r3 == var_r4->unk10) {
-                        var_r4->unk10 = temp_r2;
-                    }
-                    var_r3 = temp_r2;
-                }
-                temp_r2 = var_r3->next;
-                if (temp_r2->status == MEMORY_STATUS_FREE) {
-                    var_r3->size = var_r3->size + temp_r2->size;
-                    temp_r0 = temp_r2->next;
-                    var_r3->next = temp_r0;
-                    temp_r0->tail = var_r3;
-                    if (temp_r2 == var_r4->unk10) {
-                        var_r4->unk10 = var_r3;
-                    }
-                }
-            }
+static inline void mem_collect_heap (struct unk* start) {
+    struct unk* current;
+
+    for (current = start->next; current != start; current = current->next) {
+        struct unk* boundary;
+        struct unk* block;
+        struct unk* relative;
+        struct unk** test;
+        
+        if (current->next->status != MEMORY_STATUS_COLLECT) {
+            continue;
         }
-        current = current->next;
+
+        test = &current->unk10;
+        
+        if (test == NULL) {
+            continue;
+        }
+
+        // looks like the ewram and the iwram are treated as contiguos
+        if ((u32) test >= (u32) mem_iwram_heap_pointer) {
+            boundary = mem_iwram_heap_pointer;
+        } else {
+            boundary = mem_ewram_heap_pointer;
+        }
+
+        //TODO: FIND A BETTER WAY OF DESCRIBING THIS INDIRECTION?
+        block = test - 0x04;
+        block->status = MEMORY_STATUS_FREE;
+        relative = block->tail;
+
+        if (relative->status == MEMORY_STATUS_FREE) {
+            block = mem_collect_something (relative, block, boundary);
+        }
+
+        relative = block->next;
+        
+        if (relative->status == MEMORY_STATUS_FREE) {
+            mem_collect_something (block, relative, boundary);
+        }
     }
 }
 
 void mem_collect(s32 arg0) {
     if (0x80000000 & arg0) {
-        mem_collect_heap(mem_iwram_heap);
+        mem_collect_heap (mem_iwram_heap_pointer);
     }
+    
     if (0x40000000 & arg0) {
-        mem_collect_heap(mem_ewram_heap);
+        mem_collect_heap (mem_ewram_heap_pointer);
     }
 }
 #endif
