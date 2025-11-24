@@ -3,7 +3,7 @@
 
 s32 mem_heap_init(u32);
 extern void sub_8000518();                                    /* extern */
-extern void sub_80005D0();                                    /* extern */
+extern void irq_disable();                                    /* extern */
 extern u32 irq_setup();                                  /* extern */
 extern void sub_8000620();                                    /* extern */
 extern s32 sub_8026EEC();                                  /* extern */
@@ -27,7 +27,7 @@ s32 AgbMain(void) {
         return -1;
     }
     
-    sub_80005D0();
+    irq_disable();
     sub_8000518();
     
     return 0;

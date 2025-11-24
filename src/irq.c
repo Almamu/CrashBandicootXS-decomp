@@ -3,6 +3,7 @@
 extern void* gUnknown_030009E8[5];
 extern void* gUnknown_03000A20[5];
 extern void nullsub_10();
+extern u32 IntrMain_Buffer;
 
 // TODO: PROPERLY UNDERSTAND WHAT THIS FUNCTION IS USED FOR, MIGHT BE A CALLBACK INIT FUNCTION FOR SOME TYPE OF MESSAGE
 // irq_handler_clear_index maybe?
@@ -31,4 +32,28 @@ void sub_80005A0(s32 interruptIndex, s32 arg1) {
     gUnknown_03000A20[interruptIndex] = gUnknown_030009E8[interruptIndex];
     gUnknown_030009E8[interruptIndex] = arg1;
     REG_IE |= 1 << interruptIndex;
+}
+
+
+void irq_disable(void) {
+    REG_IME = 0;
+}
+
+u32 irq_setup() {
+    u32* intrbuffer = &IntrMain_Buffer;
+    u32 data = &nullsub_10;
+    u32** dst1 = (u32** )0x03000A20;
+    u32** dst2 = (u32** )0x030009E8;
+    s32 count = 0xD;
+
+    for (;count >= 0;) {
+        *dst1++ = data;
+        *dst2++ = data;
+        count --;
+    }
+    
+    INTR_VECTOR = intrbuffer;
+    REG_IME = 1;
+    
+    return 0;
 }

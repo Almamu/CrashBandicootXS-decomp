@@ -23,8 +23,6 @@ SECTIONS
         build/crashbandicootxs/src/main.o(.text);
         build/crashbandicootxs/src/memory.o(.text);
         build/crashbandicootxs/src/irq.o(.text);
-        build/crashbandicootxs/asm/code_2.o(.text);
-        build/crashbandicootxs/src/irq2.o(.text);
         build/crashbandicootxs/asm/code_3.o(.text);
 
         /* Data */
