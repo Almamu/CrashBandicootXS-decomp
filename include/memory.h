@@ -37,6 +37,8 @@ extern struct mem_heap* mem_iwram_heap_pointer;
 extern struct mem_heap* mem_ewram_heap_pointer;
 extern int* gUnknown_030007D4;
 extern int iwram_end;
+extern void* gUnknown_030009E8[5];
+extern void nullsub_10();
 
 // TODO: THIS SHOULD NOT BE PUBLIC, BUT UNTIL THE WHOLE MEMORY.C CONTENT IS REVERSED
 // WE NEED TO LEAVE IT LIKE TI IS, BUT THE INLINED FUNCTION SHOULD BE USED INSTEAD OF THIS
