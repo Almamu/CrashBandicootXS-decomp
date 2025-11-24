@@ -2202,7 +2202,7 @@ sub_80016DC: @ 0x080016DC
 	push {lr}
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	pop {r1}
 	bx r1
 	.align 2, 0
@@ -13108,7 +13108,7 @@ sub_8006C00: @ 0x08006C00
 	lsls r0, r0, #6
 	movs r1, #0x80
 	lsls r1, r1, #0x17
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _08006C1C @ =gUnknown_03001290
 	str r0, [r1]
 	cmp r0, #0
@@ -79624,7 +79624,7 @@ sub_8026EC0: @ 0x08026EC0
 	push {lr}
 	movs r1, #0x80
 	lsls r1, r1, #0x17
-	bl sub_8000440
+	bl mem_alloc
 	pop {r1}
 	bx r1
 	.align 2, 0
@@ -79642,7 +79642,7 @@ sub_8026EDC: @ 0x08026EDC
 	push {lr}
 	movs r1, #0x80
 	lsls r1, r1, #0x17
-	bl sub_8000440
+	bl mem_alloc
 	pop {r1}
 	bx r1
 	.align 2, 0
@@ -83424,13 +83424,13 @@ sub_8028BA0: @ 0x08028BA0
 	movs r4, #0x80
 	lsls r4, r4, #0x17
 	adds r1, r4, #0
-	bl sub_8000440
+	bl mem_alloc
 	str r0, [r6]
 	ldr r5, _08028C30 @ =gUnknown_03001340
 	movs r0, #0x80
 	lsls r0, r0, #3
 	adds r1, r4, #0
-	bl sub_8000440
+	bl mem_alloc
 	str r0, [r5]
 	ldr r0, _08028C34 @ =0x06018000
 	subs r4, r0, r7
@@ -83816,12 +83816,12 @@ sub_8028EF0: @ 0x08028EF0
 	movs r5, #0x80
 	lsls r5, r5, #0x17
 	adds r1, r5, #0
-	bl sub_8000440
+	bl mem_alloc
 	str r0, [r4]
 	ldr r4, _08028F44 @ =gUnknown_03001348
 	movs r0, #0x80
 	adds r1, r5, #0
-	bl sub_8000440
+	bl mem_alloc
 	str r0, [r4]
 	ldr r0, _08028F48 @ =gUnknown_0300134C
 	movs r1, #0
@@ -84051,7 +84051,7 @@ sub_80290BC: @ 0x080290BC
 	lsls r0, r0, #4
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	str r0, [r4]
 	ldr r1, _080290FC @ =gUnknown_03001354
 	str r1, [r1, #4]
@@ -84159,7 +84159,7 @@ sub_802917C: @ 0x0802917C
 	lsrs r0, r0, #8
 	movs r1, #0x80
 	lsls r1, r1, #0x17
-	bl sub_8000440
+	bl mem_alloc
 	adds r1, r0, #0
 	ldr r0, _080291A0 @ =gUnknown_0300137C
 	str r1, [r0]
@@ -84632,7 +84632,7 @@ _08029598:
 	lsls r0, r0, #2
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	adds r4, r0, #0
 	mov r5, r8
 	str r5, [r6]
@@ -85865,7 +85865,7 @@ _08029F58:
 	movs r1, #0x80
 	lsls r1, r1, #0x18
 	movs r0, #0xc8
-	bl sub_8000440
+	bl mem_alloc
 	str r0, [r4]
 	ldr r4, _08029FF4 @ =gUnknown_03001418
 	ldr r0, [r4]
@@ -87658,7 +87658,7 @@ _0802AD0C:
 	movs r0, #0x54
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	adds r4, r0, #0
 	lsls r1, r5, #2
 	adds r1, r1, r5
@@ -87680,7 +87680,7 @@ _0802AD3C:
 	movs r0, #0x54
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _0802AD60 @ =gUnknown_0300147C
 	lsls r2, r5, #2
 	adds r2, r2, r5
@@ -87698,7 +87698,7 @@ _0802AD64:
 	movs r0, #0x54
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	adds r4, r0, #0
 	lsls r1, r5, #2
 	adds r1, r1, r5
@@ -87720,7 +87720,7 @@ _0802AD94:
 	movs r0, #0x54
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	adds r4, r0, #0
 	lsls r1, r5, #2
 	adds r1, r1, r5
@@ -87742,7 +87742,7 @@ _0802ADC4:
 	movs r0, #0x54
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	adds r4, r0, #0
 	lsls r1, r5, #2
 	adds r1, r1, r5
@@ -87764,7 +87764,7 @@ _0802ADF4:
 	movs r0, #0x54
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _0802AE18 @ =gUnknown_0300147C
 	lsls r2, r5, #2
 	adds r2, r2, r5
@@ -87782,7 +87782,7 @@ _0802AE1C:
 	movs r0, #0x58
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _0802AE40 @ =gUnknown_0300147C
 	lsls r2, r5, #2
 	adds r2, r2, r5
@@ -87800,7 +87800,7 @@ _0802AE44:
 	movs r0, #0x68
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _0802AE6C @ =gUnknown_0300147C
 	lsls r2, r5, #2
 	adds r2, r2, r5
@@ -87820,7 +87820,7 @@ _0802AE70:
 	movs r0, #0x54
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	adds r4, r0, #0
 	lsls r1, r5, #2
 	adds r1, r1, r5
@@ -87847,7 +87847,7 @@ _0802AEA0:
 	movs r0, #0x54
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	adds r4, r0, #0
 	ldr r0, _0802AED4 @ =gUnknown_0300147C
 	ldr r1, [r0]
@@ -87868,7 +87868,7 @@ _0802AEDC:
 	movs r0, #0x58
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	adds r4, r0, #0
 	lsls r1, r5, #2
 	adds r1, r1, r5
@@ -87899,7 +87899,7 @@ _0802AF14:
 	movs r0, #0x54
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	adds r4, r0, #0
 	ldr r0, _0802AF48 @ =gUnknown_0300147C
 	ldr r1, [r0]
@@ -87920,7 +87920,7 @@ _0802AF50:
 	movs r0, #0x58
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	adds r4, r0, #0
 	lsls r1, r5, #2
 	adds r1, r1, r5
@@ -87946,7 +87946,7 @@ _0802AF88:
 	movs r0, #0x54
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	adds r4, r0, #0
 	lsls r1, r5, #2
 	adds r1, r1, r5
@@ -87968,7 +87968,7 @@ _0802AFB8:
 	movs r0, #0x54
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	adds r4, r0, #0
 	lsls r1, r5, #2
 	adds r1, r1, r5
@@ -87990,7 +87990,7 @@ _0802AFE8:
 	movs r0, #0x54
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _0802B00C @ =gUnknown_0300147C
 	lsls r2, r5, #2
 	adds r2, r2, r5
@@ -88008,7 +88008,7 @@ _0802B010:
 	movs r0, #0x54
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _0802B034 @ =gUnknown_0300147C
 	lsls r2, r5, #2
 	adds r2, r2, r5
@@ -88026,7 +88026,7 @@ _0802B038:
 	movs r0, #0x54
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r4, _0802B088 @ =gUnknown_0300147C
 	ldr r1, [r4]
 	movs r2, #0x82
@@ -88048,7 +88048,7 @@ _0802B038:
 	movs r0, #0x54
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	lsls r2, r5, #2
 	adds r2, r2, r5
 	lsls r2, r2, #3
@@ -88065,7 +88065,7 @@ _0802B08C:
 	movs r0, #0x54
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r4, _0802B0DC @ =gUnknown_0300147C
 	ldr r1, [r4]
 	movs r2, #0x8c
@@ -88087,7 +88087,7 @@ _0802B08C:
 	movs r0, #0x54
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	lsls r2, r5, #2
 	adds r2, r2, r5
 	lsls r2, r2, #3
@@ -88104,7 +88104,7 @@ _0802B0E0:
 	movs r0, #0x54
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	adds r4, r0, #0
 	lsls r1, r5, #2
 	adds r1, r1, r5
@@ -88152,7 +88152,7 @@ sub_802B12C: @ 0x0802B12C
 	movs r0, #0x54
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	adds r4, r0, #0
 	ldr r0, _0802B16C @ =gUnknown_0300147C
 	ldr r1, [r0]
@@ -88186,7 +88186,7 @@ sub_802B174: @ 0x0802B174
 	movs r0, #0x60
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _0802B1A4 @ =gUnknown_0300147C
 	ldr r1, [r1]
 	movs r2, #0xdc
@@ -88216,7 +88216,7 @@ sub_802B1A8: @ 0x0802B1A8
 	movs r0, #0x54
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _0802B1E4 @ =gUnknown_0300147C
 	ldr r1, [r1]
 	movs r2, #0x87
@@ -88248,7 +88248,7 @@ sub_802B1E8: @ 0x0802B1E8
 	movs r0, #0x54
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, [r4]
 	adds r2, r6, #0
 	bl sub_802B298
@@ -94080,7 +94080,7 @@ sub_802DFDC: @ 0x0802DFDC
 	movs r0, #0x1c
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	adds r4, r0, #0
 	ldr r0, _0802E040 @ =gStaticData_0817A850
 	ldr r1, _0802E044 @ =gStaticData_0817A880
@@ -94356,7 +94356,7 @@ _0802E230:
 	movs r0, #0x80
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _0802E254 @ =gUnknown_030014D8
 	lsls r2, r6, #2
 	adds r2, r2, r6
@@ -94375,7 +94375,7 @@ _0802E258:
 	movs r0, #0x64
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _0802E27C @ =gUnknown_030014D8
 	lsls r2, r6, #2
 	adds r2, r2, r6
@@ -94393,7 +94393,7 @@ _0802E280:
 	movs r0, #0x70
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _0802E2A4 @ =gUnknown_030014D8
 	lsls r2, r6, #2
 	adds r2, r2, r6
@@ -94416,7 +94416,7 @@ _0802E2A8:
 	movs r0, #0x74
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _0802E2C8 @ =gUnknown_030014D8
 	ldr r1, [r1]
 	movs r2, #0xc8
@@ -94428,7 +94428,7 @@ _0802E2CC:
 	movs r0, #0x74
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _0802E2F0 @ =gUnknown_030014D8
 	lsls r2, r6, #2
 	adds r2, r2, r6
@@ -94448,7 +94448,7 @@ _0802E2F4:
 	movs r0, #0x70
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _0802E318 @ =gUnknown_030014D8
 	lsls r2, r6, #2
 	adds r2, r2, r6
@@ -94466,7 +94466,7 @@ _0802E31C:
 	movs r0, #0x60
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _0802E340 @ =gUnknown_030014D8
 	lsls r2, r6, #2
 	adds r2, r2, r6
@@ -94484,7 +94484,7 @@ _0802E344:
 	movs r0, #0x68
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _0802E368 @ =gUnknown_030014D8
 	lsls r2, r6, #2
 	adds r2, r2, r6
@@ -94502,7 +94502,7 @@ _0802E36C:
 	movs r0, #0x5c
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r3, _0802E3B8 @ =gUnknown_030014D8
 	mov sb, r3
 	ldr r2, [r3]
@@ -94523,7 +94523,7 @@ _0802E36C:
 	movs r0, #0x5c
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	mov r2, sb
 	ldr r1, [r2]
 	adds r1, r1, r4
@@ -94558,7 +94558,7 @@ sub_802E3CC: @ 0x0802E3CC
 	movs r0, #0x58
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	adds r4, r0, #0
 	ldr r0, _0802E418 @ =gUnknown_030014D8
 	ldr r1, [r0]
@@ -94603,7 +94603,7 @@ sub_802E420: @ 0x0802E420
 	movs r0, #0x58
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	adds r4, r0, #0
 	ldr r0, _0802E47C @ =gUnknown_030014D8
 	ldr r1, [r0]
@@ -94641,7 +94641,7 @@ sub_802E484: @ 0x0802E484
 	movs r0, #0x64
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _0802E4B4 @ =gUnknown_030014D8
 	ldr r1, [r1]
 	movs r2, #0xdc
@@ -94675,7 +94675,7 @@ sub_802E4B8: @ 0x0802E4B8
 	movs r0, #0x64
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _0802E500 @ =gUnknown_030014D8
 	lsls r2, r4, #2
 	adds r2, r2, r4
@@ -94707,7 +94707,7 @@ sub_802E504: @ 0x0802E504
 	movs r0, #0x5c
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _0802E534 @ =gUnknown_030014D8
 	ldr r1, [r1]
 	movs r2, #0x8c
@@ -94738,7 +94738,7 @@ sub_802E538: @ 0x0802E538
 	movs r0, #0x70
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _0802E578 @ =gUnknown_030014D8
 	ldr r1, [r1]
 	movs r2, #0x82
@@ -94769,7 +94769,7 @@ sub_802E57C: @ 0x0802E57C
 	movs r0, #0x70
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _0802E5AC @ =gUnknown_030014D8
 	ldr r1, [r1]
 	movs r2, #0xf0
@@ -94796,7 +94796,7 @@ sub_802E5B0: @ 0x0802E5B0
 	movs r0, #0x70
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _0802E5E0 @ =gUnknown_030014D8
 	ldr r1, [r1]
 	movs r2, #0xdc
@@ -94829,7 +94829,7 @@ sub_802E5E4: @ 0x0802E5E4
 	movs r0, #0x6c
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _0802E628 @ =gUnknown_030014D8
 	ldr r1, [r1]
 	movs r2, #0xc3
@@ -94863,7 +94863,7 @@ sub_802E62C: @ 0x0802E62C
 	movs r0, #0x6c
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _0802E670 @ =gUnknown_030014D8
 	ldr r1, [r1]
 	movs r2, #0xbe
@@ -94902,7 +94902,7 @@ sub_802E674: @ 0x0802E674
 	movs r0, #0x60
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _0802E6C8 @ =gUnknown_030014D8
 	ldr r1, [r1]
 	adds r1, #0x78
@@ -94938,7 +94938,7 @@ sub_802E6CC: @ 0x0802E6CC
 	movs r0, #0x60
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _0802E70C @ =gUnknown_030014D8
 	ldr r1, [r1]
 	adds r1, #0x50
@@ -94968,7 +94968,7 @@ sub_802E710: @ 0x0802E710
 	movs r0, #0x58
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, [r4]
 	adds r2, r5, #0
 	bl sub_802E740
@@ -100186,7 +100186,7 @@ _08030F9C:
 	movs r0, #0x1c
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	adds r5, r0, #0
 	ldr r0, _0803102C @ =gStaticData_0817C3E4
 	ldr r1, _08031030 @ =gUnknown_03001580
@@ -104567,7 +104567,7 @@ sub_80331BC: @ 0x080331BC
 	movs r0, #0x1c
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	adds r5, r0, #0
 	ldr r0, _08033250 @ =gStaticData_0817C4BC
 	ldr r1, _08033254 @ =gUnknown_03001600
@@ -110611,7 +110611,7 @@ sub_80361B0: @ 0x080361B0
 	movs r0, #0x54
 	movs r1, #0x80
 	lsls r1, r1, #0x18
-	bl sub_8000440
+	bl mem_alloc
 	ldr r1, _08036224 @ =gStaticData_0817D698
 	bl sub_8036E20
 	mov r8, r0

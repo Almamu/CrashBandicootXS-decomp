@@ -12,6 +12,14 @@ sudo apt update
 sudo apt install build-essential binutils-arm-none-eabi gcc-arm-none-eabi
 ```
 
+## MacOS
+### Packages
+You'll need to install basic build tools first. These are needed to build the argbcc toolchain and the final rom.
+```sh
+xcode-select --install
+brew install arm-none-eabi-binutils arm-none-eabi-gcc arm-none-eabi-gdb
+```
+
 ### Toolchain
 Once those packages are installed you'll need to provide agbcc, which is the compiler used for building the final ROM.
 

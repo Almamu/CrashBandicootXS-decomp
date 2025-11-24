@@ -3,69 +3,6 @@
 .syntax unified
 .arm
 
-	thumb_func_start sub_8000440
-sub_8000440: @ 0x08000440
-	push {r4, lr}
-	adds r3, r0, #0
-	cmp r1, #0
-	bge _08000454
-	ldr r0, _0800044C @ =mem_iwram_heap_pointer
-	b _08000456
-	.align 2, 0
-_0800044C: .4byte mem_iwram_heap_pointer
-_08000450:
-	movs r0, #0
-	b _080004A4
-_08000454:
-	ldr r0, _08000468 @ =mem_ewram_heap_pointer
-_08000456:
-	ldr r4, [r0]
-	adds r3, #0x13
-	movs r0, #4
-	rsbs r0, r0, #0
-	ands r3, r0
-	ldr r2, [r4, #0x10]
-	ldr r1, [r2, #0xc]
-	b _08000472
-	.align 2, 0
-_08000468: .4byte mem_ewram_heap_pointer
-_0800046C:
-	cmp r2, r1
-	beq _08000450
-	ldr r2, [r2, #8]
-_08000472:
-	ldr r0, [r2, #4]
-	cmp r0, #0
-	bne _0800046C
-	ldr r0, [r2]
-	cmp r0, r3
-	blo _0800046C
-	subs r1, r0, r3
-	cmp r1, #0x40
-	bls _08000498
-	adds r0, r2, r3
-	str r1, [r0]
-	movs r1, #0
-	str r1, [r0, #4]
-	str r2, [r0, #0xc]
-	ldr r1, [r2, #8]
-	str r1, [r0, #8]
-	str r0, [r1, #0xc]
-	str r0, [r2, #8]
-	str r3, [r2]
-_08000498:
-	movs r0, #2
-	str r0, [r2, #4]
-	ldr r0, [r2, #8]
-	str r0, [r4, #0x10]
-	adds r0, r2, #0
-	adds r0, #0x10
-_080004A4:
-	pop {r4}
-	pop {r1}
-	bx r1
-	.align 2, 0
-
 	thumb_func_start sub_80004AC
 sub_80004AC: @ 0x080004AC
 	push {r4, lr}

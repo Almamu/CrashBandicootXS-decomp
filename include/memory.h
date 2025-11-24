@@ -37,5 +37,6 @@ extern int iwram_end;
 // TODO: THIS SHOULD NOT BE PUBLIC, BUT UNTIL THE WHOLE MEMORY.C CONTENT IS REVERSED
 // WE NEED TO LEAVE IT LIKE TI IS, BUT THE INLINED FUNCTION SHOULD BE USED INSTEAD OF THIS
 s32 mem_free_bytes(s32 arg0);
+u8* mem_alloc(u32 requestedSize, s32 arg1);
 
 #endif /* !__MEMORY_H__ */

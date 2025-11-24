@@ -151,3 +151,57 @@ s32 mem_free_bytes(s32 arg0) {
     
     return free_bytes;
 }
+
+u8* mem_alloc(u32 requestedSize, s32 arg1) {
+    struct mem_block* current;
+    struct mem_block* end;
+    struct mem_heap* heap;
+    struct mem_block* result;
+    u32 alignedSize = requestedSize;
+    s32 freeBytesAfterReservation;
+
+    if (0x80000000 & arg1) {
+        heap = mem_iwram_heap_pointer;
+    } else {
+        heap = mem_ewram_heap_pointer;
+    }
+
+    // align value
+    alignedSize += 0x13;
+    alignedSize &= ~3;
+
+    current = heap->base.nextFreeBlock;
+    end = current->tail;
+
+    for (; current->status != MEMORY_STATUS_FREE || current->size < alignedSize; current = current->next) {
+        if (current == end) {
+            return NULL;
+        }
+    }
+    
+    freeBytesAfterReservation = current->size - alignedSize;
+
+    // do not bother updating sizes if the difference in bytes
+    // is not enough to fit a decent block of free data
+    if (freeBytesAfterReservation > 0x40U) {
+        struct mem_block* newBlockAfter = (struct mem_block*) ((u32) current + alignedSize);
+        struct mem_block* temp_r1_3;
+        
+        newBlockAfter->size = freeBytesAfterReservation;
+        newBlockAfter->status = MEMORY_STATUS_FREE;
+        newBlockAfter->tail = current;
+        temp_r1_3 = current->next;
+        newBlockAfter->next = temp_r1_3;
+        temp_r1_3->tail = newBlockAfter;
+        current->next = newBlockAfter;
+        current->size = alignedSize;
+    }
+    
+    current->status = MEMORY_STATUS_COLLECT;
+    heap->base.nextFreeBlock = current->next;
+
+    return current->buffer;
+}
+
+// required because mem_alloc fill isn't entirely right, might be removable once the next function is reversed
+__asm__(".align 2, 0");
