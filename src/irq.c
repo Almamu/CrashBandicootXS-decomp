@@ -24,3 +24,11 @@ void sub_8000558(s32 interruptIndex) {
     
     gUnknown_03000A20[interruptIndex] = &nullsub_10;
 }
+
+// TODO: PROPERLY NAME THIS FUNCTION
+// irq_enable_index or maybe irq_set_index
+void sub_80005A0(s32 interruptIndex, s32 arg1) {
+    gUnknown_03000A20[interruptIndex] = gUnknown_030009E8[interruptIndex];
+    gUnknown_030009E8[interruptIndex] = arg1;
+    REG_IE |= 1 << interruptIndex;
+}
