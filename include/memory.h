@@ -23,6 +23,10 @@ struct mem_heap {
 #define MEMORY_STATUS_USED 1
 #define MEMORY_STATUS_COLLECT 2
 
+#define MEM_HEAP_IWRAM 0x80000000
+#define MEM_HEAP_EWRAM 0x40000000
+#define MEM_HEAP_BOTH (MEM_HEAP_EWRAM | MEM_HEAP_IWRAM)
+
 // ensure some structs don't change size
 COMPILE_TIME_ASSERT(sizeof (struct mem_block) == 0x10);
 COMPILE_TIME_ASSERT(sizeof (struct mem_heap_header) == 0x14);

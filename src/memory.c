@@ -32,7 +32,7 @@ s32 mem_heap_init (u32 arg0) {
     mem_heap_init_section (&mem_iwram_heap_pointer->base, &mem_iwram_heap_pointer->mainblock, iwram_size_left);
     mem_ewram_heap_pointer = EWRAM_START;
     mem_heap_init_section (&mem_ewram_heap_pointer->base, &mem_ewram_heap_pointer->mainblock, EWRAM_SIZE);
-    mem_free_bytes_update(0xC0000000);
+    mem_free_bytes_update(MEM_HEAP_BOTH);
     
     return 0;
 }
@@ -104,11 +104,11 @@ static inline void mem_collect_heap (struct mem_heap_header* start) {
 }
 
 void mem_collect(s32 arg0) {
-    if (0x80000000 & arg0) {
+    if (MEM_HEAP_IWRAM & arg0) {
         mem_collect_heap (&mem_iwram_heap_pointer->base);
     }
     
-    if (0x40000000 & arg0) {
+    if (MEM_HEAP_EWRAM & arg0) {
         mem_collect_heap (&mem_ewram_heap_pointer->base);
     }
 }
@@ -141,11 +141,11 @@ static inline u32 mem_free_bytes_for_heap (struct mem_heap* heap) {
 s32 mem_free_bytes(s32 arg0) {
     u32 free_bytes = 0;
 
-    if (0x80000000 & arg0) {
+    if (MEM_HEAP_IWRAM & arg0) {
         free_bytes += mem_free_bytes_for_heap (mem_iwram_heap_pointer);
     }
     
-    if (0x40000000 & arg0) {
+    if (MEM_HEAP_EWRAM & arg0) {
         free_bytes += mem_free_bytes_for_heap (mem_ewram_heap_pointer);
     }
     
@@ -160,7 +160,7 @@ u8* mem_alloc(u32 requestedSize, s32 arg1) {
     u32 alignedSize = requestedSize;
     s32 freeBytesAfterReservation;
 
-    if (0x80000000 & arg1) {
+    if (MEM_HEAP_IWRAM & arg1) {
         heap = mem_iwram_heap_pointer;
     } else {
         heap = mem_ewram_heap_pointer;
@@ -245,5 +245,15 @@ void mem_free(u8* address) {
         if (adjacent == heap->base.nextFreeBlock) {
             heap->base.nextFreeBlock = current;
         }
+    }
+}
+
+// TODO: WHAT IS THIS USED FOR? THE RETURN OF mem_free_bytes IS NOT USED FOR ANYTHING?
+void sub_8000518() {
+    s32 currentFreeBytes = mem_free_bytes(MEM_HEAP_BOTH);
+    
+    if (gUnknown_030007D4 != currentFreeBytes) {
+        mem_collect(MEM_HEAP_BOTH);
+        mem_free_bytes(MEM_HEAP_BOTH);
     }
 }
