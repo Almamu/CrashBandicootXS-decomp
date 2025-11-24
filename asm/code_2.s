@@ -3,42 +3,6 @@
 .syntax unified
 .arm
 
-	thumb_func_start sub_8000558
-sub_8000558: @ 0x08000558
-	push {r4, r5, r6, lr}
-	adds r5, r0, #0
-	ldr r0, _0800058C @ =gUnknown_030009E8
-	lsls r2, r5, #2
-	adds r0, r2, r0
-	ldr r1, _08000590 @ =gUnknown_03000A20
-	adds r6, r2, r1
-	ldr r1, [r6]
-	str r1, [r0]
-	cmp r1, #0
-	bne _08000582
-	ldr r3, _08000594 @ =0x04000208
-	ldrh r2, [r3]
-	strh r1, [r3]
-	ldr r4, _08000598 @ =0x04000200
-	movs r1, #1
-	lsls r1, r5
-	ldrh r0, [r4]
-	bics r0, r1
-	strh r0, [r4]
-	strh r2, [r3]
-_08000582:
-	ldr r0, _0800059C @ =nullsub_10
-	str r0, [r6]
-	pop {r4, r5, r6}
-	pop {r0}
-	bx r0
-	.align 2, 0
-_0800058C: .4byte gUnknown_030009E8
-_08000590: .4byte gUnknown_03000A20
-_08000594: .4byte 0x04000208
-_08000598: .4byte 0x04000200
-_0800059C: .4byte nullsub_10
-
 	thumb_func_start sub_80005A0
 sub_80005A0: @ 0x080005A0
 	push {r4, lr}

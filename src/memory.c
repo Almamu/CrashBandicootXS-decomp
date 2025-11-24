@@ -257,8 +257,3 @@ void sub_8000518() {
         mem_free_bytes(MEM_HEAP_BOTH);
     }
 }
-
-// TODO: PROPERLY UNDERSTAND WHAT THIS FUNCTION IS USED FOR, MIGHT BE A CALLBACK INIT FUNCTION FOR SOME TYPE OF MESSAGE
-void sub_8000544(s32 arg0) {
-    gUnknown_030009E8[arg0] = &nullsub_10;
-}
