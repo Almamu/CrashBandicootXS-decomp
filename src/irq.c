@@ -2,7 +2,7 @@
 
 extern void* gUnknown_030009E8[5];
 extern void* gUnknown_03000A20[5];
-extern void nullsub_10();
+void nullsub_10();
 extern u32 IntrMain_Buffer;
 
 // TODO: PROPERLY UNDERSTAND WHAT THIS FUNCTION IS USED FOR, MIGHT BE A CALLBACK INIT FUNCTION FOR SOME TYPE OF MESSAGE
@@ -57,3 +57,7 @@ u32 irq_setup() {
     
     return 0;
 }
+
+void nullsub_10() {}
+
+__asm__(".align 2,0");

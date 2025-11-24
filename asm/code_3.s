@@ -3,11 +3,6 @@
 .syntax unified
 .arm
 
-	thumb_func_start nullsub_10
-nullsub_10: @ 0x0800061C
-	bx lr
-	.align 2, 0
-
 	thumb_func_start sub_8000620
 sub_8000620: @ 0x08000620
 	push {lr}
