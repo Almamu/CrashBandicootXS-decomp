@@ -203,5 +203,47 @@ u8* mem_alloc(u32 requestedSize, s32 arg1) {
     return current->buffer;
 }
 
-// required because mem_alloc fill isn't entirely right, might be removable once the next function is reversed
-__asm__(".align 2, 0");
+void mem_free(u8* address) {
+    struct mem_heap* heap;
+    struct mem_block* tmp;
+    struct mem_block* adjacent;
+    struct mem_block* current;
+
+    if (address == NULL) {
+        return;
+    }
+
+    if (address >= (u32) mem_iwram_heap_pointer) {
+        heap = mem_iwram_heap_pointer;
+    } else {
+        heap = mem_ewram_heap_pointer;
+    }
+
+    // get the memory pointer's block header
+    current = (u8*) address - sizeof(struct mem_block);
+    current->status = MEMORY_STATUS_FREE;
+    adjacent = current->tail;
+    
+    if (adjacent->status == MEMORY_STATUS_FREE) {
+        adjacent->size = adjacent->size + current->size;
+        tmp = current->next;
+        adjacent->next = tmp;
+        tmp->tail = adjacent;
+        if (current == heap->base.nextFreeBlock) {
+            heap->base.nextFreeBlock = adjacent;
+        }
+        current = adjacent;
+    }
+
+    adjacent = current->next;
+    
+    if (adjacent->status == MEMORY_STATUS_FREE) {
+        current->size = current->size + adjacent->size;
+        tmp = adjacent->next;
+        current->next = tmp;
+        tmp->tail = current;
+        if (adjacent == heap->base.nextFreeBlock) {
+            heap->base.nextFreeBlock = current;
+        }
+    }
+}

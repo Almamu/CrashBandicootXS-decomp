@@ -2192,7 +2192,7 @@ _080016C6:
 	thumb_func_start sub_80016D0
 sub_80016D0: @ 0x080016D0
 	push {lr}
-	bl sub_80004AC
+	bl mem_free
 	pop {r0}
 	bx r0
 	.align 2, 0
@@ -13091,7 +13091,7 @@ sub_8006BE4: @ 0x08006BE4
 	ldr r0, [r4]
 	cmp r0, #0
 	beq _08006BF6
-	bl sub_80004AC
+	bl mem_free
 	movs r0, #0
 	str r0, [r4]
 _08006BF6:
@@ -79614,7 +79614,7 @@ _08026EB0: .4byte 0xFFFFB000
 	thumb_func_start sub_8026EB4
 sub_8026EB4: @ 0x08026EB4
 	push {lr}
-	bl sub_80004AC
+	bl mem_free
 	pop {r0}
 	bx r0
 	.align 2, 0
@@ -79632,7 +79632,7 @@ sub_8026EC0: @ 0x08026EC0
 	thumb_func_start sub_8026ED0
 sub_8026ED0: @ 0x08026ED0
 	push {lr}
-	bl sub_80004AC
+	bl mem_free
 	pop {r0}
 	bx r0
 	.align 2, 0
@@ -83659,10 +83659,10 @@ sub_8028DB8: @ 0x08028DB8
 	push {lr}
 	ldr r0, _08028DD0 @ =gUnknown_03001340
 	ldr r0, [r0]
-	bl sub_80004AC
+	bl mem_free
 	ldr r0, _08028DD4 @ =gUnknown_03001320
 	ldr r0, [r0]
-	bl sub_80004AC
+	bl mem_free
 	pop {r0}
 	bx r0
 	.align 2, 0
@@ -83765,10 +83765,10 @@ sub_8028E88: @ 0x08028E88
 	push {lr}
 	ldr r0, _08028EA0 @ =gUnknown_03001348
 	ldr r0, [r0]
-	bl sub_80004AC
+	bl mem_free
 	ldr r0, _08028EA4 @ =gUnknown_03001344
 	ldr r0, [r0]
-	bl sub_80004AC
+	bl mem_free
 	pop {r0}
 	bx r0
 	.align 2, 0
@@ -84013,7 +84013,7 @@ sub_802907C: @ 0x0802907C
 	push {lr}
 	ldr r0, _0802908C @ =gUnknown_03001378
 	ldr r0, [r0]
-	bl sub_80004AC
+	bl mem_free
 	pop {r0}
 	bx r0
 	.align 2, 0
@@ -84145,7 +84145,7 @@ sub_8029168: @ 0x08029168
 	push {lr}
 	ldr r0, _08029178 @ =gUnknown_0300137C
 	ldr r0, [r0]
-	bl sub_80004AC
+	bl mem_free
 	pop {r0}
 	bx r0
 	.align 2, 0
@@ -84657,7 +84657,7 @@ _08029598:
 	str r3, [r6, #8]
 	ldr r0, [r6, #8]
 	adds r0, r4, #0
-	bl sub_80004AC
+	bl mem_free
 	bl sub_802996C
 	ldr r0, _08029638 @ =gUnknown_03001380
 	ldr r1, [r0]
@@ -86767,7 +86767,7 @@ _0802A620:
 _0802A636:
 	ldr r0, _0802A64C @ =gUnknown_03001408
 	ldr r0, [r0]
-	bl sub_80004AC
+	bl mem_free
 	pop {r4, r5}
 	pop {r0}
 	bx r0
@@ -87350,7 +87350,7 @@ sub_802AA54: @ 0x0802AA54
 	cmp r0, #0
 	beq _0802AA76
 	adds r0, r3, #0
-	bl sub_80004AC
+	bl mem_free
 _0802AA76:
 	pop {r0}
 	bx r0
@@ -90273,7 +90273,7 @@ _0802C1C2:
 	cmp r0, #0
 	beq _0802C1EE
 	adds r0, r5, #0
-	bl sub_80004AC
+	bl mem_free
 _0802C1EE:
 	pop {r4, r5, r6, r7}
 	pop {r0}
@@ -90530,7 +90530,7 @@ _0802C3B6:
 	cmp r0, #0
 	beq _0802C3D4
 	adds r0, r4, #0
-	bl sub_80004AC
+	bl mem_free
 _0802C3D4:
 	pop {r4, r5, r6, r7}
 	pop {r0}
@@ -94065,7 +94065,7 @@ sub_802DFC8: @ 0x0802DFC8
 	push {lr}
 	ldr r0, _0802DFD8 @ =gUnknown_030014BC
 	ldr r0, [r0]
-	bl sub_80004AC
+	bl mem_free
 	pop {r0}
 	bx r0
 	.align 2, 0
@@ -96998,7 +96998,7 @@ _0802F702:
 	cmp r0, #0
 	beq _0802F72E
 	adds r0, r5, #0
-	bl sub_80004AC
+	bl mem_free
 _0802F72E:
 	pop {r4, r5, r6, r7}
 	pop {r0}
@@ -101168,7 +101168,7 @@ sub_80317C4: @ 0x080317C4
 	push {lr}
 	ldr r0, _080317D4 @ =gUnknown_03001534
 	ldr r0, [r0]
-	bl sub_80004AC
+	bl mem_free
 	pop {r0}
 	bx r0
 	.align 2, 0
@@ -102477,7 +102477,7 @@ sub_80321D0: @ 0x080321D0
 	cmp r0, #0
 	beq _080321F2
 	adds r0, r3, #0
-	bl sub_80004AC
+	bl mem_free
 _080321F2:
 	pop {r0}
 	bx r0
@@ -103346,7 +103346,7 @@ _0803285E:
 	cmp r0, #0
 	beq _0803287C
 	adds r0, r4, #0
-	bl sub_80004AC
+	bl mem_free
 _0803287C:
 	pop {r4, r5, r6, r7}
 	pop {r0}
@@ -105281,7 +105281,7 @@ sub_80337E4: @ 0x080337E4
 	push {lr}
 	ldr r0, _080337F4 @ =gUnknown_030015AC
 	ldr r0, [r0]
-	bl sub_80004AC
+	bl mem_free
 	pop {r0}
 	bx r0
 	.align 2, 0
@@ -112575,7 +112575,7 @@ sub_803716C: @ 0x0803716C
 	cmp r0, #0
 	beq _080371A2
 	adds r0, r6, #0
-	bl sub_80004AC
+	bl mem_free
 _080371A2:
 	pop {r4, r5, r6}
 	pop {r0}
