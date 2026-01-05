@@ -3,4 +3,6 @@
 
 typedef void (*irq_handler_t)();
 
+void sub_8000620(void);
+
 #endif /* __IRQ_H__ */

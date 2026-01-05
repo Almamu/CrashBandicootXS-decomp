@@ -728,6 +728,22 @@
 #define JOY_EXCL_DPAD   0x030F
 
 // interrupt flags
+#define INTR_INDEX_VBLANK   (0)
+#define INTR_INDEX_HBLANK   (1)
+#define INTR_INDEX_VCOUNT   (2)
+#define INTR_INDEX_TIMER0   (3)
+#define INTR_INDEX_TIMER1   (4)
+#define INTR_INDEX_TIMER2   (5)
+#define INTR_INDEX_TIMER3   (6)
+#define INTR_INDEX_SERIAL   (7)
+#define INTR_INDEX_DMA0     (8)
+#define INTR_INDEX_DMA1     (9)
+#define INTR_INDEX_DMA2     (10)
+#define INTR_INDEX_DMA3     (11)
+#define INTR_INDEX_KEYPAD   (12)
+#define INTR_INDEX_GAMEPAK  (13)
+
+// interrupt flags
 #define INTR_FLAG_VBLANK  (1 <<  0)
 #define INTR_FLAG_HBLANK  (1 <<  1)
 #define INTR_FLAG_VCOUNT  (1 <<  2)
