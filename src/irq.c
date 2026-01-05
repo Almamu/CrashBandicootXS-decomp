@@ -88,3 +88,13 @@ void sub_8000620(void) {
     tmp = DISPSTAT_VBLANK_INTR;
     *value = tmp | *value;
 }
+
+// lcd_deactivate or something like that?
+void sub_8000654(void) {
+    register vu8* dispstat asm("r1") = REG_ADDR_DISPSTAT;
+    u8 tmp = DISPSTAT_VBLANK_INTR;
+    
+    *dispstat &= ~tmp;
+    
+    sub_8000558(INTR_INDEX_VBLANK);
+}
