@@ -98,3 +98,7 @@ void sub_8000654(void) {
     
     sub_8000558(INTR_INDEX_VBLANK);
 }
+
+void sub_8000670(s32 arg0) {
+    gUnknown_03000A60.unknown[arg0] = 0;
+}
