@@ -102,3 +102,20 @@ void sub_8000654(void) {
 void sub_8000670(s32 arg0) {
     gUnknown_03000A60.unknown[arg0] = 0;
 }
+
+s32 sub_8000680(s32 arg0) {
+    s32 index = 0;
+
+    while (index <= 7) {
+        if (gUnknown_03000A60.unknown[index] == 0) {
+            gUnknown_03000A60.unknown[index] = arg0;
+            return index;
+        }
+
+        index ++;
+    }
+
+    return -1;
+}
+
+__asm__(".align 2,0");
