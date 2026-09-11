@@ -906,7 +906,600 @@ gStaticData_085A9F04:
 
 .global gStaticData_085A9F10
 gStaticData_085A9F10:
-	.incbin "baserom.gba", 0x005A9F10, 0x0008D8B0
+	@ header/index table for the graphics below (not yet understood)
+	.incbin "baserom.gba", 0x005A9F10, 0x00000260
+
+.global gStaticData_085AA170
+gStaticData_085AA170:
+	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
+	.incbin "graphics/intro/00_5aa170_bitmap.bin.lz", 0, 0x3A61
+
+gStaticData_085ADBD1:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x005ADBD1, 0x00000203
+
+.global gStaticData_085ADDD4
+gStaticData_085ADDD4:
+	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
+	.incbin "graphics/intro/01_5addd4_bitmap.bin.lz", 0, 0x570D
+
+gStaticData_085B34E1:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x005B34E1, 0x00000203
+
+.global gStaticData_085B36E4
+gStaticData_085B36E4:
+	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
+	.incbin "graphics/intro/02_5b36e4_bitmap.bin.lz", 0, 0x4BD8
+
+gStaticData_085B82BC:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x005B82BC, 0x00000200
+
+.global gStaticData_085B84BC
+gStaticData_085B84BC:
+	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
+	.incbin "graphics/intro/03_5b84bc_bitmap.bin.lz", 0, 0x422C
+
+gStaticData_085BC6E8:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x005BC6E8, 0x00000200
+
+.global gStaticData_085BC8E8
+gStaticData_085BC8E8:
+	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
+	.incbin "graphics/intro/04_5bc8e8_bitmap.bin.lz", 0, 0x504E
+
+gStaticData_085C1936:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x005C1936, 0x00000202
+
+.global gStaticData_085C1B38
+gStaticData_085C1B38:
+	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
+	.incbin "graphics/intro/05_5c1b38_bitmap.bin.lz", 0, 0x4C15
+
+gStaticData_085C674D:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x005C674D, 0x00000203
+
+.global gStaticData_085C6950
+gStaticData_085C6950:
+	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
+	.incbin "graphics/intro/06_5c6950_bitmap.bin.lz", 0, 0x480D
+
+gStaticData_085CB15D:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x005CB15D, 0x00000203
+
+.global gStaticData_085CB360
+gStaticData_085CB360:
+	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
+	.incbin "graphics/intro/07_5cb360_bitmap.bin.lz", 0, 0x4B6A
+
+gStaticData_085CFECA:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x005CFECA, 0x00000202
+
+.global gStaticData_085D00CC
+gStaticData_085D00CC:
+	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
+	.incbin "graphics/intro/08_5d00cc_bitmap.bin.lz", 0, 0x6465
+
+gStaticData_085D6531:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x005D6531, 0x00000203
+
+.global gStaticData_085D6734
+gStaticData_085D6734:
+	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
+	.incbin "graphics/intro/09_5d6734_bitmap.bin.lz", 0, 0x5031
+
+gStaticData_085DB765:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x005DB765, 0x00000203
+
+.global gStaticData_085DB968
+gStaticData_085DB968:
+	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
+	.incbin "graphics/intro/10_5db968_bitmap.bin.lz", 0, 0x4154
+
+gStaticData_085DFABC:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x005DFABC, 0x00000200
+
+.global gStaticData_085DFCBC
+gStaticData_085DFCBC:
+	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
+	.incbin "graphics/intro/11_5dfcbc_bitmap.bin.lz", 0, 0x584F
+
+gStaticData_085E550B:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x005E550B, 0x00000201
+
+.global gStaticData_085E570C
+gStaticData_085E570C:
+	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
+	.incbin "graphics/intro/12_5e570c_bitmap.bin.lz", 0, 0x5538
+
+gStaticData_085EAC44:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x005EAC44, 0x00000200
+
+.global gStaticData_085EAE44
+gStaticData_085EAE44:
+	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
+	.incbin "graphics/intro/13_5eae44_bitmap.bin.lz", 0, 0x5523
+
+gStaticData_085F0367:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x005F0367, 0x00000201
+
+.global gStaticData_085F0568
+gStaticData_085F0568:
+	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
+	.incbin "graphics/intro/14_5f0568_bitmap.bin.lz", 0, 0x4759
+
+gStaticData_085F4CC1:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x005F4CC1, 0x00000203
+
+.global gStaticData_085F4EC4
+gStaticData_085F4EC4:
+	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
+	.incbin "graphics/intro/15_5f4ec4_bitmap.bin.lz", 0, 0x530E
+
+gStaticData_085FA1D2:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x005FA1D2, 0x00000202
+
+.global gStaticData_085FA3D4
+gStaticData_085FA3D4:
+	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
+	.incbin "graphics/intro/16_5fa3d4_bitmap.bin.lz", 0, 0x53A5
+
+gStaticData_085FF779:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x005FF779, 0x00000203
+
+.global gStaticData_085FF97C
+gStaticData_085FF97C:
+	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
+	.incbin "graphics/intro/17_5ff97c_bitmap.bin.lz", 0, 0x4036
+
+gStaticData_086039B2:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x006039B2, 0x00000202
+
+.global gStaticData_08603BB4
+gStaticData_08603BB4:
+	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
+	.incbin "graphics/intro/18_603bb4_bitmap.bin.lz", 0, 0x4E9C
+
+gStaticData_08608A50:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x00608A50, 0x00000200
+
+.global gStaticData_08608C50
+gStaticData_08608C50:
+	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
+	.incbin "graphics/intro/19_608c50_bitmap.bin.lz", 0, 0x4927
+
+gStaticData_0860D577:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x0060D577, 0x00000201
+
+.global gStaticData_0860D778
+gStaticData_0860D778:
+	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
+	.incbin "graphics/intro/20_60d778_bitmap.bin.lz", 0, 0x4461
+
+gStaticData_08611BD9:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x00611BD9, 0x00000203
+
+.global gStaticData_08611DDC
+gStaticData_08611DDC:
+	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
+	.incbin "graphics/intro/21_611ddc_bitmap.bin.lz", 0, 0x4584
+
+gStaticData_08616360:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x00616360, 0x00000200
+
+.global gStaticData_08616560
+gStaticData_08616560:
+	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
+	.incbin "graphics/intro/22_616560_bitmap.bin.lz", 0, 0x39F1
+
+gStaticData_08619F51:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x00619F51, 0x00000203
+
+.global gStaticData_0861A154
+gStaticData_0861A154:
+	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
+	.incbin "graphics/intro/23_61a154_bitmap.bin.lz", 0, 0x1988
+
+.global gStaticData_0861BADC
+gStaticData_0861BADC:
+	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
+	.incbin "graphics/intro/24_61badc_tiles.4bpp.lz", 0, 0x28
+
+.global gStaticData_0861BB04
+gStaticData_0861BB04:
+	@ LZ77 compressed data (unidentified) (512 bytes decompressed)
+	.incbin "graphics/intro/25_61bb04.bin.lz", 0, 0x244
+
+.global gStaticData_0861BD48
+gStaticData_0861BD48:
+	@ LZ77 compressed data (unidentified) (512 bytes decompressed)
+	.incbin "graphics/intro/26_61bd48.bin.lz", 0, 0x1E6
+
+gStaticData_0861BF2E:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x0061BF2E, 0x00000002
+
+.global gStaticData_0861BF30
+gStaticData_0861BF30:
+	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
+	.incbin "graphics/intro/27_61bf30_tiles.4bpp.lz", 0, 0x28
+
+.global gStaticData_0861BF58
+gStaticData_0861BF58:
+	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
+	.incbin "graphics/intro/28_61bf58_tiles.4bpp.lz", 0, 0x28
+
+.global gStaticData_0861BF80
+gStaticData_0861BF80:
+	@ LZ77 compressed data (unidentified) (512 bytes decompressed)
+	.incbin "graphics/intro/29_61bf80.bin.lz", 0, 0x1DC
+
+.global gStaticData_0861C15C
+gStaticData_0861C15C:
+	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
+	.incbin "graphics/intro/30_61c15c_tiles.4bpp.lz", 0, 0x26
+
+gStaticData_0861C182:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x0061C182, 0x00000002
+
+.global gStaticData_0861C184
+gStaticData_0861C184:
+	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
+	.incbin "graphics/intro/31_61c184_tiles.4bpp.lz", 0, 0x28
+
+.global gStaticData_0861C1AC
+gStaticData_0861C1AC:
+	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
+	.incbin "graphics/intro/32_61c1ac_tiles.4bpp.lz", 0, 0x28
+
+.global gStaticData_0861C1D4
+gStaticData_0861C1D4:
+	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
+	.incbin "graphics/intro/33_61c1d4_tiles.4bpp.lz", 0, 0x28
+
+.global gStaticData_0861C1FC
+gStaticData_0861C1FC:
+	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
+	.incbin "graphics/intro/34_61c1fc_tiles.4bpp.lz", 0, 0x28
+
+.global gStaticData_0861C224
+gStaticData_0861C224:
+	@ LZ77 compressed data (unidentified) (512 bytes decompressed)
+	.incbin "graphics/intro/35_61c224.bin.lz", 0, 0xE5
+
+gStaticData_0861C309:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x0061C309, 0x00000003
+
+.global gStaticData_0861C30C
+gStaticData_0861C30C:
+	@ LZ77 tile graphics (4bpp) (16288 bytes decompressed)
+	.incbin "graphics/intro/36_61c30c_tiles.4bpp.lz", 0, 0x22EA
+
+gStaticData_0861E5F6:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x0061E5F6, 0x00000002
+
+.global gStaticData_0861E5F8
+gStaticData_0861E5F8:
+	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
+	.incbin "graphics/intro/37_61e5f8_bitmap.bin.lz", 0, 0x6F73
+
+gStaticData_0862556B:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x0062556B, 0x00000001
+
+.global gStaticData_0862556C
+gStaticData_0862556C:
+	@ LZ77 tile graphics (4bpp) (20288 bytes decompressed)
+	.incbin "graphics/intro/38_62556c_tiles.4bpp.lz", 0, 0x36E3
+
+gStaticData_08628C4F:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x00628C4F, 0x00000001
+
+.global gStaticData_08628C50
+gStaticData_08628C50:
+	@ LZ77 tile graphics (4bpp) (16192 bytes decompressed)
+	.incbin "graphics/intro/39_628c50_tiles.4bpp.lz", 0, 0x1D07
+
+gStaticData_0862A957:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x0062A957, 0x00000001
+
+.global gStaticData_0862A958
+gStaticData_0862A958:
+	@ LZ77 tile graphics (4bpp) (5344 bytes decompressed)
+	.incbin "graphics/intro/40_62a958_tiles.4bpp.lz", 0, 0x9F4
+
+.global gStaticData_0862B34C
+gStaticData_0862B34C:
+	@ LZ77 tile graphics (4bpp) (6272 bytes decompressed)
+	.incbin "graphics/intro/41_62b34c_tiles.4bpp.lz", 0, 0xF79
+
+gStaticData_0862C2C5:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x0062C2C5, 0x00000003
+
+.global gStaticData_0862C2C8
+gStaticData_0862C2C8:
+	@ LZ77 tile graphics (4bpp) (704 bytes decompressed)
+	.incbin "graphics/intro/42_62c2c8_tiles.4bpp.lz", 0, 0x1E5
+
+gStaticData_0862C4AD:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x0062C4AD, 0x00000003
+
+.global gStaticData_0862C4B0
+gStaticData_0862C4B0:
+	@ LZ77 tile graphics (4bpp) (3648 bytes decompressed)
+	.incbin "graphics/intro/43_62c4b0_tiles.4bpp.lz", 0, 0x78B
+
+gStaticData_0862CC3B:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x0062CC3B, 0x00000001
+
+.global gStaticData_0862CC3C
+gStaticData_0862CC3C:
+	@ LZ77 tile graphics (4bpp) (1184 bytes decompressed)
+	.incbin "graphics/intro/44_62cc3c_tiles.4bpp.lz", 0, 0x232
+
+gStaticData_0862CE6E:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x0062CE6E, 0x00000002
+
+.global gStaticData_0862CE70
+gStaticData_0862CE70:
+	@ LZ77 tile graphics (4bpp) (1088 bytes decompressed)
+	.incbin "graphics/intro/45_62ce70_tiles.4bpp.lz", 0, 0x25B
+
+gStaticData_0862D0CB:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x0062D0CB, 0x00000001
+
+.global gStaticData_0862D0CC
+gStaticData_0862D0CC:
+	@ LZ77 tile graphics (4bpp) (14976 bytes decompressed)
+	.incbin "graphics/intro/46_62d0cc_tiles.4bpp.lz", 0, 0x12E3
+
+gStaticData_0862E3AF:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x0062E3AF, 0x00000001
+
+.global gStaticData_0862E3B0
+gStaticData_0862E3B0:
+	@ LZ77 tile graphics (4bpp) (9152 bytes decompressed)
+	.incbin "graphics/intro/47_62e3b0_tiles.4bpp.lz", 0, 0x1774
+
+.global gStaticData_0862FB24
+gStaticData_0862FB24:
+	@ LZ77 tile graphics (4bpp) (1280 bytes decompressed)
+	.incbin "graphics/intro/48_62fb24_tiles.4bpp.lz", 0, 0x4CF
+
+gStaticData_0862FFF3:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x0062FFF3, 0x00000001
+
+.global gStaticData_0862FFF4
+gStaticData_0862FFF4:
+	@ LZ77 compressed data (unidentified) (1200 bytes decompressed)
+	.incbin "graphics/intro/49_62fff4.bin.lz", 0, 0x548
+
+.global gStaticData_0863053C
+gStaticData_0863053C:
+	@ LZ77 tile graphics (4bpp) (2048 bytes decompressed)
+	.incbin "graphics/intro/50_63053c_tiles.4bpp.lz", 0, 0x3B3
+
+gStaticData_086308EF:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x006308EF, 0x00000001
+
+.global gStaticData_086308F0
+gStaticData_086308F0:
+	@ LZ77 compressed data (unidentified) (1200 bytes decompressed)
+	.incbin "graphics/intro/51_6308f0.bin.lz", 0, 0x529
+
+gStaticData_08630E19:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x00630E19, 0x00000003
+
+.global gStaticData_08630E1C
+gStaticData_08630E1C:
+	@ LZ77 compressed data (unidentified) (1200 bytes decompressed)
+	.incbin "graphics/intro/52_630e1c.bin.lz", 0, 0x339
+
+gStaticData_08631155:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x00631155, 0x00000003
+
+.global gStaticData_08631158
+gStaticData_08631158:
+	@ LZ77 compressed data (unidentified) (1200 bytes decompressed)
+	.incbin "graphics/intro/53_631158.bin.lz", 0, 0x21A
+
+gStaticData_08631372:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x00631372, 0x00000002
+
+.global gStaticData_08631374
+gStaticData_08631374:
+	@ LZ77 compressed data (unidentified) (48 bytes decompressed)
+	.incbin "graphics/intro/54_631374.bin.lz", 0, 0x39
+
+gStaticData_086313AD:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x006313AD, 0x00000003
+
+.global gStaticData_086313B0
+gStaticData_086313B0:
+	@ LZ77 tile graphics (4bpp) (640 bytes decompressed)
+	.incbin "graphics/intro/55_6313b0_tiles.4bpp.lz", 0, 0x140
+
+.global gStaticData_086314F0
+gStaticData_086314F0:
+	@ LZ77 tile graphics (4bpp) (128 bytes decompressed)
+	.incbin "graphics/intro/56_6314f0_tiles.4bpp.lz", 0, 0x67
+
+gStaticData_08631557:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x00631557, 0x00000001
+
+.global gStaticData_08631558
+gStaticData_08631558:
+	@ LZ77 tile graphics (4bpp) (128 bytes decompressed)
+	.incbin "graphics/intro/57_631558_tiles.4bpp.lz", 0, 0x63
+
+gStaticData_086315BB:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x006315BB, 0x00000001
+
+.global gStaticData_086315BC
+gStaticData_086315BC:
+	@ LZ77 compressed data (unidentified) (1200 bytes decompressed)
+	.incbin "graphics/intro/58_6315bc.bin.lz", 0, 0x27E
+
+gStaticData_0863183A:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x0063183A, 0x00000002
+
+.global gStaticData_0863183C
+gStaticData_0863183C:
+	@ LZ77 palette (256 colors) (512 bytes decompressed)
+	.incbin "graphics/intro/59_63183c.gbapal.lz", 0, 0x162
+
+gStaticData_0863199E:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x0063199E, 0x00000002
+
+.global gStaticData_086319A0
+gStaticData_086319A0:
+	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
+	.incbin "graphics/intro/60_6319a0_tiles.4bpp.lz", 0, 0x28
+
+.global gStaticData_086319C8
+gStaticData_086319C8:
+	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
+	.incbin "graphics/intro/61_6319c8_tiles.4bpp.lz", 0, 0x28
+
+.global gStaticData_086319F0
+gStaticData_086319F0:
+	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
+	.incbin "graphics/intro/62_6319f0_tiles.4bpp.lz", 0, 0x28
+
+.global gStaticData_08631A18
+gStaticData_08631A18:
+	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
+	.incbin "graphics/intro/63_631a18_tiles.4bpp.lz", 0, 0x28
+
+.global gStaticData_08631A40
+gStaticData_08631A40:
+	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
+	.incbin "graphics/intro/64_631a40_tiles.4bpp.lz", 0, 0x28
+
+.global gStaticData_08631A68
+gStaticData_08631A68:
+	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
+	.incbin "graphics/intro/65_631a68_tiles.4bpp.lz", 0, 0x28
+
+.global gStaticData_08631A90
+gStaticData_08631A90:
+	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
+	.incbin "graphics/intro/66_631a90_tiles.4bpp.lz", 0, 0x28
+
+.global gStaticData_08631AB8
+gStaticData_08631AB8:
+	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
+	.incbin "graphics/intro/67_631ab8_tiles.4bpp.lz", 0, 0x14
+
+.global gStaticData_08631ACC
+gStaticData_08631ACC:
+	@ LZ77 tile graphics (4bpp) (4608 bytes decompressed)
+	.incbin "graphics/intro/68_631acc_tiles.4bpp.lz", 0, 0x9E7
+
+gStaticData_086324B3:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x006324B3, 0x00000001
+
+.global gStaticData_086324B4
+gStaticData_086324B4:
+	@ LZ77 tile graphics (4bpp) (2048 bytes decompressed)
+	.incbin "graphics/intro/69_6324b4_tiles.4bpp.lz", 0, 0x36A
+
+gStaticData_0863281E:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x0063281E, 0x00000002
+
+.global gStaticData_08632820
+gStaticData_08632820:
+	@ LZ77 tile graphics (4bpp) (2048 bytes decompressed)
+	.incbin "graphics/intro/70_632820_tiles.4bpp.lz", 0, 0x3A2
+
+gStaticData_08632BC2:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x00632BC2, 0x00000002
+
+.global gStaticData_08632BC4
+gStaticData_08632BC4:
+	@ LZ77 tile graphics (4bpp) (6144 bytes decompressed)
+	.incbin "graphics/intro/71_632bc4_tiles.4bpp.lz", 0, 0x8FD
+
+gStaticData_086334C1:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x006334C1, 0x00000003
+
+.global gStaticData_086334C4
+gStaticData_086334C4:
+	@ LZ77 tile graphics (4bpp) (7680 bytes decompressed)
+	.incbin "graphics/intro/72_6334c4_tiles.4bpp.lz", 0, 0xDAC
+
+.global gStaticData_08634270
+gStaticData_08634270:
+	@ LZ77 tile graphics (4bpp) (25600 bytes decompressed)
+	.incbin "graphics/intro/73_634270_tiles.4bpp.lz", 0, 0x2C81
+
+gStaticData_08636EF1:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x00636EF1, 0x00000003
+
+.global gStaticData_08636EF4
+gStaticData_08636EF4:
+	@ LZ77 tile graphics (4bpp) (4608 bytes decompressed)
+	.incbin "graphics/intro/74_636ef4_tiles.4bpp.lz", 0, 0x70F
+
+gStaticData_08637603:
+	@ padding/unidentified data between assets
+	.incbin "baserom.gba", 0x00637603, 0x00000001
+
+.global gStaticData_08637604
+gStaticData_08637604:
+	@ LZ77 tile graphics (4bpp) (1024 bytes decompressed)
+	.incbin "graphics/intro/75_637604_tiles.4bpp.lz", 0, 0x1B9
+
+gStaticData_086377BD:
+	@ trailing padding
+	.incbin "baserom.gba", 0x006377BD, 0x00000003
 
 .global gStaticData_086377C0
 gStaticData_086377C0:

@@ -9,7 +9,7 @@ You'll need to install basic build tools first. These are needed to build the ar
 
 ```sh
 sudo apt update
-sudo apt install build-essential binutils-arm-none-eabi gcc-arm-none-eabi
+sudo apt install build-essential binutils-arm-none-eabi gcc-arm-none-eabi libpng-dev zlib1g-dev python3-pil
 ```
 
 ## MacOS
@@ -17,7 +17,8 @@ sudo apt install build-essential binutils-arm-none-eabi gcc-arm-none-eabi
 You'll need to install basic build tools first. These are needed to build the argbcc toolchain and the final rom.
 ```sh
 xcode-select --install
-brew install arm-none-eabi-binutils arm-none-eabi-gcc arm-none-eabi-gdb
+brew install arm-none-eabi-binutils arm-none-eabi-gcc arm-none-eabi-gdb libpng zlib
+pip3 install Pillow
 ```
 
 ### Toolchain

@@ -58,10 +58,26 @@ DATA_ASM_OBJS := $(patsubst $(DATA_ASM_SUBDIR)/%.s,$(DATA_ASM_BUILDDIR)/%.o,$(DA
 OBJS := $(C_OBJS) $(ASM_OBJS) $(DATA_ASM_OBJS)
 OBJS_REL := $(patsubst $(OBJ_DIR)/%,%,$(OBJS))
 
+include graphics.mk
+
+GRAPHICS_PNGS := $(wildcard graphics/*/*.png)
+GRAPHICS_PALS := $(wildcard graphics/*/*.pal)
+GRAPHICS_BINS := $(wildcard graphics/*/*.bin)
+
+GRAPHICS_BUILT := \
+	$(patsubst %_bitmap.png,%_bitmap.bin.lz,$(filter %_bitmap.png,$(GRAPHICS_PNGS))) \
+	$(patsubst %.png,%.4bpp.lz,$(filter-out %_bitmap.png,$(GRAPHICS_PNGS))) \
+	$(patsubst %.pal,%.gbapal.lz,$(GRAPHICS_PALS)) \
+	$(patsubst %.bin,%.bin.lz,$(GRAPHICS_BINS))
+
 #### Main Targets ####
 
 compare: $(ROM)
 	sha1sum -c checksum.sha1
+
+# Every incbin in data/*.s that pulls from graphics/ needs the corresponding
+# built (converted + recompressed) file to exist first.
+$(DATA_ASM_OBJS): $(GRAPHICS_BUILT)
 
 clean:
 	$(RM) $(ROM) $(ELF) $(MAP) $(OBJS) $(C_ASMS)
@@ -69,6 +85,9 @@ clean:
 tidy:
 	rm -f $(ROM) $(ELF) $(MAP)
 	rm -r build/*
+
+graphicsclean:
+	find graphics -type f \( -name '*.4bpp' -o -name '*.8bpp' -o -name '*.gbapal' -o -name '*.lz' \) -delete
 
 #### Recipes ####
 	
@@ -87,3 +106,6 @@ $(ASM_BUILDDIR)/%.o: $(ASM_SUBDIR)/%.s
 
 $(DATA_ASM_BUILDDIR)/%.o: $(DATA_ASM_SUBDIR)/%.s
 	$(AS) $(ASFLAGS) -o $@ $<
+
+$(GFX):
+	$(MAKE) -C tools/gbagfx

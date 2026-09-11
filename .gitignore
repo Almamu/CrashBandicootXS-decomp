@@ -57,7 +57,17 @@ Temporary Items
 *.o
 *.dump
 build
-tools
+tools/agbcc
 kappa-db.json
 context
 decomp.yaml
+
+# =========================
+# Generated graphics build artifacts
+# =========================
+graphics/**/*.1bpp
+graphics/**/*.4bpp
+graphics/**/*.8bpp
+graphics/**/*.gbapal
+graphics/**/*.lz
+graphics/**/*.rl
