@@ -80,15 +80,15 @@ all (e.g. level/tilemap data).
 
 ### The VRAM upload dispatcher
 
-`sub_8001174` (ROM `0x08001174`) is a generic "decompress-or-copy asset"
+`LoadTaggedAsset` (ROM `0x08001174`) is a generic "decompress-or-copy asset"
 helper, used for sprite tile uploads among other things. It reads a tag
 byte from the *first byte* of its source and dispatches:
 
 | tag (top nibble of byte 0) | meaning | handler |
 |---|---|---|
 | `0x0` | raw, uncompressed | direct DMA3 copy (source+4, skipping the 4-byte tag+size header) |
-| `0x1` | LZ77 | `sub_803A950` (`svc 0x12`) |
-| `0x3` | RL | `sub_803A958` (`svc 0x15`) |
+| `0x1` | LZ77 | `LZ77UnCompWrapper` (`svc 0x12`) |
+| `0x3` | RL | `RLUnCompWrapper` (`svc 0x15`) |
 
 This is the same tag-byte convention used by the already-identified LZ77
 graphics blocks elsewhere in the ROM (tag `0x10` = `0x1` in the top nibble +
@@ -96,7 +96,7 @@ zero low nibble). **If sprite tiles are stored with tag `0x0` (raw), no
 signature scan will ever find them** - this is the leading theory for why
 the two large regions above didn't turn up anything.
 
-`sub_8028A00` calls this dispatcher with a destination computed as
+`UploadHudTile` calls this dispatcher with a destination computed as
 `0x06010000 + tile_index * 32` - i.e. a real GBA OBJ tile VRAM address
 (`0x06010000` is the OBJ character base in tile modes 0-2, 32 bytes per
 4bpp tile). This confirms the dispatcher is genuinely used for sprite tile
@@ -104,7 +104,7 @@ streaming, not just background graphics.
 
 ### A dynamic VRAM tile allocator exists
 
-`sub_8028BA0` builds a **free list of 125 x 16-byte tile slots** starting at
+`InitObjTileFreeList` builds a **free list of 125 x 16-byte tile slots** starting at
 VRAM `0x06018000` (also OBJ tile memory), via `mem_alloc` + a manually
 constructed linked list (each node's `+8` field points at the next node,
 16 bytes further on). This strongly suggests sprite tiles for whichever
@@ -125,12 +125,12 @@ always-unimplemented slot 0); real behavior starts at pair index 1. These
 are a per-actor-type message/behavior dispatch table, not graphics data:
 
 - Only **3 of the 93 records** (`gStaticData_087E4D1C`, `_087E4D64`,
-  `_087E4DAC`) use `sub_8028A00` (the VRAM-tile-upload function above) -
+  `_087E4DAC`) use `UploadHudTile` (the VRAM-tile-upload function above) -
   confirmed by searching the whole ROM for that function's address as a raw
   pointer, so this is exhaustive, not a sample. All three share every pair
   *except* pair 1 (their constructor, see below) - i.e. they're the same
   "renderable sprite" base chassis with different construction. Of the
-  three, `_087E4DAC`'s constructor (`sub_8028B7C`) is confirmed to belong to
+  three, `_087E4DAC`'s constructor (`InitHudTextWidget`) is confirmed to belong to
   a **text-rendering actor** (see next section) - the other two
   (`_087E4D1C`, `_087E4D64`) are still unidentified and are the most
   promising remaining candidates for "an actual sprite", including
@@ -158,25 +158,25 @@ are a per-actor-type message/behavior dispatch table, not graphics data:
 
 ### The render-vtable family is a HUD text/counter system, not player sprites
 
-All 3 records that use `sub_8028A00` are now identified, and **none of them
+All 3 records that use `UploadHudTile` are now identified, and **none of them
 is a game-world sprite** - they're all part of an on-screen text/counter
 HUD widget:
 
-- `_087E4DAC`'s constructor (`sub_8028B7C`) leads to a pure text-measurement
-  routine (`sub_8028994`): walks a null-terminated string byte by byte,
+- `_087E4DAC`'s constructor (`InitHudTextWidget`) leads to a pure text-measurement
+  routine (`MeasureText`): walks a null-terminated string byte by byte,
   special-casing `'\n'`/`' '`, looking up per-character width from tables
   hung off the actor - classic text layout, no icon/number.
 - `_087E4D64` and `_087E4D1C` are set up by two near-identical functions
-  (`sub_802866C`, `sub_8028734`) that **both** start by measuring a string
+  (`InitHudIconWidgetA`, `InitHudIconWidgetB`) that **both** start by measuring a string
   via the same low-level routine (`sub_803A94C`, called with a
   `0x05000002` constant - `0x05000000` is GBA Palette RAM, so this looks
   like a palette-aware text draw), then overwrite the actor's vtable to
   `_087E4D64`/`_087E4D1C` and set a graphics-package pointer at a struct
   offset that varies by variant:
-  - `sub_802866C` -> `_087E4D64`: sets `self+0x128 = gStaticData_085A4E70`
+  - `InitHudIconWidgetA` -> `_087E4D64`: sets `self+0x128 = gStaticData_085A4E70`
     (an *already-extracted* graphics block, `graphics/intro/00_5a4e70_tiles.png`
     - 5056 bytes decompressed, only 16px wide).
-  - `sub_8028734` -> `_087E4D1C`: sets `self+0x110 = gStaticData_085A551C`
+  - `InitHudIconWidgetB` -> `_087E4D1C`: sets `self+0x110 = gStaticData_085A551C`
     (also already extracted, `graphics/intro/00_5a551c_tiles.png` - 9600
     bytes decompressed) and flips a bit in a `+3` flags byte
     (`& 0x3F | 0x40`), which is presumably what tells the shared rendering
@@ -186,20 +186,20 @@ HUD widget:
     layout across all render-capable actors.
 
 Put together: this whole family (all 3 records, the only ones that ever
-touch `sub_8028A00`) is a HUD element that measures a string then renders
+touch `UploadHudTile`) is a HUD element that measures a string then renders
 an icon/number combo (think a lives-or-fruit counter: icon + digits) or
 plain text next to it. Both graphics pointers found this way point at
 small, already-extracted icon-sized assets from the very first extraction
 pass, not anything sprite-sheet sized.
 
-**This rules out the vtable/`sub_8028A00` path as the mechanism for
+**This rules out the vtable/`UploadHudTile` path as the mechanism for
 regular game-world sprites (player, enemies, objects).** Whatever renders
-those must go through a different function entirely - `sub_8028A00`'s
+those must go through a different function entirely - `UploadHudTile`'s
 callers are exhaustively these 3 HUD records and nothing else (confirmed
-via full-ROM pointer scan for `sub_8028A00`'s address).
+via full-ROM pointer scan for `UploadHudTile`'s address).
 
 The single most shared function across all 93 records, for reference, is
-`sub_802A88C` (used by 40 of the 93) - but it contains no
+`UpdateAnimatedActorPart` (used by 40 of the 93) - but it contains no
 VRAM/OAM/DMA/`mem_alloc` references at all, so it reads as a generic
 per-frame update (physics/timer-style), not a renderer. No other function
 comes close to being used broadly enough to be "the" sprite-render hook
@@ -253,14 +253,14 @@ into the (still unidentified) region beyond it
 ### Found the real sprite-loading path (not through the HUD vtable system)
 
 Traced from the other direction as planned: `AgbMain` (`src/main.c`) calls
-`sub_8026EEC`, which contains the game's true main loop (an unconditional
-`b` back to itself, calling `sub_80225A0` every iteration - this never
+`MainLoop`, which contains the game's true main loop (an unconditional
+`b` back to itself, calling `UpdateGameFrame` every iteration - this never
 returns during normal play, which is why `AgbMain`'s post-loop cleanup
-code is dead in practice). `sub_80225A0` has its own inner loop that reads
-level data and, per iteration, calls `sub_80354E0` - and **that** is where
+code is dead in practice). `UpdateGameFrame` has its own inner loop that reads
+level data and, per iteration, calls `LoadLevelGraphics` - and **that** is where
 real sprite/tile loading happens:
 
-- `sub_80354E0` DMAs three **16-color palettes** directly into **OBJ
+- `LoadLevelGraphics` DMAs three **16-color palettes** directly into **OBJ
   palette RAM banks 13-15** (`0x050003A0`-`0x050003FF`) from
   `gStaticData_0817D034`, `_0817D054`, `_0817D074` (32/32/112 bytes -
   uncompressed, no tag+size header, straight RGB555 arrays). **The first
@@ -269,12 +269,12 @@ real sprite/tile loading happens:
   `rgb(248,80,56)`, `rgb(216,32,24)`, etc.) exactly like his fur/shorts.
   The third bank is black/white and is presumably a UI or flash-effect
   palette rather than part of his normal look.
-- It then calls `sub_80355E0` (loads a background onto BG2 via the same
-  tag+size `sub_8001174` dispatcher, from a package struct
+- It then calls `LoadBg2Background` (loads a background onto BG2 via the same
+  tag+size `LoadTaggedAsset` dispatcher, from a package struct
   `gStaticData_0817D0E4` with fields `{width, height, palette_ptr,
   tile_ptr, tilemap_ptr}` at offsets `0, 4, 8, 0xC, 0x10`) and then
-  `sub_8035684`.
-- `sub_8035684` is the real **OBJ sprite tile loader**: it walks an array
+  `LoadObjSpriteTiles`.
+- `LoadObjSpriteTiles` is the real **OBJ sprite tile loader**: it walks an array
   of 4 pointers (`gUnknown_030008BC`, confirmed 16 bytes = 4 pointers via
   the linked ELF's symbol table) to package structs of that same
   `{w, h, palette_ptr, tile_ptr, remap_ptr}` shape. For each of the 4: DMA
@@ -290,12 +290,12 @@ real sprite/tile loading happens:
 This is almost certainly the real player/enemy/object sprite loading
 mechanism. What's still missing: **where `gUnknown_030008BC`'s 4 entries
 get populated**. It's never written anywhere else in the disassembled
-code (checked exhaustively by text search) - `sub_8035684` is the only
+code (checked exhaustively by text search) - `LoadObjSpriteTiles` is the only
 place that even reads it. Likely explanations, in rough order of
 likelihood: it's filled in from a still-undisassembled code pocket (see
 the two we already found - there may be more `.byte`-dumped fragments
 among the ~179 remaining); it's filled from level data read earlier in
-`sub_80225A0`'s loop (the `sub_80354BC`/`sub_8035E14`/`sub_8036154`
+`UpdateGameFrame`'s loop (the `sub_80354BC`/`sub_8035E14`/`sub_8036154`
 "stream reader" functions glimpsed there haven't been traced yet); or it's
 written through a raw computed address rather than the symbol textually
 (harder to grep for).
@@ -309,9 +309,9 @@ Progress on that, now conclusive enough to stop and report rather than
 keep guessing: this has been checked about as thoroughly as static
 analysis allows, and the write site still can't be found.
 
-- Ruled out `sub_8035E14` (called right alongside `sub_80354E0` in the
+- Ruled out `sub_8035E14` (called right alongside `LoadLevelGraphics` in the
   main loop) - it's player input/collision/SFX handling (calls
-  `sub_8001854`, the confirmed `PlaySfx` function, with real SFX IDs like
+  `PlaySfx`, the confirmed `PlaySfx` function, with real SFX IDs like
   `0x49`/`0x46` gated on input bitflags), not graphics setup.
 - Traced `sub_80354BC`/`sub_8034CEC`/`sub_8034E2C` (the other branch of the
   main loop's state machine) - these turned out to be level-transition
@@ -323,7 +323,7 @@ analysis allows, and the write site still can't be found.
   ROM-side initializer copied in at boot**; every byte of it must be
   written by executed code, not preset data.
 - Searched the *entire 8MB ROM* for the raw 4-byte value `0x030008BC` -
-  **exactly one hit**: the literal pool entry inside `sub_8035684` itself
+  **exactly one hit**: the literal pool entry inside `LoadObjSpriteTiles` itself
   (the reader). No other instruction anywhere in the ROM - disassembled
   or not - loads this address as a constant.
 - Checked the two nearby variables that do get directly referenced
@@ -397,7 +397,7 @@ environment.
 
 ### Found and fixed: some "unclear" graphics were actually 8bpp, not 4bpp
 
-The background-loading trace above (`sub_80355E0`) led to a graphics
+The background-loading trace above (`LoadBg2Background`) led to a graphics
 package struct, `gStaticData_0817D0E4`, whose tile pointer turned out to be
 `gStaticData_0862E3B0` - one of the blocks from the original "garbled
 mess" pass that got reclassified as raw binary because it looked like
@@ -470,7 +470,7 @@ candidates; rendered all 25 as a contact sheet to review at once. Result:
   `26_61bd48`, `29_61bf80`) look plausibly palette-like (varied RGB555-ish
   values) but are unconfirmed and hit the same bit-15 round-trip problem -
   left as raw `.bin` with a similar comment. **Update:** all 3 are now
-  confirmed (not just "plausible") - see "Swept `sub_801E578`'s package
+  confirmed (not just "plausible") - see "Swept `LoadGraphicsPackage`'s package
   structs" below.
 - **One more, `graphics/intro/35_61c224`, is a confirmed palette** - it's
   `gStaticData_0817D0E4`'s (the XS logo package's) own palette pointer,
@@ -485,9 +485,9 @@ candidates; rendered all 25 as a contact sheet to review at once. Result:
 The other 47 raw blocks don't divide evenly by 64 at all, so they can't be
 straightforward 8bpp tile data - not swept further here.
 
-### Swept `sub_801E578`'s package structs (done)
+### Swept `LoadGraphicsPackage`'s package structs (done)
 
-`sub_801E578` (ROM `0x0801E578`) is a generic "load a `{w, h, palette_ptr,
+`LoadGraphicsPackage` (ROM `0x0801E578`) is a generic "load a `{w, h, palette_ptr,
 tile_ptr, tilemap_ptr}` graphics package" helper (the same 5-word package
 shape used elsewhere in this doc, e.g. `gStaticData_0817D0E4` for the XS
 logo) - found from 9 call sites, resolving to 6 distinct package structs.
@@ -559,13 +559,13 @@ again.
 
 This is the "actual per-frame rendering loop" the previous section's open
 question was looking for - found by chasing call sites of the generic
-"load OBJ graphics package" helper `sub_801E578` and the package structs it
+"load OBJ graphics package" helper `LoadGraphicsPackage` and the package structs it
 was called with, which led away from the HUD vtable system entirely into a
 separate, much more elaborate chain:
 
 - **`gStaticData_08175558`** - a per-actor-*category* descriptor array,
   `0x34` (52-byte) stride, 7 valid entries. Selected via
-  `sub_8029ED0(category, ...)`, which computes
+  `SelectActorCategory(category, ...)`, which computes
   `gStaticData_081756C4 + category*0x34` (see next) and stores it as the
   active vtable, then calls vtable slot 0 (the constructor) passing the
   descriptor's `+0x18` field. Key fields (word offsets): `+0x10` = a raw
@@ -582,7 +582,7 @@ separate, much more elaborate chain:
   stride but interpreted as **13 plain function pointers** (not the
   `{0, ptr}` pair convention the HUD vtable system uses - a different,
   unrelated convention that happens to reuse the same struct-offset idea).
-- **`sub_802A700`** - constructs one *part* instance: `r1` (the per-part
+- **`InitActorPart`** - constructs one *part* instance: `r1` (the per-part
   descriptor) is computed at call sites as
   `gUnknown_0300147C[0] + index*0x28` (40-byte stride) - i.e. a single
   category can spawn several independently-animated parts (limbs on a
@@ -600,21 +600,21 @@ separate, much more elaborate chain:
   one animation clip (e.g. record 0's 13-entry cycle:
   `[0,20,59,79,88,97,113,121,132,133,117,60,0]` - a closed loop back to 0).
 - **`table_B`** - flat array of 4-byte raw ROM pointers, read by
-  **`sub_803B074`** (`table_A[keyframe].halfword_at_2` indexes into it).
-  Confirmed via disassembly of `sub_8028FF8`/`sub_8028F58` (the functions
+  **`GetAnimFrameData`** (`table_A[keyframe].halfword_at_2` indexes into it).
+  Confirmed via disassembly of `SetupSpriteFrameOam`/`LoadSpriteFrameTiles` (the functions
   that consume the returned pointer) that each entry points at a tiny
   self-contained record: `{w_tiles, h_tiles, 0x30, 0x00}` (4 bytes) followed
   by exactly `w_tiles*h_tiles*32` bytes of standard swizzled 4bpp tile data
   (every sampled entry across both animal families is `w=8,h=8` = a 64x64
-  OBJ). `sub_8028FF8` decodes the `w`/`h` bytes using the exact GBA OAM
+  OBJ). `SetupSpriteFrameOam` decodes the `w`/`h` bytes using the exact GBA OAM
   shape/size encoding (square/wide/tall + size class 1/2/4/8 tiles) to
   build the sprite's attribute bits - this is unambiguous confirmation
   it's genuine OBJ sprite data, not coincidence.
 - The actual VRAM upload is a **queued DMA**, not an inline copy:
-  `sub_8028F58` computes the byte count and calls `sub_8006B94`, which just
+  `LoadSpriteFrameTiles` computes the byte count and calls `QueueVramDmaTransfer`, which just
   appends `{dest, src, size}` into a ring buffer
   (`gUnknown_03001290`, up to 768 entries) rather than copying immediately.
-  The flush happens in `sub_8006B1C`, confirmed by disassembly to write
+  The flush happens in `FlushVramDmaQueue`, confirmed by disassembly to write
   directly to **`0x040000D4`/`0x040000D8`** - the GBA's real DMA3
   source/destination registers - and start the transfer. **No
   reformatting happens anywhere in this path**: ROM bytes reach VRAM
@@ -645,14 +645,14 @@ down - exactly what a rotating 3D-rendered object looks like under a fixed
 camera (silhouette/position holds steady, surface shading drifts). Given
 the palette (cream/white + red/orange + dark blue, index 0 = transparent)
 matches the already-identified Uka Uka mask family from the
-`sub_801E578` sweep, this is most likely a **spinning Aku Aku mask**
+`LoadGraphicsPackage` sweep, this is most likely a **spinning Aku Aku mask**
 (Uka Uka's "good" counterpart) - not yet confirmed beyond the palette/shape
 match, since no in-game screenshot or emulator run was available to check
 against.
 
 **Important correction/clarification:** this whole `table_A`/`table_B`
 system reads its frame data directly from fixed ROM addresses (confirmed:
-`sub_803B074` does add a RAM-buffer-base global, `gUnknown_0300137C`, but
+`GetAnimFrameData` does add a RAM-buffer-base global, `gUnknown_0300137C`, but
 it reads back as `0` along this path, making the add a no-op) - it is
 **raw, uncompressed data sitting in ROM**, physically near but *not inside*
 the two giant LZ77 sheets (`0x080B2120`/`0x0814174C`) referenced by the
@@ -662,18 +662,18 @@ remain unidentified - don't assume they're pre-decompressed into the
 buffer this animation system reads from.
 
 Not yet resolved: the descriptor's `+0x14` field (unique per entry,
-passed into `sub_8029ED0`) and the `+0x20`-`+0x30` small integers; the
+passed into `SelectActorCategory`) and the `+0x20`-`+0x30` small integers; the
 animation table record's `header_byte` (copied into the runtime instance
-at `+0x18` by `sub_802A700`, role not traced further).
+at `+0x18` by `InitActorPart`, role not traced further).
 
 ### Identified the two giant LZ77 sheets: they're the actual sprite art
 
-Found the reader: `sub_802928C` (per-category init, called with the
+Found the reader: `InitActorCategory` (per-category init, called with the
 category number, stored in `gUnknown_03001380`) reads the descriptor's
-`+0x1C` sheet pointer and calls `sub_802917C(sheet_ptr)`, which reads the
+`+0x1C` sheet pointer and calls `DecompressCategorySpriteSheet(sheet_ptr)`, which reads the
 tag+size header, `mem_alloc`s a buffer of the declared decompressed size,
 stores it in **`gUnknown_0300137C`**, and decompresses into it via
-`sub_8001174` - **this is the same global `sub_803B074` adds to a
+`LoadTaggedAsset` - **this is the same global `GetAnimFrameData` adds to a
 `table_B` value** (see above). So there are genuinely two different
 addressing modes in play for animation-table records, both already
 present in the code, and confirmed by directly decompressing
@@ -684,7 +684,7 @@ records against it:
 - **Category 0-2's record 0** (the "mask", `table_B = gStaticData_0817941C`)
   holds full absolute ROM addresses (`0x080Cxxxx`) and reads real
   uncompressed ROM data directly - `gUnknown_0300137C` is unset/0 for
-  this path, making the add in `sub_803B074` a no-op. This is the
+  this path, making the add in `GetAnimFrameData` a no-op. This is the
   overlapping/deduplicated "rotation strip" scheme described above.
 - **Records 1, 2, 4** (`table_B` at `0x0817a130`, `0x081796a4`,
   `0x0817a250`) hold **small byte offsets into the decompressed
@@ -1074,17 +1074,17 @@ looked at this specific folder yet".
 ### Open questions / next steps
 
 - The `0x087E3BEC`-onward vtable system, its constructors, and
-  `sub_8028A00` are now a dead end for finding player/enemy sprites - fully
+  `UploadHudTile` are now a dead end for finding player/enemy sprites - fully
   traced and conclusively shown to be a HUD text/counter system instead.
   Don't re-investigate this path without new evidence.
 - There is no simple "type ID -> descriptor" lookup table anywhere in the
   ROM for this vtable system (checked exhaustively) - actor construction
-  embeds a record's address directly in code (as seen in `sub_802866C`/
-  `sub_8028734`) rather than going through a numeric index. Whatever the
+  embeds a record's address directly in code (as seen in `InitHudIconWidgetA`/
+  `InitHudIconWidgetB`) rather than going through a numeric index. Whatever the
   equivalent mechanism is for game-world sprites hasn't been located.
 - **The per-frame rendering loop has been found** (see the new section
   above) - it's the category-descriptor -> vtable -> animation-table ->
-  `table_A`/`table_B` chain, not `sub_8028A00`. What's still open there:
+  `table_A`/`table_B` chain, not `UploadHudTile`. What's still open there:
   identifying which game object(s) categories 0-2 and 3-6 actually are
   (working theory: a spinning Aku Aku mask for 0-2, unconfirmed), and the
   still-undecoded descriptor/record fields listed at the end of that

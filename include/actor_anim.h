@@ -11,8 +11,8 @@
  * keyframe, resolved to the exact ROM address or extracted frame PNG it
  * uses).
  *
- * None of the *code* behind this system (sub_8029ED0, sub_802A700,
- * sub_803B074, the per-category vtable functions, ...) has been
+ * None of the *code* behind this system (SelectActorCategory, InitActorPart,
+ * GetAnimFrameData, the per-category vtable functions, ...) has been
  * reversed to C yet - these structs are only the data layout, written
  * ahead of that so the two can be matched up directly once it is.
  */
@@ -27,7 +27,7 @@ struct anim_table_record {
     u32 index;                 // 0x00 - equals the record's own slot number in every valid record observed
     struct keyframe_entry *table_A; // 0x04 - keyframe/timing sequence, see below
     u32 *table_B;               // 0x08 - frame address/offset array, see the comment above struct sprite_frame
-    u8 header_byte;              // 0x0C - copied into the runtime per-part instance at offset +0x18 by sub_802A700; role beyond that not traced
+    u8 header_byte;              // 0x0C - copied into the runtime per-part instance at offset +0x18 by InitActorPart; role beyond that not traced
     u8 pad_0D[3];
     u8 unknown_10[0x18];         // 0x10 - always 0 in every record observed
 }; // 0x28
@@ -41,7 +41,7 @@ COMPILE_TIME_ASSERT(sizeof(struct anim_table_record) == 0x28);
 struct keyframe_entry {
     u8 unknown_00;    // 0x00 - alternates between two values (seen 0x80/0x40) across entries in every record sampled; role unclear
     u8 unknown_01;    // 0x01 - 0 in every entry sampled
-    s16 table_B_index; // 0x02 - signed index into this record's table_B array - the one confirmed field, both by code (sub_803B074) and by exhaustive empirical resolution against every record's real frame data
+    s16 table_B_index; // 0x02 - signed index into this record's table_B array - the one confirmed field, both by code (GetAnimFrameData) and by exhaustive empirical resolution against every record's real frame data
     u32 unknown_04;    // 0x04 - a small integer, or two packed 16-bit sub-values a fixed distance apart; role unclear
     u32 unknown_08;    // 0x08 - 0 in every entry sampled
 }; // 0xC
@@ -73,7 +73,7 @@ COMPILE_TIME_ASSERT(sizeof(struct keyframe_entry) == 0xC);
 
 /* One animation frame's raw pixel data, exactly as DMA'd to VRAM with no
  * reformatting (confirmed via the DMA3 register writes in the queued
- * transfer flush routine, sub_8006B1C) - so this is also exactly what
+ * transfer flush routine, FlushVramDmaQueue) - so this is also exactly what
  * graphics/unknown/<sheet>/<entity>/NN.png round-trips to/from (that
  * tool strips/reinserts this same 4-byte header - see tools/framed_gfx.py). */
 struct sprite_frame {
@@ -86,7 +86,7 @@ struct sprite_frame {
 
 /* gStaticData_08175558 - 7 entries (categories 0-2 use the family rooted
  * at gStaticData_081796CC, 3-6 the one at gStaticData_0817B2A4). Selected
- * via sub_8029ED0(category, ...), which computes
+ * via SelectActorCategory(category, ...), which computes
  * gStaticData_081756C4 + category*0x34 and stores it as the active
  * vtable before calling its constructor (vtable slot 0). */
 struct category_descriptor {
@@ -94,7 +94,7 @@ struct category_descriptor {
     void *family_shared_04;         // 0x04 - constant across all categories in one family; pointer-shaped, role unknown
     u32 family_shared_08;           // 0x08 - constant across all categories in one family; role unknown
     void *conditional_ptr_0C;       // 0x0C - if non-NULL, sub_802F7B0 (not reversed) gets called during category init
-    const u16 *palette;             // 0x10 - raw 16-color RGB555 palette, DMA'd to OBJ palette RAM (sub_802928C)
+    const u16 *palette;             // 0x10 - raw 16-color RGB555 palette, DMA'd to OBJ palette RAM (InitActorCategory)
     void *sub_effect_table;         // 0x14 - a second per-category table (threshold-triggered sub-effects/spawns via vtable slot 1); structure not reversed, see docs/graphics.md
     struct anim_table_record *anim_table; // 0x18 - this category's animation table base (gStaticData_081796CC or gStaticData_0817B2A4)
     const u8 *sprite_sheet;         // 0x1C - this category family's LZ77-compressed sprite sheet
@@ -109,8 +109,8 @@ COMPILE_TIME_ASSERT(sizeof(struct category_descriptor) == 0x34);
 /* gStaticData_081756C4 - 7 entries, category-indexed the same way as
  * category_descriptor above. Exact signatures unknown (none of these
  * functions have been reversed to C yet); slot 0 is confirmed to be the
- * constructor (sub_802B1E8-style - receives the animation table base and
- * the descriptor's position_offset_flag). A couple of slots (7 and 8, at
+ * constructor, ConstructAnimTableState (receives the animation table base
+ * and the descriptor's position_offset_flag). A couple of slots (7 and 8, at
  * least for category 0) hold obviously-invalid addresses and appear to
  * simply be unused for that category. */
 struct category_vtable {

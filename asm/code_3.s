@@ -253,7 +253,7 @@ sub_80007EC: @ 0x080007EC
 	movs r1, #0xc0
 	lsls r1, r1, #0x13
 	mov r0, sb
-	bl sub_8001174
+	bl LoadTaggedAsset
 	pop {r3, r4}
 	mov r8, r3
 	mov sb, r4
@@ -1425,8 +1425,8 @@ _08001160:
 _0800116C: .4byte gUnknown_03001304
 _08001170: .4byte gUnknown_030007E0
 
-	thumb_func_start sub_8001174
-sub_8001174: @ 0x08001174
+	thumb_func_start LoadTaggedAsset
+LoadTaggedAsset: @ 0x08001174
 	push {lr}
 	adds r3, r0, #0
 	ldr r0, [r3]
@@ -1458,11 +1458,11 @@ _0800118C:
 _080011A8: .4byte 0x040000D4
 _080011AC:
 	adds r0, r3, #0
-	bl sub_803A950
+	bl LZ77UnCompWrapper
 	b _080011BA
 _080011B4:
 	adds r0, r3, #0
-	bl sub_803A958
+	bl RLUnCompWrapper
 _080011BA:
 	pop {r0}
 	bx r0
@@ -1477,7 +1477,7 @@ sub_80011C0: @ 0x080011C0
 	adds r0, r4, r1
 	movs r1, #0xc0
 	lsls r1, r1, #0x13
-	bl sub_8001174
+	bl LoadTaggedAsset
 	bl sub_80006A8
 	ldr r1, _080011EC @ =0x040000D4
 	str r4, [r1]
@@ -2396,8 +2396,8 @@ _08001848: .4byte gUnknown_030007DD
 _0800184C: .4byte gStaticData_0816AA20
 _08001850: .4byte gStaticData_0855BCB4
 
-	thumb_func_start sub_8001854
-sub_8001854: @ 0x08001854
+	thumb_func_start PlaySfx
+PlaySfx: @ 0x08001854
 	push {r4, r5, r6, r7, lr}
 	mov r7, sl
 	mov r6, sb
@@ -5976,7 +5976,7 @@ sub_80032E8: @ 0x080032E8
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x47
-	bl sub_8001854
+	bl PlaySfx
 	b _0800338A
 	.align 2, 0
 _08003304: .4byte gUnknown_030012BC
@@ -5990,7 +5990,7 @@ _08003308:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x49
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, [r4, #0x10]
 	cmp r0, #4
 	bhi _080033DE
@@ -6054,7 +6054,7 @@ _08003390:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x46
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, [r4, #0x10]
 	subs r0, #1
 	str r0, [r4, #0x10]
@@ -6075,7 +6075,7 @@ _080033BC:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x46
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, [r4, #0x10]
 	adds r0, #1
 	str r0, [r4, #0x10]
@@ -6102,7 +6102,7 @@ sub_80033E8: @ 0x080033E8
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x46
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, [r4, #0x10]
 	cmp r0, #4
 	bhi _080034B2
@@ -6140,7 +6140,7 @@ _0800343E:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x46
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, [r4, #0x10]
 	cmp r0, #4
 	bhi _080034B2
@@ -6181,7 +6181,7 @@ _0800348E:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x46
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, [r4, #0x10]
 	movs r1, #2
 	eors r0, r1
@@ -6222,7 +6222,7 @@ _080034DE:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x49
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #0
 	str r0, [r6, #0xc]
 	str r0, [r6, #0x10]
@@ -6240,7 +6240,7 @@ _08003500:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x48
-	bl sub_8001854
+	bl PlaySfx
 	b _080035B2
 	.align 2, 0
 _0800351C: .4byte gUnknown_030012BC
@@ -6250,7 +6250,7 @@ _08003520:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x49
-	bl sub_8001854
+	bl PlaySfx
 	ldr r1, [r6, #0x10]
 	adds r0, r7, #0
 	mov r2, sp
@@ -6299,7 +6299,7 @@ _0800358C:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x47
-	bl sub_8001854
+	bl PlaySfx
 	str r4, [r6, #0xc]
 	str r4, [r6, #0x10]
 	b _080035B2
@@ -6336,7 +6336,7 @@ sub_80035C0: @ 0x080035C0
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x47
-	bl sub_8001854
+	bl PlaySfx
 	b _0800368C
 	.align 2, 0
 _080035EC: .4byte gUnknown_030012BC
@@ -6555,7 +6555,7 @@ _08003798:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x49
-	bl sub_8001854
+	bl PlaySfx
 	b _0800381A
 	.align 2, 0
 _080037B0: .4byte gUnknown_030012BC
@@ -6573,7 +6573,7 @@ _080037B4:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x47
-	bl sub_8001854
+	bl PlaySfx
 	b _0800381A
 	.align 2, 0
 _080037D4: .4byte gUnknown_030012BC
@@ -6591,7 +6591,7 @@ _080037D8:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x46
-	bl sub_8001854
+	bl PlaySfx
 	b _0800381A
 	.align 2, 0
 _080037F8: .4byte gUnknown_030012BC
@@ -6609,7 +6609,7 @@ _080037FC:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x46
-	bl sub_8001854
+	bl PlaySfx
 _0800381A:
 	pop {r4, r5}
 	pop {r0}
@@ -6638,7 +6638,7 @@ _08003838:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x49
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #0
 	str r0, [r4, #0xc]
 	movs r0, #2
@@ -6652,7 +6652,7 @@ _0800385C:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x49
-	bl sub_8001854
+	bl PlaySfx
 	adds r0, r4, #0
 	adds r0, #0x8c
 	ldr r0, [r0]
@@ -6690,7 +6690,7 @@ _080038A2:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x47
-	bl sub_8001854
+	bl PlaySfx
 	str r5, [r4, #0xc]
 	str r6, [r4, #0x10]
 	b _080038CA
@@ -6725,7 +6725,7 @@ _080038E4:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x49
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #0
 	str r0, [r4, #0xc]
 	b _08003964
@@ -6745,7 +6745,7 @@ _08003904:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x48
-	bl sub_8001854
+	bl PlaySfx
 	b _08003976
 	.align 2, 0
 _08003928: .4byte gUnknown_030012BC
@@ -6755,7 +6755,7 @@ _0800392C:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x49
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #7
 	str r0, [r4, #0xc]
 	ldr r0, [r4, #0x10]
@@ -6774,7 +6774,7 @@ _0800394C:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x47
-	bl sub_8001854
+	bl PlaySfx
 	str r5, [r4, #0xc]
 _08003964:
 	movs r0, #3
@@ -6841,7 +6841,7 @@ _080039CE:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x49
-	bl sub_8001854
+	bl PlaySfx
 	b _08003A52
 	.align 2, 0
 _080039E8: .4byte gUnknown_030012BC
@@ -6859,7 +6859,7 @@ _080039EC:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x47
-	bl sub_8001854
+	bl PlaySfx
 	b _08003A52
 	.align 2, 0
 _08003A0C: .4byte gUnknown_030012BC
@@ -6877,7 +6877,7 @@ _08003A10:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x46
-	bl sub_8001854
+	bl PlaySfx
 	b _08003A52
 	.align 2, 0
 _08003A30: .4byte gUnknown_030012BC
@@ -6895,7 +6895,7 @@ _08003A34:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x46
-	bl sub_8001854
+	bl PlaySfx
 _08003A52:
 	add sp, #0x70
 	pop {r4, r5, r6, r7}
@@ -8604,7 +8604,7 @@ sub_80047F8: @ 0x080047F8
 	bl sub_801E644
 	ldr r1, _08004854 @ =gStaticData_0816C484
 	add r0, sp, #4
-	bl sub_801E578
+	bl LoadGraphicsPackage
 	str r5, [r4]
 	add r0, sp, #4
 	bl sub_801E640
@@ -9189,7 +9189,7 @@ _08004CCA:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x49
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #0
 	str r0, [r4, #0xc]
 	str r5, [r4, #0x10]
@@ -9217,7 +9217,7 @@ sub_8004CE8: @ 0x08004CE8
 	ldr r0, _08004D1C @ =gUnknown_03001300
 	ldr r0, [r0]
 	bl sub_8006AAC
-	bl sub_8006B1C
+	bl FlushVramDmaQueue
 	pop {r0}
 	bx r0
 	.align 2, 0
@@ -9476,7 +9476,7 @@ sub_8004EC0: @ 0x08004EC0
 	strb r3, [r0]
 	ldr r1, _08004FC4 @ =gStaticData_0816B284
 	adds r0, r7, #0
-	bl sub_801E578
+	bl LoadGraphicsPackage
 	ldr r5, _08004FC8 @ =gUnknown_030012C0
 	ldr r0, [r5]
 	bl sub_80236EC
@@ -9753,7 +9753,7 @@ _0800515A:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x49
-	bl sub_8001854
+	bl PlaySfx
 	movs r7, #0
 	b _0800529A
 	.align 2, 0
@@ -9784,7 +9784,7 @@ _08005180:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x46
-	bl sub_8001854
+	bl PlaySfx
 _080051BE:
 	movs r0, #0x80
 	ldrh r2, [r6, #2]
@@ -9800,7 +9800,7 @@ _080051BE:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x46
-	bl sub_8001854
+	bl PlaySfx
 _080051E0:
 	ldr r2, [r6]
 	lsrs r1, r2, #0x10
@@ -9884,7 +9884,7 @@ _08005264:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x48
-	bl sub_8001854
+	bl PlaySfx
 	b _0800515A
 	.align 2, 0
 _08005284: .4byte gUnknown_030007E0
@@ -9895,7 +9895,7 @@ _0800528C:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x49
-	bl sub_8001854
+	bl PlaySfx
 _0800529A:
 	adds r6, r4, #0
 	movs r0, #0x1f
@@ -11488,7 +11488,7 @@ _08005F5C:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xe
-	bl sub_8001854
+	bl PlaySfx
 _08005FB0:
 	pop {r4, r5, r6}
 	pop {r0}
@@ -11585,7 +11585,7 @@ _08006024:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xe
-	bl sub_8001854
+	bl PlaySfx
 _08006078:
 	pop {r4, r5, r6}
 	pop {r0}
@@ -11841,7 +11841,7 @@ sub_8006250: @ 0x08006250
 	ldr r0, _080062A0 @ =gUnknown_03001300
 	ldr r0, [r0]
 	bl sub_8006AAC
-	bl sub_8006B1C
+	bl FlushVramDmaQueue
 	movs r1, #0xa0
 	lsls r1, r1, #0x13
 	movs r0, #0
@@ -12079,7 +12079,7 @@ sub_80063D8: @ 0x080063D8
 	str r0, [r5, #0x14]
 	ldr r1, _08006504 @ =gStaticData_0816C484
 	adds r0, r5, #0
-	bl sub_801E578
+	bl LoadGraphicsPackage
 	str r6, [r5, #0x1c]
 	movs r0, #0x40
 	bl sub_8026EDC
@@ -12400,7 +12400,7 @@ sub_8006714: @ 0x08006714
 	ldr r0, _08006764 @ =gUnknown_03001300
 	ldr r0, [r0]
 	bl sub_8006AAC
-	bl sub_8006B1C
+	bl FlushVramDmaQueue
 	ldr r1, _08006768 @ =0x04000010
 	ldr r0, [r4, #0x1c]
 	lsrs r0, r0, #3
@@ -12971,8 +12971,8 @@ sub_8006B0C: @ 0x08006B0C
 	pop {r1}
 	bx r1
 
-	thumb_func_start sub_8006B1C
-sub_8006B1C: @ 0x08006B1C
+	thumb_func_start FlushVramDmaQueue
+FlushVramDmaQueue: @ 0x08006B1C
 	push {r4, r5, r6, lr}
 	movs r4, #0
 	ldr r6, _08006B48 @ =gUnknown_03001290
@@ -13037,8 +13037,8 @@ _08006B88:
 	.align 2, 0
 _08006B90: .4byte 0x040000D4
 
-	thumb_func_start sub_8006B94
-sub_8006B94: @ 0x08006B94
+	thumb_func_start QueueVramDmaTransfer
+QueueVramDmaTransfer: @ 0x08006B94
 	push {r4, r5, r6, r7, lr}
 	adds r7, r0, #0
 	adds r6, r1, #0
@@ -13206,7 +13206,7 @@ sub_8006C84: @ 0x08006C84
 	lsrs r2, r2, #0x10
 	adds r0, r3, #0
 	movs r3, #0x20
-	bl sub_8006B94
+	bl QueueVramDmaTransfer
 	cmp r0, #0
 	bne _08006CC0
 	adds r0, r4, #0
@@ -17605,7 +17605,7 @@ _08008BBA:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x21
-	bl sub_8001854
+	bl PlaySfx
 	b _08008C72
 	.align 2, 0
 _08008C14: .4byte gUnknown_030012D8
@@ -19205,7 +19205,7 @@ _080097A2:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x21
-	bl sub_8001854
+	bl PlaySfx
 	b _0800985A
 	.align 2, 0
 _080097FC: .4byte gUnknown_030012D8
@@ -22066,7 +22066,7 @@ _0800ACEC:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x1c
-	bl sub_8001854
+	bl PlaySfx
 	b _0800AFE6
 	.align 2, 0
 _0800AD0C: .4byte gUnknown_030012C0
@@ -22134,7 +22134,7 @@ _0800AD8A:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x18
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, [r4]
 	bl sub_8022D50
 	b _0800AFE6
@@ -22147,7 +22147,7 @@ _0800ADA8:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x1f
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _0800ADCC @ =gUnknown_030012C0
 	ldr r0, [r0]
 	bl sub_8023404
@@ -22165,7 +22165,7 @@ _0800ADD0:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x1f
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _0800ADF4 @ =gUnknown_030012C0
 	ldr r0, [r0]
 	bl sub_8023404
@@ -22183,7 +22183,7 @@ _0800ADF8:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x1f
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _0800AE14 @ =gUnknown_030012C0
 	ldr r1, [r0]
 	movs r0, #2
@@ -22197,7 +22197,7 @@ _0800AE18:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x1f
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _0800AE34 @ =gUnknown_030012C0
 	ldr r1, [r0]
 	movs r0, #4
@@ -22211,7 +22211,7 @@ _0800AE38:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x1f
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _0800AE58 @ =gUnknown_030012C0
 	ldr r1, [r0]
 	movs r0, #1
@@ -22229,7 +22229,7 @@ _0800AE5C:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x1f
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _0800AE7C @ =gUnknown_030012C0
 	ldr r1, [r0]
 	movs r0, #8
@@ -22339,11 +22339,11 @@ _0800AF0E:
 	lsls r5, r5, #1
 	movs r1, #0
 	adds r2, r5, #0
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, [r4]
 	movs r1, #0x1b
 	adds r2, r5, #0
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, [r6, #0x44]
 	ldr r2, [r0, #0xc]
 	movs r3, #0x10
@@ -23891,7 +23891,7 @@ _0800B9FA:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x13
-	bl sub_8001854
+	bl PlaySfx
 	b _0800BD3A
 	.align 2, 0
 _0800BA0C: .4byte gUnknown_030012BC
@@ -24049,7 +24049,7 @@ _0800BAEA:
 	ldr r0, [r7]
 	movs r1, #0x12
 	mov r2, r8
-	bl sub_8001854
+	bl PlaySfx
 	b _0800BB98
 	.align 2, 0
 _0800BB44: .4byte gUnknown_030012D8
@@ -24278,7 +24278,7 @@ _0800BCD8:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	b _0800BD3A
 	.align 2, 0
 _0800BD1C: .4byte gUnknown_030012BC
@@ -24358,7 +24358,7 @@ _0800BD8E:
 	ldr r0, [r0]
 	movs r1, #0x5a
 	movs r2, #0x80
-	bl sub_8001854
+	bl PlaySfx
 	b _0800BF94
 	.align 2, 0
 _0800BDB8: .4byte gUnknown_030012D8
@@ -24497,7 +24497,7 @@ _0800BECA:
 	ldr r0, [r0]
 	movs r1, #5
 	movs r2, #0x80
-	bl sub_8001854
+	bl PlaySfx
 	cmp r5, #0
 	beq _0800BF94
 	ldr r1, [r5, #0xc]
@@ -25027,7 +25027,7 @@ _0800C2C6:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x14
-	bl sub_8001854
+	bl PlaySfx
 	b _0800C30A
 	.align 2, 0
 _0800C2E8: .4byte gUnknown_030012BC
@@ -25043,7 +25043,7 @@ _0800C2EC:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x14
-	bl sub_8001854
+	bl PlaySfx
 _0800C30A:
 	pop {r4}
 	pop {r0}
@@ -25319,7 +25319,7 @@ _0800C4FE:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x26
-	bl sub_8001854
+	bl PlaySfx
 	b _0800C52E
 	.align 2, 0
 _0800C518: .4byte gUnknown_030012BC
@@ -25331,7 +25331,7 @@ _0800C51C:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #9
-	bl sub_8001854
+	bl PlaySfx
 _0800C52E:
 	ldr r0, [r4, #0x6c]
 	cmp r0, #0x17
@@ -25367,7 +25367,7 @@ _0800C52E:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x1e
-	bl sub_8001854
+	bl PlaySfx
 	b _0800C5C6
 	.align 2, 0
 _0800C57C: .4byte gUnknown_030012BC
@@ -25403,7 +25403,7 @@ _0800C5A4:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x23
-	bl sub_8001854
+	bl PlaySfx
 _0800C5C6:
 	add sp, #0xc
 	pop {r4}
@@ -29024,7 +29024,7 @@ _0800E112:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #2
-	bl sub_8001854
+	bl PlaySfx
 	mov r5, sl
 	ldr r0, [r5]
 	ldr r1, [r0, #0x18]
@@ -29075,7 +29075,7 @@ _0800E170:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #2
-	bl sub_8001854
+	bl PlaySfx
 	mov r1, sl
 	ldr r0, [r1]
 	ldr r1, [r0, #0x18]
@@ -29742,7 +29742,7 @@ sub_800E620: @ 0x0800E620
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x11
-	bl sub_8001854
+	bl PlaySfx
 	adds r4, #0x4f
 	movs r0, #0x3c
 	strb r0, [r4]
@@ -29808,7 +29808,7 @@ sub_800E6B0: @ 0x0800E6B0
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x17
-	bl sub_8001854
+	bl PlaySfx
 	ldrh r1, [r4, #8]
 	ldr r0, _0800E794 @ =0x0000FFFF
 	cmp r1, r0
@@ -30195,7 +30195,7 @@ _0800EA5C:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	b _0800EAE6
 	.align 2, 0
 _0800EA6C: .4byte gUnknown_030012BC
@@ -30256,7 +30256,7 @@ _0800EAB8:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 _0800EAE6:
 	add sp, #8
 	pop {r3, r4}
@@ -30281,7 +30281,7 @@ sub_800EAFC: @ 0x0800EAFC
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	adds r5, r4, #0
 	adds r5, #0x51
 	ldrb r0, [r5]
@@ -30361,7 +30361,7 @@ _0800EBB0:
 	movs r1, #3
 	movs r2, #0x80
 	lsls r2, r2, #1
-	bl sub_8001854
+	bl PlaySfx
 	ldrh r1, [r4, #8]
 	ldr r0, _0800EC00 @ =0x0000FFFF
 	cmp r1, r0
@@ -30417,7 +30417,7 @@ _0800EC0C:
 	movs r1, #1
 	movs r2, #0x80
 	lsls r2, r2, #1
-	bl sub_8001854
+	bl PlaySfx
 	b _0800ECFC
 	.align 2, 0
 _0800EC40: .4byte gUnknown_030012D8
@@ -30533,7 +30533,7 @@ sub_800ED08: @ 0x0800ED08
 	lsls r6, r6, #1
 	movs r1, #3
 	adds r2, r6, #0
-	bl sub_8001854
+	bl PlaySfx
 	ldr r1, [r4, #0x48]
 	movs r0, #7
 	ands r1, r0
@@ -30552,7 +30552,7 @@ _0800ED40:
 	ldr r0, [r5]
 	movs r1, #3
 	adds r2, r6, #0
-	bl sub_8001854
+	bl PlaySfx
 	ldrh r1, [r4, #8]
 	ldr r0, _0800ED88 @ =0x0000FFFF
 	cmp r1, r0
@@ -30875,7 +30875,7 @@ _0800EFA0:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	adds r0, r4, #0
 	bl sub_800EDBC
 	ldr r0, _0800F064 @ =gUnknown_030012D8
@@ -31318,7 +31318,7 @@ sub_800F2BC: @ 0x0800F2BC
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	str r4, [r6, #0x48]
 	ldr r0, _0800F364 @ =gUnknown_030012C0
 	ldr r0, [r0]
@@ -31614,7 +31614,7 @@ _0800F566:
 	movs r1, #0xf
 	movs r2, #0x80
 	lsls r2, r2, #1
-	bl sub_8001854
+	bl PlaySfx
 	movs r6, #1
 _0800F596:
 	adds r4, #4
@@ -32075,7 +32075,7 @@ _0800F904:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x11
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #0x14
 	b _0800F968
 	.align 2, 0
@@ -32097,7 +32097,7 @@ _0800F93C:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x11
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #0x13
 _0800F968:
 	strb r0, [r5]
@@ -32485,7 +32485,7 @@ _0800FC14:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x10
-	bl sub_8001854
+	bl PlaySfx
 _0800FC5C:
 	pop {r3, r4}
 	mov r8, r3
@@ -34095,7 +34095,7 @@ sub_801085C: @ 0x0801085C
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #1
-	bl sub_8001854
+	bl PlaySfx
 _0801088E:
 	pop {r4}
 	pop {r0}
@@ -34116,7 +34116,7 @@ sub_801089C: @ 0x0801089C
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	ldrh r1, [r4, #8]
 	ldr r0, _080108FC @ =0x0000FFFF
 	cmp r1, r0
@@ -35002,7 +35002,7 @@ sub_8010EAC: @ 0x08010EAC
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #7
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #0xa0
 	strh r0, [r5, #0x3c]
 	cmp r4, #0
@@ -35136,7 +35136,7 @@ _08010FBA:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xe
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _08011008 @ =gUnknown_030012C0
 	ldr r0, [r0]
 	bl sub_8023464
@@ -35393,7 +35393,7 @@ sub_80111B8: @ 0x080111B8
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #7
-	bl sub_8001854
+	bl PlaySfx
 	adds r0, r5, #0
 	adds r0, #0x48
 	movs r2, #1
@@ -35696,7 +35696,7 @@ _080113B4:
 	ldr r0, [r0]
 	movs r1, #6
 	movs r2, #0x80
-	bl sub_8001854
+	bl PlaySfx
 	b _0801143E
 	.align 2, 0
 _08011410: .4byte gUnknown_030012D8
@@ -35737,7 +35737,7 @@ sub_8011448: @ 0x08011448
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #8
-	bl sub_8001854
+	bl PlaySfx
 	cmp r4, #0
 	beq _080114B4
 	bl sub_8000E4C
@@ -35902,7 +35902,7 @@ _08011592:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xe
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _080115C0 @ =gUnknown_030012C0
 	ldr r0, [r0]
 	bl sub_8023430
@@ -36268,7 +36268,7 @@ sub_8011870: @ 0x08011870
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #8
-	bl sub_8001854
+	bl PlaySfx
 	adds r0, r5, #0
 	adds r0, #0x48
 	movs r4, #1
@@ -37171,7 +37171,7 @@ _08011F70:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xa
-	bl sub_8001854
+	bl PlaySfx
 	movs r5, #1
 	movs r0, #1
 	ands r4, r0
@@ -37253,7 +37253,7 @@ _0801201C:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x2c
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _08012090 @ =gUnknown_030012D8
 	ldr r1, [r0]
 	movs r0, #0x7f
@@ -37414,7 +37414,7 @@ sub_8012160: @ 0x08012160
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x1b
-	bl sub_8001854
+	bl PlaySfx
 	ldr r2, [r6, #0xc]
 	adds r2, #0x50
 	movs r1, #0
@@ -38231,7 +38231,7 @@ _0801281A:
 	lsls r2, r2, #1
 _08012822:
 	movs r1, #0xc
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #1
 	b _08012832
 	.align 2, 0
@@ -39031,7 +39031,7 @@ _08012E1E:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xd
-	bl sub_8001854
+	bl PlaySfx
 	ldr r1, [r4, #0xc]
 	movs r2, #0x20
 	ldrsh r0, [r1, r2]
@@ -39251,7 +39251,7 @@ _08012FE0:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xd
-	bl sub_8001854
+	bl PlaySfx
 	ldr r1, [r6, #0xc]
 	movs r2, #0x20
 	ldrsh r0, [r1, r2]
@@ -39302,7 +39302,7 @@ _08013054:
 	ldr r0, _08013100 @ =gUnknown_030012BC
 	ldr r0, [r0]
 	movs r1, #0x1a
-	bl sub_8001854
+	bl PlaySfx
 	movs r4, #0x10
 	ldr r1, [r6, #0xc]
 	movs r2, #0x20
@@ -39605,7 +39605,7 @@ _080132A8:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xa
-	bl sub_8001854
+	bl PlaySfx
 	movs r4, #0x18
 	ldr r1, [r5, #0xc]
 	movs r2, #0x20
@@ -39891,7 +39891,7 @@ sub_80134B8: @ 0x080134B8
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xa
-	bl sub_8001854
+	bl PlaySfx
 	movs r4, #0x18
 	ldr r1, [r5, #0xc]
 	movs r2, #0x20
@@ -40204,7 +40204,7 @@ _08013778:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x19
-	bl sub_8001854
+	bl PlaySfx
 	ldr r1, [r5, #0xc]
 	movs r2, #0x20
 	ldrsh r0, [r1, r2]
@@ -40516,7 +40516,7 @@ _080139C8:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xc
-	bl sub_8001854
+	bl PlaySfx
 	ldr r1, [r5, #0x10]
 	movs r0, #2
 	rsbs r0, r0, #0
@@ -41283,7 +41283,7 @@ sub_8013FD4: @ 0x08013FD4
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xc
-	bl sub_8001854
+	bl PlaySfx
 	ldr r1, [r4, #0x10]
 	movs r0, #2
 	rsbs r0, r0, #0
@@ -41383,7 +41383,7 @@ sub_8014084: @ 0x08014084
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xc
-	bl sub_8001854
+	bl PlaySfx
 	ldr r1, [r4, #0x10]
 	movs r0, #2
 	rsbs r0, r0, #0
@@ -41655,7 +41655,7 @@ sub_80142B0: @ 0x080142B0
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xc
-	bl sub_8001854
+	bl PlaySfx
 	ldr r1, [r4, #0x10]
 	movs r0, #2
 	rsbs r0, r0, #0
@@ -41730,7 +41730,7 @@ sub_801434C: @ 0x0801434C
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xc
-	bl sub_8001854
+	bl PlaySfx
 	ldr r1, [r4, #0x10]
 	movs r0, #2
 	rsbs r0, r0, #0
@@ -42496,7 +42496,7 @@ sub_8014940: @ 0x08014940
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x2e
-	bl sub_8001854
+	bl PlaySfx
 _0801496A:
 	ldr r1, [r4, #0x10]
 	adds r0, r1, #0
@@ -42660,7 +42660,7 @@ _08014A9A:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xd
-	bl sub_8001854
+	bl PlaySfx
 	adds r0, r4, #0
 	bl sub_8014B54
 	b _08014AE4
@@ -42706,7 +42706,7 @@ sub_8014AEC: @ 0x08014AEC
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xd
-	bl sub_8001854
+	bl PlaySfx
 	adds r0, r4, #0
 	bl sub_8014B54
 	b _08014B4C
@@ -42822,7 +42822,7 @@ sub_8014BCC: @ 0x08014BCC
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xd
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #0
 	adds r1, r4, #0
 	adds r1, #0x31
@@ -43009,7 +43009,7 @@ _08014D5E:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xd
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #0
 	adds r1, r4, #0
 	adds r1, #0x31
@@ -43206,7 +43206,7 @@ sub_8014EE0: @ 0x08014EE0
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xd
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #0
 	adds r1, r4, #0
 	adds r1, #0x31
@@ -43423,7 +43423,7 @@ _08015076:
 	adds r1, #0x57
 	movs r2, #0x80
 	lsls r2, r2, #1
-	bl sub_8001854
+	bl PlaySfx
 	ldrb r0, [r5]
 	adds r0, #1
 	strb r0, [r5]
@@ -43505,7 +43505,7 @@ _08015116:
 	adds r1, #0x57
 	movs r2, #0x80
 	lsls r2, r2, #1
-	bl sub_8001854
+	bl PlaySfx
 	b _080151A8
 	.align 2, 0
 _08015158: .4byte gUnknown_030012BC
@@ -43540,7 +43540,7 @@ _0801515C:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xa
-	bl sub_8001854
+	bl PlaySfx
 	adds r1, r6, #0
 	adds r1, #0x26
 	movs r0, #0x63
@@ -43821,7 +43821,7 @@ sub_8015398: @ 0x08015398
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xa
-	bl sub_8001854
+	bl PlaySfx
 	str r5, [r4, #0x18]
 	movs r0, #0x18
 	str r0, [r4, #0x1c]
@@ -43872,7 +43872,7 @@ sub_80153FC: @ 0x080153FC
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xa
-	bl sub_8001854
+	bl PlaySfx
 	str r4, [r5, #0x18]
 	movs r0, #0x18
 	str r0, [r5, #0x1c]
@@ -44420,7 +44420,7 @@ _08015802:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x36
-	bl sub_8001854
+	bl PlaySfx
 	b _0801582A
 	.align 2, 0
 _0801581C: .4byte gUnknown_030012BC
@@ -45050,7 +45050,7 @@ _08015C7C:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #9
-	bl sub_8001854
+	bl PlaySfx
 	ldr r1, [r4, #0x10]
 	adds r1, #0x68
 	movs r0, #3
@@ -45760,7 +45760,7 @@ sub_80161EC: @ 0x080161EC
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x1b
-	bl sub_8001854
+	bl PlaySfx
 	ldr r1, [r4, #0xc]
 	movs r2, #0x20
 	ldrsh r0, [r1, r2]
@@ -48083,7 +48083,7 @@ sub_8017564: @ 0x08017564
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x1b
-	bl sub_8001854
+	bl PlaySfx
 	ldr r1, [r4, #0xc]
 	movs r2, #0x20
 	ldrsh r0, [r1, r2]
@@ -49557,7 +49557,7 @@ _08018044:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x39
-	bl sub_8001854
+	bl PlaySfx
 _08018070:
 	ldr r0, [r7, #8]
 	cmp r0, #8
@@ -49732,7 +49732,7 @@ _080181EE:
 	ldr r0, [r4]
 	movs r1, #0x2a
 	adds r2, r5, #0
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, [r7, #8]
 	cmp r0, #0xf
 	bne _08018228
@@ -49779,7 +49779,7 @@ _08018256:
 	ldr r0, [r4]
 	movs r1, #0x3d
 	adds r2, r5, #0
-	bl sub_8001854
+	bl PlaySfx
 	adds r0, r7, #0
 	mov r1, r8
 	movs r2, #8
@@ -49978,7 +49978,7 @@ _080183CC:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xd
-	bl sub_8001854
+	bl PlaySfx
 _080183EE:
 	add sp, #0x20
 	pop {r3, r4}
@@ -50179,7 +50179,7 @@ _08018582:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x15
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, [r4, #0x10]
 	adds r0, #1
 	str r0, [r4, #0x10]
@@ -50457,7 +50457,7 @@ sub_80186F0: @ 0x080186F0
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x13
-	bl sub_8001854
+	bl PlaySfx
 	pop {r3, r4}
 	mov r8, r3
 	mov sb, r4
@@ -51467,7 +51467,7 @@ _08018FAE:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x5c
-	bl sub_8001854
+	bl PlaySfx
 	adds r0, r6, #0
 	adds r0, #0x2c
 	strb r4, [r0]
@@ -51877,7 +51877,7 @@ _080192B6:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x31
-	bl sub_8001854
+	bl PlaySfx
 	b _0801931A
 	.align 2, 0
 _08019304: .4byte gUnknown_030012F4
@@ -51888,7 +51888,7 @@ _0801930C:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x32
-	bl sub_8001854
+	bl PlaySfx
 _0801931A:
 	pop {r4, r5, r6, r7}
 	pop {r0}
@@ -53381,7 +53381,7 @@ _08019E7A:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x15
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #5
 	rsbs r0, r0, #0
 	ldrb r3, [r6, #0xc]
@@ -53484,7 +53484,7 @@ _08019F54:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x29
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #7
 	adds r1, r6, #0
 	adds r1, #0x2d
@@ -53948,7 +53948,7 @@ _0801A2C2:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x39
-	bl sub_8001854
+	bl PlaySfx
 _0801A338:
 	ldr r3, _0801A3E4 @ =gUnknown_030012D8
 	mov r8, r3
@@ -54018,7 +54018,7 @@ _0801A36E:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x39
-	bl sub_8001854
+	bl PlaySfx
 _0801A3CE:
 	ldr r0, [r5, #8]
 	cmp r0, #6
@@ -54171,7 +54171,7 @@ _0801A4D4:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x39
-	bl sub_8001854
+	bl PlaySfx
 	b _0801A56E
 	.align 2, 0
 _0801A51C: .4byte gUnknown_03001308
@@ -57296,7 +57296,7 @@ _0801BCD4:
 	bl sub_801E644
 	ldr r1, _0801BFA8 @ =gStaticData_0816C484
 	add r0, sp, #4
-	bl sub_801E578
+	bl LoadGraphicsPackage
 	str r4, [r7, #0x7c]
 	movs r0, #0x54
 	bl sub_8026EDC
@@ -58823,7 +58823,7 @@ _0801C9D0:
 	ldr r0, _0801CAE0 @ =gUnknown_03001300
 	ldr r0, [r0]
 	bl sub_8006AAC
-	bl sub_8006B1C
+	bl FlushVramDmaQueue
 	ldr r0, [r5, #0x20]
 	bl sub_801DCBC
 	ldr r0, [r5, #0x7c]
@@ -58876,7 +58876,7 @@ _0801CA48:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x51
-	bl sub_8001854
+	bl PlaySfx
 	adds r3, r5, #0
 	adds r3, #0xa0
 	movs r6, #0
@@ -58967,7 +58967,7 @@ _0801CB14:
 	ldr r0, _0801CBC4 @ =gUnknown_03001300
 	ldr r0, [r0]
 	bl sub_8006AAC
-	bl sub_8006B1C
+	bl FlushVramDmaQueue
 	ldr r0, [r5, #0x20]
 	bl sub_801DCBC
 	ldr r0, [r5, #0x7c]
@@ -59108,7 +59108,7 @@ _0801CC50:
 	ldr r0, _0801CCE4 @ =gUnknown_03001300
 	ldr r0, [r0]
 	bl sub_8006AAC
-	bl sub_8006B1C
+	bl FlushVramDmaQueue
 	ldr r0, [r5, #0x20]
 	bl sub_801DCBC
 	ldr r0, [r5, #0x7c]
@@ -59190,7 +59190,7 @@ _0801CD1A:
 	ldr r0, _0801CDC8 @ =gUnknown_03001300
 	ldr r0, [r0]
 	bl sub_8006AAC
-	bl sub_8006B1C
+	bl FlushVramDmaQueue
 	ldr r0, [r4, #0x20]
 	bl sub_801DCBC
 	ldr r0, [r4, #0x7c]
@@ -59274,7 +59274,7 @@ sub_801CDE0: @ 0x0801CDE0
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x48
-	bl sub_8001854
+	bl PlaySfx
 	b _0801CE50
 	.align 2, 0
 _0801CDFC: .4byte gUnknown_030012BC
@@ -59337,7 +59337,7 @@ sub_801CE60: @ 0x0801CE60
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x48
-	bl sub_8001854
+	bl PlaySfx
 	b _0801CED0
 	.align 2, 0
 _0801CE7C: .4byte gUnknown_030012BC
@@ -59405,7 +59405,7 @@ _0801CEEC:
 	ldr r0, _0801CFD8 @ =gUnknown_03001300
 	ldr r0, [r0]
 	bl sub_8006AAC
-	bl sub_8006B1C
+	bl FlushVramDmaQueue
 	ldr r0, [r4, #0x20]
 	bl sub_801DCBC
 	ldr r0, [r4, #0x7c]
@@ -59579,7 +59579,7 @@ _0801D062:
 	ldr r0, _0801D0FC @ =gUnknown_03001300
 	ldr r0, [r0]
 	bl sub_8006AAC
-	bl sub_8006B1C
+	bl FlushVramDmaQueue
 	ldr r0, [r4, #0x20]
 	bl sub_801DCBC
 	ldr r0, [r4, #0x7c]
@@ -59653,7 +59653,7 @@ sub_801D110: @ 0x0801D110
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x52
-	bl sub_8001854
+	bl PlaySfx
 	ldr r1, [r6, #8]
 	lsls r1, r1, #2
 	adds r0, r6, #0
@@ -59683,7 +59683,7 @@ _0801D154:
 	ldr r0, _0801D228 @ =gUnknown_03001300
 	ldr r0, [r0]
 	bl sub_8006AAC
-	bl sub_8006B1C
+	bl FlushVramDmaQueue
 	ldr r0, [r6, #0x20]
 	bl sub_801DCBC
 	ldr r0, [r6, #0x7c]
@@ -59782,7 +59782,7 @@ _0801D23C:
 	ldr r0, _0801D2EC @ =gUnknown_03001300
 	ldr r0, [r0]
 	bl sub_8006AAC
-	bl sub_8006B1C
+	bl FlushVramDmaQueue
 	ldr r0, [r6, #0x20]
 	bl sub_801DCBC
 	ldr r0, [r6, #0x7c]
@@ -59865,7 +59865,7 @@ sub_801D300: @ 0x0801D300
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x49
-	bl sub_8001854
+	bl PlaySfx
 	adds r2, r5, #0
 	adds r2, #0xa0
 	movs r0, #0xc0
@@ -59908,7 +59908,7 @@ _0801D354:
 	ldr r0, _0801D408 @ =gUnknown_03001300
 	ldr r0, [r0]
 	bl sub_8006AAC
-	bl sub_8006B1C
+	bl FlushVramDmaQueue
 	ldr r0, [r5, #0x20]
 	bl sub_801DCBC
 	ldr r0, [r5, #0x7c]
@@ -60097,7 +60097,7 @@ sub_801D4C4: @ 0x0801D4C4
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x56
-	bl sub_8001854
+	bl PlaySfx
 	b _0801D512
 	.align 2, 0
 _0801D4E8: .4byte gUnknown_030012BC
@@ -60137,7 +60137,7 @@ _0801D530:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x48
-	bl sub_8001854
+	bl PlaySfx
 _0801D53E:
 	pop {r4}
 	pop {r0}
@@ -60160,7 +60160,7 @@ sub_801D548: @ 0x0801D548
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x55
-	bl sub_8001854
+	bl PlaySfx
 	b _0801D596
 	.align 2, 0
 _0801D56C: .4byte gUnknown_030012BC
@@ -60200,7 +60200,7 @@ _0801D5B4:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x48
-	bl sub_8001854
+	bl PlaySfx
 _0801D5C2:
 	pop {r4}
 	pop {r0}
@@ -60332,7 +60332,7 @@ sub_801D698: @ 0x0801D698
 	ldr r0, _0801D718 @ =gUnknown_03001300
 	ldr r0, [r0]
 	bl sub_8006AAC
-	bl sub_8006B1C
+	bl FlushVramDmaQueue
 	ldr r0, [r4, #0x20]
 	bl sub_801DCBC
 	ldr r0, [r4, #0x7c]
@@ -60528,7 +60528,7 @@ sub_801D7F8: @ 0x0801D7F8
 	str r0, [r4, #0x10]
 	ldr r1, _0801D824 @ =gStaticData_0816C58C
 	adds r0, r4, #0
-	bl sub_801E578
+	bl LoadGraphicsPackage
 	adds r0, r4, #0
 	add sp, #4
 	pop {r4}
@@ -60961,14 +60961,14 @@ _0801DB6C:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x53
-	bl sub_8001854
+	bl PlaySfx
 	ldr r4, _0801DBC4 @ =gStaticData_0816C5A0
 	ldr r0, [r5, #0x10]
 	lsls r0, r0, #3
 	adds r0, r0, r4
 	ldr r0, [r0]
 	mov r1, sp
-	bl sub_8001174
+	bl LoadTaggedAsset
 	ldr r1, _0801DBC8 @ =0x040000D4
 	mov r3, sp
 	str r3, [r1]
@@ -60988,7 +60988,7 @@ _0801DB6C:
 	movs r4, #0xc0
 	lsls r4, r4, #0x13
 	adds r1, r1, r4
-	bl sub_8001174
+	bl LoadTaggedAsset
 	movs r0, #0
 	b _0801DBF0
 	.align 2, 0
@@ -61229,7 +61229,7 @@ sub_801DD5C: @ 0x0801DD5C
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x54
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #1
 	str r0, [r4, #0xc]
 	movs r0, #0xb
@@ -61761,7 +61761,7 @@ sub_801E04C: @ 0x0801E04C
 	strb r2, [r3]
 	ldr r0, _0801E188 @ =gStaticData_086377C0
 	ldr r1, _0801E18C @ =0x06017800
-	bl sub_8001174
+	bl LoadTaggedAsset
 	adds r0, r6, #0
 	adds r0, #0x48
 	strh r5, [r0]
@@ -62314,8 +62314,8 @@ _0801E56C:
 	.align 2, 0
 _0801E574: .4byte gUnknown_030012B8
 
-	thumb_func_start sub_801E578
-sub_801E578: @ 0x0801E578
+	thumb_func_start LoadGraphicsPackage
+LoadGraphicsPackage: @ 0x0801E578
 	push {r4, r5, r6, r7, lr}
 	mov r7, sl
 	mov r6, sb
@@ -62345,14 +62345,14 @@ _0801E5A0:
 	movs r2, #0xa0
 	lsls r2, r2, #0x13
 	adds r1, r1, r2
-	bl sub_8001174
+	bl LoadTaggedAsset
 	ldr r0, [r6, #0xc]
 	ldr r1, [r5]
 	lsls r1, r1, #0xe
 	movs r4, #0xc0
 	lsls r4, r4, #0x13
 	adds r1, r1, r4
-	bl sub_8001174
+	bl LoadTaggedAsset
 	ldr r0, [r6, #0x10]
 	ldr r0, [r0]
 	lsrs r0, r0, #9
@@ -62361,7 +62361,7 @@ _0801E5A0:
 	mov r8, r0
 	ldr r0, [r6, #0x10]
 	mov r1, r8
-	bl sub_8001174
+	bl LoadTaggedAsset
 	ldr r0, [r5, #8]
 	lsls r0, r0, #0xc
 	mov ip, r0
@@ -62951,7 +62951,7 @@ _0801EA1E:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #1
-	bl sub_8001854
+	bl PlaySfx
 _0801EA46:
 	pop {r4, r5, r6, r7}
 	pop {r0}
@@ -64546,7 +64546,7 @@ sub_801F680: @ 0x0801F680
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x27
-	bl sub_8001854
+	bl PlaySfx
 	pop {r3}
 	mov r8, r3
 	pop {r4, r5, r6}
@@ -69822,12 +69822,12 @@ sub_8022230: @ 0x08022230
 	lsls r4, r4, #1
 	adds r0, r4, #0
 	bl sub_8026EDC
-	bl sub_802866C
+	bl InitHudIconWidgetA
 	str r0, [r5]
 	ldr r5, _08022334 @ =gUnknown_030012E0
 	adds r0, r4, #0
 	bl sub_8026EDC
-	bl sub_8028734
+	bl InitHudIconWidgetB
 	str r0, [r5]
 	bl sub_8006C00
 	ldr r4, _08022338 @ =gUnknown_03001300
@@ -70152,8 +70152,8 @@ _08022594: .4byte gStaticData_0816D1F4
 _08022598: .4byte gUnknown_03000834
 _0802259C: .4byte gUnknown_03000868
 
-	thumb_func_start sub_80225A0
-sub_80225A0: @ 0x080225A0
+	thumb_func_start UpdateGameFrame
+UpdateGameFrame: @ 0x080225A0
 	push {r4, r5, r6, r7, lr}
 	mov r7, sl
 	mov r6, sb
@@ -70204,7 +70204,7 @@ _0802260A:
 	movs r0, #0x88
 	lsls r0, r0, #2
 	bl sub_8026EDC
-	bl sub_80354E0
+	bl LoadLevelGraphics
 	adds r4, r0, #0
 	bl sub_8035E14
 	adds r5, r0, #0
@@ -70579,7 +70579,7 @@ _0802294C:
 	b _08022976
 _08022956:
 	ldrh r0, [r0, #0x10]
-	bl sub_802928C
+	bl InitActorCategory
 	mov r8, r0
 	cmp r0, #0
 	bne _08022976
@@ -71228,7 +71228,7 @@ sub_8022EA8: @ 0x08022EA8
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x18
-	bl sub_8001854
+	bl PlaySfx
 	adds r2, r5, #0
 	adds r2, #0xa0
 	lsls r1, r4, #4
@@ -73156,7 +73156,7 @@ _08023C92:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x2c
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, [r5]
 	ldr r0, [r0, #0x44]
 	ldr r2, [r0, #0xc]
@@ -73569,7 +73569,7 @@ _08024072:
 	bl sub_8006AAC
 	ldr r0, [r5]
 	bl sub_80268F8
-	bl sub_8006B1C
+	bl FlushVramDmaQueue
 _080240AE:
 	pop {r4, r5}
 	pop {r0}
@@ -74264,7 +74264,7 @@ sub_8024590: @ 0x08024590
 	ldr r0, [r6]
 	movs r2, #0x80
 	lsls r2, r2, #1
-	bl sub_8001854
+	bl PlaySfx
 _080245C8:
 	ldr r0, [r5]
 	adds r0, r4, r0
@@ -74317,7 +74317,7 @@ _08024612:
 	ldr r1, [r1, #0x18]
 	movs r2, #0x80
 	lsls r2, r2, #1
-	bl sub_8001854
+	bl PlaySfx
 _08024636:
 	pop {r4, r5, r6, r7}
 	pop {r0}
@@ -74452,14 +74452,14 @@ sub_8024708: @ 0x08024708
 	adds r0, r6, r1
 	movs r1, #0xc0
 	lsls r1, r1, #0x13
-	bl sub_8001174
+	bl LoadTaggedAsset
 	b _0802473E
 _08024732:
 	movs r2, #0x80
 	lsls r2, r2, #2
 	adds r0, r6, r2
 	ldr r1, _08024774 @ =0x0600A000
-	bl sub_8001174
+	bl LoadTaggedAsset
 _0802473E:
 	ldr r4, _08024778 @ =gUnknown_03001314
 	movs r1, #1
@@ -78040,7 +78040,7 @@ sub_80260B4: @ 0x080260B4
 	lsls r0, r0, #0x13
 	adds r1, r1, r0
 	adds r0, r2, #0
-	bl sub_8001174
+	bl LoadTaggedAsset
 	pop {r0}
 	bx r0
 	.align 2, 0
@@ -78797,7 +78797,7 @@ sub_80265FC: @ 0x080265FC
 	adds r1, r1, r2
 	movs r2, #0x40
 	movs r3, #0x10
-	bl sub_8006B94
+	bl QueueVramDmaTransfer
 	pop {r0}
 	bx r0
 
@@ -78923,7 +78923,7 @@ _080266D8:
 	str r1, [r4, #0x24]
 	ldr r0, [r5, #4]
 	ldr r0, [r0, #0x14]
-	bl sub_8001174
+	bl LoadTaggedAsset
 	adds r1, r4, #0
 	adds r1, #0x28
 	movs r0, #1
@@ -80030,8 +80030,8 @@ sub_8026EDC: @ 0x08026EDC
 	bx r1
 	.align 2, 0
 
-	thumb_func_start sub_8026EEC
-sub_8026EEC: @ 0x08026EEC
+	thumb_func_start MainLoop
+MainLoop: @ 0x08026EEC
 	push {r4, r5, lr}
 	bl sub_8023738
 	ldr r4, _08026F30 @ =gUnknown_030012C0
@@ -80052,7 +80052,7 @@ _08026F1A:
 	adds r0, r5, #0
 	bl mem_free_bytes
 	ldr r0, [r4]
-	bl sub_80225A0
+	bl UpdateGameFrame
 	adds r0, r5, #0
 	bl mem_free_bytes
 	b _08026F1A
@@ -83053,8 +83053,8 @@ _08028660: .4byte 0x000003FF
 _08028664: .4byte 0xFFFFFC00
 _08028668: .4byte gUnknown_03001300
 
-	thumb_func_start sub_802866C
-sub_802866C: @ 0x0802866C
+	thumb_func_start InitHudIconWidgetA
+InitHudIconWidgetA: @ 0x0802866C
 	push {r4, r5, r6, r7, lr}
 	sub sp, #4
 	adds r4, r0, #0
@@ -83153,8 +83153,8 @@ _08028728: .4byte gStaticData_085A4E70
 _0802872C: .4byte gStaticData_08174DD4
 _08028730: .4byte gStaticData_08174D84
 
-	thumb_func_start sub_8028734
-sub_8028734: @ 0x08028734
+	thumb_func_start InitHudIconWidgetB
+InitHudIconWidgetB: @ 0x08028734
 	push {r4, r5, r6, r7, lr}
 	sub sp, #4
 	adds r4, r0, #0
@@ -83488,8 +83488,8 @@ _0802898A:
 	bx r1
 	.align 2, 0
 
-	thumb_func_start sub_8028994
-sub_8028994: @ 0x08028994
+	thumb_func_start MeasureText
+MeasureText: @ 0x08028994
 	push {r4, r5, r6, r7, lr}
 	mov r7, r8
 	push {r7}
@@ -83553,8 +83553,8 @@ _080289F6:
 	pop {r1}
 	bx r1
 
-	thumb_func_start sub_8028A00
-sub_8028A00: @ 0x08028A00
+	thumb_func_start UploadHudTile
+UploadHudTile: @ 0x08028A00
 	push {lr}
 	adds r3, r0, #0
 	movs r1, #0x94
@@ -83573,7 +83573,7 @@ sub_8028A00: @ 0x08028A00
 	lsls r1, r1, #5
 	ldr r2, _08028A2C @ =0x06010000
 	adds r1, r1, r2
-	bl sub_8001174
+	bl LoadTaggedAsset
 	pop {r0}
 	bx r0
 	.align 2, 0
@@ -83775,8 +83775,8 @@ sub_8028B58: @ 0x08028B58
 	pop {r0}
 	bx r0
 
-	thumb_func_start sub_8028B7C
-sub_8028B7C: @ 0x08028B7C
+	thumb_func_start InitHudTextWidget
+InitHudTextWidget: @ 0x08028B7C
 	push {lr}
 	adds r3, r0, #0
 	movs r0, #0x98
@@ -83796,8 +83796,8 @@ _08028B98:
 	.align 2, 0
 _08028B9C: .4byte gStaticData_087E4DAC
 
-	thumb_func_start sub_8028BA0
-sub_8028BA0: @ 0x08028BA0
+	thumb_func_start InitObjTileFreeList
+InitObjTileFreeList: @ 0x08028BA0
 	push {r4, r5, r6, r7, lr}
 	sub sp, #4
 	adds r7, r0, #0
@@ -84274,8 +84274,8 @@ _08028F4C: .4byte gUnknown_03001350
 _08028F50: .4byte 0x040000D4
 _08028F54: .4byte 0x81000200
 
-	thumb_func_start sub_8028F58
-sub_8028F58: @ 0x08028F58
+	thumb_func_start LoadSpriteFrameTiles
+LoadSpriteFrameTiles: @ 0x08028F58
 	push {r4, r5, r6, r7, lr}
 	adds r4, r0, #0
 	ldr r0, _08028F74 @ =gUnknown_03000870
@@ -84340,7 +84340,7 @@ _08028FC4:
 	lsls r2, r6, #0x10
 	lsrs r2, r2, #0x10
 	movs r3, #0x10
-	bl sub_8006B94
+	bl QueueVramDmaTransfer
 	ldr r0, [r5, #0xc]
 	ldr r1, _08028FF4 @ =0xF9FF0000
 	adds r0, r0, r1
@@ -84353,8 +84353,8 @@ _08028FE8:
 _08028FF0: .4byte gUnknown_03001364
 _08028FF4: .4byte 0xF9FF0000
 
-	thumb_func_start sub_8028FF8
-sub_8028FF8: @ 0x08028FF8
+	thumb_func_start SetupSpriteFrameOam
+SetupSpriteFrameOam: @ 0x08028FF8
 	push {r4, r5, r6, r7, lr}
 	adds r5, r0, #0
 	adds r6, r1, #0
@@ -84416,7 +84416,7 @@ _0802905C:
 _0802905E:
 	orrs r6, r2
 	adds r0, r5, #0
-	bl sub_8028F58
+	bl LoadSpriteFrameTiles
 	orrs r4, r0
 	lsls r0, r4, #0x10
 	lsrs r4, r0, #0x10
@@ -84571,8 +84571,8 @@ sub_8029168: @ 0x08029168
 	.align 2, 0
 _08029178: .4byte gUnknown_0300137C
 
-	thumb_func_start sub_802917C
-sub_802917C: @ 0x0802917C
+	thumb_func_start DecompressCategorySpriteSheet
+DecompressCategorySpriteSheet: @ 0x0802917C
 	push {r4, lr}
 	adds r4, r0, #0
 	ldr r0, [r4]
@@ -84584,18 +84584,18 @@ sub_802917C: @ 0x0802917C
 	ldr r0, _080291A0 @ =gUnknown_0300137C
 	str r1, [r0]
 	adds r0, r4, #0
-	bl sub_8001174
+	bl LoadTaggedAsset
 	pop {r4}
 	pop {r0}
 	bx r0
 	.align 2, 0
 _080291A0: .4byte gUnknown_0300137C
 
-	thumb_func_start sub_80291A4
-sub_80291A4: @ 0x080291A4
+	thumb_func_start SetupActorVramPool
+SetupActorVramPool: @ 0x080291A4
 	push {r4, r5, r6, lr}
 	ldr r0, _08029200 @ =0x06011400
-	bl sub_8028BA0
+	bl InitObjTileFreeList
 	bl sub_8028EF0
 	bl sub_80290BC
 	ldr r0, _08029204 @ =gUnknown_030012D0
@@ -84692,8 +84692,8 @@ _08029280: .4byte gUnknown_03001318
 _08029284: .4byte gStaticData_08175558
 _08029288: .4byte gUnknown_03001380
 
-	thumb_func_start sub_802928C
-sub_802928C: @ 0x0802928C
+	thumb_func_start InitActorCategory
+InitActorCategory: @ 0x0802928C
 	push {r4, r5, r6, r7, lr}
 	mov r7, sl
 	mov r6, sb
@@ -84724,8 +84724,8 @@ sub_802928C: @ 0x0802928C
 	adds r1, #0x1c
 	adds r0, r0, r1
 	ldr r0, [r0]
-	bl sub_802917C
-	bl sub_80291A4
+	bl DecompressCategorySpriteSheet
+	bl SetupActorVramPool
 	bl sub_802AAFC
 	movs r1, #0
 	ldr r0, [r6]
@@ -84904,7 +84904,7 @@ _08029436:
 	adds r1, r3, #0
 	adds r2, r5, #0
 	mov r3, ip
-	bl sub_8029ED0
+	bl SelectActorCategory
 	mov r3, sb
 	ldr r0, [r3]
 	mov r5, r8
@@ -84958,7 +84958,7 @@ _08029498:
 	mov r3, sb
 	ldr r0, [r3]
 	bl sub_8006AAC
-	bl sub_8006B1C
+	bl FlushVramDmaQueue
 	bl sub_8029ADC
 	bl sub_802A650
 	bl sub_8029090
@@ -85065,7 +85065,7 @@ _08029598:
 	bl sub_8028DB8
 	bl sub_8004D74
 	adds r5, r0, #0
-	bl sub_80291A4
+	bl SetupActorVramPool
 	movs r0, #0x80
 	movs r1, #1
 	movs r2, #1
@@ -86211,8 +86211,8 @@ sub_8029EB4: @ 0x08029EB4
 _08029EC8: .4byte gUnknown_030013F8
 _08029ECC: .4byte gUnknown_030013D0
 
-	thumb_func_start sub_8029ED0
-sub_8029ED0: @ 0x08029ED0
+	thumb_func_start SelectActorCategory
+SelectActorCategory: @ 0x08029ED0
 	push {r4, r5, r6, r7, lr}
 	mov r7, sb
 	mov r6, r8
@@ -87297,8 +87297,8 @@ sub_802A6EC: @ 0x0802A6EC
 	.align 2, 0
 _0802A6FC: .4byte gUnknown_03001418
 
-	thumb_func_start sub_802A700
-sub_802A700: @ 0x0802A700
+	thumb_func_start InitActorPart
+InitActorPart: @ 0x0802A700
 	push {r4, r5, r6, r7, lr}
 	adds r7, r0, #0
 	adds r4, r1, #0
@@ -87472,7 +87472,7 @@ _0802A844:
 	movs r0, #0
 	strb r0, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -87498,8 +87498,8 @@ _0802A884:
 	bx r0
 	.align 2, 0
 
-	thumb_func_start sub_802A88C
-sub_802A88C: @ 0x0802A88C
+	thumb_func_start UpdateAnimatedActorPart
+UpdateAnimatedActorPart: @ 0x0802A88C
 	push {r4, r5, r6, r7, lr}
 	mov r7, r8
 	push {r7}
@@ -87531,7 +87531,7 @@ sub_802A88C: @ 0x0802A88C
 	adds r1, r1, r0
 	asrs r5, r1, #8
 	adds r0, r6, #0
-	bl sub_803B074
+	bl GetAnimFrameData
 	adds r7, r0, #0
 	movs r2, #0
 	mov r1, r8
@@ -87614,7 +87614,7 @@ _0802A966:
 	adds r0, r7, #0
 	adds r1, r3, #0
 	mov r3, r8
-	bl sub_8028FF8
+	bl SetupSpriteFrameOam
 _0802A972:
 	add sp, #4
 	pop {r3}
@@ -87915,7 +87915,7 @@ sub_802AB58: @ 0x0802AB58
 	movs r2, #0xe0
 	lsls r2, r2, #1
 	movs r3, #0x10
-	bl sub_8006B94
+	bl QueueVramDmaTransfer
 	ldr r1, _0802ABB4 @ =gUnknown_03001478
 	ldr r0, [r1]
 	adds r0, #1
@@ -88400,7 +88400,7 @@ _0802AFB8:
 	adds r0, r4, #0
 	adds r2, r7, #0
 	mov r3, r8
-	bl sub_802A700
+	bl InitActorPart
 	ldr r0, _0802AFE4 @ =gStaticData_087E4E94
 	b _0802B106
 	.align 2, 0
@@ -88536,7 +88536,7 @@ _0802B0E0:
 	adds r0, r4, #0
 	adds r2, r7, #0
 	mov r3, r8
-	bl sub_802A700
+	bl InitActorPart
 	ldr r0, _0802B110 @ =gStaticData_087E4E14
 _0802B106:
 	str r0, [r4, #0x50]
@@ -88583,7 +88583,7 @@ sub_802B12C: @ 0x0802B12C
 	adds r0, r4, #0
 	adds r2, r6, #0
 	mov r3, r8
-	bl sub_802A700
+	bl InitActorPart
 	ldr r0, _0802B170 @ =gStaticData_087E4E34
 	str r0, [r4, #0x50]
 	add sp, #4
@@ -88656,8 +88656,8 @@ sub_802B1A8: @ 0x0802B1A8
 	.align 2, 0
 _0802B1E4: .4byte gUnknown_0300147C
 
-	thumb_func_start sub_802B1E8
-sub_802B1E8: @ 0x0802B1E8
+	thumb_func_start ConstructAnimTableState
+ConstructAnimTableState: @ 0x0802B1E8
 	push {r4, r5, r6, lr}
 	adds r6, r1, #0
 	ldr r4, _0802B210 @ =gUnknown_0300147C
@@ -88671,7 +88671,7 @@ sub_802B1E8: @ 0x0802B1E8
 	bl mem_alloc
 	ldr r1, [r4]
 	adds r2, r6, #0
-	bl sub_802B298
+	bl ConstructActorPart
 	str r0, [r5]
 	pop {r4, r5, r6}
 	pop {r0}
@@ -88753,8 +88753,8 @@ _0802B290:
 	pop {r1}
 	bx r1
 
-	thumb_func_start sub_802B298
-sub_802B298: @ 0x0802B298
+	thumb_func_start ConstructActorPart
+ConstructActorPart: @ 0x0802B298
 	push {r4, lr}
 	sub sp, #4
 	adds r4, r0, #0
@@ -88767,7 +88767,7 @@ _0802B2A8:
 	str r2, [sp]
 	adds r0, r4, #0
 	movs r2, #0
-	bl sub_802A700
+	bl InitActorPart
 	ldr r0, _0802B2D8 @ =gStaticData_087E4E54
 	str r0, [r4, #0x50]
 	adds r0, r4, #0
@@ -88954,7 +88954,7 @@ _0802B402:
 	movs r0, #0
 	strb r0, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -89346,12 +89346,12 @@ _0802B744:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x1b
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _0802B7B8 @ =gStaticData_0817A728
 	ldr r1, _0802B7BC @ =0x05000200
 	movs r2, #0x20
 	movs r3, #0x10
-	bl sub_8006B94
+	bl QueueVramDmaTransfer
 	movs r0, #6
 	movs r1, #5
 	str r0, [r4, #0x28]
@@ -89441,7 +89441,7 @@ _0802B7F4:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x33
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _0802B848 @ =gUnknown_030014A3
 	strb r4, [r0]
 	ldr r1, _0802B84C @ =gUnknown_030014A0
@@ -89577,7 +89577,7 @@ _0802B918:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x35
-	bl sub_8001854
+	bl PlaySfx
 	str r5, [r4, #0x20]
 	movs r0, #9
 	str r0, [r4, #0x28]
@@ -89687,7 +89687,7 @@ _0802B9DC:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xd
-	bl sub_8001854
+	bl PlaySfx
 	ldr r1, _0802BA54 @ =gUnknown_030014A4
 	ldr r0, _0802BA58 @ =0xFFFFF880
 	str r0, [r1]
@@ -89828,7 +89828,7 @@ _0802BAFE:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xd
-	bl sub_8001854
+	bl PlaySfx
 	ldr r1, _0802BB44 @ =gUnknown_030014A4
 	ldr r0, _0802BB48 @ =0xFFFFF880
 	str r0, [r1]
@@ -89853,7 +89853,7 @@ sub_802BB4C: @ 0x0802BB4C
 	ldr r1, _0802BB9C @ =0x05000200
 	movs r2, #0x20
 	movs r3, #0x10
-	bl sub_8006B94
+	bl QueueVramDmaTransfer
 	ldr r1, _0802BBA0 @ =gUnknown_03001480
 	movs r0, #1
 	strb r0, [r1]
@@ -89893,7 +89893,7 @@ _0802BBA8:
 	ldr r1, _0802BBC4 @ =0x05000200
 	movs r2, #0x20
 	movs r3, #0x10
-	bl sub_8006B94
+	bl QueueVramDmaTransfer
 	b _0802BBD4
 	.align 2, 0
 _0802BBC0: .4byte gStaticData_0817A728
@@ -89903,7 +89903,7 @@ _0802BBC8:
 	ldr r1, _0802BBE0 @ =0x05000200
 	movs r2, #0x20
 	movs r3, #0x10
-	bl sub_8006B94
+	bl QueueVramDmaTransfer
 _0802BBD4:
 	pop {r4}
 	pop {r0}
@@ -90058,7 +90058,7 @@ _0802BCFE:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #8
-	bl sub_8001854
+	bl PlaySfx
 _0802BD0E:
 	pop {r4, r5}
 	pop {r0}
@@ -90352,7 +90352,7 @@ sub_802BF30: @ 0x0802BF30
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x3c
-	bl sub_8001854
+	bl PlaySfx
 	ldr r1, _0802BF94 @ =gUnknown_030014A4
 	ldr r0, _0802BF98 @ =0xFFFFF980
 	str r0, [r1]
@@ -90489,7 +90489,7 @@ sub_802C018: @ 0x0802C018
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x41
-	bl sub_8001854
+	bl PlaySfx
 	pop {r4, r5}
 	pop {r0}
 	bx r0
@@ -90555,7 +90555,7 @@ sub_802C0BC: @ 0x0802C0BC
 	strh r0, [r4, #0x10]
 	strb r1, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -90791,7 +90791,7 @@ _0802C294:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xe
-	bl sub_8001854
+	bl PlaySfx
 	cmp r4, #0
 	beq _0802C2F4
 	ldr r1, [r4, #0x50]
@@ -90813,7 +90813,7 @@ _0802C2BC:
 	movs r0, #0
 	strb r0, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -90849,7 +90849,7 @@ sub_802C2FC: @ 0x0802C2FC
 	asrs r4, r0, #8
 	asrs r5, r1, #8
 	adds r0, r6, #0
-	bl sub_803B074
+	bl GetAnimFrameData
 	adds r7, r0, #0
 	movs r0, #0
 	mov r8, r0
@@ -90908,7 +90908,7 @@ _0802C37A:
 	adds r1, r3, #0
 	movs r3, #0xa0
 	lsls r3, r3, #1
-	bl sub_8028FF8
+	bl SetupSpriteFrameOam
 _0802C388:
 	pop {r3}
 	mov r8, r3
@@ -90969,7 +90969,7 @@ sub_802C3E8: @ 0x0802C3E8
 	movs r0, #1
 	str r0, [sp]
 	adds r0, r6, #0
-	bl sub_802A700
+	bl InitActorPart
 	ldr r0, _0802C458 @ =gStaticData_087E4E74
 	str r0, [r6, #0x50]
 	str r4, [r6, #0x5c]
@@ -91059,7 +91059,7 @@ sub_802C4A4: @ 0x0802C4A4
 	ldr r0, [sp, #0xc]
 	str r0, [sp]
 	adds r0, r4, #0
-	bl sub_802A700
+	bl InitActorPart
 	ldr r0, _0802C4C4 @ =gStaticData_087E4E94
 	str r0, [r4, #0x50]
 	adds r0, r4, #0
@@ -91087,7 +91087,7 @@ sub_802C4C8: @ 0x0802C4C8
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _0802C530 @ =gUnknown_030012C0
 	ldr r0, [r0]
 	bl sub_8022FEC
@@ -91168,7 +91168,7 @@ _0802C57E:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _0802C59C @ =gUnknown_03000884
 	ldr r0, [r0]
 	movs r1, #1
@@ -91183,7 +91183,7 @@ _0802C5A0:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _0802C5C0 @ =gUnknown_03000884
 	ldr r0, [r0]
 	movs r1, #3
@@ -91198,7 +91198,7 @@ _0802C5C4:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _0802C5E4 @ =gUnknown_03000884
 	ldr r0, [r0]
 	movs r1, #5
@@ -91248,7 +91248,7 @@ sub_802C614: @ 0x0802C614
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #7
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _0802C6B8 @ =gUnknown_030012C0
 	ldr r0, [r0]
 	bl sub_8022FEC
@@ -91283,7 +91283,7 @@ _0802C666:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _0802C6B8 @ =gUnknown_030012C0
 	ldr r0, [r0]
 	bl sub_8022FEC
@@ -91345,7 +91345,7 @@ _0802C6EE:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _0802C738 @ =gUnknown_030012C0
 	ldr r0, [r0]
 	bl sub_8022FEC
@@ -91379,7 +91379,7 @@ _0802C740:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _0802C77C @ =gUnknown_030012C0
 	ldr r0, [r0]
 	bl sub_8022FEC
@@ -91562,7 +91562,7 @@ _0802C8AA:
 	movs r1, #4
 	movs r2, #0x80
 	lsls r2, r2, #1
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _0802C8FC @ =gUnknown_030012C0
 	ldr r0, [r0]
 	bl sub_8022FEC
@@ -91640,7 +91640,7 @@ _0802C942:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _0802C990 @ =gUnknown_030012C0
 	ldr r0, [r0]
 	bl sub_8022FEC
@@ -91684,7 +91684,7 @@ sub_802C99C: @ 0x0802C99C
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	ldr r5, _0802C9E0 @ =gUnknown_030012C0
 	ldr r0, [r5]
 	bl sub_8022FEC
@@ -91749,7 +91749,7 @@ sub_802CA28: @ 0x0802CA28
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _0802CA68 @ =gUnknown_030012C0
 	ldr r0, [r0]
 	bl sub_8022FEC
@@ -91789,7 +91789,7 @@ sub_802CA6C: @ 0x0802CA6C
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _0802CAC8 @ =gUnknown_030012C0
 	ldr r0, [r0]
 	bl sub_8022FEC
@@ -91835,7 +91835,7 @@ sub_802CAD0: @ 0x0802CAD0
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _0802CB2C @ =gUnknown_030012C0
 	ldr r0, [r0]
 	bl sub_8022FEC
@@ -91874,7 +91874,7 @@ sub_802CB34: @ 0x0802CB34
 	ldr r0, [sp, #0x14]
 	str r0, [sp]
 	adds r0, r5, #0
-	bl sub_802A700
+	bl InitActorPart
 	ldr r0, _0802CB98 @ =gStaticData_087E4F94
 	str r0, [r5, #0x50]
 	asrs r4, r4, #8
@@ -92091,7 +92091,7 @@ _0802CCB8:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #1
 	str r0, [r4, #0xc]
 	ldr r0, [r4]
@@ -92122,7 +92122,7 @@ _0802CCF2:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #1
 	str r0, [r4, #0xc]
 	ldr r0, [r4]
@@ -92152,7 +92152,7 @@ _0802CD48:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #1
 	str r0, [r4, #0xc]
 	ldr r0, [r4]
@@ -92176,7 +92176,7 @@ _0802CD7A:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #1
 	str r0, [r4, #0xc]
 	ldr r0, [r4]
@@ -92220,7 +92220,7 @@ sub_802CDE4: @ 0x0802CDE4
 	ldr r0, [sp, #0xc]
 	str r0, [sp]
 	adds r0, r4, #0
-	bl sub_802A700
+	bl InitActorPart
 	ldr r0, _0802CE0C @ =gStaticData_087E4FB4
 	str r0, [r4, #0x50]
 	adds r1, r4, #0
@@ -92263,7 +92263,7 @@ sub_802CE38: @ 0x0802CE38
 	ldr r0, [sp, #0xc]
 	str r0, [sp]
 	adds r0, r4, #0
-	bl sub_802A700
+	bl InitActorPart
 	ldr r0, _0802CE58 @ =gStaticData_087E4FD4
 	str r0, [r4, #0x50]
 	adds r0, r4, #0
@@ -92299,7 +92299,7 @@ _0802CE6C:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #1
 	str r0, [r4, #0x28]
 	str r5, [r4, #0x44]
@@ -92325,7 +92325,7 @@ _0802CEB0:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #1
 	str r0, [r4, #0x28]
 	str r6, [r4, #0x44]
@@ -92369,7 +92369,7 @@ sub_802CF0C: @ 0x0802CF0C
 	ldr r0, [sp, #0xc]
 	str r0, [sp]
 	adds r0, r4, #0
-	bl sub_802A700
+	bl InitActorPart
 	ldr r0, _0802CF2C @ =gStaticData_087E4FF4
 	str r0, [r4, #0x50]
 	adds r0, r4, #0
@@ -92445,7 +92445,7 @@ _0802CF8C:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #5
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #1
 	str r0, [r4, #0x28]
 	str r6, [r4, #0x44]
@@ -92492,7 +92492,7 @@ _0802CFF0:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #5
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #1
 	str r0, [r4, #0x28]
 	str r5, [r4, #0x44]
@@ -92587,7 +92587,7 @@ sub_802D0C8: @ 0x0802D0C8
 	ldr r5, [sp, #0x14]
 	str r0, [sp]
 	adds r0, r4, #0
-	bl sub_802A700
+	bl InitActorPart
 	ldr r0, _0802D0F0 @ =gStaticData_087E5014
 	str r0, [r4, #0x50]
 	ldr r1, [r5, #0x10]
@@ -92643,7 +92643,7 @@ _0802D128:
 	strh r0, [r4, #0x10]
 	strb r1, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -92680,7 +92680,7 @@ _0802D164:
 	strh r0, [r4, #0x10]
 	strb r1, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -92713,7 +92713,7 @@ sub_802D1B8: @ 0x0802D1B8
 	ldr r0, [sp, #0x14]
 	str r0, [sp]
 	adds r0, r6, #0
-	bl sub_802A700
+	bl InitActorPart
 	ldr r0, _0802D200 @ =gStaticData_087E5034
 	str r0, [r6, #0x50]
 	ldrb r1, [r4]
@@ -92770,7 +92770,7 @@ _0802D228:
 	ldr r1, _0802D284 @ =0x050003C0
 	movs r2, #0x20
 	movs r3, #0x10
-	bl sub_8006B94
+	bl QueueVramDmaTransfer
 	adds r1, r4, #0
 	adds r1, #0x2c
 	movs r6, #0
@@ -92783,7 +92783,7 @@ _0802D228:
 	strh r0, [r4, #0x10]
 	strb r1, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -92871,7 +92871,7 @@ sub_802D2DC: @ 0x0802D2DC
 	ldr r1, _0802D308 @ =0x050003C0
 	movs r2, #0x20
 	movs r3, #0x10
-	bl sub_8006B94
+	bl QueueVramDmaTransfer
 	b _0802D318
 	.align 2, 0
 _0802D300: .4byte gUnknown_030014B8
@@ -92882,7 +92882,7 @@ _0802D30C:
 	ldr r1, _0802D39C @ =0x050003C0
 	movs r2, #0x20
 	movs r3, #0x10
-	bl sub_8006B94
+	bl QueueVramDmaTransfer
 _0802D318:
 	ldr r1, _0802D3A0 @ =gUnknown_030014B8
 	ldr r0, [r1]
@@ -92921,7 +92921,7 @@ _0802D34A:
 	movs r0, #0
 	strb r0, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -93099,7 +93099,7 @@ sub_802D4B0: @ 0x0802D4B0
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _0802D4E8 @ =gUnknown_030012C0
 	ldr r0, [r0]
 	ldr r4, [r0, #0x78]
@@ -93129,7 +93129,7 @@ sub_802D4EC: @ 0x0802D4EC
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #1
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _0802D524 @ =gUnknown_030012C0
 	ldr r0, [r0]
 	ldr r4, [r0, #0x78]
@@ -93165,7 +93165,7 @@ sub_802D528: @ 0x0802D528
 	adds r0, r0, r6
 	str r0, [sp]
 	adds r0, r4, #0
-	bl sub_802A700
+	bl InitActorPart
 	ldr r0, _0802D574 @ =gStaticData_087E5054
 	str r0, [r4, #0x50]
 	ldr r0, _0802D578 @ =gUnknown_030012C0
@@ -93244,7 +93244,7 @@ sub_802D5D4: @ 0x0802D5D4
 	ldr r0, [sp, #0xc]
 	str r0, [sp]
 	adds r0, r4, #0
-	bl sub_802A700
+	bl InitActorPart
 	ldr r0, _0802D5FC @ =gStaticData_087E5074
 	str r0, [r4, #0x50]
 	adds r1, r4, #0
@@ -93281,7 +93281,7 @@ sub_802D600: @ 0x0802D600
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x28
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #1
 	strb r0, [r5]
 _0802D634:
@@ -93303,7 +93303,7 @@ sub_802D648: @ 0x0802D648
 	ldr r0, [sp, #0x10]
 	str r0, [sp]
 	adds r0, r5, #0
-	bl sub_802A700
+	bl InitActorPart
 	ldr r0, _0802D69C @ =gStaticData_087E5094
 	str r0, [r5, #0x50]
 	asrs r4, r4, #8
@@ -93364,7 +93364,7 @@ sub_802D6A0: @ 0x0802D6A0
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x17
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _0802D750 @ =gUnknown_030012C0
 	ldr r0, [r0]
 	bl sub_8022FEC
@@ -93400,7 +93400,7 @@ _0802D6EE:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _0802D750 @ =gUnknown_030012C0
 	ldr r0, [r0]
 	bl sub_8022FEC
@@ -93440,7 +93440,7 @@ sub_802D764: @ 0x0802D764
 	adds r5, r0, #0
 	ldr r4, [sp, #0x10]
 	str r4, [sp]
-	bl sub_802A700
+	bl InitActorPart
 	ldr r0, _0802D7A8 @ =gStaticData_087E50B4
 	str r0, [r5, #0x50]
 	bl sub_802973C
@@ -93460,7 +93460,7 @@ sub_802D764: @ 0x0802D764
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x17
-	bl sub_8001854
+	bl PlaySfx
 _0802D79E:
 	adds r0, r5, #0
 	add sp, #4
@@ -93504,7 +93504,7 @@ _0802D7D4:
 	movs r0, #0
 	strb r0, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -94073,7 +94073,7 @@ _0802DC6A:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x20
-	bl sub_8001854
+	bl PlaySfx
 _0802DC9E:
 	add sp, #4
 	pop {r4, r5}
@@ -94134,7 +94134,7 @@ _0802DCFE:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x3f
-	bl sub_8001854
+	bl PlaySfx
 	b _0802DD52
 	.align 2, 0
 _0802DD24: .4byte gUnknown_030014C8
@@ -94152,7 +94152,7 @@ _0802DD40:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x40
-	bl sub_8001854
+	bl PlaySfx
 _0802DD52:
 	movs r0, #0x80
 	lsls r0, r0, #2
@@ -94974,7 +94974,7 @@ sub_802E3CC: @ 0x0802E3CC
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x17
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #0x58
 	movs r1, #0x80
 	lsls r1, r1, #0x18
@@ -94991,7 +94991,7 @@ sub_802E3CC: @ 0x0802E3CC
 	adds r0, r4, #0
 	movs r2, #0
 	movs r3, #0
-	bl sub_802A700
+	bl InitActorPart
 	str r5, [r4, #0x54]
 	ldr r0, _0802E41C @ =gStaticData_087E50D4
 	str r0, [r4, #0x50]
@@ -95019,7 +95019,7 @@ sub_802E420: @ 0x0802E420
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #0x58
 	movs r1, #0x80
 	lsls r1, r1, #0x18
@@ -95035,7 +95035,7 @@ sub_802E420: @ 0x0802E420
 	adds r0, r4, #0
 	mov r2, r8
 	mov r3, sb
-	bl sub_802A700
+	bl InitActorPart
 	str r5, [r4, #0x54]
 	ldr r0, _0802E480 @ =gStaticData_087E510C
 	str r0, [r4, #0x50]
@@ -95245,7 +95245,7 @@ sub_802E5E4: @ 0x0802E5E4
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x38
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #0x6c
 	movs r1, #0x80
 	lsls r1, r1, #0x18
@@ -95279,7 +95279,7 @@ sub_802E62C: @ 0x0802E62C
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x38
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #0x6c
 	movs r1, #0x80
 	lsls r1, r1, #0x18
@@ -95318,7 +95318,7 @@ sub_802E674: @ 0x0802E674
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x30
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #0x60
 	movs r1, #0x80
 	lsls r1, r1, #0x18
@@ -95416,7 +95416,7 @@ _0802E74E:
 	str r2, [sp]
 	adds r0, r5, #0
 	movs r2, #0
-	bl sub_802A700
+	bl InitActorPart
 	str r4, [r5, #0x54]
 	ldr r0, _0802E798 @ =gStaticData_087E5144
 	str r0, [r5, #0x50]
@@ -95548,7 +95548,7 @@ _0802E87A:
 	ldr r0, _0802E9A4 @ =gUnknown_030012BC
 	ldr r0, [r0]
 	movs r1, #0x37
-	bl sub_8001854
+	bl PlaySfx
 _0802E884:
 	ldr r1, _0802E99C @ =gUnknown_030014E0
 	movs r0, #0
@@ -95651,7 +95651,7 @@ _0802E908:
 	movs r0, #0
 	strb r0, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -95944,7 +95944,7 @@ _0802EB8A:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x3a
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #4
 	movs r1, #3
 	str r0, [r4, #0x28]
@@ -96024,7 +96024,7 @@ _0802EC4C:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x42
-	bl sub_8001854
+	bl PlaySfx
 _0802EC5A:
 	pop {r4, r5, r6}
 	pop {r0}
@@ -96247,7 +96247,7 @@ sub_802EDBC: @ 0x0802EDBC
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xa
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #2
 	movs r1, #1
 	str r0, [r4, #0x28]
@@ -96282,7 +96282,7 @@ _0802EE28:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xa
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #3
 	movs r1, #2
 	str r0, [r4, #0x28]
@@ -96405,7 +96405,7 @@ _0802EF16:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xa
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #2
 	movs r1, #1
 	str r0, [r4, #0x28]
@@ -96439,7 +96439,7 @@ _0802EF78:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xa
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #3
 	movs r1, #2
 	str r0, [r4, #0x28]
@@ -96533,7 +96533,7 @@ _0802F01A:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xa
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #2
 	movs r1, #1
 	str r0, [r4, #0x28]
@@ -96567,7 +96567,7 @@ _0802F07C:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xa
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #3
 	movs r1, #2
 	str r0, [r4, #0x28]
@@ -96638,7 +96638,7 @@ sub_802F0DC: @ 0x0802F0DC
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x3b
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _0802F15C @ =gUnknown_030012C0
 	ldr r2, [r0]
 	adds r0, r2, #0
@@ -96863,7 +96863,7 @@ _0802F2E8:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #7
-	bl sub_8001854
+	bl PlaySfx
 _0802F30A:
 	bl sub_802A4D4
 	ldr r1, _0802F330 @ =gUnknown_030014EC
@@ -97033,7 +97033,7 @@ _0802F452:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #8
-	bl sub_8001854
+	bl PlaySfx
 _0802F462:
 	pop {r4, r5}
 	pop {r0}
@@ -97122,7 +97122,7 @@ _0802F4EA:
 	ldr r1, _0802F508 @ =0x05000200
 	movs r2, #0x20
 	movs r3, #0x10
-	bl sub_8006B94
+	bl QueueVramDmaTransfer
 _0802F4FA:
 	pop {r0}
 	bx r0
@@ -97814,7 +97814,7 @@ sub_802FA04: @ 0x0802FA04
 	movs r5, #1
 	str r0, [sp]
 	adds r0, r4, #0
-	bl sub_802A700
+	bl InitActorPart
 	str r5, [r4, #0x54]
 	ldr r0, _0802FA30 @ =gStaticData_087E517C
 	str r0, [r4, #0x50]
@@ -98161,7 +98161,7 @@ _0802FCAE:
 	strh r0, [r6, #0x10]
 	strb r1, [r6, #0x12]
 	adds r0, r6, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r6, #0xc]
 	ldr r3, [r6]
 	lsls r1, r2, #1
@@ -98187,7 +98187,7 @@ _0802FCEC:
 	strh r0, [r6, #0x10]
 	strb r1, [r6, #0x12]
 	adds r0, r6, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r6, #0xc]
 	ldr r3, [r6]
 	lsls r1, r2, #1
@@ -98256,7 +98256,7 @@ _0802FD56:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x25
-	bl sub_8001854
+	bl PlaySfx
 _0802FD80:
 	pop {r4}
 	pop {r0}
@@ -98274,7 +98274,7 @@ sub_802FD8C: @ 0x0802FD8C
 	movs r4, #4
 	str r0, [sp]
 	adds r0, r5, #0
-	bl sub_802A700
+	bl InitActorPart
 	str r4, [r5, #0x54]
 	ldr r0, _0802FDF0 @ =gStaticData_087E51B4
 	str r0, [r5, #0x50]
@@ -98488,7 +98488,7 @@ sub_802FF08: @ 0x0802FF08
 	movs r4, #2
 	str r0, [sp]
 	adds r0, r7, #0
-	bl sub_802A700
+	bl InitActorPart
 	str r4, [r7, #0x54]
 	ldr r0, _0802FF4C @ =gStaticData_087E51EC
 	str r0, [r7, #0x50]
@@ -98599,7 +98599,7 @@ sub_802FFB8: @ 0x0802FFB8
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #6
 	movs r1, #1
 	str r0, [r4, #0x28]
@@ -98887,7 +98887,7 @@ sub_80301EC: @ 0x080301EC
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #6
 	movs r1, #1
 	str r0, [r4, #0x28]
@@ -99028,7 +99028,7 @@ sub_8030300: @ 0x08030300
 	movs r5, #1
 	str r0, [sp]
 	adds r0, r4, #0
-	bl sub_802A700
+	bl InitActorPart
 	str r5, [r4, #0x54]
 	ldr r0, _0803032C @ =gStaticData_087E5224
 	str r0, [r4, #0x50]
@@ -99160,7 +99160,7 @@ _080303E4:
 	ldr r0, [r0]
 	movs r1, #4
 	mov r2, sb
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #2
 	movs r1, #1
 	str r0, [r6, #0x28]
@@ -99276,7 +99276,7 @@ _08030474:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #2
 	movs r1, #1
 	str r0, [r6, #0x28]
@@ -99316,7 +99316,7 @@ sub_8030530: @ 0x08030530
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #2
 	movs r1, #1
 	str r0, [r4, #0x28]
@@ -99421,7 +99421,7 @@ sub_80305F8: @ 0x080305F8
 	movs r5, #2
 	str r0, [sp]
 	adds r0, r4, #0
-	bl sub_802A700
+	bl InitActorPart
 	str r5, [r4, #0x54]
 	ldr r0, _0803063C @ =gStaticData_087E525C
 	str r0, [r4, #0x50]
@@ -99544,7 +99544,7 @@ sub_80306AC: @ 0x080306AC
 	strh r0, [r4, #0x10]
 	strb r1, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -99664,7 +99664,7 @@ _080307B2:
 	strh r0, [r4, #0x10]
 	strb r1, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -99837,7 +99837,7 @@ _08030930:
 	strh r0, [r4, #0x10]
 	strb r1, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -100143,7 +100143,7 @@ _08030BEC:
 	strh r0, [r4, #0x10]
 	strb r1, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -100161,7 +100161,7 @@ _08030C2A:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x42
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #0x9d
 	mov r3, r8
 	str r0, [r3]
@@ -100249,7 +100249,7 @@ _08030CCC:
 	strh r0, [r4, #0x10]
 	strb r1, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -100630,7 +100630,7 @@ _08030F9C:
 	strh r0, [r5, #0x10]
 	strb r6, [r5, #0x12]
 	adds r0, r5, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r5, #0xc]
 	ldr r3, [r5]
 	lsls r1, r2, #1
@@ -100691,7 +100691,7 @@ sub_8031040: @ 0x08031040
 	strh r0, [r4, #0x10]
 	strb r1, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -100801,7 +100801,7 @@ _08031090:
 	ldr r1, _080311C0 @ =0x05000020
 	movs r2, #0x20
 	movs r3, #0x10
-	bl sub_8006B94
+	bl QueueVramDmaTransfer
 	pop {r3, r4, r5}
 	mov r8, r3
 	mov sb, r4
@@ -100863,7 +100863,7 @@ sub_80311C4: @ 0x080311C4
 	movs r0, #0
 	strb r0, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -101190,7 +101190,7 @@ sub_803146C: @ 0x0803146C
 	strh r0, [r4, #0x10]
 	strb r1, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -101218,7 +101218,7 @@ _080314EC:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x43
-	bl sub_8001854
+	bl PlaySfx
 _080314FA:
 	pop {r4, r5}
 	pop {r0}
@@ -101540,7 +101540,7 @@ _08031762:
 	ldr r1, _08031780 @ =0x05000020
 	movs r2, #0x20
 	movs r3, #0x10
-	bl sub_8006B94
+	bl QueueVramDmaTransfer
 _08031772:
 	pop {r0}
 	bx r0
@@ -101698,7 +101698,7 @@ _08031886:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x2e
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #2
 	str r0, [r4, #0x28]
 	str r5, [r4, #0x44]
@@ -101751,7 +101751,7 @@ sub_80318D0: @ 0x080318D0
 	movs r0, #0
 	strb r0, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -101786,7 +101786,7 @@ sub_8031920: @ 0x08031920
 	movs r5, #2
 	str r0, [sp]
 	adds r0, r4, #0
-	bl sub_802A700
+	bl InitActorPart
 	str r5, [r4, #0x54]
 	ldr r0, _08031950 @ =gStaticData_087E5294
 	str r0, [r4, #0x50]
@@ -101818,7 +101818,7 @@ sub_8031954: @ 0x08031954
 	movs r0, #0
 	strb r0, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -101870,7 +101870,7 @@ _080319B8:
 	movs r0, #0
 	strb r0, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -102092,7 +102092,7 @@ _08031B52:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _08031B70 @ =gUnknown_03000884
 	ldr r0, [r0]
 	movs r1, #1
@@ -102107,7 +102107,7 @@ _08031B74:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _08031B94 @ =gUnknown_03000884
 	ldr r0, [r0]
 	movs r1, #3
@@ -102122,7 +102122,7 @@ _08031B98:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _08031BB8 @ =gUnknown_03000884
 	ldr r0, [r0]
 	movs r1, #5
@@ -102137,7 +102137,7 @@ _08031BBC:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #7
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, [r4, #0x70]
 	bl sub_802AAB4
 	ldr r0, _08031C08 @ =gUnknown_030012C0
@@ -102211,7 +102211,7 @@ _08031C4E:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _08031C6C @ =gUnknown_03000884
 	ldr r0, [r0]
 	movs r1, #1
@@ -102226,7 +102226,7 @@ _08031C70:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _08031C90 @ =gUnknown_03000884
 	ldr r0, [r0]
 	movs r1, #3
@@ -102241,7 +102241,7 @@ _08031C94:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _08031CB4 @ =gUnknown_03000884
 	ldr r0, [r0]
 	movs r1, #5
@@ -102256,7 +102256,7 @@ _08031CB8:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #7
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, [r4, #0x70]
 	bl sub_802AAB4
 	ldr r0, _08031D00 @ =gUnknown_030012C0
@@ -102317,7 +102317,7 @@ sub_8031D04: @ 0x08031D04
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, [r4, #0x58]
 	cmp r0, #0
 	beq _08031D5C
@@ -102385,7 +102385,7 @@ _08031DC2:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _08031DE0 @ =gUnknown_030012C0
 	ldr r0, [r0]
 	movs r1, #1
@@ -102400,7 +102400,7 @@ _08031DE4:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _08031E04 @ =gUnknown_030012C0
 	ldr r0, [r0]
 	movs r1, #2
@@ -102415,7 +102415,7 @@ _08031E08:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _08031E28 @ =gUnknown_030012C0
 	ldr r0, [r0]
 	movs r1, #3
@@ -102430,7 +102430,7 @@ _08031E2C:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x18
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _08031E7C @ =gUnknown_030012C0
 	ldr r0, [r0]
 	bl sub_8022D50
@@ -102507,7 +102507,7 @@ _08031EC2:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _08031EE0 @ =gUnknown_030012C0
 	ldr r0, [r0]
 	movs r1, #1
@@ -102522,7 +102522,7 @@ _08031EE4:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _08031F04 @ =gUnknown_030012C0
 	ldr r0, [r0]
 	movs r1, #2
@@ -102537,7 +102537,7 @@ _08031F08:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _08031F28 @ =gUnknown_030012C0
 	ldr r0, [r0]
 	movs r1, #3
@@ -102552,7 +102552,7 @@ _08031F2C:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x18
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _08031F74 @ =gUnknown_030012C0
 	ldr r0, [r0]
 	bl sub_8022D50
@@ -102599,7 +102599,7 @@ sub_8031F78: @ 0x08031F78
 	mov r8, r0
 	str r7, [sp]
 	adds r0, r4, #0
-	bl sub_802A700
+	bl InitActorPart
 	mov r0, r8
 	str r0, [r4, #0x54]
 	ldr r0, _08031FDC @ =gStaticData_087E538C
@@ -102668,7 +102668,7 @@ sub_8031FE8: @ 0x08031FE8
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, [r4, #0x58]
 	cmp r0, #0
 	beq _0803203C
@@ -102705,7 +102705,7 @@ sub_8032054: @ 0x08032054
 	mov r8, r0
 	str r7, [sp]
 	adds r0, r4, #0
-	bl sub_802A700
+	bl InitActorPart
 	mov r0, r8
 	str r0, [r4, #0x54]
 	ldr r0, _080320B8 @ =gStaticData_087E538C
@@ -102758,7 +102758,7 @@ sub_80320C4: @ 0x080320C4
 	mov r8, r0
 	str r7, [sp]
 	adds r0, r4, #0
-	bl sub_802A700
+	bl InitActorPart
 	mov r0, r8
 	str r0, [r4, #0x54]
 	ldr r0, _0803212C @ =gStaticData_087E538C
@@ -102861,7 +102861,7 @@ sub_8032170: @ 0x08032170
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #3
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, _080321CC @ =gUnknown_030012C0
 	ldr r0, [r0]
 	bl sub_8022FEC
@@ -102922,7 +102922,7 @@ sub_80321FC: @ 0x080321FC
 	mov r8, r0
 	str r7, [sp]
 	adds r0, r4, #0
-	bl sub_802A700
+	bl InitActorPart
 	mov r0, r8
 	str r0, [r4, #0x54]
 	ldr r0, _08032268 @ =gStaticData_087E538C
@@ -103136,7 +103136,7 @@ _0803237E:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	movs r3, #1
 	str r3, [r4, #0xc]
 	ldr r0, [r4]
@@ -103189,7 +103189,7 @@ sub_80323F4: @ 0x080323F4
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	str r4, [r6, #0xc]
 	ldr r0, [r6]
 	ldrh r0, [r0, #0xc]
@@ -103219,7 +103219,7 @@ sub_8032440: @ 0x08032440
 	str r0, [sp]
 	adds r0, r4, #0
 	ldr r3, _08032470 @ =0xFFFF0600
-	bl sub_802A700
+	bl InitActorPart
 	str r5, [r4, #0x54]
 	ldr r0, _08032474 @ =gStaticData_087E53CC
 	str r0, [r4, #0x50]
@@ -103372,7 +103372,7 @@ sub_803256C: @ 0x0803256C
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #7
 	str r0, [r4, #0x18]
 	str r5, [r4, #0xc]
@@ -103409,7 +103409,7 @@ sub_80325A4: @ 0x080325A4
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #4
 	str r0, [r5, #0x18]
 	movs r0, #2
@@ -103439,7 +103439,7 @@ sub_80325EC: @ 0x080325EC
 	adds r0, r5, #0
 	movs r3, #0xfa
 	lsls r3, r3, #8
-	bl sub_802A700
+	bl InitActorPart
 	str r4, [r5, #0x54]
 	ldr r0, _0803266C @ =gStaticData_087E5404
 	str r0, [r5, #0x50]
@@ -103487,7 +103487,7 @@ _08032634:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x2d
-	bl sub_8001854
+	bl PlaySfx
 	adds r0, r5, #0
 	add sp, #4
 	pop {r4, r5, r6}
@@ -103540,7 +103540,7 @@ sub_8032688: @ 0x08032688
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x3e
-	bl sub_8001854
+	bl PlaySfx
 _080326CE:
 	adds r0, r4, #0
 	bl sub_802A7B8
@@ -103560,7 +103560,7 @@ sub_80326E4: @ 0x080326E4
 	movs r5, #1
 	str r0, [sp]
 	adds r0, r4, #0
-	bl sub_802A700
+	bl InitActorPart
 	str r5, [r4, #0x54]
 	ldr r0, _08032710 @ =gStaticData_087E543C
 	str r0, [r4, #0x50]
@@ -103607,7 +103607,7 @@ _0803273C:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0xe
-	bl sub_8001854
+	bl PlaySfx
 	cmp r4, #0
 	beq _0803279C
 	ldr r1, [r4, #0x50]
@@ -103629,7 +103629,7 @@ _08032764:
 	movs r0, #0
 	strb r0, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -103665,7 +103665,7 @@ sub_80327A4: @ 0x080327A4
 	asrs r4, r0, #8
 	asrs r5, r1, #8
 	adds r0, r6, #0
-	bl sub_803B074
+	bl GetAnimFrameData
 	adds r7, r0, #0
 	movs r0, #0
 	mov r8, r0
@@ -103724,7 +103724,7 @@ _08032822:
 	adds r1, r3, #0
 	movs r3, #0xc0
 	lsls r3, r3, #1
-	bl sub_8028FF8
+	bl SetupSpriteFrameOam
 _08032830:
 	pop {r3}
 	mov r8, r3
@@ -103784,7 +103784,7 @@ sub_8032890: @ 0x08032890
 	ldr r5, [sp, #0x18]
 	movs r4, #1
 	str r4, [sp]
-	bl sub_802A700
+	bl InitActorPart
 	str r4, [r6, #0x54]
 	ldr r0, _08032900 @ =gStaticData_087E5474
 	str r0, [r6, #0x50]
@@ -103856,7 +103856,7 @@ sub_8032910: @ 0x08032910
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #1
 	str r0, [r4, #0x28]
 	movs r2, #0
@@ -103960,7 +103960,7 @@ sub_80329D4: @ 0x080329D4
 	movs r5, #2
 	str r0, [sp]
 	adds r0, r4, #0
-	bl sub_802A700
+	bl InitActorPart
 	str r5, [r4, #0x54]
 	ldr r0, _08032A18 @ =gStaticData_087E54AC
 	str r0, [r4, #0x50]
@@ -104027,7 +104027,7 @@ _08032A3C:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #1
 	str r0, [r4, #0x28]
 	movs r2, #0
@@ -104524,7 +104524,7 @@ _08032E04:
 	strh r0, [r4, #0x10]
 	strb r1, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -104723,7 +104723,7 @@ _08032F8A:
 	strh r0, [r4, #0x10]
 	strb r1, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -105009,7 +105009,7 @@ sub_80331BC: @ 0x080331BC
 	strh r0, [r5, #0x10]
 	strb r6, [r5, #0x12]
 	adds r0, r5, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r5, #0xc]
 	ldr r3, [r5]
 	lsls r1, r2, #1
@@ -105070,7 +105070,7 @@ sub_8033264: @ 0x08033264
 	movs r3, #0
 	strb r3, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -105294,7 +105294,7 @@ sub_8033470: @ 0x08033470
 	movs r0, #0
 	strb r0, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -105803,7 +105803,7 @@ sub_803388C: @ 0x0803388C
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	ldr r1, _080338BC @ =gUnknown_030015F8
 	ldr r0, [r1]
 	subs r2, r0, #1
@@ -105889,7 +105889,7 @@ sub_803390C: @ 0x0803390C
 	strh r0, [r4, #0x10]
 	strb r1, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -105946,7 +105946,7 @@ sub_803395C: @ 0x0803395C
 	strh r0, [r4, #0x10]
 	strb r1, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -106134,7 +106134,7 @@ sub_8033AE0: @ 0x08033AE0
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	b _08033B3A
 	.align 2, 0
 _08033B28: .4byte gUnknown_030012BC
@@ -106144,7 +106144,7 @@ _08033B2C:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x45
-	bl sub_8001854
+	bl PlaySfx
 _08033B3A:
 	pop {r4, r5}
 	pop {r0}
@@ -106230,7 +106230,7 @@ sub_8033BB8: @ 0x08033BB8
 	movs r5, #0xf
 	str r0, [sp]
 	adds r0, r4, #0
-	bl sub_802A700
+	bl InitActorPart
 	str r5, [r4, #0x54]
 	ldr r0, _08033BF8 @ =gStaticData_087E54E4
 	str r0, [r4, #0x50]
@@ -106563,7 +106563,7 @@ sub_8033E18: @ 0x08033E18
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	b _08033E76
 	.align 2, 0
 _08033E64: .4byte gUnknown_030012BC
@@ -106573,7 +106573,7 @@ _08033E68:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x45
-	bl sub_8001854
+	bl PlaySfx
 _08033E76:
 	pop {r4, r5, r6}
 	pop {r0}
@@ -106659,7 +106659,7 @@ sub_8033EF4: @ 0x08033EF4
 	movs r5, #0x19
 	str r0, [sp]
 	adds r0, r4, #0
-	bl sub_802A700
+	bl InitActorPart
 	str r5, [r4, #0x54]
 	ldr r0, _08033F44 @ =gStaticData_087E551C
 	str r0, [r4, #0x50]
@@ -106861,7 +106861,7 @@ _0803407C:
 	adds r1, r6, #0
 	adds r2, r7, #0
 	mov r3, r8
-	bl sub_802A700
+	bl InitActorPart
 	str r4, [r5, #0x54]
 	ldr r0, _080340D4 @ =gStaticData_087E5554
 	str r0, [r5, #0x50]
@@ -106973,7 +106973,7 @@ _08034142:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #4
-	bl sub_8001854
+	bl PlaySfx
 	b _0803417E
 	.align 2, 0
 _0803416C: .4byte gUnknown_030012BC
@@ -106983,7 +106983,7 @@ _08034170:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x45
-	bl sub_8001854
+	bl PlaySfx
 _0803417E:
 	pop {r4, r5}
 	pop {r0}
@@ -107173,7 +107173,7 @@ sub_80342D4: @ 0x080342D4
 	movs r5, #1
 	str r0, [sp]
 	adds r0, r4, #0
-	bl sub_802A700
+	bl InitActorPart
 	str r5, [r4, #0x54]
 	ldr r0, _08034310 @ =gStaticData_087E558C
 	str r0, [r4, #0x50]
@@ -107771,13 +107771,13 @@ sub_803472C: @ 0x0803472C
 	str r0, [r5, #8]
 	ldr r0, [r5]
 	ldr r1, _08034854 @ =gStaticData_0817C5BC
-	bl sub_801E578
+	bl LoadGraphicsPackage
 	ldr r0, [r5, #4]
 	ldr r1, _08034858 @ =gStaticData_0817C594
-	bl sub_801E578
+	bl LoadGraphicsPackage
 	ldr r0, [r5, #8]
 	ldr r1, _0803485C @ =gStaticData_0817C5A8
-	bl sub_801E578
+	bl LoadGraphicsPackage
 	movs r1, #0xa0
 	lsls r1, r1, #0x13
 	movs r0, #0
@@ -108045,7 +108045,7 @@ _080349D8:
 	movs r1, #0x49
 	movs r2, #0x80
 	lsls r2, r2, #1
-	bl sub_8001854
+	bl PlaySfx
 	b _08034A88
 	.align 2, 0
 _080349E8: .4byte gUnknown_030007E0
@@ -108064,7 +108064,7 @@ _080349F4:
 	movs r1, #0x46
 	movs r2, #0x80
 	lsls r2, r2, #1
-	bl sub_8001854
+	bl PlaySfx
 	str r5, [r4, #0x20]
 _08034A12:
 	movs r0, #0x80
@@ -108080,7 +108080,7 @@ _08034A12:
 	movs r1, #0x46
 	movs r2, #0x80
 	lsls r2, r2, #1
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #1
 	str r0, [r4, #0x20]
 _08034A34:
@@ -108361,7 +108361,7 @@ sub_8034C5C: @ 0x08034C5C
 	ldr r0, _08034C80 @ =gUnknown_03001300
 	ldr r0, [r0]
 	bl sub_8006AAC
-	bl sub_8006B1C
+	bl FlushVramDmaQueue
 	movs r1, #0x80
 	lsls r1, r1, #0x13
 	ldrh r0, [r4, #0xc]
@@ -109199,7 +109199,7 @@ _08035304:
 	str r0, [sp, #0x10]
 	ldr r0, [r7, #0xc]
 	ldr r1, [sp, #0x10]
-	bl sub_8001174
+	bl LoadTaggedAsset
 	mov r3, r8
 	ldr r1, [r3]
 	ldr r0, [r3, #4]
@@ -109304,7 +109304,7 @@ _080353D6:
 	adds r4, r0, #0
 	ldr r0, [r7, #8]
 	adds r1, r4, #0
-	bl sub_8001174
+	bl LoadTaggedAsset
 	adds r2, r4, #0
 	ldr r1, [sp, #0xc]
 	lsls r0, r1, #5
@@ -109365,7 +109365,7 @@ sub_803544C: @ 0x0803544C
 	ldr r0, _08035478 @ =gUnknown_03001300
 	ldr r0, [r0]
 	bl sub_8006AAC
-	bl sub_8006B1C
+	bl FlushVramDmaQueue
 	pop {r0}
 	bx r0
 	.align 2, 0
@@ -109427,8 +109427,8 @@ _080354DA:
 	pop {r0}
 	bx r0
 
-	thumb_func_start sub_80354E0
-sub_80354E0: @ 0x080354E0
+	thumb_func_start LoadLevelGraphics
+LoadLevelGraphics: @ 0x080354E0
 	push {r4, r5, lr}
 	adds r5, r0, #0
 	ldr r0, _080355B0 @ =gUnknown_030012DC
@@ -109491,9 +109491,9 @@ sub_80354E0: @ 0x080354E0
 	str r2, [r0, #8]
 	ldr r0, [r0, #8]
 	adds r0, r5, #0
-	bl sub_80355E0
+	bl LoadBg2Background
 	adds r0, r5, #0
-	bl sub_8035684
+	bl LoadObjSpriteTiles
 	movs r0, #0x82
 	lsls r0, r0, #2
 	adds r4, r5, r0
@@ -109531,8 +109531,8 @@ _080355D4: .4byte gStaticData_0817D074
 _080355D8: .4byte 0x050003E0
 _080355DC: .4byte gUnknown_030012BC
 
-	thumb_func_start sub_80355E0
-sub_80355E0: @ 0x080355E0
+	thumb_func_start LoadBg2Background
+LoadBg2Background: @ 0x080355E0
 	push {r4, r5, r6, r7, lr}
 	mov r7, r8
 	push {r7}
@@ -109540,10 +109540,10 @@ sub_80355E0: @ 0x080355E0
 	ldr r0, [r4, #8]
 	movs r1, #0xa0
 	lsls r1, r1, #0x13
-	bl sub_8001174
+	bl LoadTaggedAsset
 	ldr r0, [r4, #0xc]
 	ldr r1, _08035674 @ =0x06008000
-	bl sub_8001174
+	bl LoadTaggedAsset
 	ldr r1, [r4, #4]
 	ldr r0, [r4]
 	muls r0, r1, r0
@@ -109552,7 +109552,7 @@ sub_80355E0: @ 0x080355E0
 	mov r8, r0
 	ldr r0, [r4, #0x10]
 	mov r1, r8
-	bl sub_8001174
+	bl LoadTaggedAsset
 	ldr r6, _08035678 @ =0x0600F000
 	movs r3, #0
 	ldr r1, [r4, #4]
@@ -109609,8 +109609,8 @@ _08035678: .4byte 0x0600F000
 _0803567C: .4byte 0xFFFF0000
 _08035680: .4byte 0x0400000C
 
-	thumb_func_start sub_8035684
-sub_8035684: @ 0x08035684
+	thumb_func_start LoadObjSpriteTiles
+LoadObjSpriteTiles: @ 0x08035684
 	push {r4, r5, r6, r7, lr}
 	mov r7, sl
 	mov r6, sb
@@ -109634,7 +109634,7 @@ _0803569E:
 	ldr r0, [r7]
 	ldr r0, [r0, #8]
 	adds r1, r4, #0
-	bl sub_8001174
+	bl LoadTaggedAsset
 	ldr r0, _08035778 @ =0x040000D4
 	str r4, [r0]
 	ldr r1, [sp]
@@ -109659,7 +109659,7 @@ _080356D4:
 	ldr r0, [r7]
 	ldr r0, [r0, #0xc]
 	adds r1, r6, #0
-	bl sub_8001174
+	bl LoadTaggedAsset
 	ldr r0, [r7]
 	ldr r1, [r0, #4]
 	ldr r0, [r0]
@@ -109671,7 +109671,7 @@ _080356D4:
 	ldm r7!, {r0}
 	ldr r0, [r0, #0x10]
 	adds r1, r5, #0
-	bl sub_8001174
+	bl LoadTaggedAsset
 	mov r8, r7
 	movs r1, #1
 	add sb, r1
@@ -110089,7 +110089,7 @@ _08035A24:
 	movs r1, #0x4a
 	movs r2, #0x80
 	lsls r2, r2, #1
-	bl sub_8001854
+	bl PlaySfx
 _08035A3C:
 	ldr r1, [r6, #0x14]
 	movs r0, #0x80
@@ -110249,7 +110249,7 @@ _08035B4C:
 	movs r1, #0x3d
 	movs r2, #0x80
 	lsls r2, r2, #1
-	bl sub_8001854
+	bl PlaySfx
 	b _08035BB6
 	.align 2, 0
 _08035B88: .4byte 0x000003FF
@@ -110683,7 +110683,7 @@ _08035EB8:
 	movs r1, #0x49
 	movs r2, #0x80
 	lsls r2, r2, #1
-	bl sub_8001854
+	bl PlaySfx
 	movs r5, #0
 	b _08035F5C
 	.align 2, 0
@@ -110701,7 +110701,7 @@ _08035F0C:
 	movs r1, #0x46
 	movs r2, #0x80
 	lsls r2, r2, #1
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, [r4]
 	cmp r0, #0
 	beq _08035F2A
@@ -110720,7 +110720,7 @@ _08035F2E:
 	movs r1, #0x46
 	movs r2, #0x80
 	lsls r2, r2, #1
-	bl sub_8001854
+	bl PlaySfx
 	ldr r0, [r4]
 	adds r0, #1
 	str r0, [r4]
@@ -111038,7 +111038,7 @@ sub_80361B0: @ 0x080361B0
 	push {r5, r6, r7}
 	adds r6, r0, #0
 	ldr r0, _08036220 @ =0x06010000
-	bl sub_8028BA0
+	bl InitObjTileFreeList
 	bl sub_8028EF0
 	bl sub_80290BC
 	movs r0, #0x54
@@ -111102,7 +111102,7 @@ _08036244:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x4b
-	bl sub_8001854
+	bl PlaySfx
 	movs r5, #0x80
 	lsls r5, r5, #6
 	ldr r0, _0803630C @ =0x00000444
@@ -111145,7 +111145,7 @@ _08036292:
 	movs r1, #0x4c
 	movs r2, #0x80
 	lsls r2, r2, #1
-	bl sub_8001854
+	bl PlaySfx
 _080362BC:
 	ldr r3, [r4]
 	cmp r3, #0x40
@@ -111371,7 +111371,7 @@ _0803649A:
 	ldr r0, _0803651C @ =gUnknown_03001300
 	ldr r0, [r0]
 	bl sub_8006AAC
-	bl sub_8006B1C
+	bl FlushVramDmaQueue
 	bl sub_8029090
 	ldr r1, _08036520 @ =0x00000444
 	adds r0, r6, r1
@@ -111498,7 +111498,7 @@ sub_8036528: @ 0x08036528
 	str r1, [r5]
 	mov r2, r8
 	ldr r0, [r2, #0xc]
-	bl sub_8001174
+	bl LoadTaggedAsset
 	ldr r0, _080365FC @ =0x00000434
 	adds r4, r4, r0
 	adds r0, r7, #0
@@ -111795,7 +111795,7 @@ _080367F0:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x50
-	bl sub_8001854
+	bl PlaySfx
 _0803680C:
 	ldr r0, [r5]
 	cmp r0, #0
@@ -112014,7 +112014,7 @@ _08036994:
 	movs r1, #0x4e
 	movs r2, #0x80
 	lsls r2, r2, #1
-	bl sub_8001854
+	bl PlaySfx
 _080369BA:
 	ldr r0, _08036C10 @ =gUnknown_03001300
 	ldr r2, [r0]
@@ -112135,7 +112135,7 @@ _08036A8C:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x4d
-	bl sub_8001854
+	bl PlaySfx
 	movs r0, #0
 	strb r0, [r4]
 _08036AAA:
@@ -112211,7 +112211,7 @@ _08036AFC:
 	movs r2, #0x80
 	lsls r2, r2, #5
 	movs r3, #0x10
-	bl sub_8006B94
+	bl QueueVramDmaTransfer
 	mov r1, sp
 	movs r0, #0
 	strh r0, [r1]
@@ -112431,7 +112431,7 @@ sub_8036CF4: @ 0x08036CF4
 	mov r1, sb
 	ldr r0, [r1, #8]
 	adds r1, r4, #0
-	bl sub_8001174
+	bl LoadTaggedAsset
 	ldr r1, _08036D90 @ =0x040000D4
 	adds r0, r4, #2
 	str r0, [r1]
@@ -112448,7 +112448,7 @@ _08036D30:
 	mov r2, sb
 	ldr r0, [r2, #0xc]
 	ldr r1, _08036D9C @ =0x06008000
-	bl sub_8001174
+	bl LoadTaggedAsset
 	mov r0, sb
 	ldr r1, [r0, #4]
 	ldr r0, [r0]
@@ -112459,7 +112459,7 @@ _08036D30:
 	mov r1, sb
 	ldr r0, [r1, #0x10]
 	mov r1, sl
-	bl sub_8001174
+	bl LoadTaggedAsset
 	ldr r4, _08036DA0 @ =0x0600F000
 	movs r5, #0
 	mov r2, sb
@@ -112569,7 +112569,7 @@ sub_8036E20: @ 0x08036E20
 	adds r0, r4, #0
 	movs r2, #0
 	movs r3, #0
-	bl sub_802A700
+	bl InitActorPart
 	ldr r0, _08036EB4 @ =gStaticData_087E55C4
 	str r0, [r4, #0x50]
 	ldr r2, [r4, #8]
@@ -112692,7 +112692,7 @@ _08036F00:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x4f
-	bl sub_8001854
+	bl PlaySfx
 	b _08036F76
 	.align 2, 0
 _08036F34: .4byte gUnknown_030012BC
@@ -112711,7 +112711,7 @@ _08036F38:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x1b
-	bl sub_8001854
+	bl PlaySfx
 	b _08036F76
 	.align 2, 0
 _08036F5C: .4byte gUnknown_030012BC
@@ -112736,7 +112736,7 @@ _08036F76:
 	movs r0, #0
 	strb r0, [r4, #0x12]
 	adds r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
 	lsls r1, r2, #1
@@ -112942,7 +112942,7 @@ sub_8037110: @ 0x08037110
 	adds r7, r0, #0
 	adds r0, r5, #0
 	adds r1, r7, #0
-	bl sub_8001174
+	bl LoadTaggedAsset
 	ldr r1, _0803714C @ =0x040000D4
 	str r7, [r1]
 	str r6, [r1, #4]
@@ -113091,7 +113091,7 @@ _08037242:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x49
-	bl sub_8001854
+	bl PlaySfx
 	b _080372A6
 	.align 2, 0
 _08037254: .4byte gUnknown_030012BC
@@ -113113,7 +113113,7 @@ _0803726E:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x46
-	bl sub_8001854
+	bl PlaySfx
 	b _080372A6
 	.align 2, 0
 _08037280: .4byte gUnknown_030012BC
@@ -113134,7 +113134,7 @@ _08037298:
 	movs r2, #0x80
 	lsls r2, r2, #1
 	movs r1, #0x46
-	bl sub_8001854
+	bl PlaySfx
 _080372A6:
 	ldr r0, [r4]
 	adds r0, #1
@@ -113416,7 +113416,7 @@ sub_80374D0: @ 0x080374D0
 	bl sub_801E644
 	ldr r1, _08037528 @ =gStaticData_0816C484
 	add r0, sp, #4
-	bl sub_801E578
+	bl LoadGraphicsPackage
 	add r0, sp, #4
 	bl sub_801E640
 	ldr r1, _0803752C @ =0x04000008
@@ -113463,7 +113463,7 @@ sub_8037548: @ 0x08037548
 	ldr r0, _08037574 @ =gUnknown_03001300
 	ldr r0, [r0]
 	bl sub_8006AAC
-	bl sub_8006B1C
+	bl FlushVramDmaQueue
 	pop {r0}
 	bx r0
 	.align 2, 0
@@ -120111,8 +120111,8 @@ sub_803A94C: @ 0x0803A94C
 	svc #0xb
 	bx lr
 
-	thumb_func_start sub_803A950
-sub_803A950: @ 0x0803A950
+	thumb_func_start LZ77UnCompWrapper
+LZ77UnCompWrapper: @ 0x0803A950
 	svc #0x12
 	bx lr
 
@@ -120121,8 +120121,8 @@ sub_803A954: @ 0x0803A954
 	svc #0xf
 	bx lr
 
-	thumb_func_start sub_803A958
-sub_803A958: @ 0x0803A958
+	thumb_func_start RLUnCompWrapper
+RLUnCompWrapper: @ 0x0803A958
 	svc #0x15
 	bx lr
 
@@ -121115,8 +121115,8 @@ _0803B04A:
 _0803B050: .4byte gStaticData_087E4D64
 _0803B054: .4byte gStaticData_087E4DAC
 
-	thumb_func_start sub_803B058
-sub_803B058: @ 0x0803B058
+	thumb_func_start GetAnimFrameBaseOffset
+GetAnimFrameBaseOffset: @ 0x0803B058
 	ldr r0, [r0, #8]
 	asrs r0, r0, #8
 	bx lr
@@ -121135,11 +121135,11 @@ sub_803B060: @ 0x0803B060
 	bx lr
 	.align 2, 0
 
-	thumb_func_start sub_803B074
-sub_803B074: @ 0x0803B074
+	thumb_func_start GetAnimFrameData
+GetAnimFrameData: @ 0x0803B074
 	push {r4, r5, lr}
 	adds r4, r0, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr r5, _0803B0A4 @ =gUnknown_0300137C
 	ldr r2, [r4, #0xc]
 	ldr r3, [r4]
@@ -121695,7 +121695,7 @@ sub_803B46C: @ 0x0803B46C
 	adds	r5, r0, #0
 	movs	r4, #120	@ 0x78
 	movs	r6, #106	@ 0x6a
-	bl sub_803B074
+	bl GetAnimFrameData
 	adds	r7, r0, #0
 	ldrb	r0, [r7, #0]
 	lsls	r2, r0, #2
@@ -121747,7 +121747,7 @@ _0803B4D6:
 	adds	r1, r3, #0
 	movs	r3, #128	@ 0x80
 	lsls	r3, r3, #1
-	bl sub_8028FF8
+	bl SetupSpriteFrameOam
 _0803B4E4:
 	pop	{r4, r5, r6, r7}
 	pop	{r0}
@@ -121781,7 +121781,7 @@ _0803B510:
 	str	r0, [r4, #8]
 	strb	r2, [r4, #18]
 	adds	r0, r4, #0
-	bl sub_803B058
+	bl GetAnimFrameBaseOffset
 	ldr	r2, [r4, #12]
 _0803B524: .4byte 0x516823
 	adds	r1, r1, r2

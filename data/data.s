@@ -56,7 +56,7 @@ gStaticData_0816AA20:
 .global gStaticData_0816AA6C
 gStaticData_0816AA6C:
 	@ GAX2 sound-effect trigger table: 99 entries of {slot_id, pitch_offset,
-	@ volume}, indexed by the sound effect IDs passed to sub_8001854. Reuses
+	@ volume}, indexed by the sound effect IDs passed to PlaySfx. Reuses
 	@ the same instrument/sample pool as the music (sound/gax_manifest.json)
 	@ instead of storing separate sound-effect audio.
 	@
@@ -1179,7 +1179,7 @@ gStaticData_0861BADC:
 	@ LZ77 palette (16 colors) (32 bytes decompressed) - the palette for
 	@ gStaticData_0861C30C (sky/clouds background), loaded together as a
 	@ {w,h,palette_ptr,tile_ptr,tilemap_ptr} package at gStaticData_0816C484
-	@ via sub_801E578. Originally misclassified as a 1-tile 4bpp graphic (32
+	@ via LoadGraphicsPackage. Originally misclassified as a 1-tile 4bpp graphic (32
 	@ bytes coincidentally matches one 4bpp tile).
 	.incbin "build/crashbandicootxs/graphics/intro/24_61badc.gbapal.lz", 0, 0x28
 
@@ -1188,7 +1188,7 @@ gStaticData_0861BB04:
 	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
 	@ palette for gStaticData_0861E5F8 (Crash's face in a badge, warp-room
 	@ background), loaded as a package at gStaticData_0816B284 via
-	@ sub_801E578. Kept as raw binary: some entries have a stray set bit 15
+	@ LoadGraphicsPackage. Kept as raw binary: some entries have a stray set bit 15
 	@ that a standard .pal round-trip through gbagfx can't reproduce
 	@ (RGB555 only uses bits 0-14), which broke byte-exact rebuilding when
 	@ tried as .pal
@@ -1199,7 +1199,7 @@ gStaticData_0861BD48:
 	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
 	@ palette for gStaticData_0862556C (a level-select platform icon: a
 	@ blue gem pool, palm trees, small ruins), loaded as a package at
-	@ gStaticData_0816C58C via sub_801E578. Kept as raw binary: some
+	@ gStaticData_0816C58C via LoadGraphicsPackage. Kept as raw binary: some
 	@ entries have a stray set bit 15 that a standard .pal round-trip
 	@ through gbagfx can't reproduce (RGB555 only uses bits 0-14), which
 	@ broke byte-exact rebuilding when tried as .pal
@@ -1213,7 +1213,7 @@ gStaticData_0861BF2E:
 gStaticData_0861BF30:
 	@ LZ77 palette (16 colors) (32 bytes decompressed) - the palette for
 	@ gStaticData_08628C50 (a red/fiery smoke texture), loaded as a package
-	@ at gStaticData_0817C594 via sub_801E578. Originally misclassified as
+	@ at gStaticData_0817C594 via LoadGraphicsPackage. Originally misclassified as
 	@ a 1-tile 4bpp graphic (32 bytes coincidentally matches one 4bpp tile).
 	.incbin "build/crashbandicootxs/graphics/intro/27_61bf30.gbapal.lz", 0, 0x28
 
@@ -1222,7 +1222,7 @@ gStaticData_0861BF58:
 	@ LZ77 palette (16 colors) (32 bytes decompressed) - the palette for
 	@ gStaticData_0862A958 (a fire/aura glow effect: green transparent
 	@ background, orange/red/magenta outline), loaded as a package at
-	@ gStaticData_0817C5A8 via sub_801E578. Originally misclassified as a
+	@ gStaticData_0817C5A8 via LoadGraphicsPackage. Originally misclassified as a
 	@ 1-tile 4bpp graphic (32 bytes coincidentally matches one 4bpp tile).
 	.incbin "build/crashbandicootxs/graphics/intro/28_61bf58.gbapal.lz", 0, 0x28
 
@@ -1230,7 +1230,7 @@ gStaticData_0861BF58:
 gStaticData_0861BF80:
 	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
 	@ palette for gStaticData_0862B34C (Uka Uka's mask), loaded as a
-	@ package at gStaticData_0817C5BC via sub_801E578. Kept as raw binary:
+	@ package at gStaticData_0817C5BC via LoadGraphicsPackage. Kept as raw binary:
 	@ some entries have a stray set bit 15 that a standard .pal round-trip
 	@ through gbagfx can't reproduce (RGB555 only uses bits 0-14), which
 	@ broke byte-exact rebuilding when tried as .pal
@@ -1418,7 +1418,7 @@ gStaticData_0862E3B0:
 	@ LZ77 tile graphics (8bpp) (9152 bytes decompressed, 143 tiles). This is
 	@ the "Crash Bandicoot XS" title/logo art: referenced (with palette
 	@ gStaticData_0861C224 and tilemap gStaticData_0863183C) from a graphics
-	@ package struct at gStaticData_0817D0E4, loaded onto BG2 by sub_80355E0.
+	@ package struct at gStaticData_0817D0E4, loaded onto BG2 by LoadBg2Background.
 	.incbin "build/crashbandicootxs/graphics/intro/47_62e3b0_8bpp_tiles.8bpp.lz", 0, 0x1774
 
 .global gStaticData_0862FB24

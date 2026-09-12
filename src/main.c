@@ -6,7 +6,7 @@ extern void sub_8000518();                                    /* extern */
 extern void irq_disable();                                    /* extern */
 extern u32 irq_setup();                                  /* extern */
 extern void sub_8000620();                                    /* extern */
-extern s32 sub_8026EEC();                                  /* extern */
+extern s32 MainLoop();                                  /* extern */
 
 
 s32 AgbMain(void) {
@@ -23,7 +23,7 @@ s32 AgbMain(void) {
     
     sub_8000620();
     
-    if (sub_8026EEC() != 0) {
+    if (MainLoop() != 0) {
         return -1;
     }
     
