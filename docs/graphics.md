@@ -1103,3 +1103,63 @@ looked at this specific folder yet".
   4bpp tile data at various candidate widths and look for a recognizable
   character, the same way the original background/tileset scan worked -
   independent of and complementary to the code-tracing approach above.
+
+## Matching decompilation (started)
+
+First two functions turned into real, byte-matching C:
+`QueueVramDmaTransfer` and `FreeVramDmaQueue`, both in `src/graphics.c`
+(the DMA-transfer queue used by the animation-frame system - see "Found
+the real per-actor animation-frame system" above). Both compile with
+`tools/agbcc` to output that's byte-identical to the original ROM at
+those addresses, verified via a full clean `make compare`.
+
+**The workflow** for turning one more hand-disassembled function in
+`asm/code_3_*.s` into matching C, since `asm/code_3.s` no longer exists
+as a single file (see below):
+
+1. Read the function's disassembly, work out what it does, write C that
+   should produce the same logic.
+2. Compile just that translation unit with the project's real compiler
+   and compare the output instruction-by-instruction against the
+   original disassembly (`arm-none-eabi-cpp` + `tools/agbcc/bin/agbcc`
+   with the same flags `Makefile`'s `C_BUILDDIR` rule uses - see there
+   for the exact invocation).
+3. Once the instructions match, cut that function's block out of
+   whichever `asm/code_3_*.s` file currently holds it (it becomes two
+   files: everything before, and everything after), add the C version to
+   `src/graphics.c` (or a new file, if it doesn't belong there), and add
+   an entry to `ldscript.txt`'s `ROM :` block placing the new object file
+   exactly where the removed asm block used to sit in link order - the
+   linker concatenates whatever's listed there in that literal order, so
+   this is what keeps the function at its original ROM address.
+4. Rename every remaining `bl <old_name>`/`.4byte <old_name>` reference
+   to the function elsewhere in the still-asm files to match (the linker
+   will fail with "undefined reference" if any are missed - a useful
+   safety net, not just a cosmetic step).
+5. Full clean `make compare`.
+
+**A gotcha worth knowing before doing more of this:** a C function whose
+compiled body isn't a multiple of 4 bytes gets padded up to one by
+`arm-none-eabi-as` when it's the last thing in its translation unit's
+`.text` section - and the assembler's default pad-fill for Thumb code is
+the NOP encoding (`0xC046`), not zero. The *original* hand-written
+`asm/code_3_*.s` almost always has an explicit `.align 2, 0` at these
+exact spots (zero-fill, chosen deliberately by whoever wrote the original
+disassembly, presumably because they'd observed the real ROM bytes there
+were zero) - so a lone matched function ending on a non-4-aligned byte
+count will mismatch by exactly those trailing pad bytes, even though
+every real instruction matches perfectly. This isn't a linker-script
+`FILL()` issue (that only controls gaps the *linker* inserts, not padding
+already baked into an object file by `as`) - concretely, this bit us on
+`QueueVramDmaTransfer` alone (78 bytes) and resolved itself once
+`FreeVramDmaQueue` (30 bytes) joined it in the same file (108 bytes,
+4-aligned). If you match a function alone and hit exactly this symptom
+(a 1-2 byte mismatch right at the function's tail, nowhere else), the fix
+is usually "match one more small neighboring function into the same
+file" rather than anything wrong with the C itself - check the instant
+before assuming your C is wrong.
+
+`asm/code_3.s` (122256 lines) is now split into `asm/code_3_1.s` and
+`asm/code_3_2.s` around where `src/graphics.c`'s functions used to live -
+expect more such splits (`code_3_3.s`, etc., or renames as the split
+points shift) as more functions get matched out of it over time.

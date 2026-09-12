@@ -8,6 +8,9 @@ It builds the following ROM:
 ## Current state
 
 - Main decomp efforts just started
+- First 2 functions matching: `QueueVramDmaTransfer` and `FreeVramDmaQueue`
+  in `src/graphics.c` (see `docs/graphics.md`, "Matching decompilation" for
+  the workflow and a gotcha worth knowing before doing more of this)
 
 ## Setting up the repo
 
