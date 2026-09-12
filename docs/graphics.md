@@ -1150,14 +1150,18 @@ were zero) - so a lone matched function ending on a non-4-aligned byte
 count will mismatch by exactly those trailing pad bytes, even though
 every real instruction matches perfectly. This isn't a linker-script
 `FILL()` issue (that only controls gaps the *linker* inserts, not padding
-already baked into an object file by `as`) - concretely, this bit us on
-`QueueVramDmaTransfer` alone (78 bytes) and resolved itself once
-`FreeVramDmaQueue` (30 bytes) joined it in the same file (108 bytes,
-4-aligned). If you match a function alone and hit exactly this symptom
-(a 1-2 byte mismatch right at the function's tail, nowhere else), the fix
-is usually "match one more small neighboring function into the same
-file" rather than anything wrong with the C itself - check the instant
-before assuming your C is wrong.
+already baked into an object file by `as`).
+
+**The fix:** add `asm(".align 2, 0");` at file scope right after the
+function (confirmed to produce zero-fill instead of the assembler's
+default NOP-fill, verified by direct byte comparison against the ROM).
+Do this any time a match is otherwise perfect but the tail is off by 1-2
+bytes and nowhere else - it means the C is already correct, just missing
+this explicit directive; don't go looking for a bug in the function
+itself. (`QueueVramDmaTransfer`/`FreeVramDmaQueue` happened to sidestep
+this the first time since matching both together landed on a 4-byte
+total by coincidence - the explicit `asm(...)` is the general fix and
+doesn't depend on that kind of luck.)
 
 `asm/code_3.s` (122256 lines) is now split into `asm/code_3_1.s` and
 `asm/code_3_2.s` around where `src/graphics.c`'s functions used to live -
