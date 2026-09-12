@@ -42,8 +42,9 @@ DATA_ASM_SUBDIR = data
 C_BUILDDIR = $(OBJ_DIR)/$(C_SUBDIR)
 ASM_BUILDDIR = $(OBJ_DIR)/$(ASM_SUBDIR)
 DATA_ASM_BUILDDIR = $(OBJ_DIR)/$(DATA_ASM_SUBDIR)
+SOUND_BUILDDIR = $(OBJ_DIR)/sound
 
-$(shell mkdir -p $(C_BUILDDIR) $(ASM_BUILDDIR) $(DATA_ASM_BUILDDIR))
+$(shell mkdir -p $(C_BUILDDIR) $(ASM_BUILDDIR) $(DATA_ASM_BUILDDIR) $(SOUND_BUILDDIR))
 
 C_SRCS := $(wildcard $(C_SUBDIR)/*.c)
 C_ASMS := $(patsubst $(C_SUBDIR)/%.c,$(C_BUILDDIR)/%.s,$(C_SRCS))
@@ -80,10 +81,13 @@ compare: $(ROM)
 
 # Every incbin in data/*.s that pulls from graphics/ or sound/ needs the
 # corresponding built file to exist first.
-$(DATA_ASM_OBJS): $(GRAPHICS_BUILT) sound/gax_audio_data.bin
+$(DATA_ASM_OBJS): $(GRAPHICS_BUILT) $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/sfx_table.bin
 
-sound/gax_audio_data.bin: sound/gax_manifest.json sound/gax_header_prefix.bin sound/gax_footer.bin $(SOUND_SONGS) $(SOUND_SAMPLES) tools/gax_audio.py
+$(SOUND_BUILDDIR)/gax_audio_data.bin: sound/gax_manifest.json sound/gax_header_prefix.bin sound/gax_footer.bin $(SOUND_SONGS) $(SOUND_SAMPLES) tools/gax_audio.py
 	python3 tools/gax_audio.py $@
+
+$(SOUND_BUILDDIR)/sfx_table.bin: sound/sfx_table.json tools/sfx_table.py
+	python3 tools/sfx_table.py $@
 
 clean:
 	$(RM) $(ROM) $(ELF) $(MAP) $(OBJS) $(C_ASMS)

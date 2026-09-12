@@ -55,7 +55,13 @@ gStaticData_0816AA20:
 
 .global gStaticData_0816AA6C
 gStaticData_0816AA6C:
-	.incbin "baserom.gba", 0x0016AA6C, 0x000004A4
+	@ GAX2 sound-effect trigger table: 99 entries of {slot_id, pitch_offset,
+	@ volume}, indexed by the sound effect IDs passed to sub_8001854. Reuses
+	@ the same instrument/sample pool as the music (sound/gax_manifest.json)
+	@ instead of storing separate sound-effect audio.
+	@
+	@ Built from sound/sfx_table.json by tools/sfx_table.py.
+	.incbin "build/crashbandicootxs/sound/sfx_table.bin"
 
 .global gStaticData_0816AF10
 gStaticData_0816AF10:
@@ -853,7 +859,7 @@ gStaticData_0855BCB4:
 	@ unedited sources this rebuilds byte-for-byte identical to the
 	@ original ROM; editing a .xm/.wav changes only the bytes that
 	@ actually need to differ.
-	.incbin "sound/gax_audio_data.bin"
+	.incbin "build/crashbandicootxs/sound/gax_audio_data.bin"
 
 .global gStaticData_085A4C5C
 gStaticData_085A4C5C:

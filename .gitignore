@@ -75,6 +75,5 @@ graphics/**/*.rl
 # =========================
 # Generated audio build artifacts
 # =========================
-sound/gax_audio_data.bin
 # Python cache
 __pycache__/

@@ -1,0 +1,499 @@
+{
+ "entries": [
+  {
+   "slot_id": 1,
+   "pitch_offset": 0,
+   "volume": 256
+  },
+  {
+   "slot_id": 2,
+   "pitch_offset": 100,
+   "volume": 256
+  },
+  {
+   "slot_id": 36,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 9,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 10,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 11,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 11,
+   "pitch_offset": -100,
+   "volume": 200
+  },
+  {
+   "slot_id": 16,
+   "pitch_offset": 100,
+   "volume": 256
+  },
+  {
+   "slot_id": 31,
+   "pitch_offset": -100,
+   "volume": 200
+  },
+  {
+   "slot_id": 21,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 22,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 23,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 37,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 38,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 17,
+   "pitch_offset": -200,
+   "volume": 150
+  },
+  {
+   "slot_id": 62,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 63,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 65,
+   "pitch_offset": 100,
+   "volume": 256
+  },
+  {
+   "slot_id": 4,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 5,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 7,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 8,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 12,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 14,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 15,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 20,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 25,
+   "pitch_offset": 0,
+   "volume": 128
+  },
+  {
+   "slot_id": 24,
+   "pitch_offset": 100,
+   "volume": 200
+  },
+  {
+   "slot_id": 27,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 41,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 29,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 32,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 33,
+   "pitch_offset": 0,
+   "volume": 256
+  },
+  {
+   "slot_id": 34,
+   "pitch_offset": 0,
+   "volume": 256
+  },
+  {
+   "slot_id": 45,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 48,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 49,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 51,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 50,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 58,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 61,
+   "pitch_offset": 0,
+   "volume": 256
+  },
+  {
+   "slot_id": 61,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 64,
+   "pitch_offset": 0,
+   "volume": 256
+  },
+  {
+   "slot_id": 44,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 74,
+   "pitch_offset": 300,
+   "volume": 256
+  },
+  {
+   "slot_id": 81,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 3,
+   "pitch_offset": 0,
+   "volume": 256
+  },
+  {
+   "slot_id": 6,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 13,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 52,
+   "pitch_offset": 100,
+   "volume": 256
+  },
+  {
+   "slot_id": 18,
+   "pitch_offset": 0,
+   "volume": 256
+  },
+  {
+   "slot_id": 28,
+   "pitch_offset": 100,
+   "volume": 256
+  },
+  {
+   "slot_id": 35,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 39,
+   "pitch_offset": 0,
+   "volume": 256
+  },
+  {
+   "slot_id": 42,
+   "pitch_offset": -100,
+   "volume": 64
+  },
+  {
+   "slot_id": 43,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 47,
+   "pitch_offset": 0,
+   "volume": 256
+  },
+  {
+   "slot_id": 54,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 55,
+   "pitch_offset": 100,
+   "volume": 256
+  },
+  {
+   "slot_id": 56,
+   "pitch_offset": 0,
+   "volume": 256
+  },
+  {
+   "slot_id": 59,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 60,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 69,
+   "pitch_offset": 0,
+   "volume": 256
+  },
+  {
+   "slot_id": 82,
+   "pitch_offset": -100,
+   "volume": 150
+  },
+  {
+   "slot_id": 83,
+   "pitch_offset": -100,
+   "volume": 150
+  },
+  {
+   "slot_id": 84,
+   "pitch_offset": 0,
+   "volume": 256
+  },
+  {
+   "slot_id": 85,
+   "pitch_offset": 0,
+   "volume": 256
+  },
+  {
+   "slot_id": 6,
+   "pitch_offset": 100,
+   "volume": 256
+  },
+  {
+   "slot_id": 87,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 6,
+   "pitch_offset": 100,
+   "volume": 256
+  },
+  {
+   "slot_id": 63,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 31,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 65,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 17,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 82,
+   "pitch_offset": 0,
+   "volume": 256
+  },
+  {
+   "slot_id": 70,
+   "pitch_offset": 0,
+   "volume": 256
+  },
+  {
+   "slot_id": 71,
+   "pitch_offset": 0,
+   "volume": 256
+  },
+  {
+   "slot_id": 73,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 40,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 59,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 77,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 77,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 80,
+   "pitch_offset": 0,
+   "volume": 256
+  },
+  {
+   "slot_id": 75,
+   "pitch_offset": 0,
+   "volume": 64
+  },
+  {
+   "slot_id": 76,
+   "pitch_offset": 0,
+   "volume": 64
+  },
+  {
+   "slot_id": 79,
+   "pitch_offset": 0,
+   "volume": 256
+  },
+  {
+   "slot_id": 78,
+   "pitch_offset": 0,
+   "volume": 256
+  },
+  {
+   "slot_id": 66,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 67,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 68,
+   "pitch_offset": 0,
+   "volume": 200
+  },
+  {
+   "slot_id": 72,
+   "pitch_offset": 0,
+   "volume": 256
+  },
+  {
+   "slot_id": 26,
+   "pitch_offset": 0,
+   "volume": 128
+  },
+  {
+   "slot_id": 53,
+   "pitch_offset": 100,
+   "volume": 256
+  },
+  {
+   "slot_id": 57,
+   "pitch_offset": 0,
+   "volume": 32
+  },
+  {
+   "slot_id": 46,
+   "pitch_offset": 0,
+   "volume": 256
+  },
+  {
+   "slot_id": 52,
+   "pitch_offset": 0,
+   "volume": 256
+  },
+  {
+   "slot_id": 30,
+   "pitch_offset": 0,
+   "volume": 96
+  },
+  {
+   "slot_id": 75,
+   "pitch_offset": 0,
+   "volume": 256
+  },
+  {
+   "slot_id": 76,
+   "pitch_offset": 0,
+   "volume": 256
+  }
+ ]
+}
