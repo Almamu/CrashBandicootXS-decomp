@@ -1,0 +1,140 @@
+#ifndef __ACTOR_ANIM_H__
+#define __ACTOR_ANIM_H__
+
+/*
+ * The category-descriptor -> vtable -> animation-table -> keyframe ->
+ * frame system used to render rotating pickup/hazard sprites (crates,
+ * fruit, balloons, checkpoint text, ...). See docs/graphics.md, "Found
+ * the real per-actor animation-frame system" onward, for how each of
+ * these was reversed, and each graphics/unknown/<sheet>/entities.json
+ * for the actual data (every category, every animation-table record, every
+ * keyframe, resolved to the exact ROM address or extracted frame PNG it
+ * uses).
+ *
+ * None of the *code* behind this system (sub_8029ED0, sub_802A700,
+ * sub_803B074, the per-category vtable functions, ...) has been
+ * reversed to C yet - these structs are only the data layout, written
+ * ahead of that so the two can be matched up directly once it is.
+ */
+
+/* gStaticData_081796CC (categories 0-2, 41 slots) and gStaticData_0817B2A4
+ * (categories 3-6, 47 slots) - one record per animation clip. Several
+ * slots in each table are exact duplicates of an earlier slot's
+ * table_A/table_B pair (see "duplicate_of_slot" in entities.json) -
+ * still real, valid slots, just aliasing another one's data rather than
+ * a copy. */
+struct anim_table_record {
+    u32 index;                 // 0x00 - equals the record's own slot number in every valid record observed
+    struct keyframe_entry *table_A; // 0x04 - keyframe/timing sequence, see below
+    u32 *table_B;               // 0x08 - frame address/offset array, see the comment above struct sprite_frame
+    u8 header_byte;              // 0x0C - copied into the runtime per-part instance at offset +0x18 by sub_802A700; role beyond that not traced
+    u8 pad_0D[3];
+    u8 unknown_10[0x18];         // 0x10 - always 0 in every record observed
+}; // 0x28
+COMPILE_TIME_ASSERT(sizeof(struct anim_table_record) == 0x28);
+
+/* table_A: one entry per keyframe in an animation clip, terminated
+ * implicitly (there's no end marker - a record's real keyframe count is
+ * however many entries have a table_B_index that's actually in-bounds
+ * for that record's own table_B array before the data stops looking
+ * like a valid entry; see table_b_real_length() in tools/dump_entities.py). */
+struct keyframe_entry {
+    u8 unknown_00;    // 0x00 - alternates between two values (seen 0x80/0x40) across entries in every record sampled; role unclear
+    u8 unknown_01;    // 0x01 - 0 in every entry sampled
+    s16 table_B_index; // 0x02 - signed index into this record's table_B array - the one confirmed field, both by code (sub_803B074) and by exhaustive empirical resolution against every record's real frame data
+    u32 unknown_04;    // 0x04 - a small integer, or two packed 16-bit sub-values a fixed distance apart; role unclear
+    u32 unknown_08;    // 0x08 - 0 in every entry sampled
+}; // 0xC
+COMPILE_TIME_ASSERT(sizeof(struct keyframe_entry) == 0xC);
+
+/*
+ * table_B (see struct anim_table_record above) is an array of raw u32
+ * entries, in one of two addressing modes - fixed per record, never
+ * mixed within one record:
+ *
+ *   - "absolute_rom": each entry is a real ROM pointer straight to a
+ *     struct sprite_frame. Used only by the "mask"-style records (index
+ *     0 of both animation tables) - these frames deliberately overlap
+ *     byte-for-byte with their neighbors (a rotation-strip compression
+ *     trick, see docs/graphics.md) rather than living in the category's
+ *     sprite sheet at all, so there's no extracted PNG for them.
+ *
+ *   - "pool_offset": each entry is a byte offset from the start of the
+ *     category family's decompressed sprite sheet
+ *     (gStaticData_080B2120 for categories 0-2, gStaticData_0814174C for
+ *     3-6) to a struct sprite_frame. These frames *are* extracted - see
+ *     graphics/unknown/<sheet>/<entity>/NN.png, one file per frame.
+ *
+ * entities.json's "addressing_mode" field records which mode each
+ * record uses; "frames" resolves every keyframe-used table_B entry to
+ * either {rom_address, w_tiles, h_tiles} or {asset_file, w_tiles, h_tiles}
+ * accordingly.
+ */
+
+/* One animation frame's raw pixel data, exactly as DMA'd to VRAM with no
+ * reformatting (confirmed via the DMA3 register writes in the queued
+ * transfer flush routine, sub_8006B1C) - so this is also exactly what
+ * graphics/unknown/<sheet>/<entity>/NN.png round-trips to/from (that
+ * tool strips/reinserts this same 4-byte header - see tools/framed_gfx.py). */
+struct sprite_frame {
+    u8 width_tiles;   // 0x00 - always 1, 2, 4, or 8 in every frame observed
+    u8 height_tiles;  // 0x01 - always 1, 2, 4, or 8 in every frame observed
+    u8 pad2;          // 0x02 - always 0x10 in both category families' sheets
+    u8 pad3;          // 0x03 - always 0x00
+    u8 tile_data[0];  // 0x04 - width_tiles*height_tiles*32 bytes, standard swizzled 4bpp tile data
+};
+
+/* gStaticData_08175558 - 7 entries (categories 0-2 use the family rooted
+ * at gStaticData_081796CC, 3-6 the one at gStaticData_0817B2A4). Selected
+ * via sub_8029ED0(category, ...), which computes
+ * gStaticData_081756C4 + category*0x34 and stores it as the active
+ * vtable before calling its constructor (vtable slot 0). */
+struct category_descriptor {
+    u32 type;                       // 0x00 - 0/1/2 across categories 0-2, 1/2 across 3-6; role beyond that unclear
+    void *family_shared_04;         // 0x04 - constant across all categories in one family; pointer-shaped, role unknown
+    u32 family_shared_08;           // 0x08 - constant across all categories in one family; role unknown
+    void *conditional_ptr_0C;       // 0x0C - if non-NULL, sub_802F7B0 (not reversed) gets called during category init
+    const u16 *palette;             // 0x10 - raw 16-color RGB555 palette, DMA'd to OBJ palette RAM (sub_802928C)
+    void *sub_effect_table;         // 0x14 - a second per-category table (threshold-triggered sub-effects/spawns via vtable slot 1); structure not reversed, see docs/graphics.md
+    struct anim_table_record *anim_table; // 0x18 - this category's animation table base (gStaticData_081796CC or gStaticData_0817B2A4)
+    const u8 *sprite_sheet;         // 0x1C - this category family's LZ77-compressed sprite sheet
+    u32 unknown_20;                 // 0x20
+    u32 active_count_threshold;     // 0x24 - compared against a running "how many of this category are active" counter (gUnknown_03001384) to gate spawning an extra sub-effect instance
+    u32 unknown_28;                 // 0x28
+    u32 position_offset_flag;       // 0x2C - zero/nonzero selects between two fixed position-offset constants (0xFFFFB000 / 0x2800) applied to a spawned part's vertical anchor
+    u32 unknown_30;                 // 0x30
+}; // 0x34
+COMPILE_TIME_ASSERT(sizeof(struct category_descriptor) == 0x34);
+
+/* gStaticData_081756C4 - 7 entries, category-indexed the same way as
+ * category_descriptor above. Exact signatures unknown (none of these
+ * functions have been reversed to C yet); slot 0 is confirmed to be the
+ * constructor (sub_802B1E8-style - receives the animation table base and
+ * the descriptor's position_offset_flag). A couple of slots (7 and 8, at
+ * least for category 0) hold obviously-invalid addresses and appear to
+ * simply be unused for that category. */
+struct category_vtable {
+    void (*fn[13])(void);
+}; // 0x34
+COMPILE_TIME_ASSERT(sizeof(struct category_vtable) == 0x34);
+
+/* gStaticData_08175558 is already split out at exactly this size in
+ * data/data.s (7*0x34 = 0x16C bytes before gStaticData_081756C4 starts).
+ * gStaticData_081756C4 is only labeled for its first 3 entries there
+ * (0x9C of 0x16C bytes) - the remaining 4 categories' vtables are real,
+ * contiguous ROM bytes (confirmed empirically), but currently sit inside
+ * the next symbol, gStaticData_08175760, which is still labeled as a
+ * generic padding/unidentified block. The declaration below is the true
+ * data shape either way - reading gStaticData_081756C4[3..6] is correct
+ * today, it just currently reads through that symbol's name instead. */
+extern struct category_descriptor gStaticData_08175558[7];
+extern struct category_vtable gStaticData_081756C4[7];
+
+/* Not split out as their own labels in data/data.s yet - the bytes exist
+ * at these ROM addresses (currently inside larger unlabeled incbin
+ * blocks), so these are the correct extern declarations for whenever
+ * that's done, not yet linkable today. */
+extern struct anim_table_record gStaticData_081796CC[41]; // 0x081796CC, categories 0-2
+extern struct anim_table_record gStaticData_0817B2A4[47]; // 0x0817B2A4, categories 3-6
+
+#endif /* !__ACTOR_ANIM_H__ */

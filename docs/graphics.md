@@ -973,6 +973,15 @@ used `table_B` index resolved to either `{asset_file, w_tiles, h_tiles}`
 previous two sections is carried over as `label`/`identified` on the
 matching record.
 
+The matching C data layout - `struct category_descriptor`,
+`struct category_vtable`, `struct anim_table_record`,
+`struct keyframe_entry`, `struct sprite_frame` - is written up in
+`include/actor_anim.h`, field-for-field with this section (same offsets,
+same names where a role is known, same honest `unknown_XX` where it
+isn't). It's data-layout only - none of the functions that walk these
+structs have been reversed to C yet - but it compiles clean today
+(verified against `tools/agbcc`) and is ready for whenever that code is.
+
 Two heuristics worth knowing if this is regenerated/extended:
 - A record's real `table_B` length (needed to know where its keyframes
   stop being legitimate indices) is found by walking forward from
