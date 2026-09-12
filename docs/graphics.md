@@ -773,14 +773,15 @@ record-start offsets and using each as a cut point accounts for every
 single byte in both sheets.
 
 - `graphics/unknown/00_0b2120/` (categories 0-2's sheet, in ROM order):
-  `00_crate_variant_a.png` .. `04_crate_variant_e.png` (the 5 decorated
-  crate variants), `05_nitro_crate.png`, `06_tnt_crate.png`,
-  `07_barrel.png`, `08_unidentified.png` (a mixed-content pool - see
-  "Cataloguing the `unidentified.png` pools" below for what's in it).
+  9 files at this point - 5 decorated crate variants, a Nitro crate, a
+  TNT crate, a barrel, and one 92-frame mixed-content pool (see
+  "Cataloguing the `unidentified.png` pools" below - **this initial
+  9-way split was later replaced entirely**, see "Re-splitting into one
+  file per entity" further down for the current, final layout).
 - `graphics/unknown/01_14174c/` (categories 3-6's sheet, in ROM order):
-  `00_badge_icons.png`, `01_winged_creature.png`,
-  `02_unidentified_small.png`, `03_unidentified.png` (another mixed-content
-  pool, see below).
+  4 files at this point - badge icons, a winged creature, one small
+  mixed pool, one large 176-frame mixed pool (see below - **also later
+  replaced entirely**, see "Re-splitting into one file per entity").
 - Categories 0-2/3-6's record 0 (the mask-like object using the separate
   absolute-ROM-address/overlap-dedup scheme, not this buffer) is **not**
   part of either split - it was never inside these LZ77 streams to begin
@@ -831,6 +832,12 @@ Viewing the split PNGs whole (they're small enough) rather than one
 record at a time turns up clearly recognizable content in both -
 "unidentified" only meant "not yet looked at", not "noise".
 
+**Superseded by the re-split below** - `08_unidentified.png` no longer
+exists as a single file; every object identified in this section now has
+its own file (`16_guard_barrier.png`, `17_wumpa_fruit.png`,
+`19_checkpoint_text.png`, etc.) - but the identification work described
+here is what made that re-split possible, so it's kept as-is.
+
 **`graphics/unknown/00_0b2120/08_unidentified.png`** (92 frames, the byte
 range covered by categories 0-2's record 2) is genuinely several
 different objects sharing one physical frame pool - and unlike the rest
@@ -874,6 +881,11 @@ reveals "CHECK POINT" (record 40), with a Wumpa Fruit (record 11), a
 small creature (record 2), and an unidentified emerging object (record
 22) sharing the same underlying pixel pool incidentally rather than as
 part of that sequence.
+
+**Superseded by the re-split below** - `03_unidentified.png` no longer
+exists as a single file either; each object below now has its own file
+(`19_treasure_chest.png`, `13_parachute_crate.png`, `17_clock.png`, the
+3 balloon files, etc.).
 
 **`graphics/unknown/01_14174c/03_unidentified.png`** (176 frames,
 categories 3-6's record 3) got the same code-level treatment:
@@ -969,6 +981,53 @@ Two heuristics worth knowing if this is regenerated/extended:
   distinguished from "the table just ends here" by index-bounds alone,
   so this is a pragmatic cutoff, not a proof the true sequence never
   runs longer.
+
+### Re-splitting into one file per entity (done)
+
+The original split (above) was done by byte-range before the full extent
+of the animation tables was known, so several files bundled multiple
+unrelated objects together - most obviously the two `*unidentified*.png`
+catch-all pools, but also `06_tnt_crate.png` (which turned out to also
+contain 4 other small objects after it in ROM) and `07_barrel.png`
+(2 more). That's the opposite of what you want if you're trying to
+tweak one sprite or feed one struct's worth of data to reversed code
+without wading through everything else sharing its old byte-range file.
+
+Fixed by `tools/split_entities.py`: rather than anchoring on the handful
+of records identified so far, it enumerates **every** valid slot in both
+animation tables, dedupes by `table_B` address (the thing that actually
+determines a distinct piece of frame data - multiple slots/keyframe-
+timings can legitimately share one `table_B`, e.g. the 3 balloon colors
+each have their own frames but reuse one shared timing table), and sorts
+the results by each entity's starting offset in the decompressed sheet.
+This gives a complete, verified-gapless, non-overlapping partition of
+each sheet - 20 distinct entities for categories 0-2, 23 for categories
+3-6 - which is a lot more granular than the 9/4 files from the first
+pass once every duplicate/shared-frame-set slot is accounted for.
+
+Each entity gets its own numbered file (`NN_<name>.png` + `.frames`),
+named from the identification work in the sections above where
+available (`17_wumpa_fruit.png`, `19_checkpoint_text.png`,
+`13_parachute_crate.png`, ...) and `record_slotNN.png` (using the lowest
+animation-table slot that references it) where not yet identified -
+still individually editable and traceable back to a specific slot even
+without a friendly name. The numeric prefixes are load-bearing: they're
+what keeps `graphics.mk`'s `$(sort $(wildcard ...))` concatenation in the
+correct original ROM order, exactly as before - no Makefile changes were
+needed for this, it already rebuilds from "however many `*.png` files are
+in the directory" rather than a hardcoded list.
+
+Order of operations when regenerating: `tools/split_entities.py` first
+(writes the per-entity `.png`/`.frames`, deleting whatever was there
+before), then `tools/dump_entities.py` (reads whatever `.frames` files
+exist to resolve keyframes to `asset_file`/`frame_index`, so it always
+reflects the current split). Verified byte-exact via a full clean
+`make compare` after re-splitting.
+
+Not-yet-identified entities are still real, individually-editable files
+(e.g. `03_record_slot28.png`, `18_record_slot10.png`) - "not identified"
+no longer means "bundled in with everything else nearby", just "nobody's
+looked at this specific file yet".
 
 ### Open questions / next steps
 
