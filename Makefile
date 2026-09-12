@@ -43,8 +43,9 @@ C_BUILDDIR = $(OBJ_DIR)/$(C_SUBDIR)
 ASM_BUILDDIR = $(OBJ_DIR)/$(ASM_SUBDIR)
 DATA_ASM_BUILDDIR = $(OBJ_DIR)/$(DATA_ASM_SUBDIR)
 SOUND_BUILDDIR = $(OBJ_DIR)/sound
+GRAPHICS_BUILDDIR = $(OBJ_DIR)/graphics
 
-$(shell mkdir -p $(C_BUILDDIR) $(ASM_BUILDDIR) $(DATA_ASM_BUILDDIR) $(SOUND_BUILDDIR))
+$(shell mkdir -p $(C_BUILDDIR) $(ASM_BUILDDIR) $(DATA_ASM_BUILDDIR) $(SOUND_BUILDDIR) $(GRAPHICS_BUILDDIR))
 
 C_SRCS := $(wildcard $(C_SUBDIR)/*.c)
 C_ASMS := $(patsubst $(C_SUBDIR)/%.c,$(C_BUILDDIR)/%.s,$(C_SRCS))
@@ -66,10 +67,10 @@ GRAPHICS_PALS := $(wildcard graphics/*/*.pal)
 GRAPHICS_BINS := $(wildcard graphics/*/*.bin)
 
 GRAPHICS_BUILT := \
-	$(patsubst %_bitmap.png,%_bitmap.bin.lz,$(filter %_bitmap.png,$(GRAPHICS_PNGS))) \
-	$(patsubst %.png,%.4bpp.lz,$(filter-out %_bitmap.png,$(GRAPHICS_PNGS))) \
-	$(patsubst %.pal,%.gbapal.lz,$(GRAPHICS_PALS)) \
-	$(patsubst %.bin,%.bin.lz,$(GRAPHICS_BINS))
+	$(patsubst graphics/%_bitmap.png,$(GRAPHICS_BUILDDIR)/%_bitmap.bin.lz,$(filter %_bitmap.png,$(GRAPHICS_PNGS))) \
+	$(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.4bpp.lz,$(filter-out %_bitmap.png,$(GRAPHICS_PNGS))) \
+	$(patsubst graphics/%.pal,$(GRAPHICS_BUILDDIR)/%.gbapal.lz,$(GRAPHICS_PALS)) \
+	$(patsubst graphics/%.bin,$(GRAPHICS_BUILDDIR)/%.bin.lz,$(GRAPHICS_BINS))
 
 SOUND_SONGS := $(wildcard sound/songs/*.xm)
 SOUND_SAMPLES := $(wildcard sound/samples/*.wav)
@@ -95,9 +96,6 @@ clean:
 tidy:
 	rm -f $(ROM) $(ELF) $(MAP)
 	rm -r build/*
-
-graphicsclean:
-	find graphics -type f \( -name '*.4bpp' -o -name '*.8bpp' -o -name '*.gbapal' -o -name '*.lz' \) -delete
 
 #### Recipes ####
 	

@@ -62,18 +62,5 @@ kappa-db.json
 context
 decomp.yaml
 
-# =========================
-# Generated graphics build artifacts
-# =========================
-graphics/**/*.1bpp
-graphics/**/*.4bpp
-graphics/**/*.8bpp
-graphics/**/*.gbapal
-graphics/**/*.lz
-graphics/**/*.rl
-
-# =========================
-# Generated audio build artifacts
-# =========================
 # Python cache
 __pycache__/
