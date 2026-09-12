@@ -1,9 +1,9 @@
 .section .rodata
 
-.global gStaticData_0803B0C4
-gStaticData_0803B0C4:
+.global gStaticData_0803B8B0
+gStaticData_0803B8B0:
 	@ padding/unidentified data between assets
-	.incbin "baserom.gba", 0x0003B0C4, 0x0007705C
+	.incbin "baserom.gba", 0x0003B8B0, 0x00076870
 
 .global gStaticData_080B2120
 gStaticData_080B2120:
