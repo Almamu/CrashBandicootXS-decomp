@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
-# Converts between a raw "framed" OBJ sprite sheet (as used by the
+# Converts between a raw "framed" OBJ sprite sheet entity (as used by the
 # category-descriptor animation system in code_3.s - see docs/graphics.md,
-# "Found the real per-actor animation-frame system") and a viewable/editable
-# indexed PNG. Each sheet is a back-to-back sequence of frames:
+# "Found the real per-actor animation-frame system") and a folder of
+# individual, per-frame indexed PNGs - one file per frame, no grid, no
+# sidecar metadata file.
 #
+# Each frame in the raw entity is:
 #   4-byte header {w_tiles, h_tiles, 0x10, 0x00} + w_tiles*h_tiles*32 bytes
 #   of standard swizzled 4bpp tile data (row-major within the frame)
 #
-# gbagfx can't touch this directly (the header bytes aren't pixels, and
-# frames can vary in size within one sheet), so - like linear_gfx.py for
-# Mode 4 bitmaps - this bypasses gbagfx and does the conversion directly.
-#
-# Frame sizes are stored in a sidecar ".frames" text file next to the PNG:
-# first line is the grid column count, then one "w h" line (in tiles) per
-# frame, in original file order. Frames are laid out left-to-right/top-to-
-# bottom in a grid of cells sized to the largest frame in the sheet, each
-# frame's real pixels anchored at the cell's top-left corner - the rest of
-# an under-sized cell is filled with palette index 0 (every sheet uses
-# index 0 as its transparent/background color already).
+# gbagfx can't be used directly (the header bytes aren't pixels), so -
+# like linear_gfx.py for Mode 4 bitmaps - this bypasses gbagfx and does
+# the conversion directly. A frame's own PNG is sized to exactly
+# w_tiles*8 x h_tiles*8 pixels, so its tile dimensions are always
+# self-describing (png.width // 8, png.height // 8) - no sidecar needed.
+# Frame order is filename sort order (00.png, 01.png, ...), which is why
+# every frame folder uses zero-padded numeric names.
 
+import glob
+import os
 import sys
 
 from PIL import Image
@@ -48,7 +48,7 @@ def encode_tile(pixels):
 
 
 def parse_frames(raw):
-    """Split a raw sheet into a list of (w_tiles, h_tiles, tile_data) frames."""
+    """Split a raw entity into a list of (w_tiles, h_tiles, tile_data) frames."""
     frames = []
     pos = 0
     n = len(raw)
@@ -67,33 +67,7 @@ def parse_frames(raw):
     return frames
 
 
-def to_png(bin_path, png_path, frames_path, pal_path, cols=None):
-    with open(bin_path, 'rb') as f:
-        raw = f.read()
-    frames = parse_frames(raw)
-
-    max_w = max(w for w, h, _ in frames)
-    max_h = max(h for w, h, _ in frames)
-    if cols is None:
-        cols = min(len(frames), 8)
-    rows = (len(frames) + cols - 1) // cols
-
-    cell_w = max_w * 8
-    cell_h = max_h * 8
-    img = Image.new('P', (cell_w * cols, cell_h * rows), 0)
-    pixels = img.load()
-
-    for idx, (w, h, tile_data) in enumerate(frames):
-        gx = (idx % cols) * cell_w
-        gy = (idx // cols) * cell_h
-        for t in range(w * h):
-            tile = decode_tile(tile_data, t * 32)
-            tx = t % w
-            ty = t // w
-            for y in range(8):
-                for x in range(8):
-                    pixels[gx + tx * 8 + x, gy + ty * 8 + y] = tile[y][x]
-
+def load_palette(pal_path):
     with open(pal_path, 'rb') as f:
         pal_raw = f.read()
     palette = []
@@ -105,43 +79,49 @@ def to_png(bin_path, png_path, frames_path, pal_path, cols=None):
         g = ((c >> 5) & 0x1F) * 255 // 31
         b = ((c >> 10) & 0x1F) * 255 // 31
         palette += [r, g, b]
-    img.putpalette(palette)
-    img.save(png_path)
-
-    with open(frames_path, 'w') as f:
-        f.write(f"{cols}\n")
-        for w, h, _ in frames:
-            f.write(f"{w} {h}\n")
+    return palette
 
 
-def to_bin(png_path, frames_path, bin_path):
-    img = Image.open(png_path)
-    if img.mode != 'P':
-        raise SystemExit(f"{png_path}: expected an indexed (palette) PNG")
-    width, height = img.size
+def to_frames(bin_path, out_dir, pal_path):
+    with open(bin_path, 'rb') as f:
+        raw = f.read()
+    frames = parse_frames(raw)
+    palette = load_palette(pal_path)
 
-    with open(frames_path) as f:
-        lines = [line.split() for line in f if line.strip()]
-    cols = int(lines[0][0])
-    frame_sizes = [(int(w), int(h)) for w, h in lines[1:]]
+    os.makedirs(out_dir, exist_ok=True)
+    digits = max(2, len(str(len(frames) - 1)))
+    for idx, (w, h, tile_data) in enumerate(frames):
+        img = Image.new('P', (w * 8, h * 8))
+        img.putpalette(palette)
+        pixels = img.load()
+        for t in range(w * h):
+            tile = decode_tile(tile_data, t * 32)
+            tx = t % w
+            ty = t // w
+            for y in range(8):
+                for x in range(8):
+                    pixels[tx * 8 + x, ty * 8 + y] = tile[y][x]
+        img.save(os.path.join(out_dir, f'{idx:0{digits}d}.png'))
 
-    max_w = max(w for w, h in frame_sizes)
-    max_h = max(h for w, h in frame_sizes)
-    cell_w = max_w * 8
-    cell_h = max_h * 8
-    expected_cols_w = cell_w * cols
-    rows = (len(frame_sizes) + cols - 1) // cols
-    if width != expected_cols_w or height != cell_h * rows:
-        raise SystemExit(
-            f"{png_path}: size {width}x{height} doesn't match expected "
-            f"{expected_cols_w}x{cell_h * rows} for {len(frame_sizes)} frames, "
-            f"{cols} cols, cell {cell_w}x{cell_h}")
 
-    pixels = img.load()
+def to_bin_folder(in_dir, bin_path):
+    paths = sorted(glob.glob(os.path.join(in_dir, '*.png')))
+    if not paths:
+        raise SystemExit(f"{in_dir}: no .png files found")
+
     out = bytearray()
-    for idx, (w, h) in enumerate(frame_sizes):
-        gx = (idx % cols) * cell_w
-        gy = (idx // cols) * cell_h
+    for path in paths:
+        img = Image.open(path)
+        if img.mode != 'P':
+            raise SystemExit(f"{path}: expected an indexed (palette) PNG")
+        width, height = img.size
+        if width % 8 or height % 8:
+            raise SystemExit(f"{path}: {width}x{height} isn't a multiple of 8x8")
+        w, h = width // 8, height // 8
+        if w not in (1, 2, 4, 8) or h not in (1, 2, 4, 8):
+            raise SystemExit(f"{path}: {w}x{h} tiles isn't a valid frame size")
+
+        pixels = img.load()
         out += bytes([w, h, PAD2, PAD3])
         for t in range(w * h):
             tx = t % w
@@ -149,7 +129,7 @@ def to_bin(png_path, frames_path, bin_path):
             tile = [[0] * 8 for _ in range(8)]
             for y in range(8):
                 for x in range(8):
-                    tile[y][x] = pixels[gx + tx * 8 + x, gy + ty * 8 + y] & 0xF
+                    tile[y][x] = pixels[tx * 8 + x, ty * 8 + y] & 0xF
             out += encode_tile(tile)
 
     with open(bin_path, 'wb') as f:
@@ -159,14 +139,13 @@ def to_bin(png_path, frames_path, bin_path):
 def main(argv):
     if len(argv) < 2:
         raise SystemExit(
-            f"Usage: {argv[0]} to-png IN.bin OUT.png OUT.frames PAL.bin [COLS]\n"
-            f"       {argv[0]} to-bin IN.png IN.frames OUT.bin")
+            f"Usage: {argv[0]} to-frames IN.bin OUT_DIR PAL.bin\n"
+            f"       {argv[0]} to-bin-folder IN_DIR OUT.bin")
     cmd = argv[1]
-    if cmd == 'to-png':
-        cols = int(argv[6]) if len(argv) > 6 else None
-        to_png(argv[2], argv[3], argv[4], argv[5], cols)
-    elif cmd == 'to-bin':
-        to_bin(argv[2], argv[3], argv[4])
+    if cmd == 'to-frames':
+        to_frames(argv[2], argv[3], argv[4])
+    elif cmd == 'to-bin-folder':
+        to_bin_folder(argv[2], argv[3])
     else:
         raise SystemExit(f"Unknown command: {cmd}")
 

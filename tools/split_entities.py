@@ -73,8 +73,13 @@ def split_family(sheet_rom_addr, decompressed_size, sheet_dir, anim_table_base,
     with open(pal_path, 'wb') as f:
         f.write(rd(palette_rom_addr, 32))
 
-    for old in glob.glob(os.path.join(sheet_dir, '*.png')) + glob.glob(os.path.join(sheet_dir, '*.frames')):
-        os.remove(old)
+    for old in glob.glob(os.path.join(sheet_dir, '*')):
+        if os.path.isdir(old):
+            for f in glob.glob(os.path.join(old, '*')):
+                os.remove(f)
+            os.rmdir(old)
+        else:
+            os.remove(old)
 
     used_names = set()
     for i, (start, table_b, slots) in enumerate(anchors):
@@ -88,13 +93,13 @@ def split_family(sheet_rom_addr, decompressed_size, sheet_dir, anim_table_base,
         with open(bin_path, 'wb') as f:
             f.write(chunk)
 
-        png_path = os.path.join(sheet_dir, f'{i:02d}_{name}.png')
-        frames_path = os.path.join(sheet_dir, f'{i:02d}_{name}.frames')
+        entity_dir = os.path.join(sheet_dir, f'{i:02d}_{name}')
         subprocess.run(
-            [sys.executable, FRAMED_GFX, 'to-png', bin_path, png_path, frames_path, pal_path],
+            [sys.executable, FRAMED_GFX, 'to-frames', bin_path, entity_dir, pal_path],
             check=True,
         )
-        print(f'{os.path.basename(png_path)}: {end - start} bytes, slots {slots}')
+        nframes = len(glob.glob(os.path.join(entity_dir, '*.png')))
+        print(f'{os.path.basename(entity_dir)}/: {end - start} bytes, {nframes} frames, slots {slots}')
 
 
 def main():

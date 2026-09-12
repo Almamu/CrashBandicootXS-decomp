@@ -114,24 +114,26 @@ def read_descriptor(index):
 
 
 def build_frame_pool(sheet_dir):
-    """Read every *.frames sidecar in ROM order and reconstruct the
-    original decompressed sheet's byte layout, so a raw pool offset can
-    be resolved back to (asset file, frame index)."""
+    """Read every entity subdirectory's frame PNGs, in ROM order (entity
+    folder name, then per-frame filename), and reconstruct the original
+    decompressed sheet's byte layout, so a raw pool offset can be
+    resolved back to (asset file). Each frame's tile size is just its own
+    PNG dimensions / 8 - no sidecar metadata needed."""
+    from PIL import Image
+
     pool = []
     offset = 0
-    frame_files = sorted(glob.glob(os.path.join(sheet_dir, '*.frames')))
-    for ff in frame_files:
-        png_name = os.path.basename(ff)[:-len('.frames')] + '.png'
-        with open(ff) as f:
-            lines = [l.split() for l in f if l.strip()]
-        sizes = [(int(w), int(h)) for w, h in lines[1:]]
-        for local_idx, (w, h) in enumerate(sizes):
+    entity_dirs = sorted(d for d in glob.glob(os.path.join(sheet_dir, '*')) if os.path.isdir(d))
+    for entity_dir in entity_dirs:
+        frame_paths = sorted(glob.glob(os.path.join(entity_dir, '*.png')))
+        for fp in frame_paths:
+            with Image.open(fp) as img:
+                w, h = img.width // 8, img.height // 8
             size = 4 + w * h * 32
             pool.append({
                 'start': offset,
                 'end': offset + size,
-                'file': f'graphics/unknown/{os.path.basename(sheet_dir)}/{png_name}',
-                'frame_index': local_idx,
+                'file': f'graphics/unknown/{os.path.basename(sheet_dir)}/{os.path.basename(entity_dir)}/{os.path.basename(fp)}',
                 'w_tiles': w,
                 'h_tiles': h,
             })
@@ -144,7 +146,6 @@ def resolve_pool_offset(pool, offset):
         if entry['start'] == offset:
             return {
                 'asset_file': entry['file'],
-                'frame_index': entry['frame_index'],
                 'w_tiles': entry['w_tiles'],
                 'h_tiles': entry['h_tiles'],
             }
@@ -154,7 +155,6 @@ def resolve_pool_offset(pool, offset):
         if entry['start'] < offset < entry['end']:
             return {
                 'asset_file': entry['file'],
-                'frame_index': entry['frame_index'],
                 'w_tiles': entry['w_tiles'],
                 'h_tiles': entry['h_tiles'],
                 'note': f'offset {hx(offset)} is mid-frame (frame starts at {hx(entry["start"])})',

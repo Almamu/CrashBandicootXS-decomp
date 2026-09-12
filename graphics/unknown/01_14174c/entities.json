@@ -1341,74 +1341,62 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/01_winged_creature.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/01_winged_creature/00.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/01_winged_creature.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/01_winged_creature/01.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/01_winged_creature.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/01_winged_creature/02.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/01_winged_creature.png",
-          "frame_index": 10,
+          "asset_file": "graphics/unknown/01_14174c/01_winged_creature/10.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/01_winged_creature.png",
-          "frame_index": 11,
+          "asset_file": "graphics/unknown/01_14174c/01_winged_creature/11.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/01_winged_creature.png",
-          "frame_index": 12,
+          "asset_file": "graphics/unknown/01_14174c/01_winged_creature/12.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/01_winged_creature.png",
-          "frame_index": 3,
+          "asset_file": "graphics/unknown/01_14174c/01_winged_creature/03.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/01_winged_creature.png",
-          "frame_index": 4,
+          "asset_file": "graphics/unknown/01_14174c/01_winged_creature/04.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/01_winged_creature.png",
-          "frame_index": 5,
+          "asset_file": "graphics/unknown/01_14174c/01_winged_creature/05.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/01_winged_creature.png",
-          "frame_index": 16,
+          "asset_file": "graphics/unknown/01_14174c/01_winged_creature/16.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "19": {
-          "asset_file": "graphics/unknown/01_14174c/01_winged_creature.png",
-          "frame_index": 26,
+          "asset_file": "graphics/unknown/01_14174c/01_winged_creature/26.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "25": {
-          "asset_file": "graphics/unknown/01_14174c/01_winged_creature.png",
-          "frame_index": 19,
+          "asset_file": "graphics/unknown/01_14174c/01_winged_creature/19.png",
           "w_tiles": 8,
           "h_tiles": 8
         }
@@ -1456,8 +1444,7 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/00_record_slot02.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/00_record_slot02/00.png",
           "w_tiles": 2,
           "h_tiles": 2
         }
@@ -1487,8 +1474,7 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/03_record_slot03.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/03_record_slot03/00.png",
           "w_tiles": 1,
           "h_tiles": 1
         }
@@ -2508,56 +2494,47 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 3,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 7,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 8,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 9,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -3577,56 +3554,47 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 3,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 7,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 8,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 9,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -4646,56 +4614,47 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 3,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 7,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 8,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 9,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -5715,56 +5674,47 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 3,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 7,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 8,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 9,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -6784,56 +6734,47 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 3,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 7,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 8,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 9,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -7853,56 +7794,47 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 3,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 7,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 8,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04.png",
-          "frame_index": 9,
+          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -8760,44 +8692,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 6,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 8,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 10,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -9655,44 +9580,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 6,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 8,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 10,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -10451,44 +10369,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/19_treasure_chest.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/19_treasure_chest/00.png",
           "w_tiles": 8,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/19_treasure_chest.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/19_treasure_chest/00.png",
           "w_tiles": 8,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/19_treasure_chest.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/19_treasure_chest/01.png",
           "w_tiles": 8,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/19_treasure_chest.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/19_treasure_chest/02.png",
           "w_tiles": 8,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/19_treasure_chest.png",
-          "frame_index": 6,
+          "asset_file": "graphics/unknown/01_14174c/19_treasure_chest/06.png",
           "w_tiles": 8,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/19_treasure_chest.png",
-          "frame_index": 7,
+          "asset_file": "graphics/unknown/01_14174c/19_treasure_chest/07.png",
           "w_tiles": 8,
           "h_tiles": 4
         },
         "17": {
-          "asset_file": "graphics/unknown/01_14174c/19_treasure_chest.png",
-          "frame_index": 8,
+          "asset_file": "graphics/unknown/01_14174c/19_treasure_chest/08.png",
           "w_tiles": 8,
           "h_tiles": 4
         }
@@ -10527,8 +10438,7 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/20_record_slot13.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/20_record_slot13/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -10711,26 +10621,22 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/21_record_slot14.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/21_record_slot14/00.png",
           "w_tiles": 2,
           "h_tiles": 2
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/21_record_slot14.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/21_record_slot14/01.png",
           "w_tiles": 2,
           "h_tiles": 2
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/21_record_slot14.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/21_record_slot14/02.png",
           "w_tiles": 2,
           "h_tiles": 2
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/21_record_slot14.png",
-          "frame_index": 3,
+          "asset_file": "graphics/unknown/01_14174c/21_record_slot14/03.png",
           "w_tiles": 2,
           "h_tiles": 2
         }
@@ -11588,44 +11494,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 6,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 8,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 10,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -12483,44 +12382,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 6,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 8,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 10,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -13378,44 +13270,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 6,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 8,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 10,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -14273,44 +14158,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 6,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 8,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 10,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -14889,50 +14767,42 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/08_crate_question_mark.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/08_crate_question_mark/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 3,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 4,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 5,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 6,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 12,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -15511,50 +15381,42 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/08_crate_question_mark.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/08_crate_question_mark/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 3,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 4,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 5,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 6,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 12,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -16133,50 +15995,42 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/08_crate_question_mark.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/08_crate_question_mark/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 3,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 4,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 5,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 6,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 12,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -16755,50 +16609,42 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/08_crate_question_mark.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/08_crate_question_mark/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 3,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 4,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 5,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 6,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 12,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -17377,50 +17223,42 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/08_crate_question_mark.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/08_crate_question_mark/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 3,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 4,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 5,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 6,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 12,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -17999,50 +17837,42 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/09_crate_1.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/09_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 6,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 7,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 8,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 9,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 10,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 6,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 12,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -18621,50 +18451,42 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/10_crate_2.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/10_crate_2/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 6,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 7,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 8,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 9,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 10,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 6,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 12,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -18820,20 +18642,17 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 6,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 7,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -19286,50 +19105,42 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/13_parachute_crate.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/13_parachute_crate/00.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/13_parachute_crate.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/13_parachute_crate/01.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/13_parachute_crate.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/13_parachute_crate/02.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/13_parachute_crate.png",
-          "frame_index": 3,
+          "asset_file": "graphics/unknown/01_14174c/13_parachute_crate/03.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/13_parachute_crate.png",
-          "frame_index": 4,
+          "asset_file": "graphics/unknown/01_14174c/13_parachute_crate/04.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/13_parachute_crate.png",
-          "frame_index": 5,
+          "asset_file": "graphics/unknown/01_14174c/13_parachute_crate/05.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/13_parachute_crate.png",
-          "frame_index": 6,
+          "asset_file": "graphics/unknown/01_14174c/13_parachute_crate/06.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/13_parachute_crate.png",
-          "frame_index": 12,
+          "asset_file": "graphics/unknown/01_14174c/13_parachute_crate/12.png",
           "w_tiles": 8,
           "h_tiles": 8
         }
@@ -19710,44 +19521,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/16_record_slot28.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/16_record_slot28/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/16_record_slot28.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/16_record_slot28/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/16_record_slot28.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/16_record_slot28/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/16_record_slot28.png",
-          "frame_index": 3,
+          "asset_file": "graphics/unknown/01_14174c/16_record_slot28/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/16_record_slot28.png",
-          "frame_index": 4,
+          "asset_file": "graphics/unknown/01_14174c/16_record_slot28/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 14,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/14.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -19966,20 +19770,17 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -20360,44 +20161,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/16_record_slot28.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/16_record_slot28/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/16_record_slot28.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/16_record_slot28/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/16_record_slot28.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/16_record_slot28/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/16_record_slot28.png",
-          "frame_index": 3,
+          "asset_file": "graphics/unknown/01_14174c/16_record_slot28/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/16_record_slot28.png",
-          "frame_index": 4,
+          "asset_file": "graphics/unknown/01_14174c/16_record_slot28/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock.png",
-          "frame_index": 14,
+          "asset_file": "graphics/unknown/01_14174c/17_clock/14.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -20508,14 +20302,12 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/15_crescent_arch.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/15_crescent_arch/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/15_crescent_arch.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/15_crescent_arch/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         }
@@ -21373,44 +21165,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 6,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 8,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 10,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -22268,44 +22053,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 6,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 8,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 10,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -23163,44 +22941,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 6,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 8,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 10,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -24058,44 +23829,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 6,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 8,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 10,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -24953,44 +24717,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 6,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 8,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 10,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -25848,44 +25605,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 6,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 8,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10.png",
-          "frame_index": 10,
+          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -26815,50 +26565,42 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/04_record_slot38.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/04_record_slot38/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/04_record_slot38.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/04_record_slot38/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/04_record_slot38.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/04_record_slot38/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/04_record_slot38.png",
-          "frame_index": 3,
+          "asset_file": "graphics/unknown/01_14174c/04_record_slot38/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/04_record_slot38.png",
-          "frame_index": 7,
+          "asset_file": "graphics/unknown/01_14174c/04_record_slot38/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 9,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/09.png",
           "w_tiles": 2,
           "h_tiles": 2
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 10,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/10.png",
           "w_tiles": 2,
           "h_tiles": 2
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 12,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/12.png",
           "w_tiles": 2,
           "h_tiles": 2
         }
@@ -27788,50 +27530,42 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/04_record_slot38.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/04_record_slot38/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/04_record_slot38.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/04_record_slot38/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/04_record_slot38.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/04_record_slot38/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/04_record_slot38.png",
-          "frame_index": 3,
+          "asset_file": "graphics/unknown/01_14174c/04_record_slot38/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/04_record_slot38.png",
-          "frame_index": 7,
+          "asset_file": "graphics/unknown/01_14174c/04_record_slot38/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 9,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/09.png",
           "w_tiles": 2,
           "h_tiles": 2
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 10,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/10.png",
           "w_tiles": 2,
           "h_tiles": 2
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3.png",
-          "frame_index": 12,
+          "asset_file": "graphics/unknown/01_14174c/11_crate_3/12.png",
           "w_tiles": 2,
           "h_tiles": 2
         }
@@ -28068,32 +27802,27 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/06_balloon_red_yellow.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/06_balloon_red_yellow/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/06_balloon_red_yellow.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/06_balloon_red_yellow/01.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/06_balloon_red_yellow.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/06_balloon_red_yellow/02.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/06_balloon_red_yellow.png",
-          "frame_index": 3,
+          "asset_file": "graphics/unknown/01_14174c/06_balloon_red_yellow/03.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/05_balloon_yellow_blue_cross.png",
-          "frame_index": 3,
+          "asset_file": "graphics/unknown/01_14174c/05_balloon_yellow_blue_cross/03.png",
           "w_tiles": 4,
           "h_tiles": 8
         }
@@ -28276,20 +28005,17 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/07_balloon_orange_blue.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/07_balloon_orange_blue/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/07_balloon_orange_blue.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/07_balloon_orange_blue/01.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/07_balloon_orange_blue.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/07_balloon_orange_blue/02.png",
           "w_tiles": 4,
           "h_tiles": 8
         }
@@ -28526,32 +28252,27 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/05_balloon_yellow_blue_cross.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/05_balloon_yellow_blue_cross/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/05_balloon_yellow_blue_cross.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/05_balloon_yellow_blue_cross/01.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/05_balloon_yellow_blue_cross.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/05_balloon_yellow_blue_cross/02.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/05_balloon_yellow_blue_cross.png",
-          "frame_index": 3,
+          "asset_file": "graphics/unknown/01_14174c/05_balloon_yellow_blue_cross/03.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/07_balloon_orange_blue.png",
-          "frame_index": 3,
+          "asset_file": "graphics/unknown/01_14174c/07_balloon_orange_blue/03.png",
           "w_tiles": 4,
           "h_tiles": 8
         }
@@ -28653,14 +28374,12 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/15_crescent_arch.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/15_crescent_arch/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/15_crescent_arch.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/15_crescent_arch/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         }
@@ -28789,32 +28508,27 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/14_record_slot44.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/14_record_slot44/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/14_record_slot44.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/14_record_slot44/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/14_record_slot44.png",
-          "frame_index": 2,
+          "asset_file": "graphics/unknown/01_14174c/14_record_slot44/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/14_record_slot44.png",
-          "frame_index": 3,
+          "asset_file": "graphics/unknown/01_14174c/14_record_slot44/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/14_record_slot44.png",
-          "frame_index": 9,
+          "asset_file": "graphics/unknown/01_14174c/14_record_slot44/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -28898,20 +28612,17 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45.png",
-          "frame_index": 1,
+          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45.png",
-          "frame_index": 3,
+          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -28941,8 +28652,7 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/22_checkpoint_text.png",
-          "frame_index": 0,
+          "asset_file": "graphics/unknown/01_14174c/22_checkpoint_text/00.png",
           "w_tiles": 8,
           "h_tiles": 4
         }
