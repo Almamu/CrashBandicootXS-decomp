@@ -775,12 +775,12 @@ single byte in both sheets.
 - `graphics/unknown/00_0b2120/` (categories 0-2's sheet, in ROM order):
   `00_crate_variant_a.png` .. `04_crate_variant_e.png` (the 5 decorated
   crate variants), `05_nitro_crate.png`, `06_tnt_crate.png`,
-  `07_barrel.png`, `08_unidentified.png` (the large mixed-size leftover
-  pool, contents only partially eyeballed - not a single object).
+  `07_barrel.png`, `08_unidentified.png` (a mixed-content pool - see
+  "Cataloguing the `unidentified.png` pools" below for what's in it).
 - `graphics/unknown/01_14174c/` (categories 3-6's sheet, in ROM order):
   `00_badge_icons.png`, `01_winged_creature.png`,
-  `02_unidentified_small.png`, `03_unidentified.png` (another large
-  uncatalogued pool).
+  `02_unidentified_small.png`, `03_unidentified.png` (another mixed-content
+  pool, see below).
 - Categories 0-2/3-6's record 0 (the mask-like object using the separate
   absolute-ROM-address/overlap-dedup scheme, not this buffer) is **not**
   part of either split - it was never inside these LZ77 streams to begin
@@ -824,6 +824,95 @@ Not done: further breaking down the two `unidentified*.png` catch-all
 fragments, and figuring out frame *counts* actually used per object (vs.
 how many exist physically - some records, e.g. category 0-2's record 2,
 may bundle more than one logical animation).
+
+### Cataloguing the `unidentified.png` pools
+
+Viewing the split PNGs whole (they're small enough) rather than one
+record at a time turns up clearly recognizable content in both -
+"unidentified" only meant "not yet looked at", not "noise".
+
+**`graphics/unknown/00_0b2120/08_unidentified.png`** (92 frames, the byte
+range covered by categories 0-2's record 2) is genuinely several
+different objects sharing one physical frame pool - and unlike the rest
+of this section, this one **is** code-verified: `gStaticData_081796CC`
+(the animation table) turned out to have far more than the 10 records
+originally catalogued - it runs to at least 41 (many are duplicate
+aliases of the same handful of `table_A`/`table_B` pairs, and indices
+32-34 are a zeroed gap). Cross-referencing each *distinct* record's own
+`table_B[0]` offset against this pool's byte range, then rendering that
+record's own frames (not just eyeballing the pool as a whole), gives
+actual per-object confirmation:
+- **Record 2** (`table_A 0x817968C`, `table_B 0x81796A4`) - the small
+  gray/white rounded creature, a 10-frame idle/rotation set. Identity
+  beyond shape/color still unconfirmed.
+- **Record 11** (`table_A 0x8179D34`, `table_B 0x8179D40`) - a clean
+  rotation set that renders as a real **Wumpa Fruit**, confirming the
+  visual ID directly at the record level, not just by proximity.
+- **Record 22** (`table_A 0x8179D78`, `table_B 0x8179D90`) - a red/orange
+  spiky-based object with a white/gray cap that grows then peels away
+  over its 11 frames - reads as some creature or item emerging from
+  under a shell/cover. Not confidently identified beyond that.
+- **Record 23** (`table_A 0x8179E24`, `table_B 0x8179E3C`) - not one
+  guard repeated, but **two** guards facing each other, each holding one
+  end of a shared horizontal chain/spear prop between them - a barrier
+  formed by a pair of guards, confirmed by rendering record 23's own
+  frame 0 cleanly.
+- **Record 40** (`table_A 0x817A6A0`, `table_B 0x817A6AC`) - a `w=8,h=4`
+  frame that renders as the literal text **"CHECK POINT"**, confirmed
+  crystal-clear at native resolution. This sits right near the end of
+  the pool's byte range.
+
+So the "guard shattering into debris" and the loose fragments seen when
+scanning the whole pool visually are real (there's clearly debris-style
+content between the guard-barrier frames and the checkpoint text), but
+which specific record(s) they belong to hasn't been pinned down the same
+rigorous way - only records 2, 11, 22, 23, and 40 have been matched to
+actual animation-table entries so far. The overall reading still stands
+and is now partially code-confirmed rather than purely visual: a
+two-guard barrier (record 23) guards a checkpoint, and defeating it
+reveals "CHECK POINT" (record 40), with a Wumpa Fruit (record 11), a
+small creature (record 2), and an unidentified emerging object (record
+22) sharing the same underlying pixel pool incidentally rather than as
+part of that sequence.
+
+**`graphics/unknown/01_14174c/03_unidentified.png`** (176 frames,
+categories 3-6's record 3) got the same code-level treatment:
+`gStaticData_0817B2A4` also runs far past the 3 records originally
+catalogued - valid entries go up to at least record 46 (again with many
+duplicate aliases; records 49+ read back the same garbage offset and are
+past the real end). Rendering each distinct record's own frame 0 gives a
+rich, individually-confirmed catalogue:
+
+| record | table_A / table_B | content |
+|---|---|---|
+| 12 | `0x817bdf0` / `0x817be20` | a **treasure chest** opening (matches the "chest" guess from the whole-pool scan, now tied to a specific record) |
+| 19 | `0x817bedc` / `0x817bef4` | a wooden crate with a **"?" mark** - a mystery/question-mark crate |
+| 24 | `0x817bedc` / `0x817bf18` | a wooden crate with a **"1"** |
+| 25 | `0x817bedc` / `0x817bf3c` | a wooden crate with a **"2"** |
+| 26 | `0x817bedc` / `0x817bf60` | a wooden crate with a **"3"**-like digit |
+| 27 | `0x817bf84` / `0x817bf9c` | the **parachute-dropped crate** (confirmed) |
+| 29 | `0x817c070` / `0x817c088` | a round **clock face** with visible hands |
+| 31 | `0x817c100` / `0x817c118` | the crescent/arch-shaped striped object (still just a shape match, not identified beyond that - sits right next to the clock, so plausibly a related prop) |
+| 40, 41, 42 | `0x817c0a0` / `0x817c0b8`, `0x817c0e8`, `0x817c0d0` | three **balloon color variants** - plain red/yellow, orange/red/blue, and a yellow/blue one with a cross/plus mark on it |
+| 46 | `0x817c1a8` / `0x817c1b4` | **"CHECK POINT"** text again, confirmed crystal-clear, independently of the first pool's copy |
+
+(Records 3, 10, 13, 14, 28, 38, 44, 45 are smaller badge/icon/fragment
+frames, consistent with the debris/sparkle content seen scanning the pool
+as a whole, but weren't individually identified beyond "a small icon or
+debris chunk".)
+
+This upgrades the whole-pool visual scan from a guess to a confirmed
+catalogue: numbered crates (including a "?" mystery crate - a real,
+distinct Crash Bandicoot gameplay object), a parachute crate, a treasure
+chest, a clock, and 3 balloon variants really are separate animation-
+table entries sharing this one physical byte pool, each independently
+renderable from its own record. The "container breaks open into CHECK
+POINT" narrative from the whole-pool scan is still not proven as a
+*single connected sequence* (no code trace linking e.g. record 27's
+parachute crate to record 46's text) - what's now confirmed is that both
+the container objects and the checkpoint text are real, distinct,
+individually-addressable records in this table, which was the main open
+question.
 
 ### Open questions / next steps
 
