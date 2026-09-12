@@ -11,7 +11,10 @@ split out of the raw `baserom.gba` incbins in `data/data.s`, under
 - `graphics/unknown/` — LZ77-compressed blocks that decompress fine but
   don't produce a coherent image as tile data (wrong width guessed, a
   non-tile asset, or genuinely something else) - kept as raw binary rather
-  than forced into a misleading PNG.
+  than forced into a misleading PNG. Two of these (`00_0b2120`,
+  `01_14174c`) are actually directories of named, per-record editable
+  PNGs (a real sprite sheet, not raw binary) - see "Splitting the two
+  giant sprite sheets" below for why and how the build reassembles them.
 
 ### How blocks were found
 
@@ -466,6 +469,276 @@ candidates; rendered all 25 as a contact sheet to review at once. Result:
 The other 47 raw blocks don't divide evenly by 64 at all, so they can't be
 straightforward 8bpp tile data - not swept further here.
 
+### Found the real per-actor animation-frame system
+
+This is the "actual per-frame rendering loop" the previous section's open
+question was looking for - found by chasing call sites of the generic
+"load OBJ graphics package" helper `sub_801E578` and the package structs it
+was called with, which led away from the HUD vtable system entirely into a
+separate, much more elaborate chain:
+
+- **`gStaticData_08175558`** - a per-actor-*category* descriptor array,
+  `0x34` (52-byte) stride, 7 valid entries. Selected via
+  `sub_8029ED0(category, ...)`, which computes
+  `gStaticData_081756C4 + category*0x34` (see next) and stores it as the
+  active vtable, then calls vtable slot 0 (the constructor) passing the
+  descriptor's `+0x18` field. Key fields (word offsets): `+0x10` = a raw
+  16-color OBJ palette pointer (DMA'd to `0x05000200`), `+0x18` = the
+  **animation table base** for this category-family
+  (`gStaticData_081796CC` for categories 0-2, `gStaticData_0817B2A4` for
+  3-6), `+0x1C` = a big LZ77 sprite-sheet pointer (`0x080B2120` for
+  categories 0-2, `0x0814174C` for 3-6 - these are the same two giant
+  blocks as `graphics/unknown/00_0b2120.bin`/`01_14174c.bin` from the very
+  first extraction pass). **Note:** despite living in the same descriptor
+  record, this `+0x1C` sheet is *not* the data source for the animation
+  system below - see the callout at the end of this section.
+- **`gStaticData_081756C4`** - the category vtable array, same `0x34`
+  stride but interpreted as **13 plain function pointers** (not the
+  `{0, ptr}` pair convention the HUD vtable system uses - a different,
+  unrelated convention that happens to reuse the same struct-offset idea).
+- **`sub_802A700`** - constructs one *part* instance: `r1` (the per-part
+  descriptor) is computed at call sites as
+  `gUnknown_0300147C[0] + index*0x28` (40-byte stride) - i.e. a single
+  category can spawn several independently-animated parts (limbs on a
+  shared body, most likely), each picking its own row out of the
+  animation table.
+- **The animation table** (`gStaticData_081796CC` / `_0817B2A4`), `0x28`
+  (40-byte) stride records: `{index, table_A_ptr, table_B_ptr, header_byte,
+  ...}`. Multiple records can share the same `table_A` (the timing/keyframe
+  driver) while pointing at *different* `table_B`s (the actual pixel data)
+  - seen directly in `gStaticData_081796CC` records 5-9, which all reuse
+  `table_A = 0x817a2b8` with 5 distinct `table_B`s - consistent with
+  several body parts animating in lockstep off one shared timing table.
+- **`table_A`** - 12 bytes/entry; the signed halfword at `+2` is a
+  `table_B` index. A record's full `table_A` is the keyframe sequence for
+  one animation clip (e.g. record 0's 13-entry cycle:
+  `[0,20,59,79,88,97,113,121,132,133,117,60,0]` - a closed loop back to 0).
+- **`table_B`** - flat array of 4-byte raw ROM pointers, read by
+  **`sub_803B074`** (`table_A[keyframe].halfword_at_2` indexes into it).
+  Confirmed via disassembly of `sub_8028FF8`/`sub_8028F58` (the functions
+  that consume the returned pointer) that each entry points at a tiny
+  self-contained record: `{w_tiles, h_tiles, 0x30, 0x00}` (4 bytes) followed
+  by exactly `w_tiles*h_tiles*32` bytes of standard swizzled 4bpp tile data
+  (every sampled entry across both animal families is `w=8,h=8` = a 64x64
+  OBJ). `sub_8028FF8` decodes the `w`/`h` bytes using the exact GBA OAM
+  shape/size encoding (square/wide/tall + size class 1/2/4/8 tiles) to
+  build the sprite's attribute bits - this is unambiguous confirmation
+  it's genuine OBJ sprite data, not coincidence.
+- The actual VRAM upload is a **queued DMA**, not an inline copy:
+  `sub_8028F58` computes the byte count and calls `sub_8006B94`, which just
+  appends `{dest, src, size}` into a ring buffer
+  (`gUnknown_03001290`, up to 768 entries) rather than copying immediately.
+  The flush happens in `sub_8006B1C`, confirmed by disassembly to write
+  directly to **`0x040000D4`/`0x040000D8`** - the GBA's real DMA3
+  source/destination registers - and start the transfer. **No
+  reformatting happens anywhere in this path**: ROM bytes reach VRAM
+  completely unmodified, so the frame-record format above is exactly what
+  the hardware sees.
+
+**The `table_B` "sliding window" discovery:** consecutive `table_B`
+entries looked suspiciously close together in ROM (only ~600-880 bytes
+apart) for records that each claim a 2048-byte payload (64 tiles). Checked
+directly at the byte level: `payload(table_B[i])[delta:]` is **byte-for-
+byte identical** to `payload(table_B[i+1])[:len]`, where `delta` is the
+address gap between the two entries - not approximately similar, an exact
+match, confirmed across dozens of consecutive index pairs in both animal
+families. Some indices even alias the exact same address entirely (e.g.
+category 0-2's `table_B[113] == table_B[20]`, bit-for-bit the same
+pointer). This is a ROM-space-saving trick for pre-rendered 3D rotation
+animation: since neighboring rotation angles of a spinning object share
+almost all their pixels, the asset pipeline stores one long overlapped
+byte stream per rotating object and lets different keyframe indices just
+pick different windows (or literally the same window, when a pose
+repeats) into it, instead of storing N independent full frames.
+
+Rendering frames evenly spaced across one confirmed contiguous run (e.g.
+indices 0, 12, 24, ... 95 of the categories 0-2 pool) shows a *stable*
+overall composition frame to frame - green (transparent) background, a
+pale rounded mass with a dark-blue crescent shape, red/orange mass lower
+down - exactly what a rotating 3D-rendered object looks like under a fixed
+camera (silhouette/position holds steady, surface shading drifts). Given
+the palette (cream/white + red/orange + dark blue, index 0 = transparent)
+matches the already-identified Uka Uka mask family from the
+`sub_801E578` sweep, this is most likely a **spinning Aku Aku mask**
+(Uka Uka's "good" counterpart) - not yet confirmed beyond the palette/shape
+match, since no in-game screenshot or emulator run was available to check
+against.
+
+**Important correction/clarification:** this whole `table_A`/`table_B`
+system reads its frame data directly from fixed ROM addresses (confirmed:
+`sub_803B074` does add a RAM-buffer-base global, `gUnknown_0300137C`, but
+it reads back as `0` along this path, making the add a no-op) - it is
+**raw, uncompressed data sitting in ROM**, physically near but *not inside*
+the two giant LZ77 sheets (`0x080B2120`/`0x0814174C`) referenced by the
+category descriptor's `+0x1C` field. Those two sheets are loaded via the
+ordinary tag+size dispatcher elsewhere and their actual contents/purpose
+remain unidentified - don't assume they're pre-decompressed into the
+buffer this animation system reads from.
+
+Not yet resolved: the descriptor's `+0x14` field (unique per entry,
+passed into `sub_8029ED0`) and the `+0x20`-`+0x30` small integers; the
+animation table record's `header_byte` (copied into the runtime instance
+at `+0x18` by `sub_802A700`, role not traced further).
+
+### Identified the two giant LZ77 sheets: they're the actual sprite art
+
+Found the reader: `sub_802928C` (per-category init, called with the
+category number, stored in `gUnknown_03001380`) reads the descriptor's
+`+0x1C` sheet pointer and calls `sub_802917C(sheet_ptr)`, which reads the
+tag+size header, `mem_alloc`s a buffer of the declared decompressed size,
+stores it in **`gUnknown_0300137C`**, and decompresses into it via
+`sub_8001174` - **this is the same global `sub_803B074` adds to a
+`table_B` value** (see above). So there are genuinely two different
+addressing modes in play for animation-table records, both already
+present in the code, and confirmed by directly decompressing
+`0x080B2120` (a standard LZ77 stream, tag `0x10`, declared size 213064 -
+matches `graphics/unknown/00_0b2120.bin` exactly) and checking real
+records against it:
+
+- **Category 0-2's record 0** (the "mask", `table_B = gStaticData_0817941C`)
+  holds full absolute ROM addresses (`0x080Cxxxx`) and reads real
+  uncompressed ROM data directly - `gUnknown_0300137C` is unset/0 for
+  this path, making the add in `sub_803B074` a no-op. This is the
+  overlapping/deduplicated "rotation strip" scheme described above.
+- **Records 1, 2, 4** (`table_B` at `0x0817a130`, `0x081796a4`,
+  `0x0817a250`) hold **small byte offsets into the decompressed
+  `0x080B2120` buffer** instead (e.g. record 1: `0xfdf8, 0xfffc, 0x10200,
+  ...`, a constant stride of exactly `0x204` = `4 + 4*4*32` bytes - a
+  plain non-overlapping sequential frame array, no dedup trick at all).
+  Decompressing `0x080B2120` in Python and rendering these offsets with
+  the same category palette (`gStaticData_08178F80`) gives **completely
+  clean, unambiguous art**:
+  - Record 1 (`w=4,h=4`, 32x32 frames): a **rotating TNT crate** (the
+    classic X-braced wooden crate), full clean rotation sequence.
+  - Record 4 (`w=4,h=4`, 32x32 frames): a **rotating Nitro crate** - the
+    "NITRO" text label is legible in multiple frames.
+  - Record 2 (`w=8,h=8`, 64x64 frames, stride `0x804` = `4+8*8*32`, also
+    no dedup): a fluffy white/gray creature face (round ears, snout -
+    plausibly Crash's polar-bear companion, unconfirmed) for the first
+    several frames, transitioning to what looks like a red-armored
+    enemy figure with a chain/weapon prop later in the sequence (the
+    frame count used to sample this one was a guess, not derived from a
+    real per-record count, so the transition point may just be where
+    record 2's real data ends and record 3's begins - not necessarily
+    one single animated object).
+
+This conclusively confirms `graphics/unknown/00_0b2120.bin` is genuine
+**rotating pickup/hazard sprite art** (crates confirmed, a
+companion/enemy likely) - not a background or something unrelated.
+
+**The second sheet, `01_14174c.bin` (categories 3-6), decompresses and
+checks out the same way** - `0x0814174C`, tag `0x10`, declared size
+207124, matches the LZ77 stream exactly. Its animation table
+(`gStaticData_0817B2A4`) uses the identical two addressing modes: record
+0 is the absolute-ROM-address/overlap-dedup scheme (like categories 0-2's
+"mask"), while records 1 and 2 are small offsets into this sheet's own
+decompressed buffer (stride `0x804` = `4+8*8*32` for record 1, `0x84` =
+`4+2*2*32` for record 2 - both plain non-overlapping arrays). Rendered
+with this category's palette (`gStaticData_0817AAA4`):
+
+- Record 1 (`w=8,h=8`, 64x64 frames): a rotating **mechanical/winged
+  creature** - a central body with a beaked/helmeted head, wide
+  outstretched wings (dotted/riveted pattern), and what look like
+  wheels or turbines on some angles - reads as a small flying
+  enemy/vehicle rather than a crate; exact identity unconfirmed.
+- Record 2 (`w=2,h=2`, 16x16 frames, only 4 valid entries before the
+  data stops making sense as this record - matches the raw `table_B`
+  values going erratic after index 2): three small circular
+  medallion/badge icons (red, dark maroon, and a third variant, tan
+  border) plus one small icon of the winged creature above - likely UI
+  icons (checkpoint/gem/difficulty badges) rather than animation
+  frames.
+
+**Records 5-9 of the categories 0-2 animation table** (`gStaticData_081796CC`,
+all sharing `table_A = 0x817a2b8`) turned out not to be body parts of one
+character as first guessed - each is an **independent decorated crate
+variant**: rendering frame 0 of all five (all `w=4,h=4`, plain non-
+overlapping `0x204`-stride arrays like the TNT/Nitro crates) shows records
+5-7 as a red/dark-blue crate border with a small gray icon/figure inside,
+and records 8-9 as a tan/pale crate border with a different red-orange
+icon inside - reads as different "special crate" types (e.g. checkpoint,
+extra-life, ? crate - exact icon meanings unconfirmed) that all happen to
+reuse the same generic rotation timing table, which is exactly why they
+share one `table_A`.
+
+Categories 0-2's record 3 (`table_B = 0x0817a5dc`, mostly `0x204`-stride
+like the crates) is another `w=4,h=4` decorated-drum/barrel-looking
+object (a red/tan spiral or coil pattern on a cylindrical shape) - yet
+another distinct pickup/hazard prop, not yet identified beyond "clearly
+not noise, clearly a barrel/drum-shaped object". Categories 3-6's own
+records 3-4 follow the same pattern (an 8x8 badge icon and a 32x32 prop
+resembling part of the winged creature/vehicle from record 1) - records
+5-9 in that table are identical repeats of record 4, i.e. this
+particular table's genuinely-used range is only records 0-4, not the
+full 10 slots read for categories 0-2's table.
+
+### Splitting the two giant sprite sheets (done)
+
+Both sheets are now split into per-record source files instead of one
+opaque flat `.bin`. Each decompressed sheet turned out to be, with zero
+gaps and zero leftover bytes, a back-to-back sequence of
+`{w_tiles, h_tiles, pad, 0}` + `w*h*32`-byte frame records from start to
+finish - confirmed by a greedy parser that walks the whole buffer
+re-parsing a frame header at every position it lands on and never fails
+to find a valid one anywhere in either 213064 or 207124 bytes. That made
+the record boundaries found while identifying content (the `table_B`
+start offsets for each record) exact and exhaustive: sorting all known
+record-start offsets and using each as a cut point accounts for every
+single byte in both sheets.
+
+- `graphics/unknown/00_0b2120/` (categories 0-2's sheet, in ROM order):
+  `00_crate_variant_a.png` .. `04_crate_variant_e.png` (the 5 decorated
+  crate variants), `05_nitro_crate.png`, `06_tnt_crate.png`,
+  `07_barrel.png`, `08_unidentified.png` (the large mixed-size leftover
+  pool, contents only partially eyeballed - not a single object).
+- `graphics/unknown/01_14174c/` (categories 3-6's sheet, in ROM order):
+  `00_badge_icons.png`, `01_winged_creature.png`,
+  `02_unidentified_small.png`, `03_unidentified.png` (another large
+  uncatalogued pool).
+- Categories 0-2/3-6's record 0 (the mask-like object using the separate
+  absolute-ROM-address/overlap-dedup scheme, not this buffer) is **not**
+  part of either split - it was never inside these LZ77 streams to begin
+  with, see the addressing-mode callout above.
+
+**These are real, viewable/editable indexed PNGs, not raw passthrough
+binaries** - each frame's actual pixels (after its 4-byte header) are
+standard swizzled 4bpp tile data, exactly like every other 4bpp asset in
+this project, just interleaved with non-pixel header bytes and (within a
+single record) sometimes varying frame sizes, which is what stops plain
+`gbagfx` from handling them directly. A new tool, `tools/framed_gfx.py`
+(same idea as the existing `linear_gfx.py` for Mode 4 bitmaps - bypass
+`gbagfx`, do the pixel conversion directly), strips the per-frame headers
+and lays every frame out on a grid (cells sized to the record's largest
+frame, each frame's real pixels anchored top-left, unused cell space
+filled with palette index 0 - already the transparent/background index
+everywhere in this data) to produce one indexed PNG per record, plus a
+`.frames` sidecar text file (grid column count, then each frame's
+`w_tiles h_tiles` in original order - the only information a flat PNG
+can't self-describe, since frame sizes vary within a record). The
+per-frame pad bytes are always `{0x10, 0x00}` in both sheets (verified
+across every single frame via the same greedy parser), so the tool
+hardcodes them rather than storing them per frame.
+
+**Why directories of PNGs instead of separate top-level assets:** the
+original ROM data is one single LZ77-compressed stream per sheet, so the
+records can't be compressed independently and still round-trip byte-
+exact - compression exploits cross-record byte patterns. `graphics.mk`
+gained a generic `%.bin: %.png %.frames` rule (runs `framed_gfx.py`) plus
+two explicit rules that `cat` each directory's *built* per-record `.bin`
+fragments back together in filename order (numeric prefixes preserve
+original ROM order, computed via `$(patsubst ...,$(sort $(wildcard
+graphics/unknown/<name>/*.png)))` so new/removed records stay in sync
+automatically) before the existing generic `.bin.lz` compression rule
+runs - `Makefile`'s `GRAPHICS_BUILT` lists the two composite `.bin.lz`
+targets explicitly since the flat `graphics/*/*.bin`/`*.png` wildcards
+don't reach 3 directory levels deep. Verified byte-exact via a full clean
+`make compare` (including rebuilding `gbagfx`) after the change.
+
+Not done: further breaking down the two `unidentified*.png` catch-all
+fragments, and figuring out frame *counts* actually used per object (vs.
+how many exist physically - some records, e.g. category 0-2's record 2,
+may bundle more than one logical animation).
+
 ### Open questions / next steps
 
 - The `0x087E3BEC`-onward vtable system, its constructors, and
@@ -477,17 +750,23 @@ straightforward 8bpp tile data - not swept further here.
   embeds a record's address directly in code (as seen in `sub_802866C`/
   `sub_8028734`) rather than going through a numeric index. Whatever the
   equivalent mechanism is for game-world sprites hasn't been located.
-- Next real lead: find the *actual* per-frame rendering loop - something
-  that iterates active game-world actors (not HUD widgets) and uploads
-  their current animation frame to VRAM. This is almost certainly a
-  different function from `sub_8028A00`, since that one's callers are
-  exhaustively the 3 HUD records. Tracing from the main game loop /
-  VBlank handler downward (rather than from individual actor vtables
-  upward) may be more productive than continuing to inspect individual
-  vtable slots one at a time.
+- **The per-frame rendering loop has been found** (see the new section
+  above) - it's the category-descriptor -> vtable -> animation-table ->
+  `table_A`/`table_B` chain, not `sub_8028A00`. What's still open there:
+  identifying which game object(s) categories 0-2 and 3-6 actually are
+  (working theory: a spinning Aku Aku mask for 0-2, unconfirmed), and the
+  still-undecoded descriptor/record fields listed at the end of that
+  section.
+- The two giant LZ77 sheets are now identified and split into per-record,
+  editable PNG sources under `graphics/unknown/00_0b2120/`, `01_14174c/`
+  (a TNT crate, a Nitro crate, 5 decorated crate variants, a winged
+  creature, badge icons, a barrel, all confirmed; two large
+  `unidentified.png` catch-all pools remain uncatalogued). See "Identified
+  the two giant LZ77 sheets" / "Splitting the two giant sprite sheets"
+  above. Not done: cataloguing the two `unidentified.png` pools further.
 - Given the raw-tag (`0x0`) upload path exists (see the VRAM upload
   dispatcher above) and signature scanning can't find uncompressed data,
-  the fastest path to *locating* sprite pixels may still be empirical:
+  the fastest path to *locating* more sprite pixels may still be empirical:
   render chunks of the two large untyped regions as raw (uncompressed)
   4bpp tile data at various candidate widths and look for a recognizable
   character, the same way the original background/tileset scan worked -

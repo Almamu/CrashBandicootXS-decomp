@@ -71,7 +71,9 @@ GRAPHICS_BUILT := \
 	$(patsubst graphics/%_8bpp_tiles.png,$(GRAPHICS_BUILDDIR)/%_8bpp_tiles.8bpp.lz,$(filter %_8bpp_tiles.png,$(GRAPHICS_PNGS))) \
 	$(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.4bpp.lz,$(filter-out %_bitmap.png %_8bpp_tiles.png,$(GRAPHICS_PNGS))) \
 	$(patsubst graphics/%.pal,$(GRAPHICS_BUILDDIR)/%.gbapal.lz,$(GRAPHICS_PALS)) \
-	$(patsubst graphics/%.bin,$(GRAPHICS_BUILDDIR)/%.bin.lz,$(GRAPHICS_BINS))
+	$(patsubst graphics/%.bin,$(GRAPHICS_BUILDDIR)/%.bin.lz,$(GRAPHICS_BINS)) \
+	$(GRAPHICS_BUILDDIR)/unknown/00_0b2120.bin.lz \
+	$(GRAPHICS_BUILDDIR)/unknown/01_14174c.bin.lz
 
 SOUND_SONGS := $(wildcard sound/songs/*.xm)
 SOUND_SAMPLES := $(wildcard sound/samples/*.wav)
