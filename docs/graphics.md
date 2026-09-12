@@ -1269,3 +1269,37 @@ bitwise-AND-then-compare-to-zero idiom for testing a single bit exactly
 as the ROM has it (`ands r0, r0, r1; cmp r0, #0; beq ...`, not a `tst`
 instruction, which the ROM also doesn't use here). `sub_8026ED0` stays
 unmatched asm.
+
+Seventh matched function: `sub_8006AC8` (ROM `0x08006AC8`, immediately
+before `sub_8006AF4`, same region - joined `src/graphics.c` right above
+it). Inserts a 2-pointer record (`arg1[0]`/`arg1[1]`) into a slot
+`arg0 + count*8 + 0xC` of a 128-slot table living inline in `*arg0`
+(bounds-checked against `0x7F`), while preserving the 2-byte value that
+was sitting at `+0x12` of that slot (read before the overwrite, written
+back after - the field at `+0x12` overlaps the tail of the second pointer
+field, i.e. entries are 8 bytes apart but the record touches 20 bytes
+starting at `+0xC`, the classic GBA OAM-entry-affine-padding overlap
+trick). Took more register-pinning than any function so far - four
+separate `register ... asm("rN")` variables were needed to reproduce the
+ROM's *inconsistent* register choices for what look like structurally
+identical operations (the first "read count, shift, add base" sequence
+stays in one register throughout; the second, later "reload count, shift,
+add base" sequence spreads across two different registers) - gcc 2.9 just
+doesn't allocate the same way twice for near-identical code, and no
+amount of C-level rephrasing reproduced it without pinning. Two other
+non-obvious pieces were needed too:
+- The count field must be read through a **local volatile cast**
+  (`*(vs32 *)arg0`) both times, or gcc CSEs the second "reload" away
+  entirely (no aliasing barrier otherwise, since nothing in between
+  looks like it could change `*arg0` from the compiler's point of view).
+- The two incoming record fields must be read into **named temporaries
+  before either is stored** (`v0 = arg1[0]; v1 = arg1[1];` then both
+  stores) - writing it as two direct `field = arg1[i];` statements makes
+  gcc interleave load/store/load/store (reusing one register for both
+  loads), which is a different instruction order than the ROM's
+  load/load/store/store.
+`arg0`'s struct layout (a count at `+0`, then table entries starting at
+`+0xC`, most likely with 8 more bytes of header in between not touched by
+this function) isn't otherwise identified, and `arg1`'s two fields are
+untyped (`u32`) rather than named - this function was matched byte-exact
+without pinning down what data it actually manages.

@@ -23,6 +23,32 @@ extern struct dma_queue gUnknown_03001290;
 #define DMA3 (*(struct dma_regs *)0x040000D4)
 #define QUEUE_COUNT (((volatile struct dma_queue *)&gUnknown_03001290)->count)
 
+void sub_8006AC8(void *arg0, u32 *arg1)
+{
+    register s32 n1 asm("r2");
+    register u16 saved asm("r3");
+    register s32 n2 asm("r1");
+    register s32 addr2 asm("r0");
+    u32 v0;
+    u32 v1;
+
+    n1 = *(vs32 *)arg0;
+    if (n1 > 0x7F) {
+        return;
+    }
+    n1 = (s32)arg0 + (n1 << 3);
+    saved = *(u16 *)(n1 + 0x12);
+    v0 = arg1[0];
+    v1 = arg1[1];
+    *(u32 *)(n1 + 0xC) = v0;
+    *(u32 *)(n1 + 0x10) = v1;
+    n2 = *(vs32 *)arg0;
+    addr2 = (s32)arg0 + (n2 << 3);
+    *(u16 *)(addr2 + 0x12) = saved;
+    n2++;
+    *(s32 *)arg0 = n2;
+}
+
 extern void sub_8026ED0(void *arg0);
 
 void sub_8006AF4(void *arg0, u32 arg1)

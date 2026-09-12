@@ -12919,29 +12919,3 @@ sub_8006AAC: @ 0x08006AAC
 	.align 2, 0
 _08006AC0: .4byte 0x040000D4
 _08006AC4: .4byte 0x84000100
-
-	thumb_func_start sub_8006AC8
-sub_8006AC8: @ 0x08006AC8
-	push {r4, lr}
-	adds r4, r0, #0
-	ldr r2, [r4]
-	cmp r2, #0x7f
-	bgt _08006AEC
-	lsls r2, r2, #3
-	adds r2, r4, r2
-	ldrh r3, [r2, #0x12]
-	ldr r0, [r1]
-	ldr r1, [r1, #4]
-	str r0, [r2, #0xc]
-	str r1, [r2, #0x10]
-	ldr r1, [r4]
-	lsls r0, r1, #3
-	adds r0, r4, r0
-	strh r3, [r0, #0x12]
-	adds r1, #1
-	str r1, [r4]
-_08006AEC:
-	pop {r4}
-	pop {r0}
-	bx r0
-	.align 2, 0
