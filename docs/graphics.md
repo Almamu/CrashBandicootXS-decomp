@@ -442,6 +442,20 @@ candidates; rendered all 25 as a contact sheet to review at once. Result:
   scene, and others, each clearly a distinct level's thumbnail. All 10
   converted to proper `_8bpp_tiles.png` sources using that real palette and
   verified byte-exact.
+  - **Correction (fixed):** rendering all 10 with the single shared
+    `gStaticData_0863CF98` palette was wrong for 9 of them. An array at
+    `gStaticData_0816C5A0` (10 `{palette_ptr, tile_ptr}` 8-byte pairs, read
+    by `sub_801DB6C`) gives each icon its own dedicated 256-color palette -
+    only icon `01_637a70`'s pairing with `0863CF98` was actually correct;
+    icons `02`-`10` each pair with one of the `tileset1/12`-`20` blocks
+    below instead (`02`->`12`, `03`->`13`, `04`->`14`, `05`->`15`,
+    `06`->`16`, `07`->`17`, `08`->`18`, `09`->`19`, `10`->`20`). Re-rendered
+    with their real palettes: `02` is a jungle/waterfall scene, `06` an
+    icy/snow scene, `09` a submarine in water, etc. Fixed by regenerating
+    each PNG's color table from its real palette (the pixel *index* data,
+    and therefore the built ROM bytes, are untouched by this - it only
+    affects what the source PNG looks like when viewed/edited) and
+    correcting `data/data.s`'s per-file comments; verified byte-exact.
 - **`graphics/tileset1/12`-`20` (9 files, 512 bytes each) are not tile
   graphics at all - they're almost certainly 256-color palettes** that just
   happen to be the same byte size as 8 tiles' worth of 8bpp pixels (both are

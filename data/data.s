@@ -1246,8 +1246,10 @@ gStaticData_0861C1D4:
 
 .global gStaticData_0861C1FC
 gStaticData_0861C1FC:
-	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/34_61c1fc_tiles.4bpp.lz", 0, 0x28
+	@ LZ77 palette (16 colors) (32 bytes decompressed). This is
+	@ gStaticData_0817D7A4's (the legal/credits text screen) palette - see
+	@ gStaticData_0862D0CC below.
+	.incbin "build/crashbandicootxs/graphics/intro/34_61c1fc.gbapal.lz", 0, 0x28
 
 .global gStaticData_0861C224
 gStaticData_0861C224:
@@ -1352,8 +1354,14 @@ gStaticData_0862D0CB:
 
 .global gStaticData_0862D0CC
 gStaticData_0862D0CC:
-	@ LZ77 tile graphics (8bpp) (14976 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/46_62d0cc_8bpp_tiles.8bpp.lz", 0, 0x12E3
+	@ LZ77 tile graphics (4bpp) (14976 bytes decompressed, 468 tiles). This
+	@ is the legal/credits text screen: referenced (with palette
+	@ gStaticData_0861C1FC and tilemap gStaticData_086315BC) from a graphics
+	@ package struct at gStaticData_0817D7A4. Originally misclassified as
+	@ 8bpp - 14976 divides evenly by both 32 and 64, and this only decodes
+	@ as a coherent image (not noise) once composited with its real
+	@ palette+tilemap as 4bpp.
+	.incbin "build/crashbandicootxs/graphics/intro/46_62d0cc_tiles.4bpp.lz", 0, 0x12E3
 
 gStaticData_0862E3AF:
 	@ padding/unidentified data between assets
@@ -1451,7 +1459,9 @@ gStaticData_086315BB:
 
 .global gStaticData_086315BC
 gStaticData_086315BC:
-	@ LZ77 compressed data (unidentified) (1200 bytes decompressed)
+	@ LZ77 compressed data (1200 bytes decompressed) - the tilemap for the
+	@ legal/credits text screen, gStaticData_0862D0CC (30x20 tiles, 16-bit
+	@ entries).
 	.incbin "build/crashbandicootxs/graphics/intro/58_6315bc.bin.lz", 0, 0x27E
 
 gStaticData_0863183A:
@@ -1599,13 +1609,13 @@ gStaticData_086382C6:
 .global gStaticData_086382C8
 gStaticData_086382C8:
 	@ LZ77 tile graphics (8bpp) (4096 bytes decompressed) - a circular level-select
-	@ icon vignette, using the palette at gStaticData_0863CF98
+	@ icon vignette, using the palette at gStaticData_0863D01C
 	.incbin "build/crashbandicootxs/graphics/tileset1/02_6382c8_8bpp_tiles.8bpp.lz", 0, 0xAA0
 
 .global gStaticData_08638D68
 gStaticData_08638D68:
 	@ LZ77 tile graphics (8bpp) (4096 bytes decompressed) - a circular level-select
-	@ icon vignette, using the palette at gStaticData_0863CF98
+	@ icon vignette, using the palette at gStaticData_0863D0A0
 	.incbin "build/crashbandicootxs/graphics/tileset1/03_638d68_8bpp_tiles.8bpp.lz", 0, 0x6F1
 
 .global gStaticData_08639459
@@ -1616,13 +1626,13 @@ gStaticData_08639459:
 .global gStaticData_0863945C
 gStaticData_0863945C:
 	@ LZ77 tile graphics (8bpp) (4096 bytes decompressed) - a circular level-select
-	@ icon vignette, using the palette at gStaticData_0863CF98
+	@ icon vignette, using the palette at gStaticData_0863D124
 	.incbin "build/crashbandicootxs/graphics/tileset1/04_63945c_8bpp_tiles.8bpp.lz", 0, 0x8BC
 
 .global gStaticData_08639D18
 gStaticData_08639D18:
 	@ LZ77 tile graphics (8bpp) (4096 bytes decompressed) - a circular level-select
-	@ icon vignette, using the palette at gStaticData_0863CF98
+	@ icon vignette, using the palette at gStaticData_0863D1A8
 	.incbin "build/crashbandicootxs/graphics/tileset1/05_639d18_8bpp_tiles.8bpp.lz", 0, 0x8F2
 
 .global gStaticData_0863A60A
@@ -1633,7 +1643,7 @@ gStaticData_0863A60A:
 .global gStaticData_0863A60C
 gStaticData_0863A60C:
 	@ LZ77 tile graphics (8bpp) (4096 bytes decompressed) - a circular level-select
-	@ icon vignette, using the palette at gStaticData_0863CF98
+	@ icon vignette, using the palette at gStaticData_0863D22C
 	.incbin "build/crashbandicootxs/graphics/tileset1/06_63a60c_8bpp_tiles.8bpp.lz", 0, 0x781
 
 .global gStaticData_0863AD8D
@@ -1644,7 +1654,7 @@ gStaticData_0863AD8D:
 .global gStaticData_0863AD90
 gStaticData_0863AD90:
 	@ LZ77 tile graphics (8bpp) (4096 bytes decompressed) - a circular level-select
-	@ icon vignette, using the palette at gStaticData_0863CF98
+	@ icon vignette, using the palette at gStaticData_0863D2B0
 	.incbin "build/crashbandicootxs/graphics/tileset1/07_63ad90_8bpp_tiles.8bpp.lz", 0, 0x8D6
 
 .global gStaticData_0863B666
@@ -1655,7 +1665,7 @@ gStaticData_0863B666:
 .global gStaticData_0863B668
 gStaticData_0863B668:
 	@ LZ77 tile graphics (8bpp) (4096 bytes decompressed) - a circular level-select
-	@ icon vignette, using the palette at gStaticData_0863CF98
+	@ icon vignette, using the palette at gStaticData_0863D334
 	.incbin "build/crashbandicootxs/graphics/tileset1/08_63b668_8bpp_tiles.8bpp.lz", 0, 0x76A
 
 .global gStaticData_0863BDD2
@@ -1666,13 +1676,13 @@ gStaticData_0863BDD2:
 .global gStaticData_0863BDD4
 gStaticData_0863BDD4:
 	@ LZ77 tile graphics (8bpp) (4096 bytes decompressed) - a circular level-select
-	@ icon vignette, using the palette at gStaticData_0863CF98
+	@ icon vignette, using the palette at gStaticData_0863D3B8
 	.incbin "build/crashbandicootxs/graphics/tileset1/09_63bdd4_8bpp_tiles.8bpp.lz", 0, 0x810
 
 .global gStaticData_0863C5E4
 gStaticData_0863C5E4:
 	@ LZ77 tile graphics (8bpp) (4096 bytes decompressed) - a circular level-select
-	@ icon vignette, using the palette at gStaticData_0863CF98
+	@ icon vignette, using the palette at gStaticData_0863D43C
 	.incbin "build/crashbandicootxs/graphics/tileset1/10_63c5e4_8bpp_tiles.8bpp.lz", 0, 0x9B1
 
 .global gStaticData_0863CF95
@@ -1687,56 +1697,56 @@ gStaticData_0863CF98:
 
 .global gStaticData_0863D01C
 gStaticData_0863D01C:
-	@ LZ77 compressed data (512 bytes decompressed) - very likely a 256-color
-	@ RGB555 palette (plausible color values throughout), kept as raw binary:
-	@ some entries have a stray set bit 15 that a standard .pal round-trip
-	@ through gbagfx can't reproduce (RGB555 only uses bits 0-14), which
-	@ broke byte-exact rebuilding when tried as .pal
+	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
+	@ palette for the circular level-select icon at gStaticData_086382C8.
+	@ Kept as raw binary: some entries have a stray set bit 15 that a
+	@ standard .pal round-trip through gbagfx can't reproduce (RGB555 only
+	@ uses bits 0-14), which broke byte-exact rebuilding when tried as .pal
 	.incbin "build/crashbandicootxs/graphics/tileset1/12_63d01c.bin.lz", 0, 0x84
 
 .global gStaticData_0863D0A0
 gStaticData_0863D0A0:
-	@ LZ77 compressed data (512 bytes decompressed) - very likely a 256-color
-	@ RGB555 palette (plausible color values throughout), kept as raw binary:
-	@ some entries have a stray set bit 15 that a standard .pal round-trip
-	@ through gbagfx can't reproduce (RGB555 only uses bits 0-14), which
-	@ broke byte-exact rebuilding when tried as .pal
+	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
+	@ palette for the circular level-select icon at gStaticData_08638D68.
+	@ Kept as raw binary: some entries have a stray set bit 15 that a
+	@ standard .pal round-trip through gbagfx can't reproduce (RGB555 only
+	@ uses bits 0-14), which broke byte-exact rebuilding when tried as .pal
 	.incbin "build/crashbandicootxs/graphics/tileset1/13_63d0a0.bin.lz", 0, 0x84
 
 .global gStaticData_0863D124
 gStaticData_0863D124:
-	@ LZ77 compressed data (512 bytes decompressed) - very likely a 256-color
-	@ RGB555 palette (plausible color values throughout), kept as raw binary:
-	@ some entries have a stray set bit 15 that a standard .pal round-trip
-	@ through gbagfx can't reproduce (RGB555 only uses bits 0-14), which
-	@ broke byte-exact rebuilding when tried as .pal
+	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
+	@ palette for the circular level-select icon at gStaticData_0863945C.
+	@ Kept as raw binary: some entries have a stray set bit 15 that a
+	@ standard .pal round-trip through gbagfx can't reproduce (RGB555 only
+	@ uses bits 0-14), which broke byte-exact rebuilding when tried as .pal
 	.incbin "build/crashbandicootxs/graphics/tileset1/14_63d124.bin.lz", 0, 0x84
 
 .global gStaticData_0863D1A8
 gStaticData_0863D1A8:
-	@ LZ77 compressed data (512 bytes decompressed) - very likely a 256-color
-	@ RGB555 palette (plausible color values throughout), kept as raw binary:
-	@ some entries have a stray set bit 15 that a standard .pal round-trip
-	@ through gbagfx can't reproduce (RGB555 only uses bits 0-14), which
-	@ broke byte-exact rebuilding when tried as .pal
+	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
+	@ palette for the circular level-select icon at gStaticData_08639D18.
+	@ Kept as raw binary: some entries have a stray set bit 15 that a
+	@ standard .pal round-trip through gbagfx can't reproduce (RGB555 only
+	@ uses bits 0-14), which broke byte-exact rebuilding when tried as .pal
 	.incbin "build/crashbandicootxs/graphics/tileset1/15_63d1a8.bin.lz", 0, 0x84
 
 .global gStaticData_0863D22C
 gStaticData_0863D22C:
-	@ LZ77 compressed data (512 bytes decompressed) - very likely a 256-color
-	@ RGB555 palette (plausible color values throughout), kept as raw binary:
-	@ some entries have a stray set bit 15 that a standard .pal round-trip
-	@ through gbagfx can't reproduce (RGB555 only uses bits 0-14), which
-	@ broke byte-exact rebuilding when tried as .pal
+	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
+	@ palette for the circular level-select icon at gStaticData_0863A60C.
+	@ Kept as raw binary: some entries have a stray set bit 15 that a
+	@ standard .pal round-trip through gbagfx can't reproduce (RGB555 only
+	@ uses bits 0-14), which broke byte-exact rebuilding when tried as .pal
 	.incbin "build/crashbandicootxs/graphics/tileset1/16_63d22c.bin.lz", 0, 0x84
 
 .global gStaticData_0863D2B0
 gStaticData_0863D2B0:
-	@ LZ77 compressed data (512 bytes decompressed) - very likely a 256-color
-	@ RGB555 palette (plausible color values throughout), kept as raw binary:
-	@ some entries have a stray set bit 15 that a standard .pal round-trip
-	@ through gbagfx can't reproduce (RGB555 only uses bits 0-14), which
-	@ broke byte-exact rebuilding when tried as .pal
+	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
+	@ palette for the circular level-select icon at gStaticData_0863AD90.
+	@ Kept as raw binary: some entries have a stray set bit 15 that a
+	@ standard .pal round-trip through gbagfx can't reproduce (RGB555 only
+	@ uses bits 0-14), which broke byte-exact rebuilding when tried as .pal
 	.incbin "build/crashbandicootxs/graphics/tileset1/17_63d2b0.bin.lz", 0, 0x83
 
 .global gStaticData_0863D333
@@ -1746,29 +1756,29 @@ gStaticData_0863D333:
 
 .global gStaticData_0863D334
 gStaticData_0863D334:
-	@ LZ77 compressed data (512 bytes decompressed) - very likely a 256-color
-	@ RGB555 palette (plausible color values throughout), kept as raw binary:
-	@ some entries have a stray set bit 15 that a standard .pal round-trip
-	@ through gbagfx can't reproduce (RGB555 only uses bits 0-14), which
-	@ broke byte-exact rebuilding when tried as .pal
+	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
+	@ palette for the circular level-select icon at gStaticData_0863B668.
+	@ Kept as raw binary: some entries have a stray set bit 15 that a
+	@ standard .pal round-trip through gbagfx can't reproduce (RGB555 only
+	@ uses bits 0-14), which broke byte-exact rebuilding when tried as .pal
 	.incbin "build/crashbandicootxs/graphics/tileset1/18_63d334.bin.lz", 0, 0x84
 
 .global gStaticData_0863D3B8
 gStaticData_0863D3B8:
-	@ LZ77 compressed data (512 bytes decompressed) - very likely a 256-color
-	@ RGB555 palette (plausible color values throughout), kept as raw binary:
-	@ some entries have a stray set bit 15 that a standard .pal round-trip
-	@ through gbagfx can't reproduce (RGB555 only uses bits 0-14), which
-	@ broke byte-exact rebuilding when tried as .pal
+	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
+	@ palette for the circular level-select icon at gStaticData_0863BDD4.
+	@ Kept as raw binary: some entries have a stray set bit 15 that a
+	@ standard .pal round-trip through gbagfx can't reproduce (RGB555 only
+	@ uses bits 0-14), which broke byte-exact rebuilding when tried as .pal
 	.incbin "build/crashbandicootxs/graphics/tileset1/19_63d3b8.bin.lz", 0, 0x84
 
 .global gStaticData_0863D43C
 gStaticData_0863D43C:
-	@ LZ77 compressed data (512 bytes decompressed) - very likely a 256-color
-	@ RGB555 palette (plausible color values throughout), kept as raw binary:
-	@ some entries have a stray set bit 15 that a standard .pal round-trip
-	@ through gbagfx can't reproduce (RGB555 only uses bits 0-14), which
-	@ broke byte-exact rebuilding when tried as .pal
+	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
+	@ palette for the circular level-select icon at gStaticData_0863C5E4.
+	@ Kept as raw binary: some entries have a stray set bit 15 that a
+	@ standard .pal round-trip through gbagfx can't reproduce (RGB555 only
+	@ uses bits 0-14), which broke byte-exact rebuilding when tried as .pal
 	.incbin "build/crashbandicootxs/graphics/tileset1/20_63d43c.bin.lz", 0, 0x83
 
 .global gStaticData_0863D4BF
