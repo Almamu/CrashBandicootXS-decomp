@@ -1181,16 +1181,66 @@ Third matched function: `GetAnimFrameBaseOffset` in `src/actor_anim.c` -
 trivial (a single field read + arithmetic shift), included here mainly to
 confirm the "new `.c` file, non-adjacent region" workflow above works.
 
-Current known-close-but-not-yet-matched case, parked rather than forced:
-`FlushVramDmaQueue` (ROM `0x08006B1C`, right before `QueueVramDmaTransfer`
-- would need yet another split/new file) compiles with every instruction
-in the right order and the right operands, but the register allocator
-picks r5/r6 the opposite way from the original in one specific spot (a
-persistent queue-pointer copy vs. a value only needed once at the loop's
-end) - 17 bytes out of 120 differ, all attributable to that one swap and
-its knock-on effects, nothing semantically wrong. Several C-structure
-variations were tried (direct global access vs. a local pointer, moving
-the pointer's scope, named vs. inlined temporaries, statement order) -
-none flipped which physical register the compiler picked. Worth
-revisiting with a fresh angle (or a tool like decomp.me/a permuter) rather
-than more manual guessing.
+Fourth matched function: `FlushVramDmaQueue`, at the top of
+`src/graphics.c` (ROM `0x08006B1C`, right before `QueueVramDmaTransfer` in
+the same contiguous region, so no new split/ldscript entry was needed).
+This one took two rounds to get exactly right - the recipe, since it's
+non-obvious:
+
+- The loop condition must re-read `gUnknown_03001290.count` **fresh every
+  iteration**, matching the ROM's `ldr r0,[r6,#4]` inside the loop body.
+  Plain `s32 count` lets gcc 2.9 -O2 treat the trip count as loop-invariant
+  and hoist it into a decrementing counter (no re-read at all). The fix is
+  a *local* volatile cast used only inside this function -
+  `#define QUEUE_COUNT (((volatile struct dma_queue *)&gUnknown_03001290)->count)`,
+  then `for (i = 0; i < QUEUE_COUNT; i++)`. Marking the struct's `count`
+  field itself `vs32` also forces the re-read, but it's the wrong fix: the
+  same field is read (non-volatile, cached-in-a-register) by
+  `QueueVramDmaTransfer` earlier in this same file, and making the field
+  volatile broke *that* function's already-matched codegen (it started
+  re-loading `count` twice instead of caching it - a real regression,
+  caught by re-running `make compare` on the whole ROM, not just this
+  function's byte range). Casting through a local volatile pointer instead
+  keeps the volatility scoped to the one call site that needs it. Also
+  worth noting: casting `&gUnknown_03001290.count` (the field's address)
+  to a volatile pointer instead of casting the *struct pointer* changes
+  which address ends up as the literal-pool constant (`gUnknown_03001290+4`
+  instead of `gUnknown_03001290`), which look equivalent after relocation
+  but produce different bytes than the ROM actually has - cast the struct
+  pointer, not the field address.
+- The entries pointer must be written as `entry = &gUnknown_03001290.entries[i];`
+  **inside** the loop (array-indexed off the loop variable, not a
+  `pointer++` incremented once outside it). GCC's strength reduction then
+  turns this into exactly the ROM's pattern: a single pointer load in the
+  loop preheader (right after the initial "count > 0" guard) plus an
+  `add r2, r2, #0xc` per iteration - and, combined with the volatile count
+  read above, this is what makes the compiler allocate a *second*,
+  separate copy of `&gUnknown_03001290` (r6 for the repeated count check,
+  r5 for the entries-deref/final "count = 0" reset), matching the ROM's
+  r5/r6 split exactly. A plain incremented pointer variable collapses both
+  roles onto one register and loses the split.
+- Reading `entry->field_08` and shifting it (`>> 2`/`>> 1`) before OR-ing
+  in the DMA control flags needed one more trick. The ROM loads the raw
+  halfword into r1 and shifts the result into r0 (`ldrh r1,[r2,#8]`;
+  `lsrs r0,r1,#2`); every ordinary C phrasing tried instead collapsed this
+  to a single register (`ldrh r0,[r2,#8]`; `lsr r0,r0,#2`) - gcc 2.9's
+  local-alloc pass just doesn't pick the same two registers a human would
+  from that C alone, and no amount of reordering/renaming budged it (worse,
+  adding named locals anywhere in the function perturbed *unrelated*
+  register choices elsewhere, e.g. moved the entries pointer from r2 to
+  r1). The fix: pin the two temporaries to explicit hard registers with
+  GCC's old-style register-variable syntax -
+  `register u16 raw asm("r1");` and `register u32 shifted asm("r0");` -
+  then `raw = entry->field_08; shifted = raw >> 2; shifted |= 0x84000000;`
+  reproduces the ROM's register choice exactly. This is a legitimate,
+  commonly-used decomp technique for exactly this situation (nudging gcc's
+  allocator when no plain-C phrasing does it), not a hack specific to this
+  function - reach for it whenever a close-but-not-quite match traces back
+  to one specific pair of registers gcc won't pick on its own.
+
+Also confirmed along the way: the magic DMA control constants are exactly
+the existing `DmaCopy32`/`DmaCopy16` control words -
+`0x84000000 == (DMA_ENABLE | DMA_32BIT) << 16` and
+`0x80000000 == (DMA_ENABLE | DMA_16BIT) << 16` (see `dma_macros.h`) -
+though writing it that way vs. a raw hex literal makes no codegen
+difference (both constant-fold identically).

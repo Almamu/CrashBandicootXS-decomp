@@ -13,7 +13,46 @@ struct dma_queue {
     s32 count;
 };
 
+struct dma_regs {
+    vu32 src;
+    vu32 dst;
+    vu32 cnt;
+};
+
 extern struct dma_queue gUnknown_03001290;
+#define DMA3 (*(struct dma_regs *)0x040000D4)
+#define QUEUE_COUNT (((volatile struct dma_queue *)&gUnknown_03001290)->count)
+
+void FlushVramDmaQueue(void)
+{
+    struct dma_queue_entry *entry;
+    s32 i;
+    register u16 raw asm("r1");
+    register u32 shifted asm("r0");
+
+    for (i = 0; i < QUEUE_COUNT; i++) {
+        entry = &gUnknown_03001290.entries[i];
+        if (entry->field_0A == 0x20) {
+            DMA3.src = entry->field_04;
+            DMA3.dst = entry->field_00;
+            raw = entry->field_08;
+            shifted = raw >> 2;
+            shifted |= 0x84000000;
+        } else {
+            DMA3.src = entry->field_04;
+            DMA3.dst = entry->field_00;
+            raw = entry->field_08;
+            shifted = raw >> 1;
+            shifted |= 0x80000000;
+        }
+        DMA3.cnt = shifted;
+        (void)DMA3.cnt;
+    }
+    gUnknown_03001290.count = 0;
+
+    while (DMA3.cnt & 0x80000000) {
+    }
+}
 
 s32 QueueVramDmaTransfer(void *arg0, void *arg1, u16 arg2, u16 arg3)
 {
