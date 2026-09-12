@@ -12960,14 +12960,3 @@ _08006B06:
 	pop {r0}
 	bx r0
 	.align 2, 0
-
-	thumb_func_start sub_8006B0C
-sub_8006B0C: @ 0x08006B0C
-	push {r4, lr}
-	adds r4, r0, #0
-	bl sub_8006A90
-	adds r0, r4, #0
-	pop {r4}
-	pop {r1}
-	bx r1
-

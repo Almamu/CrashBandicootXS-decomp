@@ -23,6 +23,14 @@ extern struct dma_queue gUnknown_03001290;
 #define DMA3 (*(struct dma_regs *)0x040000D4)
 #define QUEUE_COUNT (((volatile struct dma_queue *)&gUnknown_03001290)->count)
 
+extern void sub_8006A90(void *arg0);
+
+void *sub_8006B0C(void *arg0)
+{
+    sub_8006A90(arg0);
+    return arg0;
+}
+
 void FlushVramDmaQueue(void)
 {
     struct dma_queue_entry *entry;

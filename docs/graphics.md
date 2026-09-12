@@ -1244,3 +1244,19 @@ the existing `DmaCopy32`/`DmaCopy16` control words -
 `0x80000000 == (DMA_ENABLE | DMA_16BIT) << 16` (see `dma_macros.h`) -
 though writing it that way vs. a raw hex literal makes no codegen
 difference (both constant-fold identically).
+
+Fifth matched function: `sub_8006B0C` (ROM `0x08006B0C`, immediately
+before `FlushVramDmaQueue` in the same contiguous region - joined
+`src/graphics.c` right above it, no new split). A trivial one-shot first
+try: `void *sub_8006B0C(void *arg0) { sub_8006A90(arg0); return arg0; }`
+matched byte-for-byte immediately - a plain "call a helper for its side
+effect, then return the original argument unchanged" idiom, which gcc 2.9
+compiles predictably (save the arg across the call in a callee-saved reg,
+restore it into r0 for the return). `sub_8006A90` itself is still
+unmatched asm - it's part of a little three-function family
+(`sub_8006A78`/`sub_8006A84`/`sub_8006A90`, all still asm, all operating
+on a 3-field struct at ROM `0x08006A78`-`0x08006AAC`) that looks like a
+double-buffer swap/reset utility given how many places call it, but wasn't
+investigated further here since the goal was just to match this one
+wrapper - left un-renamed (still `sub_8006A90`/`sub_8006B0C`) rather than
+guess at a name from partial evidence.
