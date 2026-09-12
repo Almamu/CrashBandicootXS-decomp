@@ -1176,23 +1176,31 @@ gStaticData_0861A154:
 
 .global gStaticData_0861BADC
 gStaticData_0861BADC:
-	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/24_61badc_tiles.4bpp.lz", 0, 0x28
+	@ LZ77 palette (16 colors) (32 bytes decompressed) - the palette for
+	@ gStaticData_0861C30C (sky/clouds background), loaded together as a
+	@ {w,h,palette_ptr,tile_ptr,tilemap_ptr} package at gStaticData_0816C484
+	@ via sub_801E578. Originally misclassified as a 1-tile 4bpp graphic (32
+	@ bytes coincidentally matches one 4bpp tile).
+	.incbin "build/crashbandicootxs/graphics/intro/24_61badc.gbapal.lz", 0, 0x28
 
 .global gStaticData_0861BB04
 gStaticData_0861BB04:
-	@ LZ77 compressed data (512 bytes decompressed) - very likely a 256-color
-	@ RGB555 palette (plausible color values throughout), kept as raw binary:
-	@ some entries have a stray set bit 15 that a standard .pal round-trip
-	@ through gbagfx can't reproduce (RGB555 only uses bits 0-14), which
-	@ broke byte-exact rebuilding when tried as .pal
+	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
+	@ palette for gStaticData_0861E5F8 (Crash's face in a badge, warp-room
+	@ background), loaded as a package at gStaticData_0816B284 via
+	@ sub_801E578. Kept as raw binary: some entries have a stray set bit 15
+	@ that a standard .pal round-trip through gbagfx can't reproduce
+	@ (RGB555 only uses bits 0-14), which broke byte-exact rebuilding when
+	@ tried as .pal
 	.incbin "build/crashbandicootxs/graphics/intro/25_61bb04.bin.lz", 0, 0x244
 
 .global gStaticData_0861BD48
 gStaticData_0861BD48:
-	@ LZ77 compressed data (512 bytes decompressed) - very likely a 256-color
-	@ RGB555 palette (plausible color values throughout), kept as raw binary:
-	@ some entries have a stray set bit 15 that a standard .pal round-trip
+	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
+	@ palette for gStaticData_0862556C (a level-select platform icon: a
+	@ blue gem pool, palm trees, small ruins), loaded as a package at
+	@ gStaticData_0816C58C via sub_801E578. Kept as raw binary: some
+	@ entries have a stray set bit 15 that a standard .pal round-trip
 	@ through gbagfx can't reproduce (RGB555 only uses bits 0-14), which
 	@ broke byte-exact rebuilding when tried as .pal
 	.incbin "build/crashbandicootxs/graphics/intro/26_61bd48.bin.lz", 0, 0x1E6
@@ -1203,18 +1211,26 @@ gStaticData_0861BF2E:
 
 .global gStaticData_0861BF30
 gStaticData_0861BF30:
-	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/27_61bf30_tiles.4bpp.lz", 0, 0x28
+	@ LZ77 palette (16 colors) (32 bytes decompressed) - the palette for
+	@ gStaticData_08628C50 (a red/fiery smoke texture), loaded as a package
+	@ at gStaticData_0817C594 via sub_801E578. Originally misclassified as
+	@ a 1-tile 4bpp graphic (32 bytes coincidentally matches one 4bpp tile).
+	.incbin "build/crashbandicootxs/graphics/intro/27_61bf30.gbapal.lz", 0, 0x28
 
 .global gStaticData_0861BF58
 gStaticData_0861BF58:
-	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/28_61bf58_tiles.4bpp.lz", 0, 0x28
+	@ LZ77 palette (16 colors) (32 bytes decompressed) - the palette for
+	@ gStaticData_0862A958 (a fire/aura glow effect: green transparent
+	@ background, orange/red/magenta outline), loaded as a package at
+	@ gStaticData_0817C5A8 via sub_801E578. Originally misclassified as a
+	@ 1-tile 4bpp graphic (32 bytes coincidentally matches one 4bpp tile).
+	.incbin "build/crashbandicootxs/graphics/intro/28_61bf58.gbapal.lz", 0, 0x28
 
 .global gStaticData_0861BF80
 gStaticData_0861BF80:
-	@ LZ77 compressed data (512 bytes decompressed) - very likely a 256-color
-	@ RGB555 palette (plausible color values throughout), kept as raw binary:
+	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
+	@ palette for gStaticData_0862B34C (Uka Uka's mask), loaded as a
+	@ package at gStaticData_0817C5BC via sub_801E578. Kept as raw binary:
 	@ some entries have a stray set bit 15 that a standard .pal round-trip
 	@ through gbagfx can't reproduce (RGB555 only uses bits 0-14), which
 	@ broke byte-exact rebuilding when tried as .pal
@@ -1268,8 +1284,14 @@ gStaticData_0861C309:
 
 .global gStaticData_0861C30C
 gStaticData_0861C30C:
-	@ LZ77 compressed data (16288 bytes decompressed) - not clearly identifiable as pixel graphics
-	.incbin "build/crashbandicootxs/graphics/intro/36_61c30c.bin.lz", 0, 0x22EA
+	@ LZ77 tile graphics (4bpp) (16288 bytes decompressed, 509 tiles - a
+	@ prime tile count, so stored as a 1-tile-tall strip). A sky/clouds
+	@ background: composited with its real palette (gStaticData_0861BADC)
+	@ and tilemap (gStaticData_0862FB24, 32x20 tiles) via the package at
+	@ gStaticData_0816C484. Originally left as raw binary ("not clearly
+	@ identifiable") since a bare tileset doesn't look like anything on its
+	@ own without the tilemap.
+	.incbin "build/crashbandicootxs/graphics/intro/36_61c30c_tiles.4bpp.lz", 0, 0x22EA
 
 gStaticData_0861E5F6:
 	@ padding/unidentified data between assets
@@ -1277,8 +1299,15 @@ gStaticData_0861E5F6:
 
 .global gStaticData_0861E5F8
 gStaticData_0861E5F8:
-	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/37_61e5f8_bitmap.bin.lz", 0, 0x6F73
+	@ LZ77 tile graphics (8bpp) (38400 bytes decompressed, 600 tiles - an
+	@ exact 30x20 screen's worth, no reuse). Crash's face in a blue badge
+	@ over a metallic warp-room background: composited with its real
+	@ palette (gStaticData_0861BB04) and tilemap (gStaticData_0862FFF4)
+	@ via the package at gStaticData_0816B284. Originally misclassified as
+	@ a Mode 4 (linear/non-tiled) bitmap - it happens to be exactly
+	@ 240x160 like a real Mode 4 bitmap (30x20 tiles x 8px), but it's
+	@ genuine tiled+tilemapped BG graphics.
+	.incbin "build/crashbandicootxs/graphics/intro/37_61e5f8_8bpp_tiles.8bpp.lz", 0, 0x6F73
 
 gStaticData_0862556B:
 	@ padding/unidentified data between assets
@@ -1286,7 +1315,11 @@ gStaticData_0862556B:
 
 .global gStaticData_0862556C
 gStaticData_0862556C:
-	@ LZ77 tile graphics (8bpp) (20288 bytes decompressed)
+	@ LZ77 tile graphics (8bpp) (20288 bytes decompressed, 317 tiles). A
+	@ level-select platform icon (blue gem pool, palm trees, small ruins,
+	@ magenta transparent background): composited with its real palette
+	@ (gStaticData_0861BD48) and tilemap (gStaticData_0863053C, 32x32
+	@ tiles) via the package at gStaticData_0816C58C.
 	.incbin "build/crashbandicootxs/graphics/intro/38_62556c_8bpp_tiles.8bpp.lz", 0, 0x36E3
 
 gStaticData_08628C4F:
@@ -1295,7 +1328,10 @@ gStaticData_08628C4F:
 
 .global gStaticData_08628C50
 gStaticData_08628C50:
-	@ LZ77 tile graphics (4bpp) (16192 bytes decompressed)
+	@ LZ77 tile graphics (4bpp) (16192 bytes decompressed, 506 tiles). A
+	@ red/fiery smoke texture: composited with its real palette
+	@ (gStaticData_0861BF30) and tilemap (gStaticData_086308F0) via the
+	@ package at gStaticData_0817C594.
 	.incbin "build/crashbandicootxs/graphics/intro/39_628c50_tiles.4bpp.lz", 0, 0x1D07
 
 gStaticData_0862A957:
@@ -1304,12 +1340,22 @@ gStaticData_0862A957:
 
 .global gStaticData_0862A958
 gStaticData_0862A958:
-	@ LZ77 compressed data (5344 bytes decompressed) - not clearly identifiable as pixel graphics
-	.incbin "build/crashbandicootxs/graphics/intro/40_62a958.bin.lz", 0, 0x9F4
+	@ LZ77 tile graphics (4bpp) (5344 bytes decompressed, 167 tiles - a
+	@ prime tile count, so stored as a 1-tile-tall strip). A fire/aura glow
+	@ effect (green transparent background, orange/red/magenta outline):
+	@ composited with its real palette (gStaticData_0861BF58) and tilemap
+	@ (gStaticData_08630E1C) via the package at gStaticData_0817C5A8.
+	@ Originally left as raw binary ("not clearly identifiable") since a
+	@ bare tileset doesn't look like anything on its own without the
+	@ tilemap.
+	.incbin "build/crashbandicootxs/graphics/intro/40_62a958_tiles.4bpp.lz", 0, 0x9F4
 
 .global gStaticData_0862B34C
 gStaticData_0862B34C:
-	@ LZ77 tile graphics (8bpp) (6272 bytes decompressed)
+	@ LZ77 tile graphics (8bpp) (6272 bytes decompressed, 98 tiles). Uka
+	@ Uka's mask: composited with its real palette (gStaticData_0861BF80)
+	@ and tilemap (gStaticData_08631158) via the package at
+	@ gStaticData_0817C5BC.
 	.incbin "build/crashbandicootxs/graphics/intro/41_62b34c_8bpp_tiles.8bpp.lz", 0, 0xF79
 
 gStaticData_0862C2C5:
@@ -1377,8 +1423,11 @@ gStaticData_0862E3B0:
 
 .global gStaticData_0862FB24
 gStaticData_0862FB24:
-	@ LZ77 tile graphics (4bpp) (1280 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/48_62fb24_tiles.4bpp.lz", 0, 0x4CF
+	@ LZ77 compressed data (1280 bytes decompressed) - the tilemap for the
+	@ sky/clouds background, gStaticData_0861C30C (32x20 tiles, 16-bit
+	@ entries). Originally misclassified as 4bpp tile graphics (1280 bytes
+	@ divides evenly by 32, the 4bpp tile size, purely by coincidence).
+	.incbin "build/crashbandicootxs/graphics/intro/48_62fb24.bin.lz", 0, 0x4CF
 
 gStaticData_0862FFF3:
 	@ padding/unidentified data between assets
@@ -1386,13 +1435,19 @@ gStaticData_0862FFF3:
 
 .global gStaticData_0862FFF4
 gStaticData_0862FFF4:
-	@ LZ77 compressed data (unidentified) (1200 bytes decompressed)
+	@ LZ77 compressed data (1200 bytes decompressed) - the tilemap for
+	@ Crash's face/warp-room background, gStaticData_0861E5F8 (30x20
+	@ tiles, 16-bit entries).
 	.incbin "build/crashbandicootxs/graphics/intro/49_62fff4.bin.lz", 0, 0x548
 
 .global gStaticData_0863053C
 gStaticData_0863053C:
-	@ LZ77 tile graphics (4bpp) (2048 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/50_63053c_tiles.4bpp.lz", 0, 0x3B3
+	@ LZ77 compressed data (2048 bytes decompressed) - the tilemap for the
+	@ level-select platform icon, gStaticData_0862556C (32x32 tiles,
+	@ 16-bit entries). Originally misclassified as 4bpp tile graphics (2048
+	@ bytes divides evenly by 32, the 4bpp tile size, purely by
+	@ coincidence).
+	.incbin "build/crashbandicootxs/graphics/intro/50_63053c.bin.lz", 0, 0x3B3
 
 gStaticData_086308EF:
 	@ padding/unidentified data between assets
@@ -1400,7 +1455,9 @@ gStaticData_086308EF:
 
 .global gStaticData_086308F0
 gStaticData_086308F0:
-	@ LZ77 compressed data (unidentified) (1200 bytes decompressed)
+	@ LZ77 compressed data (1200 bytes decompressed) - the tilemap for the
+	@ red/fiery smoke texture, gStaticData_08628C50 (30x20 tiles, 16-bit
+	@ entries).
 	.incbin "build/crashbandicootxs/graphics/intro/51_6308f0.bin.lz", 0, 0x529
 
 gStaticData_08630E19:
@@ -1409,7 +1466,9 @@ gStaticData_08630E19:
 
 .global gStaticData_08630E1C
 gStaticData_08630E1C:
-	@ LZ77 compressed data (unidentified) (1200 bytes decompressed)
+	@ LZ77 compressed data (1200 bytes decompressed) - the tilemap for the
+	@ fire/aura glow effect, gStaticData_0862A958 (30x20 tiles, 16-bit
+	@ entries).
 	.incbin "build/crashbandicootxs/graphics/intro/52_630e1c.bin.lz", 0, 0x339
 
 gStaticData_08631155:
@@ -1418,7 +1477,8 @@ gStaticData_08631155:
 
 .global gStaticData_08631158
 gStaticData_08631158:
-	@ LZ77 compressed data (unidentified) (1200 bytes decompressed)
+	@ LZ77 compressed data (1200 bytes decompressed) - the tilemap for Uka
+	@ Uka's mask, gStaticData_0862B34C (30x20 tiles, 16-bit entries).
 	.incbin "build/crashbandicootxs/graphics/intro/53_631158.bin.lz", 0, 0x21A
 
 gStaticData_08631372:

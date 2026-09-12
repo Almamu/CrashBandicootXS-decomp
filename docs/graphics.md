@@ -469,7 +469,9 @@ candidates; rendered all 25 as a contact sheet to review at once. Result:
 - Similarly, 3 more small 512-byte blocks in `graphics/intro/` (`25_61bb04`,
   `26_61bd48`, `29_61bf80`) look plausibly palette-like (varied RGB555-ish
   values) but are unconfirmed and hit the same bit-15 round-trip problem -
-  left as raw `.bin` with a similar comment.
+  left as raw `.bin` with a similar comment. **Update:** all 3 are now
+  confirmed (not just "plausible") - see "Swept `sub_801E578`'s package
+  structs" below.
 - **One more, `graphics/intro/35_61c224`, is a confirmed palette** - it's
   `gStaticData_0817D0E4`'s (the XS logo package's) own palette pointer,
   found while tracing that struct. Same bit-15 issue prevents converting it
@@ -482,6 +484,76 @@ candidates; rendered all 25 as a contact sheet to review at once. Result:
 
 The other 47 raw blocks don't divide evenly by 64 at all, so they can't be
 straightforward 8bpp tile data - not swept further here.
+
+### Swept `sub_801E578`'s package structs (done)
+
+`sub_801E578` (ROM `0x0801E578`) is a generic "load a `{w, h, palette_ptr,
+tile_ptr, tilemap_ptr}` graphics package" helper (the same 5-word package
+shape used elsewhere in this doc, e.g. `gStaticData_0817D0E4` for the XS
+logo) - found from 9 call sites, resolving to 6 distinct package structs.
+All 6 already had their tile graphics extracted from earlier passes, but
+several were misclassified, and none had their real palette/tilemap
+identified. Decompressing each package's tile+palette+tilemap together and
+compositing them gives a clean, confirmed picture in every case:
+
+| package | tile data | content |
+|---|---|---|
+| `gStaticData_0816C484` | `36_61c30c` (4bpp) | sky/clouds background |
+| `gStaticData_0816B284` | `37_61e5f8` (8bpp) | Crash's face in a blue badge, metallic warp-room background |
+| `gStaticData_0816C58C` | `38_62556c` (8bpp) | level-select platform icon: blue gem pool, palm trees, small ruins, magenta transparent bg |
+| `gStaticData_0817C594` | `39_628c50` (4bpp) | red/fiery smoke texture |
+| `gStaticData_0817C5A8` | `40_62a958` (4bpp) | fire/aura glow effect: green transparent bg, orange/red/magenta outline |
+| `gStaticData_0817C5BC` | `41_62b34c` (8bpp) | Uka Uka's mask |
+
+Fixes applied (all verified byte-exact via a full clean rebuild):
+
+- **`36_61c30c` and `40_62a958`** were left as raw `.bin` ("not clearly
+  identifiable as pixel graphics") - true of a bare tileset without its
+  tilemap, but both decode cleanly as 4bpp once paired with their real
+  tilemap. Converted to proper `_tiles.4bpp` PNG sources (prime tile
+  counts - 509 and 167 - so both stored as 1-tile-tall strips, matching
+  the existing convention for `38_62556c`'s 317-tile case).
+- **`37_61e5f8`** was classified as a Mode 4 (linear) bitmap - it happens
+  to be exactly 240x160 like a real one, but its decompressed size
+  (38400 bytes) divides evenly by 64 into exactly 600 tiles (an exact
+  30x20 screen, matching its package's `w,h` with no tile reuse), and it
+  needs a tilemap to make sense - genuine tiled+tilemapped 8bpp BG
+  graphics, not a linear bitmap. Reconverted through `gbagfx`'s normal
+  8bpp path.
+- **Three 32-byte blocks miscategorized as one-tile 4bpp graphics**
+  (`24_61badc`, `27_61bf30`, `28_61bf58` - the same "32 bytes divides
+  evenly by the 4bpp tile size" coincidence hit earlier for `34_61c1fc`)
+  are actually the 16-color palettes for `36_61c30c`, `39_628c50`, and
+  `40_62a958` respectively. None have the stray-bit-15 problem, so all
+  converted cleanly to `.pal` sources.
+- **Two blocks miscategorized as 4bpp tile graphics** (`48_62fb24`,
+  1280 bytes; `50_63053c`, 2048 bytes) are actually the tilemaps for
+  `36_61c30c` and `38_62556c` (both byte counts divide evenly by 32, the
+  4bpp tile size, purely by coincidence - same trap as the palettes
+  above). Every tilemap entry's tile index is in-bounds for its
+  tileset's real tile count, confirming this rather than assuming it.
+  Converted back to raw `.bin` (tilemaps aren't tile pixel data, so they
+  don't go through `gbagfx` at all - same as every other already-known
+  tilemap in this file).
+- **The 3 previously "plausible but unconfirmed" 256-color palette
+  blocks** (`25_61bb04`, `26_61bd48`, `29_61bf80`) are now confirmed as
+  `37_61e5f8`'s, `38_62556c`'s, and `41_62b34c`'s real palettes
+  respectively - comments updated from "very likely"/"plausible" to
+  stating the pairing directly. Still raw `.bin` (all 3 still hit the
+  stray-bit-15 `.pal` round-trip problem).
+- **`38_62556c` and `41_62b34c`** were already correctly 4bpp/8bpp from
+  earlier passes - only their `data.s` comments were missing the real
+  identity/palette/tilemap pairing, now added.
+
+One gotcha hit while fixing `37_61e5f8`: hand-building an indexed (`P`
+mode) PNG in Pillow from the working grayscale source (loading it,
+`putdata`-ing the same index values into a fresh `P`-mode image, then
+`putpalette`) silently broke the round-trip through `gbagfx`, even though
+the pixel index values were byte-identical going in - so the fix keeps
+this one file as grayscale (verified byte-exact) rather than forcing it
+to match the indexed-PNG style most other 8bpp sources use. Root cause
+not investigated further; worth being cautious about if this comes up
+again.
 
 ### Found the real per-actor animation-frame system
 
