@@ -1163,7 +1163,34 @@ this the first time since matching both together landed on a 4-byte
 total by coincidence - the explicit `asm(...)` is the general fix and
 doesn't depend on that kind of luck.)
 
-`asm/code_3.s` (122256 lines) is now split into `asm/code_3_1.s` and
-`asm/code_3_2.s` around where `src/graphics.c`'s functions used to live -
-expect more such splits (`code_3_3.s`, etc., or renames as the split
-points shift) as more functions get matched out of it over time.
+`asm/code_3.s` (122256 lines) is now split into `asm/code_3_1.s`,
+`asm/code_3_2.s`, and `asm/code_3_3.s` around where `src/graphics.c`'s
+and `src/actor_anim.c`'s functions used to live - expect more such splits
+as more functions get matched out of it over time. **One `.c` file per
+contiguous ROM region, not one per "topic":** `GetAnimFrameBaseOffset`
+(ROM `0x0803B058`) is nowhere near `QueueVramDmaTransfer`/
+`FreeVramDmaQueue` (ROM `0x08006B94`-ish) even though all three are part
+of the same animation-frame system - since one object file's `.text` can
+only be placed as a single contiguous block by `ldscript.txt`, a function
+whose real address isn't adjacent to an existing matched file's functions
+needs its own new `.c` file (here, `src/actor_anim.c`), not just an
+addition to the existing one - adding it to the wrong file would silently
+move it to the wrong ROM address.
+
+Third matched function: `GetAnimFrameBaseOffset` in `src/actor_anim.c` -
+trivial (a single field read + arithmetic shift), included here mainly to
+confirm the "new `.c` file, non-adjacent region" workflow above works.
+
+Current known-close-but-not-yet-matched case, parked rather than forced:
+`FlushVramDmaQueue` (ROM `0x08006B1C`, right before `QueueVramDmaTransfer`
+- would need yet another split/new file) compiles with every instruction
+in the right order and the right operands, but the register allocator
+picks r5/r6 the opposite way from the original in one specific spot (a
+persistent queue-pointer copy vs. a value only needed once at the loop's
+end) - 17 bytes out of 120 differ, all attributable to that one swap and
+its knock-on effects, nothing semantically wrong. Several C-structure
+variations were tried (direct global access vs. a local pointer, moving
+the pointer's scope, named vs. inlined temporaries, statement order) -
+none flipped which physical register the compiler picked. Worth
+revisiting with a fresh angle (or a tool like decomp.me/a permuter) rather
+than more manual guessing.

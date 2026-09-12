@@ -26,6 +26,8 @@ SECTIONS
         build/crashbandicootxs/asm/code_3_1.o(.text);
         build/crashbandicootxs/src/graphics.o(.text);
         build/crashbandicootxs/asm/code_3_2.o(.text);
+        build/crashbandicootxs/src/actor_anim.o(.text);
+        build/crashbandicootxs/asm/code_3_3.o(.text);
 
         /* Data */
         build/crashbandicootxs/data/data.o(.rodata);
