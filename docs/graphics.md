@@ -1260,3 +1260,12 @@ double-buffer swap/reset utility given how many places call it, but wasn't
 investigated further here since the goal was just to match this one
 wrapper - left un-renamed (still `sub_8006A90`/`sub_8006B0C`) rather than
 guess at a name from partial evidence.
+
+Sixth matched function: `sub_8006AF4` (ROM `0x08006AF4`, immediately
+before `sub_8006B0C`, same contiguous region - joined `src/graphics.c`
+right above it, no new split). Another one-shot match: a conditional-call
+wrapper, `if (arg1 & 1) sub_8026ED0(arg0);` - gcc 2.9 compiles the
+bitwise-AND-then-compare-to-zero idiom for testing a single bit exactly
+as the ROM has it (`ands r0, r0, r1; cmp r0, #0; beq ...`, not a `tst`
+instruction, which the ROM also doesn't use here). `sub_8026ED0` stays
+unmatched asm.
