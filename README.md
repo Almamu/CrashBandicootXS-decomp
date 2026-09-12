@@ -15,6 +15,8 @@ Please see follow [these instructions](./INSTALL.md)
 
 ## Notes
 
+- [docs/audio.md](./docs/audio.md) - how the Shin'en GAX2 sound engine's data is laid out and rebuilt
+- [docs/graphics.md](./docs/graphics.md) - how graphics were extracted, and ongoing notes on the sprite/actor system
 - The [Kirby & The Amazing Mirror](https://github.com/jiangzhengwenjz/katam/) decompilation uses a very similar codebase, as it was written by the same dev team (Dimps)
 - https://decomp.me is a great resource for helping to create matching functions
 - `ldscript.txt` tells the linker the order which files should be linked
