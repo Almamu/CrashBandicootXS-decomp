@@ -839,7 +839,21 @@ gStaticData_084A5600:
 
 .global gStaticData_0855BCB4
 gStaticData_0855BCB4:
-	.incbin "baserom.gba", 0x0055BCB4, 0x00048FA8
+	@ Shin'en GAX2 sound engine data: shared instrument/sample pool plus all
+	@ 19 songs (jungle, underwater, arctic, sewers, future, rocket crash,
+	@ bonus round, dingodile, n gin, tiny, neo cortex, main menu europe,
+	@ main menu japan, cutscenes, cutscenes spooky, intro, warp room,
+	@ credits, drums). Music by Manfred Linzner.
+	@
+	@ Built from editable sources (sound/songs/*.xm, sound/samples/*.wav,
+	@ sound/gax_manifest.json) by tools/gax_audio.py - a from-scratch GAX2
+	@ encoder, reverse-engineered to reproduce Shin'en's own object layout
+	@ (allocation order, pattern/instrument sharing, even a couple of fixed
+	@ "reserved" pointers whose purpose isn't otherwise understood). With
+	@ unedited sources this rebuilds byte-for-byte identical to the
+	@ original ROM; editing a .xm/.wav changes only the bytes that
+	@ actually need to differ.
+	.incbin "sound/gax_audio_data.bin"
 
 .global gStaticData_085A4C5C
 gStaticData_085A4C5C:

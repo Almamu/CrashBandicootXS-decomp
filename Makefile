@@ -70,14 +70,20 @@ GRAPHICS_BUILT := \
 	$(patsubst %.pal,%.gbapal.lz,$(GRAPHICS_PALS)) \
 	$(patsubst %.bin,%.bin.lz,$(GRAPHICS_BINS))
 
+SOUND_SONGS := $(wildcard sound/songs/*.xm)
+SOUND_SAMPLES := $(wildcard sound/samples/*.wav)
+
+sound/gax_audio_data.bin: sound/gax_manifest.json sound/gax_header_prefix.bin sound/gax_footer.bin $(SOUND_SONGS) $(SOUND_SAMPLES) tools/gax_audio.py
+	python3 tools/gax_audio.py $@
+
 #### Main Targets ####
 
 compare: $(ROM)
 	sha1sum -c checksum.sha1
 
-# Every incbin in data/*.s that pulls from graphics/ needs the corresponding
-# built (converted + recompressed) file to exist first.
-$(DATA_ASM_OBJS): $(GRAPHICS_BUILT)
+# Every incbin in data/*.s that pulls from graphics/ or sound/ needs the
+# corresponding built file to exist first.
+$(DATA_ASM_OBJS): $(GRAPHICS_BUILT) sound/gax_audio_data.bin
 
 clean:
 	$(RM) $(ROM) $(ELF) $(MAP) $(OBJS) $(C_ASMS)
