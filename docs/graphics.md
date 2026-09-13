@@ -1624,3 +1624,18 @@ with an immediate materializes the mask into a register and ANDs
 (2 instructions, valid but different bytes) rather than reproducing the
 ROM's shift-based extraction (also 2 instructions) - the same idiom
 identified back at `sub_800695C`.
+
+Twenty-eighth matched function: `sub_8006770` (ROM `0x08006770`,
+immediately before `sub_80067A4` - joined `src/oam_count.c` above it, no
+new split). Two unrelated pieces in one function: if `arg0->+0x18` is
+non-NULL, reads a signed 16-bit offset and a pointer out of a nested
+struct (`arg0->+0x18->+0x18`, offset `+0x50`/`+0x54`) and calls
+`sub_803AD80(base + offset, 3, ptr)` - looks like resolving a relative
+link/index into an absolute address before invoking some renderer or
+allocator; then, completely independently, the same `if (arg1 & 1)
+sub_8026ED0(arg0);` conditional-call idiom seen before in `sub_8006AF4`.
+Matched byte-exact on the second try - the only fix was inlining the
+offset and pointer reads directly as call arguments rather than through
+named locals, which changed the evaluation order to match the ROM's
+(read the signed halfword, compute the base+offset sum, *then* read the
+trailing pointer field - not both reads up front).

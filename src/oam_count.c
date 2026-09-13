@@ -2,6 +2,23 @@
 
 extern u8 gStaticData_0816C86C[];
 extern void sub_80062A8(s32 arg0, s32 arg1, s32 arg2);
+extern void sub_803AD80(void *arg0, s32 arg1, void *arg2);
+extern void sub_8026ED0(void *arg0);
+
+void sub_8006770(void *arg0, u32 arg1)
+{
+    void *field18;
+    u8 *p;
+
+    field18 = *(void **)((u8 *)arg0 + 0x18);
+    if (field18 != NULL) {
+        p = *(u8 **)((u8 *)field18 + 0x18) + 0x50;
+        sub_803AD80((u8 *)field18 + *(s16 *)p, 3, *(void **)(p + 4));
+    }
+    if (arg1 & 1) {
+        sub_8026ED0(arg0);
+    }
+}
 
 void sub_80067A4(void)
 {

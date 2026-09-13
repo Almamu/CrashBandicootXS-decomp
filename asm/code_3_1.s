@@ -12430,32 +12430,3 @@ _08006760: .4byte gUnknown_030012B8
 _08006764: .4byte gUnknown_03001300
 _08006768: .4byte 0x04000010
 _0800676C: .4byte 0x04000050
-
-	thumb_func_start sub_8006770
-sub_8006770: @ 0x08006770
-	push {r4, r5, lr}
-	adds r4, r0, #0
-	adds r5, r1, #0
-	ldr r2, [r4, #0x18]
-	cmp r2, #0
-	beq _0800678E
-	ldr r1, [r2, #0x18]
-	adds r1, #0x50
-	movs r3, #0
-	ldrsh r0, [r1, r3]
-	adds r0, r2, r0
-	ldr r2, [r1, #4]
-	movs r1, #3
-	bl sub_803AD80
-_0800678E:
-	movs r0, #1
-	ands r0, r5
-	cmp r0, #0
-	beq _0800679C
-	adds r0, r4, #0
-	bl sub_8026ED0
-_0800679C:
-	pop {r4, r5}
-	pop {r0}
-	bx r0
-	.align 2, 0
