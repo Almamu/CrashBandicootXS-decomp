@@ -52,7 +52,7 @@ extern void sub_8006C28(void *arg0);
 extern void sub_8008890(void *arg0, s32 arg1, s32 arg2);
 extern void sub_803AFE4(void *buf, s32 arg1, s32 arg2);
 extern void sub_803AFDC(void *buf, s32 arg1, s32 arg2);
-extern void sub_8001214(void *arg0, void *arg1, void *buf, s32 arg3);
+extern s32 sub_8001214(void *arg0, void *arg1, void *buf, s32 arg3);
 extern s32 sub_8026F38(s32 arg0);
 extern void *gUnknown_030012FC;
 

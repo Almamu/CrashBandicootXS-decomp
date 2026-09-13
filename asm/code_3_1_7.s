@@ -3,39 +3,6 @@
 .syntax unified
 .arm
 
-	thumb_func_start sub_8001214
-sub_8001214: @ 0x08001214
-	push {r4, r5, r6, lr}
-	mov r6, r8
-	push {r6}
-	sub sp, #4
-	mov r8, r0
-	adds r4, r1, #0
-	adds r5, r2, #0
-	adds r6, r3, #0
-	ldr r1, [r5]
-	movs r2, #0x8c
-	lsls r2, r2, #1
-	adds r0, r4, r2
-	str r1, [r0]
-	ldr r0, [r5, #0xc]
-	adds r2, #4
-	adds r1, r4, r2
-	ldr r1, [r1]
-	bl sub_8037E54
-	adds r3, r0, #0
-	str r6, [sp]
-	mov r0, r8
-	adds r1, r4, #0
-	adds r2, r5, #0
-	bl sub_8000EE4
-	add sp, #4
-	pop {r3}
-	mov r8, r3
-	pop {r4, r5, r6}
-	pop {r1}
-	bx r1
-
 	thumb_func_start sub_8001254
 sub_8001254: @ 0x08001254
 	adds r2, r0, #0

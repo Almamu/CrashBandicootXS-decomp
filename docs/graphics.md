@@ -2499,6 +2499,27 @@ Extracting this one function needed the same kind of split as before:
 nothing and removed, its ldscript slot going to `word_util.o`, with
 everything from `sub_8001214` on moved to a new `asm/code_3_1_7.s`.
 
+Twenty-fifth matched function: `sub_8001214` (ROM `0x08001214`, right
+after `sub_80011F4`), also in `src/word_util.c` - a thin wrapper around
+the still-parked `sub_8000EE4`: stashes one field from its `params`
+struct into the render-target object's own `field_118`, computes a
+line-count limit (`params->field_c / self->field_11c`), then forwards
+to `sub_8000EE4` with that limit and **returns its result** - genuinely
+`s32`, not `void`, even though the one call site matched so far
+(`sub_8006600` in `src/oam_count.c`, still parked) ignores it. Caught
+via the epilogue: an initial `void`-returning version compiled the
+final "restore LR and branch" step through `r0` (`pop {r0}; bx r0`),
+one register off from the ROM's `pop {r1}; bx r1` - changing the return
+type to `s32` and actually `return`ing `sub_8000EE4`'s result fixed it,
+since `r0` then holds a live value (the forwarded return) that the
+epilogue must preserve, forcing `r1` for the restore instead. Also
+needed the store to `self->field_118` split into two statements (`s32
+v = params->field_0; *addr = v;`) rather than one combined expression,
+to get the ROM's exact register letters for the address/value pair
+(and, as a side effect, made gcc reuse the already-shifted `0x118`
+constant plus 4 for the `field_11c` offset instead of recomputing it
+from scratch, incidentally also matching the ROM there).
+
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/graphics.c`,
