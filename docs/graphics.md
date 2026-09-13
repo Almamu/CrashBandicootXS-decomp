@@ -2365,6 +2365,28 @@ via a clean `make compare`); `make NON_MATCHING=1 crashbandicootxs.gba`
 compiles this C version in instead (verified this session to compile
 and link cleanly with no duplicate-symbol errors).
 
+Twenty-first matched function: `sub_800106C` (ROM `0x0800106C`, right
+after the still-parked `sub_8000EE4`), in new file `src/time_util.c` -
+formats a centisecond count as `"MM:SS.X0"` into a 9-byte buffer (`void
+sub_800106C(s32 value, u8 *buf)`); only one fractional digit is
+actually computed (`value % 10`) - the other is always `'0'`, so the
+displayed precision is really just tenths of a second despite the
+two-digit-looking field. Built on two not-yet-matched helpers,
+`sub_803AF1C` (mod) and `sub_8037E54` (div) - both declared here with
+plain `s32`/`s32` signatures despite `sub_803AF1C` already having a
+`u16`/`s32`-typed extern declaration in `src/rand_util.c` for a
+different call site; harmless; C linkage doesn't check parameter types
+across translation units, and both signatures compile to the same
+calling convention here anyway. Matched first-try structurally, needed
+the same trailing `asm(".align 2, 0")` fix as the others in this
+session.
+
+Extracting this one function required the same kind of split as
+`sub_8000CBC`'s and `sub_8000D68`'s: `asm/code_3_1_3.s` was trimmed to
+end right after `sub_8000EE4`'s `.endif`, and everything from
+`sub_80010E0` on moved to a new `asm/code_3_1_4.s`, with
+`src/time_util.c`'s object linked between them in `ldscript.txt`.
+
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/graphics.c`,
