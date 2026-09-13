@@ -3,6 +3,11 @@
 .syntax unified
 .arm
 
+@ sub_8000CBC is reconstructed (but not yet byte-matching) as C in
+@ src/printf_util.c, guarded by #if NON_MATCHING - this raw version is
+@ only assembled for the default (matching) build. See docs/graphics.md,
+@ "Parked, not matched: sub_8000CBC".
+.if NON_MATCHING == 0
 	thumb_func_start sub_8000CBC
 sub_8000CBC: @ 0x08000CBC
 	push {r4, r5, r6, r7, lr}
@@ -107,6 +112,7 @@ _08000D62:
 	pop {r4, r5, r6, r7}
 	pop {r1}
 	bx r1
+.endif
 	thumb_func_start sub_8000D68
 sub_8000D68: @ 0x08000D68
 	movs	r2, #0

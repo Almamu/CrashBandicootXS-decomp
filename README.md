@@ -34,6 +34,12 @@ It builds the following ROM:
   split into itself (just this one function) plus `asm/code_3_1_2.s`
   (everything after it) so later functions could still be matched -
   see `docs/graphics.md` for the pattern to reuse if this happens again
+- `sub_8000CBC` (in `src/printf_util.c`, a case-insensitive `strstr`) is
+  also understood but not yet byte-matching - compiled only under
+  `make NON_MATCHING=1` for now (see `docs/graphics.md`, "Parked, not
+  matched: sub_8000CBC"): matching a specific redundant-truncate branch
+  shape in its lowercase-fold logic conflicts with keeping
+  `caseInsensitive` out of `r8`
 
 ## Setting up the repo
 

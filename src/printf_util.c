@@ -127,3 +127,112 @@ void sub_8000CA8(u8 *dest, u8 *fmt, ...)
 
 /* Trailing padding (see matching_decomp_alignment_fix memory). */
 asm(".align 2, 0");
+
+#if NON_MATCHING
+/* strstr, with optional case-insensitive matching (`caseInsensitive`
+ * nonzero lowercases both sides before comparing). NOT YET BYTE-
+ * MATCHING - see docs/graphics.md, "Parked, not matched: sub_8000CBC"
+ * for the full account; compiled only under `make NON_MATCHING=1`, the
+ * checked-in assembly (asm/code_3_1_2.s) is used otherwise. Not
+ * printf-related, but kept in this file rather than a new one purely
+ * to preserve the ROM's address order (it sits immediately after
+ * sub_8000CA8) without another ldscript.txt split.
+ *
+ * `haystack`/`hcOuter` are pinned to r5/r3 to match the ROM (both
+ * plain scratch here - `hcOuter`'s own lifetime never crosses a call,
+ * so no r4-r7 hazard). The rest of the "normalize a char to lowercase"
+ * logic is written as `x = *p; p++; if (cond) x += 0x20;` using a
+ * *plain*, unpinned local for the actual arithmetic (`hcOuterVal`,
+ * `firstChar`, and the inner loop's `hc`/`nc`), with the pinned
+ * `hcOuter` only ever assigned *from* the finished result and never
+ * used mid-computation - pinning the working value directly (tried
+ * first) makes gcc skip the (redundant, since the value's already in
+ * 0-255 range) truncate-back-to-u8 step the ROM always has, and
+ * collapses the compare's and the add's separate `r0`-routed copies of
+ * the byte into one direct read/write of the pinned register instead.
+ * This *plain*-local version reproduces the ROM's total instruction
+ * count/registers everywhere except the shape of that "unchanged"
+ * skip: the ROM still executes an (otherwise redundant) copy-into-r0
+ * on the untaken branch before the shared truncate, where the plain
+ * `if (cond) x += 0x20;` here just branches straight past the whole
+ * conversion. An `s32 t = x; if (cond) t = x + 0x20; x = (u8)t;` form
+ * *does* reproduce that shape exactly (verified in isolation), but
+ * adding it back in this function specifically pushes register
+ * pressure just far enough to spill `caseInsensitive` into r8 (needing
+ * a save/restore dance the ROM doesn't have) - a worse mismatch than
+ * the one it fixes. Whichever local register ends up hosting that
+ * temp needs to be pinned without disturbing anything else already
+ * correct here; not yet found.
+ *
+ * `needleRest` is pinned to `ip` (r12, also just scratch here - never
+ * live across a call) to match the ROM, which computes it as a plain
+ * copy of `needle` *before* reading `firstChar`, then increments it
+ * *afterward* via a separate `movs r0, #1; add ip, r0` (the only way to
+ * add an immediate to a high register in Thumb) - `needleRest = needle
+ * + 1;` as one expression instead computes the sum in a low register
+ * first and copies the result into `ip`, which is shorter but not what
+ * the ROM does; no plain-C phrasing reproduced the ROM's instruction
+ * order/split here, so the increment is spelled out as inline asm. */
+u8 *sub_8000CBC(u8 *haystack0, u8 *needle, s32 caseInsensitive)
+{
+    register u8 *haystack asm("r5");
+    u8 firstChar;
+    register u8 *needleRest asm("ip");
+    u8 *h, *n;
+    u8 hcOuterVal;
+    register s32 hcOuter asm("r3");
+    u8 hc, nc;
+
+    needleRest = needle;
+    haystack = haystack0;
+    firstChar = *needle;
+    asm volatile("mov r0, #1\n\tadd %0, %0, r0" : "+r"(needleRest) : : "r0");
+    if (firstChar == 0) {
+        return 0;
+    }
+    if (caseInsensitive) {
+        if ((u8)(firstChar - 'A') <= 0x19) {
+            firstChar += 0x20;
+        }
+    }
+outer:
+    hcOuterVal = *haystack;
+    haystack++;
+    if (caseInsensitive) {
+        if ((u8)(hcOuterVal - 'A') <= 0x19) {
+            hcOuterVal += 0x20;
+        }
+    }
+    hcOuter = hcOuterVal;
+    if (hcOuter == firstChar) {
+        goto matchStart;
+    }
+    if (hcOuter != 0) {
+        goto outer;
+    }
+    return 0;
+
+matchStart:
+    h = haystack;
+    n = needleRest;
+inner:
+    nc = *n;
+    n++;
+    if (nc == 0) {
+        goto found;
+    }
+    hc = *h;
+    h++;
+    if (caseInsensitive) {
+        if ((u8)(nc - 'A') <= 0x19) nc += 0x20;
+        if ((u8)(hc - 'A') <= 0x19) hc += 0x20;
+    }
+    if (nc == hc) {
+        goto inner;
+    }
+    goto outer;
+
+found:
+    return haystack - 1;
+}
+#endif /* NON_MATCHING */

@@ -2101,6 +2101,65 @@ vararg. Matched first-try using this toolchain's real `<stdarg.h>`
 project code had used variadics before this. Needed the same trailing
 `asm(".align 2, 0")` fix as `sub_800094C` for the padding byte after it.
 
+**Not yet byte-matching, kept as C under `#if NON_MATCHING`:
+`sub_8000CBC`** (ROM `0x08000CBC`, right after `sub_8000CA8`, same file).
+A case-insensitive `strstr`: `u8 *sub_8000CBC(u8 *haystack0, u8 *needle,
+s32 caseInsensitive)` scans `haystack0` for the first occurrence of
+`needle`, lowercasing both sides byte-by-byte before comparing whenever
+`caseInsensitive` is nonzero (`(u8)(c - 'A') <= 0x19` is the ROM's own
+range check for `'A'`-`'Z'`), returning a pointer into `haystack0` at
+the match or `0` if not found or if `needle` is empty. Kept in
+`printf_util.c` (not printf-related) purely to preserve ROM address
+order right after `sub_8000CA8` without another `ldscript.txt` split.
+
+Register findings: `haystack` (the outer scan cursor) is pinned to
+`r5` and the outer loop's post-case-fold char to `r3`, matching the ROM;
+both are plain scratch here since neither is live across a call.
+`needleRest` (a copy of `needle + 1`, the fixed start-of-match cursor
+used by the inner comparison loop) is pinned to `ip` (r12) - the ROM
+computes it as a plain copy of `needle` *before* reading the first
+needle char, then increments it *afterward* via a separate `movs r0,
+#1; add ip, r0` (the only way to add an immediate to a high register in
+Thumb); `needleRest = needle + 1;` as one C expression instead computes
+the sum in a low register first and copies the result into `ip`, which
+is shorter but not what the ROM does, so the increment is spelled out
+as inline asm (`asm volatile("mov r0, #1\n\tadd %0, %0, r0" :
+"+r"(needleRest) : : "r0")`) right after the plain copy. Statement
+*order* matters too: `needleRest = needle;` must be assigned before
+`haystack = haystack0;` - confirmed directly against `baserom.gba` via
+`objdump` (`mov ip, r1` precedes `adds r5, r0, #0`), correcting an
+earlier misreading in this same session.
+
+**Unresolved conflict blocking a full match**: the four "normalize a
+char to lowercase" blocks (first-char, outer-loop char, and the inner
+loop's two chars) each have a subtlety in exactly how the *unchanged*
+path is shaped. The ROM computes the fold as `x = *p; p++;` then, on
+*both* branches of the range check, routes the value through `r0` and a
+shared truncate-back-to-`u8` at the end - even the "value already in
+range" branch re-copies it through `r0` before falling into that shared
+truncate, rather than skipping straight past. Reproducing this exactly
+needs an `s32 t = x; if (cond) t = x + 0x20; x = (u8)t;` shape (a signed
+temp so the truncate isn't optimized away as a no-op) - verified in
+isolation to produce the right shape - but applying it to all four
+blocks in the real function pushes register pressure just far enough
+that `caseInsensitive` (correctly in `r7` otherwise) spills into `r8`,
+forcing an extra `mov r7, r8; push {r7}; mov r8, r2` prologue/epilogue
+dance the ROM doesn't have - a worse mismatch than the branch-shape one
+it fixes. The simpler `if (cond) x += 0x20;` form (checked in) keeps
+every register correct except this branch shape in the 4 blocks.
+Whichever register ends up hosting the `s32 t` temp needs to be pinned
+without disturbing anything else already correct here; not yet found.
+
+**Build toggle**: this function's C definition in `src/printf_util.c` is
+wrapped in `#if NON_MATCHING`, and the corresponding raw bytes in
+`asm/code_3_1_2.s` are wrapped in `.if NON_MATCHING == 0` / `.endif`
+(same pattern as `sub_8006600`, see above), so exactly one definition is
+ever assembled. Default builds (`make`/`make compare`) get
+`NON_MATCHING=0` and use the checked-in matching assembly (verified via
+a clean `make compare`); `make NON_MATCHING=1 crashbandicootxs.gba`
+compiles this C version in instead (verified this session to compile
+and link cleanly with no duplicate-symbol errors).
+
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/graphics.c`,
