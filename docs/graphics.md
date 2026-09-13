@@ -1409,3 +1409,22 @@ different Thumb `ADD` byte sequences for the same value), fixed just by
 adding explicit parentheses to group the shift-and-constant before adding
 the base pointer - no inline asm needed here, unlike the pathological
 case in `sub_8006A48`.
+
+Fourteenth matched function: `sub_80069E8` (ROM `0x080069E8`, immediately
+before `sub_8006A14`, same region - joined `src/graphics.c` right above
+it). Writes OAM **affine parameters**: given a pointer directly to an OAM
+entry (no `+0xC` bias this time - the caller must already point at the
+right shadow-buffer slot) and `arg2` groups, each group writes one `s16`
+from `arg1` into the padding field (`+0x12` again, same field
+`sub_8006AC8` preserves) of the first of 4 consecutive 8-byte entries,
+zeroes the padding of the next two, and writes a second `s16` from
+`arg1+2` into the fourth - i.e. `PA = src[0], PB = 0, PC = 0, PD = src[1]`
+for each affine group, matching the real GBA OAM affine-matrix layout
+(4 entries' padding bytes hold `PA`/`PB`/`PC`/`PD` in sequence) and
+building a pure axis-aligned scale matrix (no rotation/shear terms).
+Matched byte-exact on the first try, no register pins needed - the
+constant `0` gets materialized into a register once before the loop
+(matching the ROM), and the only ordering quirk was which of the two
+preheader instructions (materializing `0`, or copying `arg0` into the
+loop pointer) came first - fixed by writing the `zero = 0;` assignment as
+its own earlier statement, ahead of the entry-pointer setup.

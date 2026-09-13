@@ -12784,30 +12784,3 @@ sub_800697C: @ 0x0800697C
 	pop {r1}
 	bx r1
 	.align 2, 0
-
-	thumb_func_start sub_80069E8
-sub_80069E8: @ 0x080069E8
-	push {r4, lr}
-	cmp r2, #0
-	ble _08006A0E
-	movs r4, #0
-	adds r3, r0, #0
-_080069F2:
-	ldrh r0, [r1]
-	strh r0, [r3, #0x12]
-	adds r3, #8
-	strh r4, [r3, #0x12]
-	adds r3, #8
-	strh r4, [r3, #0x12]
-	adds r3, #8
-	ldrh r0, [r1, #2]
-	strh r0, [r3, #0x12]
-	adds r3, #8
-	adds r1, #4
-	subs r2, #1
-	cmp r2, #0
-	bne _080069F2
-_08006A0E:
-	pop {r4}
-	pop {r0}
-	bx r0
