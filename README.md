@@ -5,6 +5,11 @@ Work in progress matching decompilation of Crash Bandicoot XS (Crash Bandicoot: 
 It builds the following ROM:
 * [**crashbandicootxs.gba**](https://datomatic.no-intro.org/index.php?page=show_record&s=23&n=0310) `sha1: bdd061e1b5187c0528928ec0ddb6886b1de16970` (Europe) (En,Fr,De,Es,It,Nl)
 
+> :warning: **Matching a function? Read [docs/workflow.md](./docs/workflow.md) first.**
+> It's the required per-function loop (match byte-exact, then clean up
+> hardware registers/structs/pointer arithmetic before moving on to the
+> next one) - not optional style guidance.
+
 ## Current state
 
 - Main decomp efforts just started
@@ -32,8 +37,8 @@ It builds the following ROM:
   `sub_80012AC`/`sub_800132C` in `src/fade_util.c`,
   `sub_80013FC` in `src/palette_blend.c`,
   `GetAnimFrameBaseOffset` in `src/actor_anim.c`
-  (see `docs/matching.md`, "Matching decompilation" for the workflow and
-  a few gotchas worth knowing before doing more of this)
+  (see `docs/workflow.md` for the per-function loop, and `docs/matching.md`
+  for a few gotchas worth knowing before doing more of this)
 - `sub_8006600` (in `src/oam_count.c`) is reconstructed but not yet
   byte-matching - compiled only under `make NON_MATCHING=1` for now (see
   `docs/matching.md`, "Parked, not matched: sub_8006600"); a local
@@ -73,9 +78,10 @@ Please see follow [these instructions](./INSTALL.md)
 
 ## Notes
 
+- [docs/workflow.md](./docs/workflow.md) - **the required per-function matching loop, must be followed for every function**
 - [docs/audio.md](./docs/audio.md) - how the Shin'en GAX2 sound engine's data is laid out and rebuilt
 - [docs/graphics.md](./docs/graphics.md) - how graphics were extracted, and ongoing notes on the sprite/actor system
-- [docs/matching.md](./docs/matching.md) - byte-exact matching decompilation workflow, gotchas, and the per-function matching/parked log
+- [docs/matching.md](./docs/matching.md) - byte-exact matching decompilation gotchas, and the per-function matching/parked log
 - The [Kirby & The Amazing Mirror](https://github.com/jiangzhengwenjz/katam/) decompilation uses a very similar codebase, as it was written by the same dev team (Dimps)
 - https://decomp.me is a great resource for helping to create matching functions
 - `ldscript.txt` tells the linker the order which files should be linked
