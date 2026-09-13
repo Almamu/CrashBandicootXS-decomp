@@ -1667,3 +1667,50 @@ that these functions likely all operate on the same "actor" or "entity"
 struct (not unified into one shared type here, consistent with this
 file's existing per-function-struct style). Matched byte-exact on the
 first try.
+
+**Parked, not matched: `sub_8006600`** (ROM `0x08006600`, immediately
+before `sub_8006714`). A HUD-icon-plus-number renderer: resets one OAM
+manager (`sub_8006A90`), calls `sub_8006C28` on another global, calls
+`sub_8008890`, positions a left icon by computing its centered X (`(240 -
+width) >> 1`, width from `sub_803AD80`) and a fixed Y, formats/draws a
+number via `sub_803AFE4`/`sub_803AFDC`/`sub_8001214` into a stack buffer,
+gets its pixel width via `sub_8026F38`, then positions a second icon the
+same way - finally calls the already-matched `sub_8006A48` to hide unused
+OAM slots. None of `sub_8006C28`, `sub_8008890`, `sub_803AD80`,
+`sub_803AFE4`, `sub_803AFDC`, `sub_8001214`, `sub_8026F38` are matched or
+even confidently typed beyond the argument shapes this call site implies.
+
+Got very close - confirmed via `asmdiff.sh` that a late attempt matched
+the ROM's **total byte count exactly** (every address past this function
+lined up again) and used the same 2 high registers (`r8`, one long-lived
+for `&gUnknown_03001300`, one reused mid-function for a computed
+`sub_8026F38` result) - but a handful of **which specific low register**
+(`r0`-`r7`) holds a given short-lived value still differed from the ROM
+in a few spots, all cosmetic (no logic/size difference). Getting `mgr`
+pointers to actually reload after each call (instead of surviving in a
+stable callee-saved register, which the ROM never does even though it
+would be cheaper) needed real fights against gcc's optimizer: read
+`gUnknown_030012E0`/`_030012DC` fresh through a cached address rather
+than caching the dereferenced pointer itself, and use inline-asm-computed
+addresses (not plain struct field access) for the repeated `record`/
+`posX`/`posY` accesses, or gcc's CSE quietly shares an address computation
+across a call boundary the ROM recomputes from scratch.
+
+**A real hazard found and avoided, worth remembering**: pinning a
+low register (`r4`-`r7`) via `register T x asm("rN");` only works safely
+when the compiler's own analysis *also* decides that register needs
+saving - which happens for values that appear in plain C statements
+(confirmed working: `self`→`r4`, an offset constant→`r5`). A register
+pinned to `r4`-`r7` but assigned/read **only inside inline `asm`
+operands** (tried for a last-mile fix on `r7`) does **not** make it into
+agbcc's `push {r4, ...}` list even though the generated code clobbers it
+- a genuine miscompile risk (would silently corrupt the caller's r7),
+not just a mismatch. Confirmed on two independent attempts before backing
+off. High registers (`r8`-`r11`) don't have this problem, since gcc
+always emits their `mov`-to-low-reg-then-`push` dance itself once
+anything is assigned to them. Reverted rather than integrated - `oam_count.c`
+still ends at `sub_8006714` upward. Worth a fresh attempt later (ideally
+with decomp.me/a permuter for the last few register picks), but the
+approach above (fresh-reload globals + inline-asm address computation)
+is the right starting point, not the dead ends this note is warning
+about.

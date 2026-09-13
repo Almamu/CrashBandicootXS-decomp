@@ -13,20 +13,12 @@ extern void *gUnknown_03001300;
 
 extern void sub_8008044(void *arg0);
 
-struct sub_8006700_struct {
+/* Shared by sub_8006700/sub_8006714/sub_8006770 below - all three access
+ * field_18/field_1c at the same offsets on what looks like the same
+ * "actor" object. */
+struct sub_8006700_actor {
     u8 unused_00[0x18];
     void *field_18;
-    s32 field_1c;
-};
-
-void sub_8006700(struct sub_8006700_struct *arg0)
-{
-    arg0->field_1c++;
-    sub_8008044(arg0->field_18);
-}
-
-struct sub_8006714_struct {
-    u8 unused_00[0x1c];
     u32 field_1c;
     u32 field_20;
     u8 field_24;
@@ -34,25 +26,31 @@ struct sub_8006714_struct {
     u16 field_28;
 };
 
-void sub_8006714(struct sub_8006714_struct *arg0)
+void sub_8006700(struct sub_8006700_actor *arg0)
+{
+    arg0->field_1c++;
+    sub_8008044(arg0->field_18);
+}
+
+void sub_8006714(struct sub_8006700_actor *arg0)
 {
     sub_80006A8(arg0);
     sub_8006DC8(gUnknown_030012B8);
     sub_8006AAC(gUnknown_03001300);
     FlushVramDmaQueue();
-    *(vu16 *)0x04000010 = arg0->field_1c >> 3;
-    *(vu16 *)0x05000000 = 0;
-    *(vu32 *)0x04000050 = arg0->field_20;
-    *(vu16 *)0x04000054 = (u32)(arg0->field_24 << 27) >> 27;
-    *(vu16 *)0x04000000 = arg0->field_28;
+    *(vu16 *)REG_ADDR_BG0HOFS = arg0->field_1c >> 3;
+    *(vu16 *)PLTT = 0;
+    *(vu32 *)REG_ADDR_BLDCNT = arg0->field_20;
+    *(vu16 *)REG_ADDR_BLDY = (u32)(arg0->field_24 << 27) >> 27;
+    *(vu16 *)REG_ADDR_DISPCNT = arg0->field_28;
 }
 
-void sub_8006770(void *arg0, u32 arg1)
+void sub_8006770(struct sub_8006700_actor *arg0, u32 arg1)
 {
     void *field18;
     u8 *p;
 
-    field18 = *(void **)((u8 *)arg0 + 0x18);
+    field18 = arg0->field_18;
     if (field18 != NULL) {
         p = *(u8 **)((u8 *)field18 + 0x18) + 0x50;
         sub_803AD80((u8 *)field18 + *(s16 *)p, 3, *(void **)(p + 4));

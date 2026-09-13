@@ -20,8 +20,10 @@ struct dma_regs {
 };
 
 extern struct dma_queue gUnknown_03001290;
-#define DMA3 (*(struct dma_regs *)0x040000D4)
+#define DMA3 (*(struct dma_regs *)REG_ADDR_DMA3SAD)
 #define QUEUE_COUNT (((volatile struct dma_queue *)&gUnknown_03001290)->count)
+/* Allocated capacity of gUnknown_03001290.entries. */
+#define DMA_QUEUE_MAX_ENTRIES 0x300
 
 extern s32 sub_800695C(void *arg0);
 extern s32 sub_80068CC(void *arg0);
@@ -83,19 +85,34 @@ void sub_80069E8(void *arg0, u16 *arg1, s32 arg2)
     } while (arg2 != 0);
 }
 
-void sub_8006A14(void *arg0, void *arg1, s32 arg2)
+/* Manages a shadow copy of a chunk of the 128-entry hardware OAM table:
+ * a count of active entries, two unidentified fields, then the
+ * 1024-byte shadow table itself (128 entries * 8 bytes) starting right
+ * after. Functions below that need volatile or register-pinned access
+ * to `count`/the table still use raw pointer casts on purpose (see
+ * docs/graphics.md, "Matching decompilation") - this type exists so
+ * call sites can be typed meaningfully instead of passing `void *`. */
+struct oam_shadow_buffer {
+    s32 count;
+    s32 field_04;
+    s32 field_08;
+    u8 table[0x400];
+};
+COMPILE_TIME_ASSERT(sizeof(struct oam_shadow_buffer) == 0x40C);
+
+void sub_8006A14(struct oam_shadow_buffer *arg0, void *arg1, s32 arg2)
 {
     if (arg2 == 0) {
         return;
     }
     DMA3.src = arg1;
     DMA3.dst = (u8 *)arg0 + ((*(s32 *)arg0 << 3) + 0xC);
-    DMA3.cnt = (arg2 << 1) | 0x84000000;
+    DMA3.cnt = (arg2 << 1) | ((DMA_ENABLE | DMA_32BIT) << 16);
     (void)DMA3.cnt;
     *(s32 *)arg0 = *(s32 *)arg0 + arg2;
 }
 
-void sub_8006A48(void *arg0)
+void sub_8006A48(struct oam_shadow_buffer *arg0)
 {
     register u8 *self asm("r1");
     register s32 i asm("r2");
@@ -106,7 +123,7 @@ void sub_8006A48(void *arg0)
 
     self = (u8 *)arg0;
     i = *(s32 *)self;
-    if (i > 0x7F) {
+    if (i > OAM_ENTRY_COUNT - 1) {
         return;
     }
     mask = ~3;
@@ -121,44 +138,38 @@ void sub_8006A48(void *arg0)
         *self = result;
         self += 8;
         i++;
-    } while (i <= 0x7F);
+    } while (i <= OAM_ENTRY_COUNT - 1);
 }
 
-struct sub_8006A78_struct {
-    s32 field_00;
-    s32 field_04;
-    s32 field_08;
-};
-
-void sub_8006A78(struct sub_8006A78_struct *arg0)
+void sub_8006A78(struct oam_shadow_buffer *arg0)
 {
-    arg0->field_00 = arg0->field_04;
+    arg0->count = arg0->field_04;
     arg0->field_08 = 0;
 }
 
-void sub_8006A84(struct sub_8006A78_struct *arg0)
+void sub_8006A84(struct oam_shadow_buffer *arg0)
 {
-    arg0->field_04 = arg0->field_00;
+    arg0->field_04 = arg0->count;
     arg0->field_08 = 0;
 }
 
-void sub_8006A90(struct sub_8006A78_struct *arg0)
+void sub_8006A90(struct oam_shadow_buffer *arg0)
 {
-    arg0->field_00 = 0;
+    arg0->count = 0;
     arg0->field_08 = 0;
     sub_8006A84(arg0);
     sub_8006A78(arg0);
 }
 
-void sub_8006AAC(void *arg0)
+void sub_8006AAC(struct oam_shadow_buffer *arg0)
 {
     DMA3.src = (u8 *)arg0 + 0xC;
-    DMA3.dst = (void *)0x07000000;
-    DMA3.cnt = 0x84000100;
+    DMA3.dst = (void *)OAM;
+    DMA3.cnt = ((DMA_ENABLE | DMA_32BIT) << 16) | 0x100;
     (void)DMA3.cnt;
 }
 
-void sub_8006AC8(void *arg0, u32 *arg1)
+void sub_8006AC8(struct oam_shadow_buffer *arg0, u32 *arg1)
 {
     register s32 n1 asm("r2");
     register u16 saved asm("r3");
@@ -168,7 +179,7 @@ void sub_8006AC8(void *arg0, u32 *arg1)
     u32 v1;
 
     n1 = *(vs32 *)arg0;
-    if (n1 > 0x7F) {
+    if (n1 > OAM_ENTRY_COUNT - 1) {
         return;
     }
     n1 = (s32)arg0 + (n1 << 3);
@@ -193,7 +204,7 @@ void sub_8006AF4(void *arg0, u32 arg1)
     }
 }
 
-void *sub_8006B0C(void *arg0)
+struct oam_shadow_buffer *sub_8006B0C(struct oam_shadow_buffer *arg0)
 {
     sub_8006A90(arg0);
     return arg0;
@@ -213,20 +224,20 @@ void FlushVramDmaQueue(void)
             DMA3.dst = entry->field_00;
             raw = entry->field_08;
             shifted = raw >> 2;
-            shifted |= 0x84000000;
+            shifted |= (DMA_ENABLE | DMA_32BIT) << 16;
         } else {
             DMA3.src = entry->field_04;
             DMA3.dst = entry->field_00;
             raw = entry->field_08;
             shifted = raw >> 1;
-            shifted |= 0x80000000;
+            shifted |= (DMA_ENABLE | DMA_16BIT) << 16;
         }
         DMA3.cnt = shifted;
         (void)DMA3.cnt;
     }
     gUnknown_03001290.count = 0;
 
-    while (DMA3.cnt & 0x80000000) {
+    while (DMA3.cnt & (DMA_ENABLE << 16)) {
     }
 }
 
@@ -237,7 +248,7 @@ s32 QueueVramDmaTransfer(void *arg0, void *arg1, u16 arg2, u16 arg3)
     if (arg2 == 0) {
         return 0;
     }
-    if (gUnknown_03001290.count > 0x2FF) {
+    if (gUnknown_03001290.count > DMA_QUEUE_MAX_ENTRIES - 1) {
         return -1;
     }
     entry = &gUnknown_03001290.entries[gUnknown_03001290.count];
