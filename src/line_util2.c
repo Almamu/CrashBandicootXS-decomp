@@ -1,22 +1,11 @@
 #include "core.h"
+#include "line_util.h"
 
 /* Sits right after sub_8001214 (ROM 0x08001214, in src/word_util.c)
  * and before sub_80012AC (still raw in asm/code_3_1_7.s). Not adjacent
- * to sub_8000E6C's own struct definition (src/line_util.c) in ROM
- * address order - kept in its own file (rather than reusing that one)
- * purely because that file's object already links much earlier. */
-struct bresenham_line {
-    s32 x0;
-    s32 y0;
-    s32 x1;
-    s32 y1;
-    s32 field_10;
-    s32 field_14;
-    s32 field_18;
-    s32 sx;
-    s32 sy;
-    u8 flag;
-};
+ * to sub_8000E6C (src/line_util.c) in ROM address order - kept in its
+ * own file purely because that file's object already links much
+ * earlier; both share the struct definition from include/line_util.h. */
 
 /* Advances a Bresenham line (set up by sub_8000E6C) by one step: the
  * "driving" axis (x if `flag` is set, y otherwise) always advances by

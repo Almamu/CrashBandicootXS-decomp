@@ -2659,3 +2659,54 @@ edit below):
   without breaking the match (each block here was arrived at only after
   exhausting plain-C rephrasing, per the entries above), so the fix for
   "this looks like unexplained magic" is documentation, not removal.
+
+### Second cleanup pass (after sub_8000D68 through sub_80013FC)
+
+Another readability pass over everything matched or parked since the
+previous cleanup, again re-checking both `make compare` and
+`make NON_MATCHING=1` after every edit:
+
+- **Hardware registers**: `src/fade_util.c`'s raw `0x04000054`/
+  `0x04000050`/`0x04000208` became `REG_BLDY`/`REG_BLDCNT`/`REG_IME` -
+  the last one had been mislabeled as `REG_IE` in an earlier writeup
+  (`0x04000208` is actually `IME`, the interrupt *master* enable, not
+  the per-source `IE` at `0x04000200` - an easy mix-up since both are
+  "the interrupt enable register" in casual terms, but the ROM's own
+  "write 0, do a critical section, write 1" idiom here specifically
+  needs the master switch). `src/asset_util.c`'s two raw
+  `0x040000D4`-based `vu32 *dma` pointers became `struct dma_regs *`
+  (see next point) through `REG_ADDR_DMA3SAD`.
+- **Struct consolidation**:
+  - `struct dma_regs` (`src/graphics.c`'s local `{ vu32 src, dst, cnt;
+    }`) moved to `include/gba/dma_macros.h` (the header that already
+    holds every other DMA-related macro) and is now shared by
+    `src/asset_util.c`'s `LoadTaggedAsset`/`sub_80011C0` instead of each
+    doing raw `vu32 *` + manual `[0]`/`[1]`/`[2]` indexing.
+  - `struct bresenham_line` (independently declared, identically, in
+    both `src/line_util.c` and `src/line_util2.c` purely because the
+    two functions that share it link far apart) moved to a new
+    `include/line_util.h`, included by both.
+  - `struct icon_manager`/`struct icon_record` (`src/oam_count.c`,
+    previously with `field_10`/`field_14`/`field_20`/`field_24` named
+    directly on `icon_record`) moved to a new `include/icon_manager.h`
+    and `icon_record` was reshaped into `struct icon_slot { s16 offset;
+    u8 unused[2]; void *ptr; } slots[6]` - an 8-byte-stride array,
+    confirmed by `sub_8000EE4` (`src/text_layout.c`, still parked)
+    independently needing three *more* slots (`slots[1]`/`[3]`/`[5]`,
+    at the offsets right in between the two `sub_8006600` already used)
+    for its own per-glyph and newline-marker OAM draws. `text_layout.c`
+    now takes a real `struct icon_manager *`/`struct icon_record *`
+    instead of raw `u8 *self + <offset>` arithmetic throughout.
+  - Checked for (but didn't find) a similar merge opportunity between
+    `sub_8000EE4`'s `struct sub_8000EE4_box` and `sub_8001214`'s
+    `struct sub_8001214_params` (`src/word_util.c`) - different field
+    layouts (offsets 0/4/8 vs. 0/0xc), not the same object.
+  - Left `gUnknown_030007E0` (`src/irq.c`)/`gUnknown_030007E4`
+    (`src/rand_util.c`)/`gUnknown_030007E8`+`gUnknown_030007F4`+
+    `gUnknown_030007F8` (`src/fade_util.c`) as separate globals despite
+    being adjacent in IWRAM (`0x7E0`-`0x7F8`) - `irq.c`'s own notes
+    already established that combining even just the first pair into
+    one struct changes agbcc's literal-pool codegen for already-matched
+    functions, so merging these needs much stronger evidence than
+    "they're next to each other" before touching functions that
+    currently match.

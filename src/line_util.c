@@ -1,25 +1,11 @@
 #include "core.h"
+#include "line_util.h"
 
 /* Sits right after sub_8000E4C (ROM 0x08000E4C, in src/rand_util.c)
  * and before sub_8000EE4 (still raw in asm/code_3_1_3.s). */
 
 /* Bresenham-line setup: computes the deltas/signs/error terms for
- * walking a line from (x0,y0) to (x1,y1) one step at a time. Field
- * names beyond the four input coordinates are left as `field_N`
- * (offsets, not purposes) until a caller clarifies them. */
-struct bresenham_line {
-    s32 x0;
-    s32 y0;
-    s32 x1;
-    s32 y1;
-    s32 field_10;
-    s32 field_14;
-    s32 field_18;
-    s32 sx;
-    s32 sy;
-    u8 flag;
-};
-
+ * walking a line from (x0,y0) to (x1,y1) one step at a time. */
 void sub_8000E6C(struct bresenham_line *l)
 {
     s32 dx, dy;

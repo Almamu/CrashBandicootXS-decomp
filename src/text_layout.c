@@ -1,4 +1,5 @@
 #include "core.h"
+#include "icon_manager.h"
 
 /* Sits right after sub_8000E6C (ROM 0x08000E6C, in src/line_util.c) and
  * before sub_800106C (still raw in asm/code_3_1_3.s). */
@@ -44,19 +45,19 @@ extern void sub_80006A8(void);
 extern void sub_8006AAC(void *arg0);
 extern void *gUnknown_03001300;
 
-s32 sub_8000EE4(u8 *textParam, void *selfParam, struct sub_8000EE4_box *box, s32 limit, s32 mode)
+s32 sub_8000EE4(u8 *textParam, struct icon_manager *selfParam, struct sub_8000EE4_box *box, s32 limit, s32 mode)
 {
-    register void *self asm("r8");
+    register struct icon_manager *self asm("r8");
     register u8 *cursor asm("r10");
     s32 widthAccum;
     s32 lineCount;
     s32 posAccum;
-    s32 *xAddr;
-    s32 *yAddr;
+    u32 *xAddr;
+    u32 *yAddr;
     register u8 *token asm("r6");
     s32 tokenLen;
-    u8 **fieldAddr;
-    u8 *record;
+    struct icon_record **fieldAddr;
+    struct icon_record *record;
     register s32 charWidth asm("r9");
     s32 combined;
 
@@ -68,8 +69,8 @@ s32 sub_8000EE4(u8 *textParam, void *selfParam, struct sub_8000EE4_box *box, s32
         sub_8006A48(gUnknown_03001300);
     }
 
-    xAddr = (s32 *)((u8 *)self + 0x110);
-    yAddr = (s32 *)((u8 *)self + 0x114);
+    xAddr = &self->posX;
+    yAddr = &self->posY;
     *xAddr = box->field_0;
     *yAddr = box->field_4;
 
@@ -109,20 +110,20 @@ loopTop:
         }
     }
 
-    record = *(u8 **)((u8 *)self + 0x130);
-    sub_803AD80((u8 *)self + *(s16 *)(record + 0x38), 10, *(void **)(record + 0x3c));
+    record = self->record;
+    sub_803AD80((u8 *)self + record->slots[5].offset, 10, record->slots[5].ptr);
     widthAccum = 0;
     lineCount++;
     goto bottom1;
 
 normalChar:
-    fieldAddr = (u8 **)((u8 *)self + 0x130);
+    fieldAddr = &self->record;
     record = *fieldAddr;
-    charWidth = sub_803AD84((u8 *)self + *(s16 *)(record + 0x18), token, tokenLen, *(void **)(record + 0x1c));
+    charWidth = sub_803AD84((u8 *)self + record->slots[1].offset, token, tokenLen, record->slots[1].ptr);
     combined = widthAccum + charWidth;
     if (combined <= box->field_8) {
         record = *fieldAddr;
-        sub_803AD84((u8 *)self + *(s16 *)(record + 0x28), token, tokenLen, *(void **)(record + 0x2c));
+        sub_803AD84((u8 *)self + record->slots[3].offset, token, tokenLen, record->slots[3].ptr);
         widthAccum = combined;
         if (mode == 1) {
             goto flush;
@@ -134,9 +135,9 @@ normalChar:
             goto bottom1;
         }
         record = *fieldAddr;
-        sub_803AD80((u8 *)self + *(s16 *)(record + 0x38), 10, *(void **)(record + 0x3c));
+        sub_803AD80((u8 *)self + record->slots[5].offset, 10, record->slots[5].ptr);
         record = *fieldAddr;
-        sub_803AD84((u8 *)self + *(s16 *)(record + 0x28), token, tokenLen, *(void **)(record + 0x2c));
+        sub_803AD84((u8 *)self + record->slots[3].offset, token, tokenLen, record->slots[3].ptr);
         widthAccum = charWidth;
         if (mode == 1 || mode == 2) {
             goto flush;

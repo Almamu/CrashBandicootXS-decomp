@@ -13,12 +13,6 @@ struct dma_queue {
     s32 count;
 };
 
-struct dma_regs {
-    vu32 src;
-    vu32 dst;
-    vu32 cnt;
-};
-
 extern struct dma_queue gUnknown_03001290;
 #define DMA3 (*(struct dma_regs *)REG_ADDR_DMA3SAD)
 #define QUEUE_COUNT (((volatile struct dma_queue *)&gUnknown_03001290)->count)

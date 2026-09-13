@@ -27,13 +27,13 @@ void LoadTaggedAsset(void *asset, void *dest)
 
     switch (type) {
     case 0: {
-        vu32 *dma = (vu32 *)0x040000D4;
+        struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
         u32 size;
-        dma[0] = (u32)asset + 4;
-        dma[1] = (u32)dest;
+        dma->src = (u32)asset + 4;
+        dma->dst = (u32)dest;
         size = *(u32 *)asset;
-        dma[2] = ((size >> 8) - 4) >> 2 | 0x84000000;
-        size = dma[2];
+        dma->cnt = ((size >> 8) - 4) >> 2 | 0x84000000;
+        size = dma->cnt;
         break;
     }
     case 1:
@@ -53,16 +53,16 @@ extern void sub_80006A8(void);
  * RAM at `0x05000000`. */
 void sub_80011C0(void *asset)
 {
-    vu32 *dma;
+    struct dma_regs *dma;
     u32 val;
 
     LoadTaggedAsset((u8 *)asset + 0x200, (void *)0x06000000);
     sub_80006A8();
-    dma = (vu32 *)0x040000D4;
-    dma[0] = (u32)asset;
-    dma[1] = 0x05000000;
-    dma[2] = 0x80000100;
-    val = dma[2];
+    dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
+    dma->src = (u32)asset;
+    dma->dst = 0x05000000;
+    dma->cnt = 0x80000100;
+    val = dma->cnt;
 }
 
 /* Trailing padding (see matching_decomp_alignment_fix memory). */

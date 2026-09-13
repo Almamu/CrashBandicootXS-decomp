@@ -1,4 +1,5 @@
 #include "core.h"
+#include "icon_manager.h"
 
 /* A small per-category threshold table: sub_8006864/sub_8006820/
  * sub_80067EC each count how many of a caller's 20 records fall between
@@ -55,33 +56,6 @@ extern void sub_803AFDC(void *buf, s32 arg1, s32 arg2);
 extern s32 sub_8001214(void *arg0, void *arg1, void *buf, s32 arg3);
 extern s32 sub_8026F38(s32 arg0);
 extern void *gUnknown_030012FC;
-
-/* field_10/field_14 and field_20/field_24 are each an (offset, pointer)
- * pair sub_8006600 feeds straight to sub_803AD80 - two OAM slots one
- * icon spans (a wide sprite needs two entries side by side, most
- * likely). */
-struct icon_record {
-    u8 unused_00[0x10];
-    s16 field_10;
-    u8 unused_12[2];
-    void *field_14;
-    u8 unused_18[8];
-    s16 field_20;
-    u8 unused_22[2];
-    void *field_24;
-};
-
-/* An OAM "icon" positioner: screen X/Y for the icon, then a pointer to
- * a small record describing which two OAM slots to draw it into.
- * gUnknown_030012E0/gUnknown_030012DC are two instances of this, used for
- * a left/right icon pair flanking a number in sub_8006600. */
-struct icon_manager {
-    u8 unused_00[0x110];
-    u32 posX;
-    u32 posY;
-    u8 unused_118[0x130 - 0x118];
-    struct icon_record *record;
-};
 
 extern struct icon_manager *gUnknown_030012E0;
 extern struct icon_manager *gUnknown_030012DC;
@@ -174,14 +148,14 @@ void sub_8006600(struct sub_8006700_actor *arg0)
     mgr1Base = *(void **)addr;
     recOff = 0x98 << 1; /* offsetof(struct icon_manager, record) */
     SUB_8006600_GET_RECORD(mgr1Base, recOff, record);
-    width = sub_803AD80((u8 *)mgr1Base + record->field_10,
-                         self->field_10, record->field_14);
+    width = sub_803AD80((u8 *)mgr1Base + record->slots[0].offset,
+                         self->field_10, record->slots[0].ptr);
     halved = (0xF0 - width) >> 1;
     mgr1Base = *(void **)mgrAddrCache;
     SUB_8006600_STORE_TWO_FIELDS(mgr1Base, halved, 0x2D);
     SUB_8006600_GET_RECORD(mgr1Base, recOff, record);
-    sub_803AD80((u8 *)mgr1Base + record->field_20,
-                self->field_10, record->field_24);
+    sub_803AD80((u8 *)mgr1Base + record->slots[2].offset,
+                self->field_10, record->slots[2].ptr);
 
     sub_803AFE4(buf, 0x10, 0x6a);
     sub_803AFDC(buf, 0xd0, 0x35);
@@ -191,14 +165,14 @@ void sub_8006600(struct sub_8006700_actor *arg0)
 
     mgr1Base = *(void **)self;
     SUB_8006600_GET_RECORD(mgr1Base, recOff, record);
-    width = sub_803AD80((u8 *)mgr1Base + record->field_10,
-                         charWidth, record->field_14);
+    width = sub_803AD80((u8 *)mgr1Base + record->slots[0].offset,
+                         charWidth, record->slots[0].ptr);
     halved = (0xF0 - width) >> 1;
     mgr1Base = *(void **)self;
     SUB_8006600_STORE_TWO_FIELDS_REUSE_SELF(mgr1Base, halved, 0x90, self);
     SUB_8006600_GET_RECORD_REUSE_RECOFF(mgr1Base, recOff, record);
-    sub_803AD80((u8 *)mgr1Base + record->field_20,
-                charWidth, record->field_24);
+    sub_803AD80((u8 *)mgr1Base + record->slots[2].offset,
+                charWidth, record->slots[2].ptr);
 
     self = (struct sub_8006700_actor *)g1300Addr;
     mgr1Base = *(void **)self;

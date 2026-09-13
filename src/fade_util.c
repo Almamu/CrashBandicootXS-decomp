@@ -16,12 +16,11 @@ struct unk_030007E8 {
 extern struct unk_030007E8 gUnknown_030007E8;
 
 /* A per-frame screen-brightness fade tick: every `gUnknown_030007E8`.
- * `field_0` frames, writes the next brightness step to `BLDY`
- * (`0x04000054`), counting either up or down depending on
- * `field_8`'s top bit (fading in vs. out). After 17 steps (a full
- * fade), resets both counters, briefly disables interrupts
- * (`0x04000208`, `REG_IE`) while resetting `field_0` to `-1` and
- * calling `sub_8000670` with `field_4` (presumably to kick off
+ * `field_0` frames, writes the next brightness step to `REG_BLDY`,
+ * counting either up or down depending on `field_8`'s top bit (fading
+ * in vs. out). After 17 steps (a full fade), resets both counters,
+ * briefly disables interrupts (`REG_IME`) while resetting `field_0` to
+ * `-1` and calling `sub_8000670` with `field_4` (presumably to kick off
  * whatever comes after the fade), then re-enables interrupts.
  * `mask`/`flag8` are pinned to r0/r1 to match the ROM's exact register
  * choice for the `& 0x80` check - the natural (unpinned) allocation
@@ -42,19 +41,19 @@ void sub_80012AC(void)
         mask = 0x80;
         flag8 = gUnknown_030007E8.field_8;
         if (mask & flag8) {
-            *(vu16 *)0x04000054 = 16 - gUnknown_030007F4;
+            REG_BLDY = 16 - gUnknown_030007F4;
         } else {
-            *(vu16 *)0x04000054 = gUnknown_030007F4;
+            REG_BLDY = gUnknown_030007F4;
         }
         val = gUnknown_030007F4 + 1;
         gUnknown_030007F4 = val;
         if (val == 0x11) {
             gUnknown_030007F4 = 0;
             gUnknown_030007F8 = 0;
-            *(vu16 *)0x04000208 = 0;
+            REG_IME = 0;
             gUnknown_030007E8.field_0 = -1;
             sub_8000670(gUnknown_030007E8.field_4);
-            *(vu16 *)0x04000208 = 1;
+            REG_IME = 1;
         }
     }
 }
@@ -63,7 +62,7 @@ extern s32 sub_8000680(void *callback);
 extern void sub_80006A8(void);
 
 /* Starts a screen-brightness fade: `flags` bit 0 selects the blend
- * target (`BLDCNT`, `0x04000050` - `0xBF` vs `0xFF`), bit 7 selects
+ * target (`REG_BLDCNT`, `0xBF` vs `0xFF`), bit 7 selects
  * direction (fade in from `0x10` vs fade out from `0`); `frameDelay`
  * (clamped to at least 1) is how many frames each of the 17 steps
  * takes. Refuses to start (silently) if a fade is already running -
@@ -93,23 +92,23 @@ void sub_800132C(u8 flags, s32 frameDelay, u8 sync)
     }
 
     if (flags & 1) {
-        *(vu16 *)0x04000050 = 0xBF;
+        REG_BLDCNT = 0xBF;
     } else {
-        *(vu16 *)0x04000050 = 0xFF;
+        REG_BLDCNT = 0xFF;
     }
 
     if (sync != 0) {
         u8 dirBit = flags & 0x80;
         if (dirBit != 0) {
-            *(vu16 *)0x04000054 = 0x10;
+            REG_BLDY = 0x10;
         } else {
-            *(vu16 *)0x04000054 = dirBit;
+            REG_BLDY = dirBit;
         }
-        *(vu16 *)0x04000208 = 0;
+        REG_IME = 0;
         gUnknown_030007E8.field_8 = flags;
         gUnknown_030007E8.field_0 = frameDelay;
         gUnknown_030007E8.field_4 = sub_8000680(sub_80012AC);
-        *(vu16 *)0x04000208 = 1;
+        REG_IME = 1;
     } else {
         s32 i = 0;
         register s32 dirBit8 asm("r8");
@@ -117,9 +116,9 @@ void sub_800132C(u8 flags, s32 frameDelay, u8 sync)
         do {
             s32 next;
             if (dirBit8 != 0) {
-                *(vu16 *)0x04000054 = 0x10 - i;
+                REG_BLDY = 0x10 - i;
             } else {
-                *(vu16 *)0x04000054 = i;
+                REG_BLDY = i;
             }
             next = i + 1;
             if (frameDelay > 0) {
