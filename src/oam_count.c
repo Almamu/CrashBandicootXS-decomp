@@ -64,14 +64,18 @@ extern struct icon_manager *gUnknown_030012DC;
 /* Positions two OAM icons flanking a number (drawn via sub_8001214 in
  * between) - centers each icon horizontally from its rendered pixel
  * width (`sub_803AD80`'s return value), at fixed Y coordinates. NOT YET
- * BYTE-MATCHING: matches the ROM's total instruction/byte count exactly
- * and most register choices, but a handful of low-register (r0-r7)
- * letter picks in the two STORE_TWO_FIELDS blocks still differ from the
- * ROM, and forcing them needs an r7 pin that a fresh test proved is a
- * genuine ABI hazard (see docs/graphics.md, "Parked, not matched:
- * sub_8006600", and matching_decomp_register_pinning memory) - so this
- * is compiled only under NON_MATCHING, with the checked-in matching
- * assembly (asm/code_3_1.s) used otherwise. The two STORE_TWO_FIELDS/
+ * BYTE-MATCHING: the prologue/epilogue register list and most of the
+ * first half's register choices now match the ROM exactly (see
+ * docs/graphics.md, "Parked, not matched: sub_8006600" for how - plain,
+ * unpinned locals that increase register pressure enough for gcc's own
+ * allocator to naturally reach for r7, since an *explicit* r7 pin is a
+ * genuine ABI hazard in this toolchain - confirmed and documented in
+ * matching_decomp_register_pinning memory). Four register-letter
+ * mismatches remain, all in the second half (the REUSE_SELF call site
+ * and its neighbors) - manual attempts to close them have regressed the
+ * rest of the function four times in a row, so this is compiled only
+ * under NON_MATCHING, with the checked-in matching assembly
+ * (asm/code_3_1_7.s) used otherwise. The two STORE_TWO_FIELDS/
  * GET_RECORD asm blocks anchor address computations gcc would otherwise
  * cache across the sub_803AD80 calls in between, which the ROM does not
  * do. mgrAddrCache/mgr1Base/recOff/g1300Addr are pinned to match the
@@ -81,11 +85,14 @@ extern struct icon_manager *gUnknown_030012DC;
     do { \
         register s32 _hv asm("r3") = (halved); \
         register s32 _yv asm("r2") = (yconst); \
-        void *_addr; \
-        asm volatile("mov %0, #0x88\n\tlsl %0, %0, #1" : "=&r"(_addr)); \
-        *(u32 *)((u8 *)(base) + (s32)_addr) = _hv; \
-        asm volatile("mov %0, #0x8a\n\tlsl %0, %0, #1" : "+r"(_hv)); \
-        *(u32 *)((u8 *)(base) + (s32)_hv) = _yv; \
+        s32 _xOff = 0x88 << 1; \
+        void *_addr1 = (u8 *)(base) + _xOff; \
+        *(u32 *)_addr1 = _hv; \
+        { \
+            s32 _yOff = 0x8a << 1; \
+            void *_addr2 = (u8 *)(base) + _yOff; \
+            *(u32 *)_addr2 = _yv; \
+        } \
     } while (0)
 
 #define SUB_8006600_GET_RECORD(base, recOff, out) \
@@ -150,8 +157,22 @@ void sub_8006600(struct sub_8006700_actor *arg0)
     SUB_8006600_GET_RECORD(mgr1Base, recOff, record);
     width = sub_803AD80((u8 *)mgr1Base + record->slots[0].offset,
                          self->field_10, record->slots[0].ptr);
-    halved = (0xF0 - width) >> 1;
-    mgr1Base = *(void **)mgrAddrCache;
+    /* r0 pin is safe here (dies immediately, no cross-call lifetime) and
+     * matches the ROM's `subs r0,r6,r0`/`lsrs r3,r0,#1` register choice;
+     * the `u32` intermediate (not `s32`) matters too - a signed temp
+     * shifts arithmetic (asrs) instead of logical (lsrs) like the ROM. */
+    {
+        register u32 _tmp asm("r0") = 0xF0 - width;
+        halved = _tmp >> 1;
+    }
+    /* Plain unpinned intermediate: raises register pressure enough for
+     * gcc's own allocator to naturally reach for r7 in the surrounding
+     * prologue/epilogue (see docs/graphics.md for why this works but an
+     * explicit r7 pin doesn't). */
+    {
+        void *_p = mgrAddrCache;
+        mgr1Base = *(void **)_p;
+    }
     SUB_8006600_STORE_TWO_FIELDS(mgr1Base, halved, 0x2D);
     SUB_8006600_GET_RECORD(mgr1Base, recOff, record);
     sub_803AD80((u8 *)mgr1Base + record->slots[2].offset,

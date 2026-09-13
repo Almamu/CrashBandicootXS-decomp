@@ -1748,72 +1748,104 @@ applied to the checked-in `#if NON_MATCHING` version:
   fresh scratch register) is safe and matches the ROM's `adds r5, r0,
   r5` / `ldr r2, [r5]` at that call site exactly.
 
-What's still unmatched, after all of the above, is exactly the set of
-spots where the ROM's own register choice is `r7` and nothing already
-alive can stand in for it: the prologue/epilogue push/pop list (ROM
-pushes `r4,r5,r6,r7`; this build pushes only `r4,r5,r6`), the *first*
-`STORE_TWO_FIELDS` call site's address scratch (ROM: `r7`; both operands
-`self`/`recOff`/`mgrAddrCache`/`mgr1Base` are still alive there, so
-nothing free to reuse), one of the four record-offset-constant loads
-(ROM uses `r7` for the `field_20` offset right after the first
-`STORE_TWO_FIELDS` block specifically - the other three matching
-occurrences all use `r3`), and the *second* `STORE_TWO_FIELDS` call
-site's *second* scratch (ROM: `r7`, after already using `r4` for the
-first one).
+**Why not just pin `r7`**: `register T x asm("r7")` (explicit
+register-variable pinning) is a genuine, silent ABI-violation bug in
+this specific agbcc/gcc-2.9-arm toolchain, confirmed by a minimal
+standalone repro (`register u32 b asm("r7"); b = a + 1; callee(b);`
+compiles to `add r7, r4, #1` / `bl callee` with **no push/pop of r7 at
+all**, silently clobbering the caller's r7) and corroborated externally
+(pret/agbcc; the overjt/knidl decompilation project documents the same
+"r7 (FRAME_POINTER_REGNUM) is never allocated to call-crossing pseudos
+by global_alloc even with -fomit-frame-pointer forced" limitation). This
+is not fixed in any known agbcc variant and can't be fixed here without
+diverging from the exact historical compiler the rest of the ROM was
+built with - see technique 10 in `matching_decomp_register_pinning`
+memory. It must never be used, even in parked/`NON_MATCHING` code.
 
-**Why not just pin `r7`, confirmed with a fresh isolated test this
-session**: tried adding a real, plain-C-visible temp
-(`register void *tmp asm("r7"); tmp = mgrAddrCache; mgr1Base = *(void
-**)tmp;`) to force the ROM's `mov r7, r8` / `ldr r0, [r7]` pattern - it
-*did* reproduce those exact two instructions, but the prologue/epilogue
-push/pop list still didn't include `r7`. A minimal standalone repro
-outside this file nails down why: `register u32 b asm("r7"); b = a + 1;
-callee(b);` inside a function that also calls `callee` earlier compiles
-to `add r7, r4, #1` / `add r0, r7, #0` / `bl callee` with **no `push`/
-`pop` of r7 at all** - a genuine ABI violation (the AAPCS requires r7 be
-callee-saved unconditionally; this silently clobbers the caller's r7).
-A follow-up test went further: two *separate* `r7`-pinned locals in two
-different blocks, each written and consumed around its own call, with
-an unrelated call in between - even with `r7` genuinely touched on both
-sides of an intervening `bl`, still no push/pop. A quick natural-
-allocation test (enough plain locals to force spilling past `r4`-`r6`)
-showed gcc's own *unforced* allocator skips `r7` entirely in favor of
-`r8`-`r10` when given the choice. Together these point to `r7` being
-exempt from agbcc's callee-save bookkeeping for *explicit register-
-variable pins* specifically in this Thumb configuration (plausibly its
-classic APCS role as the Thumb frame pointer), not a phrasing problem -
-see technique 10 in `matching_decomp_register_pinning` memory. The `r9`
-fix for `gUnknown_03001300` was kept because `r9` is a high register and
-doesn't have this problem, and the three reuse-based fixes above were
-kept because they clobber only registers already proven dead at that
-point, not a fresh `r7` pin.
+**Refined this session**: the bug is narrower than it first looked. It
+is specific to *explicit* `register T x asm("r7")` pinning (and likely
+inline-asm `"=&r"`-constrained outputs), not to r7 in general. Proof:
+`sub_800132C` (`src/fade_util.c`, already matched byte-exact) has a
+do-while loop where a plain, completely unpinned local (`dirBit8`,
+originally just a normal C value) survives repeated calls to
+`sub_80006A8()` inside the loop, and gcc's own *unforced* allocator
+chooses `r7` for it on its own - correctly emitting `push {r4,r5,r6,r7,
+lr}` / `pop {r4,r5,r6,r7}`. So values *can* safely live in r7 across
+calls in this compiler, as long as they get there via natural,
+unforced allocation rather than an explicit pin.
 
-Also tried and ruled out: reordering/unpinning the low-register
-declarations (`self`, `recOff`) to see if that shifts which two low
-registers the prologue's `r8`/`r9`-save dance picks as scratch (ROM
-picks `r6`/`r7`; every variant tried here still picks `r5`/`r6`,
-regardless of declaration order, whether `recOff` is pinned at all, or
-how early it's first assigned) - this particular choice appears fixed by
-something in agbcc's internals unrelated to C-level register-variable
-declarations.
+Applying that insight here closed several of the previously-unmatched
+spots:
 
-A fresh attempt would need a technique that doesn't rely on a
-short-lived low-register pin - a permuter (e.g. decomp.me/a local one)
-searching many structurally-different C phrasings to find one where
-gcc's *own, unforced* allocator lands on `r7` (matching the natural-
-allocation finding above) is the most promising remaining avenue; manual
-C rephrasing of this specific shape has been tried extensively across
-multiple sessions without success. **Update**: a local decomp-permuter
-instance was set up for exactly this (see
-`decomp-permuter/work/sub_8006600/` in the sibling `decomp-permuter`
-checkout, one level up from this repo) and is actively searching -
-starting score 1905 (mostly register-letter noise, per the debug
-penalty breakdown: Insertions 8/Deletions 4 vs Register Differences
-105), improving steadily. If it finds a score-0 match, the winning
-source lands in `work/sub_8006600/output-0-*/source.c` and should be
-adapted back into this file's `#if NON_MATCHING` block (with proper
-struct/field names restored, since the permuter's base.c uses simplified
-placeholder code) and the guard removed.
+- Replacing the first `STORE_TWO_FIELDS` call's collapsed/inline-asm
+  address computation with genuinely separate plain (unpinned) locals
+  (`_xOff`/`_addr1`, then a nested block for `_yOff`/`_addr2`), and
+  replacing the direct `mgr1Base = *(void **)mgrAddrCache;` reload with
+  a block introducing a plain unpinned intermediate, raises the register
+  pressure enough that gcc's own allocator reaches for `r7` - the
+  prologue/epilogue now matches the ROM exactly: `push {r4,r5,r6,r7,lr}`
+  / `mov r7,r9` / `mov r6,r8` / `push {r6,r7}` ... `pop {r3,r4}` / `mov
+  r8,r3` / `mov r9,r4` / `pop {r4,r5,r6,r7}`.
+- The `halved = (0xF0 - width) >> 1;` computation's shift instruction
+  (`lsrs` vs `asrs`) turned out to be sensitive to the *signedness of the
+  intermediate*: introducing an explicit two-step temp as `s32 _tmp =
+  0xF0 - width;` forces a signed (arithmetic) shift and mismatches the
+  ROM's `lsrs`, but `u32 _tmp = 0xF0 - width;` keeps it as an unsigned
+  (logical) shift, matching the ROM - the original single-line form
+  happened to get this right implicitly (the `0xF0 - width` subexpression
+  is unsigned since `width` is `u32`), so this only bit when refactoring
+  it into a temp.
+- Pinning that same intermediate to `r0` explicitly (`register u32 _tmp
+  asm("r0") = 0xF0 - width;`) - safe because it dies immediately with no
+  cross-call lifetime - fixes the instruction *ordering/register choice*
+  to match the ROM's `subs r0, r6, r0` / `lsrs r3, r0, #1` exactly (the
+  unconstrained version computed both steps directly into `r3`).
+
+**What's still unmatched** (four spots, all in the second half of the
+function, all resistant to the same techniques so far):
+
+- The first `STORE_TWO_FIELDS`' `mgrAddrCache` → `mgr1Base` reload still
+  uses `r0` as its scratch (`mov r0, r8` / `ldr r0, [r0, #0]`) where the
+  ROM uses `r7` (`mov r7, r8` / `ldr r0, [r7, #0]`).
+- The *second* `halved` computation's reload of `mgr1Base` from `self`
+  happens one instruction too early relative to the ROM (ROM completes
+  both `subs`/`lsrs` before the reload; this build's reload lands between
+  them).
+- `SUB_8006600_STORE_TWO_FIELDS_REUSE_SELF`'s *second* field (the
+  `0x8a << 1` / y-offset store) still picks `r3`/`r3` (`movs r3, #138` /
+  `lsls r3, r3, #1` / `adds r3, r0, r3` / `str r2, [r3, #0]`) where the
+  ROM picks `r7`/`r1` (`movs r7, #138` / `lsls r7, r7, #1` / `adds r1,
+  r0, r7` / `str r2, [r1, #0]`).
+- The second `record->slots[2].offset` (`0x20`) `ldrsh` picks `r7` where
+  the ROM picks `r3` (register swap, mirror image of the previous item).
+
+Every attempt this session to touch the second half with the same
+"replace collapsed/inline-asm computation with separate plain locals"
+technique that worked on the first half **regressed** the hard-won
+prologue fix instead of improving these four spots (four separate
+variations tried and reverted: two shapes of a new-locals version of the
+y-offset store, a version reusing the already-declared `_hv`/`_addr`
+instead of new locals, and applying the same `r0`-pinned-intermediate
+trick to the second `halved` computation) - each one brought back
+`sl`/`r10` usage and lost `r7` from the push/pop list entirely. The
+interaction between which specific piece of code is touched and the
+resulting whole-function register allocation is fragile and not fully
+understood; the second half appears to sit right at a decision boundary
+in gcc's allocator that the first half's fix doesn't touch. Given `git
+diff` was checked at every step and each regression reverted immediately
+(never left in the tree), the version now checked in is a genuine,
+confirmed improvement over prior sessions (prologue/epilogue register
+list now matches exactly, plus the first `halved` computation's
+instruction choice and ordering) even though it stops short of a full
+byte-exact match. If revisited, the most promising untried angle is a
+permuter search scoped to *only* the second half's four remaining
+mismatches (much smaller search space than a fresh whole-function
+attempt) rather than more manual rephrasing, since manual attempts on
+this specific region have now failed identically four times in a row.
+The decomp-permuter run from a prior session was stopped after
+plateauing around score 745; its best candidate contained a genuine
+uninitialized-variable read (a real correctness bug, not just a
+register-letter mismatch) and was discarded rather than adapted.
 
 Thirty-first matched function: `sub_80006A8` (ROM `0x080006A8`, at the
 very front of `asm/code_3_1.s`'s remaining content, immediately after
