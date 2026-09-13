@@ -2046,6 +2046,53 @@ approach in `matching_decomp_register_pinning` memory:
   value was already available and reused it instead, saving an
   instruction the ROM doesn't save.
 
+Tenth matched function: `sub_8000AA8` (ROM `0x08000AA8`, right after
+`sub_80009F4`) - the actual printf-style driver these last several
+functions were building toward. Lives in new file `src/printf_util.c`.
+Walks `fmt`, echoing literal characters, and dispatching `%`-conversions
+through a jump table: `%s` (string copy), `%c` (single byte from the
+arg array - every slot is 4 bytes regardless of the value's real size),
+`%d`/`%x`/`%X` (via `sub_800094C`), `%<digit>...` (space-padded width,
+via `sub_80009F4`), and `%0...` (zero-padded width, same). Args are a
+raw `u32 *` array, not real varargs.
+
+Three genuinely new findings, on top of everything from
+`sub_80009F4`'s writeup:
+
+- The manual bounds pre-check that seemed necessary at first (checking
+  `(u8)(c - '%') > 0x53` before the `switch`) turned out to *be* the
+  ROM's own switch-statement bounds check in disguise - once an
+  explicit `case '%':` was added (mapped to the same body as `default`,
+  widening the switch's case range down to `'%'` itself rather than
+  starting at `'0'`), agbcc generated that exact single check on its
+  own and the manual pre-check became redundant *and wrong* (it produced
+  a second, narrower check in addition to the switch's own one).
+- Case-block **physical layout order in the source** matters, not just
+  which code runs for which case: the `'%'`/`default` case had to be
+  written *last* in the switch (matching where the ROM physically places
+  its equivalent block, immediately before the loop's read-next-char
+  step) rather than first - agbcc lays out non-jump-table code in
+  source order, so the case textually closest to a shared successor
+  becomes the one that "falls through" to it for free, while every
+  other case gets an explicit trailing branch. Writing the same case
+  first instead made a *different* case fall through, changing which
+  branches were explicit and by how many bytes.
+- The two `charsConsumed` variables needed separate block-scoped
+  declarations (one per case), matching the ROM's two distinct stack
+  slots, rather than one shared variable reused across both cases (see
+  the file for detail already captured there).
+- The function is declared `void`, not `u8 *`, even though it looks
+  exactly like it should return the advanced `dest` pointer (and every
+  other function in this call chain does) - the ROM's epilogue never
+  sets up r0 before its `pop {r0}; bx r0` return dance, leaving whatever
+  was last written there (0, from the terminating NUL) to be silently
+  discarded by the caller. Caught by comparing the tail of the compiled
+  output against a fresh objdump of the exact ROM bytes at that address
+  (not the write-up notes from reading the disassembly a while
+  earlier), since a `u8 *` return produces an extra, very plausible-
+  looking `adds r0, r4, #0` instruction that's easy to assume belongs
+  there.
+
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/graphics.c`,
