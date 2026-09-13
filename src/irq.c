@@ -118,4 +118,36 @@ s32 sub_8000680(s32 arg0) {
     return -1;
 }
 
+extern u8 gUnknown_030007DC;
+extern u32 gUnknown_030007D8;
+extern u32 gUnknown_03000A58;
+extern u32 gUnknown_03000A5C;
+extern void sub_0803A960(void);
+
+/* arg0 is unused - the ROM never reads r0 past the prologue. */
+void sub_80006A8(void *arg0)
+{
+    u32 *p1;
+    u32 *p2;
+    u32 *p3;
+    u32 v1;
+    u32 v2;
+
+    if (gUnknown_030007DC != 0) {
+        p1 = &gUnknown_030007D8;
+        p2 = &gUnknown_03000A58;
+        p3 = &gUnknown_03000A5C;
+        v1 = *p1;
+        v2 = *p2;
+        while (v1 < v2) {
+            sub_0803A960();
+            v1 = *p1;
+            v2 = *p2;
+        }
+        *p2 = v2 + *p3;
+    } else {
+        sub_0803A960();
+    }
+}
+
 __asm__(".align 2,0");

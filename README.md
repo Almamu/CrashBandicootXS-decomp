@@ -8,16 +8,22 @@ It builds the following ROM:
 ## Current state
 
 - Main decomp efforts just started
-- First 30 functions matching: `QueueVramDmaTransfer`/`FreeVramDmaQueue`/
+- First 31 functions matching: `QueueVramDmaTransfer`/`FreeVramDmaQueue`/
   `FlushVramDmaQueue`/`sub_8006B0C`/`sub_8006AF4`/`sub_8006AC8`/
   `sub_8006AAC`/`sub_8006A78`/`sub_8006A84`/`sub_8006A90`/`sub_8006A48`/
   `sub_8006A14`/`sub_80069E8`/`sub_800697C` in `src/graphics.c`,
   `sub_8006700`/`sub_8006714`/`sub_8006770`/`sub_80067A4`/`sub_80067B4`/
   `sub_80067C4`/`sub_80067D4`/`sub_80067E4`/`sub_80067EC`/`sub_8006820`/
   `sub_8006864`/`sub_80068A8`/`sub_80068CC`/`sub_8006920`/`sub_800695C`
-  in `src/oam_count.c`, `GetAnimFrameBaseOffset` in `src/actor_anim.c`
+  in `src/oam_count.c`, `sub_80006A8` in `src/irq.c`,
+  `GetAnimFrameBaseOffset` in `src/actor_anim.c`
   (see `docs/graphics.md`, "Matching decompilation" for the workflow and
   a few gotchas worth knowing before doing more of this)
+- `sub_8006600` (in `src/oam_count.c`) is reconstructed but not yet
+  byte-matching - compiled only under `make NON_MATCHING=1` for now (see
+  `docs/graphics.md`, "Parked, not matched: sub_8006600"); a local
+  decomp-permuter instance is searching for the remaining register
+  picks in the sibling `decomp-permuter` checkout
 
 ## Setting up the repo
 

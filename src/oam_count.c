@@ -23,7 +23,6 @@ extern struct threshold_table_entry gStaticData_0816C86C[];
 extern void sub_80062A8(s32 arg0, s32 arg1, s32 arg2);
 extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
 extern void sub_8026ED0(void *arg0);
-extern void sub_80006A8(void *arg0);
 extern void sub_8006DC8(void *arg0);
 extern void sub_8006AAC(void *arg0);
 extern void sub_8006A90(void *arg0);
@@ -206,6 +205,8 @@ void sub_8006600(struct sub_8006700_actor *arg0)
     sub_8006A48(mgr1Base);
 }
 #endif /* NON_MATCHING */
+
+extern void sub_80006A8(void *arg0);
 
 void sub_8006700(struct sub_8006700_actor *arg0)
 {

@@ -1803,7 +1803,46 @@ searching many structurally-different C phrasings to find one where
 gcc's *own, unforced* allocator lands on `r7` (matching the natural-
 allocation finding above) is the most promising remaining avenue; manual
 C rephrasing of this specific shape has been tried extensively across
-multiple sessions without success.
+multiple sessions without success. **Update**: a local decomp-permuter
+instance was set up for exactly this (see
+`decomp-permuter/work/sub_8006600/` in the sibling `decomp-permuter`
+checkout, one level up from this repo) and is actively searching -
+starting score 1905 (mostly register-letter noise, per the debug
+penalty breakdown: Insertions 8/Deletions 4 vs Register Differences
+105), improving steadily. If it finds a score-0 match, the winning
+source lands in `work/sub_8006600/output-0-*/source.c` and should be
+adapted back into this file's `#if NON_MATCHING` block (with proper
+struct/field names restored, since the permuter's base.c uses simplified
+placeholder code) and the guard removed.
+
+Thirty-first matched function: `sub_80006A8` (ROM `0x080006A8`, at the
+very front of `asm/code_3_1.s`'s remaining content, immediately after
+`irq.c`'s `sub_8000680` - moved there, not into `oam_count.c`, once
+`make compare` failed after an initial placement: this function's
+address is far earlier than `oam_count.o`'s region, and it turned out to
+belong right where `irq.c` already left off, its globals
+`gUnknown_03000A58`/`gUnknown_03000A5C` sitting immediately before
+`irq.c`'s already-established `gUnknown_03000A60`). Ignores its `arg0`
+parameter entirely (dead - the ROM never reads `r0` past the prologue,
+kept only because the call site passes one). Waits for
+`gUnknown_030007D8 >= gUnknown_03000A58` (calling `sub_0803A960()` each
+time it isn't, unconditionally at least once if `gUnknown_030007DC` is
+0) then adds `gUnknown_03000A5C` onto `gUnknown_03000A58` - looks like a
+"wait for some counter to catch up, then advance a threshold" pattern,
+maybe a frame-timing/animation-delay wait. Needed one register-pinning
+technique: explicit pointer locals (`p1`/`p2`/`p3`) for the three
+globals' addresses, loaded unconditionally right after the outer `if`
+(matching the ROM's own eager `ldr r5/r4/r6` before branching to the
+loop condition) - a direct `while (gUnknown_030007D8 < gUnknown_03000A58)`
+with the globals referenced by name let gcc compute the addresses lazily
+inside the loop instead. Also needed named locals for both compared
+values (loaded fresh each iteration, matching the ROM re-reading through
+r5/r4 every pass) so the closing `+=` could reuse the already-loaded
+`gUnknown_03000A58` value instead of re-dereferencing it - the ROM reuses
+the comparison's last-loaded register for the store afterward. Matched
+byte-exact on the second try (first attempt used `s32`/plain globals and
+got the branch condition, register letters, and the `+=`'s redundant
+reload all slightly wrong).
 
 ### Cleanup pass over everything matched so far
 
