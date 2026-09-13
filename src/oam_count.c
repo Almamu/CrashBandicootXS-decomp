@@ -11,6 +11,20 @@ extern void FlushVramDmaQueue(void);
 extern void *gUnknown_030012B8;
 extern void *gUnknown_03001300;
 
+extern void sub_8008044(void *arg0);
+
+struct sub_8006700_struct {
+    u8 unused_00[0x18];
+    void *field_18;
+    s32 field_1c;
+};
+
+void sub_8006700(struct sub_8006700_struct *arg0)
+{
+    arg0->field_1c++;
+    sub_8008044(arg0->field_18);
+}
+
 struct sub_8006714_struct {
     u8 unused_00[0x1c];
     u32 field_1c;

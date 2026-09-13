@@ -12376,15 +12376,3 @@ _080066F0: .4byte gUnknown_03001300
 _080066F4: .4byte gUnknown_030012FC
 _080066F8: .4byte gUnknown_030012E0
 _080066FC: .4byte gUnknown_030012DC
-
-	thumb_func_start sub_8006700
-sub_8006700: @ 0x08006700
-	push {lr}
-	ldr r1, [r0, #0x1c]
-	adds r1, #1
-	str r1, [r0, #0x1c]
-	ldr r0, [r0, #0x18]
-	bl sub_8008044
-	pop {r0}
-	bx r0
-	.align 2, 0

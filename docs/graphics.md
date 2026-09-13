@@ -1658,3 +1658,12 @@ between `0x04000010`, a freshly-materialized `0x05000000`, then
 `0x04000050`, `+4`, and `-0x54` to land on `0x04000000`) falls out
 naturally from gcc just evaluating a sequence of plain absolute-address
 volatile pointer dereferences in program order.
+
+Thirtieth matched function: `sub_8006700` (ROM `0x08006700`, immediately
+before `sub_8006714` - joined `src/oam_count.c` above it, no new split).
+Trivial: increments `arg0->field_1c`, then calls `sub_8008044(arg0->field_18)`
+- the same `field_18`/`field_1c` field names as `sub_8006770`, reinforcing
+that these functions likely all operate on the same "actor" or "entity"
+struct (not unified into one shared type here, consistent with this
+file's existing per-function-struct style). Matched byte-exact on the
+first try.
