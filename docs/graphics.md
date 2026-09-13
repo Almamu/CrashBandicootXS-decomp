@@ -1302,4 +1302,25 @@ non-obvious pieces were needed too:
 `+0xC`, most likely with 8 more bytes of header in between not touched by
 this function) isn't otherwise identified, and `arg1`'s two fields are
 untyped (`u32`) rather than named - this function was matched byte-exact
-without pinning down what data it actually manages.
+without pinning down what data it actually manages. (Resolved by the next
+function below: the `+0xC` table is an **OAM shadow buffer**.)
+
+Eighth matched function: `sub_8006AAC` (ROM `0x08006AAC`, immediately
+before `sub_8006AC8`, same region - joined `src/graphics.c` right above
+it). One-shot match, no register tricks needed - a tiny leaf function
+(no `push`/`pop` at all, matching the ROM exactly, since it makes no
+calls and needs no callee-saved registers) that DMAs `arg0 + 0xC` to
+`0x07000000` (**OAM**, confirmed - that's the GBA's real object-attribute
+memory address) for `0x100` 32-bit units = `0x400` = 1024 bytes, exactly
+the size of the whole OAM (128 sprites x 8 bytes). This confirms
+`sub_8006AC8`'s 128-entry, 8-byte-stride table at `arg0 + 0xC` (previous
+entry above) **is** that same shadow OAM buffer, and the struct at `arg0`
+is an OAM-shadow-buffer manager: a slot count at `+0`, then the shadow
+OAM table at `+0xC`. `DMA3.cnt = 0x84000100` reused the existing
+`DMA3`/`struct dma_regs` from `FlushVramDmaQueue` above - no new types
+needed. One nice confirmation of gcc 2.9's constant-synthesis behavior
+carrying over: `0x07000000` (not representable as an 8-bit rotated
+immediate) is built the same way as `FlushVramDmaQueue`'s DMA flags -
+`mov r0, #0xe0; lsl r0, r0, #0x13` - triggered here just by writing the
+plain decimal-looking hex literal `0x07000000`, no special phrasing
+needed.
