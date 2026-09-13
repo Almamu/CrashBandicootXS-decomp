@@ -2484,6 +2484,21 @@ via `LoadTaggedAsset`) into VRAM at `0x06000000`, then DMAs the first
 `0x200` bytes of `asset` itself (a raw 256-halfword palette) straight
 into palette RAM at `0x05000000`. Matched first-try.
 
+Twenty-fourth matched function: `sub_80011F4` (ROM `0x080011F4`, right
+after `sub_80011C0`), in new file `src/word_util.c` - returns the
+length of the next "word" starting at `s`: the count of characters up
+to and including the first space, or up to (but not including) the NUL
+terminator if no space comes first. This is exactly what the still-
+parked `sub_8000EE4` (`src/text_layout.c`) uses to walk text one token
+at a time. Needed a single shared `goto done;` return point (matching
+the ROM's one `bx lr`) rather than three separate `return` statements,
+which otherwise compile to three separate epilogues.
+
+Extracting this one function needed the same kind of split as before:
+`asm/code_3_1_6.s` (which held only `sub_80011F4`) was trimmed to
+nothing and removed, its ldscript slot going to `word_util.o`, with
+everything from `sub_8001214` on moved to a new `asm/code_3_1_7.s`.
+
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/graphics.c`,

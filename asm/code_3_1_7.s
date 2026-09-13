@@ -3,27 +3,6 @@
 .syntax unified
 .arm
 
-	thumb_func_start sub_80011F4
-sub_80011F4: @ 0x080011F4
-	movs r2, #0
-	ldrb r1, [r0]
-	cmp r1, #0
-	beq _08001210
-	movs r2, #1
-	cmp r1, #0x20
-	beq _08001210
-_08001202:
-	adds r0, #1
-	ldrb r1, [r0]
-	cmp r1, #0
-	beq _08001210
-	adds r2, #1
-	cmp r1, #0x20
-	bne _08001202
-_08001210:
-	adds r0, r2, #0
-	bx lr
-
 	thumb_func_start sub_8001214
 sub_8001214: @ 0x08001214
 	push {r4, r5, r6, lr}
