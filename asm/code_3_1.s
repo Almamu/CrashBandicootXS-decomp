@@ -12261,6 +12261,11 @@ _080065D6:
 _080065F8: .4byte gUnknown_03001304
 _080065FC: .4byte gUnknown_030007E0
 
+@ sub_8006600 is reconstructed (but not yet byte-matching) as C in
+@ src/oam_count.c, guarded by #if NON_MATCHING - this raw version is
+@ only assembled for the default (matching) build. See docs/graphics.md,
+@ "Parked, not matched: sub_8006600".
+.if NON_MATCHING == 0
 	thumb_func_start sub_8006600
 sub_8006600: @ 0x08006600
 	push {r4, r5, r6, r7, lr}
@@ -12376,3 +12381,4 @@ _080066F0: .4byte gUnknown_03001300
 _080066F4: .4byte gUnknown_030012FC
 _080066F8: .4byte gUnknown_030012E0
 _080066FC: .4byte gUnknown_030012DC
+.endif

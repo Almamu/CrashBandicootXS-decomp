@@ -21,22 +21,26 @@ COMPILE_TIME_ASSERT(sizeof(struct threshold_table_entry) == 0x24);
 
 extern struct threshold_table_entry gStaticData_0816C86C[];
 extern void sub_80062A8(s32 arg0, s32 arg1, s32 arg2);
-extern void sub_803AD80(void *arg0, s32 arg1, void *arg2);
+extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
 extern void sub_8026ED0(void *arg0);
 extern void sub_80006A8(void *arg0);
 extern void sub_8006DC8(void *arg0);
 extern void sub_8006AAC(void *arg0);
+extern void sub_8006A90(void *arg0);
+extern void sub_8006A48(void *arg0);
 extern void FlushVramDmaQueue(void);
 extern void *gUnknown_030012B8;
 extern void *gUnknown_03001300;
 
 extern void sub_8008044(void *arg0);
 
-/* Shared by sub_8006700/sub_8006714/sub_8006770 below - all three access
- * field_18/field_1c at the same offsets on what looks like the same
- * "actor" object. */
+/* Shared by sub_8006600/sub_8006700/sub_8006714/sub_8006770 below - all
+ * four access field_18 (and sub_8006600 also field_10/field_14) at the
+ * same offsets on what looks like the same "actor" object. */
 struct sub_8006700_actor {
-    u8 unused_00[0x18];
+    u8 unused_00[0x10];
+    s32 field_10;
+    void *field_14;
     void *field_18;
     u32 field_1c;
     u32 field_20;
@@ -44,6 +48,136 @@ struct sub_8006700_actor {
     u8 unused_25[3];
     u16 field_28;
 };
+
+extern void sub_8006C28(void *arg0);
+extern void sub_8008890(void *arg0, s32 arg1, s32 arg2);
+extern void sub_803AFE4(void *buf, s32 arg1, s32 arg2);
+extern void sub_803AFDC(void *buf, s32 arg1, s32 arg2);
+extern void sub_8001214(void *arg0, void *arg1, void *buf, s32 arg3);
+extern s32 sub_8026F38(s32 arg0);
+extern void *gUnknown_030012FC;
+
+/* field_10/field_14 and field_20/field_24 are each an (offset, pointer)
+ * pair sub_8006600 feeds straight to sub_803AD80 - two OAM slots one
+ * icon spans (a wide sprite needs two entries side by side, most
+ * likely). */
+struct icon_record {
+    u8 unused_00[0x10];
+    s16 field_10;
+    u8 unused_12[2];
+    void *field_14;
+    u8 unused_18[8];
+    s16 field_20;
+    u8 unused_22[2];
+    void *field_24;
+};
+
+/* An OAM "icon" positioner: screen X/Y for the icon, then a pointer to
+ * a small record describing which two OAM slots to draw it into.
+ * gUnknown_030012E0/gUnknown_030012DC are two instances of this, used for
+ * a left/right icon pair flanking a number in sub_8006600. */
+struct icon_manager {
+    u8 unused_00[0x110];
+    u32 posX;
+    u32 posY;
+    u8 unused_118[0x130 - 0x118];
+    struct icon_record *record;
+};
+
+extern struct icon_manager *gUnknown_030012E0;
+extern struct icon_manager *gUnknown_030012DC;
+
+#if NON_MATCHING
+/* Positions two OAM icons flanking a number (drawn via sub_8001214 in
+ * between) - centers each icon horizontally from its rendered pixel
+ * width (`sub_803AD80`'s return value), at fixed Y coordinates. NOT YET
+ * BYTE-MATCHING: matches the ROM's total instruction/byte count exactly
+ * and most register choices, but a handful of low-register (r0-r7)
+ * letter picks in the two STORE_TWO_FIELDS blocks still differ from the
+ * ROM, and forcing them needs an r7 pin that a fresh test proved is a
+ * genuine ABI hazard (see docs/graphics.md, "Parked, not matched:
+ * sub_8006600", and matching_decomp_register_pinning memory) - so this
+ * is compiled only under NON_MATCHING, with the checked-in matching
+ * assembly (asm/code_3_1.s) used otherwise. The two STORE_TWO_FIELDS/
+ * GET_RECORD asm blocks anchor address computations gcc would otherwise
+ * cache across the sub_803AD80 calls in between, which the ROM does not
+ * do. mgrAddrCache/mgr1Base/recOff/g1300Addr are pinned to match the
+ * ROM's own register choices for values that must survive those same
+ * calls. */
+#define SUB_8006600_STORE_TWO_FIELDS(base, halved, yconst) \
+    do { \
+        register s32 _hv asm("r3") = (halved); \
+        register s32 _yv asm("r2") = (yconst); \
+        void *_addr; \
+        asm volatile("mov %0, #0x88\n\tlsl %0, %0, #1" : "=&r"(_addr)); \
+        *(u32 *)((u8 *)(base) + (s32)_addr) = _hv; \
+        asm volatile("mov %0, #0x8a\n\tlsl %0, %0, #1" : "+r"(_hv)); \
+        *(u32 *)((u8 *)(base) + (s32)_hv) = _yv; \
+    } while (0)
+
+#define SUB_8006600_GET_RECORD(base, recOff, out) \
+    do { \
+        void *_addr; \
+        asm volatile("add %0, %1, %2" : "=&r"(_addr) : "r"(base), "r"(recOff)); \
+        (out) = *(struct icon_record **)_addr; \
+    } while (0)
+
+void sub_8006600(struct sub_8006700_actor *arg0)
+{
+    register struct sub_8006700_actor *self asm("r4");
+    register s32 recOff asm("r5");
+    register void *mgrAddrCache asm("r8");
+    register void *mgr1Base asm("r0");
+    register void **g1300Addr asm("r9");
+    void *addr;
+    struct icon_record *record;
+    u8 buf[0x10];
+    u32 width;
+    u32 halved;
+    s32 charWidth;
+
+    self = arg0;
+    g1300Addr = &gUnknown_03001300;
+    sub_8006A90(*g1300Addr);
+    sub_8006C28(gUnknown_030012FC);
+    sub_8008890(self->field_18, 0, 0);
+
+    addr = &gUnknown_030012E0;
+    mgrAddrCache = addr;
+    mgr1Base = *(void **)addr;
+    recOff = 0x98 << 1; /* offsetof(struct icon_manager, record) */
+    SUB_8006600_GET_RECORD(mgr1Base, recOff, record);
+    width = sub_803AD80((u8 *)mgr1Base + record->field_10,
+                         self->field_10, record->field_14);
+    halved = (0xF0 - width) >> 1;
+    mgr1Base = *(void **)mgrAddrCache;
+    SUB_8006600_STORE_TWO_FIELDS(mgr1Base, halved, 0x2D);
+    SUB_8006600_GET_RECORD(mgr1Base, recOff, record);
+    sub_803AD80((u8 *)mgr1Base + record->field_20,
+                self->field_10, record->field_24);
+
+    sub_803AFE4(buf, 0x10, 0x6a);
+    sub_803AFDC(buf, 0xd0, 0x35);
+    sub_8001214(self->field_14, gUnknown_030012DC, buf, 0);
+    charWidth = sub_8026F38(0x2e);
+    self = (struct sub_8006700_actor *)&gUnknown_030012DC;
+
+    mgr1Base = *(void **)self;
+    SUB_8006600_GET_RECORD(mgr1Base, recOff, record);
+    width = sub_803AD80((u8 *)mgr1Base + record->field_10,
+                         charWidth, record->field_14);
+    halved = (0xF0 - width) >> 1;
+    mgr1Base = *(void **)self;
+    SUB_8006600_STORE_TWO_FIELDS(mgr1Base, halved, 0x90);
+    SUB_8006600_GET_RECORD(mgr1Base, recOff, record);
+    sub_803AD80((u8 *)mgr1Base + record->field_20,
+                charWidth, record->field_24);
+
+    self = (struct sub_8006700_actor *)g1300Addr;
+    mgr1Base = *(void **)self;
+    sub_8006A48(mgr1Base);
+}
+#endif /* NON_MATCHING */
 
 void sub_8006700(struct sub_8006700_actor *arg0)
 {

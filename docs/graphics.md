@@ -1673,9 +1673,8 @@ struct (not unified into one shared type here, consistent with this
 file's existing per-function-struct style). Matched byte-exact on the
 first try.
 
-**Parked, not matched: `sub_8006600`** (ROM `0x08006600`, immediately
-before `sub_8006714`; still raw assembly in `asm/code_3_1.s` - a
-re-integration attempt this session was reverted again, see below). A
+**Not yet byte-matching, kept as C under `#if NON_MATCHING`:
+`sub_8006600`** (ROM `0x08006600`, immediately before `sub_8006714`). A
 HUD-icon-plus-number renderer: resets one OAM manager (`sub_8006A90`),
 calls `sub_8006C28` on another global, calls `sub_8008890`, positions a
 left icon by computing its centered X (`(240 - width) >> 1`, width from
@@ -1686,13 +1685,29 @@ pixel width via `sub_8026F38`, then positions a second icon the same way
 slots. None of `sub_8006C28`, `sub_8008890`, `sub_803AD80`,
 `sub_803AFE4`, `sub_803AFDC`, `sub_8001214`, `sub_8026F38` are matched or
 even confidently typed beyond the argument shapes this call site
-implies. The reconstruction used `struct icon_record`/`struct
-icon_manager` for the two OAM-slot-record pairs it reads, and extended
-the existing `struct sub_8006700_actor` (shared with
-`sub_8006700`/`sub_8006714`/`sub_8006770`) with `field_10`/`field_14`
-for `self`'s shape rather than defining a second struct for the same
-object - these struct definitions were reverted along with the function
-body since nothing else in the file exercises them yet.
+implies. Uses `struct icon_record`/`struct icon_manager` for the two
+OAM-slot-record pairs it reads, and extends the existing `struct
+sub_8006700_actor` (shared with `sub_8006700`/`sub_8006714`/
+`sub_8006770`) with `field_10`/`field_14` for `self`'s shape rather than
+defining a second struct for the same object.
+
+**Build toggle**: this function's C definition in `src/oam_count.c` is
+wrapped in `#if NON_MATCHING`, and the corresponding raw bytes in
+`asm/code_3_1.s` are wrapped in `.if NON_MATCHING == 0` / `.endif`, so
+exactly one definition of `sub_8006600` is ever assembled. Default builds
+(`make`/`make compare`) get `NON_MATCHING=0` from the Makefile and use
+the checked-in matching assembly, so `make compare` still passes.
+`make NON_MATCHING=1 crashbandicootxs.gba` (or any other target) instead
+compiles this C version in - confirmed this session to compile and link
+cleanly - useful for testing the reconstructed logic actually behaves
+right even while the register-letter mismatch below is unresolved. This
+is the first per-function use of this pattern in the project; `#ifndef
+NON_MATCHING #define NON_MATCHING 0 #endif` was added to `include/core.h`
+so the macro is always defined (default builds don't pass `-D
+NON_MATCHING`, and `#if NON_MATCHING` on a genuinely undefined macro
+would still evaluate as 0, but defining it explicitly is clearer and
+matches how the assembly side already needs a defined symbol from
+`--defsym`).
 
 Confirmed via `asmdiff.sh` that the reconstruction matches the ROM's
 **total byte count exactly** (every address past this function lines up
@@ -1707,19 +1722,15 @@ memory: both `r8` and `r9` get a proper `mov`-to-lowreg-then-`push`/
 `pop`-then-`mov`-back dance in the prologue/epilogue automatically, just
 from being assigned to, independent of cross-call liveness.
 
-What's still unmatched even with that fix applied is a cluster of
-**low-register** (`r0`-`r7`) letter-only differences, all cosmetic (no
-logic/size difference): the prologue/epilogue push/pop list is missing
-`r7` (ROM pushes `r4,r5,r6,r7`; the reconstruction pushes only
-`r4,r5,r6`), and the two `SUB_8006600_STORE_TWO_FIELDS` blocks use a
-different scratch register for the `posX`/`posY` address computation
-than the ROM does at each of its two call sites (ROM uses `r7`+`r1` at
-the first site, `r4`+`r7` at the second; the reconstruction's `"=&r"`
-constraints let gcc pick `r1`/`r3` instead). Since `make compare` hashes
-the *entire* ROM, a near-miss here fails the whole build, so the C
-version was reverted back to the checked-in assembly rather than landed
-non-matching - same outcome as the prior session's attempt, but this
-session's `r9`-caching insight is new and worth keeping for next time.
+What's still unmatched is a cluster of **low-register** (`r0`-`r7`)
+letter-only differences, all cosmetic (no logic/size difference): the
+prologue/epilogue push/pop list is missing `r7` (ROM pushes
+`r4,r5,r6,r7`; the reconstruction pushes only `r4,r5,r6`), and the two
+`SUB_8006600_STORE_TWO_FIELDS` blocks use a different scratch register
+for the `posX`/`posY` address computation than the ROM does at each of
+its two call sites (ROM uses `r7`+`r1` at the first site, `r4`+`r7` at
+the second; the reconstruction's `"=&r"` constraints let gcc pick
+`r1`/`r3` instead).
 
 **Why not just pin `r7`, confirmed with a fresh isolated test this
 session**: tried adding a real, plain-C-visible temp
@@ -1738,26 +1749,16 @@ because it's assigned/read in ordinary C. Since `tmp`'s whole lifetime
 here sits between two calls with no `bl` in between, agbcc omits it -
 correctly by its own liveness model, incorrectly by the ABI. This
 broadens the hazard already recorded in `matching_decomp_register_pinning`
-memory (previously thought fixed by "give it a plain C use") - reverted
-`tmp` rather than keep a real miscompile for a handful of cosmetic
-bytes. The `r9` fix for `gUnknown_03001300` was kept because `r9` is a
-high register and doesn't have this problem.
+memory (previously thought fixed by "give it a plain C use") - not used
+here for that reason. The `r9` fix for `gUnknown_03001300` was kept
+because `r9` is a high register and doesn't have this problem.
 
-Worth a fresh attempt later only via a technique that doesn't rely on a
+Worth a fresh attempt via a technique that doesn't rely on a
 short-lived low-register pin (e.g. decomp.me/a permuter for the last few
 register picks, or restructuring so the relevant temp's lifetime
 genuinely straddles a call) - the approach above (fresh-reload globals +
 inline-asm address computation + high-register address caching) is the
 right starting point, not the dead ends this note is warning about.
-
-Net effect this session: strictly closer to the ROM than before (one
-whole reload sequence now matches exactly, using a technique - `r9`
-address-caching - that's provably safe), with the remaining low-register
-letter differences left as-is rather than forced through an ABI-unsafe
-pin. Worth a fresh attempt later only via a technique that doesn't rely
-on a short-lived low-register pin (e.g. decomp.me/a permuter for the
-last few register picks, or restructuring so the relevant temp's
-lifetime genuinely straddles a call).
 
 ### Cleanup pass over everything matched so far
 
