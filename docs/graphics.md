@@ -1517,3 +1517,29 @@ different bit of the same per-record flags byte. Matched byte-exact on
 the second try - no register pins needed at all this time, just
 reordering two preheader statements (`total = 0;` before `p = arg0;`,
 matching the ROM's `movs r4,#0` before `adds r2,r5,#0`).
+
+Eighteenth matched function: `sub_80068CC` (ROM `0x080068CC`,
+immediately before `sub_8006920` - joined `src/oam_count.c` above it, no
+new split, and it's one of the five callees `sub_800697C` left
+unidentified). Combines everything the previous two entries found: the
+same 20-record-plus-one-extra bit-summing shape as `sub_8006920`
+(**bits 1 and 2** again, not bit 0 or the 7/5/6/4 set `sub_800697C`
+reads), *plus* four more bits (0, 2, 3, 1, in that order) from the same
+flags byte at `arg0+2` that `sub_800697C` reads directly. Confirms
+`arg0+2` is a genuinely multi-purpose bitfield byte queried by at least
+three of this cluster's functions, each reading a different subset of
+its bits.
+
+Needed register pins (`p`→`r2`, `total`→`r4`, `i`→`r3`) to match the
+ROM's unusually tight register budget (only `r4`/`r5` pushed, no `r6` -
+one fewer register than a first plain-C attempt used, because the ROM
+reuses `r2` for two different roles at different times: the loop's
+induction pointer, then - once that pointer is dead - the flags byte
+read). The final four-bit accumulation also switches from the pinned
+`total` (`r4`) to a **second, unpinned local** initialized from it,
+matching how the ROM's last `total = total + bit` computation lands in a
+fresh register (`r0`) instead of continuing to accumulate in `r4` - by
+this point in the session, splitting a single logical accumulator into
+"the pinned one" and "the one that picks up after it" is a recognizable
+move whenever the ROM's own accumulator changes registers partway
+through a chain of additions with no persisting need for the old one.

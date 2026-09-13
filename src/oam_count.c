@@ -1,5 +1,32 @@
 #include "core.h"
 
+s32 sub_80068CC(void *arg0)
+{
+    register u8 *p asm("r2");
+    register s32 total asm("r4");
+    register s32 i asm("r3");
+    s32 result;
+    u8 flags;
+    u8 byte;
+
+    total = 0;
+    p = (u8 *)arg0;
+    i = 0x13;
+    do {
+        byte = p[4];
+        total += (((u32)byte << 30) >> 31) + (((u32)byte << 29) >> 31);
+        p += 4;
+        i--;
+    } while (i >= 0);
+    total += (((u32)*((u8 *)arg0 + 0x64) << 30) >> 31) + (((u32)*((u8 *)arg0 + 0x64) << 29) >> 31);
+    flags = *((u8 *)arg0 + 2);
+    result = total + (((u32)flags << 31) >> 31);
+    result += ((u32)flags << 29) >> 31;
+    result += ((u32)flags << 28) >> 31;
+    result += ((u32)flags << 30) >> 31;
+    return result;
+}
+
 s32 sub_8006920(void *arg0)
 {
     u8 *p;
