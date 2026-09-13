@@ -12615,21 +12615,3 @@ _08006892:
 	bx r1
 	.align 2, 0
 _080068A4: .4byte gStaticData_0816C86C
-
-	thumb_func_start sub_80068A8
-sub_80068A8: @ 0x080068A8
-	push {r4, r5, r6, lr}
-	adds r5, r0, #0
-	bl sub_8006864
-	adds r4, r0, #0
-	adds r0, r5, #0
-	bl sub_8006820
-	adds r6, r0, #0
-	adds r0, r5, #0
-	bl sub_80067EC
-	adds r4, r4, r6
-	adds r4, r4, r0
-	adds r0, r4, #0
-	pop {r4, r5, r6}
-	pop {r1}
-	bx r1

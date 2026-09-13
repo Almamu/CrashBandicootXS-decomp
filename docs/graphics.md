@@ -1543,3 +1543,13 @@ this point in the session, splitting a single logical accumulator into
 "the pinned one" and "the one that picks up after it" is a recognizable
 move whenever the ROM's own accumulator changes registers partway
 through a chain of additions with no persisting need for the old one.
+
+Nineteenth matched function: `sub_80068A8` (ROM `0x080068A8`, immediately
+before `sub_80068CC` - joined `src/oam_count.c` above it, no new split).
+The simplest of this whole cluster: sums three of `sub_800697C`'s five
+callees directly - `sub_8006864 + sub_8006820 + sub_80067EC` - no bit
+tests, no halving. Matched byte-exact on the first try, no register pins
+needed. Two of the five callees (`sub_8006864`, `sub_8006820`) are now
+each called by *two* different matched functions (`sub_800697C` and
+`sub_80068A8`), and `sub_80067EC` by both of those too - worth matching
+next, since it would immediately pay off three call sites at once.

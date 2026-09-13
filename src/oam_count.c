@@ -1,5 +1,23 @@
 #include "core.h"
 
+extern s32 sub_8006864(void *arg0);
+extern s32 sub_8006820(void *arg0);
+extern s32 sub_80067EC(void *arg0);
+
+s32 sub_80068A8(void *arg0)
+{
+    s32 total;
+    s32 b;
+    s32 c;
+
+    total = sub_8006864(arg0);
+    b = sub_8006820(arg0);
+    c = sub_80067EC(arg0);
+    total += b;
+    total += c;
+    return total;
+}
+
 s32 sub_80068CC(void *arg0)
 {
     register u8 *p asm("r2");
