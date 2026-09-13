@@ -38,6 +38,7 @@ SECTIONS
         build/crashbandicootxs/asm/code_3_1_5.o(.text);
         build/crashbandicootxs/src/asset_util.o(.text);
         build/crashbandicootxs/src/word_util.o(.text);
+        build/crashbandicootxs/src/line_util2.o(.text);
         build/crashbandicootxs/asm/code_3_1_7.o(.text);
         build/crashbandicootxs/src/oam_count.o(.text);
         build/crashbandicootxs/src/graphics.o(.text);

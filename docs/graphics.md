@@ -2520,6 +2520,29 @@ to get the ROM's exact register letters for the address/value pair
 constant plus 4 for the `field_11c` offset instead of recomputing it
 from scratch, incidentally also matching the ROM there).
 
+Twenty-sixth matched function: `sub_8001254` (ROM `0x08001254`, right
+after `sub_8001214`), in new file `src/line_util2.c` - advances a
+Bresenham line (set up by `sub_8000E6C`, `src/line_util.c`) by one
+step: the "driving" axis (`x0` if `flag` is set, `y0` otherwise) always
+advances by its sign; the other axis advances only when the
+accumulated error term (`field_10`) is positive, in which case the
+error term is corrected by `field_18` instead of `field_14`. Kept in
+its own file (redefining the same `struct bresenham_line` locally
+rather than sharing `sub_8000E6C`'s) purely because `line_util.o`
+already links much earlier in `ldscript.txt` and this function's
+address requires it to come after `word_util.o` instead. Two things
+needed fixing versus a first attempt that seemed to match on casual
+inspection but didn't: the error term must be re-read fresh inside
+*each* of the two `flag` branches (not hoisted above the `if (flag)`
+check, matching the ROM's two separate reloads), and - the actual bug -
+each branch's `if (err > 0) {...} else {...}` needs to be written as
+`if (err <= 0) {...} else {...}` instead: agbcc always lays out an
+`if`'s true branch inline (no jump) and its `else` via a jump, so
+writing the condition as `err > 0` put the wrong body first and
+produced an inverted branch (`ble`/fallthrough-swapped) that still
+*looked* plausible next to the ROM's `bgt` until directly diffed
+byte-for-byte. Needed the usual trailing `asm(".align 2, 0")` fix.
+
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/graphics.c`,

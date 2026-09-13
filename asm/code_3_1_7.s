@@ -3,59 +3,6 @@
 .syntax unified
 .arm
 
-	thumb_func_start sub_8001254
-sub_8001254: @ 0x08001254
-	adds r2, r0, #0
-	adds r0, #0x24
-	ldrb r0, [r0]
-	cmp r0, #0
-	beq _08001284
-	ldr r1, [r2, #0x10]
-	cmp r1, #0
-	bgt _0800126C
-	ldr r0, [r2, #0x14]
-	adds r0, r1, r0
-	str r0, [r2, #0x10]
-	b _0800127A
-_0800126C:
-	ldr r0, [r2, #0x18]
-	adds r0, r1, r0
-	str r0, [r2, #0x10]
-	ldr r0, [r2, #4]
-	ldr r1, [r2, #0x20]
-	adds r0, r0, r1
-	str r0, [r2, #4]
-_0800127A:
-	ldr r0, [r2]
-	ldr r1, [r2, #0x1c]
-	adds r0, r0, r1
-	str r0, [r2]
-	b _080012A8
-_08001284:
-	ldr r1, [r2, #0x10]
-	cmp r1, #0
-	bgt _08001292
-	ldr r0, [r2, #0x14]
-	adds r0, r1, r0
-	str r0, [r2, #0x10]
-	b _080012A0
-_08001292:
-	ldr r0, [r2, #0x18]
-	adds r0, r1, r0
-	str r0, [r2, #0x10]
-	ldr r0, [r2]
-	ldr r1, [r2, #0x1c]
-	adds r0, r0, r1
-	str r0, [r2]
-_080012A0:
-	ldr r0, [r2, #4]
-	ldr r1, [r2, #0x20]
-	adds r0, r0, r1
-	str r0, [r2, #4]
-_080012A8:
-	bx lr
-	.align 2, 0
-
 	thumb_func_start sub_80012AC
 sub_80012AC: @ 0x080012AC
 	push {r4, r5, lr}
