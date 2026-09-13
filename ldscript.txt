@@ -34,7 +34,8 @@ SECTIONS
         build/crashbandicootxs/src/text_layout.o(.text);
         build/crashbandicootxs/asm/code_3_1_3.o(.text);
         build/crashbandicootxs/src/time_util.o(.text);
-        build/crashbandicootxs/asm/code_3_1_4.o(.text);
+        build/crashbandicootxs/src/input_util.o(.text);
+        build/crashbandicootxs/asm/code_3_1_5.o(.text);
         build/crashbandicootxs/src/oam_count.o(.text);
         build/crashbandicootxs/src/graphics.o(.text);
         build/crashbandicootxs/asm/code_3_2.o(.text);

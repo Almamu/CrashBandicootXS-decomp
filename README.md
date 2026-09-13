@@ -55,6 +55,12 @@ It builds the following ROM:
   instruction-for-instruction except ~8 bytes from two small codegen
   details (incoming-argument spill ordering, and a couple of loop-bound
   comparisons compiling one instruction shorter than the ROM's)
+- `sub_80010E0` (in new file `src/input_util.c`, an input-polling
+  helper) is also understood but not yet byte-matching - compiled only
+  under `make NON_MATCHING=1` for now (see `docs/graphics.md`, "Parked,
+  not matched: sub_80010E0"): a single bit-test compiles with the
+  branch senses swapped from the ROM (same two instructions, same
+  size) in a way that resists every C-level rephrasing tried
 
 ## Setting up the repo
 

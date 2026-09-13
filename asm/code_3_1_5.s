@@ -3,6 +3,11 @@
 .syntax unified
 .arm
 
+@ sub_80010E0 is reconstructed (but not yet byte-matching) as C in
+@ src/input_util.c, guarded by #if NON_MATCHING - this raw version is
+@ only assembled for the default (matching) build. See docs/graphics.md,
+@ "Parked, not matched: sub_80010E0".
+.if NON_MATCHING == 0
 	thumb_func_start sub_80010E0
 sub_80010E0: @ 0x080010E0
 	push {r4, r5, r6, r7, lr}
@@ -79,7 +84,7 @@ _08001160:
 	.align 2, 0
 _0800116C: .4byte gUnknown_03001304
 _08001170: .4byte gUnknown_030007E0
-
+.endif
 	thumb_func_start LoadTaggedAsset
 LoadTaggedAsset: @ 0x08001174
 	push {lr}

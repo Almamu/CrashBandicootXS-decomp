@@ -2386,6 +2386,53 @@ Extracting this one function required the same kind of split as
 end right after `sub_8000EE4`'s `.endif`, and everything from
 `sub_80010E0` on moved to a new `asm/code_3_1_4.s`, with
 `src/time_util.c`'s object linked between them in `ldscript.txt`.
+(`asm/code_3_1_4.s` was later removed again - see `sub_80010E0`'s own
+notes just below - once it turned out to hold only one function that
+also needed parking.)
+
+**Not yet byte-matching, kept as C under `#if NON_MATCHING`:
+`sub_80010E0`** (ROM `0x080010E0`, right after `sub_800106C`), in new
+file `src/input_util.c`. Polls input (the same `sub_80006A8`-then-
+`sub_80007AC` VBlank-wait-and-update-keys pair used elsewhere) until a
+button matching `mask`'s bit 0 (confirm) or bit 3 (cancel) is newly
+pressed, or - if `count != 0` - until `count` polls elapse; returns 0
+only on a cancel press, 1 on everything else (confirm press, or hitting
+the poll limit). A `checkButtons` byte parameter gates whether the
+per-poll button checks happen at all (with it clear, this is just a
+plain `count`-poll delay, or an immediate no-op return if `count` is
+also 0). Needed `keys` pinned to `r1` and set via an inline-asm copy of
+`mask` (`asm volatile("add %0, %1, #0" ...)`) rather than a plain `keys
+= mask & load` - gcc's own codegen for the combined expression loads
+straight into `r1` and ANDs with the mask register in place, one
+instruction shorter than the ROM's redundant `adds r1, mask, #0`
+followed by a separate `ands`; the `keys &= 8;` bit-8 checks are
+likewise written as in-place ANDs (not `if ((keys & 8) != 0)`) so the
+result lands back in `keys`'s own register, matching the ROM's `ands
+r1, r0` instead of a fresh scratch register.
+
+**Unresolved (4 bytes)**: with all of the above, only one instruction
+differs from the ROM: the count-limited loop's `if (keys & 1)` bit-test
+compiles here as `bne done; b continue` where the ROM has the opposite
+sense, `beq continue; b done` (same two instructions, same size, just
+inverted). Every rephrasing tried - swapping `==`/`!=`, splitting into
+explicit `goto`-only chains with no `if`/`else` at all, reordering this
+whole loop variant before or after the unlimited-loop version in the
+source - produced identical output; the *same* bit-test in the
+unlimited-loop variant a few lines below already matches the ROM's
+sense with no special handling at all, which points at a fixed gcc-2.9
+canonicalization for this exact shape rather than something reachable
+from this file's C.
+
+**Build toggle**: this function's C definition in `src/input_util.c` is
+wrapped in `#if NON_MATCHING`, and the corresponding raw bytes - now
+living in `asm/code_3_1_5.s`, right before `LoadTaggedAsset` (since
+`asm/code_3_1_4.s`, which held only this one function, was removed
+entirely and its ldscript slot given to `input_util.o` instead) - are
+wrapped in `.if NON_MATCHING == 0` / `.endif`. Default builds get
+`NON_MATCHING=0` and use the checked-in matching assembly (verified via
+a clean `make compare`); `make NON_MATCHING=1 crashbandicootxs.gba`
+compiles this C version in instead (verified this session to compile
+and link cleanly with no duplicate-symbol errors).
 
 ### Cleanup pass over everything matched so far
 
