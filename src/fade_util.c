@@ -58,3 +58,78 @@ void sub_80012AC(void)
         }
     }
 }
+
+extern s32 sub_8000680(void *callback);
+extern void sub_80006A8(void);
+
+/* Starts a screen-brightness fade: `flags` bit 0 selects the blend
+ * target (`BLDCNT`, `0x04000050` - `0xBF` vs `0xFF`), bit 7 selects
+ * direction (fade in from `0x10` vs fade out from `0`); `frameDelay`
+ * (clamped to at least 1) is how many frames each of the 17 steps
+ * takes. Refuses to start (silently) if a fade is already running -
+ * `gUnknown_030007E8.field_0` is the sentinel `-1` only when idle,
+ * checked via the classic `(~x + 1) | ~x < 0` "x != -1" bit-trick
+ * rather than a plain comparison (matching the ROM's exact `mvn; neg;
+ * orr; cmp` sequence - a direct `!= -1` compiles to a shorter
+ * load-constant-and-compare instead). If `sync` is nonzero, registers
+ * `sub_80012AC` as a periodic callback (via `sub_8000680`) to drive the
+ * fade one step per call and returns immediately; otherwise it blocks
+ * here, looping through all 17 steps itself and busy-waiting
+ * `frameDelay` VBlanks between each via `sub_80006A8`. */
+void sub_800132C(u8 flags, s32 frameDelay, u8 sync)
+{
+    {
+        s32 f = gUnknown_030007E8.field_0;
+        s32 notf = ~f;
+        s32 t = -notf;
+        t |= notf;
+        if (t < 0) {
+            return;
+        }
+    }
+
+    if (frameDelay <= 0) {
+        frameDelay = 1;
+    }
+
+    if (flags & 1) {
+        *(vu16 *)0x04000050 = 0xBF;
+    } else {
+        *(vu16 *)0x04000050 = 0xFF;
+    }
+
+    if (sync != 0) {
+        u8 dirBit = flags & 0x80;
+        if (dirBit != 0) {
+            *(vu16 *)0x04000054 = 0x10;
+        } else {
+            *(vu16 *)0x04000054 = dirBit;
+        }
+        *(vu16 *)0x04000208 = 0;
+        gUnknown_030007E8.field_8 = flags;
+        gUnknown_030007E8.field_0 = frameDelay;
+        gUnknown_030007E8.field_4 = sub_8000680(sub_80012AC);
+        *(vu16 *)0x04000208 = 1;
+    } else {
+        s32 i = 0;
+        register s32 dirBit8 asm("r8");
+        dirBit8 = flags & 0x80;
+        do {
+            s32 next;
+            if (dirBit8 != 0) {
+                *(vu16 *)0x04000054 = 0x10 - i;
+            } else {
+                *(vu16 *)0x04000054 = i;
+            }
+            next = i + 1;
+            if (frameDelay > 0) {
+                s32 k = frameDelay;
+                do {
+                    sub_80006A8();
+                    k--;
+                } while (k != 0);
+            }
+            i = next;
+        } while (i <= 0x10);
+    }
+}

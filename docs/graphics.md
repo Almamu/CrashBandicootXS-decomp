@@ -2559,6 +2559,27 @@ choice for the `& 0x80` check - the natural (unpinned) allocation puts
 the loaded byte in r0 and the constant in r1 instead, one register off,
 regardless of which order the two operands are written in the C.
 
+Twenty-eighth matched function: `sub_800132C` (ROM `0x0800132C`, right
+after `sub_80012AC`), also in `src/fade_util.c` - starts a screen fade.
+`flags` bit 0 selects the blend target (`BLDCNT`, `0xBF` vs `0xFF`),
+bit 7 selects direction (fade in from `0x10` vs fade out from `0`);
+`frameDelay` (clamped to at least 1) is how many frames each of the 17
+steps takes. Refuses to start if a fade is already running, checked via
+the same `(~x + 1) | ~x < 0` "`x != -1`" bit-trick as before (needed
+here too, spelled out with explicit temporaries - a direct `!= -1`
+compiles to a shorter load-and-compare). If `sync` is nonzero, it
+registers `sub_80012AC` as a periodic callback (via the already-matched
+`sub_8000680`) and returns immediately; otherwise it blocks here,
+looping through all 17 steps itself and busy-waiting `frameDelay`
+VBlanks (`sub_80006A8`) between each. That inline loop needed the same
+"separate next-iteration variable" idiom seen in `sub_8000EE4`'s
+notes - `i++` in place reuses one register for the whole loop, but the
+ROM computes `next = i + 1` into a *different* register partway
+through, then feeds it back as `i` only at the very end (freeing the
+original register for reuse in between); this looked functionally
+identical either way and only showed up as a real mismatch once
+directly diffed.
+
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/graphics.c`,
