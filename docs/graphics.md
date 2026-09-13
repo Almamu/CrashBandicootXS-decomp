@@ -2251,6 +2251,21 @@ Removed these three functions' raw bytes directly from the existing
 entirely inside one already-open file) and added one `ldscript.txt`
 line for `rand_util.o` between `string_util2.o` and `code_3_1_3.o`.
 
+Twentieth matched function: `sub_8000E6C` (ROM `0x08000E6C`, right after
+`sub_8000E4C`) - Bresenham-line setup, in new file `src/line_util.c`
+(doesn't fit any existing file). Given a `struct bresenham_line *` with
+`x0`/`y0`/`x1`/`y1` already filled in, computes `dx`/`dy`, records each
+axis's step direction (`sx`/`sy`, `+1`/`-1`/`0`) and the absolute
+deltas, then - depending on which delta is larger - fills in three more
+`s32` fields (an initial error term, a doubled-delta reload value, and
+a doubled-difference decrement, all standard Bresenham quantities) plus
+a `u8` "which axis is driving the walk" flag. Matched first-try;
+non-input fields are left as `field_N` (not e.g. `err`/`step`) since no
+caller has been matched yet to confirm their actual roles. Removed the
+function's raw bytes directly from `asm/code_3_1_3.s` (no further
+splitting needed) and added one more `ldscript.txt` line
+(`line_util.o`, between `rand_util.o` and `code_3_1_3.o`).
+
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/graphics.c`,
