@@ -1942,6 +1942,32 @@ statement order matching the ROM's own dx-then-dx² compute-fully-before-
 dy pattern (an initial attempt that computed both `dx`/`dy` before either
 squaring reordered the two multiplies together instead of interleaving).
 
+Six more matched in the same file right after, all first-try:
+
+- `sub_80008CC` - same `dx`/`dy` squared-distance math as `sub_80008B4`,
+  fed through `sub_803A95C` (presumably an integer square root, unmatched
+  so far) and the low 16 bits of the result rescaled back up by 8 - an
+  actual (non-squared) distance.
+- `sub_80008F0` - trivial wrapper, `sub_803ADB4(arg0 << 8, arg1)`.
+- `sub_80008FC` - halves whichever of its two arguments is larger before
+  multiplying them (an overflow-avoidance trick for a scale/interpolation
+  calculation), `a > b ? (a>>8)*b : a*(b>>8)`.
+- `sub_800090C`/`sub_8000924`/`sub_800093C` - three small wrappers/helpers
+  around `sub_803ADB4`, sign-extending 16-bit operands in and the result
+  back out. `sub_803ADB4` itself looks like an atan2-style angle lookup
+  (see its use in `sub_800697C` as `sub_803ADB4(total * 100, 0x48)` in
+  `src/graphics.c`), which fits `sub_80007EC` calling `sub_800090C` twice
+  to get two BG2 affine scale/rotation parameters from an angle.
+
+Left unmatched for now (still raw assembly, right after these six in
+`asm/code_3_1_2.s`): `sub_800094C`, a custom itoa (int-to-string, with a
+fast path for base 16 using bit-AND + arithmetic-shift instead of a
+division call, falling back to a `sub_8000140` divmod helper for other
+bases, then reversing the digits in place) - structurally understood,
+but an early attempt spilled a value to the stack that the ROM keeps
+purely in registers, so it needs another pass before it's worth
+integrating.
+
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/graphics.c`,
