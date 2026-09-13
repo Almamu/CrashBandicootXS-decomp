@@ -1877,6 +1877,30 @@ Next four matched functions, all in `src/irq.c` immediately after
   phrasing needed, it just happens to pick a different strategy for the
   first check than the following three (which do branch).
 
+Fifth matched function in this run: `sub_80007AC` (ROM `0x080007AC`,
+immediately after `sub_8000760`). Reads `REG_KEYINPUT` (active-low),
+inverts it active-high, records newly-pressed bits into
+`gUnknown_030007E2` (`gUnknown_030007E0 & ~previousValue`, written
+through pointer arithmetic off `gUnknown_030007E0` - a second `extern`
+for the adjacent global made agbcc treat the two addresses as
+unrelated and emit a non-matching second literal-pool load/store pair),
+updates `gUnknown_030007E0`, then returns `1` if the low 4 bits (A/B/
+Select/Start) are all held - a "soft reset" combo check. Needed two
+techniques, both entirely on plain caller-saved scratch registers
+(`r0`-`r3`, none of which carry the r4-r7 hazard from the `sub_8006600`
+saga): pinning `keysR1`/`mask` to `r1`/`r0` for the closing mask-and-
+compare, since gcc's own unpinned allocator puts the AND's result in a
+fresh register instead of reusing `r1` in place and compares against a
+fresh immediate instead of reusing `r0`'s already-loaded `0xF`; and a
+one-instruction `asm volatile("add %0, %1, #0")` anchor (technique 6 in
+`matching_decomp_register_pinning` memory) to force a scratch copy of
+`keys` to happen *before* the `gUnknown_030007E0` reload rather than
+after - gcc's scheduler freely reordered the two since neither depends
+on the other, regardless of the C statement order they were written in.
+`addr`/`prevKeys` also needed pinning to `r2`/`r3` specifically (not
+just *some* free registers) to match the ROM's exact choice once the
+ordering was fixed.
+
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/graphics.c`,

@@ -199,4 +199,46 @@ u8 sub_8000760(void)
     return gStaticData_0816A810[idx];
 }
 
+/* Reads the raw (active-low) hardware key register, inverts it to
+ * active-high, records newly-pressed bits into gUnknown_030007E2 (the
+ * u16 right after gUnknown_030007E0 - read/written through pointer
+ * arithmetic off gUnknown_030007E0 rather than its own extern: agbcc
+ * doesn't know the two globals are adjacent and emits a second,
+ * non-matching literal-pool load/store pair otherwise), updates
+ * gUnknown_030007E0 to the new state, then returns 1 if the low 4 bits
+ * (A/B/Select/Start) are all held - a "soft reset" combo check. All
+ * four register pins below are plain caller-saved scratch (r0-r3), so
+ * none of them carry the r4-r7 save/restore hazard: `addr`/`prevKeys`
+ * (r2/r3) match the ROM's choice for the address/reload pair, and
+ * `keysR1`/`mask` (r1/r0) match its choice for the closing mask-and-
+ * compare (gcc's own unpinned allocator picks a fresh register for the
+ * AND result instead of reusing r1 in place, and compares against a
+ * fresh immediate instead of reusing r0's already-loaded 0xF). The
+ * inline `add %0,%1,#0` anchors a copy of `keys` into a scratch value
+ * gcc would otherwise schedule after the `prevKeys` reload instead of
+ * before it, despite neither having a data dependency on the other. */
+s32 sub_80007AC(void)
+{
+    u16 keys;
+    u16 keysCopy;
+    register u16 *addr asm("r2");
+    register u16 prevKeys asm("r3");
+    register u16 keysR1 asm("r1");
+    register s32 mask asm("r0");
+
+    keys = (u16)~REG_KEYINPUT;
+    addr = &gUnknown_030007E0;
+    asm volatile("add %0, %1, #0" : "=r"(keysCopy) : "r"(keys));
+    prevKeys = *addr;
+    *(u16 *)((u8 *)addr + 2) = keysCopy & ~prevKeys;
+    *addr = keys;
+    keysR1 = keys;
+    mask = 0xF;
+    keysR1 &= mask;
+    if (mask == keysR1) {
+        return 1;
+    }
+    return 0;
+}
+
 __asm__(".align 2,0");
