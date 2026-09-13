@@ -32,6 +32,10 @@ extern s32 sub_8006820(void *arg0);
 extern s32 sub_80067EC(void *arg0);
 extern s32 sub_803ADB4(s32 arg0, s32 arg1);
 
+/* The register pins below (and in several functions further down) match
+ * the ROM's own register allocation exactly - required for a byte-exact
+ * build, not stylistic. See docs/graphics.md, "Matching decompilation"
+ * for why plain C alone doesn't reproduce them. */
 s32 sub_800697C(void *arg0)
 {
     register void *self asm("r6");
@@ -112,6 +116,10 @@ void sub_8006A14(struct oam_shadow_buffer *arg0, void *arg1, s32 arg2)
     *(s32 *)arg0 = *(s32 *)arg0 + arg2;
 }
 
+/* The two inline-asm `add`s below anchor operations gcc would otherwise
+ * reorder or canonicalize differently than the ROM (see docs/graphics.md,
+ * "Matching decompilation") - not obfuscation, just pinning byte-exact
+ * order. */
 void sub_8006A48(struct oam_shadow_buffer *arg0)
 {
     register u8 *self asm("r1");
@@ -169,6 +177,9 @@ void sub_8006AAC(struct oam_shadow_buffer *arg0)
     (void)DMA3.cnt;
 }
 
+/* Inserts one record (arg1[0]/arg1[1]) into the shadow OAM table at the
+ * current count, preserving the padding halfword at +0x12 that overlaps
+ * the tail of arg1[1] on real hardware (see docs/graphics.md). */
 void sub_8006AC8(struct oam_shadow_buffer *arg0, u32 *arg1)
 {
     register s32 n1 asm("r2");
@@ -213,7 +224,10 @@ struct oam_shadow_buffer *sub_8006B0C(struct oam_shadow_buffer *arg0)
 void FlushVramDmaQueue(void)
 {
     struct dma_queue_entry *entry;
-    s32 i;
+    s32 i; /* QUEUE_COUNT must be re-read each iteration - see its
+            * definition above - and `raw`/`shifted` are pinned to match
+            * the ROM's register choice for the size-field load+shift
+            * (docs/graphics.md, "Matching decompilation"). */
     register u16 raw asm("r1");
     register u32 shifted asm("r0");
 

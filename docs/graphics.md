@@ -1341,17 +1341,22 @@ struct sub_8006A78_struct {
 };
 ```
 
-`sub_8006A78`: `field_00 = field_04; field_08 = 0;`. `sub_8006A84`: the
-mirror image, `field_04 = field_00; field_08 = 0;`. `sub_8006A90`: zero
-`field_00`/`field_08` directly, then call `sub_8006A84` (copies the just-
-zeroed `field_00` into `field_04`, re-zeros `field_08`) then `sub_8006A78`
-(copies that zero back from `field_04` into `field_00`, re-zeros
+(Later folded into `struct oam_shadow_buffer` - see the cleanup-pass entry
+further down - once it became clear this is the same 12-byte header
+`sub_8006AC8`/`sub_8006AAC`/etc. address into, with `field_00` renamed to
+`count` accordingly.)
+
+`sub_8006A78`: `count = field_04; field_08 = 0;`. `sub_8006A84`: the
+mirror image, `field_04 = count; field_08 = 0;`. `sub_8006A90`: zero
+`count`/`field_08` directly, then call `sub_8006A84` (copies the just-
+zeroed `count` into `field_04`, re-zeros `field_08`) then `sub_8006A78`
+(copies that zero back from `field_04` into `count`, re-zeros
 `field_08` again) - a convoluted-looking but exact way of zeroing all
 three fields by reusing the two swap primitives rather than three direct
 stores, which only makes sense if the original source is doing the same
 thing for consistency with how the swap functions are used elsewhere
-(not otherwise justified from this function alone). Since `field_00` is
-the same "count" field `sub_8006AC8` bounds-checks and increments,
+(not otherwise justified from this function alone). Since `count` is
+the same field `sub_8006AC8` bounds-checks and increments,
 `sub_8006A90` (called from `sub_8006B0C`, called from further out still
 unmatched) most likely **resets the OAM shadow buffer manager to empty**
 - `field_04`/`field_08`'s purpose (double-buffer index? generation
@@ -1714,3 +1719,53 @@ with decomp.me/a permuter for the last few register picks), but the
 approach above (fresh-reload globals + inline-asm address computation)
 is the right starting point, not the dead ends this note is warning
 about.
+
+### Cleanup pass over everything matched so far
+
+After the run of matches above, a pass over `src/graphics.c`,
+`src/oam_count.c` and `src/actor_anim.c` to tighten up readability
+without touching generated code (`make compare` re-checked after every
+edit below):
+
+- **Hardware registers**: every raw address (`0x040000D4`, `0x07000000`,
+  `0x05000000`, `0x04000010`/`0x04000050`/`0x04000054`/`0x04000000`) now
+  goes through the existing `REG_ADDR_*`/`OAM`/`PLTT` constants from
+  `include/gba/io_reg.h`/`defines.h`, and the DMA control words are built
+  from `DMA_ENABLE`/`DMA_32BIT`/`DMA_16BIT` instead of the raw hex
+  (`0x84000000` → `(DMA_ENABLE | DMA_32BIT) << 16`, etc.) - these headers
+  were already in the project, just unused by the newly-matched code.
+- **Named bounds instead of magic numbers**: `OAM_ENTRY_COUNT - 1`
+  (already-defined, `128`) replaces the `0x7F` bound in `sub_8006A48`/
+  `sub_8006AC8`; a new `DMA_QUEUE_MAX_ENTRIES` (`0x300`) replaces the
+  `0x2FF` check in `QueueVramDmaTransfer` for the DMA queue's allocated
+  capacity.
+- **Struct consolidation** (checked for exactly this before adding
+  anything new, per the point above about `struct oam_shadow_buffer`):
+  - `struct sub_8006700_struct` and `struct sub_8006714_struct`
+    (`oam_count.c`) turned out to be the same object at compatible
+    offsets - `sub_8006770` independently confirmed `field_18` at the
+    same address via raw pointer arithmetic. Folded into one
+    `struct sub_8006700_actor` used by all three functions.
+  - The standalone `struct sub_8006A78_struct` (`graphics.c`) is exactly
+    the 12-byte header of the OAM-shadow-buffer object every other
+    function in that cluster (`sub_8006A14`/`AAC`/`AC8`/`A48`/`B0C`) was
+    still taking as bare `void *` - folded into one
+    `struct oam_shadow_buffer` (with `field_00` renamed `count` to match
+    how the other functions already treat it) and used as the parameter
+    type everywhere in the cluster, including the ones that still need
+    raw pointer casts internally for volatile/register-pinning reasons.
+  - A new `struct threshold_table_entry` documents `gStaticData_0816C86C`'s
+    layout for `sub_8006820`/`sub_8006864`/`sub_80067EC`. `sub_80067EC`
+    now indexes through it with a typed pointer instead of a bare `u8 *`
+    (confirmed this doesn't change codegen - the pre-biased-pointer
+    pattern it needs survives the cast). `sub_8006820`/`sub_8006864`
+    keep their inline-asm address computation as-is (switching those to
+    plain `entry->threshold_0C`-style field access reintroduces the
+    exact CSE problem documented above for them), but now have a comment
+    naming which two threshold fields each one is bounds-checking.
+- **Comments added, no code removed**: every register-pinned/inline-asm
+  function got a one-line comment pointing at this doc instead of being
+  silently unexplained - reducing the asm itself further isn't possible
+  without breaking the match (each block here was arrived at only after
+  exhausting plain-C rephrasing, per the entries above), so the fix for
+  "this looks like unexplained magic" is documentation, not removal.

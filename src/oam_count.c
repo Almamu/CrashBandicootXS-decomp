@@ -1,6 +1,25 @@
 #include "core.h"
 
-extern u8 gStaticData_0816C86C[];
+/* A small per-category threshold table: sub_8006864/sub_8006820/
+ * sub_80067EC each count how many of a caller's 20 records fall between
+ * two adjacent thresholds here (threshold_08/_0C for one function,
+ * threshold_0C/_10 for the next, and just threshold_10 alone for the
+ * simplest one) - looks like nested difficulty/category boundaries.
+ * sub_8006864/sub_8006820 read through inline asm rather than plain
+ * struct field access on purpose: gcc's CSE otherwise shares the
+ * "table[i]" address between the two threshold reads even though the
+ * ROM recomputes it fresh for each one (see docs/graphics.md, "Matching
+ * decompilation"). */
+struct threshold_table_entry {
+    u8 unused_00[8];
+    u32 threshold_08;
+    u32 threshold_0C;
+    u32 threshold_10;
+    u8 unused_14[0x24 - 0x14];
+};
+COMPILE_TIME_ASSERT(sizeof(struct threshold_table_entry) == 0x24);
+
+extern struct threshold_table_entry gStaticData_0816C86C[];
 extern void sub_80062A8(s32 arg0, s32 arg1, s32 arg2);
 extern void sub_803AD80(void *arg0, s32 arg1, void *arg2);
 extern void sub_8026ED0(void *arg0);
@@ -85,6 +104,9 @@ u8 sub_80067E4(void *arg0)
     return (u32)(*(u8 *)arg0 << 25) >> 25;
 }
 
+/* Counts records whose derived value is <= threshold_10 alone (no lower
+ * bound) - the simplest of the three sub_8006820/sub_8006864/sub_80067EC
+ * threshold checks. */
 s32 sub_80067EC(void *arg0)
 {
     s32 count;
@@ -96,8 +118,8 @@ s32 sub_80067EC(void *arg0)
     s32 val;
 
     count = 0;
-    base = gStaticData_0816C86C;
-    bound = base + 0x10;
+    base = (u8 *)gStaticData_0816C86C;
+    bound = base + 0x10; /* &gStaticData_0816C86C[0].threshold_10 */
     p = (u8 *)arg0;
     i = 0x13;
     do {
@@ -115,6 +137,10 @@ s32 sub_80067EC(void *arg0)
     return count;
 }
 
+/* Counts records whose derived value falls in (threshold_10, threshold_0C]
+ * of the matching gStaticData_0816C86C entry - see the comment on
+ * struct threshold_table_entry above for why this reads through inline
+ * asm instead of entry->threshold_0C/entry->threshold_10. */
 s32 sub_8006820(void *arg0)
 {
     register u8 *p asm("r3");
@@ -148,6 +174,8 @@ s32 sub_8006820(void *arg0)
     return count;
 }
 
+/* Same shape as sub_8006820 above, one threshold pair up:
+ * (threshold_0C, threshold_08]. */
 s32 sub_8006864(void *arg0)
 {
     register u8 *p asm("r3");
