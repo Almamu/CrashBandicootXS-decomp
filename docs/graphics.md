@@ -1428,3 +1428,36 @@ constant `0` gets materialized into a register once before the loop
 preheader instructions (materializing `0`, or copying `arg0` into the
 loop pointer) came first - fixed by writing the `zero = 0;` assignment as
 its own earlier statement, ahead of the entry-pointer setup.
+
+Fifteenth matched function: `sub_800695C` (ROM `0x0800695C`) - and the
+**first one requiring a new mid-file split**, in `src/oam_count.c`.
+Counts how many of 20 fixed-stride (4-byte) records have bit 0 of the
+byte at `+4` set - almost certainly counting how many of a fixed set of
+"slots" (particles? actors?) are currently active, unrelated to the OAM
+system by address but reusing the same shift-based bit-test idiom
+(`(x << 31) >> 31` for extracting bit 0 with an unsigned result) as
+`sub_8006A48`'s mask synth - GCC 2.9 reliably produces this specific
+shift pair for isolating a single bit, so it's a idiom worth recognizing
+elsewhere. Needed register pins (byte load -> `r4`, forcing the
+push/pop that a natural, unpinned compile skips entirely since it fits
+in caller-saved registers) - a good example of pinning changing not just
+*which* register but *whether the prologue needs one at all*.
+
+**The split, and a mistake caught before committing:** `sub_800695C` is
+immediately followed in ROM by `sub_800697C` (still unmatched - calls
+five other unidentified functions, out of scope here), which is what
+`src/graphics.o` used to sit directly behind. Initially added
+`sub_800695C` straight into `graphics.c` above `sub_80069E8` - `make
+compare` failed the full-ROM checksum, and the reason was exactly the
+"one .o's `.text` is one contiguous block" rule from the very first
+matched functions: pulling `sub_800695C` into `graphics.c` while
+`sub_800697C` stayed asm would have collapsed the 108-byte gap between
+them, shifting everything after downstream. Fixed by giving
+`sub_800695C` **its own file** (`src/oam_count.c`) and splitting
+`sub_800697C` out into its own asm file (`asm/code_3_1_697c.o`, needs the
+usual `.include "asm/macros.inc"` / `.syntax unified` / `.arm` header a
+plain `sed`-extracted fragment doesn't have), landing them in the
+ldscript in ROM order: `code_3_1.o`, `oam_count.o`, `code_3_1_697c.o`,
+`graphics.o`, ... A reminder to check ROM-address contiguity against
+*every* neighboring function - including ones several matches back -
+before assuming a new match can just join an existing file.
