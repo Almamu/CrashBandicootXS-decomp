@@ -2434,6 +2434,49 @@ a clean `make compare`); `make NON_MATCHING=1 crashbandicootxs.gba`
 compiles this C version in instead (verified this session to compile
 and link cleanly with no duplicate-symbol errors).
 
+Twenty-second matched function: `LoadTaggedAsset` (ROM `0x08001174`,
+right after the still-parked `sub_80010E0`), in new file
+`src/asset_util.c`. Loads (or raw-copies) an asset based on a tag in
+its first word's high nibble: `0` = uncompressed (a manual DMA3 setup -
+`SAD`/`DAD`/`CNT` written directly through a `vu32 *` at `0x040000D4`,
+word-sized transfer, byte count taken from the header's remaining 24
+bits), `1` = LZ77 (via not-yet-matched `LZ77UnCompWrapper`), `3` =
+run-length (via not-yet-matched `RLUnCompWrapper`); any other tag value
+is a silent no-op. Written as a `switch` rather than an if/else chain
+specifically to reproduce the ROM's literal compare sequence (`cmp #1;
+beq; cmp #1; blo; cmp #3; beq; b` - checking `case 1` twice against the
+same immediate, once for equality and once for "below") - an
+if/else-based `type == 1` / `type < 1` / `type == 3` chain compiles to
+a shorter, differently-ordered set of comparisons instead (gcc
+canonicalizes `< 1` on an unsigned value into a single `== 0` check).
+`case 0`'s body is listed *first* in the switch source (despite `case
+1` being checked first via the initial `beq`) to match the ROM's
+physical layout, which puts case 0's body right after the compare
+chain - the by-now-familiar "agbcc lays out switch bodies in source
+order, not check order" rule from `sub_8000AA8`'s notes. Needed the
+usual trailing `asm(".align 2, 0")` fix.
+
+Extracting `LoadTaggedAsset` uncovered a genuine ordering bug from
+parking `sub_80010E0` earlier this session: that function's raw bytes
+(guarded `.if NON_MATCHING == 0`, so *included* in the default build)
+had ended up sharing one `asm/code_3_1_5.s` file with everything after
+it, including `LoadTaggedAsset` and `sub_80011C0` onward - fine as long
+as `LoadTaggedAsset` stayed raw too, but once it moved to C in
+`asset_util.o`, the linker had no way to slot that object *between*
+`sub_80010E0`'s raw bytes and `sub_80011C0`'s (both still in the same
+`code_3_1_5.o`), producing a build that linked and passed size checks
+but put `LoadTaggedAsset` at the wrong address (silently breaking every
+call to it - caught via a direct `cmp -l`/objdump diff showing a `bl`
+target pointing at `sub_80010E0`'s address instead). Fixed by splitting
+`asm/code_3_1_5.s` again, right after `sub_80010E0`'s `.endif`, into
+itself plus a new `asm/code_3_1_6.s` (`sub_80011C0` onward), with
+`asset_util.o` linked between them. **Lesson**: when a parked function's
+raw-bytes file also holds *later, still-to-be-matched* functions,
+extracting one of those later functions to C always needs its own
+split at that exact boundary - the parked function's raw bytes can
+never end up sharing an object with something that no longer sits
+immediately next to it in the final link.
+
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/graphics.c`,
