@@ -2093,6 +2093,14 @@ Three genuinely new findings, on top of everything from
   looking `adds r0, r4, #0` instruction that's easy to assume belongs
   there.
 
+Eleventh: `sub_8000CA8` (ROM `0x08000CA8`, right after `sub_8000AA8`) -
+a genuine variadic wrapper (`void sub_8000CA8(u8 *dest, u8 *fmt, ...)`)
+forwarding straight to `sub_8000AA8` with a pointer to the first
+vararg. Matched first-try using this toolchain's real `<stdarg.h>`
+(`va_list`/`va_start`/`va_end`, backed by `__builtin_next_arg`) - no
+project code had used variadics before this. Needed the same trailing
+`asm(".align 2, 0")` fix as `sub_800094C` for the padding byte after it.
+
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/graphics.c`,

@@ -3,18 +3,6 @@
 .syntax unified
 .arm
 
-	thumb_func_start sub_8000CA8
-sub_8000CA8: @ 0x08000CA8
-	push {r1, r2, r3}
-	push {lr}
-	ldr r1, [sp, #4]
-	add r2, sp, #8
-	bl sub_8000AA8
-	pop {r3}
-	add sp, #0xc
-	bx r3
-	.align 2, 0
-
 	thumb_func_start sub_8000CBC
 sub_8000CBC: @ 0x08000CBC
 	push {r4, r5, r6, r7, lr}

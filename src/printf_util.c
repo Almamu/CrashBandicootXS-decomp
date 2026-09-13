@@ -1,4 +1,5 @@
 #include "core.h"
+#include <stdarg.h>
 
 extern u8 *sub_80009F4(u8 *dest, u8 *fmt, s32 *valuePtr, u8 padChar,
                         s32 *charsConsumedPtr);
@@ -112,3 +113,17 @@ void sub_8000AA8(u8 *dest, u8 *fmt, u32 *args)
     }
     *dest = 0;
 }
+
+/* Thin variadic wrapper: forwards straight to sub_8000AA8 with a
+ * pointer to the first vararg (each slot is a plain 4-byte word, not
+ * type-aware - matches sub_8000AA8's raw `u32 *` argument array). */
+void sub_8000CA8(u8 *dest, u8 *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    sub_8000AA8(dest, fmt, (u32 *)args);
+    va_end(args);
+}
+
+/* Trailing padding (see matching_decomp_alignment_fix memory). */
+asm(".align 2, 0");
