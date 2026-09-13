@@ -1356,3 +1356,42 @@ the same "count" field `sub_8006AC8` bounds-checks and increments,
 unmatched) most likely **resets the OAM shadow buffer manager to empty**
 - `field_04`/`field_08`'s purpose (double-buffer index? generation
 counter?) isn't identified.
+
+Twelfth matched function: `sub_8006A48` (ROM `0x08006A48`, immediately
+before `sub_8006A78`, same region - joined `src/graphics.c` right above
+it). The **hardest match yet** - confirms the semantic picture further:
+starting from `arg0`'s current "count", it walks every *unused* slot from
+`count` to `127` and forces bits `[9:8]` of that OAM entry's `attr0` to
+`0b10` (clears the low 2 bits of the byte at `entry+1`, then sets bit 1) -
+the standard GBA idiom for **disabling a sprite** (non-affine + disable
+bit set). This is the natural counterpart to `sub_8006AC8`: after writing
+`count` live sprites, call this to hide the rest of the previous frame's
+leftovers.
+
+Getting the loop's *structure* right (a `do`/`while` with the address as
+a plain incrementing pointer, register-pinned the same way as
+`sub_8006AC8`) was routine by this point. What wasn't routine: gcc 2.9
+kept reordering two independent, data-flow-unrelated operations inside
+the loop body - copying the loop-invariant mask into a scratch register,
+and loading the current byte - putting the **load first** no matter how
+the corresponding C statements were ordered, whether the mask was a named
+variable or an inlined constant, or whether a `loaded` temporary was
+pinned, unpinned, or removed entirely. Explicit `register` pins alone
+couldn't fix it (unlike every function so far) because the mismatch
+wasn't about *which* register, it was about *instruction order between
+two register-only operations gcc's scheduler treats as freely
+interchangeable*. The fix: drop to a single inline-asm instruction for
+just the copy, anchoring it in place -
+`asm volatile("add %0, %1, #0" : "=r"(result) : "r"(mask));` - which
+gcc cannot reorder relative to the following C statements. The same
+technique fixed a second, unrelated one-instruction case: computing the
+loop's starting address as `self + offset` vs `offset + self` produces
+different register operand order in the 3-register Thumb `ADD` (`adds
+r1, r0, r1` vs `adds r1, r1, r0` - same value, different bytes), and no
+combination of writing the addition (plain `+`, `+=`, swapped operands)
+changed gcc's canonicalization - so that one add is also inline asm,
+`asm volatile("add %0, %1, %0" : "+r"(self) : "r"(result));`, reusing
+`result`'s register for the offset since their lifetimes don't overlap.
+Both asm statements are simple, single real Thumb instructions (not a
+trick or a workaround bug) - see [[matching_decomp_register_pinning]] for
+when to reach for this.

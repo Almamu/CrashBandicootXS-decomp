@@ -23,6 +23,35 @@ extern struct dma_queue gUnknown_03001290;
 #define DMA3 (*(struct dma_regs *)0x040000D4)
 #define QUEUE_COUNT (((volatile struct dma_queue *)&gUnknown_03001290)->count)
 
+void sub_8006A48(void *arg0)
+{
+    register u8 *self asm("r1");
+    register s32 i asm("r2");
+    register s32 bit asm("r3");
+    register s32 mask asm("r4");
+    register u8 loaded asm("r5");
+    register s32 result asm("r0");
+
+    self = (u8 *)arg0;
+    i = *(s32 *)self;
+    if (i > 0x7F) {
+        return;
+    }
+    mask = ~3;
+    bit = 2;
+    result = (i << 3) + 0xD;
+    asm volatile("add %0, %1, %0" : "+r"(self) : "r"(result));
+    do {
+        asm volatile("add %0, %1, #0" : "=r"(result) : "r"(mask));
+        loaded = *self;
+        result &= loaded;
+        result |= bit;
+        *self = result;
+        self += 8;
+        i++;
+    } while (i <= 0x7F);
+}
+
 struct sub_8006A78_struct {
     s32 field_00;
     s32 field_04;
