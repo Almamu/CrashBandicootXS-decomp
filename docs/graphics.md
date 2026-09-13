@@ -2005,6 +2005,47 @@ traced back to a technique already in memory (per-site low-register
 pins reused across dead-variable boundaries, the r7-must-stay-unpinned
 rule, and address-reuse-via-named-pointers) rather than anything new.
 
+Ninth matched function: `sub_80009F4` (ROM `0x080009F4`, right after
+`sub_800094C`, same file). A printf-style single-conversion formatter:
+parses an optional width from `*fmt` (digits immediately before the
+specifier), reads a `'d'`/`'x'`/`'X'` specifier, calls `sub_800094C` to
+render the referenced value into a stack buffer at the parsed base,
+left-pads with a caller-supplied fill character to reach the width,
+appends the number, and writes back how many format characters it
+consumed through a 5th (stack-passed) out-parameter. New findings this
+time, all now folded into technique 6 and the general register-pinning
+approach in `matching_decomp_register_pinning` memory:
+
+- A `switch` on the specifier had to use `goto` to a single shared call
+  site (each case setting up its own value/buffer/base locals, then
+  jumping to one shared `sub_800094C(...)` call) rather than `break` -
+  agbcc's cross-jump merging only unifies a *literal-identical tail*
+  working backward from the branch target until the first difference;
+  with `break`, each case's call is a separate, unmerged copy, while the
+  `goto`-to-shared-label form produces exactly the ROM's shape (one
+  physical `bl`, reached by an explicit jump from one case and a
+  fall-through from the other). Whatever's assigned to a per-branch
+  local *before* reaching the merge point stays duplicated per branch
+  even when the value is identical between branches (matching the ROM,
+  which repeats `mov r1, sp` in each case) - only referencing the
+  variable *at* the merge point lets gcc share its computation.
+- The `default` case needed an explicit `goto` past `width -=
+  digitCount` (skipping straight to the unconditional `width -= 1`
+  after it), not `digitCount = 0` followed by a normal (no-op)
+  subtraction - the ROM has no subtraction instruction at all for the
+  no-specifier-matched case.
+- The out-parameter write (`*charsConsumedPtr = ...`) had to move to
+  right before the `return`, keeping the computed value alive in a
+  register (r1) across the entire padding loop and copy loop, rather
+  than storing it immediately after computing it - the ROM keeps it
+  live in a register the whole time instead of writing it out early.
+- Two spots needed a literal constant re-materialized in a register via
+  a pin/inline-asm even though an already-live register held the exact
+  same value from an unrelated preceding comparison (a `-1` sentinel,
+  and a `0` byte for the final NUL write) - plain C recognized the
+  value was already available and reused it instead, saving an
+  instruction the ROM doesn't save.
+
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/graphics.c`,
