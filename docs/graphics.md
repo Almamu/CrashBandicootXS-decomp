@@ -1461,3 +1461,47 @@ ldscript in ROM order: `code_3_1.o`, `oam_count.o`, `code_3_1_697c.o`,
 `graphics.o`, ... A reminder to check ROM-address contiguity against
 *every* neighboring function - including ones several matches back -
 before assuming a new match can just join an existing file.
+
+Sixteenth matched function: `sub_800697C` (ROM `0x0800697C`) - the
+function flagged as "bigger scope" last time, calling five other
+unidentified functions. Sums several subsystems' per-`arg0` contributions
+into one total - `sub_800695C` (the active-slot counter matched above),
+`sub_80068CC`, `sub_8006864` (halved, rounded toward zero -
+`(x + (unsigned)x>>31) >> 1`, the standard signed-divide-by-2 idiom),
+`sub_8006820`, `sub_80067EC`, plus four individual bits (7, 5, 6, 4, in
+that order) of a flags byte at `arg0+2` - then multiplies the total by
+100 and passes it (with a constant `72`) into `sub_803ADB4`, almost
+certainly a "draw number as text" call (`72` reads like a screen Y
+position) - most likely a debug/menu stat display (something like an
+active-object or particle count). None of the five callees were matched
+or even given real signatures beyond `s32 f(void *)` inferred from the
+call sites - out of scope here, flagged for later.
+
+Matched byte-exact, but needed the session's most elaborate register
+pinning yet: five separate `register` variables (`self`→`r6`, the
+running `total`→`r4`, and the three intermediate call results spread
+across `r9`, `r5`, `r8`) reproduced the ROM's exact save/restore dance for
+the high registers `r8`/`r9` (Thumb can't push them directly, so gcc
+copies them to low registers first, matching the ROM's
+`mov r6,sb`/`mov r5,r8`/`push {r5,r6}` prologue and its mirror-image
+epilogue) - once the registers were pinned, gcc produced the *entire*
+function's instruction sequence correctly on the very next attempt, no
+further reordering fights needed (contrast with `sub_8006A48`). The one
+remaining piece, after pinning: the epilogue's final "pop a register,
+branch to it" step used `r0` in every attempt, but the ROM uses `r1` -
+turned out to depend on whether the function's return value is
+considered live at that point. `sub_803ADB4`'s result was being discarded
+(`void`-returning call as the last statement); declaring `sub_800697C`
+itself to `return sub_803ADB4(...)` instead (making the call result a
+genuine, live return value in `r0`) freed `r0` from being reused as the
+epilogue's scratch register, forcing gcc onto `r1` and completing the
+match - a good reminder that a function's own return type/value can
+shape its *own* epilogue register choice, not just its body.
+
+Matching this function also **retired** the `asm/code_3_1_697c.o` split
+from the previous entry: since `sub_800697C` occupied that entire split
+file and is immediately followed by `sub_80069E8` (already in
+`graphics.c`), moving it to `graphics.c` too closed the gap completely -
+deleted the split file and removed its `ldscript.txt` line. `oam_count.c`
+(holding `sub_800695C`) is still needed as its own file, since it's
+followed by `sub_800697C`'s ROM address, not `graphics.c`'s.
