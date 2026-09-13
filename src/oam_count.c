@@ -1,6 +1,40 @@
 #include "core.h"
 
-extern s32 sub_8006864(void *arg0);
+extern u8 gStaticData_0816C86C[];
+
+s32 sub_8006864(void *arg0)
+{
+    register u8 *p asm("r3");
+    register s32 i asm("r5");
+    register s32 count asm("r6");
+    register s32 offset asm("r4");
+    register s32 val asm("r1");
+    register s32 addr asm("r0");
+    register u16 raw asm("r0");
+
+    count = 0;
+    offset = 0;
+    p = (u8 *)arg0;
+    i = 0x13;
+    do {
+        raw = *(u16 *)(p + 4);
+        val = raw >> 3;
+        if (val != 0) {
+            asm volatile("add %0, %1, #0\n\tadd %0, %0, #8\n\tadd %0, %2, %0" : "=r"(addr) : "r"(gStaticData_0816C86C), "r"(offset));
+            if (val <= *(u32 *)addr) {
+                asm volatile("add %0, %1, #0\n\tadd %0, %0, #0xc\n\tadd %0, %2, %0" : "=r"(addr) : "r"(gStaticData_0816C86C), "r"(offset));
+                if (val > *(u32 *)addr) {
+                    count++;
+                }
+            }
+        }
+        offset += 0x24;
+        p += 4;
+        i--;
+    } while (i >= 0);
+    return count;
+}
+
 extern s32 sub_8006820(void *arg0);
 extern s32 sub_80067EC(void *arg0);
 

@@ -1553,3 +1553,35 @@ needed. Two of the five callees (`sub_8006864`, `sub_8006820`) are now
 each called by *two* different matched functions (`sub_800697C` and
 `sub_80068A8`), and `sub_80067EC` by both of those too - worth matching
 next, since it would immediately pay off three call sites at once.
+
+Twentieth matched function: `sub_8006864` (ROM `0x08006864`, immediately
+before `sub_80068A8` - joined `src/oam_count.c` above it, no new split).
+Another 20-record loop, this time a genuine **range check** rather than
+a bit test: for each record, take the halfword at `+4`, shift right by
+3, and - if nonzero - count it only if it falls in `(gStaticData_0816C86C[i].min, gStaticData_0816C86C[i].max]`,
+where the per-record bounds live in a *parallel* table (`gStaticData_0816C86C`,
+stride `0x24`, `max` at `+8`, `min` at `+0xC`) indexed by the *loop
+position*, not by anything read from the record itself.
+
+The hardest register-allocation fight of the whole session. gcc 2.9's
+CSE reliably recognized that both bounds live at `base + offset + {8,0xC}`
+and always shared the `base + offset` computation between them once
+formed as one live register value across the branch - and every
+plain-C rewrite tried (a local copy of the base pointer, restructuring
+associativity, `volatile`-qualifying the pointer, splitting into nested
+`if`s) still let gcc reuse it, which doesn't match the ROM: the ROM
+recomputes the full `base + bias + offset` chain from scratch for *each*
+bound, and even reloads the `gStaticData_0816C86C` address from its
+literal pool **inside the loop** (after the first bit-test branch, not
+hoisted to the preheader) rather than once up front. Fixed with two
+inline-asm blocks, one per bound, each spelling out the exact three-`ADD`
+chain (`add %0,%1,#0` / `add %0,%0,#N` / `add %0,%2,%0`) with the
+*symbol itself* (`gStaticData_0816C86C`, not a locally-cached pointer
+variable) as an input operand - since nothing hoists the symbol's address
+out of the conditional block it's used in, the literal-pool load lands
+exactly where the ROM has it, and since each inline-asm block is opaque
+to CSE, gcc can't merge the two chains no matter how similar they are.
+The loaded halfword's own register also needed an explicit pin distinct
+from the shifted result's register (`raw`→`r0`, `val`→`r1`), matching a
+now-familiar pattern from earlier entries where the ROM keeps a
+freshly-loaded value and its transformed result in different registers.
