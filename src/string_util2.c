@@ -60,3 +60,30 @@ void sub_8000D80(u8 *dst, u8 *src)
 
 /* Trailing padding (see matching_decomp_alignment_fix memory). */
 asm(".align 2, 0");
+
+/* strncpy: copies at most n bytes from src into dst, stopping early at
+ * src's NUL terminator; NUL-terminates dst only if fewer than n bytes
+ * were actually copied from src (real strncpy always pads dst to n
+ * bytes - this doesn't). */
+void sub_8000DAC(u8 *dst, u8 *src, s32 n)
+{
+    u8 c = *src;
+    if (c != 0) {
+        n--;
+        if (n != -1) {
+            do {
+                *dst = c;
+                src++;
+                dst++;
+                c = *src;
+                if (c == 0) {
+                    break;
+                }
+                n--;
+            } while (n != -1);
+        }
+    }
+    if (n != 0) {
+        *dst = 0;
+    }
+}

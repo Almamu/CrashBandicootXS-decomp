@@ -2202,6 +2202,17 @@ compiles fine but keeps everything in `r3,` one register off from the
 ROM. Needed the same trailing `asm(".align 2, 0")` fix as the others in
 this file.
 
+Fourteenth matched function: `sub_8000DAC` (ROM `0x08000DAC`, right
+after `sub_8000D80`, same file) - `strncpy`-like: copies at most `n`
+bytes from `src` into `dst` (`void sub_8000DAC(u8 *dst, u8 *src, s32
+n)`), stopping early at `src`'s NUL terminator, and NUL-terminates
+`dst` only if the copy stopped early (fewer than `n` bytes actually
+copied) - unlike real `strncpy`, it never pads `dst` out to `n` bytes.
+Matched first-try (no alignment fix needed - ends exactly 4-byte
+aligned already); the ROM's `-1` sentinel (computed via `movs r4, #1;
+rsbs r4, r4, #0` since Thumb has no negative-immediate `mov`) shows up
+naturally from writing the loop bound as a plain `n != -1` compare.
+
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/graphics.c`,
