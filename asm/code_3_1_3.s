@@ -3,34 +3,6 @@
 .syntax unified
 .arm
 
-	thumb_func_start sub_8000D80
-sub_8000D80: @ 0x08000D80
-	adds	r3, r0, #0
-	movs	r2, #0
-	ldrb	r0, [r3, #0]
-	cmp	r0, #0
-	beq _08000D94
-_08000D8A:
-	adds	r2, #1
-	adds	r0, r3, r2
-	ldrb	r0, [r0, #0]
-	cmp	r0, #0
-	bne _08000D8A
-_08000D94:
-	adds	r2, r3, r2
-	b _08000D9E
-_08000D98:
-	strb	r0, [r2, #0]
-	adds	r1, #1
-	adds	r2, #1
-_08000D9E:
-	ldrb	r0, [r1, #0]
-	cmp	r0, #0
-	bne _08000D98
-	movs	r0, #0
-	strb	r0, [r2, #0]
-	bx	lr
-
 	thumb_func_start sub_8000DAC
 sub_8000DAC: @ 0x08000DAC
 	push {r4, lr}

@@ -2186,6 +2186,22 @@ only way to get its object linked exactly between `code_3_1_2.o` and
 `sub_8000CBC`'s parked toggle still links cleanly around the new
 split).
 
+Thirteenth matched function: `sub_8000D80` (ROM `0x08000D80`, right
+after `sub_8000D68`, same file) - `strcat`: appends `src` to the end of
+`dst` in place and NUL-terminates the result (`void sub_8000D80(u8
+*dst, u8 *src)`). The ROM finds the end of `dst` via an *index* rather
+than a walked pointer (`p[i]`, incrementing `i`, with `p` fixed), then
+converts to a pointer once (`p + i`) for the copy loop - and critically
+uses a *different* register for that resulting pointer (`r2`, the same
+register `i` was just using, now dead) rather than writing the sum back
+into `p`'s own register (`r3`). Matching this needed `p`/`i` explicitly
+pinned to `r3`/`r2` (plain scratch, leaf function) *and* the
+post-search pointer split into its own block-scoped variable `q`,
+itself pinned to `r2` - writing `p = p + i;` into the same `p` variable
+compiles fine but keeps everything in `r3,` one register off from the
+ROM. Needed the same trailing `asm(".align 2, 0")` fix as the others in
+this file.
+
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/graphics.c`,

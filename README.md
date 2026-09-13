@@ -8,7 +8,7 @@ It builds the following ROM:
 ## Current state
 
 - Main decomp efforts just started
-- First 49 functions matching: `QueueVramDmaTransfer`/`FreeVramDmaQueue`/
+- First 50 functions matching: `QueueVramDmaTransfer`/`FreeVramDmaQueue`/
   `FlushVramDmaQueue`/`sub_8006B0C`/`sub_8006AF4`/`sub_8006AC8`/
   `sub_8006AAC`/`sub_8006A78`/`sub_8006A84`/`sub_8006A90`/`sub_8006A48`/
   `sub_8006A14`/`sub_80069E8`/`sub_800697C` in `src/graphics.c`,
@@ -21,7 +21,7 @@ It builds the following ROM:
   `sub_8000924`/`sub_800093C` in `src/math_util.c`,
   `sub_800094C`/`sub_80009F4` in `src/string_util.c`,
   `sub_8000AA8`/`sub_8000CA8` in `src/printf_util.c`,
-  `sub_8000D68` in `src/string_util2.c`,
+  `sub_8000D68`/`sub_8000D80` in `src/string_util2.c`,
   `GetAnimFrameBaseOffset` in `src/actor_anim.c`
   (see `docs/graphics.md`, "Matching decompilation" for the workflow and
   a few gotchas worth knowing before doing more of this)

@@ -26,3 +26,37 @@ s32 sub_8000D68(u8 *s)
 
 /* Trailing padding (see matching_decomp_alignment_fix memory). */
 asm(".align 2, 0");
+
+/* strcat: appends src to the end of dst (in place), NUL-terminating
+ * the result. `p`/`i` are pinned to r3/r2 to match the ROM, which
+ * finds the end of dst via an index (`p[i]`) rather than walking a
+ * pointer; the pointer computed from `p + i` is then a *separate*
+ * variable (`q`, also pinned to r2 - the ROM lets `i`'s register go
+ * dead and reuses it, rather than writing the sum back into `p`'s r3)
+ * used for the rest of the copy loop. All plain scratch here (leaf
+ * function, no calls). */
+void sub_8000D80(u8 *dst, u8 *src)
+{
+    register u8 *p asm("r3");
+    register s32 i asm("r2");
+    i = 0;
+    p = dst;
+    if (p[i] != 0) {
+        do {
+            i++;
+        } while (p[i] != 0);
+    }
+    {
+        register u8 *q asm("r2");
+        q = p + i;
+        while (*src != 0) {
+            *q = *src;
+            src++;
+            q++;
+        }
+        *q = 0;
+    }
+}
+
+/* Trailing padding (see matching_decomp_alignment_fix memory). */
+asm(".align 2, 0");
