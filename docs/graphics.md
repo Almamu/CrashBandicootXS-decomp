@@ -1959,14 +1959,51 @@ Six more matched in the same file right after, all first-try:
   `src/graphics.c`), which fits `sub_80007EC` calling `sub_800090C` twice
   to get two BG2 affine scale/rotation parameters from an angle.
 
-Left unmatched for now (still raw assembly, right after these six in
-`asm/code_3_1_2.s`): `sub_800094C`, a custom itoa (int-to-string, with a
-fast path for base 16 using bit-AND + arithmetic-shift instead of a
-division call, falling back to a `sub_8000140` divmod helper for other
-bases, then reversing the digits in place) - structurally understood,
-but an early attempt spilled a value to the stack that the ROM keeps
-purely in registers, so it needs another pass before it's worth
-integrating.
+Eighth matched function (after a second pass): `sub_800094C`, a custom
+itoa (int-to-string, with a fast path for base 16 using bit-AND +
+arithmetic-shift instead of a division call, falling back to a
+`sub_8000140` divmod helper for other bases, then reversing the digits
+in place). Lives in new file `src/string_util.c`. This one needed
+**every** local pinned to a specific register to match - a good worked
+example of the technique 5 warning in `matching_decomp_register_pinning`
+memory (the same *kind* of value needing different pins at different
+points):
+
+- `v`/`buf`/`baseR` (r3/r6/r4) hold the value/buffer/base parameters -
+  unpinned, gcc put `value` in r2 and only homed `buffer`/`base` into
+  r6/r4 *before* `v`'s own assignment, instead of after it like the ROM.
+- `len`/`negative` needed only `negative` pinned to r5, leaving `len`
+  unpinned - gcc's own (unpinned) allocator then puts `len` in r7 on its
+  own, which is what actually keeps r7 safe here: a *pinned* r7 never
+  gets included in the prologue's push/pop (confirmed again this
+  session, see `sub_8006600`'s notes above), but gcc's own unforced
+  choice always does. Every other local in this function landing on
+  r4-r7 is either never pinned there directly (`len`) or has a lifetime
+  that genuinely survives a call within the function (`v`/`buf`/
+  `baseR`/`negative`/`j`), so none of them hit that hazard.
+- `rem` (r1) needed to stay a plain `s32` (not `u8`) and be stored back
+  into itself (`rem = rem + 0x37`) rather than into a separate `u8 c`
+  variable - the type change alone eliminated a stack round-trip gcc
+  otherwise inserted for the narrowing store, and removed a
+  byte-truncation pair (`lsl`/`lsr` by 24) before the final `strb`.
+- The `rem <= 9 ? +0x30 : +0x37` branches needed swapping to `rem > 9 ?
+  +0x37 : +0x30` to match which branch the ROM falls through to
+  unconditionally vs. jumps to.
+- The final reversal loop needed its own pins: `i`/`j` (r1/r4, reusing
+  the exact registers `rem`/`baseR` used earlier once those are dead)
+  for the strlen-style length scan, then a *separate* variable `k`
+  pinned to r5 (reusing `negative`'s dead register) for the actual swap
+  loop - and the swap body needed named pointer locals (`u8 *p1 =
+  &buf[k]; u8 tmp = *p1; u8 *p2 = &buf[j]; u8 val = *p2; *p1 = val; *p2
+  = tmp;`) in that exact interleaved order (address, load, address,
+  load, store, store) to get gcc to compute each address once and reuse
+  it, matching the ROM - a direct `buf[k] = buf[j]; buf[j] = tmp;`
+  recomputed one address twice.
+
+All told: ~10 compile-and-diff iterations, but every single mismatch
+traced back to a technique already in memory (per-site low-register
+pins reused across dead-variable boundaries, the r7-must-stay-unpinned
+rule, and address-reuse-via-named-pointers) rather than anything new.
 
 ### Cleanup pass over everything matched so far
 

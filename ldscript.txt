@@ -25,6 +25,7 @@ SECTIONS
         build/crashbandicootxs/src/irq.o(.text);
         build/crashbandicootxs/asm/code_3_1.o(.text);
         build/crashbandicootxs/src/math_util.o(.text);
+        build/crashbandicootxs/src/string_util.o(.text);
         build/crashbandicootxs/asm/code_3_1_2.o(.text);
         build/crashbandicootxs/src/oam_count.o(.text);
         build/crashbandicootxs/src/graphics.o(.text);
