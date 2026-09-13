@@ -12870,36 +12870,3 @@ _08006A70:
 	pop {r0}
 	bx r0
 	.align 2, 0
-
-	thumb_func_start sub_8006A78
-sub_8006A78: @ 0x08006A78
-	ldr r1, [r0, #4]
-	str r1, [r0]
-	movs r1, #0
-	str r1, [r0, #8]
-	bx lr
-	.align 2, 0
-
-	thumb_func_start sub_8006A84
-sub_8006A84: @ 0x08006A84
-	ldr r1, [r0]
-	str r1, [r0, #4]
-	movs r1, #0
-	str r1, [r0, #8]
-	bx lr
-	.align 2, 0
-
-	thumb_func_start sub_8006A90
-sub_8006A90: @ 0x08006A90
-	push {r4, lr}
-	adds r4, r0, #0
-	movs r0, #0
-	str r0, [r4]
-	str r0, [r4, #8]
-	adds r0, r4, #0
-	bl sub_8006A84
-	adds r0, r4, #0
-	bl sub_8006A78
-	pop {r4}
-	pop {r0}
-	bx r0

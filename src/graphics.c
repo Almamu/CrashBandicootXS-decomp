@@ -23,6 +23,32 @@ extern struct dma_queue gUnknown_03001290;
 #define DMA3 (*(struct dma_regs *)0x040000D4)
 #define QUEUE_COUNT (((volatile struct dma_queue *)&gUnknown_03001290)->count)
 
+struct sub_8006A78_struct {
+    s32 field_00;
+    s32 field_04;
+    s32 field_08;
+};
+
+void sub_8006A78(struct sub_8006A78_struct *arg0)
+{
+    arg0->field_00 = arg0->field_04;
+    arg0->field_08 = 0;
+}
+
+void sub_8006A84(struct sub_8006A78_struct *arg0)
+{
+    arg0->field_04 = arg0->field_00;
+    arg0->field_08 = 0;
+}
+
+void sub_8006A90(struct sub_8006A78_struct *arg0)
+{
+    arg0->field_00 = 0;
+    arg0->field_08 = 0;
+    sub_8006A84(arg0);
+    sub_8006A78(arg0);
+}
+
 void sub_8006AAC(void *arg0)
 {
     DMA3.src = (u8 *)arg0 + 0xC;
@@ -65,8 +91,6 @@ void sub_8006AF4(void *arg0, u32 arg1)
         sub_8026ED0(arg0);
     }
 }
-
-extern void sub_8006A90(void *arg0);
 
 void *sub_8006B0C(void *arg0)
 {

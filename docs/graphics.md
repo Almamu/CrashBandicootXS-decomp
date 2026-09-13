@@ -1324,3 +1324,35 @@ immediate) is built the same way as `FlushVramDmaQueue`'s DMA flags -
 `mov r0, #0xe0; lsl r0, r0, #0x13` - triggered here just by writing the
 plain decimal-looking hex literal `0x07000000`, no special phrasing
 needed.
+
+Ninth, tenth and eleventh matched functions: `sub_8006A78`/`sub_8006A84`/
+`sub_8006A90` (ROM `0x08006A78`-`0x08006AAC`, immediately before
+`sub_8006AAC` - joined `src/graphics.c` right above it, no new split).
+All three matched byte-exact on the first try, no register tricks. This
+is the little "swap/reset" family mentioned as unidentified back at the
+fifth match (`sub_8006B0C`) - now given a real (if provisionally-named)
+struct, since matching them required picking concrete field types:
+
+```c
+struct sub_8006A78_struct {
+    s32 field_00;   // count - same field sub_8006AC8/sub_8006AAC read via arg0+0
+    s32 field_04;
+    s32 field_08;
+};
+```
+
+`sub_8006A78`: `field_00 = field_04; field_08 = 0;`. `sub_8006A84`: the
+mirror image, `field_04 = field_00; field_08 = 0;`. `sub_8006A90`: zero
+`field_00`/`field_08` directly, then call `sub_8006A84` (copies the just-
+zeroed `field_00` into `field_04`, re-zeros `field_08`) then `sub_8006A78`
+(copies that zero back from `field_04` into `field_00`, re-zeros
+`field_08` again) - a convoluted-looking but exact way of zeroing all
+three fields by reusing the two swap primitives rather than three direct
+stores, which only makes sense if the original source is doing the same
+thing for consistency with how the swap functions are used elsewhere
+(not otherwise justified from this function alone). Since `field_00` is
+the same "count" field `sub_8006AC8` bounds-checks and increments,
+`sub_8006A90` (called from `sub_8006B0C`, called from further out still
+unmatched) most likely **resets the OAM shadow buffer manager to empty**
+- `field_04`/`field_08`'s purpose (double-buffer index? generation
+counter?) isn't identified.

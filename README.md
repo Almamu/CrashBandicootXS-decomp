@@ -8,11 +8,12 @@ It builds the following ROM:
 ## Current state
 
 - Main decomp efforts just started
-- First 8 functions matching: `QueueVramDmaTransfer`/`FreeVramDmaQueue`/
+- First 11 functions matching: `QueueVramDmaTransfer`/`FreeVramDmaQueue`/
   `FlushVramDmaQueue`/`sub_8006B0C`/`sub_8006AF4`/`sub_8006AC8`/
-  `sub_8006AAC` in `src/graphics.c`, `GetAnimFrameBaseOffset` in
-  `src/actor_anim.c` (see `docs/graphics.md`, "Matching decompilation" for
-  the workflow and a few gotchas worth knowing before doing more of this)
+  `sub_8006AAC`/`sub_8006A78`/`sub_8006A84`/`sub_8006A90` in
+  `src/graphics.c`, `GetAnimFrameBaseOffset` in `src/actor_anim.c` (see
+  `docs/graphics.md`, "Matching decompilation" for the workflow and a few
+  gotchas worth knowing before doing more of this)
 
 ## Setting up the repo
 
