@@ -2226,6 +2226,31 @@ called via `bl` from anything disassembled yet so whatever tool
 originally produced this file didn't detect the boundary. Gave it the
 `sub_8000DF8` name (its ROM address) like every other function here.
 
+Seventeenth through nineteenth matched functions, all first-try, in new
+file `src/rand_util.c` (RNG, doesn't fit any existing file): `sub_8000E10`
+(ROM `0x08000E10`, right after `sub_8000DF8`) seeds a global LCG state
+(`gUnknown_030007E4` in IWRAM) with its argument; `sub_8000E4C` (ROM
+`0x08000E4C`) advances that LCG (`seed = seed * 0x41C64E6D + 0x3039` -
+the standard C library constants) and returns 16 bits from the middle
+of the new seed (`(u16)(seed >> 4)`, i.e. the ROM's `lsls #0xc; lsrs
+#0x10` pair - avoids the LCG's low bits, which are the least random);
+`sub_8000E1C` (ROM `0x08000E1C`, sitting *between* the two, despite
+being logically "based on" `sub_8000E4C`) does the same seed advance
+inline (not by calling `sub_8000E4C` - the ROM has two physical copies
+of these 8 instructions) and forwards the result plus its own `s32
+max` argument to `sub_803AF1C` (not yet matched or confidently typed
+beyond this call site's `u16, s32 -> u16` shape) - likely a
+"random number in `[0, max)`" helper. `sub_8000E1C` needed its return
+type declared `u16` (not `s32`) to reproduce the ROM's post-call `lsls
+r0, #0x10; lsrs r0, #0x10` truncation of `sub_803AF1C`'s result; without
+it, gcc has no reason to truncate a call result it's about to return
+as-is.
+
+Removed these three functions' raw bytes directly from the existing
+`asm/code_3_1_3.s` (no further file-splitting needed - they sit
+entirely inside one already-open file) and added one `ldscript.txt`
+line for `rand_util.o` between `string_util2.o` and `code_3_1_3.o`.
+
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/graphics.c`,

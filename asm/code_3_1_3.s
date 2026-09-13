@@ -3,54 +3,6 @@
 .syntax unified
 .arm
 
-	thumb_func_start sub_8000E10
-sub_8000E10: @ 0x08000E10
-	ldr r1, _08000E18 @ =gUnknown_030007E4
-	str r0, [r1]
-	bx lr
-	.align 2, 0
-_08000E18: .4byte gUnknown_030007E4
-
-	thumb_func_start sub_8000E1C
-sub_8000E1C: @ 0x08000E1C
-	push {lr}
-	adds r1, r0, #0
-	ldr r3, _08000E40 @ =gUnknown_030007E4
-	ldr r2, [r3]
-	ldr r0, _08000E44 @ =0x41C64E6D
-	muls r0, r2, r0
-	ldr r2, _08000E48 @ =0x00003039
-	adds r0, r0, r2
-	str r0, [r3]
-	lsls r0, r0, #0xc
-	lsrs r0, r0, #0x10
-	bl sub_803AF1C
-	lsls r0, r0, #0x10
-	lsrs r0, r0, #0x10
-	pop {r1}
-	bx r1
-	.align 2, 0
-_08000E40: .4byte gUnknown_030007E4
-_08000E44: .4byte 0x41C64E6D
-_08000E48: .4byte 0x00003039
-
-	thumb_func_start sub_8000E4C
-sub_8000E4C: @ 0x08000E4C
-	ldr r2, _08000E60 @ =gUnknown_030007E4
-	ldr r1, [r2]
-	ldr r0, _08000E64 @ =0x41C64E6D
-	muls r0, r1, r0
-	ldr r1, _08000E68 @ =0x00003039
-	adds r0, r0, r1
-	str r0, [r2]
-	lsls r0, r0, #0xc
-	lsrs r0, r0, #0x10
-	bx lr
-	.align 2, 0
-_08000E60: .4byte gUnknown_030007E4
-_08000E64: .4byte 0x41C64E6D
-_08000E68: .4byte 0x00003039
-
 	thumb_func_start sub_8000E6C
 sub_8000E6C: @ 0x08000E6C
 	push {r4, lr}
