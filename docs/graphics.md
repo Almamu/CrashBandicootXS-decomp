@@ -1722,15 +1722,44 @@ memory: both `r8` and `r9` get a proper `mov`-to-lowreg-then-`push`/
 `pop`-then-`mov`-back dance in the prologue/epilogue automatically, just
 from being assigned to, independent of cross-call liveness.
 
-What's still unmatched is a cluster of **low-register** (`r0`-`r7`)
-letter-only differences, all cosmetic (no logic/size difference): the
-prologue/epilogue push/pop list is missing `r7` (ROM pushes
-`r4,r5,r6,r7`; the reconstruction pushes only `r4,r5,r6`), and the two
-`SUB_8006600_STORE_TWO_FIELDS` blocks use a different scratch register
-for the `posX`/`posY` address computation than the ROM does at each of
-its two call sites (ROM uses `r7`+`r1` at the first site, `r4`+`r7` at
-the second; the reconstruction's `"=&r"` constraints let gcc pick
-`r1`/`r3` instead).
+A follow-up pass narrowed this further by reusing registers that are
+already alive rather than introducing new pins - each verified safe and
+applied to the checked-in `#if NON_MATCHING` version:
+
+- **`addr` (the temp holding `&gUnknown_030012E0`) pinned to `r1`**: a
+  plain scratch local with no cross-call lifetime of its own, so pinning
+  it to whatever register the ROM happens to use has no save/restore
+  implications at all (`r1` is caller-saved, never part of this
+  question). Reproduces the ROM's `ldr r1, =gUnknown_030012E0; mov r8,
+  r1; ldr r0, [r1]` exactly, where the unconstrained version had gcc
+  pick `r0` instead.
+- **`SUB_8006600_STORE_TWO_FIELDS_REUSE_SELF`**: at the *second* of the
+  two `STORE_TWO_FIELDS` call sites, `self` (pinned `r4`) is genuinely
+  dead - its last read is the `mgr1Base` reload just before this call,
+  its next write is the final reassignment to `g1300Addr` near the end
+  of the function - so temporarily clobbering it as the scratch register
+  for the `0x88 << 1` address computation is completely safe (unlike an
+  `r7` pin, this doesn't touch a register that must survive to the
+  caller). Matches the ROM's `mov r4, #0x88` / `lsl r4, r4, #1` / `adds
+  r1, r0, r4` at this site exactly.
+- **`SUB_8006600_GET_RECORD_REUSE_RECOFF`**: the function's *last* read
+  of `recOff` (pinned `r5`) computes the final `record` address, so
+  computing that address in-place into `recOff` itself (rather than a
+  fresh scratch register) is safe and matches the ROM's `adds r5, r0,
+  r5` / `ldr r2, [r5]` at that call site exactly.
+
+What's still unmatched, after all of the above, is exactly the set of
+spots where the ROM's own register choice is `r7` and nothing already
+alive can stand in for it: the prologue/epilogue push/pop list (ROM
+pushes `r4,r5,r6,r7`; this build pushes only `r4,r5,r6`), the *first*
+`STORE_TWO_FIELDS` call site's address scratch (ROM: `r7`; both operands
+`self`/`recOff`/`mgrAddrCache`/`mgr1Base` are still alive there, so
+nothing free to reuse), one of the four record-offset-constant loads
+(ROM uses `r7` for the `field_20` offset right after the first
+`STORE_TWO_FIELDS` block specifically - the other three matching
+occurrences all use `r3`), and the *second* `STORE_TWO_FIELDS` call
+site's *second* scratch (ROM: `r7`, after already using `r4` for the
+first one).
 
 **Why not just pin `r7`, confirmed with a fresh isolated test this
 session**: tried adding a real, plain-C-visible temp
@@ -1743,22 +1772,38 @@ callee(b);` inside a function that also calls `callee` earlier compiles
 to `add r7, r4, #1` / `add r0, r7, #0` / `bl callee` with **no `push`/
 `pop` of r7 at all** - a genuine ABI violation (the AAPCS requires r7 be
 callee-saved unconditionally; this silently clobbers the caller's r7).
-agbcc only adds a low-register pin to the save list when its own
-liveness analysis decides the value must survive a `bl`, not just
-because it's assigned/read in ordinary C. Since `tmp`'s whole lifetime
-here sits between two calls with no `bl` in between, agbcc omits it -
-correctly by its own liveness model, incorrectly by the ABI. This
-broadens the hazard already recorded in `matching_decomp_register_pinning`
-memory (previously thought fixed by "give it a plain C use") - not used
-here for that reason. The `r9` fix for `gUnknown_03001300` was kept
-because `r9` is a high register and doesn't have this problem.
+A follow-up test went further: two *separate* `r7`-pinned locals in two
+different blocks, each written and consumed around its own call, with
+an unrelated call in between - even with `r7` genuinely touched on both
+sides of an intervening `bl`, still no push/pop. A quick natural-
+allocation test (enough plain locals to force spilling past `r4`-`r6`)
+showed gcc's own *unforced* allocator skips `r7` entirely in favor of
+`r8`-`r10` when given the choice. Together these point to `r7` being
+exempt from agbcc's callee-save bookkeeping for *explicit register-
+variable pins* specifically in this Thumb configuration (plausibly its
+classic APCS role as the Thumb frame pointer), not a phrasing problem -
+see technique 10 in `matching_decomp_register_pinning` memory. The `r9`
+fix for `gUnknown_03001300` was kept because `r9` is a high register and
+doesn't have this problem, and the three reuse-based fixes above were
+kept because they clobber only registers already proven dead at that
+point, not a fresh `r7` pin.
 
-Worth a fresh attempt via a technique that doesn't rely on a
-short-lived low-register pin (e.g. decomp.me/a permuter for the last few
-register picks, or restructuring so the relevant temp's lifetime
-genuinely straddles a call) - the approach above (fresh-reload globals +
-inline-asm address computation + high-register address caching) is the
-right starting point, not the dead ends this note is warning about.
+Also tried and ruled out: reordering/unpinning the low-register
+declarations (`self`, `recOff`) to see if that shifts which two low
+registers the prologue's `r8`/`r9`-save dance picks as scratch (ROM
+picks `r6`/`r7`; every variant tried here still picks `r5`/`r6`,
+regardless of declaration order, whether `recOff` is pinned at all, or
+how early it's first assigned) - this particular choice appears fixed by
+something in agbcc's internals unrelated to C-level register-variable
+declarations.
+
+A fresh attempt would need a technique that doesn't rely on a
+short-lived low-register pin - a permuter (e.g. decomp.me/a local one)
+searching many structurally-different C phrasings to find one where
+gcc's *own, unforced* allocator lands on `r7` (matching the natural-
+allocation finding above) is the most promising remaining avenue; manual
+C rephrasing of this specific shape has been tried extensively across
+multiple sessions without success.
 
 ### Cleanup pass over everything matched so far
 

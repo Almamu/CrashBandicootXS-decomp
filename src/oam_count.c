@@ -122,6 +122,34 @@ extern struct icon_manager *gUnknown_030012DC;
         (out) = *(struct icon_record **)_addr; \
     } while (0)
 
+/* Same as SUB_8006600_STORE_TWO_FIELDS, but reuses `self` (r4) as the
+ * scratch register for the first address computation, matching the ROM
+ * at this specific call site - safe because `self` is genuinely dead
+ * here (its last read is the `mgr1Base` reload just before this call;
+ * its next write is the final reassignment to g1300Addr near the end of
+ * the function), unlike the r7 scratch this can't reach. */
+#define SUB_8006600_STORE_TWO_FIELDS_REUSE_SELF(base, halved, yconst, self) \
+    do { \
+        register s32 _hv asm("r3") = (halved); \
+        register s32 _yv asm("r2") = (yconst); \
+        void *_addr; \
+        asm volatile("mov %0, #0x88\n\tlsl %0, %0, #1" : "+r"(self)); \
+        asm volatile("add %0, %1, %2" : "=&r"(_addr) : "r"(base), "r"(self)); \
+        *(u32 *)_addr = _hv; \
+        asm volatile("mov %0, #0x8a\n\tlsl %0, %0, #1" : "+r"(_hv)); \
+        *(u32 *)((u8 *)(base) + (s32)_hv) = _yv; \
+    } while (0)
+
+/* Same as SUB_8006600_GET_RECORD, but computes the address in-place into
+ * `recOff` itself (r5) rather than a fresh scratch register, matching
+ * the ROM's `adds r5, r0, r5` at its last call site - safe because this
+ * is the function's last read of `recOff`. */
+#define SUB_8006600_GET_RECORD_REUSE_RECOFF(base, recOff, out) \
+    do { \
+        asm volatile("add %0, %1, %0" : "+r"(recOff) : "r"(base)); \
+        (out) = *(struct icon_record **)(recOff); \
+    } while (0)
+
 void sub_8006600(struct sub_8006700_actor *arg0)
 {
     register struct sub_8006700_actor *self asm("r4");
@@ -129,7 +157,7 @@ void sub_8006600(struct sub_8006700_actor *arg0)
     register void *mgrAddrCache asm("r8");
     register void *mgr1Base asm("r0");
     register void **g1300Addr asm("r9");
-    void *addr;
+    register void *addr asm("r1");
     struct icon_record *record;
     u8 buf[0x10];
     u32 width;
@@ -168,8 +196,8 @@ void sub_8006600(struct sub_8006700_actor *arg0)
                          charWidth, record->field_14);
     halved = (0xF0 - width) >> 1;
     mgr1Base = *(void **)self;
-    SUB_8006600_STORE_TWO_FIELDS(mgr1Base, halved, 0x90);
-    SUB_8006600_GET_RECORD(mgr1Base, recOff, record);
+    SUB_8006600_STORE_TWO_FIELDS_REUSE_SELF(mgr1Base, halved, 0x90, self);
+    SUB_8006600_GET_RECORD_REUSE_RECOFF(mgr1Base, recOff, record);
     sub_803AD80((u8 *)mgr1Base + record->field_20,
                 charWidth, record->field_24);
 
