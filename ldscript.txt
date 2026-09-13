@@ -28,6 +28,8 @@ SECTIONS
         build/crashbandicootxs/src/string_util.o(.text);
         build/crashbandicootxs/src/printf_util.o(.text);
         build/crashbandicootxs/asm/code_3_1_2.o(.text);
+        build/crashbandicootxs/src/string_util2.o(.text);
+        build/crashbandicootxs/asm/code_3_1_3.o(.text);
         build/crashbandicootxs/src/oam_count.o(.text);
         build/crashbandicootxs/src/graphics.o(.text);
         build/crashbandicootxs/asm/code_3_2.o(.text);

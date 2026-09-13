@@ -2160,6 +2160,32 @@ a clean `make compare`); `make NON_MATCHING=1 crashbandicootxs.gba`
 compiles this C version in instead (verified this session to compile
 and link cleanly with no duplicate-symbol errors).
 
+Twelfth matched function: `sub_8000D68` (ROM `0x08000D68`, right after
+the still-parked `sub_8000CBC`) - counts the non-space characters in a
+NUL-terminated string (`s32 sub_8000D68(u8 *s)`; spaces are skipped,
+not counted, everything else including walking off the terminator is).
+Matched first-try structurally. Needed the same trailing
+`asm(".align 2, 0")` fix as `sub_800094C`/`sub_8000CA8` - the raw
+function is 22 bytes (11 instructions) plus a 2-byte pad NOP to reach
+the next function's 4-byte-aligned start, and without the explicit
+alignment directive agbcc doesn't emit that trailing NOP.
+
+Extracting this one function required a second split of the same kind
+as `sub_80007EC`'s: it sits between `sub_8000CBC` (parked, still raw in
+`asm/code_3_1_2.s`) and `sub_8000D80` onward, so `asm/code_3_1_2.s` was
+trimmed to end right after `sub_8000CBC`'s `.endif`, everything from
+`sub_8000D80` on moved to a new `asm/code_3_1_3.s` (same three-line
+header), and `sub_8000D68` itself lives in a new `src/string_util2.c`
+(not `string_util.c` - that object already links *before*
+`printf_util.o`/`code_3_1_2.o` in `ldscript.txt`, which would put this
+function's code at the wrong address; a fresh translation unit was the
+only way to get its object linked exactly between `code_3_1_2.o` and
+`code_3_1_3.o`). `ldscript.txt` now lists, in order:
+`code_3_1_2.o`, `string_util2.o`, `code_3_1_3.o`. Verified with a full
+`rm -rf build && make compare` (and a `NON_MATCHING=1` build to confirm
+`sub_8000CBC`'s parked toggle still links cleanly around the new
+split).
+
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/graphics.c`,
