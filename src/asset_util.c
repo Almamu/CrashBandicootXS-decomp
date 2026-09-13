@@ -1,7 +1,7 @@
 #include "core.h"
 
 /* Sits right after the still-parked sub_80010E0 (asm/code_3_1_5.s) and
- * before sub_80011C0 (still raw in the same file). */
+ * before whatever's still raw in asm/code_3_1_6.s. */
 
 extern void LZ77UnCompWrapper(void *src);
 extern void RLUnCompWrapper(void *src);
@@ -43,6 +43,26 @@ void LoadTaggedAsset(void *asset, void *dest)
         RLUnCompWrapper(asset);
         break;
     }
+}
+
+extern void sub_80006A8(void);
+
+/* Loads a specific background's tile/tileset data (tagged asset at
+ * `asset + 0x200`) into VRAM at `0x06000000`, then DMAs the first 0x200
+ * bytes of `asset` (a raw palette, 256 halfwords) straight into palette
+ * RAM at `0x05000000`. */
+void sub_80011C0(void *asset)
+{
+    vu32 *dma;
+    u32 val;
+
+    LoadTaggedAsset((u8 *)asset + 0x200, (void *)0x06000000);
+    sub_80006A8();
+    dma = (vu32 *)0x040000D4;
+    dma[0] = (u32)asset;
+    dma[1] = 0x05000000;
+    dma[2] = 0x80000100;
+    val = dma[2];
 }
 
 /* Trailing padding (see matching_decomp_alignment_fix memory). */

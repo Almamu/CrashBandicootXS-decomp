@@ -2477,6 +2477,13 @@ split at that exact boundary - the parked function's raw bytes can
 never end up sharing an object with something that no longer sits
 immediately next to it in the final link.
 
+Twenty-third matched function: `sub_80011C0` (ROM `0x080011C0`, right
+after `LoadTaggedAsset`), also in `src/asset_util.c` - loads one
+background's tile/tileset data (the tagged asset at `asset + 0x200`,
+via `LoadTaggedAsset`) into VRAM at `0x06000000`, then DMAs the first
+`0x200` bytes of `asset` itself (a raw 256-halfword palette) straight
+into palette RAM at `0x05000000`. Matched first-try.
+
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/graphics.c`,

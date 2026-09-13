@@ -3,32 +3,6 @@
 .syntax unified
 .arm
 
-	thumb_func_start sub_80011C0
-sub_80011C0: @ 0x080011C0
-	push {r4, lr}
-	adds r4, r0, #0
-	movs r1, #0x80
-	lsls r1, r1, #2
-	adds r0, r4, r1
-	movs r1, #0xc0
-	lsls r1, r1, #0x13
-	bl LoadTaggedAsset
-	bl sub_80006A8
-	ldr r1, _080011EC @ =0x040000D4
-	str r4, [r1]
-	movs r0, #0xa0
-	lsls r0, r0, #0x13
-	str r0, [r1, #4]
-	ldr r0, _080011F0 @ =0x80000100
-	str r0, [r1, #8]
-	ldr r0, [r1, #8]
-	pop {r4}
-	pop {r0}
-	bx r0
-	.align 2, 0
-_080011EC: .4byte 0x040000D4
-_080011F0: .4byte 0x80000100
-
 	thumb_func_start sub_80011F4
 sub_80011F4: @ 0x080011F4
 	movs r2, #0
