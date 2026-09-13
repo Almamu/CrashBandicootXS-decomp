@@ -2580,6 +2580,36 @@ original register for reuse in between); this looked functionally
 identical either way and only showed up as a real mismatch once
 directly diffed.
 
+Twenty-ninth matched function: `sub_80013FC` (ROM `0x080013FC`, right
+after `sub_800132C`), in new file `src/palette_blend.c` - blends the
+whole 512-entry palette at `gUnknown_03000A80` toward black by
+`factor`/16 per channel (5 bits each, GBA BGR555), writing the result
+to `gUnknown_03000E80`. Each channel is extracted via an explicit
+shift-left-then-shift-right pair and re-inserted via "clear those
+bits, then OR the new value in" - even for pulling the initial raw
+16-bit pixel into the `color` accumulator, which is never explicitly
+zeroed (its stale value from the previous iteration gets masked away
+by the same pattern) - rather than plain `&`/`|` on named bitfields,
+matching the ROM's exact instruction shapes. This one needed unusually
+heavy register/instruction pinning to get byte-exact: the channel
+extraction's two shifts collapse into a single register when written
+as one C expression (`(x << a) >> b`), but the ROM computes the first
+shift into a *different*, temporary register before the second reads
+from it; the post-subtract `(u16)` truncate before the final 5-bit mask
+gets optimized away entirely by gcc (same result, but the ROM has a
+redundant 16-bit truncate first); and channel 2/3's insert needs the
+new value shifted into position *before* the mask constant is loaded
+and ANDed, not after (same instructions, wrong order otherwise). All
+three were only reachable via small register-pinned scratch blocks
+(`tmp`/`diff`, both r0) and, for the truncate, literal inline
+`lsl/lsr #0x10` asm - plain C phrasing kept getting "correctly"
+optimized past the ROM's own redundant steps. Confirmed the
+"mov r0, r1" vs. "adds r0, r1, #0" difference in agbcc's own hex-asm
+listing (used throughout this comparison process) really is cosmetic,
+not a byte difference - a real integration + `make compare` matched
+byte-exact despite that textual mismatch persisting in the isolated
+scratch-test comparisons up to the very last iteration.
+
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/graphics.c`,
