@@ -1639,3 +1639,22 @@ offset and pointer reads directly as call arguments rather than through
 named locals, which changed the evaluation order to match the ROM's
 (read the signed halfword, compute the base+offset sum, *then* read the
 trailing pointer field - not both reads up front).
+
+Twenty-ninth matched function: `sub_8006714` (ROM `0x08006714`,
+immediately before `sub_8006770` - joined `src/oam_count.c` above it, no
+new split). A scene/frame setup routine: calls `sub_80006A8(arg0)`, then
+`sub_8006DC8`/`sub_8006AAC` on two globals (`gUnknown_030012B8`,
+`gUnknown_03001300` - the second call is our own already-matched
+`sub_8006AAC`, DMA-flushing an OAM shadow buffer to real OAM), flushes
+the VRAM DMA queue (`FlushVramDmaQueue`, also already matched), then pokes
+five real GBA I/O registers directly from `arg0`'s fields: `REG_BG0HOFS`
+(`0x04000010`, shifted right 3), the first palette color
+(`0x05000000`, zeroed), `REG_BLDCNT`+`REG_BLDALPHA` together as one
+32-bit write (`0x04000050`), `REG_BLDY` (`0x04000054`, masked to 5 bits
+with the by-now-familiar shift-trick idiom), and `REG_DISPCNT`
+(`0x04000000`). Matched byte-exact on the **first try**, no pins or
+tricks needed at all - the ROM's hardware-address register (which jumps
+between `0x04000010`, a freshly-materialized `0x05000000`, then
+`0x04000050`, `+4`, and `-0x54` to land on `0x04000000`) falls out
+naturally from gcc just evaluating a sequence of plain absolute-address
+volatile pointer dereferences in program order.

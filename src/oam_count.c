@@ -4,6 +4,34 @@ extern u8 gStaticData_0816C86C[];
 extern void sub_80062A8(s32 arg0, s32 arg1, s32 arg2);
 extern void sub_803AD80(void *arg0, s32 arg1, void *arg2);
 extern void sub_8026ED0(void *arg0);
+extern void sub_80006A8(void *arg0);
+extern void sub_8006DC8(void *arg0);
+extern void sub_8006AAC(void *arg0);
+extern void FlushVramDmaQueue(void);
+extern void *gUnknown_030012B8;
+extern void *gUnknown_03001300;
+
+struct sub_8006714_struct {
+    u8 unused_00[0x1c];
+    u32 field_1c;
+    u32 field_20;
+    u8 field_24;
+    u8 unused_25[3];
+    u16 field_28;
+};
+
+void sub_8006714(struct sub_8006714_struct *arg0)
+{
+    sub_80006A8(arg0);
+    sub_8006DC8(gUnknown_030012B8);
+    sub_8006AAC(gUnknown_03001300);
+    FlushVramDmaQueue();
+    *(vu16 *)0x04000010 = arg0->field_1c >> 3;
+    *(vu16 *)0x05000000 = 0;
+    *(vu32 *)0x04000050 = arg0->field_20;
+    *(vu16 *)0x04000054 = (u32)(arg0->field_24 << 27) >> 27;
+    *(vu16 *)0x04000000 = arg0->field_28;
+}
 
 void sub_8006770(void *arg0, u32 arg1)
 {
