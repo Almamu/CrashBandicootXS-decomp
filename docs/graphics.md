@@ -2543,6 +2543,22 @@ produced an inverted branch (`ble`/fallthrough-swapped) that still
 *looked* plausible next to the ROM's `bgt` until directly diffed
 byte-for-byte. Needed the usual trailing `asm(".align 2, 0")` fix.
 
+Twenty-seventh matched function: `sub_80012AC` (ROM `0x080012AC`, right
+after `sub_8001254`), in new file `src/fade_util.c` - a per-frame
+screen-brightness fade tick. Every `gUnknown_030007E8.field_0` frames,
+writes the next step to `BLDY` (`0x04000054`), counting up or down
+depending on `field_8`'s top bit (fade in vs. out); after 17 steps (a
+full fade), resets both counters, briefly disables interrupts
+(`0x04000208`, `REG_IE`) while resetting `field_0` to a literal `-1`
+(not a decrement of whatever was there - confirmed by the ROM reusing
+the register that's *already* holding `0` from a few instructions
+earlier, computing `0 - 1` rather than reloading `field_0` first) and
+calling `sub_8000670` with `field_4`, then re-enables interrupts.
+`mask`/`flag8` are pinned to r0/r1 to match the ROM's exact register
+choice for the `& 0x80` check - the natural (unpinned) allocation puts
+the loaded byte in r0 and the constant in r1 instead, one register off,
+regardless of which order the two operands are written in the C.
+
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/graphics.c`,
