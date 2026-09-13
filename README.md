@@ -32,21 +32,21 @@ It builds the following ROM:
   `sub_80012AC`/`sub_800132C` in `src/fade_util.c`,
   `sub_80013FC` in `src/palette_blend.c`,
   `GetAnimFrameBaseOffset` in `src/actor_anim.c`
-  (see `docs/graphics.md`, "Matching decompilation" for the workflow and
+  (see `docs/matching.md`, "Matching decompilation" for the workflow and
   a few gotchas worth knowing before doing more of this)
 - `sub_8006600` (in `src/oam_count.c`) is reconstructed but not yet
   byte-matching - compiled only under `make NON_MATCHING=1` for now (see
-  `docs/graphics.md`, "Parked, not matched: sub_8006600"); a local
+  `docs/matching.md`, "Parked, not matched: sub_8006600"); a local
   decomp-permuter instance is searching for the remaining register
   picks in the sibling `decomp-permuter` checkout
 - `sub_80007EC` (ROM `0x080007EC`) is understood but not yet
   byte-matching (an instruction-scheduling detail); `asm/code_3_1.s` was
   split into itself (just this one function) plus `asm/code_3_1_2.s`
   (everything after it) so later functions could still be matched -
-  see `docs/graphics.md` for the pattern to reuse if this happens again
+  see `docs/matching.md` for the pattern to reuse if this happens again
 - `sub_8000CBC` (in `src/printf_util.c`, a case-insensitive `strstr`) is
   also understood but not yet byte-matching - compiled only under
-  `make NON_MATCHING=1` for now (see `docs/graphics.md`, "Parked, not
+  `make NON_MATCHING=1` for now (see `docs/matching.md`, "Parked, not
   matched: sub_8000CBC"): matching a specific redundant-truncate branch
   shape in its lowercase-fold logic conflicts with keeping
   `caseInsensitive` out of `r8`; `asm/code_3_1_2.s` now holds just this
@@ -55,14 +55,14 @@ It builds the following ROM:
   matched
 - `sub_8000EE4` (in new file `src/text_layout.c`, a word-wrap text
   renderer) is also understood but not yet byte-matching - compiled
-  only under `make NON_MATCHING=1` for now (see `docs/graphics.md`,
+  only under `make NON_MATCHING=1` for now (see `docs/matching.md`,
   "Parked, not matched: sub_8000EE4"): matches the ROM
   instruction-for-instruction except ~8 bytes from two small codegen
   details (incoming-argument spill ordering, and a couple of loop-bound
   comparisons compiling one instruction shorter than the ROM's)
 - `sub_80010E0` (in new file `src/input_util.c`, an input-polling
   helper) is also understood but not yet byte-matching - compiled only
-  under `make NON_MATCHING=1` for now (see `docs/graphics.md`, "Parked,
+  under `make NON_MATCHING=1` for now (see `docs/matching.md`, "Parked,
   not matched: sub_80010E0"): a single bit-test compiles with the
   branch senses swapped from the ROM (same two instructions, same
   size) in a way that resists every C-level rephrasing tried
@@ -75,6 +75,7 @@ Please see follow [these instructions](./INSTALL.md)
 
 - [docs/audio.md](./docs/audio.md) - how the Shin'en GAX2 sound engine's data is laid out and rebuilt
 - [docs/graphics.md](./docs/graphics.md) - how graphics were extracted, and ongoing notes on the sprite/actor system
+- [docs/matching.md](./docs/matching.md) - byte-exact matching decompilation workflow, gotchas, and the per-function matching/parked log
 - The [Kirby & The Amazing Mirror](https://github.com/jiangzhengwenjz/katam/) decompilation uses a very similar codebase, as it was written by the same dev team (Dimps)
 - https://decomp.me is a great resource for helping to create matching functions
 - `ldscript.txt` tells the linker the order which files should be linked

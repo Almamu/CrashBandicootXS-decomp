@@ -9,7 +9,7 @@
  * sub_8006864/sub_8006820 read through inline asm rather than plain
  * struct field access on purpose: gcc's CSE otherwise shares the
  * "table[i]" address between the two threshold reads even though the
- * ROM recomputes it fresh for each one (see docs/graphics.md, "Matching
+ * ROM recomputes it fresh for each one (see docs/matching.md, "Matching
  * decompilation"). */
 struct threshold_table_entry {
     u8 unused_00[8];
@@ -66,7 +66,7 @@ extern struct icon_manager *gUnknown_030012DC;
  * width (`sub_803AD80`'s return value), at fixed Y coordinates. NOT YET
  * BYTE-MATCHING: the prologue/epilogue register list and most of the
  * first half's register choices now match the ROM exactly (see
- * docs/graphics.md, "Parked, not matched: sub_8006600" for how - plain,
+ * docs/matching.md, "Parked, not matched: sub_8006600" for how - plain,
  * unpinned locals that increase register pressure enough for gcc's own
  * allocator to naturally reach for r7, since an *explicit* r7 pin is a
  * genuine ABI hazard in this toolchain - confirmed and documented in
@@ -167,7 +167,7 @@ void sub_8006600(struct sub_8006700_actor *arg0)
     }
     /* Plain unpinned intermediate: raises register pressure enough for
      * gcc's own allocator to naturally reach for r7 in the surrounding
-     * prologue/epilogue (see docs/graphics.md for why this works but an
+     * prologue/epilogue (see docs/matching.md for why this works but an
      * explicit r7 pin doesn't). */
     {
         void *_p = mgrAddrCache;

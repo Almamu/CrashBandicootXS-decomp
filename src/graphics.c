@@ -28,7 +28,7 @@ extern s32 sub_803ADB4(s32 arg0, s32 arg1);
 
 /* The register pins below (and in several functions further down) match
  * the ROM's own register allocation exactly - required for a byte-exact
- * build, not stylistic. See docs/graphics.md, "Matching decompilation"
+ * build, not stylistic. See docs/matching.md, "Matching decompilation"
  * for why plain C alone doesn't reproduce them. */
 s32 sub_800697C(void *arg0)
 {
@@ -88,7 +88,7 @@ void sub_80069E8(void *arg0, u16 *arg1, s32 arg2)
  * 1024-byte shadow table itself (128 entries * 8 bytes) starting right
  * after. Functions below that need volatile or register-pinned access
  * to `count`/the table still use raw pointer casts on purpose (see
- * docs/graphics.md, "Matching decompilation") - this type exists so
+ * docs/matching.md, "Matching decompilation") - this type exists so
  * call sites can be typed meaningfully instead of passing `void *`. */
 struct oam_shadow_buffer {
     s32 count;
@@ -111,7 +111,7 @@ void sub_8006A14(struct oam_shadow_buffer *arg0, void *arg1, s32 arg2)
 }
 
 /* The two inline-asm `add`s below anchor operations gcc would otherwise
- * reorder or canonicalize differently than the ROM (see docs/graphics.md,
+ * reorder or canonicalize differently than the ROM (see docs/matching.md,
  * "Matching decompilation") - not obfuscation, just pinning byte-exact
  * order. */
 void sub_8006A48(struct oam_shadow_buffer *arg0)
@@ -173,7 +173,7 @@ void sub_8006AAC(struct oam_shadow_buffer *arg0)
 
 /* Inserts one record (arg1[0]/arg1[1]) into the shadow OAM table at the
  * current count, preserving the padding halfword at +0x12 that overlaps
- * the tail of arg1[1] on real hardware (see docs/graphics.md). */
+ * the tail of arg1[1] on real hardware (see docs/matching.md). */
 void sub_8006AC8(struct oam_shadow_buffer *arg0, u32 *arg1)
 {
     register s32 n1 asm("r2");
@@ -221,7 +221,7 @@ void FlushVramDmaQueue(void)
     s32 i; /* QUEUE_COUNT must be re-read each iteration - see its
             * definition above - and `raw`/`shifted` are pinned to match
             * the ROM's register choice for the size-field load+shift
-            * (docs/graphics.md, "Matching decompilation"). */
+            * (docs/matching.md, "Matching decompilation"). */
     register u16 raw asm("r1");
     register u32 shifted asm("r0");
 

@@ -4,7 +4,7 @@
  * LoadTaggedAsset (still raw in asm/code_3_1_5.s). */
 
 #if NON_MATCHING
-/* NOT YET BYTE-MATCHING - see docs/graphics.md, "Parked, not matched:
+/* NOT YET BYTE-MATCHING - see docs/matching.md, "Parked, not matched:
  * sub_80010E0" for the full account; compiled only under
  * `make NON_MATCHING=1`, the checked-in assembly (asm/code_3_1_5.s) is
  * used otherwise. Logic and every register/instruction match the ROM

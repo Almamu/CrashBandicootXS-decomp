@@ -5,7 +5,7 @@
  * before sub_800106C (still raw in asm/code_3_1_3.s). */
 
 #if NON_MATCHING
-/* NOT YET BYTE-MATCHING - see docs/graphics.md, "Parked, not matched:
+/* NOT YET BYTE-MATCHING - see docs/matching.md, "Parked, not matched:
  * sub_8000EE4" for the full account; compiled only under
  * `make NON_MATCHING=1`, the checked-in assembly (asm/code_3_1_3.s) is
  * used otherwise. Logic and almost all register allocation match the

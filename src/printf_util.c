@@ -131,7 +131,7 @@ asm(".align 2, 0");
 #if NON_MATCHING
 /* strstr, with optional case-insensitive matching (`caseInsensitive`
  * nonzero lowercases both sides before comparing). NOT YET BYTE-
- * MATCHING - see docs/graphics.md, "Parked, not matched: sub_8000CBC"
+ * MATCHING - see docs/matching.md, "Parked, not matched: sub_8000CBC"
  * for the full account; compiled only under `make NON_MATCHING=1`, the
  * checked-in assembly (asm/code_3_1_2.s) is used otherwise. Not
  * printf-related, but kept in this file rather than a new one purely
