@@ -1585,3 +1585,27 @@ The loaded halfword's own register also needed an explicit pin distinct
 from the shifted result's register (`raw`→`r0`, `val`→`r1`), matching a
 now-familiar pattern from earlier entries where the ROM keeps a
 freshly-loaded value and its transformed result in different registers.
+
+Twenty-first and twenty-second matched functions: `sub_8006820` and
+`sub_80067EC` (ROM `0x08006820` and `0x080067EC`, immediately before
+`sub_8006864` - joined `src/oam_count.c` above it, no new split). Two
+more members of the same `gStaticData_0816C86C` range-check family:
+`sub_8006820` is `sub_8006864` with different field offsets (`+0xC`/
+`+0x10` instead of `+8`/`+0xC` - same anti-CSE inline-asm technique
+reused verbatim, just changing the two constants), while `sub_80067EC`
+is a **simpler single-bound variant**: only checks `val <= table[i].field_at_0x10`
+(no lower bound), and - unlike the other two - the ROM computes the
+bound as a **persistent, pre-biased pointer** (`gStaticData_0816C86C + 0x10`,
+computed once before the loop and incremented by the `0x24` stride each
+iteration) rather than recomputing `base + bias + offset` fresh every
+time. Matched byte-exact with no register pins at all: the only fix
+needed was introducing a plain local pointer variable for the base
+address before adding the `+0x10` bias (`base = gStaticData_0816C86C;
+bound = base + 0x10;` instead of `bound = gStaticData_0816C86C + 0x10;`
+directly) - writing it as one combined expression let gcc fold the `+0x10`
+straight into the literal-pool constant (`.word gStaticData_0816C86C+0x10`,
+a single load), whereas the ROM does it as three separate runtime `ADD`s
+against the plain unbiased symbol. A cheaper alternative to the inline-asm
+anchor from the two entries above, worth trying first when the ROM
+"wastes" instructions re-deriving a value gcc would rather fold at
+compile/link time.
