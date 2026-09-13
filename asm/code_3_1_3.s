@@ -3,6 +3,11 @@
 .syntax unified
 .arm
 
+@ sub_8000EE4 is reconstructed (but not yet byte-matching) as C in
+@ src/text_layout.c, guarded by #if NON_MATCHING - this raw version is
+@ only assembled for the default (matching) build. See docs/graphics.md,
+@ "Parked, not matched: sub_8000EE4".
+.if NON_MATCHING == 0
 	thumb_func_start sub_8000EE4
 sub_8000EE4: @ 0x08000EE4
 	push {r4, r5, r6, r7, lr}
@@ -203,7 +208,7 @@ _08001056:
 	bx r1
 	.align 2, 0
 _08001068: .4byte gUnknown_03001300
-
+.endif
 	thumb_func_start sub_800106C
 sub_800106C: @ 0x0800106C
 	push {r4, r5, r6, lr}

@@ -2266,6 +2266,105 @@ function's raw bytes directly from `asm/code_3_1_3.s` (no further
 splitting needed) and added one more `ldscript.txt` line
 (`line_util.o`, between `rand_util.o` and `code_3_1_3.o`).
 
+**Not yet byte-matching, kept as C under `#if NON_MATCHING`:
+`sub_8000EE4`** (ROM `0x08000EE4`, right after `sub_8000E6C`), in new
+file `src/text_layout.c`. A text-layout/word-wrap renderer: walks a
+NUL-terminated string one "token" at a time (`sub_80011F4` returns each
+token's byte length - looks like it splits on word boundaries), drawing
+each token through the OAM-icon system (`sub_803AD84`, returning the
+token's pixel width; a second call at a different record slot appears
+to draw a cursor/highlight) while accumulating a running pixel width
+against a per-line budget (`box->field_8`). When the running width would
+overflow, it advances to a new "line" (drawing a newline marker via
+`sub_803AD80` at a third record slot, and re-drawing the just-measured
+token at the line's start) and optionally "flushes" (`sub_80006A8` then
+`sub_8006AAC(gUnknown_03001300)` - the same OAM-shadow-buffer flush
+pattern used elsewhere) depending on a `mode` parameter (0 = never
+flush per-token, 1 = flush after every token, 2 = only flush after a
+line wrap) - and unconditionally flushes once more after the whole
+string is consumed if `mode != 0`. Recognizes two escape sequences,
+`/b` (nudge the render Y position down by 4, a half-line break) and
+`/n` (full newline - same drawing as an overflow-driven line advance),
+both introduced by a literal `/` byte in the text.
+
+Struct `sub_8000EE4_box` (the 3rd parameter) has only `field_0`/
+`field_4` (the starting X/Y, copied into the render-target object's
+`0x110`/`0x114` fields before the loop starts) and `field_8` (the
+per-line pixel-width budget) named by use; the render-target object
+itself (2nd parameter) isn't given a named struct at all - just raw
+`u8 *self + offset` arithmetic throughout, matching the style already
+established in `sub_8006770` (`src/oam_count.c`) for the exact same
+"record is an array of 8-byte `{s16, pad, void *}` entries, 0x10 bytes
+apart" shape - `self->0x130` holds a pointer to that array, and the
+function reads 3 different entries from it (`+0x18`/`+0x28`/`+0x38`)
+depending on what it's drawing.
+
+Register findings: `self` pinned to `r8`, `cursor` (the running text
+pointer) to `r10`, `token` (the current token's start, snapshotted each
+iteration) to `r6`, and `charWidth` (the first `sub_803AD84` call's
+returned pixel width) to `r9` - all matching the ROM, and all necessary
+since each survives multiple calls. The two record-address caches
+(`&self->0x110`/`&self->0x114`, used only in the `/b` handler) land in
+plain stack slots in both the ROM and this reconstruction, computed
+once and reloaded via pointer variables (`xAddr`/`yAddr`) rather than
+recomputed from `self` each time. The record-array base address
+(`&self->0x130`) is similarly cached once per branch into a plain local
+(`fieldAddr`), reloaded through it on each subsequent access - matching
+`sub_8006600`'s established address-caching pattern (see its notes
+above) rather than letting `self->0x130` be recomputed fresh, which
+would use more instructions than the ROM's single cached-address reuse.
+
+Two important non-obvious behavioral details, both verified directly
+against the ROM's bytes: the escape-sequence check reads the byte
+*after* the `/` exactly once (`token++; c = *token;`, matching the
+ROM's `adds r6, #1; ldrb r0, [r6]`) and reuses that one read for both
+the `'b'` and `'n'` comparisons - an earlier attempt that read
+`token[1]` twice (once per comparison) compiled to an extra load plus a
+redundant sign-extension shift-pair, a worse mismatch. Second: in the
+overflow ("wrap to a new line") branch, the freshly-reset `widthAccum`
+is set from the *first* `sub_803AD84` call's cached return value
+(`charWidth`, still held in `r9`), **not** the second (redrawing) call's
+return value in that same branch - the ROM explicitly discards the
+second call's `r0` and reuses `r9` instead (`mov r0, r9` right after
+the call, ignoring what the call just returned).
+
+**Unresolved (~8 bytes)**: everything above matches the ROM
+instruction-for-instruction except two small, non-semantic codegen
+details. First, the ROM moves `self`/`cursor` into their pinned
+registers *before* `box`/`limit` get spilled to their stack homes, but
+this reconstruction always produces the opposite order regardless of
+where the assignment statements are written in the source - `box`/
+`limit`'s stack spill appears to be an unconditional first step agbcc
+takes for incoming stack-homed arguments, not something reachable from
+C source ordering. Second, two of the loop-bound comparisons
+(`posAccum >= limit` near the top of the function, `lineCount < limit`
+at the bottom) compile here to a single inverted conditional branch,
+but the ROM has a redundant two-instruction "compare in the natural
+sense, branch on true to the very next instruction, then an
+unconditional branch to the real (far) destination" pair at both spots
+- most likely a Thumb conditional-branch encoding range limit (+-256
+bytes) forcing the split in the ROM's original build once the function
+reached its true size, not reproduced here since standalone tests of
+the same shape never got large enough to trigger it either way. An
+`asm volatile("" : "+r"(posAccum))` barrier right after zeroing
+`posAccum` was needed regardless - without it, gcc notices `posAccum`
+and `lineCount` are both provably `0` at the point of the *first*
+check and cross-jump-merges it directly into the bottom check's code
+(a bigger, wrong-shape mismatch, not just a register/branch-count
+detail) - the same barrier applied to `lineCount` at the bottom check
+trims the byte count further but introduces a new spurious stack store
+there instead, so it's left out pending a real fix.
+
+**Build toggle**: this function's C definition in `src/text_layout.c`
+is wrapped in `#if NON_MATCHING`, and the corresponding raw bytes in
+`asm/code_3_1_3.s` are wrapped in `.if NON_MATCHING == 0` / `.endif`
+(same pattern as `sub_8006600`/`sub_8000CBC`, see above), so exactly
+one definition is ever assembled. Default builds (`make`/`make compare`)
+get `NON_MATCHING=0` and use the checked-in matching assembly (verified
+via a clean `make compare`); `make NON_MATCHING=1 crashbandicootxs.gba`
+compiles this C version in instead (verified this session to compile
+and link cleanly with no duplicate-symbol errors).
+
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/graphics.c`,

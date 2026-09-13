@@ -47,6 +47,13 @@ It builds the following ROM:
   parked function, with everything after it (from `sub_8000D80` on)
   moved to `asm/code_3_1_3.s` so `sub_8000D68` in between could still be
   matched
+- `sub_8000EE4` (in new file `src/text_layout.c`, a word-wrap text
+  renderer) is also understood but not yet byte-matching - compiled
+  only under `make NON_MATCHING=1` for now (see `docs/graphics.md`,
+  "Parked, not matched: sub_8000EE4"): matches the ROM
+  instruction-for-instruction except ~8 bytes from two small codegen
+  details (incoming-argument spill ordering, and a couple of loop-bound
+  comparisons compiling one instruction shorter than the ROM's)
 
 ## Setting up the repo
 
