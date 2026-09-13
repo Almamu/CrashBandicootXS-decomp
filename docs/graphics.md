@@ -1901,6 +1901,20 @@ on the other, regardless of the C statement order they were written in.
 just *some* free registers) to match the ROM's exact choice once the
 ordering was fixed.
 
+Sixth: `sub_80007DC` (ROM `0x080007DC`, immediately after
+`sub_80007AC`) - trivial, zeroes both `gUnknown_030007E0` and the
+adjacent `gUnknown_030007E2` (accessed the same way as `sub_80007AC`
+above, through pointer arithmetic off `gUnknown_030007E0`). Needed only
+`r1`/`r2` pins (both plain scratch) to match the ROM's register choice
+for the address/zero-constant pair - matched on the second try.
+
+`sub_80007EC` (ROM `0x080007EC`, right after) is a much larger function
+- affine BG transform math (writes `BG2PA`/`PB`/`PC`/`PD`/`BG2X`/`BG2Y`
+around `0x04000020`) plus a DMA transfer and what looks like sound
+channel setup (`0x0400000C`) feeding into `LoadTaggedAsset` - left
+unmatched for now in favor of continuing through the smaller
+surrounding functions first.
+
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/graphics.c`,

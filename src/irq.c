@@ -241,4 +241,15 @@ s32 sub_80007AC(void)
     return 0;
 }
 
+void sub_80007DC(void)
+{
+    register u16 *addr asm("r2");
+    register u16 zero asm("r1");
+
+    addr = &gUnknown_030007E0;
+    zero = 0;
+    *addr = zero;
+    *(u16 *)((u8 *)addr + 2) = zero;
+}
+
 __asm__(".align 2,0");

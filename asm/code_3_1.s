@@ -3,16 +3,6 @@
 .syntax unified
 .arm
 
-	thumb_func_start sub_80007DC
-sub_80007DC: @ 0x080007DC
-	ldr r2, _080007E8 @ =gUnknown_030007E0
-	movs r1, #0
-	strh r1, [r2]
-	strh r1, [r2, #2]
-	bx lr
-	.align 2, 0
-_080007E8: .4byte gUnknown_030007E0
-
 	thumb_func_start sub_80007EC
 sub_80007EC: @ 0x080007EC
 	push {r4, r5, r6, lr}
