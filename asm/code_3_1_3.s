@@ -3,37 +3,6 @@
 .syntax unified
 .arm
 
-	thumb_func_start sub_8000DE0
-sub_8000DE0: @ 0x08000DE0
-	adds	r2, r0, #0
-	b _08000DEA
-_08000DE4:
-	strb	r0, [r2, #0]
-	adds	r1, #1
-	adds	r2, #1
-_08000DEA:
-	ldrb	r0, [r1, #0]
-	cmp	r0, #0
-	bne _08000DE4
-	movs	r0, #0
-	strb	r0, [r2, #0]
-	bx	lr
-	movs	r0, r0
-	adds	r2, r0, #0
-	movs	r1, #0
-	ldrb	r0, [r2, #0]
-	cmp	r0, #0
-	beq _08000E0C
-_08000E02:
-	adds	r1, #1
-	adds	r0, r2, r1
-	ldrb	r0, [r0, #0]
-	cmp	r0, #0
-	bne _08000E02
-_08000E0C:
-	adds	r0, r1, #0
-	bx	lr
-
 	thumb_func_start sub_8000E10
 sub_8000E10: @ 0x08000E10
 	ldr r1, _08000E18 @ =gUnknown_030007E4

@@ -87,3 +87,38 @@ void sub_8000DAC(u8 *dst, u8 *src, s32 n)
         *dst = 0;
     }
 }
+
+/* strcpy. */
+void sub_8000DE0(u8 *dst, u8 *src)
+{
+    u8 *p = dst;
+    u8 c;
+    while ((c = *src) != 0) {
+        *p = c;
+        src++;
+        p++;
+    }
+    *p = 0;
+}
+
+/* Trailing padding (see matching_decomp_alignment_fix memory). */
+asm(".align 2, 0");
+
+/* strlen. Had no thumb_func_start label of its own in the original raw
+ * asm/code_3_1_3.s (unlike every other function extracted so far) -
+ * confirmed via a direct baserom.gba objdump that it's real code at
+ * ROM 0x08000DF8, immediately after sub_8000DE0's own trailing pad NOP,
+ * not data or padding; likely just never called via `bl` from anything
+ * disassembled yet, so whatever tool originally split this file didn't
+ * detect a boundary here. */
+s32 sub_8000DF8(u8 *s)
+{
+    u8 *p = s;
+    s32 i = 0;
+    if (p[i] != 0) {
+        do {
+            i++;
+        } while (p[i] != 0);
+    }
+    return i;
+}

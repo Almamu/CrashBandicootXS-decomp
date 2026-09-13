@@ -2213,6 +2213,19 @@ aligned already); the ROM's `-1` sentinel (computed via `movs r4, #1;
 rsbs r4, r4, #0` since Thumb has no negative-immediate `mov`) shows up
 naturally from writing the loop bound as a plain `n != -1` compare.
 
+Fifteenth and sixteenth matched functions, both first-try: `sub_8000DE0`
+(ROM `0x08000DE0`, right after `sub_8000DAC`) - a plain `strcpy` (`void
+sub_8000DE0(u8 *dst, u8 *src)`) - and `sub_8000DF8` (ROM `0x08000DF8`,
+right after it) - a plain `strlen` (`s32 sub_8000DF8(u8 *s)`, the same
+"walk an index, not a pointer" shape as `sub_8000D68`'s search loop).
+`sub_8000DF8` had no `thumb_func_start` label of its own in the original
+raw `asm/code_3_1_3.s` - it just ran on as unlabeled bytes right after
+`sub_8000DE0`'s trailing pad NOP - confirmed via a direct
+`baserom.gba` objdump that it's real code (not data), likely just never
+called via `bl` from anything disassembled yet so whatever tool
+originally produced this file didn't detect the boundary. Gave it the
+`sub_8000DF8` name (its ROM address) like every other function here.
+
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/graphics.c`,
