@@ -1909,11 +1909,38 @@ above, through pointer arithmetic off `gUnknown_030007E0`). Needed only
 for the address/zero-constant pair - matched on the second try.
 
 `sub_80007EC` (ROM `0x080007EC`, right after) is a much larger function
-- affine BG transform math (writes `BG2PA`/`PB`/`PC`/`PD`/`BG2X`/`BG2Y`
-around `0x04000020`) plus a DMA transfer and what looks like sound
-channel setup (`0x0400000C`) feeding into `LoadTaggedAsset` - left
-unmatched for now in favor of continuing through the smaller
-surrounding functions first.
+- affine BG transform math (BG2CNT/DISPCNT setup, two calls to
+`sub_800090C` feeding `BG2PA`/`PB`/`PC`/`PD` and computed `BG2X`/`BG2Y`
+offsets around `0x04000020`) plus a palette DMA transfer and
+`LoadTaggedAsset` at the end. Got byte-count-exact and instruction-exact
+in every operation, but couldn't pin down one instruction-scheduling
+detail: the ROM computes the second `sub_800090C` result's sign-extended
+(`s16`) and zero-extended (`u16`) forms interleaved with *other*,
+unrelated statements in a way no amount of C-level statement reordering
+reproduced (tried ~6 orderings - each shifted which of two independent
+instructions landed first, never both). Left unmatched (still raw
+assembly) rather than chase the exact ordering further, and - since this
+function must stay in `asm/code_3_1.s` either way - the once-contiguous
+`asm/code_3_1.s` was split at this exact point so functions *after* it
+could still be extracted to C: `asm/code_3_1.s` now holds only
+`sub_80007EC`, followed in `ldscript.txt` by the newly-matched
+function's own object file, then a new `asm/code_3_1_2.s` picking up
+where `sub_80007EC` ends (`sub_80008CC` onward) - the address layout
+this relies on was verified with a full `rm -rf build && make compare`.
+This is the first split of its kind in the project; reuse the same
+pattern (trim the tail of the `.s` file at the boundary, start a new
+`_2.s` with the same three-line header, add one `ldscript.txt` line)
+whenever a hard-to-match function needs to be skipped without blocking
+everything after it.
+
+Seventh matched function: `sub_80008B4` (ROM `0x080008B4`, immediately
+after `sub_80007EC`; lives in new file `src/math_util.c`, since it's not
+yet called by anything matched and didn't fit thematically in
+`irq.c`) - a fixed-point squared-distance-style helper:
+`((dx>>8)^2 + (dy>>8)^2) << 8`. Matched first-try structurally; needed
+statement order matching the ROM's own dx-then-dx² compute-fully-before-
+dy pattern (an initial attempt that computed both `dx`/`dy` before either
+squaring reordered the two multiplies together instead of interleaving).
 
 ### Cleanup pass over everything matched so far
 

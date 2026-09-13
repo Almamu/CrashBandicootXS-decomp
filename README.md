@@ -8,7 +8,7 @@ It builds the following ROM:
 ## Current state
 
 - Main decomp efforts just started
-- First 37 functions matching: `QueueVramDmaTransfer`/`FreeVramDmaQueue`/
+- First 38 functions matching: `QueueVramDmaTransfer`/`FreeVramDmaQueue`/
   `FlushVramDmaQueue`/`sub_8006B0C`/`sub_8006AF4`/`sub_8006AC8`/
   `sub_8006AAC`/`sub_8006A78`/`sub_8006A84`/`sub_8006A90`/`sub_8006A48`/
   `sub_8006A14`/`sub_80069E8`/`sub_800697C` in `src/graphics.c`,
@@ -17,6 +17,7 @@ It builds the following ROM:
   `sub_8006864`/`sub_80068A8`/`sub_80068CC`/`sub_8006920`/`sub_800695C`
   in `src/oam_count.c`, `sub_80006A8`/`sub_80006EC`/`sub_80006F8`/
   `sub_8000720`/`sub_8000760`/`sub_80007AC`/`sub_80007DC` in `src/irq.c`,
+  `sub_80008B4` in `src/math_util.c`,
   `GetAnimFrameBaseOffset` in `src/actor_anim.c`
   (see `docs/graphics.md`, "Matching decompilation" for the workflow and
   a few gotchas worth knowing before doing more of this)
@@ -25,6 +26,11 @@ It builds the following ROM:
   `docs/graphics.md`, "Parked, not matched: sub_8006600"); a local
   decomp-permuter instance is searching for the remaining register
   picks in the sibling `decomp-permuter` checkout
+- `sub_80007EC` (ROM `0x080007EC`) is understood but not yet
+  byte-matching (an instruction-scheduling detail); `asm/code_3_1.s` was
+  split into itself (just this one function) plus `asm/code_3_1_2.s`
+  (everything after it) so later functions could still be matched -
+  see `docs/graphics.md` for the pattern to reuse if this happens again
 
 ## Setting up the repo
 
