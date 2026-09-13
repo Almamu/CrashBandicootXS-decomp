@@ -1609,3 +1609,18 @@ against the plain unbiased symbol. A cheaper alternative to the inline-asm
 anchor from the two entries above, worth trying first when the ROM
 "wastes" instructions re-deriving a value gcc would rather fold at
 compile/link time.
+
+Twenty-third through twenty-seventh matched functions: `sub_80067A4`,
+`sub_80067B4`, `sub_80067C4`, `sub_80067D4`, `sub_80067E4` (ROM
+`0x080067A4`-`0x080067EC`, immediately before `sub_80067EC` - joined
+`src/oam_count.c` above it, no new split). A family of four trivial
+wrappers, each just `sub_80062A8(constA, constB, constC)` with different
+constants (likely per-difficulty or per-mode config calls into whatever
+`sub_80062A8` sets up), plus one unrelated one-liner extracting the low 7
+bits of a byte. All five matched byte-exact - the four wrappers on the
+first try, no tricks; the bit-mask one needed the shift-trick phrasing
+(`(u32)(byte << 25) >> 25`) instead of `byte & 0x7F`, since gcc's `&`
+with an immediate materializes the mask into a register and ANDs
+(2 instructions, valid but different bytes) rather than reproducing the
+ROM's shift-based extraction (also 2 instructions) - the same idiom
+identified back at `sub_800695C`.

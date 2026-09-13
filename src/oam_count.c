@@ -1,6 +1,32 @@
 #include "core.h"
 
 extern u8 gStaticData_0816C86C[];
+extern void sub_80062A8(s32 arg0, s32 arg1, s32 arg2);
+
+void sub_80067A4(void)
+{
+    sub_80062A8(0x3F, 0x43, 1);
+}
+
+void sub_80067B4(void)
+{
+    sub_80062A8(0x3E, 0x42, 0);
+}
+
+void sub_80067C4(void)
+{
+    sub_80062A8(0x3D, 0x41, 2);
+}
+
+void sub_80067D4(void)
+{
+    sub_80062A8(0x3C, 0x40, 3);
+}
+
+u8 sub_80067E4(void *arg0)
+{
+    return (u32)(*(u8 *)arg0 << 25) >> 25;
+}
 
 s32 sub_80067EC(void *arg0)
 {
