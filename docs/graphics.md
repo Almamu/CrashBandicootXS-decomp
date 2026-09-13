@@ -1395,3 +1395,17 @@ changed gcc's canonicalization - so that one add is also inline asm,
 Both asm statements are simple, single real Thumb instructions (not a
 trick or a workaround bug) - see [[matching_decomp_register_pinning]] for
 when to reach for this.
+
+Thirteenth matched function: `sub_8006A14` (ROM `0x08006A14`, immediately
+before `sub_8006A48`, same region - joined `src/graphics.c` right above
+it). The bulk-copy counterpart to `sub_8006AC8`: instead of copying one
+record's fields with the CPU, this DMAs `arg2` whole 8-byte OAM entries
+straight from `arg1` into the shadow buffer at the current count
+(`arg0 + count*8 + 0xC`), then advances `count` by `arg2`. Matched
+byte-exact on the second try, no register pins needed this time - the
+only issue was the same additive-grouping quirk seen in `sub_8006A48`
+(`base + (offset + const)` vs `(base + offset) + const` producing
+different Thumb `ADD` byte sequences for the same value), fixed just by
+adding explicit parentheses to group the shift-and-constant before adding
+the base pointer - no inline asm needed here, unlike the pathological
+case in `sub_8006A48`.
