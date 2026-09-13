@@ -1844,6 +1844,39 @@ byte-exact on the second try (first attempt used `s32`/plain globals and
 got the branch condition, register letters, and the `+=`'s redundant
 reload all slightly wrong).
 
+Next four matched functions, all in `src/irq.c` immediately after
+`sub_80006A8`, matched first-try each:
+
+- `sub_80006EC` (ROM `0x080006EC`): trivial, `gUnknown_030007DC = 0;`.
+- `sub_80006F8` (ROM `0x080006F8`): sets up the wait state
+  `sub_80006A8` polls - `gUnknown_03000A5C = arg0; gUnknown_03000A58 =
+  gUnknown_030007D8 + arg0; gUnknown_030007DC = 1;` (arm the "wait until
+  the counter reaches `gUnknown_030007D8 + arg0`" check for a given
+  delay).
+- `sub_8000720` (ROM `0x08000720`) - the vblank handler
+  (`irq.c` already had `extern irq_handler_t sub_8000720;` as a
+  placeholder for its address before this session; changed to a plain
+  forward declaration `void sub_8000720(void);` now that it's a real
+  function, matching how `irq_empty_handler` is declared/referenced
+  elsewhere in this file). Conditionally calls `sub_8038B68()`, then
+  calls `sub_803AD78()` for every nonzero slot in
+  `gUnknown_03000A60.unknown[8]` (iterated via a pointer walking forward
+  while a separate counter counts `7` down to `0`, matching this file's
+  existing loop idiom), then increments `gUnknown_030007D8` - the
+  counter `sub_80006A8`/`sub_80006F8` above poll/arm.
+- `sub_8000760` (ROM `0x08000760`): remaps 4 bits of the
+  `gUnknown_030007E0` input-flags halfword (`0x10`/`0x20`/`0x80`/`0x40`,
+  read fresh via the global each time - a cached local variable made gcc
+  insert a redundant register copy for the last comparison that the ROM
+  doesn't have) into a 4-bit index (`8`/`4`/`2`/`1` respectively) used to
+  look up `gStaticData_0816A810[idx]` - likely a D-pad-bits-to-angle or
+  similar remap table. The first bit-check compiles branchless (a
+  `rsbs`/`asrs` sign-extend trick turning "is this bit set" straight
+  into "0 or 8" without a conditional branch) purely from gcc's own
+  optimization of a plain `if (flags & 0x10) idx |= 8;` - no special
+  phrasing needed, it just happens to pick a different strategy for the
+  first check than the following three (which do branch).
+
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/graphics.c`,

@@ -9,7 +9,7 @@ struct irq_unknown1 {
 extern irq_handler_t* gUnknown_030009E8[5];
 extern irq_handler_t* gUnknown_03000A20[5];
 extern struct irq_unknown1 gUnknown_03000A60;
-extern irq_handler_t sub_8000720; // vblank handler?
+void sub_8000720(void); // vblank handler?
 void irq_empty_handler();
 extern u32 IntrMain_Buffer;
 
@@ -148,6 +148,55 @@ void sub_80006A8(void *arg0)
     } else {
         sub_0803A960();
     }
+}
+
+void sub_80006EC(void)
+{
+    gUnknown_030007DC = 0;
+}
+
+void sub_80006F8(u32 arg0)
+{
+    gUnknown_03000A5C = arg0;
+    gUnknown_03000A58 = gUnknown_030007D8 + arg0;
+    gUnknown_030007DC = 1;
+}
+
+extern u8 gUnknown_030007DD;
+extern void sub_8038B68(void);
+extern void sub_803AD78(void);
+
+void sub_8000720(void)
+{
+    s32 *p;
+    s32 i;
+
+    if (gUnknown_030007DD != 0) {
+        sub_8038B68();
+    }
+    p = gUnknown_03000A60.unknown;
+    i = 7;
+    do {
+        if (*p != 0) {
+            sub_803AD78();
+        }
+        p++;
+        i--;
+    } while (i >= 0);
+    gUnknown_030007D8++;
+}
+
+extern u16 gUnknown_030007E0;
+extern u8 gStaticData_0816A810[];
+
+u8 sub_8000760(void)
+{
+    u8 idx = 0;
+    if (gUnknown_030007E0 & 0x10) idx |= 8;
+    if (gUnknown_030007E0 & 0x20) idx |= 4;
+    if (gUnknown_030007E0 & 0x80) idx |= 2;
+    if (gUnknown_030007E0 & 0x40) idx |= 1;
+    return gStaticData_0816A810[idx];
 }
 
 __asm__(".align 2,0");
