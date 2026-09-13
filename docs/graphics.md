@@ -1505,3 +1505,15 @@ file and is immediately followed by `sub_80069E8` (already in
 deleted the split file and removed its `ldscript.txt` line. `oam_count.c`
 (holding `sub_800695C`) is still needed as its own file, since it's
 followed by `sub_800697C`'s ROM address, not `graphics.c`'s.
+
+Seventeenth matched function: `sub_8006920` (ROM `0x08006920`,
+immediately before `sub_800695C` - joined `src/oam_count.c` above it, no
+new split). A near-twin of `sub_800695C`: same 20-record, 4-byte-stride
+loop shape, but sums **bits 1 and 2** (not bit 0) of the byte at each
+record's `+4`, plus the same two bits from one more byte at `arg0+0x64`
+(a fixed field past the array, not part of the loop) - almost certainly
+a sibling "count how many records have flag X set" query using a
+different bit of the same per-record flags byte. Matched byte-exact on
+the second try - no register pins needed at all this time, just
+reordering two preheader statements (`total = 0;` before `p = arg0;`,
+matching the ROM's `movs r4,#0` before `adds r2,r5,#0`).

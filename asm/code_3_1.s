@@ -12679,37 +12679,3 @@ _080068D6:
 	pop {r1}
 	bx r1
 	.align 2, 0
-
-	thumb_func_start sub_8006920
-sub_8006920: @ 0x08006920
-	push {r4, r5, lr}
-	adds r5, r0, #0
-	movs r4, #0
-	adds r2, r5, #0
-	movs r3, #0x13
-_0800692A:
-	ldrb r0, [r2, #4]
-	lsls r1, r0, #0x1e
-	lsrs r1, r1, #0x1f
-	lsls r0, r0, #0x1d
-	lsrs r0, r0, #0x1f
-	adds r1, r1, r0
-	adds r4, r4, r1
-	adds r2, #4
-	subs r3, #1
-	cmp r3, #0
-	bge _0800692A
-	adds r0, r5, #0
-	adds r0, #0x64
-	ldrb r0, [r0]
-	lsls r1, r0, #0x1e
-	lsrs r1, r1, #0x1f
-	lsls r0, r0, #0x1d
-	lsrs r0, r0, #0x1f
-	adds r1, r1, r0
-	adds r4, r4, r1
-	adds r0, r4, #0
-	pop {r4, r5}
-	pop {r1}
-	bx r1
-	.align 2, 0
