@@ -743,6 +743,40 @@ runtime units via rounded division into a per-object array. Neither is
 vtable-dispatched via a direct-caller search (not yet checked against
 the raw-pointer search specifically).
 
+### A fourth vtable table, a third RAM-struct family, and a new `PlaySfx` sibling
+
+A further fork read four more previously-flagged targets, confirming
+three as vtable-dispatched and surfacing two genuinely new leads.
+**`sub_802B5B4`**/**`sub_802E9FC`** (entity-vtable slots at
+`gStaticData_087E4E70`/`gStaticData_087E5160`) are near-identical twins
+- byte-for-byte matching opening sequences that index a tile/grid
+structure via Q8.8 coordinates into a per-tile record, then branch on a
+stored-value match to compute screen-space output. Reads as
+**tile-relative rendering/collision-position resolution**, on-theme for
+the zone.
+
+**`sub_802DB2C`** is dispatched through a **fourth, previously-
+uncatalogued table** - `gStaticData_0817A840`, a plain 4-entry array of
+raw function pointers (matching the `menu_ui`/trigger-effect
+convention, not the `{0,ptr}` pairing), with neighboring scalar-only
+records (`gStaticData_0817A850`, `gStaticData_0817A7F8` - the latter
+reading as a lookup table of `{const, varying, tier}` triples). The
+function itself opens a **third RAM-struct family**:
+`gUnknown_030014BC`/`030014C8`/`030014CC` - distinct from both the
+`gUnknown_030012xx` struct tracked all session and the
+`gUnknown_030015xx` family found in `actor` earlier this round. It
+accumulates a clamped position delta, then dispatches on threshold
+values to call **`sub_80019F8`** - a genuinely new sibling to
+`PlaySfx`/`sub_80019A8`, sharing the same `gUnknown_030012BC`
+first-argument convention and an SFX-trigger call shape (id `0x3E8`,
+volume `0x100`). Three audio-trigger-shaped functions confirmed now,
+not just `PlaySfx` and its mute companion.
+
+**`sub_8034AA4`** (not vtable-dispatched) is just another instance of
+the by-now-familiar "refresh OAM + center text" pattern - more
+confirmation that most of this zone really is the known toolkit,
+punctuated by occasional genuinely new leads like the ones above.
+
 ## Subdividing `game_loop`
 
 `game_loop`'s 112.7 KB has been one undifferentiated bucket even after
