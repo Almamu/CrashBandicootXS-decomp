@@ -1031,6 +1031,48 @@ this document had already independently found and named elsewhere -
 further confirmation that the whole ROM's gameplay code shares a small,
 consistent toolkit rather than each subsystem reinventing its own.
 
+### A different dispatch style found in the core remainder: plain switch-on-type, not table-driven
+
+A second parallel fork read the next four biggest functions in
+`game_loop`'s still-unexplained core (212 functions, 24.3 KB at the
+time). None hit the entity vtable family via the raw-pointer search -
+consistent with a real, different pattern rather than more of the same
+tables:
+
+- **`sub_801283C`** (576 B) - itself a helper of the already-documented
+  `sub_80134B8` "bonus popup" action-table entry, so already indirectly
+  explained, just not itself table-tagged. Dispatches on a `self+8`
+  "type" field (values `7`/`9`/`0xB`/`0xE` seen) with **per-type
+  distance thresholds** checked against a sub-object's position
+  (`self+0x64`, the same field offset seen in `sub_800A178`). On a
+  proximity match, sets a flag and calls the `sub_803AD80` trampoline
+  with a fixed value `0x1A`. Reads as a **proximity-triggered indicator**
+  - show a hint icon when near a specific object type, distance varying
+  by type.
+- **`sub_8015DF8`** (484 B): dispatches on a `self+8` type (`2`/`3`/
+  default), calls the matched `sub_8000760` (`src/system/irq.c`), gates
+  on `gUnknown_0300082C`'s low 7 bits `==0` (a periodic ~128-frame
+  check - `gUnknown_0300082C` is the same counter the post-fade
+  investigation above also touches) **and** an input check
+  (`sub_8000E1C(2)`), then queues something via
+  `sub_8025BAC(gUnknown_030012E4, 28, 4, ...)`. Reads as a periodic,
+  input-gated trigger - every ~128 frames, only while a specific button
+  state holds.
+- **`sub_8019CE4`** (472 B): calls the `sub_803AD80` trampoline once,
+  then **dispatches through a 16-case jump table** on its own third
+  parameter (clamped `1`-`16`) - a message/hint-ID selector. Case 15
+  checks `gUnknown_030012C0` state before calling
+  `sub_8021EF4(0xFFFF, 0xA0, 0xA9, 0)`. Reads as a **"show message type
+  N" dispatcher**, 16 distinct message types.
+
+**The pattern across all three**: each dispatches on a small integer
+"type"/"kind"/"message ID" parameter via a plain jump table, not through
+a vtable or a `gStaticData_0816Bxxx`-style data table - a third dispatch
+idiom in this ROM's toolkit (alongside the `{0,ptr}`-pair vtables and
+the per-level data tables), used for smaller, more localized decisions
+(which hint to show, which proximity check applies) rather than
+per-object-type behavior or per-level configuration.
+
 ## Mapping the rest of the per-level descriptor region
 
 Switched from chasing individual functions to mapping the
@@ -1337,6 +1379,41 @@ Left here as a structural resolution, not a full read - the size alone
 (21 KB, ~9% of everything `graphics_loading`/`menu_ui`/`game_loop`
 combined have accounted for in per-level data) makes it worth a
 dedicated look if anyone continues this specific thread.
+
+### A family of "trigger effect type N" functions, and a second `PlaySfx`-like helper
+
+A third parallel fork picked up the rest of `graphics_loading`'s
+remainder (68 still-unread functions) and `sub_8022468`'s two requested
+siblings.
+
+**`sub_802107C`/`sub_802117C`** (256 B/260 B, consecutive in ROM) are
+**near-identical twins** - almost certainly a small family (a third,
+`sub_8021280` at 264 B right after, fits the same size/address pattern
+but wasn't individually confirmed). Each checks a specific bit of
+`gUnknown_030012C0+2` (bit 2 vs bit 3 - one bit per type); if set *and*
+`sub_8023278` (matched accessor, `+0xA7`) is false *and*
+`gUnknown_030012C0+0x8C==0`: plays a type-specific sound (`sub_801A878`,
+IDs `0xA` vs `9`) via `sub_80234E8`. If that top-level bit isn't set at
+all, it instead **spawns a full visual effect** - tags the object
+(`self+0x2D=6`), wires an animation-table pointer through
+`gUnknown_030012D0`, builds it via the same
+`sub_80087C0`/`sub_80087B4`/`sub_800872C` OAM trio seen throughout this
+document, and registers it via `sub_8008E94`. Falls back to a **shared**
+sound ID `0xC` when the type-specific path is muted/overridden. Reads
+as a **"trigger effect type N" family**, each entry gated by its own
+settings/accessibility-style bit - sound-only, full particle effect, or
+a shared fallback sound, depending on per-type flags.
+
+**`sub_802364C`** (8 B): a trivial wrapper, `sub_8022468(self, 2)` -
+confirms `sub_8022468`'s second parameter is a context/mode selector, as
+suspected. **`sub_8023658`**: calls `sub_8022468(self, 1)` then
+**`sub_80019A8(gUnknown_030012BC, 0x5D)`** - a *second*, distinct
+audio-triggering function alongside `PlaySfx`, sharing `PlaySfx`'s own
+first argument global (`gUnknown_030012BC`). Confirms the same "screen
+transition + paired sound cue" combo the fade-to-black investigation
+found, for a different context ID. `sub_80019A8` itself is a real,
+concrete lead if anyone wants to find out how it differs from `PlaySfx`
+- not yet read.
 
 ## Narrowing the GAX2 boundary
 
