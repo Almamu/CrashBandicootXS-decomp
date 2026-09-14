@@ -806,6 +806,33 @@ different field offsets**, not a fourth separate RAM family as the
 address alone might suggest. Also calls `sub_8000E1C`, the same input-
 check function `sub_8015DF8` used back in `game_loop`'s core.
 
+### Three more reads, zero new table families - the known structures are absorbing the remainder
+
+A further fork read three more previously-flagged targets. **All three
+reinforce or extend structures already found, rather than introducing
+new ones** - a good sign this zone's remaining unknowns are converging,
+not multiplying. **`sub_802B364`** (740 B, vtable-dispatched at an
+untraced slot of the already-labeled `gStaticData_087E4E54` record)
+manages two independent countdown timers (`gUnknown_0300148C`/
+`0300149C`, new symbols sitting only ~0x1C-0x2C bytes from the
+`gUnknown_030014BC`-family cluster `sub_802DB2C` used - very plausibly
+the *same* larger struct again) - a respawn/reset countdown, resetting
+fields and doing position math on expiry. **`sub_802E170`** (not
+vtable-dispatched) is a 31-case jump table paired with a **new
+stride-40 RAM table**, `gUnknown_030014D8`, fetching a position-offset
+pair per case - structurally close to the actor animation-frame system,
+but backed by a RAM table rather than a `gStaticData_` ROM one.
+
+**`sub_8033264`** is the clearest of the three: writes directly into
+`gUnknown_030015B4`/`B8`/`BC` - the exact family `sub_8032C0C` used two
+rounds ago - and calls **`GetAnimFrameBaseOffset`** (already matched,
+`src/graphics/actor_anim.c`). This is **hard confirmation that
+`gUnknown_030015xx` is a real, animation-system-wired object**, not
+just a coincidentally-similar camera computation - `sub_8033264` reads
+as its constructor/init step (packs scaled position args into the
+struct, reads an anim-part-instance, checks a frame-index bound before
+resetting a counter).
+
 ## Subdividing `game_loop`
 
 `game_loop`'s 112.7 KB has been one undifferentiated bucket even after
