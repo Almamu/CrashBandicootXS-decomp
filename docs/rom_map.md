@@ -47,7 +47,7 @@ taught this project to avoid. Treat this as the reading-level answer to
 | `audio_sfx` (SFX layer, distinct from GAX2) | 20.6 KB | 8.6% | medium - one anchor (`PlaySfx`), rest by contiguity |
 | `audio_gax2` (Shin'en GAX2 engine) | 14.1 KB | 5.9% | medium - narrowed this investigation, see `docs/audio.md` |
 | `hud` (icon/text widgets, score/percentage/stat counters) | 6.1 KB | 2.6% | high - 1.3 KB named landmarks plus ~4.8 KB stat-widget cluster (8 functions, all individually read this pass) |
-| `menu_ui`? (text-label/dialog-entry construction, tentative) | 9.1 KB | 3.8% | medium - one function read in full, 30 siblings inferred by shared call signature |
+| `menu_ui` (per-level text/dialog display, dispatch table confirmed) | 9.1 KB | 3.8% | high - one function read in full, 29/31 siblings confirmed as real dispatch-table entries in ROM data |
 | `fx`? (particle/trajectory queue, tentative) | 0.3 KB | 0.1% | low - two small functions read |
 | `system` | 4.2 KB | 1.8% | matched, or matched-caller-confirmed (`LZ77UnCompWrapper` etc.) |
 | `graphics` | 2.1 KB | 0.9% | matched |
@@ -385,10 +385,36 @@ Checked how far the second pattern extends: **31 of the cluster's 102
 functions** call `sub_803AD80` and/or `sub_8009ED0` together, totaling
 **9.1 KB - 56% of the whole 16.2 KB cluster**. That's a bigger single
 correction than either the `hud`/`fx` split or anything else found this
-session. Tentatively split out as its own `menu_ui` category (no
-callers found in the raw-asm call graph for the one function read in
-full - either invoked from an already-matched `src/*.c` file, or from a
-menu/dialog system not yet connected to anything else in this document).
+session. Split out as its own `menu_ui` category.
+
+### Found the dispatch table: it's a real function-pointer array, hiding inside the same per-level data family
+
+None of the 31 `menu_ui` functions have a single caller anywhere in the
+raw-asm call graph - every `bl` in the whole ROM was checked, zero hits.
+That's the signature of indirect (function-pointer) dispatch, not a
+gap in the analysis. Confirmed it directly: searched `baserom.gba` for
+each function's own address (thumb bit set) as a raw 4-byte
+little-endian value, and **29 of the 31 turned up as data**, packed
+almost contiguously at `0x0816C744`-`0x0816C7D8` (a couple of slots
+repeat the same function - shared behavior across table entries, same
+pattern the actor category vtables used) - a genuine **function-pointer
+dispatch table**, not a guess.
+
+The table sits **inside the exact same `0x0816Bxxx`-`0x0816Dxxx` region**
+this document already tied to `game_loop` (`gStaticData_0816C86C`) and
+to `sub_801E788`'s background-centering math
+(`gStaticData_0816C644`/`gStaticData_0816C674`) - and in `data/data.s`,
+it currently sits inside a still-unlabeled stretch between
+`gStaticData_0816C6A4` and `gStaticData_0816C814` (0x170 bytes, only
+partially covered by the confirmed 0x94-byte pointer run - the rest is
+still-unidentified neighboring data, quite possibly more fields of the
+same per-level record). This substantially upgrades what that whole
+data family actually is: not just scalar per-level *parameters*
+(offsets, thresholds) as `game_loop`'s investigation described it, but
+a **richer per-level descriptor that also selects a level-specific
+text/dialog display function** - one shared structure feeding
+`game_loop`, `graphics_loading`'s positioning math, and now `menu_ui`,
+not three unrelated systems that happen to reference nearby addresses.
 `graphics_loading` shrinks to `LoadGraphicsPackage` itself plus whatever
 of the remaining ~6.9 KB (including `sub_801E788`'s positioning family)
 is genuinely graphics-flavored - not individually re-verified beyond the
