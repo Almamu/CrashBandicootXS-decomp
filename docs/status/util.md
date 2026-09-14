@@ -7,15 +7,15 @@ helpers.
 
 - `src/util/math_util.c`: `sub_80008B4`, `sub_80008CC`, `sub_80008F0`,
   `sub_80008FC`, `sub_800090C`, `sub_8000924`, `sub_800093C`
-- `src/util/string_util.c`: `sub_800094C`, `sub_80009F4`
+- `src/util/string_util.c`: `itoa`, `sub_80009F4`
 - `src/util/printf_util.c`: `sub_8000AA8`, `sub_8000CA8`
-- `src/util/string_util2.c`: `sub_8000D68`, `sub_8000D80`, `sub_8000DAC`,
-  `sub_8000DE0`, `sub_8000DF8`
-- `src/util/rand_util.c`: `sub_8000E10`, `sub_8000E1C`, `sub_8000E4C`
-- `src/util/line_util.c`: `sub_8000E6C`
-- `src/util/time_util.c`: `sub_800106C`
-- `src/util/word_util.c`: `sub_80011F4`, `sub_8001214`
-- `src/util/line_util2.c`: `sub_8001254`
+- `src/util/string_util2.c`: `CountNonSpaceChars`, `strcat`, `sub_8000DAC`,
+  `strcpy`, `strlen`
+- `src/util/rand_util.c`: `srand`, `sub_8000E1C`, `rand`
+- `src/util/line_util.c`: `InitBresenhamLine`
+- `src/util/time_util.c`: `FormatCentiseconds`
+- `src/util/word_util.c`: `GetWordLength`, `sub_8001214`
+- `src/util/line_util2.c`: `StepBresenhamLine`
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.

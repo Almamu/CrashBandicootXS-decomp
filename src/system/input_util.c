@@ -1,6 +1,6 @@
 #include "core.h"
 
-/* Sits between sub_800106C (ROM 0x0800106C, in src/util/time_util.c) and
+/* Sits between FormatCentiseconds (ROM 0x0800106C, in src/util/time_util.c) and
  * LoadTaggedAsset (still raw in asm/code_3_1_5.s). */
 
 #if NON_MATCHING

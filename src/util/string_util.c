@@ -25,7 +25,7 @@ extern s32 sub_8000140(s32 value, s32 base, s32 *remainder);
  * own allocator onto r7 for `len` unpinned, which is what actually
  * keeps the r7 push/pop safe here (a *pinned* r7 never gets saved, see
  * memory; letting gcc pick r7 on its own always does). */
-s32 sub_800094C(s32 value, u8 *buffer, s32 base)
+s32 itoa(s32 value, u8 *buffer, s32 base)
 {
     register s32 v asm("r3");
     register u8 *buf asm("r6");
@@ -119,7 +119,7 @@ asm(".align 2, 0");
  *
  * The specifier check must stay a `switch` using `goto` to a single
  * shared call site (not `break`, which produces two separate physical
- * `bl sub_800094C` copies here rather than one shared one like the
+ * `bl itoa` copies here rather than one shared one like the
  * ROM has) - and the value/buffer-pointer/base arguments must each be
  * assigned to their own local *inside* every case (not referenced
  * directly at the shared call site) so gcc's cross-jump merging only
@@ -191,7 +191,7 @@ u8 *sub_80009F4(u8 *dest, u8 *fmt, s32 *valuePtr, u8 padChar,
             goto skipSub;
         }
 doCall:
-        digitCount = sub_800094C(v, bufp, base);
+        digitCount = itoa(v, bufp, base);
         width -= digitCount;
 skipSub:
         ;

@@ -26,6 +26,7 @@ Please see follow [these instructions](./INSTALL.md)
 
 - [docs/status/](./docs/status/) - **per-system matched/parked function status, the "Current state" section moved here**
 - [docs/workflow.md](./docs/workflow.md) - **the required per-function matching loop, must be followed for every function**
+- [docs/naming.md](./docs/naming.md) - **the function naming convention, must be followed whenever a function gets a real name**
 - [docs/audio.md](./docs/audio.md) - how the Shin'en GAX2 sound engine's data is laid out and rebuilt
 - [docs/graphics.md](./docs/graphics.md) - how graphics were extracted, and ongoing notes on the sprite/actor system
 - [docs/matching.md](./docs/matching.md) - byte-exact matching decompilation gotchas, and the per-function matching/parked log

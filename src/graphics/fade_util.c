@@ -1,6 +1,6 @@
 #include "core.h"
 
-/* Sits right after sub_8001254 (ROM 0x08001254, in src/util/line_util2.c)
+/* Sits right after StepBresenhamLine (ROM 0x08001254, in src/util/line_util2.c)
  * and before whatever's still raw in asm/code_3_1_7.s. */
 
 extern void sub_8000670(s32 arg0);

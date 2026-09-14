@@ -3,8 +3,8 @@
 
 s32 mem_heap_init(u32);
 extern void sub_8000518();                                    /* extern */
-extern void irq_disable();                                    /* extern */
-extern u32 irq_setup();                                  /* extern */
+extern void IrqDisable();                                    /* extern */
+extern u32 IrqSetup();                                  /* extern */
 extern void sub_8000620();                                    /* extern */
 extern s32 MainLoop();                                  /* extern */
 
@@ -17,7 +17,7 @@ s32 AgbMain(void) {
     REG_BLDY = 0x10;
     REG_DISPCNT = DISPCNT_MODE_0;
 
-    if (mem_heap_init(0x400) != 0 || irq_setup() != 0) {
+    if (mem_heap_init(0x400) != 0 || IrqSetup() != 0) {
         return -1;
     }
     
@@ -27,7 +27,7 @@ s32 AgbMain(void) {
         return -1;
     }
     
-    irq_disable();
+    IrqDisable();
     sub_8000518();
     
     return 0;

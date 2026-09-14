@@ -27,7 +27,18 @@
 # genuine mismatch.
 
 rename sub_8006BE4 FreeVramDmaQueue
-split 0x08000DF8 sub_8000DF8
+split 0x08000DF8 strlen
+rename sub_8000DE0 strcpy
+rename sub_8000D80 strcat
+rename sub_800094C itoa
+rename sub_8000E10 srand
+rename sub_8000E4C rand
+rename sub_80011C0 LoadBackgroundTileAndPalette
+rename sub_8000E6C InitBresenhamLine
+rename sub_8001254 StepBresenhamLine
+rename sub_800106C FormatCentiseconds
+rename sub_80011F4 GetWordLength
+rename sub_8000D68 CountNonSpaceChars
 
 # expected/legacy.s (commit 8b090ca, the very first commit - see
 # expected/README.md) predates commit 710cc9a's renaming pass entirely,
@@ -40,9 +51,9 @@ rename sub_8000274 mem_collect
 rename sub_80003DC mem_free_bytes
 rename sub_8000440 mem_alloc
 rename sub_80004AC mem_free
-rename sub_80005D0 irq_disable
-rename sub_80005DC irq_setup
-rename nullsub_10 irq_empty_handler
+rename sub_80005D0 IrqDisable
+rename sub_80005DC IrqSetup
+rename nullsub_10 IrqEmptyHandler
 
 # The original disassembly has a local label here (`_0800039C:`, likely
 # because something branches to it) but never recognized it as its own

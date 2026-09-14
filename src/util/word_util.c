@@ -1,6 +1,6 @@
 #include "core.h"
 
-/* Sits right after sub_80011C0 (ROM 0x080011C0, in src/system/asset_util.c)
+/* Sits right after LoadBackgroundTileAndPalette (ROM 0x080011C0, in src/system/asset_util.c)
  * and before whatever's still raw in asm/code_3_1_7.s. */
 
 /* Returns the length of the next "word" starting at `s`: the number of
@@ -8,7 +8,7 @@
  * including) the NUL terminator if no space is found first. Used by
  * the still-parked sub_8000EE4 (src/graphics/text_layout.c) to walk text one
  * token at a time. */
-s32 sub_80011F4(u8 *s)
+s32 GetWordLength(u8 *s)
 {
     s32 len = 0;
     u8 c;

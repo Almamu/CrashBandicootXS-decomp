@@ -1,8 +1,8 @@
 #include "core.h"
 #include "icon_manager.h"
 
-/* Sits right after sub_8000E6C (ROM 0x08000E6C, in src/util/line_util.c) and
- * before sub_800106C (still raw in asm/code_3_1_3.s). */
+/* Sits right after InitBresenhamLine (ROM 0x08000E6C, in src/util/line_util.c) and
+ * before FormatCentiseconds (still raw in asm/code_3_1_3.s). */
 
 #if NON_MATCHING
 /* NOT YET BYTE-MATCHING - see docs/matching.md, "Parked, not matched:
@@ -38,7 +38,7 @@ struct sub_8000EE4_box {
 
 extern void sub_8006A90(void *arg0);
 extern void sub_8006A48(void *arg0);
-extern s32 sub_80011F4(u8 *cursor);
+extern s32 GetWordLength(u8 *cursor);
 extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
 extern s32 sub_803AD84(void *arg0, u8 *arg1, s32 arg2, void *arg3);
 extern void sub_80006A8(void);
@@ -88,7 +88,7 @@ s32 sub_8000EE4(u8 *textParam, struct icon_manager *selfParam, struct sub_8000EE
 
 loopTop:
     token = cursor;
-    tokenLen = sub_80011F4(cursor);
+    tokenLen = GetWordLength(cursor);
     cursor = token + tokenLen;
 
     if (*token != '/') {

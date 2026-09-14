@@ -62,7 +62,7 @@ _08000F44:
 	str r3, [sp, #0x14]
 _08000F46:
 	mov r0, sl
-	bl sub_80011F4
+	bl GetWordLength
 	adds r7, r0, #0
 	mov r6, sl
 	adds r2, r6, r7

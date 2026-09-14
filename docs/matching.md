@@ -765,7 +765,7 @@ Next four matched functions, all in `src/system/irq.c` immediately after
   (`irq.c` already had `extern irq_handler_t sub_8000720;` as a
   placeholder for its address before this session; changed to a plain
   forward declaration `void sub_8000720(void);` now that it's a real
-  function, matching how `irq_empty_handler` is declared/referenced
+  function, matching how `IrqEmptyHandler` is declared/referenced
   elsewhere in this file). Conditionally calls `sub_8038B68()`, then
   calls `sub_803AD78()` for every nonzero slot in
   `gUnknown_03000A60.unknown[8]` (iterated via a pointer walking forward
@@ -867,7 +867,7 @@ Six more matched in the same file right after, all first-try:
   `src/graphics/graphics.c`), which fits `sub_80007EC` calling `sub_800090C` twice
   to get two BG2 affine scale/rotation parameters from an angle.
 
-Eighth matched function (after a second pass): `sub_800094C`, a custom
+Eighth matched function (after a second pass): `itoa`, a custom
 itoa (int-to-string, with a fast path for base 16 using bit-AND +
 arithmetic-shift instead of a division call, falling back to a
 `sub_8000140` divmod helper for other bases, then reversing the digits
@@ -914,9 +914,9 @@ pins reused across dead-variable boundaries, the r7-must-stay-unpinned
 rule, and address-reuse-via-named-pointers) rather than anything new.
 
 Ninth matched function: `sub_80009F4` (ROM `0x080009F4`, right after
-`sub_800094C`, same file). A printf-style single-conversion formatter:
+`itoa`, same file). A printf-style single-conversion formatter:
 parses an optional width from `*fmt` (digits immediately before the
-specifier), reads a `'d'`/`'x'`/`'X'` specifier, calls `sub_800094C` to
+specifier), reads a `'d'`/`'x'`/`'X'` specifier, calls `itoa` to
 render the referenced value into a stack buffer at the parsed base,
 left-pads with a caller-supplied fill character to reach the width,
 appends the number, and writes back how many format characters it
@@ -926,7 +926,7 @@ approach in `matching_decomp_register_pinning` memory:
 
 - A `switch` on the specifier had to use `goto` to a single shared call
   site (each case setting up its own value/buffer/base locals, then
-  jumping to one shared `sub_800094C(...)` call) rather than `break` -
+  jumping to one shared `itoa(...)` call) rather than `break` -
   agbcc's cross-jump merging only unifies a *literal-identical tail*
   working backward from the branch target until the first difference;
   with `break`, each case's call is a separate, unmerged copy, while the
@@ -960,7 +960,7 @@ functions were building toward. Lives in new file `src/util/printf_util.c`.
 Walks `fmt`, echoing literal characters, and dispatching `%`-conversions
 through a jump table: `%s` (string copy), `%c` (single byte from the
 arg array - every slot is 4 bytes regardless of the value's real size),
-`%d`/`%x`/`%X` (via `sub_800094C`), `%<digit>...` (space-padded width,
+`%d`/`%x`/`%X` (via `itoa`), `%<digit>...` (space-padded width,
 via `sub_80009F4`), and `%0...` (zero-padded width, same). Args are a
 raw `u32 *` array, not real varargs.
 
@@ -1007,7 +1007,7 @@ forwarding straight to `sub_8000AA8` with a pointer to the first
 vararg. Matched first-try using this toolchain's real `<stdarg.h>`
 (`va_list`/`va_start`/`va_end`, backed by `__builtin_next_arg`) - no
 project code had used variadics before this. Needed the same trailing
-`asm(".align 2, 0")` fix as `sub_800094C` for the padding byte after it.
+`asm(".align 2, 0")` fix as `itoa` for the padding byte after it.
 
 **Parked, not matched: `sub_8000CBC`** (ROM `0x08000CBC`, right after `sub_8000CA8`, same file).
 A case-insensitive `strstr`: `u8 *sub_8000CBC(u8 *haystack0, u8 *needle,
@@ -1067,22 +1067,22 @@ a clean `make compare`); `make NON_MATCHING=1 crashbandicootxs.gba`
 compiles this C version in instead (verified this session to compile
 and link cleanly with no duplicate-symbol errors).
 
-Twelfth matched function: `sub_8000D68` (ROM `0x08000D68`, right after
+Twelfth matched function: `CountNonSpaceChars` (ROM `0x08000D68`, right after
 the still-parked `sub_8000CBC`) - counts the non-space characters in a
-NUL-terminated string (`s32 sub_8000D68(u8 *s)`; spaces are skipped,
+NUL-terminated string (`s32 CountNonSpaceChars(u8 *s)`; spaces are skipped,
 not counted, everything else including walking off the terminator is).
 Matched first-try structurally. Needed the same trailing
-`asm(".align 2, 0")` fix as `sub_800094C`/`sub_8000CA8` - the raw
+`asm(".align 2, 0")` fix as `itoa`/`sub_8000CA8` - the raw
 function is 22 bytes (11 instructions) plus a 2-byte pad NOP to reach
 the next function's 4-byte-aligned start, and without the explicit
 alignment directive agbcc doesn't emit that trailing NOP.
 
 Extracting this one function required a second split of the same kind
 as `sub_80007EC`'s: it sits between `sub_8000CBC` (parked, still raw in
-`asm/code_3_1_2.s`) and `sub_8000D80` onward, so `asm/code_3_1_2.s` was
+`asm/code_3_1_2.s`) and `strcat` onward, so `asm/code_3_1_2.s` was
 trimmed to end right after `sub_8000CBC`'s `.endif`, everything from
-`sub_8000D80` on moved to a new `asm/code_3_1_3.s` (same three-line
-header), and `sub_8000D68` itself lives in a new `src/util/string_util2.c`
+`strcat` on moved to a new `asm/code_3_1_3.s` (same three-line
+header), and `CountNonSpaceChars` itself lives in a new `src/util/string_util2.c`
 (not `string_util.c` - that object already links *before*
 `printf_util.o`/`code_3_1_2.o` in `ldscript.txt`, which would put this
 function's code at the wrong address; a fresh translation unit was the
@@ -1093,9 +1093,9 @@ only way to get its object linked exactly between `code_3_1_2.o` and
 `sub_8000CBC`'s parked toggle still links cleanly around the new
 split).
 
-Thirteenth matched function: `sub_8000D80` (ROM `0x08000D80`, right
-after `sub_8000D68`, same file) - `strcat`: appends `src` to the end of
-`dst` in place and NUL-terminates the result (`void sub_8000D80(u8
+Thirteenth matched function: `strcat` (ROM `0x08000D80`, right
+after `CountNonSpaceChars`, same file) - `strcat`: appends `src` to the end of
+`dst` in place and NUL-terminates the result (`void strcat(u8
 *dst, u8 *src)`). The ROM finds the end of `dst` via an *index* rather
 than a walked pointer (`p[i]`, incrementing `i`, with `p` fixed), then
 converts to a pointer once (`p + i`) for the copy loop - and critically
@@ -1110,7 +1110,7 @@ ROM. Needed the same trailing `asm(".align 2, 0")` fix as the others in
 this file.
 
 Fourteenth matched function: `sub_8000DAC` (ROM `0x08000DAC`, right
-after `sub_8000D80`, same file) - `strncpy`-like: copies at most `n`
+after `strcat`, same file) - `strncpy`-like: copies at most `n`
 bytes from `src` into `dst` (`void sub_8000DAC(u8 *dst, u8 *src, s32
 n)`), stopping early at `src`'s NUL terminator, and NUL-terminates
 `dst` only if the copy stopped early (fewer than `n` bytes actually
@@ -1120,30 +1120,30 @@ aligned already); the ROM's `-1` sentinel (computed via `movs r4, #1;
 rsbs r4, r4, #0` since Thumb has no negative-immediate `mov`) shows up
 naturally from writing the loop bound as a plain `n != -1` compare.
 
-Fifteenth and sixteenth matched functions, both first-try: `sub_8000DE0`
+Fifteenth and sixteenth matched functions, both first-try: `strcpy`
 (ROM `0x08000DE0`, right after `sub_8000DAC`) - a plain `strcpy` (`void
-sub_8000DE0(u8 *dst, u8 *src)`) - and `sub_8000DF8` (ROM `0x08000DF8`,
-right after it) - a plain `strlen` (`s32 sub_8000DF8(u8 *s)`, the same
-"walk an index, not a pointer" shape as `sub_8000D68`'s search loop).
-`sub_8000DF8` had no `thumb_func_start` label of its own in the original
+strcpy(u8 *dst, u8 *src)`) - and `strlen` (ROM `0x08000DF8`,
+right after it) - a plain `strlen` (`s32 strlen(u8 *s)`, the same
+"walk an index, not a pointer" shape as `CountNonSpaceChars`'s search loop).
+`strlen` had no `thumb_func_start` label of its own in the original
 raw `asm/code_3_1_3.s` - it just ran on as unlabeled bytes right after
-`sub_8000DE0`'s trailing pad NOP - confirmed via a direct
+`strcpy`'s trailing pad NOP - confirmed via a direct
 `baserom.gba` objdump that it's real code (not data), likely just never
 called via `bl` from anything disassembled yet so whatever tool
 originally produced this file didn't detect the boundary. Gave it the
-`sub_8000DF8` name (its ROM address) like every other function here.
+`strlen` name (its ROM address) like every other function here.
 
 Seventeenth through nineteenth matched functions, all first-try, in new
-file `src/util/rand_util.c` (RNG, doesn't fit any existing file): `sub_8000E10`
-(ROM `0x08000E10`, right after `sub_8000DF8`) seeds a global LCG state
-(`gUnknown_030007E4` in IWRAM) with its argument; `sub_8000E4C` (ROM
+file `src/util/rand_util.c` (RNG, doesn't fit any existing file): `srand`
+(ROM `0x08000E10`, right after `strlen`) seeds a global LCG state
+(`gUnknown_030007E4` in IWRAM) with its argument; `rand` (ROM
 `0x08000E4C`) advances that LCG (`seed = seed * 0x41C64E6D + 0x3039` -
 the standard C library constants) and returns 16 bits from the middle
 of the new seed (`(u16)(seed >> 4)`, i.e. the ROM's `lsls #0xc; lsrs
 #0x10` pair - avoids the LCG's low bits, which are the least random);
 `sub_8000E1C` (ROM `0x08000E1C`, sitting *between* the two, despite
-being logically "based on" `sub_8000E4C`) does the same seed advance
-inline (not by calling `sub_8000E4C` - the ROM has two physical copies
+being logically "based on" `rand`) does the same seed advance
+inline (not by calling `rand` - the ROM has two physical copies
 of these 8 instructions) and forwards the result plus its own `s32
 max` argument to `sub_803AF1C` (not yet matched or confidently typed
 beyond this call site's `u16, s32 -> u16` shape) - likely a
@@ -1158,8 +1158,8 @@ Removed these three functions' raw bytes directly from the existing
 entirely inside one already-open file) and added one `ldscript.txt`
 line for `rand_util.o` between `string_util2.o` and `code_3_1_3.o`.
 
-Twentieth matched function: `sub_8000E6C` (ROM `0x08000E6C`, right after
-`sub_8000E4C`) - Bresenham-line setup, in new file `src/util/line_util.c`
+Twentieth matched function: `InitBresenhamLine` (ROM `0x08000E6C`, right after
+`rand`) - Bresenham-line setup, in new file `src/util/line_util.c`
 (doesn't fit any existing file). Given a `struct bresenham_line *` with
 `x0`/`y0`/`x1`/`y1` already filled in, computes `dx`/`dy`, records each
 axis's step direction (`sx`/`sy`, `+1`/`-1`/`0`) and the absolute
@@ -1173,9 +1173,9 @@ function's raw bytes directly from `asm/code_3_1_3.s` (no further
 splitting needed) and added one more `ldscript.txt` line
 (`line_util.o`, between `rand_util.o` and `code_3_1_3.o`).
 
-**Parked, not matched: `sub_8000EE4`** (ROM `0x08000EE4`, right after `sub_8000E6C`), in new
+**Parked, not matched: `sub_8000EE4`** (ROM `0x08000EE4`, right after `InitBresenhamLine`), in new
 file `src/graphics/text_layout.c`. A text-layout/word-wrap renderer: walks a
-NUL-terminated string one "token" at a time (`sub_80011F4` returns each
+NUL-terminated string one "token" at a time (`GetWordLength` returns each
 token's byte length - looks like it splits on word boundaries), drawing
 each token through the OAM-icon system (`sub_803AD84`, returning the
 token's pixel width; a second call at a different record slot appears
@@ -1271,10 +1271,10 @@ via a clean `make compare`); `make NON_MATCHING=1 crashbandicootxs.gba`
 compiles this C version in instead (verified this session to compile
 and link cleanly with no duplicate-symbol errors).
 
-Twenty-first matched function: `sub_800106C` (ROM `0x0800106C`, right
+Twenty-first matched function: `FormatCentiseconds` (ROM `0x0800106C`, right
 after the still-parked `sub_8000EE4`), in new file `src/util/time_util.c` -
 formats a centisecond count as `"MM:SS.X0"` into a 9-byte buffer (`void
-sub_800106C(s32 value, u8 *buf)`); only one fractional digit is
+FormatCentiseconds(s32 value, u8 *buf)`); only one fractional digit is
 actually computed (`value % 10`) - the other is always `'0'`, so the
 displayed precision is really just tenths of a second despite the
 two-digit-looking field. Built on two not-yet-matched helpers,
@@ -1288,7 +1288,7 @@ the same trailing `asm(".align 2, 0")` fix as the others in this
 session.
 
 Extracting this one function required the same kind of split as
-`sub_8000CBC`'s and `sub_8000D68`'s: `asm/code_3_1_3.s` was trimmed to
+`sub_8000CBC`'s and `CountNonSpaceChars`'s: `asm/code_3_1_3.s` was trimmed to
 end right after `sub_8000EE4`'s `.endif`, and everything from
 `sub_80010E0` on moved to a new `asm/code_3_1_4.s`, with
 `src/util/time_util.c`'s object linked between them in `ldscript.txt`.
@@ -1296,7 +1296,7 @@ end right after `sub_8000EE4`'s `.endif`, and everything from
 notes just below - once it turned out to hold only one function that
 also needed parking.)
 
-**Parked, not matched: `sub_80010E0`** (ROM `0x080010E0`, right after `sub_800106C`), in new
+**Parked, not matched: `sub_80010E0`** (ROM `0x080010E0`, right after `FormatCentiseconds`), in new
 file `src/system/input_util.c`. Polls input (the same `sub_80006A8`-then-
 `sub_80007AC` VBlank-wait-and-update-keys pair used elsewhere) until a
 button matching `mask`'s bit 0 (confirm) or bit 3 (cancel) is newly
@@ -1365,16 +1365,16 @@ Extracting `LoadTaggedAsset` uncovered a genuine ordering bug from
 parking `sub_80010E0` earlier this session: that function's raw bytes
 (guarded `.if NON_MATCHING == 0`, so *included* in the default build)
 had ended up sharing one `asm/code_3_1_5.s` file with everything after
-it, including `LoadTaggedAsset` and `sub_80011C0` onward - fine as long
+it, including `LoadTaggedAsset` and `LoadBackgroundTileAndPalette` onward - fine as long
 as `LoadTaggedAsset` stayed raw too, but once it moved to C in
 `asset_util.o`, the linker had no way to slot that object *between*
-`sub_80010E0`'s raw bytes and `sub_80011C0`'s (both still in the same
+`sub_80010E0`'s raw bytes and `LoadBackgroundTileAndPalette`'s (both still in the same
 `code_3_1_5.o`), producing a build that linked and passed size checks
 but put `LoadTaggedAsset` at the wrong address (silently breaking every
 call to it - caught via a direct `cmp -l`/objdump diff showing a `bl`
 target pointing at `sub_80010E0`'s address instead). Fixed by splitting
 `asm/code_3_1_5.s` again, right after `sub_80010E0`'s `.endif`, into
-itself plus a new `asm/code_3_1_6.s` (`sub_80011C0` onward), with
+itself plus a new `asm/code_3_1_6.s` (`LoadBackgroundTileAndPalette` onward), with
 `asset_util.o` linked between them. **Lesson**: when a parked function's
 raw-bytes file also holds *later, still-to-be-matched* functions,
 extracting one of those later functions to C always needs its own
@@ -1382,15 +1382,15 @@ split at that exact boundary - the parked function's raw bytes can
 never end up sharing an object with something that no longer sits
 immediately next to it in the final link.
 
-Twenty-third matched function: `sub_80011C0` (ROM `0x080011C0`, right
+Twenty-third matched function: `LoadBackgroundTileAndPalette` (ROM `0x080011C0`, right
 after `LoadTaggedAsset`), also in `src/system/asset_util.c` - loads one
 background's tile/tileset data (the tagged asset at `asset + 0x200`,
 via `LoadTaggedAsset`) into VRAM at `0x06000000`, then DMAs the first
 `0x200` bytes of `asset` itself (a raw 256-halfword palette) straight
 into palette RAM at `0x05000000`. Matched first-try.
 
-Twenty-fourth matched function: `sub_80011F4` (ROM `0x080011F4`, right
-after `sub_80011C0`), in new file `src/util/word_util.c` - returns the
+Twenty-fourth matched function: `GetWordLength` (ROM `0x080011F4`, right
+after `LoadBackgroundTileAndPalette`), in new file `src/util/word_util.c` - returns the
 length of the next "word" starting at `s`: the count of characters up
 to and including the first space, or up to (but not including) the NUL
 terminator if no space comes first. This is exactly what the still-
@@ -1400,12 +1400,12 @@ the ROM's one `bx lr`) rather than three separate `return` statements,
 which otherwise compile to three separate epilogues.
 
 Extracting this one function needed the same kind of split as before:
-`asm/code_3_1_6.s` (which held only `sub_80011F4`) was trimmed to
+`asm/code_3_1_6.s` (which held only `GetWordLength`) was trimmed to
 nothing and removed, its ldscript slot going to `word_util.o`, with
 everything from `sub_8001214` on moved to a new `asm/code_3_1_7.s`.
 
 Twenty-fifth matched function: `sub_8001214` (ROM `0x08001214`, right
-after `sub_80011F4`), also in `src/util/word_util.c` - a thin wrapper around
+after `GetWordLength`), also in `src/util/word_util.c` - a thin wrapper around
 the still-parked `sub_8000EE4`: stashes one field from its `params`
 struct into the render-target object's own `field_118`, computes a
 line-count limit (`params->field_c / self->field_11c`), then forwards
@@ -1425,15 +1425,15 @@ to get the ROM's exact register letters for the address/value pair
 constant plus 4 for the `field_11c` offset instead of recomputing it
 from scratch, incidentally also matching the ROM there).
 
-Twenty-sixth matched function: `sub_8001254` (ROM `0x08001254`, right
+Twenty-sixth matched function: `StepBresenhamLine` (ROM `0x08001254`, right
 after `sub_8001214`), in new file `src/util/line_util2.c` - advances a
-Bresenham line (set up by `sub_8000E6C`, `src/util/line_util.c`) by one
+Bresenham line (set up by `InitBresenhamLine`, `src/util/line_util.c`) by one
 step: the "driving" axis (`x0` if `flag` is set, `y0` otherwise) always
 advances by its sign; the other axis advances only when the
 accumulated error term (`field_10`) is positive, in which case the
 error term is corrected by `field_18` instead of `field_14`. Kept in
 its own file (redefining the same `struct bresenham_line` locally
-rather than sharing `sub_8000E6C`'s) purely because `line_util.o`
+rather than sharing `InitBresenhamLine`'s) purely because `line_util.o`
 already links much earlier in `ldscript.txt` and this function's
 address requires it to come after `word_util.o` instead. Two things
 needed fixing versus a first attempt that seemed to match on casual
@@ -1449,7 +1449,7 @@ produced an inverted branch (`ble`/fallthrough-swapped) that still
 byte-for-byte. Needed the usual trailing `asm(".align 2, 0")` fix.
 
 Twenty-seventh matched function: `sub_80012AC` (ROM `0x080012AC`, right
-after `sub_8001254`), in new file `src/graphics/fade_util.c` - a per-frame
+after `StepBresenhamLine`), in new file `src/graphics/fade_util.c` - a per-frame
 screen-brightness fade tick. Every `gUnknown_030007E8.field_0` frames,
 writes the next step to `BLDY` (`0x04000054`), counting up or down
 depending on `field_8`'s top bit (fade in vs. out); after 17 steps (a
@@ -1565,7 +1565,7 @@ edit below):
   exhausting plain-C rephrasing, per the entries above), so the fix for
   "this looks like unexplained magic" is documentation, not removal.
 
-### Second cleanup pass (after sub_8000D68 through sub_80013FC)
+### Second cleanup pass (after CountNonSpaceChars through sub_80013FC)
 
 Another readability pass over everything matched or parked since the
 previous cleanup, again re-checking both `make compare` and
@@ -1585,7 +1585,7 @@ previous cleanup, again re-checking both `make compare` and
   - `struct dma_regs` (`src/graphics/graphics.c`'s local `{ vu32 src, dst, cnt;
     }`) moved to `include/gba/dma_macros.h` (the header that already
     holds every other DMA-related macro) and is now shared by
-    `src/system/asset_util.c`'s `LoadTaggedAsset`/`sub_80011C0` instead of each
+    `src/system/asset_util.c`'s `LoadTaggedAsset`/`LoadBackgroundTileAndPalette` instead of each
     doing raw `vu32 *` + manual `[0]`/`[1]`/`[2]` indexing.
   - `struct bresenham_line` (independently declared, identically, in
     both `src/util/line_util.c` and `src/util/line_util2.c` purely because the

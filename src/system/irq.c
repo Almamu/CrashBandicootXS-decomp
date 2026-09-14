@@ -10,13 +10,13 @@ extern irq_handler_t* gUnknown_030009E8[5];
 extern irq_handler_t* gUnknown_03000A20[5];
 extern struct irq_unknown1 gUnknown_03000A60;
 void sub_8000720(void); // vblank handler?
-void irq_empty_handler();
+void IrqEmptyHandler();
 extern u32 IntrMain_Buffer;
 
 // TODO: PROPERLY UNDERSTAND WHAT THIS FUNCTION IS USED FOR, MIGHT BE A CALLBACK INIT FUNCTION FOR SOME TYPE OF MESSAGE
 // irq_handler_clear_index maybe?
 void sub_8000544(s32 interruptIndex) {
-    gUnknown_030009E8[interruptIndex] = &irq_empty_handler;
+    gUnknown_030009E8[interruptIndex] = &IrqEmptyHandler;
 }
 
 // TODO: PROPERLY NAME THIS FUNCTION, SEEMS TO BE DISABLING SPECIFIC INTERRUPT HANDLING
@@ -31,7 +31,7 @@ void sub_8000558(s32 interruptIndex) {
         REG_IME = previousIMEvalue; // bring back previous IME status
     }
     
-    gUnknown_03000A20[interruptIndex] = &irq_empty_handler;
+    gUnknown_03000A20[interruptIndex] = &IrqEmptyHandler;
 }
 
 // TODO: PROPERLY NAME THIS FUNCTION
@@ -43,13 +43,13 @@ void sub_80005A0(s32 interruptIndex, irq_handler_t* fn) {
 }
 
 
-void irq_disable(void) {
+void IrqDisable(void) {
     REG_IME = 0;
 }
 
-u32 irq_setup() {
+u32 IrqSetup() {
     u32* intrbuffer = &IntrMain_Buffer;
-    irq_handler_t* fn = &irq_empty_handler;
+    irq_handler_t* fn = &IrqEmptyHandler;
     irq_handler_t** dst1 = &gUnknown_03000A20;
     irq_handler_t** dst2 = &gUnknown_030009E8;
     s32 count;
@@ -65,7 +65,7 @@ u32 irq_setup() {
     return 0;
 }
 
-void irq_empty_handler() {}
+void IrqEmptyHandler() {}
 
 __asm__(".align 2,0");
 

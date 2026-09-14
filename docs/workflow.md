@@ -15,6 +15,10 @@ incomplete pass and should be finished before moving on.
    should produce the same logic. Use whatever's already been reversed
    about neighboring functions/globals (structs, named constants,
    register-macro headers) rather than starting from raw offsets again.
+   If you're confident enough in what it does to give it a real name
+   instead of leaving it `sub_XXXXXXXX`, see
+   [docs/naming.md](./naming.md) for the convention (and when *not* to
+   name it yet).
 2. Compile just that translation unit with the project's real compiler
    and compare the output instruction-by-instruction against the
    original disassembly (`arm-none-eabi-cpp` + `tools/agbcc/bin/agbcc`

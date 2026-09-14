@@ -17190,7 +17190,7 @@ sub_800EAFC: @ 0x0800EAFC
 	ldrb r0, [r5]
 	cmp r0, #9
 	bne _0800EB48
-	bl sub_8000E4C
+	bl rand
 	lsls r0, r0, #0x10
 	lsrs r0, r0, #0x18
 	adds r1, r0, #0
@@ -21910,7 +21910,7 @@ sub_8010EAC: @ 0x08010EAC
 	strh r0, [r5, #0x3c]
 	cmp r4, #0
 	beq _08010F1C
-	bl sub_8000E4C
+	bl rand
 	lsls r0, r0, #0x10
 	lsrs r2, r0, #0x10
 	movs r1, #1
@@ -22643,7 +22643,7 @@ sub_8011448: @ 0x08011448
 	bl PlaySfx
 	cmp r4, #0
 	beq _080114B4
-	bl sub_8000E4C
+	bl rand
 	lsls r0, r0, #0x10
 	lsrs r2, r0, #0x10
 	movs r1, #1
@@ -45472,14 +45472,14 @@ _0801C794:
 	adds r6, r7, #0
 	adds r6, #0x71
 	adds r1, r6, #0
-	bl sub_800106C
+	bl FormatCentiseconds
 	mov r1, sb
 	ldr r0, [r1]
 	lsls r0, r0, #0x10
 	lsrs r0, r0, #0x13
 	adds r1, r7, #0
 	adds r1, #0x68
-	bl sub_800106C
+	bl FormatCentiseconds
 	ldr r4, [r7, #0x54]
 	movs r2, #0
 	mov r8, r2
@@ -45566,7 +45566,7 @@ _0801C878:
 	bhi _0801C8EA
 	adds r0, r2, #0
 	adds r1, r6, #0
-	bl sub_800106C
+	bl FormatCentiseconds
 	movs r0, #0x1c
 	ldr r1, [sp, #4]
 	str r0, [r1]
@@ -45616,7 +45616,7 @@ _0801C8EA:
 	bhi _0801C95A
 	adds r0, r3, #0
 	adds r1, r6, #0
-	bl sub_800106C
+	bl FormatCentiseconds
 	movs r0, #0x1c
 	ldr r3, [sp, #4]
 	str r0, [r3]
@@ -49053,7 +49053,7 @@ _0801E442:
 	beq _0801E458
 _0801E452:
 	adds r0, r4, #0
-	bl sub_8001254
+	bl StepBresenhamLine
 _0801E458:
 	subs r5, #1
 	cmp r5, #0
@@ -49094,7 +49094,7 @@ sub_801E480: @ 0x0801E480
 	beq _0801E4C4
 _0801E494:
 	adds r0, r4, #0
-	bl sub_8000E6C
+	bl InitBresenhamLine
 	adds r0, r4, #0
 	adds r0, #0x24
 	ldrb r0, [r0]

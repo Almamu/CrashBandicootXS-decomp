@@ -51,7 +51,7 @@ extern void sub_80006A8(void);
  * `asset + 0x200`) into VRAM at `0x06000000`, then DMAs the first 0x200
  * bytes of `asset` (a raw palette, 256 halfwords) straight into palette
  * RAM at `0x05000000`. */
-void sub_80011C0(void *asset)
+void LoadBackgroundTileAndPalette(void *asset)
 {
     struct dma_regs *dma;
     u32 val;

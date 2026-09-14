@@ -10,7 +10,7 @@
 /* Counts the non-space characters in a NUL-terminated string (spaces
  * are skipped, not counted; every other byte, including the
  * terminator's, is). */
-s32 sub_8000D68(u8 *s)
+s32 CountNonSpaceChars(u8 *s)
 {
     s32 count = 0;
     u8 c;
@@ -35,7 +35,7 @@ asm(".align 2, 0");
  * dead and reuses it, rather than writing the sum back into `p`'s r3)
  * used for the rest of the copy loop. All plain scratch here (leaf
  * function, no calls). */
-void sub_8000D80(u8 *dst, u8 *src)
+void strcat(u8 *dst, u8 *src)
 {
     register u8 *p asm("r3");
     register s32 i asm("r2");
@@ -89,7 +89,7 @@ void sub_8000DAC(u8 *dst, u8 *src, s32 n)
 }
 
 /* strcpy. */
-void sub_8000DE0(u8 *dst, u8 *src)
+void strcpy(u8 *dst, u8 *src)
 {
     u8 *p = dst;
     u8 c;
@@ -107,11 +107,11 @@ asm(".align 2, 0");
 /* strlen. Had no thumb_func_start label of its own in the original raw
  * asm/code_3_1_3.s (unlike every other function extracted so far) -
  * confirmed via a direct baserom.gba objdump that it's real code at
- * ROM 0x08000DF8, immediately after sub_8000DE0's own trailing pad NOP,
+ * ROM 0x08000DF8, immediately after strcpy's own trailing pad NOP,
  * not data or padding; likely just never called via `bl` from anything
  * disassembled yet, so whatever tool originally split this file didn't
  * detect a boundary here. */
-s32 sub_8000DF8(u8 *s)
+s32 strlen(u8 *s)
 {
     u8 *p = s;
     s32 i = 0;

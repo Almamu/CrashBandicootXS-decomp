@@ -9,7 +9,7 @@ extern s32 sub_8037E54(s32 value, s32 divisor);
 /* Formats `value` (in centiseconds) as "MM:SS.X0" into `buf` (9 bytes,
  * NUL-terminated) - only one fractional digit is actually computed
  * (`value % 10`); the other is always '0'. */
-void sub_800106C(s32 value, u8 *buf)
+void FormatCentiseconds(s32 value, u8 *buf)
 {
     s32 q1, q2, secPart;
 
