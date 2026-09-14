@@ -684,7 +684,7 @@ instead of one blob:
 | **Undifferentiated core** | 48.2 KB | 312 | Reachable from the confirmed dispatch chain (`sub_801C96C` etc.), but references neither shared data family - the single biggest *remaining* unknown in the whole ROM. Purpose per-function still unread. |
 | **Level-parameterized logic** | 31.3 KB | 67 | Reachable from the dispatch chain *and* reads the per-level descriptor family (`gStaticData_0816Bxxx`-`0816Dxxx`) - game logic whose behavior varies by which level is loaded. |
 | **Entity/object spawn (in-loop)** | 4.8 KB | 50 | Reachable from the dispatch chain *and* references the 93-entry placeable-object family (`gStaticData_087Exxx`) - spawn/construct calls made as part of the main loop. |
-| **`UpdateGameFrame`-`MainLoop` cluster** | 17.1 KB | ~101 | A *separate* zone (`0x080225A0`-`0x08026EEC`) with 46 direct, non-hub links back to `UpdateGameFrame` - not yet cross-checked against either data family the way the main zone was. |
+| **`UpdateGameFrame`-`MainLoop` cluster** | 18.3 KB | 259 | Cross-checked below - total zone size revised up from the original ~17.1 KB/~101 connectivity-only estimate once the whole zone was actually counted; 65% is one dominant connected component, the same signature every other confirmed subsystem here shows. |
 | **Standalone entity constructors** | 1.0 KB | 39 | Reference the entity family but aren't reachable from the dispatch chain - presumably called from elsewhere (another vtable, or matched `src/*.c`). |
 | **Standalone level-config readers** | 1.3 KB | 13 | Same story, for the level-config family. |
 | **Unidentified** | 9.3 KB | 325 | No landmark reachability, no data-family signature - genuinely uncharacterized. |
@@ -927,6 +927,48 @@ regardless of which bucket they fell in (`sub_801AB98`, `sub_800B8DC`,
 distinguishing signature found yet - the next concrete step is more of
 the same: pick the next-biggest unread function, read it, check whether
 it's vtable-dispatched or data-family-tagged, fold the result back in.
+
+### Cross-checked the `UpdateGameFrame`-`MainLoop` cluster: same signature, not an island
+
+A parallel fork gave this separate 17.1 KB (now revised to 18.3 KB once
+properly recounted - the original figure was the connectivity-only
+dominant component, not the whole zone) sub-bucket the same treatment
+the main 94.4 KB zone already got, since it had only ever been
+evidenced by "46 direct links back to `UpdateGameFrame`," never
+cross-checked against either data family.
+
+**Full zone**: 259 functions, 18,764 bytes - bigger than previously
+estimated. **Data-family tagging is thin**: only 8 functions reference
+`gStaticData_087E` and 11 reference `gStaticData_0816[B-D]` directly -
+19/259 (~7%), much lighter than the main zone's coverage.
+**Vtable-dispatched**: 21 functions have their own address embedded as
+a raw pointer inside the entity-vtable family - confirmed entity
+behavior slots live in this address range too, not confined to the
+main zone. **Connectivity**: a dominant component of 128/259 functions
+(49% by count, **65% of the zone's bytes**) - the same "one big
+connected system" signature every other confirmed subsystem in this
+document shows, just somewhat weaker than the main zone's 87%.
+
+Read two functions: **`sub_80255D4`** (704 B) DMA-writes to OBJ palette
+RAM and a BG window register, then iterates a small count-prefixed
+array touching `gUnknown_030012E4` - the same global `sub_8015DF8`'s
+periodic input-gated check (documented above) also uses. Reads as a
+per-frame visible-object/window list processor. **`sub_8024F24`**
+(408 B) is a linear ID→offset lookup scanning fields starting at
+`self+0x1020` against a parameter - implying `self` is a large
+allocated struct, very plausibly `gUnknown_030012BC` itself (the
+8340-byte `PlaySfx` channel-state object `sub_8022230` allocates,
+given the offset comfortably fits inside that allocation). Reads as
+"given a sound/channel ID, find its slot" - plausibly infrastructure
+`PlaySfx`/`sub_80019A8` build on.
+
+**Net conclusion: this cluster is not a separate island.** It's cut
+from the same cloth as the main zone - same connectivity signature,
+confirmed entity-vtable slots, the same hot globals
+(`gUnknown_030012E4`, likely `gUnknown_030012BC`) - just less densely
+tagged by the two specific data-family searches used elsewhere. No new
+table or vtable family found here; two more concrete ties into
+already-documented infrastructure instead.
 
 ### Continuing into the remainder: one cross-zone link, one field re-confirmed
 
