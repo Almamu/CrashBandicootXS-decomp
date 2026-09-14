@@ -668,6 +668,46 @@ this pass's landmarks don't happen to reach directly) rather than a
 second hidden system sharing the neighborhood. **Net read: this 40.4 KB
 zone is overwhelmingly actor per-type behavior code.**
 
+### Pushing into the last ~30%: a second RAM-struct family and a third per-category table
+
+A parallel fork re-ran the reachability count (181/331 confirmed this
+pass - close to but not exactly the 198 cited above, likely minor seed
+differences between passes, not a contradiction) and read the two
+biggest still-unreached functions. Both turned out to be
+**vtable-dispatched after all - just through a table this document
+hadn't catalogued yet**, not the entity or actor-category vtables
+already documented.
+
+**`sub_8032C0C`** (660 B) and **`sub_8032EA0`** (424 B) are referenced
+as raw pointers at `0x0817C4D0`/`0x0817C4D4`, inside a cluster of
+small, individually-labeled records (`gStaticData_0817C414` through
+`gStaticData_0817C4F8`, each `0xC`-`0x18` bytes, mixing a few scalars
+with 2-6 function pointers) - **a third per-category-adjacent table
+family**, distinct from both the 93-entry entity vtables and the
+3-vtable actor category system, structurally similar to a
+category-descriptor but much smaller and never previously noticed.
+
+`sub_8032C0C` itself opens up a **second RAM-struct family entirely**:
+`gUnknown_030015B4` through `gUnknown_030015EC` (9 fields, ~56 bytes) -
+completely separate from the `gUnknown_030012xx` struct this whole
+session has tracked. The function accumulates and clamps fixed-point
+values (range checks against constants like `0x98`/`0x3F`/`0x69`, then
+`>>0xC` scaling) against a `gStaticData_0817C4B0`-family value - reads
+as a **camera-follow or scroll-velocity smoothing computation**
+(position easing), structurally similar in *purpose* to the
+`sub_8008AD8`/`sub_80096C0` camera-clamp candidate found independently
+in `game_loop`'s core this same round, but working against a completely
+different global struct - two separate camera-adjacent computations,
+not the same one found twice.
+
+A third function, `sub_8034EF0` (436 B, not vtable-dispatched), turned
+out to be just another instance of the already-catalogued
+"refresh OAM + center text" pattern (`sub_8006A90`/`sub_8006C28`,
+matching `sub_8006600`/`sub_801C104`) - confirms the overall "mostly
+the known toolkit" reading for this zone's tail, even as the
+`gUnknown_030015xx`/`gStaticData_0817C4xx` pair shows there's still at
+least one genuinely fresh corner left in it.
+
 ## Subdividing `game_loop`
 
 `game_loop`'s 112.7 KB has been one undifferentiated bucket even after
