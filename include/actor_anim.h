@@ -121,12 +121,17 @@ COMPILE_TIME_ASSERT(sizeof(struct category_descriptor) == 0x34);
  * of these. Exact signatures unknown (none of these functions have been
  * reversed to C yet); slot 0 is confirmed to be the constructor,
  * ConstructAnimTableState (receives the animation table base and the
- * descriptor's position_offset_flag). A couple of slots (7 and 8, at
- * least for type 0) hold obviously-invalid addresses and appear to
- * simply be unused for that type. Placeholder names for the per-type
- * functions once matched (slots 2-6, the ones that actually differ
- * between types): Actor0_*/Actor1_*/Actor2_* rather than a guessed
- * real-world name - see docs/naming.md. */
+ * descriptor's position_offset_flag) for type 0, but a different,
+ * still-unnamed function for types 1/2 (which share it - constructor
+ * logic splits by sprite-sheet family, not by type individually; see
+ * docs/rom_map.md's "confirmed: mostly actor per-type behavior" section
+ * for the raw addresses of all 39 slots and which ROM region each type's
+ * slots 2-6 land in). A couple of slots (7 and 8, at least for type 0)
+ * hold obviously-invalid addresses and appear to simply be unused for
+ * that type. Placeholder names for the per-type functions once matched
+ * (slots 2-6, the ones that actually differ between types):
+ * Actor0_*/Actor1_*/Actor2_* rather than a guessed real-world name - see
+ * docs/naming.md. */
 struct category_vtable {
     void (*fn[13])(void);
 }; // 0x34

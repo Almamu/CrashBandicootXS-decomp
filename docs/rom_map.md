@@ -118,20 +118,54 @@ struct, read directly by name rather than through a passed-in pointer
 like `sub_801CCF8`'s object above. Distinct from that function's own
 struct; not yet connected to it.
 
-### `0x0802B348`-`0x080354E0` (40.4 KB, 331 functions) - likely actor-part behavior
+### `0x0802B348`-`0x080354E0` (40.4 KB, 331 functions) - confirmed: mostly actor per-type behavior
 
-More fragmented than the zone above (153 components, largest only 66
-functions/9.7 KB) but with a much stronger, non-hub-driven landmark
-signal: **34 of its 331 functions have a direct call edge to/from
-`InitActorPart`** alone - a genuine actor-system function, not a hub.
-Sits immediately after `ConstructActorPart` and before the next
-graphics-loading landmark. Best guess: this is where the category
-vtable's per-type functions live (`Actor0_*`/`Actor1_*`/`Actor2_*`
-placeholders from `include/actor_anim.h` - slots 2-6 of each of the 3
-real vtables, i.e. up to 15 functions, plus whatever each of those calls
-internally) along with related per-part spawn/update logic. Worth
-revisiting once any one of the 3 vtables' addresses are checked against
-this range directly.
+**Confirmed, not just guessed** - dumped all 3×13 = 39 raw pointers out
+of `gStaticData_081756C4` (the category vtable array, see
+`include/actor_anim.h`) directly from `baserom.gba` and checked each
+against this zone's bounds:
+
+- **Slot 0** (the constructor) resolves to `ConstructAnimTableState`
+  (`0x0802B1E8`) for type 0 - confirming the existing doc note - but to a
+  *different*, still-unnamed function (`sub_802E710`, `0x0802E710`) for
+  types 1 **and** 2, which share it. Same story for slot 1
+  (`sub_802E0CC`, also shared by types 1/2, vs. type 0's own neighbor at
+  `0x0802B218`). Sensible split: constructor logic differs by *sprite
+  sheet family* (type 0 = family 1, types 1/2 = family 2, per
+  `docs/graphics.md`) rather than by type individually - types 1 and 2
+  share a sprite family, so they share a constructor.
+- **Slots 2-6** (13 - the ones "that actually differ between types" per
+  `include/actor_anim.h`'s comment) land **inside this 40.4 KB zone for
+  all three types**, 5 functions each, 17 unique addresses total (type
+  1 and 2's slots 0/1 being shared accounts for 17 rather than 19):
+  type 0 at `0x0802D7B1`-`0x0802DFDD`, the type-1/2-shared pair at
+  `0x0802E0CD`/`0x0802E711`, type 1's own slots 2-6 at
+  `0x08030F89`-`0x080317C5`, type 2's at `0x080331BD`-`0x080337E5`.
+- **Slots 7-12** either hold obviously-invalid addresses (unused, per
+  the existing doc note) or land *before* this zone, back in the
+  already-documented actor-system region (`0x0802A019`-`0x0802A6D9`ish)
+  - small, tightly-packed, near-identical-address functions per type,
+  most likely trivial per-type constant getters.
+
+Tracing the call graph **from just those 17 confirmed addresses**,
+staying within this zone, reaches **115 of 331 functions (17.0 KB,
+~42%)** - real, direct confirmation that a large share of this zone is
+genuinely the per-type behavior implementation (`Actor0_*`/`Actor1_*`/
+`Actor2_*` placeholders from `include/actor_anim.h`, plus whatever they
+call). The remaining ~58% splits into three chunks worth separate
+follow-up: a ~9.4 KB prefix before type 0's first confirmed slot
+(`0x0802B364`-`0x0802D7B0`, 82 functions) that holds 12 of
+`InitActorPart`'s 41 total call-graph neighbors - a real concentration,
+consistent with spawn/init-time dispatch code rather than per-frame
+behavior; a ~9.4 KB gap between the shared type-1/2 constructor and
+type 1's slots 2-6 (`0x0802E740`-`0x08030F88`, 75 functions) not reached
+by this pass; and a ~7.1 KB tail after type 2's last slot
+(`0x080336CC`-`0x080354BC`, 68 functions) also not reached - it directly
+precedes `LoadLevelGraphics`, so it may turn out to belong to level
+loading rather than actors. None of these three are ruled out as
+actor-related - the BFS only sees direct `bl` call edges, so anything
+reached only through a computed/indirect branch (a local jump table,
+say) wouldn't show up - just not yet *confirmed* the way the 115 are.
 
 ## The SFX system (`0x080014A4`-`0x08006700`, 20.6 KB)
 
