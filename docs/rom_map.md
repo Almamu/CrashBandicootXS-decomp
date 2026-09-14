@@ -46,7 +46,7 @@ taught this project to avoid. Treat this as the reading-level answer to
 | `graphics_loading` (package/tile/level loading) | 24.8 KB | 10.4% | high - dense named landmarks, plus a 6.2 KB stretch folded in this pass (see below) |
 | `audio_sfx` (SFX layer, distinct from GAX2) | 20.6 KB | 8.6% | medium - one anchor (`PlaySfx`), rest by contiguity |
 | `audio_gax2` (Shin'en GAX2 engine) | 14.1 KB | 5.9% | medium - narrowed this investigation, see `docs/audio.md` |
-| `hud` (icon/text widgets, score/percentage counters) | 6.1 KB | 2.6% | mixed - 1.3 KB named landmarks (high), ~4.8 KB two digit-display functions read this pass (high), rest unread |
+| `hud` (icon/text widgets, score/percentage/stat counters) | 6.1 KB | 2.6% | high - 1.3 KB named landmarks plus ~4.8 KB stat-widget cluster (8 functions, all individually read this pass) |
 | `fx`? (particle/trajectory queue, tentative) | 0.3 KB | 0.1% | low - two small functions read |
 | `system` | 4.2 KB | 1.8% | matched, or matched-caller-confirmed (`LZ77UnCompWrapper` etc.) |
 | `graphics` | 2.1 KB | 0.9% | matched |
@@ -232,6 +232,40 @@ shrinks to essentially a rounding error. Second lesson on top of the
 first: even a "tentative, low-confidence" placement is worth reopening
 once there's time to actually read the thing, rather than trusting the
 label it was given under time pressure.
+
+### Read the rest of the cluster: it's a full HUD stat-widget family with one dispatcher
+
+Kept reading past the two samples above - the other five members of that
+same 8-function connected component (`sub_80274EC`, `sub_802757C`,
+`sub_802763C`, `sub_8027838`, `sub_8027D5C`) all turn out to be more
+widgets of the same shape, not a mix. `sub_80274EC` is the group's
+**dispatcher**: it calls `sub_8027E88` (the percentage counter) when a
+flag is set, unconditionally calls `sub_8027838`, checks a mode value to
+pick between `sub_802757C` and a fallback OAM-init path, conditionally
+calls `sub_802763C`, then unconditionally calls `sub_8027940` (the score
+counter) and `sub_8027D5C`. The other four:
+
+- **`sub_802757C`**: sets up *two* icon slots (not digits) gated on a
+  count from `sub_8023378`, showing a second icon only once the count
+  exceeds 1 - reads as an icon-based indicator (an "×N" style icon plus
+  count, lives being the obvious guess) rather than a digit counter.
+- **`sub_802763C`**, **`sub_8027838`**, **`sub_8027D5C`**: three more
+  2-3 digit counters, each keyed off a different source value
+  (`sub_8023270`/`sub_803AFEC`/`sub_802325C` respectively) and each with
+  a **change-detection cache** (comparing against a stored `last value`
+  field before redoing the digit-split work) - the same
+  divide-by-100/divide-by-10-and-mod idiom as `sub_8027940` throughout.
+
+So the full 3.9 KB cluster, not just the two pieces read first, is one
+coherent **HUD stat-widget family**: one dispatcher plus several
+digit/icon widgets, each reading a different live game value and
+re-rendering only on change. Traced `sub_80274EC`'s own callers too:
+**`UpdateGameFrame`'s own per-frame chain** (via `sub_802400C`, itself in
+the already-`game_loop`-linked `UpdateGameFrame`-`MainLoop` cluster) and,
+notably, **`InitActorCategory`** - meaning these HUD stats get refreshed
+not just every frame but specifically whenever an actor category is
+(re)initialized, consistent with at least one of these counters tracking
+something actor-driven (crates broken, items collected, or similar).
 
 ## The clear regions
 
