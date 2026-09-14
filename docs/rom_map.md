@@ -267,6 +267,46 @@ not just every frame but specifically whenever an actor category is
 (re)initialized, consistent with at least one of these counters tracking
 something actor-driven (crates broken, items collected, or similar).
 
+### Tracing the widgets' value sources: `gUnknown_030012C0`'s target is one big accessor-heavy state struct
+
+Each widget above pulls its number from a one-line getter
+(`sub_8023414`, `sub_8023270`, `sub_803AFEC`, `sub_802325C`) - all of
+which just do `ldr r0, [r0, #OFFSET]; bx lr` against whatever
+`gUnknown_030012C0` currently points at. Reading the surrounding
+functions turned up a **whole family of nearly-identical one-line
+accessors** for that same object - `sub_8023260`/`68`/`70`/`78`/`80`/
+`88`/`90`/`98`/`A0`/`A8`/... - get/set pairs for individual byte and word
+fields, the kind of code a small set of macros or a very mechanical hand
+process would produce. This is a strong, concrete shape for whatever
+struct `gUnknown_030012C0` points at: a single, large, field-accessed
+**central game/level state object**, not a loose pile of separate
+globals - tying together everything read in the `game_loop` and `hud`
+investigations so far.
+
+One field stands out: **`+0xC4`** is read by `sub_8023378` (feeding the
+icon-indicator widget, `sub_802757C`) and separately by `sub_80233B4`
+(the exact function `sub_80274EC`'s dispatcher itself branches on to
+choose between `sub_802757C` and a fallback path). Observed values
+`0x14`-`0x17`; `sub_80233B4` maps them through a 5-entry jump table to
+`{3, 2, 0, 1, -1}` and anything else falls through to `-1` - reads as a
+small, closed **level-type/game-mode enum** (4 real variants: normal
+level? boss? bonus round? time trial? - unconfirmed which is which)
+gating which HUD layout applies. `sub_8023378` itself, for three of
+those four modes, computes `3 - self_ptr->+0x10` from a separate
+sub-object at `+0x1C8` - a countdown-from-3 formula that's a strong,
+concrete hint the icon widget is **lives remaining**, only shown in
+modes where lives are tracked at all.
+
+The two remaining getters (`+0x70` via `sub_8023414`, feeding the score
+counter `sub_8027940`; `+0x74` via `sub_803AFEC`, feeding `sub_8027838`)
+are adjacent 4-byte fields with no comparable smoking-gun evidence yet -
+plausible as a related stat pair (score/bonus, or two different
+collectible counts) but not confirmed the way the lives field is. Worth
+revisiting once more of this struct's ~30+ accessor functions are read
+and cross-referenced against where each field gets *written*, not just
+read - that's the next real step toward naming `gUnknown_030012C0`'s
+target struct itself.
+
 ## The clear regions
 
 | Address range | Size | Category | Confidence | Evidence |
