@@ -43,11 +43,10 @@ taught this project to avoid. Treat this as the reading-level answer to
 |---|---|---|---|
 | `game_loop` (core per-frame/state-machine logic) | 112.7 KB | 47.3% | mixed - see note |
 | `actor` (category/part/vtable system) | 50.7 KB | 21.3% | high for ~38.7 KB (named landmarks + confirmed reachable)\*, ~12 KB inferred |
+| `graphics_loading` (package/tile/level loading) | 24.8 KB | 10.4% | high - dense named landmarks, plus a 6.2 KB stretch folded in this pass (see below) |
 | `audio_sfx` (SFX layer, distinct from GAX2) | 20.6 KB | 8.6% | medium - one anchor (`PlaySfx`), rest by contiguity |
-| `graphics_loading` (package/tile/level loading) | 18.4 KB | 7.7% | high - dense named landmarks |
 | `audio_gax2` (Shin'en GAX2 engine) | 14.1 KB | 5.9% | medium - narrowed this investigation, see `docs/audio.md` |
 | `hud` (icon/text widgets) | 7.2 KB | 3.0% | high for the named cluster, low for its small neighboring gaps |
-| `unknown` | 6.4 KB | 2.7% | none - genuinely uninvestigated |
 | `system` | 4.2 KB | 1.8% | matched, or matched-caller-confirmed (`LZ77UnCompWrapper` etc.) |
 | `graphics` | 2.1 KB | 0.9% | matched |
 | `util` | 1.8 KB | 0.8% | matched |
@@ -57,16 +56,35 @@ the 40.4 KB zone directly confirmed by that zone's reachability pass;
 the zone's remaining ~12 KB is folded in on the "net read" call from
 that investigation, not independently verified.
 
-**`game_loop`'s 47.3% is the least settled number here** - it's almost
-entirely the 94.4 KB zone this document calls "core gameplay logic",
-where only a handful of KB (the `UpdateGameFrame`→`sub_801BAF0`→
-`sub_801C96C` chain and its immediate dispatch targets, and separately
-the 17.1 KB `UpdateGameFrame`-linked cluster with 46 direct links) has
-actually been read. The other ~90 KB is included here on call-graph
-cohesion alone (87% of the 94.4 KB zone is one connected component) -
-plausible, not confirmed. If this project ever wants a real `game_loop`
-objdiff category, that number needs shrinking through actual reading
-before it's trustworthy, the same way `actor`'s did this session.
+No more `unknown` bucket: the 6.2 KB gap between `LoadObjSpriteTiles`
+and the (now-narrowed) start of GAX2 turned out, on the same
+matched-function cross-reference check used throughout this document, to
+call `LoadTaggedAsset`/`FlushVramDmaQueue`/`QueueVramDmaTransfer`/
+`GetAnimFrameBaseOffset` - graphics-loading's own signature, not
+something unrelated. Folded into `graphics_loading` above rather than
+left unlabeled.
+
+**`game_loop`'s 47.3% is still the least settled number here, but firmer
+than last pass.** Re-running the zone's reachability check seeded from
+just the 7 functions actually read so far (`sub_801BAF0`, `sub_801C96C`,
+`sub_801CCF8`, `sub_801D4C4`, `sub_801D548`, `sub_801CDE0`,
+`sub_801CE60`) plus their own in-zone callers - no landmark bleed-through,
+purely their own connectivity - reaches **exactly the same 427-function,
+82.7 KB dominant component** found by the earlier cohesion-only pass.
+That's a real upgrade: it's no longer "an unlabeled blob happens to be
+one connected component", it's "the confirmed core's own reachability
+*is* that component." The remaining ~11.7 KB of the 94.4 KB zone (377
+functions) splits into many small, mutually-disconnected chains spread
+across the *entire* address range rather than one clump - spot-checked
+one (`sub_800B8A8`, 6 functions in a chain touching
+`sub_8026ED0`/`gStaticData_087E3E7C`): sets a per-object ROM-data pointer
+field and conditionally calls into the matched OAM path, reading more
+like object/entity construction than per-frame update - possibly a
+related but distinct "spawn/place things in the level" system living in
+the same neighborhood, not confirmed. Reading through more of these
+small chains (there are dozens) is the obvious way to keep shrinking the
+inferred portion, the same way `actor` went from "likely" to "confirmed
+~70%" over several passes.
 
 ## The clear regions
 
