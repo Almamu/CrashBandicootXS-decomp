@@ -900,13 +900,36 @@ secondary frame/counter index times 4 - `616 / 28 = 22` exactly, so
 from the 36-byte-stride table above (confirming again: many distinct
 tables, not one uniform array). Found it inside **`sub_0800D18C`**
 (1960 B - one of the largest functions in the entire `game_loop` zone,
-not fully read, but its opening confirms it ties together `gUnknown_
-030012D8` (viewport), `gUnknown_030012C0+0x78` (a mode field on the
-central game-state struct, special-cased for value `3`), and *this*
-table in one place - reads like a central per-object
-screen-position/frame-offset computation, in the same family as the
-animation-frame lookups already documented for `actor`, just for
-whatever object class this function serves.
+its opening ties together `gUnknown_030012D8` (viewport),
+`gUnknown_030012C0+0x78` (a mode field on the central game-state struct,
+special-cased for value `3`), and *this* table in one place.
+
+**Read the rest of it.** `sub_0800D18C` is the **collision-response
+commit** that presumably consumes `sub_801AB98`'s edge codes (`1`/`2`/
+`4`/`8`, left/right/top/bottom): it walks a linked list of nearby
+objects (`sub_8010708`/`sub_801070C`, "get next"-style calls) accumulating
+an edge-code value, then **dispatches through a 6-case jump table** on
+that accumulated value - separate handlers per edge direction/combo
+(`sub_800F2BC`, `sub_800F368`, `sub_800E7A8`, `sub_800EEF0`,
+`sub_800E6B0`), each gated by additional state checks (an animation
+"state 6" special-case appears twice, matching a state also checked in
+`sub_800B8DC`'s 18-state machine). Along the way it maintains a small
+5-slot ring buffer of "recently touched" object pointers *inside*
+`gUnknown_030012D8` itself (`+0x94` counter, `+0x98`+ array) - the
+camera/viewport struct isn't just position data, it's also tracking
+recent collision events. Ends by computing a final corrected
+position/rect (again via `gStaticData_0816BC98`) and handing everything
+off to **`sub_8010D54`** with ~8 packed arguments - the actual
+apply/commit step.
+
+**One caller only** (`sub_80109A4`, itself unread) - and the 27 distinct
+functions `sub_0800D18C` itself calls almost all fall in one tight
+address neighborhood, roughly `0x0800D000`-`0x08010D54`, alongside it. That's
+a strong hint this whole neighborhood (not sampled elsewhere in this
+document) is a **cohesive physics/collision subsystem** in its own
+right, worth a dedicated pass rather than more one-off large-function
+reads - the next concrete step for closing out `game_loop`'s remaining
+core.
 
 **Net picture**: this data region is a small cluster of genuinely
 different tables - one big 36-slot per-level record array
