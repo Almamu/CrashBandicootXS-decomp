@@ -1320,6 +1320,37 @@ anything new. None of `sub_8024820`/`sub_8024960`/`sub_8025334`/
 `sub_8024AA0` are entity-vtable-dispatched (checked via raw-pointer
 search of `baserom.gba`) - all reached via direct `bl`.
 
+**Follow-up: resolved the semantics by tracing callers.** The decoder
+is **generic - reused by two independent level-streaming subsystems**,
+not tied to one data type:
+
+- **Visual scrolling background streamer.** `sub_8024AA0(self,
+  worldpos_ptr)` right-shifts world X/Y by 7/6 (128/64 px tile
+  granularity), compares against last-known tile coords at
+  `self+0xc`/`+0x10`, and on a camera-crossed-boundary calls
+  `sub_8024C08` (X axis) or `sub_8024BAC` (Y axis) to stream in the
+  newly-exposed row/column into a **circular 4x4-block ring buffer**
+  at `self+8` (`(coord&3)*0x400 + (coord&3)*0x20` wraparound
+  addressing) - classic infinite-scroll background streaming.
+- **Collision/terrain-map streamer.** `sub_80250BC(self, x, y)` and
+  sibling `sub_8025130` right-shift world X/Y by 4/3 (16x8 px,
+  collision-granularity), fetch a halfword record ID, call the
+  already-documented `sub_8024F24` (16-slot LRU cache/decode
+  dispatcher) to get a decoded 256-byte chunk, then index within it
+  via `((y&7)<<4 | (x&0xf))<<1` - exactly a 16-wide x 8-tall halfword
+  grid (`16*8*2=256B`, matching the cache slot size precisely). The
+  low byte of the fetched halfword (bounds-checked `<=0x23`/35) indexes
+  **`gStaticData_081725AC`** (a real ROM label, `data/data.s:511`) at
+  36-byte stride - a **36-entry tile-type/terrain-property table**.
+  The high nibble of the same halfword is a separate flag byte.
+
+Neither consumer's record-index table resolved to a named
+`gStaticData_` symbol - both are reached through runtime pointer
+fields, presumably set up by an unread constructor. Confidence: high
+on both call chains and the `gStaticData_081725AC` tie-in (read
+directly, cross-checked against `data/data.s`); medium on "terrain-
+property table" as the specific semantic label for that table.
+
 ### Continuing into the remainder: one cross-zone link, one field re-confirmed
 
 Picked up the next-biggest unread functions after the consolidation
