@@ -849,6 +849,53 @@ previously credited: scalar per-level parameters, the `menu_ui`
 text/dialog table, and now apparently at least one more per-level
 function-pointer field for in-level events.
 
+## Mapping the rest of the per-level descriptor region
+
+Switched from chasing individual functions to mapping the
+`0x0816Bxxx`-`0x0816Dxxx` data region itself, now that three unrelated
+systems (`game_loop`, `menu_ui`, and the bonus-popup dispatch above)
+have all turned out to read from it. `data/data.s` has **108 labeled
+symbols** in this range - 90 actually referenced from `code_3_2.s`
+(7956 bytes), only 18 (424 bytes) with no code reference found. Sizes
+range from 2 bytes to 1300 bytes with no uniform stride across the whole
+region - this isn't one array, it's many differently-shaped tables
+packed together, the same conclusion the `menu_ui` investigation already
+reached for one sub-range of it.
+
+**Resolved the structure of the biggest and most-referenced one.**
+`gStaticData_0816C86C` (1300 B, 30 references - the single most-used
+symbol in the region) is what `sub_801C96C` indexes into. Found the
+exact indexing arithmetic in a related function (`sub_801C3E8`):
+`index*8 + index`, then `<<2` - i.e. **`index * 36`**. `1300 = 4 + 36*36`
+- a 4-byte header (value `1` in the ROM) followed by **36 entries of 36
+bytes each**, almost certainly one per level (or level/room slot - GBA
+Crash games of this era commonly have level counts in this range).
+Dumped the first three entries directly: each has several small
+integers, a `+0x10` field used elsewhere as a bounds-check maximum (the
+"if index > entry.max, skip" pattern in `sub_801C3E8`), and a pointer
+field at `+0x1C` into more data in the same region. One field (last word
+of each entry) increments `2, 3, 4` across the first three entries -
+consistent with, but not confirmed as, a sequential level-number tag.
+
+**Checked whether the region's other heavy-hitters are separate systems
+or shared resources.** `gStaticData_0816B98C` (32 B, the single
+most-referenced symbol at 50 hits) traces back to `sub_801EF0C` - the
+*first* of the 31 confirmed `menu_ui` dispatch-table functions. Its
+reference count (50, versus `menu_ui`'s 31 table slots) is consistent
+with being a **shared resource several `menu_ui` records reuse** (a
+common font/layout constant), not a distinct new table of its own.
+
+**Net picture**: this data region is a small cluster of genuinely
+different tables - one big 36-slot per-level record array
+(`0x0816C86C`), the `menu_ui` function-pointer table nested inside
+`0x0816C6A4`'s own 368-byte block, at least one more per-level
+event-dispatch pointer (`0x0816BF20+0x74`), a shared resource several
+`menu_ui` widgets reuse (`0x0816B98C`), and roughly a dozen more
+medium-sized tables (20-680 B) not yet individually characterized. Not
+one monolithic "level config" struct as the early `game_loop`
+investigation implied - closer to a small header file's worth of
+level-related tables that happen to sit next to each other in ROM.
+
 ## `audio_sfx` was almost entirely wrong: mostly a UI/overlay system, not audio
 
 Previously treated as one region purely on address contiguity -
