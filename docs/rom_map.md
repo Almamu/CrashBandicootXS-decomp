@@ -885,9 +885,26 @@ reference count (50, versus `menu_ui`'s 31 table slots) is consistent
 with being a **shared resource several `menu_ui` records reuse** (a
 common font/layout constant), not a distinct new table of its own.
 
+**Resolved a second table's structure while reading the function that
+uses it most.** `gStaticData_0816BC98` (616 B, 19 references) is indexed
+by an object's own state byte (`self+0x4E`) times **28**, plus a small
+secondary frame/counter index times 4 - `616 / 28 = 22` exactly, so
+**22 rows of up to 7 four-byte values each**, a clean, different shape
+from the 36-byte-stride table above (confirming again: many distinct
+tables, not one uniform array). Found it inside **`sub_0800D18C`**
+(1960 B - one of the largest functions in the entire `game_loop` zone,
+not fully read, but its opening confirms it ties together `gUnknown_
+030012D8` (viewport), `gUnknown_030012C0+0x78` (a mode field on the
+central game-state struct, special-cased for value `3`), and *this*
+table in one place - reads like a central per-object
+screen-position/frame-offset computation, in the same family as the
+animation-frame lookups already documented for `actor`, just for
+whatever object class this function serves.
+
 **Net picture**: this data region is a small cluster of genuinely
 different tables - one big 36-slot per-level record array
-(`0x0816C86C`), the `menu_ui` function-pointer table nested inside
+(`0x0816C86C`), a 22-row per-state frame-offset table
+(`0x0816BC98`), the `menu_ui` function-pointer table nested inside
 `0x0816C6A4`'s own 368-byte block, at least one more per-level
 event-dispatch pointer (`0x0816BF20+0x74`), a shared resource several
 `menu_ui` widgets reuse (`0x0816B98C`), and roughly a dozen more
