@@ -1354,6 +1354,31 @@ individually characterized) in a cursor/menu-position-style pattern -
 calls the `sub_803AD84` trampoline with position arguments matching the
 draw-text shape.
 
+### A second shared action-table helper, and a real bucket insert/remove system
+
+A further fork read the two remaining explicitly-flagged targets and
+found one genuine headline each. **`sub_80122CC`** (340 B) reads
+controller state, then dispatches a 39-value enum down to a shared
+handler that toggles a bit flag based on which directional button is
+held - reads as an **"is this object responsive to a directional input
+toggle" gate**, plausibly switches or pushable platforms. **All 12 of
+its callers are entries in the confirmed 42-slot action dispatch
+table** - a **second shared helper** several action-table handlers
+reuse, alongside the glyph-constant dispatcher (`sub_8015038`) found
+earlier. The action table increasingly looks like it's built from a
+small library of common per-action helpers, not 37 fully-independent
+implementations.
+
+**`sub_8009008`** (328 B) is a **linked-list unlink/removal** operation
+on a bucketed structure - indexes a bucket-head array, walks the chain
+removing one item, pushes the freed node onto a free-list. This is
+almost certainly the **same spatial-bucket structure**
+`sub_8009528`'s broad-phase visibility/proximity query reads from -
+confirms a real insert/remove/query system, not just a one-way query.
+Called from `sub_80091D4` (the function flagged as a cross-zone link to
+`UpdateGameFrame`-`MainLoop` several rounds ago, still not itself fully
+characterized) among others.
+
 ## Mapping the rest of the per-level descriptor region
 
 Switched from chasing individual functions to mapping the
