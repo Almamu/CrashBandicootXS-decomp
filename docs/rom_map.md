@@ -71,6 +71,53 @@ itself part of any subsystem documented so far - player control, physics/
 collision, camera, or level scripting are all plausible, none confirmed.
 **The single largest uncharted stretch in the ROM.**
 
+Cross-referencing calls against every *already-matched* `src/*.c`
+function (not just the raw-asm landmarks the automated pass above uses)
+confirms the "self-contained, touches everything only lightly" read:
+only 17 of the zone's 804 functions call out to real matched code at
+all, and even those are scattered across unrelated systems rather than
+concentrated on one - 7 calls to `FlushVramDmaQueue` (graphics), 3 to
+`rand` (RNG), 2 to `LoadTaggedAsset` (asset loading), 1 each to
+`InitBresenhamLine`/`StepBresenhamLine` (line-drawing - a trajectory,
+laser, or debug-line effect, unconfirmed), `mem_free_bytes`, and
+`FormatCentiseconds` (a timer-display formatter - the one concrete hint
+this zone touches HUD/UI, not just simulation). A mix this broad, this
+thin, is exactly what "the main per-frame update, which pokes every
+other system a little" would look like from the outside.
+
+One representative function, read in full: **`sub_801CCF8`**
+(`0x0801CCF8`), called from two near-identical top-level functions
+(`sub_801D4C4`/`sub_801D548` - same call set, differing only in which
+of two near-identical sub-branch functions they call, suggesting two
+closely-related "run one frame of \[mode/level-type A vs B\]"
+entry points). Given a struct pointer (fields observed out to at least
+`+0xA8`, so the struct is at least 0xAC bytes), it: calls
+`FlushVramDmaQueue` (draining the queued VRAM DMA transfers - already
+matched, `src/graphics/graphics.c`), then assembles and writes **every
+core PPU register that isn't already owned by a matched file** in one
+pass - `REG_BG0HOFS` (`0x04000010`, driven by a monotonically
+incrementing per-object counter at `+0x7C` shifted right 3 - a fixed-rate
+auto-scroll, not a player-position-driven camera), `REG_BG1HOFS`/`VOFS`
+(`0x04000014`, one word write covering both), `REG_BG1CNT`/`BG2CNT`
+(`0x0400000A`/`0x0400000C`, each computed by a callee off a sub-pointer
+at `+0x1C`/`+0x20`), backdrop color 0 (`0x05000000`), and
+`REG_BLDCNT`/`BLDALPHA`/`BLDY`/`DISPCNT` (`0x04000050`/`+2`/`0x04000054`/
+`0x04000000`, all four sourced from three fields packed at `+0xA0`/
+`+0xA4`/`+0xA8`). Best read: this is the **frame-end display-register
+commit step** for whichever object owns the screen's current background/
+blend configuration - camera scroll and screen-wide blend effects
+(fades, flashes) are the obvious owners of a struct shaped like this,
+but nothing here confirms *which* object that is or how many instances
+exist.
+
+A second, smaller cluster of globals shows up too: a tight run of IWRAM
+words at `0x030012B4`-`0x03001310` (24 consecutive 4-byte fields per
+`sym_iwram.txt`) gets referenced hundreds of times across the zone
+(`gUnknown_030012D8` alone: 140 times) - one compact, extremely hot
+struct, read directly by name rather than through a passed-in pointer
+like `sub_801CCF8`'s object above. Distinct from that function's own
+struct; not yet connected to it.
+
 ### `0x0802B348`-`0x080354E0` (40.4 KB, 331 functions) - likely actor-part behavior
 
 More fragmented than the zone above (153 components, largest only 66
