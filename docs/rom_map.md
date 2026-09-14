@@ -819,6 +819,36 @@ generic `Construct(type_id)` indexed by a category number. Consistent
 with a game that has many fixed, individually-placed objects per level
 rather than fully data-driven entity instantiation.
 
+### A third data-driven dispatch, and a likely "bonus/score popup" event
+
+Kept reading the biggest still-unexplained functions in the 48.2 KB core
+past the vtable cross-reference. **`sub_80134B8`** (1072 B): watches a
+state field (`self+8`) for a specific transition (out of a range that
+includes state `0x18`/`0x19`), gated by a flag bit in
+`gUnknown_030007E0` (the same upper-16-bits flags word `sub_801C96C`'s
+dispatch already reads) and a per-instance cooldown byte. When the
+gate passes: calls **`PlaySfx`** directly (sound id `0xA`), then lays
+out and draws a short text label via `sub_803AD80`/`sub_803AD84`, and
+writes the result into a field on `gUnknown_030012D8` - the same
+struct `sub_801AB98`'s collision-edge test reads, reinforcing the
+camera/viewport-rectangle read on that global. Sound plus a text label
+plus a viewport-relative write, gated by a state-machine transition,
+reads as a **floating bonus/score popup** - ties together three threads
+this document already had going (`PlaySfx`, the `sub_803ADxx` text
+family, and `gUnknown_030012D8`) into one plausible concrete event.
+
+Its one caller, **`sub_8013D94`**, is itself dispatched through a
+pointer - not via `bl` from anywhere in raw asm, same pattern as the
+93-vtable system - but this time the pointer sits inside
+**`gStaticData_0816BF20`** (already part of the documented per-level
+`0x0816Bxxx`-`0x0816Dxxx` family, at `+0x74` into its own 0x150-byte
+block, not a separate table). A second, different behavior-selection
+mechanism riding on the same per-level descriptor region as the
+`menu_ui` dispatch table - that region is doing even more work than
+previously credited: scalar per-level parameters, the `menu_ui`
+text/dialog table, and now apparently at least one more per-level
+function-pointer field for in-level events.
+
 ## `audio_sfx` was almost entirely wrong: mostly a UI/overlay system, not audio
 
 Previously treated as one region purely on address contiguity -
