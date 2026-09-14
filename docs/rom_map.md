@@ -1196,9 +1196,36 @@ rotation/zoom effect - a title/intro sequence, a warp/bonus-room entry,
 or similar. Distinct from both `LoadGraphicsPackage` (asset loading) and
 `menu_ui` (text/dialog) - a third genuine sub-thread inside what this
 document has been calling `graphics_loading`'s "immediate neighbors."
-Not fully read past this point; the natural next step if this thread is
-worth pulling further is dumping `gStaticData_0816D1F4` the same way the
-other per-level tables were resolved.
+
+### `gStaticData_0816D1F4` is a header array of variable-length lists
+
+Dumped it. At **21,428 bytes it's by far the largest member** of the
+per-level data family mapped in this document - the 36-slot table
+(`0816C86C`) was 1300 B, the 42-slot action dispatch (`0816BF20`) was
+336 B; this one dwarfs both combined several times over. `sub_8022468`
+reads it as `{pointer, count}` pairs (8 bytes each, matching the
+`lsls r2, r6, #3` indexing seen there). Confirmed the layout by chaining
+three consecutive header entries: entry 0 is `{ptr=0x0816D448, count=1}`;
+`0x0816D448 + 1*4 = 0x0816D44C`, which is *exactly* entry 1's pointer
+(`count=4`); `0x0816D44C + 4*4 = 0x0816D45C`, *exactly* entry 2's
+pointer (`count=9`) - each header slot's data region butts up against
+the next slot's, with no gaps. So this is a **header array of
+variable-length 4-byte-element lists**, tightly packed - not a flat
+table, a proper list-of-lists. Roughly 74 header slots' worth of space
+precedes where the first list's data actually starts (`596 B / 8`,
+not perfectly clean - worth double-checking the exact header count
+before trusting it further).
+
+Given `sub_8022468` reads one such list per call, indexed by its own
+parameter, and does so right alongside the BG2 affine-transform reset -
+the natural reading is **one variable-length list of "things" per
+level/context** (screen regions to affine-transform, tile indices to
+touch, sub-effect IDs - not resolved which), consistent with the
+`sub_8022468` finding above without pinning down the exact semantics.
+Left here as a structural resolution, not a full read - the size alone
+(21 KB, ~9% of everything `graphics_loading`/`menu_ui`/`game_loop`
+combined have accounted for in per-level data) makes it worth a
+dedicated look if anyone continues this specific thread.
 
 ## Narrowing the GAX2 boundary
 
