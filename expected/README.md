@@ -20,7 +20,7 @@ for) - it exists solely as an unchanging comparison baseline. If it turns
 out to be wrong or incomplete somehow, regenerate it from the same commit
 rather than hand-patching it.
 
-Does **not** currently cover `src/main.c`/`memory.c`/`irq.c`: those were
+Does **not** currently cover `src/system/main.c`/`memory.c`/`irq.c`: those were
 matched even earlier, before this repo settled on the `code_3.s` naming/
 splitting convention, and reconstructing their original pristine
 disassembly would need walking further back through several more splits

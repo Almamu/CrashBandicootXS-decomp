@@ -1,7 +1,7 @@
 #include "core.h"
 #include "line_util.h"
 
-/* Sits right after sub_8000E4C (ROM 0x08000E4C, in src/rand_util.c)
+/* Sits right after sub_8000E4C (ROM 0x08000E4C, in src/util/rand_util.c)
  * and before sub_8000EE4 (still raw in asm/code_3_1_3.s). */
 
 /* Bresenham-line setup: computes the deltas/signs/error terms for

@@ -1,6 +1,6 @@
 #include "core.h"
 
-/* Sits between sub_800106C (ROM 0x0800106C, in src/time_util.c) and
+/* Sits between sub_800106C (ROM 0x0800106C, in src/util/time_util.c) and
  * LoadTaggedAsset (still raw in asm/code_3_1_5.s). */
 
 #if NON_MATCHING
@@ -34,11 +34,11 @@ extern u16 gUnknown_030007E0;
  * this is just a `count`-poll delay that always returns 1; with it
  * clear and `count == 0`, it returns 1 immediately without polling at
  * all. Reads the "newly pressed this frame" keys (`gUnknown_030007E0`'s
- * companion u16 at +2, see `sub_80007AC`'s own notes in `src/irq.c`) via
+ * companion u16 at +2, see `sub_80007AC`'s own notes in `src/system/irq.c`) via
  * a fresh `u16 *` each time, matching the ROM (no caching across polls,
  * since sub_80007AC's call in between could change it). The
  * `sub_80007AC(gUnknown_03001304)` calls pass an argument the real,
- * already-matched `sub_80007AC(void)` (in `src/irq.c`) never reads -
+ * already-matched `sub_80007AC(void)` (in `src/system/irq.c`) never reads -
  * same "ROM sets up an arg the callee ignores" shape as `sub_80006A8`
  * itself; declared here with a dummy `void *` parameter purely so this
  * call site's leftover r0 setup matches the ROM's bytes. `keys` is

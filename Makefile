@@ -47,7 +47,7 @@ GRAPHICS_BUILDDIR = $(OBJ_DIR)/graphics
 
 $(shell mkdir -p $(C_BUILDDIR) $(ASM_BUILDDIR) $(DATA_ASM_BUILDDIR) $(SOUND_BUILDDIR) $(GRAPHICS_BUILDDIR))
 
-C_SRCS := $(wildcard $(C_SUBDIR)/*.c)
+C_SRCS := $(wildcard $(C_SUBDIR)/*/*.c)
 C_ASMS := $(patsubst $(C_SUBDIR)/%.c,$(C_BUILDDIR)/%.s,$(C_SRCS))
 C_OBJS := $(patsubst $(C_SUBDIR)/%.c,$(C_BUILDDIR)/%.o,$(C_SRCS))
 
@@ -115,7 +115,7 @@ EXPECTED_BUILDDIR := build/expected
 # main.c/memory.c/irq.c were matched before expected/code_3.s's history
 # began (see expected/README.md) - not covered by it, so excluded here
 # rather than reported against the wrong/no target.
-REPORT_EXCLUDE   := main.o memory.o irq.o
+REPORT_EXCLUDE   := system/main.o system/memory.o system/irq.o
 REPORT_BASE_OBJS := $(filter-out $(addprefix $(C_BUILDDIR)/,$(REPORT_EXCLUDE)),$(C_OBJS))
 
 $(shell mkdir -p $(EXPECTED_BUILDDIR))
@@ -139,6 +139,7 @@ $(ELF): $(OBJS) $(LDSCRIPT)
 	$(OBJCOPY) -O binary $< $@
 
 $(C_BUILDDIR)/%.o : $(C_SUBDIR)/%.c
+	@mkdir -p $(dir $@)
 	$(CPP) $(CPPFLAGS) $< | $(CC1) $(CC1FLAGS) -o $(C_BUILDDIR)/$*.s
 	$(AS) $(ASFLAGS) -o $@ $(C_BUILDDIR)/$*.s
 

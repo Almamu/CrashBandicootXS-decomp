@@ -48,7 +48,7 @@ s32 sub_80008FC(s32 a, s32 b)
 }
 
 /* sub_803ADB4 looks like an atan2-style angle lookup (see its use in
- * sub_800697C as `sub_803ADB4(total * 100, 0x48)` in src/graphics.c) -
+ * sub_800697C as `sub_803ADB4(total * 100, 0x48)` in src/graphics/graphics.c) -
  * these three wrappers pass fixed/sign-extended 16-bit operands through
  * to it and sign-extend the 16-bit result back. */
 s32 sub_800090C(s32 arg0)

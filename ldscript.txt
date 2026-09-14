@@ -20,32 +20,32 @@ SECTIONS
 	ALIGN(4)
 	{
         build/crashbandicootxs/asm/crt0.o(.text);
-        build/crashbandicootxs/src/main.o(.text);
-        build/crashbandicootxs/src/memory.o(.text);
-        build/crashbandicootxs/src/irq.o(.text);
+        build/crashbandicootxs/src/system/main.o(.text);
+        build/crashbandicootxs/src/system/memory.o(.text);
+        build/crashbandicootxs/src/system/irq.o(.text);
         build/crashbandicootxs/asm/code_3_1.o(.text);
-        build/crashbandicootxs/src/math_util.o(.text);
-        build/crashbandicootxs/src/string_util.o(.text);
-        build/crashbandicootxs/src/printf_util.o(.text);
+        build/crashbandicootxs/src/util/math_util.o(.text);
+        build/crashbandicootxs/src/util/string_util.o(.text);
+        build/crashbandicootxs/src/util/printf_util.o(.text);
         build/crashbandicootxs/asm/code_3_1_2.o(.text);
-        build/crashbandicootxs/src/string_util2.o(.text);
-        build/crashbandicootxs/src/rand_util.o(.text);
-        build/crashbandicootxs/src/line_util.o(.text);
-        build/crashbandicootxs/src/text_layout.o(.text);
+        build/crashbandicootxs/src/util/string_util2.o(.text);
+        build/crashbandicootxs/src/util/rand_util.o(.text);
+        build/crashbandicootxs/src/util/line_util.o(.text);
+        build/crashbandicootxs/src/graphics/text_layout.o(.text);
         build/crashbandicootxs/asm/code_3_1_3.o(.text);
-        build/crashbandicootxs/src/time_util.o(.text);
-        build/crashbandicootxs/src/input_util.o(.text);
+        build/crashbandicootxs/src/util/time_util.o(.text);
+        build/crashbandicootxs/src/system/input_util.o(.text);
         build/crashbandicootxs/asm/code_3_1_5.o(.text);
-        build/crashbandicootxs/src/asset_util.o(.text);
-        build/crashbandicootxs/src/word_util.o(.text);
-        build/crashbandicootxs/src/line_util2.o(.text);
-        build/crashbandicootxs/src/fade_util.o(.text);
-        build/crashbandicootxs/src/palette_blend.o(.text);
+        build/crashbandicootxs/src/system/asset_util.o(.text);
+        build/crashbandicootxs/src/util/word_util.o(.text);
+        build/crashbandicootxs/src/util/line_util2.o(.text);
+        build/crashbandicootxs/src/graphics/fade_util.o(.text);
+        build/crashbandicootxs/src/graphics/palette_blend.o(.text);
         build/crashbandicootxs/asm/code_3_1_7.o(.text);
-        build/crashbandicootxs/src/oam_count.o(.text);
-        build/crashbandicootxs/src/graphics.o(.text);
+        build/crashbandicootxs/src/graphics/oam_count.o(.text);
+        build/crashbandicootxs/src/graphics/graphics.o(.text);
         build/crashbandicootxs/asm/code_3_2.o(.text);
-        build/crashbandicootxs/src/actor_anim.o(.text);
+        build/crashbandicootxs/src/graphics/actor_anim.o(.text);
         build/crashbandicootxs/asm/code_3_3.o(.text);
 
         /* Data */

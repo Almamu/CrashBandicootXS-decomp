@@ -1,12 +1,12 @@
 #include "core.h"
 
-/* Sits right after sub_80011C0 (ROM 0x080011C0, in src/asset_util.c)
+/* Sits right after sub_80011C0 (ROM 0x080011C0, in src/system/asset_util.c)
  * and before whatever's still raw in asm/code_3_1_7.s. */
 
 /* Returns the length of the next "word" starting at `s`: the number of
  * characters up to and including the first space, or up to (but not
  * including) the NUL terminator if no space is found first. Used by
- * the still-parked sub_8000EE4 (src/text_layout.c) to walk text one
+ * the still-parked sub_8000EE4 (src/graphics/text_layout.c) to walk text one
  * token at a time. */
 s32 sub_80011F4(u8 *s)
 {
@@ -45,11 +45,11 @@ struct sub_8001214_params {
     s32 field_c;
 };
 
-/* Thin wrapper around the still-parked sub_8000EE4 (src/text_layout.c):
+/* Thin wrapper around the still-parked sub_8000EE4 (src/graphics/text_layout.c):
  * stashes `params->field_0` into `self`'s own `field_118`, computes a
  * line-count limit as `params->field_c / self->field_11c`, then
  * forwards to sub_8000EE4 with that limit and returns its result
- * (unused by the one call site matched so far, in `src/oam_count.c`'s
+ * (unused by the one call site matched so far, in `src/graphics/oam_count.c`'s
  * still-parked `sub_8006600`, but the ROM does actually propagate it -
  * confirmed by the epilogue needing r1, not r0, to restore the return
  * address, since r0 holds the forwarded value at that point). */

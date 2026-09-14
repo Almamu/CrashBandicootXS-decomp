@@ -1,6 +1,6 @@
 #include "core.h"
 
-/* Sits right after sub_8000DF8 (ROM 0x08000DF8, in src/string_util2.c)
+/* Sits right after sub_8000DF8 (ROM 0x08000DF8, in src/util/string_util2.c)
  * and before sub_8000E6C (still raw in asm/code_3_1_3.s); a standard C
  * library LCG (multiplier 0x41C64E6D, increment 0x3039 aka 12345) fed
  * from a global seed in IWRAM. */

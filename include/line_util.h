@@ -1,8 +1,8 @@
 #ifndef __LINE_UTIL_H__
 #define __LINE_UTIL_H__
 
-/* Bresenham-line state: set up by sub_8000E6C (src/line_util.c) and
- * advanced one step at a time by sub_8001254 (src/line_util2.c).
+/* Bresenham-line state: set up by sub_8000E6C (src/util/line_util.c) and
+ * advanced one step at a time by sub_8001254 (src/util/line_util2.c).
  * Field names beyond the four input coordinates are left as `field_N`
  * (offsets, not purposes) until a caller clarifies them. */
 struct bresenham_line {

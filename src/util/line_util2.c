@@ -1,9 +1,9 @@
 #include "core.h"
 #include "line_util.h"
 
-/* Sits right after sub_8001214 (ROM 0x08001214, in src/word_util.c)
+/* Sits right after sub_8001214 (ROM 0x08001214, in src/util/word_util.c)
  * and before sub_80012AC (still raw in asm/code_3_1_7.s). Not adjacent
- * to sub_8000E6C (src/line_util.c) in ROM address order - kept in its
+ * to sub_8000E6C (src/util/line_util.c) in ROM address order - kept in its
  * own file purely because that file's object already links much
  * earlier; both share the struct definition from include/line_util.h. */
 

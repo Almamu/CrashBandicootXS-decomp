@@ -9,7 +9,7 @@ separate, unrelated topic of graphics/sprite asset extraction, and
 [audio.md](./audio.md) for the sound engine.
 
 First two functions turned into real, byte-matching C:
-`QueueVramDmaTransfer` and `FreeVramDmaQueue`, both in `src/graphics.c`
+`QueueVramDmaTransfer` and `FreeVramDmaQueue`, both in `src/graphics/graphics.c`
 (the DMA-transfer queue used by the animation-frame system - see "Found
 the real per-actor animation-frame system" above). Both compile with
 `tools/agbcc` to output that's byte-identical to the original ROM at
@@ -41,8 +41,8 @@ total by coincidence - the explicit `asm(...)` is the general fix and
 doesn't depend on that kind of luck.)
 
 `asm/code_3.s` (122256 lines) is now split into `asm/code_3_1.s`,
-`asm/code_3_2.s`, and `asm/code_3_3.s` around where `src/graphics.c`'s
-and `src/actor_anim.c`'s functions used to live - expect more such splits
+`asm/code_3_2.s`, and `asm/code_3_3.s` around where `src/graphics/graphics.c`'s
+and `src/graphics/actor_anim.c`'s functions used to live - expect more such splits
 as more functions get matched out of it over time. **One `.c` file per
 contiguous ROM region, not one per "topic":** `GetAnimFrameBaseOffset`
 (ROM `0x0803B058`) is nowhere near `QueueVramDmaTransfer`/
@@ -50,16 +50,16 @@ contiguous ROM region, not one per "topic":** `GetAnimFrameBaseOffset`
 of the same animation-frame system - since one object file's `.text` can
 only be placed as a single contiguous block by `ldscript.txt`, a function
 whose real address isn't adjacent to an existing matched file's functions
-needs its own new `.c` file (here, `src/actor_anim.c`), not just an
+needs its own new `.c` file (here, `src/graphics/actor_anim.c`), not just an
 addition to the existing one - adding it to the wrong file would silently
 move it to the wrong ROM address.
 
-Third matched function: `GetAnimFrameBaseOffset` in `src/actor_anim.c` -
+Third matched function: `GetAnimFrameBaseOffset` in `src/graphics/actor_anim.c` -
 trivial (a single field read + arithmetic shift), included here mainly to
 confirm the "new `.c` file, non-adjacent region" workflow above works.
 
 Fourth matched function: `FlushVramDmaQueue`, at the top of
-`src/graphics.c` (ROM `0x08006B1C`, right before `QueueVramDmaTransfer` in
+`src/graphics/graphics.c` (ROM `0x08006B1C`, right before `QueueVramDmaTransfer` in
 the same contiguous region, so no new split/ldscript entry was needed).
 This one took two rounds to get exactly right - the recipe, since it's
 non-obvious:
@@ -124,7 +124,7 @@ difference (both constant-fold identically).
 
 Fifth matched function: `sub_8006B0C` (ROM `0x08006B0C`, immediately
 before `FlushVramDmaQueue` in the same contiguous region - joined
-`src/graphics.c` right above it, no new split). A trivial one-shot first
+`src/graphics/graphics.c` right above it, no new split). A trivial one-shot first
 try: `void *sub_8006B0C(void *arg0) { sub_8006A90(arg0); return arg0; }`
 matched byte-for-byte immediately - a plain "call a helper for its side
 effect, then return the original argument unchanged" idiom, which gcc 2.9
@@ -139,7 +139,7 @@ wrapper - left un-renamed (still `sub_8006A90`/`sub_8006B0C`) rather than
 guess at a name from partial evidence.
 
 Sixth matched function: `sub_8006AF4` (ROM `0x08006AF4`, immediately
-before `sub_8006B0C`, same contiguous region - joined `src/graphics.c`
+before `sub_8006B0C`, same contiguous region - joined `src/graphics/graphics.c`
 right above it, no new split). Another one-shot match: a conditional-call
 wrapper, `if (arg1 & 1) sub_8026ED0(arg0);` - gcc 2.9 compiles the
 bitwise-AND-then-compare-to-zero idiom for testing a single bit exactly
@@ -148,7 +148,7 @@ instruction, which the ROM also doesn't use here). `sub_8026ED0` stays
 unmatched asm.
 
 Seventh matched function: `sub_8006AC8` (ROM `0x08006AC8`, immediately
-before `sub_8006AF4`, same region - joined `src/graphics.c` right above
+before `sub_8006AF4`, same region - joined `src/graphics/graphics.c` right above
 it). Inserts a 2-pointer record (`arg1[0]`/`arg1[1]`) into a slot
 `arg0 + count*8 + 0xC` of a 128-slot table living inline in `*arg0`
 (bounds-checked against `0x7F`), while preserving the 2-byte value that
@@ -183,7 +183,7 @@ without pinning down what data it actually manages. (Resolved by the next
 function below: the `+0xC` table is an **OAM shadow buffer**.)
 
 Eighth matched function: `sub_8006AAC` (ROM `0x08006AAC`, immediately
-before `sub_8006AC8`, same region - joined `src/graphics.c` right above
+before `sub_8006AC8`, same region - joined `src/graphics/graphics.c` right above
 it). One-shot match, no register tricks needed - a tiny leaf function
 (no `push`/`pop` at all, matching the ROM exactly, since it makes no
 calls and needs no callee-saved registers) that DMAs `arg0 + 0xC` to
@@ -204,7 +204,7 @@ needed.
 
 Ninth, tenth and eleventh matched functions: `sub_8006A78`/`sub_8006A84`/
 `sub_8006A90` (ROM `0x08006A78`-`0x08006AAC`, immediately before
-`sub_8006AAC` - joined `src/graphics.c` right above it, no new split).
+`sub_8006AAC` - joined `src/graphics/graphics.c` right above it, no new split).
 All three matched byte-exact on the first try, no register tricks. This
 is the little "swap/reset" family mentioned as unidentified back at the
 fifth match (`sub_8006B0C`) - now given a real (if provisionally-named)
@@ -240,7 +240,7 @@ unmatched) most likely **resets the OAM shadow buffer manager to empty**
 counter?) isn't identified.
 
 Twelfth matched function: `sub_8006A48` (ROM `0x08006A48`, immediately
-before `sub_8006A78`, same region - joined `src/graphics.c` right above
+before `sub_8006A78`, same region - joined `src/graphics/graphics.c` right above
 it). The **hardest match yet** - confirms the semantic picture further:
 starting from `arg0`'s current "count", it walks every *unused* slot from
 `count` to `127` and forces bits `[9:8]` of that OAM entry's `attr0` to
@@ -279,7 +279,7 @@ trick or a workaround bug) - see [[matching_decomp_register_pinning]] for
 when to reach for this.
 
 Thirteenth matched function: `sub_8006A14` (ROM `0x08006A14`, immediately
-before `sub_8006A48`, same region - joined `src/graphics.c` right above
+before `sub_8006A48`, same region - joined `src/graphics/graphics.c` right above
 it). The bulk-copy counterpart to `sub_8006AC8`: instead of copying one
 record's fields with the CPU, this DMAs `arg2` whole 8-byte OAM entries
 straight from `arg1` into the shadow buffer at the current count
@@ -293,7 +293,7 @@ the base pointer - no inline asm needed here, unlike the pathological
 case in `sub_8006A48`.
 
 Fourteenth matched function: `sub_80069E8` (ROM `0x080069E8`, immediately
-before `sub_8006A14`, same region - joined `src/graphics.c` right above
+before `sub_8006A14`, same region - joined `src/graphics/graphics.c` right above
 it). Writes OAM **affine parameters**: given a pointer directly to an OAM
 entry (no `+0xC` bias this time - the caller must already point at the
 right shadow-buffer slot) and `arg2` groups, each group writes one `s16`
@@ -312,7 +312,7 @@ loop pointer) came first - fixed by writing the `zero = 0;` assignment as
 its own earlier statement, ahead of the entry-pointer setup.
 
 Fifteenth matched function: `sub_800695C` (ROM `0x0800695C`) - and the
-**first one requiring a new mid-file split**, in `src/oam_count.c`.
+**first one requiring a new mid-file split**, in `src/graphics/oam_count.c`.
 Counts how many of 20 fixed-stride (4-byte) records have bit 0 of the
 byte at `+4` set - almost certainly counting how many of a fixed set of
 "slots" (particles? actors?) are currently active, unrelated to the OAM
@@ -335,7 +335,7 @@ compare` failed the full-ROM checksum, and the reason was exactly the
 matched functions: pulling `sub_800695C` into `graphics.c` while
 `sub_800697C` stayed asm would have collapsed the 108-byte gap between
 them, shifting everything after downstream. Fixed by giving
-`sub_800695C` **its own file** (`src/oam_count.c`) and splitting
+`sub_800695C` **its own file** (`src/graphics/oam_count.c`) and splitting
 `sub_800697C` out into its own asm file (`asm/code_3_1_697c.o`, needs the
 usual `.include "asm/macros.inc"` / `.syntax unified` / `.arm` header a
 plain `sed`-extracted fragment doesn't have), landing them in the
@@ -389,7 +389,7 @@ deleted the split file and removed its `ldscript.txt` line. `oam_count.c`
 followed by `sub_800697C`'s ROM address, not `graphics.c`'s.
 
 Seventeenth matched function: `sub_8006920` (ROM `0x08006920`,
-immediately before `sub_800695C` - joined `src/oam_count.c` above it, no
+immediately before `sub_800695C` - joined `src/graphics/oam_count.c` above it, no
 new split). A near-twin of `sub_800695C`: same 20-record, 4-byte-stride
 loop shape, but sums **bits 1 and 2** (not bit 0) of the byte at each
 record's `+4`, plus the same two bits from one more byte at `arg0+0x64`
@@ -401,7 +401,7 @@ reordering two preheader statements (`total = 0;` before `p = arg0;`,
 matching the ROM's `movs r4,#0` before `adds r2,r5,#0`).
 
 Eighteenth matched function: `sub_80068CC` (ROM `0x080068CC`,
-immediately before `sub_8006920` - joined `src/oam_count.c` above it, no
+immediately before `sub_8006920` - joined `src/graphics/oam_count.c` above it, no
 new split, and it's one of the five callees `sub_800697C` left
 unidentified). Combines everything the previous two entries found: the
 same 20-record-plus-one-extra bit-summing shape as `sub_8006920`
@@ -427,7 +427,7 @@ move whenever the ROM's own accumulator changes registers partway
 through a chain of additions with no persisting need for the old one.
 
 Nineteenth matched function: `sub_80068A8` (ROM `0x080068A8`, immediately
-before `sub_80068CC` - joined `src/oam_count.c` above it, no new split).
+before `sub_80068CC` - joined `src/graphics/oam_count.c` above it, no new split).
 The simplest of this whole cluster: sums three of `sub_800697C`'s five
 callees directly - `sub_8006864 + sub_8006820 + sub_80067EC` - no bit
 tests, no halving. Matched byte-exact on the first try, no register pins
@@ -437,7 +437,7 @@ each called by *two* different matched functions (`sub_800697C` and
 next, since it would immediately pay off three call sites at once.
 
 Twentieth matched function: `sub_8006864` (ROM `0x08006864`, immediately
-before `sub_80068A8` - joined `src/oam_count.c` above it, no new split).
+before `sub_80068A8` - joined `src/graphics/oam_count.c` above it, no new split).
 Another 20-record loop, this time a genuine **range check** rather than
 a bit test: for each record, take the halfword at `+4`, shift right by
 3, and - if nonzero - count it only if it falls in `(gStaticData_0816C86C[i].min, gStaticData_0816C86C[i].max]`,
@@ -470,7 +470,7 @@ freshly-loaded value and its transformed result in different registers.
 
 Twenty-first and twenty-second matched functions: `sub_8006820` and
 `sub_80067EC` (ROM `0x08006820` and `0x080067EC`, immediately before
-`sub_8006864` - joined `src/oam_count.c` above it, no new split). Two
+`sub_8006864` - joined `src/graphics/oam_count.c` above it, no new split). Two
 more members of the same `gStaticData_0816C86C` range-check family:
 `sub_8006820` is `sub_8006864` with different field offsets (`+0xC`/
 `+0x10` instead of `+8`/`+0xC` - same anti-CSE inline-asm technique
@@ -495,7 +495,7 @@ compile/link time.
 Twenty-third through twenty-seventh matched functions: `sub_80067A4`,
 `sub_80067B4`, `sub_80067C4`, `sub_80067D4`, `sub_80067E4` (ROM
 `0x080067A4`-`0x080067EC`, immediately before `sub_80067EC` - joined
-`src/oam_count.c` above it, no new split). A family of four trivial
+`src/graphics/oam_count.c` above it, no new split). A family of four trivial
 wrappers, each just `sub_80062A8(constA, constB, constC)` with different
 constants (likely per-difficulty or per-mode config calls into whatever
 `sub_80062A8` sets up), plus one unrelated one-liner extracting the low 7
@@ -508,7 +508,7 @@ ROM's shift-based extraction (also 2 instructions) - the same idiom
 identified back at `sub_800695C`.
 
 Twenty-eighth matched function: `sub_8006770` (ROM `0x08006770`,
-immediately before `sub_80067A4` - joined `src/oam_count.c` above it, no
+immediately before `sub_80067A4` - joined `src/graphics/oam_count.c` above it, no
 new split). Two unrelated pieces in one function: if `arg0->+0x18` is
 non-NULL, reads a signed 16-bit offset and a pointer out of a nested
 struct (`arg0->+0x18->+0x18`, offset `+0x50`/`+0x54`) and calls
@@ -523,7 +523,7 @@ named locals, which changed the evaluation order to match the ROM's
 trailing pointer field - not both reads up front).
 
 Twenty-ninth matched function: `sub_8006714` (ROM `0x08006714`,
-immediately before `sub_8006770` - joined `src/oam_count.c` above it, no
+immediately before `sub_8006770` - joined `src/graphics/oam_count.c` above it, no
 new split). A scene/frame setup routine: calls `sub_80006A8(arg0)`, then
 `sub_8006DC8`/`sub_8006AAC` on two globals (`gUnknown_030012B8`,
 `gUnknown_03001300` - the second call is our own already-matched
@@ -542,7 +542,7 @@ naturally from gcc just evaluating a sequence of plain absolute-address
 volatile pointer dereferences in program order.
 
 Thirtieth matched function: `sub_8006700` (ROM `0x08006700`, immediately
-before `sub_8006714` - joined `src/oam_count.c` above it, no new split).
+before `sub_8006714` - joined `src/graphics/oam_count.c` above it, no new split).
 Trivial: increments `arg0->field_1c`, then calls `sub_8008044(arg0->field_18)`
 - the same `field_18`/`field_1c` field names as `sub_8006770`, reinforcing
 that these functions likely all operate on the same "actor" or "entity"
@@ -567,7 +567,7 @@ sub_8006700_actor` (shared with `sub_8006700`/`sub_8006714`/
 `sub_8006770`) with `field_10`/`field_14` for `self`'s shape rather than
 defining a second struct for the same object.
 
-**Build toggle**: this function's C definition in `src/oam_count.c` is
+**Build toggle**: this function's C definition in `src/graphics/oam_count.c` is
 wrapped in `#if NON_MATCHING`, and the corresponding raw bytes in
 `asm/code_3_1.s` are wrapped in `.if NON_MATCHING == 0` / `.endif`, so
 exactly one definition of `sub_8006600` is ever assembled. Default builds
@@ -641,7 +641,7 @@ memory. It must never be used, even in parked/`NON_MATCHING` code.
 **Refined this session**: the bug is narrower than it first looked. It
 is specific to *explicit* `register T x asm("r7")` pinning (and likely
 inline-asm `"=&r"`-constrained outputs), not to r7 in general. Proof:
-`sub_800132C` (`src/fade_util.c`, already matched byte-exact) has a
+`sub_800132C` (`src/graphics/fade_util.c`, already matched byte-exact) has a
 do-while loop where a plain, completely unpinned local (`dirBit8`,
 originally just a normal C value) survives repeated calls to
 `sub_80006A8()` inside the loop, and gcc's own *unforced* allocator
@@ -752,7 +752,7 @@ byte-exact on the second try (first attempt used `s32`/plain globals and
 got the branch condition, register letters, and the `+=`'s redundant
 reload all slightly wrong).
 
-Next four matched functions, all in `src/irq.c` immediately after
+Next four matched functions, all in `src/system/irq.c` immediately after
 `sub_80006A8`, matched first-try each:
 
 - `sub_80006EC` (ROM `0x080006EC`): trivial, `gUnknown_030007DC = 0;`.
@@ -842,7 +842,7 @@ whenever a hard-to-match function needs to be skipped without blocking
 everything after it.
 
 Seventh matched function: `sub_80008B4` (ROM `0x080008B4`, immediately
-after `sub_80007EC`; lives in new file `src/math_util.c`, since it's not
+after `sub_80007EC`; lives in new file `src/util/math_util.c`, since it's not
 yet called by anything matched and didn't fit thematically in
 `irq.c`) - a fixed-point squared-distance-style helper:
 `((dx>>8)^2 + (dy>>8)^2) << 8`. Matched first-try structurally; needed
@@ -864,14 +864,14 @@ Six more matched in the same file right after, all first-try:
   around `sub_803ADB4`, sign-extending 16-bit operands in and the result
   back out. `sub_803ADB4` itself looks like an atan2-style angle lookup
   (see its use in `sub_800697C` as `sub_803ADB4(total * 100, 0x48)` in
-  `src/graphics.c`), which fits `sub_80007EC` calling `sub_800090C` twice
+  `src/graphics/graphics.c`), which fits `sub_80007EC` calling `sub_800090C` twice
   to get two BG2 affine scale/rotation parameters from an angle.
 
 Eighth matched function (after a second pass): `sub_800094C`, a custom
 itoa (int-to-string, with a fast path for base 16 using bit-AND +
 arithmetic-shift instead of a division call, falling back to a
 `sub_8000140` divmod helper for other bases, then reversing the digits
-in place). Lives in new file `src/string_util.c`. This one needed
+in place). Lives in new file `src/util/string_util.c`. This one needed
 **every** local pinned to a specific register to match - a good worked
 example of the technique 5 warning in `matching_decomp_register_pinning`
 memory (the same *kind* of value needing different pins at different
@@ -956,7 +956,7 @@ approach in `matching_decomp_register_pinning` memory:
 
 Tenth matched function: `sub_8000AA8` (ROM `0x08000AA8`, right after
 `sub_80009F4`) - the actual printf-style driver these last several
-functions were building toward. Lives in new file `src/printf_util.c`.
+functions were building toward. Lives in new file `src/util/printf_util.c`.
 Walks `fmt`, echoing literal characters, and dispatching `%`-conversions
 through a jump table: `%s` (string copy), `%c` (single byte from the
 arg array - every slot is 4 bytes regardless of the value's real size),
@@ -1057,7 +1057,7 @@ every register correct except this branch shape in the 4 blocks.
 Whichever register ends up hosting the `s32 t` temp needs to be pinned
 without disturbing anything else already correct here; not yet found.
 
-**Build toggle**: this function's C definition in `src/printf_util.c` is
+**Build toggle**: this function's C definition in `src/util/printf_util.c` is
 wrapped in `#if NON_MATCHING`, and the corresponding raw bytes in
 `asm/code_3_1_2.s` are wrapped in `.if NON_MATCHING == 0` / `.endif`
 (same pattern as `sub_8006600`, see above), so exactly one definition is
@@ -1082,7 +1082,7 @@ as `sub_80007EC`'s: it sits between `sub_8000CBC` (parked, still raw in
 `asm/code_3_1_2.s`) and `sub_8000D80` onward, so `asm/code_3_1_2.s` was
 trimmed to end right after `sub_8000CBC`'s `.endif`, everything from
 `sub_8000D80` on moved to a new `asm/code_3_1_3.s` (same three-line
-header), and `sub_8000D68` itself lives in a new `src/string_util2.c`
+header), and `sub_8000D68` itself lives in a new `src/util/string_util2.c`
 (not `string_util.c` - that object already links *before*
 `printf_util.o`/`code_3_1_2.o` in `ldscript.txt`, which would put this
 function's code at the wrong address; a fresh translation unit was the
@@ -1134,7 +1134,7 @@ originally produced this file didn't detect the boundary. Gave it the
 `sub_8000DF8` name (its ROM address) like every other function here.
 
 Seventeenth through nineteenth matched functions, all first-try, in new
-file `src/rand_util.c` (RNG, doesn't fit any existing file): `sub_8000E10`
+file `src/util/rand_util.c` (RNG, doesn't fit any existing file): `sub_8000E10`
 (ROM `0x08000E10`, right after `sub_8000DF8`) seeds a global LCG state
 (`gUnknown_030007E4` in IWRAM) with its argument; `sub_8000E4C` (ROM
 `0x08000E4C`) advances that LCG (`seed = seed * 0x41C64E6D + 0x3039` -
@@ -1159,7 +1159,7 @@ entirely inside one already-open file) and added one `ldscript.txt`
 line for `rand_util.o` between `string_util2.o` and `code_3_1_3.o`.
 
 Twentieth matched function: `sub_8000E6C` (ROM `0x08000E6C`, right after
-`sub_8000E4C`) - Bresenham-line setup, in new file `src/line_util.c`
+`sub_8000E4C`) - Bresenham-line setup, in new file `src/util/line_util.c`
 (doesn't fit any existing file). Given a `struct bresenham_line *` with
 `x0`/`y0`/`x1`/`y1` already filled in, computes `dx`/`dy`, records each
 axis's step direction (`sx`/`sy`, `+1`/`-1`/`0`) and the absolute
@@ -1174,7 +1174,7 @@ splitting needed) and added one more `ldscript.txt` line
 (`line_util.o`, between `rand_util.o` and `code_3_1_3.o`).
 
 **Parked, not matched: `sub_8000EE4`** (ROM `0x08000EE4`, right after `sub_8000E6C`), in new
-file `src/text_layout.c`. A text-layout/word-wrap renderer: walks a
+file `src/graphics/text_layout.c`. A text-layout/word-wrap renderer: walks a
 NUL-terminated string one "token" at a time (`sub_80011F4` returns each
 token's byte length - looks like it splits on word boundaries), drawing
 each token through the OAM-icon system (`sub_803AD84`, returning the
@@ -1199,7 +1199,7 @@ Struct `sub_8000EE4_box` (the 3rd parameter) has only `field_0`/
 per-line pixel-width budget) named by use; the render-target object
 itself (2nd parameter) isn't given a named struct at all - just raw
 `u8 *self + offset` arithmetic throughout, matching the style already
-established in `sub_8006770` (`src/oam_count.c`) for the exact same
+established in `sub_8006770` (`src/graphics/oam_count.c`) for the exact same
 "record is an array of 8-byte `{s16, pad, void *}` entries, 0x10 bytes
 apart" shape - `self->0x130` holds a pointer to that array, and the
 function reads 3 different entries from it (`+0x18`/`+0x28`/`+0x38`)
@@ -1261,7 +1261,7 @@ detail) - the same barrier applied to `lineCount` at the bottom check
 trims the byte count further but introduces a new spurious stack store
 there instead, so it's left out pending a real fix.
 
-**Build toggle**: this function's C definition in `src/text_layout.c`
+**Build toggle**: this function's C definition in `src/graphics/text_layout.c`
 is wrapped in `#if NON_MATCHING`, and the corresponding raw bytes in
 `asm/code_3_1_3.s` are wrapped in `.if NON_MATCHING == 0` / `.endif`
 (same pattern as `sub_8006600`/`sub_8000CBC`, see above), so exactly
@@ -1272,7 +1272,7 @@ compiles this C version in instead (verified this session to compile
 and link cleanly with no duplicate-symbol errors).
 
 Twenty-first matched function: `sub_800106C` (ROM `0x0800106C`, right
-after the still-parked `sub_8000EE4`), in new file `src/time_util.c` -
+after the still-parked `sub_8000EE4`), in new file `src/util/time_util.c` -
 formats a centisecond count as `"MM:SS.X0"` into a 9-byte buffer (`void
 sub_800106C(s32 value, u8 *buf)`); only one fractional digit is
 actually computed (`value % 10`) - the other is always `'0'`, so the
@@ -1280,7 +1280,7 @@ displayed precision is really just tenths of a second despite the
 two-digit-looking field. Built on two not-yet-matched helpers,
 `sub_803AF1C` (mod) and `sub_8037E54` (div) - both declared here with
 plain `s32`/`s32` signatures despite `sub_803AF1C` already having a
-`u16`/`s32`-typed extern declaration in `src/rand_util.c` for a
+`u16`/`s32`-typed extern declaration in `src/util/rand_util.c` for a
 different call site; harmless; C linkage doesn't check parameter types
 across translation units, and both signatures compile to the same
 calling convention here anyway. Matched first-try structurally, needed
@@ -1291,13 +1291,13 @@ Extracting this one function required the same kind of split as
 `sub_8000CBC`'s and `sub_8000D68`'s: `asm/code_3_1_3.s` was trimmed to
 end right after `sub_8000EE4`'s `.endif`, and everything from
 `sub_80010E0` on moved to a new `asm/code_3_1_4.s`, with
-`src/time_util.c`'s object linked between them in `ldscript.txt`.
+`src/util/time_util.c`'s object linked between them in `ldscript.txt`.
 (`asm/code_3_1_4.s` was later removed again - see `sub_80010E0`'s own
 notes just below - once it turned out to hold only one function that
 also needed parking.)
 
 **Parked, not matched: `sub_80010E0`** (ROM `0x080010E0`, right after `sub_800106C`), in new
-file `src/input_util.c`. Polls input (the same `sub_80006A8`-then-
+file `src/system/input_util.c`. Polls input (the same `sub_80006A8`-then-
 `sub_80007AC` VBlank-wait-and-update-keys pair used elsewhere) until a
 button matching `mask`'s bit 0 (confirm) or bit 3 (cancel) is newly
 pressed, or - if `count != 0` - until `count` polls elapse; returns 0
@@ -1328,7 +1328,7 @@ sense with no special handling at all, which points at a fixed gcc-2.9
 canonicalization for this exact shape rather than something reachable
 from this file's C.
 
-**Build toggle**: this function's C definition in `src/input_util.c` is
+**Build toggle**: this function's C definition in `src/system/input_util.c` is
 wrapped in `#if NON_MATCHING`, and the corresponding raw bytes - now
 living in `asm/code_3_1_5.s`, right before `LoadTaggedAsset` (since
 `asm/code_3_1_4.s`, which held only this one function, was removed
@@ -1341,7 +1341,7 @@ and link cleanly with no duplicate-symbol errors).
 
 Twenty-second matched function: `LoadTaggedAsset` (ROM `0x08001174`,
 right after the still-parked `sub_80010E0`), in new file
-`src/asset_util.c`. Loads (or raw-copies) an asset based on a tag in
+`src/system/asset_util.c`. Loads (or raw-copies) an asset based on a tag in
 its first word's high nibble: `0` = uncompressed (a manual DMA3 setup -
 `SAD`/`DAD`/`CNT` written directly through a `vu32 *` at `0x040000D4`,
 word-sized transfer, byte count taken from the header's remaining 24
@@ -1383,18 +1383,18 @@ never end up sharing an object with something that no longer sits
 immediately next to it in the final link.
 
 Twenty-third matched function: `sub_80011C0` (ROM `0x080011C0`, right
-after `LoadTaggedAsset`), also in `src/asset_util.c` - loads one
+after `LoadTaggedAsset`), also in `src/system/asset_util.c` - loads one
 background's tile/tileset data (the tagged asset at `asset + 0x200`,
 via `LoadTaggedAsset`) into VRAM at `0x06000000`, then DMAs the first
 `0x200` bytes of `asset` itself (a raw 256-halfword palette) straight
 into palette RAM at `0x05000000`. Matched first-try.
 
 Twenty-fourth matched function: `sub_80011F4` (ROM `0x080011F4`, right
-after `sub_80011C0`), in new file `src/word_util.c` - returns the
+after `sub_80011C0`), in new file `src/util/word_util.c` - returns the
 length of the next "word" starting at `s`: the count of characters up
 to and including the first space, or up to (but not including) the NUL
 terminator if no space comes first. This is exactly what the still-
-parked `sub_8000EE4` (`src/text_layout.c`) uses to walk text one token
+parked `sub_8000EE4` (`src/graphics/text_layout.c`) uses to walk text one token
 at a time. Needed a single shared `goto done;` return point (matching
 the ROM's one `bx lr`) rather than three separate `return` statements,
 which otherwise compile to three separate epilogues.
@@ -1405,13 +1405,13 @@ nothing and removed, its ldscript slot going to `word_util.o`, with
 everything from `sub_8001214` on moved to a new `asm/code_3_1_7.s`.
 
 Twenty-fifth matched function: `sub_8001214` (ROM `0x08001214`, right
-after `sub_80011F4`), also in `src/word_util.c` - a thin wrapper around
+after `sub_80011F4`), also in `src/util/word_util.c` - a thin wrapper around
 the still-parked `sub_8000EE4`: stashes one field from its `params`
 struct into the render-target object's own `field_118`, computes a
 line-count limit (`params->field_c / self->field_11c`), then forwards
 to `sub_8000EE4` with that limit and **returns its result** - genuinely
 `s32`, not `void`, even though the one call site matched so far
-(`sub_8006600` in `src/oam_count.c`, still parked) ignores it. Caught
+(`sub_8006600` in `src/graphics/oam_count.c`, still parked) ignores it. Caught
 via the epilogue: an initial `void`-returning version compiled the
 final "restore LR and branch" step through `r0` (`pop {r0}; bx r0`),
 one register off from the ROM's `pop {r1}; bx r1` - changing the return
@@ -1426,8 +1426,8 @@ constant plus 4 for the `field_11c` offset instead of recomputing it
 from scratch, incidentally also matching the ROM there).
 
 Twenty-sixth matched function: `sub_8001254` (ROM `0x08001254`, right
-after `sub_8001214`), in new file `src/line_util2.c` - advances a
-Bresenham line (set up by `sub_8000E6C`, `src/line_util.c`) by one
+after `sub_8001214`), in new file `src/util/line_util2.c` - advances a
+Bresenham line (set up by `sub_8000E6C`, `src/util/line_util.c`) by one
 step: the "driving" axis (`x0` if `flag` is set, `y0` otherwise) always
 advances by its sign; the other axis advances only when the
 accumulated error term (`field_10`) is positive, in which case the
@@ -1449,7 +1449,7 @@ produced an inverted branch (`ble`/fallthrough-swapped) that still
 byte-for-byte. Needed the usual trailing `asm(".align 2, 0")` fix.
 
 Twenty-seventh matched function: `sub_80012AC` (ROM `0x080012AC`, right
-after `sub_8001254`), in new file `src/fade_util.c` - a per-frame
+after `sub_8001254`), in new file `src/graphics/fade_util.c` - a per-frame
 screen-brightness fade tick. Every `gUnknown_030007E8.field_0` frames,
 writes the next step to `BLDY` (`0x04000054`), counting up or down
 depending on `field_8`'s top bit (fade in vs. out); after 17 steps (a
@@ -1465,7 +1465,7 @@ the loaded byte in r0 and the constant in r1 instead, one register off,
 regardless of which order the two operands are written in the C.
 
 Twenty-eighth matched function: `sub_800132C` (ROM `0x0800132C`, right
-after `sub_80012AC`), also in `src/fade_util.c` - starts a screen fade.
+after `sub_80012AC`), also in `src/graphics/fade_util.c` - starts a screen fade.
 `flags` bit 0 selects the blend target (`BLDCNT`, `0xBF` vs `0xFF`),
 bit 7 selects direction (fade in from `0x10` vs fade out from `0`);
 `frameDelay` (clamped to at least 1) is how many frames each of the 17
@@ -1486,7 +1486,7 @@ identical either way and only showed up as a real mismatch once
 directly diffed.
 
 Twenty-ninth matched function: `sub_80013FC` (ROM `0x080013FC`, right
-after `sub_800132C`), in new file `src/palette_blend.c` - blends the
+after `sub_800132C`), in new file `src/graphics/palette_blend.c` - blends the
 whole 512-entry palette at `gUnknown_03000A80` toward black by
 `factor`/16 per channel (5 bits each, GBA BGR555), writing the result
 to `gUnknown_03000E80`. Each channel is extracted via an explicit
@@ -1517,8 +1517,8 @@ scratch-test comparisons up to the very last iteration.
 
 ### Cleanup pass over everything matched so far
 
-After the run of matches above, a pass over `src/graphics.c`,
-`src/oam_count.c` and `src/actor_anim.c` to tighten up readability
+After the run of matches above, a pass over `src/graphics/graphics.c`,
+`src/graphics/oam_count.c` and `src/graphics/actor_anim.c` to tighten up readability
 without touching generated code (`make compare` re-checked after every
 edit below):
 
@@ -1571,32 +1571,32 @@ Another readability pass over everything matched or parked since the
 previous cleanup, again re-checking both `make compare` and
 `make NON_MATCHING=1` after every edit:
 
-- **Hardware registers**: `src/fade_util.c`'s raw `0x04000054`/
+- **Hardware registers**: `src/graphics/fade_util.c`'s raw `0x04000054`/
   `0x04000050`/`0x04000208` became `REG_BLDY`/`REG_BLDCNT`/`REG_IME` -
   the last one had been mislabeled as `REG_IE` in an earlier writeup
   (`0x04000208` is actually `IME`, the interrupt *master* enable, not
   the per-source `IE` at `0x04000200` - an easy mix-up since both are
   "the interrupt enable register" in casual terms, but the ROM's own
   "write 0, do a critical section, write 1" idiom here specifically
-  needs the master switch). `src/asset_util.c`'s two raw
+  needs the master switch). `src/system/asset_util.c`'s two raw
   `0x040000D4`-based `vu32 *dma` pointers became `struct dma_regs *`
   (see next point) through `REG_ADDR_DMA3SAD`.
 - **Struct consolidation**:
-  - `struct dma_regs` (`src/graphics.c`'s local `{ vu32 src, dst, cnt;
+  - `struct dma_regs` (`src/graphics/graphics.c`'s local `{ vu32 src, dst, cnt;
     }`) moved to `include/gba/dma_macros.h` (the header that already
     holds every other DMA-related macro) and is now shared by
-    `src/asset_util.c`'s `LoadTaggedAsset`/`sub_80011C0` instead of each
+    `src/system/asset_util.c`'s `LoadTaggedAsset`/`sub_80011C0` instead of each
     doing raw `vu32 *` + manual `[0]`/`[1]`/`[2]` indexing.
   - `struct bresenham_line` (independently declared, identically, in
-    both `src/line_util.c` and `src/line_util2.c` purely because the
+    both `src/util/line_util.c` and `src/util/line_util2.c` purely because the
     two functions that share it link far apart) moved to a new
     `include/line_util.h`, included by both.
-  - `struct icon_manager`/`struct icon_record` (`src/oam_count.c`,
+  - `struct icon_manager`/`struct icon_record` (`src/graphics/oam_count.c`,
     previously with `field_10`/`field_14`/`field_20`/`field_24` named
     directly on `icon_record`) moved to a new `include/icon_manager.h`
     and `icon_record` was reshaped into `struct icon_slot { s16 offset;
     u8 unused[2]; void *ptr; } slots[6]` - an 8-byte-stride array,
-    confirmed by `sub_8000EE4` (`src/text_layout.c`, still parked)
+    confirmed by `sub_8000EE4` (`src/graphics/text_layout.c`, still parked)
     independently needing three *more* slots (`slots[1]`/`[3]`/`[5]`,
     at the offsets right in between the two `sub_8006600` already used)
     for its own per-glyph and newline-marker OAM draws. `text_layout.c`
@@ -1604,11 +1604,11 @@ previous cleanup, again re-checking both `make compare` and
     instead of raw `u8 *self + <offset>` arithmetic throughout.
   - Checked for (but didn't find) a similar merge opportunity between
     `sub_8000EE4`'s `struct sub_8000EE4_box` and `sub_8001214`'s
-    `struct sub_8001214_params` (`src/word_util.c`) - different field
+    `struct sub_8001214_params` (`src/util/word_util.c`) - different field
     layouts (offsets 0/4/8 vs. 0/0xc), not the same object.
-  - Left `gUnknown_030007E0` (`src/irq.c`)/`gUnknown_030007E4`
-    (`src/rand_util.c`)/`gUnknown_030007E8`+`gUnknown_030007F4`+
-    `gUnknown_030007F8` (`src/fade_util.c`) as separate globals despite
+  - Left `gUnknown_030007E0` (`src/system/irq.c`)/`gUnknown_030007E4`
+    (`src/util/rand_util.c`)/`gUnknown_030007E8`+`gUnknown_030007F4`+
+    `gUnknown_030007F8` (`src/graphics/fade_util.c`) as separate globals despite
     being adjacent in IWRAM (`0x7E0`-`0x7F8`) - `irq.c`'s own notes
     already established that combining even just the first pair into
     one struct changes agbcc's literal-pool codegen for already-matched

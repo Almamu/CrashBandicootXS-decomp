@@ -1,7 +1,7 @@
 #include "core.h"
 #include "icon_manager.h"
 
-/* Sits right after sub_8000E6C (ROM 0x08000E6C, in src/line_util.c) and
+/* Sits right after sub_8000E6C (ROM 0x08000E6C, in src/util/line_util.c) and
  * before sub_800106C (still raw in asm/code_3_1_3.s). */
 
 #if NON_MATCHING

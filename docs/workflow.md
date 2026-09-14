@@ -42,7 +42,11 @@ incomplete pass and should be finished before moving on.
    contiguous ROM region, not one per "topic"** - a function whose real
    address isn't adjacent to an existing matched file's functions needs
    its own new `.c` file instead (see `GetAnimFrameBaseOffset`'s entry
-   in matching.md for a worked example).
+   in matching.md for a worked example). A new file still goes under
+   whichever of `src/graphics/`/`src/util/`/`src/system/`/`src/audio/`
+   matches what the function actually *does* - that split is orthogonal
+   to the ROM-contiguity one above (see `docs/status/README.md` for what
+   each directory covers).
 5. Rename every remaining `bl <old_name>`/`.4byte <old_name>` reference
    to the function elsewhere in the still-asm files to match (the linker
    will fail with "undefined reference" if any are missed - a useful
@@ -89,8 +93,10 @@ incomplete pass and should be finished before moving on.
      immediately, not left in on the theory that it's "close enough."
 8. Update matching.md's per-function log (a short paragraph like the
    existing entries is enough; a subtler fix may deserve its own
-   explained bullet like the "Cleanup pass" entries there) and
-   `README.md`'s status list, then commit. If this function got a real
+   explained bullet like the "Cleanup pass" entries there) and the
+   matched/parked list in `docs/status/<system>.md` for whichever of
+   `src/graphics/`/`util/`/`system/`/`audio/` this function lives under,
+   then commit. If this function got a real
    name only now (rather than already having one before it was matched),
    or turned out to be a separate function the original disassembly
    never gave its own label, add a line to `expected/corrections.txt` -

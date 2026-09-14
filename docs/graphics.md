@@ -4,8 +4,8 @@ How graphics assets were located and extracted from the ROM, and ongoing
 notes on the sprite/actor rendering system. For byte-exact matching
 decompilation notes (workflow, register-allocation gotchas, per-function
 parked/matched log across the whole codebase, including the
-graphics-adjacent functions in `src/graphics.c`/`src/oam_count.c`/
-`src/actor_anim.c`), see [matching.md](./matching.md) instead.
+graphics-adjacent functions in `src/graphics/graphics.c`/`src/graphics/oam_count.c`/
+`src/graphics/actor_anim.c`), see [matching.md](./matching.md) instead.
 
 ## Background/tileset extraction (done)
 
@@ -259,7 +259,7 @@ into the (still unidentified) region beyond it
 
 ### Found the real sprite-loading path (not through the HUD vtable system)
 
-Traced from the other direction as planned: `AgbMain` (`src/main.c`) calls
+Traced from the other direction as planned: `AgbMain` (`src/system/main.c`) calls
 `MainLoop`, which contains the game's true main loop (an unconditional
 `b` back to itself, calling `UpdateGameFrame` every iteration - this never
 returns during normal play, which is why `AgbMain`'s post-loop cleanup

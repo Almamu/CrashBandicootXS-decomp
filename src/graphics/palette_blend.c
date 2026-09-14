@@ -1,6 +1,6 @@
 #include "core.h"
 
-/* Sits right after sub_800132C (ROM 0x0800132C, in src/fade_util.c)
+/* Sits right after sub_800132C (ROM 0x0800132C, in src/graphics/fade_util.c)
  * and before whatever's still raw in asm/code_3_1_7.s. */
 
 extern u16 gUnknown_03000A80[512];
