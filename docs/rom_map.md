@@ -2040,6 +2040,31 @@ dedicated follow-up, not folded into the settings-menu reading.
 Confidence: high on "distinct state machine, not a settings row," low
 on specific purpose. None of the four are entity-vtable-dispatched.
 
+**Follow-up, with one correction: `sub_80031E4` doesn't "draw via
+`sub_803AD7C`"** - that's a `bx r1` BLX-emulation trampoline (part of
+the documented `sub_803AD78`-`94` family), so the call proves only
+"makes one indirect call." The pre-loop (5 iterations over
+`self+0xA8`/`0xBC`/`0xD0`) actually calls a **per-slot function
+pointer** stored at each entry's `+0x18`, not a literal draw.
+`sub_80031E4`'s 11-case jump table turns out to be a **menu/dialog
+state machine that reuses settings-menu infrastructure**: case 3
+(`sub_80035C0`) plays `PlaySfx(0x47)` on a state transition - the same
+"confirm" SFX ID `sub_8005100` (the settings screen's confirm/cancel
+driver) already uses - and another case transition calls
+`sub_8026F38`, the same settings-row label-lookup function. Its only
+caller, **`sub_800300C(self, mode)`**, is a VBlank-paced wait loop with
+exactly two call sites, both **inside `UpdateGameFrame`** - one sits in
+the *same level-load state machine* as the between-level map screen
+(`sub_80354BC`, on a sibling branch of `sub_8035E14`'s return value:
+map screen fires on `==2`, this fires on the "not 0" branch) - very
+likely a **second between-level screen** (a confirm/prompt dialog)
+alternating with the map screen depending on level-load state; the
+second call site is gated on an unrelated condition, so it's reused
+generically as a modal dialog rather than tied to one trigger. Neither
+`sub_80031E4` nor `sub_800300C` are entity-vtable-dispatched.
+`sub_8035E14` (the shared level-load-stage selector) remains unread
+and would pin down exactly which states map to which screen.
+
 ### A fourth thing in this file: the small leftover cluster is a fade-to-black effect
 
 The ~0.4 KB of tiny leaf singletons left unlabeled by the split above
