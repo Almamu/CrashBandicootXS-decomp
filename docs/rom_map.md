@@ -1088,10 +1088,59 @@ subsection's claim by hand:
 
 Plus several of the core's largest individual functions read end-to-end
 regardless of which bucket they fell in (`sub_801AB98`, `sub_800B8DC`,
-`sub_80134B8`, `sub_0800D18C`). The remaining ~23.5 KB has no
-distinguishing signature found yet - the next concrete step is more of
-the same: pick the next-biggest unread function, read it, check whether
-it's vtable-dispatched or data-family-tagged, fold the result back in.
+`sub_80134B8`, `sub_0800D18C`, and - this round - `sub_8016288`,
+`sub_8011BD4`, `sub_800FF0C`, `sub_8017AB0`, `sub_801BC28`,
+`sub_8007634`, `sub_800E08C`, `sub_801C608`, `sub_801B304`; see below).
+The remaining ~14.5 KB has no distinguishing signature found yet - the
+next concrete step is more of the same: pick the next-biggest unread
+function, read it, check whether it's vtable-dispatched or
+data-family-tagged, fold the result back in.
+
+### Nine more core reads: a blend-effect setter/commit pair, a shared player-control type ID
+
+A parallel fork picked off the next-biggest unread functions in the
+94.4 KB main zone (~9 KB net-new coverage). None were entity-vtable-
+dispatched (all reached via `bl`); the two concrete new leads:
+
+- **`sub_801BC28`/`sub_801CCF8` are a setter/commit pair for one
+  blend/fade-effect subsystem.** `sub_801BC28` (1052 B) computes
+  `BLDCNT`-shaped bitmasks (layer-select bits, an alpha nibble) into
+  `self+0xA0`/`+0xA4`/`+0xA8`; `sub_801CCF8` (already documented in
+  "Two big unnamed systems") reads those *exact same three offsets*
+  and commits them to `REG_BLDCNT`/`BLDALPHA`/`BLDY`. Confirms the
+  two functions belong to a single subsystem rather than two unrelated
+  ones that happen to share field offsets.
+- **`sub_8016288`/`sub_8011BD4` share a type-ID gate (`0x1d`)**,
+  suggesting they're sibling state machines on the same object-type
+  family. `sub_8016288` (2088 B) is a per-frame input/state-machine
+  handler: reads D-pad input via the already-matched `sub_8000760`
+  (`src/system/irq.c`), gates on a child object's `+0x2D` type field
+  against `0x1d`/`0x1f`/`0x20`, then dispatches a 34-case jump table on
+  `self+0x22` - strong evidence of core **player movement/action
+  control**, referencing a new unlabeled table `gStaticData_0816C250`.
+  `sub_8011BD4` (1420 B) bails unless `self+0x8==0x1d` (the same
+  type ID), then runs a 25-case jump table on a second parameter, with
+  a further 7-case sub-dispatch on a nibble of a child object's `+4`
+  byte - reads as a companion state machine to `sub_8016288`.
+
+Smaller/lower-confidence reads, each real coverage but without a new
+family attached: **`sub_800FF0C`** (1396 B, entity constructor -
+allocates via `sub_8026EDC(100)`, sets `self+0x18 = &gStaticData_087E4074`,
+a real address inside the documented 93-entry `gStaticData_087Exxx`
+family, but at a new `+0x18` convention rather than the previously-seen
+`+0xC`); **`sub_8017AB0`** (1052 B, 3-state dispatch gated by
+`gUnknown_030012D8[0x104]` and a bit test); **`sub_8007634`** (1044 B,
+clamps a halfword at `self+0x3c`, min `0x40` - likely velocity/timer);
+**`sub_800E08C`** (1032 B, takes 3 stack-passed byte args, extends
+`gUnknown_030012D8`'s known layout with new `+0x88`/`+0x24` fields);
+**`sub_801C608`** (868 B, clean priority classifier - calls five
+sibling predicates `sub_802336C`/`sub_8023360`/`sub_8023354`/
+`sub_8023348`/`sub_802333C` in sequence, stores the index of the first
+true one into `self+0x98`); **`sub_801B304`** (800 B, indexes a new
+unlabeled 3-word-record table `gStaticData_0816C460` by
+`(child_object+8)*3`, conditionally sign-flips the three values,
+writes into a target object's `+0x60`/`+0x48`/`+0x4c`/`+0x50` -
+reads as a per-object-type directional velocity/offset table).
 
 ### Cross-checked the `UpdateGameFrame`-`MainLoop` cluster: same signature, not an island
 
