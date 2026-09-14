@@ -683,6 +683,46 @@ improvement: not just "part of the blob" but "specifically consumes
 *this* data" - a concrete, checkable claim, even without knowing what
 each individual function does.
 
+### Opening the black box: the two biggest undifferentiated-core functions read as player physics
+
+Read the two largest functions in the 48.2 KB "undifferentiated core"
+bucket to start narrowing it down. Both point the same direction:
+
+- **`sub_801AB98`** (1648 B, the single biggest function in the entire
+  94.4 KB zone): compares a passed-in object's bounding box against
+  `gUnknown_030012D8`'s rectangle - the single most-referenced symbol in
+  the whole zone (140 hits) - using `asrs r0, r0, #8` throughout, i.e.
+  **Q8.8 fixed-point coordinates**. Produces Cohen-Sutherland-style
+  edge/corner codes (`1`/`2`/`4`/`8`, matching left/right/top/bottom)
+  based on which side(s) the box crosses, with special-casing on an
+  object "type" field (`+0x78`, values 1/5/6 treated differently) and
+  further tile-grid-aligned comparisons via `sub_8009EBC`/`sub_8009EC4`
+  (pixel-to-tile helpers). Reads as a **tile/viewport collision-edge
+  test** - `gUnknown_030012D8` is very likely the camera/viewport
+  rectangle, and this is screen- or tile-boundary collision detection.
+- **`sub_800B8DC`** (1132 B): dispatches through an **18-entry jump
+  table** (`self+0x74` as the state selector, cases 0-17) into
+  per-state handler blocks that read a second object pointer
+  (`self+0x70`, an "owner"/context reference), call state-transition
+  helpers (`sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC`), and set a
+  fixed-point velocity-shaped constant (`0xFFFF9C00`, i.e. `-100` in the
+  same Q8.8 format - a negative/upward value, the shape of an initial
+  jump impulse). An 18-state state machine with velocity assignment is
+  exactly the shape of a **player (or generic dynamic-actor) state
+  machine** - idle/walk/jump/hurt/etc., not generic bookkeeping.
+
+Neither function has a single direct caller anywhere in the raw-asm call
+graph - the same "confirmed via connectivity, but only through shared
+low-level accessors, not a real caller edge" pattern already seen with
+the entity/level-config tables and the `menu_ui` dispatch table.
+Strongly suggests both are reached through **an as-yet-unlocated
+function-pointer vtable**, structurally similar to the actor category
+system's `gStaticData_081756C4` - a "player" or "dynamic object" vtable
+this document hasn't found yet. That's the natural next thread: finding
+*that* table would do for this 48.2 KB bucket what finding the category
+vtable already did for `actor`, and what finding the `0x0816C744` table
+did for `menu_ui`.
+
 ## The SFX system (`0x080014A4`-`0x08006700`, 20.6 KB)
 
 Previously investigated and already flagged as a dead end for further
