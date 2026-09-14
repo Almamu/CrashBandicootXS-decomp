@@ -1127,6 +1127,36 @@ given the offset comfortably fits inside that allocation). Reads as
 "given a sound/channel ID, find its slot" - plausibly infrastructure
 `PlaySfx`/`sub_80019A8` build on.
 
+**`sub_8022BF0`/`sub_8022CA0`** (a linked pair - the first calls the
+second) configure **GBA hardware window registers** (`REG_WIN0H`,
+`0x04000040`, written twice via `sub_803A94C` with source data from
+`gUnknown_030012B4`) - a genuinely new hardware system not seen
+elsewhere this session (window masking/spotlight-style visual
+effects). `sub_8022BF0` itself maintains a **modulo-100 wraparound
+accumulator** across three fields (`self+0x6C`/`0x70`/`0x74`),
+incrementing a "lap"/wrap counter (`self+0x74`) each time the position
+field exceeds 99 - reads as an odometer-style distance/lap counter,
+not raw position. `sub_8022CA0` branches on `self+0xDC->+8==3` (the
+recurring "mode 3" check seen throughout this session in multiple
+unrelated functions), and in both branches calls **`sub_8023414`** -
+the same field-`+0x70` getter already characterized as feeding the
+score-style HUD counter - storing its result into `self+0xCC`, then
+calling `sub_800014C` (one of `UpdateGameFrame`'s own direct top-level
+callees). Reads as: per-frame update of a wrapping counter/lap value,
+paired with a hardware window effect and a score-getter tie-in -
+plausibly a "distance traveled" or timer-adjacent HUD+visual element.
+
+**`sub_8022D50`** (344 B, the cluster's biggest unread function at the
+time) resets a 5-word block to zero, then - unless in "mode 3" -
+checks two child-object slots (`self+0x1B8`/`self+0x1BC`) and, for
+each non-null one, tags it (`self+0x2D = 7` and `= 0xC` respectively)
+before running the standard `sub_80087C0`/`sub_80087B4`/`sub_800872C`
+OAM-setup trio already seen dozens of times this session. Confirms the
+known toolkit, but the two distinct type tags (7 and `0xC`=12) are
+concrete new data points. None of the 17 biggest unread functions
+checked in this pass are entity-vtable-dispatched via the raw-pointer
+search - all called directly via `bl`.
+
 **Net conclusion: this cluster is not a separate island.** It's cut
 from the same cloth as the main zone - same connectivity signature,
 confirmed entity-vtable slots, the same hot globals
