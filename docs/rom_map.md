@@ -1159,11 +1159,13 @@ subsection's claim by hand:
 
 Plus several of the core's largest individual functions read end-to-end
 regardless of which bucket they fell in (`sub_801AB98`, `sub_800B8DC`,
-`sub_80134B8`, `sub_0800D18C`, and - this round - `sub_8016288`,
-`sub_8011BD4`, `sub_800FF0C`, `sub_8017AB0`, `sub_801BC28`,
-`sub_8007634`, `sub_800E08C`, `sub_801C608`, `sub_801B304`; see below).
-The remaining ~14.5 KB has no distinguishing signature found yet - the
-next concrete step is more of the same: pick the next-biggest unread
+`sub_80134B8`, `sub_0800D18C`, `sub_8016288`, `sub_8011BD4`,
+`sub_800FF0C`, `sub_8017AB0`, `sub_801BC28`, `sub_8007634`,
+`sub_800E08C`, `sub_801C608`, `sub_801B304`, and - this round -
+`sub_800E888`, `sub_800F990`, `sub_800AFF4`, `sub_8012420`,
+`sub_801A2A8`, `sub_800A884`, `sub_80159F8`, `sub_8016DDC`; see
+below). The remaining ~9.4 KB has no distinguishing signature found
+yet - the next concrete step is more of the same: pick the next-biggest unread
 function, read it, check whether it's vtable-dispatched or
 data-family-tagged, fold the result back in.
 
@@ -1212,6 +1214,47 @@ unlabeled 3-word-record table `gStaticData_0816C460` by
 `(child_object+8)*3`, conditionally sign-flips the three values,
 writes into a target object's `+0x60`/`+0x48`/`+0x4c`/`+0x50` -
 reads as a per-object-type directional velocity/offset table).
+
+### Eight more core reads: the 28-byte-record table has a constructor, and two cross-category ties confirmed
+
+A further fork read eight more functions (~5.1 KB net-new). The
+standout: **`sub_800E888`** (628 B) is plausibly the constructor for
+the "type `0x1d`" player-control entity `sub_8016288`/`sub_8011BD4`
+already gate on - it sets `self+0x2D = 0x1d` (the exact tag value),
+runs the standard OAM-setup trio, then reaches the **same 28-byte-
+record-array dereference chain** the `gStaticData_084A5600` fork found
+via `sub_801E04C` (`self+0x20 → *ptr + tag*0x1C`, reading byte
+`+0x14`). This directly proves tag `0x1d` is a live, populated slot in
+that table - a real cross-tie between the master-table sub-structure
+and the player-control type family found independently in two
+different passes. Two more functions confirm the same table at
+different offsets: **`sub_800F990`** (736 B, a proximity-gated cyclic
+state machine, tags `7`/`0xB`/`0xD`/`0x20`) reaches the identical
+`+0x14` chain again; **`sub_800AFF4`** (636 B) reaches it through a
+*child* object's `+0x20` field and reads a third offset, byte `+0x16`
+this time, clamping the result into `self+0x30` - three independent
+sites now confirming the same dereference shape.
+
+Two more cross-ties: **`sub_8012420`** (628 B) reads
+`gUnknown_03001308→+0x10→+0x14` (the documented lazy-singleton text
+box) for a pixel-position computation, and calls `sub_8012238` - the
+same function tied to `overlay_ui`'s `sub_8012AF4`/`sub_80157C4`
+callers - a new concrete `game_loop`<->`overlay_ui` call-graph link.
+**`sub_801A2A8`** (732 B) draws a two-part text label plus a
+`PlaySfx(0x39)` cue, then gates a second block on `gUnknown_030012D8`
+byte `+0x104` - the same field `sub_8017AB0` already gates on.
+
+Smaller reads, same known shapes: **`sub_800A884`** (616 B) wraps
+`sub_800A0FC` with a reentrancy-guard-shaped flag at
+`gUnknown_03001308+0x2a`, and separately calls `sub_803AD7C` - another
+member of the BLX-trampoline family (`sub_803AD78`-`94`), so this call
+proves only "makes one indirect call," not real work there.
+**`sub_80159F8`** (628 B) and **`sub_8016DDC`** (616 B) extend the
+directional-table/timed-state-machine shapes already found in this
+zone and in `actor` (`gStaticData_0816C090`, `gStaticData_0816C070` -
+two more unlabeled tables in the same family as `gStaticData_0816C460`).
+None of the eight showed vtable-dispatch patterns in this pass (spot
+pattern, not exhaustively re-checked against `baserom.gba`).
 
 ### Cross-checked the `UpdateGameFrame`-`MainLoop` cluster: same signature, not an island
 
