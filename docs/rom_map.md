@@ -931,6 +931,36 @@ right, worth a dedicated pass rather than more one-off large-function
 reads - the next concrete step for closing out `game_loop`'s remaining
 core.
 
+### Confirmed: a shared physics/collision subsystem, entered from multiple different entity types
+
+Followed up immediately. The neighborhood is real: **45 of its 75
+functions (14.9 KB) form one single connected component** - the same
+"nearly everything is one dominant component" signature every other
+confirmed subsystem in this document has shown. Traced its entry point
+up the call chain (`sub_0800D18C` ← `sub_80109A4` ← `sub_8009868` ←
+`sub_800AB9C`) and checked whether the top of that chain is itself
+vtable-dispatched, the same way `sub_800B8DC`/`sub_801AB34` were.
+**It is** - `sub_800AB9C` sits at `gStaticData_087E3E04+0x74`, the last
+slot of a *different* 15-slot entity vtable than either of the two
+already traced. That's the clean confirmation: this physics/collision
+code isn't specific to one entity type's behavior, it's **shared
+infrastructure multiple different entity-type vtables call into** -
+edge detection, collision response, and position commit as common
+services, with each type's own vtable slots supplying the
+type-specific behavior on top (state machines like `sub_800B8DC`'s,
+spawn/trigger logic, etc.).
+
+Cross-checked against what's still unexplained in `game_loop`'s core:
+**29 of this component's 45 functions (4.1 KB) were still sitting in
+the fully-unexplained remainder** before this pass (the other 16 were
+already accounted for, including the two large functions read earlier).
+Folded in with the direct vtable cross-reference from before (12.2 KB),
+that's **~16.3 KB of the original 48.2 KB "undifferentiated core" now
+concretely explained**, plus several of its largest individual
+functions read end-to-end - real progress on what was, at the start of
+this session, the single biggest unlabeled stretch of code in the
+entire ROM.
+
 **Net picture**: this data region is a small cluster of genuinely
 different tables - one big 36-slot per-level record array
 (`0x0816C86C`), a 22-row per-state frame-offset table
