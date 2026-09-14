@@ -43,10 +43,11 @@ taught this project to avoid. Treat this as the reading-level answer to
 |---|---|---|---|
 | `game_loop` (core per-frame/state-machine logic) | 112.7 KB | 47.3% | high for ~92.3% of the 94.4 KB zone (confirmed via reachability + two shared data-table families), the rest inferred by cohesion; the other ~18.3 KB of this category (the `UpdateGameFrame`-`MainLoop` gap) is separately evidenced, not yet closed the same way |
 | `actor` (category/part/vtable system) | 50.7 KB | 21.3% | high for ~38.7 KB (named landmarks + confirmed reachable)\*, ~12 KB inferred |
-| `graphics_loading` (package/tile/level loading) | 24.8 KB | 10.4% | high - dense named landmarks, plus a 6.2 KB stretch folded in this pass (see below) |
+| `graphics_loading` (package/tile/level loading) | 15.7 KB | 6.6% | mixed - `LoadGraphicsPackage` itself and its immediate neighbors read directly, ~9.1 KB moved out to `menu_ui`? (see below) |
 | `audio_sfx` (SFX layer, distinct from GAX2) | 20.6 KB | 8.6% | medium - one anchor (`PlaySfx`), rest by contiguity |
 | `audio_gax2` (Shin'en GAX2 engine) | 14.1 KB | 5.9% | medium - narrowed this investigation, see `docs/audio.md` |
 | `hud` (icon/text widgets, score/percentage/stat counters) | 6.1 KB | 2.6% | high - 1.3 KB named landmarks plus ~4.8 KB stat-widget cluster (8 functions, all individually read this pass) |
+| `menu_ui`? (text-label/dialog-entry construction, tentative) | 9.1 KB | 3.8% | medium - one function read in full, 30 siblings inferred by shared call signature |
 | `fx`? (particle/trajectory queue, tentative) | 0.3 KB | 0.1% | low - two small functions read |
 | `system` | 4.2 KB | 1.8% | matched, or matched-caller-confirmed (`LZ77UnCompWrapper` etc.) |
 | `graphics` | 2.1 KB | 0.9% | matched |
@@ -343,6 +344,55 @@ file, invisible to this grep), through a level of indirection this
 pattern search doesn't catch (a computed offset rather than a literal
 `#0x70`/`#0xC4`), or genuinely not written at all in the raw code
 searched so far. Left open rather than guessed at.
+
+## `graphics_loading` wasn't monolithic either: most of the `LoadGraphicsPackage` cluster is menu/dialog text
+
+Moved to a different big group per the user's direction, picking the
+16.2 KB `LoadGraphicsPackage` cluster (`0x0801E578`-`0x080225A0`) since
+it had never been read past the landmark itself. Reading
+`LoadGraphicsPackage` in full confirmed the easy part cleanly: it loads
+a palette (`LoadTaggedAsset` into `0x05000000`+), tiles
+(`LoadTaggedAsset` into `0x06000000`+), and a tilemap (into a scratch
+buffer, then OR-merged with a palette-bank offset into VRAM) - textbook
+graphics-package loading, no surprises.
+
+But this 102-function cluster is almost totally fragmented at the
+call-graph level (the single largest internal component is 3 functions)
+- very different from every zone read so far, and a sign that most of
+it consists of independent leaf functions called from *outside* this
+cluster rather than from each other. Reading two of the larger ones
+(all in the 300-370 B range, and there are dozens) found two clearly
+different systems, not one:
+
+- **`sub_801E788`** (368 B): indexes `gStaticData_0816C644`/
+  `gStaticData_0816C674` - the *same* 91-entry per-level parameter table
+  family already tied to `game_loop` - by a self-held level index, and
+  computes a centering offset (`(a-b)/2`-style arithmetic) between a
+  stored coordinate and the table's per-level reference point, packing
+  the result into a 9-bit position field. Reads as **background/
+  viewport alignment** - genuinely graphics/level-layout work, no
+  correction needed here.
+- **`sub_801F8DC`** (352 B): allocates an object (`sub_8009ED0`), pulls
+  a shared style/font object (`sub_800CA74`), calls `sub_803AD80` (the
+  matched text-width helper) **twice**, and writes through the same
+  low-level OAM setter trio (`sub_80087C0`/`sub_80087B4`/`sub_800872C`)
+  every other widget system in this document has used. Not a graphics
+  loader - this constructs a **text label as sprite tiles**, most likely
+  a menu or dialog entry (two text-width calls suggest two lines, or a
+  label plus a value).
+
+Checked how far the second pattern extends: **31 of the cluster's 102
+functions** call `sub_803AD80` and/or `sub_8009ED0` together, totaling
+**9.1 KB - 56% of the whole 16.2 KB cluster**. That's a bigger single
+correction than either the `hud`/`fx` split or anything else found this
+session. Tentatively split out as its own `menu_ui` category (no
+callers found in the raw-asm call graph for the one function read in
+full - either invoked from an already-matched `src/*.c` file, or from a
+menu/dialog system not yet connected to anything else in this document).
+`graphics_loading` shrinks to `LoadGraphicsPackage` itself plus whatever
+of the remaining ~6.9 KB (including `sub_801E788`'s positioning family)
+is genuinely graphics-flavored - not individually re-verified beyond the
+one sample read.
 
 ## The clear regions
 
