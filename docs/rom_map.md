@@ -46,11 +46,12 @@ taught this project to avoid. Treat this as the reading-level answer to
 | `graphics_loading` (package/tile/level loading) | 24.8 KB | 10.4% | high - dense named landmarks, plus a 6.2 KB stretch folded in this pass (see below) |
 | `audio_sfx` (SFX layer, distinct from GAX2) | 20.6 KB | 8.6% | medium - one anchor (`PlaySfx`), rest by contiguity |
 | `audio_gax2` (Shin'en GAX2 engine) | 14.1 KB | 5.9% | medium - narrowed this investigation, see `docs/audio.md` |
-| `fx`? (particle/trajectory queue, tentative) | 5.9 KB | 2.5% | low - one function read, see "Correcting `hud`" below |
-| `hud` (icon/text widgets) | 1.3 KB | 0.6% | high - dense named landmarks, but shrunk this pass (see below) |
+| `hud` (icon/text widgets, score/percentage counters) | 6.1 KB | 2.6% | mixed - 1.3 KB named landmarks (high), ~4.8 KB two digit-display functions read this pass (high), rest unread |
+| `fx`? (particle/trajectory queue, tentative) | 0.3 KB | 0.1% | low - two small functions read |
 | `system` | 4.2 KB | 1.8% | matched, or matched-caller-confirmed (`LZ77UnCompWrapper` etc.) |
 | `graphics` | 2.1 KB | 0.9% | matched |
 | `util` | 1.8 KB | 0.8% | matched |
+| *(unlabeled remainder)* | ~0.8 KB | 0.3% | none - a small timer-ish cluster and a few unread leaf functions left over from splitting the old `fx` bucket above, not folded into anything |
 
 \* `0x08029ED0`-`0x0802B348` (8.2 KB, named landmarks) plus 28.4 KB of
 the 40.4 KB zone directly confirmed by that zone's reachability pass;
@@ -182,6 +183,55 @@ lesson generalizes: **every other "gap between landmarks" region in
 this document that hasn't had at least one function actually read
 carries the same risk** - proximity in ROM is a weak signal on its own,
 worth treating as a hypothesis rather than a placement until checked.
+
+## `fx` wasn't right either - most of it is HUD after all
+
+Read through the rest of the 29-function gap (all but a handful of the
+smallest leaf functions) rather than just the two samples above, since
+the user asked directly whether it's genuinely all `fx`. It isn't - and
+most of it, on direct reading, turns out to be `hud` again, just with
+real evidence behind it this time instead of ROM proximity:
+
+- **`sub_8027940`** (1052 B, the biggest function in the gap): reads a
+  value via `sub_8023414`, compares it to 99, and - when over two
+  digits - calls `sub_803ADB4(value, 100)` then `sub_803ADB4(value, 10)`
+  + `sub_803AE4C(_, 10)` (the "atan2 helper" and the "generic division
+  routine" from the correction above, both reused here for something
+  much more mundane: **splitting an integer into hundreds/tens/ones
+  digits**), storing each digit's glyph index into a small OAM-shaped
+  struct (`+0x30` field, capped against a per-glyph-set max read from a
+  table). This is a textbook **numeric counter widget update** - almost
+  certainly a score display.
+- **`sub_8027E88`** (1400 B, the largest function in the whole zone):
+  calls `sub_803AD7C` (immediately next to the matched `sub_803AD80`/
+  `sub_803AD84` text-drawing helpers), computes a value, and branches
+  specially on `cmp r1, #0x64` (100) before writing per-digit glyph
+  indices the same way as above. Reads as a **percentage counter**
+  (a "XX% complete" style display, cmp-100 handling the 3-digit special
+  case) - not fx at all.
+- **The `sub_802710C`/`sub_8027120`/`sub_8027138`/`sub_802732C` cluster**
+  (992 B): sets up a fixed 34-slot OAM array, pulling its per-slot
+  constructor pointer from `gStaticData_087E4CB4` - a member of the
+  *same* 93-entry entity-descriptor family this document already tied
+  to `game_loop`/`actor`. Called directly by both `UpdateGameFrame` and
+  `SetupActorVramPool` (a real `graphics_loading`/actor landmark, not a
+  hub). Reads as setup for a row of status icons.
+- **Genuinely still `fx`-shaped**: just `sub_8026F54`/`sub_8027018`
+  (308 B combined) - the ring-buffer-with-an-angle-field pair from the
+  correction above. Everything else that's been read points at HUD, not
+  this.
+
+Net tally: **~4.8 KB of the 5.9 KB gap (~80%) is HUD** (two digit-display
+widgets plus the icon-array setup, all separately evidenced - not
+neighbors-by-proximity this time), **~0.3 KB stays tentatively `fx`**
+(the queue pair), and the small remainder (a 3-function timer-ish
+cluster keyed off a global mode byte, plus a handful of unread leaf
+singletons, ~0.8 KB) is left unlabeled rather than guessed at. Folded
+back into the category table: `hud` rises to roughly **6.1 KB**, `fx`
+shrinks to essentially a rounding error. Second lesson on top of the
+first: even a "tentative, low-confidence" placement is worth reopening
+once there's time to actually read the thing, rather than trusting the
+label it was given under time pressure.
 
 ## The clear regions
 
