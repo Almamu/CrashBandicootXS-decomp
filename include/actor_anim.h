@@ -85,12 +85,22 @@ struct sprite_frame {
 };
 
 /* gStaticData_08175558 - 7 entries (categories 0-2 use the family rooted
- * at gStaticData_081796CC, 3-6 the one at gStaticData_0817B2A4). Selected
- * via SelectActorCategory(category, ...), which computes
- * gStaticData_081756C4 + category*0x34 and stores it as the active
- * vtable before calling its constructor (vtable slot 0). */
+ * at gStaticData_081796CC, 3-6 the one at gStaticData_0817B2A4). Each
+ * category's `type` field (0/1/2, see below) - NOT the category index
+ * itself - selects a shared vtable: traced the one real call site, and
+ * the caller reads gStaticData_08175558[category].type into the
+ * register it passes as SelectActorCategory's first argument, which
+ * then computes gStaticData_081756C4 + type*0x34 (confirmed against
+ * SelectActorCategory's own disassembly). Categories 0/1/2 all have
+ * type 0 and share one vtable; 3/4/5 all have type 1 and share another;
+ * 6 is type 2, on its own - three real vtables total, not seven, so
+ * gStaticData_081756C4 below is declared [3]. Whatever data actually
+ * follows those three at gStaticData_081756C4+0x9C (ROM 0x08175760) is
+ * unrelated - it doesn't decode as a 4th/5th/6th/7th vtable no matter
+ * how it's sliced (verified directly against the raw bytes), so
+ * there's no "categories 3-6 vtable" to go looking for. */
 struct category_descriptor {
-    u32 type;                       // 0x00 - 0/1/2 across categories 0-2, 1/2 across 3-6; role beyond that unclear
+    u32 type;                       // 0x00 - 0 for categories 0-2, 1 for 3-5, 2 for 6 - selects the shared vtable, see above
     void *family_shared_04;         // 0x04 - constant across all categories in one family; pointer-shaped, role unknown
     u32 family_shared_08;           // 0x08 - constant across all categories in one family; role unknown
     void *conditional_ptr_0C;       // 0x0C - if non-NULL, sub_802F7B0 (not reversed) gets called during category init
@@ -106,13 +116,17 @@ struct category_descriptor {
 }; // 0x34
 COMPILE_TIME_ASSERT(sizeof(struct category_descriptor) == 0x34);
 
-/* gStaticData_081756C4 - 7 entries, category-indexed the same way as
- * category_descriptor above. Exact signatures unknown (none of these
- * functions have been reversed to C yet); slot 0 is confirmed to be the
- * constructor, ConstructAnimTableState (receives the animation table base
- * and the descriptor's position_offset_flag). A couple of slots (7 and 8, at
- * least for category 0) hold obviously-invalid addresses and appear to
- * simply be unused for that category. */
+/* gStaticData_081756C4 - 3 entries, type-indexed (see category_descriptor
+ * above), not category-indexed - categories that share a type share one
+ * of these. Exact signatures unknown (none of these functions have been
+ * reversed to C yet); slot 0 is confirmed to be the constructor,
+ * ConstructAnimTableState (receives the animation table base and the
+ * descriptor's position_offset_flag). A couple of slots (7 and 8, at
+ * least for type 0) hold obviously-invalid addresses and appear to
+ * simply be unused for that type. Placeholder names for the per-type
+ * functions once matched (slots 2-6, the ones that actually differ
+ * between types): Actor0_*/Actor1_*/Actor2_* rather than a guessed
+ * real-world name - see docs/naming.md. */
 struct category_vtable {
     void (*fn[13])(void);
 }; // 0x34
@@ -120,15 +134,13 @@ COMPILE_TIME_ASSERT(sizeof(struct category_vtable) == 0x34);
 
 /* gStaticData_08175558 is already split out at exactly this size in
  * data/data.s (7*0x34 = 0x16C bytes before gStaticData_081756C4 starts).
- * gStaticData_081756C4 is only labeled for its first 3 entries there
- * (0x9C of 0x16C bytes) - the remaining 4 categories' vtables are real,
- * contiguous ROM bytes (confirmed empirically), but currently sit inside
- * the next symbol, gStaticData_08175760, which is still labeled as a
- * generic padding/unidentified block. The declaration below is the true
- * data shape either way - reading gStaticData_081756C4[3..6] is correct
- * today, it just currently reads through that symbol's name instead. */
+ * gStaticData_081756C4 is only labeled for its first 3 entries there,
+ * which is also all of it - there is no 4th/5th/6th/7th vtable to find,
+ * see the comment on category_descriptor.type above. Whatever real data
+ * follows it at gStaticData_081756C4+0x9C (ROM 0x08175760, currently
+ * inside the still-generic gStaticData_08175760 label) is unrelated. */
 extern struct category_descriptor gStaticData_08175558[7];
-extern struct category_vtable gStaticData_081756C4[7];
+extern struct category_vtable gStaticData_081756C4[3];
 
 /* Not split out as their own labels in data/data.s yet - the bytes exist
  * at these ROM addresses (currently inside larger unlabeled incbin

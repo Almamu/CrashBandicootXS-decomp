@@ -571,9 +571,13 @@ was called with, which led away from the HUD vtable system entirely into a
 separate, much more elaborate chain:
 
 - **`gStaticData_08175558`** - a per-actor-*category* descriptor array,
-  `0x34` (52-byte) stride, 7 valid entries. Selected via
-  `SelectActorCategory(category, ...)`, which computes
-  `gStaticData_081756C4 + category*0x34` (see next) and stores it as the
+  `0x34` (52-byte) stride, 7 valid entries. `+0x00` is a `type` field (0
+  for categories 0-2, 1 for 3-5, 2 for 6 - only 3 distinct values, see
+  next). Selected via `SelectActorCategory(type, ...)` - traced the one
+  real call site: the caller reads `gStaticData_08175558[category].type`
+  and passes *that* (not the raw category index) as the argument, which
+  `SelectActorCategory` then uses to compute
+  `gStaticData_081756C4 + type*0x34` (see next) and stores it as the
   active vtable, then calls vtable slot 0 (the constructor) passing the
   descriptor's `+0x18` field. Key fields (word offsets): `+0x10` = a raw
   16-color OBJ palette pointer (DMA'd to `0x05000200`), `+0x18` = the
@@ -585,10 +589,17 @@ separate, much more elaborate chain:
   first extraction pass). **Note:** despite living in the same descriptor
   record, this `+0x1C` sheet is *not* the data source for the animation
   system below - see the callout at the end of this section.
-- **`gStaticData_081756C4`** - the category vtable array, same `0x34`
-  stride but interpreted as **13 plain function pointers** (not the
-  `{0, ptr}` pair convention the HUD vtable system uses - a different,
-  unrelated convention that happens to reuse the same struct-offset idea).
+- **`gStaticData_081756C4`** - the vtable array, same `0x34` stride but
+  interpreted as **13 plain function pointers** (not the `{0, ptr}` pair
+  convention the HUD vtable system uses - a different, unrelated
+  convention that happens to reuse the same struct-offset idea). Only
+  **3 real entries** (type-indexed, not category-indexed - categories
+  sharing a type share one of these and so run identical
+  construct/update logic, differing only by data). An earlier pass here
+  assumed 7 entries, one per raw category, and misread whatever data
+  happens to follow the 3rd entry as a 4th - verified directly against
+  the raw bytes (a repeating 32-byte-strided pattern, not this struct's
+  `0x34` stride at all) that there's nothing there to find.
 - **`InitActorPart`** - constructs one *part* instance: `r1` (the per-part
   descriptor) is computed at call sites as
   `gUnknown_0300147C[0] + index*0x28` (40-byte stride) - i.e. a single
