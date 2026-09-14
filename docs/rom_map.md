@@ -43,7 +43,7 @@ taught this project to avoid. Treat this as the reading-level answer to
 |---|---|---|---|
 | `game_loop` (core per-frame/state-machine logic) | 112.7 KB | 47.3% | high for ~92.3% of the 94.4 KB zone (confirmed via reachability + two shared data-table families), the rest inferred by cohesion; the other ~18.3 KB of this category (the `UpdateGameFrame`-`MainLoop` gap) is separately evidenced, not yet closed the same way |
 | `actor` (category/part/vtable system) | 50.7 KB | 21.3% | high for ~38.7 KB (named landmarks + confirmed reachable)\*, ~12 KB inferred |
-| `graphics_loading` (package/tile/level loading) | 15.7 KB | 6.6% | mixed - `LoadGraphicsPackage` itself and its immediate neighbors read directly, ~9.1 KB moved out to `menu_ui`? (see below) |
+| `graphics_loading` (package/tile/level loading) | 15.7 KB | 6.6% | mixed - `LoadGraphicsPackage` itself and its immediate neighbors read directly, ~9.1 KB moved out to `menu_ui` (see below) |
 | `audio_sfx` (SFX layer, distinct from GAX2) | 20.6 KB | 8.6% | medium - one anchor (`PlaySfx`), rest by contiguity |
 | `audio_gax2` (Shin'en GAX2 engine) | 14.1 KB | 5.9% | medium - narrowed this investigation, see `docs/audio.md` |
 | `hud` (icon/text widgets, score/percentage/stat counters) | 6.1 KB | 2.6% | high - 1.3 KB named landmarks plus ~4.8 KB stat-widget cluster (8 functions, all individually read this pass) |
