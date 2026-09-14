@@ -1,5 +1,6 @@
-# Corrections applied to build/expected/code_3.o after assembling the
-# frozen expected/code_3.s (never to the source itself - see
+# Corrections applied to build/expected/target.o (the merge of
+# expected/code_3.s and expected/legacy.s - see Makefile's `report`
+# target) after assembling, never to either frozen source itself (see
 # docs/decomp_dev.md and expected/README.md for why). Two kinds of entry,
 # one per line:
 #
@@ -27,3 +28,24 @@
 
 rename sub_8006BE4 FreeVramDmaQueue
 split 0x08000DF8 sub_8000DF8
+
+# expected/legacy.s (commit 8b090ca, the very first commit - see
+# expected/README.md) predates commit 710cc9a's renaming pass entirely,
+# so main.c/memory.c/irq.c's functions are still sub_XXXXXXXX there even
+# though they've had real names since 2025 - one rename per function
+# that got named while it was still being matched, back before this
+# project tracked that decision anywhere.
+rename sub_80001CC mem_heap_init
+rename sub_8000274 mem_collect
+rename sub_80003DC mem_free_bytes
+rename sub_8000440 mem_alloc
+rename sub_80004AC mem_free
+rename sub_80005D0 irq_disable
+rename sub_80005DC irq_setup
+rename nullsub_10 irq_empty_handler
+
+# The original disassembly has a local label here (`_0800039C:`, likely
+# because something branches to it) but never recognized it as its own
+# function - src/system/memory.c now has this as a properly-disassembled
+# (if unreachable) `sub_800039C`, see its comment there.
+split 0x0800039C sub_800039C

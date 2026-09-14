@@ -25,22 +25,33 @@ left to assemble a target object from directly.
 **The fix**: `expected/code_3.s` is a frozen copy of `asm/code_3.s` as it
 existed at commit `710cc9a`, the last point before any function was ever cut
 out of it - i.e. exactly the original disassembly, with real names already
-applied wherever they were known at that point. It is committed once and
-**must never be edited again** (see `expected/README.md`). This is what
-"pristine baseline" from the earlier discussion of this integration turned
-into in practice: rather than repeatedly re-extracting bytes from
-`baserom.gba` (which would lose per-symbol relocations and produce false
-mismatches for anything containing a function call), git history already had
-exactly the right frozen source sitting in it.
+applied wherever they were known at that point. `expected/legacy.s` is the
+same idea for the ROM's very first region (`main.c`/`memory.c`/`irq.c`'s
+functions): a frozen copy of `asm/code.s` as it existed at the very first
+commit (`8b090ca`), before *any* splitting or renaming happened at all -
+that region was fully matched away by late 2025, well before `code_3.s`
+even existed as a separate file, so it needed its own, earlier frozen
+source (see `expected/README.md` for the exact address range and how it
+was verified). Both are committed once and **must never be edited again**.
+This is what "pristine baseline" from the earlier discussion of this
+integration turned into in practice: rather than repeatedly re-extracting
+bytes from `baserom.gba` (which would lose per-symbol relocations and
+produce false mismatches for anything containing a function call), git
+history already had the right frozen sources sitting in it, for both
+regions.
 
 ## What `make report` builds
 
-Two objects, both under `build/expected/`:
-
-- **`code_3.o`** (the target) - `expected/code_3.s` assembled as-is, then
-  patched (see below) via `tools/patch_expected_target.py`. Contains every
-  function in scope, whether it's been matched yet or not.
-- **`base_combined.o`** (the base) - every currently-matched/parked
+- **`build/expected/legacy.o`**, **`build/expected/code_3.o`** - each
+  frozen source assembled as-is, no patching yet.
+- **`build/expected/target.o`** - the above two merged with
+  `arm-none-eabi-ld -r` (`legacy.o` first, matching real ROM address order -
+  `tools/patch_expected_target.py`'s corrections derive their addresses
+  from the merged object's own lowest `sub_XXXXXXXX` symbol, which only
+  lines up with real ROM addresses if the merge order matches the ROM's),
+  then patched via `tools/patch_expected_target.py` (see below). Contains
+  every function in scope, whether it's been matched yet or not.
+- **`build/expected/base_combined.o`** - every currently-matched/parked
   `src/*.c` object (built under `NON_MATCHING=1`, so parked functions are
   included as their real - possibly imperfect - C reconstruction, not
   swapped out for raw asm) merged into one object via `arm-none-eabi-ld -r`.
@@ -51,10 +62,11 @@ Two objects, both under `build/expected/`:
   "100% matched" (which raw, unconverted asm would otherwise show, since
   by construction it still reproduces the ROM bytes exactly).
 
-`objdiff.json` at the repo root points a single unit at these two objects.
-Run `make NON_MATCHING=1 report` after a clean build (`rm -rf build`) to
-produce them, matching [`docs/workflow.md`](./workflow.md)'s convention for
-`NON_MATCHING` builds generally.
+`objdiff.json` at the repo root points a single unit at `target.o`/
+`base_combined.o`. Run `make NON_MATCHING=1 report` after a clean build
+(`rm -rf build`) to produce them, matching
+[`docs/workflow.md`](./workflow.md)'s convention for `NON_MATCHING` builds
+generally.
 
 ## `expected/corrections.txt`: patching the target without editing it
 
@@ -75,9 +87,9 @@ namely:
   and the other doesn't appear at all.
 
 `tools/patch_expected_target.py` applies `expected/corrections.txt` to the
-*assembled* `code_3.o` via `objcopy --redefine-sym`/`--add-symbol` as part of
-building it - never to the `.s` source. See the comment at the top of
-`expected/corrections.txt` for the exact line format.
+merged, *assembled* `target.o` via `objcopy --redefine-sym`/`--add-symbol` as
+part of building it - never to either `.s` source. See the comment at the
+top of `expected/corrections.txt` for the exact line format.
 
 **When to add one**: whenever a newly-matched function doesn't show up in a
 locally-generated `report.json` at all, or reports an unexpectedly low match
@@ -87,29 +99,59 @@ be there.
 
 ## A separate, known limitation: small residual percentages on real matches
 
-`expected/code_3.s` never uses the `thumb_func_end` macro (see
-`asm/macros/function.inc`), so none of its ~2045 symbols carry an explicit
-ELF `.size` - objdiff infers each one's size from the distance to the next
-label instead. For most functions this infers correctly, but a handful show
-99-99.9% instead of 100% even though a direct byte comparison confirms
-they're genuinely byte-exact: objdiff's inferred size includes a trailing
-literal-pool constant or padding halfword that belongs to neither function
-cleanly (there's no label marking exactly where one function's own literal
-pool ends and the gap before the next function's code begins). This is
-cosmetic - it doesn't affect whether a function is truly matched, only the
-last fractional percentage point objdiff reports for it - and isn't worth
-chasing down function-by-function; `expected/corrections.txt` is for the
-two real problems above (missing name, missing boundary), not this one.
+Neither `expected/code_3.s` nor `expected/legacy.s` uses the
+`thumb_func_end` macro (see `asm/macros/function.inc`), so none of their
+~2060 combined symbols carry an explicit ELF `.size` - objdiff infers each
+one's size from the distance to the next label instead. For most functions
+this infers correctly, but a handful show 99-99.9% instead of 100% even
+though a direct byte comparison confirms they're genuinely byte-exact:
+objdiff's inferred size includes a trailing literal-pool constant or padding
+halfword that belongs to neither function cleanly (there's no label marking
+exactly where one function's own literal pool ends and the gap before the
+next function's code begins). This is cosmetic - it doesn't affect whether a
+function is truly matched, only the last fractional percentage point objdiff
+reports for it - and isn't worth chasing down function-by-function;
+`expected/corrections.txt` is for the two real problems above (missing name,
+missing boundary), not this one. (`mem_collect`, in the section below, is
+*not* an example of this - a 64-byte hidden function is not a rounding
+error, which is exactly how that one was told apart from this category.)
 
-## Known gap: `main.c`/`memory.c`/`irq.c` aren't in the report yet
+## Resolved: `main.c`/`memory.c`/`irq.c`, and a genuine hidden function
 
 These three were matched even earlier than `asm/code_3.s` existed as a named
 file (back when the whole ROM was still one `asm/code.s`), through several
-more splits than `code_3.s` went through. Reconstructing their pristine
-disassembly would mean walking further back through that history. They're
-excluded from `objdiff.json`'s scope for now (neither counted as matched nor
-as outstanding) rather than guessed at - a reasonable follow-up if someone
-wants a fully complete percentage, but a small one relative to the whole ROM.
+more splits than `code_3.s` went through, and were originally excluded from
+the report entirely for lack of a pristine source. `expected/legacy.s` (see
+above) closed that gap.
+
+Closing it also surfaced two real, distinct problems, worth knowing about
+since both patterns will likely recur:
+
+- **`irq.c` turned out to be a mixed file**: some of its functions came from
+  the old `code_1.s`/`code_2.s` lineage (2025), but seven others
+  (`sub_80006A8` onward) were actually matched much later, from `code_3.s`
+  (Sept 2026) - and were being silently dropped from the report because an
+  earlier version of this integration excluded `irq.o` from
+  `base_combined.o` *entirely* on the assumption the whole file predated
+  `code_3.s`. There's no such thing as "this file is legacy" in general -
+  only "this function's frozen source is legacy.s or code_3.s" - which is
+  why the base side has no exclusions at all now; every `src/*.c` object
+  goes in, and pairing is purely by symbol name against whichever frozen
+  source actually has that name.
+- **A genuinely unreachable function was hiding as a raw byte blob**:
+  `mem_collect` used to report ~89% for no visible reason - direct
+  disassembly of the 64 bytes right after it (still correctly compiled,
+  since `make compare` never lies) showed real, coherent Thumb code with no
+  caller anywhere in the matched source: two near-identical
+  `mem_i/ewram_heap_pointer`-chasing loops, most likely an
+  identical-code-folding artifact from agbcc's optimizer rather than
+  anything reachable from a real call site. `src/system/memory.c` already
+  had this embedded as a raw `.byte` blob (`// this is ugly AF`) from
+  whoever matched `mem_collect` originally, precisely because leaving it
+  out breaks the ROM's byte layout - it's now written as real, labelled
+  Thumb instructions (`sub_800039C`) instead, with `expected/corrections.txt`
+  giving the frozen target a matching `split` entry. Same bytes, same
+  `make compare` result, just inspectable instead of opaque.
 
 Graphics/audio/data extraction is out of scope for this report entirely -
 `objdiff`/decomp.dev's progress model is about code, and this project's

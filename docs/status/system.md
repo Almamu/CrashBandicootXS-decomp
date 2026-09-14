@@ -7,15 +7,21 @@ tagged-asset loading.
 
 - `src/system/main.c`: `AgbMain`
 - `src/system/memory.c`: `mem_heap_init`, `mem_collect`, `mem_free_bytes`,
-  `mem_alloc`, `mem_free`, `sub_8000518`
-- `src/system/irq.c`: `sub_80006A8`, `sub_80006EC`, `sub_80006F8`,
-  `sub_8000720`, `sub_8000760`, `sub_80007AC`, `sub_80007DC`
+  `mem_alloc`, `mem_free`, `sub_8000518`, `sub_800039C` (unreachable -
+  see `docs/decomp_dev.md` for what it is and why it's kept)
+- `src/system/irq.c`: `irq_disable`, `irq_setup`, `irq_empty_handler`,
+  `sub_8000620`, `sub_8000654`, `sub_8000670`, `sub_8000680` (2025,
+  original `code_1.s`/`code_2.s` lineage), plus `sub_80006A8`,
+  `sub_80006EC`, `sub_80006F8`, `sub_8000720`, `sub_8000760`,
+  `sub_80007AC`, `sub_80007DC` (Sept 2026, `code_3.s` lineage - `irq.c` is
+  a mixed file, see `docs/decomp_dev.md`)
 - `src/system/asset_util.c`: `LoadTaggedAsset`, `sub_80011C0`
 
-`main.c`/`memory.c` were matched earliest of all, before `docs/matching.md`'s
-per-function log convention (or `expected/code_3.s`'s frozen baseline -
-see [docs/decomp_dev.md](../decomp_dev.md)) existed, so they don't have
-per-function writeups there the way everything since does.
+`main.c`/`memory.c`/most of `irq.c` were matched earliest of all, before
+`docs/matching.md`'s per-function log convention existed, so they don't have
+per-function writeups there the way everything since does. They do have a
+frozen decomp.dev baseline now (`expected/legacy.s`) - see
+[docs/decomp_dev.md](../decomp_dev.md).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop.
 

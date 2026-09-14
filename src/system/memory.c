@@ -113,14 +113,57 @@ void mem_collect(s32 arg0) {
     }
 }
 
-// this is ugly AF
+/* ROM 0x0800039C - dead code: reachable from nothing in this file (or
+ * any other matched source), but its bytes still sit between
+ * mem_collect and mem_free_bytes_for_heap in the ROM and must be
+ * reproduced for a byte-exact build. Two near-identical halves, one
+ * per heap (IWRAM if MEM_HEAP_IWRAM is set, then EWRAM if
+ * MEM_HEAP_EWRAM is set): take &mem_i/ewram_heap_pointer, deref it for
+ * the heap struct, then loop `p = p->field_8` until `p->field_8` loops
+ * back to the heap struct itself - the same circular-list-walk idiom
+ * mem_collect_heap uses, but here the result is never stored anywhere,
+ * consistent with this being an optimizer-emitted leftover (e.g. a
+ * partially-shared/identical-code-folded copy of a real function body)
+ * rather than something reachable from source. Kept as real
+ * instructions rather than a raw byte blob so it's inspectable; see
+ * docs/decomp_dev.md for how this was found and verified byte-for-byte
+ * against the disassembled ROM. */
 __asm__(
     ".align 2, 0\n"
-    ".byte 0x03, 0x1C, 0x00, 0x2B\n"
-	".byte 0x0A, 0xDA, 0x02, 0x48, 0x02, 0x68, 0x91, 0x68, 0x03, 0xE0, 0x00, 0x00, 0xCC, 0x07, 0x00, 0x03\n"
-	".byte 0x89, 0x68, 0x88, 0x68, 0x90, 0x42, 0xFB, 0xD1, 0x80, 0x20, 0xC0, 0x05, 0x18, 0x40, 0x00, 0x28\n"
-	".byte 0x0A, 0xD0, 0x02, 0x48, 0x02, 0x68, 0x91, 0x68, 0x03, 0xE0, 0x00, 0x00, 0xD0, 0x07, 0x00, 0x03\n"
-	".byte 0x89, 0x68, 0x88, 0x68, 0x90, 0x42, 0xFB, 0xD1, 0x70, 0x47, 0x00, 0x00"
+    ".thumb_func\n"
+    ".type sub_800039C, function\n"
+    ".global sub_800039C\n"
+    "sub_800039C:\n"
+    "add r3, r0, #0\n\t"
+    "cmp r3, #0\n\t"
+    "bge 1f\n\t"
+    "ldr r0, 2f\n\t"
+    "ldr r2, [r0, #0]\n\t"
+    "ldr r1, [r2, #8]\n\t"
+    "b 3f\n\t"
+    ".align 2, 0\n"
+    "2: .4byte mem_iwram_heap_pointer\n"
+    "4: ldr r1, [r1, #8]\n"
+    "3: ldr r0, [r1, #8]\n\t"
+    "cmp r0, r2\n\t"
+    "bne 4b\n"
+    "1: mov r0, #0x80\n\t"
+    "lsl r0, r0, #23\n\t"
+    "and r0, r3\n\t"
+    "cmp r0, #0\n\t"
+    "beq 5f\n\t"
+    "ldr r0, 6f\n\t"
+    "ldr r2, [r0, #0]\n\t"
+    "ldr r1, [r2, #8]\n\t"
+    "b 7f\n\t"
+    ".align 2, 0\n"
+    "6: .4byte mem_ewram_heap_pointer\n"
+    "8: ldr r1, [r1, #8]\n"
+    "7: ldr r0, [r1, #8]\n\t"
+    "cmp r0, r2\n\t"
+    "bne 8b\n"
+    "5: bx lr\n"
+    ".align 2, 0\n"
 );
 
 static inline u32 mem_free_bytes_for_heap (struct mem_heap* heap) {

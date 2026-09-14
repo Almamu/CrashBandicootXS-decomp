@@ -102,33 +102,40 @@ tidy:
 
 #### decomp.dev progress report ####
 # See docs/decomp_dev.md. `report` builds the two objects objdiff.json
-# points at: a "target" object assembled from expected/code_3.s (frozen,
-# original ROM disassembly - never rebuilt from anything else) and a
-# "base" object that's every currently-matched/parked src/*.c object
-# merged into one. Run under `NON_MATCHING=1` so parked functions are
-# included as their (possibly imperfect) C reconstruction rather than
-# omitted or silently swapped for raw asm.
+# points at: a "target" object assembled from expected/legacy.s +
+# expected/code_3.s (frozen, original ROM disassembly covering the
+# entire game's code - never rebuilt from anything else) and a "base"
+# object that's every currently-matched/parked src/*.c object merged
+# into one. Run under `NON_MATCHING=1` so parked functions are included
+# as their (possibly imperfect) C reconstruction rather than omitted or
+# silently swapped for raw asm.
 
 EXPECTED_DIR      := expected
 EXPECTED_BUILDDIR := build/expected
 
-# main.c/memory.c/irq.c were matched before expected/code_3.s's history
-# began (see expected/README.md) - not covered by it, so excluded here
-# rather than reported against the wrong/no target.
-REPORT_EXCLUDE   := system/main.o system/memory.o system/irq.o
-REPORT_BASE_OBJS := $(filter-out $(addprefix $(C_BUILDDIR)/,$(REPORT_EXCLUDE)),$(C_OBJS))
-
 $(shell mkdir -p $(EXPECTED_BUILDDIR))
 
 .PHONY: report
-report: $(EXPECTED_BUILDDIR)/code_3.o $(EXPECTED_BUILDDIR)/base_combined.o
+report: $(EXPECTED_BUILDDIR)/target.o $(EXPECTED_BUILDDIR)/base_combined.o
 
-$(EXPECTED_BUILDDIR)/code_3.o: $(EXPECTED_DIR)/code_3.s $(EXPECTED_DIR)/corrections.txt tools/patch_expected_target.py
+# legacy.s covers the lower addresses (main.c/memory.c/irq.c's region)
+# and must come first in this merge - patch_expected_target.py derives
+# every correction's address from the merged object's own lowest
+# sub_XXXXXXXX symbol, which only lines up with real ROM addresses if
+# the two frozen sources are concatenated in the same order they
+# actually sit in the ROM.
+$(EXPECTED_BUILDDIR)/legacy.o: $(EXPECTED_DIR)/legacy.s
 	$(AS) $(ASFLAGS) -o $@ $<
+
+$(EXPECTED_BUILDDIR)/code_3.o: $(EXPECTED_DIR)/code_3.s
+	$(AS) $(ASFLAGS) -o $@ $<
+
+$(EXPECTED_BUILDDIR)/target.o: $(EXPECTED_BUILDDIR)/legacy.o $(EXPECTED_BUILDDIR)/code_3.o $(EXPECTED_DIR)/corrections.txt tools/patch_expected_target.py
+	$(LD) -r -o $@ $(EXPECTED_BUILDDIR)/legacy.o $(EXPECTED_BUILDDIR)/code_3.o
 	python3 tools/patch_expected_target.py $(EXPECTED_DIR)/corrections.txt $@
 
-$(EXPECTED_BUILDDIR)/base_combined.o: $(REPORT_BASE_OBJS)
-	$(LD) -r -o $@ $(REPORT_BASE_OBJS)
+$(EXPECTED_BUILDDIR)/base_combined.o: $(C_OBJS)
+	$(LD) -r -o $@ $(C_OBJS)
 
 #### Recipes ####
 	

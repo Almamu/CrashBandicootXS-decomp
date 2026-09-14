@@ -5,7 +5,7 @@
     "units": [
         {
             "name": "crashbandicootxs",
-            "target_path": "build/expected/code_3.o",
+            "target_path": "build/expected/target.o",
             "base_path": "build/expected/base_combined.o"
         }
     ]
