@@ -5,7 +5,10 @@ which reads a JSON report (in [objdiff](https://github.com/encounter/objdiff)'s
 `Report` schema) uploaded as a GitHub Actions artifact on every push to `main`
 (and on PRs, for its PR-comment feature) - see `.github/workflows/build.yml`'s
 "Build progress report objects"/"Install objdiff-cli"/"Generate progress
-report"/"Upload progress report artifact" steps.
+report"/"Upload progress report artifact" steps. `objdiff.json` (objdiff-cli's
+own config, read by `report generate`) is generated fresh by `make report`
+every time (see "One unit per matched file" below) and gitignored - never
+hand-edit or commit it.
 
 ## Why this needed more than just running objdiff-cli
 
@@ -40,39 +43,73 @@ produce false mismatches for anything containing a function call), git
 history already had the right frozen sources sitting in it, for both
 regions.
 
-## What `make report` builds
+## One unit per matched file, not one merged blob
 
-- **`build/expected/legacy.o`**, **`build/expected/code_3.o`** - each
-  frozen source assembled as-is, no patching yet.
-- **`build/expected/target.o`** - the above two merged with
-  `arm-none-eabi-ld -r` (`legacy.o` first, matching real ROM address order -
-  `tools/patch_expected_target.py`'s corrections derive their addresses
-  from the merged object's own lowest `sub_XXXXXXXX` symbol, which only
-  lines up with real ROM addresses if the merge order matches the ROM's),
-  then patched via `tools/patch_expected_target.py` (see below). Contains
-  every function in scope, whether it's been matched yet or not.
-- **`build/expected/base_combined.o`** - every currently-matched/parked
-  `src/*.c` object (built under `NON_MATCHING=1`, so parked functions are
-  included as their real - possibly imperfect - C reconstruction, not
-  swapped out for raw asm) merged into one object via `arm-none-eabi-ld -r`.
-  Deliberately **excludes** anything still living purely in `asm/*.s` -
-  those functions simply don't appear in `base_combined.o`, so objdiff
-  correctly reports them as "not yet attempted" (their bytes still count
-  toward the total, but not toward the matched total) instead of trivially
-  "100% matched" (which raw, unconverted asm would otherwise show, since
-  by construction it still reproduces the ROM bytes exactly).
+`make report` (via `tools/report_units.py`) builds **one objdiff unit per
+matched `src/*.c` file**, each tagged with a category (`graphics`/`util`/
+`system`), plus one untagged unit per still-fully-raw stretch of ROM - not
+a single unit covering the whole game. This is what makes decomp.dev's
+per-system progress bars possible: each unit's `metadata.progress_categories`
+tags it, and objdiff-cli's report aggregates matched/total *per category*
+across whichever units carry that tag, then again as one overall total.
 
-`objdiff.json` at the repo root points a single unit at `target.o`/
-`base_combined.o`. Run `make NON_MATCHING=1 report` after a clean build
-(`rm -rf build`) to produce them, matching
+This has to be per-file, not per-category-merged, because of the exact
+same problem `mem_collect` had (see below): objdiff infers a symbol's size
+from the distance to the *next* symbol in the same object when there's no
+explicit `.size`, and `arm-none-eabi-ld -r`-merging two functions that
+aren't really adjacent in the ROM (which is what merging every `Util`
+function into one blob would do - `math_util.c` and `time_util.c` aren't
+next to each other) reintroduces exactly that bug at the merge seam. A
+matched *file*, on the other hand, really is one contiguous ROM region
+(the "one `.c` file per contiguous ROM region" rule in
+[`docs/workflow.md`](./workflow.md) guarantees it), so slicing and pairing
+one target/base object per file keeps every function's inferred size
+correct, and category totals just fall out of aggregating those units.
+
+For each entry in `tools/report_units.py`'s address table:
+
+- **base**: that file's own compiled object under `build/crashbandicootxs/`
+  (already built by the normal `NON_MATCHING=1` pass - nothing extra to do).
+- **target**: `tools/slice_expected.py` pulls the matching address range's
+  *text* out of `expected/code_3.s` or `expected/legacy.s` (whichever one
+  covers it - see below) - the same technique `expected/legacy.s` itself
+  was carved out with, so relocations and literal pools survive intact -
+  then `tools/patch_expected_target.py` applies `expected/corrections.txt`
+  to the assembled slice (see the next section). Four files
+  (`printf_util.c`, `text_layout.c`, `input_util.c`, `oam_count.c`) contain
+  a still-parked function; their range is wider than their own
+  `NON_MATCHING=0` object shows, since the parked function's real ROM
+  bytes currently live in the *neighboring* still-raw `asm/*.s` chunk
+  instead - `expected/code_3.s` already has it labelled at its true
+  address regardless (it was only ever parked, never extracted), so
+  slicing still works unmodified once the address table accounts for it.
+- Still-fully-raw stretches (nothing matched there yet) get a unit with
+  only a target (the frozen slice) and no base and no category - they
+  count toward the *overall* total, correctly showing as unmatched, but
+  aren't attributed to graphics/util/system since nothing there has been
+  triaged yet (see "Not categorized yet" below).
+
+**The address table is the fragile part.** It's hand-written in
+`tools/report_units.py` from a **clean `make compare` (`NON_MATCHING=0`)
+build's** `crashbandicootxs.map` - deliberately *not* the `NON_MATCHING=1`
+build, because a parked function's imperfect reconstruction is a different
+byte count than the real ROM, which shifts every address *after* it in a
+`NON_MATCHING=1` map. `NON_MATCHING=0`'s addresses are the only ones
+guaranteed correct, since `make compare`'s checksum verifies them against
+the real ROM directly. Whenever a function moves between files, a new file
+is added, or another parked function gets fixed, re-derive this table from
+a fresh `make compare` map rather than hand-adjusting it.
+
+Run `make NON_MATCHING=1 report` after a clean build (`rm -rf build`) to
+produce `objdiff.json` and every unit's objects, matching
 [`docs/workflow.md`](./workflow.md)'s convention for `NON_MATCHING` builds
 generally.
 
-## `expected/corrections.txt`: patching the target without editing it
+## `expected/corrections.txt`: patching targets without editing the source
 
-Since `expected/code_3.s` is frozen, it can't be corrected in place when
-later matching work finds something the original disassembly got wrong -
-namely:
+Since `expected/code_3.s`/`expected/legacy.s` are frozen, they can't be
+corrected in place when later matching work finds something the original
+disassembly got wrong - namely:
 
 - **A function got a real name only when (or after) it was matched**, not
   in the one dedicated renaming pass commit `710cc9a` itself already
@@ -86,16 +123,33 @@ namely:
   too large (compared against extra bytes that belong to the other one),
   and the other doesn't appear at all.
 
-`tools/patch_expected_target.py` applies `expected/corrections.txt` to the
-merged, *assembled* `target.o` via `objcopy --redefine-sym`/`--add-symbol` as
-part of building it - never to either `.s` source. See the comment at the
-top of `expected/corrections.txt` for the exact line format.
+`tools/patch_expected_target.py` applies `expected/corrections.txt` to each
+*assembled* target slice via `objcopy --redefine-sym`/`--add-symbol` - never
+to either `.s` source. It's run once per unit now (see above), so it's
+built to tolerate corrections that don't apply to a given slice (a rename
+whose old name isn't present, or a split address outside the slice's own
+range) by skipping them silently rather than erroring - the same
+`corrections.txt` is passed to every slice unfiltered. See the comment at
+the top of `expected/corrections.txt` for the exact line format.
 
 **When to add one**: whenever a newly-matched function doesn't show up in a
 locally-generated `report.json` at all, or reports an unexpectedly low match
 percentage that direct byte comparison against `baserom.gba` (the project's
 own established verification method - see `docs/workflow.md`) says shouldn't
 be there.
+
+## Not categorized yet
+
+Only `graphics`/`util`/`system` (mirroring `src/`'s layout) exist as
+categories right now - the still-fully-raw majority of the ROM (including
+the Shin'en GAX2 sound engine, roughly `0x08037110`-`0x0803B0C4` per
+[`docs/audio.md`](./audio.md)) isn't split out into its own `audio` category
+yet, even though it counts toward the overall total already. That range
+isn't a clean carve - `docs/audio.md` itself warns it has generic
+compiler-runtime helpers interleaved with genuine GAX2 code - so it needs
+its own boundary-refinement pass before it can be sliced out accurately,
+rather than guessing and mislabeling neighboring code as audio. A
+reasonable follow-up once someone's traced that region more precisely.
 
 ## A separate, known limitation: small residual percentages on real matches
 
