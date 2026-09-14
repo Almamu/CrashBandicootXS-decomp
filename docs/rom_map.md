@@ -723,6 +723,67 @@ this document hasn't found yet. That's the natural next thread: finding
 vtable already did for `actor`, and what finding the `0x0816C744` table
 did for `menu_ui`.
 
+### Found it: the 93-entry "entity descriptor" family is 93 vtables, not 93 descriptors
+
+Same technique as `menu_ui`'s dispatch table: searched `baserom.gba` for
+`sub_800B8DC`'s and `sub_801AB34`'s own addresses (thumb bit set) as raw
+pointer values. Both turned up **inside the already-documented 93-entry
+`gStaticData_087Exxx` family** this document has been calling
+"per-placeable-object-type descriptors" since the `game_loop`
+investigation - `sub_800B8DC` at `gStaticData_087E3EE4+0xC`,
+`sub_801AB34` at `gStaticData_087E49DC+0xC`. Dumping those two records in
+full (0x68 and 0x78 bytes respectively) shows neither is a "descriptor"
+in the sense assumed earlier - **every word is either `0` or a valid
+thumb function pointer, alternating `{0, ptr}`** - exactly the same
+pairing convention already documented for the HUD vtable system (`docs/
+graphics.md`), just never previously recognized here. Slot 0 (`{0,0}`)
+is null/unused in both samples, mirroring the actor category vtable's
+own unused slots.
+
+**Checked all 93 records, not just the two samples: every single one
+fits the same shape** - every even-indexed word `0`, every odd-indexed
+word either `0` (unused slot) or a valid in-ROM thumb pointer. Record
+size determines slot count (`size / 8`), ranging from 2 to 15 slots
+across the 93 entries (831 slots total), with **only 319 distinct
+function addresses** doing the work - almost 3x reuse on average, the
+same sharing pattern already seen in the actor category vtables and the
+`menu_ui` table. This is, structurally, the "player/dynamic object
+vtable" hypothesized above - except there isn't one, there are
+**93 of them, one per placeable-object type**, each with its own subset
+of up to 15 behavior slots.
+
+This resolves a lot at once. `InitActorPart`-style construction, the
+tiny "set `self+0xC` = `&gStaticData_087Exxx`" stub functions found
+during the `game_loop`/`actor` investigations, and this vtable shape all
+fit one picture: **each of the 93 entity types is a small class**, its
+descriptor pointer *is* its vtable, and the earlier "constructor" stubs
+were literally assigning an object instance its type's vtable. Checking
+where the 319 unique implementations land: **149 fall inside the main
+94.4 KB `game_loop` zone, 83 inside the 40.4 KB `actor` zone, 21 inside
+the `UpdateGameFrame`-`MainLoop` cluster** - meaning `game_loop` and
+`actor`, treated as separate categories throughout this document, are
+substantially **one underlying dynamic-object system** wearing two
+different labels, connected by this one 93-vtable family. (Two outlier
+addresses - one just before `AgbMain`, one past the `.rodata` boundary -
+are almost certainly false positives from this coarse a scan and were
+excluded from these counts.)
+
+This is easily the single highest-value structural finding of this
+session - it explains *why* `game_loop`'s "undifferentiated core" turned
+out to be one connected component with no direct callers (dispatched
+through these vtables, exactly like the two sample functions). Cross-
+referenced all 149 in-zone vtable-slot addresses against the zone's
+existing sub-buckets: **39 (8.8 KB) were already in the "undifferentiated
+core"** - now reclassified from "reachable but unexplained" to
+"confirmed entity-vtable slot implementation" - and **53 more (3.3 KB)
+were sitting in the fully "unidentified" bucket**, previously
+uncharacterized by *any* signal. Together that's 92 functions, 12.2 KB,
+newly and concretely explained - real progress, though it also confirms
+this one family alone doesn't account for the whole 48.2 KB core (most
+of the remaining 39.4 KB presumably belongs to vtable slots this scan
+didn't catch - a slot pointing at a function the scan's ROM search
+missed, or dispatch through some other, still-unfound table).
+
 ## The SFX system (`0x080014A4`-`0x08006700`, 20.6 KB)
 
 Previously investigated and already flagged as a dead end for further
