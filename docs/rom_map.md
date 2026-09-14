@@ -1411,9 +1411,24 @@ suspected. **`sub_8023658`**: calls `sub_8022468(self, 1)` then
 audio-triggering function alongside `PlaySfx`, sharing `PlaySfx`'s own
 first argument global (`gUnknown_030012BC`). Confirms the same "screen
 transition + paired sound cue" combo the fade-to-black investigation
-found, for a different context ID. `sub_80019A8` itself is a real,
-concrete lead if anyone wants to find out how it differs from `PlaySfx`
-- not yet read.
+found, for a different context ID.
+
+**Resolved `sub_80019A8` (a fourth parallel fork): it's a stop/mute
+companion to `PlaySfx`, not a second way to start sounds.**
+`sub_80019A8(handle_ptr, id)` loops over exactly two tracked slots
+(`self+0x10`/`+0x14`); on a match against `id`, it calls
+**`sub_8038FD0(slot_index)`** - a function inside the confirmed GAX2
+range that walks a `GAX2_Song`/`SoundHandler` structure (matching the
+layout `docs/audio.md` already documents) and sets a per-channel mute
+byte (`handler+0x24 = 1`), with a special-case for parameter `-1`
+suggesting "stop all channels" versus "stop one specific channel."
+Six callers total, spanning *both* the `overlay_ui` region
+(`sub_8012238`/`sub_8012AF4`/`sub_80157C4`) and the `game_loop` region
+(`sub_8023658`/`sub_8024640`/`sub_8024790`) - narrower than `PlaySfx`
+(a true hub), but still cross-cutting, used whenever some unrelated
+subsystem needs to "stop this sound if it's currently playing." Fits
+`sub_8023658`'s pattern exactly: pair a screen-transition setup with
+silencing a specific sound, not starting a new one.
 
 ## Narrowing the GAX2 boundary
 
