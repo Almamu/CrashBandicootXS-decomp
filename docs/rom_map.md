@@ -21,6 +21,13 @@ will drift as ground truth improves. Nothing here is confirmed until
 someone actually reads the functions in question - treat every category
 below as a hypothesis with its supporting evidence attached, not a fact.
 
+**Read this before trusting any count involving `sub_803AD78`-`sub_803AD94`**:
+those addresses are a register-indirect-call trampoline table (`bx r0`
+through `bx sp`, one instruction each), not real functions - see
+"Correction: `sub_803AD78`-`sub_803AD94`..." below. Several earlier
+findings cite "calls `sub_803AD80`" as a text-layout signature; those
+counts are upper bounds, not precise figures.
+
 ## Totals
 
 238.2 KB of code between the ROM header and the start of `.rodata`
@@ -44,7 +51,7 @@ taught this project to avoid. Treat this as the reading-level answer to
 | `game_loop` (core per-frame/state-machine logic) | 112.7 KB | 47.3% | mixed - now split into sub-buckets, see "Subdividing `game_loop`" below |
 | `actor` (category/part/vtable system) | 50.7 KB | 21.3% | high for ~38.7 KB (named landmarks + confirmed reachable)\*, ~12 KB inferred |
 | `graphics_loading` (package/tile/level loading) | 15.7 KB | 6.6% | mixed - `LoadGraphicsPackage` itself and its immediate neighbors read directly, ~9.1 KB moved out to `menu_ui` (see below) |
-| `overlay_ui`? (self-contained UI screen, `PlaySfx` embedded in it) | 18.7 KB | 7.9% | high for the split (118-function dominant component, 22 individually text-layout-confirmed), low for *which* screen this is |
+| `overlay_ui`? (self-contained UI screen, `PlaySfx` embedded in it) | 18.7 KB | 7.9% | high for the split itself (118-function dominant component, connectivity-based); the "22 functions" sub-count is a trampoline-inflated upper bound, see the correction below; low for *which* screen this is |
 | `audio_gax2` (Shin'en GAX2 engine) | 14.1 KB | 5.9% | medium - narrowed this investigation, see `docs/audio.md` |
 | `hud` (icon/text widgets, score/percentage/stat counters) | 6.1 KB | 2.6% | high - 1.3 KB named landmarks plus ~4.8 KB stat-widget cluster (8 functions, all individually read this pass) |
 | `menu_ui` (per-level text/dialog display, dispatch table confirmed) | 9.1 KB | 3.8% | high - one function read in full, 29/31 siblings confirmed as real dispatch-table entries in ROM data |
@@ -912,6 +919,64 @@ medium-sized tables (20-680 B) not yet individually characterized. Not
 one monolithic "level config" struct as the early `game_loop`
 investigation implied - closer to a small header file's worth of
 level-related tables that happen to sit next to each other in ROM.
+
+## Correction: `sub_803AD78`-`sub_803AD94` are a register-indirect-call trampoline table, not real functions
+
+Reading further into `sub_0800D18C` past the table above hit something
+that changes how several earlier findings in this document need to be
+read. `sub_803AD84` - the function this document has been calling "the
+matched text-drawing helper" since the `hud` investigation, cited as
+evidence in `hud`, `menu_ui`, and the `audio_sfx`→`overlay_ui`
+correction - is one instruction: **`bx r3`**. Reading its neighbors
+confirms this isn't an isolated stub: `sub_803AD78`=`bx r0`,
+`sub_803AD7C`=`bx r1`, `sub_803AD80`=`bx r2`, `sub_803AD84`=`bx r3`,
+`sub_803AD88`=`bx r4`, `sub_803AD8C`=`bx r5`, `sub_803AD90`=`bx r6`,
+continuing through every register up to `sp` before `nullsub_43`
+(`bx lr`) and then real code resumes at `sub_803ADB4`. This is the
+standard **Thumb `BLX`-emulation pattern** - the ARM7TDMI's Thumb mode
+has no register-indirect call instruction, so `bl <trampoline for rN>`
+plus a `bx rN` stub is how the compiler simulates "call the function
+pointer in register N" while still getting a return address pushed.
+
+**What this means for earlier findings**: "a function calls
+`sub_803AD80`" only ever meant "this function makes an indirect call
+through r2" - not "this function measures text width." The actual
+target is whatever the caller loaded into r2 at that specific call
+site, and nothing stops unrelated code anywhere in the ROM from reusing
+the *same* trampoline address for a completely different r2 target.
+Every count in this document built by grepping for `sub_803AD80`/`84`/
+`7C`/`88` as a bare text-layout *signature* (the 31 `menu_ui` functions,
+the 22-function `overlay_ui` sub-cluster, the "several `actor` runs also
+call the text helpers" finding, the `hud` widgets' shared calls) is
+now suspect as an exact count - it will have folded in some calls that
+happen to route through the same trampoline for unrelated reasons.
+
+**What still holds**: every one of those findings also included at least
+one function read in full, where the actual calling convention was
+checked by hand (`sub_8006600`'s `(240-width)/2` centering math,
+`sub_8007F78`/`FD8`'s paired width-then-position calls, `sub_801F8DC`'s
+object-allocate-then-measure-twice shape) - those specific reads remain
+valid regardless of the trampoline mechanics, because the surrounding
+code's *behavior* was verified directly, not inferred from the call
+target's name. The qualitative conclusions (these clusters are
+substantially UI/text work) are on solid ground; the exact byte/function
+counts attached to them are now flagged as upper bounds, not precise
+figures, until someone re-checks what each call site actually loads
+into the trampoline's register. Also worth registering as a general
+methodology note for whoever continues this document: **a `sub_XXXXXXXX`
+being called doesn't guarantee it does real work - check whether it's a
+trampoline (a one- or two-instruction `bx rN`/`bx lr` stub) before
+treating a signature match as evidence.**
+
+One unrelated correction caught in passing: **`sub_8026ED0`** (the
+"conditionally call" tail of the 93-vtable entity constructors) is not
+an OAM-refresh call as earlier sections guessed - it's a two-instruction
+wrapper around **`mem_free`**. The constructor pattern is "assign this
+object's vtable, then conditionally free the object" (a deferred/
+one-shot-instance free), not "assign vtable, then conditionally redraw."
+Doesn't change the vtable-family discovery itself (found independently,
+via the raw ROM pointer dump), just the description of what the
+conditional tail-call does.
 
 ## `audio_sfx` was almost entirely wrong: mostly a UI/overlay system, not audio
 
