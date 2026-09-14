@@ -1,0 +1,12 @@
+{
+    "$schema": "https://raw.githubusercontent.com/encounter/objdiff/main/config.schema.json",
+    "build_target": false,
+    "build_base": false,
+    "units": [
+        {
+            "name": "crashbandicootxs",
+            "target_path": "build/expected/code_3.o",
+            "base_path": "build/expected/base_combined.o"
+        }
+    ]
+}

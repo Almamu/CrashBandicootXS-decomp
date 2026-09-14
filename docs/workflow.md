@@ -90,4 +90,9 @@ incomplete pass and should be finished before moving on.
 8. Update matching.md's per-function log (a short paragraph like the
    existing entries is enough; a subtler fix may deserve its own
    explained bullet like the "Cleanup pass" entries there) and
-   `README.md`'s status list, then commit.
+   `README.md`'s status list, then commit. If this function got a real
+   name only now (rather than already having one before it was matched),
+   or turned out to be a separate function the original disassembly
+   never gave its own label, add a line to `expected/corrections.txt` -
+   see [docs/decomp_dev.md](./decomp_dev.md) for why, and check with
+   `make NON_MATCHING=1 report` (see the same doc) that it's picked up.

@@ -61,6 +61,7 @@ tools/agbcc
 kappa-db.json
 context
 decomp.yaml
+report.json
 
 # Python cache
 __pycache__/

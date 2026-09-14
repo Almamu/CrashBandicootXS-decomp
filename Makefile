@@ -100,6 +100,36 @@ tidy:
 	rm -f $(ROM) $(ELF) $(MAP)
 	rm -r build/*
 
+#### decomp.dev progress report ####
+# See docs/decomp_dev.md. `report` builds the two objects objdiff.json
+# points at: a "target" object assembled from expected/code_3.s (frozen,
+# original ROM disassembly - never rebuilt from anything else) and a
+# "base" object that's every currently-matched/parked src/*.c object
+# merged into one. Run under `NON_MATCHING=1` so parked functions are
+# included as their (possibly imperfect) C reconstruction rather than
+# omitted or silently swapped for raw asm.
+
+EXPECTED_DIR      := expected
+EXPECTED_BUILDDIR := build/expected
+
+# main.c/memory.c/irq.c were matched before expected/code_3.s's history
+# began (see expected/README.md) - not covered by it, so excluded here
+# rather than reported against the wrong/no target.
+REPORT_EXCLUDE   := main.o memory.o irq.o
+REPORT_BASE_OBJS := $(filter-out $(addprefix $(C_BUILDDIR)/,$(REPORT_EXCLUDE)),$(C_OBJS))
+
+$(shell mkdir -p $(EXPECTED_BUILDDIR))
+
+.PHONY: report
+report: $(EXPECTED_BUILDDIR)/code_3.o $(EXPECTED_BUILDDIR)/base_combined.o
+
+$(EXPECTED_BUILDDIR)/code_3.o: $(EXPECTED_DIR)/code_3.s $(EXPECTED_DIR)/corrections.txt tools/patch_expected_target.py
+	$(AS) $(ASFLAGS) -o $@ $<
+	python3 tools/patch_expected_target.py $(EXPECTED_DIR)/corrections.txt $@
+
+$(EXPECTED_BUILDDIR)/base_combined.o: $(REPORT_BASE_OBJS)
+	$(LD) -r -o $@ $(REPORT_BASE_OBJS)
+
 #### Recipes ####
 	
 $(ELF): $(OBJS) $(LDSCRIPT)

@@ -1,0 +1,29 @@
+# Corrections applied to build/expected/code_3.o after assembling the
+# frozen expected/code_3.s (never to the source itself - see
+# docs/decomp_dev.md and expected/README.md for why). Two kinds of entry,
+# one per line:
+#
+#   rename OLD_NAME NEW_NAME
+#     A function that was still `sub_XXXXXXXX` in the frozen disassembly
+#     (commit 710cc9a) got a real, descriptive name at or after the point
+#     it was matched to C (rather than in the one dedicated renaming pass
+#     that commit 710cc9a itself already captured) - without this, the
+#     function doesn't appear in decomp.dev's report at all, since target
+#     and base would disagree on its name and objdiff pairs symbols by
+#     name within a unit.
+#
+#   split ADDRESS NAME
+#     The original disassembly never gave this address its own function
+#     label at all - later matching work discovered it's actually a
+#     separate function from whatever precedes it. Without this, both
+#     the real preceding function AND this one report a wrong match
+#     percentage (the preceding one appears too large, and this one
+#     doesn't appear at all).
+#
+# Add a line here whenever a newly-matched function doesn't show up in
+# the report, or reports an unexpectedly low match percentage - see
+# docs/decomp_dev.md for how to tell the difference between this and a
+# genuine mismatch.
+
+rename sub_8006BE4 FreeVramDmaQueue
+split 0x08000DF8 sub_8000DF8

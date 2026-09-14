@@ -29,3 +29,26 @@ jobs:
       
     - name: Build and compare
       run: make
+
+    # Progress report for decomp.dev (see docs/decomp_dev.md) - doesn't need
+    # baserom.gba at all, since expected/code_3.s (checked into the repo) is
+    # the ground truth it diffs against, not the ROM directly.
+    - name: Build progress report objects
+      run: |
+        rm -f crashbandicootxs.gba crashbandicootxs.elf crashbandicootxs.map
+        rm -rf build
+        make NON_MATCHING=1 report
+
+    - name: Install objdiff-cli
+      run: |
+        curl -sL -o objdiff-cli https://github.com/encounter/objdiff/releases/download/v3.8.1/objdiff-cli-linux-x86_64
+        chmod +x objdiff-cli
+
+    - name: Generate progress report
+      run: ./objdiff-cli report generate -o report.json
+
+    - name: Upload progress report artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: europe_report
+        path: report.json
