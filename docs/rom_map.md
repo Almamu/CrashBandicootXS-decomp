@@ -1631,13 +1631,40 @@ effect type N" family) **is a pointer *variable*, not the struct
 itself** - `sub_8022230` sets it to `&gStaticData_084A5600`, and code
 dereferences through it (`**gUnknown_030012D0 + 4` at one confirmed
 site) to reach the table's own first field, itself another pointer.
-Confirms the table's header genuinely is live pointer data, consumed
-indirectly rather than read as a fixed-offset struct everywhere -
-consistent with "index into whichever asset table is currently active,"
-not a single fixed resource. Given the size, this is very plausibly
-the master graphics-asset table the whole `graphics_loading` category
-ultimately bottoms out in - a natural target for a dedicated pass if
-anyone wants to pin down its record schema.
+
+**Follow-up fork pinned down the schema, and corrected the earlier
+guess at how many places reference it.** Only **two direct symbolic
+references exist in the whole codebase** (inside `sub_8022230` itself,
+and inside a separate function, `sub_8004D74`, in
+`asm/code_3_1_7.s`) - not a wide-reaching table lookup, a narrow one.
+`gUnknown_030012D0` turns out to be a **pointer-to-pointer**:
+`sub_8022230` allocates 4 fresh bytes, stores *that* address in
+`gUnknown_030012D0`, then stores `&gStaticData_084A5600` into those 4
+bytes - so `*gUnknown_030012D0 == &gStaticData_084A5600`, matching the
+`**gUnknown_030012D0+4` read found earlier. **`sub_8006EF0`/
+`sub_8006FB4` turned out to be unrelated to this table's content** -
+generic pool-allocator constructors (a 16-slot free-list setup, and a
+plain struct-zeroer) reused all over the codebase for unrelated pools;
+they just happened to sit next to this table's reference in
+`sub_8022230`'s init sequence.
+
+**The real consumer is `sub_8004D74`**: allocates a buffer for
+`gUnknown_030012B8`, then reads `gStaticData_084A5600+8` (a pointer)
+and `+0xE` (a `u16` count) to configure a pool object via
+`sub_8006EF0`. Direct ROM dump confirms a **fixed 16-byte header, read
+at hardcoded offsets - not a runtime-indexed array**: `+0x0` is a
+self-relative pointer 16 bytes past its own base (plausibly "first real
+record"), `+0x4` points into unrelated earlier ROM territory, `+0x8`
+points into the preceding graphics blob (the one actually used, count
+`125` at `+0xE`), and neither known consumer ever scans this table by
+index - both just read the same fixed header fields. Whether the
+remaining ~729 KB past this header is itself a repeating-record array
+is still open - not established either way. One live lead left
+unexplored: `sub_8004D74` calls `sub_803A94C`/`sub_8006D50`
+immediately after, with `gStaticData_0816B2C0` (an already-documented
+per-level symbol) - a real, concrete tie between this table and the
+per-level data region, worth following if anyone continues this
+specific thread.
 
 ## Narrowing the GAX2 boundary
 
