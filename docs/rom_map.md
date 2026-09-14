@@ -1065,6 +1065,28 @@ tables:
   `sub_8021EF4(0xFFFF, 0xA0, 0xA9, 0)`. Reads as a **"show message type
   N" dispatcher**, 16 distinct message types.
 
+A follow-up fork read two more: **`sub_801C104`** (428 B, called
+repeatedly from the confirmed dispatch chain - `sub_801CCF8`,
+`sub_801D110`, and `sub_801C96C`'s own loop body all call it directly)
+is the *same* OAM-refresh-plus-text-centering shape as `sub_8006600`
+from the very first `overlay_ui` investigation - the shared "refresh a
+text label's screen position" routine invoked every display-commit
+cycle, most likely the timer/counter HUD text specifically given how
+often it's called. **`sub_800C40C`** (456 B) dispatches on `self+0x68`
+- the *exact* field offset `sub_800B8DC`'s 18-state player-physics
+machine also uses as its own state selector - with 6 cases, gating on
+the same `gUnknown_0300082C` frame counter the fade/post-fade
+investigation touches. Reads as another per-object state machine, same
+field shape as `sub_800B8DC` but a distinct object/context - evidence
+`+0x68` is a **conventional state-field offset reused across several
+different object structs** in this codebase, not proof every function
+using it shares one struct. Neither function ties to a new table or
+vtable family - this remainder increasingly looks like many small
+per-object behaviors built from the same handful of already-catalogued
+primitives (the frame counter, the trampoline-based measure/draw calls,
+the `+0x68`/`+0x74`-style state fields), rather than hiding another
+undiscovered subsystem the way the earlier passes through this zone did.
+
 **The pattern across all three**: each dispatches on a small integer
 "type"/"kind"/"message ID" parameter via a plain jump table, not through
 a vtable or a `gStaticData_0816Bxxx`-style data table - a third dispatch
@@ -1387,9 +1409,12 @@ remainder (68 still-unread functions) and `sub_8022468`'s two requested
 siblings.
 
 **`sub_802107C`/`sub_802117C`** (256 B/260 B, consecutive in ROM) are
-**near-identical twins** - almost certainly a small family (a third,
-`sub_8021280` at 264 B right after, fits the same size/address pattern
-but wasn't individually confirmed). Each checks a specific bit of
+**near-identical twins**. **Correction**: `sub_8021280` (264 B, right
+after them in ROM - originally guessed as a likely third twin on size/
+address grounds alone) is **not** part of this family - checked
+directly and it has a completely different structure (see below). The
+twin family may still have a third member elsewhere, just not this one.
+Each of the two confirmed twins checks a specific bit of
 `gUnknown_030012C0+2` (bit 2 vs bit 3 - one bit per type); if set *and*
 `sub_8023278` (matched accessor, `+0xA7`) is false *and*
 `gUnknown_030012C0+0x8C==0`: plays a type-specific sound (`sub_801A878`,
@@ -1429,6 +1454,48 @@ Six callers total, spanning *both* the `overlay_ui` region
 subsystem needs to "stop this sound if it's currently playing." Fits
 `sub_8023658`'s pattern exactly: pair a screen-transition setup with
 silencing a specific sound, not starting a new one.
+
+## Found the origin point: `sub_8022230` allocates nearly every hot global this document tracks
+
+The same fork that resolved the twin family kept going and found
+something bigger than any individual function read this session:
+**`sub_8021280` is not a third twin** of `sub_802107C`/`sub_802117C`
+(corrected above) - it's a **conditional bonus/reward-object spawner**,
+checking three accessors on `gUnknown_030012C0` and the 36-slot
+per-level table's `+0x4` field before spawning a 100×100 or 40×40
+tagged object (type `0x12`) via `sub_80071E4`/`sub_80070EC`, gated by a
+viewport flag and paired with a `sub_801A878` sound call - a real,
+distinct function, just not part of the family it was guessed to
+belong to.
+
+But the headline is **`sub_8022230`** (292 B): it sequentially
+allocates and constructs **essentially every hot IWRAM global this
+entire document has been referencing all session** -
+`gUnknown_030012BC` (an 8340-byte allocation - almost certainly
+`PlaySfx`'s own channel-state object, since that's the exact global
+`PlaySfx` takes as its first argument everywhere), `030012B4`/`B8`/
+`C8`/`CC`/`D0`/`DC` (via the *already-named, real* `InitHudIconWidgetA`)/
+`E0` (via `InitHudIconWidgetB`)/`FC`, `03001300` (via `sub_8006B0C` -
+the OAM shadow buffer, matching `sub_8006A48`'s `struct
+oam_shadow_buffer*` parameter found back in the `hud` investigation),
+`03001304`, and clears `gUnknown_03001288` (the fade cluster's own mode
+byte). One field, `gUnknown_030012D0`, gets pointed at a **brand-new
+symbol never seen anywhere else in this document**:
+`gStaticData_084A5600` (the `0x084Axxxx` region - entirely outside every
+address range mapped so far, a genuinely fresh lead).
+
+**Its one caller is `sub_8023738`** - the exact function `MainLoop`
+calls first, whose return value `MainLoop` immediately stores into
+`gUnknown_030012C0` (see "Found the entry point" near the top of this
+section). So the real init chain, now complete, is: `MainLoop` →
+`sub_8023738` (constructs the central game-state struct itself) →
+`sub_8022230` (constructs nearly everything else this document has been
+treating as an unexplained pre-existing global). This is the origin
+point for most of the "hot IWRAM globals" repeatedly cited throughout
+`game_loop`, `hud`, `overlay_ui`, and the fade/transition threads - not
+a new category, but real, valuable context for everything already
+written: these aren't scattered ambient globals, they're one function's
+worth of deliberate construction, run once at the top of the game loop.
 
 ## Narrowing the GAX2 boundary
 
