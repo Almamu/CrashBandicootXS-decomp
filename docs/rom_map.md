@@ -307,6 +307,43 @@ and cross-referenced against where each field gets *written*, not just
 read - that's the next real step toward naming `gUnknown_030012C0`'s
 target struct itself.
 
+### Following `+0x74`'s writes: set at level load, not per-frame
+
+Searched for direct `str`/`strh` writes to `+0x70`/`+0x74`/`+0xC4` inside
+functions that also reference `gUnknown_030012C0`, rather than only
+following getters. Found `+0x74` written in exactly one place:
+**`UpdateGameFrame` itself**, in its level-(re)load branch - right after
+a `bl LoadLevelGraphics` call, `bl sub_8035E14`'s return value goes into
+`r5`, which then gets stored to three fields at once: `+0x1B8`, `+0x1BC`,
+and, a little further down (past a `sub_80232B8`-gated block that first
+*caches the old* `+0x6C`/`+0x74`/`+0x70` values into `+0xB0`/`+0xB8`/
+`+0xB4` - exactly the "last displayed value" fields the HUD widgets'
+change-detection logic reads), `+0x74` again.
+
+Two things follow from this. First, **`+0x74` is set once when a level
+loads**, from a level-parsing function (`sub_8035E14`, itself just past
+`LoadLevelGraphics` in ROM - inside the `graphics_loading` gap this
+document already folded in) - not incremented every frame the way a
+running score or elapsed-time counter would be. That points away from
+"score" and toward something more like a **per-level fixed total** (a
+target/par count established at load time - total collectibles for a
+percentage calculation is the leading guess, though `sub_8027838`'s
+widget reads it as a plain counter, not obviously combined with any
+other field into a ratio - not fully reconciled). Second, the caching
+step confirms the wiring for real: `UpdateGameFrame` explicitly refreshes
+the exact three fields (`+0x6C`/`+0x70`/`+0x74`) the HUD stat widgets
+read, into the exact three cache slots (`+0xB0`/`+0xB4`/`+0xB8`) their
+change-detection compares against - `game_loop` and `hud` are
+mechanically the same update cycle here, not just two categories that
+happen to call into each other.
+
+`+0x70` and `+0xC4` had no direct-write hits from this search - either
+written somewhere outside `code_3_2.s` (an already-matched `src/*.c`
+file, invisible to this grep), through a level of indirection this
+pattern search doesn't catch (a computed offset rather than a literal
+`#0x70`/`#0xC4`), or genuinely not written at all in the raw code
+searched so far. Left open rather than guessed at.
+
 ## The clear regions
 
 | Address range | Size | Category | Confidence | Evidence |
