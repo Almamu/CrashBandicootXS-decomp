@@ -1166,6 +1166,40 @@ the per-level data tables), used for smaller, more localized decisions
 (which hint to show, which proximity check applies) rather than
 per-object-type behavior or per-level configuration.
 
+### A camera-clamp candidate, and two more cross-references into known systems
+
+A further parallel fork read five more of the core's biggest remaining
+functions (down to 205 unread, 21.1 KB at that point) - none
+vtable-dispatched, but two land as concrete cross-references and one is
+a genuinely promising new lead:
+
+- **`sub_8008AD8`/`sub_80096C0`** (424 B each) are **structural twins**:
+  both open by checking `gUnknown_030012C0+0x78==3` (the same "mode 3"
+  branch `sub_0800D18C` also checks), then compute a clamped offset
+  written directly into `gUnknown_030012D8`'s own position field via a
+  threshold compare. The strongest **camera-follow/clamp candidate**
+  found this session - writes straight into the viewport rect this
+  document has tracked since the very first collision-edge function,
+  plausibly the X/Y (or min/max) pair that keeps the camera inside
+  level bounds. Not fully resolved, but a concrete lead worth a
+  dedicated read.
+- **`sub_8009528`** (408 B): iterates a spatial bucket-style array
+  within a viewport-sized box (`0xF0`×`0xA0` in Q8.8 - screen
+  dimensions) via the `sub_803AD80` trampoline. Reads as a **broad-phase
+  visibility/proximity query** over nearby objects.
+- **`sub_8012694`** (424 B, a helper of the already-documented
+  `sub_801283C`): sets/checks a type-tag value of `6` at a sub-object's
+  `+0x2D` field - the **exact same type-tag** the `graphics_loading`
+  fork's "trigger effect type N" family uses when spawning its own
+  visual-effect objects. A concrete, if narrow, cross-reference between
+  two previously-separate threads.
+- **`sub_8015038`** (400 B): dispatches a small enum to fixed hex glyph
+  constants, the same shape as the HUD digit-counter pattern - and is
+  **called from three of the 42-slot action table's own confirmed
+  entries** (`sub_8013C60`/`sub_8013D94`/`sub_8013EAC`), a shared helper
+  several action-table handlers reuse, likely to update one common HUD
+  counter glyph.
+
 ## Mapping the rest of the per-level descriptor region
 
 Switched from chasing individual functions to mapping the
