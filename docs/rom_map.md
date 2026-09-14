@@ -915,6 +915,30 @@ distinguishing signature found yet - the next concrete step is more of
 the same: pick the next-biggest unread function, read it, check whether
 it's vtable-dispatched or data-family-tagged, fold the result back in.
 
+### Continuing into the remainder: one cross-zone link, one field re-confirmed
+
+Picked up the next-biggest unread functions after the consolidation
+above. Two smaller but real threads, neither a full resolution:
+
+- **`sub_80091D4`**'s only caller, `sub_8023A1C`, sits inside the
+  *separate* `UpdateGameFrame`-`MainLoop` cluster (`0x080225A0`-
+  `0x08026EEC`) - a concrete call edge bridging the two `game_loop`
+  sub-zones this document has otherwise treated as unconnected. Worth
+  remembering when someone eventually tries to merge those two
+  partitions back into a single account of `game_loop`.
+- **`sub_800A178`** (680 B): mid-function, unconditionally zeroes
+  `self+0x74` - the same field `UpdateGameFrame`'s level-load branch
+  sets once from `sub_8035E14`'s return value (see "Following `+0x74`'s
+  writes" above). A second confirmed write site for that field, this
+  time a reset rather than an initial assignment - consistent with
+  "total for this level" being cleared and presumably recomputed under
+  some condition, not fully traced here. Also references `sub_803AD7C`
+  (one of the trampoline stubs) with a calling shape matching the
+  established width-measurement pattern, but per the trampoline
+  correction above this is not confirmed as text work without checking
+  what's actually loaded into the target register at this specific call
+  site - flagged rather than assumed.
+
 ## Mapping the rest of the per-level descriptor region
 
 Switched from chasing individual functions to mapping the
