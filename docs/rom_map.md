@@ -1354,6 +1354,30 @@ individually characterized) in a cursor/menu-position-style pattern -
 calls the `sub_803AD84` trampoline with position arguments matching the
 draw-text shape.
 
+### `gUnknown_03001308` resolved: a lazy-singleton text-positioning box, cached under two names
+
+A parallel fork chased the global flagged above. 102 references, but
+narrower than the `gUnknown_030012xx` cluster - and **not allocated by
+`sub_8022230`** (the master init function), its own write site. Its one
+write site is instead inside **`sub_802375C`** (already documented as
+`sub_8023A1C`'s own caller, from the fade-trace investigation): calls
+**`sub_80268AC`**, a **lazy-singleton accessor** - if
+`gUnknown_0300084C` is `NULL`, allocate and construct 44 bytes and
+cache the pointer there; return the cached pointer either way - then
+stores that same result into `gUnknown_03001308` too. So
+`gUnknown_03001308` and `gUnknown_0300084C` end up **aliased to the
+identical object**, just cached under two separate global names -
+`gUnknown_03001308` is a level-start-time snapshot of an otherwise
+lazily-created singleton, not its own independent piece of state.
+
+Every read site dereferences twice, then reads `+0x10` as a pointer to
+a Q8.8 `{x,y}` pair offset by fixed negative constants (≈`-100`/`-60`),
+built into a rect and passed to the `sub_803AD80` trampoline. Reads as
+a **text/label positioning-box singleton** - a margin-adjusted bounding
+rect for UI text, built once and reused for the rest of the session via
+two aliased slots. Consistent with `sub_8019094`'s "cursor/menu-position
+dispatch" characterization above.
+
 ### A second shared action-table helper, and a real bucket insert/remove system
 
 A further fork read the two remaining explicitly-flagged targets and
