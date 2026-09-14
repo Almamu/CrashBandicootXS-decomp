@@ -982,6 +982,55 @@ dispatch) into one coherent, concrete story, though the exact trigger
 condition (`sub_80241B0`'s own meaning) and what happens after the fade
 completes are still unread.
 
+### Resolved: `sub_80241B0`'s gate, and what happens after the fade
+
+Ran this as a parallel, independent investigation (a forked agent,
+reporting findings back rather than editing this document directly - no
+concurrent-edit risk since only one writer ever touches this file).
+
+**`sub_80241B0` is a plain getter for `gUnknown_03000830`**, a single
+boolean byte, with a confirmed accessor triple: `sub_8024198` clears it,
+`sub_80241A4` sets it. The **clearer is called only from
+`sub_802375C`** - which turns out to be `sub_8023A1C`'s own caller,
+confirming the entry point precisely: `UpdateGameFrame` →
+`sub_802375C` → `sub_8023A1C`. The **setter is called from six
+different places**, all in the actor/entity address range
+(`sub_800AC2C`, `sub_8015690`, `sub_8017650`, `sub_8018008`,
+`sub_8018A30`, `sub_80197F8`). Reads as a **readiness/synchronization
+flag**: clear it before the wait loop, let one of several entity
+behaviors set it back once they've finished whatever they're doing,
+then proceed to the fade - not a fixed timer, a genuine "wait for
+everyone to be ready" barrier.
+
+**Post-fade** (`_08023E82` onward, several branches converging at
+`_08023F92`): loops over a count-prefixed collection at
+`gUnknown_0300130C`, and for each entry checks an indirect-call result
+`==3` *and* `entry+0x4E==0xA` - the **exact same field offset**
+`gStaticData_0816BC98` indexes by, tying this directly back to the
+physics-subsystem investigation. Counts the matches and calls
+`sub_8023140(gUnknown_030012C0, count)` - reads as **"count how many
+objects are currently in state `0xA`"**, plausibly a
+remaining-enemies/collectibles check feeding into level-completion
+logic, unconfirmed. Immediately after, calls `sub_8008CEC` on five hot
+IWRAM globals (`030012E8`/`EC`/`F0`/`F4`/`F8`), then calls
+**`sub_8001578`/`sub_8001564`/`sub_800153C`** - three of the fade
+cluster's own bitfield-accessor functions - resetting screen-mode flags
+now that the transition is done. A clean bookend: the same small
+utility cluster that starts the fade also cleans up after it.
+
+**Two of the jump table's remaining cases**, for texture: the
+`_08023B8C` case calls `sub_8027088` then **`sub_8027018`** - the
+ring-buffer "add entry" function from this document's very first
+`hud`/`fx` investigation, all the way back near the start of this
+session - with arguments from `gStaticData_0816C862` (a small per-level
+table). The `_08023BC4` case clears `gUnknown_030012C8`, calls two more
+helpers, and conditionally builds an OAM entry via the
+`sub_80087C0`/`sub_80087B4`/`sub_800872C` trio already seen driving HUD
+widgets and entity constructors alike. Both cases reuse infrastructure
+this document had already independently found and named elsewhere -
+further confirmation that the whole ROM's gameplay code shares a small,
+consistent toolkit rather than each subsystem reinventing its own.
+
 ## Mapping the rest of the per-level descriptor region
 
 Switched from chasing individual functions to mapping the
