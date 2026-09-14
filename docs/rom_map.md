@@ -41,7 +41,7 @@ taught this project to avoid. Treat this as the reading-level answer to
 
 | Category | Size | Share | Confidence |
 |---|---|---|---|
-| `game_loop` (core per-frame/state-machine logic) | 112.7 KB | 47.3% | high for ~92.3% of the 94.4 KB zone (confirmed via reachability + two shared data-table families), the rest inferred by cohesion; the other ~18.3 KB of this category (the `UpdateGameFrame`-`MainLoop` gap) is separately evidenced, not yet closed the same way |
+| `game_loop` (core per-frame/state-machine logic) | 112.7 KB | 47.3% | mixed - now split into sub-buckets, see "Subdividing `game_loop`" below |
 | `actor` (category/part/vtable system) | 50.7 KB | 21.3% | high for ~38.7 KB (named landmarks + confirmed reachable)\*, ~12 KB inferred |
 | `graphics_loading` (package/tile/level loading) | 15.7 KB | 6.6% | mixed - `LoadGraphicsPackage` itself and its immediate neighbors read directly, ~9.1 KB moved out to `menu_ui` (see below) |
 | `audio_sfx` (SFX layer, distinct from GAX2) | 20.6 KB | 8.6% | medium - one anchor (`PlaySfx`), rest by contiguity |
@@ -647,6 +647,41 @@ consistent with ordinary tapering-off (leaf helpers a few calls deep that
 this pass's landmarks don't happen to reach directly) rather than a
 second hidden system sharing the neighborhood. **Net read: this 40.4 KB
 zone is overwhelmingly actor per-type behavior code.**
+
+## Subdividing `game_loop`
+
+`game_loop`'s 112.7 KB has been one undifferentiated bucket even after
+all the work above - "confirmed" there only ever meant "reachable from
+the dispatch chain", not "read and understood". Re-partitioning the
+94.4 KB zone's 479 already-confirmed functions by *which* evidence backs
+each one - direct call-graph reachability from the 7 read dispatch
+functions, membership in the entity-descriptor family, or membership in
+the per-level-config family, allowing overlap - gives a real breakdown
+instead of one blob:
+
+| Sub-bucket | Size | Functions | What ties it together |
+|---|---|---|---|
+| **Undifferentiated core** | 48.2 KB | 312 | Reachable from the confirmed dispatch chain (`sub_801C96C` etc.), but references neither shared data family - the single biggest *remaining* unknown in the whole ROM. Purpose per-function still unread. |
+| **Level-parameterized logic** | 31.3 KB | 67 | Reachable from the dispatch chain *and* reads the per-level descriptor family (`gStaticData_0816Bxxx`-`0816Dxxx`) - game logic whose behavior varies by which level is loaded. |
+| **Entity/object spawn (in-loop)** | 4.8 KB | 50 | Reachable from the dispatch chain *and* references the 93-entry placeable-object family (`gStaticData_087Exxx`) - spawn/construct calls made as part of the main loop. |
+| **`UpdateGameFrame`-`MainLoop` cluster** | 17.1 KB | ~101 | A *separate* zone (`0x080225A0`-`0x08026EEC`) with 46 direct, non-hub links back to `UpdateGameFrame` - not yet cross-checked against either data family the way the main zone was. |
+| **Standalone entity constructors** | 1.0 KB | 39 | Reference the entity family but aren't reachable from the dispatch chain - presumably called from elsewhere (another vtable, or matched `src/*.c`). |
+| **Standalone level-config readers** | 1.3 KB | 13 | Same story, for the level-config family. |
+| **Unidentified** | 9.3 KB | 325 | No landmark reachability, no data-family signature - genuinely uncharacterized. |
+
+(Sums to ~113 KB with minor double-counting where a function hits both
+data families - close enough for this grain.)
+
+**The honest headline: `game_loop`'s single largest piece (48.2 KB, the
+"undifferentiated core") is still a black box.** It's confirmed to be
+*part of the same system* as the read dispatch chain - directly
+call-graph-reachable, not a guess - but not one of those 312 functions
+has actually been read. That's now the single biggest well-defined gap
+in this whole document, bigger than any other category's unconfirmed
+portion. The "level-parameterized" and "entity spawn" slices are a real
+improvement: not just "part of the blob" but "specifically consumes
+*this* data" - a concrete, checkable claim, even without knowing what
+each individual function does.
 
 ## The SFX system (`0x080014A4`-`0x08006700`, 20.6 KB)
 
