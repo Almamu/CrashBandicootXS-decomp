@@ -152,20 +152,67 @@ staying within this zone, reaches **115 of 331 functions (17.0 KB,
 ~42%)** - real, direct confirmation that a large share of this zone is
 genuinely the per-type behavior implementation (`Actor0_*`/`Actor1_*`/
 `Actor2_*` placeholders from `include/actor_anim.h`, plus whatever they
-call). The remaining ~58% splits into three chunks worth separate
-follow-up: a ~9.4 KB prefix before type 0's first confirmed slot
-(`0x0802B364`-`0x0802D7B0`, 82 functions) that holds 12 of
-`InitActorPart`'s 41 total call-graph neighbors - a real concentration,
-consistent with spawn/init-time dispatch code rather than per-frame
-behavior; a ~9.4 KB gap between the shared type-1/2 constructor and
-type 1's slots 2-6 (`0x0802E740`-`0x08030F88`, 75 functions) not reached
-by this pass; and a ~7.1 KB tail after type 2's last slot
-(`0x080336CC`-`0x080354BC`, 68 functions) also not reached - it directly
-precedes `LoadLevelGraphics`, so it may turn out to belong to level
-loading rather than actors. None of these three are ruled out as
-actor-related - the BFS only sees direct `bl` call edges, so anything
-reached only through a computed/indirect branch (a local jump table,
-say) wouldn't show up - just not yet *confirmed* the way the 115 are.
+call). Adding `InitActorPart`'s own 34 in-zone callers as extra seeds
+(the earlier pass under-counted this - it only followed edges *between*
+zone functions, and `InitActorPart` itself lives just outside the zone,
+so its in-zone callers never got pulled in) raises this to **148 of 331
+(20.8 KB, ~45%)**.
+
+### The leftover ~55% - still actor-linked, just not through these seeds
+
+Checked what the remaining, still-unreached functions call, grouped into
+their largest contiguous runs - and the pattern is consistent enough
+across all of them to say something concrete, even without seeding from
+them directly:
+
+- **Every run leans on the same handful of already-matched or
+  already-documented functions**: `PlaySfx`, `InitActorPart`,
+  `GetAnimFrameBaseOffset` (matched, `actor_anim.c`), and two
+  actor-system siblings just outside the zone (`sub_802A6EC`,
+  `sub_802A7B8`, near `InitActorPart`/`UpdateAnimatedActorPart` -
+  every prior pass only seeded from `InitActorPart` itself, missing
+  these). This is the same signature as the 148 confirmed functions,
+  just reached through different individual actor-system entry points
+  than the ones already traced - strong evidence the leftover runs are
+  still actor code, not something else that happens to share the
+  neighborhood.
+- **New finding: several of these runs also call `sub_803AD80`/
+  `sub_803AD84`** - the text-drawing helpers already matched in
+  `src/graphics/text_layout.c`/`oam_count.c` (`sub_803AD80` measures a
+  string's pixel width, `sub_803AD84` draws one). Meaning: at least some
+  actor types render text as part of their behavior - a floating score,
+  a countdown, a crate-contents readout, something along those lines.
+  Not confirmed which, but a genuinely new, specific behavioral clue
+  this pass didn't have before.
+- **A concrete link back to the 94 KB zone's own finding**: one of the
+  IWRAM globals in that zone's hot cluster, `gUnknown_03001300`, is
+  passed as the `struct oam_shadow_buffer *` argument to `sub_8006A48`
+  (matched, `src/graphics/graphics.c`) - and `sub_8006A48` shows up
+  repeatedly as an outgoing call from these leftover actor runs too, as
+  does `sub_80006A8` (matched, `src/system/irq.c`'s region). So the same
+  OAM-shadow-buffer singleton and the same low-level sync helper get
+  used by text layout, the 94 KB zone's frame-end display commit
+  function, and these actor-behavior functions alike - one shared piece
+  of infrastructure underneath several "systems" this document has been
+  treating as separate.
+- **The ~7.1 KB tail bordering `LoadLevelGraphics`** (`0x080336CC`-
+  `0x08035...`) shows this same actor-flavored signature rather than
+  anything resembling level-loading code - weakens (doesn't rule out)
+  last pass's guess that it might belong to level loading instead.
+
+Confirmed by re-running the reachability pass seeded from *every*
+already-documented actor-system function (`InitActorCategory`,
+`SelectActorCategory`, `UpdateAnimatedActorPart`, `ConstructActorPart`,
+`GetAnimFrameData`, `GetAnimFrameBaseOffset`, and their close neighbors
+`sub_802A6EC`/`sub_802A7B8`) together with the 17 vtable slots and each
+one's in-zone callers, not just `InitActorPart`'s: coverage jumps to
+**198 of 331 functions (28.4 KB, ~70% of the zone's bytes)**. The
+remaining ~30% is scattered across many small runs (the largest just 22
+functions) rather than concentrated in one or two unexplained blocks -
+consistent with ordinary tapering-off (leaf helpers a few calls deep that
+this pass's landmarks don't happen to reach directly) rather than a
+second hidden system sharing the neighborhood. **Net read: this 40.4 KB
+zone is overwhelmingly actor per-type behavior code.**
 
 ## The SFX system (`0x080014A4`-`0x08006700`, 20.6 KB)
 
