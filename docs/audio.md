@@ -141,9 +141,16 @@ picture):
   `gUnknown_03001630` (writes the magic, stores the song/sound struct
   pointer, resets counters), validates an item count against a `0x18B`
   (395) sanity maximum, and fills in default fields - an instrument-bank
-  pointer (`gStaticData_085A4C5C`, a fresh symbol whose relationship to
-  the documented `gStaticData_0855BCB4` data block isn't established
-  yet) and a default volume (`0xFF`) - when the caller left them zero.
+  pointer (`gStaticData_085A4C5C`) and a default volume (`0xFF`) - when
+  the caller left them zero.
+- **`gStaticData_085A4C5C`** (20 bytes) turns out to sit **immediately
+  after** the documented `gStaticData_0855BCB4` audio block, not
+  embedded within it - confirmed exactly: `gax_audio_data.bin` (the
+  built block) is `0x48FA8` bytes, and `0x0855BCB4 + 0x48FA8 =
+  0x085A4C5C` precisely. Decodes as `{count=4, ptr, ptr, ptr, ptr}` -
+  four pointers, all pointing back into the tail of the audio block -
+  plausibly a small default-instrument-set selector table
+  `sub_8038538`'s play-start logic falls back to.
 - **`sub_8038E74`** (one of `PlaySfx`'s two direct callees) is the
   **voice-stealing mixer allocator**: loops the current song's active
   channel handlers via `gUnknown_03001630`'s child-pointer chain, and
@@ -159,6 +166,18 @@ picture):
   confirmed which operation, but the shape is unambiguous enough to
   flag as a likely false positive for anyone scanning this range by
   address alone.
+- **`sub_8037A7C`** (984 B) is a **second confirmed non-GAX2 false
+  positive** in this range: a generic 64-bit software division routine,
+  read in full - normalizes the dividend via a 256-entry bit-
+  normalization/leading-zero-count lookup table
+  (`gStaticData_085A4D70`, sitting right next to the `gStaticData_
+  085A4C5C` instrument-selector data above) before doing long division
+  via `sub_803AF1C`/`sub_8037E54`. Worth noting explicitly: the small
+  data cluster right after the audio block is itself mixed -
+  `gStaticData_085A4C5C` plausibly audio-related,
+  `gStaticData_085A4D70` confirmed unrelated - so proximity to
+  known-audio data doesn't settle the question either, only reading
+  the consuming function does.
 
 ## Sound effects
 
