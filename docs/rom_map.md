@@ -873,11 +873,36 @@ new mechanisms not previously catalogued in this zone:
   instead - reads as a minimap with off-screen-indicator handling.
 
 None of the ten are entity-vtable-dispatched (all called via `bl`).
-Net effect: the zone's remaining unknowns keep converging on known
-families for the position/timer/animation machinery, but the
-rendering side turns out to hide at least three distinct, previously
-uncatalogued display features layered on top of the same actor
-per-type dispatch backbone.
+
+**Correction from a follow-up fork: these three "mechanisms" are one
+combined feature, and it's not actor code at all - it's a between-
+level map/progress screen driven directly from `game_loop`.** Tracing
+the full call chain upward: `sub_8034688` is the real per-frame
+minimap driver (clears via `sub_8034480`, places up to 8 dots via
+`sub_80345B0` per call, advancing a `self+0xc` reveal-progress counter
+capped at `0x7f` - an incremental "reveal the map" animation, not a
+one-shot draw). `sub_8034CEC` is a **combined constructor** for both
+the minimap and the popup-text system in one call (allocates the
+minimap object, resets the OAM shadow buffer, initializes
+`gUnknown_030012DC`/`030012E0`, then calls `sub_80352AC`, the
+popup-text asset loader). `sub_8034E2C` is a **combined per-frame
+driver**: toggles a parity bit to trigger `sub_80350A4` (popup text)
+roughly every other frame alongside `sub_8034688` (map reveal) every
+frame - the popup-text and minimap systems are driven together as one
+screen state, not independently - then runs a 16-iteration wipe/
+transition effect poking `0x04000050`/`0x04000054` (the same window-
+register hardware family as `sub_8022BF0`/`sub_8022CA0` from the
+`game_loop` core), and frees the popup-text list. The top-level entry,
+**`sub_80354BC`**, is called from exactly **two sites, both inside
+`UpdateGameFrame` itself** (not from any actor code) - the first
+gated on `sub_8035E14`'s return value `== 2` inside a level-load state
+loop right after `LoadLevelGraphics`. Reads as a **level-transition
+map/progress screen shown between levels**, implemented in the same
+ROM region as actor code but logically part of `game_loop`'s level-
+load state machine, not an actor per-type behavior. `sub_8035E14`
+(the level-load-stage selector gating the whole feature) and
+`sub_8034374` (the minimap object's own constructor) remain unread and
+would be the natural next step for anyone continuing this thread.
 
 ## Subdividing `game_loop`
 
@@ -1915,6 +1940,31 @@ other plays `PlaySfx(id=0x46)` and starts a 30-frame timer (plausibly
 confirm/select, with a short animation). The move/confirm/cancel
 handler driving the same per-row updates the rows themselves use -
 consistent with, not a correction to, the settings-menu reading.
+
+**A follow-up fork read four more functions in this zone.**
+`sub_8003D3C` (500 B) and `sub_800556C` (416 B, list-iterating over a
+`self+0x1c`-counted, `self+0x14`-based `*8`-stride array) both fit the
+documented settings-row text-layout pattern exactly (label lookup via
+`sub_8026F38`, the `gUnknown_03000850[gUnknown_03000868]` runtime
+string table; width measurement via `sub_803AD80`; centered-x math
+into `gUnknown_030012DC`-relative OAM fields). `sub_800556C` branches
+on a per-row type tag (`==4`/`==5`/else) into three distinct layout
+variants - reads as the umbrella per-row list renderer the individual
+row wrappers sit inside, extending the "four sliders, one breaks the
+pattern" finding. **New, not yet characterized: `sub_80031E4`** (260 B)
+is a *different* object entirely - not a settings row. It loops 5
+times over `self+0xA8`/`0xBC`/`0xD0` arrays (3 fields/iteration),
+drawing via `sub_803AD7C` (a sibling of the text-draw family), then
+dispatches an **11-case jump table** on `self+0xC` to a family of
+similarly-sized (150-260 B) unread siblings: `sub_80032E8`,
+`sub_80034BC`, `sub_80035C0`, `sub_8004CB4`, `sub_8003824`,
+`sub_80038D0`, `sub_800376C`, `sub_800397C`. Reads as a distinct
+multi-state UI element with 5 repeating slots (possibly a transition/
+wipe effect or a separate widget) living in the same file as the
+settings menu but structurally independent from it - worth a
+dedicated follow-up, not folded into the settings-menu reading.
+Confidence: high on "distinct state machine, not a settings row," low
+on specific purpose. None of the four are entity-vtable-dispatched.
 
 ### A fourth thing in this file: the small leftover cluster is a fade-to-black effect
 
