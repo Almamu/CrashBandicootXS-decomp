@@ -41,7 +41,7 @@ taught this project to avoid. Treat this as the reading-level answer to
 
 | Category | Size | Share | Confidence |
 |---|---|---|---|
-| `game_loop` (core per-frame/state-machine logic) | 112.7 KB | 47.3% | mixed, improving - ~89% of the 94.4 KB zone now traces to confirmed functions, see note |
+| `game_loop` (core per-frame/state-machine logic) | 112.7 KB | 47.3% | high for ~92.3% of the 94.4 KB zone (confirmed via reachability + two shared data-table families), the rest inferred by cohesion; the other ~18.3 KB of this category (the `UpdateGameFrame`-`MainLoop` gap) is separately evidenced, not yet closed the same way |
 | `actor` (category/part/vtable system) | 50.7 KB | 21.3% | high for ~38.7 KB (named landmarks + confirmed reachable)\*, ~12 KB inferred |
 | `graphics_loading` (package/tile/level loading) | 24.8 KB | 10.4% | high - dense named landmarks, plus a 6.2 KB stretch folded in this pass (see below) |
 | `audio_sfx` (SFX layer, distinct from GAX2) | 20.6 KB | 8.6% | medium - one anchor (`PlaySfx`), rest by contiguity |
@@ -118,6 +118,31 @@ category/vtable system to bring the placed thing to life. Re-running the
 component, so only 39 are net-new) pushes zone coverage from 427 to
 **466 of 804 functions, 83.7 KB (~89%) of the zone's bytes** - up from
 82.7 KB last pass.
+
+### Closing the gap further: a second large ROM-data-table family
+
+Same technique, one more pass: tallied every data symbol referenced by
+the zone's still-unreached functions, and one family stood out -
+`gStaticData_0816B2E0` through `gStaticData_0816C...`, **91 distinct
+entries**, the same family `sub_801C96C` itself indexes into
+(`gStaticData_0816C86C`) right before its main loop. 80 zone functions
+reference this family; 67 were already part of the confirmed set (it's
+core to the already-read `sub_801C96C`, so heavy overlap is expected),
+but **13 more (1.4 KB) were net-new**. Folding those in: **479 of 804
+functions, 87.1 KB (~92.3%) of the zone confirmed.**
+
+Re-tallied symbols among what's *still* unreached after this (325
+functions, ~7.3 KB) and found no third data-table family - just the same
+hot IWRAM globals (`gUnknown_030012B4`-`0300130C`) already tied to the
+confirmed core throughout this investigation. Read as: this remainder is
+very likely more of the same system, just small individual functions
+this pass's seeds don't happen to reach directly (called only via
+function pointer/jump table, or only from already-matched `src/*.c` this
+BFS can't see) - not a fourth hidden category. **92.3% is a reasonable
+place to stop for this pass**; closing the last ~7.7 KB from here means
+reading individual leftover functions one at a time rather than finding
+another shared signature, the same way `actor` was ultimately closed out
+to its own ~70%.
 
 ## The clear regions
 
