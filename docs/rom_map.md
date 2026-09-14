@@ -784,6 +784,41 @@ of the remaining 39.4 KB presumably belongs to vtable slots this scan
 didn't catch - a slot pointing at a function the scan's ROM search
 missed, or dispatch through some other, still-unfound table).
 
+### Looked for this system's `SelectActorCategory` equivalent - doesn't seem to exist
+
+The actor system picks a vtable at runtime: `SelectActorCategory` takes
+an index and computes `gStaticData_081756C4 + type*0x34`. Checked
+whether this 93-vtable entity system has the same kind of indexed
+selector, by tracing the tiny constructor stubs' own callers back up
+(`sub_8008484` - 6 callers; `sub_800B8A8` - 15 callers, matching almost
+exactly the 24-function component first noticed back when this zone was
+still an unexplained blob). **No shared dispatcher turned up.** Every
+caller is its own distinct, differently-named function, each hardcoded
+to set one specific `self+0xC` field to one specific `gStaticData_087Exxx`
+address - there's no `type` parameter or table-index computation
+anywhere in this chain, just direct, compile-time-fixed calls.
+
+One example worth flagging rather than smoothing over:
+**`sub_800CA60`** sets `self+0xC = &gStaticData_087E3EE4` (the very
+vtable already dumped in full above) and then immediately calls
+`sub_800B8A8` - which unconditionally overwrites that same field to
+`&gStaticData_087E3E7C` instead. Read literally, `sub_800CA60`'s own
+write is dead, entirely superseded before the function returns; the only
+surviving effect is whatever `sub_800B8A8` does (assign the *other*
+vtable, and conditionally call `sub_8026ED0`). Not resolved here -
+could be a genuine compiler-emitted redundant store (two near-duplicate
+constructors that should probably share more code), or a sign this
+document's read of one of the two functions is subtly wrong. Flagged for
+whoever picks this thread up next rather than guessed at.
+
+**Net conclusion: unlike `actor`, this entity-vtable system looks
+statically/compile-time dispatched, not runtime-selected** - each spawn
+call-site in the game's logic directly invokes the specific constructor
+for the specific thing it wants to create, rather than going through a
+generic `Construct(type_id)` indexed by a category number. Consistent
+with a game that has many fixed, individually-placed objects per level
+rather than fully data-driven entity instantiation.
+
 ## The SFX system (`0x080014A4`-`0x08006700`, 20.6 KB)
 
 Previously investigated and already flagged as a dead end for further
