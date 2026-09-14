@@ -679,14 +679,21 @@ instead of one blob:
 (Sums to ~113 KB with minor double-counting where a function hits both
 data families - close enough for this grain.)
 
-**The honest headline: `game_loop`'s single largest piece (48.2 KB, the
-"undifferentiated core") is still a black box.** It's confirmed to be
-*part of the same system* as the read dispatch chain - directly
-call-graph-reachable, not a guess - but not one of those 312 functions
-has actually been read. That's now the single biggest well-defined gap
-in this whole document, bigger than any other category's unconfirmed
-portion. The "level-parameterized" and "entity spawn" slices are a real
-improvement: not just "part of the blob" but "specifically consumes
+**The honest headline at this point in the investigation: `game_loop`'s
+single largest piece (48.2 KB, the "undifferentiated core") is still a
+black box.** *(Updated after later passes: by the end of this
+document's `game_loop` investigation - the 93-vtable discovery, the
+shared physics subsystem, and the 42-slot action table further down -
+~24.7 KB of these 48.2 KB, just over half, is concretely explained.
+Left as originally written below since it accurately describes the
+state at the time; see "Subdividing `game_loop`"'s later subsections for
+the running total.)* It's confirmed to be *part of the same system* as
+the read dispatch chain - directly call-graph-reachable, not a guess -
+but not one of those 312 functions has actually been read. That's now
+the single biggest well-defined gap in this whole document, bigger than
+any other category's unconfirmed portion. The "level-parameterized" and
+"entity spawn" slices are a real improvement: not just "part of the
+blob" but "specifically consumes
 *this* data" - a concrete, checkable claim, even without knowing what
 each individual function does.
 
@@ -847,14 +854,48 @@ family, and `gUnknown_030012D8`) into one plausible concrete event.
 Its one caller, **`sub_8013D94`**, is itself dispatched through a
 pointer - not via `bl` from anywhere in raw asm, same pattern as the
 93-vtable system - but this time the pointer sits inside
-**`gStaticData_0816BF20`** (already part of the documented per-level
-`0x0816Bxxx`-`0x0816Dxxx` family, at `+0x74` into its own 0x150-byte
-block, not a separate table). A second, different behavior-selection
-mechanism riding on the same per-level descriptor region as the
-`menu_ui` dispatch table - that region is doing even more work than
-previously credited: scalar per-level parameters, the `menu_ui`
-text/dialog table, and now apparently at least one more per-level
-function-pointer field for in-level events.
+**`gStaticData_0816BF20`**, already part of the documented per-level
+`0x0816Bxxx`-`0x0816Dxxx` family. First read as "at least one more
+function-pointer field" - dumping the entire 0x150-byte block in full
+shows it's much more than that.
+
+### `gStaticData_0816BF20` is a 42-slot, fully-populated action dispatch table
+
+Every one of the block's 42 `{0xFFFF0000, ptr}` pairs (a third variant
+of the pairing convention already seen twice - plain `{0,ptr}` for HUD/
+entity vtables, `{0xFFFF0000,ptr}` here) holds a **valid thumb function
+address** - unlike the sparse entity vtables, this table has no unused
+slots at all. Cross-referencing the 37 unique targets against every
+function already read or flagged as one of the "biggest unexplained
+`game_loop` functions" landed several direct hits at once:
+`sub_8012D24`, `sub_8012FBC`, `sub_8013228`, `sub_80134B8` (the bonus
+popup above), `sub_8013994`, `sub_8014674` were *all* already on this
+document's "biggest still-unexplained" list independently - this one
+table explains a large fraction of them in a single stroke.
+
+Read one of the twin-sized entries, **`sub_8013994`** (716 B, tied with
+`sub_8014674` for size): checks individual bits of `gUnknown_030007E0`'s
+*lower* half this time (a different half of the same flags word
+`sub_801C96C`'s dispatch reads from the upper half) against specific
+action codes (`0xB`, `0x10`) via `sub_800AAEC`, and on a match plays a
+distinct `PlaySfx` id, clears flag bits, and hands off to a further
+per-action handler (`sub_8015508`/`sub_8015398`). Reads as **player
+input/action handling** - which specific button or trigger maps to
+which of the 42 slots isn't resolved, but the shape (flag-bit checks →
+action-code lookup → sound + state change) is a clean, specific claim.
+
+Six of the 37 unique targets are the *same* address
+(`sub_80134B8`/`0x080134b9`, appearing at 6 of the 42 slots) - a shared
+default/fallback handler for whichever action slots don't have a
+level-specific response, the same "many slots, few unique
+implementations" reuse pattern as every other table/vtable in this
+document. **Quantified the payoff**: of the 37 unique target functions
+(9.1 KB total), **28 (8.4 KB) were still sitting in the fully-
+unexplained remainder** before this - the single largest net-new
+contribution of any individual finding in this whole investigation.
+Combined with the vtable cross-reference (12.2 KB) and the physics
+subsystem (4.1 KB), that's **~24.7 KB of the original 48.2 KB
+"undifferentiated core" now concretely explained - just over half.**
 
 ## Mapping the rest of the per-level descriptor region
 
@@ -963,15 +1004,16 @@ entire ROM.
 
 **Net picture**: this data region is a small cluster of genuinely
 different tables - one big 36-slot per-level record array
-(`0x0816C86C`), a 22-row per-state frame-offset table
-(`0x0816BC98`), the `menu_ui` function-pointer table nested inside
-`0x0816C6A4`'s own 368-byte block, at least one more per-level
-event-dispatch pointer (`0x0816BF20+0x74`), a shared resource several
-`menu_ui` widgets reuse (`0x0816B98C`), and roughly a dozen more
-medium-sized tables (20-680 B) not yet individually characterized. Not
-one monolithic "level config" struct as the early `game_loop`
-investigation implied - closer to a small header file's worth of
-level-related tables that happen to sit next to each other in ROM.
+(`0x0816C86C`), a 22-row per-state frame-offset table (`0x0816BC98`),
+the `menu_ui` function-pointer table nested inside `0x0816C6A4`'s own
+368-byte block, a fully-populated 42-slot action dispatch table
+(`0x0816BF20` - see below, resolved in full after this was written), a
+shared resource several `menu_ui` widgets reuse (`0x0816B98C`), and
+roughly a dozen more medium-sized tables (20-680 B) not yet individually
+characterized. Not one monolithic "level config" struct as the early
+`game_loop` investigation implied - closer to a small header file's
+worth of level-related tables that happen to sit next to each other in
+ROM, several of which turned out to be dispatch tables themselves.
 
 ## Correction: `sub_803AD78`-`sub_803AD94` are a register-indirect-call trampoline table, not real functions
 
