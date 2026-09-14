@@ -1256,6 +1256,51 @@ two more unlabeled tables in the same family as `gStaticData_0816C460`).
 None of the eight showed vtable-dispatch patterns in this pass (spot
 pattern, not exhaustively re-checked against `baserom.gba`).
 
+### Closing in on the core: two vtable hits fold in, a synthesis, and a distinct combo-text system
+
+A further fork read five more functions, with two results that fold
+into an already-counted bucket rather than adding new coverage:
+**`sub_800BD48`** and **`sub_8018E4C`** are both **entity-vtable-
+dispatched** (their thumb-bit-set addresses appear as raw pointer
+values inside the documented `gStaticData_087Exxx` 93-entry entity
+family), so their combined ~1.2 KB already belongs to the "Direct
+93-vtable cross-reference" line in the running-total table below, not
+new territory. `sub_800BD48` is still a strong synthesis, though: gated
+on `gUnknown_030012D8+0x88`, it either flips a bit in
+`gUnknown_030012B4`'s bitset (the same global feeding the hardware
+window registers via `sub_8022BF0`/`sub_8022CA0`) plus `PlaySfx(0x5a)`,
+or dispatches a 22-case jump table where cases 18/19 allocate an
+object, draw floating text, and write the **exact same
+`self+0x60`/`+0x48`/`+0x4c`/`+0x50` directional-target field layout**
+`sub_801B304` (actor) and `sub_80159F8` (game_loop core) already
+write - a real synthesis point tying together the window-register
+bitset, the directional-target field convention, the shared
+`sub_8000E1C` input-check, and floating-text feedback in one function.
+
+Genuine new coverage (~1.75 KB): **`sub_8018400`** (636 B) and
+`sub_8018E4C` are a linked pair driving large jump tables (15/11
+cases) that draw text at varying priorities and reference a new
+global-record-array `gUnknown_030012EC` plus a new table family
+(`gStaticData_0816C308`/`35F`/`5F0`, more members of the
+`0x0816Cxxx` directional/state-table family already seen this
+session) - reads as a floating combo-text/score-popup state machine,
+distinct from the earlier-documented map-screen popup-text system
+(different globals, different tables); shares helpers `sub_8019094`
+and `sub_8019214` with it (the latter the same function already
+documented as a `gStaticData_084A5600` consumer/pickup-object spawner
+- consistent, not a naming collision). **`sub_80073DC`** (590 B)
+builds and submits a packed OAM word from the per-level
+`gStaticData_0816B2E0`/`2EC` tables, screen-culled against GBA-shaped
+bounds (`0x9f`/`0xef`) - a new concrete consumer of that per-level
+table family. **`sub_801D828`** (528 B, partially read) uses DMA3 to
+*generate* a 128-halfword arithmetic-gradient buffer rather than copy
+static data - a palette/gradient generator distinct from the
+documented fade-to-black effect; not fully characterized.
+
+This leaves roughly **~7.6 KB genuinely unexplained** in the core.
+Next candidates: `sub_8019094`, `sub_8018978`, and the unread
+remainder of `sub_801D828`.
+
 ### Cross-checked the `UpdateGameFrame`-`MainLoop` cluster: same signature, not an island
 
 A parallel fork gave this separate 17.1 KB (now revised to 18.3 KB once
