@@ -1526,6 +1526,41 @@ a new category, but real, valuable context for everything already
 written: these aren't scattered ambient globals, they're one function's
 worth of deliberate construction, run once at the top of the game loop.
 
+### `gStaticData_084A5600` resolved: a 729 KB master index, not a small table
+
+A parallel fork chased the fresh lead. It's **729 KB** (`0xB66B4`
+bytes) - by far the largest single labeled symbol anywhere in this
+document, filling the gap *exactly* between a 3.2 MB unlabeled graphics
+blob and the documented GAX2 audio data block
+(`0x084A5600 + 0xB66B4 = 0x0855BCB4` precisely). No family of related
+symbols nearby, unlike the 93-entry or per-level families - one giant
+incbin, not a series.
+
+**Not raw pixel/asset data - it's a structured header/index.** The
+first 64 bytes alternate pointers (some pointing *before* the symbol's
+own start, into the preceding graphics blob) with what look like packed
+dimension/count pairs. A second, previously-undocumented reference in
+`asm/code_3_1_7.s` reads `+0x8` as a pointer and `+0xE` as a halfword
+count, then calls a graphics-loading-shaped helper following an
+allocation - reads as a **master per-record index table**, `{pointer,
+count}`-style entries pointing into the preceding graphics blob,
+consumed by a loader. Exact record stride not pinned down (too few
+samples).
+
+**`gUnknown_030012D0`** (184 references - genuinely hot, and already
+seen this session in `sub_8027138`'s icon-array setup and the "trigger
+effect type N" family) **is a pointer *variable*, not the struct
+itself** - `sub_8022230` sets it to `&gStaticData_084A5600`, and code
+dereferences through it (`**gUnknown_030012D0 + 4` at one confirmed
+site) to reach the table's own first field, itself another pointer.
+Confirms the table's header genuinely is live pointer data, consumed
+indirectly rather than read as a fixed-offset struct everywhere -
+consistent with "index into whichever asset table is currently active,"
+not a single fixed resource. Given the size, this is very plausibly
+the master graphics-asset table the whole `graphics_loading` category
+ultimately bottoms out in - a natural target for a dedicated pass if
+anyone wants to pin down its record schema.
+
 ## Narrowing the GAX2 boundary
 
 [`docs/audio.md`](./audio.md) documented the Shin'en GAX2 engine as
