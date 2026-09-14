@@ -1716,6 +1716,19 @@ the same central per-level data region `menu_ui`, the 36-slot table,
 and the 42-slot action table all bottom out in - four different
 categories, one shared data region underneath all of them.
 
+**`sub_8005100`** (a follow-up read) fits and extends the picture
+rather than contradicting it: it's the screen's **cursor/navigation
+driver**, not another settings row. Loops a bounded counter while
+calling the same three-function update triple
+(`sub_80053F4`/`sub_8006250`/`sub_8005304`) each individual settings
+row already uses, then checks `gUnknown_030007E0`'s flags (the input
+global tracked throughout this session) for two distinct actions - one
+plays `PlaySfx(id=0x49)` and exits early (plausibly cancel/back), the
+other plays `PlaySfx(id=0x46)` and starts a 30-frame timer (plausibly
+confirm/select, with a short animation). The move/confirm/cancel
+handler driving the same per-row updates the rows themselves use -
+consistent with, not a correction to, the settings-menu reading.
+
 ### A fourth thing in this file: the small leftover cluster is a fade-to-black effect
 
 The ~0.4 KB of tiny leaf singletons left unlabeled by the split above
