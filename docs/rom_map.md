@@ -51,7 +51,7 @@ taught this project to avoid. Treat this as the reading-level answer to
 | `game_loop` (core per-frame/state-machine logic) | 112.7 KB | 47.3% | mixed - split into sub-buckets in "Subdividing `game_loop`" below; its "undifferentiated core" sub-bucket is ~51% concretely explained as of "Current state of the undifferentiated core" further down that section |
 | `actor` (category/part/vtable system) | 50.7 KB | 21.3% | high for ~38.7 KB (named landmarks + confirmed reachable)\*, ~12 KB inferred |
 | `graphics_loading` (package/tile/level loading) | 15.7 KB | 6.6% | mixed - `LoadGraphicsPackage` itself and its immediate neighbors read directly, ~9.1 KB moved out to `menu_ui` (see below) |
-| `overlay_ui`? (likely a settings/options menu, `PlaySfx` embedded in it) | 18.7 KB | 7.9% | high for the split itself (118-function dominant component, connectivity-based); the "22 functions" sub-count is a trampoline-inflated upper bound, see the correction below; medium for "settings/options menu" specifically - see "Narrowed down which screen" below |
+| `overlay_ui`? (likely a settings menu, 4 discrete-level sliders) | 18.7 KB | 7.9% | high for the split itself (118-function dominant component, connectivity-based); the "22 functions" sub-count is a trampoline-inflated upper bound, see the correction below; medium for "settings menu, 4 sliders" - structure confirmed, actual setting names not recoverable statically, see "Narrowed down which screen" below |
 | `audio_gax2` (Shin'en GAX2 engine) | 14.1 KB | 5.9% | medium - boundary narrowed this investigation; three internal functions now read directly too, see `docs/audio.md`'s "A few engine internals read directly" |
 | `hud` (icon/text widgets, score/percentage/stat counters) | 6.1 KB | 2.6% | high - 1.3 KB named landmarks plus ~4.8 KB stat-widget cluster (8 functions, all individually read this pass) |
 | `menu_ui` (per-level text/dialog display, dispatch table confirmed) | 9.1 KB | 3.8% | high - one function read in full, 29/31 siblings confirmed as real dispatch-table entries in ROM data |
@@ -1593,11 +1593,37 @@ options menu with several adjustable numeric values** (volume,
 difficulty, brightness-style sliders are the obvious guesses) rather
 than a generic pause menu or plain HUD overlay - medium confidence,
 since no literal text/label strings were found to name the specific
-options, but the shape itself is hard to misread. `sub_8002CE8`'s two
-query modes (`0` vs `1` - plausibly "is selected" vs "is enabled")
-and the remaining unread functions (`sub_800450C`, `sub_8005100`,
-`sub_8005D44`) are the natural next targets if anyone wants to name the
-actual six settings.
+options, but the shape itself is hard to misread.
+
+**A follow-up fork tried to actually name the settings, and got most of
+the way there structurally, if not by name.** `sub_8002CE8` turned out
+trivial (a flat lookup, not informative on its own) - but reading the 6
+wrapper callers revealed they resolve to only **4 distinct label
+indices**, two of which are each used by *two* wrappers. That's **4
+real settings, not 6** - the "6 callers" were paired rows (one wrapper
+draws a row's fixed label, its pair draws the row's live value), not 6
+independent items. Each label index resolves through
+**`sub_8026F38`** - the exact `gUnknown_03000850[gUnknown_03000868]`
+runtime string-table lookup this document already characterized, all
+the way back in the very first `game_loop`/DARK1 investigation - so the
+row titles are real text, just RAM-resident and populated from ROM
+elsewhere, out of reach of this static read. Three of the four rows
+share the same shape: draw a value via `sub_80041BC`, gate a flag on
+whether the value `==4` - consistent with **four discrete 0-4-level
+sliders** (5 positions each), the `==4` check plausibly a "maxed out"
+indicator. The fourth breaks the pattern - skips the slider draw
+entirely for a two-value display, maybe a ratio or fraction rather than
+a level.
+
+**Couldn't name the actual settings** (no literal ASCII text - the
+label table is RAM-resident) - but did find one more concrete tie:
+`sub_800450C` copies from **the very first four tables in the
+documented per-level `gStaticData_0816Bxxx` family**
+(`gStaticData_0816B13A`/`15A`/`17A`/`19A`) into this screen's own
+per-item arrays. A real, direct link between this settings screen and
+the same central per-level data region `menu_ui`, the 36-slot table,
+and the 42-slot action table all bottom out in - four different
+categories, one shared data region underneath all of them.
 
 ### A fourth thing in this file: the small leftover cluster is a fade-to-black effect
 
