@@ -178,6 +178,33 @@ picture):
   `gStaticData_085A4D70` confirmed unrelated - so proximity to
   known-audio data doesn't settle the question either, only reading
   the consuming function does.
+- **`sub_803A608` isn't really a function to characterize - it's a
+  2-instruction stub (`nop; b _0803A61E`, plus a small fallback
+  zero-fill loop) sitting in front of roughly 450 bytes of genuine
+  **ARM-mode (32-bit) machine code that the disassembler never actually
+  disassembled as code**. The labels right after it
+  (`gStaticData_0803A630`, `gStaticData_0803A67C`, `gStaticData_
+  0803A73C`, `gStaticData_0803A818`) mark raw bytes that decode cleanly
+  as ARM instruction encodings (e.g. `60 00 2D E9` = ARM `STMFD
+  sp!,{...}`, a classic ARM function prologue) - this codebase is
+  otherwise entirely Thumb, so whatever raw-asm-extraction pass
+  produced `asm/code_3.s` correctly recognized this stretch wasn't
+  Thumb and gave up, dumping it as opaque data instead. GAX2 shipping a
+  hand-written ARM-mode routine (for mixer speed - ARM decodes faster
+  per-instruction than Thumb on the ARM7TDMI, a known trick for hot
+  loops) inside an otherwise all-Thumb ROM is entirely plausible and
+  would explain the mismatch. Genuinely different from the two false
+  positives above - not mislabeled *ownership* (GAX2 vs. generic
+  helper), but a mislabeled *instruction set*, and a real gap in this
+  project's disassembly coverage worth flagging for whoever eventually
+  wants a byte-exact match through this stretch.
+- **`sub_8039B44`** (780 B): reads a pattern/sequence pointer
+  (`self+0x3C`), a note value checked against sentinel `0xFFFF8AD0`
+  ("empty/no note", `self+0x2A`), and a small 0-3 index (`self+0x10`,
+  plausibly a channel number) to step through pattern data and index a
+  row table. Reads as the sequencer's actual **pattern/channel
+  row-stepping logic** - genuinely core engine code, not a false
+  positive.
 
 ## Sound effects
 
