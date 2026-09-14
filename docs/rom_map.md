@@ -1458,6 +1458,42 @@ as a **"trigger effect type N" family**, each entry gated by its own
 settings/accessibility-style bit - sound-only, full particle effect, or
 a shared fallback sound, depending on per-type flags.
 
+**Confirmed by a follow-up fork: this family is a real dispatch table,
+not a size/address guess.** Checking `sub_8020E84`/`sub_8020F7C` (two
+more of `graphics_loading`'s unread functions) against the raw-pointer
+search placed them at `0x0816C7E8`/`0x0816C7EC` - *inside the same
+`gStaticData_0816C6A4` block* the `menu_ui` dispatch table already
+occupies. Dumping `0x0816C7D8`-`0x0816C814` directly shows a **plain,
+densely-packed array of 15 raw function pointers** (no `{0,ptr}`
+pairing this time - a fourth table shape in this ROM's toolkit,
+alongside the paired vtables, the 42-slot action table, and the
+per-level header-of-lists), running right up to the already-known
+`gStaticData_0816C814` label. This table includes `sub_802107C`,
+`sub_802117C`, **and `sub_8021280`** - so the earlier correction needs
+its own footnote: `sub_8021280` isn't part of the twins' *behavioral*
+pattern (it's a distinct bonus/reward spawner, correctly identified as
+such), but it **is** one of this same 15-slot table's entries - the
+table mixes genuinely different response types (sound+effect twins,
+a reward spawner) under one dispatch mechanism, the same way the
+42-slot action table mixed real handlers with a shared no-op fallback.
+`sub_8020E84`, read in full, matches the twins' exact shape (a
+different bit of `gUnknown_030012C0+2`, sound `0xB` this time,
+fallback `0xC`) - at least 4 of the 15 slots are now individually
+confirmed.
+
+**A second finding refines `sub_801E788`'s own table from earlier**:
+`sub_801E688` (368 B) reads the same `gStaticData_0816C644`/
+`gStaticData_0816C674` pair (12 entries each) completely differently -
+it iterates all 12 looking for the **smallest-area candidate that still
+fits** a given width/height, tracking the best index, then computes
+fixed-point scale factors via `sub_803ADB4` (confirmed real division
+function, not a trampoline call this time) for both axes. So this
+table pair isn't purely "per-level centering reference points" as
+first characterized - it reads more like a **shared table of available
+box/tile-size presets**, used both for best-fit *selection*
+(`sub_801E688`) and for *centering within* whichever box got selected
+(`sub_801E788`). Same data, two different consumers.
+
 **`sub_802364C`** (8 B): a trivial wrapper, `sub_8022468(self, 2)` -
 confirms `sub_8022468`'s second parameter is a context/mode selector, as
 suspected. **`sub_8023658`**: calls `sub_8022468(self, 1)` then
