@@ -57,9 +57,9 @@ taught this project to avoid. Treat this as the reading-level answer to
 | `menu_ui` (per-level text/dialog display, dispatch table confirmed) | 9.1 KB | 3.8% | high - one function read in full, 29/31 siblings confirmed as real dispatch-table entries in ROM data |
 | `fx`? (particle/trajectory queue, tentative) | 0.3 KB | 0.1% | low - two small functions read |
 | `system` (incl. 1.5 KB SIO/link-cable handling, newly found) | 5.7 KB | 2.4% | matched or matched-caller-confirmed, plus one directly-read SIO cluster |
-| `graphics` | 2.1 KB | 0.9% | matched |
+| `graphics` (incl. a 0.3 KB fade-to-black cluster, newly found) | 2.4 KB | 1.0% | matched, plus one directly-read fade-effect cluster tied to matched `palette_blend.c`/`fade_util.c` |
 | `util` | 1.8 KB | 0.8% | matched |
-| *(unlabeled remainder)* | ~1.2 KB | 0.5% | none - a small timer-ish cluster from the old `fx` split, plus a handful of tiny leaf singletons left over from the `overlay_ui` split, not folded into anything |
+| *(unlabeled remainder)* | ~0.9 KB | 0.4% | none - a small timer-ish cluster from the old `fx` split, not folded into anything |
 
 \* `0x08029ED0`-`0x0802B348` (8.2 KB, named landmarks) plus 28.4 KB of
 the 40.4 KB zone directly confirmed by that zone's reachability pass;
@@ -1172,6 +1172,38 @@ found (yet) to the `0x0816C744` dispatch table. Which specific screen
 this is (pause menu, options, a HUD overlay) is unconfirmed. The SIO
 pair (2.5 KB) is a third, still-separate thing entirely - serial/link-
 cable hardware handling, unrelated to either audio or UI.
+
+### A fourth thing in this file: the small leftover cluster is a fade-to-black effect
+
+The ~0.4 KB of tiny leaf singletons left unlabeled by the split above
+(the smallest functions in the whole file, `0x080014A4`-`0x080015E0`,
+13 functions/332 B) turns out to be genuinely identifiable, not just
+noise. **`sub_80014A4`**, the very first function in the entire file,
+loops calling **`sub_80013FC`** at increasing factors (`0, 2, 4, ...,
+0x10`) - and `sub_80013FC` is not raw asm at all, it's **already matched**
+(`src/graphics/palette_blend.c`), documented there as blending the whole
+512-entry palette toward black by `factor/16` per channel. Between each
+step, `sub_80014A4` calls `sub_80006A8` (matched, `src/system/irq.c`'s
+region - a VBlank-wait/commit helper used throughout this document) and
+DMAs the result out - the textbook shape of a **fade-to-black effect**,
+one step per frame. `palette_blend.c`'s own header comment already
+anticipated this: *"Sits right after `sub_800132C`
+(`src/graphics/fade_util.c`) and before whatever's still raw in
+`asm/code_3_1_7.s`"* - this is that continuation, finally identified.
+
+The other 12 functions in the cluster (16-24 B each) are get/set
+bitfield accessors for **`gUnknown_03001288`**, a packed mode/flags
+byte - the same one `sub_8022468` (the `graphics_loading` BG2-affine
+function from the section below) writes directly, and whose setters
+(`sub_8001524`/`sub_80015B0`/`sub_80015E0`) that same function calls by
+address. A real, concrete link between two categories this document has
+treated as unrelated: a small fade/screen-mode utility library, shared
+between the mislabeled "audio" file and the `graphics_loading`
+neighborhood. So this one ROM file actually holds **four** distinct
+things, not two: real SFX-triggering (`PlaySfx`, tiny), a self-contained
+UI overlay (`overlay_ui`, the 19.2 KB dominant component), SIO/link-cable
+handling (2.5 KB), and this fade/screen-mode utility set (0.3 KB) - the
+`unlabeled remainder` row in the category table above can be retired.
 
 ## Into `graphics_loading`'s remainder: a BG2-affine screen-effect setup
 
