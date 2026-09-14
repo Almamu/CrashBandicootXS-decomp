@@ -44,15 +44,15 @@ taught this project to avoid. Treat this as the reading-level answer to
 | `game_loop` (core per-frame/state-machine logic) | 112.7 KB | 47.3% | mixed - now split into sub-buckets, see "Subdividing `game_loop`" below |
 | `actor` (category/part/vtable system) | 50.7 KB | 21.3% | high for ~38.7 KB (named landmarks + confirmed reachable)\*, ~12 KB inferred |
 | `graphics_loading` (package/tile/level loading) | 15.7 KB | 6.6% | mixed - `LoadGraphicsPackage` itself and its immediate neighbors read directly, ~9.1 KB moved out to `menu_ui` (see below) |
-| `audio_sfx` (SFX layer, distinct from GAX2) | 20.6 KB | 8.6% | medium - one anchor (`PlaySfx`), rest by contiguity |
+| `overlay_ui`? (self-contained UI screen, `PlaySfx` embedded in it) | 18.7 KB | 7.9% | high for the split (118-function dominant component, 22 individually text-layout-confirmed), low for *which* screen this is |
 | `audio_gax2` (Shin'en GAX2 engine) | 14.1 KB | 5.9% | medium - narrowed this investigation, see `docs/audio.md` |
 | `hud` (icon/text widgets, score/percentage/stat counters) | 6.1 KB | 2.6% | high - 1.3 KB named landmarks plus ~4.8 KB stat-widget cluster (8 functions, all individually read this pass) |
 | `menu_ui` (per-level text/dialog display, dispatch table confirmed) | 9.1 KB | 3.8% | high - one function read in full, 29/31 siblings confirmed as real dispatch-table entries in ROM data |
 | `fx`? (particle/trajectory queue, tentative) | 0.3 KB | 0.1% | low - two small functions read |
-| `system` | 4.2 KB | 1.8% | matched, or matched-caller-confirmed (`LZ77UnCompWrapper` etc.) |
+| `system` (incl. 1.5 KB SIO/link-cable handling, newly found) | 5.7 KB | 2.4% | matched or matched-caller-confirmed, plus one directly-read SIO cluster |
 | `graphics` | 2.1 KB | 0.9% | matched |
 | `util` | 1.8 KB | 0.8% | matched |
-| *(unlabeled remainder)* | ~0.8 KB | 0.3% | none - a small timer-ish cluster and a few unread leaf functions left over from splitting the old `fx` bucket above, not folded into anything |
+| *(unlabeled remainder)* | ~1.2 KB | 0.5% | none - a small timer-ish cluster from the old `fx` split, plus a handful of tiny leaf singletons left over from the `overlay_ui` split, not folded into anything |
 
 \* `0x08029ED0`-`0x0802B348` (8.2 KB, named landmarks) plus 28.4 KB of
 the 40.4 KB zone directly confirmed by that zone's reachability pass;
@@ -819,21 +819,50 @@ generic `Construct(type_id)` indexed by a category number. Consistent
 with a game that has many fixed, individually-placed objects per level
 rather than fully data-driven entity instantiation.
 
-## The SFX system (`0x080014A4`-`0x08006700`, 20.6 KB)
+## `audio_sfx` was almost entirely wrong: mostly a UI/overlay system, not audio
 
-Previously investigated and already flagged as a dead end for further
-landmark discovery: `PlaySfx` is the only named function in the whole
-20.6 KB stretch, and it's a hub (called throughout gameplay code, not
-just from here) so call-graph connectivity from it doesn't help pin down
-where the *rest* of this file's functions come from. Treated as one
-region purely on **address contiguity** - the standing assumption
-throughout this project (see `mem_collect`/`sub_800039C` in
-`docs/decomp_dev.md`) that a stretch of ROM between two matched/
-understood boundaries with no evidence of belonging anywhere else is one
-original source file. This is a real sound-effect subsystem distinct
-from GAX2 (see below) - GAX2 is the *music*/general audio driver,
-`PlaySfx` here is presumably the game's own trigger/priority layer on
-top of it.
+Previously treated as one region purely on address contiguity -
+`PlaySfx` was the only named landmark, and being a hub (called from
+gameplay code throughout the ROM, not just here) meant its own
+connectivity couldn't help characterize the rest of the file. Actually
+reading it turned into the biggest single correction of the session -
+bigger than `hud`, bigger than `graphics_loading`/`menu_ui`.
+
+**Read the two largest functions first.** `sub_8006600` (1536 B, the
+file's biggest function) doesn't touch a single sound register - it
+calls `sub_803AD80` (text width) **four times**, computing
+`(240 - width) / 2` (screen-width centering math) for two separate
+labels, and writes the results into OAM-shaped position fields via three
+more of the "hot IWRAM globals" already tied to `game_loop`/`hud`
+(`gUnknown_030012E0`/`030012DC`/`030012FC`). Pure text-layout work.
+`sub_8002114` (1488 B, second-biggest) is genuinely different again -
+it manipulates `0x04000128`/`0x0400012A` (**`REG_SIOCNT`/`SIODATA8`**,
+the GBA's serial-IO/link-cable hardware), checking specific control
+bits before touching per-object state. Neither is audio in any sense.
+
+**Quantified how far this goes.** Removing `PlaySfx` from the local call
+graph (it's a hub even within this one file - removing it barely
+changed the numbers, confirming the other functions aren't just
+hanging off it) leaves **one dominant component of 118 functions,
+19.2 KB - effectively the entire file** minus a small 2-function SIO
+pair and a handful of tiny leaf singletons. Of those 118, **22 functions
+(8.1 KB, ~42% of the component's bytes)** carry the same text-layout
+signature (`sub_803AD80`/`84`/`7C`/`88`) as `sub_8006600` above.
+`PlaySfx` itself sits *inside* this same dominant component (it does
+call genuinely audio-shaped functions in the GAX2 range,
+`sub_8038E74`/`sub_80390F8` - it's real, legitimate SFX-triggering code)
+but accounts for only 184 of the component's 19.2 KB.
+
+**Read as: a self-contained UI/overlay screen** (text labels laid out
+and centered, OAM positions computed, `PlaySfx` called incidentally for
+selection/feedback sound) that just happens to sit in its own
+contiguous ROM stretch, the same way `menu_ui` turned out to be most of
+the `LoadGraphicsPackage` cluster. Not the same system as `menu_ui`
+itself, though - different data symbols, different call shape, no link
+found (yet) to the `0x0816C744` dispatch table. Which specific screen
+this is (pause menu, options, a HUD overlay) is unconfirmed. The SIO
+pair (2.5 KB) is a third, still-separate thing entirely - serial/link-
+cable hardware handling, unrelated to either audio or UI.
 
 ## Narrowing the GAX2 boundary
 
