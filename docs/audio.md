@@ -7,11 +7,15 @@ magic constant (`0x47415832`) embedded in the engine's own init code
 (`asm/code_3.s`, around `sub_8038538`, ROM `0x08038538`).
 
 The whole engine (mixer, timer IRQ handler, replay logic) lives in
-`asm/code_3.s` roughly between `0x08037110` and `0x0803B0C4`. **Be aware this
-range also contains generic compiler-runtime helpers** (a software 64-bit
-division routine, ARM/Thumb interworking trampolines, BIOS `svc` wrapper
-stubs) interleaved with genuine GAX2 code — don't assume every function in
-that address range is audio-related just because of where it sits.
+`asm/code_3.s` roughly between `0x08037110` and `0x0803A950` (narrowed
+from an earlier `0x0803B0C4` estimate — see
+[`docs/rom_map.md`](./rom_map.md#narrowing-the-gax2-boundary) for the
+evidence: `LZ77UnCompWrapper`/`RLUnCompWrapper`, confirmed non-audio, sit
+right at the old upper bound). **Be aware this range also contains generic
+compiler-runtime helpers** (a software 64-bit division routine, ARM/Thumb
+interworking trampolines, BIOS `svc` wrapper stubs) interleaved with
+genuine GAX2 code — don't assume every function in that address range is
+audio-related just because of where it sits.
 
 ## Data layout
 

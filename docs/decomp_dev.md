@@ -142,7 +142,7 @@ be there.
 
 Only `graphics`/`util`/`system` (mirroring `src/`'s layout) exist as
 categories right now - the still-fully-raw majority of the ROM (including
-the Shin'en GAX2 sound engine, roughly `0x08037110`-`0x0803B0C4` per
+the Shin'en GAX2 sound engine, roughly `0x08037110`-`0x0803A950` per
 [`docs/audio.md`](./audio.md)) isn't split out into its own `audio` category
 yet, even though it counts toward the overall total already. That range
 isn't a clean carve - `docs/audio.md` itself warns it has generic
@@ -150,6 +150,13 @@ compiler-runtime helpers interleaved with genuine GAX2 code - so it needs
 its own boundary-refinement pass before it can be sliced out accurately,
 rather than guessing and mislabeling neighboring code as audio. A
 reasonable follow-up once someone's traced that region more precisely.
+
+See [`docs/rom_map.md`](./rom_map.md) for a rough, whole-ROM pass at
+sketching out what the *rest* of the still-raw code might be (actor
+system, HUD, an SFX layer distinct from GAX2, and two large - 94 KB and
+40 KB - still-unidentified stretches that together are over half the
+unmatched ROM). None of that is precise enough to become real
+`objdiff.json` categories yet - it's reconnaissance, not ground truth.
 
 ## A separate, known limitation: small residual percentages on real matches
 

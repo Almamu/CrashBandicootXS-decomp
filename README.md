@@ -31,6 +31,7 @@ Please see follow [these instructions](./INSTALL.md)
 - [docs/graphics.md](./docs/graphics.md) - how graphics were extracted, and ongoing notes on the sprite/actor system
 - [docs/matching.md](./docs/matching.md) - byte-exact matching decompilation gotchas, and the per-function matching/parked log
 - [docs/decomp_dev.md](./docs/decomp_dev.md) - how this project's [decomp.dev](https://decomp.dev) progress report is generated in CI
+- [docs/rom_map.md](./docs/rom_map.md) - a rough, whole-ROM map of what still-unmatched code probably belongs to which system
 - The [Kirby & The Amazing Mirror](https://github.com/jiangzhengwenjz/katam/) decompilation uses a very similar codebase, as it was written by the same dev team (Dimps)
 - https://decomp.me is a great resource for helping to create matching functions
 - `ldscript.txt` tells the linker the order which files should be linked
