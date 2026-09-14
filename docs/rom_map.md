@@ -52,7 +52,7 @@ taught this project to avoid. Treat this as the reading-level answer to
 | `actor` (category/part/vtable system) | 50.7 KB | 21.3% | high for ~38.7 KB (named landmarks + confirmed reachable)\*, ~12 KB inferred |
 | `graphics_loading` (package/tile/level loading) | 15.7 KB | 6.6% | mixed - `LoadGraphicsPackage` itself and its immediate neighbors read directly, ~9.1 KB moved out to `menu_ui` (see below) |
 | `overlay_ui`? (self-contained UI screen, `PlaySfx` embedded in it) | 18.7 KB | 7.9% | high for the split itself (118-function dominant component, connectivity-based); the "22 functions" sub-count is a trampoline-inflated upper bound, see the correction below; low for *which* screen this is |
-| `audio_gax2` (Shin'en GAX2 engine) | 14.1 KB | 5.9% | medium - narrowed this investigation, see `docs/audio.md` |
+| `audio_gax2` (Shin'en GAX2 engine) | 14.1 KB | 5.9% | medium - boundary narrowed this investigation; three internal functions now read directly too, see `docs/audio.md`'s "A few engine internals read directly" |
 | `hud` (icon/text widgets, score/percentage/stat counters) | 6.1 KB | 2.6% | high - 1.3 KB named landmarks plus ~4.8 KB stat-widget cluster (8 functions, all individually read this pass) |
 | `menu_ui` (per-level text/dialog display, dispatch table confirmed) | 9.1 KB | 3.8% | high - one function read in full, 29/31 siblings confirmed as real dispatch-table entries in ROM data |
 | `fx`? (particle/trajectory queue, tentative) | 0.3 KB | 0.1% | low - two small functions read |

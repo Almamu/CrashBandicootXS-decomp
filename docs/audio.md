@@ -127,6 +127,39 @@ like the Japanese commercial cue that reuses sample 25); those got a real
 derived rate instead (see the "Fix preview sample rates" commit for the
 full list).
 
+## A few engine internals read directly (not part of the build pipeline)
+
+Everything above the "Build pipeline" section was reverse-engineered
+from the *data* layout, without needing to read the engine's own code
+closely. A few of its functions have since been read directly (see
+[`docs/rom_map.md`](./rom_map.md) for how this fits into the whole-ROM
+picture):
+
+- **`sub_8038538`** (ROM `0x08038538`, the function already cited above
+  for the `"GAX2"` magic constant) is the engine's **play-start/init
+  entry point**: initializes a runtime player-state object at
+  `gUnknown_03001630` (writes the magic, stores the song/sound struct
+  pointer, resets counters), validates an item count against a `0x18B`
+  (395) sanity maximum, and fills in default fields - an instrument-bank
+  pointer (`gStaticData_085A4C5C`, a fresh symbol whose relationship to
+  the documented `gStaticData_0855BCB4` data block isn't established
+  yet) and a default volume (`0xFF`) - when the caller left them zero.
+- **`sub_8038E74`** (one of `PlaySfx`'s two direct callees) is the
+  **voice-stealing mixer allocator**: loops the current song's active
+  channel handlers via `gUnknown_03001630`'s child-pointer chain, and
+  either resolves a specific requested channel index, or - when the
+  caller passes `-1` - scans for the channel with the lowest priority
+  value at `+0x4C` to reuse. Textbook voice stealing.
+- **`sub_8037648`** (1076 B, the second-largest function in the whole
+  GAX2 address range) is very likely **not GAX2 code at all** - its
+  opening is the standard prologue shape for a software 64-bit
+  division/multiply routine (sign-and-negate both operand halves before
+  the real work), matching this document's own caveat above about
+  generic compiler-runtime helpers sharing this address range. Not
+  confirmed which operation, but the shape is unambiguous enough to
+  flag as a likely false positive for anyone scanning this range by
+  address alone.
+
 ## Sound effects
 
 Distinct from music: `sub_8001854` (called ~264 times across gameplay code)
