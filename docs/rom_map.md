@@ -75,16 +75,36 @@ That's a real upgrade: it's no longer "an unlabeled blob happens to be
 one connected component", it's "the confirmed core's own reachability
 *is* that component." The remaining ~11.7 KB of the 94.4 KB zone (377
 functions) splits into many small, mutually-disconnected chains spread
-across the *entire* address range rather than one clump - spot-checked
-one (`sub_800B8A8`, 6 functions in a chain touching
-`sub_8026ED0`/`gStaticData_087E3E7C`): sets a per-object ROM-data pointer
-field and conditionally calls into the matched OAM path, reading more
-like object/entity construction than per-frame update - possibly a
-related but distinct "spawn/place things in the level" system living in
-the same neighborhood, not confirmed. Reading through more of these
-small chains (there are dozens) is the obvious way to keep shrinking the
-inferred portion, the same way `actor` went from "likely" to "confirmed
-~70%" over several passes.
+across the *entire* address range rather than one clump.
+
+### A distinct system inside the leftovers: per-entity-type constructors
+
+Spot-checked two of the small chains (`sub_800B8A8`, `sub_8008484`) and
+found the *same* code shape in both: set one field of a passed-in struct
+to a ROM data pointer, then conditionally call `sub_8026ED0` (matched,
+`src/graphics/oam_count.c`/`graphics.c`) based on a bit in the second
+argument. Both point at a data symbol from the same family -
+`gStaticData_087E3E7C`/`gStaticData_087E3BEC` - which turns out to be
+**93 distinct, individually-labeled, variable-sized entries** in
+`data/data.s` (`gStaticData_087E3BEC` onward, sizes from `0x58` to
+`0x78`+ bytes each in the two sampled) - a genuinely large table, clearly
+separate from the 3-vtable/7-category actor system this document already
+confirmed. Read as **per-placeable-object-type descriptors** - crates,
+pickups, hazards, whatever the game's level-object roster actually
+contains - each with its own tiny constructor stub.
+
+Checked how far this extends: 45 functions call `sub_8026ED0` in total,
+but only 11 of them reference a `gStaticData_087E*` symbol directly in
+their own body (508 bytes combined) - so `sub_8026ED0` itself is a
+shared utility (also called from `InitHudTextWidget`, so not exclusive
+to this system), and most of the 93 table entries are very likely
+consumed through one shared, generic "construct from table[index]" path
+rather than 93 individually hardcoded stubs like the two found so far.
+That generic path hasn't been located yet - worth chasing next if this
+"level object" system becomes its own tracked category, since at 508
+bytes confirmed vs. 93 data entries, the *code* side of this system is
+almost entirely still unaccounted for even though the *data* side is
+already fully labeled.
 
 ## The clear regions
 
