@@ -29,6 +29,45 @@ far (`src/*.c`, tracked precisely as objdiff units per
 [`docs/decomp_dev.md`](./decomp_dev.md)); the rest is still raw
 `asm/code_3_*.s`, this document's subject.
 
+## Category breakdown
+
+Folding every finding from the sections below into one whole-ROM split.
+Not a proposal for real `objdiff.json` categories yet (see
+`docs/decomp_dev.md`'s "Not categorized yet") - a `game_loop`/`actor`
+split this coarse would still merge non-adjacent functions into one unit
+and reintroduce the exact size-inference bug `mem_collect` already
+taught this project to avoid. Treat this as the reading-level answer to
+"what's in here", not an implementation plan.
+
+| Category | Size | Share | Confidence |
+|---|---|---|---|
+| `game_loop` (core per-frame/state-machine logic) | 112.7 KB | 47.3% | mixed - see note |
+| `actor` (category/part/vtable system) | 50.7 KB | 21.3% | high for ~38.7 KB (named landmarks + confirmed reachable)\*, ~12 KB inferred |
+| `audio_sfx` (SFX layer, distinct from GAX2) | 20.6 KB | 8.6% | medium - one anchor (`PlaySfx`), rest by contiguity |
+| `graphics_loading` (package/tile/level loading) | 18.4 KB | 7.7% | high - dense named landmarks |
+| `audio_gax2` (Shin'en GAX2 engine) | 14.1 KB | 5.9% | medium - narrowed this investigation, see `docs/audio.md` |
+| `hud` (icon/text widgets) | 7.2 KB | 3.0% | high for the named cluster, low for its small neighboring gaps |
+| `unknown` | 6.4 KB | 2.7% | none - genuinely uninvestigated |
+| `system` | 4.2 KB | 1.8% | matched, or matched-caller-confirmed (`LZ77UnCompWrapper` etc.) |
+| `graphics` | 2.1 KB | 0.9% | matched |
+| `util` | 1.8 KB | 0.8% | matched |
+
+\* `0x08029ED0`-`0x0802B348` (8.2 KB, named landmarks) plus 28.4 KB of
+the 40.4 KB zone directly confirmed by that zone's reachability pass;
+the zone's remaining ~12 KB is folded in on the "net read" call from
+that investigation, not independently verified.
+
+**`game_loop`'s 47.3% is the least settled number here** - it's almost
+entirely the 94.4 KB zone this document calls "core gameplay logic",
+where only a handful of KB (the `UpdateGameFrame`→`sub_801BAF0`→
+`sub_801C96C` chain and its immediate dispatch targets, and separately
+the 17.1 KB `UpdateGameFrame`-linked cluster with 46 direct links) has
+actually been read. The other ~90 KB is included here on call-graph
+cohesion alone (87% of the 94.4 KB zone is one connected component) -
+plausible, not confirmed. If this project ever wants a real `game_loop`
+objdiff category, that number needs shrinking through actual reading
+before it's trustworthy, the same way `actor`'s did this session.
+
 ## The clear regions
 
 | Address range | Size | Category | Confidence | Evidence |
