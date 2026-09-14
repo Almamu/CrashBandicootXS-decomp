@@ -103,7 +103,7 @@ struct category_descriptor {
     u32 type;                       // 0x00 - 0 for categories 0-2, 1 for 3-5, 2 for 6 - selects the shared vtable, see above
     void *family_shared_04;         // 0x04 - constant across all categories in one family; pointer-shaped, role unknown
     u32 family_shared_08;           // 0x08 - constant across all categories in one family; role unknown
-    void *conditional_ptr_0C;       // 0x0C - if non-NULL, sub_802F7B0 (not reversed) gets called during category init
+    void *conditional_ptr_0C;       // 0x0C - NULL for categories 0-2 (type 0); a real pointer for every category in the 3-6 family (5 and 6 alias the exact same pointer) - a family-2-only extra graphics blob, not a per-category flag. When non-NULL, sub_802F7B0 (not reversed) DMAs a small header-prefixed tile blob from it to VRAM once during category init - see docs/graphics.md
     const u16 *palette;             // 0x10 - raw 16-color RGB555 palette, DMA'd to OBJ palette RAM (InitActorCategory)
     void *sub_effect_table;         // 0x14 - a second per-category table (threshold-triggered sub-effects/spawns via vtable slot 1); structure not reversed, see docs/graphics.md
     struct anim_table_record *anim_table; // 0x18 - this category's animation table base (gStaticData_081796CC or gStaticData_0817B2A4)

@@ -600,6 +600,28 @@ separate, much more elaborate chain:
   happens to follow the 3rd entry as a 4th - verified directly against
   the raw bytes (a repeating 32-byte-strided pattern, not this struct's
   `0x34` stride at all) that there's nothing there to find.
+- **`+0x0C` (`conditional_ptr_0C`)** - dumped this field for all 7
+  categories directly from `baserom.gba`: it's `0` for categories 0-2
+  (type 0, the `gStaticData_081796CC` family) and a real pointer for
+  every category in the `gStaticData_0817B2A4` family (3: `0x813d934`,
+  4: `0x8151ac4`, 5/6: `0x8155260` - **6 aliases 5's exact pointer**, the
+  same kind of intentional data-sharing seen elsewhere in this system,
+  not a bug). So this isn't really "conditional" per category so much as
+  "family-2 categories carry one extra graphics blob that family-1
+  categories don't have at all". When non-null, `InitActorCategory` calls
+  `sub_802F7B0(ptr)` once, during category init (right after the
+  `sub_8029890` call and before `SelectActorCategory`) - not reversed to
+  C yet, but its shape is clear from disassembly: it treats `ptr` as a
+  small header (`+0x200`/`+0x202` signed halfwords, both `38`/`16` across
+  all three distinct blobs sampled; `+0x204` word, varying per blob -
+  `0x165`/`0xed`/`0x176`) followed by tile data, decodes an OBJ tile
+  count/size from the header, and DMAs the result to VRAM at a fixed OBJ
+  tile base (`0x0600D000`-relative) via a helper (`sub_8029AC4`) shared
+  with the main sprite-frame upload path. Reads as a one-time upload of a
+  fixed-size supplemental tile sheet (a shine/sparkle/shadow overlay
+  sprite is the leading guess, given it's uploaded once per category
+  rather than per-frame) - not yet confirmed against any visible in-game
+  effect.
 - **`InitActorPart`** - constructs one *part* instance: `r1` (the per-part
   descriptor) is computed at call sites as
   `gUnknown_0300147C[0] + index*0x28` (40-byte stride) - i.e. a single
