@@ -1087,7 +1087,36 @@ primitives (the frame counter, the trampoline-based measure/draw calls,
 the `+0x68`/`+0x74`-style state fields), rather than hiding another
 undiscovered subsystem the way the earlier passes through this zone did.
 
-**The pattern across all three**: each dispatches on a small integer
+**A parallel fork then found a genuine surprise connecting two
+previously-separate categories.** `sub_800C6A8` (210 B) is an **18-state
+state machine using `self+0x74`** - structurally identical to
+`sub_800B8DC`'s own 18-state player-physics machine found earlier
+(same comparison shape, same state-count, same field role). But its 26
+callers are **every one of the confirmed 31 `menu_ui` dispatch-table
+functions** (`gStaticData_0816C744`'s entries, `sub_801EF0C` through
+`sub_8020D4C`). That means **`menu_ui`'s text/dialog entries aren't 31
+independent one-off constructors** - they're all instances of *one*
+18-state dialog-widget object type, each entry just supplying its own
+text content and layout. The `+0x74`/18-state shape isn't only a
+player-physics pattern, it's a **general-purpose stateful-widget
+convention** reused for dialog boxes too.
+
+A companion function, `sub_800CD00` (436 B), reinforces the "shared
+convention, not shared struct" reading from above: it checks `self+0x4E`
+(the exact field `gStaticData_0816BC98`, the physics subsystem's 22-row
+table, indexes by) and, when not early-exiting, indexes its *own*
+`self+0x20` sub-table using **stride 28** - matching
+`gStaticData_0816BC98`'s stride exactly, but clearly a different table
+instance. Its only caller is `sub_800AAEC` - the same input-action-check
+function the 42-slot action dispatch table's own entries
+(`sub_8013994` etc.) call. Three previously-separate threads
+(`menu_ui`, the physics subsystem's per-state table shape, and the
+action-dispatch table's input checking) all turn out to share this same
+small handful of field-offset and stride conventions, applied to
+different object types across different categories.
+
+**The pattern across all three [of the earlier plain-dispatch trio]**:
+each dispatches on a small integer
 "type"/"kind"/"message ID" parameter via a plain jump table, not through
 a vtable or a `gStaticData_0816Bxxx`-style data table - a third dispatch
 idiom in this ROM's toolkit (alongside the `{0,ptr}`-pair vtables and
