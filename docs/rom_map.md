@@ -833,6 +833,52 @@ as its constructor/init step (packs scaled position args into the
 struct, reads an anim-part-instance, checks a frame-index bound before
 resetting a counter).
 
+### Three new mechanisms: a floating-text popup system, an icon+cached-label renderer, a minimap
+
+A further fork read ten more of the zone's unread functions. Most
+reinforce known structures (a third `gUnknown_030014xx` tier-threshold
+sound-cue actor; direct confirmation that `sub_8030834`/`sub_8030E08`
+are the real consumers of the `gUnknown_03001540`/`03001544`
+accumulator pair flagged as a guess last round, clamping toward a
+camera-relative target via a new table `gStaticData_0817C3D8`; a new
+detail that `sub_802E170`'s effect variant depends on current input
+state via `sub_8000E1C`, not just proximity) - but three are genuinely
+new mechanisms not previously catalogued in this zone:
+
+- **A floating-text/glyph popup system.** `sub_80350A4` (520 B)
+  processes a linked list of timed nodes (alloc/free via the standard
+  `sub_8026EDC`/`sub_8026ED0`), parsing a byte-opcode stream
+  (0/1/2/3/0xA=terminator) at `self+8` and drawing text via
+  `sub_803AD84` positioned relative to `gUnknown_030012DC`/
+  `gUnknown_030012E0` (likely P1/P2 structs), indexed into a new table
+  `gStaticData_0817CF3C` (stride 8, 3 entries/state). `sub_80352AC`
+  (416 B) is its asset loader: iterates a 5-entry table
+  `gStaticData_0817CF40` (stride `0x14`) and DMA3-transfers custom
+  glyph tile data via `LoadTaggedAsset` into `gUnknown_030012B8+0x2c`.
+- **A twin icon+cached-text-label renderer.** `sub_802E9FC` and
+  `sub_802B5B4` are byte-for-byte identical logic operating on two
+  different global sets (`gUnknown_03001510`/`14`/`18` vs.
+  `030014A8`/`AC`/`B0` - plausibly a per-player pair). Both project a
+  record's position to screen space (new helpers `sub_8029E98`/
+  `sub_8029EB4`), pack an OAM attribute word via a new call
+  `sub_8028DD8`, and only re-measure/redraw text (`sub_803AD80`) when
+  the referenced source object has changed since last frame - a
+  caching optimization on top of the already-documented text-drawing
+  helpers.
+- **A minimap/radar renderer.** `sub_8034480` (304 B) DMA-clears a
+  tile buffer, then iterates N position records (`self+8`, stride
+  `0x10`), converts world position to screen/tile space (`>>0xb`), and
+  packs a 4-bit "dot" into a tilemap buffer at `self+0x10`; records
+  outside screen bounds are redirected to `sub_80345B0` (unread)
+  instead - reads as a minimap with off-screen-indicator handling.
+
+None of the ten are entity-vtable-dispatched (all called via `bl`).
+Net effect: the zone's remaining unknowns keep converging on known
+families for the position/timer/animation machinery, but the
+rendering side turns out to hide at least three distinct, previously
+uncatalogued display features layered on top of the same actor
+per-type dispatch backbone.
+
 ## Subdividing `game_loop`
 
 `game_loop`'s 112.7 KB has been one undifferentiated bucket even after
