@@ -708,6 +708,41 @@ the known toolkit" reading for this zone's tail, even as the
 `gUnknown_030015xx`/`gStaticData_0817C4xx` pair shows there's still at
 least one genuinely fresh corner left in it.
 
+### `gStaticData_0817C4xx` dumped in full: mixed conventions, not one uniform table
+
+A follow-up fork dumped `0x0817C414`-`0x0817C4F8` completely, and it's
+**a mix, not one uniform shape** - genuinely different from every table
+resolved so far in this document. Several records are `{0xFFFF0000,
+ptr}` triples (3-slot mini-vtables, matching the 42-slot action table's
+own pairing convention: `0x0817C414`, `0x0817C42C`, `0x0817C450`
+(2 slots), `0x0817C4E0`, `0x0817C4F8`). One record - the one holding
+`sub_8032C0C`/`sub_8032EA0` - is instead a **plain array of 6 raw
+function pointers**, no pairing, matching the `menu_ui`/trigger-effect
+convention instead. Interspersed between them are **pure scalar-data
+records with no function pointers at all** (small packed constants, and
+one 80-byte/20-word lookup table of plain integers). Reads as a
+sequence of **per-category-like descriptor records, each pairing 0-2
+small vtables with scalar sub-data** - structurally in the same family
+as the category-descriptor+vtable pattern already documented for
+actors, but a third distinct instance of it, mixing table shapes within
+one contiguous block rather than committing to one convention.
+
+Two more functions read confirm this zone still has a working, if
+smaller, thread of its own: **`sub_80350A4`** (520 B) is a **linked-list
+countdown/expiry walker** - decrements a timer pair, unlinks and frees
+(`sub_8026ED0`, confirmed `mem_free`) on expiry, then walks a string
+byte-by-byte computing width via a new symbol,
+**`sub_8028968(char, gStaticData_0817CF3C)`**, against the same hot
+text-centering globals (`gUnknown_030012DC`/`gUnknown_030012E0`) used
+elsewhere. Reads as a **queued/expiring text-message manager** -
+plausibly the thing underneath `game_loop`'s "message type N" dispatcher
+(`sub_8019CE4`) and the bonus-popup text found earlier. **`sub_80352AC`**
+(416 B) is its setup/init counterpart: indexes a new 5-record table
+(**`gStaticData_0817CF40`**, stride 20) and converts raw values into
+runtime units via rounded division into a per-object array. Neither is
+vtable-dispatched via a direct-caller search (not yet checked against
+the raw-pointer search specifically).
+
 ## Subdividing `game_loop`
 
 `game_loop`'s 112.7 KB has been one undifferentiated bucket even after
