@@ -41,7 +41,7 @@ taught this project to avoid. Treat this as the reading-level answer to
 
 | Category | Size | Share | Confidence |
 |---|---|---|---|
-| `game_loop` (core per-frame/state-machine logic) | 112.7 KB | 47.3% | mixed - see note |
+| `game_loop` (core per-frame/state-machine logic) | 112.7 KB | 47.3% | mixed, improving - ~89% of the 94.4 KB zone now traces to confirmed functions, see note |
 | `actor` (category/part/vtable system) | 50.7 KB | 21.3% | high for ~38.7 KB (named landmarks + confirmed reachable)\*, ~12 KB inferred |
 | `graphics_loading` (package/tile/level loading) | 24.8 KB | 10.4% | high - dense named landmarks, plus a 6.2 KB stretch folded in this pass (see below) |
 | `audio_sfx` (SFX layer, distinct from GAX2) | 20.6 KB | 8.6% | medium - one anchor (`PlaySfx`), rest by contiguity |
@@ -93,18 +93,31 @@ confirmed. Read as **per-placeable-object-type descriptors** - crates,
 pickups, hazards, whatever the game's level-object roster actually
 contains - each with its own tiny constructor stub.
 
-Checked how far this extends: 45 functions call `sub_8026ED0` in total,
-but only 11 of them reference a `gStaticData_087E*` symbol directly in
-their own body (508 bytes combined) - so `sub_8026ED0` itself is a
-shared utility (also called from `InitHudTextWidget`, so not exclusive
-to this system), and most of the 93 table entries are very likely
-consumed through one shared, generic "construct from table[index]" path
-rather than 93 individually hardcoded stubs like the two found so far.
-That generic path hasn't been located yet - worth chasing next if this
-"level object" system becomes its own tracked category, since at 508
-bytes confirmed vs. 93 data entries, the *code* side of this system is
-almost entirely still unaccounted for even though the *data* side is
-already fully labeled.
+**Correction after digging further**: the "shared generic lookup"
+guess above was wrong. Searching *every* function's own literal pool for
+a `gStaticData_087E*` reference (not just `sub_8026ED0`'s 45 callers -
+that undercounted badly) finds **158 functions ROM-wide, 9.2 KB total**,
+each with its *own* dedicated literal-pool reference to one specific
+entry - there's no shared index table, every reference is a direct,
+per-entry pointer baked into a small dedicated group of functions (2-4
+per entry, matching 158 functions / 93 entries). So this isn't one
+generic constructor plus a big lookup table - it's genuinely ~93 small,
+mostly-independent per-type code groups, the same shape found in the two
+samples, just far more of them than the `sub_8026ED0`-only search showed.
+
+Split by where they land: **89 of the 158 (3.8 KB) sit inside this 94.4
+KB `game_loop` zone**, and **46 (3.7 KB) sit inside the 40.4 KB `actor`
+zone** confirmed earlier - the rest are scattered further out (near the
+GAX2/text-drawing tail, not investigated). That's a genuinely new,
+concrete link between the two biggest categories in this document: the
+entity/placement descriptors most likely say *what* goes where in a
+level, and at least some of their handlers reach directly into the actor
+category/vtable system to bring the placed thing to life. Re-running the
+`game_loop` zone's confirmed-reachability pass with these 89 folded in
+(50 turned out to already be part of the confirmed 427-function
+component, so only 39 are net-new) pushes zone coverage from 427 to
+**466 of 804 functions, 83.7 KB (~89%) of the zone's bytes** - up from
+82.7 KB last pass.
 
 ## The clear regions
 
