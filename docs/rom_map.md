@@ -1252,12 +1252,23 @@ a genuinely promising new lead:
   both open by checking `gUnknown_030012C0+0x78==3` (the same "mode 3"
   branch `sub_0800D18C` also checks), then compute a clamped offset
   written directly into `gUnknown_030012D8`'s own position field via a
-  threshold compare. The strongest **camera-follow/clamp candidate**
-  found this session - writes straight into the viewport rect this
-  document has tracked since the very first collision-edge function,
-  plausibly the X/Y (or min/max) pair that keeps the camera inside
-  level bounds. Not fully resolved, but a concrete lead worth a
-  dedicated read.
+  threshold compare - flagged here as the strongest camera-follow/clamp
+  candidate found this session. **Read in full by a follow-up fork -
+  more nuanced than "camera clamp," and not purely one thing.** Confirmed
+  it writes only to the viewport's **X field**, never Y, and only in one
+  specific branch (mode `!=3` *and* a bit on `self+0xD`) - a genuine
+  camera-position step, but the step size is *computed* each call from
+  two helper functions, not a fixed constant. The mode-3 branch is
+  different code entirely (calls `sub_8009FF4`, reads a *byte* field,
+  no position write). And the rest of the function, when that bit is
+  clear, is an **event/message dispatcher** - multiple branches invoke
+  the `sub_803AD88` trampoline with small message/direction codes, one
+  ending in `PlaySfx(id=0x21)` - boundary/threshold-crossing
+  notifications, unrelated to the camera step. Net: `sub_8008AD8` is a
+  **multi-purpose per-object update function** where "step the camera
+  toward this object" is only one of several gated behaviors, not its
+  sole purpose - the original label was directionally right but
+  incomplete.
 - **`sub_8009528`** (408 B): iterates a spatial bucket-style array
   within a viewport-sized box (`0xF0`×`0xA0` in Q8.8 - screen
   dimensions) via the `sub_803AD80` trampoline. Reads as a **broad-phase
@@ -1274,6 +1285,13 @@ a genuinely promising new lead:
   entries** (`sub_8013C60`/`sub_8013D94`/`sub_8013EAC`), a shared helper
   several action-table handlers reuse, likely to update one common HUD
   counter glyph.
+- **`sub_8015C6C`** (396 B, read by the same fork that corrected
+  `sub_8008AD8` above): checks a self-flag, plays `PlaySfx(id=9)`, calls
+  the matched `sub_8000760`, and on state `self+8==4` writes a signed
+  velocity constant (`±0x3C0`) into `self+0x10→+0x60`, direction chosen
+  by a `self+0x22==7` check. Another per-object state/physics function
+  using the by-now-familiar `+0x10→+0x68`/`+0x60` field-offset
+  convention seen throughout this zone; no new table or vtable hit.
 
 ## Mapping the rest of the per-level descriptor region
 
