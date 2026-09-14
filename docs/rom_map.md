@@ -1407,6 +1407,19 @@ rect for UI text, built once and reused for the rest of the session via
 two aliased slots. Consistent with `sub_8019094`'s "cursor/menu-position
 dispatch" characterization above.
 
+**Correction after reading the constructor itself
+(`sub_80267A0`):** "text-positioning box" undersells what's actually
+built. The outer struct is small (~44 bytes), but it's a **container of
+five separately-allocated sub-objects**: `+0x10` is a 96-byte tagged
+object (`sub_8026448`, tag `0`) - the one every caller reads the Q8.8
+pair out of, so the earlier finding stands for *that* sub-object, just
+not for the whole struct; `+0x14`/`+0x18`/`+0x1C` are three more
+92-byte tagged objects (tags `1`-`3`); `+0x20` is a raw **4196-byte**
+buffer pointer (passed through a genuine no-op, `nullsub_4`). Reads
+more like a **general-purpose UI/overlay manager** owning a large work
+buffer plus three or four tagged sub-panels, of which the text-box
+behavior already documented is only one piece.
+
 ### A second shared action-table helper, and a real bucket insert/remove system
 
 A further fork read the two remaining explicitly-flagged targets and
