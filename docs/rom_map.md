@@ -118,6 +118,49 @@ struct, read directly by name rather than through a passed-in pointer
 like `sub_801CCF8`'s object above. Distinct from that function's own
 struct; not yet connected to it.
 
+### Found the entry point: `UpdateGameFrame` → `sub_801BAF0` → `sub_801C96C`
+
+Traced the call chain all the way from the one landmark that's guaranteed
+to run every frame: `UpdateGameFrame` calls `sub_801BAF0` (312 bytes)
+directly, which calls **`sub_801C96C`** (908 bytes, `0x0801C96C`) - and
+reading `sub_801C96C` in full explains where `sub_801CCF8` (the
+display-commit function above) actually gets called from, and why there
+were two near-identical dispatchers calling it.
+
+`sub_801C96C` is a loop (`_0801CB14`): each iteration inlines the exact
+same display-commit sequence as `sub_801CCF8` (`FlushVramDmaQueue`, then
+`BG0HOFS`/`BG1HOFS`+`VOFS`/`BG1CNT`/`BG2CNT`/`BLDCNT`/`BLDALPHA`/`BLDY`/
+`DISPCNT`), then checks a couple of completion conditions
+(`sub_801D780`, `sub_801E464`) to decide whether to keep looping. Once a
+completion condition trips, it reads the upper 16 bits of a global,
+**`gUnknown_030007E0`** (word-sized; only the low byte of that same word
+has a separate, already-inferred role in `sym_iwram.txt`'s neighboring
+layout), and dispatches on individual bits to one of **four** small
+handler functions, in two same-sized pairs:
+
+- bit `0x80` → `sub_801D4C4` (132 B), bit `0x40` → `sub_801D548` (132
+  B, **identical size** - a twin pair)
+- bit `0x20` → `sub_801CDE0` (128 B), bit `0x10` → `sub_801CE60` (128
+  B, **also an identical-size twin pair**)
+- bit `0x08` (checked separately, before the loop even starts) →
+  `sub_801D300`, which skips the rest of this function entirely
+
+Each of `sub_801D4C4`/`sub_801D548` (already known from the display-
+commit investigation above) itself calls `sub_801CCF8` again once its
+own work is done - i.e. `sub_801CCF8` isn't only reached one way, it's
+the shared "finish up and push the display state" tail call for at
+least this whole family of handlers. Two equal-sized pairs dispatched by
+adjacent single bits reads as two variants of two distinct special
+sequences (enter/exit of a transition, or two flavors of the same event
+- level-complete and death are plausible given the loop-until-flagged
+structure, unconfirmed) rather than four unrelated functions. Also
+notable: right before this whole loop, `sub_801C96C` indexes a ROM data
+table, `gStaticData_0816C86C`, using a small integer read via
+`sub_801DE2C` - a level- or per-instance-specific parameterization step,
+consistent with this being the level/game **state-machine step that
+runs every frame until some trigger condition fires**, not raw physics
+or input handling itself.
+
 ### `0x0802B348`-`0x080354E0` (40.4 KB, 331 functions) - confirmed: mostly actor per-type behavior
 
 **Confirmed, not just guessed** - dumped all 3×13 = 39 raw pointers out
