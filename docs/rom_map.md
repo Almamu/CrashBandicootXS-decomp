@@ -777,6 +777,35 @@ the by-now-familiar "refresh OAM + center text" pattern - more
 confirmation that most of this zone really is the known toolkit,
 punctuated by occasional genuinely new leads like the ones above.
 
+### `gStaticData_0817A840` fully read: one position-tracking object, not four behaviors
+
+A follow-up fork read the table's other three entries. **All four
+slots turn out to operate on the same `gUnknown_030014xx` object** -
+not four independent behaviors, one coherent **position-tracking
+system with tier-threshold sound cues**: `sub_802DCC0` confirms the
+same accumulate-into-`030014C8`/`CC`-then-clamp-at-`0xA000` pattern
+`sub_802DB2C` established, branching to different `PlaySfx` IDs by
+tier; `sub_802E0A0` resolves to the already-named `nullsub_27` (a real,
+deliberate no-op for this context, not a gap); `sub_802E0A4` is a small
+state-snapshot trigger on the same object. Confirmed the table's
+neighbors (`gStaticData_0817A7F8`, `0817A850`) are the same
+mixed-scalar/pointer descriptor-cluster shape as `gStaticData_0817C4xx`
+- a separate instance of that pattern, not literally connected to it.
+
+**`sub_80309B4`** (740 B, the next-biggest unreached function) is
+**vtable-dispatched 8 bytes before the documented `gStaticData_0817C414`
+start** - extends that table's known range slightly earlier than
+previously catalogued. It opens by accumulating two pairs of globals
+(`gUnknown_03001540 += gUnknown_03001558`,
+`gUnknown_03001544 += gUnknown_0300155C`) - a **third position-
+accumulation instance** this session, after `sub_8008AD8`/`sub_80096C0`
+in `game_loop` and `sub_8032C0C` in `actor`. These addresses sit only
+~0xAC bytes before the `gUnknown_030015B4`-`030015EC` family
+`sub_8032C0C` uses - very plausibly the **same larger struct at
+different field offsets**, not a fourth separate RAM family as the
+address alone might suggest. Also calls `sub_8000E1C`, the same input-
+check function `sub_8015DF8` used back in `game_loop`'s core.
+
 ## Subdividing `game_loop`
 
 `game_loop`'s 112.7 KB has been one undifferentiated bucket even after
