@@ -952,6 +952,36 @@ above. Two smaller but real threads, neither a full resolution:
   what's actually loaded into the target register at this specific call
   site - flagged rather than assumed.
 
+### Traced the fade-to-black's trigger: `sub_8023A1C`, a level-lifecycle state machine
+
+Followed up on the fade effect found in the `audio_sfx`→`overlay_ui`
+correction by tracing its one caller. It's **`sub_8023A1C`** (656
+lines) - the *exact same* function that turned out to be
+`sub_80091D4`'s only caller too, so both loose threads converge on one
+function. Its opening indexes the 36-slot per-level master table
+(`gStaticData_0816C86C`) by a `self`-held level index, conditionally
+calls a setup function, then **dispatches through a 6-case jump table**
+on the level-table entry's own state field - the same "index the master
+table, then switch on one of its fields" shape `sub_801C96C` uses,
+suggesting these are sibling per-level-phase drivers rather than one
+being subordinate to the other.
+
+The concrete payoff: found the exact call site of `sub_80014A4` (the
+fade). It sits inside a **wait loop** (`bl sub_80241B0` checked
+repeatedly, combined with a flag bit on `gUnknown_030012D8`) - the code
+calls `sub_80091D4` and three more `sub_800891C` calls (on
+`gUnknown_030012EC`/`F0`/`F8`, more of the hot IWRAM globals already
+tied to this whole investigation) *before* looping back to check the
+exit condition again, and only calls the fade once that condition is
+finally satisfied. Reads as **"finish up outstanding per-frame work,
+wait until it's safe, then fade the screen to black"** - a level-exit
+or scene-transition sequence, not a random mid-gameplay effect. Ties
+together three previously-separate loose ends (the fade effect, the
+`sub_80091D4` cross-zone link, and this function's own jump-table
+dispatch) into one coherent, concrete story, though the exact trigger
+condition (`sub_80241B0`'s own meaning) and what happens after the fade
+completes are still unread.
+
 ## Mapping the rest of the per-level descriptor region
 
 Switched from chasing individual functions to mapping the
