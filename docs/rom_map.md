@@ -1173,6 +1173,33 @@ this is (pause menu, options, a HUD overlay) is unconfirmed. The SIO
 pair (2.5 KB) is a third, still-separate thing entirely - serial/link-
 cable hardware handling, unrelated to either audio or UI.
 
+## Into `graphics_loading`'s remainder: a BG2-affine screen-effect setup
+
+Switched to the ~6.9 KB non-`menu_ui` remainder of the
+`LoadGraphicsPackage` cluster (71 functions). Read the next-biggest one,
+**`sub_8022468`** (312 B, sitting immediately before `UpdateGameFrame`
+in ROM): sets up a fixed screen rect, writes an **identity BG2 affine
+transform** (`REG_BG2PA`/`PC`/`PD` = `0x100`, `PB`/`PC` half = `0`, via
+DMA to `0x04000020`+) - the standard "reset the rotate/scale background
+to no rotation, no scale" pattern GBA games use before or after an
+affine-mode screen effect - then indexes **`gStaticData_0816D1F4`** (a
+previously-uncharacterized member of the per-level data family, right
+near its tail) by an 8-byte stride using its own second parameter.
+
+**Called directly by `UpdateGameFrame` itself**, plus three siblings
+(`sub_802364C`/`sub_8023658`/`sub_802369C`) all living in the separate
+`UpdateGameFrame`-`MainLoop` cluster - a real, non-hub connection, not
+inferred. Reads as a **level-start or screen-transition setup step**:
+reset the affine background to identity and load a level-indexed
+configuration, plausibly preparing for (or cleaning up after) a
+rotation/zoom effect - a title/intro sequence, a warp/bonus-room entry,
+or similar. Distinct from both `LoadGraphicsPackage` (asset loading) and
+`menu_ui` (text/dialog) - a third genuine sub-thread inside what this
+document has been calling `graphics_loading`'s "immediate neighbors."
+Not fully read past this point; the natural next step if this thread is
+worth pulling further is dumping `gStaticData_0816D1F4` the same way the
+other per-level tables were resolved.
+
 ## Narrowing the GAX2 boundary
 
 [`docs/audio.md`](./audio.md) documented the Shin'en GAX2 engine as
