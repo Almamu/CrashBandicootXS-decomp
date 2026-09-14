@@ -1327,6 +1327,33 @@ a genuinely promising new lead:
   using the by-now-familiar `+0x10→+0x68`/`+0x60` field-offset
   convention seen throughout this zone; no new table or vtable hit.
 
+### Closed a known gap, and found the first confirmed consumer of the 729 KB asset table
+
+A further fork closed a real, previously-flagged gap: **`sub_801D300`**
+- the "bit 0x08" early-exit handler `sub_801C96C`'s dispatch calls
+before its main loop even starts, flagged back when that function was
+first read but never itself examined. Plays `PlaySfx` with a sound ID
+(`0x49`) not seen anywhere else this session, sets every bit of a flag
+byte, clears one bit of another, then falls into the shared
+display-commit tail - reads as a one-shot "enable everything" trigger,
+plausibly a celebratory full-screen event (level-complete or checkpoint
+fanfare). **Confirmed vtable-dispatched** at `0x087E2178` - inside the
+93-entry entity family's address range, but *before* the documented
+first entry (`0x087E3BEC`), a new low-address data point in that family.
+
+**`sub_8019EBC`** is the **first confirmed consumer of
+`gStaticData_084A5600`** (the 729 KB master asset table) beyond its own
+header-reading code: allocates a tagged object, reads through
+`gUnknown_030012D0`'s chain at offset `0x288`, then dispatches on a
+mode parameter to spawn effect objects - the same "spawn effect type N"
+shape as `graphics_loading`'s trigger-effect family, but this one
+concretely ties back into the master table rather than a per-level
+table. **`sub_8019094`** dispatches on a mode parameter touching
+`gUnknown_03001308` (a hot global referenced elsewhere but not yet
+individually characterized) in a cursor/menu-position-style pattern -
+calls the `sub_803AD84` trampoline with position arguments matching the
+draw-text shape.
+
 ## Mapping the rest of the per-level descriptor region
 
 Switched from chasing individual functions to mapping the
