@@ -2100,6 +2100,39 @@ per-level symbol) - a real, concrete tie between this table and the
 per-level data region, worth following if anyone continues this
 specific thread.
 
+**Follow-up: the body is not a flat record array - it's a header
+pointing to distinct sub-structures at different fixed offsets.** Two
+more consumers reach through `gUnknown_030012D0`'s same three-level
+dereference (`gUnknown_030012D0 → *P → &gStaticData_084A5600 →
+*table` = the table's own `+0x0` "first real record" field) to
+header-relative offsets not previously sampled:
+
+- **`sub_8019214`** adds `0x9F<<2 = 0x27C` to that dereferenced
+  pointer (absolute `table_base + 0x10 + 0x27C = table_base + 0x28C`),
+  stores the result into a newly-spawned object's `+0x20` field
+  (built via `sub_8009ED0`, tagged `0xE`/`0x11` at `+0x2D`, then run
+  through the standard `sub_80087C0`/`sub_80087B4`/`sub_800872C`
+  OAM-setup trio, with a conditional SFX `0x31`). Reads as a
+  pickup/effect-object spawner seeded from the master table.
+- **`sub_801E04C`** adds `0x90<<2 = 0x240` instead (absolute
+  `table_base + 0x250`), stores it into a different object's `+0x20`
+  (built via `sub_8026EDC(0x40)`+`sub_8008904`, tag `0`) - but then,
+  unlike every previously-seen consumer, **dereferences that `+0x20`
+  field again** (`table_base+0x250` is itself a pointer, not raw
+  data), computes `index = tag*28` (`0x1C`), and reads **byte `+0x14`**
+  of the selected 28-byte record.
+
+This resolves the open question: at least one sub-table reached
+*through* the header (at header-relative `+0x240`) is a pointer to a
+**small array of 28-byte (`0x1C`) records, indexed by a per-object
+type/tag byte** - the 729 KB body is a header pointing to several
+distinct, differently-shaped sub-structures at fixed offsets, not one
+homogeneous record array. What lives at `+0x27C`/`+0x28C` is not yet
+resolved past "an object-spawn seed pointer." Confidence: high on the
+offset/dereference chains (read directly); medium on the "pickup/
+effect spawner" semantic label (object type not independently
+confirmed).
+
 ## Narrowing the GAX2 boundary
 
 [`docs/audio.md`](./audio.md) documented the Shin'en GAX2 engine as
