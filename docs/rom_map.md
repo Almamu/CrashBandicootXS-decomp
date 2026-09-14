@@ -48,7 +48,7 @@ taught this project to avoid. Treat this as the reading-level answer to
 
 | Category | Size | Share | Confidence |
 |---|---|---|---|
-| `game_loop` (core per-frame/state-machine logic) | 112.7 KB | 47.3% | mixed - now split into sub-buckets, see "Subdividing `game_loop`" below |
+| `game_loop` (core per-frame/state-machine logic) | 112.7 KB | 47.3% | mixed - split into sub-buckets in "Subdividing `game_loop`" below; its "undifferentiated core" sub-bucket is ~51% concretely explained as of "Current state of the undifferentiated core" further down that section |
 | `actor` (category/part/vtable system) | 50.7 KB | 21.3% | high for ~38.7 KB (named landmarks + confirmed reachable)\*, ~12 KB inferred |
 | `graphics_loading` (package/tile/level loading) | 15.7 KB | 6.6% | mixed - `LoadGraphicsPackage` itself and its immediate neighbors read directly, ~9.1 KB moved out to `menu_ui` (see below) |
 | `overlay_ui`? (self-contained UI screen, `PlaySfx` embedded in it) | 18.7 KB | 7.9% | high for the split itself (118-function dominant component, connectivity-based); the "22 functions" sub-count is a trampoline-inflated upper bound, see the correction below; low for *which* screen this is |
@@ -681,21 +681,18 @@ data families - close enough for this grain.)
 
 **The honest headline at this point in the investigation: `game_loop`'s
 single largest piece (48.2 KB, the "undifferentiated core") is still a
-black box.** *(Updated after later passes: by the end of this
-document's `game_loop` investigation - the 93-vtable discovery, the
-shared physics subsystem, and the 42-slot action table further down -
-~24.7 KB of these 48.2 KB, just over half, is concretely explained.
-Left as originally written below since it accurately describes the
-state at the time; see "Subdividing `game_loop`"'s later subsections for
-the running total.)* It's confirmed to be *part of the same system* as
-the read dispatch chain - directly call-graph-reachable, not a guess -
-but not one of those 312 functions has actually been read. That's now
-the single biggest well-defined gap in this whole document, bigger than
-any other category's unconfirmed portion. The "level-parameterized" and
-"entity spawn" slices are a real improvement: not just "part of the
-blob" but "specifically consumes
-*this* data" - a concrete, checkable claim, even without knowing what
-each individual function does.
+black box.** It's confirmed to be *part of the same system* as the read
+dispatch chain - directly call-graph-reachable, not a guess - but not
+one of those 312 functions has actually been read. That's the single
+biggest well-defined gap in this whole document at this point, bigger
+than any other category's unconfirmed portion. The "level-parameterized"
+and "entity spawn" slices are a real improvement: not just "part of the
+blob" but "specifically consumes *this* data" - a concrete, checkable
+claim, even without knowing what each individual function does. The
+subsections below chip steadily into this 48.2 KB; **"Current state of
+the undifferentiated core" near the end of this section has the running
+total** - skip there for the up-to-date number rather than adding up
+each subsection's claim by hand.
 
 ### Opening the black box: the two biggest undifferentiated-core functions read as player physics
 
@@ -894,8 +891,29 @@ document. **Quantified the payoff**: of the 37 unique target functions
 unexplained remainder** before this - the single largest net-new
 contribution of any individual finding in this whole investigation.
 Combined with the vtable cross-reference (12.2 KB) and the physics
-subsystem (4.1 KB), that's **~24.7 KB of the original 48.2 KB
-"undifferentiated core" now concretely explained - just over half.**
+subsystem (4.1 KB, confirmed a little further below), that's **~24.7 KB
+of the original 48.2 KB "undifferentiated core" now concretely
+explained - just over half.**
+
+### Current state of the undifferentiated core
+
+One place to see the running total, rather than adding up each
+subsection's claim by hand:
+
+| Source | Net-new KB explained |
+|---|---|
+| Direct 93-vtable cross-reference (39 in-zone functions) | 8.8 KB |
+| Unidentified-bucket functions also hit by the vtable scan (53) | 3.3 KB |
+| Shared physics/collision subsystem (29 functions) | 4.1 KB |
+| 42-slot action dispatch table, `gStaticData_0816BF20` (28 functions) | 8.4 KB |
+| **Total explained** | **~24.7 KB of 48.2 KB (~51%)** |
+
+Plus several of the core's largest individual functions read end-to-end
+regardless of which bucket they fell in (`sub_801AB98`, `sub_800B8DC`,
+`sub_80134B8`, `sub_0800D18C`). The remaining ~23.5 KB has no
+distinguishing signature found yet - the next concrete step is more of
+the same: pick the next-biggest unread function, read it, check whether
+it's vtable-dispatched or data-family-tagged, fold the result back in.
 
 ## Mapping the rest of the per-level descriptor region
 
