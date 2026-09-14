@@ -12,7 +12,7 @@ jobs:
     - uses: actions/checkout@v5
 
     - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get install build-essential binutils-arm-none-eabi gcc-arm-none-eabi
+      run: sudo apt-get update && sudo apt-get install build-essential binutils-arm-none-eabi gcc-arm-none-eabi libpng-dev zlib1g-dev python3-pil
 
     - name: Checkout agbcc
       uses: actions/checkout@v5
