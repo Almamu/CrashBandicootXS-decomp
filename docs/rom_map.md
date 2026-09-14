@@ -46,7 +46,8 @@ taught this project to avoid. Treat this as the reading-level answer to
 | `graphics_loading` (package/tile/level loading) | 24.8 KB | 10.4% | high - dense named landmarks, plus a 6.2 KB stretch folded in this pass (see below) |
 | `audio_sfx` (SFX layer, distinct from GAX2) | 20.6 KB | 8.6% | medium - one anchor (`PlaySfx`), rest by contiguity |
 | `audio_gax2` (Shin'en GAX2 engine) | 14.1 KB | 5.9% | medium - narrowed this investigation, see `docs/audio.md` |
-| `hud` (icon/text widgets) | 7.2 KB | 3.0% | high for the named cluster, low for its small neighboring gaps |
+| `fx`? (particle/trajectory queue, tentative) | 5.9 KB | 2.5% | low - one function read, see "Correcting `hud`" below |
+| `hud` (icon/text widgets) | 1.3 KB | 0.6% | high - dense named landmarks, but shrunk this pass (see below) |
 | `system` | 4.2 KB | 1.8% | matched, or matched-caller-confirmed (`LZ77UnCompWrapper` etc.) |
 | `graphics` | 2.1 KB | 0.9% | matched |
 | `util` | 1.8 KB | 0.8% | matched |
@@ -143,6 +144,44 @@ place to stop for this pass**; closing the last ~7.7 KB from here means
 reading individual leftover functions one at a time rather than finding
 another shared signature, the same way `actor` was ultimately closed out
 to its own ~70%.
+
+## Correcting `hud`: the "lead-in" gap wasn't HUD at all
+
+Moving to `hud` next (per the user's stated priority of digging deeper
+into `actor`/`game_loop`/`hud` specifically) surfaced a mistake in the
+first-pass category table: the 5.9 KB gap between `MainLoop` and
+`InitHudIconWidgetA` (`0x08026EEC`-`0x0802866C`) had been folded into
+`hud` purely because of *where it sits* - immediately before the real
+HUD widget landmarks - never because anything in it was actually read.
+
+Reading two of its functions shows that guess was wrong. **`sub_803AE4C`**
+(called from this gap 4 times) is a plain software integer-division
+routine (bit-shift-and-subtract long division) with no HUD connection
+at all - one of the ROM's generic math primitives, unrelated to what
+calls it. More telling: **`sub_8027018`**, one of the gap's own
+functions, takes a self-pointer with an internal counter at `+0x40` and
+appends an entry to what looks like a small ring buffer - storing two
+input values plus a third computed via `sub_803ADB4(0x3C, arg3)` (the
+same atan2-style angle helper `math_util.c` already documents as
+"looks like an atan2-style angle lookup"). Fixed first argument, varying
+second, stored as one of three fields per queue entry - this reads far
+more like a **particle or projectile trajectory queue** (an angle
+computed once per spawned effect, then tracked over time) than anything
+resembling icon/text widget layout. Also consistent with the 94.4 KB
+zone's own earlier finding of `InitBresenhamLine`/`StepBresenhamLine`
+calls (line-drawing, presumably for exactly this kind of effect).
+
+Reclassified in the table above: `hud` shrinks to its real evidence, the
+1.3 KB of tightly-packed named landmarks
+(`InitHudIconWidgetA`/`InitHudIconWidgetB`/`MeasureText`/`UploadHudTile`/
+`InitHudTextWidget`) confirmed since the very first pass. The 5.9 KB
+gap moves to its own tentative `fx` bucket - genuinely uninvestigated
+beyond the two functions read here, marked accordingly rather than
+folded into whichever category happened to be nearest in the ROM. The
+lesson generalizes: **every other "gap between landmarks" region in
+this document that hasn't had at least one function actually read
+carries the same risk** - proximity in ROM is a weak signal on its own,
+worth treating as a hypothesis rather than a placement until checked.
 
 ## The clear regions
 
