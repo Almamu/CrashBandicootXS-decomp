@@ -1165,6 +1165,41 @@ tagged by the two specific data-family searches used elsewhere. No new
 table or vtable family found here; two more concrete ties into
 already-documented infrastructure instead.
 
+### A new find: a custom RLE/delta token-stream decoder, distinct from LZ77/RL
+
+**`sub_8024960`** (ROM `0x08024960`-`0x08024AA0`, 320 B) and
+**`sub_8025334`** (same shape, called from the neighboring
+`sub_8025058`/`sub_802505C` block) are **twin implementations of a
+custom RLE/delta token-stream decoder** - not the already-documented
+LZ77/RL wrappers in `graphics_loading`. Both look up a base pointer
+via `[self+4]` indexed by a halfword table (`table[idx]*4 + base` -
+the same indexing *shape* as `anim_table_record`/`table_B` in
+`include/actor_anim.h`, but a different scheme, decoding 16-bit values
+rather than tile pixel data), then decode a token stream with a budget
+counter starting at `0x7F` and three run modes per token byte
+(literal-fill run, signed-delta-accumulate run, raw-copy run).
+`sub_8024960` writes into a 2D buffer (row = `idx>>4`, 64-halfword row
+stride); `sub_8025334` writes the same decode into a flat linear
+buffer, and its caller `sub_802505C` uses it to populate one of **16
+rotating cache slots** (ring buffer at `self+0x1020`/`self+0x1060`,
+index masked `&0xf`) keyed by a record index - reads as a small
+LRU-style decode cache, presumably to avoid re-decoding the same
+record every frame. Confidence: high on the decode-loop mechanics
+(read byte-for-byte), medium on the semantic interpretation (no
+type/record names recoverable statically - could be animation curves,
+palette ramps, or some other 16-bit-per-sample data).
+
+Also read in the same pass: **`sub_8024820`** (~284 B), a per-frame
+display loop that iterates `[self+4]` items and, per item, drives the
+already-documented OAM-shadow-buffer cluster in sequence
+(`sub_8006A90` reset, `sub_8006A48` hide-unused, `sub_80006A8` VBlank
+poll, `sub_8006AAC` flush) - the same "HUD-icon-plus-number renderer"
+OAM pacing pattern already noted in `docs/matching.md`. Confirms known
+infra (render-one-item-per-VBlank list display) rather than adding
+anything new. None of `sub_8024820`/`sub_8024960`/`sub_8025334`/
+`sub_8024AA0` are entity-vtable-dispatched (checked via raw-pointer
+search of `baserom.gba`) - all reached via direct `bl`.
+
 ### Continuing into the remainder: one cross-zone link, one field re-confirmed
 
 Picked up the next-biggest unread functions after the consolidation
