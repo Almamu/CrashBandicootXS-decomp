@@ -559,6 +559,19 @@ consistent with this being the level/game **state-machine step that
 runs every frame until some trigger condition fires**, not raw physics
 or input handling itself.
 
+**Addendum found later, while reading further into `game_loop`'s core**:
+the loop has a fifth exit path this section's original read missed -
+gated by two further conditions (`sub_801DE28` then `sub_801DD18`, both
+must pass) it calls **`sub_801D110`** (680 B), which opens with a direct
+`PlaySfx` (sound id `0x52`, different from every other id seen so far in
+this document) plus several more `sub_801Dxx` setup calls, then falls
+into the *exact same* shared display-commit body `sub_801CCF8` and
+`sub_801D4C4`/`801D548` also use. So the loop's real exit dispatch is
+five-wide, not four: the two-condition-gated `sub_801D110` path plus the
+four bit-flag handlers already documented. Doesn't change the overall
+characterization, just fills in a gap in this section's own coverage of
+the function it's about.
+
 ### `0x0802B348`-`0x080354E0` (40.4 KB, 331 functions) - confirmed: mostly actor per-type behavior
 
 **Confirmed, not just guessed** - dumped all 3×13 = 39 raw pointers out
