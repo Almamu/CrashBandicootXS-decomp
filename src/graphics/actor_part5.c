@@ -43,4 +43,10 @@ s32 sub_8008328(struct actor *part)
     }
     return result;
 }
+
+/* Always-true stub. */
+s32 sub_800834C(void)
+{
+    return 1;
+}
 asm(".align 2, 0");
