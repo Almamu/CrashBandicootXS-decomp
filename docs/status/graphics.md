@@ -54,7 +54,7 @@ per-actor animation frames, text layout.
   either, since the parked `sub_8008188`/`sub_8008200`/`sub_8008278`
   sit raw between them; see `docs/matching.md`): `sub_8008304`,
   `sub_8008328`, `sub_800834C`, `sub_8008350`, `sub_8008364`,
-  `sub_8008394`
+  `sub_8008394`, `sub_80083A8`
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.

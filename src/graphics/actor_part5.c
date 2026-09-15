@@ -101,4 +101,16 @@ void *sub_8008394(struct actor *part)
     void *rec = (u8 *)table + offset;
     return (u8 *)rec + 4;
 }
+
+extern void *gUnknown_030012D0;
+
+/* Ignores its `part` argument entirely (the ROM never reads r0 before
+ * overwriting it) - already declared with this signature at its
+ * `sub_80073DC` call site in graphics.c. Returns
+ * `(*(void **)gUnknown_030012D0)+4`'s value. */
+s32 sub_80083A8(void *part)
+{
+    void *p2 = *(void **)gUnknown_030012D0;
+    return *(s32 *)((u8 *)p2 + 4);
+}
 asm(".align 2, 0");
