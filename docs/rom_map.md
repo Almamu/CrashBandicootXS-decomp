@@ -1815,6 +1815,27 @@ be the natural next step. Most of the other sampled functions
 (the player-input-control family, position/collision checkers) rather
 than introducing anything new.
 
+**A further pass read 8 more of the genuinely-undocumented main-zone
+functions.** All fit already-known conventions - two concrete new
+data points, no new systems. **`sub_80186F0`** and **`sub_80194E0`**
+are more instances of the `gStaticData_084A5600` record-indexed
+popup-text spawner: `sub_80186F0` uses a **new record index 55**
+(`0x294` header offset, extending the master-table offset family
+further), `sub_80194E0` reuses the already-confirmed record 53.
+**`sub_801E190`** (300 B) is a recurring spawn/despawn cycling
+dispenser with idle bounce animation, tagging a child object from
+`gStaticData_0816C634` - not previously catalogued as its own
+behavior, though built entirely from known toolkit pieces (OAM trio,
+per-level table lookup). **`sub_800C074`**/**`sub_800C314`** are a
+5th+ instance of the recurring `self+0x68`/`self+0x74` generic
+state-machine selector pattern already noted across unrelated object
+types. **`sub_8011448`** is a randomized-position spawn picker, same
+flavor as the documented `sub_800EAFC` randomized-behavior selector
+but for position rather than behavior choice. **`sub_8016B1C`** is a
+timed input-driven state machine, a close cousin of the player-
+input-control family but with its own field-offset triple. None of
+these represent a wholly new subsystem.
+
 ### Cross-checked the `UpdateGameFrame`-`MainLoop` cluster: same signature, not an island
 
 A parallel fork gave this separate 17.1 KB (now revised to 18.3 KB once
