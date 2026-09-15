@@ -1634,8 +1634,10 @@ property table" as the specific semantic label for that table.
 ### More of the cluster: the frame-end flush hub, a `CheckTerrainFlag`-style API, and collision response
 
 A further fork read three more functions. **`sub_802400C`** (216 B)
-reads as **`UpdateGameFrame`'s actual end-of-frame "flush everything"
-hub**: in sequence it touches `gUnknown_030012B8`, `gUnknown_030012D4`,
+reads as one of `UpdateGameFrame`'s end-of-frame "flush everything"
+steps (**correction below**: a later pass found it's actually called
+*from inside* `sub_80241BC`, not the top-level hub itself): in
+sequence it touches `gUnknown_030012B8`, `gUnknown_030012D4`,
 `gUnknown_03001308`, `gUnknown_030012C8`, conditionally
 `gUnknown_03001318`, four separate hot-IWRAM-global calls
 (`gUnknown_030012F4`/`F0`/`EC`/`F8`), `gUnknown_0300130C`, and finally
@@ -1763,6 +1765,60 @@ ID->cache-slot mapper with reference counting, same *shape* as
 touches `gUnknown_0300084C` (the UI-overlay-manager singleton)
 directly as its own teardown/refresh function - same shape family as
 `overlay_ui`'s `sub_8005004`, a distinct instance.
+
+### Ten more reads: a real frame-end hub correction, an achievement-icon spawner family, the streamer's missing init half
+
+A further pass read 10 more functions, with one correction to an
+earlier claim and several concrete new ties.
+
+**Correction: `sub_80241BC` is the real top-level frame-end hub,
+`sub_802400C` is a step inside it.** `sub_80241BC` (128 B) DMA3-
+transfers `self+0x18`'s pointer into **Palette RAM (`0x05000000`)**,
+writes 0 to palette color 0, refreshes several hot globals, **then
+calls `sub_802400C` itself as a sub-step**, followed by four more
+unread calls. `sub_802400C` isn't the top of this chain after all -
+see the correction added to that earlier paragraph above.
+
+**An achievement/unlock-icon spawner family, tied to `gStaticData_084A5600`
+record 47.** `sub_8022EA8` (132 B) is the setter for that record's
+periodic trigger (the already-documented `sub_8022F2C` is its
+decrementer): it reads **two different byte offsets from record 47's
+data span** (`+0x30` and `+0x84`) - direct confirmation that a
+record's `ptr_A`/`ptr_B` point to variable-length data blobs indexed
+differently by different consumers, not a fixed struct. **`sub_8025A64`**
+also reads record 47 and spawns an object tagging it with 3 packed
+byte fields (`self+0x49`/`+0x4a`/`+0x4b`) - reads as an achievement/
+unlock-icon spawner. **`sub_8025CA4`** - the function
+`sub_800EAFC`'s randomized AI-behavior selector calls in case 9 - is a
+sibling spawner in the same family (same tag-field shape, same
+`gUnknown_030012C0+0x8c` gate), tying the AI-behavior selector
+directly into this spawner family.
+
+**The background streamer's missing "level load" half.** `sub_8024C64`
+computes tile coordinates with the exact same shift constants
+(`>>7`/`>>6`) `sub_8024AA0`'s per-frame streamer uses, then loops a
+4x4 block grid calling `sub_8024960` (the RLE/delta decoder) to seed
+the circular ring buffer's **full initial contents**, rather than the
+per-frame incremental updates `sub_8024BAC`/`sub_8024C08` do - the
+constructor half of that streaming system. **`sub_8026628`** is an
+umbrella 5-mode dispatcher unifying the already-documented
+`sub_8026AE8`/`sub_8026A18` collision resolvers under one API.
+**`sub_802306C`/`sub_8022FEC`** are two more entry points into the
+`sub_8022BF0` wraparound lap-counter system (same `self+0x70`/`0xbc`
+field pair), and on threshold-cross call `sub_801EB04` with the same
+`self+0x1c0`/`0x1c4` fields the 15-slot table's `sub_802209C` writes -
+a concrete new tie between that table slot and this counter system.
+
+**Two entity-vtable hits extend the decoded-tile-chunk system, one
+drives it actively.** `sub_8025F3C`/`sub_80261CC` are structurally
+identical and both entity-vtable-dispatched (one shared slot, two
+records); `sub_80261CC` routes through the already-documented
+`sub_80264F8` cache-slot mapper - ties it directly into the decoded-
+tile-chunk system as an alternate resolver path. `sub_8025E98`
+(vtable-dispatched twice) converts a bounding box to tile-space
+bounds, draws two text lines, and **directly calls `sub_8024AA0`**
+(the background streamer) - an entity behavior actively driving
+background streaming, not just consuming it.
 
 ### Continuing into the remainder: one cross-zone link, one field re-confirmed
 
