@@ -2973,6 +2973,36 @@ this ~40-slot segment isn't a fourth category, it's the same spawner/
 trampoline machinery already characterized, reused with different
 parameters throughout.
 
+### The genuinely-standalone remainder: a VRAM tilemap-fill primitive, and a possible "local vtable copy" pattern
+
+A fork isolated `graphics_loading`'s truly-unsampled remainder - the
+~20 functions in this cluster that don't reference
+`gUnknown_030012D0` - from the ~50 already known to be the
+`gStaticData_084A5600` spawner family. Of 9 read, **5 turn out to be
+more slots of the unified 92-slot table** (confirmed via raw-pointer
+hits), extending its characterization further: a distinct constructor
+shape registering into a different list (`gUnknown_030012E8`, not the
+already-documented `EC`/`F0`/`F4`/`F8`), a setter extending
+`gUnknown_030012D8`'s accessor family, a trampoline, a conditional
+`sub_800FF0C` type-selector, and a spawn call tying into the
+achievement/unlock-icon family (`sub_801173C`).
+
+**4 are genuinely standalone.** `sub_801E8F8` is a **DMA3 tilemap-row-
+fill helper** - packs a repeated 4-bit pattern across a 16-bit tile-
+index word and DMAs it to VRAM address `0x06017800` - a graphics
+primitive ("fill one BG tilemap row with a single tile/palette value")
+not seen elsewhere in this document. More interesting: **`sub_8022208`/
+`sub_80221F0`**, a constructor/consumer pair, calls
+`sub_8025D4C(gStaticData_0816C6A4, 0x5c, ...)` - passing the **92-slot
+table's own base address** plus a size `0x5c` (92 bytes = 23 words) -
+reading like a raw byte-copy of the table's first 23 function-pointer
+slots into a freshly-allocated object, rather than indexed dispatch.
+Not confirmed, but a plausible **"local vtable copy" pattern** (a
+per-instance snapshot for faster dispatch than re-indexing the shared
+table each time) - worth a dedicated follow-up (`sub_8025D4C`/
+`sub_8025D54` remain unread). `sub_801E96C` is a flags-clear utility,
+same shape family as the already-documented trivial bit-helpers.
+
 **`sub_802364C`** (8 B): a trivial wrapper, `sub_8022468(self, 2)` -
 confirms `sub_8022468`'s second parameter is a context/mode selector, as
 suspected. **`sub_8023658`**: calls `sub_8022468(self, 1)` then
