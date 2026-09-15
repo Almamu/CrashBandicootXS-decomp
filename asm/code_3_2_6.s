@@ -2,30 +2,6 @@
 
 .syntax unified
 .arm
-	thumb_func_start sub_8008364
-sub_8008364: @ 0x08008364
-	push {r4, lr}
-	adds r4, r0, #0
-	bl sub_8008044
-	ldr r1, [r4, #0x18]
-	adds r1, #0x60
-	movs r2, #0
-	ldrsh r0, [r1, r2]
-	adds r0, r4, r0
-	ldr r1, [r1, #4]
-	bl sub_803AD7C
-	ldr r1, [r4, #0x18]
-	movs r2, #8
-	ldrsh r0, [r1, r2]
-	adds r4, r4, r0
-	ldr r1, [r1, #0xc]
-	adds r0, r4, #0
-	bl sub_803AD7C
-	pop {r4}
-	pop {r0}
-	bx r0
-	.align 2, 0
-
 	thumb_func_start sub_8008394
 sub_8008394: @ 0x08008394
 	ldr r2, [r0, #0x20]
