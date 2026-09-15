@@ -1289,6 +1289,28 @@ hazard detector measuring its own distance to this singleton.
 Confidence: high on mechanics (all functions read in full); medium on
 "second unique object" as the semantic label.
 
+**Three more finished reads add a spiral-orbit variant, a palette-swap
+mode transition, and a fourth type-byte-dispatch instance.**
+**`sub_803044C`** is a **5th confirmed actor-side consumer** of the
+shared trig table `gStaticData_0816A820` - same orbiting-companion
+shape as `sub_8030334`, but with a *shrinking* radius (decremented
+`0x100`/frame, floored at 0) - a spiral-inward variant not seen in the
+other consumers. **`sub_802D204`** is a mode-driven palette/state
+transition keyed on the recurring `gUnknown_030012C0+0x78` "mode"
+field: DMA-loads a mode-indexed 32-byte palette chunk from a new
+table `gStaticData_0817A798` into Palette RAM, and touches a newly-
+seen field in the `gUnknown_030014xx` tier-threshold family
+(`gUnknown_030014B8`, tied to a ~500-frame timer) - reads as a
+palette-swap-driven mode/phase change (a power-up or similar).
+**`sub_802C540`** extends the shared "type-byte event dispatch"
+family (`sub_8031D7C`/etc.) to a new value range (`0x1c`-`0x1f`),
+ties into the wraparound-lap-counter system via `sub_8022FEC`
+(alongside `sub_802C6C0`'s already-noted tie), and calls two unread
+functions (`sub_802C078`/`sub_802C128`) taking the player-pointer
+global as their first argument - the same convention as the
+documented `sub_802B7E0`/`sub_802B730` "player reaction" pair,
+suggesting they're more instances of that family.
+
 ## Subdividing `game_loop`
 
 `game_loop`'s 112.7 KB has been one undifferentiated bucket even after
