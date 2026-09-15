@@ -2951,6 +2951,28 @@ functions referencing `gUnknown_030012D0`" found in the section above
 are very likely largely drawn from this same combined table's various
 segments, not evidence of yet another distinct table elsewhere.
 
+**Follow-up confirmed the prediction directly: this segment isn't a
+new dispatch category, it's more instances of two already-documented
+conventions.** Read 10 of the ~40 slots. A tight, evenly-spaced
+(`0x24`/36 B) run of four (`sub_8021A94`/`AB8`/`ADC`/`CE0`) are more
+instances of the already-documented `sub_800FF0C` entity-constructor
+trampoline family, feeding the 93-entry `gStaticData_087Exxx` family
+with new type constants (`0x10`, `0xf`, `1`). Five more
+(`sub_8021D04`, `sub_8021D80`, `sub_8021DFC`, `sub_801EBF0`,
+`sub_802200C`) are all the already-documented `gStaticData_084A5600`
+record-indexed OAM-trio spawner shape, each gated by a different
+settings/state bit - and two new record indices came out of it:
+**record 38** (`0x1C8`) - the *same* record `overlay_ui`'s
+`sub_80063D8` dialog-box spawner already uses, now also confirmed
+feeding plain entity spawns, not just dialogs - and **record 32**
+(`0x180`). Only slot 0 (`sub_801E990`) stands apart with the
+position/state-write shape on `gUnknown_030012D8`; also confirmed:
+four `nullsub_21` shared-fallback slots in a row, the same convention
+seen elsewhere in this table and the 42-slot action table. Net effect:
+this ~40-slot segment isn't a fourth category, it's the same spawner/
+trampoline machinery already characterized, reused with different
+parameters throughout.
+
 **`sub_802364C`** (8 B): a trivial wrapper, `sub_8022468(self, 2)` -
 confirms `sub_8022468`'s second parameter is a context/mode selector, as
 suspected. **`sub_8023658`**: calls `sub_8022468(self, 1)` then
