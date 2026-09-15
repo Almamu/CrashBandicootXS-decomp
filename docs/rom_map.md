@@ -1364,7 +1364,18 @@ timer); a second, distinct fade/flash palette mechanism
 (`sub_802D9A8`, DMA'd brightness-scaled recoloring keyed to a
 different countdown, `gUnknown_030014CC`); and a camera/window-
 position committer (`sub_802DA68`) using the documented screen-
-projection helpers.
+projection helpers. **`sub_802D6A0`** (from the same round) is a
+two-stage proximity/AABB state machine whose first-stage helpers,
+**`sub_8029748`** and **`sub_802B12C`**, were read in a follow-up:
+`sub_8029748` extends the actor-category active-count system
+(`gUnknown_03001384`, the counter `include/actor_anim.h`'s
+`category_descriptor.active_count_threshold` comment describes) and
+also pokes the documented lap-counter function `sub_8022CA0` - shared
+reset/teardown infrastructure, confirmed by a second, unrelated
+caller (`sub_802F4AC`), not specific to `sub_802D6A0`'s object.
+`sub_802B12C` is an unremarkable `InitActorPart`-based entity
+constructor, fitting the established `+0x50` field-pointer convention
+exactly. No new mechanism in either.
 
 ## Subdividing `game_loop`
 
