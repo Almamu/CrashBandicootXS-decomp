@@ -2453,3 +2453,57 @@ confirms `matching_decomp_register_pinning` memory point 10's r7
 warning applies here too, just with a harder failure. Parked as
 `NON_MATCHING` rather than keep chasing this one register - same call
 as `sub_8007B00`/`sub_8007B98` above.
+
+**`sub_8007F78`** (ROM `0x08007F78`, right after `sub_8007DBC`, new
+`src/graphics/actor_part3.c`): a visibility/on-screen check, the same
+shape as `sub_8006FE4` in `graphics.c` - `part+0x25 == 1` is a fast
+"always visible" override; otherwise `part+0xd` bit 2 gates a call to
+`sub_803AD80` with a 4-word "region" built from
+`gUnknown_03001308`'s sub-object (two Q8 fields) plus the GBA's fixed
+screen width/height (`0xf0<<8`/`0xa0<<8`), using the same
+`table+N`/`table+N+4` offset/pointer slot convention `sub_8006FE4`
+reads at `table+0x40` - here at `table+0x30`, a second confirmed slot
+in the same per-category table.
+
+Matched on the first real attempt structurally, needing only
+established per-instruction techniques: the by-now-standard
+accumulator-register pin for the `part+0xd` bit-2 test (byte load into
+one register, shift/mask into another, matching the ROM's own
+`ldrb r1,.../lsrs r0,r1,.../ands r0,r1` shape) but with an unsigned
+(`u32`, not `s32`) shifted value - a signed right-shift of a loaded
+byte compiles to `asr` even though the value is always 0-255, so the
+`u32` cast was needed to get the ROM's `lsr`; pinning the
+`gUnknown_03001308` sub-object pointer to `r0` so it stays in the same
+register across all three of its dereferences (address-of-global,
+value, `+0x10` field) rather than moving to a fresh register, matching
+`sub_8006FE4`'s own single-register reuse; and grouping each pair of
+"compute two values, then store both" operations (the sub-object's two
+Q8 fields; the two screen-dimension constants) into their own nested
+block with local temporaries, rather than writing four independent
+`buf[N] = ...;` statements, to get the ROM's own "compute both, store
+both" instruction order instead of an interleaved
+compute-then-immediately-store order.
+
+One additional fix: the function's C return type had to be `s32`, not
+the more natural `u8` - the ROM computes its `0`/`sub_803AD80`-result
+return value into `r3` once and copies it to `r0` with a plain `adds`
+at the single return point, but declaring the function `u8` made gcc
+re-truncate/zero-extend that value with an extra `lsl`/`lsr` pair
+immediately before returning (the compiler doesn't track that `r3`
+already holds a clean byte from the earlier masked call result or the
+literal `0`), even though every value actually stored in the
+register-pinned `result asm("r3")` local was already byte-clean.
+
+Same file-split lesson as `sub_8007C30` (see its entry above), one
+level deeper: `sub_8007F78` isn't ROM-adjacent to `actor_part2.c`
+either (the parked `sub_8007DBC` sits raw, in `asm/code_3_2_3.s`,
+between them), so appending it to `actor_part2.c` compiled a
+byte-exact *function* but still broke the checksum - `actor_part2.o`
+links before `asm/code_3_2_3.o`, so the extra bytes landed before
+`sub_8007DBC`'s raw block instead of after it, shifting everything
+downstream. Fixed the same way: split `asm/code_3_2_3.s` again, this
+time at the `sub_8007FD8` boundary right after `sub_8007DBC`'s guard,
+into `asm/code_3_2_3.s` (now just the parked `sub_8007DBC`) and a new
+`asm/code_3_2_4.s` (the unchanged remainder), with the new
+`src/graphics/actor_part3.c` (holding just `sub_8007F78`) inserted
+between them in `ldscript.txt`.
