@@ -1201,6 +1201,39 @@ positioning. Not fully resolved - a dedicated pass on this cluster
 (`sub_8030734`, `sub_80311C4`, `sub_8031378`, `sub_802F540`,
 `sub_802B730`) would likely resolve it fully.
 
+**Follow-up confirms the boss hypothesis strongly.** `sub_8030734`
+bounces a value between 0-`0x98`, accumulating it into a position
+field - an oscillation/patrol drive - runs a circular hit/proximity
+test against the player, cycles through a small waypoint table, calls
+the documented camera-edge-follower `sub_8030E08`, and resets its
+animation state once a threshold counter crosses `0x31FF` - a classic
+patrol-and-attack cycle with periodic reset. `sub_80311C4` advances
+animation via `GetAnimFrameBaseOffset`, computes a scaled/projected
+position, and - when the projected tile position changes - **calls
+`sub_8030D48`** (the documented BG-tilemap blit primitive) - directly
+confirming that function is this object's own on-demand tile
+renderer, not a separate system. `sub_8031378` (gated on the object's
+own state field being 2 or 3) loads a 3D vector from
+`gStaticData_0817C3D8` and calls **`sub_800014C`** - a **fifth+
+confirmed site** of the actor->`UpdateGameFrame` dispatch tie already
+noted for `sub_8022CA0`/`sub_802D7B0`/`sub_802C7A8`/`sub_802356C`.
+`sub_802F540` is a running-total accumulator/tally, not a check.
+**Correction: `sub_802B730` is not a passive "player-struct check"**
+as first framed - it's a sibling of the documented `sub_802B7E0`
+(identical field-write shape), but loads a flash/effect asset and a
+different sound cue instead of raw anim-frame copies; since its
+caller (the homing/chase mechanic `sub_802CF30`) passes it the
+player-pointer global as `self`, **it writes state directly into the
+player object** - reads as the "player got hit" reaction when the
+homing enemy catches the player, not a check. Net picture: this
+object combines patrol/oscillation movement, a circular attack
+trigger, camera-edge following, a VRAM meter display, on-demand tile
+streaming, keyframe-driven animation, 3D position tracking feeding
+`UpdateGameFrame` directly, and (via the homing-enemy sibling) a
+separate player-hit-reaction path - strongly boss-shaped, though the
+"boss" label itself remains an inference, not confirmed against
+sprite/level data.
+
 ## Subdividing `game_loop`
 
 `game_loop`'s 112.7 KB has been one undifferentiated bucket even after
