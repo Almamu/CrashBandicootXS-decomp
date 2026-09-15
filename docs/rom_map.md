@@ -988,6 +988,34 @@ same 3-layer `sub_803472C` constructor, not a sibling of the map
 screen. `sub_803AFEC`, `sub_8034994`, `sub_8034C84` remain unread and
 would confirm the exact trigger condition.
 
+**Follow-up resolved it fully: `sub_8034CB0` drives a "Are you sure?"
+Yes/No confirmation prompt.** `sub_803AFEC` (2 B) is just
+`self->field_0x74` - the *same generic one-line accessor shape*
+already documented elsewhere in this doc for `gUnknown_030012C0`'s
+score-adjacent stat field (`+0x74`, feeding `sub_8027838`'s HUD
+counter, see "Tracing the widgets' value sources") - but here it's
+called with a **different `self`** entirely (a separate object, not
+`gUnknown_030012C0`), so its meaning is unrelated: on this object,
+`+0x74` is a state/sentinel field, negative meaning "show the dialog."
+**`sub_8034994`** (~350 B) is a genuinely distinct **Yes/No
+confirmation-dialog driver**: reads input, cancel (bit `0x1`/`0x8`)
+plays `PlaySfx(0x49)` and exits immediately, confirm/toggle (bit
+`0x40`/`0x80`) plays `PlaySfx(0x46)` and records the selected option;
+draws two text labels from a small 2-entry table via
+`sub_8026F38`/`sub_803AD80` (a "Yes"/"No" menu), each frame also
+writing a bitfield to hardware register `0x04000050` (the same window
+register family used elsewhere in this document); returns which
+option was selected. **`sub_8034C84(obj, mode)`** is teardown (frees
+three sub-objects, and `obj` itself when `mode&1`). Full picture: when
+the gate field goes negative, `sub_8034CB0` frees a memory block,
+builds the screen via `sub_803472C`, runs the Yes/No dialog to
+completion, tears it down, and returns the result; the caller resets
+the gate field to `5` (via **`sub_80231E4`**, confirmed as the same
+field's setter) only if "No" was selected - if "Yes," the field is
+left untouched, presumably handled by a separate confirmed-action code
+path not traced here. High confidence on mechanics (all four functions
+read in full); medium on the exact semantic label.
+
 ## Subdividing `game_loop`
 
 `game_loop`'s 112.7 KB has been one undifferentiated bucket even after
