@@ -51,7 +51,7 @@ taught this project to avoid. Treat this as the reading-level answer to
 | `game_loop` (core per-frame/state-machine logic) | 112.7 KB | 47.3% | mixed - split into sub-buckets in "Subdividing `game_loop`" below; its "undifferentiated core" sub-bucket is ~51% concretely explained as of "Current state of the undifferentiated core" further down that section |
 | `actor` (category/part/vtable system) | 50.7 KB | 21.3% | high for ~38.7 KB (named landmarks + confirmed reachable)\*, ~12 KB inferred |
 | `graphics_loading` (package/tile/level loading) | 15.7 KB | 6.6% | mixed - `LoadGraphicsPackage` itself and its immediate neighbors read directly, ~9.1 KB moved out to `menu_ui` (see below) |
-| `overlay_ui`? (a settings menu plus sibling post-level screens - a results/medal-award screen and a confirm dialog, sharing one constructor toolkit) | 18.7 KB | 7.9% | high for the split itself (118-function dominant component, connectivity-based); the "22 functions" sub-count is a trampoline-inflated upper bound, see the correction below; medium for "settings menu, 4 sliders" - structure confirmed, actual setting names not recoverable statically, see "Narrowed down which screen" below; see "Correction: `overlay_ui` is a small family of screens" for the medal/dialog siblings |
+| `overlay_ui`? (a pause-menu composite settings+medal-results screen, plus shared dialog/popup infrastructure `game_loop`'s level-load state machine drives for achievement notifications and the between-level map screen) | 18.7 KB | 7.9% | high for the split itself (118-function dominant component, connectivity-based); the "22 functions" sub-count is a trampoline-inflated upper bound, see the correction below; medium for "settings menu, 4 sliders" - structure confirmed, actual setting names not recoverable statically, see "Narrowed down which screen" below; see "Correction: `overlay_ui` is a small family of screens" and its follow-up for the pause-screen/dialog-toolkit picture |
 | `audio_gax2` (Shin'en GAX2 engine) | 14.1 KB | 5.9% | medium - boundary narrowed this investigation; three internal functions now read directly too, see `docs/audio.md`'s "A few engine internals read directly" |
 | `hud` (icon/text widgets, score/percentage/stat counters) | 6.1 KB | 2.6% | high - 1.3 KB named landmarks plus ~4.8 KB stat-widget cluster (8 functions, all individually read this pass) |
 | `menu_ui` (per-level text/dialog display, dispatch table confirmed) | 9.1 KB | 3.8% | high - one function read in full, 29/31 siblings confirmed as real dispatch-table entries in ROM data |
@@ -2242,6 +2242,59 @@ medals, confirm dialogs) sharing one constructor toolkit and the
 worth a heading/category-description update, though not conclusive
 without reading the callers of `sub_80062A8`/`sub_8004EC0`/
 `sub_8005D44` themselves.
+
+**Follow-up traced those callers, and refines (partially corrects) the
+"family of separate screens" framing: it's one composite pause/options
+screen plus a separate one-shot achievement-notification sequence.**
+
+- **`sub_8004EC0` and `sub_8005D44` are not two screens - one
+  screen.** `sub_8004EC0` is the top-level constructor for a
+  **combined pause/options screen**: it calls `sub_800599C` (builds
+  sub-widgets `sub_8005A78`/`AE8`/`B80`/`C58`), which ends by calling
+  `sub_8005D44` (the medal/rank display) as its *final step*.
+  `sub_8004EC0` is itself called from **`sub_8004D74`** - already
+  documented as the real `gStaticData_084A5600` header consumer -
+  right after `sub_8004D74` allocates its object, and immediately
+  followed by a call to `sub_8005100` (the settings-row cursor/
+  confirm/cancel driver). **The medal/results display and the
+  interactive settings-row navigation are one composite screen, both
+  built by `sub_8004D74`**, not two separate screens as the prior
+  round's framing suggested. Trigger: two call sites for
+  `sub_8004D74`, both in `game_loop` - one gated on a byte at
+  `[base]+0x104==0` (plausibly the same `gUnknown_030012D8[0x104]`
+  field `sub_8017AB0` already gates on) plus a button-press bit,
+  reading as a **pause-menu-open trigger during normal gameplay**; the
+  other sits in a different, level-init-adjacent context (near
+  `SetupActorVramPool`), not fully characterized.
+- **`sub_80062A8` has no `bl` caller in raw asm - it's called from
+  already-matched C code**, `src/graphics/oam_count.c`. Four tiny
+  wrappers there (`sub_80067A4`-`D4`) each call it with a fixed
+  `(label1, label2, type)` triple, matching `sub_80063D8`'s dialog-box
+  shape exactly. These four wrappers are called from `UpdateGameFrame`'s
+  level-load state machine (a jump table on `self+0xc4`, cases 0-3 at
+  raw state values `0x14`-`0x17`), each gated by its own one-shot check
+  function before firing its dialog and advancing the state field -
+  reading as an **end-of-level achievement/unlock notification
+  sequence**, up to four distinct one-shot dialogs cycling through
+  before the state machine proceeds to case 4 (state `0x18`), which
+  calls `sub_80354BC` (the between-level map screen) again.
+- **`sub_8035E14` is not a simple state selector - it's an active
+  per-frame driver with its own state**, correcting the earlier
+  framing. It initializes a 9-entry sub-table rooted at
+  `gStaticData_0817CFA4` and, when a condition holds, calls
+  `sub_8034688` (the minimap-reveal driver) and `sub_80006A8` directly
+  inside its own loop - it's actively driving the map-screen
+  transition, not just reporting a code. Its return value still gates
+  the caller: `==2` -> `sub_80354BC` (map/popup screen, loops back);
+  `==0` -> `sub_8022468(gUnknown_030012C0, 2)`; anything else ->
+  `sub_800300C(1,0)` (the modal dialog).
+
+Net picture, refined: `overlay_ui` covers (1) a pause-menu-triggered
+composite settings+medal-results screen (one screen, not two), and
+(2) infrastructure shared with `game_loop`'s level-load state
+machine, which separately drives an achievement-notification dialog
+sequence, the between-level map screen, and the generic modal dialog -
+all built on the same dialog-lifecycle/popup-text toolkit.
 
 ### A fourth thing in this file: the small leftover cluster is a fade-to-black effect
 
