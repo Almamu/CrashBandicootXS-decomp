@@ -40,7 +40,7 @@ per-actor animation frames, text layout.
 - `src/graphics/actor_part2.c` (new file - `sub_8007C30`'s real ROM
   address isn't adjacent to `actor_part.c`'s matched functions either,
   since the parked `sub_8007B00`/`sub_8007B98` sit raw between them;
-  see `docs/matching.md`): `sub_8007C30`
+  see `docs/matching.md`): `sub_8007C30`, `sub_8007CF8`
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.

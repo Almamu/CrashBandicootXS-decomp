@@ -2355,4 +2355,32 @@ a new `asm/code_3_2_3.s` picks up the (unchanged) remainder starting
 at `sub_8007CF8`, and the new `src/graphics/actor_part2.c` (holding
 just `sub_8007C30`) is inserted between them in `ldscript.txt` - the
 same "split file, new file for the non-adjacent function" pattern used
-for `sub_8007A48`/`actor_part.c` itself, just one level deeper.
+for `sub_8007A48`/`actor_part.c` itself, just one level deeper. (The
+second split boundary moved to `sub_8007DBC` once `sub_8007CF8`, right
+after `sub_8007C30`, matched too - see below.)
+
+**`sub_8007CF8`** (ROM `0x08007CF8`, right after `sub_8007C30`, same
+file): the fourth and last of the AABB-for-keyframe builders, identical
+shape to `sub_8007C30` with an even simpler `switch` - only two
+outcomes, `info+0xc` (cases 0/2/3/4/6) or the `gStaticData_0816B2F8`
+fallback (cases 1/5). Copied `sub_8007C30`'s already-proven template
+directly and it matched on the first real attempt, with one genuine
+bug caught along the way: initially wrote the `default:` case as
+`info+0xc` (reusing the "everything unhandled falls to the first
+group" assumption from `sub_8007C30`, where that happened to be
+correct), which put the wrong code block at the jump table's
+out-of-range (`bhi`) target and reordered the two switch bodies
+relative to the ROM (`gStaticData_0816B2F8` first, `info+0xc` second,
+where the ROM has it the other way around) - not just a register
+mismatch but a real behavioral difference for out-of-range `type`
+values. The ROM's own `bhi` target is the fallback block, confirmed by
+reading the raw disassembly directly rather than assuming symmetry
+with `sub_8007C30`; fixing `default:` to match (`gStaticData_0816B2F8`,
+same as cases 1/5) fixed both the byte-exact match and the switch's
+actual semantics in one edit. Also caught and fixed a copy-paste
+naming slip from working off `sub_8007C30`'s template: the function was
+initially written and matched under the name `sub_8007DBC` (the
+*next* function's real address) before being renamed to its correct
+`sub_8007CF8` prior to cutting it from the raw `.s` file - a reminder
+to check the ROM address in the disassembly comment, not just count
+`thumb_func_start` blocks, before naming a new function.
