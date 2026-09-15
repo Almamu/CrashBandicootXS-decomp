@@ -1870,3 +1870,51 @@ fields - the flag-byte math needed real register pinning:
 the same `gStaticData_087E3BEC` vtable pointer and calling
 `sub_8007230` on an already-allocated object (rather than allocating
 one itself, unlike `sub_80071E4`). Matched on the first attempt.
+
+### Cleanup pass: `struct actor` for the sub_8006FE4-sub_800725C cluster
+
+Retroactive cleanup pass (`make compare` re-checked after every edit
+below) over `sub_8006FE4`/`sub_8007048`/`sub_80070EC`/`sub_8007114`/
+`sub_80070D4`/`sub_80070E8`/`sub_80071E4`/`sub_8007230`/`sub_800725C`,
+all of which had been left on raw `void *self` offsets - this should
+have happened per-function as each one was matched (docs/workflow.md
+step 7 is not a deferred batch step), not as a separate pass
+afterward.
+
+By the time all nine functions above were matched, the same object
+shape had shown up often enough (position, a flags byte, a
+width/height pair stored two ways, a per-category table pointer) to
+be worth a real struct instead of another round of "raw offsets,
+matching the many similar actor-zone functions" comments - and
+`oam_count.c`'s `sub_8006770` (already-matched, `struct
+sub_8006700_actor.field_18`) turned out to be a pointer to exactly
+the same object, confirming it independently. New `struct actor` in
+`include/actor.h`, sized `0x1c` bytes (confirmed by `sub_80071E4`'s
+`sub_8026EDC(sizeof(struct actor))` allocation) with named fields for
+everything a function in this cluster actually reads/writes - `x`/`y`
+(Q8 fixed-point position), `field_08`/`field_0A` (role not yet
+understood beyond their offset), `flags`, `halfW`/`halfH`/`rawW`/
+`rawH`, and `table` (the per-category data table pointer - its own
+internal shape still isn't known, so dynamic offsets into *it* stay
+raw pointer math, not a nested struct). `struct
+sub_8006700_actor.field_18` retyped from `void *` to `struct actor *`
+to match.
+
+One real regression caught by rebuilding after the edit (not assumed
+away): in `sub_8007230`, switching the five field *writes*
+(`self->flags = result;` etc.) from raw pointer stores to struct
+field assignment moved the zero constant's materialization earlier
+and into a different register than the ROM uses - reverted those five
+specific stores back to raw pointer casts with a comment explaining
+why (the *read* of `self->flags` earlier in the same function was
+unaffected and stays as a field access). Every other function's
+struct-field reads/writes compiled byte-identically to their previous
+raw-pointer-cast form, including through the existing register pins
+and inline asm blocks (pinning wraps whichever C expression computes
+the address/value, so the struct doesn't interact with it).
+
+`gUnknown_03001308`'s own sub-object (read by `sub_8006FE4`/
+`sub_8007174`/`sub_800719C`) is a *different*, still-unidentified
+object (looks camera/viewport-offset-shaped given how it's used, but
+that's not confirmed) - deliberately left untyped rather than folded
+into `struct actor` or guessed at.

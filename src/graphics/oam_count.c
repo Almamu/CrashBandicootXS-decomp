@@ -1,6 +1,7 @@
 #include "core.h"
 #include "icon_manager.h"
 #include "vram_pool.h"
+#include "actor.h"
 
 /* A small per-category threshold table: sub_8006864/sub_8006820/
  * sub_80067EC each count how many of a caller's 20 records fall between
@@ -42,7 +43,7 @@ struct sub_8006700_actor {
     u8 unused_00[0x10];
     s32 field_10;
     void *field_14;
-    void *field_18;
+    struct actor *field_18;
     u32 field_1c;
     u32 field_20;
     u8 field_24;
@@ -225,12 +226,12 @@ void sub_8006714(struct sub_8006700_actor *arg0)
 
 void sub_8006770(struct sub_8006700_actor *arg0, u32 arg1)
 {
-    void *field18;
+    struct actor *field18;
     u8 *p;
 
     field18 = arg0->field_18;
     if (field18 != NULL) {
-        p = *(u8 **)((u8 *)field18 + 0x18) + 0x50;
+        p = (u8 *)field18->table + 0x50;
         sub_803AD80((u8 *)field18 + *(s16 *)p, 3, *(void **)(p + 4));
     }
     if (arg1 & 1) {

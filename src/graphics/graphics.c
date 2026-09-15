@@ -1,6 +1,7 @@
 #include "core.h"
 #include "memory.h"
 #include "vram_pool.h"
+#include "actor.h"
 
 struct dma_queue_entry {
     void *field_00;
@@ -612,24 +613,24 @@ asm(".align 2, 0");
 extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
 extern void *gUnknown_03001308;
 
-/* `self`'s own layout isn't tied to a named struct yet - raw offsets,
- * matching the many similar actor-zone functions docs/rom_map.md
- * documents this session using the same "field+0x18 -> {s16 offset;
- * ...; void *text}" convention.
+/* `self` uses the shared `struct actor` layout (see actor.h) - the
+ * "field_18 -> {s16 offset; ...; void *text}" convention docs/rom_map.md
+ * documents is `table` (the per-category table's own internal shape
+ * isn't known yet, so a dynamic offset into it stays raw pointer math).
  *
  * `pSelf` is pinned to r2: this function makes a call, and plain C
  * phrasing left `self` in r3 instead of the ROM's r2 (tried, rebuilt,
  * confirmed different - see docs/matching.md, "Matching decompilation"). */
-u8 sub_8006FE4(void *self)
+u8 sub_8006FE4(struct actor *self)
 {
-    register void *pSelf asm("r2") = self;
+    register struct actor *pSelf asm("r2") = self;
     s32 buf[4];
-    void *subObj;
     void *table;
+    void *subObj;
     s32 a, b, c, d;
     u8 flag;
 
-    flag = (*((u8 *)pSelf + 0xc) >> 4) & 1;
+    flag = (pSelf->flags >> 4) & 1;
     if (!flag) {
         a = 0xdc << 9;
         b = 0x8c << 9;
@@ -642,8 +643,7 @@ u8 sub_8006FE4(void *self)
         buf[0] = c;
         buf[1] = d;
 
-        table = *(void **)((u8 *)pSelf + 0x18);
-        table = (u8 *)table + 0x40;
+        table = (u8 *)pSelf->table + 0x40;
         flag = (u8)sub_803AD80((u8 *)pSelf + *(s16 *)table, buf, *(void **)((u8 *)table + 4));
     }
     return flag;
@@ -654,11 +654,10 @@ extern void sub_803AFE4(void *buf, s32 arg1, s32 arg2);
 extern void sub_803AFDC(void *buf, s32 arg1, s32 arg2);
 extern u8 sub_800B37C(void *arg0, void *buf);
 extern void sub_803AD88(void *arg0, s32 arg1, s32 arg2, s32 arg3);
-extern void *gUnknown_030012D8;
+extern struct actor *gUnknown_030012D8;
 
-/* `self` uses the same actor-zone raw-offset layout as sub_8006FE4
- * above (field_0c flags byte, field_18 table pointer) - still no named
- * struct, per the same precedent.
+/* `self` uses the shared `struct actor` layout (see actor.h) - same
+ * precedent as sub_8006FE4 above.
  *
  * Two of the flag-byte tests below use inline asm rather than plain C
  * (`(byte >> N) & 1`, `byte | const`): gcc's register choice for the
@@ -669,7 +668,7 @@ extern void *gUnknown_030012D8;
  * mirrors a load the ROM performs but never uses (dead code in the
  * original too, apparently a field access whose result just goes
  * unused at this call site) - kept to match the byte count exactly. */
-s32 sub_8007048(void *self)
+s32 sub_8007048(struct actor *self)
 {
     void *table;
     void *rec;
@@ -682,12 +681,12 @@ s32 sub_8007048(void *self)
     u8 field0a;
     s32 flagTest;
 
-    table = *(void **)((u8 *)self + 0x18);
+    table = self->table;
     rec = sub_803AD7C((u8 *)self + *(s16 *)((u8 *)table + 0x10), *(void **)((u8 *)table + 0x14));
 
-    x = *(s32 *)self >> 8;
+    x = self->x >> 8;
     rx = *(s16 *)((u8 *)rec + 0);
-    y = *(s32 *)((u8 *)self + 4) >> 8;
+    y = self->y >> 8;
     ry = *(s16 *)((u8 *)rec + 2);
     rw = *((u8 *)rec + 4);
     rh = *((u8 *)rec + 5);
@@ -719,10 +718,9 @@ s32 sub_8007048(void *self)
                 : "r"(self)
                 : "r0", "r2", "memory");
 
-            table2 = *(void **)((u8 *)gUnknown_030012D8 + 0x18);
-            table2 = (u8 *)table2 + 0x68;
+            table2 = (u8 *)gUnknown_030012D8->table + 0x68;
             addr = (u8 *)gUnknown_030012D8 + *(s16 *)table2;
-            field0a = *((u8 *)self + 0xa);
+            field0a = self->field_0A;
             {
                 register void *deadRead asm("r4") = *(void *volatile *)((u8 *)table2 + 4);
                 (void)deadRead;
@@ -738,27 +736,27 @@ void nullsub_11(void)
 }
 asm(".align 2, 0");
 
-void sub_80070D4(void *self)
+void sub_80070D4(struct actor *self)
 {
-    void *table = *(void **)((u8 *)self + 0x18);
+    void *table = self->table;
     sub_803AD7C((u8 *)self + *(s16 *)((u8 *)table + 8), *(void **)((u8 *)table + 0xc));
 }
 
-void *sub_80070E8(void *self)
+void *sub_80070E8(struct actor *self)
 {
-    return (u8 *)self + 0x10;
+    return &self->halfW;
 }
 
 /* `w`/`h` are stored both as the raw byte and as a halved-and-negated
  * s16 - the negate-then-divide-by-2 idiom below is C's `(-w) / 2`,
  * matched by the truncating-toward-zero integer division the ROM
  * itself performs (see docs/matching.md, "Matching decompilation"). */
-void sub_80070EC(void *self, s32 w, s32 h)
+void sub_80070EC(struct actor *self, s32 w, s32 h)
 {
-    *(s16 *)((u8 *)self + 0x10) = -w / 2;
-    *(s16 *)((u8 *)self + 0x12) = -h / 2;
-    *((u8 *)self + 0x14) = w;
-    *((u8 *)self + 0x15) = h;
+    self->halfW = -w / 2;
+    self->halfH = -h / 2;
+    self->rawW = w;
+    self->rawH = h;
 }
 
 s32 sub_800710C(void)
@@ -771,27 +769,30 @@ s32 sub_8007110(void)
     return 0;
 }
 
-/* Same raw self layout/field+0x18 table convention as sub_8006FE4 and
- * sub_8007048 above. Both `self` and `box` are pinned - matching the
- * ROM's exact register dance required it (see the inline asm block
- * below), and a plain-C parameter reload picked different registers
- * once anything else in this function was pinned. This function's
- * body is 94 bytes (not 4-aligned) and is the last thing in this
- * translation unit right now, so the trailing `asm(".align 2, 0")`
- * below is required to get the ROM's zero-fill instead of `as`'s
- * default NOP pad - see docs/matching.md, "A gotcha worth knowing". */
-s32 sub_8007114(void *self, void *box)
+/* `self` uses the shared `struct actor` layout (see actor.h), same
+ * precedent as sub_8006FE4/sub_8007048 above. `box` is a plain
+ * {s32 x0, y0, w, h} AABB rect - only seen at this one call site so
+ * far, so it's not (yet) worth a named struct of its own. Both
+ * `self` and `box` are pinned - matching the ROM's exact register
+ * dance required it (see the inline asm block below), and a plain-C
+ * parameter reload picked different registers once anything else in
+ * this function was pinned. This function's body is 94 bytes (not
+ * 4-aligned) and is the last thing in this translation unit right
+ * now, so the trailing `asm(".align 2, 0")` below is required to get
+ * the ROM's zero-fill instead of `as`'s default NOP pad - see
+ * docs/matching.md, "A gotcha worth knowing". */
+s32 sub_8007114(struct actor *self, void *box)
 {
-    register void *pSelf asm("r5") = self;
+    register struct actor *pSelf asm("r5") = self;
     register void *pBox asm("r6") = box;
     void *table;
     void *rec;
     u8 flag;
     s32 result;
 
-    flag = (*((u8 *)pSelf + 0xc) >> 4) & 1;
+    flag = (pSelf->flags >> 4) & 1;
     if (!flag) {
-        table = *(void **)((u8 *)pSelf + 0x18);
+        table = pSelf->table;
         rec = sub_803AD7C((u8 *)pSelf + *(s16 *)((u8 *)table + 0x10), *(void **)((u8 *)table + 0x14));
         {
             register void *recR0 asm("r0") = rec;
@@ -891,19 +892,19 @@ void nullsub_12(void)
 asm(".align 2, 0");
 
 extern void *sub_8026EDC(s32 size);
-extern void sub_8007230(void *self);
+extern void sub_8007230(struct actor *self);
 extern u8 gStaticData_087E3BEC[];
 
-void *sub_80071E4(u16 arg0, u16 arg1, u16 arg2)
+struct actor *sub_80071E4(u16 arg0, u16 arg1, u16 arg2)
 {
-    void *obj;
+    struct actor *obj;
 
-    obj = sub_8026EDC(0x1c);
-    *(void **)((u8 *)obj + 0x18) = gStaticData_087E3BEC;
+    obj = sub_8026EDC(sizeof(struct actor));
+    obj->table = gStaticData_087E3BEC;
     sub_8007230(obj);
-    *(u16 *)((u8 *)obj + 8) = arg0;
-    *(s32 *)obj = (s32)arg1 << 8;
-    *(s32 *)((u8 *)obj + 4) = (s32)arg2 << 8;
+    obj->field_08 = arg0;
+    obj->x = (s32)arg1 << 8;
+    obj->y = (s32)arg2 << 8;
     return obj;
 }
 
@@ -916,7 +917,7 @@ s32 sub_800722C(void)
  * called from sub_80071E4. 44-byte body isn't 4-aligned, so the
  * trailing asm(".align 2, 0") is required (see the first entry in
  * docs/matching.md). */
-void sub_8007230(void *self)
+void sub_8007230(struct actor *self)
 {
     /* `result` and `tmp` are pinned so the running result stays in
      * the constant's own register (r1) rather than the freshly-loaded
@@ -927,7 +928,7 @@ void sub_8007230(void *self)
     register s32 tmp asm("r2");
 
     result = ~2;
-    tmp = *((u8 *)self + 0xc);
+    tmp = self->flags;
     result &= tmp;
     tmp = 4;
     result |= tmp;
@@ -942,6 +943,12 @@ void sub_8007230(void *self)
     result &= tmp;
     tmp -= 8;
     result &= tmp;
+    /* Kept as raw pointer stores rather than self->flags/halfW/halfH/
+     * rawW/rawH: tried the struct-field form here and rebuilt - it
+     * shifts the zero-constant's materialization earlier and into a
+     * different register (r2 instead of reusing r1 right after the
+     * strb), a real regression, not just a style difference (see
+     * docs/matching.md, "Matching decompilation"). */
     *((u8 *)self + 0xc) = result;
     *(u16 *)((u8 *)self + 0x10) = 0;
     *(u16 *)((u8 *)self + 0x12) = 0;
@@ -950,9 +957,9 @@ void sub_8007230(void *self)
 }
 asm(".align 2, 0");
 
-void *sub_800725C(void *self)
+struct actor *sub_800725C(struct actor *self)
 {
-    *(void **)((u8 *)self + 0x18) = gStaticData_087E3BEC;
+    self->table = gStaticData_087E3BEC;
     sub_8007230(self);
     return self;
 }
