@@ -2291,3 +2291,68 @@ to change gcc's internal scratch-register counter, which sometimes
 helped one spot and broke another already-matching one. Parked as
 `NON_MATCHING` rather than keep chasing individual register letters -
 same call as `sub_8007B00` and the other parked functions above.
+
+**`sub_8007C30`** (ROM `0x08007C30`, right after `sub_8007B98`, in the
+new `src/graphics/actor_part2.c`): a third AABB-for-keyframe builder -
+same `sub_803AFE4`/`sub_803AFDC`-based shape as `sub_8007B00`/
+`sub_8007B98`, but this time the 6-byte `{s16 x, s16 y, u8 w, u8 h}`
+record is chosen by a `switch` on `(*(sub_80083B8(part)+4))>>4` (0-6,
+else default) among `info+0x14`, `info+0xc`, or a fixed fallback table
+`gStaticData_0816B2F8` - the ROM compiles this `switch` to a real
+7-entry jump table (`mov pc, rX`), which only happened here once every
+case value 0-6 got its own explicit label (cases 1/2/6 all just
+`break` to the same fallback, but leaving them implicit merged the
+`switch` down to 4 distinct labels and made gcc emit an `if`/`else`
+chain instead - a sparser-looking `switch` is not necessarily cheaper
+for this compiler's jump-table heuristic).
+
+This is the first of the three AABB builders that fully matches, not
+just parked-close. It needed all of the previous two's techniques
+(shift-into-sign-bit bit-tests, `offX = offX + x` reusing its own
+register, a shared `flagsAddr` local instead of recomputing `part+0x28`
+twice) plus a few new ones specific to this shape: pinning `dest` to a
+plain unpinned local (no `r8` needed here at all, unlike `sub_8007B00`/
+`sub_8007B98` - `dest` and `part` both fit in `r7`/`r6` once `part` is
+explicitly pinned to `r6` first) and replacing the `s32 *buf = (s32 *)
+&buf_;` indirection (which matched fine in the two earlier functions)
+with direct `buf_.field_N` accesses and `&buf_` at the call sites -
+here the extra named pointer variable was enough register pressure
+(on top of the `switch`'s own temporaries) to spill `dest` to `r8`
+after all, whereas removing it let `sp` get used inline exactly like
+the ROM.
+
+The very last gap - the second `part+0x28` bit-test's `ldrb` landing
+in `r0` instead of the ROM's `r3` (reusing the now-dead address
+register) - resisted every C-level trick that worked for the first
+bit-test (plain reassignment, a fresh `register ... asm("r1")`/
+`asm("r3")` local, inlining the read into the shift expression
+directly): the compiler kept discarding the pin and picking `r0`
+anyway, apparently because the loaded value's only use is the very
+next instruction and gcc treats it as fully expendable regardless of
+what register a `register` declaration asks for. What did work: an
+inline-asm anchor for the load+shift pair together
+(`asm("ldrb %1, [%1]\n\tlsl %0, %1, #0x1a" : "=r"(shifted), "+r"(addr));`),
+plus pinning the shared `shifted` result variable itself to `r0` (its
+register otherwise drifted to `r1` once the second branch's inline asm
+was in play, breaking the *first* bit-test's already-correct `r0`
+choice) - both are established "inline-asm anchor"/"register pin"
+techniques per `docs/workflow.md` step 3, just combined for one
+instruction pair instead of a whole function.
+
+Getting this to link at its correct ROM address needed a second file
+split: `sub_8007C30` isn't ROM-adjacent to `actor_part.c` (the parked
+`sub_8007B00`/`sub_8007B98` sit raw, in `asm/code_3_2_2.s`, between
+them), so it needed its own new `.c` file - but naively appending it
+to the end of `actor_part.c` and rebuilding produced a byte-exact
+*function* that still broke the checksum, because `actor_part.o` links
+*before* `asm/code_3_2_2.o` in `ldscript.txt`: appending `sub_8007C30`
+to `actor_part.c` placed its compiled bytes right after `sub_8007AB4`,
+*before* `sub_8007B00`/`sub_8007B98`'s raw bytes instead of after them,
+shifting everything downstream. Fixed by splitting `asm/code_3_2_2.s`
+itself a second time, at the `sub_8007CF8` boundary right after
+`sub_8007B98`'s NON_MATCHING guard: `asm/code_3_2_2.s` now ends there,
+a new `asm/code_3_2_3.s` picks up the (unchanged) remainder starting
+at `sub_8007CF8`, and the new `src/graphics/actor_part2.c` (holding
+just `sub_8007C30`) is inserted between them in `ldscript.txt` - the
+same "split file, new file for the non-adjacent function" pattern used
+for `sub_8007A48`/`actor_part.c` itself, just one level deeper.
