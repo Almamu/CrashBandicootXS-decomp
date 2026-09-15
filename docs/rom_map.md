@@ -1971,6 +1971,30 @@ timed input-driven state machine, a close cousin of the player-
 input-control family but with its own field-offset triple. None of
 these represent a wholly new subsystem.
 
+**Scope correction: the remaining gap in this zone is bigger than the
+"65 functions" estimate suggested.** A fresh full re-scan (same
+method, script cross-referencing every function name against the
+doc's prose) found **587 undocumented functions, 29,932 bytes**
+outside the physics/collision subsystem's range - larger than the
+prior "65/18,852 B" figure, likely reflecting a different coverage
+threshold or genuine growth in what counts as "documented" as this
+section's own prose has grown. Read 9 more: **`sub_800A420`** (264 B)
+finishes a previously-flagged partial read, confirming it's a
+collision/placement check against the text-box singleton exactly as
+guessed. The rest all fit already-documented conventions -
+`sub_8018D70` (the master-table spawner shape, spawning two objects
+per call), `sub_800A734` (a reset/init function for the directional-
+target field octet, its 5th+ confirmed site), `sub_800944C` (a
+per-object list updater tied to the text-box singleton's camera
+anchor), `sub_8010EAC`/`sub_8016048` (the randomized-behavior and
+player-input-control families respectively), `sub_8008F20`/
+`sub_801E2BC`/`sub_8009914` (asset-loading/OAM/text-rendering toolkit
+shapes, not fully characterized in detail but no anomalies). Nothing
+sampled so far suggests this remaining gap hides an undiscovered
+system - it reads as a long tail of individually-uncharacterized but
+conventionally-shaped functions, the natural cost of a whole-ROM map
+at this grain.
+
 ### Cross-checked the `UpdateGameFrame`-`MainLoop` cluster: same signature, not an island
 
 A parallel fork gave this separate 17.1 KB (now revised to 18.3 KB once
