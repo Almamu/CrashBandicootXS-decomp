@@ -49,4 +49,14 @@ s32 sub_800834C(void)
 {
     return 1;
 }
+
+extern void sub_8007A84(void *self, void *part);
+extern void *gUnknown_030012CC;
+
+/* Tail-calls `sub_8007A84` (already matched in `actor_part.c`) with
+ * the global `gUnknown_030012CC` as `self`. */
+void sub_8008350(void *part)
+{
+    sub_8007A84(gUnknown_030012CC, part);
+}
 asm(".align 2, 0");
