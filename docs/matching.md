@@ -2725,3 +2725,21 @@ subtracting). Same single resistant gap: the shared kind-8/12 block's
 `adds r1, r2, r1` - see `sub_8008188`'s entry above for the full
 account of what was tried (all of which applies identically here, not
 re-run a second time). Parked as `NON_MATCHING` alongside its sibling.
+
+**Parked, not matched: `sub_8008278`** (ROM `0x08008278`, right after
+`sub_8008200`, same file): a third variant of the `sub_8008188` shape,
+this time updating *both* fields on every handled `kind`: kind 1/2
+update `dest->field_0` (sub/add `rec+4`'s byte) and then
+unconditionally also add `rec+2`'s short (Q8) to `dest->field_4`;
+kinds 4/8/12 update `dest->field_4` (same as `sub_8008188`'s kinds)
+and then unconditionally also subtract `rec+4`'s byte from
+`dest->field_0`. Needed the accumulator-register pin pattern
+(`byteVal`/`shifted`/`field0`, reusing `r0` for the byte-load-then-
+field0-reload chain in the kind-0/1 blocks, `r2` in the kind-3/7/11
+tail block, matching the ROM's own choice of which dead register gets
+reused each time) to get every other instruction matching. Same single
+resistant gap as `sub_8008188`/`sub_8008200`: the shared kind-8/12
+block's `add` compiles as `adds r1, r1, r0` instead of the ROM's
+`adds r1, r0, r1` - see `sub_8008188`'s entry above for the full
+account of what was tried against this exact pattern. Parked alongside
+its two siblings.

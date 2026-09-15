@@ -116,3 +116,9 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   `sub_8008188` (mirror-image add/subtract directions), parked for the
   identical single-instruction gap - see `docs/matching.md`, "Parked,
   not matched: `sub_8008200`".
+- **`sub_8008278`** (`src/graphics/actor_part4.c`) - a third variant:
+  kind 1/2 update `field_0` and *unconditionally* also update
+  `field_4`; kinds 4/8/12 update `field_4` and unconditionally also
+  update `field_0`. Parked for the same single-instruction gap as
+  `sub_8008188`/`sub_8008200` - see `docs/matching.md`, "Parked, not
+  matched: `sub_8008278`".

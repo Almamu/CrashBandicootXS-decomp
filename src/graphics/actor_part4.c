@@ -280,4 +280,123 @@ void sub_8008200(void *dest, s32 kind, void *rec)
     }
 }
 #endif /* NON_MATCHING */
+
+#if NON_MATCHING
+/* A third variant of `sub_8008188`'s shape: kind 1/2 update
+ * `dest->field_0` (sub/add) AND unconditionally also add `rec+2`'s
+ * short (Q8) to `dest->field_4`; kinds 4/8/12 add to `dest->field_4`
+ * (same as `sub_8008188`'s kinds) AND additionally always subtract
+ * `rec+4`'s byte (Q8, `<<7`) from `dest->field_0` afterward. Same
+ * single resistant `add`-operand-order gap as `sub_8008188`/
+ * `sub_8008200` in the shared kind-8/12 block - see `sub_8008188`'s
+ * doc comment for the full account of what was tried. */
+void sub_8008278(void *dest, s32 kind, void *rec)
+{
+    s32 idx = kind - 1;
+
+    switch (idx) {
+    case 1:
+        {
+            register s32 byteVal asm("r0") = *((u8 *)rec + 4);
+            register s32 shifted asm("r1");
+            register s32 field0 asm("r0");
+
+            shifted = byteVal << 7;
+            field0 = *(s32 *)dest;
+            field0 -= shifted;
+            *(s32 *)dest = field0;
+        }
+        {
+            s32 v = *(s16 *)((u8 *)rec + 2);
+            v <<= 8;
+            *(s32 *)((u8 *)dest + 4) += v;
+        }
+        break;
+    case 0:
+        {
+            register s32 byteVal asm("r0") = *((u8 *)rec + 4);
+            register s32 shifted asm("r1");
+            register s32 field0 asm("r0");
+
+            shifted = byteVal << 7;
+            field0 = *(s32 *)dest;
+            field0 += shifted;
+            *(s32 *)dest = field0;
+        }
+        {
+            s32 v = *(s16 *)((u8 *)rec + 2);
+            v <<= 8;
+            *(s32 *)((u8 *)dest + 4) += v;
+        }
+        break;
+    case 2:
+        break;
+    case 3:
+        {
+            s32 v = *(s16 *)((u8 *)rec + 2);
+            v <<= 8;
+            *(s32 *)((u8 *)dest + 4) += v;
+        }
+        {
+            register s32 byteVal asm("r2") = *((u8 *)rec + 4);
+            register s32 shifted asm("r1");
+            register s32 field0 asm("r0");
+
+            shifted = byteVal << 7;
+            field0 = *(s32 *)dest;
+            field0 -= shifted;
+            *(s32 *)dest = field0;
+        }
+        break;
+    case 4:
+        break;
+    case 5:
+        break;
+    case 6:
+        break;
+    case 7:
+        {
+            s32 v = *(s16 *)((u8 *)rec + 2) + *((u8 *)rec + 5);
+            v <<= 8;
+            *(s32 *)((u8 *)dest + 4) += v;
+        }
+        {
+            register s32 byteVal asm("r2") = *((u8 *)rec + 4);
+            register s32 shifted asm("r1");
+            register s32 field0 asm("r0");
+
+            shifted = byteVal << 7;
+            field0 = *(s32 *)dest;
+            field0 -= shifted;
+            *(s32 *)dest = field0;
+        }
+        break;
+    case 8:
+        break;
+    case 9:
+        break;
+    case 10:
+        break;
+    case 11:
+        {
+            s32 v = *(s16 *)((u8 *)rec + 2) + *((u8 *)rec + 5);
+            v <<= 8;
+            *(s32 *)((u8 *)dest + 4) += v;
+        }
+        {
+            register s32 byteVal asm("r2") = *((u8 *)rec + 4);
+            register s32 shifted asm("r1");
+            register s32 field0 asm("r0");
+
+            shifted = byteVal << 7;
+            field0 = *(s32 *)dest;
+            field0 -= shifted;
+            *(s32 *)dest = field0;
+        }
+        break;
+    default:
+        break;
+    }
+}
+#endif /* NON_MATCHING */
 asm(".align 2, 0");
