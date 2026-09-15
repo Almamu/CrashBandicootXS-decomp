@@ -2529,6 +2529,24 @@ characterized above the ~60 B noise floor** - the remaining ~15%
 undocumented is near-certainly more of the `gUnknown_030012C0`
 one-line accessor family already characterized elsewhere.
 
+**Verification fork confirms the closure claim holds - zero
+undocumented functions exceed 100 B - but found a write-up gap: 6
+already-investigated functions from an earlier round's report were
+never individually named in this document's prose.** For completeness:
+`sub_802692C`/`sub_8026984` (a P1/P2 HUD value-plus-alternates
+display), `sub_80236AC`/`sub_80236EC` (a getter/setter pair for a
+packed state round-tripping through `sub_800014C`), `sub_8024E24`
+(a two-line text draw, same family as the icon-renderer shapes), and
+`sub_8026108`/`sub_802613E` (tile-alignment modulo-32 helpers). Two
+functions are genuinely new to this pass: **`sub_80262E8`/`sub_8026328`**
+are bounded-range bulk-release helpers for the cache-slot system -
+each loops calling the already-documented single-call release
+wrappers (`sub_8026264`/`sub_80262A4`) across a range, a proper
+range-walk driver rather than the single-call bulk releases previously
+documented. All 8 fit already-established conventions - no new
+subsystem, just closing the gap between what was investigated and
+what was written down.
+
 ### Continuing into the remainder: one cross-zone link, one field re-confirmed
 
 Picked up the next-biggest unread functions after the consolidation
