@@ -2607,3 +2607,46 @@ throughout - trading one gap for a worse one every time. Parked with
 the version that gets the whole first half byte-exact rather than
 chase this - same call as `sub_8007B00`/`sub_8007B98`/`sub_8007DBC`
 above.
+
+**`sub_80080C0`** (ROM `0x080080C0`, right after `sub_8008044`, new
+`src/graphics/actor_part4.c`): builds `part`'s AABB (the same
+keyframe-table shape/record layout as `sub_8007B98` -
+`{s16 offX, s16 offY, u8 w, u8 h}` at `rec+4`/`+6`/`+8`/`+9` - but
+inlined directly here rather than calling it, since this function
+needs the box left on the stack for the final overlap test, not
+written out through a `dest` pointer), mirrors it per `part+0x28` bits
+4/5 (same convention as the other AABB builders), and tests the result
+for overlap against a `region` parameter via `sub_8001688` - the same
+collision-test function `sub_8007DBC` uses, confirming its signature.
+Also confirms `part+0x28` bits 4/5 read via the `((u32)(byte <<
+(31-N))) >> 31` idiom (materializing a clean `0`/`1` boolean for a
+LATER comparison) rather than the sign-branch `(s32)(byte << (31-N)) <
+0` form used in `sub_8007B00`/`sub_8007B98`/`sub_8007C30`/
+`sub_8007CF8` (which only works when the value feeds an immediate
+`if`, not when it must survive past intervening code like the
+`sub_803AFE4`/`sub_803AFDC` calls here).
+
+Matched on the first real attempt using the by-now-established
+`sub_8007B00`-style register-chain-reuse pattern for the keyframe
+lookup: `idx` pinned to `r3` and `rec` pinned to `r0`, reused across
+three roles (table pointer's dereferenced value, then `+offset`, i.e.
+`rec` itself) exactly like `sub_8007B00`'s own `table`/`rec` reuse -
+plus reusing `part`'s own parameter register for the index-byte
+address (`part = (struct actor *)((u8 *)part + 0x2d);`) once `part`
+itself is dead, matching the ROM's own reuse of `r0` for exactly that.
+Uses three high registers (`r8`/`sb`/`sl`) for values that must
+survive the three `bl` calls, saved via the by-now-standard
+"copy each into r4-r7, then push those" prologue trick (`mov r7,sl;
+mov r6,sb; mov r5,r8; push {r5,r6,r7}`) - no explicit C-level trick
+needed for this, gcc emits it automatically once enough values need
+protecting past the calls.
+
+Needed a trailing `asm(".align 2, 0");` since it's the only function
+in `src/graphics/actor_part4.c` - same established alignment gotcha as
+`sub_8007FD8` above. Not ROM-adjacent to `actor_part3.c` either (the
+parked `sub_8008044` sits raw between them, in `asm/code_3_2_4.s`), so
+needed the same file-split treatment: `asm/code_3_2_4.s` split again
+at the `sub_800815C` boundary right after `sub_8008044`'s guard, into
+`asm/code_3_2_4.s` (now just the parked `sub_8008044`) and a new
+`asm/code_3_2_5.s`, with the new `src/graphics/actor_part4.c`
+(holding just `sub_80080C0`) inserted between them in `ldscript.txt`.
