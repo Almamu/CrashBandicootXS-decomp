@@ -1113,6 +1113,34 @@ distinct heap-management subsystem, worth flagging for whoever maps
 allocator conventions further; confirmed backing globals:
 `gUnknown_03001320`/`3328`/`3338`/`3340`.
 
+### A new mechanism: an orbiting-companion object using a trig lookup table
+
+A further pass read 4 more actor-zone functions. **New mechanism:
+`sub_8030334`** (280 B) reads as an **orbiting companion/bonus orb**
+that circles the player: integrates position toward the player
+(`gUnknown_03000884`) with the same exponential-smoothing lerp shape
+already documented for the camera-follow filter
+(`sub_8026DFC`/`sub_8026D8C`, `>>5` damping), maintains a growing
+radius accumulator and an angle index, and looks up
+**`gStaticData_0816A820`** at the angle index and at `angle+0x40` (a
+90-degree-phase-shifted pair) - a sine/cosine table read. **This is
+the same table already tied to the minimap's rotating-dot placement**
+(`sub_80345B0`) - now cross-confirmed as a genuine trig lookup table,
+not minimap-specific. The orbit result is added to the lerped position
+as the object's draw position; on proximity hit it draws a text popup,
+plays a sound cue, and resets into a second orbit state. A strong
+candidate for a real-world name once sprite data is chased (Aku Aku-
+style mask, spinning fruit, or similar).
+
+Three more reads confirm and extend already-known conventions rather
+than introducing new ones: `sub_802FA38`/`sub_802E84C` add two new
+table addresses (`gStaticData_0817C260`/`0817C1C0`) to the already-
+documented "mixed-convention third table family," and `sub_802CC9C`
+is a 4-state animation-frame-swap actor (three new tables near the
+documented `gStaticData_0817A840` four-slot object) using a second,
+previously-unseen proximity-check variant, **`sub_802B7E0`** (left
+unread - a natural next target).
+
 ## Subdividing `game_loop`
 
 `game_loop`'s 112.7 KB has been one undifferentiated bucket even after
