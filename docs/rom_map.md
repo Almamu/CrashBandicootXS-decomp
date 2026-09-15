@@ -1436,6 +1436,20 @@ value **`0x2710` (10000)**, a large score-shaped constant. Reads as a
 animation paired with a big score/achievement notification - the
 concrete payoff tying the singleton system to a reward event.
 
+**Two small follow-ups round out the picture further.** `sub_802C3E8`/
+`sub_8032890` (the last two unread spawn-effect-family per-type
+constructors) turn out to be byte-for-byte twins: both compute a
+velocity vector aiming toward a fixed offset point via the
+screen-projection helpers plus `sub_803ADB4` division - a homing/
+seek-toward-point effect, parameterized per spawn type. **`sub_8033550`**
+is the **singleton's own BG2 affine-matrix committer**, structurally
+parallel to the boss cluster's `sub_80312C4` - but pure scale (no
+rotation, `PB`/`PC=0`), unlike the boss's full rotate+scale - direct
+confirmation the singleton has its own independent BG2 zoom-style
+rendering counterpart to the boss's spin/zoom effect, reinforcing the
+"closely-parallel machinery" pattern already noted between the two
+object clusters.
+
 ## Subdividing `game_loop`
 
 `game_loop`'s 112.7 KB has been one undifferentiated bucket even after
