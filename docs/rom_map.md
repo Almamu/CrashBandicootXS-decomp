@@ -1258,6 +1258,37 @@ already-known families (proximity triggers, the `gUnknown_030014xx`
 tier-threshold family) without introducing anything new. Nothing this
 pass broke the established "actor per-type behavior" reading.
 
+**Follow-up reads `sub_80339DC`'s helper cluster and `sub_8033470`
+(the new type-2 vtable slot), and finds evidence of a second unique/
+singleton object - closely-parallel machinery to the boss cluster,
+not the same object.** Most of the private helpers
+(`sub_8033900`/`80338F4`/`80338E8`/`80338D0`/`80338DC`/`8033880`/
+`80338C4`) are trivial one-line getters for a **singleton** referenced
+via a global pointer, `gUnknown_030015AC` (not a per-instance `self`)
+- and its fields (`gUnknown_030015B4`/`B8`/`BC`) are exactly the same
+family already documented elsewhere as the "animation-system-wired
+object" (`sub_8033264`'s finding). `sub_803390C`/`sub_803395C` are
+state-transition setters running the same animation-frame-reset
+sequence as the boss cluster's functions. `sub_803388C` is a death/
+reset transition (lifetime counter to zero). `sub_802E504` confirms
+membership in a small family of "spawn effect type N" functions
+indexed into the documented stride-40 `gUnknown_030014D8` table
+(siblings `sub_802E538`/`sub_802E57C` visible nearby, not read).
+**`sub_8033470`** operates on this same `gUnknown_030015AC` singleton:
+advances animation, computes a projected/scaled position via
+**`sub_8029E34`** (the same screen-projection helper already seen in
+the boss cluster's `sub_80311C4`), and streams tile data via
+**`sub_80330FC`** (a different tile-consumer than the boss's
+`sub_8030D48`) when the projected position changes. Reads as this
+singleton's own per-frame animate+project+tile-stream update function
+- structurally the type-2 analog of the boss cluster's `sub_80311C4`,
+but for a **singleton object**, not a per-instance struct - either the
+same object family or closely-parallel machinery for a second unique
+feature. `sub_80339DC` itself reads as a proximity-triggered effect/
+hazard detector measuring its own distance to this singleton.
+Confidence: high on mechanics (all functions read in full); medium on
+"second unique object" as the semantic label.
+
 ## Subdividing `game_loop`
 
 `game_loop`'s 112.7 KB has been one undifferentiated bucket even after
