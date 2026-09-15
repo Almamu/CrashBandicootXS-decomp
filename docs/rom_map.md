@@ -2101,6 +2101,24 @@ it despite sitting just outside the documented boundary, suggesting
 that subsystem's real edge is a few hundred bytes fuzzier than
 currently stated.
 
+**The "14 functions >=200 B, truly undocumented" set in this zone is
+now fully closed** - the remaining 7 all fit already-documented
+conventions, no new subsystem. `sub_800C5D4`/`sub_800C244` extend the
+`self+0x68`-keyed generic state-machine family (now 7+ confirmed
+sites); `sub_800C5D4` notably ties that family directly to the
+directional-target field octet for the first time. `sub_800CBF4`
+extends the `gUnknown_030012B4` bitset convention. `sub_8007C30`
+confirms `sub_803AFE4`/`sub_803AFDC` as the ROM's general-purpose
+AABB-construction primitive, now reused across 3+ sites (also seen in
+`sub_802DD9C`'s overlap test). `sub_8016C94` is pure input-dispatch
+orchestration. `sub_801A584` extends the master-table spawner family
+with a new record index (34) and a new 93-entry-family address.
+`sub_801B624` is a camera-target-position setter extending
+`gUnknown_030012D8`'s known field layout. **Two new data points worth
+flagging**: a recurring, still-unexplained global **`gUnknown_0300082C`**
+(3 independent confirmed sites - `sub_8016C94`, `sub_800BFA8`,
+`sub_801B624`) and the confirmed AABB-builder primitive reused widely.
+
 ### Cross-checked the `UpdateGameFrame`-`MainLoop` cluster: same signature, not an island
 
 A parallel fork gave this separate 17.1 KB (now revised to 18.3 KB once
