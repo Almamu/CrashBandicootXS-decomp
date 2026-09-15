@@ -1301,6 +1301,25 @@ This leaves roughly **~7.6 KB genuinely unexplained** in the core.
 Next candidates: `sub_8019094`, `sub_8018978`, and the unread
 remainder of `sub_801D828`.
 
+**Follow-up closed out these three.** **`sub_801D828`** turned out
+*not* to be a runtime palette/gradient generator as first guessed - a
+full read shows it's a **one-time constructor that procedurally
+writes a gradient directly into VRAM** (DMA3 destination `=
+(param2<<0xb) + 0x06000000`, VRAM base, not palette RAM), then sets
+fixed state fields (`self+0x20=0x78`, `+0x24=0x35`, ...) - reads as
+the constructor for a timed visual effect object (vignette/shadow/glow
+candidate), not a generic gradient generator. **`sub_8019094`** (384 B)
+is a `self`/`target`/`mode` dispatcher that reads through
+`gUnknown_03001308` (the documented lazy-singleton text box) in two of
+its modes to compute screen position and draw text - **a new,
+independent consumer of that global**, reinforcing it as shared
+infrastructure with several unrelated callers (already tied to
+`sub_8012420` and `overlay_ui`'s dialog constructors). **`sub_8018978`**
+(76 B) is a small position-delta/flag-sync helper, likely called from
+a larger mover object. None are entity-vtable-dispatched; none fold
+into an existing bucket - net new coverage ~988 B, leaving the core at
+**roughly ~6.7 KB genuinely unexplained**.
+
 ### Cross-checked the `UpdateGameFrame`-`MainLoop` cluster: same signature, not an island
 
 A parallel fork gave this separate 17.1 KB (now revised to 18.3 KB once
