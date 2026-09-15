@@ -2015,3 +2015,7 @@ trailing-padding alignment fix.
 
 **`sub_8007340`**: a getter for `self->flags` bit1, same shape as the
 other bit getters. Matched on the first attempt.
+
+**`sub_800734C`**: clears `self->flags` bit1 (`&= ~2`) - distinct
+from `sub_80072CC`'s bit0 clear despite the similar-looking mask.
+Same accumulator-register fix; already 4-aligned.
