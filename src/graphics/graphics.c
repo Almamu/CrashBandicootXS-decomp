@@ -906,3 +906,46 @@ void *sub_80071E4(u16 arg0, u16 arg1, u16 arg2)
     *(s32 *)((u8 *)obj + 4) = (s32)arg2 << 8;
     return obj;
 }
+
+s32 sub_800722C(void)
+{
+    return 0;
+}
+
+/* Clears self's bit1/bit0/bit3/bit4, sets bit2 - the actor-init step
+ * called from sub_80071E4. 44-byte body isn't 4-aligned, so the
+ * trailing asm(".align 2, 0") is required (see the first entry in
+ * docs/matching.md). */
+void sub_8007230(void *self)
+{
+    /* `result` and `tmp` are pinned so the running result stays in
+     * the constant's own register (r1) rather than the freshly-loaded
+     * byte's (r2), matching the ROM's exact register dance - plain C
+     * naturally accumulates into the loaded-byte's register instead
+     * (see docs/matching.md, "Matching decompilation"). */
+    register s32 result asm("r1");
+    register s32 tmp asm("r2");
+
+    result = ~2;
+    tmp = *((u8 *)self + 0xc);
+    result &= tmp;
+    tmp = 4;
+    result |= tmp;
+    /* The `tmp = -2` reload below is real, matching the ROM's own
+     * fresh mov+neg - gcc otherwise derives -2 as "4 - 6" reusing the
+     * OR step's leftover register value (cheaper, but not what the
+     * ROM does) no matter how the C is phrased, so it's pinned via
+     * inline asm to force the fresh load. */
+    asm volatile("mov %0, #2\n\tneg %0, %0" : "=r"(tmp));
+    result &= tmp;
+    tmp -= 7;
+    result &= tmp;
+    tmp -= 8;
+    result &= tmp;
+    *((u8 *)self + 0xc) = result;
+    *(u16 *)((u8 *)self + 0x10) = 0;
+    *(u16 *)((u8 *)self + 0x12) = 0;
+    *((u8 *)self + 0x14) = 1;
+    *((u8 *)self + 0x15) = 1;
+}
+asm(".align 2, 0");

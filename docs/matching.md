@@ -1841,3 +1841,27 @@ push/save/restore dance for keeping `arg0` alive across both calls -
 gcc reached for `r8` on its own here (three live parameters plus the
 allocated object exceeds what r4-r7 alone can hold), no pinning
 needed - see `matching_decomp_register_pinning` memory, point 8.
+
+**`sub_800722C`/`sub_8007230`**: `sub_800722C` is another unreferenced
+`return 0;` stub, same as `sub_800710C`/`sub_8007110`. `sub_8007230`
+clears/sets a handful of bits in self's flag byte plus a few other
+fields - the flag-byte math needed real register pinning:
+- The ROM builds its bitmask constants (-3, then later -2, -9, -17)
+  via `mov`+`neg`/`subs` chains rather than direct byte immediates,
+  even though the masks fit in a single Thumb `mov` - this only
+  reproduces when the accumulator is a wide (`s32`) type, not `u8`
+  (the narrower type let gcc fold straight to a byte immediate,
+  which is cheaper but not what the ROM does).
+- One mask reload (`-2`, appearing right after an unrelated `|= 4`)
+  kept getting computed as "4 - 6" by reusing the OR step's leftover
+  register instead of a fresh `mov`+`neg` - fixed with a 2-instruction
+  inline asm anchor forcing the literal fresh load.
+- The ROM computes the *first* mask constant before even loading the
+  flag byte, and the AND's result ends up living in the *constant's*
+  register (r1), not the freshly-loaded byte's (r2) - plain C
+  naturally accumulates into the loaded value's own register instead,
+  so both the running result and the scratch constant needed explicit
+  `register ... asm("r1")`/`asm("r2")` pins to force the ROM's
+  register roles.
+- 44-byte body, not 4-aligned - the usual trailing
+  `asm(".align 2, 0")` fix.
