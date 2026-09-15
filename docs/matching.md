@@ -2384,3 +2384,72 @@ initially written and matched under the name `sub_8007DBC` (the
 `sub_8007CF8` prior to cutting it from the raw `.s` file - a reminder
 to check the ROM address in the disassembly comment, not just count
 `thumb_func_start` blocks, before naming a new function.
+
+**Parked, not matched: `sub_8007DBC`** (ROM `0x08007DBC`, right after
+`sub_8007CF8`, same file): a real gameplay function rather than another
+AABB-builder clone - `part` (confirmed as a plain `struct actor`,
+matching `include/actor.h`) colliding with the player. Two flag-bit
+tests on `part->flags` (bits 3 and 2, both must be clear/set
+respectively, else return early) gate an AABB-vs-AABB collision test
+against the player global `gUnknown_030012D8` (both boxes built via
+the already-matched `sub_8007B98`, compared via `sub_8001688`, a
+new/unnamed collision-test function with the same "return a 0/1 byte"
+convention as `sub_800B37C` in `graphics.c`). On collision: sets
+`part->flags` bit 3, plays a sound at the player's position (the
+`table+0x68` short-offset/dead-read idiom is *exactly*
+`sub_8007048`'s `sub_803AD88` call, just keyed off `part->field_0A`
+instead of `self->field_0A` - strong confirmation both functions share
+the same "table+0x68 offset, table+4 unused field" convention), sets
+`part->flags` bit 0, and - if `part->field_08` isn't the `0xFFFF`
+sentinel - marks a bit in the `gUnknown_030012B4` 32-bit-word bitmap at
+`+0x108` (identical to `sub_80072D8`'s convention). Finally,
+`part->field_0A - 0x1b` (0-7) selects one of six "kind" values (1, 6,
+5, 0, 3, 4 for cases 2/3, 6, 4, 7, 5, 0 respectively; case 1 and any
+out-of-range value spawn nothing) passed to `sub_8025BAC(gUnknown_030012E4,
+0x2b, kind, part->x>>8, part->y>>8, 0)` - "spawn an object from a pool
+at this position" is the working theory, not confirmed. If something
+spawned, its `+0x28` bits 0-1 get set to `01` and its `+0xc` bit 2
+gets cleared - kept as raw offsets since the spawned object's own type
+isn't established.
+
+Needed: the exact same shift-then-mask idiom as `sub_8007048`'s
+`flagTest` (a single `ldrb`+`lsl`+`lsr`+mask sequence, written as
+`asm volatile` since plain C register pins for this exact "byte load,
+shift twice, AND with a reused mask constant" shape kept getting
+discarded the same way documented for `sub_8007B98`/`sub_8007C30`'s
+single bit-tests - here it's the SAME loaded-and-shifted value (`r1`)
+feeding both tests, with a single `mask=1` constant (`r6`) reused for
+both ANDs, matching the ROM's own register reuse exactly once written
+as one asm block per test sharing the `shifted`/`mask` register
+variables); caching `&gUnknown_030012D8` in a local
+(`struct actor **pGlobal = &gUnknown_030012D8;`) instead of writing
+`gUnknown_030012D8->field` at each use site, to get the ROM's own
+"load the global's address once, dereference it fresh each time"
+reuse pattern instead of gcc reloading the address from the literal
+pool at every access; and, for the six-case spawn switch, writing the
+`sub_8025BAC` call fully inline at each case (not hoisting `x`/`y`
+into shared locals before the switch) since the ROM recomputes
+`part->x>>8`/`part->y>>8` fresh in every case block rather than
+sharing one computation - plus reordering the case bodies in source to
+match the ROM's own (non-obvious) code layout: cases 2/3, then 6, 4,
+7, 5, and finally 0 (which falls straight into the shared
+`sub_8025BAC` call site with no trailing `break`/jump, unlike the
+others) - a pattern arrived at by matching the observed block order
+directly rather than any predictive rule for how gcc lays out switch
+bodies.
+
+The one remaining gap: the cached `&gUnknown_030012D8` address lands
+in `r6` here instead of the ROM's `r7`. Since this value is read from
+across several basic blocks (both `sub_8007B98` calls, the
+`sub_803AD88` position lookup), the single register-letter difference
+cascades into nearly every subsequent instruction's register
+numbering, even though each instruction's *operation* is identical -
+the same "look identical in shape, register-letter-shifted throughout"
+signature as `sub_8007B00`'s `part`/r6-vs-r7 problem above. Tried
+pinning the cached-address local directly to `r7`: unlike the softer
+"pin silently ignored" failure mode seen elsewhere, this one crashes
+the compiler outright (`internal error--unrecognizable insn`) -
+confirms `matching_decomp_register_pinning` memory point 10's r7
+warning applies here too, just with a harder failure. Parked as
+`NON_MATCHING` rather than keep chasing this one register - same call
+as `sub_8007B00`/`sub_8007B98` above.

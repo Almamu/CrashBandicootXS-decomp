@@ -77,3 +77,12 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   a recurring "which anonymous scratch register" choice (about 10 of
   73 instructions) - see `docs/matching.md`, "Parked, not matched:
   `sub_8007B98`".
+- **`sub_8007DBC`** (`src/graphics/actor_part2.c`) - collision-with-
+  player handler: tests two `part` flag bits, AABB-collides `part`
+  against the player, plays a sound and marks a global bitmap slot on
+  hit, then spawns one of several "kind"s of object at `part`'s
+  position depending on a `part` sub-type field. Matches the ROM
+  instruction-for-instruction except one systematic register choice
+  (the cached `&gUnknown_030012D8` address lands in r6 here vs the
+  ROM's r7 - an explicit r7 pin crashes the compiler outright here) -
+  see `docs/matching.md`, "Parked, not matched: `sub_8007DBC`".

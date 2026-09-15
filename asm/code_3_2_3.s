@@ -3,6 +3,12 @@
 .syntax unified
 .arm
 
+@ sub_8007DBC is reconstructed (extremely close, but not yet
+@ byte-matching) as C in src/graphics/actor_part2.c, guarded by
+@ #if NON_MATCHING - this raw version is used only for the real
+@ byte-matching build. See docs/matching.md, "Parked, not matched:
+@ sub_8007DBC".
+.if NON_MATCHING == 0
 	thumb_func_start sub_8007DBC
 sub_8007DBC: @ 0x08007DBC
 	push {r4, r5, r6, r7, lr}
@@ -224,6 +230,8 @@ _08007F68:
 	bx r1
 	.align 2, 0
 _08007F74: .4byte gUnknown_030012E4
+
+.endif
 
 	thumb_func_start sub_8007F78
 sub_8007F78: @ 0x08007F78
