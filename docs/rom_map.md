@@ -1234,6 +1234,30 @@ separate player-hit-reaction path - strongly boss-shaped, though the
 "boss" label itself remains an inference, not confirmed against
 sprite/level data.
 
+### A new type-2 vtable slot, and a growing pattern of shared orbital-motion consumers
+
+A further pass read 10 more actor-zone functions. **`sub_8033470`
+confirms a new `category_vtable` slot**: type 2, slot index 3
+(`gStaticData_081756C4+0x74`) - not yet read for behavior beyond
+confirming the dispatch slot. **The shared trig table
+`gStaticData_0816A820` keeps gaining independent consumers**:
+`sub_8032480` and `sub_802D3A8` are two more actors reading it for
+orbital/circular motion (phase-shifted pairs, lerped toward the
+result) - now **3 confirmed actor consumers** (`sub_8030334`,
+`sub_8032480`, `sub_802D3A8`) plus the minimap and the
+`sub_8010F8C` projectile/hazard found in the parallel `game_loop`
+pass - a genuinely general-purpose circular/orbital-motion convention
+used throughout the ROM, not unique to one actor. `sub_802C6C0` ties
+an actor behavior directly to the wraparound-lap-counter system
+(calls `sub_8022FEC`, one of its documented entry points) alongside
+the homing-chase helper `sub_802B730` - a concrete new cross-system
+link. `sub_802DD9C` is another instance of the 3-axis AABB overlap-
+test shape already documented for `sub_802D7B0`. The rest
+(`sub_80339DC` and its private helper cluster, `sub_802EB78`) extend
+already-known families (proximity triggers, the `gUnknown_030014xx`
+tier-threshold family) without introducing anything new. Nothing this
+pass broke the established "actor per-type behavior" reading.
+
 ## Subdividing `game_loop`
 
 `game_loop`'s 112.7 KB has been one undifferentiated bucket even after
