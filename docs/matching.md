@@ -2764,3 +2764,12 @@ functions in this cluster: `asm/code_3_2_5.s` split at the
 `sub_8008328` boundary into itself (now just the three parked
 functions) and a new `asm/code_3_2_6.s`, with the new
 `src/graphics/actor_part5.c` inserted between them in `ldscript.txt`.
+
+**`sub_8008328`** (ROM `0x08008328`, right after `sub_8008304`, same
+file): the same `part+0x25 == 1` fast-override shape, deferring to
+`sub_8006FE4` (already matched in `graphics.c`) instead of
+`sub_8007114` - a single-argument sibling, so the address-scratch
+register naturally lands in `r1` instead of `r2` (no second call
+argument to avoid clobbering). Matched on the first attempt, applying
+the same `addr`/`byteVal` register-reuse pin from `sub_8008304`
+directly.

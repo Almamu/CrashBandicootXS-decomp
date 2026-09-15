@@ -2,28 +2,6 @@
 
 .syntax unified
 .arm
-	thumb_func_start sub_8008328
-sub_8008328: @ 0x08008328
-	push {r4, lr}
-	movs r4, #0
-	adds r1, r0, #0
-	adds r1, #0x25
-	ldrb r1, [r1]
-	cmp r1, #1
-	beq _08008340
-	bl sub_8006FE4
-	lsls r0, r0, #0x18
-	cmp r0, #0
-	beq _08008342
-_08008340:
-	movs r4, #1
-_08008342:
-	adds r0, r4, #0
-	pop {r4}
-	pop {r1}
-	bx r1
-	.align 2, 0
-
 	thumb_func_start sub_800834C
 sub_800834C: @ 0x0800834C
 	movs r0, #1

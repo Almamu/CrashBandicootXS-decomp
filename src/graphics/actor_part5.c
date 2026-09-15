@@ -21,4 +21,26 @@ s32 sub_8008304(struct actor *part, void *box)
     }
     return result;
 }
+
+extern u8 sub_8006FE4(struct actor *self);
+
+/* Same `part+0x25` fast-override shape as `sub_8008304` above,
+ * deferring to `sub_8006FE4` (already matched in `graphics.c`)
+ * instead - a single-argument sibling, so the address scratch
+ * naturally lands in `r1` instead of `r2` (no second call argument to
+ * keep out of the way). */
+s32 sub_8008328(struct actor *part)
+{
+    s32 result = 0;
+    register u8 *addr asm("r1") = (u8 *)part + 0x25;
+    register u8 byteVal asm("r1");
+
+    byteVal = *addr;
+    if (byteVal == 1) {
+        result = 1;
+    } else if (sub_8006FE4(part)) {
+        result = 1;
+    }
+    return result;
+}
 asm(".align 2, 0");
