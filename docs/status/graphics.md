@@ -60,3 +60,10 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   ROM spills more locals to its stack frame than gcc does here, causing
   register-letter differences through most of the per-piece loop - see
   `docs/matching.md`, "Parked, not matched: `sub_80073DC`".
+- **`sub_8007B00`** (`src/graphics/actor_part.c`) - builds an AABB for
+  `part`'s current animation keyframe (via the shared `sub_803AFE4`/
+  `sub_803AFDC` primitive) and mirrors it horizontally/vertically per
+  flag bits. Matches the ROM instruction-for-instruction except one
+  systematic register choice (`part` lands in r6 here vs the ROM's r7,
+  cascading into a 3- vs 4-register push/pop list) - see
+  `docs/matching.md`, "Parked, not matched: `sub_8007B00`".

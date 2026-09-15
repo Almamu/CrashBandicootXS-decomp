@@ -2177,3 +2177,43 @@ stores. The very last store also needed the address pinned to a
 *fresh* register (`r1`) - the ROM computes `part+0x2c` into a new
 register even though `part` is dead right after, while plain C let
 the allocator overwrite `part`'s own register in place instead.
+
+**Parked, not matched: `sub_8007B00`** (ROM `0x08007B00`, right after
+`sub_8007AB4`, in `src/graphics/actor_part.c`): builds an AABB for
+`part`'s current animation keyframe, via the shared `sub_803AFE4`
+(set-position)/`sub_803AFDC` (set-size) primitive already seen
+elsewhere. The keyframe table pointer lives at `part+0x20`, indexed by
+the counter at `part+0x2d` (`0x1c` bytes per record); each record's
+`+0xc`/`+0xe`/`+0x10`/`+0x11` fields are `{s16 xOffset, s16 yOffset, u8
+w, u8 h}` - the same offset/table convention seen elsewhere, just AABB
+dimensions instead of a text pointer. `part+0x28` bits 4/5 mirror the
+resulting AABB horizontally/vertically around `part`'s own position.
+Confirms `struct aabb { s32 field_0, field_4, field_8, field_c; }` as
+the shared 16-byte AABB shape (used by the `sub_803AFE4`/`sub_803AFDC`
+pair generally, not just here).
+
+Needed the pointer-to-pointer double-dereference at `part+0x20`
+matched in the ROM's own order (first deref, then the `idx*0x1c` index
+computation, THEN the second deref - not both derefs back-to-back);
+`vu8` on the second of two `part+0x28` bit-checks to stop the compiler
+merging what the ROM does as two separate `ldrb` loads into one cached
+load with two shifts; and a `struct aabb` whole-struct assignment
+(`*pDest = buf_;`) in place of four scalar `s32` stores, to get the
+matching `ldm`/`stm` block-copy the ROM uses instead of four separate
+`ldr`/`str` pairs.
+
+Every one of those fixes landed exactly - the function matches the ROM
+instruction-for-instruction except a single systematic register
+choice: `part` lands in `r6` here, where the ROM has it in `r7`,
+cascading into a 3- vs 4-register prologue/epilogue push/pop list (the
+only actual byte difference). Tried: pinning `part` directly to `r7`
+(categorically unsafe in this toolchain - see the
+`matching_decomp_register_pinning` memory, point 10: an explicit `r7`
+pin is never included in the compiled prologue's `push` list); pinning
+`dest` to `r8` vs leaving it unpinned (neither naturally shifts `part`
+onto `r7`); and blocking `r6` with a dummy pin to push the allocator
+elsewhere (didn't compile - a `(void)dummy;` statement ahead of other
+declarations violates this compiler's C89 declare-before-statement
+rule). Parked as `NON_MATCHING` rather than continue chasing one
+register letter - same call as `sub_8006600`/`sub_8000EE4`/
+`sub_80073DC` above.
