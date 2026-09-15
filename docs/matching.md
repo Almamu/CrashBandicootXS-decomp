@@ -2112,3 +2112,39 @@ local-variable shape needed to reproduce the rest of the stack layout.
 Compiled only under `NON_MATCHING`, with the checked-in matching
 assembly (`asm/code_3_2.s`, guarded by `.if NON_MATCHING == 0`) used
 otherwise - same pattern as `sub_8006600`/`sub_8000EE4` above.
+
+**`sub_8007634`**: left entirely untouched (still raw asm, no
+reconstruction attempted at all - a genuinely different situation from
+`sub_80073DC`'s "understood but not register-matched" park). A
+~1044-byte sibling of `sub_80073DC` immediately after it: same `part`/
+`info` shapes and the same OAM attr0/attr1/attr2 packing tail, but
+additionally reads a Q8 "scale" factor from `part+0x3c` (clamped to a
+minimum of `0x40`) and sets up a **GBA hardware affine (rotation/
+scaling) sprite matrix** for it - allocating a rotation-group index
+from a counter at `gUnknown_03001300+8`, selecting OBJ mode 1 (affine)
+or 3 (affine + double-size) based on the scale value, and writing
+computed parameters into the OAM parameter-memory region alongside a
+keyframe-position interpolation (blending a cached "previous" position
+at `part+0x20`/`part+0x2c`/`part+0x30` against the current record's
+position by the scale fraction, clamped against a per-state max index
+read through `part+0x20`'s own table `+0x16`). This is real,
+non-trivial hardware-affine-sprite logic that would need to be fully
+and confidently understood before writing any C for it - a guessed
+reconstruction risks leaving wrong documentation behind, which is
+worse than leaving it unclaimed. Revisit with a dedicated session.
+
+**`sub_8007A48`** (new file `src/graphics/actor_part.c` - its real ROM
+address, `0x08007A48`, sits right after the still-unclaimed
+`sub_80073DC`/`sub_8007634` pair, so it isn't adjacent to any of
+`graphics.c`'s matched functions; `asm/code_3_2.s` was split at this
+boundary into itself (ending after `sub_8007634`) and a new
+`asm/code_3_2_2.s` picking up at `sub_8007A84`, with `ldscript.txt`
+updated to interleave `actor_part.o` between them - see
+`docs/workflow.md` step 4's "needs its own new `.c` file" case).
+Resolves whether `(x, y)` are already screen-relative
+(`part+0x25 != 0`) or need the camera-relative conversion
+`sub_8007174` applies, then forwards the result to `sub_80073DC`
+(itself parked as `NON_MATCHING` - callable normally since only its
+*definition* is guarded, not a separate `extern` declaration). Matched
+on the first attempt; the usual alignment fix (58-byte body, last
+function in a freshly-split translation unit).
