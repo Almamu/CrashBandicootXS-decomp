@@ -1918,3 +1918,12 @@ the address/value, so the struct doesn't interact with it).
 object (looks camera/viewport-offset-shaped given how it's used, but
 that's not confirmed) - deliberately left untyped rather than folded
 into `struct actor` or guessed at.
+
+**`sub_8007278`**: clears `self->flags` bit4 (`&= ~16`), using
+`struct actor` from the cleanup pass above straight away rather than
+raw offsets. Same accumulator-register pattern as `sub_8007230`'s
+mask chain: the ROM computes the mask constant before loading the
+flag byte, and the AND's result lives in the *mask's* register, not
+the freshly-loaded byte's - plain C (even with the load reordered to
+match) accumulated into the byte's register instead, fixed with the
+same `register ... asm("r1")`/`asm("r2")` pin pair.

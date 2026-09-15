@@ -963,3 +963,18 @@ struct actor *sub_800725C(struct actor *self)
     sub_8007230(self);
     return self;
 }
+
+/* `result`/`tmp` pinned so the running result stays in the constant's
+ * own register (r1) rather than the freshly-loaded byte's (r2) -
+ * same pattern as sub_8007230 above (see docs/matching.md, "Matching
+ * decompilation"). */
+void sub_8007278(struct actor *self)
+{
+    register s32 result asm("r1");
+    register s32 tmp asm("r2");
+
+    result = -17;
+    tmp = self->flags;
+    result &= tmp;
+    self->flags = result;
+}
