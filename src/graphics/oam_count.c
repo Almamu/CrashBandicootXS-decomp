@@ -1,5 +1,6 @@
 #include "core.h"
 #include "icon_manager.h"
+#include "vram_pool.h"
 
 /* A small per-category threshold table: sub_8006864/sub_8006820/
  * sub_80067EC each count how many of a caller's 20 records fall between
@@ -24,12 +25,12 @@ extern struct threshold_table_entry gStaticData_0816C86C[];
 extern void sub_80062A8(s32 arg0, s32 arg1, s32 arg2);
 extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
 extern void sub_8026ED0(void *arg0);
-extern void sub_8006DC8(void *arg0);
+extern void sub_8006DC8(struct tile_asset_cache *arg0);
 extern void sub_8006AAC(void *arg0);
 extern void sub_8006A90(void *arg0);
 extern void sub_8006A48(void *arg0);
 extern void FlushVramDmaQueue(void);
-extern void *gUnknown_030012B8;
+extern struct tile_asset_cache *gUnknown_030012B8;
 extern void *gUnknown_03001300;
 
 extern void sub_8008044(void *arg0);
@@ -49,13 +50,13 @@ struct sub_8006700_actor {
     u16 field_28;
 };
 
-extern void sub_8006C28(void *arg0);
+extern void sub_8006C28(struct vram_upload_cursor *arg0);
 extern void sub_8008890(void *arg0, s32 arg1, s32 arg2);
 extern void sub_803AFE4(void *buf, s32 arg1, s32 arg2);
 extern void sub_803AFDC(void *buf, s32 arg1, s32 arg2);
 extern s32 sub_8001214(void *arg0, void *arg1, void *buf, s32 arg3);
 extern s32 sub_8026F38(s32 arg0);
-extern void *gUnknown_030012FC;
+extern struct vram_upload_cursor *gUnknown_030012FC;
 
 extern struct icon_manager *gUnknown_030012E0;
 extern struct icon_manager *gUnknown_030012DC;

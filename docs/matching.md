@@ -1645,3 +1645,56 @@ to land the next raw function (`sub_8006C28`) at the same address it
 already had, no new `.c` file was needed and no other file's boundary
 moved - only `tools/report_units.py`'s `game_loop` category start moved
 forward by this function's size (`0x08006C00` -> `0x08006C28`).
+
+## `sub_8006C28`-`sub_8006FB4`: a VRAM upload-cursor and a tile/palette asset cache
+
+Matched the next 22 functions in ROM order too (`0x08006C28`-`0x08006FC8`),
+resolving into two distinct 12-byte and 0x230-byte structs - both new
+to `include/vram_pool.h`. This range sits at the very start of what
+`docs/rom_map.md` calls the `game_loop` zone, but (same lesson as
+`AllocVramDmaQueue` above) turned out to have nothing to do with it -
+`tools/report_units.py`'s `game_loop` boundary moves again, to
+`0x08006FC8`.
+
+**`struct vram_upload_cursor`** (`sub_8006C28`-`sub_8006CE8`, 9
+functions) is a bump/rollback cursor pair over a fixed
+`OBJ_VRAM0_SIZE`-byte staging window - see the struct's own doc
+comment in `vram_pool.h`. `sub_8006C38` has zero callers anywhere in
+the codebase (confirmed by grepping every `asm/*.s` and `src/*.c`) -
+matched anyway per the `mem_collect` precedent (see "Resolved:
+`main.c`/`memory.c`/`irq.c`" above), not a mistake.
+
+**`struct tile_asset_cache`** (`sub_8006D08`-`sub_8006FB4`, 13
+functions) is a 16-slot raw-asset cache backing both an OBJ-tile-VRAM
+upload path and an OBJ-palette-bank upload path through the same
+32-byte-per-slot storage, depending on which function the caller
+invokes - see the struct's doc comment. `sub_8006E64` is also
+genuinely unreachable (zero callers, same as `sub_8006C38`).
+`oam_count.c`'s existing `void *`-typed `extern`s for
+`gUnknown_030012FC`/`gUnknown_030012B8` and
+`sub_8006C28`/`sub_8006DC8` were retyped to the real structs as part
+of this match (the cleanup-pass "check whether a struct for the same
+object already exists elsewhere" rule) - `oam_count.c` was already
+calling both, just through untyped pointers.
+
+**Several register-allocation/instruction-order mismatches, all
+resolved by the same three techniques already established above** (see
+"A gotcha worth knowing"/further down): guard-clause polarity (writing
+the *common* case as the branch-away target vs. the *fallthrough*
+flips which comparison the compiler emits - `sub_8006C58`/`sub_8006C84`/
+`sub_8006D50`/`sub_8006DF8`/`sub_8006E64` all needed the opposite
+guard shape from an initial straightforward reading before matching),
+explicit intermediate locals to force a specific evaluation order
+(`sub_8006D08`'s `src`/`dst` split, `sub_8006DF8`'s `reservedBase`),
+and - where plain C genuinely couldn't reproduce the ROM's exact
+register/operand choice even after several rephrasings - targeted
+`register asm("rN")` pins plus a one-line `asm volatile("add %0, %1,
+%2" ...)` for the specific address computation
+(`sub_8006D68`/`sub_8006D84`'s pending-slot address, `sub_8006DF8`'s
+whole-function register layout since it makes no calls and gcc was
+otherwise free to allocate however it liked, `sub_8006FB4`'s dirty-flag
+address). One genuinely new fact caught only by compiling and diffing:
+`sub_8006EF0`'s `count` parameter is `u16`, not `s32` as first assumed -
+the ROM's `lsls r1,r1,#0x10; lsrs r7,r1,#0x10` is the truncation a
+16-bit parameter forces on its incoming (possibly dirty-upper-bits)
+register, absent entirely once the parameter was declared `u16`.

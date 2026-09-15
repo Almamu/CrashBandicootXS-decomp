@@ -1,5 +1,6 @@
 #include "core.h"
 #include "memory.h"
+#include "vram_pool.h"
 
 struct dma_queue_entry {
     void *field_00;
@@ -285,4 +286,313 @@ s32 AllocVramDmaQueue(void)
     }
     gUnknown_03001290.count = 0;
     return 0;
+}
+
+extern void sub_8001604(void);
+extern void *sub_8026EC0(u32 size);
+
+void sub_8006C28(struct vram_upload_cursor *self)
+{
+    self->field_04 = self->field_00;
+}
+
+void sub_8006C30(struct vram_upload_cursor *self)
+{
+    self->field_00 = self->field_04;
+}
+
+/* No callers anywhere in the codebase - genuinely unreachable, matched
+ * anyway to keep the ROM's byte layout intact (see docs/decomp_dev.md's
+ * mem_collect entry for the established pattern). */
+s32 sub_8006C38(struct vram_upload_cursor *self)
+{
+    return OBJ_VRAM0_SIZE - self->field_04;
+}
+
+s32 sub_8006C44(struct vram_upload_cursor *self)
+{
+    return self->field_04 >> 5;
+}
+
+void sub_8006C4C(struct vram_upload_cursor *self)
+{
+    self->field_04 = self->field_00 = self->field_08 << 5;
+}
+
+s32 sub_8006C58(struct vram_upload_cursor *self, s32 size)
+{
+    s32 result;
+
+    if (self->field_04 + size <= OBJ_VRAM0_SIZE) {
+        result = sub_8006C44(self);
+        self->field_04 += size;
+        return result;
+    }
+    return -1;
+}
+
+s32 sub_8006C84(struct vram_upload_cursor *self, void *src, s32 size)
+{
+    s32 result;
+
+    if (self->field_04 + size <= OBJ_VRAM0_SIZE) {
+        if (QueueVramDmaTransfer(src, OBJ_VRAM0 + self->field_04, (u16)size, 0x20) == 0) {
+            result = sub_8006C44(self);
+            self->field_04 += size;
+            return result;
+        }
+        return -2;
+    }
+    return -1;
+}
+
+void sub_8006CD0(struct vram_upload_cursor *self, u32 flags)
+{
+    if (flags & 1) {
+        sub_8026ED0(self);
+    }
+}
+
+struct vram_upload_cursor *sub_8006CE8(struct vram_upload_cursor *self, s32 count)
+{
+    sub_8001604();
+    self->field_08 = count;
+    sub_8006C4C(self);
+    sub_8006C4C(self);
+    return self;
+}
+
+/* `(u8 *)self + 0x2c` (offsetof(slots)) plus a separate `+= slot << 5`
+ * step, instead of `self->slots[slot]` directly - the plain field
+ * access compiles to a different instruction order/operand choice
+ * than the ROM here (tried, rebuilt, confirmed different - see
+ * docs/matching.md, "Matching decompilation"). */
+void sub_8006D08(struct tile_asset_cache *self, s32 slot, s32 recordId)
+{
+    const u8 *src;
+    u8 *dst;
+
+    self->remap[recordId] = slot;
+    self->dirty = 1;
+    src = self->records;
+    dst = (u8 *)self + 0x2c;
+    src += recordId << 5;
+    dst += slot << 5;
+    DMA3.src = src;
+    DMA3.dst = dst;
+    DMA3.cnt = (DMA_ENABLE << 16) | 16;
+    (void)DMA3.cnt;
+}
+
+void sub_8006D40(struct tile_asset_cache *self, s32 slot, s32 index)
+{
+    self->remap[index] = slot;
+    self->reserved[slot] = 0;
+}
+
+s32 sub_8006D50(struct tile_asset_cache *self, s32 index)
+{
+    if (self->reserved[index] == 0) {
+        return 0;
+    }
+    self->reserved[index] = 0;
+    return 1;
+}
+
+/* The inline asm pins the ROM's exact `add r0, r1, r0` (slot-then-base)
+ * operand order for this address computation - a plain C `base[slot]`
+ * or `slot + base` expression both lowered to the opposite operand
+ * order regardless of how the addition was phrased (see docs/matching.md,
+ * "Matching decompilation"). */
+void sub_8006D68(struct tile_asset_cache *self, s32 index)
+{
+    u8 *base;
+    s32 slot;
+    u8 *addr;
+
+    if (self->remap[index] != 0xFF) {
+        base = self->pending;
+        slot = self->remap[index];
+        asm volatile("add %0, %1, %2" : "=r"(addr) : "r"(slot), "r"(base));
+        *addr = 0;
+    }
+}
+
+void sub_8006D84(struct tile_asset_cache *self, s32 index)
+{
+    u8 *base;
+    s32 slot;
+    u8 *addr;
+
+    if (self->remap[index] != 0xFF) {
+        base = self->pending;
+        slot = self->remap[index];
+        asm volatile("add %0, %1, %2" : "=r"(addr) : "r"(slot), "r"(base));
+        *addr = 1;
+    }
+}
+
+void sub_8006DA0(struct tile_asset_cache *self, s32 index)
+{
+    DMA3.src = self->slots[index];
+    DMA3.dst = OBJ_PLTT + (index << 5);
+    DMA3.cnt = (DMA_ENABLE << 16) | 16;
+    (void)DMA3.cnt;
+}
+
+void sub_8006DC8(struct tile_asset_cache *self)
+{
+    if (self->dirty) {
+        DMA3.src = self->slots;
+        DMA3.dst = OBJ_PLTT;
+        DMA3.cnt = (DMA_ENABLE << 16) | 0x100;
+        (void)DMA3.cnt;
+    }
+}
+
+/* Explicit register pins for `self`/`recordId`: this function makes no
+ * calls, so gcc is otherwise free to pick any registers for them and
+ * lands on a different (equally valid) allocation than the ROM's own -
+ * pinned to match byte-exactly (see docs/matching.md, "Matching
+ * decompilation"). */
+u8 sub_8006DF8(struct tile_asset_cache *self, s32 recordId)
+{
+    register struct tile_asset_cache *pSelf asm("r2") = self;
+    register s32 pRecordId asm("r5") = recordId;
+    register u8 *remap asm("r0") = pSelf->remap;
+    register u8 *addr asm("r1");
+    u8 slot;
+    s32 i;
+    const u8 *src;
+    u8 *dst;
+    u8 *reservedBase;
+    register s32 shiftedId asm("r0");
+
+    asm volatile("add %0, %1, %2" : "=r"(addr) : "r"(remap), "r"(pRecordId));
+    slot = *addr;
+
+    if (slot != 0xFF) {
+        return slot;
+    }
+    pSelf->dirty = 1;
+    i = 0;
+    reservedBase = pSelf->reserved;
+    for (; i <= 15; i++) {
+        if (reservedBase[i] != 0) {
+            reservedBase[i] = 0;
+            pSelf->remap[pRecordId] = i;
+            src = pSelf->records;
+            dst = (u8 *)pSelf + 0x2c;
+            shiftedId = pRecordId << 5;
+            src += shiftedId;
+            dst += i << 5;
+            DMA3.src = src;
+            DMA3.dst = dst;
+            DMA3.cnt = (DMA_ENABLE << 16) | 16;
+            (void)DMA3.cnt;
+            return (u8)i;
+        }
+    }
+    return 0;
+}
+
+/* No callers anywhere in the codebase - genuinely unreachable, matched
+ * anyway to keep the ROM's byte layout intact (see docs/decomp_dev.md's
+ * mem_collect entry for the established pattern). */
+s32 sub_8006E64(struct tile_asset_cache *self, s32 slot)
+{
+    s32 i;
+    s32 result;
+
+    if (self->pending[slot] == 0) {
+        self->reserved[slot] = 1;
+        for (i = 0; i < self->count; i++) {
+            if (self->remap[i] == slot) {
+                self->remap[i] = 0xFF;
+            }
+        }
+        result = 1;
+    } else {
+        result = 0;
+    }
+    return result;
+}
+
+void sub_8006EA8(struct tile_asset_cache *self)
+{
+    s32 slot;
+    s32 i;
+
+    for (slot = 0; slot <= 15; slot++) {
+        if (self->pending[slot] == 0) {
+            self->reserved[slot] = 1;
+            for (i = 0; i < self->count; i++) {
+                if (self->remap[i] == slot) {
+                    self->remap[i] = 0xFF;
+                }
+            }
+        }
+    }
+}
+
+void sub_8006EF0(struct tile_asset_cache *self, u16 count, const u8 *records)
+{
+    s32 i;
+
+    if (self->remap != NULL) {
+        sub_8026ED0(self->remap);
+    }
+    self->remap = NULL;
+    self->count = 0;
+    self->records = NULL;
+    for (i = 0; i <= 15; i++) {
+        self->reserved[i] = 1;
+        self->pending[i] = 0;
+    }
+    self->count = count;
+    self->records = records;
+    self->remap = (u8 *)sub_8026EC0(self->count);
+    for (i = 0; i < self->count; i++) {
+        self->remap[i] = 0xFF;
+    }
+}
+
+void sub_8006F5C(struct tile_asset_cache *self)
+{
+    s32 i;
+
+    if (self->remap != NULL) {
+        sub_8026ED0(self->remap);
+    }
+    self->remap = NULL;
+    self->count = 0;
+    self->records = NULL;
+    for (i = 0; i <= 15; i++) {
+        self->reserved[i] = 1;
+        self->pending[i] = 0;
+    }
+}
+
+void sub_8006F94(struct tile_asset_cache *self, u32 flags)
+{
+    sub_8006F5C(self);
+    if (flags & 1) {
+        sub_8026ED0(self);
+    }
+}
+
+/* The inline asm pins the ROM's `add r1, r0, r3` (self-plus-constant,
+ * not in-place) operand order/register choice - see docs/matching.md,
+ * "Matching decompilation". */
+void sub_8006FB4(struct tile_asset_cache *self)
+{
+    register s32 offset asm("r3");
+    register u8 *dirtyAddr asm("r1");
+
+    self->count = 0;
+    self->remap = NULL;
+    self->records = NULL;
+    offset = 0x8b << 2;
+    asm volatile("add %0, %1, %2" : "=r"(dirtyAddr) : "r"(self), "r"(offset));
+    *dirtyAddr = 0;
 }
