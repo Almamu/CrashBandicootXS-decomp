@@ -1815,6 +1815,33 @@ be the natural next step. Most of the other sampled functions
 (the player-input-control family, position/collision checkers) rather
 than introducing anything new.
 
+**Follow-up resolved `sub_801DAD8` fully, correcting the "boss loader"
+speculation: it's not tied to the actor-zone boss cluster at all -
+it's the already-documented page-scroll menu system's BG2-layer
+content driver.** `sub_801DE04(self, countdown_struct)` decrements a
+two-word countdown pair per call; on expiry it calls
+**`sub_801DDB4`**, which reads through the documented 28-byte-record
+dereference chain (the same `+0x16` offset `sub_800AFF4` found),
+clamps a value into a stat field, and re-randomizes its own timer -
+each of `sub_801DAD8`'s 4 sub-objects independently counts down and
+refreshes on expiry. **`gStaticData_0816C5A0`** is a real labeled
+0x50-byte block = exactly **10 records of 8 bytes**, each a
+**`{palette_data, tile_data}` pair** (not `{asset_tag, dma_dest}` as
+first guessed) - `self+0x10` (checked against sentinel `0xb`=11,
+matching the 10-record count) selects which of 10 palette+sprite
+appearances to load, one via `LoadTaggedAsset` into a stack buffer
+then DMA'd to Palette RAM, the other into VRAM. Case 3's rotation math
+and cases 0/1's fade counters round out a state machine that fades in,
+loads a selectable palette+sprite skin, and rotates. **Callers confirm
+the tie directly**: `sub_801D110`'s call site calls
+`sub_801E640`/`sub_801DE24` on the exact same sub-object accessor
+pair `sub_801CEE0`'s hardware-register-write sequence uses, then calls
+`sub_801DAD8` on that same BG2-layer sub-object - this is the swappable-
+appearance icon/portrait (10 skins, fade, rotation) for the page-scroll
+menu system (`sub_801CEE0`/`sub_801D4C4`/`sub_801D548`/`sub_801D110`/
+`sub_801C96C`/`sub_801CCF8`, all clustered at `0x0801Cxxx`-`0x0801Dxxx`
+in the main zone), not a boss loader.
+
 **A further pass read 8 more of the genuinely-undocumented main-zone
 functions.** All fit already-known conventions - two concrete new
 data points, no new systems. **`sub_80186F0`** and **`sub_80194E0`**
