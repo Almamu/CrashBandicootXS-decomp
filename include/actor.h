@@ -16,7 +16,7 @@
 struct actor {
     s32 x;             // 0x00 - Q8 fixed-point screen position
     s32 y;              // 0x04 - Q8 fixed-point screen position
-    u16 field_08;         // 0x08 - set from a constructor argument, role unclear
+    u16 field_08;         // 0x08 - an object/record id used as a 32-bit-word bitmap index (see sub_80072D8)
     u8 field_0A;            // 0x0A - passed through to sub_803AD88 by sub_8007048
     u8 unused_0B;             // 0x0B
     u8 flags;                  // 0x0C - individual bits tested/set by several functions

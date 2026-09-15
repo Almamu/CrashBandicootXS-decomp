@@ -1059,3 +1059,56 @@ void sub_80072CC(struct actor *self)
     result &= tmp;
     self->flags = result;
 }
+
+extern void *gUnknown_030012B4;
+
+/* Always sets self->flags bit0; if self->field_08 (an id) isn't the
+ * sentinel 0xFFFF, also sets bit `field_08 & 0x1F` of a 32-bit-word
+ * bitmap at `*gUnknown_030012B4 + 0x108`, word-indexed by
+ * `field_08 >> 5` - looks like "mark this object's slot as active" in
+ * some external allocation-tracking table. Several register-pinned
+ * blocks below reproduce the ROM's exact instruction order/register
+ * choices - see the inline comment on each, and docs/matching.md,
+ * "Matching decompilation" for the general techniques. */
+void sub_80072D8(struct actor *self)
+{
+    register struct actor *pSelf asm("r1") = self;
+    register u16 id asm("r4");
+
+    {
+        register s32 result asm("r0");
+        register s32 tmp asm("r2");
+
+        result = 1;
+        tmp = pSelf->flags;
+        result |= tmp;
+        pSelf->flags = result;
+    }
+    {
+        s32 cmpVal = 0xFFFF;
+        id = pSelf->field_08;
+        if (id != cmpVal) {
+            s32 rawId = pSelf->field_08;
+            void *base = gUnknown_030012B4;
+            /* `word` is pinned to r0 and reused as the running
+             * accumulator for the rest of the block (word<<5, then
+             * rawId-word) - a fresh local for the subtraction's
+             * result computed into a different register than the
+             * ROM's own reuse of r0. The initial asm copy-then-shift
+             * pair forces the ROM's extra `add`/`asr` instead of
+             * gcc's one-instruction shift straight out of `rawId`'s
+             * register. */
+            register s32 word asm("r0");
+            s32 wordOffset;
+
+            asm volatile("add %0, %1, #0\n\tasr %0, %0, #5" : "=r"(word) : "r"(rawId));
+            wordOffset = word << 2;
+
+            base = (u8 *)base + 0x108;
+            base = (u8 *)base + wordOffset;
+            word = word << 5;
+            word = rawId - word;
+            *(u32 *)base |= 1 << word;
+        }
+    }
+}

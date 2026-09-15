@@ -1942,6 +1942,40 @@ register). Usual alignment fix.
 accumulator-register fix as the other single-bit-clear siblings above;
 body comes out already 4-aligned, no padding fix needed this time.
 
+**`sub_80072D8`**: always sets `self->flags` bit0; if `self->field_08`
+(an id) isn't the sentinel `0xFFFF`, also sets a bit in an external
+32-bit-word bitmap (`*gUnknown_030012B4 + 0x108`, word-indexed by
+`field_08 >> 5`, bit-indexed by `field_08 & 0x1F`) - looks like
+"mark this object active" in some allocation-tracking table. The
+most register-pin-heavy function in this cluster so far:
+- The flags `|= 1` step needed the usual accumulator-register pin.
+- `self` needed pinning to r1 (not r2, where it naturally landed) -
+  once the flags-OR block above it was pinned, gcc stopped placing
+  the plain parameter in the ROM's own register on its own, the same
+  effect seen in `sub_8007114`.
+- The ROM reads `field_08` twice - once into r4 for the sentinel
+  comparison, once again into r3 for the bitmap computation - and r4
+  is genuinely a *fourth* register here (needing `push {r4, lr}`),
+  reused later for the `0x108` constant. Plain C coalesced the two
+  reads into one value; pinning the comparison read to r4 specifically
+  reproduced both the extra push/pop and the fresh second read.
+- The sentinel constant (`0xFFFF`) is loaded *before* the comparison
+  read in the ROM, not after (as `if (field_08 != 0xFFFF)` naturally
+  compiles) - fixed by assigning the constant to a named local first.
+- `word = id >> 5` compiles to a single instruction shifting straight
+  out of `id`'s own register; the ROM has an extra, genuinely
+  redundant-looking copy first (`adds r0, r3, #0` then `asrs r0, r0,
+  #5`) - forced via a 2-instruction inline asm anchor, since no
+  amount of C-level redundant-copy phrasing reproduced it.
+- The final `id - (word << 5)` subtraction needed to land back in
+  `word`'s own register (r0), not a fresh one - fixed by reusing the
+  same r0-pinned `word` variable as the accumulator for both `word <<
+  5` and the subtraction, rather than a separate `bit` local.
+- `word << 2` (the array-index offset) had to be computed *before*
+  the `0x108` base offset was added, even though the base offset is
+  added to the pointer first - same "compute early, use late"
+  ordering seen in `sub_8007114`'s width/height block.
+
 **`sub_80072A8`**: sets `self->flags` bit3 (`|= 8`) - the mirror of
 `sub_800729C`. Same accumulator-register fix, plus the usual
 trailing-padding alignment fix.
