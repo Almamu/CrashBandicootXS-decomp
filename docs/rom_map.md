@@ -1704,7 +1704,32 @@ window-shaped hardware registers via three unread helpers
 `0x0600A000`, then loops drawing 6 text items via `sub_803AD84` -
 reads as a second-screen/overlay commit function (debug overlay,
 second BG-layer content, or similar), not yet folded into any
-documented bucket. The other genuinely-unread outside-any-bucket
+documented bucket.
+
+**Follow-up fully resolved it: a smooth left/right page-scroll
+transition, not a debug overlay.** `sub_801D7D0`/`sub_801E640`/
+`sub_801DE24` are trivial one-line field getters reading pre-baked
+register values off two sub-objects (`self+0x1c`/`+0x20`), both
+initialized via the shared `sub_801E644` constructor `overlay_ui`'s
+screens and `sub_803472C` already use - `sub_801CEE0` is a per-frame
+draw step for a standard **3-BG-layer screen** (writes `BG0HOFS` from
+an auto-scroll counter, `BG1HOFS`/`VOFS` packed, `BG1CNT`/`BG2CNT`),
+the same construction convention as other documented UI screens.
+**Its two callers, `sub_801D4C4`/`sub_801D548` (a mirror-image
+pair), resolve the whole picture**: each checks a gate condition; if
+open, plays an entry SFX, then loops - nudging a scroll offset by one
+whole pixel (Q8.8) per frame via `sub_801D790`/`sub_801D79C`, drawing
+one frame via `sub_801CEE0`, polling input - until a page counter
+reaches zero, using the documented blend-effect commit
+(`sub_801CCF8`) at the transition boundary; if the gate is closed, it
+plays a "blocked" SFX instead and exits immediately. Reads as **a
+paged menu/screen with a smooth horizontal page-turn animation** -
+`sub_801D4C4` scrolls one direction, `sub_801D548` the other. Medium-
+high confidence: mechanics fully read, but the actual screen content
+(level-select? a stats/results carousel?) isn't independently
+confirmed.
+
+The other genuinely-unread outside-any-bucket
 function sampled, `sub_8017348`, fits already-known conventions
 closely (the type-`0x1d`/28-byte-record family). `sub_8010F8C` and
 `sub_801DAD8` remain unread and unclassified.
