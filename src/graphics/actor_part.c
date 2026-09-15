@@ -3,6 +3,7 @@
 
 extern void sub_8007174(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4);
 extern void sub_80073DC(void *unused, void *part, s32 *posPtr);
+extern void sub_8026ED0(void *arg0);
 
 /* `part+0x25` selects whether (x, y) are already screen-relative
  * (nonzero - used as-is) or need the camera-relative conversion
@@ -31,5 +32,18 @@ asm(".align 2, 0");
 void sub_8007A84(void *self, void *part)
 {
     sub_8007A48(self, part, *(s32 *)part >> 8, *(s32 *)((u8 *)part + 4) >> 8);
+}
+asm(".align 2, 0");
+
+void sub_8007A98(void *arg0, u32 arg1)
+{
+    if (arg1 & 1) {
+        sub_8026ED0(arg0);
+    }
+}
+asm(".align 2, 0");
+
+void nullsub_2(void)
+{
 }
 asm(".align 2, 0");

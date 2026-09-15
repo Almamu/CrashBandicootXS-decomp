@@ -2154,3 +2154,7 @@ fixed-point fields `struct actor` has at 0x00/0x04, integer-shifted by
 8) as the explicit position and forwards to `sub_8007A48` - confirming
 `part` embeds a struct-actor-shaped position at its own start. Matched
 on the first attempt, plus the usual alignment fix.
+
+**`sub_8007A98`/`nullsub_2`**: the same conditionally-free idiom as
+`sub_8006AF4`/`sub_8006FC8`/`sub_80073BC` and another empty stub, both
+matched on the first attempt.
