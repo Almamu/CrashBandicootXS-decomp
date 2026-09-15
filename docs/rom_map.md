@@ -1764,8 +1764,32 @@ confirmed.
 
 The other genuinely-unread outside-any-bucket
 function sampled, `sub_8017348`, fits already-known conventions
-closely (the type-`0x1d`/28-byte-record family). `sub_8010F8C` and
-`sub_801DAD8` remain unread and unclassified.
+closely (the type-`0x1d`/28-byte-record family).
+
+**Follow-up resolved `sub_8010F8C`/`sub_801DAD8`, and found the "mostly
+already-bucketed" framing above was too optimistic for this specific
+slice: a full re-scan found 65 functions over 150 B genuinely absent
+from this document's prose, outside the physics/collision subsystem's
+address range** - a real, if modest, remaining gap. `sub_8010F8C`
+(378 B) is a bounds-checked, mode-selected object state machine that
+self-destructs off-screen, and its default mode reads
+**`gStaticData_0816A820`** (the shared trig table already tied to the
+minimap and the orbiting-companion actor) - a **fourth confirmed
+consumer**, computing a rotating offset - reads as a rotating/orbiting
+projectile or hazard. **`sub_801DAD8`** (336 B) is the one concrete
+new lead: a 5-case jump-table state machine where case 2 loads assets
+via `LoadTaggedAsset` twice from a new table `gStaticData_0816C5A0`
+(8-byte stride, `{asset_tag, dma_dest}`-shaped) and unconditionally
+drives 4 sub-objects via `sub_801DE04`, while case 3 is another
+`gStaticData_0816A820` rotation-math consumer - reads as a type-
+selected asset-loading/animation state machine for a multi-part
+object, plausibly a boss or major object's loader, distinct from
+anything else documented. `sub_801DE04`, `gStaticData_0816C5A0`'s full
+record layout, and `sub_801DAD8`'s own caller remain unread and would
+be the natural next step. Most of the other sampled functions
+(`sub_8014BCC`, `sub_8019324`) extend already-known conventions
+(the player-input-control family, position/collision checkers) rather
+than introducing anything new.
 
 ### Cross-checked the `UpdateGameFrame`-`MainLoop` cluster: same signature, not an island
 
