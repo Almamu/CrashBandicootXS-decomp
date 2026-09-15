@@ -1450,6 +1450,42 @@ rendering counterpart to the boss's spin/zoom effect, reinforcing the
 "closely-parallel machinery" pattern already noted between the two
 object clusters.
 
+### `sub_80331BC` closes a long-open question: the missing singleton constructor
+
+A further pass read 8 more functions. **The standout: `sub_80331BC`
+is the missing constructor for the singleton object system
+(`gUnknown_030015AC`)** - it sets a new pointer global
+`gUnknown_030015D8 = self`, initializes fields from a per-level table
+(`gStaticData_08169CE8`, same family shape as the meter-twins' tables
+but a distinct address), allocates and stores the object into
+**`gUnknown_030015AC`** itself - the singleton pointer everything in
+this session's "second singleton object" thread reads - validates the
+initial animation index, calls the already-documented per-frame
+update driver `sub_8033604` once, and finishes by setting
+**`gUnknown_030015F8=4`** - the exact lifetime counter `sub_803388C`
+decrements toward the "dead" flag. This ties the whole singleton
+thread together with a real constructor, closing a question open
+since the singleton was first found.
+
+Everything else extends already-documented families: **`sub_802B990`**/
+**`sub_802B8E8`** are two more members of the
+`gUnknown_030014A0`-`A4` accumulator sub-family - `sub_802B8E8`
+specifically is a **lazy-singleton pattern** (same style as the
+documented `gUnknown_03001308` text-box singleton) that accumulates
+`gUnknown_030014A4` into its own field, confirming that global as a
+running accumulator with its own threshold-triggered payoff (a text
+popup + sound cue at `0x2800`/10240), not just a sentinel.
+**`sub_8032B6C`** is the singleton's periodic sync/animation-select
+step, syncing a value across two mirrored globals
+(`gUnknown_030008B4`/`B8`) - a **genuinely new global family**
+(`gUnknown_0300088x`, a P1/P2-mirror-shaped pair) not previously
+catalogued, role not further characterized. `sub_8031A6C`/
+`sub_8032358` fit the `0x0817Cxxx` table family and the proximity-
+trigger family exactly. `sub_802C3E8`/`sub_8032890` (the spawn-effect
+twins, independently re-confirmed this round) compute a Manhattan-
+distance-based directional velocity split for their spawned objects -
+consistent with the earlier "homing/seek-toward-point" reading.
+
 ## Subdividing `game_loop`
 
 `game_loop`'s 112.7 KB has been one undifferentiated bucket even after
