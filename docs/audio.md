@@ -180,9 +180,12 @@ picture):
   the consuming function does.
 - **`sub_803A608` isn't really a function to characterize - it's a
   2-instruction stub (`nop; b _0803A61E`, plus a small fallback
-  zero-fill loop) sitting in front of roughly 450 bytes of genuine
-  **ARM-mode (32-bit) machine code that the disassembler never actually
-  disassembled as code**. The labels right after it
+  zero-fill loop) sitting in front of **~788 bytes** (revised up from
+  an initial ~450-byte estimate; confirmed by tracing the raw ARM
+  bytes continuously from `0x0803A630` to `0x0803A944`, where the
+  BIOS `svc` wrapper stubs below begin) of genuine **ARM-mode (32-bit)
+  machine code that the disassembler never actually disassembled as
+  code**. The labels right after it
   (`gStaticData_0803A630`, `gStaticData_0803A67C`, `gStaticData_
   0803A73C`, `gStaticData_0803A818`) mark raw bytes that decode cleanly
   as ARM instruction encodings (e.g. `60 00 2D E9` = ARM `STMFD
@@ -197,7 +200,20 @@ picture):
   positives above - not mislabeled *ownership* (GAX2 vs. generic
   helper), but a mislabeled *instruction set*, and a real gap in this
   project's disassembly coverage worth flagging for whoever eventually
-  wants a byte-exact match through this stretch.
+  wants a byte-exact match through this stretch. **Not one routine**:
+  at least 4 separate ARM function prologues appear inside the blob
+  (`STMFD sp!,{...}` shapes at `0x0803A630`, `0x0803A67C`,
+  `0x0803A73C`, `0x0803A818`), and two of the chunk boundaries carry
+  embedded ASCII tags - `"FILT"` right before the `0x0803A73C` chunk,
+  `"BART"` right before `0x0803A818` - reading like named-routine
+  markers inside a hand-written ARM-mode DSP/mixer block (plausibly
+  "filter" and some `"BART"`-tagged routine). Right after the blob,
+  `sub_803A944`/`948`/`94C` are raw BIOS `svc` wrapper stubs (`svc
+  #0xe`/`#0xc`/`#0xb` - the last is `CpuSet`), 4 bytes of real code
+  each - confirmed genuine BIOS wrappers, not further GAX2 internals,
+  and the true end of the GAX2 engine: only 12 bytes separate them
+  from `LZ77UnCompWrapper` at `0x0803A950` (see `docs/rom_map.md`'s
+  "Narrowing the GAX2 boundary" for the full boundary resolution).
 - **`sub_8039B44`** (780 B): reads a pattern/sequence pointer
   (`self+0x3C`), a note value checked against sentinel `0xFFFF8AD0`
   ("empty/no note", `self+0x2A`), and a small 0-3 index (`self+0x10`,

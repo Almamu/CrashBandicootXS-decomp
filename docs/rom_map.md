@@ -3311,6 +3311,33 @@ noting: `0x0803B074` (`GetAnimFrameData`, confirmed actor-system) falls
 *inside* the old `0x0803B0C4` upper bound entirely - further confirming
 that bound was never tight to begin with.
 
+**Follow-up pins the end boundary down to 12 bytes of slack.**
+`sub_803A5A8` is confirmed genuine GAX2 code (touches
+`gUnknown_03001630`, the GAX2 player-state object `sub_8038538`
+initializes, and dispatches through the same `self->[0]->+8`
+`play_fn`-style vtable convention `docs/audio.md` documents), running
+uninterrupted right up to the ARM-mode blob's prologue. That blob
+(`docs/audio.md`'s "`sub_803A608` isn't really a function" entry) is
+**bigger than documented - ~788 bytes, not ~450** - running
+continuously from `0x0803A630` to `0x0803A944`, and is itself genuine
+GAX2 code, not a documentation gap: it contains at least 4 separate
+ARM function prologues, two preceded by embedded ASCII tags (`"FILT"`,
+`"BART"`) reading like named-routine markers inside a hand-written
+ARM-mode DSP/mixer block. After the blob, `sub_803A944`/`948`/`94C`
+are raw BIOS `svc` wrapper stubs (`svc #0xe`/`#0xc`/`#0xb` -
+`CpuSet`), 4 bytes of real code each, confirming `docs/audio.md`'s own
+"BIOS svc wrapper stubs interleaved with genuine GAX2 code" caveat
+with concrete identities. **Net: real GAX2 code runs essentially
+uninterrupted through `0x0803A944`, with only 12 bytes of generic
+BIOS-wrapper code before `LZ77UnCompWrapper` at `0x0803A950`** - the
+true end boundary is effectively `0x0803A944`, far tighter than the
+"~630 bytes, likely more" framing above suggested. One correction this
+implies elsewhere in this document: `sub_803A94C` (cited in the
+`sub_8022BF0`/`sub_8022CA0` hardware-window-register finding as a
+register-write helper) is functionally accurate as described, but
+mechanically it's a raw BIOS `CpuSet` SWI wrapper, not a hand-written
+helper.
+
 ## Everything else
 
 The remaining small gaps between landmarks (a few hundred bytes to ~20
