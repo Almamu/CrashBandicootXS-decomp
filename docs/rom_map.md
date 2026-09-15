@@ -1544,6 +1544,41 @@ uncatalogued full-palette swap tied to this overlay-manager screen.
 None of the eight functions across both passes are entity-vtable-
 dispatched.
 
+### A per-level completion-time cascade, and a medal-table tally chain
+
+A further pass read three more functions, none entity-vtable-
+dispatched, finding a concrete link between the medal-results screen
+and a per-level counting pass. **`sub_8022F2C`** (192 B) is a
+countdown-gated periodic event trigger: on its countdown reaching 0 it
+reaches through `gUnknown_030012D0`'s triple-dereference into
+`gStaticData_084A5600` at header-relative offset **`0x8d<<2 = 0x234`**
+- a new offset, only 3 words after the already-documented `0x228`
+(`0x8a<<2`). Otherwise it falls into a nested-counter cascade
+(`self+0x9c`/`0x98`/`0x94`/`0x90`, thresholds `5`/`9`/`0x3b`/`0x63`) -
+shaped like a cascading digit counter (minutes:seconds:centiseconds),
+plausibly the per-frame timer-increment function feeding the per-level
+completion time `sub_8005D44` (the medal-award function) later reads
+via `FormatCentiseconds`; not confirmed which global it targets.
+**`sub_8024278`** (204 B) directly indexes the confirmed 36-slot medal
+table `gStaticData_0816C86C` (`+0x20 + idx*36`, matching its
+documented stride), and for each level record's list-like sub-fields
+calls **`sub_8025894`** - a tally worker walking a nested two-level
+list, dispatching a 19-case jump table on a computed sub-value, most
+cases incrementing a running counter. Reads as a per-level "count how
+many of X are satisfied/collected" tally, consuming the same medal
+table `sub_8005D44` reads - a concrete new link in the results-screen
+chain (`sub_8005D44`→`sub_8024278`→`sub_8025894`). Semantics not fully
+pinned down (plausibly a fruit/crate/collectible-percentage counter).
+
+**New structural hypothesis for the `gStaticData_084A5600` header-
+offset family**: the offsets found across several rounds (`0x18C`,
+`0x1C8`, `0x228`, `0x234`, `0x240`, `0x27C`) cluster suspiciously close
+together with small, regular gaps (`0x228`/`0x234` are only 3 words
+apart) - consistent with a genuine **word-indexed pointer array**
+(indices `0x8a`/`0x8d`/`0x90`/`0x9F` for the `<<2` family) rather than
+unrelated ad-hoc offsets. Not confirmed, but worth checking by whoever
+maps that table further.
+
 ### Continuing into the remainder: one cross-zone link, one field re-confirmed
 
 Picked up the next-biggest unread functions after the consolidation
