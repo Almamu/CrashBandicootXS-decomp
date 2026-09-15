@@ -2019,3 +2019,7 @@ other bit getters. Matched on the first attempt.
 **`sub_800734C`**: clears `self->flags` bit1 (`&= ~2`) - distinct
 from `sub_80072CC`'s bit0 clear despite the similar-looking mask.
 Same accumulator-register fix; already 4-aligned.
+
+**`sub_8007358`**: sets `self->flags` bit1 (`|= 2`) - the mirror of
+`sub_800734C`. Same accumulator-register fix, plus the usual
+trailing-padding alignment fix.
