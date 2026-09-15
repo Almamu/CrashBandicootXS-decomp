@@ -889,3 +889,20 @@ void nullsub_12(void)
 {
 }
 asm(".align 2, 0");
+
+extern void *sub_8026EDC(s32 size);
+extern void sub_8007230(void *self);
+extern u8 gStaticData_087E3BEC[];
+
+void *sub_80071E4(u16 arg0, u16 arg1, u16 arg2)
+{
+    void *obj;
+
+    obj = sub_8026EDC(0x1c);
+    *(void **)((u8 *)obj + 0x18) = gStaticData_087E3BEC;
+    sub_8007230(obj);
+    *(u16 *)((u8 *)obj + 8) = arg0;
+    *(s32 *)obj = (s32)arg1 << 8;
+    *(s32 *)((u8 *)obj + 4) = (s32)arg2 << 8;
+    return obj;
+}

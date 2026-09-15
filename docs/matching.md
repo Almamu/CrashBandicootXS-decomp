@@ -1830,3 +1830,14 @@ compiled to a compute-use-compute-use order instead of the ROM's
 compute-both-then-use-both order - fixed by pulling both shifted
 values out into named locals (`subX`/`subY`) ahead of the two
 subtractions. `nullsub_12` is the usual empty-stub alignment fix.
+
+**`sub_80071E4`**: an object constructor - allocates 0x1c bytes via
+`sub_8026EDC`, wires up a vtable-like pointer
+(`gStaticData_087E3BEC`) and calls an init function
+(`sub_8007230`), then stores its three `u16` parameters into the new
+object (one as a raw halfword, two left-shifted into fixed-point
+`s32` fields). Matched on the first attempt, including the `r8`
+push/save/restore dance for keeping `arg0` alive across both calls -
+gcc reached for `r8` on its own here (three live parameters plus the
+allocated object exceeds what r4-r7 alone can hold), no pinning
+needed - see `matching_decomp_register_pinning` memory, point 8.
