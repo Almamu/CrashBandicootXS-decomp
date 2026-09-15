@@ -1414,6 +1414,28 @@ correction that a player-pointer argument alone doesn't imply that.
 The rest (`sub_802CE5C`, `sub_802FF08`) fit already-documented shapes
 exactly.
 
+### A concrete reward trigger ties the singleton's patrol driver to a big score bonus
+
+A follow-up read six more functions, reinforcing this session's
+established lesson that a player-pointer argument must be checked
+per-function rather than assumed to imply a "player reaction."
+`sub_802AAB4` and `sub_802C0A8` genuinely don't use their player-
+pointer-shaped arguments (`sub_802AAB4` is a bounded unique-item
+dedup-set utility; `sub_802C0A8` just forwards to
+`sub_8023464(gUnknown_030012C0)`, discarding its own parameter
+entirely). `sub_802B174`/`sub_802E484` both fit the "spawn effect type
+N" family exactly - `sub_802BC68`/`sub_802F3BC`'s tiered reward-
+magnitude targets. **`sub_802F0DC` is a genuine player-reaction
+function and a concrete new tie**: called by the singleton's patrol
+driver (`sub_8033048`) with the player pointer, it writes the
+documented field-write octet already seen in
+`sub_802B7E0`/`sub_802B730`, plays a sound cue, and - conditionally -
+calls the documented achievement-spawner setter `sub_8022EA8` with
+value **`0x2710` (10000)**, a large score-shaped constant. Reads as a
+"catch/complete the singleton" reward trigger: a player-reaction
+animation paired with a big score/achievement notification - the
+concrete payoff tying the singleton system to a reward event.
+
 ## Subdividing `game_loop`
 
 `game_loop`'s 112.7 KB has been one undifferentiated bucket even after
