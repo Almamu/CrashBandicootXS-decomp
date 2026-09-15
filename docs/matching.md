@@ -2202,18 +2202,92 @@ load with two shifts; and a `struct aabb` whole-struct assignment
 matching `ldm`/`stm` block-copy the ROM uses instead of four separate
 `ldr`/`str` pairs.
 
-Every one of those fixes landed exactly - the function matches the ROM
-instruction-for-instruction except a single systematic register
-choice: `part` lands in `r6` here, where the ROM has it in `r7`,
-cascading into a 3- vs 4-register prologue/epilogue push/pop list (the
-only actual byte difference). Tried: pinning `part` directly to `r7`
-(categorically unsafe in this toolchain - see the
-`matching_decomp_register_pinning` memory, point 10: an explicit `r7`
-pin is never included in the compiled prologue's `push` list); pinning
-`dest` to `r8` vs leaving it unpinned (neither naturally shifts `part`
-onto `r7`); and blocking `r6` with a dummy pin to push the allocator
-elsewhere (didn't compile - a `(void)dummy;` statement ahead of other
-declarations violates this compiler's C89 declare-before-statement
-rule). Parked as `NON_MATCHING` rather than continue chasing one
-register letter - same call as `sub_8006600`/`sub_8000EE4`/
+Every one of those fixes landed exactly, plus a later one: casting the
+`part+0x28` flag byte through a shift-then-sign-compare
+(`if ((s32)(flags << 27) < 0)`) instead of the more obvious
+`(flags >> 4) & 1`, to get the ROM's own `lsl`/`cmp`/`bge` bit-test
+idiom instead of an `lsr`/`and`/`cmp`/`beq` one (discovered while
+matching `sub_8007B98` below - this file's first version of this
+entry incorrectly claimed the bit-tests already matched).
+
+Two differences remain. (1) `part` lands in `r6` here, where the ROM
+has it in `r7`, cascading into a 3- vs 4-register prologue/epilogue
+push/pop list. Tried: pinning `part` directly to `r7` (categorically
+unsafe in this toolchain - see the `matching_decomp_register_pinning`
+memory, point 10: an explicit `r7` pin is never included in the
+compiled prologue's `push` list); pinning `dest` to `r8` vs leaving it
+unpinned (neither naturally shifts `part` onto `r7`); and blocking
+`r6` with a dummy pin to push the allocator elsewhere (didn't compile
+- a `(void)dummy;` statement ahead of other declarations violates this
+compiler's C89 declare-before-statement rule). (2) each of the two
+bit-tests above spends one fewer anonymous register than the ROM (the
+byte load and the following `lsl` land in the same register here,
+where the ROM uses two) - the same gap documented at length in
+`sub_8007B98`'s entry below, just two instances of it instead of ten.
+Parked as `NON_MATCHING` rather than continue chasing individual
+register choices - same call as `sub_8006600`/`sub_8000EE4`/
 `sub_80073DC` above.
+
+**Parked, not matched: `sub_8007B98`** (ROM `0x08007B98`, right after
+`sub_8007B00`, in `src/graphics/actor_part.c`): the same AABB-for-
+keyframe shape as `sub_8007B00` above, for a second, differently-laid-
+out keyframe table - `offX`/`offY`/`w`/`h` sit at `rec+4`/`+6`/`+8`/
+`+9` here rather than `rec+0xc`/`+0xe`/`+0x10`/`+0x11`, reusing the
+same shared `struct aabb`. Unlike `sub_8007B00` (void), this one
+returns `dest` back to the caller - the ROM reloads `r8` into `r0`
+right before the epilogue's stack teardown, which only made sense once
+the C was given a `void *` return type and an explicit `return dest;`
+(via `return pDest;`, since `pDest` is the same value in the same
+register).
+
+Every instruction's operation, operand, and order matches the ROM
+exactly except a recurring "which anonymous scratch register" choice -
+about 10 of this function's ~73 instructions. Every case has the same
+shape: the ROM loads a byte or materializes a small immediate into one
+register, then uses a *second*, different register for the following
+shift/`ldrsh` (e.g. `ldrb r1,[r3]; lsl r0,r1,#0x1b`), while this
+reconstruction gets gcc to collapse the two into one register in place
+(`ldrb r0,[r3]; lsl r0,r0,#0x1b`) every time except one (the *second*
+`ldrsh`'s shift-amount register, which happens to land on the ROM's
+own `r5` once `w`/`h` are pinned there - see below). Also one prologue
+instruction pair (the `dest`/`part` parameter spills, `mov r8,r0`/
+`add r7,r1,#0`) compiles in the opposite order from the ROM's.
+
+Fixes that DID land exactly here: pinning `dest` to `r8` (as
+`sub_8007B00` does) was enough to naturally put `part` in `r7` this
+time (no r6/r7 problem, unlike `sub_8007B00` - the extra register
+pressure from `w`/`h` surviving across both `sub_803AFE4`/
+`sub_803AFDC` calls apparently changes the allocator's choice); pinning
+`w`/`h` to `r5`/`r6` as plain `s32` (not `u8` - a `register u8`
+pin still re-masks the value with `lsl`/`lsr` before each call,
+since the compiler can't assume a register variable's upper bits
+stay clear between statements) fixed a stray `r9` spill; reusing
+`rec`'s pinned register (`r1`) as both the keyframe-table pointer and
+the final record pointer (rather than three separate C locals) matched
+the ROM's own single-register reuse chain; pinning the `part+0x2d`
+address computation to `r2` and the loaded index byte to `r3`
+untangled the last address-chain register swap; keeping `offX`/`offY`
+as `s32` (not `s16`) and writing `offX = offX + x;` (reusing `offX`'s
+own register for the sum, matching the ROM's `adds r1,r1,r4`) instead
+of a separate `x`/`y` accumulator matched the position-add instructions
+exactly; and switching the two `part+0x28` bit-checks from
+`(flags >> N) & 1` to `(s32)(flags << (31-N)) < 0` got the `lsl`/`cmp`/
+`bge` idiom (see `sub_8007B00`'s corrected entry above) plus, as a
+side effect, put every register right except the byte-load one.
+
+Tried and didn't change the remaining ~10-instruction gap: forcing the
+first `ldrsh`'s shift-immediate into `r5` via a scoped
+`register s32 shift asm("r5") = 4;` local (gcc constant-propagates the
+literal away regardless, still picking `r0`) and via inline
+`asm("mov %0, #4" : "=r"(w))` (forces the `mov r5,#4` but then the
+compiler no longer folds the offset into the `ldrsh`'s own addressing
+mode, emitting an extra `add` instead); reordering the `pDest = dest;`
+assignment before/after/between the `part`-touching statements (only
+one specific placement - right after the `rec` assignment's first
+line but before its second - got the *order* half of the prologue
+pair right, and even that was arrived at by trial, not a general
+technique); and folding away intermediate locals (`tablePtr`, `offset`)
+to change gcc's internal scratch-register counter, which sometimes
+helped one spot and broke another already-matching one. Parked as
+`NON_MATCHING` rather than keep chasing individual register letters -
+same call as `sub_8007B00` and the other parked functions above.

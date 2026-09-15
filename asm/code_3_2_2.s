@@ -89,6 +89,12 @@ _08007B7E:
 
 .endif
 
+@ sub_8007B98 is reconstructed (extremely close, but not yet
+@ byte-matching) as C in src/graphics/actor_part.c, guarded by
+@ #if NON_MATCHING - this raw version is used only for the real
+@ byte-matching build. See docs/matching.md, "Parked, not matched:
+@ sub_8007B98".
+.if NON_MATCHING == 0
 	thumb_func_start sub_8007B98
 sub_8007B98: @ 0x08007B98
 	push {r4, r5, r6, r7, lr}
@@ -167,6 +173,8 @@ _08007C14:
 	pop {r1}
 	bx r1
 	.align 2, 0
+
+.endif
 
 	thumb_func_start sub_8007C30
 sub_8007C30: @ 0x08007C30

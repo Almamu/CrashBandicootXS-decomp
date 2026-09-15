@@ -67,3 +67,9 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   systematic register choice (`part` lands in r6 here vs the ROM's r7,
   cascading into a 3- vs 4-register push/pop list) - see
   `docs/matching.md`, "Parked, not matched: `sub_8007B00`".
+- **`sub_8007B98`** (`src/graphics/actor_part.c`) - the same AABB-for-
+  keyframe shape as `sub_8007B00`, for a second, differently-laid-out
+  keyframe table. Matches the ROM's operations/order throughout except
+  a recurring "which anonymous scratch register" choice (about 10 of
+  73 instructions) - see `docs/matching.md`, "Parked, not matched:
+  `sub_8007B98`".

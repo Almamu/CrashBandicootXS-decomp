@@ -135,17 +135,21 @@ struct aabb {
  * dimensions instead of a text pointer. `part+0x28` bits 4/5 mirror
  * the AABB horizontally/vertically around `part`'s own position.
  *
- * NOT YET BYTE-MATCHING, but extremely close: every single
- * instruction's operation and order matches the ROM exactly except
- * one - `part` lands in r6 here instead of the ROM's r7, cascading
- * into a 3- vs 4-register push/pop list. Tried pinning `part` to r7
- * directly (categorically unsafe in this toolchain - see
- * `matching_decomp_register_pinning` memory, point 10: r7 pins never
- * make it into the prologue's push list), pinning `dest` to r8 vs
- * leaving it unpinned (both tried, neither naturally shifts `part`
- * onto r7), and blocking r6 with a dummy pin to force the allocator
- * elsewhere (didn't compile as attempted). Parked rather than continue
- * chasing one specific register choice - same pattern as
+ * NOT YET BYTE-MATCHING, but close: every instruction's operation and
+ * order matches the ROM exactly except two things. (1) `part` lands in
+ * r6 here instead of the ROM's r7, cascading into a 3- vs 4-register
+ * push/pop list - tried pinning `part` to r7 directly (categorically
+ * unsafe in this toolchain - see `matching_decomp_register_pinning`
+ * memory, point 10: r7 pins never make it into the prologue's push
+ * list), pinning `dest` to r8 vs leaving it unpinned (both tried,
+ * neither naturally shifts `part` onto r7), and blocking r6 with a
+ * dummy pin to force the allocator elsewhere (didn't compile as
+ * attempted). (2) the two `part+0x28` bit-checks each spend one extra
+ * anonymous-register choice compiling the byte load and the following
+ * shift into the same register instead of the ROM's two (see
+ * `sub_8007B98` below, which has several more instances of this same
+ * "which scratch register" gap). Parked rather than continue chasing
+ * individual register choices - same pattern as
  * `sub_80073DC`/`sub_8006600`/`sub_8000EE4`. */
 void sub_8007B00(void *dest, void *part)
 {
@@ -178,13 +182,98 @@ void sub_8007B00(void *dest, void *part)
     sub_803AFE4(buf, x, y);
     sub_803AFDC(buf, w, h);
 
-    if ((*((u8 *)part + 0x28) >> 4) & 1) {
-        buf[0] = (*(s32 *)part >> 8) * 2 - (buf[0] + buf[2]);
+    {
+        u8 flags = *((u8 *)part + 0x28);
+        if ((s32)(flags << 27) < 0) {
+            buf[0] = (*(s32 *)part >> 8) * 2 - (buf[0] + buf[2]);
+        }
     }
-    if ((*(vu8 *)((u8 *)part + 0x28) >> 5) & 1) {
-        buf[1] = (*(s32 *)((u8 *)part + 4) >> 8) * 2 - (buf[1] + buf[3]);
+    {
+        u8 flags = *(vu8 *)((u8 *)part + 0x28);
+        if ((s32)(flags << 26) < 0) {
+            buf[1] = (*(s32 *)((u8 *)part + 4) >> 8) * 2 - (buf[1] + buf[3]);
+        }
     }
 
     *pDest = buf_;
+}
+#endif /* NON_MATCHING */
+
+#if NON_MATCHING
+/* Same AABB-for-keyframe shape as sub_8007B00 above, for a second,
+ * differently-laid-out keyframe table (offX/offY/w/h sit at rec+4/+6/+8/+9
+ * here, not rec+0xc/+0xe/+0x10/+0x11) - reusing the shared `struct aabb`.
+ * Also returns `dest` back to the caller (the ROM reloads r8 into r0
+ * right before the epilogue), unlike sub_8007B00 which is void.
+ *
+ * NOT YET BYTE-MATCHING, but extremely close: every instruction's
+ * operation, operand, and order matches the ROM exactly except a
+ * recurring "which anonymous scratch register" choice - about 10 of
+ * this function's ~73 instructions. Every case is the same shape: the
+ * ROM loads a byte/materializes a small immediate into one register
+ * then uses a SECOND register for the following shift/ldrsh (e.g.
+ * `ldrb r1,[r3]; lsl r0,r1,#0x1b`), while this reconstruction has gcc
+ * collapse the two into one register in place (`ldrb r0,[r3]; lsl
+ * r0,r0,#0x1b`). Also one prologue instruction pair
+ * (`mov r8,r0`/`add r7,r1,#0`, the dest/part parameter spills) compiles
+ * in the opposite order from the ROM's. Tried reordering the C
+ * statements that produce each pair, scoped register pins for the
+ * scratch value, and folding/unfolding intermediate locals - none
+ * changed gcc's internal scratch-register counter for these spots (the
+ * same category of resistant issue as sub_8007B00's r6-vs-r7 and
+ * sub_80073DC's stack-spill differences above). Parked rather than
+ * keep chasing individual register letters. */
+void *sub_8007B98(void *dest, void *part)
+{
+    register struct aabb *pDest asm("r8");
+    struct aabb buf_;
+    s32 *buf = (s32 *)&buf_;
+    register void *rec asm("r1");
+    void *rec4;
+    register u8 *addr asm("r2");
+    register u8 idx asm("r3");
+    s32 offset;
+    s32 offX, offY;
+    register s32 w asm("r5");
+    register s32 h asm("r6");
+    s32 x, y;
+
+    pDest = dest;
+    rec = *(void ***)((u8 *)part + 0x20);
+    addr = (u8 *)part + 0x2d;
+    idx = *addr;
+    offset = idx * 0x1c;
+    rec = *(void **)rec;
+    rec = (u8 *)rec + offset;
+    rec4 = (u8 *)rec + 4;
+
+    x = *(s32 *)part >> 8;
+    offX = *(s16 *)((u8 *)rec + 4);
+    y = *(s32 *)((u8 *)part + 4) >> 8;
+    w = 2;
+    offY = *(s16 *)((u8 *)rec4 + w);
+    w = *((u8 *)rec4 + 4);
+    h = *((u8 *)rec4 + 5);
+
+    offX = offX + x;
+    offY = offY + y;
+    sub_803AFE4(buf, offX, offY);
+    sub_803AFDC(buf, w, h);
+
+    {
+        u8 flags = *((u8 *)part + 0x28);
+        if ((s32)(flags << 27) < 0) {
+            buf[0] = (*(s32 *)part >> 8) * 2 - (buf[0] + buf[2]);
+        }
+    }
+    {
+        u8 flags = *(vu8 *)((u8 *)part + 0x28);
+        if ((s32)(flags << 26) < 0) {
+            buf[1] = (*(s32 *)((u8 *)part + 4) >> 8) * 2 - (buf[1] + buf[3]);
+        }
+    }
+
+    *pDest = buf_;
+    return pDest;
 }
 #endif /* NON_MATCHING */
