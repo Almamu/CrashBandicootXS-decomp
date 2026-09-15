@@ -415,8 +415,12 @@ it currently sits inside a still-unlabeled stretch between
 `gStaticData_0816C6A4` and `gStaticData_0816C814` (0x170 bytes, only
 partially covered by the confirmed 0x94-byte pointer run - the rest is
 still-unidentified neighboring data, quite possibly more fields of the
-same per-level record). This substantially upgrades what that whole
-data family actually is: not just scalar per-level *parameters*
+same per-level record) - **later confirmed as exactly right: see
+"Major correction: there is no second table" further down this
+document - this whole 0x170-byte block is one unified 92-slot
+function-pointer array, of which this 31-entry run is one segment.**
+This substantially upgrades what that whole data family actually is:
+not just scalar per-level *parameters*
 (offsets, thresholds) as `game_loop`'s investigation described it, but
 a **richer per-level descriptor that also selects a level-specific
 text/dialog display function** - one shared structure feeding
@@ -2902,6 +2906,50 @@ anyone continuing `graphics_loading`'s investigation: the "71 unread
 functions" figure overstates how many genuinely independent unknowns
 remain, but understates how much of a still-unmapped dispatch table
 sits right next to the one already fully characterized.
+
+### Major correction: there is no second table - `menu_ui`'s dispatch table and the 15-slot trigger-effect table are two segments of one unified ~92-slot array
+
+A follow-up fork checked the "second dispatch table" hypothesis
+directly and found it's wrong in a useful way: **there is no separate
+second table next door - `menu_ui`'s already-confirmed 31-entry
+dispatch table and the fully-mapped 15-slot trigger-effect table are
+two segments of one single, longer, 92-slot plain function-pointer
+array**, occupying the *entire* `gStaticData_0816C6A4` block
+(`0x0816C6A4`-`0x0816C814`, `0x170`/368 bytes = `92*4`) - exactly the
+"partially covered, rest still-unidentified" block flagged back when
+`menu_ui`'s table was first found. The earlier "77 candidates in 968
+bytes" figure was mis-scoped: the range `0x0816C400`-`0x0816C6A4`
+scanned alongside it is **not part of this table at all** - it's a run
+of already-labeled, unrelated small per-level tables (thresholds, a
+velocity-shift table, palette-adjacent tables, the documented
+`gStaticData_0816C644`/`674` centering-preset pair); zero pointer-
+shaped hits there when dumped directly.
+
+**All 92 words inside `gStaticData_0816C6A4` are valid ROM code
+pointers** - a plain array, no `{0,ptr}` pairing. 30 of them (the
+previously-uncharacterized leading ~40-slot segment,
+`0x0816C6A4`-`0x0816C740`) were cross-checked against
+`asm/code_3_2.s`: 28/30 matched real function starts exactly, the
+other 2 matched genuine no-op stubs (`nullsub_21`/`nullsub_22`) -
+`nullsub_21`'s address recurs as a shared fallback slot **8 times**
+across the table, the same "shared no-op fallback" convention already
+documented for the 42-slot action table. **One slot of this new
+leading segment was read: `sub_801E990`** - takes 3 Q8.8-shifted x/y/z
+args, checks the level-type enum via the documented `sub_80232F4`,
+packs bits into `gUnknown_030012D8+0x28`, writes the position into
+`gUnknown_030012D8`'s target - a position/state-write handler on the
+hot camera/viewport struct, structurally consistent with being another
+slot family in the same table, distinct from both the menu-text and
+trigger-effect segments.
+
+**Net picture**: one unified ~92-slot table - ~31 slots the documented
+`menu_ui` text/dialog handlers, 15 slots the documented trigger-effect
+spawners, and ~40 leading slots (starting `sub_801E990`) a newly-found,
+not-yet-individually-characterized segment reading from
+`gUnknown_030012D8`/`gUnknown_030012C0`. The "~50 spawner-family
+functions referencing `gUnknown_030012D0`" found in the section above
+are very likely largely drawn from this same combined table's various
+segments, not evidence of yet another distinct table elsewhere.
 
 **`sub_802364C`** (8 B): a trivial wrapper, `sub_8022468(self, 2)` -
 confirms `sub_8022468`'s second parameter is a context/mode selector, as
