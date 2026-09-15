@@ -2041,3 +2041,7 @@ chosen mnemonic for a zero halfword, not a literal `adds r0, r0, #0`
 already zero-fills correctly here - no explicit padding fix was
 actually needed. Lesson: always confirm a disassembly gotcha against
 the raw ROM bytes, not just against how a tool chose to render them.
+
+**`sub_8007388`**: a thin wrapper unpacking a 2-`s32`-field pointer
+argument and forwarding to `sub_800737C`. Matched on the first
+attempt.

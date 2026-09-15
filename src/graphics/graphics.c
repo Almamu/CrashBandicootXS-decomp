@@ -1207,3 +1207,8 @@ void sub_800737C(struct actor *self, s32 arg1, s32 arg2)
     self->y = arg2 << 8;
 }
 asm(".align 2, 0");
+
+void sub_8007388(struct actor *self, s32 *arg1)
+{
+    sub_800737C(self, arg1[0], arg1[1]);
+}
