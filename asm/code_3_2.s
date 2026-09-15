@@ -2,6 +2,11 @@
 
 .syntax unified
 .arm
+@ sub_80073DC is reconstructed (but not yet byte-matching) as C in
+@ src/graphics/graphics.c, guarded by #if NON_MATCHING - this raw version is
+@ used only for the real byte-matching build. See docs/matching.md,
+@ "Parked, not matched: sub_80073DC".
+.if NON_MATCHING == 0
 	thumb_func_start sub_80073DC
 sub_80073DC: @ 0x080073DC
 	push {r4, r5, r6, r7, lr}
@@ -295,6 +300,8 @@ _08007624: .4byte 0xFFFFFC00
 _08007628: .4byte gUnknown_03001300
 _0800762C: .4byte gUnknown_030012FC
 _08007630: .4byte 0x00FFFFFF
+
+.endif
 
 	thumb_func_start sub_8007634
 sub_8007634: @ 0x08007634

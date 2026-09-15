@@ -1247,3 +1247,136 @@ void sub_80073BC(struct actor *self, u32 arg1)
         sub_8026ED0(self);
     }
 }
+
+extern void *sub_80083B8(void *part);
+extern s32 sub_80083A8(void *part);
+extern s32 sub_8006C84(struct vram_upload_cursor *self, void *src, s32 size);
+extern struct vram_upload_cursor *gUnknown_030012FC;
+extern struct oam_shadow_buffer *gUnknown_03001300;
+extern u8 gStaticData_0816B2E0[];
+extern u8 gStaticData_0816B2EC[];
+
+#if NON_MATCHING
+/* `part` is a bigger, not-yet-understood object whose first bytes
+ * likely overlap struct actor's layout (it shares the same
+ * "field+0x18 table pointer" convention at the same offset) but
+ * extends past struct actor's 0x1c-byte size (fields at +0x28/+0x29
+ * are read here) - kept as raw offsets rather than guessing a wider
+ * struct. `info` (the sub_80083B8 return value) is a small per-part
+ * record: an array of {s16 x, s16 y} offset pairs, a parallel array
+ * of per-piece record ids, and a packed u32 (low 24 bits added to the
+ * VRAM upload source address, top byte the loop count) - also kept
+ * raw for the same reason.
+ *
+ * Builds one combined OAM word pair per visible sub-piece of an
+ * animated part - attr0 (low 16 bits) and attr1 (high 16 bits) packed
+ * into one u32, attr2 (low 16) and padding (high 16) into a second
+ * u32, matching the format sub_8006AC8's arg1[0]/arg1[1] expects -
+ * and queues each through sub_8006AC8, accumulating a total VRAM tile
+ * byte count queued once through sub_8006C84 at the end.
+ *
+ * NOT YET BYTE-MATCHING: the logic/instruction *shape* is confirmed
+ * right (every AND/OR/shift constant, branch condition, and call
+ * argument lines up with the ROM one-for-one), but the ROM keeps
+ * several more values on the stack (a 0x1c-byte frame: `posPtr` and
+ * the `part+0x28` flags-byte pointer both get their own spilled slots
+ * there) that gcc here keeps in registers instead, given fewer
+ * simultaneously-live locals than whatever the true source's shape
+ * was - this cascades into register-letter differences through most
+ * of the per-piece loop body. Closing this would mean reverse-
+ * engineering the exact original local-variable/statement shape that
+ * produces that specific register pressure, which multiple structural
+ * rewrites (splitting/merging the field-pack blocks, forcing `posPtr`/
+ * `flagsPtr` through pinned locals) didn't converge on - parked here,
+ * same as `sub_8006600` (`src/graphics/oam_count.c`) and `sub_8000EE4`
+ * (`src/graphics/text_layout.c`), with the checked-in matching
+ * assembly (`asm/code_3_2.s`) used otherwise. */
+void sub_80073DC(void *unused, void *part, s32 *posPtr)
+{
+    u32 oamBuf[2];
+    void *info;
+    s32 tileByteCount;
+    s32 tileOffsetAccum;
+    u8 *flagsPtr;
+    s32 i, count;
+    s32 arrOffset;
+
+    tileOffsetAccum = 0;
+    info = sub_80083B8(part);
+    tileByteCount = sub_8006C44(gUnknown_030012FC);
+
+    oamBuf[0] &= 0xFFFFFCFF;
+    flagsPtr = (u8 *)part + 0x28;
+    {
+        u8 fb = *flagsPtr;
+        oamBuf[0] &= 0xFFFFF3FF;
+        oamBuf[0] |= (fb & 3) << 10;
+        oamBuf[0] &= 0xFFFFEFFF;
+        oamBuf[0] |= ((fb >> 2) & 1) << 12;
+        oamBuf[0] &= 0xFFFFDFFF;
+        oamBuf[0] |= ((fb >> 3) & 1) << 13;
+    }
+
+    {
+        void *table = *(void **)((u8 *)part + 0x18);
+        void *tableEntry = (u8 *)table + 0x58;
+        void *rec = sub_803AD7C((u8 *)part + *(s16 *)tableEntry, *(void **)((u8 *)tableEntry + 4));
+        u16 recVal = (u16)(s32)rec;
+        oamBuf[1] &= 0xFFFFF3FF;
+        oamBuf[1] |= (recVal & 3) << 10;
+    }
+    {
+        u8 fb2 = *((u8 *)part + 0x29);
+        oamBuf[1] &= 0xFFFF0FFF;
+        oamBuf[1] |= (fb2 & 0xF) << 12;
+    }
+
+    count = *((u8 *)info + 0xb);
+    for (i = 0, arrOffset = 0; i != count; i++, arrOffset += 4) {
+        u8 recordId = *((u8 *)info + 4 + i) & 0xF;
+        u8 w = gStaticData_0816B2E0[recordId];
+        u8 h = gStaticData_0816B2EC[recordId];
+        s16 *offPair = (s16 *)((u8 *)*(void **)info + arrOffset);
+        s32 y, x;
+
+        if ((*flagsPtr >> 5) & 1) {
+            y = posPtr[1] - h - offPair[1];
+        } else {
+            y = posPtr[1] + offPair[1];
+        }
+
+        if (y + h > 0 && y <= 0x9f) {
+            if ((*flagsPtr >> 4) & 1) {
+                x = posPtr[0] - w - offPair[0];
+            } else {
+                x = posPtr[0] + offPair[0];
+            }
+
+            if (x + w > 0 && x <= 0xef) {
+                oamBuf[0] &= 0xFFFFFF00;
+                oamBuf[0] |= (u8)y;
+                oamBuf[0] &= 0xFFFF3FFF;
+                oamBuf[0] |= ((recordId >> 2) & 3) << 14;
+                x &= 0x1FF;
+                oamBuf[0] &= 0xFE00FFFF;
+                oamBuf[0] |= x << 16;
+                oamBuf[0] &= 0x3FFFFFFF;
+                oamBuf[0] |= (recordId & 3) << 30;
+
+                sub_8006AC8(gUnknown_03001300, oamBuf);
+            }
+        }
+
+        {
+            s32 tileCount = (w >> 3) * (h >> 3);
+            if ((*flagsPtr >> 3) & 1) {
+                tileCount <<= 1;
+            }
+            tileByteCount += tileCount;
+            tileOffsetAccum += tileCount << 5;
+        }
+    }
+
+    sub_8006C84(gUnknown_030012FC, (void *)(sub_80083A8(part) + (*(u32 *)((u8 *)info + 8) & 0xFFFFFF)), tileOffsetAccum);
+}
+#endif /* NON_MATCHING */

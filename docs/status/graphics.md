@@ -48,3 +48,10 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   from two small codegen details (incoming-argument spill ordering, and a
   couple of loop-bound comparisons compiling one instruction shorter than
   the ROM's) - see `docs/matching.md`, "Parked, not matched: `sub_8000EE4`".
+- **`sub_80073DC`** (`src/graphics/graphics.c`) - builds and queues one
+  OAM entry per visible sub-piece of an animated part, plus a combined
+  VRAM tile upload. Logic/instruction shape confirmed correct (every
+  AND/OR/shift constant and branch condition matches the ROM), but the
+  ROM spills more locals to its stack frame than gcc does here, causing
+  register-letter differences through most of the per-piece loop - see
+  `docs/matching.md`, "Parked, not matched: `sub_80073DC`".

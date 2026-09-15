@@ -2065,3 +2065,50 @@ first attempt.
 conditionally frees `self` if `arg1 & 1` - the same
 "conditionally-free" idiom as `sub_8006AF4`/`sub_8006FC8`. Matched on
 the first attempt.
+
+**Parked, not matched: `sub_80073DC`** (ROM `0x080073DC`, right after
+`sub_80073BC`). A ~600-byte function building one OAM entry per
+visible sub-piece of an animated `part` object, plus queuing a
+combined VRAM tile upload for the whole part. `part` shares
+`struct actor`'s "field+0x18 table pointer" convention at the same
+offset but extends past its 0x1c-byte size (fields read at `+0x28`/
+`+0x29`) - kept as raw offsets rather than guessing a wider struct.
+`info` (`sub_80083B8(part)`'s return) is a small per-part record: an
+array of `{s16 x, s16 y}` offset pairs, a parallel byte array of
+per-piece record ids, and a packed `u32` whose low 24 bits get added
+to the VRAM upload source address and whose top byte is the loop
+count - also kept raw.
+
+The function builds two combined 32-bit words matching the layout
+`sub_8006AC8`'s `arg1[0]`/`arg1[1]` expects: `oamBuf[0]` packs
+OAM attr0 (low 16 bits: Y in bits 0-7, obj mode forced to 0 in bits
+8-9, gfx mode in bits 10-11, mosaic in bit 12, color mode in bit 13,
+shape in bits 14-15) and attr1 (high 16 bits: X in bits 16-24, size in
+bits 30-31) into *one* word; `oamBuf[1]` packs attr2 (priority in bits
+10-11, palette in bits 12-15) into its low half. The gfx-mode/mosaic/
+color-mode/priority/palette bits are computed once before the loop and
+persist across iterations (only Y/shape/X/size get rewritten per
+visible piece); a `w`/`h` lookup via two 16-entry tables
+(`gStaticData_0816B2E0`/`gStaticData_0816B2EC`, indexed by the low 4
+bits of each piece's record id) drives both the on-screen Y/X
+visibility bounds check (screen height 0x9f/160, width 0xef/240) and
+the accumulated VRAM tile byte count (`(w>>3)*(h>>3)` tiles, doubled
+if a flag bit is set, `*32` for byte count) queued once via
+`sub_8006C84` after the loop.
+
+NOT YET BYTE-MATCHING: every AND/OR/shift constant, branch condition,
+and call argument confirmed to line up with the ROM one-for-one (the
+logic/instruction *shape* is right), but the ROM's true stack frame is
+0x1c bytes and spills `posPtr` and the cached `part+0x28` flags-byte
+pointer to their own slots there, while this reconstruction's smaller
+local-variable footprint lets gcc keep both in registers instead -
+this cascades into register-letter differences through most of the
+per-piece loop body. Multiple structural rewrites (splitting/merging
+the field-pack blocks into separate statements, an explicit
+`u32 oamBuf[2]` array to force the OAM words onto the stack instead of
+scalar locals gcc kept in registers - which *did* fix the OAM-word
+storage location to match) didn't converge on the exact original
+local-variable shape needed to reproduce the rest of the stack layout.
+Compiled only under `NON_MATCHING`, with the checked-in matching
+assembly (`asm/code_3_2.s`, guarded by `.if NON_MATCHING == 0`) used
+otherwise - same pattern as `sub_8006600`/`sub_8000EE4` above.
