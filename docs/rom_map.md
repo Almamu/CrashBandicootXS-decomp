@@ -1619,6 +1619,14 @@ apart) - consistent with a genuine **word-indexed pointer array**
 unrelated ad-hoc offsets. Not confirmed, but worth checking by whoever
 maps that table further.
 
+**Confirmed and sharpened by a direct ROM dump - see the dedicated
+`gStaticData_084A5600` section further down this document** ("Follow-
+up: the body is not a flat record array...") for the full resolution:
+it's a dense array of 12-byte `{ptr_A, ptr_B, u16_count}` records
+starting at record 0, and all 9 "header-relative offsets" found across
+this document are just hardcoded record-index literals into that same
+array.
+
 ### Resolved `category_descriptor.sub_effect_table`'s record layout, and five more extensions
 
 A further pass read six more functions in this cluster, none showing
@@ -2814,6 +2822,32 @@ resolved past "an object-spawn seed pointer." Confidence: high on the
 offset/dereference chains (read directly); medium on the "pickup/
 effect spawner" semantic label (object type not independently
 confirmed).
+
+**Final resolution - corrects the "several distinct sub-structures"
+framing above: it's one dense, uniform record array, not several
+differently-shaped sub-structures.** A direct ROM dump of the "first
+real record" base (`table_base = 0x084A5610`) across word indices
+`0x00`-`0xA5`+ shows **every 3-word group fits the same shape**: words
+0 and 1 are both ROM pointers (`0x084axxxx`-`0x084bxxxx`, increasing,
+word 1 > word 0 by a variable gap - variable-length data per record),
+and word 2 is always `0x000N0000` (a `u16` count packed into the upper
+half). This is a dense array of **12-byte `{ptr_A, ptr_B, u16_count}`
+records, starting at record 0, zero gaps** - and every one of the 9
+"header-relative offsets" found across this document (`0xd8`, `0x18C`,
+`0x1C8`, `0x210`, `0x21C`, `0x228`, `0x234`, `0x240`, `0x27C`) divides
+evenly by 12 - they're records **18, 33, 38, 44, 45, 46, 47, 48, 53**
+respectively, not scattered ad-hoc offsets: each consumer function is
+simply hardcoded to a fixed record-index literal, exactly matching
+`sub_8025BAC`'s already-documented `param1*12` runtime-indexed access
+to the same array. (The `sub_801E04C`/28-byte-record finding above
+still stands as real - record 48's `ptr_A`/`ptr_B` themselves point to
+a *further* array of 28-byte sub-records, a second, nested table -
+just not evidence of a differently-shaped *top-level* record.) Given
+the 729 KB body, this array plausibly holds thousands of 12-byte
+records - almost certainly per-level or per-feature "content
+descriptor" records (a variable-length data span between `ptr_A`/
+`ptr_B`, with `count` giving an element count). Confidence: high - the
+byte pattern is unambiguous across ~54 sampled records.
 
 ## Narrowing the GAX2 boundary
 
