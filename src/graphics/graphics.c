@@ -596,3 +596,55 @@ void sub_8006FB4(struct tile_asset_cache *self)
     asm volatile("add %0, %1, %2" : "=r"(dirtyAddr) : "r"(self), "r"(offset));
     *dirtyAddr = 0;
 }
+
+void sub_8006FC8(void *arg0, u32 arg1)
+{
+    if (arg1 & 1) {
+        sub_8026ED0(arg0);
+    }
+}
+
+void nullsub_1(void)
+{
+}
+asm(".align 2, 0");
+
+extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
+extern void *gUnknown_03001308;
+
+/* `self`'s own layout isn't tied to a named struct yet - raw offsets,
+ * matching the many similar actor-zone functions docs/rom_map.md
+ * documents this session using the same "field+0x18 -> {s16 offset;
+ * ...; void *text}" convention.
+ *
+ * `pSelf` is pinned to r2: this function makes a call, and plain C
+ * phrasing left `self` in r3 instead of the ROM's r2 (tried, rebuilt,
+ * confirmed different - see docs/matching.md, "Matching decompilation"). */
+u8 sub_8006FE4(void *self)
+{
+    register void *pSelf asm("r2") = self;
+    s32 buf[4];
+    void *subObj;
+    void *table;
+    s32 a, b, c, d;
+    u8 flag;
+
+    flag = (*((u8 *)pSelf + 0xc) >> 4) & 1;
+    if (!flag) {
+        a = 0xdc << 9;
+        b = 0x8c << 9;
+        buf[2] = a;
+        buf[3] = b;
+
+        subObj = *(void **)((u8 *)gUnknown_03001308 + 0x10);
+        c = (*(s32 *)subObj << 8) + (s32)0xFFFF9C00;
+        d = (*(s32 *)((u8 *)subObj + 4) << 8) + (s32)0xFFFFC400;
+        buf[0] = c;
+        buf[1] = d;
+
+        table = *(void **)((u8 *)pSelf + 0x18);
+        table = (u8 *)table + 0x40;
+        flag = (u8)sub_803AD80((u8 *)pSelf + *(s16 *)table, buf, *(void **)((u8 *)table + 4));
+    }
+    return flag;
+}

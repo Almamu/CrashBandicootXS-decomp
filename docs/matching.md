@@ -1698,3 +1698,42 @@ address). One genuinely new fact caught only by compiling and diffing:
 the ROM's `lsls r1,r1,#0x10; lsrs r7,r1,#0x10` is the truncation a
 16-bit parameter forces on its incoming (possibly dirty-upper-bits)
 register, absent entirely once the parameter was declared `u16`.
+
+**`sub_8006FC8`/`nullsub_1`**: `sub_8006FC8` is a small mirror of the
+already-matched `sub_8006AF4` (conditionally frees `arg0` based on an
+odd/even flag in `arg1`), matched on the first attempt.  `nullsub_1` is
+an empty stub whose 2-byte body isn't 4-aligned - the same
+NOP-vs-zero-fill padding gotcha documented at the top of this file -
+fixed with `asm(".align 2, 0");` right after the function.
+
+**`sub_8006FE4`**: an actor-zone dispatch function (still
+struct-less, raw `self` offsets - the `field+0x18 -> {s16 offset; ...;
+void *text}` shape docs/rom_map.md has been seeing repeatedly in this
+zone) that early-returns a flag byte or otherwise builds a 4-word
+buffer and tail-calls `sub_803AD80(self + offset, buf, text)`. Two
+real bugs surfaced only by compiling and diffing against the ROM
+bytes: an extra dereference on `gUnknown_03001308` (the bare global
+name already yields the stored pointer - no further `*` needed) and a
+*missing* dereference on `self + 0x18` (that field itself holds a
+pointer to another struct - `ldr r1, [r2, #0x18]` is a real load, not
+pointer arithmetic). After those two fixes the function still ran two
+instructions long, for two independent reasons:
+- `self` landed in r3 under plain C phrasing where the ROM keeps it in
+  r2 throughout (the function makes one call, so gcc was otherwise
+  free to choose) - fixed with a `register void *pSelf asm("r2")` pin.
+- The 3rd call argument (`text`) computed into a scratch register
+  before argument-shuffling, adding an extra `add r2, r3, #0` the ROM
+  doesn't have. Passing the two dereferences directly as call-argument
+  expressions instead of through named locals let gcc load `text`
+  straight into r2, matching the ROM exactly - this is the opposite of
+  the "split into ordered locals" technique above: here inlining the
+  expressions, not splitting them out, is what fixed the operand
+  order.
+- Separately, restructuring from two early-return statements into a
+  single shared `u8 result` variable/`if`-`else`/one final `return`
+  let both control-flow paths converge on the ROM's own trick: the
+  early-return path's flag byte is already sitting in the same
+  register (r1) that the truncated call result lands in on the main
+  path, so the shared tail (`adds r0, r1, #0`) serves both paths with
+  no branch instruction needed to skip it - two separate `return`
+  statements had cost an extra unconditional `b`.
