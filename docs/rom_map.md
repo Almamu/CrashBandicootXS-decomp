@@ -2763,6 +2763,40 @@ this table mixes at least five genuinely different response types
 under one dispatch mechanism, more heterogeneous than first
 characterized.
 
+### The "71 unread functions" are mostly one family, and there's a much bigger dispatch table next door
+
+A follow-up fork checked what the rest of `graphics_loading`'s 71-
+function remainder actually is. **~50 of the 71 reference
+`gUnknown_030012D0`** (the triple-dereference into
+`gStaticData_084A5600`'s confirmed 12-byte-record array) - essentially
+the whole remainder, not a grab-bag of independent unknowns. Five
+samples read in full confirm two known shapes recur widely: a
+sprite/effect spawner (`sub_801EA5C`, record index 37, spawns via
+`sub_8008434` instead of the usual `sub_8009ED0`, then the standard
+OAM trio) and, more strikingly, **several more near-identical
+siblings of the two-line-text-popup spawner** (the 15-slot table's
+slot 0, `sub_8020D4C`) - `sub_802062C` (record 23) and `sub_8020788`
+(record 22) share its exact shape (`sub_8009ED0` → two `sub_803AD80`
+calls via `sub_800CA74`, a `gUnknown_030012B4`-bit-selected pair of
+tables) but each with its own distinct record index and table pair -
+a **family of many near-identical popup spawners**, not one instance.
+
+**Bigger finding: 4 of 4 sampled functions in this remainder are
+entity-vtable-dispatched**, at ROM addresses `0x0816C6C0`-`0x0816C7A8`
+- sitting **immediately before** the already-fully-mapped 15-slot
+dispatch table at `gStaticData_0816C7D8`. A quick scan of that
+preceding 968-byte range (`0x0816C400`-`0x0816C7D8`) for thumb-bit-set
+pointer-shaped words found **77 candidates** - strongly suggesting a
+second, considerably larger dispatch table sits right next to the
+known 15-slot one, likely encompassing most of this ~50-function
+spawner family. Not yet confirmed - the exact word-by-word table
+boundary and a cross-check of each candidate pointer against a real
+function start remain open. This is the natural next thread for
+anyone continuing `graphics_loading`'s investigation: the "71 unread
+functions" figure overstates how many genuinely independent unknowns
+remain, but understates how much of a still-unmapped dispatch table
+sits right next to the one already fully characterized.
+
 **`sub_802364C`** (8 B): a trivial wrapper, `sub_8022468(self, 2)` -
 confirms `sub_8022468`'s second parameter is a context/mode selector, as
 suspected. **`sub_8023658`**: calls `sub_8022468(self, 1)` then
