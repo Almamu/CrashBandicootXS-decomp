@@ -1865,3 +1865,8 @@ fields - the flag-byte math needed real register pinning:
   register roles.
 - 44-byte body, not 4-aligned - the usual trailing
   `asm(".align 2, 0")` fix.
+
+**`sub_800725C`**: another small constructor-style helper, wiring up
+the same `gStaticData_087E3BEC` vtable pointer and calling
+`sub_8007230` on an already-allocated object (rather than allocating
+one itself, unlike `sub_80071E4`). Matched on the first attempt.

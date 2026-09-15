@@ -949,3 +949,10 @@ void sub_8007230(void *self)
     *((u8 *)self + 0x15) = 1;
 }
 asm(".align 2, 0");
+
+void *sub_800725C(void *self)
+{
+    *(void **)((u8 *)self + 0x18) = gStaticData_087E3BEC;
+    sub_8007230(self);
+    return self;
+}
