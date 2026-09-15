@@ -84,10 +84,12 @@ For each entry in `tools/report_units.py`'s address table:
   address regardless (it was only ever parked, never extracted), so
   slicing still works unmodified once the address table accounts for it.
 - Still-fully-raw stretches (nothing matched there yet) get a unit with
-  only a target (the frozen slice) and no base and no category - they
-  count toward the *overall* total, correctly showing as unmatched, but
-  aren't attributed to graphics/util/system since nothing there has been
-  triaged yet (see "Not categorized yet" below).
+  only a target (the frozen slice) and no base - they count toward the
+  *overall* total, correctly showing as unmatched. Most now also carry
+  a `category` despite having no `base_path`/match percentage of their
+  own, reflecting `docs/rom_map.md`'s reconnaissance pass - see
+  "Categorizing the still-raw majority of the ROM" below for which ones
+  and why a couple of regions are deliberately left uncategorized still.
 
 **The address table is the fragile part.** It's hand-written in
 `tools/report_units.py` from a **clean `make compare` (`NON_MATCHING=0`)
@@ -138,25 +140,52 @@ percentage that direct byte comparison against `baserom.gba` (the project's
 own established verification method - see `docs/workflow.md`) says shouldn't
 be there.
 
-## Not categorized yet
+## Categorizing the still-raw majority of the ROM
 
-Only `graphics`/`util`/`system` (mirroring `src/`'s layout) exist as
-categories right now - the still-fully-raw majority of the ROM (including
-the Shin'en GAX2 sound engine, roughly `0x08037110`-`0x0803A950` per
-[`docs/audio.md`](./audio.md)) isn't split out into its own `audio` category
-yet, even though it counts toward the overall total already. That range
-isn't a clean carve - `docs/audio.md` itself warns it has generic
-compiler-runtime helpers interleaved with genuine GAX2 code - so it needs
-its own boundary-refinement pass before it can be sliced out accurately,
-rather than guessing and mislabeling neighboring code as audio. A
-reasonable follow-up once someone's traced that region more precisely.
+Beyond `graphics`/`util`/`system` (mirroring `src/`'s layout, tagging
+actually-matched files), `tools/report_units.py`'s `UNITS` list also
+tags several **still-fully-raw** stretches with a category - `game_loop`,
+`actor`, `graphics_loading`, `audio` (the Shin'en GAX2 engine), `hud`,
+and `overlay_ui` - even though none of that code has a `base_object` or
+counts as matched yet. This is possible because [`docs/rom_map.md`](./rom_map.md)'s
+whole-ROM reconnaissance pass (originally "reconnaissance, not ground
+truth") has, over many rounds of direct function reads, reached high
+confidence on where most of these regions actually start and end -
+confirmed landmark addresses, individually-read functions, or a
+dominant connected component - enough to be worth a decomp.dev progress
+bucket even at 0% matched, the same way an unmatched `src/*.c` file
+would show 0% under its own category rather than not appearing at all.
 
-See [`docs/rom_map.md`](./rom_map.md) for a rough, whole-ROM pass at
-sketching out what the *rest* of the still-raw code might be (actor
-system, HUD, an SFX layer distinct from GAX2, and two large - 94 KB and
-40 KB - still-unidentified stretches that together are over half the
-unmatched ROM). None of that is precise enough to become real
-`objdiff.json` categories yet - it's reconnaissance, not ground truth.
+Two categories `rom_map.md` also identified - **`menu_ui`** and **`fx`** -
+deliberately don't get their own address range: both are individual
+functions scattered *inside* another category's contiguous span rather
+than a separate block (`menu_ui`'s dispatch-table functions sit inside
+`graphics_loading`'s `LoadGraphicsPackage` cluster; `fx`'s two-function
+particle/trajectory-queue pair sits inside the `hud` gap after
+`MainLoop`) - carving them out would need a boundary that doesn't
+exist, so they're folded into their containing category instead. A few
+other spots have a smaller-scale version of the same problem, folded
+into the dominant category rather than left out or guessed at:
+
+- `overlay_ui`'s span (`0x080015E0`-`0x08006600`) also contains a
+  confirmed SIO/link-cable multiplayer subsystem, not separable by
+  address from the pause-menu/dialog code around it.
+- The `audio` span (`0x08037110`-`0x0803A944`, narrowed this session -
+  see `docs/audio.md`) has a couple of confirmed generic compiler-
+  runtime helpers (64-bit division routines) interleaved with genuine
+  GAX2 code, the same false-positive pattern `docs/audio.md` warns
+  about.
+- The `hud` gap right after `MainLoop` (`0x08026EEC`-`0x0802866C`)
+  overstates `rom_map.md`'s own ~4.8 KB hud figure by the ~1.1 KB that's
+  actually `fx`/genuinely unlabeled, folded in for the same reason.
+
+`tools/report_units.py`'s own comments note each of these inline, next
+to the exact `UNITS` entry it applies to - check there before treating
+any of `game_loop`/`actor`/`graphics_loading`/`audio`/`hud`/`overlay_ui`'s
+decomp.dev percentage as more precise than "the dominant category in
+this address range." Genuinely untouched regions (nothing in
+`rom_map.md`, or too small to matter - like the ~200 B gap right after
+`irq.c`) stay uncategorized, same as before this pass.
 
 ## A separate, known limitation: small residual percentages on real matches
 

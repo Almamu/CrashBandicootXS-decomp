@@ -18,10 +18,29 @@ currently live in the neighboring raw asm/*.s chunk instead, but
 expected/code_3.s already has it labelled at its true address (it was
 never extracted, only parked), so slicing still works unmodified.
 
-Still-raw regions (nothing here) become uncategorized units: their
-target is the frozen source slice for that range, with no base_path, so
-they count toward the overall total but not any specific category -
-see docs/decomp_dev.md for what's deliberately not categorized yet.
+Still-raw regions with no `base_object` can still carry a `category` -
+docs/rom_map.md's whole-ROM reconnaissance pass split most of the ROM's
+remaining raw stretches into game_loop/actor/graphics_loading/audio/hud/
+overlay_ui by address, high-confidence enough (individually-read
+functions, confirmed landmarks, or a dominant connected component) to be
+worth a decomp.dev progress category even at 0% matched - these units
+get `metadata.progress_categories` but no `base_path`, so they count
+toward that category's total (all unmatched) without affecting per-file
+match percentages. Two categories rom_map.md found - `menu_ui` and `fx` -
+don't get their own address boundary: both are individual functions
+scattered *inside* another category's contiguous range rather than a
+separate block of their own (menu_ui's dispatch-table functions sit
+inside graphics_loading's `LoadGraphicsPackage` cluster; fx's two-function
+particle-queue pair sits inside the hud gap after `MainLoop`), so
+splitting them out here would require a fake, unjustified address cut -
+see docs/rom_map.md for exactly which functions are which; nothing here
+should be read as more precise than "the dominant category in this
+range." A handful of ranges have a similar, smaller-scale mix (a
+confirmed SIO/link-cable subsystem inside `overlay_ui`'s span; a couple
+of generic division-routine false positives inside the GAX2 span) -
+flagged inline below, folded into the dominant category regardless.
+Genuinely untouched regions (nothing in rom_map.md, too small to matter)
+stay `None`/uncategorized, same as before.
 """
 import json
 import subprocess
@@ -62,14 +81,40 @@ UNITS = [
     (0x08001254, "src/util/line_util2.o", "util"),
     (0x080012AC, "src/graphics/fade_util.o", "graphics"),
     (0x080013FC, "src/graphics/palette_blend.o", "graphics"),
-    (0x080014A4, None, None),  # code_3_1_7.o, still raw (up to sub_8006600)
+    (0x080014A4, None, "graphics"),  # fade/screen-mode utility cluster (13 fns/332B), calls matched palette_blend.c - docs/rom_map.md "A fourth thing in this file"
+    (0x080015E0, None, "overlay_ui"),  # pause-menu/dialog dominant component (118 fns/19.2KB); a smaller SIO/link-cable subsystem (sub_8001F50/sub_8001DB4/...) is interleaved throughout this same span, not separable by address - folded into overlay_ui regardless, see docs/rom_map.md
     (0x08006600, "src/graphics/oam_count.o", "graphics"),  # incl. parked sub_8006600
     (0x0800697C, "src/graphics/graphics.o", "graphics"),
-    (0x08006C00, None, None),  # code_3_2.o, still raw (includes the audio engine - not carved out yet, see docs/decomp_dev.md)
+    (0x08006C00, None, "game_loop"),  # 94.4 KB main zone, confirmed one cohesive system - docs/rom_map.md "Two big unnamed systems"
+    (0x0801E578, None, "graphics_loading"),  # LoadGraphicsPackage cluster (16.2KB); menu_ui's ~9.1KB dispatch-table functions and the trigger-effect spawner family are interleaved inside this same range, not a separate block - see docs/rom_map.md "Major correction: there is no second table"
+    (0x080225A0, None, "game_loop"),  # UpdateGameFrame-MainLoop cluster (18,764B exact), confirmed same system/signature as the 0x08006C00 zone, not a separate island
+    (0x08026EEC, None, "hud"),  # ~4.8 of 5.9KB is HUD stat-widgets; ~0.3KB (fx's particle/trajectory-queue pair) and ~0.8KB unlabeled remainder are interleaved inside this same span - docs/rom_map.md "fx wasn't right either"
+    (0x0802866C, None, "hud"),  # InitHudIconWidgetA/B, MeasureText, UploadHudTile, InitHudTextWidget
+    (0x08028BA0, None, "graphics_loading"),  # InitObjTileFreeList, LoadSpriteFrameTiles, SetupSpriteFrameOam, DecompressCategorySpriteSheet
+    (0x080291A4, None, "actor"),  # SetupActorVramPool, InitActorCategory, SelectActorCategory, InitActorPart, UpdateAnimatedActorPart, ConstructAnimTableState, ConstructActorPart
+    (0x0802B364, None, "actor"),  # 40.4 KB actor zone (docs/rom_map.md cites 0x0802B348, 28B before the nearest real function start - snapped forward since 0x0802B348 itself falls mid-function) - category/part/vtable system, boss-candidate + singleton object clusters
+    (0x080354E0, None, "graphics_loading"),  # LoadLevelGraphics, LoadBg2Background, LoadObjSpriteTiles
+    (0x08037110, None, "audio"),  # Shin'en GAX2 engine, boundary narrowed this session to end at 0x0803A944; a couple of generic 64-bit-division helpers are confirmed interleaved false positives - see docs/audio.md
+    (0x0803A944, None, "system"),  # BIOS svc wrapper stubs + LZ77UnCompWrapper/RLUnCompWrapper, confirmed non-audio via matched asset_util.c callers
     (0x0803B058, "src/graphics/actor_anim.o", "graphics"),
-    (0x0803B060, None, None),  # code_3_3.o, still raw
+    (0x0803B060, None, "actor"),  # GetAnimFrameData + 43 unnamed neighbors, medium confidence
     (0x0803B8B0, None, None),  # sentinel end address, not a real unit
 ]
+
+# Display names for progress_categories - report_units.py-only categories
+# (game_loop/actor/... don't mirror a src/ directory the way graphics/util/
+# system do, so `category.capitalize()` alone would read oddly).
+CATEGORY_NAMES = {
+    "system": "System",
+    "util": "Util",
+    "graphics": "Graphics",
+    "game_loop": "Game Loop",
+    "actor": "Actor",
+    "graphics_loading": "Graphics Loading",
+    "audio": "Audio (GAX2)",
+    "hud": "HUD",
+    "overlay_ui": "Overlay UI",
+}
 
 
 def run(cmd, **kwargs):
@@ -138,7 +183,7 @@ def main():
             unit["base_path"] = f"build/crashbandicootxs/{base_rel}"
         if category is not None:
             unit["metadata"] = {"progress_categories": [category]}
-            categories[category] = category.capitalize()
+            categories[category] = CATEGORY_NAMES.get(category, category.capitalize())
         units.append(unit)
 
     objdiff = {

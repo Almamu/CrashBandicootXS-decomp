@@ -39,12 +39,17 @@ far (`src/*.c`, tracked precisely as objdiff units per
 ## Category breakdown
 
 Folding every finding from the sections below into one whole-ROM split.
-Not a proposal for real `objdiff.json` categories yet (see
-`docs/decomp_dev.md`'s "Not categorized yet") - a `game_loop`/`actor`
-split this coarse would still merge non-adjacent functions into one unit
-and reintroduce the exact size-inference bug `mem_collect` already
-taught this project to avoid. Treat this as the reading-level answer to
-"what's in here", not an implementation plan.
+The highest-confidence categories below (`game_loop`/`actor`/
+`graphics_loading`/`audio`/`hud`/`overlay_ui`) are now also reflected in
+`objdiff.json`'s real decomp.dev progress categories - see
+`tools/report_units.py`'s `UNITS` list and `docs/decomp_dev.md`'s
+"Categorizing the still-raw majority of the ROM" for exactly which
+address ranges made the cut, and which two categories here (`menu_ui`,
+`fx`) didn't get their own `objdiff.json` category because they're
+individual functions scattered inside another category's range rather
+than a contiguous block of their own. Treat the table below as the
+reading-level answer to "what's in here" regardless - it's finer-
+grained and more heavily caveated than what a progress bar can show.
 
 | Category | Size | Share | Confidence |
 |---|---|---|---|
