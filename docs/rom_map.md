@@ -1305,11 +1305,28 @@ palette-swap-driven mode/phase change (a power-up or similar).
 **`sub_802C540`** extends the shared "type-byte event dispatch"
 family (`sub_8031D7C`/etc.) to a new value range (`0x1c`-`0x1f`),
 ties into the wraparound-lap-counter system via `sub_8022FEC`
-(alongside `sub_802C6C0`'s already-noted tie), and calls two unread
+(alongside `sub_802C6C0`'s already-noted tie), and calls two
 functions (`sub_802C078`/`sub_802C128`) taking the player-pointer
-global as their first argument - the same convention as the
-documented `sub_802B7E0`/`sub_802B730` "player reaction" pair,
-suggesting they're more instances of that family.
+global as their first argument.
+
+**Follow-up refutes the "player reaction" guess for both - the
+player-pointer argument is a shared calling convention, not evidence
+of a shared purpose.** `sub_802C078` (44 B) never reads its
+player-pointer parameter at all - it's an accumulator, same shape and
+gate as the already-documented `sub_802F540`. `sub_802C128` (28 B)
+also ignores its player-pointer parameter entirely - it's a lock-
+timer setter, writing `0x1F4` (500) into `gUnknown_0300149C` (the same
+lock/active flag `sub_802B7E0` gates on) under a condition. Both share
+`sub_802B7E0`/`sub_802B730`'s calling convention (player-pointer as
+first arg) without using that argument - unrelated accumulator/lock-
+timer functions, not more instances of the field-write "player
+reaction" family. Separately, **`sub_80330FC`** (the singleton
+object's tile-consumer, called by `sub_8033470`) confirms the same
+BG-tilemap-blit-primitive mechanics as the boss cluster's
+`sub_8030D48`, but on an entirely separate global cluster
+(`gUnknown_030015xx`, not `gUnknown_03001520`-family) - the singleton
+has its own independent instance of the same primitive, not shared
+state with the boss.
 
 ## Subdividing `game_loop`
 
