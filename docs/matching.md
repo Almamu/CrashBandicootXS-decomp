@@ -1963,3 +1963,7 @@ last use, same two-C-variables-one-hard-register technique as
 flags;` directly - the direct-return form computed the AND into the
 loaded byte's register and needed an extra copy into r0, the assignment
 form didn't.
+
+**`sub_80072CC`**: clears `self->flags` bit1 (`&= ~2`). Same
+accumulator-register fix as the other single-bit-clear siblings;
+already 4-aligned, no padding fix needed.
