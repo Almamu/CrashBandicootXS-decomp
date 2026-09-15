@@ -3326,14 +3326,31 @@ smaller than that figure suggests; 46 undocumented functions exceed
 60 B, so a real remainder exists. No functions were found explicitly
 flagged as still-unread in this section's own prose - it reads as
 internally complete at the narrative level, just not exhaustively
-named function-by-function. One concrete new lead from sampling the
-two largest: **`sub_8001DB4`** (412 B) is a large constructor -
-zeroes/initializes ~8 fields, copies packed byte pairs, touches a new
-global `gUnknown_03000800` (a `0x0300xxxx` family distinct from the
-`game_loop`-side `gUnknown_030012xx` one) - plausibly the pause-menu
-composite screen's own initializer, not yet tied to the documented
-`sub_8004D74`/`sub_8004EC0` construction chain; not read to
-completion, worth a dedicated follow-up.
+named function-by-function.
+
+**Follow-up resolved both leads fully, correcting the "pause-menu
+constructor" speculation: both `sub_8001F50` and `sub_8001DB4` are
+core members of the SIO/link-cable multiplayer subsystem, not UI
+code.** `sub_8001F50` is the **link-connection/handshake driver**,
+called repeatedly (once per frame) until the link is established or
+times out: configures `SIOCNT`/`SIODATA32_H` for multiplayer mode,
+checks status bits, sets up interrupts (`IE`/`IME`, two registered
+ISR handlers), programs hardware **Timer 3** as a handshake timeout,
+and on timeout calls `sub_8001D30` then **`sub_8001DB4`** to reset the
+session and retry. `sub_8001DB4` is the **link-session reset/init
+function**: sets `gUnknown_03000800 = 1` (a "link active" flag,
+referenced from only two sites in the whole codebase, both in this
+SIO region), resets 4 per-player communication slot buffers, and -
+the clinching detail - writes the literal **`0x1234`** to each
+player's data-exchange field before programming `SIOMLT_SEND`
+(`0x0400012A`) - `0x1234` is the canonical GBA multiplayer link
+sync/ready magic value from the standard link-cable handshake
+protocol (matches libgba/devkitPro's well-known constant), unambiguous
+hard evidence this resets a multiplayer session, not a UI screen.
+Only 3 callers total for `sub_8001DB4`, all inside this same SIO
+cluster. This deepens (but doesn't contradict) the earlier finding
+that this file's SIO footprint is bigger than "2 functions," and
+retires the pause-menu speculation as a false lead.
 
 ## Into `graphics_loading`'s remainder: a BG2-affine screen-effect setup
 
