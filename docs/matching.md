@@ -2045,3 +2045,7 @@ the raw ROM bytes, not just against how a tool chose to render them.
 **`sub_8007388`**: a thin wrapper unpacking a 2-`s32`-field pointer
 argument and forwarding to `sub_800737C`. Matched on the first
 attempt.
+
+**`sub_8007398`**: sets `self->x`/`self->y` directly (no `<<8` shift),
+the raw-value counterpart to `sub_800737C`. Matched on the first
+attempt, plus the usual alignment fix.

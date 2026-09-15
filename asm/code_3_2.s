@@ -2,13 +2,6 @@
 
 .syntax unified
 .arm
-	thumb_func_start sub_8007398
-sub_8007398: @ 0x08007398
-	str r1, [r0]
-	str r2, [r0, #4]
-	bx lr
-	.align 2, 0
-
 	thumb_func_start sub_80073A0
 sub_80073A0: @ 0x080073A0
 	push {lr}
