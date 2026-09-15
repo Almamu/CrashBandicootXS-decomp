@@ -904,6 +904,46 @@ load state machine, not an actor per-type behavior. `sub_8035E14`
 `sub_8034374` (the minimap object's own constructor) remain unread and
 would be the natural next step for anyone continuing this thread.
 
+### Two new type-0 vtable slots confirmed, and a repeated actor->game_loop dispatch tie
+
+A further pass read 11 more actor-zone functions. **Two new confirmed
+slots in the type-0 `category_vtable`** (`gStaticData_081756C4[0]`,
+`include/actor_anim.h`): `sub_802D7B0` and `sub_802DE70` both appear as
+raw pointers at `0x081756D0`/`0x081756DC` - slot indices 3 and 6 of
+the 13-entry `fn[13]` array, previously unreversed. Both operate on
+the `gUnknown_030014BC`-rooted animation-linked family (call
+`GetAnimFrameBaseOffset`, index the documented `gStaticData_0817A840`,
+draw text). `sub_802D7B0` additionally runs a full 3-axis AABB overlap
+test against `gUnknown_03000884` (a player-shaped struct) before
+calling **`sub_800014C`** - one of `UpdateGameFrame`'s own direct
+top-level callees, the same cross-tie already noted for
+`sub_8022CA0`. **`sub_802C7A8`** (not vtable-dispatched) is a
+*second*, independent actor function calling `sub_800014C` directly -
+confirming this actor->game_loop-dispatch tie as a real, repeated
+pattern, not a one-off. Three more vtable hits land in already-
+documented families (two in the 93-entry `gStaticData_087Exxx` family,
+one in the `0x0817Cxxx` mixed-convention third table family).
+
+**`sub_803472C` reuses the `overlay_ui` screen-constructor toolkit,
+inside the actor zone**: allocates 3 sprite-layer objects, calls
+`sub_801E644` three times at priorities `0x1F`/`0x1E`/`0x1D` - the
+same init function `overlay_ui`'s screen constructors use - loads
+three graphics packages via `LoadGraphicsPackage`, and resets palette
+color 0. Its only caller, `sub_8034CB0`, sits immediately adjacent to
+the documented map-screen cluster (`sub_8034CEC`/`sub_8034E2C`/
+`sub_80354BC`) - plausibly a related sibling screen reusing the same
+3-layer setup, not confirmed further.
+
+Other reads extend known families without introducing new ones:
+`sub_8031040` extends the `gUnknown_03001540`/`1544` accumulator pair
+into a much larger 18-field consecutive run
+(`gUnknown_03001534`-`0300157C`); `sub_802F164` extends the
+`gUnknown_030014xx` family with a new `E4`-`FC` sub-cluster; `sub_802FBF0`
+references a run of 5 unread sibling functions
+(`sub_802A504`/`51C`/`540`/`558`/`570`); `sub_803487C` is an asset/
+screen refresh function touching known hot globals plus a new table
+cluster `gStaticData_0817C512`/`532`/`552`/`572`.
+
 ## Subdividing `game_loop`
 
 `game_loop`'s 112.7 KB has been one undifferentiated bucket even after
