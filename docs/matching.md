@@ -2507,3 +2507,59 @@ into `asm/code_3_2_3.s` (now just the parked `sub_8007DBC`) and a new
 `asm/code_3_2_4.s` (the unchanged remainder), with the new
 `src/graphics/actor_part3.c` (holding just `sub_8007F78`) inserted
 between them in `ldscript.txt`.
+
+**`sub_8007FD8`** (ROM `0x08007FD8`, right after `sub_8007F78`, same
+file): an AABB-vs-region overlap test, sharing `sub_8007F78`'s exact
+`part+0x25 == 1`/`part+0xd` bit-2 fast-path shape, but the real check
+builds `part`'s own AABB (via the still-parked `sub_8007B00` -
+confirms that function's `struct aabb` output shape is trusted even
+though it isn't byte-matching yet) and tests it for overlap against a
+second `void *region` parameter's raw `{s32 x, y, w, h}` fields (kept
+raw - `region`'s own type isn't established) with the standard
+`x2 > region.x && x1 < region.x+region.w && y2 > region.y && y1 <
+region.y+region.h` open-interval test.
+
+Two things made this look harder than it was at first, both resolved
+the same way: the ROM computes a `0`-default return value into `r3`
+*before* the `part+0x25` check even runs (used only by the `bit-2 set`
+early-return path), then *separately* accumulates the real overlap
+result into `r7` during the AABB test, copying `r7` back into `r3`
+only at the very end, right before the final `r3`-to-`r0` return copy
+- writing this as a single `result` variable initialized once at the
+top made the AABB-building code reuse *that* variable's `r3` for its
+own `x1`/`x2` intermediates too early (since `result`'s lifetime
+spanned the whole function), landing `x1` in a fresh register instead
+of the ROM's r3. Splitting the single C-level "result" into two: an
+outer `earlyResult` (`register s32 ... asm("r3") = 0`, used only by
+the bit-2 early return) and a separate inner `result` (a *plain*,
+unpinned local for the overlap accumulator - letting the allocator
+naturally put it in r7 once the AABB math frees up `r3` for its own
+temporaries) got every register right, including the final
+`earlyResult = result; return earlyResult;` two-step copy matching the
+ROM's own `r7`-to-`r3`-to-`r0` chain.
+
+The second snag: explicitly pinning the inner accumulator to
+`register s32 result asm("r7")` compiled correct instruction content
+but silently dropped `r7` from the prologue/epilogue's `push`/`pop`
+list (`push {r4,r5,r6,lr}` instead of the ROM's `push
+{r4,r5,r6,r7,lr}`) - yet another distinct r7-pin failure mode beyond
+the two already seen in this file (silently ignored placement,
+outright compiler crash): here the pin's *value* and *instructions*
+compile correctly, only the register-preservation bookkeeping is
+skipped. Leaving the same variable as a plain unpinned `s32 result;`
+let the natural allocator choose r7 on its own, and with no explicit
+pin in the way, the prologue/epilogue push/pop list came out correct.
+Between this and `sub_8007DBC`'s crash and the earlier "pin place
+non-r7 registers but the compiler ignores it" cases, r7 pins in this
+toolchain now have three known-different failure shapes - avoid them
+entirely and let the allocator find r7 on its own wherever possible.
+
+Also needed a trailing `asm(".align 2, 0");` after this function - it
+is the last one in `src/graphics/actor_part3.c`, and without it the
+2-byte gap gcc leaves between this object's end and the next linked
+object filled with a real `nop` encoding (`0x46c0`) instead of the
+ROM's zero bytes (the raw `.s` file's original `.align 2, 0` directive
+explicitly zero-fills; gcc's own automatic inter-function padding
+inside a single translation unit does not) - see the
+`matching_decomp_alignment_fix` memory and the established "only
+needed when the function is last in its TU" rule.
