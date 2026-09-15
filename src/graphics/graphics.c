@@ -1024,3 +1024,9 @@ void sub_80072A8(struct actor *self)
     self->flags = result;
 }
 asm(".align 2, 0");
+
+u8 sub_80072B4(struct actor *self)
+{
+    return (self->flags >> 3) & 1;
+}
+asm(".align 2, 0");
