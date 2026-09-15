@@ -2650,3 +2650,23 @@ at the `sub_800815C` boundary right after `sub_8008044`'s guard, into
 `asm/code_3_2_4.s` (now just the parked `sub_8008044`) and a new
 `asm/code_3_2_5.s`, with the new `src/graphics/actor_part4.c`
 (holding just `sub_80080C0`) inserted between them in `ldscript.txt`.
+
+**`sub_800815C`** (ROM `0x0800815C`, right after `sub_80080C0`, same
+file): a small lookup - reads `part`'s current keyframe record's
+`+0x14` byte as a record id, then passes it to `sub_8006DF8` (already
+matched in `graphics.c`) against the global tile-asset cache
+`gUnknown_030012B8`. Matched on the first attempt (after one register
+fix): the ROM reads `gUnknown_030012B8`'s value into `r3` *before* any
+of the keyframe-table math, not right before the call - writing the
+same `struct tile_asset_cache *cache = gUnknown_030012B8;` as the
+first statement (rather than passing the global directly as the call
+argument) reproduces that ordering. The keyframe-table lookup then
+needed the `sub_8007B00`-style "one register carries every role"
+reuse taken further than usual: a single pinned `rec` (`r1`) is
+reused for the *offset* computation (`idx*0x1c`), then `+table` to
+become `rec` proper, then the final `+0x14` byte read to become
+`recordId` - four different named quantities in this description, but
+literally one register end to end - while `idx` (`r4`) and `table`
+(a plain unpinned local, naturally `r2`) each get one, single
+untouched role. Byte-exact on the first successful attempt, no
+parking needed.

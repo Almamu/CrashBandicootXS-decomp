@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor.h"
+#include "vram_pool.h"
 
 struct aabb {
     s32 field_0;
@@ -67,5 +68,30 @@ s32 sub_80080C0(struct actor *part, void *region)
     }
 
     return (u8)sub_8001688(&buf_, region);
+}
+
+extern u8 sub_8006DF8(struct tile_asset_cache *self, s32 recordId);
+extern struct tile_asset_cache *gUnknown_030012B8;
+
+/* Reads `part`'s current keyframe record's `+0x14` byte as a
+ * `sub_8006DF8` record id, looked up against the global tile-asset
+ * cache `gUnknown_030012B8`. */
+s32 sub_800815C(struct actor *part)
+{
+    struct tile_asset_cache *cache = gUnknown_030012B8;
+    void **tablePtr;
+    void *table;
+    register u8 idx asm("r4");
+    register s32 rec asm("r1");
+
+    tablePtr = *(void ***)((u8 *)part + 0x20);
+    part = (struct actor *)((u8 *)part + 0x2d);
+    table = *tablePtr;
+    idx = *(u8 *)part;
+    rec = idx * 0x1c;
+    rec = rec + (s32)table;
+    rec = *((u8 *)rec + 0x14);
+
+    return (u8)sub_8006DF8(cache, rec);
 }
 asm(".align 2, 0");
