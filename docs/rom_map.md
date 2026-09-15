@@ -1328,6 +1328,44 @@ BG-tilemap-blit-primitive mechanics as the boss cluster's
 has its own independent instance of the same primitive, not shared
 state with the boss.
 
+**The "spawn effect type N" family has at least 9 members - N flavors
+of small effect/debris object, not a hidden dispatch table.**
+`sub_802E504` through `sub_802E6CC` are ≥9 near-identical siblings,
+each a thin `mem_alloc`+`InitActorPart`+table-offset wrapper around a
+distinct per-type constructor - called individually by name from
+scattered sites, no function-pointer array. **One call site spawns
+four of these back-to-back**, each positioned relative to
+`gUnknown_030015B4` (the singleton's own position field) - a burst
+spawn of multiple small effect objects clustered around the
+singleton, likely particle/debris. **`sub_8034058`** ties directly
+into the singleton system: calls two of its already-documented
+getters to pick between bound constants and configure the spawned
+object's velocity/scale - a concrete new tie confirming the family
+isn't just reading `gUnknown_030014D8`, at least one member reads the
+singleton's live state directly.
+
+**`sub_8030F88` closes a real open question from earlier rounds: it's
+the missing P2-side constructor for the VRAM fill-level meter.** Sets
+`gUnknown_03001564 = self`, sets `gUnknown_03001528`/`152C` from
+`gStaticData_08167CD4` - the exact per-level table `sub_8031604` (the
+P2 meter twin) already reads - and finishes by calling the confirmed
+`category_vtable` type-1 slot 6 dispatcher (`sub_8031504`). This ties
+the whole meter-twin/P1-P2 finding together with a real constructor.
+Nine more functions extend already-documented families without
+introducing anything new: a second confirmed evidence trail that
+`sub_80330FC`/`sub_8033550` are real per-frame steps of the
+singleton's update cycle (`sub_8033604`); a third construction site
+tying into the `gUnknown_030015AC` singleton
+(`sub_8034058`/`sub_80338DC`); two more independent "player reaction"
+trigger paths (`sub_802D0F4`, extending `sub_802B730`'s call sites);
+a real confirmed caller for the palette-transition function
+`sub_802D204` (`sub_802D2DC`, decrementing the `gUnknown_030014B8`
+timer); a second, distinct fade/flash palette mechanism
+(`sub_802D9A8`, DMA'd brightness-scaled recoloring keyed to a
+different countdown, `gUnknown_030014CC`); and a camera/window-
+position committer (`sub_802DA68`) using the documented screen-
+projection helpers.
+
 ## Subdividing `game_loop`
 
 `game_loop`'s 112.7 KB has been one undifferentiated bucket even after
