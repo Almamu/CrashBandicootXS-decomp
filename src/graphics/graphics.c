@@ -770,3 +770,79 @@ s32 sub_8007110(void)
 {
     return 0;
 }
+
+/* Same raw self layout/field+0x18 table convention as sub_8006FE4 and
+ * sub_8007048 above. Both `self` and `box` are pinned - matching the
+ * ROM's exact register dance required it (see the inline asm block
+ * below), and a plain-C parameter reload picked different registers
+ * once anything else in this function was pinned. This function's
+ * body is 94 bytes (not 4-aligned) and is the last thing in this
+ * translation unit right now, so the trailing `asm(".align 2, 0")`
+ * below is required to get the ROM's zero-fill instead of `as`'s
+ * default NOP pad - see docs/matching.md, "A gotcha worth knowing". */
+s32 sub_8007114(void *self, void *box)
+{
+    register void *pSelf asm("r5") = self;
+    register void *pBox asm("r6") = box;
+    void *table;
+    void *rec;
+    u8 flag;
+    s32 result;
+
+    flag = (*((u8 *)pSelf + 0xc) >> 4) & 1;
+    if (!flag) {
+        table = *(void **)((u8 *)pSelf + 0x18);
+        rec = sub_803AD7C((u8 *)pSelf + *(s16 *)((u8 *)table + 0x10), *(void **)((u8 *)table + 0x14));
+        {
+            register void *recR0 asm("r0") = rec;
+            register s32 minXR4 asm("r4");
+            register s32 maxXR1 asm("r1");
+            register s32 minYR5 asm("r5");
+            register s32 maxYR3 asm("r3");
+            s32 boxX0;
+            /* r7 is never usable for an explicit register-variable pin
+             * in this toolchain (the compiler drops it from the
+             * prologue's push list regardless - see
+             * matching_decomp_register_pinning memory), so `result`
+             * below is left as an ordinary unpinned local and happens
+             * to land in r7 on its own, matching the ROM. The rest of
+             * this block reproduces the ROM's own register dance:
+             * gcc otherwise computes rec[4]<<7/rec[5]<<7 in place
+             * (same register as the byte load) rather than moving the
+             * shifted result to a free register the way the ROM does
+             * - tried several C-level rephrasings with no effect, see
+             * docs/matching.md, "Matching decompilation". */
+            asm volatile(
+                "ldrb r1, [%4, #4]\n\t"
+                "lsl r2, r1, #7\n\t"
+                "ldrb r0, [%4, #5]\n\t"
+                "lsl r3, r0, #7\n\t"
+                "ldr r1, [%5]\n\t"
+                "sub %0, r1, r2\n\t"
+                "ldr r0, [%5, #4]\n\t"
+                "sub %2, r0, r3\n\t"
+                "add %1, r1, r2\n\t"
+                "add %3, r0, r3"
+                : "=r"(minXR4), "=r"(maxXR1), "=r"(minYR5), "=r"(maxYR3)
+                : "r"(recR0), "r"(pSelf)
+                : "r0", "r1", "r2");
+            result = 0;
+            boxX0 = *(s32 *)pBox;
+            if (minXR4 > boxX0) {
+                s32 boxX1 = boxX0 + *(s32 *)((u8 *)pBox + 8);
+                if (maxXR1 < boxX1) {
+                    register s32 boxY0 asm("r2") = *(s32 *)((u8 *)pBox + 4);
+                    if (minYR5 > boxY0) {
+                        register s32 boxY1 asm("r0") = boxY0 + *(s32 *)((u8 *)pBox + 0xc);
+                        if (maxYR3 < boxY1) {
+                            result = 1;
+                        }
+                    }
+                }
+            }
+        }
+        flag = result;
+    }
+    return flag;
+}
+asm(".align 2, 0");

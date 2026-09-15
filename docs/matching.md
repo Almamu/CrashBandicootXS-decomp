@@ -1786,3 +1786,31 @@ the ROM's rsb/lsr/add/asr rounding idiom exactly, no tricks needed.
 no callers found anywhere in the codebase (raw asm or already-matched
 C) - genuinely unreferenced, same as `sub_8006C38`/`sub_8006E64`
 above.
+
+**`sub_8007114`**: an AABB-vs-rectangle containment test, same raw
+`self` layout as the actor-zone functions above. Needed the heaviest
+register wrangling so far in this cluster:
+- `self` and `box` both had to be pinned (`asm("r5")`/`asm("r6")`) -
+  once anything else in the function was pinned, gcc stopped putting
+  the plain parameters in the ROM's own registers on its own.
+- The width/height-to-min/max computation is one inline asm block
+  (mirroring `sub_8007048`'s halfW/halfH-in-place-vs-moved issue,
+  same root cause) with its four outputs pinned to r4/r1/r5/r3.
+- **`r7` cannot be pinned in this toolchain, ever** - confirmed again
+  here: pinning `result` to r7 for a merged single big asm block
+  dropped r7 from the prologue's push list entirely and produced
+  wrong code (see `matching_decomp_register_pinning` memory, point
+  10). Leaving `result` as a completely ordinary, unpinned local let
+  gcc's own allocator land it in r7 on its own, matching the ROM -
+  the fix for an "r7 mismatch" that looks like it needs a pin is
+  usually to pin *less*, not more.
+- The two box-corner-vs-AABB comparisons needed `boxY0`/`boxY1`
+  pinned individually (r2, then r0) - same in-place-vs-moved pattern
+  as the width/height computation, but for the *second* box corner
+  read specifically; the *first* one (`boxX0`/`boxX1`) matched with
+  plain, unpinned locals.
+- The function's body comes out to 94 bytes (not 4-aligned) and,
+  since it's currently the last function in this translation unit,
+  needed the usual `asm(".align 2, 0")` fix (see the very first entry
+  in this file) - without it, `as` pads with NOP instead of the
+  ROM's zero-fill.

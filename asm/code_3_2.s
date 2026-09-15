@@ -2,58 +2,6 @@
 
 .syntax unified
 .arm
-	thumb_func_start sub_8007114
-sub_8007114: @ 0x08007114
-	push {r4, r5, r6, r7, lr}
-	adds r5, r0, #0
-	adds r6, r1, #0
-	ldrb r0, [r5, #0xc]
-	lsrs r1, r0, #4
-	movs r0, #1
-	ands r1, r0
-	cmp r1, #0
-	bne _0800716A
-	ldr r1, [r5, #0x18]
-	movs r2, #0x10
-	ldrsh r0, [r1, r2]
-	adds r0, r5, r0
-	ldr r1, [r1, #0x14]
-	bl sub_803AD7C
-	ldrb r1, [r0, #4]
-	lsls r2, r1, #7
-	ldrb r0, [r0, #5]
-	lsls r3, r0, #7
-	ldr r1, [r5]
-	subs r4, r1, r2
-	ldr r0, [r5, #4]
-	subs r5, r0, r3
-	adds r1, r1, r2
-	adds r3, r0, r3
-	movs r7, #0
-	ldr r2, [r6]
-	cmp r4, r2
-	ble _08007168
-	ldr r0, [r6, #8]
-	adds r0, r2, r0
-	cmp r1, r0
-	bge _08007168
-	ldr r2, [r6, #4]
-	cmp r5, r2
-	ble _08007168
-	ldr r0, [r6, #0xc]
-	adds r0, r2, r0
-	cmp r3, r0
-	bge _08007168
-	movs r7, #1
-_08007168:
-	adds r1, r7, #0
-_0800716A:
-	adds r0, r1, #0
-	pop {r4, r5, r6, r7}
-	pop {r1}
-	bx r1
-	.align 2, 0
-
 	thumb_func_start sub_8007174
 sub_8007174: @ 0x08007174
 	push {r4, r5, lr}
