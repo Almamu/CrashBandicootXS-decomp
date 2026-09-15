@@ -2,18 +2,6 @@
 
 .syntax unified
 .arm
-	thumb_func_start sub_8007A84
-sub_8007A84: @ 0x08007A84
-	push {lr}
-	ldr r2, [r1]
-	asrs r2, r2, #8
-	ldr r3, [r1, #4]
-	asrs r3, r3, #8
-	bl sub_8007A48
-	pop {r0}
-	bx r0
-	.align 2, 0
-
 	thumb_func_start sub_8007A98
 sub_8007A98: @ 0x08007A98
 	push {lr}

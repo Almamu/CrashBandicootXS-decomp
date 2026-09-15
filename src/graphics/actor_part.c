@@ -23,3 +23,13 @@ void sub_8007A48(void *self, void *part, s32 x, s32 y)
     sub_80073DC(self, part, pos);
 }
 asm(".align 2, 0");
+
+/* `part`'s own leading {x, y} pair (the same Q8 fixed-point position
+ * fields struct actor has at 0x00/0x04) becomes the explicit position
+ * passed to sub_8007A48 - confirms `part` embeds a struct-actor-shaped
+ * position at its own start. */
+void sub_8007A84(void *self, void *part)
+{
+    sub_8007A48(self, part, *(s32 *)part >> 8, *(s32 *)((u8 *)part + 4) >> 8);
+}
+asm(".align 2, 0");

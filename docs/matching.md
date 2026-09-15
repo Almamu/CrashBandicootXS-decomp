@@ -2148,3 +2148,9 @@ Resolves whether `(x, y)` are already screen-relative
 *definition* is guarded, not a separate `extern` declaration). Matched
 on the first attempt; the usual alignment fix (58-byte body, last
 function in a freshly-split translation unit).
+
+**`sub_8007A84`**: reads `part`'s own `{x, y}` pair (the same Q8
+fixed-point fields `struct actor` has at 0x00/0x04, integer-shifted by
+8) as the explicit position and forwards to `sub_8007A48` - confirming
+`part` embeds a struct-actor-shaped position at its own start. Matched
+on the first attempt, plus the usual alignment fix.
