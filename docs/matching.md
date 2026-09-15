@@ -2004,3 +2004,7 @@ already 4-aligned, no padding fix needed.
 
 **`sub_800731C`**: a getter for `self->flags` bit2, same shape as
 `sub_8007290`/`sub_80072B4`. Matched on the first attempt.
+
+**`sub_8007328`**: clears `self->flags` bit2 (`&= ~4`). Same
+accumulator-register fix as the other single-bit-clear siblings;
+already 4-aligned.
