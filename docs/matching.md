@@ -2743,3 +2743,24 @@ block's `add` compiles as `adds r1, r1, r0` instead of the ROM's
 `adds r1, r0, r1` - see `sub_8008188`'s entry above for the full
 account of what was tried against this exact pattern. Parked alongside
 its two siblings.
+
+**`sub_8008304`** (ROM `0x08008304`, right after `sub_8008278`, new
+`src/graphics/actor_part5.c`): `part+0x25 == 1` is the same fast
+override seen in `sub_8007F78`/`sub_8007FD8`; otherwise defers entirely
+to `sub_8007114` (already matched in `graphics.c`), forwarding a `box`
+argument straight through untouched. Matched on the second attempt: the
+first draft let the compiler use `part`'s own register (`r0`) as
+scratch for the `part+0x25` address computation, forcing an extra
+"restore `r0` before the call" copy the ROM doesn't have (the ROM
+computes that address into `r2`, a genuinely fresh register, leaving
+`r0`/`part` and `r1`/`box` both untouched from function entry all the
+way to the `bl`). Fixed by pinning the address to `r2` *and* reusing
+that same register in place for the loaded byte (`register u8 *addr
+asm("r2")` then `register u8 byteVal asm("r2");`) - once the address
+computation had its own dedicated register, gcc stopped needing to
+relocate `part`, matching the ROM exactly with zero remaining
+differences. Same file-split treatment as the previous non-adjacent
+functions in this cluster: `asm/code_3_2_5.s` split at the
+`sub_8008328` boundary into itself (now just the three parked
+functions) and a new `asm/code_3_2_6.s`, with the new
+`src/graphics/actor_part5.c` inserted between them in `ldscript.txt`.
