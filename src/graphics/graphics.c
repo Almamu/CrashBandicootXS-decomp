@@ -1112,3 +1112,9 @@ void sub_80072D8(struct actor *self)
         }
     }
 }
+
+u8 sub_800731C(struct actor *self)
+{
+    return (self->flags >> 2) & 1;
+}
+asm(".align 2, 0");
