@@ -1937,3 +1937,7 @@ function in the translation unit right now).
 first attempt with plain struct field access (no accumulator-register
 issue here since there's no second operand needing a separate
 register). Usual alignment fix.
+
+**`sub_800729C`**: clears `self->flags` bit3 (`&= ~8`). Same
+accumulator-register fix as the other single-bit-clear siblings above;
+body comes out already 4-aligned, no padding fix needed this time.

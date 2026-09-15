@@ -2,15 +2,6 @@
 
 .syntax unified
 .arm
-	thumb_func_start sub_800729C
-sub_800729C: @ 0x0800729C
-	movs r1, #9
-	rsbs r1, r1, #0
-	ldrb r2, [r0, #0xc]
-	ands r1, r2
-	strb r1, [r0, #0xc]
-	bx lr
-
 	thumb_func_start sub_80072A8
 sub_80072A8: @ 0x080072A8
 	movs r1, #8

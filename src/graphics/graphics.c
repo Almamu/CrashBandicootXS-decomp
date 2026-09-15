@@ -997,3 +997,16 @@ u8 sub_8007290(struct actor *self)
     return (self->flags >> 4) & 1;
 }
 asm(".align 2, 0");
+
+/* Same accumulator-register pattern as sub_8007230/sub_8007278/
+ * sub_8007284 above. */
+void sub_800729C(struct actor *self)
+{
+    register s32 result asm("r1");
+    register s32 tmp asm("r2");
+
+    result = -9;
+    tmp = self->flags;
+    result &= tmp;
+    self->flags = result;
+}
