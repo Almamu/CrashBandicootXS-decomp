@@ -103,3 +103,12 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   makes gcc stop using `ip` for `part` altogether instead, trading one
   mismatch for a worse one - see `docs/matching.md`, "Parked, not
   matched: `sub_8008044`".
+- **`sub_8008188`** (`src/graphics/actor_part4.c`) - adjusts a `dest`
+  position per a `kind` selector and a small `rec` record. Matches the
+  ROM instruction-for-instruction - including the exact non-obvious
+  case-body layout order and the two duplicate case labels correctly
+  sharing one code block - except a single register-register `add`'s
+  operand order in that shared block; this compiler appears to always
+  canonicalize such an add so the destination's prior value is the
+  first source operand, with no C-level way found to override it -
+  see `docs/matching.md`, "Parked, not matched: `sub_8008188`".

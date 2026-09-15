@@ -2670,3 +2670,48 @@ literally one register end to end - while `idx` (`r4`) and `table`
 (a plain unpinned local, naturally `r2`) each get one, single
 untouched role. Byte-exact on the first successful attempt, no
 parking needed.
+
+**Parked, not matched: `sub_8008188`** (ROM `0x08008188`, right after
+`sub_800815C`, same file): adjusts `dest`'s `{s32 field_0, field_4}`
+(a position, working theory) per a `kind` selector (`kind-1` is the
+real switch value, 0-11; everything else - including the four
+explicit no-op cases 2/4/5/6/8/9/10 - does nothing) and a small `rec`
+record: kind 1/2 add/subtract `rec+4`'s byte (shifted by 7, not 8 -
+maybe a half-Q8 value) to/from `dest->field_0`; kind 4 subtracts
+`rec+2`'s signed 16-bit value (shifted by 8, full Q8) from
+`dest->field_4`; kinds 8/12 do the same as kind 4 but add `rec+5`'s
+byte to the `rec+2` value first. `dest`/`rec` kept raw since neither
+type is established.
+
+Matched everything except a single instruction on the first attempt:
+every instruction's operation, order, and even the non-obvious case
+layout (the `add`/`subtract` cases had to be declared `kind==2` first,
+`kind==1` second in the `switch` - opposite of their numeric order -
+to get the ROM's own code-block ordering, the same "declaration order
+picked by trial, not a general rule" pattern seen in `sub_8007DBC`'s
+spawn switch) match, including the two duplicate case labels (kinds 8
+and 12) correctly sharing one code block via register-pinned locals
+(`v`/`byteVal` in `r1`/`r2`, matching the ROM's own register choices
+for the loads).
+
+The one holdout: the shared kind-8/12 block's `add` combining the two
+loaded values compiles as `adds r1, r1, r2` (destination's own prior
+value as the first source operand - the "obvious" in-place-accumulate
+encoding) where the ROM has `adds r1, r2, r1` (the *other* operand
+first). Tried and failed: swapping the C addition's operand order
+(`byteVal + v` vs `v + byteVal`); giving both operands and the result
+each their own explicit register pin; using a genuinely separate,
+unpinned result variable; an inline-asm anchor for just the add
+(this DID produce the right instruction, but broke the kind-8/12 block
+merging in the process - the compiler no longer recognized the two
+case bodies as identical, trading a 1-instruction mismatch for
+duplicated code and a completely different, larger mismatch); and
+reversing which operand's load comes first in the C source (gcc just
+reschedules the loads back to the ROM's own order regardless, and
+still emits the self-referencing `add` form). This compiler appears
+to always canonicalize a register-register add so the destination's
+own incoming value becomes the first source operand - no C-level
+construction was found that produces the other order while also
+preserving the block-merging and every other already-matching
+instruction. Parked rather than keep chasing this one instruction -
+same call as the other parked functions above.

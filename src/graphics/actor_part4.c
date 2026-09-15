@@ -94,4 +94,110 @@ s32 sub_800815C(struct actor *part)
 
     return (u8)sub_8006DF8(cache, rec);
 }
+
+#if NON_MATCHING
+/* Adjusts `dest`'s `{s32 field_0, field_4}` (a position, working
+ * theory) per `kind` (`kind-1` is the real switch selector, 0-11;
+ * anything else - including the four explicit no-op cases 2/4/5/6/8/9/
+ * 10 - does nothing): kind 1/2 add/subtract `rec+4`'s byte (Q8,
+ * shifted by 7 not 8 - half-Q8?) from `dest->field_0`; kind 4
+ * subtracts `rec+2`'s signed 16-bit value (shifted by 8, full Q8) from
+ * `dest->field_4`; kinds 8/12 do the same but add `rec+5`'s byte to
+ * the `rec+2` value first. `dest`/`rec` kept raw - neither type is
+ * established yet.
+ *
+ * NOT YET BYTE-MATCHING: every instruction matches the ROM exactly -
+ * including the exact case-body layout order in the jump table (cases
+ * 1/2 are declared kind-1-then-kind-0 in the switch to get the ROM's
+ * own block ordering, the same non-obvious-declaration-order pattern
+ * documented for sub_8007DBC's spawn switch) and the two duplicate
+ * case labels (8 and 12) correctly sharing one code block - except a
+ * single register-register `add` in that shared kind-8/12 block:
+ * the ROM's `adds r1, r2, r1` (byte-value register as the first
+ * source operand, short-value register second) versus this
+ * reconstruction's `adds r1, r1, r2` (the more usual "accumulate
+ * in-place" operand order). Every technique that worked for similar
+ * cases elsewhere in this project failed here: swapping the C
+ * addition's operand order, giving each operand its own pinned
+ * register, using a separate unpinned destination variable, an
+ * inline-asm anchor for just the add (which also broke the case-8/12
+ * block merging, trading one mismatch for a worse one), and reversing
+ * which operand loads first (gcc reschedules the loads back to the
+ * same order regardless, and still emits the self-referencing add
+ * form). This compiler appears to always canonicalize a
+ * register-register add so the destination's own prior value becomes
+ * the first source operand, with no C-level way found to override it.
+ * Parked rather than keep chasing this one instruction - same call as
+ * the other parked functions above. */
+void sub_8008188(void *dest, s32 kind, void *rec)
+{
+    s32 idx = kind - 1;
+
+    switch (idx) {
+    case 1:
+        {
+            register s32 byteVal asm("r2") = *((u8 *)rec + 4);
+            register s32 shifted asm("r1");
+
+            shifted = byteVal << 7;
+            *(s32 *)dest += shifted;
+        }
+        break;
+    case 0:
+        {
+            register s32 byteVal asm("r2") = *((u8 *)rec + 4);
+            register s32 shifted asm("r1");
+
+            shifted = byteVal << 7;
+            *(s32 *)dest -= shifted;
+        }
+        break;
+    case 2:
+        break;
+    case 3:
+        {
+            s32 v = *(s16 *)((u8 *)rec + 2);
+            v <<= 8;
+            *(s32 *)((u8 *)dest + 4) -= v;
+        }
+        break;
+    case 4:
+        break;
+    case 5:
+        break;
+    case 6:
+        break;
+    case 7:
+        {
+            register s32 v asm("r1") = *(s16 *)((u8 *)rec + 2);
+            register s32 byteVal asm("r2") = *((u8 *)rec + 5);
+            register s32 result asm("r1");
+
+            result = byteVal + v;
+            result <<= 8;
+            *(s32 *)((u8 *)dest + 4) -= result;
+        }
+        break;
+    case 8:
+        break;
+    case 9:
+        break;
+    case 10:
+        break;
+    case 11:
+        {
+            register s32 v asm("r1") = *(s16 *)((u8 *)rec + 2);
+            register s32 byteVal asm("r2") = *((u8 *)rec + 5);
+            register s32 result asm("r1");
+
+            result = byteVal + v;
+            result <<= 8;
+            *(s32 *)((u8 *)dest + 4) -= result;
+        }
+        break;
+    default:
+        break;
+    }
+}
+#endif /* NON_MATCHING */
 asm(".align 2, 0");
