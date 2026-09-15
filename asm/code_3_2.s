@@ -2,16 +2,6 @@
 
 .syntax unified
 .arm
-	thumb_func_start sub_80073A0
-sub_80073A0: @ 0x080073A0
-	push {lr}
-	ldr r3, [r1]
-	ldr r2, [r1, #4]
-	adds r1, r3, #0
-	bl sub_8007398
-	pop {r0}
-	bx r0
-
 	thumb_func_start sub_80073B0
 sub_80073B0: @ 0x080073B0
 	strb r1, [r0, #0xa]

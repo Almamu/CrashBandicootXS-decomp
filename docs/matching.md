@@ -2049,3 +2049,7 @@ attempt.
 **`sub_8007398`**: sets `self->x`/`self->y` directly (no `<<8` shift),
 the raw-value counterpart to `sub_800737C`. Matched on the first
 attempt, plus the usual alignment fix.
+
+**`sub_80073A0`**: the same unpack-and-forward wrapper shape as
+`sub_8007388`, this time calling `sub_8007398`. Matched on the first
+attempt.
