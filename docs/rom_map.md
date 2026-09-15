@@ -2006,6 +2006,28 @@ system - it reads as a long tail of individually-uncharacterized but
 conventionally-shaped functions, the natural cost of a whole-ROM map
 at this grain.
 
+**Follow-up scope note: only 14 functions in this zone actually score
+>=200 B and are truly undocumented** - most of the 587-function/
+29,932-byte gap is sub-200 B functions, consistent with the "long
+tail" framing above. Read 8 of the 14, all fitting already-documented
+conventions: **`sub_801C51C`** is a page-scroll-menu orchestration
+point, directly indexing the 36-slot medal table and calling the
+documented BG2 icon driver (`sub_801DAD8`) - ties the medal table into
+that menu system. **`sub_8012160`** calls `sub_8012AF4`, already tied
+to `overlay_ui` elsewhere - a caller-side confirmation of that link.
+**`sub_8018BDC`**/**`sub_801A03C`** extend the master-table spawner
+family (the latter with a new near-header offset, `+0x30`).
+**`sub_801A64C`** is a 6th+ confirmed site of the directional-target
+field convention, sourcing from a new table `gStaticData_0816C3B8`.
+**`sub_800BFA8`** is a further instance of the `self+0x68`/`0x74`
+generic state-machine selector pattern. **`sub_800CF70`**, sitting
+144 bytes before the physics/collision subsystem's stated
+`0x0800D000` start, calls the same linked-list walkers that subsystem
+uses and reaches the same 28-byte-record chain - functionally part of
+it despite sitting just outside the documented boundary, suggesting
+that subsystem's real edge is a few hundred bytes fuzzier than
+currently stated.
+
 ### Cross-checked the `UpdateGameFrame`-`MainLoop` cluster: same signature, not an island
 
 A parallel fork gave this separate 17.1 KB (now revised to 18.3 KB once
