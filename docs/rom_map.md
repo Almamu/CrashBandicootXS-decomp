@@ -1026,6 +1026,47 @@ left untouched, presumably handled by a separate confirmed-action code
 path not traced here. High confidence on mechanics (all four functions
 read in full); medium on the exact semantic label.
 
+### A new mechanism: a procedurally-generated VRAM fill-level meter, plus a movable-object state machine
+
+A further pass read 9 more actor-zone functions. **New mechanism:
+`sub_80336CC`/`sub_8031604` are near-identical twins that
+procedurally generate a vertical meter/fill-level tile graphic** -
+each indexes a per-level table (`gStaticData_08169AE8`/
+`gStaticData_08167AD4`, real labeled ROM symbols) via
+`gUnknown_030015A0`-family fields, sums heights, computes `0xFF - sum`,
+scales it, and DMAs the result as packed 4-bit nibbles into VRAM tile
+data (`0x06008000`) - a health-bar/water-level-style meter built per-
+frame from per-level source data. Two parallel field sets
+(`gUnknown_030015A0`-family vs. `gUnknown_03001528`-family) suggest a
+P1/P2 pair, consistent with this session's other two-player findings.
+**`sub_8031604` is called from `sub_8031504`, a new confirmed
+`category_vtable` slot** (`include/actor_anim.h`) - lands at
+`gStaticData_081756C4`, **type 1, slot 6** - a real behavioral tie:
+this meter system is invoked as part of type-1's per-frame vtable
+dispatch.
+
+**`sub_802E740` is the long-sought constructor for the `gUnknown_030014xx`-
+rooted tier-threshold actor family**, characterized multiple times
+this session but never traced to its constructor before - sets
+`self+0x50 = &gStaticData_087E5144` (a new confirmed 93-entry-family
+address, at a new `+0x50` field-pointer convention), initializes ~15
+struct fields, branching into two different init paths by sound ID
+(`0x1e` vs `7`). **`sub_802EDBC`/`sub_802EED0`/`sub_802EFD8` are three
+consecutive `gStaticData_0817Cxxx` mixed-convention vtable slots**
+forming a coherent input-driven state machine on the object
+`sub_802E740` constructs: mirror-image left/right accumulators
+(`±0x100`/frame, clamped `±0x500`, plus a secondary modular
+rotation/angle counter), and a button-press handler
+(`gUnknown_030007E0 & 0x200`) playing `PlaySfx(0xa, 0x100)` and
+resetting animation-part fields - reads as a player-controllable
+movable object (crate, platform, or similar) layered on the
+tier-threshold sound-cue base. `sub_8033CF8`'s already-known
+`sub_802E170` case-code finding (from an earlier round, never
+written into this document) is folded in here too. Nothing this pass
+broke the "actor per-type behavior" reading - all extend or connect
+already-known families; the VRAM-meter twins are the one genuinely
+new mechanism.
+
 ## Subdividing `game_loop`
 
 `game_loop`'s 112.7 KB has been one undifferentiated bucket even after
