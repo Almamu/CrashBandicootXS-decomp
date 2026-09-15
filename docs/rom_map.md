@@ -1320,6 +1320,36 @@ a larger mover object. None are entity-vtable-dispatched; none fold
 into an existing bucket - net new coverage ~988 B, leaving the core at
 **roughly ~6.7 KB genuinely unexplained**.
 
+**A further pass read four more functions, two of which fold into
+already-counted buckets.** **`sub_8011548`** (500 B) is entity-
+vtable-dispatched (inside the documented `gStaticData_087Exxx` 93-entry
+family) - not new core coverage, but mechanically interesting: it
+integrates position from velocity fields, manages a wrapping counter
+with mode-gated increment/decrement, and on a branch plays
+`PlaySfx(0xe, 0x100)` plus calls a scoring/counter candidate,
+`sub_8023430`. **`sub_8014084`** (488 B) is directly referenced *from
+inside the 42-slot action dispatch table's own ROM span* (`0x0816BFAC`,
+`0x8C` bytes past `gStaticData_0816BF20`'s base) - a concrete new tie,
+and also folds into the already-counted action-table bucket. It
+strongly resembles the `sub_8016288`/`sub_8011BD4` type-`0x1d`
+player-control family's shape (D-pad input via the same
+`sub_8000760`, direction-value branching), though the type-ID field
+wasn't cross-checked.
+
+Genuine new coverage (~1 KB): **`sub_800EAFC`** (524 B, not
+vtable-dispatched) is a **randomized-behavior state machine** - rolls
+a `rand()`-based state on entry, then dispatches a 10-case jump table;
+one case conditionally calls `sub_802599C(gUnknown_030012B4)`, the
+same helper already tied to that global in `sub_800FF0C`'s finding -
+reads as an AI/behavior pattern selector for some actor type.
+**`sub_8010B6C`** (488 B, partially read) is a proximity/nearest-
+neighbor search over the hot `gUnknown_030012D8` global's leading
+fields against a target, populating a stack array of pointers into
+`self`'s own fields - not fully characterized, the loop body past
+setup wasn't read. Next candidates if continued: `sub_8014D18`,
+`sub_8007DBC`, `sub_801434C`, `sub_801A114`, and the still-unread
+`sub_80240E4` bitfield-packer.
+
 ### Cross-checked the `UpdateGameFrame`-`MainLoop` cluster: same signature, not an island
 
 A parallel fork gave this separate 17.1 KB (now revised to 18.3 KB once
