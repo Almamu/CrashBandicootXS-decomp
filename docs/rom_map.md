@@ -964,16 +964,22 @@ offset by `*gUnknown_03001420`), and `+0x18` a raw field
 (`sub_802A504`). Three Q8.8 fields plus a mode-selected variant byte
 reads as a plausible spawn-offset vector (x/y/z) plus a type selector -
 consistent with the doc's original "threshold-triggered sub-effects/
-spawns" guess. **Caveat**: the field offsets go up to `+0x18` (24
-bytes) while the fork reported a 20-byte (`0x14`) record stride - an
-apparent inconsistency not reconciled here; worth double-checking the
-actual stride before treating this layout as final. (Note this sits
-alongside, and isn't fully reconciled with, `sub_802968C`'s separate
-finding elsewhere in this document that the *ROM-resident* copy of
-`sub_effect_table` is a count-prefixed array of `0x14`-byte records
-matched on a `+0x8` byte - `SelectActorCategory` may copy/transform the
-ROM table into this runtime layout, or the two findings describe
-different fields; not resolved.)
+spawns" guess. **Resolved by a follow-up fork - no inconsistency
+after all, and this is the same array `sub_802968C` reads, not a
+separate runtime copy.** `SelectActorCategory` itself indexes with
+`idx*5, <<2 = idx*0x14` and stores its own array-pointer parameter
+directly into `gUnknown_03001400` - genuinely the same `0x14`-byte-
+stride array `sub_802968C` walks (record 0 doubles as a combined
+header+entry, with the record count at its own `+4`, matching
+`sub_802968C`'s reading exactly - direct ROM dump of category 0's real
+table, `0x080B1444`, confirms `count=164` there). The `sub_802A5xx`
+accessors' `+0x18` and `+0x14` fields aren't part of an oversized
+record - since `idx*0x14+0x18 = (idx+1)*0x14+0x4`, they're reading 4
+and 0 bytes into the *adjacent* record (`idx+1`), not this one -
+plausibly deliberate, reading ahead for interpolation between
+consecutive entries (the same adjacency style the `anim_table_record`/
+keyframe system already uses). Record stride is **confirmed `0x14`
+(20 bytes)** across both findings.
 
 **`sub_8034CB0` turns out to be a separate, per-frame-gated screen
 trigger, not part of the map-screen's level-load state machine** as
