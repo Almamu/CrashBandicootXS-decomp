@@ -1163,6 +1163,44 @@ state-transition/lock step. Its only caller (`sub_802CC9C`) checks
 checks its return - a two-stage gate (dynamic check, then lock/mode
 check), not a duplicate proximity check with different thresholds.
 
+### A shared "type-byte event dispatch" convention, and evidence of one large, complex actor object (boss candidate)
+
+A further pass read 9 more functions. **New pattern: a shared
+"type-byte event dispatch" convention** feeding two different
+downstream families. `sub_8031D7C`/`sub_8031B0C`/`sub_8031E80`/
+`sub_8031C0C` are near-identical: on trigger (proximity via
+`sub_802A6EC`, or a countdown timer), they read a type byte from
+`self+0x30`, always play `PlaySfx(3, 0x100)` first, then split by
+value range into two downstream calls - values `0x18`/`0x19`/`0x1a`
+(and `0x1d`) call **`sub_8022EA8(gUnknown_030012C0, N)`**, the
+already-documented achievement/unlock-icon spawner setter (tied to
+`gStaticData_084A5600` record 47) - a concrete new confirmation of
+what triggers it; values `0x14`-`0x17` call
+**`sub_802F540(gUnknown_03000884, N)`**, unread, a sibling event
+family worth a follow-up. `sub_802CF30` is a homing/chase mechanic:
+integrates velocity into position, and on proximity plus a
+`sub_802B730(gUnknown_03000884)` check, sets a large fixed velocity
+toward the player - reads as a bonus/enemy object that homes in on
+the player once triggered. `sub_802FFB8` indexes a new table
+**`gStaticData_0817C280`** (stride 8) by its own state field.
+
+**Evidence of one large, complex actor object - likely a boss or
+major environmental feature, not several unrelated small actors.**
+`sub_80311C4`/`sub_8030734`/`sub_8031378` all touch the dense
+`gUnknown_030015xx` field cluster together with
+`gStaticData_0817C3D8` (the same target table the camera-edge-follower
+`sub_8030E08` already uses) and `GetAnimFrameBaseOffset`;
+`sub_8031378` specifically does 3D stack-buffer position math
+combining `gUnknown_03001540`/`1544`/`1548` accumulators with
+`self+0x38`-rooted fields - camera-relative projection/culling math.
+Combined with the already-documented `sub_8031504`/`sub_8031604`
+(VRAM meter) and `sub_8030D48` (tilemap blit) sitting in this same
+address neighborhood, this reads as one unusually large, complex
+actor with its own camera tracking, VRAM meter display, and 3D
+positioning. Not fully resolved - a dedicated pass on this cluster
+(`sub_8030734`, `sub_80311C4`, `sub_8031378`, `sub_802F540`,
+`sub_802B730`) would likely resolve it fully.
+
 ## Subdividing `game_loop`
 
 `game_loop`'s 112.7 KB has been one undifferentiated bucket even after
