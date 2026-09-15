@@ -51,7 +51,7 @@ taught this project to avoid. Treat this as the reading-level answer to
 | `game_loop` (core per-frame/state-machine logic) | 112.7 KB | 47.3% | mixed - split into sub-buckets in "Subdividing `game_loop`" below; its "undifferentiated core" sub-bucket is ~51% concretely explained as of "Current state of the undifferentiated core" further down that section |
 | `actor` (category/part/vtable system) | 50.7 KB | 21.3% | high for ~38.7 KB (named landmarks + confirmed reachable)\*, ~12 KB inferred |
 | `graphics_loading` (package/tile/level loading) | 15.7 KB | 6.6% | mixed - `LoadGraphicsPackage` itself and its immediate neighbors read directly, ~9.1 KB moved out to `menu_ui` (see below) |
-| `overlay_ui`? (likely a settings menu, 4 discrete-level sliders) | 18.7 KB | 7.9% | high for the split itself (118-function dominant component, connectivity-based); the "22 functions" sub-count is a trampoline-inflated upper bound, see the correction below; medium for "settings menu, 4 sliders" - structure confirmed, actual setting names not recoverable statically, see "Narrowed down which screen" below |
+| `overlay_ui`? (a settings menu plus sibling post-level screens - a results/medal-award screen and a confirm dialog, sharing one constructor toolkit) | 18.7 KB | 7.9% | high for the split itself (118-function dominant component, connectivity-based); the "22 functions" sub-count is a trampoline-inflated upper bound, see the correction below; medium for "settings menu, 4 sliders" - structure confirmed, actual setting names not recoverable statically, see "Narrowed down which screen" below; see "Correction: `overlay_ui` is a small family of screens" for the medal/dialog siblings |
 | `audio_gax2` (Shin'en GAX2 engine) | 14.1 KB | 5.9% | medium - boundary narrowed this investigation; three internal functions now read directly too, see `docs/audio.md`'s "A few engine internals read directly" |
 | `hud` (icon/text widgets, score/percentage/stat counters) | 6.1 KB | 2.6% | high - 1.3 KB named landmarks plus ~4.8 KB stat-widget cluster (8 functions, all individually read this pass) |
 | `menu_ui` (per-level text/dialog display, dispatch table confirmed) | 9.1 KB | 3.8% | high - one function read in full, 29/31 siblings confirmed as real dispatch-table entries in ROM data |
@@ -2109,6 +2109,64 @@ generically as a modal dialog rather than tied to one trigger. Neither
 `sub_80031E4` nor `sub_800300C` are entity-vtable-dispatched.
 `sub_8035E14` (the shared level-load-stage selector) remains unread
 and would pin down exactly which states map to which screen.
+
+### Correction: `overlay_ui` is a small family of screens, not one settings menu
+
+A further fork read six more functions and turned up evidence this
+zone isn't a single settings menu - it's **several related post-level/
+pause-menu screens sharing one constructor toolkit**:
+
+- **`sub_8005D44` reads as a medal/rank award function**, not a
+  settings row: fetches the current level index, reads a per-level
+  completion time, formats it via `FormatCentiseconds`, compares it
+  against three thresholds in a new per-level table
+  `gStaticData_0816C86C` (`+8`/`+0xc`/`+0x10` - a bronze/silver/gold
+  shape), and tags a new object with an icon selected from
+  `gStaticData_0816B270[0]`/`[4]`/`[8]`. Runs the standard OAM trio.
+- **`sub_80063D8` builds a two-string dialog/message box**
+  (parameterized by two label pointers and a type tag), called by
+  **`sub_80062A8`**, a higher-level constructor that resets palette
+  color 0 and `DISPCNT`, initializes the popup-text system's
+  `gUnknown_030012DC`/`030012E0` structs via `sub_8028A40` - **the
+  same init call the between-level map screen's `sub_8034CEC` uses** -
+  reinforcing that the popup-text init is shared UI infrastructure,
+  not map-screen- or actor-specific. `sub_80062A8` then calls
+  `sub_80063D8` to build the dialog and **`sub_8006518`** to run it: a
+  fade-in/wait-for-confirm/fade-out animation driver (ramps an
+  alpha-ish counter `0x1f`→`0`, VBlank-waits for a button press, ramps
+  back `0`→`0x10`) - a complete modal-dialog lifecycle. (`sub_8006600`,
+  one of `sub_8006518`'s callees, is already partially matched as
+  `src/oam_count.c`, parked under `#if NON_MATCHING` per an asm
+  comment right after it - a useful cross-reference for whoever
+  continues this thread.)
+- **`sub_8004EC0`, `sub_80063D8`, `sub_8005D44` are all instances of
+  one recurring screen-constructor shape**: `sub_801E644` init → a
+  *local* blend-register setup at `0x04000050` (same field-offset
+  convention as `sub_801BC28`/`sub_801CCF8`, but per-screen rather
+  than shared) → `LoadGraphicsPackage` with a per-screen package
+  (`gStaticData_0816B284` for `sub_8004EC0`, `gStaticData_0816C484`
+  for `sub_80063D8`) → allocate an object → reach through
+  `gUnknown_030012D0`'s triple-dereference into `gStaticData_084A5600`
+  at a **new header-relative offset each time**. New offsets this
+  pass: `0x8a<<2=0x228` (`sub_8004EC0`), `0xc6<<1=0x18C`
+  (`sub_8005D44`), `0xe4<<1=0x1C8` (`sub_80063D8`) - combined with the
+  previously-known `0x240`/`0x27C`, that's now **five confirmed
+  header-relative offsets** clustered together in this table.
+- **`sub_8005004`** is a finalize/refresh utility: iterates ~10
+  child-object pointer slots, re-measures each non-null one's string
+  width, and conditionally frees `self` - reads as "refresh all child
+  labels, optionally tear down the screen."
+
+None of the six are entity-vtable-dispatched. Confidence: high on the
+mechanical/call-graph findings; medium-high on the "medal award"/
+"dialog box" semantic labels (object types not independently
+confirmed, but both shapes are distinctive). Net effect: `overlay_ui`
+looks like a small family of related screens (settings, results/
+medals, confirm dialogs) sharing one constructor toolkit and the
+`gStaticData_084A5600`-offset convention, not a single settings menu -
+worth a heading/category-description update, though not conclusive
+without reading the callers of `sub_80062A8`/`sub_8004EC0`/
+`sub_8005D44` themselves.
 
 ### A fourth thing in this file: the small leftover cluster is a fade-to-black effect
 
