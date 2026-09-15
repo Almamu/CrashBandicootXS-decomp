@@ -2012,3 +2012,6 @@ already 4-aligned.
 **`sub_8007334`**: sets `self->flags` bit2 (`|= 4`) - the mirror of
 `sub_8007328`. Same accumulator-register fix, plus the usual
 trailing-padding alignment fix.
+
+**`sub_8007340`**: a getter for `self->flags` bit1, same shape as the
+other bit getters. Matched on the first attempt.
