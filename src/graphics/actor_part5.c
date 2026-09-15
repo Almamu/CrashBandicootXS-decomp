@@ -89,4 +89,16 @@ void sub_8008364(struct actor *part)
         sub_803AD7C(addr, ptr);
     }
 }
+
+/* Returns a pointer to `part`'s current keyframe record's `+4` field -
+ * the same keyframe-table lookup used throughout this ROM region. */
+void *sub_8008394(struct actor *part)
+{
+    register void **tablePtr asm("r2") = *(void ***)((u8 *)part + 0x20);
+    register u8 idx asm("r3") = *((u8 *)part + 0x2d);
+    s32 offset = idx * 0x1c;
+    void *table = *tablePtr;
+    void *rec = (u8 *)table + offset;
+    return (u8 *)rec + 4;
+}
 asm(".align 2, 0");

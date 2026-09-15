@@ -2,19 +2,6 @@
 
 .syntax unified
 .arm
-	thumb_func_start sub_8008394
-sub_8008394: @ 0x08008394
-	ldr r2, [r0, #0x20]
-	adds r0, #0x2d
-	ldrb r3, [r0]
-	lsls r1, r3, #3
-	subs r1, r1, r3
-	lsls r1, r1, #2
-	ldr r0, [r2]
-	adds r0, r0, r1
-	adds r0, #4
-	bx lr
-
 	thumb_func_start sub_80083A8
 sub_80083A8: @ 0x080083A8
 	ldr r0, _080083B4 @ =gUnknown_030012D0
