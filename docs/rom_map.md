@@ -1377,6 +1377,43 @@ caller (`sub_802F4AC`), not specific to `sub_802D6A0`'s object.
 constructor, fitting the established `+0x50` field-pointer convention
 exactly. No new mechanism in either.
 
+### The boss's BG2 spin/zoom effect, a singleton patrol driver, and two accumulator-drain pairs
+
+A further pass read 10 more functions, filling in real gaps in the
+boss/singleton rendering pictures rather than opening new ones.
+**`sub_80312C4`** reads as the **boss cluster's own BG2 affine-matrix
+(rotate/scale) committer** - alternates a `BG2CNT` control word on a
+toggle, computes a projection via the same screen-projection helpers
+`sub_80311C4` uses combined with the boss's own position fields, and
+writes `BG2PA`/`PB`/`PC`/`PD`/`BG2X` - the boss's spin/zoom visual
+effect. **`sub_8030C98`** confirms `sub_8030834`/`sub_8030E08`'s
+accumulator pair and `sub_8030734`'s oscillation drive **share one
+physical update cascade** - a third consumer of the same fields, with
+its own distinct threshold and a `DISPCNT`-bit clear on cross. In
+parallel, **`sub_8033048`** is the **singleton's own patrol/
+oscillation driver**, structurally parallel to the boss's
+`sub_8030734` - same bounded-oscillator shape, its own "dead"-flag
+set on a separate threshold.
+
+**`sub_802EC64`/`sub_802ED10`** are a new up/down accumulator pair,
+structurally identical to the documented left/right movable-object
+pair (`sub_802EDBC`/`sub_802EED0`/`sub_802EFD8`) but on different
+input bits and a new field (`gUnknown_03001508`) - a companion control
+axis for the same movable object. **`sub_802BC68`/`sub_802F3BC`** are
+a matched pair of **accumulator-drain/reward-dispenser functions**:
+one drains the `sub_802C078` accumulator, the other the `sub_802F540`
+accumulator, each into tiered calls by threshold magnitude - confirms
+both accumulators have dedicated consumers, not just producers.
+**`sub_802C614`** extends the lap-counter/proximity-dispatch family
+and confirms **`sub_802C4C8`** as a shared cleanup/tail step across
+this actor family (same unconditional tail-call already seen from
+`sub_802C540`); its own two player-pointer callees
+(`sub_802C0A8`/`sub_802AAB4`) were left unread rather than assumed to
+be more "player reaction" instances, per this session's established
+correction that a player-pointer argument alone doesn't imply that.
+The rest (`sub_802CE5C`, `sub_802FF08`) fit already-documented shapes
+exactly.
+
 ## Subdividing `game_loop`
 
 `game_loop`'s 112.7 KB has been one undifferentiated bucket even after
