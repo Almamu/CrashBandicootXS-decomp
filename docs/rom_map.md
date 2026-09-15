@@ -2042,6 +2042,32 @@ resembles the 16-slot LRU decode cache but with a different slot
 count; not fully resolved, likely a text/dialog-data cache
 constructor, worth a follow-up.
 
+### Cluster closed: 15 more reads, effectively fully characterized above the noise floor
+
+A follow-up fork read all 15 remaining functions over 60 B in this
+cluster - **none represent a new system**, all extend or connect
+already-documented families. Highlights: `sub_8024498` confirms
+**`gStaticData_0816CD80`** (flagged in an earlier round as "not
+investigated further") as a real **per-level sound-cue-ID sub-table**,
+feeding `sub_8001B54`. `sub_8024EB4` resolves the caller context for
+the background streamer's initial-fill constructor
+(`sub_8024C64`). `sub_8026264`/`sub_80262A4` confirm both streamer
+"get source pointer" helpers (`sub_8024B18`/`sub_8024B48`) feed the
+same cache-slot release mechanism (`sub_80265A0`) in bulk-teardown
+paths. `sub_8026BF8`/`sub_8026C3C` are single-point collision-test
+siblings of `sub_8026A18`/`sub_8026AE8`, one via the raw terrain
+streamer and one via the `CheckTerrainFlag` API - confirming that
+API's use in collision response too. `sub_8026E6C` ties the
+text-box singleton (`gUnknown_03001308`) into the camera-follow
+system. `sub_8025DE8`/`sub_8025E2C` draw a repeated-glyph meter row
+(text characters expanding from a center point) - a distinct shape,
+not previously catalogued, but a rendering variant rather than a new
+subsystem. **With this pass, the 259-function/18.3 KB
+`UpdateGameFrame`-`MainLoop` cluster is effectively fully
+characterized above the ~60 B noise floor** - the remaining ~15%
+undocumented is near-certainly more of the `gUnknown_030012C0`
+one-line accessor family already characterized elsewhere.
+
 ### Continuing into the remainder: one cross-zone link, one field re-confirmed
 
 Picked up the next-biggest unread functions after the consolidation
