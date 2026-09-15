@@ -1989,6 +1989,37 @@ This cluster's remaining unread functions are now consistently under
 ~160 B, a marked drop from earlier rounds' 300-700 B finds - a sign
 this cluster, too, is approaching full characterization.
 
+### Coverage check and eight more small reads: mostly closing loops on known systems
+
+A follow-up fork cross-referenced every `thumb_func_start` label in
+this cluster against the doc: **5,108 bytes (27.2%) across 171
+functions remain undocumented by name**, but the large majority are
+tiny (8-28 B) one-line accessors, almost certainly more of the
+`gUnknown_030012C0` accessor family - only ~14 exceed 90 B. Read the 8
+largest, all closing loops on already-documented systems rather than
+opening new ones: **`sub_8024708`** is a flag-toggled dual-asset
+streamer plus a *new* `DISPCNT` writer (alongside the already-
+documented `sub_8001614`/`gUnknown_03001288` one). **`sub_80235E4`**
+is a fifth entry point into the hardware-window-register/lap-counter
+system, confirmed calling `sub_8022CA0` directly. **`sub_8025FC8`**
+fills in `sub_8024B48`'s role (the background streamer's "get source
+pointer" helper, previously called but never characterized).
+**`sub_8023484`** closes the loop on the `self+0x1c0`/`0x1c4`
+counter-notification chain - the consumer/trigger side of the 15-slot
+table's `sub_802209C` writer, forwarding into `sub_801EB04` alongside
+`sub_802306C`/`sub_8022FEC`'s threshold-cross paths. **`sub_802602C`**
+is a generalized multi-line sibling of `sub_8025E98`. **`sub_8025460`**
+extends the `CheckTerrainFlag` characterization (`sub_8025228` above)
+- same lookup, but returns *three* simultaneous outputs from one
+decoded chunk instead of a single mode-selected byte, richer than
+first characterized. **`sub_80265A0`** is the missing "release" half
+of the `sub_80264F8`/`sub_802648C` cache-slot trio (init/acquire/
+release now all confirmed). **`sub_80254F8`** is a constructor tying
+into `gUnknown_03001308` with a 15-entry sentinel array - shape
+resembles the 16-slot LRU decode cache but with a different slot
+count; not fully resolved, likely a text/dialog-data cache
+constructor, worth a follow-up.
+
 ### Continuing into the remainder: one cross-zone link, one field re-confirmed
 
 Picked up the next-biggest unread functions after the consolidation
