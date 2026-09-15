@@ -3032,17 +3032,31 @@ achievement/unlock-icon family (`sub_801173C`).
 fill helper** - packs a repeated 4-bit pattern across a 16-bit tile-
 index word and DMAs it to VRAM address `0x06017800` - a graphics
 primitive ("fill one BG tilemap row with a single tile/palette value")
-not seen elsewhere in this document. More interesting: **`sub_8022208`/
-`sub_80221F0`**, a constructor/consumer pair, calls
-`sub_8025D4C(gStaticData_0816C6A4, 0x5c, ...)` - passing the **92-slot
-table's own base address** plus a size `0x5c` (92 bytes = 23 words) -
-reading like a raw byte-copy of the table's first 23 function-pointer
-slots into a freshly-allocated object, rather than indexed dispatch.
-Not confirmed, but a plausible **"local vtable copy" pattern** (a
-per-instance snapshot for faster dispatch than re-indexing the shared
-table each time) - worth a dedicated follow-up (`sub_8025D4C`/
-`sub_8025D54` remain unread). `sub_801E96C` is a flags-clear utility,
-same shape family as the already-documented trivial bit-helpers.
+not seen elsewhere in this document. More interesting-looking:
+**`sub_8022208`/`sub_80221F0`**, a constructor/consumer pair, calls
+`sub_8025D4C(gStaticData_0816C6A4, 0x5c, ...)` - passing the 92-slot
+table's own base address plus a size `0x5c` (92 bytes). `sub_801E96C`
+is a flags-clear utility, same shape family as the already-documented
+trivial bit-helpers.
+
+**Follow-up disproves the "local vtable copy" hypothesis - it's a
+generic `{base, count}` descriptor pair, nothing table-specific.**
+`sub_8025D4C(self, r1, r2)` is a trivial 2-field setter
+(`self->field_0=r1; self->field_4=r2`), and its zeroing counterpart
+`sub_8025D6C` is likewise a generic 2-word zeroer - no loop, no copy,
+no table-specific logic in either body. The table-relatedness lives
+entirely in the caller's arguments: `sub_8022208` allocates an 8-byte
+object, zeroes it, stores it in `gUnknown_030012E4`, then calls
+`sub_8025D4C(obj, &gStaticData_0816C6A4, 0x5c)` - the object just
+remembers `{table_base, 0x5c}` as a small descriptor, plausibly so
+some other, not-yet-identified consumer can do bounds-checked indexed
+access into the table rather than hardcoding its address everywhere.
+`sub_80221F0` is plain teardown (frees `gUnknown_030012E4` via the
+documented `mem_free`). Also resolved: **`sub_801F680`** (the
+per-instance callback `sub_8021A00` installs) is just another instance
+of the standard `gStaticData_084A5600` popup-spawner shape, at a new
+record index (17); **`sub_801B984`** is a standard entity constructor,
+fits the established `+0x18`-pointer convention exactly, no anomalies.
 
 **`sub_802364C`** (8 B): a trivial wrapper, `sub_8022468(self, 2)` -
 confirms `sub_8022468`'s second parameter is a context/mode selector, as
