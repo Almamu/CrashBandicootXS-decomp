@@ -3163,9 +3163,14 @@ that bound was never tight to begin with.
 The remaining small gaps between landmarks (a few hundred bytes to ~20
 KB each - see `tools/map_rom_regions.py`'s output for the exact list) are
 mostly too fragmented (dozens of small, mostly-disconnected components)
-to say anything useful about yet. One exception: the ~16.7 KB gap between
-`UpdateGameFrame` and `MainLoop` has a strong internal cluster (101
-functions/9.7 KB) with 46 direct, non-hub links back to `UpdateGameFrame`
-itself - i.e. this is very plausibly more per-frame gameplay-update logic
-in the same vein as the 94.4 KB zone above, just already anchored to a
-landmark rather than floating free.
+to say anything useful about yet. One exception, **now stale - see
+"Cross-checked the `UpdateGameFrame`-`MainLoop` cluster" and its many
+follow-ups in the "Subdividing `game_loop`" section above for the
+current, extensively-read state (40+ functions individually read
+across many rounds, remaining unread functions now consistently under
+~160 B)**: the ~16.7 KB gap between `UpdateGameFrame` and `MainLoop`
+originally showed a strong internal cluster (101 functions/9.7 KB, now
+revised to 259 functions/18.3 KB once properly recounted) with 46
+direct, non-hub links back to `UpdateGameFrame` itself - confirmed as
+more per-frame gameplay-update logic in the same vein as the 94.4 KB
+zone, not a separate island.
