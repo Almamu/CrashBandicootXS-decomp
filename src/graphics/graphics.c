@@ -275,3 +275,14 @@ void FreeVramDmaQueue(void)
         gUnknown_03001290.entries = NULL;
     }
 }
+
+s32 AllocVramDmaQueue(void)
+{
+    gUnknown_03001290.entries = (struct dma_queue_entry *)mem_alloc(
+        sizeof(struct dma_queue_entry) * DMA_QUEUE_MAX_ENTRIES, MEM_HEAP_EWRAM);
+    if (gUnknown_03001290.entries == NULL) {
+        return -1;
+    }
+    gUnknown_03001290.count = 0;
+    return 0;
+}

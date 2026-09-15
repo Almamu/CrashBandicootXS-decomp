@@ -60,3 +60,5 @@ rename nullsub_10 IrqEmptyHandler
 # function - src/system/memory.c now has this as a properly-disassembled
 # (if unreachable) `sub_800039C`, see its comment there.
 split 0x0800039C sub_800039C
+
+rename sub_8006C00 AllocVramDmaQueue

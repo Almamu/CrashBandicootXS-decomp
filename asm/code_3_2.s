@@ -2,30 +2,6 @@
 
 .syntax unified
 .arm
-	thumb_func_start sub_8006C00
-sub_8006C00: @ 0x08006C00
-	push {lr}
-	movs r0, #0x90
-	lsls r0, r0, #6
-	movs r1, #0x80
-	lsls r1, r1, #0x17
-	bl mem_alloc
-	ldr r1, _08006C1C @ =gUnknown_03001290
-	str r0, [r1]
-	cmp r0, #0
-	beq _08006C20
-	movs r0, #0
-	str r0, [r1, #4]
-	b _08006C24
-	.align 2, 0
-_08006C1C: .4byte gUnknown_03001290
-_08006C20:
-	movs r0, #1
-	rsbs r0, r0, #0
-_08006C24:
-	pop {r1}
-	bx r1
-
 	thumb_func_start sub_8006C28
 sub_8006C28: @ 0x08006C28
 	ldr r1, [r0]
@@ -56732,7 +56708,7 @@ sub_8022230: @ 0x08022230
 	bl sub_8026EDC
 	bl InitHudIconWidgetB
 	str r0, [r5]
-	bl sub_8006C00
+	bl AllocVramDmaQueue
 	ldr r4, _08022338 @ =gUnknown_03001300
 	ldr r0, _0802233C @ =0x0000040C
 	bl sub_8026EDC

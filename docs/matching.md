@@ -1615,3 +1615,33 @@ previous cleanup, again re-checking both `make compare` and
     functions, so merging these needs much stronger evidence than
     "they're next to each other" before touching functions that
     currently match.
+
+## `AllocVramDmaQueue`: a third piece of the DMA-queue system, mislabeled by ROM proximity
+
+Matched `sub_8006C00` (right at the boundary between `graphics.c`'s
+matched code and the raw `asm/code_3_2.s` chunk `docs/rom_map.md`'s
+whole-ROM pass calls `game_loop`) as `AllocVramDmaQueue` in
+`src/graphics/graphics.c`, right after `FreeVramDmaQueue` - the missing
+constructor counterpart: allocates `DMA_QUEUE_MAX_ENTRIES *
+sizeof(struct dma_queue_entry)` bytes via `mem_alloc`, stores the
+pointer into `gUnknown_03001290.entries`, zeroes `.count`, and returns
+`0`/`-1` on success/failure - the exact mirror image of
+`FreeVramDmaQueue`'s `mem_free`+`NULL`-out. A concrete example of the
+whole-ROM investigation's own "proximity is a weak signal" lesson: this
+function's ROM address happens to sit at `game_loop`'s doorstep, but it
+has nothing to do with that system - it belongs with the two other DMA-
+queue functions already matched here, just never picked up before since
+nobody had looked at this exact address yet.
+
+One real gotcha, caught by the compile-and-compare step rather than by
+reading alone: the disassembly's `movs r1, #0x80; lsls r1, r1, #0x17`
+computes `0x80 << 23 = 0x40000000` (`MEM_HEAP_EWRAM`), not
+`0x80000000` (`MEM_HEAP_IWRAM`) as an eyeballed first guess assumed -
+`0x80`'s single set bit is at position 7, so a 23-bit shift lands it at
+bit 30, not 31. Building with `MEM_HEAP_IWRAM` compiled to a shift-by-24
+instead of shift-by-23, an instant, obvious diff against the real
+disassembly. Since `graphics.o` compiles to the exact byte count needed
+to land the next raw function (`sub_8006C28`) at the same address it
+already had, no new `.c` file was needed and no other file's boundary
+moved - only `tools/report_units.py`'s `game_loop` category start moved
+forward by this function's size (`0x08006C00` -> `0x08006C28`).

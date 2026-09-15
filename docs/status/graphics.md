@@ -5,10 +5,10 @@ per-actor animation frames, text layout.
 
 ## Matched
 
-- `src/graphics/graphics.c`: `QueueVramDmaTransfer`, `FreeVramDmaQueue`,
-  `FlushVramDmaQueue`, `sub_8006B0C`, `sub_8006AF4`, `sub_8006AC8`,
-  `sub_8006AAC`, `sub_8006A78`, `sub_8006A84`, `sub_8006A90`, `sub_8006A48`,
-  `sub_8006A14`, `sub_80069E8`, `sub_800697C`
+- `src/graphics/graphics.c`: `AllocVramDmaQueue`, `QueueVramDmaTransfer`,
+  `FreeVramDmaQueue`, `FlushVramDmaQueue`, `sub_8006B0C`, `sub_8006AF4`,
+  `sub_8006AC8`, `sub_8006AAC`, `sub_8006A78`, `sub_8006A84`, `sub_8006A90`,
+  `sub_8006A48`, `sub_8006A14`, `sub_80069E8`, `sub_800697C`
 - `src/graphics/oam_count.c`: `sub_8006700`, `sub_8006714`, `sub_8006770`,
   `sub_80067A4`, `sub_80067B4`, `sub_80067C4`, `sub_80067D4`, `sub_80067E4`,
   `sub_80067EC`, `sub_8006820`, `sub_8006864`, `sub_80068A8`, `sub_80068CC`,
