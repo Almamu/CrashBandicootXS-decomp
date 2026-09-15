@@ -1619,6 +1619,40 @@ apart) - consistent with a genuine **word-indexed pointer array**
 unrelated ad-hoc offsets. Not confirmed, but worth checking by whoever
 maps that table further.
 
+### Resolved `category_descriptor.sub_effect_table`'s record layout, and five more extensions
+
+A further pass read six more functions in this cluster, none showing
+the paired-vtable `{0,ptr}` shape. The standout: **`sub_802968C`**
+(~140 B) resolves part of `include/actor_anim.h`'s explicitly-marked-
+unreversed `category_descriptor.sub_effect_table` field (`+0x14`).
+Given a category index, it indexes `gStaticData_08175558[idx]`, reads
+`+0x14` (the sub-effect table pointer) and `+0x00` (`type`), then
+loops a count (read from the table's own `+4`) over `0x14`-byte-stride
+records, checking each record's `+8` byte against one of **two
+different match-sets depending on the category's `type`**: an 11-value
+discrete set (`1,3,4,8,9,0xA,0x1C,0x1D,0x1E,0x1F,0x23`) for `type==0`,
+or a mostly-contiguous range (`0x13`-`0x17`, plus `0x1B`,`0x1E`)
+otherwise - tallying and returning a count of matching records. Reads
+as "count this category's sub-effects/spawns of certain types" - a
+concrete resolution worth folding into `actor_anim.h`'s comment on
+that field.
+
+Five more extend already-documented conventions without introducing
+new ones: **`sub_8025B0C`** wraps the already-documented `sub_8025BAC`
+(`gStaticData_084A5600` 12-byte-record spawner) and writes the exact
+`self+0x60`/`0x48`/`0x4c`/`0x50` directional-target field layout
+already confirmed five other places - a sixth instance.
+**`sub_8024590`**/**`sub_8024640`** (a linked pair) manage
+`gUnknown_030012BC` sound-channel lifecycle via
+`sub_8001B54`/`sub_80019A8`/`PlaySfx` - extends the `PlaySfx`/
+`sub_80019A8` channel-handle toolkit, unrelated to the medal-tally
+chain despite address proximity. **`sub_80264F8`** is a generic
+ID->cache-slot mapper with reference counting, same *shape* as
+`sub_8024F24`'s pattern but a distinct instance. **`sub_802680C`**
+touches `gUnknown_0300084C` (the UI-overlay-manager singleton)
+directly as its own teardown/refresh function - same shape family as
+`overlay_ui`'s `sub_8005004`, a distinct instance.
+
 ### Continuing into the remainder: one cross-zone link, one field re-confirmed
 
 Picked up the next-biggest unread functions after the consolidation
