@@ -1678,6 +1678,37 @@ but two more action-table slots and a new entity-vtable<->master-table
 tie are concrete additions - the core is now overwhelmingly explained
 by already-documented families, with a small genuine remainder.
 
+### A whole-zone sanity check: the 94.4 KB main zone is ~59% named in prose, and most of the rest is already-bucketed
+
+A different kind of check than the "undifferentiated core" tracking
+above: a fork scripted a direct cross-reference of every function name
+in the whole 94.4 KB main `game_loop` zone (804 functions, 96,632
+bytes) against every function name appearing anywhere in this
+document's prose - **59.1% (57,112 B) is directly named**; the
+remaining 40.9% (39,520 B, 666 functions) isn't, but this overstates
+genuine unknowns, since whole buckets (the physics/collision
+subsystem, the 42-slot action table, entity-vtable slots) were
+confirmed at the aggregate/connectivity level without every member
+being individually named in prose. Spot-checking the 8 largest
+"undocumented" functions against the physics/collision subsystem's own
+address range confirmed 4 of 8 fall inside it and fit its shape
+exactly - simply never named.
+
+**One genuine new lead came out of this check: `sub_801CEE0`** (400 B)
+- a per-frame commit/overlay function distinct from the documented
+`sub_802400C`/`sub_80241BC` frame-end hubs (this one lives in the main
+zone, not the `UpdateGameFrame`-`MainLoop` cluster). Runs the same
+OAM-commit sequence seen elsewhere, then writes several BG-scroll/
+window-shaped hardware registers via three unread helpers
+(`sub_801D7D0`/`sub_801E640`/`sub_801DE24`), zeroes VRAM at
+`0x0600A000`, then loops drawing 6 text items via `sub_803AD84` -
+reads as a second-screen/overlay commit function (debug overlay,
+second BG-layer content, or similar), not yet folded into any
+documented bucket. The other genuinely-unread outside-any-bucket
+function sampled, `sub_8017348`, fits already-known conventions
+closely (the type-`0x1d`/28-byte-record family). `sub_8010F8C` and
+`sub_801DAD8` remain unread and unclassified.
+
 ### Cross-checked the `UpdateGameFrame`-`MainLoop` cluster: same signature, not an island
 
 A parallel fork gave this separate 17.1 KB (now revised to 18.3 KB once
