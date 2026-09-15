@@ -2551,6 +2551,33 @@ box/tile-size presets**, used both for best-fit *selection*
 (`sub_801E688`) and for *centering within* whichever box got selected
 (`sub_801E788`). Same data, two different consumers.
 
+**Follow-up fully mapped all 15 slots of the trigger-effect dispatch
+table** (`gStaticData_0816C7D8`-`0816C814`, confirmed by direct dump -
+a plain array, no `{0,ptr}` pairing):
+
+| Slot | Function | Behavior |
+|---|---|---|
+| 0 | `sub_8020D4C` (312 B) | New shape: a richer spawn with a **two-line text popup** (two `sub_803AD80` calls), `self+0x20` = header base **`+0xd8`** (a much smaller `gStaticData_084A5600` offset than the `0x18C`+ family), picks between two more tables (`gStaticData_0816B98C`/`0816BB2C`) via a `gUnknown_030012B4` bit - not the sound/effect toggle shape. |
+| 1-3 | `sub_80219BC`/`8021998`/`8021974` (36 B each) | Trivial `sub_801A878(x,y,w,h,id)` trampolines, ids 0/1/2 - sound-cue-only. |
+| 4-5 | `sub_8020E84`/`sub_8020F7C` | Confirmed twin-shape siblings (prior round). |
+| 6-7 | `sub_802107C`/`sub_802117C` | Confirmed twin family, sounds `0xA`/`9`, fallback `0xC`, full OAM spawn on the "no bit set" path. |
+| 8 | `sub_8021280` | Confirmed distinct bonus/reward spawner - a real slot, not part of the twins' behavioral pattern. |
+| 9 | `sub_802190C` (~104 B) | Sound-only variant with its own gate (`sub_80232A0(gUnknown_030012C0)` OR `gUnknown_030012C0+0x8c`, the twins' own field) picking sound `7`/`5`, closing via a *different* accessor (`sub_80234F4` vs. the twins' `sub_80234E8`). |
+| 10-11 | `sub_80218E8`/`sub_80218C4` (36 B) | More `sub_801A878` trampolines, ids 6/8. |
+| 12 | `sub_802209C` (40 B) | New shape: a plain state-write slot, no sound/spawn - packs two args and calls `sub_8023500`, which just stores them into `gUnknown_030012C0+0x1c0`/`+0x1c4`. |
+| 13-14 | `sub_802183C`/`sub_8021748` (136 B each) | Full-OAM-trio spawners, header offsets **`+0x210`**/**`+0x21C`** - two more `gStaticData_084A5600` offsets, extending that family to at least 8 confirmed values (`0xd8`, `0x18C`, `0x1C8`, `0x210`, `0x21C`, `0x228`, `0x234`, `0x240`, `0x27C`). |
+
+**Adjacent non-slot sibling**: `sub_80217D0`, sitting between slots 13
+and 14 in ROM, is byte-for-byte identical to slot 14 minus the tag
+write - a related but untagged variant, not itself one of the 15
+pointers. **Net characterization**: 5 trivial sound trampolines, 2
+confirmed twins, 1 gated sound-only variant, 1 reward spawner, 1
+plain state-write, 2 full-OAM-trio spawners, and 1 two-line-text
+popup spawner (slot 0) with a shape distinct from every other slot -
+this table mixes at least five genuinely different response types
+under one dispatch mechanism, more heterogeneous than first
+characterized.
+
 **`sub_802364C`** (8 B): a trivial wrapper, `sub_8022468(self, 2)` -
 confirms `sub_8022468`'s second parameter is a context/mode selector, as
 suspected. **`sub_8023658`**: calls `sub_8022468(self, 1)` then
