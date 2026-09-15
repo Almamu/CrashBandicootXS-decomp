@@ -1927,3 +1927,8 @@ flag byte, and the AND's result lives in the *mask's* register, not
 the freshly-loaded byte's - plain C (even with the load reordered to
 match) accumulated into the byte's register instead, fixed with the
 same `register ... asm("r1")`/`asm("r2")` pin pair.
+
+**`sub_8007284`**: sets `self->flags` bit4 (`|= 16`) - the mirror
+image of `sub_8007278`. Same accumulator-register fix, plus the usual
+trailing-padding alignment fix (10-byte body, not 4-aligned, last
+function in the translation unit right now).

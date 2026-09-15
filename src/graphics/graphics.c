@@ -978,3 +978,16 @@ void sub_8007278(struct actor *self)
     result &= tmp;
     self->flags = result;
 }
+
+/* Same accumulator-register pattern as sub_8007230/sub_8007278 above. */
+void sub_8007284(struct actor *self)
+{
+    register s32 result asm("r1");
+    register s32 tmp asm("r2");
+
+    result = 16;
+    tmp = self->flags;
+    result |= tmp;
+    self->flags = result;
+}
+asm(".align 2, 0");
