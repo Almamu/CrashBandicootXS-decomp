@@ -1050,8 +1050,8 @@ rooted tier-threshold actor family**, characterized multiple times
 this session but never traced to its constructor before - sets
 `self+0x50 = &gStaticData_087E5144` (a new confirmed 93-entry-family
 address, at a new `+0x50` field-pointer convention), initializes ~15
-struct fields, branching into two different init paths by sound ID
-(`0x1e` vs `7`). **`sub_802EDBC`/`sub_802EED0`/`sub_802EFD8` are three
+struct fields, branching into two different init paths (via
+`sub_8029BAC`). **`sub_802EDBC`/`sub_802EED0`/`sub_802EFD8` are three
 consecutive `gStaticData_0817Cxxx` mixed-convention vtable slots**
 forming a coherent input-driven state machine on the object
 `sub_802E740` constructs: mirror-image left/right accumulators
@@ -1066,6 +1066,34 @@ written into this document) is folded in here too. Nothing this pass
 broke the "actor per-type behavior" reading - all extend or connect
 already-known families; the VRAM-meter twins are the one genuinely
 new mechanism.
+
+**Follow-up: `sub_802E740`'s object ties into the meter/gauge and
+icon-renderer infrastructure, not a plain crate/platform - and one
+mischaracterization corrected.** **`sub_802F338`** computes, twice,
+`width_tiles*height_tiles*32` (the exact `struct sprite_frame` byte-
+size formula from `include/actor_anim.h`) via a 12-byte-stride table
+lookup, allocates two sprite-frame-sized tile buffers, and registers
+them into `gUnknown_03001518`/`+4` - the same P1/P2-pair global set
+already tagged by the icon+cached-label renderer - ties `sub_802E740`'s
+object directly into that renderer's infrastructure, not a one-off.
+**Correction**: `sub_8029BAC` isn't a "sound-id-gated init path
+selector" as first guessed - it's a trivial one-liner,
+`gUnknown_030013B4 = sub_803ADB4(x<<8, 0x3c)` (a confirmed real Q8.8
+division, not a trampoline) - a generic ratio/scale computation
+(plausibly frames-to-seconds at 60 fps) with no sound-ID logic in its
+own body; whatever sound-ID branching happens must live in
+`sub_802E740` itself. **`sub_8030D48`** (`sub_8031504`'s conditional
+callee, only partially read) streams a halfword data source into
+**VRAM** (`0x06000000`) via four new globals
+(`gUnknown_03001520`/`1528`/`152C`/`1530`, numerically adjacent to
+`gUnknown_03001518`) - the same streamed-source-to-packed-VRAM-tile
+shape as the meter twins, but on a distinct global cluster; not
+confirmed as the same subsystem, but clearly another tile/graphics-
+composition routine in the same family of conventions. Net picture:
+`sub_802E740`'s object is a movable, animated object that also drives
+its own VRAM tile graphics (a meter/gauge/readout), tied together with
+the icon-renderer and meter-twin systems rather than being a plain
+crate/platform.
 
 ## Subdividing `game_loop`
 
