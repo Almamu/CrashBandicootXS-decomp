@@ -1941,3 +1941,7 @@ register). Usual alignment fix.
 **`sub_800729C`**: clears `self->flags` bit3 (`&= ~8`). Same
 accumulator-register fix as the other single-bit-clear siblings above;
 body comes out already 4-aligned, no padding fix needed this time.
+
+**`sub_80072A8`**: sets `self->flags` bit3 (`|= 8`) - the mirror of
+`sub_800729C`. Same accumulator-register fix, plus the usual
+trailing-padding alignment fix.
