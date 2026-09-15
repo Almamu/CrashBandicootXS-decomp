@@ -2059,3 +2059,9 @@ setter/getter pair. Both matched on the first attempt.
 
 **`sub_80073B8`**: a trivial `self->field_08` getter. Matched on the
 first attempt.
+
+**`sub_80073BC`**: rewires `self->table` to `gStaticData_087E3BEC`
+(the same vtable pointer `sub_80071E4`/`sub_800725C` wire up) and
+conditionally frees `self` if `arg1 & 1` - the same
+"conditionally-free" idiom as `sub_8006AF4`/`sub_8006FC8`. Matched on
+the first attempt.

@@ -2,24 +2,6 @@
 
 .syntax unified
 .arm
-	thumb_func_start sub_80073BC
-sub_80073BC: @ 0x080073BC
-	push {lr}
-	adds r2, r0, #0
-	ldr r0, _080073D8 @ =gStaticData_087E3BEC
-	str r0, [r2, #0x18]
-	movs r0, #1
-	ands r0, r1
-	cmp r0, #0
-	beq _080073D2
-	adds r0, r2, #0
-	bl sub_8026ED0
-_080073D2:
-	pop {r0}
-	bx r0
-	.align 2, 0
-_080073D8: .4byte gStaticData_087E3BEC
-
 	thumb_func_start sub_80073DC
 sub_80073DC: @ 0x080073DC
 	push {r4, r5, r6, r7, lr}

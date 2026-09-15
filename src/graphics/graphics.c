@@ -1239,3 +1239,11 @@ u16 sub_80073B8(struct actor *self)
 {
     return self->field_08;
 }
+
+void sub_80073BC(struct actor *self, u32 arg1)
+{
+    self->table = gStaticData_087E3BEC;
+    if (arg1 & 1) {
+        sub_8026ED0(self);
+    }
+}
