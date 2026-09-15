@@ -1458,6 +1458,62 @@ on both call chains and the `gStaticData_081725AC` tie-in (read
 directly, cross-checked against `data/data.s`); medium on "terrain-
 property table" as the specific semantic label for that table.
 
+### More of the cluster: the frame-end flush hub, a `CheckTerrainFlag`-style API, and collision response
+
+A further fork read three more functions. **`sub_802400C`** (216 B)
+reads as **`UpdateGameFrame`'s actual end-of-frame "flush everything"
+hub**: in sequence it touches `gUnknown_030012B8`, `gUnknown_030012D4`,
+`gUnknown_03001308`, `gUnknown_030012C8`, conditionally
+`gUnknown_03001318`, four separate hot-IWRAM-global calls
+(`gUnknown_030012F4`/`F0`/`EC`/`F8`), `gUnknown_0300130C`, and finally
+the full OAM-shadow commit trio (`sub_8006A48`→`sub_80006A8`→
+`sub_8006AAC` on `gUnknown_03001300`) plus `FlushVramDmaQueue` - nearly
+every hot IWRAM global this document has separately traced, in one
+place. **`sub_8025228(self, x, y, mode)`** (268 B) re-derives the same
+tile-grid lookup the terrain streamer uses (`x>>4`, `y>>3`, through the
+16-slot LRU cache), then branches on `mode` (0-3) to read one of 4
+adjacent bytes from **`gStaticData_081725A8[id]`** (36-byte stride,
+only 4 bytes before the already-documented `gStaticData_081725AC` -
+almost certainly the same table's true base address, with `...AC`
+being its `+4` field) - reads as the actual **`CheckTerrainFlag(x, y,
+propertyIndex)`**-style API the whole streaming/collision system
+serves. **`sub_80240E4`** (180 B, partial) packs a bitfield into a new
+global `gUnknown_03001280`, shaped like the `sub_801BC28` blend-effect
+setter but targeting a different hardware register set - a lead, not
+resolved.
+
+**A follow-up fork found the concrete collision-response consumer.**
+**`sub_8026A18`**/**`sub_8026AE8`** (208/216 B) are a **horizontal/
+vertical collision-resolver pair** built directly on the terrain
+streamer: each iterates tiles along one axis, calling
+`sub_8025130(self+0x20, x, y, mode)` per tile, and on a solid hit
+nudges a caller-supplied position pointer by `±(tile_edge_distance<<8)`
+(Q8.8 sub-pixel push-out math) - the concrete gameplay consumer tying
+the terrain/collision streaming system to actual movement collision
+response. **`sub_8025BAC`** (248 B) is another `gStaticData_084A5600`
+consumer, but with a genuinely different access pattern: it indexes
+the table's "first real record" base pointer by **`param1 * 12`** - a
+real runtime-indexed array of **12-byte records**, unlike the fixed
+header-relative-offset family (`0x18C`-`0x27C`) found elsewhere -
+resolving part of the open "is the body index-scanned" question (yes,
+here, by caller-supplied index). Spawns an object via `sub_8009ED0`,
+clamped against `gUnknown_03001308`'s screen bounds - reads as an
+object/pickup spawner selected by a runtime record index.
+**`sub_8026C90`** (252 B) is a level-boundary clamp/spring-back
+function on `self+0xc`/`self+8` offset fields, gated per-direction by
+a blocked-flag nibble - shape consistent with feeding the hardware-
+window-register system (`sub_8022BF0`/`sub_8022CA0`), not directly
+confirmed as the same fields. **`sub_80266BC`** (228 B) sits
+immediately before the documented UI-overlay-manager constructor
+(`sub_80267A0`) and reads as its refresh/update companion - three
+sub-object refreshes, a screen-anchor computation (`camera_x-0xf0`,
+`camera_y-0xa0` - 240/160, GBA screen dimensions), calls the documented
+`sub_80255D4`, and finishes with a **DMA3 upload of a full 256-color
+palette bank into Palette RAM (`0x05000000`)** - a previously
+uncatalogued full-palette swap tied to this overlay-manager screen.
+None of the eight functions across both passes are entity-vtable-
+dispatched.
+
 ### Continuing into the remainder: one cross-zone link, one field re-confirmed
 
 Picked up the next-biggest unread functions after the consolidation
