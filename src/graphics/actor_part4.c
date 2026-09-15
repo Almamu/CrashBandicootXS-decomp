@@ -200,4 +200,84 @@ void sub_8008188(void *dest, s32 kind, void *rec)
     }
 }
 #endif /* NON_MATCHING */
+
+#if NON_MATCHING
+/* Same shape as `sub_8008188` above (mirror-image add/subtract
+ * directions: kind 1/2 do the opposite sign on `dest->field_0`, and
+ * kinds 4/8/12 add to `dest->field_4` instead of subtracting). Same
+ * single resistant `add`-operand-order gap in the shared kind-8/12
+ * block - see `sub_8008188`'s doc comment and
+ * "Parked, not matched: `sub_8008188`" in docs/matching.md for the
+ * full account of what was tried. */
+void sub_8008200(void *dest, s32 kind, void *rec)
+{
+    s32 idx = kind - 1;
+
+    switch (idx) {
+    case 1:
+        {
+            register s32 byteVal asm("r2") = *((u8 *)rec + 4);
+            register s32 shifted asm("r1");
+
+            shifted = byteVal << 7;
+            *(s32 *)dest -= shifted;
+        }
+        break;
+    case 0:
+        {
+            register s32 byteVal asm("r2") = *((u8 *)rec + 4);
+            register s32 shifted asm("r1");
+
+            shifted = byteVal << 7;
+            *(s32 *)dest += shifted;
+        }
+        break;
+    case 2:
+        break;
+    case 3:
+        {
+            s32 v = *(s16 *)((u8 *)rec + 2);
+            v <<= 8;
+            *(s32 *)((u8 *)dest + 4) += v;
+        }
+        break;
+    case 4:
+        break;
+    case 5:
+        break;
+    case 6:
+        break;
+    case 7:
+        {
+            register s32 v asm("r1") = *(s16 *)((u8 *)rec + 2);
+            register s32 byteVal asm("r2") = *((u8 *)rec + 5);
+            register s32 result asm("r1");
+
+            result = byteVal + v;
+            result <<= 8;
+            *(s32 *)((u8 *)dest + 4) += result;
+        }
+        break;
+    case 8:
+        break;
+    case 9:
+        break;
+    case 10:
+        break;
+    case 11:
+        {
+            register s32 v asm("r1") = *(s16 *)((u8 *)rec + 2);
+            register s32 byteVal asm("r2") = *((u8 *)rec + 5);
+            register s32 result asm("r1");
+
+            result = byteVal + v;
+            result <<= 8;
+            *(s32 *)((u8 *)dest + 4) += result;
+        }
+        break;
+    default:
+        break;
+    }
+}
+#endif /* NON_MATCHING */
 asm(".align 2, 0");

@@ -67,6 +67,12 @@ _080081FE:
 
 .endif
 
+@ sub_8008200 is reconstructed (extremely close, but not yet
+@ byte-matching) as C in src/graphics/actor_part4.c, guarded by
+@ #if NON_MATCHING - this raw version is used only for the real
+@ byte-matching build. See docs/matching.md, "Parked, not matched:
+@ sub_8008200".
+.if NON_MATCHING == 0
 	thumb_func_start sub_8008200
 sub_8008200: @ 0x08008200
 	adds r3, r0, #0
@@ -123,6 +129,8 @@ _0800826E:
 	str r0, [r3, #4]
 _08008276:
 	bx lr
+
+.endif
 
 	thumb_func_start sub_8008278
 sub_8008278: @ 0x08008278

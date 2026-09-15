@@ -2715,3 +2715,13 @@ construction was found that produces the other order while also
 preserving the block-merging and every other already-matching
 instruction. Parked rather than keep chasing this one instruction -
 same call as the other parked functions above.
+
+**Parked, not matched: `sub_8008200`** (ROM `0x08008200`, right after
+`sub_8008188`, same file): the same shape as `sub_8008188` above, with
+every add/subtract direction mirrored (kind 1/2 do the opposite sign
+on `dest->field_0`; kinds 4/8/12 add to `dest->field_4` instead of
+subtracting). Same single resistant gap: the shared kind-8/12 block's
+`add` compiles as `adds r1, r1, r2` instead of the ROM's
+`adds r1, r2, r1` - see `sub_8008188`'s entry above for the full
+account of what was tried (all of which applies identically here, not
+re-run a second time). Parked as `NON_MATCHING` alongside its sibling.

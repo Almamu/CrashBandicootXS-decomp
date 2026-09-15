@@ -112,3 +112,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   canonicalize such an add so the destination's prior value is the
   first source operand, with no C-level way found to override it -
   see `docs/matching.md`, "Parked, not matched: `sub_8008188`".
+- **`sub_8008200`** (`src/graphics/actor_part4.c`) - the same shape as
+  `sub_8008188` (mirror-image add/subtract directions), parked for the
+  identical single-instruction gap - see `docs/matching.md`, "Parked,
+  not matched: `sub_8008200`".
