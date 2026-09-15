@@ -2056,3 +2056,6 @@ attempt.
 
 **`sub_80073B0`/`sub_80073B4`**: a trivial `self->field_0A`
 setter/getter pair. Both matched on the first attempt.
+
+**`sub_80073B8`**: a trivial `self->field_08` getter. Matched on the
+first attempt.

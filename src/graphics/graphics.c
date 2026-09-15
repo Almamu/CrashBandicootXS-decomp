@@ -1234,3 +1234,8 @@ u8 sub_80073B4(struct actor *self)
 {
     return self->field_0A;
 }
+
+u16 sub_80073B8(struct actor *self)
+{
+    return self->field_08;
+}
