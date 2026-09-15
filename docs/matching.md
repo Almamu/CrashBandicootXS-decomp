@@ -2563,3 +2563,47 @@ explicitly zero-fills; gcc's own automatic inter-function padding
 inside a single translation unit does not) - see the
 `matching_decomp_alignment_fix` memory and the established "only
 needed when the function is last in its TU" rule.
+
+**Parked, not matched: `sub_8008044`** (ROM `0x08008044`, right after
+`sub_8007FD8`, same file): advances `part`'s per-keyframe animation
+timer by one tick, gated on `part+0x2c`. `part+0x34` counts up each
+tick against the current keyframe record's `+0x15` duration; once it
+reaches that duration, `part+0x34` resets and `part+0x30` (the frame
+index) advances. If `part+0x30` then reaches the record's `+0x16`
+frame count, both counters reset and - unless the record's `+0x17`
+flags byte has bit 1 set (a "loop" flag, working theory) - `part+0x38`
+gets marked done. Record fields kept raw, same keyframe-table
+convention used throughout this ROM region.
+
+The ROM keeps `part` itself in `ip` for the whole function (no `bl`
+happens after the initial `part+0x2c` check, so nothing ever clobbers
+`ip`, letting it substitute for a genuinely saved register for free)
+and shares its keyframe-table pointer (kept in `r3`) and index-byte
+address (copied into `r2` right after the first half's `rec`
+computation) across both halves, so the second half never needs to
+re-read `part+0x20`/recompute `part+0x2d`. Register pins matching the
+ROM's exact choices (`counter` in `r4`, `tablePtr` in `r3`, `idxAddr`
+in `r1`, `table` in `r2`, `idx` in `r5`) plus writing the final
+`rec = idx*0x1c; rec = rec + (s32)table;` as two separate integer
+(not pointer) additions - to get the ROM's `adds r0,r0,r2` operand
+order instead of gcc's own canonicalized `adds r0,r2,r0` for pointer
+arithmetic - got the entire FIRST half matching the ROM
+instruction-for-instruction, including the `ip` trick and the
+inverted-condition/swapped-branch-target `if`/`else` layout (writing
+the C condition as `counter < duration` with the bodies swapped,
+rather than the more natural `counter >= duration`, to match the ROM's
+own `bge`-to-forward-block/fallthrough-else layout instead of the
+opposite).
+
+The second half resisted every attempt to add the same "shared
+table pointer/index address" reuse: introducing ANY value that must
+survive from the first half into the second (an outer-scope plain
+local, an outer-scope register pin, either alone or together)
+reliably made gcc stop using `ip` for `part` at all, instead
+allocating it a genuine callee-saved register (`r6`, widening the
+`push`/`pop` list from `{r4,r5,lr}` to `{r4,r5,r6,lr}`) and
+reintroducing a fresh, different set of register-letter mismatches
+throughout - trading one gap for a worse one every time. Parked with
+the version that gets the whole first half byte-exact rather than
+chase this - same call as `sub_8007B00`/`sub_8007B98`/`sub_8007DBC`
+above.

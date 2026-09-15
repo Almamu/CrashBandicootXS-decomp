@@ -90,3 +90,12 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   (the cached `&gUnknown_030012D8` address lands in r6 here vs the
   ROM's r7 - an explicit r7 pin crashes the compiler outright here) -
   see `docs/matching.md`, "Parked, not matched: `sub_8007DBC`".
+- **`sub_8008044`** (`src/graphics/actor_part3.c`) - advances `part`'s
+  per-keyframe animation timer by one tick. The first half (the
+  counter-vs-duration test) matches the ROM instruction-for-instruction
+  exactly, including its `ip`-register `part` trick; sharing the
+  keyframe-table pointer/index-byte address into the second half (as
+  the ROM itself does, avoiding a second `part+0x20` reload) reliably
+  makes gcc stop using `ip` for `part` altogether instead, trading one
+  mismatch for a worse one - see `docs/matching.md`, "Parked, not
+  matched: `sub_8008044`".

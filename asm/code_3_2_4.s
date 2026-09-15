@@ -2,6 +2,12 @@
 
 .syntax unified
 .arm
+@ sub_8008044 is reconstructed (extremely close, but not yet
+@ byte-matching) as C in src/graphics/actor_part3.c, guarded by
+@ #if NON_MATCHING - this raw version is used only for the real
+@ byte-matching build. See docs/matching.md, "Parked, not matched:
+@ sub_8008044".
+.if NON_MATCHING == 0
 	thumb_func_start sub_8008044
 sub_8008044: @ 0x08008044
 	push {r4, r5, lr}
@@ -69,6 +75,8 @@ _080080BA:
 	pop {r4, r5}
 	pop {r0}
 	bx r0
+
+.endif
 
 	thumb_func_start sub_80080C0
 sub_80080C0: @ 0x080080C0
