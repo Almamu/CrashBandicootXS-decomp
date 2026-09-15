@@ -1949,3 +1949,17 @@ trailing-padding alignment fix.
 **`sub_80072B4`**: a getter for `self->flags` bit3, same shape as
 `sub_8007290`. Matched on the first attempt, plus the usual alignment
 fix.
+
+**`sub_80072C0`**: a getter for `self->flags` bit0 (`& 1`, no shift).
+Unlike `sub_8007290`/`sub_80072B4` (where plain field access matched
+immediately), the ROM here moves `self` into r1 before loading -
+gcc's own unforced allocator can `ldrb` straight through r0 (`self`'s
+own incoming register) instead, so there's no reason to move it -
+fixed by pinning `self` to r1. The AND itself also needed explicit
+register pins (constant in r0, loaded byte reusing r1 after `self`'s
+last use, same two-C-variables-one-hard-register technique as
+`sub_8007114`'s `minY`/`boxY1`) *and* an explicit
+`result = result & flags; return result;` instead of `return result &
+flags;` directly - the direct-return form computed the AND into the
+loaded byte's register and needed an extra copy into r0, the assignment
+form didn't.

@@ -1030,3 +1030,20 @@ u8 sub_80072B4(struct actor *self)
     return (self->flags >> 3) & 1;
 }
 asm(".align 2, 0");
+
+/* Register pins force the ROM's exact register dance: gcc otherwise
+ * doesn't move `self` to r1 at all (it can ldrb directly through r0),
+ * and separately computes the AND into r1 instead of the constant's
+ * own r0 - see docs/matching.md, "Matching decompilation". */
+u8 sub_80072C0(struct actor *self)
+{
+    register struct actor *pSelf asm("r1") = self;
+    register u8 flags asm("r1");
+    register s32 result asm("r0") = 1;
+
+    flags = pSelf->flags;
+    result = result & flags;
+    return result;
+}
+asm(".align 2, 0");
+asm(".align 2, 0");
