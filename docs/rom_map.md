@@ -1434,6 +1434,37 @@ setup wasn't read. Next candidates if continued: `sub_8014D18`,
 `sub_8007DBC`, `sub_801434C`, `sub_801A114`, and the still-unread
 `sub_80240E4` bitfield-packer.
 
+**Final push on these five: four fold into already-counted buckets,
+one closes out.** **`sub_8014D18`** (456 B) and **`sub_801434C`**
+(404 B) are both confirmed slots in the 42-slot action dispatch table
+(`gStaticData_0816BF20`, slots 38/20) - part of one cohesive family
+with `sub_8014084`: interactive player-input handlers sharing an
+identical tag-field triple (`self+0x31`/`+0x2f`/`+0x27`) across both
+functions. **`sub_8007DBC`** (444 B) is entity-vtable-dispatched (5
+separate hits in the `gStaticData_087Exxx` family - one shared generic
+slot reused by 5 different entity records), and dispatches an 8-case
+table that calls the already-documented **`sub_8025BAC`** (the
+runtime-indexed 12-byte-record spawner in `gStaticData_084A5600`) -
+a concrete new tie between the entity-vtable system and that master
+array. **`sub_801A114`** (404 B) is also entity-vtable-dispatched, and
+notably its case 0 builds a BLDCNT-shaped bitmask and writes it
+directly to hardware register `0x04000050` - a **third** distinct
+blend/window-register code path in this ROM, alongside
+`sub_801BC28`/`sub_801CCF8`'s shared-field convention and
+`overlay_ui`'s local-copy convention.
+
+Only **`sub_80240E4`** (180 B, now fully read) is genuine new core
+coverage: a bitfield packer that zeroes `gUnknown_03001280` and
+`gUnknown_03001308+0x2b` (a flag on the text-box singleton), then
+packs bits from a child object's fields into `gUnknown_03001280` -
+shape resembles `sub_801BC28`'s blend-setter but targets a different
+global, likely window/color config feeding the `gUnknown_03001308`
+text/dialog system. Net effect: the core's unexplained total barely
+moves from the prior ~6.7 KB estimate (only ~180 B genuinely new),
+but two more action-table slots and a new entity-vtable<->master-table
+tie are concrete additions - the core is now overwhelmingly explained
+by already-documented families, with a small genuine remainder.
+
 ### Cross-checked the `UpdateGameFrame`-`MainLoop` cluster: same signature, not an island
 
 A parallel fork gave this separate 17.1 KB (now revised to 18.3 KB once
