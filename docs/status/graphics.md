@@ -36,7 +36,7 @@ per-actor animation frames, text layout.
   address isn't adjacent to `graphics.c`'s matched functions, since
   `sub_80073DC`/`sub_8007634` sit unclaimed between them; see
   `docs/matching.md`): `sub_8007A48`, `sub_8007A84`, `sub_8007A98`,
-  `nullsub_2`
+  `nullsub_2`, `sub_8007AB4`
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.

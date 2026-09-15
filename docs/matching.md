@@ -2158,3 +2158,22 @@ on the first attempt, plus the usual alignment fix.
 **`sub_8007A98`/`nullsub_2`**: the same conditionally-free idiom as
 `sub_8006AF4`/`sub_8006FC8`/`sub_80073BC` and another empty stub, both
 matched on the first attempt.
+
+**`sub_8007AB4`**: a `part`-object field initializer, clearing/setting
+several fields also seen in `sub_80073DC`/`sub_8007634`'s disassembly
+(`0x20`/`0x30`/`0x34` position-interpolation state, `0x28`-`0x29` the
+flags-byte pair packed into attr1/attr2, `0x2d` the keyframe counter,
+`0x3c` the Q8 scale factor, `0x25` the screen-vs-camera-relative flag)
+- genuinely useful corroborating evidence for those two still-parked/
+unclaimed functions' field layout, even though this one's own body is
+small enough to fully match. Needed the by-now-familiar
+accumulator-register pin for both bit-clear sequences, plus two new
+techniques: a single running pointer (advanced by relative `+8`/
+`+0xb` instead of recomputed from `part` each time) to match the
+ROM's own address reuse across three of the clears, and a shared
+`zero` local (instead of separate `= 0` literals) to stop the
+compiler rematerializing the same constant for differently-sized
+stores. The very last store also needed the address pinned to a
+*fresh* register (`r1`) - the ROM computes `part+0x2c` into a new
+register even though `part` is dead right after, while plain C let
+the allocator overwrite `part`'s own register in place instead.

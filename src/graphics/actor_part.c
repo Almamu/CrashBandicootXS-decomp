@@ -47,3 +47,67 @@ void nullsub_2(void)
 {
 }
 asm(".align 2, 0");
+
+/* Initializes/clears several `part`-object fields also seen used in
+ * sub_80073DC/sub_8007634: 0x20/0x30/0x34 (position-interpolation
+ * state), 0x28-0x29 (the flags byte pair packed into attr1/attr2),
+ * 0x2d (keyframe counter), 0x3c (Q8 "scale" factor), and 0x25 (the
+ * screen-vs-camera-relative flag sub_8007A48 tests). `part+0xd` is a
+ * second, separate flags byte from `part+0xc`.
+ *
+ * Register pins throughout match the ROM's own choices for the two
+ * bit-clear sequences (constant computed before the byte load, result
+ * landing in the constant's own register - the same accumulator
+ * pattern documented at length for `struct actor`'s flags field in
+ * graphics.c) and for the final `0x2c` store (the ROM computes that
+ * address into a *fresh* register rather than reusing `part`'s, even
+ * though `part` is dead afterward - plain C let the allocator reuse
+ * it instead). The running `p` pointer (advanced by `+8` then `+0xb`
+ * rather than recomputed from `part` each time) and the shared `zero`
+ * local (reused across differently-sized stores instead of
+ * rematerializing the constant) both mirror the ROM's own address/
+ * value reuse - see docs/matching.md, "Matching decompilation". */
+void sub_8007AB4(void *arg0)
+{
+    register void *part asm("r3") = arg0;
+    register s32 result asm("r0");
+    register s32 tmp asm("r1");
+
+    result = 0x7f;
+    tmp = *((u8 *)part + 0xc);
+    result &= tmp;
+    tmp = -0x41;
+    result &= tmp;
+    *((u8 *)part + 0xc) = result;
+
+    {
+        u8 *p = (u8 *)part + 0x25;
+        s32 zero = 0;
+        *p = zero;
+        *(s32 *)((u8 *)part + 0x20) = zero;
+        p += 8;
+        *p = zero;
+        *(s32 *)((u8 *)part + 0x30) = zero;
+        *(s32 *)((u8 *)part + 0x34) = zero;
+        *(u16 *)((u8 *)part + 0x28) = zero;
+        p += 0xb;
+        *p = zero;
+    }
+
+    {
+        register s32 result2 asm("r0");
+        register s32 tmp2 asm("r4");
+
+        result2 = -5;
+        tmp2 = *((u8 *)part + 0xd);
+        result2 &= tmp2;
+        *((u8 *)part + 0xd) = result2;
+    }
+
+    *((u8 *)part + 0x24) = 0;
+    *(u16 *)((u8 *)part + 0x3c) = 0;
+    {
+        register u8 *p2 asm("r1") = (u8 *)part + 0x2c;
+        *p2 = 1;
+    }
+}

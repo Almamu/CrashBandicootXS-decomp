@@ -2,47 +2,6 @@
 
 .syntax unified
 .arm
-	thumb_func_start sub_8007AB4
-sub_8007AB4: @ 0x08007AB4
-	push {r4, lr}
-	adds r3, r0, #0
-	movs r0, #0x7f
-	ldrb r1, [r3, #0xc]
-	ands r0, r1
-	movs r1, #0x41
-	rsbs r1, r1, #0
-	ands r0, r1
-	strb r0, [r3, #0xc]
-	adds r0, r3, #0
-	adds r0, #0x25
-	movs r1, #0
-	strb r1, [r0]
-	str r1, [r3, #0x20]
-	adds r0, #8
-	strb r1, [r0]
-	str r1, [r3, #0x30]
-	str r1, [r3, #0x34]
-	movs r2, #0
-	strh r1, [r3, #0x28]
-	adds r0, #0xb
-	strb r2, [r0]
-	movs r0, #5
-	rsbs r0, r0, #0
-	ldrb r4, [r3, #0xd]
-	ands r0, r4
-	strb r0, [r3, #0xd]
-	adds r0, r3, #0
-	adds r0, #0x24
-	strb r2, [r0]
-	strh r1, [r3, #0x3c]
-	adds r1, r3, #0
-	adds r1, #0x2c
-	movs r0, #1
-	strb r0, [r1]
-	pop {r4}
-	pop {r0}
-	bx r0
-
 	thumb_func_start sub_8007B00
 sub_8007B00: @ 0x08007B00
 	push {r4, r5, r6, r7, lr}
