@@ -1809,8 +1809,13 @@ register wrangling so far in this cluster:
   as the width/height computation, but for the *second* box corner
   read specifically; the *first* one (`boxX0`/`boxX1`) matched with
   plain, unpinned locals.
-- The function's body comes out to 94 bytes (not 4-aligned) and,
-  since it's currently the last function in this translation unit,
-  needed the usual `asm(".align 2, 0")` fix (see the very first entry
-  in this file) - without it, `as` pads with NOP instead of the
-  ROM's zero-fill.
+- The function's body comes out to 94 bytes (not 4-aligned), needing
+  the usual `asm(".align 2, 0")` fix (see the very first entry in this
+  file) - without it, `as` pads with NOP instead of the ROM's
+  zero-fill.
+
+**`sub_8007174`**: matched on the first attempt. Ignores its own first
+parameter entirely (overwritten as scratch before ever being read),
+reads the same `gUnknown_03001308` sub-object `sub_8006FE4` uses but
+as two raw sign-extended-24-bit `s32` fields (dx/dy) rather than
+through the record table - a different part of the same object.

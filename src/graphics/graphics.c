@@ -846,3 +846,20 @@ s32 sub_8007114(void *self, void *box)
     return flag;
 }
 asm(".align 2, 0");
+
+/* `arg0` is unused by the ROM - overwritten as scratch before its
+ * incoming value is ever read. `gUnknown_03001308`'s sub-object here
+ * is the same one sub_8006FE4 reads, but as two raw s32 fields
+ * (dx/dy) sign-extended from their low 24 bits, not the record table
+ * sub_8006FE4 uses - a different part of the same object. */
+void sub_8007174(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4)
+{
+    void *subObj;
+    s32 dx, dy;
+
+    subObj = *(void **)((u8 *)gUnknown_03001308 + 0x10);
+    dx = (*(s32 *)subObj << 8) >> 8;
+    dy = (*(s32 *)((u8 *)subObj + 4) << 8) >> 8;
+    *arg3 = arg1 - dx;
+    *arg4 = arg2 - dy;
+}
