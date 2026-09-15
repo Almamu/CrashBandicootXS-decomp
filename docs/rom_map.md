@@ -2995,7 +2995,14 @@ graph (it's a hub even within this one file - removing it barely
 changed the numbers, confirming the other functions aren't just
 hanging off it) leaves **one dominant component of 118 functions,
 19.2 KB - effectively the entire file** minus a small 2-function SIO
-pair and a handful of tiny leaf singletons. Of those 118, **22 functions
+pair and a handful of tiny leaf singletons (**correction from a later
+coverage-check fork: the SIO footprint here is bigger than "2
+functions" - `sub_8001F50`, 452 B, also touches SIOCNT/RCNT and the
+interrupt-control registers `0x04000200`/`0x04000208` (IE/IME) and is
+not part of the already-identified pair; not read to completion, but
+a concrete third+ member of this file's SIO/link-cable cluster,
+worth folding into the `system` category's "1.5 KB SIO/link-cable
+handling" figure**). Of those 118, **22 functions
 (8.1 KB, ~42% of the component's bytes)** carry the same text-layout
 signature (`sub_803AD80`/`84`/`7C`/`88`) as `sub_8006600` above.
 `PlaySfx` itself sits *inside* this same dominant component (it does
@@ -3269,6 +3276,27 @@ things, not two: real SFX-triggering (`PlaySfx`, tiny), a self-contained
 UI overlay (`overlay_ui`, the 19.2 KB dominant component), SIO/link-cable
 handling (2.5 KB), and this fade/screen-mode utility set (0.3 KB) - the
 `unlabeled remainder` row in the category table above can be retired.
+
+### A verification pass: coverage check and one more construction lead
+
+A coverage-check fork cross-referenced every function name in this
+whole file's address span (`0x080014A4`-`0x08006700`, 156 functions,
+21,084 bytes - which mixes `audio_sfx`/`PlaySfx` and `overlay_ui`
+together under one table row) against this document's prose: 112
+functions (9,940 bytes, 47.1%) don't appear by name - but since the
+span mixes two categories, the true `overlay_ui`-specific gap is
+smaller than that figure suggests; 46 undocumented functions exceed
+60 B, so a real remainder exists. No functions were found explicitly
+flagged as still-unread in this section's own prose - it reads as
+internally complete at the narrative level, just not exhaustively
+named function-by-function. One concrete new lead from sampling the
+two largest: **`sub_8001DB4`** (412 B) is a large constructor -
+zeroes/initializes ~8 fields, copies packed byte pairs, touches a new
+global `gUnknown_03000800` (a `0x0300xxxx` family distinct from the
+`game_loop`-side `gUnknown_030012xx` one) - plausibly the pause-menu
+composite screen's own initializer, not yet tied to the documented
+`sub_8004D74`/`sub_8004EC0` construction chain; not read to
+completion, worth a dedicated follow-up.
 
 ## Into `graphics_loading`'s remainder: a BG2-affine screen-effect setup
 
