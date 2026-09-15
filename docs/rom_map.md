@@ -1083,17 +1083,35 @@ division, not a trampoline) - a generic ratio/scale computation
 (plausibly frames-to-seconds at 60 fps) with no sound-ID logic in its
 own body; whatever sound-ID branching happens must live in
 `sub_802E740` itself. **`sub_8030D48`** (`sub_8031504`'s conditional
-callee, only partially read) streams a halfword data source into
-**VRAM** (`0x06000000`) via four new globals
-(`gUnknown_03001520`/`1528`/`152C`/`1530`, numerically adjacent to
-`gUnknown_03001518`) - the same streamed-source-to-packed-VRAM-tile
-shape as the meter twins, but on a distinct global cluster; not
-confirmed as the same subsystem, but clearly another tile/graphics-
-composition routine in the same family of conventions. Net picture:
-`sub_802E740`'s object is a movable, animated object that also drives
-its own VRAM tile graphics (a meter/gauge/readout), tied together with
-the icon-renderer and meter-twin systems rather than being a plain
-crate/platform.
+callee) reads through to completion in a follow-up: a **rectangular
+BG-tilemap blit routine**, mechanically distinct from the meter twins
+- streams 16-bit values two at a time, adds a constant per-call bias
+byte (`gUnknown_03001530`, a single global, same value for every
+write), and packs each pair into one 16-bit VRAM write (a tile-index-
+pair, not the meter twins' 4-bit-nibble packing). Row stride is `0x20`
+halfwords - exactly a standard 32-tile-wide GBA BG tilemap row; row/
+column counts (both capped near 32) come from
+`gUnknown_03001528`/`152C`, write base from those plus
+`gUnknown_03001520`. Reads as "blit a decoded/raw tile-index pattern
+into a rectangular region (up to 32x32 tiles) of a BG tilemap" - a
+generic tilemap-composition primitive, related to but mechanically
+distinct from the meter twins (which compute fill-level heights, not
+stream raw tile indices). Net picture: `sub_802E740`'s object is a
+movable, animated object that also drives its own VRAM tile graphics
+(a meter/gauge/readout), tied together with the icon-renderer and
+meter-twin systems rather than being a plain crate/platform.
+
+**A third generic allocator found: `sub_8028CD4`** (`sub_802F338`'s
+callee), distinct from the already-documented `sub_8026EDC` and
+`sub_8009ED0`. A first-fit free-list pool allocator: walks a doubly-
+linked free-list rooted at `gUnknown_03001338` (size/used-flag/prev/
+next fields), finds the first block that fits, splits it if there's
+remainder, marks the block used, and - notably - writes a byte into a
+side table `gUnknown_03001340` indexed by size-class - an allocation-
+tracking table not seen in either of the other two allocators. A real,
+distinct heap-management subsystem, worth flagging for whoever maps
+allocator conventions further; confirmed backing globals:
+`gUnknown_03001320`/`3328`/`3338`/`3340`.
 
 ## Subdividing `game_loop`
 
