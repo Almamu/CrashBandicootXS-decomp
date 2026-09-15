@@ -2,57 +2,6 @@
 
 .syntax unified
 .arm
-	thumb_func_start nullsub_11
-nullsub_11: @ 0x080070D0
-	bx lr
-	.align 2, 0
-
-	thumb_func_start sub_80070D4
-sub_80070D4: @ 0x080070D4
-	push {lr}
-	ldr r2, [r0, #0x18]
-	movs r3, #8
-	ldrsh r1, [r2, r3]
-	adds r0, r0, r1
-	ldr r1, [r2, #0xc]
-	bl sub_803AD7C
-	pop {r0}
-	bx r0
-
-	thumb_func_start sub_80070E8
-sub_80070E8: @ 0x080070E8
-	adds r0, #0x10
-	bx lr
-
-	thumb_func_start sub_80070EC
-sub_80070EC: @ 0x080070EC
-	push {r4, lr}
-	rsbs r3, r1, #0
-	lsrs r4, r3, #0x1f
-	adds r3, r3, r4
-	asrs r3, r3, #1
-	strh r3, [r0, #0x10]
-	rsbs r3, r2, #0
-	lsrs r4, r3, #0x1f
-	adds r3, r3, r4
-	asrs r3, r3, #1
-	strh r3, [r0, #0x12]
-	strb r1, [r0, #0x14]
-	strb r2, [r0, #0x15]
-	pop {r4}
-	pop {r0}
-	bx r0
-
-	thumb_func_start sub_800710C
-sub_800710C: @ 0x0800710C
-	movs r0, #0
-	bx lr
-
-	thumb_func_start sub_8007110
-sub_8007110: @ 0x08007110
-	movs r0, #0
-	bx lr
-
 	thumb_func_start sub_8007114
 sub_8007114: @ 0x08007114
 	push {r4, r5, r6, r7, lr}

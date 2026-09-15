@@ -1768,3 +1768,21 @@ inline asm with a single pinned output register (avoiding the extra
 would otherwise insert for the implicit truncation check - fixed by
 routing the asm's output through an `s32` temporary instead of a `u8`
 one).
+
+**`nullsub_11`/`sub_80070D4`/`sub_80070E8`/`sub_80070EC`/`sub_800710C`/
+`sub_8007110`**: six small functions, all matched on the first or
+second attempt. `nullsub_11` needed the usual empty-stub alignment
+fix. `sub_80070D4` tail-calls `sub_803AD7C` through the same
+field+0x18 table convention but discards its return value - the ROM's
+epilogue pops the saved LR into r0 (clobbering the call's return
+value on purpose), which only happens for a genuinely `void`-returning
+function; declaring it to return `void *` instead kept a pointless
+value alive in r0 across the pop, forcing a different register
+(`pop {r1}`) and breaking the match. `sub_80070EC` stores a
+width/height pair both as raw bytes and as `-w/2`-style halved,
+negated `s16`s - plain C division by a negative constant reproduced
+the ROM's rsb/lsr/add/asr rounding idiom exactly, no tricks needed.
+`sub_800710C`/`sub_8007110` are two identical `return 0;` stubs with
+no callers found anywhere in the codebase (raw asm or already-matched
+C) - genuinely unreferenced, same as `sub_8006C38`/`sub_8006E64`
+above.

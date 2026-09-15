@@ -732,3 +732,41 @@ s32 sub_8007048(void *self)
     }
     return 0;
 }
+
+void nullsub_11(void)
+{
+}
+asm(".align 2, 0");
+
+void sub_80070D4(void *self)
+{
+    void *table = *(void **)((u8 *)self + 0x18);
+    sub_803AD7C((u8 *)self + *(s16 *)((u8 *)table + 8), *(void **)((u8 *)table + 0xc));
+}
+
+void *sub_80070E8(void *self)
+{
+    return (u8 *)self + 0x10;
+}
+
+/* `w`/`h` are stored both as the raw byte and as a halved-and-negated
+ * s16 - the negate-then-divide-by-2 idiom below is C's `(-w) / 2`,
+ * matched by the truncating-toward-zero integer division the ROM
+ * itself performs (see docs/matching.md, "Matching decompilation"). */
+void sub_80070EC(void *self, s32 w, s32 h)
+{
+    *(s16 *)((u8 *)self + 0x10) = -w / 2;
+    *(s16 *)((u8 *)self + 0x12) = -h / 2;
+    *((u8 *)self + 0x14) = w;
+    *((u8 *)self + 0x15) = h;
+}
+
+s32 sub_800710C(void)
+{
+    return 0;
+}
+
+s32 sub_8007110(void)
+{
+    return 0;
+}
