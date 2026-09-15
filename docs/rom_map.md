@@ -944,6 +944,50 @@ references a run of 5 unread sibling functions
 screen refresh function touching known hot globals plus a new table
 cluster `gStaticData_0817C512`/`532`/`552`/`572`.
 
+### The `sub_802A5xx` siblings pin down `sub_effect_table`'s runtime shape; `sub_8034CB0` is a separate screen trigger
+
+Follow-up on the two leads above. **The five `sub_802A5xx` siblings are
+field accessors into `category_descriptor.sub_effect_table`'s runtime-
+loaded array** (`include/actor_anim.h`, offset `0x14`, marked
+"structure not reversed"). All five index a global pointer
+`gUnknown_03001400` - which `SelectActorCategory` itself sets directly
+from its own second parameter (`asm/code_3_2.s:73135`, inside
+`SelectActorCategory`'s own body, a threshold-selection loop over this
+same array) - pinning down the field's real record layout for the
+first time: `+0x0` a threshold word (`SelectActorCategory`'s selection
+loop reads this), `+0x8`/`+0x9`/`+0xa` three byte-sized variant values
+(`sub_802A570` mode-selects one via `gUnknown_030012C0+0x8c` and
+`gUnknown_03001414`, another `SelectActorCategory`-set field, then
+subtracts `0x20`), `+0xc`/`+0x10`/`+0x14` three Q8.8 fixed-point
+fields (`sub_802A558`/`540`/`51C`, each `<<8`; `+0x14`'s is further
+offset by `*gUnknown_03001420`), and `+0x18` a raw field
+(`sub_802A504`). Three Q8.8 fields plus a mode-selected variant byte
+reads as a plausible spawn-offset vector (x/y/z) plus a type selector -
+consistent with the doc's original "threshold-triggered sub-effects/
+spawns" guess. **Caveat**: the field offsets go up to `+0x18` (24
+bytes) while the fork reported a 20-byte (`0x14`) record stride - an
+apparent inconsistency not reconciled here; worth double-checking the
+actual stride before treating this layout as final. (Note this sits
+alongside, and isn't fully reconciled with, `sub_802968C`'s separate
+finding elsewhere in this document that the *ROM-resident* copy of
+`sub_effect_table` is a count-prefixed array of `0x14`-byte records
+matched on a `+0x8` byte - `SelectActorCategory` may copy/transform the
+ROM table into this runtime layout, or the two findings describe
+different fields; not resolved.)
+
+**`sub_8034CB0` turns out to be a separate, per-frame-gated screen
+trigger, not part of the map-screen's level-load state machine** as
+the address-adjacency guess suggested. Its only caller sits directly
+inside `UpdateGameFrame`'s main per-frame body, right next to the
+documented `sub_8022BF0`/`sub_8022CA0` hardware-window-register
+functions - not inside the `sub_8035E14`-driven level-load loop the
+map screen uses. Gated on `sub_803AFEC(self)`'s return value being
+negative (a distinct, per-frame condition, function unread). Reads as
+a separate one-shot/special-case overlay that happens to reuse the
+same 3-layer `sub_803472C` constructor, not a sibling of the map
+screen. `sub_803AFEC`, `sub_8034994`, `sub_8034C84` remain unread and
+would confirm the exact trigger condition.
+
 ## Subdividing `game_loop`
 
 `game_loop`'s 112.7 KB has been one undifferentiated bucket even after
