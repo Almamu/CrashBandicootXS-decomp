@@ -2008,3 +2008,7 @@ already 4-aligned, no padding fix needed.
 **`sub_8007328`**: clears `self->flags` bit2 (`&= ~4`). Same
 accumulator-register fix as the other single-bit-clear siblings;
 already 4-aligned.
+
+**`sub_8007334`**: sets `self->flags` bit2 (`|= 4`) - the mirror of
+`sub_8007328`. Same accumulator-register fix, plus the usual
+trailing-padding alignment fix.
