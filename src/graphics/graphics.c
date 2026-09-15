@@ -863,3 +863,29 @@ void sub_8007174(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4)
     *arg3 = arg1 - dx;
     *arg4 = arg2 - dy;
 }
+
+void sub_800719C(void *arg0, s32 *arg1, s32 *arg2)
+{
+    void *subObj;
+    s32 x, y;
+    s32 subX, subY;
+
+    x = *(s32 *)arg0;
+    y = *(s32 *)((u8 *)arg0 + 4);
+    if (x & 0x80) {
+        x += 0x80;
+    }
+    if (y & 0x80) {
+        y += 0x80;
+    }
+    subObj = *(void **)((u8 *)gUnknown_03001308 + 0x10);
+    subX = *(s32 *)subObj << 8;
+    subY = *(s32 *)((u8 *)subObj + 4) << 8;
+    *arg1 = (x - subX) >> 8;
+    *arg2 = (y - subY) >> 8;
+}
+
+void nullsub_12(void)
+{
+}
+asm(".align 2, 0");

@@ -1819,3 +1819,14 @@ parameter entirely (overwritten as scratch before ever being read),
 reads the same `gUnknown_03001308` sub-object `sub_8006FE4` uses but
 as two raw sign-extended-24-bit `s32` fields (dx/dy) rather than
 through the record table - a different part of the same object.
+
+**`sub_800719C`/`nullsub_12`**: `sub_800719C` is a close sibling of
+`sub_8007174` above, reading the same sub-object fields but through
+plain `<< 8` (no sign-extension this time) after a small per-axis
+rounding step. Needed the "compute both loads before either use"
+technique (see `matching_decomp_register_pinning` memory, point 4):
+plain `(x - (*(s32*)subObj << 8)) >> 8` per axis, evaluated inline,
+compiled to a compute-use-compute-use order instead of the ROM's
+compute-both-then-use-both order - fixed by pulling both shifted
+values out into named locals (`subX`/`subY`) ahead of the two
+subtractions. `nullsub_12` is the usual empty-stub alignment fix.
