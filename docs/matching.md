@@ -2053,3 +2053,6 @@ attempt, plus the usual alignment fix.
 **`sub_80073A0`**: the same unpack-and-forward wrapper shape as
 `sub_8007388`, this time calling `sub_8007398`. Matched on the first
 attempt.
+
+**`sub_80073B0`/`sub_80073B4`**: a trivial `self->field_0A`
+setter/getter pair. Both matched on the first attempt.

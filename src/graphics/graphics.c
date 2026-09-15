@@ -1224,3 +1224,13 @@ void sub_80073A0(struct actor *self, s32 *arg1)
 {
     sub_8007398(self, arg1[0], arg1[1]);
 }
+
+void sub_80073B0(struct actor *self, u8 arg1)
+{
+    self->field_0A = arg1;
+}
+
+u8 sub_80073B4(struct actor *self)
+{
+    return self->field_0A;
+}
