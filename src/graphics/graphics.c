@@ -648,3 +648,87 @@ u8 sub_8006FE4(void *self)
     }
     return flag;
 }
+
+extern void *sub_803AD7C(void *arg0, void *arg1);
+extern void sub_803AFE4(void *buf, s32 arg1, s32 arg2);
+extern void sub_803AFDC(void *buf, s32 arg1, s32 arg2);
+extern u8 sub_800B37C(void *arg0, void *buf);
+extern void sub_803AD88(void *arg0, s32 arg1, s32 arg2, s32 arg3);
+extern void *gUnknown_030012D8;
+
+/* `self` uses the same actor-zone raw-offset layout as sub_8006FE4
+ * above (field_0c flags byte, field_18 table pointer) - still no named
+ * struct, per the same precedent.
+ *
+ * Two of the flag-byte tests below use inline asm rather than plain C
+ * (`(byte >> N) & 1`, `byte | const`): gcc's register choice for the
+ * intermediate/result value flipped from the ROM's own pick (which
+ * register survives vs. which is scratch) no matter how the C was
+ * rephrased or split into locals - tried and rebuilt several ways, see
+ * docs/matching.md, "Matching decompilation". The `deadRead` r4 pin
+ * mirrors a load the ROM performs but never uses (dead code in the
+ * original too, apparently a field access whose result just goes
+ * unused at this call site) - kept to match the byte count exactly. */
+s32 sub_8007048(void *self)
+{
+    void *table;
+    void *rec;
+    s32 x, rx;
+    s32 y, ry;
+    u8 rw, rh;
+    s32 buf[4];
+    void *table2;
+    void *addr;
+    u8 field0a;
+    s32 flagTest;
+
+    table = *(void **)((u8 *)self + 0x18);
+    rec = sub_803AD7C((u8 *)self + *(s16 *)((u8 *)table + 0x10), *(void **)((u8 *)table + 0x14));
+
+    x = *(s32 *)self >> 8;
+    rx = *(s16 *)((u8 *)rec + 0);
+    y = *(s32 *)((u8 *)self + 4) >> 8;
+    ry = *(s16 *)((u8 *)rec + 2);
+    rw = *((u8 *)rec + 4);
+    rh = *((u8 *)rec + 5);
+    x += rx;
+    y += ry;
+    sub_803AFE4(buf, x, y);
+    sub_803AFDC(buf, rw, rh);
+
+    {
+        register s32 flagTestR0 asm("r0");
+        asm volatile(
+            "ldrb r1, [%1, #0xc]\n\t"
+            "lsr %0, r1, #2\n\t"
+            "mov r1, #1\n\t"
+            "and %0, %0, r1"
+            : "=r"(flagTestR0)
+            : "r"(self)
+            : "r1");
+        flagTest = flagTestR0;
+    }
+    if (flagTest) {
+        if (sub_800B37C(gUnknown_030012D8, buf)) {
+            asm volatile(
+                "mov r0, #8\n\t"
+                "ldrb r2, [%0, #0xc]\n\t"
+                "orr r0, r0, r2\n\t"
+                "strb r0, [%0, #0xc]"
+                :
+                : "r"(self)
+                : "r0", "r2", "memory");
+
+            table2 = *(void **)((u8 *)gUnknown_030012D8 + 0x18);
+            table2 = (u8 *)table2 + 0x68;
+            addr = (u8 *)gUnknown_030012D8 + *(s16 *)table2;
+            field0a = *((u8 *)self + 0xa);
+            {
+                register void *deadRead asm("r4") = *(void *volatile *)((u8 *)table2 + 4);
+                (void)deadRead;
+            }
+            sub_803AD88(addr, 0, field0a, 0);
+        }
+    }
+    return 0;
+}

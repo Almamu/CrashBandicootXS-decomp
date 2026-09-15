@@ -1737,3 +1737,34 @@ instructions long, for two independent reasons:
   path, so the shared tail (`adds r0, r1, #0`) serves both paths with
   no branch instruction needed to skip it - two separate `return`
   statements had cost an extra unconditional `b`.
+
+**`sub_8007048`**: another actor-zone function, same raw `self`
+layout as `sub_8006FE4`. Builds an AABB into a stack buffer from a
+record looked up via `sub_803AD7C`, then (conditionally, gated by a
+flag bit and a `sub_800B37C` collision-style check) sets another flag
+bit and fires off a `sub_803AD88` call using the same
+`field+0x18 -> {s16 offset; ...; void *text}` table convention seen in
+`sub_8006FE4` - except here the `text` field is read but genuinely
+never used (no stack store, no argument register holds it after the
+call) - a dead load the ROM itself performs, kept via a `register
+void *asm("r4")` pin so the byte count matches. `sub_800B37C`'s return
+type had to be `u8` (not `s32`) to reproduce the ROM's
+`lsls r0,r0,#0x18` truncation before the boolean test - the same
+pattern as `sub_800B37C`'s sibling checks and `sub_803AD80` and
+`sub_8006FE4`'s own return value above.
+
+Two flag-byte tests (`(byte >> 2) & 1`, and `byte | 8` stored back)
+each needed inline asm rather than plain C: gcc's register choice for
+which value is "scratch" and which "survives" into the next
+instruction kept coming out backwards from the ROM's own pick, no
+matter how the expression was split into ordered locals, register-
+pinned individually, or reordered - the *last* two instructions of
+each 4-instruction sequence already matched without any changes, only
+the *first two* (which register the loaded byte lands in, and whether
+a subsequent shift/mask keeps or moves it) needed correcting, which
+turned out to only be controllable by writing the whole sequence as
+inline asm with a single pinned output register (avoiding the extra
+`mov` a normal `"=r"` output constraint into a `u8`-typed C variable
+would otherwise insert for the implicit truncation check - fixed by
+routing the asm's output through an `s32` temporary instead of a `u8`
+one).

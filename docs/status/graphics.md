@@ -14,7 +14,7 @@ per-actor animation frames, text layout.
   `sub_8006D40`, `sub_8006D50`, `sub_8006D68`, `sub_8006D84`, `sub_8006DA0`,
   `sub_8006DC8`, `sub_8006DF8`, `sub_8006E64`, `sub_8006EA8`, `sub_8006EF0`,
   `sub_8006F5C`, `sub_8006F94`, `sub_8006FB4`, `sub_8006FC8`, `nullsub_1`,
-  `sub_8006FE4`
+  `sub_8006FE4`, `sub_8007048`
 - `src/graphics/oam_count.c`: `sub_8006700`, `sub_8006714`, `sub_8006770`,
   `sub_80067A4`, `sub_80067B4`, `sub_80067C4`, `sub_80067D4`, `sub_80067E4`,
   `sub_80067EC`, `sub_8006820`, `sub_8006864`, `sub_80068A8`, `sub_80068CC`,
