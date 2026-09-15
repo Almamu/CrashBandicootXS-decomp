@@ -1654,8 +1654,10 @@ being its `+4` field) - reads as the actual **`CheckTerrainFlag(x, y,
 propertyIndex)`**-style API the whole streaming/collision system
 serves. **`sub_80240E4`** (180 B, partial) packs a bitfield into a new
 global `gUnknown_03001280`, shaped like the `sub_801BC28` blend-effect
-setter but targeting a different hardware register set - a lead, not
-resolved.
+setter but targeting a different hardware register set - a lead
+(**resolved below**: `gUnknown_03001280` is committed to `BLDCNT`/
+`BLDALPHA` by `sub_8001624`, confirming `sub_80240E4` is genuinely a
+blend-effect setter).
 
 **A follow-up fork found the concrete collision-response consumer.**
 **`sub_8026A18`**/**`sub_8026AE8`** (208/216 B) are a **horizontal/
@@ -1819,6 +1821,48 @@ tile-chunk system as an alternate resolver path. `sub_8025E98`
 bounds, draws two text lines, and **directly calls `sub_8024AA0`**
 (the background streamer) - an entity behavior actively driving
 background streaming, not just consuming it.
+
+### Closed out `sub_80241BC`'s remaining callees: BLDCNT/DISPCNT commits, and a camera-follow candidate
+
+A further pass resolved `sub_80241BC`'s (the real frame-end hub)
+remaining unread callees, plus more of the cluster. **`sub_8001524`
+through `sub_80015B0`** turn out to be a family of trivial bit-set/
+clear helpers on `gUnknown_03001288` (a 2-byte flags struct), living
+in `asm/code_3_1_7.s`'s fade-to-black cluster, not this cluster
+itself. **`sub_8001614`** commits that flags struct to **`DISPCNT`**
+(`0x04000000`, display-control BG/OBJ/window toggles) once per frame.
+**`sub_8001624`** commits **`gUnknown_03001280`** (the `sub_80240E4`
+bitfield output) to **`BLDCNT`/`BLDALPHA`** (`0x04000050`/`0x54`) -
+closing out that earlier "lead, not resolved" item: `sub_80240E4` is
+confirmed a genuine blend-effect setter.
+
+**`sub_802356C`** is a fourth entry point into the hardware-window-
+register/lap-counter system, writing to the same `0x04000040`
+register as `sub_8022BF0`/`sub_8022CA0` and calling the same
+`sub_800014C` cross-tie into `UpdateGameFrame`. **`sub_8026368`** is a
+third entity behavior (vtable-dispatched) directly driving the
+decoded-tile-chunk system via `sub_80264F8`, alongside last round's
+`sub_8025F3C`/`sub_80261CC`/`sub_8025E98`. **`sub_802648C`** is the
+missing constructor for `sub_80264F8`'s backing storage (zeroes a
+512-entry ref-count array, fills a 1024-entry slot-index array with a
+sentinel). **`sub_8025D74`** stores a new confirmed `gStaticData_087Exxx`
+address (`&gStaticData_087E4C14`) and configures BG-layer control/
+scroll registers - a scrolling-background-layer object constructor.
+**`sub_8024344`** indexes the 36-slot medal table and walks its
+list-of-lists structure testing for nonzero - a sibling of the
+already-documented tally chain, likely an item/flag-presence check
+rather than a full tally.
+
+**`sub_8026DFC`/`sub_8026D8C`** (a linked pair) are a strong
+**camera-follow/damping filter candidate**: clamp a target position
+against symmetric boundary constants (~±4725), then compute an
+exponential-smoothing lerp (`self += (target - self) / 4`) toward it -
+not confirmed as literally "the camera," but the shape matches
+closely. Not vtable-dispatched.
+
+This cluster's remaining unread functions are now consistently under
+~160 B, a marked drop from earlier rounds' 300-700 B finds - a sign
+this cluster, too, is approaching full characterization.
 
 ### Continuing into the remainder: one cross-zone link, one field re-confirmed
 
