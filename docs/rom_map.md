@@ -1141,6 +1141,28 @@ documented `gStaticData_0817A840` four-slot object) using a second,
 previously-unseen proximity-check variant, **`sub_802B7E0`** (left
 unread - a natural next target).
 
+**Follow-up read `sub_802B7E0`, with a correction to how `sub_802A6EC`
+itself was being characterized.** `sub_802A6EC` isn't a proximity-
+trigger function in its own right - it's a trivial one-line indirect-
+call wrapper (`return sub_803AD7C(gUnknown_03001418->+0x24)`, a
+BLX-trampoline call through a per-context function pointer); whatever
+proximity/trigger logic exists lives behind that dynamically-
+configured pointer, not in `sub_802A6EC`'s own body. **`sub_802B7E0`**
+(124 B) is genuinely different logic, not a re-parameterized copy of
+anything already documented: gated by `gUnknown_0300149C` as a lock/
+active flag (returns immediately if already active), branches on
+`gUnknown_030012C0->+0x78` (a mode field), and on the "not yet active"
+path writes a batch of OAM/anim-part fields into its **parameter
+object** (its only caller passes `gUnknown_03000884`, the documented
+player-pointer global, explicitly), plays a sound cue, and calls the
+confirmed `sub_8029BAC` Q8.8-division helper. `gUnknown_0300149C`/
+`030014A0`-`A3` sit inside the `gUnknown_030014xx` tier-threshold-
+sound-cue family's address range - ties this into that family as a
+state-transition/lock step. Its only caller (`sub_802CC9C`) checks
+`sub_802A6EC` first, then calls `sub_802B7E0(gUnknown_03000884)` and
+checks its return - a two-stage gate (dynamic check, then lock/mode
+check), not a duplicate proximity check with different thresholds.
+
 ## Subdividing `game_loop`
 
 `game_loop`'s 112.7 KB has been one undifferentiated bucket even after
