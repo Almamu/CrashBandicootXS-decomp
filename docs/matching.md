@@ -2023,3 +2023,21 @@ Same accumulator-register fix; already 4-aligned.
 **`sub_8007358`**: sets `self->flags` bit1 (`|= 2`) - the mirror of
 `sub_800734C`. Same accumulator-register fix, plus the usual
 trailing-padding alignment fix.
+
+**`sub_8007364`/`sub_800736C`/`sub_8007374`/`sub_8007378`/
+`sub_800737C`**: five small position accessors, all matched on the
+first attempt - `sub_8007364`/`sub_800736C` return `self->y`/`self->x`
+shifted right 8 (the integer part of the Q8 fixed-point position),
+`sub_8007374`/`sub_8007378` return the raw (still-fixed-point)
+`self->y`/`self->x`, and `sub_800737C` is the setter
+(`self->x = arg1 << 8; self->y = arg2 << 8;`). One false start: the
+gap after `sub_8007364`'s 6-byte body initially looked like it needed
+a real `movs r0, r0` NOP (that's how `asm/code_3_2.s`'s disassembler
+rendered it) rather than the usual zero-fill - but a direct byte
+comparison against `baserom.gba` showed the real bytes there are
+`0000`, and `movs r0, r0`/`lsls r0, r0, #0` is just that disassembler's
+chosen mnemonic for a zero halfword, not a literal `adds r0, r0, #0`
+(`0x1C00`) instruction. `as`'s own default inter-function alignment
+already zero-fills correctly here - no explicit padding fix was
+actually needed. Lesson: always confirm a disassembly gotcha against
+the raw ROM bytes, not just against how a tool chose to render them.

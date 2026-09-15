@@ -1180,3 +1180,30 @@ void sub_8007358(struct actor *self)
     self->flags = result;
 }
 asm(".align 2, 0");
+
+s32 sub_8007364(struct actor *self)
+{
+    return self->y >> 8;
+}
+
+s32 sub_800736C(struct actor *self)
+{
+    return self->x >> 8;
+}
+
+s32 sub_8007374(struct actor *self)
+{
+    return self->y;
+}
+
+s32 sub_8007378(struct actor *self)
+{
+    return self->x;
+}
+
+void sub_800737C(struct actor *self, s32 arg1, s32 arg2)
+{
+    self->x = arg1 << 8;
+    self->y = arg2 << 8;
+}
+asm(".align 2, 0");
