@@ -2382,6 +2382,47 @@ Left here as a structural resolution, not a full read - the size alone
 combined have accounted for in per-level data) makes it worth a
 dedicated look if anyone continues this specific thread.
 
+### Mapped the whole `gStaticData_0816Cxxx` span: one contiguous, fully-labeled mega-region
+
+A fork checked whether the recurring `gStaticData_0816Cxxx` symbols
+found across this session's actor/game_loop reads
+(`gStaticData_0816C090`, `0816C070`, `0816C250`, `0816C308`/`35F`/
+`5F0`, `0816C460`, `0816C86C`, ...) are scattered tables or one region.
+**They're one fully contiguous, byte-precise-labeled ROM span** -
+`data/data.s` already splits the entire range from the 42-slot action
+table `gStaticData_0816BF20` (ends `0x0816C070`) straight through to
+the 36-slot per-level master table `gStaticData_0816D1F4` (21 KB,
+above) into ~90 individually-labeled `.incbin` chunks with zero gaps -
+which itself ends at exactly `0x081725A8`, the start of
+`gStaticData_081725A8`, the terrain-property table found in an earlier
+round. So `0x0816BF20`-`0x081725A8` is **one already-fully-accounted-
+for "per-level/per-entity config mega-region"** - these are real,
+separately-addressable symbols already, not unlabeled blobs needing
+splitting, contrary to how earlier rounds described them.
+
+**`gStaticData_0816C86C` fits the "36 levels" theme exactly**: it's
+`0x514` (1300) bytes - 4 bytes short of 36 records at a 36-byte stride
+(`36*0x24=0x510`), consistent with a 4-byte header + 36 per-level
+records, matching `gStaticData_0816D1F4`'s confirmed 36-slot count -
+independent confirmation of the medal/threshold-table reading.
+
+**New consumer found, extending the directional-vector-table family**:
+`sub_8017ECC`/`sub_8017F14` index `gStaticData_0816C2D8` via the same
+double-indirection shape already noted for `gStaticData_0816C460`
+(`idx*8` intermediate lookup -> `value*3*4`), fetch a **3-word (x,y,z)
+vector record**, conditionally negate all three components based on a
+flag bit, and write them into `self+0x54`/`+0x58`/`+0x5c` or
+`self+0x48`/`+0x4c`/`+0x50` - the same "directional target" convention
+as `sub_801B304`/`sub_80159F8`/`sub_800BD48`. `sub_8017FD4` ties this
+region directly to the 93-entry entity vtable family: stores
+`&gStaticData_087E43C4` into `self+0xc` then calls `sub_8017A78`.
+
+Not investigated further: `0x0816C6A4` (0x170B, the largest unread
+sub-blob in the small-tables span), the `0x0816C814`-`862` cluster,
+and `0x0816CD80` (0x474 B, sits between the medal table and the
+36-slot master table - worth checking as a related per-level
+structure).
+
 ### A family of "trigger effect type N" functions, and a second `PlaySfx`-like helper
 
 A third parallel fork picked up the rest of `graphics_loading`'s
