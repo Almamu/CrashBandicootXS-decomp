@@ -1932,3 +1932,8 @@ same `register ... asm("r1")`/`asm("r2")` pin pair.
 image of `sub_8007278`. Same accumulator-register fix, plus the usual
 trailing-padding alignment fix (10-byte body, not 4-aligned, last
 function in the translation unit right now).
+
+**`sub_8007290`**: a getter for `self->flags` bit4 - matched on the
+first attempt with plain struct field access (no accumulator-register
+issue here since there's no second operand needing a separate
+register). Usual alignment fix.

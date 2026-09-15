@@ -991,3 +991,9 @@ void sub_8007284(struct actor *self)
     self->flags = result;
 }
 asm(".align 2, 0");
+
+u8 sub_8007290(struct actor *self)
+{
+    return (self->flags >> 4) & 1;
+}
+asm(".align 2, 0");
