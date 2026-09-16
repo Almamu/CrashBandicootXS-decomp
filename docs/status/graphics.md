@@ -211,6 +211,18 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   genuine miscompile (aliases with the unrelated loop counter) rather
   than fixing the gap - see `docs/matching.md`, "Parked, not matched:
   `sub_8008A40`".
+- **`sub_8008AD8`** (`src/graphics/actor_part7.c`) - resolves
+  collision push-out between a `part` and the player
+  (`gUnknown_030012D8`) against the box `sub_8008A40` passes in,
+  branching on `gUnknown_030012C0`'s mode field and `part`'s own flag
+  bits, and firing `table+0x68`-driven trampolines and (in one path) a
+  sound effect. A ~150-instruction function, but every branch, field
+  offset, and call argument confirmed correct; parked on two small
+  structural gaps this compiler can't directly avoid: an unavoidable
+  extra load for one box coordinate that the ROM leaves untouched in
+  its original stack slot (the same ABI stack-layout trick used by
+  `sub_8008A40`), and a knock-on register-letter difference for `part`
+  - see `docs/matching.md`, "Parked, not matched: `sub_8008AD8`".
 - **`sub_8009DF4`** (`src/graphics/actor_part8.c`) - a velocity/
   position integrator: steps each axis's velocity toward its max by
   its accel amount (clamped so it never overshoots), builds a

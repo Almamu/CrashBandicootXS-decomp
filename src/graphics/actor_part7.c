@@ -501,4 +501,226 @@ void sub_8008A40(void *manager, s32 boxX, s32 boxY, s32 boxW, s32 boxH, s32 unus
     }
 }
 #endif /* NON_MATCHING */
+
+#if NON_MATCHING
+extern void *gUnknown_030012C0;
+extern void *gUnknown_030012BC;
+extern s32 sub_8009FF4(void *part, void *region);
+extern void *sub_8007B98(void *dest, void *pt);
+extern void *sub_8007CF8(void *dest, void *pt);
+extern u8 sub_8001688(void *buf1, void *buf2);
+extern void sub_803AD88(void *arg0, s32 arg1, s32 arg2, s32 arg3);
+extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
+
+/* Resolves collision push-out between `part` and the player
+ * (`gUnknown_030012D8`, confirmed "very likely the camera/viewport"
+ * elsewhere - see `docs/rom_map.md`) against the incoming
+ * `{boxX, boxY, boxW, boxH}` rectangle passed by `sub_8008A40` above.
+ * `manager` itself is never read - a dead parameter kept for a
+ * uniform call signature with `sub_8008D80`'s sibling.
+ *
+ * If `gUnknown_030012C0`'s mode field (`+0x78`) is 3: tests `part`
+ * against the box via `sub_8009FF4` (already matched in
+ * `actor_part9.c`); if it misses entirely, returns. Otherwise fires
+ * a `part->table+0x68`-driven trampoline via `sub_803AD88` with the
+ * player's `+0xa` byte as the third argument.
+ *
+ * Otherwise, if `part+0xd` bit 3 is set (a "large object" case):
+ * builds the player's AABB via `sub_8007B98` (parked as `NON_MATCHING`
+ * in `actor_part.c`) and `part`'s secondary AABB via `sub_8007CF8`
+ * (already matched), tests them via `sub_8001688`; on a hit, pushes
+ * the player's X position away from `part` by the sum of both boxes'
+ * widths (`<<7`, i.e. `*128`) in whichever direction `part` is
+ * relative to the player, then fires a `player->table+0x68`
+ * trampoline (direction encoded in the final argument, `2` or `1`).
+ *
+ * Otherwise: tests `part` against the box again via `sub_8009FF4`.
+ * Result 1: sets the player's `flags` bit 3; if the player's `+0xa`
+ * byte is exactly 1 and its `+0x64` counter is positive, fires two
+ * trampolines (`part`'s own, then the player's) and plays SFX `0x21`
+ * via `gUnknown_030012BC`; otherwise (byte != 1) fires a single
+ * `part`-table trampoline with the player's `+0xa` byte as the third
+ * argument (the same shared tail the mode-3 branch above also
+ * reaches). Result 2: sets `part->flags` bit 3; if the mode field is
+ * nonzero, fires a `part`-table trampoline first; either way, then
+ * fires a `player`-table trampoline with `part`'s own `+0xa` byte as
+ * the third argument.
+ *
+ * Every `table+0x68/0x6c`-driven trampoline call needed its function-
+ * pointer half marked as a "dead read" (loaded into `r4` but never
+ * actually passed to `sub_803AD88`, a plain 4-argument function, not
+ * itself a trampoline) - the same idiom already confirmed for
+ * `sub_8007DBC`/`sub_8009FD4`'s own `sub_803AD88` calls.
+ *
+ * NOT YET BYTE-MATCHING, but very close - every branch, field offset,
+ * and call argument across this ~150-instruction function is
+ * confirmed correct. Two small structural gaps remain: (1) this
+ * compiler doesn't have a way to express "this scalar parameter is
+ * already sitting in the right stack position for the callee I'm
+ * about to build a struct pointer into" - the ROM's `box` argument to
+ * `sub_8009FF4`/`sub_8007CF8` leaves `boxH` untouched in its own
+ * incoming stack slot (which happens to be the correct 4th word of
+ * the AABB purely from ABI stack-layout coincidence, the same trick
+ * confirmed for `sub_8008A40`'s own box-passing above), while a
+ * C-level `struct aabb box; box.field_c = boxH;` necessarily emits a
+ * real load-then-store pair to populate a *fresh* local struct
+ * instead. (2) `part` consistently lands in `r6` throughout this
+ * reconstruction instead of the ROM's `r5` (needing one extra
+ * register - `r7` - pushed as a knock-on effect) - likely a
+ * consequence of the same extra `boxH` load changing overall register
+ * pressure at entry, though not confirmed. Parked rather than keep
+ * chasing a stack-layout optimization C has no way to express
+ * directly. */
+void sub_8008AD8(void *manager, s32 boxX, s32 boxY, s32 boxW, s32 boxH, void *partArg)
+{
+    struct actor *part = partArg;
+    struct aabb box;
+    void *state;
+    s32 mode;
+
+    box.field_0 = boxX;
+    box.field_4 = boxY;
+    box.field_8 = boxW;
+    box.field_c = boxH;
+
+    state = gUnknown_030012C0;
+    mode = *(s32 *)((u8 *)state + 0x78);
+
+    if (mode == 3) {
+        s32 result = sub_8009FF4(part, &box);
+        if (result == 0) {
+            return;
+        }
+        {
+            u8 *rec = (u8 *)part->table + 0x68;
+            s16 offset = *(s16 *)rec;
+            void *addr = (u8 *)part + offset;
+            struct actor *player = gUnknown_030012D8;
+            u8 someByte = player->field_0A;
+            register void *deadRead asm("r4") = *(void *volatile *)(rec + 4);
+            (void)deadRead;
+
+            sub_803AD88(addr, 1, someByte, 0);
+        }
+        return;
+    }
+
+    if ((*((u8 *)part + 0xd) >> 3) & 1) {
+        struct aabb playerBox;
+        struct aabb partBox;
+        struct actor *player = gUnknown_030012D8;
+        u8 result;
+
+        sub_8007B98(&playerBox, player);
+        sub_8007CF8(&partBox, part);
+
+        result = sub_8001688(&playerBox, &partBox);
+        if (!result) {
+            return;
+        }
+
+        {
+            s32 partX = part->x;
+            struct actor *player2 = gUnknown_030012D8;
+            s32 playerX = player2->x;
+
+            if (partX < playerX) {
+                s32 sum = (partBox.field_8 + playerBox.field_8) << 7;
+                player2->x = partX + sum;
+
+                {
+                    u8 *rec2 = (u8 *)player2->table + 0x68;
+                    s16 offset2 = *(s16 *)rec2;
+                    void *addr2 = (u8 *)player2 + offset2;
+                    register void *deadRead asm("r4") = *(void *volatile *)(rec2 + 4);
+                    (void)deadRead;
+
+                    sub_803AD88(addr2, 0, 0xc, 2);
+                }
+            } else {
+                s32 sum = (partBox.field_8 + playerBox.field_8) << 7;
+                player2->x = partX - sum;
+
+                {
+                    u8 *rec2 = (u8 *)player2->table + 0x68;
+                    s16 offset2 = *(s16 *)rec2;
+                    void *addr2 = (u8 *)player2 + offset2;
+                    register void *deadRead asm("r4") = *(void *volatile *)(rec2 + 4);
+                    (void)deadRead;
+
+                    sub_803AD88(addr2, 0, 0xc, 1);
+                }
+            }
+        }
+        return;
+    }
+
+    {
+        s32 result = sub_8009FF4(part, &box);
+
+        if (result == 1) {
+            struct actor *player = gUnknown_030012D8;
+
+            player->flags |= 8;
+            if (player->field_0A == 1) {
+                if (*(s32 *)((u8 *)player + 0x64) > 0) {
+                    {
+                        u8 *rec = (u8 *)part->table + 0x68;
+                        s16 offset = *(s16 *)rec;
+                        void *addr = (u8 *)part + offset;
+                        register void *deadRead asm("r4") = *(void *volatile *)(rec + 4);
+                        (void)deadRead;
+
+                        sub_803AD88(addr, 1, 1, 0);
+                    }
+                    {
+                        u8 *rec = (u8 *)player->table + 0x68;
+                        s16 offset = *(s16 *)rec;
+                        void *addr = (u8 *)player + offset;
+                        register void *deadRead asm("r4") = *(void *volatile *)(rec + 4);
+                        (void)deadRead;
+
+                        sub_803AD88(addr, 0, 0xd, 0);
+                    }
+                    PlaySfx(gUnknown_030012BC, 0x21, 0x100);
+                }
+                return;
+            } else {
+                u8 *rec = (u8 *)part->table + 0x68;
+                s16 offset = *(s16 *)rec;
+                void *addr = (u8 *)part + offset;
+                register void *deadRead asm("r4") = *(void *volatile *)(rec + 4);
+                (void)deadRead;
+
+                sub_803AD88(addr, 1, player->field_0A, 0);
+                return;
+            }
+        } else if (result == 2) {
+            part->flags |= 8;
+            mode = *(s32 *)((u8 *)state + 0x78);
+            if (mode != 0) {
+                u8 *rec = (u8 *)part->table + 0x68;
+                s16 offset = *(s16 *)rec;
+                void *addr = (u8 *)part + offset;
+                register void *deadRead asm("r4") = *(void *volatile *)(rec + 4);
+                (void)deadRead;
+
+                sub_803AD88(addr, 1, 1, 0);
+            }
+            {
+                struct actor *player = gUnknown_030012D8;
+                u8 *rec = (u8 *)player->table + 0x68;
+                s16 offset = *(s16 *)rec;
+                void *addr = (u8 *)player + offset;
+                register void *deadRead asm("r4") = *(void *volatile *)(rec + 4);
+                (void)deadRead;
+
+                sub_803AD88(addr, 1, part->field_0A, 0);
+            }
+            return;
+        }
+        return;
+    }
+}
+#endif /* NON_MATCHING */
 asm(".align 2, 0");

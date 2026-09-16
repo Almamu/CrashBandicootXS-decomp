@@ -3307,6 +3307,63 @@ push/pop entry. Parked with the version that avoids the corruption
 (natural allocation into `r8`) rather than risk a silently-wrong
 reconstruction for a cosmetically closer register match.
 
+**Parked, not matched: `sub_8008AD8`** (ROM `0x08008AD8`, right after
+`sub_8008A40`, same file). Resolves collision push-out between `part`
+and the player (`gUnknown_030012D8`) against the incoming
+`{boxX, boxY, boxW, boxH}` rectangle passed by `sub_8008A40`. `manager`
+itself is never read - a dead parameter kept for a uniform call
+signature with `sub_8008D80`'s sibling.
+
+If `gUnknown_030012C0`'s mode field (`+0x78`) is 3: tests `part`
+against the box via `sub_8009FF4` (already matched in
+`actor_part9.c`); if it misses entirely, returns. Otherwise fires a
+`part->table+0x68`-driven trampoline via `sub_803AD88` with the
+player's `+0xa` byte as the third argument.
+
+Otherwise, if `part+0xd` bit 3 is set (a "large object" case): builds
+the player's AABB via `sub_8007B98` (parked as `NON_MATCHING` in
+`actor_part.c`) and `part`'s secondary AABB via `sub_8007CF8` (already
+matched), tests them via `sub_8001688`; on a hit, pushes the player's
+X position away from `part` by the sum of both boxes' widths (`<<7`,
+i.e. `*128`) in whichever direction `part` is relative to the player,
+then fires a `player->table+0x68` trampoline (direction encoded in
+the final argument, `2` or `1`).
+
+Otherwise: tests `part` against the box again via `sub_8009FF4`.
+Result 1: sets the player's `flags` bit 3; if the player's `+0xa` byte
+is exactly 1 and its `+0x64` counter is positive, fires two
+trampolines (`part`'s own, then the player's) and plays SFX `0x21` via
+`gUnknown_030012BC`; otherwise (byte != 1) fires a single `part`-table
+trampoline with the player's `+0xa` byte as the third argument (the
+same shared tail the mode-3 branch above also reaches). Result 2:
+sets `part->flags` bit 3; if the mode field is nonzero, fires a
+`part`-table trampoline first; either way, then fires a `player`-table
+trampoline with `part`'s own `+0xa` byte as the third argument.
+
+Every `table+0x68`-driven trampoline call needed its function-pointer
+half marked as a "dead read" (loaded into `r4` but never actually
+passed to `sub_803AD88`, a plain 4-argument function, not itself a
+trampoline) - the same idiom already confirmed for
+`sub_8007DBC`/`sub_8009FD4`'s own `sub_803AD88` calls.
+
+NOT YET BYTE-MATCHING, but very close for a ~150-instruction function -
+every branch, field offset, and call argument confirmed correct. Two
+small structural gaps remain: (1) this compiler has no way to express
+"this scalar parameter is already sitting in the right stack position
+for the callee I'm about to build a struct pointer into" - the ROM's
+`box` argument to `sub_8009FF4`/`sub_8007CF8` leaves `boxH` untouched
+in its own incoming stack slot (which happens to be the correct 4th
+word of the AABB purely from ABI stack-layout coincidence, the same
+trick confirmed for `sub_8008A40`'s own box-passing above), while a
+C-level `struct aabb box; box.field_c = boxH;` necessarily emits a
+real load-then-store pair to populate a *fresh* local struct instead.
+(2) `part` consistently lands in `r6` throughout this reconstruction
+instead of the ROM's `r5` (needing one extra register - `r7` - pushed
+as a knock-on effect) - likely a consequence of the same extra `boxH`
+load changing overall register pressure at entry, though not
+confirmed. Parked rather than keep chasing a stack-layout optimization
+C has no way to express directly.
+
 ## Tractable pocket found past the AI/collision cluster: `actor_part8.c`
 
 `sub_8008A40` (right after `sub_800891C`) drops into a large, deeply
