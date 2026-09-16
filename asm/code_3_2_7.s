@@ -3,106 +3,10 @@
 .syntax unified
 .arm
 
-	thumb_func_start sub_80086E4
-sub_80086E4: @ 0x080086E4
-	adds r0, #0x2c
-	ldrb r0, [r0]
-	bx lr
-	.align 2, 0
-
-	thumb_func_start sub_80086EC
-sub_80086EC: @ 0x080086EC
-	adds r0, #0x2c
-	strb r1, [r0]
-	bx lr
-	.align 2, 0
-
-	thumb_func_start sub_80086F4
-sub_80086F4: @ 0x080086F4
-	lsls r1, r1, #0x18
-	lsrs r1, r1, #0x18
-	adds r0, #0x28
-	movs r2, #1
-	ands r1, r2
-	lsls r1, r1, #4
-	movs r2, #0x11
-	rsbs r2, r2, #0
-	ldrb r3, [r0]
-	ands r2, r3
-	orrs r2, r1
-	strb r2, [r0]
-	bx lr
-	.align 2, 0
-
-	thumb_func_start sub_8008710
-sub_8008710: @ 0x08008710
-	lsls r1, r1, #0x18
-	lsrs r1, r1, #0x18
-	adds r0, #0x28
-	movs r2, #1
-	ands r1, r2
-	lsls r1, r1, #5
-	movs r2, #0x21
-	rsbs r2, r2, #0
-	ldrb r3, [r0]
-	ands r2, r3
-	orrs r2, r1
-	strb r2, [r0]
-	bx lr
-	.align 2, 0
-
-	thumb_func_start sub_800872C
-sub_800872C: @ 0x0800872C
-	adds r0, #0x38
-	strb r1, [r0]
-	bx lr
-	.align 2, 0
-
-	thumb_func_start sub_8008734
-sub_8008734: @ 0x08008734
-	ldr r1, [r0, #0x20]
-	adds r0, #0x2d
-	ldr r2, [r1]
-	ldrb r3, [r0]
-	lsls r1, r3, #3
-	subs r1, r1, r3
-	lsls r1, r1, #2
-	adds r1, r1, r2
-	ldrb r0, [r1, #0x14]
-	bx lr
-
-	thumb_func_start sub_8008748
-sub_8008748: @ 0x08008748
-	adds r0, #0x29
-	ldrb r0, [r0]
-	lsls r0, r0, #0x1c
-	lsrs r0, r0, #0x1c
-	bx lr
-	.align 2, 0
-
-	thumb_func_start sub_8008754
-sub_8008754: @ 0x08008754
-	adds r0, #0x29
-	movs r2, #0xf
-	ands r1, r2
-	movs r2, #0x10
-	rsbs r2, r2, #0
-	ldrb r3, [r0]
-	ands r2, r3
-	orrs r2, r1
-	strb r2, [r0]
-	bx lr
-
-	thumb_func_start sub_8008768
-sub_8008768: @ 0x08008768
-	str r1, [r0, #0x20]
-	bx lr
-
-	thumb_func_start sub_800876C
-sub_800876C: @ 0x0800876C
-	ldr r0, [r0, #0x20]
-	bx lr
-
+@ sub_8008770 is reconstructed (extremely close, but not yet
+@ byte-matching) as C in src/graphics/actor_part6.c, guarded by
+@ #if NON_MATCHING - see docs/matching.md for the exact remaining gap.
+.if NON_MATCHING == 0
 	thumb_func_start sub_8008770
 sub_8008770: @ 0x08008770
 	ldr r1, [r0, #0x20]
@@ -119,6 +23,7 @@ sub_8008770: @ 0x08008770
 	lsls r0, r0, #0x18
 	lsrs r0, r0, #0x18
 	bx lr
+.endif
 
 	thumb_func_start sub_800878C
 sub_800878C: @ 0x0800878C

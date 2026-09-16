@@ -64,7 +64,9 @@ per-actor animation frames, text layout.
   `sub_8008640`, `sub_8008648`, `sub_8008650`, `sub_800865C`,
   `sub_8008674`, `sub_8008680`, `sub_800868C`, `sub_8008698`,
   `sub_80086A4`, `sub_80086B0`, `sub_80086BC`, `sub_80086C4`,
-  `sub_80086CC`, `sub_80086D8`
+  `sub_80086CC`, `sub_80086D8`, `sub_80086E4`, `sub_80086EC`,
+  `sub_80086F4`, `sub_8008710`, `sub_800872C`, `sub_8008734`,
+  `sub_8008748`, `sub_8008754`, `sub_8008768`, `sub_800876C`
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -147,3 +149,10 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   "which operand goes first" `add`-operand-order gap as
   `sub_8008188`/`sub_8008200`/`sub_8008278` - see `docs/matching.md`,
   "Parked, not matched: `sub_80083B8`".
+- **`sub_8008770`** (`src/graphics/actor_part6.c`) - looks up `part`'s
+  current keyframe record (same lookup as `sub_8008734`) and tests its
+  `+0x17` flags bit 1, returning it as 0/1. Matches the ROM through the
+  `ands` that computes the bit; the ROM's two trailing truncation
+  instructions (`lsls`/`lsrs` to a byte) get optimized away here since
+  this compiler can prove the value already fits - see
+  `docs/matching.md`, "Parked, not matched: `sub_8008770`".

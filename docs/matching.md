@@ -3023,3 +3023,82 @@ compile puts the byte load first in every one of them, which is a
 real, byte-level reordering versus the ROM (not merely cosmetic), even
 though the two instructions are otherwise independent. All eight
 matched once this ordering fix was applied uniformly.
+
+**`sub_80086E4`/`sub_80086EC`** (ROM `0x080086E4`/`0x080086EC`, right
+after `sub_80086D8`, same file): a plain `part+0x2c` byte get/set
+pair, no other logic. Both matched on the first attempt.
+
+**`sub_80086F4`** (ROM `0x080086F4`, right after `sub_80086EC`, same
+file): sets `part+0x28` bit 4 to `value & 1`. Two things needed
+fixing: the ROM's mandatory zero-extend of the `u8 value` parameter
+at entry (`lsls`/`lsrs` by 24) combined with a plain `& 1` compiles to
+a longer 3-instruction sequence in this compiler than the ROM's single
+`ands` - fixed with a two-instruction inline `asm` `and` for just that
+step; and, as with `sub_800865C`, the `1` input needed marking `+r`
+(read-write, even though unchanged) to stop the later mask constant
+`-0x11` being computed relative to that leftover register value
+instead of via a fresh `movs`+`negs`. Matched after applying both.
+
+**`sub_8008710`** (ROM `0x08008710`, right after `sub_80086F4`, same
+file): the same shape as `sub_80086F4` immediately above, setting bit
+5 (mask `-0x21`) instead of bit 4. Matched with the identical fix.
+
+**`sub_800872C`** (ROM `0x0800872C`, right after `sub_8008710`, same
+file): `part+0x38` ("done" flag, also read/written by `sub_80083B8`)
+setter. Matched on the first attempt.
+
+**`sub_8008734`** (ROM `0x08008734`, right after `sub_800872C`, same
+file): the same keyframe-record lookup used throughout this ROM region
+(see `sub_8008394`/`sub_8008604`), returning the record's `+0x14` byte
+instead of the record pointer itself. The final `rec = table + offset`
+add hit the same resistant "which operand goes first" gap as
+`sub_8008618` - fixed the same way, with a one-instruction inline
+`asm` anchor (`asm("add %0, %0, %1" : "+r"(offset) : "r"(table))`).
+Matched after applying that fix.
+
+**`sub_8008748`** (ROM `0x08008748`, right after `sub_8008734`, same
+file): `part+0x29` low-nibble getter. Needed the value read through a
+`u32` (not `u8`) intermediate so the final `>> 0x1c` compiles to a
+logical `lsr` instead of an arithmetic `asr` - same lesson as the
+`(flags >> N) & 1` vs `(s32)(flags << (31-N)) < 0` idiom distinction
+documented elsewhere in this ROM region, just for a plain shift instead
+of a branch. Matched after fixing the signedness.
+
+**`sub_8008754`** (ROM `0x08008754`, right after `sub_8008748`, same
+file): sets `part+0x29`'s low nibble to `value & 0xf`. This one hit a
+genuinely new, previously-undocumented compiler quirk: `value & 0xf`
+on a `u8`-typed parameter compiles to a much longer defensive
+shift-based sequence in this compiler (confirmed in isolation with a
+minimal `s32 f(u8 v) { return v & 0xf; }` test - it emits `lsl`/`mov
+#0xf0`/`lsl #0x14`/`and`/`lsr` instead of a plain `mov #0xf`/`and`),
+while the *identical* mask against an `s32`-typed parameter compiles
+to the ROM's simple two-instruction form. Retyping the parameter `s32`
+fixed the mask codegen; the mask constant `-0x10` then needed the same
+`+r`-on-the-other-operand fix as `sub_80086F4` above to stop it being
+computed relative to the leftover `0xf` register value. Matched after
+finding both fixes.
+
+**`sub_8008768`/`sub_800876C`** (ROM `0x08008768`/`0x0800876C`, right
+after `sub_8008754`, same file): a plain `part+0x20` table-pointer
+get/set pair, no other logic. Both matched on the first attempt.
+
+**Parked, not matched: `sub_8008770`** (ROM `0x08008770`, right after
+`sub_800876C`, same file): the same keyframe-record lookup as
+`sub_8008734` above, testing the record's `+0x17` flags bit 1 and
+returning it as a plain 0/1 value. Matches the ROM instruction-for-
+instruction through the `ands` that computes the bit, including the
+accumulator-register pattern (mask computed into `r0` before the
+flags byte load, which reuses `rec`'s own dying `r1` register). The
+ROM then has two trailing truncation instructions (`lsls r0, r0,
+#0x18; lsrs r0, r0, #0x18`, narrowing the result to a byte) that this
+compiler always optimizes away here, since it can prove the AND
+result already fits in a byte (the mask is the visible constant `2`).
+Every attempt to force the truncation back in - an explicit `(u8)`
+cast on the result, an explicit `((u32)x << 24) >> 24` shift idiom,
+a `u8`-typed intermediate variable - either made no difference or
+reintroduced a miscompile where the whole function folds to
+`return 0;` (the same register-pinned-constant-combined-with-later-
+transformation hazard as the `ip`-trick and r7-pin failures documented
+elsewhere in this file, here triggered by pinning the mask register
+with its initializer in the same statement as the later shift).
+Parked rather than keep chasing two trailing no-op instructions.

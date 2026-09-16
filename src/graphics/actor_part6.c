@@ -421,4 +421,175 @@ void sub_80086D8(struct actor *part)
     result = mask | byte;
     part->flags = result;
 }
+
+/* `part+0x2c` byte get/set pair. */
+u8 sub_80086E4(void *part)
+{
+    return *((u8 *)part + 0x2c);
+}
+
+void sub_80086EC(void *part, u8 val)
+{
+    *((u8 *)part + 0x2c) = val;
+}
+
+/* Sets `part+0x28` bit 4 to `value & 1`. Needed the low-bit extraction
+ * done via a two-instruction inline `asm` AND (rather than this
+ * compiler's own `& 1`, which produces the same result but as three
+ * instructions once the u8 parameter's mandatory entry truncation is
+ * folded in) - and, as with `sub_800865C`, the "1" input needed
+ * marking `+r` to stop the mask constant `-0x11` from being computed
+ * relative to that leftover register value instead of freshly. */
+void sub_80086F4(void *part, u8 value)
+{
+    register s32 truncVal asm("r1") = value;
+    register u8 *addr asm("r0") = (u8 *)part + 0x28;
+    register s32 one asm("r2") = 1;
+    register s32 shiftedBit asm("r1");
+    register s32 mask asm("r2");
+    register s32 byte asm("r3");
+    register s32 result asm("r2");
+
+    asm("and %0, %0, %1" : "+r" (truncVal), "+r" (one));
+    shiftedBit = truncVal << 4;
+    mask = -0x11;
+    byte = *addr;
+    result = mask & byte;
+    result |= shiftedBit;
+    *addr = result;
+}
+
+/* Same shape as `sub_80086F4` immediately above, sets `part+0x28` bit
+ * 5 instead. */
+void sub_8008710(void *part, u8 value)
+{
+    register s32 truncVal asm("r1") = value;
+    register u8 *addr asm("r0") = (u8 *)part + 0x28;
+    register s32 one asm("r2") = 1;
+    register s32 shiftedBit asm("r1");
+    register s32 mask asm("r2");
+    register s32 byte asm("r3");
+    register s32 result asm("r2");
+
+    asm("and %0, %0, %1" : "+r" (truncVal), "+r" (one));
+    shiftedBit = truncVal << 5;
+    mask = -0x21;
+    byte = *addr;
+    result = mask & byte;
+    result |= shiftedBit;
+    *addr = result;
+}
+
+/* `part+0x38` ("done" flag, also read/written by `sub_80083B8`)
+ * setter. */
+void sub_800872C(void *part, u8 val)
+{
+    *((u8 *)part + 0x38) = val;
+}
+
+/* Same keyframe-record lookup used throughout this ROM region (see
+ * `sub_8008394`/`sub_8008604`), returning the record's `+0x14` byte
+ * instead of the record pointer itself. The final `rec = table +
+ * offset` add hit the same resistant operand-order gap as
+ * `sub_8008618` - fixed the same way, with a one-instruction inline
+ * `asm` anchor. */
+u8 sub_8008734(struct actor *part)
+{
+    register void **tablePtr asm("r1") = *(void ***)((u8 *)part + 0x20);
+    register u8 *idxAddr asm("r0") = (u8 *)part + 0x2d;
+    register void *table asm("r2") = *tablePtr;
+    register u8 idx asm("r3") = *idxAddr;
+    register s32 offset asm("r1") = idx * 0x1c;
+    void *rec;
+
+    asm("add %0, %0, %1" : "+r" (offset) : "r" (table));
+    rec = (void *)offset;
+    return *((u8 *)rec + 0x14);
+}
+
+/* `part+0x29` low-nibble getter. */
+s32 sub_8008748(void *part)
+{
+    u32 byte = *((u8 *)part + 0x29);
+    return (byte << 0x1c) >> 0x1c;
+}
+
+/* Sets `part+0x29`'s low nibble to `value & 0xf`. Needed the
+ * parameter typed `s32` rather than `u8` - the `& 0xf` mask on a `u8`-
+ * typed parameter compiles to a much longer defensive shift-based
+ * sequence in this compiler (confirmed in isolation), which the ROM
+ * doesn't have. The mask constant also needed the same `+r`-on-the-
+ * other-operand fix as `sub_800865C`/`sub_80086F4` to stop it being
+ * computed relative to the leftover "0xf" register value. */
+void sub_8008754(void *part, s32 value)
+{
+    register u8 *addr asm("r0") = (u8 *)part + 0x29;
+    register s32 value_ asm("r1") = value;
+    register s32 fifteen asm("r2") = 0xf;
+    register s32 lowNibble asm("r1");
+    register s32 mask asm("r2");
+    register s32 byte asm("r3");
+    register s32 result asm("r2");
+
+    asm("and %0, %0, %1" : "+r" (value_), "+r" (fifteen));
+    lowNibble = value_;
+
+    mask = -0x10;
+    byte = *addr;
+    result = mask & byte;
+    result |= lowNibble;
+    *addr = result;
+}
+
+/* `part+0x20` table-pointer get/set pair. */
+void sub_8008768(void *part, void *val)
+{
+    *(void **)((u8 *)part + 0x20) = val;
+}
+
+void *sub_800876C(void *part)
+{
+    return *(void **)((u8 *)part + 0x20);
+}
+
+#if NON_MATCHING
+/* Same keyframe-record lookup as `sub_8008734` above, testing the
+ * record's `+0x17` flags bit 1 and returning it as a plain 0/1 value.
+ *
+ * NOT YET BYTE-MATCHING: every instruction matches the ROM up through
+ * the `ands r0, r1` - confirmed via the same accumulator-register
+ * pattern used throughout this ROM region (mask computed into r0
+ * before the flags byte is loaded, reusing `rec`'s own dying r1
+ * register for the load). The ROM then has two more instructions
+ * (`lsls r0, r0, #0x18; lsrs r0, r0, #0x18`, truncating the result to
+ * a byte) that this compiler always optimizes away here, since it can
+ * prove the AND result already fits in a byte (mask is the visible
+ * constant 2) - every attempt to force the truncation back in
+ * (explicit `(u8)` cast, explicit shift-based truncation idiom, u8-
+ * typed intermediate) either made no difference or reintroduced the
+ * `register ... = 2` combined-with-later-shift miscompile documented
+ * for `sub_8008618`-style chains elsewhere in this file (the whole
+ * function's body got folded to `return 0;`). Parked rather than keep
+ * chasing two trailing no-op instructions. */
+u8 sub_8008770(struct actor *part)
+{
+    register void **tablePtr asm("r1") = *(void ***)((u8 *)part + 0x20);
+    register u8 *idxAddr asm("r0") = (u8 *)part + 0x2d;
+    register void *table asm("r2") = *tablePtr;
+    register u8 idx asm("r3") = *idxAddr;
+    register s32 offset asm("r1") = idx * 0x1c;
+    void *rec;
+    register s32 mask asm("r0");
+    register s32 flags asm("r1");
+    register s32 test asm("r0");
+
+    asm("add %0, %0, %1" : "+r" (offset) : "r" (table));
+    rec = (void *)offset;
+
+    mask = 2;
+    flags = *((u8 *)rec + 0x17);
+    test = mask & flags;
+    return test;
+}
+#endif /* NON_MATCHING */
 asm(".align 2, 0");
