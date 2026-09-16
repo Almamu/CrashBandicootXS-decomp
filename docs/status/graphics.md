@@ -97,10 +97,14 @@ per-actor animation frames, text layout.
   `sub_8009A30`, `sub_8009AA0`, `sub_8009AF0`, `sub_8009B3C`,
   `sub_8009B70`, `sub_8009B9C`
 
+- `src/graphics/actor_part13.c` (new file - `sub_8009CA0`'s real ROM
+  address isn't adjacent to `actor_part12.c`'s matched functions
+  either, since the raw `sub_8009BE0` sits between them; see
+  `docs/matching.md`): `sub_8009CA0`
+
 - `src/graphics/actor_part8.c` (new file - `sub_8009EA8`'s real ROM
-  address isn't adjacent to `code_3_2_14.o`'s raw content either, since
-  the parked `sub_8009DF4` sits raw between them, and the whole large
-  `sub_8009BE0`-`sub_8009DF4`-ish remainder of the AI/collision cluster
+  address isn't adjacent to `code_3_2_15.o`'s raw content either, since
+  the parked `sub_8009DF4` sits raw between them, and `sub_8009BE0`
   before that was left raw rather than guessed at; see
   `docs/matching.md`):
   `sub_8009EA8`, `sub_8009EB0`, `sub_8009EBC`, `sub_8009EC4`,
@@ -262,6 +266,15 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   same "dead read" trampoline call), called from elsewhere in this
   cluster. Parked on the same `boxH` stack-layout gap - see
   `docs/matching.md`, "Parked, not matched: `sub_80099F0`".
+- **`sub_8009D5C`** (`src/graphics/actor_part13.c`) - fires a
+  `part->table+0x68`-driven trampoline based on `gUnknown_030012C0`'s
+  mode, on the player and/or `part` depending on the mode value.
+  Every branch, call, and argument confirmed correct (a `switch`
+  reproduces the ROM's exact 3-way mode dispatch, and explicit `goto`s
+  into a shared, ABI-register-pinned tail reproduce the mode-0/mode-
+  1-2 call sharing); parked on a single remaining conditional-branch
+  encoding gap in the mode-3 case - see `docs/matching.md`, "Parked,
+  not matched: `sub_8009D5C`".
 - **`sub_8009DF4`** (`src/graphics/actor_part8.c`) - a velocity/
   position integrator: steps each axis's velocity toward its max by
   its accel amount (clamped so it never overshoots), builds a

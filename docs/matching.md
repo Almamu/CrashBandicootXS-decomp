@@ -3622,13 +3622,85 @@ byte-identical in shape to the already-parked `sub_8008D80` - the same
 `boxH` stack-layout gap applies. See "Parked, not matched:
 `sub_8008D80`" above for the full writeup; this is its twin.
 
+`sub_8009BE0` (right after `sub_8009B9C`) is a physics/collision step-
+probe function calling still-unexamined `sub_8008278`/`sub_8026628`
+(a Q8->int conversion via `>>8`, an up-to-4-attempt probe loop, and
+mysterious `+0x2a` flag toggling on `gUnknown_030012D8`) - left raw
+rather than guess at semantics.
+
+## `sub_8009CA0`: third tractable function, `actor_part13.c`
+
+Right after the raw `sub_8009BE0`, `sub_8009CA0` turned out to be
+another self-contained, clearly-understood function: it tests `part`
+for a collision-grid hit against the player (`gUnknown_030012D8`),
+gated by a mix of flag bits and a periodic "fast path" check against
+`gUnknown_0300082C` (the same ~128-frame counter documented in
+`docs/rom_map.md`) - if `part->flags` bit 2 is set and the player's
+`+0x8c` field is ahead of the frame counter (an **unsigned**
+comparison - using a signed one here produced a real, full-rebuild-
+caught mismatch) and `gUnknown_030012C0`'s mode (`+0x78`) is 3, or
+independently if `part`'s `+0xd` byte bit 3 is set and the mode is 3,
+builds `part`'s primary AABB via `sub_8007C30` (already matched) and
+tests it against the player via `sub_800B37C` (already matched); on a
+hit, calls `sub_8009D5C` and returns. If the primary AABB has no
+region, *or the hit test simply missed*, falls back to the secondary
+AABB via `sub_8007CF8` (already matched) and repeats the same hit
+test.
+
+That "or the hit test simply missed" clause was a genuine logic bug
+caught only by the full clean rebuild: the first draft returned
+unconditionally whenever the primary AABB had a region, regardless of
+whether `sub_800B37C` actually reported a hit - silently skipping the
+secondary-AABB fallback whenever the primary AABB existed but missed.
+Fixed by moving the `return` inside the hit branch only.
+
+Needed a `switch (mode) { case 0: ...; case 1: case 2: ...; case 3:
+...; default: return; }` to reproduce the ROM's exact `cmp #2,bgt` /
+`cmp #1,bge` / `cmp #0,beq` three-way dispatch - an equivalent `if
+(mode > 2) {...} else if (mode >= 1) {...} else if (mode == 0)
+{...}` chain, in any nesting or ordering tried, always gets
+normalized by this compiler into `cmp #0,bgt` for the middle test
+(`x >= 1` and `x > 0` are folded to the same canonical form for a
+plain comparison chain, but not when lowered from a `switch`). Also
+needed the by-now-familiar byte-destination-register pins (`ldrb`
+into `r1`, not the naturally-allocated `r0`) for both flag-bit tests,
+each one only surfacing via the full integrated rebuild - the
+isolated per-function compile looked correct both times.
+
+**Parked, not matched: `sub_8009D5C`** (ROM `0x08009D5C`, right after
+`sub_8009CA0`, `src/graphics/actor_part13.c`): fires a
+`part->table+0x68`-driven trampoline (the established "dead read"
+idiom) based on `gUnknown_030012C0`'s mode: mode 0 fires it on the
+player with `(0, part->field_0A, 0)`; modes 1-2 fire it on the player
+with the same arguments, then again on `part` itself with `(1, 1,
+0)`; mode 3 fires it on `part` alone with `(1, 1, 0)`; any other mode
+does nothing. Always sets `part->flags` bit 3 first.
+
+Every branch, call, and argument is confirmed correct, and this got
+extremely close: the same mode-dispatching `switch` used for
+`sub_8009CA0` reproduces the ROM's exact 3-way comparison form, and
+explicit `goto`s into a shared tail block (`addr`/`arg1`/`arg2`/
+`deadRead` pinned to `r0`/`r1`/`r2`/`r4`, the real ABI argument
+registers, rather than left as ordinary locals - which needed their
+own 3-instruction shuffle at the call site) reproduce the ROM's
+sharing of one call between the mode-0 and mode-1-2 paths. The single
+remaining gap: ROM's mode-3 case compiles its `if (mode == 3) { ...
+call ... }` guard as a 3-instruction `cmp r0,#3; beq target; b
+epilogue` (jumping into the call code, then separately jumping back
+to the shared epilogue), while every equivalent C construct this
+reconstruction tried - a bare `if` inside the switch's `case 3`, the
+same `if` behind a `goto`-reached label, restructuring as its own
+top-level `if (mode > 2)` block - collapses to the more compact
+2-instruction `cmp r0,#3; bne epilogue` (skip-if-false, fall straight
+into the return that's already right there). Parked on this single
+conditional-branch encoding gap.
+
 ## Tractable pocket found past the AI/collision cluster: `actor_part8.c`
 
-`sub_8009BE0` through `sub_8009D5C` drops into a small raw span before
-matching resumes at `sub_8009DF4` - which, despite living inside that
-same general address range, is self-contained (no calls into the
-unclear cluster) - and the clearly-recognizable "part object" family
-immediately following it
+Matching then resumes at `sub_8009DF4` - which, despite living inside
+the same general address range as the still-unclear AI/collision
+cluster, is self-contained (no calls into the unclear cluster) - and
+the clearly-recognizable "part object" family immediately following it
 (`sub_8009EA8` onward), which reuses patterns and even specific
 functions (`sub_8008484`, `sub_8008364`) already matched earlier this
 session.
