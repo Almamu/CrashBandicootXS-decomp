@@ -1,6 +1,19 @@
 #include "core.h"
 #include "actor.h"
 
+/* This file's `manager` is the same `dual_array_manager` struct
+ * defined and used in `actor_part11.c` (capacity/count1/count2/
+ * array1/array2), but is deliberately kept as raw offset casts here
+ * instead of named struct field access: every function below pins
+ * specific registers (`register ... asm("rN")`) to reproduce exact
+ * ROM instruction ordering, and this compiler's register allocation
+ * for a struct-field access is sensitive to surrounding context in
+ * ways that have already caused real regressions this session (see
+ * docs/matching.md's "second tractable pocket" writeup and
+ * docs/workflow.md step 7's carve-out for when to keep raw pointer
+ * arithmetic). Converting these would need the same rebuild-verify
+ * rigor as any other change here - not attempted opportunistically. */
+
 extern void *gUnknown_03001308;
 extern s32 sub_803AD80(void *arg0, void *arg1, void *fn);
 extern void *sub_803AD7C(void *arg0, void *fn);

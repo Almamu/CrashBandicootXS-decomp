@@ -1,10 +1,31 @@
 #include "core.h"
 #include "actor.h"
 
-extern void sub_8009008(void *manager, void *item);
+/* The fixed-slot object-pool manager struct `sub_8008F20`
+ * (`actor_part11.c`) initializes: `slotArray` holds the active
+ * objects (bounded by `activeCount`, up to `capacity`); `nodeArray`
+ * is a flat array of `capacity` 0x14-byte pool nodes; `gridHead`/
+ * `gridTail` are a 256-bucket spatial hash grid, each bucket a
+ * singly-linked list of pool nodes (head set once when a bucket
+ * leaves empty, tail always updated for O(1) append - see
+ * `sub_8009AF0`); `freeListArray` is `capacity` 8-byte {node, next}
+ * pairs threaded into a singly-linked free list, `freeListHead`
+ * pointing at its first still-free entry. */
+struct pool_manager {
+    s32 activeCount;         // +0x0
+    s32 capacity;               // +0x4
+    void **slotArray;              // +0x8
+    void *nodeArray;                  // +0xc
+    void *gridHead[256];                 // +0x10
+    void *gridTail[256];                    // +0x410
+    void *freeListArray;                       // +0x810
+    void *freeListHead;                           // +0x814
+};
+
+extern void sub_8009008(struct pool_manager *manager, void *item);
 extern void sub_803A94C(void *src, void *dst, s32 control);
-extern void *sub_8009AF0(void *manager, void *data, s32 bucket, s32 extra);
-extern void sub_8009B3C(void *manager, void *obj);
+extern void *sub_8009AF0(struct pool_manager *manager, void *data, s32 bucket, s32 extra);
+extern void sub_8009B3C(struct pool_manager *manager, void *obj);
 extern void sub_8026EB4(void *ptr);
 extern void sub_8026ED0(void *manager);
 
@@ -66,23 +87,23 @@ void sub_80099F0(void *manager, s32 boxX, s32 boxY, s32 boxW, s32 boxH, void *pa
 #endif /* NON_MATCHING */
 asm(".align 2, 0");
 
-/* Searches `manager`'s active-object array (`manager+8` base,
- * `manager+4` capacity bound for the search) for `target`; if found,
- * removes it from the collision grid and returns its pool node to the
- * free list via `sub_8009008`, then compacts the array (bounded this
- * time by the live count at `manager+0`) via the same CpuSet-based
- * shift used throughout this cluster, decrementing `manager+0`. */
-void sub_8009A30(void *manager, void *target)
+/* Searches `manager->slotArray` (bounded by `capacity`, for the
+ * search) for `target`; if found, removes it from the collision grid
+ * and returns its pool node to the free list via `sub_8009008`, then
+ * compacts the array (bounded this time by `activeCount`) via the
+ * same CpuSet-based shift used throughout this cluster, decrementing
+ * `activeCount`. */
+void sub_8009A30(struct pool_manager *manager, void *target)
 {
     s32 i = 0;
-    s32 searchCount = *(s32 *)((u8 *)manager + 4);
+    s32 searchCount = manager->capacity;
     void **base;
 
     if (i >= searchCount) {
         goto done;
     }
     {
-        void **p0 = *(void ***)((u8 *)manager + 8);
+        void **p0 = manager->slotArray;
         void *val = *p0;
         base = p0;
         if (val != target) {
@@ -97,7 +118,7 @@ void sub_8009A30(void *manager, void *target)
         }
     }
 
-    if (i < *(s32 *)((u8 *)manager + 4)) {
+    if (i < manager->capacity) {
         s32 off = i * 4;
         void *item = base[i];
 
@@ -105,21 +126,21 @@ void sub_8009A30(void *manager, void *target)
 
         {
             s32 srcOff = off + 4;
-            void **base2 = *(void ***)((u8 *)manager + 8);
+            void **base2 = manager->slotArray;
             void *src = (u8 *)base2 + srcOff;
             void *dst = (u8 *)base2 + off;
-            s32 control = (*(s32 *)manager - i) & 0x1FFFFF;
+            s32 control = (manager->activeCount - i) & 0x1FFFFF;
             s32 cnt;
             void **base3;
 
             control |= 0x4000000;
             sub_803A94C(src, dst, control);
 
-            cnt = *(s32 *)manager;
-            base3 = *(void ***)((u8 *)manager + 8);
+            cnt = manager->activeCount;
+            base3 = manager->slotArray;
             *(void **)((u8 *)base3 + cnt * 4 - 4) = 0;
             cnt -= 1;
-            *(s32 *)manager = cnt;
+            manager->activeCount = cnt;
         }
     }
 done:
@@ -129,10 +150,10 @@ done:
 /* Removes the entry at `index` from `manager`'s active-object array
  * the same way `sub_8009A30` does after its own search - unlinks it
  * from the grid via `sub_8009008`, then compacts via `sub_803A94C`. */
-void sub_8009AA0(void *manager, s32 index)
+void sub_8009AA0(struct pool_manager *manager, s32 index)
 {
-    if (index < *(s32 *)((u8 *)manager + 4)) {
-        void **base = *(void ***)((u8 *)manager + 8);
+    if (index < manager->capacity) {
+        void **base = manager->slotArray;
         s32 off = index * 4;
         void *item = base[index];
 
@@ -140,36 +161,36 @@ void sub_8009AA0(void *manager, s32 index)
 
         {
             s32 srcOff = off + 4;
-            void **base2 = *(void ***)((u8 *)manager + 8);
+            void **base2 = manager->slotArray;
             void *src = (u8 *)base2 + srcOff;
             void *dst = (u8 *)base2 + off;
-            s32 control = (*(s32 *)manager - index) & 0x1FFFFF;
+            s32 control = (manager->activeCount - index) & 0x1FFFFF;
             s32 cnt;
             void **base3;
 
             control |= 0x4000000;
             sub_803A94C(src, dst, control);
 
-            cnt = *(s32 *)manager;
-            base3 = *(void ***)((u8 *)manager + 8);
+            cnt = manager->activeCount;
+            base3 = manager->slotArray;
             *(void **)((u8 *)base3 + cnt * 4 - 4) = 0;
             cnt -= 1;
-            *(s32 *)manager = cnt;
+            manager->activeCount = cnt;
         }
     }
 }
 
-/* Pops a node off `manager`'s free list (`manager+0x814` head,
- * unlinked via the wrapper entry's own `+4` "next" field), reuses it
- * to wrap `data`/`extra`, and inserts it into the spatial hash grid
- * bucket `bucket`: `manager+0x10` holds each bucket's head pointer
- * (set only the first time a bucket goes from empty), `manager+0x410`
- * holds each bucket's tail pointer (always updated, chaining the
- * previous tail's `+4` "next" field to the new node). Returns the
+/* Pops a node off `manager->freeListHead` (unlinked via the wrapper
+ * entry's own `+4` "next" field), reuses it to wrap `data`/`extra`,
+ * and inserts it into the spatial hash grid bucket `bucket`:
+ * `gridHead` holds each bucket's head pointer (set only the first
+ * time a bucket goes from empty), `gridTail` holds each bucket's tail
+ * pointer (always updated, chaining the previous tail's `+4` "next"
+ * field to the new node). Returns the
  * node. */
-void *sub_8009AF0(void *manager, void *data, s32 bucket, s32 extra)
+void *sub_8009AF0(struct pool_manager *manager, void *data, s32 bucket, s32 extra)
 {
-    void **headField = (void **)((u8 *)manager + 0x814);
+    void **headField = &manager->freeListHead;
     void **entry = *headField;
     void *node = *(void **)entry;
 
@@ -184,14 +205,14 @@ void *sub_8009AF0(void *manager, void *data, s32 bucket, s32 extra)
 
     {
         s32 off = bucket * 4;
-        u8 *gridABase = (u8 *)manager + 0x10;
-        void **gridASlot = (void **)(gridABase + off);
+        void **gridABase = manager->gridHead;
+        void **gridASlot = (void **)((u8 *)gridABase + off);
         if (*gridASlot == 0) {
             *gridASlot = node;
         }
         {
-            u8 *gridBBase = (u8 *)manager + 0x410;
-            void **gridBSlot = (void **)(gridBBase + off);
+            void **gridBBase = manager->gridTail;
+            void **gridBSlot = (void **)((u8 *)gridBBase + off);
             void *tail = *gridBSlot;
             if (tail != 0) {
                 *(void **)((u8 *)tail + 4) = node;
@@ -212,7 +233,7 @@ void *sub_8009AF0(void *manager, void *data, s32 bucket, s32 extra)
  * The ROM never sets up a return value here (its only caller,
  * `sub_8009B70`, ignores it), so this is `void` despite `sub_8009AF0`
  * itself returning the node. */
-void sub_8009B3C(void *manager, void *obj)
+void sub_8009B3C(struct pool_manager *manager, void *obj)
 {
     s16 bucket = *(s16 *)((u8 *)obj + 2);
     void *node1 = sub_8009AF0(manager, obj, bucket, 0);
@@ -234,42 +255,41 @@ void sub_8009B3C(void *manager, void *obj)
     }
 }
 
-/* Appends `obj` to `manager`'s active-object array (`manager+8` base,
- * `manager+0` count) if there's room below `manager+4`'s capacity,
- * inserting it into the collision grid via `sub_8009B3C` first. */
-void sub_8009B70(void *manager, void *obj)
+/* Appends `obj` to `manager->slotArray` if there's room below
+ * `capacity`, inserting it into the collision grid via `sub_8009B3C`
+ * first. */
+void sub_8009B70(struct pool_manager *manager, void *obj)
 {
-    if (*(s32 *)manager < *(s32 *)((u8 *)manager + 4)) {
+    if (manager->activeCount < manager->capacity) {
         s32 idx;
 
         sub_8009B3C(manager, obj);
 
-        idx = *(s32 *)manager;
+        idx = manager->activeCount;
         {
-            void **base = *(void ***)((u8 *)manager + 8);
+            void **base = manager->slotArray;
             base[idx] = obj;
         }
-        *(s32 *)manager = idx + 1;
+        manager->activeCount = idx + 1;
     }
 }
 
-/* Tears down a pool manager: frees the free-list array
- * (`manager+0x810`), the node array (`manager+0xc`), and the slot
- * array (`manager+8`), each via `sub_8026EB4` if non-`NULL`; resets
- * the capacity (`manager+4`) to 0; and, if a flags bit is set, frees
- * the manager itself via `sub_8026ED0`. */
-void sub_8009B9C(void *manager, s32 flags)
+/* Tears down a pool manager: frees `freeListArray`, `nodeArray`, and
+ * `slotArray`, each via `sub_8026EB4` if non-`NULL`; resets `capacity`
+ * to 0; and, if a flags bit is set, frees the manager itself via
+ * `sub_8026ED0`. */
+void sub_8009B9C(struct pool_manager *manager, s32 flags)
 {
-    if (*(void **)((u8 *)manager + 0x810) != 0) {
-        sub_8026EB4(*(void **)((u8 *)manager + 0x810));
+    if (manager->freeListArray != 0) {
+        sub_8026EB4(manager->freeListArray);
     }
-    if (*(void **)((u8 *)manager + 0xc) != 0) {
-        sub_8026EB4(*(void **)((u8 *)manager + 0xc));
+    if (manager->nodeArray != 0) {
+        sub_8026EB4(manager->nodeArray);
     }
-    if (*(void **)((u8 *)manager + 8) != 0) {
-        sub_8026EB4(*(void **)((u8 *)manager + 8));
+    if (manager->slotArray != 0) {
+        sub_8026EB4(manager->slotArray);
     }
-    *(s32 *)((u8 *)manager + 4) = 0;
+    manager->capacity = 0;
     if (flags & 1) {
         sub_8026ED0(manager);
     }
