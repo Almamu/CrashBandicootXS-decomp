@@ -3,61 +3,6 @@
 .syntax unified
 .arm
 
-	thumb_func_start sub_8008640
-sub_8008640: @ 0x08008640
-	adds r0, #0x25
-	ldrb r0, [r0]
-	bx lr
-	.align 2, 0
-
-	thumb_func_start sub_8008648
-sub_8008648: @ 0x08008648
-	adds r0, #0x25
-	strb r1, [r0]
-	bx lr
-	.align 2, 0
-
-	thumb_func_start sub_8008650
-sub_8008650: @ 0x08008650
-	ldrb r0, [r0, #0xd]
-	lsrs r0, r0, #2
-	movs r1, #1
-	ands r0, r1
-	bx lr
-	.align 2, 0
-	thumb_func_start sub_800865C
-sub_800865C: @ 0x0800865C
-	ldrb	r3, [r0, #13]
-	lsrs	r2, r3, #2
-	movs	r1, #1
-	eors	r2, r1
-	ands	r2, r1
-	lsls	r2, r2, #2
-	movs	r1, #5
-	negs	r1, r1
-	ands	r1, r3
-	orrs	r1, r2
-	strb	r1, [r0, #13]
-	bx	lr
-
-	thumb_func_start sub_8008674
-sub_8008674: @ 0x08008674
-	ldrb r0, [r0, #0xd]
-	lsrs r0, r0, #3
-	movs r1, #1
-	ands r0, r1
-	bx lr
-	.align 2, 0
-
-	thumb_func_start sub_8008680
-sub_8008680: @ 0x08008680
-	movs r1, #9
-	rsbs r1, r1, #0
-	ldrb r2, [r0, #0xd]
-	ands r1, r2
-	strb r1, [r0, #0xd]
-	bx lr
-
 	thumb_func_start sub_800868C
 sub_800868C: @ 0x0800868C
 	movs r1, #8

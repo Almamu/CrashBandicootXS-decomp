@@ -276,4 +276,72 @@ void sub_8008618(struct actor *part, s32 frame)
         *(s32 *)((u8 *)part + 0x30) = frame;
     }
 }
+
+/* `part+0x25` accessor pair - plain byte get/set, no other logic. */
+u8 sub_8008640(void *part)
+{
+    return *((u8 *)part + 0x25);
+}
+
+void sub_8008648(void *part, u8 val)
+{
+    *((u8 *)part + 0x25) = val;
+}
+
+/* `part+0xd` bit-2 getter. */
+s32 sub_8008650(void *part)
+{
+    return (*((u8 *)part + 0xd) >> 2) & 1;
+}
+
+/* Toggles `part+0xd` bit 2. Needed the bit-flip (`(byte>>2)^1)&1`)
+ * done via genuinely separate `eor`+`and` instructions instead of the
+ * single `bic` this compiler normally folds that pattern into -
+ * forced via a two-instruction inline `asm` block, whose "one" input
+ * also needed marking `+r` (read-write) even though its value never
+ * changes, purely to stop the compiler from constant-propagating its
+ * value 1 past the asm block and computing the later mask (`-5`) as
+ * `1 - 6` off of it instead of the ROM's fresh `movs r1, #5; negs r1,
+ * r1`. Also needed the shifted-bit computed before (not after) the
+ * mask, matching the ROM's own instruction order. */
+void sub_800865C(void *part)
+{
+    register u32 byte asm("r3") = *((u8 *)part + 0xd);
+    register u32 shifted asm("r2") = byte >> 2;
+    register u32 one asm("r1") = 1;
+    register u32 bit asm("r2");
+    register u32 shiftedBit asm("r2");
+    register s32 mask asm("r1");
+    register s32 result asm("r1");
+
+    asm("eor %0, %0, %2\n\tand %0, %0, %2" : "=r" (bit), "+r" (one) : "1" (one), "0" (shifted));
+    shiftedBit = bit << 2;
+
+    mask = -5;
+    result = mask & byte;
+    result |= shiftedBit;
+    *((u8 *)part + 0xd) = result;
+}
+
+/* `part+0xd` bit-3 getter - same shape as `sub_8008650` above, one
+ * bit over. */
+s32 sub_8008674(void *part)
+{
+    return (*((u8 *)part + 0xd) >> 3) & 1;
+}
+
+/* Clears `part+0xd` bit 3. Needed the mask register-pinned to a
+ * literal `-9` (computed via `movs r1, #9; negs r1, r1`, same
+ * `-(N+1) == ~N` trick as `sub_800865C`'s `-5` mask above) instead of
+ * `~8`, which this compiler folds directly into a single `mov #0xf7`
+ * immediate load. */
+void sub_8008680(void *part)
+{
+    register s32 mask asm("r1") = -9;
+    register s32 byte asm("r2") = *((u8 *)part + 0xd);
+    register s32 result asm("r1");
+
+    result = mask & byte;
+    *((u8 *)part + 0xd) = result;
+}
 asm(".align 2, 0");

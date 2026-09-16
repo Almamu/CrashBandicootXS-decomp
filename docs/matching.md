@@ -2959,3 +2959,47 @@ a single-instruction inline `asm("add %0, %0, %1" : "+r"(offset) :
 match, unlike the switch-based functions where the same trick broke
 duplicate-case-label merging elsewhere. Matched after finding the
 register pins and the inline-asm fix for the add.
+
+**`sub_8008640`/`sub_8008648`** (ROM `0x08008640`/`0x08008648`, right
+after `sub_8008618`, same file): a plain `part+0x25` byte get/set
+pair, no other logic. Both matched on the first attempt.
+
+**`sub_8008650`** (ROM `0x08008650`, right after `sub_8008648`, same
+file): `part+0xd` bit-2 getter, `(byte >> 2) & 1`. Matched on the
+first attempt.
+
+**`sub_800865C`** (ROM `0x0800865C`, right after `sub_8008650`, same
+file): toggles `part+0xd` bit 2. Two separate compiler quirks needed
+fixing here:
+
+- The bit-flip `((byte >> 2) ^ 1) & 1` compiles to a single `bic`
+  (bit-clear) instruction by default - this compiler recognizes
+  `(x ^ k) & k` as `~x & k` and folds it, while the ROM has genuinely
+  separate `eor`/`and` instructions. Forced via a two-instruction
+  inline `asm` block for just that pair.
+- The mask constant `-5` (used to clear bit 2, `1<<2`, via
+  `-(N+1) == ~N`) got computed as `1 - 6` (relative to the still-live
+  value 1 left over from the bit-flip's inline-asm input) instead of a
+  fresh `movs r1, #5; negs r1, r1`, because the compiler kept tracking
+  that register's old constant value across the `asm` block. Marking
+  that input `+r` (read-write) instead of `r`, even though its value
+  never actually changes, was enough to break that tracking and force
+  a genuinely fresh load.
+
+Also needed the shifted-bit computed before (not after) the mask, to
+match the ROM's own instruction order. Matched after working through
+both quirks.
+
+**`sub_8008674`** (ROM `0x08008674`, right after `sub_800865C`, same
+file): `part+0xd` bit-3 getter, same shape as `sub_8008650` one bit
+over. Matched on the first attempt.
+
+**`sub_8008680`** (ROM `0x08008680`, right after `sub_8008674`, same
+file): clears `part+0xd` bit 3. `byte &= ~8` (or the equivalent
+`byte &= -9`, since `-(N+1) == ~N`) folds directly into a single `mov
+r1, #0xf7` immediate load in this compiler; the ROM instead computes
+it via `movs r1, #9; negs r1, r1`. Fixed the same way as
+`sub_800865C`'s `-5` mask above: register-pinning
+`register s32 mask asm("r1") = -9;` as its own statement (rather than
+folding the negation into the `&=` compound assignment) was enough to
+force the fresh `mov`+`neg` pair. Matched after finding this.
