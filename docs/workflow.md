@@ -35,6 +35,23 @@ incomplete pass and should be finished before moving on.
    `matching_decomp_non_matching_toggle` memory and the "Parked, not
    matched" entries in matching.md for the pattern and when to stop
    iterating.
+
+   **A step-2/step-3 isolated compile (one function, or even one whole
+   `.c` file, compiled standalone outside the real build) is a
+   diagnostic tool, never proof of a match.** It cannot see the
+   surrounding link context - other functions in the same object,
+   which registers a caller already occupies, or a neighboring
+   parked/raw block sitting between this function and the next in ROM
+   order - and this compiler's register allocation is sensitive to
+   exactly that context. Do not say a function "matches", write that
+   into matching.md/status docs, or commit it, on the strength of an
+   isolated compile alone. Only step 6's full clean rebuild (the whole
+   ROM, from a `rm -rf build`) is evidence of a match. This project has
+   hit this exact mistake more than once (`sub_8008C80`/`sub_8008D30`,
+   and again `sub_8009AA0`/`sub_8009B3C` - both pairs looked identical
+   to the ROM in isolation and both had real bugs step 6 caught, one of
+   them a wrong-register byte load, the other a bogus return value)
+   - treat every "matches" claim before step 6 as provisional.
 4. Once it matches (or is deliberately parked), cut that function's
    block out of whichever `asm/code_3_*.s` file currently holds it (it
    becomes two files: everything before, and everything after), add the
@@ -56,7 +73,16 @@ incomplete pass and should be finished before moving on.
    will fail with "undefined reference" if any are missed - a useful
    safety net, not just a cosmetic step).
 6. Full clean `make compare` (and `make NON_MATCHING=1 <rom-target>` too,
-   if the function ended up parked).
+   if the function ended up parked). This means `rm -rf build
+   crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map` first,
+   every time, not a rebuild that reuses stale objects. **No function is
+   "done" - matched or parked - until this step has actually run and
+   passed on the real tree.** When several functions are being worked
+   through together as one batch (a common pattern in this project), do
+   not report or record any of them as matched based on their individual
+   step-2/3 isolated compiles; step 6 must run once against the fully
+   integrated batch (all of it cut into its real `.c`/`.s` files, per
+   step 4) before step 8 records anything.
 7. **Cleanup pass, on this function alone, right now - do not defer it
    to a later batch pass:**
    - Replace every raw hardware address (`0x040000xx`/`0x0500...`/

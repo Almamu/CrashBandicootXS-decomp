@@ -3530,19 +3530,105 @@ loop index reused from the zero-fill loop's counter, and a running
 Parked rather than chase a four-scalar, three-high-register allocation
 puzzle for a single function.
 
+`sub_8009008` (right after the parked `sub_8008F20`) through
+`sub_8009914` (~8 functions) is complex spatial-hash-grid list-
+management/removal logic built on `sub_8008F20`'s pool-manager struct
+- `sub_8009008` alone unlinks a node from potentially many grid
+buckets via a two-phase search whose higher-level "why" isn't
+recoverable without more context. Left raw rather than guess.
+
+## Second tractable pocket: `actor_part12.c`
+
+Right after that raw span, `sub_80099F0` through `sub_8009B9C` turned
+out to be another self-contained, clearly-understood run - the same
+active-object array/grid manipulation primitives seen in
+`actor_part11.c`/`actor_part10.c`, just operating on the pool-manager
+struct's own fields (`+0`=active count, `+4`=capacity, `+8`=slot
+array, `+0xc`=node array, `+0x10`/`+0x410`=spatial grid head/tail
+tables, `+0x810`/`+0x814`=free-list array/head):
+
+- **`sub_80099F0`** turned out byte-identical in shape to the already-
+  parked `sub_8008D80` (down to the label offsets) - the same
+  collision-hit-resolve logic, called from elsewhere in this cluster.
+  Parked immediately on the same `boxH` gap, reusing `sub_8008D80`'s
+  exact C body - see "Parked, not matched: `sub_80099F0`" below.
+- **`sub_8009A30`**: searches the active-object array for `target`
+  (search bound = capacity, at `+4`); on a match, unlinks it from the
+  grid via `sub_8009008` and compacts the array (bound = active count,
+  at `+0`) via the same CpuSet shift used throughout this region.
+  Matched first-attempt - this manager struct's field layout (`+4`
+  search bound vs `+0xc` array base in `actor_part11.c`'s simpler
+  manager type) is genuinely different from the one used by
+  `sub_8008DEC` etc., confirmed by cross-referencing which fields
+  `sub_8008EE4`/`sub_8008F20` themselves initialize.
+- **`sub_8009AA0`**: the same removal shape as `sub_8009A30`, but
+  takes the index directly instead of searching. Needed the array-base
+  load moved *before* the index-shift computation (`s32 off = i*4;`
+  written after, not before, the `void **base = ...` load) to match
+  the ROM's own instruction order - a mismatch an isolated per-
+  function test missed entirely (it only surfaced once fixing
+  `sub_8009B3C`'s bug forced a full re-verification - see the lesson
+  below).
+- **`sub_8009AF0`**: pops a node off the free list (`+0x814` head,
+  unlinked via the popped entry's own `+4` "next"), reuses it to wrap
+  `(data, extra)`, and inserts it into the spatial grid bucket
+  `bucket` (`+0x10` head-pointer table, `+0x410` tail-pointer table -
+  a classic head+tail singly-linked list per bucket for O(1) append).
+  Needed each grid base address (`manager+0x10`, `manager+0x410`)
+  computed as its own subexpression *before* adding the bucket byte
+  offset, rather than the natural C order of computing `off` first.
+- **`sub_8009B3C`**: inserts `obj` into the grid via `sub_8009AF0`,
+  bucketed by `obj`'s own `+2` field; if `obj->flags` bit 4 is set (a
+  "large object" spanning more than one cell), also inserts it into
+  the special bucket `0xff` and links the two nodes together via their
+  `+0xc` fields. Two real bugs here, both only caught by a full clean
+  rebuild after the whole batch had already "passed" in isolation:
+  (1) the ROM never sets up a return value before this function's
+  epilogue (its only caller, `sub_8009B70`, ignores the result) - it
+  must be `void`, not `void *`, even though `sub_8009AF0` itself
+  returns the node; (2) the `obj->flags` bit-4 test needed the loaded
+  byte pinned to `r1` (not the naturally-allocated `r0`) before the
+  shift, the same register-letter idiom already established for
+  `sub_8008D30`'s own flags test.
+- **`sub_8009B70`**: appends `obj` to the active-object array if
+  there's room, inserting it into the grid via `sub_8009B3C` first.
+  Matched first-attempt.
+- **`sub_8009B9C`**: tears down a pool manager - frees the free-list
+  array, node array, and slot array (each via `sub_8026EB4` if
+  non-`NULL`), resets the capacity field to 0, and optionally frees
+  the manager itself via `sub_8026ED0`. Matched first-attempt.
+
+**Lesson reinforced again**: `sub_8009AA0` and `sub_8009B3C` were both
+initially declared "matches" from isolated per-function compiles, the
+same mistake this project has hit before with `sub_8008C80`/
+`sub_8008D30`. Only a full clean `make compare` after integrating the
+whole batch into `actor_part12.c` caught both regressions - the ROM
+size grew by 4 bytes and every address after the bug shifted, which is
+exactly the kind of failure an isolated test cannot surface. A
+function is not "matched" until the *entire ROM* has been rebuilt from
+a clean tree and verified byte-exact - see `docs/workflow.md`'s
+verification step, now stated as a hard requirement rather than a
+recommendation.
+
+`sub_8009BE0` through `sub_8009D5C` (~3 functions) sits between this
+pocket and the already-matched `sub_8009DF4` boundary; `sub_8009BE0`
+itself (a physics/collision step-probe calling still-unexamined
+`sub_8008278`/`sub_8026628`) was left raw rather than guessed at, so
+this remains a separate raw span for now.
+
+**Parked, not matched: `sub_80099F0`** (ROM `0x080099F0`, right after
+the raw `sub_8009008`-`sub_8009914` span, `src/graphics/actor_part12.c`):
+byte-identical in shape to the already-parked `sub_8008D80` - the same
+`boxH` stack-layout gap applies. See "Parked, not matched:
+`sub_8008D80`" above for the full writeup; this is its twin.
+
 ## Tractable pocket found past the AI/collision cluster: `actor_part8.c`
 
-`sub_8009008` (right after the parked `sub_8008F20`) drops into a
-large, deeply interconnected AI/collision/physics dispatch system
-(roughly 28 functions, up to around `sub_8009DF4`) that repeatedly
-touches `gUnknown_030012C0`/`gUnknown_030012D8` - globals
-`docs/rom_map.md` itself still describes as only partially understood
-after extensive prior investigation. Rather than guess at semantics
-there, this whole span was left completely raw/unclaimed, and matching
-resumed at `sub_8009DF4` - which, despite living inside that same
-address range, is self-contained (no calls into the unclear cluster) -
-and the clearly-recognizable "part object" family immediately
-following it
+`sub_8009BE0` through `sub_8009D5C` drops into a small raw span before
+matching resumes at `sub_8009DF4` - which, despite living inside that
+same general address range, is self-contained (no calls into the
+unclear cluster) - and the clearly-recognizable "part object" family
+immediately following it
 (`sub_8009EA8` onward), which reuses patterns and even specific
 functions (`sub_8008484`, `sub_8008364`) already matched earlier this
 session.

@@ -90,10 +90,17 @@ per-actor animation frames, text layout.
   `docs/matching.md`): `sub_8008DC0`, `sub_8008DEC`, `sub_8008E50`,
   `sub_8008E94`, `sub_8008EB4`, `sub_8008EE4`
 
+- `src/graphics/actor_part12.c` (new file - `sub_8009A30`'s real ROM
+  address isn't adjacent to `actor_part11.c`'s matched functions
+  either, since the parked `sub_8008F20` and the raw `sub_8009008`-
+  `sub_8009914` span sit between them; see `docs/matching.md`):
+  `sub_8009A30`, `sub_8009AA0`, `sub_8009AF0`, `sub_8009B3C`,
+  `sub_8009B70`, `sub_8009B9C`
+
 - `src/graphics/actor_part8.c` (new file - `sub_8009EA8`'s real ROM
-  address isn't adjacent to `code_3_2_13.o`'s raw content either, since
+  address isn't adjacent to `code_3_2_14.o`'s raw content either, since
   the parked `sub_8009DF4` sits raw between them, and the whole large
-  `sub_8009008`-`sub_8009DF4`-ish remainder of the AI/collision cluster
+  `sub_8009BE0`-`sub_8009DF4`-ish remainder of the AI/collision cluster
   before that was left raw rather than guessed at; see
   `docs/matching.md`):
   `sub_8009EA8`, `sub_8009EB0`, `sub_8009EBC`, `sub_8009EC4`,
@@ -250,6 +257,11 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   loop index, a running byte offset) allocation gap across
   `r3`/`sb`/`sl`/`r4`/`r8` - see `docs/matching.md`, "Parked, not
   matched: `sub_8008F20`".
+- **`sub_80099F0`** (`src/graphics/actor_part12.c`) - `sub_8008D80`'s
+  twin: byte-identical in shape (same collision-hit-resolve logic,
+  same "dead read" trampoline call), called from elsewhere in this
+  cluster. Parked on the same `boxH` stack-layout gap - see
+  `docs/matching.md`, "Parked, not matched: `sub_80099F0`".
 - **`sub_8009DF4`** (`src/graphics/actor_part8.c`) - a velocity/
   position integrator: steps each axis's velocity toward its max by
   its accel amount (clamped so it never overshoots), builds a
