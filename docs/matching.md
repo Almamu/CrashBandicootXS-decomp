@@ -2826,3 +2826,13 @@ file-split treatment used throughout this cluster: `asm/code_3_2_6.s`
 split at the `sub_8008434` boundary into itself (now just the parked
 `sub_80083B8`) and the new `asm/code_3_2_7.s`, with the new
 `src/graphics/actor_part6.c` inserted between them in `ldscript.txt`.
+
+**`sub_8008434`** (ROM `0x08008434`, right after `sub_8008408`, same
+file): a `struct actor`-shaped object constructor - allocates via
+`sub_8026EDC(0x40)`, initializes it through `sub_800725C` (already
+matched in `graphics.c`, wires up `gStaticData_087E3BEC` and clears
+flags), then immediately overwrites its `table` with
+`gStaticData_087E3C44` instead and clears its part-object fields via
+`sub_8007AB4` (already matched in `actor_part.c`). The three `u16`
+arguments become `field_08` and the Q8 `x`/`y` position. Matched on
+the first attempt.

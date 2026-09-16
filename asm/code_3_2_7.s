@@ -2,43 +2,6 @@
 
 .syntax unified
 .arm
-	thumb_func_start sub_8008434
-sub_8008434: @ 0x08008434
-	push {r4, r5, r6, lr}
-	mov r6, r8
-	push {r6}
-	mov r8, r0
-	adds r5, r1, #0
-	adds r6, r2, #0
-	lsls r0, r0, #0x10
-	lsrs r0, r0, #0x10
-	mov r8, r0
-	lsls r5, r5, #0x10
-	lsrs r5, r5, #0x10
-	lsls r6, r6, #0x10
-	lsrs r6, r6, #0x10
-	movs r0, #0x40
-	bl sub_8026EDC
-	adds r4, r0, #0
-	bl sub_800725C
-	ldr r0, _0800847C @ =gStaticData_087E3C44
-	str r0, [r4, #0x18]
-	adds r0, r4, #0
-	bl sub_8007AB4
-	mov r0, r8
-	strh r0, [r4, #8]
-	lsls r5, r5, #8
-	str r5, [r4]
-	lsls r6, r6, #8
-	str r6, [r4, #4]
-	adds r0, r4, #0
-	pop {r3}
-	mov r8, r3
-	pop {r4, r5, r6}
-	pop {r1}
-	bx r1
-	.align 2, 0
-_0800847C: .4byte gStaticData_087E3C44
 
 	thumb_func_start sub_8008480
 sub_8008480: @ 0x08008480
