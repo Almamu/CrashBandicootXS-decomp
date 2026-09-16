@@ -2809,3 +2809,20 @@ genuinely separate destination variable (all three techniques,
 independently) made no difference here either. Parked rather than keep
 chasing this one instruction - same call as the other parked functions
 above.
+
+**`sub_8008408`** (ROM `0x08008408`, right after `sub_80083B8`, new
+`src/graphics/actor_part6.c`): the same `gUnknown_03001308` sub-object
+convention used throughout this ROM region (`sub_8007F78`/
+`sub_8006FE4`) - if `gUnknown_03001308+0x2b` is nonzero, returns the
+sub-object's `+0x34` byte's low 2 bits minus 1; otherwise returns
+those bits unmodified. Matched on the second attempt: the first draft
+had the compiler lay out the `if`/`else` bodies in the opposite order
+from the ROM (ROM falls through the "nonzero" case first, branches
+past it to the "zero" case second); inverting the C condition
+(`== 0` instead of `!= 0`, with the bodies swapped to match) got the
+ROM's exact block order. Not ROM-adjacent to `actor_part5.c` (the
+parked `sub_80083B8` sits raw between them), so it needed the same
+file-split treatment used throughout this cluster: `asm/code_3_2_6.s`
+split at the `sub_8008434` boundary into itself (now just the parked
+`sub_80083B8`) and the new `asm/code_3_2_7.s`, with the new
+`src/graphics/actor_part6.c` inserted between them in `ldscript.txt`.

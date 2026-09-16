@@ -55,6 +55,8 @@ SECTIONS
         build/crashbandicootxs/asm/code_3_2_5.o(.text);
         build/crashbandicootxs/src/graphics/actor_part5.o(.text);
         build/crashbandicootxs/asm/code_3_2_6.o(.text);
+        build/crashbandicootxs/src/graphics/actor_part6.o(.text);
+        build/crashbandicootxs/asm/code_3_2_7.o(.text);
         build/crashbandicootxs/src/graphics/actor_anim.o(.text);
         build/crashbandicootxs/asm/code_3_3.o(.text);
 
