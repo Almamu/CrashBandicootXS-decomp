@@ -3003,3 +3003,23 @@ it via `movs r1, #9; negs r1, r1`. Fixed the same way as
 `register s32 mask asm("r1") = -9;` as its own statement (rather than
 folding the negation into the `&=` compound assignment) was enough to
 force the fresh `mov`+`neg` pair. Matched after finding this.
+
+**`sub_800868C`/`sub_8008698`/`sub_80086A4`/`sub_80086B0`/
+`sub_80086BC`/`sub_80086C4`/`sub_80086CC`/`sub_80086D8`** (ROM
+`0x0800868C`-`0x080086D8`, right after `sub_8008680`, same file): a
+run of eight more trivial flag/byte accessors - `sub_800868C` sets
+`part+0xd` bit 3, `sub_8008698`/`sub_80086A4`/`sub_80086B0` are the
+`part->flags` bit-6 getter/clearer/setter, `sub_80086BC` resets
+`part`'s frame index (`+0x2d`) to 0, and `sub_80086C4`/`sub_80086CC`/
+`sub_80086D8` are the `part->flags` bit-7 getter/clearer/setter (the
+getter needs no mask, since shifting an 8-bit value right by 7 already
+leaves only that bit).
+
+Every AND/OR one of these (all except the getters and the plain
+`+0x2d` reset) needed its bitmask register-pinned AND assigned
+*before* the byte load, mirroring the established accumulator-
+register pattern from earlier in this file - the natural, unpinned
+compile puts the byte load first in every one of them, which is a
+real, byte-level reordering versus the ROM (not merely cosmetic), even
+though the two instructions are otherwise independent. All eight
+matched once this ordering fix was applied uniformly.

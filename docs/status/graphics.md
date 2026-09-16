@@ -62,7 +62,9 @@ per-actor animation frames, text layout.
   `sub_8008484`, `sub_80084A4`, `sub_80084C4`, `sub_8008518`,
   `sub_8008564`, `sub_80085B8`, `sub_8008604`, `sub_8008618`,
   `sub_8008640`, `sub_8008648`, `sub_8008650`, `sub_800865C`,
-  `sub_8008674`, `sub_8008680`
+  `sub_8008674`, `sub_8008680`, `sub_800868C`, `sub_8008698`,
+  `sub_80086A4`, `sub_80086B0`, `sub_80086BC`, `sub_80086C4`,
+  `sub_80086CC`, `sub_80086D8`
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.

@@ -344,4 +344,81 @@ void sub_8008680(void *part)
     result = mask & byte;
     *((u8 *)part + 0xd) = result;
 }
+
+/* Sets `part+0xd` bit 3. Needed the mask register-pinned and computed
+ * before the byte load (matching the ROM's own instruction order) -
+ * the natural allocation loads the byte first. Same accumulator-
+ * register pattern used for every AND/OR accessor below. */
+void sub_800868C(void *part)
+{
+    register s32 mask asm("r1") = 8;
+    register s32 byte asm("r2") = *((u8 *)part + 0xd);
+    register s32 result asm("r1");
+
+    result = mask | byte;
+    *((u8 *)part + 0xd) = result;
+}
+
+/* `part->flags` bit-6 getter. */
+s32 sub_8008698(struct actor *part)
+{
+    return (part->flags >> 6) & 1;
+}
+
+/* Clears `part->flags` bit 6. */
+void sub_80086A4(struct actor *part)
+{
+    register s32 mask asm("r1") = -0x41;
+    register s32 byte asm("r2") = part->flags;
+    register s32 result asm("r1");
+
+    result = mask & byte;
+    part->flags = result;
+}
+
+/* Sets `part->flags` bit 6. */
+void sub_80086B0(struct actor *part)
+{
+    register s32 mask asm("r1") = 0x40;
+    register s32 byte asm("r2") = part->flags;
+    register s32 result asm("r1");
+
+    result = mask | byte;
+    part->flags = result;
+}
+
+/* Resets `part`'s frame index (`+0x2d`) to 0. */
+void sub_80086BC(void *part)
+{
+    *((u8 *)part + 0x2d) = 0;
+}
+
+/* `part->flags` bit-7 getter - no mask needed since the shift already
+ * leaves only that bit in position 0 of an 8-bit value. */
+s32 sub_80086C4(struct actor *part)
+{
+    return part->flags >> 7;
+}
+
+/* Clears `part->flags` bit 7. */
+void sub_80086CC(struct actor *part)
+{
+    register s32 mask asm("r1") = 0x7f;
+    register s32 byte asm("r2") = part->flags;
+    register s32 result asm("r1");
+
+    result = mask & byte;
+    part->flags = result;
+}
+
+/* Sets `part->flags` bit 7. */
+void sub_80086D8(struct actor *part)
+{
+    register s32 mask asm("r1") = 0x80;
+    register s32 byte asm("r2") = part->flags;
+    register s32 result asm("r1");
+
+    result = mask | byte;
+    part->flags = result;
+}
 asm(".align 2, 0");
