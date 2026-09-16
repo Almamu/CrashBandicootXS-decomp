@@ -2852,3 +2852,51 @@ file): the same `sub_800725C`/table-swap-to-`gStaticData_087E3C44`/
 `sub_8007AB4` shape as `sub_8008434` above, but re-initializes an
 existing `self` in place instead of allocating a fresh object via
 `sub_8026EDC`. Matched on the first attempt.
+
+**`sub_80084C4`** (ROM `0x080084C4`, right after `sub_80084A4`, same
+file): looks up `part`'s keyframe record via `sub_80083B8` (parked as
+`NON_MATCHING` in `actor_part5.c`), then picks a pointer off it based
+on the record's `+4` byte's upper nibble - 0 selects `info+0x24`, 6
+selects `info+0x14`, and everything else (1-5, or anything above 6)
+falls back to the fixed table `gStaticData_0816B300`.
+
+This is a genuine native `switch` (unlike the label-array/computed-
+goto approach considered and discarded below), but getting gcc to
+compile it into the ROM's real jump table took real experimentation.
+A "naturally" written switch grouping the case labels into their
+obvious contiguous ranges (`case 0:`, `case 1: case 2: case 3: case 4:
+case 5:`, `case 6:`) always compiled to a `cmp`/`bgt`/`bge` compare
+chain instead, no matter how the `default:` clause was phrased (folded
+into the range group, or written as its own separate identical-body
+arm) - this compiler evidently only emits a jump table when the
+case-value-to-code-block mapping can't be expressed as a handful of
+contiguous range checks. Confirmed this experimentally by copying
+`sub_8007C30`'s already-matched switch (whose case values *are*
+genuinely scattered: `0,3,4` / `1,2,6` / `5` / default) with dummy
+identical bodies - it produced a jump table purely from the scatter,
+independent of the actual values returned. The fix: since cases 1-5
+and `default` all compute the exact same result here, they can be
+freely split across multiple source-level arms without changing
+behavior; scattering them out of numeric order (`case 0`, `case 3:
+case 4:`, `case 1: case 2:`, `case 5`, `case 6`, `default`) was enough
+to make gcc emit the same two-level-indirection jump table structure
+as the ROM (a literal-pool word holding the table's own address,
+loaded into a register, then indexed and loaded a second time before
+the `mov pc, r0`) - byte-exact including the "needlessly scattered"
+case order itself, which is now a required part of the source, not
+just cosmetic.
+
+(Earlier abandoned approach, for reference: a manual
+`goto *label_array[type]` construct, with `label_array` a function-
+local `static const void *[]` initialized from `&&label` addresses,
+reproduced the ROM's exact instruction sequence in isolation - but
+the array itself gets emitted into `.data`, a section this project's
+`ldscript.txt` doesn't retain for arbitrary objects (only `data.o`'s
+`.rodata` and each object's `.text` are kept, everything else is
+`/DISCARD/`ed), so the reference would dangle in the actual linked
+ROM. Forcing the array's section via
+`__attribute__((section(".text")))` placed it in `.text` but as its
+own object *before* the function symbol, not inlined at the correct
+byte offset the way a compiler-native jump table is. The native
+`switch` approach above avoids both problems entirely.) Matched on
+this attempt once the case-scatter trick was found.

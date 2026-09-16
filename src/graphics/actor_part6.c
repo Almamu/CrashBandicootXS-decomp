@@ -77,4 +77,50 @@ struct actor *sub_80084A4(struct actor *self)
     sub_8007AB4(self);
     return self;
 }
+
+extern void *sub_80083B8(void *part);
+extern u8 gStaticData_0816B300[];
+
+/* Looks up `part`'s keyframe record via `sub_80083B8` (already parked
+ * as `NON_MATCHING` in `actor_part5.c`), then picks a pointer off it
+ * per the record's `+4` byte's upper nibble: 0 -> `info+0x24`, 6 ->
+ * `info+0x14`, anything else (1-5, or above 6) -> the fixed fallback
+ * table `gStaticData_0816B300`. Needed the case labels scattered
+ * out of numeric order (rather than grouped into the obvious
+ * contiguous "0 / 1-5 / 6" ranges) to get gcc to emit a real jump
+ * table instead of a compare chain - this compiler only builds a
+ * jump table when the case-to-block mapping can't be expressed as a
+ * few simple range checks, so a source-level shape that *looks*
+ * needlessly scattered is what is needed to match the ROM's own
+ * jump table here. */
+void *sub_80084C4(void *part)
+{
+    void *info = sub_80083B8(part);
+    u8 type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
+    void *result;
+
+    switch (type) {
+    case 0:
+        result = (u8 *)info + 0x24;
+        break;
+    case 3:
+    case 4:
+        result = gStaticData_0816B300;
+        break;
+    case 1:
+    case 2:
+        result = gStaticData_0816B300;
+        break;
+    case 5:
+        result = gStaticData_0816B300;
+        break;
+    case 6:
+        result = (u8 *)info + 0x14;
+        break;
+    default:
+        result = gStaticData_0816B300;
+        break;
+    }
+    return result;
+}
 asm(".align 2, 0");
