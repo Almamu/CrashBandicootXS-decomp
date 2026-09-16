@@ -2840,3 +2840,9 @@ the first attempt.
 **`sub_8008480`** (ROM `0x08008480`, right after `sub_8008434`, same
 file): trivial always-true stub, `return 1;`. Matched on the first
 attempt.
+
+**`sub_8008484`** (ROM `0x08008484`, right after `sub_8008480`, same
+file): the same `gStaticData_087E3BEC`-table-swap-plus-conditional-
+`sub_8026ED0` shape as `sub_80073BC` (already matched in
+`graphics.c`) - overwrites `self->table` unconditionally, then calls
+`sub_8026ED0(self)` only if `arg1 & 1`. Matched on the first attempt.
