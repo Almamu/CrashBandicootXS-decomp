@@ -167,3 +167,15 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   instructions (`lsls`/`lsrs` to a byte) get optimized away here since
   this compiler can prove the value already fits - see
   `docs/matching.md`, "Parked, not matched: `sub_8008770`".
+- **`sub_800891C`** (`src/graphics/actor_part7.c`) - filters/compacts
+  an array of `part`-like objects into a second output array each
+  call, broad/narrow-phase-testing each one against a `gUnknown_03001308`-
+  sub-object-centered region pair via `part->table`-driven
+  trampolines, with array-entry removal handled via the GBA BIOS
+  `CpuSet` SWI. Semantics fully understood and every call shape
+  confirmed correct, but this compiler puts the loop counter into a
+  high register (`r8`, needing a second high register for another
+  loop-invariant pointer) instead of the ROM's low register `r7` -
+  explicitly pinning it to `r7` triggers the `r7`-pin corruption
+  pattern documented elsewhere in this ROM region instead of fixing
+  it - see `docs/matching.md`, "Parked, not matched: `sub_800891C`".

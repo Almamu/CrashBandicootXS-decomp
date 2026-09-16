@@ -3192,3 +3192,63 @@ file): re-initializes `part` via `sub_80084A4` (already matched in
 immediately overwrites `table` with `gStaticData_087E3CAC` instead -
 the same "overwrite right after a helper that just set it" shape as
 `sub_80088F0` above. Matched on the first attempt.
+
+**Parked, not matched: `sub_800891C`** (ROM `0x0800891C`, right after
+`sub_8008904`, same file). A genuinely new, previously-uncharacterized
+system: `self` is a manager over an array of `part`-like objects
+(`self+0xc`, length `self+0x4`) that gets filtered/compacted into a
+second output array (`self+0x10`, length `self+0x8`) each call.
+
+Builds two `gUnknown_03001308`-sub-object-centered boxes first: an
+"extended" 440x280 region 100/60 px past the sub-object's own position
+(`boxA`), and the plain 240x160 screen region at the sub-object's own
+position (`boxB` - the GBA's exact visible area in Q8, `0xf0<<8` /
+`0xa0<<8`) - reusing the same `gUnknown_03001308+0x10` sub-object
+convention documented throughout this ROM region (see
+`sub_8007F78`/`sub_8006FE4`).
+
+For each `part` in the array: if `part+0xc` bit 0 is set, and its
+index is still below `self+0x0`, removes it from the array via
+`sub_803A94C` - confirmed in `docs/rom_map.md` to be the GBA BIOS
+`CpuSet` SWI wrapper, not a hand-written helper - block-copying every
+later element down by one slot (`CpuSet(src=&arr[i+1], dst=&arr[i],
+control=((count-i)&0x1FFFFF)|0x4000000)`, the `0x4000000` bit
+selecting `CpuSet`'s 32-bit-word transfer mode), decrementing
+`self+0x4` and clearing the vacated last slot - then (whether or not
+it was actually removed) calls a `part->table`-driven trampoline at
+table offset `0x50`/`0x54` with a constant argument `3` via
+`sub_803AD80` (confirmed in `docs/rom_map.md` to be a `bx r2`
+BLX-emulation trampoline calling `fn(arg0, arg1)` - the same
+`table+N`/`table+N+4` offset/function-pointer convention as
+`sub_8006FE4`/`sub_8007F78`/`sub_8008364`), and re-examines the same
+index next iteration (`i--`) to account for the shift.
+
+Otherwise (bit 0 clear): tests the `part` against `boxA` through the
+table's `0x40`/`0x44` trampoline; if that passes, fires the table's
+`0x18`/`0x1c` trampoline via `sub_803AD7C` (another `bx r1` trampoline,
+return value discarded) and then tests against `boxB` through the
+table's `0x30`/`0x34` trampoline; if that also passes, appends `part`
+to the output array and increments its count.
+
+NOT YET BYTE-MATCHING: the overall control flow, all four
+`table+N`-trampoline call shapes (address adjusted once, then the
+`s16` offset and function pointer both read relative to it), the
+`sub_803A94C` block-copy invocation, and the `struct aabb` field
+values are all confirmed correct - but this compiler puts the loop
+counter `i` into a high register (`r8`, paired with a second high
+register `r9` for the `boxB` pointer, needing an extra high-register
+save/restore the ROM doesn't have) instead of the ROM's low register
+`r7` (with only `r8` used, for `boxB`). Explicitly pinning `i` to
+`register s32 i asm("r7")` does not fix this - it reproduces the
+`r7`-pin corruption pattern documented at length elsewhere in this ROM
+region (`sub_8007DBC`, `sub_8007FD8`): the pin partially takes for the
+loop's entry check, then something in the loop body silently
+reassigns `r7` to an unrelated constant (`mov r7, #0x4`) instead of
+preserving `i`, corrupting the reconstruction outright. A handful of
+the `table+N` trampoline call sites also have their two reads (`s16`
+offset, function pointer) in the opposite order from the ROM (fn read
+before offset read, rather than after) - reordering the two source
+statements did not change the compiled order. Parked with the version
+that avoids the `r7`-pin corruption (natural allocation into `r8`/`r9`)
+rather than risk a silent miscompile for a cosmetically closer
+register match.

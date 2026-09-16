@@ -278,4 +278,139 @@ struct actor *sub_8008904(struct actor *part)
     part->table = gStaticData_087E3CAC;
     return part;
 }
+
+#if NON_MATCHING
+struct aabb {
+    s32 field_0;
+    s32 field_4;
+    s32 field_8;
+    s32 field_c;
+};
+
+extern void *gUnknown_03001308;
+extern s32 sub_803AD80(void *arg0, void *arg1, void *fn);
+extern void *sub_803AD7C(void *arg0, void *fn);
+extern void sub_803A94C(const void *src, void *dst, u32 cnt);
+
+/* `self` is a manager over an array of `part`-like objects (`self+0xc`,
+ * length `self+0x4`) that gets filtered/compacted into a second output
+ * array (`self+0x10`, length `self+0x8`) each call. Builds two
+ * `gUnknown_03001308`-sub-object-centered boxes first: an "extended"
+ * 440x280 region 100/60 px past the sub-object's own position
+ * (`boxA`), and the plain 240x160 screen region at the sub-object's
+ * own position (`boxB`, the GBA's exact visible area in Q8) - reusing
+ * the same `gUnknown_03001308+0x10` sub-object convention documented
+ * throughout this ROM region (see `sub_8007F78`/`sub_8006FE4`).
+ *
+ * For each `part` in the array: if `part+0xc` bit 0 is set, and its
+ * index is still below `self+0x0`, removes it from the array via a
+ * `sub_803A94C` (the GBA BIOS `CpuSet` SWI, confirmed in
+ * `docs/rom_map.md`) block-copy shifting every later element down by
+ * one slot, decrementing `self+0x4` and clearing the vacated last
+ * slot - then (whether or not it was actually removed) calls a
+ * `part->table`-driven trampoline at table offset 0x50/0x54 with a
+ * constant argument `3` via `sub_803AD80` (same
+ * `table+N`/`table+N+4` offset/function-pointer convention as
+ * `sub_8006FE4`/`sub_8007F78`/`sub_8008364`), and re-examines the same
+ * index next iteration (`i--`) to account for the shift.
+ *
+ * Otherwise (bit 0 clear): tests the `part` against `boxA` through the
+ * table's 0x40/0x44 trampoline; if that passes, fires the table's
+ * 0x18/0x1c trampoline (return value discarded) and then tests against
+ * `boxB` through the table's 0x30/0x34 trampoline; if THAT also
+ * passes, appends `part` to the output array and increments its count.
+ *
+ * NOT YET BYTE-MATCHING: the overall control flow, all four
+ * `table+N`-trampoline call shapes (address adjusted once, then the
+ * `s16` offset and function pointer both read relative to it), the
+ * `sub_803A94C` block-copy invocation, and the `struct aabb` field
+ * values are all confirmed correct - but this compiler puts the loop
+ * counter `i` into a high register (`r8`, paired with a second high
+ * register `r9` for the `boxB` pointer) instead of the ROM's low
+ * register `r7` (with only `r8` used for `boxB`, avoiding a second
+ * high-register save/restore entirely). Explicitly pinning `i` to
+ * `register s32 i asm("r7")` does not fix this - it reproduces the
+ * `r7`-pin corruption pattern documented at length elsewhere in this
+ * ROM region (`sub_8007DBC`, `sub_8007FD8`): the pin partially takes
+ * for the loop's entry check, then something in the loop body
+ * silently reassigns r7 to an unrelated constant (`mov r7, #0x4`)
+ * instead of preserving `i`, corrupting the reconstruction outright.
+ * Parked with the version that avoids that corruption (natural
+ * allocation into r8/r9) rather than risk a silent miscompile for a
+ * cosmetically closer register match. A handful of the `table+N`
+ * trampoline call sites also have their two reads (`s16` offset,
+ * function pointer) in the opposite order from the ROM (fn read before
+ * offset read, rather than after) - reordering the two source
+ * statements did not change the compiled order. */
+void sub_800891C(void *self)
+{
+    struct aabb boxA;
+    struct aabb boxB;
+    s32 i;
+    void *subObj;
+
+    boxA.field_8 = 0xdc << 9;
+    boxA.field_c = 0x8c << 9;
+
+    subObj = *(void **)((u8 *)gUnknown_03001308 + 0x10);
+    boxA.field_0 = (*(s32 *)subObj << 8) + (s32)0xFFFF9C00;
+    boxA.field_4 = (*(s32 *)((u8 *)subObj + 4) << 8) + (s32)0xFFFFC400;
+
+    boxB.field_0 = *(s32 *)subObj << 8;
+    boxB.field_4 = *(s32 *)((u8 *)subObj + 4) << 8;
+    boxB.field_8 = 0xf0 << 8;
+    boxB.field_c = 0xa0 << 8;
+
+    *(s32 *)((u8 *)self + 8) = 0;
+
+    for (i = 0; i < *(s32 *)((u8 *)self + 4); i++) {
+        void **arr = *(void ***)((u8 *)self + 0xc);
+        void *part = arr[i];
+        u8 flags = *((u8 *)part + 0xc);
+
+        if (flags & 1) {
+            if (i < *(s32 *)self) {
+                sub_803A94C(&arr[i + 1], &arr[i], ((*(s32 *)((u8 *)self + 4) - i) & 0x1FFFFF) | 0x4000000);
+                *(s32 *)((u8 *)self + 4) -= 1;
+                arr[*(s32 *)((u8 *)self + 4)] = 0;
+            }
+            if (part != 0) {
+                u8 *rec = *(u8 **)((u8 *)part + 0x18) + 0x50;
+                s16 offset = *(s16 *)rec;
+                void *fn = *(void **)(rec + 4);
+
+                sub_803AD80((u8 *)part + offset, (void *)3, fn);
+            }
+            i--;
+        } else {
+            u8 *rec1 = *(u8 **)((u8 *)part + 0x18) + 0x40;
+            s16 offset1 = *(s16 *)rec1;
+            void *fn1 = *(void **)(rec1 + 4);
+
+            if (sub_803AD80((u8 *)part + offset1, &boxA, fn1)) {
+                u8 *rec2 = *(u8 **)((u8 *)part + 0x18) + 0x18;
+                s16 offset2 = *(s16 *)rec2;
+                void *fn2 = *(void **)(rec2 + 4);
+                u8 *rec3;
+                s16 offset3;
+                void *fn3;
+
+                sub_803AD7C((u8 *)part + offset2, fn2);
+
+                rec3 = *(u8 **)((u8 *)part + 0x18) + 0x30;
+                offset3 = *(s16 *)rec3;
+                fn3 = *(void **)(rec3 + 4);
+
+                if (sub_803AD80((u8 *)part + offset3, &boxB, fn3)) {
+                    void **outArr = *(void ***)((u8 *)self + 0x10);
+                    s32 outCount = *(s32 *)((u8 *)self + 8);
+
+                    outArr[outCount] = part;
+                    *(s32 *)((u8 *)self + 8) = outCount + 1;
+                }
+            }
+        }
+    }
+}
+#endif /* NON_MATCHING */
 asm(".align 2, 0");
