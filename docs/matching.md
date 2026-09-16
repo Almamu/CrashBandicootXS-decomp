@@ -3082,6 +3082,37 @@ finding both fixes.
 after `sub_8008754`, same file): a plain `part+0x20` table-pointer
 get/set pair, no other logic. Both matched on the first attempt.
 
+**`sub_800878C`/`sub_80087A0`/`sub_80087B4`/`sub_80087BC`/
+`sub_80087C0`/`sub_80087C8`/`sub_80087D0`/`sub_80087F4`/`sub_80087FC`/
+`sub_8008804`/`sub_800880C`/`sub_8008814`/`sub_8008818`/`sub_800881C`/
+`sub_8008824`** (ROM `0x0800878C`-`0x08008824`, new
+`src/graphics/actor_part7.c`): two
+more `sub_8008734`-style keyframe-record byte lookups (`+0x16` frame
+count, `+0x15` duration) plus a run of plain `part+0x24`/`+0x28`/
+`+0x2d`/`+0x30`/`+0x34` field get/set/reset/increment accessors (the
+low-2-bit getter for `+0x28` reuses the `(u32 << 30) >> 30` idiom from
+`sub_8008408`). All matched on the first or second attempt.
+
+This batch is genuinely non-adjacent to `actor_part6.c`'s matched
+functions, since the parked `sub_8008770` sits raw between
+`sub_800876C` and `sub_800878C` - a mistake first caught here the same
+way as every other time this session: appending these directly to
+`actor_part6.c` produced byte-exact functions in isolation, but a full
+clean `make compare` still failed, with `cmp` finding the first
+differing byte far outside this region entirely (a `bl` instruction at
+ROM `0x08004686`, hundreds of KB before this file) - a strong signal
+that a *later* function's address had shifted, since only a `bl`'s
+*target* encoding changes when a callee moves, not the call site
+itself. The parked `sub_8008770`'s raw bytes stay in `asm/
+code_3_2_7.s`, which links *after* all of `actor_part6.o` - so
+anything appended past the guard in `actor_part6.c` was landing
+*before* `sub_8008770` in the final ROM instead of after it. Fixed
+with the usual file split: `asm/code_3_2_7.s` split again at the
+`sub_8008830` boundary into itself (now holding just the parked
+`sub_8008770`) and a new `asm/code_3_2_8.s`, with a new
+`src/graphics/actor_part7.c` holding this whole batch inserted between
+them in `ldscript.txt`.
+
 **Parked, not matched: `sub_8008770`** (ROM `0x08008770`, right after
 `sub_800876C`, same file): the same keyframe-record lookup as
 `sub_8008734` above, testing the record's `+0x17` flags bit 1 and
