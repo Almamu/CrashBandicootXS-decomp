@@ -3133,3 +3133,62 @@ transformation hazard as the `ip`-trick and r7-pin failures documented
 elsewhere in this file, here triggered by pinning the mask register
 with its initializer in the same statement as the later shift).
 Parked rather than keep chasing two trailing no-op instructions.
+
+**`sub_8008830`** (ROM `0x08008830`, right after `sub_8008824`, new
+`src/graphics/actor_part7.c`): sets `part+0x28`'s low 2 bits to
+`value & 3`. Same accumulator-register pattern and `+r`-on-the-other-
+operand fix as `sub_8008754` above (mask `-4` computed via a fresh
+`movs`+`negs`, not relative to the leftover `3` register value).
+Matched after applying that fix.
+
+**`sub_8008844`/`sub_8008850`/`sub_8008864`/`sub_800887C`** (ROM
+`0x08008844`/`0x08008850`/`0x08008864`/`0x0800887C`, interleaved with
+the functions below, same file): `part+0x28` bit-4/5/2/3 getters,
+using the `(u32 << N) >> 31` logical-shift idiom (see `sub_8007B00`'s
+mirror flags) rather than a plain `(byte >> N) & 1`. All four matched
+on the first attempt.
+
+**`sub_800885C`** (ROM `0x0800885C`, same file): `part+0x38` ("done"
+flag, also written by `sub_800872C`) getter. Matched on the first
+attempt.
+
+**`sub_8008870`** (ROM `0x08008870`, same file): `part+0x29` low-
+nibble getter, same shape as `sub_8008748`. Matched on the first
+attempt.
+
+**`sub_8008888`/`sub_800888C`** (ROM `0x08008888`/`0x0800888C`, same
+file): a plain `part+0x3c` (`u16`) get/set pair, no other logic. Both
+matched on the first attempt.
+
+**`sub_8008890`** (ROM `0x08008890`, right after `sub_800888C`, same
+file): resolves `part`'s Q8 position plus a caller-supplied offset
+into a stack `{x, y}` pair, then dispatches to `sub_8007634` or
+`sub_80073DC` (both already matched/parked elsewhere in this ROM
+region) depending on whether `part+0x3c` is set - including the ROM's
+own two separate literal-pool copies of `gUnknown_030012CC`, one per
+branch (the compiler doesn't share them across the `if`/`else`).
+Matched on the first attempt.
+
+**`sub_80088D8`/`sub_80088E8`** (ROM `0x080088D8`/`0x080088E8`, right
+after `sub_8008890`, same file): `part+0x28`'s top-2-bit setter/getter
+(mask `0x3f`, shift 6). The setter needed the same `s32`-not-`u8`
+parameter-typing fix as `sub_8008754` - a `u8`-typed parameter's
+mandatory entry truncation combines with the later `<< 6` into a
+single, ROM-mismatching shift pair in this compiler. Both matched
+after applying that fix (the getter needed no mask, since the shift
+already isolates the top 2 bits).
+
+**`sub_80088F0`** (ROM `0x080088F0`, right after `sub_80088E8`, same
+file): overwrites `part->table` with `gStaticData_087E3CAC`, then
+tail-calls `sub_8008484` (already matched in `actor_part6.c`) with the
+same `arg1` - which immediately overwrites `table` again with
+`gStaticData_087E3BEC` before its own conditional `sub_8026ED0` call.
+Reproduces the ROM's apparently-redundant double table write exactly
+as found; matched on the first attempt.
+
+**`sub_8008904`** (ROM `0x08008904`, right after `sub_80088F0`, same
+file): re-initializes `part` via `sub_80084A4` (already matched in
+`actor_part6.c`, itself sets `table` to `gStaticData_087E3C44`), then
+immediately overwrites `table` with `gStaticData_087E3CAC` instead -
+the same "overwrite right after a helper that just set it" shape as
+`sub_80088F0` above. Matched on the first attempt.
