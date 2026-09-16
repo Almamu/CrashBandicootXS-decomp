@@ -161,4 +161,38 @@ void *sub_8008518(void *part)
     }
     return result;
 }
+
+/* Same `sub_80083B8`-derived-record-nibble `switch` shape again, with
+ * the exact same case-to-block mapping as `sub_8007C30` (already
+ * matched in `actor_part2.c`) - 0/3/4 select `info+0x14`, 5 selects
+ * `info+0xc`, and 1/2/6/anything-above-6 fall back to
+ * `gStaticData_0816B2F8`. That mapping is non-contiguous on its own,
+ * so plain ascending case order was enough for a jump table here too,
+ * no scattering needed. */
+void *sub_8008564(void *part)
+{
+    void *info = sub_80083B8(part);
+    u8 type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
+    void *result;
+
+    switch (type) {
+    case 0:
+    case 3:
+    case 4:
+        result = (u8 *)info + 0x14;
+        break;
+    case 1:
+    case 2:
+    case 6:
+        result = gStaticData_0816B2F8;
+        break;
+    case 5:
+        result = (u8 *)info + 0xc;
+        break;
+    default:
+        result = gStaticData_0816B2F8;
+        break;
+    }
+    return result;
+}
 asm(".align 2, 0");

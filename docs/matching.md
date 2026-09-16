@@ -2914,3 +2914,13 @@ to a different one is *already* non-contiguous - confirming the
 theory from `sub_80084C4`'s entry above (gcc only falls back to a
 compare chain when the case-to-block mapping actually can be expressed
 as a handful of simple range checks). Matched on the first attempt.
+
+**`sub_8008564`** (ROM `0x08008564`, right after `sub_8008518`, same
+file): the same `sub_80083B8`-derived-record-nibble `switch` shape
+again, this time reusing `sub_8007C30`'s exact case-to-block mapping
+(already matched in `actor_part2.c`) - 0/3/4 select `info+0x14`, 5
+selects `info+0xc`, and 1/2/6/anything-above-6 fall back to
+`gStaticData_0816B2F8`. That mapping is non-contiguous on its own
+(same reasoning as `sub_8008518`), so plain ascending case order
+produced the ROM's jump table with no scattering needed. Matched on
+the first attempt.
