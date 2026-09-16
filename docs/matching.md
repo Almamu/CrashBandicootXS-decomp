@@ -2846,3 +2846,9 @@ file): the same `gStaticData_087E3BEC`-table-swap-plus-conditional-
 `sub_8026ED0` shape as `sub_80073BC` (already matched in
 `graphics.c`) - overwrites `self->table` unconditionally, then calls
 `sub_8026ED0(self)` only if `arg1 & 1`. Matched on the first attempt.
+
+**`sub_80084A4`** (ROM `0x080084A4`, right after `sub_8008484`, same
+file): the same `sub_800725C`/table-swap-to-`gStaticData_087E3C44`/
+`sub_8007AB4` shape as `sub_8008434` above, but re-initializes an
+existing `self` in place instead of allocating a fresh object via
+`sub_8026EDC`. Matched on the first attempt.

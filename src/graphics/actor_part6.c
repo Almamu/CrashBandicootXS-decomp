@@ -66,4 +66,15 @@ void sub_8008484(struct actor *self, u32 arg1)
         sub_8026ED0(self);
     }
 }
+
+/* Same `sub_800725C`/table-swap/`sub_8007AB4` shape as `sub_8008434`
+ * above, but re-initializes an existing `self` instead of allocating
+ * a new one. */
+struct actor *sub_80084A4(struct actor *self)
+{
+    sub_800725C(self);
+    self->table = gStaticData_087E3C44;
+    sub_8007AB4(self);
+    return self;
+}
 asm(".align 2, 0");
