@@ -229,4 +229,51 @@ void *sub_80085B8(void *part)
     }
     return result;
 }
+
+/* Same keyframe-record lookup used throughout this ROM region (see
+ * `sub_8008394`) - `part`'s `+0x20` table pointer dereferenced twice,
+ * indexed by the `+0x2d` frame index, times the record size (0x1c). */
+void *sub_8008604(struct actor *part)
+{
+    register void **tablePtr asm("r2") = *(void ***)((u8 *)part + 0x20);
+    register u8 idx asm("r3") = *((u8 *)part + 0x2d);
+    s32 offset = idx * 0x1c;
+    void *table = *tablePtr;
+    return (u8 *)table + offset;
+}
+
+/* Clamps `frame` to `part`'s current keyframe record's duration
+ * (`+0x16`) minus one if it's out of range, then stores the result
+ * into `part+0x30` (the frame index also read/written by
+ * `sub_80083B8`). Needed explicit register pins on the whole
+ * tablePtr/idxAddr/table/idx chain to get the ROM's `r5` (rather than
+ * a tighter, naturally-reused register) - `idx` genuinely outlives
+ * `table`'s own register here. The final `rec = table + offset` add
+ * also hit the resistant "which operand goes first" canonicalization
+ * documented at length for `sub_8008188`/`sub_8008200`/
+ * `sub_8008278`/`sub_80083B8` - but unlike those (which were inside a
+ * `switch` and had to be parked to avoid breaking case-block merging),
+ * this function has no such constraint, so a one-instruction inline
+ * `asm` anchor for just this add gets a fully byte-exact match. */
+void sub_8008618(struct actor *part, s32 frame)
+{
+    register void **tablePtr asm("r0") = *(void ***)((u8 *)part + 0x20);
+    register u8 *idxAddr asm("r2") = (u8 *)part + 0x2d;
+    register void *table asm("r1") = *tablePtr;
+    register u8 idx asm("r5") = *idxAddr;
+    register s32 offset asm("r0") = idx * 0x1c;
+    void *rec;
+
+    asm("add %0, %0, %1" : "+r" (offset) : "r" (table));
+    rec = (void *)offset;
+
+    {
+        u8 duration = *((u8 *)rec + 0x16);
+
+        if (frame >= duration) {
+            frame = duration - 1;
+        }
+        *(s32 *)((u8 *)part + 0x30) = frame;
+    }
+}
 asm(".align 2, 0");

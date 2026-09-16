@@ -2932,3 +2932,30 @@ back to `gStaticData_0816B2F8`. Non-contiguous enough on its own
 (1 and 5 are isolated within a run of the other result), so plain
 ascending case order produced the jump table directly. Matched on the
 first attempt.
+
+**`sub_8008604`** (ROM `0x08008604`, right after `sub_80085B8`, same
+file): the same keyframe-record-address lookup used throughout this
+ROM region (see `sub_8008394`) - `part`'s `+0x20` table pointer
+dereferenced twice, indexed by the `+0x2d` frame index times the
+0x1c-byte record size. A pure leaf function (`bx lr`, no push).
+Matched on the first attempt.
+
+**`sub_8008618`** (ROM `0x08008618`, right after `sub_8008604`, same
+file): clamps a `frame` argument to `part`'s current keyframe record's
+duration (`+0x16`) minus one if it's out of range, then stores the
+(possibly clamped) result into `part+0x30` (the same frame-index field
+read/written by `sub_80083B8`). Needed explicit register pins across
+the whole `tablePtr`/`idxAddr`/`table`/`idx` chain to reproduce the
+ROM's real extra callee-saved register (`r5` for `idx`, hence the
+`push {r4, r5, lr}` rather than a tighter single-register reuse) - the
+naturally-allocated version reused fewer registers and only pushed
+`r4`. The final `rec = table + offset` add also hit the same resistant
+"which operand goes first" canonicalization documented at length for
+`sub_8008188`/`sub_8008200`/`sub_8008278`/`sub_80083B8` above - but
+since this function has no `switch` (and therefore no case-block-
+merging to protect), the usual fallback of parking wasn't necessary:
+a single-instruction inline `asm("add %0, %0, %1" : "+r"(offset) :
+"r"(table))` anchor for just that one add got a fully byte-exact
+match, unlike the switch-based functions where the same trick broke
+duplicate-case-label merging elsewhere. Matched after finding the
+register pins and the inline-asm fix for the add.
