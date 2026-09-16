@@ -3364,6 +3364,89 @@ load changing overall register pressure at entry, though not
 confirmed. Parked rather than keep chasing a stack-layout optimization
 C has no way to express directly.
 
+**`sub_8008C80`** (ROM `0x08008C80`, right after the raw, unclaimed
+`sub_8008AD8`... no wait, right after the *parked* `sub_8008AD8`, new
+`src/graphics/actor_part10.c`): the same "extended screen box" filter
+shape as `sub_800891C`'s own `boxB` pass - the plain 240x160 GBA
+screen region, in Q8, at the `gUnknown_03001308` sub-object's own
+position - iterating `manager`'s array (`manager+0xc` base,
+`manager+4` count), filtering each `part` whose `table+0x30/0x34`-
+driven trampoline passes into a second output array (`manager+0x10`
+base, `manager+8` count).
+
+Needed the same register-chain-reuse pattern established throughout
+this ROM region for the `gUnknown_03001308` sub-object double-deref
+(`register void *P asm("r0") = gUnknown_03001308; register void
+*subObj asm("r0"); subObj = *(void **)((u8 *)P + 0x10);` - keeping the
+whole chain in `r0`, matching the ROM's own self-referencing
+`ldr r0,[r0]; ldr r0,[r0,#0x10]`), plus a "compute both fields, then
+store both" reordering for each pair of box words (`box[0]`/`box[1]`
+and `box[2]`/`box[3]`) instead of the natural compute-then-store-
+immediately order this compiler otherwise chooses - and, within the
+loop, explicit register pins for the array-indexing chain
+(`arrBase`/`idx`/`slot`) to match the ROM's specific register roles
+for that computation too. A genuine reminder that isolated per-
+function tests only prove a function compiles to *some* byte-exact
+sequence in isolation - the full clean `make compare` caught three
+separate, unrelated mismatches inside this one function that none of
+the smaller isolated tests surfaced, since each fix only mattered once
+the surrounding context (the whole prologue, or the whole loop) was
+present. Matched after applying all of them.
+
+**`sub_8008CEC`** (ROM `0x08008CEC`, right after `sub_8008C80`, same
+file): fires a `part->table+0x50/0x54`-driven trampoline (constant
+arg 3) via `sub_803AD80` for every entry in `manager`'s array
+(`manager+0xc` base, `manager+4` count) that isn't already `NULL`,
+then clears every slot and resets both the count (`manager+4`) and
+the second array's count (`manager+8`) to 0 - a full teardown of both
+this manager's arrays. Needed the array-base reload split into its
+own statement before the index multiply (matching the ROM's own
+instruction order: load the base, *then* compute `i*4`, rather than
+the reverse) plus the usual `addr`-before-`fn` trampoline-argument
+fix. Matched after applying both.
+
+**`sub_8008D30`** (ROM `0x08008D30`, right after `sub_8008CEC`, same
+file): iterates `manager`'s array (`manager+0x10` base, `manager+8`
+count): for each `part`, fires a `table+0x48/0x4c`-driven trampoline
+via `sub_803AD7C` and skips unless the result equals `arg1` (a
+caller-supplied selector); skips unless `part->flags` bit 2 is set;
+then fires a *second*, unconditional `table+8/0xc` trampoline (return
+value discarded). The flags-bit test needed the byte loaded into `r1`
+(not `r0`) before the shift, matching the ROM's own register choice -
+another mismatch the isolated test missed and only the full clean
+build caught. Matched after fixing it.
+
+**Parked, not matched: `sub_8008D80`** (ROM `0x08008D80`, right after
+`sub_8008D30`, same file - `src/graphics/actor_part7.c`, since its
+real ROM address sits between the parked `sub_8008AD8` and the raw,
+unclaimed `sub_8008DC0`). `sub_8008AD8`'s sibling: resolves the same
+collision-hit logic when the "compare viewport" doesn't match the
+current one (see `sub_8008A40` above) - `otherViewport` here plays
+the role `gUnknown_030012D8` (the player) plays in `sub_8008AD8`.
+Tests `part` against the incoming box via `sub_8009FF4`; on a hit,
+fires a `part->table+0x68`-driven trampoline (same "dead read" idiom
+as `sub_8008AD8`) with `otherViewport->field_0A` as the third
+argument, then sets `otherViewport->flags` bit 3.
+
+NOT YET BYTE-MATCHING: same structural gap as `sub_8008AD8` and
+`sub_8008A40` above - this compiler has no way to leave one scalar
+parameter (`boxH`) untouched in its own incoming stack slot while
+still building a 4-word AABB pointer that includes it. Parked with the
+version that writes it explicitly (the only one that's actually
+correct), matching `sub_8008AD8`'s own parking rationale.
+
+**Lesson reinforced by this whole batch**: an isolated per-function
+compile test that "matches ROM" is a *necessary*, not *sufficient*,
+check. `sub_8008C80` and `sub_8008D30` both passed their own isolated
+tests cleanly but still broke the full clean `make compare` when
+placed in the real file, because the surrounding context (other local
+variables live at the same time, or which registers a caller already
+occupies) changes this compiler's register allocation in ways an
+isolated one-function test can't reproduce. The full clean
+`NON_MATCHING=1 report` + default `make compare` cycle after *every*
+integration - not just after drafting - is what this workflow already
+mandates, and it is what caught both regressions here.
+
 ## Tractable pocket found past the AI/collision cluster: `actor_part8.c`
 
 `sub_8008A40` (right after `sub_800891C`) drops into a large, deeply

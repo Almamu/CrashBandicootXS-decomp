@@ -79,11 +79,17 @@ per-actor animation frames, text layout.
   `sub_800888C`, `sub_8008890`, `sub_80088D8`, `sub_80088E8`,
   `sub_80088F0`, `sub_8008904`
 
+- `src/graphics/actor_part10.c` (new file - `sub_8008C80`'s real ROM
+  address isn't adjacent to `actor_part7.c`'s matched functions
+  either, since the parked `sub_8008AD8` sits raw between them; see
+  `docs/matching.md`): `sub_8008C80`, `sub_8008CEC`, `sub_8008D30`
+
 - `src/graphics/actor_part8.c` (new file - `sub_8009EA8`'s real ROM
-  address isn't adjacent to `code_3_2_8.o`'s raw content either, since
+  address isn't adjacent to `code_3_2_12.o`'s raw content either, since
   the parked `sub_8009DF4` sits raw between them, and the whole large
-  `sub_8008A40`-`sub_8009DF4`-ish AI/collision cluster before that was
-  left raw rather than guessed at; see `docs/matching.md`):
+  `sub_8008DC0`-`sub_8009DF4`-ish remainder of the AI/collision cluster
+  before that was left raw rather than guessed at; see
+  `docs/matching.md`):
   `sub_8009EA8`, `sub_8009EB0`, `sub_8009EBC`, `sub_8009EC4`,
   `sub_8009ECC`, `sub_8009ED0`, `sub_8009F1C`, `sub_8009F50`,
   `sub_8009F90`, `sub_8009FB0`
@@ -223,6 +229,12 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   its original stack slot (the same ABI stack-layout trick used by
   `sub_8008A40`), and a knock-on register-letter difference for `part`
   - see `docs/matching.md`, "Parked, not matched: `sub_8008AD8`".
+- **`sub_8008D80`** (`src/graphics/actor_part7.c`) - `sub_8008AD8`'s
+  sibling, resolving the same collision-hit logic when the "compare
+  viewport" doesn't match the current one. Every branch, field offset,
+  and call argument confirmed correct; parked on the same box-
+  coordinate stack-layout gap as `sub_8008AD8`/`sub_8008A40` - see
+  `docs/matching.md`, "Parked, not matched: `sub_8008D80`".
 - **`sub_8009DF4`** (`src/graphics/actor_part8.c`) - a velocity/
   position integrator: steps each axis's velocity toward its max by
   its accel amount (clamped so it never overshoots), builds a

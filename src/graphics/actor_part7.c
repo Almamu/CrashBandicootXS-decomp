@@ -723,4 +723,59 @@ void sub_8008AD8(void *manager, s32 boxX, s32 boxY, s32 boxW, s32 boxH, void *pa
     }
 }
 #endif /* NON_MATCHING */
+
+#if NON_MATCHING
+/* `sub_8008AD8`'s sibling: resolves the same collision-hit logic when
+ * the "compare viewport" doesn't match the current one (see
+ * `sub_8008A40` above) - `otherViewport` here plays the role
+ * `gUnknown_030012D8` (the player) plays in `sub_8008AD8`. Tests
+ * `part` against the incoming box via `sub_8009FF4`; on a hit, fires
+ * a `part->table+0x68`-driven trampoline (same "dead read" idiom as
+ * `sub_8008AD8`) with `otherViewport->field_0A` as the third argument,
+ * then sets `otherViewport->flags` bit 3.
+ *
+ * NOT YET BYTE-MATCHING: same structural gap as `sub_8008AD8` and
+ * `sub_8008A40` above - this compiler has no way to leave one scalar
+ * parameter (`boxH`) untouched in its own incoming stack slot while
+ * still building a 4-word AABB pointer that includes it, the ABI
+ * stack-layout trick the ROM's own (presumably much tighter,
+ * 3-scalar-sized) local frame relies on. A C-level `struct aabb`
+ * local reserves its full 16 bytes regardless of which fields are
+ * written, so either writing `boxH` explicitly (an extra, ROM-
+ * mismatching load) or leaving it unwritten (leaving the 4th AABB
+ * word as genuine uninitialized garbage, since the local struct's
+ * memory doesn't coincide with the incoming argument's stack slot the
+ * way the ROM's smaller frame does) are the only two options
+ * available. Parked with the version that writes it explicitly (the
+ * only one that's actually correct), matching `sub_8008AD8`'s own
+ * parking rationale. */
+void sub_8008D80(void *manager, s32 boxX, s32 boxY, s32 boxW, s32 boxH, void *partArg, void *otherViewportArg)
+{
+    struct actor *part = partArg;
+    struct actor *otherViewport = otherViewportArg;
+    struct aabb box;
+    s32 result;
+
+    box.field_0 = boxX;
+    box.field_4 = boxY;
+    box.field_8 = boxW;
+    box.field_c = boxH;
+
+    result = sub_8009FF4(part, &box);
+    if (result == 0) {
+        return;
+    }
+    {
+        u8 *rec = (u8 *)part->table + 0x68;
+        s16 offset = *(s16 *)rec;
+        void *addr = (u8 *)part + offset;
+        u8 someByte = otherViewport->field_0A;
+        register void *deadRead asm("r4") = *(void *volatile *)(rec + 4);
+        (void)deadRead;
+
+        sub_803AD88(addr, 1, someByte, 0);
+    }
+    otherViewport->flags |= 8;
+}
+#endif /* NON_MATCHING */
 asm(".align 2, 0");
