@@ -84,10 +84,16 @@ per-actor animation frames, text layout.
   either, since the parked `sub_8008AD8` sits raw between them; see
   `docs/matching.md`): `sub_8008C80`, `sub_8008CEC`, `sub_8008D30`
 
+- `src/graphics/actor_part11.c` (new file - `sub_8008DC0`'s real ROM
+  address isn't adjacent to `actor_part10.c`'s matched functions
+  either, since the parked `sub_8008D80` sits raw between them; see
+  `docs/matching.md`): `sub_8008DC0`, `sub_8008DEC`, `sub_8008E50`,
+  `sub_8008E94`, `sub_8008EB4`, `sub_8008EE4`
+
 - `src/graphics/actor_part8.c` (new file - `sub_8009EA8`'s real ROM
-  address isn't adjacent to `code_3_2_12.o`'s raw content either, since
+  address isn't adjacent to `code_3_2_13.o`'s raw content either, since
   the parked `sub_8009DF4` sits raw between them, and the whole large
-  `sub_8008DC0`-`sub_8009DF4`-ish remainder of the AI/collision cluster
+  `sub_8008F20`-`sub_8009DF4`-ish remainder of the AI/collision cluster
   before that was left raw rather than guessed at; see
   `docs/matching.md`):
   `sub_8009EA8`, `sub_8009EB0`, `sub_8009EBC`, `sub_8009EC4`,

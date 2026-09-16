@@ -3447,22 +3447,79 @@ isolated one-function test can't reproduce. The full clean
 integration - not just after drafting - is what this workflow already
 mandates, and it is what caught both regressions here.
 
+## Six more manager utilities matched: `actor_part11.c`
+
+Continuing past `sub_8008D80` (parked), the next six functions turned
+out to be a self-contained family of small, clearly-understood
+"manager" array utilities (the same capacity/count/base-pointer struct
+shape used throughout `actor_part10.c`), not the murkier
+`gUnknown_030012C0`/`gUnknown_030012D8`-touching dispatch logic - so
+all six were matched rather than parked or skipped:
+
+- **`sub_8008DC0`**: fires a `part->table+0x20/0x24`-driven trampoline
+  via `sub_803AD7C` for every entry in `manager`'s array
+  (`manager+0x10` base, `manager+8` count). Matched first-attempt.
+- **`sub_8008DEC`**: searches `manager`'s array (`manager+0xc` base,
+  `manager+0` count) for an entry equal to `target`, then - if found -
+  compacts the array by shifting every following entry down one slot
+  via the BIOS `CpuSet` wrapper `sub_803A94C`, decrements the
+  `manager+4` count, and clears the newly-unused trailing slot. Needed
+  an explicit `goto`-based control-flow rewrite: the ROM's "not found"
+  paths (initial empty-array check, and the search loop running past
+  the count) branch straight past the compaction guard to the
+  function's very end, while only the "found" paths (index 0 matching
+  immediately, or the search loop's match) fall through into the
+  guard check - a natural `if`/`do-while` C translation collapses all
+  three exits to the same post-search point, producing a real
+  branch-target mismatch even though the individual instructions
+  looked identical at a glance. Fixed by writing the "not found" exits
+  as explicit `goto`s to a trailing label, keeping the "found" paths
+  as plain fallthrough - mirroring the ROM's own asymmetry.
+- **`sub_8008E50`**: the same array-compaction shape as `sub_8008DEC`,
+  but takes the index directly as an argument instead of searching for
+  it. Needed the removed element's byte offset (`index*4`) and its
+  "+4" sibling computed as two independent values *before* the array
+  base pointer is loaded (matching the ROM's own instruction order),
+  rather than the natural C order of loading the base first and then
+  computing pointers from it.
+- **`sub_8008E94`**: appends a value to `manager`'s array
+  (`manager+0xc` base, `manager+4` count) if there's room below
+  `manager+0`'s capacity. Matched first-attempt.
+- **`sub_8008EB4`**: tears down a manager - frees both of its arrays
+  (`manager+0x10`/`manager+0xc`, each via `sub_8026EB4` = `mem_free`,
+  if non-`NULL`) and, if a flags bit is set, frees the manager itself
+  via `sub_8026ED0` (already-confirmed `mem_free`). Matched
+  first-attempt; the compiler CSE'd each null-check's loaded register
+  straight into the following call's argument, exactly like the ROM.
+- **`sub_8008EE4`**: initializes a manager - sets both counts to 0,
+  capacity to the given count, allocates two `count`-word arrays via
+  `sub_8026EC0` (`mem_alloc`), and zero-fills the first array. Needed
+  a `do`/`while (i != 0)` loop (not a `for (i = n; i > 0; i--)`, which
+  compiles to a `bgt` epilogue check instead of the ROM's `bne`) and
+  the zero-fill's "0" literal materialized into its own local variable
+  *before* the array-base load, to match the ROM's own instruction
+  order (`movs r2, #0` before `ldr r1, [r5, #0xc]`).
+
+All six were verified both in isolation and via a full recompile of
+`actor_part11.c` together, after this session's earlier
+`sub_8008C80`/`sub_8008D30` regressions showed isolated tests alone
+aren't sufficient proof.
+
 ## Tractable pocket found past the AI/collision cluster: `actor_part8.c`
 
-`sub_8008A40` (right after `sub_800891C`) drops into a large, deeply
-interconnected AI/collision/physics dispatch system (roughly 40
+`sub_8008F20` (right after `sub_8008EE4`) drops into a large, deeply
+interconnected AI/collision/physics dispatch system (roughly 30
 functions, up to around `sub_8009DF4`) that repeatedly touches
 `gUnknown_030012C0`/`gUnknown_030012D8` - globals `docs/rom_map.md`
 itself still describes as only partially understood after extensive
-prior investigation, calling `sub_800014C` (one of `UpdateGameFrame`'s
-own direct top-level calls) among other things. Rather than guess at
-semantics there, this whole span was left completely raw/unclaimed,
-and matching resumed at `sub_8009DF4` - which, despite living inside
-that same address range, is self-contained (no calls into the unclear
-cluster) - and the clearly-recognizable "part object" family
-immediately following it (`sub_8009EA8` onward), which reuses
-patterns and even specific functions (`sub_8008484`, `sub_8008364`)
-already matched earlier this session.
+prior investigation. Rather than guess at semantics there, this whole
+span was left completely raw/unclaimed, and matching resumed at
+`sub_8009DF4` - which, despite living inside that same address range,
+is self-contained (no calls into the unclear cluster) - and the
+clearly-recognizable "part object" family immediately following it
+(`sub_8009EA8` onward), which reuses patterns and even specific
+functions (`sub_8008484`, `sub_8008364`) already matched earlier this
+session.
 
 **Parked, not matched: `sub_8009DF4`** (ROM `0x08009DF4`, right after
 the raw AI/collision cluster, new `src/graphics/actor_part8.c`): a
