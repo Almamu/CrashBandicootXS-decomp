@@ -2507,3 +2507,26 @@ into `asm/code_3_2_3.s` (now just the parked `sub_8007DBC`) and a new
 `asm/code_3_2_4.s` (the unchanged remainder), with the new
 `src/graphics/actor_part3.c` (holding just `sub_8007F78`) inserted
 between them in `ldscript.txt`.
+
+**`sub_8008618`** (ROM `0x08008618`, new
+`src/graphics/actor_part4.c`): clamps a requested signed animation-frame
+index to the last valid frame in the current 0x1c-byte animation record
+(`part->anim_data->records[part->anim_index].frame_count - 1`) and stores
+it in `part->frame_index`; negative indices are deliberately left
+unchanged because the ROM only checks the upper bound. The minimal local
+structs name every field this function touches; no compatible shared
+struct for this extended part object exists yet (`actor_part.c` still
+documents the same object through raw offsets).
+
+Plain struct-based C first produced the correct logic and total size but
+allocated the index in r0, omitting r5 from the prologue. Register pins
+for the live values reproduced the ROM's r0-r5 allocation. One final
+byte difference remained in a commutative address addition: gcc emitted
+`adds r0,r1,r0` while the ROM uses `adds r0,r0,r1`; a one-instruction
+inline-asm anchor fixes only that operand order. Direct extraction of the
+compiled `.text` and the 40 ROM bytes produced the same SHA-1
+(`889361516468f3f59e6749eb170cecf21143bb8b`), and both pre- and
+post-cleanup `make compare` runs passed. `asm/code_3_2_4.s` was split at
+this exact location, with the untouched remainder starting at
+`sub_8008640` in new `asm/code_3_2_5.s`, and `actor_part4.o` interleaved
+between them in `ldscript.txt`.
