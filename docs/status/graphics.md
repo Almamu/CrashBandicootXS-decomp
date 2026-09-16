@@ -197,6 +197,20 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   explicitly pinning it to `r7` triggers the `r7`-pin corruption
   pattern documented elsewhere in this ROM region instead of fixing
   it - see `docs/matching.md`, "Parked, not matched: `sub_800891C`".
+- **`sub_8008A40`** (`src/graphics/actor_part7.c`) - iterates a
+  `manager`'s array of `part`-like objects, broad-phase-testing each
+  via a `table+0x48/0x4c` trampoline and a flags-bit check, then
+  dispatches an incoming rectangle to `sub_8008AD8` or `sub_8008D80`
+  depending on whether a caller-supplied "compare viewport" argument
+  matches the current `gUnknown_030012D8` (the camera/viewport).
+  Resolved `sub_800014C` as a plain `memcpy`-style BIOS `CpuSet`
+  wrapper along the way. Every branch and call argument confirmed
+  correct; parked purely on a register-spill gap for the
+  "compareViewport" argument, which needs an extra high register here
+  instead of the ROM's `r7` - explicitly pinning it to `r7` produces a
+  genuine miscompile (aliases with the unrelated loop counter) rather
+  than fixing the gap - see `docs/matching.md`, "Parked, not matched:
+  `sub_8008A40`".
 - **`sub_8009DF4`** (`src/graphics/actor_part8.c`) - a velocity/
   position integrator: steps each axis's velocity toward its max by
   its accel amount (clamped so it never overshoots), builds a

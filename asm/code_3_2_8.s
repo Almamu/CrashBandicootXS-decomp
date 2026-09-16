@@ -154,6 +154,10 @@ _08008A32:
 	.align 2, 0
 .endif
 
+@ sub_8008A40 is reconstructed (semantics fully understood, but not
+@ yet byte-matching) as C in src/graphics/actor_part7.c, guarded by
+@ #if NON_MATCHING - see docs/matching.md for the exact remaining gap.
+.if NON_MATCHING == 0
 	thumb_func_start sub_8008A40
 sub_8008A40: @ 0x08008A40
 	sub sp, #0xc
@@ -230,6 +234,7 @@ _08008AC8:
 	pop {r3}
 	add sp, #0xc
 	bx r3
+.endif
 
 	thumb_func_start sub_8008AD8
 sub_8008AD8: @ 0x08008AD8

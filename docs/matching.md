@@ -3253,7 +3253,61 @@ that avoids the `r7`-pin corruption (natural allocation into `r8`/`r9`)
 rather than risk a silent miscompile for a cosmetically closer
 register match.
 
-## New tractable pocket found past the AI/collision cluster: `actor_part8.c`
+## Diving into the AI/collision cluster: `sub_8008A40`
+
+**Parked, not matched: `sub_8008A40`** (ROM `0x08008A40`, right after
+`sub_800891C`, same file). Iterates `manager`'s array of `part`-like
+objects (`manager+0x10` base, `manager+8` count - the same
+`self+0xc`/`self+0x10` shape as `sub_800891C` above, just at
+different offsets). For each `part`: fires a `part->table+0x48/0x4c`-
+driven trampoline via `sub_803AD7C` (same `table+N`/`table+N+4`
+convention throughout this ROM region); skip if the result is `<= 4`
+(a distance/priority-style broad-phase test). Skip unless
+`part->flags` bit 2 is set. Then, depending on whether the caller's
+`compareViewport` argument equals the current `gUnknown_030012D8`
+(confirmed elsewhere to be "very likely the camera/viewport" - see
+`docs/rom_map.md`) or a *different* one, dispatches the incoming
+`{boxX, boxY, boxW, boxH}` rectangle (passed across `r1`-`r3` plus one
+stack word, the usual GBA Thumb ABI for more than 3 scalar arguments)
+to `sub_8008AD8` or `sub_8008D80` (the latter also forwarding
+`compareViewport` itself as a 6th argument) - reads like "resolve
+collision against parts near this box, routing differently when
+testing across a screen/room boundary vs within the active one".
+
+**Resolved `sub_800014C` along the way**, one of `docs/rom_map.md`'s
+long-standing open questions ("packed state round-tripping through
+`sub_800014C`", cited as one of `UpdateGameFrame`'s own direct top-
+level calls, referenced ~140 times project-wide): reading its actual
+definition directly in `asm/crt0.s` shows it's a plain `memcpy`-style
+wrapper - `void *sub_800014C(void *dest, void *src, s32 size)` copies
+`size` bytes from `src` to `dest` via the GBA BIOS `CpuSet` SWI
+(`sub_803A94C`, the same BIOS wrapper already identified for
+`sub_800891C`'s array-compaction call) and returns `dest`. In
+`sub_8008A40` it's used purely to relocate the incoming box onto a
+fresh stack slot before unpacking it again for the sub-call - not a
+coordinate transform, just a generic byte copy the compiler happens
+to route through this shared helper for a 16-byte struct move.
+
+NOT YET BYTE-MATCHING: every branch, field offset, and call argument
+confirmed correct - but `compareViewport` needs to survive the whole
+loop across calls to `sub_803AD7C`/`sub_800014C`/`sub_8008AD8`/
+`sub_8008D80`, and this compiler spills it to a high register (`r8`,
+needing an extra push/pop pair the ROM doesn't have) instead of the
+ROM's low register `r7`. Explicitly pinning it to `register void
+*compareViewport asm("r7")` does not just fail to help - it produces
+a genuine miscompile: the loop counter `i` (an ordinary, unpinned
+local) independently also gets allocated to `r7`, and since both
+variables are simultaneously live across the whole loop, the
+counter's own zero-initialization silently overwrites
+`compareViewport` before its first use - a concrete, newly-confirmed
+instance of the general "never pin r7 in this toolchain" hazard
+documented at length elsewhere in this ROM region, this time
+corrupting a value rather than crashing the compiler or dropping a
+push/pop entry. Parked with the version that avoids the corruption
+(natural allocation into `r8`) rather than risk a silently-wrong
+reconstruction for a cosmetically closer register match.
+
+## Tractable pocket found past the AI/collision cluster: `actor_part8.c`
 
 `sub_8008A40` (right after `sub_800891C`) drops into a large, deeply
 interconnected AI/collision/physics dispatch system (roughly 40

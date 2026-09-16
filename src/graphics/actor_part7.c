@@ -413,4 +413,92 @@ void sub_800891C(void *self)
     }
 }
 #endif /* NON_MATCHING */
+
+#if NON_MATCHING
+extern void *sub_803AD7C(void *arg0, void *fn);
+extern void *sub_800014C(void *dest, void *src, s32 size);
+extern void sub_8008AD8(void *manager, s32 x, s32 y, s32 w, s32 h, void *part);
+extern void sub_8008D80(void *manager, s32 x, s32 y, s32 w, s32 h, void *part, void *arg6);
+extern void *gUnknown_030012D8;
+
+/* Iterates `manager`'s array of `part`-like objects (`manager+0x10`
+ * base, `manager+8` count) - the same `self+0xc`/`self+0x10` shape as
+ * `sub_800891C` above, just at different offsets. For each `part`:
+ * fires a `part->table+0x48/0x4c`-driven trampoline via `sub_803AD7C`
+ * (same convention throughout this ROM region); skip if the result is
+ * `<= 4` (a distance/priority-style broad-phase test). Skip unless
+ * `part->flags` bit 2 is set. Then, depending on whether the caller's
+ * `compareViewport` argument is the current `gUnknown_030012D8`
+ * (confirmed elsewhere to be "very likely the camera/viewport" - see
+ * `docs/rom_map.md`) or a *different* one, dispatches the incoming
+ * `{boxX, boxY, boxW, boxH}` rectangle (passed in across `r1`-`r3`
+ * plus one stack word, following the usual GBA Thumb ABI for more
+ * than 3 scalar arguments) to `sub_8008AD8` or `sub_8008D80` (the
+ * latter also forwarding `compareViewport` itself as a 6th argument) -
+ * reads like "resolve collision against parts near this box, routing
+ * differently when testing across a screen/room boundary vs within
+ * the active one". `sub_800014C` (used here purely to relocate the
+ * incoming box onto a fresh stack slot before unpacking it again for
+ * the sub-call - its own signature and behavior, `void *sub_800014C
+ * (void *dest, void *src, s32 size)`, confirmed by reading its
+ * definition directly in `asm/crt0.s`) turned out to be a plain
+ * `memcpy`-style wrapper around the GBA BIOS `CpuSet` SWI
+ * (`sub_803A94C`, already identified for `sub_800891C` above) -
+ * resolving one of `docs/rom_map.md`'s long-open "packed state
+ * round-tripping" mysteries around this function.
+ *
+ * NOT YET BYTE-MATCHING: every branch, field offset, and call
+ * argument confirmed correct - but `compareViewport` needs to survive
+ * the whole loop across calls to `sub_803AD7C`/`sub_800014C`/
+ * `sub_8008AD8`/`sub_8008D80`, and this compiler spills it to a high
+ * register (`r8`, needing an extra push/pop pair the ROM doesn't
+ * have) instead of the ROM's low register `r7`. Explicitly pinning it
+ * to `register void *compareViewport asm("r7")` does NOT just fail to
+ * help here - it produces a genuine miscompile: the loop counter `i`
+ * (an ordinary, unpinned local) independently also gets allocated to
+ * `r7`, and since both variables are simultaneously live across the
+ * whole loop, the counter's own zero-initialization silently
+ * overwrites `compareViewport` before its first use - a concrete,
+ * newly-confirmed instance of the general "never pin r7 in this
+ * toolchain" hazard already documented at length elsewhere in this
+ * ROM region, this time corrupting a value rather than crashing the
+ * compiler or dropping a push/pop entry. Parked with the version that
+ * avoids the corruption (natural allocation into `r8`) rather than
+ * risk a silently-wrong reconstruction for a cosmetically closer
+ * register match. */
+void sub_8008A40(void *manager, s32 boxX, s32 boxY, s32 boxW, s32 boxH, s32 unused, void *compareViewport)
+{
+    s32 i;
+    s32 params[4];
+    s32 box[4];
+
+    params[0] = boxX;
+    params[1] = boxY;
+    params[2] = boxW;
+    params[3] = boxH;
+
+    for (i = 0; i < *(s32 *)((u8 *)manager + 8); i++) {
+        void **arr = *(void ***)((u8 *)manager + 0x10);
+        void *part = arr[i];
+        u8 *rec = *(u8 **)((u8 *)part + 0x18) + 0x48;
+        s16 offset = *(s16 *)rec;
+        void *fn = *(void **)(rec + 4);
+        s32 result = (s32)sub_803AD7C((u8 *)part + offset, fn);
+
+        if (result <= 4) {
+            continue;
+        }
+        if (!((*((u8 *)part + 0xc) >> 2) & 1)) {
+            continue;
+        }
+        if (compareViewport == gUnknown_030012D8) {
+            sub_800014C(box, params, 0x10);
+            sub_8008AD8(manager, box[0], box[1], box[2], box[3], part);
+        } else {
+            sub_800014C(box, params, 0x10);
+            sub_8008D80(manager, box[0], box[1], box[2], box[3], part, compareViewport);
+        }
+    }
+}
+#endif /* NON_MATCHING */
 asm(".align 2, 0");
