@@ -93,7 +93,7 @@ per-actor animation frames, text layout.
 - `src/graphics/actor_part8.c` (new file - `sub_8009EA8`'s real ROM
   address isn't adjacent to `code_3_2_13.o`'s raw content either, since
   the parked `sub_8009DF4` sits raw between them, and the whole large
-  `sub_8008F20`-`sub_8009DF4`-ish remainder of the AI/collision cluster
+  `sub_8009008`-`sub_8009DF4`-ish remainder of the AI/collision cluster
   before that was left raw rather than guessed at; see
   `docs/matching.md`):
   `sub_8009EA8`, `sub_8009EB0`, `sub_8009EBC`, `sub_8009EC4`,
@@ -241,6 +241,15 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   and call argument confirmed correct; parked on the same box-
   coordinate stack-layout gap as `sub_8008AD8`/`sub_8008A40` - see
   `docs/matching.md`, "Parked, not matched: `sub_8008D80`".
+- **`sub_8008F20`** (`src/graphics/actor_part11.c`) - initializes a
+  fixed-slot object-pool manager struct: two big 256-word zeroed
+  tables (likely a pair of spatial-partition/collision grids), plus a
+  singly-linked free list built over an allocated node array. Every
+  load, store, and field offset confirmed correct; parked purely on a
+  many-register (item count, two persistent field addresses, a reused
+  loop index, a running byte offset) allocation gap across
+  `r3`/`sb`/`sl`/`r4`/`r8` - see `docs/matching.md`, "Parked, not
+  matched: `sub_8008F20`".
 - **`sub_8009DF4`** (`src/graphics/actor_part8.c`) - a velocity/
   position integrator: steps each axis's velocity toward its max by
   its accel amount (clamped so it never overshoots), builds a

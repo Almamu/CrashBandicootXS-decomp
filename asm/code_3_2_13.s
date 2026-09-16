@@ -3,6 +3,10 @@
 .syntax unified
 .arm
 
+@ sub_8008F20 is reconstructed (semantics fully understood, but not
+@ yet byte-matching) as C in src/graphics/actor_part11.c, guarded by
+@ #if NON_MATCHING - see docs/matching.md for the exact remaining gap.
+.if NON_MATCHING == 0
 	thumb_func_start sub_8008F20
 sub_8008F20: @ 0x08008F20
 	push {r4, r5, r6, r7, lr}
@@ -124,6 +128,7 @@ _08008FF0:
 	pop {r4, r5, r6, r7}
 	pop {r1}
 	bx r1
+.endif
 
 	thumb_func_start sub_8009008
 sub_8009008: @ 0x08009008

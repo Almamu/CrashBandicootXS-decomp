@@ -3505,18 +3505,44 @@ All six were verified both in isolation and via a full recompile of
 `sub_8008C80`/`sub_8008D30` regressions showed isolated tests alone
 aren't sufficient proof.
 
+**Parked, not matched: `sub_8008F20`** (ROM `0x08008F20`, right after
+`sub_8008EE4`, `src/graphics/actor_part11.c`): initializes a
+fixed-slot object-pool manager struct - `+0x0` active count (0),
+`+0x4` capacity, `+0x8` a `count`-pointer array (zeroed), `+0xc` a
+`count`-entry array of 0x14-byte nodes, `+0x10`..`+0x40F` and
+`+0x410`..`+0x80F` two 256-word (1024-byte) zeroed tables (very likely
+a pair of spatial-partition/collision grids, though that broader
+purpose isn't needed to confirm the individual loads/stores), and
+`+0x810`/`+0x814` a free-list array pointer and head. For each index
+`i`, links `freeList[i].node` to `&nodeArray[i]`, zeroes several of
+`nodeArray[i]`'s fields, sets `nodeArray[i]`'s back-pointer to
+`&freeList[i]`, and chains `freeList[i].next` to `&freeList[i+1]` (or
+`NULL` for the last entry) - building a singly-linked free list of
+pool nodes through the wrapper array.
+
+Every load, store, and field offset is confirmed correct - the
+isolated reconstruction reproduces the ROM's exact branch structure
+and even its use of `ip`/`r8` for the loop - but four long-lived
+scalars (the item count, the `+0x810`/`+0x814` field addresses, the
+loop index reused from the zero-fill loop's counter, and a running
+"next" byte offset) land in a different combination of
+`r3`/`sb`(`r9`)/`sl`(`r10`)/`r4`/`r8` than the ROM's own allocation.
+Parked rather than chase a four-scalar, three-high-register allocation
+puzzle for a single function.
+
 ## Tractable pocket found past the AI/collision cluster: `actor_part8.c`
 
-`sub_8008F20` (right after `sub_8008EE4`) drops into a large, deeply
-interconnected AI/collision/physics dispatch system (roughly 30
-functions, up to around `sub_8009DF4`) that repeatedly touches
-`gUnknown_030012C0`/`gUnknown_030012D8` - globals `docs/rom_map.md`
-itself still describes as only partially understood after extensive
-prior investigation. Rather than guess at semantics there, this whole
-span was left completely raw/unclaimed, and matching resumed at
-`sub_8009DF4` - which, despite living inside that same address range,
-is self-contained (no calls into the unclear cluster) - and the
-clearly-recognizable "part object" family immediately following it
+`sub_8009008` (right after the parked `sub_8008F20`) drops into a
+large, deeply interconnected AI/collision/physics dispatch system
+(roughly 28 functions, up to around `sub_8009DF4`) that repeatedly
+touches `gUnknown_030012C0`/`gUnknown_030012D8` - globals
+`docs/rom_map.md` itself still describes as only partially understood
+after extensive prior investigation. Rather than guess at semantics
+there, this whole span was left completely raw/unclaimed, and matching
+resumed at `sub_8009DF4` - which, despite living inside that same
+address range, is self-contained (no calls into the unclear cluster) -
+and the clearly-recognizable "part object" family immediately
+following it
 (`sub_8009EA8` onward), which reuses patterns and even specific
 functions (`sub_8008484`, `sub_8008364`) already matched earlier this
 session.
