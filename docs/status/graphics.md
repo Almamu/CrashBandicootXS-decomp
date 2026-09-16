@@ -128,3 +128,12 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   update `field_0`. Parked for the same single-instruction gap as
   `sub_8008188`/`sub_8008200` - see `docs/matching.md`, "Parked, not
   matched: `sub_8008278`".
+- **`sub_80083B8`** (`src/graphics/actor_part5.c`) - looks up `part`'s
+  current keyframe record, conditionally clamps its frame index/resets
+  its sub-counter (mirroring `sub_8008044`'s "done" handling), then
+  resolves a two-level pointer-array lookup. Matches the ROM
+  instruction-for-instruction (confirmed the apparent `ands` mismatch
+  is a disassembly-style artifact, not a real one) except the same
+  "which operand goes first" `add`-operand-order gap as
+  `sub_8008188`/`sub_8008200`/`sub_8008278` - see `docs/matching.md`,
+  "Parked, not matched: `sub_80083B8`".

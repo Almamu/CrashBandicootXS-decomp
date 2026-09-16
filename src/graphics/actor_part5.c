@@ -113,4 +113,68 @@ s32 sub_80083A8(void *part)
     void *p2 = *(void **)gUnknown_030012D0;
     return *(s32 *)((u8 *)p2 + 4);
 }
+
+#if NON_MATCHING
+/* Looks up `part`'s current keyframe record (same convention as
+ * elsewhere in this ROM region). If `part+0x38` ("done", set by
+ * `sub_8008044`) is set and the record's `+0x17` flags byte bit 1 is
+ * clear (not looping), clamps `part`'s frame index (`+0x30`) to the
+ * last frame (`record+0x16 - 1`) and resets the sub-counter
+ * (`+0x34`) to the record's duration (`record+0x15`). Either way,
+ * then resolves a final pointer: the record's own `+0` field is
+ * itself a pointer (`recPtr`) to a per-frame `u16` array, indexed by
+ * the (possibly just-clamped) frame index; that `u16` in turn indexes
+ * a pointer array at `table+4`, and the result is that array's
+ * pointer at the looked-up index.
+ *
+ * NOT YET BYTE-MATCHING: every instruction matches the ROM exactly -
+ * confirmed the apparent `ands r0, r0, r2` vs the ROM's `ands r0, r2`
+ * assemble to the identical encoding (Thumb `ANDS` has no 3-operand
+ * form; the extra `r0` is purely a disassembly-style difference, not
+ * a real one) - except the final index computation's `add`:
+ * `adds r0, r1, r0` here vs the ROM's `adds r0, r0, r1`. Same
+ * resistant "which operand goes first" gap documented at length for
+ * `sub_8008188`/`sub_8008200`/`sub_8008278` above - reordering the C
+ * addition, giving each operand its own pinned register, and using a
+ * genuinely separate destination variable were all tried again here
+ * and again made no difference. Parked rather than keep chasing this
+ * one instruction - same call as the other parked functions. */
+void *sub_80083B8(struct actor *part)
+{
+    register void *rec asm("r1") = *(void ***)((u8 *)part + 0x20);
+    register u8 *idxAddr asm("r2") = (u8 *)part + 0x2d;
+    register u8 idx asm("r4") = *idxAddr;
+    s32 offset = idx * 0x1c;
+
+    rec = *(void **)rec;
+    rec = (u8 *)rec + offset;
+
+    if (*((u8 *)part + 0x38) != 0) {
+        register s32 mask asm("r0") = 2;
+        register s32 flags asm("r2") = *((u8 *)rec + 0x17);
+        register s32 test asm("r0");
+
+        test = mask & flags;
+        if (!test) {
+            *(s32 *)((u8 *)part + 0x30) = *((u8 *)rec + 0x16) - 1;
+            *(s32 *)((u8 *)part + 0x34) = *((u8 *)rec + 0x15);
+        }
+    }
+
+    {
+        void **tablePtr2 = *(void ***)((u8 *)part + 0x20);
+        s32 frameIdx = *(s32 *)((u8 *)part + 0x30);
+        register void *recPtr asm("r1") = *(void **)rec;
+        register s32 byteOffset asm("r0") = frameIdx * 2;
+        register u16 *arr asm("r0");
+        register void **ptrArray asm("r1");
+        u16 idx2;
+
+        arr = (u16 *)(byteOffset + (u8 *)recPtr);
+        ptrArray = *(void ***)((u8 *)tablePtr2 + 4);
+        idx2 = *arr;
+        return ptrArray[idx2];
+    }
+}
+#endif /* NON_MATCHING */
 asm(".align 2, 0");

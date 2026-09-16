@@ -2773,3 +2773,39 @@ register naturally lands in `r1` instead of `r2` (no second call
 argument to avoid clobbering). Matched on the first attempt, applying
 the same `addr`/`byteVal` register-reuse pin from `sub_8008304`
 directly.
+
+**Parked, not matched: `sub_80083B8`** (ROM `0x080083B8`, right after
+`sub_80083A8`, same file): looks up `part`'s current keyframe record
+(the same `sub_8007B00`-style keyframe-table chain used throughout
+this ROM region). If `part+0x38` ("done", set by `sub_8008044`) is
+set and the record's `+0x17` flags byte bit 1 is clear (not looping),
+clamps `part`'s frame index (`+0x30`) to the last frame
+(`record+0x16 - 1`) and resets the sub-counter (`+0x34`) to the
+record's duration (`record+0x15`). Either way, then resolves a final
+pointer: the record's own `+0` field is itself a pointer (`recPtr`) to
+a per-frame `u16` array, indexed by the (possibly just-clamped) frame
+index; that `u16` in turn indexes a pointer array at `table+4`, and
+the result is that array's pointer at the looked-up index.
+
+Needed the `sub_8007B00`-style single-register `rec` chain (`r1`,
+reused across the `tablePtr`/`table`/`rec` roles) plus explicit pins
+matching every one of the ROM's own register choices (`idxAddr` in
+`r2`, `idx` in `r4`) to get the whole keyframe lookup and conditional
+clamp matching exactly, including the by-now-standard
+accumulator-register pattern (`mask`/`flags`/`test`, constant computed
+before the byte load) for the `part+0x17` bit-2 test.
+
+Confirmed one apparent mismatch is not real: the compiled `ands r0, r0,
+r2` versus the ROM's `ands r0, r2` assemble to the identical byte
+encoding (Thumb's `ANDS` register form has no 3-operand encoding at
+all - the extra `r0` some assemblers print is purely a disassembly
+convention, not a distinguishable instruction). The one genuine
+remaining gap: the final index computation's `add` compiles as
+`adds r0, r1, r0` where the ROM has `adds r0, r0, r1` - the same
+"which operand goes first" canonicalization documented at length for
+`sub_8008188`/`sub_8008200`/`sub_8008278` above. Reordering the C
+addition, pinning each operand to its own register, and using a
+genuinely separate destination variable (all three techniques,
+independently) made no difference here either. Parked rather than keep
+chasing this one instruction - same call as the other parked functions
+above.
