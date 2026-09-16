@@ -123,4 +123,42 @@ void *sub_80084C4(void *part)
     }
     return result;
 }
+
+extern u8 gStaticData_0816B2F8[];
+
+/* Same `sub_80083B8`-derived-record-nibble-switch shape as
+ * `sub_80084C4` above, with a different result mapping: 0 and 4
+ * select `info+0x1c`, anything else falls back to
+ * `gStaticData_0816B2F8`. Unlike `sub_80084C4`, no case-scattering
+ * trick was needed here - 0 and 4 are already non-adjacent, which is
+ * enough on its own to make gcc emit a jump table instead of a
+ * compare chain. */
+void *sub_8008518(void *part)
+{
+    void *info = sub_80083B8(part);
+    u8 type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
+    void *result;
+
+    switch (type) {
+    case 0:
+        result = (u8 *)info + 0x1c;
+        break;
+    case 1:
+    case 2:
+    case 3:
+        result = gStaticData_0816B2F8;
+        break;
+    case 4:
+        result = (u8 *)info + 0x1c;
+        break;
+    case 5:
+    case 6:
+        result = gStaticData_0816B2F8;
+        break;
+    default:
+        result = gStaticData_0816B2F8;
+        break;
+    }
+    return result;
+}
 asm(".align 2, 0");

@@ -2900,3 +2900,17 @@ own object *before* the function symbol, not inlined at the correct
 byte offset the way a compiler-native jump table is. The native
 `switch` approach above avoids both problems entirely.) Matched on
 this attempt once the case-scatter trick was found.
+
+**`sub_8008518`** (ROM `0x08008518`, right after `sub_80084C4`, same
+file): the same `sub_80083B8`-derived-record-nibble `switch` shape as
+`sub_80084C4` immediately above, with a different result mapping - 0
+and 4 select `info+0x1c`, everything else (1, 2, 3, 5, 6, or above 6)
+falls back to `gStaticData_0816B2F8`. No case-scattering trick was
+needed this time: writing the cases in plain ascending order (`case
+0:`, `case 1: case 2: case 3:`, `case 4:`, `case 5: case 6:`,
+`default:`) was already enough to produce a jump table, because 0 and
+4 mapping to the same result while everything between and after maps
+to a different one is *already* non-contiguous - confirming the
+theory from `sub_80084C4`'s entry above (gcc only falls back to a
+compare chain when the case-to-block mapping actually can be expressed
+as a handful of simple range checks). Matched on the first attempt.
