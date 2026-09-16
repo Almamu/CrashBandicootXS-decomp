@@ -3375,3 +3375,89 @@ appear to be forwarded straight through from `sub_8009FD4`'s own
 (uncertain) parameter list rather than computed locally; not confident
 enough in that reading to commit to a signature yet. Matched
 `sub_8009FB0` after fixing the read order.
+
+## `sub_8009FD4` left raw, matching resumes at `sub_8009FF4`: `actor_part9.c`
+
+**`sub_8009FF4`** (ROM `0x08009FF4`, right after the raw, unclaimed
+`sub_8009FD4`, new `src/graphics/actor_part9.c`): builds `part`'s
+primary AABB (`sub_8007C30`, already matched in `actor_part2.c`) and
+tests it against `region` (`sub_8001688`, the same collision-test
+function already declared for `sub_8007DBC`/`sub_8008304`'s sibling
+in `actor_part.c`/`actor_part4.c`); if that already overlaps, returns
+2. Otherwise builds the secondary AABB (`sub_8007CF8`, also already
+matched) and re-tests; if that misses, returns 0. If it hits, returns
+2 unless `part->flags` bit 6 is set, in which case it returns the
+(nonzero) hit-test result itself.
+
+Needed the control flow rewritten with explicit `goto`s into a single
+shared exit (rather than three separate `return` statements) to
+reproduce the ROM's own single "adds r0, r2, #0" epilogue reused by
+every path - an early `return 0;` for the miss case compiles to its
+own `mov r0, #0; b <end>` instead of falling into the shared exit with
+the value already sitting in the right register. The final flags test
+also needed the byte loaded into `part`'s own dying register (`r5`,
+matching the ROM's `ldrb r5, [r5, #0xc]` self-overwrite - `part` is
+never read again afterward) and read through a `u32` intermediate so
+the `>> 6` compiles to a logical `lsr` instead of an arithmetic `asr`.
+Matched after applying both fixes.
+
+**`sub_800A050`** (ROM `0x0800A050`, right after `sub_8009FF4`, same
+file): fires a `self->table+0x70/0x74`-driven trampoline via
+`sub_803AD7C` and always returns 0. Same `addr`-before-`fn` register-
+aliasing fix as `sub_8009F1C`/`sub_8009FB0`/`sub_800A0AC` (below).
+Matched after applying it.
+
+**`sub_800A068`/`sub_800A078`/`sub_800A080`** (ROM `0x0800A068`-
+`0x0800A080`, same file): `self+0x74` get/clear/OR-set accessors, no
+other logic. All matched on the first attempt.
+
+**`sub_800A06C`** (ROM `0x0800A06C`, same file): `self+0x74 != 0`,
+via the branchless `(-x | x) >> 31` idiom (this compiler does not
+choose it automatically for a plain `!= 0` comparison - that compiles
+to a `cmp`/`beq`/`mov` branch instead) rather than a plain comparison.
+Matched by writing the idiom explicitly.
+
+**`sub_800A088`/`sub_800A090`** (ROM `0x0800A088`/`0x0800A090`, same
+file): a plain `self+0x68` byte get/set pair. Both matched on the
+first attempt.
+
+**`sub_800A098`/`sub_800A09C`/`sub_800A0A0`/`sub_800A0A4`** (ROM
+`0x0800A098`-`0x0800A0A4`, same file): `self+0x64`/`self+0x60` setters
+and their getter siblings, no other logic. All four matched on the
+first attempt.
+
+**`sub_800A0A8`** (ROM `0x0800A0A8`, same file): `self+0x44` (the
+keyframe/table record pointer used by `sub_8009F1C`/`sub_8009FB0`/
+`sub_800A0AC`) getter. Matched on the first attempt.
+
+**`sub_800A0AC`** (ROM `0x0800A0AC`, right after `sub_800A0A8`, same
+file): sets `self+0x44` to `rec`, then fires `rec->table+0x18/0x1c`'s
+trampoline via `sub_803AD80` with `self` as the second argument. Same
+`addr`-before-`fn` register-aliasing fix as `sub_8009F1C`/
+`sub_8009FB0` - but this one initially "matched" with the wrong
+register roles (`tbl` in `r1` instead of the ROM's `r2`) because a
+misread of the ROM trace happened to still produce a *plausible-
+looking* but ultimately wrong instruction sequence; caught only by
+the full clean `make compare` (isolated per-function tests can't catch
+this class of error on their own - they only prove a function
+compiles to *some* byte-exact sequence, not that the reconstruction
+used the ROM's actual register assignment, if a copy-paste or
+transcription mistake happens to compile to a different-but-still-
+matching-length sequence that merely looks right at a glance). Fixed
+by re-reading the ROM disassembly instruction-by-instruction again
+rather than trusting the earlier note.
+
+**`sub_800A0CC`/`sub_800A0D8`** (ROM `0x0800A0CC`/`0x0800A0D8`, same
+file): a `self+0x64`/`self+0x54`/`self+0x58`/`self+0x5c` bulk setter
+(the first two fields sharing the same argument) and its sibling
+without the `self+0x64` write. Both matched on the first attempt.
+
+**`sub_800A0E0`/`sub_800A0EC`** (ROM `0x0800A0E0`/`0x0800A0EC`, same
+file): the same "shared first write" bulk-setter shape as
+`sub_800A0CC`/`sub_800A0D8` above, this time for `self+0x60`/
+`self+0x48`/`self+0x4c`/`self+0x50` - the velocity/accel/max-velocity
+fields `sub_8009DF4` clamps. Both matched on the first attempt.
+
+**`sub_800A0F4`** (ROM `0x0800A0F4`, right after `sub_800A0EC`, same
+file): `self+0x69` (cleared by `sub_8009F50`) getter. Matched on the
+first attempt.
