@@ -49,6 +49,9 @@ per-actor animation frames, text layout.
   inside the raw `asm/code_3_2_4.s` region, so preserving its ROM address
   required a new translation unit and a split before `sub_8008640`):
   `sub_8008618`
+- `src/graphics/hud_counter.c` (new file - `sub_8027838` is an isolated
+  HUD counter inside the raw `asm/code_3_2_5.s` region, so preserving its
+  ROM address required a split before `sub_8027940`): `sub_8027838`
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
