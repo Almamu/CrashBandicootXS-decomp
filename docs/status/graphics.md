@@ -87,10 +87,10 @@ per-actor animation frames, text layout.
   `sub_8009EA8`, `sub_8009EB0`, `sub_8009EBC`, `sub_8009EC4`,
   `sub_8009ECC`, `sub_8009ED0`, `sub_8009F1C`, `sub_8009F50`,
   `sub_8009F90`, `sub_8009FB0`
-- `src/graphics/actor_part9.c` (new file - `sub_8009FF4`'s real ROM
+- `src/graphics/actor_part9.c` (new file - `sub_8009FD4`'s real ROM
   address isn't adjacent to `actor_part8.c`'s matched functions
-  either, since the raw, unclaimed `sub_8009FD4` sits between them;
-  see `docs/matching.md`): `sub_8009FF4`, `sub_800A050`,
+  either, since the parked `sub_8009DF4` sits raw between them; see
+  `docs/matching.md`): `sub_8009FD4`, `sub_8009FF4`, `sub_800A050`,
   `sub_800A068`, `sub_800A06C`, `sub_800A078`, `sub_800A080`,
   `sub_800A088`, `sub_800A090`, `sub_800A098`, `sub_800A09C`,
   `sub_800A0A0`, `sub_800A0A4`, `sub_800A0A8`, `sub_800A0AC`,

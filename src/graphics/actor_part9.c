@@ -1,6 +1,30 @@
 #include "core.h"
 #include "actor.h"
 
+extern void sub_803AD88(void *arg0, s32 arg1, s32 arg2, s32 arg3);
+
+/* Same `record->table+0x10/0x14`-driven trampoline shape as
+ * `sub_8009F1C`/`sub_8009FB0`, but forwarding `arg1`/`arg2`/`arg3`
+ * straight through as `sub_803AD88`'s own arg1-arg3 instead of
+ * building them locally. The `table+0x14` function pointer read is a
+ * genuine "dead read" - loaded into `r4` but never actually passed to
+ * `sub_803AD88` (a plain 4-argument function, not itself a trampoline)
+ * - the same idiom already confirmed and documented for
+ * `sub_8007DBC`'s own `sub_803AD88` call in `actor_part2.c`. */
+void sub_8009FD4(struct actor *self, s32 arg1, s32 arg2, s32 arg3)
+{
+    void *rec = *(void **)((u8 *)self + 0x44);
+
+    if (rec != 0) {
+        u8 *tbl = *(u8 **)((u8 *)rec + 0xc);
+        void *addr = (u8 *)rec + *(s16 *)(tbl + 0x10);
+        register void *deadRead asm("r4") = *(void *volatile *)(tbl + 0x14);
+        (void)deadRead;
+
+        sub_803AD88(addr, arg1, arg2, arg3);
+    }
+}
+
 struct aabb {
     s32 field_0;
     s32 field_4;

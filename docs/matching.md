@@ -3368,18 +3368,33 @@ file): calls `sub_8008364` (already matched in `actor_part5.c`), then
 (if `self+0x44`'s record is set) fires a `record->table+8/0xc`-driven
 trampoline via `sub_803AD80` with `self` itself as the second
 argument. Same `addr`-before-`fn` register-aliasing fix as
-`sub_8009F1C` above. `sub_8009FD4` immediately after was left raw -
-its call to `sub_803AD88` only sets two of that function's four
-established parameters explicitly, and the other two (`r2`/`r3`)
-appear to be forwarded straight through from `sub_8009FD4`'s own
-(uncertain) parameter list rather than computed locally; not confident
-enough in that reading to commit to a signature yet. Matched
-`sub_8009FB0` after fixing the read order.
+`sub_8009F1C` above. Matched `sub_8009FB0` after fixing the read
+order.
 
-## `sub_8009FD4` left raw, matching resumes at `sub_8009FF4`: `actor_part9.c`
+## `sub_8009FD4` resolved and matched: `actor_part9.c`
 
-**`sub_8009FF4`** (ROM `0x08009FF4`, right after the raw, unclaimed
-`sub_8009FD4`, new `src/graphics/actor_part9.c`): builds `part`'s
+`sub_8009FD4` (right after `sub_8009FB0`) was initially left raw -
+its call to `sub_803AD88` only set two of that function's four
+established parameters explicitly, with a `table+0x14` value loaded
+into `r4` but never moved into an argument register, and the other
+two args (`r2`/`r3`) appeared to be forwarded straight through from
+`sub_8009FD4`'s own (uncertain) parameter list rather than computed
+locally. Resolved while investigating the much larger
+`sub_8008A40`-`sub_8008AD8` collision cluster below: the `r4` load is
+a genuine **"dead read"** - the same idiom already established and
+tested for `sub_8007DBC`'s own `sub_803AD88` call in
+`actor_part2.c` (`table+0x68`'s function-pointer half read into `r4`
+but marked `(void)deadRead;`, never actually passed to
+`sub_803AD88`, which is confirmed to be a plain 4-argument function,
+not itself a trampoline). `sub_8009FD4` forwards `arg1`/`arg2`/`arg3`
+straight through as `sub_803AD88`'s own `arg1`-`arg3`. Matched after
+applying the dead-read pattern; folded into the front of
+`actor_part9.c` (replacing what was `asm/code_3_2_10.o`, which held
+only this one function) since its own real ROM address comes right
+after the parked `sub_8009DF4` and before `sub_8009FF4`.
+
+**`sub_8009FF4`** (ROM `0x08009FF4`, right after `sub_8009FD4`, same
+file): builds `part`'s
 primary AABB (`sub_8007C30`, already matched in `actor_part2.c`) and
 tests it against `region` (`sub_8001688`, the same collision-test
 function already declared for `sub_8007DBC`/`sub_8008304`'s sibling
