@@ -195,4 +195,38 @@ void *sub_8008564(void *part)
     }
     return result;
 }
+
+/* Same `sub_80083B8`-derived-record-nibble `switch` shape once more -
+ * 0/2/3/4/6 select `info+0xc`, 1/5/anything-above-6 fall back to
+ * `gStaticData_0816B2F8`. */
+void *sub_80085B8(void *part)
+{
+    void *info = sub_80083B8(part);
+    u8 type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
+    void *result;
+
+    switch (type) {
+    case 0:
+        result = (u8 *)info + 0xc;
+        break;
+    case 1:
+        result = gStaticData_0816B2F8;
+        break;
+    case 2:
+    case 3:
+    case 4:
+        result = (u8 *)info + 0xc;
+        break;
+    case 5:
+        result = gStaticData_0816B2F8;
+        break;
+    case 6:
+        result = (u8 *)info + 0xc;
+        break;
+    default:
+        result = gStaticData_0816B2F8;
+        break;
+    }
+    return result;
+}
 asm(".align 2, 0");

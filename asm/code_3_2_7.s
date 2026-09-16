@@ -3,43 +3,6 @@
 .syntax unified
 .arm
 
-	thumb_func_start sub_80085B8
-sub_80085B8: @ 0x080085B8
-	push {lr}
-	bl sub_80083B8
-	adds r2, r0, #0
-	ldr r0, [r2, #4]
-	ldrb r0, [r0]
-	lsrs r0, r0, #4
-	cmp r0, #6
-	bhi _080085FA
-	lsls r0, r0, #2
-	ldr r1, _080085D4 @ =_080085D8
-	adds r0, r0, r1
-	ldr r0, [r0]
-	mov pc, r0
-	.align 2, 0
-_080085D4: .4byte _080085D8
-_080085D8: @ jump table
-	.4byte _080085F4 @ case 0
-	.4byte _080085FA @ case 1
-	.4byte _080085F4 @ case 2
-	.4byte _080085F4 @ case 3
-	.4byte _080085F4 @ case 4
-	.4byte _080085FA @ case 5
-	.4byte _080085F4 @ case 6
-_080085F4:
-	adds r0, r2, #0
-	adds r0, #0xc
-	b _080085FC
-_080085FA:
-	ldr r0, _08008600 @ =gStaticData_0816B2F8
-_080085FC:
-	pop {r1}
-	bx r1
-	.align 2, 0
-_08008600: .4byte gStaticData_0816B2F8
-
 	thumb_func_start sub_8008604
 sub_8008604: @ 0x08008604
 	ldr r2, [r0, #0x20]

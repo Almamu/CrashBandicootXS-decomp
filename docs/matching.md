@@ -2924,3 +2924,11 @@ selects `info+0xc`, and 1/2/6/anything-above-6 fall back to
 (same reasoning as `sub_8008518`), so plain ascending case order
 produced the ROM's jump table with no scattering needed. Matched on
 the first attempt.
+
+**`sub_80085B8`** (ROM `0x080085B8`, right after `sub_8008564`, same
+file): the same `sub_80083B8`-derived-record-nibble `switch` shape
+once more - 0/2/3/4/6 select `info+0xc`, 1/5/anything-above-6 fall
+back to `gStaticData_0816B2F8`. Non-contiguous enough on its own
+(1 and 5 are isolated within a run of the other result), so plain
+ascending case order produced the jump table directly. Matched on the
+first attempt.
