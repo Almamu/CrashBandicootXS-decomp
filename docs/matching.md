@@ -3252,3 +3252,126 @@ statements did not change the compiled order. Parked with the version
 that avoids the `r7`-pin corruption (natural allocation into `r8`/`r9`)
 rather than risk a silent miscompile for a cosmetically closer
 register match.
+
+## New tractable pocket found past the AI/collision cluster: `actor_part8.c`
+
+`sub_8008A40` (right after `sub_800891C`) drops into a large, deeply
+interconnected AI/collision/physics dispatch system (roughly 40
+functions, up to around `sub_8009DF4`) that repeatedly touches
+`gUnknown_030012C0`/`gUnknown_030012D8` - globals `docs/rom_map.md`
+itself still describes as only partially understood after extensive
+prior investigation, calling `sub_800014C` (one of `UpdateGameFrame`'s
+own direct top-level calls) among other things. Rather than guess at
+semantics there, this whole span was left completely raw/unclaimed,
+and matching resumed at `sub_8009DF4` - which, despite living inside
+that same address range, is self-contained (no calls into the unclear
+cluster) - and the clearly-recognizable "part object" family
+immediately following it (`sub_8009EA8` onward), which reuses
+patterns and even specific functions (`sub_8008484`, `sub_8008364`)
+already matched earlier this session.
+
+**Parked, not matched: `sub_8009DF4`** (ROM `0x08009DF4`, right after
+the raw AI/collision cluster, new `src/graphics/actor_part8.c`): a
+velocity/position integrator. For each axis (X: `self+0x60` velocity,
+`self+0x50` max, `self+0x4c` accel; Y: `self+0x64`/`self+0x5c`/
+`self+0x58`), steps the velocity toward its max by the accel amount,
+clamped so it never overshoots past the max in either direction.
+Builds a "direction" byte at `self+0x24` from the sign of each clamped
+velocity (1=right/2=left/8=down/4=up, OR'd together - the same
+mirror-flag-style bit encoding used earlier in this ROM region for
+`sub_8007B00`). Caches the pre-move position at `self+0x6c`/`self+0x70`
+(read back by `sub_8009EB0`/`sub_8009EBC`/`sub_8009EC4` below), applies
+the clamped velocity to `self+0`/`self+4`, updates the global
+`gUnknown_03001298` with the Y velocity, and returns whether either
+axis is still moving.
+
+Every branch, comparison, and memory access is confirmed correct,
+including several of the ROM's own genuinely redundant reloads (it
+re-reads fields fresh from memory rather than reusing already-loaded
+register values in multiple places - matched by deliberately NOT
+caching those values across statements) and the dirFlags OR-combine's
+accumulator-register pattern (constant computed into its own register
+before the byte load, reached via an explicit `goto` past the whole
+combine when a velocity is exactly zero, to reproduce the ROM's real
+"skip entirely" branch rather than a compute-then-OR-with-zero that
+would be semantically equivalent but byte-different).
+
+The one remaining gap: the ROM is a genuine leaf function - no
+`push`/`pop` at all, needing only `r0`-`r3` for the whole body, with
+`self` naturally landing in `r2` and being freed for reuse (for the
+final `gUnknown_03001298` dereference) once its last use has passed.
+Every arrangement tried here needs one extra register spilled to `r4`
+(a `push {r4, lr}`/`pop {r4}` pair the ROM doesn't have), including:
+pinning `self` to `r2` explicitly (fixes everything up through the
+dirFlags section, but then holds `r2` live for the pin's whole lexical
+C scope, blocking the ROM's own end-of-function reuse of that
+register once `self` is logically dead); and re-deriving a freshly
+pinned `self` from the plain parameter in separate scoped blocks
+(this just pushes the *plain parameter* into `r4` instead, since it
+now needs to survive across multiple re-derivations). Parked with the
+version that gets every branch and memory access right, differing
+from the ROM only by this one extra register spill.
+
+**`sub_8009EA8`/`sub_8009EB0`/`sub_8009EBC`/`sub_8009EC4`** (ROM
+`0x08009EA8`-`0x08009EC4`, right after `sub_8009DF4`, same file): the
+`self+0x6c`/`self+0x70` "previous position" get/set/Q8-to-integer
+accessors written by `sub_8009DF4` above. All four matched on the
+first attempt.
+
+**`sub_8009ECC`** (ROM `0x08009ECC`, same file): constant-5 stub.
+Matched on the first attempt.
+
+**`sub_8009ED0`** (ROM `0x08009ED0`, right after `sub_8009ECC`, same
+file): the same `sub_8008434`-style part-object constructor shape used
+throughout this ROM region, this time allocating a bigger 0x78-byte
+object, initializing via `sub_80084A4` (already matched in
+`actor_part6.c`), setting `table` to `gStaticData_087E3D14`, clearing
+extra fields via `sub_8009F50` (below) instead of `sub_8007AB4`, then
+setting `field_08` and the Q8 `x`/`y` position from three `u16`
+arguments. Matched on the first attempt.
+
+**`sub_8009F1C`** (ROM `0x08009F1C`, right after `sub_8009ED0`, same
+file): overwrites `self->table`, then (if `self+0x44`'s record is
+set) fires a `record->table+0x48/0x4c`-driven trampoline with a
+constant argument `3` via `sub_803AD80` (same `table+N`/`table+N+4`
+convention as `sub_8006FE4`/`sub_8007F78`/`sub_8008364`), and finally
+tail-calls `sub_8008484` (already matched in `actor_part6.c`). Needed
+the trampoline's `addr = rec + offset` computed *before* the `fn`
+load, both pinned to the same registers the ROM uses (`rec`/`fn`
+sharing `r2`, `tblAdj` in `r1`, `offset`/`addr` in `r0`) - computing
+them in the ROM's other order aliases `rec` and `fn` onto the same
+physical register and silently computes `fn + offset` instead of
+`rec + offset` (a genuine miscompile, not just a cosmetic mismatch,
+caught by noticing the compiled `add r0, r2, r0` used `r2` *after* it
+had already been overwritten with `fn`). Matched after fixing the
+read order.
+
+**`sub_8009F50`** (ROM `0x08009F50`, right after `sub_8009F1C`, same
+file): the shared part-object field-clearer called from every
+`sub_8009ED0`-family constructor in this file - sets `flags` bit 6,
+clears `part+0xd` bit 3 (the same `-9`-mask trick as `sub_8008680`),
+zeroes the velocity/accel/max-velocity fields `sub_8009DF4` reads
+(`+0x60`/`+0x64`/`+0x48`/`+0x4c`/`+0x50`/`+0x54`/`+0x58`/`+0x5c`) plus
+`+0x24`/`+0x44`/`+0x40`, sets `+0x68` to 8, and clears `+0x69`. A pure
+leaf function with no calls. Matched on the first attempt (after
+applying the same accumulator-register pattern already established
+for the two AND/OR field updates).
+
+**`sub_8009F90`** (ROM `0x08009F90`, right after `sub_8009F50`, same
+file): the same `sub_80084A4`/table-swap/`sub_8009F50` shape as
+`sub_8009ED0` above, but re-initializes an existing `part` instead of
+allocating a new one - the same relationship `sub_80084A4` itself has
+to `sub_8008434`. Matched on the first attempt.
+
+**`sub_8009FB0`** (ROM `0x08009FB0`, right after `sub_8009F90`, same
+file): calls `sub_8008364` (already matched in `actor_part5.c`), then
+(if `self+0x44`'s record is set) fires a `record->table+8/0xc`-driven
+trampoline via `sub_803AD80` with `self` itself as the second
+argument. Same `addr`-before-`fn` register-aliasing fix as
+`sub_8009F1C` above. `sub_8009FD4` immediately after was left raw -
+its call to `sub_803AD88` only sets two of that function's four
+established parameters explicitly, and the other two (`r2`/`r3`)
+appear to be forwarded straight through from `sub_8009FD4`'s own
+(uncertain) parameter list rather than computed locally; not confident
+enough in that reading to commit to a signature yet. Matched
+`sub_8009FB0` after fixing the read order.
