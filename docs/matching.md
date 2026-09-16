@@ -2836,3 +2836,7 @@ flags), then immediately overwrites its `table` with
 `sub_8007AB4` (already matched in `actor_part.c`). The three `u16`
 arguments become `field_08` and the Q8 `x`/`y` position. Matched on
 the first attempt.
+
+**`sub_8008480`** (ROM `0x08008480`, right after `sub_8008434`, same
+file): trivial always-true stub, `return 1;`. Matched on the first
+attempt.

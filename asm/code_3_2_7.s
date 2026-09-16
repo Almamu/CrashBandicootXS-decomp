@@ -3,11 +3,6 @@
 .syntax unified
 .arm
 
-	thumb_func_start sub_8008480
-sub_8008480: @ 0x08008480
-	movs r0, #1
-	bx lr
-
 	thumb_func_start sub_8008484
 sub_8008484: @ 0x08008484
 	push {lr}

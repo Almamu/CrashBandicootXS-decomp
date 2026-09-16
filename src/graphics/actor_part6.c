@@ -47,4 +47,10 @@ struct actor *sub_8008434(u16 arg0, u16 arg1, u16 arg2)
     part->y = (s32)arg2 << 8;
     return part;
 }
+
+/* Always-true stub. */
+s32 sub_8008480(void)
+{
+    return 1;
+}
 asm(".align 2, 0");
