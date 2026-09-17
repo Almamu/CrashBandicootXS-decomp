@@ -249,6 +249,23 @@ from "core" graphics.
   `sub_803B440` - unlink `self` from its `+0x48`/`+0x4c` circular list,
   set `+0x50` to the shared "dead" vtable, and conditionally free) - see
   [docs/matching/issue-71-0x0803b060-actor.md](../matching/issue-71-0x0803b060-actor.md).
+- `src/graphics/actor_part39.c` (new file, GitHub issue #16, ROM
+  0x080119A8-0x08011BD4): `sub_80119A8`, `sub_80119D4`, `sub_80119D8`,
+  `sub_80119EC`, `sub_80119FC`, `sub_8011A1C`, `sub_8011A50`,
+  `sub_8011A64`, `sub_8011A84`, `sub_8011A8C`, `sub_8011B0C`,
+  `nullsub_16`, `sub_8011B5C`, `sub_8011B70`, `sub_8011B90` - a run of
+  `struct actor` vtable-swap constructor helpers (same
+  `sub_80084A4`/`sub_8008484`/`nullsub` shape as `actor_part6.c`), a
+  handful of small setters/getters on offsets beyond `struct actor`'s
+  own 0x1c bytes, and a distance-gate (`sub_8011A8C`) reusing
+  `actor_part2.c`'s `gUnknown_030012B4+0x108` bitmap idiom verbatim.
+  Recategorized `graphics`->`actor` from the issue's label: every
+  matched function here operates on `struct actor` via the same
+  `table@0x18`/`flags@0xc`/`field_08@8` layout `actor_part*.c` already
+  established, not the `game_loop`-core "child object" family
+  `docs/rom_map.md` traces through the chunk's remaining (unmatched)
+  functions. See
+  [docs/matching/issue-16-actor-11b0c.md](../matching/issue-16-actor-11b0c.md).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -580,3 +597,16 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   #22) - a ~480-instruction jump-table player action-state machine
   plus two high-register-pressure helpers it calls; left raw, out of
   scope for this pass - see `docs/matching/issue-22-0x08017a44-actor.md`.
+- **`sub_8011BD4`/`sub_8012160`/`sub_8012238`/`sub_80122CC`/
+  `sub_8012420`/`sub_8012694`/`sub_801283C`/`sub_8012A7C`/
+  `sub_8012AF4`/`sub_8012D24`** (`asm/code_3_2_17_11bd4.s`, ROM
+  0x08011BD4-0x08012FBC, GitHub issue #16) - `sub_8011BD4` itself is
+  `docs/rom_map.md`'s documented ~1420B, 25-case/7-case nested
+  jump-table companion state machine to `sub_8016288` (still raw,
+  type-`0x1d` player-control family); the rest are further members of
+  the 42-slot action-dispatch-table family (`gStaticData_0816BF20`)
+  reading/writing a still-unnamed "child object" struct (`self+0xc`/
+  `+0x10`/`+0x18` sub-record pointers, distinct from `struct actor`)
+  that `docs/rom_map.md` itself says isn't understood with byte-exact
+  precision yet. Left raw, out of scope for this pass - see
+  [docs/matching/issue-16-actor-11b0c.md](../matching/issue-16-actor-11b0c.md).
