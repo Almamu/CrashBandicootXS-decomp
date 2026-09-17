@@ -70,6 +70,26 @@ These read as genuine GAX2 mixer/SoundHandler internals (not
 game/HUD-side callers), the first real dive past `sub_80381FC`'s single
 constructor.
 
+`src/audio/` (further in, at `0x08039818`-`0x0803A944` - see
+[`docs/matching/issue-68-0x08039818-audio.md`](../matching/issue-68-0x08039818-audio.md)
+for the full write-up, GitHub issue #68):
+
+- `src/audio/gax_channel_note_cut.c` - `sub_8039818` (per-channel note-
+  cut/note-on command dispatch)
+- `src/audio/gax_channel_effect_table.c` - `sub_8039FFC` (per-tick
+  vibrato/tremolo-style effect-table lookup)
+- `src/audio/gax_channel_init.c` - `sub_803A104` (per-channel voice
+  object constructor)
+- `src/audio/gax_sound_handler_unknownc.c` - `nullsub_41` (UNUSED - no
+  caller anywhere in the ROM), `sub_803A22C` (the "UnknownC" type's
+  init_fn), `nullsub_42` (its unknown_fn)
+
+Only 6 of this chunk's 21 functions matched - the rest hit the same
+many-register (`r8`/`sb`/`sl`) gcc-2.9 allocation ceiling already
+documented for `sub_8038538`'s cluster, or are entangled with a
+neighboring function via a manual return-address-trampoline idiom (see
+the write-up's "Left raw" section for the full per-function breakdown).
+
 ## Parked
 
 - `PlaySfx` (`sub_8001854`, real bytes in `asm/code_3_1_10.s`,
@@ -123,3 +143,13 @@ From the `0x08038538`-`0x08039658` pass (issue #67):
 - `sub_803943C` - the "Info" SoundHandler type's play_fn; left raw.
 - `sub_8039518` - the "Channel" SoundHandler type's init_fn; left raw.
 - `sub_80395A4` - the "Channel" SoundHandler type's play_fn; left raw.
+
+From the `0x08039818`-`0x0803A944` pass specifically (issue #68): 15 of
+the chunk's 21 functions (`sub_8039658`, `sub_80398DC`, `sub_803985C`,
+`sub_8039AA4`, `sub_8039B44`, `sub_8039E50`, `sub_803A03C`, `sub_803A158`,
+`sub_803A278`, `sub_803A2C8`, `sub_803A318`, `sub_803A324`, `sub_803A5A8`,
+`sub_803A608`) - see
+[`docs/matching/issue-68-0x08039818-audio.md`](../matching/issue-68-0x08039818-audio.md)'s
+"Left raw" section for the per-function reason (many-register allocation
+ceiling, or entangled with a neighbor via a manual return-address-
+trampoline idiom).

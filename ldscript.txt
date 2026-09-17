@@ -157,6 +157,14 @@ SECTIONS
         build/crashbandicootxs/asm/code_3_2_20e_943c.o(.text);
         build/crashbandicootxs/src/audio/gax_sound_handler_channel.o(.text);
         build/crashbandicootxs/asm/code_3_2_20e_95a4.o(.text);
+        build/crashbandicootxs/src/audio/gax_channel_note_cut.o(.text);
+        build/crashbandicootxs/asm/code_3_2_20e_985c.o(.text);
+        build/crashbandicootxs/src/audio/gax_channel_effect_table.o(.text);
+        build/crashbandicootxs/asm/code_3_2_20e_a03c.o(.text);
+        build/crashbandicootxs/src/audio/gax_channel_init.o(.text);
+        build/crashbandicootxs/asm/code_3_2_20e_a158.o(.text);
+        build/crashbandicootxs/src/audio/gax_sound_handler_unknownc.o(.text);
+        build/crashbandicootxs/asm/code_3_2_20e_a278.o(.text);
         build/crashbandicootxs/src/system/timer_util.o(.text);
         build/crashbandicootxs/asm/code_3_2_20e_aa08.o(.text);
         build/crashbandicootxs/asm/code_3_2_20e_ab54.o(.text);
