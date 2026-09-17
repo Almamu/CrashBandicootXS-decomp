@@ -627,4 +627,193 @@ void sub_800944C(void *managerArg)
     }
 }
 #endif /* NON_MATCHING */
+
+#if NON_MATCHING
+struct aabb {
+    s32 field_0;
+    s32 field_4;
+    s32 field_8;
+    s32 field_c;
+};
+
+extern void *gUnknown_030012C0;
+extern void *gUnknown_030012D8;
+extern void *gUnknown_030012BC;
+extern s32 sub_8009FF4(void *part, void *region);
+extern void *sub_8007B98(void *dest, void *pt);
+extern void *sub_8007CF8(void *dest, void *pt);
+extern u8 sub_8001688(void *buf1, void *buf2);
+extern void sub_803AD88(void *arg0, s32 arg1, s32 arg2, s32 arg3);
+extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
+
+/* `sub_8008AD8`'s twin, operating in this spatial-hash-grid cluster:
+ * byte-identical collision-hit resolution logic (mode dispatch via
+ * `gUnknown_030012C0`, the AABB push-out via `sub_8007B98`/
+ * `sub_8007CF8`/`sub_8001688`, and the `sub_803AD88` trampoline calls
+ * with the same "dead read" idiom) - see `sub_8008AD8`'s own writeup
+ * in `actor_part7.c`/`docs/matching.md` for the full branch-by-branch
+ * semantics, identical here. `manager` itself is never read, a dead
+ * parameter kept for a uniform call signature with `sub_80099F0`'s
+ * sibling.
+ *
+ * NOT YET BYTE-MATCHING: the exact same structural gap as
+ * `sub_8008AD8`/`sub_8008D80`/`sub_80099F0` - this compiler has no
+ * way to leave `boxH` untouched in its own incoming stack slot while
+ * still building a 4-word AABB pointer that includes it, the ABI
+ * stack-layout trick the ROM's own tighter local frame relies on.
+ * Parked with the version that writes it explicitly, matching
+ * `sub_8008AD8`'s own parking rationale - see docs/matching.md,
+ * "Parked, not matched: `sub_80096C0`". */
+void sub_80096C0(void *manager, s32 boxX, s32 boxY, s32 boxW, s32 boxH, void *partArg)
+{
+    struct actor *part = partArg;
+    struct aabb box;
+    void *state;
+    s32 mode;
+
+    box.field_0 = boxX;
+    box.field_4 = boxY;
+    box.field_8 = boxW;
+    box.field_c = boxH;
+
+    state = gUnknown_030012C0;
+    mode = *(s32 *)((u8 *)state + 0x78);
+
+    if (mode == 3) {
+        s32 result = sub_8009FF4(part, &box);
+        if (result == 0) {
+            return;
+        }
+        {
+            u8 *rec = (u8 *)part->table + 0x68;
+            s16 offset = *(s16 *)rec;
+            void *addr = (u8 *)part + offset;
+            struct actor *player = gUnknown_030012D8;
+            u8 someByte = player->field_0A;
+            register void *deadRead asm("r4") = *(void *volatile *)(rec + 4);
+            (void)deadRead;
+
+            sub_803AD88(addr, 1, someByte, 0);
+        }
+        return;
+    }
+
+    if ((*((u8 *)part + 0xd) >> 3) & 1) {
+        struct aabb playerBox;
+        struct aabb partBox;
+        struct actor *player = gUnknown_030012D8;
+        u8 result;
+
+        sub_8007B98(&playerBox, player);
+        sub_8007CF8(&partBox, part);
+
+        result = sub_8001688(&playerBox, &partBox);
+        if (!result) {
+            return;
+        }
+
+        {
+            s32 partX = part->x;
+            struct actor *player2 = gUnknown_030012D8;
+            s32 playerX = player2->x;
+
+            if (partX < playerX) {
+                s32 sum = (partBox.field_8 + playerBox.field_8) << 7;
+                player2->x = partX + sum;
+
+                {
+                    u8 *rec2 = (u8 *)player2->table + 0x68;
+                    s16 offset2 = *(s16 *)rec2;
+                    void *addr2 = (u8 *)player2 + offset2;
+                    register void *deadRead asm("r4") = *(void *volatile *)(rec2 + 4);
+                    (void)deadRead;
+
+                    sub_803AD88(addr2, 0, 0xc, 2);
+                }
+            } else {
+                s32 sum = (partBox.field_8 + playerBox.field_8) << 7;
+                player2->x = partX - sum;
+
+                {
+                    u8 *rec2 = (u8 *)player2->table + 0x68;
+                    s16 offset2 = *(s16 *)rec2;
+                    void *addr2 = (u8 *)player2 + offset2;
+                    register void *deadRead asm("r4") = *(void *volatile *)(rec2 + 4);
+                    (void)deadRead;
+
+                    sub_803AD88(addr2, 0, 0xc, 1);
+                }
+            }
+        }
+        return;
+    }
+
+    {
+        s32 result = sub_8009FF4(part, &box);
+
+        if (result == 1) {
+            struct actor *player = gUnknown_030012D8;
+
+            player->flags |= 8;
+            if (player->field_0A == 1) {
+                if (*(s32 *)((u8 *)player + 0x64) > 0) {
+                    {
+                        u8 *rec = (u8 *)part->table + 0x68;
+                        s16 offset = *(s16 *)rec;
+                        void *addr = (u8 *)part + offset;
+                        register void *deadRead asm("r4") = *(void *volatile *)(rec + 4);
+                        (void)deadRead;
+
+                        sub_803AD88(addr, 1, 1, 0);
+                    }
+                    {
+                        u8 *rec = (u8 *)player->table + 0x68;
+                        s16 offset = *(s16 *)rec;
+                        void *addr = (u8 *)player + offset;
+                        register void *deadRead asm("r4") = *(void *volatile *)(rec + 4);
+                        (void)deadRead;
+
+                        sub_803AD88(addr, 0, 0xd, 0);
+                    }
+                    PlaySfx(gUnknown_030012BC, 0x21, 0x100);
+                }
+                return;
+            } else {
+                u8 *rec = (u8 *)part->table + 0x68;
+                s16 offset = *(s16 *)rec;
+                void *addr = (u8 *)part + offset;
+                register void *deadRead asm("r4") = *(void *volatile *)(rec + 4);
+                (void)deadRead;
+
+                sub_803AD88(addr, 1, player->field_0A, 0);
+                return;
+            }
+        } else if (result == 2) {
+            part->flags |= 8;
+            mode = *(s32 *)((u8 *)state + 0x78);
+            if (mode != 0) {
+                u8 *rec = (u8 *)part->table + 0x68;
+                s16 offset = *(s16 *)rec;
+                void *addr = (u8 *)part + offset;
+                register void *deadRead asm("r4") = *(void *volatile *)(rec + 4);
+                (void)deadRead;
+
+                sub_803AD88(addr, 1, 1, 0);
+            }
+            {
+                struct actor *player = gUnknown_030012D8;
+                u8 *rec = (u8 *)player->table + 0x68;
+                s16 offset = *(s16 *)rec;
+                void *addr = (u8 *)player + offset;
+                register void *deadRead asm("r4") = *(void *volatile *)(rec + 4);
+                (void)deadRead;
+
+                sub_803AD88(addr, 1, part->field_0A, 0);
+            }
+            return;
+        }
+        return;
+    }
+}
+#endif /* NON_MATCHING */
 asm(".align 2, 0");

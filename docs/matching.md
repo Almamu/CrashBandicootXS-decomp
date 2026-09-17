@@ -3603,14 +3603,37 @@ r5, #2`) - no rewrite tried (an intermediate volatile-routed constant
 included) discourages this specific reuse. Parked on this single
 2-byte gap.
 
-`sub_8009528` through `sub_8009868` (~3 functions, right after the
-parked `sub_800944C`) remain a raw span - complex list-management/
-probe functions calling still-unexamined helpers (`sub_800D040`,
-`sub_80109A4`) whose higher-level purpose isn't recoverable without
-more context. Left raw rather than guess.
+`sub_8009528` (right after the parked `sub_800944C`) remains raw - the
+same "extended screen box" grid-iteration shape as `sub_800944C`, but
+dispatching each hit to `sub_80096C0` (when the box's "compare
+viewport" argument equals `gUnknown_030012D8`, the player) or
+`sub_80099F0` (otherwise) - the spatial-grid-cluster analog of
+`sub_8008A40`'s own dispatch to `sub_8008AD8`/`sub_8008D80`. Left raw
+for now given its size and the two nested loops (main grid buckets,
+then the special bucket-255 pass) each repeating the same dispatch.
+
+**Parked, not matched: `sub_80096C0`** (ROM `0x080096C0`, right after
+the raw `sub_8009528`, `src/graphics/actor_part11.c`): `sub_8008AD8`'s
+twin, confirmed by reading its disassembly directly against
+`sub_8008AD8`'s own - byte-identical collision-hit resolution logic
+(mode dispatch via `gUnknown_030012C0`, AABB push-out via
+`sub_8007B98`/`sub_8007CF8`/`sub_8001688`, and `sub_803AD88`
+trampoline calls with the same "dead read" idiom), just called from
+this spatial-hash-grid cluster instead of the plain array manager.
+Reused `sub_8008AD8`'s exact C body (renamed) rather than re-derive it
+from scratch, given the two are line-for-line identical in the
+disassembly. Parked on the exact same `boxH` stack-layout gap as
+`sub_8008AD8`/`sub_8008D80`/`sub_80099F0` (confirmed by the resulting
+object being exactly 8 bytes short of the real ROM size, the same gap
+size as those three).
+
+`sub_8009868` (right after the parked `sub_80096C0`) remains raw -
+calls still-unexamined helpers (`sub_800D040`, `sub_80109A4`) whose
+higher-level purpose isn't recoverable without more context. Left raw
+rather than guess.
 
 **Parked, not matched: `sub_8009914`** (ROM `0x08009914`, right after
-the raw `sub_8009528`-`sub_8009868` span, `src/graphics/actor_part11.c`):
+the raw `sub_8009868`, `src/graphics/actor_part11.c`):
 resets a pool manager to empty. First tears down every active object
 in `slotArray[0..activeCount)` - firing each one's `table+0x50/0x54`
 trampoline via `sub_803AD80` with constant arg `3` if non-`NULL`, then

@@ -277,6 +277,12 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   choice (`bucket = baseIdx + 2` computed in-place instead of into a
   fresh register) - see `docs/matching.md`, "Parked, not matched:
   `sub_800944C`".
+- **`sub_80096C0`** (`src/graphics/actor_part11.c`) - `sub_8008AD8`'s
+  twin: byte-identical collision-hit resolution logic, operating in
+  this spatial-hash-grid cluster instead of the plain array manager.
+  Parked on the same `boxH` stack-layout gap as `sub_8008AD8`/
+  `sub_8008D80`/`sub_80099F0` - see `docs/matching.md`, "Parked, not
+  matched: `sub_80096C0`".
 - **`sub_8009914`** (`src/graphics/actor_part11.c`) - resets a pool
   manager to empty: tears down every active object, then rebuilds the
   grid and free list from scratch. The teardown loop is confirmed

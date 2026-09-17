@@ -1038,6 +1038,10 @@ _080096AE:
 	add sp, #0xc
 	bx r3
 
+@ sub_80096C0 is reconstructed (semantics fully understood, but not
+@ yet byte-matching) as C in src/graphics/actor_part11.c, guarded by
+@ #if NON_MATCHING - see docs/matching.md for the exact remaining gap.
+.if NON_MATCHING == 0
 	thumb_func_start sub_80096C0
 sub_80096C0: @ 0x080096C0
 	sub sp, #0xc
@@ -1245,6 +1249,7 @@ _0800985A:
 	bx r3
 	.align 2, 0
 _08009864: .4byte gUnknown_030012D8
+.endif
 
 	thumb_func_start sub_8009868
 sub_8009868: @ 0x08009868
