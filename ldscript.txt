@@ -117,6 +117,12 @@ SECTIONS
         build/crashbandicootxs/asm/code_3_2_17_22ea8.o(.text);
         build/crashbandicootxs/src/system/game_loop2.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_231cc.o(.text);
+        build/crashbandicootxs/src/system/game_loop3.o(.text);
+        build/crashbandicootxs/asm/code_3_2_17_24f24.o(.text);
+        build/crashbandicootxs/src/system/game_loop4.o(.text);
+        build/crashbandicootxs/asm/code_3_2_17_25460.o(.text);
+        build/crashbandicootxs/src/system/game_loop5.o(.text);
+        build/crashbandicootxs/asm/code_3_2_17_255d4.o(.text);
         build/crashbandicootxs/src/system/main_loop.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_26f54.o(.text);
         build/crashbandicootxs/src/graphics/hud_icon_slot.o(.text);
