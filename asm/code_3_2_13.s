@@ -1336,6 +1336,10 @@ _08009906:
 	pop {r0}
 	bx r0
 
+@ sub_8009914 is reconstructed (semantics fully understood, but not
+@ yet byte-matching) as C in src/graphics/actor_part11.c, guarded by
+@ #if NON_MATCHING - see docs/matching.md for the exact remaining gap.
+.if NON_MATCHING == 0
 	thumb_func_start sub_8009914
 sub_8009914: @ 0x08009914
 	push {r4, r5, r6, r7, lr}
@@ -1453,6 +1457,7 @@ _080099D8:
 	pop {r4, r5, r6, r7}
 	pop {r0}
 	bx r0
+.endif
 	.align 2, 0
 
 

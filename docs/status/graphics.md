@@ -269,6 +269,12 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   out of a 255-iteration loop, where the ROM recomputes it fresh every
   non-empty bucket) - see `docs/matching.md`, "Parked, not matched:
   `sub_8009150`".
+- **`sub_8009914`** (`src/graphics/actor_part11.c`) - resets a pool
+  manager to empty: tears down every active object, then rebuilds the
+  grid and free list from scratch. The teardown loop is confirmed
+  correct; the rebuild loop is a byte-for-byte copy of `sub_8008F20`'s
+  own tail and hits the identical many-register allocation gap - see
+  `docs/matching.md`, "Parked, not matched: `sub_8009914`".
 - **`sub_80099F0`** (`src/graphics/actor_part12.c`) - `sub_8008D80`'s
   twin: byte-identical in shape (same collision-hit-resolve logic,
   same "dead read" trampoline call), called from elsewhere in this

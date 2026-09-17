@@ -3571,6 +3571,34 @@ is found. No portable C construct tried (an inline-asm memory clobber
 included) discourages this specific loop-invariant hoist. Parked on
 this single 2-byte gap.
 
+`sub_80091D4` through `sub_8009868` (~5 functions, right after the
+parked `sub_8009150`) remain a raw span - complex list-management/
+probe functions calling still-unexamined helpers (`sub_800D040`,
+`sub_80109A4`) whose higher-level purpose isn't recoverable without
+more context. Left raw rather than guess.
+
+**Parked, not matched: `sub_8009914`** (ROM `0x08009914`, right after
+the raw `sub_80091D4`-`sub_8009868` span, `src/graphics/actor_part11.c`):
+resets a pool manager to empty. First tears down every active object
+in `slotArray[0..activeCount)` - firing each one's `table+0x50/0x54`
+trampoline via `sub_803AD80` with constant arg `3` if non-`NULL`, then
+clearing the slot - and resets `activeCount` to 0. Then rebuilds both
+the grid (`gridHead`/`gridTail` zeroed) and the free list from scratch
+over `nodeArray` - the exact same free-list-build loop `sub_8008F20`
+performs during initialization, reproduced here byte-for-byte in the
+ROM's own compiled output.
+
+The active-object teardown loop (the first half) is confirmed correct
+and matches on its own; the free-list-rebuild loop (the second half)
+being a literal copy of `sub_8008F20`'s own tail means it hits the
+exact same many-register allocation gap documented there - the ROM
+keeps three persistent high registers (`sb`/`sl`/`r8`) alive across
+the whole rebuild loop (even applying the same early-`field810`/
+`field814`-computation restructuring that got `sub_8008F20`'s own
+reconstruction as close as it got), while this reconstruction's most
+faithful attempt still only needs two. Parked for the same reason as
+`sub_8008F20`.
+
 ## Second tractable pocket: `actor_part12.c`
 
 Right after that raw span, `sub_80099F0` through `sub_8009B9C` turned

@@ -6,6 +6,7 @@ extern void sub_803A94C(void *src, void *dst, s32 control);
 extern void sub_8026EB4(void *ptr);
 extern void sub_8026ED0(void *manager);
 extern void *sub_8026EC0(u32 size);
+extern s32 sub_803AD80(void *arg0, void *arg1, void *fn);
 
 /* The "filter into a second array" manager struct also used by
  * `sub_8008C80`/`sub_8008CEC`/`sub_8008D30` in `actor_part10.c` -
@@ -408,6 +409,103 @@ void sub_8009150(struct pool_manager *manager, void *objArg)
                 }
             }
         }
+    }
+}
+#endif /* NON_MATCHING */
+
+#if NON_MATCHING
+/* Resets a pool manager to empty: tears down every active object
+ * (`slotArray[0..activeCount)`, firing each one's `table+0x50/0x54`
+ * trampoline via `sub_803AD80` with constant arg `3` if non-`NULL`,
+ * then clearing the slot), resets `activeCount` to 0, and rebuilds
+ * both the grid (`gridHead`/`gridTail` zeroed) and the free list from
+ * scratch over `nodeArray` - the exact same free-list-build loop
+ * `sub_8008F20` performs during initialization.
+ *
+ * NOT YET BYTE-MATCHING: the active-object teardown loop (the first
+ * half) is confirmed correct and matches in isolation, but the
+ * free-list-rebuild loop (the second half) is a byte-for-byte copy of
+ * `sub_8008F20`'s own tail and hits the exact same many-register
+ * allocation gap documented there - the ROM keeps three persistent
+ * high registers (`sb`/`sl`/`r8`) alive across the whole loop, while
+ * this reconstruction's most faithful attempt still only needs two.
+ * Parked for the same reason as `sub_8008F20` - see docs/matching.md,
+ * "Parked, not matched: `sub_8009914`". */
+void sub_8009914(struct pool_manager *manager)
+{
+    s32 i;
+
+    for (i = 0; i < manager->activeCount; i++) {
+        struct actor *part = manager->slotArray[i];
+
+        if (part != 0) {
+            u8 *rec = (u8 *)part->table + 0x50;
+            s16 offset = *(s16 *)rec;
+            void *addr = (u8 *)part + offset;
+            void *fn = *(void **)(rec + 4);
+
+            sub_803AD80(addr, (void *)3, fn);
+        }
+        manager->slotArray[i] = 0;
+    }
+
+    manager->activeCount = 0;
+
+    {
+        s32 capacity = manager->capacity;
+        void **field810 = &manager->freeListArray;
+        void **field814 = &manager->freeListHead;
+        void **gridHead = manager->gridHead;
+        void **gridTail = manager->gridTail;
+        s32 m = 0xFF;
+        void *zero = 0;
+
+        do {
+            *gridHead = zero;
+            gridHead++;
+            *gridTail = zero;
+            gridTail++;
+            m--;
+        } while (m >= 0);
+
+        {
+            s32 i2 = 0;
+            if (i2 < capacity) {
+                s32 nextOff = 8;
+                s32 nodeOff = 0;
+                do {
+                    void *freeListArr = *field810;
+                    s32 idxOff = i2 * 8;
+                    void *entry = (u8 *)freeListArr + idxOff;
+                    void *node = (u8 *)manager->nodeArray + nodeOff;
+
+                    *(void **)entry = node;
+
+                    node = (u8 *)manager->nodeArray + nodeOff;
+                    *(s32 *)node = 0;
+                    *(s32 *)((u8 *)node + 4) = 0;
+                    *(s32 *)((u8 *)node + 0xc) = 0;
+                    *((u8 *)node + 0x10) = 0;
+
+                    node = (u8 *)manager->nodeArray + nodeOff;
+                    freeListArr = *field810;
+                    entry = (u8 *)freeListArr + idxOff;
+                    *(void **)((u8 *)node + 8) = entry;
+
+                    if (i2 == manager->capacity - 1) {
+                        *(s32 *)((u8 *)entry + 4) = 0;
+                    } else {
+                        *(void **)((u8 *)entry + 4) = (u8 *)freeListArr + nextOff;
+                    }
+
+                    nextOff += 8;
+                    nodeOff += 0x14;
+                    i2++;
+                } while (i2 < manager->capacity);
+            }
+        }
+
+        *field814 = *field810;
     }
 }
 #endif /* NON_MATCHING */
