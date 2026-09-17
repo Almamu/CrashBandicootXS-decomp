@@ -361,12 +361,17 @@ obligation to match every function below before opening a PR, or to do
 it alone - multiple people can each take a few functions from this list
 (say which ones in a comment, so nobody duplicates work), split it
 across several PRs, or hand off partial progress. Reference this issue
-from your PR without `Closes` unless you got through everything below;
-otherwise just say what's left in a comment.
+from your PR with `Closes` **only if every function below ends up
+byte-exact matched** - a parked or left-raw function, however well
+understood or documented, keeps this issue open; otherwise just say
+what's left (and why) in a comment.
 
 **Claiming:** check off a function's box once it's matched/parked (or
 say in a comment which ones you're taking, if you don't have write
 access to edit the checklist) - see [CONTRIBUTING.md]({REPO_URL}/blob/main/CONTRIBUTING.md#claiming-work).
+A checked box means the function is handled (matched or parked), not
+that this issue is ready to close - see "Opening the PR" in
+CONTRIBUTING.md for the closing rule.
 
 **Category:** `{cat or "uncategorized"}` - {blurb}
 

@@ -24,8 +24,9 @@ the real detail.
   alongside every `decomp-chunk` issue, linked as blocked-by it (a real
   GitHub issue-dependency relationship, shown in that issue's sidebar),
   and stays that way until every function in its paired chunk is
-  matched or parked. Don't start a blocked one early - the code it
-  targets doesn't exist yet. Once its blocking chunk closes, remove the
+  byte-exact matched (parking a function doesn't count - see "Opening
+  the PR" below). Don't start a blocked one early - the code it targets
+  doesn't exist yet. Once its blocking chunk closes, remove the
   `blocked` label (or ask a maintainer to) and it's fair game.
 - **A `decomp-chunk` issue is just a scoping convenience, not a
   contract.** The grouping exists to make the ROM's remaining work
@@ -36,8 +37,9 @@ the real detail.
   duplicate it), split it across several smaller PRs, or hand off
   partial progress to someone else via a comment. Open a PR for however
   much you've matched/parked/left-with-a-reason, reference the issue
-  without `Closes` unless you finished the whole thing, and leave a
-  comment saying what's left for the next person.
+  without `Closes` unless **every** function is byte-exact matched (see
+  "Opening the PR" below - parked or left-raw functions don't count),
+  and leave a comment saying what's left for the next person.
 - Category labels (`game_loop`, `actor`, `graphics`, `overlay_ui`,
   `graphics_loading`, `audio`, `hud`, `system`, `util`) tell you roughly
   what part of the game it's in - see [docs/rom_map.md](docs/rom_map.md)
@@ -123,10 +125,13 @@ what you matched/parked/left, and commit.
 
 ## Opening the PR
 
-Reference the issue (`Closes #N`) only if you got through every function
-in the chunk (matched, parked, or explicitly left with a stated reason).
-If you only got partway through a large chunk, leave the issue open and
-say what's left in the PR description instead.
+Reference the issue (`Closes #N`) only if **every function in the chunk
+is byte-exact matched** - parking a function or leaving it raw (even
+with a well-documented reason) doesn't count toward closing, it just
+means that function's box gets checked off as handled. If anything in
+the chunk is parked, left raw, or otherwise not fully matched, leave the
+issue open and say what's left (and why) in the PR description instead
+- someone else may be able to close the remaining gap later.
 
 ## Cleanup tasks
 

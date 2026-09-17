@@ -66,8 +66,10 @@ convention. Before starting:
   relevant `- [ ]` to `- [x]`, or ask the user to do it if you don't have
   write access). Leave unchecked boxes for whoever picks this up next.
 - There's no obligation to finish every box before opening a PR - open
-  one for whatever you completed, and only reference `Closes #N` if you
-  got through everything in the list.
+  one for whatever you completed, and only reference `Closes #N` if
+  **every function in the list is byte-exact matched** - parking a
+  function still checks its box (it's handled), but does not count
+  toward closing the issue.
 
 Skip this step entirely if you were asked to "just work on function X-Y"
 directly without an issue existing yet.
@@ -157,10 +159,13 @@ gh pr create --title "Match <address range or short description>" --body "..."
 The PR body should say plainly: which functions matched, which got
 parked (with the one-line reason each), which were left untouched (with
 why), and confirm the full clean `make compare` passed. Reference the
-issue (`Closes #N`) only if **every** function in the chunk reached one
-of matched/parked/left-untouched-with-reason - if you only got partway
-through a big chunk, say so instead and leave the issue open (or comment
-with progress) rather than closing it early.
+issue (`Closes #N`) **only if every function in the chunk is byte-exact
+matched** - a parked function (even fully understood, even with a
+one-line reason) or a left-untouched function both mean the issue stays
+open. Don't close an issue with any parked or raw functions remaining,
+no matter how well-documented the reason is - say so instead and leave
+the issue open (or comment with progress) so the gap is visible to
+whoever picks it up next.
 
 ## Picking up a `cleanup` issue instead
 
