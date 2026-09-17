@@ -4468,6 +4468,69 @@ NOP padding (`0xc046`, "mov r8,r8") mismatched the ROM's zero-padding
 before the next raw function - the same alignment fix already
 established for other files' trailing functions.
 
+## `boot_util.c`/`intro_screen.c`: the boot-adjacent BIOS wrappers and the intro's affine BG setup
+
+Four functions right after `asm/crt0.s`'s permanent hand-written boot
+stub, picked up from issue #2 as an end-to-end test of the chunk-issue
+contribution workflow:
+
+- **`sub_8000140`** (`src/system/boot_util.c`): a BIOS `Div` (SWI 6)
+  wrapper exposing both the quotient (return value) and the remainder
+  (via an out-parameter). Written with inline asm rather than a plain
+  `register`-pinned call, because the ROM saves the remainder-out
+  pointer across the SWI with a bare `push {r2}`/`pop {r2}` pair -
+  marking `r2` clobbered on a plain call makes the compiler spill it
+  through a callee-saved register (`r4`) with a normal push/pop-list
+  prologue instead, a real but differently-shaped save. Embedding the
+  `push`/`pop` literally inside the inline-asm text (rather than as a
+  clobber list) reproduced the ROM byte-for-byte.
+- **`sub_800014C`**: the already-matched `sub_803A94C` (BIOS `CpuSet`
+  wrapper) with swapped src/dst argument order and `byteCount`
+  converted to `CpuSet`'s 32-bit-word count field (masked to the low 23
+  bits via `<<9`/`>>11`, then the 32-bit-transfer flag `0x04000000`
+  set).
+- **`nullsub_9`**: empty function; needed the usual trailing
+  `asm(".align 2, 0");` for the ROM's zero-fill padding before the next
+  function.
+- **`sub_80007EC`** (`src/graphics/intro_screen.c` - a separate file
+  from `boot_util.c` despite being boot-adjacent, since `main.c`/
+  `memory.c`/`irq.c` sit between them in real ROM order and file order
+  has to follow ROM address order, not "logical" grouping). Sets up BG2
+  for an affine full-screen image (mode 1), computing a scale-only
+  affine matrix from `sub_800090C(0x100)` called twice plus the
+  matching `BG2X`/`BG2Y` centering reference point, then DMAs a palette
+  and loads tile/tilemap data via the already-matched
+  `LoadTaggedAsset`. Three separate statement-ordering gotchas were
+  needed to match the ROM's exact instruction order, found by iterating
+  against the linked binary's disassembly (an isolated per-function
+  compile kept "matching" while the full build still didn't, since all
+  three are about *when* an expression's low-level steps get emitted,
+  not what they compute):
+  - The second `sub_800090C` result's left-shift-by-16 (the first step
+    of splitting it into unsigned/signed halves) has to be its own
+    statement immediately after the call, before the first result's
+    sign-extension/offset math runs - deriving the split values
+    straight from the raw call result instead defers that shift until
+    first use and puts it too late.
+  - The Y reference point's `0x4FB0` base has to be assigned as its own
+    statement right after the X reference point is fully computed,
+    before the second call's result gets split - matching the ROM's
+    early load of that constant - rather than folded into one final
+    `0x4FB0 - scaleD * 80` expression evaluated after the split.
+  - `BG2X_H`/`BG2Y_H` have to be computed inline in their own register
+    assignment (`REG_BG2X_H = (xLow & 0x0FFF0000) >> 16;`) rather than
+    through an intermediate variable - storing through a variable first
+    defers the pointer-advance between consecutive register writes
+    until after the mask/shift is computed, whereas the ROM advances
+    the pointer immediately after each store.
+
+All four verified via a full clean `make compare`. `start` (the boot
+stub itself) is permanent hand-written asm per standard GBA-decomp
+convention and isn't tracked as a function to match. `asm/code_3_1.s`
+(which held only `sub_80007EC`) was deleted once matched, and
+`ldscript.txt`/`tools/report_units.py` updated for the new
+`boot_util.o`/`intro_screen.o` split.
+
 ## `0x080016EC`-`0x08001C80`: the `AudioContext` wrapper layer (first audio matches)
 
 Matched 23 of the 25 functions in this chunk (issue #2 in the
