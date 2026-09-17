@@ -4957,3 +4957,157 @@ NON_MATCHING == 0`), `game_loop.o`, `code_3_2_17_22d50.s` (raw
 `sub_80231CC` on) - see `ldscript.txt` and `tools/report_units.py`'s
 `game_loop` category, both updated to match. Verified via a full clean
 `make compare` (`La suma coincide`) and `make NON_MATCHING=1 report`.
+
+## `0x08026EEC`-`0x08028568` (GitHub issue #45, `hud` chunk): 14 of 24 matched
+
+Picked up the 25-function `hud` chunk generated for issue #45
+(`0x08026EEC`-`0x08028568`); `sub_8027838` had already landed on `main`
+independently (PR #1, see its own entry above) so the real remaining
+count was 24. Matched 14, left 10 untouched in the raw `.s` files (with
+reasons below) rather than force low-confidence reconstructions of the
+chunk's biggest, least-understood cluster in one pass.
+
+**Matched, new `src/system/main_loop.c`:**
+
+- **`MainLoop`** (ROM `0x08026EEC`): the game's actual top-level loop,
+  called once from `AgbMain` (`src/system/main.c`). Sets up the central
+  per-level state object (`gUnknown_030012C0`, via `sub_8023738`/
+  `sub_802369C`/`sub_8023674`/`sub_8023658` - none of those four are
+  understood beyond "state setup", left as opaque `extern` calls), the
+  on-screen counter widget (`sub_8037620`/`sub_80371B4`/`sub_80375EC`,
+  already-matched in `src/audio/counter_selector*.c`), then loops
+  `UpdateGameFrame` forever, freeing scratch memory (`MEM_HEAP_BOTH`)
+  before and after each frame. Never actually returns - the `s32`
+  return type only exists to satisfy `AgbMain`'s
+  `if (MainLoop() != 0)` guard as a preexisting `extern` declaration,
+  which this infinite loop never reaches.
+- **`sub_8026F38`**: a plain two-level table lookup,
+  `gUnknown_03000850[gUnknown_03000868][index]` - `gUnknown_03000850`
+  is an array of per-counter-widget-mode tables (`gUnknown_03000868` is
+  the mode `MainLoop` just set from `sub_80371B4`'s return); the
+  tables' own contents aren't characterized.
+
+Both compiled byte-identical to the ROM on the first try - no register
+pins or reordering needed.
+
+**Matched, new `src/graphics/hud_icon_slot.c`** (non-adjacent to
+`hud_counter.o` - `sub_8027138`-`sub_802763C` sit raw between them):
+
+- **`sub_8027088`**/**`sub_80270C0`**: reset/construct a fixed 3-entry
+  particle/effect queue object (new local `struct hud_fx_queue`,
+  0x48 bytes - `active` flag, two touched 3-element parallel arrays at
+  `+0x10`/`+0x1c`, `count` at `+0x40`) - the consumer (`sub_8026F54`)
+  and producer (`sub_8027018`) that actually use the other two parallel
+  arrays (`+0x28`/`+0x34`) and the `active`/`count` fields are both
+  left raw (see "Left untouched" below), so the struct only names the
+  fields this pair touches. `sub_80270C0` is the constructor (called
+  right after `sub_8026EDC(0x48)`, returns `self`); `sub_8027088` is a
+  mid-life reset (called right before `sub_8027018` queues a fresh
+  entry, return value unused). Confirmed same object via call-site
+  cross-reference in the still-raw `asm/code_3_2_17_231cc.s` (both
+  `sub_8027088` and `sub_8027018` are called back-to-back on
+  `gUnknown_030012C8`, and `sub_80270C0` constructs that exact global
+  right after its `0x48`-byte allocation).
+- **`sub_80270A8`**: teardown counterpart to `sub_80270C0` - frees
+  `self` via `sub_8026ED0` when bit 0 of `flags` is set.
+- **`sub_80270E0`**: draws one HUD digit/icon slot's current frame
+  (`sub_8008890`) unless it's hidden (`frame_index == -1`, the
+  single-digit case `sub_8027838` sets on the second digit), offsetting
+  Y by the shared HUD layout value (`gUnknown_0300086C`). Already
+  referenced as an `extern` from `hud_counter.c`; this is its real
+  definition.
+- **`sub_802710C`** (UNUSED - no caller anywhere in the ROM, checked
+  `asm/*.s`, `expected/*.s`, every `src/*.c` file) and **`sub_8027120`**:
+  two `struct actor`-table-swap constructors for one HUD digit/icon
+  slot, confirming `struct hud_digit_part`'s first 0x18 bytes plus
+  `table` at `+0x18` are byte-identical to `struct actor`
+  (`include/actor.h`) - both call the same generic `sub_80088F0`/
+  `sub_8008904` table-swap helpers already matched for the actor/part
+  system (`actor_part7.c`), just with this widget family's own
+  `gStaticData_087E4CB4` table. `sub_8027120` is called 35 times in a
+  loop by the still-raw `sub_8027138` (stride `0x40` = `sizeof(struct
+  hud_digit_part)`, confirming the struct size independently).
+
+Moved `struct hud_anim_record`/`hud_anim_data`/`hud_digit_part`/
+`hud_counter` out of `hud_counter.c` into a new shared
+`include/hud.h` so this file could reuse them (per the project's
+"check whether a struct for the same object already exists elsewhere
+first" convention) - `hud_digit_part.table` is the one new field this
+pass added, splitting it out of what was previously an opaque
+`unknown_00[0x20]` blob.
+
+**Matched, new `src/graphics/hud_blink.c`** (`sub_8028400`-
+`sub_8028520`, contiguous):
+
+A 3-slot icon "blink" animation timer on the `gUnknown_03001318`
+object (already referenced as `void *` from `src/system/game_loop.c`/
+`game_loop2.c` - kept the same untyped convention here rather than
+naming a struct, since the object extends past this file's own fields,
+to at least `+0x28` per `sub_8028568`). Each slot is a `{state, timer}`
+`s32` pair: state 0 idle, 1 counting up to a threshold then -> 2, 2
+counting down 0x14 frames then -> 3, 3 counting down its own timer
+then back to 0.
+
+- **`sub_8028400`**: per-frame tick, gated on the central state
+  object's `+0x8c` flag - force-advances slots 0 and 1 out of a stuck
+  1/2 state, then runs the generic advance (`sub_8028520`) on all three
+  slots unconditionally.
+- **`sub_8028474`**/**`sub_80284A4`**/**`sub_80284D4`**: per-slot
+  triggers (slots 2/0/1 respectively) - start a fresh blink from idle
+  or finished, or refresh the timer if already in the "on" phase; only
+  runs while `+0x8c` is clear (opposite gating from the tick above).
+- **`sub_8028504`**: fires all three triggers at once.
+- **`sub_8028520`**: the generic single-slot advance shared by the
+  tick function above.
+
+Two register/codegen gaps hit while matching this file, both explained
+in the source's own comments (`docs/workflow.md` step 7 convention):
+
+1. `sub_8028400`'s four field-address expressions (`state`+`0`/`4`/`8`/
+   `0xc`) must stay inline at each use site rather than cached into
+   local pointer variables - caching them pulls four extra values into
+   callee-saved registers (`r5`-`r8`, needing an extra push/pop pair)
+   that the ROM's version doesn't have.
+2. `sub_8028520`'s `switch` needs an explicit, never-taken `case 0:`
+   arm to compile as the ROM's plain ascending compare chain (`1`, then
+   an early-out for `<= 1`, then `2`, then `3`) - without it, this
+   compiler lowers a 3-case (`1`/`2`/`3`) switch as a balanced
+   comparison tree pivoting on the middle value instead, changing both
+   the branch order and the case-body layout.
+
+**Left untouched (raw `.s`, no C attempted):**
+
+- **`sub_8026F54`/`sub_8027018`** (new `asm/code_3_2_17_26f54.s`) - the
+  fixed-3-entry queue's consumer and producer (see
+  `struct hud_fx_queue` above); `docs/rom_map.md`'s "fx" investigation
+  read these in detail (an angle field via `sub_803ADB4`, suggesting a
+  particle/projectile trajectory queue) but didn't reach byte-precision
+  confidence.
+- **`sub_8027138`/`sub_802732C`** (new `asm/code_3_2_17_27138.s`, first
+  half) - a 34/35-slot OAM array setup pair (calls `sub_8027120` in a
+  loop, per above), heavy on interleaved `gStaticData_08174BE0`/
+  `gStaticData_08174C6C` table indexing not chased down this pass.
+- **`sub_80274EC`/`sub_802757C`/`sub_802763C`** (same file, second
+  half) - the HUD stat-widget dispatcher and its icon-indicator/digit-
+  counter callees documented in `docs/rom_map.md`'s "full HUD
+  stat-widget family" section; genuinely understood at the semantic
+  level already, but matching them to the same register-pin precision
+  `sub_8027838` needed (see its own PR #1 entry above) is a bigger job
+  than fit in this pass.
+- **`sub_8027940`/`sub_8027D5C`/`sub_8027E88`** (`asm/code_3_2_20.s`,
+  now truncated to just these three) - the rest of that same digit-
+  counter family (score counter, a third cached counter, and the
+  percentage counter) - same reason as above.
+
+**File structure:** `asm/code_3_2_17_231cc.s` is now truncated right
+before `MainLoop`; followed by `main_loop.o`, the new raw
+`code_3_2_17_26f54.s` (`sub_8026F54`/`sub_8027018`), `hud_icon_slot.o`,
+the new raw `code_3_2_17_27138.s` (`sub_8027138` through
+`sub_802763C` - the original file's unchanged remainder), then the
+existing `hud_counter.o`. `asm/code_3_2_20.s` is now truncated to just
+`sub_8027940`/`sub_8027D5C`/`sub_8027E88`; followed by `hud_blink.o`,
+then the new raw `code_3_2_20_28568.s` (`sub_8028568` onward - the
+original file's unchanged remainder). See `ldscript.txt` and
+`tools/report_units.py`'s `hud` category entries, both updated to
+match. Verified via a full clean `make compare` (`La suma coincide`)
+and `make NON_MATCHING=1 report`.
