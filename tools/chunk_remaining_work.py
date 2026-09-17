@@ -250,6 +250,14 @@ from the current state of `asm/*.s`. See [docs/workflow.md]({REPO_URL}/blob/main
 for the required per-function matching process before starting - this
 issue is scope, not instructions.
 
+**This chunk is a scoping convenience, not a contract.** There's no
+obligation to match every function below before opening a PR, or to do
+it alone - multiple people can each take a few functions from this list
+(say which ones in a comment, so nobody duplicates work), split it
+across several PRs, or hand off partial progress. Reference this issue
+from your PR without `Closes` unless you got through everything below;
+otherwise just say what's left in a comment.
+
 **Category:** `{cat or "uncategorized"}` - {blurb}
 
 **Range:** `0x{start:08X}`-`0x{end:08X}` (~{size_kb:.1f} KB)

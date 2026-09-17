@@ -12,6 +12,17 @@ the real detail.
   label (a group of ~10-25 still-unmatched functions in one address
   range) or the `parked-function` label (one specific function whose
   semantics are already understood, just not yet byte-exact).
+- **A `decomp-chunk` issue is just a scoping convenience, not a
+  contract.** The grouping exists to make the ROM's remaining work
+  easier to browse and claim - there's no obligation to match every
+  function in one before opening a PR, and no obligation to do it alone.
+  Multiple people can work different functions from the same issue in
+  parallel (say which ones you're taking, in a comment, so others don't
+  duplicate it), split it across several smaller PRs, or hand off
+  partial progress to someone else via a comment. Open a PR for however
+  much you've matched/parked/left-with-a-reason, reference the issue
+  without `Closes` unless you finished the whole thing, and leave a
+  comment saying what's left for the next person.
 - Category labels (`game_loop`, `actor`, `graphics`, `overlay_ui`,
   `graphics_loading`, `audio`, `hud`, `system`, `util`) tell you roughly
   what part of the game it's in - see [docs/rom_map.md](docs/rom_map.md)
