@@ -169,6 +169,12 @@ per-actor animation frames, text layout.
   required a split of what's now `asm/code_3_2_17.s`/`asm/code_3_2_20.s`
   right around it): `sub_8027838`
 
+- `src/graphics/intro_screen.c` (new file, replacing `asm/code_3_1.s` -
+  boot-adjacent but not part of `src/system/boot_util.c` since
+  `main.c`/`memory.c`/`irq.c` sit between them in ROM order):
+  `sub_80007EC` - BG2 affine setup for a full-screen intro image; see
+  `docs/matching.md` for the statement-ordering gotchas.
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 

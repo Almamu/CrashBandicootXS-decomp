@@ -66,7 +66,7 @@ UNITS = [
     (0x08000170, "src/system/main.o", "system"),
     (0x080001CC, "src/system/memory.o", "system"),
     (0x08000544, "src/system/irq.o", "system"),
-    (0x080007EC, None, None),  # code_3_1.o (sub_80007EC), still raw
+    (0x080007EC, "src/graphics/intro_screen.o", "graphics"),
     (0x080008B4, "src/util/math_util.o", "util"),
     (0x0800094C, "src/util/string_util.o", "util"),
     (0x08000AA8, "src/util/printf_util.o", "util"),  # incl. parked sub_8000CBC
