@@ -22,6 +22,17 @@ system from "core" system startup/init code.
   `sub_80231C4` (GitHub issue #34, `UpdateGameFrame`-`MainLoop` cluster -
   a `self+0x80`/`0x84`/`0x88`/`0xac`/`0xc0`/`+2`-flags accessor family
   plus the two frame-counter/limit tick functions)
+- `src/system/game_loop3.c` (GitHub issue #40): `sub_8024E68`,
+  `sub_8024E90`, `sub_8024EB4` (a viewport/parallax-scroll-layer object)
+  and `sub_8024F04`/`sub_8024F0C`/`sub_8024F10`/`sub_8024F14`/
+  `sub_8024F18`/`sub_8024F1C`/`sub_8024F20` (its field accessors)
+- `src/system/game_loop4.c` (GitHub issue #40): `sub_8025444`,
+  `nullsub_4`
+- `src/system/game_loop5.c` (GitHub issue #40): `sub_80254C0`,
+  `sub_80254F8`, `sub_8025554`, `sub_8025588`, `sub_80255A8`,
+  `sub_80255C4` - the terrain tile-record decode cache's constructor,
+  a raw-cell-lookup variant, a floor-div-by-32 bitmap set/clear pair,
+  and a `CpuSet`-based palette-bank zero-fill wrapper pair
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -37,8 +48,15 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   issue #34) - record 47's periodic-trigger setter/decrementer; real
   bytes in `asm/code_3_2_17_22ea8.s`. See `docs/matching.md`'s issue
   #34 entry for the exact register-allocation gaps.
+- **`sub_8024F24`/`sub_80250BC`/`sub_8025130`/`sub_8025228`/
+  `sub_8025334`** (`src/system/game_loop3.c`, GitHub issue #40) - the
+  16-slot terrain tile-record decode/LRU cache's lookup dispatcher, its
+  four `(x, y)`-lookup consumer variants, and the RLE/delta
+  token-stream decoder; real bytes in `asm/code_3_2_17_24f24.s`. See
+  [docs/matching/issue-40-terrain-tile-cache.md](../matching/issue-40-terrain-tile-cache.md)
+  for the exact register-allocation gaps.
 
-## Still raw, category-mapped (GitHub issue #34)
+## Still raw, category-mapped (GitHub issue #34/#40)
 
 - **`UpdateGameFrame`** (`asm/code_3_2_17_225a0.s`, ROM `0x080225A0`) -
   the main per-frame game-loop driver, a ~730-instruction jump-table
@@ -47,3 +65,9 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 - **`sub_8022D50`** (`asm/code_3_2_17_22d50.s`, ROM `0x08022D50`) - a
   level-start/reset routine with several still-uncharacterized callees
   - see `docs/matching.md`.
+- **`sub_80255D4`** (`asm/code_3_2_17_255d4.s`, ROM `0x080255D4`,
+  GitHub issue #40) - a per-frame visible-object/window list processor
+  (DMA-writes to OBJ palette RAM and a BG window register, then walks a
+  small count-prefixed record list); several callees not characterized
+  precisely enough yet - see
+  [docs/matching/issue-40-terrain-tile-cache.md](../matching/issue-40-terrain-tile-cache.md).
