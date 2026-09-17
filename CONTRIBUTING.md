@@ -10,8 +10,11 @@ the real detail.
 
 - Look through the [issues list](../../issues) for the `decomp-chunk`
   label (a group of ~10-25 still-unmatched functions in one address
-  range) or the `parked-function` label (one specific function whose
-  semantics are already understood, just not yet byte-exact).
+  range), the `parked-function` label (one specific function whose
+  semantics are already understood, just not yet byte-exact), or the
+  `cleanup` label (already-matched code that still needs docs/workflow.md
+  step 7's struct/register-macro cleanup applied - see "Cleanup tasks"
+  below).
 - **A `decomp-chunk` issue is just a scoping convenience, not a
   contract.** The grouping exists to make the ROM's remaining work
   easier to browse and claim - there's no obligation to match every
@@ -35,11 +38,30 @@ the real detail.
   This scans `asm/*.s` fresh, so it reflects whatever's actually still
   raw right now - open issues can go stale as other PRs land.
 
-## Claiming an issue
+## Claiming work
 
-Comment on the issue to say you're starting it, so two people (or two
-agents) don't duplicate work. If you stop partway through, say so in a
-comment rather than leaving it silently claimed.
+Each `decomp-chunk` issue lists its functions as a GitHub task list
+(`- [ ] sub_XXXXXXXX`), specifically so claiming can happen at the
+function level, not just the whole-issue level:
+
+- **Claiming the whole issue:** comment saying you're starting it.
+- **Claiming a subset:** comment naming which functions you're taking
+  (e.g. "taking `sub_8001640`-`sub_8001688`"), and check their boxes in
+  the issue body as you go (anyone with write access can edit a task
+  list; if you don't have that, ask in a comment and a maintainer will
+  check them off, or just leave a comment - the checkboxes are a
+  convenience, not the source of truth). Leave the rest unchecked for
+  someone else.
+- **`parked-function` issues** are single-function, so a comment saying
+  you're starting it is enough - no task list needed.
+- If you stop partway through, say so in a comment and leave whatever
+  you checked off checked - don't uncheck progress that's real just
+  because you're stepping away from the rest.
+- Two people checking the same box around the same time is a minor,
+  self-correcting race, not a problem to design around - whoever's PR
+  lands first wins, and the second person's `make compare` catches it
+  immediately (the function will already be gone from `asm/*.s`) so
+  they just drop that one and move to another box.
 
 ## Doing the work
 
@@ -93,6 +115,36 @@ Reference the issue (`Closes #N`) only if you got through every function
 in the chunk (matched, parked, or explicitly left with a stated reason).
 If you only got partway through a large chunk, leave the issue open and
 say what's left in the PR description instead.
+
+## Cleanup tasks
+
+Not all remaining work is about matching new functions - a lot of it is
+going back over **already-matched** code and applying
+[docs/workflow.md](docs/workflow.md) step 7's cleanup pass
+retroactively, for functions that were matched before that step was
+consistently applied (or where it was reasonably deferred at the time).
+Look for the `cleanup` label, or generate a fresh list yourself:
+
+```
+python3 tools/chunk_remaining_work.py --cleanup-scan --issues-dir /tmp/issues
+```
+
+This scans already-matched `src/**/*.c` files for raw pointer-arithmetic
+field access (`*(u32 *)((u8 *)base + 0x10)`-style casts) and raw
+hardware addresses that should be named structs/`REG_*` macros, and
+groups the results per file into issues the same way `decomp-chunk`
+ones work (claim, comment, PR - same conventions as above).
+
+**The important carve-out, straight from docs/workflow.md step 7:**
+don't touch a raw offset or an inline-asm/`register ... asm("rN")` pin
+just because it looks unclean - a lot of them are load-bearing, holding
+the exact ROM register allocation in place. Only replace one where you
+can actually demonstrate (by rebuilding) that the cleaner version still
+compiles to the identical bytes; if it doesn't, revert the change and
+leave a one-line comment explaining why it has to stay low-level,
+rather than force it through. **Every cleanup PR needs the same full
+clean `make compare` verification as a new match** - a cleanup that
+silently breaks a match is worse than not doing the cleanup at all.
 
 ## If you're an AI agent
 
