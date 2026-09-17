@@ -4398,3 +4398,39 @@ All 14 matched functions plus the 3 parked ones were verified via a
 full clean `make compare` after the five-way file split; `ldscript.txt`
 links them in real ROM order: `code_3_1_7.o`, `fade_screen_mode.o`,
 `code_3_1_8.o`, `fade_screen_mode2.o`, `code_3_1_9.o`.
+
+## `aabb_util.c` (`sub_8001640`-`sub_80016DC`)
+
+Right after the parked `sub_8001624`, two AABB overlap tests plus two
+tiny `mem_free`/`mem_alloc` wrappers:
+
+- **`sub_8001640`/`sub_8001688`**: axis-aligned box overlap tests on
+  a plain `{x, y, w, h}` rect (already named `struct aabb` elsewhere
+  in this codebase, re-declared locally per this project's per-file
+  convention). Both check `w > 0` for each box, then an X-axis overlap
+  test, then a Y-axis overlap test - `sub_8001640`'s X-axis test uses
+  `<=` (touching edges count as overlap) while `sub_8001688`'s uses
+  `<` (touching does not count); the Y-axis test is `<` in both.
+  `sub_8001688` is the variant already referenced by name as an
+  `extern` from `actor_part15.c`'s `sub_800B37C` and the pool/grid
+  collision functions in `actor_part11.c`. Both needed the Y-axis
+  result computed into a separate `u8 temp = 0;` local, only then
+  copied into the return-value variable (`result = temp;`), instead of
+  assigning `result = 1;` directly inside the innermost `if` - the ROM
+  has a genuine extra "temp, then copy" step there (a `movs r4,#0` /
+  `movs r4,#1` / `adds r6,r4,#0` sequence) that a direct assignment
+  compiles 4 bytes shorter, a real integration-only catch: the isolated
+  per-function compile "matched" by eye, but the full rebuild's map
+  showed a 4-byte address shift starting exactly at `sub_8001688`
+  until this was caught by direct byte-diffing against the ROM instead
+  of trusting a visual instruction-shape comparison.
+- **`sub_80016D0`/`sub_80016DC`**: trivial `mem_free`/`mem_alloc`
+  wrappers, the latter always requesting the `0x80000000` flag
+  (IWRAM-preferring allocation, per `mem_alloc`'s own established
+  `arg1` semantics in `src/system/memory.c`).
+
+Needed an explicit trailing `asm(".align 2, 0");` after `sub_80016DC`
+(the last function in the file) - without it, the assembler's default
+NOP padding (`0xc046`, "mov r8,r8") mismatched the ROM's zero-padding
+before the next raw function - the same alignment fix already
+established for other files' trailing functions.

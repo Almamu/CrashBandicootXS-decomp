@@ -158,6 +158,11 @@ per-actor animation frames, text layout.
   fade/screen-mode utility cluster documented in `docs/rom_map.md`,
   split around two parked functions - see `docs/matching.md`.
 
+- `src/graphics/aabb_util.c` (new file): `sub_8001640`, `sub_8001688`,
+  `sub_80016D0`, `sub_80016DC` - two AABB overlap tests (one already
+  referenced by name from `actor_part15.c`) plus `mem_free`/`mem_alloc`
+  wrappers.
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
