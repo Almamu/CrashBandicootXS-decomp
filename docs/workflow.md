@@ -112,6 +112,16 @@ incomplete pass and should be finished before moving on.
      new named constant for a value whose meaning isn't actually
      understood yet - an unexplained `0x2D` is more honest than a
      confidently-named constant that's really a guess.
+   - Reconsider naming the function now that it's fully understood
+     (revisiting step 1's naming check with the finished C in front of
+     you often surfaces a confident name that wasn't obvious before) -
+     see [docs/naming.md](./naming.md) for the convention and when
+     *not* to name it. This is **not a requirement for marking a
+     function matched or parked** - `sub_XXXXXXXX` is a perfectly
+     complete final state, not a placeholder that blocks progress, and
+     most of the ROM will stay that way for a long time. Only rename
+     when genuinely confident; a wrong or overly-specific name left in
+     is worse than an honest `sub_XXXXXXXX`.
    - **Rebuild and re-run `make compare` (and `make NON_MATCHING=1
      <rom-target>`, if parked) after each individual cleanup edit**, not
      just once at the end. A cleanup edit that's supposed to be a
