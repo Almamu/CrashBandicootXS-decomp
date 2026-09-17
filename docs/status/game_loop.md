@@ -55,9 +55,43 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   token-stream decoder; real bytes in `asm/code_3_2_17_24f24.s`. See
   [docs/matching/issue-40-terrain-tile-cache.md](../matching/issue-40-terrain-tile-cache.md)
   for the exact register-allocation gaps.
+- **`sub_800D040`** (`src/system/game_loop6.c`, GitHub issue #12) -
+  builds `self`'s and the player's AABB from the shared
+  `+0x20`-table-pointer/`+0x2d`-tag hitbox-record convention
+  (`sub_8007B00`/`sub_8007B98` in `actor_part.c`), dispatches to
+  `sub_800EEF0`/`sub_800E7A8` on overlap; real bytes in
+  `asm/code_3_2_17_d040.s`. See
+  [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md).
+- **`sub_800E494`/`sub_800E4E4`** (`src/system/game_loop7.c`, GitHub
+  issue #12) - bidirectional linked-list walkers (`sub_801070C`/
+  `sub_8010708`) clearing/setting each neighbor's `+0x58` flag; real
+  bytes in `asm/code_3_2_17_e494.s`. See
+  [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md).
 
-## Still raw, category-mapped (GitHub issue #34/#40)
+## Still raw, category-mapped (GitHub issue #12/#34/#40)
 
+- **`sub_0800D18C`/`sub_800E08C`** (`asm/code_3_2_17_d18c.s`, ROM
+  `0x0800D18C`-`0x0800E494`, GitHub issue #12) - the physics/collision
+  subsystem's largest, most tangled functions (docs/rom_map.md:
+  "Confirmed: a shared physics/collision subsystem, entered from
+  multiple different entity types" - `sub_0800D18C` alone is ~1960B, a
+  6-case jump-table collision-response commit that maintains a 5-slot
+  ring buffer inside `gUnknown_030012D8` and calls 27 other functions
+  in this same neighborhood). Not understood branch-by-branch with the
+  precision a byte-exact reconstruction needs yet - see
+  [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md).
+- **`sub_800E560` onward through `sub_800F990`** (`asm/code_3_2_17_e560.s`,
+  ROM `0x0800E560`-`0x0800FC70`, GitHub issue #12) - the rest of this
+  chunk's 25-function list: the collision-response jump-table handlers
+  `sub_0800D18C` itself dispatches to (`sub_800E620`, `sub_800E6B0`,
+  `sub_800E7A8`, `sub_800E888`, `sub_800EAFC`, `sub_800ED08`,
+  `sub_800EDBC`, `sub_800EEF0`, `sub_800F06C`, `sub_800F1B8`,
+  `sub_800F258`, `sub_800F2BC`, `sub_800F368`, `sub_800F4F4`,
+  `sub_800F5B8`, `sub_800F6B8`, `sub_800F798`, `sub_800F8E0`,
+  `sub_800F990`), each a moderately-sized state-machine function with
+  several sibling calls within this same still-raw neighborhood; left
+  untouched for this pass - see
+  [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md).
 - **`UpdateGameFrame`** (`asm/code_3_2_17_225a0.s`, ROM `0x080225A0`) -
   the main per-frame game-loop driver, a ~730-instruction jump-table
   state machine. Not understood branch-by-branch with the precision a
