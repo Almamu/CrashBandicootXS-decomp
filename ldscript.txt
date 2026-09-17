@@ -47,7 +47,12 @@ SECTIONS
         build/crashbandicootxs/src/graphics/fade_screen_mode2.o(.text);
         build/crashbandicootxs/asm/code_3_1_9.o(.text);
         build/crashbandicootxs/src/graphics/aabb_util.o(.text);
+        build/crashbandicootxs/src/audio/music_player.o(.text);
         build/crashbandicootxs/asm/code_3_1_10.o(.text);
+        build/crashbandicootxs/src/audio/sfx_ambient.o(.text);
+        build/crashbandicootxs/asm/code_3_1_10_2.o(.text);
+        build/crashbandicootxs/src/audio/audio_context.o(.text);
+        build/crashbandicootxs/asm/code_3_1_10_3.o(.text);
         build/crashbandicootxs/src/graphics/oam_count.o(.text);
         build/crashbandicootxs/src/graphics/graphics.o(.text);
         build/crashbandicootxs/asm/code_3_2.o(.text);

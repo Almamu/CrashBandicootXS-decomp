@@ -4467,3 +4467,156 @@ Needed an explicit trailing `asm(".align 2, 0");` after `sub_80016DC`
 NOP padding (`0xc046`, "mov r8,r8") mismatched the ROM's zero-padding
 before the next raw function - the same alignment fix already
 established for other files' trailing functions.
+
+## `0x080016EC`-`0x08001C80`: the `AudioContext` wrapper layer (first audio matches)
+
+Matched 23 of the 25 functions in this chunk (issue #2 in the
+`decomp-chunk` generation), all operating on one shared `AudioContext`
+object (`*gUnknown_030012BC` in the ROM - an 8340-byte allocation from
+`sub_8022230`, see docs/rom_map.md's "Found the origin point" section)
+- new struct in `include/audio.h`, modeling the leading `0x58` bytes
+this cluster actually touches (fields for state/current-and-pending
+song, two independent fade-envelope pairs, an ambient-sfx `id`/
+`deadline`/`volume` record pair, and the round-robin `PlaySfx`
+history). `sub_80017BC`'s embedded GAX2 runtime player-state object at
+`self+0x58` stays raw offset casts - genuinely nested engine-internal
+state (`sub_80381FC`/`sub_8038538` own it), not independently
+reverse-engineered. This is the **first matched code anywhere in the
+GAX2 wrapper/engine address family** - `docs/status/audio.md` no
+longer says "not started."
+
+New files: `src/audio/music_player.c` (`sub_80016EC` per-tick fade
+update, `sub_80017BC` start-song), `src/audio/sfx_ambient.c`
+(`sub_800190C`/`sub_80019A8`/`sub_80019CC`/`sub_80019E8`, the
+ambient/looping-sfx-channel tick/stop/reset/force-expire cluster), and
+`src/audio/audio_context.c` (the remaining 17-function accessor/
+state-machine cluster: play/pause/stop, both fade-envelope arm/setter
+pairs, the constructor). Three separate files, not one, because the
+two parked functions below (`PlaySfx` and `sub_80019F8`) sit physically
+between them in ROM order and stay raw - each `.c` file is one
+contiguous matched region, per the usual convention.
+
+**A pervasive compiler idiom this whole cluster shares**: almost every
+`if (self->someField == CONSTANT)` - whether guarding the entire rest
+of the function or just one block, with or without an `else` - compiles
+in the ROM as a materialized boolean rather than a direct branch:
+`movs rX,#0; ldr r0,[self,#offset]; cmp r0,#CONSTANT; bne skip;
+movs rX,#1; skip: cmp rX,#0; beq/bne ...`. Writing the natural
+`if (self->field == 1) { ... }` directly compiles to a single `cmp`+
+branch instead - one instruction pair short. Every function in this
+chunk that checks `state` against 0/1/2 needed the explicit two-step
+`s32 flag = 0; if (cond) flag = 1; if (flag) {...}` form to reproduce
+this. `sub_8001BD4` additionally needed the materialized flag and the
+"reused as the zero constant for later stores" value pinned to two
+*different* registers (`register s32 isStopped asm("r2")` for the
+materialization, `register s32 zero asm("r4")` for the copy that
+survives across the `sub_8039198()` call) - a plain single local
+collapses the two into one register and drops an instruction, since
+gcc's own CSE proves they're redundant when nothing forces them apart.
+`sub_80017BC` needed the identical `r1`/`r4` split for its own
+first-time-init guard.
+
+**Two-sided branches don't get this idiom automatically**: `sub_8001B54`
+has a genuine `if (!isPlaying) { call; return; } ...more code...`
+shape, which on its own compiles to a direct `beq`, not the ROM's
+materialized form - it needed the explicit `s32 isPlaying = 0; if
+(state == 1) isPlaying = 1;` written out by hand despite the "guard
+plus continuation" shape reading like it wouldn't need it.
+
+**Signedness matters for fade-envelope comparisons**: `sub_80016EC`'s
+`musicVolCurrent`/`Target` and `duckVolCurrent`/`Target` fields must be
+`s32`, not `u32` - the ROM compares them with `blt`/`bgt` (signed),
+and a `u32` field produces `bcc`/`bhi` (unsigned) instead, an otherwise
+invisible mismatch until diffed instruction-by-instruction. Getting the
+`if`/`else` body order backwards was a second, related trap: the ROM's
+branch instruction always tests the *negation* of the `else`-arm's
+condition (the "then" arm compiles inline/falls-through, the `else`
+arm is branched-to) - `sub_80016EC`'s four fade blocks all needed
+`if (cur >= target) { clamp } else { ramp }`, not the more natural-
+reading `if (cur < target) { ramp } else { clamp }`, to get `blt`
+(not `bge`) as the actual encoded branch.
+
+**A 12-byte struct-copy idiom**: `sub_800190C` promotes a queued
+`pendingSfx` record into `activeSfx` via `self->activeSfx =
+self->pendingSfx;` (a whole-struct assignment) rather than three
+separate field copies - only the whole-struct form reproduces the
+ROM's `ldm r0!,{r2,r3,r5} / stm r1!,{r2,r3,r5}` block move; field-by-
+field copies compile to three separate `ldr`/`str` pairs instead. This
+is why `AudioContext.activeSfx`/`pendingSfx` are modeled as a
+`struct SfxRecord` in `include/audio.h` instead of six flat fields.
+
+**Register-pinning highlights** (see `matching_decomp_register_pinning`
+memory for the general technique): `sub_800190C`'s expired-sfx path
+needed both a `register s32 v asm("r0")` pin *and* a
+`*(volatile s32 *)&self->field_34` re-read at the `sub_80390F8` call
+site specifically to defeat this compiler's own CSE, which otherwise
+reuses the cached register value instead of reloading from memory
+(closing what would otherwise look like the same gap `sub_80019F8`
+below couldn't close) - once the register was pinned to hold the
+computed value, a plain reference to `self->field_34` at the call site
+started getting reused via CSE instead of reloaded, which the ROM
+doesn't do; forcing a volatile re-read restored the reload. `PlaySfx`
+needed `self` pinned to `r9` and a *second*, separately-pinned copy at
+`r2` (`register struct AudioContext *p2 asm("r2") = pself;`) purely for
+one field access, to match the ROM's specific choice of scratch
+register for that one dereference.
+
+### Parked: `PlaySfx` and `sub_80019F8`
+
+Both fully understood, both extensively iterated on (many register-
+pinning permutations tried, verified against the real ROM
+instruction-by-instruction, not just eyeballed), both left one small
+gap this compiler wouldn't close:
+
+- **`PlaySfx`** (`sub_8001854` - see docs/audio.md's "Sound effects"
+  section for what it does): every single instruction matches except
+  the function's own prologue register-save order. The ROM does
+  `mov sb,r0` (cache `self`) immediately, before `mov sl,r1` (cache
+  `id`); this compiler always defers the `self` save to just before
+  `self->state` is first dereferenced (the point `r0` actually gets
+  clobbered) once `self` is bound to an explicit high-register
+  variable. Tried: an inline-asm register "touch" barrier right after
+  binding it (forces the save, but as a literal *extra* instruction,
+  not earlier scheduling), reordering the declaration relative to
+  other locals, and leaving `self` unbound entirely (the register
+  allocator then picks the right *set* of registers late instead of
+  early, and a different permutation of them besides). Every
+  combination reproduces the ROM's exact instruction stream except
+  this one prologue-ordering difference.
+- **`sub_80019F8`** (a sibling to `PlaySfx` driving the ambient-sfx
+  channel with an explicit deadline/force-retrigger flag - see its
+  doc comment in `src/audio/audio_context.c`): two gaps. (1) The ROM
+  reads its 5th (stack) parameter, `forceFlag`, via
+  `add rX,sp,#0x14; ldrb rX,[rX]` - compute the stack slot's address,
+  then a genuine byte load; this compiler instead reads the full word
+  and masks it with `lsls #24; lsrs #24` - both are valid ways to read
+  a `u8` stack argument, but a different instruction count. (2) the
+  ROM recomputes `&gStaticData_0816AA6C[id].baseVolume` fully from
+  `tableBase`+offset+`8` for the volume read, even though the
+  identical address was already computed for the `slotId` read a few
+  instructions earlier and is still live in a register; this
+  compiler's CSE always reuses that live address instead (fewer
+  instructions) - tried raw-offset-cast expressions instead of struct-
+  field access, and a volatile-qualified pointer to explicitly
+  discourage the reuse (rejected outright by the compiler itself,
+  with a "volatile register variables don't work as you might wish"
+  warning); neither changed the outcome.
+
+Both stay raw in `asm/code_3_1_10.s` (`PlaySfx`) and
+`asm/code_3_1_10_2.s` (`sub_80019F8`) respectively, guarded by
+`.if NON_MATCHING == 0`, with the understood-but-not-matching C
+reconstruction living in the *following* file in ROM order
+(`src/audio/sfx_ambient.c` and `src/audio/audio_context.c`
+respectively) under `#if NON_MATCHING` - same convention as
+`sub_8001624`/`aabb_util.c` earlier in this same address range. This
+split the original `asm/code_3_1_10.s` into three pieces
+(`code_3_1_10.s`/`_2.s`/`_3.s`, the last holding everything from
+`sub_8001C80` onward, entirely unchanged) since the two parked
+functions sit physically between the three new matched `.c` files.
+
+Verified via both an isolated per-function compile *and* a full clean
+`make compare` on the fully integrated tree (per workflow.md's own
+warning that isolated compiles aren't proof) - both `PlaySfx` and
+`sub_80019F8` show the identical two gaps in the real linked context
+as in isolation, confirming these are genuine compiler-behavior gaps
+and not link-context artifacts.
