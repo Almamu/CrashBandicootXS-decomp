@@ -150,6 +150,12 @@ per-actor animation frames, text layout.
   `nullsub_13`, `sub_800B86C`, `sub_800B8A4`, `sub_800B8A8`,
   `sub_800B8C8`, `sub_800B8D8`
 
+- `src/graphics/actor_part18.c`/`actor_part18b.c` (new files, non-
+  adjacent since the parked `sub_801434C` sits raw between them - see
+  `docs/matching.md`, issue #17): `sub_801426C`, `sub_80142B0`,
+  `sub_80144E0`, `sub_8014524` - four entries of the `gStaticData_0816BF20`
+  42-slot action dispatch table
+
 - `src/graphics/fade_screen_mode.c` (new file - `sub_8001510`) and
   `src/graphics/fade_screen_mode2.c` (new file - `sub_800153C`,
   `sub_8001550`, `sub_8001564`, `sub_8001578`, `sub_800158C`,
@@ -407,3 +413,21 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   in r2 reused once dead; every arrangement tried here needs one extra
   spilled register) - see `docs/matching.md`, "Parked, not matched:
   `sub_8009DF4`".
+- **`sub_801434C`** (`asm/code_3_2_17_1434c.s`, C in
+  `src/graphics/actor_part18.c`) - the shared handler
+  `sub_80142B0` tail-calls; one of the `gStaticData_0816BF20` action-
+  table entries. Every load/store, branch and call confirmed correct,
+  including the ROM's case-`0`/`2`-before-case-`1` switch layout and
+  its shared `sub_803AD84` tail call; parked purely on instruction-
+  *scheduling* for a handful of mutually-independent instructions in
+  the closing `masked = *(u16 *)&snap & 0x180` block (right
+  address/constant/load ordering, wrong relative order) - see
+  `docs/matching.md`, issue #17, for everything tried.
+- **`sub_80145E4`** (`asm/code_3_2_17_145e4.s`, C in
+  `src/graphics/actor_part18b.c`) - same shape as the matched
+  `sub_8014524` (boolean/raw-value bit test, `sub_8015780` reset
+  block) but keeps the raw masked bit value rather than a `!= 0`-
+  normalized boolean. Every load/store and branch confirmed correct;
+  parked on a single materialize-then-copy gap in the opening bit-test
+  triggered by a required nested `if` sharing the value's live range
+  across both branches - see `docs/matching.md`, issue #17.
