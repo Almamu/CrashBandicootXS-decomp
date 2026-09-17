@@ -4313,4 +4313,88 @@ right after `sub_800B704` (their shared shape made that the natural
 writing order) instead of after `sub_800B7B0` (its real ROM position),
 producing a 48-byte map-address shift starting at `sub_800B734`;
 fixed by reordering. `sub_800B8DC` onward (a 546+-line function) is
-left for a future pass.
+left for a future pass - a background pass on it read the whole
+jump-table dispatcher and worked out most of its shape, but found a
+real structural contradiction (case 17 stores a pointer through
+`self+0x88` and later dereferences it as a `struct actor`, while the
+already-matched `sub_800B554`/`sub_800B55C` in `actor_part16.c` treat
+`self+0x88` as a plain byte) that needs `sub_800C9C8`'s own semantics
+pinned down first; left completely untouched rather than guess.
+
+## The `0x080014A4`-`0x08001624` fade/screen-mode cluster, finally matched
+
+`docs/rom_map.md` had already identified this 13-function, 332-byte
+cluster (a fade-to-black effect plus 12 `gUnknown_03001288`/
+`gUnknown_03001280` DISPCNT/blend-register shadow-copy accessors) but
+it stayed raw until now. Three of its functions resisted byte-exact
+matching for three unrelated reasons, and - since they're interleaved
+with the matched ones rather than clustered at one edge - the whole
+thing needed splitting into *five* files instead of the usual two:
+`asm/code_3_1_7.s` (parked `sub_80014A4` alone), `fade_screen_mode.c`
+(`sub_8001510`), `asm/code_3_1_8.s` (parked `sub_8001524` alone),
+`fade_screen_mode2.c` (`sub_800153C`-`sub_8001614`, 13 fns), and
+`asm/code_3_1_9.s` (parked `sub_8001624`, followed immediately by the
+still-fully-raw `sub_8001640` onward - the overlay_ui/pause-menu
+cluster).
+
+- **`sub_80014A4`** (PARKED): backs the real palette (`0x05000000`)
+  up into `gUnknown_03000A80`, then for each factor 0/2/.../16 blends
+  it toward black via the already-matched `sub_80013FC` into
+  `gUnknown_03000E80` and DMAs the result into the real palette,
+  waiting a VBlank between steps - a textbook fade-to-black. Once
+  fully faded, sets `REG_BLDCNT`/`REG_BLDY` and restores the original
+  palette. The ROM caches the blended-buffer address in a register
+  across the loop while recomputing the DMA destination and control
+  constants fresh every iteration, plus an extra register-rename copy
+  before the loop; this compiler's loop-invariant hoisting always
+  either hoists nothing extra (matching the recompute behavior but
+  losing the buffer cache) or hoists the buffer *and* at least one of
+  the other two fields once any local variable represents the buffer
+  address - no combination of local-variable placement, register
+  pins, or inline-asm memory-clobber barriers landed on the ROM's
+  exact "cache exactly one of three" split. Same root cause as
+  `sub_8009150`'s documented loop-invariant-hoisting gap, applied to
+  a memory-mapped-I/O DMA setup instead of a pointer computation.
+- **`sub_8001510`**: `gUnknown_030007E8.field_0 != -1` (the same
+  "idle" fade sentinel documented on that struct in `fade_util.c`),
+  written as a plain `s32` read since this file doesn't share that
+  struct definition.
+- **`sub_8001524`** (PARKED): sets `gUnknown_03001288`'s low 3 bits
+  (the DISPCNT background-mode field) to `val & 7`. This compiler
+  recognizes that `-8` is reachable from the already-loaded `7` mask
+  via a single `SUB` (`7 - 15 = -8`) and always folds the ROM's fresh
+  `movs r1,#8; rsbs r1,r1,#0` pair into that shorter subtract - tried
+  respelling the constant (`-8` vs `~7`), reordering statements,
+  inline-asm barriers, and `volatile` register variables (which gcc
+  itself warns don't work as hoped); none stopped the value-propagation
+  optimization.
+- **`sub_800153C`/`sub_8001550`/`sub_8001564`/`sub_8001578`/
+  `sub_800158C`/`sub_80015F0`**: clear bits 3/2/1/0/4 (of byte 1) and
+  bit 6 (of byte 0) of `gUnknown_03001288`, all using the established
+  negative-constant clear-mask idiom - each needed the address loaded
+  into its own register *before* the mask computation (`register u8
+  *addr asm("r1") = ...;` first, then `register s32 mask asm("r0") =
+  -K;`) to reproduce the ROM's exact instruction order; a plain `field
+  &= -K;` on a byte destination let the compiler fold straight to the
+  positive byte-mask immediate instead of the ROM's `mov`+`neg` pair.
+- **`sub_80015A0`/`sub_80015B0`/`sub_80015C0`/`sub_80015D0`/
+  `sub_80015E0`/`sub_8001604`**: the `|=` counterparts of the above
+  (bits 3/2/1/0/4 of byte 1, bit 6 of byte 0), same address-first
+  register-pin shape.
+- **`sub_8001614`**: commits the packed `gUnknown_03001288` shadow
+  (both bytes as one halfword) straight to `REG_DISPCNT`.
+- **`sub_8001624`** (PARKED): commits a second shadow,
+  `gUnknown_03001280` (a word covering `REG_BLDCNT`+`REG_BLDALPHA`,
+  plus a trailing byte whose low 5 bits become `REG_BLDY`), to the
+  real registers. The ROM writes the word, then does a separate `adds
+  r2,#4` on the same register before the second store; this compiler
+  always fuses that specific store-then-increment-same-register pair
+  into a single `stmia r2!,{r0}`, regardless of whether the increment
+  is a separate statement, guarded by a memory-clobber barrier, or
+  assigned to a distinctly-named pointer variable - an unavoidable
+  peephole optimization for this instruction pair.
+
+All 14 matched functions plus the 3 parked ones were verified via a
+full clean `make compare` after the five-way file split; `ldscript.txt`
+links them in real ROM order: `code_3_1_7.o`, `fade_screen_mode.o`,
+`code_3_1_8.o`, `fade_screen_mode2.o`, `code_3_1_9.o`.

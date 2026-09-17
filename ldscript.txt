@@ -42,6 +42,10 @@ SECTIONS
         build/crashbandicootxs/src/graphics/fade_util.o(.text);
         build/crashbandicootxs/src/graphics/palette_blend.o(.text);
         build/crashbandicootxs/asm/code_3_1_7.o(.text);
+        build/crashbandicootxs/src/graphics/fade_screen_mode.o(.text);
+        build/crashbandicootxs/asm/code_3_1_8.o(.text);
+        build/crashbandicootxs/src/graphics/fade_screen_mode2.o(.text);
+        build/crashbandicootxs/asm/code_3_1_9.o(.text);
         build/crashbandicootxs/src/graphics/oam_count.o(.text);
         build/crashbandicootxs/src/graphics/graphics.o(.text);
         build/crashbandicootxs/asm/code_3_2.o(.text);
