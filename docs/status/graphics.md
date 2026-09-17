@@ -120,6 +120,15 @@ per-actor animation frames, text layout.
   `sub_800A0CC`, `sub_800A0D8`, `sub_800A0E0`, `sub_800A0EC`,
   `sub_800A0F4`
 
+- `src/graphics/actor_part14.c` (new file - `sub_800A5F4`'s real ROM
+  address isn't adjacent to `actor_part9.c`'s matched functions
+  either, since a large raw span (`sub_800A0FC`-`sub_800A590`) sits
+  between them; see `docs/matching.md`): `sub_800A5F4`, `sub_800A600`,
+  `sub_800A604`, `sub_800A650`, `sub_800A664`, `sub_800A6A4`,
+  `sub_800A6C4`, `sub_800A6D0`, `sub_800A6DC`, `sub_800A6E8`,
+  `sub_800A6F4`, `sub_800A700`, `sub_800A70C`, `sub_800A718`,
+  `sub_800A724`, `sub_800A730`
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 

@@ -4050,3 +4050,91 @@ fields `sub_8009DF4` clamps. Both matched on the first attempt.
 **`sub_800A0F4`** (ROM `0x0800A0F4`, right after `sub_800A0EC`, same
 file): `self+0x69` (cleared by `sub_8009F50`) getter. Matched on the
 first attempt.
+
+## New tractable pocket after the AI/collision cluster: `actor_part14.c`
+
+Past the whole AI/collision cluster resolved above, `sub_800A0FC`
+through `sub_800A590` (part-object update/collision dispatchers
+calling still-unexamined `sub_800A178`/`sub_8009BE0`) remain a raw
+span in `code_3_2_11.s` - left raw rather than guess at semantics.
+
+Right after that span, `sub_800A5F4` through `sub_800A730` turned out
+to be another self-contained, clearly-understood run: a small
+`gStaticData_087E3D8C`-table family of part-object constructors,
+mirroring the already-matched `gStaticData_087E3D14`-table family
+(`sub_8009ED0`/`sub_8009F1C`/`sub_8009F50`/`sub_8009F90`) in
+`actor_part8.c`, plus a dozen tiny single-bit accessor pairs.
+
+- **`sub_800A5F4`**: a void tail-call wrapper around the already-
+  matched `sub_8008350` - the ROM discards its return value (`pop
+  {r0}; bx r0` reuses the exact register `sub_8008350`'s own return
+  landed in for the epilogue, not the function's own result), so
+  writing `sub_8008350(arg0);` as a statement (not `return
+  sub_8008350(arg0);`) was needed to avoid keeping the result alive.
+- **`sub_800A600`**: constant-6 stub.
+- **`sub_800A604`**: same shape as `sub_8009ED0`/etc. - allocates a
+  bigger (0x80-byte) part-object via `sub_8026EDC`, re-initializes it
+  via `sub_8009F90`, overwrites its table with `gStaticData_087E3D8C`,
+  clears it via `sub_800A664`, then sets `field_08`/`x`/`y` from the
+  three `u16` arguments.
+- **`sub_800A650`**: overwrites `self->table` with
+  `gStaticData_087E3D8C`, then tail-calls `sub_8009F1C` - which
+  unconditionally overwrites `table` again with `gStaticData_087E3D14`
+  and fires its own trampoline, so this function's own table write
+  only matters transiently. Needed an explicit (unused) second
+  parameter threaded straight through to `sub_8009F1C`'s own second
+  argument - the ROM never sets it itself, just leaves whatever its
+  own caller left in that register.
+- **`sub_800A664`**: the `gStaticData_087E3D8C`-table sibling of
+  `sub_8009F50`'s own clearer - sets `flags` bits 6/7, zeroes the same
+  velocity/accel/max-velocity fields `sub_8009DF4` consumes plus
+  `+0x24`/`+0x44`/`+0x78`/`+0x1c`, sets `+0x68` to 8, and (unlike
+  `sub_8009F50`) sets `+0xd` bit 0 instead of clearing bit 3. This one
+  needed real care: the two-step `flags |= 0x80; flags |= 0x40;`
+  needed register pins to avoid the compiler constant-folding both
+  masks into a single `0xc0` immediate (the ROM does two separate
+  loads-and-ORs); the `+0x24` field address needed its own address
+  computed via a register *different* from the one just used for
+  `+0x68`'s address, otherwise the compiler notices `+0x24 == +0x68 -
+  0x44` and emits a shorter `sub` instead of the ROM's fresh `add`
+  from `self` (no memory barrier or `volatile` pointer discouraged
+  this - only picking an unrelated register did); and the trailing
+  `+0xd |= 1` needed the same mask-first register pin as the simple
+  accessors below, which only surfaced via the full integrated
+  rebuild (in isolation, without the surrounding zero-fills' register
+  pressure, the naive form happened to already look right).
+- **`sub_800A6A4`**: same `sub_8009F90`/table-swap/clearer shape as
+  `sub_800A604`, but re-initializes an existing `self` instead of
+  allocating a new one.
+- **`sub_800A6C4`/`sub_800A6D0`/`sub_800A6DC`**: get/clear/set
+  accessors for `self+0xd` bit 1.
+- **`sub_800A6E8`/`sub_800A6F4`/`sub_800A700`**: get/clear/set
+  accessors for `self+0xd` bit 0. `sub_800A6E8` needed the incoming
+  `self` pointer explicitly copied into `r1` before the load (the ROM
+  has a seemingly-redundant `adds r1, r0, #0` this compiler otherwise
+  optimizes away, reading directly through `r0` instead) - fixed via
+  an unusual "declare in `r1`, initialize in `r0`, reassign" pattern
+  that also forces the AND's result into `r0` matching the ROM's own
+  register choice for the return value.
+- **`sub_800A70C`/`sub_800A718`/`sub_800A724`**: clear/set/get
+  accessors for `flags` bit 5. The clear masks (`-3`, `-2`, `-0x21`
+  for the three clear functions above and here) match the established
+  "negate a small positive constant" idiom this compiler uses for bit-
+  clear masks (already documented for `sub_8008680`'s own `-9`) -
+  writing the literal negative constant directly (not `&= ~mask`,
+  which folds to a different immediate-load instruction) reproduces
+  the ROM's `movs`+`rsbs`/`neg` pair exactly.
+- **`sub_800A730`**: `self+0x44` getter (the same "record" field
+  `sub_8009F1C`/`sub_8009FB0` fire their trampolines through).
+
+All 16 were verified via a full recompile of `actor_part14.c` together
+and a full clean `make compare`, after this session's earlier
+regressions (`sub_8008C80`/`sub_8009AA0`/`sub_8009B3C`) established
+that isolated per-function compiles aren't sufficient proof - and this
+batch caught two more real integration-only issues: `sub_800A664`/
+`sub_800A604` were initially placed in the wrong file order (matching
+their natural "helper defined before caller" writing order rather
+than their real ROM address order), and `sub_800A6E8`'s isolated test
+initially passed with the redundant register copy already dropped
+(matching in isolation) but the full build caught the resulting
+4-byte size regression once the whole file was assembled together.
