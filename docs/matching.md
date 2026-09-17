@@ -4467,3 +4467,143 @@ Needed an explicit trailing `asm(".align 2, 0");` after `sub_80016DC`
 NOP padding (`0xc046`, "mov r8,r8") mismatched the ROM's zero-padding
 before the next raw function - the same alignment fix already
 established for other files' trailing functions.
+
+## `0x08037110`-`0x08038538`: first pass into the "audio" range
+
+Issue #66's chunk sits at the very start of the address range
+[docs/audio.md](./audio.md) calls the GAX2 engine. First real matching
+pass into that range - 10 of the 25 functions matched, split across
+four new small files (non-contiguous, since several functions in
+between resist matching or aren't understood well enough yet, per the
+project's "one `.c` file per contiguous ROM region" rule):
+
+- **`src/audio/counter_selector.c`** (`sub_8037110`, `nullsub_7`,
+  `sub_8037154`, `sub_803716C`, `sub_80371B4`, `sub_8037224`) - reads
+  like game/HUD-side code that merely *calls into* audio (`PlaySfx`)
+  rather than GAX2 engine internals: a small on-screen 0-5 "counter"
+  widget (`counter_widget`, 0x14 bytes: a frame counter, a "done" flag,
+  the 0-5 value, and a child-object pointer) that cycles its value with
+  D-pad-style input and confirms/cancels with a `PlaySfx` cue. Not
+  confidently identified as any one specific screen - a jukebox/sound
+  test track selector is the leading guess (SFX ids 0x49/0x46, a 0-5
+  range, sitting right at the top of the audio address range) but not
+  confirmed, so kept as `sub_XXXXXXXX` throughout rather than guessing a
+  name.
+  - `sub_8037110` ignores its first argument (`r0`) entirely - same
+    "ROM sets up/leaves an arg the callee never reads" shape documented
+    elsewhere in this project - and needed the `struct dma_regs *dma`
+    pointer computed *after* both calls it follows (not hoisted to the
+    top of the function) to avoid an extra persistent register (the
+    isolated compile pushed `r8` until this was fixed). The header-word
+    shift amount also needed writing as a single mutable `val >>= 8;`
+    then later `val >>= 1;` (destructively reusing the same register),
+    not two independent shifts of the original value - the ROM computes
+    `header >> 9` this way, not as a folded constant shift.
+  - `sub_803716C` is **UNUSED** - no caller anywhere in the ROM
+    (checked every `asm/`, `expected/`, and `src/` source file for a
+    `bl sub_803716C` or a raw `0x0803716D` reference). It operates on a
+    completely different, much larger object (fields at +0x48/+0x4c/
+    +0x50) than the 0x14-byte `counter_widget` every neighboring
+    function here uses, so it gets its own minimal `struct linked_node`
+    instead: flips a state/vtable-looking pointer at +0x50 between two
+    constants (with two `sub_8028C48` "commit" calls in between), then
+    unlinks itself from a doubly-linked list (`next->prev = prev;
+    prev->next = next;`) and optionally `mem_free`s itself.
+  - `sub_80371B4` is a genuine `while` loop (test at the bottom, jumped
+    to unconditionally past the loop body first, then branching back)
+    - not a `do-while` - even though the loop body always runs at least
+    once in practice (the just-zeroed exit flag guarantees the first
+    test passes); writing it as `do-while` collapses the two separate
+    literal-pool dumps the ROM has (one right after the initial jump,
+    one at the loop's end) into a single merged pool, 4 bytes short.
+    The "newly pressed" key read also needed the established
+    `addr = &gUnknown_030007E0; keys = *(u16 *)((u8 *)addr + 2);`
+    idiom from `sub_80010E0` (`src/system/input_util.c`) - folding the
+    `+2` into the literal constant itself compiles to `ldrh r1,[r0]`
+    with no offset, not the ROM's `ldrh r1,[r0,#2]`.
+  - `sub_8037224`'s bit-3/bit-0 "confirm" cases share their `PlaySfx`
+    call via a `goto`, matching the ROM's own tail-sharing rather than
+    duplicating the call in an `if`/`else if`.
+
+- **`src/audio/counter_selector_setup.c`** (`sub_80374D0`,
+  `sub_8037534`, `sub_8037548`, `sub_8037578`, `sub_80375A0`,
+  `sub_80375EC`, `sub_8037620`) - the widget's graphics/BG setup,
+  draw-flush, and init/teardown pair. Non-adjacent to the file above
+  since `sub_80372BC`/`sub_8037388` sit raw between them (see below).
+  - `sub_80374D0`'s two-byte-field bit-twiddle (`field_c`/`field_d`,
+    read via `ldrb`/written via `strb`, but *zeroed* together via one
+    `strh`) needed the "negative-constant bit-clear idiom"
+    (`& -8`/`& -3`, not `& ~8`/`& ~3` - a different mask entirely, and
+    the only form that reproduces the ROM's runtime `rsbs`
+    negation instead of a folded 8-bit AND immediate) plus a
+    `register ... asm("r2")`/`asm("r1")` pin on the second field's
+    temp/mask pair - without the pin, gcc reused the first field's
+    already-computed `1` immediate for the second field's `-3` mask via
+    a one-instruction `sub` instead of the ROM's fresh `mov`+`rsb` pair.
+  - `sub_8037548`/`sub_80374D0`'s `REG_DISPCNT`/`REG_BG0HOFS` writes
+    needed the *combined* width the ROM actually uses - `REG_DISPCNT`
+    is fed both `field_c` and `field_d` at once via `*(u16 *)&self->
+    field_c` (a real `ldrh`, not two separate byte accesses), and
+    `REG_BG0HOFS` is written as a 32-bit `*(vu32 *)` (covering
+    BG0HOFS+BG0VOFS together as one `str`), not the plain 16-bit
+    `REG_BG0HOFS = 0` macro.
+  - `sub_8037578` reads `self->field_10` once for its null check and
+    **reuses that same loaded pointer value** as `sub_80346FC`'s first
+    argument - it is not `self` itself. This was the one bug the full
+    rebuild caught here (the isolated per-file compile looked fine): a
+    stray extra `adds r0,r4,#0` shifted every following byte in the ROM
+    by 2, corrupting the compare on a totally unrelated distant offset
+    until traced back via `cmp`+`objdump` to this exact spot.
+  - `sub_80375A0`/`sub_8037620` chain three unmatched-looking nested
+    allocator calls (`sub_8034374(sub_8026EDC(0x14))`, and
+    `gUnknown_030008CC = sub_80375A0(sub_8026EDC(0x14))`) - the ROM
+    genuinely never re-loads `r0` between the two `bl`s, so the
+    "argument is literally the previous call's return value" reading is
+    correct, not a missed dereference.
+  - `sub_8037388` itself is declared `extern` here (takes an ignored
+    `self` argument - confirmed by the caller's `adds r0,r4,#0` before
+    the `bl`) but left un-matched; see below.
+
+- **`src/audio/song_slot_lookup.c`** (`sub_8037FA0`) - a 12-entry,
+  8-byte-stride threshold-table lookup over `gStaticData_085A6150`
+  (table contents/meaning not understood). The loop bound compare
+  needed an explicitly `u32 i`, not `s32` - a signed loop variable
+  compiles the trailing `cmp r1,#0xb` check as `ble` (signed), while
+  the ROM uses `bls` (unsigned) - a real, easy-to-miss instruction
+  substitution that reads identically in this compiler's own `-fhex-asm`
+  dump mnemonics unless the actual opcode bytes are checked.
+
+- **`src/audio/sound_object_init.c`** (`sub_80381FC`) - a
+  SoundHandler/channel-object-shaped constructor: `self == NULL` takes
+  a completely different 2-argument-call path into still-unread GAX2
+  internals (`sub_80392E0`); otherwise zero-fills `self` (via
+  `sub_8037F3C`, a memset-like helper) and resets a handful of fields to
+  "empty" sentinel values. The `0xFFFFFFFF`-style constant for `+8` had
+  to go through its own named `u16` temp (`val = 0xFFFF; *addr = val;`)
+  - assigning the literal directly to the dereferenced address loads it
+  into a scratch register and copies that into the "real" destination
+  register before the store, one instruction more than the ROM's direct
+  `ldr r0,=...; strh r0,[...]`.
+
+**Left raw, not attempted this pass** (all fully described in
+`tools/report_units.py`'s `UNITS` table and `docs/status/audio.md`):
+`sub_80372BC`/`sub_8037388` (fully understood - an icon-manager draw
+loop and its supporting tile-cache-init/field-copy helper - but they
+hit the exact same many-register (`r8`/`r9`/`sl`) gcc-2.9 allocation
+difficulty already documented for `sub_8006600` in
+`src/graphics/oam_count.c`, no matter how the source was rephrased);
+`sub_8037648`/`sub_8037A7C`/`sub_8037E54`/`sub_8037ECC`/`sub_8037F3C`
+(generic 64-bit software division/multiply helpers interleaved in the
+GAX2 range, per `docs/audio.md`'s existing false-positive notes);
+`sub_8037FC0`/`sub_8038240`/`sub_80384DC` (real GAX2 mixer-state/
+hardware-register internals, including one function with an existing
+in-source comment flagging a compiler-quirk raw-byte workaround) - none
+of these were modified from their existing raw `asm/` form.
+
+All 10 matched functions were verified via a full clean `make compare`
+after splitting `asm/code_3_2_20.s` into `code_3_2_20.s` (before) plus
+four new raw fragments (`code_3_2_20a.s` through `code_3_2_20d.s`,
+holding the left-raw functions above in ROM order) and a renamed tail
+(`code_3_2_20e.s`, everything from `sub_8038538` on, unchanged) around
+the four new matched `.c` files, each inserted into `ldscript.txt` at
+its real ROM position.
