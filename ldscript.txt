@@ -88,6 +88,15 @@ SECTIONS
         build/crashbandicootxs/asm/code_3_2_17.o(.text);
         build/crashbandicootxs/src/graphics/hud_counter.o(.text);
         build/crashbandicootxs/asm/code_3_2_20.o(.text);
+        build/crashbandicootxs/src/audio/counter_selector.o(.text);
+        build/crashbandicootxs/asm/code_3_2_20a.o(.text);
+        build/crashbandicootxs/src/audio/counter_selector_setup.o(.text);
+        build/crashbandicootxs/asm/code_3_2_20b.o(.text);
+        build/crashbandicootxs/src/audio/song_slot_lookup.o(.text);
+        build/crashbandicootxs/asm/code_3_2_20c.o(.text);
+        build/crashbandicootxs/src/audio/sound_object_init.o(.text);
+        build/crashbandicootxs/asm/code_3_2_20d.o(.text);
+        build/crashbandicootxs/asm/code_3_2_20e.o(.text);
         build/crashbandicootxs/src/graphics/actor_anim.o(.text);
         build/crashbandicootxs/asm/code_3_3.o(.text);
 
