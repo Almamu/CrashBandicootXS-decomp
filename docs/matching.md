@@ -4670,3 +4670,138 @@ holding the left-raw functions above in ROM order) and a renamed tail
 (`code_3_2_20e.s`, everything from `sub_8038538` on, unchanged) around
 the four new matched `.c` files, each inserted into `ldscript.txt` at
 its real ROM position.
+## GitHub issue #34: `0x080225A0`-`0x080231C4` (`UpdateGameFrame`-`MainLoop` cluster, part)
+
+This chunk's 25 functions sit right at the head of `UpdateGameFrame`
+itself. Of the 26 checkbox entries, 18 matched byte-exact, 6 were
+parked (`NON_MATCHING`, semantics/field offsets confirmed, one specific
+register-allocation gap each), and 2 (`UpdateGameFrame` itself and
+`sub_8022D50`) were left fully raw.
+
+**Matched (`src/system/game_loop2.c`, 18 functions):**
+
+- **`sub_8022FEC`/`sub_802306C`**: two near-identical "tick a frame
+  counter, and when it reaches `self+0xbc`'s limit, either flag the
+  level as done (`self->levelPtr->mode == 3`) or fire an out-of-time
+  animation (`sub_801EB04(0xffff, self+0x1c0, self+0x1c4, 0)`" - both
+  needed `sub_8023404` (a `self+0xc4`-record accessor) re-derived as a
+  **one-argument** function; the ROM's caller sets no second argument
+  before `bl sub_8023404` at all - reading `sub_8023404`'s own body
+  (`adds r1,r0,#0; adds r1,#0xc4; ldr r1,[r1]; bl sub_80233FC`) shows
+  it *overwrites* `r1` from `r0` before ever reading the incoming
+  value, confirming the real signature really is `void
+  *sub_8023404(void *self)`. Also needed the field-order fix already
+  described in `docs/workflow.md` step 3/its many prior entries: `count
+  == limit` compiles cheapest (no extra register, matching the ROM's
+  bare `push {r4,lr}`) only when the increment (`self->field_0x70 +=
+  1;`) is written *before* the limit comparison, letting the limit's
+  address computation reuse `r4` instead of needing a 5th register.
+- **`self+0x80`/`0x84`/`0x88`/`0xac`/`0xc0`/`+2`-flags accessor family**
+  (`sub_8023104`-`sub_80231C4`, 18 trivial one-to-six-instruction
+  functions): plain get/set/OR/add/bit-test accessors on the same
+  `self` object as the rest of this chunk. Two recurring idioms,
+  confirmed matching this compiler's known behavior:
+  - **Single-bit boolean tests** (`sub_8023158`'s `(flags & mask) !=
+    0`, and `sub_80231B4`/`BC`/`C4`'s "read bit N of `self+2`") compile
+    branchless only when written as the `(-x | x) >> 31` idiom (for
+    `!= 0`) or `(x << (31-N)) >> 31` (for a single bit), matching the
+    already-established "this compiler doesn't choose the branchless
+    form for a plain comparison" pattern from `sub_800A06C`.
+  - **OR-setters** (`sub_8023184`/`90`/`9C`/`80231A8`, and the `|= 2`
+    step inside `sub_8022FEC`/`sub_802306C` above) all need the mask
+    built into `r1` *before* the byte is loaded into `r2` - a plain
+    `*flags |= N;` always loads the byte first regardless of statement
+    order, so each needed explicit `register s32 mask asm("r1")`/
+    `register s32 value asm("r2")` pins. Caught only by the full
+    `make compare` (see `docs/workflow.md` step 3's warning) - the
+    isolated per-function compiles for the OR-setters "looked" right at
+    a glance (same 4 mnemonics, same operands) and the load/mask swap
+    was missed until the real rebuild's byte-diff pinpointed it at
+    `sub_8023184`'s exact address.
+  - **`sub_8023168`** (clears bits `0x10`/`0x40`/`0x20`, masks to
+    `0x7f`): the ROM builds each negative mask via `movs`+`rsbs` (never
+    the `~N` constant this compiler folds straight to a positive
+    8-bit `mov`) and, critically, keeps the *accumulator* in `r1` while
+    each fresh mask cycles through `r2` - reproduced with
+    `register s32 acc asm("r1")`/`register s32 tmp asm("r2")` and
+    literal negative constants (`-0x11`, `-0x41`, `+= 0x20`, `0x7f`)
+    instead of `~0x10` etc.
+
+**Parked (`NON_MATCHING`, real bytes in `asm/code_3_2_17_22bf0.s` and
+`asm/code_3_2_17_22ea8.s`):**
+
+- **`sub_8022EA8`/`sub_8022F2C`** (`src/system/game_loop2.c`): record
+  47's periodic-trigger setter/decrementer (see `docs/rom_map.md`, "An
+  achievement/unlock-icon spawner family, tied to `gStaticData_084A5600`
+  record 47"). Every field offset/call/argument confirmed correct
+  (including `sub_8022F2C`'s cascading `self+0x9c`/`0x98`/`0x94`/`0x90`
+  minutes:seconds:centiseconds-style odometer, which *does* reproduce
+  the ROM's exact branch topology). Both hit the same gap: the ROM
+  keeps `&gUnknown_030012D0` and `&gUnknown_030012B8` alive across the
+  `sub_8006DF8` call in `r4`/`r7` (`r4`'s slot reused from the by-then-
+  dead `seconds` parameter), landing the whole function in just 4 low
+  registers (`push {r4,r5,r6,r7,lr}`); this compiler's natural
+  allocation instead spills one of the two cached globals into `r8`
+  (an extra `mov r7,r8`/`push {r7}` pair the ROM doesn't have).
+  Explicit register pins for every local (`self`/`seconds`/both cached
+  globals/`slot`) were tried and made things *worse* - the pinned
+  `slot` (`u8`, `r6`) then picks up a spurious truncate-and-remask at
+  every read instead of the ROM's single truncate at assignment, and a
+  stray stack spill appears for the `0x234` record-header offset - so
+  parked with the naturally-allocated (but `r8`-using) version.
+- **`sub_8022BF0`/`sub_8022CA0`** (`src/system/game_loop.c`): the
+  level-start/checkpoint-restore progress-total updater and its
+  "refresh cached frame count / snapshot `self`'s first `0x68` bytes"
+  helper (called recursively by `sub_8022BF0` itself, and again from
+  `UpdateGameFrame`). All field offsets/calls/arguments confirmed,
+  including `sub_8022BF0`'s `self+0x6c`-exceeds-99 carry-into-`+0x74`
+  loop and the two `gUnknown_030012B4`-bitmap `sub_803A94C` (BIOS
+  `CpuSet`) spans `sub_8022CA0` syncs. `sub_8022BF0` needs four field
+  addresses (`self+0x70`/`0x6c`/`0x74`/`0xbc`) live across several
+  calls, and this compiler spills them into `r8`/`r9`/`sl` where the
+  ROM reuses just `r4`-`r7`; `sub_8022CA0` has two smaller gaps (the
+  `self+0xa9`-byte-to-`+0xd0` copy computing its destination from a
+  persisted `self+0xa9` address instead of deriving `+0xd0` via `+0x27`
+  off the same register right after a call, and the repeated
+  `0x04000040` `sub_803A94C` control word getting hoisted into a
+  shared register across both calls instead of reloaded from the
+  literal pool each time). Neither gap changes behavior; not yet found
+  a phrasing this compiler accepts for either.
+
+**Left fully raw (no C reconstruction attempted):**
+
+- **`UpdateGameFrame`** itself (`asm/code_3_2_17_225a0.s`, ROM
+  `0x080225A0`-`0x08022BF0`, ~730 instructions) - the main per-frame
+  driver: a level-load state loop (calling `LoadLevelGraphics`,
+  `sub_8035E14`, the map/progress-screen trigger `sub_80354BC`), a
+  5-case jump table dispatching on the player's current state
+  (`sub_80231BC`/`80231A8`/`80231B4`/`80231C4`/`80231CC` gating,
+  `sub_8023190`/`8184`/`819C`/`80231A8` transitioning), and an
+  end-of-frame block juggling `gUnknown_030012B4`/`030012B8`/
+  `03001318`/`0300082C` plus several still-uncharacterized SP-relative
+  locals (8 stack slots). `docs/rom_map.md` has extensive prior
+  characterization of the surrounding cluster, but not enough of this
+  function's own branch-by-branch semantics to commit a byte-precise
+  reconstruction with confidence in one session - a natural next
+  chunk for whoever picks this up.
+- **`sub_8022D50`** (`asm/code_3_2_17_22d50.s`, ROM `0x08022D50`-
+  `0x08022EA8`) - a level-start/reset routine: clears `self+0x8c`/
+  `0x90`-`0xa0`, tears down two actor slots at `self+0x1bc`/`0x1c0` via
+  `sub_80087C0`/`sub_80087B4`/`sub_800872C` when non-null, then walks
+  `gUnknown_030012EC`'s array firing `sub_803AD7C` table trampolines
+  and setting bits in the `gUnknown_030012B4` collision bitmap. Several
+  callees (`sub_80231EC`, `sub_8010804`, `sub_803AD7C`, `sub_8011448`)
+  aren't characterized precisely enough yet to commit a confident
+  reconstruction.
+
+**File structure:** `asm/code_3_2_17.s` (truncated right before
+`UpdateGameFrame`) is now followed, in ROM order, by
+`code_3_2_17_225a0.s` (raw `UpdateGameFrame`), `code_3_2_17_22bf0.s`
+(raw twin for the two parked `game_loop.c` functions, `.if
+NON_MATCHING == 0`), `game_loop.o`, `code_3_2_17_22d50.s` (raw
+`sub_8022D50`), `code_3_2_17_22ea8.s` (raw twin for the two parked
+`game_loop2.c` functions), `game_loop2.o`, and finally
+`code_3_2_17_231cc.s` (the original file's unchanged remainder, from
+`sub_80231CC` on) - see `ldscript.txt` and `tools/report_units.py`'s
+`game_loop` category, both updated to match. Verified via a full clean
+`make compare` (`La suma coincide`) and `make NON_MATCHING=1 report`.

@@ -116,7 +116,11 @@ UNITS = [
     (0x0800B704, "src/graphics/actor_part17.o", "graphics"),  # sub_800B704/sub_800B734/sub_800B7B0/sub_800B838 (a table-driven trampoline pair and a fixed-point-scaled vector-copy pair, siblings of sub_800B3AC/sub_8009D5C and sub_800B6A0/sub_800B6D0 respectively), nullsub_13, sub_800B86C (guarded frame-index setter), and four more part+0xc/part+8 table-pointer accessors; matched
     (0x0800B8DC, None, "graphics"),  # sub_800B8DC onward (a 546+-line function and beyond) - not yet examined
     (0x0801E578, None, "graphics_loading"),  # LoadGraphicsPackage cluster (16.2KB); menu_ui's ~9.1KB dispatch-table functions and the trigger-effect spawner family are interleaved inside this same range, not a separate block - see docs/rom_map.md "Major correction: there is no second table"
-    (0x080225A0, None, "game_loop"),  # UpdateGameFrame-MainLoop cluster (18,764B exact), confirmed same system/signature as the 0x08006C00 zone, not a separate island
+    (0x080225A0, None, "game_loop"),  # UpdateGameFrame-MainLoop cluster (18,764B exact), confirmed same system/signature as the 0x08006C00 zone, not a separate island. UpdateGameFrame itself (0x080225A0-0x08022BF0) is a ~730-instruction jump-table state machine left raw - see docs/matching.md, GitHub issue #34
+    (0x08022BF0, "src/system/game_loop.o", "game_loop"),  # sub_8022BF0/sub_8022CA0 (parked, NON_MATCHING) - real bytes live in asm/code_3_2_17_22bf0.s - see docs/matching.md
+    (0x08022D50, None, "game_loop"),  # sub_8022D50 - level-start/reset routine (gUnknown_030012EC array walk, sub_803AD7C trampolines), left raw - see docs/matching.md
+    (0x08022EA8, "src/system/game_loop2.o", "game_loop"),  # sub_8022EA8/sub_8022F2C (parked, NON_MATCHING, real bytes in asm/code_3_2_17_22ea8.s) plus sub_8022FEC/sub_802306C and the self+0x80/0x84/0x88/0xac/0xc0/+2-flags accessor family (matched) - see docs/matching.md
+    (0x080231CC, None, "game_loop"),  # remainder of the UpdateGameFrame-MainLoop cluster, still raw
     (0x08026EEC, None, "hud"),  # raw HUD region before sub_8027838
     (0x08027838, "src/graphics/hud_counter.o", "graphics"),  # sub_8027838 - cached two-digit HUD counter update
     (0x08027940, None, "hud"),  # remainder of the HUD stat-widget region
