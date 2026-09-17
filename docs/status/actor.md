@@ -187,6 +187,21 @@ from "core" graphics.
   raw `sub_8018008`-`sub_80186F0` block sits between them):
   `sub_80187FC`, `sub_8018858`, `sub_801886C`, `sub_8018884`; see
   `docs/matching/issue-22-0x08017a44-actor.md`.
+- `src/graphics/actor_part28.c`/`actor_part30.c`/`actor_part32.c`/
+  `actor_part34.c`/`actor_part36.c` (new files, GitHub issue #62, ROM
+  0x08033804-0x08033EF4 - the `gUnknown_030015AC` singleton system's
+  accessor/state-machine cluster, non-adjacent since 5 parked functions
+  sit interleaved between them; see
+  [docs/matching/issue-62-0x08033804-actor.md](../matching/issue-62-0x08033804-actor.md)):
+  `sub_8033804`, `sub_8033828`, `sub_8033880`, `sub_803388C`,
+  `sub_80338C4`, `sub_80338D0`, `sub_80338DC`, `sub_80338E8`,
+  `sub_80338F4`, `sub_8033900`, `sub_803390C`, `nullsub_36`,
+  `sub_803395C`, `nullsub_37`, `sub_8033AE0`, `sub_8033BB8`,
+  `sub_8033BFC`, `sub_8033C28`, `sub_8033CF0`, `sub_8033E18` - the
+  singleton's one-shot latches, field getters, state-transition/
+  anim-frame-reset setters, an `InitActorPart`-based constructor, and
+  several "self" object accessors/setters sharing the boss cluster's
+  layout convention.
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -419,6 +434,38 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   parked on this compiler's register choice for a couple of
   intermediate abs-value-computation values - see `docs/matching.md`,
   issue #52.
+- **`sub_80339DC`** (`asm/code_3_2_20_28568_c99c_31784_339dc.s`, C in
+  `src/graphics/actor_part29.c`) - a proximity-triggered effect/hazard
+  detector measuring `self`'s distance to the player after syncing to
+  the singleton's position. Every load/store, branch and call
+  confirmed correct; parked on a residual register-allocation gap for
+  one 16-bit constant materialization this compiler won't place in the
+  ROM's chosen scratch register without breaking the surrounding
+  `ip`/`r8`/`r9` pins - see
+  `docs/matching/issue-62-0x08033804-actor.md`, issue #62.
+- **`sub_8033B44`** (`asm/code_3_2_20_28568_c99c_31784_33b44.s`, C in
+  `src/graphics/actor_part31.c`) - position-update-then-draw helper via
+  a `gStaticData_0817C4E0` stride-8 trampoline table, the same shape
+  and register-allocation gap as the already-parked `sub_802C208` - see
+  `docs/matching/issue-62-0x08033804-actor.md`, issue #62.
+- **`sub_8033C84`** (`asm/code_3_2_20_28568_c99c_31784_33c84.s`, C in
+  `src/graphics/actor_part33.c`) - `sub_8033B44`'s predicate twin,
+  parked on the identical gap - see
+  `docs/matching/issue-62-0x08033804-actor.md`, issue #62.
+- **`sub_8033CF8`** (`asm/code_3_2_20_28568_c99c_31784_33cf8.s`, C in
+  `src/graphics/actor_part35.c`) - `sub_80339DC`'s sibling proximity/
+  spawn detector. Every branch and call confirmed correct; parked
+  because this agbcc build never emits a callee-save push/pop for a
+  plain low-register (`r0`-`r7`) `register` variable used across a
+  call unless another high register is *also* live in the same
+  function (confirmed with an isolated test) - pinning `self+0x64`'s
+  cache to `r7` here (matching the ROM) would silently corrupt the
+  caller's `r7` - see `docs/matching/issue-62-0x08033804-actor.md`,
+  issue #62.
+- **`sub_8033E80`** (`asm/code_3_2_20_28568_c99c_31784_33e80.s`, C in
+  `src/graphics/actor_part37.c`) - `sub_8033B44`'s twin using the
+  second stride-8 table (`gStaticData_0817C4F8`), parked on the same
+  gap - see `docs/matching/issue-62-0x08033804-actor.md`, issue #62.
 
 ## Left raw (not attempted, or attempted and set aside)
 
