@@ -220,7 +220,18 @@ UNITS = [
     (0x0802C464, "src/graphics/actor_part19g.o", "actor"),  # sub_802C464-sub_802C6C0 - proximity/overlap-dispatch and "used"-state transition family sharing the tail sub_802C4C8; matched
     (0x0802C7A8, None, "actor"),  # sub_802C7A8 - a circular-list AABB-overlap scan (self+0x4c walk, type==4 filter, sub_800014C-based translate+compare) - left raw, stack-buffer layout not pinned down with enough confidence for a byte-exact attempt this pass
     (0x0802C904, "src/graphics/actor_part19d.o", "actor"),  # sub_802C904 - same proximity/overlap "used"-state transition shape as actor_part19g.o's family; matched
-    (0x0802C99C, None, "actor"),  # remainder of the 40.4 KB actor zone, still raw
+    (0x0802C99C, None, "actor"),  # remainder of the actor zone before issue #56's chunk, still raw
+    (0x0802F0DC, "src/graphics/actor_part43.o", "actor"),  # sub_802F0DC (issue #56): constructor/reset for a second boss-weapon "spawn/pre-attack" singleton; matched
+    (0x0802F164, None, "actor"),  # sub_802F164 (issue #56): a ~160-instruction state-machine update for the same singleton, incl. a `mov pc, r0` computed-goto jump table - not attempted this pass
+    (0x0802F338, "src/graphics/actor_part43b.o", "actor"),  # sub_802F338 (issue #56, parked, NON_MATCHING) - computes two keyframe-driven tile-cache sizes via sub_8028CD4; real bytes live in asm/code_3_2_20_28568_c99c_2f338.s
+    (0x0802F3BC, "src/graphics/actor_part44.o", "actor"),  # sub_802F3BC-sub_802F6DC (issue #56, 14 functions): accumulator-drain/reward-dispenser, accessors, accumulator drivers, state-transition idioms, and the singleton's teardown/destructor; matched
+    (0x0802F748, "src/graphics/actor_part44b.o", "actor"),  # sub_802F748 (issue #56, parked, NON_MATCHING) - a gStaticData_0817C1C0 stride-8 trampoline-record dispatcher, same shape as the parked sub_802C208; real bytes live in asm/code_3_2_20_28568_c99c_2f748.s
+    (0x0802F7A4, "src/graphics/actor_part45.o", "actor"),  # sub_802F7A4 (issue #56): trivial singleton-flag getter; matched
+    (0x0802F7B0, None, "actor"),  # sub_802F7B0/sub_802F8E8 (issue #56): a pair of ~130-170-instruction VRAM tile-remap loops with heavy sb/sl/r8 register pressure - not attempted this pass
+    (0x0802F97C, "src/graphics/actor_part45b.o", "actor"),  # sub_802F97C (issue #56, parked, NON_MATCHING) - physics-step-and-collision-react updater; real bytes live in asm/code_3_2_20_28568_c99c_2f97c.s
+    (0x0802FA04, "src/graphics/actor_part45c.o", "actor"),  # sub_802FA04 (issue #56, parked, NON_MATCHING) - an InitActorPart-based constructor, same 7-argument shape as the left-raw sub_80305F8; real bytes live in asm/code_3_2_20_28568_c99c_2fa04.s
+    (0x0802FA34, "src/graphics/actor_part46.o", "actor"),  # sub_802FA34 (issue #56): trivial constant-true predicate; matched
+    (0x0802FA38, None, "actor"),  # sub_802FA38 (issue #56): a ~150-instruction position-update/collision-damage function with heavy sb/r8 register pressure, plus the remainder of the actor zone before issue #58's chunk - not attempted this pass
     (0x08030530, "src/graphics/actor_part20.o", "actor"),  # sub_8030530 (issue #58): countdown timer driving a boss-weapon state-2/table-index-1 transition; matched
     (0x08030574, None, "actor"),  # sub_8030574-sub_80305F8 (issue #58): boss-weapon keyframe-table AABB lookup/dispatch and an InitActorPart wrapper - left raw, not attempted this pass beyond a near-miss register-allocation/scheduling gap
     (0x08030640, "src/graphics/actor_part21.o", "actor"),  # sub_8030640 (issue #58): trivial self+0x68 setter; matched

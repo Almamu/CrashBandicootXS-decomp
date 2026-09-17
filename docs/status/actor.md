@@ -231,6 +231,24 @@ from "core" graphics.
   `sub_801426C`/`sub_80142B0`; see
   `docs/matching/issue-18-0x08014f8c-actor.md`.
 
+- `src/graphics/actor_part43.c`/`actor_part44.c`/`actor_part45.c`/
+  `actor_part46.c` (new files, GitHub issue #56, ROM
+  0x0802F0DC-0x0802FBF0 - a second boss-weapon "spawn/pre-attack"
+  singleton and its `self` object, non-adjacent since the left-raw
+  `sub_802F164`/`sub_802F7B0`/`sub_802F8E8`/`sub_802FA38` and the
+  parked `sub_802F338`/`sub_802F748`/`sub_802F97C`/`sub_802FA04` sit
+  interleaved between them; see
+  [docs/matching/issue-56-0x0802f0dc-actor.md](../matching/issue-56-0x0802f0dc-actor.md)):
+  `sub_802F0DC`, `sub_802F3BC`, `sub_802F46C`, `sub_802F47C`,
+  `sub_802F4AC`, `sub_802F4C0`, `sub_802F4CC`, `sub_802F50C`,
+  `sub_802F540`, `sub_802F570`, `sub_802F5AC`, `sub_802F5E4`,
+  `sub_802F640`, `sub_802F69C`, `sub_802F6DC`, `sub_802F7A4`,
+  `sub_802FA34` - a constructor/reset, an accumulator-drain/reward-
+  dispenser, accessors, accumulator drivers, idle-state-reset idioms,
+  and the singleton's teardown/destructor, all sharing
+  `actor_part17.c`/`actor_part18.c`/`actor_part20.c`'s established
+  "self" object conventions.
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
@@ -536,6 +554,27 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   store, branch and call is understood and semantically correct;
   parked on register allocation across the 3-way dispatch - see
   `docs/matching/issue-18-0x08014f8c-actor.md`.
+- **`sub_802F338`** (`src/graphics/actor_part43b.c`) - computes two
+  keyframe-driven tile-cache sizes via `sub_8028CD4`. Every load/store,
+  branch and call confirmed correct; parked on a "materialize the
+  multiply result, then copy it again before shifting" gap this
+  compiler's dead-store elimination always collapses - see
+  `docs/matching/issue-56-0x0802f0dc-actor.md`.
+- **`sub_802F748`** (`src/graphics/actor_part44b.c`) - a
+  `gStaticData_0817C1C0` stride-8 trampoline-record dispatcher, same
+  shape as the parked `sub_802C208`; parked on the same
+  `record = base + state*8` re-derivation register-allocation gap -
+  see `docs/matching/issue-56-0x0802f0dc-actor.md`.
+- **`sub_802F97C`** (`src/graphics/actor_part45b.c`) - a physics-step-
+  and-collision-react updater. Every load/store, branch and call
+  confirmed correct; parked on a residual `r2`-vs-`r3` register choice
+  for a repeated `8` immediate - see
+  `docs/matching/issue-56-0x0802f0dc-actor.md`.
+- **`sub_802FA04`** (`src/graphics/actor_part45c.c`) - an
+  `InitActorPart`-based 7-argument constructor, the same shape as the
+  left-raw `sub_80305F8`; parked on this compiler's own high-register
+  push/pop allocation never matching the ROM's `r4=self,r5=1,r6=e,r7=f`
+  assignment - see `docs/matching/issue-56-0x0802f0dc-actor.md`.
 
 ## Left raw (not attempted, or attempted and set aside)
 
@@ -548,3 +587,17 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   #22) - a ~480-instruction jump-table player action-state machine
   plus two high-register-pressure helpers it calls; left raw, out of
   scope for this pass - see `docs/matching/issue-22-0x08017a44-actor.md`.
+- **`sub_802F164`** (`asm/code_3_2_20_28568_c99c_2f164.s`, GitHub issue
+  #56) - a ~160-instruction state-machine update for the "spawn/pre-
+  attack" singleton, including a `mov pc, r0` computed-goto 5-case
+  jump table; left raw, out of scope for this pass - see
+  `docs/matching/issue-56-0x0802f0dc-actor.md`.
+- **`sub_802F7B0`**/**`sub_802F8E8`**
+  (`asm/code_3_2_20_28568_c99c_2f7b0.s`, GitHub issue #56) - a pair of
+  ~130-170-instruction VRAM tile-remap loops with heavy `sb`/`sl`/`r8`
+  register pressure; left raw, out of scope for this pass - see
+  `docs/matching/issue-56-0x0802f0dc-actor.md`.
+- **`sub_802FA38`** (`asm/code_3_2_20_28568_c99c_2fa38.s`, GitHub issue
+  #56) - a ~150-instruction position-update/collision-damage function
+  with heavy `sb`/`r8` register pressure; left raw, out of scope for
+  this pass - see `docs/matching/issue-56-0x0802f0dc-actor.md`.
