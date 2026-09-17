@@ -21,6 +21,14 @@ for the full write-up, including two real compiler-codegen gotchas
 (a DMA-register load-order fix, and a trailing `asm(".align 2, 0")`
 zero-padding fix) found along the way.
 
+- **`LoadLevelGraphics`** (`src/graphics/level_graphics.c`) - the
+  per-level setup entry point `UpdateGameFrame` calls; stashes the
+  icon-manager pointer, resets the OAM shadow buffer, sets up blend/
+  display registers, DMA3-copies three palette banks, calls
+  `LoadBg2Background`/`LoadObjSpriteTiles`, runs the fade/audio-reset
+  quartet, and starts song `0xb` - see
+  [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md).
+
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
 - **`sub_8020E84`**, **`sub_8020F7C`**, **`sub_802107C`**,
@@ -50,6 +58,21 @@ zero-padding fix) found along the way.
   constant from a still-live register instead of the ROM's fresh
   reload - see
   [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md).
+- **`LoadBg2Background`** (real bytes in
+  `asm/code_3_2_20_28568_c99c_31784_33ef4_355e0.s` under a
+  `.if NON_MATCHING == 0` guard, C in `src/graphics/level_graphics.c`) -
+  BG2's palette/tileset/tilemap loader; every operation and register in
+  the body matches the ROM exactly after register-pinning, but the ROM's
+  prologue/epilogue pushes/pops one extra dead callee-saved register
+  (`r7`) that no reachable C phrasing reproduces alongside the correct
+  body registers at the same time - the same gcc-2.9 allocator artifact
+  documented for `sub_801E644` above - see
+  [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md).
+- **`LoadObjSpriteTiles`** (real bytes in the same new asm file, C in
+  the same file) - the OBJ-sprite tileset/palette loader (4-pass over
+  `gUnknown_030008BC`); semantically faithful but not yet
+  register-tuned - see
+  [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
