@@ -3571,14 +3571,46 @@ is found. No portable C construct tried (an inline-asm memory clobber
 included) discourages this specific loop-invariant hoist. Parked on
 this single 2-byte gap.
 
-`sub_80091D4` through `sub_8009868` (~5 functions, right after the
-parked `sub_8009150`) remain a raw span - complex list-management/
+`sub_80091D4` (right after the parked `sub_9150`) remains raw - complex
+list-management logic whose higher-level purpose isn't recoverable
+without more context. Left raw rather than guess.
+
+**Parked, not matched: `sub_800944C`** (ROM `0x0800944C`, right after
+the raw `sub_80091D4`, `src/graphics/actor_part11.c`): the same
+"extended screen box" filter shape as `sub_8008C80` (the plain
+240x160 GBA screen region, in Q8, at the `gUnknown_03001308`
+sub-object's own position), but instead of filtering into a second
+array, iterates `manager`'s spatial hash grid buckets directly (from
+`baseIdx+2` down to 0, where `baseIdx` is the screen-box's own X
+position clamped to non-negative) and, for every node whose
+`table+0x30/0x34`-driven trampoline passes the box test, fires its
+`table+0x20/0x24`-driven trampoline and marks it (`node+0x11 = 1`) so
+a second pass - over the special "large object" bucket 255 - knows to
+skip nodes already handled via their primary bucket (clearing the mark
+instead of re-testing), while still running the same box-test-then-
+trampoline logic for any bucket-255 node that wasn't already marked.
+
+Every load, store, and field offset is confirmed correct, matching
+down to the exact same `r0`/`r2`/`r3`/`r8` register roles as
+`sub_8008C80`'s own box construction plus a persistent `r7`(grid-head
+base)/`r8`(bucket-255 address) pair mirroring `sub_8008F20`/
+`sub_8009150`'s own early-address-hoisting pattern. The single
+remaining gap: computing `bucket = baseIdx + 2` from the already-
+computed, register-pinned `baseIdx` naturally reuses `baseIdx`'s own
+register in place (`adds r5, #2`) since it's not read again afterward,
+while the ROM computes it into a separate register instead (`adds r1,
+r5, #2`) - no rewrite tried (an intermediate volatile-routed constant
+included) discourages this specific reuse. Parked on this single
+2-byte gap.
+
+`sub_8009528` through `sub_8009868` (~3 functions, right after the
+parked `sub_800944C`) remain a raw span - complex list-management/
 probe functions calling still-unexamined helpers (`sub_800D040`,
 `sub_80109A4`) whose higher-level purpose isn't recoverable without
 more context. Left raw rather than guess.
 
 **Parked, not matched: `sub_8009914`** (ROM `0x08009914`, right after
-the raw `sub_80091D4`-`sub_8009868` span, `src/graphics/actor_part11.c`):
+the raw `sub_8009528`-`sub_8009868` span, `src/graphics/actor_part11.c`):
 resets a pool manager to empty. First tears down every active object
 in `slotArray[0..activeCount)` - firing each one's `table+0x50/0x54`
 trampoline via `sub_803AD80` with constant arg `3` if non-`NULL`, then

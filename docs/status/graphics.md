@@ -269,6 +269,14 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   out of a 255-iteration loop, where the ROM recomputes it fresh every
   non-empty bucket) - see `docs/matching.md`, "Parked, not matched:
   `sub_8009150`".
+- **`sub_800944C`** (`src/graphics/actor_part11.c`) - the same
+  "extended screen box" filter shape as `sub_8008C80`, but iterating
+  the spatial hash grid directly and firing per-object trampolines
+  instead of building a second array. Every load, store, and field
+  offset confirmed correct; parked purely on a single register-reuse
+  choice (`bucket = baseIdx + 2` computed in-place instead of into a
+  fresh register) - see `docs/matching.md`, "Parked, not matched:
+  `sub_800944C`".
 - **`sub_8009914`** (`src/graphics/actor_part11.c`) - resets a pool
   manager to empty: tears down every active object, then rebuilds the
   grid and free list from scratch. The teardown loop is confirmed

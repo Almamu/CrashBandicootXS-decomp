@@ -714,6 +714,10 @@ _0800943A:
 	bx r0
 	.align 2, 0
 
+@ sub_800944C is reconstructed (semantics fully understood, but not
+@ yet byte-matching) as C in src/graphics/actor_part11.c, guarded by
+@ #if NON_MATCHING - see docs/matching.md for the exact remaining gap.
+.if NON_MATCHING == 0
 	thumb_func_start sub_800944C
 sub_800944C: @ 0x0800944C
 	push {r4, r5, r6, r7, lr}
@@ -829,6 +833,7 @@ _0800951A:
 	pop {r4, r5, r6, r7}
 	pop {r0}
 	bx r0
+.endif
 	.align 2, 0
 
 	thumb_func_start sub_8009528

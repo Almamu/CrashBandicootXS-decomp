@@ -7,6 +7,7 @@ extern void sub_8026EB4(void *ptr);
 extern void sub_8026ED0(void *manager);
 extern void *sub_8026EC0(u32 size);
 extern s32 sub_803AD80(void *arg0, void *arg1, void *fn);
+extern void *gUnknown_03001308;
 
 /* The "filter into a second array" manager struct also used by
  * `sub_8008C80`/`sub_8008CEC`/`sub_8008D30` in `actor_part10.c` -
@@ -506,6 +507,123 @@ void sub_8009914(struct pool_manager *manager)
         }
 
         *field814 = *field810;
+    }
+}
+#endif /* NON_MATCHING */
+
+#if NON_MATCHING
+/* Same "extended screen box" filter shape as `sub_8008C80` (the plain
+ * 240x160 GBA screen region, in Q8, at the `gUnknown_03001308`
+ * sub-object's own position), but instead of filtering into a second
+ * array, iterates `manager`'s spatial hash grid buckets directly
+ * (from `baseIdx+2` down to 0, where `baseIdx` is the screen-box's own
+ * X position clamped to non-negative) and, for every node whose
+ * `table+0x30/0x34`-driven trampoline passes the box test, fires its
+ * `table+0x20/0x24`-driven trampoline and marks it (`node+0x11 = 1`)
+ * so the second pass - over the special "large object" bucket 255 -
+ * knows to skip nodes already handled via their primary bucket
+ * (clearing the mark instead) rather than double-processing them,
+ * while still running the same box-test-then-trampoline logic for any
+ * bucket-255 node that wasn't already marked.
+ *
+ * NOT YET BYTE-MATCHING, but extremely close - every load, store, and
+ * field offset is confirmed correct, matching down to the exact same
+ * `r0`/`r2`/`r3`/`r8` register roles as sub_8008C80's own box
+ * construction plus a persistent `r7`(grid-head base)/`r8`(bucket-255
+ * address) pair mirroring sub_8008F20/sub_8009150's own early-address-
+ * hoisting pattern. The single remaining gap: computing `bucket =
+ * baseIdx + 2` from the already-computed, register-pinned `baseIdx`
+ * naturally reuses `baseIdx`'s own register in place (`adds r5, #2`)
+ * since it's not read again afterward, while the ROM computes it into
+ * a separate register instead (`adds r1, r5, #2`) - no rewrite tried
+ * (an intermediate volatile-routed constant included) discourages
+ * this specific reuse. Parked on this single 2-byte gap - see
+ * docs/matching.md, "Parked, not matched: `sub_800944C`". */
+void sub_800944C(void *managerArg)
+{
+    register struct pool_manager *manager asm("r3") = managerArg;
+    s32 box[4];
+    register void *P asm("r0") = gUnknown_03001308;
+    register void *subObj asm("r2") = *(void **)((u8 *)P + 0x10);
+    register s32 v0 asm("r1") = *(s32 *)subObj << 8;
+    register s32 v1 asm("r0") = *(s32 *)((u8 *)subObj + 4) << 8;
+    s32 v2, v3;
+    register s32 baseIdx asm("r5");
+    s32 bucket;
+
+    box[0] = v0;
+    box[1] = v1;
+    v2 = 0xf0 << 8;
+    v3 = 0xa0 << 8;
+    box[2] = v2;
+    box[3] = v3;
+
+    baseIdx = *(s32 *)subObj >> 8;
+    if (baseIdx < 0) {
+        baseIdx = 0;
+    }
+
+    bucket = baseIdx + 2;
+    {
+        void **gridHeadBase = manager->gridHead;
+        register void **gridHead255 asm("r8") = &manager->gridHead[255];
+
+        for (; bucket >= 0; bucket--) {
+            void *node = gridHeadBase[bucket];
+
+            if (node == 0) {
+                continue;
+            }
+
+            do {
+                void *part = *(void **)node;
+                u8 *tbl = *(u8 **)((u8 *)part + 0x18);
+                s16 offset = *(s16 *)(tbl + 0x30);
+                void *addr = (u8 *)part + offset;
+                void *fn = *(void **)(tbl + 0x34);
+
+                if ((u8)sub_803AD80(addr, box, fn)) {
+                    u8 *tbl2 = *(u8 **)((u8 *)part + 0x18);
+                    s16 offset2 = *(s16 *)(tbl2 + 0x20);
+                    void *addr2 = (u8 *)part + offset2;
+                    void *fn2 = *(void **)(tbl2 + 0x24);
+
+                    sub_803AD7C(addr2, fn2);
+                    *((u8 *)node + 0x11) = 1;
+                }
+
+                node = *(void **)((u8 *)node + 4);
+            } while (node != 0);
+        }
+
+        {
+            void *node = *gridHead255;
+
+            while (node != 0) {
+                void *node2 = *(void **)((u8 *)node + 0xc);
+
+                if (*((u8 *)node2 + 0x11) != 0) {
+                    *((u8 *)node2 + 0x11) = 0;
+                } else {
+                    void *part = *(void **)node;
+                    u8 *tbl = *(u8 **)((u8 *)part + 0x18);
+                    s16 offset = *(s16 *)(tbl + 0x30);
+                    void *addr = (u8 *)part + offset;
+                    void *fn = *(void **)(tbl + 0x34);
+
+                    if ((u8)sub_803AD80(addr, box, fn)) {
+                        u8 *tbl2 = *(u8 **)((u8 *)part + 0x18);
+                        s16 offset2 = *(s16 *)(tbl2 + 0x20);
+                        void *addr2 = (u8 *)part + offset2;
+                        void *fn2 = *(void **)(tbl2 + 0x24);
+
+                        sub_803AD7C(addr2, fn2);
+                    }
+                }
+
+                node = *(void **)((u8 *)node + 4);
+            }
+        }
     }
 }
 #endif /* NON_MATCHING */
