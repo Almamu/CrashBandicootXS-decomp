@@ -229,7 +229,18 @@ UNITS = [
     (0x0803146C, "src/graphics/actor_part25.o", "actor"),  # sub_803146C (issue #58): boss-weapon "charge" countdown driving a state-4/table-index-1 transition; matched
     (0x08031504, None, "actor"),  # sub_8031504/sub_8031604 (issue #58): DMA/tile-cache setup and a palette/tile-nibble repack loop - left raw, register-pressure not attempted this pass
     (0x0803171C, "src/graphics/actor_part26.o", "actor"),  # sub_803171C/sub_8031744 (issue #58): palette flash-color select and DMA-queued palette-strip animation refresh; matched
-    (0x08031784, None, "actor"),  # remainder of the 40.4 KB actor zone, still raw
+    (0x08031784, None, "actor"),  # remainder of the actor zone before issue #62's chunk, still raw
+    (0x08033804, "src/graphics/actor_part28.o", "actor"),  # sub_8033804-nullsub_37 (issue #62): the gUnknown_030015AC singleton's one-shot latch, a P1/P2 mirror speed-override toggle, its field getters, and the two shared state-transition/anim-frame-reset setters (sub_803390C/sub_803395C); matched
+    (0x080339DC, "src/graphics/actor_part29.o", "actor"),  # sub_80339DC (issue #62, parked, NON_MATCHING) - a proximity-triggered effect/hazard detector measuring self's distance to the player after syncing to the singleton's position; real bytes live in asm/code_3_2_20_28568_c99c_31784_339dc.s
+    (0x08033AE0, "src/graphics/actor_part30.o", "actor"),  # sub_8033AE0 (issue #62): TakeDamage-style health countdown + death-state transition for this "self" object; matched
+    (0x08033B44, "src/graphics/actor_part31.o", "actor"),  # sub_8033B44 (issue #62, parked, NON_MATCHING) - position-update-then-draw helper via a gStaticData_0817C4E0 stride-8 trampoline table, same shape as the parked sub_802C208; real bytes live in asm/code_3_2_20_28568_c99c_31784_33b44.s
+    (0x08033BB8, "src/graphics/actor_part32.o", "actor"),  # sub_8033BB8/sub_8033BFC/sub_8033C28 (issue #62): an InitActorPart-based constructor, a fixed sound cue + conditional event-table trampoline, and a state-1/table-index-1 transition; matched
+    (0x08033C84, "src/graphics/actor_part33.o", "actor"),  # sub_8033C84 (issue #62, parked, NON_MATCHING) - sub_8033B44's predicate twin (same stride-8 table, returns a bool instead of tail-calling); real bytes live in asm/code_3_2_20_28568_c99c_31784_33c84.s
+    (0x08033CF0, "src/graphics/actor_part34.o", "actor"),  # sub_8033CF0 (issue #62): trivial self+0x6c death-flag getter; matched
+    (0x08033CF8, "src/graphics/actor_part35.o", "actor"),  # sub_8033CF8 (issue #62, parked, NON_MATCHING) - sub_80339DC's sibling proximity/spawn detector; real bytes live in asm/code_3_2_20_28568_c99c_31784_33cf8.s
+    (0x08033E18, "src/graphics/actor_part36.o", "actor"),  # sub_8033E18 (issue #62): sub_8033AE0's state-1-gated twin; matched
+    (0x08033E80, "src/graphics/actor_part37.o", "actor"),  # sub_8033E80 (issue #62, parked, NON_MATCHING) - sub_8033B44's twin using the gStaticData_0817C4F8 stride-8 table; real bytes live in asm/code_3_2_20_28568_c99c_31784_33e80.s
+    (0x08033EF4, None, "actor"),  # remainder of the actor zone after issue #62's chunk, still raw
     (0x080354E0, None, "graphics_loading"),  # LoadLevelGraphics, LoadBg2Background, LoadObjSpriteTiles
     (0x08037110, "src/audio/counter_selector.o", "audio"),  # sub_8037110/nullsub_7/sub_8037154/sub_803716C/sub_80371B4/sub_8037224 - a small on-screen 0-5 "counter" widget (increments/decrements with input, confirms/cancels with PlaySfx), reads like game/HUD-side code using PlaySfx rather than GAX2 internals; sub_803716C is UNUSED (no caller found); matched
     (0x080372BC, None, "audio"),  # sub_80372BC/sub_8037388 - fully understood (icon-manager draw loop / tile-cache init for the widget above) but hits the same gcc-2.9 many-register-allocation difficulty already documented for sub_8006600 (src/graphics/oam_count.c); left raw rather than force a low-confidence register pin
