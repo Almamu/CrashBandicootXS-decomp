@@ -46,6 +46,31 @@ automatically qualify - see "When to actually rename" below.
   established pret/GBA-decomp convention (`N` assigned sequentially as
   they're found; don't renumber existing ones to "fix" gaps).
 
+## Functions with no caller anywhere in the ROM
+
+A function can turn out to be genuinely dead code - nothing in the whole
+ROM (`bl`/`.4byte` reference) ever calls it, confirmed by grepping every
+`asm/*.s`/`expected/*.s`/`src/**/*.c` for its address/symbol before
+concluding this, not just the files nearby. This does **not** mean skip
+matching it - it still goes through the full workflow.md loop like any
+other function, since it's still real code that shipped in the ROM and its
+behavior is worth understanding. What changes is the documentation:
+
+- Say so plainly in the function's doc comment - `/* UNUSED - no caller
+  anywhere in the ROM (checked <what was grepped>). ... */` - not a vague
+  question or a TODO. If there's a plausible reason it's dead (leftover
+  debug/dev code, an earlier design that got replaced, a duplicate of
+  another function that superseded it), say that too, but don't invent a
+  confident reason that isn't actually supported by what's visible in the
+  ROM.
+- Still record it as matched (or parked) in `docs/matching.md`/
+  `docs/status/<system>.md` the normal way - being unused isn't a reason to
+  leave it out of the log.
+- Don't confuse this with a function that merely computes something and
+  discards the result (e.g. calling a function purely for a side effect,
+  ignoring its return value) - that function still *has* a caller and is
+  reachable; only tag `UNUSED` when nothing calls the function itself.
+
 ## When to actually rename
 
 Only once the function's behavior is understood confidently enough that the

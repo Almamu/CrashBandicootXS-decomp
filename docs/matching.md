@@ -2508,30 +2508,8 @@ into `asm/code_3_2_3.s` (now just the parked `sub_8007DBC`) and a new
 `src/graphics/actor_part3.c` (holding just `sub_8007F78`) inserted
 between them in `ldscript.txt`.
 
-**`sub_8008618`** (ROM `0x08008618`, new
-`src/graphics/actor_part4.c`): clamps a requested signed animation-frame
-index to the last valid frame in the current 0x1c-byte animation record
-(`part->anim_data->records[part->anim_index].frame_count - 1`) and stores
-it in `part->frame_index`; negative indices are deliberately left
-unchanged because the ROM only checks the upper bound. The minimal local
-structs name every field this function touches; no compatible shared
-struct for this extended part object exists yet (`actor_part.c` still
-documents the same object through raw offsets).
-
-Plain struct-based C first produced the correct logic and total size but
-allocated the index in r0, omitting r5 from the prologue. Register pins
-for the live values reproduced the ROM's r0-r5 allocation. One final
-byte difference remained in a commutative address addition: gcc emitted
-`adds r0,r1,r0` while the ROM uses `adds r0,r0,r1`; a one-instruction
-inline-asm anchor fixes only that operand order. Direct extraction of the
-compiled `.text` and the 40 ROM bytes produced the same SHA-1
-(`889361516468f3f59e6749eb170cecf21143bb8b`), and both pre- and
-post-cleanup `make compare` runs passed. `asm/code_3_2_4.s` was split at
-this exact location, with the untouched remainder starting at
-`sub_8008640` in new `asm/code_3_2_5.s`, and `actor_part4.o` interleaved
-between them in `ldscript.txt`.
-
-**`sub_8027838`** (ROM `0x08027838`, 262 bytes, new
+**`sub_8027838`** (ROM `0x08027838`, 262 bytes, contributed via PR #1 by
+@MiryamSanchez26, new
 `src/graphics/hud_counter.c`): updates a cached two-digit HUD counter
 from the central state object's `+0x74` value. Negative source values
 are displayed as zero. Modes 1 and 3 derive the shared horizontal HUD
@@ -2555,7 +2533,1937 @@ The explicit trailing alignment preserves the ROM's zero halfword.
 Direct comparison of the 264-byte linked region (262 bytes of function
 plus two bytes of alignment) produced identical SHA-1 values
 (`e9e861b9af7201e179d747cc8afc019ed6b6bf4f`), and both the initial and
-post-cleanup `make compare` runs passed. `asm/code_3_2_5.s` was split at
+post-cleanup `make compare` runs passed. `asm/code_3_2_17.s` was split at
 this exact location; its untouched remainder begins at `sub_8027940` in
-new `asm/code_3_2_6.s`, with `hud_counter.o` interleaved between them in
-`ldscript.txt`.
+new `asm/code_3_2_20.s`, with `hud_counter.o` interleaved between them in
+`ldscript.txt`. (The PR's own second matched function, `sub_8008618`,
+turned out to duplicate work already matched independently on `main` in
+`actor_part6.c` - see that file's own entry above for the real writeup;
+the PR's version wasn't merged.)
+
+**`sub_8007FD8`** (ROM `0x08007FD8`, right after `sub_8007F78`, same
+file): an AABB-vs-region overlap test, sharing `sub_8007F78`'s exact
+`part+0x25 == 1`/`part+0xd` bit-2 fast-path shape, but the real check
+builds `part`'s own AABB (via the still-parked `sub_8007B00` -
+confirms that function's `struct aabb` output shape is trusted even
+though it isn't byte-matching yet) and tests it for overlap against a
+second `void *region` parameter's raw `{s32 x, y, w, h}` fields (kept
+raw - `region`'s own type isn't established) with the standard
+`x2 > region.x && x1 < region.x+region.w && y2 > region.y && y1 <
+region.y+region.h` open-interval test.
+
+Two things made this look harder than it was at first, both resolved
+the same way: the ROM computes a `0`-default return value into `r3`
+*before* the `part+0x25` check even runs (used only by the `bit-2 set`
+early-return path), then *separately* accumulates the real overlap
+result into `r7` during the AABB test, copying `r7` back into `r3`
+only at the very end, right before the final `r3`-to-`r0` return copy
+- writing this as a single `result` variable initialized once at the
+top made the AABB-building code reuse *that* variable's `r3` for its
+own `x1`/`x2` intermediates too early (since `result`'s lifetime
+spanned the whole function), landing `x1` in a fresh register instead
+of the ROM's r3. Splitting the single C-level "result" into two: an
+outer `earlyResult` (`register s32 ... asm("r3") = 0`, used only by
+the bit-2 early return) and a separate inner `result` (a *plain*,
+unpinned local for the overlap accumulator - letting the allocator
+naturally put it in r7 once the AABB math frees up `r3` for its own
+temporaries) got every register right, including the final
+`earlyResult = result; return earlyResult;` two-step copy matching the
+ROM's own `r7`-to-`r3`-to-`r0` chain.
+
+The second snag: explicitly pinning the inner accumulator to
+`register s32 result asm("r7")` compiled correct instruction content
+but silently dropped `r7` from the prologue/epilogue's `push`/`pop`
+list (`push {r4,r5,r6,lr}` instead of the ROM's `push
+{r4,r5,r6,r7,lr}`) - yet another distinct r7-pin failure mode beyond
+the two already seen in this file (silently ignored placement,
+outright compiler crash): here the pin's *value* and *instructions*
+compile correctly, only the register-preservation bookkeeping is
+skipped. Leaving the same variable as a plain unpinned `s32 result;`
+let the natural allocator choose r7 on its own, and with no explicit
+pin in the way, the prologue/epilogue push/pop list came out correct.
+Between this and `sub_8007DBC`'s crash and the earlier "pin place
+non-r7 registers but the compiler ignores it" cases, r7 pins in this
+toolchain now have three known-different failure shapes - avoid them
+entirely and let the allocator find r7 on its own wherever possible.
+
+Also needed a trailing `asm(".align 2, 0");` after this function - it
+is the last one in `src/graphics/actor_part3.c`, and without it the
+2-byte gap gcc leaves between this object's end and the next linked
+object filled with a real `nop` encoding (`0x46c0`) instead of the
+ROM's zero bytes (the raw `.s` file's original `.align 2, 0` directive
+explicitly zero-fills; gcc's own automatic inter-function padding
+inside a single translation unit does not) - see the
+`matching_decomp_alignment_fix` memory and the established "only
+needed when the function is last in its TU" rule.
+
+**Parked, not matched: `sub_8008044`** (ROM `0x08008044`, right after
+`sub_8007FD8`, same file): advances `part`'s per-keyframe animation
+timer by one tick, gated on `part+0x2c`. `part+0x34` counts up each
+tick against the current keyframe record's `+0x15` duration; once it
+reaches that duration, `part+0x34` resets and `part+0x30` (the frame
+index) advances. If `part+0x30` then reaches the record's `+0x16`
+frame count, both counters reset and - unless the record's `+0x17`
+flags byte has bit 1 set (a "loop" flag, working theory) - `part+0x38`
+gets marked done. Record fields kept raw, same keyframe-table
+convention used throughout this ROM region.
+
+The ROM keeps `part` itself in `ip` for the whole function (no `bl`
+happens after the initial `part+0x2c` check, so nothing ever clobbers
+`ip`, letting it substitute for a genuinely saved register for free)
+and shares its keyframe-table pointer (kept in `r3`) and index-byte
+address (copied into `r2` right after the first half's `rec`
+computation) across both halves, so the second half never needs to
+re-read `part+0x20`/recompute `part+0x2d`. Register pins matching the
+ROM's exact choices (`counter` in `r4`, `tablePtr` in `r3`, `idxAddr`
+in `r1`, `table` in `r2`, `idx` in `r5`) plus writing the final
+`rec = idx*0x1c; rec = rec + (s32)table;` as two separate integer
+(not pointer) additions - to get the ROM's `adds r0,r0,r2` operand
+order instead of gcc's own canonicalized `adds r0,r2,r0` for pointer
+arithmetic - got the entire FIRST half matching the ROM
+instruction-for-instruction, including the `ip` trick and the
+inverted-condition/swapped-branch-target `if`/`else` layout (writing
+the C condition as `counter < duration` with the bodies swapped,
+rather than the more natural `counter >= duration`, to match the ROM's
+own `bge`-to-forward-block/fallthrough-else layout instead of the
+opposite).
+
+The second half resisted every attempt to add the same "shared
+table pointer/index address" reuse: introducing ANY value that must
+survive from the first half into the second (an outer-scope plain
+local, an outer-scope register pin, either alone or together)
+reliably made gcc stop using `ip` for `part` at all, instead
+allocating it a genuine callee-saved register (`r6`, widening the
+`push`/`pop` list from `{r4,r5,lr}` to `{r4,r5,r6,lr}`) and
+reintroducing a fresh, different set of register-letter mismatches
+throughout - trading one gap for a worse one every time. Parked with
+the version that gets the whole first half byte-exact rather than
+chase this - same call as `sub_8007B00`/`sub_8007B98`/`sub_8007DBC`
+above.
+
+**`sub_80080C0`** (ROM `0x080080C0`, right after `sub_8008044`, new
+`src/graphics/actor_part4.c`): builds `part`'s AABB (the same
+keyframe-table shape/record layout as `sub_8007B98` -
+`{s16 offX, s16 offY, u8 w, u8 h}` at `rec+4`/`+6`/`+8`/`+9` - but
+inlined directly here rather than calling it, since this function
+needs the box left on the stack for the final overlap test, not
+written out through a `dest` pointer), mirrors it per `part+0x28` bits
+4/5 (same convention as the other AABB builders), and tests the result
+for overlap against a `region` parameter via `sub_8001688` - the same
+collision-test function `sub_8007DBC` uses, confirming its signature.
+Also confirms `part+0x28` bits 4/5 read via the `((u32)(byte <<
+(31-N))) >> 31` idiom (materializing a clean `0`/`1` boolean for a
+LATER comparison) rather than the sign-branch `(s32)(byte << (31-N)) <
+0` form used in `sub_8007B00`/`sub_8007B98`/`sub_8007C30`/
+`sub_8007CF8` (which only works when the value feeds an immediate
+`if`, not when it must survive past intervening code like the
+`sub_803AFE4`/`sub_803AFDC` calls here).
+
+Matched on the first real attempt using the by-now-established
+`sub_8007B00`-style register-chain-reuse pattern for the keyframe
+lookup: `idx` pinned to `r3` and `rec` pinned to `r0`, reused across
+three roles (table pointer's dereferenced value, then `+offset`, i.e.
+`rec` itself) exactly like `sub_8007B00`'s own `table`/`rec` reuse -
+plus reusing `part`'s own parameter register for the index-byte
+address (`part = (struct actor *)((u8 *)part + 0x2d);`) once `part`
+itself is dead, matching the ROM's own reuse of `r0` for exactly that.
+Uses three high registers (`r8`/`sb`/`sl`) for values that must
+survive the three `bl` calls, saved via the by-now-standard
+"copy each into r4-r7, then push those" prologue trick (`mov r7,sl;
+mov r6,sb; mov r5,r8; push {r5,r6,r7}`) - no explicit C-level trick
+needed for this, gcc emits it automatically once enough values need
+protecting past the calls.
+
+Needed a trailing `asm(".align 2, 0");` since it's the only function
+in `src/graphics/actor_part4.c` - same established alignment gotcha as
+`sub_8007FD8` above. Not ROM-adjacent to `actor_part3.c` either (the
+parked `sub_8008044` sits raw between them, in `asm/code_3_2_4.s`), so
+needed the same file-split treatment: `asm/code_3_2_4.s` split again
+at the `sub_800815C` boundary right after `sub_8008044`'s guard, into
+`asm/code_3_2_4.s` (now just the parked `sub_8008044`) and a new
+`asm/code_3_2_5.s`, with the new `src/graphics/actor_part4.c`
+(holding just `sub_80080C0`) inserted between them in `ldscript.txt`.
+
+**`sub_800815C`** (ROM `0x0800815C`, right after `sub_80080C0`, same
+file): a small lookup - reads `part`'s current keyframe record's
+`+0x14` byte as a record id, then passes it to `sub_8006DF8` (already
+matched in `graphics.c`) against the global tile-asset cache
+`gUnknown_030012B8`. Matched on the first attempt (after one register
+fix): the ROM reads `gUnknown_030012B8`'s value into `r3` *before* any
+of the keyframe-table math, not right before the call - writing the
+same `struct tile_asset_cache *cache = gUnknown_030012B8;` as the
+first statement (rather than passing the global directly as the call
+argument) reproduces that ordering. The keyframe-table lookup then
+needed the `sub_8007B00`-style "one register carries every role"
+reuse taken further than usual: a single pinned `rec` (`r1`) is
+reused for the *offset* computation (`idx*0x1c`), then `+table` to
+become `rec` proper, then the final `+0x14` byte read to become
+`recordId` - four different named quantities in this description, but
+literally one register end to end - while `idx` (`r4`) and `table`
+(a plain unpinned local, naturally `r2`) each get one, single
+untouched role. Byte-exact on the first successful attempt, no
+parking needed.
+
+**Parked, not matched: `sub_8008188`** (ROM `0x08008188`, right after
+`sub_800815C`, same file): adjusts `dest`'s `{s32 field_0, field_4}`
+(a position, working theory) per a `kind` selector (`kind-1` is the
+real switch value, 0-11; everything else - including the four
+explicit no-op cases 2/4/5/6/8/9/10 - does nothing) and a small `rec`
+record: kind 1/2 add/subtract `rec+4`'s byte (shifted by 7, not 8 -
+maybe a half-Q8 value) to/from `dest->field_0`; kind 4 subtracts
+`rec+2`'s signed 16-bit value (shifted by 8, full Q8) from
+`dest->field_4`; kinds 8/12 do the same as kind 4 but add `rec+5`'s
+byte to the `rec+2` value first. `dest`/`rec` kept raw since neither
+type is established.
+
+Matched everything except a single instruction on the first attempt:
+every instruction's operation, order, and even the non-obvious case
+layout (the `add`/`subtract` cases had to be declared `kind==2` first,
+`kind==1` second in the `switch` - opposite of their numeric order -
+to get the ROM's own code-block ordering, the same "declaration order
+picked by trial, not a general rule" pattern seen in `sub_8007DBC`'s
+spawn switch) match, including the two duplicate case labels (kinds 8
+and 12) correctly sharing one code block via register-pinned locals
+(`v`/`byteVal` in `r1`/`r2`, matching the ROM's own register choices
+for the loads).
+
+The one holdout: the shared kind-8/12 block's `add` combining the two
+loaded values compiles as `adds r1, r1, r2` (destination's own prior
+value as the first source operand - the "obvious" in-place-accumulate
+encoding) where the ROM has `adds r1, r2, r1` (the *other* operand
+first). Tried and failed: swapping the C addition's operand order
+(`byteVal + v` vs `v + byteVal`); giving both operands and the result
+each their own explicit register pin; using a genuinely separate,
+unpinned result variable; an inline-asm anchor for just the add
+(this DID produce the right instruction, but broke the kind-8/12 block
+merging in the process - the compiler no longer recognized the two
+case bodies as identical, trading a 1-instruction mismatch for
+duplicated code and a completely different, larger mismatch); and
+reversing which operand's load comes first in the C source (gcc just
+reschedules the loads back to the ROM's own order regardless, and
+still emits the self-referencing `add` form). This compiler appears
+to always canonicalize a register-register add so the destination's
+own incoming value becomes the first source operand - no C-level
+construction was found that produces the other order while also
+preserving the block-merging and every other already-matching
+instruction. Parked rather than keep chasing this one instruction -
+same call as the other parked functions above.
+
+**Parked, not matched: `sub_8008200`** (ROM `0x08008200`, right after
+`sub_8008188`, same file): the same shape as `sub_8008188` above, with
+every add/subtract direction mirrored (kind 1/2 do the opposite sign
+on `dest->field_0`; kinds 4/8/12 add to `dest->field_4` instead of
+subtracting). Same single resistant gap: the shared kind-8/12 block's
+`add` compiles as `adds r1, r1, r2` instead of the ROM's
+`adds r1, r2, r1` - see `sub_8008188`'s entry above for the full
+account of what was tried (all of which applies identically here, not
+re-run a second time). Parked as `NON_MATCHING` alongside its sibling.
+
+**Parked, not matched: `sub_8008278`** (ROM `0x08008278`, right after
+`sub_8008200`, same file): a third variant of the `sub_8008188` shape,
+this time updating *both* fields on every handled `kind`: kind 1/2
+update `dest->field_0` (sub/add `rec+4`'s byte) and then
+unconditionally also add `rec+2`'s short (Q8) to `dest->field_4`;
+kinds 4/8/12 update `dest->field_4` (same as `sub_8008188`'s kinds)
+and then unconditionally also subtract `rec+4`'s byte from
+`dest->field_0`. Needed the accumulator-register pin pattern
+(`byteVal`/`shifted`/`field0`, reusing `r0` for the byte-load-then-
+field0-reload chain in the kind-0/1 blocks, `r2` in the kind-3/7/11
+tail block, matching the ROM's own choice of which dead register gets
+reused each time) to get every other instruction matching. Same single
+resistant gap as `sub_8008188`/`sub_8008200`: the shared kind-8/12
+block's `add` compiles as `adds r1, r1, r0` instead of the ROM's
+`adds r1, r0, r1` - see `sub_8008188`'s entry above for the full
+account of what was tried against this exact pattern. Parked alongside
+its two siblings.
+
+**`sub_8008304`** (ROM `0x08008304`, right after `sub_8008278`, new
+`src/graphics/actor_part5.c`): `part+0x25 == 1` is the same fast
+override seen in `sub_8007F78`/`sub_8007FD8`; otherwise defers entirely
+to `sub_8007114` (already matched in `graphics.c`), forwarding a `box`
+argument straight through untouched. Matched on the second attempt: the
+first draft let the compiler use `part`'s own register (`r0`) as
+scratch for the `part+0x25` address computation, forcing an extra
+"restore `r0` before the call" copy the ROM doesn't have (the ROM
+computes that address into `r2`, a genuinely fresh register, leaving
+`r0`/`part` and `r1`/`box` both untouched from function entry all the
+way to the `bl`). Fixed by pinning the address to `r2` *and* reusing
+that same register in place for the loaded byte (`register u8 *addr
+asm("r2")` then `register u8 byteVal asm("r2");`) - once the address
+computation had its own dedicated register, gcc stopped needing to
+relocate `part`, matching the ROM exactly with zero remaining
+differences. Same file-split treatment as the previous non-adjacent
+functions in this cluster: `asm/code_3_2_5.s` split at the
+`sub_8008328` boundary into itself (now just the three parked
+functions) and a new `asm/code_3_2_6.s`, with the new
+`src/graphics/actor_part5.c` inserted between them in `ldscript.txt`.
+
+**`sub_8008328`** (ROM `0x08008328`, right after `sub_8008304`, same
+file): the same `part+0x25 == 1` fast-override shape, deferring to
+`sub_8006FE4` (already matched in `graphics.c`) instead of
+`sub_8007114` - a single-argument sibling, so the address-scratch
+register naturally lands in `r1` instead of `r2` (no second call
+argument to avoid clobbering). Matched on the first attempt, applying
+the same `addr`/`byteVal` register-reuse pin from `sub_8008304`
+directly.
+
+**Parked, not matched: `sub_80083B8`** (ROM `0x080083B8`, right after
+`sub_80083A8`, same file): looks up `part`'s current keyframe record
+(the same `sub_8007B00`-style keyframe-table chain used throughout
+this ROM region). If `part+0x38` ("done", set by `sub_8008044`) is
+set and the record's `+0x17` flags byte bit 1 is clear (not looping),
+clamps `part`'s frame index (`+0x30`) to the last frame
+(`record+0x16 - 1`) and resets the sub-counter (`+0x34`) to the
+record's duration (`record+0x15`). Either way, then resolves a final
+pointer: the record's own `+0` field is itself a pointer (`recPtr`) to
+a per-frame `u16` array, indexed by the (possibly just-clamped) frame
+index; that `u16` in turn indexes a pointer array at `table+4`, and
+the result is that array's pointer at the looked-up index.
+
+Needed the `sub_8007B00`-style single-register `rec` chain (`r1`,
+reused across the `tablePtr`/`table`/`rec` roles) plus explicit pins
+matching every one of the ROM's own register choices (`idxAddr` in
+`r2`, `idx` in `r4`) to get the whole keyframe lookup and conditional
+clamp matching exactly, including the by-now-standard
+accumulator-register pattern (`mask`/`flags`/`test`, constant computed
+before the byte load) for the `part+0x17` bit-2 test.
+
+Confirmed one apparent mismatch is not real: the compiled `ands r0, r0,
+r2` versus the ROM's `ands r0, r2` assemble to the identical byte
+encoding (Thumb's `ANDS` register form has no 3-operand encoding at
+all - the extra `r0` some assemblers print is purely a disassembly
+convention, not a distinguishable instruction). The one genuine
+remaining gap: the final index computation's `add` compiles as
+`adds r0, r1, r0` where the ROM has `adds r0, r0, r1` - the same
+"which operand goes first" canonicalization documented at length for
+`sub_8008188`/`sub_8008200`/`sub_8008278` above. Reordering the C
+addition, pinning each operand to its own register, and using a
+genuinely separate destination variable (all three techniques,
+independently) made no difference here either. Parked rather than keep
+chasing this one instruction - same call as the other parked functions
+above.
+
+**`sub_8008408`** (ROM `0x08008408`, right after `sub_80083B8`, new
+`src/graphics/actor_part6.c`): the same `gUnknown_03001308` sub-object
+convention used throughout this ROM region (`sub_8007F78`/
+`sub_8006FE4`) - if `gUnknown_03001308+0x2b` is nonzero, returns the
+sub-object's `+0x34` byte's low 2 bits minus 1; otherwise returns
+those bits unmodified. Matched on the second attempt: the first draft
+had the compiler lay out the `if`/`else` bodies in the opposite order
+from the ROM (ROM falls through the "nonzero" case first, branches
+past it to the "zero" case second); inverting the C condition
+(`== 0` instead of `!= 0`, with the bodies swapped to match) got the
+ROM's exact block order. Not ROM-adjacent to `actor_part5.c` (the
+parked `sub_80083B8` sits raw between them), so it needed the same
+file-split treatment used throughout this cluster: `asm/code_3_2_6.s`
+split at the `sub_8008434` boundary into itself (now just the parked
+`sub_80083B8`) and the new `asm/code_3_2_7.s`, with the new
+`src/graphics/actor_part6.c` inserted between them in `ldscript.txt`.
+
+**`sub_8008434`** (ROM `0x08008434`, right after `sub_8008408`, same
+file): a `struct actor`-shaped object constructor - allocates via
+`sub_8026EDC(0x40)`, initializes it through `sub_800725C` (already
+matched in `graphics.c`, wires up `gStaticData_087E3BEC` and clears
+flags), then immediately overwrites its `table` with
+`gStaticData_087E3C44` instead and clears its part-object fields via
+`sub_8007AB4` (already matched in `actor_part.c`). The three `u16`
+arguments become `field_08` and the Q8 `x`/`y` position. Matched on
+the first attempt.
+
+**`sub_8008480`** (ROM `0x08008480`, right after `sub_8008434`, same
+file): trivial always-true stub, `return 1;`. Matched on the first
+attempt.
+
+**`sub_8008484`** (ROM `0x08008484`, right after `sub_8008480`, same
+file): the same `gStaticData_087E3BEC`-table-swap-plus-conditional-
+`sub_8026ED0` shape as `sub_80073BC` (already matched in
+`graphics.c`) - overwrites `self->table` unconditionally, then calls
+`sub_8026ED0(self)` only if `arg1 & 1`. Matched on the first attempt.
+
+**`sub_80084A4`** (ROM `0x080084A4`, right after `sub_8008484`, same
+file): the same `sub_800725C`/table-swap-to-`gStaticData_087E3C44`/
+`sub_8007AB4` shape as `sub_8008434` above, but re-initializes an
+existing `self` in place instead of allocating a fresh object via
+`sub_8026EDC`. Matched on the first attempt.
+
+**`sub_80084C4`** (ROM `0x080084C4`, right after `sub_80084A4`, same
+file): looks up `part`'s keyframe record via `sub_80083B8` (parked as
+`NON_MATCHING` in `actor_part5.c`), then picks a pointer off it based
+on the record's `+4` byte's upper nibble - 0 selects `info+0x24`, 6
+selects `info+0x14`, and everything else (1-5, or anything above 6)
+falls back to the fixed table `gStaticData_0816B300`.
+
+This is a genuine native `switch` (unlike the label-array/computed-
+goto approach considered and discarded below), but getting gcc to
+compile it into the ROM's real jump table took real experimentation.
+A "naturally" written switch grouping the case labels into their
+obvious contiguous ranges (`case 0:`, `case 1: case 2: case 3: case 4:
+case 5:`, `case 6:`) always compiled to a `cmp`/`bgt`/`bge` compare
+chain instead, no matter how the `default:` clause was phrased (folded
+into the range group, or written as its own separate identical-body
+arm) - this compiler evidently only emits a jump table when the
+case-value-to-code-block mapping can't be expressed as a handful of
+contiguous range checks. Confirmed this experimentally by copying
+`sub_8007C30`'s already-matched switch (whose case values *are*
+genuinely scattered: `0,3,4` / `1,2,6` / `5` / default) with dummy
+identical bodies - it produced a jump table purely from the scatter,
+independent of the actual values returned. The fix: since cases 1-5
+and `default` all compute the exact same result here, they can be
+freely split across multiple source-level arms without changing
+behavior; scattering them out of numeric order (`case 0`, `case 3:
+case 4:`, `case 1: case 2:`, `case 5`, `case 6`, `default`) was enough
+to make gcc emit the same two-level-indirection jump table structure
+as the ROM (a literal-pool word holding the table's own address,
+loaded into a register, then indexed and loaded a second time before
+the `mov pc, r0`) - byte-exact including the "needlessly scattered"
+case order itself, which is now a required part of the source, not
+just cosmetic.
+
+(Earlier abandoned approach, for reference: a manual
+`goto *label_array[type]` construct, with `label_array` a function-
+local `static const void *[]` initialized from `&&label` addresses,
+reproduced the ROM's exact instruction sequence in isolation - but
+the array itself gets emitted into `.data`, a section this project's
+`ldscript.txt` doesn't retain for arbitrary objects (only `data.o`'s
+`.rodata` and each object's `.text` are kept, everything else is
+`/DISCARD/`ed), so the reference would dangle in the actual linked
+ROM. Forcing the array's section via
+`__attribute__((section(".text")))` placed it in `.text` but as its
+own object *before* the function symbol, not inlined at the correct
+byte offset the way a compiler-native jump table is. The native
+`switch` approach above avoids both problems entirely.) Matched on
+this attempt once the case-scatter trick was found.
+
+**`sub_8008518`** (ROM `0x08008518`, right after `sub_80084C4`, same
+file): the same `sub_80083B8`-derived-record-nibble `switch` shape as
+`sub_80084C4` immediately above, with a different result mapping - 0
+and 4 select `info+0x1c`, everything else (1, 2, 3, 5, 6, or above 6)
+falls back to `gStaticData_0816B2F8`. No case-scattering trick was
+needed this time: writing the cases in plain ascending order (`case
+0:`, `case 1: case 2: case 3:`, `case 4:`, `case 5: case 6:`,
+`default:`) was already enough to produce a jump table, because 0 and
+4 mapping to the same result while everything between and after maps
+to a different one is *already* non-contiguous - confirming the
+theory from `sub_80084C4`'s entry above (gcc only falls back to a
+compare chain when the case-to-block mapping actually can be expressed
+as a handful of simple range checks). Matched on the first attempt.
+
+**`sub_8008564`** (ROM `0x08008564`, right after `sub_8008518`, same
+file): the same `sub_80083B8`-derived-record-nibble `switch` shape
+again, this time reusing `sub_8007C30`'s exact case-to-block mapping
+(already matched in `actor_part2.c`) - 0/3/4 select `info+0x14`, 5
+selects `info+0xc`, and 1/2/6/anything-above-6 fall back to
+`gStaticData_0816B2F8`. That mapping is non-contiguous on its own
+(same reasoning as `sub_8008518`), so plain ascending case order
+produced the ROM's jump table with no scattering needed. Matched on
+the first attempt.
+
+**`sub_80085B8`** (ROM `0x080085B8`, right after `sub_8008564`, same
+file): the same `sub_80083B8`-derived-record-nibble `switch` shape
+once more - 0/2/3/4/6 select `info+0xc`, 1/5/anything-above-6 fall
+back to `gStaticData_0816B2F8`. Non-contiguous enough on its own
+(1 and 5 are isolated within a run of the other result), so plain
+ascending case order produced the jump table directly. Matched on the
+first attempt.
+
+**`sub_8008604`** (ROM `0x08008604`, right after `sub_80085B8`, same
+file): the same keyframe-record-address lookup used throughout this
+ROM region (see `sub_8008394`) - `part`'s `+0x20` table pointer
+dereferenced twice, indexed by the `+0x2d` frame index times the
+0x1c-byte record size. A pure leaf function (`bx lr`, no push).
+Matched on the first attempt.
+
+**`sub_8008618`** (ROM `0x08008618`, right after `sub_8008604`, same
+file): clamps a `frame` argument to `part`'s current keyframe record's
+duration (`+0x16`) minus one if it's out of range, then stores the
+(possibly clamped) result into `part+0x30` (the same frame-index field
+read/written by `sub_80083B8`). Needed explicit register pins across
+the whole `tablePtr`/`idxAddr`/`table`/`idx` chain to reproduce the
+ROM's real extra callee-saved register (`r5` for `idx`, hence the
+`push {r4, r5, lr}` rather than a tighter single-register reuse) - the
+naturally-allocated version reused fewer registers and only pushed
+`r4`. The final `rec = table + offset` add also hit the same resistant
+"which operand goes first" canonicalization documented at length for
+`sub_8008188`/`sub_8008200`/`sub_8008278`/`sub_80083B8` above - but
+since this function has no `switch` (and therefore no case-block-
+merging to protect), the usual fallback of parking wasn't necessary:
+a single-instruction inline `asm("add %0, %0, %1" : "+r"(offset) :
+"r"(table))` anchor for just that one add got a fully byte-exact
+match, unlike the switch-based functions where the same trick broke
+duplicate-case-label merging elsewhere. Matched after finding the
+register pins and the inline-asm fix for the add.
+
+**`sub_8008640`/`sub_8008648`** (ROM `0x08008640`/`0x08008648`, right
+after `sub_8008618`, same file): a plain `part+0x25` byte get/set
+pair, no other logic. Both matched on the first attempt.
+
+**`sub_8008650`** (ROM `0x08008650`, right after `sub_8008648`, same
+file): `part+0xd` bit-2 getter, `(byte >> 2) & 1`. Matched on the
+first attempt.
+
+**`sub_800865C`** (ROM `0x0800865C`, right after `sub_8008650`, same
+file): toggles `part+0xd` bit 2. Two separate compiler quirks needed
+fixing here:
+
+- The bit-flip `((byte >> 2) ^ 1) & 1` compiles to a single `bic`
+  (bit-clear) instruction by default - this compiler recognizes
+  `(x ^ k) & k` as `~x & k` and folds it, while the ROM has genuinely
+  separate `eor`/`and` instructions. Forced via a two-instruction
+  inline `asm` block for just that pair.
+- The mask constant `-5` (used to clear bit 2, `1<<2`, via
+  `-(N+1) == ~N`) got computed as `1 - 6` (relative to the still-live
+  value 1 left over from the bit-flip's inline-asm input) instead of a
+  fresh `movs r1, #5; negs r1, r1`, because the compiler kept tracking
+  that register's old constant value across the `asm` block. Marking
+  that input `+r` (read-write) instead of `r`, even though its value
+  never actually changes, was enough to break that tracking and force
+  a genuinely fresh load.
+
+Also needed the shifted-bit computed before (not after) the mask, to
+match the ROM's own instruction order. Matched after working through
+both quirks.
+
+**`sub_8008674`** (ROM `0x08008674`, right after `sub_800865C`, same
+file): `part+0xd` bit-3 getter, same shape as `sub_8008650` one bit
+over. Matched on the first attempt.
+
+**`sub_8008680`** (ROM `0x08008680`, right after `sub_8008674`, same
+file): clears `part+0xd` bit 3. `byte &= ~8` (or the equivalent
+`byte &= -9`, since `-(N+1) == ~N`) folds directly into a single `mov
+r1, #0xf7` immediate load in this compiler; the ROM instead computes
+it via `movs r1, #9; negs r1, r1`. Fixed the same way as
+`sub_800865C`'s `-5` mask above: register-pinning
+`register s32 mask asm("r1") = -9;` as its own statement (rather than
+folding the negation into the `&=` compound assignment) was enough to
+force the fresh `mov`+`neg` pair. Matched after finding this.
+
+**`sub_800868C`/`sub_8008698`/`sub_80086A4`/`sub_80086B0`/
+`sub_80086BC`/`sub_80086C4`/`sub_80086CC`/`sub_80086D8`** (ROM
+`0x0800868C`-`0x080086D8`, right after `sub_8008680`, same file): a
+run of eight more trivial flag/byte accessors - `sub_800868C` sets
+`part+0xd` bit 3, `sub_8008698`/`sub_80086A4`/`sub_80086B0` are the
+`part->flags` bit-6 getter/clearer/setter, `sub_80086BC` resets
+`part`'s frame index (`+0x2d`) to 0, and `sub_80086C4`/`sub_80086CC`/
+`sub_80086D8` are the `part->flags` bit-7 getter/clearer/setter (the
+getter needs no mask, since shifting an 8-bit value right by 7 already
+leaves only that bit).
+
+Every AND/OR one of these (all except the getters and the plain
+`+0x2d` reset) needed its bitmask register-pinned AND assigned
+*before* the byte load, mirroring the established accumulator-
+register pattern from earlier in this file - the natural, unpinned
+compile puts the byte load first in every one of them, which is a
+real, byte-level reordering versus the ROM (not merely cosmetic), even
+though the two instructions are otherwise independent. All eight
+matched once this ordering fix was applied uniformly.
+
+**`sub_80086E4`/`sub_80086EC`** (ROM `0x080086E4`/`0x080086EC`, right
+after `sub_80086D8`, same file): a plain `part+0x2c` byte get/set
+pair, no other logic. Both matched on the first attempt.
+
+**`sub_80086F4`** (ROM `0x080086F4`, right after `sub_80086EC`, same
+file): sets `part+0x28` bit 4 to `value & 1`. Two things needed
+fixing: the ROM's mandatory zero-extend of the `u8 value` parameter
+at entry (`lsls`/`lsrs` by 24) combined with a plain `& 1` compiles to
+a longer 3-instruction sequence in this compiler than the ROM's single
+`ands` - fixed with a two-instruction inline `asm` `and` for just that
+step; and, as with `sub_800865C`, the `1` input needed marking `+r`
+(read-write, even though unchanged) to stop the later mask constant
+`-0x11` being computed relative to that leftover register value
+instead of via a fresh `movs`+`negs`. Matched after applying both.
+
+**`sub_8008710`** (ROM `0x08008710`, right after `sub_80086F4`, same
+file): the same shape as `sub_80086F4` immediately above, setting bit
+5 (mask `-0x21`) instead of bit 4. Matched with the identical fix.
+
+**`sub_800872C`** (ROM `0x0800872C`, right after `sub_8008710`, same
+file): `part+0x38` ("done" flag, also read/written by `sub_80083B8`)
+setter. Matched on the first attempt.
+
+**`sub_8008734`** (ROM `0x08008734`, right after `sub_800872C`, same
+file): the same keyframe-record lookup used throughout this ROM region
+(see `sub_8008394`/`sub_8008604`), returning the record's `+0x14` byte
+instead of the record pointer itself. The final `rec = table + offset`
+add hit the same resistant "which operand goes first" gap as
+`sub_8008618` - fixed the same way, with a one-instruction inline
+`asm` anchor (`asm("add %0, %0, %1" : "+r"(offset) : "r"(table))`).
+Matched after applying that fix.
+
+**`sub_8008748`** (ROM `0x08008748`, right after `sub_8008734`, same
+file): `part+0x29` low-nibble getter. Needed the value read through a
+`u32` (not `u8`) intermediate so the final `>> 0x1c` compiles to a
+logical `lsr` instead of an arithmetic `asr` - same lesson as the
+`(flags >> N) & 1` vs `(s32)(flags << (31-N)) < 0` idiom distinction
+documented elsewhere in this ROM region, just for a plain shift instead
+of a branch. Matched after fixing the signedness.
+
+**`sub_8008754`** (ROM `0x08008754`, right after `sub_8008748`, same
+file): sets `part+0x29`'s low nibble to `value & 0xf`. This one hit a
+genuinely new, previously-undocumented compiler quirk: `value & 0xf`
+on a `u8`-typed parameter compiles to a much longer defensive
+shift-based sequence in this compiler (confirmed in isolation with a
+minimal `s32 f(u8 v) { return v & 0xf; }` test - it emits `lsl`/`mov
+#0xf0`/`lsl #0x14`/`and`/`lsr` instead of a plain `mov #0xf`/`and`),
+while the *identical* mask against an `s32`-typed parameter compiles
+to the ROM's simple two-instruction form. Retyping the parameter `s32`
+fixed the mask codegen; the mask constant `-0x10` then needed the same
+`+r`-on-the-other-operand fix as `sub_80086F4` above to stop it being
+computed relative to the leftover `0xf` register value. Matched after
+finding both fixes.
+
+**`sub_8008768`/`sub_800876C`** (ROM `0x08008768`/`0x0800876C`, right
+after `sub_8008754`, same file): a plain `part+0x20` table-pointer
+get/set pair, no other logic. Both matched on the first attempt.
+
+**`sub_800878C`/`sub_80087A0`/`sub_80087B4`/`sub_80087BC`/
+`sub_80087C0`/`sub_80087C8`/`sub_80087D0`/`sub_80087F4`/`sub_80087FC`/
+`sub_8008804`/`sub_800880C`/`sub_8008814`/`sub_8008818`/`sub_800881C`/
+`sub_8008824`** (ROM `0x0800878C`-`0x08008824`, new
+`src/graphics/actor_part7.c`): two
+more `sub_8008734`-style keyframe-record byte lookups (`+0x16` frame
+count, `+0x15` duration) plus a run of plain `part+0x24`/`+0x28`/
+`+0x2d`/`+0x30`/`+0x34` field get/set/reset/increment accessors (the
+low-2-bit getter for `+0x28` reuses the `(u32 << 30) >> 30` idiom from
+`sub_8008408`). All matched on the first or second attempt.
+
+This batch is genuinely non-adjacent to `actor_part6.c`'s matched
+functions, since the parked `sub_8008770` sits raw between
+`sub_800876C` and `sub_800878C` - a mistake first caught here the same
+way as every other time this session: appending these directly to
+`actor_part6.c` produced byte-exact functions in isolation, but a full
+clean `make compare` still failed, with `cmp` finding the first
+differing byte far outside this region entirely (a `bl` instruction at
+ROM `0x08004686`, hundreds of KB before this file) - a strong signal
+that a *later* function's address had shifted, since only a `bl`'s
+*target* encoding changes when a callee moves, not the call site
+itself. The parked `sub_8008770`'s raw bytes stay in `asm/
+code_3_2_7.s`, which links *after* all of `actor_part6.o` - so
+anything appended past the guard in `actor_part6.c` was landing
+*before* `sub_8008770` in the final ROM instead of after it. Fixed
+with the usual file split: `asm/code_3_2_7.s` split again at the
+`sub_8008830` boundary into itself (now holding just the parked
+`sub_8008770`) and a new `asm/code_3_2_8.s`, with a new
+`src/graphics/actor_part7.c` holding this whole batch inserted between
+them in `ldscript.txt`.
+
+**Parked, not matched: `sub_8008770`** (ROM `0x08008770`, right after
+`sub_800876C`, same file): the same keyframe-record lookup as
+`sub_8008734` above, testing the record's `+0x17` flags bit 1 and
+returning it as a plain 0/1 value. Matches the ROM instruction-for-
+instruction through the `ands` that computes the bit, including the
+accumulator-register pattern (mask computed into `r0` before the
+flags byte load, which reuses `rec`'s own dying `r1` register). The
+ROM then has two trailing truncation instructions (`lsls r0, r0,
+#0x18; lsrs r0, r0, #0x18`, narrowing the result to a byte) that this
+compiler always optimizes away here, since it can prove the AND
+result already fits in a byte (the mask is the visible constant `2`).
+Every attempt to force the truncation back in - an explicit `(u8)`
+cast on the result, an explicit `((u32)x << 24) >> 24` shift idiom,
+a `u8`-typed intermediate variable - either made no difference or
+reintroduced a miscompile where the whole function folds to
+`return 0;` (the same register-pinned-constant-combined-with-later-
+transformation hazard as the `ip`-trick and r7-pin failures documented
+elsewhere in this file, here triggered by pinning the mask register
+with its initializer in the same statement as the later shift).
+Parked rather than keep chasing two trailing no-op instructions.
+
+**`sub_8008830`** (ROM `0x08008830`, right after `sub_8008824`, new
+`src/graphics/actor_part7.c`): sets `part+0x28`'s low 2 bits to
+`value & 3`. Same accumulator-register pattern and `+r`-on-the-other-
+operand fix as `sub_8008754` above (mask `-4` computed via a fresh
+`movs`+`negs`, not relative to the leftover `3` register value).
+Matched after applying that fix.
+
+**`sub_8008844`/`sub_8008850`/`sub_8008864`/`sub_800887C`** (ROM
+`0x08008844`/`0x08008850`/`0x08008864`/`0x0800887C`, interleaved with
+the functions below, same file): `part+0x28` bit-4/5/2/3 getters,
+using the `(u32 << N) >> 31` logical-shift idiom (see `sub_8007B00`'s
+mirror flags) rather than a plain `(byte >> N) & 1`. All four matched
+on the first attempt.
+
+**`sub_800885C`** (ROM `0x0800885C`, same file): `part+0x38` ("done"
+flag, also written by `sub_800872C`) getter. Matched on the first
+attempt.
+
+**`sub_8008870`** (ROM `0x08008870`, same file): `part+0x29` low-
+nibble getter, same shape as `sub_8008748`. Matched on the first
+attempt.
+
+**`sub_8008888`/`sub_800888C`** (ROM `0x08008888`/`0x0800888C`, same
+file): a plain `part+0x3c` (`u16`) get/set pair, no other logic. Both
+matched on the first attempt.
+
+**`sub_8008890`** (ROM `0x08008890`, right after `sub_800888C`, same
+file): resolves `part`'s Q8 position plus a caller-supplied offset
+into a stack `{x, y}` pair, then dispatches to `sub_8007634` or
+`sub_80073DC` (both already matched/parked elsewhere in this ROM
+region) depending on whether `part+0x3c` is set - including the ROM's
+own two separate literal-pool copies of `gUnknown_030012CC`, one per
+branch (the compiler doesn't share them across the `if`/`else`).
+Matched on the first attempt.
+
+**`sub_80088D8`/`sub_80088E8`** (ROM `0x080088D8`/`0x080088E8`, right
+after `sub_8008890`, same file): `part+0x28`'s top-2-bit setter/getter
+(mask `0x3f`, shift 6). The setter needed the same `s32`-not-`u8`
+parameter-typing fix as `sub_8008754` - a `u8`-typed parameter's
+mandatory entry truncation combines with the later `<< 6` into a
+single, ROM-mismatching shift pair in this compiler. Both matched
+after applying that fix (the getter needed no mask, since the shift
+already isolates the top 2 bits).
+
+**`sub_80088F0`** (ROM `0x080088F0`, right after `sub_80088E8`, same
+file): overwrites `part->table` with `gStaticData_087E3CAC`, then
+tail-calls `sub_8008484` (already matched in `actor_part6.c`) with the
+same `arg1` - which immediately overwrites `table` again with
+`gStaticData_087E3BEC` before its own conditional `sub_8026ED0` call.
+Reproduces the ROM's apparently-redundant double table write exactly
+as found; matched on the first attempt.
+
+**`sub_8008904`** (ROM `0x08008904`, right after `sub_80088F0`, same
+file): re-initializes `part` via `sub_80084A4` (already matched in
+`actor_part6.c`, itself sets `table` to `gStaticData_087E3C44`), then
+immediately overwrites `table` with `gStaticData_087E3CAC` instead -
+the same "overwrite right after a helper that just set it" shape as
+`sub_80088F0` above. Matched on the first attempt.
+
+**Parked, not matched: `sub_800891C`** (ROM `0x0800891C`, right after
+`sub_8008904`, same file). A genuinely new, previously-uncharacterized
+system: `self` is a manager over an array of `part`-like objects
+(`self+0xc`, length `self+0x4`) that gets filtered/compacted into a
+second output array (`self+0x10`, length `self+0x8`) each call.
+
+Builds two `gUnknown_03001308`-sub-object-centered boxes first: an
+"extended" 440x280 region 100/60 px past the sub-object's own position
+(`boxA`), and the plain 240x160 screen region at the sub-object's own
+position (`boxB` - the GBA's exact visible area in Q8, `0xf0<<8` /
+`0xa0<<8`) - reusing the same `gUnknown_03001308+0x10` sub-object
+convention documented throughout this ROM region (see
+`sub_8007F78`/`sub_8006FE4`).
+
+For each `part` in the array: if `part+0xc` bit 0 is set, and its
+index is still below `self+0x0`, removes it from the array via
+`sub_803A94C` - confirmed in `docs/rom_map.md` to be the GBA BIOS
+`CpuSet` SWI wrapper, not a hand-written helper - block-copying every
+later element down by one slot (`CpuSet(src=&arr[i+1], dst=&arr[i],
+control=((count-i)&0x1FFFFF)|0x4000000)`, the `0x4000000` bit
+selecting `CpuSet`'s 32-bit-word transfer mode), decrementing
+`self+0x4` and clearing the vacated last slot - then (whether or not
+it was actually removed) calls a `part->table`-driven trampoline at
+table offset `0x50`/`0x54` with a constant argument `3` via
+`sub_803AD80` (confirmed in `docs/rom_map.md` to be a `bx r2`
+BLX-emulation trampoline calling `fn(arg0, arg1)` - the same
+`table+N`/`table+N+4` offset/function-pointer convention as
+`sub_8006FE4`/`sub_8007F78`/`sub_8008364`), and re-examines the same
+index next iteration (`i--`) to account for the shift.
+
+Otherwise (bit 0 clear): tests the `part` against `boxA` through the
+table's `0x40`/`0x44` trampoline; if that passes, fires the table's
+`0x18`/`0x1c` trampoline via `sub_803AD7C` (another `bx r1` trampoline,
+return value discarded) and then tests against `boxB` through the
+table's `0x30`/`0x34` trampoline; if that also passes, appends `part`
+to the output array and increments its count.
+
+NOT YET BYTE-MATCHING: the overall control flow, all four
+`table+N`-trampoline call shapes (address adjusted once, then the
+`s16` offset and function pointer both read relative to it), the
+`sub_803A94C` block-copy invocation, and the `struct aabb` field
+values are all confirmed correct - but this compiler puts the loop
+counter `i` into a high register (`r8`, paired with a second high
+register `r9` for the `boxB` pointer, needing an extra high-register
+save/restore the ROM doesn't have) instead of the ROM's low register
+`r7` (with only `r8` used, for `boxB`). Explicitly pinning `i` to
+`register s32 i asm("r7")` does not fix this - it reproduces the
+`r7`-pin corruption pattern documented at length elsewhere in this ROM
+region (`sub_8007DBC`, `sub_8007FD8`): the pin partially takes for the
+loop's entry check, then something in the loop body silently
+reassigns `r7` to an unrelated constant (`mov r7, #0x4`) instead of
+preserving `i`, corrupting the reconstruction outright. A handful of
+the `table+N` trampoline call sites also have their two reads (`s16`
+offset, function pointer) in the opposite order from the ROM (fn read
+before offset read, rather than after) - reordering the two source
+statements did not change the compiled order. Parked with the version
+that avoids the `r7`-pin corruption (natural allocation into `r8`/`r9`)
+rather than risk a silent miscompile for a cosmetically closer
+register match.
+
+## Diving into the AI/collision cluster: `sub_8008A40`
+
+**Parked, not matched: `sub_8008A40`** (ROM `0x08008A40`, right after
+`sub_800891C`, same file). Iterates `manager`'s array of `part`-like
+objects (`manager+0x10` base, `manager+8` count - the same
+`self+0xc`/`self+0x10` shape as `sub_800891C` above, just at
+different offsets). For each `part`: fires a `part->table+0x48/0x4c`-
+driven trampoline via `sub_803AD7C` (same `table+N`/`table+N+4`
+convention throughout this ROM region); skip if the result is `<= 4`
+(a distance/priority-style broad-phase test). Skip unless
+`part->flags` bit 2 is set. Then, depending on whether the caller's
+`compareViewport` argument equals the current `gUnknown_030012D8`
+(confirmed elsewhere to be "very likely the camera/viewport" - see
+`docs/rom_map.md`) or a *different* one, dispatches the incoming
+`{boxX, boxY, boxW, boxH}` rectangle (passed across `r1`-`r3` plus one
+stack word, the usual GBA Thumb ABI for more than 3 scalar arguments)
+to `sub_8008AD8` or `sub_8008D80` (the latter also forwarding
+`compareViewport` itself as a 6th argument) - reads like "resolve
+collision against parts near this box, routing differently when
+testing across a screen/room boundary vs within the active one".
+
+**Resolved `sub_800014C` along the way**, one of `docs/rom_map.md`'s
+long-standing open questions ("packed state round-tripping through
+`sub_800014C`", cited as one of `UpdateGameFrame`'s own direct top-
+level calls, referenced ~140 times project-wide): reading its actual
+definition directly in `asm/crt0.s` shows it's a plain `memcpy`-style
+wrapper - `void *sub_800014C(void *dest, void *src, s32 size)` copies
+`size` bytes from `src` to `dest` via the GBA BIOS `CpuSet` SWI
+(`sub_803A94C`, the same BIOS wrapper already identified for
+`sub_800891C`'s array-compaction call) and returns `dest`. In
+`sub_8008A40` it's used purely to relocate the incoming box onto a
+fresh stack slot before unpacking it again for the sub-call - not a
+coordinate transform, just a generic byte copy the compiler happens
+to route through this shared helper for a 16-byte struct move.
+
+NOT YET BYTE-MATCHING: every branch, field offset, and call argument
+confirmed correct - but `compareViewport` needs to survive the whole
+loop across calls to `sub_803AD7C`/`sub_800014C`/`sub_8008AD8`/
+`sub_8008D80`, and this compiler spills it to a high register (`r8`,
+needing an extra push/pop pair the ROM doesn't have) instead of the
+ROM's low register `r7`. Explicitly pinning it to `register void
+*compareViewport asm("r7")` does not just fail to help - it produces
+a genuine miscompile: the loop counter `i` (an ordinary, unpinned
+local) independently also gets allocated to `r7`, and since both
+variables are simultaneously live across the whole loop, the
+counter's own zero-initialization silently overwrites
+`compareViewport` before its first use - a concrete, newly-confirmed
+instance of the general "never pin r7 in this toolchain" hazard
+documented at length elsewhere in this ROM region, this time
+corrupting a value rather than crashing the compiler or dropping a
+push/pop entry. Parked with the version that avoids the corruption
+(natural allocation into `r8`) rather than risk a silently-wrong
+reconstruction for a cosmetically closer register match.
+
+**Parked, not matched: `sub_8008AD8`** (ROM `0x08008AD8`, right after
+`sub_8008A40`, same file). Resolves collision push-out between `part`
+and the player (`gUnknown_030012D8`) against the incoming
+`{boxX, boxY, boxW, boxH}` rectangle passed by `sub_8008A40`. `manager`
+itself is never read - a dead parameter kept for a uniform call
+signature with `sub_8008D80`'s sibling.
+
+If `gUnknown_030012C0`'s mode field (`+0x78`) is 3: tests `part`
+against the box via `sub_8009FF4` (already matched in
+`actor_part9.c`); if it misses entirely, returns. Otherwise fires a
+`part->table+0x68`-driven trampoline via `sub_803AD88` with the
+player's `+0xa` byte as the third argument.
+
+Otherwise, if `part+0xd` bit 3 is set (a "large object" case): builds
+the player's AABB via `sub_8007B98` (parked as `NON_MATCHING` in
+`actor_part.c`) and `part`'s secondary AABB via `sub_8007CF8` (already
+matched), tests them via `sub_8001688`; on a hit, pushes the player's
+X position away from `part` by the sum of both boxes' widths (`<<7`,
+i.e. `*128`) in whichever direction `part` is relative to the player,
+then fires a `player->table+0x68` trampoline (direction encoded in
+the final argument, `2` or `1`).
+
+Otherwise: tests `part` against the box again via `sub_8009FF4`.
+Result 1: sets the player's `flags` bit 3; if the player's `+0xa` byte
+is exactly 1 and its `+0x64` counter is positive, fires two
+trampolines (`part`'s own, then the player's) and plays SFX `0x21` via
+`gUnknown_030012BC`; otherwise (byte != 1) fires a single `part`-table
+trampoline with the player's `+0xa` byte as the third argument (the
+same shared tail the mode-3 branch above also reaches). Result 2:
+sets `part->flags` bit 3; if the mode field is nonzero, fires a
+`part`-table trampoline first; either way, then fires a `player`-table
+trampoline with `part`'s own `+0xa` byte as the third argument.
+
+Every `table+0x68`-driven trampoline call needed its function-pointer
+half marked as a "dead read" (loaded into `r4` but never actually
+passed to `sub_803AD88`, a plain 4-argument function, not itself a
+trampoline) - the same idiom already confirmed for
+`sub_8007DBC`/`sub_8009FD4`'s own `sub_803AD88` calls.
+
+NOT YET BYTE-MATCHING, but very close for a ~150-instruction function -
+every branch, field offset, and call argument confirmed correct. Two
+small structural gaps remain: (1) this compiler has no way to express
+"this scalar parameter is already sitting in the right stack position
+for the callee I'm about to build a struct pointer into" - the ROM's
+`box` argument to `sub_8009FF4`/`sub_8007CF8` leaves `boxH` untouched
+in its own incoming stack slot (which happens to be the correct 4th
+word of the AABB purely from ABI stack-layout coincidence, the same
+trick confirmed for `sub_8008A40`'s own box-passing above), while a
+C-level `struct aabb box; box.field_c = boxH;` necessarily emits a
+real load-then-store pair to populate a *fresh* local struct instead.
+(2) `part` consistently lands in `r6` throughout this reconstruction
+instead of the ROM's `r5` (needing one extra register - `r7` - pushed
+as a knock-on effect) - likely a consequence of the same extra `boxH`
+load changing overall register pressure at entry, though not
+confirmed. Parked rather than keep chasing a stack-layout optimization
+C has no way to express directly.
+
+**`sub_8008C80`** (ROM `0x08008C80`, right after the raw, unclaimed
+`sub_8008AD8`... no wait, right after the *parked* `sub_8008AD8`, new
+`src/graphics/actor_part10.c`): the same "extended screen box" filter
+shape as `sub_800891C`'s own `boxB` pass - the plain 240x160 GBA
+screen region, in Q8, at the `gUnknown_03001308` sub-object's own
+position - iterating `manager`'s array (`manager+0xc` base,
+`manager+4` count), filtering each `part` whose `table+0x30/0x34`-
+driven trampoline passes into a second output array (`manager+0x10`
+base, `manager+8` count).
+
+Needed the same register-chain-reuse pattern established throughout
+this ROM region for the `gUnknown_03001308` sub-object double-deref
+(`register void *P asm("r0") = gUnknown_03001308; register void
+*subObj asm("r0"); subObj = *(void **)((u8 *)P + 0x10);` - keeping the
+whole chain in `r0`, matching the ROM's own self-referencing
+`ldr r0,[r0]; ldr r0,[r0,#0x10]`), plus a "compute both fields, then
+store both" reordering for each pair of box words (`box[0]`/`box[1]`
+and `box[2]`/`box[3]`) instead of the natural compute-then-store-
+immediately order this compiler otherwise chooses - and, within the
+loop, explicit register pins for the array-indexing chain
+(`arrBase`/`idx`/`slot`) to match the ROM's specific register roles
+for that computation too. A genuine reminder that isolated per-
+function tests only prove a function compiles to *some* byte-exact
+sequence in isolation - the full clean `make compare` caught three
+separate, unrelated mismatches inside this one function that none of
+the smaller isolated tests surfaced, since each fix only mattered once
+the surrounding context (the whole prologue, or the whole loop) was
+present. Matched after applying all of them.
+
+**`sub_8008CEC`** (ROM `0x08008CEC`, right after `sub_8008C80`, same
+file): fires a `part->table+0x50/0x54`-driven trampoline (constant
+arg 3) via `sub_803AD80` for every entry in `manager`'s array
+(`manager+0xc` base, `manager+4` count) that isn't already `NULL`,
+then clears every slot and resets both the count (`manager+4`) and
+the second array's count (`manager+8`) to 0 - a full teardown of both
+this manager's arrays. Needed the array-base reload split into its
+own statement before the index multiply (matching the ROM's own
+instruction order: load the base, *then* compute `i*4`, rather than
+the reverse) plus the usual `addr`-before-`fn` trampoline-argument
+fix. Matched after applying both.
+
+**`sub_8008D30`** (ROM `0x08008D30`, right after `sub_8008CEC`, same
+file): iterates `manager`'s array (`manager+0x10` base, `manager+8`
+count): for each `part`, fires a `table+0x48/0x4c`-driven trampoline
+via `sub_803AD7C` and skips unless the result equals `arg1` (a
+caller-supplied selector); skips unless `part->flags` bit 2 is set;
+then fires a *second*, unconditional `table+8/0xc` trampoline (return
+value discarded). The flags-bit test needed the byte loaded into `r1`
+(not `r0`) before the shift, matching the ROM's own register choice -
+another mismatch the isolated test missed and only the full clean
+build caught. Matched after fixing it.
+
+**Parked, not matched: `sub_8008D80`** (ROM `0x08008D80`, right after
+`sub_8008D30`, same file - `src/graphics/actor_part7.c`, since its
+real ROM address sits between the parked `sub_8008AD8` and the raw,
+unclaimed `sub_8008DC0`). `sub_8008AD8`'s sibling: resolves the same
+collision-hit logic when the "compare viewport" doesn't match the
+current one (see `sub_8008A40` above) - `otherViewport` here plays
+the role `gUnknown_030012D8` (the player) plays in `sub_8008AD8`.
+Tests `part` against the incoming box via `sub_8009FF4`; on a hit,
+fires a `part->table+0x68`-driven trampoline (same "dead read" idiom
+as `sub_8008AD8`) with `otherViewport->field_0A` as the third
+argument, then sets `otherViewport->flags` bit 3.
+
+NOT YET BYTE-MATCHING: same structural gap as `sub_8008AD8` and
+`sub_8008A40` above - this compiler has no way to leave one scalar
+parameter (`boxH`) untouched in its own incoming stack slot while
+still building a 4-word AABB pointer that includes it. Parked with the
+version that writes it explicitly (the only one that's actually
+correct), matching `sub_8008AD8`'s own parking rationale.
+
+**Lesson reinforced by this whole batch**: an isolated per-function
+compile test that "matches ROM" is a *necessary*, not *sufficient*,
+check. `sub_8008C80` and `sub_8008D30` both passed their own isolated
+tests cleanly but still broke the full clean `make compare` when
+placed in the real file, because the surrounding context (other local
+variables live at the same time, or which registers a caller already
+occupies) changes this compiler's register allocation in ways an
+isolated one-function test can't reproduce. The full clean
+`NON_MATCHING=1 report` + default `make compare` cycle after *every*
+integration - not just after drafting - is what this workflow already
+mandates, and it is what caught both regressions here.
+
+## Six more manager utilities matched: `actor_part11.c`
+
+Continuing past `sub_8008D80` (parked), the next six functions turned
+out to be a self-contained family of small, clearly-understood
+"manager" array utilities (the same capacity/count/base-pointer struct
+shape used throughout `actor_part10.c`), not the murkier
+`gUnknown_030012C0`/`gUnknown_030012D8`-touching dispatch logic - so
+all six were matched rather than parked or skipped:
+
+- **`sub_8008DC0`**: fires a `part->table+0x20/0x24`-driven trampoline
+  via `sub_803AD7C` for every entry in `manager`'s array
+  (`manager+0x10` base, `manager+8` count). Matched first-attempt.
+- **`sub_8008DEC`**: searches `manager`'s array (`manager+0xc` base,
+  `manager+0` count) for an entry equal to `target`, then - if found -
+  compacts the array by shifting every following entry down one slot
+  via the BIOS `CpuSet` wrapper `sub_803A94C`, decrements the
+  `manager+4` count, and clears the newly-unused trailing slot. Needed
+  an explicit `goto`-based control-flow rewrite: the ROM's "not found"
+  paths (initial empty-array check, and the search loop running past
+  the count) branch straight past the compaction guard to the
+  function's very end, while only the "found" paths (index 0 matching
+  immediately, or the search loop's match) fall through into the
+  guard check - a natural `if`/`do-while` C translation collapses all
+  three exits to the same post-search point, producing a real
+  branch-target mismatch even though the individual instructions
+  looked identical at a glance. Fixed by writing the "not found" exits
+  as explicit `goto`s to a trailing label, keeping the "found" paths
+  as plain fallthrough - mirroring the ROM's own asymmetry.
+- **`sub_8008E50`**: the same array-compaction shape as `sub_8008DEC`,
+  but takes the index directly as an argument instead of searching for
+  it. Needed the removed element's byte offset (`index*4`) and its
+  "+4" sibling computed as two independent values *before* the array
+  base pointer is loaded (matching the ROM's own instruction order),
+  rather than the natural C order of loading the base first and then
+  computing pointers from it.
+- **`sub_8008E94`**: appends a value to `manager`'s array
+  (`manager+0xc` base, `manager+4` count) if there's room below
+  `manager+0`'s capacity. Matched first-attempt.
+- **`sub_8008EB4`**: tears down a manager - frees both of its arrays
+  (`manager+0x10`/`manager+0xc`, each via `sub_8026EB4` = `mem_free`,
+  if non-`NULL`) and, if a flags bit is set, frees the manager itself
+  via `sub_8026ED0` (already-confirmed `mem_free`). Matched
+  first-attempt; the compiler CSE'd each null-check's loaded register
+  straight into the following call's argument, exactly like the ROM.
+- **`sub_8008EE4`**: initializes a manager - sets both counts to 0,
+  capacity to the given count, allocates two `count`-word arrays via
+  `sub_8026EC0` (`mem_alloc`), and zero-fills the first array. Needed
+  a `do`/`while (i != 0)` loop (not a `for (i = n; i > 0; i--)`, which
+  compiles to a `bgt` epilogue check instead of the ROM's `bne`) and
+  the zero-fill's "0" literal materialized into its own local variable
+  *before* the array-base load, to match the ROM's own instruction
+  order (`movs r2, #0` before `ldr r1, [r5, #0xc]`).
+
+All six were verified both in isolation and via a full recompile of
+`actor_part11.c` together, after this session's earlier
+`sub_8008C80`/`sub_8008D30` regressions showed isolated tests alone
+aren't sufficient proof.
+
+**Parked, not matched: `sub_8008F20`** (ROM `0x08008F20`, right after
+`sub_8008EE4`, `src/graphics/actor_part11.c`): initializes a
+fixed-slot object-pool manager struct - `+0x0` active count (0),
+`+0x4` capacity, `+0x8` a `count`-pointer array (zeroed), `+0xc` a
+`count`-entry array of 0x14-byte nodes, `+0x10`..`+0x40F` and
+`+0x410`..`+0x80F` two 256-word (1024-byte) zeroed tables (very likely
+a pair of spatial-partition/collision grids, though that broader
+purpose isn't needed to confirm the individual loads/stores), and
+`+0x810`/`+0x814` a free-list array pointer and head. For each index
+`i`, links `freeList[i].node` to `&nodeArray[i]`, zeroes several of
+`nodeArray[i]`'s fields, sets `nodeArray[i]`'s back-pointer to
+`&freeList[i]`, and chains `freeList[i].next` to `&freeList[i+1]` (or
+`NULL` for the last entry) - building a singly-linked free list of
+pool nodes through the wrapper array.
+
+Every load, store, and field offset is confirmed correct - the
+isolated reconstruction reproduces the ROM's exact branch structure
+and even its use of `ip`/`r8` for the loop - but four long-lived
+scalars (the item count, the `+0x810`/`+0x814` field addresses, the
+loop index reused from the zero-fill loop's counter, and a running
+"next" byte offset) land in a different combination of
+`r3`/`sb`(`r9`)/`sl`(`r10`)/`r4`/`r8` than the ROM's own allocation.
+Parked rather than chase a four-scalar, three-high-register allocation
+puzzle for a single function.
+
+`sub_8009008` (right after the parked `sub_8008F20`) is complex
+spatial-hash-grid removal logic built on `sub_8008F20`'s pool-manager
+struct - it unlinks a node from potentially many grid buckets via a
+two-phase search whose higher-level "why" isn't recoverable without
+more context. Left raw rather than guess.
+
+**Parked, not matched: `sub_8009150`** (ROM `0x08009150`, right after
+the raw `sub_8009008`, `src/graphics/actor_part11.c`): searches every
+bucket (254 down to 0, i.e. every bucket except the special "large
+object" bucket 255) of `manager`'s spatial hash grid for a node whose
+data pointer equals `obj`. On the first match: if the object's `+0xc`
+flags byte bit 4 isn't set, returns immediately (nothing to do). If it
+IS set but the node already has a bucket-255 secondary link
+(`node->field_0xc != 0`, the same field `sub_8009AF0`/`sub_8009B3C`
+set up), also returns immediately - the link already exists.
+Otherwise, pops a fresh node off the free list (the same `sub_8009AF0`
+pop idiom), wraps `obj` in it, and inserts that new node into bucket
+255's head/tail list, finally linking the two nodes together via the
+original node's `field_0xc` - lazily creating the "large object"
+bucket-255 registration for an object that didn't get one when it was
+originally inserted (`sub_8009B3C` only creates it when `obj->flags`
+bit 4 is already set at insert time; this looks like the retroactive
+counterpart, called when an object transitions to "large" status
+after insertion).
+
+Every load, store, and field offset is confirmed correct, and
+explicit register pins (`obj`/`data`/`headField`/`newNode` to
+`r3`/`r5`/`r6`/`r2`, matching a byte-for-byte-verified value/register-
+reuse chain through a "recycled zero" idiom - the ROM reuses whatever
+register held the just-checked `node->field_0xc == 0` result as the
+literal `0` for three subsequent zero-stores, rather than reloading
+fresh zeroes) reproduce the whole function except one detail: the
+free-list-head field's address (`manager+0x814`) is loop-invariant
+across the whole 255-bucket outer loop, and this compiler correctly
+recognizes that and hoists the computation outside the loop (computing
+it once, then just copying the cached value into place per bucket) -
+but the ROM instead recomputes it fresh every time a non-empty bucket
+is found. No portable C construct tried (an inline-asm memory clobber
+included) discourages this specific loop-invariant hoist. Parked on
+this single 2-byte gap.
+
+`sub_80091D4` (right after the parked `sub_9150`) remains raw - complex
+list-management logic whose higher-level purpose isn't recoverable
+without more context. Left raw rather than guess.
+
+**Parked, not matched: `sub_800944C`** (ROM `0x0800944C`, right after
+the raw `sub_80091D4`, `src/graphics/actor_part11.c`): the same
+"extended screen box" filter shape as `sub_8008C80` (the plain
+240x160 GBA screen region, in Q8, at the `gUnknown_03001308`
+sub-object's own position), but instead of filtering into a second
+array, iterates `manager`'s spatial hash grid buckets directly (from
+`baseIdx+2` down to 0, where `baseIdx` is the screen-box's own X
+position clamped to non-negative) and, for every node whose
+`table+0x30/0x34`-driven trampoline passes the box test, fires its
+`table+0x20/0x24`-driven trampoline and marks it (`node+0x11 = 1`) so
+a second pass - over the special "large object" bucket 255 - knows to
+skip nodes already handled via their primary bucket (clearing the mark
+instead of re-testing), while still running the same box-test-then-
+trampoline logic for any bucket-255 node that wasn't already marked.
+
+Every load, store, and field offset is confirmed correct, matching
+down to the exact same `r0`/`r2`/`r3`/`r8` register roles as
+`sub_8008C80`'s own box construction plus a persistent `r7`(grid-head
+base)/`r8`(bucket-255 address) pair mirroring `sub_8008F20`/
+`sub_8009150`'s own early-address-hoisting pattern. The single
+remaining gap: computing `bucket = baseIdx + 2` from the already-
+computed, register-pinned `baseIdx` naturally reuses `baseIdx`'s own
+register in place (`adds r5, #2`) since it's not read again afterward,
+while the ROM computes it into a separate register instead (`adds r1,
+r5, #2`) - no rewrite tried (an intermediate volatile-routed constant
+included) discourages this specific reuse. Parked on this single
+2-byte gap.
+
+**Parked, not matched: `sub_8009528`** (ROM `0x08009528`, right after
+the parked `sub_800944C`, `src/graphics/actor_part11.c`): the same
+"extended screen box" grid-iteration shape as `sub_800944C`, but
+dispatching each hit to `sub_80096C0` (when the box's "compare
+viewport" argument equals `gUnknown_030012D8`, the player) or
+`sub_80099F0` (otherwise) - the spatial-grid-cluster analog of
+`sub_8008A40`'s own dispatch to `sub_8008AD8`/`sub_8008D80`, right
+down to reconstructing the box via `sub_800014C` with the same
+"unavoidable extra `boxH` load" idiom (the incoming `boxH` argument
+sits in its own stack slot, coinciding with the 4th word of the AABB
+`sub_800014C` builds, purely from ABI stack-layout coincidence).
+
+Every branch, field offset, and call argument is confirmed correct
+against the ROM disassembly - two nested loops (main grid buckets from
+`baseIdx+2` down to 0, then the special bucket-255 pass), each with an
+identical inline copy of the box-test/flags-test/trampoline-result/
+dispatch sequence, matching `sub_800944C`'s own two-pass shape.
+
+NOT YET BYTE-MATCHING: beyond the established `boxH` gap, this
+reconstruction's compiled size is still noticeably larger than the
+real ROM function - likely some combination of stack-frame layout
+(the ROM's prologue splits its stack allocation into two separate
+`sub sp` adjustments, one before the callee-saved-register push and
+one after, suggesting a local variable with a different lifetime than
+this reconstruction's single `box2[4]` captures) and register
+allocation across the two duplicated dispatch blocks. Sharing one
+`box2[4]` across all four call sites (rather than one per call site)
+closed part of the gap but not all of it. Not chased further given the
+size of the remaining raw cluster - parked with the semantically-
+correct version.
+
+**Parked, not matched: `sub_80096C0`** (ROM `0x080096C0`, right after
+the parked `sub_8009528`, `src/graphics/actor_part11.c`): `sub_8008AD8`'s
+twin, confirmed by reading its disassembly directly against
+`sub_8008AD8`'s own - byte-identical collision-hit resolution logic
+(mode dispatch via `gUnknown_030012C0`, AABB push-out via
+`sub_8007B98`/`sub_8007CF8`/`sub_8001688`, and `sub_803AD88`
+trampoline calls with the same "dead read" idiom), just called from
+this spatial-hash-grid cluster instead of the plain array manager.
+Reused `sub_8008AD8`'s exact C body (renamed) rather than re-derive it
+from scratch, given the two are line-for-line identical in the
+disassembly. Parked on the exact same `boxH` stack-layout gap as
+`sub_8008AD8`/`sub_8008D80`/`sub_80099F0` (confirmed by the resulting
+object being exactly 8 bytes short of the real ROM size, the same gap
+size as those three).
+
+`sub_8009868` (right after the parked `sub_80096C0`) remains raw -
+calls still-unexamined helpers (`sub_800D040`, `sub_80109A4`) whose
+higher-level purpose isn't recoverable without more context. Left raw
+rather than guess.
+
+**Parked, not matched: `sub_8009914`** (ROM `0x08009914`, right after
+the raw `sub_8009868`, `src/graphics/actor_part11.c`):
+resets a pool manager to empty. First tears down every active object
+in `slotArray[0..activeCount)` - firing each one's `table+0x50/0x54`
+trampoline via `sub_803AD80` with constant arg `3` if non-`NULL`, then
+clearing the slot - and resets `activeCount` to 0. Then rebuilds both
+the grid (`gridHead`/`gridTail` zeroed) and the free list from scratch
+over `nodeArray` - the exact same free-list-build loop `sub_8008F20`
+performs during initialization, reproduced here byte-for-byte in the
+ROM's own compiled output.
+
+The active-object teardown loop (the first half) is confirmed correct
+and matches on its own; the free-list-rebuild loop (the second half)
+being a literal copy of `sub_8008F20`'s own tail means it hits the
+exact same many-register allocation gap documented there - the ROM
+keeps three persistent high registers (`sb`/`sl`/`r8`) alive across
+the whole rebuild loop (even applying the same early-`field810`/
+`field814`-computation restructuring that got `sub_8008F20`'s own
+reconstruction as close as it got), while this reconstruction's most
+faithful attempt still only needs two. Parked for the same reason as
+`sub_8008F20`.
+
+## Second tractable pocket: `actor_part12.c`
+
+Right after that raw span, `sub_80099F0` through `sub_8009B9C` turned
+out to be another self-contained, clearly-understood run - the same
+active-object array/grid manipulation primitives seen in
+`actor_part11.c`/`actor_part10.c`, just operating on the pool-manager
+struct's own fields (`+0`=active count, `+4`=capacity, `+8`=slot
+array, `+0xc`=node array, `+0x10`/`+0x410`=spatial grid head/tail
+tables, `+0x810`/`+0x814`=free-list array/head):
+
+- **`sub_80099F0`** turned out byte-identical in shape to the already-
+  parked `sub_8008D80` (down to the label offsets) - the same
+  collision-hit-resolve logic, called from elsewhere in this cluster.
+  Parked immediately on the same `boxH` gap, reusing `sub_8008D80`'s
+  exact C body - see "Parked, not matched: `sub_80099F0`" below.
+- **`sub_8009A30`**: searches the active-object array for `target`
+  (search bound = capacity, at `+4`); on a match, unlinks it from the
+  grid via `sub_8009008` and compacts the array (bound = active count,
+  at `+0`) via the same CpuSet shift used throughout this region.
+  Matched first-attempt - this manager struct's field layout (`+4`
+  search bound vs `+0xc` array base in `actor_part11.c`'s simpler
+  manager type) is genuinely different from the one used by
+  `sub_8008DEC` etc., confirmed by cross-referencing which fields
+  `sub_8008EE4`/`sub_8008F20` themselves initialize.
+- **`sub_8009AA0`**: the same removal shape as `sub_8009A30`, but
+  takes the index directly instead of searching. Needed the array-base
+  load moved *before* the index-shift computation (`s32 off = i*4;`
+  written after, not before, the `void **base = ...` load) to match
+  the ROM's own instruction order - a mismatch an isolated per-
+  function test missed entirely (it only surfaced once fixing
+  `sub_8009B3C`'s bug forced a full re-verification - see the lesson
+  below).
+- **`sub_8009AF0`**: pops a node off the free list (`+0x814` head,
+  unlinked via the popped entry's own `+4` "next"), reuses it to wrap
+  `(data, extra)`, and inserts it into the spatial grid bucket
+  `bucket` (`+0x10` head-pointer table, `+0x410` tail-pointer table -
+  a classic head+tail singly-linked list per bucket for O(1) append).
+  Needed each grid base address (`manager+0x10`, `manager+0x410`)
+  computed as its own subexpression *before* adding the bucket byte
+  offset, rather than the natural C order of computing `off` first.
+- **`sub_8009B3C`**: inserts `obj` into the grid via `sub_8009AF0`,
+  bucketed by `obj`'s own `+2` field; if `obj->flags` bit 4 is set (a
+  "large object" spanning more than one cell), also inserts it into
+  the special bucket `0xff` and links the two nodes together via their
+  `+0xc` fields. Two real bugs here, both only caught by a full clean
+  rebuild after the whole batch had already "passed" in isolation:
+  (1) the ROM never sets up a return value before this function's
+  epilogue (its only caller, `sub_8009B70`, ignores the result) - it
+  must be `void`, not `void *`, even though `sub_8009AF0` itself
+  returns the node; (2) the `obj->flags` bit-4 test needed the loaded
+  byte pinned to `r1` (not the naturally-allocated `r0`) before the
+  shift, the same register-letter idiom already established for
+  `sub_8008D30`'s own flags test.
+- **`sub_8009B70`**: appends `obj` to the active-object array if
+  there's room, inserting it into the grid via `sub_8009B3C` first.
+  Matched first-attempt.
+- **`sub_8009B9C`**: tears down a pool manager - frees the free-list
+  array, node array, and slot array (each via `sub_8026EB4` if
+  non-`NULL`), resets the capacity field to 0, and optionally frees
+  the manager itself via `sub_8026ED0`. Matched first-attempt.
+
+**Lesson reinforced again**: `sub_8009AA0` and `sub_8009B3C` were both
+initially declared "matches" from isolated per-function compiles, the
+same mistake this project has hit before with `sub_8008C80`/
+`sub_8008D30`. Only a full clean `make compare` after integrating the
+whole batch into `actor_part12.c` caught both regressions - the ROM
+size grew by 4 bytes and every address after the bug shifted, which is
+exactly the kind of failure an isolated test cannot surface. A
+function is not "matched" until the *entire ROM* has been rebuilt from
+a clean tree and verified byte-exact - see `docs/workflow.md`'s
+verification step, now stated as a hard requirement rather than a
+recommendation.
+
+`sub_8009BE0` through `sub_8009D5C` (~3 functions) sits between this
+pocket and the already-matched `sub_8009DF4` boundary; `sub_8009BE0`
+itself (a physics/collision step-probe calling still-unexamined
+`sub_8008278`/`sub_8026628`) was left raw rather than guessed at, so
+this remains a separate raw span for now.
+
+**Parked, not matched: `sub_80099F0`** (ROM `0x080099F0`, right after
+the raw `sub_8009008`-`sub_8009914` span, `src/graphics/actor_part12.c`):
+byte-identical in shape to the already-parked `sub_8008D80` - the same
+`boxH` stack-layout gap applies. See "Parked, not matched:
+`sub_8008D80`" above for the full writeup; this is its twin.
+
+`sub_8009BE0` (right after `sub_8009B9C`) is a physics/collision step-
+probe function calling still-unexamined `sub_8008278`/`sub_8026628`
+(a Q8->int conversion via `>>8`, an up-to-4-attempt probe loop, and
+mysterious `+0x2a` flag toggling on `gUnknown_030012D8`) - left raw
+rather than guess at semantics.
+
+## `sub_8009CA0`: third tractable function, `actor_part13.c`
+
+Right after the raw `sub_8009BE0`, `sub_8009CA0` turned out to be
+another self-contained, clearly-understood function: it tests `part`
+for a collision-grid hit against the player (`gUnknown_030012D8`),
+gated by a mix of flag bits and a periodic "fast path" check against
+`gUnknown_0300082C` (the same ~128-frame counter documented in
+`docs/rom_map.md`) - if `part->flags` bit 2 is set and the player's
+`+0x8c` field is ahead of the frame counter (an **unsigned**
+comparison - using a signed one here produced a real, full-rebuild-
+caught mismatch) and `gUnknown_030012C0`'s mode (`+0x78`) is 3, or
+independently if `part`'s `+0xd` byte bit 3 is set and the mode is 3,
+builds `part`'s primary AABB via `sub_8007C30` (already matched) and
+tests it against the player via `sub_800B37C` (already matched); on a
+hit, calls `sub_8009D5C` and returns. If the primary AABB has no
+region, *or the hit test simply missed*, falls back to the secondary
+AABB via `sub_8007CF8` (already matched) and repeats the same hit
+test.
+
+That "or the hit test simply missed" clause was a genuine logic bug
+caught only by the full clean rebuild: the first draft returned
+unconditionally whenever the primary AABB had a region, regardless of
+whether `sub_800B37C` actually reported a hit - silently skipping the
+secondary-AABB fallback whenever the primary AABB existed but missed.
+Fixed by moving the `return` inside the hit branch only.
+
+Needed a `switch (mode) { case 0: ...; case 1: case 2: ...; case 3:
+...; default: return; }` to reproduce the ROM's exact `cmp #2,bgt` /
+`cmp #1,bge` / `cmp #0,beq` three-way dispatch - an equivalent `if
+(mode > 2) {...} else if (mode >= 1) {...} else if (mode == 0)
+{...}` chain, in any nesting or ordering tried, always gets
+normalized by this compiler into `cmp #0,bgt` for the middle test
+(`x >= 1` and `x > 0` are folded to the same canonical form for a
+plain comparison chain, but not when lowered from a `switch`). Also
+needed the by-now-familiar byte-destination-register pins (`ldrb`
+into `r1`, not the naturally-allocated `r0`) for both flag-bit tests,
+each one only surfacing via the full integrated rebuild - the
+isolated per-function compile looked correct both times.
+
+**Parked, not matched: `sub_8009D5C`** (ROM `0x08009D5C`, right after
+`sub_8009CA0`, `src/graphics/actor_part13.c`): fires a
+`part->table+0x68`-driven trampoline (the established "dead read"
+idiom) based on `gUnknown_030012C0`'s mode: mode 0 fires it on the
+player with `(0, part->field_0A, 0)`; modes 1-2 fire it on the player
+with the same arguments, then again on `part` itself with `(1, 1,
+0)`; mode 3 fires it on `part` alone with `(1, 1, 0)`; any other mode
+does nothing. Always sets `part->flags` bit 3 first.
+
+Every branch, call, and argument is confirmed correct, and this got
+extremely close: the same mode-dispatching `switch` used for
+`sub_8009CA0` reproduces the ROM's exact 3-way comparison form, and
+explicit `goto`s into a shared tail block (`addr`/`arg1`/`arg2`/
+`deadRead` pinned to `r0`/`r1`/`r2`/`r4`, the real ABI argument
+registers, rather than left as ordinary locals - which needed their
+own 3-instruction shuffle at the call site) reproduce the ROM's
+sharing of one call between the mode-0 and mode-1-2 paths. The single
+remaining gap: ROM's mode-3 case compiles its `if (mode == 3) { ...
+call ... }` guard as a 3-instruction `cmp r0,#3; beq target; b
+epilogue` (jumping into the call code, then separately jumping back
+to the shared epilogue), while every equivalent C construct this
+reconstruction tried - a bare `if` inside the switch's `case 3`, the
+same `if` behind a `goto`-reached label, restructuring as its own
+top-level `if (mode > 2)` block - collapses to the more compact
+2-instruction `cmp r0,#3; bne epilogue` (skip-if-false, fall straight
+into the return that's already right there). Parked on this single
+conditional-branch encoding gap.
+
+## Tractable pocket found past the AI/collision cluster: `actor_part8.c`
+
+Matching then resumes at `sub_8009DF4` - which, despite living inside
+the same general address range as the still-unclear AI/collision
+cluster, is self-contained (no calls into the unclear cluster) - and
+the clearly-recognizable "part object" family immediately following it
+(`sub_8009EA8` onward), which reuses patterns and even specific
+functions (`sub_8008484`, `sub_8008364`) already matched earlier this
+session.
+
+**Parked, not matched: `sub_8009DF4`** (ROM `0x08009DF4`, right after
+the raw AI/collision cluster, new `src/graphics/actor_part8.c`): a
+velocity/position integrator. For each axis (X: `self+0x60` velocity,
+`self+0x50` max, `self+0x4c` accel; Y: `self+0x64`/`self+0x5c`/
+`self+0x58`), steps the velocity toward its max by the accel amount,
+clamped so it never overshoots past the max in either direction.
+Builds a "direction" byte at `self+0x24` from the sign of each clamped
+velocity (1=right/2=left/8=down/4=up, OR'd together - the same
+mirror-flag-style bit encoding used earlier in this ROM region for
+`sub_8007B00`). Caches the pre-move position at `self+0x6c`/`self+0x70`
+(read back by `sub_8009EB0`/`sub_8009EBC`/`sub_8009EC4` below), applies
+the clamped velocity to `self+0`/`self+4`, updates the global
+`gUnknown_03001298` with the Y velocity, and returns whether either
+axis is still moving.
+
+Every branch, comparison, and memory access is confirmed correct,
+including several of the ROM's own genuinely redundant reloads (it
+re-reads fields fresh from memory rather than reusing already-loaded
+register values in multiple places - matched by deliberately NOT
+caching those values across statements) and the dirFlags OR-combine's
+accumulator-register pattern (constant computed into its own register
+before the byte load, reached via an explicit `goto` past the whole
+combine when a velocity is exactly zero, to reproduce the ROM's real
+"skip entirely" branch rather than a compute-then-OR-with-zero that
+would be semantically equivalent but byte-different).
+
+The one remaining gap: the ROM is a genuine leaf function - no
+`push`/`pop` at all, needing only `r0`-`r3` for the whole body, with
+`self` naturally landing in `r2` and being freed for reuse (for the
+final `gUnknown_03001298` dereference) once its last use has passed.
+Every arrangement tried here needs one extra register spilled to `r4`
+(a `push {r4, lr}`/`pop {r4}` pair the ROM doesn't have), including:
+pinning `self` to `r2` explicitly (fixes everything up through the
+dirFlags section, but then holds `r2` live for the pin's whole lexical
+C scope, blocking the ROM's own end-of-function reuse of that
+register once `self` is logically dead); and re-deriving a freshly
+pinned `self` from the plain parameter in separate scoped blocks
+(this just pushes the *plain parameter* into `r4` instead, since it
+now needs to survive across multiple re-derivations). Parked with the
+version that gets every branch and memory access right, differing
+from the ROM only by this one extra register spill.
+
+**`sub_8009EA8`/`sub_8009EB0`/`sub_8009EBC`/`sub_8009EC4`** (ROM
+`0x08009EA8`-`0x08009EC4`, right after `sub_8009DF4`, same file): the
+`self+0x6c`/`self+0x70` "previous position" get/set/Q8-to-integer
+accessors written by `sub_8009DF4` above. All four matched on the
+first attempt.
+
+**`sub_8009ECC`** (ROM `0x08009ECC`, same file): constant-5 stub.
+Matched on the first attempt.
+
+**`sub_8009ED0`** (ROM `0x08009ED0`, right after `sub_8009ECC`, same
+file): the same `sub_8008434`-style part-object constructor shape used
+throughout this ROM region, this time allocating a bigger 0x78-byte
+object, initializing via `sub_80084A4` (already matched in
+`actor_part6.c`), setting `table` to `gStaticData_087E3D14`, clearing
+extra fields via `sub_8009F50` (below) instead of `sub_8007AB4`, then
+setting `field_08` and the Q8 `x`/`y` position from three `u16`
+arguments. Matched on the first attempt.
+
+**`sub_8009F1C`** (ROM `0x08009F1C`, right after `sub_8009ED0`, same
+file): overwrites `self->table`, then (if `self+0x44`'s record is
+set) fires a `record->table+0x48/0x4c`-driven trampoline with a
+constant argument `3` via `sub_803AD80` (same `table+N`/`table+N+4`
+convention as `sub_8006FE4`/`sub_8007F78`/`sub_8008364`), and finally
+tail-calls `sub_8008484` (already matched in `actor_part6.c`). Needed
+the trampoline's `addr = rec + offset` computed *before* the `fn`
+load, both pinned to the same registers the ROM uses (`rec`/`fn`
+sharing `r2`, `tblAdj` in `r1`, `offset`/`addr` in `r0`) - computing
+them in the ROM's other order aliases `rec` and `fn` onto the same
+physical register and silently computes `fn + offset` instead of
+`rec + offset` (a genuine miscompile, not just a cosmetic mismatch,
+caught by noticing the compiled `add r0, r2, r0` used `r2` *after* it
+had already been overwritten with `fn`). Matched after fixing the
+read order.
+
+**`sub_8009F50`** (ROM `0x08009F50`, right after `sub_8009F1C`, same
+file): the shared part-object field-clearer called from every
+`sub_8009ED0`-family constructor in this file - sets `flags` bit 6,
+clears `part+0xd` bit 3 (the same `-9`-mask trick as `sub_8008680`),
+zeroes the velocity/accel/max-velocity fields `sub_8009DF4` reads
+(`+0x60`/`+0x64`/`+0x48`/`+0x4c`/`+0x50`/`+0x54`/`+0x58`/`+0x5c`) plus
+`+0x24`/`+0x44`/`+0x40`, sets `+0x68` to 8, and clears `+0x69`. A pure
+leaf function with no calls. Matched on the first attempt (after
+applying the same accumulator-register pattern already established
+for the two AND/OR field updates).
+
+**`sub_8009F90`** (ROM `0x08009F90`, right after `sub_8009F50`, same
+file): the same `sub_80084A4`/table-swap/`sub_8009F50` shape as
+`sub_8009ED0` above, but re-initializes an existing `part` instead of
+allocating a new one - the same relationship `sub_80084A4` itself has
+to `sub_8008434`. Matched on the first attempt.
+
+**`sub_8009FB0`** (ROM `0x08009FB0`, right after `sub_8009F90`, same
+file): calls `sub_8008364` (already matched in `actor_part5.c`), then
+(if `self+0x44`'s record is set) fires a `record->table+8/0xc`-driven
+trampoline via `sub_803AD80` with `self` itself as the second
+argument. Same `addr`-before-`fn` register-aliasing fix as
+`sub_8009F1C` above. Matched `sub_8009FB0` after fixing the read
+order.
+
+## `sub_8009FD4` resolved and matched: `actor_part9.c`
+
+`sub_8009FD4` (right after `sub_8009FB0`) was initially left raw -
+its call to `sub_803AD88` only set two of that function's four
+established parameters explicitly, with a `table+0x14` value loaded
+into `r4` but never moved into an argument register, and the other
+two args (`r2`/`r3`) appeared to be forwarded straight through from
+`sub_8009FD4`'s own (uncertain) parameter list rather than computed
+locally. Resolved while investigating the much larger
+`sub_8008A40`-`sub_8008AD8` collision cluster below: the `r4` load is
+a genuine **"dead read"** - the same idiom already established and
+tested for `sub_8007DBC`'s own `sub_803AD88` call in
+`actor_part2.c` (`table+0x68`'s function-pointer half read into `r4`
+but marked `(void)deadRead;`, never actually passed to
+`sub_803AD88`, which is confirmed to be a plain 4-argument function,
+not itself a trampoline). `sub_8009FD4` forwards `arg1`/`arg2`/`arg3`
+straight through as `sub_803AD88`'s own `arg1`-`arg3`. Matched after
+applying the dead-read pattern; folded into the front of
+`actor_part9.c` (replacing what was `asm/code_3_2_10.o`, which held
+only this one function) since its own real ROM address comes right
+after the parked `sub_8009DF4` and before `sub_8009FF4`.
+
+**`sub_8009FF4`** (ROM `0x08009FF4`, right after `sub_8009FD4`, same
+file): builds `part`'s
+primary AABB (`sub_8007C30`, already matched in `actor_part2.c`) and
+tests it against `region` (`sub_8001688`, the same collision-test
+function already declared for `sub_8007DBC`/`sub_8008304`'s sibling
+in `actor_part.c`/`actor_part4.c`); if that already overlaps, returns
+2. Otherwise builds the secondary AABB (`sub_8007CF8`, also already
+matched) and re-tests; if that misses, returns 0. If it hits, returns
+2 unless `part->flags` bit 6 is set, in which case it returns the
+(nonzero) hit-test result itself.
+
+Needed the control flow rewritten with explicit `goto`s into a single
+shared exit (rather than three separate `return` statements) to
+reproduce the ROM's own single "adds r0, r2, #0" epilogue reused by
+every path - an early `return 0;` for the miss case compiles to its
+own `mov r0, #0; b <end>` instead of falling into the shared exit with
+the value already sitting in the right register. The final flags test
+also needed the byte loaded into `part`'s own dying register (`r5`,
+matching the ROM's `ldrb r5, [r5, #0xc]` self-overwrite - `part` is
+never read again afterward) and read through a `u32` intermediate so
+the `>> 6` compiles to a logical `lsr` instead of an arithmetic `asr`.
+Matched after applying both fixes.
+
+**`sub_800A050`** (ROM `0x0800A050`, right after `sub_8009FF4`, same
+file): fires a `self->table+0x70/0x74`-driven trampoline via
+`sub_803AD7C` and always returns 0. Same `addr`-before-`fn` register-
+aliasing fix as `sub_8009F1C`/`sub_8009FB0`/`sub_800A0AC` (below).
+Matched after applying it.
+
+**`sub_800A068`/`sub_800A078`/`sub_800A080`** (ROM `0x0800A068`-
+`0x0800A080`, same file): `self+0x74` get/clear/OR-set accessors, no
+other logic. All matched on the first attempt.
+
+**`sub_800A06C`** (ROM `0x0800A06C`, same file): `self+0x74 != 0`,
+via the branchless `(-x | x) >> 31` idiom (this compiler does not
+choose it automatically for a plain `!= 0` comparison - that compiles
+to a `cmp`/`beq`/`mov` branch instead) rather than a plain comparison.
+Matched by writing the idiom explicitly.
+
+**`sub_800A088`/`sub_800A090`** (ROM `0x0800A088`/`0x0800A090`, same
+file): a plain `self+0x68` byte get/set pair. Both matched on the
+first attempt.
+
+**`sub_800A098`/`sub_800A09C`/`sub_800A0A0`/`sub_800A0A4`** (ROM
+`0x0800A098`-`0x0800A0A4`, same file): `self+0x64`/`self+0x60` setters
+and their getter siblings, no other logic. All four matched on the
+first attempt.
+
+**`sub_800A0A8`** (ROM `0x0800A0A8`, same file): `self+0x44` (the
+keyframe/table record pointer used by `sub_8009F1C`/`sub_8009FB0`/
+`sub_800A0AC`) getter. Matched on the first attempt.
+
+**`sub_800A0AC`** (ROM `0x0800A0AC`, right after `sub_800A0A8`, same
+file): sets `self+0x44` to `rec`, then fires `rec->table+0x18/0x1c`'s
+trampoline via `sub_803AD80` with `self` as the second argument. Same
+`addr`-before-`fn` register-aliasing fix as `sub_8009F1C`/
+`sub_8009FB0` - but this one initially "matched" with the wrong
+register roles (`tbl` in `r1` instead of the ROM's `r2`) because a
+misread of the ROM trace happened to still produce a *plausible-
+looking* but ultimately wrong instruction sequence; caught only by
+the full clean `make compare` (isolated per-function tests can't catch
+this class of error on their own - they only prove a function
+compiles to *some* byte-exact sequence, not that the reconstruction
+used the ROM's actual register assignment, if a copy-paste or
+transcription mistake happens to compile to a different-but-still-
+matching-length sequence that merely looks right at a glance). Fixed
+by re-reading the ROM disassembly instruction-by-instruction again
+rather than trusting the earlier note.
+
+**`sub_800A0CC`/`sub_800A0D8`** (ROM `0x0800A0CC`/`0x0800A0D8`, same
+file): a `self+0x64`/`self+0x54`/`self+0x58`/`self+0x5c` bulk setter
+(the first two fields sharing the same argument) and its sibling
+without the `self+0x64` write. Both matched on the first attempt.
+
+**`sub_800A0E0`/`sub_800A0EC`** (ROM `0x0800A0E0`/`0x0800A0EC`, same
+file): the same "shared first write" bulk-setter shape as
+`sub_800A0CC`/`sub_800A0D8` above, this time for `self+0x60`/
+`self+0x48`/`self+0x4c`/`self+0x50` - the velocity/accel/max-velocity
+fields `sub_8009DF4` clamps. Both matched on the first attempt.
+
+**`sub_800A0F4`** (ROM `0x0800A0F4`, right after `sub_800A0EC`, same
+file): `self+0x69` (cleared by `sub_8009F50`) getter. Matched on the
+first attempt.
+
+## New tractable pocket after the AI/collision cluster: `actor_part14.c`
+
+Past the whole AI/collision cluster resolved above, `sub_800A0FC`
+through `sub_800A590` (part-object update/collision dispatchers
+calling still-unexamined `sub_800A178`/`sub_8009BE0`) remain a raw
+span in `code_3_2_11.s` - left raw rather than guess at semantics.
+
+Right after that span, `sub_800A5F4` through `sub_800A730` turned out
+to be another self-contained, clearly-understood run: a small
+`gStaticData_087E3D8C`-table family of part-object constructors,
+mirroring the already-matched `gStaticData_087E3D14`-table family
+(`sub_8009ED0`/`sub_8009F1C`/`sub_8009F50`/`sub_8009F90`) in
+`actor_part8.c`, plus a dozen tiny single-bit accessor pairs.
+
+- **`sub_800A5F4`**: a void tail-call wrapper around the already-
+  matched `sub_8008350` - the ROM discards its return value (`pop
+  {r0}; bx r0` reuses the exact register `sub_8008350`'s own return
+  landed in for the epilogue, not the function's own result), so
+  writing `sub_8008350(arg0);` as a statement (not `return
+  sub_8008350(arg0);`) was needed to avoid keeping the result alive.
+- **`sub_800A600`**: constant-6 stub.
+- **`sub_800A604`**: same shape as `sub_8009ED0`/etc. - allocates a
+  bigger (0x80-byte) part-object via `sub_8026EDC`, re-initializes it
+  via `sub_8009F90`, overwrites its table with `gStaticData_087E3D8C`,
+  clears it via `sub_800A664`, then sets `field_08`/`x`/`y` from the
+  three `u16` arguments.
+- **`sub_800A650`**: overwrites `self->table` with
+  `gStaticData_087E3D8C`, then tail-calls `sub_8009F1C` - which
+  unconditionally overwrites `table` again with `gStaticData_087E3D14`
+  and fires its own trampoline, so this function's own table write
+  only matters transiently. Needed an explicit (unused) second
+  parameter threaded straight through to `sub_8009F1C`'s own second
+  argument - the ROM never sets it itself, just leaves whatever its
+  own caller left in that register.
+- **`sub_800A664`**: the `gStaticData_087E3D8C`-table sibling of
+  `sub_8009F50`'s own clearer - sets `flags` bits 6/7, zeroes the same
+  velocity/accel/max-velocity fields `sub_8009DF4` consumes plus
+  `+0x24`/`+0x44`/`+0x78`/`+0x1c`, sets `+0x68` to 8, and (unlike
+  `sub_8009F50`) sets `+0xd` bit 0 instead of clearing bit 3. This one
+  needed real care: the two-step `flags |= 0x80; flags |= 0x40;`
+  needed register pins to avoid the compiler constant-folding both
+  masks into a single `0xc0` immediate (the ROM does two separate
+  loads-and-ORs); the `+0x24` field address needed its own address
+  computed via a register *different* from the one just used for
+  `+0x68`'s address, otherwise the compiler notices `+0x24 == +0x68 -
+  0x44` and emits a shorter `sub` instead of the ROM's fresh `add`
+  from `self` (no memory barrier or `volatile` pointer discouraged
+  this - only picking an unrelated register did); and the trailing
+  `+0xd |= 1` needed the same mask-first register pin as the simple
+  accessors below, which only surfaced via the full integrated
+  rebuild (in isolation, without the surrounding zero-fills' register
+  pressure, the naive form happened to already look right).
+- **`sub_800A6A4`**: same `sub_8009F90`/table-swap/clearer shape as
+  `sub_800A604`, but re-initializes an existing `self` instead of
+  allocating a new one.
+- **`sub_800A6C4`/`sub_800A6D0`/`sub_800A6DC`**: get/clear/set
+  accessors for `self+0xd` bit 1.
+- **`sub_800A6E8`/`sub_800A6F4`/`sub_800A700`**: get/clear/set
+  accessors for `self+0xd` bit 0. `sub_800A6E8` needed the incoming
+  `self` pointer explicitly copied into `r1` before the load (the ROM
+  has a seemingly-redundant `adds r1, r0, #0` this compiler otherwise
+  optimizes away, reading directly through `r0` instead) - fixed via
+  an unusual "declare in `r1`, initialize in `r0`, reassign" pattern
+  that also forces the AND's result into `r0` matching the ROM's own
+  register choice for the return value.
+- **`sub_800A70C`/`sub_800A718`/`sub_800A724`**: clear/set/get
+  accessors for `flags` bit 5. The clear masks (`-3`, `-2`, `-0x21`
+  for the three clear functions above and here) match the established
+  "negate a small positive constant" idiom this compiler uses for bit-
+  clear masks (already documented for `sub_8008680`'s own `-9`) -
+  writing the literal negative constant directly (not `&= ~mask`,
+  which folds to a different immediate-load instruction) reproduces
+  the ROM's `movs`+`rsbs`/`neg` pair exactly.
+- **`sub_800A730`**: `self+0x44` getter (the same "record" field
+  `sub_8009F1C`/`sub_8009FB0` fire their trampolines through).
+
+All 16 were verified via a full recompile of `actor_part14.c` together
+and a full clean `make compare`, after this session's earlier
+regressions (`sub_8008C80`/`sub_8009AA0`/`sub_8009B3C`) established
+that isolated per-function compiles aren't sufficient proof - and this
+batch caught two more real integration-only issues: `sub_800A664`/
+`sub_800A604` were initially placed in the wrong file order (matching
+their natural "helper defined before caller" writing order rather
+than their real ROM address order), and `sub_800A6E8`'s isolated test
+initially passed with the redundant register copy already dropped
+(matching in isolation) but the full build caught the resulting
+4-byte size regression once the whole file was assembled together.
+
+## A new unnamed object: `actor_part15.c`/`actor_part16.c` (`sub_800B324`-`sub_800B6D0`)
+
+Right after `actor_part14.c`'s cluster, a big new not-yet-named object
+(at least 0x108 bytes, distinct from `struct actor`) starts - most of
+these 44 functions are pure single-field get/set/clear/increment
+accessors on it, so raw offset casts are used throughout rather than
+guessing at a struct layout. Split across two files at a raw,
+untouched function (`sub_800B3F0`, see below) that sits in the middle
+of the run:
+
+- **`sub_800B324`**: `self+0x5c` boolean getter. Needed the verbose
+  `if (cond) { return 1; } else { return 0; }` form (the ROM has a
+  genuinely redundant `movs r0,#0; b end; ...; movs r0,#1; end:`
+  rather than reusing the comparison operand's register) - the same
+  idiom already documented for other boolean accessors in this ROM.
+- **`sub_800B33C`**: clamps three fields to `<= 0`; needed `self`
+  pinned to `r1` to avoid an extra register copy the ROM doesn't have.
+- **`sub_800B360`**: countdown-decrement then tail-call into
+  `sub_800A528` (itself still raw, in the `sub_800A0FC`-`sub_800A590`
+  span).
+- **`sub_800B37C`**: the `gUnknown_030012D8` AABB-vs-buf collision
+  check every earlier-matched pool/grid function in `actor_part11.c`
+  calls by name - finally matched for real. Builds a secondary AABB
+  via the already-matched `sub_8007CF8`, and only tests it via
+  `sub_8001688` when it has a region (`field_8 > 0`).
+- **`sub_800B3AC`**: overwrites `self->table` with
+  `gStaticData_087E3E04` (a second static table alongside the
+  already-matched `gStaticData_087E3D14`), fires a child object's own
+  trampoline via `sub_803AD80` if one exists, then calls
+  `sub_8010E14(self+0x108, 2)` and tail-calls `sub_800A650`.
+- **`sub_800B3F0`** (LEFT RAW - not reconstructed, given its own
+  `asm/code_3_2_19.s`): a part-object constructor that calls three
+  still-unexamined helpers (`sub_80087C0`, `sub_80087B4`,
+  `sub_800872C`) plus `sub_800A734` (itself the start of a still-raw
+  94 KB span) and `sub_8008434`/`sub_8010E2C`/`sub_800A6A4`. Sits
+  between `sub_800B3AC` and `sub_800B4A4` in ROM, so it splits this
+  batch into `actor_part15.c` (up to `sub_800B3AC`) and
+  `actor_part16.c` (`sub_800B4A4` onward).
+- **`sub_800B4A4`-`sub_800B644`**: a long run of plain single-field
+  accessors (address getter, byte clear/set/get pairs, bulk 3-word
+  setters, countdown decrement/clear/increment/get, an unsigned
+  "counter snapshot ahead of `gUnknown_0300082C`" check, and four
+  parallel byte accessor pairs at `+0x100`-`+0x103` that read like a
+  small per-phase flag array). One real gap: `sub_800B524`'s unsigned
+  `field > gUnknown_0300082C` check needed to be written as a plain
+  `return a > b;` rather than an explicit `if/else` - here the
+  explicit form was the one that mismatched (the reverse of
+  `sub_800B324` above), producing a longer flag-accumulate-then-copy
+  sequence instead of the ROM's compact set-0/conditionally-set-1/
+  return pattern.
+- **`sub_800B650`/`sub_800B678`**: indexed getter/setter into a
+  5-element `s32` array at `self+0x98`, gated by `self+0x88` and (for
+  index > 4) `self+0x94`'s own count. Both needed real work:
+  - `sub_800B650`'s guard-clause form (`if (bad) return 0;` twice)
+    compiled *correctly* but 2 bytes *short* - GCC merged the two
+    `return 0;` epilogues and placed the merged block right after the
+    first check, while the ROM places its single `return 0` block at
+    the very end and falls through the two guard checks straight into
+    the compute path. Fixed by rewriting with explicit `goto`s
+    (`goto ret0` / `goto end`) so the source's block order forces the
+    ROM's exact layout. The array-index address itself then needed
+    the base pointer (`self+0x98`) and the scaled index (`idx*4`)
+    computed into two clearly separate locals (`s32 *arr = ...; result
+    = arr[idx];`) - a plain `((s32*)(self+0x98))[idx]` computed
+    everything through one register and mismatched.
+  - `sub_800B678` needed heavier register surgery: the ROM keeps
+    `val` copied into `r3` up front (the usual "redundant copy the
+    natural codegen drops" idiom), and - critically - loads the
+    `self+0x94` count byte into `r1` *while leaving `r0` still holding
+    the `self+0x94` address*, so it can later do `adds r0,#4` to reach
+    `self+0x98` instead of recomputing it fresh from `self`. Plain C
+    naturally reuses the same register for both the address and the
+    loaded byte (clobbering the address), forcing a fresh
+    recomputation later. Fixed with explicit `register ... asm("r0")`/
+    `asm("r1")` pins matching the ROM's exact register roles, plus an
+    unsigned (`u32`) index type so the bounds check compiles to `bhi`
+    (unsigned) instead of `bgt` (signed).
+- **`sub_800B698`/`sub_800B69C`**: plain word setters at `self+8`/
+  `self+4`.
+- **`sub_800B6A0`/`sub_800B6D0`** (PARKED, `#if NON_MATCHING` in
+  `actor_part16.c`, raw bytes in `asm/code_3_2_18.s`): copy a 3-vector
+  into `self+0x54`/`+0x58`/`+0x5c` (the second function also mirrors
+  the X component into `+0x64`), negating X and Z when `self+0x28`
+  bit 5 (a mirror flag) is set. The `vec` pointer is referenced in
+  both branches of the if/else, and this compiler unconditionally
+  promotes it to a callee-saved register (`push {r4,lr}`/`pop {r4}`)
+  even though nothing clobbers it in either branch - the real ROM is
+  a true `r0`-`r3`-only leaf function with no stack frame. Three
+  independent fixes were tried and all produced an identical 8-byte-
+  larger result: pinning `self` alone to `r3`; additionally pinning
+  and reassigning `vec` to `r2`; and restructuring the if/else into an
+  equivalent `goto`-based flow. Accepted as an unavoidable compiler
+  limitation for this pattern and parked.
+
+All 44 non-parked functions plus the 2 parked ones were verified via a
+full clean `make compare` after being split into `actor_part15.c`/
+`actor_part16.c` around the raw `sub_800B3F0` gap; `ldscript.txt` links
+them in real ROM order: `actor_part15.o`, `asm/code_3_2_19.o`
+(`sub_800B3F0`, raw), `actor_part16.o`, `asm/code_3_2_18.o` (the two
+parked functions' real bytes), `asm/code_3_2_17.o` (`sub_800B704`
+onward, still raw).
+
+## `actor_part17.c` (`sub_800B704`-`sub_800B8D8`)
+
+Continuation right after the previous batch's parked pair - a table-
+driven trampoline pair, a fixed-point-scaled vector-copy pair (mirrors
+of `sub_800B3AC`/`sub_8009D5C` and `sub_800B6A0`/`sub_800B6D0`
+respectively), and a handful of small `part`/table accessors:
+
+- **`sub_800B704`/`sub_800B838`**: look up `self`'s `index`-th 8-byte
+  record through a double pointer chain at `self+4`
+  (`**(void***)(self+4)`, i.e. `self+4` holds a pointer to an object
+  whose own first field is the actual array base), use the record's
+  second word (`sub_800B704`) or first word (`sub_800B838`) as a type
+  index into the 12-byte-stride `gStaticData_0816B304` table (a new
+  table, distinct from the already-matched `gStaticData_087E3D14`/
+  `gStaticData_087E3E04`), and fire that table entry's trampoline via
+  `sub_803AD84` at `self + (int16 offset from self->0xc's part+0x30`
+  or `part+0x28)` through the function pointer at `part+0x34` or
+  `part+0x2c` - the same base+offset+fn-pointer convention as
+  `sub_800B3AC`/`sub_8009D5C`, just with an extra `tableEntry`
+  parameter (`sub_803AD84` takes 4 args where `sub_803AD80` took 3).
+  Needed real register work: `rec = arr + index*8`'s pointer addition
+  compiled to the wrong `ADDS Rd,Rn,Rm` operand order regardless of
+  how the C expression was written (`arr + offset` vs `offset + arr`
+  both picked the same, wrong, encoding - register-pinned variables
+  don't respect source operand order the way ordinary locals
+  sometimes do), so it needed the same explicit `asm("add %0, %0,
+  %1")` two-operand-form trick already used by `sub_80087A0` in
+  `actor_part7.c`, pinning the destination register directly instead
+  of hoping the compiler picks it.
+- **`sub_800B734`/`sub_800B7B0`**: per-axis `sub_80008FC(component,
+  self->field4->field4)`-scaled vector write into `part+0x48`/`+0x4c`/
+  `+0x50`, negating X and Z when `part+0x28` bit 4 (`(s32)(flags <<
+  27) < 0` - the same 32-bit-shift bit-test idiom already used for
+  this exact field in `actor_part.c`/`actor_part2.c`, confirming
+  `part+0x28` is the actor_part's own flags byte and not a new field)
+  is set. `sub_800B7B0` additionally duplicates the (possibly negated)
+  X component into `part+0x60` - the scaled-copy counterpart of
+  `sub_800B6D0`'s plain-copy `+0x64` duplication. Both compiled
+  correctly on the first try, register-for-register, once written with
+  the `self->field4->field4` chain expression repeated inline for each
+  of the three `sub_80008FC` calls (not hoisted into a local) - the
+  ROM genuinely reloads it three times.
+- **`nullsub_13`**: empty stub.
+- **`sub_800B86C`**: sets `part+0x2d` (frame index) to `newVal`, but
+  only if it actually changed; on a real change, resets the sub-
+  counter/frame-counter/"done" flag exactly like the already-matched
+  `sub_80087D0` (inlined here rather than called), clears `part+0xc`
+  bit 3, and returns 1 (0 if unchanged). Two gaps: the `u8 newVal`
+  parameter needed to be `s32` instead - a `u8` parameter forced a
+  redundant zero-extend truncation the ROM doesn't have, meaning the
+  real signature never narrows this argument; and the bit-3 clear
+  needed the mask-first register-pin pattern (`register s32 mask
+  asm("r0") = -9; register s32 byte asm("r1") = part[0xc]; ...`) since
+  plain `part[0xc] &= -9` let the compiler fold the mask straight to
+  the byte immediate `0xf7` and load-before-mask, instead of the ROM's
+  `movs r0,#9; neg r0,r0` sequence.
+- **`sub_800B8A4`**: `self+0` word setter.
+- **`sub_800B8A8`**: resets `self+0xc`'s table pointer to
+  `gStaticData_087E3E7C` (a third static table alongside
+  `gStaticData_087E3D14`/`gStaticData_0816B304`), then fires
+  `sub_8026ED0(self)` if flags bit 0 is set.
+- **`sub_800B8C8`**: resets `self+0xc`'s table pointer to
+  `gStaticData_087E3E7C` and clears `self+8`.
+- **`sub_800B8D8`**: `self+8` word getter.
+
+All were verified via a full clean `make compare`; this batch also
+caught a repeat of the earlier "file order must match ROM address,
+not writing order" mistake - `sub_800B838` was initially written
+right after `sub_800B704` (their shared shape made that the natural
+writing order) instead of after `sub_800B7B0` (its real ROM position),
+producing a 48-byte map-address shift starting at `sub_800B734`;
+fixed by reordering. `sub_800B8DC` onward (a 546+-line function) is
+left for a future pass - a background pass on it read the whole
+jump-table dispatcher and worked out most of its shape, but found a
+real structural contradiction (case 17 stores a pointer through
+`self+0x88` and later dereferences it as a `struct actor`, while the
+already-matched `sub_800B554`/`sub_800B55C` in `actor_part16.c` treat
+`self+0x88` as a plain byte) that needs `sub_800C9C8`'s own semantics
+pinned down first; left completely untouched rather than guess.
+
+## The `0x080014A4`-`0x08001624` fade/screen-mode cluster, finally matched
+
+`docs/rom_map.md` had already identified this 13-function, 332-byte
+cluster (a fade-to-black effect plus 12 `gUnknown_03001288`/
+`gUnknown_03001280` DISPCNT/blend-register shadow-copy accessors) but
+it stayed raw until now. Three of its functions resisted byte-exact
+matching for three unrelated reasons, and - since they're interleaved
+with the matched ones rather than clustered at one edge - the whole
+thing needed splitting into *five* files instead of the usual two:
+`asm/code_3_1_7.s` (parked `sub_80014A4` alone), `fade_screen_mode.c`
+(`sub_8001510`), `asm/code_3_1_8.s` (parked `sub_8001524` alone),
+`fade_screen_mode2.c` (`sub_800153C`-`sub_8001614`, 13 fns), and
+`asm/code_3_1_9.s` (parked `sub_8001624`, followed immediately by the
+still-fully-raw `sub_8001640` onward - the overlay_ui/pause-menu
+cluster).
+
+- **`sub_80014A4`** (PARKED): backs the real palette (`0x05000000`)
+  up into `gUnknown_03000A80`, then for each factor 0/2/.../16 blends
+  it toward black via the already-matched `sub_80013FC` into
+  `gUnknown_03000E80` and DMAs the result into the real palette,
+  waiting a VBlank between steps - a textbook fade-to-black. Once
+  fully faded, sets `REG_BLDCNT`/`REG_BLDY` and restores the original
+  palette. The ROM caches the blended-buffer address in a register
+  across the loop while recomputing the DMA destination and control
+  constants fresh every iteration, plus an extra register-rename copy
+  before the loop; this compiler's loop-invariant hoisting always
+  either hoists nothing extra (matching the recompute behavior but
+  losing the buffer cache) or hoists the buffer *and* at least one of
+  the other two fields once any local variable represents the buffer
+  address - no combination of local-variable placement, register
+  pins, or inline-asm memory-clobber barriers landed on the ROM's
+  exact "cache exactly one of three" split. Same root cause as
+  `sub_8009150`'s documented loop-invariant-hoisting gap, applied to
+  a memory-mapped-I/O DMA setup instead of a pointer computation.
+- **`sub_8001510`**: `gUnknown_030007E8.field_0 != -1` (the same
+  "idle" fade sentinel documented on that struct in `fade_util.c`),
+  written as a plain `s32` read since this file doesn't share that
+  struct definition.
+- **`sub_8001524`** (PARKED): sets `gUnknown_03001288`'s low 3 bits
+  (the DISPCNT background-mode field) to `val & 7`. This compiler
+  recognizes that `-8` is reachable from the already-loaded `7` mask
+  via a single `SUB` (`7 - 15 = -8`) and always folds the ROM's fresh
+  `movs r1,#8; rsbs r1,r1,#0` pair into that shorter subtract - tried
+  respelling the constant (`-8` vs `~7`), reordering statements,
+  inline-asm barriers, and `volatile` register variables (which gcc
+  itself warns don't work as hoped); none stopped the value-propagation
+  optimization.
+- **`sub_800153C`/`sub_8001550`/`sub_8001564`/`sub_8001578`/
+  `sub_800158C`/`sub_80015F0`**: clear bits 3/2/1/0/4 (of byte 1) and
+  bit 6 (of byte 0) of `gUnknown_03001288`, all using the established
+  negative-constant clear-mask idiom - each needed the address loaded
+  into its own register *before* the mask computation (`register u8
+  *addr asm("r1") = ...;` first, then `register s32 mask asm("r0") =
+  -K;`) to reproduce the ROM's exact instruction order; a plain `field
+  &= -K;` on a byte destination let the compiler fold straight to the
+  positive byte-mask immediate instead of the ROM's `mov`+`neg` pair.
+- **`sub_80015A0`/`sub_80015B0`/`sub_80015C0`/`sub_80015D0`/
+  `sub_80015E0`/`sub_8001604`**: the `|=` counterparts of the above
+  (bits 3/2/1/0/4 of byte 1, bit 6 of byte 0), same address-first
+  register-pin shape.
+- **`sub_8001614`**: commits the packed `gUnknown_03001288` shadow
+  (both bytes as one halfword) straight to `REG_DISPCNT`.
+- **`sub_8001624`** (PARKED): commits a second shadow,
+  `gUnknown_03001280` (a word covering `REG_BLDCNT`+`REG_BLDALPHA`,
+  plus a trailing byte whose low 5 bits become `REG_BLDY`), to the
+  real registers. The ROM writes the word, then does a separate `adds
+  r2,#4` on the same register before the second store; this compiler
+  always fuses that specific store-then-increment-same-register pair
+  into a single `stmia r2!,{r0}`, regardless of whether the increment
+  is a separate statement, guarded by a memory-clobber barrier, or
+  assigned to a distinctly-named pointer variable - an unavoidable
+  peephole optimization for this instruction pair.
+
+All 14 matched functions plus the 3 parked ones were verified via a
+full clean `make compare` after the five-way file split; `ldscript.txt`
+links them in real ROM order: `code_3_1_7.o`, `fade_screen_mode.o`,
+`code_3_1_8.o`, `fade_screen_mode2.o`, `code_3_1_9.o`.
+
+## `aabb_util.c` (`sub_8001640`-`sub_80016DC`)
+
+Right after the parked `sub_8001624`, two AABB overlap tests plus two
+tiny `mem_free`/`mem_alloc` wrappers:
+
+- **`sub_8001640`/`sub_8001688`**: axis-aligned box overlap tests on
+  a plain `{x, y, w, h}` rect (already named `struct aabb` elsewhere
+  in this codebase, re-declared locally per this project's per-file
+  convention). Both check `w > 0` for each box, then an X-axis overlap
+  test, then a Y-axis overlap test - `sub_8001640`'s X-axis test uses
+  `<=` (touching edges count as overlap) while `sub_8001688`'s uses
+  `<` (touching does not count); the Y-axis test is `<` in both.
+  `sub_8001688` is the variant already referenced by name as an
+  `extern` from `actor_part15.c`'s `sub_800B37C` and the pool/grid
+  collision functions in `actor_part11.c`. Both needed the Y-axis
+  result computed into a separate `u8 temp = 0;` local, only then
+  copied into the return-value variable (`result = temp;`), instead of
+  assigning `result = 1;` directly inside the innermost `if` - the ROM
+  has a genuine extra "temp, then copy" step there (a `movs r4,#0` /
+  `movs r4,#1` / `adds r6,r4,#0` sequence) that a direct assignment
+  compiles 4 bytes shorter, a real integration-only catch: the isolated
+  per-function compile "matched" by eye, but the full rebuild's map
+  showed a 4-byte address shift starting exactly at `sub_8001688`
+  until this was caught by direct byte-diffing against the ROM instead
+  of trusting a visual instruction-shape comparison.
+- **`sub_80016D0`/`sub_80016DC`**: trivial `mem_free`/`mem_alloc`
+  wrappers, the latter always requesting the `0x80000000` flag
+  (IWRAM-preferring allocation, per `mem_alloc`'s own established
+  `arg1` semantics in `src/system/memory.c`).
+
+Needed an explicit trailing `asm(".align 2, 0");` after `sub_80016DC`
+(the last function in the file) - without it, the assembler's default
+NOP padding (`0xc046`, "mov r8,r8") mismatched the ROM's zero-padding
+before the next raw function - the same alignment fix already
+established for other files' trailing functions.

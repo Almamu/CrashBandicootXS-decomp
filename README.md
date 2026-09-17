@@ -18,12 +18,47 @@ game's code is actually organized - see [docs/status/](./docs/status/) for
 the full per-system breakdown of what's matched, what's parked and why, and
 what's still fully raw asm.
 
+## AI-assisted decompilation
+
+A large part of this project's matching work (function reversal, byte-exact
+C reconstruction, ROM address-space mapping, and documentation) has been
+done with the help of AI coding agents (Claude Code), under human
+supervision and review. This isn't a secret or an experiment on the side -
+it's the primary way this project has been making progress, and it's
+expected to keep being used that way. A few things follow from that:
+
+- **Nothing is trusted on the AI's say-so.** Every function marked
+  "matched" has gone through the full clean-rebuild verification described
+  in [docs/workflow.md](./docs/workflow.md) - an isolated compile matching
+  is not proof, only a byte-identical `make compare` against the real ROM
+  is. This applies equally whether a human or an AI made the change.
+- **Contributions from AI-assisted work are welcome**, including from
+  contributors using their own AI tooling - as long as the same
+  verification standard is met (byte-exact match or an honestly-documented
+  `NON_MATCHING` park, never a guess presented as a match).
+  [docs/rom_map.md](./docs/rom_map.md) and [docs/matching.md](./docs/matching.md)
+  exist specifically so an AI agent (or a human) picking up a fresh session
+  has enough context to keep going without re-deriving everything from
+  scratch.
+- **Semantic naming should stay honest.** `sub_XXXXXXXX` is a perfectly
+  valid, permanent name for a fully-matched function - AI agents (and
+  humans) should only replace it with a real name when genuinely confident,
+  per [docs/naming.md](./docs/naming.md). An overconfident or invented name
+  is worse than an honest placeholder.
+- **Humans still make the calls that matter**: what gets merged, how the
+  project is organized, and any judgment call that isn't purely mechanical
+  verification.
+
+If this isn't the kind of project you want to contribute to for that
+reason, that's a completely reasonable position - just know it going in.
+
 ## Setting up the repo
 
 Please see follow [these instructions](./INSTALL.md)
 
 ## Notes
 
+- [CONTRIBUTING.md](./CONTRIBUTING.md) - **how to pick up a chunk of work from the issue tracker, human or agent, and get it to a PR**
 - [docs/status/](./docs/status/) - **per-system matched/parked function status, the "Current state" section moved here**
 - [docs/workflow.md](./docs/workflow.md) - **the required per-function matching loop, must be followed for every function**
 - [docs/naming.md](./docs/naming.md) - **the function naming convention, must be followed whenever a function gets a real name**

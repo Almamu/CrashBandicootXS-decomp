@@ -1,5 +1,11 @@
 # The per-function matching loop
 
+**Picking up work?** See [CONTRIBUTING.md](../CONTRIBUTING.md) first for
+how to find a scoped chunk of functions (or a single parked function)
+via this repo's GitHub issues, claim it, and open a PR when done - this
+document is the loop you run *within* that process for each function,
+not how to find one to work on.
+
 Every function that goes from `asm/code_3_*.s` into real C **must**
 follow this same loop, in order, end to end, every time - including the
 cleanup step (step 7), which in earlier sessions happened as an
@@ -35,6 +41,23 @@ incomplete pass and should be finished before moving on.
    `matching_decomp_non_matching_toggle` memory and the "Parked, not
    matched" entries in matching.md for the pattern and when to stop
    iterating.
+
+   **A step-2/step-3 isolated compile (one function, or even one whole
+   `.c` file, compiled standalone outside the real build) is a
+   diagnostic tool, never proof of a match.** It cannot see the
+   surrounding link context - other functions in the same object,
+   which registers a caller already occupies, or a neighboring
+   parked/raw block sitting between this function and the next in ROM
+   order - and this compiler's register allocation is sensitive to
+   exactly that context. Do not say a function "matches", write that
+   into matching.md/status docs, or commit it, on the strength of an
+   isolated compile alone. Only step 6's full clean rebuild (the whole
+   ROM, from a `rm -rf build`) is evidence of a match. This project has
+   hit this exact mistake more than once (`sub_8008C80`/`sub_8008D30`,
+   and again `sub_8009AA0`/`sub_8009B3C` - both pairs looked identical
+   to the ROM in isolation and both had real bugs step 6 caught, one of
+   them a wrong-register byte load, the other a bogus return value)
+   - treat every "matches" claim before step 6 as provisional.
 4. Once it matches (or is deliberately parked), cut that function's
    block out of whichever `asm/code_3_*.s` file currently holds it (it
    becomes two files: everything before, and everything after), add the
@@ -56,7 +79,16 @@ incomplete pass and should be finished before moving on.
    will fail with "undefined reference" if any are missed - a useful
    safety net, not just a cosmetic step).
 6. Full clean `make compare` (and `make NON_MATCHING=1 <rom-target>` too,
-   if the function ended up parked).
+   if the function ended up parked). This means `rm -rf build
+   crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map` first,
+   every time, not a rebuild that reuses stale objects. **No function is
+   "done" - matched or parked - until this step has actually run and
+   passed on the real tree.** When several functions are being worked
+   through together as one batch (a common pattern in this project), do
+   not report or record any of them as matched based on their individual
+   step-2/3 isolated compiles; step 6 must run once against the fully
+   integrated batch (all of it cut into its real `.c`/`.s` files, per
+   step 4) before step 8 records anything.
 7. **Cleanup pass, on this function alone, right now - do not defer it
    to a later batch pass:**
    - Replace every raw hardware address (`0x040000xx`/`0x0500...`/
@@ -86,6 +118,16 @@ incomplete pass and should be finished before moving on.
      new named constant for a value whose meaning isn't actually
      understood yet - an unexplained `0x2D` is more honest than a
      confidently-named constant that's really a guess.
+   - Reconsider naming the function now that it's fully understood
+     (revisiting step 1's naming check with the finished C in front of
+     you often surfaces a confident name that wasn't obvious before) -
+     see [docs/naming.md](./naming.md) for the convention and when
+     *not* to name it. This is **not a requirement for marking a
+     function matched or parked** - `sub_XXXXXXXX` is a perfectly
+     complete final state, not a placeholder that blocks progress, and
+     most of the ROM will stay that way for a long time. Only rename
+     when genuinely confident; a wrong or overly-specific name left in
+     is worse than an honest `sub_XXXXXXXX`.
    - **Rebuild and re-run `make compare` (and `make NON_MATCHING=1
      <rom-target>`, if parked) after each individual cleanup edit**, not
      just once at the end. A cleanup edit that's supposed to be a

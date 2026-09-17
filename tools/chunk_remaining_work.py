@@ -1,0 +1,459 @@
+#!/usr/bin/env python3
+"""Enumerates every still-raw function across asm/*.s (thumb_func_start /
+non_word_aligned_thumb_func_start / arm_func_start), sorts them by ROM
+address, tags each with the category tools/report_units.py's UNITS list
+already assigns that address range, and groups them into contiguous,
+single-category chunks capped at --max-functions (default 25) for use as
+self-contained "pick this up" issues.
+
+Usage: python3 tools/chunk_remaining_work.py [--max-functions N] [--json out.json] [--md out.md]
+       python3 tools/chunk_remaining_work.py --issues-dir DIR --parked-issues   # write title/body files
+       python3 tools/chunk_remaining_work.py --issues-dir DIR --parked-issues --create-github-issues  # also open them on GitHub via `gh`
+
+This is read-only with respect to asm/ and src/ - it never touches them.
+--create-github-issues is the one mode with a real side effect (it opens
+issues on GitHub via `gh issue create`); everything else just writes
+local files. Re-run any time more functions get matched (and cut out of
+asm/*.s) to regenerate the chunk list against current ground truth -
+re-running --create-github-issues will open duplicates of anything
+already-open, so only do that deliberately.
+"""
+import argparse
+import json
+import re
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+ASM_DIR = ROOT / "asm"
+SRC_DIR = ROOT / "src"
+REPO_URL = "https://github.com/Almamu/CrashBandicootXS-decomp"
+
+FUNC_START_RE = re.compile(
+    r"^\s*(?:thumb_func_start|non_word_aligned_thumb_func_start|arm_func_start)\s+(\S+)\s*$"
+)
+ADDR_RE = re.compile(r"^(\S+):\s*@\s*0x([0-9A-Fa-f]+)")
+IF_NON_MATCHING_RE = re.compile(r"^\s*\.if\s+NON_MATCHING\s*==\s*0\s*$")
+ENDIF_RE = re.compile(r"^\s*\.endif\b")
+IF_RE = re.compile(r"^\s*\.if\b")
+
+
+def load_units():
+    src = (ROOT / "tools" / "report_units.py").read_text()
+    start_idx = src.index("UNITS = [")
+    end_idx = src.index("\n]\n", start_idx) + 3
+    ns = {}
+    exec(src[start_idx:end_idx], ns)
+    return ns["UNITS"]
+
+
+def category_for(addr, units):
+    for i in range(len(units) - 1):
+        start, base_rel, category = units[i]
+        end = units[i + 1][0]
+        if start <= addr < end:
+            return category, base_rel
+    return None, None
+
+
+def scan_functions():
+    funcs = []
+    for path in sorted(ASM_DIR.glob("*.s")):
+        lines = path.read_text().splitlines()
+        pending_name = None
+        # Stack of booleans: True if this .if level is a "NON_MATCHING == 0"
+        # guard (i.e. everything inside it is an already-parked function's
+        # real bytes, kept for the NON_MATCHING=0 build - not raw/unmatched
+        # work). Any nonzero depth of NON_MATCHING==0 guard marks a parked
+        # function; a plain .if unrelated to NON_MATCHING nested inside one
+        # (e.g. a jump-table guard) still counts as parked since it's inside
+        # the outer guard.
+        if_stack = []
+        for line in lines:
+            if IF_NON_MATCHING_RE.match(line):
+                if_stack.append(True)
+                continue
+            if ENDIF_RE.match(line):
+                if if_stack:
+                    if_stack.pop()
+                continue
+            if IF_RE.match(line):
+                if_stack.append(False)
+                continue
+
+            m = FUNC_START_RE.match(line)
+            if m:
+                pending_name = m.group(1)
+                continue
+            if pending_name is not None:
+                m2 = ADDR_RE.match(line.strip())
+                if m2 and m2.group(1) == pending_name:
+                    addr = int(m2.group(2), 16)
+                    is_parked = any(if_stack)
+                    funcs.append({
+                        "name": pending_name,
+                        "addr": addr,
+                        "file": path.name,
+                        "parked": is_parked,
+                    })
+                    pending_name = None
+                # if the immediately-following line isn't the address line
+                # (shouldn't happen with this project's convention), drop
+                # pending_name so we don't mis-attribute a later address
+                elif m2:
+                    pending_name = None
+    return funcs
+
+
+def annotate(funcs, units):
+    """Sorts by address and attaches category/size to every function
+    (parked or not) - sizes need the full, unfiltered address sequence to
+    be correct, so this must run before any filtering."""
+    funcs = sorted(funcs, key=lambda f: f["addr"])
+    for i, f in enumerate(funcs):
+        f["category"], f["base_rel"] = category_for(f["addr"], units)
+        f["size"] = funcs[i + 1]["addr"] - f["addr"] if i + 1 < len(funcs) else None
+    return funcs
+
+
+FUNC_SIG_RE = re.compile(r"^[A-Za-z_][\w \*]*?\b(sub_[0-9A-Fa-f]{6,8}|nullsub_\d+)\s*\(")
+IFDEF_NON_MATCHING_RE = re.compile(r"^#if\s+NON_MATCHING\s*$")
+ENDIF_C_RE = re.compile(r"^#endif\b")
+
+
+DIR_TO_CATEGORY = {
+    "graphics": "graphics",
+    "system": "system",
+    "util": "util",
+    "audio": "audio",
+}
+
+
+def category_from_path(rel_path):
+    parts = Path(rel_path).parts
+    if len(parts) >= 2 and parts[0] == "src":
+        return DIR_TO_CATEGORY.get(parts[1])
+    return None
+
+
+def scan_parked_functions():
+    """Finds every function inside a `#if NON_MATCHING` block in src/**/*.c
+    and pulls its immediately-preceding /* ... */ doc comment (this
+    project's convention always documents a parked function's remaining
+    gap right above it)."""
+    parked = []
+    for path in sorted(SRC_DIR.rglob("*.c")):
+        lines = path.read_text().splitlines()
+        depth = 0
+        comment_buf = []
+        in_comment = False
+        for line in lines:
+            stripped = line.strip()
+            if IFDEF_NON_MATCHING_RE.match(stripped):
+                depth += 1
+                continue
+            if ENDIF_C_RE.match(stripped) and depth > 0:
+                depth -= 1
+                continue
+            if depth == 0:
+                comment_buf = []
+                in_comment = False
+                continue
+
+            if in_comment:
+                comment_buf.append(line)
+                if "*/" in stripped:
+                    in_comment = False
+                continue
+            if stripped.startswith("/*"):
+                comment_buf = [line]
+                in_comment = not ("*/" in stripped)
+                continue
+
+            m = FUNC_SIG_RE.match(stripped)
+            if m and "extern" not in stripped:
+                parked.append({
+                    "name": m.group(1),
+                    "file": str(path.relative_to(ROOT)),
+                    "comment": "\n".join(comment_buf).strip(),
+                })
+                comment_buf = []
+                continue
+            if stripped and not stripped.startswith("*") and not stripped.startswith("extern"):
+                # any other real code line resets the "comment directly
+                # above" assumption
+                comment_buf = []
+    return parked
+
+
+def build_chunks(funcs, max_functions):
+    """funcs must already be annotate()-d and pre-filtered (e.g. to
+    exclude parked functions) by the caller."""
+    chunks = []
+    current = []
+    current_cat = object()  # sentinel, never equals a real category
+    for f in funcs:
+        if f["category"] != current_cat or len(current) >= max_functions:
+            if current:
+                chunks.append(current)
+            current = [f]
+            current_cat = f["category"]
+        else:
+            current.append(f)
+    if current:
+        chunks.append(current)
+    return chunks
+
+
+def chunk_summary(chunk):
+    start = chunk[0]["addr"]
+    sizes = [f["size"] for f in chunk if f["size"] is not None]
+    total_size = sum(sizes) if sizes else None
+    end = chunk[-1]["addr"] + (chunk[-1]["size"] or 0)
+    return {
+        "start": start,
+        "end": end,
+        "category": chunk[0]["category"],
+        "count": len(chunk),
+        "total_size": total_size,
+        "functions": [f["name"] for f in chunk],
+        "files": sorted({f["file"] for f in chunk}),
+    }
+
+
+CATEGORY_BLURBS = {
+    "game_loop": "core per-frame/state-machine logic - see docs/rom_map.md's \"Subdividing game_loop\" for the sub-bucket this range likely falls in.",
+    "actor": "the category/part/vtable object-construction system - see docs/rom_map.md's actor-zone sections.",
+    "overlay_ui": "the pause-menu/settings/dialog UI system - see docs/rom_map.md's \"audio_sfx was almost entirely wrong\" section and follow-ups.",
+    "graphics_loading": "package/tile/level asset loading - see docs/rom_map.md's graphics_loading sections.",
+    "graphics": "sprite/actor rendering and screen effects - check docs/status/graphics.md for neighboring already-matched files first.",
+    "audio": "the licensed Shin'en GAX2 sound engine - see docs/audio.md before starting, this is harder/lower-priority than game code.",
+    "hud": "HUD icon/text widgets and stat counters - see docs/rom_map.md's HUD sections.",
+    "system": "startup/memory/interrupt/input infrastructure - check docs/status/system.md for neighboring already-matched files first.",
+    "util": "math/string/RNG/line-drawing helpers - check docs/status/util.md for neighboring already-matched files first.",
+    None: "not yet categorized by docs/rom_map.md - you may be the first to look at this range; consider a docs/rom_map.md note once you understand it.",
+}
+
+
+def render_issue(summary, index, total):
+    start, end, cat, count = summary["start"], summary["end"], summary["category"], summary["count"]
+    size_kb = (summary["total_size"] or 0) / 1024
+    title = f"Match 0x{start:08X}-0x{end:08X} ({count} functions, ~{size_kb:.1f} KB, {cat or 'uncategorized'})"
+    blurb = CATEGORY_BLURBS.get(cat, CATEGORY_BLURBS[None])
+    func_list = "\n".join(f"- `{n}`" for n in summary["functions"])
+    files = ", ".join(f"`asm/{f}`" for f in summary["files"])
+    body = f"""One chunk ({index} of {total} in this generation pass) of the project's
+remaining-work inventory, generated by `tools/chunk_remaining_work.py`
+from the current state of `asm/*.s`. See [docs/workflow.md]({REPO_URL}/blob/main/docs/workflow.md)
+for the required per-function matching process before starting - this
+issue is scope, not instructions.
+
+**This chunk is a scoping convenience, not a contract.** There's no
+obligation to match every function below before opening a PR, or to do
+it alone - multiple people can each take a few functions from this list
+(say which ones in a comment, so nobody duplicates work), split it
+across several PRs, or hand off partial progress. Reference this issue
+from your PR without `Closes` unless you got through everything below;
+otherwise just say what's left in a comment.
+
+**Category:** `{cat or "uncategorized"}` - {blurb}
+
+**Range:** `0x{start:08X}`-`0x{end:08X}` (~{size_kb:.1f} KB)
+
+**Source file(s):** {files}
+
+**Functions in this chunk ({count}):**
+
+{func_list}
+
+---
+
+*This is a point-in-time snapshot. If some of these functions have
+already been matched by the time you pick this up, skip them and note it
+in your PR instead of re-doing or reverting that work. If a Claude Code
+session is picking this up, see `.claude/skills/match-chunk/SKILL.md`.*
+"""
+    return title, body
+
+
+def render_parked_issue(p):
+    title = f"Byte-match parked function {p['name']}"
+    comment = p["comment"] or "*(no doc comment found directly above the function - check the file for context.)*"
+    body = f"""One already-parked (`#if NON_MATCHING`) function that's fully
+understood semantically but not yet byte-exact - generated by
+`tools/chunk_remaining_work.py` from the current state of `src/**/*.c`.
+See [docs/workflow.md]({REPO_URL}/blob/main/docs/workflow.md) for the
+general process; this specific case is narrower than a normal "match
+this function" task - **the C is already correct, it just doesn't
+compile to the same bytes as the ROM**. This is usually a specific gcc
+2.9 register-allocation, instruction-scheduling, or peephole-optimization
+quirk. See `docs/matching.md` for a large catalog of techniques that have
+worked on similar cases elsewhere in this codebase (register `asm("rN")`
+pins, forcing block order with `goto`, the negative-constant bit-clear
+idiom, etc.) before assuming something is truly unfixable.
+
+**Function:** `{p['name']}`
+
+**File:** `{p['file']}`
+
+**Current doc comment (what's already been tried):**
+
+```c
+{comment}
+```
+
+---
+
+*If you find a fix, update the function (removing the `#if NON_MATCHING`
+guard and the now-obsolete comment), cut its raw bytes out of the
+corresponding `asm/*.s` file, run the full clean `make compare` to
+confirm, and update `docs/matching.md`/`docs/status/<system>.md`
+accordingly - see `docs/workflow.md` step 6 onward.*
+"""
+    return title, body
+
+
+def create_github_issue(title, body, labels):
+    with tempfile.NamedTemporaryFile("w", suffix=".md", delete=False) as f:
+        f.write(body)
+        body_path = f.name
+    cmd = ["gh", "issue", "create", "--title", title, "--body-file", body_path]
+    for label in labels:
+        cmd += ["--label", label]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    Path(body_path).unlink(missing_ok=True)
+    if result.returncode != 0:
+        print(f"FAILED: {title}\n{result.stderr}", file=sys.stderr)
+        return None
+    return result.stdout.strip()
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--max-functions", type=int, default=25)
+    ap.add_argument("--json", type=str, default=None)
+    ap.add_argument("--md", type=str, default=None)
+    ap.add_argument("--min-count", type=int, default=1,
+                     help="Skip printing chunks with fewer than this many functions (still counted in totals)")
+    ap.add_argument("--issues-dir", type=str, default=None,
+                     help="Write one ready-to-use GitHub issue body (title + body .md pair) per chunk into this directory")
+    ap.add_argument("--min-issue-count", type=int, default=3,
+                     help="Skip generating a chunk issue for groups smaller than this (they're usually a single already-tracked parked function)")
+    ap.add_argument("--parked-issues", action="store_true",
+                     help="Also emit one issue per already-parked (#if NON_MATCHING) function into --issues-dir")
+    ap.add_argument("--create-github-issues", action="store_true",
+                     help="Actually open each generated issue on GitHub via `gh issue create` (requires gh to be authenticated). Real side effect - see module docstring.")
+    args = ap.parse_args()
+
+    units = load_units()
+    all_funcs = scan_functions()
+    all_funcs = annotate(all_funcs, units)
+    unmatched_funcs = [f for f in all_funcs if not f["parked"]]
+    parked_asm_names = {f["name"] for f in all_funcs if f["parked"]}
+    print(f"Scanned {len(all_funcs)} functions still physically raw in asm/*.s: "
+          f"{len(unmatched_funcs)} genuinely unmatched, {len(parked_asm_names)} already parked",
+          file=sys.stderr)
+
+    chunks = build_chunks(unmatched_funcs, args.max_functions)
+    summaries = [chunk_summary(c) for c in chunks]
+
+    if args.json:
+        Path(args.json).write_text(json.dumps(summaries, indent=2))
+        print(f"Wrote {args.json} ({len(summaries)} chunks)", file=sys.stderr)
+
+    if args.md:
+        lines = [f"# Remaining-work chunks ({len(summaries)} total, max {args.max_functions} functions each)\n"]
+        by_cat = {}
+        for s in summaries:
+            by_cat.setdefault(s["category"], []).append(s)
+        for cat in sorted(by_cat, key=lambda c: -sum(x["count"] for x in by_cat[c])):
+            group = by_cat[cat]
+            total_fns = sum(x["count"] for x in group)
+            total_kb = sum(x["total_size"] or 0 for x in group) / 1024
+            lines.append(f"\n## {cat or '(uncategorized)'} - {len(group)} chunks, {total_fns} functions, ~{total_kb:.1f} KB\n")
+            for s in group:
+                if s["count"] < args.min_count:
+                    continue
+                size_kb = (s["total_size"] or 0) / 1024
+                lines.append(
+                    f"- `0x{s['start']:08X}`-`0x{s['end']:08X}` ({s['count']} fns, ~{size_kb:.2f} KB): "
+                    + ", ".join(f"`{n}`" for n in s["functions"][:6])
+                    + (f", ... (+{s['count']-6} more)" if s["count"] > 6 else "")
+                )
+        Path(args.md).write_text("\n".join(lines) + "\n")
+        print(f"Wrote {args.md}", file=sys.stderr)
+
+    if args.issues_dir:
+        out_dir = Path(args.issues_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        eligible = [s for s in summaries if s["count"] >= args.min_issue_count]
+        created, failed = 0, 0
+        for i, s in enumerate(eligible, 1):
+            title, body = render_issue(s, i, len(eligible))
+            stem = f"{i:03d}_0x{s['start']:08X}"
+            (out_dir / f"{stem}.title.txt").write_text(title + "\n")
+            (out_dir / f"{stem}.body.md").write_text(body)
+            if args.create_github_issues:
+                labels = ["decomp-chunk"]
+                if s["category"]:
+                    labels.append(s["category"])
+                url = create_github_issue(title, body, labels)
+                if url:
+                    created += 1
+                    print(f"[{i}/{len(eligible)}] {url}", file=sys.stderr)
+                else:
+                    failed += 1
+        print(f"Wrote {len(eligible)} issue title/body pairs to {out_dir} "
+              f"({len(summaries) - len(eligible)} smaller chunks skipped, "
+              f"see docs/matching.md for those individually-tracked functions)",
+              file=sys.stderr)
+        if args.create_github_issues:
+            print(f"Created {created} GitHub issues ({failed} failed)", file=sys.stderr)
+
+        if args.parked_issues:
+            parked = scan_parked_functions()
+            # cross-check against the asm-side parked set so we only emit
+            # an issue for functions that are genuinely still guarded in
+            # both the .c (comment/#if) and the .s (raw bytes) - if one
+            # side lost track of a function that's a real inconsistency
+            # worth surfacing, not silently papering over.
+            mismatched = [p["name"] for p in parked if p["name"] not in parked_asm_names]
+            if mismatched:
+                print(f"WARNING: {len(mismatched)} functions are #if NON_MATCHING in "
+                      f"src/**/*.c but their raw bytes aren't guarded in asm/*.s (or weren't "
+                      f"found there) - skipping issue generation for these, check by hand: "
+                      f"{', '.join(mismatched)}", file=sys.stderr)
+            parked = [p for p in parked if p["name"] in parked_asm_names]
+            start_idx = len(eligible) + 1
+            p_created, p_failed = 0, 0
+            for offset, p in enumerate(parked):
+                title, body = render_parked_issue(p)
+                stem = f"{start_idx + offset:03d}_parked_{p['name']}"
+                (out_dir / f"{stem}.title.txt").write_text(title + "\n")
+                (out_dir / f"{stem}.body.md").write_text(body)
+                if args.create_github_issues:
+                    labels = ["parked-function"]
+                    cat = category_from_path(p["file"])
+                    if cat:
+                        labels.append(cat)
+                    url = create_github_issue(title, body, labels)
+                    if url:
+                        p_created += 1
+                        print(f"[parked {offset+1}/{len(parked)}] {url}", file=sys.stderr)
+                    else:
+                        p_failed += 1
+            print(f"Wrote {len(parked)} additional per-function parked-issue "
+                  f"title/body pairs to {out_dir}", file=sys.stderr)
+            if args.create_github_issues:
+                print(f"Created {p_created} GitHub issues ({p_failed} failed)", file=sys.stderr)
+
+    if not args.json and not args.md and not args.issues_dir:
+        for s in summaries:
+            size_kb = (s["total_size"] or 0) / 1024
+            print(f"0x{s['start']:08X}-0x{s['end']:08X} [{s['category']}] {s['count']} fns ~{size_kb:.2f}KB")
+
+
+if __name__ == "__main__":
+    main()
