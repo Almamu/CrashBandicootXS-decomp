@@ -28,6 +28,19 @@ zero-padding fix) found along the way.
   `LoadBg2Background`/`LoadObjSpriteTiles`, runs the fade/audio-reset
   quartet, and starts song `0xb` - see
   [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md).
+- **`sub_8021BFC`**-**`sub_8021CE0`** (`src/graphics/graphics_loading_21bfc.c`)
+  - the `sub_800FF0C` entity-constructor trampoline family, types `1`-`7`.
+- **`sub_8021D80`**, **`sub_8021DFC`**, **`sub_8021E78`**, **`sub_8021EF4`**,
+  **`sub_8021F70`**, **`sub_802200C`**, **`sub_80220C4`**, **`sub_802209C`**,
+  **`sub_8022158`**, **`nullsub_22`**, **`sub_802218C`**, **`sub_80221A4`**,
+  **`sub_80221BC`**, **`sub_80221D4`**, **`nullsub_23`**, **`sub_80221F0`**,
+  **`sub_8022208`**, **`sub_8022230`** (`src/graphics/graphics_loading_21d80.c`)
+  - the `gStaticData_084A5600` record-indexed OAM-trio spawner family, the
+  `sub_801E990` trampolines, the `gUnknown_030012D8` position writers, the
+  `{table_base, count}` descriptor pair, and `sub_8022230` itself - the
+  "origin point" that constructs nearly every hot IWRAM global this ROM
+  region references. See
+  [issue-33-0x08021bfc-graphics-loading.md](../matching/issue-33-0x08021bfc-graphics-loading.md).
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
@@ -73,6 +86,13 @@ zero-padding fix) found along the way.
   `gUnknown_030008BC`); semantically faithful but not yet
   register-tuned - see
   [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md).
+- **`sub_8021D04`** (real bytes in `asm/code_3_2_17_21d04.s`, C in
+  `src/graphics/graphics_loading_21bfc.c`) - a `sub_800FF0C` trampoline
+  plus a per-record flags-byte lookup via `gUnknown_030012B4`; every
+  field/mask/branch confirmed correct, but the middle "resolve the
+  flags byte address" section is 4 bytes short of the ROM's register
+  allocation - see
+  [issue-33-0x08021bfc-graphics-loading.md](../matching/issue-33-0x08021bfc-graphics-loading.md).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
