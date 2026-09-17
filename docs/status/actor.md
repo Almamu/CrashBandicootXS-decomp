@@ -108,6 +108,13 @@ from "core" graphics.
   `sub_800A6F4`, `sub_800A700`, `sub_800A70C`, `sub_800A718`,
   `sub_800A724`, `sub_800A730`
 
+- `src/graphics/actor_part49.c` (new file, GitHub issue #9): `sub_800B270`
+  - a per-frame velocity integrator moving `self+0x60`/`self+0x64`
+  toward `self+0x50`/`self+0x5c` by `self+0x4c`/`self+0x58` each call,
+  deriving a `self+0x24` direction-flag byte and applying the result to
+  the object's position; see
+  [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
+
 - `src/graphics/actor_part15.c`/`src/graphics/actor_part16.c` (new
   files, split around the raw untouched `sub_800B3F0` - see
   `docs/matching.md`): a new not-yet-named big object's accessors -
@@ -289,6 +296,24 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
+- **`sub_800A528`/`sub_800A590`** (`src/graphics/actor_part47.c`,
+  GitHub issue #9; real bytes in `asm/code_3_2_11_a528.s`) - a moving-
+  platform "ride along" hookup, nudging `self->y` by the delta between
+  a cached and current position-record lookup. Matches the ROM's
+  register roles for `self`/the record pointer exactly; parked on a
+  genuine fifth-scratch-register need (`r5`, just to hold an offset
+  immediate) this compiler never introduces. See
+  [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
+- **`sub_800A734`/`sub_800A810`** (`src/graphics/actor_part48.c`,
+  GitHub issue #9; real bytes in `asm/code_3_2_16_a734.s`) - a part-
+  object velocity/state reset pair, one of which also hooks up a child
+  object and one of which dispatches a sub-state byte to one of three
+  teardown helpers. Field writes and dispatch semantics fully
+  confirmed; parked on the ROM's running-pointer address-increment
+  style (`sub_800A734`) and an exact compare-chain-vs-register-letter
+  tradeoff (`sub_800A810`) neither reproduced together by any C
+  phrasing tried. See
+  [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
 - **`sub_800B6A0`/`sub_800B6D0`** (`src/graphics/actor_part16.c`) -
   mirror-flag-gated 3-vector copies. This compiler unconditionally
   spills the `vec` pointer to a callee-saved register (`push
@@ -662,3 +687,29 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   that `docs/rom_map.md` itself says isn't understood with byte-exact
   precision yet. Left raw, out of scope for this pass - see
   [docs/matching/issue-16-actor-11b0c.md](../matching/issue-16-actor-11b0c.md).
+- **`sub_8007634`** (`asm/code_3_2.s`, ROM 0x08007634, GitHub issue #9)
+  - real GBA hardware-affine sprite-matrix setup; already flagged in
+  `docs/matching.md` as needing "a dedicated session" of its own, not
+  attempted again here - see
+  `docs/matching/issue-9-0x08007634-actor.md`.
+- **`sub_8009008`/`sub_80091D4`/`sub_8009868`** (`asm/code_3_2_13.s`,
+  ROM 0x08009008-0x08009914, GitHub issue #9) - spatial-hash-grid
+  removal/list-management logic and a function calling into the
+  still-mostly-raw physics/collision subsystem; each individually
+  understood mechanically but not to a byte-exact-reconstruction
+  precision - see `docs/matching/issue-9-0x08007634-actor.md`.
+- **`sub_8009BE0`** (`asm/code_3_2_14.s`, ROM 0x08009BE0, GitHub issue
+  #9) - a physics/collision step-probe calling still-unexamined
+  helpers - see `docs/matching/issue-9-0x08007634-actor.md`.
+- **`sub_800A0FC`/`sub_800A178`/`sub_800A420`** (`asm/code_3_2_11.s`,
+  ROM 0x0800A0FC-0x0800A5F4, GitHub issue #9) - part-object
+  update/collision dispatchers built on unmatched
+  `sub_8008200`/`sub_8026628`/`sub_8026C3C`/`sub_8026BF8` - see
+  `docs/matching/issue-9-0x08007634-actor.md`.
+- **`sub_800A884`/`sub_800AAEC`/`sub_800AB9C`/`sub_800AC2C`/
+  `sub_800AFF4`** (`asm/code_3_2_16.s`, ROM 0x0800A884-0x0800B270,
+  GitHub issue #9) - a reentrancy-guard wrapper, a global-list iterator,
+  a hitbox-lookup dispatcher, a 38-case player action-state machine,
+  and a high-register-pressure hitbox commit function; each calls one
+  or more still-unexamined helpers - see
+  `docs/matching/issue-9-0x08007634-actor.md`.
