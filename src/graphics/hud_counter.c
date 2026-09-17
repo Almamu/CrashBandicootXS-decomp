@@ -1,39 +1,5 @@
 #include "core.h"
-
-struct hud_anim_record {
-    u8 unknown_00[0x16];
-    u8 frame_count;
-    u8 unknown_17[5];
-};
-
-struct hud_anim_data {
-    struct hud_anim_record *records;
-};
-
-struct hud_digit_part {
-    u8 unknown_00[0x20];
-    struct hud_anim_data *anim_data;
-    u8 unknown_24[9];
-    u8 anim_index;
-    u8 unknown_2E[2];
-    s32 frame_index;
-    u8 unknown_34[0xC];
-};
-
-struct hud_counter {
-    s32 mode;
-    s32 layout_value;
-    u8 unknown_08[0x14];
-    s32 value;
-    u8 unknown_20[0x20];
-    s32 previous_value;
-    u8 unknown_44[0x20];
-    struct hud_digit_part *parts;
-};
-
-COMPILE_TIME_ASSERT(sizeof(struct hud_anim_record) == 0x1C);
-COMPILE_TIME_ASSERT(sizeof(struct hud_digit_part) == 0x40);
-COMPILE_TIME_ASSERT(sizeof(struct hud_counter) == 0x68);
+#include "hud.h"
 
 extern void *gUnknown_030012C0;
 extern s32 gUnknown_0300086C;

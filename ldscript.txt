@@ -103,8 +103,14 @@ SECTIONS
         build/crashbandicootxs/asm/code_3_2_17_22ea8.o(.text);
         build/crashbandicootxs/src/system/game_loop2.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_231cc.o(.text);
+        build/crashbandicootxs/src/system/main_loop.o(.text);
+        build/crashbandicootxs/asm/code_3_2_17_26f54.o(.text);
+        build/crashbandicootxs/src/graphics/hud_icon_slot.o(.text);
+        build/crashbandicootxs/asm/code_3_2_17_27138.o(.text);
         build/crashbandicootxs/src/graphics/hud_counter.o(.text);
         build/crashbandicootxs/asm/code_3_2_20.o(.text);
+        build/crashbandicootxs/src/graphics/hud_blink.o(.text);
+        build/crashbandicootxs/asm/code_3_2_20_28568.o(.text);
         build/crashbandicootxs/src/audio/counter_selector.o(.text);
         build/crashbandicootxs/asm/code_3_2_20a.o(.text);
         build/crashbandicootxs/src/audio/counter_selector_setup.o(.text);
@@ -114,6 +120,11 @@ SECTIONS
         build/crashbandicootxs/src/audio/sound_object_init.o(.text);
         build/crashbandicootxs/asm/code_3_2_20d.o(.text);
         build/crashbandicootxs/asm/code_3_2_20e.o(.text);
+        build/crashbandicootxs/src/system/timer_util.o(.text);
+        build/crashbandicootxs/asm/code_3_2_20e_aa08.o(.text);
+        build/crashbandicootxs/asm/code_3_2_20e_ab54.o(.text);
+        build/crashbandicootxs/src/system/reg_trampolines.o(.text);
+        build/crashbandicootxs/asm/code_3_2_20e_3adb4.o(.text);
         build/crashbandicootxs/src/graphics/actor_anim.o(.text);
         build/crashbandicootxs/asm/code_3_3.o(.text);
 

@@ -129,9 +129,14 @@ UNITS = [
     (0x08022D50, None, "game_loop"),  # sub_8022D50 - level-start/reset routine (gUnknown_030012EC array walk, sub_803AD7C trampolines), left raw - see docs/matching.md
     (0x08022EA8, "src/system/game_loop2.o", "game_loop"),  # sub_8022EA8/sub_8022F2C (parked, NON_MATCHING, real bytes in asm/code_3_2_17_22ea8.s) plus sub_8022FEC/sub_802306C and the self+0x80/0x84/0x88/0xac/0xc0/+2-flags accessor family (matched) - see docs/matching.md
     (0x080231CC, None, "game_loop"),  # remainder of the UpdateGameFrame-MainLoop cluster, still raw
-    (0x08026EEC, None, "hud"),  # raw HUD region before sub_8027838
+    (0x08026EEC, "src/system/main_loop.o", "system"),  # MainLoop/sub_8026F38 - the game's top-level per-frame loop (sets up the central state object, runs UpdateGameFrame forever) and a two-level per-widget-mode table lookup; matched. GitHub issue #45
+    (0x08026F54, None, "hud"),  # sub_8026F54/sub_8027018 - a fixed 3-entry particle/effect queue's consumer/producer pair, left raw - see docs/rom_map.md's "fx" investigation (GitHub issue #45)
+    (0x08027088, "src/graphics/hud_icon_slot.o", "graphics"),  # sub_8027088-sub_8027120 - the same fx-queue's reset/constructor pair, a HUD digit-slot draw helper (sub_80270E0), and two struct-actor-table-swap slot constructors (sub_802710C UNUSED, sub_8027120 matched); matched. Non-adjacent to hud_counter.o since sub_8027138-sub_802763C sit raw between them. GitHub issue #45
+    (0x08027138, None, "hud"),  # sub_8027138-sub_802763C - the 34-slot icon-array setup cluster (sub_8027138/sub_802732C) and the HUD stat-widget dispatcher family (sub_80274EC/sub_802757C/sub_802763C), left raw - see docs/rom_map.md's "hud" investigation (GitHub issue #45)
     (0x08027838, "src/graphics/hud_counter.o", "graphics"),  # sub_8027838 - cached two-digit HUD counter update
-    (0x08027940, None, "hud"),  # remainder of the HUD stat-widget region
+    (0x08027940, None, "hud"),  # sub_8027940/sub_8027D5C/sub_8027E88 - more of the HUD stat-widget dispatcher family, left raw (GitHub issue #45)
+    (0x08028400, "src/graphics/hud_blink.o", "graphics"),  # sub_8028400-sub_8028520 - a 3-slot icon-blink animation timer: a per-frame tick, three per-slot trigger functions, and the generic single-slot advance helper they share; matched. GitHub issue #45
+    (0x08028568, None, "hud"),  # remainder of the HUD stat-widget region, left raw
     (0x0802866C, None, "hud"),  # InitHudIconWidgetA/B, MeasureText, UploadHudTile, InitHudTextWidget
     (0x08028BA0, None, "graphics_loading"),  # InitObjTileFreeList, LoadSpriteFrameTiles, SetupSpriteFrameOam, DecompressCategorySpriteSheet
     (0x080291A4, None, "actor"),  # SetupActorVramPool, InitActorCategory, SelectActorCategory, InitActorPart, UpdateAnimatedActorPart, ConstructAnimTableState, ConstructActorPart
@@ -145,7 +150,10 @@ UNITS = [
     (0x08037FC0, None, "audio"),  # sub_8037FC0 - a large, genuinely hard-to-follow GAX2 mixer/timing computation over gStaticData_085A6150 and several SoundHandler-shaped structures; left raw, not attempted this pass
     (0x080381FC, "src/audio/sound_object_init.o", "audio"),  # sub_80381FC - a SoundHandler/channel-object-shaped constructor (zero-fill plus a few sentinel fields); matched
     (0x08038240, None, "audio"),  # sub_8038240/sub_80384DC - core GAX2 mixer-state wiring (gUnknown_03001630) and a hardware sound-register reset with an inlined timing-loop compiler quirk already flagged in the raw asm; left raw, not attempted this pass
-    (0x0803A944, None, "system"),  # BIOS svc wrapper stubs + LZ77UnCompWrapper/RLUnCompWrapper, confirmed non-audio via matched asset_util.c callers
+    (0x0803A944, "src/system/timer_util.o", "system"),  # BIOS svc wrapper stubs (sub_803A944-sub_803A95C/sub_0803A960) + LZ77UnCompWrapper/RLUnCompWrapper (confirmed non-audio via matched asset_util.c callers), sub_803A968 (picks a 12-byte EepromConfig table by chip-size code - see the struct's header comment) and sub_803A9D0 (claims a hardware timer, hands back an IRQ-handler-stub address); matched, issue #69. Also incl. parked sub_803AA08/sub_803AA90/sub_803AAD4 (NON_MATCHING C reconstructions widen this unit past its own real 0x0803AA08 end, per the same "parked function" convention as sub_80073DC above) - all three stay raw, linked from asm/code_3_2_20e_aa08.s; every field/register access is confirmed against the ROM, parked purely on register-allocation/loop-shape gaps (see docs/matching.md)
+    (0x0803AB54, None, "system"),  # sub_803AB54/sub_803AC04/sub_803ACE0/sub_803AD38 - a DMA3 bit-serial EEPROM read/write/retry cluster (working theory, not confirmed enough to commit even a parked reconstruction); left raw - see asm/code_3_2_20e_ab54.s's header comment and docs/matching.md, issue #69
+    (0x0803AD78, "src/system/reg_trampolines.o", "system"),  # sub_803AD78-sub_803AD94 (bx-r0..sp trampolines, called with the target function pointer already sitting in that register) and nullsub_43 (bonus, just past issue #69's listed range); matched
+    (0x0803ADB4, None, "system"),  # sub_803ADB4 (confirmed integer-division helper, docs/rom_map.md) onward - still raw
     (0x0803B058, "src/graphics/actor_anim.o", "graphics"),
     (0x0803B060, None, "actor"),  # GetAnimFrameData + 43 unnamed neighbors, medium confidence
     (0x0803B8B0, None, None),  # sentinel end address, not a real unit
