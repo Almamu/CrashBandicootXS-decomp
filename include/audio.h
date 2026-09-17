@@ -78,4 +78,21 @@ struct SfxTableEntry {
 
 extern struct SfxTableEntry gStaticData_0816AA6C[99];
 
+/* The GAX2 engine's own runtime player-state object - `gUnknown_03001630`
+ * is an IWRAM *pointer variable* holding this struct's address (set up by
+ * `sub_8038538`, the still-raw play-start/init entry point - see
+ * docs/audio.md). Field layout is only partly understood; only the
+ * fields this pass's small handful of matched functions actually touch
+ * are named here - everything else stays unmodeled. `channels[]`'s
+ * length (2) is fixed by `curChannelIdx` sitting at +0x10 in every
+ * function that reads it. */
+struct GaxPlayerState {
+    u32 magic;             /* 0x00 - 0x47415832 ("GAX2") once a song is loaded */
+    void *songPtr;          /* 0x04 - the struct passed as sub_8038538's arg0 */
+    void *channels[2];        /* 0x08 */
+    u32 curChannelIdx;          /* 0x10 */
+    u8 pad_14[0x1c];               /* 0x14-0x2f - not modeled by this pass */
+    u32 state;                       /* 0x30 - 0 = stopped, 1 = starting, 2 = playing */
+};
+
 #endif /* __AUDIO_H__ */

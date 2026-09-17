@@ -211,6 +211,17 @@ per-actor animation frames, text layout.
   `sub_80007EC` - BG2 affine setup for a full-screen intro image; see
   `docs/matching.md` for the statement-ordering gotchas.
 
+- `src/graphics/settings_menu2.c` (new file - the composite pause/
+  options screen's BG-load helper and per-row stats gatherer/
+  aggregator; see `docs/rom_map.md`'s `overlay_ui` section):
+  `sub_80047F8`, `sub_8004860`, `sub_80048BC`, `sub_80048E0`
+- `src/graphics/settings_menu3.c` (new file - the same screen's flag
+  test, link-cancel-flag pair, six near-identical per-item wrappers,
+  state jump-table dispatcher, and a final list-refresh trio):
+  `sub_8004A50`, `sub_8004A64`, `sub_8004A80`, `sub_8004AA4`,
+  `sub_8004ACC`, `sub_8004AFC`, `sub_8004B24`, `sub_8004B54`,
+  `sub_8004B70`, `sub_8004BA0`, `sub_8004BD0`, `sub_8004C7C`
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
@@ -478,3 +489,18 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   parked on this compiler's register choice for a couple of
   intermediate abs-value-computation values - see `docs/matching.md`,
   issue #52.
+- **`sub_8003B40`**, **`sub_8003BDC`**, **`sub_8003C90`**,
+  **`sub_8003D3C`**, **`sub_80041BC`**, **`sub_8004914`**,
+  **`sub_80049CC`** (`asm/code_3_1_10_3.s`/`asm/code_3_1_10_4.s`/
+  `asm/code_3_1_10_5.s`, C in `src/graphics/settings_menu.c`) - the
+  composite pause/options screen's icon-manager centered-label draws
+  (`sub_80049CC`/`sub_8003C90`/`sub_8003BDC`/`sub_8003D3C`/
+  `sub_80041BC`/`sub_8004914`, all built on the same primitive
+  `sub_8006600` above uses) plus a SIO-handshake spinner dialog
+  (`sub_8003B40`). Every load/store, branch, and call is semantically
+  confirmed for all seven; each hits the same class of gcc-2.9
+  scratch-register nondeterminism `sub_8006600` documents at length
+  (`sub_80049CC`/`sub_8003C90` come within one or two register-letter
+  choices; `sub_8003BDC` additionally spills a constant through `ip`,
+  which plain C can't request) - see `docs/matching.md`, "Match
+  0x08003B40-0x08004CB4", for what was tried on each.

@@ -5349,6 +5349,241 @@ focused pass rather than a rushed low-confidence match.
 `sub_8014674` on) - see `ldscript.txt` and `tools/report_units.py`'s
 `graphics` category, both updated to match. Verified via a full clean
 `make compare` (`La suma coincide`) and `make NON_MATCHING=1 report`.
+
+## `0x08038538`-`0x08039658`: issue #67's 25-function chunk (6 matched)
+
+Continues straight on from issue #66's pass (the
+"`0x08037110`-`0x08038538`" entry above), still inside the address range
+[docs/audio.md](./audio.md) calls the GAX2 engine. This chunk sits right
+at `sub_8038538` itself - the engine's play-start/init entry point
+docs/audio.md already characterizes in prose - plus the handful of small
+GAX2_SoundHandler "Info"/"Channel" vtable functions just past it. 6 of
+the 25 functions matched, across five small new files (non-contiguous,
+since the remaining 19 either resist matching or aren't understood well
+enough yet):
+
+- **`src/audio/gax_dma_control.c`** (`sub_8038C28`, `sub_8038C50`) - a
+  Direct Sound A output stop/start pair, gated on a shared `state` field
+  (0 = stopped, 1 = starting, 2 = playing) on the runtime player-state
+  object `gUnknown_03001630` points at - modeled as a new
+  `struct GaxPlayerState` in `include/audio.h` (only the handful of
+  fields this pass's functions actually touch are named; `channels[2]`
+  at `+8` is a fixed-size embedded pointer array, its length pinned by
+  `curChannelIdx` always sitting at `+0x10` right after it).
+  `sub_8038C28` clears `state` and disables SOUNDCNT_H's DMA1-sound-A
+  bits; `sub_8038C50` flushes 8 zero halfwords into FIFO_A first, then
+  enables them. `sub_8038C50`'s flush loop needed the FIFO_A pointer and
+  the zero value pulled into their own named locals, assigned *before*
+  the loop counter - writing the loop as
+  `for (i = 7; i >= 0; i--) *(vu16 *)REG_ADDR_FIFO_A = 0;` directly
+  compiles the counter's `movs r0,#7` first, but the ROM loads the FIFO
+  address and the zero value into r2/r1 before touching r0 at all.
+- **`src/audio/gax_note_param.c`** (`sub_8038F94`) - conditionally
+  updates a currently-active channel voice's note-period-looking field
+  (`+0x26`) by walking `gUnknown_03001630`'s current-channel chain two
+  levels deep (`cur->0->0xc` gives a count added to the `channel`
+  argument, indexed into `cur->0->8`'s array to land on the target
+  voice), gated on that voice's `+0x3c` field being non-zero. The
+  chained objects past `GaxPlayerState` itself aren't understood yet -
+  kept as raw offsets, same as `sub_80381FC`'s constructor
+  (`sound_object_init.c`).
+- **`src/audio/gax_swi.c`** (`sub_80392C4`) - a HuffUnComp (SWI 0x13)
+  wrapper. Unlike this project's other bare SWI wrappers
+  (`src/system/timer_util.c`, a straight `svc`+`bx lr`), this one
+  explicitly preserves r0/r1 across the call via r7/r8, plus a
+  `sub sp, #8` and two stack stores nothing ever reads back - reads like
+  a hand-written asm stub, not compiler-generated C, so it's transcribed
+  directly as `NAKED` asm rather than guessed-at C. One real gotcha: the
+  compiler rejects `adds r7, r0, #0` (three-operand immediate-0 add
+  between two *different* low registers) as "instruction not supported
+  in Thumb16 mode" when written inline inside a NAKED function's `asm()`
+  block, even though the exact same mnemonic assembles fine in a raw
+  `asm/*.s` file - had to drop the `s` suffix (`add r7, r0, #0`) to get
+  through `as`, same encoded bytes either way.
+- **`src/audio/gax_sound_handler_info.c`** (`sub_80393D0`, `sub_80393FC`,
+  `sub_803941C`, `nullsub_39`) - the GAX2_SoundHandler "Info" type's
+  init_fn/unknown_fn, resolving two more entries in docs/audio.md's
+  per-type function-pointer table (`sub_80393FC` = `0x080393FD`,
+  `nullsub_39` = `0x08039439`; play_fn `sub_803943C` stays raw).
+  `sub_80393D0` is the shared field-reset core both init variants fall
+  through to after their own field subsets - its two 16-bit constants
+  (`0xFFFF`/`0x4E20`, too big for a `movs` immediate) each needed a named
+  temp assigned right before the store, and the two zero-fill temps
+  needed to be set as a *pair* right after the first store (matching the
+  ROM's `movs r2,#0; movs r3,#0` before either is used) with the second
+  one (`zeroHalf`) pinned to `register ... asm("r3")` - otherwise gcc's
+  CSE reuses the first temp's already-known-zero register for the
+  second and drops the ROM's separate `movs r3,#0` entirely, 2 bytes
+  short. `sub_803941C` needed the same "zero into its own named temp,
+  set before the other stores" treatment (a plain `= 0;` inline compiles
+  it into the same register as the adjacent `movs r0,#2`, not the ROM's
+  separately pre-staged r1).
+- **`src/audio/gax_sound_handler_channel.c`** (`nullsub_40`) - the
+  "Channel" type's unknown_fn (`0x080395A1`), a no-op stub like
+  `nullsub_39` above; init_fn (`sub_8039518`) and play_fn
+  (`sub_80395A4`) stay raw.
+
+**Left raw, not matched this pass** (all described in
+`tools/report_units.py`'s `UNITS` table and `docs/status/audio.md`):
+`sub_8038538`/`sub_8038A1C`/`sub_8038B68` (the play-start/init entry
+point and its DMA1/Timer0 direct-sound follow-ups - genuinely understood
+at the prose level per docs/audio.md, but hits the same many-register
+`r8`/`sb`/`sl` gcc-2.9 allocation difficulty already documented for
+`sub_8006600`/`sub_80372BC`); `sub_8038C88`/`sub_8038DC0`/`sub_8038E74`
+(more mixer-tick/voice-stealing internals); `sub_8038FD0`/`sub_8039064`/
+`sub_80390F8` (a per-channel mute/volume-set family - confirmed via
+isolated compile that the ROM's own codegen for this exact loop shape
+fits in r0-r3 with no callee-saved registers at all, while every C
+rephrasing tried needs at least 3 more; the same difficulty as the
+`sub_8038538` cluster, just in loop rather than straight-line form);
+`sub_8039198`/`sub_80391E8` (contain the same hardware-register
+NOP-delay compiler quirk already flagged in-source at `sub_80384DC` -
+`.byte 0x1b, 0x1c` / `mov r8, r8` x3 - not chased further here);
+`sub_8039214` (a text/console-tile state machine, word-wrap-looking
+character remapping - not attempted); `sub_80392E0` (fatal-error
+display: renders a message via `sub_8039214` then loops forever);
+`sub_803943C` (Info type's play_fn); `sub_8039518` (Channel type's
+init_fn); `sub_80395A4` (Channel type's play_fn) - none of these were
+modified from their existing raw `asm/` form.
+
+All 6 matched functions were verified via a full clean `make compare`
+after splitting `asm/code_3_2_20e.s` into its unchanged head (now just
+`sub_8038538`/`sub_8038A1C`/`sub_8038B68`) plus four new raw fragments
+(`code_3_2_20e_8c88.s`, `code_3_2_20e_8fd0.s`, `code_3_2_20e_92e0.s`,
+`code_3_2_20e_943c.s`) and a renamed tail (`code_3_2_20e_95a4.s`,
+everything from `sub_80395A4` on, unchanged) around the five new matched
+`.c` files, each inserted into `ldscript.txt` at its real ROM position.
+One non-obvious fixup the split needed: `gStaticData_0803A630`/
+`_0803A67C`/`_0803A73C`/`_0803A818` (the ARM-mode-blob data labels
+docs/audio.md's `sub_803A608` entry describes) are referenced from
+`sub_8038538` in the head fragment but *defined* down in the new
+`code_3_2_20e_95a4.s` tail fragment - harmless while both lived in one
+object file, but needs an explicit `.global` on each definition once
+they're split across separate `.o`s, or the link fails with "undefined
+reference" (the label reference itself was untouched - this is a
+linkage-visibility fixup, not a content change).
+## Match 0x08003B40-0x08004CB4 (25-function `overlay_ui` chunk, the composite pause/options screen)
+
+This is the chunk `docs/rom_map.md`'s "narrowed down which screen
+`overlay_ui` is" section already characterized in detail: a settings
+screen with (per that section) four numeric-slider rows drawn via a
+shared icon-manager centered-label toolkit (the same
+`gUnknown_030012DC`/`gUnknown_030012E0` structs and `sub_803AD80`/
+`sub_8026F38` calls `sub_8006600`, already parked in
+`src/graphics/oam_count.c`, uses for its flanking-icon draw). 16 of the
+25 functions matched; the rest hit that exact same class of gcc-2.9
+register-allocation difficulty `sub_8006600` already hit, or (two of
+them) weren't understood confidently enough to force a reconstruction.
+
+**Matched** (`src/graphics/settings_menu2.c`, `src/graphics/settings_menu3.c`):
+`sub_80047F8` (BG-load helper - literally the same shape as
+`sub_80374D0` in `src/audio/counter_selector_setup.c`, just at
+different field offsets and with an extra `field_0 = 0`),
+`sub_8004860`/`sub_80048E0` (per-row stats gatherer/aggregator, sharing
+a five-function battery: `sub_8006920`/`sub_80068A8`/`sub_80067E4`/
+`sub_800695C`/`sub_800697C`), `sub_80048BC`, `sub_8004A50` (the
+`(flags>>2)&1` bit test repeated throughout this whole chunk - note it
+shifts *arithmetically*, so the field is `s32` not `u32`), `sub_8004A64`/
+`sub_8004A80` (link-cancel-flag pair - the second doesn't cache the
+global's *value* across its call the way the first does, it re-reads
+the global fresh both times, a genuine ROM difference between two
+near-identical-looking functions), the six near-identical per-item
+wrappers `sub_8004AA4`/`sub_8004ACC`/`sub_8004AFC`/`sub_8004B24`/
+`sub_8004B54`/`sub_8004B70`/`sub_8004BA0` `docs/rom_map.md` already
+found call `sub_80041BC`, `sub_8004BD0` (the state jump-table
+dispatcher - needed explicit `case 8:`/`case 10:` labels, even though
+both are empty, to keep gcc emitting an 11-entry jump table matching
+the ROM instead of collapsing to a 10-entry one with an extra bounds
+check; also needed case `9`'s body written *before* case `7`'s in the
+switch statement to get gcc to lay the two call blocks out in the ROM's
+address order - the jump table's *data* was already correct either
+way, only the two bodies' relative position in `.text` was wrong),
+`sub_8004C7C` (needed a trailing `asm(".align 2, 0")` per the
+established alignment-padding gotcha - gcc's own padding NOP encodes as
+`mov r8, r8` here where the ROM has `movs r0, r0`).
+
+**Parked** (`.if NON_MATCHING == 0` across `asm/code_3_1_10_3.s`/
+`asm/code_3_1_10_4.s`/`asm/code_3_1_10_5.s`, `#if NON_MATCHING` C
+reconstructions in `src/graphics/settings_menu.c`) - `sub_8003B40`,
+`sub_8003BDC`, `sub_8003C90`, `sub_8003D3C`, `sub_80041BC`,
+`sub_8004914`, `sub_80049CC`:
+
+- **`sub_80049CC`** is the cleanest case and the template for the rest:
+  a centered-label draw into `gUnknown_030012E0`'s icon pair, matching
+  `sub_8006600`'s shape. With `label`/`slot0`/`mgrAddr`/`mgr`/`recOff`
+  pinned to `r9`/`r8`/`r6`/`r4`/`r5` (mirroring the ROM's own register
+  choices exactly) and the destination-address computation
+  (`mgr = mgr + slot->offset`) reordered *before* the `sub_8026F38`
+  call it needs to survive across, every instruction matches except
+  one: the `s16` shift-index for `record->slots[N].offset`'s `ldrsh`
+  reuses whatever register already holds the matching struct-offset
+  constant (`0x10`/`0x20`) in this reconstruction's codegen, where the
+  ROM reloads a *fresh* register (`r3`) for it both times. Tried
+  splitting the offset read into its own local, an inline-asm
+  register-pinned `ldrsh`, and reordering around it - none closed the
+  gap without introducing a worse one (the inline-asm route adds a
+  spurious sign-extension pair gcc can't see through its own `ldrsh`
+  already did). This is the same class of "last mile" gcc-2.9
+  scratch-register nondeterminism `sub_8006600` documents at length.
+- **`sub_8003C90`** is `sub_80049CC`'s sibling (fixed label `0x23`,
+  `gUnknown_030012DC` not `E0`, plus a highlight/plain visibility
+  branch) and came within one register-letter choice of matching after
+  reordering the `half = (0xf0-width)>>1` computation ahead of the
+  `mgr` reload it precedes in the ROM - the remaining gap is which
+  scratch register that reload lands in (`r0` here, `r3` in the ROM).
+- **`sub_8003BDC`**/**`sub_8003D3C`**/**`sub_80041BC`**/**`sub_8004914`**
+  are all built on the same centered-label/positioned-glyph primitive
+  (semantics fully traced and mechanically reproduced) and hit the same
+  scratch-register nondeterminism; `sub_8003BDC` additionally spills a
+  constant through `ip` in the ROM (`mov ip, r1` / `mov r2, ip`), which
+  plain C has no way to request at all. `sub_80041BC` reconstructs the
+  ROM's 4x-unrolled per-row body as a small table + loop instead
+  (semantically faithful, but can't reproduce four independent sets of
+  per-occurrence register choices).
+- **`sub_8003B40`** is a distinct SIO-related function, not part of the
+  icon-manager family: a "connecting..." spinner dialog that loops
+  `sub_8001F50` (the link-connection/handshake driver from
+  `docs/rom_map.md`'s SIO section) against the link-active flag
+  `gUnknown_03000800` and an allocated spinner object's own state.
+  Fully traced mechanically; not yet attempted for byte-exact register
+  matching given the above pattern's track record.
+
+**Left completely untouched** (not confidently understood - raw in
+`asm/code_3_1_10_4.s`, no `#if NON_MATCHING` reconstruction):
+
+- **`sub_8003F30`** - a per-row `itoa`-based numeric renderer indexed
+  across three parallel 5-element object arrays
+  (`self->rowObjA`/`rowObjB`/`rowObjC`, the arrays `sub_800450C`
+  populates); the overall shape (measure via `sub_803AD80`, `itoa`,
+  three positioned digit draws) is clear but several of the per-call
+  offset/stride relationships weren't traced to full confidence in the
+  time available.
+- **`sub_800450C`** - the screen's own init routine: resets the OAM
+  shadow buffer/tile caches, copies the first four per-level
+  `gStaticData_0816Bxxx` tables into `gUnknown_030012B8`'s per-row
+  arrays (the exact link `docs/rom_map.md` already found), and
+  allocates the 15 objects across `rowObjA`/`rowObjB`/`rowObjC` this
+  chunk's other functions read - but the closing block that writes 5
+  fixed Q8 width/height rects doesn't cleanly map onto the
+  `rowObjA`/`rowObjB`/`rowObjC[0..4]` layout traced from the allocation
+  loop above it, and a triple-pointer dereference through
+  `gUnknown_030012D0` in the middle wasn't independently confirmed.
+
+**File structure:** `sub_8003C90` (parked) sits between `sub_8003BDC`
+and `sub_8003D3C`, appended to the end of `asm/code_3_1_10_3.s` (kept
+in its original ROM position rather than moved, exactly like
+`sub_8006600`) rather than getting cut out - since every function in
+`src/graphics/settings_menu.c` is `#if NON_MATCHING`-guarded, that file
+compiles to nothing in a default build and its ldscript slot is simply
+empty. `asm/code_3_1_10_4.s` (new: `sub_8003D3C` through `sub_800450C`)
+and `asm/code_3_1_10_5.s` (new: `sub_8004914`/`sub_80049CC`) hold the
+other two parked/raw runs, and `asm/code_3_1_10_6.s` is the original
+file's unchanged remainder from `sub_8004CB4` (outside this chunk) on.
+`include/pause_options_screen.h` holds the shared `struct
+pause_options_screen`/`struct settings_row_stats` types used across all
+three new `.c` files. See `ldscript.txt` and `tools/report_units.py`'s
+`overlay_ui` category, both updated to match. Verified via a full clean
+`make compare` (`La suma coincide`) and `make NON_MATCHING=1 report`.
 ## `actor_part19*.c`: the action-object family's `0x0802BED8`-`0x0802C99C` chunk (issue #52)
 
 `0x0802BED8`-`0x0802C99C` (25-function chunk), `asm/code_3_2_20_28568.s`

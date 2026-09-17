@@ -49,6 +49,27 @@ constructor, not confirmed GAX2 mixer internals - see the matching.md
 entry for what's still just an educated guess (a jukebox/sound-test
 track selector) versus confirmed.
 
+`src/audio/` (further in, at `0x08038538`-`0x08039658` - see
+`docs/matching.md`'s "`0x08038538`-`0x08039658`" entry for the full
+write-up, GitHub issue #67):
+
+- `src/audio/gax_dma_control.c` - `sub_8038C28`/`sub_8038C50` (Direct
+  Sound A output stop/start pair)
+- `src/audio/gax_note_param.c` - `sub_8038F94` (conditional per-voice
+  note-period update)
+- `src/audio/gax_swi.c` - `sub_80392C4` (HuffUnComp SWI 0x13 wrapper,
+  transcribed as NAKED asm)
+- `src/audio/gax_sound_handler_info.c` - `sub_80393D0`/`sub_80393FC`/
+  `sub_803941C`/`nullsub_39` (the GAX2_SoundHandler "Info" type's
+  init_fn/unknown_fn, per `docs/audio.md`'s per-type function-pointer
+  table)
+- `src/audio/gax_sound_handler_channel.c` - `nullsub_40` (the "Channel"
+  type's unknown_fn)
+
+These read as genuine GAX2 mixer/SoundHandler internals (not
+game/HUD-side callers), the first real dive past `sub_80381FC`'s single
+constructor.
+
 ## Parked
 
 - `PlaySfx` (`sub_8001854`, real bytes in `asm/code_3_1_10.s`,
@@ -75,3 +96,30 @@ from the `0x08037110`-`0x08038538` pass specifically:
   generic 64-bit software division/multiply helpers, per `docs/audio.md`.
 - `sub_8037FC0`/`sub_8038240`/`sub_80384DC` - genuine GAX2 mixer-state/
   hardware-register internals; not attempted this pass.
+
+From the `0x08038538`-`0x08039658` pass (issue #67):
+
+- `sub_8038538`/`sub_8038A1C`/`sub_8038B68` - the play-start/init entry
+  point (docs/audio.md) and its DMA1/Timer0 direct-sound-output
+  follow-ups; hit the same many-register (`r8`/`sb`/`sl`) gcc-2.9
+  allocation difficulty already documented for `sub_8006600`/
+  `sub_80372BC` - not attempted further this pass.
+- `sub_8038C88`/`sub_8038DC0`/`sub_8038E74` - more mixer-tick/
+  voice-stealing internals (`sub_8038E74` is the voice-stealing
+  allocator, docs/audio.md); left raw.
+- `sub_8038FD0`/`sub_8039064`/`sub_80390F8` - a per-channel mute/
+  volume-set family; each hits the same many-register loop-allocation
+  difficulty as the `sub_8038538` cluster above (confirmed via isolated
+  compile - the ROM's own register allocation for this loop shape uses
+  only r0-r3, no callee-saved registers, and no C rephrasing tried
+  reproduced that).
+- `sub_8039198`/`sub_80391E8` - contain the same hardware-register
+  NOP-delay compiler quirk already flagged in-source at `sub_80384DC`
+  above (`.byte 0x1b, 0x1c` / `mov r8, r8` x3); not attempted.
+- `sub_8039214` - a text/console-tile state machine (word-wrap-looking
+  character remapping); not attempted this pass.
+- `sub_80392E0` - fatal-error display (renders a message via
+  `sub_8039214`, then an infinite loop); left raw.
+- `sub_803943C` - the "Info" SoundHandler type's play_fn; left raw.
+- `sub_8039518` - the "Channel" SoundHandler type's init_fn; left raw.
+- `sub_80395A4` - the "Channel" SoundHandler type's play_fn; left raw.
