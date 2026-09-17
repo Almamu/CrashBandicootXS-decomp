@@ -34,6 +34,16 @@ category page - see [game_loop.md](./game_loop.md).
   register" trampoline table, already referenced by name from `irq.c`'s
   `sub_8000720` and several `actor_part*` files), `nullsub_43` (bonus,
   just past issue #69's listed range) - GitHub issue #69
+- `src/system/link_cable.c`/`link_cable2.c` (new files - the GBA
+  multiplayer link-cable/SIO transport, `0x08001C80`-`0x08002868`,
+  interleaved with `audio`/`overlay_ui` in this same address range -
+  see `docs/rom_map.md`'s SIO/link-cable section): `sub_8001D30`
+  (link-session "stop"), `sub_80026E4` (link-session "start"),
+  `sub_800276C` (RCNT/SIOCNT reset helper), `sub_8002798` (reset
+  convenience wrapper), `sub_80027B0` (reset + conditional teardown),
+  `sub_80027E8` (session object constructor), `sub_8002830`/
+  `sub_8002848` (Serial/Timer3 IRQ handlers) - matched, GitHub
+  issue #4, see `docs/matching/issue-4-sio-settings-sync.md`
 
 GitHub issue #70 (`0x0803ADB4`-`0x0803B060`, right after
 `reg_trampolines.c` above) was categorized `system` by the chunk
@@ -54,6 +64,22 @@ See [docs/workflow.md](../workflow.md) for the per-function loop.
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
+- **`sub_8001CB8`** (`asm/code_3_1_10_3_1cb8.s`, C in
+  `src/system/link_cable.c`) - the per-player CRC-16-style handshake-id
+  hash helper called by `sub_8001DB4`. Semantics fully understood; the
+  per-byte table-index computation resists matching the ROM's plain
+  8-bit shift - see `docs/matching/issue-4-sio-settings-sync.md`,
+  issue #4.
+- **`sub_8001DB4`** (`asm/code_3_1_10_3_1db4.s`, same C file) - the
+  link-session reset/init, a 400 B 4-player-loop function. Semantics
+  fully understood, register/stack-plan gap - see
+  `docs/matching/issue-4-sio-settings-sync.md`, issue #4.
+- **`sub_8002868`/`sub_8002938`** (`asm/code_3_1_10_3_2868.s`, C in
+  `src/graphics/settings_menu8d.c`) - EEPROM load/save block-loop pair
+  for the settings record, built on this file's own `EepromConfig`
+  primitives below. Semantics fully understood, an IME-save/restore
+  register-hop gap - see `docs/matching/issue-4-sio-settings-sync.md`,
+  issue #4.
 - **`sub_80010E0`** (`src/system/input_util.c`, an input-polling helper) -
   a single bit-test compiles with the branch senses swapped from the ROM
   (same two instructions, same size) in a way that resists every C-level
@@ -71,3 +97,15 @@ See [docs/workflow.md](../workflow.md) for the per-function loop.
   (`asm/code_3_2_20e_ab54.s`, ROM `0x0803AB54`) - a DMA3 bit-serial
   EEPROM read/write/retry cluster (working theory, not confirmed enough
   to commit even a parked reconstruction) - see `docs/matching.md`.
+
+## Still raw, category-mapped (GitHub issue #4)
+
+- **`sub_8001F50`** (452 B, `asm/code_3_1_10_3.s`) - the link-
+  connection/handshake driver; `docs/rom_map.md` already characterizes
+  its broad shape, not read to full per-branch confidence in the time
+  available. Left untouched rather than parked or force-matched - see
+  `docs/matching/issue-4-sio-settings-sync.md`.
+- **`sub_8002114`** (1488 B, same file) - the per-frame SIO
+  data-exchange pump, extremely register-heavy with deep nested
+  branching. Left untouched for the same reason - see
+  `docs/matching/issue-4-sio-settings-sync.md`.
