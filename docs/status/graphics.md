@@ -221,6 +221,16 @@ per-actor animation frames, text layout.
   `sub_8004A50`, `sub_8004A64`, `sub_8004A80`, `sub_8004AA4`,
   `sub_8004ACC`, `sub_8004AFC`, `sub_8004B24`, `sub_8004B54`,
   `sub_8004B70`, `sub_8004BA0`, `sub_8004BD0`, `sub_8004C7C`
+- `src/graphics/settings_menu4.c` (new file - confirm/cancel handler,
+  BG0HOFS/DISPCNT save-restore, and the SIO-spinner teardown/construct
+  pair): `sub_8004CB4`, `sub_8004CE8`, `sub_8004D20`, `sub_8004D4C`
+- `src/graphics/settings_menu5.c` (new file - a wrap-increment/decrement
+  counter pair on a settings-row sub-widget): `sub_8006084`,
+  `sub_800609C`
+- `src/graphics/settings_menu6.c` (new file - first of the composite
+  screen's five settings-row icon-widget constructors; see
+  `docs/matching.md`'s issue #7 writeup for the rest, parked in the same
+  file): `sub_8005A78`
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -504,3 +514,20 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   choices; `sub_8003BDC` additionally spills a constant through `ip`,
   which plain C can't request) - see `docs/matching.md`, "Match
   0x08003B40-0x08004CB4", for what was tried on each.
+- **`sub_8005AE8`**, **`sub_8005B80`**, **`sub_8005C58`**,
+  **`sub_8005D44`** (`asm/code_3_1_10_8.s`, C in
+  `src/graphics/settings_menu6.c`) - four more settings-row icon-widget
+  constructors on the composite pause/options screen (4/5/3-element
+  arrays plus the medal/rank-award icon). Each one's `field_29`
+  frame-index update matches byte-for-byte (shared with the matched
+  `sub_8005A78` above), but the surrounding loop/branch address
+  computation never lands the loop/self pointer in `r8`/`sb` the way
+  the ROM's does, the same class `sub_8006600` documents - see
+  `docs/matching.md`, issue #7.
+- **`sub_8005EF4`**, **`sub_8005FBC`** (`asm/code_3_1_10_10.s`, C in
+  `src/graphics/settings_menu7.c`) - a matched inc/dec pair for a
+  per-row percentage counter, formatting a `" <NN%>"`-shaped scratch
+  string and pushing it through the matching `AudioContext` setter.
+  Fully understood; off by several register-letter choices in the
+  digit-formatting tail, the same unresolved class `sub_80049CC` above
+  documents - see `docs/matching.md`, issue #7.

@@ -5752,3 +5752,119 @@ remainder, from `sub_802C99C` on) - see `ldscript.txt` and
 `tools/report_units.py`'s `actor` category, both updated to match.
 Verified via a full clean `make compare` (`La suma coincide`) and
 `make NON_MATCHING=1 report`.
+
+## Chunk 0x08004CB4-0x080060AC (issue #7, overlay_ui)
+
+The `asm/code_3_1_10_6.s` continuation of the composite pause/options
+screen from issue #6 (`docs/rom_map.md`'s "Correction: `overlay_ui` is
+a small family of screens"). 7 of the chunk's 25 functions matched, 6
+parked, 12 left untouched - see below for the split.
+
+**Matched (7):**
+
+- **`sub_8004CB4`** (`src/graphics/settings_menu4.c`) - the composite
+  screen's confirm/cancel handler: on flags bit 0 or bit 3, plays the
+  standard confirm SFX cue and resets `state`/`field_10`. Needed the
+  ROM's exact two-branch `if (flags&1) goto confirm; else if
+  (flags&8) confirm: ...` shape - a single `(flags&1)||(flags&8)`
+  condition lets gcc fold the mask into one `and #9` test, which
+  doesn't keep the constant `1` live in a register the way the ROM's
+  two-step `ands`/`ands` does for the later `str` of `field_10`.
+- **`sub_8004CE8`** (`src/graphics/settings_menu4.c`) - restores
+  `REG_DISPCNT`/`REG_BG0HOFS` from two newly-named `pause_options_screen`
+  fields (`field_1c`/`field_0`) and re-flushes the VRAM/OAM commit
+  queues. Extended `pause_options_screen.h`'s `unused_00`/`unused_1c`
+  padding into named fields for these two, per docs/workflow.md step 7.
+- **`sub_8004D20`/`sub_8004D4C`** (`src/graphics/settings_menu4.c`) - a
+  teardown/construct pair for the "connecting..." SIO-handshake spinner
+  object (`gUnknown_0300080C`) sub_8003B40 (settings_menu3.c) already
+  documents allocating from. `sub_8004D4C` needed its destination
+  pointer's address-of computed in a separate statement, positioned
+  between the two calls (matching the ROM's `ldr r4,=gUnknown_0300080C`
+  sitting between the `sub_8006EA8` and `sub_8026EDC` calls) rather than
+  let via a single chained expression, which put gcc's address
+  computation after both calls instead.
+- **`sub_8005A78`** (`src/graphics/settings_menu6.c`) - the first of five
+  settings-row icon-widget constructors on the composite screen's
+  "results" sub-region (new locally-scoped `struct pause_screen_results`/
+  `struct settings_icon_actor` - see their header comments for why they
+  aren't reconciled with `pause_options_screen`). Needed: (1) the
+  destination field computed through an explicit `T **dest = &self->x`
+  local, assigned *after* the allocation calls but reused for the
+  post-call reload, to reproduce the ROM's `r4 = &self->field_88`
+  address cached across both `bl`s; (2) a `field_29`-nibble-update
+  macro (`UPDATE_ICON_FRAME_NIBBLE`, reused by every parked sibling
+  below) with full register pins (`r0`/`r1`/`r2`/`r3`, matching the
+  `SUB_8006600_*` convention in `oam_count.c`) plus an `asm volatile`
+  two-instruction `mov #0x10`/`neg` sequence - gcc's constant
+  propagation otherwise collapses the ROM's `movs r1,#0x10`/`rsbs
+  r1,r1,#0` into a single `sub` relative to the just-used `0xf` mask,
+  which the ROM never does.
+- **`sub_8006084`/`sub_800609C`** (`src/graphics/settings_menu5.c`) - a
+  small wrap-increment/decrement counter pair on a settings-row
+  sub-widget (new minimal `struct row_counter_widget`, deliberately not
+  asserted identical to `pause_screen_results` despite the call graph
+  suggesting they're likely the same underlying object - see the
+  struct's header comment). Matched with no register-pin tricks needed.
+
+**Parked (`NON_MATCHING`, 6):**
+
+- **`sub_8005AE8`/`sub_8005B80`/`sub_8005C58`/`sub_8005D44`**
+  (`src/graphics/settings_menu6.c`) - the remaining four icon-widget
+  constructors (4/5/3-element arrays plus the medal/rank-award single
+  icon). Semantics fully understood and cross-checked against
+  docs/rom_map.md's medal/rank writeup; each one's `field_29` tail
+  matches byte-for-byte via `UPDATE_ICON_FRAME_NIBBLE`, but the
+  surrounding per-iteration address computation never lands the
+  loop/self pointer in `r8`/`sb` the way the ROM's does, the same
+  gcc-2.9 difficulty already documented for `sub_8006600`
+  (`oam_count.c`) and `sub_8037388` (`counter_selector_setup.c`) -
+  closing it would need the same heavy per-call-site
+  `SUB_8006600_*`-style macros across four near-identical functions,
+  more than this pass had budget for.
+- **`sub_8005EF4`/`sub_8005FBC`** (`src/graphics/settings_menu7.c`, a
+  second minimal `struct pause_screen_row_counts` view of the same
+  object) - a matched inc/dec pair for a per-row percentage counter,
+  formatting a `" <NN%>"`-shaped scratch string and pushing it through
+  the matching `AudioContext` setter. Fully understood; off by several
+  register-letter choices in the digit-formatting tail, the same
+  unresolved class `sub_80049CC` (`settings_menu.c`) documents.
+
+**Left untouched (12, not attempted this pass):** `sub_8004D74`,
+`sub_8004EC0`, `sub_8005004`, `sub_8005100`, `sub_8005304`,
+`sub_80053F4`, `sub_800556C`, `sub_800570C`, `sub_80057E0`,
+`sub_80058C0`, `sub_800599C`, `sub_8005E5C` - the composite screen's own
+constructor pair, its settings-row cursor/confirm/cancel driver, and
+their `gUnknown_030012DC`/`E0` icon-manager-heavy sub-widgets.
+docs/rom_map.md's "Correction: `overlay_ui` is a small family of
+screens" already gives high-confidence semantics for several of these
+(`sub_8004D74` is the real header consumer/composite-screen allocator,
+`sub_8004EC0` its top-level constructor, `sub_8005004` a child-label
+refresh/self-teardown utility, `sub_8005100` the settings-row cursor
+driver, `sub_800599C` the widget-building orchestrator that calls every
+icon constructor above) - genuinely not "not understood," just out of
+scope for this pass: every one of them shares the same
+icon-manager-positioning-math shape (`sub_803AD80`/`gStaticData_0816B21C`-
+style tables) that made `sub_8006600` a multi-pass parking effort on its
+own, and writing+verifying eleven-plus functions of that shape was more
+than this session's budget covered. Left for a follow-up pass; issue #7
+stays open.
+
+**File structure:** `asm/code_3_1_10_6.s` split into
+`src/graphics/settings_menu4.c` (`sub_8004CB4`-`sub_8004D4C`, matched),
+the new raw `asm/code_3_1_10_7.s` (`sub_8004D74`-`sub_800599C`, left
+untouched), `src/graphics/settings_menu6.c` (`sub_8005A78` matched,
+`sub_8005AE8`-`sub_8005D44` parked), the new raw `asm/code_3_1_10_8.s`
+(those same four functions' real bytes, each wrapped
+`.if NON_MATCHING == 0`), the new raw `asm/code_3_1_10_9.s`
+(`sub_8005E5C`, left untouched), `src/graphics/settings_menu7.c`
+(`sub_8005EF4`/`sub_8005FBC`, parked), the new raw
+`asm/code_3_1_10_10.s` (their real bytes, wrapped), `src/graphics/settings_menu5.c`
+(`sub_8006084`/`sub_800609C`, matched), and finally the new raw
+`asm/code_3_1_10_11.s` (the original file's unchanged remainder, from
+`sub_80060AC` on, including its pre-existing parked `sub_8006600` guard)
+- see `ldscript.txt` and `tools/report_units.py`'s `overlay_ui` entries,
+both updated to match. `include/pause_options_screen.h` gained two named
+fields (`field_0`/`field_1c`, both previously padding) for
+`sub_8004CE8`'s use. Verified via a full clean `make compare`
+(`La suma coincide`) and `make NON_MATCHING=1 report`.

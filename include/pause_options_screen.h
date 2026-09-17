@@ -17,11 +17,16 @@ COMPILE_TIME_ASSERT(sizeof(struct settings_row_stats) == 0x14);
 
 /* The composite pause/options screen widget (see docs/rom_map.md's
  * overlay_ui section - "one composite pause/options screen"). Only the
- * fields this chunk's functions (0x08003B40-0x08004CB4) actually touch
- * are named; the real header/constructor (sub_8004D74/sub_8004EC0,
- * still raw, outside this chunk) would pin down the rest. */
+ * fields actually touched by functions matched so far
+ * (0x08003B40-0x08004CB4, plus sub_8004CB4/sub_8004CE8 at
+ * 0x08004CB4-0x08004D74, src/graphics/settings_menu4.c) are named; the
+ * real constructor (sub_8004D74/sub_8004EC0, still raw) would pin down
+ * the rest. */
 struct pause_options_screen {
-    u8 unused_00[4];
+    /* 0x00 - read by sub_8004CE8 (src/graphics/settings_menu4.c), shifted
+     * right by 3 and written to REG_BG0HOFS (a u16) - a saved/pending BG0
+     * horizontal-scroll value, pre-shifted by the caller. */
+    u32 field_0;
     s32 flags;          /* 0x04 - bit 2 tested via (flags>>2)&1 throughout; signed - the
                           * ROM shifts it arithmetically (asr, not lsr) */
     u8 unused_08[4];
@@ -29,7 +34,10 @@ struct pause_options_screen {
     u32 field_10;          /* 0x10 - per-row raw value; ==4 means "maxed out" */
     u32 field_14;            /* 0x14 - label1, passed to sub_8003BDC */
     u32 field_18;              /* 0x18 - label2, passed to sub_8003BDC */
-    u8 unused_1c[8];             /* 0x1c-0x23 */
+    /* 0x1c - read by sub_8004CE8 as a u16, written straight to REG_DISPCNT
+     * - a saved/pending DISPCNT value, paired with field_0 above. */
+    u16 field_1c;
+    u8 unused_1e[6];             /* 0x1e-0x23 */
     u32 field_24;                  /* 0x24 - numeric value for the slider rows */
     u8 unused_28[0x3c - 0x28];       /* 0x28-0x3b */
     struct settings_row_stats rowStats[4]; /* 0x3c-0x8b */
