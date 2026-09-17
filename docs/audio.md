@@ -224,13 +224,20 @@ picture):
 
 ## Sound effects
 
-Distinct from music: `sub_8001854` (called ~264 times across gameplay code)
-is the sound-effect trigger. It's `PlaySfx(context, sfx_id, volume_param)`
-in spirit. It looks up `sfx_id` in a 99-entry table at ROM `0x0816AA6C`
-(`sound/sfx_table.json`), each entry `{slot_id, pitch_offset, volume}`
-(volume as 8.8 fixed point), and uses it to steal a mixing voice
-(`sub_8038E74`) and play a note from the *same* shared instrument/sample
-pool music uses — **there is no separate sound-effect sample bank**.
+Distinct from music: `sub_8001854`, now matched as `PlaySfx` (see
+[docs/status/audio.md](./status/audio.md) - called ~264 times across
+gameplay code), is the sound-effect trigger:
+`PlaySfx(context, sfx_id, volume_param)`. It looks up `sfx_id` in a
+99-entry table at ROM `0x0816AA6C` (`sound/sfx_table.json`,
+`struct SfxTableEntry` in `include/audio.h`), each entry `{slot_id,
+chan_arg, volume}` (volume as 8.8 fixed point) - the matching pass
+corrected the middle field's guessed name from "pitch_offset" to
+`chan_arg`: `PlaySfx` passes it straight through as `sub_8038E74`'s
+channel-select argument, and the ambient-sfx sibling `sub_80019F8`
+never reads it at all (always passes a hardcoded `0` there instead) -
+and uses it to steal a mixing voice (`sub_8038E74`) and play a note
+from the *same* shared instrument/sample pool music uses — **there is
+no separate sound-effect sample bank**.
 
 ## Build pipeline
 

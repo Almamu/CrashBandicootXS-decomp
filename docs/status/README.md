@@ -14,4 +14,6 @@ every entry here, see [docs/matching.md](../matching.md).
   formatting helpers
 - [system.md](./system.md) - startup, memory allocator, interrupts, input
   polling, tagged-asset loading
-- [audio.md](./audio.md) - the Shin'en GAX2 sound engine (not started)
+- [audio.md](./audio.md) - the Shin'en GAX2 sound engine's own code (not
+  started) and the wrapper layer around it (music/SFX triggering,
+  fading/ducking - matched)
