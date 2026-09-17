@@ -163,6 +163,20 @@ UNITS = [
     (0x0802C7A8, None, "actor"),  # sub_802C7A8 - a circular-list AABB-overlap scan (self+0x4c walk, type==4 filter, sub_800014C-based translate+compare) - left raw, stack-buffer layout not pinned down with enough confidence for a byte-exact attempt this pass
     (0x0802C904, "src/graphics/actor_part19d.o", "actor"),  # sub_802C904 - same proximity/overlap "used"-state transition shape as actor_part19g.o's family; matched
     (0x0802C99C, None, "actor"),  # remainder of the 40.4 KB actor zone, still raw
+    (0x08030530, "src/graphics/actor_part20.o", "actor"),  # sub_8030530 (issue #58): countdown timer driving a boss-weapon state-2/table-index-1 transition; matched
+    (0x08030574, None, "actor"),  # sub_8030574-sub_80305F8 (issue #58): boss-weapon keyframe-table AABB lookup/dispatch and an InitActorPart wrapper - left raw, not attempted this pass beyond a near-miss register-allocation/scheduling gap
+    (0x08030640, "src/graphics/actor_part21.o", "actor"),  # sub_8030640 (issue #58): trivial self+0x68 setter; matched
+    (0x08030648, None, "actor"),  # sub_8030648 (issue #58): same keyframe-table AABB lookup shape as sub_8030574, left raw
+    (0x080306A4, "src/graphics/actor_part22.o", "actor"),  # sub_80306A4 (issue #58): trivial self+0x68 getter; matched
+    (0x080306AC, None, "actor"),  # sub_80306AC-sub_80309B4 (issue #58): boss-weapon camera-relative position update and a large weapon-kind projectile-position dispatcher - left raw, register-pressure/many-unresolved-helper-signature functions not attempted this pass
+    (0x08030C98, "src/graphics/actor_part23.o", "actor"),  # sub_8030C98 (issue #58): screen-accumulator advance + threshold reset on the boss-weapon's small tracker object; matched
+    (0x08030D48, None, "actor"),  # sub_8030D48-sub_80311C4 (issue #58): boss-weapon palette-strip layout, position-easing, VRAM/tile-cache setup and projectile-advance functions - left raw, register-pressure not attempted this pass
+    (0x080312C4, "src/graphics/actor_part24.o", "actor"),  # sub_80312C4 (issue #58): BG2CNT toggle + BG2 affine-matrix recompute for the boss-weapon zoom effect; matched
+    (0x08031378, None, "actor"),  # sub_8031378 (issue #58): AABB overlap test against a keyframe-table box - left raw, not attempted this pass
+    (0x0803146C, "src/graphics/actor_part25.o", "actor"),  # sub_803146C (issue #58): boss-weapon "charge" countdown driving a state-4/table-index-1 transition; matched
+    (0x08031504, None, "actor"),  # sub_8031504/sub_8031604 (issue #58): DMA/tile-cache setup and a palette/tile-nibble repack loop - left raw, register-pressure not attempted this pass
+    (0x0803171C, "src/graphics/actor_part26.o", "actor"),  # sub_803171C/sub_8031744 (issue #58): palette flash-color select and DMA-queued palette-strip animation refresh; matched
+    (0x08031784, None, "actor"),  # remainder of the 40.4 KB actor zone, still raw
     (0x080354E0, None, "graphics_loading"),  # LoadLevelGraphics, LoadBg2Background, LoadObjSpriteTiles
     (0x08037110, "src/audio/counter_selector.o", "audio"),  # sub_8037110/nullsub_7/sub_8037154/sub_803716C/sub_80371B4/sub_8037224 - a small on-screen 0-5 "counter" widget (increments/decrements with input, confirms/cancels with PlaySfx), reads like game/HUD-side code using PlaySfx rather than GAX2 internals; sub_803716C is UNUSED (no caller found); matched
     (0x080372BC, None, "audio"),  # sub_80372BC/sub_8037388 - fully understood (icon-manager draw loop / tile-cache init for the widget above) but hits the same gcc-2.9 many-register-allocation difficulty already documented for sub_8006600 (src/graphics/oam_count.c); left raw rather than force a low-confidence register pin

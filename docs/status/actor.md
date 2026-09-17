@@ -156,6 +156,18 @@ from "core" graphics.
   trivial raw-offset getter), `sub_803AFF0`/`sub_803B024` (two more
   `gStaticData_087E3BEC`-family per-type descriptor table constructors)
 
+- `src/graphics/actor_part20.c`/`actor_part21.c`/`actor_part22.c`/
+  `actor_part23.c`/`actor_part24.c`/`actor_part25.c`/`actor_part26.c`
+  (new files, issue #58, ROM `0x08030334`-`0x08031784` - the boss-
+  weapon effect state machine, non-adjacent since 18 raw functions sit
+  between/around them; see
+  [docs/matching/issue-58-0x08030334-actor.md](../matching/issue-58-0x08030334-actor.md)):
+  `sub_8030530`, `sub_8030640`, `sub_80306A4`, `sub_8030C98`,
+  `sub_80312C4`, `sub_803146C`, `sub_803171C`, `sub_8031744` - a
+  countdown-timer state transition, a trivial byte setter/getter pair,
+  a screen-accumulator/tracker-reset step, a BG2 zoom-effect updater,
+  a "charge" countdown, and a palette flash/animation-refresh pair.
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
