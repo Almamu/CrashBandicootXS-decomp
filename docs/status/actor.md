@@ -231,6 +231,24 @@ from "core" graphics.
   `sub_801426C`/`sub_80142B0`; see
   `docs/matching/issue-18-0x08014f8c-actor.md`.
 
+- `src/graphics/actor_part39.c`/`actor_part41.c`/`actor_part43.c`/
+  `actor_part45.c` (new files, GitHub issue #50, ROM
+  0x0802A69C-0x0802AC28, non-adjacent since the parked
+  `UpdateAnimatedActorPart`/`sub_802AA0C`/`sub_802AB58` sit interleaved
+  between them; see
+  [docs/matching/issue-50-actor-2a69c.md](../matching/issue-50-actor-2a69c.md)):
+  `sub_802A69C`, `sub_802A6B0`, `sub_802A6C4`, `sub_802A6D8`,
+  `sub_802A6EC`, `InitActorPart`, `sub_802A7B8`, `sub_802A980`,
+  `sub_802A9D4`, `sub_802A9DC`, `sub_802AA00`, `sub_802AA04`,
+  `sub_802AA08`, `sub_802AA4C`, `sub_802AA54`, `sub_802AA80`,
+  `sub_802AAB4`, `sub_802AAFC`, `sub_802AB08`, `sub_802AB34`,
+  `sub_802ABC8`, `sub_802ABFC` - the `InitActorPart` constructor itself
+  (previously only forward-declared by every other `actor_part*.c`
+  file), its movement-threshold recompute pair, the fixed 15-slot
+  object registry (`gUnknown_03001428`/`gUnknown_03000888`), and the
+  `gUnknown_03001464`-gated palette-cycle DMA cluster's non-parked
+  members.
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
@@ -536,6 +554,28 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   store, branch and call is understood and semantically correct;
   parked on register allocation across the 3-way dispatch - see
   `docs/matching/issue-18-0x08014f8c-actor.md`.
+- **`UpdateAnimatedActorPart`** (`asm/code_3_2_20_8b7c_a88c.s`, C in
+  `src/graphics/actor_part44.c`) - the OAM draw/scale routine for the
+  `InitActorPart`-constructed "self" object. Every byte of this
+  ~120-instruction function matches except one `frame[1]` read the ROM
+  serves from a leftover, never-reloaded copy of `GetAnimFrameData`'s
+  return value still sitting in `r0` - a redundant-load/value-reuse
+  optimization this agbcc build doesn't perform - see
+  `docs/matching/issue-50-actor-2a69c.md`.
+- **`sub_802AA0C`** (`asm/code_3_2_20_8b7c_aa0c.s`, C in
+  `src/graphics/actor_part40.c`) - a 12-byte little-vector velocity
+  integrator. Every load/store confirmed correct (including the ROM's
+  own `ldm`/`stm` 3-word block-copy idiom at both ends); parked purely
+  on instruction scheduling around the three per-axis `>>8` shifts
+  between the two block copies - see
+  `docs/matching/issue-50-actor-2a69c.md`.
+- **`sub_802AB58`** (`asm/code_3_2_20_8b7c_ab58.s`, C in
+  `src/graphics/actor_part42.c`) - the palette-cycle cursor-advance DMA
+  step. Every load/store, branch and call confirmed correct; parked
+  because this compiler speculatively computes the cursor's decrement
+  ahead of the branch that decides whether it's needed, folding away a
+  redundant unconditional jump the ROM's own build still has - see
+  `docs/matching/issue-50-actor-2a69c.md`.
 
 ## Left raw (not attempted, or attempted and set aside)
 
