@@ -5462,3 +5462,125 @@ object file, but needs an explicit `.global` on each definition once
 they're split across separate `.o`s, or the link fails with "undefined
 reference" (the label reference itself was untouched - this is a
 linkage-visibility fixup, not a content change).
+## Match 0x08003B40-0x08004CB4 (25-function `overlay_ui` chunk, the composite pause/options screen)
+
+This is the chunk `docs/rom_map.md`'s "narrowed down which screen
+`overlay_ui` is" section already characterized in detail: a settings
+screen with (per that section) four numeric-slider rows drawn via a
+shared icon-manager centered-label toolkit (the same
+`gUnknown_030012DC`/`gUnknown_030012E0` structs and `sub_803AD80`/
+`sub_8026F38` calls `sub_8006600`, already parked in
+`src/graphics/oam_count.c`, uses for its flanking-icon draw). 16 of the
+25 functions matched; the rest hit that exact same class of gcc-2.9
+register-allocation difficulty `sub_8006600` already hit, or (two of
+them) weren't understood confidently enough to force a reconstruction.
+
+**Matched** (`src/graphics/settings_menu2.c`, `src/graphics/settings_menu3.c`):
+`sub_80047F8` (BG-load helper - literally the same shape as
+`sub_80374D0` in `src/audio/counter_selector_setup.c`, just at
+different field offsets and with an extra `field_0 = 0`),
+`sub_8004860`/`sub_80048E0` (per-row stats gatherer/aggregator, sharing
+a five-function battery: `sub_8006920`/`sub_80068A8`/`sub_80067E4`/
+`sub_800695C`/`sub_800697C`), `sub_80048BC`, `sub_8004A50` (the
+`(flags>>2)&1` bit test repeated throughout this whole chunk - note it
+shifts *arithmetically*, so the field is `s32` not `u32`), `sub_8004A64`/
+`sub_8004A80` (link-cancel-flag pair - the second doesn't cache the
+global's *value* across its call the way the first does, it re-reads
+the global fresh both times, a genuine ROM difference between two
+near-identical-looking functions), the six near-identical per-item
+wrappers `sub_8004AA4`/`sub_8004ACC`/`sub_8004AFC`/`sub_8004B24`/
+`sub_8004B54`/`sub_8004B70`/`sub_8004BA0` `docs/rom_map.md` already
+found call `sub_80041BC`, `sub_8004BD0` (the state jump-table
+dispatcher - needed explicit `case 8:`/`case 10:` labels, even though
+both are empty, to keep gcc emitting an 11-entry jump table matching
+the ROM instead of collapsing to a 10-entry one with an extra bounds
+check; also needed case `9`'s body written *before* case `7`'s in the
+switch statement to get gcc to lay the two call blocks out in the ROM's
+address order - the jump table's *data* was already correct either
+way, only the two bodies' relative position in `.text` was wrong),
+`sub_8004C7C` (needed a trailing `asm(".align 2, 0")` per the
+established alignment-padding gotcha - gcc's own padding NOP encodes as
+`mov r8, r8` here where the ROM has `movs r0, r0`).
+
+**Parked** (`.if NON_MATCHING == 0` across `asm/code_3_1_10_3.s`/
+`asm/code_3_1_10_4.s`/`asm/code_3_1_10_5.s`, `#if NON_MATCHING` C
+reconstructions in `src/graphics/settings_menu.c`) - `sub_8003B40`,
+`sub_8003BDC`, `sub_8003C90`, `sub_8003D3C`, `sub_80041BC`,
+`sub_8004914`, `sub_80049CC`:
+
+- **`sub_80049CC`** is the cleanest case and the template for the rest:
+  a centered-label draw into `gUnknown_030012E0`'s icon pair, matching
+  `sub_8006600`'s shape. With `label`/`slot0`/`mgrAddr`/`mgr`/`recOff`
+  pinned to `r9`/`r8`/`r6`/`r4`/`r5` (mirroring the ROM's own register
+  choices exactly) and the destination-address computation
+  (`mgr = mgr + slot->offset`) reordered *before* the `sub_8026F38`
+  call it needs to survive across, every instruction matches except
+  one: the `s16` shift-index for `record->slots[N].offset`'s `ldrsh`
+  reuses whatever register already holds the matching struct-offset
+  constant (`0x10`/`0x20`) in this reconstruction's codegen, where the
+  ROM reloads a *fresh* register (`r3`) for it both times. Tried
+  splitting the offset read into its own local, an inline-asm
+  register-pinned `ldrsh`, and reordering around it - none closed the
+  gap without introducing a worse one (the inline-asm route adds a
+  spurious sign-extension pair gcc can't see through its own `ldrsh`
+  already did). This is the same class of "last mile" gcc-2.9
+  scratch-register nondeterminism `sub_8006600` documents at length.
+- **`sub_8003C90`** is `sub_80049CC`'s sibling (fixed label `0x23`,
+  `gUnknown_030012DC` not `E0`, plus a highlight/plain visibility
+  branch) and came within one register-letter choice of matching after
+  reordering the `half = (0xf0-width)>>1` computation ahead of the
+  `mgr` reload it precedes in the ROM - the remaining gap is which
+  scratch register that reload lands in (`r0` here, `r3` in the ROM).
+- **`sub_8003BDC`**/**`sub_8003D3C`**/**`sub_80041BC`**/**`sub_8004914`**
+  are all built on the same centered-label/positioned-glyph primitive
+  (semantics fully traced and mechanically reproduced) and hit the same
+  scratch-register nondeterminism; `sub_8003BDC` additionally spills a
+  constant through `ip` in the ROM (`mov ip, r1` / `mov r2, ip`), which
+  plain C has no way to request at all. `sub_80041BC` reconstructs the
+  ROM's 4x-unrolled per-row body as a small table + loop instead
+  (semantically faithful, but can't reproduce four independent sets of
+  per-occurrence register choices).
+- **`sub_8003B40`** is a distinct SIO-related function, not part of the
+  icon-manager family: a "connecting..." spinner dialog that loops
+  `sub_8001F50` (the link-connection/handshake driver from
+  `docs/rom_map.md`'s SIO section) against the link-active flag
+  `gUnknown_03000800` and an allocated spinner object's own state.
+  Fully traced mechanically; not yet attempted for byte-exact register
+  matching given the above pattern's track record.
+
+**Left completely untouched** (not confidently understood - raw in
+`asm/code_3_1_10_4.s`, no `#if NON_MATCHING` reconstruction):
+
+- **`sub_8003F30`** - a per-row `itoa`-based numeric renderer indexed
+  across three parallel 5-element object arrays
+  (`self->rowObjA`/`rowObjB`/`rowObjC`, the arrays `sub_800450C`
+  populates); the overall shape (measure via `sub_803AD80`, `itoa`,
+  three positioned digit draws) is clear but several of the per-call
+  offset/stride relationships weren't traced to full confidence in the
+  time available.
+- **`sub_800450C`** - the screen's own init routine: resets the OAM
+  shadow buffer/tile caches, copies the first four per-level
+  `gStaticData_0816Bxxx` tables into `gUnknown_030012B8`'s per-row
+  arrays (the exact link `docs/rom_map.md` already found), and
+  allocates the 15 objects across `rowObjA`/`rowObjB`/`rowObjC` this
+  chunk's other functions read - but the closing block that writes 5
+  fixed Q8 width/height rects doesn't cleanly map onto the
+  `rowObjA`/`rowObjB`/`rowObjC[0..4]` layout traced from the allocation
+  loop above it, and a triple-pointer dereference through
+  `gUnknown_030012D0` in the middle wasn't independently confirmed.
+
+**File structure:** `sub_8003C90` (parked) sits between `sub_8003BDC`
+and `sub_8003D3C`, appended to the end of `asm/code_3_1_10_3.s` (kept
+in its original ROM position rather than moved, exactly like
+`sub_8006600`) rather than getting cut out - since every function in
+`src/graphics/settings_menu.c` is `#if NON_MATCHING`-guarded, that file
+compiles to nothing in a default build and its ldscript slot is simply
+empty. `asm/code_3_1_10_4.s` (new: `sub_8003D3C` through `sub_800450C`)
+and `asm/code_3_1_10_5.s` (new: `sub_8004914`/`sub_80049CC`) hold the
+other two parked/raw runs, and `asm/code_3_1_10_6.s` is the original
+file's unchanged remainder from `sub_8004CB4` (outside this chunk) on.
+`include/pause_options_screen.h` holds the shared `struct
+pause_options_screen`/`struct settings_row_stats` types used across all
+three new `.c` files. See `ldscript.txt` and `tools/report_units.py`'s
+`overlay_ui` category, both updated to match. Verified via a full clean
+`make compare` (`La suma coincide`) and `make NON_MATCHING=1 report`.
