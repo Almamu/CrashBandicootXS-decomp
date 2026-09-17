@@ -50,6 +50,26 @@ system from "core" system startup/init code.
   `sub_80241A4`, `sub_80241B0`, `sub_80241BC`, `sub_802423C` - a
   boolean flag clear/set/get trio, the level-end teardown, and the
   shared vram-upload-cursor/OAM-shadow flush tail
+- `src/system/game_loop12.c` (GitHub issue #41): `sub_8025944`,
+  `sub_8025968`, `sub_802599C` - the first two of three overlapping
+  bit-grid accessors at `self+8`/`self+0x208`/`self+0x308`
+- `src/system/game_loop13.c` (GitHub issue #41): `sub_8025A0C`
+  (third bit-grid setter), `sub_8025A3C` (Q8-to-int store),
+  `sub_8025A44` (conditional `sub_8026ED0` forward), `sub_8025A5C`
+  (zero two Q8 words)
+- `src/system/game_loop14.c` (GitHub issue #41): `sub_8025D28`
+  (table-indexed function-pointer dispatch via the interworking
+  trampoline convention), `sub_8025D4C` (store two Q8 words),
+  `sub_8025D54` (conditional `sub_8026ED0` forward, dup of
+  `sub_8025A44`), `sub_8025D6C` (zero two Q8 words, dup of
+  `sub_8025A5C`)
+- `src/system/game_loop15.c` (GitHub issue #41): `sub_8025DE8`,
+  `sub_8025E2C` (streamed-tile-range growers firing a `self->0x30`-
+  table trampoline per step), `sub_8025E70`, `sub_8025E84` (their
+  plain clamp-only counterparts)
+- `src/system/game_loop16.c` (GitHub issue #41): `sub_8025F24` -
+  truncates the Q8 position to a tile-scroll halfword pair and writes
+  it through the `self+0x58` hardware-register pointer
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -94,6 +114,30 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   `asm/code_3_2_17_240e4.s`. See
   [docs/matching/issue-37-game-loop-234e8.md](../matching/issue-37-game-loop-234e8.md)
   for both parked functions' exact register-allocation gaps.
+- **`sub_8025894`** (`src/system/game_loop12.c`, GitHub issue #41) - a
+  group/item list counter with a 19-entry jump table; real bytes stay
+  in `asm/code_3_2_17_255d4.s`. See
+  [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
+- **`sub_80259D4`** (`src/system/game_loop13.c`, GitHub issue #41) -
+  sets a bit in both the `self+0x208` and `self+0x308` bit-grids at
+  once; real bytes in `asm/code_3_2_17_259d4.s`. See
+  [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
+- **`sub_8025A64`/`sub_8025B0C`/`sub_8025BAC`/`sub_8025CA4`**
+  (`src/system/game_loop14.c`, GitHub issue #41) - four part-object
+  spawn helpers (`gUnknown_030012D0`-table-indexed,
+  `sub_8009ED0`/`sub_8011114`/`sub_801173C`-family constructors); real
+  bytes in `asm/code_3_2_17_25a64.s`. See
+  [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
+- **`sub_8025D74`** (`src/system/game_loop15.c`, GitHub issue #41) -
+  BG-scroll-layer hardware-register/bitfield initializer; real bytes
+  in `asm/code_3_2_17_25d74.s`. See
+  [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
+- **`sub_8025E98`/`sub_8025F3C`** (`src/system/game_loop16.c`, GitHub
+  issue #41) - the streamed-tile-range screen-edge-tile computer, and
+  a circular-buffer decoded-tile streaming loop; real bytes in
+  `asm/code_3_2_17_25e98.s`/`asm/code_3_2_17_25f3c.s` respectively.
+  See
+  [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
 
 ## Still raw, category-mapped (GitHub issue #12/#34/#40)
 
