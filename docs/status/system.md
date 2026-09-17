@@ -28,6 +28,11 @@ tagged-asset loading.
   `sub_80231C4` (GitHub issue #34, `UpdateGameFrame`-`MainLoop` cluster -
   a `self+0x80`/`0x84`/`0x88`/`0xac`/`0xc0`/`+2`-flags accessor family
   plus the two frame-counter/limit tick functions)
+- `src/system/main_loop.c` (new file, GitHub issue #45): `MainLoop` -
+  the game's actual top-level loop (called once from `AgbMain`, sets up
+  the central per-level state object and the on-screen counter widget,
+  then runs `UpdateGameFrame` forever) - and `sub_8026F38`, a two-level
+  per-counter-widget-mode table lookup
 - `src/system/timer_util.c`: `sub_803A944`, `sub_803A948`, `sub_803A94C`,
   `LZ77UnCompWrapper`, `sub_803A954`, `RLUnCompWrapper`, `sub_803A95C`,
   `sub_0803A960` (eight BIOS SWI wrappers), `sub_803A968` (picks a
