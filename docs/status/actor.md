@@ -202,6 +202,34 @@ from "core" graphics.
   anim-frame-reset setters, an `InitActorPart`-based constructor, and
   several "self" object accessors/setters sharing the boss cluster's
   layout convention.
+- `src/graphics/actor_part38.c` (new file, GitHub issue #18, ROM
+  0x08014F8C - numbered `38` rather than `28` since issue #62's
+  parallel PR above independently claimed `actor_part28.c` first):
+  `sub_8014F8C` - a `gUnknown_030012F0`-list proximity-
+  trigger scan for the same "self" action-table object family as
+  `actor_part18.c`; see `docs/matching/issue-18-0x08014f8c-actor.md`.
+- `src/graphics/actor_part38b.c` (new file, GitHub issue #18, ROM
+  0x080151C8, non-adjacent to `actor_part38.c` since the parked
+  `sub_8015038` sits raw between them): `sub_80151C8`; see
+  `docs/matching/issue-18-0x08014f8c-actor.md`.
+- `src/graphics/actor_part38c.c` (new file, GitHub issue #18, ROM
+  0x08015350-0x080156B4, non-adjacent to `actor_part38b.c` since the
+  parked `sub_8015238`/`sub_80152F0` sit raw between them):
+  `sub_8015350`, `sub_8015398`, `sub_80153FC`, `sub_8015460`,
+  `sub_8015508`, `sub_8015558`, `sub_80155A8`, `sub_80155AC`,
+  `sub_80155B8`, `sub_80155F8`, `sub_8015650`, `sub_8015690`,
+  `sub_80156B4` - more of the same self+0xc/self+0x10 trampoline-pair
+  family, including two near-identical self+0x29-keyed mgr-trampoline
+  arms (`sub_8015460`) and several part+0x38-gated trampoline firers;
+  see `docs/matching/issue-18-0x08014f8c-actor.md`.
+- `src/graphics/actor_part38d.c` (new file, GitHub issue #18, ROM
+  0x0801574C-0x08015780, non-adjacent to `actor_part38c.c` since the
+  parked `sub_80156EC` sits raw between them): `nullsub_17`,
+  `sub_8015750`, `nullsub_18`, `sub_8015774`, `sub_8015780` - two
+  nullsubs, two tail-call wrappers, and the shared trampoline-pair-
+  plus-sentinel-store helper called by `actor_part18.c`'s
+  `sub_801426C`/`sub_80142B0`; see
+  `docs/matching/issue-18-0x08014f8c-actor.md`.
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -466,6 +494,48 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   `src/graphics/actor_part37.c`) - `sub_8033B44`'s twin using the
   second stride-8 table (`gStaticData_0817C4F8`), parked on the same
   gap - see `docs/matching/issue-62-0x08033804-actor.md`, issue #62.
+- **`sub_8015038`** (`asm/code_3_2_17_15038.s`, C in
+  `src/graphics/actor_part38.c`) - a three-arm mgr-trampoline handler
+  keyed on `self+0x24`/`self+0x22`, picking one of three table-index
+  fallbacks. Every load/store, branch and call is understood and
+  semantically correct; parked on this compiler's register allocation
+  across the three near-identical arms (it won't keep the computed
+  `self+0x21`/`self+0x22` field addresses in the ROM's own `r7`/`r5`
+  once real trampoline calls intervene) - see
+  `docs/matching/issue-18-0x08014f8c-actor.md`.
+- **`sub_8015238`** (`asm/code_3_2_17_15238.s`, C in
+  `src/graphics/actor_part38b.c`) - `self+0x26`/`mode`/`flags`-gated
+  mgr-trampoline dispatcher. Every load/store, branch and call is
+  correct, in the right order, and in the right registers - parked
+  purely on the two parameter home-copies at function entry (this
+  compiler always truncates `mode` before copying `self`, the ROM does
+  the opposite, and neither order nor register pins nor hand-written
+  `asm volatile` copies could override the compiler's own fixed
+  parameter-home-copy prologue pass) - see
+  `docs/matching/issue-18-0x08014f8c-actor.md`.
+- **`sub_80152F0`** (`asm/code_3_2_17_15238.s`, C in
+  `src/graphics/actor_part38b.c`) - `self+0x27`/`self+0x2b`/`mode`-
+  gated state/counter/table-index trio reset, tail-calling
+  `sub_80122CC`. Every load/store, branch and call confirmed correct
+  and in the right order; parked on a single instruction (a `+6` byte
+  offset folds into a `strb`'s own addressing mode where the ROM keeps
+  it as a separate `adds`) - see
+  `docs/matching/issue-18-0x08014f8c-actor.md`.
+- **`sub_80156EC`** (`asm/code_3_2_17_156ec.s`, C in
+  `src/graphics/actor_part38c.c`) - `part+0x38`/`sub_80231BC`-gated
+  mgr-trampoline dispatcher. Every load/store, branch and call
+  confirmed correct; parked on the `else` arm recomputing `self` into
+  a fresh register (an extra push/pop this compiler insists on once
+  its own `mgr` local is redeclared in that arm) where the ROM reuses
+  the same `self` register the whole function already lives in - see
+  `docs/matching/issue-18-0x08014f8c-actor.md`.
+- **`sub_80157C4`** (`asm/code_3_2_17_157c4.s`, C in
+  `src/graphics/actor_part38d.c`) - player's `+0x100`-flag-gated
+  `mode` remapper (a 3-way dispatch playing a fixed cue via
+  `sub_80019A8`/`PlaySfx`), tail-calling `sub_800B86C`. Every load/
+  store, branch and call is understood and semantically correct;
+  parked on register allocation across the 3-way dispatch - see
+  `docs/matching/issue-18-0x08014f8c-actor.md`.
 
 ## Left raw (not attempted, or attempted and set aside)
 
