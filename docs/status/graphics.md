@@ -129,11 +129,37 @@ per-actor animation frames, text layout.
   `sub_800A6F4`, `sub_800A700`, `sub_800A70C`, `sub_800A718`,
   `sub_800A724`, `sub_800A730`
 
+- `src/graphics/actor_part15.c`/`src/graphics/actor_part16.c` (new
+  files, split around the raw untouched `sub_800B3F0` - see
+  `docs/matching.md`): a new not-yet-named big object's accessors -
+  `sub_800B324`, `sub_800B334`, `sub_800B33C`, `sub_800B360`,
+  `sub_800B37C`, `sub_800B3AC`, `sub_800B4A4`, `sub_800B4AC`,
+  `sub_800B4B8`, `sub_800B4C4`, `sub_800B4D0`, `sub_800B4F0`,
+  `sub_800B4F8`, `sub_800B508`, `sub_800B510`, `sub_800B51C`,
+  `sub_800B524`, `sub_800B53C`, `sub_800B544`, `sub_800B554`,
+  `sub_800B55C`, `sub_800B564`, `sub_800B56C`, `sub_800B574`,
+  `sub_800B57C`, `sub_800B584`, `sub_800B58C`, `sub_800B5A0`,
+  `sub_800B5A8`, `sub_800B5B0`, `sub_800B5BC`, `sub_800B5C4`,
+  `sub_800B5CC`, `sub_800B5D8`, `sub_800B5E0`, `sub_800B5E8`,
+  `sub_800B5F0`, `sub_800B5FC`, `sub_800B608`, `sub_800B614`,
+  `sub_800B620`, `sub_800B62C`, `sub_800B638`, `sub_800B644`,
+  `sub_800B650`, `sub_800B678`, `sub_800B698`, `sub_800B69C`
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
+- **`sub_800B6A0`/`sub_800B6D0`** (`src/graphics/actor_part16.c`) -
+  mirror-flag-gated 3-vector copies. This compiler unconditionally
+  spills the `vec` pointer to a callee-saved register (`push
+  {r4,lr}`/`pop {r4}`) whenever it's referenced in both branches of an
+  if/else, even with nothing to clobber it - the ROM is a true leaf
+  function using only r0-r3. Three independent fixes (pinning `self`
+  alone; also pinning/reassigning `vec`; restructuring into a
+  `goto`-based flow) all produced an identical 8-byte-larger result -
+  see `docs/matching.md`, "A new unnamed object:
+  `actor_part15.c`/`actor_part16.c`".
 - **`sub_8006600`** (`src/graphics/oam_count.c`) - HUD-icon-plus-number
   renderer. Prologue/epilogue and most register choices now match the ROM;
   four register-letter mismatches remain in the second half, resistant to

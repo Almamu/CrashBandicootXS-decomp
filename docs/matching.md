@@ -4138,3 +4138,105 @@ than their real ROM address order), and `sub_800A6E8`'s isolated test
 initially passed with the redundant register copy already dropped
 (matching in isolation) but the full build caught the resulting
 4-byte size regression once the whole file was assembled together.
+
+## A new unnamed object: `actor_part15.c`/`actor_part16.c` (`sub_800B324`-`sub_800B6D0`)
+
+Right after `actor_part14.c`'s cluster, a big new not-yet-named object
+(at least 0x108 bytes, distinct from `struct actor`) starts - most of
+these 44 functions are pure single-field get/set/clear/increment
+accessors on it, so raw offset casts are used throughout rather than
+guessing at a struct layout. Split across two files at a raw,
+untouched function (`sub_800B3F0`, see below) that sits in the middle
+of the run:
+
+- **`sub_800B324`**: `self+0x5c` boolean getter. Needed the verbose
+  `if (cond) { return 1; } else { return 0; }` form (the ROM has a
+  genuinely redundant `movs r0,#0; b end; ...; movs r0,#1; end:`
+  rather than reusing the comparison operand's register) - the same
+  idiom already documented for other boolean accessors in this ROM.
+- **`sub_800B33C`**: clamps three fields to `<= 0`; needed `self`
+  pinned to `r1` to avoid an extra register copy the ROM doesn't have.
+- **`sub_800B360`**: countdown-decrement then tail-call into
+  `sub_800A528` (itself still raw, in the `sub_800A0FC`-`sub_800A590`
+  span).
+- **`sub_800B37C`**: the `gUnknown_030012D8` AABB-vs-buf collision
+  check every earlier-matched pool/grid function in `actor_part11.c`
+  calls by name - finally matched for real. Builds a secondary AABB
+  via the already-matched `sub_8007CF8`, and only tests it via
+  `sub_8001688` when it has a region (`field_8 > 0`).
+- **`sub_800B3AC`**: overwrites `self->table` with
+  `gStaticData_087E3E04` (a second static table alongside the
+  already-matched `gStaticData_087E3D14`), fires a child object's own
+  trampoline via `sub_803AD80` if one exists, then calls
+  `sub_8010E14(self+0x108, 2)` and tail-calls `sub_800A650`.
+- **`sub_800B3F0`** (LEFT RAW - not reconstructed, given its own
+  `asm/code_3_2_19.s`): a part-object constructor that calls three
+  still-unexamined helpers (`sub_80087C0`, `sub_80087B4`,
+  `sub_800872C`) plus `sub_800A734` (itself the start of a still-raw
+  94 KB span) and `sub_8008434`/`sub_8010E2C`/`sub_800A6A4`. Sits
+  between `sub_800B3AC` and `sub_800B4A4` in ROM, so it splits this
+  batch into `actor_part15.c` (up to `sub_800B3AC`) and
+  `actor_part16.c` (`sub_800B4A4` onward).
+- **`sub_800B4A4`-`sub_800B644`**: a long run of plain single-field
+  accessors (address getter, byte clear/set/get pairs, bulk 3-word
+  setters, countdown decrement/clear/increment/get, an unsigned
+  "counter snapshot ahead of `gUnknown_0300082C`" check, and four
+  parallel byte accessor pairs at `+0x100`-`+0x103` that read like a
+  small per-phase flag array). One real gap: `sub_800B524`'s unsigned
+  `field > gUnknown_0300082C` check needed to be written as a plain
+  `return a > b;` rather than an explicit `if/else` - here the
+  explicit form was the one that mismatched (the reverse of
+  `sub_800B324` above), producing a longer flag-accumulate-then-copy
+  sequence instead of the ROM's compact set-0/conditionally-set-1/
+  return pattern.
+- **`sub_800B650`/`sub_800B678`**: indexed getter/setter into a
+  5-element `s32` array at `self+0x98`, gated by `self+0x88` and (for
+  index > 4) `self+0x94`'s own count. Both needed real work:
+  - `sub_800B650`'s guard-clause form (`if (bad) return 0;` twice)
+    compiled *correctly* but 2 bytes *short* - GCC merged the two
+    `return 0;` epilogues and placed the merged block right after the
+    first check, while the ROM places its single `return 0` block at
+    the very end and falls through the two guard checks straight into
+    the compute path. Fixed by rewriting with explicit `goto`s
+    (`goto ret0` / `goto end`) so the source's block order forces the
+    ROM's exact layout. The array-index address itself then needed
+    the base pointer (`self+0x98`) and the scaled index (`idx*4`)
+    computed into two clearly separate locals (`s32 *arr = ...; result
+    = arr[idx];`) - a plain `((s32*)(self+0x98))[idx]` computed
+    everything through one register and mismatched.
+  - `sub_800B678` needed heavier register surgery: the ROM keeps
+    `val` copied into `r3` up front (the usual "redundant copy the
+    natural codegen drops" idiom), and - critically - loads the
+    `self+0x94` count byte into `r1` *while leaving `r0` still holding
+    the `self+0x94` address*, so it can later do `adds r0,#4` to reach
+    `self+0x98` instead of recomputing it fresh from `self`. Plain C
+    naturally reuses the same register for both the address and the
+    loaded byte (clobbering the address), forcing a fresh
+    recomputation later. Fixed with explicit `register ... asm("r0")`/
+    `asm("r1")` pins matching the ROM's exact register roles, plus an
+    unsigned (`u32`) index type so the bounds check compiles to `bhi`
+    (unsigned) instead of `bgt` (signed).
+- **`sub_800B698`/`sub_800B69C`**: plain word setters at `self+8`/
+  `self+4`.
+- **`sub_800B6A0`/`sub_800B6D0`** (PARKED, `#if NON_MATCHING` in
+  `actor_part16.c`, raw bytes in `asm/code_3_2_18.s`): copy a 3-vector
+  into `self+0x54`/`+0x58`/`+0x5c` (the second function also mirrors
+  the X component into `+0x64`), negating X and Z when `self+0x28`
+  bit 5 (a mirror flag) is set. The `vec` pointer is referenced in
+  both branches of the if/else, and this compiler unconditionally
+  promotes it to a callee-saved register (`push {r4,lr}`/`pop {r4}`)
+  even though nothing clobbers it in either branch - the real ROM is
+  a true `r0`-`r3`-only leaf function with no stack frame. Three
+  independent fixes were tried and all produced an identical 8-byte-
+  larger result: pinning `self` alone to `r3`; additionally pinning
+  and reassigning `vec` to `r2`; and restructuring the if/else into an
+  equivalent `goto`-based flow. Accepted as an unavoidable compiler
+  limitation for this pattern and parked.
+
+All 44 non-parked functions plus the 2 parked ones were verified via a
+full clean `make compare` after being split into `actor_part15.c`/
+`actor_part16.c` around the raw `sub_800B3F0` gap; `ldscript.txt` links
+them in real ROM order: `actor_part15.o`, `asm/code_3_2_19.o`
+(`sub_800B3F0`, raw), `actor_part16.o`, `asm/code_3_2_18.o` (the two
+parked functions' real bytes), `asm/code_3_2_17.o` (`sub_800B704`
+onward, still raw).
