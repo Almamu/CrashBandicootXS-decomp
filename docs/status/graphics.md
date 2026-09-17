@@ -156,6 +156,18 @@ per-actor animation frames, text layout.
   `sub_80144E0`, `sub_8014524` - four entries of the `gStaticData_0816BF20`
   42-slot action dispatch table
 
+- `src/graphics/actor_part19.c`/`actor_part19c.c`/`actor_part19d.c`/
+  `actor_part19f.c`/`actor_part19g.c` (new files, non-adjacent since
+  three parked functions and one left-raw function sit between them -
+  see `docs/matching.md`, issue #52): `sub_802BED8`, `sub_802BF30`,
+  `sub_802BFA0`, `sub_802BFD4`, `sub_802C018`, `sub_802C078`,
+  `sub_802C0A8`, `sub_802C0BC`, `sub_802C128`, `sub_802C14C`,
+  `sub_802C19C`, `sub_802C264`, `sub_802C270`, `sub_802C394`,
+  `sub_802C464`, `sub_802C4A4`, `sub_802C4C8`, `sub_802C540`,
+  `sub_802C614`, `sub_802C6C0`, `sub_802C904` - the same large
+  per-instance "self" object's action-table/trampoline/circular-list
+  conventions as `actor_part17.c`/`actor_part18.c`
+
 - `src/graphics/fade_screen_mode.c` (new file - `sub_8001510`) and
   `src/graphics/fade_screen_mode2.c` (new file - `sub_800153C`,
   `sub_8001550`, `sub_8001564`, `sub_8001578`, `sub_800158C`,
@@ -449,3 +461,20 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   parked on a single materialize-then-copy gap in the opening bit-test
   triggered by a required nested `if` sharing the value's live range
   across both branches - see `docs/matching.md`, issue #17.
+- **`sub_802C208`** (`asm/code_3_2_20_28568_c208.s`, C in
+  `src/graphics/actor_part19e.c`) - a `gStaticData_0817A6B8` stride-8
+  trampoline-record dispatcher. Every load/store, branch and call
+  confirmed correct; parked on register-allocation/instruction-
+  scheduling around two `record = base + state*8` re-derivations - see
+  `docs/matching.md`, issue #52.
+- **`sub_802C2FC`** (`asm/code_3_2_20_28568_c2fc.s`, C in
+  `src/graphics/actor_part19b.c`) - OAM setup for one sprite frame.
+  Matches instruction-for-instruction except a single dead `flag = 0`
+  initializer this compiler's dead-store elimination always removes -
+  see `docs/matching.md`, issue #52.
+- **`sub_802C3E8`** (`asm/code_3_2_20_28568_c3e8.s`, C in
+  `src/graphics/actor_part19c2.c`) - a homing/seek-toward-point spawn-
+  effect constructor. Every field access and call confirmed correct;
+  parked on this compiler's register choice for a couple of
+  intermediate abs-value-computation values - see `docs/matching.md`,
+  issue #52.

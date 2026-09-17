@@ -5349,3 +5349,171 @@ focused pass rather than a rushed low-confidence match.
 `sub_8014674` on) - see `ldscript.txt` and `tools/report_units.py`'s
 `graphics` category, both updated to match. Verified via a full clean
 `make compare` (`La suma coincide`) and `make NON_MATCHING=1 report`.
+## `actor_part19*.c`: the action-object family's `0x0802BED8`-`0x0802C99C` chunk (issue #52)
+
+`0x0802BED8`-`0x0802C99C` (25-function chunk), `asm/code_3_2_20_28568.s`
+(the file's own truncation point, already past several other sessions'
+splits). Same large per-instance "self" object as `actor_part17.c`/
+`actor_part18.c`/`actor_part18b.c` - state at `+0x28`, a table-index
+field at `+0xc`, an anim-frame halfword/byte pair at `+0x10`/`+0x12`, a
+counter at `+0x44`, an accumulator at `+8` (also readable as
+`GetAnimFrameBaseOffset`'s `struct anim_part_instance.field_08`), and a
+"part table" pointer at `+0` (the same convention actor_part18.c
+documents at `self+0x10` for its own object, just a different fixed
+offset here). New conventions confirmed by this chunk: a `+0x50`-rooted
+`{s16 offset; void *fn}` trampoline record (the same shape actor_part10/
+11.c already name at a different offset for a sibling object), and a
+`+0x48`/`+0x4c` circular doubly-linked list of these objects rooted at
+the player-pointer global `gUnknown_03000884` (`sub_802C19C`/
+`sub_802C394` unlink from it on teardown; `sub_802C7A8`, left raw,
+walks it for an AABB-overlap scan). Ties into `docs/rom_map.md`'s
+`gUnknown_030014xx` tier-threshold family (`sub_802BED8`/`sub_802BF30`/
+`sub_802BFD4`/`sub_802C018`/`sub_802C128`/`sub_802C14C`) and the shared
+"type-byte event dispatch"/lap-counter families (`sub_802C540`/
+`sub_802C614`/`sub_802C6C0`/`sub_802C904`, all converging on the shared
+tail `sub_802C4C8`).
+
+**Matched (21 of 25):** `sub_802BED8`, `sub_802BF30`, `sub_802BFA0`,
+`sub_802BFD4`, `sub_802C018`, `sub_802C078`, `sub_802C0A8`,
+`sub_802C0BC`, `sub_802C128`, `sub_802C14C`, `sub_802C19C`,
+`sub_802C264`, `sub_802C270`, `sub_802C394`, `sub_802C464`,
+`sub_802C4A4`, `sub_802C4C8`, `sub_802C540`, `sub_802C614`,
+`sub_802C6C0`, `sub_802C904`.
+
+- **The repeated "state transition" block** (`self+0x28`=state,
+  `self+0xc`=table-index, `self+0x44`/`self+8`=0, an anim halfword from
+  the part-table into `self+0x10`, `self+0x12`=0) needed the exact same
+  register-pinning discipline as the earlier `actor_part18.c` entries,
+  applied consistently across every occurrence in this chunk: the
+  state/index constants loaded together *before* the first store
+  (`register s32 stateVal asm("r0")`/`idxVal asm("r1")`), then a
+  shared-zero register for the fields that reuse one load
+  (`register s32 zero asm("rN")`), and critically - the anim halfword
+  read and the *second* zero-reload (for the byte field) both computed
+  **before** the halfword store, not after (`register u16 anim
+  asm("r0")`/`register u8 zero1 asm("r1")` declared and initialized
+  together, then both stores issued) - getting this reload's position
+  wrong relative to the `strh` compiles to the same byte *count* but a
+  transposed instruction order, an easy one-instruction-pair swap to
+  miss by inspection alone (see "full clean rebuild required" below).
+- **Two-parameter functions taking `self` and a second argument**
+  (`sub_802C0BC`, `sub_802C19C`, `sub_802C394`) needed *both*
+  parameters register-pinned (`self` to its ROM register, the second
+  argument to its own) to reproduce the ROM's parameter-copy order in
+  the prologue - pinning only `self` still let the unpinned second
+  parameter get materialized first.
+- **`sub_802C0BC`'s `entry = table + idx*0xc` pointer computation**
+  needed a literal `asm("add %0, %0, %1" : "+r"(entryPtr) :
+  "r"(table))` (the same extended-asm idiom already used in
+  `actor_part17.c`/`actor_part6.c`/`actor_part7.c` for this exact
+  problem) - this compiler consistently canonicalizes `pointer +
+  computed_offset` as `add Rd, Rpointer, Roffset` regardless of the C
+  expression's own operand order, while the ROM has `add Rd, Roffset,
+  Rpointer`; no combination of C-level reordering (integer-first,
+  pointer-first, split statements, fresh locals) changed the compiler's
+  choice, only forcing the instruction directly did. The same technique
+  reproduces `sub_802C270`'s identical `table + idx*0xc` computation in
+  its own frame-threshold block.
+- **`sub_802C0BC`'s frame-vs-threshold comparison direction was
+  initially miscoded backwards** (`if (frame < val)` instead of `if
+  (frame >= val)` for the `self+8` accumulator reset) - an isolated
+  compile of the function in the wrong direction still produced a
+  plausible-looking `blt`/branch pair, and this slipped through an
+  early single-function check; only the full-ROM byte comparison caught
+  it. `sub_802C270`'s analogous, already-correct `if (frame >=
+  entry[2])` was the tell that something was inverted.
+- **`sub_802C6C0`'s `sub_802A6EC(self)` boolean result must be
+  materialized into its own register with the ROM's exact `lsls
+  rX,rX,#0x18` / `lsrs rY,rX,#0x18` double-shift truncation**, not just
+  compared inline - the truncated value is reused, unmodified, as a
+  known-zero fallback deep in the function's other branch (`self+0x44`/
+  `self+8`'s reset), so a plain `if (sub_802A6EC(self))` (which the
+  compiler happily optimizes to a single untruncated comparison) loses
+  the persistent register value the later branch depends on. Forcing a
+  `register u32 found asm("r5")` through an explicit `raw <<= 24; found
+  = raw >> 24;` pair reproduces both the truncation idiom and the
+  cross-branch register lifetime.
+- **`sub_802C540`'s type-byte dispatch** (`0x1c`-`0x1f`, extending the
+  shared "type-byte event dispatch" family per docs/rom_map.md) needed
+  an explicit `goto`-based rewrite matching the ROM's literal *physical*
+  block order (compare chain, then the `>0x1d` sub-dispatch, then case
+  `0x1c`, case `0x1d`, case `0x1e`, case `0x1f`, then the shared tail) -
+  neither a `switch` nor an if/else-if chain (which both compile to a
+  logically-equivalent but differently-*laid-out* sequence) reproduced
+  this specific physical ordering; only forward `goto`s into
+  purpose-placed blocks did. The same "physically move the `then`-block
+  after the `else`-block via `goto`" technique (already used for
+  `sub_802C270`'s branch polarity) also fixed `sub_802C6C0`'s top-level
+  `state == 0x12` dispatch, which the ROM places at the very end of the
+  function via a forward branch rather than inline.
+- **`sub_802C6C0`'s `self+0x38` AABB refresh from `gStaticData_0817A768`**
+  (a 12-byte/3-word copy) needed an anonymous 3-`s32`-field struct
+  assignment (`*(struct vec3_words *)dst = *(struct vec3_words
+  *)src;`) to trigger this compiler's `ldm`/`stm` multi-register
+  struct-copy lowering - three separate per-field `s32` copies compile
+  to three separate `ldr`/`str` pairs (12 bytes more) instead of the
+  ROM's `ldm r1!, {r2, r3, r5}; stm r0!, {r2, r3, r5}` pair.
+
+**Parked (`NON_MATCHING`, 3):**
+
+- **`sub_802C208`** (`actor_part19e.c`, real bytes in
+  `asm/code_3_2_20_28568_c208.s`) - a `gStaticData_0817A6B8` stride-8
+  trampoline-record dispatcher (`{s16 baseOff; s16 count; s16
+  subOffset}`, count-gated between an inline fallback pair and a
+  per-instance list's last entry). Every load/store, branch and call is
+  confirmed correct; the residual gap is register-allocation/
+  instruction-scheduling around the two `record = base + state*8`
+  re-derivations that resisted every register-pin variant tried in this
+  pass.
+- **`sub_802C2FC`** (`actor_part19b.c`, real bytes in
+  `asm/code_3_2_20_28568_c2fc.s`) - screen-space visibility test and OAM
+  setup for one sprite frame. Fully understood and matches ROM
+  instruction-for-instruction *except* a single dead `flag = 0`
+  initializer (`movs r0, #0`/`mov r8, r0`, materialized by the ROM right
+  after `frame` is obtained even though every reachable path to
+  `flag`'s use overwrites it with `0x100` first) that this compiler's
+  dead-store elimination always removes here, however the assignment is
+  phrased (combined with the declaration, moved before/after the
+  `GetAnimFrameData` call, guarded with an empty-asm or `volatile`
+  anti-DCE hint - `volatile register` additionally spills the variable
+  to the stack, a bigger mismatch than the one being chased).
+- **`sub_802C3E8`** (`actor_part19c2.c`, real bytes in
+  `asm/code_3_2_20_28568_c3e8.s`) - a homing/seek-toward-point spawn-
+  effect constructor (the `sub_8032890` byte-for-byte twin per
+  docs/rom_map.md), computing a Manhattan-distance-style abs-value sum
+  for a `sub_803ADB4` angle division. Every field access and call
+  matches; the residual gap is this compiler's choice of a different
+  (but logically equivalent) register for a couple of intermediate
+  values in the abs-value computation, which resisted the register-pin
+  variants tried in this pass.
+
+**Left completely raw (1, not attempted to full precision):**
+
+- **`sub_802C7A8`** - walks the circular `self+0x4c`-rooted list of
+  these objects (see the `+0x48`/`+0x4c` convention above), filters to
+  `type == 4` and `!= self`, builds two translated 12-byte AABB copies
+  via `sub_800014C` (one of `UpdateGameFrame`'s own direct callees, the
+  same actor->game_loop tie already documented for `sub_802D7B0`), and
+  on overlap fires the shared lap-counter/"used"-state transition.
+  Semantics are understood at this level, but the exact stack-buffer
+  layout (three candidate buffers touched across the function, `r8`/
+  `sb` register usage) wasn't pinned down with enough confidence for a
+  byte-exact attempt this pass - left untouched rather than guess.
+
+**File structure:** `asm/code_3_2_20_28568.s` (truncated right before
+`sub_802BED8`) is followed, in ROM order, by `actor_part19.o`
+(`sub_802BED8`-`sub_802C19C`), the new raw `code_3_2_20_28568_c208.s`
+(parked `sub_802C208`), `actor_part19e.o` (`sub_802C208`'s
+`NON_MATCHING`-only twin), `actor_part19f.o` (`sub_802C264`/
+`sub_802C270`), the new raw `code_3_2_20_28568_c2fc.s` (parked
+`sub_802C2FC`), `actor_part19b.o` (its `NON_MATCHING`-only twin),
+`actor_part19c.o` (`sub_802C394`), the new raw
+`code_3_2_20_28568_c3e8.s` (parked `sub_802C3E8`), `actor_part19c2.o`
+(its `NON_MATCHING`-only twin), `actor_part19g.o` (`sub_802C464`-
+`sub_802C6C0`), the new raw `code_3_2_20_28568_c7a8.s` (left-untouched
+`sub_802C7A8`), `actor_part19d.o` (`sub_802C904`), and finally the new
+raw `code_3_2_20_28568_c99c.s` (the original file's unchanged
+remainder, from `sub_802C99C` on) - see `ldscript.txt` and
+`tools/report_units.py`'s `actor` category, both updated to match.
+Verified via a full clean `make compare` (`La suma coincide`) and
+`make NON_MATCHING=1 report`.
