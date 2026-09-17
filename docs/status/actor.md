@@ -231,6 +231,24 @@ from "core" graphics.
   `sub_801426C`/`sub_80142B0`; see
   `docs/matching/issue-18-0x08014f8c-actor.md`.
 
+- `src/graphics/actor_anim.c` (extended, GitHub issue #71, ROM
+  `0x0803B060`-`0x0803B46C` - immediately adjacent to the file's existing
+  `GetAnimFrameBaseOffset`, which itself ends exactly at `0x0803B060`):
+  `sub_803B060` (reads the current keyframe's `attr` halfword pre-shifted
+  into the high 16 bits), `GetAnimFrameData` (resolves the current
+  keyframe's tile-graphics pointer via `frameOffsets`/`gUnknown_0300137C`),
+  `sub_803B0A8` (selects a new keyframe, resetting the playback
+  accumulator), `sub_803B0F0` (advances a Q8 fall/scroll accumulator,
+  then either fires the `self+0x50` trampoline or tail-calls
+  `sub_802A7B8`), and 20 byte-identical `gStaticData_087E4DF4` "kind"
+  teardown handlers (`sub_803B0C4`, `sub_803B128`, `sub_803B154`,
+  `sub_803B180`, `sub_803B1AC`, `sub_803B1D8`, `sub_803B204`,
+  `sub_803B230`, `sub_803B25C`, `sub_803B288`, `sub_803B2B4`,
+  `sub_803B2E0`, `sub_803B30C`, `sub_803B338`, `sub_803B364`,
+  `sub_803B390`, `sub_803B3BC`, `sub_803B3E8`, `sub_803B414`,
+  `sub_803B440` - unlink `self` from its `+0x48`/`+0x4c` circular list,
+  set `+0x50` to the shared "dead" vtable, and conditionally free) - see
+  [docs/matching/issue-71-0x0803b060-actor.md](../matching/issue-71-0x0803b060-actor.md).
 - `src/graphics/actor_part39.c` (new file, GitHub issue #16, ROM
   0x080119A8-0x08011BD4): `sub_80119A8`, `sub_80119D4`, `sub_80119D8`,
   `sub_80119EC`, `sub_80119FC`, `sub_8011A1C`, `sub_8011A50`,
@@ -554,6 +572,19 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   store, branch and call is understood and semantically correct;
   parked on register allocation across the 3-way dispatch - see
   `docs/matching/issue-18-0x08014f8c-actor.md`.
+
+- **`sub_803B46C`** (`src/graphics/actor_anim.c`, GitHub issue #71) -
+  fixed-position (120, 106) OAM setup for one sprite frame: screen-space
+  visibility cull, then builds the OAM attribute words (masked position,
+  `sub_803B060`'s attr flag, and a priority/palette nibble from
+  `self+0x18`/`self+0x14`) and calls `SetupSpriteFrameOam`. Near-
+  identical twin of the already-parked `sub_802C2FC`
+  (`actor_part19b.c`) - hits the same two gaps: a `| 0`-with-a-zero-
+  valued-term this compiler's dead-store elimination always removes
+  (the ROM keeps a real materialize-and-OR pair) and a register-budget
+  difference needing an extra spilled/high register to keep `frame`
+  alive across both calls where the ROM fits entirely in r4-r7 - see
+  [docs/matching/issue-71-0x0803b060-actor.md](../matching/issue-71-0x0803b060-actor.md).
 
 ## Left raw (not attempted, or attempted and set aside)
 

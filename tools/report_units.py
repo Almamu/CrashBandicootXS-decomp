@@ -249,7 +249,8 @@ UNITS = [
     (0x08033E18, "src/graphics/actor_part36.o", "actor"),  # sub_8033E18 (issue #62): sub_8033AE0's state-1-gated twin; matched
     (0x08033E80, "src/graphics/actor_part37.o", "actor"),  # sub_8033E80 (issue #62, parked, NON_MATCHING) - sub_8033B44's twin using the gStaticData_0817C4F8 stride-8 table; real bytes live in asm/code_3_2_20_28568_c99c_31784_33e80.s
     (0x08033EF4, None, "actor"),  # remainder of the actor zone after issue #62's chunk, still raw
-    (0x080354E0, None, "graphics_loading"),  # LoadLevelGraphics, LoadBg2Background, LoadObjSpriteTiles
+    (0x080354E0, "src/graphics/level_graphics.o", "graphics_loading"),  # GitHub issue #65: LoadLevelGraphics (matched) + LoadBg2Background/LoadObjSpriteTiles (parked, NON_MATCHING, real bytes in asm/code_3_2_20_28568_c99c_31784_33ef4_355e0.s) - see docs/matching/issue-65-graphics-loading.md
+    (0x08035780, None, "graphics_loading"),  # remainder of issue #65's chunk (sub_8035780-sub_8036FBC) - left raw, out of scope for this pass
     (0x08037110, "src/audio/counter_selector.o", "audio"),  # sub_8037110/nullsub_7/sub_8037154/sub_803716C/sub_80371B4/sub_8037224 - a small on-screen 0-5 "counter" widget (increments/decrements with input, confirms/cancels with PlaySfx), reads like game/HUD-side code using PlaySfx rather than GAX2 internals; sub_803716C is UNUSED (no caller found); matched
     (0x080372BC, None, "audio"),  # sub_80372BC/sub_8037388 - fully understood (icon-manager draw loop / tile-cache init for the widget above) but hits the same gcc-2.9 many-register-allocation difficulty already documented for sub_8006600 (src/graphics/oam_count.c); left raw rather than force a low-confidence register pin
     (0x080374D0, "src/audio/counter_selector_setup.o", "audio"),  # sub_80374D0/sub_8037534/sub_8037548/sub_8037578/sub_80375A0/sub_80375EC/sub_8037620 - the widget's graphics/BG setup, draw-flush, and init/teardown pair; matched
@@ -285,7 +286,8 @@ UNITS = [
     (0x0803AE4C, None, "util"),  # sub_803AE4C (signed modulo)/sub_803AF1C (unsigned modulo) - same shift-and-subtract shape as sub_803ADB4, NON_MATCHING C reconstructions in src/util/math_div_util.c; parked (same prologue/epilogue gap, plus a `ror`-codegen gap), raw bytes stay in asm/code_3_2_20e_3ae4c.s, issue #70
     (0x0803AFDC, "src/graphics/actor_aabb_setup.o", "graphics"),  # sub_803AFDC/sub_803AFE4 (shared AABB set-size/set-position primitives), sub_803AFEC (raw-offset getter), sub_803AFF0/sub_803B024 (per-type descriptor table constructors, gStaticData_087E3BEC family); matched, issue #70
     (0x0803B058, "src/graphics/actor_anim.o", "graphics"),
-    (0x0803B060, None, "actor"),  # GetAnimFrameData + 43 unnamed neighbors, medium confidence
+    (0x0803B060, "src/graphics/actor_anim.o", "actor"),  # sub_803B060/GetAnimFrameData/sub_803B0A8/sub_803B0F0 + 20 near-identical gStaticData_087E4DF4 "kind" teardown handlers (sub_803B0C4-sub_803B440); matched, issue #71
+    (0x0803B46C, None, "actor"),  # sub_803B46C - fixed-position OAM setup, near-identical twin of the already-parked sub_802C2FC (same `| 0`-dead-store and register-budget gaps); NON_MATCHING C reconstruction in src/graphics/actor_anim.c, raw bytes stay in asm/code_3_3_b46c.s, issue #71. Also incl. sub_803B4EC onward, unattempted, medium confidence
     (0x0803B8B0, None, None),  # sentinel end address, not a real unit
 ]
 
