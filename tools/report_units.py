@@ -282,7 +282,8 @@ UNITS = [
     (0x0803AE4C, None, "util"),  # sub_803AE4C (signed modulo)/sub_803AF1C (unsigned modulo) - same shift-and-subtract shape as sub_803ADB4, NON_MATCHING C reconstructions in src/util/math_div_util.c; parked (same prologue/epilogue gap, plus a `ror`-codegen gap), raw bytes stay in asm/code_3_2_20e_3ae4c.s, issue #70
     (0x0803AFDC, "src/graphics/actor_aabb_setup.o", "graphics"),  # sub_803AFDC/sub_803AFE4 (shared AABB set-size/set-position primitives), sub_803AFEC (raw-offset getter), sub_803AFF0/sub_803B024 (per-type descriptor table constructors, gStaticData_087E3BEC family); matched, issue #70
     (0x0803B058, "src/graphics/actor_anim.o", "graphics"),
-    (0x0803B060, None, "actor"),  # GetAnimFrameData + 43 unnamed neighbors, medium confidence
+    (0x0803B060, "src/graphics/actor_anim.o", "actor"),  # sub_803B060/GetAnimFrameData/sub_803B0A8/sub_803B0F0 + 20 near-identical gStaticData_087E4DF4 "kind" teardown handlers (sub_803B0C4-sub_803B440); matched, issue #71
+    (0x0803B46C, None, "actor"),  # sub_803B46C - fixed-position OAM setup, near-identical twin of the already-parked sub_802C2FC (same `| 0`-dead-store and register-budget gaps); NON_MATCHING C reconstruction in src/graphics/actor_anim.c, raw bytes stay in asm/code_3_3_b46c.s, issue #71. Also incl. sub_803B4EC onward, unattempted, medium confidence
     (0x0803B8B0, None, None),  # sentinel end address, not a real unit
 ]
 
