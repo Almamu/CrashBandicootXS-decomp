@@ -312,6 +312,10 @@ _08009140:
 	pop {r0}
 	bx r0
 
+@ sub_8009150 is reconstructed (semantics fully understood, but not
+@ yet byte-matching) as C in src/graphics/actor_part11.c, guarded by
+@ #if NON_MATCHING - see docs/matching.md for the exact remaining gap.
+.if NON_MATCHING == 0
 	thumb_func_start sub_8009150
 sub_8009150: @ 0x08009150
 	push {r4, r5, r6, r7, lr}
@@ -384,6 +388,7 @@ _080091CC:
 	pop {r4, r5, r6, r7}
 	pop {r0}
 	bx r0
+.endif
 	.align 2, 0
 
 	thumb_func_start sub_80091D4

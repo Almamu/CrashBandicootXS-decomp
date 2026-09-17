@@ -261,6 +261,14 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   loop index, a running byte offset) allocation gap across
   `r3`/`sb`/`sl`/`r4`/`r8` - see `docs/matching.md`, "Parked, not
   matched: `sub_8008F20`".
+- **`sub_8009150`** (`src/graphics/actor_part11.c`) - lazily creates a
+  "large object" bucket-255 grid registration for an object that
+  didn't get one at insert time. Every load, store, and field offset
+  confirmed correct; parked purely on a loop-invariant-hoisting gap (a
+  free-list-head address computation this compiler correctly hoists
+  out of a 255-iteration loop, where the ROM recomputes it fresh every
+  non-empty bucket) - see `docs/matching.md`, "Parked, not matched:
+  `sub_8009150`".
 - **`sub_80099F0`** (`src/graphics/actor_part12.c`) - `sub_8008D80`'s
   twin: byte-identical in shape (same collision-hit-resolve logic,
   same "dead read" trampoline call), called from elsewhere in this

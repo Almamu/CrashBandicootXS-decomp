@@ -3530,12 +3530,46 @@ loop index reused from the zero-fill loop's counter, and a running
 Parked rather than chase a four-scalar, three-high-register allocation
 puzzle for a single function.
 
-`sub_8009008` (right after the parked `sub_8008F20`) through
-`sub_8009914` (~8 functions) is complex spatial-hash-grid list-
-management/removal logic built on `sub_8008F20`'s pool-manager struct
-- `sub_8009008` alone unlinks a node from potentially many grid
-buckets via a two-phase search whose higher-level "why" isn't
-recoverable without more context. Left raw rather than guess.
+`sub_8009008` (right after the parked `sub_8008F20`) is complex
+spatial-hash-grid removal logic built on `sub_8008F20`'s pool-manager
+struct - it unlinks a node from potentially many grid buckets via a
+two-phase search whose higher-level "why" isn't recoverable without
+more context. Left raw rather than guess.
+
+**Parked, not matched: `sub_8009150`** (ROM `0x08009150`, right after
+the raw `sub_8009008`, `src/graphics/actor_part11.c`): searches every
+bucket (254 down to 0, i.e. every bucket except the special "large
+object" bucket 255) of `manager`'s spatial hash grid for a node whose
+data pointer equals `obj`. On the first match: if the object's `+0xc`
+flags byte bit 4 isn't set, returns immediately (nothing to do). If it
+IS set but the node already has a bucket-255 secondary link
+(`node->field_0xc != 0`, the same field `sub_8009AF0`/`sub_8009B3C`
+set up), also returns immediately - the link already exists.
+Otherwise, pops a fresh node off the free list (the same `sub_8009AF0`
+pop idiom), wraps `obj` in it, and inserts that new node into bucket
+255's head/tail list, finally linking the two nodes together via the
+original node's `field_0xc` - lazily creating the "large object"
+bucket-255 registration for an object that didn't get one when it was
+originally inserted (`sub_8009B3C` only creates it when `obj->flags`
+bit 4 is already set at insert time; this looks like the retroactive
+counterpart, called when an object transitions to "large" status
+after insertion).
+
+Every load, store, and field offset is confirmed correct, and
+explicit register pins (`obj`/`data`/`headField`/`newNode` to
+`r3`/`r5`/`r6`/`r2`, matching a byte-for-byte-verified value/register-
+reuse chain through a "recycled zero" idiom - the ROM reuses whatever
+register held the just-checked `node->field_0xc == 0` result as the
+literal `0` for three subsequent zero-stores, rather than reloading
+fresh zeroes) reproduce the whole function except one detail: the
+free-list-head field's address (`manager+0x814`) is loop-invariant
+across the whole 255-bucket outer loop, and this compiler correctly
+recognizes that and hoists the computation outside the loop (computing
+it once, then just copying the cached value into place per bucket) -
+but the ROM instead recomputes it fresh every time a non-empty bucket
+is found. No portable C construct tried (an inline-asm memory clobber
+included) discourages this specific loop-invariant hoist. Parked on
+this single 2-byte gap.
 
 ## Second tractable pocket: `actor_part12.c`
 
