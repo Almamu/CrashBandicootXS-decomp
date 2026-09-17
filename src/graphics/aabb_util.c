@@ -4,6 +4,44 @@
 /* Sits right after the parked sub_8001624 (asm/code_3_1_9.s) and
  * before the still-raw pause-menu/SIO cluster. */
 
+#if NON_MATCHING
+struct unk_03001280 {
+    u32 bldcntAlpha;
+    u8 bldy;
+};
+
+extern struct unk_03001280 gUnknown_03001280;
+
+/* Commits the `gUnknown_03001280` shadow to the real blend registers:
+ * the word at `+0` covers both `REG_BLDCNT` and `REG_BLDALPHA` (a
+ * single 32-bit write spanning the adjacent halfwords), and the low
+ * 5 bits of the byte at `+4` become `REG_BLDY`.
+ *
+ * Parked: the ROM writes the word then does a separate `adds r2,#4`
+ * on the same register before the second store (`str r0,[r2]; adds
+ * r2,#4; ...; strh r0,[r2]`); this compiler always fuses that
+ * store-then-increment-same-register pair into a single `stmia
+ * r2!,{r0}` regardless of how the pointer increment is expressed in
+ * C (a separate statement, a memory-clobber barrier in between, a
+ * fresh pointer variable) - an unavoidable peephole optimization for
+ * this exact instruction pair. */
+void sub_8001624(void)
+{
+    register vu32 *bldReg asm("r2") = (vu32 *)0x04000050;
+    register struct unk_03001280 *p asm("r1") = &gUnknown_03001280;
+    register u32 word asm("r0") = p->bldcntAlpha;
+    register s32 byte asm("r1");
+    register s32 result asm("r0");
+
+    *bldReg = word;
+    bldReg = (vu32 *)((u8 *)bldReg + 4);
+    byte = p->bldy;
+    result = (u32)(byte << 27) >> 27;
+    *(vu16 *)bldReg = result;
+}
+#endif /* NON_MATCHING */
+asm(".align 2, 0");
+
 struct aabb {
     s32 field_0;
     s32 field_4;

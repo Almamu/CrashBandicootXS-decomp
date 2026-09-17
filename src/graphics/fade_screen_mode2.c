@@ -9,6 +9,24 @@
 
 extern u8 gUnknown_03001288[2];
 
+#if NON_MATCHING
+/* Sets `gUnknown_03001288`'s low 3 bits (the DISPCNT background-mode
+ * field) to `val & 7`, preserving the rest. Parked: this compiler
+ * recognizes `-8` as reachable from the already-loaded `7` mask via
+ * a single `SUB` (`7 - 15 = -8`) and folds the ROM's fresh `movs
+ * r1,#8; rsbs r1,r1,#0` pair into that shorter subtract, regardless
+ * of how the constant is spelled (`-8`, `~7`) or how many
+ * intervening register-pinned temporaries separate the two uses of
+ * r1 - a value-propagation optimization that plain C can't defeat. */
+void sub_8001524(s32 val)
+{
+    u8 *addr = gUnknown_03001288;
+
+    addr[0] = (addr[0] & -8) | (val & 7);
+}
+#endif /* NON_MATCHING */
+asm(".align 2, 0");
+
 /* `gUnknown_03001288[1]` bit 3 clear/set pair (part of the packed
  * DISPCNT-mode shadow's second byte). */
 void sub_800153C(void)
