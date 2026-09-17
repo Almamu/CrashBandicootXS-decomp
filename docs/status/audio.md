@@ -29,6 +29,11 @@ for the full write-up.
   `sub_8001B00`, `sub_8001B14`, `sub_8001B30`, `sub_8001B50`,
   `sub_8001B54`, `sub_8001B88`, `sub_8001BAC`, `sub_8001BD4`,
   `sub_8001C04`, `sub_8001C2C` (constructor), `sub_8001C64`.
+- `src/audio/music_irq.c` (new file - `sub_8001C80`/`sub_8001CA4`,
+  0x08001C80): installs the VCount-IRQ handler that forwards into
+  `sub_80016EC`'s per-tick fade update above - `music_player.c`'s
+  header comment already anticipated this pair. Matched - GitHub
+  issue #4, see `docs/matching/issue-4-sio-settings-sync.md`.
 
 `src/audio/` (further in, at `0x08037110`-`0x08038538` - see
 `docs/matching.md`'s "`0x08037110`-`0x08038538`" entry for the full
