@@ -16,6 +16,10 @@ tagged-asset loading.
   `sub_80007AC`, `sub_80007DC` (Sept 2026, `code_3.s` lineage - `irq.c` is
   a mixed file, see `docs/decomp_dev.md`)
 - `src/system/asset_util.c`: `LoadTaggedAsset`, `LoadBackgroundTileAndPalette`
+- `src/system/boot_util.c`: `sub_8000140`, `sub_800014C`, `nullsub_9` -
+  boot-adjacent BIOS wrappers right after `asm/crt0.s`'s permanent boot
+  stub (`start`, left as hand-written asm, not tracked as a function to
+  match); see `docs/matching.md`
 
 `main.c`/`memory.c`/most of `irq.c` were matched earliest of all, before
 `docs/matching.md`'s per-function log convention existed, so they don't have

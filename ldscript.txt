@@ -20,10 +20,11 @@ SECTIONS
 	ALIGN(4)
 	{
         build/crashbandicootxs/asm/crt0.o(.text);
+        build/crashbandicootxs/src/system/boot_util.o(.text);
         build/crashbandicootxs/src/system/main.o(.text);
         build/crashbandicootxs/src/system/memory.o(.text);
         build/crashbandicootxs/src/system/irq.o(.text);
-        build/crashbandicootxs/asm/code_3_1.o(.text);
+        build/crashbandicootxs/src/graphics/intro_screen.o(.text);
         build/crashbandicootxs/src/util/math_util.o(.text);
         build/crashbandicootxs/src/util/string_util.o(.text);
         build/crashbandicootxs/src/util/printf_util.o(.text);
