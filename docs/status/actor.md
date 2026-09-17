@@ -238,6 +238,59 @@ from "core" graphics.
   `sub_801426C`/`sub_80142B0`; see
   `docs/matching/issue-18-0x08014f8c-actor.md`.
 
+- `src/graphics/actor_anim.c` (extended, GitHub issue #71, ROM
+  `0x0803B060`-`0x0803B46C` - immediately adjacent to the file's existing
+  `GetAnimFrameBaseOffset`, which itself ends exactly at `0x0803B060`):
+  `sub_803B060` (reads the current keyframe's `attr` halfword pre-shifted
+  into the high 16 bits), `GetAnimFrameData` (resolves the current
+  keyframe's tile-graphics pointer via `frameOffsets`/`gUnknown_0300137C`),
+  `sub_803B0A8` (selects a new keyframe, resetting the playback
+  accumulator), `sub_803B0F0` (advances a Q8 fall/scroll accumulator,
+  then either fires the `self+0x50` trampoline or tail-calls
+  `sub_802A7B8`), and 20 byte-identical `gStaticData_087E4DF4` "kind"
+  teardown handlers (`sub_803B0C4`, `sub_803B128`, `sub_803B154`,
+  `sub_803B180`, `sub_803B1AC`, `sub_803B1D8`, `sub_803B204`,
+  `sub_803B230`, `sub_803B25C`, `sub_803B288`, `sub_803B2B4`,
+  `sub_803B2E0`, `sub_803B30C`, `sub_803B338`, `sub_803B364`,
+  `sub_803B390`, `sub_803B3BC`, `sub_803B3E8`, `sub_803B414`,
+  `sub_803B440` - unlink `self` from its `+0x48`/`+0x4c` circular list,
+  set `+0x50` to the shared "dead" vtable, and conditionally free) - see
+  [docs/matching/issue-71-0x0803b060-actor.md](../matching/issue-71-0x0803b060-actor.md).
+- `src/graphics/actor_part39.c` (new file, GitHub issue #16, ROM
+  0x080119A8-0x08011BD4): `sub_80119A8`, `sub_80119D4`, `sub_80119D8`,
+  `sub_80119EC`, `sub_80119FC`, `sub_8011A1C`, `sub_8011A50`,
+  `sub_8011A64`, `sub_8011A84`, `sub_8011A8C`, `sub_8011B0C`,
+  `nullsub_16`, `sub_8011B5C`, `sub_8011B70`, `sub_8011B90` - a run of
+  `struct actor` vtable-swap constructor helpers (same
+  `sub_80084A4`/`sub_8008484`/`nullsub` shape as `actor_part6.c`), a
+  handful of small setters/getters on offsets beyond `struct actor`'s
+  own 0x1c bytes, and a distance-gate (`sub_8011A8C`) reusing
+  `actor_part2.c`'s `gUnknown_030012B4+0x108` bitmap idiom verbatim.
+  Recategorized `graphics`->`actor` from the issue's label: every
+  matched function here operates on `struct actor` via the same
+  `table@0x18`/`flags@0xc`/`field_08@8` layout `actor_part*.c` already
+  established, not the `game_loop`-core "child object" family
+  `docs/rom_map.md` traces through the chunk's remaining (unmatched)
+  functions. See
+  [docs/matching/issue-16-actor-11b0c.md](../matching/issue-16-actor-11b0c.md).
+- `src/graphics/actor_part43.c`/`actor_part44.c`/`actor_part45.c`/
+  `actor_part46.c` (new files, GitHub issue #56, ROM
+  0x0802F0DC-0x0802FBF0 - a second boss-weapon "spawn/pre-attack"
+  singleton and its `self` object, non-adjacent since the left-raw
+  `sub_802F164`/`sub_802F7B0`/`sub_802F8E8`/`sub_802FA38` and the
+  parked `sub_802F338`/`sub_802F748`/`sub_802F97C`/`sub_802FA04` sit
+  interleaved between them; see
+  [docs/matching/issue-56-0x0802f0dc-actor.md](../matching/issue-56-0x0802f0dc-actor.md)):
+  `sub_802F0DC`, `sub_802F3BC`, `sub_802F46C`, `sub_802F47C`,
+  `sub_802F4AC`, `sub_802F4C0`, `sub_802F4CC`, `sub_802F50C`,
+  `sub_802F540`, `sub_802F570`, `sub_802F5AC`, `sub_802F5E4`,
+  `sub_802F640`, `sub_802F69C`, `sub_802F6DC`, `sub_802F7A4`,
+  `sub_802FA34` - a constructor/reset, an accumulator-drain/reward-
+  dispenser, accessors, accumulator drivers, idle-state-reset idioms,
+  and the singleton's teardown/destructor, all sharing
+  `actor_part17.c`/`actor_part18.c`/`actor_part20.c`'s established
+  "self" object conventions.
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
@@ -561,6 +614,40 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   store, branch and call is understood and semantically correct;
   parked on register allocation across the 3-way dispatch - see
   `docs/matching/issue-18-0x08014f8c-actor.md`.
+- **`sub_802F338`** (`src/graphics/actor_part43b.c`) - computes two
+  keyframe-driven tile-cache sizes via `sub_8028CD4`. Every load/store,
+  branch and call confirmed correct; parked on a "materialize the
+  multiply result, then copy it again before shifting" gap this
+  compiler's dead-store elimination always collapses - see
+  `docs/matching/issue-56-0x0802f0dc-actor.md`.
+- **`sub_802F748`** (`src/graphics/actor_part44b.c`) - a
+  `gStaticData_0817C1C0` stride-8 trampoline-record dispatcher, same
+  shape as the parked `sub_802C208`; parked on the same
+  `record = base + state*8` re-derivation register-allocation gap -
+  see `docs/matching/issue-56-0x0802f0dc-actor.md`.
+- **`sub_802F97C`** (`src/graphics/actor_part45b.c`) - a physics-step-
+  and-collision-react updater. Every load/store, branch and call
+  confirmed correct; parked on a residual `r2`-vs-`r3` register choice
+  for a repeated `8` immediate - see
+  `docs/matching/issue-56-0x0802f0dc-actor.md`.
+- **`sub_802FA04`** (`src/graphics/actor_part45c.c`) - an
+  `InitActorPart`-based 7-argument constructor, the same shape as the
+  left-raw `sub_80305F8`; parked on this compiler's own high-register
+  push/pop allocation never matching the ROM's `r4=self,r5=1,r6=e,r7=f`
+  assignment - see `docs/matching/issue-56-0x0802f0dc-actor.md`.
+
+- **`sub_803B46C`** (`src/graphics/actor_anim.c`, GitHub issue #71) -
+  fixed-position (120, 106) OAM setup for one sprite frame: screen-space
+  visibility cull, then builds the OAM attribute words (masked position,
+  `sub_803B060`'s attr flag, and a priority/palette nibble from
+  `self+0x18`/`self+0x14`) and calls `SetupSpriteFrameOam`. Near-
+  identical twin of the already-parked `sub_802C2FC`
+  (`actor_part19b.c`) - hits the same two gaps: a `| 0`-with-a-zero-
+  valued-term this compiler's dead-store elimination always removes
+  (the ROM keeps a real materialize-and-OR pair) and a register-budget
+  difference needing an extra spilled/high register to keep `frame`
+  alive across both calls where the ROM fits entirely in r4-r7 - see
+  [docs/matching/issue-71-0x0803b060-actor.md](../matching/issue-71-0x0803b060-actor.md).
 
 ## Left raw (not attempted, or attempted and set aside)
 
@@ -573,6 +660,33 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   #22) - a ~480-instruction jump-table player action-state machine
   plus two high-register-pressure helpers it calls; left raw, out of
   scope for this pass - see `docs/matching/issue-22-0x08017a44-actor.md`.
+- **`sub_802F164`** (`asm/code_3_2_20_28568_c99c_2f164.s`, GitHub issue
+  #56) - a ~160-instruction state-machine update for the "spawn/pre-
+  attack" singleton, including a `mov pc, r0` computed-goto 5-case
+  jump table; left raw, out of scope for this pass - see
+  `docs/matching/issue-56-0x0802f0dc-actor.md`.
+- **`sub_802F7B0`**/**`sub_802F8E8`**
+  (`asm/code_3_2_20_28568_c99c_2f7b0.s`, GitHub issue #56) - a pair of
+  ~130-170-instruction VRAM tile-remap loops with heavy `sb`/`sl`/`r8`
+  register pressure; left raw, out of scope for this pass - see
+  `docs/matching/issue-56-0x0802f0dc-actor.md`.
+- **`sub_802FA38`** (`asm/code_3_2_20_28568_c99c_2fa38.s`, GitHub issue
+  #56) - a ~150-instruction position-update/collision-damage function
+  with heavy `sb`/`r8` register pressure; left raw, out of scope for
+  this pass - see `docs/matching/issue-56-0x0802f0dc-actor.md`.
+- **`sub_8011BD4`/`sub_8012160`/`sub_8012238`/`sub_80122CC`/
+  `sub_8012420`/`sub_8012694`/`sub_801283C`/`sub_8012A7C`/
+  `sub_8012AF4`/`sub_8012D24`** (`asm/code_3_2_17_11bd4.s`, ROM
+  0x08011BD4-0x08012FBC, GitHub issue #16) - `sub_8011BD4` itself is
+  `docs/rom_map.md`'s documented ~1420B, 25-case/7-case nested
+  jump-table companion state machine to `sub_8016288` (still raw,
+  type-`0x1d` player-control family); the rest are further members of
+  the 42-slot action-dispatch-table family (`gStaticData_0816BF20`)
+  reading/writing a still-unnamed "child object" struct (`self+0xc`/
+  `+0x10`/`+0x18` sub-record pointers, distinct from `struct actor`)
+  that `docs/rom_map.md` itself says isn't understood with byte-exact
+  precision yet. Left raw, out of scope for this pass - see
+  [docs/matching/issue-16-actor-11b0c.md](../matching/issue-16-actor-11b0c.md).
 - **`sub_8007634`** (`asm/code_3_2.s`, ROM 0x08007634, GitHub issue #9)
   - real GBA hardware-affine sprite-matrix setup; already flagged in
   `docs/matching.md` as needing "a dedicated session" of its own, not
