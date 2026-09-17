@@ -182,9 +182,17 @@ UNITS = [
     (0x08027138, None, "hud"),  # sub_8027138-sub_802763C - the 34-slot icon-array setup cluster (sub_8027138/sub_802732C) and the HUD stat-widget dispatcher family (sub_80274EC/sub_802757C/sub_802763C), left raw - see docs/rom_map.md's "hud" investigation (GitHub issue #45)
     (0x08027838, "src/graphics/hud_counter.o", "graphics"),  # sub_8027838 - cached two-digit HUD counter update
     (0x08027940, None, "hud"),  # sub_8027940/sub_8027D5C/sub_8027E88 - more of the HUD stat-widget dispatcher family, left raw (GitHub issue #45)
-    (0x08028400, "src/graphics/hud_blink.o", "graphics"),  # sub_8028400-sub_8028520 - a 3-slot icon-blink animation timer: a per-frame tick, three per-slot trigger functions, and the generic single-slot advance helper they share; matched. GitHub issue #45
-    (0x08028568, None, "hud"),  # remainder of the HUD stat-widget region, left raw
-    (0x0802866C, None, "hud"),  # InitHudIconWidgetA/B, MeasureText, UploadHudTile, InitHudTextWidget
+    (0x08028400, "src/graphics/hud_blink.o", "graphics"),  # sub_8028400-sub_8028520 - a 3-slot icon-blink animation timer, plus sub_8028568/sub_802856C (a setter/increment pair on the same central-state object's +0x28 field) added by GitHub issue #46; matched. GitHub issue #45
+    (0x08028574, "src/graphics/hud_icon_widget.o", "hud"),  # sub_8028574 - a struct hud_counter's parts-array destructor; matched. GitHub issue #46
+    (0x080285C4, None, "hud"),  # sub_80285C4/InitHudIconWidgetA/InitHudIconWidgetB/sub_8028808 - parked (real bytes in asm/code_3_2_20_85c4.s), NON_MATCHING reconstruction in src/graphics/hud_icon_widget_85c4.c - see docs/matching/issue-46-hud-icon-widget.md - GitHub issue #46
+    (0x08028860, "src/graphics/hud_icon_widget2.o", "hud"),  # sub_8028860 - draws a fixed-count run of characters via the widget's own record trampoline; matched. GitHub issue #46
+    (0x08028890, None, "hud"),  # sub_8028890/sub_8028900 - parked (real bytes in asm/code_3_2_20_8890.s), NON_MATCHING reconstruction in src/graphics/hud_icon_widget_8890.c - see docs/matching/issue-46-hud-icon-widget.md - GitHub issue #46
+    (0x08028968, "src/graphics/hud_icon_widget3.o", "hud"),  # sub_8028968 - total text-block-height helper; matched. GitHub issue #46
+    (0x08028994, None, "hud"),  # MeasureText - parked (real bytes in asm/code_3_2_20_8994.s), NON_MATCHING reconstruction in src/graphics/hud_icon_widget_8994.c - see docs/matching/issue-46-hud-icon-widget.md - GitHub issue #46
+    (0x08028A00, "src/graphics/hud_icon_widget4.o", "hud"),  # UploadHudTile/sub_8028A30/sub_8028A40 - matched. GitHub issue #46
+    (0x08028A78, None, "hud"),  # sub_8028A78 - parked (real bytes in asm/code_3_2_20_8a78.s), NON_MATCHING reconstruction in src/graphics/hud_icon_widget_8a78.c - see docs/matching/issue-46-hud-icon-widget.md - GitHub issue #46
+    (0x08028AC4, "src/graphics/hud_icon_widget5.o", "hud"),  # sub_8028AC4-sub_8028B58 - trivial struct icon_manager getter/setter/trampoline-forwarder family; matched. GitHub issue #46
+    (0x08028B7C, None, "hud"),  # InitHudTextWidget onward - left raw, out of GitHub issue #46's chunk scope
     (0x08028BA0, None, "graphics_loading"),  # InitObjTileFreeList, LoadSpriteFrameTiles, SetupSpriteFrameOam, DecompressCategorySpriteSheet
     (0x080291A4, None, "actor"),  # SetupActorVramPool, InitActorCategory, SelectActorCategory, InitActorPart, UpdateAnimatedActorPart, ConstructAnimTableState, ConstructActorPart
     (0x0802B364, None, "actor"),  # 40.4 KB actor zone (docs/rom_map.md cites 0x0802B348, 28B before the nearest real function start - snapped forward since 0x0802B348 itself falls mid-function) - category/part/vtable system, boss-candidate + singleton object clusters
