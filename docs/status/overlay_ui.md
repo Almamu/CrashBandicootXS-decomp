@@ -9,6 +9,20 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
 
 ## Matched
 
+- `src/graphics/settings_menu8.c`/`settings_menu8a2.c`/`settings_menu8b.c`/
+  `settings_menu8c.c` (new files - issue #5, 0x08002C84-0x08003B40): the
+  settings-sync record's init/flag/checksum accessors
+  (`struct settings_sync_record`, `include/settings_sync.h`), the SIO
+  send/receive pump's handle accessors, the spinner dialog's blocking
+  modal loop and shared field_8c/field_90 constructor/destructor
+  (also used by the composite screen itself), the per-frame input
+  dispatcher, and 12 of its per-state handlers; matched. See
+  `docs/matching/issue-5-overlay-ui-sync.md` for the full write-up:
+  `sub_8002C84`, `sub_8002CE8`, `sub_8002CF4`, `sub_8002D28`,
+  `sub_8002FCC`, `sub_8002FD4`, `sub_8002FD8`, `sub_800300C`,
+  `sub_800306C`, `sub_800312C`, `sub_80031E4`, `sub_80032E8`,
+  `sub_80033E8`, `sub_80034BC`, `sub_80035C0`, `sub_800376C`,
+  `sub_8003824`, `sub_80038D0`, `sub_800397C`
 - `src/graphics/settings_menu2.c` (new file - the composite pause/
   options screen's BG-load helper and per-row stats gatherer/
   aggregator; see `docs/rom_map.md`'s `overlay_ui` section):
@@ -35,6 +49,27 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
+- **`sub_8002D0C`** (`asm/code_3_1_10_3_2d0c.s`, C in
+  `src/graphics/settings_menu8.c`) - bitmask-clear accessor; the ROM
+  keeps a redundant register-to-register copy of the bit-cleared
+  result no C variation tried reproduces. See
+  `docs/matching/issue-5-overlay-ui-sync.md`, issue #5.
+- **`sub_8002D44`**, **`sub_8002E20`**, **`sub_8002EFC`**
+  (`asm/code_3_1_10_3_2d44.s`, C in
+  `src/graphics/settings_menu8a2.c`) - the SIO settings-sync
+  send/receive pump trio (`struct settings_sync_pump`,
+  `include/settings_sync.h`); fully understood and even byte-size-exact
+  for `sub_8002D44`, but not byte-for-byte content. See
+  `docs/matching/issue-5-overlay-ui-sync.md`, issue #5.
+- **`sub_8003698`** (`asm/code_3_1_10_3_3698.s`, C in
+  `src/graphics/settings_menu8b.c`) - the shared "commit or refresh
+  row" step nine of the per-state input handlers call into. See
+  `docs/matching/issue-5-overlay-ui-sync.md`, issue #5.
+- **`sub_8003A60`** (`asm/code_3_1_10_3_3a60.s`, C in
+  `src/graphics/settings_menu8c.c`) - the state-select label list draw,
+  same measure-then-draw icon shape/register-allocation gap as
+  `sub_80049CC` below. See `docs/matching/issue-5-overlay-ui-sync.md`,
+  issue #5.
 - **`sub_8003B40`**, **`sub_8003BDC`**, **`sub_8003C90`**,
   **`sub_8003D3C`**, **`sub_80041BC`**, **`sub_8004914`**,
   **`sub_80049CC`** (`asm/code_3_1_10_3.s`/`asm/code_3_1_10_4.s`/
