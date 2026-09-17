@@ -836,6 +836,10 @@ _0800951A:
 .endif
 	.align 2, 0
 
+@ sub_8009528 is reconstructed (semantics fully understood, but not
+@ yet byte-matching) as C in src/graphics/actor_part11.c, guarded by
+@ #if NON_MATCHING - see docs/matching.md for the exact remaining gap.
+.if NON_MATCHING == 0
 	thumb_func_start sub_8009528
 sub_8009528: @ 0x08009528
 	sub sp, #0xc
@@ -1037,6 +1041,7 @@ _080096AE:
 	pop {r3}
 	add sp, #0xc
 	bx r3
+.endif
 
 @ sub_80096C0 is reconstructed (semantics fully understood, but not
 @ yet byte-matching) as C in src/graphics/actor_part11.c, guarded by

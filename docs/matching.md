@@ -3603,17 +3603,39 @@ r5, #2`) - no rewrite tried (an intermediate volatile-routed constant
 included) discourages this specific reuse. Parked on this single
 2-byte gap.
 
-`sub_8009528` (right after the parked `sub_800944C`) remains raw - the
-same "extended screen box" grid-iteration shape as `sub_800944C`, but
+**Parked, not matched: `sub_8009528`** (ROM `0x08009528`, right after
+the parked `sub_800944C`, `src/graphics/actor_part11.c`): the same
+"extended screen box" grid-iteration shape as `sub_800944C`, but
 dispatching each hit to `sub_80096C0` (when the box's "compare
 viewport" argument equals `gUnknown_030012D8`, the player) or
 `sub_80099F0` (otherwise) - the spatial-grid-cluster analog of
-`sub_8008A40`'s own dispatch to `sub_8008AD8`/`sub_8008D80`. Left raw
-for now given its size and the two nested loops (main grid buckets,
-then the special bucket-255 pass) each repeating the same dispatch.
+`sub_8008A40`'s own dispatch to `sub_8008AD8`/`sub_8008D80`, right
+down to reconstructing the box via `sub_800014C` with the same
+"unavoidable extra `boxH` load" idiom (the incoming `boxH` argument
+sits in its own stack slot, coinciding with the 4th word of the AABB
+`sub_800014C` builds, purely from ABI stack-layout coincidence).
+
+Every branch, field offset, and call argument is confirmed correct
+against the ROM disassembly - two nested loops (main grid buckets from
+`baseIdx+2` down to 0, then the special bucket-255 pass), each with an
+identical inline copy of the box-test/flags-test/trampoline-result/
+dispatch sequence, matching `sub_800944C`'s own two-pass shape.
+
+NOT YET BYTE-MATCHING: beyond the established `boxH` gap, this
+reconstruction's compiled size is still noticeably larger than the
+real ROM function - likely some combination of stack-frame layout
+(the ROM's prologue splits its stack allocation into two separate
+`sub sp` adjustments, one before the callee-saved-register push and
+one after, suggesting a local variable with a different lifetime than
+this reconstruction's single `box2[4]` captures) and register
+allocation across the two duplicated dispatch blocks. Sharing one
+`box2[4]` across all four call sites (rather than one per call site)
+closed part of the gap but not all of it. Not chased further given the
+size of the remaining raw cluster - parked with the semantically-
+correct version.
 
 **Parked, not matched: `sub_80096C0`** (ROM `0x080096C0`, right after
-the raw `sub_8009528`, `src/graphics/actor_part11.c`): `sub_8008AD8`'s
+the parked `sub_8009528`, `src/graphics/actor_part11.c`): `sub_8008AD8`'s
 twin, confirmed by reading its disassembly directly against
 `sub_8008AD8`'s own - byte-identical collision-hit resolution logic
 (mode dispatch via `gUnknown_030012C0`, AABB push-out via

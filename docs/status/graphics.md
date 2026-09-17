@@ -277,6 +277,15 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   choice (`bucket = baseIdx + 2` computed in-place instead of into a
   fresh register) - see `docs/matching.md`, "Parked, not matched:
   `sub_800944C`".
+- **`sub_8009528`** (`src/graphics/actor_part11.c`) - the spatial-
+  hash-grid-cluster analog of `sub_8008A40`: the same grid-iteration
+  shape as `sub_800944C`, dispatching each hit to `sub_80096C0`/
+  `sub_80099F0` exactly like `sub_8008A40` dispatches to
+  `sub_8008AD8`/`sub_8008D80`. Every branch, field offset, and call
+  argument is semantically confirmed; parked on a stack-frame/register
+  gap larger than the established `boxH` issue alone, not chased
+  further given the size of the remaining cluster - see
+  `docs/matching.md`, "Parked, not matched: `sub_8009528`".
 - **`sub_80096C0`** (`src/graphics/actor_part11.c`) - `sub_8008AD8`'s
   twin: byte-identical collision-hit resolution logic, operating in
   this spatial-hash-grid cluster instead of the plain array manager.
