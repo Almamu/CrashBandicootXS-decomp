@@ -8,13 +8,25 @@ the real detail.
 
 ## Finding something to work on
 
-- Look through the [issues list](../../issues) for the `decomp-chunk`
-  label (a group of ~10-25 still-unmatched functions in one address
-  range), the `parked-function` label (one specific function whose
-  semantics are already understood, just not yet byte-exact), or the
-  `cleanup` label (already-matched code that still needs docs/workflow.md
-  step 7's struct/register-macro cleanup applied - see "Cleanup tasks"
-  below).
+- Start from **[the ready-to-work list](https://github.com/Almamu/CrashBandicootXS-decomp/issues?q=is%3Aopen%20is%3Aissue%20-label%3Ablocked%20sort%3Acreated-asc)**,
+  not the plain issues tab - GitHub's default view has no way to sort
+  blocked issues to the bottom, and a lot of the `cleanup` issues are
+  blocked (see below), so the plain list quickly fills up with things
+  you can't start yet. That link excludes anything labeled `blocked`
+  and sorts oldest-first, which surfaces actionable work first.
+- Within that list, look for the `decomp-chunk` label (a group of
+  ~10-25 still-unmatched functions in one address range), the
+  `parked-function` label (one specific function whose semantics are
+  already understood, just not yet byte-exact), or the `cleanup` label
+  (already-matched code that still needs docs/workflow.md step 7's
+  struct/register-macro cleanup applied - see "Cleanup tasks" below).
+- **Most `cleanup` issues start out `blocked`** - one is generated
+  alongside every `decomp-chunk` issue, linked as blocked-by it (a real
+  GitHub issue-dependency relationship, shown in that issue's sidebar),
+  and stays that way until every function in its paired chunk is
+  matched or parked. Don't start a blocked one early - the code it
+  targets doesn't exist yet. Once its blocking chunk closes, remove the
+  `blocked` label (or ask a maintainer to) and it's fair game.
 - **A `decomp-chunk` issue is just a scoping convenience, not a
   contract.** The grouping exists to make the ROM's remaining work
   easier to browse and claim - there's no obligation to match every
@@ -120,20 +132,29 @@ say what's left in the PR description instead.
 
 Not all remaining work is about matching new functions - a lot of it is
 going back over **already-matched** code and applying
-[docs/workflow.md](docs/workflow.md) step 7's cleanup pass
-retroactively, for functions that were matched before that step was
-consistently applied (or where it was reasonably deferred at the time).
-Look for the `cleanup` label, or generate a fresh list yourself:
+[docs/workflow.md](docs/workflow.md) step 7's cleanup pass. There are
+two kinds, both under the `cleanup` label:
 
-```
-python3 tools/chunk_remaining_work.py --cleanup-scan --issues-dir /tmp/issues
-```
-
-This scans already-matched `src/**/*.c` files for raw pointer-arithmetic
-field access (`*(u32 *)((u8 *)base + 0x10)`-style casts) and raw
-hardware addresses that should be named structs/`REG_*` macros, and
-groups the results per file into issues the same way `decomp-chunk`
-ones work (claim, comment, PR - same conventions as above).
+- **Already-actionable ones**, for code that was matched before step 7
+  was consistently applied (or where it was reasonably deferred at the
+  time). Generate a fresh list yourself with:
+  ```
+  python3 tools/chunk_remaining_work.py --cleanup-scan --issues-dir /tmp/issues
+  ```
+  This scans already-matched `src/**/*.c` files for raw
+  pointer-arithmetic field access (`*(u32 *)((u8 *)base + 0x10)`-style
+  casts) and raw hardware addresses that should be named structs/
+  `REG_*` macros, and groups the results per file (claim, comment, PR -
+  same conventions as above).
+- **Blocked ones**, paired 1:1 with a `decomp-chunk` issue at
+  generation time (`--pair-cleanup`) and linked to it via GitHub's
+  native issue-dependency relationship, since there's nothing to clean
+  up in code that doesn't exist yet. These carry the `blocked` label
+  and are excluded from [the ready-to-work list](https://github.com/Almamu/CrashBandicootXS-decomp/issues?q=is%3Aopen%20is%3Aissue%20-label%3Ablocked%20sort%3Acreated-asc)
+  above until their chunk closes - see "Finding something to work on".
+  Once it does, whoever notices (the person who closed the chunk, a
+  maintainer, or you, checking the paired issue's "blocked by" link)
+  removes the `blocked` label and it joins the regular pool.
 
 **The important carve-out, straight from docs/workflow.md step 7:**
 don't touch a raw offset or an inline-asm/`register ... asm("rN")` pin
