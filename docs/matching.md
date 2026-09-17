@@ -5350,8 +5350,119 @@ focused pass rather than a rushed low-confidence match.
 `graphics` category, both updated to match. Verified via a full clean
 `make compare` (`La suma coincide`) and `make NON_MATCHING=1 report`.
 
-## Match 0x08003B40-0x08004CB4 (25-function `overlay_ui` chunk, the
-## composite pause/options screen)
+## `0x08038538`-`0x08039658`: issue #67's 25-function chunk (6 matched)
+
+Continues straight on from issue #66's pass (the
+"`0x08037110`-`0x08038538`" entry above), still inside the address range
+[docs/audio.md](./audio.md) calls the GAX2 engine. This chunk sits right
+at `sub_8038538` itself - the engine's play-start/init entry point
+docs/audio.md already characterizes in prose - plus the handful of small
+GAX2_SoundHandler "Info"/"Channel" vtable functions just past it. 6 of
+the 25 functions matched, across five small new files (non-contiguous,
+since the remaining 19 either resist matching or aren't understood well
+enough yet):
+
+- **`src/audio/gax_dma_control.c`** (`sub_8038C28`, `sub_8038C50`) - a
+  Direct Sound A output stop/start pair, gated on a shared `state` field
+  (0 = stopped, 1 = starting, 2 = playing) on the runtime player-state
+  object `gUnknown_03001630` points at - modeled as a new
+  `struct GaxPlayerState` in `include/audio.h` (only the handful of
+  fields this pass's functions actually touch are named; `channels[2]`
+  at `+8` is a fixed-size embedded pointer array, its length pinned by
+  `curChannelIdx` always sitting at `+0x10` right after it).
+  `sub_8038C28` clears `state` and disables SOUNDCNT_H's DMA1-sound-A
+  bits; `sub_8038C50` flushes 8 zero halfwords into FIFO_A first, then
+  enables them. `sub_8038C50`'s flush loop needed the FIFO_A pointer and
+  the zero value pulled into their own named locals, assigned *before*
+  the loop counter - writing the loop as
+  `for (i = 7; i >= 0; i--) *(vu16 *)REG_ADDR_FIFO_A = 0;` directly
+  compiles the counter's `movs r0,#7` first, but the ROM loads the FIFO
+  address and the zero value into r2/r1 before touching r0 at all.
+- **`src/audio/gax_note_param.c`** (`sub_8038F94`) - conditionally
+  updates a currently-active channel voice's note-period-looking field
+  (`+0x26`) by walking `gUnknown_03001630`'s current-channel chain two
+  levels deep (`cur->0->0xc` gives a count added to the `channel`
+  argument, indexed into `cur->0->8`'s array to land on the target
+  voice), gated on that voice's `+0x3c` field being non-zero. The
+  chained objects past `GaxPlayerState` itself aren't understood yet -
+  kept as raw offsets, same as `sub_80381FC`'s constructor
+  (`sound_object_init.c`).
+- **`src/audio/gax_swi.c`** (`sub_80392C4`) - a HuffUnComp (SWI 0x13)
+  wrapper. Unlike this project's other bare SWI wrappers
+  (`src/system/timer_util.c`, a straight `svc`+`bx lr`), this one
+  explicitly preserves r0/r1 across the call via r7/r8, plus a
+  `sub sp, #8` and two stack stores nothing ever reads back - reads like
+  a hand-written asm stub, not compiler-generated C, so it's transcribed
+  directly as `NAKED` asm rather than guessed-at C. One real gotcha: the
+  compiler rejects `adds r7, r0, #0` (three-operand immediate-0 add
+  between two *different* low registers) as "instruction not supported
+  in Thumb16 mode" when written inline inside a NAKED function's `asm()`
+  block, even though the exact same mnemonic assembles fine in a raw
+  `asm/*.s` file - had to drop the `s` suffix (`add r7, r0, #0`) to get
+  through `as`, same encoded bytes either way.
+- **`src/audio/gax_sound_handler_info.c`** (`sub_80393D0`, `sub_80393FC`,
+  `sub_803941C`, `nullsub_39`) - the GAX2_SoundHandler "Info" type's
+  init_fn/unknown_fn, resolving two more entries in docs/audio.md's
+  per-type function-pointer table (`sub_80393FC` = `0x080393FD`,
+  `nullsub_39` = `0x08039439`; play_fn `sub_803943C` stays raw).
+  `sub_80393D0` is the shared field-reset core both init variants fall
+  through to after their own field subsets - its two 16-bit constants
+  (`0xFFFF`/`0x4E20`, too big for a `movs` immediate) each needed a named
+  temp assigned right before the store, and the two zero-fill temps
+  needed to be set as a *pair* right after the first store (matching the
+  ROM's `movs r2,#0; movs r3,#0` before either is used) with the second
+  one (`zeroHalf`) pinned to `register ... asm("r3")` - otherwise gcc's
+  CSE reuses the first temp's already-known-zero register for the
+  second and drops the ROM's separate `movs r3,#0` entirely, 2 bytes
+  short. `sub_803941C` needed the same "zero into its own named temp,
+  set before the other stores" treatment (a plain `= 0;` inline compiles
+  it into the same register as the adjacent `movs r0,#2`, not the ROM's
+  separately pre-staged r1).
+- **`src/audio/gax_sound_handler_channel.c`** (`nullsub_40`) - the
+  "Channel" type's unknown_fn (`0x080395A1`), a no-op stub like
+  `nullsub_39` above; init_fn (`sub_8039518`) and play_fn
+  (`sub_80395A4`) stay raw.
+
+**Left raw, not matched this pass** (all described in
+`tools/report_units.py`'s `UNITS` table and `docs/status/audio.md`):
+`sub_8038538`/`sub_8038A1C`/`sub_8038B68` (the play-start/init entry
+point and its DMA1/Timer0 direct-sound follow-ups - genuinely understood
+at the prose level per docs/audio.md, but hits the same many-register
+`r8`/`sb`/`sl` gcc-2.9 allocation difficulty already documented for
+`sub_8006600`/`sub_80372BC`); `sub_8038C88`/`sub_8038DC0`/`sub_8038E74`
+(more mixer-tick/voice-stealing internals); `sub_8038FD0`/`sub_8039064`/
+`sub_80390F8` (a per-channel mute/volume-set family - confirmed via
+isolated compile that the ROM's own codegen for this exact loop shape
+fits in r0-r3 with no callee-saved registers at all, while every C
+rephrasing tried needs at least 3 more; the same difficulty as the
+`sub_8038538` cluster, just in loop rather than straight-line form);
+`sub_8039198`/`sub_80391E8` (contain the same hardware-register
+NOP-delay compiler quirk already flagged in-source at `sub_80384DC` -
+`.byte 0x1b, 0x1c` / `mov r8, r8` x3 - not chased further here);
+`sub_8039214` (a text/console-tile state machine, word-wrap-looking
+character remapping - not attempted); `sub_80392E0` (fatal-error
+display: renders a message via `sub_8039214` then loops forever);
+`sub_803943C` (Info type's play_fn); `sub_8039518` (Channel type's
+init_fn); `sub_80395A4` (Channel type's play_fn) - none of these were
+modified from their existing raw `asm/` form.
+
+All 6 matched functions were verified via a full clean `make compare`
+after splitting `asm/code_3_2_20e.s` into its unchanged head (now just
+`sub_8038538`/`sub_8038A1C`/`sub_8038B68`) plus four new raw fragments
+(`code_3_2_20e_8c88.s`, `code_3_2_20e_8fd0.s`, `code_3_2_20e_92e0.s`,
+`code_3_2_20e_943c.s`) and a renamed tail (`code_3_2_20e_95a4.s`,
+everything from `sub_80395A4` on, unchanged) around the five new matched
+`.c` files, each inserted into `ldscript.txt` at its real ROM position.
+One non-obvious fixup the split needed: `gStaticData_0803A630`/
+`_0803A67C`/`_0803A73C`/`_0803A818` (the ARM-mode-blob data labels
+docs/audio.md's `sub_803A608` entry describes) are referenced from
+`sub_8038538` in the head fragment but *defined* down in the new
+`code_3_2_20e_95a4.s` tail fragment - harmless while both lived in one
+object file, but needs an explicit `.global` on each definition once
+they're split across separate `.o`s, or the link fails with "undefined
+reference" (the label reference itself was untouched - this is a
+linkage-visibility fixup, not a content change).
+## Match 0x08003B40-0x08004CB4 (25-function `overlay_ui` chunk, the composite pause/options screen)
 
 This is the chunk `docs/rom_map.md`'s "narrowed down which screen
 `overlay_ui` is" section already characterized in detail: a settings
