@@ -1,5 +1,16 @@
 # Matching decompilation
 
+**This file is a frozen historical record - it stops gaining new
+entries as of the `docs/matching/` split (see the note at the very
+bottom).** Every entry written since then lives as its own file under
+[`docs/matching/`](./matching/), one per chunk/issue, specifically so
+two parallel PRs never have to edit the same file - appending here
+meant every single PR touched this one file's tail, which was the
+single biggest source of merge conflicts between parallel matching
+work. When looking for a specific function's write-up, check both this
+file (older entries) and `docs/matching/` (newer ones) - `docs/status/`
+cross-references point at whichever one actually has it.
+
 Byte-exact matching progress for functions across the whole codebase (not
 just graphics) - gotchas, per-function notes, and cleanup-pass history
 for turning hand-disassembled `asm/code_3_*.s` blocks into real,
@@ -6102,3 +6113,11 @@ both updated to match. `include/pause_options_screen.h` gained two named
 fields (`field_0`/`field_1c`, both previously padding) for
 `sub_8004CE8`'s use. Verified via a full clean `make compare`
 (`La suma coincide`) and `make NON_MATCHING=1 report`.
+
+---
+
+**End of the frozen historical record.** Everything matched/parked from
+here on gets its own file under [`docs/matching/`](./matching/) instead
+of a new section appended below this line - see that directory's
+`README.md` for the naming convention. Nothing above this line will be
+edited going forward except to fix a factual error.

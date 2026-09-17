@@ -20,9 +20,11 @@ Read these once per session if you haven't already, in order:
    per-function loop. This is not optional style guidance.
 2. [`docs/naming.md`](../../../docs/naming.md) - naming conventions, and
    when (rarely) to rename a `sub_XXXXXXXX`.
-3. [`docs/matching.md`](../../../docs/matching.md) - the running log of
-   every gotcha/compiler-quirk found so far. Skim it for the category
-   you're about to work in; a lot of the ARM/Thumb-codegen quirks recur.
+3. [`docs/matching.md`](../../../docs/matching.md) (frozen historical
+   entries) and [`docs/matching/`](../../../docs/matching/) (everything
+   since) - the running log of every gotcha/compiler-quirk found so
+   far. Skim both for the category you're about to work in; a lot of
+   the ARM/Thumb-codegen quirks recur.
 
 ## 1. Get the chunk's function list
 
@@ -66,8 +68,10 @@ convention. Before starting:
   relevant `- [ ]` to `- [x]`, or ask the user to do it if you don't have
   write access). Leave unchecked boxes for whoever picks this up next.
 - There's no obligation to finish every box before opening a PR - open
-  one for whatever you completed, and only reference `Closes #N` if you
-  got through everything in the list.
+  one for whatever you completed, and only reference `Closes #N` if
+  **every function in the list is byte-exact matched** - parking a
+  function still checks its box (it's handled), but does not count
+  toward closing the issue.
 
 Skip this step entirely if you were asked to "just work on function X-Y"
 directly without an issue existing yet.
@@ -136,11 +140,19 @@ bytes directly with `objdump`) rather than guessing.
 
 ## 5. Update docs and commit
 
-- `docs/matching.md`: append a section for this chunk following the
+- `docs/matching/issue-<N>-<slug>.md` (a **new file** - `docs/matching.md`
+  itself is a frozen historical record and no longer gains new sections,
+  see the note at its top/bottom): write up this chunk following the
   existing per-function/per-batch write-up style (semantics, any
-  compiler-quirk fixes, what got parked or left raw and why).
-- `docs/status/<system>.md`: add matched functions to the file's list;
-  add parked ones to its "Parked" section with a one-line summary.
+  compiler-quirk fixes, what got parked or left raw and why). Creating a
+  new file rather than editing a shared one means your PR can never
+  conflict with another parallel chunk's docs update here.
+- `docs/status/<category>.md` (see `docs/status/README.md` for which of
+  the 9 category pages matches this chunk - it's usually, but not
+  always, the same as the issue's label; check the actual function
+  content, not just the label, since the chunk generator's category
+  guess is occasionally wrong): add matched functions to the file's
+  list; add parked ones to its "Parked" section with a one-line summary.
 - `python3 tools/report_units.py` to regenerate `objdiff.json` if you
   touched `UNITS`.
 - Commit with a message describing what got matched/parked/left, in this
@@ -157,10 +169,13 @@ gh pr create --title "Match <address range or short description>" --body "..."
 The PR body should say plainly: which functions matched, which got
 parked (with the one-line reason each), which were left untouched (with
 why), and confirm the full clean `make compare` passed. Reference the
-issue (`Closes #N`) only if **every** function in the chunk reached one
-of matched/parked/left-untouched-with-reason - if you only got partway
-through a big chunk, say so instead and leave the issue open (or comment
-with progress) rather than closing it early.
+issue (`Closes #N`) **only if every function in the chunk is byte-exact
+matched** - a parked function (even fully understood, even with a
+one-line reason) or a left-untouched function both mean the issue stays
+open. Don't close an issue with any parked or raw functions remaining,
+no matter how well-documented the reason is - say so instead and leave
+the issue open (or comment with progress) so the gap is visible to
+whoever picks it up next.
 
 ## Picking up a `cleanup` issue instead
 
@@ -183,8 +198,8 @@ breaking the match.
 
 If you're starting cold (no prior conversation in this repo): read
 `docs/workflow.md` end to end before touching anything, and read the
-specific chunk's category notes in `docs/rom_map.md` and
-`docs/matching.md` for context already established about that address
+specific chunk's category notes in `docs/rom_map.md`, `docs/matching.md`,
+and `docs/matching/` for context already established about that address
 range - a lot of struct layouts and calling conventions are already
 pinned down and referenced by name (`gUnknown_030012D8`,
 `sub_803AD80`-family trampolines, `struct aabb`, etc.); don't re-derive

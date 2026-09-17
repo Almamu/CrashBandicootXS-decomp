@@ -24,8 +24,9 @@ the real detail.
   alongside every `decomp-chunk` issue, linked as blocked-by it (a real
   GitHub issue-dependency relationship, shown in that issue's sidebar),
   and stays that way until every function in its paired chunk is
-  matched or parked. Don't start a blocked one early - the code it
-  targets doesn't exist yet. Once its blocking chunk closes, remove the
+  byte-exact matched (parking a function doesn't count - see "Opening
+  the PR" below). Don't start a blocked one early - the code it targets
+  doesn't exist yet. Once its blocking chunk closes, remove the
   `blocked` label (or ask a maintainer to) and it's fair game.
 - **A `decomp-chunk` issue is just a scoping convenience, not a
   contract.** The grouping exists to make the ROM's remaining work
@@ -36,8 +37,9 @@ the real detail.
   duplicate it), split it across several smaller PRs, or hand off
   partial progress to someone else via a comment. Open a PR for however
   much you've matched/parked/left-with-a-reason, reference the issue
-  without `Closes` unless you finished the whole thing, and leave a
-  comment saying what's left for the next person.
+  without `Closes` unless **every** function is byte-exact matched (see
+  "Opening the PR" below - parked or left-raw functions don't count),
+  and leave a comment saying what's left for the next person.
 - Category labels (`game_loop`, `actor`, `graphics`, `overlay_ui`,
   `graphics_loading`, `audio`, `hud`, `system`, `util`) tell you roughly
   what part of the game it's in - see [docs/rom_map.md](docs/rom_map.md)
@@ -82,10 +84,11 @@ before starting, it's not optional style guidance.** In short, for each
 function in your chunk:
 
 1. Read its disassembly and understand what it does. Check
-   [docs/rom_map.md](docs/rom_map.md) and
-   [docs/matching.md](docs/matching.md) first - a lot of structs,
-   globals, and calling conventions in this ROM are already named and
-   documented, and re-deriving them from scratch wastes time.
+   [docs/rom_map.md](docs/rom_map.md), [docs/matching.md](docs/matching.md)
+   (frozen historical entries), and [docs/matching/](docs/matching/)
+   (everything since) first - a lot of structs, globals, and calling
+   conventions in this ROM are already named and documented, and
+   re-deriving them from scratch wastes time.
 2. Write the C reconstruction. Prefer named structs/fields and
    `REG_*`/hardware-register macros over raw pointer-arithmetic casts.
 3. Compile in isolation and diff the resulting instructions against the
@@ -118,15 +121,22 @@ rm -rf build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && m
 `docs/workflow.md`'s map-file address-shift diagnostic method rather
 than guessing at what regressed.
 
-Then update `docs/matching.md` and `docs/status/<system>.md` to reflect
-what you matched/parked/left, and commit.
+Then write up what you matched/parked/left in a **new file** under
+`docs/matching/` (never edit `docs/matching.md` itself - see that
+file's header for why), update the relevant `docs/status/<category>.md`
+(check `docs/status/README.md` for which of the 9 category pages
+applies - it's usually but not always the same as the issue's label),
+and commit.
 
 ## Opening the PR
 
-Reference the issue (`Closes #N`) only if you got through every function
-in the chunk (matched, parked, or explicitly left with a stated reason).
-If you only got partway through a large chunk, leave the issue open and
-say what's left in the PR description instead.
+Reference the issue (`Closes #N`) only if **every function in the chunk
+is byte-exact matched** - parking a function or leaving it raw (even
+with a well-documented reason) doesn't count toward closing, it just
+means that function's box gets checked off as handled. If anything in
+the chunk is parked, left raw, or otherwise not fully matched, leave the
+issue open and say what's left (and why) in the PR description instead
+- someone else may be able to close the remaining gap later.
 
 ## Cleanup tasks
 
