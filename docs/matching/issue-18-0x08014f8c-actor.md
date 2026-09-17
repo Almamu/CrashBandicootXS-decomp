@@ -21,7 +21,10 @@ guessed struct.
 ## New files
 
 The chunk's matched/parked functions split into four new `.c` files
-(`actor_part28.c`/`28b.c`/`28c.c`/`28d.c`), each ending where a parked
+(`actor_part38.c`/`38b.c`/`38c.c`/`38d.c` - numbered `38` rather than
+`28`, which would have matched their creation order more naturally,
+since issue #62's parallel PR independently claimed `actor_part28.c`
+first before this PR merged), each ending where a parked
 function's raw bytes sit between it and the next matched run - the same
 "widen past the parked function's real end" convention as
 `actor_part18.c`. Four new raw `.s` splits carry the parked functions'

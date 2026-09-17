@@ -169,3 +169,17 @@ void sub_8028520(void *self, s32 *state, s32 *timer, s32 threshold)
         break;
     }
 }
+
+/* Setter/increment pair for the same central state object's `+0x28`
+ * field (see the file doc comment above) - GitHub issue #46. Neither
+ * has a confirmed name for the field yet (no other reader of it has
+ * been matched in this chunk), so it stays a raw offset. */
+void sub_8028568(void *state, s32 val)
+{
+    *(s32 *)((u8 *)state + 0x28) = val;
+}
+
+void sub_802856C(void *state)
+{
+    *(s32 *)((u8 *)state + 0x28) += 1;
+}

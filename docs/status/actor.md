@@ -187,16 +187,33 @@ from "core" graphics.
   raw `sub_8018008`-`sub_80186F0` block sits between them):
   `sub_80187FC`, `sub_8018858`, `sub_801886C`, `sub_8018884`; see
   `docs/matching/issue-22-0x08017a44-actor.md`.
-- `src/graphics/actor_part28.c` (new file, GitHub issue #18, ROM
-  0x08014F8C): `sub_8014F8C` - a `gUnknown_030012F0`-list proximity-
+- `src/graphics/actor_part28.c`/`actor_part30.c`/`actor_part32.c`/
+  `actor_part34.c`/`actor_part36.c` (new files, GitHub issue #62, ROM
+  0x08033804-0x08033EF4 - the `gUnknown_030015AC` singleton system's
+  accessor/state-machine cluster, non-adjacent since 5 parked functions
+  sit interleaved between them; see
+  [docs/matching/issue-62-0x08033804-actor.md](../matching/issue-62-0x08033804-actor.md)):
+  `sub_8033804`, `sub_8033828`, `sub_8033880`, `sub_803388C`,
+  `sub_80338C4`, `sub_80338D0`, `sub_80338DC`, `sub_80338E8`,
+  `sub_80338F4`, `sub_8033900`, `sub_803390C`, `nullsub_36`,
+  `sub_803395C`, `nullsub_37`, `sub_8033AE0`, `sub_8033BB8`,
+  `sub_8033BFC`, `sub_8033C28`, `sub_8033CF0`, `sub_8033E18` - the
+  singleton's one-shot latches, field getters, state-transition/
+  anim-frame-reset setters, an `InitActorPart`-based constructor, and
+  several "self" object accessors/setters sharing the boss cluster's
+  layout convention.
+- `src/graphics/actor_part38.c` (new file, GitHub issue #18, ROM
+  0x08014F8C - numbered `38` rather than `28` since issue #62's
+  parallel PR above independently claimed `actor_part28.c` first):
+  `sub_8014F8C` - a `gUnknown_030012F0`-list proximity-
   trigger scan for the same "self" action-table object family as
   `actor_part18.c`; see `docs/matching/issue-18-0x08014f8c-actor.md`.
-- `src/graphics/actor_part28b.c` (new file, GitHub issue #18, ROM
-  0x080151C8, non-adjacent to `actor_part28.c` since the parked
+- `src/graphics/actor_part38b.c` (new file, GitHub issue #18, ROM
+  0x080151C8, non-adjacent to `actor_part38.c` since the parked
   `sub_8015038` sits raw between them): `sub_80151C8`; see
   `docs/matching/issue-18-0x08014f8c-actor.md`.
-- `src/graphics/actor_part28c.c` (new file, GitHub issue #18, ROM
-  0x08015350-0x080156B4, non-adjacent to `actor_part28b.c` since the
+- `src/graphics/actor_part38c.c` (new file, GitHub issue #18, ROM
+  0x08015350-0x080156B4, non-adjacent to `actor_part38b.c` since the
   parked `sub_8015238`/`sub_80152F0` sit raw between them):
   `sub_8015350`, `sub_8015398`, `sub_80153FC`, `sub_8015460`,
   `sub_8015508`, `sub_8015558`, `sub_80155A8`, `sub_80155AC`,
@@ -205,8 +222,8 @@ from "core" graphics.
   family, including two near-identical self+0x29-keyed mgr-trampoline
   arms (`sub_8015460`) and several part+0x38-gated trampoline firers;
   see `docs/matching/issue-18-0x08014f8c-actor.md`.
-- `src/graphics/actor_part28d.c` (new file, GitHub issue #18, ROM
-  0x0801574C-0x08015780, non-adjacent to `actor_part28c.c` since the
+- `src/graphics/actor_part38d.c` (new file, GitHub issue #18, ROM
+  0x0801574C-0x08015780, non-adjacent to `actor_part38c.c` since the
   parked `sub_80156EC` sits raw between them): `nullsub_17`,
   `sub_8015750`, `nullsub_18`, `sub_8015774`, `sub_8015780` - two
   nullsubs, two tail-call wrappers, and the shared trampoline-pair-
@@ -445,8 +462,40 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   parked on this compiler's register choice for a couple of
   intermediate abs-value-computation values - see `docs/matching.md`,
   issue #52.
+- **`sub_80339DC`** (`asm/code_3_2_20_28568_c99c_31784_339dc.s`, C in
+  `src/graphics/actor_part29.c`) - a proximity-triggered effect/hazard
+  detector measuring `self`'s distance to the player after syncing to
+  the singleton's position. Every load/store, branch and call
+  confirmed correct; parked on a residual register-allocation gap for
+  one 16-bit constant materialization this compiler won't place in the
+  ROM's chosen scratch register without breaking the surrounding
+  `ip`/`r8`/`r9` pins - see
+  `docs/matching/issue-62-0x08033804-actor.md`, issue #62.
+- **`sub_8033B44`** (`asm/code_3_2_20_28568_c99c_31784_33b44.s`, C in
+  `src/graphics/actor_part31.c`) - position-update-then-draw helper via
+  a `gStaticData_0817C4E0` stride-8 trampoline table, the same shape
+  and register-allocation gap as the already-parked `sub_802C208` - see
+  `docs/matching/issue-62-0x08033804-actor.md`, issue #62.
+- **`sub_8033C84`** (`asm/code_3_2_20_28568_c99c_31784_33c84.s`, C in
+  `src/graphics/actor_part33.c`) - `sub_8033B44`'s predicate twin,
+  parked on the identical gap - see
+  `docs/matching/issue-62-0x08033804-actor.md`, issue #62.
+- **`sub_8033CF8`** (`asm/code_3_2_20_28568_c99c_31784_33cf8.s`, C in
+  `src/graphics/actor_part35.c`) - `sub_80339DC`'s sibling proximity/
+  spawn detector. Every branch and call confirmed correct; parked
+  because this agbcc build never emits a callee-save push/pop for a
+  plain low-register (`r0`-`r7`) `register` variable used across a
+  call unless another high register is *also* live in the same
+  function (confirmed with an isolated test) - pinning `self+0x64`'s
+  cache to `r7` here (matching the ROM) would silently corrupt the
+  caller's `r7` - see `docs/matching/issue-62-0x08033804-actor.md`,
+  issue #62.
+- **`sub_8033E80`** (`asm/code_3_2_20_28568_c99c_31784_33e80.s`, C in
+  `src/graphics/actor_part37.c`) - `sub_8033B44`'s twin using the
+  second stride-8 table (`gStaticData_0817C4F8`), parked on the same
+  gap - see `docs/matching/issue-62-0x08033804-actor.md`, issue #62.
 - **`sub_8015038`** (`asm/code_3_2_17_15038.s`, C in
-  `src/graphics/actor_part28.c`) - a three-arm mgr-trampoline handler
+  `src/graphics/actor_part38.c`) - a three-arm mgr-trampoline handler
   keyed on `self+0x24`/`self+0x22`, picking one of three table-index
   fallbacks. Every load/store, branch and call is understood and
   semantically correct; parked on this compiler's register allocation
@@ -455,7 +504,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   once real trampoline calls intervene) - see
   `docs/matching/issue-18-0x08014f8c-actor.md`.
 - **`sub_8015238`** (`asm/code_3_2_17_15238.s`, C in
-  `src/graphics/actor_part28b.c`) - `self+0x26`/`mode`/`flags`-gated
+  `src/graphics/actor_part38b.c`) - `self+0x26`/`mode`/`flags`-gated
   mgr-trampoline dispatcher. Every load/store, branch and call is
   correct, in the right order, and in the right registers - parked
   purely on the two parameter home-copies at function entry (this
@@ -465,7 +514,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   parameter-home-copy prologue pass) - see
   `docs/matching/issue-18-0x08014f8c-actor.md`.
 - **`sub_80152F0`** (`asm/code_3_2_17_15238.s`, C in
-  `src/graphics/actor_part28b.c`) - `self+0x27`/`self+0x2b`/`mode`-
+  `src/graphics/actor_part38b.c`) - `self+0x27`/`self+0x2b`/`mode`-
   gated state/counter/table-index trio reset, tail-calling
   `sub_80122CC`. Every load/store, branch and call confirmed correct
   and in the right order; parked on a single instruction (a `+6` byte
@@ -473,7 +522,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   it as a separate `adds`) - see
   `docs/matching/issue-18-0x08014f8c-actor.md`.
 - **`sub_80156EC`** (`asm/code_3_2_17_156ec.s`, C in
-  `src/graphics/actor_part28c.c`) - `part+0x38`/`sub_80231BC`-gated
+  `src/graphics/actor_part38c.c`) - `part+0x38`/`sub_80231BC`-gated
   mgr-trampoline dispatcher. Every load/store, branch and call
   confirmed correct; parked on the `else` arm recomputing `self` into
   a fresh register (an extra push/pop this compiler insists on once
@@ -481,7 +530,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   the same `self` register the whole function already lives in - see
   `docs/matching/issue-18-0x08014f8c-actor.md`.
 - **`sub_80157C4`** (`asm/code_3_2_17_157c4.s`, C in
-  `src/graphics/actor_part28d.c`) - player's `+0x100`-flag-gated
+  `src/graphics/actor_part38d.c`) - player's `+0x100`-flag-gated
   `mode` remapper (a 3-way dispatch playing a fixed cue via
   `sub_80019A8`/`PlaySfx`), tail-calling `sub_800B86C`. Every load/
   store, branch and call is understood and semantically correct;

@@ -1,292 +1,258 @@
 #include "core.h"
-#include "actor.h"
 
-/* GitHub issue #18's chunk, ROM 0x08014F8C-0x080157C0 - continues the
- * same "self" action-table object family documented at the top of
- * actor_part18.c (`self+0xc` a per-category `{s16 offset; void *fn}`
- * table, `self+0x10` a `struct actor *` sub-object, `self+0x27`-`0x32` a
- * shared state/flag/table-index trio) - `sub_8015508`/`sub_8015780` are
- * both called directly by `sub_801426C`/`sub_80142B0` there, confirming
- * the same object shapes carry over. `gUnknown_030012F0` (only touched
- * by `sub_8014F8C` here) is a small list object - `+4` a count, `+0xc`
- * a `struct actor **` array - not referenced by any already-matched
- * code yet, so it stays raw-offset rather than a guessed struct. This
- * file covers `sub_8014F8C` (matched) and `sub_8015038` (parked,
- * NON_MATCHING); the chunk continues in actor_part28b.c/c.c/d.c, split
- * at each parked function's raw-asm gap - see docs/matching/
- * issue-18-0x08014f8c-actor.md for the full write-up. */
+/* A second per-instance "self" object family sharing the exact same
+ * layout convention already documented for the boss-weapon cluster
+ * (actor_part20.c-actor_part26.c, docs/matching/issue-58-0x08030334-actor.md):
+ * state at `+0x28`, table-index/"kind" at `+0xc`, an anim-frame
+ * halfword/byte pair at `+0x10`/`+0x12`, an accumulator at `+8`, a
+ * "part table" pointer at `+0`, and an event/trampoline table pointer
+ * at `+0x50` - plus a health-like countdown at `+0x54` and a death/
+ * "dead" byte flag at `+0x6c`. These functions also drive a *singleton*
+ * object reached through the global pointer `gUnknown_030015AC` (not a
+ * per-instance `self`) - see docs/rom_map.md, "Follow-up reads
+ * `sub_80339DC`'s helper cluster and `sub_8033470`" and "`sub_80331BC`
+ * closes a long-open question: the missing singleton constructor". Most
+ * of `gUnknown_030015AC`'s own accessors (`sub_8033880`-`sub_803390C`)
+ * are trivial one-line getters for its fields; `sub_803390C`/
+ * `sub_803395C` are the same state-transition/animation-frame-reset
+ * sequence already documented for the boss cluster's
+ * `sub_8030530`/`sub_8030C98`/`sub_803146C`. See
+ * docs/matching/issue-62-0x08033804-actor.md. */
 
+extern void *gUnknown_030015AC;
+extern s32 gUnknown_030015B0;
+extern s32 gUnknown_030015B4;
+extern s32 gUnknown_030015B8;
+extern s32 gUnknown_030015BC;
+extern s32 gUnknown_030015C8;
+extern s32 gUnknown_030015CC;
+extern s32 gUnknown_030015D0;
+extern s32 gUnknown_030015D4;
+extern void *gUnknown_030015D8;
+extern void *gUnknown_030015DC;
+extern s32 gUnknown_030015F8;
+extern s16 gUnknown_030015FC;
+extern u8 gUnknown_030015FE;
+extern u8 gUnknown_030015FF;
+extern u16 gUnknown_03001590;
+extern s32 gUnknown_03001594;
+extern void *gUnknown_030008B4;
+extern void *gUnknown_030008B8;
 extern void *gUnknown_030012BC;
-extern void *gUnknown_030012F0;
-extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
-extern s32 sub_803AD7C(void *addr, void *fn);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
-extern s32 sub_803AD84(void *arg0, void *arg1, void *arg2, void *arg3);
-extern void sub_803AD88(void *arg0, s32 arg1, s32 arg2, s32 arg3);
-extern void sub_800F6B8(s32 x, s32 y, s32 arg2, s32 arg3);
 
-/* For each `struct actor *` in the `gUnknown_030012F0` list: skips
- * entries whose `+0x48` trampoline (`sub_803AD7C`) reports a width of 4
- * or less, entries further than 0x40 (Manhattan distance) from `self`'s
- * own part, entries without their `+0xc` bit 6 flag set, and entries
- * more than 0x11 away vertically - then fires the `+0x68` trampoline
- * pair via `sub_803AD88` with action `0x16` on whatever survives all
- * four checks. */
-void sub_8014F8C(void *selfArg)
+extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
+extern s32 GetAnimFrameBaseOffset(void *self);
+
+/* One-shot latch: if neither `gUnknown_030015FE` nor `gUnknown_030015FC`
+ * has been set yet, arms both. */
+void sub_8033804(void)
 {
-    u8 *self = selfArg;
-    struct actor *part;
-    register s32 threshold asm("r8");
-    s32 px, py;
-    s32 i;
+    if (gUnknown_030015FE == 0 && gUnknown_030015FC == 0) {
+        gUnknown_030015FC = 1;
+        gUnknown_030015FE = 1;
+    }
+}
 
-    part = *(struct actor **)(self + 0x10);
-    sub_800F6B8(part->x >> 8, part->y >> 8, 0x40, 0x12);
-    threshold = 0x40;
+/* Speed-override toggle for a P1/P2-mirrored object pair
+ * (`gUnknown_030008B4`/`gUnknown_030008B8`, each a pointer to an object
+ * with a speed-like `u16` at `+0x1e`). The first call caches the
+ * current speed into `gUnknown_03001590`; from then on, `flag` picks
+ * between a fixed max speed (`0x7FFF`) and the cached value, applying
+ * it to both objects. */
+void sub_8033828(u8 flag)
+{
+    register u16 val asm("r1");
 
-    part = *(struct actor **)(self + 0x10);
-    px = part->x >> 8;
-    py = part->y >> 8;
+    if (gUnknown_03001594 == 0) {
+        gUnknown_03001590 = *(u16 *)((u8 *)gUnknown_030008B4 + 0x1e);
+        gUnknown_03001594 = 1;
+    }
 
-    i = 0;
-    goto loop_cond;
+    if (flag != 0) {
+        register u8 *p asm("r0") = gUnknown_030008B4;
 
-loop_body:
+        val = 0x7FFF;
+        *(u16 *)(p + 0x1e) = val;
+    } else {
+        register u8 *p asm("r2") = gUnknown_030008B4;
+
+        val = gUnknown_03001590;
+        *(u16 *)(p + 0x1e) = val;
+    }
+
+    *(u16 *)((u8 *)gUnknown_030008B8 + 0x1e) = val;
+}
+
+/* Constant getter - returns the singleton's lifetime counter
+ * (`gUnknown_030015F8`). */
+s32 sub_8033880(void)
+{
+    return gUnknown_030015F8;
+}
+
+extern void sub_803390C(s32 a0, s32 a1);
+
+/* The singleton's death/reset transition: plays the death sound, then
+ * decrements the lifetime counter `gUnknown_030015F8`, and once it
+ * reaches zero clears `gUnknown_030015FF` and fires the state-5/
+ * table-index-0 transition via `sub_803390C`. */
+void sub_803388C(void)
+{
+    PlaySfx(gUnknown_030012BC, 4, 0x100);
+
+    gUnknown_030015F8 -= 1;
+    if (gUnknown_030015F8 == 0) {
+        gUnknown_030015FF = gUnknown_030015F8;
+        sub_803390C(5, 0);
+    }
+}
+
+/* Constant getter - returns `gUnknown_030015DC` (a pointer to a small
+ * per-state lookup table used by several functions in this cluster). */
+void *sub_80338C4(void)
+{
+    return gUnknown_030015DC;
+}
+
+/* Constant getter - returns `gUnknown_030015B0` (the singleton's
+ * current animation "kind" index). */
+s32 sub_80338D0(void)
+{
+    return gUnknown_030015B0;
+}
+
+/* Constant getter - returns `gUnknown_030015D8` (set to the singleton
+ * `self` pointer by its constructor, `sub_80331BC`). */
+void *sub_80338DC(void)
+{
+    return gUnknown_030015D8;
+}
+
+/* Constant getter - returns the singleton's Z position field
+ * (`gUnknown_030015BC`). */
+s32 sub_80338E8(void)
+{
+    return gUnknown_030015BC;
+}
+
+/* Constant getter - returns the singleton's Y position field
+ * (`gUnknown_030015B8`). */
+s32 sub_80338F4(void)
+{
+    return gUnknown_030015B8;
+}
+
+/* Constant getter - returns the singleton's X position field
+ * (`gUnknown_030015B4`). */
+s32 sub_8033900(void)
+{
+    return gUnknown_030015B4;
+}
+
+/* State-transition setter for the singleton (`gUnknown_030015AC`):
+ * selects animation "kind" `a0`, sets the table index to `a1`, resets
+ * the anim-frame halfword/byte pair from the new table entry's first
+ * field, and - once the current animation frame reaches the new
+ * entry's duration (its `+4` halfword) - clears the accumulator at
+ * `+8`. Same idiom as the boss cluster's `sub_8030530`/`sub_8030C98`. */
+void sub_803390C(s32 a0, s32 a1)
+{
+    u8 *self;
+
+    gUnknown_030015B0 = a0;
+    self = gUnknown_030015AC;
+    *(s32 *)(self + 0xc) = a1;
+
     {
-        u8 *list;
-        struct actor *other;
-        u8 *rec;
-        s16 offset;
-        void *addr;
-        void *fn;
-        register s32 dx asm("r1");
-        register s32 dy asm("r2");
+        register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + a1 * 12);
+        register u8 zero asm("r1") = 0;
 
-        /* Anti-CSE: a plain re-read of `gUnknown_030012F0` here would
-         * let gcc reuse the register value the loop condition below
-         * just loaded, across the branch - the ROM reloads it again
-         * from scratch inside the body instead (see matching.md's
-         * `sub_8006864`/`sub_8006820` entry for the general technique).
-         * Both this and the condition's read go through the same
-         * hand-placed literal-pool word (`.Lgu12f0_8014f8c`, emitted
-         * once right after this function) via a real two-instruction
-         * `ldr`/`ldr` rather than gcc's own per-use pool management,
-         * since letting gcc manage it here would either still let it
-         * CSE the address across the branch, or (if forced fresh some
-         * other way) emit a *second*, redundant pool word instead of
-         * reusing the condition's - the ROM's own single-word pool
-         * layout for this symbol needs exactly one entry shared by
-         * both `ldr` sites, matching how the two loads share one
-         * literal in the ROM (`_08015034` referenced from both
-         * `_08014FB8` and `_0801501E`). */
-        asm volatile("ldr %0, .Lgu12f0_8014f8c\n\tldr %0, [%0]" : "=r"(list));
-        other = (*(struct actor ***)(list + 0xc))[i];
-        rec = (u8 *)other->table + 0x48;
-        offset = *(s16 *)rec;
-        addr = (u8 *)other + offset;
-        fn = *(void **)(rec + 4);
+        *(u16 *)(self + 0x10) = anim;
+        self[0x12] = zero;
+    }
 
-        if (sub_803AD7C(addr, fn) <= 4) {
-            goto loop_inc;
+    {
+        s32 frame = GetAnimFrameBaseOffset(self);
+        register s32 idx asm("r2") = *(s32 *)(self + 0xc);
+        register u8 *table asm("r3") = *(u8 **)self;
+        register u8 *entryPtr asm("r1") = (u8 *)(idx * 0xc);
+        register s32 four asm("r2");
+        register s32 val asm("r1");
+
+        asm("add %0, %0, %1" : "+r" (entryPtr) : "r" (table));
+        four = 4;
+        val = *(s16 *)(entryPtr + four);
+
+        if (frame >= val) {
+            *(s32 *)(self + 8) = 0;
+        }
+    }
+}
+
+/* No-op stub. */
+void nullsub_36(void)
+{
+}
+
+/* State-transition setter for the singleton, gated by a depth
+ * accumulator: advances `gUnknown_030015BC` by `gUnknown_030015D4`,
+ * and - only while `gUnknown_030015C8` is still under its `0x81FF`
+ * threshold - resets `gUnknown_030015CC`/`gUnknown_030015D0`, selects
+ * animation "kind" 2, and runs the same table-index-0 anim-frame-reset
+ * sequence as `sub_803390C`. */
+void sub_803395C(void)
+{
+    u8 *self;
+
+    gUnknown_030015BC += gUnknown_030015D4;
+
+    if (gUnknown_030015C8 <= 0x81FF) {
+        register s32 *pCC asm("r1") = &gUnknown_030015CC;
+        register s32 *pD0 asm("r0") = &gUnknown_030015D0;
+        register s32 zeroD0 asm("r5") = 0;
+
+        *pD0 = zeroD0;
+        *pCC = zeroD0;
+        {
+            register s32 two asm("r1") = 2;
+            register s32 *pB0 asm("r0") = &gUnknown_030015B0;
+
+            *pB0 = two;
+        }
+
+        self = gUnknown_030015AC;
+        *(s32 *)(self + 0xc) = zeroD0;
+
+        {
+            register u16 anim asm("r0") = *(u16 *)(*(u8 **)self);
+            register u8 zero asm("r1") = 0;
+
+            *(u16 *)(self + 0x10) = anim;
+            self[0x12] = zero;
         }
 
         {
-            register s32 sign asm("r0");
+            s32 frame = GetAnimFrameBaseOffset(self);
+            register s32 idx asm("r2") = *(s32 *)(self + 0xc);
+            register u8 *table asm("r3") = *(u8 **)self;
+            register u8 *entryPtr asm("r1") = (u8 *)(idx * 0xc);
+            register s32 four asm("r2");
+            register s32 val asm("r1");
 
-            dx = (other->x >> 8) - px;
-            sign = dx >> 31;
-            dx ^= sign;
-            dx -= sign;
+            asm("add %0, %0, %1" : "+r" (entryPtr) : "r" (table));
+            four = 4;
+            val = *(s16 *)(entryPtr + four);
 
-            sign = (other->y >> 8) - py;
-            dy = sign >> 31;
-            sign ^= dy;
-            dy = sign - dy;
-
-            dx += dy;
-        }
-        if (dx > threshold) {
-            goto loop_inc;
-        }
-        {
-            register u8 flagsVal asm("r1") = other->flags;
-            register s32 bit asm("r0") = flagsVal >> 6;
-            register s32 one asm("r1") = 1;
-
-            bit &= one;
-            if (bit == 0) {
-                goto loop_inc;
+            if (frame >= val) {
+                *(s32 *)(self + 8) = zeroD0;
             }
         }
-        if (dy > 0x11) {
-            goto loop_inc;
-        }
-
-        {
-            u8 *rec2 = (u8 *)other->table + 0x68;
-            s16 offset2 = *(s16 *)rec2;
-            void *addr2 = (u8 *)other + offset2;
-            register void *fn2 asm("r4") = *(void *volatile *)(rec2 + 4);
-
-            sub_803AD88(addr2, 0, 0x16, 0);
-            (void)fn2;
-        }
-    }
-
-loop_inc:
-    i++;
-loop_cond:
-    {
-        void *listVal;
-
-        asm volatile("ldr %0, .Lgu12f0_8014f8c\n\tldr %0, [%0]" : "=r"(listVal));
-        if (i < *(s32 *)((u8 *)listVal + 4)) {
-            goto loop_body;
-        }
     }
 }
-asm(".align 2, 0\n\t.Lgu12f0_8014f8c: .word gUnknown_030012F0");
 
-#if NON_MATCHING
-/* NOT YET BYTE-MATCHING - see docs/matching/issue-18-0x08014f8c-actor.md,
- * "Parked, not matched: sub_8015038" for the full account; compiled
- * only under `make NON_MATCHING=1`, the checked-in assembly
- * (asm/code_3_2_17_15038.s) is used otherwise. Every load/store, branch
- * and call is understood and semantically correct - the residual gap is
- * this compiler's register allocation across the three near-identical
- * arms (it wants `ip`/`sb`/`r8` for `id`/`0`/the table-index exactly
- * like the ROM, but also insists on caching computed field addresses
- * (`self+0x21`/`self+0x22`) in different registers than the ROM's own
- * `r7`/`r5` choices once real trampoline calls intervene) - tried
- * explicit `register ... asm("rN")` pins matching every ROM register
- * role, local pointer variables for `self+0x21`/`self+0x22` computed
- * once and reused, and reordering statements to match the ROM's
- * "zero-init early, resolve late" sequencing; each fixed one spot but
- * regressed another already-matching one elsewhere in the same
- * function. */
-extern void *gUnknown_030012BC;
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
-extern s32 sub_803AD84(void *arg0, void *arg1, void *arg2, void *arg3);
-
-/* Same `mgr`/`{s16 offset; void *fn}` trampoline pair at `self+0xc`
- * (`+0x20`/`+0x24` and `+0x50`/`+0x54`) as `sub_801426C`/`sub_80142B0`.
- * `self+0x24` selects one of two variants: while clear, picks a
- * table-index (`+0x21`) from `self+0x22` (1->0x28, 2->0x27, default
- * 0x17), stores it back, fires both trampolines with `id`/that index,
- * resets `self+0x18`/`0x1c` to `0`/`0x14`, plays a sound keyed off the
- * new `+0x21`, then bumps `self+0x22` and - once it reaches `self+0x20`
- * - latches `self+0x24` and clamps `self+0x22` to `0`/`1`. While set,
- * either repeats the same shape with a fixed `+0x21` from `self+0x22`
- * (unless `self+0x22` is already above `0xf0`, i.e. wrapped) or, once
- * wrapped, fires a third fixed-index variant (using `param2` as the
- * mgr's `+0x20` trampoline argument instead of `id`) and stamps
- * `self+0x26` with `0x63`. */
-void sub_8015038(void *selfArg, s32 id, s32 param2)
+/* No-op stub. */
+void nullsub_37(void)
 {
-    register u8 *self asm("r6") = selfArg;
-    register s32 idReg asm("ip") = id;
-    register s32 p2 asm("r3") = param2;
-
-    if (self[0x24] == 0) {
-        u8 *p21 = self + 0x21;
-        u8 *p22 = self + 0x22;
-        register s32 tableIdx asm("r8");
-        register s32 zero asm("r9") = 0;
-        s32 fourteen = 0x14;
-        u8 byte22 = *p22;
-        u8 *mgr;
-        u8 *off;
-
-        *p21 = 0;
-        tableIdx = 0x17;
-        if (byte22 == 1) {
-            tableIdx = 0x28;
-        } else if (byte22 == 2) {
-            tableIdx = 0x27;
-        }
-        *p21 = byte22;
-
-        mgr = *(u8 **)(self + 0xc);
-        sub_803AD80(self + *(s16 *)(mgr + 0x20), (void *)idReg, *(void **)(mgr + 0x24));
-        off = *(u8 **)(self + 0xc) + 0x50;
-        sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)tableIdx,
-                    *(void **)(off + 4));
-
-        *(s32 *)(self + 0x18) = zero;
-        *(s32 *)(self + 0x1c) = fourteen;
-
-        PlaySfx(gUnknown_030012BC, *p21 + 0x57, 0x100);
-
-        *p22 += 1;
-        if ((u8)*p22 < self[0x20]) {
-            self[0x23] = 0;
-            return;
-        }
-
-        self[0x24] = 1;
-        *p22 = (*p22 <= 1) ? zero : 1;
-        self[0x23] = 0;
-        return;
-    }
-
-    if (self[0x22] <= 0xf0) {
-        u8 *mgr = *(u8 **)(self + 0xc);
-        u8 *off;
-        s32 zero = 0;
-        s32 eighteen = 0x18;
-
-        self[0x21] = 0;
-        self[0x20] = 0;
-
-        sub_803AD80(self + *(s16 *)(mgr + 0x20), (void *)p2, *(void **)(mgr + 0x24));
-        off = *(u8 **)(self + 0xc) + 0x50;
-        sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)0x10,
-                    *(void **)(off + 4));
-
-        *(s32 *)(self + 0x18) = zero;
-        *(s32 *)(self + 0x1c) = eighteen;
-
-        PlaySfx(gUnknown_030012BC, 0xa, 0x100);
-        self[0x26] = 0x63;
-
-        self[0x22]--;
-        self[0x23] = 0;
-        return;
-    }
-
-    {
-        u8 *p22 = self + 0x22;
-        u8 *p21 = self + 0x21;
-        register s32 tableIdx asm("r8");
-        s32 zero = 0;
-        s32 fourteen = 0x14;
-        u8 byte22 = *p22;
-        u8 *mgr;
-        u8 *off;
-
-        *p21 = 0;
-        tableIdx = 0x17;
-        if (byte22 == 1) {
-            tableIdx = 0x28;
-        } else if (byte22 == 2) {
-            tableIdx = 0x27;
-        }
-        *p21 = byte22;
-
-        mgr = *(u8 **)(self + 0xc);
-        sub_803AD80(self + *(s16 *)(mgr + 0x20), (void *)idReg, *(void **)(mgr + 0x24));
-        off = *(u8 **)(self + 0xc) + 0x50;
-        sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)tableIdx,
-                    *(void **)(off + 4));
-
-        *(s32 *)(self + 0x18) = zero;
-        *(s32 *)(self + 0x1c) = fourteen;
-
-        PlaySfx(gUnknown_030012BC, self[0x21] + 0x57, 0x100);
-
-        *p22 -= 1;
-    }
-
-    self[0x23] = 0;
 }
-#endif /* NON_MATCHING */
+
+asm(".align 2, 0");

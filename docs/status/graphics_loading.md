@@ -8,7 +8,18 @@ family. Filed under `src/graphics/` on disk, tracked as its own
 
 ## Matched
 
-None yet.
+- **`sub_801E640`** (`src/graphics/graphics_package_1e640.c`)
+- **`sub_801E8F8`** (`src/graphics/graphics_package_1e8f8.c`) - DMA3
+  fills one VRAM tile with a solid color
+- **`sub_801E964`**, **`sub_801E96C`**
+  (`src/graphics/graphics_package_1e964.c`)
+
+All four are accessors on the same 0x10-byte `LoadGraphicsPackage`
+scratch buffer - see
+[issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)
+for the full write-up, including two real compiler-codegen gotchas
+(a DMA-register load-order fix, and a trailing `asm(".align 2, 0")`
+zero-padding fix) found along the way.
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
@@ -24,6 +35,21 @@ None yet.
   and the entry bit-test/`sub_8023278` call's register choice) - see
   `docs/matching.md`, "`graphics_loading` chunk `0x0801FA3C`-
   `0x08021668` (issue #31)", for what was tried.
+- **`sub_801E644`** (real bytes in `asm/code_3_2_17_1e644.s` under a
+  `.if NON_MATCHING == 0` guard, C in
+  `src/graphics/graphics_package_1e640.c`) - a five-field constructor
+  on the same scratch buffer as `sub_801E640`; every instruction's
+  operation matches but this compiler collapses two of the ROM's
+  register-copy instructions away and pushes one fewer callee-saved
+  register in every phrasing tried - see
+  [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md).
+- **`sub_801E950`** (real bytes in `asm/code_3_2_17_1e950.s` under a
+  `.if NON_MATCHING == 0` guard, C in
+  `src/graphics/graphics_package_1e8f8.c`) - matches in full shape
+  except one instruction where this compiler rematerializes a mask
+  constant from a still-live register instead of the ROM's fresh
+  reload - see
+  [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.

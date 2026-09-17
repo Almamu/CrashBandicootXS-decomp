@@ -30,11 +30,47 @@ system from "core" graphics.
   `sub_8028504`, `sub_8028520` - a 3-slot icon-blink animation timer
   (per-frame tick, three per-slot triggers, and the generic single-slot
   advance they share); see `docs/matching.md` for two codegen gotchas
-  hit along the way.
+  hit along the way. Extended by GitHub issue #46 with `sub_8028568`/
+  `sub_802856C` - a setter/increment pair on the same central-state
+  object's `+0x28` field.
+
+- `src/graphics/hud_icon_widget.c` (new file, GitHub issue #46):
+  `sub_8028574` - a `struct hud_counter`'s `parts`-array destructor.
+
+- `src/graphics/hud_icon_widget2.c` (new file, GitHub issue #46):
+  `sub_8028860` - draws a fixed-count run of characters via the
+  `struct icon_manager` widget's own record trampoline.
+
+- `src/graphics/hud_icon_widget3.c` (new file, GitHub issue #46):
+  `sub_8028968` - total text-block-height helper.
+
+- `src/graphics/hud_icon_widget4.c` (new file, GitHub issue #46):
+  `UploadHudTile`, `sub_8028A30`, `sub_8028A40` - glyph-sheet VRAM
+  upload and two OAM-attribute-nibble setters.
+
+- `src/graphics/hud_icon_widget5.c` (new file, GitHub issue #46):
+  `sub_8028AC4`, `sub_8028ADC`, `sub_8028AE8`, `sub_8028B04`,
+  `sub_8028B28`, `sub_8028B34`, `sub_8028B40`, `sub_8028B4C`,
+  `sub_8028B58` - trivial `struct icon_manager` getter/setter/
+  trampoline-forwarder family.
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
+GitHub issue #46's own write-up (icon/text-widget renderer, including
+`include/icon_manager.h`'s newly-documented field layout) is
+[docs/matching/issue-46-hud-icon-widget.md](../matching/issue-46-hud-icon-widget.md).
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
-None yet.
+- GitHub issue #46 (see
+  [docs/matching/issue-46-hud-icon-widget.md](../matching/issue-46-hud-icon-widget.md)
+  for what was tried on each): `sub_80285C4`, `InitHudIconWidgetA`,
+  `InitHudIconWidgetB`, `sub_8028808` (real bytes in
+  `asm/code_3_2_20_85c4.s`, reconstructions in
+  `src/graphics/hud_icon_widget_85c4.c`); `sub_8028890`, `sub_8028900`
+  (real bytes in `asm/code_3_2_20_8890.s`, reconstructions in
+  `src/graphics/hud_icon_widget_8890.c`); `MeasureText` (real bytes in
+  `asm/code_3_2_20_8994.s`, reconstruction in
+  `src/graphics/hud_icon_widget_8994.c`); `sub_8028A78` (real bytes in
+  `asm/code_3_2_20_8a78.s`, reconstruction in
+  `src/graphics/hud_icon_widget_8a78.c`).
