@@ -5752,3 +5752,128 @@ remainder, from `sub_802C99C` on) - see `ldscript.txt` and
 `tools/report_units.py`'s `actor` category, both updated to match.
 Verified via a full clean `make compare` (`La suma coincide`) and
 `make NON_MATCHING=1 report`.
+
+## `0x0803ADB4`-`0x0803B060`: divide/modulo primitives + AABB/per-type-table setup (issue #70, `system`)
+
+Issue #70's listed source file (`asm/code_3_2_17.s`) was stale - by the
+time this was picked up, the region had already been renamed/split (see
+issue #69's PR #195) to `asm/code_3_2_20e_3adb4.s`, sitting right after
+the now-matched `nullsub_43`/`sub_803AD78`-family trampolines in
+`src/system/reg_trampolines.c`. The issue's `nullsub_43` box was
+already checked off by that prior PR; the other 9 functions were still
+raw.
+
+**Matched (6):**
+
+- **`nullsub_8`** (ROM `0x0803AE48`, new `src/util/math_div_util.c`) -
+  the shared divide-by-zero handler for all three division/modulo
+  routines below. ROM bytes are `mov pc, lr` (not `bx lr`, which is
+  what agbcc's plain-C codegen picks for a genuinely empty function
+  body) - written via `NAKED` + `asm("mov pc, lr")` instead, the same
+  technique `nullsub_43` used in issue #69's PR.
+- **`sub_803AFDC`/`sub_803AFE4`** (ROM `0x0803AFDC`, new
+  `src/graphics/actor_aabb_setup.c`) - the shared AABB set-size
+  (`field_8`/`field_c`)/set-position (`field_0`/`field_4`) primitive
+  pair, already referenced by name (not yet matched) from
+  `actor_part.c`/`actor_part2.c`/`oam_count.c`'s `sub_8006600` entry.
+  Two one-line leaf functions, matched first-try (each needed the usual
+  trailing `asm(".align 2, 0")` for its 6-byte, non-4-aligned body).
+- **`sub_803AFEC`** (same file) - a trivial `self+0x74` getter; kept as
+  a raw offset (no named struct) since this single call site doesn't
+  give enough context to know the owning object's shape.
+- **`sub_803AFF0`/`sub_803B024`** (same file) - two more members of the
+  `gStaticData_087E3BEC`-family per-type descriptor table documented at
+  length in `docs/rom_map.md` (`gStaticData_087E4D1C`/`_4D64`/`_4DAC`,
+  each 0x48 bytes): "set a field of a passed-in struct to a ROM data
+  pointer, then conditionally call `sub_8026ED0` based on a bit in the
+  second argument," the same shape as `sub_8006AF4`'s conditional-call
+  idiom. Unusually, each of these two writes `self+0x130` **twice** in
+  a row with two *different* table pointers - the first store is
+  genuinely dead (immediately clobbered by the second), confirmed
+  directly against the ROM bytes rather than a disassembly artifact.
+  Plain double `struct`-field assignment collapses to a single store no
+  matter how it's phrased (gcc dead-store-eliminates the first write and
+  CSEs the repeated address computation into one register, reused for
+  both stores - neither matches the ROM, which recomputes the address
+  fresh for each store). Fixed with the same inline-asm address-anchor
+  technique `oam_count.c`'s `sub_8006864`/`sub_8006820` already
+  established for defeating exactly this CSE (see that entry above) -
+  `asm volatile("mov r0, #0x98\n\tlsl r0, r0, #1\n\tadd %0, %1, r0")`
+  computes `self + 0x130` fresh into a fresh register for each store,
+  matching the ROM's `movs r0,#152; lsls r0,r0,#1; adds r2,r3,r0`
+  pair exactly, twice. Both matched byte-for-byte once that anchor was
+  in place.
+
+**Parked, not matched (3): `sub_803ADB4`/`sub_803AE4C`/`sub_803AF1C`**
+(ROM `0x0803ADB4`-`0x0803AFDC`, `src/util/math_div_util.c`, raw bytes
+in `asm/code_3_2_20e_3adb4.s`/`asm/code_3_2_20e_3ae4c.s`) - a trio of
+generic software division/modulo primitives (no hardware divide on this
+CPU): `sub_803ADB4` is signed division (`a / b`, truncating toward
+zero - the "atan2-style angle helper" `math_util.c` already documents
+wrappers around, and the digit-splitter `sub_8027940` calls), and
+`sub_803AE4C`/`sub_803AF1C` are signed/unsigned modulo respectively
+(`sub_803AF1C` already had a `mod` note next to a not-yet-matched
+extern in `rand_util.c`/`time_util.c`). All three are classic
+shift-and-subtract binary long division, 4 bits at a time: normalize a
+`divisor`/`bit`-weight pair up to the dividend's magnitude, then
+repeatedly test the top 4 candidate bit positions before shrinking by
+another nibble. The modulo pair additionally tracks a *rotated* copy of
+the bit weight (`ror`, not a plain shift) in a correction mask, so a
+weight too small to shift meaningfully still leaves a nonzero marker up
+near bit 31 - used afterwards to add back exactly the fractional
+divisor amounts that were subtracted from the running remainder but
+shouldn't have survived, since only the top-level (whole-`divisor`)
+subtraction is a genuine remainder step.
+
+`sub_803ADB4` got extremely close: with `dividend`/`divisor`/
+`quotient`/`bit`/`mask` pinned to `r0`/`r1`/`r2`/`r3`/`r4` and the `a^b`
+sign pinned to `ip` (avoiding a 5th push-requiring register - the ROM
+stores the sign there too, confirmed by its own `mov ip,r4`/`mov r4,ip`
+pair), **every single instruction in the function body matches the ROM
+exactly**. The only remaining gap is the prologue/epilogue shape: the
+ROM has two genuinely different entry/exit sequences depending on path
+- `push {r4}` (no `lr`) only on the fallthrough (`b != 0`) computation,
+ending in a bare `mov pc, lr` (that path never calls anything, so `lr`
+is never touched), versus a separate, minimal `push {lr} ... bl
+nullsub_8 ... pop {pc}` only on the `b == 0` path. This is real
+per-path register-save minimization (effectively shrink-wrapping) that
+agbcc - built on gcc 2.9, long before shrink-wrapping existed in
+mainline gcc - simply does not do from plain C, regardless of how the
+`if` is phrased (early-return at the top and inverted-condition-with-
+the-trivial-case-at-the-bottom were both tried and produce the exact
+same single combined `push {r4, lr}`/`pop`-into-register-then-`bx`
+prologue/epilogue either way). Reproducing the ROM's exact split would
+mean hand-writing the *entire* function as `NAKED` asm, discarding a
+genuinely complete, verified-correct C reconstruction for a gap that
+isn't about this function's logic at all - parked under `NON_MATCHING`
+instead.
+
+`sub_803AE4C`/`sub_803AF1C` hit the same prologue/epilogue class of gap
+(both also have their own ROM-side per-path register-save
+peculiarities: `sub_803AF1C`'s `dividend < divisor` fast path returns
+via a bare `mov pc, lr` with no `push` at all), plus a second one: the
+rotate-into-a-correction-mask step above needs a real single `ror`
+instruction to match, but expressing it in plain C as
+`(v >> n) | (v << (32 - n))` compiles to a shift/shift/or triple that
+pulls in extra scratch registers the ROM doesn't use. Both
+reconstructions were verified correct by hand-tracing an example (`7 %
+3 == 1` through `sub_803AF1C`'s exact register-level steps) rather than
+chasing the `ror` codegen further, since the shared prologue/epilogue
+gap already rules out a byte-exact match either way. All three compile
+cleanly under `NON_MATCHING=1` (`make NON_MATCHING=1 report` passes)
+and their raw ROM bytes stay wrapped in `.if NON_MATCHING == 0` blocks
+in `asm/code_3_2_20e_3adb4.s` (`sub_803ADB4`) and the new
+`asm/code_3_2_20e_3ae4c.s` (`sub_803AE4C`/`sub_803AF1C`).
+
+**File structure:** the old single `asm/code_3_2_20e_3adb4.s` (all 9
+functions) is now four pieces in ROM order: the trimmed
+`asm/code_3_2_20e_3adb4.s` (parked `sub_803ADB4` only, guarded),
+`src/util/math_div_util.o` (`nullsub_8` unconditionally, plus all three
+parked functions under `#if NON_MATCHING` - only `nullsub_8` actually
+contributes bytes in a matching build), the new
+`asm/code_3_2_20e_3ae4c.s` (parked `sub_803AE4C`/`sub_803AF1C`,
+guarded), and the new `src/graphics/actor_aabb_setup.o`
+(`sub_803AFDC`-`sub_803B024`, all matched) - see `ldscript.txt` and
+`tools/report_units.py`'s `util`/`graphics` categories, both updated to
+match. Verified via a full clean `make compare` (`La suma coincide`)
+and `make NON_MATCHING=1 report`.
