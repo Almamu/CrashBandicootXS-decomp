@@ -50,8 +50,10 @@ entry for what's still just an educated guess (a jukebox/sound-test
 track selector) versus confirmed.
 
 `src/audio/` (further in, at `0x08038538`-`0x08039658` - see
-`docs/matching.md`'s "`0x08038538`-`0x08039658`" entry for the full
-write-up, GitHub issue #67):
+`docs/matching.md`'s "`0x08038538`-`0x08039658`" entry (PR #198, first
+pass) and
+[`docs/matching/issue-67-0x08038538-audio.md`](../matching/issue-67-0x08038538-audio.md)
+(second pass) for the full write-up, GitHub issue #67):
 
 - `src/audio/gax_dma_control.c` - `sub_8038C28`/`sub_8038C50` (Direct
   Sound A output stop/start pair)
@@ -59,10 +61,12 @@ write-up, GitHub issue #67):
   note-period update)
 - `src/audio/gax_swi.c` - `sub_80392C4` (HuffUnComp SWI 0x13 wrapper,
   transcribed as NAKED asm)
+- `src/audio/gax_fatal_error.c` - `sub_80392E0` (the fatal-error
+  display screen)
 - `src/audio/gax_sound_handler_info.c` - `sub_80393D0`/`sub_80393FC`/
-  `sub_803941C`/`nullsub_39` (the GAX2_SoundHandler "Info" type's
-  init_fn/unknown_fn, per `docs/audio.md`'s per-type function-pointer
-  table)
+  `sub_803941C`/`nullsub_39`/`sub_803943C` (the GAX2_SoundHandler
+  "Info" type's init_fn/unknown_fn/play_fn, per `docs/audio.md`'s
+  per-type function-pointer table)
 - `src/audio/gax_sound_handler_channel.c` - `nullsub_40` (the "Channel"
   type's unknown_fn)
 
@@ -117,16 +121,19 @@ from the `0x08037110`-`0x08038538` pass specifically:
 - `sub_8037FC0`/`sub_8038240`/`sub_80384DC` - genuine GAX2 mixer-state/
   hardware-register internals; not attempted this pass.
 
-From the `0x08038538`-`0x08039658` pass (issue #67):
+From the `0x08038538`-`0x08039658` pass (issue #67, PR #198 - still
+raw after the second pass, see
+[`docs/matching/issue-67-0x08038538-audio.md`](../matching/issue-67-0x08038538-audio.md)):
 
 - `sub_8038538`/`sub_8038A1C`/`sub_8038B68` - the play-start/init entry
   point (docs/audio.md) and its DMA1/Timer0 direct-sound-output
   follow-ups; hit the same many-register (`r8`/`sb`/`sl`) gcc-2.9
   allocation difficulty already documented for `sub_8006600`/
   `sub_80372BC` - not attempted further this pass.
-- `sub_8038C88`/`sub_8038DC0`/`sub_8038E74` - more mixer-tick/
-  voice-stealing internals (`sub_8038E74` is the voice-stealing
-  allocator, docs/audio.md); left raw.
+- `sub_8038C88`/`sub_8038DC0` - more mixer-tick internals, read in full
+  but not attempted as a C reconstruction; `sub_8038E74` (the
+  voice-stealing allocator, docs/audio.md) hits the same many-register
+  (`r8`) shape as its neighbors above - left raw.
 - `sub_8038FD0`/`sub_8039064`/`sub_80390F8` - a per-channel mute/
   volume-set family; each hits the same many-register loop-allocation
   difficulty as the `sub_8038538` cluster above (confirmed via isolated
@@ -136,13 +143,18 @@ From the `0x08038538`-`0x08039658` pass (issue #67):
 - `sub_8039198`/`sub_80391E8` - contain the same hardware-register
   NOP-delay compiler quirk already flagged in-source at `sub_80384DC`
   above (`.byte 0x1b, 0x1c` / `mov r8, r8` x3); not attempted.
-- `sub_8039214` - a text/console-tile state machine (word-wrap-looking
-  character remapping); not attempted this pass.
-- `sub_80392E0` - fatal-error display (renders a message via
-  `sub_8039214`, then an infinite loop); left raw.
-- `sub_803943C` - the "Info" SoundHandler type's play_fn; left raw.
-- `sub_8039518` - the "Channel" SoundHandler type's init_fn; left raw.
-- `sub_80395A4` - the "Channel" SoundHandler type's play_fn; left raw.
+- `sub_8039214` - a word-wrap text/console-tile renderer (called by the
+  now-matched `sub_80392E0`); fully understood, not attempted as a C
+  reconstruction this pass - complex nested-loop control flow
+  deprioritized in favor of the two matches this pass did land.
+- `sub_8039518` - the "Channel" SoundHandler type's init_fn; fully
+  understood and reconstructed almost byte-exact, but one call site's
+  argument-loading codegen (a `0`/`1` literal pair pool-loaded via `ldr`
+  instead of `movs`, for reasons not yet identified) resisted every
+  variant tried - left raw rather than force a guess.
+- `sub_80395A4`/`sub_8039658` - the "Channel" SoundHandler type's
+  play_fn and its direct callee; `sub_8039658` hits the same
+  many-register (`r8`/`sb`) shape as `sub_8038538`'s cluster - left raw.
 
 From the `0x08039818`-`0x0803A944` pass specifically (issue #68): 15 of
 the chunk's 21 functions (`sub_8039658`, `sub_80398DC`, `sub_803985C`,

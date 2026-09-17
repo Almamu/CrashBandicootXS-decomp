@@ -221,9 +221,9 @@ UNITS = [
     (0x08038F94, "src/audio/gax_note_param.o", "audio"),  # sub_8038F94 - conditional per-voice note-period update; matched, issue #67
     (0x08038FD0, None, "audio"),  # sub_8038FD0/sub_8039064/sub_80390F8/sub_8039198/sub_80391E8/sub_8039214 - per-channel mute/volume-set family (hit the same many-register loop-allocation difficulty as sub_8038538 above) plus a hardware-register NOP-delay quirk and a text/console state machine; left raw, issue #67
     (0x080392C4, "src/audio/gax_swi.o", "audio"),  # sub_80392C4 - HuffUnComp (SWI 0x13) wrapper with hand-written-looking r0/r1 preservation; matched (NAKED asm transcription), issue #67
-    (0x080392E0, None, "audio"),  # sub_80392E0 - fatal-error display (renders a message via sub_8039214, then an infinite loop) - left raw, issue #67
-    (0x080393D0, "src/audio/gax_sound_handler_info.o", "audio"),  # sub_80393D0/sub_80393FC/sub_803941C/nullsub_39 - the GAX2_SoundHandler "Info" type's init_fn/unknown_fn (docs/audio.md's per-type function-pointer table); matched, issue #67
-    (0x0803943C, None, "audio"),  # sub_803943C (Info type's play_fn)/sub_8039518 (Channel type's init_fn) - left raw, issue #67
+    (0x080392E0, "src/audio/gax_fatal_error.o", "audio"),  # sub_80392E0 - fatal-error display (renders a message via sub_8039214, then an infinite loop); matched, issue #67
+    (0x080393D0, "src/audio/gax_sound_handler_info.o", "audio"),  # sub_80393D0/sub_80393FC/sub_803941C/nullsub_39/sub_803943C - the GAX2_SoundHandler "Info" type's init_fn/unknown_fn/play_fn (docs/audio.md's per-type function-pointer table); matched, issue #67
+    (0x08039518, None, "audio"),  # sub_8039518 (Channel type's init_fn) - left raw, issue #67
     (0x080395A0, "src/audio/gax_sound_handler_channel.o", "audio"),  # nullsub_40 - the GAX2_SoundHandler "Channel" type's unknown_fn; matched, issue #67
     (0x080395A4, None, "audio"),  # sub_80395A4 (Channel type's play_fn), sub_8039658 - left raw, issue #67/#68
     (0x08039818, "src/audio/gax_channel_note_cut.o", "audio"),  # sub_8039818 - per-channel note-cut/note-on command dispatch (cmd==1 arms a fixed note-off envelope, cmd>1 derives a pattern-note offset); matched, issue #68
