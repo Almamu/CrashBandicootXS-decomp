@@ -129,7 +129,14 @@ UNITS = [
     (0x080291A4, None, "actor"),  # SetupActorVramPool, InitActorCategory, SelectActorCategory, InitActorPart, UpdateAnimatedActorPart, ConstructAnimTableState, ConstructActorPart
     (0x0802B364, None, "actor"),  # 40.4 KB actor zone (docs/rom_map.md cites 0x0802B348, 28B before the nearest real function start - snapped forward since 0x0802B348 itself falls mid-function) - category/part/vtable system, boss-candidate + singleton object clusters
     (0x080354E0, None, "graphics_loading"),  # LoadLevelGraphics, LoadBg2Background, LoadObjSpriteTiles
-    (0x08037110, None, "audio"),  # Shin'en GAX2 engine, boundary narrowed this session to end at 0x0803A944; a couple of generic 64-bit-division helpers are confirmed interleaved false positives - see docs/audio.md
+    (0x08037110, "src/audio/counter_selector.o", "audio"),  # sub_8037110/nullsub_7/sub_8037154/sub_803716C/sub_80371B4/sub_8037224 - a small on-screen 0-5 "counter" widget (increments/decrements with input, confirms/cancels with PlaySfx), reads like game/HUD-side code using PlaySfx rather than GAX2 internals; sub_803716C is UNUSED (no caller found); matched
+    (0x080372BC, None, "audio"),  # sub_80372BC/sub_8037388 - fully understood (icon-manager draw loop / tile-cache init for the widget above) but hits the same gcc-2.9 many-register-allocation difficulty already documented for sub_8006600 (src/graphics/oam_count.c); left raw rather than force a low-confidence register pin
+    (0x080374D0, "src/audio/counter_selector_setup.o", "audio"),  # sub_80374D0/sub_8037534/sub_8037548/sub_8037578/sub_80375A0/sub_80375EC/sub_8037620 - the widget's graphics/BG setup, draw-flush, and init/teardown pair; matched
+    (0x08037648, None, "audio"),  # sub_8037648/sub_8037A7C/sub_8037E54/sub_8037ECC/sub_8037F3C - confirmed/likely generic 64-bit software division/multiply helpers (see docs/audio.md's sub_8037648/sub_8037A7C entries) interleaved in the GAX2 range; left raw, not chased further this pass
+    (0x08037FA0, "src/audio/song_slot_lookup.o", "audio"),  # sub_8037FA0 - a 12-entry threshold-table lookup; table contents not understood; matched
+    (0x08037FC0, None, "audio"),  # sub_8037FC0 - a large, genuinely hard-to-follow GAX2 mixer/timing computation over gStaticData_085A6150 and several SoundHandler-shaped structures; left raw, not attempted this pass
+    (0x080381FC, "src/audio/sound_object_init.o", "audio"),  # sub_80381FC - a SoundHandler/channel-object-shaped constructor (zero-fill plus a few sentinel fields); matched
+    (0x08038240, None, "audio"),  # sub_8038240/sub_80384DC - core GAX2 mixer-state wiring (gUnknown_03001630) and a hardware sound-register reset with an inlined timing-loop compiler quirk already flagged in the raw asm; left raw, not attempted this pass
     (0x0803A944, None, "system"),  # BIOS svc wrapper stubs + LZ77UnCompWrapper/RLUnCompWrapper, confirmed non-audio via matched asset_util.c callers
     (0x0803B058, "src/graphics/actor_anim.o", "graphics"),
     (0x0803B060, None, "actor"),  # GetAnimFrameData + 43 unnamed neighbors, medium confidence
