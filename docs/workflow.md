@@ -137,13 +137,17 @@ incomplete pass and should be finished before moving on.
      exactly like `sub_8006864`/`sub_8006820`'s inline-asm-guarded reads,
      documented in matching.md) - any such regression gets reverted
      immediately, not left in on the theory that it's "close enough."
-8. Update matching.md's per-function log (a short paragraph like the
-   existing entries is enough; a subtler fix may deserve its own
-   explained bullet like the "Cleanup pass" entries there) and the
-   matched/parked list in `docs/status/<system>.md` for whichever of
-   `src/graphics/`/`util/`/`system/`/`audio/` this function lives under,
-   then commit. If this function got a real
-   name only now (rather than already having one before it was matched),
+8. Write up the function in a new file under `docs/matching/` (a short
+   paragraph like `docs/matching.md`'s old entries is enough; a subtler
+   fix may deserve its own explained bullet like the "Cleanup pass"
+   entries there did - `docs/matching.md` itself is now a frozen
+   historical record and never gains new sections, see its header) and
+   update the matched/parked list in `docs/status/<category>.md` for
+   whichever of the 9 category pages this function lives under (see
+   `docs/status/README.md` - not always the same as its `src/` directory,
+   several categories share a directory with another), then commit. If
+   this function got a real name only now (rather than already having
+   one before it was matched),
    or turned out to be a separate function the original disassembly
    never gave its own label, add a line to `expected/corrections.txt` -
    see [docs/decomp_dev.md](./decomp_dev.md) for why, and check with

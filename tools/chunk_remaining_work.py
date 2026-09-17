@@ -330,13 +330,13 @@ def chunk_summary(chunk):
 
 
 CATEGORY_BLURBS = {
-    "game_loop": "core per-frame/state-machine logic - see docs/rom_map.md's \"Subdividing game_loop\" for the sub-bucket this range likely falls in.",
-    "actor": "the category/part/vtable object-construction system - see docs/rom_map.md's actor-zone sections.",
-    "overlay_ui": "the pause-menu/settings/dialog UI system - see docs/rom_map.md's \"audio_sfx was almost entirely wrong\" section and follow-ups.",
-    "graphics_loading": "package/tile/level asset loading - see docs/rom_map.md's graphics_loading sections.",
+    "game_loop": "core per-frame/state-machine logic - see docs/rom_map.md's \"Subdividing game_loop\" for the sub-bucket this range likely falls in, and docs/status/game_loop.md for what's already matched.",
+    "actor": "the category/part/vtable object-construction system - see docs/rom_map.md's actor-zone sections and docs/status/actor.md for what's already matched.",
+    "overlay_ui": "the pause-menu/settings/dialog UI system - see docs/rom_map.md's \"audio_sfx was almost entirely wrong\" section and follow-ups, and docs/status/overlay_ui.md for what's already matched.",
+    "graphics_loading": "package/tile/level asset loading - see docs/rom_map.md's graphics_loading sections and docs/status/graphics_loading.md for what's already matched.",
     "graphics": "sprite/actor rendering and screen effects - check docs/status/graphics.md for neighboring already-matched files first.",
-    "audio": "the licensed Shin'en GAX2 sound engine - see docs/audio.md before starting, this is harder/lower-priority than game code.",
-    "hud": "HUD icon/text widgets and stat counters - see docs/rom_map.md's HUD sections.",
+    "audio": "the licensed Shin'en GAX2 sound engine - see docs/audio.md before starting, this is harder/lower-priority than game code; docs/status/audio.md tracks what's matched.",
+    "hud": "HUD icon/text widgets and stat counters - see docs/rom_map.md's HUD sections and docs/status/hud.md for what's already matched.",
     "system": "startup/memory/interrupt/input infrastructure - check docs/status/system.md for neighboring already-matched files first.",
     "util": "math/string/RNG/line-drawing helpers - check docs/status/util.md for neighboring already-matched files first.",
     None: "not yet categorized by docs/rom_map.md - you may be the first to look at this range; consider a docs/rom_map.md note once you understand it.",
@@ -404,10 +404,11 @@ general process; this specific case is narrower than a normal "match
 this function" task - **the C is already correct, it just doesn't
 compile to the same bytes as the ROM**. This is usually a specific gcc
 2.9 register-allocation, instruction-scheduling, or peephole-optimization
-quirk. See `docs/matching.md` for a large catalog of techniques that have
-worked on similar cases elsewhere in this codebase (register `asm("rN")`
-pins, forcing block order with `goto`, the negative-constant bit-clear
-idiom, etc.) before assuming something is truly unfixable.
+quirk. See `docs/matching.md` and `docs/matching/` for a large catalog
+of techniques that have worked on similar cases elsewhere in this
+codebase (register `asm("rN")` pins, forcing block order with `goto`,
+the negative-constant bit-clear idiom, etc.) before assuming something
+is truly unfixable.
 
 **Function:** `{p['name']}`
 
@@ -424,8 +425,10 @@ idiom, etc.) before assuming something is truly unfixable.
 *If you find a fix, update the function (removing the `#if NON_MATCHING`
 guard and the now-obsolete comment), cut its raw bytes out of the
 corresponding `asm/*.s` file, run the full clean `make compare` to
-confirm, and update `docs/matching.md`/`docs/status/<system>.md`
-accordingly - see `docs/workflow.md` step 6 onward.*
+confirm, and write it up in a new file under `docs/matching/` plus
+update the relevant `docs/status/<category>.md` accordingly - see
+`docs/workflow.md` step 6 onward and `docs/status/README.md` for which
+category page applies.*
 """
     return title, body
 

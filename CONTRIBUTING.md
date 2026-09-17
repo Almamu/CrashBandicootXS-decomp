@@ -84,10 +84,11 @@ before starting, it's not optional style guidance.** In short, for each
 function in your chunk:
 
 1. Read its disassembly and understand what it does. Check
-   [docs/rom_map.md](docs/rom_map.md) and
-   [docs/matching.md](docs/matching.md) first - a lot of structs,
-   globals, and calling conventions in this ROM are already named and
-   documented, and re-deriving them from scratch wastes time.
+   [docs/rom_map.md](docs/rom_map.md), [docs/matching.md](docs/matching.md)
+   (frozen historical entries), and [docs/matching/](docs/matching/)
+   (everything since) first - a lot of structs, globals, and calling
+   conventions in this ROM are already named and documented, and
+   re-deriving them from scratch wastes time.
 2. Write the C reconstruction. Prefer named structs/fields and
    `REG_*`/hardware-register macros over raw pointer-arithmetic casts.
 3. Compile in isolation and diff the resulting instructions against the
@@ -120,8 +121,12 @@ rm -rf build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && m
 `docs/workflow.md`'s map-file address-shift diagnostic method rather
 than guessing at what regressed.
 
-Then update `docs/matching.md` and `docs/status/<system>.md` to reflect
-what you matched/parked/left, and commit.
+Then write up what you matched/parked/left in a **new file** under
+`docs/matching/` (never edit `docs/matching.md` itself - see that
+file's header for why), update the relevant `docs/status/<category>.md`
+(check `docs/status/README.md` for which of the 9 category pages
+applies - it's usually but not always the same as the issue's label),
+and commit.
 
 ## Opening the PR
 
