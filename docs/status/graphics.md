@@ -232,6 +232,15 @@ per-actor animation frames, text layout.
   `docs/matching.md`'s issue #7 writeup for the rest, parked in the same
   file): `sub_8005A78`
 
+- `src/graphics/actor_aabb_setup.c` (new file, GitHub issue #70, ROM
+  `0x0803AFDC`-`0x0803B060` - right after the parked division/modulo
+  trio in `src/util/math_div_util.c`, see that file's `docs/matching.md`
+  entry): `sub_803AFDC`/`sub_803AFE4` (the shared AABB set-size/
+  set-position primitive already referenced by name from
+  `actor_part.c`/`actor_part2.c`/`oam_count.c`), `sub_803AFEC` (a
+  trivial raw-offset getter), `sub_803AFF0`/`sub_803B024` (two more
+  `gStaticData_087E3BEC`-family per-type descriptor table constructors)
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
@@ -531,3 +540,15 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   Fully understood; off by several register-letter choices in the
   digit-formatting tail, the same unresolved class `sub_80049CC` above
   documents - see `docs/matching.md`, issue #7.
+- **`sub_8020E84`**, **`sub_8020F7C`**, **`sub_802107C`**,
+  **`sub_802117C`** (real bytes in `asm/code_3_2_17_14674.s` under a
+  `.if NON_MATCHING == 0` guard, C in
+  `src/graphics/trigger_effect.c`) - the "trigger effect type N" twin
+  family (4 of the 15-slot `gStaticData_0816C7D8` dispatch table's
+  slots): sound-only-or-full-spawn effect triggers gated by a
+  `gUnknown_030012C0+2` flag bit. The spawn-branch tail is
+  instruction-for-instruction identical to the ROM; parked on two
+  register-allocation gaps (the four parameters' register rotation,
+  and the entry bit-test/`sub_8023278` call's register choice) - see
+  `docs/matching.md`, "`graphics_loading` chunk `0x0801FA3C`-
+  `0x08021668` (issue #31)", for what was tried.

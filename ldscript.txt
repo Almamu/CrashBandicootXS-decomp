@@ -162,6 +162,9 @@ SECTIONS
         build/crashbandicootxs/asm/code_3_2_20e_ab54.o(.text);
         build/crashbandicootxs/src/system/reg_trampolines.o(.text);
         build/crashbandicootxs/asm/code_3_2_20e_3adb4.o(.text);
+        build/crashbandicootxs/src/util/math_div_util.o(.text);
+        build/crashbandicootxs/asm/code_3_2_20e_3ae4c.o(.text);
+        build/crashbandicootxs/src/graphics/actor_aabb_setup.o(.text);
         build/crashbandicootxs/src/graphics/actor_anim.o(.text);
         build/crashbandicootxs/asm/code_3_3.o(.text);
 

@@ -25185,6 +25185,13 @@ _08020E78: .4byte gUnknown_030012F0
 _08020E7C: .4byte gStaticData_0816B98C
 _08020E80: .4byte gStaticData_0816BB2C
 
+@ sub_8020E84/sub_8020F7C/sub_802107C/sub_802117C (the "trigger effect
+@ type N" twin family) are reconstructed (extremely close, but not yet
+@ byte-matching) as C in src/graphics/trigger_effect.c, guarded by
+@ #if NON_MATCHING - this raw version is used only for the real
+@ byte-matching build. See docs/matching.md, "Parked, not matched:
+@ sub_8020E84/sub_8020F7C/sub_802107C/sub_802117C".
+.if NON_MATCHING == 0
 	thumb_func_start sub_8020E84
 sub_8020E84: @ 0x08020E84
 	push {r4, r5, r6, r7, lr}
@@ -25679,6 +25686,7 @@ _08021266:
 	.align 2, 0
 _08021278: .4byte gUnknown_030012D0
 _0802127C: .4byte gUnknown_030012EC
+.endif
 
 	thumb_func_start sub_8021280
 sub_8021280: @ 0x08021280
