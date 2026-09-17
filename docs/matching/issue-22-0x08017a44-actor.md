@@ -17,16 +17,23 @@ and one ~480-instruction jump-table state machine, plus two
 high-register-pressure helpers) - see "Left raw" below. Issue stays
 open; `Closes #22` not used.
 
+**Naming note:** these files are numbered `actor_part27*` rather than
+`actor_part20*` (which would have matched their ROM address order more
+naturally) because issue #58's parallel PR independently claimed
+`actor_part20.c`-`actor_part26.c` for an unrelated, later-address boss-
+weapon object before this PR merged - resolved as a rename on merge to
+avoid an add/add filename collision.
+
 ## Matched
 
-- `src/graphics/actor_part20.c` (new file, ROM 0x08017A44-0x08017AAC):
+- `src/graphics/actor_part27.c` (new file, ROM 0x08017A44-0x08017AAC):
   `sub_8017A44`-`sub_8017AAC` (9 functions) - trivial `self+0x14`/
   `self+0x17`/`self+0x18` byte/word accessors, plus the
   `sub_8017A78`/`sub_8017A8C` table-pointer-reset pair (same
   `gStaticData_087E435C`/`sub_800B8A8`/`sub_800B8C8` double-set pattern
   seen throughout this object family).
-- `src/graphics/actor_part20b.c` (new file, ROM 0x08017ECC-0x08017FE8,
-  non-adjacent to `actor_part20.c` since the raw `sub_8017AB0` sits
+- `src/graphics/actor_part27b.c` (new file, ROM 0x08017ECC-0x08017FE8,
+  non-adjacent to `actor_part27.c` since the raw `sub_8017AB0` sits
   between them): `sub_8017ECC`, `sub_8017F14`, `sub_8017F5C`,
   `sub_8017F80`, `sub_8017FA4`, `sub_8017FD4`, `sub_8017FE8` - a
   `self+4` double-pointer-chain record lookup (same shape as
@@ -34,8 +41,8 @@ open; `Closes #22` not used.
   `gStaticData_0816C2D8` per-vector-component trampoline table, with
   `part+0x28` bit 4/bit 5 mirror-flag X/Z negation exactly like
   `sub_800B734`/`sub_800B7B0`/`sub_800B6A0`/`sub_800B6D0`.
-- `src/graphics/actor_part20c.c` (new file, ROM 0x080187FC-0x08018884,
-  non-adjacent to `actor_part20b.c` since the raw `sub_8018008`-
+- `src/graphics/actor_part27c.c` (new file, ROM 0x080187FC-0x08018884,
+  non-adjacent to `actor_part27b.c` since the raw `sub_8018008`-
   `sub_80186F0` block sits between them): `sub_80187FC` (a two-state
   "charge" handler), `sub_8018858`/`sub_801886C` (another table-pointer
   reset pair, `gStaticData_087E442C`), `sub_8018884` (a struct-actor-

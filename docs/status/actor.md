@@ -156,21 +156,34 @@ from "core" graphics.
   trivial raw-offset getter), `sub_803AFF0`/`sub_803B024` (two more
   `gStaticData_087E3BEC`-family per-type descriptor table constructors)
 
-- `src/graphics/actor_part20.c` (new file, GitHub issue #22, ROM
-  0x08017A44-0x08017AAC): `sub_8017A44`-`sub_8017AAC` (9 functions) -
+- `src/graphics/actor_part20.c`/`actor_part21.c`/`actor_part22.c`/
+  `actor_part23.c`/`actor_part24.c`/`actor_part25.c`/`actor_part26.c`
+  (new files, issue #58, ROM `0x08030334`-`0x08031784` - the boss-
+  weapon effect state machine, non-adjacent since 18 raw functions sit
+  between/around them; see
+  [docs/matching/issue-58-0x08030334-actor.md](../matching/issue-58-0x08030334-actor.md)):
+  `sub_8030530`, `sub_8030640`, `sub_80306A4`, `sub_8030C98`,
+  `sub_80312C4`, `sub_803146C`, `sub_803171C`, `sub_8031744` - a
+  countdown-timer state transition, a trivial byte setter/getter pair,
+  a screen-accumulator/tracker-reset step, a BG2 zoom-effect updater,
+  a "charge" countdown, and a palette flash/animation-refresh pair.
+- `src/graphics/actor_part27.c` (new file, GitHub issue #22, ROM
+  0x08017A44-0x08017AAC - numbered `27` rather than `20` since issue
+  #58's parallel PR above independently claimed `actor_part20.c`-
+  `actor_part26.c` first): `sub_8017A44`-`sub_8017AAC` (9 functions) -
   the same player/action-object family as `actor_part18.c`/
   `actor_part19.c` (`self+0xc` table pointer, `self+0x10` part
   pointer); see `docs/matching/issue-22-0x08017a44-actor.md`.
-- `src/graphics/actor_part20b.c` (new file, GitHub issue #22, ROM
-  0x08017ECC-0x08017FE8, non-adjacent to `actor_part20.c` since the
+- `src/graphics/actor_part27b.c` (new file, GitHub issue #22, ROM
+  0x08017ECC-0x08017FE8, non-adjacent to `actor_part27.c` since the
   raw `sub_8017AB0` sits between them): `sub_8017ECC`, `sub_8017F14`,
   `sub_8017F5C`, `sub_8017F80`, `sub_8017FA4`, `sub_8017FD4`,
   `sub_8017FE8` - a `self+4` double-pointer-chain record lookup (same
   shape as `sub_800B704`/`sub_800B838`) feeding the
   `gStaticData_0816C2D8` per-vector-component trampoline table; see
   `docs/matching/issue-22-0x08017a44-actor.md`.
-- `src/graphics/actor_part20c.c` (new file, GitHub issue #22, ROM
-  0x080187FC-0x08018884, non-adjacent to `actor_part20b.c` since the
+- `src/graphics/actor_part27c.c` (new file, GitHub issue #22, ROM
+  0x080187FC-0x08018884, non-adjacent to `actor_part27b.c` since the
   raw `sub_8018008`-`sub_80186F0` block sits between them):
   `sub_80187FC`, `sub_8018858`, `sub_801886C`, `sub_8018884`; see
   `docs/matching/issue-22-0x08017a44-actor.md`.
