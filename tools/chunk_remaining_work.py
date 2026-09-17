@@ -425,6 +425,98 @@ accordingly - see `docs/workflow.md` step 6 onward.*
     return title, body
 
 
+def get_issue_node_id(number):
+    result = subprocess.run(
+        ["gh", "api", f"repos/{{owner}}/{{repo}}/issues/{number}", "--jq", ".node_id"],
+        capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        print(f"Failed to look up node id for issue #{number}: {result.stderr}", file=sys.stderr)
+        return None
+    return result.stdout.strip()
+
+
+def add_blocked_by(issue_number, blocking_issue_number):
+    """Sets a native GitHub 'blocked by' relationship (the same one the
+    web UI shows in an issue's sidebar) via GraphQL - there's no `gh
+    issue` CLI flag for this yet. Best-effort: prints a warning and
+    returns False on failure rather than raising, so a whole batch isn't
+    lost over one lookup hiccup."""
+    issue_id = get_issue_node_id(issue_number)
+    blocking_id = get_issue_node_id(blocking_issue_number)
+    if not issue_id or not blocking_id:
+        return False
+    query = """
+    mutation($issueId: ID!, $blockingId: ID!) {
+      addBlockedBy(input: {issueId: $issueId, blockingIssueId: $blockingId}) {
+        clientMutationId
+      }
+    }
+    """
+    result = subprocess.run(
+        ["gh", "api", "graphql", "-f", f"query={query}",
+         "-f", f"issueId={issue_id}", "-f", f"blockingId={blocking_id}"],
+        capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        print(f"Failed to link #{issue_number} as blocked by #{blocking_issue_number}: {result.stderr}", file=sys.stderr)
+        return False
+    return True
+
+
+def list_open_issues_with_label(label):
+    result = subprocess.run(
+        ["gh", "issue", "list", "--label", label, "--state", "open",
+         "--json", "number,title,body", "--limit", "300"],
+        capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        print(f"Failed to list issues with label {label}: {result.stderr}", file=sys.stderr)
+        return []
+    return json.loads(result.stdout)
+
+
+FUNC_CHECKBOX_RE = re.compile(r"- \[[ x]\] `(\S+)`")
+RANGE_RE = re.compile(r"`0x([0-9A-Fa-f]+)`-`0x([0-9A-Fa-f]+)`")
+CATEGORY_LINE_RE = re.compile(r"\*\*Category:\*\* `([^`]*)`")
+
+
+def render_cleanup_followup_issue(chunk_number, chunk_title, functions, category, start, end):
+    size_kb = (end - start) / 1024
+    title = f"Cleanup follow-up for #{chunk_number}: 0x{start:08X}-0x{end:08X}"
+    func_list = "\n".join(f"- [ ] `{n}`" for n in functions)
+    body = f"""**Blocked by #{chunk_number} - do not start until every function
+there is matched or parked.** This issue is a placeholder generated
+alongside #{chunk_number} so the cleanup pass doesn't get forgotten once
+that chunk lands; there's nothing to scan yet because the C doesn't
+exist until #{chunk_number} is done.
+
+Once #{chunk_number} is complete, go through whatever `src/**/*.c`
+file(s) its functions ended up in and apply
+[docs/workflow.md]({REPO_URL}/blob/main/docs/workflow.md) step 7's
+cleanup pass: replace raw pointer-arithmetic offset casts
+(`*(u32 *)((u8 *)base + 0x10)`-style) with named struct fields (reusing
+an existing struct for the same object if one exists elsewhere in the
+codebase), and raw hardware addresses with the matching `REG_*`/`OAM`/
+`PLTT`/`DMA_*` macro.
+
+**The carve-out matters here more than usual:** #{chunk_number}'s
+functions were just freshly matched, often with register pins/inline
+asm to reproduce an exact ROM register allocation - don't touch those
+just because they look unclean. Only replace a raw offset where you can
+demonstrate (by rebuilding) that the cleaner version still compiles to
+the identical bytes; if it doesn't, leave it with a one-line comment
+explaining why, per [CONTRIBUTING.md]({REPO_URL}/blob/main/CONTRIBUTING.md#cleanup-tasks).
+
+**Category:** `{category or "uncategorized"}`
+
+**Functions from #{chunk_number} to check ({len(functions)}):**
+
+{func_list}
+"""
+    return title, body
+
+
 def create_github_issue(title, body, labels):
     with tempfile.NamedTemporaryFile("w", suffix=".md", delete=False) as f:
         f.write(body)
@@ -457,7 +549,52 @@ def main():
                      help="Actually open each generated issue on GitHub via `gh issue create` (requires gh to be authenticated). Real side effect - see module docstring.")
     ap.add_argument("--cleanup-scan", action="store_true",
                      help="Instead of scanning asm/*.s for unmatched work, scan already-matched src/**/*.c for raw pointer-arithmetic/hardware-address cleanup candidates and write one issue per file into --issues-dir")
+    ap.add_argument("--pair-cleanup", action="store_true",
+                     help="For every open `decomp-chunk` issue on GitHub, create (or, without --create-github-issues, just render) a paired cleanup-follow-up issue blocked by it via GitHub's native issue-dependency relationship. Requires gh.")
     args = ap.parse_args()
+
+    if args.pair_cleanup:
+        chunk_issues = list_open_issues_with_label("decomp-chunk")
+        print(f"Found {len(chunk_issues)} open decomp-chunk issues", file=sys.stderr)
+        out_dir = Path(args.issues_dir) if args.issues_dir else None
+        if out_dir:
+            out_dir.mkdir(parents=True, exist_ok=True)
+        created, failed, linked, link_failed = 0, 0, 0, 0
+        for i, issue in enumerate(chunk_issues, 1):
+            number, chunk_title, body = issue["number"], issue["title"], issue["body"]
+            functions = FUNC_CHECKBOX_RE.findall(body)
+            m = RANGE_RE.search(body)
+            start, end = (int(m.group(1), 16), int(m.group(2), 16)) if m else (0, 0)
+            cm = CATEGORY_LINE_RE.search(body)
+            category = cm.group(1) if cm else None
+            if not functions:
+                print(f"WARNING: couldn't parse functions out of #{number}'s body, skipping", file=sys.stderr)
+                continue
+            title, followup_body = render_cleanup_followup_issue(number, chunk_title, functions, category, start, end)
+            if out_dir:
+                stem = f"{i:03d}_cleanup_followup_for_{number}"
+                (out_dir / f"{stem}.title.txt").write_text(title + "\n")
+                (out_dir / f"{stem}.body.md").write_text(followup_body)
+            if args.create_github_issues:
+                labels = ["cleanup", "blocked"]
+                if category:
+                    labels.append(category)
+                url = create_github_issue(title, followup_body, labels)
+                if url:
+                    created += 1
+                    new_number = int(url.rstrip("/").rsplit("/", 1)[-1])
+                    print(f"[{i}/{len(chunk_issues)}] {url} (blocked by #{number})", file=sys.stderr)
+                    if add_blocked_by(new_number, number):
+                        linked += 1
+                    else:
+                        link_failed += 1
+                else:
+                    failed += 1
+        if out_dir:
+            print(f"Wrote {len(chunk_issues)} cleanup-follow-up title/body pairs to {out_dir}", file=sys.stderr)
+        if args.create_github_issues:
+            print(f"Created {created} GitHub issues ({failed} failed), linked {linked} as blocked-by ({link_failed} link failures)", file=sys.stderr)
+        return
 
     if args.cleanup_scan:
         if not args.issues_dir:
