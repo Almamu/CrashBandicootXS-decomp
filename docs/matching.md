@@ -4240,3 +4240,77 @@ them in real ROM order: `actor_part15.o`, `asm/code_3_2_19.o`
 (`sub_800B3F0`, raw), `actor_part16.o`, `asm/code_3_2_18.o` (the two
 parked functions' real bytes), `asm/code_3_2_17.o` (`sub_800B704`
 onward, still raw).
+
+## `actor_part17.c` (`sub_800B704`-`sub_800B8D8`)
+
+Continuation right after the previous batch's parked pair - a table-
+driven trampoline pair, a fixed-point-scaled vector-copy pair (mirrors
+of `sub_800B3AC`/`sub_8009D5C` and `sub_800B6A0`/`sub_800B6D0`
+respectively), and a handful of small `part`/table accessors:
+
+- **`sub_800B704`/`sub_800B838`**: look up `self`'s `index`-th 8-byte
+  record through a double pointer chain at `self+4`
+  (`**(void***)(self+4)`, i.e. `self+4` holds a pointer to an object
+  whose own first field is the actual array base), use the record's
+  second word (`sub_800B704`) or first word (`sub_800B838`) as a type
+  index into the 12-byte-stride `gStaticData_0816B304` table (a new
+  table, distinct from the already-matched `gStaticData_087E3D14`/
+  `gStaticData_087E3E04`), and fire that table entry's trampoline via
+  `sub_803AD84` at `self + (int16 offset from self->0xc's part+0x30`
+  or `part+0x28)` through the function pointer at `part+0x34` or
+  `part+0x2c` - the same base+offset+fn-pointer convention as
+  `sub_800B3AC`/`sub_8009D5C`, just with an extra `tableEntry`
+  parameter (`sub_803AD84` takes 4 args where `sub_803AD80` took 3).
+  Needed real register work: `rec = arr + index*8`'s pointer addition
+  compiled to the wrong `ADDS Rd,Rn,Rm` operand order regardless of
+  how the C expression was written (`arr + offset` vs `offset + arr`
+  both picked the same, wrong, encoding - register-pinned variables
+  don't respect source operand order the way ordinary locals
+  sometimes do), so it needed the same explicit `asm("add %0, %0,
+  %1")` two-operand-form trick already used by `sub_80087A0` in
+  `actor_part7.c`, pinning the destination register directly instead
+  of hoping the compiler picks it.
+- **`sub_800B734`/`sub_800B7B0`**: per-axis `sub_80008FC(component,
+  self->field4->field4)`-scaled vector write into `part+0x48`/`+0x4c`/
+  `+0x50`, negating X and Z when `part+0x28` bit 4 (`(s32)(flags <<
+  27) < 0` - the same 32-bit-shift bit-test idiom already used for
+  this exact field in `actor_part.c`/`actor_part2.c`, confirming
+  `part+0x28` is the actor_part's own flags byte and not a new field)
+  is set. `sub_800B7B0` additionally duplicates the (possibly negated)
+  X component into `part+0x60` - the scaled-copy counterpart of
+  `sub_800B6D0`'s plain-copy `+0x64` duplication. Both compiled
+  correctly on the first try, register-for-register, once written with
+  the `self->field4->field4` chain expression repeated inline for each
+  of the three `sub_80008FC` calls (not hoisted into a local) - the
+  ROM genuinely reloads it three times.
+- **`nullsub_13`**: empty stub.
+- **`sub_800B86C`**: sets `part+0x2d` (frame index) to `newVal`, but
+  only if it actually changed; on a real change, resets the sub-
+  counter/frame-counter/"done" flag exactly like the already-matched
+  `sub_80087D0` (inlined here rather than called), clears `part+0xc`
+  bit 3, and returns 1 (0 if unchanged). Two gaps: the `u8 newVal`
+  parameter needed to be `s32` instead - a `u8` parameter forced a
+  redundant zero-extend truncation the ROM doesn't have, meaning the
+  real signature never narrows this argument; and the bit-3 clear
+  needed the mask-first register-pin pattern (`register s32 mask
+  asm("r0") = -9; register s32 byte asm("r1") = part[0xc]; ...`) since
+  plain `part[0xc] &= -9` let the compiler fold the mask straight to
+  the byte immediate `0xf7` and load-before-mask, instead of the ROM's
+  `movs r0,#9; neg r0,r0` sequence.
+- **`sub_800B8A4`**: `self+0` word setter.
+- **`sub_800B8A8`**: resets `self+0xc`'s table pointer to
+  `gStaticData_087E3E7C` (a third static table alongside
+  `gStaticData_087E3D14`/`gStaticData_0816B304`), then fires
+  `sub_8026ED0(self)` if flags bit 0 is set.
+- **`sub_800B8C8`**: resets `self+0xc`'s table pointer to
+  `gStaticData_087E3E7C` and clears `self+8`.
+- **`sub_800B8D8`**: `self+8` word getter.
+
+All were verified via a full clean `make compare`; this batch also
+caught a repeat of the earlier "file order must match ROM address,
+not writing order" mistake - `sub_800B838` was initially written
+right after `sub_800B704` (their shared shape made that the natural
+writing order) instead of after `sub_800B7B0` (its real ROM position),
+producing a 48-byte map-address shift starting at `sub_800B734`;
+fixed by reordering. `sub_800B8DC` onward (a 546+-line function) is
+left for a future pass.

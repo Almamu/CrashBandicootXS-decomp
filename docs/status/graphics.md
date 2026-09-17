@@ -145,6 +145,11 @@ per-actor animation frames, text layout.
   `sub_800B620`, `sub_800B62C`, `sub_800B638`, `sub_800B644`,
   `sub_800B650`, `sub_800B678`, `sub_800B698`, `sub_800B69C`
 
+- `src/graphics/actor_part17.c` (new file - see `docs/matching.md`):
+  `sub_800B704`, `sub_800B734`, `sub_800B7B0`, `sub_800B838`,
+  `nullsub_13`, `sub_800B86C`, `sub_800B8A4`, `sub_800B8A8`,
+  `sub_800B8C8`, `sub_800B8D8`
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
