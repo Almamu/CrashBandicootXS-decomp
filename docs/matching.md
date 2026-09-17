@@ -5218,3 +5218,134 @@ untouched), `reg_trampolines.o`, and finally `code_3_2_20e_3adb4.s`
 helper on) - see `ldscript.txt` and `tools/report_units.py`'s `system`
 category, both updated to match. Verified via a full clean `make
 compare` (`La suma coincide`) and `make NON_MATCHING=1 report`.
+## Issue #17: `0x0801426C`-`0x080145E4` (6 of the 25-function chunk)
+
+Six entries of the `gStaticData_0816BF20` 42-slot per-level action
+dispatch table (docs/rom_map.md, "`gStaticData_0816BF20` is a 42-slot,
+fully-populated action dispatch table") - `self` is the player/action
+object those table entries run on, `self+0xc` a per-category table of
+`{s16 offset; void *fn}` pairs (`+0x20`/`+0x24` and `+0x50`/`+0x54`
+entries seen so far) fed through the `sub_803AD80`/`sub_803AD84`
+trampolines together with `self+offset` and `self+0x10` (a "part"
+sub-object) - the same base+offset+fn-pointer convention already named
+in `actor_part17.c`. A shared state/flag/table-index trio at
+`+0x27`/`+0x28`/`+0x29`/`+0x2f`/`+0x30`/`+0x31`/`+0x32` recurs across
+every function in this cluster; none of the three objects (self,
+table, part) has its full shape pinned down yet, so every access stays
+a raw offset with a doc comment rather than a guessed struct.
+
+Matched (`src/graphics/actor_part18.c`/`actor_part18b.c`):
+`sub_801426C`, `sub_80142B0`, `sub_80144E0`, `sub_8014524`.
+
+- The `part+0xd` bit-clear idiom (`& -2`/`& -3`, shared by
+  `sub_80142B0` and the parked `sub_801434C`) needed the mask and the
+  `part` pointer each pinned to a fixed register
+  (`register u8 *part asm("r1")`/`register s32 mask asm("r0")`) *inside
+  its own block scope*, one block per occurrence - without the pins
+  (or sharing one variable across both occurrences) gcc puts the mask
+  and the loaded byte in whichever registers are free that round and
+  sometimes reuses the previous occurrence's already-negated constant
+  via a one-instruction `sub` instead of the ROM's fresh `mov`+`neg`
+  pair.
+- The repeated "trampoline pair" shape
+  (`sub_803AD80(self + *(s16*)(mgr+0x20), N, *(mgr+0x24)); sub_803AD84(self
+  + *(s16*)(off), part, M, *(off+4))` where `off = mgr + 0x50`) matches
+  byte-exact when the *second* call's offset is folded into a single
+  pointer expression computed fresh (`u8 *off = *(u8 **)(self + 0xc) +
+  0x50;`) rather than kept as a separate `mgr`+`0x50` pair - this lets
+  gcc mutate the same register in place (`adds r2,#0x50` then
+  `ldr r3,[r2,#4]`) instead of copying to a new register first.
+- `sub_8014524`'s `gUnknown_030007E0 & 0x100 != 0` boolean needed the
+  global declared `u32` (not its "true" `u16`) in this file so agbcc
+  reads it as a full-word `ldr` and materializes the boolean via the
+  established `((word << N) ) >> 31` sign-bit idiom (`rsbs`+`lsrs`,
+  see the "negative-constant clear-mask"/boolean-materialization
+  entries elsewhere in this file) instead of a `ldrh` + shift-and-mask
+  sequence; the `sub_8000760(dummy)` call's dummy-argument load
+  (`gUnknown_03001304`, ignored by the real callee - same shape as
+  `sub_80010E0`'s `sub_80007AC(gUnknown_03001304)` in
+  `src/system/input_util.c`) also had to be hoisted into its own
+  statement *before* the boolean computation to match the ROM's literal
+  instruction order, matching neither statement order alone reproduces
+  once both are present in the same function.
+- The `st == 2 || (st >= 7 && st <= 8)` check (`sub_8014524`) needed to
+  be written as a `switch (st) { case 2: case 7: case 8: ...}` -
+  every plain `if`/`else if` or explicit `<`/`>` chain tried gets
+  canonicalized by this compiler into the shorter "subtract, truncate,
+  unsigned-compare" range test (the same `x>=1` down to `x>0`
+  canonicalization already documented for `sub_8009CA0`), which is one
+  instruction shorter than the ROM's real four-comparison cascade;
+  only the `switch` form reproduces the ROM's literal `cmp;beq;cmp;
+  blt;cmp;bgt;cmp;blt` shape.
+- Both `sub_80142B0`/`sub_8014524`'s "reset the flag trio to 0" write
+  blocks needed the shared zero value pulled into a named local
+  (`u8 zero = 0; self[0x31] = zero; ...`) rather than three separate
+  `= 0` literals - the ROM computes the constant *before* the field
+  address and reuses that same register for every zeroed field in the
+  block; three independent literal `0`s let gcc compute the address
+  first and reload/reuse the immediate differently per field.
+- `sub_80145E4` additionally needed `self` pinned to `r4`
+  (`register u8 *self asm("r4")`) to stop gcc inserting a redundant
+  `self` copy into a second callee-saved register purely because it's
+  read again, in a different branch, after an inner `if` containing a
+  call - confirmed via a minimal repro (any function shaped
+  "read self in an if containing a call, then read self again after
+  the if" hits this, regardless of the surrounding logic) - and its own
+  "reset the flag trio" block additionally needed the two walking
+  pointers (`p1`/`p2`, one for the first/last field, one for the middle
+  four) pinned to `r0`/`r1` to reproduce the ROM's split-register field
+  walk instead of the single-register walk `sub_801426C`/`sub_80144E0`
+  get for free with plain code.
+
+Parked (`.if NON_MATCHING == 0` in `asm/code_3_2_17_1434c.s`/
+`asm/code_3_2_17_145e4.s`, `#if NON_MATCHING` C reconstruction in
+`actor_part18.c`/`actor_part18b.c`):
+
+- **`sub_801434C`** - every load/store, branch and call is confirmed
+  correct, including the ROM's case-`0`/`2`-before-case-`1` switch
+  layout and the shared `sub_803AD84` tail the case-`1` arms reach via
+  a `goto` (matching the ROM's own `b _0801446E`/fallthrough sharing,
+  with the four call arguments pinned to `r0`-`r3` - see the
+  `sub_80142B0`/`sub_8014524` notes above for the same techniques used
+  successfully elsewhere in this same function). The residual gap is
+  purely instruction-*scheduling*: the closing
+  `masked = *(u16 *)&snap & 0x180` block's address/constant/load
+  ordering and register reuse compiles correctly but in a different
+  relative order than the ROM for a handful of mutually-independent
+  instructions - every reordering, pointer-splitting, and register-pin
+  variant tried either left the scheduler free to reorder anyway or
+  fixed the register choice while losing `u16` truncation semantics on
+  later reads (a worse mismatch). Left parked rather than force a
+  guess.
+- **`sub_80145E4`** - same shape as `sub_8014524` (boolean-vs-raw-value
+  bit test, `sub_8015780` reset block) but keeps the *raw* masked bit
+  value (not `!= 0`-normalized) since the ROM reuses the same register
+  for both the branch test and the later stores. Every load/store and
+  branch matches; the one residual gap is the opening bit-test
+  materializing its result into a scratch register first and only then
+  copying it into the register the rest of the function keeps it in
+  (`lsrs r0,#0x10` + `adds r5,r0,#0`, 4 bytes) where the ROM computes
+  it directly into that same register in one instruction. Confirmed
+  this is specifically triggered by the *nested* `if (part[0x38] != 0)`
+  inside the `else` branch sharing the value's live range across both
+  branches - genuinely required control flow, not something to
+  restructure away.
+
+Left completely untouched (not examined in depth this round):
+`sub_8012FBC`, `sub_8013228`, `sub_80134B8`, `sub_8013994`,
+`sub_8013C60`, `sub_8013D94`, `sub_8013EAC`, `sub_8013FD4`,
+`sub_8014084` (before this cluster) and `sub_8014674` (right after it,
+now its own raw split file `asm/code_3_2_17_14674.s`) - several of
+these are independently flagged in docs/rom_map.md as among the
+ROM's biggest still-unexplained functions and deserve their own
+focused pass rather than a rushed low-confidence match.
+
+**File structure:** `asm/code_3_2_17.s` (truncated right before
+`sub_801426C`) is followed, in ROM order, by `actor_part18.o`
+(`sub_801426C`/`sub_80142B0`), `code_3_2_17_1434c.s` (raw parked
+`sub_801434C`), `actor_part18b.o` (`sub_80144E0`/`sub_8014524`),
+`code_3_2_17_145e4.s` (raw parked `sub_80145E4`), and finally
+`code_3_2_17_14674.s` (the original file's unchanged remainder, from
+`sub_8014674` on) - see `ldscript.txt` and `tools/report_units.py`'s
+`graphics` category, both updated to match. Verified via a full clean
+`make compare` (`La suma coincide`) and `make NON_MATCHING=1 report`.
