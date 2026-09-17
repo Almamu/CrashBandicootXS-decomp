@@ -4957,3 +4957,111 @@ NON_MATCHING == 0`), `game_loop.o`, `code_3_2_17_22d50.s` (raw
 `sub_80231CC` on) - see `ldscript.txt` and `tools/report_units.py`'s
 `game_loop` category, both updated to match. Verified via a full clean
 `make compare` (`La suma coincide`) and `make NON_MATCHING=1 report`.
+
+## `timer_util.c`/`reg_trampolines.c`: BIOS SWI wrappers, a timer-driven DMA subsystem, and the bx-register trampoline table (issue #69)
+
+`0x0803A944`-`0x0803ADB0`, `asm/code_3_2_20e.s` (previously misfiled as
+`code_3_2_17.s`/`code_3_2_20e.s` boundary in the generated issue - the
+real functions live in `code_3_2_20e.s`, right before `sub_803ADB4`'s
+raw division helper). `sub_803A94C` was *not* already matched despite
+`boot_util.c`'s comment calling it "the already-matched `sub_803A94C`"
+- that comment describes `sub_800014C`'s *own* match, written in
+anticipation; the actual `sub_803A94C` definition was still raw here.
+
+**Matched (`src/system/timer_util.c`):**
+
+- **`sub_803A944`/`sub_803A948`/`sub_803A94C`/`LZ77UnCompWrapper`/
+  `sub_803A954`/`RLUnCompWrapper`/`sub_803A95C`/`sub_0803A960`** - eight
+  two/three-instruction `NAKED` BIOS SWI wrappers (`BgAffineSet`,
+  `CpuFastSet`, `CpuSet`, `LZ77UnCompVram`, `ObjAffineSet`,
+  `RLUnCompVram`, `Sqrt`, `VBlankIntrWait` with `r2` zeroed first).
+  `LZ77UnCompWrapper`/`RLUnCompWrapper` already had their real names
+  from `src/system/asset_util.c`'s `extern` declarations; the rest stay
+  `sub_XXXXXXXX`.
+- **`sub_803A968`** - picks a 12-byte config table
+  (`struct EepromConfig`, in `timer_util.c`) by a "chip type" code (4 or
+  0x40), falling back to the 4-table on any other code but reporting
+  failure. Every access site downstream (`sub_803AAD4`'s `waitcntBits`
+  merge into `WAITCNT`'s wait-state-2 field; the raw
+  `sub_803AB54`/`sub_803AC04`'s `addrBitCount` byte read of 6 or 14)
+  matches the real GBA EEPROM save chip's two sizes (512 B/8 KB, 6-bit/
+  14-bit addressing) closely enough to name the struct with confidence,
+  even though no individual function in this chunk is renamed off
+  `sub_XXXXXXXX` yet.
+- **`sub_803A9D0`** - claims a hardware timer by index (0-3, erroring
+  above 3), records it, points `gUnknown_03001628` at that timer's
+  `TMxCNT_L` register, and hands the caller the address of a small
+  hand-written Thumb code blob (`gStaticData_0803A9AD`, physically
+  between `sub_803A968` and `sub_803A9D0` - kept as literal `asm(".byte
+  ...")` data, not reconstructed as a function) to install as the
+  timer's IRQ vector.
+- **`sub_803AD78`/`sub_803AD7C`/`sub_803AD80`/`sub_803AD84`/
+  `sub_803AD88`/`sub_803AD8C`/`sub_803AD90`/`sub_803AD94`**
+  (`src/system/reg_trampolines.c`) - the `bx r0`..`bx sp` "call through
+  whatever's already in this register" trampoline table already
+  referenced by name from `src/system/irq.c`'s `sub_8000720`
+  (`sub_803AD78()`, relying on `r0` still holding a function pointer
+  from the preceding `if (*p != 0)` comparison) and several `actor_part*`
+  files. `sub_803AD94` alone covers the `r7`-`sp` entries as one
+  function/one label, since nothing in the ROM branches directly into
+  those individual offsets.
+- **`nullsub_43`** - bonus match just past issue #69's own listed range
+  (which ends at `sub_803AD94`); a plain `bx lr` stub. Needed its
+  trailing `nop` written as a literal second instruction
+  (`NAKED`+`asm("bx lr\n\tnop")`), not `asm(".align 2, 0")` - the ROM's
+  pad byte here is a real encoded `nop` (`0x46C0`), not the zero-fill
+  `.align 2, 0` produces; the alignment-fix convention only covers
+  cases where the ROM's own padding happens to be zero bytes.
+
+**Parked (`NON_MATCHING`, real bytes in `asm/code_3_2_20e_aa08.s`):**
+
+- **`sub_803AA08`/`sub_803AA90`/`sub_803AAD4`** - arm/disarm the timer
+  `sub_803A9D0` claimed (save/clear/restore IME, program the timer's
+  reload+control registers, ack/enable or disable its IRQ bit in IF/IE)
+  and a DMA3 block-transfer helper (merges the active `EepromConfig`'s
+  `waitcntBits` into `WAITCNT`, programs DMA3SAD/DAD/CNT for a one-shot
+  transfer, busy-waits on DMA3CNT_H's enable bit). Every field/register
+  access in all three is confirmed against the ROM one-for-one; what
+  resists matching is purely register-allocation/loop-shape gaps this
+  compiler won't reproduce: `sub_803AA08`'s two cross-function-lifetime
+  pointers land in `r8`/`r9` correctly once pinned but a couple of
+  literal-pool loads still come out in the wrong order; `sub_803AA90`'s
+  "repoint the global at CNT_H, zero it, repoint back" round trip
+  collapses into a plain offset store; `sub_803AAD4`'s busy-wait tail
+  (`if (cond) { do {} while (cond); }`, textually duplicated per the
+  ROM's two independent register choices for the same check) always
+  gets loop-rotated back into one shared top-tested loop by this
+  compiler regardless of source phrasing (plain `while`, `if`+`do-while`,
+  `if`+`while`, explicit `goto` all tried).
+
+**Left fully raw (no C reconstruction attempted, `asm/code_3_2_20e_ab54.s`):**
+
+- **`sub_803AB54`/`sub_803AC04`/`sub_803ACE0`/`sub_803AD38`** - a
+  DMA3 bit-serial transmission cluster built on the EEPROM config table
+  above: `sub_803AB54` packs a 2-bit start prefix, `addrBitCount`
+  address bits, and 64 transposed data bits into a stack buffer and
+  DMAs it out via `sub_803AAD4` twice (once for `addrBitCount+3`
+  halfwords, once for a fixed 0x44); `sub_803AC04` builds a similar
+  buffer, additionally arms the timer via `sub_803AA08`/`sub_803AA90`
+  with an IRQ-flag busy-wait; `sub_803ACE0` calls `sub_803AB54` and
+  compares its result against the caller's buffer; `sub_803AD38` retries
+  `sub_803AC04` then `sub_803ACE0` up to 3 times. The overall shape (a
+  DMA target of `0x0D000000` - the real GBA EEPROM memory window,
+  confirmed by decoding `movs r4,#0xd0; lsls r4,r4,#0x14` correctly
+  this time, unlike an earlier pass at this same chunk that misread it
+  as `0xD0000000` - plus the chip-size-keyed bit count and a 3-attempt
+  retry wrapper) is consistent with a read+verify EEPROM access
+  routine, but the exact bit-count arithmetic (why the second DMA in
+  `sub_803AB54` always sends 0x44 halfwords regardless of chip size,
+  what the "+3" is made of) isn't confidently pinned down - left for
+  whoever picks up the rest of this chunk rather than guess.
+
+**File structure:** `asm/code_3_2_20e.s` (truncated right before
+`sub_803A944`) is now followed, in ROM order, by `timer_util.o`,
+`code_3_2_20e_aa08.s` (raw `.if NON_MATCHING == 0` twin for the three
+parked `timer_util.c` functions), `code_3_2_20e_ab54.s` (raw, left
+untouched), `reg_trampolines.o`, and finally `code_3_2_20e_3adb4.s`
+(the original file's unchanged remainder, from `sub_803ADB4`'s division
+helper on) - see `ldscript.txt` and `tools/report_units.py`'s `system`
+category, both updated to match. Verified via a full clean `make
+compare` (`La suma coincide`) and `make NON_MATCHING=1 report`.
