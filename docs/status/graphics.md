@@ -163,6 +163,12 @@ per-actor animation frames, text layout.
   referenced by name from `actor_part15.c`) plus `mem_free`/`mem_alloc`
   wrappers.
 
+- `src/graphics/hud_counter.c` (new file, contributed via PR #1 by
+  @MiryamSanchez26 - `sub_8027838` is an isolated HUD counter update
+  inside the raw HUD stat-widget region, so preserving its ROM address
+  required a split of what's now `asm/code_3_2_17.s`/`asm/code_3_2_20.s`
+  right around it): `sub_8027838`
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 

@@ -117,7 +117,9 @@ UNITS = [
     (0x0800B8DC, None, "graphics"),  # sub_800B8DC onward (a 546+-line function and beyond) - not yet examined
     (0x0801E578, None, "graphics_loading"),  # LoadGraphicsPackage cluster (16.2KB); menu_ui's ~9.1KB dispatch-table functions and the trigger-effect spawner family are interleaved inside this same range, not a separate block - see docs/rom_map.md "Major correction: there is no second table"
     (0x080225A0, None, "game_loop"),  # UpdateGameFrame-MainLoop cluster (18,764B exact), confirmed same system/signature as the 0x08006C00 zone, not a separate island
-    (0x08026EEC, None, "hud"),  # ~4.8 of 5.9KB is HUD stat-widgets; ~0.3KB (fx's particle/trajectory-queue pair) and ~0.8KB unlabeled remainder are interleaved inside this same span - docs/rom_map.md "fx wasn't right either"
+    (0x08026EEC, None, "hud"),  # raw HUD region before sub_8027838
+    (0x08027838, "src/graphics/hud_counter.o", "graphics"),  # sub_8027838 - cached two-digit HUD counter update
+    (0x08027940, None, "hud"),  # remainder of the HUD stat-widget region
     (0x0802866C, None, "hud"),  # InitHudIconWidgetA/B, MeasureText, UploadHudTile, InitHudTextWidget
     (0x08028BA0, None, "graphics_loading"),  # InitObjTileFreeList, LoadSpriteFrameTiles, SetupSpriteFrameOam, DecompressCategorySpriteSheet
     (0x080291A4, None, "actor"),  # SetupActorVramPool, InitActorCategory, SelectActorCategory, InitActorPart, UpdateAnimatedActorPart, ConstructAnimTableState, ConstructActorPart

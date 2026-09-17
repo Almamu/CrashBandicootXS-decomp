@@ -2508,6 +2508,39 @@ into `asm/code_3_2_3.s` (now just the parked `sub_8007DBC`) and a new
 `src/graphics/actor_part3.c` (holding just `sub_8007F78`) inserted
 between them in `ldscript.txt`.
 
+**`sub_8027838`** (ROM `0x08027838`, 262 bytes, contributed via PR #1 by
+@MiryamSanchez26, new
+`src/graphics/hud_counter.c`): updates a cached two-digit HUD counter
+from the central state object's `+0x74` value. Negative source values
+are displayed as zero. Modes 1 and 3 derive the shared horizontal HUD
+offset from the counter's layout field; other modes reset that offset.
+When the value changes, values above 9 are split with `sub_803ADB4` and
+`sub_803AE4C`, while a single-digit value hides the second digit with
+frame `-1`. Every visible frame is clamped against the selected
+0x1c-byte animation record's frame count, matching the pattern already
+established by `sub_8008618`. The function then refreshes the two digit
+parts and their adjacent icon part through `sub_80270E0`, and updates
+its change-detection cache.
+
+Plain struct-based C reproduced the behavior but emitted 252 bytes and
+used a different load/register order in the clamp sequences. Named
+struct fields were retained, with narrow register pins and inline-asm
+allocation anchors only where rebuilding demonstrated they were needed:
+in particular, keeping the second digit's index-address value live
+forces the ROM's `r7` index and `r2` copy, and the ROM also preserves an
+otherwise-dead second-digit animation-index read before storing `-1`.
+The explicit trailing alignment preserves the ROM's zero halfword.
+Direct comparison of the 264-byte linked region (262 bytes of function
+plus two bytes of alignment) produced identical SHA-1 values
+(`e9e861b9af7201e179d747cc8afc019ed6b6bf4f`), and both the initial and
+post-cleanup `make compare` runs passed. `asm/code_3_2_17.s` was split at
+this exact location; its untouched remainder begins at `sub_8027940` in
+new `asm/code_3_2_20.s`, with `hud_counter.o` interleaved between them in
+`ldscript.txt`. (The PR's own second matched function, `sub_8008618`,
+turned out to duplicate work already matched independently on `main` in
+`actor_part6.c` - see that file's own entry above for the real writeup;
+the PR's version wasn't merged.)
+
 **`sub_8007FD8`** (ROM `0x08007FD8`, right after `sub_8007F78`, same
 file): an AABB-vs-region overlap test, sharing `sub_8007F78`'s exact
 `part+0x25 == 1`/`part+0xd` bit-2 fast-path shape, but the real check
