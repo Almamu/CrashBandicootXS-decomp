@@ -246,7 +246,8 @@ UNITS = [
     (0x08033E18, "src/graphics/actor_part36.o", "actor"),  # sub_8033E18 (issue #62): sub_8033AE0's state-1-gated twin; matched
     (0x08033E80, "src/graphics/actor_part37.o", "actor"),  # sub_8033E80 (issue #62, parked, NON_MATCHING) - sub_8033B44's twin using the gStaticData_0817C4F8 stride-8 table; real bytes live in asm/code_3_2_20_28568_c99c_31784_33e80.s
     (0x08033EF4, None, "actor"),  # remainder of the actor zone after issue #62's chunk, still raw
-    (0x080354E0, None, "graphics_loading"),  # LoadLevelGraphics, LoadBg2Background, LoadObjSpriteTiles
+    (0x080354E0, "src/graphics/level_graphics.o", "graphics_loading"),  # GitHub issue #65: LoadLevelGraphics (matched) + LoadBg2Background/LoadObjSpriteTiles (parked, NON_MATCHING, real bytes in asm/code_3_2_20_28568_c99c_31784_33ef4_355e0.s) - see docs/matching/issue-65-graphics-loading.md
+    (0x08035780, None, "graphics_loading"),  # remainder of issue #65's chunk (sub_8035780-sub_8036FBC) - left raw, out of scope for this pass
     (0x08037110, "src/audio/counter_selector.o", "audio"),  # sub_8037110/nullsub_7/sub_8037154/sub_803716C/sub_80371B4/sub_8037224 - a small on-screen 0-5 "counter" widget (increments/decrements with input, confirms/cancels with PlaySfx), reads like game/HUD-side code using PlaySfx rather than GAX2 internals; sub_803716C is UNUSED (no caller found); matched
     (0x080372BC, None, "audio"),  # sub_80372BC/sub_8037388 - fully understood (icon-manager draw loop / tile-cache init for the widget above) but hits the same gcc-2.9 many-register-allocation difficulty already documented for sub_8006600 (src/graphics/oam_count.c); left raw rather than force a low-confidence register pin
     (0x080374D0, "src/audio/counter_selector_setup.o", "audio"),  # sub_80374D0/sub_8037534/sub_8037548/sub_8037578/sub_80375A0/sub_80375EC/sub_8037620 - the widget's graphics/BG setup, draw-flush, and init/teardown pair; matched
