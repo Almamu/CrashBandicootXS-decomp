@@ -110,6 +110,12 @@ SECTIONS
         build/crashbandicootxs/src/graphics/actor_part18b.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_145e4.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_14674.o(.text);
+        build/crashbandicootxs/src/graphics/actor_part20.o(.text);
+        build/crashbandicootxs/asm/code_3_2_17_17ab0.o(.text);
+        build/crashbandicootxs/src/graphics/actor_part20b.o(.text);
+        build/crashbandicootxs/asm/code_3_2_17_18008.o(.text);
+        build/crashbandicootxs/src/graphics/actor_part20c.o(.text);
+        build/crashbandicootxs/asm/code_3_2_17_188d0.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_225a0.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_22bf0.o(.text);
         build/crashbandicootxs/src/system/game_loop.o(.text);

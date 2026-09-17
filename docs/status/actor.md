@@ -156,6 +156,25 @@ from "core" graphics.
   trivial raw-offset getter), `sub_803AFF0`/`sub_803B024` (two more
   `gStaticData_087E3BEC`-family per-type descriptor table constructors)
 
+- `src/graphics/actor_part20.c` (new file, GitHub issue #22, ROM
+  0x08017A44-0x08017AAC): `sub_8017A44`-`sub_8017AAC` (9 functions) -
+  the same player/action-object family as `actor_part18.c`/
+  `actor_part19.c` (`self+0xc` table pointer, `self+0x10` part
+  pointer); see `docs/matching/issue-22-0x08017a44-actor.md`.
+- `src/graphics/actor_part20b.c` (new file, GitHub issue #22, ROM
+  0x08017ECC-0x08017FE8, non-adjacent to `actor_part20.c` since the
+  raw `sub_8017AB0` sits between them): `sub_8017ECC`, `sub_8017F14`,
+  `sub_8017F5C`, `sub_8017F80`, `sub_8017FA4`, `sub_8017FD4`,
+  `sub_8017FE8` - a `self+4` double-pointer-chain record lookup (same
+  shape as `sub_800B704`/`sub_800B838`) feeding the
+  `gStaticData_0816C2D8` per-vector-component trampoline table; see
+  `docs/matching/issue-22-0x08017a44-actor.md`.
+- `src/graphics/actor_part20c.c` (new file, GitHub issue #22, ROM
+  0x080187FC-0x08018884, non-adjacent to `actor_part20b.c` since the
+  raw `sub_8018008`-`sub_80186F0` block sits between them):
+  `sub_80187FC`, `sub_8018858`, `sub_801886C`, `sub_8018884`; see
+  `docs/matching/issue-22-0x08017a44-actor.md`.
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
@@ -387,3 +406,15 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   parked on this compiler's register choice for a couple of
   intermediate abs-value-computation values - see `docs/matching.md`,
   issue #52.
+
+## Left raw (not attempted, or attempted and set aside)
+
+- **`sub_8017AB0`** (`asm/code_3_2_17_17ab0.s`, ROM 0x08017AB0-
+  0x08017ECC, GitHub issue #22) - a ~500-instruction player-vs-camera-
+  viewport state dispatcher; left raw, out of scope for this pass - see
+  `docs/matching/issue-22-0x08017a44-actor.md`.
+- **`sub_8018008`/`sub_8018400`/`sub_801865C`/`sub_80186F0`**
+  (`asm/code_3_2_17_18008.s`, ROM 0x08018008-0x080186F0, GitHub issue
+  #22) - a ~480-instruction jump-table player action-state machine
+  plus two high-register-pressure helpers it calls; left raw, out of
+  scope for this pass - see `docs/matching/issue-22-0x08017a44-actor.md`.
