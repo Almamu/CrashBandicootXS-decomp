@@ -121,7 +121,11 @@ UNITS = [
     (0x0800B704, "src/graphics/actor_part17.o", "graphics"),  # sub_800B704/sub_800B734/sub_800B7B0/sub_800B838 (a table-driven trampoline pair and a fixed-point-scaled vector-copy pair, siblings of sub_800B3AC/sub_8009D5C and sub_800B6A0/sub_800B6D0 respectively), nullsub_13, sub_800B86C (guarded frame-index setter), and four more part+0xc/part+8 table-pointer accessors; matched
     (0x0800B8DC, None, "graphics"),  # sub_800B8DC onward (a 546+-line function and beyond) - not yet examined
     (0x0801E578, None, "graphics_loading"),  # LoadGraphicsPackage cluster (16.2KB); menu_ui's ~9.1KB dispatch-table functions and the trigger-effect spawner family are interleaved inside this same range, not a separate block - see docs/rom_map.md "Major correction: there is no second table"
-    (0x080225A0, None, "game_loop"),  # UpdateGameFrame-MainLoop cluster (18,764B exact), confirmed same system/signature as the 0x08006C00 zone, not a separate island
+    (0x080225A0, None, "game_loop"),  # UpdateGameFrame-MainLoop cluster (18,764B exact), confirmed same system/signature as the 0x08006C00 zone, not a separate island. UpdateGameFrame itself (0x080225A0-0x08022BF0) is a ~730-instruction jump-table state machine left raw - see docs/matching.md, GitHub issue #34
+    (0x08022BF0, "src/system/game_loop.o", "game_loop"),  # sub_8022BF0/sub_8022CA0 (parked, NON_MATCHING) - real bytes live in asm/code_3_2_17_22bf0.s - see docs/matching.md
+    (0x08022D50, None, "game_loop"),  # sub_8022D50 - level-start/reset routine (gUnknown_030012EC array walk, sub_803AD7C trampolines), left raw - see docs/matching.md
+    (0x08022EA8, "src/system/game_loop2.o", "game_loop"),  # sub_8022EA8/sub_8022F2C (parked, NON_MATCHING, real bytes in asm/code_3_2_17_22ea8.s) plus sub_8022FEC/sub_802306C and the self+0x80/0x84/0x88/0xac/0xc0/+2-flags accessor family (matched) - see docs/matching.md
+    (0x080231CC, None, "game_loop"),  # remainder of the UpdateGameFrame-MainLoop cluster, still raw
     (0x08026EEC, None, "hud"),  # raw HUD region before sub_8027838
     (0x08027838, "src/graphics/hud_counter.o", "graphics"),  # sub_8027838 - cached two-digit HUD counter update
     (0x08027940, None, "hud"),  # remainder of the HUD stat-widget region
@@ -130,7 +134,14 @@ UNITS = [
     (0x080291A4, None, "actor"),  # SetupActorVramPool, InitActorCategory, SelectActorCategory, InitActorPart, UpdateAnimatedActorPart, ConstructAnimTableState, ConstructActorPart
     (0x0802B364, None, "actor"),  # 40.4 KB actor zone (docs/rom_map.md cites 0x0802B348, 28B before the nearest real function start - snapped forward since 0x0802B348 itself falls mid-function) - category/part/vtable system, boss-candidate + singleton object clusters
     (0x080354E0, None, "graphics_loading"),  # LoadLevelGraphics, LoadBg2Background, LoadObjSpriteTiles
-    (0x08037110, None, "audio"),  # Shin'en GAX2 engine, boundary narrowed this session to end at 0x0803A944; a couple of generic 64-bit-division helpers are confirmed interleaved false positives - see docs/audio.md
+    (0x08037110, "src/audio/counter_selector.o", "audio"),  # sub_8037110/nullsub_7/sub_8037154/sub_803716C/sub_80371B4/sub_8037224 - a small on-screen 0-5 "counter" widget (increments/decrements with input, confirms/cancels with PlaySfx), reads like game/HUD-side code using PlaySfx rather than GAX2 internals; sub_803716C is UNUSED (no caller found); matched
+    (0x080372BC, None, "audio"),  # sub_80372BC/sub_8037388 - fully understood (icon-manager draw loop / tile-cache init for the widget above) but hits the same gcc-2.9 many-register-allocation difficulty already documented for sub_8006600 (src/graphics/oam_count.c); left raw rather than force a low-confidence register pin
+    (0x080374D0, "src/audio/counter_selector_setup.o", "audio"),  # sub_80374D0/sub_8037534/sub_8037548/sub_8037578/sub_80375A0/sub_80375EC/sub_8037620 - the widget's graphics/BG setup, draw-flush, and init/teardown pair; matched
+    (0x08037648, None, "audio"),  # sub_8037648/sub_8037A7C/sub_8037E54/sub_8037ECC/sub_8037F3C - confirmed/likely generic 64-bit software division/multiply helpers (see docs/audio.md's sub_8037648/sub_8037A7C entries) interleaved in the GAX2 range; left raw, not chased further this pass
+    (0x08037FA0, "src/audio/song_slot_lookup.o", "audio"),  # sub_8037FA0 - a 12-entry threshold-table lookup; table contents not understood; matched
+    (0x08037FC0, None, "audio"),  # sub_8037FC0 - a large, genuinely hard-to-follow GAX2 mixer/timing computation over gStaticData_085A6150 and several SoundHandler-shaped structures; left raw, not attempted this pass
+    (0x080381FC, "src/audio/sound_object_init.o", "audio"),  # sub_80381FC - a SoundHandler/channel-object-shaped constructor (zero-fill plus a few sentinel fields); matched
+    (0x08038240, None, "audio"),  # sub_8038240/sub_80384DC - core GAX2 mixer-state wiring (gUnknown_03001630) and a hardware sound-register reset with an inlined timing-loop compiler quirk already flagged in the raw asm; left raw, not attempted this pass
     (0x0803A944, None, "system"),  # BIOS svc wrapper stubs + LZ77UnCompWrapper/RLUnCompWrapper, confirmed non-audio via matched asset_util.c callers
     (0x0803B058, "src/graphics/actor_anim.o", "graphics"),
     (0x0803B060, None, "actor"),  # GetAnimFrameData + 43 unnamed neighbors, medium confidence

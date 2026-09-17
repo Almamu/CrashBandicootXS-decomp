@@ -15,7 +15,9 @@ struct icon_slot {
 
 struct icon_record {
     u8 unused_00[0x10];
-    struct icon_slot slots[6];
+    /* A 7th slot (index 6, offset 0x40) is read by sub_8037388 - extends
+     * the 6-slot record sub_8006600/sub_8000EE4 already established. */
+    struct icon_slot slots[7];
 };
 
 /* An OAM "icon" positioner: screen X/Y for the icon, then a pointer to
@@ -24,10 +26,18 @@ struct icon_record {
  * instances of this, used for a left/right icon pair flanking a number
  * in sub_8006600; sub_8000EE4 takes one as its render-target object. */
 struct icon_manager {
-    u8 unused_00[0x110];
+    u8 unused_00[0x108];
+    /* Zeroed by sub_8037388 (src/audio/counter_widget.c); meaning not
+     * understood yet. */
+    u32 field_108;
+    u8 unused_10c[0x110 - 0x10c];
     u32 posX;
     u32 posY;
-    u8 unused_118[0x130 - 0x118];
+    u8 unused_118[0x12c - 0x118];
+    /* Copied byte-for-byte from gUnknown_030012DC's copy into
+     * gUnknown_030012E0's copy by sub_8037388 - meaning not understood
+     * yet. */
+    u32 field_12c;
     struct icon_record *record;
 };
 
