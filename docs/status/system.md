@@ -46,6 +46,15 @@ tagged-asset loading.
   `sub_8000720` and several `actor_part*` files), `nullsub_43` (bonus,
   just past issue #69's listed range) - GitHub issue #69
 
+GitHub issue #70 (`0x0803ADB4`-`0x0803B060`, right after
+`reg_trampolines.c` above) was categorized `system` by the chunk
+generator, but every function in it turned out to be either a generic
+math primitive or an AABB/actor-table helper - both matched and parked
+functions from it live in `docs/status/util.md`
+(`src/util/math_div_util.c`) and `docs/status/graphics.md`
+(`src/graphics/actor_aabb_setup.c`) instead. See `docs/matching.md`'s
+issue #70 entry for the full writeup.
+
 `main.c`/`memory.c`/most of `irq.c` were matched earliest of all, before
 `docs/matching.md`'s per-function log convention existed, so they don't have
 per-function writeups there the way everything since does. They do have a

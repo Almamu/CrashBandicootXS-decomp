@@ -222,6 +222,15 @@ per-actor animation frames, text layout.
   `sub_8004ACC`, `sub_8004AFC`, `sub_8004B24`, `sub_8004B54`,
   `sub_8004B70`, `sub_8004BA0`, `sub_8004BD0`, `sub_8004C7C`
 
+- `src/graphics/actor_aabb_setup.c` (new file, GitHub issue #70, ROM
+  `0x0803AFDC`-`0x0803B060` - right after the parked division/modulo
+  trio in `src/util/math_div_util.c`, see that file's `docs/matching.md`
+  entry): `sub_803AFDC`/`sub_803AFE4` (the shared AABB set-size/
+  set-position primitive already referenced by name from
+  `actor_part.c`/`actor_part2.c`/`oam_count.c`), `sub_803AFEC` (a
+  trivial raw-offset getter), `sub_803AFF0`/`sub_803B024` (two more
+  `gStaticData_087E3BEC`-family per-type descriptor table constructors)
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
