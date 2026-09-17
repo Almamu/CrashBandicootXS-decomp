@@ -58,6 +58,7 @@ Please see follow [these instructions](./INSTALL.md)
 
 ## Notes
 
+- [CONTRIBUTING.md](./CONTRIBUTING.md) - **how to pick up a chunk of work from the issue tracker, human or agent, and get it to a PR**
 - [docs/status/](./docs/status/) - **per-system matched/parked function status, the "Current state" section moved here**
 - [docs/workflow.md](./docs/workflow.md) - **the required per-function matching loop, must be followed for every function**
 - [docs/naming.md](./docs/naming.md) - **the function naming convention, must be followed whenever a function gets a real name**

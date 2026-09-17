@@ -1,5 +1,11 @@
 # The per-function matching loop
 
+**Picking up work?** See [CONTRIBUTING.md](../CONTRIBUTING.md) first for
+how to find a scoped chunk of functions (or a single parked function)
+via this repo's GitHub issues, claim it, and open a PR when done - this
+document is the loop you run *within* that process for each function,
+not how to find one to work on.
+
 Every function that goes from `asm/code_3_*.s` into real C **must**
 follow this same loop, in order, end to end, every time - including the
 cleanup step (step 7), which in earlier sessions happened as an

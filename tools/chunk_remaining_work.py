@@ -7,15 +7,23 @@ single-category chunks capped at --max-functions (default 25) for use as
 self-contained "pick this up" issues.
 
 Usage: python3 tools/chunk_remaining_work.py [--max-functions N] [--json out.json] [--md out.md]
+       python3 tools/chunk_remaining_work.py --issues-dir DIR --parked-issues   # write title/body files
+       python3 tools/chunk_remaining_work.py --issues-dir DIR --parked-issues --create-github-issues  # also open them on GitHub via `gh`
 
-This is read-only - it never touches asm/ or src/. Re-run any time more
-functions get matched (and cut out of asm/*.s) to regenerate the chunk
-list against current ground truth.
+This is read-only with respect to asm/ and src/ - it never touches them.
+--create-github-issues is the one mode with a real side effect (it opens
+issues on GitHub via `gh issue create`); everything else just writes
+local files. Re-run any time more functions get matched (and cut out of
+asm/*.s) to regenerate the chunk list against current ground truth -
+re-running --create-github-issues will open duplicates of anything
+already-open, so only do that deliberately.
 """
 import argparse
 import json
 import re
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -113,6 +121,21 @@ def annotate(funcs, units):
 FUNC_SIG_RE = re.compile(r"^[A-Za-z_][\w \*]*?\b(sub_[0-9A-Fa-f]{6,8}|nullsub_\d+)\s*\(")
 IFDEF_NON_MATCHING_RE = re.compile(r"^#if\s+NON_MATCHING\s*$")
 ENDIF_C_RE = re.compile(r"^#endif\b")
+
+
+DIR_TO_CATEGORY = {
+    "graphics": "graphics",
+    "system": "system",
+    "util": "util",
+    "audio": "audio",
+}
+
+
+def category_from_path(rel_path):
+    parts = Path(rel_path).parts
+    if len(parts) >= 2 and parts[0] == "src":
+        return DIR_TO_CATEGORY.get(parts[1])
+    return None
 
 
 def scan_parked_functions():
@@ -284,6 +307,21 @@ accordingly - see `docs/workflow.md` step 6 onward.*
     return title, body
 
 
+def create_github_issue(title, body, labels):
+    with tempfile.NamedTemporaryFile("w", suffix=".md", delete=False) as f:
+        f.write(body)
+        body_path = f.name
+    cmd = ["gh", "issue", "create", "--title", title, "--body-file", body_path]
+    for label in labels:
+        cmd += ["--label", label]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    Path(body_path).unlink(missing_ok=True)
+    if result.returncode != 0:
+        print(f"FAILED: {title}\n{result.stderr}", file=sys.stderr)
+        return None
+    return result.stdout.strip()
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--max-functions", type=int, default=25)
@@ -297,6 +335,8 @@ def main():
                      help="Skip generating a chunk issue for groups smaller than this (they're usually a single already-tracked parked function)")
     ap.add_argument("--parked-issues", action="store_true",
                      help="Also emit one issue per already-parked (#if NON_MATCHING) function into --issues-dir")
+    ap.add_argument("--create-github-issues", action="store_true",
+                     help="Actually open each generated issue on GitHub via `gh issue create` (requires gh to be authenticated). Real side effect - see module docstring.")
     args = ap.parse_args()
 
     units = load_units()
@@ -341,15 +381,28 @@ def main():
         out_dir = Path(args.issues_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
         eligible = [s for s in summaries if s["count"] >= args.min_issue_count]
+        created, failed = 0, 0
         for i, s in enumerate(eligible, 1):
             title, body = render_issue(s, i, len(eligible))
             stem = f"{i:03d}_0x{s['start']:08X}"
             (out_dir / f"{stem}.title.txt").write_text(title + "\n")
             (out_dir / f"{stem}.body.md").write_text(body)
+            if args.create_github_issues:
+                labels = ["decomp-chunk"]
+                if s["category"]:
+                    labels.append(s["category"])
+                url = create_github_issue(title, body, labels)
+                if url:
+                    created += 1
+                    print(f"[{i}/{len(eligible)}] {url}", file=sys.stderr)
+                else:
+                    failed += 1
         print(f"Wrote {len(eligible)} issue title/body pairs to {out_dir} "
               f"({len(summaries) - len(eligible)} smaller chunks skipped, "
               f"see docs/matching.md for those individually-tracked functions)",
               file=sys.stderr)
+        if args.create_github_issues:
+            print(f"Created {created} GitHub issues ({failed} failed)", file=sys.stderr)
 
         if args.parked_issues:
             parked = scan_parked_functions()
@@ -366,13 +419,27 @@ def main():
                       f"{', '.join(mismatched)}", file=sys.stderr)
             parked = [p for p in parked if p["name"] in parked_asm_names]
             start_idx = len(eligible) + 1
+            p_created, p_failed = 0, 0
             for offset, p in enumerate(parked):
                 title, body = render_parked_issue(p)
                 stem = f"{start_idx + offset:03d}_parked_{p['name']}"
                 (out_dir / f"{stem}.title.txt").write_text(title + "\n")
                 (out_dir / f"{stem}.body.md").write_text(body)
+                if args.create_github_issues:
+                    labels = ["parked-function"]
+                    cat = category_from_path(p["file"])
+                    if cat:
+                        labels.append(cat)
+                    url = create_github_issue(title, body, labels)
+                    if url:
+                        p_created += 1
+                        print(f"[parked {offset+1}/{len(parked)}] {url}", file=sys.stderr)
+                    else:
+                        p_failed += 1
             print(f"Wrote {len(parked)} additional per-function parked-issue "
                   f"title/body pairs to {out_dir}", file=sys.stderr)
+            if args.create_github_issues:
+                print(f"Created {p_created} GitHub issues ({p_failed} failed)", file=sys.stderr)
 
     if not args.json and not args.md and not args.issues_dir:
         for s in summaries:
