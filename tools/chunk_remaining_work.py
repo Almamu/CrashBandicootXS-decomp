@@ -577,7 +577,7 @@ def main():
                 (out_dir / f"{stem}.body.md").write_text(followup_body)
             if args.create_github_issues:
                 labels = ["cleanup", "blocked"]
-                if category:
+                if category and category != "uncategorized":
                     labels.append(category)
                 url = create_github_issue(title, followup_body, labels)
                 if url:
