@@ -1,254 +1,168 @@
 #include "core.h"
 #include "actor.h"
 
+/* GitHub issue #12: 0x0800D040-0x0800FC70, the physics/collision
+ * subsystem documented in docs/rom_map.md ("Confirmed: a shared
+ * physics/collision subsystem, entered from multiple different entity
+ * types"). This first function of that subsystem sits right after
+ * already-matched `game_loop` code - `sub_0800D18C` and `sub_800E08C`
+ * immediately after it are two of the subsystem's largest, most
+ * tangled functions and are left untouched for now; see
+ * docs/matching/issue-12-physics-collision.md. */
+
+struct aabb {
+    s32 field_0;
+    s32 field_4;
+    s32 field_8;
+    s32 field_c;
+};
+
+extern void sub_803AFE4(void *buf, s32 arg1, s32 arg2);
+extern void sub_803AFDC(void *buf, s32 arg1, s32 arg2);
+extern u8 sub_8001688(void *buf1, void *buf2);
 extern void *gUnknown_030012D8;
-extern void *gUnknown_030012B4;
-extern void *gUnknown_030012BC;
-extern void *gUnknown_03001318;
-
-extern s32 sub_8023414(void *self);
-extern void sub_80232EC(void *self);
-extern void sub_80232FC(void *self);
-extern void sub_8023298(void *self);
-extern void sub_8023288(void *self);
-extern u8 sub_8023290(void *self);
-extern u8 sub_80232B8(void *self);
-extern void sub_80231D4(void *self);
-extern void *sub_800014C(void *dest, void *src, s32 size);
-extern void sub_803A94C(const void *src, void *dst, u32 cnt);
-extern void sub_8007398(struct actor *self, s32 arg1, s32 arg2);
-extern void sub_8028568(void *state, s32 arg1);
-extern void sub_8022CA0(void *self, u8 arg1);
-extern void sub_8022468(void *self, s32 mode);
-extern void sub_80019A8(struct AudioContext *self, u32 id);
-extern void *sub_8026EDC(s32 size);
-extern void nullsub_7(void);
-extern s32 sub_80361B0(void);
-extern void sub_8037154(void *self, u32 flags);
-
-/* Sets `self->0x1bc` (a Q-format camera/position field paired with the
- * `sub_8023500` two-word setter below). */
-void sub_80234E8(void *self, s32 value)
-{
-    *(s32 *)((u8 *)self + 0x1bc) = value;
-}
-
-/* Sets `self->0x1b8`, the companion field to `sub_80234E8` above. */
-void sub_80234F4(void *self, s32 value)
-{
-    *(s32 *)((u8 *)self + 0x1b8) = value;
-}
-
-/* Copies a `{x, y}` pair into `self->0x1c0`/`0x1c4`. */
-void sub_8023500(void *self, s32 *point)
-{
-    s32 *dst = (s32 *)((u8 *)self + 0x1c0);
-    s32 y = point[1];
-    s32 x = point[0];
-
-    dst[0] = x;
-    dst[1] = y;
-}
-
-/* Sets `self->0xa6` to 1 unless `sub_8023290` says it's already set. */
-void sub_8023510(void *self)
-{
-    if (!sub_8023290(self)) {
-        *((u8 *)self + 0xa6) = 1;
-    }
-}
-
-/* Sets `self->0xa4` to 1 unless `sub_80232B8` says it's already set. */
-void sub_802352C(void *self)
-{
-    if (!sub_80232B8(self)) {
-        *((u8 *)self + 0xa4) = 1;
-    }
-}
-
-/* Restores `self->0x70`/`0xa9` from their `0xcc`/`0xd0` shadow copies,
- * then copies the `0xe4`-`0x14b` snapshot block back over `self`'s own
- * first `0x68` bytes - the inverse direction of `sub_802356C`/
- * `sub_8022CA0`'s "stash a snapshot at +0xe4" below. */
-void sub_8023548(void *self)
-{
-    u8 tmp;
-
-    *(s32 *)((u8 *)self + 0x70) = *(s32 *)((u8 *)self + 0xcc);
-    tmp = *((u8 *)self + 0xd0);
-    *((u8 *)self + 0xa9) = tmp;
-    sub_800014C(self, (u8 *)self + 0xe4, 0x68);
-}
-
-/* Re-arms a level/checkpoint transition: stores `flag` at `self->0xe0`,
- * refreshes the `0xcc`/`0xd0` shadow pair, resets the `sub_8023414`
- * animation-state pair (`sub_80232FC`/`sub_80232EC`), snapshots `pair`
- * into `self->0xd4`/`0xd8`, flushes two spans of the
- * `gUnknown_030012B4` bitmap via the `CpuSet` wrapper, then stashes the
- * `0xe4`-byte snapshot block (see `sub_8023548` above). */
-void sub_802356C(void *selfArg, u8 flag, s32 *pairArg)
-{
-    register void *self asm("r5") = selfArg;
-    register s32 *pair asm("r4") = pairArg;
-    u8 tmp;
-
-    *((u8 *)self + 0xe0) = flag;
-    *(s32 *)((u8 *)self + 0xcc) = sub_8023414(self);
-    tmp = *((u8 *)self + 0xa9);
-    *((u8 *)self + 0xd0) = tmp;
-    sub_80232FC(self);
-    sub_80232EC(self);
-    {
-        register s32 *dst asm("r2") = (s32 *)((u8 *)self + 0xd4);
-        register s32 px asm("r0") = pair[0];
-        register s32 py asm("r1") = pair[1];
-        dst[0] = px;
-        dst[1] = py;
-    }
-
-    pair = gUnknown_030012B4;
-    {
-        void *a = (u8 *)pair + 0x108;
-        void *b = (u8 *)pair + 8;
-        register u32 ctrl asm("r2") = 0x04000040;
-        sub_803A94C(a, b, ctrl);
-    }
-    {
-        void *a = (u8 *)pair + 0x308;
-        void *b = (u8 *)pair + 0x208;
-        register u32 ctrl asm("r2") = 0x04000040;
-        sub_803A94C(a, b, ctrl);
-    }
-
-    sub_800014C((u8 *)self + 0xe4, self, 0x68);
-}
-
-/* When `flag` is set, accumulates `self->0xb4` into `self->0x70`,
- * refreshes the animation-state pair, flushes the tile record cache
- * (`gUnknown_03001318`) using `self->0xbc`, re-syncs the player's
- * stored position (`gUnknown_030012D8`) from `self->0xd4`/`0xd8`, and
- * re-runs `sub_8022CA0`; otherwise just calls `sub_80231D4`. */
-void sub_80235E4(void *self, u8 flag)
-{
-    if (flag != 0) {
-        *(s32 *)((u8 *)self + 0x70) += *(s32 *)((u8 *)self + 0xb4);
-        sub_8023298(self);
-        sub_80232FC(self);
-        sub_8023288(self);
-        sub_8028568(gUnknown_03001318, *(s32 *)((u8 *)self + 0xbc));
-        {
-            struct actor *player = (struct actor *)gUnknown_030012D8;
-            s32 *p = (s32 *)((u8 *)self + 0xd4);
-            sub_8007398(player, p[0], p[1]);
-        }
-        sub_8022CA0(self, *((u8 *)self + 0xe0));
-    } else {
-        sub_80231D4(self);
-    }
-}
-
-void sub_802364C(void *self)
-{
-    sub_8022468(self, 2);
-}
-
-void sub_8023658(void *self)
-{
-    sub_8022468(self, 1);
-    sub_80019A8(gUnknown_030012BC, 0x5d);
-}
-
-/* Allocates a `0x44c`-byte block, fires an (empty) `nullsub_7` hook and
- * `sub_80361B0`, then hands the block to `sub_8037154` with flags `3`
- * if the allocation succeeded. */
-void sub_8023674(void)
-{
-    /* `nullsub_7` is a real no-op (`bx lr`) but, split into its own
-     * translation unit (src/audio/counter_selector.c), an ordinary call
-     * forces the allocated block's pointer into a callee-saved register
-     * *before* the call, one instruction earlier than the ROM (which
-     * keeps it in r0 across the call and only moves it afterward - only
-     * possible because the two functions were compiled together
-     * originally). Spelling the call as inline asm that doesn't clobber
-     * r0 reproduces the ROM's exact (and, here, still safe) delayed
-     * move. */
-    register void *tmp asm("r0") = sub_8026EDC(0x44c);
-    void *block;
-
-    asm volatile("bl nullsub_7" : "+r"(tmp) :: "r1", "r2", "r3", "lr", "cc");
-    block = tmp;
-    sub_80361B0();
-    if (block != NULL) {
-        sub_8037154(block, 3);
-    }
-}
-
-void sub_802369C(void *self)
-{
-    sub_8022468(self, 0);
-}
-
-void nullsub_24(void)
-{
-}
-
-/* Unpacks the packed halfword at `self->0x14c`/`0x14d` (see
- * `sub_80236EC`'s inverse below) into `self->0x74`/`0x6c`/`0x78`, but
- * first refreshes the snapshot itself: copies `src` into `self`'s first
- * `0x68` bytes, then re-copies `self` into the `0x14c`-based snapshot
- * block. */
-void sub_80236AC(void *self, void *src)
-{
-    register u8 *snap asm("r5") = (u8 *)self + 0x14c;
-    /* Register pins reproduce the ROM's exact "freshly loaded value in
-     * one register, shifted result in another" shape for both the byte
-     * and halfword extracts below (see docs/workflow.md step 7). */
-    register u8 raw asm("r1");
-    register s32 val asm("r0");
-    register u16 packed asm("r5");
-
-    sub_800014C(self, src, 0x68);
-    sub_800014C(snap, self, 0x68);
-
-    raw = *snap;
-    val = (u32)(raw << 25) >> 25;
-    *(s32 *)((u8 *)self + 0x74) = val;
-
-    *(s32 *)((u8 *)self + 0x6c) = *((u8 *)self + 0x14d) >> 1;
-
-    packed = *(u16 *)snap;
-    val = (u32)(packed << 23) >> 30;
-    *(s32 *)((u8 *)self + 0x78) = val;
-}
+extern u8 gStaticData_0816BBC4[];
+extern void sub_800EEF0(void *self, u8 arg1);
+extern void sub_800E7A8(void *self, u8 arg1, u8 arg2, u8 arg3);
 
 #if NON_MATCHING
-/* Packs `self->0x74`/`0x6c`/`0x78` back into the halfword at
- * `self->0x14c`/`0x14d` - the inverse of `sub_80236AC` above. Real
- * bytes for the default build in `asm/code_3_2_17_236ec.s`.
+/* Builds two AABBs - one for `self`, one for the player
+ * (`gUnknown_030012D8`) - from the shared "keyframe/hitbox record"
+ * table convention already established by `sub_8007B00`/`sub_8007B98`
+ * in actor_part.c (`self+0x20` -> a pointer-to-table, indexed by
+ * `self+0x2d` at 0x1c/28-byte stride; here the {s16 xOff, s16 yOff, u8
+ * w, u8 h} quad sits at the record's `+4`/`+6`/`+8`/`+9` instead of
+ * `+0xc`/`+0xe`/`+0x10`/`+0x11`, the same "differently laid out"
+ * variance `sub_8007B98`'s doc comment already flags). `self+0x28`
+ * bits 4/5 mirror each box horizontally/vertically around its own
+ * object's position, exactly like the `actor_part.c` pair. If the two
+ * boxes overlap (`sub_8001688`), dispatches to `sub_800EEF0` or
+ * `sub_800E7A8` depending on a per-state-id lookup in
+ * `gStaticData_0816BBC4`.
  *
- * NOT YET BYTE-MATCHING: every field/mask/shift is confirmed correct,
- * but the ROM keeps `self` itself alive in r3 the whole function (this
- * compiler instead folds `self` straight into each field access), and
- * addresses `self->0x14d` via register+register indexing (a literal
- * `0x14d` loaded once into r5, added to r3 at the `ldrb`/`strb`
- * themselves) rather than a precomputed pointer - a different
- * addressing-mode encoding no plain-C phrasing tried here reproduces,
- * while `self->0x14c` (used both early and at the final halfword
- * access) does get its own dedicated pointer register either way. */
-void sub_80236EC(void *self)
+ * Early-outs entirely when `self+0x4d & 0x7f == 1`.
+ *
+ * PARKED, NOT BYTE-MATCHING: this is the same AABB-build primitive as
+ * the already-parked `sub_8007B98` (see actor_part.c), just inlined
+ * twice (once for `self`, once for the player) instead of called as a
+ * subroutine, plus the overlap dispatch tail. `sub_8007B98`'s own doc
+ * comment already documents this exact shape resisting byte-exact
+ * register allocation even in isolation ("about 10 of ~73
+ * instructions... which anonymous scratch register" gaps); doing it
+ * twice in a row compounds the problem rather than cancelling it out.
+ * Concretely: the ROM keeps exactly two extra callee-saved registers
+ * live across both AABB builds (`r8` and `sb`, the latter holding
+ * `&gUnknown_030012D8` so the player pointer can be cheaply reloaded
+ * after the `sub_803AFE4`/`sub_803AFDC` calls clobber it), and reuses
+ * `r7`/`r8` for the X/Y "shift" values across *both* the self-block and
+ * the player-block. Every reconstruction tried here (explicit
+ * `xShift`/`yShift` locals reused across both blocks, a `vu8` volatile
+ * cast on the second `self+0x28` bit-test in each block to block gcc's
+ * CSE the same way `sub_8007B98` needed it, hoisting/flattening the
+ * player-box locals in and out of a nested scope) always lands on
+ * *three* extra callee-saved registers (`r8`/`r9`/`sl` in every variant
+ * tried) instead of the ROM's two, and/or moves `self` itself out of
+ * `r6` into `r8`. Parked rather than keep chasing individual register
+ * letters - see docs/matching/issue-12-physics-collision.md. */
+void sub_800D040(void *self)
 {
-    u8 *snap = (u8 *)self + 0x14c;
-    u8 byte0, byte1;
-    u16 packed;
+    struct aabb buf_;
+    s32 *buf = (s32 *)&buf_;
+    void *table;
+    u8 idx;
+    void *rec;
+    s16 offX, offY;
+    u8 w, h;
+    s32 x, y;
+    s32 xShift, yShift;
 
-    byte0 = (*snap & ~0x7f) | (*(s32 *)((u8 *)self + 0x74) & 0x7f);
-    *snap = byte0;
+    if ((*((u8 *)self + 0x4d) & 0x7f) == 1) {
+        return;
+    }
 
-    byte1 = (*(u8 *)(snap + 1) & 1) | ((*(s32 *)((u8 *)self + 0x6c) << 1) & 0xff);
-    *(u8 *)(snap + 1) = byte1;
+    {
+        void **tablePtr = *(void ***)((u8 *)self + 0x20);
+        s32 offset;
 
-    packed = *(u16 *)snap;
-    packed = (packed & 0xfe7f) | ((*(s32 *)((u8 *)self + 0x78) & 3) << 7);
-    *(u16 *)snap = packed;
+        idx = *((u8 *)self + 0x2d);
+        offset = idx * 0x1c;
+        table = *tablePtr;
+        rec = (u8 *)table + offset;
+    }
+    offX = *(s16 *)((u8 *)rec + 4);
+    offY = *(s16 *)((u8 *)rec + 6);
+    w = *((u8 *)rec + 8);
+    h = *((u8 *)rec + 9);
+
+    xShift = *(s32 *)self >> 8;
+    yShift = *(s32 *)((u8 *)self + 4) >> 8;
+
+    x = offX + xShift;
+    y = offY + yShift;
+    sub_803AFE4(buf, x, y);
+    sub_803AFDC(buf, w, h);
+
+    {
+        u8 flags = *((u8 *)self + 0x28);
+        if ((s32)(flags << 27) < 0) {
+            buf[0] = xShift * 2 - (buf[0] + buf[2]);
+        }
+    }
+    {
+        u8 flags = *(vu8 *)((u8 *)self + 0x28);
+        if ((s32)(flags << 26) < 0) {
+            buf[1] = yShift * 2 - (buf[1] + buf[3]);
+        }
+    }
+
+    {
+        void *player = gUnknown_030012D8;
+        struct aabb buf2_;
+        s32 *buf2 = (s32 *)&buf2_;
+
+        {
+            void **tablePtr = *(void ***)((u8 *)player + 0x20);
+            s32 offset;
+
+            idx = *((u8 *)player + 0x2d);
+            offset = idx * 0x1c;
+            table = *tablePtr;
+            rec = (u8 *)table + offset;
+        }
+        offX = *(s16 *)((u8 *)rec + 4);
+        offY = *(s16 *)((u8 *)rec + 6);
+        w = *((u8 *)rec + 8);
+        h = *((u8 *)rec + 9);
+
+        xShift = *(s32 *)player >> 8;
+        yShift = *(s32 *)((u8 *)player + 4) >> 8;
+
+        x = offX + xShift;
+        y = offY + yShift;
+        sub_803AFE4(buf2, x, y);
+        sub_803AFDC(buf2, w, h);
+
+        {
+            u8 flags = *((u8 *)gUnknown_030012D8 + 0x28);
+            if ((s32)(flags << 27) < 0) {
+                buf2[0] = xShift * 2 - (buf2[0] + buf2[2]);
+            }
+        }
+        {
+            u8 flags = *(vu8 *)((u8 *)gUnknown_030012D8 + 0x28);
+            if ((s32)(flags << 26) < 0) {
+                buf2[1] = yShift * 2 - (buf2[1] + buf2[3]);
+            }
+        }
+
+        if (sub_8001688(buf, buf2)) {
+            if (gStaticData_0816BBC4[*((u8 *)self + 0x4e)] == 1) {
+                sub_800EEF0(self, 1);
+            } else {
+                sub_800E7A8(self, 0, 0, 0);
+            }
+        }
+    }
 }
-#endif
+#endif /* NON_MATCHING */
+asm(".align 2, 0");

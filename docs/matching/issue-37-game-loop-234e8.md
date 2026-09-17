@@ -7,6 +7,13 @@ matching pass, so the issue's file pointer is a point-in-time snapshot
 like everything else about it). This is the write-up for the work done
 against that list.
 
+**Naming note:** these files are numbered `game_loop10`/`game_loop11`
+rather than `game_loop6`/`game_loop7` (which would have matched their
+original creation order more naturally) because issue #12's parallel PR
+independently claimed `game_loop6.c`/`game_loop7.c` first for unrelated
+functions before this PR merged - resolved as a rename on merge to
+avoid an add/add filename collision.
+
 ## What this cluster turned out to be
 
 A grab-bag of small helpers on the same large "self" object already
@@ -30,7 +37,7 @@ pass's scope, so left completely untouched.
 
 ## Matched (23 functions, full clean `make compare` passing)
 
-`src/system/game_loop6.c` (`sub_80234E8`-`sub_80236AC`, 14 fns):
+`src/system/game_loop10.c` (`sub_80234E8`-`sub_80236AC`, 14 fns):
 `sub_80234E8`/`sub_80234F4` (camera-position field setters),
 `sub_8023500` (two-word position setter), `sub_8023510`/`sub_802352C`
 (busy-flag setters gated on `sub_8023290`/`sub_80232B8`),
@@ -43,7 +50,7 @@ SFX), `sub_8023674` (allocates a `0x44c`-byte block and hands it to
 `sub_8037154`), `nullsub_24` (empty stub), `sub_80236AC` (bitfield
 unpacker, refreshing its own snapshot first).
 
-`src/system/game_loop7.c`: `sub_8023738` (lazy-allocates and returns
+`src/system/game_loop11.c`: `sub_8023738` (lazy-allocates and returns
 `gUnknown_03000828`) - its own file since the still-raw
 `sub_802375C`/`sub_8023A1C` pair sits on both sides of it in ROM order.
 
@@ -130,7 +137,7 @@ vram-upload-cursor/OAM-shadow flush tail both `sub_802400C` and
 
 ## Parked (`NON_MATCHING`) - 2 functions
 
-- **`sub_80236EC`** (`src/system/game_loop6.c`, real bytes in
+- **`sub_80236EC`** (`src/system/game_loop10.c`, real bytes in
   `asm/code_3_2_17_236ec.s`) - the inverse of `sub_80236AC`'s bitfield
   unpacker, packing `self->0x74`/`0x6c`/`0x78` back into the halfword
   at `self->0x14c`/`0x14d`. Every field/mask/shift is confirmed
