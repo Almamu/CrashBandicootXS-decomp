@@ -135,3 +135,18 @@ All in `src/graphics/actor_anim.c`, in ROM order:
 See [docs/status/actor.md](../status/actor.md) for the running matched/
 parked list, and [docs/workflow.md](../workflow.md) for the per-function
 loop.
+
+## Update: `sub_803B46C` matched via NAKED transcription
+
+The one function left parked above is now matched: converted to
+`NAKED` and the ROM's own disassembly transcribed instruction-for-
+instruction (see `docs/matching/issue-69-eeprom-timer.md`'s "NAKED
+transcription pass" section for the full account, including a trailing-
+padding gotcha found along the way - the disassembly's final
+`movs r0, r0` before the function's alignment padding turned out to be
+the padding itself, not a real instruction). `sub_802C2FC`, this
+function's twin, is unaffected and stays parked - it hits a different
+pair of gaps (a genuinely-eliminated `| 0` dead store and a register-
+budget spill) that this pass didn't attempt. 25/25 functions in this
+issue's original range are now matched; the issue itself was already
+closed before this update.

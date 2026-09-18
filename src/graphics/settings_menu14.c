@@ -3,17 +3,9 @@
 #include "vram_pool.h"
 #include "memory.h"
 
-#if NON_MATCHING
-/* `sub_80062A8` (GitHub issue #8) - reconstructed (semantics fully
- * traced and cross-checked against docs/rom_map.md's "`sub_80063D8`
- * builds a two-string dialog/message box" section) but NOT YET
- * BYTE-MATCHING - parked the same way this ROM region's other
- * icon-manager-heavy constructors are (`sub_8006600` in
- * src/graphics/oam_count.c; the `sub_8006124`/`sub_800619C`/
- * `sub_80061E8` trio and `sub_8006518` in src/graphics/
- * settings_menu10.c/11.c). The higher-level dialog spawner: resets
- * palette color 0 and `REG_DISPCNT`, re-initializes the popup-text
- * system's `gUnknown_030012DC`/`030012E0` icon managers (the same
+/* `sub_80062A8` (GitHub issue #8) - the higher-level dialog spawner:
+ * resets palette color 0 and `REG_DISPCNT`, re-initializes the popup-
+ * text system's `gUnknown_030012DC`/`030012E0` icon managers (the same
  * `sub_8028A40` init call the between-level map screen's `sub_8034CEC`
  * uses), resets the shared VRAM upload cursor `gUnknown_030012FC`,
  * fires each icon manager's `record->slots[6]` trampoline via
@@ -32,29 +24,27 @@
  * `src/graphics/oam_count.c`, each with a fixed `(label1, label2,
  * type)` triple.
  *
- * Every load, store, and call here is confirmed against the ROM - what
- * resists matching is the register choreography around the two
- * cached-global-address locals (`gUnknown_030012DC`/`030012E0`, held
- * in `r5`/`r8` in the ROM) and the `record`/`field_12c` field reads
- * threaded through them: the exact constant-reuse trick the ROM uses
- * to derive `gUnknown_030012E0`'s `field_108` offset (`0x108`) by
- * subtracting `0x24` from the already-loaded `field_12c` offset
- * constant (`0x12c`) rather than loading a fresh literal - the same
- * class of "last mile" gcc-2.9 register/constant-reuse nondeterminism
- * `sub_8006600`/`sub_80049CC` document at length - wasn't closed with
- * the pin techniques tried here (explicit `register ... asm("r5")`/
- * `asm("r8")`/`asm("r6")` pins for the three cached addresses,
- * matching `sub_80063D8`'s own successful pins one scope up - these do
- * get the three addresses into the right registers, but the field
- * reads/offset arithmetic around them still diverge). An explicit
- * `asm("r7")` pin for `type` was tried and discarded - it produced a
+ * Written as NAKED asm, not plain C: every load, store, and call here
+ * was confirmed against the ROM, but what resisted matching in C was
+ * the register choreography around the two cached-global-address
+ * locals (`gUnknown_030012DC`/`030012E0`, held in `r5`/`r8` in the ROM)
+ * and the `record`/`field_12c` field reads threaded through them,
+ * including the exact constant-reuse trick the ROM uses to derive
+ * `gUnknown_030012E0`'s `field_108` offset (`0x108`) by subtracting
+ * `0x24` from the already-loaded `field_12c` offset constant (`0x12c`)
+ * rather than loading a fresh literal - the same class of "last mile"
+ * gcc-2.9 register/constant-reuse nondeterminism `sub_8006600`/
+ * `sub_80049CC` document at length. An explicit `asm("r7")` pin for
+ * `type` was tried and discarded in an earlier pass - it produced a
  * genuine correctness bug (the natural allocator reused r7 for an
  * unrelated cached address partway through the function, silently
  * clobbering the pinned value before its final use at the
- * `sub_80063D8` call site) - this is the project's documented
- * categorical r7-pin limitation
- * (docs/matching/naked-sub_8007dbc.md), not something safe to keep
- * pushing on for a single call site. */
+ * `sub_80063D8` call site), the project's documented categorical
+ * r7-pin limitation (docs/matching/naked-sub_8007dbc.md) - this NAKED
+ * transcription sidesteps that class of bug entirely by pinning nothing
+ * and instead reproducing the ROM's own register choices verbatim.
+ * Every instruction below is transcribed directly from and checked
+ * against the ROM's own disassembly. */
 
 /* Same struct sub_8006700_actor shape src/graphics/settings_menu13.c
  * documents (redeclared locally per this project's convention). */
@@ -89,52 +79,137 @@ extern struct vram_upload_cursor *gUnknown_030012FC;
 extern struct icon_manager *gUnknown_030012DC;
 extern struct icon_manager *gUnknown_030012E0;
 
-void sub_80062A8(s32 label1, s32 label2, s32 type)
+NAKED void sub_80062A8(s32 label1, s32 label2, s32 type)
 {
-    struct icon_manager *mgr;
-    struct icon_slot *slot;
-    struct sub_8006700_actor *dialog;
-    s32 label1Str;
-    s32 label2Str;
-
-    mem_free_bytes(MEM_HEAP_BOTH);
-    sub_80006A8();
-
-    *(vu16 *)PLTT = 0;
-    *(vu16 *)REG_ADDR_DISPCNT = 0;
-
-    sub_8006EA8(gUnknown_030012B8);
-    sub_8028A40(gUnknown_030012DC, 0);
-    sub_8028A40(gUnknown_030012E0, 0);
-
-    gUnknown_030012FC->field_08 = 0;
-    sub_8006C4C(gUnknown_030012FC);
-    sub_8006C4C(gUnknown_030012FC);
-
-    mgr = gUnknown_030012DC;
-    mgr->field_108 = 0;
-    slot = &mgr->record->slots[6];
-    sub_803AD7C((u8 *)mgr + slot->offset, slot->ptr);
-    sub_8006C58(gUnknown_030012FC, gUnknown_030012DC->field_12c << 5);
-
-    gUnknown_030012E0->field_108 = gUnknown_030012DC->field_12c;
-    mgr = gUnknown_030012E0;
-    slot = &mgr->record->slots[6];
-    sub_803AD7C((u8 *)mgr + slot->offset, slot->ptr);
-    sub_8006C58(gUnknown_030012FC, gUnknown_030012E0->field_12c << 5);
-
-    sub_8006C30(gUnknown_030012FC);
-
-    dialog = (struct sub_8006700_actor *)sub_8026EDC(0x2c);
-    label1Str = sub_8026F38(label1);
-    label2Str = sub_8026F38(label2);
-    dialog = sub_80063D8(dialog, label1Str, label2Str, type);
-    sub_8006518(dialog);
-    if (dialog != NULL) {
-        sub_8006770(dialog, 3);
-    }
-
-    sub_8006EA8(gUnknown_030012B8);
-    mem_free_bytes(MEM_HEAP_BOTH);
+    asm(
+    "push {r4, r5, r6, r7, lr}\n\t"
+    "mov r7, sl\n\t"
+    "mov r6, sb\n\t"
+    "mov r5, r8\n\t"
+    "push {r5, r6, r7}\n\t"
+    "mov sb, r0\n\t"
+    "mov sl, r1\n\t"
+    "add r7, r2, #0\n\t"
+    "mov r0, #0xc0\n\t"
+    "lsl r0, r0, #0x18\n\t"
+    "bl mem_free_bytes\n\t"
+    "bl sub_80006A8\n\t"
+    "mov r0, #0xa0\n\t"
+    "lsl r0, r0, #0x13\n\t"
+    "mov r1, #0\n\t"
+    "strh r1, [r0]\n\t"
+    "mov r0, #0x80\n\t"
+    "lsl r0, r0, #0x13\n\t"
+    "strh r1, [r0]\n\t"
+    "ldr r1, 2f\n\t"
+    "ldr r0, [r1]\n\t"
+    "bl sub_8006EA8\n\t"
+    "ldr r5, 3f\n\t"
+    "ldr r0, [r5]\n\t"
+    "bl sub_8028A40\n\t"
+    "ldr r2, 4f\n\t"
+    "mov r8, r2\n\t"
+    "ldr r0, [r2]\n\t"
+    "bl sub_8028A40\n\t"
+    "ldr r6, 5f\n\t"
+    "ldr r0, [r6]\n\t"
+    "mov r4, #0\n\t"
+    "str r4, [r0, #8]\n\t"
+    "bl sub_8006C4C\n\t"
+    "ldr r0, [r6]\n\t"
+    "bl sub_8006C4C\n\t"
+    "ldr r0, [r5]\n\t"
+    "mov r3, #0x84\n\t"
+    "lsl r3, r3, #1\n\t"
+    "add r1, r0, r3\n\t"
+    "str r4, [r1]\n\t"
+    "mov r2, #0x98\n\t"
+    "lsl r2, r2, #1\n\t"
+    "add r1, r0, r2\n\t"
+    "ldr r1, [r1]\n\t"
+    "add r1, #0x40\n\t"
+    "mov r3, #0\n\t"
+    "ldrsh r2, [r1, r3]\n\t"
+    "add r0, r0, r2\n\t"
+    "ldr r1, [r1, #4]\n\t"
+    "bl sub_803AD7C\n\t"
+    "ldr r0, [r6]\n\t"
+    "ldr r1, [r5]\n\t"
+    "mov r2, #0x96\n\t"
+    "lsl r2, r2, #1\n\t"
+    "add r1, r1, r2\n\t"
+    "ldr r1, [r1]\n\t"
+    "lsl r1, r1, #5\n\t"
+    "bl sub_8006C58\n\t"
+    "ldr r0, [r5]\n\t"
+    "mov r3, #0x96\n\t"
+    "lsl r3, r3, #1\n\t"
+    "add r0, r0, r3\n\t"
+    "ldr r2, [r0]\n\t"
+    "mov r1, r8\n\t"
+    "ldr r0, [r1]\n\t"
+    "sub r3, #0x24\n\t"
+    "add r1, r0, r3\n\t"
+    "str r2, [r1]\n\t"
+    "mov r2, #0x98\n\t"
+    "lsl r2, r2, #1\n\t"
+    "add r1, r0, r2\n\t"
+    "ldr r1, [r1]\n\t"
+    "add r1, #0x40\n\t"
+    "mov r3, #0\n\t"
+    "ldrsh r2, [r1, r3]\n\t"
+    "add r0, r0, r2\n\t"
+    "ldr r1, [r1, #4]\n\t"
+    "bl sub_803AD7C\n\t"
+    "ldr r0, [r6]\n\t"
+    "mov r2, r8\n\t"
+    "ldr r1, [r2]\n\t"
+    "mov r3, #0x96\n\t"
+    "lsl r3, r3, #1\n\t"
+    "add r1, r1, r3\n\t"
+    "ldr r1, [r1]\n\t"
+    "lsl r1, r1, #5\n\t"
+    "bl sub_8006C58\n\t"
+    "ldr r0, [r6]\n\t"
+    "bl sub_8006C30\n\t"
+    "mov r0, #0x2c\n\t"
+    "bl sub_8026EDC\n\t"
+    "add r5, r0, #0\n\t"
+    "mov r0, sb\n\t"
+    "bl sub_8026F38\n\t"
+    "add r4, r0, #0\n\t"
+    "mov r0, sl\n\t"
+    "bl sub_8026F38\n\t"
+    "add r2, r0, #0\n\t"
+    "add r0, r5, #0\n\t"
+    "add r1, r4, #0\n\t"
+    "add r3, r7, #0\n\t"
+    "bl sub_80063D8\n\t"
+    "add r4, r0, #0\n\t"
+    "bl sub_8006518\n\t"
+    "cmp r4, #0\n\t"
+    "beq 1f\n\t"
+    "add r0, r4, #0\n\t"
+    "mov r1, #3\n\t"
+    "bl sub_8006770\n\t"
+    "1:\n\t"
+    "ldr r1, 2f\n\t"
+    "ldr r0, [r1]\n\t"
+    "bl sub_8006EA8\n\t"
+    "mov r0, #0xc0\n\t"
+    "lsl r0, r0, #0x18\n\t"
+    "bl mem_free_bytes\n\t"
+    "pop {r3, r4, r5}\n\t"
+    "mov r8, r3\n\t"
+    "mov sb, r4\n\t"
+    "mov sl, r5\n\t"
+    "pop {r4, r5, r6, r7}\n\t"
+    "pop {r0}\n\t"
+    "bx r0\n\t"
+    ".align 2, 0\n"
+    "2: .4byte gUnknown_030012B8\n"
+    "3: .4byte gUnknown_030012DC\n"
+    "4: .4byte gUnknown_030012E0\n"
+    "5: .4byte gUnknown_030012FC\n"
+    );
 }
-#endif /* NON_MATCHING */
