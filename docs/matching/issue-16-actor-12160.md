@@ -19,10 +19,10 @@ usage) were left raw again, still out of scope.
 `asm/code_3_2_17_11bd4.s` is trimmed to just `sub_8011BD4` (unchanged
 start address, 0x08011BD4-0x08012160). `sub_8012160`/`sub_8012238`/
 `sub_80122CC` (contiguous, 0x08012160-0x08012420) move to a new
-`src/graphics/actor_part77.c`. A new `asm/code_3_2_17_12420.s` picks up
+`src/graphics/actor_part79.c`. A new `asm/code_3_2_17_12420.s` picks up
 `sub_8012420`/`sub_8012694`/`sub_801283C` (0x08012420-0x08012A7C).
 `sub_8012A7C` alone (0x08012A7C-0x08012AF4, not ROM-adjacent to either
-matched group) moves to a new `src/graphics/actor_part78.c`. A final
+matched group) moves to a new `src/graphics/actor_part80.c`. A final
 new `asm/code_3_2_17_12af4.s` picks up `sub_8012AF4` onward - this file
 is much wider than issue #16's own range, since `code_3_2_17_11bd4.s`
 already covered everything through `sub_801426C-1` before this pass

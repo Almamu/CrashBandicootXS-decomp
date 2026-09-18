@@ -1,6 +1,7 @@
 #include "core.h"
 #include "icon_manager.h"
 #include "gba/dma_macros.h"
+#include "graphics_package.h"
 
 /* GitHub issue #65's chunk (0x080354E0-0x08037110) starts here, right at
  * the 40.4 KB actor-per-type-behavior zone's own end (docs/rom_map.md's
@@ -32,15 +33,9 @@ extern u8 gStaticData_0817D054[0x20];
 extern u8 gStaticData_0817D074[0x70];
 
 /* Loaded onto BG2, via the 5-field package struct at `gStaticData_0817D0E4`
- * - see `struct bg_package`, shared with `LoadObjSpriteTiles` below. */
-struct bg_package {
-    u32 width;
-    u32 height;
-    void *paletteAsset;
-    void *tileAsset;
-    void *mapAsset;
-};
-
+ * - see `struct bg_package` (include/graphics_package.h), shared with
+ * `LoadObjSpriteTiles` below and with `LoadGraphicsPackage`
+ * (src/graphics/graphics_package_1e578.c). */
 extern struct bg_package gStaticData_0817D0E4;
 extern void *gUnknown_030008BC[4];
 

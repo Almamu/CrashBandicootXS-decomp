@@ -1,57 +1,58 @@
 #include "core.h"
 
-#if NON_MATCHING
 /* Sets bit `n` in *both* the second (`self+0x208`) and third
  * (`self+0x308`) bitmap arrays at once - see game_loop12.c's header
  * comment on this bitmap-array family.
  *
- * PARKED, NOT BYTE-MATCHING: this is a true leaf function in the ROM
- * (no `push`/`pop` at all - `self` lives in `ip`/`r12` for the whole
- * function, freed up specifically because nothing here calls out).
- * Pinning `self` to `ip`, and - unlike the earlier attempt recorded in
- * docs/matching/issue-41-game-loop-25894.md - also pinning the
- * `shifted`/`addr` locals to `r3`/`r1` (matching the ROM's own choice
- * for those two) gets this down to a true leaf function with every
- * instruction's operation, operand, and register matching one-for-one
- * *except* the first two: the ROM does `mov ip, r0` (stash `self`)
- * before `adds r2, r1, #0` (copy `n` into its working register `t`),
- * this compiler always emits the `n`-copy first regardless of C
- * statement order, declaration order, or an explicit `asm volatile`
- * ordering barrier between them - seemingly a fixed early-reload
- * ordering for hard-register parameter moves this compiler doesn't
- * expose a way to influence from C. Pinning `t` itself to `r2` (the
- * ROM's register for it) reintroduces a `push {r4, lr}`/`pop {r4}`
- * pair instead (conflicts with `mask` needing that same register
- * later), so parked with `t` left unpinned - two swapped instructions,
- * same total size, everything else byte-for-byte. */
-void sub_80259D4(void *self, s32 n)
+ * NAKED, not plain C: this is a true leaf function in the ROM (no
+ * `push`/`pop` at all - `self` lives in `ip`/`r12` for the whole
+ * function, freed up specifically because nothing here calls out). A
+ * real C reconstruction (see git history) gets every instruction's
+ * operation, operand, and register matching one-for-one *except* the
+ * first two: the ROM does `mov ip, r0` (stash `self`) before `adds r2,
+ * r1, #0` (copy `n` into its working register), and this compiler
+ * always emits the `n`-copy first regardless of C statement order,
+ * declaration order, or an explicit `asm volatile` ordering barrier
+ * between the two - a fixed early-reload ordering for hard-register
+ * parameter moves this compiler doesn't expose a way to influence from
+ * C (pinning both values to their exact ROM registers up front just
+ * reintroduces an unwanted `push {r4, lr}`/`pop {r4}` pair instead, per
+ * the earlier attempts in docs/matching/issue-41-game-loop-25894.md).
+ * Transcribed straight from the confirmed-correct ROM disassembly. */
+NAKED void sub_80259D4(void *self, s32 n)
 {
-    register u8 *base asm("ip") = (u8 *)self;
-    s32 t = n;
-    s32 wordIndex, bitIndex, mask;
-    register s32 shifted asm("r3");
-    register s32 addr asm("r1");
-
-    if (t < 0) {
-        t += 0x1f;
-    }
-    wordIndex = t >> 5;
-    shifted = wordIndex << 2;
-
-    addr = 0x208;
-    addr += (s32)base;
-    addr += shifted;
-    bitIndex = n - (wordIndex << 5);
-    mask = 1 << bitIndex;
-    *(s32 *)addr |= mask;
-
-    addr = 0x308;
-    addr += (s32)base;
-    addr += shifted;
-    *(s32 *)addr |= mask;
+    asm(
+        "mov ip, r0\n\t"
+        "add r2, r1, #0\n\t"
+        "add r0, r2, #0\n\t"
+        "cmp r2, #0\n\t"
+        "bge 1f\n\t"
+        "add r0, r0, #0x1f\n\t"
+    "1:\n\t"
+        "asr r0, r0, #5\n\t"
+        "lsl r3, r0, #2\n\t"
+        "mov r1, #0x82\n\t"
+        "lsl r1, r1, #2\n\t"
+        "add r1, ip\n\t"
+        "add r1, r1, r3\n\t"
+        "lsl r0, r0, #5\n\t"
+        "sub r0, r2, r0\n\t"
+        "mov r2, #1\n\t"
+        "lsl r2, r0\n\t"
+        "ldr r0, [r1]\n\t"
+        "orr r0, r2\n\t"
+        "str r0, [r1]\n\t"
+        "mov r1, #0xc2\n\t"
+        "lsl r1, r1, #2\n\t"
+        "add r1, ip\n\t"
+        "add r1, r1, r3\n\t"
+        "ldr r0, [r1]\n\t"
+        "orr r0, r2\n\t"
+        "str r0, [r1]\n\t"
+        "bx lr\n\t"
+        ".align 2, 0\n"
+    );
 }
-#endif /* NON_MATCHING */
-asm(".align 2, 0");
 
 /* Sets bit `n` of the third bitmap array, at `self+0x308` - see
  * game_loop12.c's header comment on this bitmap-array family. */

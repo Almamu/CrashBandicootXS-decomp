@@ -198,3 +198,100 @@ progress on two of them without reaching a byte-exact match on either
 
 See each function's own updated doc comment (`src/system/game_loop13.c`,
 `src/system/game_loop15.c`) for the full before/after detail.
+
+## Update: all eight remaining parked functions converted to byte-exact NAKED transcriptions
+
+A later pass picked this issue's whole remaining `NON_MATCHING` list back
+up and got every one of them byte-exact, but via `NAKED` transcription
+of the confirmed-correct ROM disassembly rather than a real C match -
+each hit a genuine, already-catalogued gcc-2.9 codegen limit that plain
+C has no way to work around on this toolchain:
+
+- **`sub_80259D4`** (game_loop13.c) - unchanged from the earlier
+  finding above: the ROM's `mov ip, r0` / `adds r2, r1, #0` parameter-
+  reload order can't be reproduced from C (tried again this pass with
+  an inline-asm anchor forcing both moves in one instruction - see git
+  history - which only made things worse, spilling to `r4` and
+  reallocating the rest of the function). Now `NAKED`.
+- **`sub_8025A64`** (moved to its own new file, `game_loop29.c`, since
+  its address isn't adjacent to any other matched run once
+  `sub_8025B0C`/`sub_8025BAC`/`sub_8025CA4` stayed parked) - a real C
+  reconstruction (declaring `x`/`y`/`p3`/`p5`/`flag6` as plain
+  untruncated words so their narrowing happens at the call/field-store
+  sites instead of the prologue, matching the ROM's own instruction
+  order almost exactly) got everything else right, but hit two
+  independent confirmed toolchain bugs at once: `flag6` has to survive
+  in `r7` across every intervening call the way the ROM keeps it there,
+  and an explicit `register T x asm("r7")` pin never makes it into this
+  compiler's own `push`/`pop` list (the same confirmed bug documented on
+  `src/graphics/oam_count.c`/`src/graphics/actor_part.c` and elsewhere
+  project-wide); separately, the trailing `(*bf & -0x10) | (result &
+  0xf)` bitfield combine - even with the established negative-literal
+  register-pin idiom (`sub_8023168`/`sub_80374D0`) - gets
+  constant-folded into a cheaper derived `sub`, one instruction shorter
+  than the ROM's genuine two-instruction `movs`/`rsbs` pair. Now
+  `NAKED`.
+- **`sub_8025B0C`/`sub_8025BAC`/`sub_8025CA4`** (game_loop14.c, prepended
+  ahead of the already-matched `sub_8025D28` run - their real addresses
+  turned out to be exactly contiguous with it once split out of
+  `asm/code_3_2_17_25b0c.s`, so no new file was needed) - `sub_8025BAC`
+  alone repeats the exact same `& -0x10 | (result & 0xf)` unfixable
+  fold from `sub_8025A64` above, plus two more instances of the same
+  family (`& ~0x11`, `& -5 & -3`) - strong enough a signal, combined
+  with `sub_8025B0C`'s `r8`-spanning size and `sub_8025CA4`'s
+  `flag6`-in-`r7` shape (identical to `sub_8025A64`'s), that this pass
+  transcribed all three directly rather than re-discovering the same
+  wall three more times. Now `NAKED`.
+- **`sub_8025D74`** (game_loop15.c) - unchanged from the "Update:
+  narrowed" finding above (the `& -0x20`/`& -0xd` mask-folding gap);
+  now `NAKED` instead of left `NON_MATCHING`.
+- **`sub_8025E98`/`sub_8025F3C`** (game_loop16.c) - both large,
+  register-heavy functions (`sub_8025E98` keeps `r8` live for the
+  screen-edge X-tile-max value computed early but not consumed until
+  the very end; `sub_8025F3C` keeps `r8` live across its whole streaming
+  loop alongside a stack-resident column cursor) - transcribed directly
+  given the established pattern above. `sub_8025F3C`'s doc comment was
+  also corrected while transcribing it: the tile-index wraparound at the
+  end of each row is a genuine floor-divide/mod by `0x400`, using the
+  same negative-adjust-then-shift idiom as the function's other two
+  mods (just at shift 10), not the simpler "subtract once if over" clamp
+  the original plain-C reconstruction used - both are semantically
+  equivalent for this loop's actual value range, but only the floor-mod
+  form matches the ROM's real instructions.
+
+None of these were re-attempted as plain C beyond what's described
+above and in the original pass - the goal here was getting this issue's
+whole range to a byte-exact, verified state (full clean `make compare`,
+`crashbandicootxs.gba: La suma coincide`), not further register-allocation
+archaeology on functions three-for-three (or worse) confirmed to hit
+this toolchain's known unfixable gaps. Per this project's NAKED-tracking
+convention, none of these eight count as "matched" - `docs/status/game_loop.md`
+files them under "Parked - NAKED transcription", and issue #41 itself
+stays open pending a real C match for any of them.
+
+### Updated build layout
+
+With every function in this issue's range now byte-exact (`NAKED` or
+matched), none of the "Build layout" section's raw fragments above are
+needed any more - each one either emptied out entirely (deleted, with
+its `ldscript.txt` line dropped) or had just its now-`NAKED` prefix cut
+off (renamed to start at the next still-genuinely-raw function's
+address):
+
+- `asm/code_3_2_17_259d4.s` - deleted (`sub_80259D4` is now `NAKED` in
+  `game_loop13.c`)
+- `asm/code_3_2_17_25a64.s` - deleted; `sub_8025A64` is now `NAKED` in
+  the new `game_loop29.c`, `sub_8025B0C`/`sub_8025BAC`/`sub_8025CA4` are
+  now `NAKED` in `game_loop14.c` (prepended ahead of the already-matched
+  `sub_8025D28` run, since the addresses turned out contiguous)
+- `asm/code_3_2_17_25d74.s` - deleted (`sub_8025D74` is now `NAKED` in
+  `game_loop15.c`, its file's only function)
+- `asm/code_3_2_17_25e98.s` - deleted (`sub_8025E98` is now `NAKED` in
+  `game_loop16.c`, its file's only function)
+- `asm/code_3_2_17_25f3c.s` - renamed to `asm/code_3_2_17_25fc8.s`
+  (`sub_8025F3C` is now `NAKED` in `game_loop16.c`; the file's
+  remainder, `sub_8025FC8` onward, is still genuinely raw and out of
+  this issue's scope)
+
+Full clean `make compare` passes again after this restructuring:
+`crashbandicootxs.gba: La suma coincide`.
