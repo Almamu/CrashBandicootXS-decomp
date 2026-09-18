@@ -310,33 +310,53 @@ from "core" graphics.
   `gUnknown_03001464`-gated palette-cycle DMA cluster's non-parked
   members.
 
-- `src/graphics/actor_part57.c` (new file, GitHub issue #54, non-
+- `src/graphics/actor_part57.c` (new file, GitHub issue #19, ROM
+  0x08015840-0x080159A4 - recategorized `graphics`->`actor` from the
+  issue's label, same self+0xc/self+0x10 trampoline-pair and state/
+  counter/table-index-trio family as actor_part38c.c/actor_part38d.c;
+  non-adjacent to actor_part38d.c's matched span since the parked
+  `sub_80157C4` sits between them): `sub_8015840`, `sub_8015878`,
+  `sub_801588C`, `sub_80158AC`, `sub_80158B4`, `sub_80158BC`,
+  `sub_80158C4`, `sub_80158CC`, `sub_80158D4`, `sub_80158DC`,
+  `sub_80158E4`, `sub_80158EC`, `sub_80158F4`, `sub_8015908`,
+  `sub_8015920`, `sub_8015938`, `sub_8015950`, `sub_8015958`,
+  `sub_80159A4` - a run of small accessors/resetters on the state-trio
+  bytes, the `gStaticData_087E4224` double-table-set idiom already seen
+  in `actor_part27.c`, and a larger field-reset pair; see
+  [docs/matching/issue-19-0x08015840-actor.md](../matching/issue-19-0x08015840-actor.md).
+- `src/graphics/actor_part57b.c` (new file, GitHub issue #19, ROM
+  0x08015FDC, non-adjacent to actor_part57.c since the left-raw
+  `sub_80159F8`/`sub_8015C6C`/`sub_8015DF8` sit between them):
+  `sub_8015FDC` - a player-velocity-relative record writer; see
+  [docs/matching/issue-19-0x08015840-actor.md](../matching/issue-19-0x08015840-actor.md).
+- `src/graphics/actor_part58.c` (new file, GitHub issue #54, non-
   adjacent to `actor_part56.c` since the whole 0x0802D3A8-0x0802E0A4
-  range sits between them - see
+  range sits between them; numbered `58` rather than `57` since issue
+  #19's PR independently claimed `actor_part57.c`/`57b.c` first - see
   [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
   `sub_802D490`, `sub_802D4B0`, `sub_802D4EC`, `sub_802D528`,
   `sub_802D57C`, `sub_802D590`, `sub_802D59C`, `sub_802D5D4`,
   `sub_802D600`, `sub_802D648`, `sub_802D6A0`, `sub_802D764` -
   `InitActorPart`-based constructor variants plus the
   `gUnknown_030012C0+0x78` Aku-Aku-mask-style add/remove pair.
-- `src/graphics/actor_part58.c` (new file, GitHub issue #54, non-
+- `src/graphics/actor_part59.c` (new file, GitHub issue #54, non-
   adjacent since the raw `sub_802D7B0`/`sub_802D9A8`/`sub_802DA68` sit
-  between it and `actor_part57.c`; see
+  between it and `actor_part58.c`; see
   [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
   `sub_802DB2C`, `sub_802DCC0` - the `gUnknown_030014BC` position-
   tracking object's two `gStaticData_0817A840` vtable-slot update
   functions (accumulate/clamp, tier-keyed `PlaySfx`/`sub_80019F8`
   cues, and a shared kind/anim-reset transition tail).
-- `src/graphics/actor_part59.c` (new file, GitHub issue #54, non-
+- `src/graphics/actor_part60.c` (new file, GitHub issue #54, non-
   adjacent since the raw `sub_802DD9C`/`sub_802DE70` sit between it and
-  `actor_part58.c`; see
+  `actor_part59.c`; see
   [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
   `sub_802DFBC`, `sub_802DFC8`, `sub_802DFDC` - the
   `gUnknown_030014BC` object's state-flag setter, destructor, and
   constructor.
-- `src/graphics/actor_part60.c` (new file, GitHub issue #54, non-
+- `src/graphics/actor_part61.c` (new file, GitHub issue #54, non-
   adjacent since the raw `sub_802E058` sits between it and
-  `actor_part59.c`; see
+  `actor_part60.c`; see
   [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
   `nullsub_27` - a genuine no-op stub.
 
@@ -797,6 +817,15 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   and a high-register-pressure hitbox commit function; each calls one
   or more still-unexamined helpers - see
   `docs/matching/issue-9-0x08007634-actor.md`.
+- **`sub_80159F8`/`sub_8015C6C`/`sub_8015DF8`** (`asm/code_3_2_17_159f8.s`,
+  ROM 0x080159F8-0x08015FDC, GitHub issue #19) - three large jump-table
+  state-machine dispatchers on the part object's velocity fields; left
+  raw, out of scope for this pass - see
+  `docs/matching/issue-19-0x08015840-actor.md`.
+- **`sub_8016048`** (`asm/code_3_2_17_16048.s`, ROM 0x08016048, GitHub
+  issue #19) - a smaller joystick-input-gated dispatcher; left raw, out
+  of scope for this pass - see
+  `docs/matching/issue-19-0x08015840-actor.md`.
 - **`sub_802D7B0`/`sub_802DA68`/`sub_802D9A8`** (`asm/code_3_2_20_28568_c99c_d7b0.s`,
   GitHub issue #54) - two confirmed slots (3 and 6) of the type-0
   `category_vtable` (`sub_802D7B0`, which also runs a full 3-axis AABB

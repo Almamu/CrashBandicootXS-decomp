@@ -1,5 +1,13 @@
 # Issue #54: 0x0802D3A8-0x0802E0A4 (actor)
 
+**Naming note:** these files are numbered `actor_part58`-`62` rather
+than `actor_part57`-`61` (which would have matched their creation order
+more naturally) because issue #19's parallel PR independently claimed
+`actor_part57.c`/`57b.c` first, before this PR merged - resolved as a
+rename on merge to avoid an add/add filename collision. The whole
+five-file family was renumbered together (not just the one that
+literally collided) to keep it visually contiguous.
+
 25-function `decomp-chunk` covering `asm/code_3_2_20_28568_c99c.s`'s
 `sub_802D3A8`-`sub_802E058`/`nullsub_27` range. Two distinct object
 families live in this chunk:
@@ -36,15 +44,15 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
 
 ## Matched (18 of 25 functions)
 
-- **`sub_802D490`** (`src/graphics/actor_part57.c`) - resets a
+- **`sub_802D490`** (`src/graphics/actor_part58.c`) - resets a
   different, `gUnknown_03001494`-rooted sibling object via
   `sub_80231EC(gUnknown_030012C0, 0)` then `sub_802D204(self, 0)`.
-- **`sub_802D4B0`/`sub_802D4EC`** (`src/graphics/actor_part57.c`) - an
+- **`sub_802D4B0`/`sub_802D4EC`** (`src/graphics/actor_part58.c`) - an
   Aku-Aku-mask-style add/remove pair on `gUnknown_030012C0`'s `+0x78`
   counter (floored at 0 / capped at 3), each playing a sound and
   calling `sub_802D204`.
 - **`sub_802D528`/`sub_802D5D4`/`sub_802D648`/`sub_802D764`**
-  (`src/graphics/actor_part57.c`) - `InitActorPart`-based constructor
+  (`src/graphics/actor_part58.c`) - `InitActorPart`-based constructor
   variants, each installing a different `self+0x50` event table
   (`gStaticData_087E5054`/`5074`/`5094`/`50B4`) before a small amount of
   table-specific setup: `sub_802D528` offsets its position args by
@@ -54,11 +62,11 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
   which anim record seeds `self+0x10`/`0x12`; `sub_802D764` only
   transitions to kind 2 when `sub_802973C()` matches its own `d`
   argument.
-- **`sub_802D57C`/`sub_802D590`** (`src/graphics/actor_part57.c`) -
+- **`sub_802D57C`/`sub_802D590`** (`src/graphics/actor_part58.c`) -
   trivial: a pass-through-second-argument forwarder to `sub_80231EC`,
   and a getter for `gUnknown_030012C0`'s `+0x78` counter.
 - **`sub_802D59C`/`sub_802D600`/`sub_802D6A0`**
-  (`src/graphics/actor_part57.c`) - small state-machine steps gated on
+  (`src/graphics/actor_part58.c`) - small state-machine steps gated on
   `sub_802A6EC`'s trampoline-fire edge and/or `sub_802DD9C`'s AABB
   overlap test, each ending in `sub_802A7B8`'s frame-advance.
   `sub_802D6A0` needed a fresh, separately-pinned zero register
@@ -68,7 +76,7 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
   silently dropping 2 bytes per occurrence (4 bytes total, caught only
   by the full-link `make compare`, see "A note on isolated-compile
   confidence" below).
-- **`sub_802DB2C`/`sub_802DCC0`** (`src/graphics/actor_part58.c`) - the
+- **`sub_802DB2C`/`sub_802DCC0`** (`src/graphics/actor_part59.c`) - the
   `gUnknown_030014BC` object's accumulate/clamp/tier-cue/transition
   pair (see the chunk header above). Both needed the `dummyStack`/
   `stackPtr`-style local (a real `u8` whose address is taken and pinned
@@ -90,7 +98,7 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
   pointer arithmetic statement, which this compiler instead compiles
   into a single pre-added literal-pool constant.
 - **`sub_802DFBC`/`sub_802DFC8`/`sub_802DFDC`**
-  (`src/graphics/actor_part59.c`) - the `gUnknown_030014BC` object's
+  (`src/graphics/actor_part60.c`) - the `gUnknown_030014BC` object's
   state-flag setter, destructor (`mem_free`), and constructor
   (`mem_alloc` + part-table wiring + position-tracking reset +
   `sub_802DE70`). `sub_802DFDC` needed the incoming-argument-register
@@ -104,13 +112,13 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
   three stores, so all three loads happen before any store (this
   project's established "compute both loads before either use"
   technique, extended to three).
-- **`nullsub_27`** (`src/graphics/actor_part60.c`) - a genuine no-op
+- **`nullsub_27`** (`src/graphics/actor_part61.c`) - a genuine no-op
   stub.
 
 ## Parked (1 of 25 functions, `NON_MATCHING`)
 
 - **`sub_802D3A8`** (`asm/code_3_2_20_28568_c99c_d3a8.s`, C in
-  `src/graphics/actor_part61.c`) - eases `self`'s cached position
+  `src/graphics/actor_part62.c`) - eases `self`'s cached position
   (`self+0x1c`/`0x20`/`0x24`) toward a per-state target: state 0 eases
   toward a per-frame-counter table-scatter offset, state 1 snaps
   directly to a different table offset, any other state eases toward
@@ -198,7 +206,7 @@ function's own isolated compile looked byte-identical to the ROM at
 every instruction *position*, but reusing an already-zero local instead
 of loading a fresh zero silently drops instructions the ROM's real
 build keeps - caught only once this whole batch was cut into its real
-`src/graphics/actor_part57.c`/`58.c`/`59.c`/`60.c` files and fragment
+`src/graphics/actor_part58.c`/`59.c`/`60.c`/`61.c` files and fragment
 `.s` files, and the full-link `make compare`'s SHA1 mismatch was
 diagnosed via the file-offset → ROM-address → `crashbandicootxs.map`
 symbol-address method `docs/workflow.md` describes (a data-segment

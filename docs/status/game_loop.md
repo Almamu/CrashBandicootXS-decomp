@@ -70,6 +70,37 @@ system from "core" system startup/init code.
 - `src/system/game_loop16.c` (GitHub issue #41): `sub_8025F24` -
   truncates the Q8 position to a tile-scroll halfword pair and writes
   it through the `self+0x58` hardware-register pointer
+- `src/system/game_loop17.c` (GitHub issue #38): `sub_802425C`,
+  `nullsub_25`, `sub_8024278` - a bit-tested `sub_8026ED0` teardown
+  wrapper, an empty stub, and the medal-table per-level tally
+- `src/system/game_loop18.c` (GitHub issue #38): `sub_80243E0`,
+  `sub_8024404`, `sub_8024428`, `sub_8024434`, `sub_8024440`,
+  `sub_802444C`, `sub_8024458`, `sub_8024464`, `sub_8024498`,
+  `sub_80244F0`, `sub_8024524`, `sub_8024540`, `sub_802455C` -
+  medal-table entry/item-list field accessors, the sound-cue resolver,
+  and the `sub_8024344` constant wrappers (`sub_8024344` itself is left
+  raw, see below)
+- `src/system/game_loop19.c` (GitHub issue #38): `sub_8024784` -
+  trivial `gUnknown_03001314` setter
+- `src/system/game_loop20.c` (GitHub issue #38): `sub_80247EC`,
+  `sub_8024804` - the `sub_802425C`-shaped teardown wrapper and a
+  trivial constructor
+- `src/system/game_loop22.c` (GitHub issue #13 - numbered `22` rather
+  than `17` since issue #38's PR above independently claimed
+  `game_loop17.c`-`20.c` first): `sub_800FEB0` - resets
+  `self`'s collision-response state/timer/neighbor-list-pointer block
+  on reset
+- `src/system/game_loop23.c` (GitHub issue #13): `sub_80106DC`
+  (viewport collision-box refresh), `sub_8010708`/`sub_801070C`
+  (neighbor-list "get prev"/"get next"), `sub_8010710`/`sub_8010714`
+  ("set prev"/"set next"), `sub_8010718` (UNUSED trivial constant)
+- `src/system/game_loop24.c` (GitHub issue #13): `sub_8010804` (a
+  state-3-countdown-expiry sweep over `gUnknown_0300130C`),
+  `sub_801085C` (viewport trampoline-pair/cue-1 firing)
+- `src/system/game_loop25.c` (GitHub issue #13): `sub_8010908` -
+  trivial `gStaticData_0816BBAE[idx]` lookup
+- `src/system/game_loop26.c` (GitHub issue #13): `sub_8010A00` -
+  `self+0x48` bits 6-7 sub-state extractor
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -139,6 +170,28 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   See
   [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
 
+## Left raw, semantics traced but not byte-matching (GitHub issue #38)
+
+- **`sub_8024344`** (ROM `0x08024344`, real bytes in
+  `asm/code_3_2_17_24344.s`) - scans a medal item list for a nonzero
+  `u16` flag; every field/offset/branch confirmed, but the ROM keeps its
+  `flagIdx` parameter alive in `ip`/r12 across the whole function rather
+  than a normally-allocated register. See
+  [docs/matching/issue-38-medal-results-tally.md](../matching/issue-38-medal-results-tally.md).
+- **`sub_8024590`/`sub_8024640`/`sub_80246D8`/`sub_8024708`** (ROM
+  `0x08024590`-`0x08024783`, real bytes in `asm/code_3_2_17_24590.s`) -
+  a sound-channel-handle helper family (start/wait-then-play cue
+  selection, its per-item driver loop, an index scanner, and a
+  VRAM-bank-toggling tile-asset streamer + palette DMA + second
+  `DISPCNT` writer); every field/offset/call argument confirmed, gap is
+  register-allocation-level throughout. See
+  [docs/matching/issue-38-medal-results-tally.md](../matching/issue-38-medal-results-tally.md).
+- **`sub_8024790`** (ROM `0x08024790`, real bytes in
+  `asm/code_3_2_17_24790.s`) - the tail half of `sub_8024640`'s
+  per-item body, reused standalone; same open gap as the group above.
+  See
+  [docs/matching/issue-38-medal-results-tally.md](../matching/issue-38-medal-results-tally.md).
+
 ## Still raw, category-mapped (GitHub issue #12/#34/#40)
 
 - **`sub_0800D18C`/`sub_800E08C`** (`asm/code_3_2_17_d18c.s`, ROM
@@ -163,6 +216,32 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   several sibling calls within this same still-raw neighborhood; left
   untouched for this pass - see
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md).
+- **`sub_800FC70`/`sub_800FDC8`** (`asm/code_3_2_17_e560_fc70.s`, ROM
+  `0x0800FC70`-`0x0800FEB0`, GitHub issue #13) - a position-wrap
+  advance function and a Bresenham-line-style step algorithm; not
+  attempted this pass - see
+  [docs/matching/issue-13-graphics-fc70.md](../matching/issue-13-graphics-fc70.md).
+- **`sub_800FF0C`/`sub_8010480`/`sub_80104E4`/`sub_8010674`**
+  (`asm/code_3_2_17_e560_ff0c.s`, ROM `0x0800FF0C`-`0x080106DC`, GitHub
+  issue #13) - `sub_800FF0C` is a large (~660-instruction) projectile/
+  hazard-spawn dispatcher with two big jump tables, out of scope for
+  this pass; `sub_8010480`/`sub_80104E4`/`sub_8010674` are its smaller
+  neighbors, not attempted - see
+  [docs/matching/issue-13-graphics-fc70.md](../matching/issue-13-graphics-fc70.md).
+- **`sub_801071C`/`sub_801075C`/`sub_8010784`/`sub_80107C4`**
+  (`asm/code_3_2_17_e560_1071c.s`, ROM `0x0801071C`-`0x08010804`,
+  GitHub issue #13) - a part-object init helper, another init helper,
+  and two more Bresenham-line-style step algorithms; not attempted -
+  see [docs/matching/issue-13-graphics-fc70.md](../matching/issue-13-graphics-fc70.md).
+- **`sub_801089C`** (`asm/code_3_2_17_e560_1089c.s`, ROM
+  `0x0801089C`-`0x08010908`, GitHub issue #13) - a cue-3-plus-spawn
+  helper; not attempted - see
+  [docs/matching/issue-13-graphics-fc70.md](../matching/issue-13-graphics-fc70.md).
+- **`sub_8010914`/`sub_801095C`/`sub_80109A4`**
+  (`asm/code_3_2_17_e560_10914.s`, ROM `0x08010914`-`0x08010A00`,
+  GitHub issue #13) - two neighbor-list-walk-and-filter helpers and a
+  distance-gated dispatcher; not attempted - see
+  [docs/matching/issue-13-graphics-fc70.md](../matching/issue-13-graphics-fc70.md).
 - **`UpdateGameFrame`** (`asm/code_3_2_17_225a0.s`, ROM `0x080225A0`) -
   the main per-frame game-loop driver, a ~730-instruction jump-table
   state machine. Not understood branch-by-branch with the precision a
