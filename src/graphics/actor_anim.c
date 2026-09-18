@@ -391,62 +391,94 @@ asm(".align 2, 0");
 
 extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
 
-#if NON_MATCHING
-/* NOT YET BYTE-MATCHING - see docs/matching/issue-71-0x0803b060-actor.md
- * for the full account. Semantics are fully understood and every
- * load/store, branch and call is confirmed correct: screen-space
- * visibility test and OAM setup for one sprite frame drawn at the fixed
- * screen position (120, 106), building the OAM attribute words (masked
- * position, `sub_803B060`'s attr flag, and a priority/palette nibble
- * from `self+0x18`/`self+0x14`) and calling `SetupSpriteFrameOam`.
- * `sub_802C2FC` (src/graphics/actor_part19b.c) is the near-identical
- * twin of this function (same shape, self-relative position instead of
- * a fixed one) already parked for the same two compiler gaps hit here:
- * a `| 0`-with-a-zero-valued-local term the ROM keeps as a real
- * materialize-and-OR pair but this compiler's dead-store elimination
- * always removes, and a register-budget difference (this compiler needs
- * an extra spilled/high register to keep `frame` alive across both
- * calls where the ROM fits entirely in r4-r7). The checked-in assembly
- * (asm/code_3_3_b46c.s) is used for the default (matching) build. */
-void sub_803B46C(void *selfArg)
+/* Screen-space visibility test and OAM setup for one sprite frame drawn
+ * at the fixed screen position (120, 106): builds the OAM attribute
+ * words (masked position, `sub_803B060`'s attr flag, and a priority/
+ * palette nibble from `self+0x18`/`self+0x14`) and calls
+ * `SetupSpriteFrameOam`. See docs/matching/issue-71-0x0803b060-actor.md
+ * for the full semantic account.
+ *
+ * Written as NAKED asm, not plain C: `sub_802C2FC` (src/graphics/
+ * actor_part19b.c) is the near-identical twin of this function (same
+ * shape, self-relative position instead of a fixed one), parked on two
+ * compiler gaps a plain-C reconstruction hit here too - a `| 0`-with-a-
+ * zero-valued-local term the ROM keeps as a real materialize-and-OR
+ * pair but this compiler's dead-store elimination always removes
+ * regardless of phrasing, and a register-budget difference (this
+ * compiler needs an extra spilled/high register to keep `frame` alive
+ * across both calls where the ROM fits entirely in r4-r7). Every
+ * load/store, branch and call was already confirmed correct against
+ * the ROM, so this is a mechanical, byte-verified transcription of the
+ * ROM's own instructions (translated from the disassembler's unified
+ * syntax to this project's established NAKED plain/divided syntax,
+ * local labels renumbered per
+ * docs/matching/issue-4-sio-settings-sync.md's convention), not an
+ * inferred control-flow guess. */
+NAKED void sub_803B46C(void *selfArg)
 {
-    u8 *self = selfArg;
-    s32 x = 120;
-    s32 y = 106;
-    u8 *frame;
-    s32 w;
-    s32 h;
-    s32 attr;
-    u32 packed;
-    s32 flag = 0;
-
-    frame = GetAnimFrameData((struct anim_part_instance *)self);
-    w = frame[0];
-    h = frame[1];
-    x -= w * 4;
-    y -= h * 4;
-
-    if (y > 159) return;
-    if (y + h * 8 < 0) return;
-    if (x > 239) return;
-    if (x + w * 8 < 0) return;
-
-    attr = sub_803B060((struct anim_part_instance *)self);
-    packed = (y & 0xff) | ((u32)(x & 0x1ff) << 16) | attr | flag;
-
-    {
-        s32 v = *(s32 *)(self + 24);
-        u32 attr2;
-
-        if (*(s32 *)(self + 20) & 0x8000) {
-            attr2 = ((v << 12) | 0x800);
-        } else {
-            attr2 = (u32)(v << 12);
-        }
-
-        SetupSpriteFrameOam(frame, packed, attr2, 0x100);
-    }
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "add r5, r0, #0\n\t"
+        "mov r4, #120\n\t"
+        "mov r6, #106\n\t"
+        "bl GetAnimFrameData\n\t"
+        "add r7, r0, #0\n\t"
+        "ldrb r0, [r7]\n\t"
+        "lsl r2, r0, #2\n\t"
+        "ldrb r1, [r7, #1]\n\t"
+        "lsl r0, r1, #2\n\t"
+        "sub r4, r4, r2\n\t"
+        "sub r6, r6, r0\n\t"
+        "cmp r6, #159\n\t"
+        "bgt 7f\n\t"
+        "lsl r0, r1, #3\n\t"
+        "add r0, r6, r0\n\t"
+        "cmp r0, #0\n\t"
+        "blt 7f\n\t"
+        "cmp r4, #239\n\t"
+        "bgt 7f\n\t"
+        "lsl r0, r2, #1\n\t"
+        "add r0, r4, r0\n\t"
+        "cmp r0, #0\n\t"
+        "blt 7f\n\t"
+        "add r0, r5, #0\n\t"
+        "bl sub_803B060\n\t"
+        "mov r3, #255\n\t"
+        "and r3, r6\n\t"
+        "ldr r1, 4f\n\t"
+        "and r4, r1\n\t"
+        "lsl r1, r4, #16\n\t"
+        "orr r3, r1\n\t"
+        "orr r3, r0\n\t"
+        "mov r0, #0\n\t"
+        "orr r3, r0\n\t"
+        "ldr r4, [r5, #24]\n\t"
+        "lsl r2, r4, #12\n\t"
+        "ldr r0, [r5, #20]\n\t"
+        "mov r1, #128\n\t"
+        "lsl r1, r1, #8\n\t"
+        "and r0, r1\n\t"
+        "cmp r0, #0\n\t"
+        "beq 5f\n\t"
+        "mov r0, #128\n\t"
+        "lsl r0, r0, #4\n\t"
+        "orr r2, r0\n\t"
+        "lsl r0, r2, #16\n\t"
+        "b 6f\n\t"
+    "4: .4byte 0x1ff\n"
+    "5:\n\t"
+        "lsl r0, r4, #28\n\t"
+    "6:\n\t"
+        "lsr r2, r0, #16\n\t"
+        "add r0, r7, #0\n\t"
+        "add r1, r3, #0\n\t"
+        "mov r3, #128\n\t"
+        "lsl r3, r3, #1\n\t"
+        "bl SetupSpriteFrameOam\n\t"
+    "7:\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r0}\n\t"
+        "bx r0\n\t"
+        ".align 2, 0\n"
+    );
 }
-#endif /* NON_MATCHING */
-
-asm(".align 2, 0");

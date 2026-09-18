@@ -185,6 +185,97 @@ truncation after each call - confirming those calls' return values only
 ever need to be compared against zero, truncated to 16 bits, by this
 caller.
 
+## NAKED transcription pass: all 4 remaining functions matched
+
+The previous pass left `sub_803AA08`/`sub_803AAD4`/`sub_803AB54`/
+`sub_803AC04` parked, each narrowed to a small, well-understood
+register-allocation or loop-rotation gap - none of them a logic
+question. Rather than continue per-register archaeology, all four were
+converted to `NAKED` (this project's established escape hatch for
+exactly this class of problem, per `docs/matching/issue-4-sio-settings-
+sync.md`'s "general strategy" section): the original semantics-
+understanding doc comments were kept (trimmed to drop the now-obsolete
+"here's what doesn't match" paragraphs), and the ROM's own disassembly
+was transcribed instruction-for-instruction as inline asm, translated
+from the disassembler's unified syntax to this project's established
+NAKED plain/divided syntax (`adds`->`add`, `movs`->`mov`, `ands`->`and`,
+`lsls`/`lsrs`->`lsl`/`lsr`, `orrs`->`orr`, `rors`->`ror`, `subs`->`sub`),
+with the original's `_08XXXXXX:` labels renumbered to GNU-as local
+numeric labels. Nothing here is inferred - every instruction was already
+confirmed correct against the ROM by the previous pass's semantic
+analysis, and the transcription was verified by disassembling the
+isolated-compiled object and diffing it instruction-for-instruction
+against the ROM's own disassembly before ever touching `ldscript.txt`.
+
+- **`sub_803AA08`** (`src/system/timer_util.c`) - arms the timer.
+  Transcribed as a single straight-line sequence (no branches at all
+  in the body), so label renumbering was only needed for the trailing
+  literal pool.
+- **`sub_803AAD4`** - moved from `src/system/timer_util.c` to
+  `src/system/timer_util_aa90.c`, appended right after `sub_803AA90`:
+  since it's now matched (not `NON_MATCHING`-guarded raw bytes in a
+  separate `asm/*.s` file anymore), its real ROM address
+  (`0x0803AAD4`, immediately after `sub_803AA90`'s own range) has to
+  sit in the same translation unit as `sub_803AA90` to link in the
+  right place - it can no longer share `timer_util.c` with
+  `sub_803AA08`, since `sub_803AA90`'s own file has to be linked
+  between them (see docs/workflow.md step 4). One loop (the busy-wait
+  tail), one literal pool entry (`0x04000208`, the REG_IME address)
+  reused by two separate `ldr` instructions at different points in the
+  function, reproduced faithfully by referencing the same numeric
+  label from both.
+- **`sub_803AB54`/`sub_803AC04`** (`src/system/eeprom_util.c`) - the
+  read/write pair. Both have a stack-allocated bit buffer (`sub sp,
+  #0x88`/`#0xa4`, explicit in the transcription since NAKED functions
+  get no compiler-managed frame) and a mid-function literal pool split
+  into two separate chunks (the ROM's own compiler flushes the pool
+  after an early unconditional branch rather than deferring everything
+  to the function's end), each requiring its own set of numeric
+  labels rather than one shared trailing pool.
+
+All four verified via a full clean `make compare` (`La suma coincide`)
+together with the rest of this pass's functions (below). With all 25
+functions in issue #69's original range now matched (18 already, plus
+these 4, plus `sub_803ACE0`/`sub_803AD38` matched in the prior pass),
+**this closes issue #69**.
+
+## Division/modulo trio and sub_803B46C: same NAKED technique
+
+The same pass also closed out three more parked functions that hit an
+identical class of gap, documented in their own issues:
+
+- **`sub_803ADB4`/`sub_803AE4C`/`sub_803AF1C`** (`src/util/
+  math_div_util.c`, GitHub issue #70) - the signed-division/signed-
+  modulo/unsigned-modulo trio `docs/matching.md`'s issue #70 entry
+  parked on real per-path prologue/epilogue shrink-wrapping (plus a
+  `ror`-codegen gap for the modulo pair) that a gcc-2.9-era compiler
+  can't produce from plain C. `sub_803ADB4`'s prior-pass C
+  reconstruction already matched every instruction in the function
+  *body* - only the entry/exit shape differed - so the NAKED
+  transcription for all three was entirely mechanical. `nullsub_8`
+  (their shared divide-by-zero handler, already matched via NAKED)
+  now sits between `sub_803ADB4` and `sub_803AE4C`/`sub_803AF1C` in
+  the same file, in ROM order - see docs/status/util.md. With all 10
+  functions in issue #70's range now matched, **this closes issue
+  #70** too.
+- **`sub_803B46C`** (`src/graphics/actor_anim.c`, GitHub issue #71) -
+  the near-identical twin of the still-parked `sub_802C2FC`, fixed-
+  position OAM setup. One trailing-padding gotcha found while
+  transcribing: the ROM disassembly's final `movs r0, r0` before the
+  function's `.align 2, 0` is not a real instruction - it's the
+  disassembler's rendering of the zero-fill alignment padding itself
+  (`0x0000` decodes as `lsls r0, r0, #0`), which this compiler's
+  plain "mov r0, r0" would instead assemble as the *other* valid
+  zero-shift-amount encoding (`adds r0, r0, #0` / `0x1c00`) - same
+  final effect (a NOP), different bytes. Per
+  `matching_decomp_alignment_fix`, the fix was to drop the explicit
+  instruction entirely and let the trailing `asm(".align 2, 0")`
+  supply the correct zero-byte padding on its own, exactly as this
+  project's other trailing-padding gotchas were fixed. `sub_802C2FC`
+  itself is unaffected and stays parked - it hits a different pair of
+  gaps (a genuinely-eliminated `| 0` dead store and a register-budget
+  spill) that this pass didn't attempt.
+
 ## Files touched
 
 - `src/system/timer_util.c` - `sub_803AA08` improved (still parked),
@@ -207,3 +298,31 @@ caller.
 - `tools/report_units.py` - `UNITS` table split to match the new file
   boundaries.
 - `docs/status/system.md` - matched/parked lists updated.
+
+## Files touched (NAKED transcription pass)
+
+- `src/system/timer_util.c` - `sub_803AA08` now `NAKED`, matched;
+  `sub_803AAD4` moved out entirely (see below).
+- `src/system/timer_util_aa90.c` - `sub_803AAD4` added as `NAKED`,
+  matched, appended right after `sub_803AA90` in ROM order.
+- `src/system/eeprom_util.c` - `sub_803AB54`/`sub_803AC04` now `NAKED`,
+  matched; the now-unused `EEPROM_PORT` macro removed.
+- `src/util/math_div_util.c` - `sub_803ADB4`/`sub_803AE4C`/
+  `sub_803AF1C` now `NAKED`, matched, reordered so `sub_803ADB4` comes
+  before `nullsub_8` (matching ROM order - previously `nullsub_8` was
+  matched on its own with both division routines still fully raw in
+  neighboring `asm/*.s` files, so the ordering within the `.c` file
+  didn't matter yet); the now-unmatched `Ror32` helper removed.
+- `src/graphics/actor_anim.c` - `sub_803B46C` now `NAKED`, matched.
+- `asm/code_3_2_20e_aa08.s`, `asm/code_3_2_20e_aa90.s`,
+  `asm/code_3_2_20e_ab54.s`, `asm/code_3_2_20e_3adb4.s`,
+  `asm/code_3_2_20e_3ae4c.s`, `asm/code_3_3_b46c.s` - all deleted
+  (each was wholly superseded by its matched `NAKED` C function).
+- `ldscript.txt` - the six deleted `.o` lines removed; nothing else
+  reordered, since each matched function's real ROM address landed in
+  whichever `.o` already sat in the right link-order slot.
+- `tools/report_units.py` - the now-redundant boundary entries for
+  these six functions collapsed into their containing file's existing
+  entry.
+- `docs/status/system.md`, `docs/status/util.md`,
+  `docs/status/actor.md` - matched/parked lists updated.
