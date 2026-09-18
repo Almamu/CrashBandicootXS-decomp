@@ -38,13 +38,15 @@ palette-cycle DMA cluster (`sub_802AB08`/`sub_802AB34`/`sub_802AB58`/
 
 The raw source file `asm/code_3_2_20_8b7c.s` (6522 lines, spanning far
 beyond this chunk - InitHudTextWidget through past ConstructActorPart)
-has been split around each matched/parked function, following this
-project's "cut at the boundary" convention - new fragments are named by
-the lower 5 hex digits of their first function's address
-(`..._a88c.s`, `..._aa0c.s`, `..._ab58.s`, and the tail continuation
-`..._ac28.s`).
+was originally split around each matched/parked function, following
+this project's "cut at the boundary" convention (new fragments named by
+the lower 5 hex digits of their first function's address); the three
+that stayed raw the longest (`..._a88c.s`, `..._aa0c.s`, `..._ab58.s`)
+have since been retired entirely - all three closed to real C in a
+later pass (see the three entries at the end of the list below) - and
+only the tail continuation `..._ac28.s` remains.
 
-## Matched (22 of 25 functions)
+## Matched (25 of 25 functions)
 
 - **`sub_802A69C`/`sub_802A6B0`/`sub_802A6C4`/`sub_802A6D8`**
   (`src/graphics/actor_part50.c`) - four trivial forwarders, the same
@@ -110,53 +112,86 @@ the lower 5 hex digits of their first function's address
   palette-cycle cursor/bound save/restore pair.
 - **`sub_802ABC8`/`sub_802ABFC`** (`src/graphics/actor_part54.c`) - the
   palette-cycle cluster's remaining seed/arm-disarm pair, non-adjacent to
-  `actor_part52.c` since the parked `sub_802AB58` sits raw between them.
-
-## Parked (3 of 25 functions, `NON_MATCHING`)
-
-- **`UpdateAnimatedActorPart`** (`asm/code_3_2_20_8b7c_a88c.s`, C in
-  `src/graphics/actor_part55.c`) - the OAM draw/scale routine: computes
-  an OBJ scale factor and on-screen X/Y from `self`'s movement-threshold
-  metric, culls off-screen, and calls `SetupSpriteFrameOam`. Every one
-  of this ~120-instruction function's bytes matches the ROM except one:
-  the second half's `frame[1]` read (the mirror of the first half's
+  `actor_part52.c` since `sub_802AB58`'s own object (`actor_part53.o`)
+  sits between them.
+- **`UpdateAnimatedActorPart`** (`src/graphics/actor_part55.c`) - the OAM
+  draw/scale routine: computes an OBJ scale factor and on-screen X/Y
+  from `self`'s movement-threshold metric, culls off-screen, and calls
+  `SetupSpriteFrameOam`. Closed a later session's remaining gap: the
+  second half's `frame[1]` read (the mirror of the first half's
   `frame[0]` read, done through `r7`) is read by the ROM through `r0` -
   a leftover, never-reloaded copy of `GetAnimFrameData`'s own return
-  value still sitting untouched in `r0` at that point, saving a register
-  materialization the ROM's real compiler recognized was redundant. This
-  agbcc build does not perform that specific redundant-load/value-reuse
-  optimization: referencing `frame` a second time always re-derives it
-  from its one canonical register, and pinning a second `register` alias
-  onto `r0` emits an explicit (extra) copy instruction instead of
-  reusing `r0`'s still-valid contents - the opposite of what's needed.
-  Same shape and same family of gap as the already-parked `sub_802C2FC`
-  in `actor_part19b.c` (issue #52), which hits an analogous dead-code-
-  elimination difference in this compiler.
-- **`sub_802AA0C`** (`asm/code_3_2_20_8b7c_aa0c.s`, C in
-  `src/graphics/actor_part51.c`) - a 12-byte little-vector velocity
-  integrator (the position block `InitActorPart` copies from
-  `part+0x14..0x20`, see above). Semantics are fully understood and
-  every load/store is confirmed correct (this compiler does emit the
-  same `ldm`/`stm` 3-word block-copy idiom the ROM uses at both ends,
-  confirming the shape); the residual gap is purely instruction
-  *scheduling* around the three per-axis `>>8` shifts between the two
-  block copies - this compiler's own list scheduler bunches the three
-  loads/shifts together differently from the ROM's own strict
-  load-shift/load-shift/load-shift order no matter how the source
-  statements are grouped or which registers the per-axis values are
-  pinned to.
-- **`sub_802AB58`** (`asm/code_3_2_20_8b7c_ab58.s`, C in
-  `src/graphics/actor_part53.c`) - the palette-cycle cursor-advance DMA
-  step. Semantics fully understood and every load/store, branch and call
-  is confirmed correct (the DMA setup and refresh-counter reset at the
-  top match the ROM instruction-for-instruction); the residual gap is in
-  the cursor-advance tail: no C phrasing tried (plain if/else-if/else,
-  `goto`-linearized with an explicit `result` copy, cached-address
-  locals, register-pinned address locals) stops this compiler from
-  speculatively computing the decrement (`idx - 1`) ahead of the branch
-  that decides whether it's needed, which shortens the branch-taken path
-  by folding away a redundant unconditional jump the ROM's own build
-  still has - a shorter, still-correct result, but not byte-identical.
+  value still sitting untouched in `r0` at that point. Plain C always
+  re-derives `frame` from one canonical register for every access, but
+  pinning the *call result itself* to `r0` (instead of a second alias
+  onto it) and making the `r7` copy the explicit second variable
+  inverts which register is "canonical" - matching the ROM's per-access
+  choice for all three reads instead of gcc's single-register default.
+  That fix incidentally freed `r7`, which let `flag` (a plain local)
+  drift onto it too and collide with the pinned copy; pinning `flag` to
+  `r2` (its own ROM-matching register) fixed the collision but then lost
+  the ROM's `str`/`ldr`-through-stack spill of `flag` around the
+  `sub_803B060` call - explicit register variables in a caller-saved
+  register aren't automatically protected across a call the way an
+  ordinary gcc-owned pseudo-register is, so the spill/reload needed
+  writing out by hand (same technique as `sub_8000140`'s r2-across-SWI
+  save/restore, see docs/matching.md), reloading right before its one
+  remaining use to match the ROM's late `ldr r2, [sp]` placement.
+- **`sub_802AA0C`** (`src/graphics/actor_part51.c`) - a 12-byte
+  little-vector velocity integrator (the position block `InitActorPart`
+  copies from `part+0x14..0x20`, see above). The residual gap was
+  instruction *scheduling*: this compiler's own list scheduler always
+  bunches the three per-axis load/shift pairs together differently from
+  the ROM's own strict load-shift/load-shift/load-shift order, and
+  separately reuses a different ad hoc register pattern for the three
+  read-modify-write halfword updates (the first and third overwrite the
+  just-used delta's own register with the sum, the middle one leaves it
+  in the freshly loaded value's register instead) - no plain-C grouping
+  or register pin reproduced either. Small inline-asm islands
+  transcribing the ROM's literal instruction order for just those two
+  spots (leaving the two `ldm`/`stm` block copies as real C) closed
+  both. Also needed: `void *` instead of `void` as the return type,
+  returning `outArg` unchanged - the ROM's own epilogue keeps `outArg`
+  live in `r0` all the way to the end (it's copied to `r2`, never
+  touched again) and picks `r1`, not `r0`, for its final "pop a
+  register, branch to it" step *because* `r0` is still live; declaring
+  the return value real instead of `void` gets gcc to do the same, the
+  same return-type-shapes-epilogue-register-choice gotcha already
+  documented for `sub_800697C`/`sub_8001214` in docs/matching.md. No
+  caller of this function has been matched yet to confirm whether the
+  return value is actually used.
+- **`sub_802AB58`** (`src/graphics/actor_part53.c`) - the palette-cycle
+  cursor-advance DMA step. Two gaps: the cursor-advance tail (no C
+  phrasing tried - plain if/else-if/else, `goto`-linearized with an
+  explicit `result` copy, cached-address locals, register-pinned address
+  locals - stops this compiler from speculatively computing the
+  decrement (`idx - 1`) ahead of the branch that decides whether it's
+  needed, folding away the ROM's own redundant unconditional jump on the
+  increment path), closed with a small inline-asm island transcribing
+  the ROM's literal branch structure. Second, and less obvious: the ROM
+  splits this function's 5-word literal pool right after that same
+  tail's unconditional `b`, mid-function, while this compiler's own
+  plain-C-driven pool placement always dumps everything at the
+  function's very end - and completely ignores an `asm(".pool")` marker
+  placed around it, unlike the precedent documented for `sub_8004EC0`/
+  `sub_8003A60` in docs/matching/issue-7-0x08004d74-overlay-ui.md and
+  issue-5-overlay-ui-sync.md. The difference: a `.pool` split is only
+  respected for symbols whose literal load is itself written in
+  inline-asm text using the assembler's own `=symbol` pseudo-op (real
+  GNU `as` pool management, opaque to this compiler's own plain-C pool
+  bookkeeping) - so every global access in this function had to move
+  into one continuous asm island (with a real `.pool` directive at the
+  split point) to land all five words in the ROM's one mid-function
+  group. The `if`/`return` control flow inside that island stays a
+  genuine compiler-managed shared epilogue (reached by both the asm's
+  own early `beq`/`ble` and by falling off the end), so the function
+  signature/prologue/epilogue are still fully compiler-generated, not a
+  NAKED transcription.
+
+All three also needed a trailing `asm(".align 2, 0");` for the ROM's
+zero-fill padding before the next function - the assembler's default
+NOP fill (`mov r8, r8`) mismatched, the same established alignment-
+padding gotcha as elsewhere in this project.
 
 ## A note on isolated-compile confidence
 

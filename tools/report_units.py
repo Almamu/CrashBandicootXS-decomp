@@ -11,10 +11,10 @@ inference relies on).
 Addresses below come from a clean `make compare` (NON_MATCHING=0) build's
 crashbandicootxs.map - the only reliable source, since NON_MATCHING=1
 addresses drift downstream of any parked function (its imperfect
-reconstruction is a different byte count than the real ROM). Four files
-contain a parked function and so have a wider range here than their
-NON_MATCHING=0 object alone shows - the parked function's real bytes
-currently live in the neighboring raw asm/*.s chunk instead, but
+reconstruction is a different byte count than the real ROM). One file
+(PlaySfx's) contains a parked function and so has a wider range here
+than its NON_MATCHING=0 object alone shows - the parked function's real
+bytes currently live in the neighboring raw asm/*.s chunk instead, but
 expected/code_3.s already has it labelled at its true address (it was
 never extracted, only parked), so slicing still works unmodified.
 
@@ -289,12 +289,12 @@ UNITS = [
     (0x08028BA0, None, "graphics_loading"),  # InitObjTileFreeList, LoadSpriteFrameTiles, SetupSpriteFrameOam, DecompressCategorySpriteSheet
     (0x080291A4, None, "actor"),  # SetupActorVramPool, InitActorCategory, SelectActorCategory, ConstructAnimTableState, ConstructActorPart
     (0x0802A69C, "src/graphics/actor_part50.o", "actor"),  # sub_802A69C-sub_802A7B8 (issue #50): five gUnknown_03000884-forwarder wrappers, InitActorPart (the constructor every other actor_part*.c file already forward-declares), and sub_802A7B8 (the movement-threshold recompute/frame-advance pair); matched - see docs/matching/issue-50-actor-2a69c.md
-    (0x0802A88C, None, "actor"),  # UpdateAnimatedActorPart - the OAM draw/scale routine, parked (real bytes in asm/code_3_2_20_8b7c_a88c.s), NON_MATCHING reconstruction in src/graphics/actor_part55.c - see docs/matching/issue-50-actor-2a69c.md
-    (0x0802A980, "src/graphics/actor_part56.o", "actor"),  # sub_802A980-sub_802AA08 (issue #50): non-adjacent to actor_part50.o since the parked UpdateAnimatedActorPart sits raw between them - sub_802A980's movement-threshold recompute and a handful of trivial self+0xc/0x1c/0x20/0x24 accessors; matched - see docs/matching/issue-50-actor-2a69c.md
-    (0x0802AA0C, None, "actor"),  # sub_802AA0C - a 12-byte little-vector velocity integrator, parked (real bytes in asm/code_3_2_20_8b7c_aa0c.s), NON_MATCHING reconstruction in src/graphics/actor_part51.c - see docs/matching/issue-50-actor-2a69c.md
-    (0x0802AA4C, "src/graphics/actor_part52.o", "actor"),  # sub_802AA4C-sub_802AB34 (issue #50): non-adjacent to actor_part50.o since the parked sub_802AA0C sits raw between them - the same self+0x48/0x4c circular-list teardown as sub_802C19C, the gUnknown_03001428/gUnknown_03000888 fixed-slot registry pair, and the gUnknown_03001464-gated palette-cycle DMA cluster's setup pair (sub_802AB08/sub_802AB34); matched - see docs/matching/issue-50-actor-2a69c.md
-    (0x0802AB58, None, "actor"),  # sub_802AB58 - the palette-cycle cursor-advance DMA step, parked (real bytes in asm/code_3_2_20_8b7c_ab58.s), NON_MATCHING reconstruction in src/graphics/actor_part53.c - see docs/matching/issue-50-actor-2a69c.md
-    (0x0802ABC8, "src/graphics/actor_part54.o", "actor"),  # sub_802ABC8-sub_802ABFC (issue #50): non-adjacent to actor_part52.o since the parked sub_802AB58 sits raw between them - the palette-cycle cluster's remaining seed/arm-disarm pair; matched - see docs/matching/issue-50-actor-2a69c.md
+    (0x0802A88C, "src/graphics/actor_part55.o", "actor"),  # UpdateAnimatedActorPart - the OAM draw/scale routine; matched, needing a register-pinning trick that swaps which of r0/r7 is "canonical" for GetAnimFrameData's return value plus an explicit inline-asm spill/reload of `flag` around the sub_803B060 call - see docs/matching/issue-50-actor-2a69c.md
+    (0x0802A980, "src/graphics/actor_part56.o", "actor"),  # sub_802A980-sub_802AA08 (issue #50): non-adjacent to actor_part50.o since UpdateAnimatedActorPart's own object (actor_part55.o) sits between them - sub_802A980's movement-threshold recompute and a handful of trivial self+0xc/0x1c/0x20/0x24 accessors; matched - see docs/matching/issue-50-actor-2a69c.md
+    (0x0802AA0C, "src/graphics/actor_part51.o", "actor"),  # sub_802AA0C - a 12-byte little-vector velocity integrator; matched, needing small inline-asm islands for the per-axis load/shift ordering and the RMW halfword updates' ad hoc register reuse that no plain C phrasing reproduced - see docs/matching/issue-50-actor-2a69c.md
+    (0x0802AA4C, "src/graphics/actor_part52.o", "actor"),  # sub_802AA4C-sub_802AB34 (issue #50): non-adjacent to actor_part50.o since sub_802AA0C's own object (actor_part51.o) sits between them - the same self+0x48/0x4c circular-list teardown as sub_802C19C, the gUnknown_03001428/gUnknown_03000888 fixed-slot registry pair, and the gUnknown_03001464-gated palette-cycle DMA cluster's setup pair (sub_802AB08/sub_802AB34); matched - see docs/matching/issue-50-actor-2a69c.md
+    (0x0802AB58, "src/graphics/actor_part53.o", "actor"),  # sub_802AB58 - the palette-cycle cursor-advance DMA step; matched, needing an inline-asm island for the cursor-advance branch tail (this compiler always speculates the decrement ahead of the branch that needs it) - see docs/matching/issue-50-actor-2a69c.md
+    (0x0802ABC8, "src/graphics/actor_part54.o", "actor"),  # sub_802ABC8-sub_802ABFC (issue #50): non-adjacent to actor_part52.o since sub_802AB58's own object (actor_part53.o) sits between them - the palette-cycle cluster's remaining seed/arm-disarm pair; matched - see docs/matching/issue-50-actor-2a69c.md
     (0x0802AC28, None, "actor"),  # sub_802AC28 onward - left raw, out of GitHub issue #50's chunk scope
     (0x0802B364, None, "actor"),  # 40.4 KB actor zone (docs/rom_map.md cites 0x0802B348, 28B before the nearest real function start - snapped forward since 0x0802B348 itself falls mid-function) - category/part/vtable system, boss-candidate + singleton object clusters
     (0x0802BED8, "src/graphics/actor_part19.o", "actor"),  # sub_802BED8-sub_802C19C (issue #52): the same player/action-object action-table family as actor_part17.o/actor_part18.o (state/table-index/anim-frame fields, a self+0x50 trampoline record, and the self+0x48/0x4c circular actor list sub_802C19C unlinks from); matched
