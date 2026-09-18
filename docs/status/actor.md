@@ -98,9 +98,13 @@ from "core" graphics.
   `sub_800A6F4`, `sub_800A700`, `sub_800A70C`, `sub_800A718`,
   `sub_800A724`, `sub_800A730`
 
-- `src/graphics/actor_part48.c` (GitHub issue #9): `sub_800A810` - a
-  part-object velocity/state reset that dispatches a sub-state byte to
-  one of three teardown helpers; see
+- `src/graphics/actor_part48.c` (GitHub issue #9): `sub_800A734` - a
+  part-object velocity/state reset+constructor that hooks up a child
+  object at `self+0xb0` (closed a gap an earlier session parked on -
+  needed interleaved running-pointer cursors, several register-pinned
+  idioms, and an inline-asm-anchored instruction order in a few spots)
+  - and `sub_800A810` - a part-object velocity/state reset that
+  dispatches a sub-state byte to one of three teardown helpers; see
   [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
 
 - `src/graphics/actor_part15.c`/`src/graphics/actor_part16.c` (new
@@ -485,15 +489,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   register roles for `self`/the record pointer exactly; parked on a
   genuine fifth-scratch-register need (`r5`, just to hold an offset
   immediate) this compiler never introduces. See
-  [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
-- **`sub_800A734`** (`src/graphics/actor_part48.c`, GitHub issue #9;
-  real bytes in `asm/code_3_2_16_a734.s`) - a part-object
-  velocity/state reset that also hooks up a child object. Field writes
-  fully confirmed; parked on the ROM's running-pointer address-
-  increment style across a long, non-uniform stretch of field writes
-  (its sibling `sub_800A810`, right after it in ROM order, matched with
-  a similar cursor technique on a shorter/more uniform stretch - see
-  the write-up). See
   [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
 - **`sub_800B270`** (`src/graphics/actor_part49.c`, GitHub issue #9) -
   a per-frame velocity integrator moving `self+0x60`/`self+0x64`
