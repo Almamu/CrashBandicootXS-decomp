@@ -165,7 +165,6 @@ extern struct actor *gUnknown_030012D8;
 extern void *gUnknown_030012E4;
 extern void *gUnknown_030012B4;
 
-#if NON_MATCHING
 /* `part` (a `struct actor`, same layout used throughout this ROM
  * region) collides with the player (`gUnknown_030012D8`, tested via
  * two `sub_8007B98` AABBs and `sub_8001688`) and, if so, plays a sound
@@ -179,154 +178,246 @@ extern void *gUnknown_030012B4;
  * `+0x28`/`+0xc` flag bytes get tagged - kept as raw offsets since the
  * spawned object's own type isn't established yet.
  *
- * NOT YET BYTE-MATCHING: every instruction's operation, operand, and
- * order matches the ROM exactly except one systematic register choice
- * - the cached address of the `gUnknown_030012D8` global lands in r6
- * here instead of the ROM's r7 (same category of issue as
- * sub_8007B00's `part` above - explicit r7 pins are categorically
- * unsafe in this toolchain, confirmed again here: pinning `pGlobal` to
- * r7 crashes the compiler with an internal error instead of just
- * mis-scheduling). Because this register is read from repeatedly
- * across several basic blocks (the two collision-AABB calls, the
- * sound-position lookup), the single letter mismatch cascades through
- * nearly the entire rest of the function's register numbering, even
- * though every individual instruction's operation is identical.
- * Parked rather than keep chasing this one register - same call as
- * `sub_8007B00`/`sub_8007B98` above. */
-void sub_8007DBC(struct actor *part)
+ * Written as NAKED asm, not plain C: every instruction's operation,
+ * operand, and order was already confirmed against the ROM by the
+ * earlier plain-C reconstruction (the paragraph above is that
+ * derivation) - the only gap was one systematic register choice, the
+ * cached address of the `gUnknown_030012D8` global landing in r6
+ * instead of the ROM's r7, cascading into nearly every later register
+ * number since it's read from repeatedly across several basic blocks
+ * (both collision-AABB calls, the sound-position lookup). This is
+ * this project's well-documented "explicit `register T x asm("r7")`
+ * pin compiles correct instructions/order but silently drops r7 from
+ * the prologue/epilogue push/pop list" gcc-2.9 bug - and here it's
+ * worse than usual: pinning the cached-address local directly to r7
+ * crashes the compiler outright (`internal error--unrecognizable
+ * insn`) instead of just mis-scheduling. Register-pinning archaeology
+ * is a dead end for this specific function, confirmed multiple ways -
+ * full NAKED transcription instead, like this project's other
+ * hard-compiler-limitation cases (`src/system/link_cable.c`'s several
+ * NAKED functions, `src/audio/gax_swi.c`'s `sub_80392C4`). See
+ * docs/matching/naked-sub_8007dbc.md for the conversion write-up. */
+NAKED void sub_8007DBC(struct actor *part)
 {
-    struct aabb buf1;
-    struct aabb buf2;
-
-    {
-        register s32 shifted asm("r1");
-        register s32 mask asm("r6");
-        register s32 result asm("r0");
-
-        asm volatile(
-            "ldrb r0, [%3, #0xc]\n\t"
-            "lsl r1, r0, #0x18\n\t"
-            "lsr r0, r1, #0x1b\n\t"
-            "mov r6, #1\n\t"
-            "and r0, r0, r6"
-            : "=r" (result), "=r" (shifted), "=r" (mask)
-            : "r" (part));
-        if (result) {
-            return;
-        }
-
-        asm("lsr %0, %1, #0x1a\n\tand %0, %0, %2" : "=r" (result) : "r" (shifted), "r" (mask));
-        if (!result) {
-            return;
-        }
-    }
-
-    sub_8007B98(&buf1, part);
-
-    {
-        struct actor **pGlobal = &gUnknown_030012D8;
-
-        if (!((*pGlobal)->flags >> 7)) {
-            return;
-        }
-
-        sub_8007B98(&buf2, *pGlobal);
-
-        if (!sub_8001688(&buf2, &buf1)) {
-            return;
-        }
-
-        {
-            register s32 result asm("r0");
-            register s32 tmp asm("r3");
-
-            result = 8;
-            tmp = part->flags;
-            result |= tmp;
-            part->flags = result;
-        }
-
-        {
-            void *table2 = (u8 *)(*pGlobal)->table + 0x68;
-            void *addr = (u8 *)(*pGlobal) + *(s16 *)table2;
-            u8 field0a = part->field_0A;
-            register void *deadRead asm("r4") = *(void *volatile *)((u8 *)table2 + 4);
-            (void)deadRead;
-            sub_803AD88(addr, 0, field0a, 0);
-        }
-    }
-
-    {
-        register s32 result asm("r0");
-        register s32 tmp asm("r6");
-
-        result = 1;
-        tmp = part->flags;
-        result |= tmp;
-        part->flags = result;
-    }
-
-    if (part->field_08 != 0xFFFF) {
-        register s32 word asm("r0");
-        s32 wordOffset;
-
-        asm volatile("add %0, %1, #0\n\tasr %0, %0, #5" : "=r" (word) : "r" ((s32)part->field_08));
-        wordOffset = word << 2;
-        {
-            void *base = gUnknown_030012B4;
-            s32 *bitmap = (s32 *)((u8 *)base + 0x108 + wordOffset);
-            s32 bit = part->field_08 - (word << 5);
-            *bitmap |= 1 << bit;
-        }
-    }
-
-    {
-        void *result = 0;
-        u8 subType;
-
-        subType = part->field_0A - 0x1b;
-        switch (subType) {
-        case 2:
-        case 3:
-            result = sub_8025BAC(gUnknown_030012E4, 0x2b, 1, part->x >> 8, part->y >> 8, 0);
-            break;
-        case 6:
-            result = sub_8025BAC(gUnknown_030012E4, 0x2b, 6, part->x >> 8, part->y >> 8, 0);
-            break;
-        case 4:
-            result = sub_8025BAC(gUnknown_030012E4, 0x2b, 5, part->x >> 8, part->y >> 8, 0);
-            break;
-        case 7:
-            result = sub_8025BAC(gUnknown_030012E4, 0x2b, 0, part->x >> 8, part->y >> 8, 0);
-            break;
-        case 5:
-            result = sub_8025BAC(gUnknown_030012E4, 0x2b, 3, part->x >> 8, part->y >> 8, 0);
-            break;
-        case 0:
-            result = sub_8025BAC(gUnknown_030012E4, 0x2b, 4, part->x >> 8, part->y >> 8, 0);
-            break;
-        case 1:
-        default:
-            break;
-        }
-
-        if (result != 0) {
-            register s32 r0 asm("r0");
-            register s32 tmp asm("r4");
-
-            tmp = 1;
-            r0 = -4;
-            tmp = *((u8 *)result + 0x28);
-            r0 &= tmp;
-            r0 |= 1;
-            *((u8 *)result + 0x28) = r0;
-
-            r0 = -5;
-            tmp = *((u8 *)result + 0xc);
-            r0 &= tmp;
-            *((u8 *)result + 0xc) = r0;
-        }
-    }
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "sub sp, #0x28\n\t"
+        "add r5, r0, #0\n\t"
+        "ldrb r0, [r5, #0xc]\n\t"
+        "lsl r1, r0, #0x18\n\t"
+        "lsr r0, r1, #0x1b\n\t"
+        "mov r6, #1\n\t"
+        "and r0, r6\n\t"
+        "cmp r0, #0\n\t"
+        "beq 1f\n\t"
+        "b 24f\n\t"
+    "1:\n\t"
+        "lsr r0, r1, #0x1a\n\t"
+        "and r0, r6\n\t"
+        "cmp r0, #0\n\t"
+        "bne 2f\n\t"
+        "b 24f\n\t"
+    "2:\n\t"
+        "add r0, sp, #8\n\t"
+        "add r1, r5, #0\n\t"
+        "bl sub_8007B98\n\t"
+        "ldr r7, 6f\n\t"
+        "ldr r1, [r7]\n\t"
+        "ldrb r2, [r1, #0xc]\n\t"
+        "lsr r0, r2, #7\n\t"
+        "cmp r0, #0\n\t"
+        "bne 3f\n\t"
+        "b 24f\n\t"
+    "3:\n\t"
+        "add r4, sp, #0x18\n\t"
+        "add r0, r4, #0\n\t"
+        "bl sub_8007B98\n\t"
+        "add r0, r4, #0\n\t"
+        "add r1, sp, #8\n\t"
+        "bl sub_8001688\n\t"
+        "lsl r0, r0, #0x18\n\t"
+        "cmp r0, #0\n\t"
+        "bne 4f\n\t"
+        "b 24f\n\t"
+    "4:\n\t"
+        "mov r0, #8\n\t"
+        "ldrb r3, [r5, #0xc]\n\t"
+        "orr r0, r3\n\t"
+        "strb r0, [r5, #0xc]\n\t"
+        "ldr r0, [r7]\n\t"
+        "ldr r1, [r0, #0x18]\n\t"
+        "add r1, #0x68\n\t"
+        "mov r4, #0\n\t"
+        "ldrsh r2, [r1, r4]\n\t"
+        "add r0, r0, r2\n\t"
+        "ldrb r2, [r5, #0xa]\n\t"
+        "ldr r4, [r1, #4]\n\t"
+        "mov r1, #0\n\t"
+        "mov r3, #0\n\t"
+        "bl sub_803AD88\n\t"
+        "ldrb r0, [r5, #0xc]\n\t"
+        "orr r0, r6\n\t"
+        "strb r0, [r5, #0xc]\n\t"
+        "ldr r0, 7f\n\t"
+        "ldrh r1, [r5, #8]\n\t"
+        "cmp r1, r0\n\t"
+        "beq 5f\n\t"
+        "ldrh r3, [r5, #8]\n\t"
+        "ldr r0, 8f\n\t"
+        "ldr r2, [r0]\n\t"
+        "add r0, r3, #0\n\t"
+        "asr r0, r0, #5\n\t"
+        "lsl r1, r0, #2\n\t"
+        "mov r4, #0x84\n\t"
+        "lsl r4, r4, #1\n\t"
+        "add r2, r2, r4\n\t"
+        "add r2, r2, r1\n\t"
+        "lsl r0, r0, #5\n\t"
+        "sub r0, r3, r0\n\t"
+        "mov r1, #1\n\t"
+        "lsl r1, r0\n\t"
+        "ldr r0, [r2]\n\t"
+        "orr r0, r1\n\t"
+        "str r0, [r2]\n\t"
+    "5:\n\t"
+        "mov r3, #0\n\t"
+        "ldrb r0, [r5, #0xa]\n\t"
+        "sub r0, #0x1b\n\t"
+        "cmp r0, #7\n\t"
+        "bhi 23f\n\t"
+        "lsl r0, r0, #2\n\t"
+        "ldr r1, 9f\n\t"
+        "add r0, r0, r1\n\t"
+        "ldr r0, [r0]\n\t"
+        "mov pc, r0\n\t"
+        ".align 2, 0\n"
+    "6: .4byte gUnknown_030012D8\n"
+    "7: .4byte 0x0000FFFF\n"
+    "8: .4byte gUnknown_030012B4\n"
+    "9: .4byte 10f\n"
+    "10: .4byte 21f\n\t"
+        ".4byte 23f\n\t"
+        ".4byte 11f\n\t"
+        ".4byte 11f\n\t"
+        ".4byte 15f\n\t"
+        ".4byte 19f\n\t"
+        ".4byte 13f\n\t"
+        ".4byte 17f\n"
+    "11:\n\t"
+        "ldr r3, [r5]\n\t"
+        "asr r3, r3, #8\n\t"
+        "ldr r1, [r5, #4]\n\t"
+        "asr r1, r1, #8\n\t"
+        "ldr r0, 12f\n\t"
+        "ldr r0, [r0]\n\t"
+        "str r1, [sp]\n\t"
+        "mov r1, #0\n\t"
+        "str r1, [sp, #4]\n\t"
+        "mov r1, #0x2b\n\t"
+        "mov r2, #1\n\t"
+        "b 22f\n\t"
+        ".align 2, 0\n"
+    "12: .4byte gUnknown_030012E4\n"
+    "13:\n\t"
+        "ldr r3, [r5]\n\t"
+        "asr r3, r3, #8\n\t"
+        "ldr r1, [r5, #4]\n\t"
+        "asr r1, r1, #8\n\t"
+        "ldr r0, 14f\n\t"
+        "ldr r0, [r0]\n\t"
+        "str r1, [sp]\n\t"
+        "mov r1, #0\n\t"
+        "str r1, [sp, #4]\n\t"
+        "mov r1, #0x2b\n\t"
+        "mov r2, #6\n\t"
+        "b 22f\n\t"
+        ".align 2, 0\n"
+    "14: .4byte gUnknown_030012E4\n"
+    "15:\n\t"
+        "ldr r3, [r5]\n\t"
+        "asr r3, r3, #8\n\t"
+        "ldr r1, [r5, #4]\n\t"
+        "asr r1, r1, #8\n\t"
+        "ldr r0, 16f\n\t"
+        "ldr r0, [r0]\n\t"
+        "str r1, [sp]\n\t"
+        "mov r1, #0\n\t"
+        "str r1, [sp, #4]\n\t"
+        "mov r1, #0x2b\n\t"
+        "mov r2, #5\n\t"
+        "b 22f\n\t"
+        ".align 2, 0\n"
+    "16: .4byte gUnknown_030012E4\n"
+    "17:\n\t"
+        "ldr r3, [r5]\n\t"
+        "asr r3, r3, #8\n\t"
+        "ldr r1, [r5, #4]\n\t"
+        "asr r1, r1, #8\n\t"
+        "ldr r0, 18f\n\t"
+        "ldr r0, [r0]\n\t"
+        "str r1, [sp]\n\t"
+        "mov r1, #0\n\t"
+        "str r1, [sp, #4]\n\t"
+        "mov r1, #0x2b\n\t"
+        "mov r2, #0\n\t"
+        "b 22f\n\t"
+        ".align 2, 0\n"
+    "18: .4byte gUnknown_030012E4\n"
+    "19:\n\t"
+        "ldr r3, [r5]\n\t"
+        "asr r3, r3, #8\n\t"
+        "ldr r1, [r5, #4]\n\t"
+        "asr r1, r1, #8\n\t"
+        "ldr r0, 20f\n\t"
+        "ldr r0, [r0]\n\t"
+        "str r1, [sp]\n\t"
+        "mov r1, #0\n\t"
+        "str r1, [sp, #4]\n\t"
+        "mov r1, #0x2b\n\t"
+        "mov r2, #3\n\t"
+        "b 22f\n\t"
+        ".align 2, 0\n"
+    "20: .4byte gUnknown_030012E4\n"
+    "21:\n\t"
+        "ldr r3, [r5]\n\t"
+        "asr r3, r3, #8\n\t"
+        "ldr r1, [r5, #4]\n\t"
+        "asr r1, r1, #8\n\t"
+        "ldr r0, 25f\n\t"
+        "ldr r0, [r0]\n\t"
+        "str r1, [sp]\n\t"
+        "mov r1, #0\n\t"
+        "str r1, [sp, #4]\n\t"
+        "mov r1, #0x2b\n\t"
+        "mov r2, #4\n\t"
+    "22:\n\t"
+        "bl sub_8025BAC\n\t"
+        "add r3, r0, #0\n\t"
+    "23:\n\t"
+        "cmp r3, #0\n\t"
+        "beq 24f\n\t"
+        "add r2, r3, #0\n\t"
+        "add r2, #0x28\n\t"
+        "mov r1, #1\n\t"
+        "mov r0, #4\n\t"
+        "neg r0, r0\n\t"
+        "ldrb r4, [r2]\n\t"
+        "and r0, r4\n\t"
+        "orr r0, r1\n\t"
+        "strb r0, [r2]\n\t"
+        "mov r0, #5\n\t"
+        "neg r0, r0\n\t"
+        "ldrb r1, [r3, #0xc]\n\t"
+        "and r0, r1\n\t"
+        "strb r0, [r3, #0xc]\n\t"
+    "24:\n\t"
+        "mov r0, #0\n\t"
+        "add sp, #0x28\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r1}\n\t"
+        "bx r1\n\t"
+        ".align 2, 0\n"
+    "25: .4byte gUnknown_030012E4\n"
+    );
 }
-#endif /* NON_MATCHING */
 

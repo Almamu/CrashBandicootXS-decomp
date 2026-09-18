@@ -1,0 +1,4 @@
+# JASC-PAL palette files require literal CRLF line endings (gbagfx's
+# tools/gbagfx/jasc_pal.c parser rejects anything else) - keep git from
+# normalizing them to LF on checkin/checkout.
+*.pal -text
