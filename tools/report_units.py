@@ -47,6 +47,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from chunk_remaining_work import scan_cleanup_candidates  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent
 BUILD_DIR = ROOT / "build" / "expected" / "units"
 CODE3 = ROOT / "expected" / "code_3.s"
@@ -436,6 +439,16 @@ def main():
     categories = {}
     units = []
 
+    # Files with a leftover raw pointer-arithmetic offset cast or raw
+    # hardware address (see chunk_remaining_work.py's scan_cleanup_candidates
+    # / its "Cleanup: raw pointer arithmetic in ..." issues) are matched
+    # but not yet cleaned up per docs/workflow.md step 7. A matched unit
+    # not in this set gets metadata.complete=True; one that is gets
+    # False - objdiff/decomp.dev track this as a status independent of
+    # match percentage, so a byte-exact-but-uncleaned file still shows
+    # 100% matched while correctly not counting as "complete".
+    needs_cleanup = {entry["file"] for entry in scan_cleanup_candidates()}
+
     for i in range(len(UNITS) - 1):
         start, base_rel, category = UNITS[i]
         end = UNITS[i + 1][0]
@@ -449,11 +462,16 @@ def main():
             "name": name,
             "target_path": str(target_o.relative_to(ROOT)),
         }
+        metadata = {}
         if base_rel is not None:
             unit["base_path"] = f"build/crashbandicootxs/{base_rel}"
+            src_path = str(Path(base_rel).with_suffix(".c"))
+            metadata["complete"] = src_path not in needs_cleanup
         if category is not None:
-            unit["metadata"] = {"progress_categories": [category]}
+            metadata["progress_categories"] = [category]
             categories[category] = CATEGORY_NAMES.get(category, category.capitalize())
+        if metadata:
+            unit["metadata"] = metadata
         units.append(unit)
 
     objdiff = {
