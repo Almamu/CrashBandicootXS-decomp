@@ -78,26 +78,16 @@ per-function writeups there the way everything since does. They do have a
 frozen decomp.dev baseline now (`expected/legacy.s`) - see
 [docs/decomp_dev.md](../decomp_dev.md).
 
-See [docs/workflow.md](../workflow.md) for the per-function loop.
+## Parked - NAKED asm transcription (byte-correct, not decompiled C)
 
-## Parked (`NON_MATCHING`, not yet byte-exact)
-
-- **`sub_80010E0`** (`src/system/input_util.c`, an input-polling helper) -
-  a single bit-test compiles with the branch senses swapped from the ROM
-  (same two instructions, same size) in a way that resists every C-level
-  rephrasing tried - see `docs/matching.md`, "Parked, not matched:
-  `sub_80010E0`".
-
-### NAKED transcription (byte-exact, but not real decompiled C)
-
-These functions produce byte-exact ROM output, but only because the
-entire function body is hand-transcribed disassembly wrapped in inline
-`asm()` - the C-level matching attempt failed and the raw bytes got
-embedded as asm instead. They're tracked as parked, not matched. (A
-handful of trivial, pre-existing, genuinely un-improvable NAKED
-wrappers - BIOS SWI stubs, register trampolines, no-op stubs - remain
-correctly `matched`; see `docs/matching.md`.)
-
+- **`sub_80010E0`** (`src/system/input_util.c`, an input-poll-until-
+  button/timeout helper) - a full C reconstruction matched the ROM
+  everywhere except one bit-test whose branch senses compiled swapped
+  from the ROM (same two instructions, same size) in a way that
+  resisted every C-level rephrasing tried. Converted to a byte-verified
+  NAKED asm transcription instead - byte-exact but not real decompiled
+  C, so tracked here as parked, not matched. See
+  `docs/matching/naked-transcription-parked-functions.md`.
 - **`sub_803AA08`** (`src/system/timer_util.c`, arms the claimed
   hardware timer) - a handful of narrow register-allocation gaps a
   plain-C reconstruction couldn't close. GitHub issue #69, see
@@ -121,4 +111,3 @@ correctly `matched`; see `docs/matching.md`.)
   EEPROM load/save block-loop pair for the settings record, built on
   `timer_util.c`'s `EepromConfig` primitives). GitHub issue #4, see
   `docs/matching/issue-4-sio-settings-sync.md`.
-

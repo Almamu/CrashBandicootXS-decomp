@@ -275,3 +275,48 @@ function's own address unchanged. `tools/report_units.py`'s
 Verified via a full clean `rm -rf build && make NON_MATCHING=1 report`
 and `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` (`La suma coincide`).
+
+## Third pass: the remaining parked quartet + `sub_80062A8` matched via NAKED transcription
+
+Closed out this issue's last 4 parked functions (`sub_8006124`,
+`sub_800619C`, `sub_80061E8` in `src/graphics/settings_menu11.c`,
+`sub_8006518` in `src/graphics/settings_menu10.c`) plus `sub_80062A8`
+(`src/graphics/settings_menu14.c`), the second pass's remaining parked
+function - all 5 now byte-exact matched, confirmed by a full clean
+`make compare` (`La suma coincide`).
+
+Same treatment as `docs/matching/issue-7-0x08004d74-overlay-ui.md`'s
+second pass (done in the same session, as one combined batch across
+both issues): each was fully understood already (their own doc comments
+walk every field/branch/call), just blocked by this project's
+well-documented gcc-2.9 register-allocation nondeterminism, so each was
+converted to `NAKED` asm - a mechanical, byte-verified transcription of
+the ROM's own instructions (translated to divided syntax, GNU numeric
+local labels) rather than continuing to fight the compiler over
+individual register choices. `sub_80062A8` in particular is the same
+function whose doc comment above records a genuine correctness bug from
+an `asm("r7")` pin attempt in the second pass - the NAKED rewrite
+sidesteps that whole class of bug by not pinning anything, just
+reproducing the ROM's own register choices verbatim.
+
+`sub_8006124`/`sub_800619C`/`sub_80061E8` and `sub_8006518` needed no
+`ldscript.txt`/file restructuring - each already had its own dedicated
+object file position reserved (`settings_menu11.o`/`settings_menu10.o`),
+just contributing zero bytes to the real build while entirely parked;
+removing their `#if NON_MATCHING` guards (and the corresponding raw
+`.if NON_MATCHING == 0` bytes from `asm/code_3_1_10_14.s`/
+`code_3_1_10_13.s`, now-empty files deleted outright) was a pure
+in-place change. `sub_80062A8` likewise needed no restructuring beyond
+deleting its now-empty `asm/code_3_1_10_15.s`.
+
+Verified via the same full clean `rm -rf build && make NON_MATCHING=1
+report` and `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
+crashbandicootxs.map && make compare` (`La suma coincide`) this whole
+session's combined batch (across both issue #7 and issue #8) required.
+
+### Closing this issue
+
+Every function in GitHub issue #8's original 9-function range
+(`sub_80060AC`-`sub_8006518`, including `sub_80062A8`/`sub_80063D8`
+which that issue's own checklist hadn't been marked complete for) is
+now byte-exact matched. This PR closes issue #8.

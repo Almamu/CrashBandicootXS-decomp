@@ -42,13 +42,18 @@ and [graphics_loading.md](./graphics_loading.md).
   `sub_8001550`, `sub_8001564`, `sub_8001578`, `sub_800158C`,
   `sub_80015A0`, `sub_80015B0`, `sub_80015C0`, `sub_80015D0`,
   `sub_80015E0`, `sub_80015F0`, `sub_8001604`, `sub_8001614`): the
-  fade/screen-mode utility cluster documented in `docs/rom_map.md`,
-  split around two parked functions - see `docs/matching.md`.
+  fade/screen-mode utility cluster documented in `docs/rom_map.md` - see
+  `docs/matching.md`. `sub_80014A4`/`sub_8001524` (also in these two
+  files) are NAKED transcriptions, not decompiled C - see "Parked" below.
+- `src/graphics/text_layout.c` sits at this ROM range but its only
+  function, `sub_8000EE4`, is a NAKED transcription, not decompiled C -
+  see "Parked" below.
 
-- `src/graphics/aabb_util.c` (new file): `sub_8001640`, `sub_8001688`,
-  `sub_80016D0`, `sub_80016DC` - two AABB overlap tests (one already
-  referenced by name from `actor.md`'s `actor_part15.c`) plus
-  `mem_free`/`mem_alloc` wrappers.
+- `src/graphics/aabb_util.c` (new file): `sub_8001640`,
+  `sub_8001688`, `sub_80016D0`, `sub_80016DC` - two AABB overlap tests
+  (one already referenced by name from `actor.md`'s `actor_part15.c`)
+  plus `mem_free`/`mem_alloc` wrappers. `sub_8001624` (also in this
+  file) is a NAKED transcription, not decompiled C - see "Parked" below.
 
 - `src/graphics/intro_screen.c` (new file, replacing `asm/code_3_1.s` -
   boot-adjacent but not part of `src/system/boot_util.c` since
@@ -59,27 +64,40 @@ and [graphics_loading.md](./graphics_loading.md).
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
+## Parked - NAKED asm transcriptions (byte-correct, not decompiled C)
+
+- **`sub_80014A4`** (`src/graphics/fade_screen_mode.c`) - the
+  fade-to-black palette DMA loop. The ROM caches the blended-buffer
+  address in a register across the loop while recomputing the other two
+  DMA fields fresh every iteration; this compiler's loop-invariant
+  hoisting never reproduces that specific split. Converted to a
+  byte-verified NAKED asm transcription (see
+  `src/util/printf_util.c`'s `sub_8000CBC` for the established pattern).
+- **`sub_8001524`** (`src/graphics/fade_screen_mode2.c`) - sets a
+  packed shadow byte's low 3 bits. This compiler always folds the ROM's
+  fresh `movs r1,#8; rsbs r1,r1,#0` mask computation into a `sub`
+  derived from the already-loaded `7` mask - a value-propagation
+  optimization no respelling or barrier defeated. Converted to NAKED.
+- **`sub_8001624`** (`src/graphics/aabb_util.c`) - commits a blend-
+  register shadow. This compiler always fuses the ROM's separate
+  store-then-pointer-increment into one `stmia` writeback instruction.
+  Converted to NAKED.
+- **`sub_8000EE4`** (`src/graphics/text_layout.c`) - word-wrap text
+  renderer. A full C reconstruction matched the ROM instruction-for-
+  instruction except ~8 bytes from two small codegen details
+  (incoming-argument spill ordering, and two loop-bound comparisons
+  compiling one instruction shorter than the ROM's). Converted to NAKED.
+
+These four are byte-exact against the ROM but are NAKED asm
+transcriptions, not decompiled C, so they're tracked here as parked
+rather than matched - see
+`docs/matching/naked-transcription-parked-functions.md` for the full
+derivation of each, and `docs/matching.md`'s original entries ("The
+`0x080014A4`-`0x08001624` fade/screen-mode cluster" and "Parked, not
+matched: `sub_8000EE4`") for the pre-NAKED gap analysis.
+
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
-- **`sub_80014A4`** (`asm/code_3_1_7.s`, C in
-  `src/graphics/fade_screen_mode.c`) - the fade-to-black palette DMA
-  loop. This compiler's loop-invariant hoisting either caches nothing
-  extra or, once any local variable represents the blended-buffer
-  address, hoists it *and* at least one of the other two DMA fields -
-  never the ROM's exact "cache only the buffer" split - see
-  `docs/matching.md`, "The `0x080014A4`-`0x08001624` fade/screen-mode
-  cluster, finally matched".
-- **`sub_8001524`** (`asm/code_3_1_8.s`, C in
-  `src/graphics/fade_screen_mode.c`) - sets a packed shadow byte's low
-  3 bits. This compiler always folds the ROM's fresh `movs r1,#8;
-  rsbs r1,r1,#0` mask computation into a `sub` derived from the
-  already-loaded `7` mask - a value-propagation optimization no
-  respelling or barrier defeated. Same doc section as above.
-- **`sub_8001624`** (`asm/code_3_1_9.s`, C in
-  `src/graphics/fade_screen_mode.c`) - commits a blend-register
-  shadow. This compiler always fuses the ROM's separate
-  store-then-pointer-increment into one `stmia` writeback instruction.
-  Same doc section as above.
 - **`sub_8006600`** (`src/graphics/oam_count.c`) - HUD-icon-plus-number
   renderer. Prologue/epilogue and most register choices now match the ROM;
   four register-letter mismatches remain in the second half, resistant to
@@ -87,11 +105,6 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   matched: `sub_8006600`" for the full account. (Several `overlay_ui`/
   `actor` functions elsewhere hit this same class of gap - see
   [overlay_ui.md](./overlay_ui.md) and [actor.md](./actor.md).)
-- **`sub_8000EE4`** (`src/graphics/text_layout.c`) - word-wrap text
-  renderer. Matches the ROM instruction-for-instruction except ~8 bytes
-  from two small codegen details (incoming-argument spill ordering, and a
-  couple of loop-bound comparisons compiling one instruction shorter than
-  the ROM's) - see `docs/matching.md`, "Parked, not matched: `sub_8000EE4`".
 - **`sub_80073DC`** (`src/graphics/graphics.c`) - builds and queues one
   OAM entry per visible sub-piece of an animated part, plus a combined
   VRAM tile upload. Logic/instruction shape confirmed correct (every
