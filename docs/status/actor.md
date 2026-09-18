@@ -387,6 +387,26 @@ from "core" graphics.
   near-twin, two trivial getters, a no-op stub, a particle-spawn-budget
   driver, an input-poll busy-wait, and a buffer-release/teardown helper.
 
+- `src/graphics/actor_anim.c` (extended, GitHub issue #72, ROM
+  0x0803B4EC-0x0803B8B0 - directly contiguous with this file's existing
+  coverage, which already ended right at 0x0803B4EC): `sub_803B4EC` (an
+  animation-frame-advance/loop-back function, plus a `+0x50` trampoline
+  dispatch when the "held" flag is set) and 15 more "kind" teardown/
+  dispatch handlers through `sub_803B884` (the same `struct linked_node`
+  unlink-and-free shape, and the same `sub_80321D0`-based teardown shape,
+  already established earlier in this file). Also recovered 7 functions
+  the original disassembly never gave their own `thumb_func_start` label
+  for, sandwiched inside what looked like padding/literal-pool gaps
+  between the labelled ones (`sub_803B54C`, `sub_803B550`, `sub_803B57C`,
+  `sub_803B5AC`, `sub_803B5DC`, `nullsub_44`, `sub_803B5E4` - see
+  `expected/corrections.txt`'s matching `split` entries, and
+  `docs/matching/issue-72-0x0803b4ec-actor.md` for how each was found
+  and confirmed via a from-scratch `arm-none-eabi-as`+`objdump`
+  reassembly of the original raw block, not by eyeballing the
+  disassembly's padding). `struct anim_frame_record`'s `unknown_04[4]`
+  became two named `s16` fields (`loopThreshold`/`loopBase`), both read
+  by `sub_803B4EC`.
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 

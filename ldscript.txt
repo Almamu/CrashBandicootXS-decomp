@@ -342,7 +342,6 @@ SECTIONS
         build/crashbandicootxs/src/util/math_div_util.o(.text);
         build/crashbandicootxs/src/graphics/actor_aabb_setup.o(.text);
         build/crashbandicootxs/src/graphics/actor_anim.o(.text);
-        build/crashbandicootxs/asm/code_3_3.o(.text);
 
         /* Data */
         build/crashbandicootxs/data/data.o(.rodata);

@@ -408,7 +408,7 @@ UNITS = [
     (0x0803B058, "src/graphics/actor_anim.o", "graphics"),
     (0x0803B060, "src/graphics/actor_anim.o", "actor"),  # sub_803B060/GetAnimFrameData/sub_803B0A8/sub_803B0F0 + 20 near-identical gStaticData_087E4DF4 "kind" teardown handlers (sub_803B0C4-sub_803B440); matched, issue #71
     (0x0803B46C, None, "actor"),  # sub_803B46C - fixed-position OAM setup, near-identical twin of the already-parked sub_802C2FC - NAKED transcription, byte-correct but not real decompiled C, tracked as parked (same `| 0`-dead-store and register-budget gaps a plain-C reconstruction couldn't close) - see docs/matching/issue-71-0x0803b060-actor.md, issue #71
-    (0x0803B4EC, None, "actor"),  # sub_803B4EC onward, unattempted, medium confidence
+    (0x0803B4EC, "src/graphics/actor_anim.o", "actor"),  # sub_803B4EC, plus 7 hidden functions with no thumb_func_start of their own (sub_803B54C/sub_803B550/sub_803B57C/sub_803B5AC/sub_803B5DC/nullsub_44/sub_803B5E4 - see expected/corrections.txt's split entries) and 18 more "kind" teardown/dispatch handlers through sub_803B884; matched, issue #72
     (0x0803B8B0, None, None),  # sentinel end address, not a real unit
 ]
 
