@@ -95,10 +95,16 @@ system from "core" system startup/init code.
   `game_loop17.c`-`20.c` first): `sub_800FEB0` - resets
   `self`'s collision-response state/timer/neighbor-list-pointer block
   on reset
-- `src/system/game_loop23.c` (GitHub issue #13): `sub_80106DC`
-  (viewport collision-box refresh), `sub_8010708`/`sub_801070C`
-  (neighbor-list "get prev"/"get next"), `sub_8010710`/`sub_8010714`
-  ("set prev"/"set next"), `sub_8010718` (UNUSED trivial constant)
+- `src/system/game_loop23.c` (GitHub issue #13, third pass for
+  `sub_8010674`): `sub_8010674` (AABB-overlap test between `self`'s
+  own table-driven half-width/half-height box and a caller-supplied
+  box, prepended ahead of the rest since it's immediately
+  ROM-adjacent), `sub_80106DC` (viewport collision-box refresh),
+  `sub_8010708`/`sub_801070C` (neighbor-list "get prev"/"get next"),
+  `sub_8010710`/`sub_8010714` ("set prev"/"set next"), `sub_8010718`
+  (UNUSED trivial constant). See
+  [docs/matching/issue-13-fc70-second-continuation.md](../matching/issue-13-fc70-second-continuation.md)
+  for `sub_8010674`'s register-pinning/toolchain-bug notes.
 - `src/system/game_loop24.c` (GitHub issue #13): `sub_8010804` (a
   state-3-countdown-expiry sweep over `gUnknown_0300130C`),
   `sub_801085C` (viewport trampoline-pair/cue-1 firing)
@@ -120,6 +126,29 @@ system from "core" system startup/init code.
   pair) and `sub_8010784`/`sub_80107C4` (two fixed single-octant
   Bresenham-line-style step algorithms). See
   [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
+- `src/system/game_loop35.c` (GitHub issue #13, third pass, new file -
+  it sits between the still-raw `sub_800FF0C` and `sub_80104E4`, so it
+  can't join either neighbor's file): `sub_8010480` - a
+  `self+0x4d`-gated reset of `self+0x30`/`self+0x38` via the
+  `self+0x20`-pointer-to-manager/`self+0x2d`-tag/0x1c-stride
+  hitbox-record convention `sub_800D040` (game_loop6.c) also uses,
+  then a tail call to `sub_8007A84`. See
+  [docs/matching/issue-13-fc70-second-continuation.md](../matching/issue-13-fc70-second-continuation.md).
+- `src/system/game_loop18.c` (GitHub issue #38, follow-up pass): `sub_8024344`
+  (medal item-list per-flag nonzero scan) - prepended ahead of
+  `sub_80243E0`, contiguous with `game_loop17.c` in ROM. See
+  [docs/matching/issue-38-sound-channel-family.md](../matching/issue-38-sound-channel-family.md)
+  for the `ip`/r12 pin plus the pointer-arithmetic-canonicalization
+  gotcha that closed this out.
+- `src/system/game_loop37.c` (GitHub issue #38, follow-up pass):
+  `sub_8024640` (per-item sound-channel driver loop), `sub_80246D8`
+  (its "find next active item" index scanner) - also carries
+  `sub_8024590`/`sub_8024708`'s NON_MATCHING reconstructions, see below.
+  See [docs/matching/issue-38-sound-channel-family.md](../matching/issue-38-sound-channel-family.md).
+- `src/system/game_loop38.c` (GitHub issue #38, follow-up pass):
+  `sub_8024790` - the tail half of `sub_8024640`'s per-item body, reused
+  standalone. See
+  [docs/matching/issue-38-sound-channel-family.md](../matching/issue-38-sound-channel-family.md).
 - `src/system/game_loop27.c` (GitHub issue #14, recategorized
   graphics->game_loop - a direct continuation of the same physics/
   collision subsystem file family): `sub_8010A0C`-`sub_8010B68` (24
@@ -242,28 +271,22 @@ plain C didn't converge.
   group/item list counter with a 19-entry jump table; real bytes stay
   in `asm/code_3_2_17_255d4.s`. See
   [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
-
-## Left raw, semantics traced but not byte-matching (GitHub issue #38)
-
-- **`sub_8024344`** (ROM `0x08024344`, real bytes in
-  `asm/code_3_2_17_24344.s`) - scans a medal item list for a nonzero
-  `u16` flag; every field/offset/branch confirmed, but the ROM keeps its
-  `flagIdx` parameter alive in `ip`/r12 across the whole function rather
-  than a normally-allocated register. See
-  [docs/matching/issue-38-medal-results-tally.md](../matching/issue-38-medal-results-tally.md).
-- **`sub_8024590`/`sub_8024640`/`sub_80246D8`/`sub_8024708`** (ROM
-  `0x08024590`-`0x08024783`, real bytes in `asm/code_3_2_17_24590.s`) -
-  a sound-channel-handle helper family (start/wait-then-play cue
-  selection, its per-item driver loop, an index scanner, and a
-  VRAM-bank-toggling tile-asset streamer + palette DMA + second
-  `DISPCNT` writer); every field/offset/call argument confirmed, gap is
-  register-allocation-level throughout. See
-  [docs/matching/issue-38-medal-results-tally.md](../matching/issue-38-medal-results-tally.md).
-- **`sub_8024790`** (ROM `0x08024790`, real bytes in
-  `asm/code_3_2_17_24790.s`) - the tail half of `sub_8024640`'s
-  per-item body, reused standalone; same open gap as the group above.
-  See
-  [docs/matching/issue-38-medal-results-tally.md](../matching/issue-38-medal-results-tally.md).
+- **`sub_8024590`** (`src/system/game_loop37.c`, GitHub issue #38,
+  follow-up pass) - starts/re-selects a sound cue and plays its
+  secondary sfx immediately or after a busy-wait; real bytes stay in
+  `asm/code_3_2_17_24590.s`. Every field/offset/branch/call argument
+  confirmed; the residual gap is a redundant register-copy step this
+  reconstruction's `-0x80` OR-mask materialization collapses away via
+  constant propagation, in two call sites. See
+  [docs/matching/issue-38-sound-channel-family.md](../matching/issue-38-sound-channel-family.md).
+- **`sub_8024708`** (`src/system/game_loop37.c`, GitHub issue #38,
+  follow-up pass) - the VRAM-bank-toggling tile-asset streamer + palette
+  DMA + second `DISPCNT` writer; real bytes stay in
+  `asm/code_3_2_17_24708.s`. Every field/offset/branch/call argument
+  confirmed; the residual gap is one branch's scratch-register choice
+  (`r1` here vs. the ROM's `r2`) for an address computation whose
+  sibling branch already matches exactly. See
+  [docs/matching/issue-38-sound-channel-family.md](../matching/issue-38-sound-channel-family.md).
 
 ## Still raw, category-mapped (GitHub issue #12/#34/#40)
 
@@ -289,17 +312,18 @@ plain C didn't converge.
   several sibling calls within this same still-raw neighborhood; left
   untouched for this pass - see
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md).
-- **`sub_800FF0C`/`sub_80104E4`/`sub_8010480`/`sub_8010674`**
-  (`asm/code_3_2_17_e560_ff0c.s`, ROM `0x0800FF0C`-`0x080106DC`, GitHub
-  issue #13) - `sub_800FF0C` is a large (~660-instruction) projectile/
-  hazard-spawn dispatcher with two big jump tables, and `sub_80104E4`
-  a further ~195-instruction state dispatcher, both out of scope for a
-  single pass; `sub_8010480`/`sub_8010674` are read and understood
-  (a `self+0x20`-pointer-to-manager/28-byte-stride hitbox-record reset
-  helper, and an AABB-overlap test) but this compiler's own register
-  allocation for both spreads more live values across r0-r7 than the
-  ROM's tighter build needs - see
-  [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
+- **`sub_800FF0C`** (`asm/code_3_2_17_e560_ff0c.s`, ROM `0x0800FF0C`,
+  GitHub issue #13) - a large (~660-instruction) projectile/
+  hazard-spawn dispatcher with two big jump tables and packed bitfield
+  arguments; still out of scope for a single pass - see
+  [docs/matching/issue-13-fc70-second-continuation.md](../matching/issue-13-fc70-second-continuation.md)
+  (`sub_8010480`/`sub_8010674`, the two functions that used to share
+  this raw span with it, are now matched - see `game_loop35.c`/
+  `game_loop23.c` above).
+- **`sub_80104E4`** (`asm/code_3_2_17_e560_104e4.s`, ROM `0x080104E4`,
+  GitHub issue #13) - a further ~195-instruction state dispatcher
+  calling several still-raw siblings; not attempted - see
+  [docs/matching/issue-13-fc70-second-continuation.md](../matching/issue-13-fc70-second-continuation.md).
 - **`UpdateGameFrame`** (`asm/code_3_2_17_225a0.s`, ROM `0x080225A0`) -
   the main per-frame game-loop driver, a ~730-instruction jump-table
   state machine. Not understood branch-by-branch with the precision a

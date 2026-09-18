@@ -24,8 +24,37 @@ are named by the lower 5 hex digits of their first function's address
 `..._2f7b0.s`, `..._2f97c.s`, `..._2fa04.s`, `..._2fa38.s`,
 `..._2fbf0.s`).
 
-## Matched (19 of 25 functions)
+## Matched (20 of 25 functions)
 
+- **`sub_802F164`** (`src/graphics/actor_part43.c`) - state-machine
+  update for the same singleton: while `self+0x28` is one of the
+  "active" states (1/6/2/3), resets `self`'s table index/anim to the
+  idle frame if it wasn't already, latches the target position at
+  `self+0x1c`/`self+0x20` from the two arguments, and re-arms state 6
+  (playing a cue only on the *first* transition into it). While the
+  current game-mode flag at `gUnknown_030012C0+0x8c` is clear and the
+  `gUnknown_030014EC` frame-timer has advanced far enough, drives a
+  5-case round-robin (`gUnknown_030014F0`) once every >0xbe-frame
+  window via a real `switch` on a dense 0-4 case set - the switch's
+  own generated bounds check turned out to be exactly the ROM's own
+  `cmp r0, #4; bls ...; b ...` pair, so no separate guard `if` was
+  needed (an explicit `if (v <= 4) switch (v) {...}` duplicated that
+  bounds check into two, since a bare global read isn't CSE'd with a
+  switch's own re-read of the same global). The reset block's
+  "materialize a fresh anim halfword/zero-byte/zero-word triple" idiom
+  and two of the trailing global zero-stores needed the same
+  register-pinned-block idiom already established throughout
+  `actor_part43.c`/`actor_part44.c` (explicit `r0`/`r1`/`r2`/`r3`/`r4`
+  pins matching the ROM's own scratch-register choices, including a
+  pinned pointer-typed pair - `r2`=`&gUnknown_03001508`,
+  `r1`=`&gUnknown_0300150C` - to get the ROM's specific "load both
+  addresses before either store" scheduling instead of this compiler's
+  default "reload the same register per store" pattern); the case-3
+  accumulator-clamp arm needed its cap value re-read through the same
+  pinned pointer *after* the `sub_803ADB4` call (a fresh `register s32
+  cap asm("r4") = *maxPtr;` declared after the store, not before) to
+  match the ROM's own redundant post-call reload rather than reusing
+  the pre-call value.
 - **`sub_802F0DC`** (`src/graphics/actor_part43.c`) - constructor/
   reset: while the singleton flag (`gUnknown_03001506`) is off, resets
   `self` to state 5/table-index 4, plays a cue, and conditionally
@@ -198,31 +227,46 @@ are named by the lower 5 hex digits of their first function's address
   transcription of a substantial function doesn't count as "matched"
   under this project's current tracking policy, so
   `tools/report_units.py` keeps this address's `base_object` as `None`.
-
-## Left raw (4 of 25 functions, not attempted this pass)
-
-- **`sub_802F164`** (`asm/code_3_2_20_28568_c99c_2f164.s`) - a
-  ~160-instruction state-machine update for the singleton, including a
-  `mov pc, r0` computed-goto 5-case jump table on
-  `gUnknown_030014F0`. Semantics are largely readable (state
-  transitions gated on `self+0x28`, timing checks via `sub_802A4D4`
-  against `gUnknown_030014EC`, and per-case accumulator/threshold
-  manipulation of `gUnknown_030014FC`/`gUnknown_030014F8`/
-  `self+0x54`), but the size and the jump-table reconstruction were
-  out of scope for this pass; left untouched in the raw `.s` file.
-- **`sub_802F7B0`**/**`sub_802F8E8`**
-  (`asm/code_3_2_20_28568_c99c_2f7b0.s`) - a pair of ~130-170-
-  instruction VRAM tile-remap loops (4-bit palette-index repacking
-  into a `0x0600D000`-based tile buffer via `REG_DMA`-adjacent hardware
-  writes), each with heavy `sb`/`sl`/`r8` register pressure across a
-  nested loop. Not attempted this pass given the size of the chunk.
-- **`sub_802FA38`** (`asm/code_3_2_20_28568_c99c_2fa38.s`) - a
+- **`sub_802FA38`** (`src/graphics/actor_part46b.c`) - a
   ~150-instruction function combining a position update (via
   `self+0x60`/`0x64`/`0x68` velocity-like fields), a `self+0x2c`
-  threshold flag, and a player-distance/push-out damage calculation
-  (`sub_803ADB4`-scaled deltas feeding `sub_802E674`) plus a
-  `self+0x7c`-gated `sub_802A6EC`/`sub_803AD80` trampoline pair - heavy
-  `sb`/`r8` register pressure throughout. Not attempted this pass.
+  threshold flag, a `gStaticData_0817C260` stride-8 keyframe-table
+  lookup/`sub_803AD84` dispatch, and a player-distance/push-out damage
+  calculation (`sub_803ADB4`-scaled deltas feeding `sub_802E674`) plus
+  a `self+0x7c`-gated `sub_802A6EC`/`sub_803AD80` trampoline pair.
+  Fully understood and every load/store, branch and call transcribed
+  is confirmed correct; parked because the keyframe-table lookup is
+  the exact same categorical r7-hazard shape as `sub_802C208`/
+  `sub_802F748`/`sub_8030574` (the ROM keeps the table's base address
+  alive in `r7` for the whole function - see those entries), and the
+  damage-calculation block that follows compounds this with `r8`/`sb`
+  register pressure held live across two `sub_803ADB4` calls and a
+  `sub_802E674` call - no C-level technique (register-variable pins,
+  local-copy barriers, splitting into helper calls) reached this exact
+  allocation without either losing the ROM's registers or
+  reintroducing the r7 hazard.
+- **`sub_802F7B0`**/**`sub_802F8E8`** (`src/graphics/actor_part45d.c`)
+  - a pair of ~130-170-instruction VRAM tile-remap loops (4-bit
+  palette-index repacking into a `0x0600D000`-based tile buffer via
+  raw `REG_DMA3SAD`/`DAD`/`CNT` pokes at `0x040000D4`), each with three
+  high registers (`r8`, `sb`, `sl`) simultaneously live across a nested
+  loop. Fully understood and every load/store, branch and call
+  transcribed is confirmed correct; parked because every other
+  DMA3-setup function in this codebase with the same
+  `0x040000D4`/`0x0600D000` literal-pool shape (`actor_part26b.c`,
+  `actor_part74.c`, `actor_part75.c`, `fade_screen_mode.c`,
+  `hud_digit_array.c`, `settings_menu8e.c`, `timer_util_aa90.c`) is
+  NAKED too - this compiler's register allocator never reproduces the
+  ROM's specific three-high-register nested-loop allocation for this
+  shape, and the two calls this project's usual register-pin idioms
+  rely on (`sub_8029AC4`, called mid-loop-setup) leave no slack to pin
+  three high registers across the loop body without the compiler
+  spilling or reordering something else.
+
+## Left raw (0 of 25 functions)
+
+All 25 functions in this chunk are now either matched or parked
+(`NON_MATCHING` or NAKED); none are left raw.
 
 See [docs/status/actor.md](../status/actor.md) for the running
 matched/parked list this entry feeds into.

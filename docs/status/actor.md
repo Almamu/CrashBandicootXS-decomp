@@ -344,17 +344,18 @@ from "core" graphics.
 - `src/graphics/actor_part43.c`/`actor_part44.c`/`actor_part45.c`/
   `actor_part46.c` (new files, GitHub issue #56, ROM
   0x0802F0DC-0x0802FBF0 - a second boss-weapon "spawn/pre-attack"
-  singleton and its `self` object, non-adjacent since the left-raw
-  `sub_802F164`/`sub_802F7B0`/`sub_802F8E8`/`sub_802FA38` and the
-  parked `sub_802F338`/`sub_802FA04` and NAKED-transcribed
-  `sub_802F748` (`actor_part44b.c` - see below) sit
-  interleaved between them; see
+  singleton and its `self` object, non-adjacent since the parked
+  `sub_802F338`/`sub_802FA04`, the NAKED-transcribed `sub_802F748`
+  (`actor_part44b.c` - see below), and the NAKED-transcribed
+  `sub_802F7B0`/`sub_802F8E8`/`sub_802FA38` (`actor_part45d.c`/
+  `actor_part46b.c` - see below) sit interleaved between them; see
   [docs/matching/issue-56-0x0802f0dc-actor.md](../matching/issue-56-0x0802f0dc-actor.md)):
-  `sub_802F0DC`, `sub_802F3BC`, `sub_802F46C`, `sub_802F47C`,
+  `sub_802F0DC`, `sub_802F164`, `sub_802F3BC`, `sub_802F46C`, `sub_802F47C`,
   `sub_802F4AC`, `sub_802F4C0`, `sub_802F4CC`, `sub_802F50C`,
   `sub_802F540`, `sub_802F570`, `sub_802F5AC`, `sub_802F5E4`,
   `sub_802F640`, `sub_802F69C`, `sub_802F6DC`,
-  `sub_802F7A4`, `sub_802F97C`, `sub_802FA34` - a constructor/reset, an accumulator-drain/reward-
+  `sub_802F7A4`, `sub_802F97C`, `sub_802FA34` - a constructor/reset, a
+  state-machine update, an accumulator-drain/reward-
   dispenser, accessors, accumulator drivers, idle-state-reset idioms,
   and the singleton's teardown/destructor, all sharing
   `actor_part17.c`/`actor_part18.c`/`actor_part20.c`'s established
@@ -550,6 +551,26 @@ plain C didn't converge.
   keyframe-table AABB lookup shape as `sub_8030574`, minus its
   state-transition tail. See
   `docs/matching/issue-58-0x08030574-actor.md`.
+- **`sub_802FA38`** (`src/graphics/actor_part46b.c`, issue #56) -
+  position-update/collision-damage function for the issue #56
+  singleton's `self` object; its keyframe-table lookup is the same
+  `gStaticData_0817C260` stride-8 r7-hazard shape as `sub_802C208`/
+  `sub_802F748`/`sub_8030574` above, compounded with `r8`/`sb`
+  register pressure held live across two `sub_803ADB4` calls and a
+  `sub_802E674` call in the trailing damage-calculation block. See
+  `docs/matching/issue-56-0x0802f0dc-actor.md`.
+- **`sub_802F7B0`**/**`sub_802F8E8`** (`src/graphics/actor_part45d.c`,
+  issue #56) - a pair of VRAM tile-remap/nibble-repack loops (4-bit
+  palette-index packing into a `0x0600D000`-based tile buffer via raw
+  `REG_DMA3SAD`/`DAD`/`CNT` pokes at `0x040000D4`); each nested loop
+  keeps three high registers (`r8`, `sb`, `sl`) simultaneously live
+  across the whole loop body. Every other DMA3-setup function in this
+  codebase with the same `0x040000D4`/`0x0600D000` literal-pool shape
+  (`actor_part26b.c`, `actor_part74.c`, `actor_part75.c`,
+  `fade_screen_mode.c`, `hud_digit_array.c`, `settings_menu8e.c`,
+  `timer_util_aa90.c`) is NAKED too, not plain C with
+  `REG_DMA3SAD`/`DAD`/`CNT` macros. See
+  `docs/matching/issue-56-0x0802f0dc-actor.md`.
 - **`sub_8030734`** (`src/graphics/actor_part21d.c`) - `sub_80306AC`'s
   companion: ramps `gUnknown_03001560` toward a fixed target and, on
   its phase counter's armed tick, spawns via `sub_802E62C`. A plain-C
@@ -608,6 +629,42 @@ plain C didn't converge.
   meter nibble-repack loop (docs/rom_map.md's "procedurally-generated
   VRAM fill-level meter" finding); inner loop holds `r8`/`sb`/`sl`/`ip`
   live simultaneously. See `docs/matching/issue-58-0x08030574-actor.md`.
+- **`sub_8011BD4`** (`src/graphics/actor_part82.c`, GitHub issue #16) -
+  docs/rom_map.md's documented companion state machine to `sub_8016288`
+  (still raw), sharing its type-`0x1d` gate: a 25-case jump table on a
+  second parameter, with two of those cases sharing a further 7-case
+  sub-dispatch on a nibble of a child object's `+4` byte. The single
+  largest still-unmatched member of the `gStaticData_0816BF20` action-
+  dispatch-table family (1420 B) - a first plain-C attempt at the
+  smaller sibling `sub_8012420` (below) diverged immediately at the
+  prologue, and a jump table this wide (25 outer cases plus two
+  independent 7-case inner ones) was judged not worth the same
+  register-pinning gauntlet already exhausted throughout this section
+  for smaller members of the same table. See
+  `docs/matching/issue-16-actor-remainder.md`.
+- **`sub_8012420`**, **`sub_8012694`**, **`sub_801283C`**
+  (`src/graphics/actor_part84.c`, GitHub issue #16) - three more
+  members of the same 42-slot action-dispatch table
+  (`gStaticData_0816BF20`): a `part`-visibility/OAM-priority
+  housekeeping pass with a trailing 22-case jump table, a proximity-
+  gated child-object-type dispatch that fires a `+0x50`/`+0x54`
+  trampoline pair, and a proximity-triggered indicator dispatching on
+  `self+8`'s type against per-type distance thresholds. A first plain-C
+  attempt at `sub_8012420` compiled logically-equivalent code that
+  diverged in overall stack-frame shape (the ROM reserves an unused
+  8-byte stack slot and a 5th callee-saved register, `r7`, that the
+  straightforward translation never needed) - the same unexplained-
+  frame-shape gap this table's sibling members hit throughout this
+  section. See `docs/matching/issue-16-actor-remainder.md`.
+- **`sub_8012AF4`**, **`sub_8012D24`** (`src/graphics/actor_part83.c`,
+  GitHub issue #16) - the chunk's final two functions: an OAM-
+  visibility/priority pass keyed on a `gStaticData_0816B304` per-tag
+  12-byte stack-local record (copied via `ldm`/`stm`, with `r8` holding
+  a value across several calls - a real step up in register-allocation
+  complexity from every other member of this table matched so far), and
+  a further sibling/callee handling frame-counter thresholds, D-pad
+  input, and `sub_8012A7C`'s busy-check. See
+  `docs/matching/issue-16-actor-remainder.md`.
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
@@ -676,6 +733,20 @@ embedded as asm instead. They're tracked as parked, not matched.
   the rest of the function hasn't been through the same register-pin
   iteration yet. See
   [docs/matching/issue-9-10-0x0800a884-graphics.md](../matching/issue-9-10-0x0800a884-graphics.md).
+- **`sub_800AB9C`** (`src/graphics/actor_part81.c`, GitHub issue #9/#10;
+  real bytes in `asm/code_3_2_16_ab9c.s`) - a two-flag-gated teardown/
+  notification step on the same still-unnamed "big object" (0x108+
+  bytes) `actor_part15.c`/`actor_part77.c` work on: relocates `self`'s
+  AABB onto a second stack slot before unpacking it for `sub_8008A40`
+  (bit 1), and clears `self+0x108`/`self+0x10c` plus fires three
+  teardown/notification calls (bit 7). Every instruction matches except
+  one gap: the ROM evaluates `sub_8008A40`'s 7 arguments in an order
+  (stack-bound values interleaved with their own store, register
+  values and the `r0`-bound `manager` last) this compiler never
+  reproduces from any C-level phrasing tried - the same already-
+  accepted-as-unclosable class as `sub_8008AD8`/`sub_8008D80` right
+  next door (`actor_part7.c`) and `PlaySfx` (issue #3). See
+  [docs/matching/issue-9-10-0x0800ab9c-graphics.md](../matching/issue-9-10-0x0800ab9c-graphics.md).
 - **`sub_800A528`/`sub_800A590`** (`src/graphics/actor_part47.c`,
   GitHub issue #9; real bytes in `asm/code_3_2_11_a528.s`) - a moving-
   platform "ride along" hookup, nudging `self->y` by the delta between
@@ -908,20 +979,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   #22) - a ~480-instruction jump-table player action-state machine
   plus two high-register-pressure helpers it calls; left raw, out of
   scope for this pass - see `docs/matching/issue-22-0x08017a44-actor.md`.
-- **`sub_802F164`** (`asm/code_3_2_20_28568_c99c_2f164.s`, GitHub issue
-  #56) - a ~160-instruction state-machine update for the "spawn/pre-
-  attack" singleton, including a `mov pc, r0` computed-goto 5-case
-  jump table; left raw, out of scope for this pass - see
-  `docs/matching/issue-56-0x0802f0dc-actor.md`.
-- **`sub_802F7B0`**/**`sub_802F8E8`**
-  (`asm/code_3_2_20_28568_c99c_2f7b0.s`, GitHub issue #56) - a pair of
-  ~130-170-instruction VRAM tile-remap loops with heavy `sb`/`sl`/`r8`
-  register pressure; left raw, out of scope for this pass - see
-  `docs/matching/issue-56-0x0802f0dc-actor.md`.
-- **`sub_802FA38`** (`asm/code_3_2_20_28568_c99c_2fa38.s`, GitHub issue
-  #56) - a ~150-instruction position-update/collision-damage function
-  with heavy `sb`/`r8` register pressure; left raw, out of scope for
-  this pass - see `docs/matching/issue-56-0x0802f0dc-actor.md`.
 - **`sub_8011BD4`** (`asm/code_3_2_17_11bd4.s`, ROM 0x08011BD4, GitHub
   issue #16) - `docs/rom_map.md`'s documented ~1420B, 25-case/7-case
   nested jump-table companion state machine to `sub_8016288` (still
@@ -953,13 +1010,15 @@ embedded as asm instead. They're tracked as parked, not matched.
   update/collision dispatchers built on unmatched
   `sub_8008200`/`sub_8026628`/`sub_8026C3C`/`sub_8026BF8` - see
   `docs/matching/issue-9-0x08007634-actor.md`.
-- **`sub_800A884`/`sub_800AAEC`/`sub_800AB9C`/`sub_800AC2C`/
-  `sub_800AFF4`** (`asm/code_3_2_16.s`, ROM 0x0800A884-0x0800B270,
-  GitHub issue #9) - a reentrancy-guard wrapper, a global-list iterator,
-  a hitbox-lookup dispatcher, a 38-case player action-state machine,
-  and a high-register-pressure hitbox commit function; each calls one
-  or more still-unexamined helpers - see
-  `docs/matching/issue-9-0x08007634-actor.md`.
+- **`sub_800AAEC`** (`asm/code_3_2_16.s`, ROM 0x0800AAEC, GitHub issue
+  #9/#10) - a global-list iterator blocked on still-fully-unexamined
+  `sub_800CD00`; left raw - see
+  `docs/matching/issue-9-10-0x0800ab9c-graphics.md`.
+- **`sub_800AC2C`/`sub_800AFF4`** (`asm/code_3_2_16_ac2c.s`, ROM
+  0x0800AC2C-0x0800B270, GitHub issue #9/#10) - a 38-case player
+  action-state machine and a high-register-pressure hitbox commit
+  function, each calling one or more still-unexamined helpers; left
+  raw - see `docs/matching/issue-9-10-0x0800ab9c-graphics.md`.
 - **`sub_80159F8`/`sub_8015C6C`/`sub_8015DF8`** (`asm/code_3_2_17_159f8.s`,
   ROM 0x080159F8-0x08015FDC, GitHub issue #19) - three large jump-table
   state-machine dispatchers on the part object's velocity fields; left
