@@ -1,0 +1,275 @@
+#include "core.h"
+
+/* Same "spawn/pre-attack" singleton family as actor_part39.c - see that
+ * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md.
+ *
+ * A ~150-instruction position-update/collision-damage function for this
+ * singleton's `self` object: sets `self+0x2c` from a `self+0x34` depth
+ * threshold, advances `self+0x1c`/`0x20`/`0x24` by `self+0x60`/`0x64`/
+ * `0x68`'s velocity-like fields (each shifted down by 4), then indexes
+ * `gStaticData_0817C260` (an `{s16 baseOff; s16 count; s16 subOffset}`
+ * keyframe table, the same stride-8 shape as `sub_802C208`/
+ * `sub_802F748`/`sub_8030574`) by `self+0x28`'s state to compute a
+ * `sub_803AD84` dispatch address. While `self+0xc == 3`, runs a
+ * push-out/damage calculation against the player (`gUnknown_03000884`):
+ * scales a `self+0x24`-relative Z gap through `sub_803ADB4`, gates on a
+ * `self+0x34` depth ceiling, then computes a rotated X/Z delta magnitude
+ * (two `sub_803ADB4`-scaled products, summed via the standard
+ * `sign = v>>31; v ^= sign; v -= sign;` absolute-value idiom) against a
+ * threshold before calling `sub_802E674` (a hit/push-out reaction) and
+ * cycling a `self+0x5c` counter through three cooldown lengths stored
+ * into `self+0x58`. Finally, unless `self+0x7c` is set, fires a
+ * proximity check (`sub_802A6EC`) that dispatches two `self+0x50`-table
+ * trampolines (index 0x10 on the player, index 4 on `self`) when it
+ * hits, and separately fires a third `self+0x50`-table trampoline
+ * (index 8) when `self+0x28 == 3` and `self+0x20` clears a height
+ * threshold, else falls back to `sub_802A7B8` unconditionally.
+ *
+ * Transcribed as NAKED asm, not plain C: the keyframe-table lookup is
+ * the exact same categorical r7-hazard shape as `sub_802C208`/
+ * `sub_802F748`/`sub_8030574` (this agbcc build keeps the table's base
+ * address alive in r7 for the whole function - see those functions'
+ * comments and docs/matching.md's `sub_8007DBC`/`sub_8006600` entries;
+ * no C-level rephrasing/register pin reaches this exact allocation).
+ * The damage-calculation block that follows compounds this with heavy
+ * `r8`/`sb` (r9) register pressure held live across two `sub_803ADB4`
+ * calls and a `sub_802E674` call, which resisted every C-level
+ * technique tried (register-variable pins, local-copy barriers,
+ * splitting the calculation into helper calls) without either losing
+ * the ROM's exact register allocation or reintroducing the r7 hazard
+ * above. Every load/store, branch and call below is confirmed correct
+ * against the ROM disassembly - see docs/matching/issue-56-0x0802f0dc-actor.md. */
+extern s32 sub_803AD84(void *addr, void *arg1, void *tableEntry, void *fn);
+extern s32 sub_803ADB4(s32 arg0, s32 arg1);
+extern s32 sub_802E674(s32 x, s32 z, s32 arg2, s32 arg3);
+extern u8 sub_802A6EC(void *self);
+extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
+extern void sub_802A7B8(void *self);
+extern u8 gStaticData_0817C260[];
+extern void *gUnknown_03000884;
+
+NAKED void sub_802FA38(void *selfArg)
+{
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "mov r7, sb\n\t"
+        "mov r6, r8\n\t"
+        "push {r6, r7}\n\t"
+        "sub sp, #4\n\t"
+        "add r4, r0, #0\n\t"
+        "ldr r1, [r4, #0x34]\n\t"
+        "mov r0, #0xd8\n\t"
+        "lsl r0, r0, #5\n\t"
+        "cmp r1, r0\n\t"
+        "ble 1f\n\t"
+        "add r1, r4, #0\n\t"
+        "add r1, #0x2c\n\t"
+        "mov r0, #1\n\t"
+        "b 2f\n\t"
+    "1:\n\t"
+        "add r1, r4, #0\n\t"
+        "add r1, #0x2c\n\t"
+        "mov r0, #0\n\t"
+    "2:\n\t"
+        "strb r0, [r1]\n\t"
+        "ldr r1, [r4, #0x60]\n\t"
+        "asr r1, r1, #4\n\t"
+        "ldr r0, [r4, #0x1c]\n\t"
+        "add r0, r0, r1\n\t"
+        "str r0, [r4, #0x1c]\n\t"
+        "ldr r1, [r4, #0x64]\n\t"
+        "asr r1, r1, #4\n\t"
+        "ldr r0, [r4, #0x20]\n\t"
+        "add r0, r0, r1\n\t"
+        "str r0, [r4, #0x20]\n\t"
+        "ldr r1, [r4, #0x68]\n\t"
+        "asr r1, r1, #4\n\t"
+        "ldr r0, [r4, #0x24]\n\t"
+        "add r0, r0, r1\n\t"
+        "str r0, [r4, #0x24]\n\t"
+        "ldr r1, 3f\n\t"
+        "ldr r0, [r4, #0x28]\n\t"
+        "lsl r3, r0, #3\n\t"
+        "add r0, r3, r1\n\t"
+        "mov r7, #2\n\t"
+        "ldrsh r2, [r0, r7]\n\t"
+        "add r7, r1, #0\n\t"
+        "cmp r2, #0\n\t"
+        "ble 4f\n\t"
+        "mov r1, #4\n\t"
+        "ldrsh r0, [r0, r1]\n\t"
+        "add r0, r4, r0\n\t"
+        "ldr r1, [r0]\n\t"
+        "lsl r0, r2, #3\n\t"
+        "add r0, r0, r1\n\t"
+        "sub r0, #8\n\t"
+        "ldr r5, [r0]\n\t"
+        "ldr r6, [r0, #4]\n\t"
+        "add r3, r6, #0\n\t"
+        "b 5f\n\t"
+        ".align 2, 0\n"
+    "3: .4byte gStaticData_0817C260\n"
+    "4:\n\t"
+        "add r0, r7, #4\n\t"
+        "add r0, r3, r0\n\t"
+        "ldr r3, [r0]\n\t"
+    "5:\n\t"
+        "ldr r0, [r4, #0x28]\n\t"
+        "lsl r0, r0, #3\n\t"
+        "add r0, r0, r7\n\t"
+        "mov r7, #0\n\t"
+        "ldrsh r1, [r0, r7]\n\t"
+        "cmp r2, #0\n\t"
+        "ble 6f\n\t"
+        "lsl r0, r5, #0x10\n\t"
+        "asr r0, r0, #0x10\n\t"
+        "add r0, r0, r1\n\t"
+        "b 7f\n\t"
+    "6:\n\t"
+        "add r0, r1, #0\n\t"
+    "7:\n\t"
+        "add r0, r4, r0\n\t"
+        "bl sub_803AD84\n\t"
+        "ldr r0, [r4, #0xc]\n\t"
+        "cmp r0, #3\n\t"
+        "bne 15f\n\t"
+        "ldr r0, [r4, #0x58]\n\t"
+        "mov r8, r0\n\t"
+        "cmp r0, #0\n\t"
+        "bne 13f\n\t"
+        "ldr r0, 8f\n\t"
+        "ldr r5, [r0]\n\t"
+        "ldr r0, [r5, #0x24]\n\t"
+        "add r0, #0xa\n\t"
+        "ldr r1, [r4, #0x24]\n\t"
+        "mov sb, r1\n\t"
+        "sub r0, r0, r1\n\t"
+        "ldr r1, 9f\n\t"
+        "bl sub_803ADB4\n\t"
+        "add r2, r0, #0\n\t"
+        "cmp r2, #0\n\t"
+        "ble 15f\n\t"
+        "ldr r1, [r4, #0x34]\n\t"
+        "ldr r0, 10f\n\t"
+        "cmp r1, r0\n\t"
+        "bgt 15f\n\t"
+        "mov r0, #0x80\n\t"
+        "lsl r0, r0, #5\n\t"
+        "add r1, r2, #0\n\t"
+        "bl sub_803ADB4\n\t"
+        "ldr r1, [r5, #0x1c]\n\t"
+        "ldr r7, [r4, #0x1c]\n\t"
+        "sub r1, r1, r7\n\t"
+        "add r3, r1, #0\n\t"
+        "mul r3, r0, r3\n\t"
+        "asr r2, r3, #0xc\n\t"
+        "mov ip, r2\n\t"
+        "ldr r1, [r5, #0x20]\n\t"
+        "ldr r6, [r4, #0x20]\n\t"
+        "sub r1, r1, r6\n\t"
+        "add r2, r1, #0\n\t"
+        "mul r2, r0, r2\n\t"
+        "asr r5, r2, #0xc\n\t"
+        "asr r3, r3, #0x1f\n\t"
+        "mov r1, ip\n\t"
+        "eor r1, r3\n\t"
+        "sub r1, r1, r3\n\t"
+        "asr r2, r2, #0x1f\n\t"
+        "add r0, r5, #0\n\t"
+        "eor r0, r2\n\t"
+        "sub r0, r0, r2\n\t"
+        "add r1, r1, r0\n\t"
+        "ldr r0, 11f\n\t"
+        "cmp r1, r0\n\t"
+        "bgt 15f\n\t"
+        "mov r2, sb\n\t"
+        "sub r2, #0xa\n\t"
+        "str r5, [sp]\n\t"
+        "add r0, r7, #0\n\t"
+        "add r1, r6, #0\n\t"
+        "mov r3, ip\n\t"
+        "bl sub_802E674\n\t"
+        "ldr r0, [r4, #0x5c]\n\t"
+        "add r0, #1\n\t"
+        "str r0, [r4, #0x5c]\n\t"
+        "cmp r0, #3\n\t"
+        "bne 12f\n\t"
+        "mov r3, r8\n\t"
+        "str r3, [r4, #0x5c]\n\t"
+        "mov r0, #0x3c\n\t"
+        "b 14f\n\t"
+        ".align 2, 0\n"
+    "8: .4byte gUnknown_03000884\n"
+    "9: .4byte 0xFFFFFE56\n"
+    "10: .4byte 0x00008BFF\n"
+    "11: .4byte 0x000005FF\n"
+    "12:\n\t"
+        "mov r0, #0x14\n\t"
+        "b 14f\n\t"
+    "13:\n\t"
+        "mov r0, r8\n\t"
+        "sub r0, #1\n\t"
+    "14:\n\t"
+        "str r0, [r4, #0x58]\n\t"
+    "15:\n\t"
+        "add r0, r4, #0\n\t"
+        "add r0, #0x7c\n\t"
+        "ldrb r0, [r0]\n\t"
+        "cmp r0, #0\n\t"
+        "bne 16f\n\t"
+        "add r0, r4, #0\n\t"
+        "bl sub_802A6EC\n\t"
+        "lsl r0, r0, #0x18\n\t"
+        "cmp r0, #0\n\t"
+        "beq 16f\n\t"
+        "ldr r0, 17f\n\t"
+        "ldr r0, [r0]\n\t"
+        "ldr r2, [r0, #0x50]\n\t"
+        "mov r7, #0x20\n\t"
+        "ldrsh r1, [r2, r7]\n\t"
+        "add r0, r0, r1\n\t"
+        "ldr r2, [r2, #0x24]\n\t"
+        "mov r1, #6\n\t"
+        "bl sub_803AD80\n\t"
+        "ldr r1, [r4, #0x50]\n\t"
+        "mov r2, #0x20\n\t"
+        "ldrsh r0, [r1, r2]\n\t"
+        "add r0, r4, r0\n\t"
+        "ldr r2, [r1, #0x24]\n\t"
+        "mov r1, #4\n\t"
+        "bl sub_803AD80\n\t"
+    "16:\n\t"
+        "ldr r0, [r4, #0x28]\n\t"
+        "cmp r0, #3\n\t"
+        "bne 18f\n\t"
+        "ldr r1, [r4, #0x20]\n\t"
+        "mov r0, #0xe1\n\t"
+        "lsl r0, r0, #8\n\t"
+        "cmp r1, r0\n\t"
+        "ble 18f\n\t"
+        "cmp r4, #0\n\t"
+        "beq 19f\n\t"
+        "ldr r1, [r4, #0x50]\n\t"
+        "mov r3, #8\n\t"
+        "ldrsh r0, [r1, r3]\n\t"
+        "add r0, r4, r0\n\t"
+        "ldr r2, [r1, #0xc]\n\t"
+        "mov r1, #3\n\t"
+        "bl sub_803AD80\n\t"
+        "b 19f\n\t"
+        ".align 2, 0\n"
+    "17: .4byte gUnknown_03000884\n"
+    "18:\n\t"
+        "add r0, r4, #0\n\t"
+        "bl sub_802A7B8\n\t"
+    "19:\n\t"
+        "add sp, #4\n\t"
+        "pop {r3, r4}\n\t"
+        "mov r8, r3\n\t"
+        "mov sb, r4\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r0}\n\t"
+        "bx r0\n\t"
+        ".align 2, 0\n"
+    );
+}
