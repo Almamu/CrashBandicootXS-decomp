@@ -16,7 +16,11 @@ system from "core" graphics.
 
 - `src/graphics/hud_icon_slot.c` (new file, GitHub issue #45, non-
   adjacent to `hud_counter.c` since `sub_8027138`-`sub_802763C` sit raw
-  between them): `sub_8027088`, `sub_80270A8`, `sub_80270C0`,
+  between them): `sub_8026F54`/`sub_8027018` (the fx ring-buffer's
+  per-frame consumer/producer pair - see
+  `docs/matching/issue-45-hud-stat-widget-dispatcher.md`'s "Third pass"
+  section for the register-pinning/instruction-ordering gotchas this
+  pair needed), `sub_8027088`, `sub_80270A8`, `sub_80270C0`,
   `sub_80270E0`, `sub_802710C` (UNUSED - no caller anywhere in the
   ROM), `sub_8027120` - a fixed 3-entry particle/effect queue's reset/
   constructor/teardown trio, a HUD digit-slot draw helper, and two
