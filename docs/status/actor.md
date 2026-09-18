@@ -629,6 +629,42 @@ plain C didn't converge.
   meter nibble-repack loop (docs/rom_map.md's "procedurally-generated
   VRAM fill-level meter" finding); inner loop holds `r8`/`sb`/`sl`/`ip`
   live simultaneously. See `docs/matching/issue-58-0x08030574-actor.md`.
+- **`sub_8011BD4`** (`src/graphics/actor_part82.c`, GitHub issue #16) -
+  docs/rom_map.md's documented companion state machine to `sub_8016288`
+  (still raw), sharing its type-`0x1d` gate: a 25-case jump table on a
+  second parameter, with two of those cases sharing a further 7-case
+  sub-dispatch on a nibble of a child object's `+4` byte. The single
+  largest still-unmatched member of the `gStaticData_0816BF20` action-
+  dispatch-table family (1420 B) - a first plain-C attempt at the
+  smaller sibling `sub_8012420` (below) diverged immediately at the
+  prologue, and a jump table this wide (25 outer cases plus two
+  independent 7-case inner ones) was judged not worth the same
+  register-pinning gauntlet already exhausted throughout this section
+  for smaller members of the same table. See
+  `docs/matching/issue-16-actor-remainder.md`.
+- **`sub_8012420`**, **`sub_8012694`**, **`sub_801283C`**
+  (`src/graphics/actor_part84.c`, GitHub issue #16) - three more
+  members of the same 42-slot action-dispatch table
+  (`gStaticData_0816BF20`): a `part`-visibility/OAM-priority
+  housekeeping pass with a trailing 22-case jump table, a proximity-
+  gated child-object-type dispatch that fires a `+0x50`/`+0x54`
+  trampoline pair, and a proximity-triggered indicator dispatching on
+  `self+8`'s type against per-type distance thresholds. A first plain-C
+  attempt at `sub_8012420` compiled logically-equivalent code that
+  diverged in overall stack-frame shape (the ROM reserves an unused
+  8-byte stack slot and a 5th callee-saved register, `r7`, that the
+  straightforward translation never needed) - the same unexplained-
+  frame-shape gap this table's sibling members hit throughout this
+  section. See `docs/matching/issue-16-actor-remainder.md`.
+- **`sub_8012AF4`**, **`sub_8012D24`** (`src/graphics/actor_part83.c`,
+  GitHub issue #16) - the chunk's final two functions: an OAM-
+  visibility/priority pass keyed on a `gStaticData_0816B304` per-tag
+  12-byte stack-local record (copied via `ldm`/`stm`, with `r8` holding
+  a value across several calls - a real step up in register-allocation
+  complexity from every other member of this table matched so far), and
+  a further sibling/callee handling frame-counter thresholds, D-pad
+  input, and `sub_8012A7C`'s busy-check. See
+  `docs/matching/issue-16-actor-remainder.md`.
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
