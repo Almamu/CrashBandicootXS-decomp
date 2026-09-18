@@ -110,11 +110,9 @@ from "core" graphics.
   `sub_800A6F4`, `sub_800A700`, `sub_800A70C`, `sub_800A718`,
   `sub_800A724`, `sub_800A730`
 
-- `src/graphics/actor_part49.c` (new file, GitHub issue #9): `sub_800B270`
-  - a per-frame velocity integrator moving `self+0x60`/`self+0x64`
-  toward `self+0x50`/`self+0x5c` by `self+0x4c`/`self+0x58` each call,
-  deriving a `self+0x24` direction-flag byte and applying the result to
-  the object's position; see
+- `src/graphics/actor_part48.c` (GitHub issue #9): `sub_800A810` - a
+  part-object velocity/state reset that dispatches a sub-state byte to
+  one of three teardown helpers; see
   [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
 
 - `src/graphics/actor_part15.c`/`src/graphics/actor_part16.c` (new
@@ -422,15 +420,25 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   genuine fifth-scratch-register need (`r5`, just to hold an offset
   immediate) this compiler never introduces. See
   [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
-- **`sub_800A734`/`sub_800A810`** (`src/graphics/actor_part48.c`,
-  GitHub issue #9; real bytes in `asm/code_3_2_16_a734.s`) - a part-
-  object velocity/state reset pair, one of which also hooks up a child
-  object and one of which dispatches a sub-state byte to one of three
-  teardown helpers. Field writes and dispatch semantics fully
-  confirmed; parked on the ROM's running-pointer address-increment
-  style (`sub_800A734`) and an exact compare-chain-vs-register-letter
-  tradeoff (`sub_800A810`) neither reproduced together by any C
-  phrasing tried. See
+- **`sub_800A734`** (`src/graphics/actor_part48.c`, GitHub issue #9;
+  real bytes in `asm/code_3_2_16_a734.s`) - a part-object
+  velocity/state reset that also hooks up a child object. Field writes
+  fully confirmed; parked on the ROM's running-pointer address-
+  increment style across a long, non-uniform stretch of field writes
+  (its sibling `sub_800A810`, right after it in ROM order, matched with
+  a similar cursor technique on a shorter/more uniform stretch - see
+  the write-up). See
+  [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
+- **`sub_800B270`** (`src/graphics/actor_part49.c`, GitHub issue #9) -
+  a per-frame velocity integrator moving `self+0x60`/`self+0x64`
+  toward `self+0x50`/`self+0x5c` by `self+0x4c`/`self+0x58` each call,
+  deriving a `self+0x24` direction-flag byte and applying the result to
+  the object's position, then recording the resulting Y velocity into
+  an unlabeled RAM address (`0x0300129C`). Matches one-for-one through
+  the position-update store; parked on the trailing 14-instruction
+  `0x0300129C` block, where every register-pin combination tried either
+  swaps the ROM's address/value register letters or reintroduces an
+  unrelated `push {r4}` regression. See
   [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
 - **`sub_800B6A0`/`sub_800B6D0`** (`src/graphics/actor_part16.c`) -
   mirror-flag-gated 3-vector copies. This compiler unconditionally

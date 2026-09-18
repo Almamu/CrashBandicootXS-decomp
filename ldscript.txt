@@ -125,8 +125,8 @@ SECTIONS
         build/crashbandicootxs/src/graphics/actor_part47.o(.text);
         build/crashbandicootxs/asm/code_3_2_11_a528.o(.text);
         build/crashbandicootxs/src/graphics/actor_part14.o(.text);
-        build/crashbandicootxs/src/graphics/actor_part48.o(.text);
         build/crashbandicootxs/asm/code_3_2_16_a734.o(.text);
+        build/crashbandicootxs/src/graphics/actor_part48.o(.text);
         build/crashbandicootxs/asm/code_3_2_16.o(.text);
         build/crashbandicootxs/src/graphics/actor_part49.o(.text);
         build/crashbandicootxs/asm/code_3_2_16_b270.o(.text);
