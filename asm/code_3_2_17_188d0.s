@@ -11730,6 +11730,14 @@ _0801E56C:
 	.align 2, 0
 _0801E574: .4byte gUnknown_030012B8
 
+@ LoadGraphicsPackage: not yet matched (NON_MATCHING) - see
+@ src/graphics/graphics_package_1e578.c, guarded by #if NON_MATCHING - this
+@ raw version is only assembled for the default (matching) build. Fully
+@ semantically understood and matches the ROM instruction-for-instruction
+@ except a single callee-saved r7 push/pop pair that no C phrasing tried
+@ reproduced alongside the rest of the body's exact register choices - see
+@ docs/matching/issue-30-graphics-loading.md.
+.if NON_MATCHING == 0
 	thumb_func_start LoadGraphicsPackage
 LoadGraphicsPackage: @ 0x0801E578
 	push {r4, r5, r6, r7, lr}
@@ -11835,3 +11843,4 @@ _0801E62E:
 	bx r0
 	.align 2, 0
 
+.endif

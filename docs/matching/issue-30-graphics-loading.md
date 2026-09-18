@@ -152,3 +152,67 @@ the file, not in the middle.
 
 See [docs/status/graphics_loading.md](../status/graphics_loading.md) for
 the running matched/parked list.
+
+## Third pass: `LoadGraphicsPackage` itself - parked (`NON_MATCHING`), not matched
+
+`LoadGraphicsPackage` (the cluster's own namesake, `0x0801E578`-`0x0801E640`,
+real bytes now guarded at the tail of `asm/code_3_2_17_188d0.s`) is fully
+understood: it uses the same 5-field `struct bg_package` descriptor
+`LoadBg2Background`/`LoadObjSpriteTiles` (`src/graphics/level_graphics.c`,
+issue #65) already established for package loading - moved to a shared
+`include/graphics_package.h` header per docs/workflow.md step 7's "check
+whether a struct for the same object already exists elsewhere first" rule,
+rather than re-declaring it a third time. It loads a palette
+(`LoadTaggedAsset` into `0x05000000` + a bank offset from the `self+8`
+scratch-buffer field), a tileset (`LoadTaggedAsset` into `0x06000000` + a
+char-block offset from `self+0`), and a tilemap into a `sub_8026EC0`
+scratch buffer, then remaps the tilemap's per-tile entries - OR-ing in a
+palette-bank nibble derived from `self+8` - into `0x06000000` + a
+screen-block offset from `self+4`, one fixed 0x40-byte-wide (32-tile) row
+at a time regardless of the source package's own (possibly narrower)
+`width`. It also flips `self+0xc`'s top bit (the BG control byte's
+256-color/16-color mode select) based on whether the palette asset's own
+declared size exceeds `0x20`.
+
+This is a large (~110-instruction), register-starved function - the ROM's
+own compile uses every one of the 12 available general-purpose registers
+simultaneously in the main copy loop, spilling one address to a real stack
+slot. Heavy register pinning (`self`->r5, `pkg`->r6, `mapBuf`->r8,
+`src`->r7, the packed palette-bank mask->`ip`, `width`->r4, `height`->`sl`,
+the row stride->`sb`, the per-row dest pointer->r0, the inner-loop
+src/dest/count triple->r2/r1/r3) plus several `asm("":"+r"(...))` barriers
+(to force this compiler's "skip an apparently-redundant copy" habit back
+into the ROM's own instruction order - the same techniques documented for
+`sub_801E644`/`sub_801E8F8` above) closed every gap but one: this function
+needs r6 free for one more scratch temp (the loaded tilemap halfword,
+right before it's ORed with the palette-bank mask) *inside* the same
+window `pkg`'s own r6 binding is technically still in scope for. Pinning
+that temp to r6 (matching the ROM's own `ldrh r6,...`) makes gcc's
+allocator stop treating `src`'s r7 as needing a callee-save push/pop at
+all, even though the function body still writes and later reads it, for
+reasons that didn't yield to further restructuring (statement reordering,
+a dummy trailing `asm` read of `pkg` to keep r6 "reserved" longer, moving
+the pin to an outer scope) - so the choice was between byte-exact bar one
+dropped push/pop pair (semantically self-consistent within the function,
+but ABI-incorrect towards the caller - a real bug, not a cosmetic
+mismatch) or ABI-correct with r6 landing on a different scratch register
+than the ROM picked. This is the same first-pass-vs-second-pass
+register-pressure artifact category already documented for
+`LoadBg2Background` (`src/graphics/level_graphics.c`, issue #65) and
+`sub_801E644` above - parked under `NON_MATCHING` (the ABI-correct
+variant) rather than force either a broken function or a fake match.
+
+Verified via a full clean `rm -rf build && make NON_MATCHING=1 report`
+(clean compile, no warnings) and `rm -rf build crashbandicootxs.elf
+crashbandicootxs.gba crashbandicootxs.map && make compare` (`La suma
+coincide` - the guarded real bytes still assemble unchanged).
+
+`sub_801E688`/`sub_801E788` (the tile-cell-selection and
+viewport-centering helpers, real bytes in `asm/code_3_2_17_1e644.s`) were
+read again this pass but not attempted: `sub_801E788` in particular
+branches into a 4-way switch that writes through `gUnknown_03001300` (the
+OAM shadow buffer) at offsets (`+0x12`, `+0x1A`, `+0x22`, `+0x2A` relative
+to a packed slot index) that don't fit that struct's already-documented
+8-byte hardware-OAM-entry stride cleanly - understanding that side-table
+layout correctly is a prerequisite for a confident C reconstruction and
+wasn't rushed this pass. Left raw for whoever picks this up next.
