@@ -329,17 +329,26 @@ UNITS = [
     (0x0802FA34, "src/graphics/actor_part46.o", "actor"),  # sub_802FA34 (issue #56): trivial constant-true predicate; matched
     (0x0802FA38, None, "actor"),  # sub_802FA38 (issue #56): a ~150-instruction position-update/collision-damage function with heavy sb/r8 register pressure, plus the remainder of the actor zone before issue #58's chunk - not attempted this pass
     (0x08030530, "src/graphics/actor_part20.o", "actor"),  # sub_8030530 (issue #58): countdown timer driving a boss-weapon state-2/table-index-1 transition; matched
-    (0x08030574, None, "actor"),  # sub_8030574-sub_80305F8 (issue #58): boss-weapon keyframe-table AABB lookup/dispatch and an InitActorPart wrapper - left raw, not attempted this pass beyond a near-miss register-allocation/scheduling gap
+    (0x08030574, None, "actor"),  # sub_8030574 (issue #58, NAKED, byte-correct but not real decompiled C, tracked as parked) - boss-weapon keyframe-table AABB lookup/dispatch, same r7-hazard shape as sub_802C208; real bytes live in src/graphics/actor_part20b.c
+    (0x080305F8, "src/graphics/actor_part20d.o", "actor"),  # sub_80305F8 (issue #58): InitActorPart-based constructor; matched
     (0x08030640, "src/graphics/actor_part21.o", "actor"),  # sub_8030640 (issue #58): trivial self+0x68 setter; matched
-    (0x08030648, None, "actor"),  # sub_8030648 (issue #58): same keyframe-table AABB lookup shape as sub_8030574, left raw
+    (0x08030648, None, "actor"),  # sub_8030648 (issue #58, NAKED, byte-correct but not real decompiled C, tracked as parked) - same keyframe-table AABB lookup shape as sub_8030574; real bytes live in src/graphics/actor_part21b.c
     (0x080306A4, "src/graphics/actor_part22.o", "actor"),  # sub_80306A4 (issue #58): trivial self+0x68 getter; matched
-    (0x080306AC, None, "actor"),  # sub_80306AC-sub_80309B4 (issue #58): boss-weapon camera-relative position update and a large weapon-kind projectile-position dispatcher - left raw, register-pressure/many-unresolved-helper-signature functions not attempted this pass
+    (0x080306AC, "src/graphics/actor_part21c.o", "actor"),  # sub_80306AC (issue #58): boss-weapon camera-relative position accumulator + state-2/table-index-0 transition; matched
+    (0x08030734, None, "actor"),  # sub_8030734 (issue #58, NAKED, byte-correct but not real decompiled C, tracked as parked) - sub_80306AC's companion (ramps gUnknown_03001560, phase-driven sub_802E62C spawn); real bytes live in src/graphics/actor_part21d.c
+    (0x08030834, None, "actor"),  # sub_8030834 (issue #58, NAKED, byte-correct but not real decompiled C, tracked as parked) - distance/speed-gated sub_802E674 spawn variant; real bytes live in src/graphics/actor_part21e.c
+    (0x080309B4, None, "actor"),  # sub_80309B4 (issue #58, NAKED, byte-correct but not real decompiled C, tracked as parked) - large weapon-kind projectile spawner (5-way dispatch on gUnknown_0300153C); real bytes live in src/graphics/actor_part21f.c
     (0x08030C98, "src/graphics/actor_part23.o", "actor"),  # sub_8030C98 (issue #58): screen-accumulator advance + threshold reset on the boss-weapon's small tracker object; matched
-    (0x08030D48, None, "actor"),  # sub_8030D48-sub_80311C4 (issue #58): boss-weapon palette-strip layout, position-easing, VRAM/tile-cache setup and projectile-advance functions - left raw, register-pressure not attempted this pass
+    (0x08030D48, None, "actor"),  # sub_8030D48 (issue #58, NAKED, byte-correct but not real decompiled C, tracked as parked) - rectangular BG-tilemap blit routine (docs/rom_map.md); real bytes live in src/graphics/actor_part23b.c
+    (0x08030E08, None, "actor"),  # sub_8030E08 (issue #58, NAKED, byte-correct but not real decompiled C, tracked as parked) - position-easing helper called from sub_8030734/sub_8030834; real bytes live in src/graphics/actor_part23c.c
+    (0x08030F88, None, "actor"),  # sub_8030F88 (issue #58, NAKED, byte-correct but not real decompiled C, tracked as parked) - tracker-object constructor; real bytes live in src/graphics/actor_part23d.c
+    (0x08031040, None, "actor"),  # sub_8031040 (issue #58, NAKED, byte-correct but not real decompiled C, tracked as parked) - large "arm this weapon-kind instance" setup; real bytes live in src/graphics/actor_part23e.c
+    (0x080311C4, None, "actor"),  # sub_80311C4 (issue #58, NAKED, byte-correct but not real decompiled C, tracked as parked) - large per-frame "advance this weapon-kind instance" driver; real bytes live in src/graphics/actor_part23f.c
     (0x080312C4, "src/graphics/actor_part24.o", "actor"),  # sub_80312C4 (issue #58): BG2CNT toggle + BG2 affine-matrix recompute for the boss-weapon zoom effect; matched
-    (0x08031378, None, "actor"),  # sub_8031378 (issue #58): AABB overlap test against a keyframe-table box - left raw, not attempted this pass
+    (0x08031378, None, "actor"),  # sub_8031378 (issue #58, NAKED, byte-correct but not real decompiled C, tracked as parked) - AABB overlap test against a keyframe-table box, same shape as sub_802DD9C/sub_802D7B0; real bytes live in src/graphics/actor_part24b.c
     (0x0803146C, "src/graphics/actor_part25.o", "actor"),  # sub_803146C (issue #58): boss-weapon "charge" countdown driving a state-4/table-index-1 transition; matched
-    (0x08031504, None, "actor"),  # sub_8031504/sub_8031604 (issue #58): DMA/tile-cache setup and a palette/tile-nibble repack loop - left raw, register-pressure not attempted this pass
+    (0x08031504, None, "actor"),  # sub_8031504 (issue #58, NAKED, byte-correct but not real decompiled C, tracked as parked) - DMA/tile-cache setup + palette fade; real bytes live in src/graphics/actor_part26b.c
+    (0x08031604, None, "actor"),  # sub_8031604 (issue #58, NAKED, byte-correct but not real decompiled C, tracked as parked) - VRAM fill-level meter nibble-repack loop (docs/rom_map.md); real bytes live in src/graphics/actor_part26c.c
     (0x0803171C, "src/graphics/actor_part26.o", "actor"),  # sub_803171C/sub_8031744 (issue #58): palette flash-color select and DMA-queued palette-strip animation refresh; matched
     (0x08031784, None, "actor"),  # remainder of the actor zone before issue #62's chunk, still raw
     (0x08033804, "src/graphics/actor_part28.o", "actor"),  # sub_8033804-nullsub_37 (issue #62): the gUnknown_030015AC singleton's one-shot latch, a P1/P2 mirror speed-override toggle, its field getters, and the two shared state-transition/anim-frame-reset setters (sub_803390C/sub_803395C); matched
