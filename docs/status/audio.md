@@ -105,10 +105,13 @@ the write-up's "Left raw" section for the full per-function breakdown).
   reconstruction in `src/audio/sfx_ambient.c`): a one-instruction
   prologue register-save-scheduling difference.
 - `sub_80019F8` (real bytes in `asm/code_3_1_10_2.s`, reconstruction in
-  `src/audio/audio_context.c`): a `u8` stack-parameter byte-load
-  codegen shape and a base-volume field-address CSE difference.
+  `src/audio/audio_context.c`): a base-volume field-address CSE
+  difference (the `u8` stack-parameter byte-load gap this entry used to
+  also list was closed - see below).
 
-See docs/matching.md for exactly what was tried on both.
+See docs/matching.md for `PlaySfx`'s remaining gap and
+[docs/matching/issue-3-overlay-ui-audio-wrapper.md](../matching/issue-3-overlay-ui-audio-wrapper.md)
+for `sub_80019F8`'s.
 
 ## Left raw (not attempted, or attempted and set aside)
 

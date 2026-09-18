@@ -1,59 +1,75 @@
 #include "core.h"
 
-/* Same "self" object family as actor_part61.c - see that file's header
- * comment and docs/matching/issue-63-0x08033ef4-actor.md. */
-
 #if NON_MATCHING
-/* NOT YET BYTE-MATCHING - see docs/matching/issue-63-0x08033ef4-actor.md,
- * "Parked: sub_8034270" for the full account; compiled only under
- * `make NON_MATCHING=1`, the checked-in assembly
- * (asm/code_3_2_20_28568_c99c_31784_33ef4_34270.s) is used otherwise.
- * Syncs `self`'s position fields from the singleton's own position plus
- * a fixed offset, sets the one-shot flag (`+0x58=1`), and - if
- * `self+0x12` is set and `self` is non-NULL - fires the `self+0x50`
- * event table's slot-3 trampoline; otherwise calls `sub_802A7B8(self)`.
- * Semantics fully understood and every field/call confirmed correct;
- * parked because the ROM computes a "should animate" 0/1 value into a
- * register and then re-checks it against zero before deciding whether
- * to call `sub_802A7B8`, even though the value is a compile-time
- * constant on each path - this compiler's dead-store/dead-branch
- * elimination always collapses that redundant compute-then-recheck
- * step, the same class of gap already documented for `sub_802C2FC`
- * (issue #52) and the `| 0`-with-a-zero-valued-term case in
- * `sub_803B46C` (issue #71). */
-extern s32 sub_80338E8(void);
-extern s32 sub_8033900(void);
-extern s32 sub_80338F4(void);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *fn);
-extern void sub_802A7B8(void *self);
-
-void sub_8034270(void *selfArg)
+/* NOT YET BYTE-MATCHING - see docs/matching/issue-54-actor-d3a8.md.
+ * Eases `self`'s cached position (`self+0x1c`/`0x20`/`0x24`, the same
+ * fields `InitActorPart` caches its `b`/`c`/`d` constructor arguments
+ * into, per actor_part50.c) toward a caller-supplied target, with the
+ * exact target/mode selected by `self+0x28` ("state"):
+ *   - state 0: eases toward `posX`/`posY` offset by a per-frame-counter
+ *     (`self+0x44`) lookup into `gStaticData_0816A820` (two different
+ *     index strides for the X/Y offsets, producing a scatter/orbit-style
+ *     curve), and toward `posZ-0x200`.
+ *   - state 1: snaps (no easing) directly to `posX` for the X axis, to
+ *     `posY` plus a different table-driven offset for Y, and to
+ *     `posZ+0x200` for Z.
+ *   - any other state: eases toward `posX`/`posY` directly (no table
+ *     offset), and toward `posZ+0x200`.
+ * "Easing" is a round-toward-zero divide (by 16 for X/Y, by 4 for Z) of
+ * the remaining delta, added back onto the cached position - plain
+ * integer division reproduces the ROM's own rsb/lsr/add/asr rounding
+ * idiom here (see `sub_80070EC` in docs/matching.md).
+ *
+ * Semantics, register choices and every individual instruction body are
+ * confirmed correct; the residual gap is the prologue's argument-
+ * register-copy order (`mov ip, r2` before `adds r7, r3, #0` in the ROM)
+ * - this compiler always emits the `r7` copy first regardless of C
+ * statement order, pin declaration order, or forcing both copies into a
+ * single inline-asm block (which fixes the order but then reintroduces
+ * a second gap: any explicit `register T x asm("r7")` pin gets
+ * clobbered by unrelated scratch constant loads later in the same
+ * function, confirmed the same categorical `r7`-pin limitation already
+ * documented for `sub_8007DBC` in actor_part2.c and
+ * matching_decomp_register_pinning memory point 10). Parked rather than
+ * keep chasing this specific compiler quirk. */
+void sub_802D3A8(void *selfArg, s32 posX, s32 posY, s32 posZ)
 {
     u8 *self = selfArg;
-    s32 doAnim;
+    s32 state = *(s32 *)(self + 0x28);
 
-    *(s32 *)(self + 0x24) = sub_80338E8() - 0x200;
-    *(s32 *)(self + 0x1c) = sub_8033900() + 0x2000;
-    *(s32 *)(self + 0x20) = sub_80338F4() + 0x3000;
-    self[0x58] = 1;
+    if (state == 0) {
+        extern s16 gStaticData_0816A820[];
+        s32 counter = *(s32 *)(self + 0x44);
+        s32 offX = gStaticData_0816A820[(counter << 2) & 0xff];
+        s32 targetX = posX + (offX * 24) - 0x1000;
+        s32 offY = gStaticData_0816A820[(counter << 1) & 0xff];
+        s32 targetY = posY + (offY * 10) - 0x1E00;
+        s32 targetZ = posZ - 0x200;
+        s32 old;
 
-    if (self[0x12] != 0) {
-        if (self != NULL) {
-            u8 *table = *(u8 **)(self + 0x50);
-            u8 *addr = self + *(s16 *)(table + 8);
-            void *fn = *(void **)(table + 0xc);
+        old = *(s32 *)(self + 0x1c);
+        *(s32 *)(self + 0x1c) = old + (targetX - old) / 16;
+        old = *(s32 *)(self + 0x20);
+        *(s32 *)(self + 0x20) = old + (targetY - old) / 16;
+        old = *(s32 *)(self + 0x24);
+        *(s32 *)(self + 0x24) = old + (targetZ - old) / 4;
+    } else if (state == 1) {
+        extern s16 gStaticData_0816A820[];
+        s32 counter = *(s32 *)(self + 0x44);
+        s32 off = gStaticData_0816A820[(counter * 9) & 0xff];
 
-            sub_803AD80(addr, (void *)3, fn);
-        }
-        doAnim = 0;
+        *(s32 *)(self + 0x1c) = posX;
+        *(s32 *)(self + 0x20) = posY + (off * 4) - 0xA00;
+        *(s32 *)(self + 0x24) = posZ + 0x200;
     } else {
-        doAnim = 1;
-    }
+        s32 old;
 
-    if (doAnim != 0) {
-        sub_802A7B8(self);
+        old = *(s32 *)(self + 0x1c);
+        *(s32 *)(self + 0x1c) = old + (posX - old) / 16;
+        old = *(s32 *)(self + 0x20);
+        *(s32 *)(self + 0x20) = old + (posY - old) / 16;
+        old = *(s32 *)(self + 0x24);
+        *(s32 *)(self + 0x24) = old + ((posZ + 0x200) - old) / 4;
     }
 }
 #endif /* NON_MATCHING */
-
-asm(".align 2, 0");

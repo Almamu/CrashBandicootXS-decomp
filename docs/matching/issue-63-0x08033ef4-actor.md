@@ -1,5 +1,14 @@
 # Issue #63: 0x08033EF4-0x08034AA4 (actor)
 
+**Naming note:** these files are numbered `actor_part63`-`73` rather
+than `actor_part57`-`67` (which would have matched their creation order
+more naturally) because issues #19 and #54's parallel PRs independently
+claimed `actor_part57.c`-`62.c` first, both before this PR merged -
+resolved as a rename on merge to avoid a three-way add/add filename
+collision. The whole eleven-file family was renumbered together (not
+just the six files that literally collided) to keep it visually
+contiguous.
+
 25-function `decomp-chunk` immediately following issue #62's cluster
 (`0x08033804`-`0x08033EF4`, see
 [docs/matching/issue-62-0x08033804-actor.md](issue-62-0x08033804-actor.md)).
@@ -35,7 +44,7 @@ anim-frame halfword/byte, `self+8` accumulator, `self+0x28` state,
 
 ## Matched (14 of 25 functions)
 
-- **`sub_8033EF4`/`sub_8033F48`/`sub_8033F74`** (`src/graphics/actor_part57.c`)
+- **`sub_8033EF4`/`sub_8033F48`/`sub_8033F74`** (`src/graphics/actor_part63.c`)
   - Kind 1's constructor, its trampoline-fire helper (same shape as
   `sub_8033BFC`, actor_part32.c), and a position-sync/state-1-transition
   helper gated on the singleton's lifetime counter and animation "kind".
@@ -44,10 +53,10 @@ anim-frame halfword/byte, `self+8` accumulator, `self+0x28` state,
   register pin (`r0`) placed *after* the `b`/`c` pins so this compiler
   fetches the 5th (stack) constructor argument in the same position the
   ROM's own build does, rather than up front with the others.
-- **`sub_8034050`** (`src/graphics/actor_part59.c`) - trivial Kind 1
+- **`sub_8034050`** (`src/graphics/actor_part65.c`) - trivial Kind 1
   death-flag getter (`self+0x6c`).
 - **`sub_8034110`/`sub_8034188`/`sub_80341F8`/`sub_8034264`/`nullsub_38`**
-  (`src/graphics/actor_part61.c`) - Kind 2's damage/death handler (same
+  (`src/graphics/actor_part67.c`) - Kind 2's damage/death handler (same
   `sub_8033AE0` shape, register-pinned `zero`/`one` reused across the
   `self+0x58`/`+0x2c`/`+0x28`/`+0x44`/`+8` stores and the gate-byte read
   at `self+0x59` - reachable only via a pointer-offset walk from
@@ -61,12 +70,12 @@ anim-frame halfword/byte, `self+8` accumulator, `self+0x28` state,
   (initially miscopied as a byte-identical twin - the map-file address-
   shift diagnostic caught the missing 4-byte call), a trivial death-flag
   getter, and a no-op stub.
-- **`sub_80342D4`** (`src/graphics/actor_part63.c`) - Kind 3's
+- **`sub_80342D4`** (`src/graphics/actor_part69.c`) - Kind 3's
   constructor, same two-distinct-zero-register reset idiom as
   `sub_8033EF4`.
-- **`sub_803436C`** (`src/graphics/actor_part65.c`) - trivial Kind 3
+- **`sub_803436C`** (`src/graphics/actor_part71.c`) - trivial Kind 3
   one-shot-flag getter (`self+0x58`).
-- **`sub_8034688`/`sub_80346C8`/`sub_80346FC`** (`src/graphics/actor_part67.c`)
+- **`sub_8034688`/`sub_80346C8`/`sub_80346FC`** (`src/graphics/actor_part73.c`)
   - a particle-spawn-budget driver (calls `sub_8034480`, then spawns up
   to 8 particles via `sub_80345B0`; needed the incoming-`idx`-value
   register pinned through `r0` then copied to `r1` for the call,
@@ -128,14 +137,14 @@ boundaries - not by re-reading the isolated compiles more carefully.
 ## Parked (6 of 25 functions, `NON_MATCHING`)
 
 - **`sub_8033FE4`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_33fe4.s`, C
-  in `src/graphics/actor_part58.c`) - a `gStaticData_0817C4F8` stride-8
+  in `src/graphics/actor_part64.c`) - a `gStaticData_0817C4F8` stride-8
   trampoline-record dispatcher returning a 0/1 result instead of tail-
   calling. Same `{s16 baseOff; s16 count; void *fn}` record shape and
   the same `record = base + state*8` re-derivation register-allocation
   gap already parked for `sub_8033B44`/`sub_8033C84`/`sub_8033E80`
   (issue #62) and `sub_802C208` (issue #52).
 - **`sub_8034058`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s`, C
-  in `src/graphics/actor_part60.c`) - Kind 2's constructor. Semantics
+  in `src/graphics/actor_part66.c`) - Kind 2's constructor. Semantics
   fully understood and every field/call confirmed correct; parked
   because this compiler reads the 6th (stack-passed, byte-sized)
   constructor argument as a full word shifted/masked down to its low
@@ -143,7 +152,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   with a plain `ldrb` - the same trailing-byte-stack-argument gap
   already parked for `sub_8025A64` in `game_loop14.c` (issue #41).
 - **`sub_8034270`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34270.s`, C
-  in `src/graphics/actor_part62.c`) - position-sync/flag/trampoline
+  in `src/graphics/actor_part68.c`) - position-sync/flag/trampoline
   updater for Kind 1. Semantics fully understood and every field/call
   confirmed correct; parked because the ROM computes a "should animate"
   0/1 value into a register and re-checks it against zero before
@@ -153,10 +162,10 @@ boundaries - not by re-reading the isolated compiles more carefully.
   step, the same class of gap already documented for `sub_802C2FC`
   (issue #52) and the dead `| 0` term in `sub_803B46C` (issue #71).
 - **`sub_8034314`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34314.s`, C
-  in `src/graphics/actor_part64.c`) - `sub_8034270`'s boolean-returning
+  in `src/graphics/actor_part70.c`) - `sub_8034270`'s boolean-returning
   twin, parked on the identical gap.
 - **`sub_80345B0`/`sub_8034634`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_345b0.s`,
-  C in `src/graphics/actor_part66.c`) - a 128-slot particle spawner
+  C in `src/graphics/actor_part72.c`) - a 128-slot particle spawner
   (rolls two `sub_8000E1C` random values against the 256-entry
   `gStaticData_0816A820` direction table to seed a position/velocity
   record) and a 4-bit-per-cell tilemap nibble writer. Semantics fully

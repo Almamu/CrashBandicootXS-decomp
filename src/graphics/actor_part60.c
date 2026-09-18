@@ -1,63 +1,79 @@
 #include "core.h"
+#include "memory.h"
 
-/* Same "self" object family as actor_part59.c - see that file's header
- * comment and docs/matching/issue-63-0x08033ef4-actor.md. */
+/* More of the `gUnknown_030014BC`-rooted object's lifecycle (see
+ * actor_part58.c's header comment): a state-flag setter, its
+ * destructor, and its constructor. */
 
-#if NON_MATCHING
-/* NOT YET BYTE-MATCHING - see docs/matching/issue-63-0x08033ef4-actor.md,
- * "Parked: sub_8034058" for the full account; compiled only under
- * `make NON_MATCHING=1`, the checked-in assembly
- * (asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s) is used otherwise.
- * Constructor: health defaults to `0x10`, or `0x18` if the
- * `gUnknown_030015AC` singleton hasn't been constructed yet
- * (`sub_80338DC() == 0`). Forwards to `InitActorPart`, sets the event
- * table (`+0x50=&gStaticData_087E5554`), caches the constructor's 6th
- * (byte, stack-passed) argument at `+0x59`, selects table-index 0 or 1
- * depending on whether that byte is set, resets the usual state/frame-
- * counter/anim fields, clears the death flag (`+0x58=0`), seeds the
- * "spawn/orbit" record (`+0x5c` from the `+0x59` byte, `+0x60=0xa00`,
- * `+0x64=-1`), clears the one-shot flag (`+0x2c=0`), caches the
- * singleton table's `+4` field at `+0x68`, and clears `+0x6c`. Returns
- * `self`. Semantics fully understood and every field/call confirmed
- * correct; parked because this compiler reads the 6th (stack-passed,
- * byte-sized) constructor argument as a full word shifted/masked down
- * to its low byte, where the ROM's own build addresses that stack slot
- * directly with a plain `ldrb` - the same trailing-byte-stack-argument
- * gap already parked for `sub_8025A64` in game_loop14.c. */
-extern void *sub_80338DC(void);
-extern void *InitActorPart(void *selfArg, void *part, s32 b, s32 c, s32 d);
-extern u8 gStaticData_087E5554[];
-extern void *sub_80338C4(void);
+extern s32 gUnknown_030014D0;
 
-void *sub_8034058(void *selfArg, void *part, s32 b, s32 cParam, s32 d, u8 eByte)
+/* Arms `gUnknown_030014D0 = 3` - a state value none of this chunk's
+ * other functions read back, plausibly consumed by the vtable-dispatch
+ * caller itself. */
+void sub_802DFBC(void)
 {
-    u8 *self = selfArg;
-    s32 health;
-    s32 idx;
-
-    health = (sub_80338DC() != 0) ? 0x10 : 0x18;
-
-    InitActorPart(self, part, b, cParam, d);
-    *(s32 *)(self + 0x54) = health;
-    *(void **)(self + 0x50) = gStaticData_087E5554;
-    self[0x59] = eByte;
-    idx = (self[0x59] != 0) ? 0 : 1;
-    *(s32 *)(self + 0x28) = 0;
-    *(s32 *)(self + 0x44) = 0;
-    *(s32 *)(self + 0xc) = idx;
-    *(u16 *)(self + 0x10) = *(u16 *)(*(u8 **)self + idx * 12);
-    self[0x12] = 0;
-    *(s32 *)(self + 8) = 0;
-    self[0x58] = 0;
-    *(s32 *)(self + 0x5c) = (self[0x59] != 0) ? 0xFFFFBF00 : 0x8400;
-    *(s32 *)(self + 0x60) = 0xa00;
-    *(s32 *)(self + 0x64) = -1;
-    self[0x2c] = 0;
-    *(s32 *)(self + 0x68) = *(s32 *)((u8 *)sub_80338C4() + 4);
-    *(s32 *)(self + 0x6c) = 0;
-
-    return self;
+    gUnknown_030014D0 = 3;
 }
-#endif /* NON_MATCHING */
+
+extern void *gUnknown_030014BC;
+
+/* Destructor: frees the object. */
+void sub_802DFC8(void)
+{
+    mem_free(gUnknown_030014BC);
+}
+
+extern s32 gUnknown_030014D4;
+extern s32 gUnknown_030014C4;
+extern s32 gUnknown_030014CC;
+extern s32 gUnknown_030014C8;
+extern u8 gStaticData_0817A850[];
+extern u8 gStaticData_0817A880[];
+extern void sub_803B0A8(void *self, s32 idx);
+extern s32 sub_8029B2C(void);
+extern void sub_8029E34(s32 arg0);
+extern void sub_802DE70(void);
+
+/* Constructor: stashes the caller's argument in `gUnknown_030014D4`,
+ * allocates and wires up a fresh instance (part table
+ * `gStaticData_0817A850`/`0817A880`, header byte `0xf`, reset via
+ * `sub_803B0A8`) into `gUnknown_030014BC`, resets the position-tracking
+ * pair (`gUnknown_030014C4` to 0, `030014CC` to `0xA000`,
+ * `030014C8` derived the same way `sub_802DB2C`/`sub_802DCC0` do),
+ * primes `sub_8029E34`, clears `gUnknown_030014D0`, and finally calls
+ * `sub_802DE70` (the object's own initial VRAM-pattern/DMA setup,
+ * parked separately - see docs/matching/issue-54-actor-d3a8.md). */
+void sub_802DFDC(void *arg0)
+{
+    u8 *obj;
+    register u32 size asm("r0");
+    register s32 flags asm("r1");
+    register void **bcAddr asm("r5");
+
+    gUnknown_030014D4 = (s32)arg0;
+    bcAddr = &gUnknown_030014BC;
+    asm volatile("mov %0, #0x1c" : "=r"(size));
+    asm volatile("mov %0, #0x80\n\tlsl %0, %0, #0x18" : "=r"(flags));
+    obj = mem_alloc(size, flags);
+    {
+        u8 *v0 = gStaticData_0817A850;
+        u8 *v1 = gStaticData_0817A880;
+        s32 v2 = 0xf;
+
+        *(u8 **)obj = v0;
+        *(u8 **)(obj + 4) = v1;
+        *(s32 *)(obj + 0x18) = v2;
+    }
+    sub_803B0A8(obj, 0);
+    *bcAddr = obj;
+
+    gUnknown_030014C4 = 0;
+    gUnknown_030014CC = 0xa000;
+    gUnknown_030014C8 = (sub_8029B2C() << 8) - gUnknown_030014CC;
+    sub_8029E34(gUnknown_030014CC);
+
+    gUnknown_030014D0 = 0;
+    sub_802DE70();
+}
 
 asm(".align 2, 0");

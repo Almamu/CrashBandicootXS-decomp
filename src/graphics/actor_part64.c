@@ -1,46 +1,59 @@
 #include "core.h"
 
-/* Same "self" object family as actor_part63.c - see that file's header
- * comment and docs/matching/issue-63-0x08033ef4-actor.md. */
+/* Same "self" object family as actor_part57.c (constructed by
+ * `sub_8033EF4`) - see docs/matching/issue-63-0x08033ef4-actor.md. */
 
 #if NON_MATCHING
 /* NOT YET BYTE-MATCHING - see docs/matching/issue-63-0x08033ef4-actor.md,
- * "Parked: sub_8034314" for the full account; compiled only under
+ * "Parked: sub_8033FE4" for the full account; compiled only under
  * `make NON_MATCHING=1`, the checked-in assembly
- * (asm/code_3_2_20_28568_c99c_31784_33ef4_34314.s) is used otherwise.
- * Same position-sync/flag/trampoline shape as the parked `sub_8034270`
- * (actor_part62.c), but returns the "should animate" boolean directly
- * instead of calling `sub_802A7B8` itself. Parked on the identical
- * dead-store/dead-branch elimination gap. */
-extern s32 sub_80338E8(void);
-extern s32 sub_8033900(void);
-extern s32 sub_80338F4(void);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *fn);
+ * (asm/code_3_2_20_28568_c99c_31784_33ef4_33fe4.s) is used otherwise.
+ * The same stride-8 `{s16 baseOff; s16 count; void *fn}` trampoline-
+ * record dispatch and `sub_803AD84` call already documented for
+ * `sub_8033B44`/`sub_8033C84`/`sub_8033E80` (issue #62,
+ * `gStaticData_0817C4E0`) and `sub_802C208` (issue #52), here against a
+ * second table (`gStaticData_0817C4F8`); instead of tail-calling
+ * `sub_802A7B8` or returning a plain predicate, returns 0 when `self`
+ * is in state 2 with `self+0x12` set, 1 otherwise. Parked on the exact
+ * same `record = base + state*8` re-derivation register-allocation gap
+ * as the rest of that family. */
+extern u8 gStaticData_0817C4F8[];
+extern s32 sub_803AD84(void *addr, void *arg1, void *tableEntry, void *fn);
 
-s32 sub_8034314(void *selfArg)
+s32 sub_8033FE4(void *selfArg)
 {
     u8 *self = selfArg;
-    s32 doAnim;
+    u8 *base = gStaticData_0817C4F8;
+    s32 state = *(s32 *)(self + 0x28);
+    u8 *record = base + state * 8;
+    s16 count = *(s16 *)(record + 2);
+    void *fn;
+    s16 baseOff;
+    s32 addr;
 
-    *(s32 *)(self + 0x24) = sub_80338E8() - 0x200;
-    *(s32 *)(self + 0x1c) = sub_8033900() + 0x2000;
-    *(s32 *)(self + 0x20) = sub_80338F4() + 0x3000;
-    self[0x58] = 1;
+    if (count > 0) {
+        s16 subOffset = *(s16 *)(record + 4);
+        u8 *listPtr = *(u8 **)(self + subOffset);
+        u8 *entry = listPtr + count * 8 - 8;
+        s32 delta = *(s32 *)(entry + 0);
 
-    if (self[0x12] != 0) {
-        if (self != NULL) {
-            u8 *table = *(u8 **)(self + 0x50);
-            u8 *addr = self + *(s16 *)(table + 8);
-            void *fn = *(void **)(table + 0xc);
-
-            sub_803AD80(addr, (void *)3, fn);
-        }
-        doAnim = 0;
+        fn = *(void **)(entry + 4);
+        record = base + *(s32 *)(self + 0x28) * 8;
+        baseOff = *(s16 *)(record + 0);
+        addr = (s16)delta + baseOff;
     } else {
-        doAnim = 1;
+        fn = *(void **)(record + 4);
+        record = base + *(s32 *)(self + 0x28) * 8;
+        baseOff = *(s16 *)(record + 0);
+        addr = baseOff;
     }
 
-    return doAnim;
+    sub_803AD84(self + addr, (void *)(s32)baseOff, (void *)(s32)count, fn);
+
+    if (*(s32 *)(self + 0x28) == 2 && self[0x12] != 0) {
+        return 0;
+    }
+    return 1;
 }
 #endif /* NON_MATCHING */
 

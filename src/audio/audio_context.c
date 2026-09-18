@@ -22,27 +22,48 @@ extern void sub_80390F8(s32 channel, u32 volume);
  * `pendingSfx` and forces the current record to expire on the very
  * next tick instead of playing over it.
  *
- * Parked: two gaps neither register pinning nor array-indexing (see
- * matching_decomp_register_pinning memory) closed. (1) The ROM reads
- * the 5th (stack) parameter, `forceFlag`, via `add rX,sp,#0x14;
- * ldrb rX,[rX]` (compute the stack slot's address, then a genuine
- * byte load); this compiler instead reads the full word and masks it
- * with `lsls #24; lsrs #24` - both are valid ways to read a `u8`
- * stack argument, but produce a different instruction count. (2) the
- * ROM recomputes `&gStaticData_0816AA6C[id].baseVolume` fully from
- * `tableBase`+offset+8 for the volume read, even though the identical
- * address was already computed for the `slotId` read a few
+ * Parked: one gap closed this pass, one still resists. (1) FIXED - the
+ * ROM reads the 5th (stack) parameter, `forceFlag`, via
+ * `add rX,sp,#0x14; ldrb rX,[rX]` (compute the stack slot's address,
+ * then a genuine byte load); this compiler's default codegen for a u8
+ * stack argument instead read the full word and masked it with
+ * `lsls #24; lsrs #24`. Neither a plain `u8` local nor a `*(u8 *)&`
+ * cast changed that (the latter even forced a real stack-local copy).
+ * What worked: an inline-asm anchor reproducing the ROM's exact
+ * `add r0, sp, #0x14` / `ldrb r0, [r0]` pair verbatim (`t`, pinned to
+ * r0) ahead of the `register ... = ...` initializers for `tableBase`/
+ * `handle`, which also keeps it scheduled first in the instruction
+ * stream like the ROM, not sunk after the table lookup. (2) STILL
+ * OPEN - the ROM recomputes `&gStaticData_0816AA6C[id].baseVolume`
+ * fully from `tableBase`+offset+8 for the volume read, even though the
+ * identical address was already computed for the `slotId` read a few
  * instructions earlier and is still live; this compiler's CSE always
- * reuses that live address instead (fewer instructions) - tried
- * raw-offset casts instead of struct-field access and a
- * (rejected-by-the-compiler-itself) volatile-qualified pointer to
- * discourage the reuse, neither changed the outcome. */
+ * reuses that live address instead (fewer instructions), and once the
+ * address is folded the following `baseVolume * volumeMul` multiply's
+ * register-copy step also lands on this compiler's generic "mov Rd,Rs"
+ * encoding (`0x46xx`) rather than the ROM's "adds Rd,Rs,#0" form
+ * (`0x1Cxx`) - confirmed as a genuine byte difference by hand-
+ * assembling both forms with this project's own `arm-none-eabi-as`,
+ * not a cosmetic dump-only difference. Retried this pass: raw-offset
+ * casts, a `"memory"`-clobber barrier between the two field reads (no
+ * effect - the cached value is a computed address, not a memory load,
+ * so a memory clobber doesn't touch it), swapping the multiplication's
+ * operand order (fixes the `muls` instruction's own register field but
+ * not the preceding copy), and pinning the loaded value straight into
+ * `r1` (skips the copy entirely instead of reproducing it - shorter
+ * than the ROM, not closer). None closed it. */
 void sub_80019F8(struct AudioContext *self, u32 id, u32 frameOffset, s32 volumeMul, u8 forceFlag)
 {
-    register u32 force asm("ip") = forceFlag;
-    register struct SfxTableEntry *tableBase asm("r5") = gStaticData_0816AA6C;
-    register u32 handle asm("r2") = tableBase[id].slotId;
+    register u32 force asm("ip");
+    register struct SfxTableEntry *tableBase asm("r5");
+    register u32 handle asm("r2");
+    register u32 t asm("r0");
     s32 volume;
+
+    asm volatile ("add %0, sp, #0x14\n\tldrb %0, [%0]" : "=r" (t));
+    force = t;
+    tableBase = gStaticData_0816AA6C;
+    handle = tableBase[id].slotId;
 
     if (handle == 0) {
         return;
