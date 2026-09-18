@@ -29,12 +29,16 @@ helpers.
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
-## Parked (`NON_MATCHING`, not yet byte-exact)
+## Parked - NAKED asm transcription (byte-correct, not decompiled C)
 
 - **`sub_8000CBC`** (`src/util/printf_util.c`, a case-insensitive
-  `strstr`) - matching a specific redundant-truncate branch shape in its
-  lowercase-fold logic conflicts with keeping `caseInsensitive` out of
-  `r8` - see `docs/matching.md`, "Parked, not matched: `sub_8000CBC`".
+  `strstr`) - a full C reconstruction matched the ROM everywhere except
+  a specific redundant-truncate branch shape in its lowercase-fold
+  logic that conflicted with keeping `caseInsensitive` out of `r8`;
+  converted to a byte-verified NAKED asm transcription instead (see
+  `src/util/printf_util.c`'s own doc comment, and the general pattern
+  established by `src/system/link_cable.c`'s `sub_8001CB8`). Byte-exact
+  but not real decompiled C, so tracked here as parked, not matched.
 
 ## Other notes
 

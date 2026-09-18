@@ -7,7 +7,6 @@
  * cluster (play/pause/stop, the two fade-envelope arm/setter pairs,
  * the constructor). */
 
-#if NON_MATCHING
 extern u32 gUnknown_0300082C;
 extern s32 sub_8038E74(u32 handle, s32 channel, s32 pitchOffset, s32 priority);
 extern void sub_80390F8(s32 channel, u32 volume);
@@ -22,84 +21,123 @@ extern void sub_80390F8(s32 channel, u32 volume);
  * `pendingSfx` and forces the current record to expire on the very
  * next tick instead of playing over it.
  *
- * Parked: one gap closed this pass, one still resists. (1) FIXED - the
- * ROM reads the 5th (stack) parameter, `forceFlag`, via
- * `add rX,sp,#0x14; ldrb rX,[rX]` (compute the stack slot's address,
- * then a genuine byte load); this compiler's default codegen for a u8
- * stack argument instead read the full word and masked it with
- * `lsls #24; lsrs #24`. Neither a plain `u8` local nor a `*(u8 *)&`
- * cast changed that (the latter even forced a real stack-local copy).
- * What worked: an inline-asm anchor reproducing the ROM's exact
- * `add r0, sp, #0x14` / `ldrb r0, [r0]` pair verbatim (`t`, pinned to
- * r0) ahead of the `register ... = ...` initializers for `tableBase`/
- * `handle`, which also keeps it scheduled first in the instruction
- * stream like the ROM, not sunk after the table lookup. (2) STILL
- * OPEN - the ROM recomputes `&gStaticData_0816AA6C[id].baseVolume`
- * fully from `tableBase`+offset+8 for the volume read, even though the
- * identical address was already computed for the `slotId` read a few
- * instructions earlier and is still live; this compiler's CSE always
- * reuses that live address instead (fewer instructions), and once the
- * address is folded the following `baseVolume * volumeMul` multiply's
- * register-copy step also lands on this compiler's generic "mov Rd,Rs"
- * encoding (`0x46xx`) rather than the ROM's "adds Rd,Rs,#0" form
- * (`0x1Cxx`) - confirmed as a genuine byte difference by hand-
- * assembling both forms with this project's own `arm-none-eabi-as`,
- * not a cosmetic dump-only difference. Retried this pass: raw-offset
- * casts, a `"memory"`-clobber barrier between the two field reads (no
- * effect - the cached value is a computed address, not a memory load,
- * so a memory clobber doesn't touch it), swapping the multiplication's
- * operand order (fixes the `muls` instruction's own register field but
- * not the preceding copy), and pinning the loaded value straight into
- * `r1` (skips the copy entirely instead of reproducing it - shorter
- * than the ROM, not closer). None closed it. */
-void sub_80019F8(struct AudioContext *self, u32 id, u32 frameOffset, s32 volumeMul, u8 forceFlag)
+ * Written as NAKED asm, not plain C: a full C reconstruction (kept in
+ * git history) closed one gap (the ROM's `add rX,sp,#0x14; ldrb
+ * rX,[rX]` stack-byte-parameter read, via an inline-asm anchor) but
+ * left one open - the ROM recomputes
+ * `&gStaticData_0816AA6C[id].baseVolume` fully from `tableBase`+
+ * offset+8 for the volume read, even though the identical address was
+ * already computed for the `slotId` read a few instructions earlier
+ * and is still live; this compiler's CSE always reuses that live
+ * address instead (fewer instructions), and once folded, the following
+ * `baseVolume * volumeMul` multiply's register-copy step also lands on
+ * this compiler's generic "mov Rd,Rs" encoding rather than the ROM's
+ * "adds Rd,Rs,#0" form. Raw-offset casts, memory-clobber barriers,
+ * operand reordering, and pinning the loaded value straight into a
+ * register all failed to close it (see git history for the blow-by-
+ * blow). Every instruction below is confirmed byte-identical to the
+ * ROM - full NAKED transcription, like this project's other
+ * hard-compiler-limitation cases (see `src/util/printf_util.c`'s
+ * `sub_8000CBC` for the established pattern), is more honest than
+ * continuing to chase this one CSE decision through plain C. */
+NAKED void sub_80019F8(struct AudioContext *self, u32 id, u32 frameOffset, s32 volumeMul, u8 forceFlag)
 {
-    register u32 force asm("ip");
-    register struct SfxTableEntry *tableBase asm("r5");
-    register u32 handle asm("r2");
-    register u32 t asm("r0");
-    s32 volume;
-
-    asm volatile ("add %0, sp, #0x14\n\tldrb %0, [%0]" : "=r" (t));
-    force = t;
-    tableBase = gStaticData_0816AA6C;
-    handle = tableBase[id].slotId;
-
-    if (handle == 0) {
-        return;
-    }
-    if (volumeMul <= 0) {
-        return;
-    }
-    volume = (u32)((volumeMul * (s32)tableBase[id].baseVolume) * self->sfxVolume) >> 0x10;
-    if (self->activeSfx.id == 0x63) {
-        sub_8038E74(handle, 2, 0, -1);
-        sub_80390F8(2, self->field_34);
-        self->activeSfx.id = id;
-        self->activeSfx.deadline = gUnknown_0300082C + frameOffset;
-        self->activeSfx.volume = volume;
-        return;
-    }
-    if (volume < self->activeSfx.volume) {
-        return;
-    }
-    if (self->activeSfx.id == id) {
-        self->activeSfx.deadline = gUnknown_0300082C + frameOffset;
-        self->activeSfx.volume = volume;
-        if (force != 0) {
-            sub_8038E74(handle, 2, 0, -1);
-            sub_80390F8(2, self->field_34);
-        }
-        self->pendingSfx.id = 0x63;
-        self->pendingSfx.volume = 0;
-        return;
-    }
-    self->pendingSfx.id = id;
-    self->pendingSfx.deadline = gUnknown_0300082C + frameOffset;
-    self->pendingSfx.volume = volume;
-    self->activeSfx.deadline = gUnknown_0300082C;
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "add r4, r0, #0\n\t"
+        "add r6, r1, #0\n\t"
+        "add r7, r2, #0\n\t"
+        "add r0, sp, #0x14\n\t"
+        "ldrb r0, [r0]\n\t"
+        "mov ip, r0\n\t"
+        "ldr r5, 2f\n\t"
+        "lsl r0, r6, #1\n\t"
+        "add r0, r0, r6\n\t"
+        "lsl r1, r0, #2\n\t"
+        "add r0, r1, r5\n\t"
+        "ldr r2, [r0]\n\t"
+        "cmp r2, #0\n\t"
+        "beq 1f\n\t"
+        "cmp r3, #0\n\t"
+        "ble 1f\n\t"
+        "add r0, r5, #0\n\t"
+        "add r0, #8\n\t"
+        "add r0, r1, r0\n\t"
+        "ldr r0, [r0]\n\t"
+        "add r1, r0, #0\n\t"
+        "mul r1, r3, r1\n\t"
+        "ldr r0, [r4, #0x2c]\n\t"
+        "mul r0, r1, r0\n\t"
+        "lsr r5, r0, #0x10\n\t"
+        "ldr r1, [r4, #0x38]\n\t"
+        "cmp r1, #0x63\n\t"
+        "bne 4f\n\t"
+        "mov r3, #1\n\t"
+        "neg r3, r3\n\t"
+        "add r0, r2, #0\n\t"
+        "mov r1, #2\n\t"
+        "mov r2, #0\n\t"
+        "bl sub_8038E74\n\t"
+        "ldr r1, [r4, #0x34]\n\t"
+        "mov r0, #2\n\t"
+        "bl sub_80390F8\n\t"
+        "str r6, [r4, #0x38]\n\t"
+        "ldr r0, 3f\n\t"
+        "ldr r0, [r0]\n\t"
+        "add r0, r0, r7\n\t"
+        "str r0, [r4, #0x3c]\n\t"
+        "str r5, [r4, #0x40]\n\t"
+        "b 1f\n\t"
+        ".align 2, 0\n\t"
+    "2: .4byte gStaticData_0816AA6C\n\t"
+    "3: .4byte gUnknown_0300082C\n\t"
+    "4:\n\t"
+        "ldr r0, [r4, #0x40]\n\t"
+        "cmp r5, r0\n\t"
+        "blt 1f\n\t"
+        "cmp r1, r6\n\t"
+        "bne 7f\n\t"
+        "ldr r0, 5f\n\t"
+        "ldr r0, [r0]\n\t"
+        "add r0, r0, r7\n\t"
+        "str r0, [r4, #0x3c]\n\t"
+        "str r5, [r4, #0x40]\n\t"
+        "mov r0, ip\n\t"
+        "cmp r0, #0\n\t"
+        "beq 6f\n\t"
+        "mov r3, #1\n\t"
+        "neg r3, r3\n\t"
+        "add r0, r2, #0\n\t"
+        "mov r1, #2\n\t"
+        "mov r2, #0\n\t"
+        "bl sub_8038E74\n\t"
+        "ldr r1, [r4, #0x34]\n\t"
+        "mov r0, #2\n\t"
+        "bl sub_80390F8\n\t"
+    "6:\n\t"
+        "mov r0, #0x63\n\t"
+        "str r0, [r4, #0x44]\n\t"
+        "mov r0, #0\n\t"
+        "str r0, [r4, #0x4c]\n\t"
+        "b 1f\n\t"
+        ".align 2, 0\n\t"
+    "5: .4byte gUnknown_0300082C\n\t"
+    "7:\n\t"
+        "str r6, [r4, #0x44]\n\t"
+        "ldr r0, 8f\n\t"
+        "ldr r1, [r0]\n\t"
+        "add r0, r1, r7\n\t"
+        "str r0, [r4, #0x48]\n\t"
+        "str r5, [r4, #0x4c]\n\t"
+        "str r1, [r4, #0x3c]\n\t"
+    "1:\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r0}\n\t"
+        "bx r0\n\t"
+        ".align 2, 0\n\t"
+    "8: .4byte gUnknown_0300082C\n\t"
+    );
 }
-#endif /* NON_MATCHING */
 
 extern void sub_8039064(s32 channel, u32 volume);
 extern void sub_8039198(void);

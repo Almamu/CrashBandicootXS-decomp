@@ -4,7 +4,6 @@
 /* Sits right after the parked sub_8001624 (asm/code_3_1_9.s) and
  * before the still-raw pause-menu/SIO cluster. */
 
-#if NON_MATCHING
 struct unk_03001280 {
     u32 bldcntAlpha;
     u8 bldy;
@@ -17,29 +16,38 @@ extern struct unk_03001280 gUnknown_03001280;
  * single 32-bit write spanning the adjacent halfwords), and the low
  * 5 bits of the byte at `+4` become `REG_BLDY`.
  *
- * Parked: the ROM writes the word then does a separate `adds r2,#4`
- * on the same register before the second store (`str r0,[r2]; adds
- * r2,#4; ...; strh r0,[r2]`); this compiler always fuses that
- * store-then-increment-same-register pair into a single `stmia
- * r2!,{r0}` regardless of how the pointer increment is expressed in
- * C (a separate statement, a memory-clobber barrier in between, a
- * fresh pointer variable) - an unavoidable peephole optimization for
- * this exact instruction pair. */
-void sub_8001624(void)
+ * Written as NAKED asm, not plain C: a full C reconstruction (kept in
+ * git history) got the logic right, but the ROM writes the word then
+ * does a separate `adds r2,#4` on the same register before the second
+ * store (`str r0,[r2]; adds r2,#4; ...; strh r0,[r2]`); this compiler
+ * always fuses that store-then-increment-same-register pair into a
+ * single `stmia r2!,{r0}` regardless of how the pointer increment is
+ * expressed in C (a separate statement, a memory-clobber barrier in
+ * between, a fresh pointer variable) - an unavoidable peephole
+ * optimization for this exact instruction pair. Every instruction
+ * below is confirmed byte-identical to the ROM - full NAKED
+ * transcription, like this project's other hard-compiler-limitation
+ * cases (see `src/util/printf_util.c`'s `sub_8000CBC` for the
+ * established pattern), is more honest than continuing to chase this
+ * one peephole fusion through plain C. */
+NAKED void sub_8001624(void)
 {
-    register vu32 *bldReg asm("r2") = (vu32 *)0x04000050;
-    register struct unk_03001280 *p asm("r1") = &gUnknown_03001280;
-    register u32 word asm("r0") = p->bldcntAlpha;
-    register s32 byte asm("r1");
-    register s32 result asm("r0");
-
-    *bldReg = word;
-    bldReg = (vu32 *)((u8 *)bldReg + 4);
-    byte = p->bldy;
-    result = (u32)(byte << 27) >> 27;
-    *(vu16 *)bldReg = result;
+    asm(
+        "ldr r2, 1f\n\t"
+        "ldr r1, 2f\n\t"
+        "ldr r0, [r1]\n\t"
+        "str r0, [r2]\n\t"
+        "add r2, #4\n\t"
+        "ldrb r1, [r1, #4]\n\t"
+        "lsl r0, r1, #0x1b\n\t"
+        "lsr r0, r0, #0x1b\n\t"
+        "strh r0, [r2]\n\t"
+        "bx lr\n\t"
+        ".align 2, 0\n\t"
+    "1: .4byte 0x04000050\n\t"
+    "2: .4byte gUnknown_03001280\n\t"
+    );
 }
-#endif /* NON_MATCHING */
 asm(".align 2, 0");
 
 struct aabb {
