@@ -487,6 +487,17 @@ doesn't advance that even when byte-correct. See
 established convention, and each entry's linked write-up for why
 plain C didn't converge.
 
+- **`sub_80159F8`/`sub_8015C6C`** (`src/graphics/actor_part86.c`, ROM
+  0x080159F8-0x08015DF8, GitHub issue #19) and **`sub_8015DF8`**
+  (`src/graphics/actor_part86b.c`, ROM 0x08015DF8-0x08015FD0, split
+  into its own unit) - three large (13-case and 9-case) jump-table
+  state-machine dispatchers on the part object's `+0x60`/`+0x64`
+  velocity fields, `self+0x21` state, and (for `sub_8015DF8`) a
+  `sub_8025BAC` object-spawn call. Fully understood and near-matched
+  as real C - a recurring gcc-2.9 gap (ROM routes several `(x*3)>>2`
+  computations through an extra scratch-register copy that this
+  compiler's allocator always collapses away) blocked the last step
+  in all three. See `docs/matching/issue-19-0x08015840-actor.md`.
 - **`sub_8009008`** (`src/graphics/actor_part11b.c`) - the
   spatial-hash-grid removal primitive `sub_8009A30`/`sub_8009AA0`
   call: a two-phase search (the object's own primary bucket, then
@@ -1031,11 +1042,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   action-state machine and a high-register-pressure hitbox commit
   function, each calling one or more still-unexamined helpers; left
   raw - see `docs/matching/issue-9-10-0x0800ab9c-graphics.md`.
-- **`sub_80159F8`/`sub_8015C6C`/`sub_8015DF8`** (`asm/code_3_2_17_159f8.s`,
-  ROM 0x080159F8-0x08015FDC, GitHub issue #19) - three large jump-table
-  state-machine dispatchers on the part object's velocity fields; left
-  raw, out of scope for this pass - see
-  `docs/matching/issue-19-0x08015840-actor.md`.
 - **`sub_8016048`** (`asm/code_3_2_17_16048.s`, ROM 0x08016048, GitHub
   issue #19) - a smaller joystick-input-gated dispatcher; left raw, out
   of scope for this pass - see
