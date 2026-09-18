@@ -1,8 +1,8 @@
 #include "core.h"
 #include "icon_manager.h"
 
-/* Sits between the parked MeasureText (asm/code_3_2_20_8994.s) and the
- * parked sub_8028A78 (asm/code_3_2_20_8a78.s) - UploadHudTile/
+/* Sits between MeasureText (src/graphics/hud_icon_widget_8994.c) and
+ * sub_8028A78 (src/graphics/hud_icon_widget_8a78.c) - UploadHudTile/
  * sub_8028A30/sub_8028A40, GitHub issue #46. Same `struct icon_manager`
  * as hud_icon_widget.c/hud_icon_widget2.c/hud_icon_widget3.c/
  * hud_icon_widget5.c. */

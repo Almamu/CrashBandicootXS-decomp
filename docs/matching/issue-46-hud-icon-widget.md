@@ -313,3 +313,59 @@ functions across this codebase cite it.
 
 `InitHudTextWidget` (`0x08028B7C`, immediately after this issue's
 range) remains fully raw and out of scope - not attempted this pass.
+
+## Third pass: NAKED-transcription - all 25 functions now matched
+
+Follow-up pass over the five functions the second pass left parked:
+`sub_80285C4`, `InitHudIconWidgetA`, `InitHudIconWidgetB`,
+`sub_8028900`, `MeasureText`. All five are confirmed blocked by the same
+r7-pinning toolchain bug documented in the second pass above (`register
+T x asm("r7")`, or any inline-asm use of r7 at all - even indirectly, by
+pinning enough *other* hard registers to starve the unforced allocator's
+own r7 choice - compiles with no push/pop of r7, silently corrupting the
+caller's r7 across the call). Rather than keep chasing plain-C
+workarounds around a confirmed compiler bug, this pass transcribed all
+five directly as `NAKED` asm functions instead - the same technique this
+project already uses elsewhere for this exact class of problem
+(`src/util/math_div_util.c`'s `nullsub_8`, `src/audio/gax_swi.c`'s
+`sub_80392C4`, `src/system/link_cable.c`'s `sub_8001CB8`/`sub_8001F50`).
+A NAKED function has no compiler-generated prologue/epilogue or
+register allocation at all, so the r7 bug (and any other codegen
+mismatch) is moot - the instructions are typed in verbatim, checked
+byte-by-byte against the ROM disassembly's unified-syntax mnemonics
+translated to this project's divided-syntax convention (`adds`->`add`,
+`ands`->`and`, `lsls`/`lsrs`->`lsl`/`lsr`, `orrs`->`orr`, `subs`->`sub`,
+`muls`->`mul`, `movs`->`mov`; `cmp`/`ldrb`/`strb`/`ldrh`/`strh`/`b`/
+conditional branches/`bl`/`bx` unchanged).
+
+All five real-bytes raw `.s` fragments this issue's scope depended on
+are now gone entirely, and the ldscript entries removed with them:
+
+- `asm/code_3_2_20_85c4.s` deleted; `sub_80285C4`, `InitHudIconWidgetA`,
+  `InitHudIconWidgetB` now live as `NAKED` functions in
+  `src/graphics/hud_icon_widget_85c4.c`, ahead of the already-matched
+  plain-C `sub_8028808`. No `#if NON_MATCHING` guard anywhere in the
+  file any more.
+- `asm/code_3_2_20_8890.s` deleted; `sub_8028900` now lives as a
+  `NAKED` function in `src/graphics/hud_icon_widget_8890.c`, after the
+  already-matched plain-C `sub_8028890`.
+- `asm/code_3_2_20_8994.s` deleted; `MeasureText` now lives as a
+  `NAKED` function, alone, in `src/graphics/hud_icon_widget_8994.c`.
+
+This brings issue #46 to full completion: all 25 functions in the
+original chunk are matched, closing the issue.
+
+Two small file-organization notes for future reference:
+
+- `sub_8028900`'s trailing `.align 2, 0` (the function ends 2 bytes
+  short of a 4-byte boundary in the ROM, same gotcha documented in the
+  first pass above) is now written directly inside the `NAKED` asm
+  string's own literal text, rather than as a separate following
+  `asm(".align 2, 0");` statement (that idiom only applies to
+  compiler-generated functions, where it works around the compiler's
+  *own* padding choice - a `NAKED` function's raw asm text controls its
+  own trailing bytes directly).
+- `MeasureText`'s ROM bytes happen to already end on a 4-byte boundary
+  (no trailing `.align` was present in the original raw `.s` fragment
+  either), so its `NAKED` transcription needs no alignment directive at
+  all.

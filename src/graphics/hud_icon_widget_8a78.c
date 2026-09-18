@@ -8,7 +8,7 @@ extern u8 gStaticData_087E4DAC[];
  * data tables past `record` (the line-height/space-width/glyph fields
  * stay whatever the caller already set) - just the OAM-scratch zero and
  * cursor/margin reset shared with InitHudIconWidgetA/B
- * (asm/code_3_2_20_85c4.s).
+ * (src/graphics/hud_icon_widget_85c4.c).
  *
  * The `posX`/`posY`/`field_118`/`field_12c` zero-init needed the same
  * inline-asm address anchor as InitHudIconWidgetA/B - see that
