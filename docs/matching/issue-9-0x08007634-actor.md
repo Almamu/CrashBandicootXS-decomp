@@ -6,6 +6,14 @@ generator) listed 18 raw functions across `asm/code_3_2.s`,
 `asm/code_3_2_16.s`. This is the write-up for the work done against
 that list.
 
+**Update**: `sub_8009008`/`sub_80091D4`/`sub_8009868`/`sub_8009BE0`,
+left raw below, were later NAKED-transcribed (byte-exact, tracked as
+parked, not matched) - see
+`docs/matching/naked-spatial-grid-tail.md`. The "left raw" entries for
+them further down are kept as-is, a snapshot of what was known at the
+time this file was written; they no longer reflect the current state
+of those four functions.
+
 ## Category correction: `game_loop` -> `actor`
 
 Every function in this chunk sits directly between already-matched
@@ -108,8 +116,12 @@ here; it stays genuinely parked, see below.)
   it always finds a way to reuse `r0`-`r3` instead (a *smaller*
   register footprint than the ROM's own, ironically - no `push
   {r4,r5}` needed - but not the same bytes).
-- **`sub_800A734`** (`src/graphics/actor_part48.c`; real bytes still in
-  `asm/code_3_2_16_a734.s`) - a part-object velocity/state reset that
+- **`sub_800A734`** - **UPDATE: matched in a later session, see
+  `docs/matching/issue-14-0x08010a0c-graphics.md`'s "Follow-up"
+  section** for the techniques that closed the gap described below.
+  (`src/graphics/actor_part48.c`; real bytes were in
+  `asm/code_3_2_16_a734.s`, now removed) - a part-object velocity/state
+  reset that
   additionally hooks up a child object at `self+0xb0` (calls
   `sub_800815C` on it, packs the result's low nibble into the child's
   `+0x29` byte) and zeroes the `+0x100`-`+0x105` per-phase flag bytes

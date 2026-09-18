@@ -106,6 +106,16 @@ system from "core" system startup/init code.
   trivial `gStaticData_0816BBAE[idx]` lookup
 - `src/system/game_loop26.c` (GitHub issue #13): `sub_8010A00` -
   `self+0x48` bits 6-7 sub-state extractor
+- `src/system/game_loop27.c` (GitHub issue #14, recategorized
+  graphics->game_loop - a direct continuation of the same physics/
+  collision subsystem file family): `sub_8010A0C`-`sub_8010B68` (24
+  functions) plus the unlabeled `sub_8010AF8` (the original
+  disassembly never gave it its own symbol - it falls out of
+  `sub_8010AEC`'s trailing alignment padding) - a run of bit-field get/
+  set/clear accessors and plain field accessors on the same
+  "collision box" record `sub_8010A00`/`sub_800FEB0` already operate
+  on. See
+  [docs/matching/issue-14-0x08010a0c-graphics.md](../matching/issue-14-0x08010a0c-graphics.md).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -136,6 +146,18 @@ plain C didn't converge.
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
+- **`sub_8010B6C`** (`src/system/game_loop28.c`, GitHub issue #14; real
+  bytes in `asm/code_3_2_17_e560_10b6c.s`) - the chunk's last and
+  largest function, a collision-candidate scan/resolve helper
+  `sub_80106DC` (`game_loop23.c`) already calls once a frame. Every
+  field offset/branch/call argument is understood and cross-referenced
+  against the mirror-image `sub_8010D54` and its caller; parked on the
+  ROM building nearly every record-field address as a running pointer
+  incremented by `0x24` per loop iteration, with up to twelve of them
+  (`r8`/`sb`/`sl` included) live across a `0x68`-byte stack frame - the
+  same gap already parked for `sub_800A734`/`sub_800A528` in
+  docs/matching/issue-9-0x08007634-actor.md, at a larger scale. See
+  [docs/matching/issue-14-0x08010a0c-graphics.md](../matching/issue-14-0x08010a0c-graphics.md).
 - **`sub_8022EA8`/`sub_8022F2C`** (`src/system/game_loop2.c`, GitHub
   issue #34) - record 47's periodic-trigger setter/decrementer; real
   bytes in `asm/code_3_2_17_22ea8.s`. See `docs/matching.md`'s issue

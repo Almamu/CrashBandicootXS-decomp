@@ -59,22 +59,35 @@ from "core" graphics.
   `actor_part7b.c`'s `sub_8008D80` range): `sub_8008DC0`, `sub_8008DEC`, `sub_8008E50`,
   `sub_8008E94`, `sub_8008EB4`, `sub_8008EE4`
 
+- `src/graphics/actor_part11b.c`/`actor_part11c.c`/`actor_part11d.c`
+  (new files, NAKED-transcription-only - see "Parked - NAKED
+  transcription" below for what each one holds): `sub_8009008`,
+  `sub_80091D4`, `sub_8009868` respectively, each dropped into
+  `ldscript.txt` between the remaining `asm/code_3_2_13*.s` guard
+  splits at its own real ROM address
+
 - `src/graphics/actor_part12.c` (new file - `sub_8009A30`'s real ROM
   address isn't adjacent to `actor_part11.c`'s matched functions
-  either, since the parked `sub_8008F20` and the raw `sub_8009008`-
-  `sub_8009914` span sit between them; see `docs/matching.md`):
+  either, since the parked `sub_8008F20` guard and the NAKED
+  `sub_8009008`/`sub_80091D4`/`sub_8009868` plus the remaining parked
+  `sub_8009150`/`sub_800944C`/`sub_8009528`/`sub_80096C0`/
+  `sub_8009914`/`sub_80099F0` guards all sit between them; see
+  `docs/matching.md`):
   `sub_8009A30`, `sub_8009AA0`, `sub_8009AF0`, `sub_8009B3C`,
   `sub_8009B70`, `sub_8009B9C`
 
+- `src/graphics/actor_part12b.c` (new file, NAKED-transcription-only -
+  `sub_8009BE0`, see "Parked - NAKED transcription" below)
+
 - `src/graphics/actor_part13.c` (new file - `sub_8009CA0`'s real ROM
   address isn't adjacent to `actor_part12.c`'s matched functions
-  either, since the raw `sub_8009BE0` sits between them; see
-  `docs/matching.md`): `sub_8009CA0`
+  either, since NAKED `sub_8009BE0` (`actor_part12b.c`) sits between
+  them; see `docs/matching.md`): `sub_8009CA0`
 
 - `src/graphics/actor_part8.c` (new file - `sub_8009EA8`'s real ROM
   address isn't adjacent to `code_3_2_15.o`'s raw content either, since
-  the parked `sub_8009DF4` sits raw between them, and `sub_8009BE0`
-  before that was left raw rather than guessed at; see
+  the parked `sub_8009DF4` sits raw between them, and NAKED
+  `sub_8009BE0` before that was already handled separately; see
   `docs/matching.md`):
   `sub_8009EA8`, `sub_8009EB0`, `sub_8009EBC`, `sub_8009EC4`,
   `sub_8009ECC`, `sub_8009ED0`, `sub_8009F1C`, `sub_8009F50`,
@@ -98,9 +111,13 @@ from "core" graphics.
   `sub_800A6F4`, `sub_800A700`, `sub_800A70C`, `sub_800A718`,
   `sub_800A724`, `sub_800A730`
 
-- `src/graphics/actor_part48.c` (GitHub issue #9): `sub_800A810` - a
-  part-object velocity/state reset that dispatches a sub-state byte to
-  one of three teardown helpers; see
+- `src/graphics/actor_part48.c` (GitHub issue #9): `sub_800A734` - a
+  part-object velocity/state reset+constructor that hooks up a child
+  object at `self+0xb0` (closed a gap an earlier session parked on -
+  needed interleaved running-pointer cursors, several register-pinned
+  idioms, and an inline-asm-anchored instruction order in a few spots)
+  - and `sub_800A810` - a part-object velocity/state reset that
+  dispatches a sub-state byte to one of three teardown helpers; see
   [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
 
 - `src/graphics/actor_part15.c`/`src/graphics/actor_part16.c` (new
@@ -160,17 +177,21 @@ from "core" graphics.
   trivial raw-offset getter), `sub_803AFF0`/`sub_803B024` (two more
   `gStaticData_087E3BEC`-family per-type descriptor table constructors)
 
-- `src/graphics/actor_part20.c`/`actor_part21.c`/`actor_part22.c`/
-  `actor_part23.c`/`actor_part24.c`/`actor_part25.c`/`actor_part26.c`
-  (new files, issue #58, ROM `0x08030334`-`0x08031784` - the boss-
-  weapon effect state machine, non-adjacent since 18 raw functions sit
-  between/around them; see
+- `src/graphics/actor_part20.c`/`actor_part20d.c`/`actor_part21.c`/
+  `actor_part21c.c`/`actor_part22.c`/`actor_part23.c`/
+  `actor_part24.c`/`actor_part25.c`/`actor_part26.c` (new files, issue
+  #58, ROM `0x08030334`-`0x08031784` - the boss-weapon effect state
+  machine, non-adjacent since 18 raw functions sit between/around them;
+  see
   [docs/matching/issue-58-0x08030334-actor.md](../matching/issue-58-0x08030334-actor.md)):
-  `sub_8030530`, `sub_8030640`, `sub_80306A4`, `sub_8030C98`,
-  `sub_80312C4`, `sub_803146C`, `sub_803171C`, `sub_8031744` - a
-  countdown-timer state transition, a trivial byte setter/getter pair,
-  a screen-accumulator/tracker-reset step, a BG2 zoom-effect updater,
-  a "charge" countdown, and a palette flash/animation-refresh pair.
+  `sub_8030530`, `sub_80305F8`, `sub_8030640`, `sub_80306A4`,
+  `sub_80306AC`, `sub_8030C98`, `sub_80312C4`, `sub_803146C`,
+  `sub_803171C`, `sub_8031744` - a countdown-timer state transition, an
+  `InitActorPart`-based constructor, a trivial byte setter/getter pair,
+  a camera-relative position accumulator with its own state-2/table-
+  index-0 transition, a screen-accumulator/tracker-reset step, a BG2
+  zoom-effect updater, a "charge" countdown, and a palette flash/
+  animation-refresh pair.
 - `src/graphics/actor_part27.c` (new file, GitHub issue #22, ROM
   0x08017A44-0x08017AAC - numbered `27` rather than `20` since issue
   #58's parallel PR above independently claimed `actor_part20.c`-
@@ -423,6 +444,34 @@ doesn't advance that even when byte-correct. See
 established convention, and each entry's linked write-up for why
 plain C didn't converge.
 
+- **`sub_8009008`** (`src/graphics/actor_part11b.c`) - the
+  spatial-hash-grid removal primitive `sub_8009A30`/`sub_8009AA0`
+  call: a two-phase search (the object's own primary bucket, then
+  every bucket 255 down to 0) that unlinks its pool node(s) from the
+  `struct pool_manager` grid (`actor_part12.c`) and returns them to
+  the free list. Fully understood; parked on a single-instruction
+  register-discard quirk in phase 2's early-exit path. See
+  `docs/matching/naked-spatial-grid-tail.md`.
+- **`sub_80091D4`** (`src/graphics/actor_part11c.c`) - a per-frame
+  grid-maintenance pass over the 3-bucket window around the tracked
+  sub-object's own column (plus bucket 255): lazily links newly-large
+  objects into bucket 255 (`sub_8009150`'s own body, inlined), removes
+  and destroys objects flagged for removal, and box-tests/marks the
+  rest. Fully understood; parked on a many-high-register allocation
+  gap across its three inner-loop branches. See
+  `docs/matching/naked-spatial-grid-tail.md`.
+- **`sub_8009868`** (`src/graphics/actor_part11d.c`) - another
+  3-bucket-window grid pass, this one reading the player's state to
+  dispatch `sub_800D040`/`sub_80109A4` per object. Fully understood;
+  parked on a cross-branch register-role gap (`r8` reused for two
+  different base addresses). See
+  `docs/matching/naked-spatial-grid-tail.md`.
+- **`sub_8009BE0`** (`src/graphics/actor_part12b.c`) - a physics/
+  collision step-probe: runs `self`'s position through `sub_8008278`,
+  then probes it via `sub_8026628` up to 4 times (nudging Y each
+  retry) before giving up. Fully understood; parked on a register-
+  reload quirk in the retry loop. See
+  `docs/matching/naked-spatial-grid-tail.md`.
 - **`sub_801434C`** (`src/graphics/actor_part18.c`) - the shared
   handler `sub_80142B0` tail-calls; one of the `gStaticData_0816BF20`
   action-table entries. See `docs/matching/issue-18-0x08014f8c-actor.md`.
@@ -449,6 +498,75 @@ plain C didn't converge.
   `+0x100`-flag-gated `mode` remapper (a 3-way dispatch playing a fixed
   cue via `sub_80019A8`/`PlaySfx`), tail-calling `sub_800B86C`. See
   `docs/matching/issue-18-0x08014f8c-actor.md`.
+- **`sub_8030574`** (`src/graphics/actor_part20b.c`) - boss-weapon
+  keyframe-table AABB lookup/dispatch; same `gStaticData_*` stride-8
+  table shape and r7-hazard as the already-parked `sub_802C208`
+  (actor_part19.c) - this compiler's unforced allocator never reaches
+  r7 for this shape, and a direct C translation compiles noticeably
+  shorter/differently-structured code. See
+  `docs/matching/issue-58-0x08030574-actor.md`.
+- **`sub_8030648`** (`src/graphics/actor_part21b.c`) - same
+  keyframe-table AABB lookup shape as `sub_8030574`, minus its
+  state-transition tail. See
+  `docs/matching/issue-58-0x08030574-actor.md`.
+- **`sub_8030734`** (`src/graphics/actor_part21d.c`) - `sub_80306AC`'s
+  companion: ramps `gUnknown_03001560` toward a fixed target and, on
+  its phase counter's armed tick, spawns via `sub_802E62C`. A plain-C
+  reconstruction got everything but one statement's evaluation order
+  byte-identical - this compiler always computes a `*dest = *(source
+  expr)` assignment's RHS address before its LHS's, opposite of the
+  ROM's own build. See `docs/matching/issue-58-0x08030574-actor.md`.
+- **`sub_8030834`** (`src/graphics/actor_part21e.c`) - distance/speed-
+  gated variant of `sub_8030734`'s spawn (via `sub_802E674`); keeps the
+  weapon table's phase pointer/value alive in `sb`/`r8` across a real
+  `sub_803ADB4` call, the same many-high-register difficulty as
+  `sub_8006600` et al. See `docs/matching/issue-58-0x08030574-actor.md`.
+- **`sub_80309B4`** (`src/graphics/actor_part21f.c`) - large 5-way
+  weapon-kind projectile spawner dispatching on `gUnknown_0300153C`;
+  shares base coordinates across the dispatch in `r7`/`sb`/`sl`/`r8`.
+  See `docs/matching/issue-58-0x08030574-actor.md`.
+- **`sub_8030D48`** (`src/graphics/actor_part23b.c`) - a rectangular
+  BG-tilemap blit routine (docs/rom_map.md); nested loop keeps its
+  counters/cursor in `sl`/`sb`/`r8`/`ip`. See
+  `docs/matching/issue-58-0x08030574-actor.md`.
+- **`sub_8030E08`** (`src/graphics/actor_part23c.c`) - position-easing
+  helper called from `sub_8030734`/`sub_8030834`; keeps two accumulator
+  addresses and the player-position table in `sb`/`r8`/`sl`/`ip`. See
+  `docs/matching/issue-58-0x08030574-actor.md`.
+- **`sub_8030F88`** (`src/graphics/actor_part23d.c`) - the tracker
+  object's constructor (`mem_alloc` + the same state-0/table-index-0
+  transition idiom already matched elsewhere in this cluster); a first
+  plain-C attempt compiled shorter/differently-structured code and
+  wasn't pursued further given the ~50-instruction prologue's many
+  independent register-order choices. See
+  `docs/matching/issue-58-0x08030574-actor.md`.
+- **`sub_8031040`** (`src/graphics/actor_part23e.c`) - large "arm this
+  weapon-kind instance" setup; keeps its three position arguments and a
+  per-kind table pointer in `r8`/`sb`/`sl` across several real calls.
+  See `docs/matching/issue-58-0x08030574-actor.md`.
+- **`sub_80311C4`** (`src/graphics/actor_part23f.c`) - large per-frame
+  "advance this weapon-kind instance" driver; shares
+  `sub_8031040`'s accumulator-recompute tail and hits the same
+  operand-address-ordering gap as `sub_8030734`. See
+  `docs/matching/issue-58-0x08030574-actor.md`.
+- **`sub_8031378`** (`src/graphics/actor_part24b.c`) - AABB overlap
+  test against a keyframe-table box; same 12-byte
+  `{s16 x,y,z,sizeX,sizeY,sizeZ}` shape and register-pressure reasons
+  as the already-parked `sub_802DD9C`/`sub_802D7B0`
+  (actor_part75.c/actor_part74.c). See
+  `docs/matching/issue-58-0x08030574-actor.md`.
+- **`sub_8031504`** (`src/graphics/actor_part26b.c`) - DMA/tile-cache
+  setup + palette fade; pinning `&gUnknown_03001538` to `r7` (matching
+  the ROM's own choice) hits a *correctness* hazard, not just a byte
+  mismatch - this compiler reuses the "spare" r7 as scratch for an
+  unrelated assignment in between the pin's two dereferences, so the
+  second read would silently come from the wrong place. Abandoned
+  immediately per docs/workflow.md step 3's warning. See
+  `docs/matching/issue-58-0x08030574-actor.md`.
+- **`sub_8031604`** (`src/graphics/actor_part26c.c`) - VRAM fill-level
+  meter nibble-repack loop (docs/rom_map.md's "procedurally-generated
+  VRAM fill-level meter" finding); inner loop holds `r8`/`sb`/`sl`/`ip`
+  live simultaneously. See `docs/matching/issue-58-0x08030574-actor.md`.
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
@@ -505,15 +623,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   register roles for `self`/the record pointer exactly; parked on a
   genuine fifth-scratch-register need (`r5`, just to hold an offset
   immediate) this compiler never introduces. See
-  [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
-- **`sub_800A734`** (`src/graphics/actor_part48.c`, GitHub issue #9;
-  real bytes in `asm/code_3_2_16_a734.s`) - a part-object
-  velocity/state reset that also hooks up a child object. Field writes
-  fully confirmed; parked on the ROM's running-pointer address-
-  increment style across a long, non-uniform stretch of field writes
-  (its sibling `sub_800A810`, right after it in ROM order, matched with
-  a similar cursor technique on a shorter/more uniform stretch - see
-  the write-up). See
   [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
 - **`sub_800B270`** (`src/graphics/actor_part49.c`, GitHub issue #9) -
   a per-frame velocity integrator moving `self+0x60`/`self+0x64`
@@ -793,15 +902,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   `docs/matching.md` as needing "a dedicated session" of its own, not
   attempted again here - see
   `docs/matching/issue-9-0x08007634-actor.md`.
-- **`sub_8009008`/`sub_80091D4`/`sub_8009868`** (`asm/code_3_2_13.s`,
-  ROM 0x08009008-0x08009914, GitHub issue #9) - spatial-hash-grid
-  removal/list-management logic and a function calling into the
-  still-mostly-raw physics/collision subsystem; each individually
-  understood mechanically but not to a byte-exact-reconstruction
-  precision - see `docs/matching/issue-9-0x08007634-actor.md`.
-- **`sub_8009BE0`** (`asm/code_3_2_14.s`, ROM 0x08009BE0, GitHub issue
-  #9) - a physics/collision step-probe calling still-unexamined
-  helpers - see `docs/matching/issue-9-0x08007634-actor.md`.
 - **`sub_800A0FC`/`sub_800A178`/`sub_800A420`** (`asm/code_3_2_11.s`,
   ROM 0x0800A0FC-0x0800A5F4, GitHub issue #9) - part-object
   update/collision dispatchers built on unmatched
