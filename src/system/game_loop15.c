@@ -14,31 +14,48 @@ extern u8 gStaticData_087E4C14[];
  * fixed `8` packed into `+0x34`'s low nibble).
  *
  * PARKED, NOT BYTE-MATCHING: every field/offset confirmed against the
- * ROM. Two gaps remain: (1) the `& -0x20`/`& -0xd` masks - written as
- * negative-literal register pins matching this codebase's established
- * idiom (see `sub_8009F50` in actor_part8.c) - correctly produce the
- * ROM's two-instruction `mov`+`neg` sequence for `-0xd`, but the
- * `-0x20` mask still gets folded to a single `mov r0, #0xe0` immediate
- * regardless of how it's expressed in C; (2) hoisting `bgIndex+0x1c`
- * into its own local (needed since the ROM keeps it alive in a single
- * register from just after the `sub_8024DAC` call through the `+0x35`
- * bitfield store) pulls in an extra callee-saved register the ROM's
- * 3-register (`r4`/`r5`) frame doesn't need. Parked - see
- * docs/matching/issue-41-game-loop-25894.md. */
+ * ROM. Hoisting `bgIndex + 0x1c` into its own `t` local (needed since
+ * the ROM keeps it alive in a single register from just after the
+ * `sub_8024DAC` call through the `+0x35` bitfield store) turned out
+ * *not* to need an extra callee-saved register after all - this
+ * compiler fits it into a scratch register (`r3`) alongside the ROM's
+ * still-3-register (`r4`/`r5`) frame, contrary to an earlier attempt's
+ * finding. What remains: the `& -0x20`/`& -0xd` masks always fold to
+ * their positive byte-immediate equivalent (`0xe0`/`0xf3`) here,
+ * rather than the ROM's runtime `movs`+`rsbs` negation - tried the
+ * established negative-literal register-pin idiom (`sub_8023168`/
+ * `sub_80374D0` in docs/matching.md) but this compiler's constant
+ * folding still collapses the pinned mask onto the previously-loaded
+ * `0x1f`/`-0x20` constant via a cheaper `subs`/`adds`, the same
+ * unfixable value-propagation documented on `sub_8001524`
+ * (docs/matching.md) - no C-level phrasing found stops it. The two
+ * bitfield addresses (`self+0x34`/`self+0x35`) also land in `r2`/`r4`
+ * here versus the ROM's `r2`/`r3`, a minor knock-on permutation.
+ * Parked - see docs/matching/issue-41-game-loop-25894.md. */
 void *sub_8025D74(void *self, s32 bgIndex)
 {
     u8 *s = (u8 *)self;
+    s32 t;
+    u8 *addr34;
+    u8 *addr35;
 
     sub_8024DAC(self, bgIndex);
 
     *(void **)(s + 0x30) = gStaticData_087E4C14;
-    *(s32 *)(s + 0x4c) = ((bgIndex + 0x1c) << 0xb) + (0xc0 << 0x13);
+
+    t = bgIndex + 0x1c;
+    *(s32 *)(s + 0x4c) = (t << 0xb) + (0xc0 << 0x13);
+
     *(s32 *)(s + 0x38) = 0x04000008 + (bgIndex << 1);
     *(s32 *)(s + 0x58) = 0x04000010 + (bgIndex << 2);
     *(u16 *)(s + 0x34) = 0;
-    *(u8 *)(s + 0x34) &= 0x7f;
-    *(u8 *)(s + 0x35) = (*(u8 *)(s + 0x35) & -0x20) | ((bgIndex + 0x1c) & 0x1f);
-    *(u8 *)(s + 0x34) = (*(u8 *)(s + 0x34) & -0xd) | 8;
+
+    addr34 = s + 0x34;
+    *addr34 &= 0x7f;
+
+    addr35 = s + 0x35;
+    *addr35 = (*addr35 & -0x20) | (t & 0x1f);
+    *addr34 = (*addr34 & -0xd) | 8;
 
     return self;
 }
