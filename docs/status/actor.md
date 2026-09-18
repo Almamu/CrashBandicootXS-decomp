@@ -606,17 +606,25 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   1-2 call sharing); parked on a single remaining conditional-branch
   encoding gap in the mode-3 case - see `docs/matching.md`, "Parked,
   not matched: `sub_8009D5C`".
-- **`sub_8009DF4`** (`src/graphics/actor_part8.c`) - a velocity/
-  position integrator: steps each axis's velocity toward its max by
-  its accel amount (clamped so it never overshoots), builds a
+- **`sub_8009DF4`** (`src/graphics/actor_part8.c`, issue #97) - a
+  velocity/position integrator: steps each axis's velocity toward its
+  max by its accel amount (clamped so it never overshoots), builds a
   direction-flags byte from the clamped velocities' signs, caches the
-  pre-move position, applies the velocity, and updates a global with
-  the Y velocity. Every branch and memory access confirmed correct;
-  parked purely on a leaf-vs-non-leaf register-budget gap (the ROM
-  needs no stack frame at all, fitting entirely in r0-r3 with `self`
-  in r2 reused once dead; every arrangement tried here needs one extra
-  spilled register) - see `docs/matching.md`, "Parked, not matched:
-  `sub_8009DF4`".
+  pre-move position, applies the velocity, and updates a global
+  (`gUnknown_03001298`) with the Y velocity. Every branch and memory
+  access confirmed correct, and - after remodeling this reconstruction
+  on the near-identical `sub_800B270` (issue #9, same per-axis clamp
+  shape, same field offsets) - now a true `push`/`pop`-free leaf
+  function matching the ROM's own register budget exactly, closing the
+  leaf-vs-non-leaf gap `docs/matching.md`'s frozen entry originally
+  described. What's left is the same trailing gap `sub_800B270` itself
+  is still parked on: the global-update block's address/value register
+  roles are swapped from the ROM's (`r0`=address/`r2`=value here vs.
+  the reverse), and forcing either side of that swap either triggers
+  this compiler's dead-store elimination to drop the whole conditional
+  (when the *value* is register-pinned) or reintroduces a `push
+  {r4,lr}`/`pop {r4}` pair elsewhere (when the *address* is) - see
+  [docs/matching/issue-97-sub_8009DF4.md](../matching/issue-97-sub_8009DF4.md).
 - **`sub_801434C`** (`asm/code_3_2_17_1434c.s`, C in
   `src/graphics/actor_part18.c`) - the shared handler
   `sub_80142B0` tail-calls; one of the `gStaticData_0816BF20` action-
