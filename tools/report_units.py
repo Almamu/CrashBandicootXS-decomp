@@ -208,7 +208,7 @@ UNITS = [
     (0x08021D80, "src/graphics/graphics_loading_21d80.o", "graphics_loading"),  # GitHub issue #33: sub_8021D80-sub_8022230 all matched - the gStaticData_084A5600 record-indexed OAM-trio spawner family, and sub_8022230 (the "origin point" that constructs nearly every hot IWRAM global this ROM region references) - see docs/matching/issue-33-0x08021bfc-graphics-loading.md
     (0x08022354, None, "graphics_loading"),  # remainder of the LoadGraphicsPackage cluster past issue #33's chunk; left raw, out of scope for this pass - real bytes stay in the new asm/code_3_2_17_22354.s
     (0x080225A0, None, "game_loop"),  # UpdateGameFrame-MainLoop cluster (18,764B exact), confirmed same system/signature as the 0x08006C00 zone, not a separate island. UpdateGameFrame itself (0x080225A0-0x08022BF0) is a ~730-instruction jump-table state machine left raw - see docs/matching.md, GitHub issue #34
-    (0x08022BF0, "src/system/game_loop.o", "game_loop"),  # sub_8022BF0/sub_8022CA0 (parked, NON_MATCHING) - real bytes live in asm/code_3_2_17_22bf0.s - see docs/matching.md
+    (0x08022BF0, "src/system/game_loop.o", "game_loop"),  # sub_8022BF0/sub_8022CA0 - matched - see docs/matching/issue-37-game-loop-234e8.md
     (0x08022D50, None, "game_loop"),  # sub_8022D50 - level-start/reset routine (gUnknown_030012EC array walk, sub_803AD7C trampolines), left raw - see docs/matching.md
     (0x08022EA8, "src/system/game_loop2.o", "game_loop"),  # sub_8022EA8/sub_8022F2C (parked, NON_MATCHING, real bytes in asm/code_3_2_17_22ea8.s) plus sub_8022FEC/sub_802306C and the self+0x80/0x84/0x88/0xac/0xc0/+2-flags accessor family (matched) - see docs/matching.md
     (0x080231CC, None, "game_loop"),  # remainder of the UpdateGameFrame-MainLoop cluster, still raw
