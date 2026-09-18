@@ -6,6 +6,14 @@ generator) listed 18 raw functions across `asm/code_3_2.s`,
 `asm/code_3_2_16.s`. This is the write-up for the work done against
 that list.
 
+**Update**: `sub_8009008`/`sub_80091D4`/`sub_8009868`/`sub_8009BE0`,
+left raw below, were later NAKED-transcribed (byte-exact, tracked as
+parked, not matched) - see
+`docs/matching/naked-spatial-grid-tail.md`. The "left raw" entries for
+them further down are kept as-is, a snapshot of what was known at the
+time this file was written; they no longer reflect the current state
+of those four functions.
+
 ## Category correction: `game_loop` -> `actor`
 
 Every function in this chunk sits directly between already-matched
