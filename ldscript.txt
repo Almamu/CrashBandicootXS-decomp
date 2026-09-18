@@ -150,7 +150,10 @@ SECTIONS
         build/crashbandicootxs/asm/code_3_2_17_156ec.o(.text);
         build/crashbandicootxs/src/graphics/actor_part38d.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_157c4.o(.text);
-        build/crashbandicootxs/asm/code_3_2_17_15840.o(.text);
+        build/crashbandicootxs/src/graphics/actor_part57.o(.text);
+        build/crashbandicootxs/asm/code_3_2_17_159f8.o(.text);
+        build/crashbandicootxs/src/graphics/actor_part57b.o(.text);
+        build/crashbandicootxs/asm/code_3_2_17_16048.o(.text);
         build/crashbandicootxs/src/graphics/actor_part27.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_17ab0.o(.text);
         build/crashbandicootxs/src/graphics/actor_part27b.o(.text);
