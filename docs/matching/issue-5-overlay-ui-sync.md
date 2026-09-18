@@ -175,3 +175,129 @@ branch and call is semantically confirmed, real bytes stay in the
 
 See `docs/status/overlay_ui.md` for the per-function matched/parked
 lists.
+
+## Second pass
+
+Issue #5 was reopened after an earlier PR closed it with 6 functions
+still parked. This pass matched 4 of those 6 (`sub_8002D0C`,
+`sub_8003698`, `sub_8003A60`, `sub_8002EFC`); `sub_8002D44`/
+`sub_8002E20` stay parked for a reason explained below that no C-level
+technique gets around.
+
+- **`sub_8002D0C`** (bitmask-clear accessor, `src/graphics/
+  settings_menu8.c`) - the redundant register-to-register copy the
+  first pass's every plain-C attempt collapsed away turned out to be
+  forceable with a single `asm volatile("add %0, %1, #0" : "=r"(v) :
+  "r"(loaded))` between the `bics`-equivalent computation and the
+  store - the same "force the ROM's own extra copy with an inline-asm
+  no-op move" trick `matching_decomp_register_pinning` already
+  documents for other functions, just not tried here yet. Also
+  surfaced a small toolchain quirk worth remembering: this exact
+  `arm-none-eabi-as` build rejects the differing-register 3-operand
+  immediate-`#0` form (`adds r1, r3, #0`) outright ("instruction not
+  supported in Thumb16 mode"), even though it's a valid Thumb1
+  encoding and openly appears in the ROM's own objdump - the fix is
+  always spelling these as `add` (no `s` suffix) in this project's own
+  hand-written asm text, matching what agbcc's own `-fhex-asm` output
+  already does for compiler-generated code. The same applies to
+  `lsls`/`lsrs`/`subs`/`asrs`/`rsbs` (the last needs `neg`, not
+  `rsb`/`rsbs`, for the zero-minus-register idiom) throughout this
+  pass's other inline-asm blocks.
+
+- **`sub_8003698`** (shared "commit or refresh row" step, `src/
+  graphics/settings_menu8b.c`) - the previous pass got this to the
+  ROM's exact byte *size* with a single cached `handleAddr`, but the
+  real gap was argument-evaluation order: `sub_800014C(buf + 0x70,
+  sub_80236EC(*c0Addr), 0x68)` lets this compiler compute `buf + 0x70`
+  (the first argument) before calling `sub_80236EC` for the second,
+  where the ROM's own build evaluates the call first and only computes
+  the pointer argument afterward, as part of the call's own register
+  setup. Forcing that order just needs the call's result captured into
+  a named local first (`void *result = sub_80236EC(*c0Addr);
+  sub_800014C(buf + 0x70, result, 0x68);`) rather than nesting the call
+  directly in the outer call's argument list. Separately, `handleAddr`
+  genuinely does need recomputing a second time (`&self->field_8c`
+  taken again, matching the ROM's second `adds r4, r7, #0`/`adds r4,
+  #0x8c` pair) rather than reusing the first one - a second named local
+  (`handleAddr2`) rather than reusing `handleAddr` reproduces that.
+
+- **`sub_8003A60`** (state-select label list draw, `src/graphics/
+  settings_menu8c.c`) - this one resisted every plain-C register-pin
+  combination tried across both passes: a loop-invariant constant
+  (`mgr->record`'s `0x130` field offset, and separately
+  `&gStaticData_0816B1BC[0]`) kept getting hoisted out of the loop into
+  whichever register looked free at that point, landing on `r7` (the
+  pinned loop counter) and silently corrupting it, because this
+  compiler's constant-hoisting pass is blind to a raw-asm loop body's
+  internal control flow - and even sidestepping that, the ROM's exact
+  choice of scratch register per access still differed (e.g. reusing
+  `r1`'s already-computed `0x114` via a plain `+0x1c` for the second
+  `mgr->record` fetch, instead of resynthesizing `0x98<<1` from
+  scratch). Matched in the end by transcribing the ROM's own
+  instruction sequence directly into two `asm volatile` blocks per
+  iteration (the highlight-branch dispatch, and the
+  measure-then-draw pair), leaving only the loop's own `i`/`y`
+  compare-and-increment in plain C - this compiler only includes a
+  register in a function's automatic callee-save push/pop when *it*
+  allocated that register for a real (non-asm) value, so `i`/`y`
+  specifically have to stay genuine C locals (not register-pinned
+  operand-only variables) for the prologue to come out right. Two
+  smaller gaps besides: `sub_8004A50`'s return value needs its
+  ROM-visible `u8` truncation (`lsls`/`lsrs #0x18`) spelled out
+  explicitly, since this compiler doesn't reproduce it from the C
+  return type alone; and the final call's stack-passed `u8 flag`
+  argument needs its own asm too, because Thumb1 has no
+  stack-pointer-relative byte store (`strb`) - the ROM computes `mov
+  r1, sp` first - while this compiler always emits a direct word-sized
+  `str r0, [sp]` for a stack-passed byte argument. Getting the
+  compiler to still reserve that argument's 4-byte stack slot needs
+  taking its address as a dummy, otherwise-unused asm input operand.
+  Also needed a manual `.pool` directive right after the highlight
+  branch's own unconditional jump, since `&gUnknown_030012DC`'s
+  literal-pool placement is controlled by this same compiler pass that
+  can't see inside the raw-asm loop body - without it, the literal
+  gets deferred all the way to the function's tail instead of landing
+  in the ROM's early slot.
+
+- **`sub_8002EFC`** (SIO pump per-frame poll, `src/graphics/
+  settings_menu8a3.c`, new file) - matched the same way as
+  `sub_8003A60` above, as one big `asm volatile` transcription of the
+  ROM's instructions (this one genuinely doesn't need any real C
+  control flow at all, since it has no loop). The output register
+  matters here since the function returns a value: an unconstrained
+  `"=r"(result)` let this compiler pick any register (it picked `r8`
+  in one attempt, producing an outright illegal `movs r8, #1`), so
+  `result` has to be a `register s32 result asm("r0")` pin instead,
+  with each of the function's four return-value-setting points writing
+  through `%0` (which resolves to that same `r0`) instead of a literal
+  `r0`, and no separate closing move needed since the ROM's own
+  `pop {r4, r5, r6}; pop {r1}; bx r1` never has one either. Needed its
+  own new file (`settings_menu8a3.c`) rather than joining
+  `settings_menu8b.c`/`settings_menu8a2.c` because its real address
+  (`0x08002EFC`) sits between the still-parked `sub_8002D44`/
+  `sub_8002E20` (staying in `asm/code_3_1_10_3_2d44.s`) and
+  `settings_menu8b.c`'s first function - the usual "one `.c` file per
+  contiguous ROM region" rule from `docs/workflow.md`.
+
+- **`sub_8002D44`/`sub_8002E20`** (SIO pump TX/RX drain-fill,
+  `src/graphics/settings_menu8a2.c`) - still parked. Both need `r7` as
+  a genuinely allocated scratch register (matching the ROM's own
+  `sendLen`/sentinel usage there), and this exact agbcc build *never*
+  includes `r7` in a function's automatic callee-save push/pop,
+  regardless of how that register gets used - confirmed by direct,
+  minimal reproduction outside this file entirely: a function that
+  only ever touches `r7` via a plain `asm` clobber never gets it
+  pushed; neither does one with an explicit `register s32 x
+  asm("r7")` pin used as a real cross-statement value (even read back
+  through a genuine function call afterward); nor does a fully
+  unregistered local forced into `r7` by exhausting every other
+  register under heavy pinning pressure - every other clobbered/pinned
+  register (`r4`-`r6`, `r8`, `r9`) gets saved and restored correctly
+  in the exact same setup, just never `r7`. This is the same
+  categorical limitation already documented project-wide for
+  `sub_8007DBC` (`actor_part2.c`), `sub_802D3A8` (`actor_part62.c`,
+  `docs/matching/issue-54-actor-d3a8.md`) and others (see
+  `matching_decomp_register_pinning` memory point 10) - parked rather
+  than keep chasing a compiler bug with no known workaround. The
+  third function of the trio, `sub_8002EFC`, doesn't touch `r7` at
+  all and has been matched (see above).

@@ -22,24 +22,31 @@ asm(".align 2, 0");
 
 extern void *gUnknown_03000804;
 
-#if NON_MATCHING
-/* The three functions below (sub_8002D44/sub_8002E20/sub_8002EFC) are
- * reconstructed (semantics fully understood - see docs/matching/
- * issue-5-overlay-ui-sync.md for the whole SIO send/receive-pump
- * protocol write-up) but NOT YET BYTE-MATCHING: every technique this
- * project documents was tried (down-counting `for`/`do-while` loops
- * matching the ROM's `n != -1` sentinel idiom, swapping wrap/non-wrap
- * branch order to match the ROM's fallthrough side, explicit
- * register-variable pins on `self`/`remaining`/`session`/a `p` alias
- * for the final field-store pair - landed sub_8002D44 at the ROM's
- * exact byte *size* but not byte-for-byte content) - the remaining gap
- * is pure gcc-2.9 scratch-register nondeterminism, the same
- * unresolved class sub_8006600 (src/graphics/oam_count.c) and
- * sub_80049CC (src/graphics/settings_menu.c) document at length. Real
- * bytes stay in asm/code_3_1_10_3_2d44.s, wrapped `.if NON_MATCHING ==
- * 0`. */
+/* sub_8002EFC (below) is the third of a trio with sub_8002D44/
+ * sub_8002E20 - see docs/matching/issue-5-overlay-ui-sync.md for the
+ * whole SIO send/receive-pump write-up. sub_8002D44/sub_8002E20
+ * themselves stay parked: both need `r7` as a genuinely
+ * register-allocated scratch (matching the ROM's own `sendLen`/
+ * sentinel usage), and this exact agbcc build never includes r7 in a
+ * function's automatic callee-save push/pop - confirmed by direct
+ * reproduction (a function that only ever touches r7, whether via a
+ * plain asm clobber, an explicit `register T x asm("r7")` pin used
+ * across a real call, or a real C-level variable forced into r7 under
+ * heavy register pressure, still comes back with no r7 in the push/pop
+ * list every single time). This is the same categorical r7-pin
+ * limitation already documented for `sub_8007DBC` (actor_part2.c),
+ * `sub_802D3A8` (actor_part62.c) and others - see
+ * matching_decomp_register_pinning memory point 10. sub_8002EFC itself
+ * doesn't touch r7 at all, so it isn't affected and is matched via the
+ * same instruction-for-instruction asm transcription technique. */
 
-/* Drains up to 0x60 bytes per call from `self->cursor` (streaming a
+#if NON_MATCHING
+/* Reconstructed (semantics fully understood - see docs/matching/
+ * issue-5-overlay-ui-sync.md) but NOT YET BYTE-MATCHING: the r7
+ * limitation described above. Real bytes stay in
+ * asm/code_3_1_10_3_2d44.s, wrapped `.if NON_MATCHING == 0`.
+ *
+ * Drains up to 0x60 bytes per call from `self->cursor` (streaming a
  * settings_sync_record out of `self->tmpl`) into the SIO session
  * object's outgoing ring buffer, tracked by that session's own
  * still-uncharacterized fields at +0xc4 (pending-byte count) and +0xcc
@@ -153,61 +160,5 @@ void sub_8002E20(struct settings_sync_pump *self, s32 playerIndex)
 
     self->writePtr = self->writePtr + availCount;
     self->totalReceived = self->totalReceived + availCount;
-}
-
-/* Polls the SIO-handshake spinner's transfer state once per frame: if
- * the session (*gUnknown_03000804, byte +7 = "connected") isn't
- * connected, just tracks completion/reset of `self` and returns
- * 1 (reset)/0 (still finishing). If connected, picks a player slot from
- * the session's +0x3fc negotiation value, pumps RX (sub_8002E20) and TX
- * (sub_8002D44) at most once each per call, and once both sides report
- * complete, waits ~0x1e extra polls before finally returning 0
- * ("settled"). Returns 2 if the session's +0x3fc value is neither 0 nor
- * 1 (unrecognised role). */
-s32 sub_8002EFC(struct settings_sync_pump *self)
-{
-    u8 *session = gUnknown_03000804;
-    s32 mode;
-
-    if (session[7] == 0) {
-        if (self->field_218 == 0) {
-            goto doReset;
-        }
-        if (self->field_214 != 0) {
-            return 0;
-        }
-    doReset:
-        self->remaining = sizeof(self->data);
-        self->totalReceived = 0;
-        self->cursor = (u8 *)self->tmpl;
-        self->writePtr = self->data;
-        self->field_214 = 0;
-        self->field_218 = 0;
-        self->field_21c = 0;
-        return 1;
-    }
-
-    if (*(s32 *)(session + 0x3fc) == 0) {
-        mode = 1;
-    } else if (*(s32 *)(session + 0x3fc) == 1) {
-        mode = 0;
-    } else {
-        return 2;
-    }
-
-    if (self->field_218 == 0) {
-        sub_8002E20(self, mode);
-    }
-    if (self->field_214 == 0) {
-        sub_8002D44(self);
-    }
-    if (self->field_218 != 0 && self->field_214 != 0) {
-        s32 old = self->field_21c;
-        self->field_21c = old + 1;
-        if (old > 0x1e) {
-            return 0;
-        }
-    }
-    return 1;
 }
 #endif /* NON_MATCHING */

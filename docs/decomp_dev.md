@@ -248,6 +248,39 @@ Graphics/audio/data extraction is out of scope for this report entirely -
 asset extraction progress is tracked separately in
 [`docs/graphics.md`](./graphics.md) and [`docs/audio.md`](./audio.md).
 
+## "Matched" vs "complete": tracking the cleanup pass separately
+
+Byte-exact and *clean* aren't the same thing here: matching a function is
+often done first as raw `asm(...)`/`NAKED` or with raw pointer-arithmetic
+offset casts and literal hardware addresses, with the
+[`docs/workflow.md`](./workflow.md) step 7 cleanup pass (named struct
+fields, `REG_*`/`OAM`/`PLTT`/`DMA_*` macros) coming later, sometimes much
+later, as its own follow-up. Tracking only "matched" would make every
+`Cleanup: raw pointer arithmetic in ...` GitHub issue (see
+`tools/chunk_remaining_work.py --cleanup-scan`, `CONTRIBUTING.md`'s
+cleanup-task conventions) invisible to decomp.dev - a file could be 100%
+byte-matched and still be full of the exact opaque casts this project is
+trying to get rid of.
+
+objdiff's `Unit.metadata.complete` field (see
+[objdiff's config schema](https://raw.githubusercontent.com/encounter/objdiff/main/config.schema.json))
+exists for exactly this: a per-unit status independent of match
+percentage. `tools/report_units.py` sets it for every matched unit by
+re-running `chunk_remaining_work.py`'s `scan_cleanup_candidates()` (the
+same scan that generates the per-file cleanup issues) and marking a unit
+`complete: true` only if its source file has zero raw offset casts and
+zero raw hardware addresses outside `#if NON_MATCHING` blocks; anything
+else gets `complete: false`. Still-raw units (no `base_path`) never get
+a `complete` key at all - it isn't applicable until something's matched.
+
+`objdiff-cli report generate` aggregates this automatically into the
+report's top-level `measures.complete_units`/`measures.complete_code`/
+`measures.complete_code_percent`, alongside the existing
+`matched_units`/`matched_code_percent` - decomp.dev reads both without
+any further CI changes. Re-running `make NON_MATCHING=1 report` after any
+matching *or* cleanup work keeps this in sync automatically; there's
+nothing to hand-maintain here the way the `UNITS` address table is.
+
 ## Registering the project on decomp.dev
 
 This part can't be scripted - it needs an interactive GitHub login:

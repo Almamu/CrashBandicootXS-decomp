@@ -101,7 +101,7 @@ asm(
 );
 
 extern u8 gUnknown_03001620;
-extern vu16 *gUnknown_03001628;
+extern vu16 * volatile gUnknown_03001628;
 extern u8 gStaticData_0803A9AD[];
 
 /* Claims hardware timer `index` (0-3) for this subsystem: records the
@@ -129,29 +129,44 @@ extern u16 gUnknown_03001622;
  * claimed by `sub_803A9D0`: saves/clears IME, zeroes the timer's
  * control register, acknowledges and enables its IRQ line in IF/IE,
  * copies `arg0`'s three u16 fields into the module's globals and the
- * timer's reload/control registers, then restores IME) and every
- * field/register access below matches the ROM one-for-one, but this
- * compiler's allocation of the two values that need to survive the
- * whole function (the saved IME register address and the timer
- * register pointer) lands them in the opposite extended registers from
- * the ROM (r8 vs r9 swapped relative to real usage for at least one
- * statement ordering), and a couple of literal-pool loads come out in
- * a different order than the ROM's. Register-pinning both values (see
- * `matching_decomp_register_pinning`) got the extended-register choice
- * right but not the pool ordering; not yet found a source phrasing
- * that reproduces both simultaneously. */
+ * timer's reload/control registers, then restores IME). A previous pass
+ * left this with mismatched extended-register choices *and* literal-
+ * pool ordering; both are now fixed (see docs/matching/issue-69-*.md):
+ * `imeAddr = (vu16 *)0x04000208` folded into the expression computing
+ * `gUnknown_0300162C`'s value, so the compiler evaluates the
+ * assignment's own address first exactly like the ROM does, and a
+ * `vu16 * volatile *tmpAddr` local (assigned before the r8-pinned
+ * `timerPtrAddr`, then dereferenced through *itself* rather than
+ * through `timerPtrAddr`) reproduces the ROM's "compute address once,
+ * copy to r8, dereference the original low-register copy" shape -
+ * `gUnknown_03001628` also needed marking `volatile` so the compiler
+ * doesn't dead-store-eliminate the temporary "point past CNT_L" write
+ * (see `sub_803AA90` in src/system/timer_util_aa90.c, which had the
+ * identical issue and now matches cleanly). What's left is narrow: the
+ * `REG_IF = 8 << gUnknown_03001620` shift evaluates its operands in the
+ * opposite order
+ * from the ROM (constant-then-index here vs the ROM's index-then-
+ * constant, which also uses one extra scratch register for a value/
+ * result round-trip this compiler doesn't reproduce), the following
+ * `REG_IE |=` store lands its OR result in r2 instead of the ROM's r1,
+ * and the final `*timerPtrAddr = timerPtr` restore re-fetches r8 into a
+ * fresh register instead of reusing the one still live from the
+ * previous store three instructions earlier. Several operand-order/
+ * temp-variable rephrasings were tried for each without success. */
 void sub_803AA08(u16 *arg0)
 {
     register vu16 *imeAddr asm("r9");
-    register vu16 *timerPtr asm("r8");
-    u16 savedIme;
+    register vu16 * volatile *timerPtrAddr asm("r8");
+    register vu16 * volatile *tmpAddr asm("r3");
+    register vu16 *timerPtr asm("r5");
+    register vu16 *tmp asm("r1");
 
-    imeAddr = (vu16 *)0x04000208;
-    savedIme = *imeAddr;
-    gUnknown_0300162C = savedIme;
+    gUnknown_0300162C = *(imeAddr = (vu16 *)0x04000208);
     *imeAddr = 0;
 
-    timerPtr = gUnknown_03001628;
+    tmpAddr = &gUnknown_03001628;
+    timerPtrAddr = tmpAddr;
+    timerPtr = *tmpAddr;
     timerPtr[1] = 0;
 
     REG_IF = 8 << gUnknown_03001620;
@@ -163,33 +178,12 @@ void sub_803AA08(u16 *arg0)
 
     *timerPtr = *arg0;
     arg0++;
-    gUnknown_03001628 = timerPtr + 1;
+    tmp = timerPtr + 1;
+    *timerPtrAddr = tmp;
     timerPtr[1] = *arg0;
-    gUnknown_03001628 = timerPtr;
+    *timerPtrAddr = timerPtr;
 
     *imeAddr = 1;
-}
-
-/* NOT YET BYTE-MATCHING: the exact inverse of `sub_803AA08` (stops the
- * claimed timer, disables its IRQ, restores IME) - semantics and every
- * field/register access confirmed, but the ROM briefly repoints
- * `gUnknown_03001628` itself at the timer's CNT_H half (storing the
- * incremented pointer back to the global) before restoring it, where
- * this compiler folds that round trip into a plain offset store
- * (`ptr[1] = 0` without the intermediate global writes). Behaviorally
- * identical; not byte-identical. */
-void sub_803AA90(void)
-{
-    REG_IME = 0;
-
-    *gUnknown_03001628 = 0;
-    gUnknown_03001628++;
-    *gUnknown_03001628 = 0;
-    gUnknown_03001628--;
-
-    REG_IE &= ~(8 << gUnknown_03001620);
-
-    REG_IME = gUnknown_0300162C;
 }
 
 /* NOT YET BYTE-MATCHING: a DMA3-driven block transfer used by the
@@ -205,7 +199,23 @@ void sub_803AA90(void)
  * written with two textually-identical checks), but this compiler's
  * loop-rotation collapses any C phrasing of that (plain `while`,
  * `if`+`do-while`, `if`+`while`, explicit `goto`) into a single shared
- * top-tested loop instead. */
+ * top-tested loop instead. A hand-written `asm volatile` anchor for just
+ * the tail was tried too: it can reproduce the ROM's doubled check, but
+ * the ROM keeps every constant used by this function (including the
+ * loop's `0x040000DE` DMA3CNT_H address) in one shared trailing literal
+ * pool, which only the compiler's own pool management can reproduce -
+ * a hand-embedded `.word` inside the inline-asm block necessarily lands
+ * mid-function instead, so the anchor trades this gap for a
+ * pool-placement one rather than closing it. Also newly discovered
+ * while trying: even the pre-tail portion doesn't byte-match on its
+ * own - this compiler promotes the twice-used `REG_IME` address
+ * (0x04000208, read once to save/clear it up top, written once to
+ * restore it at the very end) into a cached extended register (r8)
+ * across the whole function, where the ROM just re-loads the same
+ * literal twice; an `asm volatile("" ::: "memory")` barrier between the
+ * two uses didn't stop it (the cached value is a pure address constant,
+ * not a memory value, so a memory clobber doesn't touch it). Left for
+ * whoever revisits this function next. */
 void sub_803AAD4(const void *src, void *dst, u16 count)
 {
     u16 savedIme;

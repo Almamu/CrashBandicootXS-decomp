@@ -520,7 +520,6 @@ void sub_80035C0(struct pause_options_screen *self)
     self->field_18 = sub_8026F38(0x2e);
 }
 
-#if NON_MATCHING
 extern u8 sub_8002CE8(void *handle, s32 rowIndex);
 extern void sub_800014C(void *dst, const void *src, s32 size);
 extern s32 sub_802332C(void *arg0);
@@ -528,17 +527,7 @@ extern s32 sub_8001ABC(void *arg0);
 extern s32 sub_8001AC0(void *arg0);
 extern s32 sub_8002BA4(void *arg0);
 
-/* Reconstructed (semantics fully understood - see
- * docs/matching/issue-5-overlay-ui-sync.md) but NOT YET BYTE-MATCHING:
- * every technique tried elsewhere in this chunk (loop restructuring,
- * `handleAddr`-style cached-address pointers matching sub_800306C's
- * pattern, cached global addresses for gUnknown_030012C0/BC) landed
- * this function at the ROM's exact byte size but not byte-for-byte
- * content - the same unresolved gcc-2.9 scratch-register class
- * documented throughout this chunk. Real bytes stay in
- * asm/code_3_1_10_3_3698.s, wrapped `.if NON_MATCHING == 0`.
- *
- * Shared "commit or refresh row `rowIndex`" step used by states 5-9
+/* Shared "commit or refresh row `rowIndex`" step used by states 5-9
  * below: pulls the row's stats/name/icon scratch data, feeds it through
  * `field_8c`'s pending-edit slot, and either finalises the edit
  * (sub_8002C6C, when it wasn't already selected) or just refreshes the
@@ -547,6 +536,7 @@ void sub_8003698(struct pause_options_screen *self, s32 rowIndex)
 {
     u8 buf[0xe0];
     void **handleAddr = &self->field_8c;
+    void **handleAddr2;
     u32 wasSelected;
     void **c0Addr;
     void **bcAddr;
@@ -559,22 +549,42 @@ void sub_8003698(struct pause_options_screen *self, s32 rowIndex)
     }
 
     c0Addr = &gUnknown_030012C0;
-    sub_800014C(buf + 0x70, sub_80236EC(*c0Addr), 0x68);
+    {
+        /* The ROM evaluates sub_80236EC()'s result before computing
+         * `buf + 0x70` (the ROM's own callee-arg setup order for
+         * sub_800014C, not the other way around) - a plain nested call
+         * expression here lets this compiler compute the pointer
+         * argument first instead. */
+        void *result = sub_80236EC(*c0Addr);
+        sub_800014C(buf + 0x70, result, 0x68);
+    }
     *(u8 *)(buf + 0xd8) = (u8)sub_802332C(*c0Addr);
 
     bcAddr = &gUnknown_030012BC;
     *(u16 *)(buf + 0xda) = (u16)sub_8001ABC(*bcAddr);
     *(u16 *)(buf + 0xdc) = (u16)sub_8001AC0(*bcAddr);
 
-    sub_8002C40(*handleAddr, rowIndex, buf + 0x70);
-    if (sub_8002BA4(*handleAddr)) {
+    /* The ROM recomputes `self->field_8c`'s address a second time here
+     * (a fresh `adds r4, r7, #0` / `adds r4, #0x8c` pair) rather than
+     * reusing the register the first computation above left live -
+     * mirror that with a second local instead of reusing `handleAddr`,
+     * matching the technique noted in docs/matching.md for this class
+     * of gap. */
+    handleAddr2 = &self->field_8c;
+    sub_8002C40(*handleAddr2, rowIndex, buf + 0x70);
+    if (sub_8002BA4(*handleAddr2)) {
         if (wasSelected) {
-            sub_8002C6C(*handleAddr, rowIndex);
+            sub_8002C6C(*handleAddr2, rowIndex);
         } else {
-            sub_8002C40(*handleAddr, rowIndex, buf);
+            sub_8002C40(*handleAddr2, rowIndex, buf);
         }
     } else {
         sub_80048E0(self, &self->rowStats[rowIndex], sub_80236EC(*c0Addr));
     }
 }
-#endif /* NON_MATCHING */
+/* Trailing byte-padding mismatch fix: GAS's default Thumb code
+ * alignment filler is the `mov r8, r8` NOP (0x46c0), but the ROM pads
+ * this function's tail with a zero halfword instead (see
+ * docs/matching.md's alignment-padding gotcha / the
+ * matching_decomp_alignment_fix convention). */
+asm(".align 2, 0");
