@@ -216,5 +216,37 @@ expected ROM address in the map file isolated the two exact functions,
 `sub_802D6A0` and `sub_802DB2C`/`sub_802DCC0`'s threshold-address
 folding, that had actually drifted).
 
+## NAKED-transcription pass
+
+`sub_802D3A8` (parked above) is now matched, closing the last of this
+issue's 19 attempted functions (the other 6 remain left untouched, out
+of scope for this pass). The parked writeup's semantics understanding
+and register-role analysis (self→r5, posX→r6, posY→ip, posZ→r7) were
+already fully correct - what blocked it was this project's confirmed,
+categorical `r7`-pin limitation (`matching_decomp_register_pinning`
+memory point 10: "r7 cannot be pinned in this toolchain, ever"), the
+same bug already on file for `sub_8007DBC` in `actor_part2.c` and, per
+`docs/matching/issue-4-sio-settings-sync.md`'s third pass, the general
+escape hatch this project uses once a function's semantics are fully
+understood but no further C-level rephrasing is likely to help: convert
+to `NAKED` and transcribe the ROM's own disassembly instruction-for-
+instruction, rather than keep chasing a register-allocation gap.
+
+The ROM's `expected/code_3.s` disassembly (and the identical, already
+in-tree `asm/code_3_2_20_28568_c99c_d3a8.s`) was translated from
+unified to the plain (divided) syntax this project's other `NAKED`
+functions use - `adds`→`add`, `ands`→`and`, `lsls`/`lsrs`→`lsl`/`lsr`,
+`subs`→`sub`, `asrs`→`asr` (`movs` needed no change: this assembler
+accepts both spellings, and the codebase already mixes both) - with the
+original's `_08XXXXXX:` labels renumbered to GNU-as local numeric
+labels (`N:`, referenced `Nf`/`Nb`; two of them, `6:`/`10:`, are true
+merge points reached both by an explicit `b` and by fallthrough, same
+as the ROM). Every instruction is a direct transcription, not an
+inferred reconstruction, so this carries none of the "guessed control
+flow" risk a low-confidence C attempt would. The raw `.s` fragment and
+its `ldscript.txt`/wildcard-`ASM_SRCS` entry were then removed -
+`src/graphics/actor_part62.c` links at the same address in its place -
+confirmed by a full clean `make compare` ("La suma coincide").
+
 See [docs/status/actor.md](../status/actor.md) for the running
 matched/parked/left-raw list this entry feeds into.
