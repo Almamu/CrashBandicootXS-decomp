@@ -114,7 +114,6 @@ s32 sub_80083A8(void *part)
     return *(s32 *)((u8 *)p2 + 4);
 }
 
-#if NON_MATCHING
 /* Looks up `part`'s current keyframe record (same convention as
  * elsewhere in this ROM region). If `part+0x38` ("done", set by
  * `sub_8008044`) is set and the record's `+0x17` flags byte bit 1 is
@@ -125,56 +124,58 @@ s32 sub_80083A8(void *part)
  * itself a pointer (`recPtr`) to a per-frame `u16` array, indexed by
  * the (possibly just-clamped) frame index; that `u16` in turn indexes
  * a pointer array at `table+4`, and the result is that array's
- * pointer at the looked-up index.
- *
- * NOT YET BYTE-MATCHING: every instruction matches the ROM exactly -
- * confirmed the apparent `ands r0, r0, r2` vs the ROM's `ands r0, r2`
- * assemble to the identical encoding (Thumb `ANDS` has no 3-operand
- * form; the extra `r0` is purely a disassembly-style difference, not
- * a real one) - except the final index computation's `add`:
- * `adds r0, r1, r0` here vs the ROM's `adds r0, r0, r1`. Same
- * resistant "which operand goes first" gap documented at length for
- * `sub_8008188`/`sub_8008200`/`sub_8008278` above - reordering the C
- * addition, giving each operand its own pinned register, and using a
- * genuinely separate destination variable were all tried again here
- * and again made no difference. Parked rather than keep chasing this
- * one instruction - same call as the other parked functions. */
-void *sub_80083B8(struct actor *part)
+ * pointer at the looked-up index. See the (now removed) NON_MATCHING C
+ * draft in git history for the full commented C reconstruction - every
+ * instruction matched the ROM except the final index computation's
+ * `add` (`adds r0, r1, r0` here vs the ROM's `adds r0, r0, r1` - the
+ * same "which operand goes first" canonicalization gap documented at
+ * length for `sub_8008188`/`sub_8008200`/`sub_8008278`, see
+ * docs/matching.md's "Parked, not matched: sub_80083B8" for what was
+ * tried). Written as NAKED asm here instead, same technique as those
+ * functions above. */
+NAKED void *sub_80083B8(struct actor *part)
 {
-    register void *rec asm("r1") = *(void ***)((u8 *)part + 0x20);
-    register u8 *idxAddr asm("r2") = (u8 *)part + 0x2d;
-    register u8 idx asm("r4") = *idxAddr;
-    s32 offset = idx * 0x1c;
-
-    rec = *(void **)rec;
-    rec = (u8 *)rec + offset;
-
-    if (*((u8 *)part + 0x38) != 0) {
-        register s32 mask asm("r0") = 2;
-        register s32 flags asm("r2") = *((u8 *)rec + 0x17);
-        register s32 test asm("r0");
-
-        test = mask & flags;
-        if (!test) {
-            *(s32 *)((u8 *)part + 0x30) = *((u8 *)rec + 0x16) - 1;
-            *(s32 *)((u8 *)part + 0x34) = *((u8 *)rec + 0x15);
-        }
-    }
-
-    {
-        void **tablePtr2 = *(void ***)((u8 *)part + 0x20);
-        s32 frameIdx = *(s32 *)((u8 *)part + 0x30);
-        register void *recPtr asm("r1") = *(void **)rec;
-        register s32 byteOffset asm("r0") = frameIdx * 2;
-        register u16 *arr asm("r0");
-        register void **ptrArray asm("r1");
-        u16 idx2;
-
-        arr = (u16 *)(byteOffset + (u8 *)recPtr);
-        ptrArray = *(void ***)((u8 *)tablePtr2 + 4);
-        idx2 = *arr;
-        return ptrArray[idx2];
-    }
+    asm(
+        "push {r4, lr}\n\t"
+        "add r3, r0, #0\n\t"
+        "ldr r1, [r3, #0x20]\n\t"
+        "add r2, r3, #0\n\t"
+        "add r2, #0x2d\n\t"
+        "ldrb r4, [r2]\n\t"
+        "lsl r0, r4, #3\n\t"
+        "sub r0, r0, r4\n\t"
+        "lsl r0, r0, #2\n\t"
+        "ldr r1, [r1]\n\t"
+        "add r1, r1, r0\n\t"
+        "add r0, r3, #0\n\t"
+        "add r0, #0x38\n\t"
+        "ldrb r0, [r0]\n\t"
+        "cmp r0, #0\n\t"
+        "beq 1f\n\t"
+        "mov r0, #2\n\t"
+        "ldrb r2, [r1, #0x17]\n\t"
+        "and r0, r2\n\t"
+        "cmp r0, #0\n\t"
+        "bne 1f\n\t"
+        "ldrb r0, [r1, #0x16]\n\t"
+        "sub r0, #1\n\t"
+        "str r0, [r3, #0x30]\n\t"
+        "ldrb r0, [r1, #0x15]\n\t"
+        "str r0, [r3, #0x34]\n\t"
+    "1:\n\t"
+        "ldr r2, [r3, #0x20]\n\t"
+        "ldr r0, [r3, #0x30]\n\t"
+        "ldr r1, [r1]\n\t"
+        "lsl r0, r0, #1\n\t"
+        "add r0, r0, r1\n\t"
+        "ldr r1, [r2, #4]\n\t"
+        "ldrh r0, [r0]\n\t"
+        "lsl r0, r0, #2\n\t"
+        "add r0, r0, r1\n\t"
+        "ldr r0, [r0]\n\t"
+        "pop {r4}\n\t"
+        "pop {r1}\n\t"
+        "bx r1\n\t"
+        ".align 2, 0\n"
+    );
 }
-#endif /* NON_MATCHING */
-asm(".align 2, 0");

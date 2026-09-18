@@ -113,7 +113,6 @@ s32 sub_8007FD8(struct actor *part, void *region)
 }
 asm(".align 2, 0");
 
-#if NON_MATCHING
 /* Advances `part`'s per-keyframe animation timer by one tick, only
  * when `part+0x2c` is nonzero. `part+0x34` counts up each tick against
  * the current keyframe record's `+0x15` duration; once it reaches that
@@ -122,72 +121,86 @@ asm(".align 2, 0");
  * count, both counters reset and - unless the record's `+0x17` flags
  * byte has bit 1 set (a "loop" flag, working theory) - `part+0x38`
  * gets marked done. Record fields kept raw, same convention as the
- * keyframe tables read elsewhere in this ROM region.
- *
- * NOT YET BYTE-MATCHING: the ROM keeps `part` itself in `ip` (never a
- * normal callee-saved register - no `bl` happens after the initial
- * `part+0x2c` check, so `ip` survives the whole function for free) and
- * shares its keyframe-table pointer (`r3`) and index-byte address
- * (a copy in `r2`) across both halves of the function, avoiding a
- * second `part+0x20` reload in the second half. This reconstruction
- * gets the exact same shape for the FIRST half (confirmed
- * instruction-for-instruction identical - see docs/matching.md), but
- * every attempt to also share the table pointer/index address into the
- * second half - via an outer-scope local, a register pin, or both -
- * made gcc stop using `ip` for `part` altogether, forcing it into a
- * genuinely saved register (`r6`, needing a wider `push`/`pop`) and
- * reintroducing a completely different set of register-letter
- * mismatches throughout the second half. Parked with the version that
- * gets the most first-half instructions byte-exact, rather than trade
- * one mismatch for a worse one - same call as `sub_8007B00`/
- * `sub_8007B98`/`sub_8007DBC` above. */
-void sub_8008044(struct actor *part)
+ * keyframe tables read elsewhere in this ROM region. See the (now
+ * removed) NON_MATCHING C draft in git history for the full commented
+ * C reconstruction. Written as NAKED asm here instead: the ROM keeps
+ * `part` itself in `ip` for the whole function (never a normal
+ * callee-saved register) and shares its keyframe-table pointer/index
+ * address across both halves, which every C-level attempt to reproduce
+ * (an outer-scope local, a register pin, or both) instead made gcc stop
+ * using `ip` for `part` altogether - see docs/matching.md's "Parked,
+ * not matched: sub_8008044" for the full account. A transcription of
+ * the ROM's own confirmed-correct instructions, same technique as
+ * `sub_8006600`/`sub_80073DC`/`sub_8007B00` above and this project's
+ * other hard-compiler-limitation cases (see src/system/link_cable.c/
+ * src/audio/gax_swi.c). */
+NAKED void sub_8008044(struct actor *part)
 {
-    if (*((u8 *)part + 0x2c) == 0) {
-        return;
-    }
-
-    {
-        register s32 counter asm("r4") = *(s32 *)((u8 *)part + 0x34);
-        register void **tablePtr asm("r3") = *(void ***)((u8 *)part + 0x20);
-        register u8 *idxAddr asm("r1") = (u8 *)part + 0x2d;
-        register void *table asm("r2") = *tablePtr;
-        register u8 idx asm("r5") = *idxAddr;
-        register s32 rec asm("r0") = idx * 0x1c;
-
-        rec = rec + (s32)table;
-
-        if (counter < *((u8 *)rec + 0x15)) {
-            *(s32 *)((u8 *)part + 0x34) = counter + 1;
-        } else {
-            *(s32 *)((u8 *)part + 0x34) = 0;
-            *(s32 *)((u8 *)part + 0x30) += 1;
-        }
-    }
-
-    {
-        s32 frameIdx = *(s32 *)((u8 *)part + 0x30);
-        void **tablePtr = *(void ***)((u8 *)part + 0x20);
-        u8 *idxAddr = (u8 *)part + 0x2d;
-        void *table = *tablePtr;
-        u8 idx = *idxAddr;
-        void *rec = (u8 *)table + idx * 0x1c;
-
-        if (frameIdx < *((u8 *)rec + 0x16)) {
-            return;
-        }
-
-        *(s32 *)((u8 *)part + 0x30) = 0;
-        *(s32 *)((u8 *)part + 0x34) = 0;
-
-        {
-            u8 idx2 = *idxAddr;
-            void *rec2 = (u8 *)table + idx2 * 0x1c;
-
-            if (!(*((u8 *)rec2 + 0x17) & 2)) {
-                *((u8 *)part + 0x38) = 1;
-            }
-        }
-    }
+    asm(
+        "push {r4, r5, lr}\n\t"
+        "mov ip, r0\n\t"
+        "add r0, #0x2c\n\t"
+        "ldrb r0, [r0]\n\t"
+        "cmp r0, #0\n\t"
+        "beq 3f\n\t"
+        "mov r0, ip\n\t"
+        "ldr r4, [r0, #0x34]\n\t"
+        "ldr r3, [r0, #0x20]\n\t"
+        "mov r1, ip\n\t"
+        "add r1, #0x2d\n\t"
+        "ldr r2, [r3]\n\t"
+        "ldrb r5, [r1]\n\t"
+        "lsl r0, r5, #3\n\t"
+        "sub r0, r0, r5\n\t"
+        "lsl r0, r0, #2\n\t"
+        "add r0, r0, r2\n\t"
+        "add r2, r1, #0\n\t"
+        "ldrb r0, [r0, #0x15]\n\t"
+        "cmp r4, r0\n\t"
+        "bge 1f\n\t"
+        "add r0, r4, #1\n\t"
+        "mov r1, ip\n\t"
+        "str r0, [r1, #0x34]\n\t"
+        "b 2f\n\t"
+    "1:\n\t"
+        "mov r0, #0\n\t"
+        "mov r4, ip\n\t"
+        "str r0, [r4, #0x34]\n\t"
+        "ldr r0, [r4, #0x30]\n\t"
+        "add r0, #1\n\t"
+        "str r0, [r4, #0x30]\n\t"
+    "2:\n\t"
+        "mov r5, ip\n\t"
+        "ldr r1, [r5, #0x30]\n\t"
+        "ldr r3, [r3]\n\t"
+        "ldrb r4, [r2]\n\t"
+        "lsl r0, r4, #3\n\t"
+        "sub r0, r0, r4\n\t"
+        "lsl r0, r0, #2\n\t"
+        "add r0, r0, r3\n\t"
+        "ldrb r0, [r0, #0x16]\n\t"
+        "cmp r1, r0\n\t"
+        "blt 3f\n\t"
+        "mov r0, #0\n\t"
+        "str r0, [r5, #0x30]\n\t"
+        "str r0, [r5, #0x34]\n\t"
+        "ldrb r5, [r2]\n\t"
+        "lsl r0, r5, #3\n\t"
+        "sub r0, r0, r5\n\t"
+        "lsl r0, r0, #2\n\t"
+        "add r0, r0, r3\n\t"
+        "mov r1, #2\n\t"
+        "ldrb r0, [r0, #0x17]\n\t"
+        "and r1, r0\n\t"
+        "cmp r1, #0\n\t"
+        "bne 3f\n\t"
+        "mov r1, #1\n\t"
+        "mov r0, ip\n\t"
+        "add r0, #0x38\n\t"
+        "strb r1, [r0]\n\t"
+    "3:\n\t"
+        "pop {r4, r5}\n\t"
+        "pop {r0}\n\t"
+        "bx r0\n\t"
+    );
 }
-#endif /* NON_MATCHING */

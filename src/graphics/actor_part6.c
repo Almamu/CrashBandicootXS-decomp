@@ -552,44 +552,34 @@ void *sub_800876C(void *part)
     return *(void **)((u8 *)part + 0x20);
 }
 
-#if NON_MATCHING
 /* Same keyframe-record lookup as `sub_8008734` above, testing the
  * record's `+0x17` flags bit 1 and returning it as a plain 0/1 value.
- *
- * NOT YET BYTE-MATCHING: every instruction matches the ROM up through
- * the `ands r0, r1` - confirmed via the same accumulator-register
- * pattern used throughout this ROM region (mask computed into r0
- * before the flags byte is loaded, reusing `rec`'s own dying r1
- * register for the load). The ROM then has two more instructions
- * (`lsls r0, r0, #0x18; lsrs r0, r0, #0x18`, truncating the result to
- * a byte) that this compiler always optimizes away here, since it can
- * prove the AND result already fits in a byte (mask is the visible
- * constant 2) - every attempt to force the truncation back in
- * (explicit `(u8)` cast, explicit shift-based truncation idiom, u8-
- * typed intermediate) either made no difference or reintroduced the
- * `register ... = 2` combined-with-later-shift miscompile documented
- * for `sub_8008618`-style chains elsewhere in this file (the whole
- * function's body got folded to `return 0;`). Parked rather than keep
- * chasing two trailing no-op instructions. */
-u8 sub_8008770(struct actor *part)
+ * See the (now removed) NON_MATCHING C draft in git history for the
+ * full commented C reconstruction - every instruction matched the ROM
+ * up through the `ands r0, r1`, but the ROM's two trailing
+ * byte-truncation instructions (`lsls r0, r0, #0x18; lsrs r0, r0,
+ * #0x18`) got optimized away by this compiler every time, since it can
+ * prove the AND result (mask is the visible constant 2) already fits
+ * in a byte - see docs/matching.md's "Parked, not matched: sub_8008770"
+ * for the techniques tried. Written as NAKED asm here instead, same
+ * technique as the other functions above. */
+NAKED u8 sub_8008770(struct actor *part)
 {
-    register void **tablePtr asm("r1") = *(void ***)((u8 *)part + 0x20);
-    register u8 *idxAddr asm("r0") = (u8 *)part + 0x2d;
-    register void *table asm("r2") = *tablePtr;
-    register u8 idx asm("r3") = *idxAddr;
-    register s32 offset asm("r1") = idx * 0x1c;
-    void *rec;
-    register s32 mask asm("r0");
-    register s32 flags asm("r1");
-    register s32 test asm("r0");
-
-    asm("add %0, %0, %1" : "+r" (offset) : "r" (table));
-    rec = (void *)offset;
-
-    mask = 2;
-    flags = *((u8 *)rec + 0x17);
-    test = mask & flags;
-    return test;
+    asm(
+        "ldr r1, [r0, #0x20]\n\t"
+        "add r0, #0x2d\n\t"
+        "ldr r2, [r1]\n\t"
+        "ldrb r3, [r0]\n\t"
+        "lsl r1, r3, #3\n\t"
+        "sub r1, r1, r3\n\t"
+        "lsl r1, r1, #2\n\t"
+        "add r1, r1, r2\n\t"
+        "mov r0, #2\n\t"
+        "ldrb r1, [r1, #0x17]\n\t"
+        "and r0, r1\n\t"
+        "lsl r0, r0, #0x18\n\t"
+        "lsr r0, r0, #0x18\n\t"
+        "bx lr\n\t"
+    );
 }
-#endif /* NON_MATCHING */
 asm(".align 2, 0");
