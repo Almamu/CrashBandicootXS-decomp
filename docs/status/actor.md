@@ -168,6 +168,18 @@ from "core" graphics.
   per-instance "self" object's action-table/trampoline/circular-list
   conventions as `actor_part17.c`/`actor_part18.c`
 
+- `src/graphics/actor_part19i.c` (new file, directly adjacent to
+  `actor_part19d.c`'s matched functions - GitHub issue #53):
+  `sub_802C99C`, `sub_802CA28`, `sub_802CA6C`, `sub_802CAD0` - the
+  type-byte-dispatch/proximity "used"-state transition family (same
+  shape as `sub_802C540`/`sub_802C614`, `actor_part19g.c`); `sub_802CB34`
+  and its seven thin forwarding wrappers (`sub_802CB9C`, `sub_802CBC0`,
+  `sub_802CBE4`, `sub_802CC08`, `sub_802CC2C`, `sub_802CC54`,
+  `sub_802CC78`) - an `InitActorPart`-based constructor family
+  classifying a "kind" from a `sub_803ADB4`-scaled/clamped value plus a
+  range-keyed offset. See
+  [docs/matching/issue-53-actor-c7a8.md](../matching/issue-53-actor-c7a8.md).
+
 - `src/graphics/actor_aabb_setup.c` (new file, GitHub issue #70, ROM
   `0x0803AFDC`-`0x0803B060` - right after the parked division/modulo
   trio in `src/util/math_div_util.c`, see that file's `docs/matching.md`
@@ -582,6 +594,14 @@ embedded as asm instead. They're tracked as parked, not matched.
   "kind" spawner. Hits this project's confirmed categorical r7-pin
   compiler bug. GitHub issue not tracked separately, see
   `docs/matching/naked-sub_8007dbc.md`.
+- **`sub_802C7A8`** (`src/graphics/actor_part19h.c`) - a circular-list
+  AABB-overlap "chain pickup" scan: walks the whole `self+0x4c`-rooted
+  actor list looking for type-4 nodes overlapping `self`'s own
+  translated `self+0x38` box, firing the shared used-state transition
+  on each match. Same heavy two-scratch-AABB-record-plus-loop-lifetime-
+  `r7` shape as `sub_802D7B0`/`sub_802DD9C` below - hits the same
+  confirmed categorical gcc-2.9 r7-pin bug. GitHub issue #53, see
+  [docs/matching/issue-53-actor-c7a8.md](../matching/issue-53-actor-c7a8.md).
 - **`sub_802D3A8`** (`src/graphics/actor_part62.c`) - eases `self`'s
   cached position toward a per-state target/table-scatter offset. Hits
   this project's confirmed categorical gcc-2.9 r7-pin bug. GitHub issue
