@@ -295,7 +295,7 @@ UNITS = [
     (0x0802F748, "src/graphics/actor_part44b.o", "actor"),  # sub_802F748 (issue #56, parked, NON_MATCHING) - a gStaticData_0817C1C0 stride-8 trampoline-record dispatcher, same shape as the parked sub_802C208; real bytes live in asm/code_3_2_20_28568_c99c_2f748.s
     (0x0802F7A4, "src/graphics/actor_part45.o", "actor"),  # sub_802F7A4 (issue #56): trivial singleton-flag getter; matched
     (0x0802F7B0, None, "actor"),  # sub_802F7B0/sub_802F8E8 (issue #56): a pair of ~130-170-instruction VRAM tile-remap loops with heavy sb/sl/r8 register pressure - not attempted this pass
-    (0x0802F97C, "src/graphics/actor_part45b.o", "actor"),  # sub_802F97C (issue #56, parked, NON_MATCHING) - physics-step-and-collision-react updater; real bytes live in asm/code_3_2_20_28568_c99c_2f97c.s
+    (0x0802F97C, "src/graphics/actor_part45b.o", "actor"),  # sub_802F97C (issue #56): physics-step-and-collision-react updater; matched
     (0x0802FA04, "src/graphics/actor_part45c.o", "actor"),  # sub_802FA04 (issue #56, parked, NON_MATCHING) - an InitActorPart-based constructor, same 7-argument shape as the left-raw sub_80305F8; real bytes live in asm/code_3_2_20_28568_c99c_2fa04.s
     (0x0802FA34, "src/graphics/actor_part46.o", "actor"),  # sub_802FA34 (issue #56): trivial constant-true predicate; matched
     (0x0802FA38, None, "actor"),  # sub_802FA38 (issue #56): a ~150-instruction position-update/collision-damage function with heavy sb/r8 register pressure, plus the remainder of the actor zone before issue #58's chunk - not attempted this pass

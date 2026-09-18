@@ -24,7 +24,7 @@ are named by the lower 5 hex digits of their first function's address
 `..._2f7b0.s`, `..._2f97c.s`, `..._2fa04.s`, `..._2fa38.s`,
 `..._2fbf0.s`).
 
-## Matched (17 of 25 functions)
+## Matched (18 of 25 functions)
 
 - **`sub_802F0DC`** (`src/graphics/actor_part43.c`) - constructor/
   reset: while the singleton flag (`gUnknown_03001506`) is off, resets
@@ -119,7 +119,7 @@ are named by the lower 5 hex digits of their first function's address
 - **`sub_802FA34`** (`src/graphics/actor_part46.c`) - trivial
   constant-true predicate.
 
-## Parked (4 of 25 functions, `NON_MATCHING`, not yet byte-exact)
+## Parked (3 of 25 functions, `NON_MATCHING`, not yet byte-exact)
 
 - **`sub_802F338`** (`src/graphics/actor_part43b.c`) - computes two
   keyframe-driven tile-cache sizes (`byte0*byte1`, scaled by 32) via
@@ -156,16 +156,33 @@ are named by the lower 5 hex digits of their first function's address
   then reacts to a `sub_802A3AC` collision probe - firing a trampoline
   on the hit object if any, else checking `sub_8031378` (an AABB
   overlap test) and a `self+0x34` depth threshold before firing
-  `self`'s own `self+0x50`-table trampoline (index 8) or falling back
-  to `sub_802A7B8`. Every load/store, branch and call confirmed
-  correct, including the ROM's exact duplicate-but-differently-
-  scheduled `self+0x50`-table lookup reached from two different arms
-  (a real "shared tail, two entry paths" shape reproduced here with an
-  explicit `goto tail;`); parked on a residual register choice (`r2`
-  vs `r3`) for the `8` immediate in those two lookups that this
-  compiler allocates the opposite way round from the ROM, and did not
-  budge under explicit `register asm("r2")`/`register asm("r3")` pins
-  at each site.
+  `self`'s own `self+0x50`-table trampoline (index 8, no NULL-guard on
+  that specific call) or, once past the threshold, falling back to
+  `sub_802A7B8` (also no NULL-guard). Two closing fixes over the prior
+  parked attempt: (1) the threshold check needed to be a plain
+  `if (cond) {...} else {sub_802A7B8(...);}`, with the shared tail
+  reached by `goto`s landing on a `merge:` label *inside* the `if`
+  body, rather than an early-returning `else if` - this compiler places
+  an `if`'s `else` body last in program order but an early-returning
+  `else if` chain's next statement first, silently relocating the
+  `sub_802A7B8` call relative to the shared tail even though every
+  individual instruction already matched; (2) the ROM's inconsistent
+  (`r2` vs `r3`) scratch-register choice for the repeated `8` immediate
+  needed a small inline-asm anchor per site (`asm volatile("mov rN, #8\n\tldrsh
+  %0, [%1, rN]" : "=r"(off) : "r"(table))`) - critically with **no**
+  clobber list (adding one, even naming the register the asm text
+  already hardcodes, was enough extra register pressure to make this
+  compiler spill a second copy of `self` into `r5`, which the earlier
+  attempt's plain `register asm("r2")`/`register asm("r3")` pins likely
+  triggered too). A related, non-obvious discovery: with the two fixes
+  above in place, this compiler *still* produced 4 extra bytes (a
+  spilled `r5` copy of `self`) as long as `self` was a separately
+  declared local (`u8 *self = selfArg;`, this file's usual pattern) -
+  only typing the parameter itself as `u8 *self` (dropping the
+  `void *selfArg` indirection entirely) got the byte-exact result. Since
+  nothing calls `sub_802F97C` by name (only indirectly through a
+  `void *`-typed function-pointer table entry), the parameter's own
+  type here doesn't need to match the project's usual convention.
 - **`sub_802FA04`** (`src/graphics/actor_part45c.c`) - an
   `InitActorPart`-based constructor for this cluster's `self` object:
   forwards its first three real arguments plus one stack argument
