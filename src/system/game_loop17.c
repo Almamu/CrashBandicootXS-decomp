@@ -5,8 +5,9 @@
  * completion-time cascade, and a medal-table tally chain") - see
  * docs/matching/issue-38-medal-results-tally.md for the full write-up
  * of this chunk (this file covers the front slice, up to but not
- * including sub_8024344, which is parked/left in
- * asm/code_3_2_17_24344.s - see that write-up for why).
+ * including sub_8024344, which lives in game_loop18.c instead - it's
+ * contiguous with both files in ROM, and ended up grouped with the
+ * wrapper functions that call it).
  *
  * `gStaticData_0816C86C` is the confirmed 36-slot medal table (see
  * `struct threshold_table_entry` in src/graphics/oam_count.c and
