@@ -301,3 +301,55 @@ technique gets around.
   than keep chasing a compiler bug with no known workaround. The
   third function of the trio, `sub_8002EFC`, doesn't touch `r7` at
   all and has been matched (see above).
+
+## NAKED-transcription pass
+
+`sub_8002D44`/`sub_8002E20` above were the only two functions left
+parked anywhere in this issue's scope, both blocked on the exact same
+categorical gcc-2.9 limitation described above: neither can get `r7`
+back into the automatic callee-save push/pop list from plain C, no
+matter how it's pinned. Rather than keep chasing that dead end, both
+were converted to `NAKED` and their bodies rewritten as a single
+`asm(...)` block transcribing the ROM's own disassembly
+instruction-for-instruction - the same escape hatch already
+established and proven in this project (see
+`docs/matching/issue-4-sio-settings-sync.md`'s "NAKED transcription,
+byte-verified" section, and the smaller worked examples in
+`src/util/math_div_util.c`'s `nullsub_8` and `src/audio/gax_swi.c`'s
+`sub_80392C4`). Both functions were already fully understood
+semantically - the parked C reconstruction that used to sit in
+`src/graphics/settings_menu8a2.c` (now replaced) and the walkthrough
+above are that derivation - so this was a pure transcription pass, not
+a fresh reverse-engineering one.
+
+Mechanically this followed the same recipe as issue #4's NAKED pass:
+the disassembler's unified-syntax mnemonics were translated to the
+divided syntax `arm-none-eabi-as`'s default mode expects for
+hand-written text (`adds`→`add`, `movs`→`mov`, `muls`→`mul`,
+`lsls`→`lsl`, `subs`→`sub`, `rsbs rX, rX, #0`→`neg rX, rX`), and every
+real `_08XXXXXX:` ROM address label was renumbered to a GNU-as local
+numeric label (`1:`...`11:` for `sub_8002D44`, `1:`...`8:` for
+`sub_8002E20`, referenced `Nf`/`Nb`), since a `NAKED` function's asm
+block can't reference the real ROM address as a label. Both functions
+keep their original prologue/epilogue written out literally -
+`sub_8002D44`'s `push {r4, r5, r6, r7, lr}` / `mov r7, sb` / `mov r6,
+r8` / `push {r6, r7}` pair (and the matching `pop {r3, r4}` / `mov r8,
+r3` / `mov sb, r4` / `pop {r4, r5, r6, r7}` / `pop {r0}` / `bx r0`
+epilogue) and `sub_8002E20`'s smaller `mov r7, r8` / `push {r7}` pair -
+exactly the callee-save sequence gcc could never reproduce from C for
+these two. `sub_8002D44` also keeps both of the ROM's separate
+`gUnknown_03000804` literal-pool copies (labels `3:`/`11:`) rather than
+merging them into one, matching the ROM's own pool placement byte for
+byte.
+
+Verified via the standard loop: an isolated compile+assemble of
+`src/graphics/settings_menu8a2.c` was first disassembled and eyeballed
+instruction-by-instruction against the original ROM disassembly (still
+just a diagnostic, per `docs/workflow.md` step 3 - not proof), then the
+whole `asm/code_3_1_10_3_2d44.s` file (which held nothing but these two
+functions, now fully extracted) was deleted and `ldscript.txt`'s
+`code_3_1_10_3_2d44.o` line removed, and a full clean `rm -rf build &&
+make NON_MATCHING=1 report` followed by clean `rm -rf build
+crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
+compare` both passed (`sha1sum`'s "La suma coincide"). Both functions
+are now matched, closing out the r7 limitation for this issue's scope.
