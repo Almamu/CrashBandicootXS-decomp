@@ -48,8 +48,9 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   retry orchestrator, muting the music player across the transfer:
   `sub_8002A08`. See `docs/matching/issue-4-sio-settings-sync.md`.
 - `src/graphics/settings_menu8e.c` (new file - issue #4,
-  0x08002B44-0x08002C84): checksum compare/store, the `versionNibble`
-  accessor, the EEPROM-save-with-retry orchestrator, and three per-row
+  0x08002AA4-0x08002C84): checksum validate + DMA-repair (`sub_8002AA4`,
+  NAKED), checksum compare/store, the `versionNibble` accessor, the
+  EEPROM-save-with-retry orchestrator, and three per-row
   default-refresh/force-set/mark-selected helpers extending
   `struct settings_sync_record`: `sub_8002B44`, `sub_8002B70`,
   `sub_8002B94`, `sub_8002BA4`, `sub_8002C14`, `sub_8002C40`,
@@ -120,14 +121,6 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   Fully understood; off by several register-letter choices in the
   digit-formatting tail, the same unresolved class `sub_80049CC` above
   documents - see `docs/matching.md`, issue #7.
-- **`sub_8002AA4`** (`asm/code_3_1_10_3_2aa4.s`, C in
-  `src/graphics/settings_menu8e.c`) - checksum validate + DMA-repair
-  for the settings-sync record. Fully understood; the loop body and
-  post-loop field writes match exactly with explicit register pins
-  matching the ROM's cached field addresses, but the prologue's
-  push-list still differs (this compiler doesn't protect `r7` across
-  `sub_8002C6C`'s calls here, unlike the ROM). See
-  `docs/matching/issue-4-sio-settings-sync.md`, issue #4.
 - **`sub_8006124`**, **`sub_800619C`**, **`sub_80061E8`**
   (`asm/code_3_1_10_14.s`, C in `src/graphics/settings_menu11.c`) -
   three icon-manager centered-label draws (the companion "draw a
