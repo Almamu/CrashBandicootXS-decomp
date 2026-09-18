@@ -483,3 +483,124 @@ issue #45 stays open.
 - `tools/report_units.py` - `0x0802757C` entry now points at
   `src/graphics/hud_stat_widget2.o` instead of `None`.
 - `docs/status/hud.md` - moved from "Parked" to "Matched".
+
+## Fourth pass
+
+Closes out the last 5 functions the third pass left "fully untouched":
+`sub_8027138`/`sub_802732C` (the 35-slot icon-array setup pair) and
+`sub_8027940`/`sub_8027D5C`/`sub_8027E88` (the rest of the digit-counter
+family). **All 5 are now byte-exact matched** - GitHub issue #45's
+`0x08026EEC`-`0x08028568` chunk is complete.
+
+### Approach: NAKED transcription from the start, not a fresh C attempt
+
+The third pass's own writeup already flagged both groups as near-certain
+to hit compiler blockers this project had already fully diagnosed and
+worked around exactly once before, on this exact function family's
+immediate siblings:
+
+- Every clamp site in all 5 functions (roughly two dozen of them) uses
+  the identical `records[index]`-via-a-byte-kept-in-r7 idiom that
+  `sub_802757C`/`sub_802763C` (this same doc's "NAKED-transcription
+  pass", directly above) already proved miscompiles in this `gcc 2.9`
+  build - a wrong-*value* read (a bogus `mov r0, sp` / shift-mask
+  sequence) on the very next use of the pinned byte, not merely a
+  register-choice mismatch, and confirmed unrelated to the
+  live-across-a-`bl` r7 bug documented elsewhere in this project.
+- `sub_802732C`'s own loop additionally keeps a running byte offset in
+  `r8` and two more loop-invariant values in `sb`/`sl` live across the
+  entire ~10-`bl`-per-iteration loop body - the same "loop/self-pointer
+  register allocation difficulty `src/graphics/settings_menu6.c`'s own
+  comment documents giving up on for four near-identical functions"
+  the third pass's read-through already named for this exact function.
+
+Given both blockers were already reproduced and root-caused (not just
+suspected) on this family's immediate neighbors, re-attempting
+register-pin tricks here first would have just re-derived the same
+negative result at several times the cost. Both groups went straight to
+full `NAKED` instruction-for-instruction transcription instead -
+this project's established escape hatch for this exact class of problem
+(`src/system/link_cable.c`'s several `NAKED` functions,
+`docs/matching/issue-4-sio-settings-sync.md`'s "NAKED transcription,
+byte-verified" section for the general method, and this same doc's own
+"NAKED-transcription pass" above for the worked example on this
+family). Semantics for all 5 were read and understood in full first (see
+the field-by-field comments in the two new files below) - nothing here
+is unreviewed opaque asm, just asm written by hand rather than by gcc.
+
+### Matched: `sub_8027138`/`sub_802732C` (new `src/graphics/hud_digit_array.c`)
+
+`sub_8027138` allocates the 35-slot `struct hud_digit_part` array
+(`sub_8026EC0(0x8C4)` - a leading 4-byte header word holding the count
+`0x23` = 35, then the 35 slots themselves), constructs every slot via
+the already-matched `sub_8027120`, zeroes `mode`/`layout_value`/
+`field_08`/the rest of `unknown_0c`, then loops over all 35 slots wiring
+each one's `anim_data` from the same triple-indirected shared table
+`settings_menu6.c` already names (`(**gUnknown_030012D0) + (const <<
+N)`) and a frame index from `gStaticData_08174BE0[i]` (or, for slot 22,
+`sub_80233B4(...) + 6` - the same "life count" special case the
+dispatcher itself, `sub_80274EC`, also singles out). One more slot past
+the main 35 gets the same treatment from a different shared-table
+offset, three trailing digit/icon slots get their initial clamped frame
+index set up front, and finally `sub_802732C(self, 0)` runs to finish
+the rest. `sub_802732C` is that same per-slot loop's tail: stores its
+second argument into `self->icon_flag`, finishes the two slots
+`sub_8027138` only partially set up (including the same `field_29`-low-
+nibble update `settings_menu6.c`'s `UPDATE_ICON_FRAME_NIBBLE` macro
+documents for the unrelated `struct settings_icon_actor` family), then
+loops over all 35 slots again repositioning/re-clamping a handful of
+specific ones (13, 22, 29) depending on the current level/game-mode and
+`self->icon_flag`, before DMA-filling nine words at `self+0x40` with
+`-1` via a raw `REG_DMA3SAD`/`DAD`/`CNT` poke (the same low-level idiom
+`settings_menu8e.c`'s `sub_8002AA4` already uses for an unrelated
+struct, address kept raw in the transcribed asm the same way that file
+keeps it).
+
+### Matched: `sub_8027940`/`sub_8027D5C`/`sub_8027E88` (new `src/graphics/hud_stat_widget3.c`)
+
+`sub_8027940` is a much larger sibling of the already-matched
+`sub_8027838`: two independent 3-digit displays (change-detection cache
+pairs at `self+0x24`/`self+0x48` and `self+0x28`/`self+0x4c`), each
+independently branching 3-digit vs. 2-digit vs. 1-digit (hiding unused
+leading slots via a desired frame of `-1`, exactly like `sub_8027838`'s
+own single-digit case), plus one more icon whose x/y table index is
+itself picked from a 3-way digit-count check on the first counter's
+value. `sub_8027D5C` is a smaller sibling - one 2-digit display sourced
+from `sub_802325C` - that also always refreshes one more fixed slot
+regardless of whether its value changed. `sub_8027E88` is the
+percentage-counter widget (`docs/rom_map.md`'s "fx" investigation named
+it this from its own `cmp r1, #0x64` special case): a value of exactly
+100 shows a single dedicated icon instead of splitting into digits,
+otherwise the usual 2-digit-vs-1-digit split runs; the function then
+repeats the same shape a second, independent time, gated by its own
+`sub_8031784`/`self->field_3c`/`self->field_60` change-detection triple
+- two percent-style readouts sharing one function body.
+
+### Verification
+
+Isolated compile (`arm-none-eabi-cpp`/`agbcc`/`arm-none-eabi-as`, the
+same flags `Makefile`'s `C_BUILDDIR` rule uses) caught two mechanical
+issues before the real build: this project's established `neg rX, rX`
+spelling (not `rsb rX, rX, #0`) for the two-operand negate idiom in
+plain (divided) syntax, and one literal-pool block in `sub_8027E88`
+that needed 4 more entries merged into it (the ROM batches literal
+pools at the next safe point rather than one per use site, and this
+transcription's first draft under-counted how many distinct pool slots
+that particular batched pool covers). Confirmed via a full clean `rm -rf
+build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map &&
+make compare` (`La suma coincide`), with both new files replacing
+`asm/code_3_2_17_27138.s` and `asm/code_3_2_20.s` (both now deleted, no
+raw asm left anywhere in this issue's `0x08026EEC`-`0x08028568` chunk)
+in `ldscript.txt`'s link order.
+
+**GitHub issue #45's scope is now fully matched.**
+
+### Cross-references
+
+- `src/graphics/hud_digit_array.c` - new file, `sub_8027138`/
+  `sub_802732C`, both `NAKED`.
+- `src/graphics/hud_stat_widget3.c` - new file, `sub_8027940`/
+  `sub_8027D5C`/`sub_8027E88`, all three `NAKED`.
+- `tools/report_units.py` - the `0x08027138` and `0x08027940` entries
+  now point at these two new object files instead of `None`.
+- `docs/status/hud.md` - matched list updated with both new files.

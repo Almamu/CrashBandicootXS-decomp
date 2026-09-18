@@ -221,11 +221,11 @@ SECTIONS
         build/crashbandicootxs/asm/code_3_2_17_25f3c.o(.text);
         build/crashbandicootxs/src/system/main_loop.o(.text);
         build/crashbandicootxs/src/graphics/hud_icon_slot.o(.text);
-        build/crashbandicootxs/asm/code_3_2_17_27138.o(.text);
+        build/crashbandicootxs/src/graphics/hud_digit_array.o(.text);
         build/crashbandicootxs/src/graphics/hud_stat_widget.o(.text);
         build/crashbandicootxs/src/graphics/hud_stat_widget2.o(.text);
         build/crashbandicootxs/src/graphics/hud_counter.o(.text);
-        build/crashbandicootxs/asm/code_3_2_20.o(.text);
+        build/crashbandicootxs/src/graphics/hud_stat_widget3.o(.text);
         build/crashbandicootxs/src/graphics/hud_blink.o(.text);
         build/crashbandicootxs/src/graphics/hud_icon_widget.o(.text);
         build/crashbandicootxs/src/graphics/hud_icon_widget_85c4.o(.text);

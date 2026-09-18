@@ -85,12 +85,10 @@ system from "core" graphics.
 
 - `src/graphics/hud_stat_widget.c` (new file, GitHub issue #45's second
   pass): `sub_80274EC` - the HUD stat-widget family's dispatcher.
-  Non-adjacent to `hud_counter.o`/other `hud` files since the rest of
-  the family (`sub_8027138`/`sub_802732C`/`sub_8027940`/`sub_8027D5C`/
-  `sub_8027E88`) still sits raw around it. Extended `struct hud_counter`
-  (`include/hud.h`) with `field_08`, `icon_flag`, and
-  `sync_value_a`/`b`/`c` - fields this function (and the still-raw
-  callees around it) touch inside what was previously opaque padding.
+  Extended `struct hud_counter` (`include/hud.h`) with `field_08`,
+  `icon_flag`, and `sync_value_a`/`b`/`c` - fields this function (and
+  the family's other callees) touch inside what was previously opaque
+  padding.
 
 - `src/graphics/hud_stat_widget2.c` (new file, GitHub issue #45's
   "NAKED-transcription pass"): `sub_802757C`/`sub_802763C` - the
@@ -102,6 +100,28 @@ system from "core" graphics.
   gcc-2.9 miscompile (see
   `docs/matching/issue-45-hud-stat-widget-dispatcher.md`'s "NAKED-
   transcription pass" section).
+
+- `src/graphics/hud_digit_array.c` (new file, GitHub issue #45's
+  "Fourth pass"): `sub_8027138`/`sub_802732C` - the 35-slot
+  `struct hud_digit_part` array's constructor and its own tail. Both
+  `NAKED` functions, transcribed instruction-for-instruction from the
+  ROM's disassembly: every clamp site hit the same r7-pinned-byte-as-
+  array-subscript miscompile as `sub_802757C`/`sub_802763C` above, and
+  `sub_802732C`'s own loop additionally needed `sl`/`sb`/`r8` held live
+  across the whole loop the way `settings_menu6.c`'s own comment already
+  documented gcc 2.9 giving up on for four near-identical functions -
+  see `docs/matching/issue-45-hud-stat-widget-dispatcher.md`'s "Fourth
+  pass" section.
+
+- `src/graphics/hud_stat_widget3.c` (new file, GitHub issue #45's
+  "Fourth pass"): `sub_8027940`/`sub_8027D5C`/`sub_8027E88` - the
+  remaining three callees of the dispatcher (two score-style digit
+  counters and the percentage-counter widget). All three `NAKED`
+  functions, transcribed the same way and for the same r7 miscompile
+  reason as `sub_802757C`/`sub_802763C` and `sub_8027138`/`sub_802732C`
+  above - see `docs/matching/issue-45-hud-stat-widget-dispatcher.md`'s
+  "Fourth pass" section. This closes out GitHub issue #45: all 24
+  functions in the `0x08026EEC`-`0x08028568` chunk are now matched.
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
