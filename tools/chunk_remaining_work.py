@@ -364,7 +364,12 @@ across several PRs, or hand off partial progress. Reference this issue
 from your PR with `Closes` **only if every function below ends up
 byte-exact matched** - a parked or left-raw function, however well
 understood or documented, keeps this issue open; otherwise just say
-what's left (and why) in a comment.
+what's left (and why) in a comment. **Never write `close #N`/`closes
+#N` in your PR body when you mean the opposite - not even negated
+("this does not close #N")** - GitHub's issue-linker matches that
+substring regardless of negation and auto-closes the issue on merge
+anyway. Say it without the word "close" next to the issue number:
+"issue #N stays open" / "the rest of #N is still raw."
 
 **Claiming:** check off a function's box once it's matched/parked (or
 say in a comment which ones you're taking, if you don't have write

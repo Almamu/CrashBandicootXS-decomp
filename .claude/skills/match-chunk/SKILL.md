@@ -177,6 +177,15 @@ no matter how well-documented the reason is - say so instead and leave
 the issue open (or comment with progress) so the gap is visible to
 whoever picks it up next.
 
+**Never write `close #N`/`closes #N` anywhere in the PR body when you
+mean the issue should stay open - not even negated ("this does **not**
+close #N").** GitHub's issue-linking scanner matches that substring
+regardless of surrounding negation and will auto-close the issue on
+merge anyway, silently reversing your own stated intent - this has
+already happened for real on 8 issues in this project. Say it without
+the word "close" next to the issue number at all: "issue #N stays open,
+N functions remain" or "the rest of #N is still raw."
+
 ## Picking up a `cleanup` issue instead
 
 Some issues are labeled `cleanup` rather than `decomp-chunk` - these
