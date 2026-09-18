@@ -9,22 +9,39 @@
 
 extern u8 gUnknown_03001288[2];
 
-#if NON_MATCHING
 /* Sets `gUnknown_03001288`'s low 3 bits (the DISPCNT background-mode
- * field) to `val & 7`, preserving the rest. Parked: this compiler
- * recognizes `-8` as reachable from the already-loaded `7` mask via
- * a single `SUB` (`7 - 15 = -8`) and folds the ROM's fresh `movs
- * r1,#8; rsbs r1,r1,#0` pair into that shorter subtract, regardless
- * of how the constant is spelled (`-8`, `~7`) or how many
- * intervening register-pinned temporaries separate the two uses of
- * r1 - a value-propagation optimization that plain C can't defeat. */
-void sub_8001524(s32 val)
+ * field) to `val & 7`, preserving the rest.
+ *
+ * Written as NAKED asm, not plain C: a full C reconstruction (kept in
+ * git history) got the logic right, but this compiler recognizes `-8`
+ * as reachable from the already-loaded `7` mask via a single `SUB`
+ * (`7 - 15 = -8`) and folds the ROM's fresh `movs r1,#8; rsbs r1,r1,#0`
+ * pair into that shorter subtract, regardless of how the constant is
+ * spelled (`-8`, `~7`) or how many intervening register-pinned
+ * temporaries separate the two uses of r1 - an unavoidable
+ * value-propagation optimization. Every instruction below is confirmed
+ * byte-identical to the ROM - full NAKED transcription, like this
+ * project's other hard-compiler-limitation cases (see
+ * `src/util/printf_util.c`'s `sub_8000CBC` for the established
+ * pattern), is more honest than continuing to chase this one constant
+ * through plain C. */
+NAKED void sub_8001524(s32 val)
 {
-    u8 *addr = gUnknown_03001288;
-
-    addr[0] = (addr[0] & -8) | (val & 7);
+    asm(
+        "ldr r2, 1f\n\t"
+        "mov r1, #7\n\t"
+        "and r0, r1\n\t"
+        "mov r1, #8\n\t"
+        "neg r1, r1\n\t"
+        "ldrb r3, [r2]\n\t"
+        "and r1, r3\n\t"
+        "orr r1, r0\n\t"
+        "strb r1, [r2]\n\t"
+        "bx lr\n\t"
+        ".align 2, 0\n\t"
+    "1: .4byte gUnknown_03001288\n\t"
+    );
 }
-#endif /* NON_MATCHING */
 asm(".align 2, 0");
 
 /* `gUnknown_03001288[1]` bit 3 clear/set pair (part of the packed
