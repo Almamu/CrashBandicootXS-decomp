@@ -51,6 +51,15 @@ system from "core" system startup/init code.
   allocates and returns `gUnknown_03000828`
 - `src/system/game_loop8.c` (GitHub issue #37): `sub_802400C` - the
   DMA3/VRAM refresh pass gated on `self+0x0 <= 0x1000`
+- `src/system/game_loop39.c` (GitHub issue #37, follow-up pass):
+  `sub_802375C` - the level-start dispatcher that allocates the
+  per-level HUD widget set, the player actor, and the text-box
+  singleton, then dispatches on a widget-kind field to construct one of
+  three counter/ring-buffer widgets before handing off to the still-raw
+  `sub_8023A1C`. See
+  [docs/matching/issue-37-game-loop-2375c.md](../matching/issue-37-game-loop-2375c.md)
+  for the register-pinning/evaluation-order gotchas that closed this
+  out.
 - `src/system/game_loop9.c` (GitHub issue #37): `sub_8024198`,
   `sub_80241A4`, `sub_80241B0`, `sub_80241BC`, `sub_802423C` - a
   boolean flag clear/set/get trio, the level-end teardown, and the
@@ -337,10 +346,15 @@ plain C didn't converge.
   small count-prefixed record list); several callees not characterized
   precisely enough yet - see
   [docs/matching/issue-40-terrain-tile-cache.md](../matching/issue-40-terrain-tile-cache.md).
-- **`sub_802375C`/`sub_8023A1C`** (`asm/code_3_2_17_2375c.s`, ROM
-  `0x0802375C`-`0x08024007`, GitHub issue #37) - a level-start
-  dispatcher (spawns several HUD/counter widget objects) and its
-  ~650-instruction jump-table-driven continuation; several callees
-  (`gStaticData_0816C8xx` tables, `sub_8027018`, `sub_80266BC`,
-  `sub_800B3F0`) not characterized precisely enough yet - see
-  [docs/matching/issue-37-game-loop-234e8.md](../matching/issue-37-game-loop-234e8.md).
+- **`sub_8023A1C`** (`asm/code_3_2_17_23a1c.s`, ROM
+  `0x08023A1C`-`0x08024007`, GitHub issue #37) - a ~650-instruction
+  jump-table-driven level-lifecycle continuation, called
+  unconditionally from `sub_802375C` (now matched, `game_loop39.c` -
+  see
+  [docs/matching/issue-37-game-loop-2375c.md](../matching/issue-37-game-loop-2375c.md)).
+  `sub_8027018`'s call shape is now confirmed against all four of this
+  function's own call sites, but the `gStaticData_0816C8xx` tables it
+  indexes and a few other callees (`sub_80266BC`, `sub_8023484`) aren't
+  characterized precisely enough yet to commit to a byte-exact
+  reconstruction of this size - see
+  [docs/matching/issue-37-game-loop-2375c.md](../matching/issue-37-game-loop-2375c.md).
