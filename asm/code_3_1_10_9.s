@@ -3,6 +3,7 @@
 .syntax unified
 .arm
 
+.if NON_MATCHING == 0
 	thumb_func_start sub_8005E5C
 sub_8005E5C: @ 0x08005E5C
 	push {r4, r5, r6, r7, lr}
@@ -77,3 +78,4 @@ sub_8005E5C: @ 0x08005E5C
 	.align 2, 0
 _08005EEC: .4byte gUnknown_030012DC
 _08005EF0: .4byte gUnknown_030012E0
+.endif
