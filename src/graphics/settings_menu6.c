@@ -29,25 +29,6 @@ void sub_8005A78(struct pause_screen_results *self)
     sub_80060AC(0x14, (u8 *)self + 0x46);
 }
 
-#if NON_MATCHING
-/* The four functions below (sub_8005AE8, sub_8005B80, sub_8005C58,
- * sub_8005D44 - plus sub_8005EF4/FBC, src/graphics/settings_menu7.c,
- * same object) are reconstructed (semantics understood, cross-checked
- * against docs/rom_map.md's "Correction: overlay_ui is a small family
- * of screens" writeup) but NOT YET BYTE-MATCHING - parked here the
- * same way sub_8006600 (src/graphics/oam_count.c) is. All four hit the
- * same class of gcc-2.9 register-allocation difficulty already
- * documented for sub_8006600 and sub_80374D0's neighbor sub_8037388
- * (src/audio/counter_selector_setup.c): the loop/self pointer never
- * ends up in `r8`/`sb` here the way the ROM's does, no matter how the
- * source is rephrased, and closing that gap would need the same kind
- * of heavy per-call-site SUB_8006600_*-style register-pin macros this
- * pass didn't have budget for across four near-identical functions (the
- * `field_29`-update tail every one of them shares - see
- * UPDATE_ICON_FRAME_NIBBLE below - *did* get pinned down exactly this
- * way, and matches sub_8005A78's real bytes byte-for-byte; it's only
- * the surrounding loop/branch scaffolding that doesn't). */
-
 extern void sub_80087C0(struct actor *part);
 extern void sub_80087B4(struct actor *part);
 extern void sub_800872C(struct actor *part, u8 val);
@@ -57,23 +38,86 @@ extern struct icon_pos gStaticData_0816B1EC[];
 /* Builds the 4-icon array at `icons8c`: one per `gStaticData_0816B1EC`
  * position entry, keyframe-table base `0xe4<<1` off the same shared
  * table `sub_8005A78` uses, frame index from `gStaticData_0816B20C`,
- * then the standard sub-counter/frame-counter/"done"-flag reset trio. */
-void sub_8005AE8(struct pause_screen_results *self)
+ * then the standard sub-counter/frame-counter/"done"-flag reset trio.
+ *
+ * Written as NAKED asm, not plain C: this project's usual gcc-2.9
+ * register-allocation difficulty already documented at length for
+ * `sub_8006600` (src/graphics/oam_count.c) - the loop/self pointer
+ * never ended up in `r8` the way the ROM's does, no matter how the
+ * source was rephrased. Every instruction below is transcribed directly
+ * from and checked against the ROM's own disassembly. */
+NAKED void sub_8005AE8(struct pause_screen_results *self)
 {
-    s32 i;
-    struct settings_icon_actor *icon;
-
-    for (i = 0; i <= 3; i++) {
-        icon = (struct settings_icon_actor *)sub_8008904((struct actor *)sub_8026EDC(0x40));
-        self->icons8c[i] = icon;
-        icon->field_20 = (void **)((u8 *)(**gUnknown_030012D0) + (0xe4 << 1));
-        icon->frameIndex = (u8)gStaticData_0816B20C[i];
-        sub_80087C0(&icon->base);
-        sub_80087B4(&icon->base);
-        sub_800872C(&icon->base, 0);
-        sub_800737C(&icon->base, gStaticData_0816B1EC[i].x, gStaticData_0816B1EC[i].y);
-        UPDATE_ICON_FRAME_NIBBLE(icon);
-    }
+    asm(
+    "push {r4, r5, r6, r7, lr}\n\t"
+    "mov r7, r8\n\t"
+    "push {r7}\n\t"
+    "mov r8, r0\n\t"
+    "mov r7, #0\n\t"
+    "1:\n\t"
+    "lsl r5, r7, #2\n\t"
+    "mov r6, r8\n\t"
+    "add r6, #0x8c\n\t"
+    "add r6, r6, r5\n\t"
+    "mov r0, #0x40\n\t"
+    "bl sub_8026EDC\n\t"
+    "bl sub_8008904\n\t"
+    "add r4, r0, #0\n\t"
+    "str r4, [r6]\n\t"
+    "ldr r0, 2f\n\t"
+    "ldr r0, [r0]\n\t"
+    "ldr r0, [r0]\n\t"
+    "ldr r0, [r0]\n\t"
+    "mov r1, #0xe4\n\t"
+    "lsl r1, r1, #1\n\t"
+    "add r0, r0, r1\n\t"
+    "str r0, [r4, #0x20]\n\t"
+    "ldr r0, 3f\n\t"
+    "add r5, r5, r0\n\t"
+    "ldr r0, [r5]\n\t"
+    "add r1, r4, #0\n\t"
+    "add r1, #0x2d\n\t"
+    "strb r0, [r1]\n\t"
+    "add r0, r4, #0\n\t"
+    "bl sub_80087C0\n\t"
+    "add r0, r4, #0\n\t"
+    "bl sub_80087B4\n\t"
+    "add r0, r4, #0\n\t"
+    "mov r1, #0\n\t"
+    "bl sub_800872C\n\t"
+    "ldr r0, [r6]\n\t"
+    "lsl r2, r7, #3\n\t"
+    "ldr r1, 4f\n\t"
+    "add r2, r2, r1\n\t"
+    "ldr r1, [r2]\n\t"
+    "ldr r2, [r2, #4]\n\t"
+    "bl sub_800737C\n\t"
+    "ldr r0, [r6]\n\t"
+    "bl sub_800815C\n\t"
+    "ldr r2, [r6]\n\t"
+    "add r2, #0x29\n\t"
+    "mov r1, #0xf\n\t"
+    "and r0, r1\n\t"
+    "mov r3, #0x10\n\t"
+    "neg r3, r3\n\t"
+    "add r1, r3, #0\n\t"
+    "ldrb r3, [r2]\n\t"
+    "and r1, r3\n\t"
+    "orr r1, r0\n\t"
+    "strb r1, [r2]\n\t"
+    "add r7, #1\n\t"
+    "cmp r7, #3\n\t"
+    "ble 1b\n\t"
+    "pop {r3}\n\t"
+    "mov r8, r3\n\t"
+    "pop {r4, r5, r6, r7}\n\t"
+    "pop {r0}\n\t"
+    "bx r0\n\t"
+    ".align 2, 0\n"
+    "2: .4byte gUnknown_030012D0\n"
+    "3: .4byte gStaticData_0816B20C\n"
+    "4: .4byte gStaticData_0816B1EC\n"
+    );
 }
 
 extern s32 sub_8006920(void *arg0);
@@ -86,31 +130,110 @@ extern struct icon_pos gStaticData_0816B21C[];
  * `gStaticData_0816B21C`/`gStaticData_0816B244`), plus each icon's
  * `field_3c = 0x80`. After the loop, formats two more row-stats
  * derived numbers (`sub_8006920`/`sub_80068CC` on `field_10`) into
- * `buf2f`/`buf32`, and the constant `0x1c` into `buf49`. */
-void sub_8005B80(struct pause_screen_results *self)
+ * `buf2f`/`buf32`, and the constant `0x1c` into `buf49`.
+ *
+ * Written as NAKED asm, not plain C: same register-pressure class of
+ * difficulty as `sub_8005AE8` above. Every instruction below is
+ * transcribed directly from and checked against the ROM's own
+ * disassembly. */
+NAKED void sub_8005B80(struct pause_screen_results *self)
 {
-    s32 i;
-    struct settings_icon_actor *icon;
-    s32 a, b;
-
-    for (i = 0; i <= 4; i++) {
-        icon = (struct settings_icon_actor *)sub_8008904((struct actor *)sub_8026EDC(0x40));
-        self->icons9c[i] = icon;
-        icon->field_20 = (void **)((u8 *)(**gUnknown_030012D0) + (0xc0 << 1));
-        icon->frameIndex = (u8)gStaticData_0816B244[i];
-        sub_80087C0(&icon->base);
-        sub_80087B4(&icon->base);
-        sub_800872C(&icon->base, 0);
-        sub_800737C(&icon->base, gStaticData_0816B21C[i].x, gStaticData_0816B21C[i].y);
-        UPDATE_ICON_FRAME_NIBBLE(icon);
-        icon->field_3c = 0x80;
-    }
-
-    a = sub_8006920(self->field_10);
-    b = sub_80068CC(self->field_10);
-    sub_80060AC(a, self->buf2f);
-    sub_80060AC(b, self->buf32);
-    sub_80060AC(0x1c, self->buf49);
+    asm(
+    "push {r4, r5, r6, r7, lr}\n\t"
+    "mov r7, r8\n\t"
+    "push {r7}\n\t"
+    "add r7, r0, #0\n\t"
+    "mov r0, #0\n\t"
+    "mov r8, r0\n\t"
+    "1:\n\t"
+    "mov r1, r8\n\t"
+    "lsl r5, r1, #2\n\t"
+    "add r6, r7, #0\n\t"
+    "add r6, #0x9c\n\t"
+    "add r6, r6, r5\n\t"
+    "mov r0, #0x40\n\t"
+    "bl sub_8026EDC\n\t"
+    "bl sub_8008904\n\t"
+    "add r4, r0, #0\n\t"
+    "str r4, [r6]\n\t"
+    "ldr r0, 2f\n\t"
+    "ldr r0, [r0]\n\t"
+    "ldr r0, [r0]\n\t"
+    "ldr r0, [r0]\n\t"
+    "mov r3, #0xc0\n\t"
+    "lsl r3, r3, #1\n\t"
+    "add r0, r0, r3\n\t"
+    "str r0, [r4, #0x20]\n\t"
+    "ldr r0, 3f\n\t"
+    "add r5, r5, r0\n\t"
+    "ldr r0, [r5]\n\t"
+    "add r1, r4, #0\n\t"
+    "add r1, #0x2d\n\t"
+    "strb r0, [r1]\n\t"
+    "add r0, r4, #0\n\t"
+    "bl sub_80087C0\n\t"
+    "add r0, r4, #0\n\t"
+    "bl sub_80087B4\n\t"
+    "add r0, r4, #0\n\t"
+    "mov r1, #0\n\t"
+    "bl sub_800872C\n\t"
+    "ldr r0, [r6]\n\t"
+    "mov r1, r8\n\t"
+    "lsl r2, r1, #3\n\t"
+    "ldr r1, 4f\n\t"
+    "add r2, r2, r1\n\t"
+    "ldr r1, [r2]\n\t"
+    "ldr r2, [r2, #4]\n\t"
+    "bl sub_800737C\n\t"
+    "ldr r0, [r6]\n\t"
+    "bl sub_800815C\n\t"
+    "ldr r2, [r6]\n\t"
+    "add r2, #0x29\n\t"
+    "mov r1, #0xf\n\t"
+    "and r0, r1\n\t"
+    "mov r3, #0x10\n\t"
+    "neg r3, r3\n\t"
+    "add r1, r3, #0\n\t"
+    "ldrb r3, [r2]\n\t"
+    "and r1, r3\n\t"
+    "orr r1, r0\n\t"
+    "strb r1, [r2]\n\t"
+    "ldr r1, [r6]\n\t"
+    "mov r0, #0x80\n\t"
+    "strh r0, [r1, #0x3c]\n\t"
+    "mov r0, #1\n\t"
+    "add r8, r0\n\t"
+    "mov r1, r8\n\t"
+    "cmp r1, #4\n\t"
+    "ble 1b\n\t"
+    "ldr r0, [r7, #0x10]\n\t"
+    "bl sub_8006920\n\t"
+    "add r4, r0, #0\n\t"
+    "ldr r0, [r7, #0x10]\n\t"
+    "bl sub_80068CC\n\t"
+    "add r5, r0, #0\n\t"
+    "add r1, r7, #0\n\t"
+    "add r1, #0x2f\n\t"
+    "add r0, r4, #0\n\t"
+    "bl sub_80060AC\n\t"
+    "add r1, r7, #0\n\t"
+    "add r1, #0x32\n\t"
+    "add r0, r5, #0\n\t"
+    "bl sub_80060AC\n\t"
+    "add r1, r7, #0\n\t"
+    "add r1, #0x49\n\t"
+    "mov r0, #0x1c\n\t"
+    "bl sub_80060AC\n\t"
+    "pop {r3}\n\t"
+    "mov r8, r3\n\t"
+    "pop {r4, r5, r6, r7}\n\t"
+    "pop {r0}\n\t"
+    "bx r0\n\t"
+    ".align 2, 0\n"
+    "2: .4byte gUnknown_030012D0\n"
+    "3: .4byte gStaticData_0816B244\n"
+    "4: .4byte gStaticData_0816B21C\n"
+    );
 }
 
 extern s32 sub_8006864(void *arg0);
@@ -127,30 +250,116 @@ extern struct icon_pos gStaticData_0816B258[];
  * (`sub_8006864`/`sub_8006820`/`sub_80067EC`/`sub_80068A8` on
  * `field_10` - the same four functions src/graphics/oam_count.c
  * documents) into `buf38`/`buf3b`/`buf3e`/`buf35`, and the constant
- * `0x14` into `buf4c`. */
-void sub_8005C58(struct pause_screen_results *self)
+ * `0x14` into `buf4c`.
+ *
+ * Written as NAKED asm, not plain C: same register-pressure class of
+ * difficulty as `sub_8005AE8`/`sub_8005B80` above. Every instruction
+ * below is transcribed directly from and checked against the ROM's own
+ * disassembly. */
+NAKED void sub_8005C58(struct pause_screen_results *self)
 {
-    s32 i;
-    struct settings_icon_actor *icon;
-
-    for (i = 0; i <= 2; i++) {
-        icon = (struct settings_icon_actor *)sub_8008904((struct actor *)sub_8026EDC(0x40));
-        self->iconsB0[i] = icon;
-        icon->field_20 = (void **)((u8 *)(**gUnknown_030012D0) + (0xc6 << 1));
-        icon->frameIndex = (u8)gStaticData_0816B270[i];
-        sub_80087C0(&icon->base);
-        sub_80087B4(&icon->base);
-        sub_800872C(&icon->base, 0);
-        sub_800737C(&icon->base, gStaticData_0816B258[i].x, gStaticData_0816B258[i].y);
-        UPDATE_ICON_FRAME_NIBBLE(icon);
-        icon->field_3c = 0x80;
-    }
-
-    sub_80060AC(sub_8006864(self->field_10), self->buf38);
-    sub_80060AC(sub_8006820(self->field_10), self->buf3b);
-    sub_80060AC(sub_80067EC(self->field_10), self->buf3e);
-    sub_80060AC(sub_80068A8(self->field_10), self->buf35);
-    sub_80060AC(0x14, self->buf4c);
+    asm(
+    "push {r4, r5, r6, r7, lr}\n\t"
+    "mov r7, r8\n\t"
+    "push {r7}\n\t"
+    "add r7, r0, #0\n\t"
+    "mov r0, #0\n\t"
+    "mov r8, r0\n\t"
+    "1:\n\t"
+    "mov r1, r8\n\t"
+    "lsl r5, r1, #2\n\t"
+    "add r6, r7, #0\n\t"
+    "add r6, #0xb0\n\t"
+    "add r6, r6, r5\n\t"
+    "mov r0, #0x40\n\t"
+    "bl sub_8026EDC\n\t"
+    "bl sub_8008904\n\t"
+    "add r4, r0, #0\n\t"
+    "str r4, [r6]\n\t"
+    "ldr r0, 2f\n\t"
+    "ldr r0, [r0]\n\t"
+    "ldr r0, [r0]\n\t"
+    "ldr r0, [r0]\n\t"
+    "mov r3, #0xc6\n\t"
+    "lsl r3, r3, #1\n\t"
+    "add r0, r0, r3\n\t"
+    "str r0, [r4, #0x20]\n\t"
+    "ldr r0, 3f\n\t"
+    "add r5, r5, r0\n\t"
+    "ldr r0, [r5]\n\t"
+    "add r1, r4, #0\n\t"
+    "add r1, #0x2d\n\t"
+    "strb r0, [r1]\n\t"
+    "add r0, r4, #0\n\t"
+    "bl sub_80087C0\n\t"
+    "add r0, r4, #0\n\t"
+    "bl sub_80087B4\n\t"
+    "add r0, r4, #0\n\t"
+    "mov r1, #0\n\t"
+    "bl sub_800872C\n\t"
+    "ldr r0, [r6]\n\t"
+    "mov r1, r8\n\t"
+    "lsl r2, r1, #3\n\t"
+    "ldr r1, 4f\n\t"
+    "add r2, r2, r1\n\t"
+    "ldr r1, [r2]\n\t"
+    "ldr r2, [r2, #4]\n\t"
+    "bl sub_800737C\n\t"
+    "ldr r0, [r6]\n\t"
+    "bl sub_800815C\n\t"
+    "ldr r2, [r6]\n\t"
+    "add r2, #0x29\n\t"
+    "mov r1, #0xf\n\t"
+    "and r0, r1\n\t"
+    "mov r3, #0x10\n\t"
+    "neg r3, r3\n\t"
+    "add r1, r3, #0\n\t"
+    "ldrb r3, [r2]\n\t"
+    "and r1, r3\n\t"
+    "orr r1, r0\n\t"
+    "strb r1, [r2]\n\t"
+    "ldr r1, [r6]\n\t"
+    "mov r0, #0x80\n\t"
+    "strh r0, [r1, #0x3c]\n\t"
+    "mov r0, #1\n\t"
+    "add r8, r0\n\t"
+    "mov r1, r8\n\t"
+    "cmp r1, #2\n\t"
+    "ble 1b\n\t"
+    "ldr r0, [r7, #0x10]\n\t"
+    "bl sub_8006864\n\t"
+    "add r1, r7, #0\n\t"
+    "add r1, #0x38\n\t"
+    "bl sub_80060AC\n\t"
+    "ldr r0, [r7, #0x10]\n\t"
+    "bl sub_8006820\n\t"
+    "add r1, r7, #0\n\t"
+    "add r1, #0x3b\n\t"
+    "bl sub_80060AC\n\t"
+    "ldr r0, [r7, #0x10]\n\t"
+    "bl sub_80067EC\n\t"
+    "add r1, r7, #0\n\t"
+    "add r1, #0x3e\n\t"
+    "bl sub_80060AC\n\t"
+    "ldr r0, [r7, #0x10]\n\t"
+    "bl sub_80068A8\n\t"
+    "add r1, r7, #0\n\t"
+    "add r1, #0x35\n\t"
+    "bl sub_80060AC\n\t"
+    "add r1, r7, #0\n\t"
+    "add r1, #0x4c\n\t"
+    "mov r0, #0x14\n\t"
+    "bl sub_80060AC\n\t"
+    "pop {r3}\n\t"
+    "mov r8, r3\n\t"
+    "pop {r4, r5, r6, r7}\n\t"
+    "pop {r0}\n\t"
+    "bx r0\n\t"
+    ".align 2, 0\n"
+    "2: .4byte gUnknown_030012D0\n"
+    "3: .4byte gStaticData_0816B270\n"
+    "4: .4byte gStaticData_0816B258\n"
+    );
 }
 
 extern void *gUnknown_030012C0;
@@ -182,53 +391,139 @@ extern struct icon_pos gStaticData_0816B27C;
  * thresholds and constructs the icon at `field_bc` tagged with the
  * matching medal (from `gStaticData_0816B270`, the same table
  * sub_8005C58 uses) only if a threshold was actually met - otherwise
- * leaves `field_6c` (an "earned" flag) clear and the icon untagged. */
-void sub_8005D44(struct pause_screen_results *self)
+ * leaves `field_6c` (an "earned" flag) clear and the icon untagged.
+ *
+ * Written as NAKED asm, not plain C: same register-pressure class of
+ * difficulty as `sub_8005AE8`/`sub_8005B80`/`sub_8005C58` above. Every
+ * instruction below is transcribed directly from and checked against
+ * the ROM's own disassembly. */
+NAKED void sub_8005D44(struct pause_screen_results *self)
 {
-    s32 levelIdx;
-    s32 raw;
-    s32 time;
-    struct threshold_table_entry *entry;
-    struct settings_icon_actor *icon;
-    u8 earned;
-
-    levelIdx = sub_802332C(gUnknown_030012C0);
-    raw = *((s32 *)self->field_10 + levelIdx + 1);
-    time = (s32)((u32)raw << 16) >> 19;
-    FormatCentiseconds(time, self->timeBuf);
-
-    entry = &gStaticData_0816C86C[levelIdx];
-    earned = 0;
-    if (time != 0 && time <= entry->threshold_08) {
-        earned = 1;
-    }
-    self->field_6c = earned;
-
-    icon = (struct settings_icon_actor *)sub_8008904((struct actor *)sub_8026EDC(0x40));
-    self->field_bc = icon;
-    icon->field_20 = (void **)((u8 *)(**gUnknown_030012D0) + (0xc6 << 1));
-    sub_800737C(&icon->base, gStaticData_0816B27C.x, gStaticData_0816B27C.y);
-
-    if (time != 0) {
-        if (time <= entry->threshold_08) {
-            icon->frameIndex = (u8)gStaticData_0816B270[2];
-            sub_80087C0(&icon->base);
-            sub_80087B4(&icon->base);
-            sub_800872C(&icon->base, 0);
-        }
-        if (time <= entry->threshold_0C) {
-            icon->frameIndex = (u8)gStaticData_0816B270[1];
-            sub_80087C0(&icon->base);
-            sub_80087B4(&icon->base);
-            sub_800872C(&icon->base, 0);
-        }
-        if (time <= entry->threshold_10) {
-            icon->frameIndex = (u8)gStaticData_0816B270[0];
-            sub_80087C0(&icon->base);
-            sub_80087B4(&icon->base);
-            sub_800872C(&icon->base, 0);
-        }
-        UPDATE_ICON_FRAME_NIBBLE(icon);
-    }
+    asm(
+    "push {r4, r5, r6, r7, lr}\n\t"
+    "add r6, r0, #0\n\t"
+    "ldr r0, 6f\n\t"
+    "ldr r0, [r0]\n\t"
+    "bl sub_802332C\n\t"
+    "add r4, r0, #0\n\t"
+    "lsl r1, r4, #2\n\t"
+    "add r1, #4\n\t"
+    "ldr r0, [r6, #0x10]\n\t"
+    "add r0, r0, r1\n\t"
+    "ldr r0, [r0]\n\t"
+    "lsl r0, r0, #0x10\n\t"
+    "lsr r5, r0, #0x13\n\t"
+    "add r1, r6, #0\n\t"
+    "add r1, #0x7c\n\t"
+    "add r0, r5, #0\n\t"
+    "bl FormatCentiseconds\n\t"
+    "lsl r0, r4, #3\n\t"
+    "add r0, r0, r4\n\t"
+    "lsl r0, r0, #2\n\t"
+    "ldr r1, 7f\n\t"
+    "add r7, r0, r1\n\t"
+    "mov r1, #0\n\t"
+    "cmp r5, #0\n\t"
+    "beq 1f\n\t"
+    "ldr r0, [r7, #8]\n\t"
+    "cmp r5, r0\n\t"
+    "bhi 1f\n\t"
+    "mov r1, #1\n\t"
+    "1:\n\t"
+    "add r0, r6, #0\n\t"
+    "add r0, #0x6c\n\t"
+    "strb r1, [r0]\n\t"
+    "add r6, #0xbc\n\t"
+    "mov r0, #0x40\n\t"
+    "bl sub_8026EDC\n\t"
+    "bl sub_8008904\n\t"
+    "str r0, [r6]\n\t"
+    "ldr r1, 8f\n\t"
+    "ldr r1, [r1]\n\t"
+    "ldr r1, [r1]\n\t"
+    "ldr r1, [r1]\n\t"
+    "mov r2, #0xc6\n\t"
+    "lsl r2, r2, #1\n\t"
+    "add r1, r1, r2\n\t"
+    "str r1, [r0, #0x20]\n\t"
+    "ldr r2, 9f\n\t"
+    "ldr r1, [r2]\n\t"
+    "ldr r2, [r2, #4]\n\t"
+    "bl sub_800737C\n\t"
+    "cmp r5, #0\n\t"
+    "beq 5f\n\t"
+    "ldr r0, [r7, #8]\n\t"
+    "cmp r5, r0\n\t"
+    "bhi 2f\n\t"
+    "ldr r0, 10f\n\t"
+    "ldr r4, [r6]\n\t"
+    "ldr r0, [r0, #8]\n\t"
+    "add r1, r4, #0\n\t"
+    "add r1, #0x2d\n\t"
+    "strb r0, [r1]\n\t"
+    "add r0, r4, #0\n\t"
+    "bl sub_80087C0\n\t"
+    "add r0, r4, #0\n\t"
+    "bl sub_80087B4\n\t"
+    "add r0, r4, #0\n\t"
+    "mov r1, #0\n\t"
+    "bl sub_800872C\n\t"
+    "2:\n\t"
+    "ldr r0, [r7, #0xc]\n\t"
+    "cmp r5, r0\n\t"
+    "bhi 3f\n\t"
+    "ldr r0, 10f\n\t"
+    "ldr r4, [r6]\n\t"
+    "ldr r0, [r0, #4]\n\t"
+    "add r1, r4, #0\n\t"
+    "add r1, #0x2d\n\t"
+    "strb r0, [r1]\n\t"
+    "add r0, r4, #0\n\t"
+    "bl sub_80087C0\n\t"
+    "add r0, r4, #0\n\t"
+    "bl sub_80087B4\n\t"
+    "add r0, r4, #0\n\t"
+    "mov r1, #0\n\t"
+    "bl sub_800872C\n\t"
+    "3:\n\t"
+    "ldr r0, [r7, #0x10]\n\t"
+    "cmp r5, r0\n\t"
+    "bhi 4f\n\t"
+    "ldr r0, 10f\n\t"
+    "ldr r4, [r6]\n\t"
+    "ldr r0, [r0]\n\t"
+    "add r1, r4, #0\n\t"
+    "add r1, #0x2d\n\t"
+    "strb r0, [r1]\n\t"
+    "add r0, r4, #0\n\t"
+    "bl sub_80087C0\n\t"
+    "add r0, r4, #0\n\t"
+    "bl sub_80087B4\n\t"
+    "add r0, r4, #0\n\t"
+    "mov r1, #0\n\t"
+    "bl sub_800872C\n\t"
+    "4:\n\t"
+    "ldr r0, [r6]\n\t"
+    "bl sub_800815C\n\t"
+    "ldr r2, [r6]\n\t"
+    "add r2, #0x29\n\t"
+    "mov r1, #0xf\n\t"
+    "and r0, r1\n\t"
+    "mov r1, #0x10\n\t"
+    "neg r1, r1\n\t"
+    "ldrb r3, [r2]\n\t"
+    "and r1, r3\n\t"
+    "orr r1, r0\n\t"
+    "strb r1, [r2]\n\t"
+    "5:\n\t"
+    "pop {r4, r5, r6, r7}\n\t"
+    "pop {r0}\n\t"
+    "bx r0\n\t"
+    ".align 2, 0\n"
+    "6: .4byte gUnknown_030012C0\n"
+    "7: .4byte gStaticData_0816C86C\n"
+    "8: .4byte gUnknown_030012D0\n"
+    "9: .4byte gStaticData_0816B27C\n"
+    "10: .4byte gStaticData_0816B270\n"
+    );
 }
-#endif /* NON_MATCHING */

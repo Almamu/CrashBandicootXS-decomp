@@ -55,29 +55,39 @@ already gave - see "Left untouched" below.
 
 ## Matched - 1 function
 
-- **`sub_800B270`** (`src/graphics/actor_part49.o`, new file): a
-  per-frame velocity integrator. Moves `self+0x60`/`self+0x64`
-  (current X/Y velocity) toward `self+0x50`/`self+0x5c` (target X/Y
-  velocity) by up to `self+0x4c`/`self+0x58` (X/Y acceleration step)
-  each call, clamping at the target instead of overshooting. Derives a
-  `self+0x24` direction-flag byte from the resulting velocity's sign,
-  snapshots the pre-move position into `self+0x6c`/`self+0x70`, applies
-  velocity to `self+0`/`self+4` (position), and records the resulting
-  Y velocity into an unlabeled RAM address (`0x0300129C` - no symbol
-  found anywhere else in this ROM, kept as a raw address rather than
-  inventing a name). Needed `self`/`v`/`target`/each clamp `result`
-  pinned to `r2`/`r1`/`r3`/`r0` respectively, the flags-byte pointer
-  pinned to `r1`, the OR-mask pinned to `r0`, an explicit `goto`-based
-  merge for the Y-axis flag write (a plain `if`/`else if` with `|=`
-  compiled to two separate read-modify-write sequences instead of the
-  ROM's single shared one), and `vs32`-cast forced reloads matching the
-  ROM's own redundant re-reads of `self->x`/`self->y` right before
-  applying velocity to them.
+- **`sub_800A810`** (`src/graphics/actor_part48.c`, right after the
+  still-parked `sub_800A734` in the same file): dispatches a sub-state
+  byte (`self+0x88`) to one of three teardown helpers
+  (`sub_8015840`/`sub_80159A4`/`sub_8017994`), each called with the
+  same `self+0x44` "record" argument `sub_800A730` already established,
+  after resetting the usual velocity/state fields. Matched with `self`
+  pinned to `r3` (kept live across all three `bl` calls); the two
+  AND-mask field clears (`self+0x28` bit 5, `self+0xc` bit 3) built via
+  the "negative-constant register-pinned mask" idiom (`register s32
+  mask asm("r0") = -0x21;`/`-9;`, forcing the ROM's own runtime
+  `mov`+`neg` pair instead of a folded 8-bit AND immediate); the
+  `self+0x68`-to-`self+0x28` field address expressed as a single
+  decremented `u8 *p` cursor (`p -= 0x40;`) instead of a fresh
+  computation, reproducing the ROM's own `subs r1, #0x40` register
+  reuse; and the whole dispatch rewritten with explicit `goto`s
+  (`if (state == 1) goto do1; if (state > 1) goto gt1; if (state == 0)
+  goto do0;`) plus a second register-pinned copy of the state byte
+  (`register s32 state2 asm("r1") = state;`, read once up front) for the
+  inner `state2 == 2`/`state2 == 3` checks - this is what finally
+  reproduced the ROM's exact `beq`/`bgt`/`beq` chain and its `adds r1,
+  r0, #0` copy; every `if`/`else if`/`switch` phrasing tried previously
+  collapsed the branch polarity to `bne`-skip and let the compiler's CSE
+  drop the redundant copy entirely (see "Real gotchas" below for the
+  general form of this pin-scope lesson).
 
 ## Parked (`NON_MATCHING`, not yet byte-exact) - 5 functions
 
 All five are fully understood (every field offset, branch, and call
 confirmed against the ROM) but don't yet produce byte-identical output.
+(`sub_800B270` was mislabeled "Matched" in this write-up's first
+version even though its own source was already `#if NON_MATCHING` and
+its "Real gotchas" entry below already described it as parked - fixed
+here; it stays genuinely parked, see below.)
 
 - **`sub_800A528`/`sub_800A590`** (`src/graphics/actor_part47.o`, new
   file; real bytes in `asm/code_3_2_11_a528.s`) - a moving-platform
@@ -98,30 +108,49 @@ confirmed against the ROM) but don't yet produce byte-identical output.
   it always finds a way to reuse `r0`-`r3` instead (a *smaller*
   register footprint than the ROM's own, ironically - no `push
   {r4,r5}` needed - but not the same bytes).
-- **`sub_800A734`/`sub_800A810`** (`src/graphics/actor_part48.o`, new
-  file; real bytes in `asm/code_3_2_16_a734.s`) - a part-object
-  velocity/state reset pair. `sub_800A734` additionally hooks up a
-  child object at `self+0xb0` (calls `sub_800815C` on it, packs the
-  result's low nibble into the child's `+0x29` byte) and zeroes the
-  `+0x100`-`+0x105` per-phase flag bytes `actor_part15.c`'s doc comment
-  already describes. `sub_800A810` dispatches a sub-state byte
-  (`self+0x88`) to one of three teardown helpers
-  (`sub_8015840`/`sub_80159A4`/`sub_8017994`), each called with the
-  same `self+0x44` "record" argument `sub_800A730` already established.
-  Field writes and dispatch semantics confirmed correct one-for-one.
-  Two independent gaps: `sub_800A734`'s ROM builds several field
-  addresses as one running pointer incremented by small relative
+- **`sub_800A734`** (`src/graphics/actor_part48.c`; real bytes still in
+  `asm/code_3_2_16_a734.s`) - a part-object velocity/state reset that
+  additionally hooks up a child object at `self+0xb0` (calls
+  `sub_800815C` on it, packs the result's low nibble into the child's
+  `+0x29` byte) and zeroes the `+0x100`-`+0x105` per-phase flag bytes
+  `actor_part15.c`'s doc comment already describes. Field writes
+  confirmed correct one-for-one against the ROM; the ROM builds several
+  field addresses as one running pointer incremented by small relative
   offsets across a long stretch of otherwise-unrelated-looking writes,
-  which no source restructuring reproduced; `sub_800A810`'s ROM reaches
-  its three dispatch targets via a specific `beq`/`bgt`/`ble`/`beq`
-  compare chain (grouping state 1 first, then state>1 split into 2 vs
-  3, then state 0 last) while every C phrasing tried here (`switch`,
-  an equivalent `if`/`else if` chain) gets *either* the right compare
-  chain *or* the right register letter for `self` across the `bl`
-  calls, never both at once.
-- **`sub_800B270`** was matched, not parked - see "Matched" above.
-  (Listed here only to make clear the two are siblings in ROM order;
-  no separate entry needed.)
+  which no source restructuring reproduced. Its sibling `sub_800A810`,
+  right after it in ROM order, *was* matched this way (a `u8 *p` cursor
+  plus register-pinned negative-constant masks) - see "Matched" above -
+  but that technique only closed `sub_800A810`'s gap; re-applying the
+  same cursor idea to `sub_800A734`'s much longer, less uniform stretch
+  of field writes (`+0x24`/`+0x44`/`+0x78`/`+0x1c`/`+0x90`/`+0xac`/
+  `+0x80`/`+0x88`/`+0x8c`, several via `subs` as well as `adds`) did not
+  reproduce the ROM's exact increment sequence in the same pass; left
+  parked rather than force it.
+- **`sub_800B270`** (`src/graphics/actor_part49.c`, new file): a
+  per-frame velocity integrator. Moves `self+0x60`/`self+0x64`
+  (current X/Y velocity) toward `self+0x50`/`self+0x5c` (target X/Y
+  velocity) by up to `self+0x4c`/`self+0x58` (X/Y acceleration step)
+  each call, clamping at the target instead of overshooting. Derives a
+  `self+0x24` direction-flag byte from the resulting velocity's sign,
+  snapshots the pre-move position into `self+0x6c`/`self+0x70`, applies
+  velocity to `self+0`/`self+4` (position), and records the resulting
+  Y velocity into an unlabeled RAM address (`0x0300129C` - no symbol
+  found anywhere else in this ROM, kept as a raw address rather than
+  inventing a name). Needed `self`/`v`/`target`/each clamp `result`
+  pinned to `r2`/`r1`/`r3`/`r0` respectively, the flags-byte pointer
+  pinned to `r1`, the OR-mask pinned to `r0`, an explicit `goto`-based
+  merge for the Y-axis flag write, and `vs32`-cast forced reloads
+  matching the ROM's own redundant re-reads of `self->x`/`self->y`
+  right before applying velocity to them - every instruction up to and
+  including the position-update store matches one-for-one. The
+  remaining gap is confined to the trailing 14-instruction `0x0300129C`
+  block (see "Real gotchas" below for the specific register-pin-scope
+  reason); re-attempted in a later session with several more register-
+  pin combinations on the same block (address pinned to `r0` alone,
+  value pinned to `r2` alone, both together, a `vs32`-qualified
+  pointer, a plain unpinned local) and all either reproduced the same
+  address/value register swap or reintroduced the `push {r4}`
+  regression - still parked on this one block.
 
 ## Left untouched (raw) - 12 functions
 

@@ -110,11 +110,9 @@ from "core" graphics.
   `sub_800A6F4`, `sub_800A700`, `sub_800A70C`, `sub_800A718`,
   `sub_800A724`, `sub_800A730`
 
-- `src/graphics/actor_part49.c` (new file, GitHub issue #9): `sub_800B270`
-  - a per-frame velocity integrator moving `self+0x60`/`self+0x64`
-  toward `self+0x50`/`self+0x5c` by `self+0x4c`/`self+0x58` each call,
-  deriving a `self+0x24` direction-flag byte and applying the result to
-  the object's position; see
+- `src/graphics/actor_part48.c` (GitHub issue #9): `sub_800A810` - a
+  part-object velocity/state reset that dispatches a sub-state byte to
+  one of three teardown helpers; see
   [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
 
 - `src/graphics/actor_part15.c`/`src/graphics/actor_part16.c` (new
@@ -131,7 +129,12 @@ from "core" graphics.
   `sub_800B5CC`, `sub_800B5D8`, `sub_800B5E0`, `sub_800B5E8`,
   `sub_800B5F0`, `sub_800B5FC`, `sub_800B608`, `sub_800B614`,
   `sub_800B620`, `sub_800B62C`, `sub_800B638`, `sub_800B644`,
-  `sub_800B650`, `sub_800B678`, `sub_800B698`, `sub_800B69C`
+  `sub_800B650`, `sub_800B678`, `sub_800B698`, `sub_800B69C`,
+  `sub_800B6A0`, `sub_800B6D0` (issues #84/#85 - see
+  [docs/matching/issue-84-85-sub_800B6A0.md](../matching/issue-84-85-sub_800B6A0.md);
+  matched with `self`/`vec` pinned to `r3`/`r2` and each branch's X/Y/Z
+  locals pinned to their own ABI registers in the ROM's actual load
+  order, avoiding the callee-saved spill three earlier attempts hit)
 
 - `src/graphics/actor_part17.c` (new file - see `docs/matching.md`):
   `sub_800B704`, `sub_800B734`, `sub_800B7B0`, `sub_800B838`,
@@ -146,8 +149,10 @@ from "core" graphics.
 
 - `src/graphics/actor_part19.c`/`actor_part19c.c`/`actor_part19d.c`/
   `actor_part19f.c`/`actor_part19g.c` (new files, non-adjacent since
-  three parked functions and one left-raw function sit between them -
-  see `docs/matching.md`, issue #52): `sub_802BED8`, `sub_802BF30`,
+  two parked functions (`sub_802C2FC`/`sub_802C3E8`), the NAKED-
+  transcribed `sub_802C208` (`actor_part19e.c` - see below), and one
+  left-raw function sit between them - see `docs/matching.md`,
+  issue #52): `sub_802BED8`, `sub_802BF30`,
   `sub_802BFA0`, `sub_802BFD4`, `sub_802C018`, `sub_802C078`,
   `sub_802C0A8`, `sub_802C0BC`, `sub_802C128`, `sub_802C14C`,
   `sub_802C19C`, `sub_802C264`, `sub_802C270`, `sub_802C394`,
@@ -199,14 +204,17 @@ from "core" graphics.
 - `src/graphics/actor_part28.c`/`actor_part30.c`/`actor_part32.c`/
   `actor_part34.c`/`actor_part36.c` (new files, GitHub issue #62, ROM
   0x08033804-0x08033EF4 - the `gUnknown_030015AC` singleton system's
-  accessor/state-machine cluster, non-adjacent since 5 parked functions
-  sit interleaved between them; see
+  accessor/state-machine cluster, non-adjacent since 2 parked functions
+  (`sub_80339DC`/`sub_8033CF8`) and the 3 NAKED-transcribed
+  `sub_8033B44`/`sub_8033C84`/`sub_8033E80` (see below) sit interleaved
+  between them; see
   [docs/matching/issue-62-0x08033804-actor.md](../matching/issue-62-0x08033804-actor.md)):
   `sub_8033804`, `sub_8033828`, `sub_8033880`, `sub_803388C`,
   `sub_80338C4`, `sub_80338D0`, `sub_80338DC`, `sub_80338E8`,
   `sub_80338F4`, `sub_8033900`, `sub_803390C`, `nullsub_36`,
-  `sub_803395C`, `nullsub_37`, `sub_8033AE0`, `sub_8033BB8`,
-  `sub_8033BFC`, `sub_8033C28`, `sub_8033CF0`, `sub_8033E18` - the
+  `sub_803395C`, `nullsub_37`, `sub_8033AE0`,
+  `sub_8033BB8`, `sub_8033BFC`, `sub_8033C28`,
+  `sub_8033CF0`, `sub_8033E18` - the
   singleton's one-shot latches, field getters, state-transition/
   anim-frame-reset setters, an `InitActorPart`-based constructor, and
   several "self" object accessors/setters sharing the boss cluster's
@@ -288,14 +296,15 @@ from "core" graphics.
   0x0802F0DC-0x0802FBF0 - a second boss-weapon "spawn/pre-attack"
   singleton and its `self` object, non-adjacent since the left-raw
   `sub_802F164`/`sub_802F7B0`/`sub_802F8E8`/`sub_802FA38` and the
-  parked `sub_802F338`/`sub_802F748`/`sub_802F97C`/`sub_802FA04` sit
+  parked `sub_802F338`/`sub_802FA04` and NAKED-transcribed
+  `sub_802F748` (`actor_part44b.c` - see below) sit
   interleaved between them; see
   [docs/matching/issue-56-0x0802f0dc-actor.md](../matching/issue-56-0x0802f0dc-actor.md)):
   `sub_802F0DC`, `sub_802F3BC`, `sub_802F46C`, `sub_802F47C`,
   `sub_802F4AC`, `sub_802F4C0`, `sub_802F4CC`, `sub_802F50C`,
   `sub_802F540`, `sub_802F570`, `sub_802F5AC`, `sub_802F5E4`,
-  `sub_802F640`, `sub_802F69C`, `sub_802F6DC`, `sub_802F7A4`,
-  `sub_802FA34` - a constructor/reset, an accumulator-drain/reward-
+  `sub_802F640`, `sub_802F69C`, `sub_802F6DC`,
+  `sub_802F7A4`, `sub_802F97C`, `sub_802FA34` - a constructor/reset, an accumulator-drain/reward-
   dispenser, accessors, accumulator drivers, idle-state-reset idioms,
   and the singleton's teardown/destructor, all sharing
   `actor_part17.c`/`actor_part18.c`/`actor_part20.c`'s established
@@ -403,10 +412,12 @@ from "core" graphics.
   `actor_part69.c`/`actor_part71.c`/`actor_part73.c` (new files, GitHub
   issue #63, ROM 0x08033EF4-0x08034AA4 - three `InitActorPart`-rooted
   "self" object kinds immediately following issue #62's cluster, non-
-  adjacent since 6 parked and 4 left-raw functions sit interleaved
-  between them; numbered `63`-`73` rather than `57`-`67` since issues
-  #19 and #54's PRs independently claimed `actor_part57.c`-`62.c`
-  first - see
+  adjacent since 5 parked (`sub_8034058`/`sub_8034270`/`sub_8034314`/
+  `sub_80345B0`/`sub_8034634`), the NAKED-transcribed `sub_8033FE4`
+  (`actor_part64.c` - see below), and 4 left-raw functions sit
+  interleaved between them; numbered `63`-`73` rather than `57`-`67`
+  since issues #19 and #54's PRs independently claimed
+  `actor_part57.c`-`62.c` first - see
   [docs/matching/issue-63-0x08033ef4-actor.md](../matching/issue-63-0x08033ef4-actor.md)):
   `sub_8033EF4`, `sub_8033F48`, `sub_8033F74`, `sub_8034050`,
   `sub_8034110`, `sub_8034188`, `sub_80341F8`, `sub_8034264`,
@@ -430,26 +441,26 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   genuine fifth-scratch-register need (`r5`, just to hold an offset
   immediate) this compiler never introduces. See
   [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
-- **`sub_800A734`/`sub_800A810`** (`src/graphics/actor_part48.c`,
-  GitHub issue #9; real bytes in `asm/code_3_2_16_a734.s`) - a part-
-  object velocity/state reset pair, one of which also hooks up a child
-  object and one of which dispatches a sub-state byte to one of three
-  teardown helpers. Field writes and dispatch semantics fully
-  confirmed; parked on the ROM's running-pointer address-increment
-  style (`sub_800A734`) and an exact compare-chain-vs-register-letter
-  tradeoff (`sub_800A810`) neither reproduced together by any C
-  phrasing tried. See
+- **`sub_800A734`** (`src/graphics/actor_part48.c`, GitHub issue #9;
+  real bytes in `asm/code_3_2_16_a734.s`) - a part-object
+  velocity/state reset that also hooks up a child object. Field writes
+  fully confirmed; parked on the ROM's running-pointer address-
+  increment style across a long, non-uniform stretch of field writes
+  (its sibling `sub_800A810`, right after it in ROM order, matched with
+  a similar cursor technique on a shorter/more uniform stretch - see
+  the write-up). See
   [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
-- **`sub_800B6A0`/`sub_800B6D0`** (`src/graphics/actor_part16.c`) -
-  mirror-flag-gated 3-vector copies. This compiler unconditionally
-  spills the `vec` pointer to a callee-saved register (`push
-  {r4,lr}`/`pop {r4}`) whenever it's referenced in both branches of an
-  if/else, even with nothing to clobber it - the ROM is a true leaf
-  function using only r0-r3. Three independent fixes (pinning `self`
-  alone; also pinning/reassigning `vec`; restructuring into a
-  `goto`-based flow) all produced an identical 8-byte-larger result -
-  see `docs/matching.md`, "A new unnamed object:
-  `actor_part15.c`/`actor_part16.c`".
+- **`sub_800B270`** (`src/graphics/actor_part49.c`, GitHub issue #9) -
+  a per-frame velocity integrator moving `self+0x60`/`self+0x64`
+  toward `self+0x50`/`self+0x5c` by `self+0x4c`/`self+0x58` each call,
+  deriving a `self+0x24` direction-flag byte and applying the result to
+  the object's position, then recording the resulting Y velocity into
+  an unlabeled RAM address (`0x0300129C`). Matches one-for-one through
+  the position-update store; parked on the trailing 14-instruction
+  `0x0300129C` block, where every register-pin combination tried either
+  swaps the ROM's address/value register letters or reintroduces an
+  unrelated `push {r4}` regression. See
+  [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
 - **`sub_8007B00`** (`src/graphics/actor_part.c`) - builds an AABB for
   `part`'s current animation keyframe (via the shared `sub_803AFE4`/
   `sub_803AFDC` primitive) and mirrors it horizontally/vertically per
@@ -611,17 +622,25 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   1-2 call sharing); parked on a single remaining conditional-branch
   encoding gap in the mode-3 case - see `docs/matching.md`, "Parked,
   not matched: `sub_8009D5C`".
-- **`sub_8009DF4`** (`src/graphics/actor_part8.c`) - a velocity/
-  position integrator: steps each axis's velocity toward its max by
-  its accel amount (clamped so it never overshoots), builds a
+- **`sub_8009DF4`** (`src/graphics/actor_part8.c`, issue #97) - a
+  velocity/position integrator: steps each axis's velocity toward its
+  max by its accel amount (clamped so it never overshoots), builds a
   direction-flags byte from the clamped velocities' signs, caches the
-  pre-move position, applies the velocity, and updates a global with
-  the Y velocity. Every branch and memory access confirmed correct;
-  parked purely on a leaf-vs-non-leaf register-budget gap (the ROM
-  needs no stack frame at all, fitting entirely in r0-r3 with `self`
-  in r2 reused once dead; every arrangement tried here needs one extra
-  spilled register) - see `docs/matching.md`, "Parked, not matched:
-  `sub_8009DF4`".
+  pre-move position, applies the velocity, and updates a global
+  (`gUnknown_03001298`) with the Y velocity. Every branch and memory
+  access confirmed correct, and - after remodeling this reconstruction
+  on the near-identical `sub_800B270` (issue #9, same per-axis clamp
+  shape, same field offsets) - now a true `push`/`pop`-free leaf
+  function matching the ROM's own register budget exactly, closing the
+  leaf-vs-non-leaf gap `docs/matching.md`'s frozen entry originally
+  described. What's left is the same trailing gap `sub_800B270` itself
+  is still parked on: the global-update block's address/value register
+  roles are swapped from the ROM's (`r0`=address/`r2`=value here vs.
+  the reverse), and forcing either side of that swap either triggers
+  this compiler's dead-store elimination to drop the whole conditional
+  (when the *value* is register-pinned) or reintroduces a `push
+  {r4,lr}`/`pop {r4}` pair elsewhere (when the *address* is) - see
+  [docs/matching/issue-97-sub_8009DF4.md](../matching/issue-97-sub_8009DF4.md).
 - **`sub_801434C`** (`asm/code_3_2_17_1434c.s`, C in
   `src/graphics/actor_part18.c`) - the shared handler
   `sub_80142B0` tail-calls; one of the `gStaticData_0816BF20` action-
@@ -640,12 +659,26 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   parked on a single materialize-then-copy gap in the opening bit-test
   triggered by a required nested `if` sharing the value's live range
   across both branches - see `docs/matching.md`, issue #17.
-- **`sub_802C208`** (`asm/code_3_2_20_28568_c208.s`, C in
-  `src/graphics/actor_part19e.c`) - a `gStaticData_0817A6B8` stride-8
-  trampoline-record dispatcher. Every load/store, branch and call
-  confirmed correct; parked on register-allocation/instruction-
-  scheduling around two `record = base + state*8` re-derivations - see
-  `docs/matching.md`, issue #52.
+- **NAKED transcription (byte-correct, not decompiled)**: `sub_802C208`
+  (`src/graphics/actor_part19e.c`, issue #52), `sub_802F748`
+  (`src/graphics/actor_part44b.c`, issue #56), `sub_8033B44`/
+  `sub_8033C84`/`sub_8033E80` (`src/graphics/actor_part31.c`/
+  `actor_part33.c`/`actor_part37.c`, issue #62), and `sub_8033FE4`
+  (`src/graphics/actor_part64.c`, issue #63) - the same
+  `gStaticData_*` stride-8 trampoline-record dispatcher shape across
+  four different tables, each hitting this project's confirmed
+  categorical gcc-2.9 r7-pin bug (the ROM keeps the table's base
+  address alive in `r7` for the whole function; an explicit
+  `register T x asm("r7")` compiles correct instructions but never
+  makes it into the prologue/epilogue push/pop list, and this
+  compiler's own unforced allocator never reaches r7 here either).
+  Every instruction is a byte-verified transcription of the ROM
+  disassembly, so these produce byte-identical output, but since the
+  function bodies are hand-written asm rather than real decompiled C
+  they are **not** counted as matched for this project's tracking
+  (`tools/report_units.py`'s `UNITS` list keeps their `base_object` as
+  `None`) - see docs/matching/issue-52-0x0802bed8-actor.md and the
+  per-issue docs for #56/#62/#63.
 - **`sub_802C2FC`** (`asm/code_3_2_20_28568_c2fc.s`, C in
   `src/graphics/actor_part19b.c`) - OAM setup for one sprite frame.
   Matches instruction-for-instruction except a single dead `flag = 0`
@@ -666,15 +699,6 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   ROM's chosen scratch register without breaking the surrounding
   `ip`/`r8`/`r9` pins - see
   `docs/matching/issue-62-0x08033804-actor.md`, issue #62.
-- **`sub_8033B44`** (`asm/code_3_2_20_28568_c99c_31784_33b44.s`, C in
-  `src/graphics/actor_part31.c`) - position-update-then-draw helper via
-  a `gStaticData_0817C4E0` stride-8 trampoline table, the same shape
-  and register-allocation gap as the already-parked `sub_802C208` - see
-  `docs/matching/issue-62-0x08033804-actor.md`, issue #62.
-- **`sub_8033C84`** (`asm/code_3_2_20_28568_c99c_31784_33c84.s`, C in
-  `src/graphics/actor_part33.c`) - `sub_8033B44`'s predicate twin,
-  parked on the identical gap - see
-  `docs/matching/issue-62-0x08033804-actor.md`, issue #62.
 - **`sub_8033CF8`** (`asm/code_3_2_20_28568_c99c_31784_33cf8.s`, C in
   `src/graphics/actor_part35.c`) - `sub_80339DC`'s sibling proximity/
   spawn detector. Every branch and call confirmed correct; parked
@@ -685,10 +709,6 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   cache to `r7` here (matching the ROM) would silently corrupt the
   caller's `r7` - see `docs/matching/issue-62-0x08033804-actor.md`,
   issue #62.
-- **`sub_8033E80`** (`asm/code_3_2_20_28568_c99c_31784_33e80.s`, C in
-  `src/graphics/actor_part37.c`) - `sub_8033B44`'s twin using the
-  second stride-8 table (`gStaticData_0817C4F8`), parked on the same
-  gap - see `docs/matching/issue-62-0x08033804-actor.md`, issue #62.
 - **`sub_8015038`** (`asm/code_3_2_17_15038.s`, C in
   `src/graphics/actor_part38.c`) - a three-arm mgr-trampoline handler
   keyed on `self+0x24`/`self+0x22`, picking one of three table-index
@@ -737,16 +757,6 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   multiply result, then copy it again before shifting" gap this
   compiler's dead-store elimination always collapses - see
   `docs/matching/issue-56-0x0802f0dc-actor.md`.
-- **`sub_802F748`** (`src/graphics/actor_part44b.c`) - a
-  `gStaticData_0817C1C0` stride-8 trampoline-record dispatcher, same
-  shape as the parked `sub_802C208`; parked on the same
-  `record = base + state*8` re-derivation register-allocation gap -
-  see `docs/matching/issue-56-0x0802f0dc-actor.md`.
-- **`sub_802F97C`** (`src/graphics/actor_part45b.c`) - a physics-step-
-  and-collision-react updater. Every load/store, branch and call
-  confirmed correct; parked on a residual `r2`-vs-`r3` register choice
-  for a repeated `8` immediate - see
-  `docs/matching/issue-56-0x0802f0dc-actor.md`.
 - **`sub_802FA04`** (`src/graphics/actor_part45c.c`) - an
   `InitActorPart`-based 7-argument constructor, the same shape as the
   left-raw `sub_80305F8`; parked on this compiler's own high-register
@@ -775,12 +785,6 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   ahead of the branch that decides whether it's needed, folding away a
   redundant unconditional jump the ROM's own build still has - see
   `docs/matching/issue-50-actor-2a69c.md`.
-- **`sub_8033FE4`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_33fe4.s`, C
-  in `src/graphics/actor_part64.c`, GitHub issue #63) - a
-  `gStaticData_0817C4F8` stride-8 trampoline-record dispatcher, same
-  shape as the parked `sub_8033B44`/`sub_8033C84`; parked on the same
-  `record = base + state*8` re-derivation gap - see
-  `docs/matching/issue-63-0x08033ef4-actor.md`.
 - **`sub_8034058`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s`, C
   in `src/graphics/actor_part66.c`, GitHub issue #63) - an
   `InitActorPart`-based constructor with a trailing byte stack argument;

@@ -9,100 +9,223 @@ extern void sub_8001B30(void *self, u32 value);
 extern void sub_8001B50(void *self, u32 value);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 
-#if NON_MATCHING
-/* NOT YET BYTE-MATCHING - reconstructed (semantics understood) but off
- * by several register-letter choices in the digit-formatting tail, the
- * same unresolved gcc-2.9 register-allocation class sub_80049CC
- * (src/graphics/settings_menu.c) and src/graphics/settings_menu6.c's
- * parked functions document; parked the same way. One of a matched
- * pair (sub_8005FBC increments the other way): if the current row is
- * an "editable count" row (state 4 or 5) and its count
+/* One of a matched pair (sub_8005FBC increments the other way): if the
+ * current row is an "editable count" row (state 4 or 5) and its count
  * (`field_60`/`field_64` respectively) is non-zero, decrements it,
  * formats a " <NN%>"-shaped scratch string into `buf57`/`buf4f`, and
  * pushes the new percentage through the matching AudioContext setter
  * (`sub_8001B30`/`sub_8001B50` - see src/audio/audio_context.c). Only
- * the state-5/`field_64` branch also plays the standard SFX cue. */
-void sub_8005EF4(struct pause_screen_results *self)
+ * the state-5/`field_64` branch also plays the standard SFX cue.
+ *
+ * Written as NAKED asm, not plain C: off by several register-letter
+ * choices in the digit-formatting tail, the same unresolved gcc-2.9
+ * register-allocation class `sub_80049CC` (src/graphics/settings_menu.c)
+ * and `src/graphics/settings_menu6.c`'s siblings document. Every
+ * instruction below is transcribed directly from and checked against
+ * the ROM's own disassembly. */
+NAKED void sub_8005EF4(struct pause_screen_results *self)
 {
-    s32 state = *((s32 *)self->field_14 + self->field_18 * 2 + 1);
-    s32 count;
-
-    if (state == 4) {
-        count = self->field_60;
-        if (count == 0) {
-            return;
-        }
-        count--;
-        self->field_60 = count;
-        self->buf57[0] = 0x20;
-        self->buf57[1] = 0x3c;
-        {
-            s32 len = sub_80060AC(count, &self->buf57[2]);
-            self->buf57[2 + len] = 0x25;
-            self->buf57[3 + len] = 0x3e;
-            self->buf57[4 + len] = 0;
-        }
-        sub_8001B30(gUnknown_030012BC, sub_803ADB4((count << 8) + 1, 0x14));
-    } else if (state == 5) {
-        count = self->field_64;
-        if (count == 0) {
-            return;
-        }
-        count--;
-        self->field_64 = count;
-        self->buf4f[0] = 0x20;
-        self->buf4f[1] = 0x3c;
-        {
-            s32 len = sub_80060AC(count, &self->buf4f[2]);
-            self->buf4f[2 + len] = 0x25;
-            self->buf4f[3 + len] = 0x3e;
-            self->buf4f[4 + len] = 0;
-        }
-        sub_8001B50(gUnknown_030012BC, sub_803ADB4((count << 8) + 1, 0x14));
-        PlaySfx(gUnknown_030012BC, 0xe, 0x100);
-    }
+    asm(
+    "push {r4, r5, r6, lr}\n\t"
+    "add r6, r0, #0\n\t"
+    "ldr r0, [r6, #0x18]\n\t"
+    "ldr r1, [r6, #0x14]\n\t"
+    "lsl r0, r0, #3\n\t"
+    "add r0, r0, r1\n\t"
+    "ldr r0, [r0, #4]\n\t"
+    "cmp r0, #4\n\t"
+    "beq 1f\n\t"
+    "cmp r0, #5\n\t"
+    "beq 3f\n\t"
+    "b 4f\n\t"
+    "1:\n\t"
+    "ldr r1, [r6, #0x60]\n\t"
+    "cmp r1, #0\n\t"
+    "beq 4f\n\t"
+    "sub r1, #1\n\t"
+    "str r1, [r6, #0x60]\n\t"
+    "add r4, r6, #0\n\t"
+    "add r4, #0x57\n\t"
+    "lsl r0, r1, #2\n\t"
+    "add r0, r0, r1\n\t"
+    "mov r1, #0x20\n\t"
+    "strb r1, [r4]\n\t"
+    "mov r1, #0x3c\n\t"
+    "strb r1, [r4, #1]\n\t"
+    "add r1, r6, #0\n\t"
+    "add r1, #0x59\n\t"
+    "bl sub_80060AC\n\t"
+    "add r0, r0, r4\n\t"
+    "mov r1, #0x25\n\t"
+    "strb r1, [r0, #2]\n\t"
+    "mov r1, #0x3e\n\t"
+    "strb r1, [r0, #3]\n\t"
+    "mov r1, #0\n\t"
+    "strb r1, [r0, #4]\n\t"
+    "ldr r0, 2f\n\t"
+    "ldr r4, [r0]\n\t"
+    "ldr r0, [r6, #0x60]\n\t"
+    "lsl r0, r0, #8\n\t"
+    "add r0, #1\n\t"
+    "mov r1, #0x14\n\t"
+    "bl sub_803ADB4\n\t"
+    "add r1, r0, #0\n\t"
+    "add r0, r4, #0\n\t"
+    "bl sub_8001B30\n\t"
+    "b 4f\n\t"
+    ".align 2, 0\n"
+    "2: .4byte gUnknown_030012BC\n"
+    "3:\n\t"
+    "ldr r1, [r6, #0x64]\n\t"
+    "cmp r1, #0\n\t"
+    "beq 4f\n\t"
+    "sub r1, #1\n\t"
+    "str r1, [r6, #0x64]\n\t"
+    "add r4, r6, #0\n\t"
+    "add r4, #0x4f\n\t"
+    "lsl r0, r1, #2\n\t"
+    "add r0, r0, r1\n\t"
+    "mov r1, #0x20\n\t"
+    "strb r1, [r4]\n\t"
+    "mov r1, #0x3c\n\t"
+    "strb r1, [r4, #1]\n\t"
+    "add r1, r6, #0\n\t"
+    "add r1, #0x51\n\t"
+    "bl sub_80060AC\n\t"
+    "add r0, r0, r4\n\t"
+    "mov r1, #0x25\n\t"
+    "strb r1, [r0, #2]\n\t"
+    "mov r1, #0x3e\n\t"
+    "strb r1, [r0, #3]\n\t"
+    "mov r1, #0\n\t"
+    "strb r1, [r0, #4]\n\t"
+    "ldr r4, 5f\n\t"
+    "ldr r5, [r4]\n\t"
+    "ldr r0, [r6, #0x64]\n\t"
+    "lsl r0, r0, #8\n\t"
+    "add r0, #1\n\t"
+    "mov r1, #0x14\n\t"
+    "bl sub_803ADB4\n\t"
+    "add r1, r0, #0\n\t"
+    "add r0, r5, #0\n\t"
+    "bl sub_8001B50\n\t"
+    "ldr r0, [r4]\n\t"
+    "mov r2, #0x80\n\t"
+    "lsl r2, r2, #1\n\t"
+    "mov r1, #0xe\n\t"
+    "bl PlaySfx\n\t"
+    "4:\n\t"
+    "pop {r4, r5, r6}\n\t"
+    "pop {r0}\n\t"
+    "bx r0\n\t"
+    ".align 2, 0\n"
+    "5: .4byte gUnknown_030012BC\n"
+    );
 }
 
 /* Counterpart to sub_8005EF4 above: increments (capped at 0x13)
- * instead of decrementing. */
-void sub_8005FBC(struct pause_screen_results *self)
+ * instead of decrementing.
+ *
+ * Written as NAKED asm, not plain C: same register-letter class of
+ * difficulty as `sub_8005EF4` above. Every instruction below is
+ * transcribed directly from and checked against the ROM's own
+ * disassembly. */
+NAKED void sub_8005FBC(struct pause_screen_results *self)
 {
-    s32 state = *((s32 *)self->field_14 + self->field_18 * 2 + 1);
-    s32 count;
-
-    if (state == 4) {
-        count = self->field_60;
-        if (count > 0x13) {
-            return;
-        }
-        count++;
-        self->field_60 = count;
-        self->buf57[0] = 0x20;
-        self->buf57[1] = 0x3c;
-        {
-            s32 len = sub_80060AC(count, &self->buf57[2]);
-            self->buf57[2 + len] = 0x25;
-            self->buf57[3 + len] = 0x3e;
-            self->buf57[4 + len] = 0;
-        }
-        sub_8001B30(gUnknown_030012BC, sub_803ADB4((count << 8) + 1, 0x14));
-    } else if (state == 5) {
-        count = self->field_64;
-        if (count > 0x13) {
-            return;
-        }
-        count++;
-        self->field_64 = count;
-        self->buf4f[0] = 0x20;
-        self->buf4f[1] = 0x3c;
-        {
-            s32 len = sub_80060AC(count, &self->buf4f[2]);
-            self->buf4f[2 + len] = 0x25;
-            self->buf4f[3 + len] = 0x3e;
-            self->buf4f[4 + len] = 0;
-        }
-        sub_8001B50(gUnknown_030012BC, sub_803ADB4((count << 8) + 1, 0x14));
-        PlaySfx(gUnknown_030012BC, 0xe, 0x100);
-    }
+    asm(
+    "push {r4, r5, r6, lr}\n\t"
+    "add r6, r0, #0\n\t"
+    "ldr r0, [r6, #0x18]\n\t"
+    "ldr r1, [r6, #0x14]\n\t"
+    "lsl r0, r0, #3\n\t"
+    "add r0, r0, r1\n\t"
+    "ldr r0, [r0, #4]\n\t"
+    "cmp r0, #4\n\t"
+    "beq 1f\n\t"
+    "cmp r0, #5\n\t"
+    "beq 3f\n\t"
+    "b 4f\n\t"
+    "1:\n\t"
+    "ldr r1, [r6, #0x60]\n\t"
+    "cmp r1, #0x13\n\t"
+    "bgt 4f\n\t"
+    "add r1, #1\n\t"
+    "str r1, [r6, #0x60]\n\t"
+    "add r4, r6, #0\n\t"
+    "add r4, #0x57\n\t"
+    "lsl r0, r1, #2\n\t"
+    "add r0, r0, r1\n\t"
+    "mov r1, #0x20\n\t"
+    "strb r1, [r4]\n\t"
+    "mov r1, #0x3c\n\t"
+    "strb r1, [r4, #1]\n\t"
+    "add r1, r6, #0\n\t"
+    "add r1, #0x59\n\t"
+    "bl sub_80060AC\n\t"
+    "add r0, r0, r4\n\t"
+    "mov r1, #0x25\n\t"
+    "strb r1, [r0, #2]\n\t"
+    "mov r1, #0x3e\n\t"
+    "strb r1, [r0, #3]\n\t"
+    "mov r1, #0\n\t"
+    "strb r1, [r0, #4]\n\t"
+    "ldr r0, 2f\n\t"
+    "ldr r4, [r0]\n\t"
+    "ldr r0, [r6, #0x60]\n\t"
+    "lsl r0, r0, #8\n\t"
+    "add r0, #1\n\t"
+    "mov r1, #0x14\n\t"
+    "bl sub_803ADB4\n\t"
+    "add r1, r0, #0\n\t"
+    "add r0, r4, #0\n\t"
+    "bl sub_8001B30\n\t"
+    "b 4f\n\t"
+    ".align 2, 0\n"
+    "2: .4byte gUnknown_030012BC\n"
+    "3:\n\t"
+    "ldr r1, [r6, #0x64]\n\t"
+    "cmp r1, #0x13\n\t"
+    "bgt 4f\n\t"
+    "add r1, #1\n\t"
+    "str r1, [r6, #0x64]\n\t"
+    "add r4, r6, #0\n\t"
+    "add r4, #0x4f\n\t"
+    "lsl r0, r1, #2\n\t"
+    "add r0, r0, r1\n\t"
+    "mov r1, #0x20\n\t"
+    "strb r1, [r4]\n\t"
+    "mov r1, #0x3c\n\t"
+    "strb r1, [r4, #1]\n\t"
+    "add r1, r6, #0\n\t"
+    "add r1, #0x51\n\t"
+    "bl sub_80060AC\n\t"
+    "add r0, r0, r4\n\t"
+    "mov r1, #0x25\n\t"
+    "strb r1, [r0, #2]\n\t"
+    "mov r1, #0x3e\n\t"
+    "strb r1, [r0, #3]\n\t"
+    "mov r1, #0\n\t"
+    "strb r1, [r0, #4]\n\t"
+    "ldr r4, 5f\n\t"
+    "ldr r5, [r4]\n\t"
+    "ldr r0, [r6, #0x64]\n\t"
+    "lsl r0, r0, #8\n\t"
+    "add r0, #1\n\t"
+    "mov r1, #0x14\n\t"
+    "bl sub_803ADB4\n\t"
+    "add r1, r0, #0\n\t"
+    "add r0, r5, #0\n\t"
+    "bl sub_8001B50\n\t"
+    "ldr r0, [r4]\n\t"
+    "mov r2, #0x80\n\t"
+    "lsl r2, r2, #1\n\t"
+    "mov r1, #0xe\n\t"
+    "bl PlaySfx\n\t"
+    "4:\n\t"
+    "pop {r4, r5, r6}\n\t"
+    "pop {r0}\n\t"
+    "bx r0\n\t"
+    ".align 2, 0\n"
+    "5: .4byte gUnknown_030012BC\n"
+    );
 }
-#endif /* NON_MATCHING */

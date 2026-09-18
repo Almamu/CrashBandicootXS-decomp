@@ -1,221 +1,311 @@
 #include "core.h"
+#include "audio.h"
+#include "actor.h"
 #include "icon_manager.h"
-#include "pause_options_screen.h"
+#include "vram_pool.h"
+#include "pause_screen_results.h"
+#include "memory.h"
 
-extern s32 sub_8028A30(void *mgr, s32 arg1);
-extern s32 sub_8026F38(s32 arg0);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
-extern struct icon_manager *gUnknown_030012E0;
-extern struct icon_manager *gUnknown_030012DC;
+/* sub_8005100 alone: ROM-address-adjacent to settings_menu15.c's
+ * sub_8005004 on one side and the already-matched sub_8005304
+ * (settings_menu17.c) on the other, so it needs its own object file
+ * to keep both neighbors' link-order positions intact (docs/workflow.md
+ * step 4's "one .c file per contiguous ROM region" rule) - see
+ * docs/matching/issue-7-0x08004d74-overlay-ui.md. */
 
-/* Sits right after the screen-init BG-load/per-row-stats cluster
- * (`src/graphics/settings_menu2.o`, ROM `0x080047F8`-`0x08004914`) and
- * before the settings-row flag-test/wrapper cluster
- * (`src/graphics/settings_menu3.c`, ROM `0x08004A50` onward). Both
- * functions here are fully understood and byte-exact matched, but
- * written as NAKED asm transcriptions rather than plain C - they hit
- * this project's well-documented "last mile" gcc-2.9 scratch-register
- * nondeterminism (see `sub_8006600`, `src/graphics/oam_count.c`, and
- * `src/util/printf_util.c`'s `sub_8000CBC` for the established
- * pattern/technique, and `src/graphics/settings_menu.c`'s own header
- * comment for this same difficulty class as hit by its sibling
- * functions) where a fully-traced C reconstruction gets every
- * field/branch/call right but can't be coaxed into the ROM's exact
- * scratch-register choices. See docs/matching.md's write-up for this
- * chunk for the full register-allocation story that motivated the
- * NAKED conversion. */
+extern void sub_80007AC(void *arg0);
+extern void *gUnknown_03001304;
+extern u32 gUnknown_030007E0;
+extern void sub_8006084(struct pause_screen_results *self);
+extern s32 sub_800609C(struct pause_screen_results *self);
+extern void sub_8005EF4(struct pause_screen_results *self);
+extern void sub_8005FBC(struct pause_screen_results *self);
+extern void sub_8006250(struct pause_screen_results *self);
+extern void sub_8005304(struct pause_screen_results *self);
+extern void PlaySfx(struct AudioContext *self, u32 id, u32 volumeParam);
 
-/* `arg1`/`arg2` are plain coordinate values here (not pointers - the
- * ROM does raw integer arithmetic on them, `arg1+0x1d`/`arg2+0xc`),
- * used as the on-screen anchor for a centered numeric glyph (label
- * 0x25) into gUnknown_030012DC.
+/* The composite pause/options screen's blocking cursor/confirm/cancel
+ * driver (docs/rom_map.md's overlay_ui section) - runs until the user
+ * confirms or cancels, redrawing every frame via sub_80053F4/
+ * sub_8006250/sub_8005304 (the same per-row draw/apply-registers/
+ * icon-cycle trio every settings row already uses).
  *
- * Written as NAKED asm, not plain C: a full C reconstruction (kept in
- * git history) hit the same "last mile" gcc-2.9 scratch-register
- * nondeterminism documented on `sub_80049CC` below. Every instruction
- * below is confirmed byte-identical to the ROM - full NAKED
- * transcription, like this project's other hard-compiler-limitation
- * cases (see `src/util/printf_util.c`'s `sub_8000CBC` for the
- * established pattern), is more honest than continuing to chase these
- * scratch-register choices through plain C. */
-NAKED void sub_8004914(struct pause_options_screen *self, s32 arg1, s32 arg2, u8 arg3)
+ * `field_cc`'s low 5 bits are a blend/fade level (see sub_8004EC0 and
+ * sub_8006250): first ramps it down to 0 one frame at a time (the
+ * screen's fade-in), then the main input loop - L/R adjust the
+ * currently-selected row's slider (sub_800609C/sub_8006084, playing a
+ * confirm-ish SFX and arming a short flash via field_68), the D-pad
+ * bumps the selected row's value up/down with an initial-press vs
+ * held-repeat distinction (sub_8005EF4/FBC), and A confirms only when
+ * the selected row's type tag is 4 or 5 (an "editable" row - anything
+ * else just plays a cancel SFX and keeps looping), B cancels
+ * outright. On confirm, ramps the fade level back up to 0x10 (the
+ * screen's fade-out) before returning the confirmed row's type tag;
+ * on cancel, returns 0 without ramping back up (`field_cc` is instead
+ * force-set to 0x40 in the low byte and DISPCNT reapplied once).
+ *
+ * Written as NAKED asm, not plain C: fully understood (every field/
+ * global here is independently confirmed by sub_8004EC0/sub_8005304/
+ * sub_8006250's own matched bytes), but by far the largest and most
+ * control-flow-heavy function in this chunk - the same class of
+ * register-pressure/scheduling difficulty documented at length for
+ * `sub_80057E0`/`sub_8005E5C`/`sub_80053F4` above. Every instruction
+ * below is transcribed directly from and checked against the ROM's own
+ * disassembly. */
+NAKED s32 sub_8005100(struct pause_screen_results *self)
 {
     asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sb\n\t"
-        "mov r6, r8\n\t"
-        "push {r6, r7}\n\t"
-        "add r4, r0, #0\n\t"
-        "lsl r3, r3, #0x18\n\t"
-        "add r7, r1, #0\n\t"
-        "add r7, #0x1d\n\t"
-        "add r2, #0xc\n\t"
-        "mov sb, r2\n\t"
-        "cmp r3, #0\n\t"
-        "beq 2f\n\t"
-        "ldr r0, 1f\n\t"
-        "ldr r2, [r0]\n\t"
-        "ldr r0, [r4, #4]\n\t"
-        "asr r0, r0, #2\n\t"
-        "mov r1, #1\n\t"
-        "and r0, r1\n\t"
-        "mov r1, #2\n\t"
-        "cmp r0, #0\n\t"
-        "beq 6f\n\t"
-        "mov r1, #1\n\t"
-    "6:\n\t"
-        "add r0, r2, #0\n\t"
-        "bl sub_8028A30\n\t"
-        "b 3f\n\t"
-        ".align 2, 0\n\t"
-    "1: .4byte gUnknown_030012DC\n\t"
+    "push {r4, r5, r6, r7, lr}\n\t"
+    "mov r7, sb\n\t"
+    "mov r6, r8\n\t"
+    "push {r6, r7}\n\t"
+    "add r5, r0, #0\n\t"
+    "add r6, r5, #0\n\t"
+    "add r6, #0xcc\n\t"
+    "mov r0, #0x1f\n\t"
+    "ldrb r1, [r6]\n\t"
+    "and r0, r1\n\t"
+    "cmp r0, #0\n\t"
+    "beq 2f\n\t"
+    "mov r2, #0x20\n\t"
+    "neg r2, r2\n\t"
+    "add r7, r2, #0\n\t"
+    "1:\n\t"
+    "add r4, r6, #0\n\t"
+    "ldrb r2, [r6]\n\t"
+    "lsl r0, r2, #0x1b\n\t"
+    "lsr r0, r0, #0x1b\n\t"
+    "sub r0, #1\n\t"
+    "mov r1, #0x1f\n\t"
+    "and r0, r1\n\t"
+    "and r2, r7\n\t"
+    "orr r2, r0\n\t"
+    "strb r2, [r6]\n\t"
+    "add r0, r5, #0\n\t"
+    "bl sub_80053F4\n\t"
+    "add r0, r5, #0\n\t"
+    "bl sub_8006250\n\t"
+    "add r0, r5, #0\n\t"
+    "bl sub_8005304\n\t"
+    "mov r0, #0x1f\n\t"
+    "ldrb r4, [r4]\n\t"
+    "and r0, r4\n\t"
+    "cmp r0, #0\n\t"
+    "bne 1b\n\t"
     "2:\n\t"
-        "ldr r0, 5f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_8028A30\n\t"
+    "add r4, r5, #0\n\t"
+    "add r4, #0xcc\n\t"
+    "mov r0, #0xd0\n\t"
+    "add r0, r0, r5\n\t"
+    "mov sb, r0\n\t"
+    "b 6f\n\t"
     "3:\n\t"
-        "ldr r0, 5f\n\t"
-        "mov r8, r0\n\t"
-        "ldr r4, [r0]\n\t"
-        "mov r5, #0x98\n\t"
-        "lsl r5, r5, #1\n\t"
-        "add r0, r4, r5\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r6, r0, #0\n\t"
-        "add r6, #0x10\n\t"
-        "mov r1, #0x10\n\t"
-        "ldrsh r0, [r0, r1]\n\t"
-        "add r4, r4, r0\n\t"
-        "mov r0, #0x25\n\t"
-        "bl sub_8026F38\n\t"
-        "add r1, r0, #0\n\t"
-        "ldr r2, [r6, #4]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_803AD80\n\t"
-        "lsr r1, r0, #0x1f\n\t"
-        "add r0, r0, r1\n\t"
-        "asr r0, r0, #1\n\t"
-        "sub r0, r7, r0\n\t"
-        "mov r2, r8\n\t"
-        "ldr r4, [r2]\n\t"
-        "mov r2, #0x88\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r1, r4, r2\n\t"
-        "str r0, [r1]\n\t"
-        "mov r1, #0x8a\n\t"
-        "lsl r1, r1, #1\n\t"
-        "add r0, r4, r1\n\t"
-        "mov r2, sb\n\t"
-        "str r2, [r0]\n\t"
-        "add r5, r4, r5\n\t"
-        "ldr r0, [r5]\n\t"
-        "add r5, r0, #0\n\t"
-        "add r5, #0x20\n\t"
-        "mov r1, #0x20\n\t"
-        "ldrsh r0, [r0, r1]\n\t"
-        "add r4, r4, r0\n\t"
-        "mov r0, #0x25\n\t"
-        "bl sub_8026F38\n\t"
-        "add r1, r0, #0\n\t"
-        "ldr r2, [r5, #4]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_803AD80\n\t"
-        "pop {r3, r4}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n\t"
-    "5: .4byte gUnknown_030012DC\n\t"
+    "ldr r1, 4f\n\t"
+    "mov r0, #8\n\t"
+    "ldrh r1, [r1, #2]\n\t"
+    "and r0, r1\n\t"
+    "cmp r0, #0\n\t"
+    "beq 6f\n\t"
+    "ldr r0, 5f\n\t"
+    "ldr r0, [r0]\n\t"
+    "mov r2, #0x80\n\t"
+    "lsl r2, r2, #1\n\t"
+    "mov r1, #0x49\n\t"
+    "bl PlaySfx\n\t"
+    "mov r7, #0\n\t"
+    "b 25f\n\t"
+    ".align 2, 0\n"
+    "4: .4byte gUnknown_030007E0\n"
+    "5: .4byte gUnknown_030012BC\n"
+    "6:\n\t"
+    "add r0, r5, #0\n\t"
+    "bl sub_80053F4\n\t"
+    "add r0, r5, #0\n\t"
+    "bl sub_8006250\n\t"
+    "add r0, r5, #0\n\t"
+    "bl sub_8005304\n\t"
+    "ldr r0, 9f\n\t"
+    "ldr r0, [r0]\n\t"
+    "bl sub_80007AC\n\t"
+    "ldr r6, 10f\n\t"
+    "mov r0, #0x40\n\t"
+    "ldrh r1, [r6, #2]\n\t"
+    "and r0, r1\n\t"
+    "cmp r0, #0\n\t"
+    "beq 7f\n\t"
+    "add r0, r5, #0\n\t"
+    "bl sub_800609C\n\t"
+    "mov r0, #0x1e\n\t"
+    "str r0, [r5, #0x68]\n\t"
+    "ldr r0, 11f\n\t"
+    "ldr r0, [r0]\n\t"
+    "mov r2, #0x80\n\t"
+    "lsl r2, r2, #1\n\t"
+    "mov r1, #0x46\n\t"
+    "bl PlaySfx\n\t"
+    "7:\n\t"
+    "mov r0, #0x80\n\t"
+    "ldrh r2, [r6, #2]\n\t"
+    "and r0, r2\n\t"
+    "cmp r0, #0\n\t"
+    "beq 8f\n\t"
+    "add r0, r5, #0\n\t"
+    "bl sub_8006084\n\t"
+    "mov r0, #0x1e\n\t"
+    "str r0, [r5, #0x68]\n\t"
+    "ldr r0, 11f\n\t"
+    "ldr r0, [r0]\n\t"
+    "mov r2, #0x80\n\t"
+    "lsl r2, r2, #1\n\t"
+    "mov r1, #0x46\n\t"
+    "bl PlaySfx\n\t"
+    "8:\n\t"
+    "ldr r2, [r6]\n\t"
+    "lsr r1, r2, #0x10\n\t"
+    "mov r3, #0x20\n\t"
+    "mov r0, #0x20\n\t"
+    "and r0, r1\n\t"
+    "cmp r0, #0\n\t"
+    "beq 12f\n\t"
+    "add r0, r5, #0\n\t"
+    "bl sub_8005EF4\n\t"
+    "mov r0, #0x1e\n\t"
+    "b 14f\n\t"
+    ".align 2, 0\n"
+    "9: .4byte gUnknown_03001304\n"
+    "10: .4byte gUnknown_030007E0\n"
+    "11: .4byte gUnknown_030012BC\n"
+    "12:\n\t"
+    "and r2, r3\n\t"
+    "cmp r2, #0\n\t"
+    "beq 15f\n\t"
+    "ldr r0, [r5, #0x68]\n\t"
+    "cmp r0, #0\n\t"
+    "bne 13f\n\t"
+    "add r0, r5, #0\n\t"
+    "bl sub_8005EF4\n\t"
+    "mov r0, #5\n\t"
+    "b 14f\n\t"
+    "13:\n\t"
+    "sub r0, #1\n\t"
+    "14:\n\t"
+    "str r0, [r5, #0x68]\n\t"
+    "15:\n\t"
+    "ldr r0, 16f\n\t"
+    "ldr r2, [r0]\n\t"
+    "lsr r1, r2, #0x10\n\t"
+    "mov r3, #0x10\n\t"
+    "mov r0, #0x10\n\t"
+    "and r0, r1\n\t"
+    "cmp r0, #0\n\t"
+    "beq 17f\n\t"
+    "add r0, r5, #0\n\t"
+    "bl sub_8005FBC\n\t"
+    "mov r0, #0x1e\n\t"
+    "b 19f\n\t"
+    ".align 2, 0\n"
+    "16: .4byte gUnknown_030007E0\n"
+    "17:\n\t"
+    "and r2, r3\n\t"
+    "cmp r2, #0\n\t"
+    "beq 20f\n\t"
+    "ldr r0, [r5, #0x68]\n\t"
+    "cmp r0, #0\n\t"
+    "bne 18f\n\t"
+    "add r0, r5, #0\n\t"
+    "bl sub_8005FBC\n\t"
+    "mov r0, #5\n\t"
+    "b 19f\n\t"
+    "18:\n\t"
+    "sub r0, #1\n\t"
+    "19:\n\t"
+    "str r0, [r5, #0x68]\n\t"
+    "20:\n\t"
+    "ldr r1, 22f\n\t"
+    "mov r0, #1\n\t"
+    "ldrh r1, [r1, #2]\n\t"
+    "and r0, r1\n\t"
+    "cmp r0, #0\n\t"
+    "bne 21f\n\t"
+    "b 3b\n\t"
+    "21:\n\t"
+    "ldr r0, [r5, #0x18]\n\t"
+    "ldr r1, [r5, #0x14]\n\t"
+    "lsl r0, r0, #3\n\t"
+    "add r0, r0, r1\n\t"
+    "ldr r7, [r0, #4]\n\t"
+    "sub r0, r7, #4\n\t"
+    "cmp r0, #1\n\t"
+    "bhi 24f\n\t"
+    "ldr r0, 23f\n\t"
+    "ldr r0, [r0]\n\t"
+    "mov r2, #0x80\n\t"
+    "lsl r2, r2, #1\n\t"
+    "mov r1, #0x48\n\t"
+    "bl PlaySfx\n\t"
+    "b 3b\n\t"
+    ".align 2, 0\n"
+    "22: .4byte gUnknown_030007E0\n"
+    "23: .4byte gUnknown_030012BC\n"
+    "24:\n\t"
+    "ldr r0, 28f\n\t"
+    "ldr r0, [r0]\n\t"
+    "mov r2, #0x80\n\t"
+    "lsl r2, r2, #1\n\t"
+    "mov r1, #0x49\n\t"
+    "bl PlaySfx\n\t"
+    "25:\n\t"
+    "add r6, r4, #0\n\t"
+    "mov r0, #0x1f\n\t"
+    "ldrb r1, [r6]\n\t"
+    "and r0, r1\n\t"
+    "cmp r0, #0x10\n\t"
+    "beq 27f\n\t"
+    "mov r2, #0x20\n\t"
+    "neg r2, r2\n\t"
+    "mov r8, r2\n\t"
+    "26:\n\t"
+    "add r4, r6, #0\n\t"
+    "ldrb r2, [r6]\n\t"
+    "lsl r0, r2, #0x1b\n\t"
+    "lsr r0, r0, #0x1b\n\t"
+    "add r0, #1\n\t"
+    "mov r1, #0x1f\n\t"
+    "and r0, r1\n\t"
+    "mov r1, r8\n\t"
+    "and r2, r1\n\t"
+    "orr r2, r0\n\t"
+    "strb r2, [r6]\n\t"
+    "add r0, r5, #0\n\t"
+    "bl sub_80053F4\n\t"
+    "add r0, r5, #0\n\t"
+    "bl sub_8006250\n\t"
+    "add r0, r5, #0\n\t"
+    "bl sub_8005304\n\t"
+    "mov r0, #0x1f\n\t"
+    "ldrb r4, [r4]\n\t"
+    "and r0, r4\n\t"
+    "cmp r0, #0x10\n\t"
+    "bne 26b\n\t"
+    "27:\n\t"
+    "mov r0, #0\n\t"
+    "mov r2, sb\n\t"
+    "strh r0, [r2]\n\t"
+    "mov r0, #0x40\n\t"
+    "ldrb r1, [r2]\n\t"
+    "orr r0, r1\n\t"
+    "strb r0, [r2]\n\t"
+    "add r0, r5, #0\n\t"
+    "bl sub_8006250\n\t"
+    "add r0, r7, #0\n\t"
+    "pop {r3, r4}\n\t"
+    "mov r8, r3\n\t"
+    "mov sb, r4\n\t"
+    "pop {r4, r5, r6, r7}\n\t"
+    "pop {r1}\n\t"
+    "bx r1\n\t"
+    ".align 2, 0\n"
+    "28: .4byte gUnknown_030012BC\n"
     );
 }
 
-/* Draws a centered label (from the runtime string table via
- * sub_8026F38) into gUnknown_030012E0's icon pair - `self` is unused.
- * Matches sub_8006600's (src/graphics/oam_count.c) centered-icon shape
- * exactly, just for a single label rather than flanking a number.
- *
- * Written as NAKED asm, not plain C: a full C reconstruction (kept in
- * git history), with `label`/`slot0`/`mgrAddr`/`mgr`/`recOff` pinned
- * to r9/r8/r6/r4/r5 (mirroring the ROM's own register choices exactly)
- * and the destination-address computation reordered before the
- * `sub_8026F38` call it needs to survive across, matched every
- * instruction except one: gcc's natural register choice for the s16
- * shift-index reused in the offset read (record+0x10/+0x20) differs
- * from the ROM's fresh reload into r3 both times - splitting the
- * offset read into its own local, an inline-asm register-pinned
- * `ldrsh`, and reordering around it were all tried and none closed the
- * gap without introducing a worse one. Every instruction below is
- * confirmed byte-identical to the ROM - full NAKED transcription, like
- * this project's other hard-compiler-limitation cases (see
- * `src/util/printf_util.c`'s `sub_8000CBC` for the established
- * pattern), is more honest than continuing to chase this one register
- * choice through plain C. */
-NAKED void sub_80049CC(struct pause_options_screen *self, s32 labelIndex)
-{
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6}\n\t"
-        "mov sb, r1\n\t"
-        "ldr r6, 1f\n\t"
-        "ldr r0, [r6]\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_8028A30\n\t"
-        "ldr r4, [r6]\n\t"
-        "mov r5, #0x98\n\t"
-        "lsl r5, r5, #1\n\t"
-        "add r0, r4, r5\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #0x10\n\t"
-        "add r1, r1, r0\n\t"
-        "mov r8, r1\n\t"
-        "mov r3, #0x10\n\t"
-        "ldrsh r0, [r0, r3]\n\t"
-        "add r4, r4, r0\n\t"
-        "mov r0, sb\n\t"
-        "bl sub_8026F38\n\t"
-        "add r1, r0, #0\n\t"
-        "mov r0, r8\n\t"
-        "ldr r2, [r0, #4]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_803AD80\n\t"
-        "mov r1, #0xf0\n\t"
-        "sub r1, r1, r0\n\t"
-        "asr r1, r1, #1\n\t"
-        "ldr r4, [r6]\n\t"
-        "mov r2, #6\n\t"
-        "mov r3, #0x88\n\t"
-        "lsl r3, r3, #1\n\t"
-        "add r0, r4, r3\n\t"
-        "str r1, [r0]\n\t"
-        "mov r1, #0x8a\n\t"
-        "lsl r1, r1, #1\n\t"
-        "add r0, r4, r1\n\t"
-        "str r2, [r0]\n\t"
-        "add r5, r4, r5\n\t"
-        "ldr r0, [r5]\n\t"
-        "add r5, r0, #0\n\t"
-        "add r5, #0x20\n\t"
-        "mov r3, #0x20\n\t"
-        "ldrsh r0, [r0, r3]\n\t"
-        "add r4, r4, r0\n\t"
-        "mov r0, sb\n\t"
-        "bl sub_8026F38\n\t"
-        "add r1, r0, #0\n\t"
-        "ldr r2, [r5, #4]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_803AD80\n\t"
-        "pop {r3, r4}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n\t"
-    "1: .4byte gUnknown_030012E0\n\t"
-    );
-}

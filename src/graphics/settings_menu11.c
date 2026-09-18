@@ -1,23 +1,16 @@
 #include "core.h"
 #include "icon_manager.h"
 
-#if NON_MATCHING
 /* The three functions below (sub_8006124, sub_800619C, sub_80061E8) -
- * plus sub_8006518, src/graphics/settings_menu10.c, further down this
- * ROM region past the still-raw sub_80062A8/sub_80063D8 - are
- * reconstructed (semantics understood, cross-checked against the
- * icon-manager conventions `src/graphics/oam_count.c` (`sub_8006600`,
- * parked) and `src/graphics/settings_menu6.c` (`sub_8005A78`, matched,
- * and its parked siblings) already establish) but NOT YET
- * BYTE-MATCHING - parked the same way those are. All three hit the
- * same class of gcc-2.9 register-allocation difficulty already
- * documented at length for `sub_8006600`/`sub_8005AE8` and friends:
+ * plus sub_8006518, src/graphics/settings_menu10.c - are all written as
+ * NAKED asm, not plain C: they all hit the same class of gcc-2.9
+ * register-allocation difficulty already documented at length for
+ * `sub_8006600` (src/graphics/oam_count.c)/`sub_8005AE8` and friends -
  * the loop/self pointer and the icon-manager position-store's mask
  * register never land in the exact scratch register the ROM's own
- * allocator reaches for, no matter how the source is rephrased -
- * closing that gap would need the same kind of heavy per-call-site
- * register-pin macro work already invested in `sub_8006600`, more than
- * this pass had budget for across three more functions on top of it. */
+ * allocator reaches for, no matter how the source is rephrased. Every
+ * instruction below is transcribed directly from and checked against
+ * the ROM's own disassembly. */
 
 /* Same "results" sub-region self object `settings_menu6.c`'s
  * `struct pause_screen_results` documents (`field_6c`/`field_bc`/
@@ -51,48 +44,115 @@ struct icon_pos {
 };
 extern struct icon_pos gStaticData_0816B27C;
 
-void sub_8006124(struct pause_screen_results *self)
+NAKED void sub_8006124(struct pause_screen_results *self)
 {
-    struct icon_manager *mgr;
-    struct icon_record *record;
-    s32 width;
-
-    if (self->field_6c != 0) {
-        sub_8008890(self->field_bc, 0, 0);
-    }
-
-    mgr = gUnknown_030012DC;
-    record = mgr->record;
-    width = sub_803AD80((u8 *)mgr + record->slots[0].offset, (s32)self->timeBuf, record->slots[0].ptr);
-
-    mgr = gUnknown_030012DC;
-    mgr->posX = gStaticData_0816B27C.x - (width >> 1) - 2;
-    mgr->posY = gStaticData_0816B27C.y - 0x23;
-
-    record = mgr->record;
-    sub_803AD80((u8 *)mgr + record->slots[2].offset, (s32)self->timeBuf, record->slots[2].ptr);
+    asm(
+    "push {r4, r5, r6, lr}\n\t"
+    "add r6, r0, #0\n\t"
+    "add r0, #0x6c\n\t"
+    "ldrb r0, [r0]\n\t"
+    "cmp r0, #0\n\t"
+    "beq 1f\n\t"
+    "add r0, r6, #0\n\t"
+    "add r0, #0xbc\n\t"
+    "ldr r0, [r0]\n\t"
+    "mov r1, #0\n\t"
+    "mov r2, #0\n\t"
+    "bl sub_8008890\n\t"
+    "1:\n\t"
+    "ldr r5, 2f\n\t"
+    "ldr r0, [r5]\n\t"
+    "mov r4, #0x98\n\t"
+    "lsl r4, r4, #1\n\t"
+    "add r1, r0, r4\n\t"
+    "ldr r2, [r1]\n\t"
+    "mov r3, #0x10\n\t"
+    "ldrsh r1, [r2, r3]\n\t"
+    "add r0, r0, r1\n\t"
+    "add r6, #0x7c\n\t"
+    "ldr r2, [r2, #0x14]\n\t"
+    "add r1, r6, #0\n\t"
+    "bl sub_803AD80\n\t"
+    "ldr r1, 3f\n\t"
+    "lsr r0, r0, #1\n\t"
+    "ldr r2, [r1]\n\t"
+    "sub r2, r2, r0\n\t"
+    "ldr r0, [r5]\n\t"
+    "sub r2, #2\n\t"
+    "ldr r3, [r1, #4]\n\t"
+    "sub r3, #0x23\n\t"
+    "mov r5, #0x88\n\t"
+    "lsl r5, r5, #1\n\t"
+    "add r1, r0, r5\n\t"
+    "str r2, [r1]\n\t"
+    "mov r2, #0x8a\n\t"
+    "lsl r2, r2, #1\n\t"
+    "add r1, r0, r2\n\t"
+    "str r3, [r1]\n\t"
+    "add r4, r0, r4\n\t"
+    "ldr r2, [r4]\n\t"
+    "mov r3, #0x20\n\t"
+    "ldrsh r1, [r2, r3]\n\t"
+    "add r0, r0, r1\n\t"
+    "ldr r2, [r2, #0x24]\n\t"
+    "add r1, r6, #0\n\t"
+    "bl sub_803AD80\n\t"
+    "pop {r4, r5, r6}\n\t"
+    "pop {r0}\n\t"
+    "bx r0\n\t"
+    ".align 2, 0\n"
+    "2: .4byte gUnknown_030012DC\n"
+    "3: .4byte gStaticData_0816B27C\n"
+    );
 }
 
 /* Same self object, `sub_8005A78`'s (the `field_88` icon widget)
  * companion label draw - the "results count" pair (`buf2c`/`buf46`,
  * already formatted by `sub_8005A78` itself) centered on that icon at
- * the fixed `gStaticData_0816B1E4` position, via a still-raw sibling
- * (`sub_8005E5C`, GitHub issue #7) that actually draws the two small
+ * the fixed `gStaticData_0816B1E4` position, via `sub_8005E5C`
+ * (src/graphics/settings_menu16.c) that actually draws the two small
  * strings. */
 extern struct icon_pos gStaticData_0816B1E4;
 extern void sub_8005E5C(struct pause_screen_results *self, void *buf1, void *buf2);
 
-void sub_800619C(struct pause_screen_results *self)
+NAKED void sub_800619C(struct pause_screen_results *self)
 {
-    struct icon_manager *mgr;
-
-    sub_8008890(self->field_88, 0, 0);
-
-    mgr = gUnknown_030012DC;
-    mgr->posX = gStaticData_0816B1E4.x - 0x2c;
-    mgr->posY = gStaticData_0816B1E4.y - 8;
-
-    sub_8005E5C(self, (u8 *)self + 0x2c, (u8 *)self + 0x46);
+    asm(
+    "push {r4, r5, lr}\n\t"
+    "add r4, r0, #0\n\t"
+    "add r0, #0x88\n\t"
+    "ldr r0, [r0]\n\t"
+    "mov r1, #0\n\t"
+    "mov r2, #0\n\t"
+    "bl sub_8008890\n\t"
+    "ldr r2, 1f\n\t"
+    "ldr r0, 2f\n\t"
+    "ldr r3, [r0]\n\t"
+    "ldr r1, [r2]\n\t"
+    "sub r1, #0x2c\n\t"
+    "ldr r2, [r2, #4]\n\t"
+    "sub r2, #8\n\t"
+    "mov r5, #0x88\n\t"
+    "lsl r5, r5, #1\n\t"
+    "add r0, r3, r5\n\t"
+    "str r1, [r0]\n\t"
+    "mov r1, #0x8a\n\t"
+    "lsl r1, r1, #1\n\t"
+    "add r0, r3, r1\n\t"
+    "str r2, [r0]\n\t"
+    "add r1, r4, #0\n\t"
+    "add r1, #0x2c\n\t"
+    "add r2, r4, #0\n\t"
+    "add r2, #0x46\n\t"
+    "add r0, r4, #0\n\t"
+    "bl sub_8005E5C\n\t"
+    "pop {r4, r5}\n\t"
+    "pop {r0}\n\t"
+    "bx r0\n\t"
+    ".align 2, 0\n"
+    "1: .4byte gStaticData_0816B1E4\n"
+    "2: .4byte gUnknown_030012DC\n"
+    );
 }
 
 /* A different, still-unreconciled self object (only `field_24`, a
@@ -111,24 +171,55 @@ struct pause_screen_category_state {
 extern s32 sub_8026F38(s32 arg0);
 extern void *gStaticData_0816B1D0[];
 
-void sub_80061E8(struct pause_screen_category_state *self)
+NAKED void sub_80061E8(struct pause_screen_category_state *self)
 {
-    struct icon_manager *mgr;
-    struct icon_record *record;
-    s32 charWidth;
-    s32 width;
-
-    charWidth = sub_8026F38((s32)gStaticData_0816B1D0[self->field_24]);
-
-    mgr = gUnknown_030012DC;
-    record = mgr->record;
-    width = sub_803AD80((u8 *)mgr + record->slots[0].offset, charWidth, record->slots[0].ptr);
-
-    mgr->posX = 0xc2 - (width >> 1);
-    mgr->posY = 0x2c;
-
-    record = mgr->record;
-    sub_803AD80((u8 *)mgr + record->slots[2].offset, charWidth, record->slots[2].ptr);
+    asm(
+    "push {r4, r5, r6, lr}\n\t"
+    "ldr r1, 1f\n\t"
+    "ldr r0, [r0, #0x24]\n\t"
+    "lsl r0, r0, #2\n\t"
+    "add r0, r0, r1\n\t"
+    "ldr r0, [r0]\n\t"
+    "bl sub_8026F38\n\t"
+    "add r6, r0, #0\n\t"
+    "ldr r5, 2f\n\t"
+    "ldr r0, [r5]\n\t"
+    "mov r4, #0x98\n\t"
+    "lsl r4, r4, #1\n\t"
+    "add r1, r0, r4\n\t"
+    "ldr r2, [r1]\n\t"
+    "mov r3, #0x10\n\t"
+    "ldrsh r1, [r2, r3]\n\t"
+    "add r0, r0, r1\n\t"
+    "ldr r2, [r2, #0x14]\n\t"
+    "add r1, r6, #0\n\t"
+    "bl sub_803AD80\n\t"
+    "lsr r0, r0, #1\n\t"
+    "mov r2, #0xc2\n\t"
+    "sub r2, r2, r0\n\t"
+    "ldr r0, [r5]\n\t"
+    "mov r3, #0x2c\n\t"
+    "mov r5, #0x88\n\t"
+    "lsl r5, r5, #1\n\t"
+    "add r1, r0, r5\n\t"
+    "str r2, [r1]\n\t"
+    "mov r2, #0x8a\n\t"
+    "lsl r2, r2, #1\n\t"
+    "add r1, r0, r2\n\t"
+    "str r3, [r1]\n\t"
+    "add r4, r0, r4\n\t"
+    "ldr r2, [r4]\n\t"
+    "mov r3, #0x20\n\t"
+    "ldrsh r1, [r2, r3]\n\t"
+    "add r0, r0, r1\n\t"
+    "ldr r2, [r2, #0x24]\n\t"
+    "add r1, r6, #0\n\t"
+    "bl sub_803AD80\n\t"
+    "pop {r4, r5, r6}\n\t"
+    "pop {r0}\n\t"
+    "bx r0\n\t"
+    ".align 2, 0\n"
+    "1: .4byte gStaticData_0816B1D0\n"
+    "2: .4byte gUnknown_030012DC\n"
+    );
 }
-
-#endif /* NON_MATCHING */
