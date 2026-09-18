@@ -10,13 +10,6 @@
  * tangled functions and are left untouched for now; see
  * docs/matching/issue-12-physics-collision.md. */
 
-struct aabb {
-    s32 field_0;
-    s32 field_4;
-    s32 field_8;
-    s32 field_c;
-};
-
 extern void sub_803AFE4(void *buf, s32 arg1, s32 arg2);
 extern void sub_803AFDC(void *buf, s32 arg1, s32 arg2);
 extern u8 sub_8001688(void *buf1, void *buf2);
@@ -25,7 +18,6 @@ extern u8 gStaticData_0816BBC4[];
 extern void sub_800EEF0(void *self, u8 arg1);
 extern void sub_800E7A8(void *self, u8 arg1, u8 arg2, u8 arg3);
 
-#if NON_MATCHING
 /* Builds two AABBs - one for `self`, one for the player
  * (`gUnknown_030012D8`) - from the shared "keyframe/hitbox record"
  * table convention already established by `sub_8007B00`/`sub_8007B98`
@@ -42,127 +34,193 @@ extern void sub_800E7A8(void *self, u8 arg1, u8 arg2, u8 arg3);
  *
  * Early-outs entirely when `self+0x4d & 0x7f == 1`.
  *
- * PARKED, NOT BYTE-MATCHING: this is the same AABB-build primitive as
- * the already-parked `sub_8007B98` (see actor_part.c), just inlined
- * twice (once for `self`, once for the player) instead of called as a
- * subroutine, plus the overlap dispatch tail. `sub_8007B98`'s own doc
- * comment already documents this exact shape resisting byte-exact
- * register allocation even in isolation ("about 10 of ~73
- * instructions... which anonymous scratch register" gaps); doing it
- * twice in a row compounds the problem rather than cancelling it out.
- * Concretely: the ROM keeps exactly two extra callee-saved registers
- * live across both AABB builds (`r8` and `sb`, the latter holding
- * `&gUnknown_030012D8` so the player pointer can be cheaply reloaded
- * after the `sub_803AFE4`/`sub_803AFDC` calls clobber it), and reuses
- * `r7`/`r8` for the X/Y "shift" values across *both* the self-block and
- * the player-block. Every reconstruction tried here (explicit
- * `xShift`/`yShift` locals reused across both blocks, a `vu8` volatile
- * cast on the second `self+0x28` bit-test in each block to block gcc's
- * CSE the same way `sub_8007B98` needed it, hoisting/flattening the
- * player-box locals in and out of a nested scope) always lands on
- * *three* extra callee-saved registers (`r8`/`r9`/`sl` in every variant
- * tried) instead of the ROM's two, and/or moves `self` itself out of
- * `r6` into `r8`. Parked rather than keep chasing individual register
- * letters - see docs/matching/issue-12-physics-collision.md. */
-void sub_800D040(void *self)
+ * Written as NAKED asm, not plain C: this is the same AABB-build
+ * primitive as the already-parked `sub_8007B98` (see actor_part.c),
+ * just inlined twice (once for `self`, once for the player) instead
+ * of called as a subroutine, plus the overlap dispatch tail. The ROM
+ * keeps exactly two extra callee-saved registers live across both AABB
+ * builds (`r8` and `sb`, the latter holding `&gUnknown_030012D8` so the
+ * player pointer can be cheaply reloaded after the
+ * `sub_803AFE4`/`sub_803AFDC` calls clobber it), and reuses `r7`/`r8`
+ * for the X/Y "shift" values across *both* the self-block and the
+ * player-block - no C reconstruction tried reproduced that with gcc
+ * 2.9 (see docs/matching/issue-12-physics-collision.md for the
+ * attempts). Transcribed instruction-for-instruction from the ROM
+ * disassembly instead, the same escape hatch used for
+ * `sub_8001CB8`/`sub_8001DB4` (src/system/link_cable.c) - `r6` holds
+ * `self` throughout, matching the C reconstruction's own local
+ * variable layout (stack offsets 0x0-0xc hold `self`'s AABB, 0x10-0x1c
+ * the player's). */
+NAKED void sub_800D040(void *self)
 {
-    struct aabb buf_;
-    s32 *buf = (s32 *)&buf_;
-    void *table;
-    u8 idx;
-    void *rec;
-    s16 offX, offY;
-    u8 w, h;
-    s32 x, y;
-    s32 xShift, yShift;
-
-    if ((*((u8 *)self + 0x4d) & 0x7f) == 1) {
-        return;
-    }
-
-    {
-        void **tablePtr = *(void ***)((u8 *)self + 0x20);
-        s32 offset;
-
-        idx = *((u8 *)self + 0x2d);
-        offset = idx * 0x1c;
-        table = *tablePtr;
-        rec = (u8 *)table + offset;
-    }
-    offX = *(s16 *)((u8 *)rec + 4);
-    offY = *(s16 *)((u8 *)rec + 6);
-    w = *((u8 *)rec + 8);
-    h = *((u8 *)rec + 9);
-
-    xShift = *(s32 *)self >> 8;
-    yShift = *(s32 *)((u8 *)self + 4) >> 8;
-
-    x = offX + xShift;
-    y = offY + yShift;
-    sub_803AFE4(buf, x, y);
-    sub_803AFDC(buf, w, h);
-
-    {
-        u8 flags = *((u8 *)self + 0x28);
-        if ((s32)(flags << 27) < 0) {
-            buf[0] = xShift * 2 - (buf[0] + buf[2]);
-        }
-    }
-    {
-        u8 flags = *(vu8 *)((u8 *)self + 0x28);
-        if ((s32)(flags << 26) < 0) {
-            buf[1] = yShift * 2 - (buf[1] + buf[3]);
-        }
-    }
-
-    {
-        void *player = gUnknown_030012D8;
-        struct aabb buf2_;
-        s32 *buf2 = (s32 *)&buf2_;
-
-        {
-            void **tablePtr = *(void ***)((u8 *)player + 0x20);
-            s32 offset;
-
-            idx = *((u8 *)player + 0x2d);
-            offset = idx * 0x1c;
-            table = *tablePtr;
-            rec = (u8 *)table + offset;
-        }
-        offX = *(s16 *)((u8 *)rec + 4);
-        offY = *(s16 *)((u8 *)rec + 6);
-        w = *((u8 *)rec + 8);
-        h = *((u8 *)rec + 9);
-
-        xShift = *(s32 *)player >> 8;
-        yShift = *(s32 *)((u8 *)player + 4) >> 8;
-
-        x = offX + xShift;
-        y = offY + yShift;
-        sub_803AFE4(buf2, x, y);
-        sub_803AFDC(buf2, w, h);
-
-        {
-            u8 flags = *((u8 *)gUnknown_030012D8 + 0x28);
-            if ((s32)(flags << 27) < 0) {
-                buf2[0] = xShift * 2 - (buf2[0] + buf2[2]);
-            }
-        }
-        {
-            u8 flags = *(vu8 *)((u8 *)gUnknown_030012D8 + 0x28);
-            if ((s32)(flags << 26) < 0) {
-                buf2[1] = yShift * 2 - (buf2[1] + buf2[3]);
-            }
-        }
-
-        if (sub_8001688(buf, buf2)) {
-            if (gStaticData_0816BBC4[*((u8 *)self + 0x4e)] == 1) {
-                sub_800EEF0(self, 1);
-            } else {
-                sub_800E7A8(self, 0, 0, 0);
-            }
-        }
-    }
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "mov r7, sb\n\t"
+        "mov r6, r8\n\t"
+        "push {r6, r7}\n\t"
+        "sub sp, #0x20\n\t"
+        "add r6, r0, #0\n\t"
+        "add r1, r6, #0\n\t"
+        "add r1, #0x4d\n\t"
+        "mov r0, #0x7f\n\t"
+        "ldrb r1, [r1]\n\t"
+        "and r0, r1\n\t"
+        "cmp r0, #1\n\t"
+        "bne 1f\n\t"
+        "b 7f\n\t"
+    "1:\n\t"
+        "ldr r1, [r6, #0x20]\n\t"
+        "add r2, r6, #0\n\t"
+        "add r2, #0x2d\n\t"
+        "ldrb r3, [r2]\n\t"
+        "lsl r0, r3, #3\n\t"
+        "sub r0, r0, r3\n\t"
+        "lsl r0, r0, #2\n\t"
+        "ldr r1, [r1]\n\t"
+        "add r1, r1, r0\n\t"
+        "add r3, r1, #4\n\t"
+        "ldr r0, [r6]\n\t"
+        "asr r7, r0, #8\n\t"
+        "ldr r0, [r6, #4]\n\t"
+        "asr r0, r0, #8\n\t"
+        "mov r8, r0\n\t"
+        "mov r0, #4\n\t"
+        "ldrsh r1, [r1, r0]\n\t"
+        "mov r0, #2\n\t"
+        "ldrsh r2, [r3, r0]\n\t"
+        "ldrb r4, [r3, #4]\n\t"
+        "ldrb r5, [r3, #5]\n\t"
+        "add r1, r1, r7\n\t"
+        "add r2, r8\n\t"
+        "mov r0, sp\n\t"
+        "bl sub_803AFE4\n\t"
+        "mov r0, sp\n\t"
+        "add r1, r4, #0\n\t"
+        "add r2, r5, #0\n\t"
+        "bl sub_803AFDC\n\t"
+        "add r3, r6, #0\n\t"
+        "add r3, #0x28\n\t"
+        "ldrb r1, [r3]\n\t"
+        "lsl r0, r1, #0x1b\n\t"
+        "cmp r0, #0\n\t"
+        "bge 2f\n\t"
+        "lsl r0, r7, #1\n\t"
+        "ldr r1, [sp]\n\t"
+        "ldr r2, [sp, #8]\n\t"
+        "add r1, r1, r2\n\t"
+        "sub r0, r0, r1\n\t"
+        "str r0, [sp]\n\t"
+    "2:\n\t"
+        "ldrb r3, [r3]\n\t"
+        "lsl r0, r3, #0x1a\n\t"
+        "cmp r0, #0\n\t"
+        "bge 3f\n\t"
+        "mov r2, r8\n\t"
+        "lsl r0, r2, #1\n\t"
+        "ldr r1, [sp, #4]\n\t"
+        "ldr r2, [sp, #0xc]\n\t"
+        "add r1, r1, r2\n\t"
+        "sub r0, r0, r1\n\t"
+        "str r0, [sp, #4]\n\t"
+    "3:\n\t"
+        "ldr r3, 10f\n\t"
+        "mov sb, r3\n\t"
+        "ldr r0, [r3]\n\t"
+        "ldr r1, [r0]\n\t"
+        "asr r7, r1, #8\n\t"
+        "ldr r1, [r0, #4]\n\t"
+        "asr r1, r1, #8\n\t"
+        "mov r8, r1\n\t"
+        "ldr r2, [r0, #0x20]\n\t"
+        "add r0, #0x2d\n\t"
+        "ldrb r3, [r0]\n\t"
+        "lsl r1, r3, #3\n\t"
+        "sub r1, r1, r3\n\t"
+        "lsl r1, r1, #2\n\t"
+        "ldr r0, [r2]\n\t"
+        "add r0, r0, r1\n\t"
+        "add r3, r0, #4\n\t"
+        "mov r2, #4\n\t"
+        "ldrsh r1, [r0, r2]\n\t"
+        "mov r0, #2\n\t"
+        "ldrsh r2, [r3, r0]\n\t"
+        "ldrb r4, [r3, #4]\n\t"
+        "ldrb r5, [r3, #5]\n\t"
+        "add r1, r1, r7\n\t"
+        "add r2, r8\n\t"
+        "add r0, sp, #0x10\n\t"
+        "bl sub_803AFE4\n\t"
+        "add r0, sp, #0x10\n\t"
+        "add r1, r4, #0\n\t"
+        "add r2, r5, #0\n\t"
+        "bl sub_803AFDC\n\t"
+        "mov r1, sb\n\t"
+        "ldr r0, [r1]\n\t"
+        "add r0, #0x28\n\t"
+        "ldrb r0, [r0]\n\t"
+        "lsl r0, r0, #0x1b\n\t"
+        "cmp r0, #0\n\t"
+        "bge 4f\n\t"
+        "lsl r0, r7, #1\n\t"
+        "ldr r1, [sp, #0x10]\n\t"
+        "ldr r2, [sp, #0x18]\n\t"
+        "add r1, r1, r2\n\t"
+        "sub r0, r0, r1\n\t"
+        "str r0, [sp, #0x10]\n\t"
+    "4:\n\t"
+        "mov r2, sb\n\t"
+        "ldr r0, [r2]\n\t"
+        "add r0, #0x28\n\t"
+        "ldrb r0, [r0]\n\t"
+        "lsl r0, r0, #0x1a\n\t"
+        "cmp r0, #0\n\t"
+        "bge 5f\n\t"
+        "mov r3, r8\n\t"
+        "lsl r0, r3, #1\n\t"
+        "ldr r1, [sp, #0x14]\n\t"
+        "ldr r2, [sp, #0x1c]\n\t"
+        "add r1, r1, r2\n\t"
+        "sub r0, r0, r1\n\t"
+        "str r0, [sp, #0x14]\n\t"
+    "5:\n\t"
+        "add r1, sp, #0x10\n\t"
+        "mov r0, sp\n\t"
+        "bl sub_8001688\n\t"
+        "lsl r0, r0, #0x18\n\t"
+        "cmp r0, #0\n\t"
+        "beq 7f\n\t"
+        "ldr r0, 11f\n\t"
+        "add r1, r6, #0\n\t"
+        "add r1, #0x4e\n\t"
+        "ldrb r1, [r1]\n\t"
+        "add r0, r1, r0\n\t"
+        "ldrb r0, [r0]\n\t"
+        "cmp r0, #1\n\t"
+        "bne 6f\n\t"
+        "add r0, r6, #0\n\t"
+        "mov r1, #1\n\t"
+        "bl sub_800EEF0\n\t"
+        "b 7f\n\t"
+        ".align 2, 0\n"
+    "10: .4byte gUnknown_030012D8\n"
+    "11: .4byte gStaticData_0816BBC4\n"
+    "6:\n\t"
+        "add r0, r6, #0\n\t"
+        "mov r1, #0\n\t"
+        "mov r2, #0\n\t"
+        "mov r3, #0\n\t"
+        "bl sub_800E7A8\n\t"
+    "7:\n\t"
+        "add sp, #0x20\n\t"
+        "pop {r3, r4}\n\t"
+        "mov r8, r3\n\t"
+        "mov sb, r4\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r0}\n\t"
+        "bx r0"
+    );
 }
-#endif /* NON_MATCHING */
+/* Trailing byte count isn't a multiple of 4 - without this, `as` pads
+ * with its default NOP fill instead of the ROM's zero fill (see
+ * docs/matching.md's alignment-padding gotcha). */
 asm(".align 2, 0");

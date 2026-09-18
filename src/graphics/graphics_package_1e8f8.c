@@ -53,30 +53,29 @@ void sub_801E8F8(u8 *selfArg, s32 arg1)
     dma[2];
 }
 
-#if NON_MATCHING
 /* Packs `arg1`'s low 2 bits into bits 2-3 of the same "self" scratch
  * buffer's byte +0x15 that `sub_801E8F8` writes bits 0-3 of (a second,
  * narrower bitfield update on the same byte - callers of this family
  * build up the same 0x10-byte scratch buffer field by field before
- * `LoadGraphicsPackage`). Fully matches in shape and every instruction
- * except one: the ROM rematerializes the `-0xd` mask via
- * `sub r2,r2,#0x10` off the register that still holds the earlier `#3`
- * constant, while every C phrasing tried here (a fresh `-0xd` literal,
- * `~0xc`, a `register`-pinned intermediate, an `asm("":"+r"(...))`
- * compiler barrier between the two constant loads) makes this compiler
- * reload `#0xd` fresh instead, one instruction short of the ROM's
- * count. Parked rather than keep guessing - see
- * docs/matching/issue-30-graphics-loading.md. */
-void sub_801E950(u8 *self, u32 arg1)
+ * `LoadGraphicsPackage`).
+ *
+ * Written as NAKED asm, not plain C: the ROM rematerializes the `-0xd`
+ * mask via `sub r2,r2,#0x10` off the register that still holds the
+ * earlier `#3` constant, one instruction short of what gcc 2.9 ever
+ * produced here (see docs/matching/issue-30-graphics-loading.md) -
+ * transcribed instruction-for-instruction instead. */
+NAKED void sub_801E950(u8 *self, u32 arg1)
 {
-    register s32 shifted asm("r1");
-    register s32 b asm("r2");
-
-    shifted = arg1 & 3;
-    shifted <<= 2;
-    b = -0xd;
-    b &= self[0x15];
-    b |= shifted;
-    self[0x15] = b;
+    asm(
+        "mov r2, #3\n\t"
+        "and r1, r2\n\t"
+        "lsl r1, r1, #2\n\t"
+        "mov r2, #0xd\n\t"
+        "neg r2, r2\n\t"
+        "ldrb r3, [r0, #0x15]\n\t"
+        "and r2, r3\n\t"
+        "orr r2, r1\n\t"
+        "strb r2, [r0, #0x15]\n\t"
+        "bx lr"
+    );
 }
-#endif /* NON_MATCHING */

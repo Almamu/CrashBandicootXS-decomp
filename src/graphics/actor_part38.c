@@ -147,23 +147,7 @@ loop_cond:
 }
 asm(".align 2, 0\n\t.Lgu12f0_8014f8c: .word gUnknown_030012F0");
 
-#if NON_MATCHING
-/* NOT YET BYTE-MATCHING - see docs/matching/issue-18-0x08014f8c-actor.md,
- * "Parked, not matched: sub_8015038" for the full account; compiled
- * only under `make NON_MATCHING=1`, the checked-in assembly
- * (asm/code_3_2_17_15038.s) is used otherwise. Every load/store, branch
- * and call is understood and semantically correct - the residual gap is
- * this compiler's register allocation across the three near-identical
- * arms (it wants `ip`/`sb`/`r8` for `id`/`0`/the table-index exactly
- * like the ROM, but also insists on caching computed field addresses
- * (`self+0x21`/`self+0x22`) in different registers than the ROM's own
- * `r7`/`r5` choices once real trampoline calls intervene) - tried
- * explicit `register ... asm("rN")` pins matching every ROM register
- * role, local pointer variables for `self+0x21`/`self+0x22` computed
- * once and reused, and reordering statements to match the ROM's
- * "zero-init early, resolve late" sequencing; each fixed one spot but
- * regressed another already-matching one elsewhere in the same
- * function. */
+
 extern void *gUnknown_030012BC;
 extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
 extern s32 sub_803AD84(void *arg0, void *arg1, void *arg2, void *arg3);
@@ -180,113 +164,222 @@ extern s32 sub_803AD84(void *arg0, void *arg1, void *arg2, void *arg3);
  * (unless `self+0x22` is already above `0xf0`, i.e. wrapped) or, once
  * wrapped, fires a third fixed-index variant (using `param2` as the
  * mgr's `+0x20` trampoline argument instead of `id`) and stamps
- * `self+0x26` with `0x63`. */
-void sub_8015038(void *selfArg, s32 id, s32 param2)
+ * `self+0x26` with `0x63`.
+ *
+ * Written as NAKED asm, not plain C: every load/store, branch and call
+ * was already confirmed correct - the residual gap was this compiler's
+ * register allocation across the three near-identical arms (it wants
+ * `ip`/`sb`/`r8` for `id`/`0`/the table-index exactly like the ROM, but
+ * also insists on caching computed field addresses (`self+0x21`/
+ * `self+0x22`) in different registers than the ROM's own `r7`/`r5`
+ * choices once real trampoline calls intervene) - see
+ * docs/matching/issue-18-0x08014f8c-actor.md, "Parked, not matched:
+ * sub_8015038". Transcribed instruction-for-instruction from the ROM
+ * disassembly instead, the same escape hatch used for
+ * `sub_8001CB8`/`sub_8001DB4` (src/system/link_cable.c). */
+NAKED void sub_8015038(void *selfArg, s32 id, s32 param2)
 {
-    register u8 *self asm("r6") = selfArg;
-    register s32 idReg asm("ip") = id;
-    register s32 p2 asm("r3") = param2;
-
-    if (self[0x24] == 0) {
-        u8 *p21 = self + 0x21;
-        u8 *p22 = self + 0x22;
-        register s32 tableIdx asm("r8");
-        register s32 zero asm("r9") = 0;
-        s32 fourteen = 0x14;
-        u8 byte22 = *p22;
-        u8 *mgr;
-        u8 *off;
-
-        *p21 = 0;
-        tableIdx = 0x17;
-        if (byte22 == 1) {
-            tableIdx = 0x28;
-        } else if (byte22 == 2) {
-            tableIdx = 0x27;
-        }
-        *p21 = byte22;
-
-        mgr = *(u8 **)(self + 0xc);
-        sub_803AD80(self + *(s16 *)(mgr + 0x20), (void *)idReg, *(void **)(mgr + 0x24));
-        off = *(u8 **)(self + 0xc) + 0x50;
-        sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)tableIdx,
-                    *(void **)(off + 4));
-
-        *(s32 *)(self + 0x18) = zero;
-        *(s32 *)(self + 0x1c) = fourteen;
-
-        PlaySfx(gUnknown_030012BC, *p21 + 0x57, 0x100);
-
-        *p22 += 1;
-        if ((u8)*p22 < self[0x20]) {
-            self[0x23] = 0;
-            return;
-        }
-
-        self[0x24] = 1;
-        *p22 = (*p22 <= 1) ? zero : 1;
-        self[0x23] = 0;
-        return;
-    }
-
-    if (self[0x22] <= 0xf0) {
-        u8 *mgr = *(u8 **)(self + 0xc);
-        u8 *off;
-        s32 zero = 0;
-        s32 eighteen = 0x18;
-
-        self[0x21] = 0;
-        self[0x20] = 0;
-
-        sub_803AD80(self + *(s16 *)(mgr + 0x20), (void *)p2, *(void **)(mgr + 0x24));
-        off = *(u8 **)(self + 0xc) + 0x50;
-        sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)0x10,
-                    *(void **)(off + 4));
-
-        *(s32 *)(self + 0x18) = zero;
-        *(s32 *)(self + 0x1c) = eighteen;
-
-        PlaySfx(gUnknown_030012BC, 0xa, 0x100);
-        self[0x26] = 0x63;
-
-        self[0x22]--;
-        self[0x23] = 0;
-        return;
-    }
-
-    {
-        u8 *p22 = self + 0x22;
-        u8 *p21 = self + 0x21;
-        register s32 tableIdx asm("r8");
-        s32 zero = 0;
-        s32 fourteen = 0x14;
-        u8 byte22 = *p22;
-        u8 *mgr;
-        u8 *off;
-
-        *p21 = 0;
-        tableIdx = 0x17;
-        if (byte22 == 1) {
-            tableIdx = 0x28;
-        } else if (byte22 == 2) {
-            tableIdx = 0x27;
-        }
-        *p21 = byte22;
-
-        mgr = *(u8 **)(self + 0xc);
-        sub_803AD80(self + *(s16 *)(mgr + 0x20), (void *)idReg, *(void **)(mgr + 0x24));
-        off = *(u8 **)(self + 0xc) + 0x50;
-        sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)tableIdx,
-                    *(void **)(off + 4));
-
-        *(s32 *)(self + 0x18) = zero;
-        *(s32 *)(self + 0x1c) = fourteen;
-
-        PlaySfx(gUnknown_030012BC, self[0x21] + 0x57, 0x100);
-
-        *p22 -= 1;
-    }
-
-    self[0x23] = 0;
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "mov r7, sb\n\t"
+        "mov r6, r8\n\t"
+        "push {r6, r7}\n\t"
+        "add r6, r0, #0\n\t"
+        "mov ip, r1\n\t"
+        "add r3, r2, #0\n\t"
+        "add r0, #0x24\n\t"
+        "ldrb r0, [r0]\n\t"
+        "cmp r0, #0\n\t"
+        "bne 1f\n\t"
+        "mov r1, #0x17\n\t"
+        "mov r8, r1\n\t"
+        "add r1, r6, #0\n\t"
+        "add r1, #0x21\n\t"
+        "strb r0, [r1]\n\t"
+        "add r0, r6, #0\n\t"
+        "add r0, #0x22\n\t"
+        "ldrb r2, [r0]\n\t"
+        "add r7, r1, #0\n\t"
+        "add r5, r0, #0\n\t"
+        "cmp r2, #1\n\t"
+        "bne 2f\n\t"
+        "mov r0, #0x28\n\t"
+        "mov r8, r0\n\t"
+        "b 3f\n\t"
+    "2:\n\t"
+        "cmp r2, #2\n\t"
+        "bne 4f\n\t"
+        "mov r1, #0x27\n\t"
+        "mov r8, r1\n\t"
+    "3:\n\t"
+        "strb r2, [r7]\n\t"
+    "4:\n\t"
+        "mov r2, #0\n\t"
+        "mov sb, r2\n\t"
+        "mov r4, #0x14\n\t"
+        "ldr r1, [r6, #0xc]\n\t"
+        "mov r2, #0x20\n\t"
+        "ldrsh r0, [r1, r2]\n\t"
+        "add r0, r6, r0\n\t"
+        "ldr r2, [r1, #0x24]\n\t"
+        "mov r1, ip\n\t"
+        "bl sub_803AD80\n\t"
+        "ldr r2, [r6, #0xc]\n\t"
+        "add r2, #0x50\n\t"
+        "mov r1, #0\n\t"
+        "ldrsh r0, [r2, r1]\n\t"
+        "add r0, r6, r0\n\t"
+        "ldr r1, [r6, #0x10]\n\t"
+        "ldr r3, [r2, #4]\n\t"
+        "mov r2, r8\n\t"
+        "bl sub_803AD84\n\t"
+        "mov r2, sb\n\t"
+        "str r2, [r6, #0x18]\n\t"
+        "str r4, [r6, #0x1c]\n\t"
+        "ldr r0, 20f\n\t"
+        "ldr r0, [r0]\n\t"
+        "ldrb r1, [r7]\n\t"
+        "add r1, #0x57\n\t"
+        "mov r2, #0x80\n\t"
+        "lsl r2, r2, #1\n\t"
+        "bl PlaySfx\n\t"
+        "ldrb r0, [r5]\n\t"
+        "add r0, #1\n\t"
+        "strb r0, [r5]\n\t"
+        "add r1, r6, #0\n\t"
+        "add r1, #0x20\n\t"
+        "lsl r0, r0, #0x18\n\t"
+        "lsr r0, r0, #0x18\n\t"
+        "ldrb r1, [r1]\n\t"
+        "cmp r0, r1\n\t"
+        "blo 6f\n\t"
+        "add r0, r6, #0\n\t"
+        "add r0, #0x24\n\t"
+        "mov r1, #1\n\t"
+        "strb r1, [r0]\n\t"
+        "ldrb r0, [r5]\n\t"
+        "cmp r0, #1\n\t"
+        "bls 5f\n\t"
+        "strb r1, [r5]\n\t"
+        "b 6f\n\t"
+        ".align 2, 0\n"
+    "20: .4byte gUnknown_030012BC\n"
+    "5:\n\t"
+        "mov r1, sb\n\t"
+        "strb r1, [r5]\n\t"
+        "b 6f\n\t"
+    "1:\n\t"
+        "add r0, r6, #0\n\t"
+        "add r0, #0x22\n\t"
+        "add r5, r0, #0\n\t"
+        "ldrb r2, [r5]\n\t"
+        "cmp r2, #0xf0\n\t"
+        "bls 10f\n\t"
+        "mov r0, #0x17\n\t"
+        "mov r8, r0\n\t"
+        "add r1, r6, #0\n\t"
+        "add r1, #0x21\n\t"
+        "mov r0, #0\n\t"
+        "strb r0, [r1]\n\t"
+        "ldrb r0, [r5]\n\t"
+        "add r7, r1, #0\n\t"
+        "cmp r0, #1\n\t"
+        "bne 7f\n\t"
+        "mov r1, #0x28\n\t"
+        "mov r8, r1\n\t"
+        "b 9f\n\t"
+    "7:\n\t"
+        "cmp r0, #2\n\t"
+        "bne 8f\n\t"
+        "mov r2, #0x27\n\t"
+        "mov r8, r2\n\t"
+    "9:\n\t"
+        "strb r0, [r7]\n\t"
+    "8:\n\t"
+        "mov r4, #0\n\t"
+        "mov r0, #0x14\n\t"
+        "mov sb, r0\n\t"
+        "ldr r1, [r6, #0xc]\n\t"
+        "mov r2, #0x20\n\t"
+        "ldrsh r0, [r1, r2]\n\t"
+        "add r0, r6, r0\n\t"
+        "ldr r2, [r1, #0x24]\n\t"
+        "mov r1, ip\n\t"
+        "bl sub_803AD80\n\t"
+        "ldr r2, [r6, #0xc]\n\t"
+        "add r2, #0x50\n\t"
+        "mov r1, #0\n\t"
+        "ldrsh r0, [r2, r1]\n\t"
+        "add r0, r6, r0\n\t"
+        "ldr r1, [r6, #0x10]\n\t"
+        "ldr r3, [r2, #4]\n\t"
+        "mov r2, r8\n\t"
+        "bl sub_803AD84\n\t"
+        "str r4, [r6, #0x18]\n\t"
+        "mov r2, sb\n\t"
+        "str r2, [r6, #0x1c]\n\t"
+        "ldr r0, 21f\n\t"
+        "ldr r0, [r0]\n\t"
+        "ldrb r1, [r7]\n\t"
+        "add r1, #0x57\n\t"
+        "mov r2, #0x80\n\t"
+        "lsl r2, r2, #1\n\t"
+        "bl PlaySfx\n\t"
+        "b 11f\n\t"
+        ".align 2, 0\n"
+    "21: .4byte gUnknown_030012BC\n"
+    "10:\n\t"
+        "add r0, r6, #0\n\t"
+        "add r0, #0x21\n\t"
+        "mov r4, #0\n\t"
+        "strb r4, [r0]\n\t"
+        "sub r0, #1\n\t"
+        "strb r4, [r0]\n\t"
+        "mov r7, #0x18\n\t"
+        "ldr r1, [r6, #0xc]\n\t"
+        "mov r2, #0x20\n\t"
+        "ldrsh r0, [r1, r2]\n\t"
+        "add r0, r6, r0\n\t"
+        "ldr r2, [r1, #0x24]\n\t"
+        "add r1, r3, #0\n\t"
+        "bl sub_803AD80\n\t"
+        "ldr r2, [r6, #0xc]\n\t"
+        "add r2, #0x50\n\t"
+        "mov r1, #0\n\t"
+        "ldrsh r0, [r2, r1]\n\t"
+        "add r0, r6, r0\n\t"
+        "ldr r1, [r6, #0x10]\n\t"
+        "ldr r3, [r2, #4]\n\t"
+        "mov r2, #0x10\n\t"
+        "bl sub_803AD84\n\t"
+        "str r4, [r6, #0x18]\n\t"
+        "str r7, [r6, #0x1c]\n\t"
+        "ldr r0, 22f\n\t"
+        "ldr r0, [r0]\n\t"
+        "mov r2, #0x80\n\t"
+        "lsl r2, r2, #1\n\t"
+        "mov r1, #0xa\n\t"
+        "bl PlaySfx\n\t"
+        "add r1, r6, #0\n\t"
+        "add r1, #0x26\n\t"
+        "mov r0, #0x63\n\t"
+        "strb r0, [r1]\n\t"
+    "11:\n\t"
+        "ldrb r0, [r5]\n\t"
+        "sub r0, #1\n\t"
+        "strb r0, [r5]\n\t"
+    "6:\n\t"
+        "add r1, r6, #0\n\t"
+        "add r1, #0x23\n\t"
+        "mov r0, #0\n\t"
+        "strb r0, [r1]\n\t"
+        "pop {r3, r4}\n\t"
+        "mov r8, r3\n\t"
+        "mov sb, r4\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r0}\n\t"
+        "bx r0\n\t"
+        ".align 2, 0\n"
+    "22: .4byte gUnknown_030012BC\n"
+    );
 }
-#endif /* NON_MATCHING */
