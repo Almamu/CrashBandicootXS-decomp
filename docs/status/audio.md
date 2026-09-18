@@ -65,6 +65,15 @@ pass) and
   Sound A output stop/start pair)
 - `src/audio/gax_note_param.c` - `sub_8038F94` (conditional per-voice
   note-period update)
+- `src/audio/gax_channel_mute_volume.c` - `sub_8038FD0`/`sub_8039064`/
+  `sub_80390F8` (per-channel mute/volume-set family - previously
+  documented as a "confirmed many-register loop-allocation ceiling";
+  matched by never caching the `gUnknown_03001630->channels[curChannelIdx]`
+  chase into a local, reproducing the ROM's own r0-r3-only allocation -
+  see [`docs/matching/issue-67-channel-mute-volume-dma-stop.md`](../matching/issue-67-channel-mute-volume-dma-stop.md))
+- `src/audio/gax_dma_stop.c` - `sub_8039198`/`sub_80391E8` (Direct Sound A/
+  Timer0 stop, the counterpart to `sub_8038B68`'s start, plus a generic
+  single-DMA-channel "off" helper; same writeup as above)
 - `src/audio/gax_swi.c` - `sub_80392C4` (HuffUnComp SWI 0x13 wrapper,
   transcribed as NAKED asm)
 - `src/audio/gax_fatal_error.c` - `sub_80392E0` (the fatal-error
@@ -200,6 +209,39 @@ See docs/matching.md for `PlaySfx`'s remaining gap.
 
   See [docs/matching/issue-67-gax-voice-steal.md](../matching/issue-67-gax-voice-steal.md)
   for all three functions' full write-up.
+- **`sub_803985C`** (`src/audio/gax_channel_bind_instrument.c`, binds a
+  new instrument entry to a per-channel voice object and resets its
+  envelope/state fields) - a real C reconstruction reproduced every field
+  write, but the ROM's `self` register choreography - reloaded fresh from
+  `ip` into a rotating r0/r1/r3 cast, with `r3` itself later mutated in
+  place - always needed one extra callee-saved register the ROM doesn't
+  spend; already set aside for the same reason in a prior pass. Byte-
+  verified NAKED transcription.
+- **`sub_80398DC`** (`src/audio/gax_channel_note_scheduler.c`, per-tick
+  pattern-note/priority-steal scheduler with a 15-way command jump table)
+  - keeps `r8`/`sb` live as genuine scratch across the whole priority-
+  steal block and the jump table, the same many-register ceiling
+  documented throughout this region. Byte-verified NAKED transcription.
+- **`sub_8039AA4`** (`src/audio/gax_channel_envelope_tick.c`, per-tick
+  envelope/portamento-pitch update) - a real C reconstruction (register-
+  pinning `self` and the clamp temporaries) landed everything except a
+  handful of `ldrsh`-with-non-immediate-offset reads in the portamento
+  tail (same gotcha as `sub_803943C`), whose individual register-pins
+  kept perturbing an earlier, already-correct block's codegen. Byte-
+  verified NAKED transcription.
+- **`sub_8039F30`** (`src/audio/gax_note_lookup.c`, resolves a pattern-
+  note index into an interpolated pitch/volume byte from a sorted
+  breakpoint table) - a real C reconstruction matched this function's
+  full control flow, but the ROM's specific register choices (`self` in
+  `r5`, `table` kept in `r3` throughout, a zero-extension dance for the
+  note-index parameter) didn't come out byte-identical from the C forms
+  tried. Byte-verified NAKED transcription.
+
+  See [docs/matching/issue-68-channel-bind-envelope-note.md](../matching/issue-68-channel-bind-envelope-note.md)
+  for all four functions' full write-up (none of this particular
+  `0x0803985C`-`0x08039FFC` cluster landed as real C this pass - the
+  `sub_8038FD0` cluster right before it did, in a separate pass, see
+  [docs/matching/issue-67-channel-mute-volume-dma-stop.md](../matching/issue-67-channel-mute-volume-dma-stop.md)).
 - **`sub_803A03C`** (`src/audio/gax_channel_pos_sweep.c`, per-tick
   ping-pong position sweep) - an extensive real-C reconstruction
   reproduced every field access and the columnar (non-struct) table
@@ -288,19 +330,20 @@ listed raw above) are now matched/parked - see
 [docs/matching/issue-67-gax-voice-steal.md](../matching/issue-67-gax-voice-steal.md)
 and the "Parked - NAKED asm transcription" section above.
 
-- `sub_8038FD0`/`sub_8039064`/`sub_80390F8` - a per-channel mute/
-  volume-set family; each hits the same many-register loop-allocation
-  difficulty as the `sub_8038538` cluster above (confirmed via isolated
-  compile - the ROM's own register allocation for this loop shape uses
-  only r0-r3, no callee-saved registers, and no C rephrasing tried
-  reproduced that).
-- `sub_8039198`/`sub_80391E8` - contain the same hardware-register
-  NOP-delay compiler quirk already flagged in-source at `sub_80384DC`
-  above (`.byte 0x1b, 0x1c` / `mov r8, r8` x3); not attempted.
+`sub_8038FD0`/`sub_8039064`/`sub_80390F8` (per-channel mute/volume-set
+family) and `sub_8039198`/`sub_80391E8` (Direct Sound A/Timer0 stop pair,
+using the same hardware-register NOP-delay compiler quirk already flagged
+in-source at `sub_80384DC` above) - listed raw above - are now matched,
+see [`docs/matching/issue-67-channel-mute-volume-dma-stop.md`](../matching/issue-67-channel-mute-volume-dma-stop.md)
+and the "Matched" section above. The earlier "confirmed many-register
+loop-allocation ceiling" verdict for the mute/volume family turned out to
+be an artifact of caching the channel chase into a local rather than a
+genuine gcc-2.9 gap - see that writeup for the technique that closed it.
+
 - `sub_8039214` - a word-wrap text/console-tile renderer (called by the
   now-matched `sub_80392E0`); fully understood, not attempted as a C
   reconstruction this pass - complex nested-loop control flow
-  deprioritized in favor of the two matches this pass did land.
+  deprioritized in favor of the five matches this pass did land.
 
 `sub_8039518`/`sub_80395A4`/`sub_8039658` (the "Channel" SoundHandler
 type's init_fn/play_fn and the latter's direct callee) - listed raw
@@ -308,15 +351,19 @@ above as of the second `0x08038538`-`0x08039658` pass - are now Parked
 NAKED transcriptions, see the "Parked" section above and
 [docs/matching/issue-67-68-channel-init-play.md](../matching/issue-67-68-channel-init-play.md).
 
-From the `0x08039818`-`0x0803A944` pass specifically (issue #68): a
-second pass parked 8 more of the chunk's 21 functions as byte-verified
-NAKED transcriptions (`sub_803A03C`, `sub_803A158`, `sub_803A278`,
-`sub_803A2C8`/`sub_803A318` (fused), `sub_803A324`, `sub_803A5A8`/
-`sub_803A608` (fused) - see "Parked - NAKED asm transcription(s)"
-above); 6 of the chunk's 21 functions (`sub_80398DC`, `sub_803985C`,
-`sub_8039AA4`, `sub_8039B44`, `sub_8039E50`) are still left raw - see
+From the `0x08039818`-`0x0803A944` pass specifically (issue #68): two
+independent passes together parked 12 of the chunk's 21 functions as
+byte-verified NAKED transcriptions - `sub_80398DC`, `sub_803985C`,
+`sub_8039AA4`, `sub_8039F30` (see
+[docs/matching/issue-68-channel-bind-envelope-note.md](../matching/issue-68-channel-bind-envelope-note.md))
+plus `sub_803A03C`, `sub_803A158`, `sub_803A278`, `sub_803A2C8`/
+`sub_803A318` (fused), `sub_803A324`, `sub_803A5A8`/`sub_803A608`
+(fused) (see "Parked - NAKED asm transcription(s)" above). Only
+`sub_8039B44`/`sub_8039E50` - one logical routine split by a manual
+return-address trampoline, not attempted given its combined size - are
+still left raw; see
 [`docs/matching/issue-68-0x08039818-audio.md`](../matching/issue-68-0x08039818-audio.md)'s
-"Left raw" section for the per-function reason (many-register allocation
+"Left raw" section for the rest's per-function reason (many-register allocation
 ceiling, or entangled with a neighbor via a manual return-address-
 trampoline idiom). The raw ARM-mode DSP/mixer code block past
 `0x0803A628` (docs/audio.md's `gStaticData_0803A630` onward) is no
