@@ -106,6 +106,20 @@ system from "core" system startup/init code.
   trivial `gStaticData_0816BBAE[idx]` lookup
 - `src/system/game_loop26.c` (GitHub issue #13): `sub_8010A00` -
   `self+0x48` bits 6-7 sub-state extractor
+- `src/system/game_loop29.c` (GitHub issue #13, second pass): `sub_801089C`
+  - cue-3 SFX plus a `gUnknown_030012B4` bit-grid consume-if-clear and a
+  `sub_8025A64` part-object spawn. See
+  [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
+- `src/system/game_loop30.c` (GitHub issue #13, second pass): `sub_80109A4`
+  - a distance-gated `sub_0800D18C` dispatcher clearing `self+0xc` bit
+  3. `sub_8010914`/`sub_801095C` in the same file are NAKED-parked, see
+  below. See
+  [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
+- `src/system/game_loop31.c` (GitHub issue #13, second pass): `sub_801071C`/
+  `sub_801075C` (a part-object table-set/tail-call-`sub_8008484` helper
+  pair) and `sub_8010784`/`sub_80107C4` (two fixed single-octant
+  Bresenham-line-style step algorithms). See
+  [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
 - `src/system/game_loop27.c` (GitHub issue #14, recategorized
   graphics->game_loop - a direct continuation of the same physics/
   collision subsystem file family): `sub_8010A0C`-`sub_8010B68` (24
@@ -143,6 +157,24 @@ plain C didn't converge.
   issue #12) - bidirectional linked-list walkers (`sub_801070C`/
   `sub_8010708`) clearing/setting each neighbor's `+0x58` flag. See
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md).
+- **`sub_800FC70`** (`src/system/game_loop32.c`, GitHub issue #13,
+  second pass) - a per-frame position-wrap advance keeping `sb`/`r8`
+  live as two extra callee-saved accumulators throughout, the same gap
+  as `sub_800D040` above. See
+  [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
+- **`sub_800FDC8`** (`src/system/game_loop33.c`, GitHub issue #13,
+  second pass) - the full 4-octant Bresenham-line-style line-stepper
+  `sub_8010784`/`sub_80107C4` (game_loop31.c) are fixed single-octant
+  variants of; every octant case was individually matched as plain C,
+  but this compiler's cross-jump pass over-merges one octant's own
+  early-return into the shared tail the other three legitimately share
+  in the ROM too (4 bytes short). See
+  [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
+- **`sub_8010914`/`sub_801095C`** (`src/system/game_loop30.c`, GitHub
+  issue #13, second pass) - "get prev"/"get next" neighbor-list-walk-
+  and-filter helpers; hits the same cross-jump-over-merge gap as
+  `sub_800FDC8` above. See
+  [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
@@ -250,32 +282,17 @@ plain C didn't converge.
   several sibling calls within this same still-raw neighborhood; left
   untouched for this pass - see
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md).
-- **`sub_800FC70`/`sub_800FDC8`** (`asm/code_3_2_17_e560_fc70.s`, ROM
-  `0x0800FC70`-`0x0800FEB0`, GitHub issue #13) - a position-wrap
-  advance function and a Bresenham-line-style step algorithm; not
-  attempted this pass - see
-  [docs/matching/issue-13-graphics-fc70.md](../matching/issue-13-graphics-fc70.md).
-- **`sub_800FF0C`/`sub_8010480`/`sub_80104E4`/`sub_8010674`**
+- **`sub_800FF0C`/`sub_80104E4`/`sub_8010480`/`sub_8010674`**
   (`asm/code_3_2_17_e560_ff0c.s`, ROM `0x0800FF0C`-`0x080106DC`, GitHub
   issue #13) - `sub_800FF0C` is a large (~660-instruction) projectile/
-  hazard-spawn dispatcher with two big jump tables, out of scope for
-  this pass; `sub_8010480`/`sub_80104E4`/`sub_8010674` are its smaller
-  neighbors, not attempted - see
-  [docs/matching/issue-13-graphics-fc70.md](../matching/issue-13-graphics-fc70.md).
-- **`sub_801071C`/`sub_801075C`/`sub_8010784`/`sub_80107C4`**
-  (`asm/code_3_2_17_e560_1071c.s`, ROM `0x0801071C`-`0x08010804`,
-  GitHub issue #13) - a part-object init helper, another init helper,
-  and two more Bresenham-line-style step algorithms; not attempted -
-  see [docs/matching/issue-13-graphics-fc70.md](../matching/issue-13-graphics-fc70.md).
-- **`sub_801089C`** (`asm/code_3_2_17_e560_1089c.s`, ROM
-  `0x0801089C`-`0x08010908`, GitHub issue #13) - a cue-3-plus-spawn
-  helper; not attempted - see
-  [docs/matching/issue-13-graphics-fc70.md](../matching/issue-13-graphics-fc70.md).
-- **`sub_8010914`/`sub_801095C`/`sub_80109A4`**
-  (`asm/code_3_2_17_e560_10914.s`, ROM `0x08010914`-`0x08010A00`,
-  GitHub issue #13) - two neighbor-list-walk-and-filter helpers and a
-  distance-gated dispatcher; not attempted - see
-  [docs/matching/issue-13-graphics-fc70.md](../matching/issue-13-graphics-fc70.md).
+  hazard-spawn dispatcher with two big jump tables, and `sub_80104E4`
+  a further ~195-instruction state dispatcher, both out of scope for a
+  single pass; `sub_8010480`/`sub_8010674` are read and understood
+  (a `self+0x20`-pointer-to-manager/28-byte-stride hitbox-record reset
+  helper, and an AABB-overlap test) but this compiler's own register
+  allocation for both spreads more live values across r0-r7 than the
+  ROM's tighter build needs - see
+  [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
 - **`UpdateGameFrame`** (`asm/code_3_2_17_225a0.s`, ROM `0x080225A0`) -
   the main per-frame game-loop driver, a ~730-instruction jump-table
   state machine. Not understood branch-by-branch with the precision a
