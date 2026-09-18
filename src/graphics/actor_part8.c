@@ -19,121 +19,140 @@ extern s32 gUnknown_03001298;
  * genuine no-op preserved as found) and returns whether either axis
  * is still moving.
  *
- * NOT YET BYTE-MATCHING: every branch, comparison, and memory access
- * is confirmed correct (including the ROM's own genuinely redundant
- * position/gUnknown_03001298 reloads - the ROM re-reads several
- * fields fresh from memory rather than reusing already-loaded register
- * values, which had to be matched by deliberately NOT caching those
- * values across statements). The dirFlags OR-combine at the end of
- * each axis needed the constant computed into its own register before
- * the byte load (the by-now-standard accumulator-register pattern
- * used throughout this ROM region), reached via an explicit `goto`
- * past the whole combine when the axis's velocity is exactly zero (to
- * reproduce the ROM's real "skip entirely" branch, not a compute-then-
- * OR-with-zero that would be semantically equivalent but byte-
- * different). The one remaining gap: the ROM is a true leaf function
- * (no `push`/`pop` at all, `self` naturally lands in r2, freed for
- * reuse once dead so the final `gUnknown_03001298` dereference reuses
- * that same register) - this compiler always spills one extra value to
- * `r4` (needing a `push {r4, lr}`/`pop {r4}` pair the ROM doesn't
- * have) for every register-pin arrangement tried, including pinning
- * `self` to `r2` explicitly (which fixes everything up to the tail but
- * then holds r2 live for the pin's whole lexical scope, blocking the
- * ROM's own end-of-function reuse) and re-deriving `self` from the
- * plain parameter in separate scoped blocks (which just pushes the
- * plain parameter into r4 instead). Parked with the version that gets
- * everything except this one leaf/non-leaf register-budget gap. */
+ * NOT YET BYTE-MATCHING, but a true `push`/`pop`-free leaf function
+ * now (matching the ROM's own register budget exactly) after modeling
+ * this reconstruction on `sub_800B270`'s own working shape (see
+ * `docs/matching/issue-9-0x08007634-actor.md` - same per-axis clamp
+ * structure, same `self` pinned to `r2`, same `vs32`-forced reloads
+ * for the ROM's own redundant `self->x`/`self->y` re-reads right
+ * before applying velocity): every branch, comparison, field offset,
+ * and register role now matches one-for-one through the position
+ * update, including the dirFlags OR-combine's accumulator-register
+ * pattern and its `goto`-based skip when an axis's velocity is
+ * exactly zero. The remaining gap is the same one `sub_800B270` itself
+ * is still parked on: the trailing `gUnknown_03001298` block's
+ * address/value register roles - the ROM loads the global's address
+ * into `r0` and its value into `r2`, while this compiler's natural
+ * allocation keeps the opposite (address in `r2`, value in `r0` -
+ * functionally identical, same instruction count, wrong register
+ * letters). Register-pinning either side of that swap reproduces
+ * `sub_800B270`'s own two failure modes exactly: pinning the loaded
+ * *value* to a specific register (`r0` or `r2`) makes this compiler's
+ * dead-store-elimination pass prove the whole conditional redundant
+ * and delete it outright (the unconditional final store already
+ * writes the same value either way, so the pass isn't wrong, just not
+ * what the ROM's own build produced); pinning the *address* to `r0`
+ * instead reintroduces a `push {r4, lr}`/`pop {r4}` pair elsewhere in
+ * the function, this time to preserve `vy` across the reallocation.
+ * Parked on this one shared address/value register-letter swap. */
 s32 sub_8009DF4(void *arg0)
 {
-    register u8 *self asm("r2") = (u8 *)arg0;
-    u8 *dirAddr;
+    register s32 *w asm("r2") = (s32 *)arg0;
+    register u8 *flags asm("r1");
+    s32 fx, fy;
 
     {
-        s32 velX = *(s32 *)(self + 0x60);
-        s32 maxVelX = *(s32 *)(self + 0x50);
+        register s32 v asm("r1") = w[0x60 / 4];
+        register s32 target asm("r3") = w[0x50 / 4];
 
-        if (velX < maxVelX) {
-            velX = velX + *(s32 *)(self + 0x4c);
-            if (velX > maxVelX) {
-                velX = maxVelX;
-            }
-        } else if (velX > maxVelX) {
-            velX = velX - *(s32 *)(self + 0x4c);
-            if (velX < maxVelX) {
-                velX = maxVelX;
-            }
+        if (v >= target) goto case1_ge;
+        {
+            s32 step = w[0x4c / 4];
+            register s32 result asm("r0") = v + step;
+            w[0x60 / 4] = result;
+            if (result <= target) goto case1_done;
+            goto case1_clamp;
         }
-        *(s32 *)(self + 0x60) = velX;
-    }
-    {
-        s32 velY = *(s32 *)(self + 0x64);
-        s32 maxVelY = *(s32 *)(self + 0x5c);
-
-        if (velY < maxVelY) {
-            velY = velY + *(s32 *)(self + 0x58);
-            if (velY > maxVelY) {
-                velY = maxVelY;
-            }
-        } else if (velY > maxVelY) {
-            velY = velY - *(s32 *)(self + 0x58);
-            if (velY < maxVelY) {
-                velY = maxVelY;
-            }
+    case1_ge:
+        if (v <= target) goto case1_done;
+        {
+            s32 step = w[0x4c / 4];
+            register s32 result asm("r0") = v - step;
+            w[0x60 / 4] = result;
+            if (result >= target) goto case1_done;
         }
-        *(s32 *)(self + 0x64) = velY;
-    }
-
-    dirAddr = self + 0x24;
-    *dirAddr = 0;
-    if (*(s32 *)(self + 0x60) > 0) {
-        *dirAddr = 1;
-    } else if (*(s32 *)(self + 0x60) < 0) {
-        *dirAddr = 2;
+    case1_clamp:
+        w[0x60 / 4] = target;
+    case1_done:
+        ;
     }
 
     {
-        register s32 orMask asm("r0");
+        register s32 v asm("r1") = w[0x64 / 4];
+        register s32 target asm("r3") = w[0x5c / 4];
 
-        if (*(s32 *)(self + 0x64) > 0) {
-            orMask = 8;
-        } else if (*(s32 *)(self + 0x64) < 0) {
-            orMask = 4;
+        if (v >= target) goto case2_ge;
+        {
+            s32 step = w[0x58 / 4];
+            register s32 result asm("r0") = v + step;
+            w[0x64 / 4] = result;
+            if (result <= target) goto case2_done;
+            goto case2_clamp;
+        }
+    case2_ge:
+        if (v <= target) goto case2_done;
+        {
+            s32 step = w[0x58 / 4];
+            register s32 result asm("r0") = v - step;
+            w[0x64 / 4] = result;
+            if (result >= target) goto case2_done;
+        }
+    case2_clamp:
+        w[0x64 / 4] = target;
+    case2_done:
+        ;
+    }
+
+    flags = (u8 *)w + 0x24;
+    *flags = 0;
+
+    fx = w[0x60 / 4];
+    if (fx > 0) *flags = 1;
+    else if (fx < 0) *flags = 2;
+
+    fy = w[0x64 / 4];
+    {
+        register s32 mask asm("r0");
+        if (fy > 0) {
+            mask = 8;
+        } else if (fy < 0) {
+            mask = 4;
         } else {
             goto skipY;
         }
-        {
-            register u8 byte asm("r3") = *dirAddr;
-            register s32 result asm("r0");
-
-            result = orMask | byte;
-            *dirAddr = result;
-        }
-    skipY:;
+        mask = mask | *flags;
+        *flags = mask;
     }
+skipY:
 
     {
-        s32 x = *(s32 *)self;
-        s32 y = *(s32 *)(self + 4);
-        s32 velX;
-        s32 velY;
+        s32 x0 = w[0];
+        s32 y0 = w[1];
+        w[0x6c / 4] = x0;
+        w[0x70 / 4] = y0;
+    }
+    {
+        s32 x = *(vs32 *)&w[0];
+        register s32 vx asm("r3") = w[0x60 / 4];
+        x = x + vx;
+        w[0] = x;
+        {
+            s32 y = *(vs32 *)&w[1];
+            s32 vy = w[0x64 / 4];
+            y = y + vy;
+            w[1] = y;
 
-        *(s32 *)(self + 0x6c) = x;
-        *(s32 *)(self + 0x70) = y;
+            {
+                s32 *g = &gUnknown_03001298;
 
-        velX = *(s32 *)(self + 0x60);
-        x = x + velX;
-        *(s32 *)self = x;
+                if (*g != 0 && vy == 0) {
+                    *g = vy;
+                }
+                *g = vy;
+            }
 
-        velY = *(s32 *)(self + 0x64);
-        y = y + velY;
-        *(s32 *)(self + 4) = y;
-
-        if (gUnknown_03001298 != 0 && velY == 0) {
-            gUnknown_03001298 = 0;
+            return (vx != 0 || vy != 0);
         }
-        gUnknown_03001298 = velY;
-
-        return (velX != 0 || velY != 0);
     }
 }
 #endif /* NON_MATCHING */

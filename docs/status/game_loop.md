@@ -8,6 +8,11 @@ system from "core" system startup/init code.
 
 ## Matched
 
+- `src/system/game_loop.c` (GitHub issue #34): `sub_8022BF0`
+  (level-start/checkpoint-restore progress-total updater) and
+  `sub_8022CA0` (its cached-state/snapshot helper) - see
+  [docs/matching/issue-37-game-loop-234e8.md](../matching/issue-37-game-loop-234e8.md)
+  for the register-allocation fixes that closed these two out.
 - `src/system/main_loop.c` (new file, GitHub issue #45 - categorized
   `hud` by the chunk generator, but `MainLoop` itself is squarely
   `game_loop`): `MainLoop` - the game's actual top-level loop (called
@@ -107,11 +112,6 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
-- **`sub_8022BF0`/`sub_8022CA0`** (`src/system/game_loop.c`, GitHub
-  issue #34) - level-start progress-total updater and its cached-state/
-  snapshot helper; real bytes in `asm/code_3_2_17_22bf0.s`. See
-  `docs/matching.md`'s issue #34 entry for the exact register-allocation
-  gaps.
 - **`sub_8022EA8`/`sub_8022F2C`** (`src/system/game_loop2.c`, GitHub
   issue #34) - record 47's periodic-trigger setter/decrementer; real
   bytes in `asm/code_3_2_17_22ea8.s`. See `docs/matching.md`'s issue

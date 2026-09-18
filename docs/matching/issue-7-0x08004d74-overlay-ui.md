@@ -224,3 +224,109 @@ reconstructions live alongside the matched functions in
   own `r5`/`r6`/`r8` choice.
 
 See `docs/status/overlay_ui.md` for the updated matched/parked lists.
+
+## Second pass: all 7 remaining functions matched via NAKED transcription
+
+Closed out every function this issue still had parked
+(`sub_8004D74`/`sub_8005100`/`sub_80053F4`/`sub_800556C`/`sub_80057E0`/
+`sub_80058C0`/`sub_8005E5C`) plus the four already-cross-referenced
+siblings in `src/graphics/settings_menu6.c`
+(`sub_8005AE8`/`sub_8005B80`/`sub_8005C58`/`sub_8005D44`) that hit the
+same difficulty class - all 11 now byte-exact matched, confirmed by a
+full clean `make compare` (`La suma coincide`).
+
+Rather than continue the per-register archaeology the first pass's
+write-up above documents at length (heavy pinning got several of these
+extremely close - `sub_8004D74` in particular - but never all the way),
+every one of these was instead converted to `NAKED` asm: mechanically
+transcribed from the ROM's own disassembly (already present, byte for
+byte, in the `.if NON_MATCHING == 0` asm fragments these functions were
+parked next to), translated from unified to plain (divided) syntax
+(`adds`->`add`, `movs`->`mov`, `ands`->`and`, `lsls`/`lsrs`->`lsl`/`lsr`,
+`rsbs rX,rX,#0`->`neg rX,rX`), with the original `_08XXXXXX:` labels
+renumbered to GNU-as local numeric labels (`N:`, referenced `Nf`/`Nb`) -
+the same established escape hatch this project has used before (see
+`docs/matching/issue-4-sio-settings-sync.md`'s "NAKED transcription,
+byte-verified" section, and `src/system/link_cable.c`'s worked
+examples). This pass's translation was scripted (a small Python helper,
+scratch-only, not committed) rather than done by hand, to avoid
+transcription-typo risk at this scale (11 functions, ~1000 real
+instructions total) - it also had to handle one wrinkle the prior NAKED
+conversions in this project hadn't hit yet: `sub_80053F4`'s
+`self->field_24` dispatch compiles to a real ROM jump table (`mov pc,
+r0` indexed through a `.4byte`-array of case labels sitting inline in
+the literal pool), which needed the *same* label-renumbering treatment
+applied to the table's own entries, not just to branch targets.
+
+Every isolated per-function compile was diagnostic only, as always
+(`docs/workflow.md`'s warning) - the actual proof is `sub_8004D74`'s own
+`.text` bytes, and every other NAKED function's, matching the ROM
+exactly once fully linked (spot-checked directly against
+`arm-none-eabi-objcopy`'d `.o` output and the base ROM before ever
+touching `ldscript.txt`, the same methodology `sub_8002114`'s NAKED
+conversion used).
+
+**File/link-order restructuring required.** Six of these eleven
+functions (`sub_8004D74`, `sub_80053F4`/`sub_800556C`,
+`sub_80057E0`/`sub_80058C0`, `sub_8005AE8`-`sub_8005D44`, `sub_8005E5C`)
+were previously all textually grouped for convenience into a small
+number of `.c` files (`settings_menu15.c`/`settings_menu6.c`/
+`settings_menu16.c`) even though their *real* ROM addresses were
+interleaved with several already-matched functions living in
+*different* object files (`sub_8005304` in `settings_menu17.c`,
+`sub_800570C` in `settings_menu18.c`, `sub_800599C` in
+`settings_menu19.c`) - this was harmless while they were `#if
+NON_MATCHING`-guarded (invisible to the real build, only compiled
+together for the `NON_MATCHING=1` diagnostic build where interleaving
+doesn't matter), but making them unconditional C would have
+silently linked them all contiguously in one block, in *source* order,
+shifting every address after them and breaking `make compare` in a way
+an isolated per-function compile can't catch (exactly the class of bug
+`docs/workflow.md`'s step 2/3 warning describes). Fixed per
+`docs/workflow.md` step 4's "one `.c` file per contiguous ROM region"
+rule: `sub_8005100` (address-adjacent to `settings_menu15.o` on one
+side and `settings_menu17.o` on the other) and
+`sub_80053F4`/`sub_800556C` (adjacent to each other, but bracketed by
+`settings_menu17.o` and `settings_menu18.o`) and
+`sub_80057E0`/`sub_80058C0` (bracketed by `settings_menu18.o` and
+`settings_menu19.o`) each got their own new object file
+(`settings_menu20.c`/`settings_menu21.c`/`settings_menu22.c`
+respectively), inserted into `ldscript.txt` at exactly the position the
+now-empty raw asm fragment used to occupy. `sub_8004D74` stayed merged
+into `settings_menu15.c` (it's genuinely address-adjacent to that
+file's `sub_8004EC0`, no gap). The four `settings_menu6.c` siblings and
+`sub_8005E5C` (`settings_menu16.c`) needed no restructuring -
+`settings_menu6.c`'s new functions are address-adjacent to its own
+already-matched `sub_8005A78`, and `settings_menu16.c` simply got its
+first-ever real content plus a brand new `ldscript.txt` entry (it had
+none before, since it contributed zero bytes to the real build while
+entirely parked).
+
+All ten now-empty raw asm fragments this issue's functions lived in
+(`asm/code_3_1_10_7.s`, `code_3_1_10_7_5100.s`, `code_3_1_10_7_53f4.s`,
+`code_3_1_10_7_57e0.s`, `code_3_1_10_8.s`, `code_3_1_10_9.s`) were
+deleted outright, along with their `ldscript.txt` lines.
+`tools/report_units.py`'s `overlay_ui` entries updated to match (merging
+the now-matched `None`-object placeholder entries into their real
+objects, per the same convention `docs/matching/issue-4-sio-settings-sync.md`'s
+third pass used).
+
+Verified via a full clean `rm -rf build && make NON_MATCHING=1 report`
+and `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
+crashbandicootxs.map && make compare` (`La suma coincide`).
+
+### Closing this issue
+
+The 12-function 0x08004D74-0x08005E5C sub-range this write-up focuses
+on is now fully matched (the 5 from the first pass plus all 7 parked
+ones from this pass). GitHub issue #7 itself tracks a wider 25-function
+range (`0x08004CB4`-`0x080060AC`) that also includes `sub_8005AE8`/
+`sub_8005B80`/`sub_8005C58`/`sub_8005D44` (`src/graphics/
+settings_menu6.c`) and `sub_8005EF4`/`sub_8005FBC` (`src/graphics/
+settings_menu7.c`) - four settings-row icon-widget constructors and a
+per-row percentage inc/dec pair that were already checked off as
+"parked" on that issue's own checklist, and this same session's pass
+also converted all six of those to NAKED and matched them byte-exact
+(see `docs/status/overlay_ui.md`'s `settings_menu6.c`/`settings_menu7.c`
+entries). With that, every one of GitHub issue #7's 25 functions is now
+byte-exact matched. This PR closes issue #7.

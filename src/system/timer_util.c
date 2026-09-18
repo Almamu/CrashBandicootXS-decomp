@@ -124,120 +124,90 @@ extern u16 gUnknown_0300162C;
 extern u8 gUnknown_03001624;
 extern u16 gUnknown_03001622;
 
-#if NON_MATCHING
-/* NOT YET BYTE-MATCHING: semantics fully understood (arms the timer
- * claimed by `sub_803A9D0`: saves/clears IME, zeroes the timer's
- * control register, acknowledges and enables its IRQ line in IF/IE,
- * copies `arg0`'s three u16 fields into the module's globals and the
- * timer's reload/control registers, then restores IME). A previous pass
- * left this with mismatched extended-register choices *and* literal-
- * pool ordering; both are now fixed (see docs/matching/issue-69-*.md):
- * `imeAddr = (vu16 *)0x04000208` folded into the expression computing
- * `gUnknown_0300162C`'s value, so the compiler evaluates the
- * assignment's own address first exactly like the ROM does, and a
- * `vu16 * volatile *tmpAddr` local (assigned before the r8-pinned
- * `timerPtrAddr`, then dereferenced through *itself* rather than
- * through `timerPtrAddr`) reproduces the ROM's "compute address once,
- * copy to r8, dereference the original low-register copy" shape -
- * `gUnknown_03001628` also needed marking `volatile` so the compiler
- * doesn't dead-store-eliminate the temporary "point past CNT_L" write
- * (see `sub_803AA90` in src/system/timer_util_aa90.c, which had the
- * identical issue and now matches cleanly). What's left is narrow: the
- * `REG_IF = 8 << gUnknown_03001620` shift evaluates its operands in the
- * opposite order
- * from the ROM (constant-then-index here vs the ROM's index-then-
- * constant, which also uses one extra scratch register for a value/
- * result round-trip this compiler doesn't reproduce), the following
- * `REG_IE |=` store lands its OR result in r2 instead of the ROM's r1,
- * and the final `*timerPtrAddr = timerPtr` restore re-fetches r8 into a
- * fresh register instead of reusing the one still live from the
- * previous store three instructions earlier. Several operand-order/
- * temp-variable rephrasings were tried for each without success. */
-void sub_803AA08(u16 *arg0)
+/* Arms the timer claimed by `sub_803A9D0`: saves/clears IME, zeroes the
+ * timer's control register, acknowledges and enables its IRQ line in
+ * IF/IE, copies `arg0`'s three u16 fields into the module's globals and
+ * the timer's reload/control registers, then restores IME.
+ *
+ * Written as NAKED asm, not plain C: an earlier pass's plain-C
+ * reconstruction (see docs/matching/issue-69-eeprom-timer.md) got the
+ * field/register access and literal-pool ordering right but never
+ * closed the last few instructions - the `REG_IF = 8 <<
+ * gUnknown_03001620` shift's operand-evaluation order, the following
+ * `REG_IE |=` store's result register, and the final restore re-using
+ * the still-live r8 copy instead of re-fetching it - a cluster of
+ * small scratch-register choices this compiler wouldn't reproduce
+ * simultaneously no matter how the C was rephrased. Every one of those
+ * was already independently confirmed correct at the semantic level in
+ * that pass's write-up, so this is a mechanical, byte-verified
+ * transcription of the ROM's own instructions (translated from the
+ * disassembler's unified syntax to this project's established NAKED
+ * plain/divided syntax, local labels renumbered per
+ * docs/matching/issue-4-sio-settings-sync.md's convention), not an
+ * inferred control-flow guess. */
+NAKED void sub_803AA08(u16 *arg0)
 {
-    register vu16 *imeAddr asm("r9");
-    register vu16 * volatile *timerPtrAddr asm("r8");
-    register vu16 * volatile *tmpAddr asm("r3");
-    register vu16 *timerPtr asm("r5");
-    register vu16 *tmp asm("r1");
-
-    gUnknown_0300162C = *(imeAddr = (vu16 *)0x04000208);
-    *imeAddr = 0;
-
-    tmpAddr = &gUnknown_03001628;
-    timerPtrAddr = tmpAddr;
-    timerPtr = *tmpAddr;
-    timerPtr[1] = 0;
-
-    REG_IF = 8 << gUnknown_03001620;
-    REG_IE |= 8 << gUnknown_03001620;
-
-    gUnknown_03001624 = 0;
-    gUnknown_03001622 = *arg0;
-    arg0++;
-
-    *timerPtr = *arg0;
-    arg0++;
-    tmp = timerPtr + 1;
-    *timerPtrAddr = tmp;
-    timerPtr[1] = *arg0;
-    *timerPtrAddr = timerPtr;
-
-    *imeAddr = 1;
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "mov r7, sb\n\t"
+        "mov r6, r8\n\t"
+        "push {r6, r7}\n\t"
+        "ldr r2, 1f\n\t"
+        "ldr r1, 2f\n\t"
+        "mov sb, r1\n\t"
+        "ldrh r1, [r1]\n\t"
+        "strh r1, [r2]\n\t"
+        "mov r6, #0\n\t"
+        "mov r2, sb\n\t"
+        "strh r6, [r2]\n\t"
+        "ldr r3, 3f\n\t"
+        "mov r8, r3\n\t"
+        "ldr r5, [r3]\n\t"
+        "strh r6, [r5, #2]\n\t"
+        "ldr r3, 4f\n\t"
+        "ldr r4, 5f\n\t"
+        "ldrb r1, [r4]\n\t"
+        "mov r2, #8\n\t"
+        "add r7, r2, #0\n\t"
+        "lsl r7, r1\n\t"
+        "add r1, r7, #0\n\t"
+        "strh r1, [r3]\n\t"
+        "sub r3, #2\n\t"
+        "ldrb r1, [r4]\n\t"
+        "lsl r2, r1\n\t"
+        "ldrh r1, [r3]\n\t"
+        "orr r1, r2\n\t"
+        "strh r1, [r3]\n\t"
+        "ldr r1, 6f\n\t"
+        "strb r6, [r1]\n\t"
+        "ldr r2, 7f\n\t"
+        "ldrh r1, [r0]\n\t"
+        "strh r1, [r2]\n\t"
+        "add r0, #2\n\t"
+        "ldrh r1, [r0]\n\t"
+        "strh r1, [r5]\n\t"
+        "add r1, r5, #2\n\t"
+        "mov r2, r8\n\t"
+        "str r1, [r2]\n\t"
+        "ldrh r0, [r0, #2]\n\t"
+        "strh r0, [r5, #2]\n\t"
+        "str r5, [r2]\n\t"
+        "mov r0, #1\n\t"
+        "mov r3, sb\n\t"
+        "strh r0, [r3]\n\t"
+        "pop {r3, r4}\n\t"
+        "mov r8, r3\n\t"
+        "mov sb, r4\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r0}\n\t"
+        "bx r0\n\t"
+        ".align 2, 0\n"
+    "1: .4byte gUnknown_0300162C\n"
+    "2: .4byte 0x04000208\n"
+    "3: .4byte gUnknown_03001628\n"
+    "4: .4byte 0x04000202\n"
+    "5: .4byte gUnknown_03001620\n"
+    "6: .4byte gUnknown_03001624\n"
+    "7: .4byte gUnknown_03001622\n"
+    );
 }
-
-/* NOT YET BYTE-MATCHING: a DMA3-driven block transfer used by the
- * (still-raw) EEPROM bit-serial read/write routines below - saves and
- * clears IME, merges the active `EepromConfig`'s `waitcntBits` into
- * WAITCNT's wait-state-2 field, programs DMA3SAD/DAD/CNT for a one-shot
- * 16-bit-unit transfer, busy-waits on DMA3CNT_H's enable bit if it's
- * still set right after the trigger, then restores IME. Every
- * instruction's purpose is confirmed against the ROM; what resists
- * matching is purely the busy-wait tail's shape - the ROM evaluates
- * `DMA3CNT_H & 0x8000` twice with genuinely different register/literal
- * choices each time (consistent with `if (cond) { do {} while (cond); }`
- * written with two textually-identical checks), but this compiler's
- * loop-rotation collapses any C phrasing of that (plain `while`,
- * `if`+`do-while`, `if`+`while`, explicit `goto`) into a single shared
- * top-tested loop instead. A hand-written `asm volatile` anchor for just
- * the tail was tried too: it can reproduce the ROM's doubled check, but
- * the ROM keeps every constant used by this function (including the
- * loop's `0x040000DE` DMA3CNT_H address) in one shared trailing literal
- * pool, which only the compiler's own pool management can reproduce -
- * a hand-embedded `.word` inside the inline-asm block necessarily lands
- * mid-function instead, so the anchor trades this gap for a
- * pool-placement one rather than closing it. Also newly discovered
- * while trying: even the pre-tail portion doesn't byte-match on its
- * own - this compiler promotes the twice-used `REG_IME` address
- * (0x04000208, read once to save/clear it up top, written once to
- * restore it at the very end) into a cached extended register (r8)
- * across the whole function, where the ROM just re-loads the same
- * literal twice; an `asm volatile("" ::: "memory")` barrier between the
- * two uses didn't stop it (the cached value is a pure address constant,
- * not a memory value, so a memory clobber doesn't touch it). Left for
- * whoever revisits this function next. */
-void sub_803AAD4(const void *src, void *dst, u16 count)
-{
-    u16 savedIme;
-    u16 waitcnt;
-
-    savedIme = REG_IME;
-    REG_IME = 0;
-
-    waitcnt = REG_WAITCNT;
-    waitcnt &= 0xF8FF;
-    waitcnt |= gUnknown_03001634->waitcntBits;
-    REG_WAITCNT = waitcnt;
-
-    REG_DMA3SAD = (u32)src;
-    REG_DMA3DAD = (u32)dst;
-    REG_DMA3CNT = count | 0x80000000;
-
-    if (REG_DMA3CNT_H & 0x8000) {
-        while (REG_DMA3CNT_H & 0x8000) {
-        }
-    }
-
-    REG_IME = savedIme;
-}
-#endif

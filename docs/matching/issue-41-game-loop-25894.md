@@ -157,3 +157,44 @@ padding at all.
 
 Full clean `make compare` passes: `crashbandicootxs.gba: La suma
 coincide`.
+
+## Update: narrowed (but not closed) gaps on `sub_80259D4`/`sub_8025D74`
+
+A later pass over this issue's remaining parked functions made real
+progress on two of them without reaching a byte-exact match on either
+- both stay `NON_MATCHING`, real bytes unchanged.
+
+- **`sub_80259D4`**: pinning `self` to `ip` (as before) plus explicitly
+  pinning the `shifted`/`addr` locals to `r3`/`r1` (the ROM's own
+  choice for those two, not tried in the original pass) gets this all
+  the way down to a true leaf function - every instruction's operation,
+  operand, *and* register matches the ROM one-for-one except the first
+  two: the ROM does `mov ip, r0` (stash `self`) before `adds r2, r1,
+  #0` (copy `n` into its working register), and this compiler always
+  emits the `n`-copy first regardless of C statement order, C
+  declaration order, or an `asm volatile` ordering barrier between the
+  two - it looks like a fixed early-reload scheduling for hard-register
+  parameter moves that plain C can't influence here. Pinning `n`'s
+  copy to `r2` too (matching the ROM) reintroduces the `push {r4,
+  lr}`/`pop {r4}` pair the leaf-function fix was chasing in the first
+  place (conflicts with `mask` needing that same register later), so
+  parked with it unpinned - two swapped instructions, identical total
+  size, everything else byte-for-byte.
+- **`sub_8025D74`**: hoisting `bgIndex + 0x1c` into its own `t` local
+  turned out not to need an extra callee-saved register after all,
+  contrary to the original parked note - this compiler fits it into a
+  scratch register (`r3`) alongside the ROM's still-3-register
+  (`r4`/`r5`) frame. What remains is purely the `& -0x20`/`& -0xd`
+  mask-folding gap (both always collapse to their positive
+  byte-immediate equivalent, `0xe0`/`0xf3`, instead of the ROM's
+  runtime `movs`+`rsbs` negation) plus a minor register-permutation
+  knock-on (the two bitfield addresses land in `r2`/`r4` here instead
+  of the ROM's `r2`/`r3`). The mask-folding half matches the exact
+  unfixable value-propagation already documented on `sub_8001524`
+  elsewhere in `docs/matching.md` - the established negative-literal
+  register-pin idiom (`sub_8023168`/`sub_80374D0`) was tried again here
+  and still gets folded via a cheaper `subs`/`adds` off the
+  previously-loaded constant.
+
+See each function's own updated doc comment (`src/system/game_loop13.c`,
+`src/system/game_loop15.c`) for the full before/after detail.
