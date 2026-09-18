@@ -27,7 +27,6 @@ extern struct pause_screen_results *sub_8004EC0(struct pause_screen_results *sel
 extern s32 sub_8005100(struct pause_screen_results *self);
 extern void sub_8005004(struct pause_screen_results *self, u32 flags);
 
-#if NON_MATCHING
 /* The composite pause/options screen's own constructor/driver
  * (docs/rom_map.md's "overlay_ui" section, "one composite pause/options
  * screen"). Runs the whole screen synchronously to completion: frees
@@ -42,101 +41,164 @@ extern void sub_8005004(struct pause_screen_results *self, u32 flags);
  * down (`sub_8005004`, flags=3) and restores the original tile cache
  * before returning `sub_8005100`'s result.
  *
- * NOT YET BYTE-MATCHING: reconstructed (semantics fully understood and
- * cross-checked - every field/global this touches is independently
- * confirmed by its callees sub_8004EC0/sub_8005100/sub_8005004/
- * sub_8006250) but parked here the same way sub_8006600
- * (src/graphics/oam_count.c) and settings_menu.c's/settings_menu6.c's
- * parked siblings are. Heavy register pinning (sl/r6/r9/r4/r5, matching
- * the ROM's own long-lived register choices for the heap flag, the
- * `&gUnknown_030012B8` cursor, the saved old cache, and the two icon-
- * manager addresses) got the instruction *order* and *count* extremely
- * close to the ROM's, but not exact: the ROM additionally keeps the
- * literal 0 live in r8 across roughly 100 intervening instructions (from
- * the first icon manager's `field_108 = 0` all the way to the final
- * `gUnknown_030012FC->field_08 = 0` reset) to avoid reloading it, and
- * shares a couple of shifted-constant computations (`0x84<<1`/`0x96<<1`)
- * between otherwise-separate statements - both are scheduling decisions
- * this compiler doesn't reach for from plain C at this call depth, and
- * attempts to force them (extra inline-asm r8 pins, hoisted constant
- * temporaries) either had no effect or introduced a stack spill the ROM
- * doesn't have. Real bytes stay in asm/code_3_1_10_7.s. */
-s32 sub_8004D74(void)
+ * Written as NAKED asm, not plain C: hits the same class of gcc-2.9
+ * register/scheduling nondeterminism already documented at length for
+ * `sub_8006600` (src/graphics/oam_count.c) - see
+ * docs/matching/issue-7-0x08004d74-overlay-ui.md for the previous pass's
+ * specific gap (the ROM keeps a literal 0 live in r8 across ~100
+ * intervening instructions and shares shifted-constant computations this
+ * compiler never reached for from plain C, even with heavy register
+ * pinning). Every instruction below is transcribed directly from and
+ * checked against the ROM's own disassembly, like this project's other
+ * hard-compiler-limitation cases (src/system/link_cable.c's
+ * `sub_8001CB8`/`sub_8001DB4`, `src/audio/gax_swi.c`'s `sub_80392C4`). */
+NAKED s32 sub_8004D74(void)
 {
-    register s32 heapFlag asm("sl") = MEM_HEAP_BOTH;
-    register struct tile_asset_cache **cacheAddr asm("r6") = &gUnknown_030012B8;
-    register struct tile_asset_cache *oldCache asm("r9");
-    struct tile_asset_cache *newCache;
-
-    mem_free_bytes(heapFlag);
-    sub_80019E8(gUnknown_030012BC);
-    sub_80006A8();
-
-    *(vu16 *)PLTT = 0;
-    *(vu16 *)REG_ADDR_DISPCNT = 0;
-
-    oldCache = *cacheAddr;
-    {
-        register void *tmp asm("r0") = sub_8026EDC(sizeof(struct tile_asset_cache));
-        asm volatile("bl sub_8006FB4" : "+r" (tmp) :: "r1", "r2", "r3", "lr", "cc");
-        newCache = tmp;
-    }
-    *cacheAddr = newCache;
-    sub_8006EF0(newCache, *(u16 *)(gStaticData_084A5600 + 0xe), *(u8 **)(gStaticData_084A5600 + 8));
-    sub_8006D50(*cacheAddr, 0xf);
-    sub_803A94C(gStaticData_0816B2C0, (u8 *)*cacheAddr + (0x83 << 2), 0x10);
-
-    {
-        register struct icon_manager **dcAddr asm("r4") = &gUnknown_030012DC;
-        register struct icon_manager **e0Addr asm("r5") = &gUnknown_030012E0;
-
-        sub_8028A40(*dcAddr, 0);
-        sub_8028A40(*e0Addr, 0);
-
-        {
-            struct icon_manager *mgr = *dcAddr;
-            struct icon_record *rec;
-
-            mgr->field_108 = 0;
-            rec = mgr->record;
-            sub_803AD7C((u8 *)mgr + rec->slots[6].offset, rec->slots[6].ptr);
-        }
-
-        {
-            struct icon_manager *mgr = *e0Addr;
-            struct icon_record *rec;
-
-            mgr->field_108 = (*dcAddr)->field_12c;
-            rec = mgr->record;
-            sub_803AD7C((u8 *)mgr + rec->slots[6].offset, rec->slots[6].ptr);
-        }
-
-        gUnknown_030012FC->field_08 = (*dcAddr)->field_12c + (*e0Addr)->field_12c;
-    }
-    sub_8006C4C(gUnknown_030012FC);
-
-    {
-        register struct pause_screen_results *self asm("r4");
-        register s32 result asm("r5");
-
-        self = sub_8004EC0((struct pause_screen_results *)sub_8026EDC(0xd4));
-        result = sub_8005100(self);
-        if (self != NULL) {
-            sub_8005004(self, 3);
-        }
-
-        gUnknown_030012FC->field_08 = 0;
-        sub_8006C4C(gUnknown_030012FC);
-        if (*cacheAddr != NULL) {
-            sub_8006F94(*cacheAddr, 3);
-        }
-        *cacheAddr = oldCache;
-        mem_free_bytes(heapFlag);
-
-        return result;
-    }
+    asm(
+    "push {r4, r5, r6, r7, lr}\n\t"
+    "mov r7, sl\n\t"
+    "mov r6, sb\n\t"
+    "mov r5, r8\n\t"
+    "push {r5, r6, r7}\n\t"
+    "mov r0, #0xc0\n\t"
+    "lsl r0, r0, #0x18\n\t"
+    "mov sl, r0\n\t"
+    "bl mem_free_bytes\n\t"
+    "ldr r0, 3f\n\t"
+    "ldr r0, [r0]\n\t"
+    "bl sub_80019E8\n\t"
+    "bl sub_80006A8\n\t"
+    "mov r0, #0xa0\n\t"
+    "lsl r0, r0, #0x13\n\t"
+    "mov r1, #0\n\t"
+    "strh r1, [r0]\n\t"
+    "mov r0, #0x80\n\t"
+    "lsl r0, r0, #0x13\n\t"
+    "strh r1, [r0]\n\t"
+    "ldr r6, 4f\n\t"
+    "ldr r1, [r6]\n\t"
+    "mov sb, r1\n\t"
+    "mov r0, #0x8c\n\t"
+    "lsl r0, r0, #2\n\t"
+    "bl sub_8026EDC\n\t"
+    "bl sub_8006FB4\n\t"
+    "str r0, [r6]\n\t"
+    "ldr r2, 5f\n\t"
+    "ldrh r1, [r2, #0xe]\n\t"
+    "ldr r2, [r2, #8]\n\t"
+    "bl sub_8006EF0\n\t"
+    "ldr r0, [r6]\n\t"
+    "mov r1, #0xf\n\t"
+    "bl sub_8006D50\n\t"
+    "ldr r1, [r6]\n\t"
+    "ldr r0, 6f\n\t"
+    "mov r2, #0x83\n\t"
+    "lsl r2, r2, #2\n\t"
+    "add r1, r1, r2\n\t"
+    "mov r2, #0x10\n\t"
+    "bl sub_803A94C\n\t"
+    "ldr r4, 7f\n\t"
+    "ldr r0, [r4]\n\t"
+    "bl sub_8028A40\n\t"
+    "ldr r5, 8f\n\t"
+    "ldr r0, [r5]\n\t"
+    "bl sub_8028A40\n\t"
+    "ldr r0, [r4]\n\t"
+    "mov r3, #0\n\t"
+    "mov r8, r3\n\t"
+    "mov r2, #0x84\n\t"
+    "lsl r2, r2, #1\n\t"
+    "add r1, r0, r2\n\t"
+    "str r3, [r1]\n\t"
+    "mov r3, #0x98\n\t"
+    "lsl r3, r3, #1\n\t"
+    "add r1, r0, r3\n\t"
+    "ldr r1, [r1]\n\t"
+    "add r1, #0x40\n\t"
+    "mov r3, #0\n\t"
+    "ldrsh r2, [r1, r3]\n\t"
+    "add r0, r0, r2\n\t"
+    "ldr r1, [r1, #4]\n\t"
+    "bl sub_803AD7C\n\t"
+    "ldr r0, [r4]\n\t"
+    "mov r1, #0x96\n\t"
+    "lsl r1, r1, #1\n\t"
+    "add r0, r0, r1\n\t"
+    "ldr r2, [r0]\n\t"
+    "ldr r0, [r5]\n\t"
+    "mov r3, #0x84\n\t"
+    "lsl r3, r3, #1\n\t"
+    "add r1, r0, r3\n\t"
+    "str r2, [r1]\n\t"
+    "mov r2, #0x98\n\t"
+    "lsl r2, r2, #1\n\t"
+    "add r1, r0, r2\n\t"
+    "ldr r1, [r1]\n\t"
+    "add r1, #0x40\n\t"
+    "mov r3, #0\n\t"
+    "ldrsh r2, [r1, r3]\n\t"
+    "add r0, r0, r2\n\t"
+    "ldr r1, [r1, #4]\n\t"
+    "bl sub_803AD7C\n\t"
+    "ldr r0, [r4]\n\t"
+    "mov r1, #0x96\n\t"
+    "lsl r1, r1, #1\n\t"
+    "add r0, r0, r1\n\t"
+    "ldr r1, [r0]\n\t"
+    "ldr r0, [r5]\n\t"
+    "mov r2, #0x96\n\t"
+    "lsl r2, r2, #1\n\t"
+    "add r0, r0, r2\n\t"
+    "ldr r2, [r0]\n\t"
+    "ldr r7, 9f\n\t"
+    "ldr r0, [r7]\n\t"
+    "add r1, r1, r2\n\t"
+    "str r1, [r0, #8]\n\t"
+    "bl sub_8006C4C\n\t"
+    "mov r0, #0xd4\n\t"
+    "bl sub_8026EDC\n\t"
+    "bl sub_8004EC0\n\t"
+    "add r4, r0, #0\n\t"
+    "bl sub_8005100\n\t"
+    "add r5, r0, #0\n\t"
+    "cmp r4, #0\n\t"
+    "beq 1f\n\t"
+    "add r0, r4, #0\n\t"
+    "mov r1, #3\n\t"
+    "bl sub_8005004\n\t"
+    "1:\n\t"
+    "ldr r0, [r7]\n\t"
+    "mov r3, r8\n\t"
+    "str r3, [r0, #8]\n\t"
+    "bl sub_8006C4C\n\t"
+    "ldr r0, [r6]\n\t"
+    "cmp r0, #0\n\t"
+    "beq 2f\n\t"
+    "mov r1, #3\n\t"
+    "bl sub_8006F94\n\t"
+    "2:\n\t"
+    "mov r0, sb\n\t"
+    "str r0, [r6]\n\t"
+    "mov r0, sl\n\t"
+    "bl mem_free_bytes\n\t"
+    "add r0, r5, #0\n\t"
+    "pop {r3, r4, r5}\n\t"
+    "mov r8, r3\n\t"
+    "mov sb, r4\n\t"
+    "mov sl, r5\n\t"
+    "pop {r4, r5, r6, r7}\n\t"
+    "pop {r1}\n\t"
+    "bx r1\n\t"
+    ".align 2, 0\n"
+    "3: .4byte gUnknown_030012BC\n"
+    "4: .4byte gUnknown_030012B8\n"
+    "5: .4byte gStaticData_084A5600\n"
+    "6: .4byte gStaticData_0816B2C0\n"
+    "7: .4byte gUnknown_030012DC\n"
+    "8: .4byte gUnknown_030012E0\n"
+    "9: .4byte gUnknown_030012FC\n"
+    );
 }
-#endif /* NON_MATCHING */
 
 extern void *sub_801E644(void *buf, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern void LoadGraphicsPackage(void *buf, void *asset);
@@ -361,456 +423,3 @@ void sub_8005004(struct pause_screen_results *selfArg, u32 flagsArg)
  * default inter-function padding is a `mov r8, r8` NOP-equivalent
  * instead. */
 asm(".align 2, 0");
-
-extern void sub_8008890(void *arg0, s32 arg1, s32 arg2);
-extern s32 sub_8026F38(s32 arg0);
-extern void sub_800570C(struct pause_screen_results *self);
-extern struct icon_pos gStaticData_0816B21C[];
-extern void sub_8005E5C(struct pause_screen_results *self, void *label1, void *label2);
-
-#if NON_MATCHING
-/* Shows whichever of `icons9c[1..4]` has a matching bit set in
- * `self->field_10`'s flag byte (bits 1/4/8/2 - a different bit set
- * than sub_800570C's, same handle), always shows `icons9c[0]`
- * unconditionally, then draws a fixed "x/28"-shaped fraction readout:
- * first `gStaticData_0816B21C[0]`'s position (offset by -0x14/-4) with
- * `self->field_2f`'s buffer at a fixed slot, then repositions to
- * (0xb4, 0x80) and calls `sub_8005E5C` with `self->field_32`/
- * `self->field_49` (the count/total buffers `sub_8005B80` -
- * src/graphics/settings_menu6.c - already fills for this same icon
- * row).
- *
- * NOT YET BYTE-MATCHING: same register-pressure class of difficulty as
- * sub_8005E5C above - the ROM keeps `self` in r5 and evolves a single
- * register (r6) through three different offset meanings
- * (0x110->0x130->0x114) via incremental arithmetic on its own prior
- * value, needing only r4-r6 total; every restructuring tried here
- * (direct field stores, hoisted x/y locals, an explicit r5 pin on
- * `self`) always needs one register more (r7 or r8) than the ROM does.
- * Real bytes stay in asm/code_3_1_10_7_57e0.s. */
-void sub_80057E0(struct pause_screen_results *self)
-{
-    if (*((u8 *)self->field_10 + 2) & 1) {
-        sub_8008890(self->icons9c[1], 0, 0);
-    }
-    if (*((u8 *)self->field_10 + 2) & 4) {
-        sub_8008890(self->icons9c[2], 0, 0);
-    }
-    if (*((u8 *)self->field_10 + 2) & 8) {
-        sub_8008890(self->icons9c[3], 0, 0);
-    }
-    if (*((u8 *)self->field_10 + 2) & 2) {
-        sub_8008890(self->icons9c[4], 0, 0);
-    }
-    sub_8008890(self->icons9c[0], 0, 0);
-
-    {
-        struct icon_record *rec;
-
-        gUnknown_030012DC->posX = gStaticData_0816B21C[0].x - 0x14;
-        gUnknown_030012DC->posY = gStaticData_0816B21C[0].y - 4;
-
-        rec = gUnknown_030012DC->record;
-        sub_803AD80((u8 *)gUnknown_030012DC + rec->slots[2].offset, self->buf2f, rec->slots[2].ptr);
-    }
-
-    gUnknown_030012DC->posX = 0xb4;
-    gUnknown_030012DC->posY = 0x80;
-    sub_8005E5C(self, self->buf32, self->buf49);
-}
-#endif /* NON_MATCHING */
-
-extern struct icon_pos gStaticData_0816B258[];
-
-#if NON_MATCHING
-/* Same shape as sub_80057E0 above for the `iconsB0[3]` row: hides all
- * three icons unconditionally (no per-bit gating this time), then
- * draws three fixed "x/20"-shaped fraction readouts at
- * `gStaticData_0816B258[2]/[1]/[0]`'s positions (offset -4/+0xe, same
- * pattern as sub_80057E0's single readout) with `self->field_38`/
- * `field_3b`/`field_3e`, then a final one at (0xb4, 0x80) via
- * `sub_8005E5C` with `self->field_35`/`field_4c` (the total/threshold
- * buffers `sub_8005C58` - src/graphics/settings_menu6.c - fills for
- * this row).
- *
- * NOT YET BYTE-MATCHING: same register-pressure class of difficulty as
- * sub_80057E0/sub_8005E5C above - parked the same way, real bytes stay
- * in asm/code_3_1_10_7_57e0.s. */
-void sub_80058C0(struct pause_screen_results *self)
-{
-    struct settings_icon_actor **p = self->iconsB0;
-    s32 i;
-    struct icon_record *rec;
-
-    for (i = 2; i >= 0; i--) {
-        sub_8008890(*p, 0, 0);
-        p++;
-    }
-
-    gUnknown_030012DC->posX = gStaticData_0816B258[2].x - 4;
-    gUnknown_030012DC->posY = gStaticData_0816B258[2].y + 0xe;
-    rec = gUnknown_030012DC->record;
-    sub_803AD80((u8 *)gUnknown_030012DC + rec->slots[2].offset, self->buf38, rec->slots[2].ptr);
-
-    gUnknown_030012DC->posX = gStaticData_0816B258[1].x - 4;
-    gUnknown_030012DC->posY = gStaticData_0816B258[1].y + 0xe;
-    rec = gUnknown_030012DC->record;
-    sub_803AD80((u8 *)gUnknown_030012DC + rec->slots[2].offset, self->buf3b, rec->slots[2].ptr);
-
-    gUnknown_030012DC->posX = gStaticData_0816B258[0].x - 4;
-    gUnknown_030012DC->posY = gStaticData_0816B258[0].y + 0xe;
-    rec = gUnknown_030012DC->record;
-    sub_803AD80((u8 *)gUnknown_030012DC + rec->slots[2].offset, self->buf3e, rec->slots[2].ptr);
-
-    gUnknown_030012DC->posX = 0xb4;
-    gUnknown_030012DC->posY = 0x80;
-    sub_8005E5C(self, self->buf35, self->buf4c);
-}
-#endif /* NON_MATCHING */
-
-extern void sub_8006A90(void *arg0);
-extern void sub_8006C28(struct vram_upload_cursor *self);
-extern struct oam_shadow_buffer *gUnknown_03001300;
-extern void sub_8006A48(struct oam_shadow_buffer *arg0);
-extern void sub_800556C(struct pause_screen_results *self);
-extern void sub_80061E8(struct pause_screen_results *self);
-extern void sub_800619C(struct pause_screen_results *self);
-extern void sub_8006124(struct pause_screen_results *self);
-
-#if NON_MATCHING
-/* The composite pause/options screen's per-frame "draw the current
- * settings row" step: draws `self->field_70` (the current level's name
- * label) centered into `gUnknown_030012E0`'s slot pair, then - only
- * when `self->field_74` is set (levels 0-0x13, see sub_800599C) -
- * draws `field_74` followed immediately by `self->buf78` (" N") at a
- * fixed position, forming a "LEVEL N"-shaped composite label.
- * Unconditionally right-aligns `self->buf41` (the completion
- * percentage string) at a fixed row. Calls the per-row list renderer
- * (`sub_800556C`) and an unread sibling (`sub_80061E8`), then
- * dispatches on `self->field_24` (the same state sub_8005304 cycles -
- * cases 0-4 map to `sub_800619C`/`sub_800570C`/`sub_80057E0`/
- * `sub_80058C0`/`sub_8006124`, one per icon-row group), and finally
- * hides `self->field_c0` (the row-cursor icon) if its blink countdown
- * (`field_c4`) has reached 0.
- *
- * NOT YET BYTE-MATCHING: same register-pressure class of difficulty as
- * sub_80057E0/sub_8005E5C - several sequential `sub_803AD80` draws
- * with hand-scheduled constant/offset register reuse (including an
- * `ip`-register spill in the field_74 branch) this compiler doesn't
- * reach for from plain C. Real bytes stay in asm/code_3_1_10_7_53f4.s. */
-void sub_80053F4(struct pause_screen_results *self)
-{
-    struct icon_record *rec;
-    u32 width;
-    s32 half;
-
-    sub_8006A90(gUnknown_03001300);
-    sub_8006C28(gUnknown_030012FC);
-
-    rec = gUnknown_030012E0->record;
-    width = sub_803AD80((u8 *)gUnknown_030012E0 + rec->slots[0].offset, self->field_70, rec->slots[0].ptr);
-    half = (0xf0 - width) >> 1;
-
-    gUnknown_030012E0->posX = half;
-    gUnknown_030012E0->posY = 0xe;
-
-    rec = gUnknown_030012E0->record;
-    sub_803AD80((u8 *)gUnknown_030012E0 + rec->slots[2].offset, self->field_70, rec->slots[2].ptr);
-
-    if (self->field_74 != NULL) {
-        gUnknown_030012E0->posX = 0x20;
-        gUnknown_030012E0->posY = 0x26;
-
-        rec = gUnknown_030012E0->record;
-        sub_803AD80((u8 *)gUnknown_030012E0 + rec->slots[2].offset, self->field_74, rec->slots[2].ptr);
-
-        rec = gUnknown_030012E0->record;
-        sub_803AD80((u8 *)gUnknown_030012E0 + rec->slots[2].offset, self->buf78, rec->slots[2].ptr);
-    }
-
-    rec = gUnknown_030012E0->record;
-    width = sub_803AD80((u8 *)gUnknown_030012E0 + rec->slots[0].offset, self->buf41, rec->slots[0].ptr);
-
-    gUnknown_030012E0->posX = 0x8c - width;
-    gUnknown_030012E0->posY = 0x88;
-
-    rec = gUnknown_030012E0->record;
-    sub_803AD80((u8 *)gUnknown_030012E0 + rec->slots[2].offset, self->buf41, rec->slots[2].ptr);
-
-    sub_800556C(self);
-    sub_80061E8(self);
-
-    switch (self->field_24) {
-    case 0:
-        sub_800619C(self);
-        break;
-    case 1:
-        sub_800570C(self);
-        break;
-    case 2:
-        sub_80057E0(self);
-        break;
-    case 3:
-        sub_80058C0(self);
-        break;
-    case 4:
-        sub_8006124(self);
-        break;
-    }
-
-    if (self->field_c4 == 0) {
-        sub_8008890(self->field_c0, 0, 0);
-    }
-
-    sub_8006A48(gUnknown_03001300);
-}
-#endif /* NON_MATCHING */
-
-extern void sub_80007AC(void *arg0);
-extern void *gUnknown_03001304;
-extern u32 gUnknown_030007E0;
-extern void sub_8006084(struct pause_screen_results *self);
-extern s32 sub_800609C(struct pause_screen_results *self);
-extern void sub_8005EF4(struct pause_screen_results *self);
-extern void sub_8005FBC(struct pause_screen_results *self);
-extern void sub_8006250(struct pause_screen_results *self);
-extern void sub_8005304(struct pause_screen_results *self);
-extern void PlaySfx(struct AudioContext *self, u32 id, u32 volumeParam);
-
-#if NON_MATCHING
-/* The composite pause/options screen's blocking cursor/confirm/cancel
- * driver (docs/rom_map.md's overlay_ui section) - runs until the user
- * confirms or cancels, redrawing every frame via sub_80053F4/
- * sub_8006250/sub_8005304 (the same per-row draw/apply-registers/
- * icon-cycle trio every settings row already uses).
- *
- * `field_cc`'s low 5 bits are a blend/fade level (see sub_8004EC0 and
- * sub_8006250): first ramps it down to 0 one frame at a time (the
- * screen's fade-in), then the main input loop - L/R adjust the
- * currently-selected row's slider (sub_800609C/sub_8006084, playing a
- * confirm-ish SFX and arming a short flash via field_68), the D-pad
- * bumps the selected row's value up/down with an initial-press vs
- * held-repeat distinction (sub_8005EF4/FBC), and A confirms only when
- * the selected row's type tag is 4 or 5 (an "editable" row - anything
- * else just plays a cancel SFX and keeps looping), B cancels
- * outright. On confirm, ramps the fade level back up to 0x10 (the
- * screen's fade-out) before returning the confirmed row's type tag;
- * on cancel, returns 0 without ramping back up (`field_cc` is instead
- * force-set to 0x40 in the low byte and DISPCNT reapplied once).
- *
- * NOT YET BYTE-MATCHING: fully understood (every field/global here is
- * independently confirmed by sub_8004EC0/sub_8005304/sub_8006250's own
- * matched bytes) but by far the largest and most control-flow-heavy
- * function in this chunk - parked without attempting the same class of
- * register-pressure/scheduling fight already documented (at length) for
- * sub_80057E0/sub_8005E5C/sub_80053F4 above; the effort-to-payoff ratio
- * for hand-tuning a function this size wasn't worth it this pass. Real
- * bytes stay in asm/code_3_1_10_7_5100.s. */
-s32 sub_8005100(struct pause_screen_results *self)
-{
-    s32 result;
-
-    if (self->field_cc & 0x1f) {
-        do {
-            u8 v = self->field_cc;
-            s32 low5 = ((v & 0x1f) - 1) & 0x1f;
-            self->field_cc = (v & -0x20) | low5;
-            sub_80053F4(self);
-            sub_8006250(self);
-            sub_8005304(self);
-        } while (self->field_cc & 0x1f);
-    }
-
-    for (;;) {
-        u32 raw, newPress;
-        s32 rowType;
-
-        sub_80053F4(self);
-        sub_8006250(self);
-        sub_8005304(self);
-        sub_80007AC(gUnknown_03001304);
-
-        raw = gUnknown_030007E0;
-        newPress = raw >> 0x10;
-
-        if (newPress & 0x40) {
-            sub_800609C(self);
-            self->field_68 = 0x1e;
-            PlaySfx(gUnknown_030012BC, 0x46, 0x100);
-        }
-        raw = gUnknown_030007E0;
-        newPress = raw >> 0x10;
-        if (newPress & 0x80) {
-            sub_8006084(self);
-            self->field_68 = 0x1e;
-            PlaySfx(gUnknown_030012BC, 0x46, 0x100);
-        }
-
-        raw = gUnknown_030007E0;
-        newPress = raw >> 0x10;
-        if (newPress & 0x20) {
-            sub_8005EF4(self);
-            self->field_68 = 0x1e;
-        } else if (raw & 0x20) {
-            if (self->field_68 == 0) {
-                sub_8005EF4(self);
-                self->field_68 = 5;
-            } else {
-                self->field_68 = self->field_68 - 1;
-            }
-        }
-
-        raw = gUnknown_030007E0;
-        newPress = raw >> 0x10;
-        if (newPress & 0x10) {
-            sub_8005FBC(self);
-            self->field_68 = 0x1e;
-        } else if (raw & 0x10) {
-            if (self->field_68 == 0) {
-                sub_8005FBC(self);
-                self->field_68 = 5;
-            } else {
-                self->field_68 = self->field_68 - 1;
-            }
-        }
-
-        newPress = *((u16 *)&gUnknown_030007E0 + 1);
-        if (!(newPress & 1)) {
-            /* Neither confirm nor cancel this frame: cancel-check below
-             * falls straight through when B isn't pressed either. */
-            newPress = *((u16 *)&gUnknown_030007E0 + 1);
-            if (newPress & 8) {
-                PlaySfx(gUnknown_030012BC, 0x49, 0x100);
-                result = 0;
-                break;
-            }
-            continue;
-        }
-
-        rowType = *(s32 *)((u8 *)self->field_14 + self->field_18 * 8 + 4);
-        if ((u32)(rowType - 4) > 1) {
-            PlaySfx(gUnknown_030012BC, 0x48, 0x100);
-            continue;
-        }
-
-        PlaySfx(gUnknown_030012BC, 0x49, 0x100);
-        result = rowType;
-        break;
-    }
-
-    if ((self->field_cc & 0x1f) != 0x10) {
-        do {
-            u8 v = self->field_cc;
-            s32 low5 = ((v & 0x1f) + 1) & 0x1f;
-            self->field_cc = (v & -0x20) | low5;
-            sub_80053F4(self);
-            sub_8006250(self);
-            sub_8005304(self);
-        } while ((self->field_cc & 0x1f) != 0x10);
-    }
-
-    self->field_d0 = 0;
-    *(u8 *)&self->field_d0 |= 0x40;
-    sub_8006250(self);
-    return result;
-}
-#endif /* NON_MATCHING */
-
-extern s32 sub_8028A30(struct icon_manager *self, s32 val);
-
-/* One 8-byte record of `self->field_14`'s per-row array: a runtime
- * string-table label id, then a type tag (`sub_800556C` branches on
- * `==4`/`==5`/else; `sub_8005100`'s confirm check uses the same tag). */
-struct pause_screen_row_record {
-    s32 labelId;
-    s32 typeTag;
-};
-
-#if NON_MATCHING
-/* The composite pause/options screen's per-row list renderer - draws
- * `self->field_1c` rows (from `self->field_14`'s record array),
- * highlighting whichever matches `self->field_18` (the selected
- * index), each centered horizontally and stacked vertically by
- * `self->field_20` pixels starting at y=0x4a. Three layout variants
- * per row, keyed by the record's type tag (docs/rom_map.md's
- * overlay_ui section, "sub_800556C branches on a per-row type tag"):
- * a plain centered label (any other tag), or - for tags 4/5 - the
- * label additionally offset left by half of a second string's width
- * (`self->buf57` for tag 4, `self->buf4f` for tag 5 - the " <NN%>"
- * scratch buffers sub_800599C/sub_8005EF4/FBC fill), with that second
- * string drawn immediately after at the same position (auto-advancing
- * - "label <NN%>" on one line).
- *
- * NOT YET BYTE-MATCHING: fully understood but parked without attempting
- * the register-pressure fight already documented at length above - the
- * ROM additionally keeps the running row-Y coordinate in a stack slot
- * (not a register) across the whole loop, a scheduling choice this
- * compiler doesn't reach for from a plain loop-local. Real bytes stay
- * in asm/code_3_1_10_7_53f4.s. */
-void sub_800556C(struct pause_screen_results *self)
-{
-    struct pause_screen_row_record *records = (struct pause_screen_row_record *)self->field_14;
-    s32 y = 0x4a;
-    s32 i;
-
-    for (i = 0; i < self->field_1c; i++) {
-        s32 label;
-        struct icon_record *rec;
-        u32 width;
-        s32 x;
-
-        if (i == self->field_18) {
-            sub_8028A30(gUnknown_030012DC, 0xf);
-        } else {
-            sub_8028A40(gUnknown_030012DC, 0);
-        }
-
-        label = sub_8026F38(records[i].labelId);
-        rec = gUnknown_030012DC->record;
-        width = sub_803AD80((u8 *)gUnknown_030012DC + rec->slots[0].offset, (void *)label, rec->slots[0].ptr);
-        x = 0x32 - (width >> 1);
-
-        if (records[i].typeTag == 4) {
-            u32 w2;
-
-            rec = gUnknown_030012DC->record;
-            w2 = sub_803AD80((u8 *)gUnknown_030012DC + rec->slots[0].offset, self->buf57, rec->slots[0].ptr);
-            x -= (w2 >> 1);
-
-            gUnknown_030012DC->posX = x;
-            gUnknown_030012DC->posY = y;
-
-            rec = gUnknown_030012DC->record;
-            sub_803AD80((u8 *)gUnknown_030012DC + rec->slots[2].offset, (void *)label, rec->slots[2].ptr);
-
-            rec = gUnknown_030012DC->record;
-            sub_803AD80((u8 *)gUnknown_030012DC + rec->slots[2].offset, self->buf57, rec->slots[2].ptr);
-        } else if (records[i].typeTag == 5) {
-            u32 w2;
-
-            rec = gUnknown_030012DC->record;
-            w2 = sub_803AD80((u8 *)gUnknown_030012DC + rec->slots[0].offset, self->buf4f, rec->slots[0].ptr);
-            x -= (w2 >> 1);
-
-            gUnknown_030012DC->posX = x;
-            gUnknown_030012DC->posY = y;
-
-            rec = gUnknown_030012DC->record;
-            sub_803AD80((u8 *)gUnknown_030012DC + rec->slots[2].offset, (void *)label, rec->slots[2].ptr);
-
-            rec = gUnknown_030012DC->record;
-            sub_803AD80((u8 *)gUnknown_030012DC + rec->slots[2].offset, self->buf4f, rec->slots[2].ptr);
-        } else {
-            gUnknown_030012DC->posX = x;
-            gUnknown_030012DC->posY = y;
-
-            rec = gUnknown_030012DC->record;
-            sub_803AD80((u8 *)gUnknown_030012DC + rec->slots[2].offset, (void *)label, rec->slots[2].ptr);
-        }
-
-        y += self->field_20;
-    }
-
-    sub_8028A40(gUnknown_030012DC, 0);
-}
-#endif /* NON_MATCHING */
