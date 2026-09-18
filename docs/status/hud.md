@@ -41,18 +41,24 @@ system from "core" graphics.
 - `src/graphics/hud_icon_widget.c` (new file, GitHub issue #46):
   `sub_8028574` - a `struct hud_counter`'s `parts`-array destructor.
 
-- `src/graphics/hud_icon_widget_85c4.c` (GitHub issue #46, second pass):
-  `sub_8028808` - the per-character newline/space/glyph-dispatch
-  trampoline. Shares its file with the still-parked
-  `sub_80285C4`/`InitHudIconWidgetA`/`InitHudIconWidgetB` (see below).
+- `src/graphics/hud_icon_widget_85c4.c` (GitHub issue #46; `sub_8028808`
+  matched second pass, `sub_80285C4`/`InitHudIconWidgetA`/
+  `InitHudIconWidgetB` matched third pass): `sub_8028808` - the
+  per-character newline/space/glyph-dispatch trampoline - plus
+  `sub_80285C4`/`InitHudIconWidgetA`/`InitHudIconWidgetB`, all three
+  matched as NAKED asm transcriptions (see the issue write-up's "Third
+  pass: NAKED-transcription" section) rather than plain C - no
+  `#if NON_MATCHING` guard, no raw `asm/code_3_2_20_85c4.s` fragment any
+  more.
 
 - `src/graphics/hud_icon_widget2.c` (new file, GitHub issue #46):
   `sub_8028860` - draws a fixed-count run of characters via the
   `struct icon_manager` widget's own record trampoline.
 
-- `src/graphics/hud_icon_widget_8890.c` (GitHub issue #46, second pass):
-  `sub_8028890` - `sub_8028808`'s "draw this whole string" sibling.
-  Shares its file with the still-parked `sub_8028900` (see below).
+- `src/graphics/hud_icon_widget_8890.c` (GitHub issue #46; `sub_8028890`
+  matched second pass, `sub_8028900` matched third pass as NAKED asm):
+  `sub_8028890`/`sub_8028900` - no `#if NON_MATCHING` guard, no raw
+  `asm/code_3_2_20_8890.s` fragment any more.
 
 - `src/graphics/hud_icon_widget3.c` (new file, GitHub issue #46):
   `sub_8028968` - total text-block-height helper.
@@ -66,6 +72,11 @@ system from "core" graphics.
   variant; now fully byte-exact, so this file (unlike the other two
   above) carries no `#if NON_MATCHING` guard at all any more.
 
+- `src/graphics/hud_icon_widget_8994.c` (GitHub issue #46, third pass):
+  `MeasureText`, matched as a NAKED asm transcription - no
+  `#if NON_MATCHING` guard, no raw `asm/code_3_2_20_8994.s` fragment any
+  more.
+
 - `src/graphics/hud_icon_widget5.c` (new file, GitHub issue #46):
   `sub_8028AC4`, `sub_8028ADC`, `sub_8028AE8`, `sub_8028B04`,
   `sub_8028B28`, `sub_8028B34`, `sub_8028B40`, `sub_8028B4C`,
@@ -75,12 +86,22 @@ system from "core" graphics.
 - `src/graphics/hud_stat_widget.c` (new file, GitHub issue #45's second
   pass): `sub_80274EC` - the HUD stat-widget family's dispatcher.
   Non-adjacent to `hud_counter.o`/other `hud` files since the rest of
-  the family (`sub_8027138`/`sub_802732C`/`sub_802757C`/`sub_802763C`/
-  `sub_8027940`/`sub_8027D5C`/`sub_8027E88`) still sits raw around it.
-  Extended `struct hud_counter` (`include/hud.h`) with `field_08`,
-  `icon_flag`, and `sync_value_a`/`b`/`c` - fields this function (and
-  the still-raw callees around it) touch inside what was previously
-  opaque padding.
+  the family (`sub_8027138`/`sub_802732C`/`sub_8027940`/`sub_8027D5C`/
+  `sub_8027E88`) still sits raw around it. Extended `struct hud_counter`
+  (`include/hud.h`) with `field_08`, `icon_flag`, and
+  `sync_value_a`/`b`/`c` - fields this function (and the still-raw
+  callees around it) touch inside what was previously opaque padding.
+
+- `src/graphics/hud_stat_widget2.c` (new file, GitHub issue #45's
+  "NAKED-transcription pass"): `sub_802757C`/`sub_802763C` - the
+  icon-indicator widget and three more change-detection-gated
+  digit/icon widgets. Both are `NAKED` functions, transcribed
+  instruction-for-instruction from the ROM's own disassembly rather
+  than plain C, after every phrasing of a per-slot `anim_index` byte
+  kept in r7 up to its use as an array subscript hit a reproducible
+  gcc-2.9 miscompile (see
+  `docs/matching/issue-45-hud-stat-widget-dispatcher.md`'s "NAKED-
+  transcription pass" section).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -93,24 +114,10 @@ why the rest of the family stayed raw) is
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
-- GitHub issue #45's third pass (see
-  [docs/matching/issue-45-hud-stat-widget-dispatcher.md](../matching/issue-45-hud-stat-widget-dispatcher.md)):
-  `sub_802757C`, `sub_802763C` (real bytes in
-  `asm/code_3_2_17_2757c.s`, reconstructions in
-  `src/graphics/hud_stat_widget2.c`) - `sub_802757C` hits a reproducible
-  gcc-2.9 miscompile pinning a byte to r7 the moment it's used as an
-  array subscript; `sub_802763C` wasn't attempted for byte-matching
-  given that same-file blocker.
-- GitHub issue #46 (see
+- GitHub issue #46: none - all 25 functions in the chunk are now
+  matched. See
   [docs/matching/issue-46-hud-icon-widget.md](../matching/issue-46-hud-icon-widget.md)
-  for what was tried on each, including its "Second pass" section):
-  `sub_80285C4`, `InitHudIconWidgetA`, `InitHudIconWidgetB` (real bytes
-  in `asm/code_3_2_20_85c4.s`, reconstructions in
-  `src/graphics/hud_icon_widget_85c4.c` - `sub_8028808`, formerly parked
-  alongside these, is now matched and lives at the end of the same
-  file); `sub_8028900` (real bytes in `asm/code_3_2_20_8890.s`,
-  reconstruction in `src/graphics/hud_icon_widget_8890.c` -
-  `sub_8028890`, formerly parked alongside it, is now matched and lives
-  at the top of the same file); `MeasureText` (real bytes in
-  `asm/code_3_2_20_8994.s`, reconstruction in
-  `src/graphics/hud_icon_widget_8994.c`).
+  for the full history, including the "Third pass: NAKED-transcription"
+  section covering the last five (`sub_80285C4`, `InitHudIconWidgetA`,
+  `InitHudIconWidgetB`, `sub_8028900`, `MeasureText`), all matched as
+  NAKED asm transcriptions rather than plain C reconstructions.

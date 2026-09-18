@@ -361,6 +361,14 @@ from "core" graphics.
   `actor_part60.c`; see
   [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
   `nullsub_27` - a genuine no-op stub.
+- `src/graphics/actor_part62.c` (new file, GitHub issue #54, non-
+  adjacent since the raw `sub_802E058` sits between it and
+  `actor_part61.c`; see
+  [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
+  `sub_802D3A8` (eases `self`'s cached position toward a per-state
+  target/table-scatter offset, NAKED - hit this project's confirmed
+  categorical gcc-2.9 r7-pin bug, transcribed instruction-for-instruction
+  from the ROM disassembly instead).
 - `src/graphics/actor_part63.c`/`actor_part65.c`/`actor_part67.c`/
   `actor_part69.c`/`actor_part71.c`/`actor_part73.c` (new files, GitHub
   issue #63, ROM 0x08033EF4-0x08034AA4 - three `InitActorPart`-rooted
@@ -749,19 +757,6 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   ahead of the branch that decides whether it's needed, folding away a
   redundant unconditional jump the ROM's own build still has - see
   `docs/matching/issue-50-actor-2a69c.md`.
-- **`sub_802D3A8`** (`asm/code_3_2_20_28568_c99c_d3a8.s`, C in
-  `src/graphics/actor_part62.c`, GitHub issue #54) - eases `self`'s
-  cached position toward a per-state target/table-scatter offset.
-  Semantics, register choices and every individual instruction body
-  confirmed correct; parked on the prologue's fixed argument-register-
-  copy order (`mov ip, r2` before `adds r7, r3, #0`), which this
-  compiler always emits in the opposite order regardless of C statement
-  order or combining the copies into one inline-asm block - and, once
-  that's forced to match, an explicit `r7` pin gets clobbered by
-  unrelated scratch constant loads later in the function body (the same
-  categorical `r7`-pin limitation already documented for `sub_8007DBC`
-  in `actor_part2.c`). See
-  [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md).
 - **`sub_8033FE4`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_33fe4.s`, C
   in `src/graphics/actor_part64.c`, GitHub issue #63) - a
   `gStaticData_0817C4F8` stride-8 trampoline-record dispatcher, same

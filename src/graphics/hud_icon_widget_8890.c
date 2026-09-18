@@ -1,10 +1,11 @@
 #include "core.h"
 #include "icon_manager.h"
 
-/* sub_8028890 is matched, byte-exact. sub_8028900 is NOT YET
- * BYTE-MATCHING - see docs/matching/issue-46-hud-icon-widget.md for the
- * full account; compiled only under `make NON_MATCHING=1`, the
- * checked-in assembly (asm/code_3_2_20_8890.s) is used otherwise. */
+/* sub_8028890 and sub_8028900 (below) are both matched, byte-exact -
+ * see docs/matching/issue-46-hud-icon-widget.md's "NAKED-transcription
+ * pass" section for sub_8028900's history (a NAKED asm transcription,
+ * not plain C - blocked by this toolchain's confirmed r7-pinning bug,
+ * see docs/matching.md's "Why not just pin r7"). */
 
 extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
 
@@ -73,11 +74,6 @@ void sub_8028890(struct icon_manager *selfArg, u8 *strArg)
  * docs/matching/issue-46-hud-icon-widget.md's "Real gotchas" section). */
 asm(".align 2, 0");
 
-/* NOT YET BYTE-MATCHING - see docs/matching/issue-46-hud-icon-widget.md
- * for the full account; compiled only under `make NON_MATCHING=1`, the
- * checked-in assembly (asm/code_3_2_20_8890.s) is used otherwise. */
-#if NON_MATCHING
-
 /* Sums the advance width of `count` characters starting at `str`
  * (`MeasureText`'s fixed-count sibling): newline contributes nothing,
  * space contributes `spaceWidth`, everything else contributes
@@ -87,76 +83,74 @@ asm(".align 2, 0");
  * itself - the field's address, reloaded fresh each iteration) into
  * `sb`/r9, caches `&spaceWidth` into `ip` and `&charLookup` into `r6`,
  * and keeps `total`/`i`/`count` in `r3`/`r4`/`r5`, with a genuine `r7`
- * scratch inside the `else` arm (the glyph-index byte). `r8`/`sb` pin
- * safely here (see docs/matching.md's "Why not just pin r7" for why
- * `r7` itself never can), and `total`/`i` pin safely too, but pinning
- * *either* `&spaceWidth` or `&charLookup` to their ROM registers
- * (`ip`/`r6`) makes `r7` drop out of the push/pop list entirely - the
- * same categorical bug, just triggered indirectly (enough simultaneous
- * hard-register pins apparently starve whatever's left for r7, even
- * when r7 itself was never pinned). Left `&spaceWidth`/`&charLookup`
- * unpinned so gcc's own unforced allocator picks *some* pair of
- * registers for them (r6/r7 here, not ip/r6 like the ROM) - correctly
- * saved, but not the ROM's exact register numbers. The newline/space/
- * else arms share a single `total += val` accumulate point reached via
- * `goto`, matching the ROM's own tail-merge (the same technique used
- * for sub_8028808's identical-shaped dispatcher), and the two address
- * computations are forced into independent fresh `mov`/`lsl` pairs
- * (`sub_803A94C`-style anchor) rather than the constant-delta
- * subtraction gcc otherwise derives one from the other with. */
-s32 sub_8028900(struct icon_manager *self, u8 *strArg, s32 count)
+ * scratch inside the `else` arm (the glyph-index byte).
+ *
+ * Transcribed as NAKED asm (not plain C): pinning either `&spaceWidth`
+ * or `&charLookup` to their ROM registers (`ip`/`r6`) makes `r7` drop
+ * out of the push/pop list entirely - the confirmed toolchain bug, just
+ * triggered indirectly (enough simultaneous hard-register pins starve
+ * whatever's left for r7, even when r7 itself was never pinned - see
+ * docs/matching.md's "Why not just pin r7"). Every instruction below is
+ * checked byte-identical to the ROM. */
+NAKED s32 sub_8028900(struct icon_manager *self, u8 *str, s32 count)
 {
-    register u8 *str asm("r8") = strArg;
-    register s32 total asm("r3") = 0;
-    register s32 i asm("r4") = 0;
-
-    if (i < count) {
-        u32 *spaceWidthAddr;
-        register struct icon_glyph_metrics **glyphRecordsAddr asm("sb");
-        u8 *charLookupBase;
-
-        /* Forces independent fresh computations for `&spaceWidth` and
-         * `&glyphRecords` - left as plain C, this compiler notices the
-         * two field offsets are a constant `0x14` apart and derives one
-         * from the other via subtraction instead of two fresh `mov`/
-         * `lsl` pairs like the ROM. */
-        asm volatile(
-            "mov r1, #0x90\n\tlsl r1, r1, #1\n\tadd %0, r1, %3\n\t"
-            "mov r7, #0x86\n\tlsl r7, r7, #1\n\tadd r7, r7, %3\n\tmov %1, r7\n\t"
-            "add %2, %3, #0\n\tadd %2, %2, #8"
-            : "=r"(spaceWidthAddr), "=r"(glyphRecordsAddr), "=r"(charLookupBase)
-            : "r"(self)
-            : "r1", "r7"
-        );
-
-    loop:
-        {
-            u8 c = str[i];
-            s32 val;
-
-            if (c == '\n') {
-                goto skip;
-            }
-            if (c == ' ') {
-                val = *spaceWidthAddr;
-                goto accumulate;
-            }
-            {
-                u8 glyphIndex = charLookupBase[c];
-                struct icon_glyph_metrics *rec =
-                    (struct icon_glyph_metrics *)((u8 *)*glyphRecordsAddr + glyphIndex * 12);
-                val = rec->width;
-            }
-        accumulate:
-            total += val;
-        }
-    skip:
-        i++;
-        if (i < count) {
-            goto loop;
-        }
-    }
-    return total;
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "mov r7, sb\n\t"
+        "mov r6, r8\n\t"
+        "push {r6, r7}\n\t"
+        "mov r8, r1\n\t"
+        "add r5, r2, #0\n\t"
+        "mov r3, #0\n\t"
+        "mov r4, #0\n\t"
+        "cmp r3, r5\n\t"
+        "bge 5f\n\t"
+        "mov r1, #0x90\n\t"
+        "lsl r1, r1, #1\n\t"
+        "add r1, r1, r0\n\t"
+        "mov ip, r1\n\t"
+        "mov r7, #0x86\n\t"
+        "lsl r7, r7, #1\n\t"
+        "add r7, r7, r0\n\t"
+        "mov sb, r7\n\t"
+        "add r6, r0, #0\n\t"
+        "add r6, #8\n\t"
+    "1:\n\t"
+        "mov r1, r8\n\t"
+        "add r0, r1, r4\n\t"
+        "ldrb r0, [r0]\n\t"
+        "cmp r0, #0xa\n\t"
+        "beq 4f\n\t"
+        "cmp r0, #0x20\n\t"
+        "bne 2f\n\t"
+        "mov r7, ip\n\t"
+        "ldr r0, [r7]\n\t"
+        "b 3f\n\t"
+    "2:\n\t"
+        "add r1, r6, r0\n\t"
+        "mov r0, sb\n\t"
+        "ldr r2, [r0]\n\t"
+        "ldrb r7, [r1]\n\t"
+        "lsl r0, r7, #1\n\t"
+        "add r1, r7, #0\n\t"
+        "add r0, r0, r1\n\t"
+        "lsl r0, r0, #2\n\t"
+        "add r0, r0, r2\n\t"
+        "ldr r0, [r0]\n\t"
+    "3:\n\t"
+        "add r3, r3, r0\n\t"
+    "4:\n\t"
+        "add r4, #1\n\t"
+        "cmp r4, r5\n\t"
+        "blt 1b\n\t"
+    "5:\n\t"
+        "add r0, r3, #0\n\t"
+        "pop {r3, r4}\n\t"
+        "mov r8, r3\n\t"
+        "mov sb, r4\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r1}\n\t"
+        "bx r1\n\t"
+        ".align 2, 0\n"
+    );
 }
-
-#endif /* NON_MATCHING */
