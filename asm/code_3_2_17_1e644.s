@@ -5,6 +5,7 @@
 
 	.align 2, 0
 
+.if NON_MATCHING == 0
 	thumb_func_start sub_801E688
 sub_801E688: @ 0x0801E688
 	push {r4, r5, r6, r7, lr}
@@ -320,4 +321,5 @@ _0801E8E2:
 	bx r0
 	.align 2, 0
 _0801E8F4: .4byte gUnknown_03001300
+.endif
 
