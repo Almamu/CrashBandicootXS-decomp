@@ -805,10 +805,10 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   partway through; left raw, out of scope for this pass - see
   `docs/matching/issue-63-0x08033ef4-actor.md`.
 - **`sub_8034480`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s`,
-  ROM 0x08034480) - a 128-entry OAM/screen-box scan driving
-  `sub_8034634`'s tilemap writer; not part of issue #63's function list,
-  left untouched alongside `sub_8034374` since it shares the same now-
-  orphaned raw span - see `docs/matching/issue-63-0x08033ef4-actor.md`.
+  ROM 0x08034480, GitHub issue #63) - a 128-entry OAM/screen-box scan
+  driving `sub_8034634`'s tilemap writer; left raw alongside
+  `sub_8034374`, out of scope for this pass - see
+  `docs/matching/issue-63-0x08033ef4-actor.md`.
 - **`sub_803472C`/`sub_803487C`/`sub_8034994`**
   (`asm/code_3_2_20_28568_c99c_31784_33ef4_3472c.s`, ROM
   0x0803472C-0x08034AA4, GitHub issue #63) - a graphics-package loading

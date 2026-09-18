@@ -1,6 +1,6 @@
 # Issue #63: 0x08033EF4-0x08034AA4 (actor)
 
-24-function `decomp-chunk` immediately following issue #62's cluster
+25-function `decomp-chunk` immediately following issue #62's cluster
 (`0x08033804`-`0x08033EF4`, see
 [docs/matching/issue-62-0x08033804-actor.md](issue-62-0x08033804-actor.md)).
 The raw source file (`asm/code_3_2_20_28568_c99c_31784_33ef4.s`, itself
@@ -33,7 +33,7 @@ anim-frame halfword/byte, `self+8` accumulator, `self+0x28` state,
   smaller object reusing `+0x58` as a plain one-shot flag rather than a
   health countdown.
 
-## Matched (14 of 24 functions)
+## Matched (14 of 25 functions)
 
 - **`sub_8033EF4`/`sub_8033F48`/`sub_8033F74`** (`src/graphics/actor_part57.c`)
   - Kind 1's constructor, its trampoline-fire helper (same shape as
@@ -125,7 +125,7 @@ diffing it byte-for-byte against `baserom.gba`, and cross-referencing
 every differing byte range against `crashbandicootxs.map`'s function
 boundaries - not by re-reading the isolated compiles more carefully.
 
-## Parked (6 of 24 functions, `NON_MATCHING`)
+## Parked (6 of 25 functions, `NON_MATCHING`)
 
 - **`sub_8033FE4`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_33fe4.s`, C
   in `src/graphics/actor_part58.c`) - a `gStaticData_0817C4F8` stride-8
@@ -168,7 +168,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   intervening call (`sub_8034634`) - the ROM's own build simply leaves
   `val` in `r3` the whole time.
 
-## Left raw (4 of 24 functions, not attempted)
+## Left raw (5 of 25 functions, not attempted)
 
 - **`sub_8034374`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s`) -
   a ~150-instruction graphics/palette/DMA setup routine (window
@@ -176,11 +176,10 @@ boundaries - not by re-reading the isolated compiles more carefully.
   transfers) with an apparent read of an uninitialized local (`r5`
   ANDed with a mask before ever being assigned in this function) partway
   through; left raw, out of scope for this pass pending a closer look at
-  that apparent uninitialized-read. Note: `sub_8034480` (the very next
-  function in ROM order, a 128-entry OAM/screen-box scan driving
-  `sub_8034634`'s tilemap writer) is *not* part of this issue's function
-  list at all - left untouched alongside `sub_8034374` purely because it
-  sits in the same now-orphaned raw span, not because it was evaluated.
+  that apparent uninitialized-read.
+- **`sub_8034480`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s`) -
+  a 128-entry OAM/screen-box scan driving `sub_8034634`'s tilemap
+  writer; left raw alongside `sub_8034374`, out of scope for this pass.
 - **`sub_803472C`/`sub_803487C`/`sub_8034994`**
   (`asm/code_3_2_20_28568_c99c_31784_33ef4_3472c.s`) - a graphics-package
   loading setup (BG/window register packing, three `LoadGraphicsPackage`
