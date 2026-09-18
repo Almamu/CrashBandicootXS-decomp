@@ -79,6 +79,14 @@ why the rest of the family stayed raw) is
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
+- GitHub issue #45's third pass (see
+  [docs/matching/issue-45-hud-stat-widget-dispatcher.md](../matching/issue-45-hud-stat-widget-dispatcher.md)):
+  `sub_802757C`, `sub_802763C` (real bytes in
+  `asm/code_3_2_17_2757c.s`, reconstructions in
+  `src/graphics/hud_stat_widget2.c`) - `sub_802757C` hits a reproducible
+  gcc-2.9 miscompile pinning a byte to r7 the moment it's used as an
+  array subscript; `sub_802763C` wasn't attempted for byte-matching
+  given that same-file blocker.
 - GitHub issue #46 (see
   [docs/matching/issue-46-hud-icon-widget.md](../matching/issue-46-hud-icon-widget.md)
   for what was tried on each): `sub_80285C4`, `InitHudIconWidgetA`,

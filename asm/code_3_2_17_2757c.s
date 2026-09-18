@@ -3,6 +3,13 @@
 .syntax unified
 .arm
 
+@ sub_802757C is reconstructed (semantics fully understood, but not yet
+@ byte-matching) as C in src/graphics/hud_stat_widget2.c, guarded by
+@ #if NON_MATCHING - see
+@ docs/matching/issue-45-hud-stat-widget-dispatcher.md for the exact
+@ remaining gap (an r7-pinned byte that miscompiles the moment it's
+@ used as an array subscript, regardless of phrasing).
+.if NON_MATCHING == 0
 	thumb_func_start sub_802757C
 sub_802757C: @ 0x0802757C
 	push {r4, r5, r6, r7, lr}
@@ -96,7 +103,15 @@ _0802762C: .4byte gStaticData_08174C6C
 _08027630: .4byte 0x000005AD
 _08027634: .4byte gUnknown_030012C0
 _08027638: .4byte 0x000005ED
+.endif
 
+@ sub_802763C is reconstructed (semantics fully understood - three
+@ change-detection-gated digit/icon widgets - via a plain, not yet
+@ register-pinned, C rewrite in src/graphics/hud_stat_widget2.c,
+@ guarded by #if NON_MATCHING; not attempted for byte-matching this
+@ pass given sub_802757C's r7 gap just above - see
+@ docs/matching/issue-45-hud-stat-widget-dispatcher.md.
+.if NON_MATCHING == 0
 	thumb_func_start sub_802763C
 sub_802763C: @ 0x0802763C
 	push {r4, r5, r6, r7, lr}
@@ -336,3 +351,4 @@ _08027828: .4byte 0x0000046D
 _0802782C: .4byte 0x000004AD
 _08027830: .4byte 0x0000052D
 _08027834: .4byte 0x0000056D
+.endif
