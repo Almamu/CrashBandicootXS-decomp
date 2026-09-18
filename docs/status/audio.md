@@ -206,6 +206,39 @@ See docs/matching.md for `PlaySfx`'s remaining gap.
 
   See [docs/matching/issue-67-gax-voice-steal.md](../matching/issue-67-gax-voice-steal.md)
   for all three functions' full write-up.
+- **`sub_803985C`** (`src/audio/gax_channel_bind_instrument.c`, binds a
+  new instrument entry to a per-channel voice object and resets its
+  envelope/state fields) - a real C reconstruction reproduced every field
+  write, but the ROM's `self` register choreography - reloaded fresh from
+  `ip` into a rotating r0/r1/r3 cast, with `r3` itself later mutated in
+  place - always needed one extra callee-saved register the ROM doesn't
+  spend; already set aside for the same reason in a prior pass. Byte-
+  verified NAKED transcription.
+- **`sub_80398DC`** (`src/audio/gax_channel_note_scheduler.c`, per-tick
+  pattern-note/priority-steal scheduler with a 15-way command jump table)
+  - keeps `r8`/`sb` live as genuine scratch across the whole priority-
+  steal block and the jump table, the same many-register ceiling
+  documented throughout this region. Byte-verified NAKED transcription.
+- **`sub_8039AA4`** (`src/audio/gax_channel_envelope_tick.c`, per-tick
+  envelope/portamento-pitch update) - a real C reconstruction (register-
+  pinning `self` and the clamp temporaries) landed everything except a
+  handful of `ldrsh`-with-non-immediate-offset reads in the portamento
+  tail (same gotcha as `sub_803943C`), whose individual register-pins
+  kept perturbing an earlier, already-correct block's codegen. Byte-
+  verified NAKED transcription.
+- **`sub_8039F30`** (`src/audio/gax_note_lookup.c`, resolves a pattern-
+  note index into an interpolated pitch/volume byte from a sorted
+  breakpoint table) - a real C reconstruction matched this function's
+  full control flow, but the ROM's specific register choices (`self` in
+  `r5`, `table` kept in `r3` throughout, a zero-extension dance for the
+  note-index parameter) didn't come out byte-identical from the C forms
+  tried. Byte-verified NAKED transcription.
+
+  See [docs/matching/issue-68-channel-bind-envelope-note.md](../matching/issue-68-channel-bind-envelope-note.md)
+  for all four functions' full write-up (none of this particular
+  `0x0803985C`-`0x08039FFC` cluster landed as real C this pass - the
+  `sub_8038FD0` cluster right before it did, in a separate pass, see
+  [docs/matching/issue-67-channel-mute-volume-dma-stop.md](../matching/issue-67-channel-mute-volume-dma-stop.md)).
 
 ## Left raw (not attempted, or attempted and set aside)
 
@@ -267,12 +300,18 @@ above as of the second `0x08038538`-`0x08039658` pass - are now Parked
 NAKED transcriptions, see the "Parked" section above and
 [docs/matching/issue-67-68-channel-init-play.md](../matching/issue-67-68-channel-init-play.md).
 
-From the `0x08039818`-`0x0803A944` pass specifically (issue #68): 14 of
-the chunk's 21 functions (`sub_80398DC`, `sub_803985C`,
-`sub_8039AA4`, `sub_8039B44`, `sub_8039E50`, `sub_803A03C`, `sub_803A158`,
+From the `0x08039818`-`0x0803A944` pass specifically (issue #68):
+`sub_80398DC`, `sub_803985C`, `sub_8039AA4`, and `sub_8039F30` (listed
+raw above as of that pass) are now Parked NAKED transcriptions - see
+[docs/matching/issue-68-channel-bind-envelope-note.md](../matching/issue-68-channel-bind-envelope-note.md)
+and the "Parked - NAKED asm transcription" section above. The remaining
+10 of the chunk's 21 functions (`sub_8039B44`, `sub_8039E50`,
+`sub_803A03C`, `sub_803A158`,
 `sub_803A278`, `sub_803A2C8`, `sub_803A318`, `sub_803A324`, `sub_803A5A8`,
-`sub_803A608`) - see
+`sub_803A608`) are still left raw - `sub_8039B44`/`sub_8039E50` are one
+logical routine split by a manual return-address trampoline (not
+attempted this pass given its size, see the write-up above); see
 [`docs/matching/issue-68-0x08039818-audio.md`](../matching/issue-68-0x08039818-audio.md)'s
-"Left raw" section for the per-function reason (many-register allocation
+"Left raw" section for the rest's per-function reason (many-register allocation
 ceiling, or entangled with a neighbor via a manual return-address-
 trampoline idiom).
