@@ -21,11 +21,13 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   refresh row" step, and the state-select label list draw; matched. See
   `docs/matching/issue-5-overlay-ui-sync.md` for the full write-up:
   `sub_8002C84`, `sub_8002CE8`, `sub_8002CF4`, `sub_8002D0C`,
-  `sub_8002D28`, `sub_8002EFC`, `sub_8002FCC`, `sub_8002FD4`,
-  `sub_8002FD8`, `sub_800300C`, `sub_800306C`, `sub_800312C`,
-  `sub_80031E4`, `sub_80032E8`, `sub_80033E8`, `sub_80034BC`,
-  `sub_80035C0`, `sub_8003698`, `sub_800376C`, `sub_8003824`,
-  `sub_80038D0`, `sub_800397C`, `sub_8003A60`
+  `sub_8002D28`, `sub_8002D44`, `sub_8002E20`, `sub_8002EFC`,
+  `sub_8002FCC`, `sub_8002FD4`, `sub_8002FD8`, `sub_800300C`,
+  `sub_800306C`, `sub_800312C`, `sub_80031E4`, `sub_80032E8`,
+  `sub_80033E8`, `sub_80034BC`, `sub_80035C0`, `sub_8003698`,
+  `sub_800376C`, `sub_8003824`, `sub_80038D0`, `sub_800397C`,
+  `sub_8003A60` (`sub_8002D44`/`sub_8002E20` matched via NAKED asm
+  transcription - see that doc's "NAKED-transcription pass" section)
 - `src/graphics/settings_menu2.c` (new file - the composite pause/
   options screen's BG-load helper and per-row stats gatherer/
   aggregator; see `docs/rom_map.md`'s `overlay_ui` section):
@@ -71,20 +73,6 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
-- **`sub_8002D44`**, **`sub_8002E20`** (`asm/code_3_1_10_3_2d44.s`, C in
-  `src/graphics/settings_menu8a2.c`) - the SIO settings-sync
-  send/receive pump's TX/RX drain-fill steps (`struct
-  settings_sync_pump`, `include/settings_sync.h`); fully understood,
-  but both genuinely need `r7` as scratch (matching the ROM's own
-  `sendLen`/sentinel usage), and this exact agbcc build never includes
-  `r7` in a function's automatic callee-save push/pop - confirmed by
-  direct reproduction (a minimal function that only ever touches r7,
-  whether via a plain asm clobber, an explicit `register T x
-  asm("r7")` pin used across a real call, or a real C-level variable
-  forced into r7 under heavy register pressure, never gets it back in
-  the push/pop list). The third function of this trio, `sub_8002EFC`
-  (which doesn't touch r7), is unaffected and has been matched - see
-  `docs/matching/issue-5-overlay-ui-sync.md`, issue #5.
 - **`sub_8003B40`**, **`sub_8003BDC`**, **`sub_8003C90`**,
   **`sub_8003D3C`**, **`sub_80041BC`**, **`sub_8004914`**,
   **`sub_80049CC`** (`asm/code_3_1_10_3.s`/`asm/code_3_1_10_4.s`/
