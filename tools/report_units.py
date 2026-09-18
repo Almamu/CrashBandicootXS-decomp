@@ -72,25 +72,30 @@ UNITS = [
     (0x080007EC, "src/graphics/intro_screen.o", "graphics"),
     (0x080008B4, "src/util/math_util.o", "util"),
     (0x0800094C, "src/util/string_util.o", "util"),
-    (0x08000AA8, "src/util/printf_util.o", "util"),  # incl. sub_8000CBC (case-insensitive strstr, NAKED); matched
+    (0x08000AA8, "src/util/printf_util.o", "util"),  # sub_8000AA8/sub_8000CA8 - custom sprintf plus its variadic wrapper; matched
+    (0x08000CBC, None, "util"),  # sub_8000CBC (case-insensitive strstr) - byte-exact NAKED asm transcription, not decompiled C; tracked as parked - see docs/matching/naked-transcription-parked-functions.md
     (0x08000D68, "src/util/string_util2.o", "util"),
     (0x08000E10, "src/util/rand_util.o", "util"),
     (0x08000E6C, "src/util/line_util.o", "util"),
-    (0x08000EE4, "src/graphics/text_layout.o", "graphics"),  # word-wrap text renderer (NAKED); matched
+    (0x08000EE4, None, "graphics"),  # sub_8000EE4 (word-wrap text renderer) - byte-exact NAKED asm transcription, not decompiled C; tracked as parked - see docs/matching/naked-transcription-parked-functions.md
     (0x0800106C, "src/util/time_util.o", "util"),
-    (0x080010E0, "src/system/input_util.o", "system"),  # input-poll-until-button/timeout (NAKED); matched
+    (0x080010E0, None, "system"),  # sub_80010E0 (input-poll-until-button/timeout) - byte-exact NAKED asm transcription, not decompiled C; tracked as parked - see docs/matching/naked-transcription-parked-functions.md
     (0x08001174, "src/system/asset_util.o", "system"),
     (0x080011F4, "src/util/word_util.o", "util"),
     (0x08001254, "src/util/line_util2.o", "util"),
     (0x080012AC, "src/graphics/fade_util.o", "graphics"),
     (0x080013FC, "src/graphics/palette_blend.o", "graphics"),
-    (0x080014A4, "src/graphics/fade_screen_mode.o", "graphics"),  # fade/screen-mode utility cluster start - sub_80014A4 (fade-to-black DMA loop, NAKED) + sub_8001510 (matched); calls matched palette_blend.c - docs/rom_map.md "A fourth thing in this file"
-    (0x0800153C, "src/graphics/fade_screen_mode2.o", "graphics"),  # sub_8001524 (DISPCNT-mode low-3-bits setter, NAKED) plus sub_800153C-sub_8001614 (13 fns): the rest of the fade/screen-mode cluster's DISPCNT-shadow bit accessors and commit; matched
-    (0x08001640, "src/graphics/aabb_util.o", "graphics"),  # sub_8001624 (BLDCNT/BLDALPHA/BLDY shadow commit, NAKED) plus sub_8001640/sub_8001688 (AABB overlap tests, X-edges inclusive vs exclusive - the latter already referenced by name from actor_part15.c's sub_800B37C) plus sub_80016D0/sub_80016DC (mem_free/mem_alloc wrappers); matched
+    (0x080014A4, None, "graphics"),  # sub_80014A4 (fade-to-black palette DMA loop) - byte-exact NAKED asm transcription, not decompiled C; tracked as parked - see docs/matching/naked-transcription-parked-functions.md. docs/rom_map.md "A fourth thing in this file"
+    (0x08001510, "src/graphics/fade_screen_mode.o", "graphics"),  # sub_8001510 (idle-fade-sentinel accessor); matched. Calls matched palette_blend.c
+    (0x08001524, None, "graphics"),  # sub_8001524 (DISPCNT-mode low-3-bits setter) - byte-exact NAKED asm transcription, not decompiled C; tracked as parked - see docs/matching/naked-transcription-parked-functions.md
+    (0x0800153C, "src/graphics/fade_screen_mode2.o", "graphics"),  # sub_800153C-sub_8001614 (13 fns): the rest of the fade/screen-mode cluster's DISPCNT-shadow bit accessors and commit; matched
+    (0x08001624, None, "graphics"),  # sub_8001624 (BLDCNT/BLDALPHA/BLDY shadow commit) - byte-exact NAKED asm transcription, not decompiled C; tracked as parked - see docs/matching/naked-transcription-parked-functions.md
+    (0x08001640, "src/graphics/aabb_util.o", "graphics"),  # sub_8001640/sub_8001688 (AABB overlap tests, X-edges inclusive vs exclusive - the latter already referenced by name from actor_part15.c's sub_800B37C) plus sub_80016D0/sub_80016DC (mem_free/mem_alloc wrappers); matched
     (0x080016EC, "src/audio/music_player.o", "audio"),  # sub_80016EC (per-tick music fade-envelope update)/sub_80017BC (start-song) - first matched code in the GAX2 wrapper layer; see docs/status/audio.md and docs/audio.md
     (0x08001854, None, "audio"),  # PlaySfx (parked - real bytes in asm/code_3_1_10.s, its reconstruction lives in src/audio/sfx_ambient.c); see docs/matching.md for the prologue register-save-scheduling gap
     (0x0800190C, "src/audio/sfx_ambient.o", "audio"),  # sub_800190C/sub_80019A8/sub_80019CC/sub_80019E8 - the ambient/looping-sfx-channel tick update, stop-if-playing scan, reset, and force-expire; matched
-    (0x080019F8, "src/audio/audio_context.o", "audio"),  # sub_80019F8 (ambient-sfx-channel play-request driver, NAKED) plus sub_8001AB8-sub_8001C64 (17 fns) - the rest of the AudioContext accessor/state-machine cluster (play/pause/stop, both fade-envelope arm/setter pairs, the constructor); matched
+    (0x080019F8, None, "audio"),  # sub_80019F8 (ambient-sfx-channel play-request driver) - byte-exact NAKED asm transcription, not decompiled C; tracked as parked - see docs/matching/issue-3-overlay-ui-audio-wrapper.md
+    (0x08001AB8, "src/audio/audio_context.o", "audio"),  # sub_8001AB8-sub_8001C64 (17 fns) - the rest of the AudioContext accessor/state-machine cluster (play/pause/stop, both fade-envelope arm/setter pairs, the constructor); matched
     (0x08001C80, "src/audio/music_irq.o", "audio"),  # sub_8001C80/sub_8001CA4 - installs the music player's VCount-IRQ per-tick update (src/audio/music_player.c's sub_80016EC); matched - issue #4, see docs/matching/issue-4-sio-settings-sync.md
     (0x08001CB8, "src/system/link_cable.o", "system"),  # sub_8001CB8 (per-slot handshake-id CRC hash helper, NAKED)/sub_8001D30 (link-session "stop")/sub_8001DB4 (link-session reset/init, NAKED)/sub_8001F50 (link-connection/handshake driver, NAKED)/sub_8002114 (1488 B per-frame SIO data pump, NAKED, this file's biggest function) - all matched - issue #4, third pass; see docs/matching/issue-4-sio-settings-sync.md
     (0x080026E4, "src/system/link_cable2.o", "system"),  # sub_80026E4-sub_8002848 (7 fns) - link-session "start" step, small SIO helpers, and the Serial/Timer3 IRQ handlers; matched - issue #4
@@ -102,10 +107,10 @@ UNITS = [
     (0x08002EFC, "src/graphics/settings_menu8a3.o", "overlay_ui"),  # sub_8002EFC - the SIO send/receive pump's per-frame poll step (third of the trio above, doesn't touch r7 so unaffected by that limitation); matched - issue #5
     (0x08002FCC, "src/graphics/settings_menu8b.o", "overlay_ui"),  # sub_8002FCC-sub_80035C0 (16 fns) plus sub_8003698 - the SIO-pump handle accessors, the spinner dialog's blocking modal loop and field_8c/field_90 constructor/destructor (sub_800300C/sub_800306C/sub_800312C), the per-frame input dispatcher (sub_80031E4), most of its per-state handlers, and the shared "commit or refresh row" step; matched - issue #5
     (0x0800376C, "src/graphics/settings_menu8c.o", "overlay_ui"),  # sub_800376C/sub_8003824/sub_80038D0/sub_800397C/sub_8003A60 - four more per-state input handlers plus the state-select label list draw; matched - issue #5
-    (0x08003B40, "src/graphics/settings_menu.o", "overlay_ui"),  # sub_8003B40 (SIO-handshake "connecting..." spinner dialog)/sub_8003BDC/sub_8003C90/sub_8003D3C/sub_8003F30/sub_80041BC (6 fns - icon-manager centered-label/positioned-glyph draws built on the same primitive as sub_8006600, plus a per-row itoa numeric renderer) - all matched via NAKED transcription (this compiler's "last mile" scratch-register nondeterminism, same class as sub_8006600) - issue #6/#7; see docs/matching/issue-6-0x08003f30-overlay-ui.md
+    (0x08003B40, None, "overlay_ui"),  # sub_8003B40 (SIO-handshake "connecting..." spinner dialog)/sub_8003BDC/sub_8003C90/sub_8003D3C/sub_8003F30/sub_80041BC (6 fns - icon-manager centered-label/positioned-glyph draws built on the same primitive as sub_8006600, plus a per-row itoa numeric renderer) - all byte-exact NAKED asm transcriptions, not decompiled C; tracked as parked - issue #6/#7; see docs/matching/issue-6-0x08003f30-overlay-ui.md
     (0x0800450C, None, "overlay_ui"),  # sub_800450C - the screen's own init routine, left fully raw (semantics not confidently understood yet - see docs/matching/issue-6-0x08003f30-overlay-ui.md)
     (0x080047F8, "src/graphics/settings_menu2.o", "overlay_ui"),  # sub_80047F8/sub_8004860/sub_80048BC/sub_80048E0 - screen-init BG-load helper + per-row stats gatherer/aggregator; matched
-    (0x08004914, "src/graphics/settings_menu20.o", "overlay_ui"),  # sub_8004914/sub_80049CC - two more icon-manager centered-glyph/label draws, same NAKED-transcription class as settings_menu.o above; matched
+    (0x08004914, None, "overlay_ui"),  # sub_8004914/sub_80049CC - two more icon-manager centered-glyph/label draws - byte-exact NAKED asm transcriptions, not decompiled C; tracked as parked - see docs/matching/issue-6-0x08003f30-overlay-ui.md
     (0x08004A50, "src/graphics/settings_menu3.o", "overlay_ui"),  # sub_8004A50-sub_8004C7C (12 fns) - the settings-row flag test, link-cancel-flag pair, six near-identical per-item wrappers (see docs/rom_map.md), the state jump-table dispatcher, and a final list-refresh trio; matched
     (0x08004CB4, "src/graphics/settings_menu4.o", "overlay_ui"),  # sub_8004CB4/sub_8004CE8/sub_8004D20/sub_8004D4C - confirm/cancel handler, BG0HOFS/DISPCNT save-restore, and the SIO-spinner teardown/construct pair; matched
     (0x08004D74, None, "overlay_ui"),  # sub_8004D74 - the composite pause/options screen's own constructor - entirely parked, real bytes wrapped `.if NON_MATCHING == 0` in asm/code_3_1_10_7.s. NON_MATCHING C reconstruction lives in src/graphics/settings_menu15.c. GitHub issue #7

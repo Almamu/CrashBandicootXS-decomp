@@ -165,7 +165,7 @@ toward `Closes #3` even when it's demonstrably closer than before.
 of its two gaps closed); `PlaySfx` is unchanged from the prior pass
 after a genuine fresh attempt that didn't pan out.
 
-## Later pass: `sub_80019F8` matched via NAKED transcription
+## Later pass: `sub_80019F8` converted to NAKED transcription (still tracked as parked)
 
 The remaining base-volume field-address CSE gap documented above never
 had a plain-C fix - this compiler always reuses the live address
@@ -178,5 +178,10 @@ for this class of gap (see `src/util/printf_util.c`'s `sub_8000CBC`).
 Every instruction now matches the ROM exactly; verified via a full
 clean `make compare` (`La suma coincide`). `sub_80019F8` no longer sits
 under `asm/code_3_1_10_2.s` (deleted) - its NAKED definition lives
-directly in `src/audio/audio_context.c`. `PlaySfx` was not attempted
-this pass and remains parked.
+directly in `src/audio/audio_context.c`. Per this project's tracking
+policy, byte-exact NAKED asm doesn't count as "matched" - only real
+decompiled C does - so `sub_80019F8` is tracked as **parked** in
+`tools/report_units.py`/`docs/status/audio.md`, not matched, even
+though its bytes are provably correct. `PlaySfx` was not attempted this
+pass and remains parked for its own, separate reason (a prologue
+register-save-scheduling gap).

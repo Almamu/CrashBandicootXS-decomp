@@ -1,4 +1,4 @@
-# Six parked functions matched via NAKED transcription
+# Six parked functions converted to NAKED transcription (byte-correct, not decompiled C)
 
 Six previously-`NON_MATCHING` functions, spread across `src/util/`,
 `src/graphics/`, and `src/system/`, all shared the same shape: fully
@@ -14,7 +14,18 @@ the established pattern for this class of gap (see
 `src/system/link_cable.c`'s `sub_8001CB8`/`sub_8001DB4` and
 `src/util/math_div_util.c`'s `nullsub_8` for the earliest examples).
 
-## Matched
+**Tracking note**: byte-exact NAKED asm is not treated as "matched" in
+this project's `tools/report_units.py`/`docs/status/*.md` tracking -
+only real decompiled C counts, even when the NAKED transcription is
+provably byte-correct against the ROM. All six functions below (and
+their siblings converted the same pass - `sub_80019F8` in
+`src/audio/audio_context.c`, and the eight
+`src/graphics/settings_menu.c`/`settings_menu20.c` functions) are
+tracked as **parked**, not matched, in those files. The functions
+themselves are still real, working, byte-verified code - only the
+progress-tracking classification differs from an ordinary match.
+
+## Parked - byte-correct NAKED transcriptions
 
 - **`sub_8000CBC`** (`src/util/printf_util.c`) - a case-insensitive
   `strstr`. The C reconstruction's only gap was one branch shape inside
@@ -65,7 +76,7 @@ the established pattern for this class of gap (see
 
 Each raw `.s` fragment (`asm/code_3_1_2.s`, `asm/code_3_1_3.s`,
 `asm/code_3_1_5.s`, `asm/code_3_1_7.s`, `asm/code_3_1_8.s`,
-`asm/code_3_1_9.s`) held only its one now-matched function, so each was
+`asm/code_3_1_9.s`) held only its one now-NAKED function, so each was
 deleted outright rather than trimmed, and its `ldscript.txt` line
 dropped - the neighboring already-matched objects on either side link
 back-to-back with no gap. The raw disassembly was transcribed
@@ -86,8 +97,11 @@ all six converted at once, alongside `sub_80019F8`
 (`src/audio/audio_context.c` - see
 `docs/matching/issue-3-overlay-ui-audio-wrapper.md`) and the eight
 `src/graphics/settings_menu.c`/`settings_menu20.c` functions (see
-`docs/matching/issue-6-0x08003f30-overlay-ui.md`) matched the same way
-in the same pass. `make NON_MATCHING=1 report` also still succeeds -
-none of these six had a `NON_MATCHING`-only reconstruction left behind
-to fall back to, since the byte-verified NAKED version is now the only
-definition.
+`docs/matching/issue-6-0x08003f30-overlay-ui.md`) converted the same
+way in the same pass. `make NON_MATCHING=1 report` also still succeeds
+- none of these six had a `NON_MATCHING`-only reconstruction left
+behind to fall back to, since the byte-verified NAKED version is now
+the only definition. `tools/report_units.py`'s `UNITS` entries for all
+15 functions across both passes carry `base_object=None` (parked, not
+matched) per this project's tracking policy - see the "Tracking note"
+above.

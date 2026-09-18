@@ -100,23 +100,32 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
 - `src/graphics/settings_menu19.c` (new file - issue #7,
   0x0800599C-0x08005A78): the results sub-region constructor:
   `sub_800599C`. See `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
-- `src/graphics/settings_menu.c` (0x08003B40-0x080041BC): `sub_8003B40`
-  (SIO-handshake "connecting..." spinner dialog), `sub_8003BDC`,
-  `sub_8003C90`, `sub_8003D3C`, `sub_8003F30` (per-row numeric display,
-  issue #6), `sub_80041BC` - all six matched via NAKED asm
-  transcription (this compiler's "last mile" scratch-register
-  nondeterminism, same class as `sub_8006600` in
-  `docs/status/graphics.md`). `sub_800450C` (this file's own init
-  routine, ROM `0x0800450C`, right after `sub_80041BC`) stays fully
-  raw/unattempted - see `docs/matching/issue-6-0x08003f30-overlay-ui.md`.
-- `src/graphics/settings_menu20.c` (new file, 0x08004914-0x080049CC,
-  right after `settings_menu2.c` and before `settings_menu3.c`):
-  `sub_8004914`, `sub_80049CC` - two more icon-manager centered-glyph/
-  label draws, same NAKED-transcription class as `settings_menu.c`
-  above.
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
+
+## Parked - NAKED asm transcriptions (byte-correct, not decompiled C)
+
+- **`sub_8003B40`** (SIO-handshake "connecting..." spinner dialog),
+  **`sub_8003BDC`**, **`sub_8003C90`**, **`sub_8003D3C`**,
+  **`sub_8003F30`** (per-row numeric display, issue #6),
+  **`sub_80041BC`** (`src/graphics/settings_menu.c`, ROM
+  `0x08003B40`-`0x080041BC`) - icon-manager centered-label/positioned-
+  glyph draws plus a SIO-handshake spinner dialog, all built on the same
+  primitive as `sub_8006600` (`docs/status/graphics.md`). Every
+  load/store, branch, and call is semantically confirmed for all six;
+  each hit the same class of gcc-2.9 scratch-register nondeterminism
+  `sub_8006600` documents at length, so all six were converted to
+  byte-verified NAKED asm transcriptions instead of plain C - byte-exact
+  but not real decompiled C, so tracked here as parked, not matched.
+  `sub_800450C` (this file's own init routine, ROM `0x0800450C`, right
+  after `sub_80041BC`) stays fully raw/unattempted - see
+  `docs/matching/issue-6-0x08003f30-overlay-ui.md`.
+- **`sub_8004914`**, **`sub_80049CC`** (`src/graphics/settings_menu20.c`,
+  new file, ROM `0x08004914`-`0x080049CC`, right after
+  `settings_menu2.c` and before `settings_menu3.c`) - two more
+  icon-manager centered-glyph/label draws, same NAKED-transcription
+  class as `settings_menu.c` above.
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 

@@ -18,10 +18,6 @@ category page - see [game_loop.md](./game_loop.md).
   `sub_80007AC`, `sub_80007DC` (Sept 2026, `code_3.s` lineage - `irq.c` is
   a mixed file, see `docs/decomp_dev.md`)
 - `src/system/asset_util.c`: `LoadTaggedAsset`, `LoadBackgroundTileAndPalette`
-- `src/system/input_util.c`: `sub_80010E0` (input-poll-until-button/
-  timeout helper, NAKED - a full C reconstruction matched the ROM
-  everywhere except one bit-test whose branch senses compiled swapped
-  from the ROM; converted to a byte-verified NAKED asm transcription)
 - `src/system/boot_util.c`: `sub_8000140`, `sub_800014C`, `nullsub_9` -
   boot-adjacent BIOS wrappers right after `asm/crt0.s`'s permanent boot
   stub (`start`, left as hand-written asm, not tracked as a function to
@@ -91,6 +87,17 @@ section for how the division/modulo trio finished matching.
 per-function writeups there the way everything since does. They do have a
 frozen decomp.dev baseline now (`expected/legacy.s`) - see
 [docs/decomp_dev.md](../decomp_dev.md).
+
+## Parked - NAKED asm transcription (byte-correct, not decompiled C)
+
+- **`sub_80010E0`** (`src/system/input_util.c`, an input-poll-until-
+  button/timeout helper) - a full C reconstruction matched the ROM
+  everywhere except one bit-test whose branch senses compiled swapped
+  from the ROM (same two instructions, same size) in a way that
+  resisted every C-level rephrasing tried. Converted to a byte-verified
+  NAKED asm transcription instead - byte-exact but not real decompiled
+  C, so tracked here as parked, not matched. See
+  `docs/matching/naked-transcription-parked-functions.md`.
 
 See [docs/workflow.md](../workflow.md) for the per-function loop.
 
