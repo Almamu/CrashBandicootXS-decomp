@@ -5,9 +5,10 @@
 
 @ sub_80019F8 is reconstructed (semantics fully understood, but not yet
 @ byte-matching) as C in src/audio/audio_context.c, guarded by
-@ #if NON_MATCHING - see docs/matching.md for the exact remaining gap
-@ (a u8 stack-parameter byte-load codegen shape and a base-volume
-@ field-address CSE this compiler won't reproduce).
+@ #if NON_MATCHING - see docs/matching/issue-3-overlay-ui-audio-wrapper.md
+@ for the remaining gap (a base-volume field-address CSE this compiler
+@ won't reproduce; the earlier u8 stack-parameter byte-load gap was
+@ closed this pass).
 .if NON_MATCHING == 0
 	thumb_func_start sub_80019F8
 sub_80019F8: @ 0x080019F8
