@@ -59,22 +59,35 @@ from "core" graphics.
   `actor_part7b.c`'s `sub_8008D80` range): `sub_8008DC0`, `sub_8008DEC`, `sub_8008E50`,
   `sub_8008E94`, `sub_8008EB4`, `sub_8008EE4`
 
+- `src/graphics/actor_part11b.c`/`actor_part11c.c`/`actor_part11d.c`
+  (new files, NAKED-transcription-only - see "Parked - NAKED
+  transcription" below for what each one holds): `sub_8009008`,
+  `sub_80091D4`, `sub_8009868` respectively, each dropped into
+  `ldscript.txt` between the remaining `asm/code_3_2_13*.s` guard
+  splits at its own real ROM address
+
 - `src/graphics/actor_part12.c` (new file - `sub_8009A30`'s real ROM
   address isn't adjacent to `actor_part11.c`'s matched functions
-  either, since the parked `sub_8008F20` and the raw `sub_8009008`-
-  `sub_8009914` span sit between them; see `docs/matching.md`):
+  either, since the parked `sub_8008F20` guard and the NAKED
+  `sub_8009008`/`sub_80091D4`/`sub_8009868` plus the remaining parked
+  `sub_8009150`/`sub_800944C`/`sub_8009528`/`sub_80096C0`/
+  `sub_8009914`/`sub_80099F0` guards all sit between them; see
+  `docs/matching.md`):
   `sub_8009A30`, `sub_8009AA0`, `sub_8009AF0`, `sub_8009B3C`,
   `sub_8009B70`, `sub_8009B9C`
 
+- `src/graphics/actor_part12b.c` (new file, NAKED-transcription-only -
+  `sub_8009BE0`, see "Parked - NAKED transcription" below)
+
 - `src/graphics/actor_part13.c` (new file - `sub_8009CA0`'s real ROM
   address isn't adjacent to `actor_part12.c`'s matched functions
-  either, since the raw `sub_8009BE0` sits between them; see
-  `docs/matching.md`): `sub_8009CA0`
+  either, since NAKED `sub_8009BE0` (`actor_part12b.c`) sits between
+  them; see `docs/matching.md`): `sub_8009CA0`
 
 - `src/graphics/actor_part8.c` (new file - `sub_8009EA8`'s real ROM
   address isn't adjacent to `code_3_2_15.o`'s raw content either, since
-  the parked `sub_8009DF4` sits raw between them, and `sub_8009BE0`
-  before that was left raw rather than guessed at; see
+  the parked `sub_8009DF4` sits raw between them, and NAKED
+  `sub_8009BE0` before that was already handled separately; see
   `docs/matching.md`):
   `sub_8009EA8`, `sub_8009EB0`, `sub_8009EBC`, `sub_8009EC4`,
   `sub_8009ECC`, `sub_8009ED0`, `sub_8009F1C`, `sub_8009F50`,
@@ -403,6 +416,34 @@ doesn't advance that even when byte-correct. See
 established convention, and each entry's linked write-up for why
 plain C didn't converge.
 
+- **`sub_8009008`** (`src/graphics/actor_part11b.c`) - the
+  spatial-hash-grid removal primitive `sub_8009A30`/`sub_8009AA0`
+  call: a two-phase search (the object's own primary bucket, then
+  every bucket 255 down to 0) that unlinks its pool node(s) from the
+  `struct pool_manager` grid (`actor_part12.c`) and returns them to
+  the free list. Fully understood; parked on a single-instruction
+  register-discard quirk in phase 2's early-exit path. See
+  `docs/matching/naked-spatial-grid-tail.md`.
+- **`sub_80091D4`** (`src/graphics/actor_part11c.c`) - a per-frame
+  grid-maintenance pass over the 3-bucket window around the tracked
+  sub-object's own column (plus bucket 255): lazily links newly-large
+  objects into bucket 255 (`sub_8009150`'s own body, inlined), removes
+  and destroys objects flagged for removal, and box-tests/marks the
+  rest. Fully understood; parked on a many-high-register allocation
+  gap across its three inner-loop branches. See
+  `docs/matching/naked-spatial-grid-tail.md`.
+- **`sub_8009868`** (`src/graphics/actor_part11d.c`) - another
+  3-bucket-window grid pass, this one reading the player's state to
+  dispatch `sub_800D040`/`sub_80109A4` per object. Fully understood;
+  parked on a cross-branch register-role gap (`r8` reused for two
+  different base addresses). See
+  `docs/matching/naked-spatial-grid-tail.md`.
+- **`sub_8009BE0`** (`src/graphics/actor_part12b.c`) - a physics/
+  collision step-probe: runs `self`'s position through `sub_8008278`,
+  then probes it via `sub_8026628` up to 4 times (nudging Y each
+  retry) before giving up. Fully understood; parked on a register-
+  reload quirk in the retry loop. See
+  `docs/matching/naked-spatial-grid-tail.md`.
 - **`sub_801434C`** (`src/graphics/actor_part18.c`) - the shared
   handler `sub_80142B0` tail-calls; one of the `gStaticData_0816BF20`
   action-table entries. See `docs/matching/issue-18-0x08014f8c-actor.md`.
@@ -773,15 +814,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   `docs/matching.md` as needing "a dedicated session" of its own, not
   attempted again here - see
   `docs/matching/issue-9-0x08007634-actor.md`.
-- **`sub_8009008`/`sub_80091D4`/`sub_8009868`** (`asm/code_3_2_13.s`,
-  ROM 0x08009008-0x08009914, GitHub issue #9) - spatial-hash-grid
-  removal/list-management logic and a function calling into the
-  still-mostly-raw physics/collision subsystem; each individually
-  understood mechanically but not to a byte-exact-reconstruction
-  precision - see `docs/matching/issue-9-0x08007634-actor.md`.
-- **`sub_8009BE0`** (`asm/code_3_2_14.s`, ROM 0x08009BE0, GitHub issue
-  #9) - a physics/collision step-probe calling still-unexamined
-  helpers - see `docs/matching/issue-9-0x08007634-actor.md`.
 - **`sub_800A0FC`/`sub_800A178`/`sub_800A420`** (`asm/code_3_2_11.s`,
   ROM 0x0800A0FC-0x0800A5F4, GitHub issue #9) - part-object
   update/collision dispatchers built on unmatched
