@@ -384,7 +384,7 @@ UNITS = [
     (0x080342D4, "src/graphics/actor_part69.o", "actor"),  # sub_80342D4 (issue #63): InitActorPart-based constructor for a third, smaller object kind; matched
     (0x08034314, "src/graphics/actor_part70.o", "actor"),  # sub_8034314 (issue #63, parked, NON_MATCHING) - sub_8034270's boolean-returning twin; real bytes live in asm/code_3_2_20_28568_c99c_31784_33ef4_34314.s
     (0x0803436C, "src/graphics/actor_part71.o", "actor"),  # sub_803436C (issue #63): trivial self+0x58 flag getter; matched
-    (0x08034374, None, "actor"),  # sub_8034374/sub_8034480 (issue #63) - left raw, out of scope for this pass (sub_8034480 itself isn't in issue #63's function list)
+    (0x08034374, "src/graphics/actor_part85.o", "actor"),  # sub_8034374/sub_8034480 (issue #63, parked, NON_MATCHING) - the particle-trail BG0 object's constructor and per-frame updater; real bytes live in asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s
     (0x080345B0, "src/graphics/actor_part72.o", "actor"),  # sub_80345B0/sub_8034634 (issue #63, parked, NON_MATCHING) - a particle-slot spawner and a 4-bit tilemap nibble writer; real bytes live in asm/code_3_2_20_28568_c99c_31784_33ef4_345b0.s
     (0x08034688, "src/graphics/actor_part73.o", "actor"),  # sub_8034688/sub_80346C8/sub_80346FC (issue #63): a particle-spawn-budget driver, an input-poll busy-wait, and a buffer-release/teardown helper; matched
     (0x0803472C, None, "actor"),  # sub_803472C/sub_803487C/sub_8034994 (issue #63) - left raw, out of scope for this pass
