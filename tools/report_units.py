@@ -47,6 +47,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from chunk_remaining_work import scan_cleanup_candidates  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent
 BUILD_DIR = ROOT / "build" / "expected" / "units"
 CODE3 = ROOT / "expected" / "code_3.s"
@@ -92,16 +95,11 @@ UNITS = [
     (0x080019F8, None, "audio"),  # sub_80019F8 (parked - real bytes in asm/code_3_1_10_2.s, its reconstruction lives in src/audio/audio_context.c); see docs/matching.md for the u8-stack-parameter-load/CSE gap
     (0x08001AB8, "src/audio/audio_context.o", "audio"),  # sub_8001AB8-sub_8001C64 (17 fns) - the rest of the AudioContext accessor/state-machine cluster (play/pause/stop, both fade-envelope arm/setter pairs, the constructor); matched
     (0x08001C80, "src/audio/music_irq.o", "audio"),  # sub_8001C80/sub_8001CA4 - installs the music player's VCount-IRQ per-tick update (src/audio/music_player.c's sub_80016EC); matched - issue #4, see docs/matching/issue-4-sio-settings-sync.md
-    (0x08001CB8, None, "system"),  # sub_8001CB8 - per-slot handshake-id CRC hash helper - parked (real bytes in asm/code_3_1_10_3_1cb8.s), NON_MATCHING reconstruction in src/system/link_cable.c - issue #4
-    (0x08001D30, "src/system/link_cable.o", "system"),  # sub_8001D30 - link-session "stop" step; matched - issue #4
-    (0x08001DB4, None, "system"),  # sub_8001DB4 - link-session reset/init - parked (real bytes in asm/code_3_1_10_3_1db4.s), NON_MATCHING reconstruction in src/system/link_cable.c - issue #4
-    (0x08001F50, None, "system"),  # sub_8001F50 (link-connection/handshake driver) - left untouched/raw, not confidently reconstructable in the time available - issue #4
-    (0x08002114, None, "system"),  # sub_8002114 (1488 B per-frame SIO data pump, the file's second-biggest function) - left untouched/raw, same reason - issue #4
+    (0x08001CB8, "src/system/link_cable.o", "system"),  # sub_8001CB8 (per-slot handshake-id CRC hash helper, NAKED)/sub_8001D30 (link-session "stop")/sub_8001DB4 (link-session reset/init, NAKED)/sub_8001F50 (link-connection/handshake driver, NAKED)/sub_8002114 (1488 B per-frame SIO data pump, NAKED, this file's biggest function) - all matched - issue #4, third pass; see docs/matching/issue-4-sio-settings-sync.md
     (0x080026E4, "src/system/link_cable2.o", "system"),  # sub_80026E4-sub_8002848 (7 fns) - link-session "start" step, small SIO helpers, and the Serial/Timer3 IRQ handlers; matched - issue #4
-    (0x08002868, None, "system"),  # sub_8002868/sub_8002938 - EEPROM load/save block loops for the settings record (built on src/system/timer_util.c's EEPROM primitives) - parked (real bytes in asm/code_3_1_10_3_2868.s), NON_MATCHING reconstruction in src/graphics/settings_menu8d.c - issue #4
+    (0x08002868, "src/graphics/settings_menu8d.o", "system"),  # sub_8002868/sub_8002938 (NAKED) - EEPROM load/save block loops for the settings record (built on src/system/timer_util.c's EEPROM primitives); matched - issue #4, third pass
     (0x08002A08, "src/graphics/settings_menu8d.o", "overlay_ui"),  # sub_8002A08 - EEPROM-load-with-retry + validate, muting the music player across the transfer; matched - issue #4
-    (0x08002AA4, None, "overlay_ui"),  # sub_8002AA4 - checksum validate/repair-via-DMA - parked (real bytes in asm/code_3_1_10_3_2aa4.s), NON_MATCHING reconstruction in src/graphics/settings_menu8e.c - issue #4
-    (0x08002B44, "src/graphics/settings_menu8e.o", "overlay_ui"),  # sub_8002B44-sub_8002C6C (7 fns) - the settings_sync_record checksum compare/store, versionNibble accessor, EEPROM-save-with-retry, and per-row default/force-set/mark-selected helpers; matched - issue #4
+    (0x08002AA4, "src/graphics/settings_menu8e.o", "overlay_ui"),  # sub_8002AA4 (checksum validate/repair-via-DMA, NAKED)/sub_8002B44-sub_8002C6C (7 fns, the settings_sync_record checksum compare/store, versionNibble accessor, EEPROM-save-with-retry, and per-row default/force-set/mark-selected helpers) - all matched - issue #4, third pass
     (0x08002C84, "src/graphics/settings_menu8.o", "overlay_ui"),  # sub_8002C84/sub_8002CE8/sub_8002CF4 - the settings-sync record's init and two flag-test accessors; matched - issue #5, see docs/matching/issue-5-overlay-ui-sync.md
     (0x08002D0C, None, "overlay_ui"),  # sub_8002D0C - parked (real bytes in asm/code_3_1_10_3_2d0c.s), NON_MATCHING reconstruction in src/graphics/settings_menu8.c - issue #5
     (0x08002D28, "src/graphics/settings_menu8a2.o", "overlay_ui"),  # sub_8002D28 (flag-set accessor); matched - issue #5
@@ -122,7 +120,11 @@ UNITS = [
     (0x08005E5C, None, "overlay_ui"),  # sub_8005E5C - raw/untouched (real bytes in asm/code_3_1_10_9.s)
     (0x08005EF4, "src/graphics/settings_menu7.o", "overlay_ui"),  # sub_8005EF4/sub_8005FBC (per-row percentage inc/dec pair) - entirely parked, real bytes wrapped `.if NON_MATCHING == 0` in asm/code_3_1_10_10.s
     (0x08006084, "src/graphics/settings_menu5.o", "overlay_ui"),  # sub_8006084/sub_800609C - a small counter/threshold wrap-increment/decrement pair on the settings-row sub-widget; matched
-    (0x080060AC, None, "overlay_ui"),  # raw/untouched continues (real bytes in asm/code_3_1_10_11.s)
+    (0x080060AC, "src/graphics/settings_menu9.o", "overlay_ui"),  # sub_80060AC/sub_80060F8 (decimal itoa helper + a " <NN%>"-shaped percentage-string formatter built on it); matched - GitHub issue #8
+    (0x08006124, "src/graphics/settings_menu11.o", "overlay_ui"),  # sub_8006124/sub_800619C/sub_80061E8 (icon-manager centered-label draws, same class as sub_8006600/sub_8005AE8) - parked, real bytes wrapped `.if NON_MATCHING == 0` in asm/code_3_1_10_14.s. See docs/matching/issue-8-0x080060ac-overlay-ui.md
+    (0x08006250, "src/graphics/settings_menu12.o", "overlay_ui"),  # sub_8006250 (apply BLDCNT/BLDY/DISPCNT for the composite screen's own top-level object); matched
+    (0x080062A8, None, "overlay_ui"),  # sub_80062A8/sub_80063D8 raw/untouched (real bytes in asm/code_3_1_10_12.s) - not confidently traced in the time available, see docs/matching/issue-8-0x080060ac-overlay-ui.md
+    (0x08006518, "src/graphics/settings_menu10.o", "overlay_ui"),  # sub_8006518 (settings-row confirm-cursor stepper) - parked, real bytes wrapped `.if NON_MATCHING == 0` in asm/code_3_1_10_13.s
     (0x08006600, "src/graphics/oam_count.o", "graphics"),  # incl. parked sub_8006600
     (0x0800697C, "src/graphics/graphics.o", "graphics"),  # incl. AllocVramDmaQueue/sub_8006C28-sub_8006FB4 (a VRAM upload-cursor + tile/palette-bank asset-cache pair)/sub_8006FC8/nullsub_1/sub_8006FE4/sub_8007048/nullsub_11/sub_80070D4/sub_80070E8/sub_80070EC/sub_800710C/sub_8007110/sub_8007114/sub_8007174/sub_800719C/nullsub_12/sub_80071E4/sub_800722C/sub_8007230/sub_800725C/sub_8007278/sub_8007284/sub_8007290/sub_800729C/sub_80072A8/sub_80072B4/sub_80072C0/sub_80072CC/sub_80072D8/sub_800731C/sub_8007328/sub_8007334/sub_8007340/sub_800734C/sub_8007358/sub_8007364/sub_800736C/sub_8007374/sub_8007378/sub_800737C/sub_8007388/sub_8007398/sub_80073A0/sub_80073B0/sub_80073B4/sub_80073B8/sub_80073BC - moved here from the raw game_loop zone below since none of it is game_loop logic (see docs/matching.md). Also incl. parked sub_80073DC (NON_MATCHING C reconstruction widens this unit past its own real 0x08007634 end, per the same "parked function" convention as sub_8006600/sub_8000EE4 above)
     (0x08007634, None, "game_loop"),  # sub_8007634 itself - a giant GBA-affine-sprite-scaling variant of sub_80073DC, not yet reverse-engineered with confidence, left fully raw rather than guessed at
@@ -441,6 +443,16 @@ def main():
     categories = {}
     units = []
 
+    # Files with a leftover raw pointer-arithmetic offset cast or raw
+    # hardware address (see chunk_remaining_work.py's scan_cleanup_candidates
+    # / its "Cleanup: raw pointer arithmetic in ..." issues) are matched
+    # but not yet cleaned up per docs/workflow.md step 7. A matched unit
+    # not in this set gets metadata.complete=True; one that is gets
+    # False - objdiff/decomp.dev track this as a status independent of
+    # match percentage, so a byte-exact-but-uncleaned file still shows
+    # 100% matched while correctly not counting as "complete".
+    needs_cleanup = {entry["file"] for entry in scan_cleanup_candidates()}
+
     for i in range(len(UNITS) - 1):
         start, base_rel, category = UNITS[i]
         end = UNITS[i + 1][0]
@@ -454,11 +466,16 @@ def main():
             "name": name,
             "target_path": str(target_o.relative_to(ROOT)),
         }
+        metadata = {}
         if base_rel is not None:
             unit["base_path"] = f"build/crashbandicootxs/{base_rel}"
+            src_path = str(Path(base_rel).with_suffix(".c"))
+            metadata["complete"] = src_path not in needs_cleanup
         if category is not None:
-            unit["metadata"] = {"progress_categories": [category]}
+            metadata["progress_categories"] = [category]
             categories[category] = CATEGORY_NAMES.get(category, category.capitalize())
+        if metadata:
+            unit["metadata"] = metadata
         units.append(unit)
 
     objdiff = {

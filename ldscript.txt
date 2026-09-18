@@ -54,14 +54,9 @@ SECTIONS
         build/crashbandicootxs/asm/code_3_1_10_2.o(.text);
         build/crashbandicootxs/src/audio/audio_context.o(.text);
         build/crashbandicootxs/src/audio/music_irq.o(.text);
-        build/crashbandicootxs/asm/code_3_1_10_3_1cb8.o(.text);
         build/crashbandicootxs/src/system/link_cable.o(.text);
-        build/crashbandicootxs/asm/code_3_1_10_3_1db4.o(.text);
-        build/crashbandicootxs/asm/code_3_1_10_3.o(.text);
         build/crashbandicootxs/src/system/link_cable2.o(.text);
-        build/crashbandicootxs/asm/code_3_1_10_3_2868.o(.text);
         build/crashbandicootxs/src/graphics/settings_menu8d.o(.text);
-        build/crashbandicootxs/asm/code_3_1_10_3_2aa4.o(.text);
         build/crashbandicootxs/src/graphics/settings_menu8e.o(.text);
         build/crashbandicootxs/src/graphics/settings_menu8.o(.text);
         build/crashbandicootxs/asm/code_3_1_10_3_2d0c.o(.text);
@@ -85,6 +80,13 @@ SECTIONS
         build/crashbandicootxs/src/graphics/settings_menu7.o(.text);
         build/crashbandicootxs/asm/code_3_1_10_10.o(.text);
         build/crashbandicootxs/src/graphics/settings_menu5.o(.text);
+        build/crashbandicootxs/src/graphics/settings_menu9.o(.text);
+        build/crashbandicootxs/src/graphics/settings_menu11.o(.text);
+        build/crashbandicootxs/asm/code_3_1_10_14.o(.text);
+        build/crashbandicootxs/src/graphics/settings_menu12.o(.text);
+        build/crashbandicootxs/asm/code_3_1_10_12.o(.text);
+        build/crashbandicootxs/src/graphics/settings_menu10.o(.text);
+        build/crashbandicootxs/asm/code_3_1_10_13.o(.text);
         build/crashbandicootxs/asm/code_3_1_10_11.o(.text);
         build/crashbandicootxs/src/graphics/oam_count.o(.text);
         build/crashbandicootxs/src/graphics/graphics.o(.text);
