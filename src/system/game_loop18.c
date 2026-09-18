@@ -3,10 +3,12 @@
 /* GitHub issue #38: 0x0802425C-0x08024810 (game_loop), continued from
  * game_loop17.c - see that file's header comment and
  * docs/matching/issue-38-medal-results-tally.md for the full write-up.
- * This slice picks up right after sub_8024344 (parked/left in
- * asm/code_3_2_17_24344.s) and runs through sub_802455C, the last
- * matched function before the sub_8024590..sub_8024708 run (parked/left
- * in asm/code_3_2_17_24590.s). */
+ * This slice picks up with sub_8024344 (contiguous with game_loop17.c's
+ * trailing sub_8024278 in ROM, so it lives here instead of getting its
+ * own file - see docs/workflow.md's "one .c file per contiguous ROM
+ * region" rule) and runs through sub_802455C, the last matched function
+ * before the sub_8024590..sub_8024708 run (parked/left in
+ * asm/code_3_2_17_24590.s). */
 struct MedalTableEntry {
     u8 unused_00[4];
     u32 cueTableOffset; /* +0x04: byte offset into gStaticData_0816CD80, see sub_8024498 below */
@@ -35,9 +37,81 @@ struct MedalItemList {
 extern void *gUnknown_030012B4;
 extern s32 sub_8025894(void *self, void *list);
 extern s32 sub_802968C(u16 catIndex);
-extern s32 sub_8024344(s32 idx, s32 flagIdx);
 
 struct AudioContext;
+
+/* Scans `gStaticData_0816C86C[idx]`'s item list (`items[]`, plus the two
+ * extra single-item slots, same shape sub_8024278 in game_loop17.c
+ * walks) for the first non-type-3 item whose `linkedObj->0x1c` nested
+ * structure (see sub_8025894's `list` parameter) has a nonzero `u16` at
+ * halfword index `flagIdx` in its own `+0x10` table pointer - i.e. "is
+ * flag `flagIdx` set on any list item's flag table". Returns as soon as
+ * a set flag is found (or a table read comes back nonzero), otherwise
+ * 0. `sub_8024428`/`34`/`40`/`4C`/`58` below are thin wrappers baking in
+ * a constant `flagIdx`.
+ *
+ * `flagIdx` is kept in `ip`/r12 for the whole function (via the
+ * `register ... asm("ip")` pin) rather than a normally-allocated
+ * register, matching the ROM's own register-pressure-driven choice -
+ * without the pin, gcc allocates it to a plain low register instead and
+ * the codegen diverges throughout. The `table`/`v` locals in each of
+ * the three (loop, extra1, extra2) flag-table reads also need explicit
+ * register pins (and, for `table`, a plain-integer type instead of a
+ * pointer type) to reproduce the ROM's exact register choice and
+ * operand order for the `table + shift` address computation - without
+ * the plain-integer type, C's usual pointer-arithmetic canonicalization
+ * (which always puts the pointer operand first) overrides the source
+ * order regardless of how the addition is written, so `shift + table`
+ * and `table + shift` compiled identically until `table` stopped being
+ * a pointer type. See docs/workflow.md's register-pinning techniques
+ * and docs/matching.md for other instances of this class of fix. */
+s32 sub_8024344(s32 idx, s32 flagIdx)
+{
+    register s32 fi asm("ip") = flagIdx;
+    s32 result = 0;
+    struct MedalItemList *list = (struct MedalItemList *)gStaticData_0816C86C[idx].itemList;
+    s32 i = 0;
+
+    if (result < list->count) {
+        struct MedalListItem **itemPtr = list->items;
+        s32 shift = fi << 1;
+        s32 n = list->count;
+
+        do {
+            struct MedalListItem *item = *itemPtr;
+
+            if (item->type != 3) {
+                void *nested = *(void **)((u8 *)item->linkedObj + 0x1c);
+                register u32 table asm("r1") = (u32)*(u8 **)((u8 *)nested + 0x10);
+                register u16 v asm("r3") = *(u16 *)(shift + table);
+
+                result = (u32)(-(s32)v | v) >> 31;
+            }
+            itemPtr++;
+            i++;
+        } while (i < n && result == 0);
+    }
+
+    if (result == 0 && list->extra1 != 0 && list->extra1->type != 3) {
+        void *nested = *(void **)((u8 *)list->extra1->linkedObj + 0x1c);
+        register u32 table asm("r0") = (u32)*(u8 **)((u8 *)nested + 0x10);
+        s32 shift = fi << 1;
+        register u16 v asm("r3") = *(u16 *)(shift + table);
+
+        result = (u32)(-(s32)v | v) >> 31;
+    }
+
+    if (result == 0 && list->extra2 != 0 && list->extra2->type != 3) {
+        void *nested = *(void **)((u8 *)list->extra2->linkedObj + 0x1c);
+        register u32 table asm("r0") = (u32)*(u8 **)((u8 *)nested + 0x10);
+        s32 shift = fi << 1;
+        register u16 v asm("r3") = *(u16 *)(shift + table);
+
+        result = (u32)(-(s32)v | v) >> 31;
+    }
+
+    return result;
+}
 
 /* `self->0x18 == gStaticData_0816C86C[self->0].itemList->extra2` - i.e.
  * "does self's cached value (see sub_802455C) match this medal entry's

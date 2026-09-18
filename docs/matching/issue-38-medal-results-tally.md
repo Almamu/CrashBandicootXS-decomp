@@ -169,3 +169,12 @@ elsewhere in the ROM and out of scope for this chunk.
 
 See [docs/status/game_loop.md](../status/game_loop.md) for the running
 matched/parked/raw lists this updates.
+
+**Update:** a follow-up pass matched `sub_8024344` and two of the six
+functions this doc's "Left raw" section lists as-is
+(`sub_8024640`/`sub_80246D8`/`sub_8024790`, all now real C), and produced
+NON_MATCHING C reconstructions for the remaining two
+(`sub_8024590`/`sub_8024708`) - see
+[docs/matching/issue-38-sound-channel-family.md](./issue-38-sound-channel-family.md)
+for the full write-up. This doc's own "Left raw" entries above are kept
+as historical record of the earlier pass and are no longer accurate.
