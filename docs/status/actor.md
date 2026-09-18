@@ -319,13 +319,11 @@ from "core" graphics.
   and the singleton's teardown/destructor, all sharing
   `actor_part17.c`/`actor_part18.c`/`actor_part20.c`'s established
   "self" object conventions.
-- `src/graphics/actor_part50.c`/`actor_part52.c`/`actor_part54.c`/
-  `actor_part56.c` (new files, GitHub issue #50, ROM
-  0x0802A69C-0x0802AC28 - numbered `50`/`52`/`54`/`56` rather than
-  `39`/`41`/`43`/`45` since issues #16 and #56's parallel PRs above
-  independently claimed those numbers first, non-adjacent since the
-  parked `UpdateAnimatedActorPart`/`sub_802AA0C`/`sub_802AB58` sit
-  interleaved between them; see
+- `src/graphics/actor_part50.c`/`actor_part51.c`/`actor_part52.c`/
+  `actor_part53.c`/`actor_part54.c`/`actor_part55.c`/`actor_part56.c`
+  (new files, GitHub issue #50, ROM 0x0802A69C-0x0802AC28 - numbered
+  `50`-`56` rather than `39`-`45` since issues #16 and #56's parallel
+  PRs above independently claimed those numbers first; see
   [docs/matching/issue-50-actor-2a69c.md](../matching/issue-50-actor-2a69c.md)):
   `sub_802A69C`, `sub_802A6B0`, `sub_802A6C4`, `sub_802A6D8`,
   `sub_802A6EC`, `InitActorPart`, `sub_802A7B8`, `sub_802A980`,
@@ -336,8 +334,11 @@ from "core" graphics.
   (previously only forward-declared by every other `actor_part*.c`
   file), its movement-threshold recompute pair, the fixed 15-slot
   object registry (`gUnknown_03001428`/`gUnknown_03000888`), and the
-  `gUnknown_03001464`-gated palette-cycle DMA cluster's non-parked
-  members.
+  `gUnknown_03001464`-gated palette-cycle DMA cluster's members - plus
+  `UpdateAnimatedActorPart`, `sub_802AA0C`, and `sub_802AB58`, all three
+  matched in a later pass that closed the register-pinning/pool-split
+  gaps documented in that same writeup (all 25 of this chunk's functions
+  are now real C, none NAKED).
 
 - `src/graphics/actor_part57.c` (new file, GitHub issue #19, ROM
   0x08015840-0x080159A4 - recategorized `graphics`->`actor` from the
@@ -813,28 +814,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   push/pop allocation never matching the ROM's `r4=self,r5=1,r6=e,r7=f`
   assignment - see `docs/matching/issue-56-0x0802f0dc-actor.md`.
 
-- **`UpdateAnimatedActorPart`** (`asm/code_3_2_20_8b7c_a88c.s`, C in
-  `src/graphics/actor_part55.c`) - the OAM draw/scale routine for the
-  `InitActorPart`-constructed "self" object. Every byte of this
-  ~120-instruction function matches except one `frame[1]` read the ROM
-  serves from a leftover, never-reloaded copy of `GetAnimFrameData`'s
-  return value still sitting in `r0` - a redundant-load/value-reuse
-  optimization this agbcc build doesn't perform - see
-  `docs/matching/issue-50-actor-2a69c.md`.
-- **`sub_802AA0C`** (`asm/code_3_2_20_8b7c_aa0c.s`, C in
-  `src/graphics/actor_part51.c`) - a 12-byte little-vector velocity
-  integrator. Every load/store confirmed correct (including the ROM's
-  own `ldm`/`stm` 3-word block-copy idiom at both ends); parked purely
-  on instruction scheduling around the three per-axis `>>8` shifts
-  between the two block copies - see
-  `docs/matching/issue-50-actor-2a69c.md`.
-- **`sub_802AB58`** (`asm/code_3_2_20_8b7c_ab58.s`, C in
-  `src/graphics/actor_part53.c`) - the palette-cycle cursor-advance DMA
-  step. Every load/store, branch and call confirmed correct; parked
-  because this compiler speculatively computes the cursor's decrement
-  ahead of the branch that decides whether it's needed, folding away a
-  redundant unconditional jump the ROM's own build still has - see
-  `docs/matching/issue-50-actor-2a69c.md`.
 - **`sub_8034058`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s`, C
   in `src/graphics/actor_part66.c`, GitHub issue #63) - an
   `InitActorPart`-based constructor with a trailing byte stack argument;
