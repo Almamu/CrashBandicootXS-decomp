@@ -1,78 +1,141 @@
 #include "core.h"
 
-/* GitHub issue #13: 0x0800FC70-0x08010A0C - continues the physics/
- * collision subsystem `game_loop6.c`/`game_loop7.c` started (see
- * docs/matching/issue-12-physics-collision.md and
- * docs/matching/issue-13-graphics-fc70.md), still in the same
- * `asm/code_3_2_17_e560.s` region issue #12 left untouched past its
- * own scope. Recategorized `graphics` -> `game_loop` for the same
- * reason issue #12 recategorized the previous span: this whole
- * neighborhood (~0x0800D000-0x08010D54) is `docs/rom_map.md`'s
- * confirmed shared physics/collision subsystem, not per-entity
- * behavior. `sub_800FC70`/`sub_800FDC8` immediately before this
- * function are left untouched raw - see the write-up doc. */
+/* GitHub issue #38: 0x0802425C-0x08024810 (game_loop). Continues the
+ * medal-results tally chain documented in docs/rom_map.md ("A per-level
+ * completion-time cascade, and a medal-table tally chain") - see
+ * docs/matching/issue-38-medal-results-tally.md for the full write-up
+ * of this chunk (this file covers the front slice, up to but not
+ * including sub_8024344, which is parked/left in
+ * asm/code_3_2_17_24344.s - see that write-up for why).
+ *
+ * `gStaticData_0816C86C` is the confirmed 36-slot medal table (see
+ * `struct threshold_table_entry` in src/graphics/oam_count.c and
+ * src/graphics/settings_menu6.c) - this file's functions resolve one
+ * more of that struct's `unused` bytes: `+0x20` (a pointer to a small
+ * `{count, items[], extra1, extra2}` list header, see sub_8024278
+ * below). Kept as this file's own local copy of the struct rather than
+ * editing the other two files' already-matched copies (this project's
+ * established per-translation-unit convention for this particular
+ * global, see the comment on `struct threshold_table_entry` in
+ * settings_menu6.c). */
+struct MedalTableEntry {
+    u8 unused_00[0x20];
+    void *itemList; /* +0x20: -> struct MedalItemList, see sub_8024278 */
+};
+COMPILE_TIME_ASSERT(sizeof(struct MedalTableEntry) == 0x24);
 
-extern void *gUnknown_030012D8;
+extern struct MedalTableEntry gStaticData_0816C86C[];
 
-/* Resets `self`'s collision-response bookkeeping: sets flags `+0xc`
- * bits 2/6, clears the low 7 bits of `+0x4d` (state byte) while also
- * clearing the global `gUnknown_030012D8+0x80` "hit" latch, then
- * zeroes the timer/list-link block `+0x44`-`+0x51`/`+0x58` and the two
- * neighbor-list pointers `+0x5c`/`+0x60`, and sets the `+0x54`
- * countdown to -1 (disabled). Matches the "get next"/"get prev" field
- * pair (`+0x5c`/`+0x60`) `sub_8010708`/`sub_801070C` in game_loop18.c
- * read/write. */
-void sub_800FEB0(void *selfArg)
+/* One entry of a `MedalTableEntry.itemList`. `linkedObj`'s own `+0x1c`
+ * field is a pointer to a further nested structure (see sub_8025894's
+ * `list` parameter in game_loop12.c) - not itself named here, since
+ * only this one offset into it is read anywhere in this file. */
+struct MedalListItem {
+    u8 unused_00[4];
+    void *linkedObj;  /* +0x04 */
+    s32 type;           /* +0x08: dispatch selector - see sub_8024278 */
+    u8 unused_0c[4];
+    u16 catIndex;          /* +0x10: category index passed to sub_802968C */
+};
+
+struct MedalItemList {
+    s32 count;                    /* +0x00 */
+    struct MedalListItem **items;  /* +0x04: array of `count` item pointers */
+    struct MedalListItem *extra1;   /* +0x08: single extra item, may be NULL */
+    struct MedalListItem *extra2;    /* +0x0c: single extra item, may be NULL */
+};
+
+extern void *gUnknown_030012B4;
+extern s32 sub_8025894(void *self, void *list);
+extern s32 sub_802968C(u16 catIndex);
+extern void sub_8026ED0(void *self);
+
+/* Wrapper: if bit 0 of `flags` is set, tears down `self` via
+ * `sub_8026ED0` (the documented UI-overlay-manager-family destroy
+ * call). */
+void sub_802425C(void *self, s32 flags)
 {
-    register u8 *self asm("r2") = selfArg;
-    u8 v = 4;
-    register u8 *addr asm("r3");
-    u8 zero;
-
-    v |= self[0xc];
-    v |= 0x40;
-    self[0xc] = v;
-
-    /* Inline-asm-anchored: the ROM computes the 0x7f/0x80 mask
-     * immediate *before* the `ldrb` byte load in both of these
-     * AND-and-store sequences (`movs r0,#mask; ldrb r4,[r3];
-     * ands r0,r4; strb r0,[r3]`), with the loaded byte specifically
-     * in r4 and the mask/result in r0 - every plain-C phrasing tried
-     * (compound assignment either direction, a named "mask"/"loaded"
-     * pair with and without register pins) instead had this compiler
-     * either load the byte first or land the AND result in the wrong
-     * register. Anchoring the exact instruction sequence here was
-     * more reliable than continuing to chase the scheduler. */
-    addr = self + 0x4d;
-    {
-        register u8 result asm("r0");
-        asm volatile(
-            "mov r0, #0x7f\n"
-            "ldrb r4, [%1]\n"
-            "and r0, r0, r4\n"
-            : "=r"(result) : "l"(addr) : "r4"
-        );
-        zero = 0;
-        *addr = result;
+    if (flags & 1) {
+        sub_8026ED0(self);
     }
-    *((u8 *)gUnknown_030012D8 + 0x80) = zero;
+}
 
-    asm volatile(
-        "mov r0, #0x80\n"
-        "ldrb r4, [%0]\n"
-        "and r0, r0, r4\n"
-        "strb r0, [%0]\n"
-        :: "l"(addr) : "r0", "r4", "memory"
-    );
+void nullsub_25(void)
+{
+}
 
-    *(u32 *)(self + 0x44) = zero;
-    self[0x4c] = zero;
-    *(u32 *)(self + 0x48) = zero;
-    self[0x4f] = zero;
-    self[0x50] = zero;
-    self[0x51] = zero;
-    self[0x58] = zero;
-    *(s32 *)(self + 0x54) = -1;
-    *(u32 *)(self + 0x5c) = zero;
-    *(u32 *)(self + 0x60) = zero;
+/* Per-level medal tally: sums, across `gStaticData_0816C86C[idx]`'s
+ * item list (`items[]`, plus the two extra single-item slots), a
+ * per-item value - `sub_8025894(gUnknown_030012B4, item->linkedObj's
+ * +0x1c list)` for `type` 0-2, `sub_802968C(item->catIndex)` for
+ * `type == 3`, 0 otherwise (including `type < 0`). The same 4-branch
+ * dispatch is inlined three times in the ROM (once per source: the
+ * `items[]` array, `extra1`, `extra2`) rather than calling a shared
+ * helper - `sub_8024464` (game_loop18.c) is a separate, standalone
+ * instance of the same dispatch body, not something this function
+ * reaches through. Each dispatch compiles as a genuine `switch` here
+ * (rather than an if/else-if chain) - only that shape reproduces the
+ * ROM's exact "test all three conditions inline, jump out to
+ * out-of-line handler blocks" layout for this compiler. */
+s32 sub_8024278(s32 idx)
+{
+    s32 total = 0;
+    struct MedalItemList *list = (struct MedalItemList *)gStaticData_0816C86C[idx].itemList;
+    s32 i;
+
+    for (i = 0; i < list->count; i++) {
+        struct MedalListItem *item = list->items[i];
+        s32 v = 0;
+        s32 type = item->type;
+
+        switch (type) {
+            case 0:
+            case 1:
+            case 2:
+                v = sub_8025894(gUnknown_030012B4, *(void **)((u8 *)item->linkedObj + 0x1c));
+                break;
+            case 3:
+                v = sub_802968C(item->catIndex);
+                break;
+        }
+        total += v;
+    }
+
+    if (list->extra1 != 0) {
+        struct MedalListItem *item = list->extra1;
+        s32 v = 0;
+        s32 type = item->type;
+
+        switch (type) {
+            case 0:
+            case 1:
+            case 2:
+                v = sub_8025894(gUnknown_030012B4, *(void **)((u8 *)item->linkedObj + 0x1c));
+                break;
+            case 3:
+                v = sub_802968C(item->catIndex);
+                break;
+        }
+        total += v;
+    }
+
+    if (list->extra2 != 0) {
+        struct MedalListItem *item = list->extra2;
+        s32 v = 0;
+        s32 type = item->type;
+
+        switch (type) {
+            case 0:
+            case 1:
+            case 2:
+                v = sub_8025894(gUnknown_030012B4, *(void **)((u8 *)item->linkedObj + 0x1c));
+                break;
+            case 3:
+                v = sub_802968C(item->catIndex);
+                break;
+        }
+        total += v;
+    }
+
+    return total;
 }

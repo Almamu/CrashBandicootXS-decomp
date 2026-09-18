@@ -1,5 +1,13 @@
 # Issue #13: 0x0800FC70-0x08010A0C (graphics -> game_loop)
 
+**Naming note:** these files are numbered `game_loop22`-`26` rather
+than `game_loop17`-`21` (which would have matched their creation order
+more naturally) because issue #38's parallel PR independently claimed
+`game_loop17.c`-`20.c` first, before this PR merged - resolved as a
+rename on merge to avoid add/add filename collisions. The whole
+five-file family was renumbered together (not just the four that
+literally collided) to keep it visually contiguous.
+
 25-function `decomp-chunk` covering the ROM span right after issue #12's
 `0x0800D040`-`0x0800FC70` physics/collision-subsystem chunk left off
 (see `docs/matching/issue-12-physics-collision.md`) - same
@@ -16,7 +24,7 @@ too, continuing issue #12's precedent.
 
 ## Matched (11 of 25 functions)
 
-- **`sub_800FEB0`** (`src/system/game_loop17.c`) - resets `self`'s
+- **`sub_800FEB0`** (`src/system/game_loop22.c`) - resets `self`'s
   collision-response state: sets flags `+0xc` bits 2/6, clears the low
   7 bits of `+0x4d` while also clearing the global
   `gUnknown_030012D8+0x80` "hit" latch, zeroes the timer/list-link
@@ -39,7 +47,7 @@ too, continuing issue #12's precedent.
   inline-asm block.
 - **`sub_80106DC`**/**`sub_8010708`**/**`sub_801070C`**/
   **`sub_8010710`**/**`sub_8010714`**/**`sub_8010718`**
-  (`src/system/game_loop18.c`) - the viewport collision-box refresh
+  (`src/system/game_loop23.c`) - the viewport collision-box refresh
   (`sub_8010B6C` on `gUnknown_030012D8+0x108`, then a saturating-at-
   zero `+0x92` hit counter), and the neighbor-list "get prev"/"get
   next"/"set prev"/"set next" accessor quartet (`self+0x60`/`+0x5c`)
@@ -50,7 +58,7 @@ too, continuing issue #12's precedent.
   gotchas beyond `sub_80106DC` needing its second `gUnknown_030012D8`
   dereference kept as a separate local (not reusing the first) to get
   the post-call reload the ROM does.
-- **`sub_8010804`**/**`sub_801085C`** (`src/system/game_loop19.c`) -
+- **`sub_8010804`**/**`sub_801085C`** (`src/system/game_loop24.c`) -
   a state-3-countdown-expiry sweep over the `gUnknown_0300130C` object
   list (same list/table layout `sub_800F1B8`/`sub_800F258` elsewhere in
   this still-raw region read), and a viewport `+0x18`-table trampoline-
@@ -64,10 +72,10 @@ too, continuing issue #12's precedent.
   always shifts in place) - and a `u32` (not `u8`) result type on the
   asm output operand to avoid a spurious truncation instruction the
   ROM doesn't have.
-- **`sub_8010908`** (`src/system/game_loop20.c`) - trivial
+- **`sub_8010908`** (`src/system/game_loop25.c`) - trivial
   `gStaticData_0816BBAE[idx]` byte-table lookup; its first parameter is
   unused in the ROM.
-- **`sub_8010A00`** (`src/system/game_loop21.c`) - extracts `self+0x48`
+- **`sub_8010A00`** (`src/system/game_loop26.c`) - extracts `self+0x48`
   bits 6-7. Needed a trailing `asm(".align 2, 0")` - the function body
   is 10 bytes (not 4-aligned), and the ROM pads the 2-byte gap before
   the next function with a zero halfword rather than the assembler's
