@@ -54,6 +54,13 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   `struct settings_sync_record`: `sub_8002B44`, `sub_8002B70`,
   `sub_8002B94`, `sub_8002BA4`, `sub_8002C14`, `sub_8002C40`,
   `sub_8002C6C`. See `docs/matching/issue-4-sio-settings-sync.md`.
+- `src/graphics/settings_menu9.c` (new file - issue #8,
+  0x080060AC-0x08006124): the decimal `itoa` helper and a
+  percentage-string formatter built on it: `sub_80060AC`, `sub_80060F8`.
+- `src/graphics/settings_menu12.c` (new file - issue #8,
+  0x08006250-0x080062A8): the composite screen's own top-level object's
+  "apply BLDCNT/BLDY/DISPCNT" step: `sub_8006250`. See
+  `docs/matching/issue-8-0x080060ac-overlay-ui.md`.
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -121,3 +128,15 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   push-list still differs (this compiler doesn't protect `r7` across
   `sub_8002C6C`'s calls here, unlike the ROM). See
   `docs/matching/issue-4-sio-settings-sync.md`, issue #4.
+- **`sub_8006124`**, **`sub_800619C`**, **`sub_80061E8`**
+  (`asm/code_3_1_10_14.s`, C in `src/graphics/settings_menu11.c`) -
+  three icon-manager centered-label draws (the companion "draw a
+  number/label on an icon widget" step for three of GitHub issue #7's
+  icon-widget constructors). Semantically confirmed; hits the same
+  gcc-2.9 register-allocation difficulty `sub_8006600` documents. See
+  `docs/matching/issue-8-0x080060ac-overlay-ui.md`, issue #8.
+- **`sub_8006518`** (`asm/code_3_1_10_13.s`, C in
+  `src/graphics/settings_menu10.c`) - the settings-row confirm-cursor
+  stepper on `struct sub_8006700_actor` (`src/graphics/oam_count.c`).
+  Semantically confirmed; same difficulty class as above. See
+  `docs/matching/issue-8-0x080060ac-overlay-ui.md`, issue #8.
