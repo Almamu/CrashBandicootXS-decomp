@@ -9,7 +9,7 @@ second pass against those five.
 
 ## Matched (7 of 12 remaining functions)
 
-- **`sub_801089C`** (`src/system/game_loop29.c`, new file) - plays
+- **`sub_801089C`** (`src/system/game_loop34.c`, new file) - plays
   cue-3 SFX, then - unless `self->field_08` is the sentinel `0xffff` -
   consumes a slot from the per-record bit-grid (`gUnknown_030012B4`,
   the same `sub_802599C`/`sub_80259D4` accessor pair game_loop12.c/

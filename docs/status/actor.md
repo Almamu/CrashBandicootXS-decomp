@@ -141,6 +141,17 @@ from "core" graphics.
   locals pinned to their own ABI registers in the ROM's actual load
   order, avoiding the callee-saved spill three earlier attempts hit)
 
+- `src/graphics/actor_part77.c` (new file, GitHub issue #9/#10, ROM
+  `0x0800B3F0`, non-adjacent to `actor_part48.c` since the matched
+  `actor_part15.c`/parked `sub_800B270`/`actor_part16.c` sit between
+  them): `sub_800B3F0` - a part-object constructor re-initializing
+  `self` via `sub_800A6A4`, allocating a child `struct actor` via
+  `sub_8008434`, hooking it up at `self+0xb0` via the standard
+  `sub_80087C0`/`sub_80087B4`/`sub_800872C` OAM trio, then calling
+  `sub_800A734` to finish the reset and setting `self`'s `field_08`/
+  `x`/`y` from its three `u16` arguments; see
+  [docs/matching/issue-9-10-0x0800a884-graphics.md](../matching/issue-9-10-0x0800a884-graphics.md).
+
 - `src/graphics/actor_part17.c` (new file - see `docs/matching.md`):
   `sub_800B704`, `sub_800B734`, `sub_800B7B0`, `sub_800B838`,
   `nullsub_13`, `sub_800B86C`, `sub_800B8A4`, `sub_800B8A8`,
@@ -167,6 +178,18 @@ from "core" graphics.
   `sub_802C614`, `sub_802C6C0`, `sub_802C904` - the same large
   per-instance "self" object's action-table/trampoline/circular-list
   conventions as `actor_part17.c`/`actor_part18.c`
+
+- `src/graphics/actor_part19i.c` (new file, directly adjacent to
+  `actor_part19d.c`'s matched functions - GitHub issue #53):
+  `sub_802C99C`, `sub_802CA28`, `sub_802CA6C`, `sub_802CAD0` - the
+  type-byte-dispatch/proximity "used"-state transition family (same
+  shape as `sub_802C540`/`sub_802C614`, `actor_part19g.c`); `sub_802CB34`
+  and its seven thin forwarding wrappers (`sub_802CB9C`, `sub_802CBC0`,
+  `sub_802CBE4`, `sub_802CC08`, `sub_802CC2C`, `sub_802CC54`,
+  `sub_802CC78`) - an `InitActorPart`-based constructor family
+  classifying a "kind" from a `sub_803ADB4`-scaled/clamped value plus a
+  range-keyed offset. See
+  [docs/matching/issue-53-actor-c7a8.md](../matching/issue-53-actor-c7a8.md).
 
 - `src/graphics/actor_aabb_setup.c` (new file, GitHub issue #70, ROM
   `0x0803AFDC`-`0x0803B060` - right after the parked division/modulo
@@ -301,6 +324,23 @@ from "core" graphics.
   `docs/rom_map.md` traces through the chunk's remaining (unmatched)
   functions. See
   [docs/matching/issue-16-actor-11b0c.md](../matching/issue-16-actor-11b0c.md).
+- `src/graphics/actor_part79.c` (new file, GitHub issue #16, ROM
+  0x08012160-0x08012420): `sub_8012160`, `sub_8012238`, `sub_80122CC` -
+  three more members of the 42-slot action-dispatch-table family
+  (`gStaticData_0816BF20`), operating on the same still-unnamed "child
+  object" struct (`self+0xc`/`self+0x10` sub-record pointers, the
+  `+0x27`-`+0x32` state/flag/table-index trio) `actor_part18.c`/
+  `actor_part18b.c` already established conventions for. Not
+  ROM-adjacent to those files (the raw `sub_8012420`/`sub_8012694`/
+  `sub_801283C` and the still-raw `sub_8011BD4` sit between them), so
+  a new file. See
+  [docs/matching/issue-16-actor-12160.md](../matching/issue-16-actor-12160.md).
+- `src/graphics/actor_part80.c` (new file, GitHub issue #16, ROM
+  0x08012A7C-0x08012AF4): `sub_8012A7C` - another member of the same
+  action-dispatch-table family, not ROM-adjacent to `actor_part79.c`'s
+  functions either (the raw `sub_8012420`/`sub_8012694`/`sub_801283C`
+  sit in between). See
+  [docs/matching/issue-16-actor-12160.md](../matching/issue-16-actor-12160.md).
 - `src/graphics/actor_part43.c`/`actor_part44.c`/`actor_part45.c`/
   `actor_part46.c` (new files, GitHub issue #56, ROM
   0x0802F0DC-0x0802FBF0 - a second boss-weapon "spawn/pre-attack"
@@ -582,6 +622,14 @@ embedded as asm instead. They're tracked as parked, not matched.
   "kind" spawner. Hits this project's confirmed categorical r7-pin
   compiler bug. GitHub issue not tracked separately, see
   `docs/matching/naked-sub_8007dbc.md`.
+- **`sub_802C7A8`** (`src/graphics/actor_part19h.c`) - a circular-list
+  AABB-overlap "chain pickup" scan: walks the whole `self+0x4c`-rooted
+  actor list looking for type-4 nodes overlapping `self`'s own
+  translated `self+0x38` box, firing the shared used-state transition
+  on each match. Same heavy two-scratch-AABB-record-plus-loop-lifetime-
+  `r7` shape as `sub_802D7B0`/`sub_802DD9C` below - hits the same
+  confirmed categorical gcc-2.9 r7-pin bug. GitHub issue #53, see
+  [docs/matching/issue-53-actor-c7a8.md](../matching/issue-53-actor-c7a8.md).
 - **`sub_802D3A8`** (`src/graphics/actor_part62.c`) - eases `self`'s
   cached position toward a per-state target/table-scatter offset. Hits
   this project's confirmed categorical gcc-2.9 r7-pin bug. GitHub issue
@@ -617,6 +665,17 @@ embedded as asm instead. They're tracked as parked, not matched.
 
 ### `NON_MATCHING` (not yet byte-exact)
 
+- **`sub_800A884`** (`src/graphics/actor_part78.c`, GitHub issue
+  #9/#10; real bytes in `asm/code_3_2_16_a884.s`) - a per-frame
+  reentrancy-guard-shaped wrapper dispatching a pending-action "kind"
+  byte (`gUnknown_03001308+0x29`) through a 10-case jump table, then a
+  keyframe-lookup/camera-position probe via `sub_80083B8`/
+  `sub_8026BC0` sharing `sub_80084C4`'s case-to-block mapping. Every
+  load/store/branch/call confirmed correct against the ROM; the leading
+  ~40 instructions are register-for-register byte-exact in isolation,
+  the rest of the function hasn't been through the same register-pin
+  iteration yet. See
+  [docs/matching/issue-9-10-0x0800a884-graphics.md](../matching/issue-9-10-0x0800a884-graphics.md).
 - **`sub_800A528`/`sub_800A590`** (`src/graphics/actor_part47.c`,
   GitHub issue #9; real bytes in `asm/code_3_2_11_a528.s`) - a moving-
   platform "ride along" hookup, nudging `self->y` by the delta between
@@ -863,19 +922,27 @@ embedded as asm instead. They're tracked as parked, not matched.
   #56) - a ~150-instruction position-update/collision-damage function
   with heavy `sb`/`r8` register pressure; left raw, out of scope for
   this pass - see `docs/matching/issue-56-0x0802f0dc-actor.md`.
-- **`sub_8011BD4`/`sub_8012160`/`sub_8012238`/`sub_80122CC`/
-  `sub_8012420`/`sub_8012694`/`sub_801283C`/`sub_8012A7C`/
-  `sub_8012AF4`/`sub_8012D24`** (`asm/code_3_2_17_11bd4.s`, ROM
-  0x08011BD4-0x08012FBC, GitHub issue #16) - `sub_8011BD4` itself is
-  `docs/rom_map.md`'s documented ~1420B, 25-case/7-case nested
-  jump-table companion state machine to `sub_8016288` (still raw,
-  type-`0x1d` player-control family); the rest are further members of
-  the 42-slot action-dispatch-table family (`gStaticData_0816BF20`)
-  reading/writing a still-unnamed "child object" struct (`self+0xc`/
-  `+0x10`/`+0x18` sub-record pointers, distinct from `struct actor`)
-  that `docs/rom_map.md` itself says isn't understood with byte-exact
-  precision yet. Left raw, out of scope for this pass - see
-  [docs/matching/issue-16-actor-11b0c.md](../matching/issue-16-actor-11b0c.md).
+- **`sub_8011BD4`** (`asm/code_3_2_17_11bd4.s`, ROM 0x08011BD4, GitHub
+  issue #16) - `docs/rom_map.md`'s documented ~1420B, 25-case/7-case
+  nested jump-table companion state machine to `sub_8016288` (still
+  raw, type-`0x1d` player-control family); left raw, out of scope for
+  this pass - see
+  [docs/matching/issue-16-actor-11b0c.md](../matching/issue-16-actor-11b0c.md)
+  and
+  [docs/matching/issue-16-actor-12160.md](../matching/issue-16-actor-12160.md).
+- **`sub_8012420`/`sub_8012694`/`sub_801283C`** (`asm/code_3_2_17_12420.s`,
+  ROM 0x08012420-0x08012A7C, GitHub issue #16) - further members of the
+  42-slot action-dispatch-table family (`gStaticData_0816BF20`) reading/
+  writing the same still-unnamed "child object" struct `sub_8012160`/
+  `sub_8012238`/`sub_80122CC` (matched below) now operate on; not
+  attempted to byte-exact precision this pass. Left raw - see
+  [docs/matching/issue-16-actor-12160.md](../matching/issue-16-actor-12160.md).
+- **`sub_8012AF4`/`sub_8012D24`** (`asm/code_3_2_17_12af4.s`, ROM
+  0x08012AF4-0x08012FBC, GitHub issue #16) - `sub_8012AF4` uses a
+  stack-local 12-byte record copy and `r8`; `sub_8012D24` is a further
+  sibling; neither attempted to byte-exact precision this pass. Left
+  raw - see
+  [docs/matching/issue-16-actor-12160.md](../matching/issue-16-actor-12160.md).
 - **`sub_8007634`** (`asm/code_3_2.s`, ROM 0x08007634, GitHub issue #9)
   - real GBA hardware-affine sprite-matrix setup; already flagged in
   `docs/matching.md` as needing "a dedicated session" of its own, not

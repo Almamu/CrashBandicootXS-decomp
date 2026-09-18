@@ -110,5 +110,16 @@ plain C didn't converge.
   `gUnknown_030008BC`); semantically faithful but not yet
   register-tuned - see
   [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md).
+- **`LoadGraphicsPackage`** (`src/graphics/graphics_package_1e578.c`,
+  real bytes guarded at the tail of `asm/code_3_2_17_188d0.s`) - the
+  cluster's own namesake; the palette/tileset/tilemap loader itself,
+  using the same `struct bg_package` (now in `include/graphics_package.h`,
+  shared with `LoadBg2Background`/`LoadObjSpriteTiles` above). Matches
+  the ROM instruction-for-instruction after heavy register pinning except
+  one dropped callee-saved `r7` push/pop pair - the same
+  first-pass-vs-second-pass register-pressure artifact as
+  `LoadBg2Background` above - see
+  [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)'s
+  "Third pass".
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.

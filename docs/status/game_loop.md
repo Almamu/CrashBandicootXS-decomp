@@ -175,6 +175,33 @@ plain C didn't converge.
   and-filter helpers; hits the same cross-jump-over-merge gap as
   `sub_800FDC8` above. See
   [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
+- **`sub_80259D4`** (`src/system/game_loop13.c`, GitHub issue #41) -
+  sets a bit in both the `self+0x208` and `self+0x308` bit-grids at
+  once; a true leaf function in the ROM (`self` pinned to `ip` the
+  whole body) whose only gap is an unreproducible `mov ip, r0`/
+  `adds r2, r1, #0` parameter-reload order. See
+  [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
+- **`sub_8025A64`** (`src/system/game_loop29.c`, new file - not
+  contiguous with any other matched run once its three siblings below
+  stayed parked - GitHub issue #41) - a part-object spawn helper; hits
+  the confirmed `register T x asm("r7")`-never-saved toolchain bug plus
+  an unfixable `& -0x10` mask-fold. See
+  [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
+- **`sub_8025B0C`/`sub_8025BAC`/`sub_8025CA4`** (`src/system/game_loop14.c`,
+  prepended ahead of the already-matched `sub_8025D28` run - GitHub
+  issue #41) - three more part-object spawn helpers; `sub_8025BAC`
+  alone repeats `sub_8025A64`'s unfixable mask-fold three times over.
+  See [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
+- **`sub_8025D74`** (`src/system/game_loop15.c`, GitHub issue #41) -
+  BG-scroll-layer hardware-register/bitfield initializer; the
+  `& -0x20`/`& -0xd` masks always fold to their positive byte-immediate
+  form instead of the ROM's runtime negation. See
+  [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
+- **`sub_8025E98`/`sub_8025F3C`** (`src/system/game_loop16.c`, GitHub
+  issue #41) - the screen-edge tile-coordinate computer/streaming
+  driver, and the circular-buffer decoded-tile streaming loop; both
+  keep `r8` live across most of their bodies. See
+  [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
@@ -214,26 +241,6 @@ plain C didn't converge.
 - **`sub_8025894`** (`src/system/game_loop12.c`, GitHub issue #41) - a
   group/item list counter with a 19-entry jump table; real bytes stay
   in `asm/code_3_2_17_255d4.s`. See
-  [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
-- **`sub_80259D4`** (`src/system/game_loop13.c`, GitHub issue #41) -
-  sets a bit in both the `self+0x208` and `self+0x308` bit-grids at
-  once; real bytes in `asm/code_3_2_17_259d4.s`. See
-  [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
-- **`sub_8025A64`/`sub_8025B0C`/`sub_8025BAC`/`sub_8025CA4`**
-  (`src/system/game_loop14.c`, GitHub issue #41) - four part-object
-  spawn helpers (`gUnknown_030012D0`-table-indexed,
-  `sub_8009ED0`/`sub_8011114`/`sub_801173C`-family constructors); real
-  bytes in `asm/code_3_2_17_25a64.s`. See
-  [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
-- **`sub_8025D74`** (`src/system/game_loop15.c`, GitHub issue #41) -
-  BG-scroll-layer hardware-register/bitfield initializer; real bytes
-  in `asm/code_3_2_17_25d74.s`. See
-  [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
-- **`sub_8025E98`/`sub_8025F3C`** (`src/system/game_loop16.c`, GitHub
-  issue #41) - the streamed-tile-range screen-edge-tile computer, and
-  a circular-buffer decoded-tile streaming loop; real bytes in
-  `asm/code_3_2_17_25e98.s`/`asm/code_3_2_17_25f3c.s` respectively.
-  See
   [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
 
 ## Left raw, semantics traced but not byte-matching (GitHub issue #38)
