@@ -186,7 +186,7 @@ void sub_800397C(struct pause_options_screen *self, u32 flags)
 
 #include "icon_manager.h"
 
-extern void *gUnknown_030012DC;
+extern struct icon_manager *gUnknown_030012DC;
 extern s32 sub_8028A30(void *mgr, s32 arg1);
 extern s32 sub_8004A50(struct pause_options_screen *self);
 extern s32 sub_8026F38(s32 arg0);
@@ -202,53 +202,172 @@ extern s32 gStaticData_0816B1BC[];
  * (src/graphics/settings_menu.c, parked) - see that function's doc
  * comment for the class of gcc register-allocation quirk this may hit
  * too. */
-#if NON_MATCHING
-/* Reconstructed (semantics fully understood) but NOT YET
- * BYTE-MATCHING: the same measure-then-draw icon shape as
- * sub_80049CC (src/graphics/settings_menu.c, parked) hits the same
- * unresolved class of gcc-2.9 register-allocation nondeterminism
- * documented there - attempts here to pin a cached `&gUnknown_030012DC`
- * address (matching the technique that worked for sub_800306C/
- * sub_800312C/sub_80031E4 elsewhere in this chunk) ran into the pinned
- * loop counter colliding with a compiler-hoisted constant in the same
- * register, and further pin juggling didn't converge. Real bytes stay
- * in asm/code_3_1_10_3_3a60.s, wrapped `.if NON_MATCHING == 0`. */
+/* This compiler's automatic register allocation cannot reproduce the
+ * ROM's exact shape here even with the individual-variable register
+ * pins that work elsewhere in this chunk (sub_800306C/sub_800312C/
+ * sub_80031E4): a loop-invariant constant (`mgr->record`'s 0x130 field
+ * offset, and separately `&gStaticData_0816B1BC[0]`) repeatedly gets
+ * hoisted out of the loop into whichever register looks free at that
+ * program point, which lands on r7 - the pinned loop counter itself,
+ * silently corrupting it - because nothing textually mentions `i` in
+ * between, and even where a per-value register pin sidesteps that, the
+ * ROM's specific choice of scratch register per access still differs
+ * (e.g. reusing r1's already-computed 0x114 via a plain `+0x1c` for the
+ * second `mgr->record` fetch, instead of resynthesizing 0x98<<1). The
+ * per-iteration body below is therefore spelled out as one inline-asm
+ * transcription of the ROM's own instruction sequence, operating on the
+ * same pinned C locals (`self`/`mgrAddr`/`y`/`i`/`label`/`mgr`) the rest
+ * of this file's register-pinned functions use - see
+ * docs/matching/issue-5-overlay-ui-sync.md for the write-up. */
 void sub_8003A60(struct pause_options_screen *self)
 {
-    s32 i;
-    s32 y = 0x64;
+    register struct pause_options_screen *selfReg asm("r9") = self;
+    register s32 y asm("sl") = 0x64;
+    s32 i = 0;
+    /* `mgrAddr`'s init is deliberately kept last (right before the loop
+     * body) - the ROM computes it right there too, not up front with
+     * `self`. It's also set via its own tiny asm statement, rather than
+     * a plain C initializer, because this compiler's own literal-pool
+     * placement for a compiler-managed `ldr =symbol` always defers to
+     * the function's tail (it never looks inside a raw asm statement's
+     * text for an earlier flush point, even one right there in the very
+     * next statement) - the matching `.pool` directive placed inside
+     * the loop body's first asm block below, right after its own
+     * unconditional `b`, is what actually lands this literal in the
+     * ROM's exact early slot. */
+    register struct icon_manager **mgrAddr asm("r8");
+    register s32 label asm("r6");
+    register struct icon_manager *mgr asm("r4");
 
-    for (i = 0; i <= 4; i++) {
-        struct icon_manager *mgr = gUnknown_030012DC;
-        struct icon_record *rec;
-        s16 off;
-        s32 label = gStaticData_0816B1BC[i];
-        s32 str;
-        s32 width;
+    asm volatile(
+        "ldr r1, =gUnknown_030012DC\n"
+        "mov %0, r1\n"
+        : "=r" (mgrAddr)
+        :
+        : "r1"
+    );
 
-        if (self->field_10 == i) {
-            sub_8028A30(mgr, sub_8004A50(self));
-        } else {
-            sub_8028A30(mgr, 0);
-        }
+    /* `i`/`y` are kept as genuinely-used C locals (the `for` loop's own
+     * compare/increment) rather than folded into the asm text below -
+     * a register pin that's *only* ever touched from inside an asm
+     * operand/clobber list, with no real (non-asm) RTL use, doesn't get
+     * the usual callee-save push/pop from this compiler (it silently
+     * drops the save of that hardware register instead of erroring),
+     * so the loop control has to stay in plain C to keep r7 (and sl)
+     * properly preserved. This build of agbcc also predates GCC's
+     * `%[name]` symbolic asm-operand syntax, so operands are referenced
+     * positionally below. */
+    for (; i <= 4; i++) {
+        /* %0 = mgr, %1 = i, %2 = self, %3 = mgrAddr */
+        asm volatile(
+            "mov r2, %2\n"
+            "ldr r0, [r2, #0x10]\n"
+            "cmp %1, r0\n"
+            "bne 1f\n"
+            "mov r0, %3\n"
+            "ldr %0, [r0]\n"
+            "mov r0, %2\n"
+            "bl sub_8004A50\n"
+            "add r1, r0, #0\n"
+            "lsl r1, r1, #0x18\n"
+            "lsr r1, r1, #0x18\n"
+            "add r0, %0, #0\n"
+            "bl sub_8028A30\n"
+            "b 2f\n"
+            ".pool\n"
+            "1:\n"
+            "mov r1, %3\n"
+            "ldr r0, [r1]\n"
+            "movs r1, #0\n"
+            "bl sub_8028A30\n"
+            "2:\n"
+            : "=r" (mgr)
+            : "r" (i), "r" (selfReg), "r" (mgrAddr)
+            : "r0", "r1", "r2", "r3", "r12", "lr", "cc", "memory"
+        );
 
-        mgr = gUnknown_030012DC;
-        rec = mgr->record;
-        off = rec->slots[0].offset;
-        str = sub_8026F38(label);
-        width = sub_803AD80((u8 *)mgr + off, (void *)str, rec->slots[0].ptr);
-
-        mgr = gUnknown_030012DC;
-        mgr->posX = (0xf0 - width) >> 1;
-        mgr->posY = y;
-        rec = mgr->record;
-        off = rec->slots[2].offset;
-        str = sub_8026F38(label);
-        sub_803AD80((u8 *)mgr + off, (void *)str, rec->slots[2].ptr);
+        /* %0 = mgr, %1 = label, %2 = y, %3 = i, %4 = mgrAddr */
+        asm volatile(
+            "mov r2, %4\n"
+            "ldr %0, [r2]\n"
+            "movs r1, #0x98\n"
+            "lsl r1, r1, #1\n"
+            "add r0, %0, r1\n"
+            "ldr r0, [r0]\n"
+            "add r5, r0, #0\n"
+            "add r5, #0x10\n"
+            "movs r2, #0x10\n"
+            "ldrsh r0, [r0, r2]\n"
+            "add %0, %0, r0\n"
+            "ldr r1, =gStaticData_0816B1BC\n"
+            "lsl r0, %3, #2\n"
+            "add r0, r0, r1\n"
+            "ldr %1, [r0]\n"
+            "add r0, %1, #0\n"
+            "bl sub_8026F38\n"
+            "add r1, r0, #0\n"
+            "ldr r2, [r5, #4]\n"
+            "add r0, %0, #0\n"
+            "bl sub_803AD80\n"
+            "movs r1, #0xf0\n"
+            "sub r1, r1, r0\n"
+            "asr r1, r1, #1\n"
+            "mov r0, %4\n"
+            "ldr %0, [r0]\n"
+            "movs r2, #0x88\n"
+            "lsl r2, r2, #1\n"
+            "add r0, %0, r2\n"
+            "str r1, [r0]\n"
+            "movs r1, #0x8a\n"
+            "lsl r1, r1, #1\n"
+            "add r0, %0, r1\n"
+            "mov r2, %2\n"
+            "str r2, [r0]\n"
+            "add r1, #0x1c\n"
+            "add r0, %0, r1\n"
+            "ldr r0, [r0]\n"
+            "add r5, r0, #0\n"
+            "add r5, #0x20\n"
+            "movs r2, #0x20\n"
+            "ldrsh r0, [r0, r2]\n"
+            "add %0, %0, r0\n"
+            "add r0, %1, #0\n"
+            "bl sub_8026F38\n"
+            "add r1, r0, #0\n"
+            "ldr r2, [r5, #4]\n"
+            "add r0, %0, #0\n"
+            "bl sub_803AD80\n"
+            : "+r" (mgr), "+r" (label)
+            : "r" (y), "r" (i), "r" (mgrAddr)
+            : "r0", "r1", "r2", "r3", "r5", "r12", "lr", "cc", "memory"
+        );
 
         y += 0xa;
     }
 
-    sub_8003F30(self, 0x5a, 0x21, 0, 0);
+    /* The ROM stores this call's stack-passed 5th argument (`flag`, a
+     * plain u8 0) through a computed `mov r1, sp` pointer and a `strb`
+     * - Thumb1 has no sp-relative byte-store encoding, so the byte has
+     * to go through a register base - whereas this compiler always
+     * emits a direct word-sized `str r0, [sp]` for a stack argument
+     * regardless of the parameter's declared width. Spelled out in asm
+     * to match; `flag`'s address is still taken (as an unused input
+     * operand) purely to make this compiler reserve the same 4-byte
+     * stack slot the ROM's own `sub sp, #4`/`add sp, #4` frame does. */
+    {
+        u8 flag;
+        asm volatile(
+            "mov r1, sp\n"
+            "movs r0, #0\n"
+            "strb r0, [r1]\n"
+            "mov r0, %0\n"
+            "movs r1, #0x5a\n"
+            "movs r2, #0x21\n"
+            "movs r3, #0\n"
+            "bl sub_8003F30\n"
+            :
+            : "r" (selfReg), "r" (&flag)
+            : "r0", "r1", "r2", "r3", "r12", "lr", "cc", "memory"
+        );
+    }
 }
-#endif /* NON_MATCHING */
