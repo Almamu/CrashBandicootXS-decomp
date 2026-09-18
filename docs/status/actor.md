@@ -19,12 +19,12 @@ from "core" graphics.
 - `src/graphics/actor_part2.c` (new file - `sub_8007C30`'s real ROM
   address isn't adjacent to `actor_part.c`'s matched functions either,
   since the parked `sub_8007B00`/`sub_8007B98` sit raw between them;
-  see `docs/matching.md`): `sub_8007C30`, `sub_8007CF8`, `sub_8007DBC`
-  (the last one matched via NAKED asm transcription - see
-  `docs/matching/naked-sub_8007dbc.md`)
+  see `docs/matching.md`): `sub_8007C30`, `sub_8007CF8`. (This file's
+  `sub_8007DBC` is a NAKED transcription tracked as parked, not matched
+  - see below and `docs/matching/naked-sub_8007dbc.md`.)
 - `src/graphics/actor_part3.c` (new file - directly adjacent to
   `actor_part2.c`'s matched functions now that `sub_8007DBC` is
-  matched too, closing the old raw gap between them):
+  byte-exact too, closing the old raw gap between them):
   `sub_8007F78`, `sub_8007FD8`
 - `src/graphics/actor_part4.c` (new file - `sub_80080C0`'s real ROM
   address isn't adjacent to `actor_part3.c`'s matched functions
@@ -264,16 +264,10 @@ from "core" graphics.
   `sub_803B2E0`, `sub_803B30C`, `sub_803B338`, `sub_803B364`,
   `sub_803B390`, `sub_803B3BC`, `sub_803B3E8`, `sub_803B414`,
   `sub_803B440` - unlink `self` from its `+0x48`/`+0x4c` circular list,
-  set `+0x50` to the shared "dead" vtable, and conditionally free), and
-  `sub_803B46C` (fixed-position (120, 106) OAM setup for one sprite
-  frame - screen-space visibility cull, then builds the OAM attribute
-  words and calls `SetupSpriteFrameOam`; matched via NAKED transcription
-  as the near-identical twin of the still-parked `sub_802C2FC`
-  (`actor_part19b.c`), hitting the same two compiler gaps: a
-  `| 0`-with-a-zero-valued-term this compiler's dead-store elimination
-  always removes, and a register-budget difference needing an extra
-  spilled/high register the ROM doesn't need) - see
+  set `+0x50` to the shared "dead" vtable, and conditionally free) - see
   [docs/matching/issue-71-0x0803b060-actor.md](../matching/issue-71-0x0803b060-actor.md).
+  (This file's `sub_803B46C` is a NAKED transcription tracked as parked,
+  not matched - see below.)
 - `src/graphics/actor_part39.c` (new file, GitHub issue #16, ROM
   0x080119A8-0x08011BD4): `sub_80119A8`, `sub_80119D4`, `sub_80119D8`,
   `sub_80119EC`, `sub_80119FC`, `sub_8011A1C`, `sub_8011A50`,
@@ -358,15 +352,6 @@ from "core" graphics.
   `sub_802D600`, `sub_802D648`, `sub_802D6A0`, `sub_802D764` -
   `InitActorPart`-based constructor variants plus the
   `gUnknown_030012C0+0x78` Aku-Aku-mask-style add/remove pair.
-- `src/graphics/actor_part74.c` (new file, GitHub issue #54, ROM
-  0x0802D7B0-0x0802DA84, sits between `actor_part58.c` and
-  `actor_part59.c`; see
-  [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
-  `sub_802D7B0`, `sub_802D9A8`, `sub_802DA68` - a confirmed slot (index
-  3) of the type-0 `category_vtable` (also runs a full 3-axis AABB
-  overlap test against the player before dispatching a `sub_803AD80`
-  trampoline) and a palette-gradient/hardware-sound cursor pair for the
-  `gUnknown_030014BC` object; all three NAKED-transcribed.
 - `src/graphics/actor_part59.c` (new file, GitHub issue #54, non-
   adjacent since `actor_part74.c` sits between it and `actor_part58.c`;
   see
@@ -375,14 +360,6 @@ from "core" graphics.
   tracking object's two `gStaticData_0817A840` vtable-slot update
   functions (accumulate/clamp, tier-keyed `PlaySfx`/`sub_80019F8`
   cues, and a shared kind/anim-reset transition tail).
-- `src/graphics/actor_part75.c` (new file, GitHub issue #54, ROM
-  0x0802DD9C-0x0802E058, sits between `actor_part59.c` and
-  `actor_part60.c`; see
-  [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
-  `sub_802DD9C`, `sub_802DE70` - the self-vs-player 3-axis AABB overlap
-  test factored out of `sub_802D7B0` (used by `sub_802D6A0`,
-  actor_part58.c) and the `gUnknown_030014BC` object's ~160-instruction
-  VRAM gauge-tile bitmap generator/DMA setup; both NAKED-transcribed.
 - `src/graphics/actor_part60.c` (new file, GitHub issue #54, non-
   adjacent since `actor_part75.c` sits between it and `actor_part59.c`;
   see
@@ -390,24 +367,11 @@ from "core" graphics.
   `sub_802DFBC`, `sub_802DFC8`, `sub_802DFDC` - the
   `gUnknown_030014BC` object's state-flag setter, destructor, and
   constructor.
-- `src/graphics/actor_part76.c` (new file, GitHub issue #54, ROM
-  0x0802E058, sits between `actor_part60.c` and `actor_part61.c`; see
-  [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
-  `sub_802E058` - a parameterized twin of `sub_802DE70`'s VRAM gauge-tile
-  triangular-fill loop; NAKED-transcribed.
 - `src/graphics/actor_part61.c` (new file, GitHub issue #54, non-
   adjacent since `actor_part76.c` sits between it and `actor_part60.c`;
   see
   [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
   `nullsub_27` - a genuine no-op stub.
-- `src/graphics/actor_part62.c` (new file, GitHub issue #54, non-
-  adjacent since `actor_part76.c` sits between it and `actor_part61.c`;
-  see
-  [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
-  `sub_802D3A8` (eases `self`'s cached position toward a per-state
-  target/table-scatter offset, NAKED - hit this project's confirmed
-  categorical gcc-2.9 r7-pin bug, transcribed instruction-for-instruction
-  from the ROM disassembly instead).
 - `src/graphics/actor_part63.c`/`actor_part65.c`/`actor_part67.c`/
   `actor_part69.c`/`actor_part71.c`/`actor_part73.c` (new files, GitHub
   issue #63, ROM 0x08033EF4-0x08034AA4 - three `InitActorPart`-rooted
@@ -432,6 +396,52 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
+
+### NAKED transcription (byte-exact, but not real decompiled C)
+
+These functions produce byte-exact ROM output, but only because the
+entire function body is hand-transcribed disassembly wrapped in inline
+`asm()` - the C-level matching attempt failed and the raw bytes got
+embedded as asm instead. They're tracked as parked, not matched.
+
+- **`sub_8007DBC`** (`src/graphics/actor_part2.c`) - the player-collision
+  "kind" spawner. Hits this project's confirmed categorical r7-pin
+  compiler bug. GitHub issue not tracked separately, see
+  `docs/matching/naked-sub_8007dbc.md`.
+- **`sub_802D3A8`** (`src/graphics/actor_part62.c`) - eases `self`'s
+  cached position toward a per-state target/table-scatter offset. Hits
+  this project's confirmed categorical gcc-2.9 r7-pin bug. GitHub issue
+  #54, see
+  [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md).
+- **`sub_802D7B0`**, **`sub_802D9A8`**, **`sub_802DA68`**
+  (`src/graphics/actor_part74.c`) - a confirmed slot (index 3) of the
+  type-0 `category_vtable` (also runs a full 3-axis AABB overlap test
+  against the player before dispatching a `sub_803AD80` trampoline) and
+  a palette-gradient/hardware-sound cursor pair for the
+  `gUnknown_030014BC` object. GitHub issue #54, see
+  [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md).
+- **`sub_802DD9C`**, **`sub_802DE70`** (`src/graphics/actor_part75.c`) -
+  the self-vs-player 3-axis AABB overlap test factored out of
+  `sub_802D7B0` (used by `sub_802D6A0`, `actor_part58.c`) and the
+  `gUnknown_030014BC` object's ~160-instruction VRAM gauge-tile bitmap
+  generator/DMA setup. GitHub issue #54, see
+  [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md).
+- **`sub_802E058`** (`src/graphics/actor_part76.c`) - a parameterized
+  twin of `sub_802DE70`'s VRAM gauge-tile triangular-fill loop. GitHub
+  issue #54, see
+  [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md).
+- **`sub_803B46C`** (`src/graphics/actor_anim.c`) - fixed-position
+  (120, 106) OAM setup for one sprite frame - screen-space visibility
+  cull, then builds the OAM attribute words and calls
+  `SetupSpriteFrameOam`; near-identical twin of the still-parked
+  `sub_802C2FC` (`actor_part19b.c`), hitting the same two compiler
+  gaps: a `| 0`-with-a-zero-valued-term this compiler's dead-store
+  elimination always removes, and a register-budget difference needing
+  an extra spilled/high register the ROM doesn't need. GitHub issue
+  #71, see
+  [docs/matching/issue-71-0x0803b060-actor.md](../matching/issue-71-0x0803b060-actor.md).
+
+### `NON_MATCHING` (not yet byte-exact)
 
 - **`sub_800A528`/`sub_800A590`** (`src/graphics/actor_part47.c`,
   GitHub issue #9; real bytes in `asm/code_3_2_11_a528.s`) - a moving-

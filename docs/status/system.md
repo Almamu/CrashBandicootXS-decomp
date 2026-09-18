@@ -24,24 +24,19 @@ category page - see [game_loop.md](./game_loop.md).
   match); see `docs/matching.md`
 - `src/system/timer_util.c`: `sub_803A944`, `sub_803A948`, `sub_803A94C`,
   `LZ77UnCompWrapper`, `sub_803A954`, `RLUnCompWrapper`, `sub_803A95C`,
-  `sub_0803A960` (eight BIOS SWI wrappers), `sub_803A968` (picks a
-  12-byte `EepromConfig` table by chip-size code), `sub_803A9D0`
-  (claims a hardware timer, hands back an IRQ-handler-stub address),
-  `sub_803AA08` (arms the claimed timer; matched via NAKED
-  transcription) - GitHub issue #69, see
-  `docs/matching/issue-69-eeprom-timer.md`
+  `sub_0803A960` (eight BIOS SWI wrappers - NAKED but genuinely
+  un-improvable trampolines with no real C logic to express, kept
+  matched per `docs/matching.md`'s frozen convention), `sub_803A968`
+  (picks a 12-byte `EepromConfig` table by chip-size code), `sub_803A9D0`
+  (claims a hardware timer, hands back an IRQ-handler-stub address) -
+  GitHub issue #69, see `docs/matching/issue-69-eeprom-timer.md`. (Its
+  `sub_803AA08` is a NAKED transcription tracked as parked - see below.)
 - `src/system/timer_util_aa90.c` (own file - its real ROM address,
-  `0x0803AA90`, sits between `sub_803AA08` and `sub_803AAD4`, so it
-  isn't adjacent to `timer_util.c`'s own matched functions):
-  `sub_803AA90` (disarms the timer `sub_803AA08` claims), `sub_803AAD4`
-  (the DMA3 block-transfer helper used by the whole EEPROM cluster;
-  matched via NAKED transcription) - GitHub issue #69, see
-  `docs/matching/issue-69-eeprom-timer.md`
-- `src/system/eeprom_util.c`: `sub_803AB54` (reads one 8-byte EEPROM
-  block), `sub_803AC04` (writes one block, then arms a watchdog timer
-  and busy-waits for completion) - the DMA3 bit-serial EEPROM read/
-  write pair, matched via NAKED transcription - GitHub issue #69, see
-  `docs/matching/issue-69-eeprom-timer.md`
+  `0x0803AA90`, sits between the parked `sub_803AA08` and `sub_803AAD4`,
+  so it isn't adjacent to `timer_util.c`'s own matched functions):
+  `sub_803AA90` (disarms the timer `sub_803AA08` claims) - GitHub issue
+  #69, see `docs/matching/issue-69-eeprom-timer.md`. (Its `sub_803AAD4`
+  is a NAKED transcription tracked as parked - see below.)
 - `src/system/eeprom_verify.c` (own file, same reason - ROM
   `0x0803ACE0`, between `sub_803AC04` and `reg_trampolines.c`'s
   functions): `sub_803ACE0` (reads an EEPROM block back and compares
@@ -56,21 +51,15 @@ category page - see [game_loop.md](./game_loop.md).
 - `src/system/link_cable.c`/`link_cable2.c` (new files - the GBA
   multiplayer link-cable/SIO transport, `0x08001C80`-`0x08002868`,
   interleaved with `audio`/`overlay_ui` in this same address range -
-  see `docs/rom_map.md`'s SIO/link-cable section): `sub_8001CB8`
-  (per-player CRC-16-style handshake-id hash helper, NAKED),
-  `sub_8001D30` (link-session "stop"), `sub_8001DB4` (link-session
-  reset/init, NAKED), `sub_8001F50` (link-connection/handshake driver,
-  NAKED), `sub_8002114` (1488 B per-frame SIO data-exchange pump,
-  NAKED, this file's biggest function), `sub_80026E4` (link-session
-  "start"), `sub_800276C` (RCNT/SIOCNT reset helper), `sub_8002798`
+  see `docs/rom_map.md`'s SIO/link-cable section): `sub_8001D30`
+  (link-session "stop"), `sub_80026E4` (link-session "start"),
+  `sub_800276C` (RCNT/SIOCNT reset helper), `sub_8002798`
   (reset convenience wrapper), `sub_80027B0` (reset + conditional
   teardown), `sub_80027E8` (session object constructor), `sub_8002830`/
   `sub_8002848` (Serial/Timer3 IRQ handlers) - all matched, GitHub
-  issue #4, see `docs/matching/issue-4-sio-settings-sync.md`
-- `src/graphics/settings_menu8d.c`'s `sub_8002868`/`sub_8002938`
-  (EEPROM load/save block-loop pair for the settings record, built on
-  this file's own `EepromConfig` primitives below, NAKED) - matched,
-  GitHub issue #4, see `docs/matching/issue-4-sio-settings-sync.md`
+  issue #4, see `docs/matching/issue-4-sio-settings-sync.md`. (This
+  file's `sub_8001CB8`/`sub_8001DB4`/`sub_8001F50`/`sub_8002114` are
+  NAKED transcriptions tracked as parked - see below.)
 
 GitHub issue #70 (`0x0803ADB4`-`0x0803B060`, right after
 `reg_trampolines.c` above) was categorized `system` by the chunk
@@ -80,7 +69,8 @@ from it live in `docs/status/util.md` (`src/util/math_div_util.c`) and
 [actor.md](./actor.md) (`src/graphics/actor_aabb_setup.c`) instead. See
 `docs/matching.md`'s issue #70 entry for the original writeup and
 `docs/matching/issue-69-eeprom-timer.md`'s "NAKED transcription pass"
-section for how the division/modulo trio finished matching.
+section for how the division/modulo trio's NAKED transcription pass
+went (now tracked as parked, not matched - see below).
 
 `main.c`/`memory.c`/most of `irq.c` were matched earliest of all, before
 `docs/matching.md`'s per-function log convention existed, so they don't have
@@ -98,6 +88,26 @@ frozen decomp.dev baseline now (`expected/legacy.s`) - see
   NAKED asm transcription instead - byte-exact but not real decompiled
   C, so tracked here as parked, not matched. See
   `docs/matching/naked-transcription-parked-functions.md`.
-
-See [docs/workflow.md](../workflow.md) for the per-function loop.
-
+- **`sub_803AA08`** (`src/system/timer_util.c`, arms the claimed
+  hardware timer) - a handful of narrow register-allocation gaps a
+  plain-C reconstruction couldn't close. GitHub issue #69, see
+  `docs/matching/issue-69-eeprom-timer.md`.
+- **`sub_803AAD4`** (`src/system/timer_util_aa90.c`, the DMA3
+  block-transfer helper used by the whole EEPROM cluster) - the
+  busy-wait tail's loop-rotation/literal-pool-placement shape isn't
+  reproducible from plain C. GitHub issue #69, see
+  `docs/matching/issue-69-eeprom-timer.md`.
+- **`sub_803AB54`**/**`sub_803AC04`** (`src/system/eeprom_util.c`, the
+  DMA3 bit-serial EEPROM read/write pair) - register-allocation/
+  loop-rotation gaps a plain-C reconstruction couldn't close. GitHub
+  issue #69, see `docs/matching/issue-69-eeprom-timer.md`.
+- **`sub_8001CB8`** (`src/system/link_cable.c`, per-player
+  CRC-16-style handshake-id hash helper), **`sub_8001DB4`**
+  (link-session reset/init), **`sub_8001F50`**
+  (link-connection/handshake driver), **`sub_8002114`** (1488 B
+  per-frame SIO data-exchange pump, this file's biggest function).
+  GitHub issue #4, see `docs/matching/issue-4-sio-settings-sync.md`.
+- **`sub_8002868`**/**`sub_8002938`** (`src/graphics/settings_menu8d.c`,
+  EEPROM load/save block-loop pair for the settings record, built on
+  `timer_util.c`'s `EepromConfig` primitives). GitHub issue #4, see
+  `docs/matching/issue-4-sio-settings-sync.md`.
