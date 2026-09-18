@@ -96,6 +96,15 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   register-letter choices; `sub_8003BDC` additionally spills a constant
   through `ip`, which plain C can't request) - see `docs/matching.md`,
   "Match 0x08003B40-0x08004CB4", for what was tried on each.
+- **`sub_8003F30`** (`asm/code_3_1_10_4.s`, C in
+  `src/graphics/settings_menu.c`) - a per-row numeric display: three
+  of the row's `struct settings_row_stats` fields drawn as decimal
+  strings via `itoa` into `self->rowObjA`/`rowObjC`/`rowObjB`, plus a
+  fourth value formatted as `"NN%"` and drawn measure-then-right-aligned.
+  Semantically confirmed (issue #6); hits the same difficulty class as
+  the functions above, compounded by four near-identical unrolled
+  blocks instead of two-to-three. See
+  `docs/matching/issue-6-0x08003f30-overlay-ui.md`, issue #6.
 - **`sub_8005AE8`**, **`sub_8005B80`**, **`sub_8005C58`**,
   **`sub_8005D44`** (`asm/code_3_1_10_8.s`, C in
   `src/graphics/settings_menu6.c`) - four more settings-row icon-widget
