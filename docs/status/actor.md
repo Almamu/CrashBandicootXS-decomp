@@ -310,6 +310,26 @@ from "core" graphics.
   `gUnknown_03001464`-gated palette-cycle DMA cluster's non-parked
   members.
 
+- `src/graphics/actor_part57.c` (new file, GitHub issue #19, ROM
+  0x08015840-0x080159A4 - recategorized `graphics`->`actor` from the
+  issue's label, same self+0xc/self+0x10 trampoline-pair and state/
+  counter/table-index-trio family as actor_part38c.c/actor_part38d.c;
+  non-adjacent to actor_part38d.c's matched span since the parked
+  `sub_80157C4` sits between them): `sub_8015840`, `sub_8015878`,
+  `sub_801588C`, `sub_80158AC`, `sub_80158B4`, `sub_80158BC`,
+  `sub_80158C4`, `sub_80158CC`, `sub_80158D4`, `sub_80158DC`,
+  `sub_80158E4`, `sub_80158EC`, `sub_80158F4`, `sub_8015908`,
+  `sub_8015920`, `sub_8015938`, `sub_8015950`, `sub_8015958`,
+  `sub_80159A4` - a run of small accessors/resetters on the state-trio
+  bytes, the `gStaticData_087E4224` double-table-set idiom already seen
+  in `actor_part27.c`, and a larger field-reset pair; see
+  [docs/matching/issue-19-0x08015840-actor.md](../matching/issue-19-0x08015840-actor.md).
+- `src/graphics/actor_part57b.c` (new file, GitHub issue #19, ROM
+  0x08015FDC, non-adjacent to actor_part57.c since the left-raw
+  `sub_80159F8`/`sub_8015C6C`/`sub_8015DF8` sit between them):
+  `sub_8015FDC` - a player-velocity-relative record writer; see
+  [docs/matching/issue-19-0x08015840-actor.md](../matching/issue-19-0x08015840-actor.md).
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
@@ -754,3 +774,12 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   and a high-register-pressure hitbox commit function; each calls one
   or more still-unexamined helpers - see
   `docs/matching/issue-9-0x08007634-actor.md`.
+- **`sub_80159F8`/`sub_8015C6C`/`sub_8015DF8`** (`asm/code_3_2_17_159f8.s`,
+  ROM 0x080159F8-0x08015FDC, GitHub issue #19) - three large jump-table
+  state-machine dispatchers on the part object's velocity fields; left
+  raw, out of scope for this pass - see
+  `docs/matching/issue-19-0x08015840-actor.md`.
+- **`sub_8016048`** (`asm/code_3_2_17_16048.s`, ROM 0x08016048, GitHub
+  issue #19) - a smaller joystick-input-gated dispatcher; left raw, out
+  of scope for this pass - see
+  `docs/matching/issue-19-0x08015840-actor.md`.
