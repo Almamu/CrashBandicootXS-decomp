@@ -323,9 +323,9 @@ SECTIONS
         build/crashbandicootxs/src/audio/gax_swi.o(.text);
         build/crashbandicootxs/src/audio/gax_fatal_error.o(.text);
         build/crashbandicootxs/src/audio/gax_sound_handler_info.o(.text);
-        build/crashbandicootxs/asm/code_3_2_20e_9518.o(.text);
+        build/crashbandicootxs/src/audio/gax_sound_handler_channel_init.o(.text);
         build/crashbandicootxs/src/audio/gax_sound_handler_channel.o(.text);
-        build/crashbandicootxs/asm/code_3_2_20e_95a4.o(.text);
+        build/crashbandicootxs/src/audio/gax_sound_handler_channel_play.o(.text);
         build/crashbandicootxs/src/audio/gax_channel_note_cut.o(.text);
         build/crashbandicootxs/asm/code_3_2_20e_985c.o(.text);
         build/crashbandicootxs/src/audio/gax_channel_effect_table.o(.text);
