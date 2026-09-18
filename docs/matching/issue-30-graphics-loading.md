@@ -127,5 +127,28 @@ shape (`sub_8009ED0` allocation, `sub_800CA74` style lookup, two
 Verified via a full clean `rm -rf build && make compare` (`La suma
 coincide`) and `make NON_MATCHING=1 report`.
 
+## Second pass: `sub_801E644`/`sub_801E950` matched via NAKED transcription
+
+Both functions parked above are now byte-exact matched, confirmed by a
+full clean `make compare` ("La suma coincide"). Every instruction's
+operation was already confirmed correct against the ROM; the residual
+register-allocation gaps (an extra callee-saved `r7` for `sub_801E644`,
+a one-instruction-shorter mask rematerialization for `sub_801E950`)
+never responded to further plain-C restructuring, so both were
+converted to `NAKED` and their ROM disassembly transcribed
+instruction-for-instruction - the same escape hatch this project
+already established for `sub_8001CB8`/`sub_8001DB4`
+(`src/system/link_cable.c`, see
+`docs/matching/issue-4-sio-settings-sync.md`'s "The general strategy
+for the rest" section).
+
+`asm/code_3_2_17_1e950.s` held nothing but its one guarded function, so
+it's now empty and was deleted, with its `ldscript.txt` line dropped.
+`asm/code_3_2_17_1e644.s` still holds two other raw functions
+(`sub_801E688`/`sub_801E788`, see "Left raw" above) after the removed
+guarded block, so only that block's lines were removed from the file -
+no split was needed since the guarded function sat at the very start of
+the file, not in the middle.
+
 See [docs/status/graphics_loading.md](../status/graphics_loading.md) for
 the running matched/parked list.

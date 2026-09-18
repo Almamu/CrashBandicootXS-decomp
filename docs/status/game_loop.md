@@ -110,6 +110,30 @@ system from "core" system startup/init code.
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
+## Parked - NAKED transcription (byte-correct, not decompiled)
+
+These are byte-exact (confirmed by a full clean `make compare`), but
+as `NAKED` functions whose body is the ROM's own disassembly
+transcribed instruction-for-instruction rather than real decompiled C,
+they don't count as "matched" for this project's tracking - the goal
+is readable C, and an asm blob wrapped in a C function signature
+doesn't advance that even when byte-correct. See
+[docs/workflow.md](../workflow.md)'s NAKED-transcription escape hatch
+(`sub_8001CB8`/`sub_8001DB4` in `src/system/link_cable.c`) for the
+established convention, and each entry's linked write-up for why
+plain C didn't converge.
+
+- **`sub_800D040`** (`src/system/game_loop6.c`, GitHub issue #12) -
+  builds `self`'s and the player's AABB from the shared
+  `+0x20`-table-pointer/`+0x2d`-tag hitbox-record convention
+  (`sub_8007B00`/`sub_8007B98` in `actor_part.c`), dispatches to
+  `sub_800EEF0`/`sub_800E7A8` on overlap. See
+  [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md).
+- **`sub_800E494`/`sub_800E4E4`** (`src/system/game_loop7.c`, GitHub
+  issue #12) - bidirectional linked-list walkers (`sub_801070C`/
+  `sub_8010708`) clearing/setting each neighbor's `+0x58` flag. See
+  [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md).
+
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
 - **`sub_8022EA8`/`sub_8022F2C`** (`src/system/game_loop2.c`, GitHub
@@ -123,18 +147,6 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   token-stream decoder; real bytes in `asm/code_3_2_17_24f24.s`. See
   [docs/matching/issue-40-terrain-tile-cache.md](../matching/issue-40-terrain-tile-cache.md)
   for the exact register-allocation gaps.
-- **`sub_800D040`** (`src/system/game_loop6.c`, GitHub issue #12) -
-  builds `self`'s and the player's AABB from the shared
-  `+0x20`-table-pointer/`+0x2d`-tag hitbox-record convention
-  (`sub_8007B00`/`sub_8007B98` in `actor_part.c`), dispatches to
-  `sub_800EEF0`/`sub_800E7A8` on overlap; real bytes in
-  `asm/code_3_2_17_d040.s`. See
-  [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md).
-- **`sub_800E494`/`sub_800E4E4`** (`src/system/game_loop7.c`, GitHub
-  issue #12) - bidirectional linked-list walkers (`sub_801070C`/
-  `sub_8010708`) clearing/setting each neighbor's `+0x58` flag; real
-  bytes in `asm/code_3_2_17_e494.s`. See
-  [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md).
 - **`sub_80236EC`** (`src/system/game_loop10.c`, GitHub issue #37 -
   numbered `10` rather than `6` since issue #12's parallel PR above
   independently claimed `game_loop6.c`/`game_loop7.c` first) - the

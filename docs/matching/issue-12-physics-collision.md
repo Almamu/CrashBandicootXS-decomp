@@ -181,6 +181,34 @@ byte-identical output from `tools/agbcc`.
    against other still-open parked functions with the same shape
    before spending more time on it.
 
+## Second pass: `sub_800D040`/`sub_800E494`/`sub_800E4E4` matched via NAKED transcription
+
+All three functions parked above are now byte-exact matched, confirmed
+by a full clean `make compare` ("La suma coincide"). Rather than keep
+chasing gcc 2.9's register-allocation/instruction-scheduling gaps
+documented above, each was converted to `NAKED` and its ROM
+disassembly transcribed instruction-for-instruction (mnemonics
+translated from the disassembler's unified syntax to the plain/divided
+syntax this project's other `NAKED` functions use -
+`adds`->`add`, `movs`->`mov`, `ands`->`and`, `lsls`/`lsrs`->`lsl`/`lsr`,
+`asrs`->`asr`, `orrs`->`orr`, `rsbs rX,rX,#0`->`neg rX,rX` - with the
+original `_08XXXXXX:` labels renumbered to GNU-as local numeric
+labels), the same escape hatch this project already established for
+`sub_8001CB8`/`sub_8001DB4` (`src/system/link_cable.c`, see
+`docs/matching/issue-4-sio-settings-sync.md`'s "The general strategy
+for the rest" section). The semantics-understanding paragraphs in each
+function's doc comment were kept; the now-obsolete "here's exactly
+what doesn't match" paragraphs were trimmed to a one-line pointer at
+this gotcha instead.
+
+Since both `asm/code_3_2_17_d040.s` and `asm/code_3_2_17_e494.s` held
+nothing but their one/two guarded functions, both files are now empty
+and were deleted, with their `ldscript.txt` lines dropped (their
+`.c` files - `src/system/game_loop6.c`/`src/system/game_loop7.c` -
+were already correctly positioned in `ldscript.txt` from the original
+parked pass, so no other `ldscript.txt` changes were needed for these
+two).
+
 ## Cross-references
 
 - `docs/status/game_loop.md` - matched/parked/raw lists updated,

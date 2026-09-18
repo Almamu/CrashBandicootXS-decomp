@@ -3,47 +3,6 @@
 .syntax unified
 .arm
 
-@ sub_801E644: not yet matched (NON_MATCHING) - see
-@ src/graphics/graphics_package_1e640.c, guarded by #if NON_MATCHING - this
-@ raw version is only assembled for the default (matching) build. See
-@ docs/matching/issue-30-graphics-loading.md.
-.if NON_MATCHING == 0
-	thumb_func_start sub_801E644
-sub_801E644: @ 0x0801E644
-	push {r4, r5, r6, r7, lr}
-	ldr r5, [sp, #0x14]
-	movs r4, #0
-	strh r4, [r0, #0xc]
-	movs r6, #3
-	ands r5, r6
-	subs r4, #4
-	ldrb r7, [r0, #0xc]
-	ands r4, r7
-	orrs r4, r5
-	str r1, [r0]
-	ands r1, r6
-	lsls r1, r1, #2
-	movs r5, #0xd
-	rsbs r5, r5, #0
-	ands r4, r5
-	orrs r4, r1
-	strb r4, [r0, #0xc]
-	movs r1, #0x3f
-	ldrb r4, [r0, #0xd]
-	ands r1, r4
-	str r2, [r0, #4]
-	movs r4, #0x1f
-	ands r2, r4
-	movs r4, #0x20
-	rsbs r4, r4, #0
-	ands r1, r4
-	orrs r1, r2
-	strb r1, [r0, #0xd]
-	str r3, [r0, #8]
-	pop {r4, r5, r6, r7}
-	pop {r1}
-	bx r1
-.endif
 	.align 2, 0
 
 	thumb_func_start sub_801E688

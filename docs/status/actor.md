@@ -142,10 +142,12 @@ from "core" graphics.
   `sub_800B8C8`, `sub_800B8D8`
 
 - `src/graphics/actor_part18.c`/`actor_part18b.c` (new files, non-
-  adjacent since the parked `sub_801434C` sits raw between them - see
+  adjacent since `sub_801434C` sits between them - see
   `docs/matching.md`, issue #17): `sub_801426C`, `sub_80142B0`,
   `sub_80144E0`, `sub_8014524` - four entries of the `gStaticData_0816BF20`
-  42-slot action dispatch table
+  42-slot action dispatch table (`sub_801434C`/`sub_80145E4`, also in
+  these files, are NAKED transcriptions - see "Parked - NAKED
+  transcription" below)
 
 - `src/graphics/actor_part19.c`/`actor_part19c.c`/`actor_part19d.c`/
   `actor_part19f.c`/`actor_part19g.c` (new files, non-adjacent since
@@ -224,28 +226,33 @@ from "core" graphics.
   parallel PR above independently claimed `actor_part28.c` first):
   `sub_8014F8C` - a `gUnknown_030012F0`-list proximity-
   trigger scan for the same "self" action-table object family as
-  `actor_part18.c`; see `docs/matching/issue-18-0x08014f8c-actor.md`.
+  `actor_part18.c` (`sub_8015038`, also in this file, is a NAKED
+  transcription - see "Parked - NAKED transcription" below); see
+  `docs/matching/issue-18-0x08014f8c-actor.md`.
 - `src/graphics/actor_part38b.c` (new file, GitHub issue #18, ROM
-  0x080151C8, non-adjacent to `actor_part38.c` since the parked
-  `sub_8015038` sits raw between them): `sub_80151C8`; see
+  0x080151C8, non-adjacent to `actor_part38.c` since `sub_8015038`
+  sits between them): `sub_80151C8` (`sub_8015238`/`sub_80152F0`, also
+  in this file, are NAKED transcriptions); see
   `docs/matching/issue-18-0x08014f8c-actor.md`.
 - `src/graphics/actor_part38c.c` (new file, GitHub issue #18, ROM
-  0x08015350-0x080156B4, non-adjacent to `actor_part38b.c` since the
-  parked `sub_8015238`/`sub_80152F0` sit raw between them):
+  0x08015350-0x080156B4, non-adjacent to `actor_part38b.c` since
+  `sub_8015238`/`sub_80152F0` sit between them):
   `sub_8015350`, `sub_8015398`, `sub_80153FC`, `sub_8015460`,
   `sub_8015508`, `sub_8015558`, `sub_80155A8`, `sub_80155AC`,
   `sub_80155B8`, `sub_80155F8`, `sub_8015650`, `sub_8015690`,
   `sub_80156B4` - more of the same self+0xc/self+0x10 trampoline-pair
   family, including two near-identical self+0x29-keyed mgr-trampoline
-  arms (`sub_8015460`) and several part+0x38-gated trampoline firers;
-  see `docs/matching/issue-18-0x08014f8c-actor.md`.
+  arms (`sub_8015460`) and several part+0x38-gated trampoline firers
+  (`sub_80156EC`, also in this file, is a NAKED transcription); see
+  `docs/matching/issue-18-0x08014f8c-actor.md`.
 - `src/graphics/actor_part38d.c` (new file, GitHub issue #18, ROM
-  0x0801574C-0x08015780, non-adjacent to `actor_part38c.c` since the
-  parked `sub_80156EC` sits raw between them): `nullsub_17`,
+  0x0801574C-0x08015780, non-adjacent to `actor_part38c.c` since
+  `sub_80156EC` sits between them): `nullsub_17`,
   `sub_8015750`, `nullsub_18`, `sub_8015774`, `sub_8015780` - two
   nullsubs, two tail-call wrappers, and the shared trampoline-pair-
   plus-sentinel-store helper called by `actor_part18.c`'s
-  `sub_801426C`/`sub_80142B0`; see
+  `sub_801426C`/`sub_80142B0` (`sub_80157C4`, also in this file, is a
+  NAKED transcription); see
   `docs/matching/issue-18-0x08014f8c-actor.md`.
 
 - `src/graphics/actor_anim.c` (extended, GitHub issue #71, ROM
@@ -394,6 +401,46 @@ from "core" graphics.
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
+
+## Parked - NAKED transcription (byte-correct, not decompiled)
+
+These are byte-exact (confirmed by a full clean `make compare`), but
+as `NAKED` functions whose body is the ROM's own disassembly
+transcribed instruction-for-instruction rather than real decompiled C,
+they don't count as "matched" for this project's tracking - the goal
+is readable C, and an asm blob wrapped in a C function signature
+doesn't advance that even when byte-correct. See
+[docs/workflow.md](../workflow.md)'s NAKED-transcription escape hatch
+(`sub_8001CB8`/`sub_8001DB4` in `src/system/link_cable.c`) for the
+established convention, and each entry's linked write-up for why
+plain C didn't converge.
+
+- **`sub_801434C`** (`src/graphics/actor_part18.c`) - the shared
+  handler `sub_80142B0` tail-calls; one of the `gStaticData_0816BF20`
+  action-table entries. See `docs/matching/issue-18-0x08014f8c-actor.md`.
+- **`sub_80145E4`** (`src/graphics/actor_part18b.c`) - same shape as
+  the matched `sub_8014524` (boolean/raw-value bit test, `sub_8015780`
+  reset block) but keeps the raw masked bit value rather than a
+  `!= 0`-normalized boolean. See
+  `docs/matching/issue-18-0x08014f8c-actor.md`.
+- **`sub_8015038`** (`src/graphics/actor_part38.c`) - a three-arm
+  mgr-trampoline handler keyed on `self+0x24`/`self+0x22`, picking one
+  of three table-index fallbacks. See
+  `docs/matching/issue-18-0x08014f8c-actor.md`.
+- **`sub_8015238`** (`src/graphics/actor_part38b.c`) -
+  `self+0x26`/`mode`/`flags`-gated mgr-trampoline dispatcher. See
+  `docs/matching/issue-18-0x08014f8c-actor.md`.
+- **`sub_80152F0`** (`src/graphics/actor_part38b.c`) -
+  `self+0x27`/`self+0x2b`/`mode`-gated state/counter/table-index trio
+  reset, tail-calling `sub_80122CC`. See
+  `docs/matching/issue-18-0x08014f8c-actor.md`.
+- **`sub_80156EC`** (`src/graphics/actor_part38c.c`) -
+  `part+0x38`/`sub_80231BC`-gated mgr-trampoline dispatcher. See
+  `docs/matching/issue-18-0x08014f8c-actor.md`.
+- **`sub_80157C4`** (`src/graphics/actor_part38d.c`) - player's
+  `+0x100`-flag-gated `mode` remapper (a 3-way dispatch playing a fixed
+  cue via `sub_80019A8`/`PlaySfx`), tail-calling `sub_800B86C`. See
+  `docs/matching/issue-18-0x08014f8c-actor.md`.
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
@@ -651,24 +698,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   (when the *value* is register-pinned) or reintroduces a `push
   {r4,lr}`/`pop {r4}` pair elsewhere (when the *address* is) - see
   [docs/matching/issue-97-sub_8009DF4.md](../matching/issue-97-sub_8009DF4.md).
-- **`sub_801434C`** (`asm/code_3_2_17_1434c.s`, C in
-  `src/graphics/actor_part18.c`) - the shared handler
-  `sub_80142B0` tail-calls; one of the `gStaticData_0816BF20` action-
-  table entries. Every load/store, branch and call confirmed correct,
-  including the ROM's case-`0`/`2`-before-case-`1` switch layout and
-  its shared `sub_803AD84` tail call; parked purely on instruction-
-  *scheduling* for a handful of mutually-independent instructions in
-  the closing `masked = *(u16 *)&snap & 0x180` block (right
-  address/constant/load ordering, wrong relative order) - see
-  `docs/matching.md`, issue #17, for everything tried.
-- **`sub_80145E4`** (`asm/code_3_2_17_145e4.s`, C in
-  `src/graphics/actor_part18b.c`) - same shape as the matched
-  `sub_8014524` (boolean/raw-value bit test, `sub_8015780` reset
-  block) but keeps the raw masked bit value rather than a `!= 0`-
-  normalized boolean. Every load/store and branch confirmed correct;
-  parked on a single materialize-then-copy gap in the opening bit-test
-  triggered by a required nested `if` sharing the value's live range
-  across both branches - see `docs/matching.md`, issue #17.
 - **NAKED transcription (byte-correct, not decompiled)**: `sub_802C208`
   (`src/graphics/actor_part19e.c`, issue #52), `sub_802F748`
   (`src/graphics/actor_part44b.c`, issue #56), `sub_8033B44`/
@@ -719,48 +748,10 @@ embedded as asm instead. They're tracked as parked, not matched.
   cache to `r7` here (matching the ROM) would silently corrupt the
   caller's `r7` - see `docs/matching/issue-62-0x08033804-actor.md`,
   issue #62.
-- **`sub_8015038`** (`asm/code_3_2_17_15038.s`, C in
-  `src/graphics/actor_part38.c`) - a three-arm mgr-trampoline handler
-  keyed on `self+0x24`/`self+0x22`, picking one of three table-index
-  fallbacks. Every load/store, branch and call is understood and
-  semantically correct; parked on this compiler's register allocation
-  across the three near-identical arms (it won't keep the computed
-  `self+0x21`/`self+0x22` field addresses in the ROM's own `r7`/`r5`
-  once real trampoline calls intervene) - see
-  `docs/matching/issue-18-0x08014f8c-actor.md`.
-- **`sub_8015238`** (`asm/code_3_2_17_15238.s`, C in
-  `src/graphics/actor_part38b.c`) - `self+0x26`/`mode`/`flags`-gated
-  mgr-trampoline dispatcher. Every load/store, branch and call is
-  correct, in the right order, and in the right registers - parked
-  purely on the two parameter home-copies at function entry (this
-  compiler always truncates `mode` before copying `self`, the ROM does
-  the opposite, and neither order nor register pins nor hand-written
-  `asm volatile` copies could override the compiler's own fixed
-  parameter-home-copy prologue pass) - see
-  `docs/matching/issue-18-0x08014f8c-actor.md`.
-- **`sub_80152F0`** (`asm/code_3_2_17_15238.s`, C in
-  `src/graphics/actor_part38b.c`) - `self+0x27`/`self+0x2b`/`mode`-
-  gated state/counter/table-index trio reset, tail-calling
-  `sub_80122CC`. Every load/store, branch and call confirmed correct
-  and in the right order; parked on a single instruction (a `+6` byte
-  offset folds into a `strb`'s own addressing mode where the ROM keeps
-  it as a separate `adds`) - see
-  `docs/matching/issue-18-0x08014f8c-actor.md`.
-- **`sub_80156EC`** (`asm/code_3_2_17_156ec.s`, C in
-  `src/graphics/actor_part38c.c`) - `part+0x38`/`sub_80231BC`-gated
-  mgr-trampoline dispatcher. Every load/store, branch and call
-  confirmed correct; parked on the `else` arm recomputing `self` into
-  a fresh register (an extra push/pop this compiler insists on once
-  its own `mgr` local is redeclared in that arm) where the ROM reuses
-  the same `self` register the whole function already lives in - see
-  `docs/matching/issue-18-0x08014f8c-actor.md`.
-- **`sub_80157C4`** (`asm/code_3_2_17_157c4.s`, C in
-  `src/graphics/actor_part38d.c`) - player's `+0x100`-flag-gated
-  `mode` remapper (a 3-way dispatch playing a fixed cue via
-  `sub_80019A8`/`PlaySfx`), tail-calling `sub_800B86C`. Every load/
-  store, branch and call is understood and semantically correct;
-  parked on register allocation across the 3-way dispatch - see
-  `docs/matching/issue-18-0x08014f8c-actor.md`.
+- **`sub_8033E80`** (`asm/code_3_2_20_28568_c99c_31784_33e80.s`, C in
+  `src/graphics/actor_part37.c`) - `sub_8033B44`'s twin using the
+  second stride-8 table (`gStaticData_0817C4F8`), parked on the same
+  gap - see `docs/matching/issue-62-0x08033804-actor.md`, issue #62.
 - **`sub_802F338`** (`src/graphics/actor_part43b.c`) - computes two
   keyframe-driven tile-cache sizes via `sub_8028CD4`. Every load/store,
   branch and call confirmed correct; parked on a "materialize the

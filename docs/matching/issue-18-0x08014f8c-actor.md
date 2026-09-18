@@ -201,6 +201,48 @@ compiler-register-allocation or instruction-scheduling gaps, not logic
 gaps. None of `Closes #18` applies here since 5 functions remain
 parked - the issue stays open for whoever picks up the remaining 5.
 
+## Third pass: all 5 remaining parked functions matched via NAKED transcription
+
+`sub_8015038`, `sub_8015238`, `sub_80152F0`, `sub_80156EC` and
+`sub_80157C4` are now all byte-exact matched, confirmed by a full clean
+`make compare` ("La suma coincide") - all 25 functions in this issue's
+range are matched now (see "Closing this issue" below). Each was fully
+understood already (see the parked-pass doc comments this replaced);
+none of the residual gaps above (register-allocation drift across
+near-identical arms, a parameter home-copy ordering gcc 2.9 always got
+backwards, a single addressing-mode fold, a 3-way dispatch's register
+choice) responded to further plain-C restructuring, so each was
+converted to `NAKED` and its ROM disassembly transcribed
+instruction-for-instruction - the same escape hatch this project
+already established for `sub_8001CB8`/`sub_8001DB4`
+(`src/system/link_cable.c`, see
+`docs/matching/issue-4-sio-settings-sync.md`'s "The general strategy
+for the rest" section). `sub_8015038`, `sub_8015238` and `sub_80152F0`
+became this project's first NAKED transcriptions with real branch
+targets renumbered to GNU-as local labels at real scale (7-11 distinct
+labels each, including mid-function literal pools placed exactly where
+the ROM's own compiler deferred them, right after an unconditional
+branch) rather than the 1-6-label functions transcribed so far.
+
+Since `asm/code_3_2_17_1434c.s`, `code_3_2_17_145e4.s`,
+`code_3_2_17_15038.s`, `code_3_2_17_15238.s`, `code_3_2_17_156ec.s` and
+`code_3_2_17_157c4.s` each held nothing but their one or two guarded
+functions, all six files are now empty and were deleted, with their
+`ldscript.txt` lines dropped - the six target `.c` files
+(`actor_part18.c`/`actor_part18b.c`/`actor_part38.c`/`actor_part38b.c`/
+`actor_part38c.c`/`actor_part38d.c`) were already correctly positioned
+in `ldscript.txt` from the original parked pass, so no other
+`ldscript.txt` changes were needed.
+
+### Issue #18 status
+
+Every function in this issue's original 25-function range
+(`0x08014F8C`-`0x080159F8`) is now matched; issue #18 was already
+closed (its task list was fully checked off, counting parked functions
+as handled) by an earlier PR, so this pass doesn't change its
+open/closed state - just replaces its last 5 parked functions with real
+byte-exact matches.
+
 ## Full-build address-shift lessons
 
 Several of the fixes above (`sub_8015460`'s early constant, both

@@ -170,5 +170,30 @@ fns): the `sub_800FF0C` trampoline family, types `1`-`7`.
   functions on both sides of a parked one need to live in different
   translation units" pattern.
 
+## Second pass: `sub_8021D04` matched via NAKED transcription
+
+Now byte-exact matched, confirmed by a full clean `make compare` ("La
+suma coincide"). Every field, mask and branch was already confirmed
+correct against the ROM; the residual 4-byte CSE gap documented above
+never responded to further plain-C restructuring, so it was converted
+to `NAKED` and its ROM disassembly transcribed instruction-for-
+instruction - the same escape hatch this project already established
+for `sub_8001CB8`/`sub_8001DB4` (`src/system/link_cable.c`, see
+`docs/matching/issue-4-sio-settings-sync.md`'s "The general strategy
+for the rest" section).
+
+**Pre-existing bug found and fixed along the way**: `asm/code_3_2_17_21d04.s`
+was missing the `.if NON_MATCHING == 0` / `.endif` guard this project's
+other parked functions' raw `.s` fragments use - it assembled
+`sub_8021D04`'s real bytes unconditionally, regardless of the
+`NON_MATCHING` flag. This didn't affect the normal `make compare` build
+(which never compiles the `#if NON_MATCHING`-guarded C version and so
+never conflicted with it), but would have produced a duplicate-symbol
+link error the moment someone ran `make NON_MATCHING=1 report` with
+this function still parked - never actually hit only because nobody had
+run that combination against this exact function before it got matched
+here. Moot now that the whole file is deleted and the function is real,
+always-compiled `NAKED` C.
+
 See [docs/status/graphics_loading.md](../status/graphics_loading.md)
 for the running matched/parked list this updates.
