@@ -129,7 +129,12 @@ from "core" graphics.
   `sub_800B5CC`, `sub_800B5D8`, `sub_800B5E0`, `sub_800B5E8`,
   `sub_800B5F0`, `sub_800B5FC`, `sub_800B608`, `sub_800B614`,
   `sub_800B620`, `sub_800B62C`, `sub_800B638`, `sub_800B644`,
-  `sub_800B650`, `sub_800B678`, `sub_800B698`, `sub_800B69C`
+  `sub_800B650`, `sub_800B678`, `sub_800B698`, `sub_800B69C`,
+  `sub_800B6A0`, `sub_800B6D0` (issues #84/#85 - see
+  [docs/matching/issue-84-85-sub_800B6A0.md](../matching/issue-84-85-sub_800B6A0.md);
+  matched with `self`/`vec` pinned to `r3`/`r2` and each branch's X/Y/Z
+  locals pinned to their own ABI registers in the ROM's actual load
+  order, avoiding the callee-saved spill three earlier attempts hit)
 
 - `src/graphics/actor_part17.c` (new file - see `docs/matching.md`):
   `sub_800B704`, `sub_800B734`, `sub_800B7B0`, `sub_800B838`,
@@ -440,16 +445,6 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   swaps the ROM's address/value register letters or reintroduces an
   unrelated `push {r4}` regression. See
   [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
-- **`sub_800B6A0`/`sub_800B6D0`** (`src/graphics/actor_part16.c`) -
-  mirror-flag-gated 3-vector copies. This compiler unconditionally
-  spills the `vec` pointer to a callee-saved register (`push
-  {r4,lr}`/`pop {r4}`) whenever it's referenced in both branches of an
-  if/else, even with nothing to clobber it - the ROM is a true leaf
-  function using only r0-r3. Three independent fixes (pinning `self`
-  alone; also pinning/reassigning `vec`; restructuring into a
-  `goto`-based flow) all produced an identical 8-byte-larger result -
-  see `docs/matching.md`, "A new unnamed object:
-  `actor_part15.c`/`actor_part16.c`".
 - **`sub_8007B00`** (`src/graphics/actor_part.c`) - builds an AABB for
   `part`'s current animation keyframe (via the shared `sub_803AFE4`/
   `sub_803AFDC` primitive) and mirrors it horizontally/vertically per

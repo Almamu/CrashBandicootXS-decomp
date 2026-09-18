@@ -340,30 +340,34 @@ void sub_800B69C(void *selfArg, s32 val)
     *(s32 *)(self + 4) = val;
 }
 
-#if NON_MATCHING
 /* Copies `vec` into `self+0x54`/`self+0x58`/`self+0x5c`, negating the
  * X and Z components when `self+0x28` bit 5 is set (a mirror-flag
  * bit, matching the same encoding convention used throughout this
- * ROM for X/Z axis flips). Parked: see docs/matching.md and
- * asm/code_3_2_18.s for the "unavoidable callee-saved register spill"
- * gap - three independent register-pin/restructure attempts all
- * produced an identical 8-byte-larger leaf-with-frame version. */
+ * ROM for X/Z axis flips). Matched with `self`/`vec` pinned to
+ * `r3`/`r2` (avoiding the callee-saved spill three earlier attempts
+ * hit - see docs/matching.md's now-stale note and
+ * asm/code_3_2_18.s's former guard) plus each branch's X/Y/Z locals
+ * pinned to their own ABI registers in the ROM's actual load order:
+ * X, then Z, then Y last in the negated branch (`v[1]`'s load is what
+ * finally overwrites `v`'s own register, so it has to come after `Z`'s
+ * load, not before it, even though the source lists them X/Y/Z). */
 void sub_800B6A0(void *unused, void *selfArg, s32 *vec)
 {
-    u8 *self = selfArg;
+    register u8 *self asm("r3") = selfArg;
+    register s32 *v asm("r2") = vec;
 
     if ((s8)(self[0x28] << 2) < 0) {
-        s32 x = -vec[0];
-        s32 y = vec[1];
-        s32 z = -vec[2];
+        register s32 x asm("r0") = -v[0];
+        register s32 z asm("r1") = -v[2];
+        register s32 y asm("r2") = v[1];
 
         *(s32 *)(self + 0x54) = x;
         *(s32 *)(self + 0x58) = y;
         *(s32 *)(self + 0x5c) = z;
     } else {
-        s32 x = vec[0];
-        s32 y = vec[1];
-        s32 z = vec[2];
+        register s32 x asm("r0") = v[0];
+        register s32 y asm("r1") = v[1];
+        register s32 z asm("r2") = v[2];
 
         *(s32 *)(self + 0x54) = x;
         *(s32 *)(self + 0x58) = y;
@@ -372,25 +376,26 @@ void sub_800B6A0(void *unused, void *selfArg, s32 *vec)
 }
 
 /* Same mirror-flag-gated copy as `sub_800B6A0`, also duplicating the
- * (possibly negated) X component into `self+0x64`. Parked for the
- * same reason. */
+ * (possibly negated) X component into `self+0x64`. Matched the same
+ * way. */
 void sub_800B6D0(void *unused, void *selfArg, s32 *vec)
 {
-    u8 *self = selfArg;
+    register u8 *self asm("r3") = selfArg;
+    register s32 *v asm("r2") = vec;
 
     if ((s8)(self[0x28] << 2) < 0) {
-        s32 x = -vec[0];
-        s32 y = vec[1];
-        s32 z = -vec[2];
+        register s32 x asm("r0") = -v[0];
+        register s32 z asm("r1") = -v[2];
+        register s32 y asm("r2") = v[1];
 
         *(s32 *)(self + 0x64) = x;
         *(s32 *)(self + 0x54) = x;
         *(s32 *)(self + 0x58) = y;
         *(s32 *)(self + 0x5c) = z;
     } else {
-        s32 x = vec[0];
-        s32 y = vec[1];
-        s32 z = vec[2];
+        register s32 x asm("r0") = v[0];
+        register s32 y asm("r1") = v[1];
+        register s32 z asm("r2") = v[2];
 
         *(s32 *)(self + 0x64) = x;
         *(s32 *)(self + 0x54) = x;
@@ -398,4 +403,4 @@ void sub_800B6D0(void *unused, void *selfArg, s32 *vec)
         *(s32 *)(self + 0x5c) = z;
     }
 }
-#endif /* NON_MATCHING */
+asm(".align 2, 0");
