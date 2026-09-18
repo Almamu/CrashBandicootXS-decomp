@@ -124,3 +124,29 @@ Verified via a full clean `rm -rf build && make NON_MATCHING=1 report`
 and `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` (`La suma coincide`) after
 `sub_8003F30`'s parked reconstruction landed.
+
+## Later pass: `sub_8003F30` matched via NAKED transcription
+
+The "several near-identical unrolled blocks, each wanting the
+loop-carried registers in slightly different places" gap described
+above never had a plain-C fix - same class as `sub_8006600`
+(`docs/status/graphics.md`). Since the semantics were already fully
+confirmed (this document's own derivation above), `sub_8003F30` was
+converted to a byte-verified NAKED asm transcription instead, the same
+pass that also closed this file's five sibling functions
+(`sub_8003B40`, `sub_8003BDC`, `sub_8003C90`, `sub_8003D3C`,
+`sub_80041BC` - all built on the same centered-label/positioned-glyph
+primitive, all hitting the identical difficulty class) - see
+`src/graphics/settings_menu.c`'s header comment and
+`src/util/printf_util.c`'s `sub_8000CBC` for the established NAKED-
+transcription pattern. Every instruction in all six now matches the
+ROM exactly; verified via a full clean `make compare` (`La suma
+coincide`).
+
+`sub_800450C` (this file's own init routine, still genuinely not
+understood with confidence - see the two open questions above) was not
+attempted this pass and stays fully raw in `asm/code_3_1_10_4.s`
+(trimmed to just this one function once its five siblings graduated
+out of the file). Since `sub_800450C` is still open, **issue #6 stays
+open** - but every other function in its original range is now
+matched.

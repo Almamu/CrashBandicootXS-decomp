@@ -18,6 +18,10 @@ category page - see [game_loop.md](./game_loop.md).
   `sub_80007AC`, `sub_80007DC` (Sept 2026, `code_3.s` lineage - `irq.c` is
   a mixed file, see `docs/decomp_dev.md`)
 - `src/system/asset_util.c`: `LoadTaggedAsset`, `LoadBackgroundTileAndPalette`
+- `src/system/input_util.c`: `sub_80010E0` (input-poll-until-button/
+  timeout helper, NAKED - a full C reconstruction matched the ROM
+  everywhere except one bit-test whose branch senses compiled swapped
+  from the ROM; converted to a byte-verified NAKED asm transcription)
 - `src/system/boot_util.c`: `sub_8000140`, `sub_800014C`, `nullsub_9` -
   boot-adjacent BIOS wrappers right after `asm/crt0.s`'s permanent boot
   stub (`start`, left as hand-written asm, not tracked as a function to
@@ -83,11 +87,6 @@ See [docs/workflow.md](../workflow.md) for the per-function loop.
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
-- **`sub_80010E0`** (`src/system/input_util.c`, an input-polling helper) -
-  a single bit-test compiles with the branch senses swapped from the ROM
-  (same two instructions, same size) in a way that resists every C-level
-  rephrasing tried - see `docs/matching.md`, "Parked, not matched:
-  `sub_80010E0`".
 - **`sub_803AA08`** (`src/system/timer_util.c`, GitHub issue #69) - arms
   the timer `sub_803A9D0` claims; real bytes in
   `asm/code_3_2_20e_aa08.s`. Every field/register access confirmed;

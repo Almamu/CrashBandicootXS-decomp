@@ -24,11 +24,16 @@ for the full write-up.
 - `src/audio/sfx_ambient.c`: `sub_800190C` (ambient/looping-sfx-channel
   tick update), `sub_80019A8` (stop-if-playing scan), `sub_80019CC`
   (reset), `sub_80019E8` (force-expire).
-- `src/audio/audio_context.c`: `sub_8001AB8`, `sub_8001ABC`,
-  `sub_8001AC0`, `sub_8001AC4`, `sub_8001AD8`, `sub_8001AEC`,
-  `sub_8001B00`, `sub_8001B14`, `sub_8001B30`, `sub_8001B50`,
-  `sub_8001B54`, `sub_8001B88`, `sub_8001BAC`, `sub_8001BD4`,
-  `sub_8001C04`, `sub_8001C2C` (constructor), `sub_8001C64`.
+- `src/audio/audio_context.c`: `sub_80019F8` (ambient-sfx-channel
+  play-request driver, NAKED - a full C reconstruction closed the
+  `u8` stack-parameter byte-load gap but left a base-volume
+  field-address CSE difference the compiler always makes; converted to
+  a byte-verified NAKED asm transcription instead), `sub_8001AB8`,
+  `sub_8001ABC`, `sub_8001AC0`, `sub_8001AC4`, `sub_8001AD8`,
+  `sub_8001AEC`, `sub_8001B00`, `sub_8001B14`, `sub_8001B30`,
+  `sub_8001B50`, `sub_8001B54`, `sub_8001B88`, `sub_8001BAC`,
+  `sub_8001BD4`, `sub_8001C04`, `sub_8001C2C` (constructor),
+  `sub_8001C64`.
 - `src/audio/music_irq.c` (new file - `sub_8001C80`/`sub_8001CA4`,
   0x08001C80): installs the VCount-IRQ handler that forwards into
   `sub_80016EC`'s per-tick fade update above - `music_player.c`'s
@@ -104,14 +109,12 @@ the write-up's "Left raw" section for the full per-function breakdown).
 - `PlaySfx` (`sub_8001854`, real bytes in `asm/code_3_1_10.s`,
   reconstruction in `src/audio/sfx_ambient.c`): a one-instruction
   prologue register-save-scheduling difference.
-- `sub_80019F8` (real bytes in `asm/code_3_1_10_2.s`, reconstruction in
-  `src/audio/audio_context.c`): a base-volume field-address CSE
-  difference (the `u8` stack-parameter byte-load gap this entry used to
-  also list was closed - see below).
 
-See docs/matching.md for `PlaySfx`'s remaining gap and
+See docs/matching.md for `PlaySfx`'s remaining gap. `sub_80019F8`
+(formerly parked here for a base-volume field-address CSE difference)
+is now matched via NAKED transcription - see
 [docs/matching/issue-3-overlay-ui-audio-wrapper.md](../matching/issue-3-overlay-ui-audio-wrapper.md)
-for `sub_80019F8`'s.
+for the original gap analysis this closed.
 
 ## Left raw (not attempted, or attempted and set aside)
 

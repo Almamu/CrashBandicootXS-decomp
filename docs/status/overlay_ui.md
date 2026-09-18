@@ -100,36 +100,26 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
 - `src/graphics/settings_menu19.c` (new file - issue #7,
   0x0800599C-0x08005A78): the results sub-region constructor:
   `sub_800599C`. See `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
+- `src/graphics/settings_menu.c` (0x08003B40-0x080041BC): `sub_8003B40`
+  (SIO-handshake "connecting..." spinner dialog), `sub_8003BDC`,
+  `sub_8003C90`, `sub_8003D3C`, `sub_8003F30` (per-row numeric display,
+  issue #6), `sub_80041BC` - all six matched via NAKED asm
+  transcription (this compiler's "last mile" scratch-register
+  nondeterminism, same class as `sub_8006600` in
+  `docs/status/graphics.md`). `sub_800450C` (this file's own init
+  routine, ROM `0x0800450C`, right after `sub_80041BC`) stays fully
+  raw/unattempted - see `docs/matching/issue-6-0x08003f30-overlay-ui.md`.
+- `src/graphics/settings_menu20.c` (new file, 0x08004914-0x080049CC,
+  right after `settings_menu2.c` and before `settings_menu3.c`):
+  `sub_8004914`, `sub_80049CC` - two more icon-manager centered-glyph/
+  label draws, same NAKED-transcription class as `settings_menu.c`
+  above.
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
-- **`sub_8003B40`**, **`sub_8003BDC`**, **`sub_8003C90`**,
-  **`sub_8003D3C`**, **`sub_80041BC`**, **`sub_8004914`**,
-  **`sub_80049CC`** (`asm/code_3_1_10_3.s`/`asm/code_3_1_10_4.s`/
-  `asm/code_3_1_10_5.s`, C in `src/graphics/settings_menu.c`) - the
-  composite pause/options screen's icon-manager centered-label draws
-  (`sub_80049CC`/`sub_8003C90`/`sub_8003BDC`/`sub_8003D3C`/
-  `sub_80041BC`/`sub_8004914`, all built on the same primitive
-  `sub_8006600` in `docs/status/graphics.md` uses) plus a SIO-handshake
-  spinner dialog (`sub_8003B40`). Every load/store, branch, and call is
-  semantically confirmed for all seven; each hits the same class of
-  gcc-2.9 scratch-register nondeterminism `sub_8006600` documents at
-  length (`sub_80049CC`/`sub_8003C90` come within one or two
-  register-letter choices; `sub_8003BDC` additionally spills a constant
-  through `ip`, which plain C can't request) - see `docs/matching.md`,
-  "Match 0x08003B40-0x08004CB4", for what was tried on each.
-- **`sub_8003F30`** (`asm/code_3_1_10_4.s`, C in
-  `src/graphics/settings_menu.c`) - a per-row numeric display: three
-  of the row's `struct settings_row_stats` fields drawn as decimal
-  strings via `itoa` into `self->rowObjA`/`rowObjC`/`rowObjB`, plus a
-  fourth value formatted as `"NN%"` and drawn measure-then-right-aligned.
-  Semantically confirmed (issue #6); hits the same difficulty class as
-  the functions above, compounded by four near-identical unrolled
-  blocks instead of two-to-three. See
-  `docs/matching/issue-6-0x08003f30-overlay-ui.md`, issue #6.
 - **`sub_8005AE8`**, **`sub_8005B80`**, **`sub_8005C58`**,
   **`sub_8005D44`** (`asm/code_3_1_10_8.s`, C in
   `src/graphics/settings_menu6.c`) - four more settings-row icon-widget
@@ -172,7 +162,8 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   per-row percentage counter, formatting a `" <NN%>"`-shaped scratch
   string and pushing it through the matching `AudioContext` setter.
   Fully understood; off by several register-letter choices in the
-  digit-formatting tail, the same unresolved class `sub_80049CC` above
+  digit-formatting tail, the same gcc-2.9 scratch-register
+  nondeterminism class `sub_8006600` (`docs/status/graphics.md`)
   documents - see `docs/matching.md`, issue #7.
 - **`sub_8006124`**, **`sub_800619C`**, **`sub_80061E8`**
   (`asm/code_3_1_10_14.s`, C in `src/graphics/settings_menu11.c`) -

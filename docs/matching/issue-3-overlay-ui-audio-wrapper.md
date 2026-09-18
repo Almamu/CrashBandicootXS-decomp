@@ -164,3 +164,19 @@ toward `Closes #3` even when it's demonstrably closer than before.
 `sub_80019F8`'s reconstruction is measurably closer to byte-exact (one
 of its two gaps closed); `PlaySfx` is unchanged from the prior pass
 after a genuine fresh attempt that didn't pan out.
+
+## Later pass: `sub_80019F8` matched via NAKED transcription
+
+The remaining base-volume field-address CSE gap documented above never
+had a plain-C fix - this compiler always reuses the live address
+computed for the `slotId` read instead of recomputing it fresh like the
+ROM does, no matter how the field access or pointer arithmetic was
+phrased. Since the semantics were already fully confirmed (this
+document's own derivation), the function was converted to a
+byte-verified NAKED asm transcription instead - the established pattern
+for this class of gap (see `src/util/printf_util.c`'s `sub_8000CBC`).
+Every instruction now matches the ROM exactly; verified via a full
+clean `make compare` (`La suma coincide`). `sub_80019F8` no longer sits
+under `asm/code_3_1_10_2.s` (deleted) - its NAKED definition lives
+directly in `src/audio/audio_context.c`. `PlaySfx` was not attempted
+this pass and remains parked.
