@@ -30,19 +30,27 @@ category page - see [game_loop.md](./game_loop.md).
   `LZ77UnCompWrapper`, `sub_803A954`, `RLUnCompWrapper`, `sub_803A95C`,
   `sub_0803A960` (eight BIOS SWI wrappers), `sub_803A968` (picks a
   12-byte `EepromConfig` table by chip-size code), `sub_803A9D0`
-  (claims a hardware timer, hands back an IRQ-handler-stub address) -
-  GitHub issue #69
-- `src/system/timer_util_aa90.c` (own file - its real ROM address,
-  `0x0803AA90`, sits between the still-parked `sub_803AA08` and
-  `sub_803AAD4`, so it isn't adjacent to `timer_util.c`'s own matched
-  functions): `sub_803AA90` (disarms the timer `sub_803AA08` claims) -
-  GitHub issue #69, see `docs/matching/issue-69-eeprom-timer.md`
-- `src/system/eeprom_verify.c` (own file, same reason - ROM
-  `0x0803ACE0`, between the still-parked `sub_803AC04` and
-  `reg_trampolines.c`'s functions): `sub_803ACE0` (reads an EEPROM
-  block back and compares it), `sub_803AD38` (write+verify with a
-  3-attempt retry) - GitHub issue #69, see
+  (claims a hardware timer, hands back an IRQ-handler-stub address),
+  `sub_803AA08` (arms the claimed timer; matched via NAKED
+  transcription) - GitHub issue #69, see
   `docs/matching/issue-69-eeprom-timer.md`
+- `src/system/timer_util_aa90.c` (own file - its real ROM address,
+  `0x0803AA90`, sits between `sub_803AA08` and `sub_803AAD4`, so it
+  isn't adjacent to `timer_util.c`'s own matched functions):
+  `sub_803AA90` (disarms the timer `sub_803AA08` claims), `sub_803AAD4`
+  (the DMA3 block-transfer helper used by the whole EEPROM cluster;
+  matched via NAKED transcription) - GitHub issue #69, see
+  `docs/matching/issue-69-eeprom-timer.md`
+- `src/system/eeprom_util.c`: `sub_803AB54` (reads one 8-byte EEPROM
+  block), `sub_803AC04` (writes one block, then arms a watchdog timer
+  and busy-waits for completion) - the DMA3 bit-serial EEPROM read/
+  write pair, matched via NAKED transcription - GitHub issue #69, see
+  `docs/matching/issue-69-eeprom-timer.md`
+- `src/system/eeprom_verify.c` (own file, same reason - ROM
+  `0x0803ACE0`, between `sub_803AC04` and `reg_trampolines.c`'s
+  functions): `sub_803ACE0` (reads an EEPROM block back and compares
+  it), `sub_803AD38` (write+verify with a 3-attempt retry) - GitHub
+  issue #69, see `docs/matching/issue-69-eeprom-timer.md`
 - `src/system/reg_trampolines.c`: `sub_803AD78`, `sub_803AD7C`,
   `sub_803AD80`, `sub_803AD84`, `sub_803AD88`, `sub_803AD8C`,
   `sub_803AD90`, `sub_803AD94` (the `bx r0`..`sp` "call through whatever
@@ -71,11 +79,12 @@ category page - see [game_loop.md](./game_loop.md).
 GitHub issue #70 (`0x0803ADB4`-`0x0803B060`, right after
 `reg_trampolines.c` above) was categorized `system` by the chunk
 generator, but every function in it turned out to be either a generic
-math primitive or an AABB/actor-table helper - both matched and parked
-functions from it live in `docs/status/util.md`
-(`src/util/math_div_util.c`) and [actor.md](./actor.md)
-(`src/graphics/actor_aabb_setup.c`) instead. See `docs/matching.md`'s
-issue #70 entry for the full writeup.
+math primitive or an AABB/actor-table helper - the matched functions
+from it live in `docs/status/util.md` (`src/util/math_div_util.c`) and
+[actor.md](./actor.md) (`src/graphics/actor_aabb_setup.c`) instead. See
+`docs/matching.md`'s issue #70 entry for the original writeup and
+`docs/matching/issue-69-eeprom-timer.md`'s "NAKED transcription pass"
+section for how the division/modulo trio finished matching.
 
 `main.c`/`memory.c`/most of `irq.c` were matched earliest of all, before
 `docs/matching.md`'s per-function log convention existed, so they don't have
@@ -84,25 +93,4 @@ frozen decomp.dev baseline now (`expected/legacy.s`) - see
 [docs/decomp_dev.md](../decomp_dev.md).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop.
-
-## Parked (`NON_MATCHING`, not yet byte-exact)
-
-- **`sub_803AA08`** (`src/system/timer_util.c`, GitHub issue #69) - arms
-  the timer `sub_803A9D0` claims; real bytes in
-  `asm/code_3_2_20e_aa08.s`. Every field/register access confirmed;
-  narrowed to a handful of register-allocation gaps this session (was
-  much wider before) - see `docs/matching/issue-69-eeprom-timer.md`.
-- **`sub_803AAD4`** (`src/system/timer_util.c`, GitHub issue #69) - a
-  DMA3 block-transfer helper used by the whole EEPROM cluster; real
-  bytes in `asm/code_3_2_20e_aa90.s`. Every field/register access
-  confirmed, parked purely on the busy-wait tail's loop-rotation/
-  literal-pool-placement shape - see
-  `docs/matching/issue-69-eeprom-timer.md`.
-- **`sub_803AB54`/`sub_803AC04`** (`src/system/eeprom_util.c`, GitHub
-  issue #69) - a DMA3 bit-serial EEPROM read/write pair; real bytes in
-  `asm/code_3_2_20e_ab54.s`. The wire protocol and every field/register
-  access are now fully confirmed (see `src/system/eeprom_util.c`'s
-  header comment for the read/write bit layout), parked on register-
-  allocation/loop-rotation gaps similar to `sub_803AA08`/`sub_803AAD4`
-  above - see `docs/matching/issue-69-eeprom-timer.md`.
 

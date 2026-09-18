@@ -183,3 +183,51 @@ vram-upload-cursor/OAM-shadow flush tail both `sub_802400C` and
 
 See [docs/status/game_loop.md](../status/game_loop.md) for the running
 matched/parked/raw lists this updates.
+
+## Update: `sub_8022BF0`/`sub_8022CA0` matched
+
+Both of this entry's two parked functions are now byte-exact matched
+(full clean `make compare`: `crashbandicootxs.gba: La suma coincide`),
+closing out the last of the original 25-function chunk. `asm/code_3_2_17_22bf0.s`
+(which held only these two functions' raw bytes) is deleted; its
+`ldscript.txt` line is removed.
+
+- **`sub_8022BF0`**: the earlier attempt cached all four of
+  `self+0x70`/`0x6c`/`0x74`/`0xbc` behind pointer locals, which spilled
+  into `r8`/`r9`/`sl`. The fix: `self+0x70`/`0x6c`/`0x74` all fit the
+  Thumb `ldr`/`str` immediate range (0-124) and the ROM addresses them
+  directly off `self` with no cached pointer at all - only
+  `0xb4`/`0xb0`/`0xb8`/`0xd4`/`0xe0`/`0xbc` (all past that range)
+  actually need an address computed into a local. Dropping the three
+  unnecessary pointer locals brought the whole function down to the
+  ROM's exact `r4`-`r7` register set, no spill.
+- **`sub_8022CA0`**: three separate gaps, all fixed:
+  1. The `self+0xa9`-byte-to-`+0xd0` copy needed a `u8 *p = self+0xa9;
+     u8 v = *p; p += 0x27; *p = v;` shape (read, then bump the *same*
+     pointer, then store) to reproduce the ROM's "derive `+0xd0` by
+     adding `0x27` to the register that still holds `+0xa9`" addressing
+     - a plain `*(p+0x27) = *p;` computes the destination address
+       before the read instead.
+  2. In the `mode == 3` branch specifically, this compiler noticed
+     `self + 0xa9` is `(self + 0xcc) - 0x23` (the two field addresses
+     differ by a compile-time constant) and reused the already-live
+     `self+0xcc` pointer via `subs r1, #0x23` instead of the ROM's
+     fresh `adds r0, r6, #0; adds r0, #0xa9`. An `asm volatile("" :
+     "+r"(self));` barrier right after the `+0xcc` write stops this
+     value-numbering reuse without costing an extra instruction, and
+     `register u8 *p asm("r0") = self + 0xa9;` then lands the
+     recomputed pointer in the same register the ROM uses.
+  3. The `self+0xd4`/`self+0xd8` two-word position store (`x`/`y` from
+     `gUnknown_030012D8`) had the exact same "two independent
+     raw-offset stores recompute the address twice" gotcha as
+     `sub_8023500`/`sub_802356C` above - fixed the same way, with a
+     local `s32 *dst = (s32 *)(self + 0xd4); dst[0] = x; dst[1] = y;`
+     so the second store reuses `[r0, #4]` off the first store's base
+     register instead of an extra `adds r0, #4`. This one was only
+     caught by the full clean `make compare` (it shifted the whole
+     ROM's checksum by 4 bytes) - the isolated per-function compile
+     looked byte-identical operand-by-operand and only the *size* was
+     off, exactly the kind of gap `docs/workflow.md` step 3 warns an
+     isolated compile can't catch.
+  The `0x04000040` control-word-reload-per-call and `gUnknown_030012B4`-
+  in-`r4` fixes from the original parked note both held up unchanged.
