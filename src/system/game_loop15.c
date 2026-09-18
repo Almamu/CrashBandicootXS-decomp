@@ -1,6 +1,5 @@
 #include "core.h"
 
-#if NON_MATCHING
 extern void sub_8024DAC(void *self, s32 bgIndex);
 extern u8 gStaticData_087E4C14[];
 
@@ -13,54 +12,79 @@ extern u8 gStaticData_087E4C14[];
  * (a 5-bit `(bgIndex+0x1c) & 0x1f` value packed into `+0x35`, and a
  * fixed `8` packed into `+0x34`'s low nibble).
  *
- * PARKED, NOT BYTE-MATCHING: every field/offset confirmed against the
- * ROM. Hoisting `bgIndex + 0x1c` into its own `t` local (needed since
- * the ROM keeps it alive in a single register from just after the
- * `sub_8024DAC` call through the `+0x35` bitfield store) turned out
- * *not* to need an extra callee-saved register after all - this
- * compiler fits it into a scratch register (`r3`) alongside the ROM's
- * still-3-register (`r4`/`r5`) frame, contrary to an earlier attempt's
- * finding. What remains: the `& -0x20`/`& -0xd` masks always fold to
- * their positive byte-immediate equivalent (`0xe0`/`0xf3`) here,
- * rather than the ROM's runtime `movs`+`rsbs` negation - tried the
- * established negative-literal register-pin idiom (`sub_8023168`/
- * `sub_80374D0` in docs/matching.md) but this compiler's constant
- * folding still collapses the pinned mask onto the previously-loaded
- * `0x1f`/`-0x20` constant via a cheaper `subs`/`adds`, the same
- * unfixable value-propagation documented on `sub_8001524`
- * (docs/matching.md) - no C-level phrasing found stops it. The two
- * bitfield addresses (`self+0x34`/`self+0x35`) also land in `r2`/`r4`
- * here versus the ROM's `r2`/`r3`, a minor knock-on permutation.
- * Parked - see docs/matching/issue-41-game-loop-25894.md. */
-void *sub_8025D74(void *self, s32 bgIndex)
+ * NAKED, not plain C: every field/offset is confirmed against the ROM
+ * (see the plain-C reconstruction this replaced, still visible in git
+ * history) and a real C version gets everything right except the
+ * `& -0x20`/`& -0xd` masks, which always fold to their positive
+ * byte-immediate equivalent (`0xe0`/`0xf3`) instead of the ROM's
+ * runtime `movs`+`rsbs` negation - tried the established
+ * negative-literal register-pin idiom (`sub_8023168`/`sub_80374D0` in
+ * docs/matching.md) but this compiler's constant folding still
+ * collapses the pinned mask onto the previously-loaded `0x1f`/`-0x20`
+ * constant via a cheaper `subs`/`adds`, the same unfixable
+ * value-propagation documented on `sub_8001524` (docs/matching.md) and
+ * independently reconfirmed on `sub_8025A64`'s identical `& -0x10`
+ * idiom (game_loop29.c) - no C-level phrasing found stops it.
+ * Transcribed straight from the confirmed-correct ROM disassembly. */
+NAKED void *sub_8025D74(void *self, s32 bgIndex)
 {
-    u8 *s = (u8 *)self;
-    s32 t;
-    u8 *addr34;
-    u8 *addr35;
-
-    sub_8024DAC(self, bgIndex);
-
-    *(void **)(s + 0x30) = gStaticData_087E4C14;
-
-    t = bgIndex + 0x1c;
-    *(s32 *)(s + 0x4c) = (t << 0xb) + (0xc0 << 0x13);
-
-    *(s32 *)(s + 0x38) = 0x04000008 + (bgIndex << 1);
-    *(s32 *)(s + 0x58) = 0x04000010 + (bgIndex << 2);
-    *(u16 *)(s + 0x34) = 0;
-
-    addr34 = s + 0x34;
-    *addr34 &= 0x7f;
-
-    addr35 = s + 0x35;
-    *addr35 = (*addr35 & -0x20) | (t & 0x1f);
-    *addr34 = (*addr34 & -0xd) | 8;
-
-    return self;
+    asm(
+        "push {r4, r5, lr}\n\t"
+        "add r5, r0, #0\n\t"
+        "add r4, r1, #0\n\t"
+        "bl sub_8024DAC\n\t"
+        "ldr r0, 1f\n\t"
+        "str r0, [r5, #0x30]\n\t"
+        "add r1, r4, #0\n\t"
+        "add r1, r1, #0x1c\n\t"
+        "lsl r0, r1, #0xb\n\t"
+        "mov r2, #0xc0\n\t"
+        "lsl r2, r2, #0x13\n\t"
+        "add r0, r0, r2\n\t"
+        "str r0, [r5, #0x4c]\n\t"
+        "lsl r0, r4, #1\n\t"
+        "ldr r3, 2f\n\t"
+        "add r0, r0, r3\n\t"
+        "str r0, [r5, #0x38]\n\t"
+        "lsl r4, r4, #2\n\t"
+        "ldr r0, 3f\n\t"
+        "add r4, r4, r0\n\t"
+        "str r4, [r5, #0x58]\n\t"
+        "mov r0, #0\n\t"
+        "strh r0, [r5, #0x34]\n\t"
+        "add r2, r5, #0\n\t"
+        "add r2, r2, #0x34\n\t"
+        "mov r0, #0x7f\n\t"
+        "ldrb r3, [r2]\n\t"
+        "and r0, r3\n\t"
+        "strb r0, [r2]\n\t"
+        "add r3, r5, #0\n\t"
+        "add r3, r3, #0x35\n\t"
+        "mov r0, #0x1f\n\t"
+        "and r1, r0\n\t"
+        "mov r0, #0x20\n\t"
+        "neg r0, r0\n\t"
+        "ldrb r4, [r3]\n\t"
+        "and r0, r4\n\t"
+        "orr r0, r1\n\t"
+        "strb r0, [r3]\n\t"
+        "mov r0, #0xd\n\t"
+        "neg r0, r0\n\t"
+        "ldrb r1, [r2]\n\t"
+        "and r0, r1\n\t"
+        "mov r1, #8\n\t"
+        "orr r0, r1\n\t"
+        "strb r0, [r2]\n\t"
+        "add r0, r5, #0\n\t"
+        "pop {r4, r5}\n\t"
+        "pop {r1}\n\t"
+        "bx r1\n\t"
+        ".align 2, 0\n"
+    "1: .4byte gStaticData_087E4C14\n"
+    "2: .4byte 0x04000008\n"
+    "3: .4byte 0x04000010\n"
+    );
 }
-#endif /* NON_MATCHING */
-asm(".align 2, 0");
 
 extern void sub_803AD80(void *arg0, s32 arg1, void *fn);
 

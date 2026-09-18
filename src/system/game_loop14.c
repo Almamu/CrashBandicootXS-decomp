@@ -1,81 +1,6 @@
 #include "core.h"
 #include "actor.h"
 
-extern void *gUnknown_030012C0;
-extern void *gUnknown_030012D0;
-extern void *gUnknown_030012F0;
-extern void *gUnknown_03001308;
-
-#if NON_MATCHING
-extern struct actor *sub_8011114(u16 arg0, u16 arg1, u16 arg2, s32 arg3);
-extern void sub_80087C0(void *part);
-extern void sub_80087B4(void *part);
-extern void sub_800872C(void *part, u8 val);
-extern s32 sub_800815C(struct actor *part);
-extern void sub_80111B8(void *part);
-
-/* Spawns a part-object via `sub_8011114` at `(x,y)` when
- * `gUnknown_030012C0+0x8c` is clear (returns NULL otherwise), tags its
- * `+0x49`/`+0x4a`/`+0x4b` bytes from `p3`/`p5`/the (always-0, since
- * only reached on that branch) state flag, points `+0x20` at
- * `gUnknown_030012D0`'s shared resource table (fixed slot `0x8d`,
- * 4-byte stride), tags `+0x2d = 0xa`, builds the OAM/keyframe trio and
- * `+0x29` bitfield the same way `trigger_effect.c`'s
- * `sub_8020E84`-family functions do, and optionally fires
- * `sub_80111B8` when `flag6` is set.
- *
- * PARKED, NOT BYTE-MATCHING: semantics traced end-to-end against the
- * ROM (parameter registers, the `+0x8d*4` table-slot arithmetic, the
- * `& -0x10 | (result & 0xf)` bitfield idiom) but not iterated to an
- * exact register allocation within this issue's chunk - same
- * unresolved register-allocation family as the sibling
- * `sub_8020E84`/`sub_8020F7C`/`sub_802107C`/`sub_802117C` functions
- * already parked in trigger_effect.c. See
- * docs/matching/issue-41-game-loop-25894.md. */
-struct actor *sub_8025A64(void *unused0, u16 x, u16 y, u8 p3, u32 p5, u8 flag6)
-{
-    struct actor *newObj = NULL;
-    u8 state8c = *((u8 *)gUnknown_030012C0 + 0x8c);
-
-    if (state8c == 0) {
-        newObj = sub_8011114(0xFFFF, x, y, 0);
-        newObj->flags |= 0x10;
-        *((u8 *)newObj + 0x49) = p3;
-        *((u8 *)newObj + 0x4a) = (u8)p5;
-        *((u8 *)newObj + 0x4b) = state8c;
-        {
-            void *p2 = *(void **)gUnknown_030012D0;
-            void *field0 = *(void **)p2;
-
-            *(void **)((u8 *)newObj + 0x20) = (u8 *)field0 + 0x8d * 4;
-        }
-        *((u8 *)newObj + 0x2d) = 0xa;
-        sub_80087C0(newObj);
-        sub_80087B4(newObj);
-        sub_800872C(newObj, 0);
-        {
-            s32 result = sub_800815C(newObj);
-            u8 *bf = (u8 *)newObj + 0x29;
-
-            *bf = (*bf & -0x10) | (result & 0xf);
-        }
-        if (flag6 != 0) {
-            sub_80111B8(newObj);
-        }
-    }
-    return newObj;
-}
-
-struct aabb {
-    s32 field_0;
-    s32 field_4;
-    s32 field_8;
-    s32 field_c;
-};
-
-extern struct actor *sub_8025BAC(void *unused0, s32 x, s32 idx, s32 testX, s32 testY, u8 mirrorFlag);
-extern void sub_8007B98(struct aabb *buf, void *obj);
-
 /* Spawns via `sub_8025BAC` (using `src`'s Q8 X shifted to tile units as
  * the 4th arg), computes an AABB for both the new part and `src` via
  * the same `sub_8007B98` primitive `actor_part11.c` documents, averages
@@ -84,80 +9,108 @@ extern void sub_8007B98(struct aabb *buf, void *obj);
  * plain `src.y + z` offset. Finally seeds the part's velocity-ish
  * fields (`+0x60`/`+0x48`/`+0x4c`/`+0x50`, the same family
  * `sub_8009F50` zeroes in actor_part8.c) from `z`, negated when the
- * mirror bit is set.
+ * mirror bit is set. The ROM's own call site into `sub_8025BAC` does
+ * not visibly set up its `testY`/`mirrorFlag` stack args before the
+ * `bl` - they land wherever this function's own `sub sp, #0x28` scratch
+ * buffer happens to hold at that point, an implicit stack-reuse
+ * coincidence transcribed verbatim below (`str r5, [sp]` / `str r4,
+ * [sp, #4]`, matching this function's own already-live locals).
  *
- * PARKED, NOT BYTE-MATCHING: semantics traced against the ROM
- * (register-by-register for the AABB/half-width/mirror-bit dance) but
- * not iterated to an exact match within this issue's chunk - a
- * genuinely large function with several long-lived stack temporaries.
- * See docs/matching/issue-41-game-loop-25894.md. */
-struct actor *sub_8025B0C(void *arg0, void *arg1, void *arg2, s32 margin, s32 z, void *src)
+ * NAKED, not plain C: semantics are fully traced against the ROM
+ * (register-by-register for the AABB/half-width/mirror-bit dance, and
+ * the stack-reuse quirk above), but this is a large function using
+ * `r8` across most of its body, and a plain-C reconstruction hits the
+ * same family of gcc-2.9 register-allocation/instruction-scheduling
+ * gaps already confirmed unfixable on the smaller siblings
+ * `sub_8025A64` (game_loop29.c)/`sub_8025D74` (game_loop15.c) -
+ * transcribed straight from the confirmed-correct ROM disassembly
+ * rather than re-chasing the same wall. See
+ * docs/matching/issue-41-game-loop-25894.md. */
+NAKED struct actor *sub_8025B0C(void *arg0, void *arg1, void *arg2, s32 margin, s32 z, void *src)
 {
-    u8 *s = (u8 *)src;
-    s32 srcX = *(s32 *)s >> 8;
-    struct actor *newObj;
-    struct aabb buf1, buf2;
-    s32 halfW1, halfW2, combined;
-    s32 newX, newY;
-    u8 *flagsAddr;
-    u8 flags;
-
-    /* NOTE: the ROM's call site here does not visibly set up
-     * sub_8025BAC's testY/mirrorFlag stack args before this `bl` -
-     * they land wherever this function's own `sub sp, #0x28` scratch
-     * buffer happens to hold at this point, an implicit stack-reuse
-     * coincidence not fully resolved here. Passed as 0/0 pending
-     * further investigation. */
-    newObj = sub_8025BAC(arg0, (s32)arg1, (s32)arg2, srcX, 0, 0);
-
-    sub_8007B98(&buf1, newObj);
-    sub_8007B98(&buf2, src);
-
-    halfW1 = buf1.field_8;
-    halfW1 = (halfW1 + (s32)((u32)halfW1 >> 31)) >> 1;
-    halfW2 = buf2.field_8;
-    halfW2 = (halfW2 + (s32)((u32)halfW2 >> 31)) >> 1;
-    combined = halfW1 + halfW2 + margin;
-
-    flagsAddr = (u8 *)newObj + 0x28;
-    flags = *flagsAddr;
-    {
-        s32 x = *(s32 *)newObj >> 8;
-
-        if ((s32)(flags << 27) < 0) {
-            newX = x - combined;
-        } else {
-            newX = x + combined;
-        }
-    }
-    newY = (*(s32 *)((u8 *)newObj + 4) >> 8) + z;
-
-    *(s32 *)newObj = newX << 8;
-    *(s32 *)((u8 *)newObj + 4) = newY << 8;
-
-    flags = *flagsAddr;
-    if ((s32)(flags << 27) < 0) {
-        s32 negZ = -z;
-
-        *(s32 *)((u8 *)newObj + 0x60) = negZ;
-        *(s32 *)((u8 *)newObj + 0x48) = negZ;
-        *(s32 *)((u8 *)newObj + 0x4c) = 0x40;
-        *(s32 *)((u8 *)newObj + 0x50) = negZ;
-    } else {
-        *(s32 *)((u8 *)newObj + 0x60) = z;
-        *(s32 *)((u8 *)newObj + 0x48) = z;
-        *(s32 *)((u8 *)newObj + 0x4c) = 0x40;
-        *(s32 *)((u8 *)newObj + 0x50) = z;
-    }
-
-    return newObj;
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "mov r7, r8\n\t"
+        "push {r7}\n\t"
+        "sub sp, #0x28\n\t"
+        "mov r8, r3\n\t"
+        "ldr r7, [sp, #0x44]\n\t"
+        "ldr r6, [sp, #0x48]\n\t"
+        "ldr r3, [r6]\n\t"
+        "asr r3, r3, #8\n\t"
+        "ldr r5, [r6, #4]\n\t"
+        "asr r5, r5, #8\n\t"
+        "add r4, r6, #0\n\t"
+        "add r4, r4, #0x28\n\t"
+        "ldrb r4, [r4]\n\t"
+        "lsl r4, r4, #0x1b\n\t"
+        "lsr r4, r4, #0x1f\n\t"
+        "str r5, [sp]\n\t"
+        "str r4, [sp, #4]\n\t"
+        "bl sub_8025BAC\n\t"
+        "add r5, r0, #0\n\t"
+        "add r0, sp, #8\n\t"
+        "add r1, r5, #0\n\t"
+        "bl sub_8007B98\n\t"
+        "ldr r4, [sp, #0x10]\n\t"
+        "add r0, sp, #0x18\n\t"
+        "add r1, r6, #0\n\t"
+        "bl sub_8007B98\n\t"
+        "ldr r0, [sp, #0x20]\n\t"
+        "lsr r1, r4, #0x1f\n\t"
+        "add r4, r4, r1\n\t"
+        "asr r4, r4, #1\n\t"
+        "lsr r1, r0, #0x1f\n\t"
+        "add r0, r0, r1\n\t"
+        "asr r0, r0, #1\n\t"
+        "add r4, r4, r0\n\t"
+        "add r4, r8\n\t"
+        "ldr r0, [r5]\n\t"
+        "asr r1, r0, #8\n\t"
+        "add r3, r5, #0\n\t"
+        "add r3, r3, #0x28\n\t"
+        "ldrb r2, [r3]\n\t"
+        "lsl r0, r2, #0x1b\n\t"
+        "add r2, r1, r4\n\t"
+        "cmp r0, #0\n\t"
+        "bge 1f\n\t"
+        "sub r2, r1, r4\n\t"
+    "1:\n\t"
+        "ldr r0, [r5, #4]\n\t"
+        "asr r0, r0, #8\n\t"
+        "ldr r1, [sp, #0x40]\n\t"
+        "add r0, r0, r1\n\t"
+        "lsl r1, r2, #8\n\t"
+        "str r1, [r5]\n\t"
+        "lsl r0, r0, #8\n\t"
+        "str r0, [r5, #4]\n\t"
+        "ldrb r3, [r3]\n\t"
+        "lsl r0, r3, #0x1b\n\t"
+        "cmp r0, #0\n\t"
+        "bge 2f\n\t"
+        "neg r0, r7\n\t"
+        "mov r1, #0x40\n\t"
+        "str r0, [r5, #0x60]\n\t"
+        "str r0, [r5, #0x48]\n\t"
+        "str r1, [r5, #0x4c]\n\t"
+        "str r0, [r5, #0x50]\n\t"
+        "b 3f\n\t"
+    "2:\n\t"
+        "mov r0, #0x40\n\t"
+        "str r7, [r5, #0x60]\n\t"
+        "str r7, [r5, #0x48]\n\t"
+        "str r0, [r5, #0x4c]\n\t"
+        "str r7, [r5, #0x50]\n\t"
+    "3:\n\t"
+        "add r0, r5, #0\n\t"
+        "add sp, #0x28\n\t"
+        "pop {r3}\n\t"
+        "mov r8, r3\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r1}\n\t"
+        "bx r1\n\t"
+    );
 }
-
-extern struct actor *sub_8009ED0(u16 arg0, u16 arg1, u16 arg2);
-extern void *sub_8026EDC(s32 size);
-extern void *sub_800CCE0(void);
-extern void sub_803AD80(void *arg0, void *arg1, void *fn);
-extern void sub_8008E94(void *manager, void *value);
 
 /* Clamps `testX`/`testY` into `[0, extent)` using
  * `gUnknown_03001308`'s sub-object `+0x10`/`+0x14` extents (the same
@@ -171,80 +124,135 @@ extern void sub_8008E94(void *manager, void *value);
  * clears flags bits 1/2 (`& ~6`), and registers into
  * `gUnknown_030012F0`'s list via `sub_8008E94`.
  *
- * PARKED, NOT BYTE-MATCHING: semantics traced against the ROM but not
- * iterated to an exact register allocation within this issue's chunk -
- * see docs/matching/issue-41-game-loop-25894.md. */
-struct actor *sub_8025BAC(void *unused0, s32 x, s32 idx, s32 testX, s32 testY, u8 mirrorFlag)
+ * NAKED, not plain C: semantics are fully traced against the ROM, but a
+ * plain-C reconstruction hits the same unfixable `& -N`-mask
+ * constant-folding gap confirmed on `sub_8025A64` (game_loop29.c) - in
+ * fact three separate instances of it here (the `& ~0x11` mirror-bit
+ * combine, the `& -0x10 | (result & 0xf)` bitfield combine identical to
+ * `sub_8025A64`'s, and the final `& -5 & -3` flags clear) - so
+ * transcribed straight from the confirmed-correct ROM disassembly
+ * rather than re-chasing the same wall three more times. See
+ * docs/matching/issue-41-game-loop-25894.md. */
+NAKED struct actor *sub_8025BAC(void *unused0, s32 x, s32 idx, s32 testX, s32 testY, u8 mirrorFlag)
 {
-    struct actor *newObj;
-    void *subObj;
-    s32 extentX, extentY;
-
-    if (testX < 0) {
-        testX = 0;
-    }
-
-    subObj = *(void **)((u8 *)gUnknown_03001308 + 0x10);
-    extentX = *(s32 *)((u8 *)subObj + 0x10);
-    if (testX >= extentX) {
-        testX = extentX - 1;
-    }
-
-    if (testY < 0) {
-        testY = 0;
-    }
-    extentY = *(s32 *)((u8 *)subObj + 0x14);
-    if (testY >= extentY) {
-        testY = extentY - 1;
-    }
-
-    newObj = sub_8009ED0(0xFFFF, (u16)testX, (u16)testY);
-
-    {
-        u8 *bf = (u8 *)newObj + 0x28;
-        u8 bit4 = (u8)(((mirrorFlag != 0) ? 1 : 0) << 4);
-
-        *bf = (*bf & ~0x11) | bit4;
-    }
-    {
-        void *p2 = *(void **)gUnknown_030012D0;
-        void *field0 = *(void **)p2;
-
-        *(void **)((u8 *)newObj + 0x20) = (u8 *)field0 + idx * 0xc;
-    }
-    *((u8 *)newObj + 0x2d) = (u8)idx;
-
-    sub_80087C0(newObj);
-    sub_80087B4(newObj);
-    sub_800872C(newObj, 0);
-    {
-        s32 result = sub_800815C(newObj);
-        u8 *bf = (u8 *)newObj + 0x29;
-
-        *bf = (*bf & -0x10) | (result & 0xf);
-    }
-
-    sub_8026EDC(0x10);
-    {
-        void *mgr = sub_800CCE0();
-        u8 *rec = *(u8 **)((u8 *)mgr + 0xc);
-        void *addr = (u8 *)mgr + *(s16 *)(rec + 0x18);
-        void *fn = *(void **)(rec + 0x1c);
-
-        *(void **)((u8 *)newObj + 0x44) = mgr;
-        sub_803AD80(addr, newObj, fn);
-    }
-
-    newObj->flags &= (u8)(~6);
-
-    sub_8008E94(gUnknown_030012F0, newObj);
-
-    return newObj;
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "add r5, r1, #0\n\t"
+        "add r7, r2, #0\n\t"
+        "ldr r2, [sp, #0x14]\n\t"
+        "ldr r6, [sp, #0x18]\n\t"
+        "cmp r3, #0\n\t"
+        "bge 1f\n\t"
+        "mov r3, #0\n\t"
+    "1:\n\t"
+        "ldr r0, 7f\n\t"
+        "ldr r0, [r0]\n\t"
+        "ldr r1, [r0, #0x10]\n\t"
+        "ldr r0, [r1, #0x10]\n\t"
+        "lsl r4, r0, #8\n\t"
+        "asr r0, r4, #8\n\t"
+        "cmp r3, r0\n\t"
+        "blt 2f\n\t"
+        "lsr r0, r4, #8\n\t"
+        "sub r3, r0, #1\n\t"
+    "2:\n\t"
+        "cmp r2, #0\n\t"
+        "bge 3f\n\t"
+        "mov r2, #0\n\t"
+    "3:\n\t"
+        "ldr r0, [r1, #0x14]\n\t"
+        "lsl r4, r0, #8\n\t"
+        "asr r0, r4, #8\n\t"
+        "cmp r2, r0\n\t"
+        "blt 4f\n\t"
+        "lsr r0, r4, #8\n\t"
+        "sub r2, r0, #1\n\t"
+    "4:\n\t"
+        "ldr r0, 8f\n\t"
+        "lsl r1, r3, #0x10\n\t"
+        "lsr r1, r1, #0x10\n\t"
+        "lsl r2, r2, #0x10\n\t"
+        "lsr r2, r2, #0x10\n\t"
+        "mov r3, #0\n\t"
+        "bl sub_8009ED0\n\t"
+        "add r4, r0, #0\n\t"
+        "neg r1, r6\n\t"
+        "orr r1, r6\n\t"
+        "add r2, r4, #0\n\t"
+        "add r2, r2, #0x28\n\t"
+        "lsr r1, r1, #0x1f\n\t"
+        "lsl r1, r1, #4\n\t"
+        "mov r0, #0x11\n\t"
+        "neg r0, r0\n\t"
+        "ldrb r3, [r2]\n\t"
+        "and r0, r3\n\t"
+        "orr r0, r1\n\t"
+        "strb r0, [r2]\n\t"
+        "ldr r0, 9f\n\t"
+        "ldr r0, [r0]\n\t"
+        "ldr r0, [r0]\n\t"
+        "lsl r1, r5, #1\n\t"
+        "add r1, r1, r5\n\t"
+        "lsl r1, r1, #2\n\t"
+        "ldr r0, [r0]\n\t"
+        "add r0, r0, r1\n\t"
+        "str r0, [r4, #0x20]\n\t"
+        "add r0, r4, #0\n\t"
+        "add r0, r0, #0x2d\n\t"
+        "strb r7, [r0]\n\t"
+        "add r0, r4, #0\n\t"
+        "bl sub_80087C0\n\t"
+        "add r0, r4, #0\n\t"
+        "bl sub_80087B4\n\t"
+        "add r0, r4, #0\n\t"
+        "mov r1, #0\n\t"
+        "bl sub_800872C\n\t"
+        "add r0, r4, #0\n\t"
+        "bl sub_800815C\n\t"
+        "add r2, r4, #0\n\t"
+        "add r2, r2, #0x29\n\t"
+        "mov r1, #0xf\n\t"
+        "and r0, r1\n\t"
+        "mov r1, #0x10\n\t"
+        "neg r1, r1\n\t"
+        "ldrb r3, [r2]\n\t"
+        "and r1, r3\n\t"
+        "orr r1, r0\n\t"
+        "strb r1, [r2]\n\t"
+        "mov r0, #0x10\n\t"
+        "bl sub_8026EDC\n\t"
+        "bl sub_800CCE0\n\t"
+        "str r0, [r4, #0x44]\n\t"
+        "ldr r2, [r0, #0xc]\n\t"
+        "mov r3, #0x18\n\t"
+        "ldrsh r1, [r2, r3]\n\t"
+        "add r0, r0, r1\n\t"
+        "ldr r2, [r2, #0x1c]\n\t"
+        "add r1, r4, #0\n\t"
+        "bl sub_803AD80\n\t"
+        "mov r0, #5\n\t"
+        "neg r0, r0\n\t"
+        "ldrb r1, [r4, #0xc]\n\t"
+        "and r0, r1\n\t"
+        "mov r1, #3\n\t"
+        "neg r1, r1\n\t"
+        "and r0, r1\n\t"
+        "strb r0, [r4, #0xc]\n\t"
+        "ldr r0, 10f\n\t"
+        "ldr r0, [r0]\n\t"
+        "add r1, r4, #0\n\t"
+        "bl sub_8008E94\n\t"
+        "add r0, r4, #0\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r1}\n\t"
+        "bx r1\n\t"
+        ".align 2, 0\n"
+    "7: .4byte gUnknown_03001308\n"
+    "8: .4byte 0x0000ffff\n"
+    "9: .4byte gUnknown_030012D0\n"
+    "10: .4byte gUnknown_030012F0\n"
+    );
 }
-
-extern struct actor *sub_801173C(u16 arg0, u16 arg1, u16 arg2, s32 arg3);
-extern void sub_801191C(void *part);
-extern void sub_8011870(void *part);
 
 /* Same early-out and `+0x49`/`+0x4a`/`+0x4b` tagging shape as
  * `sub_8025A64`, but spawns via `sub_801173C` with a "special" 4th
@@ -252,32 +260,85 @@ extern void sub_8011870(void *part);
  * instead of a fixed table slot, and fires `sub_801191C`/
  * `sub_8011870` instead of `sub_80111B8`.
  *
- * PARKED, NOT BYTE-MATCHING: semantics traced against the ROM but not
- * iterated to an exact register allocation within this issue's chunk -
- * see docs/matching/issue-41-game-loop-25894.md. */
-struct actor *sub_8025CA4(void *unused0, u16 x, u16 y, u8 p3, u8 p4, u8 p5)
+ * NAKED, not plain C: same shape as `sub_8025A64` (game_loop29.c),
+ * including the same `flag6`-in-`r7`-across-calls confirmed toolchain
+ * bug (an explicit `register T x asm("r7")` pin never makes it into
+ * this compiler's own `push`/`pop` list - see `src/graphics/oam_count.c`
+ * and the other `asm("r7")` call-outs project-wide) plus the same
+ * consecutive-byte-offset (`+0x49`/`+0x4a`/`+0x4b`) address-reuse this
+ * compiler won't reproduce from plain field-store C - transcribed
+ * straight from the confirmed-correct ROM disassembly. See
+ * docs/matching/issue-41-game-loop-25894.md. */
+NAKED struct actor *sub_8025CA4(void *unused0, u16 x, u16 y, u8 p3, u8 p4, u8 p5)
 {
-    struct actor *newObj = NULL;
-    u8 state8c = *((u8 *)gUnknown_030012C0 + 0x8c);
-
-    if (state8c == 0) {
-        s32 special = (p5 != 0 || p4 == 0xff) ? 0xFFFF : 0;
-
-        newObj = sub_801173C(0xFFFF, x, y, special);
-        newObj->flags |= 0x10;
-        *((u8 *)newObj + 0x49) = p3;
-        *((u8 *)newObj + 0x4a) = p4;
-        *((u8 *)newObj + 0x4b) = 0;
-        if (p4 == 0xff) {
-            sub_801191C(newObj);
-        }
-        if (p5 != 0) {
-            sub_8011870(newObj);
-        }
-    }
-    return newObj;
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "add r7, r3, #0\n\t"
+        "ldr r5, [sp, #0x14]\n\t"
+        "add r0, sp, #0x18\n\t"
+        "ldrb r6, [r0]\n\t"
+        "mov r4, #0\n\t"
+        "ldr r0, 5f\n\t"
+        "ldr r0, [r0]\n\t"
+        "add r0, r0, #0x8c\n\t"
+        "ldrb r0, [r0]\n\t"
+        "cmp r0, #0\n\t"
+        "bne 4f\n\t"
+        "cmp r6, #0\n\t"
+        "bne 1f\n\t"
+        "cmp r5, #0xff\n\t"
+        "bne 2f\n\t"
+    "1:\n\t"
+        "ldr r3, 6f\n\t"
+        "lsl r1, r1, #0x10\n\t"
+        "lsr r1, r1, #0x10\n\t"
+        "lsl r2, r2, #0x10\n\t"
+        "lsr r2, r2, #0x10\n\t"
+        "add r0, r3, #0\n\t"
+        "b 3f\n\t"
+        ".align 2, 0\n"
+    "5: .4byte gUnknown_030012C0\n"
+    "6: .4byte 0x0000ffff\n"
+    "2:\n\t"
+        "ldr r0, 11f\n\t"
+        "lsl r1, r1, #0x10\n\t"
+        "lsr r1, r1, #0x10\n\t"
+        "lsl r2, r2, #0x10\n\t"
+        "lsr r2, r2, #0x10\n\t"
+        "mov r3, #0\n\t"
+    "3:\n\t"
+        "bl sub_801173C\n\t"
+        "add r4, r0, #0\n\t"
+        "mov r0, #0x10\n\t"
+        "ldrb r1, [r4, #0xc]\n\t"
+        "orr r0, r1\n\t"
+        "strb r0, [r4, #0xc]\n\t"
+        "add r1, r4, #0\n\t"
+        "add r1, r1, #0x49\n\t"
+        "mov r0, #0\n\t"
+        "strb r7, [r1]\n\t"
+        "add r1, r1, #1\n\t"
+        "strb r5, [r1]\n\t"
+        "add r1, r1, #1\n\t"
+        "strb r0, [r1]\n\t"
+        "cmp r5, #0xff\n\t"
+        "bne 9f\n\t"
+        "add r0, r4, #0\n\t"
+        "bl sub_801191C\n\t"
+    "9:\n\t"
+        "cmp r6, #0\n\t"
+        "beq 4f\n\t"
+        "add r0, r4, #0\n\t"
+        "bl sub_8011870\n\t"
+    "4:\n\t"
+        "add r0, r4, #0\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r1}\n\t"
+        "bx r1\n\t"
+        ".align 2, 0\n"
+    "11: .4byte 0x0000ffff\n"
+    );
 }
-#endif /* NON_MATCHING */
 asm(".align 2, 0");
 
 /* Loads a `{tableIdx:u16, p1:u16, p2:u16, p3:u16}` record from `rec`,
