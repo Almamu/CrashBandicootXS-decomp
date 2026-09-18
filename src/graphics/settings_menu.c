@@ -10,12 +10,14 @@ extern struct icon_manager *gUnknown_030012DC;
 
 #if NON_MATCHING
 /* The functions below (0x08003B40, 0x08003BDC, 0x08003C90, 0x08003D3C,
- * 0x08004914, 0x080041BC) are all reconstructed (semantics understood)
- * but NOT YET BYTE-MATCHING - parked here the same way sub_8006600
- * (src/graphics/oam_count.c) is. Their raw bytes stay wrapped in
- * `.if NON_MATCHING == 0` in asm/code_3_1_10_3.s and the two new
- * fragments split off it (asm/code_3_1_10_4.s, asm/code_3_1_10_5.s) -
- * see docs/matching.md's write-up for this chunk for the full
+ * 0x08003F30, 0x08004914, 0x080041BC) are all reconstructed (semantics
+ * understood) but NOT YET BYTE-MATCHING - parked here the same way
+ * sub_8006600 (src/graphics/oam_count.c) is. Their raw bytes stay
+ * wrapped in `.if NON_MATCHING == 0` in asm/code_3_1_10_3.s and the two
+ * new fragments split off it (asm/code_3_1_10_4.s, asm/code_3_1_10_5.s)
+ * - see docs/matching.md's write-up for this chunk (and
+ * docs/matching/issue-6-0x08003f30-overlay-ui.md for sub_8003F30,
+ * genuinely untouched until a later pass) for the full
  * register-allocation story. */
 
 /* Same centered-label shape as sub_80049CC below, but always label
@@ -235,7 +237,121 @@ void sub_8003D3C(struct pause_options_screen *self, s32 value)
 }
 
 extern u8 sub_8002CE8(void *handle, s32 rowIndex);
-extern void sub_8003F30(struct pause_options_screen *self, s32 label1, s32 label2, s32 rowIdx, u8 flag);
+extern void sub_8008890(void *arg0, s32 arg1, s32 arg2);
+extern s32 itoa(s32 value, u8 *buffer, s32 base);
+
+/* `rowObjA`/`rowObjB`/`rowObjC` entries (see pause_options_screen.h)
+ * are small on-screen objects with just a Q8 `x`/`y` position at their
+ * front - `sub_800450C` (this chunk's other remaining function,
+ * currently still fully raw) allocates and positions them. */
+struct row_obj {
+    s32 x;
+    s32 y;
+};
+
+/* NOT YET BYTE-MATCHING: same difficulty class as this file's other
+ * parked functions (register-allocation nondeterminism around several
+ * near-identical unrolled blocks) - genuinely left completely
+ * untouched until this pass, real bytes still raw in
+ * asm/code_3_1_10_4.s. Draws this settings row's three numeric stat
+ * values - `statPtr->field_4`/`field_10`/`field_8` of the row's own
+ * `struct settings_row_stats` (`statPtr` is `(&self->currentStats)
+ * [rowIdx]`, i.e. `currentStats` and `rowStats[0..3]` read as one
+ * contiguous 5-element array - `sub_8004860`/`sub_80048E0`,
+ * `src/graphics/settings_menu2.c`, already establish `rowStats` as
+ * this same array shape) - as plain decimal strings into
+ * `self->rowObjA[rowIdx]`/`rowObjC[rowIdx]`/`rowObjB[rowIdx]`
+ * respectively (each drawn via `gUnknown_030012DC`'s `record->slots[2]`
+ * trampoline, and each preceded by the same highlight/dim
+ * `sub_8028A30` call this chunk's other row-label functions already
+ * establish - `sub_80041BC`'s own `flag` parameter selects which row
+ * is "selected", matching that shared idiom). A fourth value
+ * (`statPtr->field_0`) is formatted as `"NN%"` by `itoa`-ing then
+ * manually scanning for the NUL terminator and overwriting it with a
+ * literal `%` byte (re-terminating one byte later) - measured once via
+ * `gUnknown_030012E0`'s `slots[0]` trampoline to get its pixel width,
+ * then drawn a second time via that same manager's `slots[2]`
+ * trampoline, right-aligned against `label1` using the measured
+ * width (`posX = label1 - width + 0x1f`) - the standard
+ * "measure, then right-align" idiom this ROM region uses throughout. */
+void sub_8003F30(struct pause_options_screen *self, s32 label1, s32 label2, s32 rowIdx, u8 flag)
+{
+    struct settings_row_stats *statPtr =
+        (struct settings_row_stats *)((u8 *)&self->currentStats + rowIdx * (s32)sizeof(struct settings_row_stats));
+    struct row_obj *obj;
+    struct icon_manager *mgr;
+    struct icon_record *rec;
+    u8 buf[12];
+    s32 highlight = flag ? (((self->flags >> 2) & 1) ? 1 : 2) : 0;
+    s32 width;
+    s32 i;
+
+    /* Row A: statPtr->field_4, object at (label1+0x2b, label2+5), text
+     * drawn at (label1+0x38, label2). */
+    obj = (struct row_obj *)self->rowObjA[rowIdx];
+    obj->x = (label1 + 0x2b) << 8;
+    obj->y = (label2 + 5) << 8;
+    sub_8008890(obj, 0, 0);
+    itoa(statPtr->field_4, buf, 10);
+    sub_8028A30(gUnknown_030012DC, highlight);
+    mgr = gUnknown_030012DC;
+    mgr->posX = label1 + 0x38;
+    mgr->posY = label2;
+    rec = mgr->record;
+    sub_803AD80((u8 *)mgr + rec->slots[2].offset, buf, rec->slots[2].ptr);
+
+    /* Row C: statPtr->field_10, object at (label1+7, label2+0x1e), text
+     * drawn at (label1+0x10, label2+0x17). */
+    obj = (struct row_obj *)self->rowObjC[rowIdx];
+    obj->x = (label1 + 7) << 8;
+    obj->y = (label2 + 0x1e) << 8;
+    sub_8008890(obj, 0, 0);
+    itoa(statPtr->field_10, buf, 10);
+    sub_8028A30(gUnknown_030012DC, highlight);
+    mgr = gUnknown_030012DC;
+    mgr->posX = label1 + 0x10;
+    mgr->posY = label2 + 0x17;
+    rec = mgr->record;
+    sub_803AD80((u8 *)mgr + rec->slots[2].offset, buf, rec->slots[2].ptr);
+
+    /* Row B: statPtr->field_8, object at (label1+0x2b, label2+0x1e),
+     * text drawn at (label1+0x38, label2+0x17). */
+    obj = (struct row_obj *)self->rowObjB[rowIdx];
+    obj->x = (label1 + 0x2b) << 8;
+    obj->y = (label2 + 0x1e) << 8;
+    sub_8008890(obj, 0, 0);
+    itoa(statPtr->field_8, buf, 10);
+    sub_8028A30(gUnknown_030012DC, highlight);
+    mgr = gUnknown_030012DC;
+    mgr->posX = label1 + 0x38;
+    mgr->posY = label2 + 0x17;
+    rec = mgr->record;
+    sub_803AD80((u8 *)mgr + rec->slots[2].offset, buf, rec->slots[2].ptr);
+
+    /* Fourth value: statPtr->field_0 formatted as "NN%". */
+    itoa(statPtr->field_0, buf, 10);
+    for (i = 0; i <= 6; i++) {
+        if (buf[i] == 0) {
+            buf[i] = '%';
+            buf[i + 1] = 0;
+            break;
+        }
+    }
+
+    /* Measure via gUnknown_030012E0's slots[0]. */
+    mgr = gUnknown_030012E0;
+    rec = mgr->record;
+    width = sub_803AD80((u8 *)mgr + rec->slots[0].offset, buf, rec->slots[0].ptr);
+
+    sub_8028A30(gUnknown_030012E0, highlight);
+
+    /* Draw right-aligned against label1 via slots[2], at Y=label2-2. */
+    mgr = gUnknown_030012E0;
+    mgr->posX = label1 - width + 0x1f;
+    mgr->posY = label2 - 2;
+    rec = mgr->record;
+    sub_803AD80((u8 *)mgr + rec->slots[2].offset, buf, rec->slots[2].ptr);
+}
 
 /* NOT YET BYTE-MATCHING: same register-allocation difficulty as
  * sub_80049CC, compounded by 4x unrolling in the ROM (this
@@ -247,8 +363,8 @@ extern void sub_8003F30(struct pause_options_screen *self, s32 label1, s32 label
  * src/graphics/settings_menu3.c). When `sub_8002CE8(handle, i)`
  * reports row `i` selected, draws a highlighted numeric glyph
  * (label 0x25) centered at the row's fixed position; otherwise draws
- * the row's normal label pair via sub_8003F30 (still fully raw - see
- * asm/code_3_1_10_4.s), flagged if `selectedIndex == i`. */
+ * the row's normal label pair via sub_8003F30 (parked, NOT YET
+ * BYTE-MATCHING, above in this file), flagged if `selectedIndex == i`. */
 void sub_80041BC(struct pause_options_screen *self, void *handle, s32 selectedIndex)
 {
     static const struct { s32 x, y, label1, label2, idx; } rows[4] = {
