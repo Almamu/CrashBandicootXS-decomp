@@ -216,3 +216,103 @@ to a packed slot index) that don't fit that struct's already-documented
 8-byte hardware-OAM-entry stride cleanly - understanding that side-table
 layout correctly is a prerequisite for a confident C reconstruction and
 wasn't rushed this pass. Left raw for whoever picks this up next.
+
+## Fourth pass: `sub_801E688`/`sub_801E788` - resolved the flagged OAM layout concern, parked (`NON_MATCHING`), not matched
+
+Picked up the pair the third pass deliberately left alone. Both are now
+real, semantically-confident C in the new
+`src/graphics/graphics_package_1e688.c` (real bytes still guarded at
+`asm/code_3_2_17_1e644.s` under `.if NON_MATCHING == 0`).
+
+**`sub_801E688`** (`self`, `arg1`, `arg2`) is a best-fit box selector: it
+stores `arg1`/`arg2` at `self+8`/`self+0xc`, then loops all 12 entries of
+the shared `gStaticData_0816C644`/`674` "box preset" table (the same pair
+`sub_801E788` indexes, confirmed by `docs/rom_map.md` to be 12
+width/height entries), skipping any entry whose dimension is smaller than
+half the requested `arg1`/`arg2` and tracking the smallest-area candidate
+that still qualifies. The winning index is packed 2+2 bits split across
+`self+0x13` bits 6-7 (low 2 bits) and `self+0x11` bits 6-7 (high 2 bits) -
+this is the same `self+0x18`-stored index `sub_801E788` reads back and
+re-splits when inserting into the affine table below. It also computes a
+"tile index" (`0x400 - winningArea/32`, clamped to 10 bits) into
+`self+0x14`, and two Q8.8 scale factors (`sub_803ADB4`-divided,
+`self+0x20`/`self+0x24`) that classify into a 2-bit "scale mode" written
+to `self+0x11` bits 0-1.
+
+**`sub_801E788`** (`self`) computes `self`'s on-screen position from one
+of 4 modes packed into `self+0x11` bits 0-1 (mode 2 is a no-op - no
+position math), then unconditionally inserts `self`'s pre-built OAM
+attribute template (`self+0x10..+0x17`) into the shadow OAM buffer via
+`sub_8006AC8`. This resolves the third pass's flagged concern directly:
+unless mode was 0 (no centering, which just clears the affine-enable bits
+at `self+0x13` bits 4-5), it also allocates one affine-parameter group
+from `gUnknown_03001300->field_08` (a separate counter from the normal
+insertion counter at offset 0) and writes a pure-scale (no rotation) 2x2
+matrix into it from `sub_801E688`'s `self+0x20`/`self+0x24` factors. The
+four writes land at `field_08 * 0x20 + 0x12` and 8/16/24 bytes past it -
+which looked like it didn't fit the shadow buffer's documented 8-byte
+hardware-OAM-entry stride, but does: `field_08 * 0x20 + 0x12` is exactly
+`(field_08 * 4 + 0) * 8 + 6`, i.e. the *filler* halfword (byte offset +6)
+of the shadow entry at index `field_08 * 4`, and the other three writes
+are the same field on the next three consecutive entries. Real GBA
+hardware overlays the OBJ affine-parameter memory (PA/PB/PC/PD, one
+`s16` each) on exactly that halfword of every 4th OAM entry - the four
+writes here (scaleX, 0, 0, scaleY) are a diagonal, no-rotation affine
+matrix, and `self+0x13` bits 1-5 (the shadow buffer's `field_08` value,
+packed alongside the position bits `self+0x12`'s high byte already
+holds) become that affine group's 5-bit selector index in the sprite's
+own `attr1` field. A coherent, understood mechanism - not a layout
+mismatch, just a side-table stride that isn't the same as the
+already-documented plain-insertion one.
+
+**Parked (`NON_MATCHING`), not matched.** `sub_801E688` is a
+~110-instruction, register-starved search loop in the same category as
+`LoadGraphicsPackage`/`sub_801E644` above (every general-purpose register
+committed simultaneously) - not attempted byte-exact this pass beyond
+confirming the C's semantics compile cleanly. `sub_801E788` got much
+closer (heavy iteration: the negative-constant clear-mask idiom for all
+three `self+0x13` bit-pack masks including the ROM's own `subs r2,#0x10`
+delta-derivation of the third mask from the second, a
+`struct oam_shadow_buffer **addr = &gUnknown_03001300` address cache
+matching `graphics_loading_21d80.c`'s established pattern so the final
+`sub_8006AC8` call's address load is shared across both branches like the
+ROM's own `r6` reuse, and an explicit register pin for the loop-scoped
+`slot`/`field_08` value) but hit one gap that resisted every technique
+tried: the ROM keeps `self` in `r7` for the whole function, matching its
+4-register `push {r4-r7}` list, and reaching that register is only
+possible through an explicit `register u8 *self asm("r7")` pin - but
+pinning `self` this way makes this compiler stop folding
+`self[constant offset]` into a single `ldrb/ldrh/ldr rX,[r7,#imm]`
+instruction, emitting a separate `add rX, rX, #imm` plus a zero-offset
+dereference instead, for *every* access to `self`, not just the ones
+near the register-pressure edge. Confirmed with a minimal one-line
+repro (`register u8 *self asm("r7") = selfArg; return self[0x11];`
+still expands to `add r7,r0,#0; add r0,r0,#0x11; ldrb r0,[r0]` rather
+than `ldrb r0,[r7,#0x11]`) - a genuine, reproducible gcc-2.9/agbcc
+limitation for asm-register-pinned pointer locals, not something any
+C-level restructuring tried routes around. This is the same
+first-pass-vs-second-pass register-pressure artifact category as
+`LoadGraphicsPackage`/`sub_801E644`/`LoadBg2Background` elsewhere in
+this cluster, just manifesting through address-mode folding instead of
+a dropped push/pop pair - worth recording as a new flavor of the gotcha
+for whoever hits it next.
+
+Verified via a full clean `rm -rf build && make NON_MATCHING=1 report`
+(clean compile, no warnings for the new file) and `rm -rf build
+crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
+compare` (`La suma coincide` - the guarded real bytes still assemble
+unchanged).
+
+`sub_801E990` (the sound-trigger dispatcher docs/rom_map.md already
+partially read - 3 Q8.8-shifted x/y/z args, a `gUnknown_030012C0`-gated
+position/flag write into `gUnknown_030012D8+0x28`, then a conditional
+`PlaySfx`) was read in full this pass too, but not attempted: its second
+half calls into several still-unread helpers
+(`sub_80232E0`/`sub_8023130`/`sub_803AFEC`/`sub_80232B8`/`sub_803AD88`)
+whose own signatures and the `gUnknown_030012D8+0x18+0x68`-rooted
+sub-struct they read from aren't pinned down yet - a confident
+reconstruction would mean chasing all of those first, which this pass's
+remaining time didn't cover. Left raw, along with the rest of this
+issue's "sound-trigger dispatch plus the trigger-effect/text-popup-
+spawner families" remainder (`sub_801EA5C` onward, unchanged from the
+third pass's characterization), for whoever picks this up next.
