@@ -271,7 +271,16 @@ UNITS = [
     (0x0802C464, "src/graphics/actor_part19g.o", "actor"),  # sub_802C464-sub_802C6C0 - proximity/overlap-dispatch and "used"-state transition family sharing the tail sub_802C4C8; matched
     (0x0802C7A8, None, "actor"),  # sub_802C7A8 - a circular-list AABB-overlap scan (self+0x4c walk, type==4 filter, sub_800014C-based translate+compare) - left raw, stack-buffer layout not pinned down with enough confidence for a byte-exact attempt this pass
     (0x0802C904, "src/graphics/actor_part19d.o", "actor"),  # sub_802C904 - same proximity/overlap "used"-state transition shape as actor_part19g.o's family; matched
-    (0x0802C99C, None, "actor"),  # remainder of the actor zone before issue #56's chunk, still raw
+    (0x0802C99C, None, "actor"),  # remainder of the actor zone before issue #54's chunk, still raw
+    (0x0802D3A8, None, "actor"),  # sub_802D3A8 (issue #54, parked, NON_MATCHING) - eases self's cached position toward a per-state target/table-scatter offset; real bytes live in asm/code_3_2_20_28568_c99c_d3a8.s, NON_MATCHING reconstruction in src/graphics/actor_part62.c
+    (0x0802D490, "src/graphics/actor_part58.o", "actor"),  # sub_802D490-sub_802D764 (issue #54): InitActorPart-based constructor variants plus the gUnknown_030012C0+0x78 Aku-Aku-mask-style add/remove pair; matched - see docs/matching/issue-54-actor-d3a8.md
+    (0x0802D7B0, None, "actor"),  # sub_802D7B0/sub_802D9A8/sub_802DA68 (issue #54) - category-vtable slot dispatcher plus the gUnknown_030014BC object's palette-gradient DMA pair; left untouched (not confidently understood), still raw
+    (0x0802DB2C, "src/graphics/actor_part59.o", "actor"),  # sub_802DB2C-sub_802DCC0 (issue #54): the gUnknown_030014BC position-tracking object's two gStaticData_0817A840 vtable-slot update functions (accumulate/clamp/tier-PlaySfx/transition); matched - see docs/matching/issue-54-actor-d3a8.md
+    (0x0802DD9C, None, "actor"),  # sub_802DD9C/sub_802DE70 (issue #54) - the self-vs-player AABB overlap test and the gUnknown_030014BC object's VRAM gauge-tile pattern generator/DMA setup; left untouched (not confidently understood), still raw
+    (0x0802DFBC, "src/graphics/actor_part60.o", "actor"),  # sub_802DFBC-sub_802DFDC (issue #54): the gUnknown_030014BC object's state-flag setter, destructor, and constructor; matched - see docs/matching/issue-54-actor-d3a8.md
+    (0x0802E058, None, "actor"),  # sub_802E058 (issue #54) - a parameterized twin of sub_802DE70's VRAM gauge-tile pattern loop; left untouched (not confidently understood), still raw
+    (0x0802E0A0, "src/graphics/actor_part61.o", "actor"),  # nullsub_27 (issue #54): genuine no-op stub; matched
+    (0x0802E0A4, None, "actor"),  # remainder of the actor zone after issue #54's chunk, still raw
     (0x0802F0DC, "src/graphics/actor_part43.o", "actor"),  # sub_802F0DC (issue #56): constructor/reset for a second boss-weapon "spawn/pre-attack" singleton; matched
     (0x0802F164, None, "actor"),  # sub_802F164 (issue #56): a ~160-instruction state-machine update for the same singleton, incl. a `mov pc, r0` computed-goto jump table - not attempted this pass
     (0x0802F338, "src/graphics/actor_part43b.o", "actor"),  # sub_802F338 (issue #56, parked, NON_MATCHING) - computes two keyframe-driven tile-cache sizes via sub_8028CD4; real bytes live in asm/code_3_2_20_28568_c99c_2f338.s
