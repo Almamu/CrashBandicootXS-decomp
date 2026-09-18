@@ -67,6 +67,14 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   0x08006250-0x080062A8): the composite screen's own top-level object's
   "apply BLDCNT/BLDY/DISPCNT" step: `sub_8006250`. See
   `docs/matching/issue-8-0x080060ac-overlay-ui.md`.
+- `src/graphics/settings_menu13.c` (new file - issue #8,
+  0x080063D8-0x08006518): the two-string dialog/message-box object
+  constructor called by `sub_80062A8`: `sub_80063D8`. Matched only
+  after heavy register pinning - see
+  `docs/matching/issue-8-0x080060ac-overlay-ui.md`'s "Second pass"
+  section for the full gotcha list, including a case where an isolated
+  compile looked byte-identical but a full clean `make compare` still
+  failed (the compiled function was 4 bytes short).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -117,3 +125,13 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   stepper on `struct sub_8006700_actor` (`src/graphics/oam_count.c`).
   Semantically confirmed; same difficulty class as above. See
   `docs/matching/issue-8-0x080060ac-overlay-ui.md`, issue #8.
+- **`sub_80062A8`** (`asm/code_3_1_10_15.s`, C in
+  `src/graphics/settings_menu14.c`) - the composite screen's dialog
+  spawner (resets palette/DISPCNT, re-inits the two icon managers,
+  fires each one's `record->slots[6]` trampoline, builds and runs the
+  dialog via the now-matched `sub_80063D8`/`sub_8006518`).
+  Semantically confirmed; same difficulty class as above, plus a
+  genuine correctness bug from an attempted `asm("r7")` pin for one
+  parameter (the project's documented categorical r7-pin limitation).
+  See `docs/matching/issue-8-0x080060ac-overlay-ui.md`'s "Second pass"
+  section, issue #8.

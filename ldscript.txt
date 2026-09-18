@@ -81,7 +81,9 @@ SECTIONS
         build/crashbandicootxs/src/graphics/settings_menu11.o(.text);
         build/crashbandicootxs/asm/code_3_1_10_14.o(.text);
         build/crashbandicootxs/src/graphics/settings_menu12.o(.text);
-        build/crashbandicootxs/asm/code_3_1_10_12.o(.text);
+        build/crashbandicootxs/src/graphics/settings_menu14.o(.text);
+        build/crashbandicootxs/asm/code_3_1_10_15.o(.text);
+        build/crashbandicootxs/src/graphics/settings_menu13.o(.text);
         build/crashbandicootxs/src/graphics/settings_menu10.o(.text);
         build/crashbandicootxs/asm/code_3_1_10_13.o(.text);
         build/crashbandicootxs/asm/code_3_1_10_11.o(.text);
