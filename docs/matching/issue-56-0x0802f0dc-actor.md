@@ -24,7 +24,7 @@ are named by the lower 5 hex digits of their first function's address
 `..._2f7b0.s`, `..._2f97c.s`, `..._2fa04.s`, `..._2fa38.s`,
 `..._2fbf0.s`).
 
-## Matched (18 of 25 functions)
+## Matched (19 of 25 functions)
 
 - **`sub_802F0DC`** (`src/graphics/actor_part43.c`) - constructor/
   reset: while the singleton flag (`gUnknown_03001506`) is off, resets
@@ -118,38 +118,6 @@ are named by the lower 5 hex digits of their first function's address
   getter for the singleton's own flag.
 - **`sub_802FA34`** (`src/graphics/actor_part46.c`) - trivial
   constant-true predicate.
-
-## Parked (3 of 25 functions, `NON_MATCHING`, not yet byte-exact)
-
-- **`sub_802F338`** (`src/graphics/actor_part43b.c`) - computes two
-  keyframe-driven tile-cache sizes (`byte0*byte1`, scaled by 32) via
-  `sub_8028CD4`, storing them into the `gUnknown_03001518` pair.
-  Semantics fully understood and every load/store, branch and call
-  confirmed correct - both keyframe-size sub-blocks are literally
-  identical computations, matching the ROM's own duplication; parked
-  on a residual "materialize the multiply result into one register,
-  copy it to a second, *then* shift" gap (the ROM computes
-  `byte0*byte1` into one register, copies it to a second, then shifts:
-  `adds r2,r3,#0; muls r2,r1,r2; adds r0,r2,#0; lsls r0,r0,#5`) that
-  this compiler's dead-store elimination always collapses into a
-  shorter compute-and-shift-in-place sequence - separate locals, a
-  `register`-pinned intermediate, and an `asm("" :: "r"(...))` barrier
-  were all tried and none reproduced the extra copy without either
-  eliminating it differently or collapsing the copy-then-shift into a
-  single differently-encoded shift-with-distinct-registers instruction.
-- **`sub_802F748`** (`src/graphics/actor_part44b.c`) - a
-  `gStaticData_0817C1C0` stride-8 trampoline-record dispatcher -
-  exactly the same shape as the already-parked `sub_802C208`
-  (`src/graphics/actor_part19e.c`, issue #52): `{s16 baseOff; s16
-  count; s16 subOffset}` records indexed by `self+0x28`'s state; when
-  `count > 0`, indexes a per-instance list pointer at
-  `self+subOffset` and reads its last entry's `{s32 delta; void *fn}`
-  pair; otherwise falls back to the record's own inline `{..; void
-  *fn}` pair. Fires `sub_803AD84(self+addr, baseOff, count, fn)`.
-  Every load/store, branch and call confirmed correct; parked on the
-  same register-allocation/instruction-scheduling gap around the two
-  `record = base + state*8` re-derivations documented for
-  `sub_802C208`.
 - **`sub_802F97C`** (`src/graphics/actor_part45b.c`) - a physics-step-
   and-collision-react updater: advances `self`'s position by its
   velocity pair plus a fixed gravity-like Y offset and a fixed Z step,
@@ -183,6 +151,25 @@ are named by the lower 5 hex digits of their first function's address
   nothing calls `sub_802F97C` by name (only indirectly through a
   `void *`-typed function-pointer table entry), the parameter's own
   type here doesn't need to match the project's usual convention.
+
+## Parked (2 of 25 functions, `NON_MATCHING`, not yet byte-exact)
+
+- **`sub_802F338`** (`src/graphics/actor_part43b.c`) - computes two
+  keyframe-driven tile-cache sizes (`byte0*byte1`, scaled by 32) via
+  `sub_8028CD4`, storing them into the `gUnknown_03001518` pair.
+  Semantics fully understood and every load/store, branch and call
+  confirmed correct - both keyframe-size sub-blocks are literally
+  identical computations, matching the ROM's own duplication; parked
+  on a residual "materialize the multiply result into one register,
+  copy it to a second, *then* shift" gap (the ROM computes
+  `byte0*byte1` into one register, copies it to a second, then shifts:
+  `adds r2,r3,#0; muls r2,r1,r2; adds r0,r2,#0; lsls r0,r0,#5`) that
+  this compiler's dead-store elimination always collapses into a
+  shorter compute-and-shift-in-place sequence - separate locals, a
+  `register`-pinned intermediate, and an `asm("" :: "r"(...))` barrier
+  were all tried and none reproduced the extra copy without either
+  eliminating it differently or collapsing the copy-then-shift into a
+  single differently-encoded shift-with-distinct-registers instruction.
 - **`sub_802FA04`** (`src/graphics/actor_part45c.c`) - an
   `InitActorPart`-based constructor for this cluster's `self` object:
   forwards its first three real arguments plus one stack argument
@@ -199,6 +186,18 @@ are named by the lower 5 hex digits of their first function's address
   without either an incorrect extra `r8` push/pop (a relay attempt)
   or losing the stack argument's value outright to a register
   collision with an explicit `r7` pin.
+
+## NAKED transcription (byte-correct, not counted as matched)
+
+- **`sub_802F748`** (`src/graphics/actor_part44b.c`) - a
+  `gStaticData_0817C1C0` stride-8 trampoline-record dispatcher, same
+  shape as `sub_802C208` (issue #52). Hits the same confirmed
+  categorical gcc-2.9 r7-pin bug and is transcribed the same way - see
+  docs/matching/issue-52-0x0802bed8-actor.md for the full account. The
+  built ROM is byte-identical at this address, but a NAKED
+  transcription of a substantial function doesn't count as "matched"
+  under this project's current tracking policy, so
+  `tools/report_units.py` keeps this address's `base_object` as `None`.
 
 ## Left raw (4 of 25 functions, not attempted this pass)
 

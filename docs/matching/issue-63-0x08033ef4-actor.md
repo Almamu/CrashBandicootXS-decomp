@@ -134,15 +134,28 @@ diffing it byte-for-byte against `baserom.gba`, and cross-referencing
 every differing byte range against `crashbandicootxs.map`'s function
 boundaries - not by re-reading the isolated compiles more carefully.
 
-## Parked (6 of 25 functions, `NON_MATCHING`)
+## NAKED transcription (byte-correct, not counted as matched)
 
-- **`sub_8033FE4`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_33fe4.s`, C
-  in `src/graphics/actor_part64.c`) - a `gStaticData_0817C4F8` stride-8
-  trampoline-record dispatcher returning a 0/1 result instead of tail-
-  calling. Same `{s16 baseOff; s16 count; void *fn}` record shape and
-  the same `record = base + state*8` re-derivation register-allocation
-  gap already parked for `sub_8033B44`/`sub_8033C84`/`sub_8033E80`
-  (issue #62) and `sub_802C208` (issue #52).
+- **`sub_8033FE4`** (`src/graphics/actor_part64.c`) - a
+  `gStaticData_0817C4F8` stride-8 trampoline-record dispatcher
+  returning a 0/1 result instead of tail-calling. Same `{s16 baseOff;
+  s16 count; void *fn}` record shape as `sub_8033B44`/`sub_8033C84`/
+  `sub_8033E80` (issue #62) and `sub_802C208` (issue #52) - all hit
+  the same confirmed categorical gcc-2.9 r7-pin bug (the ROM keeps the
+  table's base address alive in `r7` for the whole function; an
+  explicit `register T x asm("r7")` compiles correct instructions but
+  never makes it into the prologue/epilogue push/pop list, and this
+  compiler's own unforced allocator never reaches r7 here either) and
+  are transcribed the same way - see
+  docs/matching/issue-52-0x0802bed8-actor.md's `sub_802C208` entry for
+  the full account. Every instruction is byte-verified against the ROM
+  disassembly, so the built ROM is byte-identical here, but per this
+  project's current tracking policy a NAKED transcription of a
+  substantial function doesn't count as "matched" -
+  `tools/report_units.py` keeps this address's `base_object` as `None`.
+
+## Parked (5 of 25 functions, `NON_MATCHING`)
+
 - **`sub_8034058`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s`, C
   in `src/graphics/actor_part66.c`) - Kind 2's constructor. Semantics
   fully understood and every field/call confirmed correct; parked
