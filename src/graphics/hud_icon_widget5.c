@@ -2,10 +2,30 @@
 #include "icon_manager.h"
 
 /* Sits between the parked sub_8028A78 (asm/code_3_2_20_8a78.s) and the
- * still-raw InitHudTextWidget (asm/code_3_2_20_8b7c.s, out of this
- * chunk's scope) - sub_8028AC4 through sub_8028B58, GitHub issue #46.
- * Same `struct icon_manager` as hud_icon_widget.c/hud_icon_widget2.c/
- * hud_icon_widget3.c/hud_icon_widget4.c. */
+ * rest of the still-raw HUD text/icon-widget driver code
+ * (asm/code_3_2_20_8b7c.s, out of GitHub issue #46's chunk scope) -
+ * sub_8028AC4 through sub_8028B58, GitHub issue #46. Same
+ * `struct icon_manager` as hud_icon_widget.c/hud_icon_widget2.c/
+ * hud_icon_widget3.c/hud_icon_widget4.c.
+ *
+ * InitHudTextWidget (0x08028B7C, no tracked issue - just the next
+ * function in ROM order, immediately after sub_8028B58 above) is
+ * folded in here too rather than getting its own object file, per
+ * docs/workflow.md's "one .c file per contiguous ROM region"
+ * convention: same `struct icon_manager`/`record` field this whole
+ * file already documents, a minimal single-field constructor
+ * (`record = &gStaticData_087E4DAC`, then the same conditional
+ * `sub_8026ED0(self)` teardown-registration idiom
+ * sub_803AFF0/sub_803B024 (src/graphics/actor_aabb_setup.c) and
+ * sub_8028A78 above use elsewhere for the same table). Matched
+ * byte-exact via plain struct field access - unlike sub_8028A78's own
+ * record write, this one didn't need the inline-asm address anchor
+ * those functions use (confirmed by a full clean `make compare`): with
+ * only one address computation total in the whole function (nothing
+ * else contends for it), gcc's own codegen already lands the `self+
+ * offsetof(record)` add in r2 exactly like the ROM. */
+extern u8 gStaticData_087E4DAC[];
+extern void sub_8026ED0(void *manager);
 
 extern void *sub_803AD7C(void *arg0, void *arg1);
 extern s32 sub_8037E54(s32 value, s32 divisor);
@@ -68,4 +88,12 @@ void sub_8028B58(struct icon_manager *self, u32 val)
     self->field_108 = val;
     slot = &self->record->slots[6];
     sub_803AD7C((u8 *)self + slot->offset, slot->ptr);
+}
+
+void InitHudTextWidget(struct icon_manager *self, u32 flags)
+{
+    self->record = (struct icon_record *)gStaticData_087E4DAC;
+    if (flags & 1) {
+        sub_8026ED0(self);
+    }
 }

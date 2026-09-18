@@ -249,8 +249,7 @@ UNITS = [
     (0x08028994, None, "hud"),  # MeasureText - parked (real bytes in asm/code_3_2_20_8994.s), NON_MATCHING reconstruction in src/graphics/hud_icon_widget_8994.c - see docs/matching/issue-46-hud-icon-widget.md - GitHub issue #46
     (0x08028A00, "src/graphics/hud_icon_widget4.o", "hud"),  # UploadHudTile/sub_8028A30/sub_8028A40 - matched. GitHub issue #46
     (0x08028A78, "src/graphics/hud_icon_widget_8a78.o", "hud"),  # sub_8028A78 - matched, byte-exact. GitHub issue #46
-    (0x08028AC4, "src/graphics/hud_icon_widget5.o", "hud"),  # sub_8028AC4-sub_8028B58 - trivial struct icon_manager getter/setter/trampoline-forwarder family; matched. GitHub issue #46
-    (0x08028B7C, None, "hud"),  # InitHudTextWidget onward - left raw, out of GitHub issue #46's chunk scope
+    (0x08028AC4, "src/graphics/hud_icon_widget5.o", "hud"),  # sub_8028AC4-sub_8028B58 - trivial struct icon_manager getter/setter/trampoline-forwarder family; matched. GitHub issue #46. Also incl. InitHudTextWidget (0x08028B7C, no tracked issue) - a minimal record-pointer constructor sharing this file's struct icon_manager; matched - see docs/matching/naked-InitHudTextWidget.md
     (0x08028BA0, None, "graphics_loading"),  # InitObjTileFreeList, LoadSpriteFrameTiles, SetupSpriteFrameOam, DecompressCategorySpriteSheet
     (0x080291A4, None, "actor"),  # SetupActorVramPool, InitActorCategory, SelectActorCategory, ConstructAnimTableState, ConstructActorPart
     (0x0802A69C, "src/graphics/actor_part50.o", "actor"),  # sub_802A69C-sub_802A7B8 (issue #50): five gUnknown_03000884-forwarder wrappers, InitActorPart (the constructor every other actor_part*.c file already forward-declares), and sub_802A7B8 (the movement-threshold recompute/frame-advance pair); matched - see docs/matching/issue-50-actor-2a69c.md
