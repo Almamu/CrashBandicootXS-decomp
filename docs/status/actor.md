@@ -359,6 +359,23 @@ from "core" graphics.
   `actor_part60.c`; see
   [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
   `nullsub_27` - a genuine no-op stub.
+- `src/graphics/actor_part63.c`/`actor_part65.c`/`actor_part67.c`/
+  `actor_part69.c`/`actor_part71.c`/`actor_part73.c` (new files, GitHub
+  issue #63, ROM 0x08033EF4-0x08034AA4 - three `InitActorPart`-rooted
+  "self" object kinds immediately following issue #62's cluster, non-
+  adjacent since 6 parked and 4 left-raw functions sit interleaved
+  between them; numbered `63`-`73` rather than `57`-`67` since issues
+  #19 and #54's PRs independently claimed `actor_part57.c`-`62.c`
+  first - see
+  [docs/matching/issue-63-0x08033ef4-actor.md](../matching/issue-63-0x08033ef4-actor.md)):
+  `sub_8033EF4`, `sub_8033F48`, `sub_8033F74`, `sub_8034050`,
+  `sub_8034110`, `sub_8034188`, `sub_80341F8`, `sub_8034264`,
+  `nullsub_38`, `sub_80342D4`, `sub_803436C`, `sub_8034688`,
+  `sub_80346C8`, `sub_80346FC` - two constructors, a trampoline-fire
+  helper, a position-sync/state-transition helper, a damage/death
+  handler, a position-sync/orbit-effect updater and its non-identical
+  near-twin, two trivial getters, a no-op stub, a particle-spawn-budget
+  driver, an input-poll busy-wait, and a buffer-release/teardown helper.
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -740,7 +757,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   redundant unconditional jump the ROM's own build still has - see
   `docs/matching/issue-50-actor-2a69c.md`.
 - **`sub_802D3A8`** (`asm/code_3_2_20_28568_c99c_d3a8.s`, C in
-  `src/graphics/actor_part61.c`, GitHub issue #54) - eases `self`'s
+  `src/graphics/actor_part62.c`, GitHub issue #54) - eases `self`'s
   cached position toward a per-state target/table-scatter offset.
   Semantics, register choices and every individual instruction body
   confirmed correct; parked on the prologue's fixed argument-register-
@@ -752,6 +769,35 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   categorical `r7`-pin limitation already documented for `sub_8007DBC`
   in `actor_part2.c`). See
   [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md).
+- **`sub_8033FE4`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_33fe4.s`, C
+  in `src/graphics/actor_part64.c`, GitHub issue #63) - a
+  `gStaticData_0817C4F8` stride-8 trampoline-record dispatcher, same
+  shape as the parked `sub_8033B44`/`sub_8033C84`; parked on the same
+  `record = base + state*8` re-derivation gap - see
+  `docs/matching/issue-63-0x08033ef4-actor.md`.
+- **`sub_8034058`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s`, C
+  in `src/graphics/actor_part66.c`, GitHub issue #63) - an
+  `InitActorPart`-based constructor with a trailing byte stack argument;
+  parked because this compiler reads that argument as a shifted/masked
+  full word where the ROM's build addresses it directly with `ldrb` -
+  see `docs/matching/issue-63-0x08033ef4-actor.md`.
+- **`sub_8034270`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34270.s`, C
+  in `src/graphics/actor_part68.c`, GitHub issue #63) - a position-sync/
+  flag/trampoline updater; parked on this compiler's dead-branch
+  elimination collapsing a redundant compute-then-recheck step the
+  ROM's own build still has - see
+  `docs/matching/issue-63-0x08033ef4-actor.md`.
+- **`sub_8034314`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34314.s`, C
+  in `src/graphics/actor_part70.c`, GitHub issue #63) - `sub_8034270`'s
+  boolean-returning twin, parked on the identical gap - see
+  `docs/matching/issue-63-0x08033ef4-actor.md`.
+- **`sub_80345B0`/`sub_8034634`**
+  (`asm/code_3_2_20_28568_c99c_31784_33ef4_345b0.s`, C in
+  `src/graphics/actor_part72.c`, GitHub issue #63) - a particle-slot
+  spawner and a 4-bit tilemap nibble writer; parked on register-
+  allocation differences for the 16-bit table lookups and an
+  unconditional leaf-function parameter spill - see
+  `docs/matching/issue-63-0x08033ef4-actor.md`.
 
 ## Left raw (not attempted, or attempted and set aside)
 
@@ -848,3 +894,20 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   triangular-fill loop, taking the destination buffer and seed value as
   arguments instead of using the fixed stack buffer/globals; left raw -
   see `docs/matching/issue-54-actor-d3a8.md`.
+- **`sub_8034374`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s`,
+  ROM 0x08034374, GitHub issue #63) - a ~150-instruction graphics/
+  palette/DMA setup routine with an apparent uninitialized-local read
+  partway through; left raw, out of scope for this pass - see
+  `docs/matching/issue-63-0x08033ef4-actor.md`.
+- **`sub_8034480`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s`,
+  ROM 0x08034480, GitHub issue #63) - a 128-entry OAM/screen-box scan
+  driving `sub_8034634`'s tilemap writer; left raw alongside
+  `sub_8034374`, out of scope for this pass - see
+  `docs/matching/issue-63-0x08033ef4-actor.md`.
+- **`sub_803472C`/`sub_803487C`/`sub_8034994`**
+  (`asm/code_3_2_20_28568_c99c_31784_33ef4_3472c.s`, ROM
+  0x0803472C-0x08034AA4, GitHub issue #63) - a graphics-package loading
+  setup, a larger multi-subsystem orchestration routine, and a
+  ~140-instruction state-machine/input-poll loop with heavy `sb`/`sl`/
+  `r8` register pressure; left raw, out of scope for this pass - see
+  `docs/matching/issue-63-0x08033ef4-actor.md`.

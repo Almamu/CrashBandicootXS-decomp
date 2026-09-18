@@ -316,7 +316,20 @@ UNITS = [
     (0x08033CF8, "src/graphics/actor_part35.o", "actor"),  # sub_8033CF8 (issue #62, parked, NON_MATCHING) - sub_80339DC's sibling proximity/spawn detector; real bytes live in asm/code_3_2_20_28568_c99c_31784_33cf8.s
     (0x08033E18, "src/graphics/actor_part36.o", "actor"),  # sub_8033E18 (issue #62): sub_8033AE0's state-1-gated twin; matched
     (0x08033E80, "src/graphics/actor_part37.o", "actor"),  # sub_8033E80 (issue #62, parked, NON_MATCHING) - sub_8033B44's twin using the gStaticData_0817C4F8 stride-8 table; real bytes live in asm/code_3_2_20_28568_c99c_31784_33e80.s
-    (0x08033EF4, None, "actor"),  # remainder of the actor zone after issue #62's chunk, still raw
+    (0x08033EF4, "src/graphics/actor_part63.o", "actor"),  # sub_8033EF4/sub_8033F48/sub_8033F74 (issue #63): an InitActorPart-based constructor plus its trampoline-fire and position/transition helpers; matched
+    (0x08033FE4, "src/graphics/actor_part64.o", "actor"),  # sub_8033FE4 (issue #63, parked, NON_MATCHING) - a gStaticData_0817C4F8 stride-8 trampoline-record dispatcher, same shape as the parked sub_8033B44/sub_8033C84; real bytes live in asm/code_3_2_20_28568_c99c_31784_33ef4_33fe4.s
+    (0x08034050, "src/graphics/actor_part65.o", "actor"),  # sub_8034050 (issue #63): trivial self+0x6c death-flag getter; matched
+    (0x08034058, "src/graphics/actor_part66.o", "actor"),  # sub_8034058 (issue #63, parked, NON_MATCHING) - InitActorPart-based constructor with a trailing byte stack argument; real bytes live in asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s
+    (0x08034110, "src/graphics/actor_part67.o", "actor"),  # sub_8034110/sub_8034188/sub_80341F8/sub_8034264/nullsub_38 (issue #63): a damage/death handler, a position-sync/orbit-effect updater (and its byte-identical twin), a death-flag getter, and a no-op; matched
+    (0x08034270, "src/graphics/actor_part68.o", "actor"),  # sub_8034270 (issue #63, parked, NON_MATCHING) - position-sync/flag/trampoline updater; real bytes live in asm/code_3_2_20_28568_c99c_31784_33ef4_34270.s
+    (0x080342D4, "src/graphics/actor_part69.o", "actor"),  # sub_80342D4 (issue #63): InitActorPart-based constructor for a third, smaller object kind; matched
+    (0x08034314, "src/graphics/actor_part70.o", "actor"),  # sub_8034314 (issue #63, parked, NON_MATCHING) - sub_8034270's boolean-returning twin; real bytes live in asm/code_3_2_20_28568_c99c_31784_33ef4_34314.s
+    (0x0803436C, "src/graphics/actor_part71.o", "actor"),  # sub_803436C (issue #63): trivial self+0x58 flag getter; matched
+    (0x08034374, None, "actor"),  # sub_8034374/sub_8034480 (issue #63) - left raw, out of scope for this pass (sub_8034480 itself isn't in issue #63's function list)
+    (0x080345B0, "src/graphics/actor_part72.o", "actor"),  # sub_80345B0/sub_8034634 (issue #63, parked, NON_MATCHING) - a particle-slot spawner and a 4-bit tilemap nibble writer; real bytes live in asm/code_3_2_20_28568_c99c_31784_33ef4_345b0.s
+    (0x08034688, "src/graphics/actor_part73.o", "actor"),  # sub_8034688/sub_80346C8/sub_80346FC (issue #63): a particle-spawn-budget driver, an input-poll busy-wait, and a buffer-release/teardown helper; matched
+    (0x0803472C, None, "actor"),  # sub_803472C/sub_803487C/sub_8034994 (issue #63) - left raw, out of scope for this pass
+    (0x08034AA4, None, "actor"),  # remainder of the actor zone after issue #63's chunk, still raw
     (0x080354E0, "src/graphics/level_graphics.o", "graphics_loading"),  # GitHub issue #65: LoadLevelGraphics (matched) + LoadBg2Background/LoadObjSpriteTiles (parked, NON_MATCHING, real bytes in asm/code_3_2_20_28568_c99c_31784_33ef4_355e0.s) - see docs/matching/issue-65-graphics-loading.md
     (0x08035780, None, "graphics_loading"),  # remainder of issue #65's chunk (sub_8035780-sub_8036FBC) - left raw, out of scope for this pass
     (0x08037110, "src/audio/counter_selector.o", "audio"),  # sub_8037110/nullsub_7/sub_8037154/sub_803716C/sub_80371B4/sub_8037224 - a small on-screen 0-5 "counter" widget (increments/decrements with input, confirms/cancels with PlaySfx), reads like game/HUD-side code using PlaySfx rather than GAX2 internals; sub_803716C is UNUSED (no caller found); matched
