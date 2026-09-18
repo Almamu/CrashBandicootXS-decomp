@@ -697,6 +697,20 @@ embedded as asm instead. They're tracked as parked, not matched.
   the rest of the function hasn't been through the same register-pin
   iteration yet. See
   [docs/matching/issue-9-10-0x0800a884-graphics.md](../matching/issue-9-10-0x0800a884-graphics.md).
+- **`sub_800AB9C`** (`src/graphics/actor_part81.c`, GitHub issue #9/#10;
+  real bytes in `asm/code_3_2_16_ab9c.s`) - a two-flag-gated teardown/
+  notification step on the same still-unnamed "big object" (0x108+
+  bytes) `actor_part15.c`/`actor_part77.c` work on: relocates `self`'s
+  AABB onto a second stack slot before unpacking it for `sub_8008A40`
+  (bit 1), and clears `self+0x108`/`self+0x10c` plus fires three
+  teardown/notification calls (bit 7). Every instruction matches except
+  one gap: the ROM evaluates `sub_8008A40`'s 7 arguments in an order
+  (stack-bound values interleaved with their own store, register
+  values and the `r0`-bound `manager` last) this compiler never
+  reproduces from any C-level phrasing tried - the same already-
+  accepted-as-unclosable class as `sub_8008AD8`/`sub_8008D80` right
+  next door (`actor_part7.c`) and `PlaySfx` (issue #3). See
+  [docs/matching/issue-9-10-0x0800ab9c-graphics.md](../matching/issue-9-10-0x0800ab9c-graphics.md).
 - **`sub_800A528`/`sub_800A590`** (`src/graphics/actor_part47.c`,
   GitHub issue #9; real bytes in `asm/code_3_2_11_a528.s`) - a moving-
   platform "ride along" hookup, nudging `self->y` by the delta between
@@ -960,13 +974,15 @@ embedded as asm instead. They're tracked as parked, not matched.
   update/collision dispatchers built on unmatched
   `sub_8008200`/`sub_8026628`/`sub_8026C3C`/`sub_8026BF8` - see
   `docs/matching/issue-9-0x08007634-actor.md`.
-- **`sub_800A884`/`sub_800AAEC`/`sub_800AB9C`/`sub_800AC2C`/
-  `sub_800AFF4`** (`asm/code_3_2_16.s`, ROM 0x0800A884-0x0800B270,
-  GitHub issue #9) - a reentrancy-guard wrapper, a global-list iterator,
-  a hitbox-lookup dispatcher, a 38-case player action-state machine,
-  and a high-register-pressure hitbox commit function; each calls one
-  or more still-unexamined helpers - see
-  `docs/matching/issue-9-0x08007634-actor.md`.
+- **`sub_800AAEC`** (`asm/code_3_2_16.s`, ROM 0x0800AAEC, GitHub issue
+  #9/#10) - a global-list iterator blocked on still-fully-unexamined
+  `sub_800CD00`; left raw - see
+  `docs/matching/issue-9-10-0x0800ab9c-graphics.md`.
+- **`sub_800AC2C`/`sub_800AFF4`** (`asm/code_3_2_16_ac2c.s`, ROM
+  0x0800AC2C-0x0800B270, GitHub issue #9/#10) - a 38-case player
+  action-state machine and a high-register-pressure hitbox commit
+  function, each calling one or more still-unexamined helpers; left
+  raw - see `docs/matching/issue-9-10-0x0800ab9c-graphics.md`.
 - **`sub_80159F8`/`sub_8015C6C`/`sub_8015DF8`** (`asm/code_3_2_17_159f8.s`,
   ROM 0x080159F8-0x08015FDC, GitHub issue #19) - three large jump-table
   state-machine dispatchers on the part object's velocity fields; left
