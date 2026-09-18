@@ -3,78 +3,17 @@
 .syntax unified
 .arm
 
-@ sub_8028890/sub_8028900 are reconstructed (semantics fully understood,
-@ but not yet byte-matching) as C in src/graphics/hud_icon_widget_8890.c,
-@ guarded by #if NON_MATCHING - see
-@ docs/matching/issue-46-hud-icon-widget.md for the exact remaining gap
-@ (sub_8028900 needs r8/sb register pinning this compiler won't
-@ reproduce with plain C, the same class of issue already documented for
-@ sub_8006600/sub_8037388 elsewhere in this codebase; sub_8028890 is an
-@ if/else-if block-layout mismatch).
+@ sub_8028900 is reconstructed (semantics fully understood, but not yet
+@ byte-matching) as C in src/graphics/hud_icon_widget_8890.c, guarded by
+@ #if NON_MATCHING - see docs/matching/issue-46-hud-icon-widget.md for
+@ the exact remaining gap (needs r8/sb register pinning plus a genuine
+@ r7 scratch this compiler's unforced allocator won't place in the ROM's
+@ exact registers once enough of the rest is pinned - a categorical
+@ toolchain bug documented in docs/matching.md's "Why not just pin r7",
+@ the same class of issue already documented for sub_8006600/sub_8037388
+@ elsewhere in this codebase). sub_8028890, formerly here too, is
+@ matched and lives at the top of the same .c file now.
 .if NON_MATCHING == 0
-	thumb_func_start sub_8028890
-sub_8028890: @ 0x08028890
-	push {r4, r5, r6, r7, lr}
-	adds r4, r0, #0
-	adds r5, r1, #0
-	ldrb r3, [r5]
-	cmp r3, #0
-	beq _080288F8
-	movs r0, #0x88
-	lsls r0, r0, #1
-	adds r6, r4, r0
-	movs r1, #0x8a
-	lsls r1, r1, #1
-	adds r7, r4, r1
-_080288A8:
-	cmp r3, #0xa
-	beq _080288C0
-	cmp r3, #0x20
-	bne _080288DA
-	movs r2, #0x90
-	lsls r2, r2, #1
-	adds r0, r4, r2
-	ldr r1, [r6]
-	ldr r0, [r0]
-	adds r1, r1, r0
-	str r1, [r6]
-	b _080288F0
-_080288C0:
-	movs r1, #0x8c
-	lsls r1, r1, #1
-	adds r0, r4, r1
-	ldr r0, [r0]
-	str r0, [r6]
-	movs r2, #0x8e
-	lsls r2, r2, #1
-	adds r1, r4, r2
-	ldr r0, [r7]
-	ldr r1, [r1]
-	adds r0, r0, r1
-	str r0, [r7]
-	b _080288F0
-_080288DA:
-	movs r1, #0x98
-	lsls r1, r1, #1
-	adds r0, r4, r1
-	ldr r1, [r0]
-	movs r2, #0x30
-	ldrsh r0, [r1, r2]
-	adds r0, r4, r0
-	ldr r2, [r1, #0x34]
-	adds r1, r3, #0
-	bl sub_803AD80
-_080288F0:
-	adds r5, #1
-	ldrb r3, [r5]
-	cmp r3, #0
-	bne _080288A8
-_080288F8:
-	pop {r4, r5, r6, r7}
-	pop {r0}
-	bx r0
-	.align 2, 0
-
 	thumb_func_start sub_8028900
 sub_8028900: @ 0x08028900
 	push {r4, r5, r6, r7, lr}

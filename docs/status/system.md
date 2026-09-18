@@ -28,6 +28,17 @@ category page - see [game_loop.md](./game_loop.md).
   12-byte `EepromConfig` table by chip-size code), `sub_803A9D0`
   (claims a hardware timer, hands back an IRQ-handler-stub address) -
   GitHub issue #69
+- `src/system/timer_util_aa90.c` (own file - its real ROM address,
+  `0x0803AA90`, sits between the still-parked `sub_803AA08` and
+  `sub_803AAD4`, so it isn't adjacent to `timer_util.c`'s own matched
+  functions): `sub_803AA90` (disarms the timer `sub_803AA08` claims) -
+  GitHub issue #69, see `docs/matching/issue-69-eeprom-timer.md`
+- `src/system/eeprom_verify.c` (own file, same reason - ROM
+  `0x0803ACE0`, between the still-parked `sub_803AC04` and
+  `reg_trampolines.c`'s functions): `sub_803ACE0` (reads an EEPROM
+  block back and compares it), `sub_803AD38` (write+verify with a
+  3-attempt retry) - GitHub issue #69, see
+  `docs/matching/issue-69-eeprom-timer.md`
 - `src/system/reg_trampolines.c`: `sub_803AD78`, `sub_803AD7C`,
   `sub_803AD80`, `sub_803AD84`, `sub_803AD88`, `sub_803AD8C`,
   `sub_803AD90`, `sub_803AD94` (the `bx r0`..`sp` "call through whatever
@@ -37,13 +48,21 @@ category page - see [game_loop.md](./game_loop.md).
 - `src/system/link_cable.c`/`link_cable2.c` (new files - the GBA
   multiplayer link-cable/SIO transport, `0x08001C80`-`0x08002868`,
   interleaved with `audio`/`overlay_ui` in this same address range -
-  see `docs/rom_map.md`'s SIO/link-cable section): `sub_8001D30`
-  (link-session "stop"), `sub_80026E4` (link-session "start"),
-  `sub_800276C` (RCNT/SIOCNT reset helper), `sub_8002798` (reset
-  convenience wrapper), `sub_80027B0` (reset + conditional teardown),
-  `sub_80027E8` (session object constructor), `sub_8002830`/
-  `sub_8002848` (Serial/Timer3 IRQ handlers) - matched, GitHub
+  see `docs/rom_map.md`'s SIO/link-cable section): `sub_8001CB8`
+  (per-player CRC-16-style handshake-id hash helper, NAKED),
+  `sub_8001D30` (link-session "stop"), `sub_8001DB4` (link-session
+  reset/init, NAKED), `sub_8001F50` (link-connection/handshake driver,
+  NAKED), `sub_8002114` (1488 B per-frame SIO data-exchange pump,
+  NAKED, this file's biggest function), `sub_80026E4` (link-session
+  "start"), `sub_800276C` (RCNT/SIOCNT reset helper), `sub_8002798`
+  (reset convenience wrapper), `sub_80027B0` (reset + conditional
+  teardown), `sub_80027E8` (session object constructor), `sub_8002830`/
+  `sub_8002848` (Serial/Timer3 IRQ handlers) - all matched, GitHub
   issue #4, see `docs/matching/issue-4-sio-settings-sync.md`
+- `src/graphics/settings_menu8d.c`'s `sub_8002868`/`sub_8002938`
+  (EEPROM load/save block-loop pair for the settings record, built on
+  this file's own `EepromConfig` primitives below, NAKED) - matched,
+  GitHub issue #4, see `docs/matching/issue-4-sio-settings-sync.md`
 
 GitHub issue #70 (`0x0803ADB4`-`0x0803B060`, right after
 `reg_trampolines.c` above) was categorized `system` by the chunk
@@ -64,48 +83,27 @@ See [docs/workflow.md](../workflow.md) for the per-function loop.
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
-- **`sub_8001CB8`** (`asm/code_3_1_10_3_1cb8.s`, C in
-  `src/system/link_cable.c`) - the per-player CRC-16-style handshake-id
-  hash helper called by `sub_8001DB4`. Semantics fully understood; the
-  per-byte table-index computation resists matching the ROM's plain
-  8-bit shift - see `docs/matching/issue-4-sio-settings-sync.md`,
-  issue #4.
-- **`sub_8001DB4`** (`asm/code_3_1_10_3_1db4.s`, same C file) - the
-  link-session reset/init, a 400 B 4-player-loop function. Semantics
-  fully understood, register/stack-plan gap - see
-  `docs/matching/issue-4-sio-settings-sync.md`, issue #4.
-- **`sub_8002868`/`sub_8002938`** (`asm/code_3_1_10_3_2868.s`, C in
-  `src/graphics/settings_menu8d.c`) - EEPROM load/save block-loop pair
-  for the settings record, built on this file's own `EepromConfig`
-  primitives below. Semantics fully understood, an IME-save/restore
-  register-hop gap - see `docs/matching/issue-4-sio-settings-sync.md`,
-  issue #4.
 - **`sub_80010E0`** (`src/system/input_util.c`, an input-polling helper) -
   a single bit-test compiles with the branch senses swapped from the ROM
   (same two instructions, same size) in a way that resists every C-level
   rephrasing tried - see `docs/matching.md`, "Parked, not matched:
   `sub_80010E0`".
-- **`sub_803AA08`/`sub_803AA90`/`sub_803AAD4`** (`src/system/timer_util.c`,
-  GitHub issue #69) - timer arm/disarm pair plus a DMA3 block-transfer
-  helper; real bytes in `asm/code_3_2_20e_aa08.s`. Every field/register
-  access confirmed, parked purely on register-allocation/loop-shape
-  gaps - see `docs/matching.md`'s issue #69 entry.
+- **`sub_803AA08`** (`src/system/timer_util.c`, GitHub issue #69) - arms
+  the timer `sub_803A9D0` claims; real bytes in
+  `asm/code_3_2_20e_aa08.s`. Every field/register access confirmed;
+  narrowed to a handful of register-allocation gaps this session (was
+  much wider before) - see `docs/matching/issue-69-eeprom-timer.md`.
+- **`sub_803AAD4`** (`src/system/timer_util.c`, GitHub issue #69) - a
+  DMA3 block-transfer helper used by the whole EEPROM cluster; real
+  bytes in `asm/code_3_2_20e_aa90.s`. Every field/register access
+  confirmed, parked purely on the busy-wait tail's loop-rotation/
+  literal-pool-placement shape - see
+  `docs/matching/issue-69-eeprom-timer.md`.
+- **`sub_803AB54`/`sub_803AC04`** (`src/system/eeprom_util.c`, GitHub
+  issue #69) - a DMA3 bit-serial EEPROM read/write pair; real bytes in
+  `asm/code_3_2_20e_ab54.s`. The wire protocol and every field/register
+  access are now fully confirmed (see `src/system/eeprom_util.c`'s
+  header comment for the read/write bit layout), parked on register-
+  allocation/loop-rotation gaps similar to `sub_803AA08`/`sub_803AAD4`
+  above - see `docs/matching/issue-69-eeprom-timer.md`.
 
-## Still raw, category-mapped (GitHub issue #69)
-
-- **`sub_803AB54`/`sub_803AC04`/`sub_803ACE0`/`sub_803AD38`**
-  (`asm/code_3_2_20e_ab54.s`, ROM `0x0803AB54`) - a DMA3 bit-serial
-  EEPROM read/write/retry cluster (working theory, not confirmed enough
-  to commit even a parked reconstruction) - see `docs/matching.md`.
-
-## Still raw, category-mapped (GitHub issue #4)
-
-- **`sub_8001F50`** (452 B, `asm/code_3_1_10_3.s`) - the link-
-  connection/handshake driver; `docs/rom_map.md` already characterizes
-  its broad shape, not read to full per-branch confidence in the time
-  available. Left untouched rather than parked or force-matched - see
-  `docs/matching/issue-4-sio-settings-sync.md`.
-- **`sub_8002114`** (1488 B, same file) - the per-frame SIO
-  data-exchange pump, extremely register-heavy with deep nested
-  branching. Left untouched for the same reason - see
-  `docs/matching/issue-4-sio-settings-sync.md`.

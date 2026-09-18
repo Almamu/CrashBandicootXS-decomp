@@ -9,20 +9,23 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
 
 ## Matched
 
-- `src/graphics/settings_menu8.c`/`settings_menu8a2.c`/`settings_menu8b.c`/
-  `settings_menu8c.c` (new files - issue #5, 0x08002C84-0x08003B40): the
-  settings-sync record's init/flag/checksum accessors
-  (`struct settings_sync_record`, `include/settings_sync.h`), the SIO
-  send/receive pump's handle accessors, the spinner dialog's blocking
+- `src/graphics/settings_menu8.c`/`settings_menu8a2.c`/`settings_menu8a3.c`/
+  `settings_menu8b.c`/`settings_menu8c.c` (`settings_menu8a3.c` new in the
+  second pass - issue #5, 0x08002C84-0x08003B40): the settings-sync
+  record's init/flag/checksum accessors (`struct settings_sync_record`,
+  `include/settings_sync.h`), the SIO send/receive pump's handle
+  accessors and per-frame poll step, the spinner dialog's blocking
   modal loop and shared field_8c/field_90 constructor/destructor
   (also used by the composite screen itself), the per-frame input
-  dispatcher, and 12 of its per-state handlers; matched. See
+  dispatcher, all 13 of its per-state handlers, the shared "commit or
+  refresh row" step, and the state-select label list draw; matched. See
   `docs/matching/issue-5-overlay-ui-sync.md` for the full write-up:
-  `sub_8002C84`, `sub_8002CE8`, `sub_8002CF4`, `sub_8002D28`,
-  `sub_8002FCC`, `sub_8002FD4`, `sub_8002FD8`, `sub_800300C`,
-  `sub_800306C`, `sub_800312C`, `sub_80031E4`, `sub_80032E8`,
-  `sub_80033E8`, `sub_80034BC`, `sub_80035C0`, `sub_800376C`,
-  `sub_8003824`, `sub_80038D0`, `sub_800397C`
+  `sub_8002C84`, `sub_8002CE8`, `sub_8002CF4`, `sub_8002D0C`,
+  `sub_8002D28`, `sub_8002EFC`, `sub_8002FCC`, `sub_8002FD4`,
+  `sub_8002FD8`, `sub_800300C`, `sub_800306C`, `sub_800312C`,
+  `sub_80031E4`, `sub_80032E8`, `sub_80033E8`, `sub_80034BC`,
+  `sub_80035C0`, `sub_8003698`, `sub_800376C`, `sub_8003824`,
+  `sub_80038D0`, `sub_800397C`, `sub_8003A60`
 - `src/graphics/settings_menu2.c` (new file - the composite pause/
   options screen's BG-load helper and per-row stats gatherer/
   aggregator; see `docs/rom_map.md`'s `overlay_ui` section):
@@ -48,39 +51,40 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   retry orchestrator, muting the music player across the transfer:
   `sub_8002A08`. See `docs/matching/issue-4-sio-settings-sync.md`.
 - `src/graphics/settings_menu8e.c` (new file - issue #4,
-  0x08002B44-0x08002C84): checksum compare/store, the `versionNibble`
-  accessor, the EEPROM-save-with-retry orchestrator, and three per-row
+  0x08002AA4-0x08002C84): checksum validate + DMA-repair (`sub_8002AA4`,
+  NAKED), checksum compare/store, the `versionNibble` accessor, the
+  EEPROM-save-with-retry orchestrator, and three per-row
   default-refresh/force-set/mark-selected helpers extending
   `struct settings_sync_record`: `sub_8002B44`, `sub_8002B70`,
   `sub_8002B94`, `sub_8002BA4`, `sub_8002C14`, `sub_8002C40`,
   `sub_8002C6C`. See `docs/matching/issue-4-sio-settings-sync.md`.
+- `src/graphics/settings_menu9.c` (new file - issue #8,
+  0x080060AC-0x08006124): the decimal `itoa` helper and a
+  percentage-string formatter built on it: `sub_80060AC`, `sub_80060F8`.
+- `src/graphics/settings_menu12.c` (new file - issue #8,
+  0x08006250-0x080062A8): the composite screen's own top-level object's
+  "apply BLDCNT/BLDY/DISPCNT" step: `sub_8006250`. See
+  `docs/matching/issue-8-0x080060ac-overlay-ui.md`.
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
-- **`sub_8002D0C`** (`asm/code_3_1_10_3_2d0c.s`, C in
-  `src/graphics/settings_menu8.c`) - bitmask-clear accessor; the ROM
-  keeps a redundant register-to-register copy of the bit-cleared
-  result no C variation tried reproduces. See
-  `docs/matching/issue-5-overlay-ui-sync.md`, issue #5.
-- **`sub_8002D44`**, **`sub_8002E20`**, **`sub_8002EFC`**
-  (`asm/code_3_1_10_3_2d44.s`, C in
+- **`sub_8002D44`**, **`sub_8002E20`** (`asm/code_3_1_10_3_2d44.s`, C in
   `src/graphics/settings_menu8a2.c`) - the SIO settings-sync
-  send/receive pump trio (`struct settings_sync_pump`,
-  `include/settings_sync.h`); fully understood and even byte-size-exact
-  for `sub_8002D44`, but not byte-for-byte content. See
+  send/receive pump's TX/RX drain-fill steps (`struct
+  settings_sync_pump`, `include/settings_sync.h`); fully understood,
+  but both genuinely need `r7` as scratch (matching the ROM's own
+  `sendLen`/sentinel usage), and this exact agbcc build never includes
+  `r7` in a function's automatic callee-save push/pop - confirmed by
+  direct reproduction (a minimal function that only ever touches r7,
+  whether via a plain asm clobber, an explicit `register T x
+  asm("r7")` pin used across a real call, or a real C-level variable
+  forced into r7 under heavy register pressure, never gets it back in
+  the push/pop list). The third function of this trio, `sub_8002EFC`
+  (which doesn't touch r7), is unaffected and has been matched - see
   `docs/matching/issue-5-overlay-ui-sync.md`, issue #5.
-- **`sub_8003698`** (`asm/code_3_1_10_3_3698.s`, C in
-  `src/graphics/settings_menu8b.c`) - the shared "commit or refresh
-  row" step nine of the per-state input handlers call into. See
-  `docs/matching/issue-5-overlay-ui-sync.md`, issue #5.
-- **`sub_8003A60`** (`asm/code_3_1_10_3_3a60.s`, C in
-  `src/graphics/settings_menu8c.c`) - the state-select label list draw,
-  same measure-then-draw icon shape/register-allocation gap as
-  `sub_80049CC` below. See `docs/matching/issue-5-overlay-ui-sync.md`,
-  issue #5.
 - **`sub_8003B40`**, **`sub_8003BDC`**, **`sub_8003C90`**,
   **`sub_8003D3C`**, **`sub_80041BC`**, **`sub_8004914`**,
   **`sub_80049CC`** (`asm/code_3_1_10_3.s`/`asm/code_3_1_10_4.s`/
@@ -113,11 +117,15 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   Fully understood; off by several register-letter choices in the
   digit-formatting tail, the same unresolved class `sub_80049CC` above
   documents - see `docs/matching.md`, issue #7.
-- **`sub_8002AA4`** (`asm/code_3_1_10_3_2aa4.s`, C in
-  `src/graphics/settings_menu8e.c`) - checksum validate + DMA-repair
-  for the settings-sync record. Fully understood; the loop body and
-  post-loop field writes match exactly with explicit register pins
-  matching the ROM's cached field addresses, but the prologue's
-  push-list still differs (this compiler doesn't protect `r7` across
-  `sub_8002C6C`'s calls here, unlike the ROM). See
-  `docs/matching/issue-4-sio-settings-sync.md`, issue #4.
+- **`sub_8006124`**, **`sub_800619C`**, **`sub_80061E8`**
+  (`asm/code_3_1_10_14.s`, C in `src/graphics/settings_menu11.c`) -
+  three icon-manager centered-label draws (the companion "draw a
+  number/label on an icon widget" step for three of GitHub issue #7's
+  icon-widget constructors). Semantically confirmed; hits the same
+  gcc-2.9 register-allocation difficulty `sub_8006600` documents. See
+  `docs/matching/issue-8-0x080060ac-overlay-ui.md`, issue #8.
+- **`sub_8006518`** (`asm/code_3_1_10_13.s`, C in
+  `src/graphics/settings_menu10.c`) - the settings-row confirm-cursor
+  stepper on `struct sub_8006700_actor` (`src/graphics/oam_count.c`).
+  Semantically confirmed; same difficulty class as above. See
+  `docs/matching/issue-8-0x080060ac-overlay-ui.md`, issue #8.

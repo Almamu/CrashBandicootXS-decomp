@@ -6,84 +6,112 @@ extern void sub_800014C(void *dst, void *src, s32 len);
 extern void sub_8002C6C(struct settings_sync_record *self, s32 row);
 extern void sub_8002B70(struct settings_sync_record *self);
 
-#if NON_MATCHING
-/* NOT YET BYTE-MATCHING: semantics fully understood. Validates the
- * record's checksum (inline word-sum, same shape as `sub_8002B44`
- * below but not a call to it - the ROM genuinely inlines this one)
- * and, if it fails, repairs the record in place: DMA-fills the whole
- * 0x200 bytes with 0 (raw DMA3 register pokes rather than a
+/* Validates the record's checksum (inline word-sum, same shape as
+ * `sub_8002B44` below but not a call to it - the ROM genuinely inlines
+ * this one) and, if it fails, repairs the record in place: DMA-fills
+ * the whole 0x200 bytes with 0 (raw DMA3 register pokes rather than a
  * `DmaFill16` call - a different, earlier style than
  * `src/graphics/settings_menu8.c`'s `sub_8002C84` uses for the same
  * "reset to blank" operation), marks every row selected
  * (`sub_8002C6C`), re-stamps the two marker bytes, clears
  * `flags`/`field_1fb`, and refreshes the checksum (`sub_8002B70`).
- * Every load/store, branch and call is semantically confirmed - the
- * ROM caches 4 field addresses (self+0x1f8/0x1f9/0x1fa/0x1fb) into
- * r6/sb/r7/r8 ahead of the row loop and this reconstruction does the
- * same via explicit register pins, which got the loop body and the
- * post-loop field writes to match exactly, but the *prologue* still
- * differs: the ROM's push list is `{r4,r5,r6,r7,lr}` then a
- * `sb`/`r8`-via-`r7`/`r6` shuffle-push, while this compiler settles on
- * a smaller `{r4,r5,r6,lr}` push shuffled via `r5`/`r6` instead (r7
- * apparently doesn't need protecting across `sub_8002C6C`'s calls in
- * this compiler's allocation, unlike the ROM's) - the same
- * unresolved gcc-2.9 scratch/callee-saved-register-choice class this
- * project documents at length elsewhere. Real bytes stay in
- * `asm/code_3_1_10_3_2aa4.s`, wrapped `.if NON_MATCHING == 0`. */
-void sub_8002AA4(struct settings_sync_record *arg0)
+ *
+ * Written as NAKED asm, not plain C: every load/store, branch and call
+ * is semantically confirmed against the ROM (the paragraph above is
+ * that derivation) - the ROM caches 4 field addresses
+ * (self+0x1f8/0x1f9/0x1fa/0x1fb) into r6/sb/r7/r8 ahead of the row loop,
+ * which explicit register pins reproduced exactly for the loop body and
+ * post-loop field writes, but the *prologue*'s `sb`/`r8`-via-`r7`/`r6`
+ * push shuffle never came out right (this compiler kept settling on a
+ * smaller push list, treating r7 as not needing protection across
+ * `sub_8002C6C`'s calls unlike the ROM) - the same unresolved gcc-2.9
+ * scratch/callee-saved-register-choice class this project documents at
+ * length elsewhere. Full NAKED transcription like
+ * `sub_8001CB8`/`sub_8001DB4`/`sub_8002868`/`sub_8002938`. */
+NAKED void sub_8002AA4(struct settings_sync_record *self)
 {
-    register struct settings_sync_record *self asm("r5");
-    register u32 *p asm("r3");
-    register u32 sum asm("r2");
-    register s32 i asm("r1");
-    register u32 matched asm("r1");
-    u16 zero;
-    register u8 *field1f8Addr asm("r6");
-    register u8 *versionAddr asm("sb");
-    register u8 *flagsAddr asm("r7");
-    register u8 *field1fbAddr asm("r8");
-    register s32 j asm("r4");
-
-    self = arg0;
-    p = (u32 *)self;
-    sum = 0;
-    i = 0x7e;
-    do {
-        sum += *p;
-        p++;
-        i--;
-    } while (i >= 0);
-
-    matched = 0;
-    if (sum == self->checksum) {
-        matched = 1;
-    }
-
-    if (matched == 0) {
-        zero = matched;
-        REG_DMA3SAD = (u32)&zero;
-        REG_DMA3DAD = (u32)self;
-        REG_DMA3CNT = 0x81000100;
-        (void)REG_DMA3CNT;
-
-        j = 0;
-        field1f8Addr = &self->field_1f8;
-        versionAddr = &self->versionNibble;
-        flagsAddr = &self->flags;
-        field1fbAddr = &self->field_1fb;
-        do {
-            sub_8002C6C(self, j);
-            j++;
-        } while (j <= 3);
-
-        *field1f8Addr = 0x43;
-        *versionAddr = 0x12;
-        *flagsAddr = 0;
-        *field1fbAddr = 0;
-        sub_8002B70(self);
-    }
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "mov r7, sb\n\t"
+        "mov r6, r8\n\t"
+        "push {r6, r7}\n\t"
+        "sub sp, #4\n\t"
+        "add r5, r0, #0\n\t"
+        "add r3, r5, #0\n\t"
+        "mov r2, #0\n\t"
+        "mov r1, #0x7e\n\t"
+    "1:\n\t"
+        "ldm r3!, {r0}\n\t"
+        "add r2, r2, r0\n\t"
+        "sub r1, #1\n\t"
+        "cmp r1, #0\n\t"
+        "bge 1b\n\t"
+        "mov r1, #0\n\t"
+        "mov r3, #0xfe\n\t"
+        "lsl r3, r3, #1\n\t"
+        "add r0, r5, r3\n\t"
+        "ldr r0, [r0]\n\t"
+        "cmp r2, r0\n\t"
+        "bne 2f\n\t"
+        "mov r1, #1\n\t"
+    "2:\n\t"
+        "cmp r1, #0\n\t"
+        "bne 3f\n\t"
+        "mov r0, sp\n\t"
+        "strh r1, [r0]\n\t"
+        "ldr r0, 5f\n\t"
+        "mov r1, sp\n\t"
+        "str r1, [r0]\n\t"
+        "str r5, [r0, #4]\n\t"
+        "ldr r1, 6f\n\t"
+        "str r1, [r0, #8]\n\t"
+        "ldr r0, [r0, #8]\n\t"
+        "mov r4, #0\n\t"
+        "mov r2, #0xfc\n\t"
+        "lsl r2, r2, #1\n\t"
+        "add r6, r5, r2\n\t"
+        "ldr r3, 7f\n\t"
+        "add r3, r3, r5\n\t"
+        "mov sb, r3\n\t"
+        "mov r0, #0xfd\n\t"
+        "lsl r0, r0, #1\n\t"
+        "add r7, r5, r0\n\t"
+        "ldr r1, 8f\n\t"
+        "add r1, r1, r5\n\t"
+        "mov r8, r1\n\t"
+    "4:\n\t"
+        "add r0, r5, #0\n\t"
+        "add r1, r4, #0\n\t"
+        "bl sub_8002C6C\n\t"
+        "add r4, #1\n\t"
+        "cmp r4, #3\n\t"
+        "ble 4b\n\t"
+        "mov r0, #0\n\t"
+        "mov r1, #0x43\n\t"
+        "strb r1, [r6]\n\t"
+        "mov r1, #0x12\n\t"
+        "mov r2, sb\n\t"
+        "strb r1, [r2]\n\t"
+        "strb r0, [r7]\n\t"
+        "mov r3, r8\n\t"
+        "strb r0, [r3]\n\t"
+        "add r0, r5, #0\n\t"
+        "bl sub_8002B70\n\t"
+    "3:\n\t"
+        "add sp, #4\n\t"
+        "pop {r3, r4}\n\t"
+        "mov r8, r3\n\t"
+        "mov sb, r4\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r0}\n\t"
+        "bx r0\n\t"
+        ".align 2, 0\n"
+    "5: .4byte 0x040000D4\n"
+    "6: .4byte 0x81000100\n"
+    "7: .4byte 0x000001F9\n"
+    "8: .4byte 0x000001FB\n"
+    );
 }
-#endif /* NON_MATCHING */
 
 /* Recomputes this record's additive word-sum checksum over its first
  * 0x1fc bytes (127 words) and compares it against the stored
