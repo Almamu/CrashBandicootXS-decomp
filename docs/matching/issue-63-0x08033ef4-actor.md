@@ -154,7 +154,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   substantial function doesn't count as "matched" -
   `tools/report_units.py` keeps this address's `base_object` as `None`.
 
-## Parked (5 of 25 functions, `NON_MATCHING`)
+## Parked (7 of 25 functions, `NON_MATCHING`)
 
 - **`sub_8034058`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s`, C
   in `src/graphics/actor_part66.c`) - Kind 2's constructor. Semantics
@@ -189,19 +189,50 @@ boundaries - not by re-reading the isolated compiles more carefully.
   even though `val` is never touched until the function's tail with no
   intervening call (`sub_8034634`) - the ROM's own build simply leaves
   `val` in `r3` the whole time.
+- **`sub_8034374`/`sub_8034480`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s`,
+  C in `src/graphics/actor_part85.c`) - the particle-trail BG0 object's
+  constructor and per-frame updater (see that file's header comment for
+  the full `struct particle_bg` field layout: a `tileVramBase`/
+  `mapVramBase` pair of fixed VRAM constants, a 128-slot particle array,
+  an active count, and a 240x160 4-bit-per-pixel shadow `tileBuffer`).
+  The apparent "read of an uninitialized local" this pair was previously
+  left raw over turned out to be the same negative-constant bit-clear
+  idiom already established for `LoadBg2Background`'s `bg2cnt`
+  (`src/graphics/level_graphics.c`, issue #65) - an intentionally
+  uninitialized `u32` ANDed against `0xFFFF0000` before every bit the
+  final halfword write actually reads gets ORed in, not a real bug.
+  Semantics for both functions are now fully understood and confirmed
+  field-by-field/instruction-by-instruction against the ROM disassembly:
+  - `sub_8034374` matches the ROM exactly except one single instruction:
+    building the tilemap-fill loop's palette-bank mask (`0xFFFFF000`),
+    the ROM's own build loads the 32-bit literal into `r1` first and
+    then copies it into `r5` (4 bytes), where every C-level phrasing
+    tried here (a plain local, a whole-function-scoped local, an
+    explicit two-register `asm("r1")`-then-`asm("r5")` pin, reordering
+    relative to the neighboring `tileBase`/`mapBase` loads, moving the
+    assignment inside vs. outside its loop) has this compiler collapse
+    it straight into one `ldr r5,=...` (2 bytes) instead - a 2-byte
+    residual gap. Every other instruction in the function, including
+    the *same* "extra register copy" pattern applied successfully a few
+    lines above for `tileBase` (`ldr r1,[r6]; mov ip,r1` - that one is a
+    genuine Thumb ISA requirement, since `ldr` can't target a high
+    register directly, unlike the mask's copy which has no such
+    requirement), matches byte-for-byte.
+  - `sub_8034480` matches the ROM exactly through both particle
+    in-bounds checks and the respawn call; it hits the exact same
+    categorical gap already accepted as unclosable for `sub_8034634`
+    just above (its own inlined nibble-write logic, duplicated twice
+    per particle instead of calling `sub_8034634`): this compiler
+    computes the `addr & 3` shift amount and the `0xf << shift`/`cell`
+    values into the opposite register pair from the ROM's own build.
+  Both left parked (real C, `NON_MATCHING`) rather than fall back to a
+  NAKED transcription, per this project's current policy of preferring
+  real C whenever the semantics are this well understood - `sub_8034480`
+  in particular is too large (~150 instructions, `sb`/`r8`/`ip` all live)
+  for a NAKED transcription to be a reasonable substitute anyway.
 
-## Left raw (5 of 25 functions, not attempted)
+## Left raw (3 of 25 functions, not attempted)
 
-- **`sub_8034374`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s`) -
-  a ~150-instruction graphics/palette/DMA setup routine (window
-  registers, a palette gradient ramp, a VRAM tile fill loop, two DMA3
-  transfers) with an apparent read of an uninitialized local (`r5`
-  ANDed with a mask before ever being assigned in this function) partway
-  through; left raw, out of scope for this pass pending a closer look at
-  that apparent uninitialized-read.
-- **`sub_8034480`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s`) -
-  a 128-entry OAM/screen-box scan driving `sub_8034634`'s tilemap
-  writer; left raw alongside `sub_8034374`, out of scope for this pass.
 - **`sub_803472C`/`sub_803487C`/`sub_8034994`**
   (`asm/code_3_2_20_28568_c99c_31784_33ef4_3472c.s`) - a graphics-package
   loading setup (BG/window register packing, three `LoadGraphicsPackage`

@@ -1,0 +1,320 @@
+#include "core.h"
+#include "gba/dma_macros.h"
+
+/* Same "self" object family as actor_part61.c/actor_part66.c/actor_part72.c/
+ * actor_part73.c - see docs/matching/issue-63-0x08033ef4-actor.md. This is
+ * the 0x14-byte constructor (`sub_8034374`, called by `LoadLevelGraphics` as
+ * `sub_8034374(sub_8026EDC(0x14))`, see `src/graphics/level_graphics.c`) and
+ * its companion per-frame updater (`sub_8034480`, called by
+ * `sub_8034688`/actor_part73.c) for a BG0 "raw bitmap" particle-trail
+ * effect: the whole 240x160 screen is set up as one contiguous run of 8x8
+ * tiles on BG0 (tile index == screen position, palette bank 15), and a
+ * shadow 4-bit-per-pixel buffer (`tileBuffer`, exactly 240*160/2 = 0x4B00
+ * bytes) is drawn into with plain nibble writes each frame, then DMA'd
+ * wholesale into the real tile graphics VRAM - the classic "abuse the BG
+ * tile grid as a raw indexed bitmap" GBA trick. */
+struct particle_bg {
+    /* Always 0x06000000 - the BG tile *graphics* VRAM this object's whole
+     * `tileBuffer` gets DMA'd into every frame. */
+    u32 tileVramBase;
+    /* Always 0x0600F800 - BG0's screen/tilemap base (screen base block 31,
+     * see `sub_8034374`'s `REG_BG0CNT` setup below), laid out once at
+     * construction time as one sequential tile index per 8x8 cell. */
+    u32 mapVramBase;
+    /* 128-slot particle array (`sub_8026EC0(0x800)`, 16-byte stride - see
+     * `struct particle_slot`, actor_part72.c). */
+    void *particles;
+    /* Active particle count (0-0x80). */
+    s32 count;
+    /* 240x160, 4-bit-per-pixel shadow tile-graphics buffer
+     * (`sub_8026EC0(0x4B00)`) - `sub_8034480` draws each active particle's
+     * trail into this every frame, then DMAs it wholesale into
+     * `tileVramBase`. */
+    void *tileBuffer;
+};
+
+struct particle_slot {
+    s32 x;
+    s32 y;
+    s32 dx;
+    s32 dy;
+};
+
+extern void *sub_8026EC0(u32 size);
+extern void sub_8001524(s32 val);
+extern void sub_80015D0(void);
+extern void sub_8001614(void);
+extern void sub_80345B0(void *mgrArg, s32 idx);
+extern u8 gUnknown_03001288[2];
+
+#if NON_MATCHING
+/* NOT YET BYTE-MATCHING - compiled only under `make NON_MATCHING=1`; the
+ * checked-in assembly (asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s) is
+ * used otherwise. Semantics fully understood and confirmed field-by-field
+ * against the ROM disassembly (every store, DMA setup and loop bound
+ * matches); the whole function is byte-identical in isolation except one
+ * single instruction: building the 4-bit-palette-bank tile-index mask
+ * (0xFFFFF000), the ROM's own build loads the 32-bit literal into `r1`
+ * first and then copies it into `r5` (`ldr r1,=0xFFFFF000; adds r5,r1,#0`,
+ * 4 bytes), while every phrasing tried here - a plain local, a
+ * whole-function-scoped local, an explicit two-register `asm("r1")`-then-
+ * `asm("r5")` pin, reordering relative to the neighboring `tileBase`/
+ * `mapBase` loads, and moving the assignment inside vs. outside the
+ * loop it's invariant across - has this compiler materialize the
+ * constant straight into `r5` in one `ldr` (2 bytes), 2 bytes short of
+ * the ROM. Every other instruction in the function, including the same
+ * "extra register copy" idiom applied successfully to `tileBase` a few
+ * lines above (`ldr r1,[r6]; mov ip,r1`, which *does* match - that one is
+ * a genuine Thumb ISA requirement, `ldr` into a high register isn't
+ * encodable, whereas the mask's r1-then-r5 copy is a pure register-
+ * allocator artifact with no such requirement), matches exactly. Left
+ * parked rather than chase this single 2-byte gap further - see
+ * docs/matching/issue-63-0x08033ef4-actor.md. */
+void *sub_8034374(void *selfArg)
+{
+    struct particle_bg *self = selfArg;
+    struct dma_regs *dma;
+    /* Deliberately left uninitialized - the ROM builds REG_BG0CNT's value
+     * with an `ands r5, =0xFFFF0000` against whatever was already in the
+     * register, then fills in every bit the halfword write actually reads
+     * via the ORs below (negative-constant bit-clear idiom, see
+     * LoadBg2Background's `bg2cnt`, src/graphics/level_graphics.c). */
+    u32 bg0cnt;
+    s32 gradIdx;
+    s32 gradCount;
+    s32 row;
+    s32 tileIdx;
+    u32 tileBase;
+    u32 mapBase;
+    u32 mask;
+    u16 *gradDst;
+    u16 dmaFillSrc16;
+    u32 dmaFillSrc32;
+    u32 *dma2Src;
+    u32 zero;
+
+    self->particles = sub_8026EC0(0x800);
+
+    {
+        u16 *dispcntShadow = (u16 *)gUnknown_03001288;
+        zero = 0;
+        *dispcntShadow = 0x40;
+    }
+    sub_8001524(0);
+
+    /* Clears BG0HOFS/BG0VOFS together via one word store. */
+    *(vu32 *)REG_ADDR_BG0HOFS = zero;
+
+    bg0cnt &= -0x10000;
+    bg0cnt |= 3;                /* priority 3 */
+    bg0cnt |= 0xf8 << 5;        /* screen base block 31 (0x0600F800) */
+    REG_BG0CNT = bg0cnt;
+
+    self->tileVramBase = 0x06000000;
+    self->mapVramBase = 0x0600F800;
+
+    sub_80015D0();
+
+    /* Clears BG palette entry 0 (the backdrop color). */
+    *(vu16 *)0x05000000 = zero;
+
+    /* A 3-step white-to-black grayscale gradient into BG palette bank 15's
+     * last 3 entries (0x050001E0 = palette index 240), used by the
+     * tilemap-fill loop below's palette-bank-15 tile entries. */
+    gradDst = (u16 *)0x050001E0;
+    dma2Src = &dmaFillSrc32;
+    gradIdx = 0;
+    gradCount = 2;
+    do {
+        s32 half = gradIdx / 2;
+        u16 color = half | (half << 5) | (half << 10);
+        *gradDst = color;
+        gradDst++;
+        gradIdx += 0x1f;
+        gradCount--;
+    } while (gradCount >= 0);
+
+    /* Lays out BG0's whole 240x160 (30x20 tiles) screen as one sequential
+     * run of tile indices (palette bank 15) - tile index N at screen
+     * position N, so `tileBuffer`'s raw nibble data below lines up 1:1
+     * with BG tile graphics VRAM once DMA'd there. */
+    tileIdx = 0;
+    row = 0;
+    tileBase = self->tileVramBase;
+    mapBase = self->mapVramBase;
+    do {
+        s32 nextRow = row + 1;
+        u16 *rowPtr = (u16 *)(mapBase + (row << 6));
+        s32 col = 0x1d;
+
+        mask = -0x1000;
+        do {
+            *rowPtr = tileIdx | mask;
+            tileIdx++;
+            rowPtr++;
+            col--;
+        } while (col >= 0);
+        row = nextRow;
+    } while (row <= 0x13);
+
+    /* Zero-fills the 19200-byte tile *graphics* VRAM region this object
+     * owns (fixed-source 16-bit fill from one stack halfword). */
+    dmaFillSrc16 = 0;
+    dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
+    dma->src = (u32)&dmaFillSrc16;
+    dma->dst = tileBase;
+    dma->cnt = 0x81002580;
+    dma->cnt;
+
+    REG_BLDCNT = 0;
+    sub_8001614();
+
+    self->count = 0;
+
+    self->tileBuffer = sub_8026EC0(0x4B00);
+
+    /* Zero-fills the freshly-allocated 19200-byte `tileBuffer` (fixed-
+     * source 32-bit fill from one stack word). */
+    dmaFillSrc32 = 0;
+    dma->src = (u32)dma2Src;
+    dma->dst = (u32)self->tileBuffer;
+    dma->cnt = 0x850012C0;
+    dma->cnt;
+
+    return self;
+}
+
+/* NOT YET BYTE-MATCHING - compiled only under `make NON_MATCHING=1`; the
+ * checked-in assembly (asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s) is
+ * used otherwise. Every frame: commits last frame's `tileBuffer` to the
+ * real tile VRAM (DMA3, 32-bit), clears `tileBuffer` back to zero (DMA3
+ * fill), then for each active particle draws a 2-value trail (nibble `1`
+ * at the pre-movement position, nibble `2` at the post-movement position -
+ * the same `(x>>3)<<6 + ((y>>3)*15)<<7 + (x&7) + (y&7)<<3` nibble-address
+ * formula as the already-parked general-purpose `sub_8034634`,
+ * actor_part72.c, just inlined twice instead of called), applies the
+ * particle's `dx`/`dy` in between, and respawns it via `sub_80345B0` if it
+ * drifted outside the `[0, 0xEFFF]`x`[0, 0x9FFF]` (24.8 fixed-point,
+ * 240x160 pixel) box.
+ *
+ * Semantics fully understood and confirmed field-by-field, and the
+ * function matches instruction-for-instruction up through both bounds
+ * checks; parked on the same categorical gap already accepted for
+ * `sub_8034634`'s identical nibble-write tail (docs/matching/
+ * issue-63-0x08033ef4-actor.md, "Parked: sub_8034634"): this compiler
+ * computes the `addr & 3` shift amount and the `0xf << shift`/`cell`
+ * values into the opposite register pair from the ROM's own build (`r1`/
+ * `r0`-`r2` here vs. the ROM's `r1` for the shift and `r0`/`r2` for the
+ * mask/cell - both function-local pin attempts on `shift`/`mask`
+ * individually just move the swap elsewhere or corrupt a neighboring
+ * instruction's encoding), for both inlined copies of the nibble write. */
+void sub_8034480(void *selfArg)
+{
+    struct particle_bg *self = selfArg;
+    struct dma_regs *dma;
+    struct particle_slot *slot;
+    s32 i;
+    s32 count;
+    u32 fillZero;
+
+    dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
+    dma->src = (u32)self->tileBuffer;
+    dma->dst = self->tileVramBase;
+    dma->cnt = 0x840012C0;
+    dma->cnt;
+
+    fillZero = 0;
+    dma->src = (u32)&fillZero;
+    dma->dst = (u32)self->tileBuffer;
+    dma->cnt = 0x850012C0;
+    dma->cnt;
+
+    slot = self->particles;
+    i = 0;
+    count = self->count;
+    if (i < count) {
+        /* Register-pinned to match the ROM's own choices - `trailVal`
+         * (the first nibble value, always 1) lives in `sb` for the whole
+         * loop, `sevenMask` (the `&7` pixel-within-tile mask) in `r8`. */
+        register s32 trailVal asm("sb") = 1;
+        register s32 sevenMask asm("r8") = 7;
+
+        do {
+            s32 xRaw = slot->x;
+            s32 yRaw = slot->y;
+            s32 xPix = xRaw >> 8;
+            s32 yPix = yRaw >> 8;
+
+            if (xPix <= 0xef && yPix >= 0 && yPix <= 0x9f) {
+                s32 blockX = xRaw >> 11;
+                s32 blockY = yRaw >> 11;
+                s32 addr = (blockX << 6) + (((blockY << 4) - blockY) << 7);
+                u16 *entry;
+                s32 shift;
+                s32 mask;
+                u16 cell;
+
+                addr += xPix & sevenMask;
+                addr += (yPix & sevenMask) << 3;
+                entry = (u16 *)((u8 *)self->tileBuffer + ((addr >> 2) << 1));
+                shift = (addr & 3) << 2;
+                mask = 0xf << shift;
+                cell = *entry;
+                cell &= ~mask;
+                cell |= trailVal << shift;
+                *entry = cell;
+            }
+
+            {
+                s32 newX = slot->x + slot->dx;
+                s32 newY = slot->y + slot->dy;
+
+                slot->x = newX;
+                slot->y = newY;
+
+                if (newX > 0xEFFF || newY < 0 || newY > 0x9FFF) {
+                    sub_80345B0(self, i);
+                }
+            }
+
+            {
+                s32 xRaw2 = slot->x;
+                s32 yRaw2 = slot->y;
+                s32 xPix2 = xRaw2 >> 8;
+                s32 yPix2 = yRaw2 >> 8;
+                /* The second nibble value (always 2) is recomputed fresh
+                 * into `ip` every iteration, matching the ROM's own
+                 * build - unlike `trailVal`/`sevenMask` above, it isn't
+                 * hoisted above the loop. */
+                register s32 oldVal asm("ip") = 2;
+
+                if (xPix2 <= 0xef && yPix2 >= 0 && yPix2 <= 0x9f) {
+                    s32 blockX = xRaw2 >> 11;
+                    s32 blockY = yRaw2 >> 11;
+                    s32 addr = (blockX << 6) + (((blockY << 4) - blockY) << 7);
+                    u16 *entry;
+                    s32 shift;
+                    s32 mask;
+                    u16 cell;
+
+                    addr += xPix2 & sevenMask;
+                    addr += (yPix2 & sevenMask) << 3;
+                    entry = (u16 *)((u8 *)self->tileBuffer + ((addr >> 2) << 1));
+                    shift = (addr & 3) << 2;
+                    mask = 0xf << shift;
+                    cell = *entry;
+                    cell &= ~mask;
+                    cell |= oldVal << shift;
+                    *entry = cell;
+                }
+            }
+
+            slot++;
+            i++;
+            count = self->count;
+        } while (i < count);
+    }
+}
+#endif /* NON_MATCHING */
+
+asm(".align 2, 0");
