@@ -263,11 +263,11 @@ SECTIONS
         build/crashbandicootxs/asm/code_3_2_20_28568_c99c.o(.text);
         build/crashbandicootxs/src/graphics/actor_part62.o(.text);
         build/crashbandicootxs/src/graphics/actor_part58.o(.text);
-        build/crashbandicootxs/asm/code_3_2_20_28568_c99c_d7b0.o(.text);
+        build/crashbandicootxs/src/graphics/actor_part74.o(.text);
         build/crashbandicootxs/src/graphics/actor_part59.o(.text);
-        build/crashbandicootxs/asm/code_3_2_20_28568_c99c_dd9c.o(.text);
+        build/crashbandicootxs/src/graphics/actor_part75.o(.text);
         build/crashbandicootxs/src/graphics/actor_part60.o(.text);
-        build/crashbandicootxs/asm/code_3_2_20_28568_c99c_e058.o(.text);
+        build/crashbandicootxs/src/graphics/actor_part76.o(.text);
         build/crashbandicootxs/src/graphics/actor_part61.o(.text);
         build/crashbandicootxs/asm/code_3_2_20_28568_c99c_e0a4.o(.text);
         build/crashbandicootxs/src/graphics/actor_part43.o(.text);
