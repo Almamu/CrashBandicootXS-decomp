@@ -70,6 +70,21 @@ system from "core" system startup/init code.
 - `src/system/game_loop16.c` (GitHub issue #41): `sub_8025F24` -
   truncates the Q8 position to a tile-scroll halfword pair and writes
   it through the `self+0x58` hardware-register pointer
+- `src/system/game_loop17.c` (GitHub issue #38): `sub_802425C`,
+  `nullsub_25`, `sub_8024278` - a bit-tested `sub_8026ED0` teardown
+  wrapper, an empty stub, and the medal-table per-level tally
+- `src/system/game_loop18.c` (GitHub issue #38): `sub_80243E0`,
+  `sub_8024404`, `sub_8024428`, `sub_8024434`, `sub_8024440`,
+  `sub_802444C`, `sub_8024458`, `sub_8024464`, `sub_8024498`,
+  `sub_80244F0`, `sub_8024524`, `sub_8024540`, `sub_802455C` -
+  medal-table entry/item-list field accessors, the sound-cue resolver,
+  and the `sub_8024344` constant wrappers (`sub_8024344` itself is left
+  raw, see below)
+- `src/system/game_loop19.c` (GitHub issue #38): `sub_8024784` -
+  trivial `gUnknown_03001314` setter
+- `src/system/game_loop20.c` (GitHub issue #38): `sub_80247EC`,
+  `sub_8024804` - the `sub_802425C`-shaped teardown wrapper and a
+  trivial constructor
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -138,6 +153,28 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   `asm/code_3_2_17_25e98.s`/`asm/code_3_2_17_25f3c.s` respectively.
   See
   [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
+
+## Left raw, semantics traced but not byte-matching (GitHub issue #38)
+
+- **`sub_8024344`** (ROM `0x08024344`, real bytes in
+  `asm/code_3_2_17_24344.s`) - scans a medal item list for a nonzero
+  `u16` flag; every field/offset/branch confirmed, but the ROM keeps its
+  `flagIdx` parameter alive in `ip`/r12 across the whole function rather
+  than a normally-allocated register. See
+  [docs/matching/issue-38-medal-results-tally.md](../matching/issue-38-medal-results-tally.md).
+- **`sub_8024590`/`sub_8024640`/`sub_80246D8`/`sub_8024708`** (ROM
+  `0x08024590`-`0x08024783`, real bytes in `asm/code_3_2_17_24590.s`) -
+  a sound-channel-handle helper family (start/wait-then-play cue
+  selection, its per-item driver loop, an index scanner, and a
+  VRAM-bank-toggling tile-asset streamer + palette DMA + second
+  `DISPCNT` writer); every field/offset/call argument confirmed, gap is
+  register-allocation-level throughout. See
+  [docs/matching/issue-38-medal-results-tally.md](../matching/issue-38-medal-results-tally.md).
+- **`sub_8024790`** (ROM `0x08024790`, real bytes in
+  `asm/code_3_2_17_24790.s`) - the tail half of `sub_8024640`'s
+  per-item body, reused standalone; same open gap as the group above.
+  See
+  [docs/matching/issue-38-medal-results-tally.md](../matching/issue-38-medal-results-tally.md).
 
 ## Still raw, category-mapped (GitHub issue #12/#34/#40)
 
