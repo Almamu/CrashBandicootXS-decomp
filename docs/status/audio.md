@@ -80,6 +80,15 @@ These read as genuine GAX2 mixer/SoundHandler internals (not
 game/HUD-side callers), the first real dive past `sub_80381FC`'s single
 constructor.
 
+`src/audio/` (issues #66/#67's leftover `0x08038240`-`0x08038B68`
+cluster - see
+[`docs/matching/issue-66-67-gax-playstart-cluster.md`](../matching/issue-66-67-gax-playstart-cluster.md)):
+
+- `src/audio/gax_hw_reset.c` - `sub_80384DC` (hardware sound-register
+  reset: DMA1/SOUNDCNT_H/SOUNDBIAS)
+- `src/audio/gax_playback_ticker.c` - `sub_8038B68` (per-frame DMA1/
+  Timer0 direct-sound-output follow-up to play-start)
+
 `src/audio/` (further in, at `0x08039818`-`0x0803A944` - see
 [`docs/matching/issue-68-0x08039818-audio.md`](../matching/issue-68-0x08039818-audio.md)
 for the full write-up, GitHub issue #68):
@@ -138,6 +147,28 @@ See docs/matching.md for `PlaySfx`'s remaining gap.
   byte-verified NAKED transcriptions - see
   [docs/matching/issue-67-68-channel-init-play.md](../matching/issue-67-68-channel-init-play.md)
   for both functions' full write-up.
+- **`sub_8038240`** (`src/audio/gax_channel_table_alloc.c`, core GAX2
+  channel-table allocator/wiring over `gUnknown_03001630`) - fully
+  understood, but its prologue keeps all three of `r8`/`sb`/`sl` live as
+  genuine scratch across several nested loops, the same many-register
+  gcc-2.9 allocation ceiling as `sub_8038538` below. Byte-verified NAKED
+  transcription.
+- **`sub_8038538`** (`src/audio/gax_playstart.c`, the play-start/init
+  entry point, docs/audio.md) - fully understood, but its prologue keeps
+  `r8`/`sb`/`sl` live across the whole function (a running priority-
+  maximum accumulator in `r8` spanning two nested voice-scan loops, plus
+  `sb`/`sl` holding intermediate bank/table pointers across several
+  calls) - the same many-register ceiling already documented for
+  `sub_8006600`/`sub_80372BC`. Byte-verified NAKED transcription.
+- **`sub_8038A1C`** (`src/audio/gax_channel_pool_alloc.c`, per-channel
+  voice-pool allocator) - fully understood, but needs `r8`/`sb` as
+  genuine scratch across a multi-level pointer-chase and two calls, the
+  same allocation ceiling as its neighbors above. Byte-verified NAKED
+  transcription.
+
+  See [docs/matching/issue-66-67-gax-playstart-cluster.md](../matching/issue-66-67-gax-playstart-cluster.md)
+  for all three functions' full write-up, plus this pass's two real
+  matches (`sub_80384DC`/`sub_8038B68`, listed under "Matched" above).
 
 ## Left raw (not attempted, or attempted and set aside)
 
@@ -152,18 +183,21 @@ from the `0x08037110`-`0x08038538` pass specifically:
   documented for `sub_8006600` (`src/graphics/oam_count.c`).
 - `sub_8037648`/`sub_8037A7C`/`sub_8037E54`/`sub_8037ECC`/`sub_8037F3C` -
   generic 64-bit software division/multiply helpers, per `docs/audio.md`.
-- `sub_8037FC0`/`sub_8038240`/`sub_80384DC` - genuine GAX2 mixer-state/
-  hardware-register internals; not attempted this pass.
+- `sub_8037FC0` - genuine GAX2 mixer/timing internals over
+  `gStaticData_085A6150`; not attempted, issue #66. `sub_8038240`/
+  `sub_80384DC` (the rest of issue #66) are now matched/parked - see
+  [docs/matching/issue-66-67-gax-playstart-cluster.md](../matching/issue-66-67-gax-playstart-cluster.md).
 
 From the `0x08038538`-`0x08039658` pass (issue #67, PR #198 - still
 raw after the second pass, see
 [`docs/matching/issue-67-0x08038538-audio.md`](../matching/issue-67-0x08038538-audio.md)):
 
-- `sub_8038538`/`sub_8038A1C`/`sub_8038B68` - the play-start/init entry
-  point (docs/audio.md) and its DMA1/Timer0 direct-sound-output
-  follow-ups; hit the same many-register (`r8`/`sb`/`sl`) gcc-2.9
-  allocation difficulty already documented for `sub_8006600`/
-  `sub_80372BC` - not attempted further this pass.
+`sub_8038538`/`sub_8038A1C`/`sub_8038B68` (the play-start/init entry
+point and its DMA1/Timer0 direct-sound-output follow-ups, listed raw
+above as of the second pass) are now matched/parked - see
+[docs/matching/issue-66-67-gax-playstart-cluster.md](../matching/issue-66-67-gax-playstart-cluster.md)
+and the "Matched"/"Parked - NAKED asm transcription" sections above.
+
 - `sub_8038C88`/`sub_8038DC0` - more mixer-tick internals, read in full
   but not attempted as a C reconstruction; `sub_8038E74` (the
   voice-stealing allocator, docs/audio.md) hits the same many-register
