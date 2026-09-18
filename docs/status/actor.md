@@ -301,6 +301,23 @@ from "core" graphics.
   `docs/rom_map.md` traces through the chunk's remaining (unmatched)
   functions. See
   [docs/matching/issue-16-actor-11b0c.md](../matching/issue-16-actor-11b0c.md).
+- `src/graphics/actor_part77.c` (new file, GitHub issue #16, ROM
+  0x08012160-0x08012420): `sub_8012160`, `sub_8012238`, `sub_80122CC` -
+  three more members of the 42-slot action-dispatch-table family
+  (`gStaticData_0816BF20`), operating on the same still-unnamed "child
+  object" struct (`self+0xc`/`self+0x10` sub-record pointers, the
+  `+0x27`-`+0x32` state/flag/table-index trio) `actor_part18.c`/
+  `actor_part18b.c` already established conventions for. Not
+  ROM-adjacent to those files (the raw `sub_8012420`/`sub_8012694`/
+  `sub_801283C` and the still-raw `sub_8011BD4` sit between them), so
+  a new file. See
+  [docs/matching/issue-16-actor-12160.md](../matching/issue-16-actor-12160.md).
+- `src/graphics/actor_part78.c` (new file, GitHub issue #16, ROM
+  0x08012A7C-0x08012AF4): `sub_8012A7C` - another member of the same
+  action-dispatch-table family, not ROM-adjacent to `actor_part77.c`'s
+  functions either (the raw `sub_8012420`/`sub_8012694`/`sub_801283C`
+  sit in between). See
+  [docs/matching/issue-16-actor-12160.md](../matching/issue-16-actor-12160.md).
 - `src/graphics/actor_part43.c`/`actor_part44.c`/`actor_part45.c`/
   `actor_part46.c` (new files, GitHub issue #56, ROM
   0x0802F0DC-0x0802FBF0 - a second boss-weapon "spawn/pre-attack"
@@ -863,19 +880,27 @@ embedded as asm instead. They're tracked as parked, not matched.
   #56) - a ~150-instruction position-update/collision-damage function
   with heavy `sb`/`r8` register pressure; left raw, out of scope for
   this pass - see `docs/matching/issue-56-0x0802f0dc-actor.md`.
-- **`sub_8011BD4`/`sub_8012160`/`sub_8012238`/`sub_80122CC`/
-  `sub_8012420`/`sub_8012694`/`sub_801283C`/`sub_8012A7C`/
-  `sub_8012AF4`/`sub_8012D24`** (`asm/code_3_2_17_11bd4.s`, ROM
-  0x08011BD4-0x08012FBC, GitHub issue #16) - `sub_8011BD4` itself is
-  `docs/rom_map.md`'s documented ~1420B, 25-case/7-case nested
-  jump-table companion state machine to `sub_8016288` (still raw,
-  type-`0x1d` player-control family); the rest are further members of
-  the 42-slot action-dispatch-table family (`gStaticData_0816BF20`)
-  reading/writing a still-unnamed "child object" struct (`self+0xc`/
-  `+0x10`/`+0x18` sub-record pointers, distinct from `struct actor`)
-  that `docs/rom_map.md` itself says isn't understood with byte-exact
-  precision yet. Left raw, out of scope for this pass - see
-  [docs/matching/issue-16-actor-11b0c.md](../matching/issue-16-actor-11b0c.md).
+- **`sub_8011BD4`** (`asm/code_3_2_17_11bd4.s`, ROM 0x08011BD4, GitHub
+  issue #16) - `docs/rom_map.md`'s documented ~1420B, 25-case/7-case
+  nested jump-table companion state machine to `sub_8016288` (still
+  raw, type-`0x1d` player-control family); left raw, out of scope for
+  this pass - see
+  [docs/matching/issue-16-actor-11b0c.md](../matching/issue-16-actor-11b0c.md)
+  and
+  [docs/matching/issue-16-actor-12160.md](../matching/issue-16-actor-12160.md).
+- **`sub_8012420`/`sub_8012694`/`sub_801283C`** (`asm/code_3_2_17_12420.s`,
+  ROM 0x08012420-0x08012A7C, GitHub issue #16) - further members of the
+  42-slot action-dispatch-table family (`gStaticData_0816BF20`) reading/
+  writing the same still-unnamed "child object" struct `sub_8012160`/
+  `sub_8012238`/`sub_80122CC` (matched below) now operate on; not
+  attempted to byte-exact precision this pass. Left raw - see
+  [docs/matching/issue-16-actor-12160.md](../matching/issue-16-actor-12160.md).
+- **`sub_8012AF4`/`sub_8012D24`** (`asm/code_3_2_17_12af4.s`, ROM
+  0x08012AF4-0x08012FBC, GitHub issue #16) - `sub_8012AF4` uses a
+  stack-local 12-byte record copy and `r8`; `sub_8012D24` is a further
+  sibling; neither attempted to byte-exact precision this pass. Left
+  raw - see
+  [docs/matching/issue-16-actor-12160.md](../matching/issue-16-actor-12160.md).
 - **`sub_8007634`** (`asm/code_3_2.s`, ROM 0x08007634, GitHub issue #9)
   - real GBA hardware-affine sprite-matrix setup; already flagged in
   `docs/matching.md` as needing "a dedicated session" of its own, not
