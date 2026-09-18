@@ -19,11 +19,13 @@ from "core" graphics.
 - `src/graphics/actor_part2.c` (new file - `sub_8007C30`'s real ROM
   address isn't adjacent to `actor_part.c`'s matched functions either,
   since the parked `sub_8007B00`/`sub_8007B98` sit raw between them;
-  see `docs/matching.md`): `sub_8007C30`, `sub_8007CF8`
-- `src/graphics/actor_part3.c` (new file - `sub_8007F78`'s real ROM
-  address isn't adjacent to `actor_part2.c`'s matched functions
-  either, since the parked `sub_8007DBC` sits raw between them; see
-  `docs/matching.md`): `sub_8007F78`, `sub_8007FD8`
+  see `docs/matching.md`): `sub_8007C30`, `sub_8007CF8`, `sub_8007DBC`
+  (the last one matched via NAKED asm transcription - see
+  `docs/matching/naked-sub_8007dbc.md`)
+- `src/graphics/actor_part3.c` (new file - directly adjacent to
+  `actor_part2.c`'s matched functions now that `sub_8007DBC` is
+  matched too, closing the old raw gap between them):
+  `sub_8007F78`, `sub_8007FD8`
 - `src/graphics/actor_part4.c` (new file - `sub_80080C0`'s real ROM
   address isn't adjacent to `actor_part3.c`'s matched functions
   either, since the parked `sub_8008044` sits raw between them; see
@@ -423,15 +425,6 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   a recurring "which anonymous scratch register" choice (about 10 of
   73 instructions) - see `docs/matching.md`, "Parked, not matched:
   `sub_8007B98`".
-- **`sub_8007DBC`** (`src/graphics/actor_part2.c`) - collision-with-
-  player handler: tests two `part` flag bits, AABB-collides `part`
-  against the player, plays a sound and marks a global bitmap slot on
-  hit, then spawns one of several "kind"s of object at `part`'s
-  position depending on a `part` sub-type field. Matches the ROM
-  instruction-for-instruction except one systematic register choice
-  (the cached `&gUnknown_030012D8` address lands in r6 here vs the
-  ROM's r7 - an explicit r7 pin crashes the compiler outright here) -
-  see `docs/matching.md`, "Parked, not matched: `sub_8007DBC`".
 - **`sub_8008044`** (`src/graphics/actor_part3.c`) - advances `part`'s
   per-keyframe animation timer by one tick. The first half (the
   counter-vs-duration test) matches the ROM instruction-for-instruction
