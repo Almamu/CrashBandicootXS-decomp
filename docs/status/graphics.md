@@ -80,22 +80,26 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   shadow. This compiler always fuses the ROM's separate
   store-then-pointer-increment into one `stmia` writeback instruction.
   Same doc section as above.
-- **`sub_8006600`** (`src/graphics/oam_count.c`) - HUD-icon-plus-number
-  renderer. Prologue/epilogue and most register choices now match the ROM;
-  four register-letter mismatches remain in the second half, resistant to
-  every technique tried so far - see `docs/matching.md`, "Parked, not
-  matched: `sub_8006600`" for the full account. (Several `overlay_ui`/
-  `actor` functions elsewhere hit this same class of gap - see
-  [overlay_ui.md](./overlay_ui.md) and [actor.md](./actor.md).)
 - **`sub_8000EE4`** (`src/graphics/text_layout.c`) - word-wrap text
   renderer. Matches the ROM instruction-for-instruction except ~8 bytes
   from two small codegen details (incoming-argument spill ordering, and a
   couple of loop-bound comparisons compiling one instruction shorter than
   the ROM's) - see `docs/matching.md`, "Parked, not matched: `sub_8000EE4`".
-- **`sub_80073DC`** (`src/graphics/graphics.c`) - builds and queues one
-  OAM entry per visible sub-piece of an animated part, plus a combined
-  VRAM tile upload. Logic/instruction shape confirmed correct (every
-  AND/OR/shift constant and branch condition matches the ROM), but the
-  ROM spills more locals to its stack frame than gcc does here, causing
-  register-letter differences through most of the per-piece loop - see
-  `docs/matching.md`, "Parked, not matched: `sub_80073DC`".
+
+## Parked (NAKED transcription, byte-correct but not decompiled)
+
+- **`sub_8006600`** (`src/graphics/oam_count.c`) and **`sub_80073DC`**
+  (`src/graphics/graphics.c`) - this project's original reference cases
+  for the register-allocation-gap class documented above (several
+  `overlay_ui`/`actor` functions elsewhere still hit the same class,
+  see [overlay_ui.md](./overlay_ui.md) and [actor.md](./actor.md)).
+  Both are now `NAKED` functions whose bodies are a literal
+  instruction-for-instruction transcription of the ROM's own assembly
+  (byte-exact, confirmed via a full clean `make compare`), rather than
+  a derived C reconstruction - see
+  `docs/matching/naked-oam-actor-part-batch.md`. Per project policy, a
+  NAKED transcription standing in for a substantial function's
+  register-allocation gap doesn't count as "matched" the way real
+  decompiled C does, so both stay filed here rather than in "Matched"
+  above, and `tools/report_units.py` tracks their address ranges as
+  unmatched (`base_object: None`).

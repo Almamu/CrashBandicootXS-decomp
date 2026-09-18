@@ -279,7 +279,6 @@ struct actor *sub_8008904(struct actor *part)
     return part;
 }
 
-#if NON_MATCHING
 struct aabb {
     s32 field_0;
     s32 field_4;
@@ -320,101 +319,166 @@ extern void sub_803A94C(const void *src, void *dst, u32 cnt);
  * `boxB` through the table's 0x30/0x34 trampoline; if THAT also
  * passes, appends `part` to the output array and increments its count.
  *
- * NOT YET BYTE-MATCHING: the overall control flow, all four
+ * See the (now removed) NON_MATCHING C draft in git history for the
+ * full commented C reconstruction: the overall control flow, all four
  * `table+N`-trampoline call shapes (address adjusted once, then the
  * `s16` offset and function pointer both read relative to it), the
  * `sub_803A94C` block-copy invocation, and the `struct aabb` field
- * values are all confirmed correct - but this compiler puts the loop
- * counter `i` into a high register (`r8`, paired with a second high
- * register `r9` for the `boxB` pointer) instead of the ROM's low
- * register `r7` (with only `r8` used for `boxB`, avoiding a second
- * high-register save/restore entirely). Explicitly pinning `i` to
- * `register s32 i asm("r7")` does not fix this - it reproduces the
- * `r7`-pin corruption pattern documented at length elsewhere in this
- * ROM region (`sub_8007DBC`, `sub_8007FD8`): the pin partially takes
- * for the loop's entry check, then something in the loop body
- * silently reassigns r7 to an unrelated constant (`mov r7, #0x4`)
- * instead of preserving `i`, corrupting the reconstruction outright.
- * Parked with the version that avoids that corruption (natural
- * allocation into r8/r9) rather than risk a silent miscompile for a
- * cosmetically closer register match. A handful of the `table+N`
- * trampoline call sites also have their two reads (`s16` offset,
- * function pointer) in the opposite order from the ROM (fn read before
- * offset read, rather than after) - reordering the two source
- * statements did not change the compiled order. */
-void sub_800891C(void *self)
+ * values were all confirmed correct there - but this compiler put the
+ * loop counter `i` into a high register (`r8`) instead of the ROM's low
+ * register `r7`, and an explicit `register s32 i asm("r7")` pin
+ * produced a genuine miscompile (see docs/matching.md's "Parked, not
+ * matched: sub_800891C" for the full account). Written as NAKED asm
+ * here instead, same technique as the other functions above. */
+NAKED void sub_800891C(void *self)
 {
-    struct aabb boxA;
-    struct aabb boxB;
-    s32 i;
-    void *subObj;
-
-    boxA.field_8 = 0xdc << 9;
-    boxA.field_c = 0x8c << 9;
-
-    subObj = *(void **)((u8 *)gUnknown_03001308 + 0x10);
-    boxA.field_0 = (*(s32 *)subObj << 8) + (s32)0xFFFF9C00;
-    boxA.field_4 = (*(s32 *)((u8 *)subObj + 4) << 8) + (s32)0xFFFFC400;
-
-    boxB.field_0 = *(s32 *)subObj << 8;
-    boxB.field_4 = *(s32 *)((u8 *)subObj + 4) << 8;
-    boxB.field_8 = 0xf0 << 8;
-    boxB.field_c = 0xa0 << 8;
-
-    *(s32 *)((u8 *)self + 8) = 0;
-
-    for (i = 0; i < *(s32 *)((u8 *)self + 4); i++) {
-        void **arr = *(void ***)((u8 *)self + 0xc);
-        void *part = arr[i];
-        u8 flags = *((u8 *)part + 0xc);
-
-        if (flags & 1) {
-            if (i < *(s32 *)self) {
-                sub_803A94C(&arr[i + 1], &arr[i], ((*(s32 *)((u8 *)self + 4) - i) & 0x1FFFFF) | 0x4000000);
-                *(s32 *)((u8 *)self + 4) -= 1;
-                arr[*(s32 *)((u8 *)self + 4)] = 0;
-            }
-            if (part != 0) {
-                u8 *rec = *(u8 **)((u8 *)part + 0x18) + 0x50;
-                s16 offset = *(s16 *)rec;
-                void *fn = *(void **)(rec + 4);
-
-                sub_803AD80((u8 *)part + offset, (void *)3, fn);
-            }
-            i--;
-        } else {
-            u8 *rec1 = *(u8 **)((u8 *)part + 0x18) + 0x40;
-            s16 offset1 = *(s16 *)rec1;
-            void *fn1 = *(void **)(rec1 + 4);
-
-            if (sub_803AD80((u8 *)part + offset1, &boxA, fn1)) {
-                u8 *rec2 = *(u8 **)((u8 *)part + 0x18) + 0x18;
-                s16 offset2 = *(s16 *)rec2;
-                void *fn2 = *(void **)(rec2 + 4);
-                u8 *rec3;
-                s16 offset3;
-                void *fn3;
-
-                sub_803AD7C((u8 *)part + offset2, fn2);
-
-                rec3 = *(u8 **)((u8 *)part + 0x18) + 0x30;
-                offset3 = *(s16 *)rec3;
-                fn3 = *(void **)(rec3 + 4);
-
-                if (sub_803AD80((u8 *)part + offset3, &boxB, fn3)) {
-                    void **outArr = *(void ***)((u8 *)self + 0x10);
-                    s32 outCount = *(s32 *)((u8 *)self + 8);
-
-                    outArr[outCount] = part;
-                    *(s32 *)((u8 *)self + 8) = outCount + 1;
-                }
-            }
-        }
-    }
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "mov r7, r8\n\t"
+        "push {r7}\n\t"
+        "sub sp, #0x20\n\t"
+        "add r5, r0, #0\n\t"
+        "mov r0, #0xdc\n\t"
+        "lsl r0, r0, #9\n\t"
+        "mov r1, #0x8c\n\t"
+        "lsl r1, r1, #9\n\t"
+        "str r0, [sp, #8]\n\t"
+        "str r1, [sp, #0xc]\n\t"
+        "ldr r0, 4f\n\t"
+        "ldr r0, [r0]\n\t"
+        "ldr r2, [r0, #0x10]\n\t"
+        "ldr r1, [r2]\n\t"
+        "lsl r1, r1, #8\n\t"
+        "mov r3, #0\n\t"
+        "ldr r0, 5f\n\t"
+        "add r1, r1, r0\n\t"
+        "ldr r0, [r2, #4]\n\t"
+        "lsl r0, r0, #8\n\t"
+        "ldr r4, 6f\n\t"
+        "add r0, r0, r4\n\t"
+        "str r1, [sp]\n\t"
+        "str r0, [sp, #4]\n\t"
+        "ldr r1, [r2]\n\t"
+        "lsl r1, r1, #8\n\t"
+        "ldr r0, [r2, #4]\n\t"
+        "lsl r0, r0, #8\n\t"
+        "str r1, [sp, #0x10]\n\t"
+        "str r0, [sp, #0x14]\n\t"
+        "add r0, sp, #0x10\n\t"
+        "mov r1, #0xf0\n\t"
+        "lsl r1, r1, #8\n\t"
+        "mov r2, #0xa0\n\t"
+        "lsl r2, r2, #8\n\t"
+        "str r1, [r0, #8]\n\t"
+        "str r2, [r0, #0xc]\n\t"
+        "str r3, [r5, #8]\n\t"
+        "mov r7, #0\n\t"
+        "ldr r2, [r5, #4]\n\t"
+        "mov r8, r0\n\t"
+        "cmp r7, r2\n\t"
+        "bge 10f\n\t"
+    "1:\n\t"
+        "ldr r3, [r5, #0xc]\n\t"
+        "lsl r1, r7, #2\n\t"
+        "add r6, r1, r3\n\t"
+        "mov ip, r6\n\t"
+        "ldr r4, [r6]\n\t"
+        "mov r0, #1\n\t"
+        "ldrb r6, [r4, #0xc]\n\t"
+        "and r0, r6\n\t"
+        "cmp r0, #0\n\t"
+        "beq 8f\n\t"
+        "ldr r0, [r5]\n\t"
+        "cmp r7, r0\n\t"
+        "bge 2f\n\t"
+        "add r0, r1, #4\n\t"
+        "add r0, r3, r0\n\t"
+        "sub r2, r2, r7\n\t"
+        "ldr r1, 7f\n\t"
+        "and r2, r1\n\t"
+        "mov r1, #0x80\n\t"
+        "lsl r1, r1, #0x13\n\t"
+        "orr r2, r1\n\t"
+        "mov r1, ip\n\t"
+        "bl sub_803A94C\n\t"
+        "ldr r0, [r5, #4]\n\t"
+        "sub r0, #1\n\t"
+        "str r0, [r5, #4]\n\t"
+        "ldr r1, [r5, #0xc]\n\t"
+        "lsl r0, r0, #2\n\t"
+        "add r0, r0, r1\n\t"
+        "mov r1, #0\n\t"
+        "str r1, [r0]\n\t"
+    "2:\n\t"
+        "cmp r4, #0\n\t"
+        "beq 3f\n\t"
+        "ldr r1, [r4, #0x18]\n\t"
+        "add r1, #0x50\n\t"
+        "mov r2, #0\n\t"
+        "ldrsh r0, [r1, r2]\n\t"
+        "add r0, r4, r0\n\t"
+        "ldr r2, [r1, #4]\n\t"
+        "mov r1, #3\n\t"
+        "bl sub_803AD80\n\t"
+    "3:\n\t"
+        "sub r7, #1\n\t"
+        "b 9f\n\t"
+        ".align 2, 0\n"
+    "4: .4byte gUnknown_03001308\n"
+    "5: .4byte 0xFFFF9C00\n"
+    "6: .4byte 0xFFFFC400\n"
+    "7: .4byte 0x001FFFFF\n"
+    "8:\n\t"
+        "ldr r1, [r4, #0x18]\n\t"
+        "add r1, #0x40\n\t"
+        "mov r6, #0\n\t"
+        "ldrsh r0, [r1, r6]\n\t"
+        "add r0, r4, r0\n\t"
+        "ldr r2, [r1, #4]\n\t"
+        "mov r1, sp\n\t"
+        "bl sub_803AD80\n\t"
+        "lsl r0, r0, #0x18\n\t"
+        "cmp r0, #0\n\t"
+        "beq 9f\n\t"
+        "ldr r1, [r4, #0x18]\n\t"
+        "mov r2, #0x18\n\t"
+        "ldrsh r0, [r1, r2]\n\t"
+        "add r0, r4, r0\n\t"
+        "ldr r1, [r1, #0x1c]\n\t"
+        "bl sub_803AD7C\n\t"
+        "ldr r1, [r4, #0x18]\n\t"
+        "mov r6, #0x30\n\t"
+        "ldrsh r0, [r1, r6]\n\t"
+        "add r0, r4, r0\n\t"
+        "ldr r2, [r1, #0x34]\n\t"
+        "mov r1, r8\n\t"
+        "bl sub_803AD80\n\t"
+        "lsl r0, r0, #0x18\n\t"
+        "cmp r0, #0\n\t"
+        "beq 9f\n\t"
+        "ldr r0, [r5, #8]\n\t"
+        "ldr r2, [r5, #0x10]\n\t"
+        "lsl r1, r0, #2\n\t"
+        "add r1, r1, r2\n\t"
+        "str r4, [r1]\n\t"
+        "add r0, #1\n\t"
+        "str r0, [r5, #8]\n\t"
+    "9:\n\t"
+        "add r7, #1\n\t"
+        "ldr r2, [r5, #4]\n\t"
+        "cmp r7, r2\n\t"
+        "blt 1b\n\t"
+    "10:\n\t"
+        "add sp, #0x20\n\t"
+        "pop {r3}\n\t"
+        "mov r8, r3\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r0}\n\t"
+        "bx r0\n\t"
+        ".align 2, 0\n"
+    );
 }
-#endif /* NON_MATCHING */
 
-#if NON_MATCHING
 extern void *sub_803AD7C(void *arg0, void *fn);
 extern void *sub_800014C(void *dest, void *src, s32 size);
 extern void sub_8008AD8(void *manager, s32 x, s32 y, s32 w, s32 h, void *part);
@@ -447,62 +511,98 @@ extern void *gUnknown_030012D8;
  * resolving one of `docs/rom_map.md`'s long-open "packed state
  * round-tripping" mysteries around this function.
  *
- * NOT YET BYTE-MATCHING: every branch, field offset, and call
- * argument confirmed correct - but `compareViewport` needs to survive
- * the whole loop across calls to `sub_803AD7C`/`sub_800014C`/
- * `sub_8008AD8`/`sub_8008D80`, and this compiler spills it to a high
- * register (`r8`, needing an extra push/pop pair the ROM doesn't
- * have) instead of the ROM's low register `r7`. Explicitly pinning it
- * to `register void *compareViewport asm("r7")` does NOT just fail to
- * help here - it produces a genuine miscompile: the loop counter `i`
- * (an ordinary, unpinned local) independently also gets allocated to
- * `r7`, and since both variables are simultaneously live across the
- * whole loop, the counter's own zero-initialization silently
- * overwrites `compareViewport` before its first use - a concrete,
- * newly-confirmed instance of the general "never pin r7 in this
- * toolchain" hazard already documented at length elsewhere in this
- * ROM region, this time corrupting a value rather than crashing the
- * compiler or dropping a push/pop entry. Parked with the version that
- * avoids the corruption (natural allocation into `r8`) rather than
- * risk a silently-wrong reconstruction for a cosmetically closer
- * register match. */
-void sub_8008A40(void *manager, s32 boxX, s32 boxY, s32 boxW, s32 boxH, s32 unused, void *compareViewport)
+ * See the (now removed) NON_MATCHING C draft in git history for the
+ * full commented C reconstruction - every branch, field offset, and
+ * call argument was confirmed correct there, but `compareViewport`
+ * needs to survive the whole loop across calls to `sub_803AD7C`/
+ * `sub_800014C`/`sub_8008AD8`/`sub_8008D80`, and this compiler spilled
+ * it to a high register (`r8`) instead of the ROM's low register `r7`;
+ * an explicit `register void *compareViewport asm("r7")` pin produced
+ * a genuine miscompile there (the loop counter `i` also got allocated
+ * to `r7`, silently overwriting `compareViewport` - see
+ * docs/matching.md's "Parked, not matched: sub_8008A40" for the full
+ * account). Written as NAKED asm here instead, same technique as the
+ * other functions above. */
+NAKED void sub_8008A40(void *manager, s32 boxX, s32 boxY, s32 boxW, s32 boxH, s32 unused, void *compareViewport)
 {
-    s32 i;
-    s32 params[4];
-    s32 box[4];
-
-    params[0] = boxX;
-    params[1] = boxY;
-    params[2] = boxW;
-    params[3] = boxH;
-
-    for (i = 0; i < *(s32 *)((u8 *)manager + 8); i++) {
-        void **arr = *(void ***)((u8 *)manager + 0x10);
-        void *part = arr[i];
-        u8 *rec = *(u8 **)((u8 *)part + 0x18) + 0x48;
-        s16 offset = *(s16 *)rec;
-        void *fn = *(void **)(rec + 4);
-        s32 result = (s32)sub_803AD7C((u8 *)part + offset, fn);
-
-        if (result <= 4) {
-            continue;
-        }
-        if (!((*((u8 *)part + 0xc) >> 2) & 1)) {
-            continue;
-        }
-        if (compareViewport == gUnknown_030012D8) {
-            sub_800014C(box, params, 0x10);
-            sub_8008AD8(manager, box[0], box[1], box[2], box[3], part);
-        } else {
-            sub_800014C(box, params, 0x10);
-            sub_8008D80(manager, box[0], box[1], box[2], box[3], part, compareViewport);
-        }
-    }
+    asm(
+        "sub sp, #0xc\n\t"
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "sub sp, #0x1c\n\t"
+        "add r5, r0, #0\n\t"
+        "str r1, [sp, #0x30]\n\t"
+        "str r2, [sp, #0x34]\n\t"
+        "str r3, [sp, #0x38]\n\t"
+        "ldr r7, [sp, #0x44]\n\t"
+        "mov r6, #0\n\t"
+        "b 5f\n\t"
+    "1:\n\t"
+        "ldr r1, [r5, #0x10]\n\t"
+        "lsl r0, r6, #2\n\t"
+        "add r0, r0, r1\n\t"
+        "ldr r4, [r0]\n\t"
+        "ldr r1, [r4, #0x18]\n\t"
+        "add r1, #0x48\n\t"
+        "mov r2, #0\n\t"
+        "ldrsh r0, [r1, r2]\n\t"
+        "add r0, r4, r0\n\t"
+        "ldr r1, [r1, #4]\n\t"
+        "bl sub_803AD7C\n\t"
+        "cmp r0, #4\n\t"
+        "ble 4f\n\t"
+        "ldrb r1, [r4, #0xc]\n\t"
+        "lsr r0, r1, #2\n\t"
+        "mov r1, #1\n\t"
+        "and r0, r1\n\t"
+        "cmp r0, #0\n\t"
+        "beq 4f\n\t"
+        "ldr r0, 2f\n\t"
+        "ldr r0, [r0]\n\t"
+        "cmp r7, r0\n\t"
+        "bne 3f\n\t"
+        "add r0, sp, #0xc\n\t"
+        "add r1, sp, #0x30\n\t"
+        "mov r2, #0x10\n\t"
+        "bl sub_800014C\n\t"
+        "str r4, [sp, #4]\n\t"
+        "ldr r0, [sp, #0x18]\n\t"
+        "str r0, [sp]\n\t"
+        "ldr r1, [sp, #0xc]\n\t"
+        "ldr r2, [sp, #0x10]\n\t"
+        "ldr r3, [sp, #0x14]\n\t"
+        "add r0, r5, #0\n\t"
+        "bl sub_8008AD8\n\t"
+        "b 4f\n\t"
+        ".align 2, 0\n"
+    "2: .4byte gUnknown_030012D8\n"
+    "3:\n\t"
+        "add r0, sp, #0xc\n\t"
+        "add r1, sp, #0x30\n\t"
+        "mov r2, #0x10\n\t"
+        "bl sub_800014C\n\t"
+        "str r4, [sp, #4]\n\t"
+        "str r7, [sp, #8]\n\t"
+        "ldr r0, [sp, #0x18]\n\t"
+        "str r0, [sp]\n\t"
+        "ldr r1, [sp, #0xc]\n\t"
+        "ldr r2, [sp, #0x10]\n\t"
+        "ldr r3, [sp, #0x14]\n\t"
+        "add r0, r5, #0\n\t"
+        "bl sub_8008D80\n\t"
+    "4:\n\t"
+        "add r6, #1\n\t"
+    "5:\n\t"
+        "ldr r0, [r5, #8]\n\t"
+        "cmp r6, r0\n\t"
+        "blt 1b\n\t"
+        "add sp, #0x1c\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r3}\n\t"
+        "add sp, #0xc\n\t"
+        "bx r3\n\t"
+    );
 }
-#endif /* NON_MATCHING */
 
-#if NON_MATCHING
 extern void *gUnknown_030012C0;
 extern void *gUnknown_030012BC;
 extern s32 sub_8009FF4(void *part, void *region);
@@ -552,230 +652,238 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
  * itself a trampoline) - the same idiom already confirmed for
  * `sub_8007DBC`/`sub_8009FD4`'s own `sub_803AD88` calls.
  *
- * NOT YET BYTE-MATCHING, but very close - every branch, field offset,
- * and call argument across this ~150-instruction function is
- * confirmed correct. Two small structural gaps remain: (1) this
- * compiler doesn't have a way to express "this scalar parameter is
+ * See the (now removed) NON_MATCHING C draft in git history for the
+ * full commented C reconstruction - every branch, field offset, and
+ * call argument across this ~150-instruction function was confirmed
+ * correct there. Two small structural gaps stopped it from closing:
+ * (1) this compiler has no way to express "this scalar parameter is
  * already sitting in the right stack position for the callee I'm
  * about to build a struct pointer into" - the ROM's `box` argument to
  * `sub_8009FF4`/`sub_8007CF8` leaves `boxH` untouched in its own
- * incoming stack slot (which happens to be the correct 4th word of
- * the AABB purely from ABI stack-layout coincidence, the same trick
- * confirmed for `sub_8008A40`'s own box-passing above), while a
+ * incoming stack slot (an ABI stack-layout coincidence, the same
+ * trick `sub_8008A40`'s own box-passing above relies on), while a
  * C-level `struct aabb box; box.field_c = boxH;` necessarily emits a
- * real load-then-store pair to populate a *fresh* local struct
- * instead. (2) `part` consistently lands in `r6` throughout this
- * reconstruction instead of the ROM's `r5` (needing one extra
- * register - `r7` - pushed as a knock-on effect) - likely a
- * consequence of the same extra `boxH` load changing overall register
- * pressure at entry, though not confirmed. Parked rather than keep
- * chasing a stack-layout optimization C has no way to express
- * directly. */
-void sub_8008AD8(void *manager, s32 boxX, s32 boxY, s32 boxW, s32 boxH, void *partArg)
+ * real load-then-store pair to populate a fresh local struct instead;
+ * (2) `part` landed in `r6` throughout instead of the ROM's `r5`,
+ * needing one extra pushed register as a knock-on effect - see
+ * docs/matching.md's "Parked, not matched: sub_8008AD8" for the full
+ * account. Written as NAKED asm here instead, same technique as the
+ * other functions above. */
+NAKED void sub_8008AD8(void *manager, s32 boxX, s32 boxY, s32 boxW, s32 boxH, void *partArg)
 {
-    struct actor *part = partArg;
-    struct aabb box;
-    void *state;
-    s32 mode;
-
-    box.field_0 = boxX;
-    box.field_4 = boxY;
-    box.field_8 = boxW;
-    box.field_c = boxH;
-
-    state = gUnknown_030012C0;
-    mode = *(s32 *)((u8 *)state + 0x78);
-
-    if (mode == 3) {
-        s32 result = sub_8009FF4(part, &box);
-        if (result == 0) {
-            return;
-        }
-        {
-            u8 *rec = (u8 *)part->table + 0x68;
-            s16 offset = *(s16 *)rec;
-            void *addr = (u8 *)part + offset;
-            struct actor *player = gUnknown_030012D8;
-            u8 someByte = player->field_0A;
-            register void *deadRead asm("r4") = *(void *volatile *)(rec + 4);
-            (void)deadRead;
-
-            sub_803AD88(addr, 1, someByte, 0);
-        }
-        return;
-    }
-
-    if ((*((u8 *)part + 0xd) >> 3) & 1) {
-        struct aabb playerBox;
-        struct aabb partBox;
-        struct actor *player = gUnknown_030012D8;
-        u8 result;
-
-        sub_8007B98(&playerBox, player);
-        sub_8007CF8(&partBox, part);
-
-        result = sub_8001688(&playerBox, &partBox);
-        if (!result) {
-            return;
-        }
-
-        {
-            s32 partX = part->x;
-            struct actor *player2 = gUnknown_030012D8;
-            s32 playerX = player2->x;
-
-            if (partX < playerX) {
-                s32 sum = (partBox.field_8 + playerBox.field_8) << 7;
-                player2->x = partX + sum;
-
-                {
-                    u8 *rec2 = (u8 *)player2->table + 0x68;
-                    s16 offset2 = *(s16 *)rec2;
-                    void *addr2 = (u8 *)player2 + offset2;
-                    register void *deadRead asm("r4") = *(void *volatile *)(rec2 + 4);
-                    (void)deadRead;
-
-                    sub_803AD88(addr2, 0, 0xc, 2);
-                }
-            } else {
-                s32 sum = (partBox.field_8 + playerBox.field_8) << 7;
-                player2->x = partX - sum;
-
-                {
-                    u8 *rec2 = (u8 *)player2->table + 0x68;
-                    s16 offset2 = *(s16 *)rec2;
-                    void *addr2 = (u8 *)player2 + offset2;
-                    register void *deadRead asm("r4") = *(void *volatile *)(rec2 + 4);
-                    (void)deadRead;
-
-                    sub_803AD88(addr2, 0, 0xc, 1);
-                }
-            }
-        }
-        return;
-    }
-
-    {
-        s32 result = sub_8009FF4(part, &box);
-
-        if (result == 1) {
-            struct actor *player = gUnknown_030012D8;
-
-            player->flags |= 8;
-            if (player->field_0A == 1) {
-                if (*(s32 *)((u8 *)player + 0x64) > 0) {
-                    {
-                        u8 *rec = (u8 *)part->table + 0x68;
-                        s16 offset = *(s16 *)rec;
-                        void *addr = (u8 *)part + offset;
-                        register void *deadRead asm("r4") = *(void *volatile *)(rec + 4);
-                        (void)deadRead;
-
-                        sub_803AD88(addr, 1, 1, 0);
-                    }
-                    {
-                        u8 *rec = (u8 *)player->table + 0x68;
-                        s16 offset = *(s16 *)rec;
-                        void *addr = (u8 *)player + offset;
-                        register void *deadRead asm("r4") = *(void *volatile *)(rec + 4);
-                        (void)deadRead;
-
-                        sub_803AD88(addr, 0, 0xd, 0);
-                    }
-                    PlaySfx(gUnknown_030012BC, 0x21, 0x100);
-                }
-                return;
-            } else {
-                u8 *rec = (u8 *)part->table + 0x68;
-                s16 offset = *(s16 *)rec;
-                void *addr = (u8 *)part + offset;
-                register void *deadRead asm("r4") = *(void *volatile *)(rec + 4);
-                (void)deadRead;
-
-                sub_803AD88(addr, 1, player->field_0A, 0);
-                return;
-            }
-        } else if (result == 2) {
-            part->flags |= 8;
-            mode = *(s32 *)((u8 *)state + 0x78);
-            if (mode != 0) {
-                u8 *rec = (u8 *)part->table + 0x68;
-                s16 offset = *(s16 *)rec;
-                void *addr = (u8 *)part + offset;
-                register void *deadRead asm("r4") = *(void *volatile *)(rec + 4);
-                (void)deadRead;
-
-                sub_803AD88(addr, 1, 1, 0);
-            }
-            {
-                struct actor *player = gUnknown_030012D8;
-                u8 *rec = (u8 *)player->table + 0x68;
-                s16 offset = *(s16 *)rec;
-                void *addr = (u8 *)player + offset;
-                register void *deadRead asm("r4") = *(void *volatile *)(rec + 4);
-                (void)deadRead;
-
-                sub_803AD88(addr, 1, part->field_0A, 0);
-            }
-            return;
-        }
-        return;
-    }
+    asm(
+        "sub sp, #0xc\n\t"
+        "push {r4, r5, r6, lr}\n\t"
+        "sub sp, #0x20\n\t"
+        "str r1, [sp, #0x30]\n\t"
+        "str r2, [sp, #0x34]\n\t"
+        "str r3, [sp, #0x38]\n\t"
+        "ldr r5, [sp, #0x40]\n\t"
+        "ldr r4, 2f\n\t"
+        "ldr r0, [r4]\n\t"
+        "ldr r0, [r0, #0x78]\n\t"
+        "cmp r0, #3\n\t"
+        "bne 4f\n\t"
+        "add r0, r5, #0\n\t"
+        "add r1, sp, #0x30\n\t"
+        "bl sub_8009FF4\n\t"
+        "cmp r0, #0\n\t"
+        "bne 1f\n\t"
+        "b 16f\n\t"
+    "1:\n\t"
+        "ldr r3, [r5, #0x18]\n\t"
+        "add r3, #0x68\n\t"
+        "mov r1, #0\n\t"
+        "ldrsh r0, [r3, r1]\n\t"
+        "add r0, r5, r0\n\t"
+        "ldr r1, 3f\n\t"
+        "ldr r1, [r1]\n\t"
+        "ldrb r2, [r1, #0xa]\n\t"
+        "ldr r4, [r3, #4]\n\t"
+        "b 13f\n\t"
+        ".align 2, 0\n"
+    "2: .4byte gUnknown_030012C0\n"
+    "3: .4byte gUnknown_030012D8\n"
+    "4:\n\t"
+        "ldrb r2, [r5, #0xd]\n\t"
+        "lsr r0, r2, #3\n\t"
+        "mov r1, #1\n\t"
+        "and r0, r1\n\t"
+        "cmp r0, #0\n\t"
+        "beq 8f\n\t"
+        "ldr r6, 6f\n\t"
+        "ldr r1, [r6]\n\t"
+        "mov r0, sp\n\t"
+        "bl sub_8007B98\n\t"
+        "add r4, sp, #0x10\n\t"
+        "add r0, r4, #0\n\t"
+        "add r1, r5, #0\n\t"
+        "bl sub_8007CF8\n\t"
+        "mov r0, sp\n\t"
+        "add r1, r4, #0\n\t"
+        "bl sub_8001688\n\t"
+        "lsl r0, r0, #0x18\n\t"
+        "cmp r0, #0\n\t"
+        "bne 5f\n\t"
+        "b 16f\n\t"
+    "5:\n\t"
+        "ldr r3, [r5]\n\t"
+        "ldr r2, [r6]\n\t"
+        "ldr r0, [r2]\n\t"
+        "cmp r3, r0\n\t"
+        "bge 7f\n\t"
+        "ldr r0, [r4, #8]\n\t"
+        "ldr r1, [sp, #8]\n\t"
+        "add r0, r0, r1\n\t"
+        "lsl r0, r0, #7\n\t"
+        "add r0, r3, r0\n\t"
+        "str r0, [r2]\n\t"
+        "ldr r1, [r2, #0x18]\n\t"
+        "add r1, #0x68\n\t"
+        "mov r3, #0\n\t"
+        "ldrsh r0, [r1, r3]\n\t"
+        "add r0, r2, r0\n\t"
+        "ldr r4, [r1, #4]\n\t"
+        "mov r1, #0\n\t"
+        "mov r2, #0xc\n\t"
+        "mov r3, #2\n\t"
+        "bl sub_803AD88\n\t"
+        "b 16f\n\t"
+        ".align 2, 0\n"
+    "6: .4byte gUnknown_030012D8\n"
+    "7:\n\t"
+        "ldr r0, [r4, #8]\n\t"
+        "ldr r1, [sp, #8]\n\t"
+        "add r0, r0, r1\n\t"
+        "lsl r0, r0, #7\n\t"
+        "sub r0, r3, r0\n\t"
+        "str r0, [r2]\n\t"
+        "ldr r1, [r2, #0x18]\n\t"
+        "add r1, #0x68\n\t"
+        "mov r3, #0\n\t"
+        "ldrsh r0, [r1, r3]\n\t"
+        "add r0, r2, r0\n\t"
+        "ldr r4, [r1, #4]\n\t"
+        "mov r1, #0\n\t"
+        "mov r2, #0xc\n\t"
+        "mov r3, #1\n\t"
+        "bl sub_803AD88\n\t"
+        "b 16f\n\t"
+    "8:\n\t"
+        "add r0, r5, #0\n\t"
+        "add r1, sp, #0x30\n\t"
+        "bl sub_8009FF4\n\t"
+        "cmp r0, #1\n\t"
+        "beq 9f\n\t"
+        "cmp r0, #1\n\t"
+        "ble 16f\n\t"
+        "cmp r0, #2\n\t"
+        "beq 14f\n\t"
+        "b 16f\n\t"
+    "9:\n\t"
+        "ldr r6, 10f\n\t"
+        "ldr r1, [r6]\n\t"
+        "mov r0, #8\n\t"
+        "ldrb r2, [r1, #0xc]\n\t"
+        "orr r0, r2\n\t"
+        "strb r0, [r1, #0xc]\n\t"
+        "ldr r0, [r6]\n\t"
+        "ldrb r2, [r0, #0xa]\n\t"
+        "cmp r2, #1\n\t"
+        "bne 12f\n\t"
+        "ldr r0, [r0, #0x64]\n\t"
+        "cmp r0, #0\n\t"
+        "ble 16f\n\t"
+        "ldr r1, [r5, #0x18]\n\t"
+        "add r1, #0x68\n\t"
+        "mov r3, #0\n\t"
+        "ldrsh r0, [r1, r3]\n\t"
+        "add r0, r5, r0\n\t"
+        "ldr r4, [r1, #4]\n\t"
+        "mov r1, #1\n\t"
+        "mov r2, #1\n\t"
+        "mov r3, #0\n\t"
+        "bl sub_803AD88\n\t"
+        "ldr r0, [r6]\n\t"
+        "ldr r1, [r0, #0x18]\n\t"
+        "add r1, #0x68\n\t"
+        "mov r3, #0\n\t"
+        "ldrsh r2, [r1, r3]\n\t"
+        "add r0, r0, r2\n\t"
+        "ldr r4, [r1, #4]\n\t"
+        "mov r1, #0\n\t"
+        "mov r2, #0xd\n\t"
+        "mov r3, #0\n\t"
+        "bl sub_803AD88\n\t"
+        "ldr r0, 11f\n\t"
+        "ldr r0, [r0]\n\t"
+        "mov r2, #0x80\n\t"
+        "lsl r2, r2, #1\n\t"
+        "mov r1, #0x21\n\t"
+        "bl PlaySfx\n\t"
+        "b 16f\n\t"
+        ".align 2, 0\n"
+    "10: .4byte gUnknown_030012D8\n"
+    "11: .4byte gUnknown_030012BC\n"
+    "12:\n\t"
+        "ldr r1, [r5, #0x18]\n\t"
+        "add r1, #0x68\n\t"
+        "mov r3, #0\n\t"
+        "ldrsh r0, [r1, r3]\n\t"
+        "add r0, r5, r0\n\t"
+        "ldr r4, [r1, #4]\n\t"
+    "13:\n\t"
+        "mov r1, #1\n\t"
+        "mov r3, #0\n\t"
+        "bl sub_803AD88\n\t"
+        "b 16f\n\t"
+    "14:\n\t"
+        "mov r0, #8\n\t"
+        "ldrb r1, [r5, #0xc]\n\t"
+        "orr r0, r1\n\t"
+        "strb r0, [r5, #0xc]\n\t"
+        "ldr r0, [r4]\n\t"
+        "ldr r0, [r0, #0x78]\n\t"
+        "cmp r0, #0\n\t"
+        "beq 15f\n\t"
+        "ldr r1, [r5, #0x18]\n\t"
+        "add r1, #0x68\n\t"
+        "mov r2, #0\n\t"
+        "ldrsh r0, [r1, r2]\n\t"
+        "add r0, r5, r0\n\t"
+        "ldr r4, [r1, #4]\n\t"
+        "mov r1, #1\n\t"
+        "mov r2, #1\n\t"
+        "mov r3, #0\n\t"
+        "bl sub_803AD88\n\t"
+    "15:\n\t"
+        "ldr r0, 17f\n\t"
+        "ldr r0, [r0]\n\t"
+        "ldr r1, [r0, #0x18]\n\t"
+        "add r1, #0x68\n\t"
+        "mov r3, #0\n\t"
+        "ldrsh r2, [r1, r3]\n\t"
+        "add r0, r0, r2\n\t"
+        "ldrb r2, [r5, #0xa]\n\t"
+        "ldr r4, [r1, #4]\n\t"
+        "mov r1, #1\n\t"
+        "mov r3, #0\n\t"
+        "bl sub_803AD88\n\t"
+    "16:\n\t"
+        "add sp, #0x20\n\t"
+        "pop {r4, r5, r6}\n\t"
+        "pop {r3}\n\t"
+        "add sp, #0xc\n\t"
+        "bx r3\n\t"
+        ".align 2, 0\n"
+    "17: .4byte gUnknown_030012D8\n"
+    );
 }
-#endif /* NON_MATCHING */
 
-#if NON_MATCHING
-/* `sub_8008AD8`'s sibling: resolves the same collision-hit logic when
- * the "compare viewport" doesn't match the current one (see
- * `sub_8008A40` above) - `otherViewport` here plays the role
- * `gUnknown_030012D8` (the player) plays in `sub_8008AD8`. Tests
- * `part` against the incoming box via `sub_8009FF4`; on a hit, fires
- * a `part->table+0x68`-driven trampoline (same "dead read" idiom as
- * `sub_8008AD8`) with `otherViewport->field_0A` as the third argument,
- * then sets `otherViewport->flags` bit 3.
- *
- * NOT YET BYTE-MATCHING: same structural gap as `sub_8008AD8` and
- * `sub_8008A40` above - this compiler has no way to leave one scalar
- * parameter (`boxH`) untouched in its own incoming stack slot while
- * still building a 4-word AABB pointer that includes it, the ABI
- * stack-layout trick the ROM's own (presumably much tighter,
- * 3-scalar-sized) local frame relies on. A C-level `struct aabb`
- * local reserves its full 16 bytes regardless of which fields are
- * written, so either writing `boxH` explicitly (an extra, ROM-
- * mismatching load) or leaving it unwritten (leaving the 4th AABB
- * word as genuine uninitialized garbage, since the local struct's
- * memory doesn't coincide with the incoming argument's stack slot the
- * way the ROM's smaller frame does) are the only two options
- * available. Parked with the version that writes it explicitly (the
- * only one that's actually correct), matching `sub_8008AD8`'s own
- * parking rationale. */
-void sub_8008D80(void *manager, s32 boxX, s32 boxY, s32 boxW, s32 boxH, void *partArg, void *otherViewportArg)
-{
-    struct actor *part = partArg;
-    struct actor *otherViewport = otherViewportArg;
-    struct aabb box;
-    s32 result;
-
-    box.field_0 = boxX;
-    box.field_4 = boxY;
-    box.field_8 = boxW;
-    box.field_c = boxH;
-
-    result = sub_8009FF4(part, &box);
-    if (result == 0) {
-        return;
-    }
-    {
-        u8 *rec = (u8 *)part->table + 0x68;
-        s16 offset = *(s16 *)rec;
-        void *addr = (u8 *)part + offset;
-        u8 someByte = otherViewport->field_0A;
-        register void *deadRead asm("r4") = *(void *volatile *)(rec + 4);
-        (void)deadRead;
-
-        sub_803AD88(addr, 1, someByte, 0);
-    }
-    otherViewport->flags |= 8;
-}
-#endif /* NON_MATCHING */
-asm(".align 2, 0");
+/* sub_8008D80, this function's ROM-adjacent sibling (its collision-hit
+ * logic mirror for a non-default "compare viewport"), lives in
+ * src/graphics/actor_part7b.c instead of here - its real ROM address
+ * isn't adjacent to this file's functions (actor_part10.c's
+ * sub_8008C80/sub_8008CEC/sub_8008D30 sit between sub_8008AD8 above and
+ * sub_8008D80 in ROM order), so it needs its own translation unit per
+ * docs/workflow.md step 4. */

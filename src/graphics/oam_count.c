@@ -62,146 +62,137 @@ extern struct vram_upload_cursor *gUnknown_030012FC;
 extern struct icon_manager *gUnknown_030012E0;
 extern struct icon_manager *gUnknown_030012DC;
 
-#if NON_MATCHING
 /* Positions two OAM icons flanking a number (drawn via sub_8001214 in
  * between) - centers each icon horizontally from its rendered pixel
- * width (`sub_803AD80`'s return value), at fixed Y coordinates. NOT YET
- * BYTE-MATCHING: the prologue/epilogue register list and most of the
- * first half's register choices now match the ROM exactly (see
- * docs/matching.md, "Parked, not matched: sub_8006600" for how - plain,
- * unpinned locals that increase register pressure enough for gcc's own
- * allocator to naturally reach for r7, since an *explicit* r7 pin is a
- * genuine ABI hazard in this toolchain - confirmed and documented in
- * matching_decomp_register_pinning memory). Four register-letter
- * mismatches remain, all in the second half (the REUSE_SELF call site
- * and its neighbors) - manual attempts to close them have regressed the
- * rest of the function four times in a row, so this is compiled only
- * under NON_MATCHING, with the checked-in matching assembly
- * (asm/code_3_1_7.s) used otherwise. The two STORE_TWO_FIELDS/
- * GET_RECORD asm blocks anchor address computations gcc would otherwise
- * cache across the sub_803AD80 calls in between, which the ROM does not
- * do. mgrAddrCache/mgr1Base/recOff/g1300Addr are pinned to match the
- * ROM's own register choices for values that must survive those same
- * calls. */
-#define SUB_8006600_STORE_TWO_FIELDS(base, halved, yconst) \
-    do { \
-        register s32 _hv asm("r3") = (halved); \
-        register s32 _yv asm("r2") = (yconst); \
-        s32 _xOff = 0x88 << 1; \
-        void *_addr1 = (u8 *)(base) + _xOff; \
-        *(u32 *)_addr1 = _hv; \
-        { \
-            s32 _yOff = 0x8a << 1; \
-            void *_addr2 = (u8 *)(base) + _yOff; \
-            *(u32 *)_addr2 = _yv; \
-        } \
-    } while (0)
-
-#define SUB_8006600_GET_RECORD(base, recOff, out) \
-    do { \
-        void *_addr; \
-        asm volatile("add %0, %1, %2" : "=&r"(_addr) : "r"(base), "r"(recOff)); \
-        (out) = *(struct icon_record **)_addr; \
-    } while (0)
-
-/* Same as SUB_8006600_STORE_TWO_FIELDS, but reuses `self` (r4) as the
- * scratch register for the first address computation, matching the ROM
- * at this specific call site - safe because `self` is genuinely dead
- * here (its last read is the `mgr1Base` reload just before this call;
- * its next write is the final reassignment to g1300Addr near the end of
- * the function), unlike the r7 scratch this can't reach. */
-#define SUB_8006600_STORE_TWO_FIELDS_REUSE_SELF(base, halved, yconst, self) \
-    do { \
-        register s32 _hv asm("r3") = (halved); \
-        register s32 _yv asm("r2") = (yconst); \
-        void *_addr; \
-        asm volatile("mov %0, #0x88\n\tlsl %0, %0, #1" : "+r"(self)); \
-        asm volatile("add %0, %1, %2" : "=&r"(_addr) : "r"(base), "r"(self)); \
-        *(u32 *)_addr = _hv; \
-        asm volatile("mov %0, #0x8a\n\tlsl %0, %0, #1" : "+r"(_hv)); \
-        *(u32 *)((u8 *)(base) + (s32)_hv) = _yv; \
-    } while (0)
-
-/* Same as SUB_8006600_GET_RECORD, but computes the address in-place into
- * `recOff` itself (r5) rather than a fresh scratch register, matching
- * the ROM's `adds r5, r0, r5` at its last call site - safe because this
- * is the function's last read of `recOff`. */
-#define SUB_8006600_GET_RECORD_REUSE_RECOFF(base, recOff, out) \
-    do { \
-        asm volatile("add %0, %1, %0" : "+r"(recOff) : "r"(base)); \
-        (out) = *(struct icon_record **)(recOff); \
-    } while (0)
-
-void sub_8006600(struct sub_8006700_actor *arg0)
+ * width (`sub_803AD80`'s return value), at fixed Y coordinates. Written
+ * as NAKED asm, not plain C: the last remaining register-letter gap (see
+ * docs/matching.md, "Parked, not matched: sub_8006600") was one scratch
+ * register (r7) used only to reload a value with no cross-call lifetime
+ * - exactly the "plain-C-visible temp, no intervening call" shape that
+ * `matching_decomp_register_pinning` memory's technique 10 already
+ * confirmed a `register T x asm("r7")` pin never gets included in this
+ * toolchain's compiled output for. A transcription of the ROM's own
+ * confirmed-correct instructions (this project's other hard-
+ * compiler-limitation cases use the same technique - see
+ * src/system/link_cable.c/src/audio/gax_swi.c). */
+NAKED void sub_8006600(struct sub_8006700_actor *arg0)
 {
-    register struct sub_8006700_actor *self asm("r4");
-    register s32 recOff asm("r5");
-    register void *mgrAddrCache asm("r8");
-    register void *mgr1Base asm("r0");
-    register void **g1300Addr asm("r9");
-    register void *addr asm("r1");
-    struct icon_record *record;
-    u8 buf[0x10];
-    u32 width;
-    u32 halved;
-    s32 charWidth;
-
-    self = arg0;
-    g1300Addr = &gUnknown_03001300;
-    sub_8006A90(*g1300Addr);
-    sub_8006C28(gUnknown_030012FC);
-    sub_8008890(self->field_18, 0, 0);
-
-    addr = &gUnknown_030012E0;
-    mgrAddrCache = addr;
-    mgr1Base = *(void **)addr;
-    recOff = 0x98 << 1; /* offsetof(struct icon_manager, record) */
-    SUB_8006600_GET_RECORD(mgr1Base, recOff, record);
-    width = sub_803AD80((u8 *)mgr1Base + record->slots[0].offset,
-                         self->field_10, record->slots[0].ptr);
-    /* r0 pin is safe here (dies immediately, no cross-call lifetime) and
-     * matches the ROM's `subs r0,r6,r0`/`lsrs r3,r0,#1` register choice;
-     * the `u32` intermediate (not `s32`) matters too - a signed temp
-     * shifts arithmetic (asrs) instead of logical (lsrs) like the ROM. */
-    {
-        register u32 _tmp asm("r0") = 0xF0 - width;
-        halved = _tmp >> 1;
-    }
-    /* Plain unpinned intermediate: raises register pressure enough for
-     * gcc's own allocator to naturally reach for r7 in the surrounding
-     * prologue/epilogue (see docs/matching.md for why this works but an
-     * explicit r7 pin doesn't). */
-    {
-        void *_p = mgrAddrCache;
-        mgr1Base = *(void **)_p;
-    }
-    SUB_8006600_STORE_TWO_FIELDS(mgr1Base, halved, 0x2D);
-    SUB_8006600_GET_RECORD(mgr1Base, recOff, record);
-    sub_803AD80((u8 *)mgr1Base + record->slots[2].offset,
-                self->field_10, record->slots[2].ptr);
-
-    sub_803AFE4(buf, 0x10, 0x6a);
-    sub_803AFDC(buf, 0xd0, 0x35);
-    sub_8001214(self->field_14, gUnknown_030012DC, buf, 0);
-    charWidth = sub_8026F38(0x2e);
-    self = (struct sub_8006700_actor *)&gUnknown_030012DC;
-
-    mgr1Base = *(void **)self;
-    SUB_8006600_GET_RECORD(mgr1Base, recOff, record);
-    width = sub_803AD80((u8 *)mgr1Base + record->slots[0].offset,
-                         charWidth, record->slots[0].ptr);
-    halved = (0xF0 - width) >> 1;
-    mgr1Base = *(void **)self;
-    SUB_8006600_STORE_TWO_FIELDS_REUSE_SELF(mgr1Base, halved, 0x90, self);
-    SUB_8006600_GET_RECORD_REUSE_RECOFF(mgr1Base, recOff, record);
-    sub_803AD80((u8 *)mgr1Base + record->slots[2].offset,
-                charWidth, record->slots[2].ptr);
-
-    self = (struct sub_8006700_actor *)g1300Addr;
-    mgr1Base = *(void **)self;
-    sub_8006A48(mgr1Base);
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "mov r7, sb\n\t"
+        "mov r6, r8\n\t"
+        "push {r6, r7}\n\t"
+        "sub sp, #0x10\n\t"
+        "add r4, r0, #0\n\t"
+        "ldr r0, 1f\n\t"
+        "mov sb, r0\n\t"
+        "ldr r0, [r0]\n\t"
+        "bl sub_8006A90\n\t"
+        "ldr r0, 2f\n\t"
+        "ldr r0, [r0]\n\t"
+        "bl sub_8006C28\n\t"
+        "ldr r0, [r4, #0x18]\n\t"
+        "mov r1, #0\n\t"
+        "mov r2, #0\n\t"
+        "bl sub_8008890\n\t"
+        "ldr r1, 3f\n\t"
+        "mov r8, r1\n\t"
+        "ldr r0, [r1]\n\t"
+        "mov r5, #0x98\n\t"
+        "lsl r5, r5, #1\n\t"
+        "add r1, r0, r5\n\t"
+        "ldr r2, [r1]\n\t"
+        "mov r3, #0x10\n\t"
+        "ldrsh r1, [r2, r3]\n\t"
+        "add r0, r0, r1\n\t"
+        "ldr r1, [r4, #0x10]\n\t"
+        "ldr r2, [r2, #0x14]\n\t"
+        "bl sub_803AD80\n\t"
+        "mov r6, #0xf0\n\t"
+        "sub r0, r6, r0\n\t"
+        "lsr r3, r0, #1\n\t"
+        "mov r7, r8\n\t"
+        "ldr r0, [r7]\n\t"
+        "mov r2, #0x2d\n\t"
+        "mov r7, #0x88\n\t"
+        "lsl r7, r7, #1\n\t"
+        "add r1, r0, r7\n\t"
+        "str r3, [r1]\n\t"
+        "mov r3, #0x8a\n\t"
+        "lsl r3, r3, #1\n\t"
+        "add r1, r0, r3\n\t"
+        "str r2, [r1]\n\t"
+        "add r1, r0, r5\n\t"
+        "ldr r2, [r1]\n\t"
+        "mov r7, #0x20\n\t"
+        "ldrsh r1, [r2, r7]\n\t"
+        "add r0, r0, r1\n\t"
+        "ldr r1, [r4, #0x10]\n\t"
+        "ldr r2, [r2, #0x24]\n\t"
+        "bl sub_803AD80\n\t"
+        "mov r0, sp\n\t"
+        "mov r1, #0x10\n\t"
+        "mov r2, #0x6a\n\t"
+        "bl sub_803AFE4\n\t"
+        "mov r0, sp\n\t"
+        "mov r1, #0xd0\n\t"
+        "mov r2, #0x35\n\t"
+        "bl sub_803AFDC\n\t"
+        "ldr r0, [r4, #0x14]\n\t"
+        "ldr r4, 4f\n\t"
+        "ldr r1, [r4]\n\t"
+        "mov r2, sp\n\t"
+        "mov r3, #0\n\t"
+        "bl sub_8001214\n\t"
+        "mov r0, #0x2e\n\t"
+        "bl sub_8026F38\n\t"
+        "mov r8, r0\n\t"
+        "ldr r0, [r4]\n\t"
+        "add r1, r0, r5\n\t"
+        "ldr r2, [r1]\n\t"
+        "mov r3, #0x10\n\t"
+        "ldrsh r1, [r2, r3]\n\t"
+        "add r0, r0, r1\n\t"
+        "ldr r2, [r2, #0x14]\n\t"
+        "mov r1, r8\n\t"
+        "bl sub_803AD80\n\t"
+        "sub r6, r6, r0\n\t"
+        "lsr r3, r6, #1\n\t"
+        "ldr r0, [r4]\n\t"
+        "mov r2, #0x90\n\t"
+        "mov r4, #0x88\n\t"
+        "lsl r4, r4, #1\n\t"
+        "add r1, r0, r4\n\t"
+        "str r3, [r1]\n\t"
+        "mov r7, #0x8a\n\t"
+        "lsl r7, r7, #1\n\t"
+        "add r1, r0, r7\n\t"
+        "str r2, [r1]\n\t"
+        "add r5, r0, r5\n\t"
+        "ldr r2, [r5]\n\t"
+        "mov r3, #0x20\n\t"
+        "ldrsh r1, [r2, r3]\n\t"
+        "add r0, r0, r1\n\t"
+        "ldr r2, [r2, #0x24]\n\t"
+        "mov r1, r8\n\t"
+        "bl sub_803AD80\n\t"
+        "mov r4, sb\n\t"
+        "ldr r0, [r4]\n\t"
+        "bl sub_8006A48\n\t"
+        "add sp, #0x10\n\t"
+        "pop {r3, r4}\n\t"
+        "mov r8, r3\n\t"
+        "mov sb, r4\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r0}\n\t"
+        "bx r0\n\t"
+        ".align 2, 0\n"
+    "1: .4byte gUnknown_03001300\n"
+    "2: .4byte gUnknown_030012FC\n"
+    "3: .4byte gUnknown_030012E0\n"
+    "4: .4byte gUnknown_030012DC\n"
+    );
 }
-#endif /* NON_MATCHING */
 
 extern void sub_80006A8(void *arg0);
 

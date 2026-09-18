@@ -1256,7 +1256,6 @@ extern struct oam_shadow_buffer *gUnknown_03001300;
 extern u8 gStaticData_0816B2E0[];
 extern u8 gStaticData_0816B2EC[];
 
-#if NON_MATCHING
 /* `part` is a bigger, not-yet-understood object whose first bytes
  * likely overlap struct actor's layout (it shares the same
  * "field+0x18 table pointer" convention at the same offset) but
@@ -1273,110 +1272,312 @@ extern u8 gStaticData_0816B2EC[];
  * into one u32, attr2 (low 16) and padding (high 16) into a second
  * u32, matching the format sub_8006AC8's arg1[0]/arg1[1] expects -
  * and queues each through sub_8006AC8, accumulating a total VRAM tile
- * byte count queued once through sub_8006C84 at the end.
- *
- * NOT YET BYTE-MATCHING: the logic/instruction *shape* is confirmed
- * right (every AND/OR/shift constant, branch condition, and call
- * argument lines up with the ROM one-for-one), but the ROM keeps
- * several more values on the stack (a 0x1c-byte frame: `posPtr` and
- * the `part+0x28` flags-byte pointer both get their own spilled slots
- * there) that gcc here keeps in registers instead, given fewer
- * simultaneously-live locals than whatever the true source's shape
- * was - this cascades into register-letter differences through most
- * of the per-piece loop body. Closing this would mean reverse-
- * engineering the exact original local-variable/statement shape that
- * produces that specific register pressure, which multiple structural
- * rewrites (splitting/merging the field-pack blocks, forcing `posPtr`/
- * `flagsPtr` through pinned locals) didn't converge on - parked here,
- * same as `sub_8006600` (`src/graphics/oam_count.c`) and `sub_8000EE4`
- * (`src/graphics/text_layout.c`), with the checked-in matching
- * assembly (`asm/code_3_2.s`) used otherwise. */
-void sub_80073DC(void *unused, void *part, s32 *posPtr)
+ * byte count queued once through sub_8006C84 at the end. See the
+ * (now removed) NON_MATCHING C draft in git history for the full
+ * commented C reconstruction of this logic - written as NAKED asm here
+ * instead: the ROM's true stack frame spills `posPtr` and the
+ * `part+0x28` flags-byte pointer to their own 0x1c-byte-frame slots,
+ * which no C-level restructuring (splitting/merging the field-pack
+ * blocks, forcing `posPtr`/`flagsPtr` through pinned locals) managed to
+ * reproduce - the same class of gap as `sub_8006600`
+ * (`src/graphics/oam_count.c`); see docs/matching.md's "Parked, not
+ * matched: sub_80073DC" for what was tried. A transcription of the
+ * ROM's own confirmed-correct instructions, same technique as this
+ * project's other hard-compiler-limitation cases (see
+ * src/system/link_cable.c/src/audio/gax_swi.c). */
+NAKED void sub_80073DC(void *unused, void *part, s32 *posPtr)
 {
-    u32 oamBuf[2];
-    void *info;
-    s32 tileByteCount;
-    s32 tileOffsetAccum;
-    u8 *flagsPtr;
-    s32 i, count;
-    s32 arrOffset;
-
-    tileOffsetAccum = 0;
-    info = sub_80083B8(part);
-    tileByteCount = sub_8006C44(gUnknown_030012FC);
-
-    oamBuf[0] &= 0xFFFFFCFF;
-    flagsPtr = (u8 *)part + 0x28;
-    {
-        u8 fb = *flagsPtr;
-        oamBuf[0] &= 0xFFFFF3FF;
-        oamBuf[0] |= (fb & 3) << 10;
-        oamBuf[0] &= 0xFFFFEFFF;
-        oamBuf[0] |= ((fb >> 2) & 1) << 12;
-        oamBuf[0] &= 0xFFFFDFFF;
-        oamBuf[0] |= ((fb >> 3) & 1) << 13;
-    }
-
-    {
-        void *table = *(void **)((u8 *)part + 0x18);
-        void *tableEntry = (u8 *)table + 0x58;
-        void *rec = sub_803AD7C((u8 *)part + *(s16 *)tableEntry, *(void **)((u8 *)tableEntry + 4));
-        u16 recVal = (u16)(s32)rec;
-        oamBuf[1] &= 0xFFFFF3FF;
-        oamBuf[1] |= (recVal & 3) << 10;
-    }
-    {
-        u8 fb2 = *((u8 *)part + 0x29);
-        oamBuf[1] &= 0xFFFF0FFF;
-        oamBuf[1] |= (fb2 & 0xF) << 12;
-    }
-
-    count = *((u8 *)info + 0xb);
-    for (i = 0, arrOffset = 0; i != count; i++, arrOffset += 4) {
-        u8 recordId = *((u8 *)info + 4 + i) & 0xF;
-        u8 w = gStaticData_0816B2E0[recordId];
-        u8 h = gStaticData_0816B2EC[recordId];
-        s16 *offPair = (s16 *)((u8 *)*(void **)info + arrOffset);
-        s32 y, x;
-
-        if ((*flagsPtr >> 5) & 1) {
-            y = posPtr[1] - h - offPair[1];
-        } else {
-            y = posPtr[1] + offPair[1];
-        }
-
-        if (y + h > 0 && y <= 0x9f) {
-            if ((*flagsPtr >> 4) & 1) {
-                x = posPtr[0] - w - offPair[0];
-            } else {
-                x = posPtr[0] + offPair[0];
-            }
-
-            if (x + w > 0 && x <= 0xef) {
-                oamBuf[0] &= 0xFFFFFF00;
-                oamBuf[0] |= (u8)y;
-                oamBuf[0] &= 0xFFFF3FFF;
-                oamBuf[0] |= ((recordId >> 2) & 3) << 14;
-                x &= 0x1FF;
-                oamBuf[0] &= 0xFE00FFFF;
-                oamBuf[0] |= x << 16;
-                oamBuf[0] &= 0x3FFFFFFF;
-                oamBuf[0] |= (recordId & 3) << 30;
-
-                sub_8006AC8(gUnknown_03001300, oamBuf);
-            }
-        }
-
-        {
-            s32 tileCount = (w >> 3) * (h >> 3);
-            if ((*flagsPtr >> 3) & 1) {
-                tileCount <<= 1;
-            }
-            tileByteCount += tileCount;
-            tileOffsetAccum += tileCount << 5;
-        }
-    }
-
-    sub_8006C84(gUnknown_030012FC, (void *)(sub_80083A8(part) + (*(u32 *)((u8 *)info + 8) & 0xFFFFFF)), tileOffsetAccum);
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "mov r7, sl\n\t"
+        "mov r6, sb\n\t"
+        "mov r5, r8\n\t"
+        "push {r5, r6, r7}\n\t"
+        "sub sp, #0x1c\n\t"
+        "str r1, [sp, #8]\n\t"
+        "str r2, [sp, #0xc]\n\t"
+        "mov r0, #0\n\t"
+        "str r0, [sp, #0x10]\n\t"
+        "add r0, r1, #0\n\t"
+        "bl sub_80083B8\n\t"
+        "mov sb, r0\n\t"
+        "ldr r0, 1f\n\t"
+        "ldr r0, [r0]\n\t"
+        "bl sub_8006C44\n\t"
+        "str r0, [sp, #0x14]\n\t"
+        "ldr r1, 2f\n\t"
+        "ldr r0, [sp]\n\t"
+        "and r0, r1\n\t"
+        "ldr r6, [sp, #8]\n\t"
+        "add r6, #0x28\n\t"
+        "ldrb r3, [r6]\n\t"
+        "lsl r1, r3, #0x1e\n\t"
+        "mov r5, #3\n\t"
+        "lsr r1, r1, #0x14\n\t"
+        "ldr r4, 3f\n\t"
+        "and r0, r4\n\t"
+        "orr r0, r1\n\t"
+        "lsl r1, r3, #0x1d\n\t"
+        "lsr r1, r1, #0x1f\n\t"
+        "lsl r1, r1, #0xc\n\t"
+        "ldr r2, 4f\n\t"
+        "and r0, r2\n\t"
+        "orr r0, r1\n\t"
+        "lsl r3, r3, #0x1c\n\t"
+        "lsr r3, r3, #0x1f\n\t"
+        "lsl r3, r3, #0xd\n\t"
+        "ldr r1, 5f\n\t"
+        "and r0, r1\n\t"
+        "orr r0, r3\n\t"
+        "str r0, [sp]\n\t"
+        "ldr r2, [sp, #8]\n\t"
+        "ldr r1, [r2, #0x18]\n\t"
+        "add r1, #0x58\n\t"
+        "mov r3, #0\n\t"
+        "ldrsh r0, [r1, r3]\n\t"
+        "add r0, r2, r0\n\t"
+        "ldr r1, [r1, #4]\n\t"
+        "bl sub_803AD7C\n\t"
+        "lsl r0, r0, #0x10\n\t"
+        "lsr r0, r0, #0x10\n\t"
+        "and r0, r5\n\t"
+        "lsl r0, r0, #0xa\n\t"
+        "ldr r1, [sp, #4]\n\t"
+        "and r1, r4\n\t"
+        "orr r1, r0\n\t"
+        "ldr r0, [sp, #8]\n\t"
+        "add r0, #0x29\n\t"
+        "ldrb r0, [r0]\n\t"
+        "lsl r0, r0, #0x1c\n\t"
+        "lsr r0, r0, #0x10\n\t"
+        "ldr r2, 6f\n\t"
+        "and r1, r2\n\t"
+        "orr r1, r0\n\t"
+        "str r1, [sp, #4]\n\t"
+        "ldrb r6, [r6]\n\t"
+        "lsl r0, r6, #0x1b\n\t"
+        "cmp r0, #0\n\t"
+        "bge 7f\n\t"
+        "mov r1, #0x80\n\t"
+        "lsl r1, r1, #0x15\n\t"
+        "ldr r0, [sp]\n\t"
+        "orr r0, r1\n\t"
+        "b 8f\n\t"
+        ".align 2, 0\n"
+    "1: .4byte gUnknown_030012FC\n"
+    "2: .4byte 0xFFFFFCFF\n"
+    "3: .4byte 0xFFFFF3FF\n"
+    "4: .4byte 0xFFFFEFFF\n"
+    "5: .4byte 0xFFFFDFFF\n"
+    "6: .4byte 0xFFFF0FFF\n"
+    "7:\n\t"
+        "ldr r1, 9f\n\t"
+        "ldr r0, [sp]\n\t"
+        "and r0, r1\n\t"
+    "8:\n\t"
+        "str r0, [sp]\n\t"
+        "ldr r0, [sp, #8]\n\t"
+        "add r0, #0x28\n\t"
+        "ldrb r2, [r0]\n\t"
+        "lsl r1, r2, #0x1a\n\t"
+        "str r0, [sp, #0x18]\n\t"
+        "cmp r1, #0\n\t"
+        "bge 10f\n\t"
+        "mov r1, #0x80\n\t"
+        "lsl r1, r1, #0x16\n\t"
+        "ldr r0, [sp]\n\t"
+        "orr r0, r1\n\t"
+        "b 11f\n\t"
+        ".align 2, 0\n"
+    "9: .4byte 0xEFFFFFFF\n"
+    "10:\n\t"
+        "ldr r1, 14f\n\t"
+        "ldr r0, [sp]\n\t"
+        "and r0, r1\n\t"
+    "11:\n\t"
+        "str r0, [sp]\n\t"
+        "mov r3, #0\n\t"
+        "mov sl, r3\n\t"
+        "mov r0, sb\n\t"
+        "ldrb r0, [r0, #0xb]\n\t"
+        "cmp sl, r0\n\t"
+        "bne 12f\n\t"
+        "b 23f\n\t"
+    "12:\n\t"
+        "mov r8, r3\n\t"
+    "13:\n\t"
+        "mov r1, sb\n\t"
+        "ldr r0, [r1, #4]\n\t"
+        "add r0, sl\n\t"
+        "mov r5, #0xf\n\t"
+        "ldrb r0, [r0]\n\t"
+        "and r5, r0\n\t"
+        "ldr r0, 15f\n\t"
+        "add r0, r5, r0\n\t"
+        "ldrb r7, [r0]\n\t"
+        "ldr r0, 16f\n\t"
+        "add r0, r5, r0\n\t"
+        "ldrb r6, [r0]\n\t"
+        "ldr r2, [sp, #0x18]\n\t"
+        "ldrb r2, [r2]\n\t"
+        "lsl r0, r2, #0x1a\n\t"
+        "cmp r0, #0\n\t"
+        "bge 17f\n\t"
+        "ldr r3, [sp, #0xc]\n\t"
+        "ldr r1, [r3, #4]\n\t"
+        "sub r1, r1, r6\n\t"
+        "mov r0, sb\n\t"
+        "ldr r2, [r0]\n\t"
+        "mov r3, r8\n\t"
+        "add r0, r3, r2\n\t"
+        "mov r3, #2\n\t"
+        "ldrsh r0, [r0, r3]\n\t"
+        "sub r4, r1, r0\n\t"
+        "b 18f\n\t"
+        ".align 2, 0\n"
+    "14: .4byte 0xDFFFFFFF\n"
+    "15: .4byte gStaticData_0816B2E0\n"
+    "16: .4byte gStaticData_0816B2EC\n"
+    "17:\n\t"
+        "mov r0, sb\n\t"
+        "ldr r2, [r0]\n\t"
+        "mov r1, r8\n\t"
+        "add r0, r1, r2\n\t"
+        "mov r3, #2\n\t"
+        "ldrsh r1, [r0, r3]\n\t"
+        "ldr r3, [sp, #0xc]\n\t"
+        "ldr r0, [r3, #4]\n\t"
+        "add r4, r0, r1\n\t"
+    "18:\n\t"
+        "add r0, r4, r6\n\t"
+        "cmp r0, #0\n\t"
+        "ble 21f\n\t"
+        "cmp r4, #0x9f\n\t"
+        "bgt 21f\n\t"
+        "ldr r1, [sp, #0x18]\n\t"
+        "ldrb r1, [r1]\n\t"
+        "lsl r0, r1, #0x1b\n\t"
+        "cmp r0, #0\n\t"
+        "bge 19f\n\t"
+        "ldr r3, [sp, #0xc]\n\t"
+        "ldr r0, [r3]\n\t"
+        "sub r0, r0, r7\n\t"
+        "mov r3, r8\n\t"
+        "add r1, r3, r2\n\t"
+        "mov r2, #0\n\t"
+        "ldrsh r1, [r1, r2]\n\t"
+        "sub r3, r0, r1\n\t"
+        "b 20f\n\t"
+    "19:\n\t"
+        "mov r3, r8\n\t"
+        "add r0, r3, r2\n\t"
+        "mov r2, #0\n\t"
+        "ldrsh r1, [r0, r2]\n\t"
+        "ldr r3, [sp, #0xc]\n\t"
+        "ldr r0, [r3]\n\t"
+        "add r3, r0, r1\n\t"
+    "20:\n\t"
+        "add r0, r3, r7\n\t"
+        "cmp r0, #0\n\t"
+        "ble 21f\n\t"
+        "cmp r3, #0xef\n\t"
+        "bgt 21f\n\t"
+        "lsl r1, r4, #0x18\n\t"
+        "lsr r1, r1, #0x18\n\t"
+        "ldr r2, 24f\n\t"
+        "ldr r0, [sp]\n\t"
+        "and r0, r2\n\t"
+        "orr r0, r1\n\t"
+        "asr r2, r5, #2\n\t"
+        "mov r1, #3\n\t"
+        "and r2, r1\n\t"
+        "lsl r2, r2, #0xe\n\t"
+        "ldr r1, 25f\n\t"
+        "and r0, r1\n\t"
+        "orr r0, r2\n\t"
+        "ldr r1, 26f\n\t"
+        "and r3, r1\n\t"
+        "lsl r2, r3, #0x10\n\t"
+        "ldr r1, 27f\n\t"
+        "and r0, r1\n\t"
+        "orr r0, r2\n\t"
+        "mov r2, #3\n\t"
+        "and r5, r2\n\t"
+        "lsl r2, r5, #0x1e\n\t"
+        "ldr r1, 28f\n\t"
+        "and r0, r1\n\t"
+        "orr r0, r2\n\t"
+        "str r0, [sp]\n\t"
+        "ldr r3, [sp, #0x14]\n\t"
+        "lsl r1, r3, #0x16\n\t"
+        "lsr r1, r1, #0x16\n\t"
+        "ldr r2, 29f\n\t"
+        "ldr r0, [sp, #4]\n\t"
+        "and r0, r2\n\t"
+        "orr r0, r1\n\t"
+        "str r0, [sp, #4]\n\t"
+        "ldr r0, 30f\n\t"
+        "ldr r0, [r0]\n\t"
+        "mov r1, sp\n\t"
+        "bl sub_8006AC8\n\t"
+    "21:\n\t"
+        "asr r0, r7, #3\n\t"
+        "asr r1, r6, #3\n\t"
+        "mul r1, r0, r1\n\t"
+        "ldr r2, [sp, #0x18]\n\t"
+        "ldrb r2, [r2]\n\t"
+        "lsl r0, r2, #0x1c\n\t"
+        "cmp r0, #0\n\t"
+        "bge 22f\n\t"
+        "lsl r1, r1, #1\n\t"
+    "22:\n\t"
+        "ldr r3, [sp, #0x14]\n\t"
+        "add r3, r3, r1\n\t"
+        "str r3, [sp, #0x14]\n\t"
+        "lsl r0, r1, #5\n\t"
+        "ldr r1, [sp, #0x10]\n\t"
+        "add r1, r1, r0\n\t"
+        "str r1, [sp, #0x10]\n\t"
+        "mov r2, #4\n\t"
+        "add r8, r2\n\t"
+        "mov r3, #1\n\t"
+        "add sl, r3\n\t"
+        "mov r0, sb\n\t"
+        "ldrb r0, [r0, #0xb]\n\t"
+        "cmp sl, r0\n\t"
+        "beq 23f\n\t"
+        "b 13b\n\t"
+    "23:\n\t"
+        "ldr r0, 31f\n\t"
+        "ldr r4, [r0]\n\t"
+        "ldr r0, [sp, #8]\n\t"
+        "bl sub_80083A8\n\t"
+        "add r1, r0, #0\n\t"
+        "mov r2, sb\n\t"
+        "ldr r0, [r2, #8]\n\t"
+        "ldr r2, 32f\n\t"
+        "and r0, r2\n\t"
+        "add r1, r1, r0\n\t"
+        "add r0, r4, #0\n\t"
+        "ldr r2, [sp, #0x10]\n\t"
+        "bl sub_8006C84\n\t"
+        "add sp, #0x1c\n\t"
+        "pop {r3, r4, r5}\n\t"
+        "mov r8, r3\n\t"
+        "mov sb, r4\n\t"
+        "mov sl, r5\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r0}\n\t"
+        "bx r0\n\t"
+        ".align 2, 0\n"
+    "24: .4byte 0xFFFFFF00\n"
+    "25: .4byte 0xFFFF3FFF\n"
+    "26: .4byte 0x000001FF\n"
+    "27: .4byte 0xFE00FFFF\n"
+    "28: .4byte 0x3FFFFFFF\n"
+    "29: .4byte 0xFFFFFC00\n"
+    "30: .4byte gUnknown_03001300\n"
+    "31: .4byte gUnknown_030012FC\n"
+    "32: .4byte 0x00FFFFFF\n"
+    );
 }
-#endif /* NON_MATCHING */

@@ -13,33 +13,25 @@ from "core" graphics.
 
 - `src/graphics/actor_part.c` (new file - `sub_8007A48`'s real ROM
   address isn't adjacent to `graphics.c`'s matched functions, since
-  `sub_80073DC`/`sub_8007634` sit unclaimed between them; see
+  `sub_8007634` sits unclaimed between them; see
   `docs/matching.md`): `sub_8007A48`, `sub_8007A84`, `sub_8007A98`,
   `nullsub_2`, `sub_8007AB4`
-- `src/graphics/actor_part2.c` (new file - `sub_8007C30`'s real ROM
-  address isn't adjacent to `actor_part.c`'s matched functions either,
-  since the parked `sub_8007B00`/`sub_8007B98` sit raw between them;
-  see `docs/matching.md`): `sub_8007C30`, `sub_8007CF8`, `sub_8007DBC`
-  (the last one matched via NAKED asm transcription - see
-  `docs/matching/naked-sub_8007dbc.md`)
+- `src/graphics/actor_part2.c` (new file, now directly adjacent to
+  `actor_part.c`'s matched functions): `sub_8007C30`, `sub_8007CF8`,
+  `sub_8007DBC` (the last one is a pre-existing NAKED transcription -
+  see `docs/matching/naked-sub_8007dbc.md`)
 - `src/graphics/actor_part3.c` (new file - directly adjacent to
   `actor_part2.c`'s matched functions now that `sub_8007DBC` is
   matched too, closing the old raw gap between them):
   `sub_8007F78`, `sub_8007FD8`
-- `src/graphics/actor_part4.c` (new file - `sub_80080C0`'s real ROM
-  address isn't adjacent to `actor_part3.c`'s matched functions
-  either, since the parked `sub_8008044` sits raw between them; see
-  `docs/matching.md`): `sub_80080C0`, `sub_800815C`
-- `src/graphics/actor_part5.c` (new file - `sub_8008304`'s real ROM
-  address isn't adjacent to `actor_part4.c`'s matched functions
-  either, since the parked `sub_8008188`/`sub_8008200`/`sub_8008278`
-  sit raw between them; see `docs/matching.md`): `sub_8008304`,
+- `src/graphics/actor_part4.c` (new file, now directly adjacent to
+  `actor_part3.c`'s matched functions): `sub_80080C0`, `sub_800815C`
+- `src/graphics/actor_part5.c` (new file, now directly adjacent to
+  `actor_part4.c`'s matched functions): `sub_8008304`,
   `sub_8008328`, `sub_800834C`, `sub_8008350`, `sub_8008364`,
   `sub_8008394`, `sub_80083A8`
-- `src/graphics/actor_part6.c` (new file - `sub_8008408`'s real ROM
-  address isn't adjacent to `actor_part5.c`'s matched functions
-  either, since the parked `sub_80083B8` sits raw between them; see
-  `docs/matching.md`): `sub_8008408`, `sub_8008434`, `sub_8008480`,
+- `src/graphics/actor_part6.c` (new file, now directly adjacent to
+  `actor_part5.c`'s matched functions): `sub_8008408`, `sub_8008434`, `sub_8008480`,
   `sub_8008484`, `sub_80084A4`, `sub_80084C4`, `sub_8008518`,
   `sub_8008564`, `sub_80085B8`, `sub_8008604`, `sub_8008618`,
   `sub_8008640`, `sub_8008648`, `sub_8008650`, `sub_800865C`,
@@ -48,10 +40,8 @@ from "core" graphics.
   `sub_80086CC`, `sub_80086D8`, `sub_80086E4`, `sub_80086EC`,
   `sub_80086F4`, `sub_8008710`, `sub_800872C`, `sub_8008734`,
   `sub_8008748`, `sub_8008754`, `sub_8008768`, `sub_800876C`
-- `src/graphics/actor_part7.c` (new file - `sub_800878C`'s real ROM
-  address isn't adjacent to `actor_part6.c`'s matched functions
-  either, since the parked `sub_8008770` sits raw between them; see
-  `docs/matching.md`): `sub_800878C`, `sub_80087A0`, `sub_80087B4`,
+- `src/graphics/actor_part7.c` (new file, now directly adjacent to
+  `actor_part6.c`'s matched functions): `sub_800878C`, `sub_80087A0`, `sub_80087B4`,
   `sub_80087BC`, `sub_80087C0`, `sub_80087C8`, `sub_80087D0`,
   `sub_80087F4`, `sub_80087FC`, `sub_8008804`, `sub_800880C`,
   `sub_8008814`, `sub_8008818`, `sub_800881C`, `sub_8008824`,
@@ -60,15 +50,11 @@ from "core" graphics.
   `sub_800888C`, `sub_8008890`, `sub_80088D8`, `sub_80088E8`,
   `sub_80088F0`, `sub_8008904`
 
-- `src/graphics/actor_part10.c` (new file - `sub_8008C80`'s real ROM
-  address isn't adjacent to `actor_part7.c`'s matched functions
-  either, since the parked `sub_8008AD8` sits raw between them; see
-  `docs/matching.md`): `sub_8008C80`, `sub_8008CEC`, `sub_8008D30`
+- `src/graphics/actor_part10.c` (new file, now directly adjacent to
+  `actor_part7.c`'s matched functions): `sub_8008C80`, `sub_8008CEC`, `sub_8008D30`
 
-- `src/graphics/actor_part11.c` (new file - `sub_8008DC0`'s real ROM
-  address isn't adjacent to `actor_part10.c`'s matched functions
-  either, since the parked `sub_8008D80` sits raw between them; see
-  `docs/matching.md`): `sub_8008DC0`, `sub_8008DEC`, `sub_8008E50`,
+- `src/graphics/actor_part11.c` (new file, now directly adjacent to
+  `actor_part7b.c`'s `sub_8008D80` range): `sub_8008DC0`, `sub_8008DEC`, `sub_8008E50`,
   `sub_8008E94`, `sub_8008EB4`, `sub_8008EE4`
 
 - `src/graphics/actor_part12.c` (new file - `sub_8009A30`'s real ROM
@@ -442,107 +428,29 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   `goto`-based flow) all produced an identical 8-byte-larger result -
   see `docs/matching.md`, "A new unnamed object:
   `actor_part15.c`/`actor_part16.c`".
-- **`sub_8007B00`** (`src/graphics/actor_part.c`) - builds an AABB for
-  `part`'s current animation keyframe (via the shared `sub_803AFE4`/
-  `sub_803AFDC` primitive) and mirrors it horizontally/vertically per
-  flag bits. Matches the ROM instruction-for-instruction except one
-  systematic register choice (`part` lands in r6 here vs the ROM's r7,
-  cascading into a 3- vs 4-register push/pop list) - see
-  `docs/matching.md`, "Parked, not matched: `sub_8007B00`".
-- **`sub_8007B98`** (`src/graphics/actor_part.c`) - the same AABB-for-
-  keyframe shape as `sub_8007B00`, for a second, differently-laid-out
-  keyframe table. Matches the ROM's operations/order throughout except
-  a recurring "which anonymous scratch register" choice (about 10 of
-  73 instructions) - see `docs/matching.md`, "Parked, not matched:
-  `sub_8007B98`".
-- **`sub_8008044`** (`src/graphics/actor_part3.c`) - advances `part`'s
-  per-keyframe animation timer by one tick. The first half (the
-  counter-vs-duration test) matches the ROM instruction-for-instruction
-  exactly, including its `ip`-register `part` trick; sharing the
-  keyframe-table pointer/index-byte address into the second half (as
-  the ROM itself does, avoiding a second `part+0x20` reload) reliably
-  makes gcc stop using `ip` for `part` altogether instead, trading one
-  mismatch for a worse one - see `docs/matching.md`, "Parked, not
-  matched: `sub_8008044`".
-- **`sub_8008188`** (`src/graphics/actor_part4.c`) - adjusts a `dest`
-  position per a `kind` selector and a small `rec` record. Matches the
-  ROM instruction-for-instruction - including the exact non-obvious
-  case-body layout order and the two duplicate case labels correctly
-  sharing one code block - except a single register-register `add`'s
-  operand order in that shared block; this compiler appears to always
-  canonicalize such an add so the destination's prior value is the
-  first source operand, with no C-level way found to override it -
-  see `docs/matching.md`, "Parked, not matched: `sub_8008188`".
-- **`sub_8008200`** (`src/graphics/actor_part4.c`) - the same shape as
-  `sub_8008188` (mirror-image add/subtract directions), parked for the
-  identical single-instruction gap - see `docs/matching.md`, "Parked,
-  not matched: `sub_8008200`".
-- **`sub_8008278`** (`src/graphics/actor_part4.c`) - a third variant:
-  kind 1/2 update `field_0` and *unconditionally* also update
-  `field_4`; kinds 4/8/12 update `field_4` and unconditionally also
-  update `field_0`. Parked for the same single-instruction gap as
-  `sub_8008188`/`sub_8008200` - see `docs/matching.md`, "Parked, not
-  matched: `sub_8008278`".
-- **`sub_80083B8`** (`src/graphics/actor_part5.c`) - looks up `part`'s
-  current keyframe record, conditionally clamps its frame index/resets
-  its sub-counter (mirroring `sub_8008044`'s "done" handling), then
-  resolves a two-level pointer-array lookup. Matches the ROM
-  instruction-for-instruction (confirmed the apparent `ands` mismatch
-  is a disassembly-style artifact, not a real one) except the same
-  "which operand goes first" `add`-operand-order gap as
-  `sub_8008188`/`sub_8008200`/`sub_8008278` - see `docs/matching.md`,
-  "Parked, not matched: `sub_80083B8`".
-- **`sub_8008770`** (`src/graphics/actor_part6.c`) - looks up `part`'s
-  current keyframe record (same lookup as `sub_8008734`) and tests its
-  `+0x17` flags bit 1, returning it as 0/1. Matches the ROM through the
-  `ands` that computes the bit; the ROM's two trailing truncation
-  instructions (`lsls`/`lsrs` to a byte) get optimized away here since
-  this compiler can prove the value already fits - see
-  `docs/matching.md`, "Parked, not matched: `sub_8008770`".
-- **`sub_800891C`** (`src/graphics/actor_part7.c`) - filters/compacts
-  an array of `part`-like objects into a second output array each
-  call, broad/narrow-phase-testing each one against a `gUnknown_03001308`-
-  sub-object-centered region pair via `part->table`-driven
-  trampolines, with array-entry removal handled via the GBA BIOS
-  `CpuSet` SWI. Semantics fully understood and every call shape
-  confirmed correct, but this compiler puts the loop counter into a
-  high register (`r8`, needing a second high register for another
-  loop-invariant pointer) instead of the ROM's low register `r7` -
-  explicitly pinning it to `r7` triggers the `r7`-pin corruption
-  pattern documented elsewhere in this ROM region instead of fixing
-  it - see `docs/matching.md`, "Parked, not matched: `sub_800891C`".
-- **`sub_8008A40`** (`src/graphics/actor_part7.c`) - iterates a
-  `manager`'s array of `part`-like objects, broad-phase-testing each
-  via a `table+0x48/0x4c` trampoline and a flags-bit check, then
-  dispatches an incoming rectangle to `sub_8008AD8` or `sub_8008D80`
-  depending on whether a caller-supplied "compare viewport" argument
-  matches the current `gUnknown_030012D8` (the camera/viewport).
-  Resolved `sub_800014C` as a plain `memcpy`-style BIOS `CpuSet`
-  wrapper along the way. Every branch and call argument confirmed
-  correct; parked purely on a register-spill gap for the
-  "compareViewport" argument, which needs an extra high register here
-  instead of the ROM's `r7` - explicitly pinning it to `r7` produces a
-  genuine miscompile (aliases with the unrelated loop counter) rather
-  than fixing the gap - see `docs/matching.md`, "Parked, not matched:
-  `sub_8008A40`".
-- **`sub_8008AD8`** (`src/graphics/actor_part7.c`) - resolves
-  collision push-out between a `part` and the player
-  (`gUnknown_030012D8`) against the box `sub_8008A40` passes in,
-  branching on `gUnknown_030012C0`'s mode field and `part`'s own flag
-  bits, and firing `table+0x68`-driven trampolines and (in one path) a
-  sound effect. A ~150-instruction function, but every branch, field
-  offset, and call argument confirmed correct; parked on two small
-  structural gaps this compiler can't directly avoid: an unavoidable
-  extra load for one box coordinate that the ROM leaves untouched in
-  its original stack slot (the same ABI stack-layout trick used by
-  `sub_8008A40`), and a knock-on register-letter difference for `part`
-  - see `docs/matching.md`, "Parked, not matched: `sub_8008AD8`".
-- **`sub_8008D80`** (`src/graphics/actor_part7.c`) - `sub_8008AD8`'s
-  sibling, resolving the same collision-hit logic when the "compare
-  viewport" doesn't match the current one. Every branch, field offset,
-  and call argument confirmed correct; parked on the same box-
-  coordinate stack-layout gap as `sub_8008AD8`/`sub_8008A40` - see
-  `docs/matching.md`, "Parked, not matched: `sub_8008D80`".
+- **`sub_8007B00`/`sub_8007B98`** (`src/graphics/actor_part.c`),
+  **`sub_8008044`** (`src/graphics/actor_part3.c`),
+  **`sub_8008188`/`sub_8008200`/`sub_8008278`**
+  (`src/graphics/actor_part4.c`), **`sub_80083B8`**
+  (`src/graphics/actor_part5.c`), **`sub_8008770`**
+  (`src/graphics/actor_part6.c`), and
+  **`sub_800891C`/`sub_8008A40`/`sub_8008AD8`**
+  (`src/graphics/actor_part7.c`) / **`sub_8008D80`**
+  (`src/graphics/actor_part7b.c`) - stayed parked here for a long time
+  on exactly the register-canonicalization/stack-layout classes of gap
+  documented at length throughout this page (`r7`-pin hazards, a
+  stubborn `add`-operand-order canonicalization, a compiler-elided
+  redundant byte truncation, and a C-inexpressible stack-layout
+  coincidence). All ten are now `NAKED` functions whose bodies are a
+  literal instruction-for-instruction transcription of the ROM's own
+  assembly (byte-exact, confirmed via a full clean `make compare`),
+  rather than a derived C reconstruction - see
+  `docs/matching/naked-oam-actor-part-batch.md`. Per project policy, a
+  NAKED transcription standing in for a substantial function's
+  register-allocation gap doesn't count as "matched" the way real
+  decompiled C does, so all ten stay filed here rather than in
+  "Matched" above, and `tools/report_units.py` tracks their address
+  ranges as unmatched (`base_object: None`).
 - **`sub_8008F20`** (`src/graphics/actor_part11.c`) - initializes a
   fixed-slot object-pool manager struct: two big 256-word zeroed
   tables (likely a pair of spatial-partition/collision grids), plus a
