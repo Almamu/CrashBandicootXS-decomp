@@ -141,6 +141,17 @@ from "core" graphics.
   locals pinned to their own ABI registers in the ROM's actual load
   order, avoiding the callee-saved spill three earlier attempts hit)
 
+- `src/graphics/actor_part77.c` (new file, GitHub issue #9/#10, ROM
+  `0x0800B3F0`, non-adjacent to `actor_part48.c` since the matched
+  `actor_part15.c`/parked `sub_800B270`/`actor_part16.c` sit between
+  them): `sub_800B3F0` - a part-object constructor re-initializing
+  `self` via `sub_800A6A4`, allocating a child `struct actor` via
+  `sub_8008434`, hooking it up at `self+0xb0` via the standard
+  `sub_80087C0`/`sub_80087B4`/`sub_800872C` OAM trio, then calling
+  `sub_800A734` to finish the reset and setting `self`'s `field_08`/
+  `x`/`y` from its three `u16` arguments; see
+  [docs/matching/issue-9-10-0x0800a884-graphics.md](../matching/issue-9-10-0x0800a884-graphics.md).
+
 - `src/graphics/actor_part17.c` (new file - see `docs/matching.md`):
   `sub_800B704`, `sub_800B734`, `sub_800B7B0`, `sub_800B838`,
   `nullsub_13`, `sub_800B86C`, `sub_800B8A4`, `sub_800B8A8`,
@@ -617,6 +628,17 @@ embedded as asm instead. They're tracked as parked, not matched.
 
 ### `NON_MATCHING` (not yet byte-exact)
 
+- **`sub_800A884`** (`src/graphics/actor_part78.c`, GitHub issue
+  #9/#10; real bytes in `asm/code_3_2_16_a884.s`) - a per-frame
+  reentrancy-guard-shaped wrapper dispatching a pending-action "kind"
+  byte (`gUnknown_03001308+0x29`) through a 10-case jump table, then a
+  keyframe-lookup/camera-position probe via `sub_80083B8`/
+  `sub_8026BC0` sharing `sub_80084C4`'s case-to-block mapping. Every
+  load/store/branch/call confirmed correct against the ROM; the leading
+  ~40 instructions are register-for-register byte-exact in isolation,
+  the rest of the function hasn't been through the same register-pin
+  iteration yet. See
+  [docs/matching/issue-9-10-0x0800a884-graphics.md](../matching/issue-9-10-0x0800a884-graphics.md).
 - **`sub_800A528`/`sub_800A590`** (`src/graphics/actor_part47.c`,
   GitHub issue #9; real bytes in `asm/code_3_2_11_a528.s`) - a moving-
   platform "ride along" hookup, nudging `self->y` by the delta between
