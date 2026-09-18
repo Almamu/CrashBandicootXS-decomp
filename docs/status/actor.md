@@ -256,7 +256,15 @@ from "core" graphics.
   `sub_803B2E0`, `sub_803B30C`, `sub_803B338`, `sub_803B364`,
   `sub_803B390`, `sub_803B3BC`, `sub_803B3E8`, `sub_803B414`,
   `sub_803B440` - unlink `self` from its `+0x48`/`+0x4c` circular list,
-  set `+0x50` to the shared "dead" vtable, and conditionally free) - see
+  set `+0x50` to the shared "dead" vtable, and conditionally free), and
+  `sub_803B46C` (fixed-position (120, 106) OAM setup for one sprite
+  frame - screen-space visibility cull, then builds the OAM attribute
+  words and calls `SetupSpriteFrameOam`; matched via NAKED transcription
+  as the near-identical twin of the still-parked `sub_802C2FC`
+  (`actor_part19b.c`), hitting the same two compiler gaps: a
+  `| 0`-with-a-zero-valued-term this compiler's dead-store elimination
+  always removes, and a register-budget difference needing an extra
+  spilled/high register the ROM doesn't need) - see
   [docs/matching/issue-71-0x0803b060-actor.md](../matching/issue-71-0x0803b060-actor.md).
 - `src/graphics/actor_part39.c` (new file, GitHub issue #16, ROM
   0x080119A8-0x08011BD4): `sub_80119A8`, `sub_80119D4`, `sub_80119D8`,
@@ -745,18 +753,6 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   push/pop allocation never matching the ROM's `r4=self,r5=1,r6=e,r7=f`
   assignment - see `docs/matching/issue-56-0x0802f0dc-actor.md`.
 
-- **`sub_803B46C`** (`src/graphics/actor_anim.c`, GitHub issue #71) -
-  fixed-position (120, 106) OAM setup for one sprite frame: screen-space
-  visibility cull, then builds the OAM attribute words (masked position,
-  `sub_803B060`'s attr flag, and a priority/palette nibble from
-  `self+0x18`/`self+0x14`) and calls `SetupSpriteFrameOam`. Near-
-  identical twin of the already-parked `sub_802C2FC`
-  (`actor_part19b.c`) - hits the same two gaps: a `| 0`-with-a-zero-
-  valued-term this compiler's dead-store elimination always removes
-  (the ROM keeps a real materialize-and-OR pair) and a register-budget
-  difference needing an extra spilled/high register to keep `frame`
-  alive across both calls where the ROM fits entirely in r4-r7 - see
-  [docs/matching/issue-71-0x0803b060-actor.md](../matching/issue-71-0x0803b060-actor.md).
 - **`UpdateAnimatedActorPart`** (`asm/code_3_2_20_8b7c_a88c.s`, C in
   `src/graphics/actor_part55.c`) - the OAM draw/scale routine for the
   `InitActorPart`-constructed "self" object. Every byte of this

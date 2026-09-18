@@ -17,8 +17,14 @@ helpers.
 - `src/util/word_util.c`: `GetWordLength`, `sub_8001214`
 - `src/util/line_util2.c`: `StepBresenhamLine`
 - `src/util/math_div_util.c` (new file, GitHub issue #70, ROM
-  `0x0803ADB4`-`0x0803AFDC`): `nullsub_8` - the shared divide-by-zero
-  handler for the parked division/modulo trio below
+  `0x0803ADB4`-`0x0803AFDC`): `sub_803ADB4` (signed division),
+  `nullsub_8` (shared divide-by-zero handler), `sub_803AE4C` (signed
+  modulo), `sub_803AF1C` (unsigned modulo) - the division/modulo trio
+  matched via NAKED transcription (real per-path prologue/epilogue
+  register-save minimization, and `sub_803AE4C`/`sub_803AF1C`'s `ror`
+  codegen, that agbcc's plain-C codegen can't reproduce) - see
+  `docs/matching/issue-69-eeprom-timer.md`'s "NAKED transcription pass"
+  section
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -29,14 +35,6 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   `strstr`) - matching a specific redundant-truncate branch shape in its
   lowercase-fold logic conflicts with keeping `caseInsensitive` out of
   `r8` - see `docs/matching.md`, "Parked, not matched: `sub_8000CBC`".
-- **`sub_803ADB4`/`sub_803AE4C`/`sub_803AF1C`** (`src/util/math_div_util.c`,
-  GitHub issue #70) - signed division, signed modulo, and unsigned
-  modulo software primitives (shift-and-subtract binary long division).
-  `sub_803ADB4`'s C reconstruction matches the ROM instruction-for-
-  instruction in its body; all three are blocked purely on a
-  prologue/epilogue shape (real per-path register-save minimization the
-  ROM has that agbcc's plain-C codegen doesn't reproduce) - see
-  `docs/matching.md`'s issue #70 entry for the full gap analysis.
 
 ## Other notes
 

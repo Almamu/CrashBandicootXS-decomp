@@ -2,10 +2,11 @@
 
 /* A DMA3 bit-serial GBA EEPROM save-chip read/write cluster, sitting
  * right after the DMA3 transfer helper `sub_803AAD4`
- * (asm/code_3_2_20e_aa90.s) and before the matched verify/retry pair in
- * src/system/eeprom_verify.c - its own file per docs/workflow.md step
- * 4's "needs its own new .c file" case, since it isn't adjacent to any
- * already-matched file's functions. See docs/matching/issue-69-*.md.
+ * (src/system/timer_util_aa90.c) and before the matched verify/retry
+ * pair in src/system/eeprom_verify.c - its own file per docs/
+ * workflow.md step 4's "needs its own new .c file" case, since it isn't
+ * adjacent to any already-matched file's functions. See
+ * docs/matching/issue-69-*.md.
  *
  * Protocol confirmed by reading every instruction against the real GBA
  * EEPROM bit-serial protocol: a read sends 2 start bits ("11"), the
@@ -41,147 +42,252 @@ extern void sub_803AA08(u16 *arg0);
 extern void sub_803AA90(void);
 extern void sub_803AAD4(const void *src, void *dst, u16 count);
 
-#define EEPROM_PORT ((void *)0x0D000000)
-
-#if NON_MATCHING
-/* NOT YET BYTE-MATCHING: reads one 8-byte (64-bit) EEPROM block at
- * `addr` into `dest[0..3]`. Returns 0x80FF if `addr` is out of range
- * for the currently-selected chip. Semantics and every field/register
- * access confirmed against the ROM (see the file header comment for
- * the wire protocol); what resists matching is the tail's bit-unpack
- * loop - the ROM keeps the "mask = 1" constant and the outer-loop
- * counter in specific low registers reused from the address-packing
- * phase above (`r6`/`r4`), where this compiler's allocator runs out of
- * low registers at that point and spills the mask into `r12` instead,
- * plus hoists the read-back/dest-pointer setup earlier than the ROM
- * does (both loop-invariant, so this compiler's scheduler moves them
- * up across the two `sub_803AAD4` calls even though they're plain
- * function calls). */
-s32 sub_803AB54(u16 addr, u16 *dest)
+/* Reads one 8-byte (64-bit) EEPROM block at `addr` into `dest[0..3]`.
+ * Returns 0x80FF if `addr` is out of range for the currently-selected
+ * chip. See the file header comment for the confirmed wire protocol.
+ *
+ * Written as NAKED asm, not plain C: an earlier pass's plain-C
+ * reconstruction (see docs/matching/issue-69-eeprom-timer.md) confirmed
+ * every field/register access against the ROM, but the tail's bit-
+ * unpack loop never reproduced the ROM's register plan - the ROM keeps
+ * the "mask = 1" constant and the outer-loop counter in specific low
+ * registers reused from the address-packing phase above, where this
+ * compiler's allocator runs out of low registers at that point and
+ * spills into r12 instead, plus hoists loop-invariant setup across the
+ * two `sub_803AAD4` calls where the ROM doesn't. Since every
+ * instruction was already independently confirmed correct, this is a
+ * mechanical, byte-verified transcription of the ROM's own instructions
+ * (translated from the disassembler's unified syntax to this project's
+ * established NAKED plain/divided syntax, local labels renumbered per
+ * docs/matching/issue-4-sio-settings-sync.md's convention), not an
+ * inferred control-flow guess. */
+NAKED s32 sub_803AB54(u16 addr, u16 *dest)
 {
-    u16 buf[68];
-    u8 n;
-    u8 i;
-    u16 v;
-    u16 *p;
-
-    if (addr >= gUnknown_03001634->maxCount) {
-        return 0x80FF;
-    }
-
-    n = gUnknown_03001634->addrBitCount;
-    p = &buf[n + 1];
-    v = addr;
-    i = 0;
-    while (i < n) {
-        *p = v;
-        p--;
-        v >>= 1;
-        i++;
-        n = gUnknown_03001634->addrBitCount;
-    }
-    *p = 1;
-    p--;
-    *p = 1;
-
-    sub_803AAD4(buf, EEPROM_PORT, gUnknown_03001634->addrBitCount + 3);
-    sub_803AAD4(EEPROM_PORT, buf, 0x44);
-
-    p = &buf[4];
-    dest += 3;
-    for (i = 0; i < 4; i++) {
-        u16 word;
-        u8 j;
-
-        word = 0;
-        for (j = 0; j <= 0xf; j++) {
-            word <<= 1;
-            word |= *p & 1;
-            p++;
-        }
-        *dest = word;
-        dest--;
-    }
-    return 0;
+    asm(
+        "push {r4, r5, r6, lr}\n\t"
+        "sub sp, #0x88\n\t"
+        "add r5, r1, #0\n\t"
+        "lsl r0, r0, #0x10\n\t"
+        "lsr r3, r0, #0x10\n\t"
+        "ldr r0, 7f\n\t"
+        "ldr r0, [r0]\n\t"
+        "ldrh r0, [r0, #4]\n\t"
+        "cmp r3, r0\n\t"
+        "blo 1f\n\t"
+        "ldr r0, 8f\n\t"
+        "b 6f\n\t"
+        ".align 2, 0\n"
+    "7: .4byte gUnknown_03001634\n"
+    "8: .4byte 0x000080FF\n"
+    "1:\n\t"
+        "ldr r0, 9f\n\t"
+        "add r6, r0, #0\n\t"
+        "ldr r0, [r0]\n\t"
+        "ldrb r1, [r0, #8]\n\t"
+        "lsl r0, r1, #1\n\t"
+        "mov r4, sp\n\t"
+        "add r2, r0, r4\n\t"
+        "add r2, #2\n\t"
+        "mov r4, #0\n\t"
+        "cmp r4, r1\n\t"
+        "bhs 3f\n\t"
+    "2:\n\t"
+        "strh r3, [r2]\n\t"
+        "sub r2, #2\n\t"
+        "lsr r3, r3, #1\n\t"
+        "add r0, r4, #1\n\t"
+        "lsl r0, r0, #0x18\n\t"
+        "lsr r4, r0, #0x18\n\t"
+        "ldr r0, [r6]\n\t"
+        "ldrb r0, [r0, #8]\n\t"
+        "cmp r4, r0\n\t"
+        "blo 2b\n\t"
+    "3:\n\t"
+        "mov r0, #1\n\t"
+        "strh r0, [r2]\n\t"
+        "sub r2, #2\n\t"
+        "strh r0, [r2]\n\t"
+        "mov r4, #0xd0\n\t"
+        "lsl r4, r4, #0x14\n\t"
+        "ldr r0, 9f\n\t"
+        "ldr r0, [r0]\n\t"
+        "ldrb r2, [r0, #8]\n\t"
+        "add r2, #3\n\t"
+        "mov r0, sp\n\t"
+        "add r1, r4, #0\n\t"
+        "bl sub_803AAD4\n\t"
+        "add r0, r4, #0\n\t"
+        "mov r1, sp\n\t"
+        "mov r2, #0x44\n\t"
+        "bl sub_803AAD4\n\t"
+        "add r2, sp, #8\n\t"
+        "add r5, #6\n\t"
+        "mov r4, #0\n\t"
+        "mov r6, #1\n\t"
+    "4:\n\t"
+        "mov r1, #0\n\t"
+        "mov r3, #0\n\t"
+    "5:\n\t"
+        "lsl r1, r1, #0x11\n\t"
+        "ldrh r0, [r2]\n\t"
+        "and r0, r6\n\t"
+        "lsr r1, r1, #0x10\n\t"
+        "orr r1, r0\n\t"
+        "add r2, #2\n\t"
+        "add r0, r3, #1\n\t"
+        "lsl r0, r0, #0x18\n\t"
+        "lsr r3, r0, #0x18\n\t"
+        "cmp r3, #0xf\n\t"
+        "bls 5b\n\t"
+        "strh r1, [r5]\n\t"
+        "sub r5, #2\n\t"
+        "add r0, r4, #1\n\t"
+        "lsl r0, r0, #0x18\n\t"
+        "lsr r4, r0, #0x18\n\t"
+        "cmp r4, #3\n\t"
+        "bls 4b\n\t"
+        "mov r0, #0\n\t"
+    "6:\n\t"
+        "add sp, #0x88\n\t"
+        "pop {r4, r5, r6}\n\t"
+        "pop {r1}\n\t"
+        "bx r1\n\t"
+        ".align 2, 0\n"
+    "9: .4byte gUnknown_03001634\n"
+    );
 }
 
-/* NOT YET BYTE-MATCHING: writes one 8-byte (64-bit) block `src[0..3]`
- * to EEPROM at `addr`, then arms a watchdog timer (`sub_803AA08` with
- * `gStaticData_085A9F10` as the reload/config) and busy-waits on the
- * EEPROM data port's ready bit until either it goes ready or the
- * timer's IRQ handler flags a timeout (`gUnknown_03001624`), stopping
- * the timer either way before returning. Returns 0x80FF if `addr` is
- * out of range, or 0xC001 on a watchdog timeout. Semantics and every
- * field/register access confirmed against the ROM; the busy-wait tail
- * hits the same loop-rotation gap `sub_803AAD4` (src/system/
- * timer_util.c) already has an unresolved entry for - this compiler
- * restructures the `if (cond) break; if (flag) { if (cond) break;
- * result = ...; break; }` shape into extra basic blocks the ROM
- * doesn't have, rather than the ROM's simpler linear flow. */
-s32 sub_803AC04(u16 addr, u16 *src)
+/* Writes one 8-byte (64-bit) block `src[0..3]` to EEPROM at `addr`,
+ * then arms a watchdog timer (`sub_803AA08` with `gStaticData_085A9F10`
+ * as the reload/config) and busy-waits on the EEPROM data port's ready
+ * bit until either it goes ready or the timer's IRQ handler flags a
+ * timeout (`gUnknown_03001624`), stopping the timer either way before
+ * returning. Returns 0x80FF if `addr` is out of range, or 0xC001 on a
+ * watchdog timeout.
+ *
+ * Written as NAKED asm: an earlier pass's plain-C reconstruction (see
+ * docs/matching/issue-69-eeprom-timer.md) confirmed every field/
+ * register access against the ROM, but the busy-wait tail hit the same
+ * loop-rotation gap `sub_803AAD4` had - this compiler restructures the
+ * `if (cond) break; if (flag) { if (cond) break; result = ...; break;
+ * }` shape into extra basic blocks the ROM doesn't have. Since every
+ * instruction was already independently confirmed correct, this is a
+ * mechanical, byte-verified transcription of the ROM's own instructions
+ * - see sub_803AB54's comment above for the syntax-translation/label-
+ * renumbering convention used. */
+NAKED s32 sub_803AC04(u16 addr, u16 *src)
 {
-    u16 buf[82];
-    u8 n;
-    u8 i;
-    u16 v;
-    u16 *p;
-    s32 result;
-
-    if (addr >= gUnknown_03001634->maxCount) {
-        return 0x80FF;
-    }
-
-    n = gUnknown_03001634->addrBitCount;
-    p = &buf[n + 66];
-    *p = 0;
-    p--;
-
-    i = 0;
-    while (i <= 3) {
-        u16 word;
-        u8 j;
-
-        word = *src;
-        src++;
-        j = 0;
-        while (j <= 0xf) {
-            *p = word;
-            p--;
-            word >>= 1;
-            j++;
-        }
-        i++;
-    }
-
-    i = 0;
-    v = addr;
-    while (i < gUnknown_03001634->addrBitCount) {
-        *p = v;
-        p--;
-        v >>= 1;
-        i++;
-    }
-    *p = 0;
-    p--;
-    *p = 1;
-
-    sub_803AAD4(buf, EEPROM_PORT, gUnknown_03001634->addrBitCount + 0x43);
-    sub_803AA08(gStaticData_085A9F10);
-
-    result = 0;
-    while (1) {
-        if (*(vu16 *)EEPROM_PORT & 1) {
-            break;
-        }
-        if (gUnknown_03001624 != 0) {
-            if (*(vu16 *)EEPROM_PORT & 1) {
-                break;
-            }
-            result = 0xC001;
-            break;
-        }
-    }
-    sub_803AA90();
-    return result;
+    asm(
+        "push {r4, r5, lr}\n\t"
+        "sub sp, #0xa4\n\t"
+        "add r5, r1, #0\n\t"
+        "lsl r0, r0, #0x10\n\t"
+        "lsr r4, r0, #0x10\n\t"
+        "ldr r0, 9f\n\t"
+        "ldr r0, [r0]\n\t"
+        "ldrh r0, [r0, #4]\n\t"
+        "cmp r4, r0\n\t"
+        "blo 1f\n\t"
+        "ldr r0, 10f\n\t"
+        "b 8f\n\t"
+        ".align 2, 0\n"
+    "9: .4byte gUnknown_03001634\n"
+    "10: .4byte 0x000080FF\n"
+    "1:\n\t"
+        "ldr r0, 11f\n\t"
+        "ldr r0, [r0]\n\t"
+        "ldrb r0, [r0, #8]\n\t"
+        "lsl r0, r0, #1\n\t"
+        "mov r1, sp\n\t"
+        "add r3, r0, r1\n\t"
+        "add r3, #0x84\n\t"
+        "mov r0, #0\n\t"
+        "strh r0, [r3]\n\t"
+        "sub r3, #2\n\t"
+        "mov r1, #0\n\t"
+    "2:\n\t"
+        "ldrh r2, [r5]\n\t"
+        "add r5, #2\n\t"
+        "mov r0, #0\n\t"
+    "3:\n\t"
+        "strh r2, [r3]\n\t"
+        "sub r3, #2\n\t"
+        "lsr r2, r2, #1\n\t"
+        "add r0, #1\n\t"
+        "lsl r0, r0, #0x18\n\t"
+        "lsr r0, r0, #0x18\n\t"
+        "cmp r0, #0xf\n\t"
+        "bls 3b\n\t"
+        "add r0, r1, #1\n\t"
+        "lsl r0, r0, #0x18\n\t"
+        "lsr r1, r0, #0x18\n\t"
+        "cmp r1, #3\n\t"
+        "bls 2b\n\t"
+        "mov r1, #0\n\t"
+        "ldr r0, 11f\n\t"
+        "add r2, r0, #0\n\t"
+        "ldr r0, [r0]\n\t"
+        "b 4f\n\t"
+        ".align 2, 0\n"
+    "11: .4byte gUnknown_03001634\n"
+    "5:\n\t"
+        "strh r4, [r3]\n\t"
+        "sub r3, #2\n\t"
+        "lsr r4, r4, #1\n\t"
+        "add r0, r1, #1\n\t"
+        "lsl r0, r0, #0x18\n\t"
+        "lsr r1, r0, #0x18\n\t"
+        "ldr r0, [r2]\n\t"
+    "4:\n\t"
+        "ldrb r0, [r0, #8]\n\t"
+        "cmp r1, r0\n\t"
+        "blo 5b\n\t"
+        "mov r0, #0\n\t"
+        "strh r0, [r3]\n\t"
+        "sub r3, #2\n\t"
+        "mov r0, #1\n\t"
+        "strh r0, [r3]\n\t"
+        "mov r1, #0xd0\n\t"
+        "lsl r1, r1, #0x14\n\t"
+        "ldr r0, 12f\n\t"
+        "ldr r0, [r0]\n\t"
+        "ldrb r2, [r0, #8]\n\t"
+        "add r2, #0x43\n\t"
+        "mov r0, sp\n\t"
+        "bl sub_803AAD4\n\t"
+        "ldr r0, 13f\n\t"
+        "bl sub_803AA08\n\t"
+        "mov r4, #0\n\t"
+        "mov r1, #0xd0\n\t"
+        "lsl r1, r1, #0x14\n\t"
+        "mov r3, #1\n\t"
+        "ldr r2, 14f\n\t"
+    "6:\n\t"
+        "ldrh r0, [r1]\n\t"
+        "and r0, r3\n\t"
+        "cmp r0, #0\n\t"
+        "bne 7f\n\t"
+        "ldrb r0, [r2]\n\t"
+        "cmp r0, #0\n\t"
+        "beq 6b\n\t"
+        "ldrh r0, [r1]\n\t"
+        "mov r1, #1\n\t"
+        "and r0, r1\n\t"
+        "cmp r0, #0\n\t"
+        "bne 7f\n\t"
+        "ldr r4, 15f\n\t"
+    "7:\n\t"
+        "bl sub_803AA90\n\t"
+        "add r0, r4, #0\n\t"
+    "8:\n\t"
+        "add sp, #0xa4\n\t"
+        "pop {r4, r5}\n\t"
+        "pop {r1}\n\t"
+        "bx r1\n\t"
+        ".align 2, 0\n"
+    "12: .4byte gUnknown_03001634\n"
+    "13: .4byte gStaticData_085A9F10\n"
+    "14: .4byte gUnknown_03001624\n"
+    "15: .4byte 0x0000C001\n"
+    );
 }
-#endif
