@@ -310,6 +310,36 @@ from "core" graphics.
   `gUnknown_03001464`-gated palette-cycle DMA cluster's non-parked
   members.
 
+- `src/graphics/actor_part57.c` (new file, GitHub issue #54, non-
+  adjacent to `actor_part56.c` since the whole 0x0802D3A8-0x0802E0A4
+  range sits between them - see
+  [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
+  `sub_802D490`, `sub_802D4B0`, `sub_802D4EC`, `sub_802D528`,
+  `sub_802D57C`, `sub_802D590`, `sub_802D59C`, `sub_802D5D4`,
+  `sub_802D600`, `sub_802D648`, `sub_802D6A0`, `sub_802D764` -
+  `InitActorPart`-based constructor variants plus the
+  `gUnknown_030012C0+0x78` Aku-Aku-mask-style add/remove pair.
+- `src/graphics/actor_part58.c` (new file, GitHub issue #54, non-
+  adjacent since the raw `sub_802D7B0`/`sub_802D9A8`/`sub_802DA68` sit
+  between it and `actor_part57.c`; see
+  [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
+  `sub_802DB2C`, `sub_802DCC0` - the `gUnknown_030014BC` position-
+  tracking object's two `gStaticData_0817A840` vtable-slot update
+  functions (accumulate/clamp, tier-keyed `PlaySfx`/`sub_80019F8`
+  cues, and a shared kind/anim-reset transition tail).
+- `src/graphics/actor_part59.c` (new file, GitHub issue #54, non-
+  adjacent since the raw `sub_802DD9C`/`sub_802DE70` sit between it and
+  `actor_part58.c`; see
+  [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
+  `sub_802DFBC`, `sub_802DFC8`, `sub_802DFDC` - the
+  `gUnknown_030014BC` object's state-flag setter, destructor, and
+  constructor.
+- `src/graphics/actor_part60.c` (new file, GitHub issue #54, non-
+  adjacent since the raw `sub_802E058` sits between it and
+  `actor_part59.c`; see
+  [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
+  `nullsub_27` - a genuine no-op stub.
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
@@ -689,6 +719,19 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   ahead of the branch that decides whether it's needed, folding away a
   redundant unconditional jump the ROM's own build still has - see
   `docs/matching/issue-50-actor-2a69c.md`.
+- **`sub_802D3A8`** (`asm/code_3_2_20_28568_c99c_d3a8.s`, C in
+  `src/graphics/actor_part61.c`, GitHub issue #54) - eases `self`'s
+  cached position toward a per-state target/table-scatter offset.
+  Semantics, register choices and every individual instruction body
+  confirmed correct; parked on the prologue's fixed argument-register-
+  copy order (`mov ip, r2` before `adds r7, r3, #0`), which this
+  compiler always emits in the opposite order regardless of C statement
+  order or combining the copies into one inline-asm block - and, once
+  that's forced to match, an explicit `r7` pin gets clobbered by
+  unrelated scratch constant loads later in the function body (the same
+  categorical `r7`-pin limitation already documented for `sub_8007DBC`
+  in `actor_part2.c`). See
+  [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md).
 
 ## Left raw (not attempted, or attempted and set aside)
 
@@ -754,3 +797,25 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   and a high-register-pressure hitbox commit function; each calls one
   or more still-unexamined helpers - see
   `docs/matching/issue-9-0x08007634-actor.md`.
+- **`sub_802D7B0`/`sub_802DA68`/`sub_802D9A8`** (`asm/code_3_2_20_28568_c99c_d7b0.s`,
+  GitHub issue #54) - two confirmed slots (3 and 6) of the type-0
+  `category_vtable` (`sub_802D7B0`, which also runs a full 3-axis AABB
+  overlap test against the player before calling `sub_800014C`) and a
+  palette-gradient DMA cursor-advance/seed pair for the
+  `gUnknown_030014BC` object (`sub_802D9A8`/`sub_802DA68`, computing a
+  16-color gradient via `sub_803ADB4` and writing it straight to BG
+  palette RAM); not confidently understood well enough to reconstruct
+  byte-exact C without real risk of a wrong guess, left raw - see
+  `docs/matching/issue-54-actor-d3a8.md`.
+- **`sub_802DD9C`/`sub_802DE70`** (`asm/code_3_2_20_28568_c99c_dd9c.s`,
+  GitHub issue #54) - a self-vs-player 3-axis AABB overlap test (the
+  same shape as `sub_802D7B0`'s inline check above, factored out to its
+  own function) and a ~160-instruction VRAM gauge-tile bitmap generator
+  (two nested 16x16 triangular-fill loops plus a DMA3 transfer, heavy
+  `r8`/`sb`/`sl` register pressure); left raw - see
+  `docs/matching/issue-54-actor-d3a8.md`.
+- **`sub_802E058`** (`asm/code_3_2_20_28568_c99c_e058.s`, GitHub issue
+  #54) - a parameterized twin of half of `sub_802DE70`'s VRAM gauge-tile
+  triangular-fill loop, taking the destination buffer and seed value as
+  arguments instead of using the fixed stack buffer/globals; left raw -
+  see `docs/matching/issue-54-actor-d3a8.md`.
