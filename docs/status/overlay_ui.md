@@ -67,7 +67,15 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   0x08006250-0x080062A8): the composite screen's own top-level object's
   "apply BLDCNT/BLDY/DISPCNT" step: `sub_8006250`. See
   `docs/matching/issue-8-0x080060ac-overlay-ui.md`.
-- `src/graphics/settings_menu13.c` (new file - issue #7,
+- `src/graphics/settings_menu13.c` (new file - issue #8,
+  0x080063D8-0x08006518): the two-string dialog/message-box object
+  constructor called by `sub_80062A8`: `sub_80063D8`. Matched only
+  after heavy register pinning - see
+  `docs/matching/issue-8-0x080060ac-overlay-ui.md`'s "Second pass"
+  section for the full gotcha list, including a case where an isolated
+  compile looked byte-identical but a full clean `make compare` still
+  failed (the compiled function was 4 bytes short).
+- `src/graphics/settings_menu15.c` (new file - issue #7,
   0x08004EC0-0x08005004): the composite screen's per-instance
   constructor and its icon-field refresh/teardown step: `sub_8004EC0`,
   `sub_8005004`. Also incl. parked `sub_8004D74`/`sub_8005100`/
@@ -77,19 +85,19 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   `asm/code_3_1_10_7.s`/`code_3_1_10_7_5100.s`/`code_3_1_10_7_53f4.s`/
   `code_3_1_10_7_57e0.s`. See
   `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
-- `src/graphics/settings_menu14.c` (new file - issue #7, 0x08005E5C) -
+- `src/graphics/settings_menu16.c` (new file - issue #7, 0x08005E5C) -
   entirely parked `sub_8005E5C`, real bytes wrapped `.if NON_MATCHING
   == 0` in `asm/code_3_1_10_9.s`. See
   `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
-- `src/graphics/settings_menu15.c` (new file - issue #7,
+- `src/graphics/settings_menu17.c` (new file - issue #7,
   0x08005304-0x080053F4): the icon-group reveal/cycle animation plus
   the row-cursor icon's blink countdown: `sub_8005304`. See
   `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
-- `src/graphics/settings_menu16.c` (new file - issue #7,
+- `src/graphics/settings_menu18.c` (new file - issue #7,
   0x0800570C-0x080057E0): shows whichever `icons8c` row changed, or a
   fallback label if none did: `sub_800570C`. See
   `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
-- `src/graphics/settings_menu17.c` (new file - issue #7,
+- `src/graphics/settings_menu19.c` (new file - issue #7,
   0x0800599C-0x08005A78): the results sub-region constructor:
   `sub_800599C`. See `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
 
@@ -113,6 +121,15 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   register-letter choices; `sub_8003BDC` additionally spills a constant
   through `ip`, which plain C can't request) - see `docs/matching.md`,
   "Match 0x08003B40-0x08004CB4", for what was tried on each.
+- **`sub_8003F30`** (`asm/code_3_1_10_4.s`, C in
+  `src/graphics/settings_menu.c`) - a per-row numeric display: three
+  of the row's `struct settings_row_stats` fields drawn as decimal
+  strings via `itoa` into `self->rowObjA`/`rowObjC`/`rowObjB`, plus a
+  fourth value formatted as `"NN%"` and drawn measure-then-right-aligned.
+  Semantically confirmed (issue #6); hits the same difficulty class as
+  the functions above, compounded by four near-identical unrolled
+  blocks instead of two-to-three. See
+  `docs/matching/issue-6-0x08003f30-overlay-ui.md`, issue #6.
 - **`sub_8005AE8`**, **`sub_8005B80`**, **`sub_8005C58`**,
   **`sub_8005D44`** (`asm/code_3_1_10_8.s`, C in
   `src/graphics/settings_menu6.c`) - four more settings-row icon-widget
@@ -124,7 +141,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   the ROM's does, the same class `sub_8006600` documents - see
   `docs/matching.md`, issue #7.
 - **`sub_8004D74`** (`asm/code_3_1_10_7.s`, C in
-  `src/graphics/settings_menu13.c`) - the composite pause/options
+  `src/graphics/settings_menu15.c`) - the composite pause/options
   screen's top-level orchestrator (allocate/build/run/teardown). Fully
   understood; got the instruction order and count extremely close via
   heavy register pinning, but the ROM additionally keeps a literal `0`
@@ -132,22 +149,22 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   of shifted-constant computations between otherwise-separate
   statements - see `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
 - **`sub_8005100`** (`asm/code_3_1_10_7_5100.s`, C in
-  `src/graphics/settings_menu13.c`) - the blocking cursor/confirm/
+  `src/graphics/settings_menu15.c`) - the blocking cursor/confirm/
   cancel driver. Fully understood but the largest, most control-flow-
   heavy function in this chunk; parked without attempting the same
   register-pressure fight documented for the others - see
   `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
 - **`sub_80053F4`**, **`sub_800556C`** (`asm/code_3_1_10_7_53f4.s`, C
-  in `src/graphics/settings_menu13.c`) - the per-frame row-draw step
+  in `src/graphics/settings_menu15.c`) - the per-frame row-draw step
   and the per-row list renderer. Same gcc-2.9 register-pressure class
   as `sub_8006600` (`docs/status/graphics.md`) - see
   `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
 - **`sub_80057E0`**, **`sub_80058C0`** (`asm/code_3_1_10_7_57e0.s`, C
-  in `src/graphics/settings_menu13.c`) - two icon-row-group draw
+  in `src/graphics/settings_menu15.c`) - two icon-row-group draw
   handlers (`icons9c`/`iconsB0`). Same register-pressure class - see
   `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
 - **`sub_8005E5C`** (`asm/code_3_1_10_9.s`, C in
-  `src/graphics/settings_menu14.c`) - draws a numerator/`/`/denominator
+  `src/graphics/settings_menu16.c`) - draws a numerator/`/`/denominator
   fraction stack. Same register-pressure class - see
   `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
 - **`sub_8005EF4`**, **`sub_8005FBC`** (`asm/code_3_1_10_10.s`, C in
@@ -169,3 +186,13 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   stepper on `struct sub_8006700_actor` (`src/graphics/oam_count.c`).
   Semantically confirmed; same difficulty class as above. See
   `docs/matching/issue-8-0x080060ac-overlay-ui.md`, issue #8.
+- **`sub_80062A8`** (`asm/code_3_1_10_15.s`, C in
+  `src/graphics/settings_menu14.c`) - the composite screen's dialog
+  spawner (resets palette/DISPCNT, re-inits the two icon managers,
+  fires each one's `record->slots[6]` trampoline, builds and runs the
+  dialog via the now-matched `sub_80063D8`/`sub_8006518`).
+  Semantically confirmed; same difficulty class as above, plus a
+  genuine correctness bug from an attempted `asm("r7")` pin for one
+  parameter (the project's documented categorical r7-pin limitation).
+  See `docs/matching/issue-8-0x080060ac-overlay-ui.md`'s "Second pass"
+  section, issue #8.

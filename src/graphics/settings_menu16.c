@@ -3,78 +3,68 @@
 #include "icon_manager.h"
 #include "pause_screen_results.h"
 
-extern void sub_8008890(void *arg0, s32 arg1, s32 arg2);
-extern s32 sub_8026F38(s32 arg0);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
 extern struct icon_manager *gUnknown_030012DC;
+extern struct icon_manager *gUnknown_030012E0;
+extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
 
-/* Shows (`sub_8008890(icon, 0, 0)`) whichever of `icons8c[0..3]` has a
- * matching bit set in `self->field_10`'s byte at offset 2 (a flag byte
- * on the row-stats handle sub_8004860/sub_80048E0 - src/graphics/
- * settings_menu2.c - already fill; bits 0x20/0x80/0x40/0x10, one per
- * slot). If *none* of the four bits were set, draws a fallback
- * centered label (text id 0x3a) at a fixed position instead. */
-void sub_800570C(struct pause_screen_results *self)
+#if NON_MATCHING
+/* Draws `label1`/`label2` (a small "N/M" fraction readout - a row's
+ * count over its fixed total, e.g. the icon-row helpers in
+ * sub_80057E0/sub_80058C0 pass each row's formatted count/total
+ * scratch buffers) on the composite pause/options screen's results
+ * icons: draws `label1` at `gUnknown_030012DC`'s current position
+ * (slot 2), copies that position (x-2, y unchanged) into
+ * `gUnknown_030012E0` and draws a literal `/` there (slot 4), then
+ * repositions `gUnknown_030012DC` to (that x-5, that y+8) and draws
+ * `label2` there (slot 2). `self` is unused - the ROM never reads it
+ * either.
+ *
+ * NOT YET BYTE-MATCHING: semantics fully understood and cross-checked
+ * against sub_80057E0/sub_80058C0's callers (docs/rom_map.md). Parked
+ * the same class of gcc-2.9 register-allocation difficulty documented
+ * for sub_8006600 (src/graphics/oam_count.c): the two long-lived
+ * `&gUnknown_030012DC`/`&gUnknown_030012E0` address pointers and the
+ * `label2` argument (all three genuinely live across the three
+ * sub_803AD80 calls) always land in r8/r9/sl here, no matter how the
+ * source is restructured (plain global references, cached address
+ * locals, or explicit r5/r6/r8 register pins matching the ROM's own
+ * choice - the last of which also introduced a stack spill the ROM
+ * doesn't have). The ROM's own register choice for these three values
+ * (r5/r6/r8) isn't reachable from plain C at this call depth. */
+void sub_8005E5C(struct pause_screen_results *self, void *label1, void *label2)
 {
-    s32 none = 1;
+    struct icon_manager **dcAddr = &gUnknown_030012DC;
+    struct icon_manager **e0Addr;
+    void *lbl2 = label2;
+    struct icon_manager *mgr;
+    struct icon_record *rec;
+    s32 x, y;
 
-    {
-        register u8 *p asm("r1") = (u8 *)self->field_10 + 2;
-        register s32 mask asm("r0") = 0x20;
-        register u8 byte asm("r1");
-        byte = *p;
-        mask &= byte;
-        if (mask) {
-            sub_8008890(self->icons8c[0], 0, 0);
-            none = 0;
-        }
-    }
-    {
-        register u8 *p asm("r1") = (u8 *)self->field_10 + 2;
-        register s32 mask asm("r0") = 0x80;
-        register u8 byte asm("r1");
-        byte = *p;
-        mask &= byte;
-        if (mask) {
-            sub_8008890(self->icons8c[1], 0, 0);
-            none = 0;
-        }
-    }
-    {
-        register u8 *p asm("r1") = (u8 *)self->field_10 + 2;
-        register s32 mask asm("r0") = 0x40;
-        register u8 byte asm("r1");
-        byte = *p;
-        mask &= byte;
-        if (mask) {
-            sub_8008890(self->icons8c[2], 0, 0);
-            none = 0;
-        }
-    }
-    {
-        register u8 *p asm("r1") = (u8 *)self->field_10 + 2;
-        register s32 mask asm("r0") = 0x10;
-        register u8 byte asm("r1");
-        byte = *p;
-        mask &= byte;
-        if (mask) {
-            sub_8008890(self->icons8c[3], 0, 0);
-            none = 0;
-        }
-    }
+    mgr = *dcAddr;
+    rec = mgr->record;
+    sub_803AD80((u8 *)mgr + rec->slots[2].offset, label1, rec->slots[2].ptr);
 
-    if (none) {
-        s32 label = sub_8026F38(0x3a);
-        struct icon_record *rec = gUnknown_030012DC->record;
-        u32 width = sub_803AD80((u8 *)gUnknown_030012DC + rec->slots[0].offset, (void *)label, rec->slots[0].ptr);
-        s32 halfX = 0xc2 - (width >> 1);
-        struct icon_manager *mgr = gUnknown_030012DC;
-        s32 y = 0x64;
+    mgr = *dcAddr;
+    x = mgr->posX;
+    y = mgr->posY;
 
-        mgr->posX = halfX;
-        mgr->posY = y;
+    e0Addr = &gUnknown_030012E0;
+    mgr = *e0Addr;
+    mgr->posX = x - 2;
+    mgr->posY = y;
 
-        rec = gUnknown_030012DC->record;
-        sub_803AD80((u8 *)gUnknown_030012DC + rec->slots[2].offset, (void *)label, rec->slots[2].ptr);
-    }
+    rec = mgr->record;
+    sub_803AD80((u8 *)mgr + rec->slots[4].offset, (void *)0x2f, rec->slots[4].ptr);
+
+    mgr = *e0Addr;
+    x = mgr->posX;
+    y = mgr->posY;
+
+    mgr = *dcAddr;
+    mgr->posX = x - 5;
+    mgr->posY = y + 8;
+
+    rec = mgr->record;
+    sub_803AD80((u8 *)mgr + rec->slots[2].offset, lbl2, rec->slots[2].ptr);
 }
+#endif /* NON_MATCHING */

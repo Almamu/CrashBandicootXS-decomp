@@ -1,6 +1,14 @@
 # Issue #7: 0x08004D74-0x08005A78/0x08005E5C - the composite pause/options
 screen's own constructor and icon-manager-heavy sub-widgets
 
+**Naming note:** these files are numbered `settings_menu15`-`19` rather
+than `settings_menu13`-`17` (which would have matched their creation
+order more naturally) because issue #8's parallel PR independently
+claimed `settings_menu13.c`/`14.c` first, before this PR merged -
+resolved as a rename on merge to avoid an add/add filename collision.
+The whole five-file family was renumbered together (not just the two
+that literally collided) to keep it visually contiguous.
+
 GitHub issue #7 covers 12 functions: the composite pause/options
 screen's top-level constructor/driver pair, its per-row list renderer
 and draw step, its five icon-row-group draw handlers, and the results
@@ -73,9 +81,9 @@ some byte offsets by coincidence, per that header's own comment.
   then builds the five icon-widget sub-groups in order (delegating to
   `sub_8005A78`/`AE8`/`B80`/`C58`/`D44`).
 
-New files: `src/graphics/settings_menu13.c` (`sub_8004EC0`,
-`sub_8005004`, plus the parked functions below), `settings_menu15.c`
-(`sub_8005304`), `settings_menu16.c` (`sub_800570C`), `settings_menu17.c`
+New files: `src/graphics/settings_menu15.c` (`sub_8004EC0`,
+`sub_8005004`, plus the parked functions below), `settings_menu17.c`
+(`sub_8005304`), `settings_menu18.c` (`sub_800570C`), `settings_menu19.c`
 (`sub_800599C`).
 
 ### Real codegen gotchas hit and fixed (all five functions)
@@ -149,9 +157,9 @@ matched functions above and `docs/rom_map.md`'s `overlay_ui`
 investigation; none were guessed. Real bytes stay in the asm fragments
 below (each wrapped `.if NON_MATCHING == 0`); the NON_MATCHING C
 reconstructions live alongside the matched functions in
-`src/graphics/settings_menu13.c` (`sub_8004D74`, `sub_8005100`,
+`src/graphics/settings_menu15.c` (`sub_8004D74`, `sub_8005100`,
 `sub_80053F4`, `sub_800556C`, `sub_80057E0`, `sub_80058C0`) and
-`src/graphics/settings_menu14.c` (`sub_8005E5C`).
+`src/graphics/settings_menu16.c` (`sub_8005E5C`).
 
 - **`sub_8004D74`** (`asm/code_3_1_10_7.s`) - the composite screen's
   top-level orchestrator: frees pending heap bytes, resets the audio

@@ -81,7 +81,14 @@ system from "core" graphics.
   `sub_8028AC4`, `sub_8028ADC`, `sub_8028AE8`, `sub_8028B04`,
   `sub_8028B28`, `sub_8028B34`, `sub_8028B40`, `sub_8028B4C`,
   `sub_8028B58` - trivial `struct icon_manager` getter/setter/
-  trampoline-forwarder family.
+  trampoline-forwarder family. Also includes `InitHudTextWidget`
+  (`0x08028B7C`, no tracked issue - just the next function in ROM
+  order): a minimal `record`-pointer constructor for the same `struct
+  icon_manager`, matched byte-exact on the first try with plain struct
+  field access - see
+  [docs/matching/naked-InitHudTextWidget.md](../matching/naked-InitHudTextWidget.md)
+  (misnomer aside - it's plain C, not a NAKED transcription; named to
+  match this repo's existing untracked-function-writeup convention).
 
 - `src/graphics/hud_stat_widget.c` (new file, GitHub issue #45's second
   pass): `sub_80274EC` - the HUD stat-widget family's dispatcher.

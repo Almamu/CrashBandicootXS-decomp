@@ -193,3 +193,85 @@ confidence semantics for several of them
 (`sub_8004D74`/`sub_8004EC0`/`sub_8005004`/`sub_8005100`/`sub_800599C`)
 and would be a reasonable next chunk to pick up. Both issues are left
 open with this comment.
+
+## Second pass: `sub_80063D8` matched, `sub_80062A8` parked
+
+A follow-up pass tackled this issue's final two "left completely
+untouched" functions, `sub_80062A8`/`sub_80063D8` (previously raw in
+`asm/code_3_1_10_12.s`).
+
+- **`sub_80063D8`** (`src/graphics/settings_menu13.c`) - the two-string
+  dialog/message-box object constructor docs/rom_map.md's "Correction"
+  section already traced: builds a small `struct sub_8006700_actor`
+  (the same object `src/graphics/oam_count.c`/`settings_menu10.c`
+  already name, allocated by the caller at exactly its own `0x2c`-byte
+  size) plus one `struct settings_icon_actor`-shaped background icon
+  owned via `field_18`, built the same way `settings_menu6.c`'s icon
+  constructors are (`sub_8008904(sub_8026EDC(0x40))`, `field_20`
+  pointed at the shared `gUnknown_030012D0` header table at a new
+  `0xe4<<1` offset). **Matched byte-exact**, but only after the same
+  class of heavy register pinning `oam_count.c`'s `SUB_8006600_*`
+  macros and `settings_menu6.c`'s `UPDATE_ICON_FRAME_NIBBLE` already
+  use - see the full account of gotchas (post-increment-store fusion,
+  address-register reuse across adjacent-but-distinct offsets, and a
+  plain `register T v asm("rN") = expr` initializer not actually
+  forcing the copy into `rN`) in that file's own header comment.
+
+  The first attempt at this function looked byte-identical in an
+  **isolated** compile but still failed a full clean `make compare` -
+  a real instance of docs/workflow.md's warning that an isolated
+  compile is diagnostic only: the compiled function came out 4 bytes
+  *shorter* than the ROM's own `0x140`-byte span (ending at
+  `0x08006514` instead of `0x08006518`, silently shifting every
+  address after it and cascading into a checksum mismatch that looked,
+  from `cmp`'s output alone, like the whole ROM had come apart). The
+  missing 4 bytes turned out to be a single `field_29`-address
+  computation the natural allocator "optimized" into `addr + 1`
+  (reusing the still-live `field_28` address register) instead of the
+  ROM's fresh `self + 0x29` recomputation - found by objdumping the
+  *actual linked* `crashbandicootxs.elf` at the real ROM address and
+  diffing it directly against the ROM's own disassembly, not by trusting
+  the isolated `.s` output a second time.
+
+- **`sub_80062A8`** (`src/graphics/settings_menu14.c`) - the higher-
+  level dialog spawner docs/rom_map.md already traced (palette/DISPCNT
+  reset, re-init the two icon managers, reset the VRAM upload cursor,
+  fire each manager's `record->slots[6]` trampoline, allocate and build
+  the dialog via `sub_80063D8` above, then run it via `sub_8006518`).
+  Every load/store/call is confirmed against the ROM. **Parked**
+  (`NON_MATCHING`) - hits the same "last mile" gcc-2.9 register/
+  constant-reuse nondeterminism this issue's other parked functions
+  document, specifically around the two cached-global-address locals
+  (`gUnknown_030012DC`/`030012E0`, `r5`/`r8` in the ROM) and the exact
+  constant-reuse trick the ROM uses to derive `gUnknown_030012E0`'s
+  `field_108` offset by subtracting `0x24` from the already-loaded
+  `field_12c` offset constant rather than loading a fresh literal. An
+  explicit `asm("r7")` pin for the `type` parameter was tried and
+  discarded - it produced a genuine **correctness bug**, not just a
+  mismatch: the natural allocator reused r7 for an unrelated cached
+  address partway through the function, silently clobbering the pinned
+  value before its one remaining use at the `sub_80063D8` call site.
+  This is the project's documented categorical r7-pin limitation
+  (`docs/matching/naked-sub_8007dbc.md`) showing up in a new function;
+  not worth continuing to push on for a single call site. Real bytes
+  wrapped `.if NON_MATCHING == 0` in the new `asm/code_3_1_10_15.s`.
+
+Since `sub_80062A8` is still parked, **issue #8 is not fully closed by
+this pass** - one function's worth of register-allocation work remains.
+
+## File structure (second pass)
+
+`asm/code_3_1_10_12.s` (previously holding both `sub_80062A8` and
+`sub_80063D8` raw) is gone - split into the new `src/graphics/
+settings_menu14.c` (`sub_80062A8`'s `NON_MATCHING` C reconstruction),
+the new `asm/code_3_1_10_15.s` (`sub_80062A8`'s real bytes, wrapped),
+and the new `src/graphics/settings_menu13.c` (`sub_80063D8`, matched,
+unconditional). `ldscript.txt` updated to link them in that order
+(`settings_menu12.o`, `settings_menu14.o`, `code_3_1_10_15.o`,
+`settings_menu13.o`, `settings_menu10.o`, ...), keeping every
+function's own address unchanged. `tools/report_units.py`'s
+`overlay_ui` entries updated to match.
+
+Verified via a full clean `rm -rf build && make NON_MATCHING=1 report`
+and `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
+crashbandicootxs.map && make compare` (`La suma coincide`).

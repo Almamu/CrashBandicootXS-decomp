@@ -247,10 +247,12 @@ _08003F20:
 	.align 2, 0
 .endif
 
-@ sub_8003F30's semantics aren't confidently understood yet (a
-@ complex per-digit itoa-rendering routine across three parallel
-@ object arrays) - left fully untouched rather than force a
-@ low-confidence reconstruction. See the PR/issue for this chunk.
+@ sub_8003F30 is reconstructed (semantics understood - a per-row
+@ itoa-based numeric renderer across three parallel object arrays plus
+@ a measured/right-aligned percentage string) but NOT YET
+@ BYTE-MATCHING - parked as C in src/graphics/settings_menu.c, guarded
+@ by #if NON_MATCHING. See docs/matching/issue-6-0x08003f30-overlay-ui.md.
+.if NON_MATCHING == 0
 	thumb_func_start sub_8003F30
 sub_8003F30: @ 0x08003F30
 	push {r4, r5, r6, r7, lr}
@@ -569,6 +571,7 @@ _08004178:
 	bx r0
 	.align 2, 0
 _080041B8: .4byte gUnknown_030012E0
+.endif
 
 @ sub_80041BC is reconstructed (semantics understood) but NOT YET
 @ byte-matching - parked as C in src/graphics/settings_menu.c, guarded

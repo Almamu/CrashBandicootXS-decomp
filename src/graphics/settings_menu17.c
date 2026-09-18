@@ -1,65 +1,101 @@
 #include "core.h"
-#include "audio.h"
 #include "actor.h"
 #include "icon_manager.h"
 #include "pause_screen_results.h"
 
-extern s32 sub_8026F38(s32 arg0);
-extern s32 sub_802332C(void *arg0);
-extern void *gUnknown_030012C0;
-extern u8 gStaticData_0816C86C[];
-extern s32 sub_800697C(void *arg0);
-extern s32 sub_80060AC(s32 value, void *dest);
-extern void sub_80060F8(s32 arg0, s32 arg1, u8 *out);
-extern s32 sub_8001AC0(void *arg0);
-extern s32 sub_8001ABC(void *arg0);
-extern struct AudioContext *gUnknown_030012BC;
-extern void sub_8005A78(struct pause_screen_results *self);
-extern void sub_8005AE8(struct pause_screen_results *self);
-extern void sub_8005B80(struct pause_screen_results *self);
-extern void sub_8005C58(struct pause_screen_results *self);
-extern void sub_8005D44(struct pause_screen_results *self);
+extern void sub_8008044(struct actor *part);
+extern s32 sub_803AE4C(s32 dividend, s32 divisor);
+extern void sub_80087C0(struct actor *part);
+extern void sub_80087B4(struct actor *part);
+extern void sub_800872C(struct actor *part, u8 val);
+extern s32 sub_8000E1C(s32 max);
 
-/* The composite pause/options screen's "results" sub-region
- * constructor: resolves the current level's name/index label
- * (`field_70`/`field_74`/`buf78` - " N" for levels 0-0x13, blank for
- * anything past that), formats the row-stats completion percentage
- * (`buf41`), formats the two BG scroll-speed settings (`sub_8001AC0`/
- * `sub_8001ABC` on the shared AudioContext, each scaled `(v+0xc)*20/
- * 256` into `field_60`/`field_64`, then " <NN%>"-formatted into
- * `buf57`/`buf4f`), then builds the five icon-widget sub-groups in
- * order (`sub_8005A78`/`AE8`/`B80`/`C58`/`D44`, all already matched or
- * parked - src/graphics/settings_menu6.c). */
-void sub_800599C(struct pause_screen_results *self)
+/* A slow reveal/cycle animation over the results screen's icon groups:
+ * `field_24` (0-4) selects which group to hide this call (a plain
+ * `sub_8008044` per icon, no fade), advancing to the next group every
+ * `field_28` (180) calls, wrapping mod 5. Independently, `field_c0`
+ * (the row-cursor icon) blinks on its own countdown (`field_c4`):
+ * while it's ticking down, just decrement it; once it hits 0, either
+ * re-show the icon with a fresh random countdown (0x78-0xef) if it's
+ * currently "armed" (`field_38`), or hide it otherwise. */
+void sub_8005304(struct pause_screen_results *self)
 {
-    s32 levelIdx = sub_802332C(gUnknown_030012C0);
-    u32 labelId = *(u32 *)(gStaticData_0816C86C + levelIdx * 0x24);
+    switch (self->field_24) {
+    case 0:
+        sub_8008044((struct actor *)self->field_88);
+        break;
+    case 1: {
+        struct settings_icon_actor **p = self->icons8c;
+        s32 i;
+        for (i = 3; i >= 0; i--) {
+            sub_8008044((struct actor *)*p);
+            p++;
+        }
+        break;
+    }
+    case 2: {
+        struct settings_icon_actor **p = self->icons9c;
+        s32 i;
+        for (i = 4; i >= 0; i--) {
+            sub_8008044((struct actor *)*p);
+            p++;
+        }
+        break;
+    }
+    case 3: {
+        struct settings_icon_actor **p = self->iconsB0;
+        s32 i;
+        for (i = 2; i >= 0; i--) {
+            sub_8008044((struct actor *)*p);
+            p++;
+        }
+        break;
+    }
+    case 4:
+        sub_8008044((struct actor *)self->field_bc);
+        break;
+    }
 
-    self->field_70 = (void *)sub_8026F38(labelId);
-
-    if (levelIdx <= 0x13) {
-        self->field_74 = (void *)sub_8026F38(0);
-        self->buf78[0] = ' ';
-        sub_80060AC(levelIdx + 1, &self->buf78[1]);
-    } else {
-        self->field_74 = 0;
+    self->field_28--;
+    if (self->field_28 == 0) {
+        self->field_24++;
+        self->field_24 = sub_803AE4C(self->field_24, 5);
+        self->field_28 = 0xb4;
     }
 
     {
-        s32 count = sub_80060AC(sub_800697C(self->field_10), self->buf41);
-        self->buf41[count] = '%';
-        self->buf41[count + 1] = 0;
+        s32 *countAddr = &self->field_c4;
+        s32 result;
+
+        if (*countAddr != 0) {
+            goto decrement;
+        }
+        {
+            struct settings_icon_actor *icon = self->field_c0;
+
+            if (icon->field_38 != 0) {
+                icon->frameIndex = 0;
+                sub_80087C0((struct actor *)icon);
+                sub_80087B4((struct actor *)icon);
+                sub_800872C((struct actor *)icon, 0);
+                result = (u16)sub_8000E1C(0x78) + 0x78;
+                goto store;
+            } else {
+                sub_8008044((struct actor *)icon);
+                goto done;
+            }
+        }
+    decrement:
+        result = *countAddr - 1;
+    store:
+        *countAddr = result;
+    done:;
     }
-
-    self->field_60 = (sub_8001AC0(gUnknown_030012BC) + 0xc) * 20 / 256;
-    self->field_64 = (sub_8001ABC(gUnknown_030012BC) + 0xc) * 20 / 256;
-
-    sub_80060F8((s32)self, self->field_60, self->buf57);
-    sub_80060F8((s32)self, self->field_64, self->buf4f);
-
-    sub_8005A78(self);
-    sub_8005AE8(self);
-    sub_8005B80(self);
-    sub_8005C58(self);
-    sub_8005D44(self);
 }
+/* Trailing byte-padding gotcha (see docs/matching.md/
+ * matching_decomp_alignment_fix memory): the ROM pads the gap before
+ * the next function (sub_80053F4) with zero bytes (an explicit
+ * `.align 2, 0` in the original assembly), but this compiler's own
+ * default inter-function padding is a `mov r8, r8` NOP-equivalent
+ * instead. */
+asm(".align 2, 0");
