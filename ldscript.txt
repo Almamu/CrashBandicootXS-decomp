@@ -224,7 +224,7 @@ SECTIONS
         build/crashbandicootxs/src/graphics/hud_icon_slot.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_27138.o(.text);
         build/crashbandicootxs/src/graphics/hud_stat_widget.o(.text);
-        build/crashbandicootxs/asm/code_3_2_17_2757c.o(.text);
+        build/crashbandicootxs/src/graphics/hud_stat_widget2.o(.text);
         build/crashbandicootxs/src/graphics/hud_counter.o(.text);
         build/crashbandicootxs/asm/code_3_2_20.o(.text);
         build/crashbandicootxs/src/graphics/hud_blink.o(.text);
