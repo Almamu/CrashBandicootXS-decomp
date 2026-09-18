@@ -16,7 +16,11 @@ system from "core" graphics.
 
 - `src/graphics/hud_icon_slot.c` (new file, GitHub issue #45, non-
   adjacent to `hud_counter.c` since `sub_8027138`-`sub_802763C` sit raw
-  between them): `sub_8027088`, `sub_80270A8`, `sub_80270C0`,
+  between them): `sub_8026F54`/`sub_8027018` (the fx ring-buffer's
+  per-frame consumer/producer pair - see
+  `docs/matching/issue-45-hud-stat-widget-dispatcher.md`'s "Third pass"
+  section for the register-pinning/instruction-ordering gotchas this
+  pair needed), `sub_8027088`, `sub_80270A8`, `sub_80270C0`,
   `sub_80270E0`, `sub_802710C` (UNUSED - no caller anywhere in the
   ROM), `sub_8027120` - a fixed 3-entry particle/effect queue's reset/
   constructor/teardown trio, a HUD digit-slot draw helper, and two
@@ -89,6 +93,14 @@ why the rest of the family stayed raw) is
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
+- GitHub issue #45's third pass (see
+  [docs/matching/issue-45-hud-stat-widget-dispatcher.md](../matching/issue-45-hud-stat-widget-dispatcher.md)):
+  `sub_802757C`, `sub_802763C` (real bytes in
+  `asm/code_3_2_17_2757c.s`, reconstructions in
+  `src/graphics/hud_stat_widget2.c`) - `sub_802757C` hits a reproducible
+  gcc-2.9 miscompile pinning a byte to r7 the moment it's used as an
+  array subscript; `sub_802763C` wasn't attempted for byte-matching
+  given that same-file blocker.
 - GitHub issue #46 (see
   [docs/matching/issue-46-hud-icon-widget.md](../matching/issue-46-hud-icon-widget.md)
   for what was tried on each, including its "Second pass" section):

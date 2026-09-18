@@ -154,3 +154,257 @@ both updated to match. Verified via a full clean `make compare`
   what each still-raw function does, referenced above.
 - `docs/matching.md`'s frozen `0x08026EEC`-`0x08028568` entry - the
   first pass on this same issue.
+
+## Third pass
+
+Picking up the remaining 9 functions issue #45's second pass left
+untouched (see "Still untouched - all 9 remaining functions" above).
+
+### Matched: `sub_8026F54`/`sub_8027018` (the fx ring-buffer pair)
+
+Both now live in `src/graphics/hud_icon_slot.c`, placed at the top of
+the file (ROM order puts them immediately before `sub_8027088`, which
+this file already held). `struct hud_fx_queue` (previously a stub with
+two named `s32[3]` arrays and unlabelled padding, in this same file)
+is now fully characterized: `targets[3]`/`lists[3]` (pointer pairs,
+`+0x10`/`+0x1c`), `periods[3]`/`counts[3]` (`+0x28`/`+0x34`), `count`
+(`+0x40`), `direction` (`+0x44`), and a still-unexplained
+write-only `fields_e[3]` at `+0x04` (`sub_8027018` zeroes it; nothing
+in either function reads it back).
+
+- **`sub_8026F54`** (consumer, called with just `self`): for each of
+  `self->count` active slots, checks
+  `sub_803AF1C(gUnknown_0300082C, periods[i]) == 0` (a "how many frames
+  since this slot's period elapsed" test) and, when it fires, rotates
+  `targets[i]` by one position along the permutation order
+  `lists[i]` gives - forwards (`direction` set) or backwards
+  (`direction` clear). This is a palette/sprite-index **cycling**
+  effect, not the "trajectory queue" the second pass's doc comment
+  speculated - no angle/trig value is ever read back as an angle, only
+  used as a modulus.
+- **`sub_8027018`** (producer): appends one new slot at `self->count`
+  (no wraparound in either function - the caller resets the queue via
+  `sub_8027088`/`sub_80270C0` between bursts), computing `periods[idx]`
+  from `sub_803ADB4(0x3C, angle)`.
+
+Both compiled byte-identical only after a long series of register-pin
+and instruction-ordering fixes, all following the established
+techniques from `docs/workflow.md` step 3/7 and the gotchas already
+documented for this same function family:
+
+- **Caching `i*4` across a `bl`**: `sub_8026F54`'s per-iteration offset
+  needs to survive the `sub_803AF1C` call (used again afterward for
+  `targets[i]`/`lists[i]`/`counts[i]`). Plain `self->arr[i]` struct
+  access recomputes `i*4` fresh after the call every time (its
+  register is caller-saved, clobbered by the callee) - the fix is the
+  same `register s32 offset asm("r5") = i << 2;` pattern already used
+  elsewhere in this project, then reusing that value via raw
+  `(u8 *)self + FIELD + offset` pointer arithmetic instead of array
+  indexing for every access this iteration.
+- **The ROM never shares a computed base pointer between adjacent field
+  accesses.** A single combined C expression like
+  `*(TYPE *)((u8 *)self + FIELD + offset)` written twice back-to-back
+  gets CSE'd by this compiler into one shared `self+offset` base with
+  per-field immediate-offset loads - the ROM instead redoes the full
+  three-instruction address build (`self`, `+FIELD`, `+offset`) fresh
+  for each field. Fix: build the pointer through **separate sequential
+  statements** (`p = (u8 *)self; p += FIELD; p += offset;`) inside its
+  own small block per field, which this compiler does not fold back
+  together.
+- **`i`/`next_i` via `ip`, mirroring the ROM's odd early-increment**:
+  the ROM computes `i+1` and stashes it in `ip` immediately after the
+  `sub_803AF1C` call (before even checking the call's result), freeing
+  r4 (still holding the *old* `i`, safe since r4 is callee-saved across
+  the call) for `target` to occupy for the rest of the iteration. A
+  plain `for (i = 0; i < count; i++)` loop's natural increment placement
+  doesn't reproduce this. Fix: `register s32 next_i asm("ip");`
+  computed explicitly right after the call, used as the `for` loop's
+  own increment expression (`for (; i < count; i = next_i)`) so both
+  the normal and `continue`d paths funnel through the same single
+  bottom-of-loop test - a genuine `do { } while` written directly (or
+  `goto`-based equivalents) instead produced a *duplicated* top-of-loop
+  test that doesn't match; only routing through the `for` clause itself
+  got the ROM's single rotated test.
+- **`i = 0;` before `count = self->count;`, not after**: independent
+  statements with no data dependency between them still get emitted in
+  their C source order by this compiler - swapping the two changed
+  which one came first in the generated code, matching the ROM's
+  `movs r4, #0` preceding its `ldr r0, [r7, #0x40]`.
+- **Deferred global dereference**: `sub_803AF1C(gUnknown_0300082C, *p)`
+  written as a plain `u32 global_val = gUnknown_0300082C;` local
+  dereferences the global immediately after taking its address. The
+  ROM takes the address first, does unrelated work (the offset/pointer
+  build for the second argument), and only dereferences it right before
+  the call. Fix: `u32 *global_addr = &gUnknown_0300082C;` (address
+  only) followed by `*global_addr` used directly in the call expression,
+  which this compiler schedules where the value is actually needed.
+- **Index-read vs. shifted-address in different registers**: the ROM's
+  `ldrh r1, [r3]` / `lsls r0, r1, #1` idiom (used throughout this
+  family for `array[index]`-style accesses) keeps the raw index and its
+  shifted byte offset in two different registers. A plain
+  `target[*list]`-shaped C expression collapses both into one register
+  once the index is dead - this compiler's own CSE, not something a
+  register pin alone fixes (pinning just the pointer variable itself
+  made this *worse*, forcing the same address to be recomputed twice
+  for a read-then-write). What actually worked: split the shift out
+  into its own `asm volatile("lsl %0, %1, #1" : "=r"(shifted) : "r"(idx))`
+  anchor, with an explicit intermediate `idx_val` local for the raw
+  index - reproduces the exact two-register shape everywhere it
+  appears, including in `sub_8027018`'s `list += n` (needing the
+  operand order forced too, via the established `add %0, %1, %0` idiom
+  from `hud_counter.c`, this time keeping the pointer being updated as
+  the *output* operand rather than the shift result).
+- **`n`'s register differs by branch - don't share one pin across
+  both.** `sub_8026F54`'s `if (self->direction)` branch keeps
+  `counts[i]` in r1 the whole time (compared against 0, then copied to
+  a separate r2 loop counter); the `else` branch never touches r1 for
+  it at all - it's loaded straight into a scratch register and
+  decremented directly into r2 in one `subs`. A single
+  `register s32 n asm("r1")` declared once above the `if` and shared by
+  both branches forced the `else` branch into a register it never
+  actually asks for, and lost the ROM's fused
+  `n = *(s32 *)p - 1;` single-`subs` shape besides. Fix: two separate
+  local declarations, one per branch, each following its own branch's
+  actual register need instead of a single "the value called `n`" pin.
+- **A `u8` 6th-argument (stack-passed) parameter**: same gcc-2.9 gap
+  documented in `docs/matching/issue-3-overlay-ui-audio-wrapper.md`'s
+  `sub_80019F8` entry - plain `u8` parameter access reads the full
+  stack word and narrows it with two shifts instead of a genuine
+  `ldrb`. Here the ROM additionally keeps the address computation and
+  the final byte value in *two different* registers (`add r0, sp,
+  #0x18` / `ldrb r7, [r0]`), unlike that precedent's single-register
+  case - fixed with a two-output inline-asm anchor
+  (`"add %1, sp, #0x18\n\tldrb %0, [%1]" : "=r"(direction),
+  "=r"(addr_scratch)`), the second output pinned to `r0` so it doesn't
+  drift onto `r8` (which would need an extra push/pop this function
+  doesn't have) picked freely by the allocator.
+- **Never pin `self` (or anything else) to `r7` when it's live across a
+  `bl`.** Confirmed yet again (`docs/matching/
+  issue-45-hud-stat-widget-dispatcher.md`'s own second-pass note, and
+  `src/graphics/actor_part35.c`): an explicit `register ... asm("r7")`
+  parameter live across a call compiles *without* emitting r7's
+  push/pop at all, silently corrupting the caller's r7. `self` reaches
+  r7 here purely through natural allocation, arrived at only once every
+  other competing pin was in place and ordered correctly - never
+  through a direct pin.
+
+Verified via a full clean `make compare` (`La suma coincide`) with both
+functions cut into `src/graphics/hud_icon_slot.c` and their
+`asm/code_3_2_17_26f54.s` fragment (now empty) removed from
+`ldscript.txt`.
+
+### Parked: `sub_802757C`/`sub_802763C` (real gap, not a budget cut)
+
+Both fully understood and reconstructed as C (`src/graphics/
+hud_stat_widget2.c`, guarded by `#if NON_MATCHING`; real bytes stay in
+`asm/code_3_2_17_2757c.s`, now itself split into two
+`.if NON_MATCHING == 0` blocks, one per function) but not byte-matched:
+
+- **`sub_802757C`** (icon-indicator widget - lives display): positions
+  and clamps `parts[22]` unconditionally, then `parts[23]` only when
+  `sub_8023378`'s count exceeds 1. Every register in this function
+  matches ROM by construction *except one*: the ROM keeps each icon's
+  `anim_index` byte (`self + 0x5AD`/`self + 0x5ED`) in **r7** right up
+  until using it as the `records[]` array subscript. Pinning it there
+  (`register u8 index asm("r7")`) reliably miscompiles - not just "the
+  wrong register", a genuine wrong-*value* bug: the next statement that
+  touches the pinned r7 value gets `mov r0, sp` / `lsl`/`lsr #0x18`
+  (reading the *stack pointer itself*, shifted, as if it were the
+  spilled byte) instead of the real value, silently corrupting the
+  result. Reproduced identically across every phrasing tried: plain
+  `records[index]`, an explicit `record_offset = index * sizeof(*records)`
+  local, and the full manual shift-and-subtract-plus-asm-forced-add
+  idiom `sub_8027838` needed for its own analogous clamp. Confirmed this
+  isn't about crossing a `bl` (the documented r7 quirk everywhere else
+  in this codebase) - there's no call between r7's definition and this
+  use. This looks like a distinct, second r7 miscompilation class in
+  this same `gcc 2.9` build, on top of the already-documented
+  live-across-a-`bl` one. Every other register does match: `self`=r6,
+  the position-table base=r5, the first icon's slot pointer=r3 and
+  clamp value=r4, the second icon's clamp value=r3 and slot pointer=r4
+  (each via a narrowly-scoped `register ... asm("rN")` local, not a
+  shared one - sharing one pinned variable between the two icons'
+  blocks, or between the outer clamp-value and the inner slot-pointer,
+  reliably knocked `self` out of r6 instead, the same "pin one thing,
+  something unrelated moves" churn `sub_8026F54` hit before its offset
+  ended up correctly cached).
+- **`sub_802763C`**: three more change-detection-gated widgets, keyed
+  off `sync_value_a`/`b`/`c` (`include/hud.h`, already named from the
+  second pass) against `sub_8023270`/`sub_8023268`/`sub_8023260`. The
+  first two split their value into tens/ones digits
+  (`sub_8037E54`/`sub_803AF1C`, div/mod by 10) across a slot pair each
+  (14/15, 17/18) using the same clamp idiom as `sub_802757C`; the third
+  does **not** split - slot 20 gets the raw value as its desired frame,
+  slot 21 always gets a fixed desired frame of 0 (a single-frame icon,
+  not a digit, matching `sub_8027138`'s own slot-21 setup). All six
+  slots, plus `sub_8027138`'s own slots 16/19, get redrawn
+  unconditionally afterward via nine `sub_80270E0` calls - slot 21
+  appears twice in that list, which the C reconstruction reproduces
+  exactly rather than treating as a typo. Not attempted for
+  byte-matching this pass, given `sub_802757C`'s r7 blocker sitting
+  right next to it in the same file and very likely recurring here too
+  (the raw disassembly shows the same `ldrb r7, [...]` shape at every
+  one of its six clamp sites).
+
+### Still fully untouched: `sub_8027138`/`sub_802732C`,
+    `sub_8027940`/`sub_8027D5C`/`sub_8027E88`
+
+Read enough to characterize but not reconstructed this pass, given the
+time already spent on the six functions above:
+
+- **`sub_8027138`** (constructor) / **`sub_802732C`** (its own tail,
+  called by `sub_8027138` itself with a second argument of 0): allocates
+  the 35-slot `parts` array (`sub_8026EC0(0x8C4)` - a leading 4-byte
+  header word holding the count `0x23`, *then* the 35
+  `struct hud_digit_part` slots, not the trailing-padding read the
+  second pass guessed), constructs every slot via the already-matched
+  `sub_8027120`, zeroes three more `struct hud_counter` fields
+  (`+0x0c`/`+0x10`/`+0x14`, still nameless - meaning not established),
+  then loops over all 35 slots wiring each one's `anim_data` from a
+  triple-indirected shared table (`**gUnknown_030012D0`, the same
+  global `src/graphics/settings_menu6.c` already names and uses via its
+  own `(**gUnknown_030012D0) + (const << N)` idiom) and either a
+  per-slot glyph table (`gStaticData_08174BE0[i]`) or, for slot 22
+  specifically, `sub_80233B4(...)+ 6`. `sub_802732C` is the exact same
+  per-slot setup loop's *tail end*: it (re)positions and re-clamps a
+  further handful of specific slots (13, 16, 19, 21) using the same
+  clamp idiom as `sub_802757C`/`sub_802763C` above. Both make heavy use
+  of the high registers (`sl`/`sb`/`r8`) throughout the loop body - the
+  same class of "loop/self pointer never lands in r8/sb no matter how
+  the source is phrased" difficulty `src/graphics/settings_menu6.c`'s
+  own `UPDATE_ICON_FRAME_NIBBLE` comment already documents giving up on
+  for four near-identical functions in that file; near-certain to hit
+  the same wall here, on top of needing `sub_802757C`'s r7 blocker
+  solved for every one of the ~10 clamp sites across both functions.
+- **`sub_8027940`** (score-style counter): a *much* bigger sibling of
+  `sub_8027838` - two separate 3-digit displays (fields `+0x24`/`+0x48`
+  and `+0x28`/`+0x4c`, each with its own change-detection cache),
+  each independently branching 3-digit vs. 2-digit vs. 1-digit (hiding
+  the unused leading slots via `frame_index = -1`, exactly like
+  `sub_8027838`'s single-digit case), plus one more icon
+  (`gStaticData_08174C6C`-positioned, slot 10) whose x/y table index is
+  itself picked from a 3-way digit-count check. Over 1000 bytes with
+  roughly a dozen clamp sites - the same r7/high-register concerns as
+  above apply throughout.
+- **`sub_8027D5C`**/**`sub_8027E88`**: not read in this pass beyond
+  their entry (mode-dispatch header identical in shape to
+  `sub_8027940`'s own `self+8`/`self+0xc` check) - `sub_8027D5C` calls
+  `sub_802325C` where `sub_8027940` called `sub_8023414`, suggesting the
+  same digit-counter shape against a different value source;
+  `sub_8027E88`, per the rom_map.md "fx" investigation, is the
+  percentage-counter widget with a `cmp r1, #0x64` special case.
+
+These five stay exactly as the earlier passes found them - real bytes,
+`asm/code_3_2_17_27138.s` (`sub_8027138`/`sub_802732C`) and
+`asm/code_3_2_20.s` (`sub_8027940`/`sub_8027D5C`/`sub_8027E88`) - not
+parked, not matched. **Issue #45 stays open**: 2 of the original 9
+untouched functions (`sub_8026F54`/`sub_8027018`) are now byte-exact
+matched, 2 more (`sub_802757C`/`sub_802763C`) are parked with a
+specific, reproducible compiler blocker identified, and 5 remain fully
+raw.
+
+## Cross-references (third pass)
+
+- `src/graphics/hud_stat_widget2.c` - new file, `sub_802757C`/
+  `sub_802763C`'s `NON_MATCHING` reconstructions.
+- `docs/status/hud.md` - matched and parked lists both updated.
