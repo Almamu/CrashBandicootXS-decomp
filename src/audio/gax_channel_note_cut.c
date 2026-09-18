@@ -1,7 +1,8 @@
 #include "core.h"
 
 /* Called with a small command value (`cmd`, 0-3 seen at the call site in
- * the still-raw `sub_8039658`) against a per-channel voice object
+ * `sub_8039658`, gax_sound_handler_channel_play.c, a NAKED transcription)
+ * against a per-channel voice object
  * (`self`). `cmd == 1` is the "note cut" case: if the voice's currently
  * bound instrument (`+0x3c`) has its second byte (`+0x7d`) set to the
  * sentinel `0xff`, arms a fixed-pitch/zero-volume note-off envelope

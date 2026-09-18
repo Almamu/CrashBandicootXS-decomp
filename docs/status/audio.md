@@ -118,6 +118,26 @@ See docs/matching.md for `PlaySfx`'s remaining gap.
   real decompiled C, so tracked here as parked, not matched. See
   [docs/matching/issue-3-overlay-ui-audio-wrapper.md](../matching/issue-3-overlay-ui-audio-wrapper.md)
   for the original gap analysis this closed.
+- **`sub_8039518`** (`src/audio/gax_sound_handler_channel_init.c`, the
+  "Channel" SoundHandler type's init_fn) - a real C reconstruction
+  landed the division call's previously-unreproducible `ldr rX,=0`/
+  `ldr rX,=1` literal-pool loads (passing them as one real `(s64)1 <<
+  32` constant), but two further gaps (an unavoidable extra
+  defensive-copy instruction from pinning the division's second
+  argument to `r2`, and the ROM's single shared 4-word literal pool
+  splitting into two once any of that call site becomes hand-placed
+  asm) resisted every C-level fix. Byte-verified NAKED transcription.
+- **`sub_80395A4`/`sub_8039658`** (`src/audio/gax_sound_handler_channel_play.c`,
+  the "Channel" SoundHandler type's play_fn and its direct callee) -
+  `sub_80395A4`'s entire body matched in isolation except its
+  3-instruction parameter-homing prologue order, which this compiler
+  never reproduces (with or without register pins, and `chanArg` can't
+  be pinned to `r7` to force the issue without hitting this toolchain's
+  confirmed r7-pin bug); `sub_8039658` hits the same many-register
+  (`r8`/`sb`) allocation ceiling as `sub_8038538`'s cluster below. Both
+  byte-verified NAKED transcriptions - see
+  [docs/matching/issue-67-68-channel-init-play.md](../matching/issue-67-68-channel-init-play.md)
+  for both functions' full write-up.
 
 ## Left raw (not attempted, or attempted and set aside)
 
@@ -161,17 +181,15 @@ raw after the second pass, see
   now-matched `sub_80392E0`); fully understood, not attempted as a C
   reconstruction this pass - complex nested-loop control flow
   deprioritized in favor of the two matches this pass did land.
-- `sub_8039518` - the "Channel" SoundHandler type's init_fn; fully
-  understood and reconstructed almost byte-exact, but one call site's
-  argument-loading codegen (a `0`/`1` literal pair pool-loaded via `ldr`
-  instead of `movs`, for reasons not yet identified) resisted every
-  variant tried - left raw rather than force a guess.
-- `sub_80395A4`/`sub_8039658` - the "Channel" SoundHandler type's
-  play_fn and its direct callee; `sub_8039658` hits the same
-  many-register (`r8`/`sb`) shape as `sub_8038538`'s cluster - left raw.
 
-From the `0x08039818`-`0x0803A944` pass specifically (issue #68): 15 of
-the chunk's 21 functions (`sub_8039658`, `sub_80398DC`, `sub_803985C`,
+`sub_8039518`/`sub_80395A4`/`sub_8039658` (the "Channel" SoundHandler
+type's init_fn/play_fn and the latter's direct callee) - listed raw
+above as of the second `0x08038538`-`0x08039658` pass - are now Parked
+NAKED transcriptions, see the "Parked" section above and
+[docs/matching/issue-67-68-channel-init-play.md](../matching/issue-67-68-channel-init-play.md).
+
+From the `0x08039818`-`0x0803A944` pass specifically (issue #68): 14 of
+the chunk's 21 functions (`sub_80398DC`, `sub_803985C`,
 `sub_8039AA4`, `sub_8039B44`, `sub_8039E50`, `sub_803A03C`, `sub_803A158`,
 `sub_803A278`, `sub_803A2C8`, `sub_803A318`, `sub_803A324`, `sub_803A5A8`,
 `sub_803A608`) - see
