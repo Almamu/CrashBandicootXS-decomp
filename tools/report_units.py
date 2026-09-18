@@ -213,7 +213,9 @@ UNITS = [
     (0x08026EEC, "src/system/main_loop.o", "system"),  # MainLoop/sub_8026F38 - the game's top-level per-frame loop (sets up the central state object, runs UpdateGameFrame forever) and a two-level per-widget-mode table lookup; matched. GitHub issue #45
     (0x08026F54, None, "hud"),  # sub_8026F54/sub_8027018 - a fixed 3-entry particle/effect queue's consumer/producer pair, left raw - see docs/rom_map.md's "fx" investigation (GitHub issue #45)
     (0x08027088, "src/graphics/hud_icon_slot.o", "graphics"),  # sub_8027088-sub_8027120 - the same fx-queue's reset/constructor pair, a HUD digit-slot draw helper (sub_80270E0), and two struct-actor-table-swap slot constructors (sub_802710C UNUSED, sub_8027120 matched); matched. Non-adjacent to hud_counter.o since sub_8027138-sub_802763C sit raw between them. GitHub issue #45
-    (0x08027138, None, "hud"),  # sub_8027138-sub_802763C - the 34-slot icon-array setup cluster (sub_8027138/sub_802732C) and the HUD stat-widget dispatcher family (sub_80274EC/sub_802757C/sub_802763C), left raw - see docs/rom_map.md's "hud" investigation (GitHub issue #45)
+    (0x08027138, None, "hud"),  # sub_8027138/sub_802732C - the 34-slot icon-array setup pair, left raw - see docs/rom_map.md's "hud" investigation (GitHub issue #45)
+    (0x080274EC, "src/graphics/hud_stat_widget.o", "hud"),  # sub_80274EC - the HUD stat-widget family's dispatcher; matched. GitHub issue #45
+    (0x0802757C, None, "hud"),  # sub_802757C/sub_802763C - the icon-indicator widget and one more digit-counter widget, left raw - see docs/rom_map.md's "hud" investigation (GitHub issue #45)
     (0x08027838, "src/graphics/hud_counter.o", "graphics"),  # sub_8027838 - cached two-digit HUD counter update
     (0x08027940, None, "hud"),  # sub_8027940/sub_8027D5C/sub_8027E88 - more of the HUD stat-widget dispatcher family, left raw (GitHub issue #45)
     (0x08028400, "src/graphics/hud_blink.o", "graphics"),  # sub_8028400-sub_8028520 - a 3-slot icon-blink animation timer, plus sub_8028568/sub_802856C (a setter/increment pair on the same central-state object's +0x28 field) added by GitHub issue #46; matched. GitHub issue #45

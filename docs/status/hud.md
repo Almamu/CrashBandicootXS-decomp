@@ -54,11 +54,24 @@ system from "core" graphics.
   `sub_8028B58` - trivial `struct icon_manager` getter/setter/
   trampoline-forwarder family.
 
+- `src/graphics/hud_stat_widget.c` (new file, GitHub issue #45's second
+  pass): `sub_80274EC` - the HUD stat-widget family's dispatcher.
+  Non-adjacent to `hud_counter.o`/other `hud` files since the rest of
+  the family (`sub_8027138`/`sub_802732C`/`sub_802757C`/`sub_802763C`/
+  `sub_8027940`/`sub_8027D5C`/`sub_8027E88`) still sits raw around it.
+  Extended `struct hud_counter` (`include/hud.h`) with `field_08`,
+  `icon_flag`, and `sync_value_a`/`b`/`c` - fields this function (and
+  the still-raw callees around it) touch inside what was previously
+  opaque padding.
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 GitHub issue #46's own write-up (icon/text-widget renderer, including
 `include/icon_manager.h`'s newly-documented field layout) is
 [docs/matching/issue-46-hud-icon-widget.md](../matching/issue-46-hud-icon-widget.md).
+GitHub issue #45's second-pass write-up (the stat-widget dispatcher, and
+why the rest of the family stayed raw) is
+[docs/matching/issue-45-hud-stat-widget-dispatcher.md](../matching/issue-45-hud-stat-widget-dispatcher.md).
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 

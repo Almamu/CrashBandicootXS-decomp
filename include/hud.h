@@ -41,12 +41,25 @@ struct hud_digit_part {
 struct hud_counter {
     s32 mode;
     s32 layout_value;
-    u8 unknown_08[0x14];
-    s32 value;
-    u8 unknown_20[0x20];
-    s32 previous_value;
-    u8 unknown_44[0x20];
-    struct hud_digit_part *parts;
+    s32 field_08;           /* +0x08 - read by sub_80274EC (gated with
+                              * field_00 against 0 to decide whether to
+                              * call sub_802763C); meaning not established. */
+    u8 unknown_0c[0xC];      /* +0x0c */
+    u8 icon_flag;            /* +0x18 - sub_80274EC's dispatcher gate for
+                               * sub_8027E88 (percentage counter); also set
+                               * from sub_802732C's second argument while
+                               * the OAM slot array is being built. */
+    u8 unknown_19[3];        /* +0x19 */
+    s32 value;               /* +0x1c */
+    u8 unknown_20[0xC];      /* +0x20 */
+    s32 sync_value_a;        /* +0x2c - sub_802763C's change-detection
+                               * cache for `sub_8023270`'s value. */
+    s32 sync_value_b;        /* +0x30 - same, for `sub_8023268`. */
+    s32 sync_value_c;        /* +0x34 - same, for `sub_8023260`. */
+    u8 unknown_38[8];        /* +0x38 */
+    s32 previous_value;      /* +0x40 */
+    u8 unknown_44[0x20];     /* +0x44 */
+    struct hud_digit_part *parts; /* +0x64 */
 };
 
 COMPILE_TIME_ASSERT(sizeof(struct hud_anim_record) == 0x1C);
