@@ -138,6 +138,21 @@ the chunk is parked, left raw, or otherwise not fully matched, leave the
 issue open and say what's left (and why) in the PR description instead
 - someone else may be able to close the remaining gap later.
 
+**Never write the literal substring `close #N` / `closes #N` anywhere in
+a PR description when you mean the opposite** - not even inside "this
+does **not** close #N" or "leaving #N open, not closing it". GitHub's
+issue-linking scanner matches that substring as a real closing keyword
+regardless of any surrounding negation, and will auto-close the issue
+the moment the PR merges, silently reversing your own stated intent.
+This has already happened for real (8 issues auto-closed this way with
+functions still fully raw - see the reopening comments on #2/#13/#19/
+#30/#40/#58/#63/#68 for the concrete examples). When you need to say a
+PR does *not* close an issue, phrase it without the word "close" next
+to the issue number at all - e.g. "issue #N stays open, N functions
+remain" or "the rest of #N is still raw" - and if you want to check
+whether your own PR text is at risk, search it for the pattern `close#N`
+mentioned in the same sentence.
+
 ## Cleanup tasks
 
 Not all remaining work is about matching new functions - a lot of it is

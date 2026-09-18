@@ -1,9 +1,9 @@
 #include "core.h"
 #include "icon_manager.h"
 
-/* Sits between the parked sub_80285C4/InitHudIconWidgetA/
- * InitHudIconWidgetB/sub_8028808 (asm/code_3_2_20_85c4.s) and the parked
- * sub_8028890/sub_8028900 (asm/code_3_2_20_8890.s) - just sub_8028860
+/* Sits between sub_80285C4/InitHudIconWidgetA/InitHudIconWidgetB/
+ * sub_8028808 (src/graphics/hud_icon_widget_85c4.c) and sub_8028890/
+ * sub_8028900 (src/graphics/hud_icon_widget_8890.c) - just sub_8028860
  * here, GitHub issue #46. Same `struct icon_manager` text/icon-glyph
  * renderer as hud_icon_widget.c/hud_icon_widget3.c/hud_icon_widget4.c/
  * hud_icon_widget5.c. */

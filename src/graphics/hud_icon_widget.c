@@ -2,8 +2,8 @@
 #include "hud.h"
 
 /* Sits right after hud_blink.c's blink-timer trio (ROM 0x08028568) and
- * before the parked sub_80285C4/InitHudIconWidgetA/InitHudIconWidgetB/
- * sub_8028808 (asm/code_3_2_20_85c4.s) - see GitHub issue #46. Just
+ * before sub_80285C4/InitHudIconWidgetA/InitHudIconWidgetB/sub_8028808
+ * (src/graphics/hud_icon_widget_85c4.c) - see GitHub issue #46. Just
  * `sub_8028574` here: a `struct hud_counter`-parts destructor, unrelated
  * to the `struct icon_manager` text/icon-glyph renderer the rest of this
  * chunk's functions operate on (see include/icon_manager.h and the other

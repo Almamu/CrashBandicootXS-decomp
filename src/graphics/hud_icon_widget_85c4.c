@@ -2,13 +2,16 @@
 #include "icon_manager.h"
 
 /* sub_8028808 (at the end of this file) is matched, byte-exact.
- * sub_80285C4/InitHudIconWidgetA/InitHudIconWidgetB are NOT YET
- * BYTE-MATCHING - see docs/matching/issue-46-hud-icon-widget.md for the
- * full account; compiled only under `make NON_MATCHING=1`, the
- * checked-in assembly (asm/code_3_2_20_85c4.s) is used otherwise. */
+ * sub_80285C4/InitHudIconWidgetA/InitHudIconWidgetB below are also
+ * matched now, but as NAKED asm transcriptions rather than plain C -
+ * see docs/matching/issue-46-hud-icon-widget.md's "NAKED-transcription
+ * pass" section for why: all three are blocked by this toolchain's
+ * confirmed r7-pinning bug (an explicit `register T x asm("r7")`, or
+ * even an indirect starve of the unforced allocator's own r7 choice,
+ * compiles with no push/pop of r7 at all - see docs/matching.md's "Why
+ * not just pin r7"), which a NAKED function sidesteps entirely since
+ * nothing asks gcc's allocator to decide anything. */
 extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
-
-#if NON_MATCHING
 
 extern void sub_803A94C(void *src, void *dst, s32 control);
 extern void sub_8006AC8(void *arg0, void *arg1);
@@ -29,38 +32,108 @@ extern u8 gStaticData_081751D4[];
  * glyph's width. `charByte` is looked up through `charLookup` first -
  * callers pass a raw character byte, not a glyph index.
  *
- * Residual gap: `self` is kept in `ip`/`r12` here instead of the ROM's
- * `r3` - this function has too many simultaneously-live values (the
- * glyph index, three re-derived `rec` pointers, `self` itself across the
- * `sub_8006AC8` call) for this compiler to fit into r4-r7 the way the
- * ROM does; tried caching `&self->posX`/`&self->glyphRecords` into
- * explicit locals (matching the ROM's own address-caching shape) and
- * plain repeated field access, neither changed the register choice. */
-void sub_80285C4(struct icon_manager *self, u8 charByte)
+ * Field map (see include/icon_manager.h): +8+charByte is
+ * `charLookup[charByte]` (glyphIndex); +0x110/+0x114 are `posX`/`posY`
+ * (only `posX`'s low 9 bits and `posY`'s low byte are read here);
+ * +0x10c is `glyphRecords` (reloaded fresh around the `sub_8006AC8`
+ * call, matching the ROM); +0x108/+0x124 are `field_108`/`field_124`.
+ *
+ * Transcribed as NAKED asm (not plain C): `self` sits in `r3` here, with
+ * too many other simultaneously-live values (the glyph index, three
+ * re-derived `rec` pointers, `self` itself across the `sub_8006AC8`
+ * call) for this compiler's allocator to fit into r4-r7 the way the ROM
+ * does - tried caching `&self->posX`/`&self->glyphRecords` into explicit
+ * locals and plain repeated field access, neither changed the register
+ * choice. Every instruction below is checked byte-identical to the
+ * ROM. */
+NAKED void sub_80285C4(struct icon_manager *self, u8 charByte)
 {
-    u8 glyphIndex = self->charLookup[charByte];
-    struct icon_glyph_metrics *rec;
-
-    *(u16 *)((u8 *)self + 2) = (*(u16 *)((u8 *)self + 2) & 0xFE00) | (self->posX & 0x1FF);
-
-    rec = (struct icon_glyph_metrics *)((u8 *)self->glyphRecords + glyphIndex * 12);
-    self->oam_scratch[0] = rec->field_8 + *((u8 *)&self->posY);
-
-    rec = (struct icon_glyph_metrics *)((u8 *)self->glyphRecords + glyphIndex * 12);
-    self->oam_scratch[1] = (self->oam_scratch[1] & 0x3F) | (u8)(rec->field_4 << 6);
-
-    *(u16 *)((u8 *)self + 4) = (*(u16 *)((u8 *)self + 4) & 0xFC00)
-        | ((self->field_108 + glyphIndex * self->field_124) & 0x3FF);
-
-    sub_8006AC8(gUnknown_03001300, self);
-
-    rec = (struct icon_glyph_metrics *)((u8 *)self->glyphRecords + glyphIndex * 12);
-    self->posX += rec->width;
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "add r3, r0, #0\n\t"
+        "lsl r1, r1, #0x18\n\t"
+        "lsr r1, r1, #0x18\n\t"
+        "add r0, #8\n\t"
+        "add r0, r0, r1\n\t"
+        "ldrb r2, [r0]\n\t"
+        "mov r0, #0x88\n\t"
+        "lsl r0, r0, #1\n\t"
+        "add r6, r3, r0\n\t"
+        "ldr r1, [r6]\n\t"
+        "ldr r4, 1f\n\t"
+        "add r0, r4, #0\n\t"
+        "and r1, r0\n\t"
+        "ldr r0, 2f\n\t"
+        "ldrh r7, [r3, #2]\n\t"
+        "and r0, r7\n\t"
+        "orr r0, r1\n\t"
+        "strh r0, [r3, #2]\n\t"
+        "mov r0, #0x8a\n\t"
+        "lsl r0, r0, #1\n\t"
+        "add r1, r3, r0\n\t"
+        "sub r4, #0xf3\n\t"
+        "add r5, r3, r4\n\t"
+        "ldr r0, [r5]\n\t"
+        "lsl r4, r2, #1\n\t"
+        "add r4, r4, r2\n\t"
+        "lsl r4, r4, #2\n\t"
+        "add r0, r4, r0\n\t"
+        "ldrb r0, [r0, #8]\n\t"
+        "ldrb r1, [r1]\n\t"
+        "add r0, r0, r1\n\t"
+        "strb r0, [r3]\n\t"
+        "ldr r0, [r5]\n\t"
+        "add r0, r4, r0\n\t"
+        "ldr r1, [r0, #4]\n\t"
+        "lsl r1, r1, #6\n\t"
+        "mov r0, #0x3f\n\t"
+        "ldrb r7, [r3, #1]\n\t"
+        "and r0, r7\n\t"
+        "orr r0, r1\n\t"
+        "strb r0, [r3, #1]\n\t"
+        "mov r1, #0x84\n\t"
+        "lsl r1, r1, #1\n\t"
+        "add r0, r3, r1\n\t"
+        "ldr r1, [r0]\n\t"
+        "mov r7, #0x92\n\t"
+        "lsl r7, r7, #1\n\t"
+        "add r0, r3, r7\n\t"
+        "ldr r0, [r0]\n\t"
+        "mul r0, r2, r0\n\t"
+        "add r1, r1, r0\n\t"
+        "ldr r2, 3f\n\t"
+        "add r0, r2, #0\n\t"
+        "and r1, r0\n\t"
+        "ldr r0, 4f\n\t"
+        "ldrh r7, [r3, #4]\n\t"
+        "and r0, r7\n\t"
+        "orr r0, r1\n\t"
+        "strh r0, [r3, #4]\n\t"
+        "ldr r0, 5f\n\t"
+        "ldr r0, [r0]\n\t"
+        "add r1, r3, #0\n\t"
+        "bl sub_8006AC8\n\t"
+        "ldr r0, [r5]\n\t"
+        "add r4, r4, r0\n\t"
+        "ldr r0, [r6]\n\t"
+        "ldr r1, [r4]\n\t"
+        "add r0, r0, r1\n\t"
+        "str r0, [r6]\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r0}\n\t"
+        "bx r0\n\t"
+        ".align 2, 0\n"
+    "1: .4byte 0x000001FF\n"
+    "2: .4byte 0xFFFFFE00\n"
+    "3: .4byte 0x000003FF\n"
+    "4: .4byte 0xFFFFFC00\n"
+    "5: .4byte gUnknown_03001300\n"
+    );
 }
 
 /* Constructs a `struct icon_manager` for the "A" icon/text widget
  * family: zeroes the leading OAM-scratch pair of words, resets cursor
- * position and left margin, points `record` at `gStaticData_087E4D64`
+ * position and left margin, points `record` at `gStaticData_087E4DAC`
  * (the first store to `gStaticData_087E4DAC` is a genuinely dead write
  * that's really in the ROM - see actor_aabb_setup.c's
  * sub_803AFF0/sub_803B024 for the identical documented pattern),
@@ -68,206 +141,235 @@ void sub_80285C4(struct icon_manager *self, u8 charByte)
  * builds `charLookup` from the `gStaticData_08174D84` font-glyph-order
  * table (see include/icon_manager.h).
  *
- * The `record`/`posX`/`posY`/`field_118`/`field_12c` preamble's address
- * computations and store order now follow the ROM via inline-asm address
- * anchors (see the comment right above that block); the exact zero-value
- * register reuse across all four stores isn't fully nailed down yet
- * (splitting the anchors into separate asm blocks loses the single
- * shared `r1`=0 the ROM keeps live the whole time). The
- * `field_11c`/`spaceWidth`/`field_128`/`field_124`/`glyphRecords` run
- * right after also has its own chain-vs-fresh address-computation
- * mismatches (confirmed via a normalized instruction-by-instruction diff
- * against the raw ROM listing, not just eyeballing the disassembly -
- * this project's own cautionary tale about isolated-compile
- * "looks-matched" claims applies here too) - not chased further since
- * the loop below blocks a full match regardless.
- *
- * Residual gap: the charLookup-building loop. The ROM keeps the table's
- * leading count byte permanently in `r7` and a constant zero in `ip`
- * across the whole loop; this compiler's *unforced* allocator instead
- * puts count in `ip` and the loop index's precomputed `+1` in `r7` (the
- * two roles swapped) - `register T x asm("r7")` cannot be used to force
- * the ROM's exact assignment, since that's a confirmed silent
- * ABI-violation bug in this toolchain (see the loop's own comment
- * below). A few other small shape differences remain too (the initial
- * `movs r2,#0` ROM does first vs. last here; the ROM recomputing the
- * conditional store's address fresh instead of caching it). Tried: the
- * loop as one literal inline-asm block (matches ROM exactly
- * instruction-for-instruction, but then *nothing* keeps `self` alive
- * past it without also landing in a clobbered register, and forcing
- * `self` back to r4 via a pin reintroduces the same r7 bug for any value
- * the asm needs to keep alive past its own scope); several `for`/`while`
- * phrasings for the inner search loop (the `j` increment's start value
- * and shape change whether gcc peels the first iteration, independent of
- * the r7 issue). */
-struct icon_manager *InitHudIconWidgetA(struct icon_manager *selfArg)
+ * Transcribed as NAKED asm (not plain C): the charLookup-building loop
+ * keeps the font table's leading count byte permanently in `r7` and a
+ * constant zero in `ip` across the whole loop - `register T x
+ * asm("r7")` cannot be used to force this, since that's the confirmed
+ * silent ABI-violation bug in this toolchain (no push/pop of r7 at all
+ * - see docs/matching.md's "Why not just pin r7"). The preceding
+ * `record`/`posX`/`posY`/`field_118`/`field_12c` preamble also has its
+ * own address-computation-order-vs-store-order mismatches that plain C
+ * never reproduced simultaneously (tried: plain struct-field
+ * assignment both orderings, raw `(u8 *)self + N` casts both orderings,
+ * a shared base-pointer local - see the second-pass writeup for the
+ * full account). Every instruction below is checked byte-identical to
+ * the ROM. */
+NAKED struct icon_manager *InitHudIconWidgetA(struct icon_manager *self)
 {
-    register struct icon_manager *self asm("r4") = selfArg;
-    s32 zero;
-    struct icon_record **recordAddr;
-    s32 i;
-    u8 count;
-
-    /* This compiler caches `self+0x130` (`record`'s address) across both
-     * stores when the assignment is expressed as plain C (`self->record
-     * = X; ... self->record = Y;` collapses to one address computation
-     * reused for both), but the ROM recomputes it fresh each time -
-     * forced via the same inline-asm address anchor already established
-     * for the identical pattern in actor_aabb_setup.c's
-     * sub_803AFF0/sub_803B024. */
-    asm volatile("mov r0, #0x98\n\tlsl r0, r0, #1\n\tadd %0, %1, r0" : "=r"(recordAddr) : "r"(self) : "r0");
-    *recordAddr = (struct icon_record *)gStaticData_087E4DAC;
-
-    /* The `posX`/`posY`/`field_118`/`field_12c` zero-init (address
-     * computed ascending, stored descending) plus `zero`'s own store
-     * (which reuses this same zeroed r1, not a fresh materialization) -
-     * one literal instruction block matching the ROM exactly, the same
-     * technique that reaches a full match in sub_8028A78
-     * (hud_icon_widget_8a78.c), which shares this exact preamble. */
-    asm volatile(
-        "mov r1, #0x88\n\tlsl r1, r1, #1\n\tadd r2, %1, r1\n\t"
-        "add r1, r1, #4\n\tadd r0, %1, r1\n\t"
-        "mov r1, #0\n\tstr r1, [r0]\n\tstr r1, [r2]\n\t"
-        "mov r2, #0x8c\n\tlsl r2, r2, #1\n\tadd r0, %1, r2\n\t"
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "sub sp, #4\n\t"
+        "add r4, r0, #0\n\t"
+        "mov r0, #0x98\n\t"
+        "lsl r0, r0, #1\n\t"
+        "add r1, r4, r0\n\t"
+        "ldr r0, 5f\n\t"
+        "str r0, [r1]\n\t"
+        "mov r1, #0x88\n\t"
+        "lsl r1, r1, #1\n\t"
+        "add r2, r4, r1\n\t"
+        "add r1, #4\n\t"
+        "add r0, r4, r1\n\t"
+        "mov r1, #0\n\t"
         "str r1, [r0]\n\t"
-        "add r2, r2, #0x14\n\tadd r0, %1, r2\n\t"
+        "str r1, [r2]\n\t"
+        "mov r2, #0x8c\n\t"
+        "lsl r2, r2, #1\n\t"
+        "add r0, r4, r2\n\t"
         "str r1, [r0]\n\t"
-        "str r1, %0"
-        : "=m"(zero)
-        : "r"(self)
-        : "r0", "r1", "r2", "memory"
+        "add r2, #0x14\n\t"
+        "add r0, r4, r2\n\t"
+        "str r1, [r0]\n\t"
+        "str r1, [sp]\n\t"
+        "mov r0, sp\n\t"
+        "add r1, r4, #0\n\t"
+        "ldr r2, 6f\n\t"
+        "bl sub_803A94C\n\t"
+        "mov r0, #0x98\n\t"
+        "lsl r0, r0, #1\n\t"
+        "add r1, r4, r0\n\t"
+        "ldr r0, 7f\n\t"
+        "str r0, [r1]\n\t"
+        "mov r2, #0x8e\n\t"
+        "lsl r2, r2, #1\n\t"
+        "add r1, r4, r2\n\t"
+        "mov r0, #9\n\t"
+        "str r0, [r1]\n\t"
+        "mov r0, #0x90\n\t"
+        "lsl r0, r0, #1\n\t"
+        "add r1, r4, r0\n\t"
+        "mov r0, #4\n\t"
+        "str r0, [r1]\n\t"
+        "add r2, #0xc\n\t"
+        "add r1, r4, r2\n\t"
+        "ldr r0, 8f\n\t"
+        "str r0, [r1]\n\t"
+        "mov r0, #0x92\n\t"
+        "lsl r0, r0, #1\n\t"
+        "add r1, r4, r0\n\t"
+        "mov r0, #2\n\t"
+        "str r0, [r1]\n\t"
+        "sub r2, #0x1c\n\t"
+        "add r1, r4, r2\n\t"
+        "ldr r0, 9f\n\t"
+        "str r0, [r1]\n\t"
+        "mov r2, #0\n\t"
+        "add r5, r4, #0\n\t"
+        "add r5, #8\n\t"
+        "ldr r6, 10f\n\t"
+        "ldrb r7, [r6]\n\t"
+        "mov ip, r2\n\t"
+    "1:\n\t"
+        "add r0, r5, r2\n\t"
+        "mov r1, ip\n\t"
+        "strb r1, [r0]\n\t"
+        "mov r1, #0\n\t"
+        "add r3, r2, #1\n\t"
+        "cmp r7, r2\n\t"
+        "beq 3f\n\t"
+    "2:\n\t"
+        "add r1, #1\n\t"
+        "cmp r1, #0x4f\n\t"
+        "bhi 4f\n\t"
+        "add r0, r1, r6\n\t"
+        "ldrb r0, [r0]\n\t"
+        "cmp r0, r2\n\t"
+        "bne 2b\n\t"
+        "add r0, r5, r2\n\t"
+    "3:\n\t"
+        "strb r1, [r0]\n\t"
+    "4:\n\t"
+        "add r2, r3, #0\n\t"
+        "cmp r2, #0xff\n\t"
+        "bls 1b\n\t"
+        "add r0, r4, #0\n\t"
+        "add sp, #4\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r1}\n\t"
+        "bx r1\n\t"
+        ".align 2, 0\n"
+    "5: .4byte gStaticData_087E4DAC\n"
+    "6: .4byte 0x05000002\n"
+    "7: .4byte gStaticData_087E4D64\n"
+    "8: .4byte gStaticData_085A4E70\n"
+    "9: .4byte gStaticData_08174DD4\n"
+    "10: .4byte gStaticData_08174D84\n"
     );
-    sub_803A94C(&zero, self, 0x05000002);
-
-    asm volatile("mov r0, #0x98\n\tlsl r0, r0, #1\n\tadd %0, %1, r0" : "=r"(recordAddr) : "r"(self) : "r0");
-    *recordAddr = (struct icon_record *)gStaticData_087E4D64;
-    self->field_11c = 9;
-    self->spaceWidth = 4;
-    self->field_128 = gStaticData_085A4E70;
-    self->field_124 = 2;
-    self->glyphRecords = (struct icon_glyph_metrics *)gStaticData_08174DD4;
-
-    /* The charLookup-building loop: `self+8`/the font table are pinned
-     * to r5/r6 (safe - see below), but `count` (the table's leading
-     * byte) and the loop index's precomputed `+1` are left as plain,
-     * completely unpinned locals so gcc's own allocator picks their
-     * registers naturally. `register T x asm("r7")` (or an inline-asm
-     * `r7` clobber/output) must never be used here even if it looks like
-     * it would match better - it's a confirmed silent ABI-violation bug
-     * in this agbcc/gcc-2.9-arm toolchain (r7 assigned via an explicit
-     * pin compiles with no push/pop of r7 at all, clobbering the
-     * caller's r7 - see docs/matching.md's "Why not just pin r7" and
-     * `matching_decomp_register_pinning` memory point 10). Values can
-     * only safely live in r7 across calls here via natural, unforced
-     * allocation. */
-    {
-        register u8 *lookupBase asm("r5") = self->charLookup;
-        register u8 *table asm("r6") = gStaticData_08174D84;
-
-        count = table[0];
-        for (i = 0; i <= 0xFF; i++) {
-            u8 j = 0;
-
-            lookupBase[i] = 0;
-            if (count == i) {
-                continue;
-            }
-            for (;;) {
-                j++;
-                if (j > 0x4F) {
-                    break;
-                }
-                if (table[j] == i) {
-                    lookupBase[i] = j;
-                    break;
-                }
-            }
-        }
-    }
-    return self;
 }
 
 /* Same shape as InitHudIconWidgetA above, "B" icon/text widget family -
  * different data tables and line-height/glyph-stride constants. Same
- * preamble fix and same residual charLookup-loop gap as
- * InitHudIconWidgetA - see that function's comments for the full
+ * NAKED-transcription rationale and residual r7 gap as
+ * InitHudIconWidgetA - see that function's comment for the full
  * account. */
-struct icon_manager *InitHudIconWidgetB(struct icon_manager *selfArg)
+NAKED struct icon_manager *InitHudIconWidgetB(struct icon_manager *self)
 {
-    register struct icon_manager *self asm("r4") = selfArg;
-    s32 zero;
-    struct icon_record **recordAddr;
-    s32 i;
-    u8 count;
-
-    asm volatile("mov r0, #0x98\n\tlsl r0, r0, #1\n\tadd %0, %1, r0" : "=r"(recordAddr) : "r"(self) : "r0");
-    *recordAddr = (struct icon_record *)gStaticData_087E4DAC;
-
-    /* Same merged posX/posY/field_118/field_12c/zero anchor as
-     * InitHudIconWidgetA above - see that function's own comment. */
-    asm volatile(
-        "mov r1, #0x88\n\tlsl r1, r1, #1\n\tadd r2, %1, r1\n\t"
-        "add r1, r1, #4\n\tadd r0, %1, r1\n\t"
-        "mov r1, #0\n\tstr r1, [r0]\n\tstr r1, [r2]\n\t"
-        "mov r2, #0x8c\n\tlsl r2, r2, #1\n\tadd r0, %1, r2\n\t"
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "sub sp, #4\n\t"
+        "add r4, r0, #0\n\t"
+        "mov r0, #0x98\n\t"
+        "lsl r0, r0, #1\n\t"
+        "add r1, r4, r0\n\t"
+        "ldr r0, 5f\n\t"
+        "str r0, [r1]\n\t"
+        "mov r1, #0x88\n\t"
+        "lsl r1, r1, #1\n\t"
+        "add r2, r4, r1\n\t"
+        "add r1, #4\n\t"
+        "add r0, r4, r1\n\t"
+        "mov r1, #0\n\t"
         "str r1, [r0]\n\t"
-        "add r2, r2, #0x14\n\tadd r0, %1, r2\n\t"
+        "str r1, [r2]\n\t"
+        "mov r2, #0x8c\n\t"
+        "lsl r2, r2, #1\n\t"
+        "add r0, r4, r2\n\t"
         "str r1, [r0]\n\t"
-        "str r1, %0"
-        : "=m"(zero)
-        : "r"(self)
-        : "r0", "r1", "r2", "memory"
+        "add r2, #0x14\n\t"
+        "add r0, r4, r2\n\t"
+        "str r1, [r0]\n\t"
+        "str r1, [sp]\n\t"
+        "mov r0, sp\n\t"
+        "add r1, r4, #0\n\t"
+        "ldr r2, 6f\n\t"
+        "bl sub_803A94C\n\t"
+        "mov r0, #0x98\n\t"
+        "lsl r0, r0, #1\n\t"
+        "add r1, r4, r0\n\t"
+        "ldr r0, 7f\n\t"
+        "str r0, [r1]\n\t"
+        "mov r2, #0x8e\n\t"
+        "lsl r2, r2, #1\n\t"
+        "add r1, r4, r2\n\t"
+        "mov r0, #0x10\n\t"
+        "str r0, [r1]\n\t"
+        "mov r0, #0x90\n\t"
+        "lsl r0, r0, #1\n\t"
+        "add r1, r4, r0\n\t"
+        "mov r0, #6\n\t"
+        "str r0, [r1]\n\t"
+        "add r2, #8\n\t"
+        "add r1, r4, r2\n\t"
+        "mov r0, #4\n\t"
+        "str r0, [r1]\n\t"
+        "mov r0, #0x86\n\t"
+        "lsl r0, r0, #1\n\t"
+        "add r1, r4, r0\n\t"
+        "ldr r0, 8f\n\t"
+        "str r0, [r1]\n\t"
+        "add r2, #4\n\t"
+        "add r1, r4, r2\n\t"
+        "ldr r0, 9f\n\t"
+        "str r0, [r1]\n\t"
+        "mov r0, #0x3f\n\t"
+        "ldrb r1, [r4, #3]\n\t"
+        "and r0, r1\n\t"
+        "mov r1, #0x40\n\t"
+        "orr r0, r1\n\t"
+        "strb r0, [r4, #3]\n\t"
+        "mov r2, #0\n\t"
+        "add r5, r4, #0\n\t"
+        "add r5, #8\n\t"
+        "ldr r6, 10f\n\t"
+        "ldrb r7, [r6]\n\t"
+        "mov ip, r2\n\t"
+    "1:\n\t"
+        "add r0, r5, r2\n\t"
+        "mov r1, ip\n\t"
+        "strb r1, [r0]\n\t"
+        "mov r1, #0\n\t"
+        "add r3, r2, #1\n\t"
+        "cmp r7, r2\n\t"
+        "beq 3f\n\t"
+    "2:\n\t"
+        "add r1, #1\n\t"
+        "cmp r1, #0x4b\n\t"
+        "bhi 4f\n\t"
+        "add r0, r1, r6\n\t"
+        "ldrb r0, [r0]\n\t"
+        "cmp r0, r2\n\t"
+        "bne 2b\n\t"
+        "add r0, r5, r2\n\t"
+    "3:\n\t"
+        "strb r1, [r0]\n\t"
+    "4:\n\t"
+        "add r2, r3, #0\n\t"
+        "cmp r2, #0xff\n\t"
+        "bls 1b\n\t"
+        "add r0, r4, #0\n\t"
+        "add sp, #4\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r1}\n\t"
+        "bx r1\n\t"
+        ".align 2, 0\n"
+    "5: .4byte gStaticData_087E4DAC\n"
+    "6: .4byte 0x05000002\n"
+    "7: .4byte gStaticData_087E4D1C\n"
+    "8: .4byte gStaticData_081751D4\n"
+    "9: .4byte gStaticData_085A551C\n"
+    "10: .4byte gStaticData_08175188\n"
     );
-    sub_803A94C(&zero, self, 0x05000002);
-
-    asm volatile("mov r0, #0x98\n\tlsl r0, r0, #1\n\tadd %0, %1, r0" : "=r"(recordAddr) : "r"(self) : "r0");
-    *recordAddr = (struct icon_record *)gStaticData_087E4D1C;
-
-    /* field_124's address is chained from field_11c's (+8) in the ROM
-     * here (unlike InitHudIconWidgetA, where it's a fresh computation) -
-     * forced the same way as the other address anchors above. */
-    {
-        s32 *field11cAddr;
-        s32 *field124Addr;
-
-        asm volatile("mov r2, #0x8e\n\tlsl r2, r2, #1\n\tadd %0, %1, r2" : "=r"(field11cAddr) : "r"(self) : "r2");
-        *field11cAddr = 0x10;
-        self->spaceWidth = 6;
-        asm volatile("add %0, %1, #8" : "=r"(field124Addr) : "0"(field11cAddr));
-        *field124Addr = 4;
-    }
-    *((u8 *)self + 3) = (*((u8 *)self + 3) & 0x3F) | 0x40;
-    self->field_128 = gStaticData_081751D4;
-    self->glyphRecords = (struct icon_glyph_metrics *)gStaticData_085A551C;
-
-    {
-        register u8 *lookupBase asm("r5") = self->charLookup;
-        register u8 *table asm("r6") = gStaticData_08175188;
-
-        count = table[0];
-        for (i = 0; i <= 0xFF; i++) {
-            u8 j = 0;
-
-            lookupBase[i] = 0;
-            if (count == i) {
-                continue;
-            }
-            for (;;) {
-                j++;
-                if (j > 0x4B) {
-                    break;
-                }
-                if (table[j] == i) {
-                    lookupBase[i] = j;
-                    break;
-                }
-            }
-        }
-    }
-    return self;
 }
-
-#endif /* NON_MATCHING */
 
 /* sub_8028808 is matched, byte-exact.
  *

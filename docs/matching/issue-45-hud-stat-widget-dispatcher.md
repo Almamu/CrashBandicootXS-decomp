@@ -408,3 +408,78 @@ raw.
 - `src/graphics/hud_stat_widget2.c` - new file, `sub_802757C`/
   `sub_802763C`'s `NON_MATCHING` reconstructions.
 - `docs/status/hud.md` - matched and parked lists both updated.
+
+## NAKED-transcription pass
+
+Closes out `sub_802757C`/`sub_802763C`, the two functions the third pass
+parked above. Both are now byte-exact matched, converted from their
+`NON_MATCHING`-guarded plain-C reconstructions to `NAKED` functions
+whose bodies are a direct instruction-for-instruction transcription of
+the ROM's own disassembly, following this project's established escape
+hatch for this exact class of problem (`src/system/link_cable.c`'s
+several `NAKED` functions, `src/audio/gax_swi.c`'s `sub_80392C4`,
+`docs/matching/issue-4-sio-settings-sync.md`'s "NAKED transcription,
+byte-verified" section for the worked-out general method).
+
+The third pass's blocker was real, not a budget cut, and re-attempting
+register-pin tricks here would have been pointless: every phrasing of
+`records[index]` for the per-slot `anim_index` byte kept in r7
+(`self+0x5AD`/`self+0x5ED` for `sub_802757C`, and the equivalent
+per-slot byte at each of `sub_802763C`'s six clamp sites) reliably
+miscompiled the very next use of that byte into a bogus `mov r0, sp` /
+shift-mask read of the stack pointer itself, with no call in between to
+blame it on. Since both functions were already fully understood
+semantically (the third pass's doc comments above walk every field,
+branch and call), nothing here is a fresh reverse-engineering problem -
+just a mechanical transcription, checked instruction-by-instruction
+against the ROM disassembly rather than inferred.
+
+### Mechanics
+
+Both functions' real bytes (previously `asm/code_3_2_17_2757c.s`, split
+into two `.if NON_MATCHING == 0` blocks) were translated from the
+disassembler's unified syntax to the plain (divided) syntax this
+project's other `NAKED` functions and `arm-none-eabi-as`'s default mode
+use: `adds`/`subs`/`lsls`/`movs`->`add`/`sub`/`lsl`/`mov` throughout (no
+`s`-suffixed Thumb1 mnemonic survived - `arm-none-eabi-as` in this
+project's default mode rejects several of them as hand-written text even
+though they're valid encodings). The original's real `_08XXXXXX:`
+address labels (both branch targets and `ldr rX, =symbol`/`=literal`
+literal-pool entries) became GNU-as local numeric labels, referenced
+`Nf`/`Nb`, since a `NAKED` function's asm block can't use the real ROM
+address as a label. `sub_802763C` reuses one such label (`2:`, the
+`gUnknown_030012C0` pool entry) across three separate `ldr r4, 2f`
+sites spread through the function - safe here since only one `2:` is
+ever defined in that asm block, so every forward reference resolves to
+the same single literal-pool word regardless of how many places load
+it.
+
+### Verification
+
+Isolated compile (`arm-none-eabi-cpp`/`agbcc`/`arm-none-eabi-as`, the
+same flags `Makefile`'s `C_BUILDDIR` rule uses) produced both functions
+at exactly their expected ROM sizes - `sub_802757C` at 0xC0 (192) bytes,
+`sub_802763C` at 0x1FC (508) bytes, matching `sub_802763C - sub_802757C`
+and `sub_8027838 - sub_802763C` respectively - and `objdump -d` showed
+every single instruction, operand and relative branch offset identical
+to the original ROM disassembly before this was ever wired into
+`ldscript.txt`. Confirmed for real via a full clean `rm -rf build
+crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
+compare` (`La suma coincide`), with `hud_stat_widget2.o` now replacing
+`asm/code_3_2_17_2757c.o` in `ldscript.txt`'s link order and the
+now-fully-empty `asm/code_3_2_17_2757c.s` deleted (same treatment the
+third pass gave `asm/code_3_2_17_26f54.s` once `sub_8026F54`/
+`sub_8027018` were both matched out of it).
+
+Issue #45's remaining scope: `sub_8027138`/`sub_802732C`,
+`sub_8027940`/`sub_8027D5C`/`sub_8027E88` are still fully untouched (see
+"Still fully untouched" above) - this pass did not attempt them, and
+issue #45 stays open.
+
+### Cross-references
+
+- `src/graphics/hud_stat_widget2.c` - `sub_802757C`/`sub_802763C`, now
+  `NAKED`, no `NON_MATCHING` guard.
+- `tools/report_units.py` - `0x0802757C` entry now points at
+  `src/graphics/hud_stat_widget2.o` instead of `None`.
+- `docs/status/hud.md` - moved from "Parked" to "Matched".
