@@ -116,8 +116,12 @@ here; it stays genuinely parked, see below.)
   it always finds a way to reuse `r0`-`r3` instead (a *smaller*
   register footprint than the ROM's own, ironically - no `push
   {r4,r5}` needed - but not the same bytes).
-- **`sub_800A734`** (`src/graphics/actor_part48.c`; real bytes still in
-  `asm/code_3_2_16_a734.s`) - a part-object velocity/state reset that
+- **`sub_800A734`** - **UPDATE: matched in a later session, see
+  `docs/matching/issue-14-0x08010a0c-graphics.md`'s "Follow-up"
+  section** for the techniques that closed the gap described below.
+  (`src/graphics/actor_part48.c`; real bytes were in
+  `asm/code_3_2_16_a734.s`, now removed) - a part-object velocity/state
+  reset that
   additionally hooks up a child object at `self+0xb0` (calls
   `sub_800815C` on it, packs the result's low nibble into the child's
   `+0x29` byte) and zeroes the `+0x100`-`+0x105` per-phase flag bytes
