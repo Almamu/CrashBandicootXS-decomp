@@ -30,6 +30,20 @@ zero-padding fix) found along the way.
   [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md).
 - **`sub_8021BFC`**-**`sub_8021CE0`** (`src/graphics/graphics_loading_21bfc.c`)
   - the `sub_800FF0C` entity-constructor trampoline family, types `1`-`7`.
+- **`sub_801FDEC`** (`src/graphics/graphics_loading_1fdec.c`) - one
+  instance of the "two-line text popup" spawner family (issue #31,
+  second pass); spawns a part-object via `sub_8009ED0`, fires a
+  `sub_803AD80` animation-table trampoline twice, packs two
+  "collected" bits from a `gUnknown_030012B4`-rooted table into its
+  `+0x28` bitfield, and registers itself into `gUnknown_030012F0`'s
+  manager - see
+  [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md)
+  for the three compiler-codegen quirks (all fixed with small
+  `asm volatile` blocks) needed to close this one byte-exact. ~20
+  more instances of the same family remain raw in
+  `asm/code_3_2_17_1e990.s`/`asm/code_3_2_17_1feec.s` - same doc has
+  the full list and what's known about each one's tail-shape
+  variant.
 - **`sub_8021D80`**, **`sub_8021DFC`**, **`sub_8021E78`**, **`sub_8021EF4`**,
   **`sub_8021F70`**, **`sub_802200C`**, **`sub_80220C4`**, **`sub_802209C`**,
   **`sub_8022158`**, **`nullsub_22`**, **`sub_802218C`**, **`sub_80221A4`**,
