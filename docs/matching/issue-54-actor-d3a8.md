@@ -248,5 +248,104 @@ its `ldscript.txt`/wildcard-`ASM_SRCS` entry were then removed -
 `src/graphics/actor_part62.c` links at the same address in its place -
 confirmed by a full clean `make compare` ("La suma coincide").
 
+## Second pass
+
+Closed out the 6 functions the first two passes left completely
+untouched (`sub_802D7B0`, `sub_802D9A8`, `sub_802DA68`, `sub_802DD9C`,
+`sub_802DE70`, `sub_802E058`) - all now byte-exact matched, confirmed by
+a full clean `make compare` ("La suma coincide"). All 25 functions in
+this issue's original range are now matched; see "Closing this issue"
+below.
+
+### Pinning down the 12-byte AABB-record layout
+
+The blocker both earlier passes cited for `sub_802D7B0`/`sub_802DD9C`
+was not being confident about the two differently-shaped 12-byte AABB
+records involved. Reading both functions' disassembly side by side
+resolved it: both use the exact same 6-halfword layout,
+`{s16 x, y, z, sizeX, sizeY, sizeZ}`, compared axis-by-axis in Z/Y/X
+order (matching the ROM's own instruction order, not storage order) -
+the same shape as `struct aabb` (`src/graphics/aabb_util.c`) generalized
+from 2 axes to 3, just never previously named because it hadn't been
+read carefully enough end to end. `sub_802D7B0`'s "static" box A is
+`gStaticData_0817AA98`, and `sub_802DD9C`'s is `gStaticData_0817AA8C` -
+confirmed to be the same table, 0xC bytes apart (the record immediately
+before it), by their literal-pool addresses alone. Box A gets
+`gUnknown_030014C4`/`030014C8` (the gauge object's own tracked X/Z
+position, both `>>8`) added into its `x`/`z` fields only - this object
+never moves in Y. Box B is either the player's own `+0x38` vector
+(`sub_802D7B0`, offset by the player's `+0x1c`/`0x20`/`0x24` position)
+or `self`'s own `+0x38` vector (`sub_802DD9C`, offset by `self`'s own
+position at the same field offsets) - `self` being whatever
+`sub_802D6A0` (actor_part58.c) passes when it calls `sub_802DD9C`.
+
+Both functions then run box B through `sub_800014C` before comparing -
+which turned out to be a real, confirmed `memcpy` (`sub_800014C`'s own
+definition in `src/system/boot_util.c`, already matched: a `CpuSet`
+SWI wrapper) called with `dst == src`, i.e. a genuine no-op self-copy,
+not a disassembly artifact or a sign of some hidden second buffer. Kept
+byte-faithful rather than "simplified away" since it's really in the
+ROM - most likely a shared "copy the box into a scratch buffer, then
+test" helper being invoked here with a buffer that already *is* its own
+scratch source.
+
+### Why NAKED transcription, not plain C, for all 6
+
+Every one of these 6 functions was fully understood on this pass (each
+one's doc comment in `src/graphics/actor_part74.c`/`75.c`/`76.c` walks
+the whole thing), but all 6 share a family of problems this project has
+hit many times before and already has an established answer for
+(`docs/matching/issue-4-sio-settings-sync.md`'s "general strategy",
+itself citing the original `sub_8007DBC`/`sub_802D3A8` cases): heavy,
+overlapping stack-buffer use (`sub_802D7B0`/`sub_802DD9C` each build two
+12-byte scratch AABB records inside one larger frame via raw `ldm`/`stm`
+block copies), registers reused for genuinely unrelated values across
+one function body (`sub_802D7B0`'s `r5` holds the `gUnknown_030014BC`
+pointer early on, then an unrelated accumulator delta later; its `r7`
+similarly switches roles mid-function), and - for `sub_802DE70` above
+all - `r8`/`sb`/`sl` all live simultaneously across a large stack frame
+and a doubled 16x16 nested loop. None of this is a semantic-confidence
+problem (the risk `docs/workflow.md` warns a low-confidence C guess
+carries); it is this project's well-documented gcc-2.9 register/stack-
+plan nondeterminism, where per-register archaeology on 6 more functions
+would not have taught anything genuinely new. Each was instead
+converted straight to `NAKED`, transcribing the ROM's own disassembly
+instruction-for-instruction (`expected/code_3.s`), translated from
+unified to this project's established plain/divided NAKED syntax
+(`adds`->`add`, `movs`->`mov`, `ands`->`and`, `lsls`/`lsrs`->`lsl`/`lsr`,
+`orrs`->`orr`, `eors`->`eor`, `muls`->`mul`, `asrs`->`asr`,
+`subs`->`sub`), with the original's `_08XXXXXX:` labels renumbered to
+GNU-as local numeric labels (`N:`, referenced `Nf`/`Nb`) via a small
+scratch-only Python script (mechanical mnemonic/label translation, not
+committed - the same approach `docs/matching/issue-4-sio-settings-
+sync.md` used for `sub_8002114`, to avoid hand-transcription typos at
+this instruction count). Each translated function's isolated compile
+was checked against the original ROM disassembly instruction-by-
+instruction before being cut into its real `.c` file, and the whole
+batch was then confirmed together with the required full clean
+`make compare`.
+
+### New files, three more contiguous ROM regions
+
+`sub_802D7B0`/`sub_802D9A8`/`sub_802DA68` (ROM 0x0802D7B0-0x0802DA84,
+between `actor_part58.c` and `actor_part59.c`), `sub_802DD9C`/
+`sub_802DE70` (ROM 0x0802DD9C-0x0802E058, between `actor_part59.c` and
+`actor_part60.c`), and `sub_802E058` (ROM 0x0802E058, between
+`actor_part60.c` and `actor_part61.c`) each got their own new file -
+`src/graphics/actor_part74.c`/`75.c`/`76.c` - per `docs/workflow.md`
+step 4's "one `.c` file per contiguous ROM region" rule; numbered `74`-
+`76` rather than continuing this issue's own `58`-`62` run since
+`actor_part63.c`-`73.c` (issue #63's parallel PR) claimed those numbers
+first in the meantime. Their raw `asm/code_3_2_20_28568_c99c_d7b0.s`/
+`_dd9c.s`/`_e058.s` fragments are now fully empty and were deleted
+outright (not left as empty stubs), with `ldscript.txt`'s three
+corresponding `ASM_SRCS` entries replaced in place by the new `.o`
+entries, keeping the same link order/ROM addresses.
+
+### Closing this issue
+
+Every function in this issue's original 25-function range
+(`0x0802D3A8`-`0x0802E0A4`) is now matched. This PR closes issue #54.
+
 See [docs/status/actor.md](../status/actor.md) for the running
 matched/parked/left-raw list this entry feeds into.

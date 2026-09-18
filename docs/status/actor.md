@@ -341,29 +341,51 @@ from "core" graphics.
   `sub_802D600`, `sub_802D648`, `sub_802D6A0`, `sub_802D764` -
   `InitActorPart`-based constructor variants plus the
   `gUnknown_030012C0+0x78` Aku-Aku-mask-style add/remove pair.
+- `src/graphics/actor_part74.c` (new file, GitHub issue #54, ROM
+  0x0802D7B0-0x0802DA84, sits between `actor_part58.c` and
+  `actor_part59.c`; see
+  [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
+  `sub_802D7B0`, `sub_802D9A8`, `sub_802DA68` - a confirmed slot (index
+  3) of the type-0 `category_vtable` (also runs a full 3-axis AABB
+  overlap test against the player before dispatching a `sub_803AD80`
+  trampoline) and a palette-gradient/hardware-sound cursor pair for the
+  `gUnknown_030014BC` object; all three NAKED-transcribed.
 - `src/graphics/actor_part59.c` (new file, GitHub issue #54, non-
-  adjacent since the raw `sub_802D7B0`/`sub_802D9A8`/`sub_802DA68` sit
-  between it and `actor_part58.c`; see
+  adjacent since `actor_part74.c` sits between it and `actor_part58.c`;
+  see
   [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
   `sub_802DB2C`, `sub_802DCC0` - the `gUnknown_030014BC` position-
   tracking object's two `gStaticData_0817A840` vtable-slot update
   functions (accumulate/clamp, tier-keyed `PlaySfx`/`sub_80019F8`
   cues, and a shared kind/anim-reset transition tail).
+- `src/graphics/actor_part75.c` (new file, GitHub issue #54, ROM
+  0x0802DD9C-0x0802E058, sits between `actor_part59.c` and
+  `actor_part60.c`; see
+  [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
+  `sub_802DD9C`, `sub_802DE70` - the self-vs-player 3-axis AABB overlap
+  test factored out of `sub_802D7B0` (used by `sub_802D6A0`,
+  actor_part58.c) and the `gUnknown_030014BC` object's ~160-instruction
+  VRAM gauge-tile bitmap generator/DMA setup; both NAKED-transcribed.
 - `src/graphics/actor_part60.c` (new file, GitHub issue #54, non-
-  adjacent since the raw `sub_802DD9C`/`sub_802DE70` sit between it and
-  `actor_part59.c`; see
+  adjacent since `actor_part75.c` sits between it and `actor_part59.c`;
+  see
   [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
   `sub_802DFBC`, `sub_802DFC8`, `sub_802DFDC` - the
   `gUnknown_030014BC` object's state-flag setter, destructor, and
   constructor.
+- `src/graphics/actor_part76.c` (new file, GitHub issue #54, ROM
+  0x0802E058, sits between `actor_part60.c` and `actor_part61.c`; see
+  [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
+  `sub_802E058` - a parameterized twin of `sub_802DE70`'s VRAM gauge-tile
+  triangular-fill loop; NAKED-transcribed.
 - `src/graphics/actor_part61.c` (new file, GitHub issue #54, non-
-  adjacent since the raw `sub_802E058` sits between it and
-  `actor_part60.c`; see
+  adjacent since `actor_part76.c` sits between it and `actor_part60.c`;
+  see
   [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
   `nullsub_27` - a genuine no-op stub.
 - `src/graphics/actor_part62.c` (new file, GitHub issue #54, non-
-  adjacent since the raw `sub_802E058` sits between it and
-  `actor_part61.c`; see
+  adjacent since `actor_part76.c` sits between it and `actor_part61.c`;
+  see
   [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
   `sub_802D3A8` (eases `self`'s cached position toward a per-state
   target/table-scatter offset, NAKED - hit this project's confirmed
@@ -860,28 +882,6 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   issue #19) - a smaller joystick-input-gated dispatcher; left raw, out
   of scope for this pass - see
   `docs/matching/issue-19-0x08015840-actor.md`.
-- **`sub_802D7B0`/`sub_802DA68`/`sub_802D9A8`** (`asm/code_3_2_20_28568_c99c_d7b0.s`,
-  GitHub issue #54) - two confirmed slots (3 and 6) of the type-0
-  `category_vtable` (`sub_802D7B0`, which also runs a full 3-axis AABB
-  overlap test against the player before calling `sub_800014C`) and a
-  palette-gradient DMA cursor-advance/seed pair for the
-  `gUnknown_030014BC` object (`sub_802D9A8`/`sub_802DA68`, computing a
-  16-color gradient via `sub_803ADB4` and writing it straight to BG
-  palette RAM); not confidently understood well enough to reconstruct
-  byte-exact C without real risk of a wrong guess, left raw - see
-  `docs/matching/issue-54-actor-d3a8.md`.
-- **`sub_802DD9C`/`sub_802DE70`** (`asm/code_3_2_20_28568_c99c_dd9c.s`,
-  GitHub issue #54) - a self-vs-player 3-axis AABB overlap test (the
-  same shape as `sub_802D7B0`'s inline check above, factored out to its
-  own function) and a ~160-instruction VRAM gauge-tile bitmap generator
-  (two nested 16x16 triangular-fill loops plus a DMA3 transfer, heavy
-  `r8`/`sb`/`sl` register pressure); left raw - see
-  `docs/matching/issue-54-actor-d3a8.md`.
-- **`sub_802E058`** (`asm/code_3_2_20_28568_c99c_e058.s`, GitHub issue
-  #54) - a parameterized twin of half of `sub_802DE70`'s VRAM gauge-tile
-  triangular-fill loop, taking the destination buffer and seed value as
-  arguments instead of using the fixed stack buffer/globals; left raw -
-  see `docs/matching/issue-54-actor-d3a8.md`.
 - **`sub_8034374`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s`,
   ROM 0x08034374, GitHub issue #63) - a ~150-instruction graphics/
   palette/DMA setup routine with an apparent uninitialized-local read
