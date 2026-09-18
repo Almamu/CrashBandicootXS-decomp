@@ -110,11 +110,9 @@ from "core" graphics.
   `sub_800A6F4`, `sub_800A700`, `sub_800A70C`, `sub_800A718`,
   `sub_800A724`, `sub_800A730`
 
-- `src/graphics/actor_part49.c` (new file, GitHub issue #9): `sub_800B270`
-  - a per-frame velocity integrator moving `self+0x60`/`self+0x64`
-  toward `self+0x50`/`self+0x5c` by `self+0x4c`/`self+0x58` each call,
-  deriving a `self+0x24` direction-flag byte and applying the result to
-  the object's position; see
+- `src/graphics/actor_part48.c` (GitHub issue #9): `sub_800A810` - a
+  part-object velocity/state reset that dispatches a sub-state byte to
+  one of three teardown helpers; see
   [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
 
 - `src/graphics/actor_part15.c`/`src/graphics/actor_part16.c` (new
@@ -131,7 +129,12 @@ from "core" graphics.
   `sub_800B5CC`, `sub_800B5D8`, `sub_800B5E0`, `sub_800B5E8`,
   `sub_800B5F0`, `sub_800B5FC`, `sub_800B608`, `sub_800B614`,
   `sub_800B620`, `sub_800B62C`, `sub_800B638`, `sub_800B644`,
-  `sub_800B650`, `sub_800B678`, `sub_800B698`, `sub_800B69C`
+  `sub_800B650`, `sub_800B678`, `sub_800B698`, `sub_800B69C`,
+  `sub_800B6A0`, `sub_800B6D0` (issues #84/#85 - see
+  [docs/matching/issue-84-85-sub_800B6A0.md](../matching/issue-84-85-sub_800B6A0.md);
+  matched with `self`/`vec` pinned to `r3`/`r2` and each branch's X/Y/Z
+  locals pinned to their own ABI registers in the ROM's actual load
+  order, avoiding the callee-saved spill three earlier attempts hit)
 
 - `src/graphics/actor_part17.c` (new file - see `docs/matching.md`):
   `sub_800B704`, `sub_800B734`, `sub_800B7B0`, `sub_800B838`,
@@ -430,26 +433,26 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   genuine fifth-scratch-register need (`r5`, just to hold an offset
   immediate) this compiler never introduces. See
   [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
-- **`sub_800A734`/`sub_800A810`** (`src/graphics/actor_part48.c`,
-  GitHub issue #9; real bytes in `asm/code_3_2_16_a734.s`) - a part-
-  object velocity/state reset pair, one of which also hooks up a child
-  object and one of which dispatches a sub-state byte to one of three
-  teardown helpers. Field writes and dispatch semantics fully
-  confirmed; parked on the ROM's running-pointer address-increment
-  style (`sub_800A734`) and an exact compare-chain-vs-register-letter
-  tradeoff (`sub_800A810`) neither reproduced together by any C
-  phrasing tried. See
+- **`sub_800A734`** (`src/graphics/actor_part48.c`, GitHub issue #9;
+  real bytes in `asm/code_3_2_16_a734.s`) - a part-object
+  velocity/state reset that also hooks up a child object. Field writes
+  fully confirmed; parked on the ROM's running-pointer address-
+  increment style across a long, non-uniform stretch of field writes
+  (its sibling `sub_800A810`, right after it in ROM order, matched with
+  a similar cursor technique on a shorter/more uniform stretch - see
+  the write-up). See
   [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
-- **`sub_800B6A0`/`sub_800B6D0`** (`src/graphics/actor_part16.c`) -
-  mirror-flag-gated 3-vector copies. This compiler unconditionally
-  spills the `vec` pointer to a callee-saved register (`push
-  {r4,lr}`/`pop {r4}`) whenever it's referenced in both branches of an
-  if/else, even with nothing to clobber it - the ROM is a true leaf
-  function using only r0-r3. Three independent fixes (pinning `self`
-  alone; also pinning/reassigning `vec`; restructuring into a
-  `goto`-based flow) all produced an identical 8-byte-larger result -
-  see `docs/matching.md`, "A new unnamed object:
-  `actor_part15.c`/`actor_part16.c`".
+- **`sub_800B270`** (`src/graphics/actor_part49.c`, GitHub issue #9) -
+  a per-frame velocity integrator moving `self+0x60`/`self+0x64`
+  toward `self+0x50`/`self+0x5c` by `self+0x4c`/`self+0x58` each call,
+  deriving a `self+0x24` direction-flag byte and applying the result to
+  the object's position, then recording the resulting Y velocity into
+  an unlabeled RAM address (`0x0300129C`). Matches one-for-one through
+  the position-update store; parked on the trailing 14-instruction
+  `0x0300129C` block, where every register-pin combination tried either
+  swaps the ROM's address/value register letters or reintroduces an
+  unrelated `push {r4}` regression. See
+  [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
 - **`sub_8007B00`** (`src/graphics/actor_part.c`) - builds an AABB for
   `part`'s current animation keyframe (via the shared `sub_803AFE4`/
   `sub_803AFDC` primitive) and mirrors it horizontally/vertically per
@@ -611,17 +614,25 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   1-2 call sharing); parked on a single remaining conditional-branch
   encoding gap in the mode-3 case - see `docs/matching.md`, "Parked,
   not matched: `sub_8009D5C`".
-- **`sub_8009DF4`** (`src/graphics/actor_part8.c`) - a velocity/
-  position integrator: steps each axis's velocity toward its max by
-  its accel amount (clamped so it never overshoots), builds a
+- **`sub_8009DF4`** (`src/graphics/actor_part8.c`, issue #97) - a
+  velocity/position integrator: steps each axis's velocity toward its
+  max by its accel amount (clamped so it never overshoots), builds a
   direction-flags byte from the clamped velocities' signs, caches the
-  pre-move position, applies the velocity, and updates a global with
-  the Y velocity. Every branch and memory access confirmed correct;
-  parked purely on a leaf-vs-non-leaf register-budget gap (the ROM
-  needs no stack frame at all, fitting entirely in r0-r3 with `self`
-  in r2 reused once dead; every arrangement tried here needs one extra
-  spilled register) - see `docs/matching.md`, "Parked, not matched:
-  `sub_8009DF4`".
+  pre-move position, applies the velocity, and updates a global
+  (`gUnknown_03001298`) with the Y velocity. Every branch and memory
+  access confirmed correct, and - after remodeling this reconstruction
+  on the near-identical `sub_800B270` (issue #9, same per-axis clamp
+  shape, same field offsets) - now a true `push`/`pop`-free leaf
+  function matching the ROM's own register budget exactly, closing the
+  leaf-vs-non-leaf gap `docs/matching.md`'s frozen entry originally
+  described. What's left is the same trailing gap `sub_800B270` itself
+  is still parked on: the global-update block's address/value register
+  roles are swapped from the ROM's (`r0`=address/`r2`=value here vs.
+  the reverse), and forcing either side of that swap either triggers
+  this compiler's dead-store elimination to drop the whole conditional
+  (when the *value* is register-pinned) or reintroduces a `push
+  {r4,lr}`/`pop {r4}` pair elsewhere (when the *address* is) - see
+  [docs/matching/issue-97-sub_8009DF4.md](../matching/issue-97-sub_8009DF4.md).
 - **`sub_801434C`** (`asm/code_3_2_17_1434c.s`, C in
   `src/graphics/actor_part18.c`) - the shared handler
   `sub_80142B0` tail-calls; one of the `gStaticData_0816BF20` action-

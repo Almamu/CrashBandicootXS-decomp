@@ -90,6 +90,8 @@ void sub_800A734(void *selfArg)
     self[0xc] &= ~1;
     self[0x105] = 0;
 }
+#endif /* NON_MATCHING */
+asm(".align 2, 0");
 
 /* Resets `part`'s velocity/state fields (`+0x60`/`+0x64` cleared,
  * `+0x68` state set to 8, `+0x24` cleared, `+0x28` bit 5 cleared,
@@ -100,47 +102,83 @@ void sub_800A734(void *selfArg)
  * `sub_8015840`, state 1 -> `sub_80159A4`, state 3 -> `sub_8017994`;
  * state 2 and anything else is a no-op.
  *
- * PARKED, NOT BYTE-MATCHING: the field writes and dispatch semantics
- * are confirmed correct one-for-one against the ROM. The remaining gap
- * is register allocation around the dispatch itself: the ROM keeps
- * `self` in r3 across the three `bl` calls (safe since nothing between
- * dispatch and each call clobbers it) and reaches the three targets via
- * a `beq`/`bgt`/`ble`/`beq` comparison chain that groups state 1 first,
- * then state>1 (splitting 2 from 3), then state 0 last; every C
- * phrasing tried here (a plain `switch`, an explicit `if`/`else if`
- * chain ordered to match, with an empty `case 2`/`else if (state==2)`
- * arm to force the redundant compare) reproduces the *dispatch value*
- * correctly but not this exact compare/branch ordering or `self`'s
- * register letter at the same time - fixing one via restructuring moved
- * the other. Parked rather than keep chasing the exact chain shape. See
- * docs/matching/issue-9-0x08007634-actor.md. */
+ * Needed `self` pinned to `r3` (kept live across the three `bl` calls),
+ * the two AND-mask field writes (`self+0x28`, `self+0xc`) built via the
+ * "negative-constant register-pinned mask" idiom (`register s32 mask
+ * asm("r0") = -0x21`/`-9`, matching the ROM's own runtime `mov`+`neg`
+ * pair instead of a folded 8-bit AND immediate), the `self+0x68`-to-
+ * `self+0x28` field-address chain expressed as a single decremented
+ * `u8 *p` cursor (reproducing the ROM's own `subs r1, #0x40` reuse
+ * instead of a fresh address computation), and the whole dispatch
+ * rewritten as an explicit `goto` chain - `if (state == 1) goto do1;
+ * if (state > 1) goto gt1; if (state == 0) goto do0;` - with a second
+ * register-pinned copy of `state` (`state2`, `r1`) read once up front
+ * for the inner `state2 == 2`/`state2 == 3` checks, matching the ROM's
+ * own `adds r1, r0, #0` copy and its `beq`/`bgt`/`beq` comparison chain
+ * (an `if`/`else if` chain, even restructured with an empty `case 2`
+ * arm, always collapsed the branch polarity to `bne`-skip instead of
+ * this `beq`-take shape and let the CSE pass drop the `state`/`state2`
+ * copy entirely). See docs/matching/issue-9-0x08007634-actor.md. */
 void sub_800A810(void *selfArg)
 {
-    u8 *self = selfArg;
-    u8 state;
+    register u8 *self asm("r3") = selfArg;
+    s32 state;
 
-    *(s32 *)(self + 0x60) = 0;
-    *(s32 *)(self + 0x64) = 0;
-    self[0x68] = 8;
-    self[0x24] = 0;
-    self[0x28] &= ~0x20;
-    self[0x2d] = 0;
-    self[0xc] = (self[0xc] & ~8) | 0x40;
+    {
+        register s32 zero asm("r2") = 0;
+
+        *(s32 *)(self + 0x60) = zero;
+        *(s32 *)(self + 0x64) = zero;
+        {
+            u8 *p = self + 0x68;
+            *p = 8;
+            self[0x24] = zero;
+            p -= 0x40;
+            {
+                register s32 mask asm("r0") = -0x21;
+                register u8 byte asm("r4") = *p;
+                register s32 result asm("r0");
+
+                result = mask & byte;
+                *p = result;
+            }
+        }
+        self[0x2d] = zero;
+    }
+    {
+        register s32 mask asm("r0") = -9;
+        register s32 byte asm("r1") = self[0xc];
+        register s32 result asm("r0");
+        register s32 orMask asm("r1");
+
+        result = mask & byte;
+        orMask = 0x40;
+        result = result | orMask;
+        self[0xc] = result;
+    }
 
     state = self[0x88];
-    switch (state) {
-    case 0:
+    {
+        register s32 state2 asm("r1") = state;
+
+        if (state == 1) goto do1;
+        if (state > 1) goto gt1;
+        if (state == 0) goto do0;
+        goto endDispatch;
+    gt1:
+        if (state2 == 2) goto endDispatch;
+        if (state2 == 3) goto do3;
+        goto endDispatch;
+    do0:
         sub_8015840(*(s32 *)(self + 0x44));
-        break;
-    case 1:
+        goto endDispatch;
+    do1:
         sub_80159A4(*(s32 *)(self + 0x44));
-        break;
-    case 3:
+        goto endDispatch;
+    do3:
         sub_8017994(*(s32 *)(self + 0x44));
-        break;
-    default:
-        break;
+    endDispatch:
+        ;
     }
 }
-#endif /* NON_MATCHING */
 asm(".align 2, 0");
