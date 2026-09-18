@@ -121,5 +121,26 @@ plain C didn't converge.
   `LoadBg2Background` above - see
   [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)'s
   "Third pass".
+- **`sub_801E688`**, **`sub_801E788`** (`src/graphics/graphics_package_1e688.c`,
+  real bytes guarded in `asm/code_3_2_17_1e644.s`) - `LoadGraphicsPackage`'s
+  tile-cell-selection (best-fit box search over the shared
+  `gStaticData_0816C644`/`674` preset table, plus Q8.8 scale-factor
+  computation) and viewport-centering (position math on one of 4
+  packed modes, then an unconditional shadow-OAM insert that also
+  allocates and writes one affine-parameter group when centering is
+  active) helpers. Fully understood, including resolving the prior
+  pass's flagged concern about `sub_801E688`'s `gUnknown_03001300`
+  writes not fitting the shadow buffer's 8-byte hardware-OAM stride -
+  they do (`field_08 * 0x20 + 0x12` decomposes into 4 consecutive
+  entries' filler halfword, the real hardware's OBJ affine-parameter
+  overlay) - but not byte-exact: `sub_801E788` needs `self` in `r7`
+  (matching the ROM's `push {r4-r7}`), which is only reachable through
+  an explicit `register u8 *self asm("r7")` pin, and that pin itself
+  defeats this compiler's immediate-offset address folding for every
+  `self[...]` access (confirmed with a minimal repro) - a new flavor of
+  the gcc-2.9 register-allocation gotchas already catalogued in this
+  cluster. See
+  [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)'s
+  "Fourth pass".
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
