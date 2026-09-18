@@ -169,6 +169,34 @@ See docs/matching.md for `PlaySfx`'s remaining gap.
   See [docs/matching/issue-66-67-gax-playstart-cluster.md](../matching/issue-66-67-gax-playstart-cluster.md)
   for all three functions' full write-up, plus this pass's two real
   matches (`sub_80384DC`/`sub_8038B68`, listed under "Matched" above).
+- **`sub_8038C88`** (`src/audio/gax_voice_steal.c`, per-frame mixer
+  tick) - fully understood (zero-fills a per-song scratch buffer,
+  mirrors a clamped byte into the current voice, and - when
+  `curChannelIdx == 1` and a song flag is set - resets it to 0 and
+  re-links every channel row's voice pointer), not attempted as real C
+  this pass - a deeply nested `p->channels[curChannelIdx]` chase
+  repeated 5 times, deprioritized versus `sub_8038DC0`'s real-C attempt
+  below. Byte-verified NAKED transcription.
+- **`sub_8038DC0`** (`src/audio/gax_voice_steal.c`, UNUSED - no caller
+  anywhere in the ROM) - a standalone near-twin of `sub_8038E74`'s
+  unconditional lowest-priority scan. Extensively attempted as real C
+  (several reconstructions came very close, including matching the
+  ROM's own apparent uninitialized-`bestIdx`-when-empty behavior), but
+  no version landed the ROM's exact `r4`/`r5`/`r6`/`r7` register
+  combination at once - including an explicit `register ... asm("r7")`
+  pin on the parameter, which the allocator overrode with an unrelated
+  value instead of honoring (confirmed by direct byte comparison
+  against the ROM, not assumed). Byte-verified NAKED transcription.
+- **`sub_8038E74`** (`src/audio/gax_voice_steal.c`, the voice-stealing
+  mixer allocator, docs/audio.md - one of `PlaySfx`'s two direct
+  callees) - fully understood, but keeps `self` in `r8` and a saved
+  `&gUnknown_03001630` copy in `ip` live across the whole function
+  including two scan loops, the same many-register ceiling as
+  `sub_8038240`/`sub_8038538`/`sub_8038A1C` above. Byte-verified NAKED
+  transcription.
+
+  See [docs/matching/issue-67-gax-voice-steal.md](../matching/issue-67-gax-voice-steal.md)
+  for all three functions' full write-up.
 
 ## Left raw (not attempted, or attempted and set aside)
 
@@ -182,7 +210,12 @@ from the `0x08037110`-`0x08038538` pass specifically:
   the same many-register gcc-2.9 allocation difficulty already
   documented for `sub_8006600` (`src/graphics/oam_count.c`).
 - `sub_8037648`/`sub_8037A7C`/`sub_8037E54`/`sub_8037ECC`/`sub_8037F3C` -
-  generic 64-bit software division/multiply helpers, per `docs/audio.md`.
+  confirmed *not* GAX2 code at all (per `docs/audio.md`'s own
+  `sub_8037648`/`sub_8037A7C` entries) - a generic 64-bit software
+  division/multiply helper family, now matched/parked under category
+  `util` in `src/util/math_div64_util.c` (issue #66) rather than this
+  page - see [docs/status/util.md](./util.md) and
+  [docs/matching/issue-66-67-math-div64-util.md](../matching/issue-66-67-math-div64-util.md).
 - `sub_8037FC0` - genuine GAX2 mixer/timing internals over
   `gStaticData_085A6150`; not attempted, issue #66. `sub_8038240`/
   `sub_80384DC` (the rest of issue #66) are now matched/parked - see
@@ -198,10 +231,12 @@ above as of the second pass) are now matched/parked - see
 [docs/matching/issue-66-67-gax-playstart-cluster.md](../matching/issue-66-67-gax-playstart-cluster.md)
 and the "Matched"/"Parked - NAKED asm transcription" sections above.
 
-- `sub_8038C88`/`sub_8038DC0` - more mixer-tick internals, read in full
-  but not attempted as a C reconstruction; `sub_8038E74` (the
-  voice-stealing allocator, docs/audio.md) hits the same many-register
-  (`r8`) shape as its neighbors above - left raw.
+`sub_8038C88`/`sub_8038DC0`/`sub_8038E74` (more mixer-tick/voice-
+stealing internals, `sub_8038E74` is the voice-stealing allocator,
+listed raw above) are now matched/parked - see
+[docs/matching/issue-67-gax-voice-steal.md](../matching/issue-67-gax-voice-steal.md)
+and the "Parked - NAKED asm transcription" section above.
+
 - `sub_8038FD0`/`sub_8039064`/`sub_80390F8` - a per-channel mute/
   volume-set family; each hits the same many-register loop-allocation
   difficulty as the `sub_8038538` cluster above (confirmed via isolated
