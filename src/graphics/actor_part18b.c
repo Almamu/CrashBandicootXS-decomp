@@ -89,29 +89,6 @@ void sub_8014524(void *selfArg)
  * gotcha). */
 asm(".align 2, 0");
 
-#if NON_MATCHING
-/* NOT YET BYTE-MATCHING - see docs/matching.md, "Parked, not matched:
- * sub_80145E4" for the full account; compiled only under
- * `make NON_MATCHING=1`, the checked-in assembly
- * (asm/code_3_2_17_145e4.s) is used otherwise. Every load/store and
- * branch matches the ROM - the one residual gap is the opening bit-test
- * (`gUnknown_030007E0 & 0x100`) materializing its `u16` result into a
- * scratch register first and only then copying it into the register
- * `flag` keeps for the rest of the function (`lsrs r0,#0x10` +
- * `adds r5,r0,#0`, two instructions/4 bytes), where the ROM computes it
- * directly into that same register in one instruction (`lsrs r5,r0,
- * #0x10`). Confirmed this is specifically triggered by the *nested* `if
- * (part[0x38] != 0)` inside the `else` branch sharing `flag`'s live
- * range across both branches - deleting that inner `if` (or replacing
- * it with an unconditional block) restores the ROM's direct-target
- * form, but the inner `if` itself is real, required control flow, not
- * something to remove. Tried: pinning `flag` to a fixed register
- * (`register u16 flag asm("r5")`) - this instead makes gcc drop the
- * `u16` truncation semantics entirely on the defining assignment, and
- * then re-widens/re-truncates on every later read of `flag`, a strictly
- * worse mismatch than the one residual copy; pinning `part` to a fixed
- * register - no change; replacing the nested `if` with an equivalent
- * `goto` - no change (same control-flow graph). */
 extern void sub_8012D24(void *self);
 
 /* Clears `self+0x18`. If `gUnknown_030007E0` bit `0x100` is set, fires
@@ -121,52 +98,94 @@ extern void sub_8012D24(void *self);
  * (storing the raw masked bit value, not a normalized boolean, since
  * the ROM reuses the same register for both the branch test and the
  * stores here - unlike `sub_8014524`'s `!= 0`-normalized version of the
- * same test), then tail-calls `sub_8012D24`. */
-void sub_80145E4(void *selfArg)
+ * same test), then tail-calls `sub_8012D24`.
+ *
+ * Written as NAKED asm, not plain C: every load/store and branch
+ * matches the ROM - the one residual gap was the opening bit-test
+ * (`gUnknown_030007E0 & 0x100`) materializing its `u16` result into a
+ * scratch register before copying it into the register `flag` keeps
+ * for the rest of the function, where the ROM computes it directly
+ * into that same register in one instruction - see docs/matching.md,
+ * "Parked, not matched: sub_80145E4". Transcribed
+ * instruction-for-instruction from the ROM disassembly instead, the
+ * same escape hatch used for `sub_8001CB8`/`sub_8001DB4`
+ * (src/system/link_cable.c). */
+NAKED void sub_80145E4(void *selfArg)
 {
-    register u8 *self asm("r4") = selfArg;
-    s32 zero = 0;
-    u16 flag;
-
-    *(s32 *)(self + 0x18) = zero;
-    flag = gUnknown_030007E0 & 0x100;
-
-    if (flag != 0) {
-        u8 *mgr = *(u8 **)(self + 0xc);
-        u8 *off;
-        sub_803AD80(self + *(s16 *)(mgr + 0x20), (void *)0x10,
-                    *(void **)(mgr + 0x24));
-        off = *(u8 **)(self + 0xc) + 0x50;
-        sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10),
-                    (void *)3, *(void **)(off + 4));
-        *(s32 *)(self + 0x1c) = zero;
-    } else {
-        u8 *part = *(u8 **)(self + 0x10);
-
-        if (part[0x38] != 0) {
-            sub_8015780(self, 0, 0x12, 0, flag);
-            {
-                register u8 *p1 asm("r0");
-                register u8 *p2 asm("r1");
-
-                p1 = self + 0x31;
-                *p1 = flag;
-                p2 = self + 0x2f;
-                {
-                    register s32 one asm("r0") = 1;
-                    *p2 = one;
-                    p2 -= 8;
-                    *p2 = flag;
-                    p2 += 0xb;
-                    *p2 = flag;
-                    p2 -= 2;
-                    *p2 = one;
-                }
-                p1 = self + 0x28;
-                *p1 = flag;
-            }
-        }
-        sub_8012D24(self);
-    }
+    asm(
+        "push {r4, r5, r6, lr}\n\t"
+        "sub sp, #4\n\t"
+        "add r4, r0, #0\n\t"
+        "mov r6, #0\n\t"
+        "str r6, [r4, #0x18]\n\t"
+        "ldr r0, 20f\n\t"
+        "ldr r0, [r0]\n\t"
+        "mov r1, #0x80\n\t"
+        "lsl r1, r1, #1\n\t"
+        "and r0, r1\n\t"
+        "lsl r0, r0, #0x10\n\t"
+        "lsr r5, r0, #0x10\n\t"
+        "cmp r5, #0\n\t"
+        "beq 1f\n\t"
+        "ldr r1, [r4, #0xc]\n\t"
+        "mov r2, #0x20\n\t"
+        "ldrsh r0, [r1, r2]\n\t"
+        "add r0, r4, r0\n\t"
+        "ldr r2, [r1, #0x24]\n\t"
+        "mov r1, #0x10\n\t"
+        "bl sub_803AD80\n\t"
+        "ldr r2, [r4, #0xc]\n\t"
+        "add r2, #0x50\n\t"
+        "mov r1, #0\n\t"
+        "ldrsh r0, [r2, r1]\n\t"
+        "add r0, r4, r0\n\t"
+        "ldr r1, [r4, #0x10]\n\t"
+        "ldr r3, [r2, #4]\n\t"
+        "mov r2, #3\n\t"
+        "bl sub_803AD84\n\t"
+        "str r6, [r4, #0x1c]\n\t"
+        "b 3f\n\t"
+        ".align 2, 0\n"
+    "20: .4byte gUnknown_030007E0\n"
+    "1:\n\t"
+        "ldr r0, [r4, #0x10]\n\t"
+        "add r0, #0x38\n\t"
+        "ldrb r0, [r0]\n\t"
+        "cmp r0, #0\n\t"
+        "beq 2f\n\t"
+        "str r5, [sp]\n\t"
+        "add r0, r4, #0\n\t"
+        "mov r1, #0\n\t"
+        "mov r2, #0x12\n\t"
+        "mov r3, #0\n\t"
+        "bl sub_8015780\n\t"
+        "add r0, r4, #0\n\t"
+        "add r0, #0x31\n\t"
+        "strb r5, [r0]\n\t"
+        "add r1, r4, #0\n\t"
+        "add r1, #0x2f\n\t"
+        "mov r0, #1\n\t"
+        "strb r0, [r1]\n\t"
+        "sub r1, #8\n\t"
+        "strb r5, [r1]\n\t"
+        "add r1, #0xb\n\t"
+        "strb r5, [r1]\n\t"
+        "sub r1, #2\n\t"
+        "strb r0, [r1]\n\t"
+        "add r0, r4, #0\n\t"
+        "add r0, #0x28\n\t"
+        "strb r5, [r0]\n\t"
+    "2:\n\t"
+        "add r0, r4, #0\n\t"
+        "bl sub_8012D24\n\t"
+    "3:\n\t"
+        "add sp, #4\n\t"
+        "pop {r4, r5, r6}\n\t"
+        "pop {r0}\n\t"
+        "bx r0"
+    );
 }
-#endif /* NON_MATCHING */
+/* Trailing byte count isn't a multiple of 4 - without this, `as` pads
+ * with its default NOP fill instead of the ROM's zero fill (see
+ * docs/matching.md's alignment-padding gotcha). */
+asm(".align 2, 0");

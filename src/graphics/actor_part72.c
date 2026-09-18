@@ -65,15 +65,26 @@ void sub_80345B0(void *mgrArg, s32 idx)
  * Writes a 4-bit nibble `val` into the `self+0x10` tilemap at pixel
  * `(x, y)`, once bounds-checked against the `0xf0x0xa0` screen
  * (silently doing nothing out of range). Semantics fully understood and
- * every field/shift confirmed correct; parked because this compiler
- * spills all four parameters into callee-saved registers at entry even
- * though `val` is never touched until the function's tail and no call
- * happens in between (a leaf function, so the ROM's own build simply
- * leaves it in `r3` the whole time) - no rewrite tried avoided the
- * up-front spill. */
-void sub_8034634(void *mgrArg, u32 x, s32 y, s32 val)
+ * every field/shift confirmed correct. This compiler originally spilled
+ * all four parameters into callee-saved registers at entry even though
+ * `val` is never touched until the function's tail and no call happens
+ * in between (a leaf function, so the ROM's own build simply leaves it
+ * in `r3` the whole time) - pinning `val` to `register s32 val
+ * asm("r3")` (assigned from a plain, unpinned `valArg` parameter; a
+ * pinned parameter itself doesn't parse on this compiler) fixed that
+ * specific gap, dropping the `push`/`pop` back down to the ROM's
+ * `{r4, r5, r6}`. The residual gap is narrower now: this compiler
+ * computes the `(x>>3)<<6`/`blockY`-derived halves of `addr` into `r2`/
+ * `r1` respectively, opposite the ROM's `r1`/`r2` - every register-pin
+ * variant tried on `addr`/`blockY` individually either left the swap in
+ * place or corrupted a neighboring instruction's encoding (e.g. turned
+ * an `adds` into an `orrs`), so the swap was left as the residual
+ * NON_MATCHING gap rather than risk a wrong-but-plausible-looking
+ * match. */
+void sub_8034634(void *mgrArg, u32 x, s32 y, s32 valArg)
 {
     u8 *mgr = mgrArg;
+    register s32 val asm("r3") = valArg;
 
     if (x <= 0xef && y >= 0 && y <= 0x9f) {
         s32 blockY = y >> 3;

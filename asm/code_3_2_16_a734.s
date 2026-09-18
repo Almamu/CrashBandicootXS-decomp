@@ -3,10 +3,11 @@
 .syntax unified
 .arm
 
-@ sub_800A734/sub_800A810 are reconstructed (but not yet byte-matching)
-@ as C in src/graphics/actor_part48.c, guarded by #if NON_MATCHING -
-@ this raw version is only assembled for the default (matching) build.
-@ See docs/matching/issue-9-0x08007634-actor.md.
+@ sub_800A734 is reconstructed (but not yet byte-matching) as C in
+@ src/graphics/actor_part48.c, guarded by #if NON_MATCHING - this raw
+@ version is only assembled for the default (matching) build. See
+@ docs/matching/issue-9-0x08007634-actor.md. (sub_800A810, right after
+@ it in ROM order, matched and moved to actor_part48.c outright.)
 .if NON_MATCHING == 0
 	thumb_func_start sub_800A734
 sub_800A734: @ 0x0800A734
@@ -118,67 +119,4 @@ sub_800A734: @ 0x0800A734
 	.align 2, 0
 _0800A808: .4byte gUnknown_0300082C
 _0800A80C: .4byte 0x00000101
-
-	thumb_func_start sub_800A810
-sub_800A810: @ 0x0800A810
-	push {r4, lr}
-	adds r3, r0, #0
-	movs r2, #0
-	str r2, [r3, #0x60]
-	str r2, [r3, #0x64]
-	adds r1, r3, #0
-	adds r1, #0x68
-	movs r0, #8
-	strb r0, [r1]
-	adds r0, r3, #0
-	adds r0, #0x24
-	strb r2, [r0]
-	subs r1, #0x40
-	movs r0, #0x21
-	rsbs r0, r0, #0
-	ldrb r4, [r1]
-	ands r0, r4
-	strb r0, [r1]
-	adds r0, r3, #0
-	adds r0, #0x2d
-	strb r2, [r0]
-	movs r0, #9
-	rsbs r0, r0, #0
-	ldrb r1, [r3, #0xc]
-	ands r0, r1
-	movs r1, #0x40
-	orrs r0, r1
-	strb r0, [r3, #0xc]
-	adds r0, r3, #0
-	adds r0, #0x88
-	ldrb r0, [r0]
-	adds r1, r0, #0
-	cmp r0, #1
-	beq _0800A870
-	cmp r0, #1
-	bgt _0800A85E
-	cmp r0, #0
-	beq _0800A868
-	b _0800A87E
-_0800A85E:
-	cmp r1, #2
-	beq _0800A87E
-	cmp r1, #3
-	beq _0800A878
-	b _0800A87E
-_0800A868:
-	ldr r0, [r3, #0x44]
-	bl sub_8015840
-	b _0800A87E
-_0800A870:
-	ldr r0, [r3, #0x44]
-	bl sub_80159A4
-	b _0800A87E
-_0800A878:
-	ldr r0, [r3, #0x44]
-	bl sub_8017994
-_0800A87E:
-	pop {r4}
-	pop {r0}
-	bx r0
 .endif

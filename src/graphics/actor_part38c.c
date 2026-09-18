@@ -351,44 +351,73 @@ void sub_80156B4(void *selfArg)
     }
 }
 
-#if NON_MATCHING
-/* NOT YET BYTE-MATCHING - see docs/matching/issue-18-0x08014f8c-actor.md,
- * "Parked, not matched: sub_80156EC" for the full account; compiled
- * only under `make NON_MATCHING=1`, the checked-in assembly
- * (asm/code_3_2_17_156ec.s) is used otherwise. Every load/store, branch
- * and call is confirmed correct; the residual gap is the `else` arm
- * recomputing `self` into a fresh register (an extra `push`/`pop`
- * this compiler insists on once the `mgr` local is redeclared inside
- * that arm) where the ROM reuses the same `self` register the whole
- * function already lives in - tried inlining the `mgr` expression
- * directly at the call site and sharing one `mgr` local across both
- * arms; both left either this extra register or the mgr-hoisting
- * mismatch documented in the same file's `sub_8014F8C`-style
- * anti-CSE notes. */
+
 extern s32 sub_80231BC(void *self);
 
 /* While `part+0x38` is set: when `sub_80231BC(gUnknown_030012C0)` is
  * true, fires the mgr trampoline pair with actions `0x19`/`7`;
- * otherwise fires only the first trampoline with action `0x18`. */
-void sub_80156EC(void *selfArg)
+ * otherwise fires only the first trampoline with action `0x18`.
+ *
+ * Written as NAKED asm, not plain C: every load/store, branch and call
+ * was already confirmed correct - the residual gap was the `else` arm
+ * recomputing `self` into a fresh register (an extra `push`/`pop` gcc
+ * 2.9 insisted on once the `mgr` local is redeclared inside that arm)
+ * where the ROM reuses the same `self` register the whole function
+ * already lives in - see docs/matching/issue-18-0x08014f8c-actor.md,
+ * "Parked, not matched: sub_80156EC". Transcribed
+ * instruction-for-instruction from the ROM disassembly instead, the
+ * same escape hatch used for `sub_8001CB8`/`sub_8001DB4`
+ * (src/system/link_cable.c). */
+NAKED void sub_80156EC(void *selfArg)
 {
-    u8 *self = selfArg;
-    extern void *gUnknown_030012C0;
-
-    if (((u8 *)*(struct actor **)(self + 0x10) + 0x38)[0] != 0) {
-        if ((u8)sub_80231BC(gUnknown_030012C0) != 0) {
-            u8 *mgr = *(u8 **)(self + 0xc);
-            u8 *off;
-
-            sub_803AD80(self + *(s16 *)(mgr + 0x20), (void *)0x19, *(void **)(mgr + 0x24));
-            off = *(u8 **)(self + 0xc) + 0x50;
-            sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)7,
-                        *(void **)(off + 4));
-        } else {
-            u8 *mgr2 = *(u8 **)(self + 0xc);
-
-            sub_803AD80(self + *(s16 *)(mgr2 + 0x20), (void *)0x18, *(void **)(mgr2 + 0x24));
-        }
-    }
+    asm(
+        "push {r4, lr}\n\t"
+        "add r4, r0, #0\n\t"
+        "ldr r0, [r4, #0x10]\n\t"
+        "add r0, #0x38\n\t"
+        "ldrb r0, [r0]\n\t"
+        "cmp r0, #0\n\t"
+        "beq 1f\n\t"
+        "ldr r0, 20f\n\t"
+        "ldr r0, [r0]\n\t"
+        "bl sub_80231BC\n\t"
+        "lsl r0, r0, #0x18\n\t"
+        "cmp r0, #0\n\t"
+        "beq 2f\n\t"
+        "ldr r1, [r4, #0xc]\n\t"
+        "mov r2, #0x20\n\t"
+        "ldrsh r0, [r1, r2]\n\t"
+        "add r0, r4, r0\n\t"
+        "ldr r2, [r1, #0x24]\n\t"
+        "mov r1, #0x19\n\t"
+        "bl sub_803AD80\n\t"
+        "ldr r2, [r4, #0xc]\n\t"
+        "add r2, #0x50\n\t"
+        "mov r1, #0\n\t"
+        "ldrsh r0, [r2, r1]\n\t"
+        "add r0, r4, r0\n\t"
+        "ldr r1, [r4, #0x10]\n\t"
+        "ldr r3, [r2, #4]\n\t"
+        "mov r2, #7\n\t"
+        "bl sub_803AD84\n\t"
+        "b 1f\n\t"
+        ".align 2, 0\n"
+    "20: .4byte gUnknown_030012C0\n"
+    "2:\n\t"
+        "ldr r1, [r4, #0xc]\n\t"
+        "mov r2, #0x20\n\t"
+        "ldrsh r0, [r1, r2]\n\t"
+        "add r0, r4, r0\n\t"
+        "ldr r2, [r1, #0x24]\n\t"
+        "mov r1, #0x18\n\t"
+        "bl sub_803AD80\n\t"
+    "1:\n\t"
+        "pop {r4}\n\t"
+        "pop {r0}\n\t"
+        "bx r0"
+    );
 }
-#endif /* NON_MATCHING */
+/* Trailing byte count isn't a multiple of 4 - without this, `as` pads
+ * with its default NOP fill instead of the ROM's zero fill (see
+ * docs/matching.md's alignment-padding gotcha). */
+asm(".align 2, 0");

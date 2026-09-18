@@ -19,7 +19,9 @@ scratch buffer - see
 [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)
 for the full write-up, including two real compiler-codegen gotchas
 (a DMA-register load-order fix, and a trailing `asm(".align 2, 0")`
-zero-padding fix) found along the way.
+zero-padding fix) found along the way. (`sub_801E644`/`sub_801E950`,
+also in these files, are NAKED transcriptions - see "Parked - NAKED
+transcription" below.)
 
 - **`LoadLevelGraphics`** (`src/graphics/level_graphics.c`) - the
   per-level setup entry point `UpdateGameFrame` calls; stashes the
@@ -29,7 +31,10 @@ zero-padding fix) found along the way.
   quartet, and starts song `0xb` - see
   [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md).
 - **`sub_8021BFC`**-**`sub_8021CE0`** (`src/graphics/graphics_loading_21bfc.c`)
-  - the `sub_800FF0C` entity-constructor trampoline family, types `1`-`7`.
+  - the `sub_800FF0C` entity-constructor trampoline family, types `1`-`7`
+  (`sub_8021D04`, type `0`, also in this file, is a NAKED
+  transcription) - see
+  [issue-33-0x08021bfc-graphics-loading.md](../matching/issue-33-0x08021bfc-graphics-loading.md).
 - **`sub_801FDEC`** (`src/graphics/graphics_loading_1fdec.c`) - one
   instance of the "two-line text popup" spawner family (issue #31,
   second pass); spawns a part-object via `sub_8009ED0`, fires a
@@ -56,35 +61,40 @@ zero-padding fix) found along the way.
   region references. See
   [issue-33-0x08021bfc-graphics-loading.md](../matching/issue-33-0x08021bfc-graphics-loading.md).
 
+## Parked - NAKED transcription (byte-correct, not decompiled)
+
+These are byte-exact (confirmed by a full clean `make compare`), but
+as `NAKED` functions whose body is the ROM's own disassembly
+transcribed instruction-for-instruction rather than real decompiled C,
+they don't count as "matched" for this project's tracking - the goal
+is readable C, and an asm blob wrapped in a C function signature
+doesn't advance that even when byte-correct. See
+[docs/workflow.md](../workflow.md)'s NAKED-transcription escape hatch
+(`sub_8001CB8`/`sub_8001DB4` in `src/system/link_cable.c`) for the
+established convention, and each entry's linked write-up for why
+plain C didn't converge.
+
+- **`sub_801E644`** (`src/graphics/graphics_package_1e640.c`) - a
+  five-field constructor on the same scratch buffer as `sub_801E640`.
+  See [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md).
+- **`sub_801E950`** (`src/graphics/graphics_package_1e8f8.c`) - packs
+  a second bitfield into the same scratch-buffer byte `sub_801E8F8`
+  writes. See
+  [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md).
+- **`sub_8021D04`** (`src/graphics/graphics_loading_21bfc.c`) - a
+  `sub_800FF0C` trampoline (type `0`) plus a per-record flags-byte
+  lookup via `gUnknown_030012B4`. See
+  [issue-33-0x08021bfc-graphics-loading.md](../matching/issue-33-0x08021bfc-graphics-loading.md).
+- **`sub_8020E84`**, **`sub_8020F7C`**, **`sub_802107C`**,
+  **`sub_802117C`** (`src/graphics/trigger_effect.c`) - the
+  "trigger effect type N" twin family (4 of the 15-slot
+  `gStaticData_0816C7D8` dispatch table's slots): sound-only-or-
+  full-spawn effect triggers gated by a `gUnknown_030012C0+2` flag bit.
+  See
+  [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md).
+
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
-- **`sub_8020E84`**, **`sub_8020F7C`**, **`sub_802107C`**,
-  **`sub_802117C`** (real bytes in `asm/code_3_2_17_14674.s` under a
-  `.if NON_MATCHING == 0` guard, C in
-  `src/graphics/trigger_effect.c`) - the "trigger effect type N" twin
-  family (4 of the 15-slot `gStaticData_0816C7D8` dispatch table's
-  slots): sound-only-or-full-spawn effect triggers gated by a
-  `gUnknown_030012C0+2` flag bit. The spawn-branch tail is
-  instruction-for-instruction identical to the ROM; parked on two
-  register-allocation gaps (the four parameters' register rotation,
-  and the entry bit-test/`sub_8023278` call's register choice) - see
-  `docs/matching.md`, "`graphics_loading` chunk `0x0801FA3C`-
-  `0x08021668` (issue #31)", for what was tried.
-- **`sub_801E644`** (real bytes in `asm/code_3_2_17_1e644.s` under a
-  `.if NON_MATCHING == 0` guard, C in
-  `src/graphics/graphics_package_1e640.c`) - a five-field constructor
-  on the same scratch buffer as `sub_801E640`; every instruction's
-  operation matches but this compiler collapses two of the ROM's
-  register-copy instructions away and pushes one fewer callee-saved
-  register in every phrasing tried - see
-  [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md).
-- **`sub_801E950`** (real bytes in `asm/code_3_2_17_1e950.s` under a
-  `.if NON_MATCHING == 0` guard, C in
-  `src/graphics/graphics_package_1e8f8.c`) - matches in full shape
-  except one instruction where this compiler rematerializes a mask
-  constant from a still-live register instead of the ROM's fresh
-  reload - see
-  [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md).
 - **`LoadBg2Background`** (real bytes in
   `asm/code_3_2_20_28568_c99c_31784_33ef4_355e0.s` under a
   `.if NON_MATCHING == 0` guard, C in `src/graphics/level_graphics.c`) -
@@ -100,13 +110,5 @@ zero-padding fix) found along the way.
   `gUnknown_030008BC`); semantically faithful but not yet
   register-tuned - see
   [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md).
-- **`sub_8021D04`** (real bytes in `asm/code_3_2_17_21d04.s`, C in
-  `src/graphics/graphics_loading_21bfc.c`) - a `sub_800FF0C` trampoline
-  plus a per-record flags-byte lookup via `gUnknown_030012B4`; every
-  field/mask/branch confirmed correct, but the middle "resolve the
-  flags byte address" section is 4 bytes short of the ROM's register
-  allocation - see
-  [issue-33-0x08021bfc-graphics-loading.md](../matching/issue-33-0x08021bfc-graphics-loading.md).
-
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.

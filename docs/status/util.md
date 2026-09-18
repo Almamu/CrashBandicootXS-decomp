@@ -17,26 +17,39 @@ helpers.
 - `src/util/word_util.c`: `GetWordLength`, `sub_8001214`
 - `src/util/line_util2.c`: `StepBresenhamLine`
 - `src/util/math_div_util.c` (new file, GitHub issue #70, ROM
-  `0x0803ADB4`-`0x0803AFDC`): `nullsub_8` - the shared divide-by-zero
-  handler for the parked division/modulo trio below
+  `0x0803AE48`-`0x0803AE4C`): `nullsub_8` (shared divide-by-zero
+  handler) - a genuinely trivial no-op stub with no real C logic to
+  express. (This file's `sub_803ADB4`/`sub_803AE4C`/`sub_803AF1C` are
+  NAKED transcriptions tracked as parked - see below.)
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
-## Parked (`NON_MATCHING`, not yet byte-exact)
+## Parked - NAKED asm transcription (byte-correct, not decompiled C)
 
 - **`sub_8000CBC`** (`src/util/printf_util.c`, a case-insensitive
-  `strstr`) - matching a specific redundant-truncate branch shape in its
-  lowercase-fold logic conflicts with keeping `caseInsensitive` out of
-  `r8` - see `docs/matching.md`, "Parked, not matched: `sub_8000CBC`".
-- **`sub_803ADB4`/`sub_803AE4C`/`sub_803AF1C`** (`src/util/math_div_util.c`,
-  GitHub issue #70) - signed division, signed modulo, and unsigned
-  modulo software primitives (shift-and-subtract binary long division).
-  `sub_803ADB4`'s C reconstruction matches the ROM instruction-for-
-  instruction in its body; all three are blocked purely on a
-  prologue/epilogue shape (real per-path register-save minimization the
-  ROM has that agbcc's plain-C codegen doesn't reproduce) - see
-  `docs/matching.md`'s issue #70 entry for the full gap analysis.
+  `strstr`) - a full C reconstruction matched the ROM everywhere except
+  a specific redundant-truncate branch shape in its lowercase-fold
+  logic that conflicted with keeping `caseInsensitive` out of `r8`;
+  converted to a byte-verified NAKED asm transcription instead (see
+  `src/util/printf_util.c`'s own doc comment, and the general pattern
+  established by `src/system/link_cable.c`'s `sub_8001CB8`). Byte-exact
+  but not real decompiled C, so tracked here as parked, not matched.
+
+### NAKED transcription (byte-exact, but not real decompiled C)
+
+These functions produce byte-exact ROM output, but only because the
+entire function body is hand-transcribed disassembly wrapped in inline
+`asm()` - the C-level matching attempt failed and the raw bytes got
+embedded as asm instead. They're tracked as parked, not matched.
+
+- **`sub_803ADB4`** (`src/util/math_div_util.c`, signed division),
+  **`sub_803AE4C`** (signed modulo), **`sub_803AF1C`** (unsigned
+  modulo) - the ROM's per-path prologue/epilogue register-save
+  minimization, and `sub_803AE4C`/`sub_803AF1C`'s `ror` codegen, that
+  agbcc's plain-C codegen can't reproduce. GitHub issue #70, see
+  `docs/matching/issue-69-eeprom-timer.md`'s "NAKED transcription pass"
+  section.
 
 ## Other notes
 

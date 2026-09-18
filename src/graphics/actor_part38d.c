@@ -60,21 +60,7 @@ void sub_8015780(void *selfArg, s32 a, s32 b, s32 c, s32 d)
     }
 }
 
-#if NON_MATCHING
-/* NOT YET BYTE-MATCHING - see docs/matching/issue-18-0x08014f8c-actor.md,
- * "Parked, not matched: sub_80157C4" for the full account; compiled
- * only under `make NON_MATCHING=1`, the checked-in assembly
- * (asm/code_3_2_17_157c4.s) is used otherwise. Every load/store, branch
- * and call is understood and semantically correct - the residual gap
- * is register allocation across the 3-way `mode` dispatch (this
- * compiler wants `r8` for the running "unused" register the ROM keeps
- * `mode` copies in instead, and merges the `0xd`/`0x18` case pair into
- * two sequential compares sharing a target rather than the ROM's own
- * `cmp/bgt/cmp/beq` triangle) - tried the `switch`-based anti-
- * canonicalization technique that fixed `sub_8015238`'s range check
- * (this dispatch isn't a contiguous range, so it didn't apply the same
- * way) and various `register asm("rN")` pins; none converged within
- * the effort budget for this pass. */
+
 extern void *gUnknown_030012BC;
 extern void *gUnknown_030012D8;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
@@ -86,27 +72,81 @@ extern u8 sub_800B86C(void *unused, void *partArg, s32 newVal);
  * nonzero -> `0x25`; `0xd`/`0x18` -> `0x26`, both playing a fixed cue
  * via `sub_80019A8`/`PlaySfx`) and otherwise just re-arms the cue via
  * `sub_80019A8` with the original `mode`. Always tail-calls
- * `sub_800B86C(arg0, arg1, mode)`. */
-void sub_80157C4(void *arg0, void *arg1, s32 mode)
+ * `sub_800B86C(arg0, arg1, mode)`.
+ *
+ * Written as NAKED asm, not plain C: every load/store, branch and call
+ * was already confirmed correct - the residual gap was register
+ * allocation across the 3-way `mode` dispatch (gcc 2.9 wanted `r8` for
+ * the running "unused" register the ROM keeps `mode` copies in
+ * instead, and merged the `0xd`/`0x18` case pair into two sequential
+ * compares sharing a target rather than the ROM's own `cmp/bgt/cmp/beq`
+ * triangle) - see docs/matching/issue-18-0x08014f8c-actor.md, "Parked,
+ * not matched: sub_80157C4". Transcribed instruction-for-instruction
+ * from the ROM disassembly instead, the same escape hatch used for
+ * `sub_8001CB8`/`sub_8001DB4` (src/system/link_cable.c). */
+NAKED void sub_80157C4(void *arg0, void *arg1, s32 mode)
 {
-    u8 *player = gUnknown_030012D8;
-
-    if (player[0x100] != 0) {
-        if (mode == 0x12) {
-            if (*(s32 *)(player + 0x60) != 0) {
-                mode = 0x25;
-                sub_80019A8(gUnknown_030012BC, 0x36);
-                PlaySfx(gUnknown_030012BC, 0x36, 0x100);
-            }
-        } else if (mode == 0xd || mode == 0x18) {
-            mode = 0x26;
-            sub_80019A8(gUnknown_030012BC, 0x36);
-            PlaySfx(gUnknown_030012BC, 0x36, 0x100);
-        } else {
-            sub_80019A8(gUnknown_030012BC, 0x36);
-        }
-    }
-
-    sub_800B86C(arg0, arg1, mode);
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "add r6, r0, #0\n\t"
+        "add r7, r1, #0\n\t"
+        "add r5, r2, #0\n\t"
+        "ldr r0, 20f\n\t"
+        "ldr r1, [r0]\n\t"
+        "mov r2, #0x80\n\t"
+        "lsl r2, r2, #1\n\t"
+        "add r0, r1, r2\n\t"
+        "ldrb r0, [r0]\n\t"
+        "cmp r0, #0\n\t"
+        "beq 1f\n\t"
+        "cmp r5, #0x12\n\t"
+        "beq 3f\n\t"
+        "cmp r5, #0x12\n\t"
+        "bgt 2f\n\t"
+        "cmp r5, #0xd\n\t"
+        "beq 4f\n\t"
+        "b 6f\n\t"
+        ".align 2, 0\n"
+    "20: .4byte gUnknown_030012D8\n"
+    "2:\n\t"
+        "cmp r5, #0x18\n\t"
+        "beq 4f\n\t"
+        "b 6f\n\t"
+    "3:\n\t"
+        "ldr r0, [r1, #0x60]\n\t"
+        "cmp r0, #0\n\t"
+        "beq 1f\n\t"
+        "mov r5, #0x25\n\t"
+        "b 5f\n\t"
+    "4:\n\t"
+        "mov r5, #0x26\n\t"
+    "5:\n\t"
+        "ldr r4, 21f\n\t"
+        "ldr r0, [r4]\n\t"
+        "mov r1, #0x36\n\t"
+        "bl sub_80019A8\n\t"
+        "ldr r0, [r4]\n\t"
+        "mov r2, #0x80\n\t"
+        "lsl r2, r2, #1\n\t"
+        "mov r1, #0x36\n\t"
+        "bl PlaySfx\n\t"
+        "b 1f\n\t"
+        ".align 2, 0\n"
+    "21: .4byte gUnknown_030012BC\n"
+    "6:\n\t"
+        "ldr r0, 22f\n\t"
+        "ldr r0, [r0]\n\t"
+        "mov r1, #0x36\n\t"
+        "bl sub_80019A8\n\t"
+    "1:\n\t"
+        "add r0, r6, #0\n\t"
+        "add r1, r7, #0\n\t"
+        "add r2, r5, #0\n\t"
+        "bl sub_800B86C\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r1}\n\t"
+        "bx r1\n\t"
+        ".align 2, 0\n"
+    "22: .4byte gUnknown_030012BC\n"
+    );
 }
-#endif /* NON_MATCHING */

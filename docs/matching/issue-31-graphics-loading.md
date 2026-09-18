@@ -161,3 +161,47 @@ just with different embedded offsets/constants/tags.
 
 Verified via a full clean `make compare` (`La suma coincide`) and
 `make NON_MATCHING=1 report`.
+
+## Third pass: the "trigger effect type N" twin family matched via NAKED transcription
+
+`sub_8020E84`/`sub_8020F7C`/`sub_802107C`/`sub_802117C`
+(`src/graphics/trigger_effect.c`), parked since the first pass
+referenced above, are now all byte-exact matched, confirmed by a full
+clean `make compare` ("La suma coincide"). Semantics were already fully
+understood and confirmed instruction-for-instruction against the ROM;
+the residual register-allocation gaps that first pass documented
+(rotated parameter-home registers, an `sb`/`r9` reload-after-call
+sequencing gcc 2.9 never reproduced) never responded to further plain-C
+restructuring, so all four were converted to `NAKED` and their ROM
+disassembly transcribed instruction-for-instruction - the same escape
+hatch this project already established for `sub_8001CB8`/`sub_8001DB4`
+(`src/system/link_cable.c`, see
+`docs/matching/issue-4-sio-settings-sync.md`'s "The general strategy
+for the rest" section). All four share the exact same shape (confirmed
+by the transcription itself matching one-for-one once the twin family
+was first identified) - only the bit-test mask, sound ids and tag value
+differ between them, plus `sub_802117C` needing a third extra
+callee-saved register (`sl`/r10) since its tag constant (`8`) doesn't
+fit the same immediate-AND idiom the other three use.
+
+**`ldscript.txt` gotcha:** `trigger_effect.c` compiled to an empty
+object file while these four functions were `#if NON_MATCHING`-guarded
+(no other code in that file), so it was never listed in `ldscript.txt`
+at all - nothing needed it there. Once the functions became real,
+always-compiled `NAKED` C, the file needed an actual `ldscript.txt`
+entry at the exact point in `asm/code_3_2_17_1feec.s` where the raw
+bytes used to sit. Since that raw block sat in the *middle* of a much
+larger still-raw file (`sub_801FEEC`-`sub_8021BD8`, most of it still
+raw per "Left raw" above), removing it left a single object with a gap
+that needed filling, not just a line to delete - so
+`code_3_2_17_1feec.s` was split into two files at that point (the
+existing name keeps everything before `sub_8020E84`; the new
+`code_3_2_17_21280.s` picks up at `sub_8021280` and keeps everything
+after `sub_802117C`, unchanged), with `trigger_effect.o` inserted
+between them in `ldscript.txt`. A first attempt that only deleted the
+guarded block in place (without this split) still built and linked
+without error, but silently shifted every ROM address from
+`sub_8021280` onward by the guarded block's byte count - caught by the
+post-build `arm-none-eabi-nm`/map-file address check against each
+function's own `sub_XXXXXXXX` name before ever diffing bytes, per
+`docs/workflow.md`'s warning about exactly this mistake.

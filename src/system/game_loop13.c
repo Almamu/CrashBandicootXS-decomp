@@ -8,33 +8,41 @@
  * PARKED, NOT BYTE-MATCHING: this is a true leaf function in the ROM
  * (no `push`/`pop` at all - `self` lives in `ip`/`r12` for the whole
  * function, freed up specifically because nothing here calls out).
- * Pinning `self` to `ip` gets every instruction's operation and
- * operand order to match, but this compiler still inserts a
- * `push {r4, lr}`/`pop {r4}` pair around the two address computations
- * that the ROM does not need - some intermediate value that should
- * die immediately is instead kept live one statement too long. Tried
- * both a pointer-typed and integer-typed address accumulator, and
- * both inlined and pointer-variable-cached table addresses; none
- * dropped the extra push. Parked - see
- * docs/matching/issue-41-game-loop-25894.md. */
+ * Pinning `self` to `ip`, and - unlike the earlier attempt recorded in
+ * docs/matching/issue-41-game-loop-25894.md - also pinning the
+ * `shifted`/`addr` locals to `r3`/`r1` (matching the ROM's own choice
+ * for those two) gets this down to a true leaf function with every
+ * instruction's operation, operand, and register matching one-for-one
+ * *except* the first two: the ROM does `mov ip, r0` (stash `self`)
+ * before `adds r2, r1, #0` (copy `n` into its working register `t`),
+ * this compiler always emits the `n`-copy first regardless of C
+ * statement order, declaration order, or an explicit `asm volatile`
+ * ordering barrier between them - seemingly a fixed early-reload
+ * ordering for hard-register parameter moves this compiler doesn't
+ * expose a way to influence from C. Pinning `t` itself to `r2` (the
+ * ROM's register for it) reintroduces a `push {r4, lr}`/`pop {r4}`
+ * pair instead (conflicts with `mask` needing that same register
+ * later), so parked with `t` left unpinned - two swapped instructions,
+ * same total size, everything else byte-for-byte. */
 void sub_80259D4(void *self, s32 n)
 {
     register u8 *base asm("ip") = (u8 *)self;
     s32 t = n;
-    s32 wordIndex, shifted, bitIndex, mask;
-    s32 addr;
+    s32 wordIndex, bitIndex, mask;
+    register s32 shifted asm("r3");
+    register s32 addr asm("r1");
 
     if (t < 0) {
         t += 0x1f;
     }
     wordIndex = t >> 5;
     shifted = wordIndex << 2;
-    bitIndex = n - (wordIndex << 5);
-    mask = 1 << bitIndex;
 
     addr = 0x208;
     addr += (s32)base;
     addr += shifted;
+    bitIndex = n - (wordIndex << 5);
+    mask = 1 << bitIndex;
     *(s32 *)addr |= mask;
 
     addr = 0x308;
