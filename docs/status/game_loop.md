@@ -101,20 +101,33 @@ system from "core" system startup/init code.
   trivial `gStaticData_0816BBAE[idx]` lookup
 - `src/system/game_loop26.c` (GitHub issue #13): `sub_8010A00` -
   `self+0x48` bits 6-7 sub-state extractor
-- `src/system/game_loop6.c` (GitHub issue #12): `sub_800D040` (NAKED) -
+
+See [docs/workflow.md](../workflow.md) for the per-function loop, and
+[docs/matching.md](../matching.md) for gotchas encountered along the way.
+
+## Parked - NAKED transcription (byte-correct, not decompiled)
+
+These are byte-exact (confirmed by a full clean `make compare`), but
+as `NAKED` functions whose body is the ROM's own disassembly
+transcribed instruction-for-instruction rather than real decompiled C,
+they don't count as "matched" for this project's tracking - the goal
+is readable C, and an asm blob wrapped in a C function signature
+doesn't advance that even when byte-correct. See
+[docs/workflow.md](../workflow.md)'s NAKED-transcription escape hatch
+(`sub_8001CB8`/`sub_8001DB4` in `src/system/link_cable.c`) for the
+established convention, and each entry's linked write-up for why
+plain C didn't converge.
+
+- **`sub_800D040`** (`src/system/game_loop6.c`, GitHub issue #12) -
   builds `self`'s and the player's AABB from the shared
   `+0x20`-table-pointer/`+0x2d`-tag hitbox-record convention
   (`sub_8007B00`/`sub_8007B98` in `actor_part.c`), dispatches to
   `sub_800EEF0`/`sub_800E7A8` on overlap. See
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md).
-- `src/system/game_loop7.c` (GitHub issue #12): `sub_800E494`/
-  `sub_800E4E4` (NAKED) - bidirectional linked-list walkers
-  (`sub_801070C`/`sub_8010708`) clearing/setting each neighbor's `+0x58`
-  flag. See
+- **`sub_800E494`/`sub_800E4E4`** (`src/system/game_loop7.c`, GitHub
+  issue #12) - bidirectional linked-list walkers (`sub_801070C`/
+  `sub_8010708`) clearing/setting each neighbor's `+0x58` flag. See
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md).
-
-See [docs/workflow.md](../workflow.md) for the per-function loop, and
-[docs/matching.md](../matching.md) for gotchas encountered along the way.
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 

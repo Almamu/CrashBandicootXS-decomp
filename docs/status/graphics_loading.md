@@ -8,22 +8,20 @@ family. Filed under `src/graphics/` on disk, tracked as its own
 
 ## Matched
 
-- **`sub_801E640`**, **`sub_801E644`** (NAKED, second pass)
-  (`src/graphics/graphics_package_1e640.c`)
-- **`sub_801E8F8`**, **`sub_801E950`** (NAKED, second pass)
-  (`src/graphics/graphics_package_1e8f8.c`) - DMA3
-  fills one VRAM tile with a solid color, plus a second scratch-buffer
-  bitfield packer
+- **`sub_801E640`** (`src/graphics/graphics_package_1e640.c`)
+- **`sub_801E8F8`** (`src/graphics/graphics_package_1e8f8.c`) - DMA3
+  fills one VRAM tile with a solid color
 - **`sub_801E964`**, **`sub_801E96C`**
   (`src/graphics/graphics_package_1e964.c`)
 
-All six are accessors on the same 0x10-byte `LoadGraphicsPackage`
+All four are accessors on the same 0x10-byte `LoadGraphicsPackage`
 scratch buffer - see
 [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)
 for the full write-up, including two real compiler-codegen gotchas
 (a DMA-register load-order fix, and a trailing `asm(".align 2, 0")`
-zero-padding fix) found along the way, and the second pass's NAKED
-transcriptions for `sub_801E644`/`sub_801E950`.
+zero-padding fix) found along the way. (`sub_801E644`/`sub_801E950`,
+also in these files, are NAKED transcriptions - see "Parked - NAKED
+transcription" below.)
 
 - **`LoadLevelGraphics`** (`src/graphics/level_graphics.c`) - the
   per-level setup entry point `UpdateGameFrame` calls; stashes the
@@ -32,11 +30,10 @@ transcriptions for `sub_801E644`/`sub_801E950`.
   `LoadBg2Background`/`LoadObjSpriteTiles`, runs the fade/audio-reset
   quartet, and starts song `0xb` - see
   [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md).
-- **`sub_8021BFC`**-**`sub_8021CE0`**, **`sub_8021D04`** (NAKED, second
-  pass) (`src/graphics/graphics_loading_21bfc.c`)
+- **`sub_8021BFC`**-**`sub_8021CE0`** (`src/graphics/graphics_loading_21bfc.c`)
   - the `sub_800FF0C` entity-constructor trampoline family, types `1`-`7`
-  (type `0`, `sub_8021D04`, additionally indexes a per-record flags
-  byte) - see
+  (`sub_8021D04`, type `0`, also in this file, is a NAKED
+  transcription) - see
   [issue-33-0x08021bfc-graphics-loading.md](../matching/issue-33-0x08021bfc-graphics-loading.md).
 - **`sub_801FDEC`** (`src/graphics/graphics_loading_1fdec.c`) - one
   instance of the "two-line text popup" spawner family (issue #31,
@@ -63,12 +60,37 @@ transcriptions for `sub_801E644`/`sub_801E950`.
   "origin point" that constructs nearly every hot IWRAM global this ROM
   region references. See
   [issue-33-0x08021bfc-graphics-loading.md](../matching/issue-33-0x08021bfc-graphics-loading.md).
+
+## Parked - NAKED transcription (byte-correct, not decompiled)
+
+These are byte-exact (confirmed by a full clean `make compare`), but
+as `NAKED` functions whose body is the ROM's own disassembly
+transcribed instruction-for-instruction rather than real decompiled C,
+they don't count as "matched" for this project's tracking - the goal
+is readable C, and an asm blob wrapped in a C function signature
+doesn't advance that even when byte-correct. See
+[docs/workflow.md](../workflow.md)'s NAKED-transcription escape hatch
+(`sub_8001CB8`/`sub_8001DB4` in `src/system/link_cable.c`) for the
+established convention, and each entry's linked write-up for why
+plain C didn't converge.
+
+- **`sub_801E644`** (`src/graphics/graphics_package_1e640.c`) - a
+  five-field constructor on the same scratch buffer as `sub_801E640`.
+  See [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md).
+- **`sub_801E950`** (`src/graphics/graphics_package_1e8f8.c`) - packs
+  a second bitfield into the same scratch-buffer byte `sub_801E8F8`
+  writes. See
+  [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md).
+- **`sub_8021D04`** (`src/graphics/graphics_loading_21bfc.c`) - a
+  `sub_800FF0C` trampoline (type `0`) plus a per-record flags-byte
+  lookup via `gUnknown_030012B4`. See
+  [issue-33-0x08021bfc-graphics-loading.md](../matching/issue-33-0x08021bfc-graphics-loading.md).
 - **`sub_8020E84`**, **`sub_8020F7C`**, **`sub_802107C`**,
-  **`sub_802117C`** (NAKED, `src/graphics/trigger_effect.c`) - the
+  **`sub_802117C`** (`src/graphics/trigger_effect.c`) - the
   "trigger effect type N" twin family (4 of the 15-slot
   `gStaticData_0816C7D8` dispatch table's slots): sound-only-or-
-  full-spawn effect triggers gated by a `gUnknown_030012C0+2` flag bit
-  - see
+  full-spawn effect triggers gated by a `gUnknown_030012C0+2` flag bit.
+  See
   [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md).
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
