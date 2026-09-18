@@ -344,17 +344,18 @@ from "core" graphics.
 - `src/graphics/actor_part43.c`/`actor_part44.c`/`actor_part45.c`/
   `actor_part46.c` (new files, GitHub issue #56, ROM
   0x0802F0DC-0x0802FBF0 - a second boss-weapon "spawn/pre-attack"
-  singleton and its `self` object, non-adjacent since the left-raw
-  `sub_802F164`/`sub_802F7B0`/`sub_802F8E8`/`sub_802FA38` and the
-  parked `sub_802F338`/`sub_802FA04` and NAKED-transcribed
-  `sub_802F748` (`actor_part44b.c` - see below) sit
-  interleaved between them; see
+  singleton and its `self` object, non-adjacent since the parked
+  `sub_802F338`/`sub_802FA04`, the NAKED-transcribed `sub_802F748`
+  (`actor_part44b.c` - see below), and the NAKED-transcribed
+  `sub_802F7B0`/`sub_802F8E8`/`sub_802FA38` (`actor_part45d.c`/
+  `actor_part46b.c` - see below) sit interleaved between them; see
   [docs/matching/issue-56-0x0802f0dc-actor.md](../matching/issue-56-0x0802f0dc-actor.md)):
-  `sub_802F0DC`, `sub_802F3BC`, `sub_802F46C`, `sub_802F47C`,
+  `sub_802F0DC`, `sub_802F164`, `sub_802F3BC`, `sub_802F46C`, `sub_802F47C`,
   `sub_802F4AC`, `sub_802F4C0`, `sub_802F4CC`, `sub_802F50C`,
   `sub_802F540`, `sub_802F570`, `sub_802F5AC`, `sub_802F5E4`,
   `sub_802F640`, `sub_802F69C`, `sub_802F6DC`,
-  `sub_802F7A4`, `sub_802F97C`, `sub_802FA34` - a constructor/reset, an accumulator-drain/reward-
+  `sub_802F7A4`, `sub_802F97C`, `sub_802FA34` - a constructor/reset, a
+  state-machine update, an accumulator-drain/reward-
   dispenser, accessors, accumulator drivers, idle-state-reset idioms,
   and the singleton's teardown/destructor, all sharing
   `actor_part17.c`/`actor_part18.c`/`actor_part20.c`'s established
@@ -550,6 +551,26 @@ plain C didn't converge.
   keyframe-table AABB lookup shape as `sub_8030574`, minus its
   state-transition tail. See
   `docs/matching/issue-58-0x08030574-actor.md`.
+- **`sub_802FA38`** (`src/graphics/actor_part46b.c`, issue #56) -
+  position-update/collision-damage function for the issue #56
+  singleton's `self` object; its keyframe-table lookup is the same
+  `gStaticData_0817C260` stride-8 r7-hazard shape as `sub_802C208`/
+  `sub_802F748`/`sub_8030574` above, compounded with `r8`/`sb`
+  register pressure held live across two `sub_803ADB4` calls and a
+  `sub_802E674` call in the trailing damage-calculation block. See
+  `docs/matching/issue-56-0x0802f0dc-actor.md`.
+- **`sub_802F7B0`**/**`sub_802F8E8`** (`src/graphics/actor_part45d.c`,
+  issue #56) - a pair of VRAM tile-remap/nibble-repack loops (4-bit
+  palette-index packing into a `0x0600D000`-based tile buffer via raw
+  `REG_DMA3SAD`/`DAD`/`CNT` pokes at `0x040000D4`); each nested loop
+  keeps three high registers (`r8`, `sb`, `sl`) simultaneously live
+  across the whole loop body. Every other DMA3-setup function in this
+  codebase with the same `0x040000D4`/`0x0600D000` literal-pool shape
+  (`actor_part26b.c`, `actor_part74.c`, `actor_part75.c`,
+  `fade_screen_mode.c`, `hud_digit_array.c`, `settings_menu8e.c`,
+  `timer_util_aa90.c`) is NAKED too, not plain C with
+  `REG_DMA3SAD`/`DAD`/`CNT` macros. See
+  `docs/matching/issue-56-0x0802f0dc-actor.md`.
 - **`sub_8030734`** (`src/graphics/actor_part21d.c`) - `sub_80306AC`'s
   companion: ramps `gUnknown_03001560` toward a fixed target and, on
   its phase counter's armed tick, spawns via `sub_802E62C`. A plain-C
@@ -922,20 +943,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   #22) - a ~480-instruction jump-table player action-state machine
   plus two high-register-pressure helpers it calls; left raw, out of
   scope for this pass - see `docs/matching/issue-22-0x08017a44-actor.md`.
-- **`sub_802F164`** (`asm/code_3_2_20_28568_c99c_2f164.s`, GitHub issue
-  #56) - a ~160-instruction state-machine update for the "spawn/pre-
-  attack" singleton, including a `mov pc, r0` computed-goto 5-case
-  jump table; left raw, out of scope for this pass - see
-  `docs/matching/issue-56-0x0802f0dc-actor.md`.
-- **`sub_802F7B0`**/**`sub_802F8E8`**
-  (`asm/code_3_2_20_28568_c99c_2f7b0.s`, GitHub issue #56) - a pair of
-  ~130-170-instruction VRAM tile-remap loops with heavy `sb`/`sl`/`r8`
-  register pressure; left raw, out of scope for this pass - see
-  `docs/matching/issue-56-0x0802f0dc-actor.md`.
-- **`sub_802FA38`** (`asm/code_3_2_20_28568_c99c_2fa38.s`, GitHub issue
-  #56) - a ~150-instruction position-update/collision-damage function
-  with heavy `sb`/`r8` register pressure; left raw, out of scope for
-  this pass - see `docs/matching/issue-56-0x0802f0dc-actor.md`.
 - **`sub_8011BD4`** (`asm/code_3_2_17_11bd4.s`, ROM 0x08011BD4, GitHub
   issue #16) - `docs/rom_map.md`'s documented ~1420B, 25-case/7-case
   nested jump-table companion state machine to `sub_8016288` (still
