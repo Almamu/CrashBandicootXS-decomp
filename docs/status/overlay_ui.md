@@ -21,13 +21,13 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   refresh row" step, and the state-select label list draw; matched. See
   `docs/matching/issue-5-overlay-ui-sync.md` for the full write-up:
   `sub_8002C84`, `sub_8002CE8`, `sub_8002CF4`, `sub_8002D0C`,
-  `sub_8002D28`, `sub_8002D44`, `sub_8002E20`, `sub_8002EFC`,
+  `sub_8002D28`, `sub_8002EFC`,
   `sub_8002FCC`, `sub_8002FD4`, `sub_8002FD8`, `sub_800300C`,
   `sub_800306C`, `sub_800312C`, `sub_80031E4`, `sub_80032E8`,
   `sub_80033E8`, `sub_80034BC`, `sub_80035C0`, `sub_8003698`,
   `sub_800376C`, `sub_8003824`, `sub_80038D0`, `sub_800397C`,
-  `sub_8003A60` (`sub_8002D44`/`sub_8002E20` matched via NAKED asm
-  transcription - see that doc's "NAKED-transcription pass" section)
+  `sub_8003A60`. (`sub_8002D44`/`sub_8002E20` are NAKED transcriptions
+  tracked as parked, not matched - see below.)
 - `src/graphics/settings_menu2.c` (new file - the composite pause/
   options screen's BG-load helper and per-row stats gatherer/
   aggregator; see `docs/rom_map.md`'s `overlay_ui` section):
@@ -53,13 +53,14 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   retry orchestrator, muting the music player across the transfer:
   `sub_8002A08`. See `docs/matching/issue-4-sio-settings-sync.md`.
 - `src/graphics/settings_menu8e.c` (new file - issue #4,
-  0x08002AA4-0x08002C84): checksum validate + DMA-repair (`sub_8002AA4`,
-  NAKED), checksum compare/store, the `versionNibble` accessor, the
-  EEPROM-save-with-retry orchestrator, and three per-row
+  0x08002B44-0x08002C84): checksum compare/store, the `versionNibble`
+  accessor, the EEPROM-save-with-retry orchestrator, and three per-row
   default-refresh/force-set/mark-selected helpers extending
   `struct settings_sync_record`: `sub_8002B44`, `sub_8002B70`,
   `sub_8002B94`, `sub_8002BA4`, `sub_8002C14`, `sub_8002C40`,
-  `sub_8002C6C`. See `docs/matching/issue-4-sio-settings-sync.md`.
+  `sub_8002C6C`. See `docs/matching/issue-4-sio-settings-sync.md`. (This
+  file's `sub_8002AA4`, checksum validate + DMA-repair, is a NAKED
+  transcription tracked as parked, not matched - see below.)
 - `src/graphics/settings_menu9.c` (new file - issue #8,
   0x080060AC-0x08006124): the decimal `itoa` helper and a
   percentage-string formatter built on it: `sub_80060AC`, `sub_80060F8`.
@@ -105,6 +106,24 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
+
+### NAKED transcription (byte-exact, but not real decompiled C)
+
+These functions produce byte-exact ROM output, but only because the
+entire function body is hand-transcribed disassembly wrapped in inline
+`asm()` - the C-level matching attempt failed and the raw bytes got
+embedded as asm instead. They're tracked as parked, not matched.
+
+- **`sub_8002D44`**, **`sub_8002E20`** (`src/graphics/settings_menu8a2.c`)
+  - the SIO send/receive pump's TX/RX drain-fill steps, both needing r7
+  (and sb/r8) as genuine scratch across their fill loops. GitHub issue
+  #5, see `docs/matching/issue-5-overlay-ui-sync.md`'s
+  "NAKED-transcription pass" section.
+- **`sub_8002AA4`** (`src/graphics/settings_menu8e.c`) - checksum
+  validate/repair-via-DMA. GitHub issue #4, see
+  `docs/matching/issue-4-sio-settings-sync.md`.
+
+### `NON_MATCHING` (not yet byte-exact)
 
 - **`sub_8003B40`**, **`sub_8003BDC`**, **`sub_8003C90`**,
   **`sub_8003D3C`**, **`sub_80041BC`**, **`sub_8004914`**,
