@@ -1,21 +1,6 @@
 #include "core.h"
-
-/* A minimal view of the composite pause/options screen's "results"
- * sub-region (see src/graphics/settings_menu6.c's fuller
- * `struct pause_screen_results` for the rest of its fields, and
- * pause_options_screen.h for why this isn't reconciled with that
- * struct either) - only the fields sub_8005EF4/sub_8005FBC below
- * touch. */
-struct pause_screen_row_counts {
-    u8 unused_00[0x14];
-    void *field_14;    /* 0x14 - base of an 8-byte-stride array indexed by field_18 */
-    s32 field_18;         /* 0x18 - element index into field_14's array */
-    u8 unused_1c[0x4f - 0x1c];
-    u8 buf4f[8];             /* 0x4f - "prefix + digits + suffix" scratch string */
-    u8 buf57[9];               /* 0x57 - same shape as buf4f */
-    s32 field_60;                 /* 0x60 - a 0-0x13 item count */
-    s32 field_64;                   /* 0x64 - a 0-0x13 item count */
-};
+#include "actor.h"
+#include "pause_screen_results.h"
 
 extern s32 sub_80060AC(s32 value, void *dest);
 extern void *gUnknown_030012BC;
@@ -37,7 +22,7 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
  * pushes the new percentage through the matching AudioContext setter
  * (`sub_8001B30`/`sub_8001B50` - see src/audio/audio_context.c). Only
  * the state-5/`field_64` branch also plays the standard SFX cue. */
-void sub_8005EF4(struct pause_screen_row_counts *self)
+void sub_8005EF4(struct pause_screen_results *self)
 {
     s32 state = *((s32 *)self->field_14 + self->field_18 * 2 + 1);
     s32 count;
@@ -80,7 +65,7 @@ void sub_8005EF4(struct pause_screen_row_counts *self)
 
 /* Counterpart to sub_8005EF4 above: increments (capped at 0x13)
  * instead of decrementing. */
-void sub_8005FBC(struct pause_screen_row_counts *self)
+void sub_8005FBC(struct pause_screen_results *self)
 {
     s32 state = *((s32 *)self->field_14 + self->field_18 * 2 + 1);
     s32 count;

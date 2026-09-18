@@ -67,6 +67,31 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   0x08006250-0x080062A8): the composite screen's own top-level object's
   "apply BLDCNT/BLDY/DISPCNT" step: `sub_8006250`. See
   `docs/matching/issue-8-0x080060ac-overlay-ui.md`.
+- `src/graphics/settings_menu13.c` (new file - issue #7,
+  0x08004EC0-0x08005004): the composite screen's per-instance
+  constructor and its icon-field refresh/teardown step: `sub_8004EC0`,
+  `sub_8005004`. Also incl. parked `sub_8004D74`/`sub_8005100`/
+  `sub_80053F4`/`sub_800556C`/`sub_80057E0`/`sub_80058C0` (NON_MATCHING
+  C reconstructions widen this unit past its own real 0x08005004 end) -
+  those six stay raw, wrapped `.if NON_MATCHING == 0` across
+  `asm/code_3_1_10_7.s`/`code_3_1_10_7_5100.s`/`code_3_1_10_7_53f4.s`/
+  `code_3_1_10_7_57e0.s`. See
+  `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
+- `src/graphics/settings_menu14.c` (new file - issue #7, 0x08005E5C) -
+  entirely parked `sub_8005E5C`, real bytes wrapped `.if NON_MATCHING
+  == 0` in `asm/code_3_1_10_9.s`. See
+  `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
+- `src/graphics/settings_menu15.c` (new file - issue #7,
+  0x08005304-0x080053F4): the icon-group reveal/cycle animation plus
+  the row-cursor icon's blink countdown: `sub_8005304`. See
+  `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
+- `src/graphics/settings_menu16.c` (new file - issue #7,
+  0x0800570C-0x080057E0): shows whichever `icons8c` row changed, or a
+  fallback label if none did: `sub_800570C`. See
+  `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
+- `src/graphics/settings_menu17.c` (new file - issue #7,
+  0x0800599C-0x08005A78): the results sub-region constructor:
+  `sub_800599C`. See `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -98,6 +123,33 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   computation never lands the loop/self pointer in `r8`/`sb` the way
   the ROM's does, the same class `sub_8006600` documents - see
   `docs/matching.md`, issue #7.
+- **`sub_8004D74`** (`asm/code_3_1_10_7.s`, C in
+  `src/graphics/settings_menu13.c`) - the composite pause/options
+  screen's top-level orchestrator (allocate/build/run/teardown). Fully
+  understood; got the instruction order and count extremely close via
+  heavy register pinning, but the ROM additionally keeps a literal `0`
+  live in `r8` across ~100 intervening instructions and shares a couple
+  of shifted-constant computations between otherwise-separate
+  statements - see `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
+- **`sub_8005100`** (`asm/code_3_1_10_7_5100.s`, C in
+  `src/graphics/settings_menu13.c`) - the blocking cursor/confirm/
+  cancel driver. Fully understood but the largest, most control-flow-
+  heavy function in this chunk; parked without attempting the same
+  register-pressure fight documented for the others - see
+  `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
+- **`sub_80053F4`**, **`sub_800556C`** (`asm/code_3_1_10_7_53f4.s`, C
+  in `src/graphics/settings_menu13.c`) - the per-frame row-draw step
+  and the per-row list renderer. Same gcc-2.9 register-pressure class
+  as `sub_8006600` (`docs/status/graphics.md`) - see
+  `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
+- **`sub_80057E0`**, **`sub_80058C0`** (`asm/code_3_1_10_7_57e0.s`, C
+  in `src/graphics/settings_menu13.c`) - two icon-row-group draw
+  handlers (`icons9c`/`iconsB0`). Same register-pressure class - see
+  `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
+- **`sub_8005E5C`** (`asm/code_3_1_10_9.s`, C in
+  `src/graphics/settings_menu14.c`) - draws a numerator/`/`/denominator
+  fraction stack. Same register-pressure class - see
+  `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
 - **`sub_8005EF4`**, **`sub_8005FBC`** (`asm/code_3_1_10_10.s`, C in
   `src/graphics/settings_menu7.c`) - a matched inc/dec pair for a
   per-row percentage counter, formatting a `" <NN%>"`-shaped scratch
