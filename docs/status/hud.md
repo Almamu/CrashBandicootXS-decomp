@@ -75,12 +75,22 @@ system from "core" graphics.
 - `src/graphics/hud_stat_widget.c` (new file, GitHub issue #45's second
   pass): `sub_80274EC` - the HUD stat-widget family's dispatcher.
   Non-adjacent to `hud_counter.o`/other `hud` files since the rest of
-  the family (`sub_8027138`/`sub_802732C`/`sub_802757C`/`sub_802763C`/
-  `sub_8027940`/`sub_8027D5C`/`sub_8027E88`) still sits raw around it.
-  Extended `struct hud_counter` (`include/hud.h`) with `field_08`,
-  `icon_flag`, and `sync_value_a`/`b`/`c` - fields this function (and
-  the still-raw callees around it) touch inside what was previously
-  opaque padding.
+  the family (`sub_8027138`/`sub_802732C`/`sub_8027940`/`sub_8027D5C`/
+  `sub_8027E88`) still sits raw around it. Extended `struct hud_counter`
+  (`include/hud.h`) with `field_08`, `icon_flag`, and
+  `sync_value_a`/`b`/`c` - fields this function (and the still-raw
+  callees around it) touch inside what was previously opaque padding.
+
+- `src/graphics/hud_stat_widget2.c` (new file, GitHub issue #45's
+  "NAKED-transcription pass"): `sub_802757C`/`sub_802763C` - the
+  icon-indicator widget and three more change-detection-gated
+  digit/icon widgets. Both are `NAKED` functions, transcribed
+  instruction-for-instruction from the ROM's own disassembly rather
+  than plain C, after every phrasing of a per-slot `anim_index` byte
+  kept in r7 up to its use as an array subscript hit a reproducible
+  gcc-2.9 miscompile (see
+  `docs/matching/issue-45-hud-stat-widget-dispatcher.md`'s "NAKED-
+  transcription pass" section).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -93,14 +103,6 @@ why the rest of the family stayed raw) is
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
-- GitHub issue #45's third pass (see
-  [docs/matching/issue-45-hud-stat-widget-dispatcher.md](../matching/issue-45-hud-stat-widget-dispatcher.md)):
-  `sub_802757C`, `sub_802763C` (real bytes in
-  `asm/code_3_2_17_2757c.s`, reconstructions in
-  `src/graphics/hud_stat_widget2.c`) - `sub_802757C` hits a reproducible
-  gcc-2.9 miscompile pinning a byte to r7 the moment it's used as an
-  array subscript; `sub_802763C` wasn't attempted for byte-matching
-  given that same-file blocker.
 - GitHub issue #46 (see
   [docs/matching/issue-46-hud-icon-widget.md](../matching/issue-46-hud-icon-widget.md)
   for what was tried on each, including its "Second pass" section):
