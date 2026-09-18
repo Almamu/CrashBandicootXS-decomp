@@ -434,9 +434,10 @@ from "core" graphics.
   `actor_part69.c`/`actor_part71.c`/`actor_part73.c` (new files, GitHub
   issue #63, ROM 0x08033EF4-0x08034AA4 - three `InitActorPart`-rooted
   "self" object kinds immediately following issue #62's cluster, non-
-  adjacent since 5 parked (`sub_8034058`/`sub_8034270`/`sub_8034314`/
-  `sub_80345B0`/`sub_8034634`), the NAKED-transcribed `sub_8033FE4`
-  (`actor_part64.c` - see below), and 4 left-raw functions sit
+  adjacent since 7 parked (`sub_8034058`/`sub_8034270`/`sub_8034314`/
+  `sub_80345B0`/`sub_8034634`/`sub_8034374`/`sub_8034480`, the last two
+  in `actor_part85.c`), the NAKED-transcribed `sub_8033FE4`
+  (`actor_part64.c` - see below), and 3 left-raw functions sit
   interleaved between them; numbered `63`-`73` rather than `57`-`67`
   since issues #19 and #54's PRs independently claimed
   `actor_part57.c`-`62.c` first - see
@@ -967,6 +968,17 @@ embedded as asm instead. They're tracked as parked, not matched.
   allocation differences for the 16-bit table lookups and an
   unconditional leaf-function parameter spill - see
   `docs/matching/issue-63-0x08033ef4-actor.md`.
+- **`sub_8034374`/`sub_8034480`**
+  (`asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s`, C in
+  `src/graphics/actor_part85.c`, GitHub issue #63) - the particle-trail
+  BG0 object's constructor and per-frame updater; `sub_8034374` parked on
+  a single 2-byte register-allocation gap (an extra `r1`-then-`r5`
+  register copy the ROM's build uses when materializing one 32-bit
+  constant that this compiler collapses into a single direct load),
+  `sub_8034480` on the same shift/mask register-pair swap already
+  accepted for `sub_8034634` just above (its own nibble-write logic,
+  inlined twice instead of calling it) - see
+  `docs/matching/issue-63-0x08033ef4-actor.md`.
 
 ## Left raw (not attempted, or attempted and set aside)
 
@@ -1028,16 +1040,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   issue #19) - a smaller joystick-input-gated dispatcher; left raw, out
   of scope for this pass - see
   `docs/matching/issue-19-0x08015840-actor.md`.
-- **`sub_8034374`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s`,
-  ROM 0x08034374, GitHub issue #63) - a ~150-instruction graphics/
-  palette/DMA setup routine with an apparent uninitialized-local read
-  partway through; left raw, out of scope for this pass - see
-  `docs/matching/issue-63-0x08033ef4-actor.md`.
-- **`sub_8034480`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s`,
-  ROM 0x08034480, GitHub issue #63) - a 128-entry OAM/screen-box scan
-  driving `sub_8034634`'s tilemap writer; left raw alongside
-  `sub_8034374`, out of scope for this pass - see
-  `docs/matching/issue-63-0x08033ef4-actor.md`.
 - **`sub_803472C`/`sub_803487C`/`sub_8034994`**
   (`asm/code_3_2_20_28568_c99c_31784_33ef4_3472c.s`, ROM
   0x0803472C-0x08034AA4, GitHub issue #63) - a graphics-package loading

@@ -172,6 +172,7 @@ SECTIONS
         build/crashbandicootxs/src/graphics/graphics_package_1e578.o(.text);
         build/crashbandicootxs/src/graphics/graphics_package_1e640.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_1e644.o(.text);
+        build/crashbandicootxs/src/graphics/graphics_package_1e688.o(.text);
         build/crashbandicootxs/src/graphics/graphics_package_1e8f8.o(.text);
         build/crashbandicootxs/src/graphics/graphics_package_1e964.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_1e990.o(.text);
@@ -191,7 +192,8 @@ SECTIONS
         build/crashbandicootxs/src/system/game_loop10.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_236ec.o(.text);
         build/crashbandicootxs/src/system/game_loop11.o(.text);
-        build/crashbandicootxs/asm/code_3_2_17_2375c.o(.text);
+        build/crashbandicootxs/src/system/game_loop39.o(.text);
+        build/crashbandicootxs/asm/code_3_2_17_23a1c.o(.text);
         build/crashbandicootxs/src/system/game_loop8.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_240e4.o(.text);
         build/crashbandicootxs/src/system/game_loop9.o(.text);
@@ -326,6 +328,7 @@ SECTIONS
         build/crashbandicootxs/src/graphics/actor_part70.o(.text);
         build/crashbandicootxs/src/graphics/actor_part71.o(.text);
         build/crashbandicootxs/asm/code_3_2_20_28568_c99c_31784_33ef4_34374.o(.text);
+        build/crashbandicootxs/src/graphics/actor_part85.o(.text);
         build/crashbandicootxs/asm/code_3_2_20_28568_c99c_31784_33ef4_345b0.o(.text);
         build/crashbandicootxs/src/graphics/actor_part72.o(.text);
         build/crashbandicootxs/src/graphics/actor_part73.o(.text);
@@ -364,11 +367,11 @@ SECTIONS
         build/crashbandicootxs/asm/code_3_2_20e_9b44.o(.text);
         build/crashbandicootxs/src/audio/gax_note_lookup.o(.text);
         build/crashbandicootxs/src/audio/gax_channel_effect_table.o(.text);
-        build/crashbandicootxs/asm/code_3_2_20e_a03c.o(.text);
+        build/crashbandicootxs/src/audio/gax_channel_pos_sweep.o(.text);
         build/crashbandicootxs/src/audio/gax_channel_init.o(.text);
-        build/crashbandicootxs/asm/code_3_2_20e_a158.o(.text);
+        build/crashbandicootxs/src/audio/gax_channel_note_cut_driver.o(.text);
         build/crashbandicootxs/src/audio/gax_sound_handler_unknownc.o(.text);
-        build/crashbandicootxs/asm/code_3_2_20e_a278.o(.text);
+        build/crashbandicootxs/src/audio/gax_unknownc_play.o(.text);
         build/crashbandicootxs/src/system/timer_util.o(.text);
         build/crashbandicootxs/src/system/timer_util_aa90.o(.text);
         build/crashbandicootxs/src/system/eeprom_util.o(.text);

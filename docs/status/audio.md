@@ -112,7 +112,10 @@ for the full write-up, GitHub issue #68):
   caller anywhere in the ROM), `sub_803A22C` (the "UnknownC" type's
   init_fn), `nullsub_42` (its unknown_fn)
 
-Only 6 of this chunk's 21 functions matched - the rest hit the same
+6 of this chunk's 21 functions are matched as real C; a second pass
+(see [`docs/matching/issue-68-0x08039818-audio.md`](../matching/issue-68-0x08039818-audio.md)'s
+updated write-up) parked 8 more as byte-verified NAKED transcriptions -
+see "Parked - NAKED asm transcription(s)" below. The rest hit the same
 many-register (`r8`/`sb`/`sl`) gcc-2.9 allocation ceiling already
 documented for `sub_8038538`'s cluster, or are entangled with a
 neighboring function via a manual return-address-trampoline idiom (see
@@ -239,6 +242,54 @@ See docs/matching.md for `PlaySfx`'s remaining gap.
   `0x0803985C`-`0x08039FFC` cluster landed as real C this pass - the
   `sub_8038FD0` cluster right before it did, in a separate pass, see
   [docs/matching/issue-67-channel-mute-volume-dma-stop.md](../matching/issue-67-channel-mute-volume-dma-stop.md)).
+- **`sub_803A03C`** (`src/audio/gax_channel_pos_sweep.c`, per-tick
+  ping-pong position sweep) - an extensive real-C reconstruction
+  reproduced every field access and the columnar (non-struct) table
+  addressing exactly, but two gaps resisted every technique tried: the
+  ROM keeps a `self+0x13`-sign-flip constant (`0xff`) live in `r8`
+  across the whole function (the same many-register ceiling as this
+  section's other entries), and separately stores it via
+  `ldrb r7,[r2,#0x13]` (reload the old byte) + `orrs r0,r7` rather than
+  a plain immediate - every C phrasing of that store (a bare `= 0xff`,
+  an explicit `|= 0xff`, a named-local two-step OR) got constant-folded
+  straight back to a plain `mov r0, #0xff` by this same compiler.
+  Byte-verified NAKED transcription (confirmed via direct binary
+  comparison against the ROM's own assembled bytes, not just an
+  instruction listing).
+- **`sub_803A158`** (`src/audio/gax_channel_note_cut_driver.c`,
+  per-tick note-cut/retrigger driver) - a wider near-twin of the
+  matched-but-NAKED `sub_80395A4`'s calling pattern: needs `r8`
+  (caching a field address across several branches) and `sb`/`sl`
+  (preserving two incoming parameters across five separate `bl` calls)
+  all three simultaneously live for most of the function. Byte-verified
+  NAKED transcription.
+- **`sub_803A278`/`sub_803A2C8`/`sub_803A324`/`sub_803A5A8`**
+  (`src/audio/gax_unknownc_play.c`, the "UnknownC" type's `play_fn`
+  (`sub_803A324`) and three of its callees) - all four use a manual
+  return-address-trampoline idiom (`mov r2, pc; adds r2, #5;
+  mov lr, r2; bx r1`) to call an interworked function pointer from
+  Thumb on ARMv4T, which has no `blx reg` - not expressible in portable
+  C at all. `sub_803A2C8`'s trampoline return address lands inside what
+  the ROM's own disassembly labels as a separate function,
+  `sub_803A318` (itself nothing but `sub_803A2C8`'s own epilogue, never
+  called from anywhere in the ROM); `sub_803A5A8`/`sub_803A608` are the
+  same fusion. Both fused pairs are transcribed as one physical NAKED
+  body each (`sub_803A318`/`sub_803A608` still get their own
+  `.thumb_func`/label pair purely so the address carries its ROM name,
+  not as separate callable C functions). `sub_803A324` additionally
+  hits the many-register gcc-2.9 allocation ceiling (confirmed via
+  isolated compile of an earlier real-C attempt). This same
+  translation unit also carries the raw ARM-mode DSP/mixer code block
+  right after it (`gStaticData_0803A630` onward, per docs/audio.md) as
+  an untouched trailing byte transcription, folded in purely because
+  its own start address has no label in `expected/code_3.s` for
+  `tools/report_units.py`'s slicing to target - it is not disassembled
+  as real code at all yet. All four functions byte-verified (confirmed
+  via direct binary comparison against the ROM's own assembled bytes
+  across the full 0x0803A278-0x0803A944 span).
+
+  See [docs/matching/issue-68-0x08039818-audio.md](../matching/issue-68-0x08039818-audio.md)
+  for all eight functions' full write-up.
 
 ## Left raw (not attempted, or attempted and set aside)
 
@@ -300,18 +351,22 @@ above as of the second `0x08038538`-`0x08039658` pass - are now Parked
 NAKED transcriptions, see the "Parked" section above and
 [docs/matching/issue-67-68-channel-init-play.md](../matching/issue-67-68-channel-init-play.md).
 
-From the `0x08039818`-`0x0803A944` pass specifically (issue #68):
-`sub_80398DC`, `sub_803985C`, `sub_8039AA4`, and `sub_8039F30` (listed
-raw above as of that pass) are now Parked NAKED transcriptions - see
-[docs/matching/issue-68-channel-bind-envelope-note.md](../matching/issue-68-channel-bind-envelope-note.md)
-and the "Parked - NAKED asm transcription" section above. The remaining
-10 of the chunk's 21 functions (`sub_8039B44`, `sub_8039E50`,
-`sub_803A03C`, `sub_803A158`,
-`sub_803A278`, `sub_803A2C8`, `sub_803A318`, `sub_803A324`, `sub_803A5A8`,
-`sub_803A608`) are still left raw - `sub_8039B44`/`sub_8039E50` are one
-logical routine split by a manual return-address trampoline (not
-attempted this pass given its size, see the write-up above); see
+From the `0x08039818`-`0x0803A944` pass specifically (issue #68): two
+independent passes together parked 12 of the chunk's 21 functions as
+byte-verified NAKED transcriptions - `sub_80398DC`, `sub_803985C`,
+`sub_8039AA4`, `sub_8039F30` (see
+[docs/matching/issue-68-channel-bind-envelope-note.md](../matching/issue-68-channel-bind-envelope-note.md))
+plus `sub_803A03C`, `sub_803A158`, `sub_803A278`, `sub_803A2C8`/
+`sub_803A318` (fused), `sub_803A324`, `sub_803A5A8`/`sub_803A608`
+(fused) (see "Parked - NAKED asm transcription(s)" above). Only
+`sub_8039B44`/`sub_8039E50` - one logical routine split by a manual
+return-address trampoline, not attempted given its combined size - are
+still left raw; see
 [`docs/matching/issue-68-0x08039818-audio.md`](../matching/issue-68-0x08039818-audio.md)'s
 "Left raw" section for the rest's per-function reason (many-register allocation
 ceiling, or entangled with a neighbor via a manual return-address-
-trampoline idiom).
+trampoline idiom). The raw ARM-mode DSP/mixer code block past
+`0x0803A628` (docs/audio.md's `gStaticData_0803A630` onward) is no
+longer a separate raw span - it is now an untouched trailing byte
+transcription inside `gax_unknownc_play.c` (see above), still not
+disassembled as real code.
