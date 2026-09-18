@@ -37,9 +37,18 @@ system from "core" graphics.
 - `src/graphics/hud_icon_widget.c` (new file, GitHub issue #46):
   `sub_8028574` - a `struct hud_counter`'s `parts`-array destructor.
 
+- `src/graphics/hud_icon_widget_85c4.c` (GitHub issue #46, second pass):
+  `sub_8028808` - the per-character newline/space/glyph-dispatch
+  trampoline. Shares its file with the still-parked
+  `sub_80285C4`/`InitHudIconWidgetA`/`InitHudIconWidgetB` (see below).
+
 - `src/graphics/hud_icon_widget2.c` (new file, GitHub issue #46):
   `sub_8028860` - draws a fixed-count run of characters via the
   `struct icon_manager` widget's own record trampoline.
+
+- `src/graphics/hud_icon_widget_8890.c` (GitHub issue #46, second pass):
+  `sub_8028890` - `sub_8028808`'s "draw this whole string" sibling.
+  Shares its file with the still-parked `sub_8028900` (see below).
 
 - `src/graphics/hud_icon_widget3.c` (new file, GitHub issue #46):
   `sub_8028968` - total text-block-height helper.
@@ -47,6 +56,11 @@ system from "core" graphics.
 - `src/graphics/hud_icon_widget4.c` (new file, GitHub issue #46):
   `UploadHudTile`, `sub_8028A30`, `sub_8028A40` - glyph-sheet VRAM
   upload and two OAM-attribute-nibble setters.
+
+- `src/graphics/hud_icon_widget_8a78.c` (GitHub issue #46, second pass):
+  `sub_8028A78` - the "no data tables of its own" widget constructor
+  variant; now fully byte-exact, so this file (unlike the other two
+  above) carries no `#if NON_MATCHING` guard at all any more.
 
 - `src/graphics/hud_icon_widget5.c` (new file, GitHub issue #46):
   `sub_8028AC4`, `sub_8028ADC`, `sub_8028AE8`, `sub_8028B04`,
@@ -77,13 +91,14 @@ why the rest of the family stayed raw) is
 
 - GitHub issue #46 (see
   [docs/matching/issue-46-hud-icon-widget.md](../matching/issue-46-hud-icon-widget.md)
-  for what was tried on each): `sub_80285C4`, `InitHudIconWidgetA`,
-  `InitHudIconWidgetB`, `sub_8028808` (real bytes in
-  `asm/code_3_2_20_85c4.s`, reconstructions in
-  `src/graphics/hud_icon_widget_85c4.c`); `sub_8028890`, `sub_8028900`
-  (real bytes in `asm/code_3_2_20_8890.s`, reconstructions in
-  `src/graphics/hud_icon_widget_8890.c`); `MeasureText` (real bytes in
+  for what was tried on each, including its "Second pass" section):
+  `sub_80285C4`, `InitHudIconWidgetA`, `InitHudIconWidgetB` (real bytes
+  in `asm/code_3_2_20_85c4.s`, reconstructions in
+  `src/graphics/hud_icon_widget_85c4.c` - `sub_8028808`, formerly parked
+  alongside these, is now matched and lives at the end of the same
+  file); `sub_8028900` (real bytes in `asm/code_3_2_20_8890.s`,
+  reconstruction in `src/graphics/hud_icon_widget_8890.c` -
+  `sub_8028890`, formerly parked alongside it, is now matched and lives
+  at the top of the same file); `MeasureText` (real bytes in
   `asm/code_3_2_20_8994.s`, reconstruction in
-  `src/graphics/hud_icon_widget_8994.c`); `sub_8028A78` (real bytes in
-  `asm/code_3_2_20_8a78.s`, reconstruction in
-  `src/graphics/hud_icon_widget_8a78.c`).
+  `src/graphics/hud_icon_widget_8994.c`).

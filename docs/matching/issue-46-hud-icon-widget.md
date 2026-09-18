@@ -175,3 +175,141 @@ difficulty in this codebase:
   document the identical "two `self+0x130` stores in a row, the first
   genuinely dead" pattern reused by `InitHudIconWidgetA`/
   `InitHudIconWidgetB`/`sub_8028A78` here.
+
+## Second pass
+
+Follow-up pass over the 8 functions this issue's first pass left
+parked, working the remaining GitHub issue #46 scope.
+
+### Matched (3 of 8) - full clean `make compare` passing
+
+- **`sub_8028808`** (`src/graphics/hud_icon_widget_85c4.c`, now split
+  out of the still-parked `sub_80285C4`/`InitHudIconWidgetA`/
+  `InitHudIconWidgetB` at the end of the same file - `#if NON_MATCHING`
+  now only wraps those three). The documented `if`/`else if`/`else`
+  block-layout gap was fixed with explicit `goto`s to force the ROM's
+  exact physical block order (space arm inline as the fallthrough,
+  newline and dispatch arms as jumped-to blocks in test order, tail
+  reached both ways). The `self`/`charByte` prologue-order gap
+  (previously undocumented as fully understood) turned out to be this
+  compiler unconditionally widening a `u8` parameter's zero-extension
+  before anything else, regardless of source order - worked around by
+  taking `charByte` as a raw `u32` (sidestepping the byte-promotion
+  invariant that forces the early widen) and writing the three-
+  instruction prologue as one literal `asm volatile` block.
+- **`sub_8028890`** (`src/graphics/hud_icon_widget_8890.c`, split out of
+  the still-parked `sub_8028900` at the top of the same file). Same
+  `goto`-based block-order fix as `sub_8028808`, plus explicit register
+  pins for `self`/`str`/the cached `&posX` (`r4`/`r5`/`r6`) - `&posY`
+  deliberately left *unpinned* (see the r7 finding below). Also hit the
+  project's known trailing-alignment-padding gotcha (function ends 2
+  bytes short of a 4-byte boundary; this compiler's own padding `nop`
+  isn't the ROM's zero-fill) - fixed with the standard
+  `asm(".align 2, 0")` following statement.
+- **`sub_8028A78`** (`src/graphics/hud_icon_widget_8a78.c`) - no
+  charLookup-building loop like its `InitHudIconWidgetA`/`B` siblings,
+  so once the shared preamble's inline-asm address anchors were right,
+  this one reached a full match with nothing left over. The file no
+  longer has an `#if NON_MATCHING` guard at all.
+
+### A genuinely new technique: literal inline-asm address anchors for the shared preamble
+
+`sub_80285C4`/`InitHudIconWidgetA`/`InitHudIconWidgetB`/`sub_8028A78`
+all share a `record`/`posX`/`posY`/`field_118`/`field_12c` zero-init
+preamble. Plain C (any statement order, any struct-field-vs-raw-offset
+phrasing) never reproduced two things at once: the ROM *recomputes*
+`&record` fresh for each of its two stores instead of caching the
+address across the `sub_803A94C` call in between (a CSE this compiler
+applies unconditionally to repeated `self->record = X` assignments),
+and the `posX`/`posY`/`field_118`/`field_12c` zero stores compute their
+addresses in ascending-offset order but store through them in a
+different order than they were computed. Fixed by writing the ROM's
+literal instruction sequence as `asm volatile` blocks with generic
+`"=r"` outputs (letting the register allocator still pick freely,
+avoiding the r7 hazard below) - the same address-anchor idiom
+`actor_aabb_setup.c`'s `sub_803AFF0`/`sub_803B024` already established,
+just scaled up to a longer shared sequence. `sub_8028A78` applies this
+whole; `InitHudIconWidgetA`/`B` apply it too but the loop past it (next
+section) still blocks a full match.
+
+### The r7-pinning toolchain bug, and why it blocks a full match on 4 of the remaining 5
+
+Chasing `InitHudIconWidgetA`/`InitHudIconWidgetB`'s charLookup-building
+loop and `sub_8028900`/`MeasureText` surfaced (and got independently
+confirmed by a minimal standalone repro) a real, silent ABI-violation
+bug in this specific agbcc/gcc-2.9-arm toolchain: `register T x
+asm("r7")` - or, it turns out, *any* inline-asm use of r7, even a bare
+clobber or an `"=r"`-constrained output bound to r7 via a register
+variable - compiles with **no push/pop of r7 at all**, silently
+corrupting the caller's r7 across the call. Values can only safely live
+in r7 here via natural, unforced allocation (gcc's own allocator picks
+it correctly, with proper save/restore, when nothing forces it there).
+Worse, this session found the bug is *contagious*: pinning enough
+*other* hard registers (not r7 itself) can starve whatever's left for
+r7, making the unforced allocator drop it from the callee-saved set too
+- hit for both `InitHudIconWidgetA`'s charLookup loop (pinning `count`
+to r7 outright broke codegen outright - see the function's own comment)
+and `sub_8028900` (pinning *either* `&spaceWidth` or `&charLookup` to
+their ROM registers, `ip`/`r6`, made r7 drop out even though r7 itself
+was left alone). The base bug (never pin r7 explicitly) was already
+documented in `docs/matching.md`'s "Why not just pin r7" and
+`matching_decomp_register_pinning` memory point 10 from earlier
+sessions; this "contagious" refinement - enough *other* pins can starve
+r7 even without touching it - is new and recorded here, not in
+`docs/matching.md` itself (frozen, never gains new entries - see that
+file's own header).
+
+Net effect: `InitHudIconWidgetA`/`InitHudIconWidgetB`'s preambles are
+now byte-exact (see above), but their charLookup-building loops -
+which the ROM allocates with the table's leading count byte
+permanently in r7 - could not be forced to match; `sub_8028900`/
+`MeasureText` hit the identical class of gap for a different r7-held
+value (a glyph-index byte inside the `else` arm). All four got real,
+verified-not-just-eyeballed improvements (see the isolated-compile
+lesson below) via safe pins (`r4`/`r5`/`r8`/`sb`/`r3` etc.) and the
+address-anchor technique, and are left parked with the exact remaining
+gap documented in each function's own comment, rather than continuing
+to chase a confirmed toolchain limitation.
+
+`sub_80285C4` itself (the fourth already-parked function in this
+issue's original scope) was looked at again but not usefully improved
+this pass - it needs the same address-anchor treatment applied to a
+much larger set of bitfield-masking stores (`0xFE00`/`0xFC00`-style
+16-bit masks built from a 32-bit literal-pool load in the ROM, vs. this
+compiler's own shift-construction of the same mask), a distinct problem
+from anything solved above; left with its original documented gap
+rather than risk a low-confidence partial change.
+
+### A second isolated-compile-vs-full-build lesson
+
+Early in this pass, "matches" was provisionally claimed for functions
+based on manually eyeballing an isolated-compile disassembly next to
+the ROM listing - `sub_8028808` in particular looked identical this
+way. A normalized, scripted instruction-by-instruction diff (stripping
+comment text, canonicalizing hex-vs-decimal immediates and 2-operand-
+vs-3-operand `add`/`sub` forms, but *not* register numbers) caught real
+remaining mismatches manual reading had missed, in a function already
+mentally filed as "done." This is the same category of mistake
+`docs/workflow.md` step 3 already warns about (an isolated compile is
+diagnostic, never proof) - the lesson refined here is that even a
+*careful manual read* of an isolated compile is not reliable enough on
+its own; only the step-6 full clean `make compare` against the real ROM
+is proof, and a scripted diff is a much better *intermediate* check
+than eyeballing before paying for that full rebuild. The alignment-
+padding gotcha on `sub_8028890` (previous section) was caught exactly
+this way too - the scripted diff was clean, but the full `make compare`
+still failed, tracked down via the map-file address-shift method
+`docs/workflow.md` describes.
+
+### Remaining scope
+
+`sub_80285C4`, `InitHudIconWidgetA`, `InitHudIconWidgetB`, `sub_8028900`,
+`MeasureText` are still parked - genuinely resistant to this toolchain,
+not unattempted. Issue #46 stays open; a future pass could revisit
+`sub_80285C4`'s bitfield-mask gap (a distinct, more tractable-looking
+problem than the r7 wall the other four hit), or wait for/investigate a
+workaround to the r7 toolchain bug itself given how many parked
+functions across this codebase cite it.
+
+`InitHudTextWidget` (`0x08028B7C`, immediately after this issue's
+range) remains fully raw and out of scope - not attempted this pass.

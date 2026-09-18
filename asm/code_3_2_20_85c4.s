@@ -3,14 +3,14 @@
 .syntax unified
 .arm
 
-@ sub_80285C4/InitHudIconWidgetA/InitHudIconWidgetB/sub_8028808 are
-@ reconstructed (semantics fully understood, but not yet byte-matching)
-@ as C in src/graphics/hud_icon_widget_85c4.c, guarded by #if
-@ NON_MATCHING - see docs/matching/issue-46-hud-icon-widget.md for the
-@ exact remaining gap in each (excess-register-pressure/gcc-2.9
-@ register-allocation and if/else-if block-layout shapes this compiler
-@ won't reproduce, the same class of issue already documented for
-@ sub_8006600/sub_8037388 elsewhere in this codebase).
+@ sub_80285C4/InitHudIconWidgetA/InitHudIconWidgetB are reconstructed
+@ (semantics fully understood, but not yet byte-matching) as C in
+@ src/graphics/hud_icon_widget_85c4.c, guarded by #if NON_MATCHING - see
+@ docs/matching/issue-46-hud-icon-widget.md for the exact remaining gap
+@ in each (excess-register-pressure/gcc-2.9 register-allocation issues,
+@ including a categorical r7-pinning toolchain bug documented in
+@ docs/matching.md's "Why not just pin r7"). sub_8028808, formerly here
+@ too, is matched and lives at the end of the same .c file now.
 .if NON_MATCHING == 0
 	thumb_func_start sub_80285C4
 sub_80285C4: @ 0x080285C4
@@ -300,53 +300,4 @@ _080287FC: .4byte gStaticData_081751D4
 _08028800: .4byte gStaticData_085A551C
 _08028804: .4byte gStaticData_08175188
 
-	thumb_func_start sub_8028808
-sub_8028808: @ 0x08028808
-	push {r4, lr}
-	adds r3, r0, #0
-	lsls r1, r1, #0x18
-	lsrs r4, r1, #0x18
-	cmp r4, #0xa
-	beq _08028822
-	cmp r4, #0x20
-	bne _08028844
-	movs r0, #0x88
-	lsls r0, r0, #1
-	adds r2, r3, r0
-	adds r0, #0x10
-	b _08028838
-_08028822:
-	movs r2, #0x88
-	lsls r2, r2, #1
-	adds r1, r3, r2
-	adds r2, #8
-	adds r0, r3, r2
-	ldr r0, [r0]
-	str r0, [r1]
-	movs r0, #0x8a
-	lsls r0, r0, #1
-	adds r2, r3, r0
-	adds r0, #8
-_08028838:
-	adds r1, r3, r0
-	ldr r0, [r2]
-	ldr r1, [r1]
-	adds r0, r0, r1
-	str r0, [r2]
-	b _0802885A
-_08028844:
-	movs r1, #0x98
-	lsls r1, r1, #1
-	adds r0, r3, r1
-	ldr r1, [r0]
-	movs r2, #0x30
-	ldrsh r0, [r1, r2]
-	adds r0, r3, r0
-	ldr r2, [r1, #0x34]
-	adds r1, r4, #0
-	bl sub_803AD80
-_0802885A:
-	pop {r4}
-	pop {r0}
-	bx r0
 .endif
