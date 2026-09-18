@@ -46,20 +46,14 @@ u8 sub_8002CF4(struct settings_sync_record *self, u8 flags)
     return result;
 }
 
-#if NON_MATCHING
-/* Reconstructed (semantics fully understood) but NOT YET
- * BYTE-MATCHING: the ROM's own compile keeps a redundant copy of the
- * bit-cleared result through a second register (loaded value -> bics ->
- * copy -> store) that every variation tried here (separate result
- * variable, register pins on the loaded/result values in various
- * combinations, a pointer-typed field access) either collapses back
- * into the single-register form or introduces an unrelated extra
- * register spill - the same unresolved gcc-2.9 scratch-register class
- * documented throughout this chunk. Real bytes stay in
- * asm/code_3_1_10_3_2d44.s, wrapped `.if NON_MATCHING == 0`. */
 void sub_8002D0C(struct settings_sync_record *self, u8 flags)
 {
-    self->flags &= ~flags;
+    register u8 loaded asm("r3");
+    register u8 v asm("r1");
+
+    loaded = self->flags;
+    loaded &= ~flags;
+    asm volatile("add %0, %1, #0" : "=r"(v) : "r"(loaded));
+    self->flags = v;
     sub_8002B70(self);
 }
-#endif /* NON_MATCHING */

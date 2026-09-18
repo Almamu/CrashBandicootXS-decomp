@@ -3,9 +3,14 @@
 .syntax unified
 .arm
 
-@ sub_8002D44/sub_8002E20/sub_8002EFC are reconstructed (semantics
-@ fully understood) but NOT YET byte-matching - parked as C in
-@ src/graphics/settings_menu8.c, guarded by #if NON_MATCHING. See
+@ sub_8002D44/sub_8002E20 are reconstructed (semantics fully
+@ understood) but NOT YET byte-matching - both need r7 as genuine
+@ scratch, and this agbcc build never includes r7 in a function's
+@ automatic callee-save push/pop (a categorical, reproduced limitation
+@ - see the doc comment in src/graphics/settings_menu8a2.c right above
+@ their parked C). sub_8002EFC (the third function of this trio, which
+@ doesn't touch r7) has already been matched and moved into
+@ src/graphics/settings_menu8a2.c unconditionally. See
 @ docs/matching/issue-5-overlay-ui-sync.md for the write-up.
 .if NON_MATCHING == 0
 	thumb_func_start sub_8002D44
@@ -250,117 +255,4 @@ _08002EF2:
 	bx r0
 	.align 2, 0
 
-	thumb_func_start sub_8002EFC
-sub_8002EFC: @ 0x08002EFC
-	push {r4, r5, r6, lr}
-	adds r4, r0, #0
-	ldr r0, _08002F54 @ =gUnknown_03000804
-	ldr r1, [r0]
-	ldrb r0, [r1, #7]
-	cmp r0, #0
-	bne _08002F58
-	movs r1, #0x86
-	lsls r1, r1, #2
-	adds r0, r4, r1
-	ldr r0, [r0]
-	cmp r0, #0
-	beq _08002F20
-	subs r1, #4
-	adds r0, r4, r1
-	ldr r0, [r0]
-	cmp r0, #0
-	bne _08002FC2
-_08002F20:
-	movs r0, #0x80
-	lsls r0, r0, #2
-	str r0, [r4]
-	movs r2, #0
-	str r2, [r4, #4]
-	ldr r0, [r4, #8]
-	str r0, [r4, #0xc]
-	movs r0, #0x84
-	lsls r0, r0, #2
-	adds r1, r4, r0
-	adds r0, r4, #0
-	adds r0, #0x10
-	str r0, [r1]
-	movs r1, #0x85
-	lsls r1, r1, #2
-	adds r0, r4, r1
-	str r2, [r0]
-	adds r1, #4
-	adds r0, r4, r1
-	str r2, [r0]
-	adds r1, #4
-	adds r0, r4, r1
-	str r2, [r0]
-	movs r0, #1
-	b _08002FC4
-	.align 2, 0
-_08002F54: .4byte gUnknown_03000804
-_08002F58:
-	movs r0, #0xff
-	lsls r0, r0, #2
-	adds r1, r1, r0
-	ldr r0, [r1]
-	cmp r0, #0
-	bne _08002F68
-	movs r1, #1
-	b _08002F74
-_08002F68:
-	ldr r0, [r1]
-	cmp r0, #1
-	beq _08002F72
-	movs r0, #2
-	b _08002FC4
-_08002F72:
-	movs r1, #0
-_08002F74:
-	movs r0, #0x86
-	lsls r0, r0, #2
-	adds r6, r4, r0
-	ldr r0, [r6]
-	cmp r0, #0
-	bne _08002F86
-	adds r0, r4, #0
-	bl sub_8002E20
-_08002F86:
-	movs r1, #0x85
-	lsls r1, r1, #2
-	adds r5, r4, r1
-	ldr r0, [r5]
-	cmp r0, #0
-	bne _08002F98
-	adds r0, r4, #0
-	bl sub_8002D44
-_08002F98:
-	movs r3, #0
-	ldr r0, [r6]
-	cmp r0, #0
-	beq _08002FBA
-	ldr r0, [r5]
-	cmp r0, #0
-	beq _08002FBA
-	movs r1, #0x87
-	lsls r1, r1, #2
-	adds r0, r4, r1
-	ldr r1, [r0]
-	adds r2, r1, #0
-	adds r1, #1
-	str r1, [r0]
-	cmp r2, #0x1e
-	ble _08002FBA
-	movs r3, #1
-_08002FBA:
-	cmp r3, #0
-	bne _08002FC2
-	movs r0, #1
-	b _08002FC4
-_08002FC2:
-	movs r0, #0
-_08002FC4:
-	pop {r4, r5, r6}
-	pop {r1}
-	bx r1
-	.align 2, 0
 .endif
