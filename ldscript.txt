@@ -328,8 +328,11 @@ SECTIONS
         build/crashbandicootxs/src/audio/song_slot_lookup.o(.text);
         build/crashbandicootxs/asm/code_3_2_20c.o(.text);
         build/crashbandicootxs/src/audio/sound_object_init.o(.text);
-        build/crashbandicootxs/asm/code_3_2_20d.o(.text);
-        build/crashbandicootxs/asm/code_3_2_20e.o(.text);
+        build/crashbandicootxs/src/audio/gax_channel_table_alloc.o(.text);
+        build/crashbandicootxs/src/audio/gax_hw_reset.o(.text);
+        build/crashbandicootxs/src/audio/gax_playstart.o(.text);
+        build/crashbandicootxs/src/audio/gax_channel_pool_alloc.o(.text);
+        build/crashbandicootxs/src/audio/gax_playback_ticker.o(.text);
         build/crashbandicootxs/src/audio/gax_dma_control.o(.text);
         build/crashbandicootxs/asm/code_3_2_20e_8c88.o(.text);
         build/crashbandicootxs/src/audio/gax_note_param.o(.text);
