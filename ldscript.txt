@@ -191,7 +191,6 @@ SECTIONS
         build/crashbandicootxs/src/graphics/graphics_loading_21d80.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_22354.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_225a0.o(.text);
-        build/crashbandicootxs/asm/code_3_2_17_22bf0.o(.text);
         build/crashbandicootxs/src/system/game_loop.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_22d50.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_22ea8.o(.text);
