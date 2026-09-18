@@ -65,6 +65,15 @@ pass) and
   Sound A output stop/start pair)
 - `src/audio/gax_note_param.c` - `sub_8038F94` (conditional per-voice
   note-period update)
+- `src/audio/gax_channel_mute_volume.c` - `sub_8038FD0`/`sub_8039064`/
+  `sub_80390F8` (per-channel mute/volume-set family - previously
+  documented as a "confirmed many-register loop-allocation ceiling";
+  matched by never caching the `gUnknown_03001630->channels[curChannelIdx]`
+  chase into a local, reproducing the ROM's own r0-r3-only allocation -
+  see [`docs/matching/issue-67-channel-mute-volume-dma-stop.md`](../matching/issue-67-channel-mute-volume-dma-stop.md))
+- `src/audio/gax_dma_stop.c` - `sub_8039198`/`sub_80391E8` (Direct Sound A/
+  Timer0 stop, the counterpart to `sub_8038B68`'s start, plus a generic
+  single-DMA-channel "off" helper; same writeup as above)
 - `src/audio/gax_swi.c` - `sub_80392C4` (HuffUnComp SWI 0x13 wrapper,
   transcribed as NAKED asm)
 - `src/audio/gax_fatal_error.c` - `sub_80392E0` (the fatal-error
@@ -237,19 +246,20 @@ listed raw above) are now matched/parked - see
 [docs/matching/issue-67-gax-voice-steal.md](../matching/issue-67-gax-voice-steal.md)
 and the "Parked - NAKED asm transcription" section above.
 
-- `sub_8038FD0`/`sub_8039064`/`sub_80390F8` - a per-channel mute/
-  volume-set family; each hits the same many-register loop-allocation
-  difficulty as the `sub_8038538` cluster above (confirmed via isolated
-  compile - the ROM's own register allocation for this loop shape uses
-  only r0-r3, no callee-saved registers, and no C rephrasing tried
-  reproduced that).
-- `sub_8039198`/`sub_80391E8` - contain the same hardware-register
-  NOP-delay compiler quirk already flagged in-source at `sub_80384DC`
-  above (`.byte 0x1b, 0x1c` / `mov r8, r8` x3); not attempted.
+`sub_8038FD0`/`sub_8039064`/`sub_80390F8` (per-channel mute/volume-set
+family) and `sub_8039198`/`sub_80391E8` (Direct Sound A/Timer0 stop pair,
+using the same hardware-register NOP-delay compiler quirk already flagged
+in-source at `sub_80384DC` above) - listed raw above - are now matched,
+see [`docs/matching/issue-67-channel-mute-volume-dma-stop.md`](../matching/issue-67-channel-mute-volume-dma-stop.md)
+and the "Matched" section above. The earlier "confirmed many-register
+loop-allocation ceiling" verdict for the mute/volume family turned out to
+be an artifact of caching the channel chase into a local rather than a
+genuine gcc-2.9 gap - see that writeup for the technique that closed it.
+
 - `sub_8039214` - a word-wrap text/console-tile renderer (called by the
   now-matched `sub_80392E0`); fully understood, not attempted as a C
   reconstruction this pass - complex nested-loop control flow
-  deprioritized in favor of the two matches this pass did land.
+  deprioritized in favor of the five matches this pass did land.
 
 `sub_8039518`/`sub_80395A4`/`sub_8039658` (the "Channel" SoundHandler
 type's init_fn/play_fn and the latter's direct callee) - listed raw
