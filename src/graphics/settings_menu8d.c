@@ -11,118 +11,239 @@ extern s32 sub_803AB54(u16 index, void *buf);
 extern s32 sub_803AD38(u16 index, void *buf);
 extern u8 *gUnknown_03001634;
 
-#if NON_MATCHING
-/* NOT YET BYTE-MATCHING: semantics fully understood. EEPROM "load" -
- * reads `gUnknown_03001634->maxCount` 8-byte blocks from the EEPROM
- * chip (`sub_803AB54`, still raw - see src/system/timer_util.c's
- * `EepromConfig` comment) into a stack buffer sized `len` (always
- * 0x200, `sizeof(struct settings_sync_record)`, from every call site),
- * then copies the whole buffer into `self`. One-time-inits the EEPROM
- * chip config (`sub_803A968`) and claims hardware timer 2 for the
- * transfer (`sub_803A9D0`) on the way in. Returns -1 on any block-read
- * failure (buffer left untouched) or 0 on success. Every load/store,
- * branch and call is semantically confirmed against the ROM, but the
- * ROM's shared IME-save/IE-clear/IME-restore snippet (repeated once
- * per exit path) lands its saved-IME value straight into the register
- * it later restores from (`ldrh r2,[r3]` then, at the end, `strh
- * r2,[r3]`), while this compiler routes the same value through r0
- * first before copying it into the variable's assigned register - an
- * extra `mov` the ROM doesn't have, most likely due to the larger
- * number of live locals in this function (buffer/self/len/p/i) leaving
- * less register headroom than the near-identical snippet that matched
- * cleanly in the much smaller `sub_8001D30` (src/system/link_cable.c).
- * Real bytes stay in `asm/code_3_1_10_3_2868.s`, wrapped
- * `.if NON_MATCHING == 0`. */
-s32 sub_8002868(void *self, s32 len)
+/* EEPROM "load" - reads `gUnknown_03001634->maxCount` 8-byte blocks
+ * from the EEPROM chip (`sub_803AB54`, still raw - see
+ * src/system/timer_util.c's `EepromConfig` comment) into a stack
+ * buffer sized `len` (always 0x200, `sizeof(struct
+ * settings_sync_record)`, from every call site), then copies the whole
+ * buffer into `self`. One-time-inits the EEPROM chip config
+ * (`sub_803A968`) and claims hardware timer 2 for the transfer
+ * (`sub_803A9D0`) on the way in. Returns -1 on any block-read failure
+ * (buffer left untouched) or 0 on success.
+ *
+ * Written as NAKED asm, not plain C: the ROM's shared IME-save/IE-
+ * clear/IME-restore snippet (repeated once per exit path) lands its
+ * saved-IME value straight into the register it later restores from
+ * (`ldrh r2,[r3]` then, at the end, `strh r2,[r3]`), while this
+ * compiler routes the same value through r0 first before copying it
+ * into the variable's assigned register - an extra `mov` the ROM
+ * doesn't have, most likely due to the larger number of live locals in
+ * this function (buffer/self/len/p/i) leaving less register headroom
+ * than the near-identical snippet that matched cleanly in the much
+ * smaller `sub_8001D30` (src/system/link_cable.c). Every
+ * load/store/branch/call below is semantically confirmed against the
+ * ROM (the paragraph above is that derivation); full NAKED
+ * transcription like `sub_8001CB8`/`sub_8001DB4` there. */
+NAKED s32 sub_8002868(void *self, s32 len)
 {
-    u8 buffer[0x200];
-    u8 *p;
-    s32 i;
-    u16 savedIme;
-
-    if (gUnknown_03000808 != 0) {
-        u16 configResult = sub_803A968(4);
-        if (configResult != 0) {
-            return -1;
-        }
-        gUnknown_03000808 = 0;
-    }
-
-    REG_IME = 0;
-    sub_803A9D0(2, &gUnknown_030009FC);
-
-    p = buffer;
-    for (i = 0; i < *(u16 *)(gUnknown_03001634 + 4); i++) {
-        u16 blockResult = sub_803AB54((u16)i, p);
-        if (blockResult != 0) {
-            savedIme = REG_IME;
-            REG_IME = 0;
-            REG_IE &= ~0x20;
-            REG_IME = savedIme;
-            REG_IME = 1;
-            return -1;
-        }
-        p += 8;
-    }
-
-    savedIme = REG_IME;
-    REG_IME = 0;
-    REG_IE &= ~0x20;
-    REG_IME = savedIme;
-    REG_IME = 1;
-
-    sub_800014C(self, buffer, len);
-    return 0;
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "ldr r4, 2f\n\t"
+        "add sp, r4\n\t"
+        "add r6, r0, #0\n\t"
+        "add r7, r1, #0\n\t"
+        "ldr r4, 3f\n\t"
+        "ldrb r0, [r4]\n\t"
+        "cmp r0, #0\n\t"
+        "beq 1f\n\t"
+        "mov r0, #4\n\t"
+        "bl sub_803A968\n\t"
+        "lsl r0, r0, #0x10\n\t"
+        "lsr r0, r0, #0x10\n\t"
+        "cmp r0, #0\n\t"
+        "bne 13f\n\t"
+        "strb r0, [r4]\n\t"
+    "1:\n\t"
+        "ldr r1, 4f\n\t"
+        "mov r0, #0\n\t"
+        "strh r0, [r1]\n\t"
+        "ldr r1, 5f\n\t"
+        "mov r0, #2\n\t"
+        "bl sub_803A9D0\n\t"
+        "mov r5, sp\n\t"
+        "mov r4, #0\n\t"
+        "b 7f\n\t"
+        ".align 2, 0\n"
+    "2: .4byte 0xFFFFFE00\n"
+    "3: .4byte gUnknown_03000808\n"
+    "4: .4byte 0x04000208\n"
+    "5: .4byte gUnknown_030009FC\n"
+    "6:\n\t"
+        "lsl r0, r4, #0x10\n\t"
+        "lsr r0, r0, #0x10\n\t"
+        "add r1, r5, #0\n\t"
+        "bl sub_803AB54\n\t"
+        "lsl r0, r0, #0x10\n\t"
+        "cmp r0, #0\n\t"
+        "bne 12f\n\t"
+        "add r5, #8\n\t"
+        "add r4, #1\n\t"
+    "7:\n\t"
+        "ldr r0, 8f\n\t"
+        "ldr r0, [r0]\n\t"
+        "ldrh r0, [r0, #4]\n\t"
+        "cmp r4, r0\n\t"
+        "blt 6b\n\t"
+        "ldr r3, 9f\n\t"
+        "ldrh r2, [r3]\n\t"
+        "mov r0, #0\n\t"
+        "strh r0, [r3]\n\t"
+        "ldr r4, 10f\n\t"
+        "ldrh r1, [r4]\n\t"
+        "ldr r0, 11f\n\t"
+        "and r0, r1\n\t"
+        "strh r0, [r4]\n\t"
+        "strh r2, [r3]\n\t"
+        "mov r0, #1\n\t"
+        "strh r0, [r3]\n\t"
+        "add r0, r6, #0\n\t"
+        "mov r1, sp\n\t"
+        "add r2, r7, #0\n\t"
+        "bl sub_800014C\n\t"
+        "mov r0, #0\n\t"
+        "b 14f\n\t"
+        ".align 2, 0\n"
+    "8: .4byte gUnknown_03001634\n"
+    "9: .4byte 0x04000208\n"
+    "10: .4byte 0x04000200\n"
+    "11: .4byte 0x0000FFDF\n"
+    "12:\n\t"
+        "ldr r3, 15f\n\t"
+        "ldrh r2, [r3]\n\t"
+        "mov r0, #0\n\t"
+        "strh r0, [r3]\n\t"
+        "ldr r4, 16f\n\t"
+        "ldrh r1, [r4]\n\t"
+        "ldr r0, 17f\n\t"
+        "and r0, r1\n\t"
+        "strh r0, [r4]\n\t"
+        "strh r2, [r3]\n\t"
+        "mov r0, #1\n\t"
+        "strh r0, [r3]\n\t"
+    "13:\n\t"
+        "mov r0, #1\n\t"
+        "neg r0, r0\n\t"
+    "14:\n\t"
+        "mov r3, #0x80\n\t"
+        "lsl r3, r3, #2\n\t"
+        "add sp, r3\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r1}\n\t"
+        "bx r1\n\t"
+        ".align 2, 0\n"
+    "15: .4byte 0x04000208\n"
+    "16: .4byte 0x04000200\n"
+    "17: .4byte 0x0000FFDF\n"
+    );
 }
 
-/* NOT YET BYTE-MATCHING: semantics fully understood, same gap class as
- * `sub_8002868` above. EEPROM "save" - counterpart to `sub_8002868`:
- * copies `self` into a stack buffer first, then writes it out
- * `maxCount` 8-byte blocks at a time (`sub_803AD38`, still raw). Same
- * one-time chip-config and timer-2 claim, same -1-on-failure/
- * 0-on-success return. Real bytes stay in
- * `asm/code_3_1_10_3_2868.s`, wrapped `.if NON_MATCHING == 0`. */
-s32 sub_8002938(void *self, s32 len)
+/* EEPROM "save" - counterpart to `sub_8002868`: copies `self` into a
+ * stack buffer first, then writes it out `maxCount` 8-byte blocks at a
+ * time (`sub_803AD38`, still raw). Same one-time chip-config and
+ * timer-2 claim, same -1-on-failure/0-on-success return, same NAKED
+ * transcription reason as `sub_8002868` above. */
+NAKED s32 sub_8002938(void *self, s32 len)
 {
-    u8 buffer[0x200];
-    u8 *p;
-    s32 i;
-    u16 savedIme;
-
-    if (gUnknown_03000808 != 0) {
-        if (sub_803A968(4) != 0) {
-            return -1;
-        }
-        gUnknown_03000808 = 0;
-    }
-
-    sub_800014C(buffer, self, len);
-
-    REG_IME = 0;
-    sub_803A9D0(2, &gUnknown_030009FC);
-
-    p = buffer;
-    for (i = 0; i < *(u16 *)(gUnknown_03001634 + 4); i++) {
-        if (sub_803AD38((u16)i, p) != 0) {
-            savedIme = REG_IME;
-            REG_IME = 0;
-            REG_IE &= ~0x20;
-            REG_IME = savedIme;
-            REG_IME = 1;
-            return -1;
-        }
-        p += 8;
-    }
-
-    savedIme = REG_IME;
-    REG_IME = 0;
-    REG_IE &= ~0x20;
-    REG_IME = savedIme;
-    REG_IME = 1;
-
-    return 0;
+    asm(
+        "push {r4, r5, r6, lr}\n\t"
+        "ldr r4, 2f\n\t"
+        "add sp, r4\n\t"
+        "add r4, r0, #0\n\t"
+        "add r5, r1, #0\n\t"
+        "ldr r6, 3f\n\t"
+        "ldrb r0, [r6]\n\t"
+        "cmp r0, #0\n\t"
+        "beq 1f\n\t"
+        "mov r0, #4\n\t"
+        "bl sub_803A968\n\t"
+        "lsl r0, r0, #0x10\n\t"
+        "lsr r0, r0, #0x10\n\t"
+        "cmp r0, #0\n\t"
+        "bne 13f\n\t"
+        "strb r0, [r6]\n\t"
+    "1:\n\t"
+        "mov r0, sp\n\t"
+        "add r1, r4, #0\n\t"
+        "add r2, r5, #0\n\t"
+        "bl sub_800014C\n\t"
+        "ldr r1, 4f\n\t"
+        "mov r0, #0\n\t"
+        "strh r0, [r1]\n\t"
+        "ldr r1, 5f\n\t"
+        "mov r0, #2\n\t"
+        "bl sub_803A9D0\n\t"
+        "mov r5, sp\n\t"
+        "mov r4, #0\n\t"
+        "b 7f\n\t"
+        ".align 2, 0\n"
+    "2: .4byte 0xFFFFFE00\n"
+    "3: .4byte gUnknown_03000808\n"
+    "4: .4byte 0x04000208\n"
+    "5: .4byte gUnknown_030009FC\n"
+    "6:\n\t"
+        "lsl r0, r4, #0x10\n\t"
+        "lsr r0, r0, #0x10\n\t"
+        "add r1, r5, #0\n\t"
+        "bl sub_803AD38\n\t"
+        "lsl r0, r0, #0x10\n\t"
+        "cmp r0, #0\n\t"
+        "bne 12f\n\t"
+        "add r5, #8\n\t"
+        "add r4, #1\n\t"
+    "7:\n\t"
+        "ldr r0, 8f\n\t"
+        "ldr r0, [r0]\n\t"
+        "ldrh r0, [r0, #4]\n\t"
+        "cmp r4, r0\n\t"
+        "blt 6b\n\t"
+        "ldr r3, 9f\n\t"
+        "ldrh r2, [r3]\n\t"
+        "mov r0, #0\n\t"
+        "strh r0, [r3]\n\t"
+        "ldr r4, 10f\n\t"
+        "ldrh r1, [r4]\n\t"
+        "ldr r0, 11f\n\t"
+        "and r0, r1\n\t"
+        "strh r0, [r4]\n\t"
+        "strh r2, [r3]\n\t"
+        "mov r0, #1\n\t"
+        "strh r0, [r3]\n\t"
+        "mov r0, #0\n\t"
+        "b 14f\n\t"
+        ".align 2, 0\n"
+    "8: .4byte gUnknown_03001634\n"
+    "9: .4byte 0x04000208\n"
+    "10: .4byte 0x04000200\n"
+    "11: .4byte 0x0000FFDF\n"
+    "12:\n\t"
+        "ldr r3, 15f\n\t"
+        "ldrh r2, [r3]\n\t"
+        "mov r0, #0\n\t"
+        "strh r0, [r3]\n\t"
+        "ldr r4, 16f\n\t"
+        "ldrh r1, [r4]\n\t"
+        "ldr r0, 17f\n\t"
+        "and r0, r1\n\t"
+        "strh r0, [r4]\n\t"
+        "strh r2, [r3]\n\t"
+        "mov r0, #1\n\t"
+        "strh r0, [r3]\n\t"
+    "13:\n\t"
+        "mov r0, #1\n\t"
+        "neg r0, r0\n\t"
+    "14:\n\t"
+        "mov r3, #0x80\n\t"
+        "lsl r3, r3, #2\n\t"
+        "add sp, r3\n\t"
+        "pop {r4, r5, r6}\n\t"
+        "pop {r1}\n\t"
+        "bx r1\n\t"
+        ".align 2, 0\n"
+    "15: .4byte 0x04000208\n"
+    "16: .4byte 0x04000200\n"
+    "17: .4byte 0x0000FFDF\n"
+    );
 }
-#endif /* NON_MATCHING */
 
 extern struct AudioContext *gUnknown_030012BC;
 extern u32 sub_8001AB8(struct AudioContext *self);
