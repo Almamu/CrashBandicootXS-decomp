@@ -240,6 +240,17 @@ plain C didn't converge.
   driver, and the circular-buffer decoded-tile streaming loop; both
   keep `r8` live across most of their bodies. See
   [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
+- **`sub_8022D50`** (`src/system/game_loop40.c`, GitHub issue #34) - the
+  level-start/reset routine (`self+0x8c`/`0x90`-`0xa0` clears, the
+  `self+0x1b8`/`0x1bc` actor-slot teardown, the `gUnknown_030012EC`
+  array walk firing `sub_803AD7C` trampolines and setting bits in the
+  `gUnknown_030012B4+0x108` collision bitmap); every piece matches
+  byte-for-byte in isolation, but the loop's own `0xffff` sentinel has
+  to live in r7 for the whole array walk and hits the confirmed
+  never-adds-an-inline-asm-clobbered-r7-to-the-function's-own-push/pop-
+  list toolchain bug once every other quirk in the function is also
+  anchored. See
+  [docs/matching/issue-34-game-loop-8022d50-80255d4.md](../matching/issue-34-game-loop-8022d50-80255d4.md).
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
@@ -337,15 +348,24 @@ plain C didn't converge.
   the main per-frame game-loop driver, a ~730-instruction jump-table
   state machine. Not understood branch-by-branch with the precision a
   byte-exact reconstruction needs yet - see `docs/matching.md`.
-- **`sub_8022D50`** (`asm/code_3_2_17_22d50.s`, ROM `0x08022D50`) - a
-  level-start/reset routine with several still-uncharacterized callees
-  - see `docs/matching.md`.
 - **`sub_80255D4`** (`asm/code_3_2_17_255d4.s`, ROM `0x080255D4`,
-  GitHub issue #40) - a per-frame visible-object/window list processor
-  (DMA-writes to OBJ palette RAM and a BG window register, then walks a
-  small count-prefixed record list); several callees not characterized
-  precisely enough yet - see
-  [docs/matching/issue-40-terrain-tile-cache.md](../matching/issue-40-terrain-tile-cache.md).
+  GitHub issue #40/#34) - `self` is `*gUnknown_030012B4` (the collision-
+  bitmap base `sub_8025944`/`sub_802599C` etc. also operate on): on a
+  group change it DMA-zero-fills and `CpuSet`-mirrors the `self+8`/
+  `self+0x208` bit-grids, then walks the new group/item list firing
+  `sub_8025D28` trampolines (now characterized - a `{count,groups}`/
+  `{count,items}` two-level walk over the same list shape
+  `sub_8025894`, game_loop12.c, documents). A second half, gated on a
+  count-prefixed `{u32,u32}` array, cross-references `gUnknown_0300130C`
+  and links matching entries via `sub_8010714`/`sub_8010710` - but
+  chases a redirect-chain search through that same array when the
+  direct lookup fails, and the real-world relationship being re-linked
+  isn't pinned down with byte-exact-reconstruction confidence yet. Left
+  completely raw - see
+  [docs/matching/issue-34-game-loop-8022d50-80255d4.md](../matching/issue-34-game-loop-8022d50-80255d4.md)
+  (a follow-up pass on top of
+  [docs/matching/issue-40-terrain-tile-cache.md](../matching/issue-40-terrain-tile-cache.md)'s
+  original characterization).
 - **`sub_8023A1C`** (`asm/code_3_2_17_23a1c.s`, ROM
   `0x08023A1C`-`0x08024007`, GitHub issue #37) - a ~650-instruction
   jump-table-driven level-lifecycle continuation, called
