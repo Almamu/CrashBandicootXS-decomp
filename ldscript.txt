@@ -339,7 +339,7 @@ SECTIONS
         build/crashbandicootxs/src/graphics/level_graphics.o(.text);
         build/crashbandicootxs/asm/code_3_2_20_28568_c99c_31784_33ef4_355e0.o(.text);
         build/crashbandicootxs/src/audio/counter_selector.o(.text);
-        build/crashbandicootxs/asm/code_3_2_20a.o(.text);
+        build/crashbandicootxs/src/audio/counter_selector_icons.o(.text);
         build/crashbandicootxs/src/audio/counter_selector_setup.o(.text);
         build/crashbandicootxs/src/util/math_div64_util.o(.text);
         build/crashbandicootxs/src/audio/song_slot_lookup.o(.text);
@@ -355,7 +355,7 @@ SECTIONS
         build/crashbandicootxs/src/audio/gax_note_param.o(.text);
         build/crashbandicootxs/src/audio/gax_channel_mute_volume.o(.text);
         build/crashbandicootxs/src/audio/gax_dma_stop.o(.text);
-        build/crashbandicootxs/asm/code_3_2_20e_9214.o(.text);
+        build/crashbandicootxs/src/audio/gax_text_render.o(.text);
         build/crashbandicootxs/src/audio/gax_swi.o(.text);
         build/crashbandicootxs/src/audio/gax_fatal_error.o(.text);
         build/crashbandicootxs/src/audio/gax_sound_handler_info.o(.text);
