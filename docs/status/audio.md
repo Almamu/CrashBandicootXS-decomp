@@ -84,6 +84,9 @@ pass) and
   per-type function-pointer table)
 - `src/audio/gax_sound_handler_channel.c` - `nullsub_40` (the "Channel"
   type's unknown_fn)
+- `src/audio/gax_text_render.c` - `sub_8039214` (word-wrap text/
+  console-tile renderer, called by `sub_80392E0`) - see
+  [docs/matching/issue-67-word-wrap-text-renderer.md](../matching/issue-67-word-wrap-text-renderer.md)
 
 These read as genuine GAX2 mixer/SoundHandler internals (not
 game/HUD-side callers), the first real dive past `sub_80381FC`'s single
@@ -131,6 +134,15 @@ See docs/matching.md for `PlaySfx`'s remaining gap.
 
 ## Parked - NAKED asm transcription (byte-correct, not decompiled C)
 
+- **`sub_80372BC`/`sub_8037388`** (`src/audio/counter_selector_icons.c`,
+  the counter widget's per-frame icon draw loop and its one-time
+  tile-cache init helper) - fully understood, but hit the same
+  many-register gcc-2.9 allocation ceiling already documented for
+  `sub_8006600` (`src/graphics/oam_count.c`) and `sub_80062A8`
+  (`src/graphics/settings_menu14.c`, whose tail is this same
+  `sub_803AD7C`/`sub_8006C58`/constant-reuse idiom `sub_8037388`'s tail
+  uses). Byte-verified NAKED transcriptions - see
+  [docs/matching/issue-67-counter-selector-icons.md](../matching/issue-67-counter-selector-icons.md).
 - **`sub_80019F8`** (`src/audio/audio_context.c`, ambient-sfx-channel
   play-request driver) - a full C reconstruction closed the `u8`
   stack-parameter byte-load gap but left a base-volume field-address
@@ -298,10 +310,6 @@ Everything else in `asm/code_3.s`'s `0x08037110`-`0x0803B0C4` range
 actually audio-related - see [docs/audio.md](../audio.md)), including,
 from the `0x08037110`-`0x08038538` pass specifically:
 
-- `sub_80372BC`/`sub_8037388` - fully understood (an icon-manager draw
-  loop and tile-cache-init helper for the counter widget above) but hit
-  the same many-register gcc-2.9 allocation difficulty already
-  documented for `sub_8006600` (`src/graphics/oam_count.c`).
 - `sub_8037648`/`sub_8037A7C`/`sub_8037E54`/`sub_8037ECC`/`sub_8037F3C` -
   confirmed *not* GAX2 code at all (per `docs/audio.md`'s own
   `sub_8037648`/`sub_8037A7C` entries) - a generic 64-bit software
@@ -340,10 +348,16 @@ loop-allocation ceiling" verdict for the mute/volume family turned out to
 be an artifact of caching the channel chase into a local rather than a
 genuine gcc-2.9 gap - see that writeup for the technique that closed it.
 
-- `sub_8039214` - a word-wrap text/console-tile renderer (called by the
-  now-matched `sub_80392E0`); fully understood, not attempted as a C
-  reconstruction this pass - complex nested-loop control flow
-  deprioritized in favor of the five matches this pass did land.
+`sub_8039214` (word-wrap text/console-tile renderer, called by the
+matched `sub_80392E0`) is now matched, real C - see
+[docs/matching/issue-67-word-wrap-text-renderer.md](../matching/issue-67-word-wrap-text-renderer.md)
+and the "Matched" section above.
+
+`sub_80372BC`/`sub_8037388` (icon-manager draw loop / tile-cache init for
+the counter widget, from the `0x08037110`-`0x08038538` pass) are now
+parked as byte-verified NAKED transcriptions - see
+[docs/matching/issue-67-counter-selector-icons.md](../matching/issue-67-counter-selector-icons.md)
+and the "Parked - NAKED asm transcription(s)" section below.
 
 `sub_8039518`/`sub_80395A4`/`sub_8039658` (the "Channel" SoundHandler
 type's init_fn/play_fn and the latter's direct callee) - listed raw
