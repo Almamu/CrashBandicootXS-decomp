@@ -380,6 +380,24 @@ from "core" graphics.
   matched in a later pass that closed the register-pinning/pool-split
   gaps documented in that same writeup (all 25 of this chunk's functions
   are now real C, none NAKED).
+- `src/graphics/actor_part107.c` (new file, ROM 0x0802BC68-0x0802BED8 -
+  the literal tail of `asm/code_3_2_20_8b7c_ac28.s`, one raw file's
+  leftover portion out of GitHub issue #50's original chunk scope;
+  everything before it in that raw file - `sub_802AC28`'s giant
+  kind-dispatch actor-part-factory constructor and the run of actor-
+  part-factory/animation-table-state functions between it and here -
+  stays raw, still out of scope; see
+  [docs/matching/issue-50-actor-bc68.md](../matching/issue-50-actor-bc68.md)):
+  `sub_802BC68`, `sub_802BD18`, `sub_802BD24`, `sub_802BD64`,
+  `sub_802BDD0`, `sub_802BE34`, `sub_802BE80` - an accumulator-drain/
+  reward-dispenser (docs/rom_map.md already reads it as a structural
+  twin of `actor_part44.c`'s `sub_802F3BC`), a trivial byte getter, two
+  frame-counter-threshold state-reset functions sharing the state/
+  table-index/anim-frame reset idiom, and a three-axis hazard-threshold
+  driver family (screen-flash trigger via `sub_800132C`, hazard-
+  direction arming via `sub_802A668`) on the same `gUnknown_0300148x`/
+  `gUnknown_030014Ax` global cluster `actor_part19.c`/`actor_part44.c`
+  already established; matched.
 
 - `src/graphics/actor_part57.c` (new file, GitHub issue #19, ROM
   0x08015840-0x080159A4 - recategorized `graphics`->`actor` from the
