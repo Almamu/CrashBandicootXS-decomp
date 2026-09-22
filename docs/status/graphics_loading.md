@@ -8,6 +8,23 @@ family. Filed under `src/graphics/` on disk, tracked as its own
 
 ## Matched
 
+- **`InitObjTileFreeList`**, **`FreeVramTileBlock`** (`src/graphics/sprite_frame_pool.c`,
+  the OBJ-tile VRAM free-list allocator's init/free pair) - matched.
+- **`sub_8028D6C`**, **`sub_8028D94`** (`src/graphics/sprite_frame_queue.c`) -
+  matched, both `UNUSED` (no caller anywhere in the ROM). `sub_8028D94`
+  never had its own `thumb_func_start` in the original disassembly - see
+  `expected/corrections.txt`'s `split 0x08028D94` entry.
+- **`FreeObjTileFreeList`**, **`QueueSpriteFrameOam`**, **`FreeSpriteFrameOamQueue`**,
+  **`FlushSpriteFrameOamQueue`**, **`InitSpriteFrameOamQueue`**,
+  **`LoadSpriteFrameTiles`**, **`SetupSpriteFrameOam`**, **`FreeSpriteFrameCache`**,
+  **`AgeSpriteFrameCache`**, **`InitSpriteFrameCache`**, **`GetSpriteShapeSizeBits`**,
+  **`FreeCategorySpriteSheet`**, **`DecompressCategorySpriteSheet`**
+  (`src/graphics/sprite_frame_queue.c`) - the per-frame overflow OAM/affine
+  queue and the sprite-frame VRAM cache built on top of the allocator
+  above; matched. See
+  [issue-47-graphics-loading.md](../matching/issue-47-graphics-loading.md)
+  for the full write-up (issue #47).
+
 - **`sub_801E640`** (`src/graphics/graphics_package_1e640.c`)
 - **`sub_801E8F8`** (`src/graphics/graphics_package_1e8f8.c`) - DMA3
   fills one VRAM tile with a solid color
@@ -95,6 +112,14 @@ plain C didn't converge.
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
+- **`AllocVramTileBlock`** (real bytes in `asm/code_3_2_20_8b7c_cd4.s` under
+  a `.if NON_MATCHING == 0` guard, C in `src/graphics/sprite_frame_queue.c`) -
+  the OBJ-tile VRAM allocator's `mem_alloc`-shaped next-fit search; every
+  operation/field/register matches the ROM exactly except the search
+  loop's entry shape, a gcc-2.9 cross-jump/tail-merging artifact that
+  resists every C phrasing tried - see
+  [issue-47-graphics-loading.md](../matching/issue-47-graphics-loading.md)
+  for the full writeup.
 - **`LoadBg2Background`** (real bytes in
   `asm/code_3_2_20_28568_c99c_31784_33ef4_355e0.s` under a
   `.if NON_MATCHING == 0` guard, C in `src/graphics/level_graphics.c`) -
