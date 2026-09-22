@@ -9,7 +9,7 @@
  * only under `make NON_MATCHING=1`, the checked-in assembly
  * (asm/code_3_2_20_28568_c99c_2f338.s) is used otherwise.
  * Computes two `self`-keyframe-driven sizes (byte0*byte1, scaled by
- * 32) via `sub_8028CD4`, storing them into the `gUnknown_03001518`
+ * 32) via `AllocVramTileBlock`, storing them into the `gUnknown_03001518`
  * pair, then arms `gUnknown_03001510`/clears `gUnknown_03001514`.
  * Semantics fully understood and every load/store, branch and call is
  * confirmed correct - both keyframe-size sub-blocks are literally
@@ -23,7 +23,7 @@
  * (separate locals, a `register`-pinned intermediate, an `asm`
  * barrier) found that reproduces the extra copy without also
  * eliminating it differently. */
-extern void *sub_8028CD4(s32 size);
+extern void *AllocVramTileBlock(s32 size);
 extern void *gUnknown_03001518[2];
 extern s32 gUnknown_03001510;
 extern s32 gUnknown_03001514;
@@ -41,7 +41,7 @@ void sub_802F338(void *selfArg)
         u8 **table2 = *(u8 ***)(self + 4);
         u8 *rec = table2[pos];
 
-        gUnknown_03001518[0] = sub_8028CD4((rec[1] * rec[0]) << 5);
+        gUnknown_03001518[0] = AllocVramTileBlock((rec[1] * rec[0]) << 5);
     }
     {
         s32 accum = *(s32 *)(self + 8) >> 8;
@@ -52,7 +52,7 @@ void sub_802F338(void *selfArg)
         u8 **table2 = *(u8 ***)(self + 4);
         u8 *rec = table2[pos];
 
-        gUnknown_03001518[1] = sub_8028CD4((rec[1] * rec[0]) << 5);
+        gUnknown_03001518[1] = AllocVramTileBlock((rec[1] * rec[0]) << 5);
     }
 
     gUnknown_03001510 = 1;

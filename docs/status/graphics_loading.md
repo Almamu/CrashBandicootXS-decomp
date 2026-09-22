@@ -8,6 +8,23 @@ family. Filed under `src/graphics/` on disk, tracked as its own
 
 ## Matched
 
+- **`InitObjTileFreeList`**, **`FreeVramTileBlock`** (`src/graphics/sprite_frame_pool.c`,
+  the OBJ-tile VRAM free-list allocator's init/free pair) - matched.
+- **`sub_8028D6C`**, **`sub_8028D94`** (`src/graphics/sprite_frame_queue.c`) -
+  matched, both `UNUSED` (no caller anywhere in the ROM). `sub_8028D94`
+  never had its own `thumb_func_start` in the original disassembly - see
+  `expected/corrections.txt`'s `split 0x08028D94` entry.
+- **`FreeObjTileFreeList`**, **`QueueSpriteFrameOam`**, **`FreeSpriteFrameOamQueue`**,
+  **`FlushSpriteFrameOamQueue`**, **`InitSpriteFrameOamQueue`**,
+  **`LoadSpriteFrameTiles`**, **`SetupSpriteFrameOam`**, **`FreeSpriteFrameCache`**,
+  **`AgeSpriteFrameCache`**, **`InitSpriteFrameCache`**, **`GetSpriteShapeSizeBits`**,
+  **`FreeCategorySpriteSheet`**, **`DecompressCategorySpriteSheet`**
+  (`src/graphics/sprite_frame_queue.c`) - the per-frame overflow OAM/affine
+  queue and the sprite-frame VRAM cache built on top of the allocator
+  above; matched. See
+  [issue-47-graphics-loading.md](../matching/issue-47-graphics-loading.md)
+  for the full write-up (issue #47).
+
 - **`sub_801E640`** (`src/graphics/graphics_package_1e640.c`)
 - **`sub_801E8F8`** (`src/graphics/graphics_package_1e8f8.c`) - DMA3
   fills one VRAM tile with a solid color
@@ -49,6 +66,25 @@ transcription" below.)
   `asm/code_3_2_17_1e990.s`/`asm/code_3_2_17_1feec.s` - same doc has
   the full list and what's known about each one's tail-shape
   variant.
+- **`sub_8021668`**/**`sub_8021748`**/**`sub_80217D0`**/**`sub_802183C`**/
+  **`sub_80218C4`**/**`sub_80218E8`**/**`sub_8021974`**/**`sub_8021998`**/
+  **`sub_80219BC`**/**`sub_80219E0`**/**`nullsub_21`**/**`sub_8021A00`**/
+  **`sub_8021A4C`**/**`sub_8021A70`**/**`sub_8021A94`**/**`sub_8021AB8`**/
+  **`sub_8021ADC`**/**`sub_8021B00`**/**`sub_8021B24`**/**`sub_8021B48`**/
+  **`sub_8021B6C`**/**`sub_8021B90`**/**`sub_8021BB4`**/**`sub_8021BD8`**
+  (`src/graphics/graphics_loading_21668.o`) - issue #31, fourth pass:
+  the last "two-line text popup" sibling (OAM-trio tail variant), the
+  `gStaticData_084A5600`-record spawner family registering into
+  `gUnknown_030012F8`, plain `sub_801A878`/`sub_801B984` trampolines, a
+  `sub_800CB40`-based constructor, and 12 more plain `sub_800FF0C`
+  entity-constructor trampolines (types `0x12`-`7`) - matched. This runs
+  through to the end of what used to be `asm/code_3_2_17_21280.s`, which
+  is now trimmed to just `sub_8021280`-`sub_802155C` (see "Left raw" in
+  the linked doc). `sub_802190C`, interleaved between two matched
+  ranges of this same file, is NAKED - see "Parked - NAKED
+  transcription" below. See
+  [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md)'s
+  "Fourth pass".
 - **`sub_8021D80`**, **`sub_8021DFC`**, **`sub_8021E78`**, **`sub_8021EF4`**,
   **`sub_8021F70`**, **`sub_802200C`**, **`sub_80220C4`**, **`sub_802209C`**,
   **`sub_8022158`**, **`nullsub_22`**, **`sub_802218C`**, **`sub_80221A4`**,
@@ -92,9 +128,22 @@ plain C didn't converge.
   full-spawn effect triggers gated by a `gUnknown_030012C0+2` flag bit.
   See
   [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md).
+- **`sub_802190C`** (`src/graphics/graphics_loading_21668.o`) - a
+  gated `sub_801A878`/`sub_80234F4` dispatcher, same OR-gated id-choice
+  shape as the twin family above. See
+  [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md)'s
+  "Fourth pass".
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
+- **`AllocVramTileBlock`** (real bytes in `asm/code_3_2_20_8b7c_cd4.s` under
+  a `.if NON_MATCHING == 0` guard, C in `src/graphics/sprite_frame_queue.c`) -
+  the OBJ-tile VRAM allocator's `mem_alloc`-shaped next-fit search; every
+  operation/field/register matches the ROM exactly except the search
+  loop's entry shape, a gcc-2.9 cross-jump/tail-merging artifact that
+  resists every C phrasing tried - see
+  [issue-47-graphics-loading.md](../matching/issue-47-graphics-loading.md)
+  for the full writeup.
 - **`LoadBg2Background`** (real bytes in
   `asm/code_3_2_20_28568_c99c_31784_33ef4_355e0.s` under a
   `.if NON_MATCHING == 0` guard, C in `src/graphics/level_graphics.c`) -

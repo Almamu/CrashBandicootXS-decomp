@@ -74,3 +74,24 @@ split 0x0803B5AC sub_803B5AC
 split 0x0803B5DC sub_803B5DC
 split 0x0803B5E0 nullsub_44
 split 0x0803B5E4 sub_803B5E4
+
+# GitHub issue #47, graphics_loading (sprite frame VRAM pool/OAM queue
+# cluster at 0x08028BA0-0x080291A4) - see src/graphics/sprite_frame_pool.c
+# and src/graphics/sprite_frame_queue.c.
+rename sub_8028C48 FreeVramTileBlock
+rename sub_8028CD4 AllocVramTileBlock
+rename sub_8028DB8 FreeObjTileFreeList
+rename sub_8028DD8 QueueSpriteFrameOam
+rename sub_8028E88 FreeSpriteFrameOamQueue
+rename sub_8028EA8 FlushSpriteFrameOamQueue
+rename sub_8028EF0 InitSpriteFrameOamQueue
+rename sub_802907C FreeSpriteFrameCache
+rename sub_8029090 AgeSpriteFrameCache
+rename sub_80290BC InitSpriteFrameCache
+rename sub_8029108 GetSpriteShapeSizeBits
+rename sub_8029168 FreeCategorySpriteSheet
+# sub_8028D6C's real body runs to 0x08028D94, then a second, separate
+# function starts there with no thumb_func_start of its own in the
+# original disassembly (same pattern as sub_800039C above) - see
+# src/graphics/sprite_frame_queue.c's comment on sub_8028D94.
+split 0x08028D94 sub_8028D94

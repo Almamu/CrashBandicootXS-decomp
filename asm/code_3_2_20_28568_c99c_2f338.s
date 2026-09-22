@@ -34,7 +34,7 @@ sub_802F338: @ 0x0802F338
 	muls r2, r1, r2
 	adds r0, r2, #0
 	lsls r0, r0, #5
-	bl sub_8028CD4
+	bl AllocVramTileBlock
 	ldr r5, _0802F3B0 @ =gUnknown_03001518
 	str r0, [r5]
 	ldr r2, [r4, #8]
@@ -58,7 +58,7 @@ sub_802F338: @ 0x0802F338
 	muls r1, r3, r1
 	adds r0, r1, #0
 	lsls r0, r0, #5
-	bl sub_8028CD4
+	bl AllocVramTileBlock
 	str r0, [r5, #4]
 	ldr r1, _0802F3B4 @ =gUnknown_03001510
 	movs r0, #1

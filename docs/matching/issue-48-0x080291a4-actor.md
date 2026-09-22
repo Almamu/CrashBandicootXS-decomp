@@ -9,7 +9,7 @@ same ROM region rather than being part of the category system itself.
 
 ## Matched (real C)
 
-- `SetupActorVramPool` (`actor_part87.c`) - pins the current category's
+- `SetupActorVramPool` (`actor_part104.c`) - pins the current category's
   tile-cache slots (2 for type-0 sprite families, 5 for type-1/2) from
   two still-unnamed ROM-side sub-tables, then (re)builds the category's
   status-icon OAM row via `sub_802732C`.
@@ -17,11 +17,11 @@ same ROM region rather than being part of the category system itself.
   category's `sub_effect_table` entries (`struct sub_effect_record`,
   `include/actor_anim.h`) match one of two fixed `variantA` byte sets,
   picked by the category's `type` field.
-- `sub_8029720`/`sub_8029730`/`sub_802973C` (`actor_part88.c`) - trivial
+- `sub_8029720`/`sub_8029730`/`sub_802973C` (`actor_part105.c`) - trivial
   frame-tick counter accessors.
 - `sub_8029748`/`sub_8029794` (`actor_part95.c`) - category tick
   re-basing and an active-instance-count threshold test.
-- `nullsub_5`/`sub_8029AC4` (`actor_part89.c`), `sub_8029ADC`
+- `nullsub_5`/`sub_8029AC4` (`actor_part106.c`), `sub_8029ADC`
   (`actor_part96.c`), `sub_8029B2C` (`actor_part90.c`), `sub_8029B38`
   (`actor_part97.c`), `sub_8029B8C`/`sub_8029B98` (`actor_part91.c`),
   `sub_8029BAC`/`sub_8029C30`/`sub_8029D8C` (`actor_part98.c`),

@@ -65,7 +65,7 @@ extern u8 sub_802DD9C(void *self);
 extern void sub_8022FEC(void *self);
 extern s32 sub_8023464(void *self);
 extern void sub_8023430(void *self);
-extern void sub_8028C48(void *arg0);
+extern void FreeVramTileBlock(void *arg0);
 extern void sub_802AAB4(s32 arg0);
 extern void sub_802B730(void *arg0);
 extern void sub_8029720(void);
@@ -382,7 +382,7 @@ void sub_802C14C(void *selfArg)
 /* Teardown, gated by `arg1` bit 0: temporarily swaps `self+0x50`'s
  * vtable to `gStaticData_087E4E54` to run `gUnknown_03001488` drain
  * calls into `sub_8023430(gUnknown_030012C0)`, runs two
- * `sub_8028C48` cleanup calls on `gUnknown_030014B0[0]`/`[1]`, sets
+ * `FreeVramTileBlock` cleanup calls on `gUnknown_030014B0[0]`/`[1]`, sets
  * `self+0x50` to the "dead" vtable `gStaticData_087E4DF4`, unlinks
  * `self` from the circular `+0x48`(next)/`+0x4c`(prev) list, and frees
  * `self` when `arg1 & 1`. */
@@ -400,8 +400,8 @@ void sub_802C19C(void *selfArg, u32 arg1param)
         } while (gUnknown_03001488 != 0);
     }
 
-    sub_8028C48(gUnknown_030014B0[0]);
-    sub_8028C48(gUnknown_030014B0[1]);
+    FreeVramTileBlock(gUnknown_030014B0[0]);
+    FreeVramTileBlock(gUnknown_030014B0[1]);
 
     *(u8 **)(self + 0x50) = gStaticData_087E4DF4;
 

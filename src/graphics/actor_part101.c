@@ -9,8 +9,8 @@
  * symbol name alone.
  *
  *   sub_8022CA0(void *arg0)
- *   DecompressCategorySpriteSheet(const u8 *sheet)      - matched, actor_part87.c's own predecessor unit
- *   SetupActorVramPool(void)                              - matched, actor_part87.c
+ *   DecompressCategorySpriteSheet(const u8 *sheet)      - matched, actor_part104.c's own predecessor unit
+ *   SetupActorVramPool(void)                              - matched, actor_part104.c
  *   sub_802AAFC(void)
  *   sub_802ABFC(s32 flag)
  *   sub_8029C30(s32 kind)                                   - matched, actor_part98.c
@@ -29,27 +29,27 @@
  *   sub_8006A78(void *arg0)
  *   sub_8028400(void *state)                                      - matched, hud_blink.c
  *   sub_80274EC(void *self)
- *   sub_8028EA8(void)
+ *   FlushSpriteFrameOamQueue(void)
  *   sub_80006A8(void)
  *   sub_8029E50(void)                                               - matched, actor_part99.c
  *   sub_8006AAC(void *arg0)
  *   FlushVramDmaQueue(void)
  *   sub_8029ADC(void)                                                - matched, actor_part96.c
  *   sub_802A650(void)                                                 - matched, actor_part94.c
- *   sub_8029090(void)
+ *   AgeSpriteFrameCache(void)
  *   sub_8001510(void) -> s32
  *   sub_802A5AC(void) -> s32                                           - matched, actor_part94.c
  *   mem_alloc(u32 size, s32 arg1) -> u8*                                - src/system/memory.c
- *   sub_802907C(void)
- *   sub_8028E88(void)
- *   sub_8028DB8(void)
+ *   FreeSpriteFrameCache(void)
+ *   FreeSpriteFrameOamQueue(void)
+ *   FreeObjTileFreeList(void)
  *   sub_8004D74(void) -> s32
  *   mem_free(u8 *address)                                                - src/system/memory.c
  *   sub_802996C(void)                                                     - NAKED-parked, actor_part95.c
  *   sub_802A5C4(void)                                                      - matched, actor_part94.c
  *   sub_8028504(void *arg0)
- *   sub_8029168(void)
- *   nullsub_5(void)                                                         - matched, actor_part89.c
+ *   FreeCategorySpriteSheet(void)
+ *   nullsub_5(void)                                                         - matched, actor_part106.c
  *   nullsub_6(void)                                                          - matched, actor_part92.c
  *   sub_802A5E4(void)                                                        - matched, actor_part94.c
  *
@@ -346,7 +346,7 @@ NAKED s32 InitActorCategory(s32 category)
         "bl sub_8028400\n\t"
         "ldr r0, [r4]\n\t"
         "bl sub_80274EC\n\t"
-        "bl sub_8028EA8\n\t"
+        "bl FlushSpriteFrameOamQueue\n\t"
         "bl sub_80006A8\n\t"
         "bl sub_8029E50\n\t"
         "mov r3, sb\n\t"
@@ -355,7 +355,7 @@ NAKED s32 InitActorCategory(s32 category)
         "bl FlushVramDmaQueue\n\t"
         "bl sub_8029ADC\n\t"
         "bl sub_802A650\n\t"
-        "bl sub_8029090\n\t"
+        "bl AgeSpriteFrameCache\n\t"
         "cmp r5, #0\n\t"
         "beq 52f\n\t"
         "cmp r5, #1\n\t"
@@ -454,9 +454,9 @@ NAKED s32 InitActorCategory(s32 category)
         "ldr r0, 60f\n\t"
         "str r0, [r6, #8]\n\t"
         "ldr r0, [r6, #8]\n\t"
-        "bl sub_802907C\n\t"
-        "bl sub_8028E88\n\t"
-        "bl sub_8028DB8\n\t"
+        "bl FreeSpriteFrameCache\n\t"
+        "bl FreeSpriteFrameOamQueue\n\t"
+        "bl FreeObjTileFreeList\n\t"
         "bl sub_8004D74\n\t"
         "add r5, r0, #0\n\t"
         "bl SetupActorVramPool\n\t"
@@ -524,10 +524,10 @@ NAKED s32 InitActorCategory(s32 category)
         "b 9b\n\t"
         "65:\n\t"
         "bl nullsub_6\n\t"
-        "bl sub_802907C\n\t"
-        "bl sub_8028E88\n\t"
-        "bl sub_8028DB8\n\t"
-        "bl sub_8029168\n\t"
+        "bl FreeSpriteFrameCache\n\t"
+        "bl FreeSpriteFrameOamQueue\n\t"
+        "bl FreeObjTileFreeList\n\t"
+        "bl FreeCategorySpriteSheet\n\t"
         "mov r1, #0x80\n\t"
         "lsl r1, r1, #0x13\n\t"
         "mov r0, #0x41\n\t"
