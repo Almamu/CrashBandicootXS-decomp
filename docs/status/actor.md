@@ -471,6 +471,26 @@ from "core" graphics.
   became two named `s16` fields (`loopThreshold`/`loopBase`), both read
   by `sub_803B4EC`.
 
+- `src/graphics/actor_part87.c`/`actor_part100.c`/`actor_part88.c`/
+  `actor_part95.c`/`actor_part89.c`/`actor_part96.c`/`actor_part90.c`/
+  `actor_part97.c`/`actor_part91.c`/`actor_part98.c`/`actor_part92.c`
+  (new files, GitHub issue #48, ROM 0x080291A4-0x08029E4C):
+  `SetupActorVramPool` (pins the category's tile-cache slots and
+  rebuilds its status-icon OAM row), `sub_802968C` (counts
+  `sub_effect_table` entries matching a type-dependent "kind" byte
+  set), and the rest of a BG-tilemap double-buffer scroll-effect
+  subsystem interleaved in this same ROM region (`sub_8029720`-
+  `sub_8029E40`, minus the NAKED functions below) - see
+  [docs/matching/issue-48-0x080291a4-actor.md](../matching/issue-48-0x080291a4-actor.md).
+- `src/graphics/actor_part92.c`/`actor_part99.c`/`actor_part93.c`/
+  `actor_part94.c` (GitHub issue #49, ROM 0x08029E4C-0x0802A69C):
+  `nullsub_6`, `sub_8029E50`, `sub_8029E98`, `sub_8029EB4` (the
+  BG2-affine scroll subsystem's tail), the `gUnknown_03001400`
+  `sub_effect_table` record accessor family (`sub_802A4D4`-
+  `sub_802A650`/`sub_802A668`), and a circular-list marker-drawing pass
+  (`sub_802A5E4`) - see
+  [docs/matching/issue-49-0x08029e4c-actor.md](../matching/issue-49-0x08029e4c-actor.md).
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
@@ -677,6 +697,56 @@ plain C didn't converge.
   a further sibling/callee handling frame-counter thresholds, D-pad
   input, and `sub_8012A7C`'s busy-check. See
   `docs/matching/issue-16-actor-remainder.md`.
+- **`InitActorCategory`** (`src/graphics/actor_part101.c`, GitHub issue
+  #48) - the category (re)initialization + per-VBlank loading-screen
+  driver. Fully understood; sustains four simultaneous high-register
+  pins (`sb`/`sl`/`r8`/`ip`, each reused for 2-3 different roles) plus a
+  stack-spilled loop-state variable threaded through many non-adjacent
+  gotos, on a ~230-instruction, 20+-call, four-state loop body - a much
+  larger instance of this project's "many-high-register-difficulty" gap
+  (`sub_80091D4`/`sub_8009868` above). Verified byte-for-byte identical
+  to the original raw disassembly (both assembled independently and
+  compared directly, not just against `baserom.gba`). See
+  [docs/matching/issue-48-0x080291a4-actor.md](../matching/issue-48-0x080291a4-actor.md).
+- **`sub_80297C8`**, **`sub_8029890`**, **`sub_802996C`**
+  (`src/graphics/actor_part95.c`, GitHub issue #48) - a "console"/text-
+  plane cursor-cell DMA trigger, its geometry (re)configuration entry
+  point, and the VRAM tilemap double-buffer fill pair it calls. Same
+  register-role-permutation gap as `InitActorCategory` above, at
+  smaller scale. See
+  [docs/matching/issue-48-0x080291a4-actor.md](../matching/issue-48-0x080291a4-actor.md).
+- **`sub_8029BC4`** (`src/graphics/actor_part98.c`, GitHub issue #48) -
+  a VRAM tilemap-fill nested loop sharing `sub_802996C`'s shape and
+  register-pressure wall. See
+  [docs/matching/issue-48-0x080291a4-actor.md](../matching/issue-48-0x080291a4-actor.md).
+- **`SelectActorCategory`** (`src/graphics/actor_part102.c`, GitHub
+  issue #49) - sets up the selected category's runtime state and runs a
+  two-pass `sub_effect_table` threshold scan. A real-C attempt
+  reproduced every instruction but needed one extra live register
+  (`r9`) beyond the ROM's own `sb`/`r8` pair. See
+  [docs/matching/issue-49-0x08029e4c-actor.md](../matching/issue-49-0x08029e4c-actor.md).
+- **`sub_802A018`**, **`sub_802A110`**, **`sub_802A3AC`**
+  (`src/graphics/actor_part103.c`, GitHub issue #49) - `self`-vs-player
+  3-axis AABB overlap tests (`sub_802A018`/`sub_802A110` near-identical,
+  differing only in guard byte; `sub_802A3AC` wraps the same test in an
+  actor-list walk) hitting this project's confirmed categorical
+  gcc-2.9 `r7` register-allocation bug - the same wall as
+  `sub_802D7B0`/`sub_802DD9C`/`sub_802C7A8` above. See
+  [docs/matching/issue-49-0x08029e4c-actor.md](../matching/issue-49-0x08029e4c-actor.md).
+- **`sub_802A208`** (`src/graphics/actor_part103.c`, GitHub issue #49) -
+  a scroll enter/exit trampoline + `sub_effect_table` draw loop +
+  double actor-list walk. Not the AABB shape above - a related but
+  distinct gap, needing one extra high register (`r9`) beyond the ROM's
+  single `r8` to keep three values simultaneously live. See
+  [docs/matching/issue-49-0x08029e4c-actor.md](../matching/issue-49-0x08029e4c-actor.md).
+- **`sub_802A674`**, **`sub_802A688`** (`src/graphics/actor_part94.c`,
+  GitHub issue #49) - plain one-call trampolines, identical in shape to
+  already-matched siblings elsewhere (`actor_part50.c`'s `sub_802A69C`);
+  this compiler's epilogue register allocator picks `r1` instead of the
+  usual `r0` for these two specific functions, a quirk that looks tied
+  to this translation unit's cumulative pseudo-register count rather
+  than anything controllable per-function. See
+  [docs/matching/issue-49-0x08029e4c-actor.md](../matching/issue-49-0x08029e4c-actor.md).
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
