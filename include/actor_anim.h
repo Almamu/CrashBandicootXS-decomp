@@ -99,13 +99,37 @@ struct sprite_frame {
  * unrelated - it doesn't decode as a 4th/5th/6th/7th vtable no matter
  * how it's sliced (verified directly against the raw bytes), so
  * there's no "categories 3-6 vtable" to go looking for. */
+/* category_descriptor.sub_effect_table's record layout - resolved from
+ * `sub_802968C` (counts matching `variantA` entries), `SelectActorCategory`
+ * (which stores this pointer directly into `gUnknown_03001400`, indexing
+ * with `idx*0x14`), and the `sub_802A504`/`51C`/`540`/`558`/`570`
+ * per-index accessor family (see docs/rom_map.md's "The sub_802A5xx
+ * siblings pin down sub_effect_table's runtime shape"). Record 0 doubles
+ * as a combined header+entry: `field_04` there is the table's real entry
+ * count (read by `sub_802968C`/`SelectActorCategory`), while every
+ * record's own `field_00`/`field_04` otherwise serve as the *next*
+ * record's threshold/opaque-accessor fields for `sub_802A51C`/
+ * `sub_802A504` (`idx*0x14+0x14 == (idx+1)*0x14+0x0`, i.e. those two
+ * accessors are reading one record ahead, not an oversized record). */
+struct sub_effect_record {
+    s32 field_00;   // 0x00 - selection threshold value (record 0: unused as a threshold, see above)
+    s32 field_04;   // 0x04 - record 0 only: the table's real entry count
+    u8 variantA;    // 0x08 - "kind"/kind byte, gated by category type in sub_802968C
+    u8 variantB;    // 0x09 - alternate kind byte, selected by sub_802A570 when gUnknown_030012C0+0x8c is set
+    u8 variantC;    // 0x0a - alternate kind byte, selected by sub_802A570 when gUnknown_03001414 is set
+    u8 pad_0b;
+    s32 offsetX;    // 0x0c - Q8.8 after sub_802A558's <<8
+    s32 offsetY;    // 0x10 - Q8.8 after sub_802A540's <<8
+}; // 0x14
+COMPILE_TIME_ASSERT(sizeof(struct sub_effect_record) == 0x14);
+
 struct category_descriptor {
     u32 type;                       // 0x00 - 0 for categories 0-2, 1 for 3-5, 2 for 6 - selects the shared vtable, see above
     void *family_shared_04;         // 0x04 - constant across all categories in one family; pointer-shaped, role unknown
     u32 family_shared_08;           // 0x08 - constant across all categories in one family; role unknown
     void *conditional_ptr_0C;       // 0x0C - NULL for categories 0-2 (type 0); a real pointer for every category in the 3-6 family (5 and 6 alias the exact same pointer) - a family-2-only extra graphics blob, not a per-category flag. When non-NULL, sub_802F7B0 (not reversed) DMAs a small header-prefixed tile blob from it to VRAM once during category init - see docs/graphics.md
     const u16 *palette;             // 0x10 - raw 16-color RGB555 palette, DMA'd to OBJ palette RAM (InitActorCategory)
-    void *sub_effect_table;         // 0x14 - a second per-category table (threshold-triggered sub-effects/spawns via vtable slot 1); {u32 count; 0x14-byte-stride records, matched byte at +0x8 against a type-dependent set} per sub_802968C (not reversed to C), see docs/graphics.md and docs/rom_map.md's "Resolved category_descriptor.sub_effect_table's record layout"
+    struct sub_effect_record *sub_effect_table; // 0x14 - a second per-category table (threshold-triggered sub-effects/spawns via vtable slot 1); see struct sub_effect_record above
     struct anim_table_record *anim_table; // 0x18 - this category's animation table base (gStaticData_081796CC or gStaticData_0817B2A4)
     const u8 *sprite_sheet;         // 0x1C - this category family's LZ77-compressed sprite sheet
     u32 unknown_20;                 // 0x20
@@ -130,8 +154,8 @@ COMPILE_TIME_ASSERT(sizeof(struct category_descriptor) == 0x34);
  * hold obviously-invalid addresses and appear to simply be unused for
  * that type. Placeholder names for the per-type functions once matched
  * (slots 2-6, the ones that actually differ between types):
- * Actor0_*/Actor1_*/Actor2_* rather than a guessed real-world name - see
- * docs/naming.md. */
+ * "Actor0_", "Actor1_", "Actor2_" prefixes rather than a guessed
+ * real-world name - see docs/naming.md. */
 struct category_vtable {
     void (*fn[13])(void);
 }; // 0x34
