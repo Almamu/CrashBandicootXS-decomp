@@ -133,6 +133,19 @@ plain C didn't converge.
   shape as the twin family above. See
   [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md)'s
   "Fourth pass".
+- **`sub_801E990`** (`src/graphics/graphics_loading_1e990.c`) - the
+  sound-trigger dispatch/position writer at the end of the
+  `LoadGraphicsPackage` cluster's scratch-buffer-style helper family
+  (issue #30). Semantics fully understood (all six called helpers -
+  `sub_80232F4`/`sub_80232E0`/`sub_8023130`/`sub_803AFEC`/`sub_80232B8`
+  already matched elsewhere as plain field accessors, `sub_803AD88` is
+  the r4-trampoline from `reg_trampolines.c`) but the
+  `gUnknown_030012B4 -> *rec -> {+8 offsets[], +0xc base}`
+  table-resolution/bitfield-pack section shares `sub_8021D04`'s
+  already-documented unmatchable-via-C register-allocation shape (same
+  file family, issue #33). See
+  [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)'s
+  "Fifth pass".
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
