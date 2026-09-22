@@ -16,7 +16,7 @@ extern s32 QueueVramDmaTransfer(void *arg0, void *arg1, u16 arg2, u16 arg3);
 extern s32 sub_800132C(s32 a, s32 b, s32 c);
 extern s32 sub_802A668(s32 arg0);
 extern s32 sub_8029B2C(void);
-extern void sub_8028C48(void *arg0);
+extern void FreeVramTileBlock(void *arg0);
 extern void mem_free(void *ptr);
 
 extern void *gUnknown_030012C0;
@@ -332,8 +332,8 @@ void sub_802F6DC(void *selfArg, s32 flags)
         } while (gUnknown_030014FC != 0);
     }
 
-    sub_8028C48(gUnknown_03001518[0]);
-    sub_8028C48(gUnknown_03001518[1]);
+    FreeVramTileBlock(gUnknown_03001518[0]);
+    FreeVramTileBlock(gUnknown_03001518[1]);
 
     *(void **)(self + 0x50) = gStaticData_087E4DF4;
 

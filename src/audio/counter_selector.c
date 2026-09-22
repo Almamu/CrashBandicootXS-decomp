@@ -90,7 +90,7 @@ struct linked_node {
     void *field_50;
 };
 
-extern void sub_8028C48(void *arg0);
+extern void FreeVramTileBlock(void *arg0);
 extern void *gUnknown_0300160C[2];
 extern u8 gStaticData_087E55C4[];
 extern u8 gStaticData_087E4DF4[];
@@ -98,8 +98,8 @@ extern u8 gStaticData_087E4DF4[];
 void sub_803716C(struct linked_node *self, u32 flags)
 {
     self->field_50 = gStaticData_087E55C4;
-    sub_8028C48(gUnknown_0300160C[0]);
-    sub_8028C48(gUnknown_0300160C[1]);
+    FreeVramTileBlock(gUnknown_0300160C[0]);
+    FreeVramTileBlock(gUnknown_0300160C[1]);
     self->field_50 = gStaticData_087E4DF4;
     self->next->prev = self->prev;
     self->prev->next = self->next;

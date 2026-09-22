@@ -1262,7 +1262,7 @@ _0802B66E:
 	ldrh r0, [r0, #8]
 	lsls r4, r0, #0x10
 	mov r0, sl
-	bl sub_8029108
+	bl GetSpriteShapeSizeBits
 	movs r1, #0xff
 	ands r5, r1
 	ldr r1, _0802B718 @ =0x000001FF
@@ -1310,7 +1310,7 @@ _0802B6E2:
 	lsrs r1, r1, #0x10
 	ldr r0, [sp, #4]
 	ldr r2, [sp]
-	bl sub_8028DD8
+	bl QueueSpriteFrameOam
 _0802B706:
 	add sp, #0x10
 	pop {r3, r4, r5}
@@ -1501,7 +1501,7 @@ sub_802B864: @ 0x0802B864
 	muls r2, r1, r2
 	adds r0, r2, #0
 	lsls r0, r0, #5
-	bl sub_8028CD4
+	bl AllocVramTileBlock
 	ldr r5, _0802B8DC @ =gUnknown_030014B0
 	str r0, [r5]
 	ldr r2, [r4, #8]
@@ -1525,7 +1525,7 @@ sub_802B864: @ 0x0802B864
 	muls r1, r3, r1
 	adds r0, r1, #0
 	lsls r0, r0, #5
-	bl sub_8028CD4
+	bl AllocVramTileBlock
 	str r0, [r5, #4]
 	ldr r1, _0802B8E0 @ =gUnknown_030014A8
 	movs r0, #1
