@@ -390,7 +390,7 @@ SECTIONS
         build/crashbandicootxs/src/audio/gax_channel_bind_instrument.o(.text);
         build/crashbandicootxs/src/audio/gax_channel_note_scheduler.o(.text);
         build/crashbandicootxs/src/audio/gax_channel_envelope_tick.o(.text);
-        build/crashbandicootxs/asm/code_3_2_20e_9b44.o(.text);
+        build/crashbandicootxs/src/audio/gax_note_trigger.o(.text);
         build/crashbandicootxs/src/audio/gax_note_lookup.o(.text);
         build/crashbandicootxs/src/audio/gax_channel_effect_table.o(.text);
         build/crashbandicootxs/src/audio/gax_channel_pos_sweep.o(.text);
