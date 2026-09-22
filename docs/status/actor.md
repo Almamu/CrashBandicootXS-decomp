@@ -677,6 +677,19 @@ plain C didn't converge.
   a further sibling/callee handling frame-counter thresholds, D-pad
   input, and `sub_8012A7C`'s busy-check. See
   `docs/matching/issue-16-actor-remainder.md`.
+- **`sub_8034994`** (`src/graphics/actor_part89.c`, GitHub issue #63) -
+  the `struct fade_overlay` object's (`sub_803472C`/`sub_803487C`,
+  actor_part87.c/actor_part88.c) per-frame input-poll/blend-alpha
+  driver: busy-loops polling input twice per outer iteration (confirm
+  exits with a cue; L/R step a one-shot flag with a cue), ping-ponging a
+  0-15 blend-alpha counter into `REG_BLDCNT`/`BLDALPHA` every two
+  iterations. Six live values (`sb`, `sl`, `r8`, three of `r4`-`r7`)
+  across four different `bl` sites with no spare register - the same
+  "many high registers held live across calls inside a loop" shape
+  already NAKED throughout this codebase
+  (`sub_80309B4`/`sub_8031040`/`sub_80311C4`,
+  `actor_part21f.c`/`23e.c`/`23f.c`). See
+  `docs/matching/issue-63-final-raw-actor.md`.
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
@@ -990,6 +1003,24 @@ embedded as asm instead. They're tracked as parked, not matched.
   accepted for `sub_8034634` just above (its own nibble-write logic,
   inlined twice instead of calling it) - see
   `docs/matching/issue-63-0x08033ef4-actor.md`.
+- **`sub_803472C`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_3472c.s`, C
+  in `src/graphics/actor_part87.c`, GitHub issue #63) - a standalone
+  fade/overlay controller's constructor half (`struct fade_overlay`, not
+  part of the `InitActorPart` family): allocates/loads its three BG
+  scratch buffers, builds DISPCNT, then a combined BLDCNT/BLDALPHA
+  alpha-blend value; every field/call/struct-offset and the vast
+  majority of register choices match exactly via heavy register pinning
+  and inline-asm anchors, but a final handful of individual accumulator/
+  temp-register choices in the BLDCNT/BLDALPHA byte-packing tail never
+  converged - see `docs/matching/issue-63-final-raw-actor.md`.
+- **`sub_803487C`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_3487c.s`, C
+  in `src/graphics/actor_part88.c`, GitHub issue #63) - the fade
+  overlay's other setup half: VRAM upload cursor flush, icon-manager
+  hookup, and a 16-iteration tile-cache seeding loop; matched except the
+  loop's trip counter, which the ROM keeps live in r7 for the whole
+  loop - this project's confirmed categorical gcc-2.9 r7-pin bug (see
+  `graphics_package_1e688.c`/`oam_count.c`/`actor_part7.c`) - see
+  `docs/matching/issue-63-final-raw-actor.md`.
 
 ## Left raw (not attempted, or attempted and set aside)
 
@@ -1046,10 +1077,3 @@ embedded as asm instead. They're tracked as parked, not matched.
   issue #19) - a smaller joystick-input-gated dispatcher; left raw, out
   of scope for this pass - see
   `docs/matching/issue-19-0x08015840-actor.md`.
-- **`sub_803472C`/`sub_803487C`/`sub_8034994`**
-  (`asm/code_3_2_20_28568_c99c_31784_33ef4_3472c.s`, ROM
-  0x0803472C-0x08034AA4, GitHub issue #63) - a graphics-package loading
-  setup, a larger multi-subsystem orchestration routine, and a
-  ~140-instruction state-machine/input-poll loop with heavy `sb`/`sl`/
-  `r8` register pressure; left raw, out of scope for this pass - see
-  `docs/matching/issue-63-0x08033ef4-actor.md`.
