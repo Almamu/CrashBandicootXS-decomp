@@ -205,3 +205,214 @@ without error, but silently shifted every ROM address from
 post-build `arm-none-eabi-nm`/map-file address check against each
 function's own `sub_XXXXXXXX` name before ever diffing bytes, per
 `docs/workflow.md`'s warning about exactly this mistake.
+
+## Fourth pass: the whole tail of `asm/code_3_2_17_21280.s` (`sub_8021668`-`sub_8021BD8`)
+
+Picked back up the remaining ~20 raw "two-line text popup" siblings the
+second pass identified but didn't attempt. Rather than working through
+them from the top (`sub_8021280` onward, all full popup-family
+instances needing the heavy `asm volatile` treatment `sub_801FDEC`
+needed), this pass started from the *other* end of
+`asm/code_3_2_17_21280.s` (`sub_8021668` onward), which turned out to
+be a much easier mix: one more popup-family instance with a different
+tail shape, a small `gStaticData_084A5600`-record spawner family
+(registering into a manager global `sub_8021D80`'s family in
+`graphics_loading_21d80.c` doesn't use), a run of plain
+`sub_801A878`/`sub_801B984` trampolines, one `sub_800CB40`-based
+constructor, and - closing out the file - 12 more plain `sub_800FF0C`
+entity-constructor trampolines (types `0x12` down to `7`) continuing
+the family `graphics_loading_21bfc.c` already covers for types `1`-`7`
+at a different address. Every one of these 24 functions from
+`sub_8021668` through `sub_8021BD8` (the literal last function in the
+old `asm/code_3_2_17_21280.s`) is now real, matched C, plus one more
+(`sub_802190C`) as a NAKED transcription - see below. This retires
+`asm/code_3_2_17_21280.s` down to just its first 470 lines
+(`sub_8021280`-`sub_802155C`, the 4 remaining full popup-family
+instances - see "Left raw" below).
+
+New file: `src/graphics/graphics_loading_21668.c`, inserted in
+`ldscript.txt` right after `asm/code_3_2_17_21280.o` (which now ends
+at `sub_802155C`'s literal pool) and before
+`src/graphics/graphics_loading_21bfc.o`.
+
+### `sub_8021668` - the popup family's OAM-trio tail variant
+
+Same `sub_8009ED0` constructor and `+0x20` table-pointer setup as
+`sub_801FDEC`, but a different tail: builds the part via the standard
+`sub_80087C0`/`sub_80087B4`/`sub_800872C` OAM trio (like
+`graphics_loading_21d80.c`'s family, not the twin family's lookup-table
+pack), looks up a frame-nibble value through a *double* dereference of
+its own just-stored `+0x20` table pointer (`*(*(part->0x20)) + 0x14`,
+not `sub_800815C`) plus `gUnknown_030012B8`'s tile-asset cache via
+`sub_8006DF8`, unconditionally clears bits 4/5 of `part->0x28` (no OR -
+simpler than the twin family's lookup-table pack), fires a single
+`sub_803AD80` trampoline (not twice), and finishes with a three-step
+flags mask (`(((flags & 0x7f) & -5) & -0x41) | 0x10`). Two real bugs
+surfaced and got fixed during this pass, both only visible after a full
+clean `make compare` (an isolated compile alone hid both - see
+`docs/workflow.md`'s warning about exactly this):
+
+- **The record-id lookup was under-dereferenced at first.** `part->0x20`
+  holds a pointer *to* the record (set moments earlier as
+  `tableBase + 0x168`), and the ROM reads `*(part->0x20)` first (a
+  second pointer) before indexing `+0x14` off *that* - an easy miss
+  since the twin family's own `+0x20` field is used as a flat pointer
+  everywhere else in this cluster. Missing the middle dereference still
+  produced byte-plausible-looking (but wrong) code in isolation.
+- **A `part->field_0x2d = 0;` write reordered relative to the ROM.**
+  Plain C (`*((u8 *)part + 0x2d) = 0;`) let the compiler compute the
+  destination address before materializing the `0` constant
+  (`add r1,r6,#0; add r1,r1,#0x2d; mov r0,#0; strb r0,[r1]`), while the
+  ROM computes the constant first (`mov r0,#0; add r1,r6,#0; ...`) -
+  the same class of evaluation-order gap the twin family's `asm
+  volatile` blocks work around elsewhere in this cluster, just for a
+  plain store instead of a masked one this time. This one slipped past
+  a by-hand ROM-listing comparison during development (the two
+  instructions look interchangeable) and was only caught by the full
+  clean `make compare`'s checksum failing by exactly 6 bytes at this
+  address - fixed with a pair of `register ... asm("r0")`/`asm("r1")`
+  locals (constant declared first, address second) forcing the same
+  evaluation order as every other two-step store in this file.
+
+Every mask/negative-constant step (record-id nibble pack, `0x28`
+bit-4/5 clear, final 3-step flags mask) needed the same
+`asm volatile`-anchored idiom the twin family established - plain C
+folds two sequential AND-immediates into one, or reorders a call-result
+reload, in ways the ROM's own codegen never does.
+
+### The `gStaticData_084A5600`-record family: `sub_8021748`/`sub_80217D0`/`sub_802183C`
+
+Same overall shape as `graphics_loading_21d80.c`'s `sub_8021D80` family
+(`sub_8008434` constructor, `+0x20` table offset, `sub_800815C`
+frame-nibble update), but two differences: they register into
+`gUnknown_030012F8`'s manager instead of `EC`, and (except
+`sub_80217D0`, which skips the OAM trio and the `+0x2d`/`+0xa` writes
+entirely) they add a `part->flags = (flags & 0x7f) & -5;` step this
+family didn't need before. That mask needed the same
+two-`asm-volatile`-step treatment as everywhere else in this cluster -
+plain C folds `(x & 0x7f) & -5` into a single `and`/`0x7b` immediate,
+which the ROM's own codegen never does. `sub_8021748`/`sub_802183C`
+also cache their shared `0` tag/`field_0A` value in `r5` across the
+whole function (a genuine `register u8 zero asm("r5")`), matching the
+ROM's own register reuse - assigning it only *after* the table-offset
+store (not at declaration) is what keeps the truncation-prologue
+instruction order matching the ROM's, the same declaration-vs-statement
+timing gotcha the fourth pass's `sub_8021668` bug above is another
+instance of.
+
+### Plain trampolines: `sub_80218C4`/`sub_80218E8`/`sub_8021974`/`sub_8021998`/`sub_80219BC`/`sub_80219E0`/`sub_8021A4C`-`sub_8021BD8`
+
+18 functions, no iteration needed beyond the established call-signature
+patterns: 5 plain `sub_801A878(arg0, arg1, arg2, arg3, id)` calls (ids
+`8`/`6`/`2`/`1`/`0` - same callee the twin family in `trigger_effect.c`
+uses), one plain `sub_801B984(arg0, arg1, arg2, arg3)` tail call, and
+12 plain `sub_800FF0C(arg0, arg1, arg2, arg3, type)` calls (types `0x12`
+down to `7`) continuing the entity-constructor trampoline family
+`graphics_loading_21bfc.c` already covers for types `1`-`7`. Every one
+of these matched from the very first isolated compile - the 5-argument
+call shape (4 register args plus a stack-passed 5th) reliably puts the
+constant on the stack before the register args regardless of source
+order, so there was nothing to fight here. `nullsub_21` (an empty
+`bx lr` stub sitting between `sub_80219E0` and `sub_8021A00`) is also
+in this file for the same reason - it has to be, to keep the file's ROM
+range contiguous.
+
+### `sub_8021A00` - a `sub_800CB40`-based constructor
+
+The one function in this run using a *different* constructor
+(`sub_800CB40`, no arguments) instead of `sub_8009ED0`/`sub_8008434`.
+Calls `sub_8026EDC(0x28)` purely for a side effect first (return value
+discarded, matching the "call purely for a side effect" idiom
+`docs/naming.md` documents), then builds the real object, wiring a
+fixed `sub_801F680` callback into `+0x1c`, `+0x20 = 0x78`, `+0x24 = 0`,
+a Q8.8 `{x, y}` position, and a `flags |= 0x10`. Two small ordering
+fixes were needed over the first plain-C draft:
+
+- The `+0x24 = 0` write's `0` is cached in `r2` right after the object
+  pointer is obtained (before the `+0x1c`/`+0x20` stores), then reused
+  at the third store, not recomputed - a `register s32 zero asm("r2")`
+  assigned at that point (not folded into a single-expression store)
+  reproduces it.
+- `obj->flags |= 0x10;` needed the mask (`0x10`) materialized in `r0`
+  *before* the `ldrb` load of the current flags byte into `r2`, the
+  same "constant first, then read" ordering
+  `CLEAR_FLAGS_7F_AND_NEG5` uses elsewhere in this file - a plain
+  `obj->flags |= 0x10;` statement evaluated the load first instead.
+
+### `sub_802190C` - parked as NAKED
+
+A gated `sub_801A878`/`sub_80234F4` dispatcher: picks id `7` if
+`sub_80232A0(gUnknown_030012C0)` is true or `gUnknown_030012C0+0x8c` is
+nonzero, else id `5` - the same OR-gated shape the twin family in
+`trigger_effect.c` uses for its own sound-id choice, just feeding
+`sub_80234F4` (`self->0x1b8` setter, `src/system/game_loop10.c`)
+instead of `sub_80234E8`. Semantics are fully understood and every
+instruction's operation matches the ROM, but the `arg0`-`arg3`
+parameter-home registers (`r5`-`r8`, a mix of immediate and deferred
+truncation) and the `id` register's exact scheduling relative to the
+stack-argument store never converged through plain C or register pins
+- the same class of gcc-2.9 register-allocation gap the twin family
+hit (see the third pass above). One register-pinning attempt (pinning
+`arg2`'s temporary to `r7` explicitly) produced outright *wrong* code
+(a bogus `sp`-relative address computed into the register instead of
+the intended value) rather than just a mismatched-but-correct
+instruction sequence - a reminder that this compiler doesn't always fail
+safe when a pin conflicts with its own internal register use (`r7` as
+an implicit frame-adjacent register in this Thumb ABI). Transcribed
+instruction-for-instruction from the ROM disassembly instead, the same
+escape hatch used throughout this project. Tracked as parked in
+`tools/report_units.py` with its own `base_object = None` entry,
+interleaved between two matched ranges of the same
+`graphics_loading_21668.o` (`tools/report_units.py`'s existing
+`actor_anim.o` entries already establish that the same `base_object`
+path can appear in more than one `UNITS` row for non-contiguous address
+ranges within one real object file).
+
+### Left raw (4, not fully attempted this pass)
+
+The remaining raw stretch, `asm/code_3_2_17_21280.s` (470 lines, ending
+right at `sub_8021668`'s start), is **not** all the same "two-line text
+popup" family - checked this pass, correcting an assumption the second
+pass's writeup carried forward:
+
+- **`sub_8021280`** is a *different* function entirely - not part of
+  the popup family. It dispatches on `sub_8023290`/`sub_80232B8`/
+  `sub_8023324`/`sub_802332C` (a `gStaticData_0816C86C`-indexed guard
+  check) into one of three arms: two calls to `sub_80071E4` +
+  `sub_80070EC` (a differently-sized spawn, tag `0x12`, registering into
+  `gUnknown_030012E8`), or a `sub_801A878` position-probe feeding
+  `sub_8023500` with an offset `{x, y}` pair. Not attempted this pass -
+  semantics read far enough to know it's not a popup-family sibling, but
+  not worked through to a full C reconstruction.
+- **`sub_8021388`**, **`sub_8021480`**, **`sub_802155C`** genuinely
+  *are* 3 more popup-family instances (same `sub_8009ED0` constructor,
+  `+0x20` table offset, `sub_800815C`/`UPDATE_PART_FRAME_NIBBLE` nibble
+  update, `gUnknown_030012B4` two-bit collected pack, `sub_803AD80`
+  trampoline via an allocated header, tag/manager-register tail -
+  `sub_8021480`/`sub_802155C` skip the flags-mask step `sub_8021388`
+  has and use a plain `flags |= 0x10` instead, and `sub_802155C` adds
+  the OAM trio like `sub_8021668`). All three additionally call a
+  header-construction helper (`sub_801A838(block, arg1, arg2)` for
+  `sub_8021388`, `sub_80189EC()` for `sub_8021480`, `sub_80197DC()` for
+  `sub_802155C`) and a closing `sub_8023318(gUnknown_030012C0, hdr)`
+  neither `sub_801FDEC` nor `sub_8021668` have. `sub_8021388` got the
+  furthest this pass: every instruction's *operation* matches the ROM
+  (confirmed via isolated compile, using the same collected-bits-pack
+  `asm volatile` block as `sub_801FDEC`/`graphics_loading_21668.c`), but
+  the prologue's `arg1`/`arg2` truncation-into-`r8`/`sb` sequence has an
+  extra ROM instruction pair (`mov r8, r1` / `mov sb, r2` computed from
+  the *raw, untruncated* incoming values, immediately followed by a
+  second `mov r8, r1` / `mov sb, r2` pair from the *truncated* values -
+  i.e. the ROM spills the parameter twice) that no plain-C phrasing or
+  register-pin tried this pass reproduced. Given `sub_8021480`/
+  `sub_802155C` likely share a close variant of the same gap
+  (unconfirmed - not attempted), this looks like the same class of
+  gcc-2.9 parameter-lowering quirk documented elsewhere in this cluster,
+  not a semantics problem - a good NAKED-transcription candidate for
+  whoever picks these three up next, or worth one more plain-C attempt
+  with a different technique (e.g. an explicit `asm volatile` spelling
+  out the double-store prologue directly, the same escape hatch used
+  for the collected-bits pack).
+
+Verified via a full clean `make compare` (`La suma coincide`) and
+`make NON_MATCHING=1 report`.
