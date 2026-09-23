@@ -180,7 +180,7 @@ SECTIONS
         build/crashbandicootxs/src/graphics/graphics_loading_1fdec.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_1feec.o(.text);
         build/crashbandicootxs/src/graphics/trigger_effect.o(.text);
-        build/crashbandicootxs/asm/code_3_2_17_21280.o(.text);
+        build/crashbandicootxs/src/graphics/graphics_loading_21280.o(.text);
         build/crashbandicootxs/src/graphics/graphics_loading_21668.o(.text);
         build/crashbandicootxs/src/graphics/graphics_loading_21bfc.o(.text);
         build/crashbandicootxs/src/graphics/graphics_loading_21d80.o(.text);
