@@ -4,54 +4,49 @@
  * (`self+0x308`) bitmap arrays at once - see game_loop12.c's header
  * comment on this bitmap-array family.
  *
- * NAKED, not plain C: this is a true leaf function in the ROM (no
- * `push`/`pop` at all - `self` lives in `ip`/`r12` for the whole
- * function, freed up specifically because nothing here calls out). A
- * real C reconstruction (see git history) gets every instruction's
- * operation, operand, and register matching one-for-one *except* the
- * first two: the ROM does `mov ip, r0` (stash `self`) before `adds r2,
- * r1, #0` (copy `n` into its working register), and this compiler
- * always emits the `n`-copy first regardless of C statement order,
- * declaration order, or an explicit `asm volatile` ordering barrier
- * between the two - a fixed early-reload ordering for hard-register
- * parameter moves this compiler doesn't expose a way to influence from
- * C (pinning both values to their exact ROM registers up front just
- * reintroduces an unwanted `push {r4, lr}`/`pop {r4}` pair instead, per
- * the earlier attempts in docs/matching/issue-41-game-loop-25894.md).
- * Transcribed straight from the confirmed-correct ROM disassembly. */
-NAKED void sub_80259D4(void *self, s32 n)
+ * Was NAKED asm, not plain C - see
+ * docs/matching/naked-sub_80259d4-matched.md for the derivation of how
+ * this was finally matched. This is a true leaf function in the ROM
+ * (no `push`/`pop` at all - `self` lives in `ip`/`r12` for the whole
+ * function). The gap: the ROM does `mov ip, r0` (stash `self`) before
+ * `adds r2, r1, #0` (copy `n` into its own working register `t`), and
+ * this compiler always emits the `n`-copy first regardless of C
+ * source order - fixed by materializing both moves as one opaque
+ * inline-asm block. The ROM also keeps `n`'s pristine copy (`t`, r2)
+ * untouched by the "clamp negative indices" adjustment (which lands in
+ * a *separate* register, r0), reusing the untouched `t` again later
+ * for `bitIndex` - a second local (`adjusted`) instead of adjusting
+ * `t` in place reproduces that split. */
+void sub_80259D4(void *self, s32 n)
 {
-    asm(
-        "mov ip, r0\n\t"
-        "add r2, r1, #0\n\t"
-        "add r0, r2, #0\n\t"
-        "cmp r2, #0\n\t"
-        "bge 1f\n\t"
-        "add r0, r0, #0x1f\n\t"
-    "1:\n\t"
-        "asr r0, r0, #5\n\t"
-        "lsl r3, r0, #2\n\t"
-        "mov r1, #0x82\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r1, ip\n\t"
-        "add r1, r1, r3\n\t"
-        "lsl r0, r0, #5\n\t"
-        "sub r0, r2, r0\n\t"
-        "mov r2, #1\n\t"
-        "lsl r2, r0\n\t"
-        "ldr r0, [r1]\n\t"
-        "orr r0, r2\n\t"
-        "str r0, [r1]\n\t"
-        "mov r1, #0xc2\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r1, ip\n\t"
-        "add r1, r1, r3\n\t"
-        "ldr r0, [r1]\n\t"
-        "orr r0, r2\n\t"
-        "str r0, [r1]\n\t"
-        "bx lr\n\t"
-        ".align 2, 0\n"
-    );
+    register u8 *base asm("ip");
+    register s32 t asm("r2");
+    s32 adjusted, wordIndex;
+    register s32 bitIndex asm("r0");
+    register s32 mask asm("r2");
+    register s32 shifted asm("r3");
+    register s32 addr asm("r1");
+
+    asm volatile("mov %0, %2\n\tadd %1, %3, #0" : "=r"(base), "=r"(t) : "r"(self), "r"(n));
+
+    adjusted = t;
+    if (t < 0) {
+        adjusted += 0x1f;
+    }
+    wordIndex = adjusted >> 5;
+    shifted = wordIndex << 2;
+
+    addr = 0x208;
+    addr += (s32)base;
+    addr += shifted;
+    bitIndex = t - (wordIndex << 5);
+    mask = 1 << bitIndex;
+    *(s32 *)addr |= mask;
+
+    addr = 0x308;
+    addr += (s32)base;
+    addr += shifted;
+    *(s32 *)addr |= mask;
 }
 
 /* Sets bit `n` of the third bitmap array, at `self+0x308` - see
