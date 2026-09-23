@@ -79,7 +79,7 @@ UNITS = [
     (0x08000E6C, "src/util/line_util.o", "util"),
     (0x08000EE4, None, "graphics"),  # sub_8000EE4 (word-wrap text renderer) - byte-exact NAKED asm transcription, not decompiled C; tracked as parked - see docs/matching/naked-transcription-parked-functions.md
     (0x0800106C, "src/util/time_util.o", "util"),
-    (0x080010E0, None, "system"),  # sub_80010E0 (input-poll-until-button/timeout) - byte-exact NAKED asm transcription, not decompiled C; tracked as parked - see docs/matching/naked-transcription-parked-functions.md
+    (0x080010E0, "src/system/input_util.o", "system"),  # sub_80010E0 (input-poll-until-button/timeout); matched. Was previously NAKED - closed by writing the count-limited loop's cancel-check block textually before the poll/confirm-check code (matching the ROM's own basic-block layout), which gets gcc to emit the ROM's exact branch pair instead of the "bne done; b continue" shape it always produces for the same logic in natural top-to-bottom order - see docs/matching/naked-sub_80010e0-matched.md
     (0x08001174, "src/system/asset_util.o", "system"),
     (0x080011F4, "src/util/word_util.o", "util"),
     (0x08001254, "src/util/line_util2.o", "util"),
