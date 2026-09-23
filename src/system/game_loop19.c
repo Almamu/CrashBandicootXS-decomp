@@ -4,14 +4,15 @@
  * game_loop18.c - see game_loop17.c's header comment and
  * docs/matching/issue-38-medal-results-tally.md for the full write-up.
  * This single function sits between the sub_8024590..sub_8024708 run
- * (parked/left in asm/code_3_2_17_24590.s) and sub_8024790 (parked/left
- * in asm/code_3_2_17_24790.s). */
+ * (game_loop37.c - sub_8024590 NAKED-parked, the rest matched - see
+ * docs/matching/issue-38-sound-channel-family.md) and sub_8024790
+ * (matched, game_loop38.c). */
 
 extern void *gUnknown_03001314;
 
-/* Trivial setter: `gUnknown_03001314 = value` - see
- * asm/code_3_2_17_24590.s's sub_8024708 for the other (bitfield-level)
- * writer of this same global. */
+/* Trivial setter: `gUnknown_03001314 = value` - see game_loop37.c's
+ * sub_8024708 for the other (bitfield-level) writer of this same
+ * global. */
 void sub_8024784(void *value)
 {
     gUnknown_03001314 = value;

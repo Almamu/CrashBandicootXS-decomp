@@ -4,14 +4,14 @@
 /* GitHub issue #38: 0x08024590-0x08024783 (game_loop), the sound-channel-
  * handle helper family - see docs/matching/issue-38-medal-results-tally.md
  * for the original write-up describing this whole group as left raw, and
- * docs/matching/issue-38-sound-channel-family.md for this follow-up pass.
- * `sub_8024640` (the per-item driver loop) and `sub_80246D8` (the "find
- * next self->0x10==1 item" index scanner) are matched here as real C;
- * `sub_8024590` and `sub_8024708` are kept as NON_MATCHING C
- * reconstructions - each is fully understood field-by-field but hits a
- * residual gcc-2.9 register-allocation quirk in one small spot (see each
- * function's own comment below) - their real bytes stay in
- * asm/code_3_2_17_24590.s and asm/code_3_2_17_24708.s respectively. */
+ * docs/matching/issue-38-sound-channel-family.md for this follow-up pass
+ * (plus its own second-pass addendum for `sub_8024590`/`sub_8024708`'s
+ * final disposition). `sub_8024640` (the per-item driver loop),
+ * `sub_80246D8` (the "find next self->0x10==1 item" index scanner), and
+ * `sub_8024708` (the VRAM-bank tile-asset streamer) are all matched here
+ * as real C. `sub_8024590` is a NAKED transcription (byte-correct but not
+ * real decompiled C, tracked as parked) - see its own comment below for
+ * the confirmed toolchain-bug gap that forced this. */
 
 struct AudioContext;
 
@@ -57,16 +57,13 @@ extern void LoadTaggedAsset(void *asset, void *dest);
 extern void sub_80006A8(void);
 extern void *gUnknown_03001314;
 
-/* Forward declarations: sub_8024708/sub_8024590 are NON_MATCHING here
- * (real bytes stay in asm/code_3_2_17_24590.s and
- * asm/code_3_2_17_24708.s under the default build) but sub_8024640
- * always calls them; sub_80246D8 is matched below but called by
- * sub_8024640 above it (ROM order). */
+/* Forward declaration: sub_8024708 is defined further down (after
+ * sub_8024590/sub_8024640/sub_80246D8, matching ROM order) but
+ * sub_8024640 above it calls it; sub_80246D8 is matched below but called
+ * by sub_8024640 above it too (ROM order). */
 extern void sub_8024708(struct SoundChannelList *self, s32 idx);
-extern void sub_8024590(struct SoundChannelList *self, s32 idx);
 extern s32 sub_80246D8(struct SoundChannelList *self, s32 startIdx, u8 condFlag);
 
-#if NON_MATCHING
 /* Starts/re-selects a sound cue for `self->items[idx]` (`sub_8001B54`),
  * then either plays its secondary sfx (`field_18`) immediately if the
  * channel already reports the requested cue id playing, or busy-polls
@@ -76,61 +73,117 @@ extern s32 sub_80246D8(struct SoundChannelList *self, s32 startIdx, u8 condFlag)
  * immediately if the id already matched, or before the busy-wait
  * otherwise.
  *
- * PARKED, NOT BYTE-MATCHING: every field, offset, branch and call
- * argument is confirmed against the ROM. The residual gap is in the
- * `field_08 | -0x80` computation, done twice (once per branch): the ROM
- * materializes -0x80 into one register then copies it to a second
- * register before the OR (`movs r2,#0x80; rsbs r2,r2,#0; adds r1,r2,#0;
- * orrs r0,r1`), while every C phrasing tried here (a plain expression, a
- * named local, register-pinned locals with an explicit copy step, `~0x7F`
- * instead of `-0x80`) collapses the redundant copy away, producing the
- * mask directly in its final register instead (`mov r1,#0x80; neg r1,r1;
- * orrs r0,r1` - two instructions short). See
- * docs/matching/issue-38-sound-channel-family.md. */
-void sub_8024590(struct SoundChannelList *self0, s32 idx)
+ * NAKED, not plain C: a second pass on this function's plain-C
+ * reconstruction (docs/matching/issue-38-sound-channel-family.md) closed
+ * two of its three documented gaps for real - the `field_08 | -0x80`
+ * redundant register-copy step (fixed with the `asm volatile("" : "=r"(v)
+ * : "0"(expr))` forced-same-register-move idiom `settings_menu13.c`
+ * documents) and a mismatched initial `self->items[idx]` pointer load
+ * (fixed by splitting the transient first-use load, fed straight to
+ * `sub_8001B54`, from the persistent `item` local the rest of the
+ * function reloads - the "differently-named pointer variable avoids
+ * reuse" gotcha, also from `settings_menu13.c`). The third gap resists
+ * every C-level technique for a different, well-precedented reason: the
+ * ROM's busy-poll loop in the `playing != item->field_14` branch needs
+ * `push {r4, r5, r6, r7, lr}` (caching `&gUnknown_030012BC` in r7 and a
+ * copy of the item byte-offset in r6 across the loop), but this
+ * compiler's `register T x asm("r7")` never adds an inline-asm-clobbered
+ * or even genuinely-written-and-read r7 to the function's own push/pop
+ * list - the same confirmed, extensively-precedented toolchain gap
+ * documented at length for `sub_8022D50` (game_loop40.c),
+ * `LoadGraphicsPackage` (graphics_package_1e578.c), and every other
+ * `asm("r7")` call-out project-wide. Transcribed straight from the
+ * confirmed-correct ROM disassembly instead of re-chasing this specific
+ * combination further - see docs/matching/issue-38-sound-channel-family.md. */
+NAKED void sub_8024590(struct SoundChannelList *self0, s32 idx)
 {
-    register struct SoundChannelList *self asm("r5") = self0;
-    struct AudioContext *audio = gUnknown_030012BC;
-    struct SoundChannelItem *item = self->items[idx];
-    register u32 playing asm("r0");
-
-    sub_8001B54(audio, item->field_14);
-    playing = sub_8001AB8(gUnknown_030012BC);
-    item = self->items[idx];
-
-    if (playing == item->field_14) {
-        if (item->field_18 != 0x63) {
-            PlaySfx(gUnknown_030012BC, item->field_18, 0x100);
-        }
-        {
-            struct SoundChannelItem *item2 = self->items[idx];
-            register s32 raw asm("r0") = item2->field_08;
-            register s32 mask asm("r2") = -0x80;
-            register s32 val asm("r1") = mask;
-            register s32 combined asm("r0") = raw | val;
-
-            sub_800132C((u8)combined, 1, 0);
-        }
-    } else {
-        {
-            register s32 mask asm("r2") = -0x80;
-            register s32 val asm("r1") = mask;
-            register s32 combined asm("r0") = item->field_08 | val;
-
-            sub_800132C((u8)combined, 1, 0);
-        }
-        item = self->items[idx];
-        if (item->field_18 != 0x63) {
-            do {
-                playing = sub_8001AB8(gUnknown_030012BC);
-                item = self->items[idx];
-            } while (playing != item->field_14);
-            PlaySfx(gUnknown_030012BC, item->field_18, 0x100);
-        }
-    }
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "add r5, r0, #0\n\t"
+        "ldr r6, 1f\n\t"
+        "ldr r0, [r6]\n\t"
+        "ldr r2, [r5]\n\t"
+        "lsl r4, r1, #2\n\t"
+        "add r2, r4, r2\n\t"
+        "ldr r1, [r2]\n\t"
+        "ldr r1, [r1, #0x14]\n\t"
+        "bl sub_8001B54\n\t"
+        "ldr r0, [r6]\n\t"
+        "bl sub_8001AB8\n\t"
+        "ldr r1, [r5]\n\t"
+        "add r1, r4, r1\n\t"
+        "ldr r2, [r1]\n\t"
+        "ldr r1, [r2, #0x14]\n\t"
+        "cmp r0, r1\n\t"
+        "bne 2f\n\t"
+        "ldr r1, [r2, #0x18]\n\t"
+        "cmp r1, #0x63\n\t"
+        "beq 3f\n\t"
+        "ldr r0, [r6]\n\t"
+        "mov r2, #0x80\n\t"
+        "lsl r2, r2, #1\n\t"
+        "bl PlaySfx\n\t"
+    "3:\n\t"
+        "ldr r0, [r5]\n\t"
+        "add r0, r4, r0\n\t"
+        "ldr r0, [r0]\n\t"
+        "ldr r0, [r0, #8]\n\t"
+        "mov r2, #0x80\n\t"
+        "neg r2, r2\n\t"
+        "add r1, r2, #0\n\t"
+        "orr r0, r0, r1\n\t"
+        "lsl r0, r0, #0x18\n\t"
+        "lsr r0, r0, #0x18\n\t"
+        "mov r1, #1\n\t"
+        "mov r2, #0\n\t"
+        "bl sub_800132C\n\t"
+        "b 4f\n\t"
+        ".align 2, 0\n"
+    "1: .4byte gUnknown_030012BC\n"
+    "2:\n\t"
+        "ldr r0, [r2, #8]\n\t"
+        "mov r2, #0x80\n\t"
+        "neg r2, r2\n\t"
+        "add r1, r2, #0\n\t"
+        "orr r0, r0, r1\n\t"
+        "lsl r0, r0, #0x18\n\t"
+        "lsr r0, r0, #0x18\n\t"
+        "mov r1, #1\n\t"
+        "mov r2, #0\n\t"
+        "bl sub_800132C\n\t"
+        "ldr r0, [r5]\n\t"
+        "add r0, r4, r0\n\t"
+        "ldr r0, [r0]\n\t"
+        "ldr r0, [r0, #0x18]\n\t"
+        "cmp r0, #0x63\n\t"
+        "beq 4f\n\t"
+        "add r7, r6, #0\n\t"
+        "add r6, r4, #0\n\t"
+    "5:\n\t"
+        "ldr r0, [r7]\n\t"
+        "bl sub_8001AB8\n\t"
+        "ldr r2, [r5]\n\t"
+        "add r1, r4, r2\n\t"
+        "ldr r1, [r1]\n\t"
+        "ldr r1, [r1, #0x14]\n\t"
+        "cmp r0, r1\n\t"
+        "bne 5b\n\t"
+        "ldr r0, 6f\n\t"
+        "ldr r0, [r0]\n\t"
+        "add r1, r6, r2\n\t"
+        "ldr r1, [r1]\n\t"
+        "ldr r1, [r1, #0x18]\n\t"
+        "mov r2, #0x80\n\t"
+        "lsl r2, r2, #1\n\t"
+        "bl PlaySfx\n\t"
+    "4:\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r0}\n\t"
+        "bx r0\n\t"
+        ".align 2, 0\n"
+    "6: .4byte gUnknown_030012BC\n"
+    );
 }
-#endif /* NON_MATCHING */
-asm(".align 2, 0");
 
 /* Per-frame driver loop over `self`'s item list: for each index, streams
  * the item's VRAM tile bank and refreshes its sound-channel handle
@@ -211,7 +264,6 @@ s32 sub_80246D8(struct SoundChannelList *self, s32 startIdx, u8 condFlag)
     return cur;
 }
 
-#if NON_MATCHING
 /* Toggles `self`'s VRAM-bank flip-flop (`self->toggle`) and streams
  * `self->items[idx]`'s tile asset (its `+0x200` byte offset - the
  * asset's second half) to whichever of the two OBJ tile VRAM banks the
@@ -225,20 +277,27 @@ s32 sub_80246D8(struct SoundChannelList *self, s32 startIdx, u8 condFlag)
  * docs/rom_map.md), and finally commits `gUnknown_03001314`'s low
  * halfword straight to `REG_DISPCNT`.
  *
- * PARKED, NOT BYTE-MATCHING: every field, offset, branch and call
- * argument is confirmed against the ROM (including the `& ~0x10`
- * negated-constant idiom, and the `self`/`asset` register pins needed to
- * reach `push {r4, r5, r6, lr}` at all). The residual gap is a single
- * branch's address computation (`asset + 0x200` inside the
- * `toggle != 0` case): the ROM computes the `0x80 << 2` scratch offset
- * into `r2` there (`movs r2,#0x80; lsls r2,r2,#2; adds r0,r6,r2`) while
- * every C phrasing tried here (plain expression, a named local, a
- * register-pinned local for either the offset or the destination
- * constant, evaluation-order swaps) puts it in `r1` instead - the
- * *other* (fallthrough) branch's identical-shaped computation already
- * matches exactly using `r1`, pointing at a per-branch scheduling
- * artifact from the ROM's original build rather than anything
- * controllable from this reconstruction's own source shape. See
+ * Matched, but only after two more register-pinning/ordering gotchas on
+ * top of the `self`/`asset` pins the first pass already found:
+ * - The `toggle != 0` branch's `asset + 0x200` scratch-offset computation
+ *   needs to land in r2 (not gcc's own natural choice of r1, which
+ *   happens to already match the *other*, `toggle == 0` branch's
+ *   identical-shaped computation) - an `asm volatile("mov r2, #0x80\n\t
+ *   lsl r2, r2, #2\n\tadd %0, %1, r2" : "=r"(addr) : "r"(asset) : "r2")`
+ *   anchor (the same "hardcode the scratch register, let the output land
+ *   wherever" idiom `hud_icon_widget_8a78.c` uses) forces it.
+ * - The `gUnknown_03001314` shadow-byte rebuild needed its own two-part
+ *   fix: gcc's front end always schedules the `& ~0x10` mask/byte-read
+ *   pair *before* the toggle-bit `& 1 << 4` shift-and-mask when both are
+ *   written as independent statements (this reconstruction's first
+ *   attempt), where the ROM computes the shifted toggle bit first; an
+ *   `asm volatile("" ::: "memory")` ordering barrier right after it
+ *   fixes that. But the barrier alone widens `bit4`'s tracked value range
+ *   just enough that the final `orr` gets an extra defensive
+ *   `lsl #24; lsr #24` truncation pair the ROM doesn't have - avoided by
+ *   writing the AND as `bit4 & toggleByte` (not `toggleByte & bit4`),
+ *   which happens to pick the same destination register (r1, not r5) the
+ *   ROM's own `ands r1, r5` uses. See
  * docs/matching/issue-38-sound-channel-family.md. */
 void sub_8024708(struct SoundChannelList *self0, s32 idx)
 {
@@ -252,20 +311,31 @@ void sub_8024708(struct SoundChannelList *self0, s32 idx)
     if (toggle == 0) {
         LoadTaggedAsset((u8 *)asset + 0x200, (void *)0x06000000);
     } else {
-        LoadTaggedAsset((u8 *)asset + 0x200, (void *)0x0600A000);
+        register u8 *addr asm("r0");
+
+        asm volatile("mov r2, #0x80\n\tlsl r2, r2, #2\n\tadd %0, %1, r2"
+                     : "=r"(addr) : "r"(asset) : "r2");
+        LoadTaggedAsset(addr, (void *)0x0600A000);
     }
 
     {
-        register u8 toggleByte asm("r5") = *((u8 *)self + 0xc);
-        u8 bit4 = (toggleByte & 1) << 4;
         u8 *shadow = (u8 *)&gUnknown_03001314;
-        register s32 mask asm("r0") = ~0x10;
-        register s32 byte asm("r2") = *shadow;
-        register s32 result asm("r0");
+        {
+            register s32 bit4 asm("r1") = 1;
+            register s32 toggleByte asm("r5");
+            register s32 mask asm("r0");
+            register s32 byte asm("r2");
+            register s32 result asm("r0");
 
-        result = mask & byte;
-        result = result | bit4;
-        *shadow = result;
+            toggleByte = *((u8 *)self + 0xc);
+            bit4 = (bit4 & toggleByte) << 4;
+            asm volatile("" ::: "memory");
+            mask = ~0x10;
+            byte = *shadow;
+            result = mask & byte;
+            result = result | bit4;
+            *shadow = result;
+        }
     }
 
     sub_80006A8();
@@ -273,5 +343,3 @@ void sub_8024708(struct SoundChannelList *self0, s32 idx)
     DmaSet(3, asset, (void *)0x05000000, (u32)((DMA_ENABLE | DMA_START_NOW | DMA_16BIT | DMA_SRC_INC | DMA_DEST_INC) << 16 | 0x100));
     REG_DISPCNT = *(u16 *)&gUnknown_03001314;
 }
-#endif /* NON_MATCHING */
-asm(".align 2, 0");
