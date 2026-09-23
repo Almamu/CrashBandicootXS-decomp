@@ -1,21 +1,23 @@
 #include "core.h"
 
-#if NON_MATCHING
-/* NOT YET BYTE-MATCHING - see docs/matching.md, "Parked, not matched:
- * sub_802C3E8" for the full account; compiled only under
- * `make NON_MATCHING=1`, the checked-in assembly
- * (asm/code_3_2_20_28568_c3e8.s) is used otherwise. Semantics are
- * fully understood and every load/store, branch and call is confirmed
- * correct; the residual gap is register-allocation choices in the
- * Manhattan-distance/abs-value computation (this compiler picks a
- * different, logically-equivalent register for a couple of
- * intermediate values than the ROM's own choice). Thin
- * `InitActorPart`-based constructor (constant last-arg `1`, unlike
- * `sub_802C4A4`'s forwarded one), then computes a velocity vector
- * aiming toward a fixed offset point via the screen-projection
+/* Thin `InitActorPart`-based constructor (constant last-arg `1`,
+ * unlike `sub_802C4A4`'s forwarded one), then computes a velocity
+ * vector aiming toward a fixed offset point via the screen-projection
  * helpers `sub_8029E98`/`sub_8029EB4` plus `sub_803ADB4` division -
  * the "homing/seek-toward-point effect" `sub_8032890` byte-for-byte
- * twins, per docs/rom_map.md. */
+ * twins, per docs/rom_map.md.
+ *
+ * The Manhattan-distance/abs-value computation uses the ROM's own
+ * branchless abs idiom (`(x ^ (x >> 31)) - (x >> 31)`, compiling to
+ * `asr`/`eor`/`sub`) rather than a `(x < 0) ? -x : x` ternary, which
+ * this compiler instead turns into a `cmp`/`bge`/`neg` branch. The
+ * `self+0x1c` reload also needs pinning to `r1` and reading *after*
+ * the `sub_8029EB4()` call (not before) - pinning it before the call
+ * let this compiler's optimizer silently skip the reload and reuse a
+ * stale register value from the unrelated `self+0x20` computation two
+ * statements earlier, a genuine correctness bug caught by a direct
+ * byte compare against the ROM, not just a register-choice cosmetic
+ * mismatch. */
 extern u8 gStaticData_087E4E74[];
 extern s32 sub_803ADB4(s32 arg0, s32 arg1);
 extern s32 sub_8029E98(void);
@@ -35,15 +37,19 @@ void *sub_802C3E8(void *selfArg, s32 a, s32 b, s32 c, s32 spawnParam)
 
     *(s32 *)(self + 0x20) += sub_8029E98();
 
-    dy = *(s32 *)(self + 0x1c) + sub_8029EB4();
+    {
+        register s32 ebResult asm("r0") = sub_8029EB4();
+        register s32 old asm("r1") = *(s32 *)(self + 0x1c);
+        dy = old + ebResult;
+    }
     *(s32 *)(self + 0x1c) = dy;
 
     {
         s32 a1 = dy - 0x1000;
-        s32 a2 = (a1 < 0) ? -a1 : a1;
+        s32 a2 = (a1 ^ (a1 >> 31)) - (a1 >> 31);
         s32 dx = *(s32 *)(self + 0x20);
         s32 b1 = dx - 0x1000;
-        s32 b2 = (b1 < 0) ? -b1 : b1;
+        s32 b2 = (b1 ^ (b1 >> 31)) - (b1 >> 31);
 
         sum = a2 + b2;
         if (sum < 0) {
@@ -57,6 +63,5 @@ void *sub_802C3E8(void *selfArg, s32 a, s32 b, s32 c, s32 spawnParam)
 
     return self;
 }
-#endif /* NON_MATCHING */
 
 asm(".align 2, 0");
