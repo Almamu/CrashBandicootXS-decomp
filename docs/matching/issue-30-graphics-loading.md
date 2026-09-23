@@ -316,3 +316,104 @@ remaining time didn't cover. Left raw, along with the rest of this
 issue's "sound-trigger dispatch plus the trigger-effect/text-popup-
 spawner families" remainder (`sub_801EA5C` onward, unchanged from the
 third pass's characterization), for whoever picks this up next.
+
+## Fifth pass: `sub_801E990` - matched semantics, parked (NAKED transcription)
+
+Picked up `sub_801E990` (the sound-trigger dispatcher the third pass
+flagged its unresolved helper calls for). All five previously-unread
+helpers turned out to already be matched elsewhere in the tree as
+plain one-line field accessors on the same `gUnknown_030012C0`-rooted
+player struct: `sub_80232F4`/`sub_80232E0`/`sub_8023130`/`sub_803AFEC`
+(`+0xa8`/`+0x7c`/`+0x84`/`+0x74` respectively - the first three in
+`asm/code_3_2_17_231cc.s`'s still-raw accessor cluster, the fourth
+already matched in `actor_aabb_setup.c`) and `sub_80232B8` (`+0xa4`,
+matched in `game_loop10.c`/`game_loop2.c`). `sub_803AD88` itself is not
+a normal function at all - it's the `bx r4` register-trampoline from
+`reg_trampolines.c` (`src/system/reg_trampolines.c`'s
+`sub_803AD78`-`sub_803AD94` "call through register" family) - the ROM
+loads the real callee's address into `r4` right before the `bl`, and
+this project's established convention (`sub_8009FD4` in
+`actor_part9.c`, `sub_8007DBC`) is to model that load as a genuine
+"dead read" (`register void *x asm("r4") = ...; (void)x;`) immediately
+before an ordinary-looking `sub_803AD88(addr, arg1, arg2, arg3)` call.
+
+With every operand pinned down, the function's full semantics are:
+
+1. If the player's `+0xa8` flag (`sub_80232F4`) is set: looks up a
+   per-`z` flags byte via the `gUnknown_030012B4 -> *rec -> {+8
+   offsets[], +0xc base}` table - the exact same table
+   `sub_8021D04` (`graphics_loading_21bfc.c`, issue #33) already reads,
+   indexed the same way (`offsets[z]`, then `base[offsets[z]]`) - folds
+   bit 1 of that byte into the player's `+0x28` bitfield's bit 4, then
+   unconditionally writes the incoming `x`/`y` args (shifted to Q8.8)
+   into the player's own `x`/`y` fields, the same unconditional write
+   `sub_80221A4`/`sub_80221D4` (`graphics_loading_21d80.c`) already do
+   elsewhere in this cluster.
+2. Unless the player's `+0x8c` "paused" flag is set: fires the
+   player's `table+0x68` trampoline (`sub_803AD88`, action `0x1a`) and
+   plays SFX `0x100` through `gUnknown_030012BC`, gated by a
+   budget/reentrancy check - either the player's spawn counter
+   (`+0x7c`) has room against its cap (`+0x84`), or, when it doesn't,
+   `sub_803AFEC` (`+0x74`), `sub_80232B8` (`+0xa4`) and the player's
+   `+0x78` mode field all agree it's still safe to fire.
+
+A plain-C reconstruction with this exact meaning compiles cleanly and
+was confirmed instruction-for-instruction correct against the ROM in
+isolation for every operation, field offset and call - except one
+section: the `gUnknown_030012B4` table-resolution plus `+0x28`
+bitfield-pack block never converged on the ROM's own register choices
+(`byte` staying in r0 across the shift, the shifted bit landing in r2,
+the `-0x11` clear mask materializing via a `movs r0,#1`/`subs
+r0,#0x12` derivation that reuses the register still holding an earlier
+`1` rather than a fresh literal), no matter the statement order,
+explicit intermediate variables, or the negative-constant idiom used
+elsewhere in this project - every restructuring tried shuffled the
+register assignment without landing on the ROM's exact one. This is
+the identical `gUnknown_030012B4 -> *rec -> {+8, +0xc}` resolution
+shape already documented as unmatchable via plain C for `sub_8021D04`
+(issue #33) for the same underlying reason, strongly suggesting this
+specific table-lookup-into-bitfield-pack shape is a recurring gcc-2.9
+register-allocation dead end for this codebase rather than something
+this pass's C phrasing missed.
+
+Converted to `NAKED` and transcribed instruction-for-instruction from
+the ROM disassembly instead - confirmed byte-identical against the ROM
+bytes (compared via `arm-none-eabi-objdump` on both the isolated
+compile and the raw ROM disassembly reassembled standalone) before
+integrating. Cut out of `asm/code_3_2_17_1e990.s` (was the first
+function in that file) into the new `src/graphics/graphics_loading_1e990.c`,
+with `ldscript.txt` updated to place the new object immediately before
+the now-trimmed raw file (which starts at `sub_801EA5C` instead).
+
+**The rest of this issue's raw region** (`sub_801EA5C` through
+`sub_801FCB4`, ending at the already-matched `sub_801FDEC`) splits into
+two families, both worth flagging precisely for whoever picks this up
+next:
+
+- **`sub_801EA5C`-`sub_801EE3C`** (5 functions): the same "trigger
+  effect type N" bit-test (`sub_8023404`)/`sub_8008434`-spawn shape
+  already parked as `NAKED` in `trigger_effect.c`
+  (`sub_8020E84`-`sub_802117C`, issue #31/#33) - the same register-
+  rotation gap that resisted plain C there is likely to resist here
+  too, so NAKED transcription is the expected outcome, not another
+  fresh matching attempt.
+- **`sub_801EF0C`-`sub_801F8DC`** (through `sub_801FA3C`/`sub_801FB74`/
+  `sub_801FCB4`, ~10 functions): further instances of the "text label
+  as sprite tiles" spawner family whose shape `sub_801FDEC`
+  (`graphics_loading_1fdec.c`, issue #31) already matched as **real,
+  byte-exact C** - `sub_8009ED0` allocation, `sub_800CA74` style
+  lookup, two `sub_803AD80` trampoline calls, and the same
+  `gUnknown_030012B4`-rooted "collected bits" pack this pass's
+  `sub_801E990` write-up above also resolves the table shape for. This
+  is the more promising real-C target of the two remaining families -
+  `sub_801FDEC`'s own matched C is the template to start from.
+
+Left raw for whoever picks this up next; `report_units.py`'s entry for
+this address range now points at `sub_801EA5C` (the new start of
+`asm/code_3_2_17_1e990.s`) instead of `sub_801E990` and calls out both
+families explicitly.
+
+Verified via a full clean `rm -rf build && make NON_MATCHING=1 report`
+(clean compile, no warnings for the new file) and `rm -rf build
+crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
+compare` (`La suma coincide`).

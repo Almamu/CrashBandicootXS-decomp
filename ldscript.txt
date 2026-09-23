@@ -176,6 +176,7 @@ SECTIONS
         build/crashbandicootxs/src/graphics/graphics_package_1e688.o(.text);
         build/crashbandicootxs/src/graphics/graphics_package_1e8f8.o(.text);
         build/crashbandicootxs/src/graphics/graphics_package_1e964.o(.text);
+        build/crashbandicootxs/src/graphics/graphics_loading_1e990.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_1e990.o(.text);
         build/crashbandicootxs/src/graphics/graphics_loading_1fdec.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_1feec.o(.text);
@@ -201,9 +202,7 @@ SECTIONS
         build/crashbandicootxs/src/system/game_loop9.o(.text);
         build/crashbandicootxs/src/system/game_loop17.o(.text);
         build/crashbandicootxs/src/system/game_loop18.o(.text);
-        build/crashbandicootxs/asm/code_3_2_17_24590.o(.text);
         build/crashbandicootxs/src/system/game_loop37.o(.text);
-        build/crashbandicootxs/asm/code_3_2_17_24708.o(.text);
         build/crashbandicootxs/src/system/game_loop19.o(.text);
         build/crashbandicootxs/src/system/game_loop38.o(.text);
         build/crashbandicootxs/src/system/game_loop20.o(.text);
@@ -213,6 +212,7 @@ SECTIONS
         build/crashbandicootxs/src/system/game_loop4.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_25460.o(.text);
         build/crashbandicootxs/src/system/game_loop5.o(.text);
+        build/crashbandicootxs/src/system/game_loop41.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_255d4.o(.text);
         build/crashbandicootxs/src/system/game_loop12.o(.text);
         build/crashbandicootxs/src/system/game_loop13.o(.text);
@@ -266,6 +266,7 @@ SECTIONS
         build/crashbandicootxs/src/graphics/actor_part53.o(.text);
         build/crashbandicootxs/src/graphics/actor_part54.o(.text);
         build/crashbandicootxs/asm/code_3_2_20_8b7c_ac28.o(.text);
+        build/crashbandicootxs/src/graphics/actor_part107.o(.text);
         build/crashbandicootxs/src/graphics/actor_part19.o(.text);
         build/crashbandicootxs/src/graphics/actor_part19e.o(.text);
         build/crashbandicootxs/src/graphics/actor_part19f.o(.text);
@@ -389,7 +390,7 @@ SECTIONS
         build/crashbandicootxs/src/audio/gax_channel_bind_instrument.o(.text);
         build/crashbandicootxs/src/audio/gax_channel_note_scheduler.o(.text);
         build/crashbandicootxs/src/audio/gax_channel_envelope_tick.o(.text);
-        build/crashbandicootxs/asm/code_3_2_20e_9b44.o(.text);
+        build/crashbandicootxs/src/audio/gax_note_trigger.o(.text);
         build/crashbandicootxs/src/audio/gax_note_lookup.o(.text);
         build/crashbandicootxs/src/audio/gax_channel_effect_table.o(.text);
         build/crashbandicootxs/src/audio/gax_channel_pos_sweep.o(.text);
