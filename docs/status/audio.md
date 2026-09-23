@@ -257,16 +257,13 @@ See docs/matching.md for `PlaySfx`'s remaining gap.
   `sub_8038FD0` cluster right before it did, in a separate pass, see
   [docs/matching/issue-67-channel-mute-volume-dma-stop.md](../matching/issue-67-channel-mute-volume-dma-stop.md)).
 - **`sub_803A03C`** (`src/audio/gax_channel_pos_sweep.c`, per-tick
-  ping-pong position sweep) - an extensive real-C reconstruction
-  reproduced every field access and the columnar (non-struct) table
-  addressing exactly, but two gaps resisted every technique tried: the
-  ROM keeps a `self+0x13`-sign-flip constant (`0xff`) live in `r8`
-  across the whole function (the same many-register ceiling as this
-  section's other entries), and separately stores it via
-  `ldrb r7,[r2,#0x13]` (reload the old byte) + `orrs r0,r7` rather than
-  a plain immediate - every C phrasing of that store (a bare `= 0xff`,
-  an explicit `|= 0xff`, a named-local two-step OR) got constant-folded
-  straight back to a plain `mov r0, #0xff` by this same compiler.
+  ping-pong position sweep) - an 81.3%-matching C reconstruction (the
+  `r8` pin and the `self+0x13` OR-with-0xff idiom both closed; the
+  residual is register-choice/instruction-selection diffs in the
+  repeated columnar-table addressing) is kept in-tree under
+  `#if NON_MATCHING` - see
+  [docs/matching/naked-sub_803a03c-matched.md](../matching/naked-sub_803a03c-matched.md)
+  for the full derivation and what's still open.
   Byte-verified NAKED transcription (confirmed via direct binary
   comparison against the ROM's own assembled bytes, not just an
   instruction listing).
