@@ -212,7 +212,11 @@ C has no way to work around on this toolchain:
   reload order can't be reproduced from C (tried again this pass with
   an inline-asm anchor forcing both moves in one instruction - see git
   history - which only made things worse, spilling to `r4` and
-  reallocating the rest of the function). Now `NAKED`.
+  reallocating the rest of the function). Now `NAKED`. **Since matched
+  as real C** - see
+  [naked-sub_80259d4-matched.md](./naked-sub_80259d4-matched.md); this
+  entry is left as-is since it's a frozen historical record of why the
+  function was originally parked.
 - **`sub_8025A64`** (moved to its own new file, `game_loop29.c`, since
   its address isn't adjacent to any other matched run once
   `sub_8025B0C`/`sub_8025BAC`/`sub_8025CA4` stayed parked) - a real C

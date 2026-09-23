@@ -67,7 +67,14 @@ system from "core" system startup/init code.
 - `src/system/game_loop12.c` (GitHub issue #41): `sub_8025944`,
   `sub_8025968`, `sub_802599C` - the first two of three overlapping
   bit-grid accessors at `self+8`/`self+0x208`/`self+0x308`
-- `src/system/game_loop13.c` (GitHub issue #41): `sub_8025A0C`
+- `src/system/game_loop13.c` (GitHub issue #41): `sub_80259D4`
+  (sets a bit in both the `self+0x208` and `self+0x308` bit-grids at
+  once - previously NAKED, now matched as real C via an
+  inline-asm-materialized self-stash/n-copy pair plus a second local
+  keeping the ROM's own untouched `n`-copy register alive for later
+  reuse - see
+  [naked-sub_80259d4-matched.md](../matching/naked-sub_80259d4-matched.md)),
+  `sub_8025A0C`
   (third bit-grid setter), `sub_8025A3C` (Q8-to-int store),
   `sub_8025A44` (conditional `sub_8026ED0` forward), `sub_8025A5C`
   (zero two Q8 words)
@@ -214,12 +221,6 @@ plain C didn't converge.
   early-return into the shared tail the other three legitimately share
   in the ROM too (4 bytes short). See
   [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
-- **`sub_80259D4`** (`src/system/game_loop13.c`, GitHub issue #41) -
-  sets a bit in both the `self+0x208` and `self+0x308` bit-grids at
-  once; a true leaf function in the ROM (`self` pinned to `ip` the
-  whole body) whose only gap is an unreproducible `mov ip, r0`/
-  `adds r2, r1, #0` parameter-reload order. See
-  [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
 - **`sub_8025A64`** (`src/system/game_loop29.c`, new file - not
   contiguous with any other matched run once its three siblings below
   stayed parked - GitHub issue #41) - a part-object spawn helper; hits
