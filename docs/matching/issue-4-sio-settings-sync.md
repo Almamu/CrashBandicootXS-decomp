@@ -293,8 +293,19 @@ compare against `raw_08002868_target.o` (objdiff-cli's own per-symbol
 instruction diff misreports the trailing literal-pool word at this
 exact symbol boundary as a size mismatch even though the raw bytes are
 identical - a good reminder to fall back to a direct byte compare when
-objdiff and the full linked `make compare` disagree). `sub_8002938`
-(the EEPROM "save" counterpart) stays NAKED -
-`tools/report_units.py`'s single `sub_8002868`/`sub_8002938` entry is
-now split in two, with `0x08002868` pointing at
+objdiff and the full linked `make compare` disagree).
+
+### Later pass: `sub_8002938` closed as real C too
+
+`sub_8002938` (the EEPROM "save" counterpart) closes the same way, with
+one real ordering fix: the ROM runs the chip-config init check *before*
+the `self`-to-stack-buffer copy (`sub_800014C`), not after - the
+function's own doc comment had the two reversed from a quick semantic
+read. Reordering the two C statements to match gets the whole function
+byte-identical on the first isolated-compile attempt, confirmed the
+same way as `sub_8002868` (a direct `.text`-section byte compare
+against the function's own slice of `raw_08002938_target.o`, since
+`report_units.py`'s target file gets renamed once the preceding
+function stops being `base_object=None`). `tools/report_units.py`'s
+entries for both `0x08002868` and `0x08002938` now point at
 `src/graphics/settings_menu8d.o`.
