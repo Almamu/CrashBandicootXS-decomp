@@ -17,20 +17,85 @@
  * slide. Channel/voice object shape not modeled yet - kept as raw
  * offsets, same as the other GAX2 engine internals in this directory.
  *
- * Written as NAKED asm, not plain C: a real C reconstruction (register-
- * pinning `self` to r4 and the two clamp temporaries) landed the whole
- * function except a handful of `ldrsh`-with-non-immediate-offset reads in
- * the portamento tail (the same "materialize the field offset into a
- * scratch register first" gotcha already documented for `sub_803943C` in
- * gax_sound_handler_info.c) - each individual read could be forced to the
- * ROM's exact register via a tiny fixed-register asm block, but doing so
- * for all of them together kept perturbing an *earlier*, already-correct
- * clamp block's register choice (gcc-2.9's hard-register variable
- * reservations aren't scoped as tightly as their C block, so a later
- * pin's `asm` clobber list changed unrelated, already-matching codegen
- * upstream) - byte-verified NAKED transcription instead, rather than
- * chase that ripple further. Mechanical, not an inferred control-flow
- * guess. */
+ * Written as NAKED asm, not plain C: a 99.7%-matching C reconstruction
+ * is kept below under `#if NON_MATCHING` - see
+ * docs/matching/naked-sub_8039aa4-matched.md for the derivation and the
+ * two-instruction residual (a pair of `ldrsh`-with-register-offset
+ * reads in the portamento tail whose own register pins independently
+ * reconfirmed the original parking finding: pinning either one ripples
+ * backward and perturbs the earlier, already-correct clamp blocks'
+ * register choices - gcc-2.9's hard-register variable reservations
+ * aren't scoped as tightly as their C block, so this looks like a
+ * genuine compiler limitation, not a phrasing gap). Mechanical, not an
+ * inferred control-flow guess. */
+#if NON_MATCHING
+/* NOT YET BYTE-MATCHING - 99.7% instruction match (two small,
+ * isolated register-choice residuals left - see the doc comment above
+ * and docs/matching/naked-sub_8039aa4-matched.md); compiled only under
+ * `make NON_MATCHING=1`, the NAKED version below is used otherwise. */
+extern u8 sub_8039F30(void *self, void *table, u16 *out);
+extern void sub_8039FFC(void *self);
+extern void sub_803A03C(void *self);
+
+void sub_8039AA4(void *self)
+{
+    register u8 *s asm("r4") = (u8 *)self;
+    register s32 zero asm("r6");
+    void *voice;
+    s32 sum1, sum2, sum26;
+
+    voice = *(void **)(s + 0x3c);
+    if (voice != NULL) {
+        void *table = *(void **)((u8 *)voice + 0x7c);
+        s[0x16] = sub_8039F30(s, table, (u16 *)(s + 0x38));
+        sub_8039FFC(s);
+        sub_803A03C(s);
+    }
+
+    sum1 = *(s16 *)(s + 0x1a) + s[0x15];
+    if (sum1 > 0xff) {
+        sum1 = 0xff;
+    }
+    if (sum1 < 0) {
+        sum1 = 0;
+    }
+    zero = 0;
+    s[0x15] = sum1;
+
+    sum2 = *(s16 *)(s + 0x1c) + s[0x17];
+    if (sum2 > 0xff) {
+        sum2 = 0xff;
+    }
+    if (sum2 < 0) {
+        sum2 = 0;
+    }
+    s[0x17] = sum2;
+
+    { register s32 v28 asm("r0") = *(u16 *)(s + 0x28);
+      register s32 v26 asm("r1") = *(u16 *)(s + 0x26);
+      sum26 = v28 + v26; }
+    *(u16 *)(s + 0x26) = sum26;
+    { register s32 v2c asm("r0") = *(u16 *)(s + 0x2c);
+      register s32 v2a asm("r2") = *(u16 *)(s + 0x2a);
+      *(u16 *)(s + 0x2a) = v2c + v2a; }
+
+    { register s32 slideRate asm("r1") = *(u16 *)(s + 0x32);
+    if ((s16)slideRate != 0) {
+        s32 diffBefore = (*(s16 *)(s + 0x30) - *(s16 *)(s + 0x26)) & 0x80000000;
+        { register s32 newVal asm("r0");
+          asm volatile("add %0, %1, %2" : "=r"(newVal) : "r"(sum26), "r"(slideRate));
+          *(u16 *)(s + 0x26) = newVal; }
+        {
+            s32 diffAfter = (*(s16 *)(s + 0x30) - *(s16 *)(s + 0x26)) & 0x80000000;
+            if (diffBefore != diffAfter) {
+                *(u16 *)(s + 0x32) = zero;
+                *(u16 *)(s + 0x26) = *(u16 *)(s + 0x30);
+                *(u16 *)(s + 0x30) = zero;
+            }
+        }
+    } }
+}
+#else /* !NON_MATCHING */
 NAKED void sub_8039AA4(void *self)
 {
     asm(
@@ -119,3 +184,4 @@ NAKED void sub_8039AA4(void *self)
         ".align 2, 0\n\t"
     );
 }
+#endif /* NON_MATCHING */
