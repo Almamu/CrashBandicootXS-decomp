@@ -59,23 +59,25 @@ void sub_801E8F8(u8 *selfArg, s32 arg1)
  * build up the same 0x10-byte scratch buffer field by field before
  * `LoadGraphicsPackage`).
  *
- * Written as NAKED asm, not plain C: the ROM rematerializes the `-0xd`
- * mask via `sub r2,r2,#0x10` off the register that still holds the
- * earlier `#3` constant, one instruction short of what gcc 2.9 ever
- * produced here (see docs/matching/issue-30-graphics-loading.md) -
- * transcribed instruction-for-instruction instead. */
-NAKED void sub_801E950(u8 *self, u32 arg1)
+ * The two `& 3`/`neg`-mask constants land in the ROM's own registers
+ * (both in r2, one right after the other - a fresh `mov r2,#0xd`
+ * reload, not a reuse of the earlier `#3` value) once the second mask
+ * is materialized via the same `mov #N; neg` opaque-asm idiom as
+ * `UPDATE_ICON_FRAME_NIBBLE` (src/graphics/settings_menu6.c) instead of
+ * a plain C `~0xc`/`-0xd`, which this compiler folds differently. */
+void sub_801E950(u8 *self, u32 arg1)
 {
-    asm(
-        "mov r2, #3\n\t"
-        "and r1, r2\n\t"
-        "lsl r1, r1, #2\n\t"
-        "mov r2, #0xd\n\t"
-        "neg r2, r2\n\t"
-        "ldrb r3, [r0, #0x15]\n\t"
-        "and r2, r3\n\t"
-        "orr r2, r1\n\t"
-        "strb r2, [r0, #0x15]\n\t"
-        "bx lr"
-    );
+    register s32 mask1 asm("r2");
+    register u32 shifted asm("r1");
+    register s32 mask2 asm("r2");
+    register u8 byte asm("r3");
+
+    mask1 = 3;
+    shifted = arg1 & mask1;
+    shifted = shifted << 2;
+    asm volatile("mov %0, #0xd\n\tneg %0, %0" : "=r"(mask2));
+    byte = self[0x15];
+    mask2 &= byte;
+    mask2 |= shifted;
+    self[0x15] = mask2;
 }

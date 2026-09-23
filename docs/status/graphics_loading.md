@@ -28,17 +28,21 @@ family. Filed under `src/graphics/` on disk, tracked as its own
 - **`sub_801E640`** (`src/graphics/graphics_package_1e640.c`)
 - **`sub_801E8F8`** (`src/graphics/graphics_package_1e8f8.c`) - DMA3
   fills one VRAM tile with a solid color
+- **`sub_801E950`** (`src/graphics/graphics_package_1e8f8.c`) - packs a
+  second bitfield into the same scratch-buffer byte `sub_801E8F8`
+  writes; closed via the same `mov #N; neg` opaque-asm negative-mask
+  idiom as `UPDATE_ICON_FRAME_NIBBLE` (src/graphics/settings_menu6.c)
 - **`sub_801E964`**, **`sub_801E96C`**
   (`src/graphics/graphics_package_1e964.c`)
 
-All four are accessors on the same 0x10-byte `LoadGraphicsPackage`
+All five are accessors on the same 0x10-byte `LoadGraphicsPackage`
 scratch buffer - see
 [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)
 for the full write-up, including two real compiler-codegen gotchas
 (a DMA-register load-order fix, and a trailing `asm(".align 2, 0")`
-zero-padding fix) found along the way. (`sub_801E644`/`sub_801E950`,
-also in these files, are NAKED transcriptions - see "Parked - NAKED
-transcription" below.)
+zero-padding fix) found along the way. (`sub_801E644`, also in these
+files, is a NAKED transcription - see "Parked - NAKED transcription"
+below.)
 
 - **`LoadLevelGraphics`** (`src/graphics/level_graphics.c`) - the
   per-level setup entry point `UpdateGameFrame` calls; stashes the
@@ -123,10 +127,6 @@ plain C didn't converge.
 - **`sub_801E644`** (`src/graphics/graphics_package_1e640.c`) - a
   five-field constructor on the same scratch buffer as `sub_801E640`.
   See [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md).
-- **`sub_801E950`** (`src/graphics/graphics_package_1e8f8.c`) - packs
-  a second bitfield into the same scratch-buffer byte `sub_801E8F8`
-  writes. See
-  [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md).
 - **`sub_8020E84`**, **`sub_8020F7C`**, **`sub_802107C`**,
   **`sub_802117C`** (`src/graphics/trigger_effect.c`) - the
   "trigger effect type N" twin family (4 of the 15-slot

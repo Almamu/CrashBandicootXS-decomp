@@ -417,3 +417,22 @@ Verified via a full clean `rm -rf build && make NON_MATCHING=1 report`
 (clean compile, no warnings for the new file) and `rm -rf build
 crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
 compare` (`La suma coincide`).
+
+## Sixth pass: `sub_801E950` matched as real C
+
+The second pass above (`## Second pass`) had converted `sub_801E950`
+to a `NAKED` transcription on the theory that the ROM rematerializes
+its `-0xd` mask via `sub r2,r2,#0x10` reusing the register that still
+held the earlier `#3` constant - checking the real target object
+(`build/expected/units/raw_0801E950_target.o`) shows this theory was
+wrong: the ROM's actual bytes are a plain `movs r2,#0xd` / `rsbs
+r2,r2,#0` (i.e. `neg`), a completely fresh reload, not a reuse. The
+straightforward plain-C phrasing (two separate register-pinned masks,
+the second one materialized via the same `mov #N; neg` opaque-asm
+negative-mask idiom `UPDATE_ICON_FRAME_NIBBLE` already uses) matches
+100% on the first isolated-compile attempt. `tools/report_units.py`'s
+entry for `0x0801E950` now points at
+`src/graphics/graphics_package_1e8f8.o`. Verified via `rm -rf build &&
+make NON_MATCHING=1 report` + `objdiff-cli diff` (100%) and a full
+clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
+crashbandicootxs.map && make compare` (`La suma coincide`).
