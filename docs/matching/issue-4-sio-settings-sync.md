@@ -280,3 +280,21 @@ immediately, independent of and prior to the full-ROM linked build.
 
 Every function in this issue's original 25-function range
 (`0x08001C80`-`0x08002C84`) is now matched. This PR closes issue #4.
+
+### Later pass: `sub_8002868` closed as real C
+
+The "red herring" register-pressure theory above (line 28) didn't
+survive a direct retest: the IME-save/IE-clear/IME-restore snippet
+matches the ROM's exact "no extra copy" shape as plain C here (`u16
+savedIme = REG_IME; REG_IME = 0; REG_IE &= 0xFFDF; REG_IME = savedIme;
+REG_IME = 1;`), the same phrasing already proven for `sub_8001D30`
+above - byte-identical, confirmed via a direct `.text`-section byte
+compare against `raw_08002868_target.o` (objdiff-cli's own per-symbol
+instruction diff misreports the trailing literal-pool word at this
+exact symbol boundary as a size mismatch even though the raw bytes are
+identical - a good reminder to fall back to a direct byte compare when
+objdiff and the full linked `make compare` disagree). `sub_8002938`
+(the EEPROM "save" counterpart) stays NAKED -
+`tools/report_units.py`'s single `sub_8002868`/`sub_8002938` entry is
+now split in two, with `0x08002868` pointing at
+`src/graphics/settings_menu8d.o`.
