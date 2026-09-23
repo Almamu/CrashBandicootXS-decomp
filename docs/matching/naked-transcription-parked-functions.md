@@ -52,7 +52,10 @@ progress-tracking classification differs from an ordinary match.
   the ROM (same two instructions, same size) - the identical check in
   the function's *other* loop variant already matched the ROM's sense
   with no special handling, pointing at a fixed gcc-2.9
-  canonicalization for this exact shape.
+  canonicalization for this exact shape. **Since matched as real C** -
+  see [naked-sub_80010e0-matched.md](./naked-sub_80010e0-matched.md);
+  this entry is left as-is since it's a frozen historical record of why
+  the function was originally parked (see `docs/matching.md`).
 - **`sub_80014A4`** (`src/graphics/fade_screen_mode.c`) - the
   fade-to-black palette DMA loop. The ROM caches the blended-buffer
   address in a register across the loop while recomputing the other two
