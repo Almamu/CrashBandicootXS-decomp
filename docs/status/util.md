@@ -8,7 +8,13 @@ helpers.
 - `src/util/math_util.c`: `sub_80008B4`, `sub_80008CC`, `sub_80008F0`,
   `sub_80008FC`, `sub_800090C`, `sub_8000924`, `sub_800093C`
 - `src/util/string_util.c`: `itoa`, `sub_80009F4`
-- `src/util/printf_util.c`: `sub_8000AA8`, `sub_8000CA8`
+- `src/util/printf_util.c`: `sub_8000AA8`, `sub_8000CA8`, `sub_8000CBC`
+  (case-insensitive `strstr` - was previously NAKED, now matched as
+  real C via opaque inline-asm-materialized lowercase folds plus
+  deferring the inner loop's match-found computation to a label placed
+  after the whole scan/verify loop so gcc's block linearizer places it
+  right before the shared epilogue, matching the ROM's own layout - see
+  [naked-sub_8000cbc-matched.md](../matching/naked-sub_8000cbc-matched.md))
 - `src/util/string_util2.c`: `CountNonSpaceChars`, `strcat`, `sub_8000DAC`,
   `strcpy`, `strlen`
 - `src/util/rand_util.c`: `srand`, `sub_8000E1C`, `rand`
@@ -32,15 +38,6 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
 ## Parked - NAKED asm transcription (byte-correct, not decompiled C)
-
-- **`sub_8000CBC`** (`src/util/printf_util.c`, a case-insensitive
-  `strstr`) - a full C reconstruction matched the ROM everywhere except
-  a specific redundant-truncate branch shape in its lowercase-fold
-  logic that conflicted with keeping `caseInsensitive` out of `r8`;
-  converted to a byte-verified NAKED asm transcription instead (see
-  `src/util/printf_util.c`'s own doc comment, and the general pattern
-  established by `src/system/link_cable.c`'s `sub_8001CB8`). Byte-exact
-  but not real decompiled C, so tracked here as parked, not matched.
 
 ### NAKED transcription (byte-exact, but not real decompiled C)
 

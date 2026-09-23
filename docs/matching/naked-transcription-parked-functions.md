@@ -35,7 +35,10 @@ progress-tracking classification differs from an ordinary match.
   branches straight past it - reproducing that exact shape pushed
   register pressure just far enough to spill `caseInsensitive` into r8,
   a worse mismatch than the one it fixed. See the function's own doc
-  comment for the full derivation.
+  comment for the full derivation. **Since matched as real C** - see
+  [naked-sub_8000cbc-matched.md](./naked-sub_8000cbc-matched.md); this
+  entry is left as-is since it's a frozen historical record of why the
+  function was originally parked (see `docs/matching.md`).
 - **`sub_8000EE4`** (`src/graphics/text_layout.c`) - a word-wrap text
   renderer. The C reconstruction matched instruction-for-instruction
   except ~8 bytes from two non-semantic codegen details: agbcc always
