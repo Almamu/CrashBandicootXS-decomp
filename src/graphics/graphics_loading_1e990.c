@@ -37,28 +37,104 @@ extern void PlaySfx(void *bank, s32 arg1, s32 sfxId);
  *    of `sub_803AFEC` (`+0x74`), `sub_80232B8` (`+0xa4`) and the
  *    player's `+0x78` mode field agree it's still safe to fire.
  *
- * Written as NAKED asm, not plain C: semantics fully understood (a
- * plain-C reconstruction with this exact meaning compiles cleanly and
- * every operation/field/register was confirmed correct against the
- * ROM in isolation - see the removed NON_MATCHING draft in git
- * history), but the first half's table-resolution/bitfield-pack
- * section never converged on the ROM's own register choices (`byte`
- * in r0, the shifted bit in r2, the mask constant reusing r0 via a
- * `movs r0,#1`/`subs r0,#0x12` derivation rather than a fresh
- * literal) no matter how the C was restructured - the same
- * `gUnknown_030012B4 -> *rec -> {+8, +0xc}` resolution shape `sub_8021D04`
- * (graphics_loading_21bfc.c, issue #33) reads, though that function's
- * own register-choice/statement-order gap has since been closed (see
- * its own doc comment) - this function's `movs r0,#1`/`subs r0,#0x12`
- * mask derivation is a distinct, still-unclosed gap.
- * Transcribed instruction-for-instruction from the ROM disassembly
- * instead, the same escape hatch used there and for
- * `sub_8001CB8`/`sub_8001DB4` (src/system/link_cable.c). The
- * `sub_803AD88` call's function-pointer half (`table+0x68+4`, loaded
- * into r4) is a genuine "dead read" - loaded but never actually
- * passed to `sub_803AD88` (a plain 4-argument function, not itself a
- * trampoline) - the same idiom documented for `sub_8009FD4`
- * (actor_part9.c) and `sub_8007DBC`. */
+ * Written as NAKED asm, not plain C: a 96.8%-matching C reconstruction
+ * is kept below under `#if NON_MATCHING` - see
+ * docs/matching/naked-sub_801e990-matched.md for the derivation and
+ * the residual register-choice gap. Mechanical, byte-verified
+ * transcription of the ROM's own instructions, not an inferred
+ * control-flow guess. */
+#if NON_MATCHING
+/* NOT YET BYTE-MATCHING - 96.8% instruction match (see the doc comment
+ * above and docs/matching/naked-sub_801e990-matched.md); compiled only
+ * under `make NON_MATCHING=1`, the NAKED version below is used
+ * otherwise. */
+void sub_801E990(u32 arg0, u16 x, u16 y, u16 z)
+{
+    if (sub_80232F4(gUnknown_030012C0)) {
+        register u8 *rec asm("r2");
+        register u16 *arrayBase asm("r0");
+        register s32 addr asm("r1");
+        register u8 *tmp asm("r0");
+        register u8 *d8addr asm("r3");
+
+        rec = *(u8 **)gUnknown_030012B4;
+        arrayBase = *(u16 **)(rec + 8);
+        addr = (z << 1) + (s32)arrayBase;
+        {
+            s32 base = *(s32 *)(rec + 0xc);
+            addr = *(u16 *)addr;
+            tmp = (u8 *)(addr + base);
+        }
+
+        {
+            register u8 byte asm("r0") = *tmp;
+            register s32 shiftedByte asm("r2");
+            register s32 one asm("r0");
+            register u8 *addr28 asm("r1");
+            register s32 mask asm("r0");
+            register u8 byte2 asm("r4");
+
+            shiftedByte = byte >> 1;
+            one = 1;
+            d8addr = (u8 *)gUnknown_030012D8;
+            addr28 = d8addr + 0x28;
+            shiftedByte &= one;
+            shiftedByte <<= 4;
+            asm volatile("sub %0, %0, #0x12" : "+r"(one));
+            mask = one;
+            byte2 = *addr28;
+            mask &= byte2;
+            mask |= shiftedByte;
+            *addr28 = mask;
+        }
+
+        {
+            register u8 *obj2 asm("r1") = d8addr;
+            *(u32 *)obj2 = x << 8;
+            *(u32 *)(obj2 + 4) = y << 8;
+        }
+    }
+
+    if (*(u8 *)((u8 *)gUnknown_030012C0 + 0x8c) != 0) {
+        goto end;
+    }
+    {
+        s32 spawnCount = sub_80232E0(gUnknown_030012C0);
+        s32 cap = sub_8023130(gUnknown_030012C0);
+        if (spawnCount >= cap) {
+            goto fire;
+        }
+        if (sub_803AFEC(gUnknown_030012C0) != 0) {
+            goto end;
+        }
+        if (sub_80232B8(gUnknown_030012C0) != 0) {
+            goto end;
+        }
+        if (*(s32 *)((u8 *)gUnknown_030012C0 + 0x78) != 0) {
+            goto end;
+        }
+    }
+fire:
+    {
+        register u8 *d8obj asm("r0");
+        register u8 *entry asm("r1");
+        register s32 fnOffset asm("r2");
+        register void *fn asm("r0");
+        register u32 dead asm("r4");
+
+        d8obj = (u8 *)gUnknown_030012D8;
+        entry = *(u8 **)(d8obj + 0x18);
+        entry = entry + 0x68;
+        asm volatile("mov r3, #0\n\tldrsh %0, [%1, r3]" : "=r"(fnOffset) : "r"(entry) : "r3");
+        fn = d8obj + fnOffset;
+        dead = *(u32 volatile *)(entry + 4);
+        (void)dead;
+        sub_803AD88(fn, 0, 0x1a, 0);
+        PlaySfx(gUnknown_030012BC, 1, 0x100);
+    }
+end:;
+}
+#else /* !NON_MATCHING */
 NAKED void sub_801E990(u32 arg0, u16 x, u16 y, u16 z)
 {
     asm(
@@ -159,3 +235,4 @@ NAKED void sub_801E990(u32 arg0, u16 x, u16 y, u16 z)
     "13: .4byte gUnknown_030012BC\n"
     );
 }
+#endif /* NON_MATCHING */
