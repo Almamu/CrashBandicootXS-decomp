@@ -93,112 +93,62 @@ fail_restore:
     return -1;
 }
 
-/* EEPROM "save" - counterpart to `sub_8002868`: copies `self` into a
- * stack buffer first, then writes it out `maxCount` 8-byte blocks at a
- * time (`sub_803AD38`, still raw). Same one-time chip-config and
- * timer-2 claim, same -1-on-failure/0-on-success return, same NAKED
- * transcription reason as `sub_8002868` above. */
-NAKED s32 sub_8002938(void *self, s32 len)
+/* EEPROM "save" - counterpart to `sub_8002868`: same one-time
+ * chip-config init and timer-2 claim, but copies `self` into a stack
+ * buffer *after* the chip-config check (not before, matching the
+ * ROM's own instruction order), then writes it out `maxCount` 8-byte
+ * blocks at a time (`sub_803AD38`, still raw). Same -1-on-failure/
+ * 0-on-success return and IME-save/IE-clear/IME-restore snippet as
+ * `sub_8002868`, byte-identical as plain C for the same reason (see
+ * that function's doc comment). */
+s32 sub_8002938(void *self, s32 len)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "ldr r4, 2f\n\t"
-        "add sp, r4\n\t"
-        "add r4, r0, #0\n\t"
-        "add r5, r1, #0\n\t"
-        "ldr r6, 3f\n\t"
-        "ldrb r0, [r6]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 1f\n\t"
-        "mov r0, #4\n\t"
-        "bl sub_803A968\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r0, r0, #0x10\n\t"
-        "cmp r0, #0\n\t"
-        "bne 13f\n\t"
-        "strb r0, [r6]\n\t"
-    "1:\n\t"
-        "mov r0, sp\n\t"
-        "add r1, r4, #0\n\t"
-        "add r2, r5, #0\n\t"
-        "bl sub_800014C\n\t"
-        "ldr r1, 4f\n\t"
-        "mov r0, #0\n\t"
-        "strh r0, [r1]\n\t"
-        "ldr r1, 5f\n\t"
-        "mov r0, #2\n\t"
-        "bl sub_803A9D0\n\t"
-        "mov r5, sp\n\t"
-        "mov r4, #0\n\t"
-        "b 7f\n\t"
-        ".align 2, 0\n"
-    "2: .4byte 0xFFFFFE00\n"
-    "3: .4byte gUnknown_03000808\n"
-    "4: .4byte 0x04000208\n"
-    "5: .4byte gUnknown_030009FC\n"
-    "6:\n\t"
-        "lsl r0, r4, #0x10\n\t"
-        "lsr r0, r0, #0x10\n\t"
-        "add r1, r5, #0\n\t"
-        "bl sub_803AD38\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "cmp r0, #0\n\t"
-        "bne 12f\n\t"
-        "add r5, #8\n\t"
-        "add r4, #1\n\t"
-    "7:\n\t"
-        "ldr r0, 8f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldrh r0, [r0, #4]\n\t"
-        "cmp r4, r0\n\t"
-        "blt 6b\n\t"
-        "ldr r3, 9f\n\t"
-        "ldrh r2, [r3]\n\t"
-        "mov r0, #0\n\t"
-        "strh r0, [r3]\n\t"
-        "ldr r4, 10f\n\t"
-        "ldrh r1, [r4]\n\t"
-        "ldr r0, 11f\n\t"
-        "and r0, r1\n\t"
-        "strh r0, [r4]\n\t"
-        "strh r2, [r3]\n\t"
-        "mov r0, #1\n\t"
-        "strh r0, [r3]\n\t"
-        "mov r0, #0\n\t"
-        "b 14f\n\t"
-        ".align 2, 0\n"
-    "8: .4byte gUnknown_03001634\n"
-    "9: .4byte 0x04000208\n"
-    "10: .4byte 0x04000200\n"
-    "11: .4byte 0x0000FFDF\n"
-    "12:\n\t"
-        "ldr r3, 15f\n\t"
-        "ldrh r2, [r3]\n\t"
-        "mov r0, #0\n\t"
-        "strh r0, [r3]\n\t"
-        "ldr r4, 16f\n\t"
-        "ldrh r1, [r4]\n\t"
-        "ldr r0, 17f\n\t"
-        "and r0, r1\n\t"
-        "strh r0, [r4]\n\t"
-        "strh r2, [r3]\n\t"
-        "mov r0, #1\n\t"
-        "strh r0, [r3]\n\t"
-    "13:\n\t"
-        "mov r0, #1\n\t"
-        "neg r0, r0\n\t"
-    "14:\n\t"
-        "mov r3, #0x80\n\t"
-        "lsl r3, r3, #2\n\t"
-        "add sp, r3\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n"
-    "15: .4byte 0x04000208\n"
-    "16: .4byte 0x04000200\n"
-    "17: .4byte 0x0000FFDF\n"
-    );
+    u8 buf[0x200];
+    s32 i;
+    u8 *p;
+
+    if (gUnknown_03000808) {
+        u16 ret = (u16)sub_803A968(4);
+        if (ret != 0) {
+            return -1;
+        }
+        gUnknown_03000808 = 0;
+    }
+
+    sub_800014C(buf, self, len);
+
+    REG_IME = 0;
+    sub_803A9D0(2, &gUnknown_030009FC);
+
+    p = buf;
+    i = 0;
+    while (i < gUnknown_03001634->maxCount) {
+        if ((u16)sub_803AD38(i, p) != 0) {
+            goto fail_restore;
+        }
+        p += 8;
+        i++;
+    }
+
+    {
+        u16 savedIme = REG_IME;
+        REG_IME = 0;
+        REG_IE &= 0xFFDF;
+        REG_IME = savedIme;
+        REG_IME = 1;
+    }
+
+    return 0;
+
+fail_restore:
+    {
+        u16 savedIme = REG_IME;
+        REG_IME = 0;
+        REG_IE &= 0xFFDF;
+        REG_IME = savedIme;
+        REG_IME = 1;
+    }
+    return -1;
 }
 
 extern struct AudioContext *gUnknown_030012BC;
