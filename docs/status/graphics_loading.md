@@ -47,10 +47,10 @@ transcription" below.)
   `LoadBg2Background`/`LoadObjSpriteTiles`, runs the fade/audio-reset
   quartet, and starts song `0xb` - see
   [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md).
-- **`sub_8021BFC`**-**`sub_8021CE0`** (`src/graphics/graphics_loading_21bfc.c`)
-  - the `sub_800FF0C` entity-constructor trampoline family, types `1`-`7`
-  (`sub_8021D04`, type `0`, also in this file, is a NAKED
-  transcription) - see
+- **`sub_8021BFC`**-**`sub_8021D04`** (`src/graphics/graphics_loading_21bfc.c`)
+  - the `sub_800FF0C` entity-constructor trampoline family, types `0`-`7`,
+  all matched (`sub_8021D04`, type `0`, closed via register-pinning the
+  table-resolution chain to the ROM's own registers) - see
   [issue-33-0x08021bfc-graphics-loading.md](../matching/issue-33-0x08021bfc-graphics-loading.md).
 - **`sub_801FDEC`** (`src/graphics/graphics_loading_1fdec.c`) - one
   instance of the "two-line text popup" spawner family (issue #31,
@@ -127,10 +127,6 @@ plain C didn't converge.
   a second bitfield into the same scratch-buffer byte `sub_801E8F8`
   writes. See
   [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md).
-- **`sub_8021D04`** (`src/graphics/graphics_loading_21bfc.c`) - a
-  `sub_800FF0C` trampoline (type `0`) plus a per-record flags-byte
-  lookup via `gUnknown_030012B4`. See
-  [issue-33-0x08021bfc-graphics-loading.md](../matching/issue-33-0x08021bfc-graphics-loading.md).
 - **`sub_8020E84`**, **`sub_8020F7C`**, **`sub_802107C`**,
   **`sub_802117C`** (`src/graphics/trigger_effect.c`) - the
   "trigger effect type N" twin family (4 of the 15-slot
@@ -161,9 +157,10 @@ Both hit the same confirmed `r7`-pin gap as `sub_8007114`
   already matched elsewhere as plain field accessors, `sub_803AD88` is
   the r4-trampoline from `reg_trampolines.c`) but the
   `gUnknown_030012B4 -> *rec -> {+8 offsets[], +0xc base}`
-  table-resolution/bitfield-pack section shares `sub_8021D04`'s
-  already-documented unmatchable-via-C register-allocation shape (same
-  file family, issue #33). See
+  table-resolution/bitfield-pack section has its own unclosed
+  register-choice gap (a `movs r0,#1`/`subs r0,#0x12` mask derivation) -
+  distinct from `sub_8021D04`'s now-closed gap in the same file family,
+  issue #33. See
   [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)'s
   "Fifth pass".
 
