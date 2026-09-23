@@ -74,16 +74,62 @@ extern u8 sub_800B86C(void *unused, void *partArg, s32 newVal);
  * `sub_80019A8` with the original `mode`. Always tail-calls
  * `sub_800B86C(arg0, arg1, mode)`.
  *
- * Written as NAKED asm, not plain C: every load/store, branch and call
- * was already confirmed correct - the residual gap was register
- * allocation across the 3-way `mode` dispatch (gcc 2.9 wanted `r8` for
- * the running "unused" register the ROM keeps `mode` copies in
- * instead, and merged the `0xd`/`0x18` case pair into two sequential
- * compares sharing a target rather than the ROM's own `cmp/bgt/cmp/beq`
- * triangle) - see docs/matching/issue-18-0x08014f8c-actor.md, "Parked,
- * not matched: sub_80157C4". Transcribed instruction-for-instruction
- * from the ROM disassembly instead, the same escape hatch used for
- * `sub_8001CB8`/`sub_8001DB4` (src/system/link_cable.c). */
+ * Written as NAKED asm, not plain C: a 99.8%-matching C reconstruction
+ * is kept below under `#if NON_MATCHING` - see
+ * docs/matching/naked-sub_80157c4-matched.md for the derivation and
+ * the one remaining cosmetic residual. Mechanical, byte-verified
+ * transcription of the ROM's own instructions, not an inferred
+ * control-flow guess. */
+#if NON_MATCHING
+/* NOT YET BYTE-MATCHING - 99.8% instruction match, a single cosmetic
+ * epilogue scratch-register choice (see the doc comment above and
+ * docs/matching/naked-sub_80157c4-matched.md); compiled only under
+ * `make NON_MATCHING=1`, the NAKED version below is used otherwise. */
+void sub_80157C4(void *arg0, void *other, s32 mode)
+{
+    void *player = gUnknown_030012D8;
+
+    if (*(u8 *)((u8 *)player + 0x100) == 0) {
+        goto tail;
+    }
+    if (mode == 0x12) {
+        goto case12;
+    }
+    if (mode > 0x12) {
+        goto checkC18;
+    }
+    if (mode == 0xd) {
+        goto setC26;
+    }
+    goto rearm;
+
+checkC18:
+    if (mode == 0x18) {
+        goto setC26;
+    }
+    goto rearm;
+
+case12:
+    if (*(s32 *)((u8 *)player + 0x60) == 0) {
+        goto tail;
+    }
+    mode = 0x25;
+    goto playCue;
+
+setC26:
+    mode = 0x26;
+playCue:
+    sub_80019A8(gUnknown_030012BC, 0x36);
+    PlaySfx(gUnknown_030012BC, 0x36, 0x100);
+    goto tail;
+
+rearm:
+    sub_80019A8(gUnknown_030012BC, 0x36);
+
+tail:
+    sub_800B86C(arg0, other, mode);
+}
+#else /* !NON_MATCHING */
 NAKED void sub_80157C4(void *arg0, void *arg1, s32 mode)
 {
     asm(
@@ -150,3 +196,4 @@ NAKED void sub_80157C4(void *arg0, void *arg1, s32 mode)
     "22: .4byte gUnknown_030012BC\n"
     );
 }
+#endif /* NON_MATCHING */

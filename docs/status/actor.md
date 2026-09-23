@@ -588,8 +588,12 @@ plain C didn't converge.
   `docs/matching/issue-18-0x08014f8c-actor.md`.
 - **`sub_80157C4`** (`src/graphics/actor_part38d.c`) - player's
   `+0x100`-flag-gated `mode` remapper (a 3-way dispatch playing a fixed
-  cue via `sub_80019A8`/`PlaySfx`), tail-calling `sub_800B86C`. See
-  `docs/matching/issue-18-0x08014f8c-actor.md`.
+  cue via `sub_80019A8`/`PlaySfx`), tail-calling `sub_800B86C`. A
+  99.8%-matching C reconstruction (explicit `goto`s reproducing the
+  ROM's own `cmp/bgt/cmp/beq` branch triangle; one cosmetic epilogue
+  scratch-register residual) is kept in-tree under `#if NON_MATCHING` -
+  see
+  [docs/matching/naked-sub_80157c4-matched.md](../matching/naked-sub_80157c4-matched.md).
 - **`sub_8030574`** (`src/graphics/actor_part20b.c`) - boss-weapon
   keyframe-table AABB lookup/dispatch; same `gStaticData_*` stride-8
   table shape and r7-hazard as the already-parked `sub_802C208`
