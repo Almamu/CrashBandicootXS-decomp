@@ -3,15 +3,13 @@
 /* Same "self" object family as actor_part63.c - see that file's header
  * comment and docs/matching/issue-63-0x08033ef4-actor.md. */
 
-#if NON_MATCHING
-/* NOT YET BYTE-MATCHING - see docs/matching/issue-63-0x08033ef4-actor.md,
- * "Parked: sub_8034314" for the full account; compiled only under
- * `make NON_MATCHING=1`, the checked-in assembly
- * (asm/code_3_2_20_28568_c99c_31784_33ef4_34314.s) is used otherwise.
- * Same position-sync/flag/trampoline shape as the parked `sub_8034270`
- * (actor_part62.c), but returns the "should animate" boolean directly
- * instead of calling `sub_802A7B8` itself. Parked on the identical
- * dead-store/dead-branch elimination gap. */
+/* Same position-sync/flag/trampoline shape as `sub_8034270`
+ * (actor_part68.c), but returns the "should animate" boolean directly
+ * instead of calling `sub_802A7B8` itself - since the value only ever
+ * needs to reach the return register (no re-check against zero the
+ * way `sub_8034270`'s own call-vs-no-call decision needs), the
+ * compute-then-recheck gap that function hit doesn't apply here:
+ * plain C matches byte-for-byte immediately. */
 extern s32 sub_80338E8(void);
 extern s32 sub_8033900(void);
 extern s32 sub_80338F4(void);
@@ -42,6 +40,5 @@ s32 sub_8034314(void *selfArg)
 
     return doAnim;
 }
-#endif /* NON_MATCHING */
 
 asm(".align 2, 0");

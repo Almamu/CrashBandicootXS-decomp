@@ -452,7 +452,7 @@ from "core" graphics.
   `actor_part69.c`/`actor_part71.c`/`actor_part73.c` (new files, GitHub
   issue #63, ROM 0x08033EF4-0x08034AA4 - three `InitActorPart`-rooted
   "self" object kinds immediately following issue #62's cluster, non-
-  adjacent since 6 parked (`sub_8034058`/`sub_8034314`/
+  adjacent since 5 parked (`sub_8034058`/
   `sub_80345B0`/`sub_8034634`/`sub_8034374`/`sub_8034480`, the last two
   in `actor_part85.c` - `sub_8034270` is now matched, see below), the
   NAKED-transcribed `sub_8033FE4`
@@ -871,6 +871,13 @@ embedded as asm instead. They're tracked as parked, not matched.
   right before the check. The old raw
   `asm/code_3_2_20_28568_c99c_31784_33ef4_34270.s` is retired. GitHub
   issue #63, see `docs/matching/issue-63-0x08033ef4-actor.md`.
+- **`sub_8034314`** (`src/graphics/actor_part70.c`) - `sub_8034270`'s
+  boolean-returning twin; matched as real C immediately, no opaque-asm
+  fix needed - returning the value directly (rather than branching on
+  it to decide whether to call `sub_802A7B8`) means there's no
+  recheck for dead-branch elimination to collapse. The old raw
+  `asm/code_3_2_20_28568_c99c_31784_33ef4_34314.s` is retired. GitHub
+  issue #63, see `docs/matching/issue-63-0x08033ef4-actor.md`.
 
 - **`sub_800A884`** (`src/graphics/actor_part78.c`, GitHub issue
   #9/#10; real bytes in `asm/code_3_2_16_a884.s`) - a per-frame
@@ -1089,10 +1096,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   parked because this compiler reads that argument as a shifted/masked
   full word where the ROM's build addresses it directly with `ldrb` -
   see `docs/matching/issue-63-0x08033ef4-actor.md`.
-- **`sub_8034314`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34314.s`, C
-  in `src/graphics/actor_part70.c`, GitHub issue #63) - `sub_8034270`'s
-  (now-matched, see below) boolean-returning twin, parked on the
-  identical gap - see `docs/matching/issue-63-0x08033ef4-actor.md`.
 - **`sub_80345B0`/`sub_8034634`**
   (`asm/code_3_2_20_28568_c99c_31784_33ef4_345b0.s`, C in
   `src/graphics/actor_part72.c`, GitHub issue #63) - a particle-slot
