@@ -54,11 +54,15 @@ and [graphics_loading.md](./graphics_loading.md).
   function, `sub_8000EE4`, is a NAKED transcription, not decompiled C -
   see "Parked" below.
 
-- `src/graphics/aabb_util.c` (new file): `sub_8001640`,
-  `sub_8001688`, `sub_80016D0`, `sub_80016DC` - two AABB overlap tests
-  (one already referenced by name from `actor.md`'s `actor_part15.c`)
-  plus `mem_free`/`mem_alloc` wrappers. `sub_8001624` (also in this
-  file) is a NAKED transcription, not decompiled C - see "Parked" below.
+- `src/graphics/aabb_util.c` (new file): `sub_8001624` (BLDCNT/
+  BLDALPHA/BLDY shadow commit - was previously NAKED, now matched as
+  real C via an inline-asm-materialized store-and-increment pair
+  opaque to the peephole fusion that otherwise always combines it into
+  a `stmia` writeback, plus the ROM's own shift-based mask idiom - see
+  [naked-sub_8001624-matched.md](../matching/naked-sub_8001624-matched.md)),
+  `sub_8001640`, `sub_8001688`, `sub_80016D0`, `sub_80016DC` - two AABB
+  overlap tests (one already referenced by name from `actor.md`'s
+  `actor_part15.c`) plus `mem_free`/`mem_alloc` wrappers.
 
 - `src/graphics/intro_screen.c` (new file, replacing `asm/code_3_1.s` -
   boot-adjacent but not part of `src/system/boot_util.c` since
@@ -78,20 +82,17 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   hoisting never reproduces that specific split. Converted to a
   byte-verified NAKED asm transcription (see
   `src/util/printf_util.c`'s `sub_8000CBC` for the established pattern).
-- **`sub_8001624`** (`src/graphics/aabb_util.c`) - commits a blend-
-  register shadow. This compiler always fuses the ROM's separate
-  store-then-pointer-increment into one `stmia` writeback instruction.
-  Converted to NAKED.
 - **`sub_8000EE4`** (`src/graphics/text_layout.c`) - word-wrap text
   renderer. A full C reconstruction matched the ROM instruction-for-
   instruction except ~8 bytes from two small codegen details
   (incoming-argument spill ordering, and two loop-bound comparisons
   compiling one instruction shorter than the ROM's). Converted to NAKED.
 
-These three are byte-exact against the ROM but are NAKED asm
+These two are byte-exact against the ROM but are NAKED asm
 transcriptions, not decompiled C, so they're tracked here as parked
-rather than matched (`sub_8001524`, formerly also in this list, is now
-matched as real C - see the Matched section above) - see
+rather than matched (`sub_8001524`/`sub_8001624`, formerly also in
+this list, are now matched as real C - see the Matched section above)
+- see
 `docs/matching/naked-transcription-parked-functions.md` for the full
 derivation of each, and `docs/matching.md`'s original entries ("The
 `0x080014A4`-`0x08001624` fade/screen-mode cluster" and "Parked, not

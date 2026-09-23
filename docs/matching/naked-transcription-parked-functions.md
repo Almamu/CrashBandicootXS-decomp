@@ -77,7 +77,10 @@ progress-tracking classification differs from an ordinary match.
   r2,#4` on the same register before the second store; this compiler
   always fuses that store-then-increment-same-register pair into a
   single `stmia r2!,{r0}`, an unavoidable peephole optimization for
-  this exact instruction pair.
+  this exact instruction pair. **Since matched as real C** - see
+  [naked-sub_8001624-matched.md](./naked-sub_8001624-matched.md); this
+  entry is left as-is since it's a frozen historical record of why the
+  function was originally parked (see `docs/matching.md`).
 
 ## Mechanics
 
