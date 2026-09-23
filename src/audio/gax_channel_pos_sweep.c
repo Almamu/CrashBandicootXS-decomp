@@ -14,34 +14,78 @@
  * once a bound is crossed (to 0xff/1, i.e. reverse direction), then
  * folds the position delta (shifted by 11) into `self+0x44`.
  *
- * Written as NAKED asm, not plain C: an extensive real-C
- * reconstruction reproduced this function almost entirely, including
- * the exact `idx*28` columnar-table addressing (getting gcc to
- * recompute it per field access rather than caching a struct pointer,
- * and to spontaneously reload `self+0x10` a second time in the "else"
- * branch, both of which a literal `self[0x3c][...][self[0x10]]`-style
- * per-access C expression reproduces on its own) - but two gaps
- * resisted every C-level technique tried: (1) the ROM keeps a
- * `self+0x13`-sign-flip constant (`0xff`) live in `r8` across the
- * whole function (needing an extra `push`/`pop` pair beyond the normal
- * `r4-r7` set, the same many-register gcc-2.9 allocation ceiling
- * documented throughout this ROM region), while every C phrasing tried
- * here only ever needed `r0-r7`/`ip` and never spilled into `r8`; (2)
- * the ROM stores that `0xff` via `ldrb r7,[r2,#0x13]` (reloading the
- * *old* `self+0x13` byte) followed by `orrs r0,r7` (i.e. computing
- * `0xff | oldByte`, which is always exactly `0xff` for an 8-bit value)
- * rather than a plain immediate store - every C form tried here
- * (a bare `= 0xff`, an explicit `|= 0xff`, and an explicit two-step
- * `oldDir | 0xff` through a named local) got constant-folded straight
- * to `mov r0, #0xff` by this same compiler, since it can prove the OR
- * is redundant; the ROM's real build evidently did not fold it, which
- * only happens with different surrounding register pressure this
- * function's simpler (fewer-register) C reconstruction never
- * recreates. Mechanical, byte-verified transcription of the ROM's own
- * instructions (translated from the disassembler's unified syntax to
- * this project's established NAKED plain/divided syntax, local labels
- * renumbered per docs/matching/issue-4-sio-settings-sync.md's
- * convention), not an inferred control-flow guess. */
+ * Written as NAKED asm, not plain C: an 81.3%-matching C
+ * reconstruction is kept below under `#if NON_MATCHING` - see
+ * docs/matching/naked-sub_803a03c-matched.md for the derivation and
+ * the residual gaps (register-choice-only diffs, plus one genuine
+ * instruction-selection difference in the repeated `tablePtr+0x20`
+ * columnar-table address that no C phrasing tried reproduced without
+ * regressing elsewhere - consistent with the many-register GAX2
+ * allocation-heuristic sensitivity this ROM region already documents,
+ * not an easy phrasing gap). Mechanical, byte-verified transcription
+ * of the ROM's own instructions (translated from the disassembler's
+ * unified syntax to this project's established NAKED plain/divided
+ * syntax, local labels renumbered per
+ * docs/matching/issue-4-sio-settings-sync.md's convention), not an
+ * inferred control-flow guess. */
+#if NON_MATCHING
+/* NOT YET BYTE-MATCHING - see docs/matching/naked-sub_803a03c-matched.md
+ * for the instruction match and the residual register-choice gaps;
+ * compiled only under `make NON_MATCHING=1`, the NAKED version below is
+ * used otherwise. */
+void sub_803A03C(void *self)
+{
+    register u8 *s asm("r2") = (u8 *)self;
+    register s32 zero8 asm("r8");
+    register u8 *tablePtr asm("ip");
+    s32 posAccum;
+    s32 newPos;
+    s32 accum44;
+    s32 countdown;
+
+    if (!s[0x12]) {
+        return;
+    }
+
+    countdown = s[0x14] - 1;
+    s[0x14] = countdown;
+    zero8 = 0xff;
+    if ((u8)countdown != 0) {
+        return;
+    }
+
+    posAccum = *(s32 *)(s + 0x48);
+    tablePtr = *(u8 **)(s + 0x3c);
+    *(u8 *)(s + 0x14) = *(u16 *)(tablePtr + s[0x10] * 28 + 0x24);
+
+    {
+        u8 oldDir = s[0x13];
+        s8 dirSigned = (s8)s[0x13];
+
+        if (dirSigned > 0) {
+            newPos = posAccum + *(s32 *)((tablePtr + 0x20) + s[0x10] * 28);
+            *(s32 *)(s + 0x48) = newPos;
+            if (newPos + *(s32 *)((tablePtr + 0x1c) + s[0x10] * 28) > *(s32 *)((tablePtr + 0x18) + s[0x10] * 28)) {
+                newPos = newPos - *(s32 *)((tablePtr + 0x20) + s[0x10] * 28) * 2;
+                *(s32 *)(s + 0x48) = newPos;
+                s[0x13] = (u8)(zero8 | oldDir);
+            }
+        } else {
+            newPos = posAccum - *(s32 *)((tablePtr + 0x20) + s[0x10] * 28);
+            *(s32 *)(s + 0x48) = newPos;
+            if (newPos < *(s32 *)((tablePtr + 0x14) + s[0x10] * 28)) {
+                newPos = newPos + *(s32 *)((tablePtr + 0x20) + s[0x10] * 28) * 2;
+                *(s32 *)(s + 0x48) = newPos;
+                s[0x13] = 1;
+            }
+        }
+    }
+
+    accum44 = *(s32 *)(s + 0x44) - (posAccum << 11);
+    accum44 = accum44 + (*(s32 *)(s + 0x48) << 11);
+    *(s32 *)(s + 0x44) = accum44;
+}
+#else /* !NON_MATCHING */
 NAKED void sub_803A03C(void *self)
 {
     asm(
@@ -151,3 +195,4 @@ NAKED void sub_803A03C(void *self)
         ".align 2, 0\n\t"
     );
 }
+#endif /* NON_MATCHING */
