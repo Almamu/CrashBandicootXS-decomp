@@ -1,8 +1,7 @@
 #include "core.h"
 
-/* Continuation of the fade_screen_mode.c cluster, right after the
- * parked sub_8001524 (asm/code_3_1_8.s) - see docs/matching.md for
- * why this cluster needed splitting into this many pieces.
+/* Continuation of the fade_screen_mode.c cluster - see docs/matching.md
+ * for why this cluster needed splitting into this many pieces.
  * `gUnknown_03001288` is a 2-byte packed mode/flags shadow copy of
  * `REG_DISPCNT`, committed to the real hardware register by
  * `sub_8001614`. */
@@ -12,37 +11,24 @@ extern u8 gUnknown_03001288[2];
 /* Sets `gUnknown_03001288`'s low 3 bits (the DISPCNT background-mode
  * field) to `val & 7`, preserving the rest.
  *
- * Written as NAKED asm, not plain C: a full C reconstruction (kept in
- * git history) got the logic right, but this compiler recognizes `-8`
- * as reachable from the already-loaded `7` mask via a single `SUB`
- * (`7 - 15 = -8`) and folds the ROM's fresh `movs r1,#8; rsbs r1,r1,#0`
- * pair into that shorter subtract, regardless of how the constant is
- * spelled (`-8`, `~7`) or how many intervening register-pinned
- * temporaries separate the two uses of r1 - an unavoidable
- * value-propagation optimization. Every instruction below is confirmed
- * byte-identical to the ROM - full NAKED transcription, like this
- * project's other hard-compiler-limitation cases (see
- * `src/util/printf_util.c`'s `sub_8000CBC` for the established
- * pattern), is more honest than continuing to chase this one constant
- * through plain C. */
-NAKED void sub_8001524(s32 val)
+ * The ROM materializes `-8` fresh via `movs r1,#8; rsbs r1,r1,#0`
+ * rather than deriving it from the already-loaded `7` mask via a
+ * cheaper `SUB` - but this compiler's value-propagation pass always
+ * takes the cheaper `SUB` once `7` has been loaded anywhere nearby, no
+ * matter how the `-8`/`~7` constant is spelled in C. The fix is to
+ * never let the mask exist as a C-level constant at all: an inline-asm
+ * block computes it via the exact two-instruction ROM sequence, opaque
+ * to the optimizer, which reproduces the ROM's own choice instead of
+ * outsmarting it. */
+void sub_8001524(s32 val)
 {
-    asm(
-        "ldr r2, 1f\n\t"
-        "mov r1, #7\n\t"
-        "and r0, r1\n\t"
-        "mov r1, #8\n\t"
-        "neg r1, r1\n\t"
-        "ldrb r3, [r2]\n\t"
-        "and r1, r3\n\t"
-        "orr r1, r0\n\t"
-        "strb r1, [r2]\n\t"
-        "bx lr\n\t"
-        ".align 2, 0\n\t"
-    "1: .4byte gUnknown_03001288\n\t"
-    );
+    register u8 *addr asm("r2") = gUnknown_03001288;
+    register s32 lowBits asm("r0") = val & 7;
+    s32 mask;
+
+    asm("mov %0, #8\n\tneg %0, %0" : "=r"(mask));
+    addr[0] = (mask & addr[0]) | lowBits;
 }
-asm(".align 2, 0");
 
 /* `gUnknown_03001288[1]` bit 3 clear/set pair (part of the packed
  * DISPCNT-mode shadow's second byte). */

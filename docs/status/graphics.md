@@ -38,13 +38,18 @@ and [graphics_loading.md](./graphics_loading.md).
 - `src/graphics/palette_blend.c`: `sub_80013FC`
 - `src/graphics/actor_anim.c`: `GetAnimFrameBaseOffset`
 - `src/graphics/fade_screen_mode.c` (new file - `sub_8001510`) and
-  `src/graphics/fade_screen_mode2.c` (new file - `sub_800153C`,
+  `src/graphics/fade_screen_mode2.c` (new file - `sub_8001524`,
+  `sub_800153C`,
   `sub_8001550`, `sub_8001564`, `sub_8001578`, `sub_800158C`,
   `sub_80015A0`, `sub_80015B0`, `sub_80015C0`, `sub_80015D0`,
   `sub_80015E0`, `sub_80015F0`, `sub_8001604`, `sub_8001614`): the
   fade/screen-mode utility cluster documented in `docs/rom_map.md` - see
-  `docs/matching.md`. `sub_80014A4`/`sub_8001524` (also in these two
-  files) are NAKED transcriptions, not decompiled C - see "Parked" below.
+  `docs/matching.md`. `sub_8001524` was previously NAKED, now matched
+  as real C via an inline-asm-materialized mask constant opaque to the
+  compiler's value-propagation fold - see
+  [naked-sub_8001524-matched.md](../matching/naked-sub_8001524-matched.md).
+  `sub_80014A4` (also in this cluster) is still a NAKED transcription,
+  not decompiled C - see "Parked" below.
 - `src/graphics/text_layout.c` sits at this ROM range but its only
   function, `sub_8000EE4`, is a NAKED transcription, not decompiled C -
   see "Parked" below.
@@ -73,11 +78,6 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   hoisting never reproduces that specific split. Converted to a
   byte-verified NAKED asm transcription (see
   `src/util/printf_util.c`'s `sub_8000CBC` for the established pattern).
-- **`sub_8001524`** (`src/graphics/fade_screen_mode2.c`) - sets a
-  packed shadow byte's low 3 bits. This compiler always folds the ROM's
-  fresh `movs r1,#8; rsbs r1,r1,#0` mask computation into a `sub`
-  derived from the already-loaded `7` mask - a value-propagation
-  optimization no respelling or barrier defeated. Converted to NAKED.
 - **`sub_8001624`** (`src/graphics/aabb_util.c`) - commits a blend-
   register shadow. This compiler always fuses the ROM's separate
   store-then-pointer-increment into one `stmia` writeback instruction.
@@ -88,9 +88,10 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   (incoming-argument spill ordering, and two loop-bound comparisons
   compiling one instruction shorter than the ROM's). Converted to NAKED.
 
-These four are byte-exact against the ROM but are NAKED asm
+These three are byte-exact against the ROM but are NAKED asm
 transcriptions, not decompiled C, so they're tracked here as parked
-rather than matched - see
+rather than matched (`sub_8001524`, formerly also in this list, is now
+matched as real C - see the Matched section above) - see
 `docs/matching/naked-transcription-parked-functions.md` for the full
 derivation of each, and `docs/matching.md`'s original entries ("The
 `0x080014A4`-`0x08001624` fade/screen-mode cluster" and "Parked, not
