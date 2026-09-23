@@ -125,10 +125,14 @@ system from "core" system startup/init code.
   - cue-3 SFX plus a `gUnknown_030012B4` bit-grid consume-if-clear and a
   `sub_8025A64` part-object spawn. See
   [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
-- `src/system/game_loop30.c` (GitHub issue #13, second pass): `sub_80109A4`
-  - a distance-gated `sub_0800D18C` dispatcher clearing `self+0xc` bit
-  3. `sub_8010914`/`sub_801095C` in the same file are NAKED-parked, see
-  below. See
+- `src/system/game_loop30.c` (GitHub issue #13, second pass):
+  `sub_8010914`/`sub_801095C` (the "get prev"/"get next"
+  neighbor-list-walk-and-filter helpers - previously NAKED, now matched
+  as real C via source-order block placement matching the ROM's own
+  layout plus an inline-asm-materialized mask check - see
+  [naked-sub_8010914-matched.md](../matching/naked-sub_8010914-matched.md))
+  and `sub_80109A4` - a distance-gated `sub_0800D18C` dispatcher
+  clearing `self+0xc` bit 3. See
   [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
 - `src/system/game_loop31.c` (GitHub issue #13, second pass): `sub_801071C`/
   `sub_801075C` (a part-object table-set/tail-call-`sub_8008484` helper
@@ -209,11 +213,6 @@ plain C didn't converge.
   but this compiler's cross-jump pass over-merges one octant's own
   early-return into the shared tail the other three legitimately share
   in the ROM too (4 bytes short). See
-  [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
-- **`sub_8010914`/`sub_801095C`** (`src/system/game_loop30.c`, GitHub
-  issue #13, second pass) - "get prev"/"get next" neighbor-list-walk-
-  and-filter helpers; hits the same cross-jump-over-merge gap as
-  `sub_800FDC8` above. See
   [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
 - **`sub_80259D4`** (`src/system/game_loop13.c`, GitHub issue #41) -
   sets a bit in both the `self+0x208` and `self+0x308` bit-grids at
