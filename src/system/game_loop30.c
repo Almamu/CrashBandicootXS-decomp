@@ -33,106 +33,127 @@ extern void sub_0800D18C(void *selfArg);
  *       cur = next;
  *   }
  *
- * Written as NAKED asm, not plain C: this compiler's cross-jump pass
- * merges the loop's two `return cur;` sites (`adds r0,r4,#0; b <exit>`
- * is byte-identical at both) into one shared tail, 4 bytes shorter
- * than the ROM, which keeps them as two separate physical copies - the
- * same gap as `sub_800FDC8` (game_loop33.c). The mask check
- * (`self+0x4d & 0x7f`) also keeps the loaded byte in r1 throughout
- * (`adds r1,ptr,#0; adds r1,#0x4d; movs r0,#0x7f; ldrb r1,[r1]; ands
- * r0,r1`), the same "mask materializes before the byte load" gap
- * already documented for `sub_800FEB0`/`sub_801085C`
- * (game_loop22.c/game_loop24.c). Every instruction below is checked
- * byte-identical to the ROM. */
-NAKED void *sub_8010914(void *selfArg)
+ * Was NAKED asm, not plain C - see
+ * docs/matching/naked-sub_8010914-matched.md for the derivation. Two
+ * gaps: this compiler's cross-jump pass merges the loop's two
+ * `return cur;` sites into a single shared tail positioned right
+ * before the epilogue (saving a branch the ROM's own, separately-kept
+ * copy still pays for), and the mask check normally computes the
+ * struct-field address and the `0x7f` mask constant in the opposite
+ * order from the ROM. Both closed below: `goto`s placing the shared
+ * `returnCur:` block *before* the loop body in source order (matching
+ * the ROM's own physical layout, so the loop's exit checks become
+ * backward branches into it, keeping the ROM's separate-copy byte
+ * count), and an inline-asm-materialized mask check matching the
+ * ROM's own instruction order (address-then-mask-then-load, not
+ * load-then-mask). */
+void *sub_8010914(void *selfArg)
 {
-    asm(
-        "push {r4, r5, lr}\n\t"
-        "add r5, r0, #0\n\t"
-        "bl sub_801070C\n\t"
-        "add r4, r0, #0\n\t"
-        "cmp r4, #0\n\t"
-        "beq 1f\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x4d\n\t"
+    void *self = selfArg;
+    void *cur;
+    void *next;
+    register u32 masked asm("r0");
+
+    cur = sub_801070C(self);
+    if (cur == NULL) {
+        goto returnSelf;
+    }
+    asm volatile(
+        "add r1, %1, #0\n\t"
+        "add r1, r1, #0x4d\n\t"
         "mov r0, #0x7f\n\t"
         "ldrb r1, [r1]\n\t"
         "and r0, r0, r1\n\t"
-        "cmp r0, #1\n\t"
-        "bne 3f\n\t"
-    "1:\n\t"
-        "add r0, r5, #0\n\t"
-        "b 5f\n\t"
-    "2:\n\t"
-        "add r0, r4, #0\n\t"
-        "b 5f\n\t"
-    "3:\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_801070C\n\t"
-        "add r2, r0, #0\n\t"
-        "cmp r2, #0\n\t"
-        "beq 2b\n\t"
-        "add r1, r2, #0\n\t"
-        "add r1, #0x4d\n\t"
-        "mov r0, #0x7f\n\t"
-        "ldrb r1, [r1]\n\t"
-        "and r0, r0, r1\n\t"
-        "cmp r0, #1\n\t"
-        "beq 2b\n\t"
-        "add r4, r2, #0\n\t"
-        "b 3b\n\t"
-    "5:\n\t"
-        "pop {r4, r5}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
+        : "=r"(masked)
+        : "r"(cur)
+        : "r1", "cc"
     );
+    if (masked != 1) {
+        goto loop;
+    }
+
+returnSelf:
+    return self;
+
+returnCur:
+    return cur;
+
+loop:
+    next = sub_801070C(cur);
+    if (next == NULL) {
+        goto returnCur;
+    }
+    asm volatile(
+        "add r1, %1, #0\n\t"
+        "add r1, r1, #0x4d\n\t"
+        "mov r0, #0x7f\n\t"
+        "ldrb r1, [r1]\n\t"
+        "and r0, r0, r1\n\t"
+        : "=r"(masked)
+        : "r"(next)
+        : "r1", "cc"
+    );
+    if (masked == 1) {
+        goto returnCur;
+    }
+    cur = next;
+    goto loop;
 }
 
 /* Same walk as `sub_8010914`, but over the "get next" chain
- * (`sub_8010708`) instead of "get prev". Same NAKED-transcription
- * reasoning as that function. */
-NAKED void *sub_801095C(void *selfArg)
+ * (`sub_8010708`) instead of "get prev". Same matching technique as
+ * that function - see docs/matching/naked-sub_8010914-matched.md. */
+void *sub_801095C(void *selfArg)
 {
-    asm(
-        "push {r4, r5, lr}\n\t"
-        "add r5, r0, #0\n\t"
-        "bl sub_8010708\n\t"
-        "add r4, r0, #0\n\t"
-        "cmp r4, #0\n\t"
-        "beq 1f\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x4d\n\t"
+    void *self = selfArg;
+    void *cur;
+    void *next;
+    register u32 masked asm("r0");
+
+    cur = sub_8010708(self);
+    if (cur == NULL) {
+        goto returnSelf;
+    }
+    asm volatile(
+        "add r1, %1, #0\n\t"
+        "add r1, r1, #0x4d\n\t"
         "mov r0, #0x7f\n\t"
         "ldrb r1, [r1]\n\t"
         "and r0, r0, r1\n\t"
-        "cmp r0, #1\n\t"
-        "bne 3f\n\t"
-    "1:\n\t"
-        "add r0, r5, #0\n\t"
-        "b 5f\n\t"
-    "2:\n\t"
-        "add r0, r4, #0\n\t"
-        "b 5f\n\t"
-    "3:\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_8010708\n\t"
-        "add r2, r0, #0\n\t"
-        "cmp r2, #0\n\t"
-        "beq 2b\n\t"
-        "add r1, r2, #0\n\t"
-        "add r1, #0x4d\n\t"
-        "mov r0, #0x7f\n\t"
-        "ldrb r1, [r1]\n\t"
-        "and r0, r0, r1\n\t"
-        "cmp r0, #1\n\t"
-        "beq 2b\n\t"
-        "add r4, r2, #0\n\t"
-        "b 3b\n\t"
-    "5:\n\t"
-        "pop {r4, r5}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
+        : "=r"(masked)
+        : "r"(cur)
+        : "r1", "cc"
     );
+    if (masked != 1) {
+        goto loop;
+    }
+
+returnSelf:
+    return self;
+
+returnCur:
+    return cur;
+
+loop:
+    next = sub_8010708(cur);
+    if (next == NULL) {
+        goto returnCur;
+    }
+    asm volatile(
+        "add r1, %1, #0\n\t"
+        "add r1, r1, #0x4d\n\t"
+        "mov r0, #0x7f\n\t"
+        "ldrb r1, [r1]\n\t"
+        "and r0, r0, r1\n\t"
+        : "=r"(masked)
+        : "r"(next)
+        : "r1", "cc"
+    );
+    if (masked == 1) {
+        goto returnCur;
+    }
+    cur = next;
+    goto loop;
 }
 
 /* Unless `self`'s own `+0x4d & 0x7f` state is 1, and `testX`/`testY`

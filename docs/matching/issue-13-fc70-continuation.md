@@ -134,7 +134,10 @@ second pass against those five.
   two `return cur;` sites are byte-identical (`adds r0,r4,#0; b
   <exit>`) and the ROM keeps them as separate physical copies, this
   compiler merges them into one (4 bytes short each). Transcribed for
-  the same reason.
+  the same reason. **Since matched as real C** - see
+  [naked-sub_8010914-matched.md](./naked-sub_8010914-matched.md); this
+  entry is left as-is since it's a frozen historical record of why the
+  function was originally parked.
 
 ## Still left raw - 4 functions
 
