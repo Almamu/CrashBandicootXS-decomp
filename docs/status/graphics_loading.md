@@ -152,17 +152,13 @@ Both hit the same confirmed `r7`-pin gap as `sub_8007114`
 - **`sub_801E990`** (`src/graphics/graphics_loading_1e990.c`) - the
   sound-trigger dispatch/position writer at the end of the
   `LoadGraphicsPackage` cluster's scratch-buffer-style helper family
-  (issue #30). Semantics fully understood (all six called helpers -
-  `sub_80232F4`/`sub_80232E0`/`sub_8023130`/`sub_803AFEC`/`sub_80232B8`
-  already matched elsewhere as plain field accessors, `sub_803AD88` is
-  the r4-trampoline from `reg_trampolines.c`) but the
-  `gUnknown_030012B4 -> *rec -> {+8 offsets[], +0xc base}`
-  table-resolution/bitfield-pack section has its own unclosed
-  register-choice gap (a `movs r0,#1`/`subs r0,#0x12` mask derivation) -
-  distinct from `sub_8021D04`'s now-closed gap in the same file family,
-  issue #33. See
-  [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)'s
-  "Fifth pass".
+  (issue #30). A 96.8%-matching C reconstruction (closing the
+  `movs r0,#1`/`subs r0,#0x12` mask derivation and the `ldrsh`
+  register-offset form, both via the same opaque-asm techniques used
+  for `sub_8021D04`) is kept in-tree under `#if NON_MATCHING` - see
+  [docs/matching/naked-sub_801e990-matched.md](../matching/naked-sub_801e990-matched.md)
+  for the derivation and the residual context-sensitive register-choice
+  gap.
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
