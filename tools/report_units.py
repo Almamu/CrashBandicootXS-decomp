@@ -72,8 +72,7 @@ UNITS = [
     (0x080007EC, "src/graphics/intro_screen.o", "graphics"),
     (0x080008B4, "src/util/math_util.o", "util"),
     (0x0800094C, "src/util/string_util.o", "util"),
-    (0x08000AA8, "src/util/printf_util.o", "util"),  # sub_8000AA8/sub_8000CA8 - custom sprintf plus its variadic wrapper; matched
-    (0x08000CBC, None, "util"),  # sub_8000CBC (case-insensitive strstr) - byte-exact NAKED asm transcription, not decompiled C; tracked as parked - see docs/matching/naked-transcription-parked-functions.md
+    (0x08000AA8, "src/util/printf_util.o", "util"),  # sub_8000AA8/sub_8000CA8/sub_8000CBC - custom sprintf plus its variadic wrapper, plus a case-insensitive strstr; matched. sub_8000CBC was previously NAKED - closed by materializing each lowercase-fold as an opaque inline-asm block (same technique as sub_8001524/sub_8001624) plus deferring the "match found" computation to a label placed after the whole scan/verify loop so gcc's block linearizer places it right before the shared epilogue, matching the ROM's own layout - see docs/matching/naked-sub_8000cbc-matched.md
     (0x08000D68, "src/util/string_util2.o", "util"),
     (0x08000E10, "src/util/rand_util.o", "util"),
     (0x08000E6C, "src/util/line_util.o", "util"),

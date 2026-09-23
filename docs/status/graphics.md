@@ -81,7 +81,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   DMA fields fresh every iteration; this compiler's loop-invariant
   hoisting never reproduces that specific split. Converted to a
   byte-verified NAKED asm transcription (see
-  `src/util/printf_util.c`'s `sub_8000CBC` for the established pattern).
+  `src/system/link_cable.c`'s `sub_8001CB8` for the established pattern).
 - **`sub_8000EE4`** (`src/graphics/text_layout.c`) - word-wrap text
   renderer. A full C reconstruction matched the ROM instruction-for-
   instruction except ~8 bytes from two small codegen details

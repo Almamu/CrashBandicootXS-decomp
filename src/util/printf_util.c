@@ -139,126 +139,143 @@ asm(".align 2, 0");
  * address order (it sits immediately after sub_8000CA8) without
  * another ldscript.txt split.
  *
- * Written as NAKED asm, not plain C: every earlier plain-C attempt (see
- * git history / docs/matching.md's "Parked, not matched: sub_8000CBC")
- * got every register/instruction right except one unavoidable gap -
- * the "normalize a char to lowercase, on the unchanged path" branch
- * shape, where the ROM still routes the untaken branch through a
- * redundant copy-into-r0 before a shared truncate that a plain
- * `if (cond) x += 0x20;` just branches straight past. Reproducing that
- * exact shape in C pushed register pressure just far enough to spill
- * `caseInsensitive` into r8, a worse mismatch than the one it fixed.
- * Every instruction below is confirmed byte-identical to the ROM (this
- * doc comment doubles as that derivation) - full NAKED transcription,
- * like this project's other hard-compiler-limitation cases
- * (`src/util/math_div_util.c`'s `nullsub_8`, `src/system/link_cable.c`'s
- * `sub_8001CB8`/`sub_8001DB4`), is more honest than continuing to chase
- * the one remaining branch shape through plain C. */
-NAKED u8 *sub_8000CBC(u8 *haystack0, u8 *needle, s32 caseInsensitive)
+ * Two compiler gaps, both closed with the techniques already used
+ * elsewhere in this file's neighbors (see naked-sub_8001524-matched.md
+ * and naked-sub_80010e0-matched.md):
+ *
+ * 1. The "normalize a char to lowercase, on the unchanged path" branch
+ *    shape: the ROM routes the untaken branch of the range check
+ *    through a redundant copy-into-r0 before a shared truncate, where
+ *    a plain `if (cond) x += 0x20;` just branches straight past it,
+ *    and gcc folds an equivalent ternary back into the same shape once
+ *    it proves the truncate redundant. Fixed the same way as
+ *    `sub_8001524`/`sub_8001624`: each fold is materialized as an
+ *    opaque inline-asm block the optimizer can't see into.
+ * 2. The inner verify loop's "needle exhausted, match found" check
+ *    compiled with the opposite branch sense from the ROM (`bne` to a
+ *    same-iteration fallthrough instead of the ROM's `beq` clear across
+ *    to a tail shared with the epilogue) whenever the match-found value
+ *    was computed inline at the check site - gcc's block linearizer
+ *    always inlines a short taken-branch target right at the branch.
+ *    Deferring the computation to a label placed after the whole
+ *    scan/verify loop (so it's the function's last basic block, exactly
+ *    where the ROM put it, immediately before the shared epilogue) gets
+ *    gcc to lay out the branch the same way the ROM's compiler did. */
+u8 *sub_8000CBC(u8 *haystack0, u8 *needle, s32 caseInsensitive)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "add r7, r2, #0\n\t"
-        "mov ip, r1\n\t"
-        "add r5, r0, #0\n\t"
-        "ldrb r6, [r1]\n\t"
-        "mov r0, #1\n\t"
-        "add ip, r0\n\t"
-        "cmp r6, #0\n\t"
-        "beq 7f\n\t"
-        "cmp r7, #0\n\t"
-        "beq 3f\n\t"
-        "add r0, r6, #0\n\t"
-        "sub r0, #0x41\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "cmp r0, #0x19\n\t"
-        "bhi 1f\n\t"
-        "add r0, r6, #0\n\t"
-        "add r0, #0x20\n\t"
-        "b 2f\n\t"
-    "1:\n\t"
-        "add r0, r6, #0\n\t"
-    "2:\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r6, r0, #0x18\n\t"
-    "3:\n\t"
-        "ldrb r3, [r5]\n\t"
-        "add r5, #1\n\t"
-        "cmp r7, #0\n\t"
-        "beq 6f\n\t"
-        "add r0, r3, #0\n\t"
-        "sub r0, #0x41\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "cmp r0, #0x19\n\t"
-        "bhi 4f\n\t"
-        "add r0, r3, #0\n\t"
-        "add r0, #0x20\n\t"
-        "b 5f\n\t"
-    "4:\n\t"
-        "add r0, r3, #0\n\t"
-    "5:\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r3, r0, #0x18\n\t"
-    "6:\n\t"
-        "cmp r3, r6\n\t"
-        "beq 8f\n\t"
-        "cmp r3, #0\n\t"
-        "bne 3b\n\t"
-    "7:\n\t"
-        "mov r0, #0\n\t"
-        "b 16f\n\t"
-    "8:\n\t"
-        "add r4, r5, #0\n\t"
-        "mov r2, ip\n\t"
-    "9:\n\t"
-        "ldrb r3, [r2]\n\t"
-        "add r2, #1\n\t"
-        "cmp r3, #0\n\t"
-        "beq 15f\n\t"
-        "ldrb r1, [r4]\n\t"
-        "add r4, #1\n\t"
-        "cmp r7, #0\n\t"
-        "beq 14f\n\t"
-        "add r0, r3, #0\n\t"
-        "sub r0, #0x41\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "cmp r0, #0x19\n\t"
-        "bhi 10f\n\t"
-        "add r0, r3, #0\n\t"
-        "add r0, #0x20\n\t"
-        "b 11f\n\t"
-    "10:\n\t"
-        "add r0, r3, #0\n\t"
-    "11:\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r3, r0, #0x18\n\t"
-        "add r0, r1, #0\n\t"
-        "sub r0, #0x41\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "cmp r0, #0x19\n\t"
-        "bhi 12f\n\t"
-        "add r0, r1, #0\n\t"
-        "add r0, #0x20\n\t"
-        "b 13f\n\t"
-    "12:\n\t"
-        "add r0, r1, #0\n\t"
-    "13:\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r1, r0, #0x18\n\t"
-    "14:\n\t"
-        "cmp r3, r1\n\t"
-        "beq 9b\n\t"
-        "b 3b\n\t"
-    "15:\n\t"
-        "sub r0, r5, #1\n\t"
-    "16:\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-    );
+    register u8 *needleRest asm("ip") = needle;
+    register u8 *haystack asm("r5") = haystack0;
+    register u32 c0 asm("r6") = *needle;
+    register u32 hc asm("r3");
+    register u8 *matchHaystack asm("r4");
+    register u8 *matchNeedle asm("r2");
+    register u32 nc asm("r3");
+    register u32 hc2 asm("r1");
+
+    asm volatile("mov r0, #1\n\tadd %0, r0" : "+r"(needleRest) :: "r0");
+
+    if (c0 == 0) {
+        return 0;
+    }
+    if (caseInsensitive != 0) {
+        asm volatile(
+            "add r0, %0, #0\n\t"
+            "sub r0, #0x41\n\t"
+            "lsl r0, r0, #0x18\n\t"
+            "lsr r0, r0, #0x18\n\t"
+            "cmp r0, #0x19\n\t"
+            "bhi 1f\n\t"
+            "add r0, %0, #0\n\t"
+            "add r0, #0x20\n\t"
+            "b 2f\n\t"
+            "1:\n\t"
+            "add r0, %0, #0\n\t"
+            "2:\n\t"
+            "lsl r0, r0, #0x18\n\t"
+            "lsr %0, r0, #0x18\n\t"
+            : "+r"(c0) :: "r0");
+    }
+
+scan:
+    hc = *haystack;
+    haystack++;
+    if (caseInsensitive != 0) {
+        asm volatile(
+            "add r0, %0, #0\n\t"
+            "sub r0, #0x41\n\t"
+            "lsl r0, r0, #0x18\n\t"
+            "lsr r0, r0, #0x18\n\t"
+            "cmp r0, #0x19\n\t"
+            "bhi 1f\n\t"
+            "add r0, %0, #0\n\t"
+            "add r0, #0x20\n\t"
+            "b 2f\n\t"
+            "1:\n\t"
+            "add r0, %0, #0\n\t"
+            "2:\n\t"
+            "lsl r0, r0, #0x18\n\t"
+            "lsr %0, r0, #0x18\n\t"
+            : "+r"(hc) :: "r0");
+    }
+    if (hc == c0) {
+        goto verify;
+    }
+    if (hc != 0) {
+        goto scan;
+    }
+    return 0;
+
+verify:
+    matchHaystack = haystack;
+    matchNeedle = needleRest;
+inner:
+    nc = *matchNeedle;
+    matchNeedle++;
+    if (nc == 0) {
+        goto matchFound;
+    }
+    hc2 = *matchHaystack;
+    matchHaystack++;
+    if (caseInsensitive != 0) {
+        asm volatile(
+            "add r0, %0, #0\n\t"
+            "sub r0, #0x41\n\t"
+            "lsl r0, r0, #0x18\n\t"
+            "lsr r0, r0, #0x18\n\t"
+            "cmp r0, #0x19\n\t"
+            "bhi 1f\n\t"
+            "add r0, %0, #0\n\t"
+            "add r0, #0x20\n\t"
+            "b 2f\n\t"
+            "1:\n\t"
+            "add r0, %0, #0\n\t"
+            "2:\n\t"
+            "lsl r0, r0, #0x18\n\t"
+            "lsr %0, r0, #0x18\n\t"
+            : "+r"(nc) :: "r0");
+        asm volatile(
+            "add r0, %0, #0\n\t"
+            "sub r0, #0x41\n\t"
+            "lsl r0, r0, #0x18\n\t"
+            "lsr r0, r0, #0x18\n\t"
+            "cmp r0, #0x19\n\t"
+            "bhi 1f\n\t"
+            "add r0, %0, #0\n\t"
+            "add r0, #0x20\n\t"
+            "b 2f\n\t"
+            "1:\n\t"
+            "add r0, %0, #0\n\t"
+            "2:\n\t"
+            "lsl r0, r0, #0x18\n\t"
+            "lsr %0, r0, #0x18\n\t"
+            : "+r"(hc2) :: "r0");
+    }
+    if (nc == hc2) {
+        goto inner;
+    }
+    goto scan;
+
+matchFound:
+    return haystack - 1;
 }
 asm(".align 2, 0");
