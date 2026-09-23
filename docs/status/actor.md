@@ -167,10 +167,11 @@ from "core" graphics.
 
 - `src/graphics/actor_part19.c`/`actor_part19c.c`/`actor_part19d.c`/
   `actor_part19f.c`/`actor_part19g.c` (new files, non-adjacent since
-  two parked functions (`sub_802C2FC`/`sub_802C3E8`), the NAKED-
-  transcribed `sub_802C208` (`actor_part19e.c` - see below), and one
-  left-raw function sit between them - see `docs/matching.md`,
-  issue #52): `sub_802BED8`, `sub_802BF30`,
+  the still-parked `sub_802C3E8`, the NAKED-transcribed `sub_802C208`
+  (`actor_part19e.c` - see below), and one left-raw function sit
+  between them - `sub_802C2FC` (`actor_part19b.c`), previously also
+  parked here, is now matched as real C (see below) - see
+  `docs/matching.md`, issue #52): `sub_802BED8`, `sub_802BF30`,
   `sub_802BFA0`, `sub_802BFD4`, `sub_802C018`, `sub_802C078`,
   `sub_802C0A8`, `sub_802C0BC`, `sub_802C128`, `sub_802C14C`,
   `sub_802C19C`, `sub_802C264`, `sub_802C270`, `sub_802C394`,
@@ -829,16 +830,24 @@ embedded as asm instead. They're tracked as parked, not matched.
 - **`sub_803B46C`** (`src/graphics/actor_anim.c`) - fixed-position
   (120, 106) OAM setup for one sprite frame - screen-space visibility
   cull, then builds the OAM attribute words and calls
-  `SetupSpriteFrameOam`; near-identical twin of the still-parked
-  `sub_802C2FC` (`actor_part19b.c`). An 88%-matching C reconstruction
-  (closing the `| 0`-dead-store idiom and the register-budget gap - the
-  latter turned out to be an r7-pin-hazard artifact, not a genuine
-  register shortage) is kept in-tree under `#if NON_MATCHING` - see
+  `SetupSpriteFrameOam`; near-identical twin of the now-matched
+  `sub_802C2FC` (`actor_part19b.c`, see below). An 88%-matching C
+  reconstruction (closing the `| 0`-dead-store idiom and the
+  register-budget gap - the latter turned out to be an r7-pin-hazard
+  artifact, not a genuine register shortage) is kept in-tree under
+  `#if NON_MATCHING` - see
   [docs/matching/naked-sub_803b46c-matched.md](../matching/naked-sub_803b46c-matched.md).
   GitHub issue #71, see
   [docs/matching/issue-71-0x0803b060-actor.md](../matching/issue-71-0x0803b060-actor.md).
-
-### `NON_MATCHING` (not yet byte-exact)
+- **`sub_802C2FC`** (`src/graphics/actor_part19b.c`) - fixed-position
+  OAM setup for one sprite frame, `sub_803B46C`'s twin above; now fully
+  matched as real C. The dead `flag = 0` initializer closes via an
+  opaque two-instruction `asm volatile` materialization (a single
+  `mov r8, #0` isn't valid Thumb - only lo registers take an
+  immediate `mov`), and the remaining register-choice gaps close with
+  the same pin-matching techniques worked out for `sub_803B46C`. The
+  old raw `asm/code_3_2_20_28568_c2fc.s` is retired. See
+  `docs/matching.md`, issue #52.
 
 - **`sub_800A884`** (`src/graphics/actor_part78.c`, GitHub issue
   #9/#10; real bytes in `asm/code_3_2_16_a884.s`) - a per-frame
@@ -1016,11 +1025,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   (`tools/report_units.py`'s `UNITS` list keeps their `base_object` as
   `None`) - see docs/matching/issue-52-0x0802bed8-actor.md and the
   per-issue docs for #56/#62/#63.
-- **`sub_802C2FC`** (`asm/code_3_2_20_28568_c2fc.s`, C in
-  `src/graphics/actor_part19b.c`) - OAM setup for one sprite frame.
-  Matches instruction-for-instruction except a single dead `flag = 0`
-  initializer this compiler's dead-store elimination always removes -
-  see `docs/matching.md`, issue #52.
 - **`sub_802C3E8`** (`asm/code_3_2_20_28568_c3e8.s`, C in
   `src/graphics/actor_part19c2.c`) - a homing/seek-toward-point spawn-
   effect constructor. Every field access and call confirmed correct;
