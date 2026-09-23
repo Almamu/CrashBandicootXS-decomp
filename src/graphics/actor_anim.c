@@ -399,23 +399,22 @@ extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
  * `SetupSpriteFrameOam`. See docs/matching/issue-71-0x0803b060-actor.md
  * for the full semantic account.
  *
- * Written as NAKED asm, not plain C: an 88%-matching C reconstruction
- * is kept below under `#if NON_MATCHING` - see
- * docs/matching/naked-sub_803b46c-matched.md for the derivation and
- * the residual register-choice gaps. Mechanical, byte-verified
- * transcription of the ROM's own instructions, not an inferred
- * control-flow guess. */
-#if NON_MATCHING
-/* NOT YET BYTE-MATCHING - 88% instruction match (see the doc comment
- * above and docs/matching/naked-sub_803b46c-matched.md); compiled only
- * under `make NON_MATCHING=1`, the NAKED version below is used
- * otherwise. */
+ * The dead `flag`-equivalent `| 0` closes via the established opaque
+ * `asm volatile("orr ...")` idiom; every other register choice (the
+ * `w`/`wShift`/`h`/`hShift` load/shift order, the position-word pack,
+ * the `self+0x18` priority-nibble unpack, and the final
+ * `SetupSpriteFrameOam` argument shuffle) matches the ROM's own
+ * register roles once pinned to match, the same techniques worked out
+ * for the near-identical twin `sub_802C2FC` (`actor_part19b.c`). Note
+ * `sub_803B46C`'s own priority constant is `0x100`, not
+ * `sub_802C2FC`'s `0x140` - the two twins differ here. */
 void sub_803B46C(void *selfArg)
 {
     register u8 *self asm("r5") = selfArg;
     register s32 x asm("r4") = 120;
     register s32 y asm("r6") = 106;
     u8 *frame;
+    register u32 packed asm("r3");
     register s32 w asm("r0");
     register s32 wShift asm("r2");
     register s32 h asm("r1");
@@ -440,8 +439,11 @@ void sub_803B46C(void *selfArg)
     if (x > 239) {
         return;
     }
-    if (x + (wShift << 1) < 0) {
-        return;
+    {
+        register s32 wCheck asm("r0") = wShift << 1;
+        if (x + wCheck < 0) {
+            return;
+        }
     }
 
     {
@@ -452,103 +454,45 @@ void sub_803B46C(void *selfArg)
         a0 &= y;
         {
             register s32 mask asm("r1") = 0x1ff;
+            register s32 shifted asm("r1");
+
             xm &= mask;
+            shifted = xm << 16;
+            a0 |= shifted;
         }
-        xm <<= 16;
-        a0 |= xm;
         a0 |= attrFlag;
         {
             register s32 zero asm("r0") = 0;
             asm volatile("orr %0, %0, %1" : "+r"(a0) : "r"(zero));
         }
-        x = a0;
+        packed = a0;
     }
 
     {
-        s32 field24 = *(s32 *)(self + 24);
+        register s32 field24 asm("r4") = *(s32 *)(self + 24);
         s32 a2 = field24 << 12;
         s32 field20 = *(s32 *)(self + 20);
-        s32 attr2;
+        register u32 attr2 asm("r2");
 
         if (field20 & 0x8000) {
             a2 |= 0x800;
-            attr2 = (u32)(a2 << 16) >> 16;
+            {
+                register s32 shifted asm("r0") = a2 << 16;
+                attr2 = (u32)shifted >> 16;
+            }
         } else {
-            attr2 = (u32)(field24 << 28) >> 16;
+            register s32 shifted asm("r0") = field24 << 28;
+            attr2 = (u32)shifted >> 16;
         }
-        SetupSpriteFrameOam(frame, x, attr2, 0x100);
+        {
+            register u8 *argFrame asm("r0") = frame;
+            register u32 argPacked asm("r1") = packed;
+            register s32 argPriority asm("r3") = 0x100;
+
+            SetupSpriteFrameOam(argFrame, argPacked, attr2, argPriority);
+        }
     }
 }
-#else /* !NON_MATCHING */
-NAKED void sub_803B46C(void *selfArg)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "add r5, r0, #0\n\t"
-        "mov r4, #120\n\t"
-        "mov r6, #106\n\t"
-        "bl GetAnimFrameData\n\t"
-        "add r7, r0, #0\n\t"
-        "ldrb r0, [r7]\n\t"
-        "lsl r2, r0, #2\n\t"
-        "ldrb r1, [r7, #1]\n\t"
-        "lsl r0, r1, #2\n\t"
-        "sub r4, r4, r2\n\t"
-        "sub r6, r6, r0\n\t"
-        "cmp r6, #159\n\t"
-        "bgt 7f\n\t"
-        "lsl r0, r1, #3\n\t"
-        "add r0, r6, r0\n\t"
-        "cmp r0, #0\n\t"
-        "blt 7f\n\t"
-        "cmp r4, #239\n\t"
-        "bgt 7f\n\t"
-        "lsl r0, r2, #1\n\t"
-        "add r0, r4, r0\n\t"
-        "cmp r0, #0\n\t"
-        "blt 7f\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_803B060\n\t"
-        "mov r3, #255\n\t"
-        "and r3, r6\n\t"
-        "ldr r1, 4f\n\t"
-        "and r4, r1\n\t"
-        "lsl r1, r4, #16\n\t"
-        "orr r3, r1\n\t"
-        "orr r3, r0\n\t"
-        "mov r0, #0\n\t"
-        "orr r3, r0\n\t"
-        "ldr r4, [r5, #24]\n\t"
-        "lsl r2, r4, #12\n\t"
-        "ldr r0, [r5, #20]\n\t"
-        "mov r1, #128\n\t"
-        "lsl r1, r1, #8\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "beq 5f\n\t"
-        "mov r0, #128\n\t"
-        "lsl r0, r0, #4\n\t"
-        "orr r2, r0\n\t"
-        "lsl r0, r2, #16\n\t"
-        "b 6f\n\t"
-    "4: .4byte 0x1ff\n"
-    "5:\n\t"
-        "lsl r0, r4, #28\n\t"
-    "6:\n\t"
-        "lsr r2, r0, #16\n\t"
-        "add r0, r7, #0\n\t"
-        "add r1, r3, #0\n\t"
-        "mov r3, #128\n\t"
-        "lsl r3, r3, #1\n\t"
-        "bl SetupSpriteFrameOam\n\t"
-    "7:\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    );
-}
-#endif /* NON_MATCHING */
 
 asm(".align 2, 0");
 

@@ -304,10 +304,9 @@ from "core" graphics.
   `sub_803B2E0`, `sub_803B30C`, `sub_803B338`, `sub_803B364`,
   `sub_803B390`, `sub_803B3BC`, `sub_803B3E8`, `sub_803B414`,
   `sub_803B440` - unlink `self` from its `+0x48`/`+0x4c` circular list,
-  set `+0x50` to the shared "dead" vtable, and conditionally free) - see
+  set `+0x50` to the shared "dead" vtable, and conditionally free), and
+  `sub_803B46C` (fixed-position OAM setup for one sprite frame) - see
   [docs/matching/issue-71-0x0803b060-actor.md](../matching/issue-71-0x0803b060-actor.md).
-  (This file's `sub_803B46C` is a NAKED transcription tracked as parked,
-  not matched - see below.)
 - `src/graphics/actor_part39.c` (new file, GitHub issue #16, ROM
   0x080119A8-0x08011BD4): `sub_80119A8`, `sub_80119D4`, `sub_80119D8`,
   `sub_80119EC`, `sub_80119FC`, `sub_8011A1C`, `sub_8011A50`,
@@ -830,14 +829,13 @@ embedded as asm instead. They're tracked as parked, not matched.
 - **`sub_803B46C`** (`src/graphics/actor_anim.c`) - fixed-position
   (120, 106) OAM setup for one sprite frame - screen-space visibility
   cull, then builds the OAM attribute words and calls
-  `SetupSpriteFrameOam`; near-identical twin of the now-matched
-  `sub_802C2FC` (`actor_part19b.c`, see below). An 88%-matching C
-  reconstruction (closing the `| 0`-dead-store idiom and the
-  register-budget gap - the latter turned out to be an r7-pin-hazard
-  artifact, not a genuine register shortage) is kept in-tree under
-  `#if NON_MATCHING` - see
-  [docs/matching/naked-sub_803b46c-matched.md](../matching/naked-sub_803b46c-matched.md).
-  GitHub issue #71, see
+  `SetupSpriteFrameOam`; near-identical twin of `sub_802C2FC`
+  (`actor_part19b.c`, see below). Now fully matched as real C: the
+  `| 0`-dead-store idiom closes via the established opaque-asm idiom,
+  and the register-budget gap the original parking cited turned out to
+  be an r7-pin-hazard artifact (leaving `frame` unpinned lets the
+  natural allocator land it in r7 correctly) rather than a genuine
+  register shortage. GitHub issue #71, see
   [docs/matching/issue-71-0x0803b060-actor.md](../matching/issue-71-0x0803b060-actor.md).
 - **`sub_802C2FC`** (`src/graphics/actor_part19b.c`) - fixed-position
   OAM setup for one sprite frame, `sub_803B46C`'s twin above; now fully
