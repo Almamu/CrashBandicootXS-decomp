@@ -62,7 +62,12 @@ category page - see [game_loop.md](./game_loop.md).
   `sub_800276C` (RCNT/SIOCNT reset helper), `sub_8002798`
   (reset convenience wrapper), `sub_80027B0` (reset + conditional
   teardown), `sub_80027E8` (session object constructor), `sub_8002830`/
-  `sub_8002848` (Serial/Timer3 IRQ handlers) - all matched, GitHub
+  `sub_8002848` (Serial/Timer3 IRQ handlers), `sub_8002868`
+  (`src/graphics/settings_menu8d.c`, EEPROM load block loop for the
+  settings record - the previously-suspected register-pressure gap in
+  its IME-save/IE-clear/IME-restore snippet didn't reproduce with the
+  actual field/loop structure; plain C matches byte-for-byte) - all
+  matched, GitHub
   issue #4, see `docs/matching/issue-4-sio-settings-sync.md`. (This
   file's `sub_8001CB8`/`sub_8001DB4`/`sub_8001F50`/`sub_8002114` are
   NAKED transcriptions tracked as parked - see below.)
@@ -105,7 +110,8 @@ frozen decomp.dev baseline now (`expected/legacy.s`) - see
   (link-connection/handshake driver), **`sub_8002114`** (1488 B
   per-frame SIO data-exchange pump, this file's biggest function).
   GitHub issue #4, see `docs/matching/issue-4-sio-settings-sync.md`.
-- **`sub_8002868`**/**`sub_8002938`** (`src/graphics/settings_menu8d.c`,
-  EEPROM load/save block-loop pair for the settings record, built on
-  `timer_util.c`'s `EepromConfig` primitives). GitHub issue #4, see
+- **`sub_8002938`** (`src/graphics/settings_menu8d.c`, EEPROM save
+  block loop for the settings record, built on `timer_util.c`'s
+  `EepromConfig` primitives; counterpart to the now-matched
+  `sub_8002868` above). GitHub issue #4, see
   `docs/matching/issue-4-sio-settings-sync.md`.
