@@ -78,13 +78,23 @@ transcription" below.)
   `gUnknown_030012F8`, plain `sub_801A878`/`sub_801B984` trampolines, a
   `sub_800CB40`-based constructor, and 12 more plain `sub_800FF0C`
   entity-constructor trampolines (types `0x12`-`7`) - matched. This runs
-  through to the end of what used to be `asm/code_3_2_17_21280.s`, which
-  is now trimmed to just `sub_8021280`-`sub_802155C` (see "Left raw" in
-  the linked doc). `sub_802190C`, interleaved between two matched
+  through to the end of what used to be `asm/code_3_2_17_21280.s`.
+  `sub_802190C`, interleaved between two matched
   ranges of this same file, is NAKED - see "Parked - NAKED
   transcription" below. See
   [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md)'s
   "Fourth pass".
+- **`sub_8021388`**, **`sub_802155C`** (`src/graphics/graphics_loading_21280.c`)
+  - issue #31, fifth pass: two more "two-line text popup" siblings
+  (`sub_8021388` builds its header via `sub_801A838`; `sub_802155C` is
+  the OAM-trio tail variant, registering into `gUnknown_030012F4`) -
+  matched. This retires `asm/code_3_2_17_21280.s` entirely - the file no
+  longer exists, replaced by this new object at the same point in
+  `ldscript.txt`. `sub_8021280`/`sub_8021480`, interleaved between/around
+  these two matched functions in the same file, are NAKED - see "Parked -
+  NAKED transcription" below. See
+  [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md)'s
+  "Fifth pass".
 - **`sub_8021D80`**, **`sub_8021DFC`**, **`sub_8021E78`**, **`sub_8021EF4`**,
   **`sub_8021F70`**, **`sub_802200C`**, **`sub_80220C4`**, **`sub_802209C`**,
   **`sub_8022158`**, **`nullsub_22`**, **`sub_802218C`**, **`sub_80221A4`**,
@@ -133,6 +143,16 @@ plain C didn't converge.
   shape as the twin family above. See
   [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md)'s
   "Fourth pass".
+- **`sub_8021280`** (`src/graphics/graphics_loading_21280.c`) - a
+  three-way dispatcher (not part of the "two-line text popup" family)
+  gated by a `gStaticData_0816C86C`-indexed guard check.
+- **`sub_8021480`** (`src/graphics/graphics_loading_21280.c`) - one more
+  "two-line text popup" sibling.
+
+Both hit the same confirmed `r7`-pin gap as `sub_8007114`
+(src/graphics/graphics.c) and `sub_802190C` above - see
+[issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md)'s
+"Fifth pass".
 - **`sub_801E990`** (`src/graphics/graphics_loading_1e990.c`) - the
   sound-trigger dispatch/position writer at the end of the
   `LoadGraphicsPackage` cluster's scratch-buffer-style helper family

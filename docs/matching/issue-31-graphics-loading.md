@@ -416,3 +416,132 @@ pass's writeup carried forward:
 
 Verified via a full clean `make compare` (`La suma coincide`) and
 `make NON_MATCHING=1 report`.
+
+## Fifth pass: the final raw region (`sub_8021280`-`sub_802155C`) - 2 of 4 real C, 2 NAKED
+
+Picked up the "Left raw (4)" list the fourth pass left behind - the last
+still-raw stretch of `asm/code_3_2_17_21280.s`. All four are now real,
+always-compiled code (2 matched, 2 NAKED), retiring the raw file entirely.
+New file: `src/graphics/graphics_loading_21280.c`, replacing
+`asm/code_3_2_17_21280.o` in `ldscript.txt` at the same point.
+
+### Matched: `sub_8021388`, `sub_802155C`
+
+Both are "two-line text popup" siblings, matched byte-exact (full clean
+`make compare`, `La suma coincide`). Confirms the fourth pass's guess that
+`sub_8021388`'s prologue double-store (`mov r8, r1` / `mov sb, r2` from
+the raw incoming values, immediately followed by a second pair from the
+truncated ones) really is a pure gcc-2.9 codegen quirk, not a semantics
+gap - but it turned out reachable from plain C after all, via a technique
+the fourth pass hadn't tried: writing the *entire* prologue-through-call
+(argument truncation, the double `r8`/`sb` store, and the `bl sub_8009ED0`
+itself) as one hand-spelled `asm volatile` block with the raw incoming
+registers (`r0`-`r3`) pinned as inputs and `part`/`a1`/`a2`/the truncated
+`arg3` pinned as outputs - rather than trying to coax the compiler's own
+scheduler into the ROM's exact instruction order through plain-C
+statement ordering (which this pass confirmed, again, gets silently
+reordered/CSE'd away; see "Two more compiler-codegen gotchas" below for
+the two extra spots this same class of gap turned up in `sub_8021388`
+itself, past the point the fourth pass had already diagnosed).
+
+`sub_802155C` (the OAM-trio tail variant, same shape as `sub_8021668`)
+needed the same "hand-spelled asm block covering the whole
+prologue-through-call" treatment for its own single-truncation prologue
+(`arg3`'s home is `r5` for the whole function, `part` is `r4`), plus a
+similar explicit block for its `+0x2d`/cached-constants store (`part->
+field_2d = 1`, with a `0` cached into `sb` for a `part->field_2c = 0`
+write far later and a `1` cached into `r6` for the collected-bits pack -
+all materialized before the store itself, not after, the same "constant
+before store" ordering this cluster's other functions already needed).
+One more real gotcha specific to this instance: `hdr = sub_80197DC()`'s
+result is used for its own `+0xc` table dereference *before* getting
+aliased into `r8` (`hdr`'s durable home for later) - `r8` can't be an
+immediate-offset load's base register in Thumb (the same restriction
+`sub_801FDEC` hit for its `+0x6c`/`+0x44` store pair), but here the ROM
+sidesteps it entirely by using the fresh, still-low-register return value
+in `r0` for the *first* access, only recovering `hdr` from `r8` after `r0`
+gets clobbered by an unrelated `ldrsh` - reproduced with one more
+`asm volatile` block spelling out the exact `bl`/`mov r8, r0`/dereference/
+`add r0, r8` sequence, rather than the `sub_801FDEC`-style plain-C
+`hdr`-pinned-in-`r8` access that works everywhere else in this cluster
+but doesn't here (a plain-C attempt produced an extra `add r0, r0, #0xc`
+address computation instead of folding the offset into the `ldr`'s
+immediate, since Thumb can't fold an immediate offset onto a *high*-register
+base and this compiler has to compute the address separately when
+starting from the `r8`-pinned variable instead of the call's fresh `r0`
+return value).
+
+#### Two more compiler-codegen gotchas found finishing `sub_8021388`
+
+Isolated-compile "confirmed matching" from the fourth pass turned out to
+still have two real mismatches, only caught by this pass's full clean
+`make compare` (per docs/workflow.md's standing warning about exactly
+this) - both fixed with small `asm volatile` blocks:
+
+- **The `+0x20` table-offset constant (`0xa2 * 4`).** A plain
+  `register s32 off asm("r3") = 0xa2 * 4;` pin is silently ignored for a
+  bare constant initializer - this compiler still picks its own register
+  (`r1`) for the two-step `mov`/`lsl` synthesis regardless of the pin,
+  unlike every other case in this cluster where pinning a *computed* or
+  *parameter-derived* value works fine. Spelled out as a 3-instruction
+  `asm volatile` block instead, forcing `r3` directly.
+- **The `part->field_0A = 1;` / collected-bits-pack `1` write pair.**
+  Same "two independent constant writes, ROM materializes both before
+  the store" idiom this cluster has hit repeatedly (`sub_8021280`'s
+  argument prologue, `sub_802155C`'s `+0x2d` store above) - plain C
+  (even with the register-pinned `one` declared and assigned *before*
+  the store) still let the compiler schedule the store between the two
+  writes rather than after both. Fixed with the same 3-instruction
+  `asm volatile` idiom `sub_801FDEC`'s own version of this pack already
+  established (`mov r0, #1` / `mov r5, #1` / `strb r0, [r6, #0xa]`).
+
+### Parked as NAKED: `sub_8021280`, `sub_8021480`
+
+Both fully understood, every instruction's *content* confirmed matching
+via isolated compile, but both hit the confirmed `r7`-pin gap documented
+for `sub_8007114` (src/graphics/graphics.c) and `sub_802190C` above -
+this compiler only adds a hard-pinned register to a function's callee-saved
+push/pop set when it tracks that register as holding a value live across
+a *wider* span than a single inline-asm block, and `r7` in both of these
+functions is only ever used as scratch inside one `asm volatile` block
+(the position-probe offset marshalling for `sub_8021280`'s middle arm; the
+collected-bits pack's mask-byte reload for `sub_8021480`). Every plain-C
+technique tried to force `r7`'s inclusion - an unused pinned local, capturing
+it as the asm's own output, a trailing "keep it alive" read spanning from
+the asm block to the end of the function - failed to get this compiler to
+push/pop `r7`, confirming (for two more functions) that this is a genuine,
+unconditional toolchain limitation for `r7` specifically, not something
+that responds to more C-level effort. Transcribed instruction-for-instruction
+from the ROM disassembly instead:
+
+- **`sub_8021280`** - a three-way dispatcher (not part of the "two-line
+  text popup" family): if `sub_8023290`/`sub_80232B8`/`sub_8023324`
+  (`gUnknown_030012C0`) all say "no" and the current level's
+  `gStaticData_0816C86C`-indexed threshold-table entry's guard field
+  (offset `+4`, meaning not otherwise understood) is zero, spawns a
+  `sub_80071E4`-built part sized `0x64`x`0x64` tagged `0x12`, registering
+  into `gUnknown_030012E8`. Otherwise, if the byte at
+  `gUnknown_030012D8 + 0x88` is zero, probes a position via
+  `sub_801A878(..., id=4)` (returning a pointer whose first two Q8.8
+  fields line up with `struct actor`'s own `x`/`y`) and feeds
+  `sub_8023500` an `{x - 2, y - 0x1e}` offset pair; otherwise falls
+  through to the same `sub_80071E4` spawn as the first arm, sized
+  `0x28`x`0x28` instead. Every `sub_80071E4`/`sub_801A878` call still
+  marshals `arg3` into `r3` even though neither function's real body
+  reads a 4th argument - the same "pass everything, callee ignores the
+  rest" convention this whole ROM region's `sub_8009ED0` callers
+  establish.
+- **`sub_8021480`** - one more "two-line text popup" sibling (a bare
+  `sub_80189EC()` header call, no OAM trio, `flags |= 0x10` at the very
+  end instead of right after the `+0x29` nibble update).
+
+### Verification
+
+Full clean `make compare` (`La suma coincide`) and `make NON_MATCHING=1
+report`, both passing. Issue #31 stays open in the PR text (not every
+function across the whole issue's original scope is a real C match -
+`sub_8021280`/`sub_8021480` here, plus every other NAKED/`NON_MATCHING`
+entry this issue accumulated across all five passes, don't count) but this
+retires the last raw bytes this issue's own scope covers - what's left
+open against #31 from here is exclusively already-parked functions
+(NAKED or `NON_MATCHING`), tracked in docs/status/graphics_loading.md.
