@@ -16,39 +16,31 @@ extern struct unk_03001280 gUnknown_03001280;
  * single 32-bit write spanning the adjacent halfwords), and the low
  * 5 bits of the byte at `+4` become `REG_BLDY`.
  *
- * Written as NAKED asm, not plain C: a full C reconstruction (kept in
- * git history) got the logic right, but the ROM writes the word then
- * does a separate `adds r2,#4` on the same register before the second
- * store (`str r0,[r2]; adds r2,#4; ...; strh r0,[r2]`); this compiler
- * always fuses that store-then-increment-same-register pair into a
- * single `stmia r2!,{r0}` regardless of how the pointer increment is
- * expressed in C (a separate statement, a memory-clobber barrier in
- * between, a fresh pointer variable) - an unavoidable peephole
- * optimization for this exact instruction pair. Every instruction
- * below is confirmed byte-identical to the ROM - full NAKED
- * transcription, like this project's other hard-compiler-limitation
- * cases (see `src/util/printf_util.c`'s `sub_8000CBC` for the
- * established pattern), is more honest than continuing to chase this
- * one peephole fusion through plain C. */
-NAKED void sub_8001624(void)
+ * The ROM writes the word then does a separate `adds r2,#4` on the
+ * same register before the second store, where this compiler always
+ * fuses a normal C-level store-then-increment-same-register pair into
+ * a single `stmia r2!,{r0}` instead (an unavoidable peephole
+ * optimization, regardless of how the increment is expressed in C).
+ * The fix is the same one used for `sub_8001524`'s value-propagation
+ * fold: emit the store-and-increment pair as one inline-asm block,
+ * opaque to the peephole pass, so it can't recognize and fuse it. The
+ * `bldy` mask is written as the ROM's own `(x << 27) >> 27` shift
+ * pair rather than a plain `& 0x1f`, which this compiler would
+ * otherwise encode as a direct AND-immediate instead. */
+void sub_8001624(void)
 {
-    asm(
-        "ldr r2, 1f\n\t"
-        "ldr r1, 2f\n\t"
-        "ldr r0, [r1]\n\t"
-        "str r0, [r2]\n\t"
-        "add r2, #4\n\t"
-        "ldrb r1, [r1, #4]\n\t"
-        "lsl r0, r1, #0x1b\n\t"
-        "lsr r0, r0, #0x1b\n\t"
-        "strh r0, [r2]\n\t"
-        "bx lr\n\t"
-        ".align 2, 0\n\t"
-    "1: .4byte 0x04000050\n\t"
-    "2: .4byte gUnknown_03001280\n\t"
-    );
+    register vu32 *bldReg asm("r2") = (vu32 *)0x04000050;
+    register struct unk_03001280 *src asm("r1") = &gUnknown_03001280;
+    register u32 word asm("r0") = src->bldcntAlpha;
+    register u32 bldy asm("r1");
+    register u32 masked asm("r0");
+
+    asm volatile("str %1, [%0]\n\tadd %0, %0, #4" : "+r"(bldReg) : "r"(word));
+
+    bldy = src->bldy;
+    masked = (bldy << 27) >> 27;
+    *(vu16 *)bldReg = masked;
 }
-asm(".align 2, 0");
 
 struct aabb {
     s32 field_0;
