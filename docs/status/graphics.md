@@ -37,7 +37,8 @@ and [graphics_loading.md](./graphics_loading.md).
 - `src/graphics/fade_util.c`: `sub_80012AC`, `sub_800132C`
 - `src/graphics/palette_blend.c`: `sub_80013FC`
 - `src/graphics/actor_anim.c`: `GetAnimFrameBaseOffset`
-- `src/graphics/fade_screen_mode.c` (new file - `sub_8001510`) and
+- `src/graphics/fade_screen_mode.c` (new file - `sub_80014A4`,
+  `sub_8001510`) and
   `src/graphics/fade_screen_mode2.c` (new file - `sub_8001524`,
   `sub_800153C`,
   `sub_8001550`, `sub_8001564`, `sub_8001578`, `sub_800158C`,
@@ -48,8 +49,11 @@ and [graphics_loading.md](./graphics_loading.md).
   as real C via an inline-asm-materialized mask constant opaque to the
   compiler's value-propagation fold - see
   [naked-sub_8001524-matched.md](../matching/naked-sub_8001524-matched.md).
-  `sub_80014A4` (also in this cluster) is still a NAKED transcription,
-  not decompiled C - see "Parked" below.
+  `sub_80014A4` (also in this cluster) was previously NAKED, now
+  matched as real C via register-pinned locals matching the ROM's own
+  register roles plus inline-asm-materialized DMA-field writes for the
+  fields the ROM recomputes fresh every loop iteration - see
+  [naked-sub_80014a4-matched.md](../matching/naked-sub_80014a4-matched.md).
 - `src/graphics/text_layout.c` sits at this ROM range but its only
   function, `sub_8000EE4`, is a NAKED transcription, not decompiled C -
   see "Parked" below.
@@ -75,24 +79,21 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 
 ## Parked - NAKED asm transcriptions (byte-correct, not decompiled C)
 
-- **`sub_80014A4`** (`src/graphics/fade_screen_mode.c`) - the
-  fade-to-black palette DMA loop. The ROM caches the blended-buffer
-  address in a register across the loop while recomputing the other two
-  DMA fields fresh every iteration; this compiler's loop-invariant
-  hoisting never reproduces that specific split. Converted to a
-  byte-verified NAKED asm transcription (see
-  `src/system/link_cable.c`'s `sub_8001CB8` for the established pattern).
 - **`sub_8000EE4`** (`src/graphics/text_layout.c`) - word-wrap text
   renderer. A full C reconstruction matched the ROM instruction-for-
   instruction except ~8 bytes from two small codegen details
   (incoming-argument spill ordering, and two loop-bound comparisons
   compiling one instruction shorter than the ROM's). Converted to NAKED.
+  A much closer (99.86% instruction match) C reconstruction is kept
+  in-tree under `#if NON_MATCHING` - see
+  [naked-sub_8000ee4-progress.md](../matching/naked-sub_8000ee4-progress.md)
+  for the full derivation and the two small residuals still open.
 
-These two are byte-exact against the ROM but are NAKED asm
-transcriptions, not decompiled C, so they're tracked here as parked
-rather than matched (`sub_8001524`/`sub_8001624`, formerly also in
-this list, are now matched as real C - see the Matched section above)
-- see
+This is byte-exact against the ROM but is a NAKED asm transcription,
+not decompiled C, so it's tracked here as parked rather than matched
+(`sub_8001524`/`sub_8001624`/`sub_80014A4`, formerly also in this
+list, are now matched as real C - see the Matched section above) -
+see
 `docs/matching/naked-transcription-parked-functions.md` for the full
 derivation of each, and `docs/matching.md`'s original entries ("The
 `0x080014A4`-`0x08001624` fade/screen-mode cluster" and "Parked, not

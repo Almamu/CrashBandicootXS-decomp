@@ -65,7 +65,10 @@ progress-tracking classification differs from an ordinary match.
   DMA fields fresh every iteration; this compiler's loop-invariant
   hoisting never reproduces that specific split - giving the buffer
   address its own local gets it cached but also hoists at least one of
-  the other two fields.
+  the other two fields. **Since matched as real C** - see
+  [naked-sub_80014a4-matched.md](./naked-sub_80014a4-matched.md); this
+  entry is left as-is since it's a frozen historical record of why the
+  function was originally parked (see `docs/matching.md`).
 - **`sub_8001524`** (`src/graphics/fade_screen_mode2.c`) - sets a
   packed shadow byte's low 3 bits. This compiler always recognizes `-8`
   as reachable from the already-loaded `7` mask via a single `SUB` and

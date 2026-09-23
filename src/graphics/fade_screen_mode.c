@@ -8,7 +8,7 @@
  * docs/matching.md for the full split. */
 
 extern void sub_80013FC(s32 factor);
-extern void sub_80006A8(void *arg0);
+extern void sub_80006A8(void);
 extern u16 gUnknown_03000A80[512];
 extern u16 gUnknown_03000E80[512];
 
@@ -20,80 +20,93 @@ extern u16 gUnknown_03000E80[512];
  * up the hardware blend registers (`REG_BLDCNT`/`REG_BLDY`) and
  * restores the original backed-up palette.
  *
- * Written as NAKED asm, not plain C: a full C reconstruction (kept in
- * git history) got every field/branch/call right, but the ROM caches
- * the blended-buffer address (`gUnknown_03000E80`) in a register
- * across the loop while recomputing the other two DMA fields (the
- * 0x05000000 destination and the 0x80000200 control word) fresh every
- * iteration, plus an extra "rename" copy of the DMA register pointer
- * right before the loop - this compiler's loop-invariant hoisting pass
- * never reproduces that specific split: giving the buffer address its
- * own local gets it cached consistently but also hoists at least one
- * of the other two fields (or, with an inline-asm register-clobber
- * barrier on the destination value to block just that hoist, drops the
- * buffer caching instead). Same root cause as the `sub_8009150`
- * loop-invariant-hoisting gap documented in docs/matching.md, applied
- * to a memory-mapped-I/O DMA setup instead of a pointer computation.
- * Every instruction below is confirmed byte-identical to the ROM (the
- * paragraph above is that derivation) - full NAKED transcription, like
- * this project's other hard-compiler-limitation cases (see
- * `src/util/printf_util.c`'s `sub_8000CBC` for the established
- * pattern), is more honest than continuing to chase this one loop's
- * register-caching split through plain C. */
-NAKED void sub_80014A4(void)
+ * Was NAKED asm, not plain C - see
+ * docs/matching/naked-sub_80014a4-matched.md for the derivation of how
+ * this was finally matched as real C. The gap: the ROM caches the
+ * blended-buffer address (`gUnknown_03000E80`) in a register across
+ * the loop while recomputing the other two DMA fields (the 0x05000000
+ * destination and the 0x80000200 control word) fresh every iteration,
+ * plus an extra "rename" copy of the DMA register pointer right before
+ * the loop, and reuses the loop's last-iteration register values
+ * (rather than recomputing) for the final post-loop DMA setup too -
+ * this compiler's loop-invariant hoisting pass never reproduces any of
+ * that from plain C. Closed with register-pinned locals matching the
+ * ROM's own register roles (including the "rename" copy) plus
+ * inline-asm-materialized DMA-field writes (opaque to the hoisting
+ * pass) for the fields the ROM keeps fresh, with the loop's own
+ * asm-computed values threaded through as real operands so the
+ * post-loop block reuses them exactly like the ROM does instead of
+ * recomputing. */
+void sub_80014A4(void)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "ldr r1, 2f\n\t"
-        "mov r0, #0xa0\n\t"
-        "lsl r0, r0, #0x13\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r0, 3f\n\t"
-        "str r0, [r1, #4]\n\t"
-        "ldr r0, 4f\n\t"
-        "str r0, [r1, #8]\n\t"
-        "ldr r0, [r1, #8]\n\t"
-        "mov r5, #0\n\t"
-        "add r4, r1, #0\n\t"
-        "ldr r6, 5f\n\t"
-    "1:\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_80013FC\n\t"
-        "bl sub_80006A8\n\t"
-        "str r6, [r4]\n\t"
-        "mov r3, #0xa0\n\t"
-        "lsl r3, r3, #0x13\n\t"
-        "str r3, [r4, #4]\n\t"
-        "ldr r2, 4f\n\t"
-        "str r2, [r4, #8]\n\t"
-        "ldr r0, [r4, #8]\n\t"
-        "add r5, #2\n\t"
-        "cmp r5, #0x10\n\t"
-        "ble 1b\n\t"
-        "ldr r1, 6f\n\t"
-        "mov r0, #0xff\n\t"
-        "strh r0, [r1]\n\t"
-        "add r1, #4\n\t"
-        "mov r0, #0x10\n\t"
-        "strh r0, [r1]\n\t"
-        "ldr r0, 2f\n\t"
-        "ldr r1, 3f\n\t"
-        "str r1, [r0]\n\t"
-        "str r3, [r0, #4]\n\t"
-        "str r2, [r0, #8]\n\t"
-        "ldr r0, [r0, #8]\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n\t"
-    "2: .4byte 0x040000D4\n\t"
-    "3: .4byte gUnknown_03000A80\n\t"
-    "4: .4byte 0x80000200\n\t"
-    "5: .4byte gUnknown_03000E80\n\t"
-    "6: .4byte 0x04000050\n\t"
-    );
+    register struct dma_regs *dma asm("r1");
+    register struct dma_regs *dma2 asm("r4");
+    register s32 factor asm("r5");
+    u32 val;
+    register u32 *bufAddr asm("r6");
+    register u32 dstVal asm("r3");
+    register u32 cntVal asm("r2");
+
+    dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
+    dma->src = 0x05000000;
+    dma->dst = (u32)gUnknown_03000A80;
+    dma->cnt = 0x80000200;
+    val = dma->cnt;
+
+    factor = 0;
+    dma2 = dma;
+    bufAddr = (u32 *)gUnknown_03000E80;
+
+    /* The 0x80000200 reload below deliberately references the literal
+     * pool slot (`.L8+0x8`) this function's own compiler-generated
+     * pool already holds it in (shared with the plain-C uses above and
+     * `dstVal`/`cntVal`'s reuse below), rather than materializing its
+     * own literal, to stay byte-identical to the ROM's single shared
+     * pool entry - see the derivation doc for why. `REG_BLDCNT`/
+     * `REG_BLDY` below are deliberately left as plain C (not also
+     * folded into asm) specifically so this function's own literal
+     * pool keeps a real, compiler-tracked entry for
+     * `REG_ADDR_DMA3SAD`+16 (0x04000050) at `.L8+0x10` for this block
+     * to reference - if a future edit to this function changes what
+     * agbcc names its pool or how many words are in it (check a
+     * `make NON_MATCHING=1` build's generated .s), update every
+     * `.L8+`-prefixed reference in this function to match. */
+    do {
+        sub_80013FC(factor);
+        sub_80006A8();
+        dma2->src = (u32)bufAddr;
+        asm volatile(
+            "mov %0, #0xa0\n\t"
+            "lsl %0, %0, #0x13\n\t"
+            "str %0, [%2, #4]\n\t"
+            "ldr %1, .L8+0x8\n\t"
+            "str %1, [%2, #8]\n\t"
+            "ldr r0, [%2, #8]\n\t"
+            : "=r"(dstVal), "=r"(cntVal) : "r"(dma2) : "r0", "memory");
+        factor += 2;
+    } while (factor <= 0x10);
+
+    REG_BLDCNT = 0xff;
+    REG_BLDY = 0x10;
+
+    /* Reload `dma` fresh from the pool (matching the ROM) instead of
+     * letting the compiler notice it can cheaply derive
+     * `REG_ADDR_DMA3SAD` from the `REG_ADDR_BLDY` value still live in
+     * a register from the two writes above (`REG_ADDR_DMA3SAD` is
+     * `REG_ADDR_BLDY + 0x80`) - a real, shorter instruction sequence
+     * this compiler prefers, but not what the ROM does. */
+    {
+        register struct dma_regs *dma3 asm("r0");
+        asm volatile(
+            "ldr %0, .L8\n\t"
+            "ldr r1, .L8+0x4\n\t"
+            "str r1, [%0, #0]\n\t"
+            "str %1, [%0, #4]\n\t"
+            "str %2, [%0, #8]\n\t"
+            "ldr %0, [%0, #8]\n\t"
+            : "=r"(dma3), "+r"(dstVal), "+r"(cntVal) :: "r1", "memory");
+    }
 }
-asm(".align 2, 0");
 
 /* `gUnknown_030007E8.field_0 != -1` - the same "idle" sentinel
  * documented on the struct in fade_util.c, exposed here as a plain
