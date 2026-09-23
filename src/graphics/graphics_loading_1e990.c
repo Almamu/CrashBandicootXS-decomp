@@ -45,10 +45,12 @@ extern void PlaySfx(void *bank, s32 arg1, s32 sfxId);
  * section never converged on the ROM's own register choices (`byte`
  * in r0, the shifted bit in r2, the mask constant reusing r0 via a
  * `movs r0,#1`/`subs r0,#0x12` derivation rather than a fresh
- * literal) no matter how the C was restructured - the exact same
- * `gUnknown_030012B4 -> *rec -> {+8, +0xc}` resolution shape already
- * documented as unmatchable via plain C for `sub_8021D04`
- * (graphics_loading_21bfc.c, issue #33) for the same reason.
+ * literal) no matter how the C was restructured - the same
+ * `gUnknown_030012B4 -> *rec -> {+8, +0xc}` resolution shape `sub_8021D04`
+ * (graphics_loading_21bfc.c, issue #33) reads, though that function's
+ * own register-choice/statement-order gap has since been closed (see
+ * its own doc comment) - this function's `movs r0,#1`/`subs r0,#0x12`
+ * mask derivation is a distinct, still-unclosed gap.
  * Transcribed instruction-for-instruction from the ROM disassembly
  * instead, the same escape hatch used there and for
  * `sub_8001CB8`/`sub_8001DB4` (src/system/link_cable.c). The

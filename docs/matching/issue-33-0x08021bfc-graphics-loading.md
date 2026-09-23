@@ -197,3 +197,33 @@ always-compiled `NAKED` C.
 
 See [docs/status/graphics_loading.md](../status/graphics_loading.md)
 for the running matched/parked list this updates.
+
+## Third pass: `sub_8021D04` closed as real C
+
+The 4-byte gap above (the ROM's `adds r3,r0,#0` copy at the very end
+of the table-resolution chain, which a plain C statement always got
+optimized away) closes with the same technique used elsewhere in this
+project: an opaque `asm volatile("add %0, %1, #0" : "=r"(flagsAddr) :
+"r"(tmp))` forces the copy as a real, un-eliminable instruction instead
+of a redundant SSA value. Register-pinning the rest of the chain to the
+ROM's own choices (`rec` in r1, the array-base/loaded-value pair
+reusing r0/r4 in the ROM's own load order, splitting the `+0xc` base
+load into its own block so it lands between the address computation and
+the `ldrh` exactly where the ROM has it) and reordering both bitfield
+checks' constant-vs-reload evaluation order (pinning the mask constant
+to r0 and the reloaded flags byte to r1/r3 respectively, matching which
+one the ROM computes first) closed the remaining two 2-byte ordering
+diffs. Now genuine matched C, not `NAKED` - `tools/report_units.py`'s
+entry for `0x08021D04` now points at
+`src/graphics/graphics_loading_21bfc.o` instead of `base_object=None`.
+Full clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
+crashbandicootxs.map && make compare` - `crashbandicootxs.gba: La suma
+coincide`.
+
+This doesn't yet extend to `sub_801E990`'s own copy of this same
+`gUnknown_030012B4 -> *rec -> {+8, +0xc}` resolution shape
+(`src/graphics/graphics_loading_1e990.c`, issue #30) - that function's
+residual is a different register-choice/mask-derivation gap (`byte` in
+r0, a `movs r0,#1`/`subs r0,#0x12` mask derivation rather than a
+negative-immediate one), not the copy-elimination gap closed here -
+left for a future pass.
