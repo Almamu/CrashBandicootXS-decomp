@@ -400,7 +400,7 @@ UNITS = [
     (0x08034050, "src/graphics/actor_part65.o", "actor"),  # sub_8034050 (issue #63): trivial self+0x6c death-flag getter; matched
     (0x08034058, "src/graphics/actor_part66.o", "actor"),  # sub_8034058 (issue #63, parked, NON_MATCHING) - InitActorPart-based constructor with a trailing byte stack argument; real bytes live in asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s
     (0x08034110, "src/graphics/actor_part67.o", "actor"),  # sub_8034110/sub_8034188/sub_80341F8/sub_8034264/nullsub_38 (issue #63): a damage/death handler, a position-sync/orbit-effect updater (and its byte-identical twin), a death-flag getter, and a no-op; matched
-    (0x08034270, "src/graphics/actor_part68.o", "actor"),  # sub_8034270 (issue #63, parked, NON_MATCHING) - position-sync/flag/trampoline updater; real bytes live in asm/code_3_2_20_28568_c99c_31784_33ef4_34270.s
+    (0x08034270, "src/graphics/actor_part68.o", "actor"),  # sub_8034270 (issue #63) - position-sync/flag/trampoline updater; matched as real C (an empty asm volatile makes the compile-time-constant doAnim value opaque, forcing the ROM's redundant compute-then-recheck step to materialize)
     (0x080342D4, "src/graphics/actor_part69.o", "actor"),  # sub_80342D4 (issue #63): InitActorPart-based constructor for a third, smaller object kind; matched
     (0x08034314, "src/graphics/actor_part70.o", "actor"),  # sub_8034314 (issue #63, parked, NON_MATCHING) - sub_8034270's boolean-returning twin; real bytes live in asm/code_3_2_20_28568_c99c_31784_33ef4_34314.s
     (0x0803436C, "src/graphics/actor_part71.o", "actor"),  # sub_803436C (issue #63): trivial self+0x58 flag getter; matched

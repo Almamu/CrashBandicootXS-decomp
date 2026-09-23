@@ -452,9 +452,10 @@ from "core" graphics.
   `actor_part69.c`/`actor_part71.c`/`actor_part73.c` (new files, GitHub
   issue #63, ROM 0x08033EF4-0x08034AA4 - three `InitActorPart`-rooted
   "self" object kinds immediately following issue #62's cluster, non-
-  adjacent since 7 parked (`sub_8034058`/`sub_8034270`/`sub_8034314`/
+  adjacent since 6 parked (`sub_8034058`/`sub_8034314`/
   `sub_80345B0`/`sub_8034634`/`sub_8034374`/`sub_8034480`, the last two
-  in `actor_part85.c`), the NAKED-transcribed `sub_8033FE4`
+  in `actor_part85.c` - `sub_8034270` is now matched, see below), the
+  NAKED-transcribed `sub_8033FE4`
   (`actor_part64.c` - see below), and 3 left-raw functions sit
   interleaved between them; numbered `63`-`73` rather than `57`-`67`
   since issues #19 and #54's PRs independently claimed
@@ -860,6 +861,16 @@ embedded as asm instead. They're tracked as parked, not matched.
   direct byte compare against the ROM, not just a register-choice
   cosmetic mismatch. The old raw `asm/code_3_2_20_28568_c3e8.s` is
   retired. See `docs/matching.md`, issue #52.
+- **`sub_8034270`** (`src/graphics/actor_part68.c`) - a position-sync/
+  flag/trampoline updater; now fully matched as real C. The ROM
+  computes a "should animate" 0/1 value and re-checks it against zero
+  even though the value is a compile-time constant on each path -
+  this compiler's dead-branch elimination always collapsed that
+  redundant compute-then-recheck step for a plain local, closed via
+  an empty `asm volatile("" : "+r"(doAnim))` making the value opaque
+  right before the check. The old raw
+  `asm/code_3_2_20_28568_c99c_31784_33ef4_34270.s` is retired. GitHub
+  issue #63, see `docs/matching/issue-63-0x08033ef4-actor.md`.
 
 - **`sub_800A884`** (`src/graphics/actor_part78.c`, GitHub issue
   #9/#10; real bytes in `asm/code_3_2_16_a884.s`) - a per-frame
@@ -1078,16 +1089,10 @@ embedded as asm instead. They're tracked as parked, not matched.
   parked because this compiler reads that argument as a shifted/masked
   full word where the ROM's build addresses it directly with `ldrb` -
   see `docs/matching/issue-63-0x08033ef4-actor.md`.
-- **`sub_8034270`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34270.s`, C
-  in `src/graphics/actor_part68.c`, GitHub issue #63) - a position-sync/
-  flag/trampoline updater; parked on this compiler's dead-branch
-  elimination collapsing a redundant compute-then-recheck step the
-  ROM's own build still has - see
-  `docs/matching/issue-63-0x08033ef4-actor.md`.
 - **`sub_8034314`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34314.s`, C
   in `src/graphics/actor_part70.c`, GitHub issue #63) - `sub_8034270`'s
-  boolean-returning twin, parked on the identical gap - see
-  `docs/matching/issue-63-0x08033ef4-actor.md`.
+  (now-matched, see below) boolean-returning twin, parked on the
+  identical gap - see `docs/matching/issue-63-0x08033ef4-actor.md`.
 - **`sub_80345B0`/`sub_8034634`**
   (`asm/code_3_2_20_28568_c99c_31784_33ef4_345b0.s`, C in
   `src/graphics/actor_part72.c`, GitHub issue #63) - a particle-slot
