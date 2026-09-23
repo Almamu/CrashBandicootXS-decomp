@@ -248,7 +248,11 @@ C has no way to work around on this toolchain:
   wall three more times. Now `NAKED`.
 - **`sub_8025D74`** (game_loop15.c) - unchanged from the "Update:
   narrowed" finding above (the `& -0x20`/`& -0xd` mask-folding gap);
-  now `NAKED` instead of left `NON_MATCHING`.
+  now `NAKED` instead of left `NON_MATCHING`. **Since matched as real
+  C** - see
+  [naked-sub_8025d74-matched.md](./naked-sub_8025d74-matched.md); this
+  entry is left as-is since it's a frozen historical record of why the
+  function was originally parked.
 - **`sub_8025E98`/`sub_8025F3C`** (game_loop16.c) - both large,
   register-heavy functions (`sub_8025E98` keeps `r8` live for the
   screen-edge X-tile-max value computed early but not consumed until

@@ -84,7 +84,13 @@ system from "core" system startup/init code.
   `sub_8025D54` (conditional `sub_8026ED0` forward, dup of
   `sub_8025A44`), `sub_8025D6C` (zero two Q8 words, dup of
   `sub_8025A5C`)
-- `src/system/game_loop15.c` (GitHub issue #41): `sub_8025DE8`,
+- `src/system/game_loop15.c` (GitHub issue #41): `sub_8025D74`
+  (BG-scroll-layer hardware-register/bitfield initializer - previously
+  NAKED, now matched as real C via opaque inline-asm-materialized mask
+  folds plus one function-owned literal pool for its three pointer-sized
+  constants - see
+  [naked-sub_8025d74-matched.md](../matching/naked-sub_8025d74-matched.md)),
+  `sub_8025DE8`,
   `sub_8025E2C` (streamed-tile-range growers firing a `self->0x30`-
   table trampoline per step), `sub_8025E70`, `sub_8025E84` (their
   plain clamp-only counterparts)
@@ -232,11 +238,6 @@ plain C didn't converge.
   issue #41) - three more part-object spawn helpers; `sub_8025BAC`
   alone repeats `sub_8025A64`'s unfixable mask-fold three times over.
   See [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
-- **`sub_8025D74`** (`src/system/game_loop15.c`, GitHub issue #41) -
-  BG-scroll-layer hardware-register/bitfield initializer; the
-  `& -0x20`/`& -0xd` masks always fold to their positive byte-immediate
-  form instead of the ROM's runtime negation. See
-  [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
 - **`sub_8025E98`/`sub_8025F3C`** (`src/system/game_loop16.c`, GitHub
   issue #41) - the screen-edge tile-coordinate computer/streaming
   driver, and the circular-buffer decoded-tile streaming loop; both
