@@ -1,0 +1,466 @@
+#include "core.h"
+
+/* GitHub issue #34/#40/#41, `UpdateGameFrame`-`MainLoop` cluster: the
+ * second of the two raw functions `docs/matching/issue-34-game-loop-
+ * 8022d50-80255d4.md` left for a follow-up pass (the first,
+ * `sub_8022D50`, is `game_loop40.c`, NAKED-parked for a different,
+ * unrelated register-pressure gap).
+ *
+ * `self` is `*gUnknown_030012B4` (the same collision-bitmap base
+ * `sub_8025944`/`sub_8025968`/`sub_802599C`, game_loop12.c, and
+ * `sub_8025A0C`, game_loop13.c, already operate on).
+ *
+ * First half (fully understood, matches the ROM's own idiom one for
+ * one): if `list` differs from `self`'s cached copy at `self+0`,
+ * `self+8`/`self+0x208` (the first two of the three overlapping
+ * collision-bitmap arrays `game_loop12.c`'s header comment documents)
+ * are DMA3-zero-filled 64 bytes each (`DmaFill32(3, 0, dest, 64)`,
+ * expanding to the exact same `REG_DMA3`-field-by-field store sequence
+ * seen here); either way `self+8`->`self+0x108` and
+ * `self+0x208`->`self+0x308` get unconditionally `CpuSet`-copied via
+ * `sub_803A94C(src, dst, 0x04000040)` (the same idiom `sub_8022CA0`,
+ * game_loop.c, already documents in the opposite direction), and
+ * `self+4` is set from `posArg >> 8` (a Q8-to-int truncation). `list`
+ * is then walked as a `{count:u16 @2, groups:ptr @4}` header over
+ * `{count:u16 @2, items:ptr @4}` 8-byte group records, each holding
+ * `{tableIdx:u16, p1:u16, p2:u16, p3:u16}` 8-byte item records; for
+ * each item not already flagged in the `self+8` bit-grid
+ * (`sub_8025968`), `sub_8025D28` (the table-indexed interworking-
+ * trampoline dispatcher, game_loop14.c) fires with a running,
+ * never-reset-per-group counter as its own `self` argument, indexing
+ * `gUnknown_030012E4`'s table.
+ *
+ * Second half (gated on `redirectInfo`, a `{count:u32, {u32,u32}[]}`
+ * array - null skips it entirely): walks `gUnknown_0300130C` (a
+ * `struct actor_list`, game_loop24.c) in reverse; for each entry whose
+ * `+8` id matches `redirectInfo`'s array's `.a` field, the paired `.b`
+ * value is chased as a target id back into `gUnknown_0300130C` (again
+ * in reverse) - a direct hit links the two entries via `sub_8010714`/
+ * `sub_8010710` (the neighbor-list set-next/set-prev pair,
+ * game_loop23.c); a miss instead re-looks-up the *current* target id
+ * in `redirectInfo`'s own array a second time (treating it as an
+ * id->id redirect chain) and retries the actor-list search with the
+ * newly resolved id, except that a redirect hit at array index 0
+ * specifically is treated as "give up" rather than "keep chasing" (an
+ * asymmetry transcribed verbatim from the ROM - matching entry 0 skips
+ * the array's `.b`-becomes-new-target rule the ROM applies to every
+ * other index). A second, independent forward pass over
+ * `redirectInfo`'s array then looks each entry's `.a` id (this time
+ * read as a `u16`, not the first pass's `u32` - genuinely different
+ * load widths for the exact same field, transcribed as-is) up in
+ * `gUnknown_0300130C` directly; on a miss it chases the same kind of
+ * id->id redirect chain through the array (again via `.a`/`.b`, again
+ * `u16`-width this time) until an actor-list match is found or the
+ * chain runs out. Once a match is found, its `+0x18`-table's `+0x10`/
+ * `+0x14` `sub_803AD7C` trampoline record's returned `+5` byte becomes
+ * a `(byte+1)<<8` Q8 delta added to the matched entry's own `+4` field,
+ * then every entry in its `sub_801070C` ("get next") neighbor chain has
+ * `sub_8007398(entry, entry+0, entry+4+delta)` fired on it in turn.
+ *
+ * NAKED, not plain C: every field, offset, branch and call argument in
+ * both halves is confirmed against the ROM (this write-up is the
+ * result of that trace), and a real C reconstruction was attempted and
+ * got remarkably close - matching the whole first half (the DMA/
+ * `CpuSet`/group-item-walk block) instruction-for-instruction once
+ * `self` and the first-half `counter` were pinned to their ROM
+ * registers (`r6`/`r7`). The second half is where it breaks down: the
+ * ROM keeps `redirectInfo`'s `{count,array}` decomposition split across
+ * `r8` (count) and `sb`/`r9` (array base) for the *entire* second half,
+ * but never caches the array base in a single low register the way a
+ * normal C local would - at every individual use site that needs it in
+ * a 3-operand Thumb add (`sb` is a high register, which Thumb restricts
+ * there), the ROM instead re-issues a fresh `mov rX, sb` into whichever
+ * low register happens to be free at that exact point (`r1` here,
+ * `r4`/`r6` there, and so on, a different choice practically every
+ * time). A plain C array-pointer local gets allocated to one single
+ * register for its entire lifetime instead (landing on `r7` in the
+ * closest reconstruction attempted here, once `r8`/`r9`/`sl` were
+ * otherwise accounted for), which is a real, different, and *smaller*
+ * register footprint than the ROM's own repeated-rematerialization
+ * pattern - not something a source-level rephrasing or a single
+ * register pin can reproduce without effectively hand-placing a
+ * distinct inline-asm anchor at every one of the dozen-plus individual
+ * use sites (at which point it stops being a C reconstruction in any
+ * meaningful sense). This is the same family of gcc-2.9
+ * high-register/3-operand-add materialization gap already parked
+ * elsewhere in this ROM region for similarly register-heavy functions
+ * (see `docs/status/game_loop.md`'s NAKED list). Transcribed straight
+ * from the confirmed-correct ROM disassembly. */
+NAKED void sub_80255D4(void *self, void *list, void *redirectInfo, s32 posArg)
+{
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "mov r7, sl\n\t"
+        "mov r6, sb\n\t"
+        "mov r5, r8\n\t"
+        "push {r5, r6, r7}\n\t"
+        "sub sp, #0x14\n\t"
+        "add r6, r0, #0\n\t"
+        "mov sb, r2\n\t"
+        "add r5, r3, #0\n\t"
+        "mov r3, #0\n\t"
+        "ldr r0, [r6]\n\t"
+        "cmp r1, r0\n\t"
+        "beq 1f\n\t"
+        "str r1, [r6]\n\t"
+        "str r3, [sp]\n\t"
+        "ldr r0, 90f\n\t"
+        "mov r1, sp\n\t"
+        "str r1, [r0]\n\t"
+        "add r1, r6, #0\n\t"
+        "add r1, #8\n\t"
+        "str r1, [r0, #4]\n\t"
+        "ldr r2, 91f\n\t"
+        "str r2, [r0, #8]\n\t"
+        "ldr r1, [r0, #8]\n\t"
+        "str r3, [sp]\n\t"
+        "mov r3, sp\n\t"
+        "str r3, [r0]\n\t"
+        "mov r4, #0x82\n\t"
+        "lsl r4, r4, #2\n\t"
+        "add r1, r6, r4\n\t"
+        "str r1, [r0, #4]\n\t"
+        "str r2, [r0, #8]\n\t"
+        "ldr r0, [r0, #8]\n\t"
+    "1:\n\t"
+        "add r0, r6, #0\n\t"
+        "add r0, #8\n\t"
+        "mov r2, #0x84\n\t"
+        "lsl r2, r2, #1\n\t"
+        "add r1, r6, r2\n\t"
+        "ldr r4, 92f\n\t"
+        "add r2, r4, #0\n\t"
+        "bl sub_803A94C\n\t"
+        "mov r3, #0x82\n\t"
+        "lsl r3, r3, #2\n\t"
+        "add r0, r6, r3\n\t"
+        "mov r2, #0xc2\n\t"
+        "lsl r2, r2, #2\n\t"
+        "add r1, r6, r2\n\t"
+        "add r2, r4, #0\n\t"
+        "bl sub_803A94C\n\t"
+        "asr r0, r5, #8\n\t"
+        "str r0, [r6, #4]\n\t"
+        "mov r7, #0\n\t"
+        "ldr r0, [r6]\n\t"
+        "ldrh r2, [r0, #2]\n\t"
+        "sub r2, #1\n\t"
+        "cmp r2, #0\n\t"
+        "blt 2f\n\t"
+    "3:\n\t"
+        "ldr r0, [r6]\n\t"
+        "lsl r1, r2, #3\n\t"
+        "ldr r0, [r0, #4]\n\t"
+        "add r5, r0, r1\n\t"
+        "mov r4, #0\n\t"
+        "sub r2, #1\n\t"
+        "mov r8, r2\n\t"
+        "ldrh r3, [r5, #2]\n\t"
+        "cmp r4, r3\n\t"
+        "bge 5f\n\t"
+    "4:\n\t"
+        "add r0, r6, #0\n\t"
+        "add r1, r7, #0\n\t"
+        "bl sub_8025968\n\t"
+        "lsl r0, r0, #0x18\n\t"
+        "cmp r0, #0\n\t"
+        "bne 6f\n\t"
+        "ldr r0, 93f\n\t"
+        "ldr r0, [r0]\n\t"
+        "lsl r1, r4, #3\n\t"
+        "ldr r2, [r5, #4]\n\t"
+        "add r2, r2, r1\n\t"
+        "add r1, r7, #0\n\t"
+        "bl sub_8025D28\n\t"
+    "6:\n\t"
+        "add r7, #1\n\t"
+        "add r4, #1\n\t"
+        "ldrh r0, [r5, #2]\n\t"
+        "cmp r4, r0\n\t"
+        "blt 4b\n\t"
+    "5:\n\t"
+        "mov r2, r8\n\t"
+        "cmp r2, #0\n\t"
+        "bge 3b\n\t"
+    "2:\n\t"
+        "mov r1, sb\n\t"
+        "cmp r1, #0\n\t"
+        "bne 7f\n\t"
+        "b 30f\n\t"
+    "7:\n\t"
+        "add r1, #4\n\t"
+        "mov sb, r1\n\t"
+        "sub r1, #4\n\t"
+        "ldm r1!, {r2}\n\t"
+        "mov r8, r2\n\t"
+        "ldr r0, 94f\n\t"
+        "ldr r0, [r0]\n\t"
+        "ldr r0, [r0]\n\t"
+        "sub r2, r0, #1\n\t"
+        "cmp r2, #0\n\t"
+        "blt 15f\n\t"
+    "8:\n\t"
+        "ldr r0, 94f\n\t"
+        "ldr r0, [r0]\n\t"
+        "ldr r1, [r0, #8]\n\t"
+        "lsl r0, r2, #2\n\t"
+        "add r0, r0, r1\n\t"
+        "ldr r7, [r0]\n\t"
+        "ldrh r4, [r7, #8]\n\t"
+        "mov r3, #0\n\t"
+        "sub r2, #1\n\t"
+        "str r2, [sp, #0x10]\n\t"
+        "cmp r3, r8\n\t"
+        "bge 13f\n\t"
+        "mov r1, sb\n\t"
+    "9:\n\t"
+        "ldr r0, [r1]\n\t"
+        "cmp r4, r0\n\t"
+        "bne 12f\n\t"
+        "mov r6, #0\n\t"
+        "ldr r5, [r1, #4]\n\t"
+        "ldr r3, 94f\n\t"
+        "mov sl, r3\n\t"
+    "10:\n\t"
+        "ldr r0, 94f\n\t"
+        "ldr r0, [r0]\n\t"
+        "ldr r0, [r0]\n\t"
+        "sub r2, r0, #1\n\t"
+        "b 17f\n\t"
+        ".align 2, 0\n"
+    "90: .4byte 0x040000D4\n"
+    "91: .4byte 0x85000010\n"
+    "92: .4byte 0x04000040\n"
+    "93: .4byte gUnknown_030012E4\n"
+    "94: .4byte gUnknown_0300130C\n"
+    "16:\n\t"
+        "sub r2, #1\n\t"
+    "17:\n\t"
+        "cmp r2, #0\n\t"
+        "blt 20f\n\t"
+        "mov r4, sl\n\t"
+        "ldr r0, [r4]\n\t"
+        "ldr r1, [r0, #8]\n\t"
+        "lsl r0, r2, #2\n\t"
+        "add r0, r0, r1\n\t"
+        "ldr r4, [r0]\n\t"
+        "ldrh r0, [r4, #8]\n\t"
+        "cmp r5, r0\n\t"
+        "bne 16b\n\t"
+        "add r0, r7, #0\n\t"
+        "add r1, r4, #0\n\t"
+        "bl sub_8010714\n\t"
+        "add r0, r4, #0\n\t"
+        "add r1, r7, #0\n\t"
+        "bl sub_8010710\n\t"
+        "mov r6, #1\n\t"
+    "20:\n\t"
+        "cmp r6, #0\n\t"
+        "bne 13f\n\t"
+        "mov r3, #1\n\t"
+        "mov r2, #0\n\t"
+        "cmp r6, r8\n\t"
+        "bge 21f\n\t"
+        "mov r1, sb\n\t"
+        "ldr r0, [r1]\n\t"
+        "cmp r5, r0\n\t"
+        "bne 22f\n\t"
+        "ldr r5, [r1, #4]\n\t"
+        "b 23f\n\t"
+    "22:\n\t"
+        "add r2, #1\n\t"
+        "cmp r2, r8\n\t"
+        "bge 21f\n\t"
+        "lsl r0, r2, #3\n\t"
+        "mov r4, sb\n\t"
+        "add r1, r0, r4\n\t"
+        "ldr r0, [r1]\n\t"
+        "cmp r5, r0\n\t"
+        "bne 22b\n\t"
+        "ldr r5, [r1, #4]\n\t"
+        "mov r3, #0\n\t"
+    "21:\n\t"
+        "cmp r3, #0\n\t"
+        "beq 23f\n\t"
+        "mov r6, #1\n\t"
+    "23:\n\t"
+        "cmp r6, #0\n\t"
+        "beq 10b\n\t"
+        "b 13f\n\t"
+    "12:\n\t"
+        "add r1, #8\n\t"
+        "add r3, #1\n\t"
+        "cmp r3, r8\n\t"
+        "blt 9b\n\t"
+    "13:\n\t"
+        "ldr r2, [sp, #0x10]\n\t"
+        "cmp r2, #0\n\t"
+        "bge 8b\n\t"
+    "15:\n\t"
+        "mov r3, #0\n\t"
+        "cmp r3, r8\n\t"
+        "blt 25f\n\t"
+        "b 30f\n\t"
+    "25:\n\t"
+        "lsl r0, r3, #3\n\t"
+        "mov r2, sb\n\t"
+        "add r1, r0, r2\n\t"
+        "ldrh r5, [r1]\n\t"
+        "mov r7, #0\n\t"
+        "mov r4, #0\n\t"
+        "ldr r1, 95f\n\t"
+        "ldr r1, [r1]\n\t"
+        "ldr r2, [r1]\n\t"
+        "add r6, r0, #0\n\t"
+        "add r3, #1\n\t"
+        "str r3, [sp, #0xc]\n\t"
+        "cmp r7, r2\n\t"
+        "bge 27f\n\t"
+        "ldr r1, [r1, #8]\n\t"
+    "26:\n\t"
+        "ldr r0, [r1]\n\t"
+        "ldrh r0, [r0, #8]\n\t"
+        "cmp r0, r5\n\t"
+        "beq 33f\n\t"
+        "add r1, #4\n\t"
+        "add r4, #1\n\t"
+        "cmp r4, r2\n\t"
+        "blt 26b\n\t"
+    "27:\n\t"
+        "cmp r7, #0\n\t"
+        "bne 33f\n\t"
+        "mov r3, sb\n\t"
+        "add r0, r6, r3\n\t"
+        "ldrh r5, [r0, #4]\n\t"
+        "mov r6, #0\n\t"
+        "ldr r4, 95f\n\t"
+        "mov sl, r4\n\t"
+        "b 29f\n\t"
+        ".align 2, 0\n"
+    "95: .4byte gUnknown_0300130C\n"
+    "28:\n\t"
+        "mov r5, ip\n\t"
+    "29:\n\t"
+        "mov r7, #1\n\t"
+        "mov r0, #0\n\t"
+        "mov ip, r0\n\t"
+        "mov r2, #0\n\t"
+        "mov r1, r8\n\t"
+        "cmp r1, #0\n\t"
+        "ble 31f\n\t"
+        "mov r1, sb\n\t"
+    "32:\n\t"
+        "ldr r0, [r1]\n\t"
+        "cmp r5, r0\n\t"
+        "bne 34f\n\t"
+        "mov r7, #0\n\t"
+        "ldrh r1, [r1, #4]\n\t"
+        "mov ip, r1\n\t"
+        "mov r3, #0\n\t"
+        "ldr r2, 96f\n\t"
+        "ldr r0, [r2]\n\t"
+        "ldr r0, [r0]\n\t"
+        "cmp r7, r0\n\t"
+        "bge 31f\n\t"
+        "mov r4, sl\n\t"
+        "ldr r0, [r4]\n\t"
+        "ldr r2, [r0]\n\t"
+        "ldr r0, [r0, #8]\n\t"
+    "35:\n\t"
+        "ldr r6, [r0]\n\t"
+        "ldrh r1, [r6, #8]\n\t"
+        "cmp r1, r5\n\t"
+        "beq 40f\n\t"
+        "add r0, #4\n\t"
+        "add r3, #1\n\t"
+        "cmp r3, r2\n\t"
+        "blt 35b\n\t"
+        "b 31f\n\t"
+        ".align 2, 0\n"
+    "96: .4byte gUnknown_0300130C\n"
+    "34:\n\t"
+        "add r1, #8\n\t"
+        "add r2, #1\n\t"
+        "cmp r2, r8\n\t"
+        "blt 32b\n\t"
+    "31:\n\t"
+        "mov r0, #0\n\t"
+        "cmp r0, #0\n\t"
+        "bne 40f\n\t"
+        "cmp r7, #0\n\t"
+        "beq 38f\n\t"
+        "mov r4, #0\n\t"
+        "ldr r1, 97f\n\t"
+        "ldr r0, [r1]\n\t"
+        "ldr r0, [r0]\n\t"
+        "cmp r4, r0\n\t"
+        "bge 38f\n\t"
+        "mov r2, sl\n\t"
+        "ldr r0, [r2]\n\t"
+        "ldr r3, [r0]\n\t"
+        "ldr r2, [r0, #8]\n\t"
+    "36:\n\t"
+        "ldr r1, [r2]\n\t"
+        "ldrh r0, [r1, #8]\n\t"
+        "cmp r0, r5\n\t"
+        "bne 37f\n\t"
+        "add r6, r1, #0\n\t"
+        "b 40f\n\t"
+        ".align 2, 0\n"
+    "97: .4byte gUnknown_0300130C\n"
+    "37:\n\t"
+        "add r2, #4\n\t"
+        "add r4, #1\n\t"
+        "cmp r4, r3\n\t"
+        "blt 36b\n\t"
+    "38:\n\t"
+        "mov r3, #0\n\t"
+        "cmp r3, #0\n\t"
+        "bne 40f\n\t"
+        "cmp r7, #0\n\t"
+        "beq 28b\n\t"
+        "b 33f\n\t"
+    "40:\n\t"
+        "cmp r6, #0\n\t"
+        "beq 33f\n\t"
+        "ldr r1, [r6, #0x18]\n\t"
+        "mov r4, #0x10\n\t"
+        "ldrsh r0, [r1, r4]\n\t"
+        "add r0, r6, r0\n\t"
+        "ldr r1, [r1, #0x14]\n\t"
+        "bl sub_803AD7C\n\t"
+        "ldrb r0, [r0, #5]\n\t"
+        "add r0, #1\n\t"
+        "lsl r5, r0, #8\n\t"
+        "add r4, sp, #4\n\t"
+    "41:\n\t"
+        "ldr r0, [r6]\n\t"
+        "str r0, [sp, #4]\n\t"
+        "ldr r2, [r6, #4]\n\t"
+        "add r2, r2, r5\n\t"
+        "str r2, [r4, #4]\n\t"
+        "ldr r1, [sp, #4]\n\t"
+        "add r0, r6, #0\n\t"
+        "bl sub_8007398\n\t"
+        "add r0, r6, #0\n\t"
+        "bl sub_801070C\n\t"
+        "add r6, r0, #0\n\t"
+        "cmp r6, #0\n\t"
+        "bne 41b\n\t"
+    "33:\n\t"
+        "ldr r3, [sp, #0xc]\n\t"
+        "cmp r3, r8\n\t"
+        "bge 30f\n\t"
+        "b 25b\n\t"
+    "30:\n\t"
+        "add sp, #0x14\n\t"
+        "pop {r3, r4, r5}\n\t"
+        "mov r8, r3\n\t"
+        "mov sb, r4\n\t"
+        "mov sl, r5\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r0}\n\t"
+        "bx r0\n\t"
+        ".align 2, 0\n"
+    );
+}

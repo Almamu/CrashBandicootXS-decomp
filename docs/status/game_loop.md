@@ -266,6 +266,28 @@ plain C didn't converge.
   above for its busy-poll loop tail, which needs `push {r4, r5, r6, r7,
   lr}`. See [docs/matching/issue-38-sound-channel-family.md](../matching/issue-38-sound-channel-family.md)'s
   second-pass addendum.
+- **`sub_80255D4`** (`src/system/game_loop41.c`, GitHub issue #34/#40/
+  #41 - the second half of the same follow-up pass as `sub_8022D50`
+  above) - `self` is `*gUnknown_030012B4`: a `self+0`-cache-gated DMA3
+  zero-fill/`CpuSet` refresh of the `self+8`/`0x208`/`0x108`/`0x308`
+  collision-bitmap family, then a `list` group/item walk firing
+  `sub_8025D28` trampolines (the same shape `sub_8025894`, parked
+  `NON_MATCHING` below, documents for a sibling list), then a
+  `gUnknown_0300130C`
+  actor-list redirect-chain linker/position-sync pass keyed off a
+  count-prefixed `redirectInfo` array (every field, offset, branch and
+  call argument confirmed - see the linked write-up for the full
+  trace). A real C reconstruction got the entire first half
+  byte-for-byte once `self`/the group-loop counter were pinned to their
+  ROM registers (`r6`/`r7`), but the second half's persistent
+  `redirectInfo`-array base lives in `sb`/`r9` in the ROM only as a
+  *source* value - at every individual 3-operand-Thumb-add use site
+  (`sb` being a high register Thumb restricts there) the ROM re-issues
+  a fresh `mov rX, sb` into whichever low register is free at that
+  exact point, never the same one twice, where a plain C pointer local
+  gets allocated one single register for its whole lifetime instead.
+  See
+  [docs/matching/issue-34-game-loop-8022d50-80255d4.md](../matching/issue-34-game-loop-8022d50-80255d4.md).
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
@@ -304,7 +326,9 @@ plain C didn't converge.
   for both parked functions' exact register-allocation gaps.
 - **`sub_8025894`** (`src/system/game_loop12.c`, GitHub issue #41) - a
   group/item list counter with a 19-entry jump table; real bytes stay
-  in `asm/code_3_2_17_255d4.s`. See
+  in `asm/code_3_2_17_255d4.s` (now truncated to just this function -
+  `sub_80255D4`, which used to share the file, is NAKED-parked in its
+  own `game_loop41.c`, see the NAKED list above). See
   [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
 ## Still raw, category-mapped (GitHub issue #12/#34/#40)
 
@@ -346,24 +370,6 @@ plain C didn't converge.
   the main per-frame game-loop driver, a ~730-instruction jump-table
   state machine. Not understood branch-by-branch with the precision a
   byte-exact reconstruction needs yet - see `docs/matching.md`.
-- **`sub_80255D4`** (`asm/code_3_2_17_255d4.s`, ROM `0x080255D4`,
-  GitHub issue #40/#34) - `self` is `*gUnknown_030012B4` (the collision-
-  bitmap base `sub_8025944`/`sub_802599C` etc. also operate on): on a
-  group change it DMA-zero-fills and `CpuSet`-mirrors the `self+8`/
-  `self+0x208` bit-grids, then walks the new group/item list firing
-  `sub_8025D28` trampolines (now characterized - a `{count,groups}`/
-  `{count,items}` two-level walk over the same list shape
-  `sub_8025894`, game_loop12.c, documents). A second half, gated on a
-  count-prefixed `{u32,u32}` array, cross-references `gUnknown_0300130C`
-  and links matching entries via `sub_8010714`/`sub_8010710` - but
-  chases a redirect-chain search through that same array when the
-  direct lookup fails, and the real-world relationship being re-linked
-  isn't pinned down with byte-exact-reconstruction confidence yet. Left
-  completely raw - see
-  [docs/matching/issue-34-game-loop-8022d50-80255d4.md](../matching/issue-34-game-loop-8022d50-80255d4.md)
-  (a follow-up pass on top of
-  [docs/matching/issue-40-terrain-tile-cache.md](../matching/issue-40-terrain-tile-cache.md)'s
-  original characterization).
 - **`sub_8023A1C`** (`asm/code_3_2_17_23a1c.s`, ROM
   `0x08023A1C`-`0x08024007`, GitHub issue #37) - a ~650-instruction
   jump-table-driven level-lifecycle continuation, called

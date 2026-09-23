@@ -115,14 +115,16 @@ for the full write-up, GitHub issue #68):
   caller anywhere in the ROM), `sub_803A22C` (the "UnknownC" type's
   init_fn), `nullsub_42` (its unknown_fn)
 
-6 of this chunk's 21 functions are matched as real C; a second pass
-(see [`docs/matching/issue-68-0x08039818-audio.md`](../matching/issue-68-0x08039818-audio.md)'s
-updated write-up) parked 8 more as byte-verified NAKED transcriptions -
-see "Parked - NAKED asm transcription(s)" below. The rest hit the same
+6 of this chunk's 21 functions are matched as real C; two further
+passes (see [`docs/matching/issue-68-0x08039818-audio.md`](../matching/issue-68-0x08039818-audio.md)'s
+updated write-up and
+[`docs/matching/issue-68-note-trigger-trampoline.md`](../matching/issue-68-note-trigger-trampoline.md))
+parked the remaining 15 as byte-verified NAKED transcriptions - see
+"Parked - NAKED asm transcription(s)" below. Most hit the same
 many-register (`r8`/`sb`/`sl`) gcc-2.9 allocation ceiling already
-documented for `sub_8038538`'s cluster, or are entangled with a
-neighboring function via a manual return-address-trampoline idiom (see
-the write-up's "Left raw" section for the full per-function breakdown).
+documented for `sub_8038538`'s cluster; the rest (`sub_803A278` family,
+`sub_8039B44`/`sub_8039E50`) are entangled with a neighboring function
+via a manual return-address-trampoline idiom. None left raw.
 
 ## Parked
 
@@ -302,6 +304,24 @@ See docs/matching.md for `PlaySfx`'s remaining gap.
 
   See [docs/matching/issue-68-0x08039818-audio.md](../matching/issue-68-0x08039818-audio.md)
   for all eight functions' full write-up.
+- **`sub_8039B44`/`sub_8039E50`** (`src/audio/gax_note_trigger.c`, the
+  per-channel note-trigger routine - issue #68's last raw pair) - the
+  ROM's own compiler split this single logical function into two
+  disassembly labels, glued together by the same manual
+  return-address-trampoline idiom as the `sub_803A278` family above:
+  `sub_8039B44`'s tail computes a return address into `lr` and
+  `bx`-jumps into `sub_8039E50`, whose first instruction is a `nop`
+  (`mov r8, r8`) alignment pad, the same trampoline-landing tell
+  already seen at `sub_803A2C8`/`sub_803A318`. Unlike the rest of this
+  cluster's NAKED entries, this one is a structural gap, not a
+  register-allocation one: the trampoline sits in the middle of the
+  function, so no real-C reconstruction of "the part before"/"the part
+  after" is possible without breaking the hand-computed-PC-offset
+  relationship between the two halves. Byte-verified (confirmed both
+  via direct binary comparison of the isolated assembled object against
+  the ROM's own reassembled original, and via a full clean `make
+  compare`, "La suma coincide") - see
+  [docs/matching/issue-68-note-trigger-trampoline.md](../matching/issue-68-note-trigger-trampoline.md).
 
 ## Left raw (not attempted, or attempted and set aside)
 
@@ -365,21 +385,23 @@ above as of the second `0x08038538`-`0x08039658` pass - are now Parked
 NAKED transcriptions, see the "Parked" section above and
 [docs/matching/issue-67-68-channel-init-play.md](../matching/issue-67-68-channel-init-play.md).
 
-From the `0x08039818`-`0x0803A944` pass specifically (issue #68): two
-independent passes together parked 12 of the chunk's 21 functions as
-byte-verified NAKED transcriptions - `sub_80398DC`, `sub_803985C`,
-`sub_8039AA4`, `sub_8039F30` (see
+From the `0x08039818`-`0x0803A944` pass specifically (issue #68): three
+independent passes together parked all 15 of the chunk's still-raw
+functions as byte-verified NAKED transcriptions - `sub_80398DC`,
+`sub_803985C`, `sub_8039AA4`, `sub_8039F30` (see
 [docs/matching/issue-68-channel-bind-envelope-note.md](../matching/issue-68-channel-bind-envelope-note.md))
 plus `sub_803A03C`, `sub_803A158`, `sub_803A278`, `sub_803A2C8`/
 `sub_803A318` (fused), `sub_803A324`, `sub_803A5A8`/`sub_803A608`
-(fused) (see "Parked - NAKED asm transcription(s)" above). Only
-`sub_8039B44`/`sub_8039E50` - one logical routine split by a manual
-return-address trampoline, not attempted given its combined size - are
-still left raw; see
+(fused) (see "Parked - NAKED asm transcription(s)" above), plus
+`sub_8039B44`/`sub_8039E50` - one logical note-trigger routine split by
+a manual return-address trampoline, `src/audio/gax_note_trigger.c` -
+see
+[docs/matching/issue-68-note-trigger-trampoline.md](../matching/issue-68-note-trigger-trampoline.md).
+Nothing in this chunk is left raw any more; see
 [`docs/matching/issue-68-0x08039818-audio.md`](../matching/issue-68-0x08039818-audio.md)'s
-"Left raw" section for the rest's per-function reason (many-register allocation
-ceiling, or entangled with a neighbor via a manual return-address-
-trampoline idiom). The raw ARM-mode DSP/mixer code block past
+"Left raw" section for the historical per-function reasoning (many-
+register allocation ceiling, or entangled with a neighbor via a manual
+return-address-trampoline idiom). The raw ARM-mode DSP/mixer code block past
 `0x0803A628` (docs/audio.md's `gStaticData_0803A630` onward) is no
 longer a separate raw span - it is now an untouched trailing byte
 transcription inside `gax_unknownc_play.c` (see above), still not

@@ -1,8 +1,11 @@
-# GitHub issue #34 follow-up: `sub_8022D50` (parked, NAKED) / `sub_80255D4` (left raw)
+# GitHub issue #34 follow-up: `sub_8022D50` (parked, NAKED) / `sub_80255D4` (parked, NAKED)
 
 Picked up the two remaining raw functions the `game_loop` category's
 `docs/status/game_loop.md` still listed under the `UpdateGameFrame`-
-`MainLoop` cluster: `sub_8022D50` and `sub_80255D4`.
+`MainLoop` cluster: `sub_8022D50` and `sub_80255D4`. `sub_80255D4` was
+initially left raw in a first pass (see below), then picked up again in
+a second follow-up pass once its second half was fully traced - see the
+"NAKED transcription" section below.
 
 ## `sub_8022D50` - NAKED transcription, `src/system/game_loop40.c`
 
@@ -68,23 +71,26 @@ Transcribed straight from the confirmed-correct ROM disassembly instead.
 Full clean `make compare` (`La suma coincide`) confirms the NAKED
 transcription byte-exact.
 
-## `sub_80255D4` - left raw
+## `sub_80255D4` - NAKED transcription, `src/system/game_loop41.c`
 
-Re-read against the ROM disassembly with several callees now
-characterized that weren't when this was last looked at (docs/matching.md's
-GitHub issue #40 entry): `self` here is `*gUnknown_030012B4` (the same
-collision-bitmap base `sub_8025944`/`sub_8025968`/`sub_802599C`,
-game_loop12.c, and `sub_8025A0C`, game_loop13.c, already operate on).
+Follow-up pass on the entry directly above: the full instruction-level
+trace was finished this time (every field, offset, branch and call
+argument pinned down against the ROM), so this is now understood with
+byte-exact-reconstruction confidence rather than left raw. `self` here
+is `*gUnknown_030012B4` (the same collision-bitmap base
+`sub_8025944`/`sub_8025968`/`sub_802599C`, game_loop12.c, and
+`sub_8025A0C`, game_loop13.c, already operate on).
 
-The first half is now solid: if `arg1` (a new "list" pointer) differs
-from `self`'s own cached copy at `+0`, `self+8`/`self+0x208` (the first
-two of the three overlapping collision-bitmap arrays that family
-already documents) get DMA-zero-filled (64 bytes each, matching a plain
-`DmaFill32(3, 0, dest, 64)`), then unconditionally `self+8`→`self+0x108`
-and `self+0x208`→`self+0x308` get `CpuSet`-copied (the same
+**First half** (DMA/`CpuSet` refresh + group/item walk): if `list` (a
+new "list" pointer) differs from `self`'s own cached copy at `+0`,
+`self+8`/`self+0x208` (the first two of the three overlapping
+collision-bitmap arrays that family already documents) get
+DMA-zero-filled (64 bytes each, matching a plain `DmaFill32(3, 0, dest,
+64)`), then unconditionally `self+8`→`self+0x108` and
+`self+0x208`→`self+0x308` get `CpuSet`-copied (the same
 `sub_803A94C(src, dst, 0x04000040)` idiom `sub_8022CA0`, game_loop.c,
 already documents in the opposite direction). `self+4` is set from
-`arg3 >> 8`. Then `arg1` itself is walked as a `{count:u16@2,
+`posArg >> 8`. Then `list` itself is walked as a `{count:u16@2,
 groups:ptr@4}` header (the same shape `sub_8025894`'s own `#if
 NON_MATCHING` reconstruction, game_loop12.c, documents for a sibling
 list) over `{count:u16@2, items:ptr@4}` 8-byte group records, each
@@ -92,26 +98,83 @@ holding `{tableIdx:u16, p1:u16, p2:u16, p3:u16}` 8-byte item records; for
 each item not already flagged in the `self+8` bit-grid (`sub_8025968`),
 `sub_8025D28` (the table-indexed interworking-trampoline dispatcher,
 game_loop14.c) fires with a running, never-reset-per-group counter as
-its own `self` argument.
+its own `self` argument, indexing `gUnknown_030012E4`'s table.
 
-The second half (everything gated on `arg2`, a count-prefixed
-`{u32, u32}` array) is where confidence runs out: for each
+**Second half** (everything gated on `redirectInfo`, a count-prefixed
+`{u32, u32}` array - null skips it entirely, otherwise the first word
+is the count and the array starts right after): for each
 `gUnknown_0300130C` (`struct actor_list`) entry in reverse, its `+8` id
-is looked up in `arg2`'s array; a match's paired value is used to
-search `gUnknown_0300130C` *again* for an entry with that id, linking
-the two via `sub_8010714`/`sub_8010710` (the neighbor-list set-next/
-set-prev pair, game_loop23.c) on success. On failure the code chases a
-*second* lookup back into `arg2` itself (treating it as an id→id
-redirect table) and retries the actor-list search with the new id -
-apparently a "follow a redirect chain until something in the live actor
-list matches" loop. The exact real-world meaning of `arg2`'s two `u32`
-fields (what relationship is being re-linked, and why a chase through
-`arg2` itself is needed when the direct actor-list search fails) isn't
-pinned down with the confidence a byte-exact reconstruction attempt
-needs, and the function's overall register pressure (`r8`/`sb`/`sl`/`ip`
-all live simultaneously across nested loops) matches the shape already
-flagged elsewhere in this ROM region as resistant to this compiler's
-allocator even once matching. Left completely untouched rather than
-force a low-confidence reconstruction or an under-understood NAKED
-transcription - real bytes stay in `asm/code_3_2_17_255d4.s`, byte-for-byte
-unchanged.
+is looked up in `redirectInfo`'s array (`.a` field, read as a full
+`u32`); a match's paired `.b` value is used to search
+`gUnknown_0300130C` *again*, in reverse, for an entry with that id,
+linking the two via `sub_8010714`/`sub_8010710` (the neighbor-list
+set-next/set-prev pair, game_loop23.c) on success. On failure the code
+chases a *second* lookup back into `redirectInfo`'s array itself
+(treating it as an id→id redirect table, `.a`→`.b` again) and retries
+the actor-list search with the new id - a "follow a redirect chain
+until something in the live actor list matches" loop, with one
+asymmetry transcribed verbatim from the ROM: a redirect hit at array
+index 0 specifically is treated as "give up" (stop chasing, move to the
+next actor-list entry) rather than "keep chasing with the new id" the
+way every other index is. A second, independent forward pass then walks
+`redirectInfo`'s array by index and looks each entry's `.a` id (this
+time read as a `u16`, not the first pass's `u32` - a genuinely different
+load width for the exact same field, confirmed against the ROM and
+transcribed as-is rather than "cleaned up" to one consistent width) up
+in `gUnknown_0300130C` directly (forward this time); on a miss it
+chases the same kind of `u16`-width id→id redirect chain through the
+array until a match is found or the chain runs out. Once a match is
+found (either pass), its `+0x18`-table's `+0x10`/`+0x14` `sub_803AD7C`
+trampoline record's returned `+5` byte becomes a `(byte+1)<<8` Q8 delta
+added to the matched entry's own `+4` field, then every entry in its
+`sub_801070C` ("get next") neighbor chain has
+`sub_8007398(entry, entry+0, entry+4+delta)` fired on it in turn - a
+position-resync pass over whatever got linked.
+
+The real-world *meaning* of `redirectInfo`'s two `u32`/`u16` fields
+(what relationship is being re-linked, why entry 0 is special-cased, why
+a second, differently-widthed pass repeats similar logic) still isn't
+named - nothing in the ROM gives that away without wider context this
+pass didn't chase down - but that's no longer what's blocking a
+byte-exact reconstruction; the control flow itself is fully pinned down.
+
+**NAKED, not plain C**: a real C reconstruction was attempted and got
+the *entire* first half byte-for-byte identical to the ROM once `self`
+and the group-loop's running counter were pinned to their ROM registers
+(`register void *self asm("r6")`, `register s32 counter asm("r7")`,
+each scoped to its own block so the pin doesn't outlive the ROM's own
+use of that register) - confirmed via an isolated compile diffed
+instruction-for-instruction against the ROM disassembly. The second
+half is where it breaks down: the ROM keeps `redirectInfo`'s
+`{count, array}` decomposition split across `r8` (count) and `sb`/`r9`
+(array base) for the *entire* second half - `r8`/`sb` pins reproduce
+that much cleanly - but the ROM never caches the array base in a single
+low register the way a normal C local would. `sb` is a high register,
+which Thumb's 3-operand `add`/indexed-load encodings restrict; at every
+individual use site that needs the array base combined with an index,
+the ROM re-issues a fresh `mov rX, sb` into whichever low register
+happens to be free at that exact point - `r1` in one place, `r4` in
+another, `r6` in a third, never the same choice twice in a row. A plain
+C pointer local (even given its own register pin) gets allocated to
+*one* register for its entire lifetime instead, which is a real,
+different, and smaller register footprint than the ROM's own
+repeated-rematerialization pattern. Reproducing it exactly would mean
+hand-placing a distinct inline-asm anchor at every one of the dozen-plus
+individual use sites - at which point it is no longer a C
+reconstruction in any meaningful sense, just NAKED asm wearing a C
+function signature. This is the same family of gcc-2.9
+high-register/3-operand-add materialization gap already parked
+elsewhere in this ROM region for similarly register-heavy functions
+(`sub_8025B0C`/`sub_8025BAC`/`sub_8025CA4`, `sub_8025E98`/`sub_8025F3C`
+above, both keeping `r8` live across most of their bodies). Transcribed
+straight from the confirmed-correct ROM disassembly instead - every
+label, branch and literal-pool placement (including the ROM's four
+redundant re-loads of `&gUnknown_0300130C` into separate nearby literal
+pools, one per Thumb `ldr`-range-limited region) carried over
+unmodified.
+
+Full clean `make compare` (`La suma coincide`) confirms the NAKED
+transcription byte-exact. `sub_8025894`, which used to share
+`asm/code_3_2_17_255d4.s` with `sub_80255D4`, is unaffected and stays
+parked `NON_MATCHING` in `src/system/game_loop12.c` - see
+[docs/matching/issue-41-game-loop-25894.md](issue-41-game-loop-25894.md).
