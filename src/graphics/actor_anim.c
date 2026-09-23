@@ -399,22 +399,87 @@ extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
  * `SetupSpriteFrameOam`. See docs/matching/issue-71-0x0803b060-actor.md
  * for the full semantic account.
  *
- * Written as NAKED asm, not plain C: `sub_802C2FC` (src/graphics/
- * actor_part19b.c) is the near-identical twin of this function (same
- * shape, self-relative position instead of a fixed one), parked on two
- * compiler gaps a plain-C reconstruction hit here too - a `| 0`-with-a-
- * zero-valued-local term the ROM keeps as a real materialize-and-OR
- * pair but this compiler's dead-store elimination always removes
- * regardless of phrasing, and a register-budget difference (this
- * compiler needs an extra spilled/high register to keep `frame` alive
- * across both calls where the ROM fits entirely in r4-r7). Every
- * load/store, branch and call was already confirmed correct against
- * the ROM, so this is a mechanical, byte-verified transcription of the
- * ROM's own instructions (translated from the disassembler's unified
- * syntax to this project's established NAKED plain/divided syntax,
- * local labels renumbered per
- * docs/matching/issue-4-sio-settings-sync.md's convention), not an
- * inferred control-flow guess. */
+ * Written as NAKED asm, not plain C: an 88%-matching C reconstruction
+ * is kept below under `#if NON_MATCHING` - see
+ * docs/matching/naked-sub_803b46c-matched.md for the derivation and
+ * the residual register-choice gaps. Mechanical, byte-verified
+ * transcription of the ROM's own instructions, not an inferred
+ * control-flow guess. */
+#if NON_MATCHING
+/* NOT YET BYTE-MATCHING - 88% instruction match (see the doc comment
+ * above and docs/matching/naked-sub_803b46c-matched.md); compiled only
+ * under `make NON_MATCHING=1`, the NAKED version below is used
+ * otherwise. */
+void sub_803B46C(void *selfArg)
+{
+    register u8 *self asm("r5") = selfArg;
+    register s32 x asm("r4") = 120;
+    register s32 y asm("r6") = 106;
+    u8 *frame;
+    register s32 w asm("r0");
+    register s32 wShift asm("r2");
+    register s32 h asm("r1");
+    register s32 hShift asm("r0");
+
+    frame = GetAnimFrameData((struct anim_part_instance *)self);
+    w = frame[0];
+    wShift = w << 2;
+    h = frame[1];
+    hShift = h << 2;
+    x -= wShift;
+    y -= hShift;
+    if (y > 159) {
+        return;
+    }
+    {
+        register s32 hCheck asm("r0") = h << 3;
+        if (y + hCheck < 0) {
+            return;
+        }
+    }
+    if (x > 239) {
+        return;
+    }
+    if (x + (wShift << 1) < 0) {
+        return;
+    }
+
+    {
+        register s32 attrFlag asm("r0") = sub_803B060((struct anim_part_instance *)self);
+        register s32 a0 asm("r3") = 0xff;
+        register s32 xm asm("r4") = x;
+
+        a0 &= y;
+        {
+            register s32 mask asm("r1") = 0x1ff;
+            xm &= mask;
+        }
+        xm <<= 16;
+        a0 |= xm;
+        a0 |= attrFlag;
+        {
+            register s32 zero asm("r0") = 0;
+            asm volatile("orr %0, %0, %1" : "+r"(a0) : "r"(zero));
+        }
+        x = a0;
+    }
+
+    {
+        s32 field24 = *(s32 *)(self + 24);
+        s32 a2 = field24 << 12;
+        s32 field20 = *(s32 *)(self + 20);
+        s32 attr2;
+
+        if (field20 & 0x8000) {
+            a2 |= 0x800;
+            attr2 = (u32)(a2 << 16) >> 16;
+        } else {
+            attr2 = (u32)(field24 << 28) >> 16;
+        }
+        SetupSpriteFrameOam(frame, x, attr2, 0x100);
+    }
+}
+#else /* !NON_MATCHING */
 NAKED void sub_803B46C(void *selfArg)
 {
     asm(
@@ -483,6 +548,7 @@ NAKED void sub_803B46C(void *selfArg)
         ".align 2, 0\n"
     );
 }
+#endif /* NON_MATCHING */
 
 asm(".align 2, 0");
 

@@ -830,11 +830,12 @@ embedded as asm instead. They're tracked as parked, not matched.
   (120, 106) OAM setup for one sprite frame - screen-space visibility
   cull, then builds the OAM attribute words and calls
   `SetupSpriteFrameOam`; near-identical twin of the still-parked
-  `sub_802C2FC` (`actor_part19b.c`), hitting the same two compiler
-  gaps: a `| 0`-with-a-zero-valued-term this compiler's dead-store
-  elimination always removes, and a register-budget difference needing
-  an extra spilled/high register the ROM doesn't need. GitHub issue
-  #71, see
+  `sub_802C2FC` (`actor_part19b.c`). An 88%-matching C reconstruction
+  (closing the `| 0`-dead-store idiom and the register-budget gap - the
+  latter turned out to be an r7-pin-hazard artifact, not a genuine
+  register shortage) is kept in-tree under `#if NON_MATCHING` - see
+  [docs/matching/naked-sub_803b46c-matched.md](../matching/naked-sub_803b46c-matched.md).
+  GitHub issue #71, see
   [docs/matching/issue-71-0x0803b060-actor.md](../matching/issue-71-0x0803b060-actor.md).
 
 ### `NON_MATCHING` (not yet byte-exact)
