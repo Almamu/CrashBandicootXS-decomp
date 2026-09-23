@@ -151,9 +151,11 @@ system from "core" system startup/init code.
   gotcha that closed this out.
 - `src/system/game_loop37.c` (GitHub issue #38, follow-up pass):
   `sub_8024640` (per-item sound-channel driver loop), `sub_80246D8`
-  (its "find next active item" index scanner) - also carries
-  `sub_8024590`/`sub_8024708`'s NON_MATCHING reconstructions, see below.
-  See [docs/matching/issue-38-sound-channel-family.md](../matching/issue-38-sound-channel-family.md).
+  (its "find next active item" index scanner), and - as of a second
+  follow-up pass - `sub_8024708` (VRAM-bank tile-asset streamer) too.
+  `sub_8024590` in the same file is NAKED-parked, see below. See
+  [docs/matching/issue-38-sound-channel-family.md](../matching/issue-38-sound-channel-family.md)
+  and its second-pass addendum.
 - `src/system/game_loop38.c` (GitHub issue #38, follow-up pass):
   `sub_8024790` - the tail half of `sub_8024640`'s per-item body, reused
   standalone. See
@@ -251,6 +253,19 @@ plain C didn't converge.
   list toolchain bug once every other quirk in the function is also
   anchored. See
   [docs/matching/issue-34-game-loop-8022d50-80255d4.md](../matching/issue-34-game-loop-8022d50-80255d4.md).
+- **`sub_8024590`** (`src/system/game_loop37.c`, GitHub issue #38, second
+  follow-up pass) - starts/re-selects a sound cue and plays its secondary
+  sfx immediately or after a busy-wait; a second pass on this function's
+  previously-NON_MATCHING C reconstruction closed two of its three
+  documented gaps for real (a redundant register-copy step, fixed with a
+  forced-same-register-move `asm volatile` idiom; a mismatched initial
+  item-pointer load, fixed by splitting the transient first-use load from
+  the persistent one) but hits the same confirmed
+  never-adds-an-inline-asm-clobbered-(or even genuinely written-and-read)-
+  r7-to-the-function's-own-push/pop-list toolchain bug as `sub_8022D50`
+  above for its busy-poll loop tail, which needs `push {r4, r5, r6, r7,
+  lr}`. See [docs/matching/issue-38-sound-channel-family.md](../matching/issue-38-sound-channel-family.md)'s
+  second-pass addendum.
 - **`sub_80255D4`** (`src/system/game_loop41.c`, GitHub issue #34/#40/
   #41 - the second half of the same follow-up pass as `sub_8022D50`
   above) - `self` is `*gUnknown_030012B4`: a `self+0`-cache-gated DMA3
@@ -315,23 +330,6 @@ plain C didn't converge.
   `sub_80255D4`, which used to share the file, is NAKED-parked in its
   own `game_loop41.c`, see the NAKED list above). See
   [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
-- **`sub_8024590`** (`src/system/game_loop37.c`, GitHub issue #38,
-  follow-up pass) - starts/re-selects a sound cue and plays its
-  secondary sfx immediately or after a busy-wait; real bytes stay in
-  `asm/code_3_2_17_24590.s`. Every field/offset/branch/call argument
-  confirmed; the residual gap is a redundant register-copy step this
-  reconstruction's `-0x80` OR-mask materialization collapses away via
-  constant propagation, in two call sites. See
-  [docs/matching/issue-38-sound-channel-family.md](../matching/issue-38-sound-channel-family.md).
-- **`sub_8024708`** (`src/system/game_loop37.c`, GitHub issue #38,
-  follow-up pass) - the VRAM-bank-toggling tile-asset streamer + palette
-  DMA + second `DISPCNT` writer; real bytes stay in
-  `asm/code_3_2_17_24708.s`. Every field/offset/branch/call argument
-  confirmed; the residual gap is one branch's scratch-register choice
-  (`r1` here vs. the ROM's `r2`) for an address computation whose
-  sibling branch already matches exactly. See
-  [docs/matching/issue-38-sound-channel-family.md](../matching/issue-38-sound-channel-family.md).
-
 ## Still raw, category-mapped (GitHub issue #12/#34/#40)
 
 - **`sub_0800D18C`/`sub_800E08C`** (`asm/code_3_2_17_d18c.s`, ROM
