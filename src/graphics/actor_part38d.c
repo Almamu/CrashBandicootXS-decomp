@@ -1,11 +1,10 @@
 #include "core.h"
 
 /* Continuation of actor_part28c.c (issue #18's chunk, the last one) -
- * covers `nullsub_17` through `sub_8015780` (matched) and `sub_80157C4`
- * (parked, NON_MATCHING); non-adjacent to actor_part28c.c since the
- * parked `sub_80156EC` sits raw between them (asm/code_3_2_17_156ec.s).
- * Same "self" object family documented at the top of actor_part18.c/
- * actor_part28.c. */
+ * covers `nullsub_17` through `sub_80157C4` (all matched); non-adjacent
+ * to actor_part28c.c since the parked `sub_80156EC` sits raw between
+ * them (asm/code_3_2_17_156ec.s). Same "self" object family documented
+ * at the top of actor_part18.c/actor_part28.c. */
 
 extern void sub_8015460(void *selfArg);
 extern void sub_8012FBC(void *self);
@@ -74,18 +73,31 @@ extern u8 sub_800B86C(void *unused, void *partArg, s32 newVal);
  * `sub_80019A8` with the original `mode`. Always tail-calls
  * `sub_800B86C(arg0, arg1, mode)`.
  *
- * Written as NAKED asm, not plain C: a 99.8%-matching C reconstruction
- * is kept below under `#if NON_MATCHING` - see
- * docs/matching/naked-sub_80157c4-matched.md for the derivation and
- * the one remaining cosmetic residual. Mechanical, byte-verified
- * transcription of the ROM's own instructions, not an inferred
- * control-flow guess. */
-#if NON_MATCHING
-/* NOT YET BYTE-MATCHING - 99.8% instruction match, a single cosmetic
- * epilogue scratch-register choice (see the doc comment above and
- * docs/matching/naked-sub_80157c4-matched.md); compiled only under
- * `make NON_MATCHING=1`, the NAKED version below is used otherwise. */
-void sub_80157C4(void *arg0, void *other, s32 mode)
+ * The control flow below is written as explicit `goto`s matching the
+ * ROM's own block layout exactly (one label per ROM branch target, no
+ * `if`/`else` restructuring at all): an `if`/`else if` chain testing
+ * `mode==0xd || mode==0x18` compiles to a different (non-matching)
+ * decision tree than the ROM's own `cmp #0x12/beq`, `cmp #0x12/bgt`,
+ * `cmp #0xd/beq`, (fallthrough) `cmp #0x18/beq` triangle - this
+ * project's usual "translate the disassembly's control flow directly,
+ * don't re-infer it as structured C" convention applies to branch
+ * *shape* just as much as to instruction *choice*.
+ *
+ * The tail call is declared to return `s32` (reinterpreting
+ * `sub_800B86C`'s real `u8` return through a function-pointer cast)
+ * purely so the value is considered live in `r0` at the return point:
+ * a genuinely `void` tail call leaves `r0` free, and gcc then reuses
+ * it as the epilogue's `pop`/`bx` scratch register, where the ROM uses
+ * `r1`. Returning the call's result normally (matching its real `u8`
+ * type) also frees `r0` for `r1`, but pulls in a spurious zero-
+ * extension pair (`lsl`/`lsr #0x18`) the ROM doesn't have, since gcc
+ * always widens a `char`-returning call's result before propagating
+ * it further; the raw-`s32` reinterpretation sidesteps that widening
+ * entirely since the value is never treated as narrower than a full
+ * register. See docs/matching/naked-sub_80157c4-matched.md for the
+ * full derivation (this was the sole remaining residual after a
+ * 99.8%-matching pass). */
+s32 sub_80157C4(void *arg0, void *other, s32 mode)
 {
     void *player = gUnknown_030012D8;
 
@@ -127,73 +139,5 @@ rearm:
     sub_80019A8(gUnknown_030012BC, 0x36);
 
 tail:
-    sub_800B86C(arg0, other, mode);
+    return ((s32 (*)(void *, void *, s32))sub_800B86C)(arg0, other, mode);
 }
-#else /* !NON_MATCHING */
-NAKED void sub_80157C4(void *arg0, void *arg1, s32 mode)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "add r6, r0, #0\n\t"
-        "add r7, r1, #0\n\t"
-        "add r5, r2, #0\n\t"
-        "ldr r0, 20f\n\t"
-        "ldr r1, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r0, r1, r2\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 1f\n\t"
-        "cmp r5, #0x12\n\t"
-        "beq 3f\n\t"
-        "cmp r5, #0x12\n\t"
-        "bgt 2f\n\t"
-        "cmp r5, #0xd\n\t"
-        "beq 4f\n\t"
-        "b 6f\n\t"
-        ".align 2, 0\n"
-    "20: .4byte gUnknown_030012D8\n"
-    "2:\n\t"
-        "cmp r5, #0x18\n\t"
-        "beq 4f\n\t"
-        "b 6f\n\t"
-    "3:\n\t"
-        "ldr r0, [r1, #0x60]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 1f\n\t"
-        "mov r5, #0x25\n\t"
-        "b 5f\n\t"
-    "4:\n\t"
-        "mov r5, #0x26\n\t"
-    "5:\n\t"
-        "ldr r4, 21f\n\t"
-        "ldr r0, [r4]\n\t"
-        "mov r1, #0x36\n\t"
-        "bl sub_80019A8\n\t"
-        "ldr r0, [r4]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0x36\n\t"
-        "bl PlaySfx\n\t"
-        "b 1f\n\t"
-        ".align 2, 0\n"
-    "21: .4byte gUnknown_030012BC\n"
-    "6:\n\t"
-        "ldr r0, 22f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #0x36\n\t"
-        "bl sub_80019A8\n\t"
-    "1:\n\t"
-        "add r0, r6, #0\n\t"
-        "add r1, r7, #0\n\t"
-        "add r2, r5, #0\n\t"
-        "bl sub_800B86C\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n"
-    "22: .4byte gUnknown_030012BC\n"
-    );
-}
-#endif /* NON_MATCHING */

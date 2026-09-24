@@ -71,3 +71,70 @@ crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
 compare` - `crashbandicootxs.gba: La suma coincide`. Unchanged from
 before this investigation; `tools/report_units.py`'s entry for
 `0x080157C4` stays `base_object=None` (still parked, not matched).
+
+## Update: the epilogue residual closed, `sub_80157C4` fully matched
+
+The one remaining residual (the `pop`/`bx` scratch-register choice,
+`r0` here vs. the ROM's `r1`) is closed. The prior write-up's own
+precedent for this exact class of gap - `docs/matching.md`'s
+`sub_800697C` entry, "a function's own return type/value can shape its
+*own* epilogue register choice" - applies here too, but with an extra
+wrinkle: `sub_800697C`'s callee (`sub_803ADB4`) already returned the
+same type the wrapper wanted to return, so a plain `return
+sub_803ADB4(...)` was enough. Here the callee, `sub_800B86C`, returns
+`u8`, and this compiler (confirmed via isolated `cpp`+`agbcc` A/B
+tests, not guessed) *always* inserts a zero-extension pair (`lsl
+r0,r0,#0x18` / `lsr r0,r0,#0x18`) immediately after a call whose result
+is propagated through any `return` of any type (tried both `u8
+sub_80157C4(...)` returning the `u8` call directly, and `s32
+sub_80157C4(...)` returning it promoted to `s32` - both inserted the
+pair) - the ROM has neither instruction, so a plain `return
+sub_800B86C(...)` was ruled out regardless of the wrapper's own
+declared return type.
+
+The fix: reinterpret the call itself through a function-pointer cast
+to a signature that already returns `s32`, so the value is never
+treated as narrower than a full register at any point and the
+extension pair never gets generated:
+
+```c
+tail:
+    return ((s32 (*)(void *, void *, s32))sub_800B86C)(arg0, other, mode);
+```
+
+`sub_80157C4` itself is declared `s32`-returning (not `void`) purely so
+the call's result is considered live in `r0` up to the `return`,
+freeing `r0` for the epilogue's `pop`/`bx` scratch role and forcing
+`r1` - the same live-value mechanism `sub_800697C` used, just applied
+through a cast instead of a same-typed passthrough. `sub_800B86C`'s own
+extern declaration (`src/graphics/actor_part17.c`, where it's already
+matched) is untouched - the cast is scoped to this one call site, and
+is arguably a more literal reading of what the ROM's own compiled code
+actually does with the value (uses the raw 32-bit `r0` register,
+untruncated, then immediately discards it) than honoring the callee's
+own narrower declared type would be.
+
+A `s32`-returning function that simply falls off the end without a
+`return` statement (discarding `sub_800B86C`'s result as a plain
+statement, no cast) was tried first and also produces the exact
+`pop {r1}`/`bx r1` epilogue with no extension pair - confirming the
+"live return value" mechanism alone (independent of the cast) is what
+drives the register choice. The cast+`return` version was kept instead
+since it avoids the control-reaches-end-of-non-void-function undefined
+behavior the fall-off variant relies on, even though this compiler
+doesn't warn on it under this project's `-Wimplicit -Wparentheses`
+flags.
+
+Verified: isolated `cpp`+`agbcc` recompile of `sub_80157C4` byte-for-
+byte identical to the ROM's own raw disassembly (direct `objcopy
+--only-section=.text` + `cmp`, zero difference); full clean `rm -rf
+build && make NON_MATCHING=1 report` (no warnings, including for
+`actor_part38d.c`); full clean `rm -rf build crashbandicootxs.elf
+crashbandicootxs.gba crashbandicootxs.map && make compare` -
+`crashbandicootxs.gba: La suma coincide`. The `#if NON_MATCHING`/
+`NAKED` split is gone - `sub_80157C4` is now a single, unconditional,
+real C definition in `src/graphics/actor_part38d.c`, and
+`tools/report_units.py`'s separate `0x080157C4` entry was removed
+entirely (folded into the neighboring `actor_part38d.o` entry, which
+now spans `0x0801574C`-`0x08015840` with no gap before
+`actor_part57.o`).
