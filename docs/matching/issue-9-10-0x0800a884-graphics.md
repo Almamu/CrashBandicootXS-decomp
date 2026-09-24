@@ -92,7 +92,7 @@ family already covered at length by
   `sub_803AD88` calls in `actor_part11.c`
   (`register void *deadRead asm("r4") = *(void *volatile *)(...)`).
 
-  **Not yet byte-exact, but far closer after a follow-up session.**
+  **Not yet byte-exact, but far closer after two follow-up sessions.**
   The earlier claim that the leading ~40 instructions were "confirmed"
   came from an *isolated* compile (just that prefix, ending right
   after `sub_800A0FC`'s call) - that isolated match did not survive
@@ -106,7 +106,7 @@ family already covered at length by
   loop `docs/workflow.md` describes, iterating against the *whole*
   ROM disassembly (not a truncated prefix) after every change. That
   session closed everything down to two narrow, purely register-
-  *choice* gaps (neither changes program behavior or even instruction
+  *choice* gaps (neither changed program behavior or even instruction
   count):
 
   1. The `self+0x105` clear's transient offset scratch register: `r0`
@@ -117,34 +117,87 @@ family already covered at length by
      (which destroys the address register with the loaded byte,
      rather than using a fresh one).
 
-  Every technique in this project's toolbox was tried for both gaps
-  this session - plain register pins, hoisting either value into its
-  own persistent pointer variable, and (for the `kindZero` gap) a
-  dedicated `asm volatile` island reproducing the ROM's exact
-  `ldrb r7, [r7]` instruction byte-for-byte. Each fix reliably
-  reproduced the *targeted* instruction(s) in isolation, but just as
-  reliably reshuffled register choices in unrelated, already-matching
-  code elsewhere in the function (sometimes upstream, sometimes
-  downstream of the change) - this compiler's -O2 register allocator
-  appears globally sensitive, for this specific dense-switch function
-  shape, to the total number of pinned/`asm`-referenced registers
-  anywhere in the function, not just their positions. The version left
-  in the tree keeps the rest of the function (everything but these two
-  self-contained two-instruction-or-fewer gaps) byte-exact rather than
-  trading one gap for a wider one; see the source file's own doc
-  comment for the full accounting, including the "Real gotchas" this
-  session needed (case-scattering for the second jump table, the
-  `s32`-not-`u8` switch-index type, matching the ROM's own block
-  *order* not just its goto targets for `kindZero`, the `case 4` vs.
-  `case 6`/`case 10` register-role split that keeps this compiler's
-  own tail-merge pass from over-merging, and the shift-not-mask bit-4
-  test). Real bytes stay in `asm/code_3_2_16_a884.s`
+  A **second follow-up session** (objdiff fuzzy-match 96.8% -> 98.0%)
+  re-verified the whole function byte-for-byte from scratch (not
+  trusting the first session's "only two gaps" claim at face value -
+  see "Real gotchas" point 10 below) and found a **third, previously
+  undocumented gap** in the camera-probe tail's Y-snap arithmetic, plus
+  closed gap 2 above entirely, using two new techniques not tried in
+  the first session:
+
+  - **The Y-snap gap** (`s32 snap = (((u32)y & 0x00FFFFF8) + 7) - y;`):
+    this compiler's -O2 was re-associating the expression into
+    `masked - (y - 7)`, using a *second* register the ROM's own
+    `ands`/`adds #7`/`subs` sequence never touches. Closed by forcing
+    the whole computation through one pinned accumulator
+    (`register s32 acc asm("r0")`, written as three separate
+    statements on that same variable) so the compiler has no freedom
+    to re-associate it into a different register pairing. Confirmed
+    via full-function diff to have **zero effect on any other register
+    choice** in the function - a clean, fully isolated fix.
+  - **The `kindZero` `r7` self-overwrite gap**: closed via a
+    *matching-constraint* asm operand (`"0"(p68)`) rather than a
+    freshly `register T v asm("r7")`-declared variable - `asm
+    volatile("ldrb r7, [r7]" : "=r"(r7byte) : "0"(p68));` ties the
+    output register to wherever `p68` *already* lives (which is `r7`,
+    unforced, simply this compiler's own natural allocation choice for
+    it), instead of asking the allocator to conjure a *new*,
+    independent `r7` binding. This introduces zero new hard-register
+    requirements into the function's register-allocation graph, which
+    is why - unlike every technique tried in the first session - it
+    does **not** ripple the `+0xac` block's own register choices. Also
+    closed, as a consequence, the `kindZero` three-clear tail's offset-
+    walk register (now correctly continuing in `r2` across all three
+    clears, `+1` then `-3`, exactly matching the ROM), at the cost of
+    one small remaining side effect: a single extra `movs r1, #0`
+    scheduled right after the `cmp r7, #8` branch, that this session
+    could not eliminate or relocate (every placement of the source-
+    level `storeVal = kind;` assignment - including via the same
+    matching-constraint technique - produced the identical extra
+    instruction in the identical position, a compiler-driven constant-
+    propagation artifact rather than a moveable register choice).
+
+  The `self+0x105` gap (gap 1) remains open - every technique tried
+  this second session (a matching-constraint asm block hardcoding
+  `r5`/`r6`, a barriered register pin) reproduced the *exact same*
+  ripple as the first session (`self` itself moving from `r5` to `r6`
+  for the rest of the function), confirming this is a stable, narrow
+  compiler-fragility floor rather than an unexplored lead - the
+  distinguishing factor from the successfully-closed `kindZero` gap is
+  that gap 1 needs a genuinely *new* hard-register binding (`r2` for a
+  literal that has no pre-existing forced home), where the `kindZero`
+  fix only *reused* a binding (`r7`) already forced there by `p68`'s
+  own unrelated, natural allocation.
+
+  Net result of the second session: one gap fully closed (`kindZero`
+  `r7` test, worth ~1 instruction), one previously-undocumented gap
+  found and fully closed (Y-snap arithmetic, worth ~2 instructions),
+  and the `kindZero` offset-walk register also fixed as a consequence
+  (~2 more instructions) - at the cost of one small new single-
+  instruction artifact (the extra `movs r1, #0`). Verified via
+  `objdiff-cli report generate` (96.8% -> 98.0% fuzzy match for this
+  unit) and a full clean `make compare` (ROM checksum still matches -
+  this function stays `NON_MATCHING`/parked, so the real, ROM-exact
+  bytes in `asm/code_3_2_16_a884.s` are still what actually ships;
+  only the *parked C reconstruction*, used for eventual matching and
+  for readability/documentation purposes, improved). See the source
+  file's own doc comment for the full accounting, including the "Real
+  gotchas" both sessions needed (case-scattering for the second jump
+  table, the `s32`-not-`u8` switch-index type, matching the ROM's own
+  block *order* not just its goto targets for `kindZero`, the `case 4`
+  vs. `case 6`/`case 10` register-role split that keeps this
+  compiler's own tail-merge pass from over-merging, the shift-not-mask
+  bit-4 test, the Y-snap re-association fix, and the matching-
+  constraint technique that closed the `r7` self-overwrite gap without
+  rippling). Real bytes stay in `asm/code_3_2_16_a884.s`
   (`asm/code_3_2_16.o` trimmed to start at `sub_800AAEC`), following
   the same `.if NON_MATCHING == 0` pattern as `sub_800A528`'s own
   `asm/code_3_2_11_a528.s`. A future session picking this up should
-  treat the two remaining gaps as a genuine compiler-fragility floor
-  for this function shape rather than an unexplored lead, unless a
-  new technique (not yet tried here) presents itself.
+  treat the `self+0x105` gap as a genuine compiler-fragility floor for
+  this function shape rather than an unexplored lead, unless a new
+  technique (not yet tried across either session) presents itself; the
+  remaining single extra `movs r1, #0` instruction is a much smaller,
+  lower-priority target that may be worth one more look.
 
 ### Real gotchas found closing the leading block
 

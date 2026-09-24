@@ -1099,16 +1099,24 @@ embedded as asm instead. They're tracked as parked, not matched.
   keyframe-lookup/camera-position probe via `sub_80083B8`/
   `sub_8026BC0` sharing `sub_80084C4`'s case-to-block mapping. Every
   load/store/branch/call confirmed correct against the ROM, and now
-  (a follow-up session) register-for-register byte-exact almost
-  everywhere: both jump tables, all 10 case bodies (two needing
-  `asm volatile` islands to reproduce a ROM cross-case tail-merge),
-  and the camera-probe tail all match. Two narrow, purely
-  register-*choice* gaps remain (neither changes program behavior or
-  instruction count) - a single scratch-register pick for the
-  `self+0x105` clear, and the `kindZero` byte-test's `r7` self-load
-  idiom - both reconfirmed resistant to every register-pin/`asm`
-  variation tried without perturbing other, already-matching code
-  ("ripple" effect). See
+  (a second follow-up session, 98.0% fuzzy-matched, up from 96.8%)
+  register-for-register byte-exact almost everywhere: both jump
+  tables, all 10 case bodies (two needing `asm volatile` islands to
+  reproduce a ROM cross-case tail-merge), the camera-probe tail's
+  Y-snap arithmetic (closed this session - a `(masked + 7) - y`
+  expression was getting re-associated into a different register
+  pairing than the ROM's own), and `kindZero`'s `self+0x68 == 8` test
+  (also closed this session, via a matching-constraint `asm volatile`
+  reusing `p68`'s own already-`r7` allocation rather than forcing a
+  brand-new register binding) all match. One narrow, purely
+  register-*choice* gap remains (the `self+0x105` clear's scratch-
+  register pick, `r0` here vs. the ROM's `r2` - reconfirmed resistant
+  to every register-pin/`asm` variation tried across two sessions now,
+  without perturbing other, already-matching code, the "ripple"
+  effect), plus one small single-instruction side effect of closing
+  the `kindZero` gap (a redundant `movs r1, #0` the compiler schedules
+  from provable-constant-propagation that no placement of the source
+  assignment moved or eliminated). See
   [docs/matching/issue-9-10-0x0800a884-graphics.md](../matching/issue-9-10-0x0800a884-graphics.md).
 - **`sub_800AB9C`** (`src/graphics/actor_part81.c`, GitHub issue #9/#10;
   real bytes in `asm/code_3_2_16_ab9c.s`) - a two-flag-gated teardown/

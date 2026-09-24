@@ -60,18 +60,29 @@ extern u8 gStaticData_0816B300[];
  * via the `goto storeAndDispatch` pair the same way the ROM merges
  * those two blocks into one physical store. The leading ~40
  * instructions (through the `sub_800A0FC` call and the `+0xac`
- * conditional block) are register-for-register byte-exact, confirmed
- * again this session against the *whole* function (not just in
- * isolation - the earlier isolated match didn't survive once the rest
- * of the function was added, see "Real gotchas" below). The 10-way
+ * conditional block) are register-for-register byte-exact. The 10-way
  * "kind" dispatch (including two case bodies - kind 7/kind 10 - that
  * needed hand-written `asm volatile` islands to reproduce the ROM's
  * own cross-case tail-merge exactly, `case 4`'s own distinct
  * non-merged tail closed with a plain register pin instead) and the
  * keyframe-lookup/camera-probe tail (including the `self+0x28` bit-4
  * test, which needed the same shift-vs-mask rewrite as the leading
- * block's own bit-7 test) are now ALSO byte-for-byte matched. Only two
- * narrow, purely register-*choice* gaps remain, identified precisely:
+ * block's own bit-7 test) are ALSO byte-for-byte matched, including
+ * the `snap` computation feeding the Y-position rounding (see "Real
+ * gotchas" point 6 below - this one was found and closed this
+ * follow-up session; it was NOT one of the two gaps the previous
+ * session's doc comment described as remaining, meaning that claim of
+ * "only two gaps left" was itself slightly stale). `kindZero`'s own
+ * `self+0x68 == 8` test and its three-clear tail (`self+0x102`,
+ * `self+0x103`, `self+0x100`, all sharing the `storeAndDispatch` merge
+ * point with the switch path) are now ALSO byte-for-byte matched -
+ * see "Real gotchas" points 7-8 for how the two previously-parked
+ * `kindZero` gaps (the `ldrb r7, [r7]` self-overwrite, and the third
+ * clear's offset-walk register) were finally closed this session.
+ * Only one narrow, purely register-*choice* gap remains, plus one
+ * single extra instruction that appeared as a side effect of closing
+ * the `kindZero` gaps (a strict net improvement over both - see
+ * below):
  *
  * 1. The `self+0x105` clear's address computation loads the raw
  *    `0x105` immediate from the literal pool into `r0` here, where the
@@ -79,43 +90,60 @@ extern u8 gStaticData_0816B300[];
  *    *destination* address still correctly lands in `r6` either way,
  *    matching the ROM's own later reuse of `r6` for `self+0x105`'s
  *    address across the `sub_803AD7C` call). Every register-pin
- *    variation tried for this single scratch temp (pinning it
- *    directly, hoisting the address into its own persistent pointer
- *    variable, reordering the two leading clears) either left this
- *    register choice unchanged or reshuffled unrelated *later*
- *    register choices instead (the `+0xac` block's own register plan,
- *    the type-switch's jump-table register choices) - a instance of
- *    this session's general "ripple" lesson (see below) with no
- *    register-pin fix found that doesn't trade this one gap for a
- *    worse one elsewhere.
- * 2. `kindZero`'s `self+0x68 == 8` test loads the byte through `r7`
- *    (the same register already holding `self+0x68`'s address) into a
- *    *fresh* register (`r0`) here, where the ROM overwrites `r7`
- *    itself with the loaded byte (`ldrb r7, [r7], an idiom to a
- *    location) - both this project's usual `register T v asm("r7")`
- *    pin and an explicit `asm volatile("ldrb r7, [r7, #0]")` island
- *    (matching the `case 4`/kind-7/kind-10 islands' own established
- *    style) were tried; both compile and assemble correctly and this
- *    *one* instruction pair does reproduce (`ldrb r7, [r7]; cmp r7,
- *    #8`), but introducing either one perturbs the *upstream* `+0xac`
- *    block's own already-matching register choices (more registers
- *    pinned earlier in the function shifts this compiler's -O2
- *    register-coloring plan for unrelated code, the same "ripple"
- *    effect, just running backward through the function instead of
- *    forward this time) - reverting back to the plain, unpinned
- *    `if (*p68 != 8)` C phrasing keeps the rest of the function
- *    (everything else, including `case 4`/the type-switch/the camera
- *    probe) byte-exact and limits this single register-choice gap to
- *    a self-contained two-instruction pair, rather than trading it for
- *    a worse, wider mismatch.
+ *    variation tried across two separate sessions for this single
+ *    scratch temp (pinning it directly, hoisting the address into its
+ *    own persistent pointer variable, an opaque `asm volatile`
+ *    barrier forcing the pin to "stick", a fully opaque asm island
+ *    computing the address outright, reordering the two leading
+ *    clears) either left this register choice unchanged (the pin
+ *    silently ignored, since the offset is a compile-time constant
+ *    the optimizer refuses to route through a hinted-but-unbarriered
+ *    register) or reshuffled `self` itself out of `r5` into `r6` for
+ *    the *entire rest of the function* the moment the pin was made to
+ *    "stick" via any barrier or asm island (confirmed both with a
+ *    barriered register variable and with a fully opaque asm block
+ *    hardcoding `r5`/`r6` - both produced the identical `self`-moves-
+ *    to-`r6` ripple). Introducing a *new*, previously-unforced hard-
+ *    register requirement this early in the function's body appears
+ *    to be what triggers this specific ripple (contrast with gap
+ *    2 below, closed this session precisely because its fix did
+ *    *not* introduce a new hard-register requirement - it only
+ *    reused a register, `r7`, already forced there by `p68`'s own
+ *    natural allocation). No register-pin fix was found this session
+ *    either that doesn't trade this one gap for a worse one
+ *    elsewhere; left parked as the sole remaining register-choice
+ *    gap.
+ * 2. `kindZero`'s three-clear tail (`self+0x102`, `self+0x103`,
+ *    `self+0x100`, `storeAndDispatch`'s shared final `strb`) now
+ *    matches the ROM's own `r2` offset-walk (`+1`, then `-3`) exactly,
+ *    reusing `kind`'s own residual `r1` register as the "already
+ *    zero" store value across all three clears just like the ROM
+ *    does - **except for a single extra `movs r1, #0` instruction**
+ *    that appears right after the `cmp r7, #8` branch, immediately
+ *    before the `r2` offset walk starts. This is a compiler-driven
+ *    constant-propagation artifact: this compiler already proves
+ *    `kind == 0` on this path (from the earlier `if (kind == 0) goto
+ *    kindZero;` guard) and schedules a fresh, redundant `r1 = 0`
+ *    materialization into the first free slot after the branch,
+ *    regardless of where the C source's own `storeVal = kind;`
+ *    assignment physically sits (tried at the very end, right after
+ *    the offset walk, and via an explicit `asm volatile` barrier at
+ *    several different points in between - every placement produced
+ *    the *exact same* single extra `movs r1, #0`, always scheduled
+ *    right after the branch, never eliminated outright). This is a
+ *    strict, verified improvement over the previous session's
+ *    two-gap state: the `ldrb r7, [r7]` self-overwrite and the wrong-
+ *    register offset walk (worth 4 mismatched instructions between
+ *    them) are now fully closed, at the cost of this single new
+ *    2-byte `movs r1, #0` - net fewer mismatched bytes overall, with
+ *    zero regressions anywhere else in the function (re-verified via
+ *    full-function diff after every change, per this project's
+ *    workflow).
  *
- * Neither gap changes program behavior or even instruction *count* -
- * both are the compiler choosing a different (but equally valid)
- * scratch register for a value that's dead moments later. See
- * docs/matching/issue-9-10-0x0800a884-graphics.md.
+ * See docs/matching/issue-9-10-0x0800a884-graphics.md for the full
+ * accounting of both gaps.
  *
- * Real gotchas found this session (in addition to the leading block's
- * own, already-documented ones):
+ * Real gotchas found across both sessions:
  *
  * 1. **A leading-block isolated match doesn't survive whole-function
  *    compilation.** The doc's earlier claim that the leading ~40
@@ -171,24 +199,89 @@ extern u8 gStaticData_0816B300[];
  *    compiler doesn't normalize between the two phrasings, and only
  *    the shift form reproduces the ROM's own `lsls #0x1b`/`cmp
  *    #0`/`bge`.
- * 6. **The "ripple" effect runs in both directions.** Every fix
- *    attempted for either of the two remaining gaps above (register
- *    pins, `asm volatile` islands, restructured pointer variables)
- *    reliably reproduced the *targeted* instruction(s) but just as
- *    reliably reshuffled register choices in unrelated, already-
- *    matching code elsewhere in the function - sometimes upstream of
- *    the change, sometimes downstream, sometimes both. The dense
- *    10-way switch and the shared literal pool for the whole function
- *    appear to make this compiler's -O2 register allocator especially
- *    sensitive to any change in the total number of pinned/asm-
- *    referenced registers, not just their positions.
+ * 6. **A `(masked + 7) - y` expression can get algebraically
+ *    re-associated into `masked - (y - 7)` at -O2**, changing which
+ *    register holds the intermediate and introducing a spurious `sub`
+ *    against a second register the ROM never uses - even though both
+ *    forms are the same value. The ROM computes this Y-snap purely in
+ *    one register (`ands`/`adds #7`/`subs`), never touching a second
+ *    one. Fixed by forcing the whole 3-step computation through a
+ *    single pinned accumulator: `register s32 acc asm("r0") = (u32)y &
+ *    0x00FFFFF8; acc = acc + 7; acc = acc - y;` - written as three
+ *    separate statements on the *same* pinned variable so this
+ *    compiler has no freedom to re-associate the arithmetic into a
+ *    different register pairing. Confirmed via full-function diff to
+ *    have zero effect on any other register choice in the function -
+ *    a clean, isolated fix.
+ * 7. **A self-overwriting `ldrb rN, [rN]` (destination register same
+ *    as the address register) *can* be reproduced without a whole-
+ *    function ripple, but only via a matching-constraint asm operand
+ *    against a variable *already* forced into that register by
+ *    something else - not via a freshly `register T v asm("rN")`-
+ *    declared variable on its own.** `kindZero`'s `self+0x68` byte
+ *    load needed exactly `ldrb r7, [r7]`, and `p68` (`self+0x68`'s
+ *    address) is *already* naturally allocated to `r7` throughout this
+ *    function (nothing forces this - it's this compiler's own
+ *    unforced choice, matching the ROM's). The fix: `register s32
+ *    r7byte asm("r7"); asm volatile("ldrb r7, [r7]" : "=r"(r7byte) :
+ *    "0"(p68));` - the `"0"` matching constraint ties the *input*
+ *    register (wherever `p68` already lives) to the *output* register,
+ *    rather than declaring a brand-new, independently-pinned `r7`
+ *    variable. Since `p68` already lives in `r7` with no forcing
+ *    needed, this introduces *zero new hard-register requirements*
+ *    into the function's register-allocation graph - it only asserts
+ *    "reuse whatever register this value's already in," which is
+ *    fundamentally different from asking the allocator to conjure a
+ *    *new* `r7` binding from scratch. This is why it didn't ripple,
+ *    where the earlier (previous session's) `register T v asm("r7")`
+ *    pin and freestanding `asm volatile("ldrb r7, [r7, #0]")` island
+ *    both did - those introduced `r7` as an independent constraint on
+ *    top of `p68`'s own, rather than aliasing the same one. Also note:
+ *    the output type must be `s32` (a full register width), not `u8` -
+ *    a `u8`-typed register-asm output variable used directly in a
+ *    comparison made this compiler emit a bizarre spurious `mov r1,
+ *    sp` / shift-pair "truncation" sequence instead of a plain `cmp`;
+ *    reading the raw `s32` register value and comparing it directly
+ *    avoided that entirely.
+ * 8. **The matching-constraint technique from point 7 does *not*
+ *    generalize to introducing a genuinely new scratch register that
+ *    wasn't already forced somewhere else.** The `self+0x105` gap
+ *    (gap 1 above) needs a *new* `r2` binding for a value (the literal
+ *    `0x105`) that has no pre-existing forced home - unlike `p68`,
+ *    which already lived in `r7` for unrelated reasons. Every attempt
+ *    to introduce that binding (plain pin, barriered pin, matching-
+ *    constraint asm, fully opaque asm island) rippled `self` itself
+ *    out of `r5`. The distinguishing factor between the two gaps
+ *    this session found: reusing an *already-forced* register's
+ *    binding via a matching constraint is ripple-free; asking the
+ *    allocator to forge a *new* one is not, at least not anywhere
+ *    this early in the function's body.
+ * 9. **The "ripple" effect runs in both directions and is a stable,
+ *    reproducible property of this function's shape**, not a one-off:
+ *    every fix attempted for the `self+0x105` gap across *two*
+ *    separate sessions (register pins, `asm volatile` islands,
+ *    restructured pointer variables, matching constraints) reliably
+ *    reproduced the *targeted* instruction(s) but just as reliably
+ *    reshuffled register choices in unrelated, already-matching code
+ *    elsewhere in the function - confirmed again this session with
+ *    two more independent technique variations, both producing the
+ *    identical `self`-moves-to-`r6` ripple. The dense 10-way switch
+ *    and the shared literal pool for the whole function appear to
+ *    make this compiler's -O2 register allocator especially sensitive
+ *    to *new* hard-register requirements introduced early in the
+ *    function body specifically - point 7's success shows this is not
+ *    a blanket "any asm ripples" rule, but a "asking for a genuinely
+ *    new binding ripples, reusing an existing one does not" rule.
  *
- * The next session picking this up should treat the two remaining
- * gaps as a genuine compiler-fragility floor for this specific
- * function shape, not an unexplored lead - reasonable variations of
- * every technique in this project's toolbox (plain pins, scoped
- * pins, `asm volatile` islands with shared local labels, explicit
- * `.pool`/`.align` placement) were tried for both gaps this session. */
+ * The next session picking this up should treat the `self+0x105` gap
+ * as a genuine compiler-fragility floor for this specific function
+ * shape, not an unexplored lead - reasonable variations of every
+ * technique in this project's toolbox, including the matching-
+ * constraint trick that closed the `kindZero` gap, were tried for it
+ * across two sessions now. The one remaining extra `movs r1, #0` (gap
+ * 2 above) is a much smaller, single-instruction, non-rippling
+ * artifact and may be worth one more look with a fresh technique, but
+ * is not a priority given how narrow it already is. */
 #if NON_MATCHING
 u8 sub_800A884(void *selfArg)
 {
@@ -328,12 +421,22 @@ u8 sub_800A884(void *selfArg)
     goto storeAndDispatch;
 
 kindZero:
-    if (*p68 != 8) {
-        goto dispatch;
+    {
+        register s32 r7byte asm("r7");
+        asm volatile("ldrb r7, [r7]" : "=r"(r7byte) : "0"(p68));
+        if (r7byte != 8) {
+            goto dispatch;
+        }
     }
-    self[0x102] = 0;
-    self[0x103] = 0;
-    storeAddr = self + 0x100;
+    asm volatile("" : "+r"(kind));
+    {
+        register s32 off asm("r2") = 0x102;
+        self[off] = kind;
+        off += 1;
+        self[off] = kind;
+        off -= 3;
+        storeAddr = self + off;
+    }
     storeVal = kind;
 
 storeAndDispatch:
@@ -383,7 +486,13 @@ dispatch:
             code = sub_8026BC0(gUnknown_03001308, x, y);
             if (code == 6) {
                 if (self[0x101] == 0) {
-                    s32 snap = (((u32)y & 0x00FFFFF8) + 7) - y;
+                    s32 snap;
+                    {
+                        register s32 acc asm("r0") = (u32)y & 0x00FFFFF8;
+                        acc = acc + 7;
+                        acc = acc - y;
+                        snap = acc;
+                    }
                     *(s32 *)(self + 4) += snap << 8;
                     {
                         u8 *tbl2 = *(u8 **)(self + 0x18) + 0x68;
