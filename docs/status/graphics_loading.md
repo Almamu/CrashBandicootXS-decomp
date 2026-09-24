@@ -171,6 +171,20 @@ Both hit the same confirmed `r7`-pin gap as `sub_8007114`
 (src/graphics/graphics.c) and `sub_802190C` above - see
 [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md)'s
 "Fifth pass".
+- **`LoadGraphicsPackage`** (`src/graphics/graphics_package_1e578.c`) -
+  the cluster's own namesake; the palette/tileset/tilemap loader itself,
+  using the shared `struct bg_package` (`include/graphics_package.h`).
+  Every operation and register choice was already confirmed correct
+  against the ROM by an earlier plain-C reconstruction (heavy register
+  pinning across every one of r0-r8/sb/sl/ip), but hit the same dropped-
+  `r7`-push/pop gap documented for `sub_801E644`/`sub_801E688` above and
+  `LoadBg2Background` below: reusing r6 for one more scratch temp (to
+  match the ROM's own mid-loop `ldrh r6,...`) makes this compiler stop
+  treating `src`'s r7 as needing a callee-save push/pop at all, even
+  though the function body still writes and reads it afterwards.
+  Transcribed instruction-for-instruction instead. See
+  [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)'s
+  "Eighth pass".
 - **`sub_801E990`** (`src/graphics/graphics_loading_1e990.c`) - the
   sound-trigger dispatch/position writer at the end of the
   `LoadGraphicsPackage` cluster's scratch-buffer-style helper family
@@ -199,17 +213,6 @@ Both hit the same confirmed `r7`-pin gap as `sub_8007114`
   `gUnknown_030008BC`); semantically faithful but not yet
   register-tuned - see
   [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md).
-- **`LoadGraphicsPackage`** (`src/graphics/graphics_package_1e578.c`,
-  real bytes guarded at the tail of `asm/code_3_2_17_188d0.s`) - the
-  cluster's own namesake; the palette/tileset/tilemap loader itself,
-  using the same `struct bg_package` (now in `include/graphics_package.h`,
-  shared with `LoadBg2Background`/`LoadObjSpriteTiles` above). Matches
-  the ROM instruction-for-instruction after heavy register pinning except
-  one dropped callee-saved `r7` push/pop pair - the same
-  first-pass-vs-second-pass register-pressure artifact as
-  `LoadBg2Background` above - see
-  [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)'s
-  "Third pass".
 - **`sub_801E788`** (`src/graphics/graphics_package_1e688.c`, real bytes
   guarded in `asm/code_3_2_17_1e644.s`) - `LoadGraphicsPackage`'s
   viewport-centering helper (position math on one of 4 packed modes,
