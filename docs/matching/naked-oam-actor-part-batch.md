@@ -127,5 +127,30 @@ computes the result made its value opaque to the optimizer, forcing
 the automatic `s32`-to-`u8` return-value truncation the ROM has (and
 this compiler otherwise proves redundant) to actually materialize.
 See `docs/matching.md`'s "Parked, not matched: sub_8008770" entry for
-the full account. The other thirteen functions in this batch are
-unaffected and remain NAKED, tracked as parked.
+the full account.
+
+**Update: `sub_8008188`/`sub_8008200`/`sub_8008278`/`sub_80083B8`
+matched in a later session.** Converted back from this NAKED
+transcription to real C. `sub_8008188`/`sub_8008200`/`sub_8008278`'s
+shared holdout - the kind-8/12 switch block's register-register `add`
+canonicalizing the "wrong" way around - was closed by routing both
+`case 8` and `case 12` to one `goto`-shared label holding the entire
+load+load+add sequence as a single atomic `asm volatile` block, rather
+than an asm anchor on just the `add` inside two ordinary switch-case
+bodies (which an earlier attempt found broke the compiler's own
+case-body identical-code merging). `sub_8008278` additionally needed
+every other switch case rewritten the same `goto`-to-an-outside-label
+way (not just the kind-8/12 one) to get the compiler's block *layout*
+matching, and an explicit `register void *rec asm("r2")` pin on the
+incoming parameter to stop the compiler from spilling it to a
+callee-saved register once its live range was forced to span every
+`goto`-connected block. `sub_80083B8`'s single-instruction
+`add`-operand-order gap sits in genuinely straight-line code with no
+case merging to protect, so a plain inline-asm anchor on just that one
+instruction - the same technique that had backfired for the other
+three - worked here directly. See `docs/matching.md`'s "Parked, not
+matched: sub_8008188" entry (and its `sub_8008200`/`sub_8008278`/
+`sub_80083B8` siblings just below it) for the original account of what
+had been tried and failed before this session. The remaining nine
+functions in this batch are unaffected and remain NAKED, tracked as
+parked.

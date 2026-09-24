@@ -27,11 +27,18 @@ from "core" graphics.
   byte-exact too, closing the old raw gap between them):
   `sub_8007F78`, `sub_8007FD8`
 - `src/graphics/actor_part4.c` (new file, now directly adjacent to
-  `actor_part3.c`'s matched functions): `sub_80080C0`, `sub_800815C`
+  `actor_part3.c`'s matched functions): `sub_80080C0`, `sub_800815C`,
+  `sub_8008188`, `sub_8008200`, `sub_8008278` (the latter three
+  originally a NAKED transcription, matched to real C in a later
+  session - see `docs/matching.md`'s "Parked, not matched: sub_8008188"
+  entry and its "Update" note)
 - `src/graphics/actor_part5.c` (new file, now directly adjacent to
   `actor_part4.c`'s matched functions): `sub_8008304`,
   `sub_8008328`, `sub_800834C`, `sub_8008350`, `sub_8008364`,
-  `sub_8008394`, `sub_80083A8`
+  `sub_8008394`, `sub_80083A8`, `sub_80083B8` (the latter originally a
+  NAKED transcription, matched to real C in a later session - see
+  `docs/matching.md`'s "Parked, not matched: sub_80083B8" entry and its
+  "Update" note)
 - `src/graphics/actor_part6.c` (new file, now directly adjacent to
   `actor_part5.c`'s matched functions): `sub_8008408`, `sub_8008434`, `sub_8008480`,
   `sub_8008484`, `sub_80084A4`, `sub_80084C4`, `sub_8008518`,
@@ -1193,32 +1200,29 @@ embedded as asm instead. They're tracked as parked, not matched.
   see `docs/matching.md`, "A new unnamed object:
   `actor_part15.c`/`actor_part16.c`".
 - **`sub_8007B00`/`sub_8007B98`** (`src/graphics/actor_part.c`),
-  **`sub_8008044`** (`src/graphics/actor_part3.c`),
-  **`sub_8008188`/`sub_8008200`/`sub_8008278`**
-  (`src/graphics/actor_part4.c`), **`sub_80083B8`**
-  (`src/graphics/actor_part5.c`), and
+  **`sub_8008044`** (`src/graphics/actor_part3.c`), and
   **`sub_800891C`/`sub_8008A40`/`sub_8008AD8`**
   (`src/graphics/actor_part7.c`) / **`sub_8008D80`**
   (`src/graphics/actor_part7b.c`) - stayed parked here for a long time
   on exactly the register-canonicalization/stack-layout classes of gap
-  documented at length throughout this page (`r7`-pin hazards, a
-  stubborn `add`-operand-order canonicalization, and a C-inexpressible
-  stack-layout coincidence). All eleven are `NAKED` functions whose
-  bodies are a literal instruction-for-instruction transcription of the
-  ROM's own assembly (byte-exact, confirmed via a full clean
-  `make compare`), rather than a derived C reconstruction - see
-  `docs/matching/naked-oam-actor-part-batch.md`. Per project policy, a
-  NAKED transcription standing in for a substantial function's
-  register-allocation gap doesn't count as "matched" the way real
-  decompiled C does, so all eleven stay filed here rather than in
+  documented at length throughout this page (`r7`-pin hazards and a
+  C-inexpressible stack-layout coincidence). All seven are `NAKED`
+  functions whose bodies are a literal instruction-for-instruction
+  transcription of the ROM's own assembly (byte-exact, confirmed via a
+  full clean `make compare`), rather than a derived C reconstruction -
+  see `docs/matching/naked-oam-actor-part-batch.md`. Per project
+  policy, a NAKED transcription standing in for a substantial
+  function's register-allocation gap doesn't count as "matched" the way
+  real decompiled C does, so all seven stay filed here rather than in
   "Matched" above, and `tools/report_units.py` tracks their address
   ranges as unmatched (`base_object: None`). `sub_8008770`
-  (`src/graphics/actor_part6.c`), which shared this list in an earlier
-  version of this page (a compiler-elided redundant byte truncation,
-  not a register-canonicalization gap), was converted back to real C
-  and matched in a later session - see "Matched" above and
-  `docs/matching.md`'s "Parked, not matched: sub_8008770" entry for
-  that account.
+  (`src/graphics/actor_part6.c`) and `sub_8008188`/`sub_8008200`/
+  `sub_8008278`/`sub_80083B8` (`src/graphics/actor_part4.c`/
+  `actor_part5.c`), which shared this list in earlier versions of this
+  page, were converted back to real C and matched in later sessions -
+  see "Matched" above and `docs/matching.md`'s "Parked, not matched:
+  sub_8008770"/"Parked, not matched: sub_8008188" entries (and the
+  latter's siblings) for those accounts.
 - **`sub_8008F20`** (`src/graphics/actor_part11.c`) - initializes a
   fixed-slot object-pool manager struct: two big 256-word zeroed
   tables (likely a pair of spatial-partition/collision grids), plus a
