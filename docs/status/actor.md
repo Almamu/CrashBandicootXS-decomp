@@ -1086,10 +1086,17 @@ embedded as asm instead. They're tracked as parked, not matched.
   byte (`gUnknown_03001308+0x29`) through a 10-case jump table, then a
   keyframe-lookup/camera-position probe via `sub_80083B8`/
   `sub_8026BC0` sharing `sub_80084C4`'s case-to-block mapping. Every
-  load/store/branch/call confirmed correct against the ROM; the leading
-  ~40 instructions are register-for-register byte-exact in isolation,
-  the rest of the function hasn't been through the same register-pin
-  iteration yet. See
+  load/store/branch/call confirmed correct against the ROM, and now
+  (a follow-up session) register-for-register byte-exact almost
+  everywhere: both jump tables, all 10 case bodies (two needing
+  `asm volatile` islands to reproduce a ROM cross-case tail-merge),
+  and the camera-probe tail all match. Two narrow, purely
+  register-*choice* gaps remain (neither changes program behavior or
+  instruction count) - a single scratch-register pick for the
+  `self+0x105` clear, and the `kindZero` byte-test's `r7` self-load
+  idiom - both reconfirmed resistant to every register-pin/`asm`
+  variation tried without perturbing other, already-matching code
+  ("ripple" effect). See
   [docs/matching/issue-9-10-0x0800a884-graphics.md](../matching/issue-9-10-0x0800a884-graphics.md).
 - **`sub_800AB9C`** (`src/graphics/actor_part81.c`, GitHub issue #9/#10;
   real bytes in `asm/code_3_2_16_ab9c.s`) - a two-flag-gated teardown/
