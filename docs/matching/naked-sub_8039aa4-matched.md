@@ -81,11 +81,27 @@ ROM:  mov r0, #0x30       MINE: mov r3, #0x30
 ```
 
 Both are pure register-choice differences with **zero** semantic
-impact. A future attempt could try isolating the whole tail (from the
-`self->0x32` check onward) into its own small helper function, giving
-the register allocator a fresh, smaller scope independent of the two
-clamp blocks earlier in the function - the same idea floated for
-`sub_8000EE4`'s own residual (`naked-sub_8000ee4-progress.md`).
+impact.
+
+**Update (later session): both follow-up ideas tried, both ruled
+out.** A self-contained `asm volatile` block per read (the exact
+technique that closed the identical "compiler won't spend a register
+on a literal offset immediate for an `ldrsh`" gap for `sub_800A528`/
+`sub_800A590` and `sub_8025894` elsewhere in this project) makes both
+residual instructions byte-correct in isolation, but reliably
+reproduces the same ripple into the earlier clamp blocks - confirmed
+across four independent variants: literal register names, `%0`-style
+free constraints, merging the read into a larger adjacent block, and
+extracting the whole portamento tail into a `static inline` helper
+(this project's compiler fully inlines it at `-O2`, so it doesn't get
+the "fresh scope" the idea relies on - the clamp blocks still regress
+once reassembled into one function body). This function's register
+pressure appears to make ANY hard-register pin in this tail perturb
+the earlier blocks regardless of how tightly it's scoped or grouped -
+a genuine compiler limitation, not an unexplored phrasing gap. Both of
+this doc's previously-floated next steps are now closed off; a future
+attempt would need a genuinely different technique, not a variation on
+these two.
 
 ## Verification
 
