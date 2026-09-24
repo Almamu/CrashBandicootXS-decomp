@@ -3693,6 +3693,34 @@ disassembly. Parked on the exact same `boxH` stack-layout gap as
 object being exactly 8 bytes short of the real ROM size, the same gap
 size as those three).
 
+**Update: converted to `NAKED`.** Since every load, store, branch, and
+computed delta was already confirmed correct (the ROM instruction
+stream turned out byte-identical to `sub_8008AD8`'s own, down to the
+label offsets - only the branch target labels and the compiled symbol
+name differ), `sub_80096C0` was hand-transcribed as literal Thumb asm
+instead of staying an unclosable `#if NON_MATCHING` C draft, the same
+technique already used for `sub_8008AD8`, `sub_8008D80`, and
+`sub_80099F0`. Moved out of `actor_part11.c` into its own new
+translation unit, `src/graphics/actor_part11e.c` (its real ROM
+address isn't adjacent to that file's other functions - it sits
+between `sub_8009528`, still raw asm in `asm/code_3_2_13_944c.s`, and
+`sub_8009868`, `actor_part11d.c` - per docs/workflow.md step 4's
+"needs its own new .c file" case). Its raw `.if NON_MATCHING == 0`
+guard block was removed from `asm/code_3_2_13_944c.s` (which still
+carries `sub_800944C`/`sub_8009528`'s own still-parked guards,
+untouched); `ldscript.txt` got a new `actor_part11e.o` entry inserted
+between `asm/code_3_2_13_944c.o` and `actor_part11d.o`. Verified
+byte-identical via `arm-none-eabi-as` isolated assemble (every
+differing byte against the raw ROM bytes falls exactly on an
+unresolved `bl` target or `.4byte` pool word, both necessarily zero in
+an isolated, unlinked object) plus a full clean `make compare`
+(`crashbandicootxs.gba: La suma coincide`). Per project policy a
+`NAKED` transcription doesn't count as "matched" the way real
+decompiled C does, so `sub_80096C0` stays filed as parked (now
+"parked, NAKED" rather than "parked, NON_MATCHING"). `sub_8008AD8`
+itself is untouched by this change and remains its own separate
+`NAKED` function in `actor_part7.c`.
+
 `sub_8009868` (right after the parked `sub_80096C0`) remains raw -
 calls still-unexamined helpers (`sub_800D040`, `sub_80109A4`) whose
 higher-level purpose isn't recoverable without more context. Left raw
