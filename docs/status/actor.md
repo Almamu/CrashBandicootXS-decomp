@@ -84,17 +84,15 @@ from "core" graphics.
   either, since NAKED `sub_8009BE0` (`actor_part12b.c`) sits between
   them; see `docs/matching.md`): `sub_8009CA0`
 
-- `src/graphics/actor_part8.c` (new file - `sub_8009EA8`'s real ROM
+- `src/graphics/actor_part8.c` (new file - `sub_8009DF4`'s real ROM
   address isn't adjacent to `code_3_2_15.o`'s raw content either, since
-  the parked `sub_8009DF4` sits raw between them, and NAKED
-  `sub_8009BE0` before that was already handled separately; see
+  NAKED `sub_8009BE0` (before that) was already handled separately; see
   `docs/matching.md`):
-  `sub_8009EA8`, `sub_8009EB0`, `sub_8009EBC`, `sub_8009EC4`,
-  `sub_8009ECC`, `sub_8009ED0`, `sub_8009F1C`, `sub_8009F50`,
-  `sub_8009F90`, `sub_8009FB0`
+  `sub_8009DF4`, `sub_8009EA8`, `sub_8009EB0`, `sub_8009EBC`,
+  `sub_8009EC4`, `sub_8009ECC`, `sub_8009ED0`, `sub_8009F1C`,
+  `sub_8009F50`, `sub_8009F90`, `sub_8009FB0`
 - `src/graphics/actor_part9.c` (new file - `sub_8009FD4`'s real ROM
-  address isn't adjacent to `actor_part8.c`'s matched functions
-  either, since the parked `sub_8009DF4` sits raw between them; see
+  address is adjacent to `actor_part8.c`'s matched functions; see
   `docs/matching.md`): `sub_8009FD4`, `sub_8009FF4`, `sub_800A050`,
   `sub_800A068`, `sub_800A06C`, `sub_800A078`, `sub_800A080`,
   `sub_800A088`, `sub_800A090`, `sub_800A098`, `sub_800A09C`,
@@ -914,6 +912,21 @@ embedded as asm instead. They're tracked as parked, not matched.
   local (it lands in `r1` naturally anyway). Retires the raw
   `asm/code_3_2_16_b270.s`. See
   `docs/matching/issue-9-0x08007634-actor.md`.
+- **`sub_8009DF4`** (`src/graphics/actor_part8.c`, issue #97) - a
+  velocity/position integrator: steps each axis's velocity toward its
+  max by its accel amount (clamped so it never overshoots), builds a
+  direction-flags byte from the clamped velocities' signs, caches the
+  pre-move position, applies the velocity, and updates a global
+  (`gUnknown_03001298`) with the Y velocity; now fully matched as real
+  C. Closed using the exact fix worked out for its near-identical twin
+  `sub_800B270` above (same per-axis clamp shape, same field offsets):
+  `vx` pinned to `r3` while `vy` stays unpinned, and the trailing
+  global-update block's "genuinely redundant" conditional store emitted
+  verbatim via one opaque `asm volatile` block instead of fighting this
+  compiler's dead-store-elimination proof, reproducing the ROM's own
+  address-in-`r0`/value-in-`r2` register choice directly. Retires the
+  old raw `asm/code_3_2_9.s`. See
+  [docs/matching/issue-97-sub_8009DF4.md](../matching/issue-97-sub_8009DF4.md).
 - **`sub_8034374`** (`src/graphics/actor_part85.c`) - constructs the
   particle-trail BG0 object; now fully matched as real C, splitting off
   the file's still-parked twin `sub_8034480` (see below). The ROM
@@ -1062,25 +1075,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   1-2 call sharing); parked on a single remaining conditional-branch
   encoding gap in the mode-3 case - see `docs/matching.md`, "Parked,
   not matched: `sub_8009D5C`".
-- **`sub_8009DF4`** (`src/graphics/actor_part8.c`, issue #97) - a
-  velocity/position integrator: steps each axis's velocity toward its
-  max by its accel amount (clamped so it never overshoots), builds a
-  direction-flags byte from the clamped velocities' signs, caches the
-  pre-move position, applies the velocity, and updates a global
-  (`gUnknown_03001298`) with the Y velocity. Every branch and memory
-  access confirmed correct, and - after remodeling this reconstruction
-  on the near-identical `sub_800B270` (issue #9, same per-axis clamp
-  shape, same field offsets) - now a true `push`/`pop`-free leaf
-  function matching the ROM's own register budget exactly, closing the
-  leaf-vs-non-leaf gap `docs/matching.md`'s frozen entry originally
-  described. What's left is the same trailing gap `sub_800B270` itself
-  is still parked on: the global-update block's address/value register
-  roles are swapped from the ROM's (`r0`=address/`r2`=value here vs.
-  the reverse), and forcing either side of that swap either triggers
-  this compiler's dead-store elimination to drop the whole conditional
-  (when the *value* is register-pinned) or reintroduces a `push
-  {r4,lr}`/`pop {r4}` pair elsewhere (when the *address* is) - see
-  [docs/matching/issue-97-sub_8009DF4.md](../matching/issue-97-sub_8009DF4.md).
 - **NAKED transcription (byte-correct, not decompiled)**: `sub_802C208`
   (`src/graphics/actor_part19e.c`, issue #52), `sub_802F748`
   (`src/graphics/actor_part44b.c`, issue #56), `sub_8033B44`/
