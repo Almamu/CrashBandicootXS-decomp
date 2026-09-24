@@ -3805,6 +3805,26 @@ byte-identical in shape to the already-parked `sub_8008D80` - the same
 `boxH` stack-layout gap applies. See "Parked, not matched:
 `sub_8008D80`" above for the full writeup; this is its twin.
 
+**Update: converted to `NAKED`.** Since every load, store, branch, and
+computed delta was already confirmed correct (the ROM instruction
+stream turned out byte-identical to `sub_8008D80`'s, down to the label
+offsets - only the branch target label and the compiled symbol name
+differ), `sub_80099F0` was hand-transcribed as literal Thumb asm in
+`src/graphics/actor_part12.c` instead of staying an unclosable
+`#if NON_MATCHING` C draft, the same technique already used for
+`sub_8008D80` (`src/graphics/actor_part7b.c`). Its raw `.if
+NON_MATCHING == 0` guard block was removed from
+`asm/code_3_2_13_9914.s` (which still carries `sub_8009914`'s own
+still-parked guard, untouched); `actor_part12.o` already linked right
+after that object in `ldscript.txt`, so no linker-script change was
+needed. Verified byte-identical via `arm-none-eabi-as` isolated
+assemble plus a full clean `make compare` (`crashbandicootxs.gba: La
+suma coincide`). Per project policy a `NAKED` transcription doesn't
+count as "matched" the way real decompiled C does, so `sub_80099F0`
+stays filed as parked (now "parked, NAKED" rather than "parked,
+NON_MATCHING"). `sub_8008D80` itself is untouched by this change and
+remains its own separate `NAKED` function in `actor_part7b.c`.
+
 `sub_8009BE0` (right after `sub_8009B9C`) is a physics/collision step-
 probe function calling still-unexamined `sub_8008278`/`sub_8026628`
 (a Q8->int conversion via `>>8`, an up-to-4-attempt probe loop, and
