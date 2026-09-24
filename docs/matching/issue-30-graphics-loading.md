@@ -385,6 +385,15 @@ function in that file) into the new `src/graphics/graphics_loading_1e990.c`,
 with `ldscript.txt` updated to place the new object immediately before
 the now-trimmed raw file (which starts at `sub_801EA5C` instead).
 
+**Update (later session):** the `+0x28` bitfield-pack block's
+remaining register-choice gap closed - see
+[naked-sub_801e990-matched.md](./naked-sub_801e990-matched.md) for the
+fix (modeling the r3-pinned local as the *address of*
+`gUnknown_030012D8` rather than its dereferenced value). `sub_801E990`
+is now real, fully matched C; the `NAKED` wrapper and `#if
+NON_MATCHING` toggle described above have been removed from
+`graphics_loading_1e990.c`.
+
 **The rest of this issue's raw region** (`sub_801EA5C` through
 `sub_801FCB4`, ending at the already-matched `sub_801FDEC`) splits into
 two families, both worth flagging precisely for whoever picks this up
