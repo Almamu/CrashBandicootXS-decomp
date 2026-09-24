@@ -58,6 +58,12 @@ below.)
   `LoadBg2Background`/`LoadObjSpriteTiles`, runs the fade/audio-reset
   quartet, and starts song `0xb` - see
   [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md).
+- **`LoadObjSpriteTiles`** (`src/graphics/level_graphics.c`) - the
+  OBJ-sprite tileset/palette loader (4-pass over `gUnknown_030008BC`),
+  closed via a register-pinning + opaque-asm-island pass on top of the
+  previously-parked semantically-faithful reconstruction - see
+  [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md)'s
+  "Third pass".
 - **`sub_8021BFC`**-**`sub_8021D04`** (`src/graphics/graphics_loading_21bfc.c`)
   - the `sub_800FF0C` entity-constructor trampoline family, types `0`-`7`,
   all matched (`sub_8021D04`, type `0`, closed via register-pinning the
@@ -214,11 +220,6 @@ Both hit the same confirmed `r7`-pin gap as `sub_8007114`
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
-- **`LoadObjSpriteTiles`** (real bytes in the same new asm file, C in
-  the same file) - the OBJ-sprite tileset/palette loader (4-pass over
-  `gUnknown_030008BC`); semantically faithful but not yet
-  register-tuned - see
-  [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md).
 - **`sub_801E788`** (`src/graphics/graphics_package_1e688.c`, real bytes
   guarded in `asm/code_3_2_17_1e644.s`) - `LoadGraphicsPackage`'s
   viewport-centering helper (position math on one of 4 packed modes,

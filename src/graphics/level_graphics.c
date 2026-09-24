@@ -233,11 +233,18 @@ NAKED void LoadBg2Background(u32 *self)
         "mov r8, r3\n\t"
         "pop {r4, r5, r6, r7}\n\t"
         "pop {r0}\n\t"
-        "bx r0"
+        "bx r0\n\t"
+        /* Force this function's own literal pool (gStaticData_0817D0E4,
+         * 0x06008000, 0x0600F000, 0xFFFF0000, 0x0400000C - 5 words) to
+         * emit immediately here, matching the ROM's own layout (its
+         * next 20 bytes, before LoadObjSpriteTiles starts) - without
+         * this, the assembler defers pooling these literals until later
+         * in the translation unit, shifting LoadObjSpriteTiles (and
+         * everything after it) 20 bytes earlier than the ROM. */
+        ".pool"
     );
 }
 
-#if NON_MATCHING
 /* Uploads the 4 obj-sprite `struct bg_package` entries in
  * `gUnknown_030008BC` (each package's `width`/`height` describe the
  * tilemap, not the object's own screen size) into OBJ VRAM
@@ -247,63 +254,116 @@ NAKED void LoadBg2Background(u32 *self)
  * BG2's (here: DMA-copying each referenced tile out of the raw tileset
  * buffer, tile-index byte selecting which 0x20-byte 4bpp tile).
  *
- * Parked, not matched: the overall shape (4-pass loop, palette DMA then
- * tile-buffer DMA then per-tile remap DMA) is confirmed against the ROM
- * and this reconstruction is semantically faithful, but it hasn't had
- * the same per-register tuning pass `LoadBg2Background` above got -
- * isolated compiles put several locals (the `struct bg_package **`
- * array-walk pointer, the per-pass palette/tile-VRAM cursors) in
- * different registers than the ROM's own `sl`/`sb`/`r8` allocation.
- * Left for a follow-up pass rather than force a low-confidence match -
- * see docs/matching/issue-65-graphics-loading.md. */
+ * Matched via a register-pinning pass on top of the previously-parked
+ * reconstruction (docs/matching/issue-65-graphics-loading.md's earlier
+ * pass) - the array-walk pointer/pass-counter/per-pass VRAM cursors now
+ * pin to the ROM's own `r7`/`sb`(r9)/`r8`/`sl` allocation
+ * (`matching_decomp_register_pinning`), and three small spots resisted
+ * every plain-C phrasing tried, so they're opaque `asm volatile` islands
+ * instead (`matching_decomp_register_pinning`'s "continuous asm island"
+ * pattern, `AllocVramTileBlock`'s precedent):
+ * - the `(*pkgPtr)->mapAsset` load: agbcc's `*ptr++` idiom recognition
+ *   doesn't trigger when the loaded pointer is immediately dereferenced
+ *   again in the same expression, so the ROM's single `ldm r7!, {r0}`
+ *   is materialized directly instead of the two-instruction `ldr`+`add`
+ *   plain C produces.
+ * - the per-tile remap's mask/shift/add-and-store: plain C
+ *   (`(mask & *(u16 *)src) << 5`, either operand order) canonicalizes
+ *   the load-then-AND into the opposite register roles than the ROM's
+ *   `mov r0,ip`-first ordering, no matter how it's phrased.
+ * - the `dma->cnt` readback followed by the tile-VRAM cursor's `+= 0x20`:
+ *   plain C reuses the readback's freed register for the constant
+ *   instead of the ROM's separate `r4`.
+ * Every register in the body - including the loop-setup preheader's
+ * exact `dma2`/`mask`/`dmaCnt2`/`src`/`i` materialization order, which
+ * turned out to matter for an exact match and is controlled here via
+ * declaration order, matching this project's established pattern that
+ * declaration order often determines otherwise-untied locals' register
+ * allocation order - was confirmed instruction-for-instruction against
+ * the ROM via a direct `arm-none-eabi-objcopy --only-section=.text` +
+ * byte comparison against `baserom.gba` before integrating (every byte
+ * matched except the nine `bl` call-site offsets and the
+ * `gUnknown_030008BC` literal-pool word, both inherent relocation
+ * artifacts of comparing an unlinked, standalone isolated object). */
 void LoadObjSpriteTiles(u32 *self)
 {
-    struct bg_package **pkgPtr = (struct bg_package **)gUnknown_030008BC;
-    struct bg_package **nextPkgPtr;
-    void *paletteDest = (void *)0x05000200;
+    register struct bg_package **pkgPtr asm("r7") = (struct bg_package **)gUnknown_030008BC;
     void *tileDest = (void *)0x06010000;
-    struct dma_regs *dma;
+    void *paletteDest = (void *)0x05000200;
     void *paletteBuf;
     void *tileBuf;
     u16 *mapBuf;
     s32 count;
-    s32 pass;
+    register s32 pass asm("r9");
+    register struct bg_package **pkgPtrStash asm("r8");
+    register s32 loopCond asm("r0");
 
-    for (pass = 0; pass <= 3; pass++) {
-        struct bg_package *pkg = *pkgPtr;
+    asm volatile("mov r4, #0\n\tmov r9, r4" ::: "r4", "r9");
 
-        paletteBuf = sub_8026EC0(*(u32 *)pkg->paletteAsset >> 8);
-        LoadTaggedAsset(pkg->paletteAsset, paletteBuf);
+    do {
+        register struct dma_regs *dma asm("r0");
+        register u32 dmaCnt asm("r1");
+
+        paletteBuf = sub_8026EC0(*(u32 *)(*pkgPtr)->paletteAsset >> 8);
+        LoadTaggedAsset((*pkgPtr)->paletteAsset, paletteBuf);
         dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
         dma->src = (u32)paletteBuf;
         dma->dst = (u32)paletteDest;
-        dma->cnt = 0x80000010;
+        dmaCnt = 0x80000010;
+        dma->cnt = dmaCnt;
         dma->cnt;
         paletteDest = (u8 *)paletteDest + 0x20;
         if (paletteBuf != NULL) {
             sub_8026EB4(paletteBuf);
         }
 
-        tileBuf = sub_8026EC0(*(u32 *)pkg->tileAsset >> 8);
-        LoadTaggedAsset(pkg->tileAsset, tileBuf);
+        tileBuf = sub_8026EC0(*(u32 *)(*pkgPtr)->tileAsset >> 8);
+        LoadTaggedAsset((*pkgPtr)->tileAsset, tileBuf);
 
-        count = pkg->width * pkg->height;
+        count = (*pkgPtr)->height * (*pkgPtr)->width;
         mapBuf = sub_8026EC0(count * 2);
-        nextPkgPtr = pkgPtr + 1;
-        LoadTaggedAsset((*pkgPtr)->mapAsset, mapBuf);
-        pkgPtr = nextPkgPtr;
+        {
+            /* ROM emits a single `ldm r7!, {r0}` here - see doc comment
+             * above. */
+            register struct bg_package *pkg asm("r0");
+            asm("ldm %1!, {%0}" : "=r"(pkg), "+r"(pkgPtr));
+            LoadTaggedAsset(pkg->mapAsset, mapBuf);
+        }
+        pkgPtrStash = pkgPtr;
+        pass++;
 
         if (count > 0) {
-            s32 i = count;
-            u8 *src = (u8 *)mapBuf;
-
-            dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
+            register struct dma_regs *dma2 asm("r3") = (struct dma_regs *)REG_ADDR_DMA3SAD;
+            u32 mask = 0xff;
+            u32 dmaCnt2 = 0x80000010;
+            register u8 *src asm("r2") = (u8 *)mapBuf;
+            register s32 i asm("r1") = count;
             do {
-                dma->src = (u32)tileBuf + ((*(u16 *)src & 0xff) << 5);
-                dma->dst = (u32)tileDest;
-                dma->cnt = 0x80000010;
-                dma->cnt;
-                tileDest = (u8 *)tileDest + 0x20;
+                /* ROM: mov r0,ip / ldrh r4,[r2] / ands r0,r4 / lsls r0,#5 /
+                 * adds r0,r6,r0 / str r0,[r3] - see doc comment above. */
+                asm volatile(
+                    "mov r0, %2\n\t"
+                    "ldrh r4, [%1]\n\t"
+                    "and r0, r0, r4\n\t"
+                    "lsl r0, r0, #5\n\t"
+                    "add r0, %3, r0\n\t"
+                    "str r0, [%0]\n\t"
+                    :
+                    : "r"(dma2), "r"(src), "r"(mask), "r"(tileBuf)
+                    : "r0", "r4"
+                );
+                dma2->dst = (u32)tileDest;
+                dma2->cnt = dmaCnt2;
+                /* ROM: ldr r0,[r3,#8] / movs r4,#0x20 / add sl,r4 - see
+                 * doc comment above. */
+                asm volatile(
+                    "ldr r0, [%1, #8]\n\t"
+                    "mov r4, #0x20\n\t"
+                    "add %0, %0, r4\n\t"
+                    : "+r"(tileDest)
+                    : "r"(dma2)
+                    : "r0", "r4"
+                );
                 src += 2;
                 i--;
             } while (i != 0);
@@ -315,6 +375,7 @@ void LoadObjSpriteTiles(u32 *self)
         if (tileBuf != NULL) {
             sub_8026EB4(tileBuf);
         }
-    }
+        pkgPtr = pkgPtrStash;
+        asm volatile("mov %0, %1" : "=r"(loopCond) : "r"(pass));
+    } while (loopCond <= 3);
 }
-#endif /* NON_MATCHING */
