@@ -55,26 +55,15 @@ issue is where they got turned into (attempted) byte-exact C.
 `src/system/game_loop5.c`: `sub_80254C0`, `sub_80254F8`, `sub_8025554`,
 `sub_8025588`, `sub_80255A8`, `sub_80255C4`.
 
-## Parked (`NON_MATCHING`) - 5 functions
+## Closed as NAKED - 1 function
 
-All five are fully understood (semantics, field offsets, every call and
-branch topology confirmed correct against the ROM disassembly) but
-don't yet produce byte-identical output from `tools/agbcc`. Real bytes
-for all five live in one raw block, `asm/code_3_2_17_24f24.s`
-(0x08024F24-0x08025444, contiguous - `sub_8024F24`, `sub_80250BC`,
-`sub_8025130`, `sub_8025228`, `sub_8025334` in ROM order), guarded
-`.if NON_MATCHING == 0`; the `#if NON_MATCHING` C reconstructions live
-in `src/system/game_loop3.c` right after the matched functions.
-
-- **`sub_8024F24`** (the 16-slot lookup dispatcher) and
-  **`sub_80250BC`** (its simplest consumer): control flow, the shared
-  per-case tail (ROM computes the final `self + offset` pointer once,
-  in a block shared by every matching case, rather than per-case - the
-  C reconstruction reproduces this via a shared `offset`/`return`
-  rather than 16 independent `if (...) return ...;` statements, which
-  was necessary to even get the *total size* right, not just the
-  bytes) and total size all match exactly. What's left is a pure
-  register-allocation permutation: this compiler assigns `self`
+- **`sub_8024F24`** (the 16-slot lookup dispatcher): semantics,
+  control flow, the shared per-case tail (ROM computes the final
+  `self + offset` pointer once, in a block shared by every matching
+  case, rather than per-case), and total size were all already
+  confirmed correct as a real-C `#if NON_MATCHING` reconstruction (see
+  git history for that version). The one remaining gap was a pure
+  register-allocation permutation: this compiler always assigns `self`
   and `recordId` to the opposite of the ROM's `r7`/`r3` pair throughout
   the whole function (every comparison/address-add byte differs as a
   result, despite every instruction *shape* matching one-for-one).
@@ -84,8 +73,36 @@ in `src/system/game_loop3.c` right after the matched functions.
   `register s32 recordId asm("r3")` pins on either variable - both
   made things *worse* (the compiler stopped using the pinned register
   as a base pointer at all and fell back to `sp`-relative addressing
-  mid-function, growing the function past its real size again).
-  Parked with the naturally-allocated version.
+  mid-function, growing the function past its real size again). Closed
+  instead by going fully `NAKED` - the same escape hatch already used
+  this session for `sub_801E688`/`LoadGraphicsPackage`/
+  `LoadBg2Background` for the identical symptom - hand-transcribing
+  the ROM disassembly instruction-for-instruction (including the
+  `.pool` literal-pool splits at each of the ROM's own mid-function
+  flush points). Verified byte-identical via isolated
+  compile+`arm-none-eabi-as` assemble, a direct byte comparison against
+  `baserom.gba` at `0x08024F24` (differing only in the
+  as-yet-unresolved `bl sub_8025334` relocation bytes, as expected for
+  an unlinked object), and a full clean `make compare`. Its raw bytes
+  no longer live in `asm/code_3_2_17_24f24.s` - that file now starts
+  directly at `sub_80250BC`.
+
+## Parked (`NON_MATCHING`) - 4 functions
+
+The remaining four are fully understood (semantics, field offsets,
+every call and branch topology confirmed correct against the ROM
+disassembly) but don't yet produce byte-identical output from
+`tools/agbcc`. Real bytes for all four live in one raw block,
+`asm/code_3_2_17_24f24.s` (0x080250BC-0x08025444, contiguous -
+`sub_80250BC`, `sub_8025130`, `sub_8025228`, `sub_8025334` in ROM
+order), guarded `.if NON_MATCHING == 0`; the `#if NON_MATCHING` C
+reconstructions live in `src/system/game_loop3.c` right after the
+matched functions.
+
+- **`sub_80250BC`** (the simplest consumer of `sub_8024F24`): same
+  register-allocation-permutation gap `sub_8024F24` had before it was
+  closed as NAKED (see above) - the natural next candidate for the
+  same NAKED treatment, not yet attempted.
 - **`sub_8025130`/`sub_8025228`/`sub_8025460`**: same
   register-allocation-permutation gap as `sub_8024F24` above (all three
   share its `self`/`x`/`y`/... parameter shape and call it internally).
