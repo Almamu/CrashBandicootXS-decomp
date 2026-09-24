@@ -55,7 +55,7 @@ issue is where they got turned into (attempted) byte-exact C.
 `src/system/game_loop5.c`: `sub_80254C0`, `sub_80254F8`, `sub_8025554`,
 `sub_8025588`, `sub_80255A8`, `sub_80255C4`.
 
-## Closed as NAKED - 1 function
+## Closed as NAKED - 4 functions
 
 - **`sub_8024F24`** (the 16-slot lookup dispatcher): semantics,
   control flow, the shared per-case tail (ROM computes the final
@@ -86,34 +86,44 @@ issue is where they got turned into (attempted) byte-exact C.
   an unlinked object), and a full clean `make compare`. Its raw bytes
   no longer live in `asm/code_3_2_17_24f24.s` - that file now starts
   directly at `sub_80250BC`.
+- **`sub_80250BC`/`sub_8025130`/`sub_8025228`** (`sub_8024F24`'s three
+  `(x, y)`-tile-lookup consumers - a terrain-property-table pointer
+  lookup, its `mode`-selected/`flagsOut`-writing sibling with 4 table
+  variants, and a `mode`-dispatched single-flag-byte variant reading
+  4 adjacent bytes of one table): same register-allocation-permutation
+  gap `sub_8024F24` had - this compiler never reproduces the ROM's own
+  `self`/`x`/`y`/`mode` <-> `r5`/`r4`/`r6`/`r7` register packing no
+  matter the C phrasing tried. Closed the same way as `sub_8024F24`:
+  hand-transcribed instruction-for-instruction from the ROM
+  disassembly, including every one of the ROM's own mid-function
+  `.pool` splits (`sub_8025130`/`sub_8025228` each have three inline
+  literal-pool flushes, one after each of the first three dispatch
+  cases, plus a fourth literal shared with the function's own trailing
+  pool - `sub_8025228` in particular re-flushes the *same*
+  `gStaticData_081725A8` symbol four separate times rather than reusing
+  one pool slot, since each `ldr` is in its own already-flushed pool
+  region). Verified the same way as `sub_8024F24`: isolated
+  compile+`arm-none-eabi-as` assemble with a direct byte comparison
+  against `baserom.gba` (all three came back byte-identical modulo the
+  expected unresolved `bl sub_8024F24`/`ldr =gStaticData_...`
+  relocation bytes), confirmed again against the real
+  cpp|agbcc-generated `.s` for the whole file, and a full clean `make
+  compare`. Their raw bytes no longer live in
+  `asm/code_3_2_17_24f24.s` - that file now starts directly at
+  `sub_8025334`.
 
-## Parked (`NON_MATCHING`) - 4 functions
+## Parked (`NON_MATCHING`) - 1 function
 
-The remaining four are fully understood (semantics, field offsets,
+The remaining function is fully understood (semantics, field offsets,
 every call and branch topology confirmed correct against the ROM
-disassembly) but don't yet produce byte-identical output from
-`tools/agbcc`. Real bytes for all four live in one raw block,
-`asm/code_3_2_17_24f24.s` (0x080250BC-0x08025444, contiguous -
-`sub_80250BC`, `sub_8025130`, `sub_8025228`, `sub_8025334` in ROM
-order), guarded `.if NON_MATCHING == 0`; the `#if NON_MATCHING` C
-reconstructions live in `src/system/game_loop3.c` right after the
-matched functions.
+disassembly) but doesn't yet produce byte-identical output from
+`tools/agbcc`, nor has NAKED transcription been attempted on it yet
+(unlike its siblings above, its gap isn't a simple register-allocation
+permutation - see below). Real bytes live in
+`asm/code_3_2_17_24f24.s` (0x08025334-0x08025444), guarded
+`.if NON_MATCHING == 0`; the `#if NON_MATCHING` C reconstruction lives
+in `src/system/game_loop3.c` right after the matched/NAKED functions.
 
-- **`sub_80250BC`** (the simplest consumer of `sub_8024F24`): same
-  register-allocation-permutation gap `sub_8024F24` had before it was
-  closed as NAKED (see above) - the natural next candidate for the
-  same NAKED treatment, not yet attempted.
-- **`sub_8025130`/`sub_8025228`/`sub_8025460`**: same
-  register-allocation-permutation gap as `sub_8024F24` above (all three
-  share its `self`/`x`/`y`/... parameter shape and call it internally).
-  Per-mode dispatch logic, the `type <= 0x23` vs `type > 0x23`
-  early-exit sense (opposite between this family and
-  `sub_80250BC`/`sub_80254C0` - confirmed by reading the raw branch
-  senses directly, not assumed) and the `wide = (u32)cell << 16` "widen
-  before extracting sub-fields" idiom the ROM uses for the nibble/hi
-  extraction (needed to get `sub_8024F24`/`sub_80250BC` themselves to
-  match the ROM's shared-register CSE shape for that extraction) are
-  all confirmed correct.
 - **`sub_8025334`** (the RLE/delta decoder): the decode loop mechanics
   (three run-mode branches, the literal/delta/raw-copy semantics, the
   0x7f-halfword budget) are reproduced and read byte-for-byte off the

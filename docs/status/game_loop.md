@@ -282,6 +282,17 @@ plain C didn't converge.
   same symptom independently confirmed for `sub_801E688`/
   `LoadGraphicsPackage`/`LoadBg2Background`. See
   [docs/matching/issue-40-terrain-tile-cache.md](../matching/issue-40-terrain-tile-cache.md).
+- **`sub_80250BC`/`sub_8025130`/`sub_8025228`** (`src/system/game_loop3.c`,
+  GitHub issue #40, follow-up pass) - `sub_8024F24`'s three `(x, y)`
+  tile-lookup consumers (a terrain-property-table pointer lookup, its
+  `mode`-selected/`flagsOut`-writing sibling, and a `mode`-dispatched
+  single-flag-byte variant). Same register-allocation-permutation gap as
+  `sub_8024F24` above; closed the same way, including reproducing the
+  ROM's own mid-function `.pool` literal-pool splits exactly. Real bytes
+  no longer live in `asm/code_3_2_17_24f24.s` - that file now starts
+  directly at `sub_8025334`, the one function of this cluster still
+  parked. See
+  [docs/matching/issue-40-terrain-tile-cache.md](../matching/issue-40-terrain-tile-cache.md).
 - **`sub_8022D50`** (`src/system/game_loop40.c`, GitHub issue #34) - the
   level-start/reset routine (`self+0x8c`/`0x90`-`0xa0` clears, the
   `self+0x1b8`/`0x1bc` actor-slot teardown, the `gUnknown_030012EC`
@@ -343,15 +354,15 @@ plain C didn't converge.
   same gap already parked for `sub_800A734`/`sub_800A528` in
   docs/matching/issue-9-0x08007634-actor.md, at a larger scale. See
   [docs/matching/issue-14-0x08010a0c-graphics.md](../matching/issue-14-0x08010a0c-graphics.md).
-- **`sub_80250BC`/`sub_8025130`/`sub_8025228`/`sub_8025334`**
-  (`src/system/game_loop3.c`, GitHub issue #40) - the 16-slot terrain
-  tile-record decode/LRU cache's four `(x, y)`-lookup consumer
-  variants and the RLE/delta token-stream decoder; real bytes in
-  `asm/code_3_2_17_24f24.s`. See
+- **`sub_8025334`** (`src/system/game_loop3.c`, GitHub issue #40) - the
+  16-slot terrain tile-record decode/LRU cache's RLE/delta
+  token-stream decoder; real bytes in `asm/code_3_2_17_24f24.s`. See
   [docs/matching/issue-40-terrain-tile-cache.md](../matching/issue-40-terrain-tile-cache.md)
-  for the exact register-allocation gaps. (`sub_8024F24`, the
-  dispatcher these four call, was closed as a NAKED transcription -
-  see below.)
+  for the register-shape gap between the ROM's own decode loop and this
+  compiler's natural index-based reconstruction. (`sub_8024F24`/
+  `sub_80250BC`/`sub_8025130`/`sub_8025228`, this cache's dispatcher and
+  its three lookup consumers, were all closed as NAKED transcriptions -
+  see above.)
 ## Still raw, category-mapped (GitHub issue #12/#34/#40)
 
 - **`sub_0800D18C`/`sub_800E08C`** (`asm/code_3_2_17_d18c.s`, ROM
