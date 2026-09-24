@@ -92,18 +92,59 @@ family already covered at length by
   `sub_803AD88` calls in `actor_part11.c`
   (`register void *deadRead asm("r4") = *(void *volatile *)(...)`).
 
-  **Not yet byte-exact.** An isolated compile of the leading ~40
-  instructions (through the `sub_800A0FC` call) was iterated to an
-  exact register-for-register match with the ROM - see "Real gotchas"
-  below. The rest of the function (the 10-way "kind" dispatch and the
-  keyframe-lookup/camera-probe tail) compiles and links correctly but
-  hasn't been through the same register-pin iteration pass; the next
-  session picking this up should start by isolating that tail with the
-  same `arm-none-eabi-cpp`+`agbcc` diagnostic loop `docs/workflow.md`
-  describes. Real bytes stay in the new `asm/code_3_2_16_a884.s`
+  **Not yet byte-exact, but far closer after a follow-up session.**
+  The earlier claim that the leading ~40 instructions were "confirmed"
+  came from an *isolated* compile (just that prefix, ending right
+  after `sub_800A0FC`'s call) - that isolated match did not survive
+  once the rest of the function was compiled alongside it (see "Real
+  gotchas" below, point 1). A follow-up session took the whole
+  function - the leading block, the 10-way "kind" dispatch (all ten
+  case bodies plus both the `idx <= 9` range check and the jump table
+  itself), and the keyframe-lookup/camera-probe tail (including its
+  own 7-entry `type` jump table sharing `sub_80084C4`'s case-to-block
+  mapping) - through the same `arm-none-eabi-cpp`+`agbcc` diagnostic
+  loop `docs/workflow.md` describes, iterating against the *whole*
+  ROM disassembly (not a truncated prefix) after every change. That
+  session closed everything down to two narrow, purely register-
+  *choice* gaps (neither changes program behavior or even instruction
+  count):
+
+  1. The `self+0x105` clear's transient offset scratch register: `r0`
+     here vs. the ROM's `r2` (the *destination* address still
+     correctly lands in `r6` either way).
+  2. The `kindZero` (`self+0x68 == 8`) test's loaded-byte register:
+     `r0` here vs. the ROM's own self-overwriting `ldrb r7, [r7]`
+     (which destroys the address register with the loaded byte,
+     rather than using a fresh one).
+
+  Every technique in this project's toolbox was tried for both gaps
+  this session - plain register pins, hoisting either value into its
+  own persistent pointer variable, and (for the `kindZero` gap) a
+  dedicated `asm volatile` island reproducing the ROM's exact
+  `ldrb r7, [r7]` instruction byte-for-byte. Each fix reliably
+  reproduced the *targeted* instruction(s) in isolation, but just as
+  reliably reshuffled register choices in unrelated, already-matching
+  code elsewhere in the function (sometimes upstream, sometimes
+  downstream of the change) - this compiler's -O2 register allocator
+  appears globally sensitive, for this specific dense-switch function
+  shape, to the total number of pinned/`asm`-referenced registers
+  anywhere in the function, not just their positions. The version left
+  in the tree keeps the rest of the function (everything but these two
+  self-contained two-instruction-or-fewer gaps) byte-exact rather than
+  trading one gap for a wider one; see the source file's own doc
+  comment for the full accounting, including the "Real gotchas" this
+  session needed (case-scattering for the second jump table, the
+  `s32`-not-`u8` switch-index type, matching the ROM's own block
+  *order* not just its goto targets for `kindZero`, the `case 4` vs.
+  `case 6`/`case 10` register-role split that keeps this compiler's
+  own tail-merge pass from over-merging, and the shift-not-mask bit-4
+  test). Real bytes stay in `asm/code_3_2_16_a884.s`
   (`asm/code_3_2_16.o` trimmed to start at `sub_800AAEC`), following
   the same `.if NON_MATCHING == 0` pattern as `sub_800A528`'s own
-  `asm/code_3_2_11_a528.s`.
+  `asm/code_3_2_11_a528.s`. A future session picking this up should
+  treat the two remaining gaps as a genuine compiler-fragility floor
+  for this function shape rather than an unexplored lead, unless a
+  new technique (not yet tried here) presents itself.
 
 ### Real gotchas found closing the leading block
 
