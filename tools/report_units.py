@@ -353,7 +353,7 @@ UNITS = [
     (0x0802E0A0, "src/graphics/actor_part61.o", "actor"),  # nullsub_27 (issue #54): genuine no-op stub; matched
     (0x0802E0A4, None, "actor"),  # remainder of the actor zone after issue #54's chunk, still raw
     (0x0802F0DC, "src/graphics/actor_part43.o", "actor"),  # sub_802F0DC/sub_802F164 (issue #56): constructor/reset plus the ~160-instruction state-machine update (incl. a `mov pc, r0` 5-case jump table) for the second boss-weapon "spawn/pre-attack" singleton; both matched
-    (0x0802F338, "src/graphics/actor_part43b.o", "actor"),  # sub_802F338 (issue #56, parked, NON_MATCHING) - computes two keyframe-driven tile-cache sizes via sub_8028CD4; real bytes live in asm/code_3_2_20_28568_c99c_2f338.s
+    (0x0802F338, "src/graphics/actor_part43b.o", "actor"),  # sub_802F338 (issue #56): computes two keyframe-driven tile-cache sizes via AllocVramTileBlock; matched
     (0x0802F3BC, "src/graphics/actor_part44.o", "actor"),  # sub_802F3BC-sub_802F6DC (issue #56, 14 functions): accumulator-drain/reward-dispenser, accessors, accumulator drivers, state-transition idioms, and the singleton's teardown/destructor; matched
     (0x0802F748, None, "actor"),  # sub_802F748 (issue #56, NAKED, byte-correct but not decompiled - tracked as parked) - a gStaticData_0817C1C0 stride-8 trampoline-record dispatcher, same shape as sub_802C208; r7 toolchain-hazard NAKED transcription, real bytes in src/graphics/actor_part44b.c
     (0x0802F7A4, "src/graphics/actor_part45.o", "actor"),  # sub_802F7A4 (issue #56): trivial singleton-flag getter; matched

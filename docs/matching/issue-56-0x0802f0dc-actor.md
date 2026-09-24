@@ -24,8 +24,29 @@ are named by the lower 5 hex digits of their first function's address
 `..._2f7b0.s`, `..._2f97c.s`, `..._2fa04.s`, `..._2fa38.s`,
 `..._2fbf0.s`).
 
-## Matched (20 of 25 functions)
+## Matched (21 of 25 functions)
 
+- **`sub_802F338`** (`src/graphics/actor_part43b.c`) - computes two
+  keyframe-driven tile-cache sizes (`byte0*byte1`, scaled by 32) via
+  `AllocVramTileBlock`, storing them into the `gUnknown_03001518` pair;
+  now fully matched as real C. The ROM's "materialize the multiply
+  result into one register, copy it to a second, *then* shift" idiom
+  (`adds r2,r3,#0; muls r2,r1,r2; adds r0,r2,#0; lsls r0,r0,#5`) closes
+  via an opaque `asm volatile` forcing the exact register-to-register
+  copy this compiler's dead-store elimination always collapsed.
+  Closing that gap surfaced a further chain of register-role
+  mismatches in the shared index/address computation: `table` needed
+  an explicit early load into `r3` (a plain unpinned local loaded it
+  too late), the `+2` index constant needed to be materialized via an
+  opaque `mov #2` immediately before the `ldrsh` (a `register`-pinned
+  local alone has no effect here since gcc constant-folds the literal
+  and freely picks its own register for it), the `table + idx*3*4`
+  addition needed its operand order pinned via `asm volatile("add %0,
+  %0, %1" ...)`, and the two blocks' final byte-load pairs
+  (`rec[0]`/`rec[1]`) needed per-block register pins matching the
+  ROM's own `ldrb` register choices (which differ between the two
+  otherwise-identical blocks). The old raw
+  `asm/code_3_2_20_28568_c99c_2f338.s` is retired.
 - **`sub_802F164`** (`src/graphics/actor_part43.c`) - state-machine
   update for the same singleton: while `self+0x28` is one of the
   "active" states (1/6/2/3), resets `self`'s table index/anim to the
@@ -181,24 +202,8 @@ are named by the lower 5 hex digits of their first function's address
   `void *`-typed function-pointer table entry), the parameter's own
   type here doesn't need to match the project's usual convention.
 
-## Parked (2 of 25 functions, `NON_MATCHING`, not yet byte-exact)
+## Parked (1 of 25 functions, `NON_MATCHING`, not yet byte-exact)
 
-- **`sub_802F338`** (`src/graphics/actor_part43b.c`) - computes two
-  keyframe-driven tile-cache sizes (`byte0*byte1`, scaled by 32) via
-  `sub_8028CD4`, storing them into the `gUnknown_03001518` pair.
-  Semantics fully understood and every load/store, branch and call
-  confirmed correct - both keyframe-size sub-blocks are literally
-  identical computations, matching the ROM's own duplication; parked
-  on a residual "materialize the multiply result into one register,
-  copy it to a second, *then* shift" gap (the ROM computes
-  `byte0*byte1` into one register, copies it to a second, then shifts:
-  `adds r2,r3,#0; muls r2,r1,r2; adds r0,r2,#0; lsls r0,r0,#5`) that
-  this compiler's dead-store elimination always collapses into a
-  shorter compute-and-shift-in-place sequence - separate locals, a
-  `register`-pinned intermediate, and an `asm("" :: "r"(...))` barrier
-  were all tried and none reproduced the extra copy without either
-  eliminating it differently or collapsing the copy-then-shift into a
-  single differently-encoded shift-with-distinct-registers instruction.
 - **`sub_802FA04`** (`src/graphics/actor_part45c.c`) - an
   `InitActorPart`-based constructor for this cluster's `self` object:
   forwards its first three real arguments plus one stack argument
