@@ -398,7 +398,7 @@ UNITS = [
     (0x08033EF4, "src/graphics/actor_part63.o", "actor"),  # sub_8033EF4/sub_8033F48/sub_8033F74 (issue #63): an InitActorPart-based constructor plus its trampoline-fire and position/transition helpers; matched
     (0x08033FE4, None, "actor"),  # sub_8033FE4 (issue #63, NAKED, byte-correct but not decompiled - tracked as parked) - a gStaticData_0817C4F8 stride-8 trampoline-record dispatcher, same shape as sub_8033B44/sub_8033C84; r7 toolchain-hazard NAKED transcription, real bytes in src/graphics/actor_part64.c
     (0x08034050, "src/graphics/actor_part65.o", "actor"),  # sub_8034050 (issue #63): trivial self+0x6c death-flag getter; matched
-    (0x08034058, "src/graphics/actor_part66.o", "actor"),  # sub_8034058 (issue #63, parked, NON_MATCHING) - InitActorPart-based constructor with a trailing byte stack argument; real bytes live in asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s
+    (0x08034058, "src/graphics/actor_part66.o", "actor"),  # sub_8034058 (issue #63, matched) - InitActorPart-based constructor
     (0x08034110, "src/graphics/actor_part67.o", "actor"),  # sub_8034110/sub_8034188/sub_80341F8/sub_8034264/nullsub_38 (issue #63): a damage/death handler, a position-sync/orbit-effect updater (and its byte-identical twin), a death-flag getter, and a no-op; matched
     (0x08034270, "src/graphics/actor_part68.o", "actor"),  # sub_8034270 (issue #63) - position-sync/flag/trampoline updater; matched as real C (an empty asm volatile makes the compile-time-constant doAnim value opaque, forcing the ROM's redundant compute-then-recheck step to materialize)
     (0x080342D4, "src/graphics/actor_part69.o", "actor"),  # sub_80342D4 (issue #63): InitActorPart-based constructor for a third, smaller object kind; matched
