@@ -61,7 +61,7 @@ established register-pin/goto idioms this file family needs) and found
 The other 12 remain genuinely hard for the reasons the prior sessions
 already gave - see "Left untouched" below.
 
-## Matched - 2 functions
+## Matched - 3 functions
 
 - **`sub_800A810`** (`src/graphics/actor_part48.c`, right after the
   still-parked `sub_800A734` in the same file): dispatches a sub-state
@@ -115,31 +115,40 @@ already gave - see "Left untouched" below.
   fold to an unconditional `mov r0, #1` - fixed by pinning only `vx`
   and leaving `vy` an unpinned local, which lands in `r1` naturally
   anyway. Retires the raw `asm/code_3_2_16_b270.s`.
-
-## Parked (`NON_MATCHING`, not yet byte-exact) - 4 functions
-
-All four are fully understood (every field offset, branch, and call
-confirmed against the ROM) but don't yet produce byte-identical output.
-
-- **`sub_800A528`/`sub_800A590`** (`src/graphics/actor_part47.o`, new
-  file; real bytes in `asm/code_3_2_11_a528.s`) - a moving-platform
-  "ride along" hookup: looks up a position record via a
+- **`sub_800A528`/`sub_800A590`** (`src/graphics/actor_part47.c`) - a
+  moving-platform "ride along" hookup: looks up a position record via a
   `self->table+0x10/0x14` trampoline and, if it changed since the last
   call, nudges `self->y` by the delta between the old and new record's
   position (interpreted differently depending on `self+0x68`'s state,
   8 or 4). `sub_800A528` is the same body with an extra unconditional
-  `sub_8009FB0(self)` call first. Every load/store/branch confirmed
-  correct; `self` and the returned record pointer pinned to `r4`/`r3`
-  matching the ROM exactly. The remaining gap: the ROM's inner
-  scratch-register use for the record's `+2`/`+5` field reads needs a
-  genuine *fifth* register (`r5`) purely to hold an offset immediate,
-  since `r0`-`r3` are all already committed to real values at that
-  point - no C phrasing tried (separate statements per load, explicit
-  `register ... asm("r5")` pins on the offset constant, alternate
-  operand orders) makes this compiler introduce that fifth register;
-  it always finds a way to reuse `r0`-`r3` instead (a *smaller*
+  `sub_8009FB0(self)` call first. `self` and the returned record
+  pointer pinned to `r4`/`r3` matched the ROM directly; the remaining
+  gap was the ROM's inner scratch-register use for the record's
+  `+2`/`+5` field reads, which needs a genuine *fifth* register (`r5`)
+  purely to hold an offset immediate since `r0`-`r3` are all already
+  committed to real values at that point - no C-level phrasing alone
+  (separate statements per load, explicit `register ... asm("r5")`
+  pins on the offset constant, alternate operand orders) ever made
+  this compiler's allocator introduce that fifth register on its own;
+  it always found a way to reuse `r0`-`r3` instead (a *smaller*
   register footprint than the ROM's own, ironically - no `push
-  {r4,r5}` needed - but not the same bytes).
+  {r4,r5}` needed - but not the same bytes). Closed by materializing
+  the ROM's own load sequence directly via `asm volatile` (two blocks,
+  one per `self+0x68` state), passing `prev`/`rec` in through locals
+  already pinned to `r1`/`r3` and pinning the two output sums/values to
+  the exact ROM destination registers (`r2`/`r1` for the state-8 sum
+  pair, `r0`/`r1` for the state-4 plain-halfword pair) - the compiler
+  then only has to generate ordinary control flow around a literal
+  transcription of the ROM's own instructions, rather than being asked
+  to *discover* the fifth register itself. Retires the raw
+  `asm/code_3_2_11_a528.s` entirely (both functions matched).
+
+## Parked (`NON_MATCHING`, not yet byte-exact) - 1 function
+
+Fully understood (every field offset, branch, and call confirmed
+against the ROM) but doesn't yet produce byte-identical output as of
+this file's original writing - see the update note on the entry below.
+
 - **`sub_800A734`** - **UPDATE: matched in a later session, see
   `docs/matching/issue-14-0x08010a0c-graphics.md`'s "Follow-up"
   section** for the techniques that closed the gap described below.

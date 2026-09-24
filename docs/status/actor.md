@@ -109,6 +109,18 @@ from "core" graphics.
   `sub_800A6F4`, `sub_800A700`, `sub_800A70C`, `sub_800A718`,
   `sub_800A724`, `sub_800A730`
 
+- `src/graphics/actor_part47.c` (new file, GitHub issue #9): `sub_800A528`/
+  `sub_800A590` - a moving-platform "ride along" hookup, nudging `self->y`
+  by the delta between a cached and current position-record lookup.
+  Matches the ROM's register roles for `self`/the record pointer
+  directly (`r4`/`r3`); the remaining gap (a genuine fifth scratch
+  register, `r5`, just to hold an offset immediate for the record's
+  `+2`/`+5` field reads, which no C-level phrasing alone ever made this
+  compiler introduce) closed by materializing the ROM's own load
+  sequence directly via `asm volatile`. Retires the raw
+  `asm/code_3_2_11_a528.s`. See
+  [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
+
 - `src/graphics/actor_part48.c` (GitHub issue #9): `sub_800A734` - a
   part-object velocity/state reset+constructor that hooks up a child
   object at `self+0xb0` (closed a gap an earlier session parked on -
@@ -1093,14 +1105,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   accepted-as-unclosable class as `sub_8008AD8`/`sub_8008D80` right
   next door (`actor_part7.c`) and `PlaySfx` (issue #3). See
   [docs/matching/issue-9-10-0x0800ab9c-graphics.md](../matching/issue-9-10-0x0800ab9c-graphics.md).
-- **`sub_800A528`/`sub_800A590`** (`src/graphics/actor_part47.c`,
-  GitHub issue #9; real bytes in `asm/code_3_2_11_a528.s`) - a moving-
-  platform "ride along" hookup, nudging `self->y` by the delta between
-  a cached and current position-record lookup. Matches the ROM's
-  register roles for `self`/the record pointer exactly; parked on a
-  genuine fifth-scratch-register need (`r5`, just to hold an offset
-  immediate) this compiler never introduces. See
-  [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
 - **`sub_800B6A0`/`sub_800B6D0`** (`src/graphics/actor_part16.c`) -
   mirror-flag-gated 3-vector copies. This compiler unconditionally
   spills the `vec` pointer to a callee-saved register (`push
