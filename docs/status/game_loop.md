@@ -363,20 +363,22 @@ plain C didn't converge.
   gets allocated one single register for its whole lifetime instead.
   See
   [docs/matching/issue-34-game-loop-8022d50-80255d4.md](../matching/issue-34-game-loop-8022d50-80255d4.md).
-
-## Parked (`NON_MATCHING`, not yet byte-exact)
-
-- **`sub_8010B6C`** (`src/system/game_loop28.c`, GitHub issue #14; real
-  bytes in `asm/code_3_2_17_e560_10b6c.s`) - the chunk's last and
-  largest function, a collision-candidate scan/resolve helper
-  `sub_80106DC` (`game_loop23.c`) already calls once a frame. Every
-  field offset/branch/call argument is understood and cross-referenced
-  against the mirror-image `sub_8010D54` and its caller; parked on the
-  ROM building nearly every record-field address as a running pointer
-  incremented by `0x24` per loop iteration, with up to twelve of them
-  (`r8`/`sb`/`sl` included) live across a `0x68`-byte stack frame - the
-  same gap already parked for `sub_800A734`/`sub_800A528` in
-  docs/matching/issue-9-0x08007634-actor.md, at a larger scale. See
+- **`sub_8010B6C`** (`src/system/game_loop28.c`, GitHub issue #14,
+  follow-up pass) - the chunk's last and largest function, a
+  collision-candidate scan/resolve helper `sub_80106DC`
+  (`game_loop23.c`) already calls once a frame. Every field offset/
+  branch/call argument was already understood and cross-referenced
+  against the mirror-image `sub_8010D54` and its caller when this was
+  first parked; the ROM builds nearly every record-field address as a
+  running pointer incremented by `0x24` per loop iteration, with up to
+  twelve of them (`r8`/`sb`/`sl` included) live across a `0x68`-byte
+  stack frame - the same gap already parked for `sub_800A734`/
+  `sub_800A528` in docs/matching/issue-9-0x08007634-actor.md, at a
+  much larger scale (three times the live-cursor count, on a stack
+  frame twice the size) - beyond what C-level register pins can
+  realistically express, so closed as a byte-exact NAKED transcription
+  instead. `asm/code_3_2_17_e560_10b6c.s` is now gone entirely - the
+  function is folded into `src/system/game_loop28.o`. See
   [docs/matching/issue-14-0x08010a0c-graphics.md](../matching/issue-14-0x08010a0c-graphics.md).
 
 ## Still raw, category-mapped (GitHub issue #12/#34/#40)

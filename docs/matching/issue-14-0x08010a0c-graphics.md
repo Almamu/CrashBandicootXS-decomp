@@ -56,48 +56,69 @@ covering:
   with the global "hit" latch `gUnknown_030012D8+0x80` `game_loop22.c`
   already established.
 
-## Parked (`NON_MATCHING`) - 1 function
+## Follow-up: `sub_8010B6C` - now matched (NAKED transcription)
 
-- **`sub_8010B6C`** (`src/system/game_loop28.c`; real bytes in
-  `asm/code_3_2_17_e560_10b6c.s`) - the chunk's last and largest
-  function (488 bytes), and the one `sub_80106DC` (game_loop23.c)
-  already calls by name. Scans `self`'s neighbor-candidate list -
-  `self`'s own `+8` onward is an array of 0x24-byte "candidate" records
-  (`neighbor` pointer at `+0`, a position pair at `+4`/`+8`, a `kind`
-  tag at `+0xc` compared against `4`, three more fields at `+0x10`/
-  `+0x14`/`+0x18`/`+0x1c`, and two flag bytes at `+0x20`/`+0x21`) -
-  where `records[0]` is a previous/seed candidate and
-  `records[1..count-1]` are new candidates queued this frame. For each
-  candidate, computes its Y-distance to the player
-  (`gUnknown_030012D8`); any whose Y-distance jumps more than 8 past
-  the running-best Y-distance, or whose own `kind` is `4`, gets
-  resolved immediately via `sub_800E08C()` (an 11-argument call - the
-  9th-11th land in this function's own stack frame at a fixed offset,
-  confirming they're genuine AAPCS-style stack-passed arguments, not
-  separate mystery locals, once cross-referenced against where their
-  addresses are computed); the rest are only compared against each
-  other (Y-distance primary, X-distance tiebreak) to find the single
-  nearest. After the scan, that overall-nearest candidate is *also*
-  resolved via `sub_800E08C()` - its 11th argument set to whether any
-  forced/priority hit happened during the scan (`1`), unlike every
-  in-loop call, which always passes `0` there - and the list is reset
-  (`count = 0`, `field4 = 0`) for the next frame.
+`sub_8010B6C` (`src/system/game_loop28.c`) - the chunk's last and
+largest function (488 bytes), and the one `sub_80106DC`
+(game_loop23.c) already calls by name - was originally parked here
+under `NON_MATCHING`. A later pass in the same session that closed
+`sub_800A734` below (see the next "Follow-up" section) closed this one
+too, as a byte-exact `NAKED` transcription rather than real decompiled
+C. It scans `self`'s neighbor-candidate list - `self`'s own `+8`
+onward is an array of 0x24-byte "candidate" records (`neighbor`
+pointer at `+0`, a position pair at `+4`/`+8`, a `kind` tag at `+0xc`
+compared against `4`, three more fields at `+0x10`/`+0x14`/`+0x18`/
+`+0x1c`, and two flag bytes at `+0x20`/`+0x21`) - where `records[0]`
+is a previous/seed candidate and `records[1..count-1]` are new
+candidates queued this frame. For each candidate, computes its
+Y-distance to the player (`gUnknown_030012D8`); any whose Y-distance
+jumps more than 8 past the running-best Y-distance, or whose own
+`kind` is `4`, gets resolved immediately via `sub_800E08C()` (an
+11-argument call - the 9th-11th land in this function's own stack
+frame at a fixed offset, confirming they're genuine AAPCS-style
+stack-passed arguments, not separate mystery locals, once
+cross-referenced against where their addresses are computed); the
+rest are only compared against each other (Y-distance primary,
+X-distance tiebreak) to find the single nearest. After the scan, that
+overall-nearest candidate is *also* resolved via `sub_800E08C()` -
+its 11th argument set to whether any forced/priority hit happened
+during the scan (`1`), unlike every in-loop call, which always passes
+`0` there - and the list is reset (`count = 0`, `field4 = 0`) for the
+next frame.
 
-  Every field offset, branch, and call argument here is understood and
-  cross-referenced against the mirror-image writer `sub_8010D54`
-  (right after this issue's own range, not itself in scope) and the
-  `sub_80106DC` caller - but the ROM builds nearly every record-field
-  address in both the loop body and the two `sub_800E08C` call sites
-  as a *running pointer*, incremented by `0x24` once per loop
-  iteration, with up to twelve of them (`r8`/`sb`/`sl` among them) live
-  across a single `0x68`-byte stack frame. This is the same "long,
-  non-uniform stretch of field accesses via running-pointer
-  increments" gap already parked for `sub_800A734`/`sub_800A528` in
-  the issue #9 write-up (`docs/matching/issue-9-0x08007634-actor.md`),
-  just at a larger scale (three times the
-  live-cursor count, on a stack frame twice the size). Not chased to a
-  byte-exact register allocation in this pass; left parked with full
-  field/branch/call fidelity instead of guessing at the remainder.
+Every field offset, branch, and call argument here was already
+understood and cross-referenced against the mirror-image writer
+`sub_8010D54` (right after this issue's own range, not itself in
+scope) and the `sub_80106DC` caller when this was first parked - but
+the ROM builds nearly every record-field address in both the loop
+body and the two `sub_800E08C` call sites as a *running pointer*,
+incremented by `0x24` once per loop iteration, with up to twelve of
+them (`r8`/`sb`/`sl` among them) live across a single `0x68`-byte
+stack frame. This is the same "long, non-uniform stretch of field
+accesses via running-pointer increments" gap already parked for
+`sub_800A734`/`sub_800A528` in the issue #9 write-up
+(`docs/matching/issue-9-0x08007634-actor.md`), just at a larger scale
+(three times the live-cursor count, on a stack frame twice the size)
+- well beyond what C-level register pins can realistically express,
+so this pass closed it as a `NAKED` transcription instead of chasing
+a plain-C register allocation: the ROM's own Thumb instructions,
+transcribed one-to-one (suffix-less mnemonics - `add`/`mov`/`lsl`/
+`ldr`/`str`, not `adds`/`movs`/`lsls`/suffixed forms - which this
+project's assembler invocation accepts identically), with the single
+`gUnknown_030012D8` literal pool kept at the ROM's own mid-function
+split point (right after the loop's first `sub_800E08C` call site's
+`b` past it) and a trailing `asm(".align 2, 0")` for the 2-byte
+zero-fill gap before `sub_8010D54` (the assembler's default `nop`
+fill pattern otherwise mismatches the ROM's zero halfword there - see
+`matching_decomp_alignment_fix`). Verified via isolated
+`arm-none-eabi-as` assembly against the ROM's raw bytes first, then
+folded into `src/system/game_loop28.c`/`.o` and confirmed with a full
+clean `make compare` (`crashbandicootxs.gba: La suma coincide`). The
+old `asm/code_3_2_17_e560_10b6c.s` fragment (which held only this one
+function) is removed entirely, `ldscript.txt`'s now-redundant
+`code_3_2_17_e560_10b6c.o` entry is dropped, and
+`tools/report_units.py`'s `0x08010B6C` unit now points at
+`src/system/game_loop28.o` instead of `None`.
 
 ## Follow-up: GitHub issue #9's `sub_800A734` - now matched
 
@@ -184,12 +205,19 @@ section entry for `sub_800A734` is removed accordingly.
 ## Cross-references
 
 - `docs/status/game_loop.md` - matched/parked lists updated for this
-  issue's functions.
+  issue's functions; `sub_8010B6C` moved from "Parked (NON_MATCHING)"
+  to the "Parked - NAKED transcription" section.
 - `docs/status/actor.md` - `sub_800A734` moved from "Parked" to
   "Matched".
 - `tools/report_units.py` - `UNITS` list split for
   `0x08010A0C`-`0x08010D54`, recategorized `graphics` -> `game_loop`;
-  `0x0800A734` merged into the existing `actor_part48.o` unit.
+  `0x0800A734` merged into the existing `actor_part48.o` unit;
+  `0x08010B6C` now points at `src/system/game_loop28.o` instead of
+  `None`.
+- `ldscript.txt` - the now-redundant
+  `build/crashbandicootxs/asm/code_3_2_17_e560_10b6c.o(.text);` line
+  removed (the function moved into the already-present
+  `game_loop28.o(.text);` line just above it).
 - `docs/matching/issue-9-0x08007634-actor.md` - the original write-up
   for `sub_800A734`'s first (parked) pass; this file's "Follow-up"
   section above is the second pass that closed the gap.
