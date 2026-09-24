@@ -2239,6 +2239,40 @@ Parked as `NON_MATCHING` rather than continue chasing individual
 register choices - same call as `sub_8006600`/`sub_8000EE4`/
 `sub_80073DC` above.
 
+**Follow-up session, extremely close now**: applying `sub_8007B98`'s
+own working technique (below) here too - pinning `rec`/`addr`/`idx` to
+`r1`/`r2`/`r3` and `w`/`h` to `r5`/`r6`, with `pDest` pinned `r8` and
+assigned via a plain `pDest = dest;` statement rather than an
+initializer - closed the r6-vs-r7 prologue/epilogue mismatch
+completely (`part` was never pinned directly; the pressure from these
+other pins was enough) and fixed both `part+0x28` bit-test scratch-
+register gaps exactly, via a pinned `register u8 flags asm("r1"/"r3")`
+paired with a *separately* pinned `register s32 shifted asm("r0")` for
+the shift result (pinning `flags` alone collapsed the `ldrb`/`lsl`
+pair back into one register; the shift needed its own explicit
+destination pin too). Also discovered: giving the function a genuine
+`void *` return type and `return pDest;` (the one call site,
+`sub_8007FD8` in `actor_part3.c`, already discards the return value,
+so this is behavior-preserving) reproduces the ROM's own redundant
+`mov r0, r8` reload right before the epilogue and, as a side effect,
+shifts the final `pop`/`bx` register choice from `r0` to `r1`,
+matching the ROM exactly - without this, the tail end of the function
+didn't match regardless of anything else tried.
+
+The result matches the ROM in every instruction but one: the first
+`ldrsh` (`offX`, `rec+0xc`)'s `0xc` offset materializes into `r0` here
+where the ROM uses `r5`. Tried and ruled out (both already documented
+as dead ends for `sub_8007B98`'s own analogous first `ldrsh`, retried
+here with the same outcome): a scoped `register s32 w asm("r5") = 0xc`
+local (gcc constant-propagates the literal away regardless, still
+picking `r0` for the actual `mov`) and inline `asm("mov %0, #0xc" :
+"=r"(w))` (forces the `mov r5,#0xc` but then breaks the `ldrsh`'s
+addressing-mode folding, emitting an extra `add`/`mov r0,#0` pair
+instead - strictly worse). Kept in-tree as a `#if NON_MATCHING` C
+reconstruction alongside the byte-exact NAKED `#else` branch (default
+builds unaffected) rather than left only in git history, given how
+close it is - see `src/graphics/actor_part.c` for the full writeup.
+
 **Parked, not matched: `sub_8007B98`** (ROM `0x08007B98`, right after
 `sub_8007B00`, in `src/graphics/actor_part.c`): the same AABB-for-
 keyframe shape as `sub_8007B00` above, for a second, differently-laid-
@@ -3402,6 +3436,54 @@ that avoids the `r7`-pin corruption (natural allocation into `r8`/`r9`)
 rather than risk a silent miscompile for a cosmetically closer
 register match.
 
+**Follow-up session**: the register-pressure technique that closed
+`sub_8006600`'s first half (raise pressure via genuinely separate,
+unpinned plain locals until gcc's own *natural* allocator reaches for
+`r7`) had never been tried here - this session tried it and it worked,
+closing the actual documented blocker. Pinning the `self` parameter to
+`register void *self asm("r5")` (safe - `self` is an ordinary
+call-crossing pointer with no r7-hazard of its own, same as any other
+non-r7 register-variable pin used throughout this project) raises
+register pressure enough that the loop counter `i` (left completely
+unpinned) lands on `r7` on its own, and the `boxB` pointer lands on the
+ROM's own `r8` - eliminating the second high register (`r9`) entirely,
+matching the ROM's register *class* usage exactly. Splitting
+`boxA.field_8 = 0xdc << 9; boxA.field_c = 0x8c << 9;` into two
+temporaries computed before either store (rather than sequentially)
+also fixed that pair's `mov r0`/`mov r1` parallel materialization to
+match the ROM's own `mov r0`/`mov r1`/`str`/`str` shape exactly - the
+same "split into separate plain locals" idea, applied to a much
+smaller two-instruction span.
+
+Still not byte-exact: `subObj`'s own register (pinning it explicitly
+to `register void *subObj asm("r2")`, matching the ROM, was needed and
+safe - a scratch value with no cross-call lifetime issue - but which
+register becomes the *accumulator* for `boxA.field_0`/`field_4`'s
+`(value << 8) + const` additions still differs, and forcing it via a
+scoped `register` pin on the shifted value only moved the mismatch
+elsewhere); the loop body's `&arr[i]` address, which the ROM caches
+once in `ip` (r12) across the removal-branch's `sub_803A94C` call and
+reuses via `mov r1, ip`, while this reconstruction recomputes it fresh
+each time it's needed (introducing an explicit `elemAddr` local made
+no difference - gcc still didn't route it through `ip`); and the
+`count`/`self+4` value, which the ROM keeps live in a register (`r2`)
+across the whole loop body once loaded for the entry condition check,
+reused for the removal branch's size calculation, while this
+reconstruction re-dereferences `self+4` fresh each time it's needed -
+explicitly restructuring the loop as a `while` with a `count` local
+mirroring the ROM's cached-register reuse was tried and **regressed**
+the `i`-onto-`r7` fix (raised pressure too far, pushed `i` back onto
+`r8`/`r9`), so it was reverted. The `#if NON_MATCHING` branch in
+`src/graphics/actor_part7.c` now carries this improved-but-still-
+imperfect reconstruction (default builds still use the byte-exact
+NAKED transcription) - see the file for the full technique writeup.
+Given the size of the remaining gap (roughly 15-20 residual
+instructions across the box-setup section and the loop body's address-
+chain reuse, versus ~135 total), a scoped permuter search over just
+those regions - the same untried angle already suggested for
+`sub_8006600`'s own residual - is probably the most promising next
+step, rather than further manual C rephrasing.
+
 ## Diving into the AI/collision cluster: `sub_8008A40`
 
 **Parked, not matched: `sub_8008A40`** (ROM `0x08008A40`, right after
@@ -3455,6 +3537,45 @@ corrupting a value rather than crashing the compiler or dropping a
 push/pop entry. Parked with the version that avoids the corruption
 (natural allocation into `r8`) rather than risk a silently-wrong
 reconstruction for a cosmetically closer register match.
+
+**Follow-up session**: same register-pressure technique tried on
+`sub_800891C` above worked here too, on the *actual* documented
+blocker (`compareViewport` itself, not just the loop counter this
+time). Pinning `manager` to `register void *manager asm("r5")`, the
+loop counter `i` to `register s32 i asm("r6")`, and `part` to
+`register void *part asm("r4")` (all three are their own ROM
+registers, all safe - ordinary call-crossing values, none of them
+`r7`) raises pressure enough that gcc's *natural, unforced* allocator
+reaches for `r7` for the completely unpinned `compareViewport` - the
+actual fix this function was parked over, achieved without ever
+touching the unsafe explicit `r7` pin that corrupted it in the earlier
+attempt. Pinning `i`/`part` individually was necessary here - pinning
+`manager` alone (the direct analogue of `sub_800891C`'s fix) instead
+put the loop counter on `r7` and left `compareViewport` on `r8`
+unchanged; only once `i` and `part` were also pinned to their own ROM
+registers did `compareViewport` land on `r7`.
+
+Still not byte-exact, and the `r8` push/pop pair this function was
+originally parked over is still present, just for a different, smaller
+reason now: the incoming box gets copied onto a fresh stack slot via
+`sub_800014C`, and reading its four fields back out for the
+`sub_8008AD8`/`sub_8008D80` call needs a pointer into that slot; an
+unpinned pointer (or direct array indexing) gets hoisted by gcc into
+`r7` itself (fighting `compareViewport` for it, regressing the whole
+fix), so it has to be pinned somewhere - `register s32 *boxp asm("r2")`
+avoids the `r7` collision, but `r2` is also `sub_8008AD8`/
+`sub_8008D80`'s own `y` argument register, so gcc ends up shuffling
+`boxp[1]` through `r8` as a temporary before `r2` gets reused for the
+call. The ROM avoids this entirely by never caching the box's address
+at all - it recomputes `sp`-relative addressing fresh at each of the
+four field reads, something no C-level restructuring tried here (a
+plain unpinned local pointer, and reading the fields into named
+temporaries before the call) reproduced; gcc's own internal scheduling
+insisted on either the hoist-to-`r7` or the `r2`-collision shuffle
+every time. The `#if NON_MATCHING` branch in
+`src/graphics/actor_part7.c` now carries this improved-but-still-
+imperfect reconstruction (default builds still use the byte-exact
+NAKED transcription).
 
 **Parked, not matched: `sub_8008AD8`** (ROM `0x08008AD8`, right after
 `sub_8008A40`, same file). Resolves collision push-out between `part`

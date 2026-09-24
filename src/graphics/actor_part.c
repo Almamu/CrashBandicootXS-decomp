@@ -132,19 +132,93 @@ struct aabb {
  * `+0x11` fields are {s16 xOffset, s16 yOffset, u8 w, u8 h} - the same
  * offset/text-table convention seen elsewhere, just with the AABB
  * dimensions instead of a text pointer. `part+0x28` bits 4/5 mirror
- * the AABB horizontally/vertically around `part`'s own position. See
- * the (now removed) NON_MATCHING C draft in git history for the full
- * commented C reconstruction. Written as NAKED asm here instead: `part`
- * needed r7 (this compiler's plain, unpinned allocator put it in r6
- * every attempt), and an explicit `register void *part asm("r7")` pin
- * is categorically unsafe in this toolchain (see
- * `matching_decomp_register_pinning` memory, point 10 - never makes it
- * into the compiled prologue's push list). A transcription of the ROM's
- * own confirmed-correct instructions, same technique as
- * `sub_8006600`/`sub_80073DC` above and this project's other hard-
- * compiler-limitation cases (see src/system/link_cable.c/
- * src/audio/gax_swi.c). */
-NAKED void sub_8007B00(void *dest, void *part)
+ * the AABB horizontally/vertically around `part`'s own position.
+ *
+ * **Build toggle**: default builds (`NON_MATCHING=0`) use the `#else`
+ * branch's NAKED transcription of the ROM's own confirmed-correct
+ * instructions, byte-exact, same technique as `sub_8006600`/
+ * `sub_80073DC` above. The `#if NON_MATCHING` branch is a since-refined
+ * C reconstruction (see docs/matching.md's "Parked, not matched:
+ * sub_8007B00" for the earlier attempt this supersedes) that gets
+ * every instruction byte-exact except one: pinning `dest`/`rec`/`addr`/
+ * `idx`/`w`/`h` to r8/r1/r2/r3/r5/r6 (mirroring the register-pressure
+ * trick that worked for `sub_8007B98` below, plus giving this function
+ * a real `void *` return - reloading `pDest` into r0 right before the
+ * epilogue, unused by the one call site, reproduces the ROM's own
+ * redundant `mov r0, r8` and shifts the final `pop`'s register choice
+ * to match too) gets `part` naturally onto r7 - closing the r6-vs-r7
+ * prologue/epilogue mismatch this function was originally parked for -
+ * and fixes both `part+0x28` bit-test scratch-register gaps via a
+ * pinned two-step `flags`/`shifted` pair per test. The one holdout: the
+ * first `ldrsh` (`offX`, `rec+0xc`) materializes its `0xc` offset into
+ * r0 here where the ROM uses r5 - the exact same shape as the
+ * still-unmatched first `ldrsh` in `sub_8007B98`'s own entry below (its
+ * `offX` at `rec+4`), which already ruled out a scoped `register s32
+ * shift asm("r5") = 0xc` local (gcc constant-propagates the literal
+ * away regardless, still picking r0) and inline `asm("mov %0, #0xc")`
+ * (forces the mov but then breaks the ldrsh's addressing-mode folding,
+ * emitting an extra `add`/`mov r0,#0` instead) - both retried here with
+ * the same outcome. Not byte-exact, so the NAKED branch stays the
+ * default; kept here instead of only in git history since it's this
+ * close (every instruction but one register letter). */
+#if NON_MATCHING
+void *sub_8007B00(void *dest, void *part)
+{
+    register struct aabb *pDest asm("r8");
+    struct aabb buf_;
+    s32 *buf = (s32 *)&buf_;
+    register void *rec asm("r1");
+    void *rec2;
+    register u8 *addr asm("r2");
+    register u8 idx asm("r3");
+    s32 offset;
+    s32 offX, offY;
+    register s32 w asm("r5");
+    register s32 h asm("r6");
+    s32 x, y;
+
+    pDest = dest;
+    rec = *(void ***)((u8 *)part + 0x20);
+    addr = (u8 *)part + 0x2d;
+    idx = *addr;
+    offset = idx * 0x1c;
+    rec = *(void **)rec;
+    rec = (u8 *)rec + offset;
+    rec2 = (u8 *)rec + 0xc;
+
+    x = *(s32 *)part >> 8;
+    offX = *(s16 *)((u8 *)rec + 0xc);
+    y = *(s32 *)((u8 *)part + 4) >> 8;
+    w = 2;
+    offY = *(s16 *)((u8 *)rec2 + w);
+    w = *((u8 *)rec2 + 4);
+    h = *((u8 *)rec2 + 5);
+
+    offX = offX + x;
+    offY = offY + y;
+    sub_803AFE4(buf, offX, offY);
+    sub_803AFDC(buf, w, h);
+
+    {
+        register u8 flags asm("r1") = *((u8 *)part + 0x28);
+        register s32 shifted asm("r0") = (s32)(flags << 27);
+        if (shifted < 0) {
+            buf[0] = (*(s32 *)part >> 8) * 2 - (buf[0] + buf[2]);
+        }
+    }
+    {
+        register u8 flags asm("r3") = *(vu8 *)((u8 *)part + 0x28);
+        register s32 shifted asm("r0") = (s32)(flags << 26);
+        if (shifted < 0) {
+            buf[1] = (*(s32 *)((u8 *)part + 4) >> 8) * 2 - (buf[1] + buf[3]);
+        }
+    }
+
+    *pDest = buf_;
+    return pDest;
+}
+#else
+NAKED void *sub_8007B00(void *dest, void *part)
 {
     asm(
         "push {r4, r5, r6, r7, lr}\n\t"
@@ -225,6 +299,7 @@ NAKED void sub_8007B00(void *dest, void *part)
         "bx r1\n\t"
     );
 }
+#endif /* NON_MATCHING */
 
 /* Same AABB-for-keyframe shape as sub_8007B00 above, for a second,
  * differently-laid-out keyframe table (offX/offY/w/h sit at rec+4/+6/+8/+9

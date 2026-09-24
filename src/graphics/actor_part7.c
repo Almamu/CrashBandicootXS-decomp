@@ -319,17 +319,115 @@ extern void sub_803A94C(const void *src, void *dst, u32 cnt);
  * `boxB` through the table's 0x30/0x34 trampoline; if THAT also
  * passes, appends `part` to the output array and increments its count.
  *
- * See the (now removed) NON_MATCHING C draft in git history for the
- * full commented C reconstruction: the overall control flow, all four
- * `table+N`-trampoline call shapes (address adjusted once, then the
- * `s16` offset and function pointer both read relative to it), the
- * `sub_803A94C` block-copy invocation, and the `struct aabb` field
- * values were all confirmed correct there - but this compiler put the
- * loop counter `i` into a high register (`r8`) instead of the ROM's low
- * register `r7`, and an explicit `register s32 i asm("r7")` pin
- * produced a genuine miscompile (see docs/matching.md's "Parked, not
- * matched: sub_800891C" for the full account). Written as NAKED asm
- * here instead, same technique as the other functions above. */
+ * **Build toggle**: default builds (`NON_MATCHING=0`) use the `#else`
+ * branch's NAKED transcription of the ROM's own confirmed-correct
+ * instructions, byte-exact, same technique as the other functions
+ * above. The `#if NON_MATCHING` branch is a since-refined C
+ * reconstruction (see docs/matching.md's "Parked, not matched:
+ * sub_800891C" for the earlier attempt this supersedes, and its
+ * appended follow-up note for this session's findings): pinning `self`
+ * to `r5` (its own ROM register, safe - `self` has no r7-hazard, it's
+ * just an ordinary call-crossing pointer) raises register pressure
+ * enough that gcc's *natural, unforced* allocator reaches for `r7` for
+ * the loop counter `i` on its own, closing the `r8`/`r9`-pair mismatch
+ * this function was originally parked for down to a single `r8` (for
+ * the `boxB` pointer) - matching the ROM's own register *class* usage
+ * exactly, without ever touching the unsafe explicit `register s32 i
+ * asm("r7")` pin. Splitting the `boxA.field_8`/`field_c` computation
+ * into two separate plain locals (computed before either store, rather
+ * than sequentially) also fixed that pair's `mov r0`/`mov r1`
+ * parallel-materialization to match the ROM exactly. Not yet byte-exact
+ * though: several more scratch-register-letter gaps remain in both the
+ * box-setup section (e.g. `subObj`'s own register, and which operand
+ * becomes the addition's accumulator for `boxA.field_0`/`field_4`) and
+ * the loop body (the ROM caches `&arr[i]` in `ip` across the removal
+ * call and reuses a stale-cached `count` register inside the loop
+ * body, neither of which this reconstruction reproduces - attempting a
+ * `count` local mirroring the ROM's cached-register reuse regressed
+ * `i` back onto `r8`/`r9`, reverted) - same category of resistant
+ * "which anonymous register" gap documented at length for
+ * `sub_8007B98`. Kept here despite not being byte-exact since it's a
+ * genuine, confirmed step forward on this function's actual documented
+ * blocker (the register *class*, not just letter) - the NAKED branch
+ * stays the default. */
+#if NON_MATCHING
+void sub_800891C(void *selfParam)
+{
+    register void *self asm("r5") = selfParam;
+    struct aabb boxA;
+    struct aabb boxB;
+    s32 i;
+    register void *subObj asm("r2");
+
+    {
+        s32 t1 = 0xdc << 9;
+        s32 t2 = 0x8c << 9;
+        boxA.field_8 = t1;
+        boxA.field_c = t2;
+    }
+
+    subObj = *(void **)((u8 *)gUnknown_03001308 + 0x10);
+    boxA.field_0 = (*(s32 *)subObj << 8) + (s32)0xFFFF9C00;
+    boxA.field_4 = (*(s32 *)((u8 *)subObj + 4) << 8) + (s32)0xFFFFC400;
+
+    boxB.field_0 = *(s32 *)subObj << 8;
+    boxB.field_4 = *(s32 *)((u8 *)subObj + 4) << 8;
+    boxB.field_8 = 0xf0 << 8;
+    boxB.field_c = 0xa0 << 8;
+
+    *(s32 *)((u8 *)self + 8) = 0;
+
+    for (i = 0; i < *(s32 *)((u8 *)self + 4); i++) {
+        void **arr = *(void ***)((u8 *)self + 0xc);
+        void **elemAddr = &arr[i];
+        void *part = *elemAddr;
+        u8 flags = *((u8 *)part + 0xc);
+
+        if (flags & 1) {
+            if (i < *(s32 *)self) {
+                sub_803A94C(elemAddr + 1, elemAddr, ((*(s32 *)((u8 *)self + 4) - i) & 0x1FFFFF) | 0x4000000);
+                *(s32 *)((u8 *)self + 4) -= 1;
+                arr[*(s32 *)((u8 *)self + 4)] = 0;
+            }
+            if (part != 0) {
+                u8 *rec = *(u8 **)((u8 *)part + 0x18) + 0x50;
+                s16 offset = *(s16 *)rec;
+                void *fn = *(void **)(rec + 4);
+
+                sub_803AD80((u8 *)part + offset, (void *)3, fn);
+            }
+            i--;
+        } else {
+            u8 *rec1 = *(u8 **)((u8 *)part + 0x18) + 0x40;
+            s16 offset1 = *(s16 *)rec1;
+            void *fn1 = *(void **)(rec1 + 4);
+
+            if (sub_803AD80((u8 *)part + offset1, &boxA, fn1)) {
+                u8 *rec2 = *(u8 **)((u8 *)part + 0x18) + 0x18;
+                s16 offset2 = *(s16 *)rec2;
+                void *fn2 = *(void **)(rec2 + 4);
+                u8 *rec3;
+                s16 offset3;
+                void *fn3;
+
+                sub_803AD7C((u8 *)part + offset2, fn2);
+
+                rec3 = *(u8 **)((u8 *)part + 0x18) + 0x30;
+                offset3 = *(s16 *)rec3;
+                fn3 = *(void **)(rec3 + 4);
+
+                if (sub_803AD80((u8 *)part + offset3, &boxB, fn3)) {
+                    void **outArr = *(void ***)((u8 *)self + 0x10);
+                    s32 outCount = *(s32 *)((u8 *)self + 8);
+
+                    outArr[outCount] = part;
+                    *(s32 *)((u8 *)self + 8) = outCount + 1;
+                }
+            }
+        }
+    }
+}
+#else
 NAKED void sub_800891C(void *self)
 {
     asm(
@@ -478,6 +576,7 @@ NAKED void sub_800891C(void *self)
         ".align 2, 0\n"
     );
 }
+#endif /* NON_MATCHING */
 
 extern void *sub_803AD7C(void *arg0, void *fn);
 extern void *sub_800014C(void *dest, void *src, s32 size);
@@ -511,18 +610,87 @@ extern void *gUnknown_030012D8;
  * resolving one of `docs/rom_map.md`'s long-open "packed state
  * round-tripping" mysteries around this function.
  *
- * See the (now removed) NON_MATCHING C draft in git history for the
- * full commented C reconstruction - every branch, field offset, and
- * call argument was confirmed correct there, but `compareViewport`
- * needs to survive the whole loop across calls to `sub_803AD7C`/
- * `sub_800014C`/`sub_8008AD8`/`sub_8008D80`, and this compiler spilled
- * it to a high register (`r8`) instead of the ROM's low register `r7`;
- * an explicit `register void *compareViewport asm("r7")` pin produced
- * a genuine miscompile there (the loop counter `i` also got allocated
- * to `r7`, silently overwriting `compareViewport` - see
- * docs/matching.md's "Parked, not matched: sub_8008A40" for the full
- * account). Written as NAKED asm here instead, same technique as the
- * other functions above. */
+ * **Build toggle**: default builds (`NON_MATCHING=0`) use the `#else`
+ * branch's NAKED transcription of the ROM's own confirmed-correct
+ * instructions, byte-exact, same technique as the other functions
+ * above. The `#if NON_MATCHING` branch is a since-refined C
+ * reconstruction (see docs/matching.md's "Parked, not matched:
+ * sub_8008A40" for the earlier attempt this supersedes, and its
+ * appended follow-up note for this session's findings): pinning
+ * `manager` to `r5`, the loop counter `i` to `r6`, and `part` to `r4`
+ * (all their own ROM registers, all safe - like `sub_800891C`'s `self`
+ * above, none of these have any r7-hazard, they're ordinary
+ * call-crossing values) raises register pressure enough that gcc's
+ * *natural, unforced* allocator reaches for `r7` for `compareViewport`
+ * on its own, matching the ROM - without ever touching the unsafe
+ * explicit `register void *compareViewport asm("r7")` pin that
+ * corrupted `compareViewport` in the earlier attempt. Not yet
+ * byte-exact, and the `r8` push/pop pair the earlier attempt was
+ * parked over is still present, just for a different, smaller-scoped
+ * reason now: pinning the copied-box pointer (`boxp`, from
+ * `sub_800014C`'s destination) to `r2` was needed to stop gcc from
+ * hoisting its address into `r7` instead of `compareViewport` (the
+ * ROM never caches this address at all, recomputing `sp`-relative each
+ * time - not reproduced here), but `r2` collides with `sub_8008AD8`/
+ * `sub_8008D80`'s own `y` argument register, forcing gcc to shuffle
+ * `boxp[1]` through `r8` as a temporary before `r2` gets reused - an
+ * unpinned `boxp` (or plain `box[N]` indexing) avoids that shuffle but
+ * puts the address-hoist back onto `r7` instead, regressing
+ * `compareViewport`; reordering the read earlier via an explicit `by`
+ * temporary didn't change gcc's own internal scheduling either (both
+ * tried and reverted). Several more scratch-register-letter gaps also
+ * remain elsewhere in the loop body (same category of resistant
+ * "which anonymous register" gap documented at length for
+ * `sub_8007B98`/`sub_800891C` above). Kept here despite not being
+ * byte-exact since it's a genuine, confirmed step forward on this
+ * function's actual documented blocker (getting `compareViewport`
+ * itself onto its correct low register) - the NAKED branch stays the
+ * default. */
+#if NON_MATCHING
+extern void *sub_803AD7C(void *arg0, void *fn);
+extern void *sub_800014C(void *dest, void *src, s32 size);
+extern void sub_8008AD8(void *manager, s32 x, s32 y, s32 w, s32 h, void *part);
+extern void sub_8008D80(void *manager, s32 x, s32 y, s32 w, s32 h, void *part, void *arg6);
+extern void *gUnknown_030012D8;
+
+void sub_8008A40(void *managerParam, s32 boxX, s32 boxY, s32 boxW, s32 boxH, s32 unused, void *compareViewport)
+{
+    register void *manager asm("r5") = managerParam;
+    register s32 i asm("r6");
+    s32 params[4];
+    s32 box[4];
+
+    params[0] = boxX;
+    params[1] = boxY;
+    params[2] = boxW;
+    params[3] = boxH;
+
+    for (i = 0; i < *(s32 *)((u8 *)manager + 8); i++) {
+        void **arr = *(void ***)((u8 *)manager + 0x10);
+        register void *part asm("r4") = arr[i];
+        u8 *rec = *(u8 **)((u8 *)part + 0x18) + 0x48;
+        s16 offset = *(s16 *)rec;
+        void *fn = *(void **)(rec + 4);
+        s32 result = (s32)sub_803AD7C((u8 *)part + offset, fn);
+
+        if (result <= 4) {
+            continue;
+        }
+        if (!((*((u8 *)part + 0xc) >> 2) & 1)) {
+            continue;
+        }
+        if (compareViewport == gUnknown_030012D8) {
+            register s32 *boxp asm("r2") = box;
+            sub_800014C(boxp, params, 0x10);
+            sub_8008AD8(manager, boxp[0], boxp[1], boxp[2], boxp[3], part);
+        } else {
+            register s32 *boxp asm("r2") = box;
+            sub_800014C(boxp, params, 0x10);
+            sub_8008D80(manager, boxp[0], boxp[1], boxp[2], boxp[3], part, compareViewport);
+        }
+    }
+}
+#else
 NAKED void sub_8008A40(void *manager, s32 boxX, s32 boxY, s32 boxW, s32 boxH, s32 unused, void *compareViewport)
 {
     asm(
@@ -602,6 +770,7 @@ NAKED void sub_8008A40(void *manager, s32 boxX, s32 boxY, s32 boxW, s32 boxH, s3
         "bx r3\n\t"
     );
 }
+#endif /* NON_MATCHING */
 
 extern void *gUnknown_030012C0;
 extern void *gUnknown_030012BC;
