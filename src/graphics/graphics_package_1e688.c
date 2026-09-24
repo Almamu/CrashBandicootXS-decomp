@@ -52,87 +52,188 @@ extern s32 gStaticData_0816C674[12];
  * shadow OAM buffer's affine-parameter overlay as a pure-scale
  * (no-rotation) 2x2 matrix. The trailing scale-classification write to
  * `self+0x11` bits 0-1 picks between "needs the scaled/clamped OAM
- * path" (3, when either scale factor undershoots 0x100 i.e. shrinks),
- * "oversized on X" (1), "exact/undersized on Y only" (0, when X is
- * exactly 1.0 and Y doesn't exceed 1.0), or leaves the two bits
- * untouched (X exactly 1.0, Y over 1.0) - `sub_801E96C`
+ * path" (3, when either scale factor undershoots 0x100 i.e. shrinks)
+ * and "not shrunk" (both factors >= 0x100): within the latter, bits
+ * become 1 ("oversized", when X's factor exceeds 0x100 *or* Y's does)
+ * or 0 (only when both factors are exactly 0x100, i.e. 1:1 on both
+ * axes) - confirmed precisely from the ROM's own fall-through shape
+ * (the "Y > 0x100" check falls straight into the "set 1" block rather
+ * than being a separate branch, so there is no "leave bits untouched"
+ * case despite how the branch layout first looked) - `sub_801E96C`
  * (graphics_package_1e964.c) is the "reset before rebuild" pair that
  * clears this same byte's bits 4-9 beforehand, so a caller can rebuild
  * it field-by-field across several of these helpers.
  *
- * Parked (`NON_MATCHING`), not matched: every operation here is
- * confirmed against the ROM (cross-checked byte-for-byte against
- * `asm/code_3_2_17_1e644.s`'s disassembly), but this is a
+ * Byte-correct, but as a NAKED transcription, not real decompiled C -
+ * tracked as parked, same as `sub_801E644`/`sub_801E990` elsewhere in
+ * this cluster (see `docs/matching/issue-30-graphics-loading.md`).
+ * Every operation here was already confirmed against the ROM (cross-
+ * checked byte-for-byte against `asm/code_3_2_17_1e644.s`'s
+ * disassembly) by an earlier plain-C reconstruction, but this is a
  * register-starved ~110-instruction function using all of r0-r8/sb/sl/
- * ip simultaneously in its search loop (the same "every register
- * committed at once" shape as `LoadGraphicsPackage`/`sub_801E644`
- * elsewhere in this cluster) - not attempted byte-exact this pass; see
- * docs/matching/issue-30-graphics-loading.md's "Fourth pass" for what
- * was tried on this function's sibling below and why the same class of
- * gcc-2.9 register-allocation gap is expected here too. */
-#if NON_MATCHING
-void sub_801E688(u8 *self, s32 arg1, s32 arg2)
+ * ip simultaneously in its search loop, and it hits the exact
+ * `sub_801E788`-documented gcc-2.9/agbcc limitation on `r7`, just in a
+ * new flavor: the ROM's own compile needs `r7` saved (its
+ * `push {r4-r7,lr}` / `push {r5,r6,r7}` prologue and mirrored epilogue),
+ * but this compiler's own callee-save/prologue-generation pass never
+ * adds `r7` to that push/pop list no matter how `r7` is referenced from
+ * inline asm - confirmed two ways: (1) an opaque `asm volatile` island
+ * covering the whole function body (register-pinning only `self`/
+ * `arg1`/`arg2` as plain `r0`/`r1`/`r2` inputs, leaving every other
+ * register including `r7` as a bare clobber) compiled and linked with
+ * every single body instruction byte-identical to the ROM, but the
+ * compiler-synthesized prologue/epilogue silently dropped `r7` from
+ * both push/pop lists (`push {r4,r5,r6,lr}` instead of
+ * `push {r4,r5,r6,r7,lr}`, and the matching epilogue), even though the
+ * body plainly uses `r7` throughout; (2) adding a dummy
+ * `register s32 r7dummy asm("r7")` output operand (the same "real
+ * register variable, not just a clobber string" fix that unblocks
+ * other registers in this project) made no difference - `r7`
+ * specifically never enters the save list via any inline-asm-based
+ * hint, matching `sub_801E788`'s own documented conclusion that this is
+ * a genuine, reproducible per-register gcc-2.9/agbcc gap, not something
+ * C-level phrasing routes around. Transcribed instruction-for-
+ * instruction from the ROM disassembly instead, confirmed
+ * byte-identical via direct isolated-object comparison against
+ * `asm/code_3_2_17_1e644.s`'s bytes for this function before
+ * integrating - the same escape hatch already used for `sub_801E644`
+ * (`graphics_package_1e640.c`) and `sub_801E990`
+ * (`graphics_loading_1e990.c`). */
+NAKED void sub_801E688(u8 *self, s32 arg1, s32 arg2)
 {
-    s32 bestArea = 0x1000;
-    s32 bestIdx = 0;
-    s32 i;
-    s32 scaleX, scaleY;
-
-    *(u32 *)(self + 8) = arg1;
-    *(u32 *)(self + 0xc) = arg2;
-
-    for (i = 0; i <= 0xb; i++) {
-        s32 cellWidth = gStaticData_0816C644[i];
-        s32 cellHeight;
-        s32 area;
-
-        if (arg1 > cellWidth * 2) {
-            continue;
-        }
-        cellHeight = gStaticData_0816C674[i];
-        if (arg2 > cellHeight * 2) {
-            continue;
-        }
-        area = cellWidth * cellHeight;
-        if (area >= bestArea) {
-            continue;
-        }
-        bestArea = area;
-        bestIdx = i;
-        *(u32 *)(self + 0x18) = bestIdx;
-    }
-
-    self[0x13] = (self[0x13] & 0x3f) | ((bestIdx & 3) << 6);
-    self[0x11] = (self[0x11] & 0x3f) | (((bestIdx >> 2) & 3) << 6);
-
-    {
-        /* `0x400 - bestArea/32`, rounded toward zero, clamped to 10
-         * bits - becomes the shadow-OAM `attr2` tile-index field
-         * `sub_801E788` inserts below. */
-        s32 v = bestArea;
-
-        if (v < 0) {
-            v += 0x1f;
-        }
-        v >>= 5;
-        v = 0x400 - v;
-        *(u16 *)(self + 0x14) = (*(u16 *)(self + 0x14) & 0xFC00) | (v & 0x3ff);
-    }
-
-    scaleX = sub_803ADB4(gStaticData_0816C644[bestIdx] << 8, arg1);
-    *(u32 *)(self + 0x20) = scaleX;
-    scaleY = sub_803ADB4(gStaticData_0816C674[bestIdx] << 8, arg2);
-    *(u32 *)(self + 0x24) = scaleY;
-
-    if (scaleX <= 0xff || scaleY <= 0xff) {
-        self[0x11] = (self[0x11] & ~3) | 3;
-    } else if (scaleX > 0x100) {
-        self[0x11] = (self[0x11] & ~3) | 1;
-    } else if (scaleY <= 0x100) {
-        self[0x11] = self[0x11] & ~3;
-    }
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "mov r7, sl\n\t"
+        "mov r6, sb\n\t"
+        "mov r5, r8\n\t"
+        "push {r5, r6, r7}\n\t"
+        "add r6, r0, #0\n\t"
+        "add r7, r1, #0\n\t"
+        "mov r8, r2\n\t"
+        "str r7, [r6, #8]\n\t"
+        "str r2, [r6, #0xc]\n\t"
+        "mov r0, #0x80\n\t"
+        "lsl r0, r0, #5\n\t"
+        "mov ip, r0\n\t"
+        "mov r3, #0\n\t"
+        "ldr r1, =gStaticData_0816C644\n\t"
+        "mov sb, r1\n\t"
+        "ldr r2, =gStaticData_0816C674\n\t"
+        "mov sl, r2\n\t"
+        "mov r5, sl\n\t"
+        "mov r4, sb\n\t"
+        "1:\n\t"
+        "ldr r2, [r4]\n\t"
+        "lsl r0, r2, #1\n\t"
+        "cmp r7, r0\n\t"
+        "bgt 2f\n\t"
+        "ldr r1, [r5]\n\t"
+        "lsl r0, r1, #1\n\t"
+        "cmp r8, r0\n\t"
+        "bgt 2f\n\t"
+        "add r0, r2, #0\n\t"
+        "mul r0, r1\n\t"
+        "cmp r0, ip\n\t"
+        "bge 2f\n\t"
+        "mov ip, r0\n\t"
+        "str r3, [r6, #0x18]\n\t"
+        "2:\n\t"
+        "add r5, #4\n\t"
+        "add r4, #4\n\t"
+        "add r3, #1\n\t"
+        "cmp r3, #0xb\n\t"
+        "ble 1b\n\t"
+        "ldr r4, [r6, #0x18]\n\t"
+        "lsl r1, r4, #6\n\t"
+        "mov r2, #0x3f\n\t"
+        "add r0, r2, #0\n\t"
+        "ldrb r3, [r6, #0x13]\n\t"
+        "and r0, r3\n\t"
+        "orr r0, r1\n\t"
+        "strb r0, [r6, #0x13]\n\t"
+        "asr r0, r4, #2\n\t"
+        "lsl r0, r0, #6\n\t"
+        "add r5, r2, #0\n\t"
+        "ldrb r1, [r6, #0x11]\n\t"
+        "and r5, r1\n\t"
+        "orr r5, r0\n\t"
+        "strb r5, [r6, #0x11]\n\t"
+        "mov r0, ip\n\t"
+        "cmp r0, #0\n\t"
+        "bge 3f\n\t"
+        "add r0, #0x1f\n\t"
+        "3:\n\t"
+        "asr r0, r0, #5\n\t"
+        "mov r2, #0x80\n\t"
+        "lsl r2, r2, #3\n\t"
+        "add r1, r2, #0\n\t"
+        "sub r1, r1, r0\n\t"
+        "ldr r3, =0x000003FF\n\t"
+        "add r0, r3, #0\n\t"
+        "and r1, r0\n\t"
+        "ldr r0, =0xFFFFFC00\n\t"
+        "ldrh r2, [r6, #0x14]\n\t"
+        "and r0, r2\n\t"
+        "orr r0, r1\n\t"
+        "strh r0, [r6, #0x14]\n\t"
+        "lsl r4, r4, #2\n\t"
+        "mov r3, sb\n\t"
+        "add r0, r4, r3\n\t"
+        "ldr r0, [r0]\n\t"
+        "lsl r0, r0, #8\n\t"
+        "add r1, r7, #0\n\t"
+        "bl sub_803ADB4\n\t"
+        "add r7, r0, #0\n\t"
+        "str r7, [r6, #0x20]\n\t"
+        "add r4, sl\n\t"
+        "ldr r0, [r4]\n\t"
+        "lsl r0, r0, #8\n\t"
+        "mov r1, r8\n\t"
+        "bl sub_803ADB4\n\t"
+        "str r0, [r6, #0x24]\n\t"
+        "cmp r7, #0xff\n\t"
+        "ble 4f\n\t"
+        "cmp r0, #0xff\n\t"
+        "bgt 5f\n\t"
+        "4:\n\t"
+        "mov r0, #3\n\t"
+        "orr r5, r0\n\t"
+        "b 6f\n\t"
+        ".pool\n\t"
+        "5:\n\t"
+        "mov r1, #0x80\n\t"
+        "lsl r1, r1, #1\n\t"
+        "cmp r7, r1\n\t"
+        "bgt 7f\n\t"
+        "cmp r0, r1\n\t"
+        "ble 8f\n\t"
+        "7:\n\t"
+        "mov r0, #4\n\t"
+        "neg r0, r0\n\t"
+        "and r5, r0\n\t"
+        "mov r0, #1\n\t"
+        "orr r5, r0\n\t"
+        "b 6f\n\t"
+        "8:\n\t"
+        "mov r0, #4\n\t"
+        "neg r0, r0\n\t"
+        "and r5, r0\n\t"
+        "6:\n\t"
+        "strb r5, [r6, #0x11]\n\t"
+        "pop {r3, r4, r5}\n\t"
+        "mov r8, r3\n\t"
+        "mov sb, r4\n\t"
+        "mov sl, r5\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r0}\n\t"
+        "bx r0"
+    );
 }
-#endif /* NON_MATCHING */
+/* Trailing byte count isn't a multiple of 4 - without this, `as` pads
+ * with its default NOP fill instead of the ROM's zero fill (the
+ * `matching_decomp_alignment_fix` precedent - see also `sub_801E644`
+ * above and `sub_801E96C` in graphics_package_1e964.c). */
+asm(".align 2, 0");
 
 /* Computes `self`'s on-screen position from one of four modes packed
  * into `self+0x11` bits 0-1 (mode 2 is a no-op: no position math at

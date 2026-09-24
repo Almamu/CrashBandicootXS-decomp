@@ -436,3 +436,83 @@ entry for `0x0801E950` now points at
 make NON_MATCHING=1 report` + `objdiff-cli diff` (100%) and a full
 clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` (`La suma coincide`).
+
+## Seventh pass: `sub_801E688` - NAKED transcription
+
+Picked up `sub_801E688` (the tile-cell-selection helper the fourth pass
+left as "fully understood, not yet byte-exact"). Its plain-C
+reconstruction was already known-correct instruction-for-instruction;
+this pass tried to close the byte-exact gap with the same techniques
+that worked for `AllocVramTileBlock` (issue #47): one continuous
+`asm volatile` island covering the entire ~110-instruction body,
+register-pinning only `self`/`arg1`/`arg2` as plain `r0`/`r1`/`r2`
+inputs and leaving every other register (`r3`-`r8`, `sb`, `sl`, `ip`)
+as bare clobbers, with the loop's back-edge and the mid-function
+literal-pool split (`.pool`, matching the ROM's own
+`gStaticData_0816C644`/`gStaticData_0816C674`/`0x3FF`/`0xFFFFFC00`
+pool placement right after the "mode 3" early-out branch) handled the
+same way as `AllocVramTileBlock`'s own island.
+
+This got remarkably close on the very first isolated-compile attempt:
+every single instruction in the function *body* came out byte-
+identical to the ROM (confirmed via a direct `arm-none-eabi-objcopy
+--only-section=.text` + `cmp` comparison against
+`asm/code_3_2_17_1e644.s`'s bytes for this function's address range) -
+but the compiler-synthesized prologue/epilogue didn't: the ROM's own
+`push {r4,r5,r6,r7,lr}` / `push {r5,r6,r7}` (saving `r7` alongside
+`r4`-`r6`/`r8`/`sb`/`sl`) came out as `push {r4,r5,r6,lr}` /
+`push {r4,r5,r6}` - `r7` silently missing from *both* push lists (and
+the mirrored pop lists), even though the asm body plainly uses `r7`
+throughout (`arg1`, later reused for `scaleX`). This is the identical
+symptom `sub_801E788` below already documented at length, just reached
+by a different route: that writeup found pinning `self` to
+`register u8 *self asm("r7")` breaks address-mode folding; this pass
+found that `r7` never enters the callee-save push/pop list *at all*
+via inline asm, regardless of whether it's referenced as a bare
+clobber string or via a dummy `register s32 r7dummy asm("r7")` output
+operand (tried both, both reproduced the exact same missing-`r7`
+prologue/epilogue with an otherwise-perfect body) - confirming this is
+a genuine, reproducible gcc-2.9/agbcc limit on this specific register
+for prologue-list inclusion, not something reachable through more
+inline-asm phrasing.
+
+Converted to `NAKED` and transcribed instruction-for-instruction from
+the ROM disassembly instead - trivial once the asm-island version's
+body text was already confirmed byte-identical, since the NAKED
+version reuses the exact same instruction sequence, just with a
+hand-written prologue/epilogue (matching the ROM's own
+`push`/`mov`-dance/`push` and `pop`/`mov`-dance/`pop`/`bx` shape used
+elsewhere in this cluster) instead of relying on the compiler to
+synthesize one. Also needed a trailing `asm(".align 2, 0")` after the
+function (the `matching_decomp_alignment_fix` precedent - the
+function's real instruction stream is 254 bytes, 2 short of the next
+4-byte boundary, and this compiler's default NOP-fill pad doesn't
+match the ROM's zero-fill).
+
+Cut `sub_801E688`'s block out of `asm/code_3_2_17_1e644.s` (it sat at
+the very start of the file, so - like the second pass's
+`sub_801E644` cut - no mid-file split was needed, just dropping the
+leading block and re-opening the `.if NON_MATCHING == 0` guard right
+before `sub_801E788`, which is now the file's only function).
+`ldscript.txt`'s two entries for this pair had to swap order:
+`sub_801E688` is now a real (always-compiled) object in
+`graphics_package_1e688.o`, so it must link *before*
+`code_3_2_17_1e644.o` (which now holds only `sub_801E788`) to land at
+its correct, lower ROM address - the opposite of the pre-existing
+order, which had the asm file first back when it supplied both
+functions' bytes. `tools/report_units.py`'s single combined entry for
+this pair was split into two: `(0x0801E688, None, ...)` (matching the
+`sub_801E644`/`sub_801E990` precedent - a NAKED transcription doesn't
+count as "matched" for this project's per-file tracking, even though
+it's byte-correct) and `(0x0801E788, "src/graphics/graphics_package_1e688.o", ...)`
+(unchanged treatment, still pointing at the `.c` file's `#if
+NON_MATCHING` reconstruction for its NON_MATCHING=1 diffable
+percentage, the same convention `LoadGraphicsPackage` above uses).
+
+Verified via a full clean `rm -rf build && make NON_MATCHING=1 report`
+(clean compile, no warnings for the new file) + `objdiff-cli report
+generate` (`sub_801E788`'s own entry unaffected, still ~41% fuzzy;
+`sub_801E688` correctly excluded from the diffable-percentage report,
+same as `sub_801E644`) and a full clean `rm -rf build
+crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
+compare` (`La suma coincide`).
