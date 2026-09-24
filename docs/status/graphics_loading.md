@@ -195,19 +195,25 @@ Both hit the same confirmed `r7`-pin gap as `sub_8007114`
   [docs/matching/naked-sub_801e990-matched.md](../matching/naked-sub_801e990-matched.md)
   for the derivation and the residual context-sensitive register-choice
   gap.
+- **`LoadBg2Background`** (`src/graphics/level_graphics.c`) - BG2's
+  palette/tileset/tilemap loader, remapping the tilemap's per-tile
+  palette-select nibble into VRAM. Every operation and register in the
+  body was already confirmed to match the ROM exactly via plain C
+  (isolated compile, instruction-for-instruction), but the ROM's
+  prologue/epilogue pushes/pops one extra dead callee-saved register
+  (`r7`, via `mov r7, r8`/`push {r7}`) that the body never reads or
+  writes - no plain-C phrasing reproduces it alongside the correct body
+  registers at the same time, and an explicit dummy
+  `register u32 r7dummy asm("r7")` referenced via an empty asm barrier
+  (the same "real register variable, not just a clobber" fix that
+  unblocks other registers in this project) made no difference either -
+  the same gcc-2.9 allocator artifact documented for `sub_801E644` and
+  `sub_801E688` above and `sub_80240E4` (`src/system/game_loop8.c`).
+  Transcribed instruction-for-instruction instead. See
+  [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md).
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
-- **`LoadBg2Background`** (real bytes in
-  `asm/code_3_2_20_28568_c99c_31784_33ef4_355e0.s` under a
-  `.if NON_MATCHING == 0` guard, C in `src/graphics/level_graphics.c`) -
-  BG2's palette/tileset/tilemap loader; every operation and register in
-  the body matches the ROM exactly after register-pinning, but the ROM's
-  prologue/epilogue pushes/pops one extra dead callee-saved register
-  (`r7`) that no reachable C phrasing reproduces alongside the correct
-  body registers at the same time - the same gcc-2.9 allocator artifact
-  documented for `sub_801E644` above - see
-  [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md).
 - **`LoadObjSpriteTiles`** (real bytes in the same new asm file, C in
   the same file) - the OBJ-sprite tileset/palette loader (4-pass over
   `gUnknown_030008BC`); semantically faithful but not yet

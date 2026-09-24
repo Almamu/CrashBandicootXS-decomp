@@ -3,94 +3,14 @@
 .syntax unified
 .arm
 
-@ LoadBg2Background/LoadObjSpriteTiles: not yet matched (NON_MATCHING) - see
+@ LoadObjSpriteTiles: not yet matched (NON_MATCHING) - see
 @ src/graphics/level_graphics.c, guarded by #if NON_MATCHING - this raw
-@ version is only assembled for the default (matching) build. Both are
-@ semantically-understood, compiling C reconstructions in that file;
-@ LoadBg2Background's isolated compile matches the ROM instruction-for-
-@ instruction except one extra dead callee-saved register in the
-@ prologue/epilogue (the same gcc-2.9 allocator artifact documented for
-@ sub_801E644), LoadObjSpriteTiles hasn't had a full register-tuning pass
-@ yet. See docs/matching/issue-65-graphics-loading.md.
+@ version is only assembled for the default (matching) build. It hasn't had
+@ a full register-tuning pass yet. LoadBg2Background (the other half of this
+@ pair) is now matched, as a NAKED transcription, directly in
+@ src/graphics/level_graphics.c, and no longer has raw bytes here. See
+@ docs/matching/issue-65-graphics-loading.md.
 .if NON_MATCHING == 0
-	thumb_func_start LoadBg2Background
-LoadBg2Background: @ 0x080355E0
-	push {r4, r5, r6, r7, lr}
-	mov r7, r8
-	push {r7}
-	ldr r4, _08035670 @ =gStaticData_0817D0E4
-	ldr r0, [r4, #8]
-	movs r1, #0xa0
-	lsls r1, r1, #0x13
-	bl LoadTaggedAsset
-	ldr r0, [r4, #0xc]
-	ldr r1, _08035674 @ =0x06008000
-	bl LoadTaggedAsset
-	ldr r1, [r4, #4]
-	ldr r0, [r4]
-	muls r0, r1, r0
-	lsls r0, r0, #1
-	bl sub_8026EC0
-	mov r8, r0
-	ldr r0, [r4, #0x10]
-	mov r1, r8
-	bl LoadTaggedAsset
-	ldr r6, _08035678 @ =0x0600F000
-	movs r3, #0
-	ldr r1, [r4, #4]
-	ldr r0, [r4]
-	muls r1, r0, r1
-	cmp r3, r1
-	bge _08035640
-	movs r4, #0xff
-	mov ip, r1
-	mov r2, r8
-_08035624:
-	adds r1, r4, #0
-	ldrh r0, [r2]
-	ands r1, r0
-	adds r0, r4, #0
-	ldrh r7, [r2, #2]
-	ands r0, r7
-	lsls r0, r0, #8
-	orrs r1, r0
-	strh r1, [r6]
-	adds r6, #2
-	adds r2, #4
-	adds r3, #2
-	cmp r3, ip
-	blt _08035624
-_08035640:
-	ldr r0, _0803567C @ =0xFFFF0000
-	ands r5, r0
-	movs r0, #8
-	orrs r5, r0
-	movs r0, #0xf0
-	lsls r0, r0, #5
-	orrs r5, r0
-	movs r0, #0x80
-	orrs r5, r0
-	movs r0, #1
-	orrs r5, r0
-	ldr r0, _08035680 @ =0x0400000C
-	strh r5, [r0]
-	mov r0, r8
-	cmp r0, #0
-	beq _08035664
-	bl sub_8026EB4
-_08035664:
-	pop {r3}
-	mov r8, r3
-	pop {r4, r5, r6, r7}
-	pop {r0}
-	bx r0
-	.align 2, 0
-_08035670: .4byte gStaticData_0817D0E4
-_08035674: .4byte 0x06008000
-_08035678: .4byte 0x0600F000
-_0803567C: .4byte 0xFFFF0000
-_08035680: .4byte 0x0400000C
-
 	thumb_func_start LoadObjSpriteTiles
 LoadObjSpriteTiles: @ 0x08035684
 	push {r4, r5, r6, r7, lr}
