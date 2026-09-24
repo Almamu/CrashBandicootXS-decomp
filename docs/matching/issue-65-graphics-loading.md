@@ -161,3 +161,77 @@ via a full clean `make compare` (`La suma coincide`) and
 
 See [docs/status/graphics_loading.md](../status/graphics_loading.md) for
 the running matched/parked list.
+
+## Second pass: `LoadBg2Background` matched via NAKED transcription
+
+Picked up `LoadBg2Background`, the one function of this pair flagged
+above as "every operation and every register in the body already
+matches the ROM exactly". Re-confirmed that with a fresh isolated
+compile of the exact `#if NON_MATCHING` body (register-pinning `mapBuf`
+to `r8`, `count` to `ip`, `mask` to `r4`, per
+`matching_decomp_register_pinning`): every single instruction in the
+function body, including the `width`/`height` load order and the remap
+loop's register choices, came out byte-identical to the ROM. The one gap
+was exactly as documented - the ROM's prologue/epilogue push/pop one
+extra dead callee-saved register (`r7`, via a `mov r7, r8`/`push {r7}`
+shuttle at entry that's never read back except by its own matching pop)
+that the compiler's own prologue-generation pass drops whenever `mapBuf`
+is pinned to `r8` (the shuttle register collapses to `r6` and doubles as
+`dest` instead, `r7` never entering the push/pop list).
+
+Tried the same "force a live register variable" technique already ruled
+out for `sub_801E688`'s identical-shaped gap, adapted for this function's
+different flavor (a genuinely *unused* r7, not a used-but-dropped one, as
+the task description flagged as worth re-checking): an explicit
+`register u32 r7dummy asm("r7")` local, kept live across the whole
+function body via an empty `asm volatile("" : "+r"(r7dummy))` barrier
+right after its declaration. Compiled cleanly, but made no difference -
+`r7` still never entered either the push or pop list (confirmed by
+grepping the isolated `.s` output for `push`/`pop`: still
+`push {r4, r5, r6, lr}` / `pop {r4, r5, r6}`, no `r7`). This reconfirms
+the conclusion already reached for `sub_801E688`
+(issue-30-graphics-loading.md's "Seventh pass") and `sub_80240E4`
+(`src/system/game_loop8.c`): this compiler's callee-save prologue list is
+built from a first (pressure-counting) allocator pass that can reserve a
+register slot never used by the time the second (assignment) pass
+actually runs, and no inline-asm-based hint - bare clobber or dummy
+register-variable operand - routes around it once the slot's use has
+already been optimized away entirely.
+
+Converted to `NAKED` and transcribed instruction-for-instruction from the
+ROM disassembly instead (the exact same instruction sequence the
+plain-C body already compiled to, just with a hand-written
+`push`/`mov`-shuttle/`push` prologue and matching `pop`/`mov`-shuttle/
+`pop`/`bx` epilogue in place of the compiler-synthesized one) - confirmed
+byte-identical via a direct `arm-none-eabi-objcopy --only-section=.text`
++ byte comparison against `baserom.gba` at `0x080355E0` before
+integrating (every byte matched except the four `bl` call-site offsets
+and the `gStaticData_0817D0E4` literal-pool word, both inherent
+relocation artifacts of comparing an unlinked, standalone isolated
+object rather than a real correctness gap). Cut `LoadBg2Background`'s
+guarded block out of
+`asm/code_3_2_20_28568_c99c_31784_33ef4_355e0.s` (it sat at the very
+start of the file, so - like the precedent cuts for `sub_801E644`/
+`sub_801E688` - no mid-file split was needed, just dropping the leading
+block and re-opening the `.if NON_MATCHING == 0` guard right before
+`LoadObjSpriteTiles`, which is now the file's only guarded function).
+
+`tools/report_units.py`'s single combined entry for this pair's address
+range was split into three: `(0x080354E0, "src/graphics/level_graphics.o", ...)`
+for `LoadLevelGraphics` (unchanged), `(0x080355E0, None, ...)` for
+`LoadBg2Background` (matching the `sub_801E644`/`sub_801E688` precedent -
+a NAKED transcription doesn't count as "matched" for this project's
+per-file tracking, even though it's byte-correct), and
+`(0x08035684, "src/graphics/level_graphics.o", ...)` for
+`LoadObjSpriteTiles` (unchanged treatment, still pointing at the `.c`
+file's `#if NON_MATCHING` reconstruction for its NON_MATCHING=1 diffable
+percentage).
+
+Verified via a full clean `rm -rf build && make NON_MATCHING=1 report`
+(clean compile, no warnings for the file) + `objdiff-cli report generate`
+(`LoadBg2Background` correctly excluded from the diffable-percentage
+report as a `raw_080355E0` unit with no target, same as `sub_801E644`/
+`sub_801E688`; `LoadLevelGraphics` still 100%, `LoadObjSpriteTiles`
+still its pre-existing fuzzy percentage) and a full clean `rm -rf build
+crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
+compare` (`La suma coincide`).
