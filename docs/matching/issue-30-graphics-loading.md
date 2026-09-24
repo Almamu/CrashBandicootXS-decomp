@@ -516,3 +516,62 @@ generate` (`sub_801E788`'s own entry unaffected, still ~41% fuzzy;
 same as `sub_801E644`) and a full clean `rm -rf build
 crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
 compare` (`La suma coincide`).
+
+## Eighth pass: `LoadGraphicsPackage` itself - NAKED transcription
+
+Picked up the cluster's own namesake, left parked (`NON_MATCHING`) by
+the third pass above with a precisely-characterized single gap: every
+operation and register choice matched the ROM after heavy pinning
+(`self`->r5, `pkg`->r6, `mapBuf`->r8, `src`->r7, the packed
+palette-bank mask->ip, `width`->r4, `height`->sl, the row stride->sb,
+the per-row dest pointer->r0, the inner-loop src/dest/count triple->
+r2/r1/r3), except that reusing r6 for one more scratch temp (the loaded
+tilemap halfword, right before it's ORed with the palette-bank mask -
+matching the ROM's own `ldrh r6,...`) made this compiler's allocator
+stop treating `src`'s r7 as needing a callee-save push/pop at all, even
+though the function body still writes and later reads it through the
+whole outer loop. This is the exact same "compiler drops a genuinely
+live register from its own auto-generated prologue/epilogue list under
+register pressure" limitation already closed this session for
+`sub_80240E4` (`src/system/game_loop8.c`, PR #334) and `sub_801E688`
+(`src/graphics/graphics_package_1e688.c`, PR #336, "Seventh pass"
+above), and documented as still-open for `LoadBg2Background`
+(`src/graphics/level_graphics.c`, issue #65) - given the extensive
+prior iteration already recorded in the third pass's write-up (every
+plausible C-level restructuring already tried and exhausted), this pass
+skipped straight to the NAKED escape hatch rather than re-attempt
+plain-C phrasings.
+
+The existing register-pinned C reconstruction's instruction content was
+already fully correct per the third pass, so the ROM disassembly
+(`asm/code_3_2_17_188d0.s`'s guarded tail, 94 Thumb instructions/188
+bytes) was transcribed directly into a `NAKED void LoadGraphicsPackage`
+function, reusing the exact hand-written `push`/`mov`-dance/`push`/
+`sub sp` prologue and `add sp`/`pop`/`mov`-dance/`pop`/`pop`/`bx`
+epilogue shape already established for `sub_801E688`/`sub_801E990` in
+this cluster. Verified via an isolated `cpp`+`agbcc` compile,
+`arm-none-eabi-as` assemble, and a direct `arm-none-eabi-objcopy
+--only-section=.text` byte comparison against the ROM bytes extracted
+from `baserom.gba` at `0x0801E578`: every halfword matched except the
+5 `bl` call sites (`LoadTaggedAsset` x3, `sub_8026EC0`, `sub_8026EB4`),
+which differ only because the isolated object is unlinked - the exact
+expected relocation-placeholder pattern, not a real mismatch.
+
+Cut the guarded `LoadGraphicsPackage` block out of the tail of
+`asm/code_3_2_17_188d0.s` entirely (it was the last thing in the file,
+so this was a pure truncation, no mid-file split needed) - the file now
+ends at `sub_801E524`'s trailing literal pool. No `ldscript.txt` changes
+were needed: `graphics_package_1e578.o` already linked immediately
+after `code_3_2_17_188d0.o` and before `graphics_package_1e688.o`, which
+is still the correct order now that the `.c` file unconditionally
+provides the real function (matching `sub_801E688`'s precedent, just
+without a reorder since this function was already the C file's sole
+export at that link position). `tools/report_units.py`'s entry for
+`0x0801E578` now points at `None` (NAKED, not "matched" - the
+`sub_801E644`/`sub_801E688`/`sub_801E990` convention) instead of the
+`.o` file.
+
+Verified via a full clean `rm -rf build && make NON_MATCHING=1 report`
+(clean compile, no warnings) + `objdiff-cli report generate` and a full
+clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
+crashbandicootxs.map && make compare` (`La suma coincide`).
