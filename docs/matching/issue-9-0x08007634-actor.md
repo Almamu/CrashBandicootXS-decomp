@@ -61,7 +61,7 @@ established register-pin/goto idioms this file family needs) and found
 The other 12 remain genuinely hard for the reasons the prior sessions
 already gave - see "Left untouched" below.
 
-## Matched - 1 function
+## Matched - 2 functions
 
 - **`sub_800A810`** (`src/graphics/actor_part48.c`, right after the
   still-parked `sub_800A734` in the same file): dispatches a sub-state
@@ -87,15 +87,39 @@ already gave - see "Left untouched" below.
   collapsed the branch polarity to `bne`-skip and let the compiler's CSE
   drop the redundant copy entirely (see "Real gotchas" below for the
   general form of this pin-scope lesson).
+- **`sub_800B270`** (`src/graphics/actor_part49.c`) - a per-frame
+  velocity integrator. Moves `self+0x60`/`self+0x64` (current X/Y
+  velocity) toward `self+0x50`/`self+0x5c` (target X/Y velocity) by up
+  to `self+0x4c`/`self+0x58` (X/Y acceleration step) each call,
+  clamping at the target instead of overshooting. Derives a
+  `self+0x24` direction-flag byte from the resulting velocity's sign,
+  snapshots the pre-move position into `self+0x6c`/`self+0x70`, applies
+  velocity to `self+0`/`self+4` (position), and records the resulting
+  Y velocity into an unlabeled RAM address (`0x0300129C` - no symbol
+  found anywhere else in this ROM, kept as a raw address rather than
+  inventing a name); now fully matched as real C. The trailing
+  `0x0300129C` block's "genuinely redundant" conditional store (the
+  ROM conditionally stores 0 to the global before unconditionally
+  overwriting it with the same value right after) gets proven dead by
+  this compiler regardless of C-level phrasing - it always collapses
+  the guard's `gval != 0 &&` half away, keeping only `vy == 0` - so the
+  whole 8-instruction load/compare/branch/store sequence is instead
+  emitted verbatim via one opaque `asm volatile` block, which also
+  reproduces the ROM's own address-in-`r0`/value-in-`r2` register
+  choice directly rather than fighting the optimizer's proof (see "Real
+  gotchas" below for the previous session's account of this same
+  block). Closing it surfaced a genuine gcc-2.9 register-pin
+  miscompile: pinning both `vx` and `vy` (the X/Y velocities, needed in
+  `r3`/`r1` to match the ROM through the position-update stores)
+  simultaneously made the function's own `return (vx != 0 || vy != 0)`
+  fold to an unconditional `mov r0, #1` - fixed by pinning only `vx`
+  and leaving `vy` an unpinned local, which lands in `r1` naturally
+  anyway. Retires the raw `asm/code_3_2_16_b270.s`.
 
-## Parked (`NON_MATCHING`, not yet byte-exact) - 5 functions
+## Parked (`NON_MATCHING`, not yet byte-exact) - 4 functions
 
-All five are fully understood (every field offset, branch, and call
+All four are fully understood (every field offset, branch, and call
 confirmed against the ROM) but don't yet produce byte-identical output.
-(`sub_800B270` was mislabeled "Matched" in this write-up's first
-version even though its own source was already `#if NON_MATCHING` and
-its "Real gotchas" entry below already described it as parked - fixed
-here; it stays genuinely parked, see below.)
 
 - **`sub_800A528`/`sub_800A590`** (`src/graphics/actor_part47.o`, new
   file; real bytes in `asm/code_3_2_11_a528.s`) - a moving-platform
@@ -138,32 +162,6 @@ here; it stays genuinely parked, see below.)
   `+0x80`/`+0x88`/`+0x8c`, several via `subs` as well as `adds`) did not
   reproduce the ROM's exact increment sequence in the same pass; left
   parked rather than force it.
-- **`sub_800B270`** (`src/graphics/actor_part49.c`, new file): a
-  per-frame velocity integrator. Moves `self+0x60`/`self+0x64`
-  (current X/Y velocity) toward `self+0x50`/`self+0x5c` (target X/Y
-  velocity) by up to `self+0x4c`/`self+0x58` (X/Y acceleration step)
-  each call, clamping at the target instead of overshooting. Derives a
-  `self+0x24` direction-flag byte from the resulting velocity's sign,
-  snapshots the pre-move position into `self+0x6c`/`self+0x70`, applies
-  velocity to `self+0`/`self+4` (position), and records the resulting
-  Y velocity into an unlabeled RAM address (`0x0300129C` - no symbol
-  found anywhere else in this ROM, kept as a raw address rather than
-  inventing a name). Needed `self`/`v`/`target`/each clamp `result`
-  pinned to `r2`/`r1`/`r3`/`r0` respectively, the flags-byte pointer
-  pinned to `r1`, the OR-mask pinned to `r0`, an explicit `goto`-based
-  merge for the Y-axis flag write, and `vs32`-cast forced reloads
-  matching the ROM's own redundant re-reads of `self->x`/`self->y`
-  right before applying velocity to them - every instruction up to and
-  including the position-update store matches one-for-one. The
-  remaining gap is confined to the trailing 14-instruction `0x0300129C`
-  block (see "Real gotchas" below for the specific register-pin-scope
-  reason); re-attempted in a later session with several more register-
-  pin combinations on the same block (address pinned to `r0` alone,
-  value pinned to `r2` alone, both together, a `vs32`-qualified
-  pointer, a plain unpinned local) and all either reproduced the same
-  address/value register swap or reintroduced the `push {r4}`
-  regression - still parked on this one block.
-
 ## Left untouched (raw) - 12 functions
 
 - **`sub_8007634`** (`asm/code_3_2.s`, ROM `0x08007634`, ~1044 B) -
@@ -252,8 +250,18 @@ documentation behind.
    attempt to pin those two registers directly produced either the
    ROM's own address/value swapped (address in `r2`, value in `r0` -
    functionally identical, wrong letters) or an unrelated `push
-   {r4}`/`pop {r4}` regression elsewhere in the function. Parked on
-   this specific swap rather than chase it further.
+   {r4}`/`pop {r4}` regression elsewhere in the function.
+   **UPDATE: matched in a later session.** The whole block - address
+   load, value load, compare/branch, and both stores - is emitted
+   verbatim via one opaque `asm volatile`, sidestepping the register-
+   pin-scope problem (and the separate dead-branch-proof problem the
+   "genuinely redundant" guard hit) entirely, rather than trying to
+   coax the C-level optimizer into the ROM's exact register choice.
+   That same pass also found pinning `vx`/`vy` *together* (rather than
+   `vx` alone) miscompiles the function's own trailing `return`
+   statement to an unconditional `mov r0, #1` - a genuine gcc-2.9
+   register-pin correctness bug, not a cosmetic mismatch. See
+   `docs/status/actor.md`'s "Matched" entry for `sub_800B270`.
 
 ## Cross-references
 

@@ -5,7 +5,6 @@
  * (see docs/matching/issue-9-0x08007634-actor.md). `sub_800B270` sits
  * right after the still-raw `sub_800AFF4`, at the end of that raw span. */
 
-#if NON_MATCHING
 /* Per-frame velocity integrator: moves `self+0x60`/`self+0x64` (current
  * X/Y velocity) toward `self+0x50`/`self+0x5c` (target X/Y velocity) by
  * up to `self+0x4c`/`self+0x58` (X/Y acceleration step) each call,
@@ -25,29 +24,26 @@
  * overwriting it with the same Y velocity value right after - so the
  * branch has no observable effect (both paths store the same value),
  * but it's reproduced as-is (not simplified to a single unconditional
- * store) since that's what the ROM actually does.
+ * store) since that's what the ROM actually does. This compiler proves
+ * that redundancy and folds the branch's condition down to just
+ * `vy == 0` regardless of C-level phrasing (plain `if`, a `volatile`-
+ * qualified pointee, an opaque `asm volatile("" : "+r"(gval))` barrier
+ * on the loaded value - none stop it), so the whole 8-instruction
+ * load/compare/branch/store sequence is instead emitted verbatim via
+ * one opaque `asm volatile` block, matching the ROM's exact
+ * instructions (and its address-in-`r0`/value-in-`r2` register
+ * choice) directly rather than fighting the optimizer's proof.
  *
- * PARKED, NOT BYTE-MATCHING: every field offset, branch, and computed
- * value is confirmed correct against the ROM - explicit register pins
- * (`self`/`v`/`target`/each clamp `result` to r2/r1/r3/r0, the flags
- * pointer to r1, the OR-mask to r0, forced fresh reloads via `vs32`
- * casts matching the ROM's own redundant re-reads of `self->x`/
- * `self->y`) reproduce every instruction up to and including the
- * position-update store, matching the ROM one-for-one through that
- * point. The remaining gap is confined to the final 14-instruction
- * `0x0300129C` block: the ROM loads the global's *address* into r0 and
- * its *value* into r2, while this compiler's natural allocation (and
- * every variant tried - a separate `s32 gval` local, `gval`/`g` each
- * pinned to r0 or r2 in both combinations, a `volatile`-qualified
- * register variable) either keeps the opposite assignment (address in
- * r2, value in r0 - functionally identical, same instruction count,
- * same byte total, but the wrong register letters throughout that
- * block) or, when `g` is force-pinned to r0, triggers an unrelated
- * regression elsewhere in the function (an extra `push {r4}`/`pop
- * {r4}` pair appears, as if r0's forced reservation propagates back
- * through the whole function). Parked on this one address/value
- * register-letter swap rather than chase it further - see
- * docs/matching/issue-9-0x08007634-actor.md. */
+ * Pinning `vx`/`vy` (the loaded X/Y velocities, needed in `r3`/`r1` to
+ * match the ROM through the position-update stores and into the
+ * `0x0300129C` block) individually is safe, but pinning *both* at once
+ * previously broke the function's own final `return (vx != 0 || vy !=
+ * 0)` - the compiler folded it to an unconditional `mov r0, #1`, a
+ * genuine gcc-2.9 register-pin miscompile (same class of correctness
+ * bug as the confirmed r7-pin hazard elsewhere in this project, just
+ * triggered by a different register pair here) rather than a cosmetic
+ * mismatch. Fixed by leaving `vy` as a plain, unpinned local - it
+ * still lands in `r1` naturally - and pinning only `vx` to `r3`. */
 s32 sub_800B270(void *selfArg)
 {
     register s32 *w asm("r2") = (s32 *)selfArg;
@@ -136,7 +132,7 @@ skipY:
     }
     {
         s32 x = *(vs32 *)&w[0];
-        s32 vx = w[0x60 / 4];
+        register s32 vx asm("r3") = w[0x60 / 4];
         x = x + vx;
         w[0] = x;
         {
@@ -145,17 +141,25 @@ skipY:
             y = y + vy;
             w[1] = y;
             {
-                s32 *g = (s32 *)0x0300129c;
+                register vs32 *g asm("r0") = (vs32 *)0x0300129c;
 
-                if (*g != 0 && vy == 0) {
-                    *g = vy;
-                }
-                *g = vy;
+                asm volatile(
+                    "ldr r2, [%0, #0]\n\t"
+                    "cmp r2, #0\n\t"
+                    "beq 1f\n\t"
+                    "cmp %1, #0\n\t"
+                    "bne 1f\n\t"
+                    "str %1, [%0, #0]\n\t"
+                    "1:\n\t"
+                    "str %1, [%0, #0]\n\t"
+                    :
+                    : "r"(g), "r"(vy)
+                    : "r2", "cc", "memory"
+                );
 
                 return (vx != 0 || vy != 0);
             }
         }
     }
 }
-#endif /* NON_MATCHING */
 asm(".align 2, 0");

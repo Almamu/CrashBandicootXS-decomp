@@ -143,7 +143,7 @@ from "core" graphics.
 
 - `src/graphics/actor_part77.c` (new file, GitHub issue #9/#10, ROM
   `0x0800B3F0`, non-adjacent to `actor_part48.c` since the matched
-  `actor_part15.c`/parked `sub_800B270`/`actor_part16.c` sit between
+  `actor_part15.c`/`sub_800B270`/`actor_part16.c` sit between
   them): `sub_800B3F0` - a part-object constructor re-initializing
   `self` via `sub_800A6A4`, allocating a child `struct actor` via
   `sub_8008434`, hooking it up at `self+0xb0` via the standard
@@ -893,6 +893,27 @@ embedded as asm instead. They're tracked as parked, not matched.
   own `ldrb` register choices), each closed with the same
   register-pin/opaque-asm technique. See
   `docs/matching/issue-56-0x0802f0dc-actor.md`.
+- **`sub_800B270`** (`src/graphics/actor_part49.c`, GitHub issue #9) -
+  a per-frame velocity integrator moving `self+0x60`/`self+0x64`
+  toward `self+0x50`/`self+0x5c` by `self+0x4c`/`self+0x58` each call,
+  deriving a `self+0x24` direction-flag byte and applying the result to
+  the object's position, then recording the resulting Y velocity into
+  an unlabeled RAM address (`0x0300129C`); now fully matched as real C.
+  The trailing `0x0300129C` block's "genuinely redundant" conditional
+  store (see the file's header comment) gets proven dead by this
+  compiler regardless of C-level phrasing, collapsing its guard down to
+  just one half of the `&&` - closed by emitting the whole load/
+  compare/branch/store sequence verbatim via one opaque `asm volatile`
+  block instead of fighting the optimizer's proof, which also
+  reproduces the ROM's own address-in-`r0`/value-in-`r2` register
+  choice directly. Also found and fixed a genuine gcc-2.9 register-pin
+  miscompile while closing this: pinning both `vx` and `vy` (the X/Y
+  velocities, needed in `r3`/`r1` to match ROM) at once made the
+  function's own `return (vx != 0 || vy != 0)` fold to an unconditional
+  `mov r0, #1` - fixed by pinning only `vx`, leaving `vy` an unpinned
+  local (it lands in `r1` naturally anyway). Retires the raw
+  `asm/code_3_2_16_b270.s`. See
+  `docs/matching/issue-9-0x08007634-actor.md`.
 - **`sub_8034374`** (`src/graphics/actor_part85.c`) - constructs the
   particle-trail BG0 object; now fully matched as real C, splitting off
   the file's still-parked twin `sub_8034480` (see below). The ROM
@@ -947,17 +968,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   register roles for `self`/the record pointer exactly; parked on a
   genuine fifth-scratch-register need (`r5`, just to hold an offset
   immediate) this compiler never introduces. See
-  [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
-- **`sub_800B270`** (`src/graphics/actor_part49.c`, GitHub issue #9) -
-  a per-frame velocity integrator moving `self+0x60`/`self+0x64`
-  toward `self+0x50`/`self+0x5c` by `self+0x4c`/`self+0x58` each call,
-  deriving a `self+0x24` direction-flag byte and applying the result to
-  the object's position, then recording the resulting Y velocity into
-  an unlabeled RAM address (`0x0300129C`). Matches one-for-one through
-  the position-update store; parked on the trailing 14-instruction
-  `0x0300129C` block, where every register-pin combination tried either
-  swaps the ROM's address/value register letters or reintroduces an
-  unrelated `push {r4}` regression. See
   [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
 - **`sub_800B6A0`/`sub_800B6D0`** (`src/graphics/actor_part16.c`) -
   mirror-flag-gated 3-vector copies. This compiler unconditionally
