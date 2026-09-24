@@ -1,6 +1,5 @@
 #include "core.h"
 
-#if NON_MATCHING
 /* GitHub issue #41: 0x08025894-0x08025FC8. Counts, across every group
  * in `list` (a `{count:u16 @2, groups:ptr @4}` header) and every item
  * in each group (`{count:u16 @2, items:ptr @4}`, items 8 bytes apart),
@@ -15,28 +14,33 @@
  * `item->6` gives a byte offset into `list->0xc`, and the effective
  * type is the `s16` eight bytes past that.
  *
- * PARKED, NOT BYTE-MATCHING: every field, offset and branch is
- * confirmed against the ROM (including the jump table's own 19-entry
- * case grouping, reproduced with an explicit `switch`). The remaining
- * gap is register pressure in the `item->type == 0x1a` lookup block:
- * the ROM does the whole four-load chain (`list->8`, `item->6`,
- * `list->0xc`, the two intermediate dereferences) using only `r0`/`r1`
- * as scratch, aggressively overwriting each value the instant it's
- * dead (item's own address is destroyed by the very read that uses
- * it, the table address is destroyed by the read that dereferences
- * it, and so on). Every C shape tried here - inline expressions,
- * named locals in ROM order, named locals reusing a single pointer
- * variable across all four steps - keeps at least one of those values
- * alive in a third register, which collides with the outer loop's `i`
- * counter (itself already pinned to r2 by the surrounding loop
- * structure) and forces an extra `r7` push/pop the ROM does not have.
- * Parked rather than keep chasing this specific reuse pattern -
- * see docs/matching/issue-41-game-loop-25894.md. */
+ * The `item->type == 0x1a` lookup does its whole four-load chain
+ * using only `r0`/`r1` as scratch in the ROM, aggressively overwriting
+ * each value the instant it's dead (item's own address is destroyed
+ * by the very read that uses it, the table address is destroyed by
+ * the read that dereferences it, and so on) - every plain-C shape
+ * tried here kept at least one of those values alive in a third
+ * register, colliding with the outer loop's `i` counter (pinned to
+ * `r2` by the surrounding loop structure) and forcing an extra `r7`
+ * push/pop the ROM does not have. Matched by emitting that one block
+ * as an opaque `asm volatile` computing the effective type directly
+ * from `l`/`item`, with `r0`/`r1` named explicitly in the asm text -
+ * this keeps the block's own internal register churn invisible to the
+ * surrounding function-level allocator, so `i` stays cleanly in `r2`
+ * and the `r7` push/pop disappears. Splitting `i`'s own init
+ * (`*(u16 *)(l + 2)` then `- 1`) into two statements was also needed:
+ * as one combined expression this compiler loads the count into a
+ * scratch register before subtracting into `i`'s register, instead of
+ * the ROM's direct load-then-decrement-in-place into the same
+ * register - see docs/matching/issue-41-game-loop-25894.md. */
 s32 sub_8025894(void *self, void *list)
 {
     u8 *l = (u8 *)list;
     s32 count = 0;
-    s32 i = (s32)(*(u16 *)(l + 2)) - 1;
+    s32 i;
+
+    i = *(u16 *)(l + 2);
+    i -= 1;
 
     for (; i >= 0; i--) {
         u8 *group = *(u8 **)(l + 4) + i * 8;
@@ -47,17 +51,23 @@ s32 sub_8025894(void *self, void *list)
             s32 type = *(u16 *)item;
 
             if (type == 0x1a) {
-                void *p = *(u8 **)(l + 8);
-                u16 idx = *(u16 *)(item + 6);
+                register void *itemReg asm("r1") = item;
+                register s32 result asm("r0");
 
-                p = (u8 *)p + idx * 2;
-                {
-                    u8 *recBase = *(u8 **)(l + 0xc);
-                    u16 sub = *(u16 *)p;
-
-                    p = recBase + sub;
-                }
-                type = *(s16 *)((u8 *)p + 8);
+                asm volatile (
+                    "ldr r0, [%1, #8]\n\t"
+                    "ldrh r1, [r1, #6]\n\t"
+                    "lsl r1, r1, #1\n\t"
+                    "add r1, r1, r0\n\t"
+                    "ldr r0, [%1, #0xc]\n\t"
+                    "ldrh r1, [r1]\n\t"
+                    "add r0, r1, r0\n\t"
+                    "mov r1, #8\n\t"
+                    "ldrsh r0, [r0, r1]\n\t"
+                    : "=r" (result)
+                    : "r" (l), "r" (itemReg)
+                );
+                type = result;
             }
 
             switch (type) {
@@ -73,7 +83,6 @@ s32 sub_8025894(void *self, void *list)
     }
     return count;
 }
-#endif /* NON_MATCHING */
 asm(".align 2, 0");
 
 /* Sets bit `n` (floor-divided into a 32-bit-word row, same idiom as

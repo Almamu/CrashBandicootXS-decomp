@@ -91,8 +91,8 @@ DMA-zero-filled (64 bytes each, matching a plain `DmaFill32(3, 0, dest,
 `sub_803A94C(src, dst, 0x04000040)` idiom `sub_8022CA0`, game_loop.c,
 already documents in the opposite direction). `self+4` is set from
 `posArg >> 8`. Then `list` itself is walked as a `{count:u16@2,
-groups:ptr@4}` header (the same shape `sub_8025894`'s own `#if
-NON_MATCHING` reconstruction, game_loop12.c, documents for a sibling
+groups:ptr@4}` header (the same shape `sub_8025894`'s own matched
+reconstruction, game_loop12.c, documents for a sibling
 list) over `{count:u16@2, items:ptr@4}` 8-byte group records, each
 holding `{tableIdx:u16, p1:u16, p2:u16, p3:u16}` 8-byte item records; for
 each item not already flagged in the `self+8` bit-grid (`sub_8025968`),
@@ -175,6 +175,8 @@ unmodified.
 
 Full clean `make compare` (`La suma coincide`) confirms the NAKED
 transcription byte-exact. `sub_8025894`, which used to share
-`asm/code_3_2_17_255d4.s` with `sub_80255D4`, is unaffected and stays
-parked `NON_MATCHING` in `src/system/game_loop12.c` - see
+`asm/code_3_2_17_255d4.s` with `sub_80255D4`, was unaffected by this
+pass and stayed parked `NON_MATCHING` in `src/system/game_loop12.c` at
+the time - it has since been matched as real C (the whole raw file is
+now gone) - see
 [docs/matching/issue-41-game-loop-25894.md](issue-41-game-loop-25894.md).
