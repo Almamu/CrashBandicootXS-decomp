@@ -44,9 +44,9 @@ system from "core" system startup/init code.
   `sub_80234F4`, `sub_8023500`, `sub_8023510`, `sub_802352C`,
   `sub_8023548`, `sub_802356C`, `sub_80235E4`, `sub_802364C`,
   `sub_8023658`, `sub_8023674`, `sub_802369C`, `nullsub_24`,
-  `sub_80236AC` - camera-position setters, checkpoint/level-transition
-  snapshot helpers, the `sub_8022468` mode-trampoline family, and a
-  packed-bitfield unpacker
+  `sub_80236AC`, `sub_80236EC` - camera-position setters,
+  checkpoint/level-transition snapshot helpers, the `sub_8022468`
+  mode-trampoline family, and a packed-bitfield unpacker/repacker pair
 - `src/system/game_loop11.c` (GitHub issue #37): `sub_8023738` - lazily
   allocates and returns `gUnknown_03000828`
 - `src/system/game_loop8.c` (GitHub issue #37): `sub_802400C` - the
@@ -324,11 +324,6 @@ plain C didn't converge.
   token-stream decoder; real bytes in `asm/code_3_2_17_24f24.s`. See
   [docs/matching/issue-40-terrain-tile-cache.md](../matching/issue-40-terrain-tile-cache.md)
   for the exact register-allocation gaps.
-- **`sub_80236EC`** (`src/system/game_loop10.c`, GitHub issue #37 -
-  numbered `10` rather than `6` since issue #12's parallel PR above
-  independently claimed `game_loop6.c`/`game_loop7.c` first) - the
-  inverse of `sub_80236AC`'s packed-bitfield unpacker; real bytes
-  in `asm/code_3_2_17_236ec.s`.
 - **`sub_80240E4`** (`src/system/game_loop8.c`, GitHub issue #37) - the
   `REG_BLDCNT`/`REG_BLDALPHA` shadow-word rebuild; real bytes in
   `asm/code_3_2_17_240e4.s`. See

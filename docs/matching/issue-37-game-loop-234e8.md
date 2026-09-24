@@ -35,9 +35,9 @@ level-start dispatcher and its post-processing continuation - clearly
 important, but not confidently understood branch-by-branch within this
 pass's scope, so left completely untouched.
 
-## Matched (23 functions, full clean `make compare` passing)
+## Matched (24 functions, full clean `make compare` passing)
 
-`src/system/game_loop10.c` (`sub_80234E8`-`sub_80236AC`, 14 fns):
+`src/system/game_loop10.c` (`sub_80234E8`-`sub_80236EC`, 15 fns):
 `sub_80234E8`/`sub_80234F4` (camera-position field setters),
 `sub_8023500` (two-word position setter), `sub_8023510`/`sub_802352C`
 (busy-flag setters gated on `sub_8023290`/`sub_80232B8`),
@@ -48,7 +48,9 @@ dispatcher), `sub_802364C`/`sub_8023658`/`sub_802369C` (the
 `sub_8022468` mode-trampoline family, one of them also playing a fixed
 SFX), `sub_8023674` (allocates a `0x44c`-byte block and hands it to
 `sub_8037154`), `nullsub_24` (empty stub), `sub_80236AC` (bitfield
-unpacker, refreshing its own snapshot first).
+unpacker, refreshing its own snapshot first), `sub_80236EC` (its
+packer inverse - see the update below, added after this doc's original
+pass).
 
 `src/system/game_loop11.c`: `sub_8023738` (lazy-allocates and returns
 `gUnknown_03000828`) - its own file since the still-raw
@@ -135,18 +137,8 @@ vram-upload-cursor/OAM-shadow flush tail both `sub_802400C` and
   side effect of the first `sub_803AD7C` call). Fixed by pinning the
   reloaded `struct actor *` to r0 at each of the two call sites.
 
-## Parked (`NON_MATCHING`) - 2 functions
+## Parked (`NON_MATCHING`) - 1 function
 
-- **`sub_80236EC`** (`src/system/game_loop10.c`, real bytes in
-  `asm/code_3_2_17_236ec.s`) - the inverse of `sub_80236AC`'s bitfield
-  unpacker, packing `self->0x74`/`0x6c`/`0x78` back into the halfword
-  at `self->0x14c`/`0x14d`. Every field/mask/shift is confirmed
-  correct, but the ROM keeps `self` itself alive in r3 across the
-  whole function and addresses `self->0x14d` via register+register
-  indexing (a literal `0x14d` loaded once into r5, added to r3 right
-  at the `ldrb`/`strb` instructions) rather than a precomputed pointer
-  - a different addressing-mode encoding than anything this compiler
-  produces from plain C here.
 - **`sub_80240E4`** (`src/system/game_loop8.c`, real bytes in
   `asm/code_3_2_17_240e4.s`) - rebuilds the `gUnknown_03001280`
   `REG_BLDCNT`/`REG_BLDALPHA` shadow word from a level object's
@@ -231,3 +223,54 @@ closing out the last of the original 25-function chunk. `asm/code_3_2_17_22bf0.s
      isolated compile can't catch.
   The `0x04000040` control-word-reload-per-call and `gUnknown_030012B4`-
   in-`r4` fixes from the original parked note both held up unchanged.
+
+## Update: `sub_80236EC` matched
+
+Now byte-exact matched (full clean `make compare`:
+`crashbandicootxs.gba: La suma coincide`), leaving only `sub_80240E4`
+parked in this chunk. `asm/code_3_2_17_236ec.s` (which held only this
+one function's raw bytes) is deleted; its `ldscript.txt` line is
+removed.
+
+- **Missing return value.** The real fix wasn't a register-allocation
+  trick at all: `sub_80236EC` actually returns the `self+0x14c`
+  snapshot pointer it just wrote through, as `void *` - the earlier
+  parked attempt treated it as `void`. This is externally visible
+  already: `settings_menu15.c`/`settings_menu8b.c` both declare
+  `extern void *sub_80236EC(void *arg0);` and use the result as a
+  pointer (`self->field_10 = sub_80236EC(...)`, and as the `src`
+  argument to `sub_80048E0`), so those call sites were already correct
+  and needed no changes. Because that pointer is already sitting in r0
+  at the end of the function, the epilogue's LR-restore register
+  naturally lands on r1 instead of r0 - reproducing the ROM's
+  `pop {r1}; bx r1` (instead of the `pop {r0}; bx r0` the earlier
+  `void`-returning attempt got) with no extra hint needed, exactly the
+  "epilogue register choice follows the function's real shape" pattern
+  documented for `sub_802A674`/`sub_802A688` in
+  [issue-49-0x08029e4c-actor.md](./issue-49-0x08029e4c-actor.md).
+- **`self` pinned to r3 for the whole function**, matching the ROM
+  (natural codegen instead folds `self` into each field access as an
+  immediate-offset addressing mode).
+- **`self->0x14d` via register+register indexing**: reproduced with
+  two opaque `asm volatile` accesses (`ldrb`/`strb` with explicit
+  `r5`/`r3` operands) instead of a precomputed byte pointer, matching
+  the ROM's literal-`0x14D`-in-r5-plus-r3 addressing exactly.
+- **The first field's `~0x7f` mask**: this compiler narrows `x &
+  ~0x7f` down to an 8-bit `mov r1, #0x80` AND once it can prove `x` is
+  byte-ranged (from the preceding `ldrb`), but the ROM keeps the full
+  32-bit `~0x7f` value, built as `mov r1, #0x80` followed by a
+  negate (`rsbs`/`neg`, same encoding) - the same "freshly loaded
+  value and its transformed result computed via a separate idiom"
+  shape already seen elsewhere in this file. Reproduced with a small
+  opaque `asm volatile("mov %0, #0x80\n\tneg %0, %0")` for just that
+  one mask (suffix-less `rsb`/`rsbs` text is rejected by
+  `arm-none-eabi-as` in this project's Thumb16 mode - `neg` assembles
+  to the identical bytes and was used instead).
+- **Statement ordering matters as much as register pins here**: the
+  ROM loads each "other" word field (`self->0x74`/`0x6c`/`0x78`)
+  *before* computing the mask/pointer for its paired byte/halfword
+  access, in each of the three packs. Writing the C in that same
+  left-to-right statement order (word field first, as its own
+  statement; mask/byte access second) was enough for this compiler to
+  reproduce the ROM's instruction order without any extra pinning
+  beyond the registers already pinned for value shape.

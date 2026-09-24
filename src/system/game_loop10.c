@@ -221,34 +221,69 @@ void sub_80236AC(void *self, void *src)
     *(s32 *)((u8 *)self + 0x78) = val;
 }
 
-#if NON_MATCHING
 /* Packs `self->0x74`/`0x6c`/`0x78` back into the halfword at
- * `self->0x14c`/`0x14d` - the inverse of `sub_80236AC` above. Real
- * bytes for the default build in `asm/code_3_2_17_236ec.s`.
+ * `self->0x14c`/`0x14d` - the inverse of `sub_80236AC` above - and
+ * returns the `self->0x14c` snapshot pointer (matching the `void *`
+ * externs used at its call sites in settings_menu15.c/settings_menu8b.c).
  *
- * NOT YET BYTE-MATCHING: every field/mask/shift is confirmed correct,
- * but the ROM keeps `self` itself alive in r3 the whole function (this
- * compiler instead folds `self` straight into each field access), and
- * addresses `self->0x14d` via register+register indexing (a literal
- * `0x14d` loaded once into r5, added to r3 at the `ldrb`/`strb`
- * themselves) rather than a precomputed pointer - a different
- * addressing-mode encoding no plain-C phrasing tried here reproduces,
- * while `self->0x14c` (used both early and at the final halfword
- * access) does get its own dedicated pointer register either way. */
-void sub_80236EC(void *self)
+ * Register-pinned to reproduce three ROM-specific shapes plain C
+ * phrasing alone didn't reach (see docs/workflow.md step 7):
+ *  - `self` stays live in r3 across the whole function (natural
+ *    codegen instead folds `self` into each field access as an
+ *    immediate-offset addressing mode).
+ *  - `self->0x14d` is addressed via register+register indexing (a
+ *    literal `0x14D` loaded once into r5, added to r3 right at the
+ *    `ldrb`/`strb`) rather than through a precomputed pointer -
+ *    reproduced with two opaque `asm volatile` accesses.
+ *  - the first field's `~0x7f` mask is materialized as a full 32-bit
+ *    `0x80; neg` pair (the same "freshly loaded value and its
+ *    transformed result in different registers" idiom as
+ *    `sub_80236AC`) rather than narrowed to an 8-bit `#0x80` AND the
+ *    way this compiler's optimizer does when it can prove the masked
+ *    operand is byte-ranged - reproduced with an opaque `asm volatile`
+ *    for just that mask. Because the return value (`self+0x14c`) ends
+ *    up already sitting in r0 at the end, the epilogue's LR-restore
+ *    register naturally lands on r1 instead of r0, matching the ROM's
+ *    `pop {r1}; bx r1` without any extra hint. */
+void *sub_80236EC(void *selfArg)
 {
-    u8 *snap = (u8 *)self + 0x14c;
-    u8 byte0, byte1;
+    register u8 *self asm("r3") = selfArg;
+    register u8 *snap asm("r0");
+    u8 byte0;
     u16 packed;
+    register s32 t asm("r2");
 
-    byte0 = (*snap & ~0x7f) | (*(s32 *)((u8 *)self + 0x74) & 0x7f);
+    t = *(s32 *)(self + 0x74);
+    snap = self + 0x14c;
+    t &= 0x7f;
+    {
+        register s32 mask asm("r1");
+        asm volatile("mov %0, #0x80\n\tneg %0, %0" : "=r"(mask));
+        mask &= *snap;
+        byte0 = mask | t;
+    }
     *snap = byte0;
 
-    byte1 = (*(u8 *)(snap + 1) & 1) | ((*(s32 *)((u8 *)self + 0x6c) << 1) & 0xff);
-    *(u8 *)(snap + 1) = byte1;
+    {
+        s32 field6c = *(s32 *)(self + 0x6c);
+        register u32 off asm("r5") = 0x14D;
+        s32 shifted = field6c << 1;
+        register s32 one asm("r1") = 1;
+        register u32 raw asm("r4");
+        asm volatile("ldrb %0, [%1, %2]" : "=r"(raw) : "r"(off), "r"(self));
+        one &= raw;
+        one |= shifted;
+        asm volatile("strb %0, [%1, %2]" :: "r"(one), "r"(off), "r"(self));
+    }
 
-    packed = *(u16 *)snap;
-    packed = (packed & 0xfe7f) | ((*(s32 *)((u8 *)self + 0x78) & 3) << 7);
+    {
+        register s32 shifted asm("r2") = (*(s32 *)(self + 0x78) & 3) << 7;
+        register s32 mask asm("r1") = 0xFFFFFE7F;
+        register u16 loaded asm("r5") = *(u16 *)snap;
+        mask &= loaded;
+        packed = mask | shifted;
+    }
     *(u16 *)snap = packed;
+
+    return snap;
 }
-#endif
