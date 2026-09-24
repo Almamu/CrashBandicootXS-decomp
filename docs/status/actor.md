@@ -450,10 +450,11 @@ from "core" graphics.
   `actor_part69.c`/`actor_part71.c`/`actor_part72.c`/`actor_part73.c`
   (new files, GitHub issue #63, ROM 0x08033EF4-0x08034AA4 - three
   `InitActorPart`-rooted "self" object kinds immediately following
-  issue #62's cluster, non-adjacent since 1 parked (`sub_8034480`, in
-  `actor_part85.c` - `sub_8034058`/`sub_8034270`/`sub_8034374`/
-  `sub_80345B0`/`sub_8034634` are now matched, see below), the
-  NAKED-transcribed `sub_8033FE4`
+  issue #62's cluster, non-adjacent since 2 remain parked
+  (`sub_8034270`/`sub_8034314`, in `actor_part68.c`/`actor_part70.c` -
+  `sub_8034058`/`sub_8034374`/`sub_8034480`/`sub_80345B0`/`sub_8034634`
+  are now matched too, closing `actor_part85.c` entirely, see below),
+  the NAKED-transcribed `sub_8033FE4`
   (`actor_part64.c` - see below), and 3 left-raw functions sit
   interleaved between them; numbered `63`-`73` rather than `57`-`67`
   since issues #19 and #54's PRs independently claimed
@@ -960,8 +961,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   old raw `asm/code_3_2_9.s`. See
   [docs/matching/issue-97-sub_8009DF4.md](../matching/issue-97-sub_8009DF4.md).
 - **`sub_8034374`** (`src/graphics/actor_part85.c`) - constructs the
-  particle-trail BG0 object; now fully matched as real C, splitting off
-  the file's still-parked twin `sub_8034480` (see below). The ROM
+  particle-trail BG0 object; now fully matched as real C. The ROM
   builds a 4-bit-palette-bank tile-index mask (0xFFFFF000) by loading
   the literal into `r1` first and copying it into `r5` (`ldr
   r1,=0xFFFFF000; adds r5,r1,#0`), rather than the single direct `ldr`
@@ -975,11 +975,35 @@ embedded as asm instead. They're tracked as parked, not matched.
   same way, and the `col = 0x1d` initializer moved after that
   computation in the C source (gcc otherwise schedules a trivial
   immediate move ahead of a nearby pinned-register asm block by its
-  literal source position). Retires the multi-function raw
-  `asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s`, split into the new
-  `asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s` (real bytes for the
-  still-parked `sub_8034480` only). GitHub issue #63, see
+  literal source position). Retired the multi-function raw
+  `asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s`, split at the time
+  into `asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s` (real bytes for
+  the twin `sub_8034480`) - that fragment is now retired too (see
+  below), closing `actor_part85.c` entirely. GitHub issue #63, see
   `docs/matching/issue-63-0x08033ef4-actor.md`.
+- **`sub_8034480`** (`src/graphics/actor_part85.c`) - `sub_8034374`'s
+  companion per-frame updater; now fully matched as real C, closing the
+  file. Commits last frame's `tileBuffer` to tile VRAM, clears it back
+  to zero, then for each active particle inlines the same nibble-
+  address formula as `sub_8034634` (`actor_part72.c`) *twice* (nibble
+  `1` pre-move, nibble `2` post-move), applying `dx`/`dy` and
+  respawning via `sub_80345B0` in between. Needed a mix of
+  `sub_8034634`'s own three fixes (unsigned casts for the `x`/`newX`
+  bounds checks alongside plain signed `>> 11` block-index shifts,
+  `addr`'s two halves split into separate statements, and one opaque
+  `asm volatile` for the `bic`/`orr`/`strh` tail - simpler here than
+  `sub_8034634`'s own tail since this function's ROM build never needs
+  an extra materialize-then-copy-back step) plus two more scheduling-
+  order fixes this larger, twice-inlined function surfaces on its own:
+  `x`'s raw value and its `>>8` pixel value must be computed
+  immediately, before `y` is even loaded (same for `blockX`'s `<<6`
+  term before `blockY` loads), the post-move `slot->x = newX` store
+  must happen immediately after computing `newX` rather than batched
+  with the `y` store, and the second inlined copy's `oldVal` (pinned to
+  `ip`) must be assigned by a plain statement after the position
+  reload rather than as its `register` declaration's own initializer.
+  Retires `asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s` entirely.
+  GitHub issue #63, see `docs/matching/issue-63-0x08033ef4-actor.md`.
 - **`sub_80345B0`/`sub_8034634`** (`src/graphics/actor_part72.c`) - a
   128-slot particle-slot spawner (rolls two `sub_8000E1C` random values
   against the 256-entry `gStaticData_0816A820` direction table to seed a
@@ -1214,12 +1238,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   second stride-8 table (`gStaticData_0817C4F8`), parked on the same
   gap - see `docs/matching/issue-62-0x08033804-actor.md`, issue #62.
 
-- **`sub_8034480`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s`, C
-  in `src/graphics/actor_part85.c`, GitHub issue #63) - the particle-
-  trail BG0 object's per-frame updater; parked on the same family of
-  shift/mask register-allocation gaps `sub_8034634` used to have (its
-  own nibble-write logic, inlined twice instead of calling it) - see
-  `docs/matching/issue-63-0x08033ef4-actor.md`.
 - **`sub_803472C`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_3472c.s`, C
   in `src/graphics/actor_part87.c`, GitHub issue #63) - a standalone
   fade/overlay controller's constructor half (`struct fade_overlay`, not
