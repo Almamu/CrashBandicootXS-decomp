@@ -2760,6 +2760,30 @@ preserving the block-merging and every other already-matching
 instruction. Parked rather than keep chasing this one instruction -
 same call as the other parked functions above.
 
+**Update: matched in a later session.** Converted back from the
+`NAKED` transcription (`docs/matching/naked-oam-actor-part-batch.md`)
+to real C. The angle that finally worked: instead of anchoring just
+the `add` instruction inside two ordinary switch-case bodies (which
+the compiler's own case-body merging pass no longer recognized as
+identical once one contained opaque asm), route *both* `case 8` and
+`case 12` to a single shared `goto` target holding the *entire*
+load+load+add sequence - `mov r0, #2`/`ldrsh r1, [r2, r0]`/`ldrb r2,
+[r2, #5]`/`add r1, r2, r1` - as one atomic `asm volatile` block. Since
+there is exactly one occurrence of this code at the C source level
+(reached by two `goto`s, not two independently-compiled switch-case
+bodies the optimizer has to notice are identical), there is nothing
+left for a cross-jump/tail-merging pass to decide about - the
+block-merging problem that had defeated the narrower single-
+instruction anchor simply doesn't arise. Every other switch case is
+routed through a bare `goto` to its own label outside the switch
+(rather than holding real code directly in the switch) so the
+compiler's block *layout* also lands exactly where the ROM has it -
+`sub_8008278` below needed this same all-`goto` restructuring for
+cases with real code too, see its own entry for why. Confirmed
+byte-identical via isolated compile plus `arm-none-eabi-as` assemble
+against the ROM's raw bytes at `0x08008188`, then via full clean
+`make compare`.
+
 **Parked, not matched: `sub_8008200`** (ROM `0x08008200`, right after
 `sub_8008188`, same file): the same shape as `sub_8008188` above, with
 every add/subtract direction mirrored (kind 1/2 do the opposite sign
@@ -2769,6 +2793,14 @@ subtracting). Same single resistant gap: the shared kind-8/12 block's
 `adds r1, r2, r1` - see `sub_8008188`'s entry above for the full
 account of what was tried (all of which applies identically here, not
 re-run a second time). Parked as `NON_MATCHING` alongside its sibling.
+
+**Update: matched in a later session.** Converted back from the
+`NAKED` transcription to real C using the identical `goto`-shared
+atomic-asm-block technique as `sub_8008188` above (just with the
+add/subtract directions mirrored to match this function's own shape) -
+see its "Update" note for the full account. Confirmed byte-identical
+via isolated compile plus `arm-none-eabi-as` assemble against the
+ROM's raw bytes at `0x08008200`, then via full clean `make compare`.
 
 **Parked, not matched: `sub_8008278`** (ROM `0x08008278`, right after
 `sub_8008200`, same file): a third variant of the `sub_8008188` shape,
@@ -2787,6 +2819,37 @@ block's `add` compiles as `adds r1, r1, r0` instead of the ROM's
 `adds r1, r0, r1` - see `sub_8008188`'s entry above for the full
 account of what was tried against this exact pattern. Parked alongside
 its two siblings.
+
+**Update: matched in a later session.** Converted back from the
+`NAKED` transcription to real C using the same `goto`-shared
+atomic-asm-block technique as `sub_8008188`/`sub_8008200` above for
+the kind-8/12 gap (`byteVal` here lands in `r0` rather than `r2`, since
+`r2` stays live as `rec` across into the shared `field_0`-adjustment
+tail that follows - the atomic block reads it as an input without
+clobbering it). Getting the *rest* of the function byte-exact needed
+going further than those two siblings: every switch case - even the
+ones with real code (`case 0`/`case 1`'s field_0 add/subtract) - had
+to be reduced to a bare `goto` targeting its own label declared
+*outside* the switch, laid out in the ROM's own block order. An
+earlier draft that let `case 0`/`case 1` hold their code directly
+(so `case 0` could fall through to the shared field_4-update tail
+without an explicit branch, matching the ROM) still ended up with
+`case 3`'s real code physically wedged between that pair and the
+tail in the compiler's output, because gcc lays out a switch's
+in-place case bodies in switch-declaration order *ahead of* any
+post-switch fallthrough code, regardless of where a `goto` target
+label textually sits - producing a spurious extra branch the ROM
+doesn't have. Moving every case's real code out to its own `goto`
+target fixed the layout. Separately, `rec` (the incoming parameter)
+needed its own explicit `register void *rec asm("r2")` pin,
+initialized from the parameter right at function entry - without it,
+once this restructuring forced `rec`'s live range to span every
+`goto`-connected block, gcc decided it needed to survive in a
+callee-saved register (`r4`, behind a `push {r4, lr}`/`pop {r4}` the
+ROM doesn't have) instead of staying in its own natural incoming
+register the whole time. Confirmed byte-identical via isolated compile
+plus `arm-none-eabi-as` assemble against the ROM's raw bytes at
+`0x08008278`, then via full clean `make compare`.
 
 **`sub_8008304`** (ROM `0x08008304`, right after `sub_8008278`, new
 `src/graphics/actor_part5.c`): `part+0x25 == 1` is the same fast
@@ -2853,6 +2916,27 @@ genuinely separate destination variable (all three techniques,
 independently) made no difference here either. Parked rather than keep
 chasing this one instruction - same call as the other parked functions
 above.
+
+**Update: matched in a later session.** Converted back from the
+`NAKED` transcription to real C. Unlike `sub_8008188`/`sub_8008200`/
+`sub_8008278`'s shared-switch-case gap, this function's resistant
+`add` sits in genuinely straight-line code - no switch, no case
+merging to protect - so a plain inline-asm anchor on just that one
+instruction (`asm volatile("add r0, r0, r1\n\t" : "=r"(arr) :
+"0"(byteOffset), "r"(recPtr));`, with `byteOffset`/`arr` sharing `r0`
+via the `"0"` matching constraint and `recPtr` pinned to `r1`) works
+here with none of the case-merging caveats that technique ran into
+inside the other three functions' shared blocks - it was never tried
+against this function specifically in the original pass (only operand
+reordering, register pins, and a separate destination variable were).
+Also needed a trailing `asm(".align 2, 0")` since it's the last
+function in `actor_part5.c` (2 bytes of zero padding before
+`sub_8008408` in `actor_part6.c` - the standard
+`matching_decomp_alignment_fix` gotcha, a plain compiled function's own
+alignment produces a `0x46c0` nop-fill instead of the ROM's zero
+padding). Confirmed byte-identical via isolated compile plus
+`arm-none-eabi-as` assemble against the ROM's raw bytes at
+`0x080083B8`, then via full clean `make compare`.
 
 **`sub_8008408`** (ROM `0x08008408`, right after `sub_80083B8`, new
 `src/graphics/actor_part6.c`): the same `gUnknown_03001308` sub-object
