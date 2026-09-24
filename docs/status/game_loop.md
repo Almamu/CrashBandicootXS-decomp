@@ -50,7 +50,13 @@ system from "core" system startup/init code.
 - `src/system/game_loop11.c` (GitHub issue #37): `sub_8023738` - lazily
   allocates and returns `gUnknown_03000828`
 - `src/system/game_loop8.c` (GitHub issue #37): `sub_802400C` - the
-  DMA3/VRAM refresh pass gated on `self+0x0 <= 0x1000`
+  DMA3/VRAM refresh pass gated on `self+0x0 <= 0x1000` - and
+  `sub_80240E4` - the `REG_BLDCNT`/`REG_BLDALPHA` shadow-word rebuild,
+  matched `NAKED` via a literal ROM-instruction transcription (a
+  gcc-2.9 r7-pin bug drops r7 from the compiler's own prologue/epilogue
+  push/pop otherwise). See
+  [docs/matching/issue-37-game-loop-234e8.md](../matching/issue-37-game-loop-234e8.md)
+  for the details.
 - `src/system/game_loop39.c` (GitHub issue #37, follow-up pass):
   `sub_802375C` - the level-start dispatcher that allocates the
   per-level HUD widget set, the player actor, and the text-box
@@ -324,11 +330,6 @@ plain C didn't converge.
   token-stream decoder; real bytes in `asm/code_3_2_17_24f24.s`. See
   [docs/matching/issue-40-terrain-tile-cache.md](../matching/issue-40-terrain-tile-cache.md)
   for the exact register-allocation gaps.
-- **`sub_80240E4`** (`src/system/game_loop8.c`, GitHub issue #37) - the
-  `REG_BLDCNT`/`REG_BLDALPHA` shadow-word rebuild; real bytes in
-  `asm/code_3_2_17_240e4.s`. See
-  [docs/matching/issue-37-game-loop-234e8.md](../matching/issue-37-game-loop-234e8.md)
-  for both parked functions' exact register-allocation gaps.
 ## Still raw, category-mapped (GitHub issue #12/#34/#40)
 
 - **`sub_0800D18C`/`sub_800E08C`** (`asm/code_3_2_17_d18c.s`, ROM
