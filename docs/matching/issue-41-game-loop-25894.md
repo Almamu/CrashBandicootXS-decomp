@@ -303,3 +303,92 @@ address):
 
 Full clean `make compare` passes again after this restructuring:
 `crashbandicootxs.gba: La suma coincide`.
+
+## Update: `sub_8025894` closed as real matched C
+
+The one function this issue's whole range still owed a real match -
+`sub_8025894` itself, left genuinely `NON_MATCHING` (not even `NAKED`)
+through both earlier passes above since it wasn't in scope for either
+- has now been closed as real decompiled C, no NAKED transcription
+needed.
+
+The original gap (see the "Parked, not byte-matching" entry above) was
+register pressure confined entirely to the `item->type == 0x1a`
+indirect-lookup block: the ROM does its whole four-load chain
+(`list->8`, `item->6`, `list->0xc`, the two intermediate dereferences)
+using only `r0`/`r1` as scratch, immediately overwriting each value the
+instant it's dead. Every plain-C phrasing tried in the original pass
+(inline expressions, named locals in ROM order, a single reused pointer
+variable) kept at least one of those four values alive in a third
+register, which collided with the outer loop's `i` counter (pinned to
+`r2` by the surrounding loop structure) and forced an extra `r7`
+push/pop the ROM does not have.
+
+The fix: emit that one block as an opaque `asm volatile`, computing the
+effective type directly from `l` (the list pointer, already
+long-lived across the whole function) and `item`, with `r0`/`r1` named
+explicitly in the asm text:
+
+```c
+if (type == 0x1a) {
+    register void *itemReg asm("r1") = item;
+    register s32 result asm("r0");
+
+    asm volatile (
+        "ldr r0, [%1, #8]\n\t"
+        "ldrh r1, [r1, #6]\n\t"
+        "lsl r1, r1, #1\n\t"
+        "add r1, r1, r0\n\t"
+        "ldr r0, [%1, #0xc]\n\t"
+        "ldrh r1, [r1]\n\t"
+        "add r0, r1, r0\n\t"
+        "mov r1, #8\n\t"
+        "ldrsh r0, [r0, r1]\n\t"
+        : "=r" (result)
+        : "r" (l), "r" (itemReg)
+    );
+    type = result;
+}
+```
+
+Because the block is opaque to the optimizer, its own internal
+register churn (item's address dying into the idx-address computation,
+the table address dying into the record-base add, and so on) never
+ripples into the surrounding function's own register allocation - `i`
+stays cleanly pinned to `r2` for the whole loop, and the unwanted `r7`
+push/pop disappears entirely. Note `agbcc` (gcc 2.9) doesn't support
+GCC's later named-operand (`%[name]`) asm syntax - positional `%0`/`%1`
+only.
+
+A second, smaller gap surfaced once the block above was closed: `i`'s
+own init (`(s32)(*(u16 *)(l + 2)) - 1` as one combined expression)
+compiled to a load into a scratch register followed by a subtract into
+`i`'s own register, rather than the ROM's direct
+load-then-decrement-in-place into the same register (`ldrh r2, [r5,
+#2]` / `subs r2, #1`). Splitting it into two plain statements (`i =
+*(u16 *)(l + 2); i -= 1;`) was enough on its own to get gcc to load
+directly into `i`'s register - no pinning needed, matching this
+project's established "statement order over register pins" idiom
+already documented for the `sub_8025944` family above.
+
+With both fixed, the isolated-compile assembly is byte-identical to
+the ROM's raw fragment (previously `asm/code_3_2_17_255d4.s`), and full
+clean `rm -rf build && make NON_MATCHING=1 report` +
+`objdiff-cli report generate` confirm 100.0% fuzzy match for
+`sub_8025894` and the whole `game_loop12` unit. `sub_8025894` is folded
+into `src/system/game_loop12.o` in `tools/report_units.py` (it's the
+first function in that unit now, immediately ahead of `sub_8025944`).
+`asm/code_3_2_17_255d4.s` - which held only `sub_8025894` by this
+point - is deleted, with its `ldscript.txt` line dropped (the linker
+now places `game_loop12.o` directly where the raw fragment used to
+sit). Full clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
+crashbandicootxs.map && make compare` confirms
+`crashbandicootxs.gba: La suma coincide`.
+
+`sub_8025894` was the only function in this issue's range that had
+stayed genuinely `NON_MATCHING` (never even converted to `NAKED`) - it
+is now matched. GitHub issue #41 itself stays open: six of the
+NAKED-transcribed functions from the earlier pass (`sub_8025A64`,
+`sub_8025B0C`/`sub_8025BAC`/`sub_8025CA4`, `sub_8025E98`/`sub_8025F3C`)
+still owe a real C match; `sub_80259D4` and `sub_8025D74` have already
+been closed (see their own linked write-ups above).

@@ -64,7 +64,16 @@ system from "core" system startup/init code.
   `sub_80241A4`, `sub_80241B0`, `sub_80241BC`, `sub_802423C` - a
   boolean flag clear/set/get trio, the level-end teardown, and the
   shared vram-upload-cursor/OAM-shadow flush tail
-- `src/system/game_loop12.c` (GitHub issue #41): `sub_8025944`,
+- `src/system/game_loop12.c` (GitHub issue #41): `sub_8025894`
+  (group/item list counter with a 19-entry jump table - previously
+  `NON_MATCHING`, now matched as real C by materializing the
+  `item->type == 0x1a` four-load lookup chain as one opaque
+  `asm volatile` block using only `r0`/`r1`, matching the ROM's own
+  two-scratch-register reuse pattern, plus splitting the loop-bound
+  `i` init into two statements so the count loads directly into `i`'s
+  own register instead of a scratch register first - see
+  [issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md)'s
+  "closed" update), `sub_8025944`,
   `sub_8025968`, `sub_802599C` - the first two of three overlapping
   bit-grid accessors at `self+8`/`self+0x208`/`self+0x308`
 - `src/system/game_loop13.c` (GitHub issue #41): `sub_80259D4`
@@ -272,8 +281,8 @@ plain C didn't converge.
   above) - `self` is `*gUnknown_030012B4`: a `self+0`-cache-gated DMA3
   zero-fill/`CpuSet` refresh of the `self+8`/`0x208`/`0x108`/`0x308`
   collision-bitmap family, then a `list` group/item walk firing
-  `sub_8025D28` trampolines (the same shape `sub_8025894`, parked
-  `NON_MATCHING` below, documents for a sibling list), then a
+  `sub_8025D28` trampolines (the same shape `sub_8025894`, matched
+  above, documents for a sibling list), then a
   `gUnknown_0300130C`
   actor-list redirect-chain linker/position-sync pass keyed off a
   count-prefixed `redirectInfo` array (every field, offset, branch and
@@ -325,12 +334,6 @@ plain C didn't converge.
   `asm/code_3_2_17_240e4.s`. See
   [docs/matching/issue-37-game-loop-234e8.md](../matching/issue-37-game-loop-234e8.md)
   for both parked functions' exact register-allocation gaps.
-- **`sub_8025894`** (`src/system/game_loop12.c`, GitHub issue #41) - a
-  group/item list counter with a 19-entry jump table; real bytes stay
-  in `asm/code_3_2_17_255d4.s` (now truncated to just this function -
-  `sub_80255D4`, which used to share the file, is NAKED-parked in its
-  own `game_loop41.c`, see the NAKED list above). See
-  [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
 ## Still raw, category-mapped (GitHub issue #12/#34/#40)
 
 - **`sub_0800D18C`/`sub_800E08C`** (`asm/code_3_2_17_d18c.s`, ROM
