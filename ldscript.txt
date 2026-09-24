@@ -235,7 +235,6 @@ SECTIONS
         build/crashbandicootxs/src/graphics/hud_icon_widget_8a78.o(.text);
         build/crashbandicootxs/src/graphics/hud_icon_widget5.o(.text);
         build/crashbandicootxs/src/graphics/sprite_frame_pool.o(.text);
-        build/crashbandicootxs/asm/code_3_2_20_8b7c_cd4.o(.text);
         build/crashbandicootxs/src/graphics/sprite_frame_queue.o(.text);
         build/crashbandicootxs/src/graphics/actor_part104.o(.text);
         build/crashbandicootxs/src/graphics/actor_part101.o(.text);

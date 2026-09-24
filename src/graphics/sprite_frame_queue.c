@@ -44,64 +44,129 @@ extern void FreeVramTileBlock(void *addr);
  * the `gUnknown_03001340` tile lookup table so FreeVramTileBlock can
  * find it again from a bare VRAM address.
  *
- * NON_MATCHING: every operation/field/register in the body below
- * matches the ROM exactly (confirmed via isolated compiles) except the
- * search loop's entry shape. The ROM's own compiled output checks the
- * starting rover once (a standalone, differently-registered copy of
- * the free+size check, using a signed `bge`/`blt` polarity) and only
- * falls into the shared advance/re-check block on failure; this
- * compiler's cross-jump/tail-merging pass at -O2 collapses every C
- * phrasing tried (plain while/for, do-while-with-guard, explicit
- * `goto found`, and manually duplicating the check text with swapped
- * operand order to defeat the merge) back down to one shared check
- * block reached via a leading unconditional branch - the same
+ * Matched via one continuous `asm volatile` island covering the search
+ * loop through the free-list split, rather than plain C. The search
+ * loop's own C reconstruction was semantically correct and every
+ * register/field access already matched, but its *entry shape* never
+ * did: the ROM's compiled output checks the starting rover once as a
+ * standalone, differently-registered copy of the free+size check
+ * (`bge`/`blt` polarity), only falling into the shared advance/re-check
+ * block on failure - but this compiler's cross-jump/tail-merging pass
+ * at -O2 collapses every C phrasing tried (plain while/for,
+ * do-while-with-guard, explicit `goto found`, manually duplicating the
+ * check text with swapped operand order) back down to one shared check
+ * block reached via a leading unconditional branch, the same
  * `bcc`-shaped, singly-deduplicated loop `mem_alloc` itself compiles to
- * (see the real `mem_alloc`/`FreeVramTileBlock` ROM bytes for the
- * contrast). Parked per docs/workflow.md's NON_MATCHING escape hatch
- * rather than an inline-asm island, since every other line already
- * matches and the semantics are fully understood - real bytes are in
- * asm/code_3_2_20_8b7c_cd4.s, guarded by `.if NON_MATCHING == 0`. */
-#if NON_MATCHING
-void *AllocVramTileBlock(s32 requestedSize)
+ * (contrast the real `mem_alloc`/`FreeVramTileBlock` ROM bytes, which
+ * never had the ROM's two-copy shape to begin with) - a loop-rotation
+ * transform this compiler's optimizer won't perform no matter how the
+ * C is phrased. `roverSlot`/`cur`/`requestedSize` are register-pinned
+ * (r6/r3/r4) to match the registers the rest of the (already-matching)
+ * function body expects; the asm's own local numeric labels (`1:`/`2:`)
+ * handle the loop's back-edges, while the two ROM-shared merge points -
+ * the "not found" early return and the free-list-split/no-split
+ * rejoin - use real, uniquely-named `.L`-prefixed labels
+ * (`.Lalloc_vram_notfound`/`.Lalloc_vram_remzero`) that a later,
+ * ordinary-looking C statement's own `asm volatile(".Lname:")` marker
+ * defines, the same "opaque asm reaching a named landing point in
+ * later plain C" idiom `sub_802AB58` (src/graphics/actor_part53.c)
+ * established for this project - `.Lalloc_vram_epilogue` marks the
+ * point right before the function's one real (compiler-generated)
+ * epilogue, split off `return result;`'s value computation via a
+ * separate `result = cur->addr;` statement so the marker can land
+ * exactly between them, and `.pool` right after
+ * `.Lalloc_vram_notfound`'s `b .Lalloc_vram_epilogue` forces the
+ * `gUnknown_03001338` literal (loaded via the assembler's own
+ * `=symbol` syntax, opaque to this compiler's own pool bookkeeping -
+ * see actor_part53.c's own comment for why only that route respects an
+ * explicit pool split) to group with the compiler's own
+ * `gUnknown_0300133C` literal in that same ROM-matching mid-function
+ * gap instead of at the function's end. The free-list-split logic
+ * itself (from `gUnknown_0300133C = spare->next;` on) is ROM-identical
+ * arithmetic, but two more of this compiler's own CSE choices needed
+ * the same asm treatment to land byte-exact: past the split, ROM
+ * reloads `cur->next` from memory for `*roverSlot = cur->next;` (its
+ * shared _08028D38 tail doesn't know a split may have just made that
+ * value redundant with `spare`, still sitting in r2) where this
+ * compiler reused the cached register instead (fixed with a `"memory"`
+ * clobber on the `.Lalloc_vram_remzero` marker); and ROM reuses r0
+ * (already `cur->next` from the immediately preceding load) for
+ * `cur->next->prev = spare;` where plain C's two separate statements
+ * made this compiler reload it a second time (fixed by writing that
+ * whole split sequence as literal ROM instructions in the same asm
+ * island, rather than trying a cached-local-variable rewrite in C -
+ * the latter forced `curNext` into `r8`, an extra spill this small
+ * function has no free low register for). */
+void *AllocVramTileBlock(s32 requestedSizeArg)
 {
-    struct vram_tile_block **roverSlot;
-    struct vram_tile_block *cur;
-    struct vram_tile_block *end;
-    struct vram_tile_block *spare;
-    u16 remaining;
+    register s32 requestedSize asm("r4") = requestedSizeArg;
+    register struct vram_tile_block **roverSlot asm("r6");
+    register struct vram_tile_block *cur asm("r3");
+    void *result;
 
-    roverSlot = &gUnknown_03001338;
-    cur = *roverSlot;
-    end = cur->prev;
-    for (; cur->status != VRAM_TILE_BLOCK_FREE || cur->size < requestedSize; cur = cur->next) {
-        if (cur == end) {
-            return NULL;
-        }
-    }
-
-    remaining = cur->size - requestedSize;
-    if (remaining != 0) {
-        spare = gUnknown_0300133C;
-        if (spare == NULL) {
-            return NULL;
-        }
-        gUnknown_0300133C = spare->next;
-        spare->size = remaining;
-        spare->addr = (u8 *)cur->addr + requestedSize;
-        spare->status = VRAM_TILE_BLOCK_FREE;
-        spare->prev = cur;
-        spare->next = cur->next;
-        cur->next->prev = spare;
-        cur->next = spare;
-        cur->size = requestedSize;
-    }
+    asm volatile(
+        "ldr r0, =gUnknown_03001338\n"
+        "ldr r1, [r0]\n"
+        "ldr r2, [r1, #0xc]\n"
+        "add r3, r1, #0\n"
+        "ldrh r1, [r3, #6]\n"
+        "add r6, r0, #0\n"
+        "cmp r1, #0\n"
+        "bne 1f\n"
+        "ldrh r0, [r3, #4]\n"
+        "cmp r0, r4\n"
+        "bge 2f\n"
+        "1:\n"
+        "cmp r3, r2\n"
+        "beq .Lalloc_vram_notfound\n"
+        "ldr r3, [r3, #8]\n"
+        "ldrh r0, [r3, #6]\n"
+        "cmp r0, #0\n"
+        "bne 1b\n"
+        "ldrh r1, [r3, #4]\n"
+        "cmp r1, r4\n"
+        "blt 1b\n"
+        "2:\n"
+        "ldrh r0, [r3, #4]\n"
+        "sub r5, r0, r4\n"
+        "cmp r5, #0\n"
+        "beq .Lalloc_vram_remzero\n"
+        "ldr r1, =gUnknown_0300133C\n"
+        "ldr r2, [r1]\n"
+        "cmp r2, #0\n"
+        "bne .Lalloc_vram_sparefound\n"
+        ".Lalloc_vram_notfound:\n"
+        "mov r0, #0\n"
+        "b .Lalloc_vram_epilogue\n"
+        ".pool\n"
+        ".Lalloc_vram_sparefound:\n"
+        "ldr r0, [r2, #8]\n"
+        "str r0, [r1]\n"
+        "mov r1, #0\n"
+        "strh r5, [r2, #4]\n"
+        "ldr r0, [r3]\n"
+        "add r0, r0, r4\n"
+        "str r0, [r2]\n"
+        "strh r1, [r2, #6]\n"
+        "str r3, [r2, #0xc]\n"
+        "ldr r0, [r3, #8]\n"
+        "str r0, [r2, #8]\n"
+        "str r2, [r0, #0xc]\n"
+        "str r2, [r3, #8]\n"
+        "strh r4, [r3, #4]\n"
+        ".Lalloc_vram_remzero:\n"
+        : "=r"(cur), "=r"(roverSlot)
+        : "r"(requestedSize)
+        : "r0", "r1", "r2", "r5", "cc", "memory"
+    );
 
     cur->status = VRAM_TILE_BLOCK_USED;
     *roverSlot = cur->next;
     gUnknown_03001340[GET_TILE_NUM(cur->addr)] = (u8)(cur - gUnknown_03001320);
-    return cur->addr;
+    result = cur->addr;
+    asm volatile(".Lalloc_vram_epilogue:");
+    return result;
 }
-#endif
 
 /* ROM 0x08028D6C - dead code, no caller anywhere in the ROM (checked
  * every asm file, expected disassembly and src tree for this address

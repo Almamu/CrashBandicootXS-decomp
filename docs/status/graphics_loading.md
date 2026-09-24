@@ -10,6 +10,13 @@ family. Filed under `src/graphics/` on disk, tracked as its own
 
 - **`InitObjTileFreeList`**, **`FreeVramTileBlock`** (`src/graphics/sprite_frame_pool.c`,
   the OBJ-tile VRAM free-list allocator's init/free pair) - matched.
+- **`AllocVramTileBlock`** (`src/graphics/sprite_frame_queue.c`) - matched.
+  The `mem_alloc`-shaped next-fit search over that same free list, closed
+  via one continuous `asm volatile` island spanning the search loop
+  through the free-list split - see
+  [issue-47-graphics-loading.md](../matching/issue-47-graphics-loading.md)
+  for the full writeup of the gcc-2.9 cross-jump/tail-merging gap this
+  closed and the technique used.
 - **`sub_8028D6C`**, **`sub_8028D94`** (`src/graphics/sprite_frame_queue.c`) -
   matched, both `UNUSED` (no caller anywhere in the ROM). `sub_8028D94`
   never had its own `thumb_func_start` in the original disassembly - see
@@ -162,14 +169,6 @@ Both hit the same confirmed `r7`-pin gap as `sub_8007114`
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
-- **`AllocVramTileBlock`** (real bytes in `asm/code_3_2_20_8b7c_cd4.s` under
-  a `.if NON_MATCHING == 0` guard, C in `src/graphics/sprite_frame_queue.c`) -
-  the OBJ-tile VRAM allocator's `mem_alloc`-shaped next-fit search; every
-  operation/field/register matches the ROM exactly except the search
-  loop's entry shape, a gcc-2.9 cross-jump/tail-merging artifact that
-  resists every C phrasing tried - see
-  [issue-47-graphics-loading.md](../matching/issue-47-graphics-loading.md)
-  for the full writeup.
 - **`LoadBg2Background`** (real bytes in
   `asm/code_3_2_20_28568_c99c_31784_33ef4_355e0.s` under a
   `.if NON_MATCHING == 0` guard, C in `src/graphics/level_graphics.c`) -

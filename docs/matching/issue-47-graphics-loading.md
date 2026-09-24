@@ -8,7 +8,7 @@ uses both. All three were already named/understood at a high level in
 understanding into byte-exact C.
 
 ## The OBJ-tile VRAM allocator (`src/graphics/sprite_frame_pool.c`,
-`asm/code_3_2_20_8b7c_cd4.s`)
+`src/graphics/sprite_frame_queue.c`)
 
 A small doubly-linked, address-sorted free-block allocator - structurally
 the same design as `mem_alloc`/`mem_free` in `src/system/memory.c` (next-fit
@@ -27,14 +27,15 @@ owning record's pool index for `FreeVramTileBlock`.
   singly-linked LIFO stack of the 127 remaining spare records.
 - **`FreeVramTileBlock`** (was `sub_8028C48`) - matched. The `mem_free`-shaped
   two-sided coalesce.
-- **`AllocVramTileBlock`** (was `sub_8028CD4`) - **NON_MATCHING, parked, not
-  matched**. Fully understood (the `mem_alloc`-shaped next-fit search,
-  splitting off a spare record when there's leftover space, failing the
-  allocation outright if the spare-record stack is empty even though a big
-  enough block exists). Every operation, field access and register in the
-  isolated-compile output matches the ROM exactly *except* the search
-  loop's entry shape: the ROM's own compiled output checks the starting
-  rover once, as a standalone, differently-registered copy of the
+- **`AllocVramTileBlock`** (was `sub_8028CD4`) - **matched** (moved to
+  `src/graphics/sprite_frame_queue.c`, real bytes in
+  `asm/code_3_2_20_8b7c_cd4.s` deleted). The `mem_alloc`-shaped next-fit
+  search, splitting off a spare record when there's leftover space,
+  failing the allocation outright if the spare-record stack is empty even
+  though a big enough block exists. Every operation, field access and
+  register in a plain-C reconstruction matched the ROM exactly *except*
+  the search loop's entry shape: the ROM's own compiled output checks the
+  starting rover once, as a standalone, differently-registered copy of the
   free+size check (`bge`/`blt` polarity), and only falls into the shared
   advance/re-check block on failure - but this compiler's cross-jump/
   tail-merging pass at `-O2` collapses every C phrasing tried (plain
@@ -45,10 +46,24 @@ owning record's pool index for `FreeVramTileBlock`.
   `bcc`-shaped, singly-deduplicated loop shape `mem_alloc` itself
   legitimately compiles to (confirmed by objdumping `mem_alloc`'s own real
   ROM bytes for contrast - it never had the ROM's two-copy shape to begin
-  with). Parked per `docs/workflow.md`'s NON_MATCHING escape hatch rather
-  than an inline-asm island, since literally every other line already
-  matches and the semantics are fully understood; real bytes live in
-  `asm/code_3_2_20_8b7c_cd4.s` under `.if NON_MATCHING == 0`.
+  with). Closed by giving up on plain C for this region and writing one
+  continuous `asm volatile` island (register-pinned `roverSlot`/`cur`/
+  `requestedSize` to r6/r3/r4) reproducing the ROM's loop-entry-plus-loop
+  instructions literally, with real `.L`-prefixed named labels (the same
+  "opaque asm reaching a named landing point defined by a later, ordinary
+  C statement's own `asm volatile(".Lname:")` marker" idiom
+  `sub_802AB58` in `src/graphics/actor_part53.c` established) standing in
+  for the two ROM-shared merge points a plain C `if`/`return` can't be
+  aimed at a chosen physical address: the "not found" early return, and
+  the free-list-split/no-split rejoin. The same asm island also had to
+  swallow the free-list-split logic and a `gUnknown_0300133C` literal
+  pool right after the "not found" trampoline - both cases of this
+  compiler's own CSE/pool-placement choices (reusing an already-loaded
+  register instead of ROM's redundant reload; deferring the pool to the
+  function's end instead of the ROM's mid-function group) that plain C
+  couldn't be steered around either. See that function's own comment in
+  `src/graphics/sprite_frame_queue.c` for the full instruction-by-
+  instruction breakdown.
 - **`sub_8028D6C`** - matched, **UNUSED** (no caller anywhere in the ROM,
   checked every `asm/*.s`, `expected/*.s` and `src/**/*.c` for the address
   and a `bl`/`.4byte` reference). Walks the spare-record stack to its end,
@@ -129,7 +144,13 @@ re-DMA the same tiles every call.
   above. Recognize this pattern early (ROM has two differently-registered
   copies of the same check, one reached by fallthrough and one by a
   leading `b`) rather than burning time trying every loop-phrasing
-  variant.
+  variant - go straight to a hand-written `asm volatile` island
+  reproducing the ROM bytes literally, landing on named `.L`-prefixed
+  labels a later plain-C statement's own no-op `asm volatile(".Lname:")`
+  marker defines (see `sub_802AB58` in `actor_part53.c` for the idiom
+  this project already established, and `AllocVramTileBlock`'s own
+  comment for a second worked example spanning a loop, a literal pool
+  split, and a free-list-split's CSE quirks all at once).
 - **The "value or its negation" ternary always canonicalizes** to
   "assign the positive value, then conditionally negate in place",
   discarding the ROM's two-independent-branches shape - fixable with
