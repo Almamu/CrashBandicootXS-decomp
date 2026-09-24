@@ -123,6 +123,18 @@ below.)
   "origin point" that constructs nearly every hot IWRAM global this ROM
   region references. See
   [issue-33-0x08021bfc-graphics-loading.md](../matching/issue-33-0x08021bfc-graphics-loading.md).
+- **`sub_801E990`** (`src/graphics/graphics_loading_1e990.c`) - the
+  sound-trigger dispatch/position writer at the end of the
+  `LoadGraphicsPackage` cluster's scratch-buffer-style helper family
+  (issue #30). Was a NAKED transcription for a long time (see "Parked"
+  below for the general convention); the residual context-sensitive
+  register-choice gap in the `+0x28` write closed by modeling the
+  r3-pinned local as the *address of* `gUnknown_030012D8`
+  (`struct actor **`) rather than its dereferenced value, so gcc
+  dereferences directly into the same register the `+0x28` add needs,
+  with no extra `mov` - see
+  [docs/matching/naked-sub_801e990-matched.md](../matching/naked-sub_801e990-matched.md)
+  for the full derivation.
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
@@ -213,16 +225,6 @@ Both hit the same confirmed `r7`-pin gap as `sub_8007114`
   Transcribed instruction-for-instruction instead. See
   [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)'s
   "Eighth pass".
-- **`sub_801E990`** (`src/graphics/graphics_loading_1e990.c`) - the
-  sound-trigger dispatch/position writer at the end of the
-  `LoadGraphicsPackage` cluster's scratch-buffer-style helper family
-  (issue #30). A 96.8%-matching C reconstruction (closing the
-  `movs r0,#1`/`subs r0,#0x12` mask derivation and the `ldrsh`
-  register-offset form, both via the same opaque-asm techniques used
-  for `sub_8021D04`) is kept in-tree under `#if NON_MATCHING` - see
-  [docs/matching/naked-sub_801e990-matched.md](../matching/naked-sub_801e990-matched.md)
-  for the derivation and the residual context-sensitive register-choice
-  gap.
 - **`LoadBg2Background`** (`src/graphics/level_graphics.c`) - BG2's
   palette/tileset/tilemap loader, remapping the tilemap's per-tile
   palette-select nibble into VRAM. Every operation and register in the

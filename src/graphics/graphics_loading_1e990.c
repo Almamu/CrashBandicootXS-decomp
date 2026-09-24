@@ -37,17 +37,17 @@ extern void PlaySfx(void *bank, s32 arg1, s32 sfxId);
  *    of `sub_803AFEC` (`+0x74`), `sub_80232B8` (`+0xa4`) and the
  *    player's `+0x78` mode field agree it's still safe to fire.
  *
- * Written as NAKED asm, not plain C: a 96.8%-matching C reconstruction
- * is kept below under `#if NON_MATCHING` - see
- * docs/matching/naked-sub_801e990-matched.md for the derivation and
- * the residual register-choice gap. Mechanical, byte-verified
- * transcription of the ROM's own instructions, not an inferred
- * control-flow guess. */
-#if NON_MATCHING
-/* NOT YET BYTE-MATCHING - 96.8% instruction match (see the doc comment
- * above and docs/matching/naked-sub_801e990-matched.md); compiled only
- * under `make NON_MATCHING=1`, the NAKED version below is used
- * otherwise. */
+ * Was a NAKED asm transcription for a long time - see
+ * docs/matching/naked-sub_801e990-matched.md for the full derivation
+ * history, including the register-choice gap that blocked a real match
+ * (the `+0x28` write's address/value register split) and how it closed:
+ * the r3-pinned local had to model the *address of the global*
+ * (`&gUnknown_030012D8`, a `struct actor **`) with `+0x28` computed as
+ * a single dereference-and-add into r1, rather than modeling the
+ * *dereferenced value* itself and copying it into r1 afterward - the
+ * latter is semantically equivalent but makes gcc materialize the
+ * value in a different temp register first, needing an extra `mov`
+ * the ROM doesn't have. */
 void sub_801E990(u32 arg0, u16 x, u16 y, u16 z)
 {
     if (sub_80232F4(gUnknown_030012C0)) {
@@ -55,7 +55,7 @@ void sub_801E990(u32 arg0, u16 x, u16 y, u16 z)
         register u16 *arrayBase asm("r0");
         register s32 addr asm("r1");
         register u8 *tmp asm("r0");
-        register u8 *d8addr asm("r3");
+        register struct actor **d8ptr asm("r3");
 
         rec = *(u8 **)gUnknown_030012B4;
         arrayBase = *(u16 **)(rec + 8);
@@ -76,8 +76,8 @@ void sub_801E990(u32 arg0, u16 x, u16 y, u16 z)
 
             shiftedByte = byte >> 1;
             one = 1;
-            d8addr = (u8 *)gUnknown_030012D8;
-            addr28 = d8addr + 0x28;
+            d8ptr = &gUnknown_030012D8;
+            addr28 = (u8 *)*d8ptr + 0x28;
             shiftedByte &= one;
             shiftedByte <<= 4;
             asm volatile("sub %0, %0, #0x12" : "+r"(one));
@@ -89,7 +89,7 @@ void sub_801E990(u32 arg0, u16 x, u16 y, u16 z)
         }
 
         {
-            register u8 *obj2 asm("r1") = d8addr;
+            register u8 *obj2 asm("r1") = (u8 *)*d8ptr;
             *(u32 *)obj2 = x << 8;
             *(u32 *)(obj2 + 4) = y << 8;
         }
@@ -134,105 +134,3 @@ fire:
     }
 end:;
 }
-#else /* !NON_MATCHING */
-NAKED void sub_801E990(u32 arg0, u16 x, u16 y, u16 z)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "lsl r1, r1, #0x10\n\t"
-        "lsr r6, r1, #0x10\n\t"
-        "lsl r2, r2, #0x10\n\t"
-        "lsr r7, r2, #0x10\n\t"
-        "lsl r3, r3, #0x10\n\t"
-        "lsr r4, r3, #0x10\n\t"
-        "ldr r5, 10f\n\t"
-        "ldr r0, [r5]\n\t"
-        "bl sub_80232F4\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "beq 1f\n\t"
-        "ldr r0, 11f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r2, [r0]\n\t"
-        "ldr r0, [r2, #8]\n\t"
-        "lsl r1, r4, #1\n\t"
-        "add r1, r1, r0\n\t"
-        "ldr r0, [r2, #0xc]\n\t"
-        "ldrh r1, [r1]\n\t"
-        "add r0, r1, r0\n\t"
-        "ldrb r0, [r0]\n\t"
-        "lsr r2, r0, #1\n\t"
-        "mov r0, #1\n\t"
-        "ldr r3, 12f\n\t"
-        "ldr r1, [r3]\n\t"
-        "add r1, #0x28\n\t"
-        "and r2, r0\n\t"
-        "lsl r2, r2, #4\n\t"
-        "sub r0, #0x12\n\t"
-        "ldrb r4, [r1]\n\t"
-        "and r0, r4\n\t"
-        "orr r0, r2\n\t"
-        "strb r0, [r1]\n\t"
-        "ldr r1, [r3]\n\t"
-        "lsl r0, r6, #8\n\t"
-        "str r0, [r1]\n\t"
-        "lsl r0, r7, #8\n\t"
-        "str r0, [r1, #4]\n\t"
-    "1:\n\t"
-        "ldr r1, [r5]\n\t"
-        "add r0, r1, #0\n\t"
-        "add r0, #0x8c\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 3f\n\t"
-        "add r0, r1, #0\n\t"
-        "bl sub_80232E0\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r0, [r5]\n\t"
-        "bl sub_8023130\n\t"
-        "cmp r4, r0\n\t"
-        "bge 2f\n\t"
-        "ldr r0, [r5]\n\t"
-        "bl sub_803AFEC\n\t"
-        "cmp r0, #0\n\t"
-        "bne 3f\n\t"
-        "ldr r0, [r5]\n\t"
-        "bl sub_80232B8\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "bne 3f\n\t"
-        "ldr r0, [r5]\n\t"
-        "ldr r0, [r0, #0x78]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 3f\n\t"
-    "2:\n\t"
-        "ldr r0, 12f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [r0, #0x18]\n\t"
-        "add r1, #0x68\n\t"
-        "mov r3, #0\n\t"
-        "ldrsh r2, [r1, r3]\n\t"
-        "add r0, r0, r2\n\t"
-        "ldr r4, [r1, #4]\n\t"
-        "mov r1, #0\n\t"
-        "mov r2, #0x1a\n\t"
-        "mov r3, #0\n\t"
-        "bl sub_803AD88\n\t"
-        "ldr r0, 13f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #1\n\t"
-        "bl PlaySfx\n\t"
-    "3:\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "10: .4byte gUnknown_030012C0\n"
-    "11: .4byte gUnknown_030012B4\n"
-    "12: .4byte gUnknown_030012D8\n"
-    "13: .4byte gUnknown_030012BC\n"
-    );
-}
-#endif /* NON_MATCHING */
