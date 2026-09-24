@@ -3678,6 +3678,32 @@ closed part of the gap but not all of it. Not chased further given the
 size of the remaining raw cluster - parked with the semantically-
 correct version.
 
+**Update: converted to `NAKED`.** Since every load, store, branch,
+field offset, and call argument was already confirmed correct, and
+this session established NAKED transcription as a reliable technique
+even for large, register-pressure-heavy functions (`sub_8010B6C`,
+`sub_80096C0`, `sub_8008AD8`/`sub_8008D80`/`sub_80099F0`), `sub_8009528`
+was hand-transcribed as literal Thumb asm instead of staying an
+unclosable `#if NON_MATCHING` C draft: the ROM's own ldr/str/lsl/asr
+sequence, one-to-one, both grid passes byte-identical to each other.
+Moved out of `actor_part11.c` into its own new translation unit,
+`src/graphics/actor_part11f.c` (its real ROM address isn't adjacent to
+that file's other functions - it sits between `sub_800944C`, still raw
+asm in `asm/code_3_2_13_944c.s`, and `sub_80096C0`,
+`src/graphics/actor_part11e.c` - per docs/workflow.md step 4's "needs
+its own new .c file" case). Its raw `.if NON_MATCHING == 0` guard block
+was removed from `asm/code_3_2_13_944c.s` (which still carries
+`sub_800944C`'s own guard, untouched); `ldscript.txt` got a new
+`actor_part11f.o` entry inserted between `asm/code_3_2_13_944c.o` and
+`actor_part11e.o`. Verified byte-identical via `arm-none-eabi-as`
+isolated assemble (a standalone reassembly of both the ROM's own
+verified instruction stream and this transcription produced bit-for-
+bit identical `.text` bytes and relocations) plus a full clean `make
+compare` (`crashbandicootxs.gba: La suma coincide`). Per project policy
+a `NAKED` transcription doesn't count as "matched" the way real
+decompiled C does, so `sub_8009528` stays filed as parked (now "parked,
+NAKED" rather than "parked, NON_MATCHING").
+
 **Parked, not matched: `sub_80096C0`** (ROM `0x080096C0`, right after
 the parked `sub_8009528`, `src/graphics/actor_part11.c`): `sub_8008AD8`'s
 twin, confirmed by reading its disassembly directly against
