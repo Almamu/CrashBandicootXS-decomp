@@ -42,7 +42,7 @@ anim-frame halfword/byte, `self+8` accumulator, `self+0x28` state,
   smaller object reusing `+0x58` as a plain one-shot flag rather than a
   health countdown.
 
-## Matched (18 of 25 functions)
+## Matched (19 of 25 functions)
 
 - **`sub_8033EF4`/`sub_8033F48`/`sub_8033F74`** (`src/graphics/actor_part63.c`)
   - Kind 1's constructor, its trampoline-fire helper (same shape as
@@ -164,10 +164,12 @@ boundaries - not by re-reading the isolated compiles more carefully.
   needed moving to *after* that computation in the C source - a trivial
   immediate move that gcc otherwise schedules ahead of a nearby
   pinned-register `asm volatile` block purely by its original textual
-  position, once that block acts as a hard scheduling barrier. Retires
+  position, once that block acts as a hard scheduling barrier. Retired
   the multi-function raw `asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s`,
-  split into the new `asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s`
-  (real bytes for the twin `sub_8034480`, still parked - see below).
+  split at the time into `asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s`
+  (real bytes for the twin `sub_8034480`) - that fragment is also retired
+  now that `sub_8034480` itself is matched (see below), so
+  `actor_part85.c` is fully matched, closing the whole file.
 - **`sub_8034058`** (`src/graphics/actor_part66.c`) - Kind 2's
   constructor. Now fully matched as real C, closing two gaps: the 6th
   (stack-passed, byte-sized) constructor argument needs the same
@@ -263,6 +265,48 @@ boundaries - not by re-reading the isolated compiles more carefully.
   address) as inputs, and `val` (already pinned to `r3` for the leaf-
   function register-spill fix) as an in/out operand.
 
+- **`sub_8034480`** (`src/graphics/actor_part85.c`) - the particle-trail
+  BG0 object's per-frame updater (`sub_8034374`'s companion, same file);
+  now fully matched as real C, closing the file entirely. Commits last
+  frame's `tileBuffer` to tile VRAM, clears it back to zero, then for
+  each active particle inlines the same nibble-address formula as
+  `sub_8034634` above *twice* (nibble `1` at the pre-move position,
+  nibble `2` at the post-move position), applying `dx`/`dy` and
+  respawning via `sub_80345B0` in between. Needed a mix of
+  `sub_8034634`'s own three fixes plus two more ordering fixes this
+  larger, twice-inlined function surfaces on its own:
+  1. Both bounds checks that compare a pixel/position value against a
+     hex constant (`x <= 0xef`, and separately `newX > 0xEFFF` after
+     the move) want an unsigned comparison (the ROM's `bhi`), modeled
+     with `(u32)` casts, while the `>> 11` block-index shifts stay plain
+     signed arithmetic shifts on the already-`s32` raw values.
+  2. `addr`'s two halves need computing as separate statements, not one
+     combined `a + b` expression - same as `sub_8034634`.
+  3. The tail - `cell &= ~mask; cell |= val << shift; *entry = cell;` -
+     closes with one opaque `asm volatile` reproducing the ROM's exact
+     sequence, simpler here than `sub_8034634`'s own tail since this
+     function's ROM build never needs the extra `r4`-materialize-then-
+     copy-back step: `mask` computed straight into `r0`, `cell` loaded
+     straight into `r2` and `bic`'d in place, then `r0` reused to shift
+     `val` in before the final `orr`/`strh`.
+  4. Two purely scheduling-order fixes this compiler doesn't infer from
+     a natural top-of-block declaration group: `x`'s raw value and its
+     `>>8` pixel value must be computed immediately, before `y` is even
+     loaded (and likewise `blockX`'s `<<6` term fully computed before
+     `blockY` is loaded), and the post-move `slot->x = newX` store must
+     happen immediately after computing `newX`, before `newY` is even
+     loaded - not batched together the way the source's natural
+     top-to-bottom order would suggest.
+  5. The second inlined copy's `oldVal` (the second nibble value,
+     always 2, pinned to `ip`) must be assigned by a plain statement
+     *after* the position reload, not as its `register` declaration's
+     own initializer - an initializer schedules the `movs #2`/`mov ip`
+     pair too early, ahead of the ROM's own position.
+
+  Retires `asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s` entirely,
+  closing `actor_part85.c` (both `sub_8034374` and `sub_8034480`, its
+  only two functions) as fully matched.
+
 ## NAKED transcription (byte-correct, not counted as matched)
 
 - **`sub_8033FE4`** (`src/graphics/actor_part64.c`) - a
@@ -283,7 +327,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   substantial function doesn't count as "matched" -
   `tools/report_units.py` keeps this address's `base_object` as `None`.
 
-## Parked (3 of 25 functions, `NON_MATCHING`)
+## Parked (2 of 25 functions, `NON_MATCHING`)
 
 - **`sub_8034270`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34270.s`, C
   in `src/graphics/actor_part68.c`) - position-sync/flag/trampoline
@@ -298,31 +342,6 @@ boundaries - not by re-reading the isolated compiles more carefully.
 - **`sub_8034314`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34314.s`, C
   in `src/graphics/actor_part70.c`) - `sub_8034270`'s boolean-returning
   twin, parked on the identical gap.
-- **`sub_8034480`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s`,
-  C in `src/graphics/actor_part85.c`) - the particle-trail BG0 object's
-  per-frame updater (see that file's header comment for the full
-  `struct particle_bg` field layout: a `tileVramBase`/`mapVramBase`
-  pair of fixed VRAM constants, a 128-slot particle array, an active
-  count, and a 240x160 4-bit-per-pixel shadow `tileBuffer`). Semantics
-  fully understood and confirmed field-by-field/instruction-by-
-  instruction against the ROM disassembly; matches the ROM exactly
-  through both particle in-bounds checks and the respawn call, but hits
-  the same categorical family of register-allocation gaps `sub_8034634`
-  (actor_part72.c) used to have before it closed them (its own inlined
-  nibble-write logic, duplicated twice per particle instead of calling
-  `sub_8034634`): this compiler computes the `addr & 3` shift amount and
-  the `0xf << shift`/`cell` values into the opposite register pair from
-  the ROM's own build. Left parked (real C, `NON_MATCHING`) rather than
-  fall back to a NAKED transcription, per this project's current policy
-  of preferring real C whenever the semantics are this well understood -
-  it's also too large (~150 instructions, `sb`/`r8`/`ip` all live) for
-  a NAKED transcription to be a reasonable substitute anyway. Its twin
-  `sub_8034374` (this same file) is now matched - see below. The exact
-  fix that closed `sub_8034634`'s own copy of this gap (a `u32`-typed
-  mask to skip a spurious truncation, split address-half statements, and
-  a final opaque `asm volatile` for the ROM's redundant compute-then-copy
-  tail - see `sub_80345B0`/`sub_8034634`'s entry below) has not yet been
-  re-attempted here for both inlined copies.
 
 ## Left raw (3 of 25 functions, not attempted)
 

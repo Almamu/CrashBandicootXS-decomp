@@ -193,34 +193,50 @@ void *sub_8034374(void *selfArg)
     return self;
 }
 
-#if NON_MATCHING
-/* NOT YET BYTE-MATCHING - compiled only under `make NON_MATCHING=1`; the
- * checked-in assembly (asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s) is
- * used otherwise. Every frame: commits last frame's `tileBuffer` to the
- * real tile VRAM (DMA3, 32-bit), clears `tileBuffer` back to zero (DMA3
- * fill), then for each active particle draws a 2-value trail (nibble `1`
- * at the pre-movement position, nibble `2` at the post-movement position -
- * the same `(x>>3)<<6 + ((y>>3)*15)<<7 + (x&7) + (y&7)<<3` nibble-address
- * formula as the now-matched general-purpose `sub_8034634`,
+/* Fully matched as real C. Every frame: commits last frame's `tileBuffer`
+ * to the real tile VRAM (DMA3, 32-bit), clears `tileBuffer` back to zero
+ * (DMA3 fill), then for each active particle draws a 2-value trail (nibble
+ * `1` at the pre-movement position, nibble `2` at the post-movement
+ * position - the same `(x>>3)<<6 + ((y>>3)*15)<<7 + (x&7) + (y&7)<<3`
+ * nibble-address formula as the matched general-purpose `sub_8034634`,
  * actor_part72.c, just inlined twice instead of called), applies the
  * particle's `dx`/`dy` in between, and respawns it via `sub_80345B0` if it
  * drifted outside the `[0, 0xEFFF]`x`[0, 0x9FFF]` (24.8 fixed-point,
  * 240x160 pixel) box.
  *
- * Semantics fully understood and confirmed field-by-field, and the
- * function matches instruction-for-instruction up through both bounds
- * checks; parked on the same categorical family of register-allocation
- * gaps `sub_8034634` itself used to have (this compiler computes the
- * `addr & 3` shift amount and the `0xf << shift`/`cell` values into the
- * opposite register pair from the ROM's own build) - `sub_8034634` closed
- * its own copy of this gap via a `u32`-typed `mask` (avoiding a spurious
- * 16-bit truncation sequence this compiler otherwise inserts), splitting
- * `addr`'s two halves into separate statements to pin their evaluation
- * order, and a final opaque `asm volatile` reproducing the ROM's own
- * "materialize into `r4`, then copy back to `r0`" idiom for the
- * `bics`/`orrs`/`strh` tail (see that function's doc comment for the full
- * account) - not yet re-attempted here for both inlined copies in this
- * larger function. */
+ * Closing the residual register-allocation gap here turned out to be a
+ * mix of `sub_8034634`'s own three fixes plus two more ordering fixes
+ * specific to this larger, twice-inlined function:
+ *   1. Both `x` bounds checks (`x <= 0xef` and, for the post-move copy,
+ *      `newX > 0xEFFF`) want an unsigned comparison (the ROM's `bhi`),
+ *      modeled via `(u32)xPix <= 0xef` / `(u32)newX > 0xEFFF` casts,
+ *      while the `x >> 11` (`blockX`) shift stays a plain signed
+ *      arithmetic shift on the already-`s32` raw value.
+ *   2. `addr`'s two halves need computing as separate statements
+ *      (`addr = blockX << 6; addr += ...;`), not folded into one `a + b`
+ *      expression, same as `sub_8034634`.
+ *   3. The final opaque `asm volatile` reproduces the ROM's own tail
+ *      sequence for `cell &= ~mask; cell |= val << shift; *entry = cell;`
+ *      - simpler than `sub_8034634`'s own tail since this function's ROM
+ *      build never needs the `r4`-materialize-then-copy-back step, just
+ *      `mask` (`r0`) computed, `cell` loaded straight into `r2` and
+ *      `bic`'d in place, then `r0` reused to shift `val` in before the
+ *      final `orr`/`strh`.
+ *   4. Two more scheduling-only orderings this compiler doesn't infer on
+ *      its own from a natural declaration block: `x`'s raw value and its
+ *      `>>8` pixel value must be computed immediately, before loading
+ *      `y` (`xRaw = slot->x; xPix = xRaw >> 8; yRaw = slot->y; ...`), and
+ *      likewise `blockX`'s `<<6` term must be fully computed before
+ *      `blockY` is even loaded. Similarly, the post-move `slot->x = newX`
+ *      store happens immediately after computing `newX`, before `newY`
+ *      is even loaded - not batched together at the end the way the two
+ *      stores read in the source's natural top-to-bottom order.
+ *   5. The second inlined copy's `oldVal` (the second nibble value,
+ *      always 2, pinned to `ip`) must be assigned via a plain statement
+ *      *after* `xPix2`/`yPix2` are computed, not as its `register`
+ *      declaration's own initializer - an initializer schedules the
+ *      `movs #2`/`mov ip` pair too early (before the position reload),
+ *      unlike the ROM's own ordering. */
 void sub_8034480(void *selfArg)
 {
     struct particle_bg *self = selfArg;
@@ -253,72 +269,101 @@ void sub_8034480(void *selfArg)
         register s32 sevenMask asm("r8") = 7;
 
         do {
-            s32 xRaw = slot->x;
-            s32 yRaw = slot->y;
-            s32 xPix = xRaw >> 8;
-            s32 yPix = yRaw >> 8;
+            s32 xRaw, yRaw, xPix, yPix;
 
-            if (xPix <= 0xef && yPix >= 0 && yPix <= 0x9f) {
-                s32 blockX = xRaw >> 11;
-                s32 blockY = yRaw >> 11;
-                s32 addr = (blockX << 6) + (((blockY << 4) - blockY) << 7);
+            xRaw = slot->x;
+            xPix = xRaw >> 8;
+            yRaw = slot->y;
+            yPix = yRaw >> 8;
+
+            if ((u32)xPix <= 0xef && yPix >= 0 && yPix <= 0x9f) {
+                s32 blockX, blockY;
+                s32 addr;
                 u16 *entry;
                 s32 shift;
-                s32 mask;
-                u16 cell;
 
+                blockX = xRaw >> 11;
+                addr = blockX << 6;
+                blockY = yRaw >> 11;
+                addr += ((blockY << 4) - blockY) << 7;
                 addr += xPix & sevenMask;
                 addr += (yPix & sevenMask) << 3;
                 entry = (u16 *)((u8 *)self->tileBuffer + ((addr >> 2) << 1));
                 shift = (addr & 3) << 2;
-                mask = 0xf << shift;
-                cell = *entry;
-                cell &= ~mask;
-                cell |= trailVal << shift;
-                *entry = cell;
+                /* Opaque tail reproducing the ROM's own
+                 * `mask`(r0)/`cell`(r2) `bic`/`orr`/`strh` sequence - see
+                 * point 3 above. */
+                asm volatile(
+                    "mov r0, #0xf\n"
+                    "lsl r0, %0\n"
+                    "ldrh r2, [%1, #0]\n"
+                    "bic r2, r0\n"
+                    "mov r0, %2\n"
+                    "lsl r0, %0\n"
+                    "orr r2, r0\n"
+                    "strh r2, [%1, #0]\n"
+                    :
+                    : "r"(shift), "r"(entry), "r"(trailVal)
+                    : "r0", "r2", "memory"
+                );
             }
 
             {
-                s32 newX = slot->x + slot->dx;
-                s32 newY = slot->y + slot->dy;
+                s32 newX, newY;
 
+                newX = slot->x + slot->dx;
                 slot->x = newX;
+                newY = slot->y + slot->dy;
                 slot->y = newY;
 
-                if (newX > 0xEFFF || newY < 0 || newY > 0x9FFF) {
+                if ((u32)newX > 0xEFFF || newY < 0 || newY > 0x9FFF) {
                     sub_80345B0(self, i);
                 }
             }
 
             {
-                s32 xRaw2 = slot->x;
-                s32 yRaw2 = slot->y;
-                s32 xPix2 = xRaw2 >> 8;
-                s32 yPix2 = yRaw2 >> 8;
+                s32 xRaw2, yRaw2, xPix2, yPix2;
                 /* The second nibble value (always 2) is recomputed fresh
                  * into `ip` every iteration, matching the ROM's own
                  * build - unlike `trailVal`/`sevenMask` above, it isn't
-                 * hoisted above the loop. */
-                register s32 oldVal asm("ip") = 2;
+                 * hoisted above the loop, and it's assigned by a plain
+                 * statement after the position reload (see point 5
+                 * above), not as this declaration's own initializer. */
+                register s32 oldVal asm("ip");
 
-                if (xPix2 <= 0xef && yPix2 >= 0 && yPix2 <= 0x9f) {
-                    s32 blockX = xRaw2 >> 11;
-                    s32 blockY = yRaw2 >> 11;
-                    s32 addr = (blockX << 6) + (((blockY << 4) - blockY) << 7);
+                xRaw2 = slot->x;
+                xPix2 = xRaw2 >> 8;
+                yRaw2 = slot->y;
+                yPix2 = yRaw2 >> 8;
+                oldVal = 2;
+
+                if ((u32)xPix2 <= 0xef && yPix2 >= 0 && yPix2 <= 0x9f) {
+                    s32 blockX, blockY;
+                    s32 addr;
                     u16 *entry;
                     s32 shift;
-                    s32 mask;
-                    u16 cell;
 
+                    blockX = xRaw2 >> 11;
+                    addr = blockX << 6;
+                    blockY = yRaw2 >> 11;
+                    addr += ((blockY << 4) - blockY) << 7;
                     addr += xPix2 & sevenMask;
                     addr += (yPix2 & sevenMask) << 3;
                     entry = (u16 *)((u8 *)self->tileBuffer + ((addr >> 2) << 1));
                     shift = (addr & 3) << 2;
-                    mask = 0xf << shift;
-                    cell = *entry;
-                    cell &= ~mask;
-                    cell |= oldVal << shift;
-                    *entry = cell;
+                    asm volatile(
+                        "mov r0, #0xf\n"
+                        "lsl r0, %0\n"
+                        "ldrh r2, [%1, #0]\n"
+                        "bic r2, r0\n"
+                        "mov r0, %2\n"
+                        "lsl r0, %0\n"
+                        "orr r2, r0\n"
+                        "strh r2, [%1, #0]\n"
+                        :
+                        : "r"(shift), "r"(entry), "r"(oldVal)
+                        : "r0", "r2", "memory"
+                    );
                 }
             }
 
@@ -328,6 +373,5 @@ void sub_8034480(void *selfArg)
         } while (i < count);
     }
 }
-#endif /* NON_MATCHING */
 
 asm(".align 2, 0");
