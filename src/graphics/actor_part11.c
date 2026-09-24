@@ -306,9 +306,9 @@ void *sub_8008F20(void *manager, s32 count)
 }
 #endif /* NON_MATCHING */
 
-#if NON_MATCHING
 /* Same pool-manager struct sub_8008F20 initializes and actor_part12.c
- * operates on - see that file for the full field writeup. */
+ * operates on - see that file for the full field writeup. Also used by
+ * the now-matched `sub_8009150` (`actor_part11g.c`). */
 struct pool_manager {
     s32 activeCount;
     s32 capacity;
@@ -319,100 +319,6 @@ struct pool_manager {
     void *freeListArray;
     void *freeListHead;
 };
-
-/* Searches every bucket (254 down to 0, i.e. every bucket except the
- * special "large object" bucket 255) of `manager`'s spatial hash grid
- * for a node whose data pointer equals `obj`. On the first match: if
- * the object's `+0xc` flags byte bit 4 isn't set, returns immediately
- * (nothing to do). If it IS set but the node already has a bucket-255
- * secondary link (`node->field_0xc != 0`, the same field
- * `sub_8009AF0`/`sub_8009B3C` set up), also returns immediately - the
- * link already exists. Otherwise, pops a fresh node off the free list
- * (the same `sub_8009AF0` pop idiom), wraps `obj` in it, and inserts
- * that new node into bucket 255's head/tail list, finally linking the
- * two nodes together via the original node's `field_0xc` - lazily
- * creating the "large object" bucket-255 registration for an object
- * that didn't get one when it was originally inserted (`sub_8009B3C`
- * only creates it when `obj->flags` bit 4 is already set at insert
- * time; this looks like the retroactive counterpart, called when an
- * object transitions to "large" status after insertion).
- *
- * NOT YET BYTE-MATCHING, but extremely close - every load, store, and
- * field offset is confirmed correct, and explicit register pins
- * (`obj`/`data`/`headField`/`newNode` to `r3`/`r5`/`r6`/`r2`, matching
- * a byte-for-byte-verified value/register-reuse chain through the
- * `fieldC` "recycled zero" idiom) reproduce the whole function except
- * one detail: the free-list-head field's address (`manager+0x814`) is
- * loop-invariant across the whole 255-bucket outer loop, and this
- * compiler correctly recognizes that and hoists the computation
- * outside the loop (computing it once, then just copying the cached
- * value into place per bucket) - but the ROM instead recomputes it
- * fresh every time a non-empty bucket is found. No portable C
- * construct tried (an inline-asm memory clobber included) discourages
- * this specific loop-invariant hoist. Parked on this single 2-byte
- * gap - see docs/matching.md, "Parked, not matched: `sub_8009150`". */
-void sub_8009150(struct pool_manager *manager, void *objArg)
-{
-    register void *obj asm("r3") = objArg;
-    s32 bucket;
-
-    for (bucket = 0xFE; bucket >= 0; bucket--) {
-        void *node = manager->gridHead[bucket];
-
-        if (node == 0) {
-            continue;
-        }
-
-        {
-            register void **headField asm("r6") = &manager->freeListHead;
-
-            for (;;) {
-                register void *data asm("r5") = *(void **)node;
-
-                if (data == obj) {
-                    void *fieldC;
-
-                    if (!((*((u8 *)data + 0xc) >> 4) & 1)) {
-                        return;
-                    }
-                    fieldC = *(void **)((u8 *)node + 0xc);
-                    if (fieldC != 0) {
-                        return;
-                    }
-                    {
-                        void **entry = *headField;
-                        register void *newNode asm("r2") = *(void **)entry;
-
-                        *headField = *(void **)((u8 *)entry + 4);
-                        *(void **)((u8 *)entry + 4) = fieldC;
-
-                        *(void **)newNode = data;
-                        *(void **)((u8 *)newNode + 4) = fieldC;
-                        *(void **)((u8 *)newNode + 0xc) = node;
-                        *((u8 *)newNode + 0x10) = (u8)(s32)fieldC;
-                        *((u8 *)newNode + 0x11) = (u8)(s32)fieldC;
-
-                        if (manager->gridHead[255] == 0) {
-                            manager->gridHead[255] = newNode;
-                        }
-                        if (manager->gridTail[255] != 0) {
-                            *(void **)((u8 *)manager->gridTail[255] + 4) = newNode;
-                        }
-                        manager->gridTail[255] = newNode;
-                        *(void **)((u8 *)node + 0xc) = newNode;
-                    }
-                    return;
-                }
-
-                node = *(void **)((u8 *)node + 4);
-                if (node == 0) {
-                    break;
-                }
-            }
-        }
-    }
-}
-#endif /* NON_MATCHING */
 
 #if NON_MATCHING
 /* Resets a pool manager to empty: tears down every active object
