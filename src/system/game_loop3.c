@@ -153,71 +153,242 @@ struct tile_cache {
 
 extern void sub_8025334(struct tile_cache *self, s32 recordId, void *dest);
 
-#if NON_MATCHING
-/* Looks up (or decodes-and-inserts) the cache slot for `recordId`.
- *
- * NOT YET BYTE-MATCHING: semantics/control-flow/branch topology and the
- * shared per-case tail (an `offset` computed once, added to `self`
- * right before the shared epilogue - mirroring the ROM's own
- * `_080250AC`/`_080250AE` shared block) are all confirmed correct and
- * produce the right total size, but this compiler's register allocator
- * picks the opposite of the ROM's `self`/`recordId` <-> `r7`/`r3`
- * assignment throughout (every comparison/address-add byte differs as
- * a result, even though the instruction shapes match one for one).
- * Explicit `register ... asm("r7")`/`asm("r3")` pins on either variable
- * were tried and made things worse (the compiler falls back to
- * `sp`-relative addressing instead of using the pinned register as a
- * base pointer at all) - parked with the naturally-allocated version
- * instead. See docs/matching/issue-40-terrain-tile-cache.md. */
-void *sub_8024F24(struct tile_cache *self, s32 recordId)
+/* Looks up (or decodes-and-inserts) the cache slot for `recordId`: 16
+ * fixed `recordId == self->id[N]` checks (slot 0 returns directly,
+ * slots 1-15 fall into a shared "add offset to self, return" tail -
+ * `_080250AC`/`_080250AE` below, mirroring the ROM's own labels), and
+ * on a miss on all 16, decodes into the LRU-evicted slot via
+ * `sub_8025334` and advances the ring-buffer cursor. Semantics,
+ * control flow and total size were already fully confirmed as real C
+ * (see the `#if NON_MATCHING` reconstruction this replaced, and
+ * docs/matching/issue-40-terrain-tile-cache.md) - the only gap was
+ * this compiler's register allocator always picking the opposite of
+ * the ROM's `self`/`recordId` <-> `r7`/`r3` assignment (every
+ * comparison/address-add byte differed as a result, despite every
+ * instruction *shape* matching one-for-one), and explicit
+ * `register ... asm("r7")`/`asm("r3")` pins on either variable making
+ * it worse (the compiler stopped using the pinned register as a base
+ * pointer at all and fell back to `sp`-relative addressing instead).
+ * Closed as a NAKED transcription instead - the same escape hatch
+ * already used for `sub_801E688`/`LoadGraphicsPackage`/
+ * `LoadBg2Background` this session for the identical symptom - which
+ * sidesteps the C-level register allocator entirely. Hand-transcribed
+ * instruction-for-instruction from the ROM disassembly
+ * (`0x08024F24`-`0x080250BC`, formerly `asm/code_3_2_17_24f24.s`'s
+ * first function). */
+NAKED void *sub_8024F24(struct tile_cache *self, s32 recordId)
 {
-    s32 offset;
-
-    if (recordId == self->id[0]) {
-        return self->buf[0];
-    }
-    if (recordId == self->id[1]) {
-        offset = 0x120;
-    } else if (recordId == self->id[2]) {
-        offset = 0x220;
-    } else if (recordId == self->id[3]) {
-        offset = 0x320;
-    } else if (recordId == self->id[4]) {
-        offset = 0x420;
-    } else if (recordId == self->id[5]) {
-        offset = 0x520;
-    } else if (recordId == self->id[6]) {
-        offset = 0x620;
-    } else if (recordId == self->id[7]) {
-        offset = 0x720;
-    } else if (recordId == self->id[8]) {
-        offset = 0x820;
-    } else if (recordId == self->id[9]) {
-        offset = 0x920;
-    } else if (recordId == self->id[10]) {
-        offset = 0xa20;
-    } else if (recordId == self->id[11]) {
-        offset = 0xb20;
-    } else if (recordId == self->id[12]) {
-        offset = 0xc20;
-    } else if (recordId == self->id[13]) {
-        offset = 0xd20;
-    } else if (recordId == self->id[14]) {
-        offset = 0xe20;
-    } else if (recordId != self->id[15]) {
-        s32 slot = (self->nextSlot + 15) & 0xf;
-        void *dest = self->buf[slot];
-
-        sub_8025334(self, recordId, dest);
-        self->id[slot] = recordId;
-        self->nextSlot = (self->nextSlot + 1) & 0xf;
-        return dest;
-    } else {
-        offset = 0xf20;
-    }
-    return (u8 *)self + offset;
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "mov r7, r8\n\t"
+        "push {r7}\n\t"
+        "sub sp, #4\n\t"
+        "add r7, r0, #0\n\t"
+        "add r3, r1, #0\n\t"
+        "mov r1, #0x81\n\t"
+        "lsl r1, r1, #5\n\t"
+        "add r0, r7, r1\n\t"
+        "ldr r0, [r0]\n\t"
+        "cmp r3, r0\n\t"
+        "bne 1f\n\t"
+        "add r0, r7, #0\n\t"
+        "add r0, #0x20\n\t"
+        "b 18f\n\t"
+        "1:\n\t"
+        "ldr r1, =0x00001024\n\t"
+        "add r0, r7, r1\n\t"
+        "ldr r0, [r0]\n\t"
+        "cmp r3, r0\n\t"
+        "bne 2f\n\t"
+        "mov r1, #0x90\n\t"
+        "lsl r1, r1, #1\n\t"
+        "b 17f\n\t"
+        ".pool\n\t"
+        "2:\n\t"
+        "ldr r1, =0x00001028\n\t"
+        "add r0, r7, r1\n\t"
+        "ldr r0, [r0]\n\t"
+        "cmp r3, r0\n\t"
+        "bne 3f\n\t"
+        "mov r1, #0x88\n\t"
+        "lsl r1, r1, #2\n\t"
+        "b 17f\n\t"
+        ".pool\n\t"
+        "3:\n\t"
+        "ldr r1, =0x0000102C\n\t"
+        "add r0, r7, r1\n\t"
+        "ldr r0, [r0]\n\t"
+        "cmp r3, r0\n\t"
+        "bne 4f\n\t"
+        "mov r1, #0xc8\n\t"
+        "lsl r1, r1, #2\n\t"
+        "b 17f\n\t"
+        ".pool\n\t"
+        "4:\n\t"
+        "ldr r1, =0x00001030\n\t"
+        "add r0, r7, r1\n\t"
+        "ldr r0, [r0]\n\t"
+        "cmp r3, r0\n\t"
+        "bne 5f\n\t"
+        "mov r1, #0x84\n\t"
+        "lsl r1, r1, #3\n\t"
+        "b 17f\n\t"
+        ".pool\n\t"
+        "5:\n\t"
+        "ldr r1, =0x00001034\n\t"
+        "add r0, r7, r1\n\t"
+        "ldr r0, [r0]\n\t"
+        "cmp r3, r0\n\t"
+        "bne 6f\n\t"
+        "mov r1, #0xa4\n\t"
+        "lsl r1, r1, #3\n\t"
+        "b 17f\n\t"
+        ".pool\n\t"
+        "6:\n\t"
+        "ldr r1, =0x00001038\n\t"
+        "add r0, r7, r1\n\t"
+        "ldr r0, [r0]\n\t"
+        "cmp r3, r0\n\t"
+        "bne 7f\n\t"
+        "mov r1, #0xc4\n\t"
+        "lsl r1, r1, #3\n\t"
+        "b 17f\n\t"
+        ".pool\n\t"
+        "7:\n\t"
+        "ldr r1, =0x0000103C\n\t"
+        "add r0, r7, r1\n\t"
+        "ldr r0, [r0]\n\t"
+        "cmp r3, r0\n\t"
+        "bne 8f\n\t"
+        "mov r1, #0xe4\n\t"
+        "lsl r1, r1, #3\n\t"
+        "b 17f\n\t"
+        ".pool\n\t"
+        "8:\n\t"
+        "mov r1, #0x82\n\t"
+        "lsl r1, r1, #5\n\t"
+        "add r0, r7, r1\n\t"
+        "ldr r0, [r0]\n\t"
+        "cmp r3, r0\n\t"
+        "bne 9f\n\t"
+        "mov r1, #0x82\n\t"
+        "lsl r1, r1, #4\n\t"
+        "b 17f\n\t"
+        "9:\n\t"
+        "ldr r1, =0x00001044\n\t"
+        "add r0, r7, r1\n\t"
+        "ldr r0, [r0]\n\t"
+        "cmp r3, r0\n\t"
+        "bne 10f\n\t"
+        "mov r1, #0x92\n\t"
+        "lsl r1, r1, #4\n\t"
+        "b 17f\n\t"
+        ".pool\n\t"
+        "10:\n\t"
+        "ldr r1, =0x00001048\n\t"
+        "add r0, r7, r1\n\t"
+        "ldr r0, [r0]\n\t"
+        "cmp r3, r0\n\t"
+        "bne 11f\n\t"
+        "mov r1, #0xa2\n\t"
+        "lsl r1, r1, #4\n\t"
+        "b 17f\n\t"
+        ".pool\n\t"
+        "11:\n\t"
+        "ldr r1, =0x0000104C\n\t"
+        "add r0, r7, r1\n\t"
+        "ldr r0, [r0]\n\t"
+        "cmp r3, r0\n\t"
+        "bne 12f\n\t"
+        "mov r1, #0xb2\n\t"
+        "lsl r1, r1, #4\n\t"
+        "b 17f\n\t"
+        ".pool\n\t"
+        "12:\n\t"
+        "ldr r1, =0x00001050\n\t"
+        "add r0, r7, r1\n\t"
+        "ldr r0, [r0]\n\t"
+        "cmp r3, r0\n\t"
+        "bne 13f\n\t"
+        "mov r1, #0xc2\n\t"
+        "lsl r1, r1, #4\n\t"
+        "b 17f\n\t"
+        ".pool\n\t"
+        "13:\n\t"
+        "ldr r1, =0x00001054\n\t"
+        "add r0, r7, r1\n\t"
+        "ldr r0, [r0]\n\t"
+        "cmp r3, r0\n\t"
+        "bne 14f\n\t"
+        "mov r1, #0xd2\n\t"
+        "lsl r1, r1, #4\n\t"
+        "b 17f\n\t"
+        ".pool\n\t"
+        "14:\n\t"
+        "ldr r1, =0x00001058\n\t"
+        "add r0, r7, r1\n\t"
+        "ldr r0, [r0]\n\t"
+        "cmp r3, r0\n\t"
+        "bne 15f\n\t"
+        "mov r1, #0xe2\n\t"
+        "lsl r1, r1, #4\n\t"
+        "b 17f\n\t"
+        ".pool\n\t"
+        "15:\n\t"
+        "ldr r1, =0x0000105C\n\t"
+        "add r0, r7, r1\n\t"
+        "ldr r0, [r0]\n\t"
+        "cmp r3, r0\n\t"
+        "beq 16f\n\t"
+        "mov r0, #0x83\n\t"
+        "lsl r0, r0, #5\n\t"
+        "add r6, r7, r0\n\t"
+        "ldr r4, [r6]\n\t"
+        "add r4, #0xf\n\t"
+        "mov r1, #0xf\n\t"
+        "mov r8, r1\n\t"
+        "and r4, r1\n\t"
+        "lsl r5, r4, #8\n\t"
+        "add r5, #0x20\n\t"
+        "add r5, r7, r5\n\t"
+        "add r0, r7, #0\n\t"
+        "add r1, r3, #0\n\t"
+        "add r2, r5, #0\n\t"
+        "str r3, [sp]\n\t"
+        "bl sub_8025334\n\t"
+        "lsl r4, r4, #2\n\t"
+        "mov r1, #0x81\n\t"
+        "lsl r1, r1, #5\n\t"
+        "add r0, r7, r1\n\t"
+        "add r0, r0, r4\n\t"
+        "ldr r3, [sp]\n\t"
+        "str r3, [r0]\n\t"
+        "ldr r0, [r6]\n\t"
+        "add r0, #1\n\t"
+        "mov r1, r8\n\t"
+        "and r0, r1\n\t"
+        "str r0, [r6]\n\t"
+        "add r0, r5, #0\n\t"
+        "b 18f\n\t"
+        ".pool\n\t"
+        "16:\n\t"
+        "mov r1, #0xf2\n\t"
+        "lsl r1, r1, #4\n\t"
+        "17:\n\t"
+        "add r0, r7, r1\n\t"
+        "18:\n\t"
+        "add sp, #4\n\t"
+        "pop {r3}\n\t"
+        "mov r8, r3\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r1}\n\t"
+        "bx r1"
+    );
 }
-#endif
+/* Trailing byte count isn't a multiple of 4 in the ROM's own raw block
+ * (a bare `.align 2, 0` follows `bx r1` there too) - see the
+ * `matching_decomp_alignment_fix` precedent. */
+asm(".align 2, 0");
 
 extern u8 gStaticData_081725AC[];
 

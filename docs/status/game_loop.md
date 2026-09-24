@@ -270,6 +270,18 @@ plain C didn't converge.
   driver, and the circular-buffer decoded-tile streaming loop; both
   keep `r8` live across most of their bodies. See
   [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
+- **`sub_8024F24`** (`src/system/game_loop3.c`, GitHub issue #40) - the
+  16-slot terrain tile-record decode/LRU cache's lookup dispatcher (16
+  fixed `recordId == self->id[N]` checks plus an LRU-evict-and-decode
+  miss path). Semantics/control-flow/total size were already fully
+  confirmed as real C; the only gap was this compiler's register
+  allocator always picking the opposite of the ROM's `self`/`recordId`
+  <-> `r7`/`r3` assignment, and explicit register pins on either
+  variable making it worse (falls back to `sp`-relative addressing
+  instead of using the pinned register as a base pointer at all) - the
+  same symptom independently confirmed for `sub_801E688`/
+  `LoadGraphicsPackage`/`LoadBg2Background`. See
+  [docs/matching/issue-40-terrain-tile-cache.md](../matching/issue-40-terrain-tile-cache.md).
 - **`sub_8022D50`** (`src/system/game_loop40.c`, GitHub issue #34) - the
   level-start/reset routine (`self+0x8c`/`0x90`-`0xa0` clears, the
   `self+0x1b8`/`0x1bc` actor-slot teardown, the `gUnknown_030012EC`
@@ -331,13 +343,15 @@ plain C didn't converge.
   same gap already parked for `sub_800A734`/`sub_800A528` in
   docs/matching/issue-9-0x08007634-actor.md, at a larger scale. See
   [docs/matching/issue-14-0x08010a0c-graphics.md](../matching/issue-14-0x08010a0c-graphics.md).
-- **`sub_8024F24`/`sub_80250BC`/`sub_8025130`/`sub_8025228`/
-  `sub_8025334`** (`src/system/game_loop3.c`, GitHub issue #40) - the
-  16-slot terrain tile-record decode/LRU cache's lookup dispatcher, its
-  four `(x, y)`-lookup consumer variants, and the RLE/delta
-  token-stream decoder; real bytes in `asm/code_3_2_17_24f24.s`. See
+- **`sub_80250BC`/`sub_8025130`/`sub_8025228`/`sub_8025334`**
+  (`src/system/game_loop3.c`, GitHub issue #40) - the 16-slot terrain
+  tile-record decode/LRU cache's four `(x, y)`-lookup consumer
+  variants and the RLE/delta token-stream decoder; real bytes in
+  `asm/code_3_2_17_24f24.s`. See
   [docs/matching/issue-40-terrain-tile-cache.md](../matching/issue-40-terrain-tile-cache.md)
-  for the exact register-allocation gaps.
+  for the exact register-allocation gaps. (`sub_8024F24`, the
+  dispatcher these four call, was closed as a NAKED transcription -
+  see below.)
 ## Still raw, category-mapped (GitHub issue #12/#34/#40)
 
 - **`sub_0800D18C`/`sub_800E08C`** (`asm/code_3_2_17_d18c.s`, ROM
