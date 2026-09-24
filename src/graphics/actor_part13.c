@@ -99,34 +99,38 @@ doCheck:
     }
 }
 
-#if NON_MATCHING
-/* Fires a `part->table+0x68`-driven trampoline (the "dead read" idiom
- * already established for `sub_8008AD8`/`sub_8008D80`/`sub_80099F0`)
- * based on `gUnknown_030012C0`'s mode (`+0x78`): mode 0 fires it on
- * the player with arguments `(0, part->field_0A, 0)`; modes 1-2 fire
- * it on the player with the same arguments, then again on `part`
- * itself with `(1, 1, 0)`; mode 3 fires it on `part` alone with
- * `(1, 1, 0)`; any other mode does nothing. Always sets `part->flags`
- * bit 3 first.
+/* ROM 0x08009D5C - fires a `part->table+0x68`-driven trampoline (the
+ * "dead read" idiom already established for
+ * `sub_8008AD8`/`sub_8008D80`/`sub_80099F0`) based on
+ * `gUnknown_030012C0`'s mode (`+0x78`): mode 0 fires it on the player
+ * with arguments `(0, part->field_0A, 0)`; modes 1-2 fire it on the
+ * player with the same arguments, then again on `part` itself with
+ * `(1, 1, 0)`; mode 3 fires it on `part` alone with `(1, 1, 0)`; any
+ * other mode does nothing. Always sets `part->flags` bit 3 first.
  *
- * NOT YET BYTE-MATCHING, but extremely close - a `switch` on `mode`
- * reproduces the ROM's exact 3-way dispatch (`cmp #2,bgt` / `cmp
- * #1,bge` / `cmp #0,beq`, which no amount of rewriting an equivalent
- * `if`/`else if` chain would reproduce - this compiler always
+ * A `switch` on `mode` reproduces the ROM's exact 3-way dispatch (`cmp
+ * #2,bgt` / `cmp #1,bge` / `cmp #0,beq`, which no amount of rewriting
+ * an equivalent `if`/`else if` chain reproduces - this compiler always
  * normalizes `x >= 1` down to `x > 0` for a plain comparison chain,
  * but a `switch` lowers differently and keeps the literal `#1`/`bge`
- * form), and explicit `goto`s into a shared 2-instruction tail
- * (`r0`/`r1`/`r2`/`r4` pinned to their ABI registers) reproduce the
- * mode-0/mode-1-2 call sharing. The single remaining gap: ROM's
- * mode-3 case compiles its `if (mode == 3) { call }` guard as a
- * 3-instruction `cmp;beq;b` (jumping into the call code, then
- * separately jumping back to the epilogue) rather than the
- * 2-instruction `cmp;bne` (skip-if-false, fall into the return) this
- * reconstruction produces for the same logic - tried as a bare `if`,
- * inside the `switch` directly, and via an explicit `goto` to a
- * shared return label, all collapse to the same 2-instruction form.
- * Parked on this single conditional-branch encoding gap - see
- * docs/matching.md, "Parked, not matched: `sub_8009D5C`". */
+ * form), and explicit `goto`s into a shared tail (`r0`/`r1`/`r2`/`r4`
+ * pinned to their ABI registers) reproduce the mode-0/mode-1-2 call
+ * sharing. The mode-3 case's own `cmp;beq;b` branch shape (jumping
+ * into the call code, then separately jumping back to the epilogue,
+ * rather than the more compact `cmp;bne` skip-and-fall-through this
+ * compiler prefers whenever the call body is placed right after the
+ * switch dispatch) only falls out once the `checkMode3:`/`if (mode ==
+ * 3)` block is moved to be the *last* thing in the function, after
+ * `mode0`/`mode1or2`/`tail` - with the call body no longer adjacent to
+ * its own dispatch test, this compiler's block-layout pass can't
+ * collapse the two paths into one, and emits the ROM's real
+ * three-instruction form. Source order also had to swap `mode0`
+ * before `mode1or2` (ROM's actual address order) and `player` needed
+ * an explicit `r0` register pin in the `mode0` block specifically -
+ * without it, this compiler picks `r2` for the reused player pointer
+ * there (it doesn't need the same hint in `mode1or2`, where the ABI
+ * call to `sub_803AD88` already forces player's address into `r0`).
+ * Matched. */
 void sub_8009D5C(void *partArg)
 {
     register struct actor *part asm("r5") = partArg;
@@ -158,16 +162,17 @@ void sub_8009D5C(void *partArg)
         return;
     }
 
-checkMode3:
-    if (mode == 3) {
-        u8 *rec = (u8 *)part->table + 0x68;
+mode0:
+    {
+        register struct actor *player asm("r0") = gUnknown_030012D8;
+        u8 *rec = (u8 *)player->table + 0x68;
         s16 offset = *(s16 *)rec;
-        void *addr3 = (u8 *)part + offset;
-        register void *deadRead3 asm("r4") = *(void *volatile *)(rec + 4);
-        (void)deadRead3;
-        sub_803AD88(addr3, 1, 1, 0);
+        addr = (u8 *)player + offset;
+        arg2 = part->field_0A;
+        deadRead = *(void *volatile *)(rec + 4);
+        arg1 = 0;
+        goto tail;
     }
-    return;
 
 mode1or2:
     {
@@ -192,23 +197,21 @@ mode1or2:
         goto tail;
     }
 
-mode0:
-    {
-        struct actor *player = gUnknown_030012D8;
-        u8 *rec = (u8 *)player->table + 0x68;
-        s16 offset = *(s16 *)rec;
-        addr = (u8 *)player + offset;
-        arg2 = part->field_0A;
-        deadRead = *(void *volatile *)(rec + 4);
-        arg1 = 0;
-        goto tail;
-    }
-
 tail:
     {
         register s32 arg3 asm("r3") = 0;
         sub_803AD88(addr, arg1, arg2, arg3);
     }
+    return;
+
+checkMode3:
+    if (mode == 3) {
+        u8 *rec = (u8 *)part->table + 0x68;
+        s16 offset = *(s16 *)rec;
+        void *addr3 = (u8 *)part + offset;
+        register void *deadRead3 asm("r4") = *(void *volatile *)(rec + 4);
+        (void)deadRead3;
+        sub_803AD88(addr3, 1, 1, 0);
+    }
 }
-#endif /* NON_MATCHING */
 asm(".align 2, 0");

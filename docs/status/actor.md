@@ -568,6 +568,28 @@ from "core" graphics.
   (`sub_802A5E4`) - see
   [docs/matching/issue-49-0x08029e4c-actor.md](../matching/issue-49-0x08029e4c-actor.md).
 
+- **`sub_8009D5C`** (`src/graphics/actor_part13.c`) - fires a
+  `part->table+0x68`-driven trampoline based on `gUnknown_030012C0`'s
+  mode, on the player and/or `part` depending on the mode value. A
+  `switch` reproduces the ROM's exact 3-way mode dispatch, and explicit
+  `goto`s into a shared, ABI-register-pinned tail reproduce the
+  mode-0/mode-1-2 call sharing. The remaining conditional-branch
+  encoding gap in the mode-3 case (ROM's 3-instruction `cmp;beq;b`
+  versus this compiler's usual 2-instruction `cmp;bne` collapse) closed
+  once the mode-3 `checkMode3:`/`if (mode == 3)` block was moved to be
+  the *last* thing in the function (after `mode0`/`mode1or2`/`tail`
+  instead of right after the `switch`) - with the call body no longer
+  textually adjacent to its own dispatch test, this compiler's
+  block-layout pass can't collapse the two paths and emits the real
+  3-instruction form on its own, no inline asm needed. Also needed
+  `mode0`'s source order swapped ahead of `mode1or2` (matching ROM's
+  real address order - the compiler places case bodies in source order,
+  not case-value order) and an explicit `r0` register pin on `mode0`'s
+  `player` local (this compiler otherwise picks `r2` there, since
+  `mode1or2`'s own `sub_803AD88` call already forces the same value
+  into `r0` via the ABI, but `mode0` has no such call to hint it).
+  Retires the old raw `asm/code_3_2_15.o` guard entirely.
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
@@ -1271,15 +1293,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   not matched: `sub_80099F0`". `sub_8008D80` itself
   (`src/graphics/actor_part7b.c`) is unaffected by this change and
   remains its own separate `NAKED` function.
-- **`sub_8009D5C`** (`src/graphics/actor_part13.c`) - fires a
-  `part->table+0x68`-driven trampoline based on `gUnknown_030012C0`'s
-  mode, on the player and/or `part` depending on the mode value.
-  Every branch, call, and argument confirmed correct (a `switch`
-  reproduces the ROM's exact 3-way mode dispatch, and explicit `goto`s
-  into a shared, ABI-register-pinned tail reproduce the mode-0/mode-
-  1-2 call sharing); parked on a single remaining conditional-branch
-  encoding gap in the mode-3 case - see `docs/matching.md`, "Parked,
-  not matched: `sub_8009D5C`".
 - **NAKED transcription (byte-correct, not decompiled)**: `sub_802C208`
   (`src/graphics/actor_part19e.c`, issue #52), `sub_802F748`
   (`src/graphics/actor_part44b.c`, issue #56), `sub_8033B44`/
