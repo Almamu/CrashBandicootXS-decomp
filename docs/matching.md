@@ -4836,12 +4836,61 @@ its real ROM position.
 ## GitHub issue #34: `0x080225A0`-`0x080231C4` (`UpdateGameFrame`-`MainLoop` cluster, part)
 
 This chunk's 25 functions sit right at the head of `UpdateGameFrame`
-itself. Of the 26 checkbox entries, 18 matched byte-exact, 6 were
+itself. Of the 26 checkbox entries, 20 matched byte-exact, 4 were
 parked (`NON_MATCHING`, semantics/field offsets confirmed, one specific
 register-allocation gap each), and 2 (`UpdateGameFrame` itself and
 `sub_8022D50`) were left fully raw.
 
-**Matched (`src/system/game_loop2.c`, 18 functions):**
+**Matched (`src/system/game_loop2.c`, 20 functions):**
+
+- **`sub_8022EA8`/`sub_8022F2C`**: record 47's periodic-trigger
+  setter/decrementer (see `docs/rom_map.md`, "An achievement/unlock-
+  icon spawner family, tied to `gStaticData_084A5600` record 47").
+  Closed after the initial blanket-register-pin attempt (pinning every
+  local to mirror the ROM's map directly) made things *worse* - a
+  pinned `slot` picked up a spurious truncate-and-remask on every read,
+  and a stray stack spill appeared for the `0x234` field offset. The
+  recipe that actually works is much more targeted: 1) a `base` local
+  that snapshots `gUnknown_030012B8`'s *value* before the chase (not
+  inline in the call argument), forcing its evaluation into `r0` early
+  exactly like the ROM's `ldr r0,[r7]` and pushing the chase itself
+  into `r1`; 2) a single `register s32 off asm("r2")` pin for the
+  `0x8d << 2` (`0x234`) record-header offset in the *first* chase only
+  - this matches the ROM's `movs r2,#0x8d; lsls r2,r2,#2` and, just as
+  importantly, stops gcc from caching that constant in a register
+  across the `sub_8006DF8` call (which is what was pushing one of the
+  two cached globals' addresses into `r8`); 3) freshly-named locals for
+  the *second* chase (`p3b`/`headerb`/`recordb` instead of reusing
+  `p3`/`header`/`record`) - reusing the same C variable name across
+  both chases made gcc "stick" the second chase's register choice to
+  the first's, instead of letting it fall into `r0` naturally (free
+  again there since the call's result is already saved off into
+  `slot`). No pin at all was needed for `self`, `&gUnknown_030012B8`,
+  or `slot` - all three land in `r5`/`r7`/`r6` purely from the
+  resulting register pressure, matching the ROM exactly.
+  `sub_8022F2C` reuses the same recipe for its own
+  `sub_8006DF8`/`sub_8006D08` cross-call pair, plus three more
+  pins/rewrites for the rest of the function: `addr`/`countdown` pinned
+  to `r1`/`r3` reproduce the ROM's front-of-function map, and that same
+  `addr` register variable is *reused* (reassigned, not redeclared) for
+  the digit-cascade's own address chasing in the `else` branch - this
+  is what makes gcc emit the ROM's `subs r1,#4` chain-decrement instead
+  of recomputing `self+0x98`/`self+0x94` fresh from `self` each time.
+  `newCountdown` needed its own `register ... asm("r0")` pin, since
+  otherwise gcc decrements `countdown`'s own register (`r3`) in place -
+  functionally fine (the two branches are mutually exclusive) but a
+  different instruction encoding (`subs r3,#1` vs the ROM's `subs
+  r0,r3,#1`) than the ROM's. Finally, the digit-cascade's four levels
+  needed rewriting test-true-first (`if (val == N) { nested / return }
+  else { val + 1 }`) instead of test-false-first (`if (val != N) { val
+  + 1 } else { nested }`) - logically identical, but only the
+  true-first form makes gcc lay out all four "plain increment" arms
+  grouped at the tail via fall-through, matching the ROM's block order;
+  each level also caches its loaded field value in a named local
+  (`val1`/`val2`/`val3`) instead of re-reading `*addr` for the
+  increment, since re-reading re-emits a redundant `ldr` gcc otherwise
+  doesn't need. Real bytes were in `asm/code_3_2_17_22ea8.s`, now
+  removed (folded into `game_loop2.o`).
 
 - **`sub_8022FEC`/`sub_802306C`**: two near-identical "tick a frame
   counter, and when it reaches `self+0xbc`'s limit, either flag the
@@ -4890,28 +4939,8 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
     literal negative constants (`-0x11`, `-0x41`, `+= 0x20`, `0x7f`)
     instead of `~0x10` etc.
 
-**Parked (`NON_MATCHING`, real bytes in `asm/code_3_2_17_22bf0.s` and
-`asm/code_3_2_17_22ea8.s`):**
+**Parked (`NON_MATCHING`, real bytes in `asm/code_3_2_17_22bf0.s`):**
 
-- **`sub_8022EA8`/`sub_8022F2C`** (`src/system/game_loop2.c`): record
-  47's periodic-trigger setter/decrementer (see `docs/rom_map.md`, "An
-  achievement/unlock-icon spawner family, tied to `gStaticData_084A5600`
-  record 47"). Every field offset/call/argument confirmed correct
-  (including `sub_8022F2C`'s cascading `self+0x9c`/`0x98`/`0x94`/`0x90`
-  minutes:seconds:centiseconds-style odometer, which *does* reproduce
-  the ROM's exact branch topology). Both hit the same gap: the ROM
-  keeps `&gUnknown_030012D0` and `&gUnknown_030012B8` alive across the
-  `sub_8006DF8` call in `r4`/`r7` (`r4`'s slot reused from the by-then-
-  dead `seconds` parameter), landing the whole function in just 4 low
-  registers (`push {r4,r5,r6,r7,lr}`); this compiler's natural
-  allocation instead spills one of the two cached globals into `r8`
-  (an extra `mov r7,r8`/`push {r7}` pair the ROM doesn't have).
-  Explicit register pins for every local (`self`/`seconds`/both cached
-  globals/`slot`) were tried and made things *worse* - the pinned
-  `slot` (`u8`, `r6`) then picks up a spurious truncate-and-remask at
-  every read instead of the ROM's single truncate at assignment, and a
-  stray stack spill appears for the `0x234` record-header offset - so
-  parked with the naturally-allocated (but `r8`-using) version.
 - **`sub_8022BF0`/`sub_8022CA0`** (`src/system/game_loop.c`): the
   level-start/checkpoint-restore progress-total updater and its
   "refresh cached frame count / snapshot `self`'s first `0x68` bytes"
@@ -4962,12 +4991,13 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
 `code_3_2_17_225a0.s` (raw `UpdateGameFrame`), `code_3_2_17_22bf0.s`
 (raw twin for the two parked `game_loop.c` functions, `.if
 NON_MATCHING == 0`), `game_loop.o`, `code_3_2_17_22d50.s` (raw
-`sub_8022D50`), `code_3_2_17_22ea8.s` (raw twin for the two parked
-`game_loop2.c` functions), `game_loop2.o`, and finally
-`code_3_2_17_231cc.s` (the original file's unchanged remainder, from
-`sub_80231CC` on) - see `ldscript.txt` and `tools/report_units.py`'s
-`game_loop` category, both updated to match. Verified via a full clean
-`make compare` (`La suma coincide`) and `make NON_MATCHING=1 report`.
+`sub_8022D50`), `game_loop2.o` (now covering `sub_8022EA8`/
+`sub_8022F2C` too - `code_3_2_17_22ea8.s`, their former raw twin, is
+removed), and finally `code_3_2_17_231cc.s` (the original file's
+unchanged remainder, from `sub_80231CC` on) - see `ldscript.txt` and
+`tools/report_units.py`'s `game_loop` category, both updated to match.
+Verified via a full clean `make compare` (`La suma coincide`) and
+`make NON_MATCHING=1 report`.
 
 ## `0x08026EEC`-`0x08028568` (GitHub issue #45, `hud` chunk): 14 of 24 matched
 
