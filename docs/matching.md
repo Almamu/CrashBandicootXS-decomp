@@ -3178,6 +3178,27 @@ elsewhere in this file, here triggered by pinning the mask register
 with its initializer in the same statement as the later shift).
 Parked rather than keep chasing two trailing no-op instructions.
 
+**Update: matched in a later session.** Converted back from the
+`NAKED` transcription (`docs/matching/naked-oam-actor-part-batch.md`)
+to real C by taking this same C reconstruction and adding an empty
+`asm volatile("" : "+r"(test))` barrier immediately after the `and`
+that computes `test`. This makes `test`'s value opaque to the
+optimizer, so it can no longer prove the automatic `s32`-to-`u8`
+return-value truncation is redundant - the barrier itself emits no
+instructions, it just forces the *existing* implicit conversion at
+`return test;` to actually materialize as the ROM's `lsls r0, r0,
+#0x18; lsrs r0, r0, #0x18` pair. An explicit asm block emitting that
+shift pair directly (rather than an empty barrier) was tried first and
+also produced byte-exact output through those two instructions, but
+then always duplicated them - the compiler still inserted its own
+separate return-value truncation immediately afterward regardless of
+whether the asm's output was typed `s32` or `u8`. The empty-barrier
+form avoids that duplication entirely by leaving the actual truncation
+to the compiler's own return-conversion codegen rather than emitting
+it explicitly. Confirmed byte-identical via isolated compile plus
+`arm-none-eabi-as` assemble and a direct comparison against the ROM's
+raw bytes at `0x08008770`, then via full clean `make compare`.
+
 **`sub_8008830`** (ROM `0x08008830`, right after `sub_8008824`, new
 `src/graphics/actor_part7.c`): sets `part+0x28`'s low 2 bits to
 `value & 3`. Same accumulator-register pattern and `+r`-on-the-other-

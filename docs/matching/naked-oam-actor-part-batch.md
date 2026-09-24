@@ -119,3 +119,13 @@ crashbandicootxs.map && make compare` confirms `La suma coincide`
 after this batch, alongside `make NON_MATCHING=1 report` (kept
 working, though now a no-op for these fourteen functions specifically
 since they're unconditionally compiled either way).
+
+**Update: `sub_8008770` matched in a later session.** Converted back
+from this NAKED transcription to real C - an empty
+`asm volatile("" : "+r"(test))` barrier right after the `and` that
+computes the result made its value opaque to the optimizer, forcing
+the automatic `s32`-to-`u8` return-value truncation the ROM has (and
+this compiler otherwise proves redundant) to actually materialize.
+See `docs/matching.md`'s "Parked, not matched: sub_8008770" entry for
+the full account. The other thirteen functions in this batch are
+unaffected and remain NAKED, tracked as parked.

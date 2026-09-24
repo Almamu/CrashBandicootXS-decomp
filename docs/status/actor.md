@@ -41,7 +41,8 @@ from "core" graphics.
   `sub_80086A4`, `sub_80086B0`, `sub_80086BC`, `sub_80086C4`,
   `sub_80086CC`, `sub_80086D8`, `sub_80086E4`, `sub_80086EC`,
   `sub_80086F4`, `sub_8008710`, `sub_800872C`, `sub_8008734`,
-  `sub_8008748`, `sub_8008754`, `sub_8008768`, `sub_800876C`
+  `sub_8008748`, `sub_8008754`, `sub_8008768`, `sub_800876C`,
+  `sub_8008770`
 - `src/graphics/actor_part7.c` (new file, now directly adjacent to
   `actor_part6.c`'s matched functions): `sub_800878C`, `sub_80087A0`, `sub_80087B4`,
   `sub_80087BC`, `sub_80087C0`, `sub_80087C8`, `sub_80087D0`,
@@ -1195,25 +1196,29 @@ embedded as asm instead. They're tracked as parked, not matched.
   **`sub_8008044`** (`src/graphics/actor_part3.c`),
   **`sub_8008188`/`sub_8008200`/`sub_8008278`**
   (`src/graphics/actor_part4.c`), **`sub_80083B8`**
-  (`src/graphics/actor_part5.c`), **`sub_8008770`**
-  (`src/graphics/actor_part6.c`), and
+  (`src/graphics/actor_part5.c`), and
   **`sub_800891C`/`sub_8008A40`/`sub_8008AD8`**
   (`src/graphics/actor_part7.c`) / **`sub_8008D80`**
   (`src/graphics/actor_part7b.c`) - stayed parked here for a long time
   on exactly the register-canonicalization/stack-layout classes of gap
   documented at length throughout this page (`r7`-pin hazards, a
-  stubborn `add`-operand-order canonicalization, a compiler-elided
-  redundant byte truncation, and a C-inexpressible stack-layout
-  coincidence). All ten are now `NAKED` functions whose bodies are a
-  literal instruction-for-instruction transcription of the ROM's own
-  assembly (byte-exact, confirmed via a full clean `make compare`),
-  rather than a derived C reconstruction - see
+  stubborn `add`-operand-order canonicalization, and a C-inexpressible
+  stack-layout coincidence). All eleven are `NAKED` functions whose
+  bodies are a literal instruction-for-instruction transcription of the
+  ROM's own assembly (byte-exact, confirmed via a full clean
+  `make compare`), rather than a derived C reconstruction - see
   `docs/matching/naked-oam-actor-part-batch.md`. Per project policy, a
   NAKED transcription standing in for a substantial function's
   register-allocation gap doesn't count as "matched" the way real
-  decompiled C does, so all ten stay filed here rather than in
+  decompiled C does, so all eleven stay filed here rather than in
   "Matched" above, and `tools/report_units.py` tracks their address
-  ranges as unmatched (`base_object: None`).
+  ranges as unmatched (`base_object: None`). `sub_8008770`
+  (`src/graphics/actor_part6.c`), which shared this list in an earlier
+  version of this page (a compiler-elided redundant byte truncation,
+  not a register-canonicalization gap), was converted back to real C
+  and matched in a later session - see "Matched" above and
+  `docs/matching.md`'s "Parked, not matched: sub_8008770" entry for
+  that account.
 - **`sub_8008F20`** (`src/graphics/actor_part11.c`) - initializes a
   fixed-slot object-pool manager struct: two big 256-word zeroed
   tables (likely a pair of spatial-partition/collision grids), plus a

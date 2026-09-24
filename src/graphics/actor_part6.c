@@ -554,32 +554,45 @@ void *sub_800876C(void *part)
 
 /* Same keyframe-record lookup as `sub_8008734` above, testing the
  * record's `+0x17` flags bit 1 and returning it as a plain 0/1 value.
- * See the (now removed) NON_MATCHING C draft in git history for the
- * full commented C reconstruction - every instruction matched the ROM
- * up through the `ands r0, r1`, but the ROM's two trailing
- * byte-truncation instructions (`lsls r0, r0, #0x18; lsrs r0, r0,
- * #0x18`) got optimized away by this compiler every time, since it can
- * prove the AND result (mask is the visible constant 2) already fits
- * in a byte - see docs/matching.md's "Parked, not matched: sub_8008770"
- * for the techniques tried. Written as NAKED asm here instead, same
- * technique as the other functions above. */
-NAKED u8 sub_8008770(struct actor *part)
+ * Matched after the NAKED transcription this function briefly used
+ * (see git history and docs/matching.md's "Parked, not matched:
+ * sub_8008770" entry for that account): every instruction here
+ * matches the ROM up through the `ands r0, r1` on its own, but the
+ * ROM's two trailing byte-truncation instructions (`lsls r0, r0,
+ * #0x18; lsrs r0, r0, #0x18`, narrowing the AND result to the `u8`
+ * return type) got optimized away by this compiler every time it
+ * could prove the AND result (mask is the visible constant 2) already
+ * fits in a byte. Closed with an empty `asm volatile("" : "+r"(test))`
+ * barrier right after the `and`, making `test`'s value opaque to the
+ * optimizer so it can no longer prove the automatic `s32`-to-`u8`
+ * return-value truncation is redundant - the barrier itself emits no
+ * instructions, it just forces the *existing* implicit truncation
+ * back in. An explicit asm block emitting the shift pair directly was
+ * tried first and also produced byte-exact output up through those
+ * two instructions, but always duplicated them (the compiler still
+ * inserted its own separate return-value truncation afterward,
+ * regardless of whether the asm's output was typed `s32` or `u8`) -
+ * the empty-barrier form avoids that by leaving the actual truncation
+ * to the compiler's own return-conversion codegen. */
+u8 sub_8008770(struct actor *part)
 {
-    asm(
-        "ldr r1, [r0, #0x20]\n\t"
-        "add r0, #0x2d\n\t"
-        "ldr r2, [r1]\n\t"
-        "ldrb r3, [r0]\n\t"
-        "lsl r1, r3, #3\n\t"
-        "sub r1, r1, r3\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r1, r1, r2\n\t"
-        "mov r0, #2\n\t"
-        "ldrb r1, [r1, #0x17]\n\t"
-        "and r0, r1\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "bx lr\n\t"
-    );
+    register void **tablePtr asm("r1") = *(void ***)((u8 *)part + 0x20);
+    register u8 *idxAddr asm("r0") = (u8 *)part + 0x2d;
+    register void *table asm("r2") = *tablePtr;
+    register u8 idx asm("r3") = *idxAddr;
+    register s32 offset asm("r1") = idx * 0x1c;
+    void *rec;
+    register s32 mask asm("r0");
+    register s32 flags asm("r1");
+    register s32 test asm("r0");
+
+    asm("add %0, %0, %1" : "+r" (offset) : "r" (table));
+    rec = (void *)offset;
+
+    mask = 2;
+    flags = *((u8 *)rec + 0x17);
+    test = mask & flags;
+    asm volatile("" : "+r" (test));
+    return test;
 }
 asm(".align 2, 0");
