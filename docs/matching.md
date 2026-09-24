@@ -3619,36 +3619,76 @@ this single 2-byte gap.
 list-management logic whose higher-level purpose isn't recoverable
 without more context. Left raw rather than guess.
 
-**Parked, not matched: `sub_800944C`** (ROM `0x0800944C`, right after
-the raw `sub_80091D4`, `src/graphics/actor_part11.c`): the same
-"extended screen box" filter shape as `sub_8008C80` (the plain
-240x160 GBA screen region, in Q8, at the `gUnknown_03001308`
-sub-object's own position), but instead of filtering into a second
-array, iterates `manager`'s spatial hash grid buckets directly (from
-`baseIdx+2` down to 0, where `baseIdx` is the screen-box's own X
-position clamped to non-negative) and, for every node whose
-`table+0x30/0x34`-driven trampoline passes the box test, fires its
-`table+0x20/0x24`-driven trampoline and marks it (`node+0x11 = 1`) so
-a second pass - over the special "large object" bucket 255 - knows to
-skip nodes already handled via their primary bucket (clearing the mark
-instead of re-testing), while still running the same box-test-then-
-trampoline logic for any bucket-255 node that wasn't already marked.
+**Matched: `sub_800944C`** (ROM `0x0800944C`, right after the raw
+`sub_80091D4`, now `src/graphics/actor_part11g.c` - moved out of
+`actor_part11.c`, since its real ROM address isn't adjacent to that
+file's own matched functions, per docs/workflow.md step 4's "needs its
+own new .c file" case): the same "extended screen box" filter shape as
+`sub_8008C80` (the plain 240x160 GBA screen region, in Q8, at the
+`gUnknown_03001308` sub-object's own position), but instead of
+filtering into a second array, iterates `manager`'s spatial hash grid
+buckets directly - a fixed `[baseIdx, baseIdx+2]` 3-bucket window, NOT
+a full 0-255 sweep, where `baseIdx` is the screen-box's own X position
+clamped to non-negative - and, for every node whose `table+0x30/0x34`-
+driven trampoline passes the box test, fires its `table+0x20/0x24`-
+driven trampoline and marks it (`node+0x11 = 1`) so a second pass -
+over the special "large object" bucket 255 - knows to skip nodes
+already handled via their primary bucket (clearing the mark instead of
+re-testing), while still running the same box-test-then-trampoline
+logic for any bucket-255 node that wasn't already marked.
 
-Every load, store, and field offset is confirmed correct, matching
-down to the exact same `r0`/`r2`/`r3`/`r8` register roles as
-`sub_8008C80`'s own box construction plus a persistent `r7`(grid-head
-base)/`r8`(bucket-255 address) pair mirroring `sub_8008F20`/
-`sub_8009150`'s own early-address-hoisting pattern. The single
-remaining gap: computing `bucket = baseIdx + 2` from the already-
-computed, register-pinned `baseIdx` naturally reuses `baseIdx`'s own
-register in place (`adds r5, #2`) since it's not read again afterward,
-while the ROM computes it into a separate register instead (`adds r1,
-r5, #2`) - no rewrite tried (an intermediate volatile-routed constant
-included) discourages this specific reuse. Parked on this single
-2-byte gap.
+The original parked draft had every load, store, and field offset
+confirmed correct, but was parked on what looked like a single
+register-reuse gap in computing `bucket = baseIdx + 2`. Chasing that
+gap surfaced a real bug in the draft's own loop bound first: the ROM's
+loop-end compare (`cmp r1, r5; bge ...`) is against `r5`, which still
+holds `baseIdx` (never reset to 0 after the initial clamp) - so the
+outer loop actually runs `bucket` from `baseIdx+2` down to `baseIdx`
+inclusive (a fixed 3-bucket window), not down to a literal 0 as the
+parked draft assumed. Fixing the bound alone surfaced the true
+register-reuse shape: with `baseIdx` correctly kept live across the
+whole loop for that per-iteration compare, the compiler naturally
+stopped reusing its register for `bucket` at all. Getting the rest to
+byte-match took three more fixes: (1) the outer loop is a `do`/`while`
+in the ROM, not a `for` - since `baseIdx+2 >= baseIdx` always holds,
+a `for` loop's upfront entry test is dead code the ROM's compiler never
+emitted, but this compiler doesn't optimize away a `for` loop's
+always-true entry test on its own; (2) the bucket-255 pass's `if` is
+ordered "box-test-and-fire on the *unmarked* case, clear the mark on
+the marked case" in the source, not the reverse - this also happens to
+be what makes the compiler's own literal-pool dump point land at the
+same spot in the instruction stream as the ROM's; (3) each grid-bucket
+dereference re-reads `part = *node` fresh rather than reusing a cached
+value across the `sub_803AD80` call, matching the ROM's own redundant
+reload. The one genuine compiler gap left after all of that: computing
+the grid slot's address as `ADD Rd, Rbase, Roffset` (`adds r0, r7, r0`,
+base operand first, matching the ROM) instead of this compiler's
+natural array-indexing order, `ADD Rd, Roffset, Rbase` (`adds r0, r0,
+r7`, offset operand first) - both compute the identical value, just
+encoded as different bytes depending on which source register is
+listed first. Closed with a single tied-operand-order `asm` line
+(`"add %0, %1, %2"` with the grid base as `%1`) forcing the ROM's own
+operand order, without disturbing any other register allocation in the
+function. Verified byte-identical via isolated `arm-none-eabi-as`
+assemble against the raw ROM bytes (the sole leftover diff was a
+section-end padding artifact from testing the function in isolation,
+outside the function's own `.size` boundary) plus a full clean `make
+compare` (`crashbandicootxs.gba: La suma coincide`).
+
+Moved into its own new translation unit, `src/graphics/actor_part11g.c`
+(also hoisting `struct pool_manager`'s definition there, mirroring the
+copy `actor_part12.c` and `actor_part11.c` each keep - `actor_part11g`
+rather than the more obvious `actor_part11f`, since a concurrent PR
+matched-as-NAKED `sub_8009528` into `actor_part11f.c` first). Its raw
+`.if NON_MATCHING == 0` guard block was removed from
+`asm/code_3_2_13_944c.s`; once `sub_8009528` also moved out (see that
+function's own "Update: converted to `NAKED`" entry below), the shared
+file held nothing at all and was deleted entirely. `ldscript.txt` got a
+new `actor_part11g.o` entry inserted between `actor_part11c.o` and
+`actor_part11f.o` (`sub_8009528`'s own new home), preserving ROM order.
 
 **Parked, not matched: `sub_8009528`** (ROM `0x08009528`, right after
-the parked `sub_800944C`, `src/graphics/actor_part11.c`): the same
+the now-matched `sub_800944C`, `src/graphics/actor_part11.c`): the same
 "extended screen box" grid-iteration shape as `sub_800944C`, but
 dispatching each hit to `sub_80096C0` (when the box's "compare
 viewport" argument equals `gUnknown_030012D8`, the player) or
