@@ -796,7 +796,6 @@ NAKED s8 sub_8025228(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsO
     );
 }
 
-#if NON_MATCHING
 /* Custom RLE/delta token-stream decoder (docs/rom_map.md's "A new find:
  * a custom RLE/delta token-stream decoder"): looks up a base pointer
  * via `self->decodeBase` indexed by `recordId`, then decodes a token
@@ -805,74 +804,182 @@ NAKED s8 sub_8025228(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsO
  * raw-copy run - writing the decoded halfwords into `dest` (a linear
  * 256-byte cache slot in `sub_8024F24`'s caller).
  *
- * NOT YET BYTE-MATCHING: the decode loop mechanics (read byte-for-byte
- * from the ROM) are all reproduced and the control flow matches, but
- * the ROM keeps a "written" byte offset alive across the whole function
- * in `r7` (used directly as a write pointer in two of the three token
- * modes) and does not hoist the repeated `0x8000`/`0x4000` bit-test
- * masks out of the loop, while this compiler's natural allocation for
- * the equivalent index-based reconstruction below picks a different
- * register shape (an extra cached mask register, a plain incrementing
- * index instead of a shared pointer). Not yet found a phrasing that
- * reproduces the ROM's exact register/instruction shape here. See
- * docs/matching/issue-40-terrain-tile-cache.md. */
-void sub_8025334(struct tile_cache *self, s32 recordId, void *dest)
+ * Semantics, control flow and total size were already fully confirmed
+ * as real C (see the `#if NON_MATCHING` reconstruction this replaced,
+ * and docs/matching/issue-40-terrain-tile-cache.md) - the remaining gap
+ * was that this loop's "bytes-written" state is kept alive very
+ * differently between the ROM and this compiler's natural allocation:
+ * the ROM keeps a byte-offset write pointer alive across the whole
+ * function in `r7` (used *directly* as the store target for the
+ * delta-run mode's first and last writes, while the literal-fill and
+ * raw-copy modes instead recompute a fresh `dest + written*2` pointer
+ * from `r8`/`ip` every time despite `r7` holding the identical value in
+ * lockstep) and never hoists the repeated `0x8000`/`0x4000` bit-test
+ * masks out of the loop - an index-based C reconstruction can't be
+ * coaxed into reproducing that particular redundant-shadow-register
+ * shape. Closed as a NAKED transcription instead - the same escape
+ * hatch already used for `sub_8024F24`/`sub_80250BC`/`sub_8025130`/
+ * `sub_8025228` above (and, this session, for `sub_801E688`/
+ * `LoadGraphicsPackage`/`LoadBg2Background`) for the identical class of
+ * "correct C, wrong register permutation" gap. Hand-transcribed
+ * instruction-for-instruction from the ROM disassembly
+ * (`0x08025334`-`0x08025444`, formerly `asm/code_3_2_17_24f24.s`'s last
+ * remaining function - that file is now gone, and this cluster's raw
+ * bytes are fully retired), including its own trailing 2-byte zero pad
+ * (see the `asm(".align 2, 0")` note after `sub_8024F24` above for why
+ * that has to be spelled out explicitly rather than left to the
+ * assembler's default NOP-fill alignment). Verified byte-identical via
+ * isolated compile + `arm-none-eabi-as` assemble, a direct byte
+ * comparison against `baserom.gba` at `0x08025334`, and a full clean
+ * `make compare`. */
+NAKED void sub_8025334(struct tile_cache *self, s32 recordId, void *dest)
 {
-    u16 *table = self->decodeBase;
-    u8 *src = (u8 *)table + table[recordId] * 4;
-    s32 budget = 0x7f;
-    s32 written = 0;
-    u16 *out = dest;
-    u16 accum;
-
-    do {
-        u16 header = *(u16 *)src;
-        u8 count = *src;
-        src += 2;
-
-        if (header & 0x8000) {
-            u16 literal = *(u16 *)src;
-            src += 2;
-            budget -= count;
-            do {
-                out[written] = literal;
-                written++;
-                count--;
-            } while (count != 0);
-        } else if (header & 0x4000) {
-            budget -= count;
-            accum = *(u16 *)src;
-            src += 2;
-            out[written] = accum;
-            written++;
-            count--;
-            while (count > 1) {
-                s8 *deltas = (s8 *)src;
-                src += 2;
-                accum += deltas[0];
-                out[written] = accum;
-                written++;
-                accum += deltas[1];
-                out[written] = accum;
-                written++;
-                count -= 2;
-            }
-            if (count != 0) {
-                s8 delta = *(s8 *)src;
-                src += 2;
-                accum += delta;
-                out[written] = accum;
-                written++;
-            }
-        } else {
-            budget -= count;
-            do {
-                out[written] = *(u16 *)src;
-                src += 2;
-                written++;
-                count--;
-            } while (count != 0);
-        }
-    } while (budget >= 0);
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "mov r7, sb\n\t"
+        "mov r6, r8\n\t"
+        "push {r6, r7}\n\t"
+        "mov r8, r2\n\t"
+        "ldr r6, [r0, #4]\n\t"
+        "lsl r1, r1, #1\n\t"
+        "add r1, r1, r6\n\t"
+        "ldrh r1, [r1]\n\t"
+        "lsl r0, r1, #2\n\t"
+        "add r6, r6, r0\n\t"
+        "mov r0, #0x7f\n\t"
+        "mov sb, r0\n\t"
+        "mov r1, #0\n\t"
+        "mov ip, r1\n\t"
+        "mov r7, r8\n\t"
+        "1:\n\t"
+        "ldrh r1, [r6]\n\t"
+        "ldrb r3, [r6]\n\t"
+        "add r6, #2\n\t"
+        "mov r0, #0x80\n\t"
+        "lsl r0, r0, #8\n\t"
+        "and r0, r1\n\t"
+        "cmp r0, #0\n\t"
+        "beq 3f\n\t"
+        "ldrh r2, [r6]\n\t"
+        "add r6, #2\n\t"
+        "mov r4, sb\n\t"
+        "sub r4, r4, r3\n\t"
+        "mov sb, r4\n\t"
+        "mov r1, ip\n\t"
+        "lsl r0, r1, #1\n\t"
+        "mov r4, r8\n\t"
+        "add r1, r0, r4\n\t"
+        "2:\n\t"
+        "strh r2, [r1]\n\t"
+        "add r1, #2\n\t"
+        "add r7, #2\n\t"
+        "mov r0, #1\n\t"
+        "add ip, r0\n\t"
+        "sub r0, r3, #1\n\t"
+        "lsl r0, r0, #0x10\n\t"
+        "lsr r3, r0, #0x10\n\t"
+        "cmp r3, #0\n\t"
+        "bne 2b\n\t"
+        "b 7f\n\t"
+        "3:\n\t"
+        "mov r0, #0x80\n\t"
+        "lsl r0, r0, #7\n\t"
+        "and r1, r0\n\t"
+        "cmp r1, #0\n\t"
+        "beq 5f\n\t"
+        "mov r1, sb\n\t"
+        "sub r1, r1, r3\n\t"
+        "mov sb, r1\n\t"
+        "ldrh r4, [r6]\n\t"
+        "add r6, #2\n\t"
+        "strh r4, [r7]\n\t"
+        "sub r0, r3, #1\n\t"
+        "lsl r0, r0, #0x10\n\t"
+        "lsr r3, r0, #0x10\n\t"
+        "add r7, #2\n\t"
+        "mov r2, #1\n\t"
+        "add ip, r2\n\t"
+        "mov r1, ip\n\t"
+        "lsl r0, r1, #1\n\t"
+        "mov r2, r8\n\t"
+        "add r5, r0, r2\n\t"
+        "4:\n\t"
+        "ldrh r2, [r6]\n\t"
+        "add r6, #2\n\t"
+        "lsl r1, r2, #0x18\n\t"
+        "lsl r0, r4, #0x10\n\t"
+        "asr r0, r0, #0x10\n\t"
+        "asr r1, r1, #0x18\n\t"
+        "add r0, r0, r1\n\t"
+        "lsl r0, r0, #0x10\n\t"
+        "lsr r4, r0, #0x10\n\t"
+        "strh r4, [r5]\n\t"
+        "add r5, #2\n\t"
+        "lsl r2, r2, #0x10\n\t"
+        "lsl r0, r4, #0x10\n\t"
+        "asr r0, r0, #0x10\n\t"
+        "asr r2, r2, #0x18\n\t"
+        "add r0, r0, r2\n\t"
+        "lsl r0, r0, #0x10\n\t"
+        "lsr r4, r0, #0x10\n\t"
+        "strh r4, [r5]\n\t"
+        "add r5, #2\n\t"
+        "add r7, #4\n\t"
+        "mov r0, #2\n\t"
+        "add ip, r0\n\t"
+        "sub r0, r3, #2\n\t"
+        "lsl r0, r0, #0x10\n\t"
+        "lsr r3, r0, #0x10\n\t"
+        "cmp r3, #1\n\t"
+        "bhi 4b\n\t"
+        "cmp r3, #0\n\t"
+        "beq 7f\n\t"
+        "ldrh r1, [r6]\n\t"
+        "add r6, #2\n\t"
+        "lsl r1, r1, #0x18\n\t"
+        "lsl r0, r4, #0x10\n\t"
+        "asr r0, r0, #0x10\n\t"
+        "asr r1, r1, #0x18\n\t"
+        "add r0, r0, r1\n\t"
+        "strh r0, [r7]\n\t"
+        "add r7, #2\n\t"
+        "mov r1, #1\n\t"
+        "add ip, r1\n\t"
+        "b 7f\n\t"
+        "5:\n\t"
+        "mov r2, sb\n\t"
+        "sub r2, r2, r3\n\t"
+        "mov sb, r2\n\t"
+        "mov r4, ip\n\t"
+        "lsl r0, r4, #1\n\t"
+        "mov r2, r8\n\t"
+        "add r1, r0, r2\n\t"
+        "6:\n\t"
+        "ldrh r0, [r6]\n\t"
+        "strh r0, [r1]\n\t"
+        "add r6, #2\n\t"
+        "add r1, #2\n\t"
+        "add r7, #2\n\t"
+        "mov r4, #1\n\t"
+        "add ip, r4\n\t"
+        "sub r0, r3, #1\n\t"
+        "lsl r0, r0, #0x10\n\t"
+        "lsr r3, r0, #0x10\n\t"
+        "cmp r3, #0\n\t"
+        "bne 6b\n\t"
+        "7:\n\t"
+        "mov r0, sb\n\t"
+        "cmp r0, #0\n\t"
+        "bge 1b\n\t"
+        "pop {r3, r4}\n\t"
+        "mov r8, r3\n\t"
+        "mov sb, r4\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r0}\n\t"
+        "bx r0"
+    );
 }
-#endif
+/* Trailing byte count isn't a multiple of 4 in the ROM's own raw block
+ * (a bare `.align 2, 0` follows `bx r0` there too) - see the
+ * `matching_decomp_alignment_fix` precedent. */
+asm(".align 2, 0");

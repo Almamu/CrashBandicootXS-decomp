@@ -55,7 +55,7 @@ issue is where they got turned into (attempted) byte-exact C.
 `src/system/game_loop5.c`: `sub_80254C0`, `sub_80254F8`, `sub_8025554`,
 `sub_8025588`, `sub_80255A8`, `sub_80255C4`.
 
-## Closed as NAKED - 4 functions
+## Closed as NAKED - 5 functions
 
 - **`sub_8024F24`** (the 16-slot lookup dispatcher): semantics,
   control flow, the shared per-case tail (ROM computes the final
@@ -111,32 +111,42 @@ issue is where they got turned into (attempted) byte-exact C.
   compare`. Their raw bytes no longer live in
   `asm/code_3_2_17_24f24.s` - that file now starts directly at
   `sub_8025334`.
-
-## Parked (`NON_MATCHING`) - 1 function
-
-The remaining function is fully understood (semantics, field offsets,
-every call and branch topology confirmed correct against the ROM
-disassembly) but doesn't yet produce byte-identical output from
-`tools/agbcc`, nor has NAKED transcription been attempted on it yet
-(unlike its siblings above, its gap isn't a simple register-allocation
-permutation - see below). Real bytes live in
-`asm/code_3_2_17_24f24.s` (0x08025334-0x08025444), guarded
-`.if NON_MATCHING == 0`; the `#if NON_MATCHING` C reconstruction lives
-in `src/system/game_loop3.c` right after the matched/NAKED functions.
-
-- **`sub_8025334`** (the RLE/delta decoder): the decode loop mechanics
-  (three run-mode branches, the literal/delta/raw-copy semantics, the
-  0x7f-halfword budget) are reproduced and read byte-for-byte off the
-  ROM disassembly, and control flow matches. The ROM keeps a
-  "bytes-written" offset alive across the whole function in `r7`,
-  using it *directly* as a write pointer in two of the three run modes
-  (not just as a counter), and does not hoist the repeated
-  `0x8000`/`0x4000` bit-test masks out of the outer loop; this
-  compiler's natural allocation for the equivalent index-based
-  reconstruction below picks a different register shape (a cached mask
-  register, a plain incrementing index instead of a shared pointer).
-  Not yet found a source phrasing that reproduces the ROM's exact
-  register/instruction shape here.
+- **`sub_8025334`** (the RLE/delta decoder `sub_8024F24` calls on a
+  cache miss): decode-loop mechanics (the three run-mode branches, the
+  literal/delta/raw-copy semantics, the 0x7f-halfword budget) and
+  control flow were already fully confirmed correct as a real-C
+  `#if NON_MATCHING` reconstruction. The remaining gap, once fully
+  traced register-by-register against the ROM disassembly: the ROM
+  keeps a "bytes-written" *byte-offset write pointer* alive across the
+  whole function in `r7` (seeded from `dest` at entry, incremented in
+  lockstep with the `written` counter in every mode), but it is only
+  ever *dereferenced* directly in the delta-run mode's first write (the
+  initial `accum` halfword) and its last write (the trailing odd delta,
+  when `count` is even) - the delta-run mode's own steady-state
+  two-at-a-time loop, and *every* write in both the literal-fill and
+  raw-copy modes, instead recompute a fresh `dest + written*2` pointer
+  from `r8`/`ip` right before storing, even though `r7` holds the exact
+  identical address at that point. This is a genuine
+  redundant-shadow-register artifact of whatever compiler produced the
+  original ROM - not a shape a straightforward index-based C
+  reconstruction can be phrased into reproducing, since C has no way to
+  say "maintain this pointer in a specific register but only read it
+  back at these two specific points, elsewhere always recomputing from
+  a different pair of registers that happen to agree." Closed as a
+  NAKED transcription - the same escape hatch as the four functions
+  above - hand-transcribing the ROM disassembly instruction-for-
+  instruction, including its own trailing 2-byte zero pad
+  (`asm(".align 2, 0")` after the function, per the
+  `matching_decomp_alignment_fix` precedent - without it,
+  `arm-none-eabi-as`'s default NOP-fill alignment (`0x46c0`) produces 2
+  bytes that differ from the ROM's zero-fill). Verified byte-identical
+  via isolated compile + `arm-none-eabi-as` assemble, a direct byte
+  comparison against `baserom.gba` at `0x08025334`, and a full clean
+  `make compare`. `asm/code_3_2_17_24f24.s` is now gone entirely - it
+  held only this function after `sub_8024F24`/`sub_80250BC`/
+  `sub_8025130`/`sub_8025228` were closed, so once this one closed too
+  the file's contents were empty and it (plus its `ldscript.txt` entry)
+  were removed rather than kept as a zero-function husk.
 
 ## Left raw (untouched) - 1 function
 
