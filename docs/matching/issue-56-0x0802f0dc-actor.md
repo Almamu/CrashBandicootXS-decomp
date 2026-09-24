@@ -24,7 +24,7 @@ are named by the lower 5 hex digits of their first function's address
 `..._2f7b0.s`, `..._2f97c.s`, `..._2fa04.s`, `..._2fa38.s`,
 `..._2fbf0.s`).
 
-## Matched (21 of 25 functions)
+## Matched (22 of 25 functions)
 
 - **`sub_802F338`** (`src/graphics/actor_part43b.c`) - computes two
   keyframe-driven tile-cache sizes (`byte0*byte1`, scaled by 32) via
@@ -201,25 +201,29 @@ are named by the lower 5 hex digits of their first function's address
   nothing calls `sub_802F97C` by name (only indirectly through a
   `void *`-typed function-pointer table entry), the parameter's own
   type here doesn't need to match the project's usual convention.
-
-## Parked (1 of 25 functions, `NON_MATCHING`, not yet byte-exact)
-
 - **`sub_802FA04`** (`src/graphics/actor_part45c.c`) - an
   `InitActorPart`-based constructor for this cluster's `self` object:
   forwards its first three real arguments plus one stack argument
   straight to `InitActorPart`, then marks `self+0x54` = 1, sets
-  `self+0x50`'s event/trampoline table, and stashes its remaining two
-  stack arguments into `self+0x58`/`self+0x5c`. Every load/store and
-  call confirmed correct - the same 7-argument `InitActorPart`-wrapper
-  shape already left raw as `sub_80305F8`
-  (`docs/matching/issue-58-0x08030334-actor.md`); parked because this
-  compiler always pushes only as many high registers (`r4`-`r7`) as it
-  independently decides it needs for its own constant/stack-argument
-  evaluation order, never matching the ROM's specific
-  `r4=self,r5=1,r6=e,r7=f` assignment (and its 4-register push/pop)
-  without either an incorrect extra `r8` push/pop (a relay attempt)
-  or losing the stack argument's value outright to a register
-  collision with an explicit `r7` pin.
+  `self+0x50`'s event/trampoline table to `gStaticData_087E517C`, and
+  stashes its remaining two stack arguments into `self+0x58`/`self+0x5c`;
+  now fully matched as real C, closing the gap the same 7-argument
+  `InitActorPart`-wrapper shape is still parked on for `sub_80305F8`
+  (`docs/matching/issue-58-0x08030334-actor.md`). Explicitly pinning `e`/
+  `f` to their ROM registers (`r6`/`r7`) either adds a spurious extra
+  `r8` push/pop (a relay attempt) or - for `r7` specifically - drops that
+  register from the compiler's own prologue push/pop list outright (a
+  genuine agbcc/gcc 2.9 Thumb-prologue bug, not just a missed
+  optimization). The fix: pin only the constant `1` to `r5`; leave
+  `self`, the stack argument `d`, and both `e`/`f` completely unpinned
+  (`self` as a plain `u8 *` local, `d` used directly as `InitActorPart`'s
+  stack argument, `e`/`f` as plain `register` locals with no explicit
+  hardware register). With that much natural register pressure, this
+  compiler's own allocator picks `r4`/`r6`/`r7` for `self`/`e`/`f` on its
+  own - correctly including all of `r4`-`r7` in the push/pop list - and,
+  in the declaration order `self`, then the pinned constant, then `e`,
+  then `f`, schedules the loads in the ROM's own self/d/e/f/constant
+  order. Retires the old raw `asm/code_3_2_20_28568_c99c_2fa04.s`.
 
 ## NAKED transcription (byte-correct, not counted as matched)
 

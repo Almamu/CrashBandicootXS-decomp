@@ -292,7 +292,6 @@ SECTIONS
         build/crashbandicootxs/src/graphics/actor_part45.o(.text);
         build/crashbandicootxs/src/graphics/actor_part45d.o(.text);
         build/crashbandicootxs/src/graphics/actor_part45b.o(.text);
-        build/crashbandicootxs/asm/code_3_2_20_28568_c99c_2fa04.o(.text);
         build/crashbandicootxs/src/graphics/actor_part45c.o(.text);
         build/crashbandicootxs/src/graphics/actor_part46.o(.text);
         build/crashbandicootxs/src/graphics/actor_part46b.o(.text);

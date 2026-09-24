@@ -891,6 +891,30 @@ embedded as asm instead. They're tracked as parked, not matched.
   own `ldrb` register choices), each closed with the same
   register-pin/opaque-asm technique. See
   `docs/matching/issue-56-0x0802f0dc-actor.md`.
+- **`sub_802FA04`** (`src/graphics/actor_part45c.c`) - an
+  `InitActorPart`-based constructor for this cluster's `self` object:
+  forwards its first three real arguments plus one stack argument
+  straight to `InitActorPart`, then marks `self+0x54` = 1, sets
+  `self+0x50`'s event/trampoline table to `gStaticData_087E517C`, and
+  stashes its remaining two stack arguments into `self+0x58`/`self+0x5c`;
+  now fully matched as real C, closing the gap the same 7-argument
+  `InitActorPart`-wrapper shape is still parked on for `sub_80305F8`.
+  Explicitly pinning `e`/`f` to their ROM registers (`r6`/`r7`) either
+  adds a spurious extra `r8` push/pop (a relay attempt) or - for `r7`
+  specifically - drops that register from the compiler's own prologue
+  push/pop list outright (a genuine agbcc/gcc 2.9 Thumb-prologue bug,
+  the same quirk `sub_802F6DC` above hit for a plain low-register pin).
+  The fix: pin only the constant `1` to `r5`; leave `self`, the stack
+  argument `d`, and both `e`/`f` completely unpinned (`self` as a plain
+  `u8 *` local, `d` used directly as `InitActorPart`'s stack argument,
+  `e`/`f` as plain `register` locals with no explicit hardware
+  register). With that much natural register pressure, this compiler's
+  own allocator picks `r4`/`r6`/`r7` for `self`/`e`/`f` on its own -
+  correctly including all of `r4`-`r7` in the push/pop list - and, in
+  the declaration order `self`, then the pinned constant, then `e`,
+  then `f`, schedules the loads in the ROM's own self/d/e/f/constant
+  order. Retires the old raw `asm/code_3_2_20_28568_c99c_2fa04.s`. See
+  `docs/matching/issue-56-0x0802f0dc-actor.md`.
 - **`sub_800B270`** (`src/graphics/actor_part49.c`, GitHub issue #9) -
   a per-frame velocity integrator moving `self+0x60`/`self+0x64`
   toward `self+0x50`/`self+0x5c` by `self+0x4c`/`self+0x58` each call,
@@ -1118,11 +1142,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   `src/graphics/actor_part37.c`) - `sub_8033B44`'s twin using the
   second stride-8 table (`gStaticData_0817C4F8`), parked on the same
   gap - see `docs/matching/issue-62-0x08033804-actor.md`, issue #62.
-- **`sub_802FA04`** (`src/graphics/actor_part45c.c`) - an
-  `InitActorPart`-based 7-argument constructor, the same shape as the
-  left-raw `sub_80305F8`; parked on this compiler's own high-register
-  push/pop allocation never matching the ROM's `r4=self,r5=1,r6=e,r7=f`
-  assignment - see `docs/matching/issue-56-0x0802f0dc-actor.md`.
 
 - **`sub_8034058`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s`, C
   in `src/graphics/actor_part66.c`, GitHub issue #63) - an
