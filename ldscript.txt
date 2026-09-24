@@ -201,7 +201,6 @@ SECTIONS
         build/crashbandicootxs/src/system/game_loop20.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_24810.o(.text);
         build/crashbandicootxs/src/system/game_loop3.o(.text);
-        build/crashbandicootxs/asm/code_3_2_17_24f24.o(.text);
         build/crashbandicootxs/src/system/game_loop4.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_25460.o(.text);
         build/crashbandicootxs/src/system/game_loop5.o(.text);

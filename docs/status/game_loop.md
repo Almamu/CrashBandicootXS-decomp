@@ -288,10 +288,21 @@ plain C didn't converge.
   `mode`-selected/`flagsOut`-writing sibling, and a `mode`-dispatched
   single-flag-byte variant). Same register-allocation-permutation gap as
   `sub_8024F24` above; closed the same way, including reproducing the
-  ROM's own mid-function `.pool` literal-pool splits exactly. Real bytes
-  no longer live in `asm/code_3_2_17_24f24.s` - that file now starts
-  directly at `sub_8025334`, the one function of this cluster still
-  parked. See
+  ROM's own mid-function `.pool` literal-pool splits exactly. See
+  [docs/matching/issue-40-terrain-tile-cache.md](../matching/issue-40-terrain-tile-cache.md).
+- **`sub_8025334`** (`src/system/game_loop3.c`, GitHub issue #40) - the
+  16-slot terrain tile-record decode/LRU cache's RLE/delta
+  token-stream decoder. Decode-loop mechanics and control flow were
+  already fully confirmed as real C; the gap was that the ROM keeps a
+  "bytes-written" byte-offset write pointer alive in `r7` across the
+  whole function, using it *directly* as the store target only for the
+  delta-run mode's first/last writes while every other write (in all
+  three modes) recomputes a fresh `dest + written*2` pointer from
+  `r8`/`ip` instead, even though `r7` holds the identical value in
+  lockstep - a redundant shadow-register shape no index-based C
+  reconstruction reproduces. Closed as NAKED, the same way as its
+  siblings above. `asm/code_3_2_17_24f24.s` is now gone entirely - this
+  was the last function still living there. See
   [docs/matching/issue-40-terrain-tile-cache.md](../matching/issue-40-terrain-tile-cache.md).
 - **`sub_8022D50`** (`src/system/game_loop40.c`, GitHub issue #34) - the
   level-start/reset routine (`self+0x8c`/`0x90`-`0xa0` clears, the
@@ -354,15 +365,7 @@ plain C didn't converge.
   same gap already parked for `sub_800A734`/`sub_800A528` in
   docs/matching/issue-9-0x08007634-actor.md, at a larger scale. See
   [docs/matching/issue-14-0x08010a0c-graphics.md](../matching/issue-14-0x08010a0c-graphics.md).
-- **`sub_8025334`** (`src/system/game_loop3.c`, GitHub issue #40) - the
-  16-slot terrain tile-record decode/LRU cache's RLE/delta
-  token-stream decoder; real bytes in `asm/code_3_2_17_24f24.s`. See
-  [docs/matching/issue-40-terrain-tile-cache.md](../matching/issue-40-terrain-tile-cache.md)
-  for the register-shape gap between the ROM's own decode loop and this
-  compiler's natural index-based reconstruction. (`sub_8024F24`/
-  `sub_80250BC`/`sub_8025130`/`sub_8025228`, this cache's dispatcher and
-  its three lookup consumers, were all closed as NAKED transcriptions -
-  see above.)
+
 ## Still raw, category-mapped (GitHub issue #12/#34/#40)
 
 - **`sub_0800D18C`/`sub_800E08C`** (`asm/code_3_2_17_d18c.s`, ROM
