@@ -57,7 +57,10 @@ from "core" graphics.
 
 - `src/graphics/actor_part11.c` (new file, now directly adjacent to
   `actor_part7b.c`'s `sub_8008D80` range): `sub_8008DC0`, `sub_8008DEC`, `sub_8008E50`,
-  `sub_8008E94`, `sub_8008EB4`, `sub_8008EE4`
+  `sub_8008E94`, `sub_8008EB4`, `sub_8008EE4`. (This file's `sub_8008F20`,
+  compiled right after these, is a NAKED transcription tracked as
+  parked, not matched - see below and
+  `docs/matching/naked-sub_8008f20-sub_8009914-freelist.md`.)
 
 - `src/graphics/actor_part11b.c`/`actor_part11c.c`/`actor_part11f.c`/
   `actor_part11e.c`/`actor_part11d.c` (new files, NAKED-transcription-
@@ -77,20 +80,26 @@ from "core" graphics.
 
 - `src/graphics/actor_part11h.c` (new file - `sub_800944C`'s real ROM
   address isn't adjacent to `actor_part11.c`'s matched functions,
-  since the parked `sub_8008F20` guard and the NAKED
-  `sub_8009008`/`sub_80091D4` plus the now-matched `sub_8009150`
-  (`actor_part11g.c`) sit between them; named `actor_part11h.c` since
-  `actor_part11f.c`/`actor_part11g.c` were both already claimed by the
-  time this landed): `sub_800944C`
+  since the NAKED `sub_8008F20` and `sub_8009008`/`sub_80091D4` plus
+  the now-matched `sub_8009150` (`actor_part11g.c`) sit between them;
+  named `actor_part11h.c` since `actor_part11f.c`/`actor_part11g.c`
+  were both already claimed by the time this landed): `sub_800944C`
+
+- `src/graphics/actor_part11i.c` (new file, NAKED-transcription-only,
+  `sub_8009914`'s real ROM address isn't adjacent to `actor_part11.c`'s
+  own functions - see `docs/matching/naked-sub_8008f20-sub_8009914-freelist.md`.
+  Named "i" - `sub_8009528` claimed `actor_part11f.c`, the now-matched
+  `sub_8009150` claimed `actor_part11g.c`, and the now-matched
+  `sub_800944C` claimed `actor_part11h.c`, all in parallel PRs merged
+  first), dropped into `ldscript.txt` in place of the retired
+  `asm/code_3_2_13_9914.s`
 
 - `src/graphics/actor_part12.c` (new file - `sub_8009A30`'s real ROM
   address isn't adjacent to `actor_part11.c`'s matched functions
-  either, since the parked `sub_8008F20` guard, the NAKED
-  `sub_8009008`/`sub_80091D4`/`sub_80096C0`/`sub_8009868`, the matched
-  `sub_8009150` (`actor_part11g.c`) and `sub_800944C`
-  (`actor_part11h.c`), the matched-as-NAKED `sub_8009528`
-  (`actor_part11f.c`), and the remaining parked `sub_8009914` guard all
-  sit between them; see `docs/matching.md`):
+  either, since the NAKED `sub_8008F20`, the now-matched `sub_8009150`
+  (`actor_part11g.c`) and `sub_800944C` (`actor_part11h.c`), the NAKED
+  `sub_8009008`/`sub_80091D4`/`sub_8009528`/`sub_80096C0`/`sub_8009868`/`sub_8009914`,
+  all sit between them; see `docs/matching.md`):
   `sub_8009A30`, `sub_8009AA0`, `sub_8009AF0`, `sub_8009B3C`,
   `sub_8009B70`, `sub_8009B9C`
 
@@ -1187,11 +1196,20 @@ embedded as asm instead. They're tracked as parked, not matched.
   fixed-slot object-pool manager struct: two big 256-word zeroed
   tables (likely a pair of spatial-partition/collision grids), plus a
   singly-linked free list built over an allocated node array. Every
-  load, store, and field offset confirmed correct; parked purely on a
-  many-register (item count, two persistent field addresses, a reused
-  loop index, a running byte offset) allocation gap across
-  `r3`/`sb`/`sl`/`r4`/`r8` - see `docs/matching.md`, "Parked, not
-  matched: `sub_8008F20`".
+  load, store, and field offset confirmed correct; hits a many-register
+  (item count, two persistent field addresses, a reused loop index, a
+  running byte offset) allocation gap across `r3`/`sb`/`sl`/`r4`/`r8`
+  that no C-level reconstruction reproduced, so converted to `NAKED`
+  the same way as `sub_80096C0`/`sub_80099F0` below: a literal
+  instruction-for-instruction transcription of the ROM's own assembly
+  (byte-exact, confirmed via a full clean `make compare`), rather than
+  a derived C reconstruction, compiled directly into `actor_part11.o`
+  alongside the matched functions above it (no separate object needed,
+  same as `sub_8008044`/`actor_part3.c`'s precedent for a NAKED
+  function sharing a file with matched ones). Per project policy this
+  doesn't count as "matched" the way real decompiled C does, so it
+  stays filed here rather than in "Matched" above - see
+  `docs/matching/naked-sub_8008f20-sub_8009914-freelist.md`.
 - **`sub_8009528`** (`src/graphics/actor_part11f.c`) - the spatial-
   hash-grid-cluster analog of `sub_8008A40`: the same grid-iteration
   shape as `sub_800944C`, dispatching each hit to `sub_80096C0`/
@@ -1221,12 +1239,24 @@ embedded as asm instead. They're tracked as parked, not matched.
   `docs/matching.md`, "Parked, not matched: `sub_80096C0`".
   `sub_8008AD8` itself (`src/graphics/actor_part7.c`) is unaffected by
   this change and remains its own separate `NAKED` function.
-- **`sub_8009914`** (`src/graphics/actor_part11.c`) - resets a pool
-  manager to empty: tears down every active object, then rebuilds the
-  grid and free list from scratch. The teardown loop is confirmed
-  correct; the rebuild loop is a byte-for-byte copy of `sub_8008F20`'s
-  own tail and hits the identical many-register allocation gap - see
-  `docs/matching.md`, "Parked, not matched: `sub_8009914`".
+- **`sub_8009914`** (`src/graphics/actor_part11i.c`, new file - its
+  real ROM address, `0x08009914`, doesn't sit adjacent to
+  `actor_part11.c`'s own functions, the same reason `sub_80096C0`
+  above got its own `actor_part11e.c` (named "i" - `sub_8009528`
+  claimed `actor_part11f.c`, the now-matched `sub_8009150` claimed
+  `actor_part11g.c`, and the now-matched `sub_800944C` claimed
+  `actor_part11h.c`, all in parallel PRs merged first)) - resets a
+  pool manager to empty: tears down every active object, then rebuilds the grid and
+  free list from scratch. The teardown loop was confirmed correct on
+  its own; the rebuild loop is a byte-for-byte copy of `sub_8008F20`'s
+  own tail and hit the identical many-register allocation gap, closed
+  via the same `NAKED` transcription technique - a literal
+  instruction-for-instruction transcription of the ROM's own assembly
+  (byte-exact, confirmed via a full clean `make compare`), rather than
+  a derived C reconstruction. Per project policy this doesn't count as
+  "matched" the way real decompiled C does, so it stays filed here
+  rather than in "Matched" above - see
+  `docs/matching/naked-sub_8008f20-sub_8009914-freelist.md`.
 - **`sub_80099F0`** (`src/graphics/actor_part12.c`) - `sub_8008D80`'s
   twin: byte-identical in shape (same collision-hit-resolve logic,
   same "dead read" trampoline call), called from elsewhere in this

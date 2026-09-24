@@ -177,7 +177,6 @@ struct dual_array_manager *sub_8008EE4(struct dual_array_manager *manager, s32 c
     return manager;
 }
 
-#if NON_MATCHING
 /* sub_8008F20 initializes a fixed-slot object pool "manager" struct:
  *  +0x0: s32 activeCount (0)
  *  +0x4: s32 capacity (= count)
@@ -205,106 +204,150 @@ struct dual_array_manager *sub_8008EE4(struct dual_array_manager *manager, s32 c
  * isn't needed to confirm every individual load/store here, which are
  * all confirmed correct.
  *
- * NOT YET BYTE-MATCHING: this compiler allocates the persistent
- * cross-loop values (item count, the +0x810/+0x814 field addresses,
- * the loop index reused from the zero-fill counter, the running
- * "next" byte offset) across r3/sb/sl/r4/r8 in a specific combination
- * this reconstruction doesn't reproduce - the isolated compile
- * produces the right *shape* (same branches, same use of `ip`/r8, and
- * even a matching high-register save/restore prologue/epilogue) but a
+ * PARKED AS NAKED: this compiler allocates the persistent cross-loop
+ * values (item count, the +0x810/+0x814 field addresses, the loop
+ * index reused from the zero-fill counter, the running "next" byte
+ * offset) across r3/sb/sl/r4/r8 in a specific combination no C-level
+ * reconstruction tried reproduces - the isolated compile produces the
+ * right *shape* (same branches, same use of `ip`/r8, and even a
+ * matching high-register save/restore prologue/epilogue) but a
  * different concrete register assignment for several of the four
- * long-lived scalars. Parked rather than chase a many-register
- * allocation puzzle for a single function - see docs/matching.md,
- * "Parked, not matched: sub_8008F20". */
-void *sub_8008F20(void *manager, s32 count)
+ * long-lived scalars. Hand-transcribed instruction-for-instruction
+ * from the ROM disassembly instead, the same technique already
+ * established for this exact class of many-register allocation gap
+ * (`sub_8010B6C`, game_loop28.c) - the ROM's suffixed Thumb mnemonics
+ * (`movs`/`adds`/`subs`/`lsls`) are written in their suffix-less forms
+ * here (`mov`/`add`/`sub`/`lsl`), which this project's assembler
+ * invocation accepts identically. `sub_8009914`'s own tail is a
+ * byte-for-byte copy of this function's free-list-build loop and hits
+ * the identical gap - see that function's own writeup
+ * (`actor_part11i.c`) for the shared technique applied there. See
+ * docs/matching.md, "Parked, not matched: sub_8008F20". */
+NAKED void *sub_8008F20(void *manager, s32 count)
 {
-    void *allocA, *allocB, *allocC;
-    s32 n;
-
-    *(s32 *)manager = 0;
-    *(s32 *)((u8 *)manager + 4) = count;
-
-    allocA = sub_8026EC0(count * 4);
-    *(void **)((u8 *)manager + 8) = allocA;
-
-    allocB = sub_8026EC0((count * 4 + count) * 4);
-    *(void **)((u8 *)manager + 0xc) = allocB;
-
-    allocC = sub_8026EC0(count * 8);
-    *(void **)((u8 *)manager + 0x810) = allocC;
-
-    n = *(s32 *)((u8 *)manager + 4);
-    if (n > 0) {
-        void *zero = 0;
-        void **arr = *(void ***)((u8 *)manager + 8);
-        do {
-            *arr = zero;
-            arr++;
-            n--;
-        } while (n != 0);
-    }
-
-    {
-        s32 count2 = *(s32 *)((u8 *)manager + 4);
-        void **field810 = (void **)((u8 *)manager + 0x810);
-        void **field814 = (void **)((u8 *)manager + 0x814);
-        u8 *p1 = (u8 *)manager + 0x10;
-        u8 *p2 = (u8 *)manager + 0x410;
-        s32 m = 0xFF;
-        s32 zero2 = 0;
-        do {
-            *(s32 *)p1 = zero2;
-            p1 += 4;
-            *(s32 *)p2 = zero2;
-            p2 += 4;
-            m--;
-        } while (m >= 0);
-
-        {
-            s32 i = 0;
-            if (i < count2) {
-                s32 nextOff = 8;
-                s32 nodeOff = 0;
-                do {
-                    void *freeListArr = *field810;
-                    s32 idxOff = i * 8;
-                    void *entry = (u8 *)freeListArr + idxOff;
-                    void *node = *(void **)((u8 *)manager + 0xc);
-                    node = (u8 *)node + nodeOff;
-                    *(void **)entry = node;
-
-                    node = *(void **)((u8 *)manager + 0xc);
-                    node = (u8 *)node + nodeOff;
-                    *(s32 *)node = 0;
-                    *(s32 *)((u8 *)node + 4) = 0;
-                    *(s32 *)((u8 *)node + 0xc) = 0;
-                    *((u8 *)node + 0x10) = 0;
-
-                    node = *(void **)((u8 *)manager + 0xc);
-                    node = (u8 *)node + nodeOff;
-                    freeListArr = *field810;
-                    entry = (u8 *)freeListArr + idxOff;
-                    *(void **)((u8 *)node + 8) = entry;
-
-                    if (i == *(s32 *)((u8 *)manager + 4) - 1) {
-                        *(s32 *)((u8 *)entry + 4) = 0;
-                    } else {
-                        *(void **)((u8 *)entry + 4) = (u8 *)freeListArr + nextOff;
-                    }
-
-                    nextOff += 8;
-                    nodeOff += 0x14;
-                    i++;
-                } while (i < *(s32 *)((u8 *)manager + 4));
-            }
-        }
-
-        *field814 = *field810;
-    }
-
-    return manager;
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "mov r7, sl\n\t"
+        "mov r6, sb\n\t"
+        "mov r5, r8\n\t"
+        "push {r5, r6, r7}\n\t"
+        "add r5, r0, #0\n\t"
+        "add r0, r1, #0\n\t"
+        "mov r1, #0\n\t"
+        "str r1, [r5]\n\t"
+        "str r0, [r5, #4]\n\t"
+        "lsl r0, r0, #2\n\t"
+        "bl sub_8026EC0\n\t"
+        "str r0, [r5, #8]\n\t"
+        "ldr r1, [r5, #4]\n\t"
+        "lsl r0, r1, #2\n\t"
+        "add r0, r0, r1\n\t"
+        "lsl r0, r0, #2\n\t"
+        "bl sub_8026EC0\n\t"
+        "str r0, [r5, #0xc]\n\t"
+        "mov r0, #0x81\n\t"
+        "lsl r0, r0, #4\n\t"
+        "add r4, r5, r0\n\t"
+        "ldr r0, [r5, #4]\n\t"
+        "lsl r0, r0, #3\n\t"
+        "bl sub_8026EC0\n\t"
+        "str r0, [r4]\n\t"
+        "ldr r0, [r5, #4]\n\t"
+        "cmp r0, #0\n\t"
+        "ble 2f\n\t"
+        "mov r2, #0\n\t"
+        "ldr r1, [r5, #8]\n\t"
+    "1:\n\t"
+        "stm r1!, {r2}\n\t"
+        "sub r0, #1\n\t"
+        "cmp r0, #0\n\t"
+        "bne 1b\n\t"
+    "2:\n\t"
+        "ldr r3, [r5, #4]\n\t"
+        "mov r1, #0x81\n\t"
+        "lsl r1, r1, #4\n\t"
+        "add r1, r1, r5\n\t"
+        "mov sb, r1\n\t"
+        "ldr r2, 5f\n\t"
+        "add r2, r2, r5\n\t"
+        "mov sl, r2\n\t"
+        "mov r0, #0\n\t"
+        "mov r1, #0x82\n\t"
+        "lsl r1, r1, #3\n\t"
+        "add r2, r5, r1\n\t"
+        "add r1, r5, #0\n\t"
+        "add r1, #0x10\n\t"
+        "mov r4, #0xff\n\t"
+    "3:\n\t"
+        "stm r1!, {r0}\n\t"
+        "stm r2!, {r0}\n\t"
+        "sub r4, #1\n\t"
+        "cmp r4, #0\n\t"
+        "bge 3b\n\t"
+        "mov r4, #0\n\t"
+        "cmp r4, r3\n\t"
+        "bge 8f\n\t"
+        "mov ip, sb\n\t"
+        "mov r7, #0\n\t"
+        "mov r2, #8\n\t"
+        "mov r8, r2\n\t"
+        "mov r6, #0\n\t"
+    "4:\n\t"
+        "mov r0, ip\n\t"
+        "ldr r1, [r0]\n\t"
+        "lsl r2, r4, #3\n\t"
+        "add r1, r2, r1\n\t"
+        "ldr r0, [r5, #0xc]\n\t"
+        "add r0, r0, r6\n\t"
+        "str r0, [r1]\n\t"
+        "ldr r0, [r5, #0xc]\n\t"
+        "add r0, r6, r0\n\t"
+        "str r7, [r0]\n\t"
+        "str r7, [r0, #4]\n\t"
+        "str r7, [r0, #0xc]\n\t"
+        "strb r7, [r0, #0x10]\n\t"
+        "ldr r0, [r5, #0xc]\n\t"
+        "add r0, r6, r0\n\t"
+        "mov r1, ip\n\t"
+        "ldr r3, [r1]\n\t"
+        "add r1, r3, r2\n\t"
+        "str r1, [r0, #8]\n\t"
+        "ldr r0, [r5, #4]\n\t"
+        "sub r0, #1\n\t"
+        "cmp r4, r0\n\t"
+        "bne 6f\n\t"
+        "str r7, [r1, #4]\n\t"
+        "b 7f\n\t"
+        ".align 2, 0\n"
+    "5: .4byte 0x00000814\n"
+    "6:\n\t"
+        "mov r2, r8\n\t"
+        "add r0, r3, r2\n\t"
+        "str r0, [r1, #4]\n\t"
+    "7:\n\t"
+        "mov r0, #8\n\t"
+        "add r8, r0\n\t"
+        "add r6, #0x14\n\t"
+        "add r4, #1\n\t"
+        "ldr r0, [r5, #4]\n\t"
+        "cmp r4, r0\n\t"
+        "blt 4b\n\t"
+    "8:\n\t"
+        "mov r1, sb\n\t"
+        "ldr r0, [r1]\n\t"
+        "mov r2, sl\n\t"
+        "str r0, [r2]\n\t"
+        "add r0, r5, #0\n\t"
+        "pop {r3, r4, r5}\n\t"
+        "mov r8, r3\n\t"
+        "mov sb, r4\n\t"
+        "mov sl, r5\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r1}\n\t"
+        "bx r1\n\t"
+    );
 }
-#endif /* NON_MATCHING */
+asm(".align 2, 0");
 
 /* Same pool-manager struct sub_8008F20 initializes and actor_part12.c
  * operates on - see that file for the full field writeup. Also used by
@@ -320,102 +363,17 @@ struct pool_manager {
     void *freeListHead;
 };
 
-#if NON_MATCHING
-/* Resets a pool manager to empty: tears down every active object
- * (`slotArray[0..activeCount)`, firing each one's `table+0x50/0x54`
- * trampoline via `sub_803AD80` with constant arg `3` if non-`NULL`,
- * then clearing the slot), resets `activeCount` to 0, and rebuilds
- * both the grid (`gridHead`/`gridTail` zeroed) and the free list from
- * scratch over `nodeArray` - the exact same free-list-build loop
- * `sub_8008F20` performs during initialization.
- *
- * NOT YET BYTE-MATCHING: the active-object teardown loop (the first
- * half) is confirmed correct and matches in isolation, but the
- * free-list-rebuild loop (the second half) is a byte-for-byte copy of
- * `sub_8008F20`'s own tail and hits the exact same many-register
- * allocation gap documented there - the ROM keeps three persistent
- * high registers (`sb`/`sl`/`r8`) alive across the whole loop, while
- * this reconstruction's most faithful attempt still only needs two.
- * Parked for the same reason as `sub_8008F20` - see docs/matching.md,
- * "Parked, not matched: `sub_8009914`". */
-void sub_8009914(struct pool_manager *manager)
-{
-    s32 i;
-
-    for (i = 0; i < manager->activeCount; i++) {
-        struct actor *part = manager->slotArray[i];
-
-        if (part != 0) {
-            u8 *rec = (u8 *)part->table + 0x50;
-            s16 offset = *(s16 *)rec;
-            void *addr = (u8 *)part + offset;
-            void *fn = *(void **)(rec + 4);
-
-            sub_803AD80(addr, (void *)3, fn);
-        }
-        manager->slotArray[i] = 0;
-    }
-
-    manager->activeCount = 0;
-
-    {
-        s32 capacity = manager->capacity;
-        void **field810 = &manager->freeListArray;
-        void **field814 = &manager->freeListHead;
-        void **gridHead = manager->gridHead;
-        void **gridTail = manager->gridTail;
-        s32 m = 0xFF;
-        void *zero = 0;
-
-        do {
-            *gridHead = zero;
-            gridHead++;
-            *gridTail = zero;
-            gridTail++;
-            m--;
-        } while (m >= 0);
-
-        {
-            s32 i2 = 0;
-            if (i2 < capacity) {
-                s32 nextOff = 8;
-                s32 nodeOff = 0;
-                do {
-                    void *freeListArr = *field810;
-                    s32 idxOff = i2 * 8;
-                    void *entry = (u8 *)freeListArr + idxOff;
-                    void *node = (u8 *)manager->nodeArray + nodeOff;
-
-                    *(void **)entry = node;
-
-                    node = (u8 *)manager->nodeArray + nodeOff;
-                    *(s32 *)node = 0;
-                    *(s32 *)((u8 *)node + 4) = 0;
-                    *(s32 *)((u8 *)node + 0xc) = 0;
-                    *((u8 *)node + 0x10) = 0;
-
-                    node = (u8 *)manager->nodeArray + nodeOff;
-                    freeListArr = *field810;
-                    entry = (u8 *)freeListArr + idxOff;
-                    *(void **)((u8 *)node + 8) = entry;
-
-                    if (i2 == manager->capacity - 1) {
-                        *(s32 *)((u8 *)entry + 4) = 0;
-                    } else {
-                        *(void **)((u8 *)entry + 4) = (u8 *)freeListArr + nextOff;
-                    }
-
-                    nextOff += 8;
-                    nodeOff += 0x14;
-                    i2++;
-                } while (i2 < manager->capacity);
-            }
-        }
-
-        *field814 = *field810;
-    }
-}
-#endif /* NON_MATCHING */
+/* sub_8009914 is reconstructed (semantics fully understood, and now
+ * matched) as a NAKED transcription in its own translation unit,
+ * `src/graphics/actor_part11i.c` - not appended here since its real
+ * ROM address, 0x08009914, doesn't sit adjacent to this file's own
+ * functions (it comes right after `sub_8009868`, `actor_part11d.c`,
+ * and right before `sub_80099F0`/`actor_part12.c`), per
+ * docs/workflow.md step 4's "needs its own new .c file" case - the
+ * same reason `sub_80096C0` above got its own file
+ * (`actor_part11e.c`), `sub_8009528` got `actor_part11f.c`, the
+ * now-matched `sub_8009150` got `actor_part11g.c`, and the now-matched
+ * `sub_800944C` got `actor_part11h.c`. */
 
 #if NON_MATCHING
 /* Same "extended screen box" filter shape as `sub_8008C80` (the plain
