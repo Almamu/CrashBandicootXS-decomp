@@ -55,22 +55,32 @@ extern struct fade_overlay *sub_803487C(struct fade_overlay *self);
  * zeroes two more fields, and finally ducks the audio context out via
  * `sub_8001AC4`. Returns `self`.
  *
- * Parked (`NON_MATCHING`), not matched: every field, call, struct
- * offset, and the vast majority of individual register choices match
- * the ROM's own build exactly (reached via extensive register pinning
- * and inline-asm anchors - matching_decomp_register_pinning memory) -
- * but a handful of individual accumulator/temp-register choices in the
- * BLDCNT/BLDALPHA byte-packing sequence (which of two freshly-available
- * low registers holds a reloaded byte vs. an already-live constant, at
- * a couple of specific points) never converged after extensive
- * iteration against the real linked ROM. The real bytes come from
- * `asm/code_3_2_20_28568_c99c_31784_33ef4_3472c.s` under a
- * `.if NON_MATCHING == 0` guard - see
+ * Matched, byte-exact real C. The remaining BLDCNT/BLDALPHA byte-packing
+ * gap this function was previously parked over (see
+ * docs/matching/issue-63-final-raw-actor.md and
  * docs/matching/issue-30-graphics-loading.md's LoadGraphicsPackage entry
- * for the established pattern and
- * docs/matching/issue-63-0x08033ef4-actor.md for this function's
- * specific writeup. */
-#if NON_MATCHING
+ * for the established "handful of register choices" pattern this hit
+ * too) turned out to be two narrow, closable spots, not a genuine
+ * compiler limitation:
+ *  - `one |= self->blend.b.bldcntHi;`'s reload was left to this
+ *    compiler's free register choice (it picked r0), where the ROM
+ *    reuses r1 (the register `mask` occupies a few lines later) -
+ *    closed with a `register u8 hi asm("r1")` pin on just that reload.
+ *  - The `mask`/`tmp` BLDALPHA pair: this compiler elides the `tmp =
+ *    mask` copy entirely and ANDs the freshly-loaded byte directly
+ *    against `mask`'s own register instead (2 bytes shorter than the
+ *    ROM's real "copy mask into tmp, then AND against a separately
+ *    reloaded byte" sequence) - closed with an empty `asm("" :
+ *    "+r"(tmp))` compiler barrier right after `tmp`'s initializer,
+ *    the same "stop the materialize-then-copy fold" technique
+ *    documented for `sub_801E8F8`/`sub_801E96C`
+ *    (docs/matching/issue-30-graphics-loading.md). Both are ordinary
+ *    register-pin/barrier fixes, not opaque `asm volatile` islands -
+ *    the "handful of accumulator/temp-register choices" this function
+ *    was previously parked over. The real bytes used to live in
+ *    `asm/code_3_2_20_28568_c99c_31784_33ef4_3472c.s` under a
+ *    `.if NON_MATCHING == 0` guard; that block is now removed since
+ *    this function always compiles to the ROM's exact bytes. */
 void *sub_803472C(void *selfArg)
 {
     /* Register-pinned to match the ROM's own allocation
@@ -168,16 +178,35 @@ void *sub_803472C(void *selfArg)
                         self->blend.word = z2;
                     }
                     four |= self->blend.b.bldcntLo;
-                    one |= self->blend.b.bldcntHi;
+                    {
+                        /* Reload pinned to r1 (rather than the freely-
+                         * chosen scratch register this compiler otherwise
+                         * picks) so it lands in the same register the
+                         * ROM's own build reuses right below - see the
+                         * doc comment above. */
+                        register u8 hi asm("r1") = self->blend.b.bldcntHi;
+                        one |= hi;
+                    }
                     self->blend.b.bldcntHi = one;
                     {
                         register s32 mask asm("r1") = -0x20;
-                        s32 tmp = mask;
+                        register s32 tmp asm("r0") = mask;
 
+                        /* Compiler barrier (matching_decomp_register_
+                         * pinning memory): without it, this compiler
+                         * elides the `tmp = mask` copy entirely and ANDs
+                         * the freshly-loaded byte directly against
+                         * `mask`'s own register instead, 2 bytes shorter
+                         * than the ROM's real "copy mask into tmp, then
+                         * AND against a separately reloaded byte"
+                         * sequence. */
+                        asm("" : "+r" (tmp));
                         tmp &= self->blend.b.bldalphaLo;
-                        self->blend.b.bldalphaLo = tmp | 8;
+                        tmp |= 8;
+                        self->blend.b.bldalphaLo = tmp;
                         mask &= self->blend.b.bldalphaHi;
-                        self->blend.b.bldalphaHi = mask | 0x10;
+                        mask |= 0x10;
+                        self->blend.b.bldalphaHi = mask;
                     }
                     four &= 0x3f;
                     /* Inline-asm anchor (docs/workflow.md step 3): a
@@ -224,6 +253,5 @@ void *sub_803472C(void *selfArg)
 
     return self;
 }
-#endif /* NON_MATCHING */
 
 asm(".align 2, 0");

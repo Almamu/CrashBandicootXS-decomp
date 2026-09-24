@@ -351,7 +351,11 @@ boundaries - not by re-reading the isolated compiles more carefully.
   calls, heavy `sb`/`r8` register pressure), a larger orchestration
   routine spanning several subsystems, and a ~140-instruction state-
   machine/input-poll loop with `sb`/`sl`/`r8` all live simultaneously;
-  left raw, out of scope for this pass.
+  left raw, out of scope for this pass. Picked up in a later pass - see
+  [docs/matching/issue-63-final-raw-actor.md](issue-63-final-raw-actor.md),
+  which matched `sub_803472C` as real C (the `asm/..._3472c.s` file
+  referenced above is now gone), parked `sub_803487C`, and NAKED-
+  transcribed `sub_8034994`.
 
 See [docs/status/actor.md](../status/actor.md) for the running
 matched/parked list this entry feeds into.

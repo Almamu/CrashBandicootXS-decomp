@@ -407,7 +407,7 @@ UNITS = [
     (0x08034480, "src/graphics/actor_part85.o", "actor"),  # sub_8034480 (issue #63): the particle-trail BG0 object's per-frame updater; matched as real C (both inlined nibble-write copies)
     (0x080345B0, "src/graphics/actor_part72.o", "actor"),  # sub_80345B0/sub_8034634 (issue #63): a particle-slot spawner and a 4-bit tilemap nibble writer; matched
     (0x08034688, "src/graphics/actor_part73.o", "actor"),  # sub_8034688/sub_80346C8/sub_80346FC (issue #63): a particle-spawn-budget driver, an input-poll busy-wait, and a buffer-release/teardown helper; matched
-    (0x0803472C, "src/graphics/actor_part87.o", "actor"),  # sub_803472C (issue #63, parked, NON_MATCHING) - the fade overlay's constructor half: allocates/loads its three BG scratch buffers, builds DISPCNT/BLDCNT/BLDALPHA; real bytes live in asm/code_3_2_20_28568_c99c_31784_33ef4_3472c.s
+    (0x0803472C, "src/graphics/actor_part87.o", "actor"),  # sub_803472C (issue #63): the fade overlay's constructor half: allocates/loads its three BG scratch buffers, builds DISPCNT/BLDCNT/BLDALPHA; matched as real C (two register-pin/barrier fixes closed the previously-parked BLDCNT/BLDALPHA byte-packing gap)
     (0x0803487C, "src/graphics/actor_part88.o", "actor"),  # sub_803487C (issue #63, parked, NON_MATCHING) - the fade overlay's other setup half (icon manager hookup, tile-cache seeding loop); real bytes live in asm/code_3_2_20_28568_c99c_31784_33ef4_3487c.s
     (0x08034994, None, "actor"),  # sub_8034994 (issue #63, NAKED, byte-correct but not decompiled - tracked as parked) - the fade overlay's per-frame input-poll/blend-alpha driver; real bytes in src/graphics/actor_part89.c
     (0x08034AA4, None, "actor"),  # remainder of the actor zone after issue #63's chunk, still raw
