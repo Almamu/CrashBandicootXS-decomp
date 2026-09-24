@@ -575,3 +575,76 @@ Verified via a full clean `rm -rf build && make NON_MATCHING=1 report`
 (clean compile, no warnings) + `objdiff-cli report generate` and a full
 clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` (`La suma coincide`).
+
+## Ninth pass: `sub_801E788` - NAKED transcription
+
+Picked up `sub_801E788` (the viewport-centering helper the fourth pass
+left parked under `NON_MATCHING`, fully semantically confirmed but one
+gap short of byte-exact). That earlier write-up characterized the gap
+carefully: the ROM keeps `self` in `r7` for the whole function
+(matching its `push {r4-r7,lr}`/`push {r5,r6,r7}` prologue), and this
+compiler only compiles `self[offset]` into a single
+`ldrb/ldrh/ldr rX,[r7,#imm]` instruction when `self` is an *ordinary*
+local - pinning it to `r7` via `register u8 *self asm("r7")` makes
+every dereference lower into a separate `add rX,rX,#imm` plus a
+zero-offset load/store instead (confirmed with a minimal one-line
+repro), a genuine, reproducible gcc-2.9/agbcc limitation. The fourth
+pass's write-up framed this as "unreachable from portable C under this
+compiler" - true, but specifically about plain-C register-pin
+semantics. It doesn't apply to a `NAKED` hand transcription, which
+sidesteps this compiler's addressing-mode-folding pass entirely: there
+is no C-level codegen left to fight, since every instruction is
+written literally with its own explicit register and immediate-offset
+encoding. This is the exact same escape hatch this cluster's sibling
+`sub_801E688` (`src/graphics/graphics_package_1e688.c`, "Seventh pass"
+above) was just closed with earlier today, for the same underlying
+`r7`-addressing-mode-folding bug class (just reached via a different
+mechanism there - `r7` never entering the compiler's own synthesized
+push/pop list at all, rather than losing offset-folding once pinned).
+
+Transcribed the ROM's own Thumb disassembly
+(`asm/code_3_2_17_1e644.s`'s guarded `sub_801E788` block, 368 bytes/
+0x170) instruction-for-instruction into a `NAKED void sub_801E788`
+function, following `sub_801E688`'s established style immediately
+above it in the same file (suffix-less Thumb mnemonics - `add`/`mov`/
+`lsl`/`lsr`/`asr`/`and`/`orr`/`sub` instead of the ROM disassembly's
+unified-syntax `adds`/`movs`/`lsls`/... spellings, `neg rX, rX` in
+place of the ROM's `movs rX,#N`/`rsbs rX,rX,#0` pairs, and `.pool`
+markers placed to reproduce the ROM's own four literal-pool split
+points exactly - after the mode-0 block, after the mode-1 block, after
+the "mode == 0" clear-bits block just before the affine-allocation
+branch point, and a trailing one after the epilogue for the
+`gUnknown_03001300` reload the affine-allocation block does). Verified
+by an isolated `cpp`+`agbcc`+`arm-none-eabi-as` compile of just this
+function and a direct byte comparison against
+`asm/code_3_2_17_1e644.s`'s own bytes (reassembled standalone) - both
+came out to exactly 368 bytes, byte-identical, on the very first
+attempt; no iteration was needed since the pool placement fell out
+naturally from writing the `ldr rX, =literal`s in the ROM's own order
+and marking `.pool` at the ROM's own split points.
+
+`asm/code_3_2_17_1e644.s` held nothing but this one guarded function at
+this point (its other two functions, `sub_801E644` and `sub_801E688`,
+were already cut out by earlier passes), so the file is now deleted
+entirely, with its `ldscript.txt` line dropped - `sub_801E788`'s bytes
+now come from `graphics_package_1e688.o`, which already links at the
+correct position (immediately after `graphics_package_1e640.o`, before
+`graphics_package_1e8f8.o`) since it already supplied `sub_801E688`'s
+real bytes at that same link position. `tools/report_units.py`'s entry
+for `0x0801E788` now points at `None` (NAKED, not "matched" - the
+`sub_801E644`/`sub_801E688`/`sub_801E990`/`LoadGraphicsPackage`
+convention) instead of the `.o` file.
+
+This closes out every function this issue's original 25-function list
+named in `asm/code_3_2_17_188d0.s`/`asm/code_3_2_17_1e644.s` except the
+two families already flagged as left raw for a future pass
+(`sub_801EA5C`-`sub_801EE3C`'s "trigger effect type N" siblings and
+`sub_801EF0C`-`sub_801F8DC`'s "text label as sprite tiles" siblings, per
+the fifth pass above) - `asm/code_3_2_17_1e644.s` no longer exists, and
+the only object left un-real-C'd immediately around this cluster is
+`asm/code_3_2_17_1e990.s`, starting at `sub_801EA5C`.
+
+Verified via a full clean `rm -rf build && make NON_MATCHING=1 report`
+(clean compile, no warnings) + `objdiff-cli report generate` and a full
+clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
+crashbandicootxs.map && make compare` (`La suma coincide`).
