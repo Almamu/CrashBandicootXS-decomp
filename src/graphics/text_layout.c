@@ -33,7 +33,7 @@
  * drawing - see `sub_8006770` (`src/graphics/oam_count.c`) for the
  * same record-array shape.
  *
- * Written as NAKED asm, not plain C. A close (99.86% instruction match)
+ * Written as NAKED asm, not plain C. A close (99.89% instruction match)
  * C reconstruction is kept below under `#if NON_MATCHING` - see
  * docs/matching/naked-sub_8000ee4-progress.md for the full derivation
  * of everything it gets right (including two gaps this function's
@@ -69,7 +69,7 @@ extern void sub_8006AAC(void *arg0);
 extern void *gUnknown_03001300;
 
 #if NON_MATCHING
-/* NOT YET BYTE-MATCHING - 99.86% instruction match (only two small,
+/* NOT YET BYTE-MATCHING - 99.89% instruction match (only two small,
  * isolated register-choice residuals left - see the doc comment above
  * and docs/matching/naked-sub_8000ee4-progress.md); compiled only
  * under `make NON_MATCHING=1`, the NAKED version below is used
@@ -156,7 +156,7 @@ loopTop:
         } else if (c == 'n') {
             goto handleN;
         } else {
-            goto bottom1;
+            goto incrementTail;
         }
     handleB:
         {
@@ -182,6 +182,7 @@ loopTop:
     { register s32 lcN asm("r1") = lineCount;
       asm volatile("add %0, %0, #1" : "+r"(lcN));
       lineCount = lcN; }
+incrementTail:
     { register s32 posAccumR asm("r2") = posAccum;
       asm volatile("add %0, %0, %1" : "+r"(posAccumR) : "r"(tokenLen));
       posAccum = posAccumR; }
