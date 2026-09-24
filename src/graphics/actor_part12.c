@@ -29,14 +29,6 @@ extern void sub_8009B3C(struct pool_manager *manager, void *obj);
 extern void sub_8026EB4(void *ptr);
 extern void sub_8026ED0(void *manager);
 
-#if NON_MATCHING
-struct aabb {
-    s32 field_0;
-    s32 field_4;
-    s32 field_8;
-    s32 field_c;
-};
-
 extern s32 sub_8009FF4(void *part, void *region);
 extern void sub_803AD88(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 
@@ -49,42 +41,52 @@ extern void sub_803AD88(void *arg0, s32 arg1, s32 arg2, s32 arg3);
  * `sub_8008D80`) with `otherViewport->field_0A` as the third
  * argument, then sets `otherViewport->flags` bit 3.
  *
- * NOT YET BYTE-MATCHING: identical structural gap as `sub_8008D80` -
- * this compiler has no way to leave `boxH` untouched in its own
- * incoming stack slot while still building a 4-word AABB pointer that
- * includes it, the ABI stack-layout trick the ROM's own tighter local
- * frame relies on. Parked with the version that writes it explicitly,
- * matching `sub_8008D80`'s own parking rationale - see
+ * PARKED AS NAKED: identical structural gap as `sub_8008D80` - this
+ * compiler has no way to leave `boxH` untouched in its own incoming
+ * stack slot while still building a 4-word AABB pointer that includes
+ * it, the ABI stack-layout trick the ROM's own tighter local frame
+ * relies on. Every load, store, branch and computed delta is
+ * confirmed correct (in fact this function's instruction stream is
+ * byte-identical to `sub_8008D80`'s, down to the label offsets), so
+ * it's hand-transcribed as literal Thumb asm instead of guessed at in
+ * C - same technique as `sub_8008D80` (`actor_part7b.c`). See
  * `docs/matching.md`, "Parked, not matched: `sub_80099F0`". */
-void sub_80099F0(void *manager, s32 boxX, s32 boxY, s32 boxW, s32 boxH, void *partArg, void *otherViewportArg)
+NAKED void sub_80099F0(void *manager, s32 boxX, s32 boxY, s32 boxW, s32 boxH, void *partArg, void *otherViewportArg)
 {
-    struct actor *part = partArg;
-    struct actor *otherViewport = otherViewportArg;
-    struct aabb box;
-    s32 result;
-
-    box.field_0 = boxX;
-    box.field_4 = boxY;
-    box.field_8 = boxW;
-    box.field_c = boxH;
-
-    result = sub_8009FF4(part, &box);
-    if (result == 0) {
-        return;
-    }
-    {
-        u8 *rec = (u8 *)part->table + 0x68;
-        s16 offset = *(s16 *)rec;
-        void *addr = (u8 *)part + offset;
-        u8 someByte = otherViewport->field_0A;
-        register void *deadRead asm("r4") = *(void *volatile *)(rec + 4);
-        (void)deadRead;
-
-        sub_803AD88(addr, 1, someByte, 0);
-    }
-    otherViewport->flags |= 8;
+    asm(
+        "sub sp, #0xc\n\t"
+        "push {r4, r5, lr}\n\t"
+        "str r1, [sp, #0xc]\n\t"
+        "str r2, [sp, #0x10]\n\t"
+        "str r3, [sp, #0x14]\n\t"
+        "ldr r4, [sp, #0x1c]\n\t"
+        "ldr r5, [sp, #0x20]\n\t"
+        "add r0, r4, #0\n\t"
+        "add r1, sp, #0xc\n\t"
+        "bl sub_8009FF4\n\t"
+        "cmp r0, #0\n\t"
+        "beq 1f\n\t"
+        "ldr r1, [r4, #0x18]\n\t"
+        "add r1, #0x68\n\t"
+        "mov r2, #0\n\t"
+        "ldrsh r0, [r1, r2]\n\t"
+        "add r0, r4, r0\n\t"
+        "ldrb r2, [r5, #0xa]\n\t"
+        "ldr r4, [r1, #4]\n\t"
+        "mov r1, #1\n\t"
+        "mov r3, #0\n\t"
+        "bl sub_803AD88\n\t"
+        "mov r0, #8\n\t"
+        "ldrb r1, [r5, #0xc]\n\t"
+        "orr r0, r1\n\t"
+        "strb r0, [r5, #0xc]\n\t"
+    "1:\n\t"
+        "pop {r4, r5}\n\t"
+        "pop {r3}\n\t"
+        "add sp, #0xc\n\t"
+        "bx r3\n\t"
+    );
 }
-#endif /* NON_MATCHING */
 asm(".align 2, 0");
 
 /* Searches `manager->slotArray` (bounded by `capacity`, for the

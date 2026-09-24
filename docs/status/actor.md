@@ -1206,8 +1206,17 @@ embedded as asm instead. They're tracked as parked, not matched.
 - **`sub_80099F0`** (`src/graphics/actor_part12.c`) - `sub_8008D80`'s
   twin: byte-identical in shape (same collision-hit-resolve logic,
   same "dead read" trampoline call), called from elsewhere in this
-  cluster. Parked on the same `boxH` stack-layout gap - see
-  `docs/matching.md`, "Parked, not matched: `sub_80099F0`".
+  cluster - in fact its instruction stream is byte-identical to
+  `sub_8008D80`'s, down to the label offsets. Same `boxH` stack-layout
+  gap, so converted to `NAKED` the same way: a literal
+  instruction-for-instruction transcription of the ROM's own assembly
+  (byte-exact, confirmed via a full clean `make compare`), rather than
+  a derived C reconstruction. Per project policy this doesn't count as
+  "matched" the way real decompiled C does, so it stays filed here
+  rather than in "Matched" above - see `docs/matching.md`, "Parked,
+  not matched: `sub_80099F0`". `sub_8008D80` itself
+  (`src/graphics/actor_part7b.c`) is unaffected by this change and
+  remains its own separate `NAKED` function.
 - **`sub_8009D5C`** (`src/graphics/actor_part13.c`) - fires a
   `part->table+0x68`-driven trampoline based on `gUnknown_030012C0`'s
   mode, on the player and/or `part` depending on the mode value.
