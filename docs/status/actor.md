@@ -75,13 +75,22 @@ from "core" graphics.
   `sub_8009150` - see
   `docs/matching/sub_8009150-loop-invariant-hoist-matched.md`
 
+- `src/graphics/actor_part11h.c` (new file - `sub_800944C`'s real ROM
+  address isn't adjacent to `actor_part11.c`'s matched functions,
+  since the parked `sub_8008F20` guard and the NAKED
+  `sub_8009008`/`sub_80091D4` plus the now-matched `sub_8009150`
+  (`actor_part11g.c`) sit between them; named `actor_part11h.c` since
+  `actor_part11f.c`/`actor_part11g.c` were both already claimed by the
+  time this landed): `sub_800944C`
+
 - `src/graphics/actor_part12.c` (new file - `sub_8009A30`'s real ROM
   address isn't adjacent to `actor_part11.c`'s matched functions
-  either, since the parked `sub_8008F20` guard, the now-matched
-  `sub_8009150` (`actor_part11g.c`), the NAKED
-  `sub_8009008`/`sub_80091D4`/`sub_8009528`/`sub_80096C0`/`sub_8009868`
-  plus the remaining parked `sub_800944C`/`sub_8009914` guards and the
-  NAKED `sub_80099F0` all sit between them; see `docs/matching.md`):
+  either, since the parked `sub_8008F20` guard, the NAKED
+  `sub_8009008`/`sub_80091D4`/`sub_80096C0`/`sub_8009868`, the matched
+  `sub_8009150` (`actor_part11g.c`) and `sub_800944C`
+  (`actor_part11h.c`), the matched-as-NAKED `sub_8009528`
+  (`actor_part11f.c`), and the remaining parked `sub_8009914` guard all
+  sit between them; see `docs/matching.md`):
   `sub_8009A30`, `sub_8009AA0`, `sub_8009AF0`, `sub_8009B3C`,
   `sub_8009B70`, `sub_8009B9C`
 
@@ -1183,14 +1192,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   loop index, a running byte offset) allocation gap across
   `r3`/`sb`/`sl`/`r4`/`r8` - see `docs/matching.md`, "Parked, not
   matched: `sub_8008F20`".
-- **`sub_800944C`** (`src/graphics/actor_part11.c`) - the same
-  "extended screen box" filter shape as `sub_8008C80`, but iterating
-  the spatial hash grid directly and firing per-object trampolines
-  instead of building a second array. Every load, store, and field
-  offset confirmed correct; parked purely on a single register-reuse
-  choice (`bucket = baseIdx + 2` computed in-place instead of into a
-  fresh register) - see `docs/matching.md`, "Parked, not matched:
-  `sub_800944C`".
 - **`sub_8009528`** (`src/graphics/actor_part11f.c`) - the spatial-
   hash-grid-cluster analog of `sub_8008A40`: the same grid-iteration
   shape as `sub_800944C`, dispatching each hit to `sub_80096C0`/
