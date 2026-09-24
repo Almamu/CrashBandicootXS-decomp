@@ -235,3 +235,139 @@ report as a `raw_080355E0` unit with no target, same as `sub_801E644`/
 still its pre-existing fuzzy percentage) and a full clean `rm -rf build
 crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
 compare` (`La suma coincide`).
+
+## Third pass: `LoadObjSpriteTiles` matched via register-pinning + opaque asm islands
+
+Picked up `LoadObjSpriteTiles`, the last function this chunk's earlier
+passes left parked. Its semantics were already confirmed (4-pass loop:
+palette DMA, tile-buffer DMA, per-tile remap DMA); this pass was purely
+about reproducing the ROM's exact register allocation, worked out by
+mapping every ROM register's role block-by-block against the raw
+disassembly (still in `asm/code_3_2_20_28568_c99c_31784_33ef4_355e0.s`
+at the time, guarded `.if NON_MATCHING == 0`) and iterating with an
+isolated `cpp`+`agbcc`+`arm-none-eabi-as` compile/assemble/byte-diff
+loop against `baserom.gba` directly (not just the disassembly text).
+
+Register roles, once mapped: the `struct bg_package **` array-walk
+pointer lives in `r7` for most of each pass, gets saved to `r8`
+(`pkgPtrStash` here) right before the per-tile remap loop reuses `r7`
+as a scratch temp, and gets restored from `r8` right before the
+loop-condition check at the bottom - a save/reuse/restore shuttle
+around one physical register serving two unrelated roles at different
+points in the same iteration. `sb`(`r9`) holds the pass counter,
+incremented mid-body (right after the map-asset load, before the
+remap loop) rather than at a conventional for-loop's tail. `sl`(r10)
+holds the tile-VRAM cursor throughout. `r4`/`r5`/`r6` hold
+`paletteBuf`/`mapBuf`/`tileBuf` respectively (with `r4` reused for
+`count` and, inside the remap loop, as pure scratch for the loaded
+map-entry halfword and the `0x20` tile-cursor increment).
+
+Three techniques closed the gaps a plain, unpinned reconstruction left:
+
+- **Register-pinned locals** (`register TYPE name asm("rN")`) for
+  `pkgPtr`(`r7`)/`pass`(`r9`)/`pkgPtrStash`(`r8`) and, inside the
+  per-tile remap block, `dma2`(`r3`)/`src`(`r2`)/`i`(`r1`) - per
+  `matching_decomp_register_pinning`. One correctness trap surfaced
+  early: pinning `pkgPtr` to `r7` while an *unrelated*, unpinned
+  temporary (the DMA-register base address, materialized fresh via
+  `(struct dma_regs *)REG_ADDR_DMA3SAD`) was free to land in any
+  register let the compiler's allocator opportunistically reuse `r7`
+  for that temporary *before* `pkgPtr`'s last real use in the same
+  block - a genuine miscompile (silently reading through a clobbered
+  pointer), not just a missed optimization, caught by re-deriving the
+  isolated `.s` output's actual register flow rather than trusting
+  that "pinned" means "reserved everywhere." Giving that DMA-address
+  temporary (and the `0x80000010` DMA_CNT constant, which hit the same
+  issue) its own explicit local with a register pin to a genuinely
+  free, caller-saved register (`r0`) - forcing fresh materialization
+  at each of its two use sites instead of one shared, hoisted,
+  CSE'd value living across calls - fixed it.
+- **Declaration order controlling otherwise-untied locals' register
+  order**: the remap loop's five setup-preheader values (`dma2`,
+  `mask`, the hoisted `dmaCnt2` constant, `src`, `i`) needed to
+  materialize in exactly the ROM's own order for an exact byte match,
+  and this compiler's own hoisting/allocation order followed the
+  *textual* declaration order of the C locals, not any semantic
+  grouping - reordering the declarations (rather than re-pinning
+  registers, which reliably triggered ripple-effect regressions
+  elsewhere in the function, confirming this project's documented
+  "always re-diff the full function after each change" caution) closed
+  this cleanly once the right order was found by trial.
+- **Opaque `asm volatile` islands** (`matching_decomp_register_pinning`'s
+  "continuous asm island" pattern, `AllocVramTileBlock`'s precedent)
+  for three spots no plain-C phrasing reproduced no matter how it was
+  written:
+  - the `(*pkgPtr)->mapAsset` load, where the ROM emits a single
+    `ldm r7!, {r0}` (load-and-post-increment in one instruction) that
+    agbcc's `*ptr++` idiom recognition never triggers once the loaded
+    pointer is immediately dereferenced again in the same expression -
+    materialized directly via `asm("ldm %1!, {%0}" : "=r"(pkg),
+    "+r"(pkgPtr))`.
+  - the per-tile mask/shift/tileBuf-add/store sequence, where plain C
+    (`(mask & *(u16 *)src) << 5`, tried in both operand orders)
+    canonicalizes the load-then-AND into the opposite register roles
+    than the ROM's `mov r0,ip`-first ordering every time.
+  - the `dma->cnt` readback immediately followed by the tile-VRAM
+    cursor's `+= 0x20`, where plain C reuses the readback's
+    just-freed register for the `0x20` constant instead of the ROM's
+    separate `r4`.
+
+  Each island's operands (`dma2`, `src`, `mask`, `tileBuf`, `tileDest`)
+  were passed as real GCC asm operands (`"r"(...)`/`"+r"(...)`) rather
+  than referencing physical registers by bare name in the asm text -
+  the one time a physical register (`r9`, for the final
+  `while (pass <= 3)` comparison's scratch copy) was referenced by
+  bare name without declaring `pass` as a real input, the compiler
+  concluded nothing actually read `pass` and dead-code-eliminated the
+  `pass++` increment entirely, freeing `r9` for `mask` to clobber - a
+  genuine correctness bug caught by re-running the isolated
+  byte-diff after the change, not by inspection. Declaring `pass` as
+  a proper `"r"(pass)` input operand fixed it.
+
+**A costly process mistake worth recording**: the isolated per-function
+byte-diff against `baserom.gba` was (correctly) treated as authoritative
+for the function's *own* bytes, but the offset used for that diff was
+computed from a stale `@ 0x08035684` label comment left over in the
+raw `asm/*.s` file from before `LoadBg2Background` was converted to a
+`NAKED` transcription earlier the same day. Converting `LoadBg2Background`
+to hand-written `asm(...)` text without an explicit `.pool` directive
+left its 5-word literal pool (`gStaticData_0817D0E4`/`0x06008000`/
+`0x0600F000`/`0xFFFF0000`/`0x0400000C`) un-pooled at the end of the
+`asm()` block, so the assembler deferred emitting those 20 bytes to
+later in the translation unit instead of immediately after the
+function body - which the *isolated, single-function* compile of
+`LoadObjSpriteTiles` alone could never reveal, since it doesn't include
+`LoadBg2Background` at all. Only the full clean `make compare` (step 6,
+run after integrating) caught the resulting 20-byte address shift,
+manifesting as a total checksum mismatch traced via the exact method
+`docs/workflow.md` prescribes: reading `crashbandicootxs.map` for the
+actual linked address of the functions on either side of the change
+(`LoadBg2Background` at `0x080355E0`, `LoadObjSpriteTiles` linking 20
+bytes earlier than the stale comment implied, at `0x08035670` instead
+of `0x08035684`), rather than guessing. Fixed by adding an explicit
+`.pool` directive at the end of `LoadBg2Background`'s `asm(...)` text,
+forcing its literal pool to emit immediately - a one-line fix, but a
+concrete reminder that `LoadBg2Background`'s own doc-comment/status
+label addresses are downstream of this fix too, not just
+`LoadObjSpriteTiles`'s. A second, narrower bug of the same flavor (an
+isolated-compile-only "match" that wasn't) also surfaced during this
+pass's own before-integration verification: the `count = pkg->width *
+pkg->height` multiplication's operand order matters for which of
+`width`/`height` loads into which scratch register, and an earlier
+"instruction-for-instruction" manual read-through of the two disassembly
+listings side-by-side missed that the immediate offsets (`[r0]` vs
+`[r0, #4]`) differed between the two loads even though the surrounding
+instructions lined up - only a real byte-level diff against the ROM
+(cross-checked against the object file's actual relocation table, not
+assumed) caught it. Both reinforce `docs/workflow.md` step 3's
+"isolated compile is a diagnostic tool, never proof" rule, and argue
+for preferring an automated byte/relocation-table diff over manual
+instruction-list comparison even when the latter looks thorough.
+
+Matched, confirmed via a full clean `rm -rf build && make NON_MATCHING=1
+report` (clean compile, no warnings; `objdiff-cli report generate`
+shows `LoadObjSpriteTiles` at 100% fuzzy-match) and a full clean
+`rm -rf build crashbandicootxs.elf crashbandicootxs.gba
+crashbandicootxs.map && make compare` (`La suma coincide`).
+`tools/report_units.py`'s entry for `LoadObjSpriteTiles` updated to
+describe it as matched rather than parked.
