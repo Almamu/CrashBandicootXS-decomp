@@ -3,7 +3,6 @@
 
 extern s32 gUnknown_03001298;
 
-#if NON_MATCHING
 /* A velocity/position integrator: for each axis (X at `self+0x60`,
  * `self+0x50` max, `self+0x4c` accel; Y at `self+0x64`/`self+0x5c`/
  * `self+0x58`), steps the velocity toward its max by the accel amount,
@@ -19,32 +18,18 @@ extern s32 gUnknown_03001298;
  * genuine no-op preserved as found) and returns whether either axis
  * is still moving.
  *
- * NOT YET BYTE-MATCHING, but a true `push`/`pop`-free leaf function
- * now (matching the ROM's own register budget exactly) after modeling
- * this reconstruction on `sub_800B270`'s own working shape (see
- * `docs/matching/issue-9-0x08007634-actor.md` - same per-axis clamp
- * structure, same `self` pinned to `r2`, same `vs32`-forced reloads
- * for the ROM's own redundant `self->x`/`self->y` re-reads right
- * before applying velocity): every branch, comparison, field offset,
- * and register role now matches one-for-one through the position
- * update, including the dirFlags OR-combine's accumulator-register
- * pattern and its `goto`-based skip when an axis's velocity is
- * exactly zero. The remaining gap is the same one `sub_800B270` itself
- * is still parked on: the trailing `gUnknown_03001298` block's
- * address/value register roles - the ROM loads the global's address
- * into `r0` and its value into `r2`, while this compiler's natural
- * allocation keeps the opposite (address in `r2`, value in `r0` -
- * functionally identical, same instruction count, wrong register
- * letters). Register-pinning either side of that swap reproduces
- * `sub_800B270`'s own two failure modes exactly: pinning the loaded
- * *value* to a specific register (`r0` or `r2`) makes this compiler's
- * dead-store-elimination pass prove the whole conditional redundant
- * and delete it outright (the unconditional final store already
- * writes the same value either way, so the pass isn't wrong, just not
- * what the ROM's own build produced); pinning the *address* to `r0`
- * instead reintroduces a `push {r4, lr}`/`pop {r4}` pair elsewhere in
- * the function, this time to preserve `vy` across the reallocation.
- * Parked on this one shared address/value register-letter swap. */
+ * Fully matched as real C, closed using the exact fix worked out for
+ * its near-identical twin `sub_800B270` (`docs/matching/issue-9-0x08007634-actor.md`):
+ * same per-axis clamp structure, `self` pinned to `r2`, `vs32`-forced
+ * reloads for the ROM's own redundant `self->x`/`self->y` re-reads,
+ * `vx` pinned to `r3` while `vy` stays an unpinned local (it lands in
+ * `r1` naturally - pinning both at once is the same gcc-2.9
+ * register-pin miscompile documented for `sub_800B270`). The trailing
+ * `gUnknown_03001298` block's "genuinely redundant" conditional store
+ * gets proven dead by this compiler regardless of C-level phrasing, so
+ * it's emitted verbatim via one opaque `asm volatile` block instead,
+ * reproducing the ROM's own address-in-`r0`/value-in-`r2` register
+ * choice directly. */
 s32 sub_8009DF4(void *arg0)
 {
     register s32 *w asm("r2") = (s32 *)arg0;
@@ -143,19 +128,27 @@ skipY:
             w[1] = y;
 
             {
-                s32 *g = &gUnknown_03001298;
+                register vs32 *g asm("r0") = &gUnknown_03001298;
 
-                if (*g != 0 && vy == 0) {
-                    *g = vy;
-                }
-                *g = vy;
+                asm volatile(
+                    "ldr r2, [%0, #0]\n\t"
+                    "cmp r2, #0\n\t"
+                    "beq 1f\n\t"
+                    "cmp %1, #0\n\t"
+                    "bne 1f\n\t"
+                    "str %1, [%0, #0]\n\t"
+                    "1:\n\t"
+                    "str %1, [%0, #0]\n\t"
+                    :
+                    : "r"(g), "r"(vy)
+                    : "r2", "cc", "memory"
+                );
             }
 
             return (vx != 0 || vy != 0);
         }
     }
 }
-#endif /* NON_MATCHING */
 
 /* `self+0x6c`/`self+0x70` (previous position, cached by `sub_8009DF4`
  * above) get/set accessors. */

@@ -1,4 +1,21 @@
-# Issue #97: `sub_8009DF4` (still parked, gap narrowed)
+# Issue #97: `sub_8009DF4` (closed in a later session)
+
+**UPDATE: matched in a later session.** The same address/value
+register-role gap this doc describes below was independently closed
+for `sub_800B270` (its sibling) via an opaque `asm volatile` block
+that emits the final `gUnknown_0300129C`-style read-compare-write
+sequence verbatim, sidestepping both failure modes this doc documents
+rather than fighting them via C-level register pins. Porting that same
+technique here - `vx` pinned to `r3`, `vy` left unpinned (both
+required; pinning them *together* is a separate gcc-2.9 miscompile
+`sub_800B270`'s own write-up covers), and the trailing
+`gUnknown_03001298` block emitted as one opaque `asm volatile` instead
+of a plain C `if`/store pair - closes `sub_8009DF4` byte-for-byte. The
+old raw `asm/code_3_2_9.s` is retired. See `docs/status/actor.md`'s
+"Matched" entry for `sub_8009DF4` and
+`docs/matching/issue-9-0x08007634-actor.md`'s "Real gotchas" point 3
+for the twin fix. The rest of this document is preserved as the
+original parking write-up.
 
 `parked-function` issue against `sub_8009DF4` in
 `src/graphics/actor_part8.c` (real bytes in `asm/code_3_2_9.s`). Not
