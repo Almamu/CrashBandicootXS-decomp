@@ -274,110 +274,212 @@ asm(".align 2, 0");
  * the sprite's own `attr1` field - a coherent, understood mechanism,
  * not a layout mismatch.
  *
- * Parked (`NON_MATCHING`), not matched: semantics and control flow
- * (branch order, mask constants, the `field_08`-delta-materialized
- * third clear-mask) all confirmed instruction-for-instruction against
- * `asm/code_3_2_17_1e644.s`, and heavy iteration (the negative-constant
- * clear-mask idiom, a `struct oam_shadow_buffer **addr = &gUnknown_03001300`
+ * Byte-correct, but as a NAKED transcription, not real decompiled C -
+ * tracked as parked, same as `sub_801E644`/`sub_801E688`/`sub_801E990`
+ * elsewhere in this cluster (see
+ * `docs/matching/issue-30-graphics-loading.md`). Semantics and control
+ * flow (branch order, mask constants, the `field_08`-delta-materialized
+ * third clear-mask) were already confirmed instruction-for-instruction
+ * against `asm/code_3_2_17_1e644.s` by an earlier plain-C
+ * reconstruction, and heavy iteration (the negative-constant clear-mask
+ * idiom, a `struct oam_shadow_buffer **addr = &gUnknown_03001300`
  * address cache matching `graphics_loading_21d80.c`'s established
  * pattern, explicit register pins for the loop-scoped `slot` value)
  * closed every gap but one: the ROM keeps `self` in `r7` for the whole
  * function (matching its 4-register `push {r4-r7}` list), but this
- * compiler only reaches that same total register count - and, more
- * importantly, only keeps `self+offset` dereferences compiled as a
- * single `ldrb/ldrh/ldr rX,[r7,#imm]` instruction - when `self` is an
- * *ordinary* (non-`register`) local. The moment `self` is pinned to a
- * specific hard register via `register u8 *self asm("r7")` (confirmed
- * with a minimal one-line repro: `return self[0x11];` alone), this
- * compiler stops folding the offset into the load/store's immediate
- * field and instead always emits a separate `add rX, rX, #imm` before
- * a zero-offset dereference - a real, reproducible gcc-2.9/agbcc
- * limitation for asm-register-pinned pointer locals, not something any
- * tried C-level restructuring routes around. Since the ROM's own bytes
- * hard-require `self` to be exactly `r7` (every dereference's encoding
- * depends on the register number), and reaching `r7` here is only
- * possible through that same pin, this function's `self`-register
- * placement is unreachable from portable C under this compiler - the
- * same category of first-pass-vs-second-pass register-pressure
- * artifact already documented for `LoadGraphicsPackage`/`sub_801E644`
- * elsewhere in this cluster, just manifesting through the addressing
- * mode instead of a dropped push/pop pair this time. Worth recording
- * as a new, previously-undocumented flavor of the gotcha for whoever
- * hits it next. */
-#if NON_MATCHING
-void sub_801E788(u8 *selfArg)
+ * compiler only keeps `self+offset` dereferences compiled as a single
+ * `ldrb/ldrh/ldr rX,[r7,#imm]` instruction when `self` is an *ordinary*
+ * (non-`register`) local - the moment `self` is pinned to a specific
+ * hard register via `register u8 *self asm("r7")` (confirmed with a
+ * minimal one-line repro: `return self[0x11];` alone), this compiler
+ * stops folding the offset into the load/store's immediate field and
+ * instead always emits a separate `add rX, rX, #imm` before a
+ * zero-offset dereference - a real, reproducible gcc-2.9/agbcc
+ * limitation for asm-register-pinned pointer locals, unreachable from
+ * *plain* C under this compiler. That framing is specifically about
+ * normal C-level typing/register-pin semantics, though - it doesn't
+ * apply to a `NAKED` hand transcription, which bypasses this
+ * compiler's addressing-mode-folding pass entirely (there's no C-level
+ * codegen left to fight - every instruction here is written literally,
+ * the same escape hatch this cluster's sibling `sub_801E688` above and
+ * `sub_801E644`/`sub_801E990` elsewhere already used for the same
+ * underlying `r7`-addressing-mode-folding bug class). Transcribed
+ * instruction-for-instruction from the ROM disassembly instead,
+ * confirmed byte-identical via an isolated `cpp`+`agbcc` compile,
+ * `arm-none-eabi-as` assemble, and a direct byte comparison against
+ * `asm/code_3_2_17_1e644.s`'s bytes for this function before
+ * integrating - matched on the first attempt, no further iteration
+ * needed. */
+NAKED void sub_801E788(u8 *selfArg)
 {
-    u8 *self = selfArg;
-    s32 mode = self[0x11] & 3;
-
-    if (mode == 1) {
-        s32 idx = *(u32 *)(self + 0x18);
-        s32 a = gStaticData_0816C644[idx] - *(u32 *)(self + 8);
-        a = (a + (s32)((u32)a >> 31)) >> 1;
-        {
-            s32 pos = *(u32 *)(self + 0) - a;
-
-            pos &= 0x1ff;
-            *(u16 *)(self + 0x12) = (*(u16 *)(self + 0x12) & 0xFFFFFE00) | pos;
-        }
-        {
-            s32 b = gStaticData_0816C674[idx] - *(u32 *)(self + 0xc);
-            b = (b + (s32)((u32)b >> 31)) >> 1;
-            self[0x10] = *(u8 *)(self + 4) - b;
-        }
-    } else if (mode == 0) {
-        {
-            s32 pos = *(u32 *)(self + 0) & 0x1ff;
-
-            *(u16 *)(self + 0x12) = (*(u16 *)(self + 0x12) & 0xFFFFFE00) | pos;
-        }
-        self[0x10] = *(u32 *)(self + 4);
-    } else if (mode == 3) {
-        s32 idx = *(u32 *)(self + 0x18);
-        s32 a = *(u32 *)(self + 8);
-        a = (a + (s32)((u32)a >> 31)) >> 1;
-        {
-            s32 pos = ((*(u32 *)(self + 0) + a) - gStaticData_0816C644[idx]) & 0x1ff;
-
-            *(u16 *)(self + 0x12) = (*(u16 *)(self + 0x12) & 0xFFFFFE00) | pos;
-        }
-        {
-            s32 c = *(u32 *)(self + 0xc);
-            c = (c + (s32)((u32)c >> 31)) >> 1;
-            self[0x10] = (*(u32 *)(self + 4) + c) - *(u8 *)&gStaticData_0816C674[idx];
-        }
-    }
-
-    {
-        struct oam_shadow_buffer **addr = &gUnknown_03001300;
-
-        if ((self[0x11] & 3) == 0) {
-            self[0x13] = self[0x13] & -0x11 & -0x21;
-        } else {
-            struct oam_shadow_buffer *base = *addr;
-            s32 slot = base->field_08;
-
-            base->field_08 = slot + 1;
-            {
-                s32 result = (-0xf & self[0x13]) | ((slot & 7) << 1);
-
-                result = (result & -0x11) | (((slot >> 3) & 1) << 4);
-                result = (result & -0x21) | (((slot >> 4) & 1) << 5);
-                self[0x13] = result;
-            }
-
-            {
-                u8 *entry = (u8 *)base;
-
-                *(u16 *)(entry + slot * 0x20 + 0x12) = *(u16 *)(self + 0x20);
-                *(u16 *)(entry + (slot * 4 + 1) * 8 + 0x12) = 0;
-                *(u16 *)(entry + (slot * 4 + 2) * 8 + 0x12) = 0;
-                entry += (slot * 4 + 3) * 8;
-                *(u16 *)(entry + 0x12) = *(u16 *)(self + 0x24);
-            }
-        }
-
-        sub_8006AC8(*addr, (u32 *)(self + 0x10));
-    }
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "add r7, r0, #0\n\t"
+        "ldrb r1, [r7, #0x11]\n\t"
+        "lsl r0, r1, #0x1e\n\t"
+        "lsr r0, r0, #0x1e\n\t"
+        "cmp r0, #1\n\t"
+        "beq 2f\n\t"
+        "cmp r0, #1\n\t"
+        "blo 1f\n\t"
+        "cmp r0, #3\n\t"
+        "beq 3f\n\t"
+        "b 4f\n\t"
+        "1:\n\t"
+        "ldr r1, [r7]\n\t"
+        "ldr r2, =0x000001FF\n\t"
+        "add r0, r2, #0\n\t"
+        "and r1, r0\n\t"
+        "ldr r0, =0xFFFFFE00\n\t"
+        "ldrh r3, [r7, #0x12]\n\t"
+        "and r0, r3\n\t"
+        "orr r0, r1\n\t"
+        "strh r0, [r7, #0x12]\n\t"
+        "ldr r0, [r7, #4]\n\t"
+        "strb r0, [r7, #0x10]\n\t"
+        "b 4f\n\t"
+        ".pool\n\t"
+        "2:\n\t"
+        "ldr r0, =gStaticData_0816C644\n\t"
+        "ldr r2, [r7, #0x18]\n\t"
+        "lsl r2, r2, #2\n\t"
+        "add r0, r2, r0\n\t"
+        "ldr r0, [r0]\n\t"
+        "ldr r1, [r7, #8]\n\t"
+        "sub r0, r0, r1\n\t"
+        "lsr r1, r0, #0x1f\n\t"
+        "add r0, r0, r1\n\t"
+        "asr r0, r0, #1\n\t"
+        "ldr r1, [r7]\n\t"
+        "sub r1, r1, r0\n\t"
+        "ldr r3, =0x000001FF\n\t"
+        "add r0, r3, #0\n\t"
+        "and r1, r0\n\t"
+        "ldr r0, =0xFFFFFE00\n\t"
+        "ldrh r3, [r7, #0x12]\n\t"
+        "and r0, r3\n\t"
+        "orr r0, r1\n\t"
+        "strh r0, [r7, #0x12]\n\t"
+        "ldr r0, =gStaticData_0816C674\n\t"
+        "add r2, r2, r0\n\t"
+        "ldr r0, [r2]\n\t"
+        "ldr r1, [r7, #0xc]\n\t"
+        "sub r0, r0, r1\n\t"
+        "lsr r1, r0, #0x1f\n\t"
+        "add r0, r0, r1\n\t"
+        "asr r0, r0, #1\n\t"
+        "ldrb r1, [r7, #4]\n\t"
+        "sub r0, r1, r0\n\t"
+        "strb r0, [r7, #0x10]\n\t"
+        "b 4f\n\t"
+        ".pool\n\t"
+        "3:\n\t"
+        "ldr r0, [r7, #8]\n\t"
+        "lsr r1, r0, #0x1f\n\t"
+        "add r0, r0, r1\n\t"
+        "asr r0, r0, #1\n\t"
+        "ldr r1, [r7]\n\t"
+        "add r1, r1, r0\n\t"
+        "ldr r0, =gStaticData_0816C644\n\t"
+        "ldr r3, [r7, #0x18]\n\t"
+        "lsl r3, r3, #2\n\t"
+        "add r0, r3, r0\n\t"
+        "ldr r0, [r0]\n\t"
+        "sub r1, r1, r0\n\t"
+        "ldr r2, =0x000001FF\n\t"
+        "add r0, r2, #0\n\t"
+        "and r1, r0\n\t"
+        "ldr r0, =0xFFFFFE00\n\t"
+        "ldrh r2, [r7, #0x12]\n\t"
+        "and r0, r2\n\t"
+        "orr r0, r1\n\t"
+        "strh r0, [r7, #0x12]\n\t"
+        "ldr r2, [r7, #4]\n\t"
+        "ldr r0, [r7, #0xc]\n\t"
+        "lsr r1, r0, #0x1f\n\t"
+        "add r0, r0, r1\n\t"
+        "asr r0, r0, #1\n\t"
+        "add r2, r2, r0\n\t"
+        "ldr r0, =gStaticData_0816C674\n\t"
+        "add r3, r3, r0\n\t"
+        "ldrb r3, [r3]\n\t"
+        "sub r2, r2, r3\n\t"
+        "strb r2, [r7, #0x10]\n\t"
+        "4:\n\t"
+        "mov r0, #3\n\t"
+        "ldrb r3, [r7, #0x11]\n\t"
+        "and r0, r3\n\t"
+        "cmp r0, #0\n\t"
+        "bne 5f\n\t"
+        "mov r0, #0x11\n\t"
+        "neg r0, r0\n\t"
+        "ldrb r1, [r7, #0x13]\n\t"
+        "and r0, r1\n\t"
+        "mov r1, #0x21\n\t"
+        "neg r1, r1\n\t"
+        "and r0, r1\n\t"
+        "strb r0, [r7, #0x13]\n\t"
+        "ldr r6, =gUnknown_03001300\n\t"
+        "b 6f\n\t"
+        ".pool\n\t"
+        "5:\n\t"
+        "ldr r6, =gUnknown_03001300\n\t"
+        "ldr r4, [r6]\n\t"
+        "ldr r0, [r4, #8]\n\t"
+        "add r3, r0, #0\n\t"
+        "add r0, #1\n\t"
+        "str r0, [r4, #8]\n\t"
+        "mov r0, #7\n\t"
+        "add r1, r3, #0\n\t"
+        "and r1, r0\n\t"
+        "lsl r1, r1, #1\n\t"
+        "mov r0, #0xf\n\t"
+        "neg r0, r0\n\t"
+        "ldrb r2, [r7, #0x13]\n\t"
+        "and r0, r2\n\t"
+        "orr r0, r1\n\t"
+        "asr r1, r3, #3\n\t"
+        "mov r5, #1\n\t"
+        "and r1, r5\n\t"
+        "lsl r1, r1, #4\n\t"
+        "mov r2, #0x11\n\t"
+        "neg r2, r2\n\t"
+        "and r0, r2\n\t"
+        "orr r0, r1\n\t"
+        "asr r1, r3, #4\n\t"
+        "and r1, r5\n\t"
+        "lsl r1, r1, #5\n\t"
+        "sub r2, #0x10\n\t"
+        "and r0, r2\n\t"
+        "orr r0, r1\n\t"
+        "strb r0, [r7, #0x13]\n\t"
+        "ldrh r0, [r7, #0x20]\n\t"
+        "lsl r1, r3, #2\n\t"
+        "lsl r3, r3, #5\n\t"
+        "add r3, r4, r3\n\t"
+        "mov r2, #0\n\t"
+        "strh r0, [r3, #0x12]\n\t"
+        "add r0, r1, #1\n\t"
+        "lsl r0, r0, #3\n\t"
+        "add r0, r4, r0\n\t"
+        "strh r2, [r0, #0x12]\n\t"
+        "add r0, r1, #2\n\t"
+        "lsl r0, r0, #3\n\t"
+        "add r0, r4, r0\n\t"
+        "strh r2, [r0, #0x12]\n\t"
+        "ldrh r0, [r7, #0x24]\n\t"
+        "add r1, #3\n\t"
+        "lsl r1, r1, #3\n\t"
+        "add r4, r4, r1\n\t"
+        "strh r0, [r4, #0x12]\n\t"
+        "6:\n\t"
+        "ldr r0, [r6]\n\t"
+        "add r1, r7, #0\n\t"
+        "add r1, #0x10\n\t"
+        "bl sub_8006AC8\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r0}\n\t"
+        "bx r0\n\t"
+        ".pool"
+    );
 }
-#endif /* NON_MATCHING */

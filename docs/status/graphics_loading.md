@@ -155,6 +155,28 @@ plain C didn't converge.
   the push and pop). Transcribed instruction-for-instruction instead.
   See [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)'s
   "Seventh pass".
+- **`sub_801E788`** (`src/graphics/graphics_package_1e688.c`) -
+  `LoadGraphicsPackage`'s viewport-centering helper (position math on
+  one of 4 packed modes, then an unconditional shadow-OAM insert that
+  also allocates and writes one affine-parameter group when centering
+  is active). Every operation was already confirmed correct by an
+  earlier plain-C reconstruction, but hits the exact same `r7` gap
+  documented for `sub_801E688` above, via yet another mechanism: the
+  ROM needs `self` in `r7` for the entire function (matching its
+  4-register `push {r4-r7}`), but this compiler only folds
+  `self[offset]` into a single `ldrb/ldrh/ldr rX,[r7,#imm]` when
+  `self` is an ordinary (non-`register`) local - pinning `self` to
+  `r7` via `register u8 *self asm("r7")` makes it stop folding offsets
+  entirely, emitting a separate `add rX,rX,#imm` before every
+  zero-offset dereference instead (confirmed with a minimal one-line
+  repro). This is specifically an artifact of plain-C register-pin
+  semantics, though, not something a `NAKED` transcription runs into
+  at all (no addressing-mode-folding pass to fight when every
+  instruction is written literally) - transcribed
+  instruction-for-instruction and matched byte-identical on the first
+  attempt. See
+  [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)'s
+  "Ninth pass".
 - **`sub_8020E84`**, **`sub_8020F7C`**, **`sub_802107C`**,
   **`sub_802117C`** (`src/graphics/trigger_effect.c`) - the
   "trigger effect type N" twin family (4 of the 15-slot
@@ -218,29 +240,5 @@ Both hit the same confirmed `r7`-pin gap as `sub_8007114`
   Transcribed instruction-for-instruction instead. See
   [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md).
 
-## Parked (`NON_MATCHING`, not yet byte-exact)
-
-- **`sub_801E788`** (`src/graphics/graphics_package_1e688.c`, real bytes
-  guarded in `asm/code_3_2_17_1e644.s`) - `LoadGraphicsPackage`'s
-  viewport-centering helper (position math on one of 4 packed modes,
-  then an unconditional shadow-OAM insert that also allocates and
-  writes one affine-parameter group when centering is active). Fully
-  understood, including resolving a prior pass's flagged concern about
-  its sibling `sub_801E688`'s `gUnknown_03001300` writes not fitting
-  the shadow buffer's 8-byte hardware-OAM stride - they do
-  (`field_08 * 0x20 + 0x12` decomposes into 4 consecutive entries'
-  filler halfword, the real hardware's OBJ affine-parameter overlay) -
-  but not byte-exact: needs `self` in `r7` (matching the ROM's
-  `push {r4-r7}`), which is only reachable through an explicit
-  `register u8 *self asm("r7")` pin, and that pin itself defeats this
-  compiler's immediate-offset address folding for every `self[...]`
-  access (confirmed with a minimal repro) - a gcc-2.9 register-
-  allocation gotcha now also confirmed (via a different mechanism -
-  `r7` never entering the callee-save push/pop list at all, regardless
-  of how it's referenced from inline asm) to affect its sibling
-  `sub_801E688` too, which is why that one is now parked as a NAKED
-  transcription instead - see "Parked - NAKED transcription" above. See
-  [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)'s
-  "Fourth pass" and "Seventh pass".
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
