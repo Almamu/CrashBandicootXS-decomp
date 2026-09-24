@@ -59,20 +59,20 @@ from "core" graphics.
   `actor_part7b.c`'s `sub_8008D80` range): `sub_8008DC0`, `sub_8008DEC`, `sub_8008E50`,
   `sub_8008E94`, `sub_8008EB4`, `sub_8008EE4`
 
-- `src/graphics/actor_part11b.c`/`actor_part11c.c`/`actor_part11d.c`
-  (new files, NAKED-transcription-only - see "Parked - NAKED
-  transcription" below for what each one holds): `sub_8009008`,
-  `sub_80091D4`, `sub_8009868` respectively, each dropped into
-  `ldscript.txt` between the remaining `asm/code_3_2_13*.s` guard
-  splits at its own real ROM address
+- `src/graphics/actor_part11b.c`/`actor_part11c.c`/`actor_part11e.c`/
+  `actor_part11d.c` (new files, NAKED-transcription-only - see "Parked
+  - NAKED transcription" below for what each one holds): `sub_8009008`,
+  `sub_80091D4`, `sub_80096C0`, `sub_8009868` respectively, each
+  dropped into `ldscript.txt` between the remaining `asm/code_3_2_13*.s`
+  guard splits at its own real ROM address
 
 - `src/graphics/actor_part12.c` (new file - `sub_8009A30`'s real ROM
   address isn't adjacent to `actor_part11.c`'s matched functions
   either, since the parked `sub_8008F20` guard and the NAKED
-  `sub_8009008`/`sub_80091D4`/`sub_8009868` plus the remaining parked
-  `sub_8009150`/`sub_800944C`/`sub_8009528`/`sub_80096C0`/
-  `sub_8009914`/`sub_80099F0` guards all sit between them; see
-  `docs/matching.md`):
+  `sub_8009008`/`sub_80091D4`/`sub_80096C0`/`sub_8009868` plus the
+  remaining parked `sub_8009150`/`sub_800944C`/`sub_8009528`/
+  `sub_8009914` guards and the NAKED `sub_80099F0` all sit between
+  them; see `docs/matching.md`):
   `sub_8009A30`, `sub_8009AA0`, `sub_8009AF0`, `sub_8009B3C`,
   `sub_8009B70`, `sub_8009B9C`
 
@@ -1199,12 +1199,20 @@ embedded as asm instead. They're tracked as parked, not matched.
   gap larger than the established `boxH` issue alone, not chased
   further given the size of the remaining cluster - see
   `docs/matching.md`, "Parked, not matched: `sub_8009528`".
-- **`sub_80096C0`** (`src/graphics/actor_part11.c`) - `sub_8008AD8`'s
+- **`sub_80096C0`** (`src/graphics/actor_part11e.c`) - `sub_8008AD8`'s
   twin: byte-identical collision-hit resolution logic, operating in
-  this spatial-hash-grid cluster instead of the plain array manager.
-  Parked on the same `boxH` stack-layout gap as `sub_8008AD8`/
-  `sub_8008D80`/`sub_80099F0` - see `docs/matching.md`, "Parked, not
-  matched: `sub_80096C0`".
+  this spatial-hash-grid cluster instead of the plain array manager -
+  in fact its instruction stream is byte-identical to `sub_8008AD8`'s,
+  down to the label offsets. Same `boxH` stack-layout gap as
+  `sub_8008AD8`/`sub_8008D80`/`sub_80099F0`, so converted to `NAKED`
+  the same way: a literal instruction-for-instruction transcription of
+  the ROM's own assembly (byte-exact, confirmed via a full clean `make
+  compare`), rather than a derived C reconstruction. Per project
+  policy this doesn't count as "matched" the way real decompiled C
+  does, so it stays filed here rather than in "Matched" above - see
+  `docs/matching.md`, "Parked, not matched: `sub_80096C0`".
+  `sub_8008AD8` itself (`src/graphics/actor_part7.c`) is unaffected by
+  this change and remains its own separate `NAKED` function.
 - **`sub_8009914`** (`src/graphics/actor_part11.c`) - resets a pool
   manager to empty: tears down every active object, then rebuilds the
   grid and free list from scratch. The teardown loop is confirmed
