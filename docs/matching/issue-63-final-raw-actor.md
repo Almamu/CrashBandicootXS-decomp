@@ -39,7 +39,7 @@ BLDCNT/BLDALPHA mirror re-applied every frame to drive a flicker/pulse
 effect, and a hookup to the shared text icon manager
 (`gUnknown_030012DC`) and tile cache (`gUnknown_030012B8`).
 
-## `sub_803472C` (`src/graphics/actor_part87.c`) - parked, NON_MATCHING
+## `sub_803472C` (`src/graphics/actor_part87.c`) - matched, real C
 
 The constructor half: allocates and initializes the three BG scratch
 buffers (`sub_8026EDC`/`sub_801E644`), loads their graphics packages,
@@ -49,9 +49,9 @@ half, then builds the BLDCNT/BLDALPHA alpha-blend value (BG2 -> BG0,
 mode 1, EVA=8/16 EVB=16/16), applies every register, zeroes two more
 fields, and ducks the audio context out via `sub_8001AC4`.
 
-This one came *extremely* close to a real match - every field, struct
-offset, and the overwhelming majority of individual register choices
-were reproduced exactly through heavy register pinning
+This one came *extremely* close to a real match on the first pass -
+every field, struct offset, and the overwhelming majority of individual
+register choices were reproduced exactly through heavy register pinning
 (`self`->r5, a `buf` pin->r0 relying on `sub_801E644` not clobbering
 r0 across the call, `zero`->r8, `c0x40`->sb, `one`->r6, `four`->r4) plus
 several inline-asm anchors for spots where this compiler's own optimizer
@@ -68,17 +68,51 @@ the freshly-loaded value, a different structurally-identical-looking
 spot accumulates into the pre-existing constant) all had to be
 reproduced by hand.
 
-Despite all of that, a final handful of individual accumulator/temp-
-register choices in the tail of the BLDCNT/BLDALPHA byte-packing
-sequence never converged, confirmed only by the real linked ROM diff
-(not the isolated compile, which "looked right" at each step - the
-exact class of trap `docs/workflow.md` warns about). Parked
-(`NON_MATCHING`) rather than pushed further given how much of the
-function is already real, byte-exact-verified C-shaped logic; the raw
-bytes live in
+A final handful of individual accumulator/temp-register choices in the
+tail of the BLDCNT/BLDALPHA byte-packing sequence didn't converge on
+that first pass, confirmed only by the real linked ROM diff (not the
+isolated compile, which "looked right" at each step - the exact class
+of trap `docs/workflow.md` warns about), and the function was parked
+(`NON_MATCHING`) rather than pushed further at the time.
+
+A follow-up pass closed both remaining gaps - narrow register-pin/
+barrier fixes, not a genuine compiler limitation:
+
+- `one |= self->blend.b.bldcntHi;`'s reload was left to this compiler's
+  free register choice (it picked r0), where the ROM reuses r1 (the
+  register `mask` occupies a few statements later) - closed with a
+  `register u8 hi asm("r1") = self->blend.b.bldcntHi;` pin on just that
+  one reload, matching `matching_decomp_register_pinning` memory's
+  established technique.
+- The `mask`/`tmp` BLDALPHA pair (`tmp = mask; tmp &= bldalphaLo; ...`):
+  this compiler elides the `tmp = mask` copy entirely and ANDs the
+  freshly-loaded byte directly against `mask`'s own register instead (2
+  bytes shorter than the ROM's real "copy mask into tmp via a plain
+  `adds`, then AND against a separately reloaded byte" sequence) -
+  closed with an empty `asm("" : "+r" (tmp));` compiler barrier
+  immediately after `tmp`'s register-pinned initializer, the same
+  "stop the materialize-then-copy fold" technique already documented
+  for `sub_801E8F8`/`sub_801E96C`
+  (`docs/matching/issue-30-graphics-loading.md`). Writing the two
+  trailing `... | 8`/`... | 0x10` stores as `tmp |= 8; blend.b.x = tmp;`
+  (rather than `blend.b.x = tmp | 8;`) was also needed so the OR's result
+  lands back in the accumulator's own register instead of the freshly-
+  loaded-constant's register - the same "which register holds the
+  result of `accumulator | fresh-immediate`" gap the `hi`/`one` fix
+  above hit too.
+
+Confirmed byte-identical against the real ROM disassembly both in an
+isolated compile (`cmp` against a standalone `arm-none-eabi-as` of the
+guarded raw block - identical) and via a full clean `rm -rf build &&
+make NON_MATCHING=1 report` (`objdiff-cli report generate` shows
+100.0% for `actor_part87`) plus `rm -rf build crashbandicootxs.elf
+crashbandicootxs.gba crashbandicootxs.map && make compare` (`La suma
+coincide`). The raw bytes that used to live in
 `asm/code_3_2_20_28568_c99c_31784_33ef4_3472c.s` under a
-`.if NON_MATCHING == 0` guard (LoadGraphicsPackage's established
-pattern, `docs/matching/issue-30-graphics-loading.md`).
+`.if NON_MATCHING == 0` guard are gone now - that file held nothing but
+this one function, so it was deleted outright, with its `ldscript.txt`
+line dropped (the still-matched `src/graphics/actor_part87.o` now
+supplies the real bytes at that link position on its own).
 
 ## `sub_803487C` (`src/graphics/actor_part88.c`) - parked, NON_MATCHING
 
@@ -175,14 +209,15 @@ plain C.
 
 Issue #63's original 25-function chunk, plus these 3:
 
-- **Real C, matched:** 14 (unchanged from before this pass)
-- **Parked, NON_MATCHING (real C, not byte-exact):** 9 (7 from before +
-  `sub_803472C` + `sub_803487C`)
+- **Real C, matched:** 15 (14 from before this pass + `sub_803472C`,
+  matched in a later follow-up pass - see above)
+- **Parked, NON_MATCHING (real C, not byte-exact):** 8 (7 from before +
+  `sub_803487C`)
 - **NAKED (byte-exact, not real C):** 2 (`sub_8033FE4` from before +
   `sub_8034994`)
 - **Left raw:** 0
 
-Issue #63 stays open - only 14/28 functions in its now-expanded scope
+Issue #63 stays open - only 15/28 functions in its now-expanded scope
 are genuinely real-C-matched, and NAKED/NON_MATCHING parking doesn't
 count toward closing per this project's convention (see
 `CONTRIBUTING.md`'s "Opening the PR" section).

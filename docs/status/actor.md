@@ -488,6 +488,18 @@ from "core" graphics.
   compute-then-copy tail - see that file's doc comments for the full
   account), a particle-spawn-budget driver, an input-poll busy-wait, and a
   buffer-release/teardown helper.
+- **`sub_803472C`** (`src/graphics/actor_part87.c`, GitHub issue #63) - a
+  standalone `struct fade_overlay` object's constructor half: allocates
+  and loads its three BG scratch buffers, builds DISPCNT, hands off to
+  `sub_803487C`, then builds the BLDCNT/BLDALPHA alpha-blend value.
+  Previously parked (`NON_MATCHING`) over a final handful of accumulator/
+  temp-register choices in the BLDCNT/BLDALPHA byte-packing tail; now
+  matched as real C - both gaps were ordinary register-pin/barrier fixes,
+  not a genuine compiler limitation (a `register u8 asm("r1")` pin for one
+  stray reload, and an empty `asm("":"+r"(tmp))` compiler barrier to stop
+  this compiler from eliding a mask-to-accumulator copy the ROM's own
+  build keeps) - see
+  [docs/matching/issue-63-final-raw-actor.md](../matching/issue-63-final-raw-actor.md).
 
 - `src/graphics/actor_anim.c` (extended, GitHub issue #72, ROM
   0x0803B4EC-0x0803B8B0 - directly contiguous with this file's existing
@@ -1249,16 +1261,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   second stride-8 table (`gStaticData_0817C4F8`), parked on the same
   gap - see `docs/matching/issue-62-0x08033804-actor.md`, issue #62.
 
-- **`sub_803472C`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_3472c.s`, C
-  in `src/graphics/actor_part87.c`, GitHub issue #63) - a standalone
-  fade/overlay controller's constructor half (`struct fade_overlay`, not
-  part of the `InitActorPart` family): allocates/loads its three BG
-  scratch buffers, builds DISPCNT, then a combined BLDCNT/BLDALPHA
-  alpha-blend value; every field/call/struct-offset and the vast
-  majority of register choices match exactly via heavy register pinning
-  and inline-asm anchors, but a final handful of individual accumulator/
-  temp-register choices in the BLDCNT/BLDALPHA byte-packing tail never
-  converged - see `docs/matching/issue-63-final-raw-actor.md`.
 - **`sub_803487C`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_3487c.s`, C
   in `src/graphics/actor_part88.c`, GitHub issue #63) - the fade
   overlay's other setup half: VRAM upload cursor flush, icon-manager
