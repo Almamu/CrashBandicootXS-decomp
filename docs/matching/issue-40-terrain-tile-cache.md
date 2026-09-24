@@ -29,7 +29,8 @@ issue is where they got turned into (attempted) byte-exact C.
   decoded cell (bounds-check + `gStaticData_081725AC` terrain-property
   pointer; add a `mode`-selected table and output flag; add a `mode`
   dispatch returning a single flag byte from `gStaticData_081725A8`;
-  return the raw halfword; return the raw byte + output params).
+  return the raw byte + output params; return the raw decoded halfword
+  directly plus a `hiOut` nibble).
 - **`sub_8024E68`/`sub_8024E90`/`sub_8024EB4`** are a small
   viewport/parallax-scroll-layer object built around the cache (own
   fields not given a struct here - see the doc comment at the top of
@@ -55,7 +56,7 @@ issue is where they got turned into (attempted) byte-exact C.
 `src/system/game_loop5.c`: `sub_80254C0`, `sub_80254F8`, `sub_8025554`,
 `sub_8025588`, `sub_80255A8`, `sub_80255C4`.
 
-## Closed as NAKED - 5 functions
+## Closed as NAKED - 6 functions
 
 - **`sub_8024F24`** (the 16-slot lookup dispatcher): semantics,
   control flow, the shared per-case tail (ROM computes the final
@@ -147,6 +148,29 @@ issue is where they got turned into (attempted) byte-exact C.
   `sub_8025130`/`sub_8025228` were closed, so once this one closed too
   the file's contents were empty and it (plus its `ldscript.txt` entry)
   were removed rather than kept as a zero-function husk.
+- **`sub_8025460`** (`src/system/game_loop4.c`) - the last of
+  `sub_8024F24`'s `(x, y)`-tile-lookup consumers: returns the raw
+  decoded halfword directly (no bounds check, no terrain-table lookup),
+  while also writing the cell's top nibble out through `hiOut`. Same
+  register-allocation-permutation gap as `sub_8025130`/`sub_8025228`
+  above (this compiler never reproduces the ROM's own `self`/`x`/`y`/
+  `flagsOut` <-> `r5`/`r4`/`r6`/`r7` register packing, no matter how the
+  C is phrased). Closed the same way: hand-transcribed
+  instruction-for-instruction from the ROM disassembly (formerly
+  `asm/code_3_2_17_25460.s`, now deleted - confirmed via
+  `arm-none-eabi-objdump -t` that it held only this one function).
+  Unlike its four siblings above, this function needed no mid-function
+  `.pool` directive at all - it has zero literal-pool references (no
+  `ldr =symbol`), only a single `bl sub_8024F24` relocation, so the
+  whole 96-byte body is one contiguous block with no split points.
+  Verified byte-identical via isolated `arm-none-eabi-as` assembly, a
+  direct byte comparison against a from-scratch assemble of
+  `asm/code_3_2_17_25460.s` itself (identical except for the expected
+  unresolved `bl sub_8024F24` relocation bytes, which matched anyway
+  since both objects reference the same undefined external symbol), and
+  a full clean `make compare`. **This was the last remaining unclosed
+  member of the issue #40 terrain-tile-cache cluster - the whole issue
+  is now closed.**
 
 ## Left raw (untouched) - 1 function
 

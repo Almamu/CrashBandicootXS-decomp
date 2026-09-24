@@ -32,7 +32,8 @@ system from "core" system startup/init code.
   and `sub_8024F04`/`sub_8024F0C`/`sub_8024F10`/`sub_8024F14`/
   `sub_8024F18`/`sub_8024F1C`/`sub_8024F20` (its field accessors)
 - `src/system/game_loop4.c` (GitHub issue #40): `sub_8025444`,
-  `nullsub_4`
+  `nullsub_4`, `sub_8025460` (matched `NAKED`, closing the whole issue
+  #40 terrain-tile-cache cluster - see below)
 - `src/system/game_loop5.c` (GitHub issue #40): `sub_80254C0`,
   `sub_80254F8`, `sub_8025554`, `sub_8025588`, `sub_80255A8`,
   `sub_80255C4` - the terrain tile-record decode cache's constructor,
@@ -303,6 +304,18 @@ plain C didn't converge.
   reconstruction reproduces. Closed as NAKED, the same way as its
   siblings above. `asm/code_3_2_17_24f24.s` is now gone entirely - this
   was the last function still living there. See
+  [docs/matching/issue-40-terrain-tile-cache.md](../matching/issue-40-terrain-tile-cache.md).
+- **`sub_8025460`** (`src/system/game_loop4.c`, GitHub issue #40) - the
+  last of `sub_8024F24`'s `(x, y)`-tile-lookup consumers: returns the
+  raw decoded halfword directly (no bounds check, no terrain-table
+  lookup) while also writing the cell's top nibble out through
+  `hiOut`. Same register-allocation-permutation gap as
+  `sub_8025130`/`sub_8025228` above; closed the same way, hand-
+  transcribed from the ROM disassembly (formerly
+  `asm/code_3_2_17_25460.s`, now retired). No mid-function `.pool`
+  split was needed - the function has no literal-pool references at
+  all. This was the last unclosed member of the issue #40
+  terrain-tile-cache cluster - the whole issue is now closed. See
   [docs/matching/issue-40-terrain-tile-cache.md](../matching/issue-40-terrain-tile-cache.md).
 - **`sub_8022D50`** (`src/system/game_loop40.c`, GitHub issue #34) - the
   level-start/reset routine (`self+0x8c`/`0x90`-`0xa0` clears, the
