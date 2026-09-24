@@ -47,29 +47,27 @@ extern void sub_8001614(void);
 extern void sub_80345B0(void *mgrArg, s32 idx);
 extern u8 gUnknown_03001288[2];
 
-#if NON_MATCHING
-/* NOT YET BYTE-MATCHING - compiled only under `make NON_MATCHING=1`; the
- * checked-in assembly (asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s) is
- * used otherwise. Semantics fully understood and confirmed field-by-field
- * against the ROM disassembly (every store, DMA setup and loop bound
- * matches); the whole function is byte-identical in isolation except one
- * single instruction: building the 4-bit-palette-bank tile-index mask
- * (0xFFFFF000), the ROM's own build loads the 32-bit literal into `r1`
- * first and then copies it into `r5` (`ldr r1,=0xFFFFF000; adds r5,r1,#0`,
- * 4 bytes), while every phrasing tried here - a plain local, a
- * whole-function-scoped local, an explicit two-register `asm("r1")`-then-
- * `asm("r5")` pin, reordering relative to the neighboring `tileBase`/
- * `mapBase` loads, and moving the assignment inside vs. outside the
- * loop it's invariant across - has this compiler materialize the
- * constant straight into `r5` in one `ldr` (2 bytes), 2 bytes short of
- * the ROM. Every other instruction in the function, including the same
- * "extra register copy" idiom applied successfully to `tileBase` a few
- * lines above (`ldr r1,[r6]; mov ip,r1`, which *does* match - that one is
- * a genuine Thumb ISA requirement, `ldr` into a high register isn't
- * encodable, whereas the mask's r1-then-r5 copy is a pure register-
- * allocator artifact with no such requirement), matches exactly. Left
- * parked rather than chase this single 2-byte gap further - see
- * docs/matching/issue-63-0x08033ef4-actor.md. */
+/* Constructs the particle-trail BG0 object. Fully matched as real C.
+ *
+ * The ROM builds the 4-bit-palette-bank tile-index mask (0xFFFFF000)
+ * by loading the 32-bit literal into `r1` first and then copying it
+ * into `r5` (`ldr r1,=0xFFFFF000; adds r5,r1,#0`), rather than
+ * materializing it directly into `r5` in one `ldr` the way a plain
+ * `mask = -0x1000;` compiles - closed by pinning an intermediate local
+ * to `r1`, letting the compiler's own literal-pool codegen place the
+ * constant (an inline-asm immediate instead produces a *second*,
+ * separately-pooled literal, appended after the compiler's own pool
+ * rather than interleaved into it in ROM's actual order, so the
+ * intermediate must stay a plain C initializer, not an asm-embedded
+ * one) and then forcing the r1->r5 copy via `asm volatile("add %0,
+ * %1, #0" ...)`. Also needed the `mapBase + (row << 6)` addition's
+ * operand order pinned (`add r1, r0, r7`, not gcc's default `r7, r0`)
+ * via the same technique, and the `col = 0x1d` initializer moved after
+ * that computation in the C source (a trivial immediate move that
+ * gcc otherwise schedules ahead of the pinned-register asm block,
+ * unlike the ROM's own ordering, since the source's original textual
+ * placement determines scheduling once a hard asm barrier is
+ * introduced nearby). See docs/matching/issue-63-0x08033ef4-actor.md. */
 void *sub_8034374(void *selfArg)
 {
     struct particle_bg *self = selfArg;
@@ -142,12 +140,23 @@ void *sub_8034374(void *selfArg)
     row = 0;
     tileBase = self->tileVramBase;
     mapBase = self->mapVramBase;
+    {
+        register u32 maskTmp asm("r1") = -0x1000;
+        register u32 maskReg asm("r5");
+        asm volatile("add %0, %1, #0" : "=r"(maskReg) : "r"(maskTmp));
+        mask = maskReg;
+    }
     do {
         s32 nextRow = row + 1;
-        u16 *rowPtr = (u16 *)(mapBase + (row << 6));
-        s32 col = 0x1d;
+        register u32 shifted asm("r0") = row << 6;
+        register u32 rowPtrVal asm("r1");
+        u16 *rowPtr;
+        s32 col;
 
-        mask = -0x1000;
+        asm volatile("add %0, %1, %2" : "=r"(rowPtrVal) : "r"(shifted), "r"(mapBase));
+        rowPtr = (u16 *)rowPtrVal;
+        col = 0x1d;
+
         do {
             *rowPtr = tileIdx | mask;
             tileIdx++;
@@ -184,8 +193,9 @@ void *sub_8034374(void *selfArg)
     return self;
 }
 
+#if NON_MATCHING
 /* NOT YET BYTE-MATCHING - compiled only under `make NON_MATCHING=1`; the
- * checked-in assembly (asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s) is
+ * checked-in assembly (asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s) is
  * used otherwise. Every frame: commits last frame's `tileBuffer` to the
  * real tile VRAM (DMA3, 32-bit), clears `tileBuffer` back to zero (DMA3
  * fill), then for each active particle draws a 2-value trail (nibble `1`

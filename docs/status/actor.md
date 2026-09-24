@@ -452,10 +452,10 @@ from "core" graphics.
   `actor_part69.c`/`actor_part71.c`/`actor_part73.c` (new files, GitHub
   issue #63, ROM 0x08033EF4-0x08034AA4 - three `InitActorPart`-rooted
   "self" object kinds immediately following issue #62's cluster, non-
-  adjacent since 5 parked (`sub_8034058`/
-  `sub_80345B0`/`sub_8034634`/`sub_8034374`/`sub_8034480`, the last two
-  in `actor_part85.c` - `sub_8034270` is now matched, see below), the
-  NAKED-transcribed `sub_8033FE4`
+  adjacent since 4 parked (`sub_8034058`/
+  `sub_80345B0`/`sub_8034634`/`sub_8034480`, the last in
+  `actor_part85.c` - `sub_8034270`/`sub_8034374` are now matched, see
+  below), the NAKED-transcribed `sub_8033FE4`
   (`actor_part64.c` - see below), and 3 left-raw functions sit
   interleaved between them; numbered `63`-`73` rather than `57`-`67`
   since issues #19 and #54's PRs independently claimed
@@ -893,6 +893,27 @@ embedded as asm instead. They're tracked as parked, not matched.
   own `ldrb` register choices), each closed with the same
   register-pin/opaque-asm technique. See
   `docs/matching/issue-56-0x0802f0dc-actor.md`.
+- **`sub_8034374`** (`src/graphics/actor_part85.c`) - constructs the
+  particle-trail BG0 object; now fully matched as real C, splitting off
+  the file's still-parked twin `sub_8034480` (see below). The ROM
+  builds a 4-bit-palette-bank tile-index mask (0xFFFFF000) by loading
+  the literal into `r1` first and copying it into `r5` (`ldr
+  r1,=0xFFFFF000; adds r5,r1,#0`), rather than the single direct `ldr`
+  a plain `mask = -0x1000;` compiles to - closed by pinning an
+  intermediate local to `r1` (its initializer must stay a plain C
+  constant, not an inline-asm-embedded immediate, so the value stays in
+  the compiler's own literal pool at the ROM's actual pool position
+  rather than becoming a second, separately-pooled literal appended
+  after it) and forcing the `r1`->`r5` copy via `asm volatile`. Also
+  needed the `mapBase + (row << 6)` addition's operand order pinned the
+  same way, and the `col = 0x1d` initializer moved after that
+  computation in the C source (gcc otherwise schedules a trivial
+  immediate move ahead of a nearby pinned-register asm block by its
+  literal source position). Retires the multi-function raw
+  `asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s`, split into the new
+  `asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s` (real bytes for the
+  still-parked `sub_8034480` only). GitHub issue #63, see
+  `docs/matching/issue-63-0x08033ef4-actor.md`.
 
 - **`sub_800A884`** (`src/graphics/actor_part78.c`, GitHub issue
   #9/#10; real bytes in `asm/code_3_2_16_a884.s`) - a per-frame
@@ -1112,16 +1133,11 @@ embedded as asm instead. They're tracked as parked, not matched.
   allocation differences for the 16-bit table lookups and an
   unconditional leaf-function parameter spill - see
   `docs/matching/issue-63-0x08033ef4-actor.md`.
-- **`sub_8034374`/`sub_8034480`**
-  (`asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s`, C in
-  `src/graphics/actor_part85.c`, GitHub issue #63) - the particle-trail
-  BG0 object's constructor and per-frame updater; `sub_8034374` parked on
-  a single 2-byte register-allocation gap (an extra `r1`-then-`r5`
-  register copy the ROM's build uses when materializing one 32-bit
-  constant that this compiler collapses into a single direct load),
-  `sub_8034480` on the same shift/mask register-pair swap already
-  accepted for `sub_8034634` just above (its own nibble-write logic,
-  inlined twice instead of calling it) - see
+- **`sub_8034480`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s`, C
+  in `src/graphics/actor_part85.c`, GitHub issue #63) - the particle-
+  trail BG0 object's per-frame updater; parked on the same shift/mask
+  register-pair swap already accepted for `sub_8034634` just above (its
+  own nibble-write logic, inlined twice instead of calling it) - see
   `docs/matching/issue-63-0x08033ef4-actor.md`.
 - **`sub_803472C`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_3472c.s`, C
   in `src/graphics/actor_part87.c`, GitHub issue #63) - a standalone

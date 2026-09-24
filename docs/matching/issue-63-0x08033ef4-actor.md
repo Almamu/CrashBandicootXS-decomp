@@ -42,7 +42,7 @@ anim-frame halfword/byte, `self+8` accumulator, `self+0x28` state,
   smaller object reusing `+0x58` as a plain one-shot flag rather than a
   health countdown.
 
-## Matched (14 of 25 functions)
+## Matched (15 of 25 functions)
 
 - **`sub_8033EF4`/`sub_8033F48`/`sub_8033F74`** (`src/graphics/actor_part63.c`)
   - Kind 1's constructor, its trampoline-fire helper (same shape as
@@ -134,6 +134,41 @@ diffing it byte-for-byte against `baserom.gba`, and cross-referencing
 every differing byte range against `crashbandicootxs.map`'s function
 boundaries - not by re-reading the isolated compiles more carefully.
 
+- **`sub_8034374`** (`src/graphics/actor_part85.c`) - constructs the
+  particle-trail BG0 object (see that file's header comment for the
+  full `struct particle_bg` field layout: a `tileVramBase`/`mapVramBase`
+  pair of fixed VRAM constants, a 128-slot particle array, an active
+  count, and a 240x160 4-bit-per-pixel shadow `tileBuffer`). The
+  apparent "read of an uninitialized local" this function was
+  previously left raw over turned out to be the same negative-constant
+  bit-clear idiom already established for `LoadBg2Background`'s
+  `bg2cnt` (`src/graphics/level_graphics.c`, issue #65) - an
+  intentionally uninitialized `u32` ANDed against `0xFFFF0000` before
+  every bit the final halfword write actually reads gets ORed in, not a
+  real bug. Now fully matched as real C: the ROM builds the tilemap-
+  fill loop's palette-bank mask (`0xFFFFF000`) by loading the 32-bit
+  literal into `r1` first and then copying it into `r5` (`ldr
+  r1,=0xFFFFF000; adds r5,r1,#0`), rather than the single direct
+  `ldr r5,=...` a plain `mask = -0x1000;` compiles to - closed by
+  pinning an intermediate local to `r1` (its initializer has to stay a
+  plain C constant, not an inline-asm-embedded immediate: an
+  asm-embedded `=0xFFFFF000` immediate gets pooled by the assembler as
+  a *second*, separately-placed literal appended after the compiler's
+  own pool, landing 16 bytes past where the ROM actually puts it,
+  whereas a plain C initializer lets the compiler place the same
+  literal in its own pool at the ROM's real position) and then forcing
+  the `r1`->`r5` copy via `asm volatile("add %0, %1, #0" ...)`. Closing
+  that surfaced two further gaps: the `mapBase + (row << 6)` addition's
+  operand order needed the same pin-and-force treatment (`add r1, r0,
+  r7`, not gcc's default `r7, r0`), and the `col = 0x1d` initializer
+  needed moving to *after* that computation in the C source - a trivial
+  immediate move that gcc otherwise schedules ahead of a nearby
+  pinned-register `asm volatile` block purely by its original textual
+  position, once that block acts as a hard scheduling barrier. Retires
+  the multi-function raw `asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s`,
+  split into the new `asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s`
+  (real bytes for the twin `sub_8034480`, still parked - see below).
+
 ## NAKED transcription (byte-correct, not counted as matched)
 
 - **`sub_8033FE4`** (`src/graphics/actor_part64.c`) - a
@@ -154,7 +189,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   substantial function doesn't count as "matched" -
   `tools/report_units.py` keeps this address's `base_object` as `None`.
 
-## Parked (7 of 25 functions, `NON_MATCHING`)
+## Parked (6 of 25 functions, `NON_MATCHING`)
 
 - **`sub_8034058`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s`, C
   in `src/graphics/actor_part66.c`) - Kind 2's constructor. Semantics
@@ -189,47 +224,26 @@ boundaries - not by re-reading the isolated compiles more carefully.
   even though `val` is never touched until the function's tail with no
   intervening call (`sub_8034634`) - the ROM's own build simply leaves
   `val` in `r3` the whole time.
-- **`sub_8034374`/`sub_8034480`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s`,
+- **`sub_8034480`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s`,
   C in `src/graphics/actor_part85.c`) - the particle-trail BG0 object's
-  constructor and per-frame updater (see that file's header comment for
-  the full `struct particle_bg` field layout: a `tileVramBase`/
-  `mapVramBase` pair of fixed VRAM constants, a 128-slot particle array,
-  an active count, and a 240x160 4-bit-per-pixel shadow `tileBuffer`).
-  The apparent "read of an uninitialized local" this pair was previously
-  left raw over turned out to be the same negative-constant bit-clear
-  idiom already established for `LoadBg2Background`'s `bg2cnt`
-  (`src/graphics/level_graphics.c`, issue #65) - an intentionally
-  uninitialized `u32` ANDed against `0xFFFF0000` before every bit the
-  final halfword write actually reads gets ORed in, not a real bug.
-  Semantics for both functions are now fully understood and confirmed
-  field-by-field/instruction-by-instruction against the ROM disassembly:
-  - `sub_8034374` matches the ROM exactly except one single instruction:
-    building the tilemap-fill loop's palette-bank mask (`0xFFFFF000`),
-    the ROM's own build loads the 32-bit literal into `r1` first and
-    then copies it into `r5` (4 bytes), where every C-level phrasing
-    tried here (a plain local, a whole-function-scoped local, an
-    explicit two-register `asm("r1")`-then-`asm("r5")` pin, reordering
-    relative to the neighboring `tileBase`/`mapBase` loads, moving the
-    assignment inside vs. outside its loop) has this compiler collapse
-    it straight into one `ldr r5,=...` (2 bytes) instead - a 2-byte
-    residual gap. Every other instruction in the function, including
-    the *same* "extra register copy" pattern applied successfully a few
-    lines above for `tileBase` (`ldr r1,[r6]; mov ip,r1` - that one is a
-    genuine Thumb ISA requirement, since `ldr` can't target a high
-    register directly, unlike the mask's copy which has no such
-    requirement), matches byte-for-byte.
-  - `sub_8034480` matches the ROM exactly through both particle
-    in-bounds checks and the respawn call; it hits the exact same
-    categorical gap already accepted as unclosable for `sub_8034634`
-    just above (its own inlined nibble-write logic, duplicated twice
-    per particle instead of calling `sub_8034634`): this compiler
-    computes the `addr & 3` shift amount and the `0xf << shift`/`cell`
-    values into the opposite register pair from the ROM's own build.
-  Both left parked (real C, `NON_MATCHING`) rather than fall back to a
-  NAKED transcription, per this project's current policy of preferring
-  real C whenever the semantics are this well understood - `sub_8034480`
-  in particular is too large (~150 instructions, `sb`/`r8`/`ip` all live)
-  for a NAKED transcription to be a reasonable substitute anyway.
+  per-frame updater (see that file's header comment for the full
+  `struct particle_bg` field layout: a `tileVramBase`/`mapVramBase`
+  pair of fixed VRAM constants, a 128-slot particle array, an active
+  count, and a 240x160 4-bit-per-pixel shadow `tileBuffer`). Semantics
+  fully understood and confirmed field-by-field/instruction-by-
+  instruction against the ROM disassembly; matches the ROM exactly
+  through both particle in-bounds checks and the respawn call, but hits
+  the exact same categorical gap already accepted as unclosable for
+  `sub_8034634` just above (its own inlined nibble-write logic,
+  duplicated twice per particle instead of calling `sub_8034634`): this
+  compiler computes the `addr & 3` shift amount and the `0xf <<
+  shift`/`cell` values into the opposite register pair from the ROM's
+  own build. Left parked (real C, `NON_MATCHING`) rather than fall back
+  to a NAKED transcription, per this project's current policy of
+  preferring real C whenever the semantics are this well understood -
+  it's also too large (~150 instructions, `sb`/`r8`/`ip` all live) for
+  a NAKED transcription to be a reasonable substitute anyway. Its twin
+  `sub_8034374` (this same file) is now matched - see below.
 
 ## Left raw (3 of 25 functions, not attempted)
 

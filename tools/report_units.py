@@ -404,7 +404,8 @@ UNITS = [
     (0x080342D4, "src/graphics/actor_part69.o", "actor"),  # sub_80342D4 (issue #63): InitActorPart-based constructor for a third, smaller object kind; matched
     (0x08034314, "src/graphics/actor_part70.o", "actor"),  # sub_8034314 (issue #63) - sub_8034270's boolean-returning twin; matched as real C immediately (returning the value directly avoids the recheck gap sub_8034270 needed an opaque asm for)
     (0x0803436C, "src/graphics/actor_part71.o", "actor"),  # sub_803436C (issue #63): trivial self+0x58 flag getter; matched
-    (0x08034374, "src/graphics/actor_part85.o", "actor"),  # sub_8034374/sub_8034480 (issue #63, parked, NON_MATCHING) - the particle-trail BG0 object's constructor and per-frame updater; real bytes live in asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s
+    (0x08034374, "src/graphics/actor_part85.o", "actor"),  # sub_8034374 (issue #63): the particle-trail BG0 object's constructor; matched as real C
+    (0x08034480, "src/graphics/actor_part85.o", "actor"),  # sub_8034480 (issue #63, parked, NON_MATCHING) - the particle-trail BG0 object's per-frame updater; real bytes live in asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s
     (0x080345B0, "src/graphics/actor_part72.o", "actor"),  # sub_80345B0/sub_8034634 (issue #63, parked, NON_MATCHING) - a particle-slot spawner and a 4-bit tilemap nibble writer; real bytes live in asm/code_3_2_20_28568_c99c_31784_33ef4_345b0.s
     (0x08034688, "src/graphics/actor_part73.o", "actor"),  # sub_8034688/sub_80346C8/sub_80346FC (issue #63): a particle-spawn-budget driver, an input-poll busy-wait, and a buffer-release/teardown helper; matched
     (0x0803472C, "src/graphics/actor_part87.o", "actor"),  # sub_803472C (issue #63, parked, NON_MATCHING) - the fade overlay's constructor half: allocates/loads its three BG scratch buffers, builds DISPCNT/BLDCNT/BLDALPHA; real bytes live in asm/code_3_2_20_28568_c99c_31784_33ef4_3472c.s
@@ -502,16 +503,25 @@ def slice_source(source, start, end):
 
 def build_target(name, start, end):
     """Assembles the frozen-source slice(s) covering [start, end) into
-    build/expected/units/<name>_target.o, applying corrections.txt."""
-    out_o = BUILD_DIR / f"{name}_target.o"
+    build/expected/units/<key>_target.o, applying corrections.txt.
+
+    Filenames are keyed by `name` plus `start` (not `name` alone): several
+    UNITS entries intentionally share one base_object (e.g. two matched
+    functions split out of the same .c file, each with its own address
+    range - see settings_menu8d.o/actor_part85.o) and used to collide on
+    plain `{name}_target.o`, silently overwriting each other's expected
+    bytes so only the last such entry's function was ever actually
+    objdiff-verified. """
+    key = f"{name}_{start:08X}"
+    out_o = BUILD_DIR / f"{key}_target.o"
     if start < CODE3_START and (end is None or end <= CODE3_START):
         text = slice_source(LEGACY, start, end)
-        out_s = BUILD_DIR / f"{name}_target.s"
+        out_s = BUILD_DIR / f"{key}_target.s"
         out_s.write_text(text)
         run(AS + ["-o", str(out_o), str(out_s)])
     elif start >= CODE3_START:
         text = slice_source(CODE3, start, end)
-        out_s = BUILD_DIR / f"{name}_target.s"
+        out_s = BUILD_DIR / f"{key}_target.s"
         out_s.write_text(text)
         run(AS + ["-o", str(out_o), str(out_s)])
     else:
@@ -519,12 +529,12 @@ def build_target(name, start, end):
         # half separately, then merge.
         legacy_text = slice_source(LEGACY, start, CODE3_START)
         code3_text = slice_source(CODE3, CODE3_START, end)
-        legacy_s = BUILD_DIR / f"{name}_legacy.s"
-        code3_s = BUILD_DIR / f"{name}_code3.s"
+        legacy_s = BUILD_DIR / f"{key}_legacy.s"
+        code3_s = BUILD_DIR / f"{key}_code3.s"
         legacy_s.write_text(legacy_text)
         code3_s.write_text(code3_text)
-        legacy_o = BUILD_DIR / f"{name}_legacy.o"
-        code3_o = BUILD_DIR / f"{name}_code3.o"
+        legacy_o = BUILD_DIR / f"{key}_legacy.o"
+        code3_o = BUILD_DIR / f"{key}_code3.o"
         run(AS + ["-o", str(legacy_o), str(legacy_s)])
         run(AS + ["-o", str(code3_o), str(code3_s)])
         run(LD + ["-o", str(out_o), str(legacy_o), str(code3_o)])
