@@ -878,6 +878,21 @@ embedded as asm instead. They're tracked as parked, not matched.
   recheck for dead-branch elimination to collapse. The old raw
   `asm/code_3_2_20_28568_c99c_31784_33ef4_34314.s` is retired. GitHub
   issue #63, see `docs/matching/issue-63-0x08033ef4-actor.md`.
+- **`sub_802F338`** (`src/graphics/actor_part43b.c`) - computes two
+  keyframe-driven tile-cache sizes via `AllocVramTileBlock`; now fully
+  matched as real C. The ROM's "materialize the multiply result, then
+  copy it again before shifting" idiom (`adds r2,r3,#0; muls r2,r1,r2;
+  adds r0,r2,#0; lsls r0,r0,#5`) closes via an opaque `asm volatile`
+  forcing the exact register-to-register copy this compiler's
+  dead-store elimination always collapsed. Closing that gap surfaced a
+  further chain of register-role mismatches in the index/address
+  computation (`table` needing an early load into `r3`, the `+2` index
+  constant needing to be materialized via an opaque `mov #2` rather
+  than a plain `register`-pinned local, and the two blocks' final
+  byte-load pairs needing per-block register pins matching the ROM's
+  own `ldrb` register choices), each closed with the same
+  register-pin/opaque-asm technique. See
+  `docs/matching/issue-56-0x0802f0dc-actor.md`.
 
 - **`sub_800A884`** (`src/graphics/actor_part78.c`, GitHub issue
   #9/#10; real bytes in `asm/code_3_2_16_a884.s`) - a per-frame
@@ -1078,12 +1093,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   `src/graphics/actor_part37.c`) - `sub_8033B44`'s twin using the
   second stride-8 table (`gStaticData_0817C4F8`), parked on the same
   gap - see `docs/matching/issue-62-0x08033804-actor.md`, issue #62.
-- **`sub_802F338`** (`src/graphics/actor_part43b.c`) - computes two
-  keyframe-driven tile-cache sizes via `sub_8028CD4`. Every load/store,
-  branch and call confirmed correct; parked on a "materialize the
-  multiply result, then copy it again before shifting" gap this
-  compiler's dead-store elimination always collapses - see
-  `docs/matching/issue-56-0x0802f0dc-actor.md`.
 - **`sub_802FA04`** (`src/graphics/actor_part45c.c`) - an
   `InitActorPart`-based 7-argument constructor, the same shape as the
   left-raw `sub_80305F8`; parked on this compiler's own high-register
