@@ -450,10 +450,10 @@ from "core" graphics.
   `actor_part69.c`/`actor_part71.c`/`actor_part72.c`/`actor_part73.c`
   (new files, GitHub issue #63, ROM 0x08033EF4-0x08034AA4 - three
   `InitActorPart`-rooted "self" object kinds immediately following
-  issue #62's cluster, non-adjacent since 2 parked (`sub_8034058`/
-  `sub_8034480`, the latter in `actor_part85.c` - `sub_8034270`/
-  `sub_8034374`/`sub_80345B0`/`sub_8034634` are now matched, see
-  below), the NAKED-transcribed `sub_8033FE4`
+  issue #62's cluster, non-adjacent since 1 parked (`sub_8034480`, in
+  `actor_part85.c` - `sub_8034058`/`sub_8034270`/`sub_8034374`/
+  `sub_80345B0`/`sub_8034634` are now matched, see below), the
+  NAKED-transcribed `sub_8033FE4`
   (`actor_part64.c` - see below), and 3 left-raw functions sit
   interleaved between them; numbered `63`-`73` rather than `57`-`67`
   since issues #19 and #54's PRs independently claimed
@@ -1013,6 +1013,36 @@ embedded as asm instead. They're tracked as parked, not matched.
   in/out operand. Retires
   `asm/code_3_2_20_28568_c99c_31784_33ef4_345b0.s` entirely. GitHub
   issue #63, see `docs/matching/issue-63-0x08033ef4-actor.md`.
+- **`sub_8034058`** (`src/graphics/actor_part66.c`, GitHub issue #63) -
+  an `InitActorPart`-based constructor with a trailing (stack-passed,
+  byte-sized) 6th argument and a spawn-record ternary; now fully
+  matched as real C. Two gaps, both closed with `asm volatile`
+  anchors: the 6th argument needs the same stack-slot-address-then-
+  `ldrb` anchor already established for other trailing byte arguments
+  (see `sub_8003A60` in `issue-5-overlay-ui-sync.md`), materialized
+  into a `register u32 asm("r9")` pin mirroring the ROM's own `sb`
+  cache; and the `self+0x5c` spawn-record ternary needs the ROM's
+  genuine two-way branch diamond (a forward `beq`/`ldr`/`b` skipping a
+  computed false branch, with two literals pooled together right after
+  the skip) rather than the eager "compute one value, conditionally
+  overwrite" shape this compiler always produces from a plain ternary
+  or if/else - and, separately, forcing that diamond through any
+  register-pinned C-level if/else made this compiler's own parameter-
+  homing pass reorder `self`'s prologue copy relative to
+  `part`/`b`/`cParam` (still the correct register, just the wrong
+  instruction position), a discrepancy that didn't respond to any
+  combination of pinning/goto/precomputed-address tried. Closed by
+  moving the diamond into one opaque `asm volatile` block referencing
+  `self`'s known `r5` home directly by name (not as an operand, which
+  is what avoids perturbing the surrounding allocation) with a real
+  `ldr r0, =0xFFFFBF00` assembler pseudo-op and a manual `.pool`
+  directive right after the skip branch - and moving the preceding
+  `gStaticData_087E5554` store into its own tiny `asm volatile` island
+  too, since a real, respected `.pool` split only works for symbols
+  whose literal load is itself opaque assembler text, the same gap
+  already documented for `sub_802AB58` in `actor_part53.c`. Retires
+  the raw `asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s`. See
+  `docs/matching/issue-63-0x08033ef4-actor.md`.
 
 - **`sub_800A884`** (`src/graphics/actor_part78.c`, GitHub issue
   #9/#10; real bytes in `asm/code_3_2_16_a884.s`) - a per-frame
@@ -1184,12 +1214,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   second stride-8 table (`gStaticData_0817C4F8`), parked on the same
   gap - see `docs/matching/issue-62-0x08033804-actor.md`, issue #62.
 
-- **`sub_8034058`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s`, C
-  in `src/graphics/actor_part66.c`, GitHub issue #63) - an
-  `InitActorPart`-based constructor with a trailing byte stack argument;
-  parked because this compiler reads that argument as a shifted/masked
-  full word where the ROM's build addresses it directly with `ldrb` -
-  see `docs/matching/issue-63-0x08033ef4-actor.md`.
 - **`sub_8034480`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s`, C
   in `src/graphics/actor_part85.c`, GitHub issue #63) - the particle-
   trail BG0 object's per-frame updater; parked on the same family of

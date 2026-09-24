@@ -42,7 +42,7 @@ anim-frame halfword/byte, `self+8` accumulator, `self+0x28` state,
   smaller object reusing `+0x58` as a plain one-shot flag rather than a
   health countdown.
 
-## Matched (17 of 25 functions)
+## Matched (18 of 25 functions)
 
 - **`sub_8033EF4`/`sub_8033F48`/`sub_8033F74`** (`src/graphics/actor_part63.c`)
   - Kind 1's constructor, its trampoline-fire helper (same shape as
@@ -168,6 +168,43 @@ boundaries - not by re-reading the isolated compiles more carefully.
   the multi-function raw `asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s`,
   split into the new `asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s`
   (real bytes for the twin `sub_8034480`, still parked - see below).
+- **`sub_8034058`** (`src/graphics/actor_part66.c`) - Kind 2's
+  constructor. Now fully matched as real C, closing two gaps: the 6th
+  (stack-passed, byte-sized) constructor argument needs the same
+  stack-slot-address-then-`ldrb` `asm volatile` anchor already
+  established for other trailing byte arguments (see `sub_8003A60` in
+  `issue-5-overlay-ui-sync.md`), materialized into a `register u32
+  asm("r9")` pin mirroring the ROM's own `sb` cache (needed since it
+  survives the following `sub_80338DC()` call) - the same
+  trailing-byte-stack-argument gap already closed elsewhere, not the
+  unrelated `sub_8025A64` mask-constant-folding gap this entry used to
+  be compared against. The `self+0x5c` spawn-record ternary
+  (`(self[0x59] != 0) ? 0xFFFFBF00 : 0x8400`) needed a second, separate
+  fix: the ROM computes it as a genuine two-way branch diamond (a
+  forward `beq`/`ldr`/`b` skipping a computed false branch, with
+  `gStaticData_087E5554`'s pending literal and `0xFFFFBF00` pooled
+  together right after the skip branch), but a plain ternary or if/else
+  always collapses this compiler's output to an eager "compute one
+  value, conditionally overwrite" shape instead (4 bytes short); and
+  once the diamond is forced through any register-pinned C-level
+  if/else, this compiler's own parameter-homing pass reorders `self`'s
+  prologue copy relative to `part`/`b`/`cParam` (still the right
+  register, just the wrong instruction position) - a discrepancy that
+  didn't respond to any combination of pinning, `goto`-linearizing, or
+  precomputing the store address tried. Closed by moving the whole
+  diamond into one opaque `asm volatile` block that references `self`'s
+  known `r5` home directly by name rather than as an operand (passing
+  it as an operand reintroduces an extra, ROM-absent register copy),
+  with a real `ldr r0, =0xFFFFBF00` assembler pseudo-op and a manual
+  `.pool` directive right after the skip branch - and moving the
+  preceding `gStaticData_087E5554` store into its own tiny `asm
+  volatile` island too, since a real, respected `.pool` split only
+  works for symbols whose literal load is itself opaque assembler text
+  (this compiler's own C-driven pool placement for a plain `extern`
+  global access always defers to the function's very end and ignores
+  an `asm(".pool")` marker around it), the same gap already documented
+  for `sub_802AB58` in `actor_part53.c`. Retires the raw
+  `asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s`.
 
 - **`sub_80345B0`/`sub_8034634`** (`src/graphics/actor_part72.c`) - a
   128-slot particle spawner (rolls two `sub_8000E1C` random values
@@ -246,16 +283,8 @@ boundaries - not by re-reading the isolated compiles more carefully.
   substantial function doesn't count as "matched" -
   `tools/report_units.py` keeps this address's `base_object` as `None`.
 
-## Parked (4 of 25 functions, `NON_MATCHING`)
+## Parked (3 of 25 functions, `NON_MATCHING`)
 
-- **`sub_8034058`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s`, C
-  in `src/graphics/actor_part66.c`) - Kind 2's constructor. Semantics
-  fully understood and every field/call confirmed correct; parked
-  because this compiler reads the 6th (stack-passed, byte-sized)
-  constructor argument as a full word shifted/masked down to its low
-  byte, where the ROM's own build addresses that stack slot directly
-  with a plain `ldrb` - the same trailing-byte-stack-argument gap
-  already parked for `sub_8025A64` in `game_loop14.c` (issue #41).
 - **`sub_8034270`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34270.s`, C
   in `src/graphics/actor_part68.c`) - position-sync/flag/trampoline
   updater for Kind 1. Semantics fully understood and every field/call
