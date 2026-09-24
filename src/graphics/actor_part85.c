@@ -201,7 +201,7 @@ void *sub_8034374(void *selfArg)
  * fill), then for each active particle draws a 2-value trail (nibble `1`
  * at the pre-movement position, nibble `2` at the post-movement position -
  * the same `(x>>3)<<6 + ((y>>3)*15)<<7 + (x&7) + (y&7)<<3` nibble-address
- * formula as the already-parked general-purpose `sub_8034634`,
+ * formula as the now-matched general-purpose `sub_8034634`,
  * actor_part72.c, just inlined twice instead of called), applies the
  * particle's `dx`/`dy` in between, and respawns it via `sub_80345B0` if it
  * drifted outside the `[0, 0xEFFF]`x`[0, 0x9FFF]` (24.8 fixed-point,
@@ -209,15 +209,18 @@ void *sub_8034374(void *selfArg)
  *
  * Semantics fully understood and confirmed field-by-field, and the
  * function matches instruction-for-instruction up through both bounds
- * checks; parked on the same categorical gap already accepted for
- * `sub_8034634`'s identical nibble-write tail (docs/matching/
- * issue-63-0x08033ef4-actor.md, "Parked: sub_8034634"): this compiler
- * computes the `addr & 3` shift amount and the `0xf << shift`/`cell`
- * values into the opposite register pair from the ROM's own build (`r1`/
- * `r0`-`r2` here vs. the ROM's `r1` for the shift and `r0`/`r2` for the
- * mask/cell - both function-local pin attempts on `shift`/`mask`
- * individually just move the swap elsewhere or corrupt a neighboring
- * instruction's encoding), for both inlined copies of the nibble write. */
+ * checks; parked on the same categorical family of register-allocation
+ * gaps `sub_8034634` itself used to have (this compiler computes the
+ * `addr & 3` shift amount and the `0xf << shift`/`cell` values into the
+ * opposite register pair from the ROM's own build) - `sub_8034634` closed
+ * its own copy of this gap via a `u32`-typed `mask` (avoiding a spurious
+ * 16-bit truncation sequence this compiler otherwise inserts), splitting
+ * `addr`'s two halves into separate statements to pin their evaluation
+ * order, and a final opaque `asm volatile` reproducing the ROM's own
+ * "materialize into `r4`, then copy back to `r0`" idiom for the
+ * `bics`/`orrs`/`strh` tail (see that function's doc comment for the full
+ * account) - not yet re-attempted here for both inlined copies in this
+ * larger function. */
 void sub_8034480(void *selfArg)
 {
     struct particle_bg *self = selfArg;

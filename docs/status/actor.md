@@ -447,12 +447,12 @@ from "core" graphics.
   [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
   `nullsub_27` - a genuine no-op stub.
 - `src/graphics/actor_part63.c`/`actor_part65.c`/`actor_part67.c`/
-  `actor_part69.c`/`actor_part71.c`/`actor_part73.c` (new files, GitHub
-  issue #63, ROM 0x08033EF4-0x08034AA4 - three `InitActorPart`-rooted
-  "self" object kinds immediately following issue #62's cluster, non-
-  adjacent since 4 parked (`sub_8034058`/
-  `sub_80345B0`/`sub_8034634`/`sub_8034480`, the last in
-  `actor_part85.c` - `sub_8034270`/`sub_8034374` are now matched, see
+  `actor_part69.c`/`actor_part71.c`/`actor_part72.c`/`actor_part73.c`
+  (new files, GitHub issue #63, ROM 0x08033EF4-0x08034AA4 - three
+  `InitActorPart`-rooted "self" object kinds immediately following
+  issue #62's cluster, non-adjacent since 2 parked (`sub_8034058`/
+  `sub_8034480`, the latter in `actor_part85.c` - `sub_8034270`/
+  `sub_8034374`/`sub_80345B0`/`sub_8034634` are now matched, see
   below), the NAKED-transcribed `sub_8033FE4`
   (`actor_part64.c` - see below), and 3 left-raw functions sit
   interleaved between them; numbered `63`-`73` rather than `57`-`67`
@@ -461,12 +461,20 @@ from "core" graphics.
   [docs/matching/issue-63-0x08033ef4-actor.md](../matching/issue-63-0x08033ef4-actor.md)):
   `sub_8033EF4`, `sub_8033F48`, `sub_8033F74`, `sub_8034050`,
   `sub_8034110`, `sub_8034188`, `sub_80341F8`, `sub_8034264`,
-  `nullsub_38`, `sub_80342D4`, `sub_803436C`, `sub_8034688`,
-  `sub_80346C8`, `sub_80346FC` - two constructors, a trampoline-fire
-  helper, a position-sync/state-transition helper, a damage/death
-  handler, a position-sync/orbit-effect updater and its non-identical
-  near-twin, two trivial getters, a no-op stub, a particle-spawn-budget
-  driver, an input-poll busy-wait, and a buffer-release/teardown helper.
+  `nullsub_38`, `sub_80342D4`, `sub_803436C`, `sub_80345B0`,
+  `sub_8034634`, `sub_8034688`, `sub_80346C8`, `sub_80346FC` - two
+  constructors, a trampoline-fire helper, a position-sync/state-transition
+  helper, a damage/death handler, a position-sync/orbit-effect updater and
+  its non-identical near-twin, two trivial getters, a no-op stub, a
+  128-slot particle-spawner (needed a swapped multiply operand order to
+  match this compiler's own left-operand-materializes-into-dest choice; no
+  register pins or opaque asm required), a 4-bit tilemap nibble writer
+  (needed a `u32`-typed intermediate mask to avoid a spurious 16-bit
+  truncation sequence, split address-half statements to pin evaluation
+  order, and one opaque `asm volatile` for the ROM's own redundant
+  compute-then-copy tail - see that file's doc comments for the full
+  account), a particle-spawn-budget driver, an input-poll busy-wait, and a
+  buffer-release/teardown helper.
 
 - `src/graphics/actor_anim.c` (extended, GitHub issue #72, ROM
   0x0803B4EC-0x0803B8B0 - directly contiguous with this file's existing
@@ -972,6 +980,39 @@ embedded as asm instead. They're tracked as parked, not matched.
   `asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s` (real bytes for the
   still-parked `sub_8034480` only). GitHub issue #63, see
   `docs/matching/issue-63-0x08033ef4-actor.md`.
+- **`sub_80345B0`/`sub_8034634`** (`src/graphics/actor_part72.c`) - a
+  128-slot particle-slot spawner (rolls two `sub_8000E1C` random values
+  against the 256-entry `gStaticData_0816A820` direction table to seed a
+  position/velocity record) and a 4-bit-per-cell tilemap nibble writer;
+  now fully matched as real C. `sub_80345B0`'s previously-parked
+  register-allocation gap for the final multiply/shift turned out not to
+  need any register pins or opaque asm at all: this compiler's codegen
+  for `dest = a * b` always materializes/copies the *left* operand into
+  the destination register before the `muls`, and the ROM's own build
+  happens to write the table lookup as the left operand
+  (`table[...] * speed`) rather than the speed value - simply writing the
+  C multiplication in that same order matched immediately.
+  `sub_8034634`'s residual `addr`/`blockY` register-role gap turned out
+  to be three separate, independently-found issues: `x`'s bounds check
+  wants an unsigned compare but `x >> 3` wants a *signed* arithmetic
+  shift (modeled with an explicit `(s32)x >> 3` cast), `addr`'s two
+  halves needed splitting into separate statements to pin gcc's
+  operand-evaluation order (a combined `a + b` expression let it
+  evaluate the blockY half first, opposite the ROM's x-half-first
+  order), and the temporary `mask` needed to stay a plain 32-bit type
+  (`u32`, not `u16`) to avoid a spurious 4-instruction 16-bit-truncation
+  sequence this compiler otherwise inserts around `0xf << shift` (the
+  low 16 bits are all `bics`/`orrs` ever reads, so the truncation was
+  never actually needed). The final residual gap - the ROM's own
+  "materialize `cell`, `bics` it, then copy the result back before
+  `orrs`/`strh`" idiom, the same class of redundant-copy-after-a-binary-op
+  quirk already seen for `sub_802F338`'s multiply - closed with one
+  opaque `asm volatile` block reproducing that exact instruction
+  sequence, taking `shift` and a `register ... asm("r2")`-pinned
+  `tileMapEntry` as inputs and the already-`r3`-pinned `val` as an
+  in/out operand. Retires
+  `asm/code_3_2_20_28568_c99c_31784_33ef4_345b0.s` entirely. GitHub
+  issue #63, see `docs/matching/issue-63-0x08033ef4-actor.md`.
 
 - **`sub_800A884`** (`src/graphics/actor_part78.c`, GitHub issue
   #9/#10; real bytes in `asm/code_3_2_16_a884.s`) - a per-frame
@@ -1149,17 +1190,10 @@ embedded as asm instead. They're tracked as parked, not matched.
   parked because this compiler reads that argument as a shifted/masked
   full word where the ROM's build addresses it directly with `ldrb` -
   see `docs/matching/issue-63-0x08033ef4-actor.md`.
-- **`sub_80345B0`/`sub_8034634`**
-  (`asm/code_3_2_20_28568_c99c_31784_33ef4_345b0.s`, C in
-  `src/graphics/actor_part72.c`, GitHub issue #63) - a particle-slot
-  spawner and a 4-bit tilemap nibble writer; parked on register-
-  allocation differences for the 16-bit table lookups and an
-  unconditional leaf-function parameter spill - see
-  `docs/matching/issue-63-0x08033ef4-actor.md`.
 - **`sub_8034480`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s`, C
   in `src/graphics/actor_part85.c`, GitHub issue #63) - the particle-
-  trail BG0 object's per-frame updater; parked on the same shift/mask
-  register-pair swap already accepted for `sub_8034634` just above (its
+  trail BG0 object's per-frame updater; parked on the same family of
+  shift/mask register-allocation gaps `sub_8034634` used to have (its
   own nibble-write logic, inlined twice instead of calling it) - see
   `docs/matching/issue-63-0x08033ef4-actor.md`.
 - **`sub_803472C`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_3472c.s`, C

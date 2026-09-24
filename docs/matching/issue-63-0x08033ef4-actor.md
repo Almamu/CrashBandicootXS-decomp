@@ -42,7 +42,7 @@ anim-frame halfword/byte, `self+8` accumulator, `self+0x28` state,
   smaller object reusing `+0x58` as a plain one-shot flag rather than a
   health countdown.
 
-## Matched (15 of 25 functions)
+## Matched (17 of 25 functions)
 
 - **`sub_8033EF4`/`sub_8033F48`/`sub_8033F74`** (`src/graphics/actor_part63.c`)
   - Kind 1's constructor, its trampoline-fire helper (same shape as
@@ -169,6 +169,63 @@ boundaries - not by re-reading the isolated compiles more carefully.
   split into the new `asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s`
   (real bytes for the twin `sub_8034480`, still parked - see below).
 
+- **`sub_80345B0`/`sub_8034634`** (`src/graphics/actor_part72.c`) - a
+  128-slot particle spawner (rolls two `sub_8000E1C` random values
+  against the 256-entry `gStaticData_0816A820` direction table to seed a
+  position/velocity record) and a 4-bit-per-cell tilemap nibble writer;
+  both now fully matched as real C, retiring
+  `asm/code_3_2_20_28568_c99c_31784_33ef4_345b0.s` entirely.
+
+  `sub_80345B0`'s previously-parked register-allocation gap for the
+  final multiply/shift needed no register pins or opaque asm at all,
+  once properly diagnosed: this compiler's codegen for `dest = a * b`
+  always materializes/copies the *left* operand into the destination
+  register before the `muls` (`adds r3, r1, #0; muls r3, r0` in the ROM,
+  copying the table lookup), while the original C wrote the
+  multiplication as `speed * table[...]` (copying `speed` instead, since
+  it was the left operand there). Simply reordering to
+  `table[...] * speed` - mathematically identical, since multiplication
+  is commutative - matched immediately.
+
+  `sub_8034634`'s residual `addr`/`blockY` register-role gap turned out
+  to be three separate, independently-found issues, not one:
+  1. `x`'s bounds check (`x <= 0xef`) wants an unsigned comparison (the
+     ROM's `bhi`), but `x >> 3` wants a *signed* arithmetic shift
+     (`asrs`, not `lsrs`) - i.e. the ROM's own source treated `x` as
+     signed for the shift while still using an unsigned-style bounds
+     check. Modeled with an explicit `((s32)x >> 3) << 6` cast rather
+     than a plain unsigned `x >> 3`.
+  2. `addr`'s two halves (the x-derived `<< 6` term and the
+     blockY-derived `<< 7` term) needed splitting into two separate C
+     statements (`addr = ...; addr += ...;`), not one combined `a + b`
+     additive expression - gcc doesn't evaluate `+`'s operands
+     left-to-right, so the combined-expression form let it pick
+     blockY's half first (opposite the ROM's x-half-first order);
+     splitting into statements pins the evaluation order to match.
+  3. The temporary `mask` (`0xf << shift`) needed to stay a plain
+     32-bit type (`u32`, not `u16`) - declaring it `u16` makes this
+     compiler insert a defensive 32-bit-to-16-bit truncation sequence
+     around the shift (`movs r0,#0xf0; lsls r0,r0,#12; lsls r0,r2;
+     lsrs r0,r0,#16` - 4 instructions computing `0xf<<16<<shift>>16`,
+     algebraically equal to `0xf<<shift` but the long way round), which
+     the ROM's own build never has, since `mask`'s upper 16 bits never
+     actually matter (only `bics`/`orrs` read it, against a cell already
+     zero-extended by `ldrh`). Reverting `mask` to a plain 32-bit type
+     let the ROM's own two-instruction `movs`/`lsls` fall out on its
+     own.
+
+  The final residual gap - the ROM's own "materialize `cell` into `r4`
+  via `bics`, then copy it back into `r0` before `orrs`/`strh`" idiom,
+  the same class of redundant-copy-after-a-binary-op gcc-2.9 quirk
+  already seen for `sub_802F338`'s multiply-copy gap - is closed with
+  one opaque `asm volatile` block emitting that exact instruction
+  sequence verbatim, taking `shift` and `tileMapEntry` (itself pinned to
+  `r2` via a nested `register ... asm("r2")` local initialized from a
+  `register s32 off asm("r0")` intermediate, matching the ROM's own
+  `asrs`/`lsls`/`ldr`/`adds` sequence for computing the tilemap entry
+  address) as inputs, and `val` (already pinned to `r3` for the leaf-
+  function register-spill fix) as an in/out operand.
+
 ## NAKED transcription (byte-correct, not counted as matched)
 
 - **`sub_8033FE4`** (`src/graphics/actor_part64.c`) - a
@@ -189,7 +246,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   substantial function doesn't count as "matched" -
   `tools/report_units.py` keeps this address's `base_object` as `None`.
 
-## Parked (6 of 25 functions, `NON_MATCHING`)
+## Parked (4 of 25 functions, `NON_MATCHING`)
 
 - **`sub_8034058`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s`, C
   in `src/graphics/actor_part66.c`) - Kind 2's constructor. Semantics
@@ -212,18 +269,6 @@ boundaries - not by re-reading the isolated compiles more carefully.
 - **`sub_8034314`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34314.s`, C
   in `src/graphics/actor_part70.c`) - `sub_8034270`'s boolean-returning
   twin, parked on the identical gap.
-- **`sub_80345B0`/`sub_8034634`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_345b0.s`,
-  C in `src/graphics/actor_part72.c`) - a 128-slot particle spawner
-  (rolls two `sub_8000E1C` random values against the 256-entry
-  `gStaticData_0816A820` direction table to seed a position/velocity
-  record) and a 4-bit-per-cell tilemap nibble writer. Semantics fully
-  understood and every field/shift confirmed correct; parked on this
-  compiler choosing different register allocations for the 16-bit table
-  lookups/final multiply-shift (`sub_80345B0`) and unconditionally
-  spilling all four leaf-function parameters into callee-saved registers
-  even though `val` is never touched until the function's tail with no
-  intervening call (`sub_8034634`) - the ROM's own build simply leaves
-  `val` in `r3` the whole time.
 - **`sub_8034480`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s`,
   C in `src/graphics/actor_part85.c`) - the particle-trail BG0 object's
   per-frame updater (see that file's header comment for the full
@@ -233,17 +278,22 @@ boundaries - not by re-reading the isolated compiles more carefully.
   fully understood and confirmed field-by-field/instruction-by-
   instruction against the ROM disassembly; matches the ROM exactly
   through both particle in-bounds checks and the respawn call, but hits
-  the exact same categorical gap already accepted as unclosable for
-  `sub_8034634` just above (its own inlined nibble-write logic,
-  duplicated twice per particle instead of calling `sub_8034634`): this
-  compiler computes the `addr & 3` shift amount and the `0xf <<
-  shift`/`cell` values into the opposite register pair from the ROM's
-  own build. Left parked (real C, `NON_MATCHING`) rather than fall back
-  to a NAKED transcription, per this project's current policy of
-  preferring real C whenever the semantics are this well understood -
+  the same categorical family of register-allocation gaps `sub_8034634`
+  (actor_part72.c) used to have before it closed them (its own inlined
+  nibble-write logic, duplicated twice per particle instead of calling
+  `sub_8034634`): this compiler computes the `addr & 3` shift amount and
+  the `0xf << shift`/`cell` values into the opposite register pair from
+  the ROM's own build. Left parked (real C, `NON_MATCHING`) rather than
+  fall back to a NAKED transcription, per this project's current policy
+  of preferring real C whenever the semantics are this well understood -
   it's also too large (~150 instructions, `sb`/`r8`/`ip` all live) for
   a NAKED transcription to be a reasonable substitute anyway. Its twin
-  `sub_8034374` (this same file) is now matched - see below.
+  `sub_8034374` (this same file) is now matched - see below. The exact
+  fix that closed `sub_8034634`'s own copy of this gap (a `u32`-typed
+  mask to skip a spurious truncation, split address-half statements, and
+  a final opaque `asm volatile` for the ROM's redundant compute-then-copy
+  tail - see `sub_80345B0`/`sub_8034634`'s entry below) has not yet been
+  re-attempted here for both inlined copies.
 
 ## Left raw (3 of 25 functions, not attempted)
 
