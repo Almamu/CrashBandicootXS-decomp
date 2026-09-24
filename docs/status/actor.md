@@ -324,14 +324,18 @@ from "core" graphics.
   (`sub_80156EC`, also in this file, is a NAKED transcription); see
   `docs/matching/issue-18-0x08014f8c-actor.md`.
 - `src/graphics/actor_part38d.c` (new file, GitHub issue #18, ROM
-  0x0801574C-0x08015780, non-adjacent to `actor_part38c.c` since
+  0x0801574C-0x08015840, non-adjacent to `actor_part38c.c` since
   `sub_80156EC` sits between them): `nullsub_17`,
-  `sub_8015750`, `nullsub_18`, `sub_8015774`, `sub_8015780` - two
-  nullsubs, two tail-call wrappers, and the shared trampoline-pair-
-  plus-sentinel-store helper called by `actor_part18.c`'s
-  `sub_801426C`/`sub_80142B0` (`sub_80157C4`, also in this file, is a
-  NAKED transcription); see
-  `docs/matching/issue-18-0x08014f8c-actor.md`.
+  `sub_8015750`, `nullsub_18`, `sub_8015774`, `sub_8015780`,
+  `sub_80157C4` - two nullsubs, two tail-call wrappers, the shared
+  trampoline-pair-plus-sentinel-store helper called by
+  `actor_part18.c`'s `sub_801426C`/`sub_80142B0`, and `sub_80157C4`
+  (player's `+0x100`-flag-gated `mode` remapper tail-calling
+  `sub_800B86C`, reinterpreted through a `s32`-returning function-
+  pointer cast to steer the epilogue's `pop`/`bx` scratch register
+  choice - see
+  [docs/matching/naked-sub_80157c4-matched.md](../matching/naked-sub_80157c4-matched.md));
+  see `docs/matching/issue-18-0x08014f8c-actor.md`.
 
 - `src/graphics/actor_anim.c` (extended, GitHub issue #71, ROM
   `0x0803B060`-`0x0803B46C` - immediately adjacent to the file's existing
@@ -448,8 +452,7 @@ from "core" graphics.
   0x08015840-0x080159A4 - recategorized `graphics`->`actor` from the
   issue's label, same self+0xc/self+0x10 trampoline-pair and state/
   counter/table-index-trio family as actor_part38c.c/actor_part38d.c;
-  non-adjacent to actor_part38d.c's matched span since the parked
-  `sub_80157C4` sits between them): `sub_8015840`, `sub_8015878`,
+  immediately adjacent to actor_part38d.c's matched span): `sub_8015840`, `sub_8015878`,
   `sub_801588C`, `sub_80158AC`, `sub_80158B4`, `sub_80158BC`,
   `sub_80158C4`, `sub_80158CC`, `sub_80158D4`, `sub_80158DC`,
   `sub_80158E4`, `sub_80158EC`, `sub_80158F4`, `sub_8015908`,
@@ -675,14 +678,6 @@ plain C didn't converge.
 - **`sub_80156EC`** (`src/graphics/actor_part38c.c`) -
   `part+0x38`/`sub_80231BC`-gated mgr-trampoline dispatcher. See
   `docs/matching/issue-18-0x08014f8c-actor.md`.
-- **`sub_80157C4`** (`src/graphics/actor_part38d.c`) - player's
-  `+0x100`-flag-gated `mode` remapper (a 3-way dispatch playing a fixed
-  cue via `sub_80019A8`/`PlaySfx`), tail-calling `sub_800B86C`. A
-  99.8%-matching C reconstruction (explicit `goto`s reproducing the
-  ROM's own `cmp/bgt/cmp/beq` branch triangle; one cosmetic epilogue
-  scratch-register residual) is kept in-tree under `#if NON_MATCHING` -
-  see
-  [docs/matching/naked-sub_80157c4-matched.md](../matching/naked-sub_80157c4-matched.md).
 - **`sub_8030574`** (`src/graphics/actor_part20b.c`) - boss-weapon
   keyframe-table AABB lookup/dispatch; same `gStaticData_*` stride-8
   table shape and r7-hazard as the already-parked `sub_802C208`
