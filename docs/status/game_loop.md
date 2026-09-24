@@ -202,6 +202,18 @@ system from "core" system startup/init code.
   "collision box" record `sub_8010A00`/`sub_800FEB0` already operate
   on. See
   [docs/matching/issue-14-0x08010a0c-graphics.md](../matching/issue-14-0x08010a0c-graphics.md).
+- **`sub_8022EA8`/`sub_8022F2C`** (`src/system/game_loop2.c`, GitHub
+  issue #34) - record 47's periodic-trigger setter/decrementer; closed
+  with a targeted register-pinning recipe after the ROM's cross-call
+  `r4`/`r7` register map was reproduced by pinning only the two values
+  that need it (see the functions' own doc comments for the full
+  recipe: an early `base` snapshot forcing `r0`, a single `off`
+  register pin for the `0x234` field-offset constant, freshly-named
+  locals for the second chase to stop register "stickiness", and an
+  `addr`/`countdown`/`newCountdown` pin set plus true-branch-first
+  digit-cascade rewrites for `sub_8022F2C`'s front half and `else`
+  branch). Real bytes formerly in `asm/code_3_2_17_22ea8.s` (now
+  removed, folded into `src/system/game_loop2.o`).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -319,10 +331,6 @@ plain C didn't converge.
   same gap already parked for `sub_800A734`/`sub_800A528` in
   docs/matching/issue-9-0x08007634-actor.md, at a larger scale. See
   [docs/matching/issue-14-0x08010a0c-graphics.md](../matching/issue-14-0x08010a0c-graphics.md).
-- **`sub_8022EA8`/`sub_8022F2C`** (`src/system/game_loop2.c`, GitHub
-  issue #34) - record 47's periodic-trigger setter/decrementer; real
-  bytes in `asm/code_3_2_17_22ea8.s`. See `docs/matching.md`'s issue
-  #34 entry for the exact register-allocation gaps.
 - **`sub_8024F24`/`sub_80250BC`/`sub_8025130`/`sub_8025228`/
   `sub_8025334`** (`src/system/game_loop3.c`, GitHub issue #40) - the
   16-slot terrain tile-record decode/LRU cache's lookup dispatcher, its
