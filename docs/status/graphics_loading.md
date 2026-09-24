@@ -134,6 +134,21 @@ plain C didn't converge.
 - **`sub_801E644`** (`src/graphics/graphics_package_1e640.c`) - a
   five-field constructor on the same scratch buffer as `sub_801E640`.
   See [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md).
+- **`sub_801E688`** (`src/graphics/graphics_package_1e688.c`) -
+  `LoadGraphicsPackage`'s tile-cell-selection helper (best-fit box
+  search over the shared `gStaticData_0816C644`/`674` preset table,
+  plus Q8.8 scale-factor computation). Every operation was already
+  confirmed correct by an earlier plain-C reconstruction, but this
+  ~110-instruction, register-starved function hits the exact same `r7`
+  gap as its sibling `sub_801E788` below, just via a new mechanism: the
+  ROM needs `r7` in its callee-save push/pop list, and this compiler's
+  prologue-generation pass never adds `r7` to that list from any
+  inline-asm-based hint (confirmed two ways: a bare clobber, and a
+  dummy `register ... asm("r7")` output operand - both produced a
+  body byte-identical to the ROM but silently dropped `r7` from both
+  the push and pop). Transcribed instruction-for-instruction instead.
+  See [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)'s
+  "Seventh pass".
 - **`sub_8020E84`**, **`sub_8020F7C`**, **`sub_802107C`**,
   **`sub_802117C`** (`src/graphics/trigger_effect.c`) - the
   "trigger effect type N" twin family (4 of the 15-slot
@@ -195,26 +210,27 @@ Both hit the same confirmed `r7`-pin gap as `sub_8007114`
   `LoadBg2Background` above - see
   [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)'s
   "Third pass".
-- **`sub_801E688`**, **`sub_801E788`** (`src/graphics/graphics_package_1e688.c`,
-  real bytes guarded in `asm/code_3_2_17_1e644.s`) - `LoadGraphicsPackage`'s
-  tile-cell-selection (best-fit box search over the shared
-  `gStaticData_0816C644`/`674` preset table, plus Q8.8 scale-factor
-  computation) and viewport-centering (position math on one of 4
-  packed modes, then an unconditional shadow-OAM insert that also
-  allocates and writes one affine-parameter group when centering is
-  active) helpers. Fully understood, including resolving the prior
-  pass's flagged concern about `sub_801E688`'s `gUnknown_03001300`
-  writes not fitting the shadow buffer's 8-byte hardware-OAM stride -
-  they do (`field_08 * 0x20 + 0x12` decomposes into 4 consecutive
-  entries' filler halfword, the real hardware's OBJ affine-parameter
-  overlay) - but not byte-exact: `sub_801E788` needs `self` in `r7`
-  (matching the ROM's `push {r4-r7}`), which is only reachable through
-  an explicit `register u8 *self asm("r7")` pin, and that pin itself
-  defeats this compiler's immediate-offset address folding for every
-  `self[...]` access (confirmed with a minimal repro) - a new flavor of
-  the gcc-2.9 register-allocation gotchas already catalogued in this
-  cluster. See
+- **`sub_801E788`** (`src/graphics/graphics_package_1e688.c`, real bytes
+  guarded in `asm/code_3_2_17_1e644.s`) - `LoadGraphicsPackage`'s
+  viewport-centering helper (position math on one of 4 packed modes,
+  then an unconditional shadow-OAM insert that also allocates and
+  writes one affine-parameter group when centering is active). Fully
+  understood, including resolving a prior pass's flagged concern about
+  its sibling `sub_801E688`'s `gUnknown_03001300` writes not fitting
+  the shadow buffer's 8-byte hardware-OAM stride - they do
+  (`field_08 * 0x20 + 0x12` decomposes into 4 consecutive entries'
+  filler halfword, the real hardware's OBJ affine-parameter overlay) -
+  but not byte-exact: needs `self` in `r7` (matching the ROM's
+  `push {r4-r7}`), which is only reachable through an explicit
+  `register u8 *self asm("r7")` pin, and that pin itself defeats this
+  compiler's immediate-offset address folding for every `self[...]`
+  access (confirmed with a minimal repro) - a gcc-2.9 register-
+  allocation gotcha now also confirmed (via a different mechanism -
+  `r7` never entering the callee-save push/pop list at all, regardless
+  of how it's referenced from inline asm) to affect its sibling
+  `sub_801E688` too, which is why that one is now parked as a NAKED
+  transcription instead - see "Parked - NAKED transcription" above. See
   [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)'s
-  "Fourth pass".
+  "Fourth pass" and "Seventh pass".
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
