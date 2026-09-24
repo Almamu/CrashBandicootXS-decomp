@@ -340,24 +340,24 @@ from "core" graphics.
   sit in between). See
   [docs/matching/issue-16-actor-12160.md](../matching/issue-16-actor-12160.md).
 - `src/graphics/actor_part43.c`/`actor_part44.c`/`actor_part45.c`/
-  `actor_part46.c` (new files, GitHub issue #56, ROM
+  `actor_part45c.c`/`actor_part46.c` (new files, GitHub issue #56, ROM
   0x0802F0DC-0x0802FBF0 - a second boss-weapon "spawn/pre-attack"
-  singleton and its `self` object, non-adjacent since the parked
-  `sub_802F338`/`sub_802FA04`, the NAKED-transcribed `sub_802F748`
-  (`actor_part44b.c` - see below), and the NAKED-transcribed
-  `sub_802F7B0`/`sub_802F8E8`/`sub_802FA38` (`actor_part45d.c`/
-  `actor_part46b.c` - see below) sit interleaved between them; see
+  singleton and its `self` object, non-adjacent since the
+  NAKED-transcribed `sub_802F748` (`actor_part44b.c` - see below), and
+  the NAKED-transcribed `sub_802F7B0`/`sub_802F8E8`/`sub_802FA38`
+  (`actor_part45d.c`/`actor_part46b.c` - see below) sit interleaved
+  between them; see
   [docs/matching/issue-56-0x0802f0dc-actor.md](../matching/issue-56-0x0802f0dc-actor.md)):
   `sub_802F0DC`, `sub_802F164`, `sub_802F3BC`, `sub_802F46C`, `sub_802F47C`,
   `sub_802F4AC`, `sub_802F4C0`, `sub_802F4CC`, `sub_802F50C`,
   `sub_802F540`, `sub_802F570`, `sub_802F5AC`, `sub_802F5E4`,
   `sub_802F640`, `sub_802F69C`, `sub_802F6DC`,
-  `sub_802F7A4`, `sub_802F97C`, `sub_802FA34` - a constructor/reset, a
-  state-machine update, an accumulator-drain/reward-
-  dispenser, accessors, accumulator drivers, idle-state-reset idioms,
-  and the singleton's teardown/destructor, all sharing
-  `actor_part17.c`/`actor_part18.c`/`actor_part20.c`'s established
-  "self" object conventions.
+  `sub_802F7A4`, `sub_802F97C`, `sub_802FA04`, `sub_802FA34` - a
+  constructor/reset, a state-machine update, an accumulator-drain/
+  reward-dispenser, accessors, accumulator drivers, idle-state-reset
+  idioms, an `InitActorPart`-based constructor, and the singleton's
+  teardown/destructor, all sharing `actor_part17.c`/`actor_part18.c`/
+  `actor_part20.c`'s established "self" object conventions.
 - `src/graphics/actor_part50.c`/`actor_part51.c`/`actor_part52.c`/
   `actor_part53.c`/`actor_part54.c`/`actor_part55.c`/`actor_part56.c`
   (new files, GitHub issue #50, ROM 0x0802A69C-0x0802AC28 - numbered
@@ -1118,12 +1118,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   `src/graphics/actor_part37.c`) - `sub_8033B44`'s twin using the
   second stride-8 table (`gStaticData_0817C4F8`), parked on the same
   gap - see `docs/matching/issue-62-0x08033804-actor.md`, issue #62.
-- **`sub_802FA04`** (`src/graphics/actor_part45c.c`) - an
-  `InitActorPart`-based 7-argument constructor, the same shape as the
-  left-raw `sub_80305F8`; parked on this compiler's own high-register
-  push/pop allocation never matching the ROM's `r4=self,r5=1,r6=e,r7=f`
-  assignment - see `docs/matching/issue-56-0x0802f0dc-actor.md`.
-
 - **`sub_8034058`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s`, C
   in `src/graphics/actor_part66.c`, GitHub issue #63) - an
   `InitActorPart`-based constructor with a trailing byte stack argument;

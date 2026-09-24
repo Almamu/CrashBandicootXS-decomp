@@ -359,7 +359,7 @@ UNITS = [
     (0x0802F7A4, "src/graphics/actor_part45.o", "actor"),  # sub_802F7A4 (issue #56): trivial singleton-flag getter; matched
     (0x0802F7B0, None, "actor"),  # sub_802F7B0/sub_802F8E8 (issue #56, NAKED, byte-correct but not real decompiled C, tracked as parked) - a pair of VRAM tile-remap loops with 3 simultaneous high-register (r8/sb/sl) nested-loop allocations, same categorical DMA3-literal-pool NAKED shape as actor_part26b.c/actor_part74.c/actor_part75.c; real bytes live in src/graphics/actor_part45d.c
     (0x0802F97C, "src/graphics/actor_part45b.o", "actor"),  # sub_802F97C (issue #56): physics-step-and-collision-react updater; matched
-    (0x0802FA04, "src/graphics/actor_part45c.o", "actor"),  # sub_802FA04 (issue #56, parked, NON_MATCHING) - an InitActorPart-based constructor, same 7-argument shape as the left-raw sub_80305F8; real bytes live in asm/code_3_2_20_28568_c99c_2fa04.s
+    (0x0802FA04, "src/graphics/actor_part45c.o", "actor"),  # sub_802FA04 (issue #56): an InitActorPart-based constructor, same 7-argument shape as sub_80305F8; matched as real C
     (0x0802FA34, "src/graphics/actor_part46.o", "actor"),  # sub_802FA34 (issue #56): trivial constant-true predicate; matched
     (0x0802FA38, None, "actor"),  # sub_802FA38 (issue #56, NAKED, byte-correct but not real decompiled C, tracked as parked) - position-update/collision-damage function; same categorical r7-hazard keyframe-table shape as sub_802C208/sub_802F748/sub_8030574, compounded with r8/sb register pressure across the damage calc; real bytes live in src/graphics/actor_part46b.c
     (0x08030530, "src/graphics/actor_part20.o", "actor"),  # sub_8030530 (issue #58): countdown timer driving a boss-weapon state-2/table-index-1 transition; matched

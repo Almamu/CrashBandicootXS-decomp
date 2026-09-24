@@ -24,7 +24,7 @@ are named by the lower 5 hex digits of their first function's address
 `..._2f7b0.s`, `..._2f97c.s`, `..._2fa04.s`, `..._2fa38.s`,
 `..._2fbf0.s`).
 
-## Matched (21 of 25 functions)
+## Matched (22 of 25 functions)
 
 - **`sub_802F338`** (`src/graphics/actor_part43b.c`) - computes two
   keyframe-driven tile-cache sizes (`byte0*byte1`, scaled by 32) via
@@ -202,24 +202,35 @@ are named by the lower 5 hex digits of their first function's address
   `void *`-typed function-pointer table entry), the parameter's own
   type here doesn't need to match the project's usual convention.
 
-## Parked (1 of 25 functions, `NON_MATCHING`, not yet byte-exact)
+## Parked (0 of 25 functions, `NON_MATCHING`, not yet byte-exact)
+
+None remaining - `sub_802FA04` (below) closed out this chunk's last
+parked entry.
 
 - **`sub_802FA04`** (`src/graphics/actor_part45c.c`) - an
   `InitActorPart`-based constructor for this cluster's `self` object:
   forwards its first three real arguments plus one stack argument
   straight to `InitActorPart`, then marks `self+0x54` = 1, sets
-  `self+0x50`'s event/trampoline table, and stashes its remaining two
-  stack arguments into `self+0x58`/`self+0x5c`. Every load/store and
-  call confirmed correct - the same 7-argument `InitActorPart`-wrapper
-  shape already left raw as `sub_80305F8`
-  (`docs/matching/issue-58-0x08030334-actor.md`); parked because this
-  compiler always pushes only as many high registers (`r4`-`r7`) as it
-  independently decides it needs for its own constant/stack-argument
-  evaluation order, never matching the ROM's specific
-  `r4=self,r5=1,r6=e,r7=f` assignment (and its 4-register push/pop)
-  without either an incorrect extra `r8` push/pop (a relay attempt)
-  or losing the stack argument's value outright to a register
-  collision with an explicit `r7` pin.
+  `self+0x50`'s event/trampoline table to `gStaticData_087E517C`, and
+  stashes its remaining two stack arguments into `self+0x58`/
+  `self+0x5c`. The same 7-argument `InitActorPart`-wrapper shape as
+  `sub_80305F8` (`docs/matching/issue-58-0x08030334-actor.md`, itself
+  matched with `register`-pinned `r6`/`r8`/`r0` locals). This function
+  resisted the same register-pinning approach: an explicit
+  `register s32 f asm("r7")` pin does put `f` in `r7` at every use, but
+  (matching a categorical `r7`-pin quirk documented elsewhere in this
+  codebase) never makes it into this compiler's own prologue `push`/
+  `pop` list, leaving `r7` unsaved across the `InitActorPart` call even
+  though the ROM saves it - the isolated compile came out with only a
+  3-register `push {r4, r5, r6, lr}` no matter how `f` was pinned. The
+  fix was to stop pinning entirely: a plain, unpinned `s32 health = 1;`
+  local, declared and assigned *before* the `InitActorPart` call, adds
+  just enough natural register pressure (four values - `self`, the `1`
+  constant, `e`, `f` - now all genuinely live across the call) that this
+  compiler's own unforced allocator reaches for `r7` on its own and
+  saves it correctly, reproducing the ROM's exact `r4=self,r5=1,r6=e,
+  r7=f` assignment and 4-register `push`/`pop` instruction-for-
+  instruction.
 
 ## NAKED transcription (byte-correct, not counted as matched)
 
