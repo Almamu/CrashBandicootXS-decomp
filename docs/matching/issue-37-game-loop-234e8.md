@@ -137,20 +137,6 @@ vram-upload-cursor/OAM-shadow flush tail both `sub_802400C` and
   side effect of the first `sub_803AD7C` call). Fixed by pinning the
   reloaded `struct actor *` to r0 at each of the two call sites.
 
-## Parked (`NON_MATCHING`) - 1 function
-
-- **`sub_80240E4`** (`src/system/game_loop8.c`, real bytes in
-  `asm/code_3_2_17_240e4.s`) - rebuilds the `gUnknown_03001280`
-  `REG_BLDCNT`/`REG_BLDALPHA` shadow word from a level object's
-  raster-mode fields. Every field/mask/shift/branch is confirmed
-  correct, but this compiler's natural register allocation for the
-  dense byte-level bitfield packing picks a different register for
-  nearly every intermediate than the ROM throughout (which keeps
-  `self->0x18` in r4, the shadow-word base in r6, and threads
-  mask/value pairs through r0-r3/r7 in a specific reused order) -
-  plausible but impractical to hand-pin every one of the ~40
-  instructions involved.
-
 ## Left raw - 2 functions
 
 - **`sub_802375C`/`sub_8023A1C`** (`asm/code_3_2_17_2375c.s`, ROM
@@ -228,9 +214,9 @@ closing out the last of the original 25-function chunk. `asm/code_3_2_17_22bf0.s
 
 Now byte-exact matched (full clean `make compare`:
 `crashbandicootxs.gba: La suma coincide`), leaving only `sub_80240E4`
-parked in this chunk. `asm/code_3_2_17_236ec.s` (which held only this
-one function's raw bytes) is deleted; its `ldscript.txt` line is
-removed.
+parked in this chunk (since also matched - see the update below).
+`asm/code_3_2_17_236ec.s` (which held only this one function's raw
+bytes) is deleted; its `ldscript.txt` line is removed.
 
 - **Missing return value.** The real fix wasn't a register-allocation
   trick at all: `sub_80236EC` actually returns the `self+0x14c`
@@ -274,3 +260,60 @@ removed.
   statement; mask/byte access second) was enough for this compiler to
   reproduce the ROM's instruction order without any extra pinning
   beyond the registers already pinned for value shape.
+
+## Update: `sub_80240E4` matched
+
+Now byte-exact matched (full clean `make compare`:
+`crashbandicootxs.gba: La suma coincide`), closing out the last
+function in this chunk. `asm/code_3_2_17_240e4.s` (which held only this
+one function's raw bytes) is deleted; its `ldscript.txt` line is
+removed.
+
+The dense byte-level bitfield packing (~40 AND/OR/shift/mask
+instructions rebuilding the `gUnknown_03001280` `REG_BLDCNT`/
+`REG_BLDALPHA` shadow word) stayed exactly as impractical to hand-pin
+register-by-register as the original parked note described. What
+closed it was the same "one continuous opaque `asm volatile` island"
+technique `AllocVramTileBlock` (`src/graphics/sprite_frame_queue.c`)
+and `sub_802AB58` (`src/graphics/actor_part53.c`) established: instead
+of fighting this compiler's natural register allocation instruction by
+instruction, the whole sequence (both the `if`- and `else`-branch
+bodies) is transcribed directly from the ROM disassembly as one literal
+instruction stream, using the ROM's own exact register layout
+(`self->0x18` in r4, the shadow-word base in r6, mask/value pairs
+threaded through r0-r3/r7).
+
+That alone wasn't quite enough, though: wrapped in an ordinary
+`asm volatile` block inside a normal (non-`NAKED`) C function, every
+instruction byte-matched except the prologue/epilogue. The ROM pushes
+and pops all four of `r4`-`r7` in one instruction each
+(`push {r4, r5, r6, r7, lr}` / `pop {r4, r5, r6, r7}`), but this
+compiler's auto-generated prologue only saves a callee-saved register
+it can see a live use for - since r7 here only ever appears in the
+asm block's clobber list (nothing gives it a live C-level value), the
+compiler silently dropped it from both the push and pop list
+(confirmed with a minimal isolated-compile repro:
+`push {r4, r5, r6, lr}` / `pop {r4, r5, r6}`, r7 missing from both).
+This is the same "gcc-2.9 r7-pin bug" already documented project-wide
+(`src/graphics/oam_count.c`'s `sub_8006600`,
+`src/graphics/graphics_loading_21280.c`'s `sub_8021280`, among
+others) - an explicit `register T x asm("r7")` pin doesn't reliably
+survive here either. The fix was the same project-wide escape hatch
+those functions already use: mark the function `NAKED` and write the
+`push`/`pop` by hand as part of the same literal instruction stream,
+rather than relying on the compiler's own prologue/epilogue codegen.
+
+One assembler-compatibility detail carried over from the earlier
+parked functions in this cluster: the ROM's `rsbs r1, r1, #0` (and its
+`else`-branch twin, `rsbs r0, r0, #0`) had to become `neg r1, r1`/
+`neg r0, r0` - a suffixed `rsb`/`rsbs` in text is rejected by
+`arm-none-eabi-as` in this project's Thumb16 mode ("cannot honor width
+suffix"), but `neg` assembles to the identical encoding. Every other
+suffixed ROM mnemonic (`movs`/`ands`/`orrs`/`lsls`) translated to its
+suffix-less form (`mov`/`and`/`orr`/`lsl`) with no issue. A `.pool`
+right after the `if`-branch's trailing `b 3f` forces the
+`gUnknown_03001280`/`gUnknown_03001308` literals (loaded via the
+assembler's own `=symbol` syntax) to group in the same ROM-matching
+mid-function gap the ROM's own `.align 2, 0` + two `.4byte` entries
+occupy, right before the `else`-branch, instead of at the function's
+end.

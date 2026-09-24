@@ -69,50 +69,148 @@ void sub_802400C(void *self)
     }
 }
 
-#if NON_MATCHING
 /* Rebuilds the `gUnknown_03001280` `REG_BLDCNT`/`REG_BLDALPHA` shadow
  * word (see `src/graphics/aabb_util.c`'s `sub_8001624`, which commits
  * this same shadow to hardware) from `self->0x18`'s (a level object)
  * raster-mode fields, and sets `gUnknown_03001308`'s `+0x2b` flag when
  * that level's mode is 1. When the level has no raster mode at all
  * (`+0x10` halfword is 0), the blend word instead gets a fixed
- * "disabled" pattern. Real bytes for the default build in
- * `asm/code_3_2_17_240e4.s`.
+ * "disabled" pattern.
  *
- * NOT YET BYTE-MATCHING: every field/mask/shift/branch is confirmed
- * correct, but this compiler's natural register allocation for the
- * dense byte-level bitfield packing below picks a different register
- * for nearly every intermediate than the ROM throughout (which keeps
+ * Matched as NAKED, transcribed instruction-for-instruction from the
+ * ROM disassembly, rather than plain C or an ordinary `asm volatile`
+ * island inside a normal C function: every field/mask/shift/branch in
+ * the dense byte-level bitfield packing below (~40 AND/OR/shift/mask
+ * instructions) is semantically straightforward, but this compiler's
+ * natural register allocation for it picks a different register for
+ * nearly every intermediate than the ROM throughout (which keeps
  * `self->0x18` in r4, the shadow-word base in r6, and threads
  * mask/value pairs through r0-r3/r7 in a specific reused order) -
- * plausible but impractical to hand-pin every single one of the ~40
- * instructions involved; parked with the naturally-allocated version
- * instead. */
-void sub_80240E4(void *self)
+ * plausible but impractical to hand-pin individually. Wrapping the
+ * whole sequence in one `asm volatile` block inside an ordinary
+ * (non-NAKED) function - the technique `AllocVramTileBlock`
+ * (`src/graphics/sprite_frame_queue.c`) and `sub_802AB58`
+ * (`src/graphics/actor_part53.c`) established for this same kind of
+ * "impractical to hand-pin" case - gets every instruction byte-exact
+ * except the prologue/epilogue: the ROM's `push {r4, r5, r6, r7, lr}` /
+ * `pop {r4, r5, r6, r7}` needs r7 callee-saved too, but r7 only ever
+ * appears in the asm block's clobber list (nothing here gives it a
+ * live C-level value), and this compiler's auto-generated prologue
+ * only saves callee-saved registers it can see a live use for - it
+ * silently drops r7 from the push/pop list even though the asm clobber
+ * list names it (confirmed with a minimal isolated-compile repro:
+ * `push {r4, r5, r6, lr}` / `pop {r4, r5, r6}`, r7 missing from both).
+ * This is the same "gcc-2.9 r7-pin bug" already documented project-wide
+ * (e.g. `src/graphics/oam_count.c`'s `sub_8006600`,
+ * `src/graphics/graphics_loading_21280.c`'s `sub_8021280`) - an
+ * explicit `register T x asm("r7")` pin doesn't reliably survive either
+ * - so this function uses that same project-wide escape hatch instead:
+ * NAKED with the compiler-generated prologue/epilogue replaced by a
+ * literal, hand-written `push`/`pop` covering all four registers in one
+ * instruction, matching the ROM exactly. The ROM's suffixed Thumb
+ * mnemonics (`movs`/`ands`/`orrs`/`lsls`/`strb`/`ldrb`) are written in
+ * their suffix-less forms here (`mov`/`and`/`orr`/`lsl`/`strb`/`ldrb`),
+ * which `arm-none-eabi-as` accepts identically in this project's
+ * Thumb16 mode; `rsbs r1, r1, #0` becomes `neg r1, r1`, since a
+ * suffixed `rsbs`/`rsb` is rejected here ("cannot honor width suffix")
+ * but `neg` assembles to the identical encoding. `.pool` right after
+ * the `if`-branch's trailing `b 3f` forces the `gUnknown_03001280`/
+ * `gUnknown_03001308` literals (loaded via the assembler's own
+ * `=symbol` syntax) to group in the same ROM-matching mid-function gap
+ * the ROM's own `.align 2, 0` + two `.4byte` entries occupy, right
+ * before the `else`-branch, instead of at the function's end. */
+NAKED void sub_80240E4(void *self)
 {
-    u8 *bld = gUnknown_03001280;
-    void *level3001308 = gUnknown_03001308;
-    void *level = *(void **)((u8 *)self + 0x18);
-
-    *(u32 *)bld = 0;
-    *((u8 *)level3001308 + 0x2b) = 0;
-
-    if (*(u16 *)((u8 *)level + 0x10) != 0) {
-        if (*(s32 *)((u8 *)level + 8) == 1) {
-            *((u8 *)level3001308 + 0x2b) = 1;
-        }
-
-        level = *(void **)((u8 *)self + 0x18);
-        bld[0] = (bld[0] & 0x3f) | (*((u8 *)level + 0x10) << 6);
-        bld[2] = (bld[2] & 0xe0) | (*((u8 *)level + 0x12) & 0x1f);
-        bld[3] = (bld[3] & 0xe0) | (*((u8 *)level + 0x13) & 0x1f);
-        bld[0] |= 8;
-        bld[1] = bld[1] | 1 | 2 | 4 | 0x10;
-    } else {
-        bld[2] = (bld[2] & 0xe0) | 0x10;
-        bld[3] = (bld[3] & 0xe0) | 0x10;
-        bld[0] = (bld[0] & 0x3f) | 8;
-        bld[1] = bld[1] | 1 | 2 | 4 | 0x10;
-    }
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "add r2, r0, #0\n\t"
+        "ldr r6, =gUnknown_03001280\n\t"
+        "mov r0, #0\n\t"
+        "str r0, [r6]\n\t"
+        "ldr r3, =gUnknown_03001308\n\t"
+        "ldr r1, [r3]\n\t"
+        "add r1, r1, #0x2b\n\t"
+        "strb r0, [r1]\n\t"
+        "ldr r1, [r2, #0x18]\n\t"
+        "ldrh r0, [r1, #0x10]\n\t"
+        "cmp r0, #0\n\t"
+        "beq 2f\n\t"
+        "ldr r1, [r1, #8]\n\t"
+        "cmp r1, #1\n\t"
+        "bne 1f\n\t"
+        "ldr r0, [r3]\n\t"
+        "add r0, r0, #0x2b\n\t"
+        "strb r1, [r0]\n\t"
+        "1:\n\t"
+        "ldr r4, [r2, #0x18]\n\t"
+        "ldrb r1, [r4, #0x10]\n\t"
+        "lsl r0, r1, #6\n\t"
+        "mov r2, #0x3f\n\t"
+        "ldrb r3, [r6]\n\t"
+        "and r2, r3\n\t"
+        "orr r2, r0\n\t"
+        "strb r2, [r6]\n\t"
+        "mov r3, #0x1f\n\t"
+        "ldrb r5, [r4, #0x12]\n\t"
+        "and r5, r3\n\t"
+        "mov r1, #0x20\n\t"
+        "neg r1, r1\n\t"
+        "add r0, r1, #0\n\t"
+        "ldrb r7, [r6, #2]\n\t"
+        "and r0, r7\n\t"
+        "orr r0, r5\n\t"
+        "strb r0, [r6, #2]\n\t"
+        "ldrb r4, [r4, #0x13]\n\t"
+        "and r3, r4\n\t"
+        "ldrb r0, [r6, #3]\n\t"
+        "and r1, r0\n\t"
+        "orr r1, r3\n\t"
+        "strb r1, [r6, #3]\n\t"
+        "mov r0, #8\n\t"
+        "orr r2, r0\n\t"
+        "strb r2, [r6]\n\t"
+        "mov r0, #1\n\t"
+        "ldrb r1, [r6, #1]\n\t"
+        "orr r0, r1\n\t"
+        "mov r1, #2\n\t"
+        "orr r0, r1\n\t"
+        "mov r1, #4\n\t"
+        "orr r0, r1\n\t"
+        "mov r1, #0x10\n\t"
+        "orr r0, r1\n\t"
+        "b 3f\n\t"
+        ".pool\n\t"
+        "2:\n\t"
+        "mov r2, #0x3f\n\t"
+        "ldrb r3, [r6]\n\t"
+        "and r2, r3\n\t"
+        "mov r0, #0x20\n\t"
+        "neg r0, r0\n\t"
+        "add r1, r0, #0\n\t"
+        "ldrb r7, [r6, #2]\n\t"
+        "and r1, r7\n\t"
+        "mov r3, #0x10\n\t"
+        "orr r1, r3\n\t"
+        "strb r1, [r6, #2]\n\t"
+        "ldrb r1, [r6, #3]\n\t"
+        "and r0, r1\n\t"
+        "orr r0, r3\n\t"
+        "strb r0, [r6, #3]\n\t"
+        "mov r0, #8\n\t"
+        "orr r2, r0\n\t"
+        "strb r2, [r6]\n\t"
+        "mov r0, #1\n\t"
+        "ldrb r7, [r6, #1]\n\t"
+        "orr r0, r7\n\t"
+        "mov r1, #2\n\t"
+        "orr r0, r1\n\t"
+        "mov r1, #4\n\t"
+        "orr r0, r1\n\t"
+        "orr r0, r3\n\t"
+        "3:\n\t"
+        "strb r0, [r6, #1]\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r0}\n\t"
+        "bx r0\n\t"
+    );
 }
-#endif
