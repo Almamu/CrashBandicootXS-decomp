@@ -175,6 +175,172 @@
  * plus 3 `.4byte gUnknown_03001308` literal-pool words - which resolve
  * correctly once linked. */
 
+/* Follow-up (same investigation): `sub_800A0FC`, the only caller of
+ * `sub_800A178` (both live right next to each other, `sub_800A0FC`
+ * immediately before `sub_800A178` in ROM and formerly the sole
+ * remaining content of `asm/code_3_2_11.s`). It stayed raw the first
+ * pass through this cluster because its own gate logic calls
+ * `sub_8009BE0` (parked NAKED, `src/graphics/actor_part12b.c`, see
+ * `docs/matching/naked-spatial-grid-tail.md`) - at the time that
+ * function's semantics were still unresolved. `sub_8009BE0` is now
+ * fully understood (a physics/collision step-probe: converts `self`'s
+ * position to plain ints via `sub_8008278`, probes it through
+ * `sub_8026628` with `mode` as the axis selector, retrying up to 3
+ * more times on a miss by nudging Y down), which is enough to close
+ * this function's own dispatch logic as real, byte-exact matched C:
+ *
+ * `sub_800A0FC(self)` returns early with `self+0x68` unchanged unless
+ * `self+0xc` bit 7 is set (the same gate `sub_800A178` itself re-checks
+ * internally). If set: calls `sub_800A178(self)` and OR's its result
+ * bitmask into `self+0x68` (a persistent, cumulative per-object
+ * collision-axis mask - distinct from `self+0x74`'s own per-call
+ * scratch mask `sub_800A178` zeroes and rebuilds every call), then
+ * unconditionally fires `sub_800A050(self)` (the already-matched
+ * `self->table+0x70/0x74` trampoline, `src/graphics/actor_part9.c` -
+ * a side-effect-only call, its always-`0` return discarded). If
+ * `self+0x68` bit 3 (the "Y-axis/mode-8" collision bit `sub_800A178`
+ * just OR'd in, if it hit) is now set: clears `self+0xc` bits 0 and 5,
+ * then - unless `self+0xd` bit 1 is already set (ground already
+ * snapped this call, `sub_800A420`'s own convention) - fires the same
+ * `self->table+0x10/0x14` "hitbox quad" trampoline `sub_800A178`
+ * itself uses, and runs a `mode == 8` (Y-axis/floor) step-probe via
+ * `sub_8009BE0(self, 8, quad)`. If that step-probe does *not* report
+ * immediate success (either a full miss, or only succeeding via one of
+ * its internal retries - see `sub_8009BE0`'s own doc comment), sets
+ * `self+0xc` bit 5 and clears `self+0x68` bit 3 back out - rolling
+ * back the "Y axis resolved" bit `sub_800A178`'s cheaper probe had
+ * just set, since the more thorough step-probe didn't confirm it
+ * cleanly. Returns the (possibly rolled-back) `self+0x68` byte either
+ * way.
+ *
+ * Read together with `sub_800A178`/`sub_800A420`: this is the
+ * part-object physics dispatcher - `sub_800A0FC` is the entry point
+ * (called by `sub_800A884`'s per-frame reentrancy-guarded wrapper,
+ * `docs/rom_map.md` line ~1835), `sub_800A178` does the actual
+ * layered collision resolution and reports which axes it resolved,
+ * and `sub_800A0FC`'s own tail cross-checks the Y-axis result against
+ * a second, independent step-probe (`sub_8009BE0`) before trusting it
+ * enough to leave the bit set in the persistent `self+0x68` mask.
+ *
+ * Matched as real C with no `NON_MATCHING` gap, via direct register
+ * pinning to reproduce the ROM's exact register choices at several
+ * points where this compiler's natural allocation otherwise diverged:
+ * a `flags`(r1)/`bit7`(r0) pair for the leading `self+0xc >> 7` gate
+ * test (this compiler naturally reused one register for both the load
+ * and the shift result; the ROM keeps them separate), the established
+ * "negative-constant register-pinned mask" idiom (`register s32 mask
+ * asm("r0") = -0x21`, matching `sub_800A734`'s own precedent,
+ * `actor_part48.c`) for the `self+0xc &= ~0x21` clear, a
+ * `dByte`(r2)/`shifted`(r0)/`one`(r1)/`bit1`(r0) chain for the
+ * `(self+0xd >> 1) & 1` gate (the same bit-1 accessor shape as
+ * `sub_800A6C4`, `actor_part14.c`, but needing explicit pinning here
+ * since it's inlined alongside other already-pinned locals rather than
+ * standing alone), the same `addr`(r0)/`fn`(r1) "compute the trampoline
+ * address before loading the function pointer" ordering `sub_800A050`
+ * already established for its own `self->table+0x70/0x74` trampoline
+ * (here reused for `self->table+0x10/0x14`, the "hitbox quad"
+ * accessor - the natural, unpinned C already matched the ROM's
+ * register-offset `ldrsh` addressing for the `+0x10` field, since
+ * Thumb's `LDRSH` has no immediate-offset encoding and must always
+ * materialize the offset into a register), and two more
+ * `mask`(r0)/`byte`(r1 or r2)/`result`(r0) pairs (mirroring the
+ * `~0x21` clear's own idiom) for the final `self+0xc |= 0x20` and
+ * `self+0x68 &= 7` writes, both of which this compiler naturally
+ * ordered constant-then-byte in the opposite register slots from the
+ * ROM's own choice.
+ *
+ * Verified via the isolated `cpp`/`agbcc`/`as` + `objcopy`/`cmp`
+ * pipeline against `baserom.gba`'s own bytes at `0x0800A0FC`-
+ * `0x0800A178` (124 bytes) before integration, then confirmed again
+ * via a full clean `make compare` after linking - `sub_800A0FC` is
+ * genuinely byte-exact, register-for-register, not just
+ * behaviorally equivalent. */
+
+extern s32 sub_803AD7C(void *addr, void *fn);
+extern u8 sub_800A178(void *self);
+extern s32 sub_800A050(void *self);
+extern u8 sub_8009BE0(void *self, s32 mode, void *quad);
+
+u8 sub_800A0FC(void *self)
+{
+    u8 *p = (u8 *)self + 0x68;
+    u8 val = *p;
+    register u8 flags asm("r1") = *(u8 *)((u8 *)self + 0xc);
+    register u32 bit7 asm("r0");
+
+    bit7 = flags >> 7;
+    if (bit7)
+    {
+        val |= sub_800A178(self);
+        *p = val;
+
+        sub_800A050(self);
+
+        {
+        register s32 mask asm("r0") = 8;
+        register s32 byte asm("r2") = *p;
+        register s32 result asm("r0");
+
+        result = mask & byte;
+        if (result)
+        {
+            {
+                register s32 mask asm("r0") = -0x21;
+                register s32 byte asm("r1") = *(u8 *)((u8 *)self + 0xc);
+                register s32 result asm("r0");
+
+                result = mask & byte;
+                *(u8 *)((u8 *)self + 0xc) = result;
+            }
+
+            {
+                register u8 dByte asm("r2") = *(u8 *)((u8 *)self + 0xd);
+                register u32 shifted asm("r0");
+                register u32 one asm("r1");
+                register u32 bit1 asm("r0");
+
+                shifted = dByte >> 1;
+                one = 1;
+                bit1 = shifted & one;
+                if (!bit1)
+                {
+                    void *quad;
+                    void *table = *(void **)((u8 *)self + 0x18);
+                    register void *addr asm("r0");
+                    register void *fn asm("r1");
+
+                    addr = (u8 *)self + *(s16 *)((u8 *)table + 0x10);
+                    fn = *(void **)((u8 *)table + 0x14);
+                    quad = (void *)sub_803AD7C(addr, fn);
+
+                    if (!sub_8009BE0(self, 8, quad))
+                    {
+                        {
+                            register s32 mask asm("r0") = 0x20;
+                            register s32 byte asm("r1") = *(u8 *)((u8 *)self + 0xc);
+                            register s32 result asm("r0");
+
+                            result = mask | byte;
+                            *(u8 *)((u8 *)self + 0xc) = result;
+                        }
+                        {
+                            register s32 mask asm("r0") = 7;
+                            register s32 byte asm("r2") = *p;
+                            register s32 result asm("r0");
+
+                            result = mask & byte;
+                            *p = result;
+                        }
+                    }
+                }
+            }
+        }
+        }
+    }
+
+    return *(u8 *)((u8 *)self + 0x68);
+}
+
 extern s32 sub_803AD7C(void *addr, void *fn);
 extern s32 sub_8008200(void *dest, s32 kind, void *rec);
 extern s32 sub_8008278(void *dest, s32 kind, void *rec);

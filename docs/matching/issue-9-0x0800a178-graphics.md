@@ -258,3 +258,258 @@ coincide` (checksum matches).
   untouched (raw)" entries for both functions (left as-is, per this
   project's append-only convention for per-investigation docs already
   published - this doc supersedes them going forward).
+
+## Follow-up: `sub_800A0FC`, closing the whole span (issue #9/#10)
+
+A second dedicated session against the immediate follow-up: `sub_800A0FC`
+(ROM `0x0800A0FC`, 124 bytes), `sub_800A178`'s only caller and, until
+now, the sole remaining content of `asm/code_3_2_11.s`. It stayed raw
+the first pass through this cluster because its own gate logic calls
+`sub_8009BE0` (parked NAKED, `src/graphics/actor_part12b.c`, see
+[naked-spatial-grid-tail.md](./naked-spatial-grid-tail.md)) - at the
+time that function's own semantics were still unresolved, so closing
+`sub_800A178`/`sub_800A420` alone didn't unblock this one. Both facts
+changed since: `sub_8009BE0` is now fully understood (a physics/
+collision step-probe, confirmed above and in its own doc), and
+`sub_800A178` itself is now fully understood too - together, that's
+enough to close `sub_800A0FC`'s own dispatch logic.
+
+### Reading the real bytes
+
+`sub_800A0FC` is short enough to read in full directly from
+`asm/code_3_2_11.s` (now deleted - it held only this function):
+
+```
+push {r4, r5, r6, lr}
+adds r4, r0, #0
+adds r6, r4, #0
+adds r6, #0x68
+ldrb r5, [r6]
+ldrb r1, [r4, #0xc]
+lsrs r0, r1, #7
+cmp r0, #0
+beq _0800A16C
+adds r0, r4, #0
+bl sub_800A178
+orrs r5, r0
+strb r5, [r6]
+adds r0, r4, #0
+bl sub_800A050
+movs r0, #8
+ldrb r2, [r6]
+ands r0, r2
+cmp r0, #0
+beq _0800A16C
+movs r0, #0x21
+rsbs r0, r0, #0
+ldrb r1, [r4, #0xc]
+ands r0, r1
+strb r0, [r4, #0xc]
+ldrb r2, [r4, #0xd]
+lsrs r0, r2, #1
+movs r1, #1
+ands r0, r1
+cmp r0, #0
+bne _0800A16C
+ldr r1, [r4, #0x18]
+movs r2, #0x10
+ldrsh r0, [r1, r2]
+adds r0, r4, r0
+ldr r1, [r1, #0x14]
+bl sub_803AD7C
+adds r2, r0, #0
+adds r0, r4, #0
+movs r1, #8
+bl sub_8009BE0
+lsls r0, r0, #0x18
+cmp r0, #0
+bne _0800A16C
+movs r0, #0x20
+ldrb r1, [r4, #0xc]
+orrs r0, r1
+strb r0, [r4, #0xc]
+movs r0, #7
+ldrb r2, [r6]
+ands r0, r2
+strb r0, [r6]
+_0800A16C:
+adds r0, r4, #0
+adds r0, #0x68
+ldrb r0, [r0]
+pop {r4, r5, r6}
+pop {r1}
+bx r1
+```
+
+There's a third callee alongside the two flagged in the task ticket:
+`sub_800A050` (already matched, `src/graphics/actor_part9.c`) - a
+fire-and-forget `self->table+0x70/0x74` trampoline call, its always-`0`
+return discarded. It sits between the `sub_800A178` call and the
+`self+0x68` bit-3 recheck, with no other effect on this function's
+control flow.
+
+### Semantics
+
+`sub_800A0FC(self)` returns `self+0x68` (a byte) unchanged unless
+`self+0xc` bit 7 is set - the same gate `sub_800A178` itself
+re-checks internally as its own second gate. Once past it:
+
+1. Calls `sub_800A178(self)` and OR's its result bitmask into
+   `self+0x68`. This is a **persistent, cumulative per-object
+   collision-axis mask** - distinct from `self+0x74`'s own per-call
+   scratch mask that `sub_800A178` zeroes and rebuilds every call (see
+   above). `self+0x68` just accumulates whatever axis bits
+   `sub_800A178` reports, call after call, with nothing in this
+   function ever clearing it back out except the one narrow rollback
+   in step 3 below.
+2. Fires `sub_800A050(self)` unconditionally - a side-effect-only call,
+   its return value never used.
+3. If `self+0x68` bit 3 (the Y-axis/"mode 8" bit `sub_800A178` just
+   OR'd in, if its own probes hit) is now set: clears `self+0xc` bits 0
+   and 5, then - unless `self+0xd` bit 1 is already set (ground
+   already snapped this call, `sub_800A420`'s own convention, see
+   above) - fires the *same* `self->table+0x10/0x14` "hitbox quad"
+   trampoline `sub_800A178` itself uses (confirmed identical: table
+   pointer read, signed-halfword offset at `+0x10`, function pointer at
+   `+0x14`, `sub_803AD7C(self+offset, fn)`), and runs a `mode == 8`
+   (Y-axis/floor, confirmed by `game_loop43.c`'s own `sub_8026628` mode
+   table) step-probe via `sub_8009BE0(self, 8, quad)`. If that
+   step-probe does *not* report immediate success (either a full miss,
+   or only succeeding via one of its own internal retries - see
+   `sub_8009BE0`'s doc comment), sets `self+0xc` bit 5 and clears
+   `self+0x68` bit 3 back out - **rolling back the "Y axis resolved"
+   bit `sub_800A178`'s own probes had just set**, since the more
+   thorough, independent step-probe didn't confirm it cleanly.
+4. Returns the (possibly rolled-back) `self+0x68` byte either way.
+
+Read together with `sub_800A178`/`sub_800A420`: this is the
+part-object physics dispatcher. `sub_800A0FC` is the entry point
+(called by `sub_800A884`'s per-frame reentrancy-guarded wrapper,
+`docs/rom_map.md` line ~1835 - `sub_800A884` itself fires its own
+`self->table+0x70` trampoline before calling in, a *different* `self`
+than `sub_800A050`'s own table+0x70/0x74 call operates on, so these
+aren't the same trampoline invocation despite sharing an offset
+convention). `sub_800A178` does the actual layered collision
+resolution and reports which axes it resolved this call; `sub_800A0FC`
+cross-checks the Y-axis result specifically against a second,
+independent step-probe (`sub_8009BE0`) before trusting it enough to
+leave the bit set in the persistent `self+0x68` mask - a "cheap probe,
+then confirm" two-stage design for the one axis (gravity/floor) that
+matters most for basing the object.
+
+### Matching
+
+Attempted, and closed, as real C - no `NON_MATCHING` fallback needed.
+The straightforward translation compiled to the right *shape*
+immediately (same branches, same calls, same bit tests), but diverged
+from the ROM's own register choices at several small, specific points;
+each was closed with a targeted, narrow fix rather than a blanket
+NAKED transcription, following the project's usual "isolated-compile
+first, only fall back if it's a genuine structural gap" order:
+
+- **Leading `self+0xc >> 7` gate**: this compiler's natural allocation
+  reused one register for both the `ldrb` and the `lsr` result; the
+  ROM keeps them in separate registers (`ldrb r1, ...` then
+  `lsrs r0, r1, #7`). Closed with a `flags`(`r1`)/`bit7`(`r0`)
+  register-variable pair - same "pin source and destination to
+  different explicit registers" technique already used throughout this
+  ROM neighborhood.
+- **`self+0xc &= ~0x21`**: the established "negative-constant
+  register-pinned mask" idiom already confirmed for `sub_800A734`
+  (`register s32 mask asm("r0") = -0x21`, `actor_part48.c`) reused
+  unchanged here - the ROM materializes `-0x21` via `movs`+`rsbs`
+  rather than folding the AND mask to a literal, since Thumb's `ANDS`
+  has no immediate form.
+- **`self+0x68 & 8` test**: same class of gap as the leading gate, but
+  needing a full `mask`(`r0`=8)/`byte`(`r2`=`*p`)/`result`(`r0`) triple
+  to match the ROM's specific `movs r0,#8` / `ldrb r2,[r6]` /
+  `ands r0,r2` order and register choice (this compiler's unpinned
+  natural order loaded the byte into `r1` first, then the constant into
+  `r0` - operand order reversed from the ROM's constant-first choice).
+  This one only showed up as a real mismatch during the full-ROM
+  `make compare` (the isolated single-function byte compare against
+  just `0x0800A0FC`-`0x0800A178` caught it directly too, once checked
+  carefully - see "Verification" below).
+- **`(self+0xd >> 1) & 1` gate**: the same bit-1 accessor shape as the
+  already-matched `sub_800A6C4` (`actor_part14.c`, `return
+  (self[0xd]>>1)&1;`, no pinning needed there since it's a standalone
+  function) - but inlined here alongside other already-pinned locals,
+  this compiler's allocator picked different registers than the ROM at
+  every step. Closed with a 4-register chain (`dByte` r2, `shifted` r0,
+  `one` r1, `bit1` r0) reproducing the ROM's exact
+  `ldrb r2,.../lsrs r0,r2,#1/movs r1,#1/ands r0,r1` sequence.
+- **`self->table+0x10/0x14` trampoline**: reused `sub_800A050`'s own
+  already-established "compute the trampoline address before loading
+  the function pointer" register-pinned ordering (`addr` r0 computed
+  first, `fn` r1 loaded second, reusing the dying `table` pointer
+  register) - the same idiom, just retargeted from offset `0x70/0x74`
+  to `0x10/0x14`. The signed-halfword offset load itself
+  (`*(s16*)(table+0x10)`) needed no pinning at all: Thumb's `LDRSH` has
+  no immediate-offset encoding, so the compiler is forced to
+  materialize the `0x10` constant into a register and emit a
+  register-offset `ldrsh` regardless of source phrasing, which already
+  matches the ROM's own `movs r2,#0x10`/`ldrsh r0,[r1,r2]` shape
+  unpinned.
+- **`sub_8009BE0`'s return value truthy test**: the ROM narrows the
+  return value via `lsls r0,r0,#0x18` before the zero test (Thumb has
+  no `AND #0xff` immediate form, and a sub-word return value isn't
+  guaranteed clean in the upper bits at the call site). This fell out
+  automatically once `sub_8009BE0` was locally declared returning `u8`
+  (matching how `sub_800A420` is itself declared `u8` despite the same
+  narrowing dance appearing at *its* own call sites in `sub_800A178`) -
+  declaring it `s32` instead skipped the narrowing entirely and
+  produced a plain `cmp r0,#0` with no `lsl`, an immediate byte
+  mismatch.
+- **Trailing `self+0xc |= 0x20` and `self+0x68 &= 7` writes**: both
+  needed the same `mask`(`r0`)/`byte`(`r1`-or-`r2`)/`result`(`r0`)
+  register-pinned pattern as the `~0x21` clear above, since this
+  compiler's unpinned natural order for both was byte-then-constant,
+  opposite the ROM's constant-then-byte choice; the second one also
+  needed the byte register specifically pinned to `r2` (not `r1`) to
+  match the ROM's own choice there.
+
+No genuinely resistant register-allocation gap turned up anywhere in
+this function - every divergence was a "compiler's unpinned natural
+choice differs from the ROM's own, but both are valid allocations"
+case, closed with a direct, targeted register pin rather than an
+opaque `asm volatile` block or a NAKED fallback.
+
+### Verification
+
+Isolated `cpp`/`agbcc`/`as` + `objcopy`/`cmp` pipeline against
+`baserom.gba`'s own bytes at `0x0800A0FC`-`0x0800A178` (124 bytes)
+confirmed byte-exact before integration - this caught the `self+0x68 &
+8` test's constant-vs-byte register-order gap directly (a 5-byte
+mismatch at `0x0800A11E`-`0x0800A122` on the first full-ROM `make
+compare` attempt, traced back to that one test not yet being
+register-pinned) once compared carefully against the ROM's own
+disassembly rather than skimmed. After the fix: full clean `rm -rf
+build && make NON_MATCHING=1 report` (no warnings from the new
+function), then `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
+crashbandicootxs.map && make compare` - `crashbandicootxs.gba: La suma
+coincide` (checksum matches).
+
+### Build layout
+
+`sub_800A0FC` was added directly to `src/graphics/actor_part110.c`
+(prepended before `sub_800A178`), the same translation unit as the
+NAKED `sub_800A178`/`sub_800A420` - the same "NAKED function sharing a
+file with matched ones" precedent already established for `sub_8008044`/
+`actor_part3.c`. `asm/code_3_2_11.s` is retired entirely (it held only
+`sub_800A0FC`) and removed from `ldscript.txt`; `actor_part110.o` now
+sits directly between the trimmed `actor_part9.o` and `actor_part47.o`
+in link order, with no raw `.s` gap between `actor_part9.o` and
+`actor_part110.o` any more.
+
+### Cross-references (follow-up)
+
+- `docs/status/actor.md` - new `src/graphics/actor_part110.c` bullet
+  in "Matched" for `sub_800A0FC`; the stale "Left raw" entry for it
+  removed; the `actor_part14.c` bullet's "large raw span" note
+  corrected (that span was never fully raw - `sub_800A528`/
+  `sub_800A590` were already matched in `actor_part47.c`).
+- `tools/report_units.py` - the `0x0800A0FC` unit's `base_object`
+  changed from `None` to `"src/graphics/actor_part110.o"` (matched);
+  the `0x0800A178` unit's comment updated to note it now shares that
+  object with the matched `sub_800A0FC`.
+- `ldscript.txt` - `asm/code_3_2_11.o` line removed.

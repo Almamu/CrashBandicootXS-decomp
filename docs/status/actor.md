@@ -135,10 +135,38 @@ from "core" graphics.
   `sub_800A0CC`, `sub_800A0D8`, `sub_800A0E0`, `sub_800A0EC`,
   `sub_800A0F4`
 
+- `src/graphics/actor_part110.c` (issue #9/#10 follow-up - see
+  [docs/matching/issue-9-0x0800a178-graphics.md](../matching/issue-9-0x0800a178-graphics.md)):
+  `sub_800A0FC` - the part-object physics dispatcher, the sole caller
+  of `sub_800A178` (both now share this file). Was left raw the first
+  pass since its own gate logic calls `sub_8009BE0`, then still-
+  unresolved; `sub_8009BE0` is now fully understood (see "Parked -
+  NAKED transcription" below), which was enough to close this one as
+  real, byte-exact matched C. Returns `self+0x68` (a persistent,
+  cumulative per-object collision-axis mask, distinct from
+  `sub_800A178`'s own per-call `self+0x74` scratch mask) unchanged
+  unless `self+0xc` bit 7 is set; if set, calls `sub_800A178` and OR's
+  its result into `self+0x68`, fires the already-matched `sub_800A050`
+  trampoline, then - if `self+0x68` bit 3 (the Y-axis bit) is now set -
+  clears `self+0xc` bits 0/5 and, unless `self+0xd` bit 1 is already
+  set, cross-checks the Y-axis hit via a second, independent
+  `sub_8009BE0(self, 8, quad)` step-probe, rolling `self+0xc` bit 5 in
+  and `self+0x68` bit 3 back out if that probe doesn't also confirm it.
+  Needed direct register pinning at several points to reproduce the
+  ROM's exact register choices (a `flags`/`bit7` pair for the leading
+  gate test, the established negative-constant-mask idiom for the
+  `&= ~0x21` clear, a 4-register chain for the `(self+0xd>>1)&1` gate,
+  `sub_800A050`'s own addr-before-fn trampoline ordering reused for
+  `self->table+0x10/0x14`, and two more mask/byte/result pairs for the
+  trailing `|= 0x20`/`&= 7` writes). Retires `asm/code_3_2_11.s`
+  entirely (it held only this function).
+
 - `src/graphics/actor_part14.c` (new file - `sub_800A5F4`'s real ROM
   address isn't adjacent to `actor_part9.c`'s matched functions
-  either, since a large raw span (`sub_800A0FC`-`sub_800A590`) sits
-  between them; see `docs/matching.md`): `sub_800A5F4`, `sub_800A600`,
+  either, since a raw/parked span (`sub_800A178`-`sub_800A590`,
+  `sub_800A178`/`sub_800A420` NAKED-parked but `sub_800A528`/
+  `sub_800A590` matched in `actor_part47.c`) sits between them; see
+  `docs/matching.md`): `sub_800A5F4`, `sub_800A600`,
   `sub_800A604`, `sub_800A650`, `sub_800A664`, `sub_800A6A4`,
   `sub_800A6C4`, `sub_800A6D0`, `sub_800A6DC`, `sub_800A6E8`,
   `sub_800A6F4`, `sub_800A700`, `sub_800A70C`, `sub_800A718`,
@@ -1438,13 +1466,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   - real GBA hardware-affine sprite-matrix setup; already flagged in
   `docs/matching.md` as needing "a dedicated session" of its own, not
   attempted again here - see
-  `docs/matching/issue-9-0x08007634-actor.md`.
-- **`sub_800A0FC`** (`asm/code_3_2_11.s`, ROM 0x0800A0FC, GitHub issue
-  #9) - a part-object update/collision dispatcher calling `sub_800A178`
-  (now examined and NAKED-parked, see "Parked - NAKED transcription"
-  above and `docs/matching/issue-9-0x0800a178-graphics.md`) and
-  `sub_8009BE0` (also NAKED-parked); left raw itself since its own gate
-  logic depends on `sub_8009BE0`'s still-unresolved semantics - see
   `docs/matching/issue-9-0x08007634-actor.md`.
 - **`sub_800AC2C`/`sub_800AFF4`** (`asm/code_3_2_16_ac2c.s`, ROM
   0x0800AC2C-0x0800B270, GitHub issue #9/#10) - a 38-case player
