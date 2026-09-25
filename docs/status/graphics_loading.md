@@ -80,9 +80,10 @@ below.)
   for the three compiler-codegen quirks (all fixed with small
   `asm volatile` blocks) needed to close this one byte-exact. The rest
   of the family is now closed too - see `sub_801EF0C`-`sub_801FCB4`
-  below (issue #31, sixth pass) and `sub_8021280`-`sub_802155C`
-  further down for the rest of what used to be raw in
-  `asm/code_3_2_17_1e990.s`/`asm/code_3_2_17_1feec.s`.
+  below (issue #31, sixth pass), `sub_801FEEC`-`sub_8020D4C` (issue #31,
+  seventh pass), and `sub_8021280`-`sub_802155C` further down for the
+  rest of what used to be raw in `asm/code_3_2_17_1e990.s`/
+  `asm/code_3_2_17_1feec.s` (both now fully retired).
 - **`sub_801F050`**, **`sub_801F170`**, **`sub_801F680`**
   (`src/graphics/graphics_loading_1ef0c.c`) - issue #31, sixth pass:
   three more "two-line text popup" siblings, real C (the other nine
@@ -114,6 +115,22 @@ below.)
   transcription" below. See
   [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md)'s
   "Fourth pass".
+- **`sub_8020B0C`** (`src/graphics/graphics_loading_1feec.c`) - issue #31,
+  seventh pass: the one function in what used to be
+  `asm/code_3_2_17_1feec.s` that avoids the r7-callee-saved-set wall
+  (push {r4,r5,r6,lr} plus one extra high register via r8, not r7) - a
+  "two-line text popup" sibling, tag 0x13, whose header is dereferenced
+  through its own fresh r0 return value before aliasing into r8 (the
+  same idiom `sub_801F680`/`sub_802155C` already established), matched.
+  The other twelve functions in this file (`sub_801FEEC`, `sub_8020010`,
+  `sub_8020138`, `sub_802026C`, `sub_80203A8`, `sub_80204EC`,
+  `sub_802062C`, `sub_8020788`, `sub_80208C4`, `sub_80209EC`,
+  `sub_8020C18`, `sub_8020D4C`) are NAKED, see "Parked - NAKED
+  transcription" below. This retires `asm/code_3_2_17_1feec.s` entirely -
+  the file no longer exists, replaced by this new object at the same
+  point in `ldscript.txt`. See
+  [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md)'s
+  "Seventh pass".
 - **`sub_8021388`**, **`sub_802155C`** (`src/graphics/graphics_loading_21280.c`)
   - issue #31, fifth pass: two more "two-line text popup" siblings
   (`sub_8021388` builds its header via `sub_801A838`; `sub_802155C` is
@@ -228,6 +245,23 @@ plain C didn't converge.
   gated by a `gStaticData_0816C86C`-indexed guard check.
 - **`sub_8021480`** (`src/graphics/graphics_loading_21280.c`) - one more
   "two-line text popup" sibling.
+- **`sub_801FEEC`**, **`sub_8020010`**, **`sub_8020138`**,
+  **`sub_802026C`**, **`sub_80203A8`**, **`sub_80204EC`**,
+  **`sub_802062C`**, **`sub_8020788`**, **`sub_80208C4`**,
+  **`sub_80209EC`**, **`sub_8020C18`**, **`sub_8020D4C`**
+  (`src/graphics/graphics_loading_1feec.c`) - issue #31, seventh pass:
+  twelve more "two-line text popup" siblings. Every instruction's
+  operation matches the ROM (confirmed via isolated compile), but each
+  one's ROM disassembly needs r7 in its callee-saved push/pop set
+  (shadowed through r5/r6/r7 alongside sb/r8, or sl/sb/r8, or just r6/r7
+  alongside sb/r8) - the same "this compiler only adds a hard-pinned
+  register to a function's callee-saved set when it tracks that
+  register as holding a value live across a wider span than a single
+  inline-asm block" gap already documented for `sub_8021280`/
+  `sub_8021480`/`sub_802190C` and the nine `graphics_loading_1ef0c.c`
+  functions above. Transcribed instruction-for-instruction instead. See
+  [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md)'s
+  "Seventh pass".
 
 Both hit the same confirmed `r7`-pin gap as `sub_8007114`
 (src/graphics/graphics.c) and `sub_802190C` above - see

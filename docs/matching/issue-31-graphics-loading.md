@@ -682,3 +682,121 @@ twin-family shape, a separate already-parked wall per this issue's own
 scope note at the top of this document) - the whole `sub_801EF0C`-
 `sub_801FCB4` stretch is now real, always-compiled code (3 matched, 9
 NAKED), tracked in `docs/status/graphics_loading.md`.
+
+## Seventh pass: `asm/code_3_2_17_1feec.s` (`sub_801FEEC`-`sub_8020D4C`, 13 functions)
+
+Picked up the raw file `sub_801FDEC` (second pass, above) was split out
+of - the whole `asm/code_3_2_17_1feec.s` that survived intact since the
+third pass carved `trigger_effect.c`'s twin family out of the *middle*
+of the original larger raw file, leaving this 13-function stretch as its
+own still-raw remainder (`tools/report_units.py`'s own comment on this
+range called it "most of the rest of the chunk 31 range"). All 13 are
+one more set of "two-line text popup" family instances, same numbered
+skeleton as documented at the top of this file: a `sub_8009ED0`-built
+part object, a `gUnknown_030012D0`-rooted `+0x20` table offset, a
+`sub_800815C` frame-nibble update, a `gUnknown_030012B4` two-bit
+"collected" pack into `+0x28`, a `gUnknown_030012F0` manager
+registration, and a header (`sub_800CA74`) with one or two `sub_803AD80`
+trampoline calls - varying only the embedded offsets/constants and tail
+shape (a header->0x84 double-rewrite plus a record-field/struct-field
+copy; the standard OAM trio; a plain record-relookup feeding
+`sub_800C6A8`/`sub_800C898`; a bit-27 re-test). New file:
+`src/graphics/graphics_loading_1feec.c`, replacing
+`asm/code_3_2_17_1feec.o` at the same point in `ldscript.txt` - this
+retires that raw file entirely.
+
+### Matched: `sub_8020B0C`
+
+The one function in this stretch whose ROM disassembly avoids the r7
+gap: `push {r4, r5, r6, lr}` plus a single lo-register copy of `r8` (no
+`sb`, no `r7` at all), same overall register footprint as
+`sub_801F050`/`sub_801F680` (`graphics_loading_1ef0c.c`) rather than the
+4-low-register-plus-extra-high-registers shape every other function in
+this file needs. Reconstructed as real C using exactly those two
+functions' established idioms: `part` pinned in `r5`, `hdr` pinned in
+`r8` and dereferenced through its own fresh `r0` return value before
+being aliased into `r8` (the same "avoid an immediate-offset load off a
+high-register base" trick `sub_801F680`/`sub_802155C` already
+established), a hand-spelled `asm volatile` island for the whole
+constructor-call prologue (raw-register truncation, the `arg3` stash
+into `r4`, and the `bl sub_8009ED0` itself), and the same
+`register s32 one asm("r6")`-cached collected-bits-pack block
+`sub_801F050` uses. Tail is a "second header->0x84 rewrite" variant
+that reuses one already-computed address (`hdr + 0x84`, pinned in `r1`)
+for both stores rather than recomputing it, with a `part->field_0A`
+overwrite (`1` then `7`) sandwiched in between - the same
+"value-before-address" ordering and address-reuse-across-statements
+technique established throughout this cluster.
+
+One genuine transcription slip surfaced only by the full clean
+`make compare` (an isolated compile alone would have hidden it, since
+both spellings are instruction-plausible - see docs/workflow.md's
+standing warning about exactly this): the collected-bits-pack's own
+byte-load scratch register. `sub_801F050`'s version of this same block
+uses `r3` for `ldrb r3, [r2]` because that function's `hdr` lives in
+`r4` (so `r4` isn't free to reuse as scratch there); `sub_8020B0C` has
+`idx` (not `hdr`) living in `r4`, and `idx`'s register is dead by this
+point in the block (fully consumed by the address computation just
+before), so the ROM reuses `r4` itself for the byte load instead -
+matching `sub_801FDEC`'s own version of this exact block, not
+`sub_801F050`'s. A first draft copied `sub_801F050`'s `r3` spelling
+verbatim without re-deriving which register was actually free in this
+function's own layout, producing a checksum failure isolated to exactly
+2 bytes (`0x08020ba6`-`0x08020ba7`) by a raw byte `cmp` against
+`baserom.gba` - fixed by using `r4` for both the `ldrb` and the
+following `lsr`, matching the ROM exactly. The lesson generalizes: which
+scratch register a "reuse the dead index/pointer register" idiom picks
+depends on what's *actually* live in the surrounding function, not on
+which sibling function's version of the same block happens to look most
+similar - each instance needs its own liveness check against its own
+register assignment, not a blind copy from the nearest matched sibling.
+
+### Parked as NAKED: the other twelve
+
+`sub_801FEEC`, `sub_8020010`, `sub_8020138`, `sub_802026C`,
+`sub_80203A8`, `sub_80204EC`, `sub_802062C`, `sub_8020788`,
+`sub_80208C4`, `sub_80209EC`, `sub_8020C18`, `sub_8020D4C` all hit the
+confirmed r7-callee-saved-set gap this issue has now documented many
+times over: each one's ROM disassembly needs r7 in its
+`push {r4,r5,r6,r7,lr}`/`pop {...,r7}` prologue/epilogue (shadowing
+`sb`/`r8`, or `sl`/`sb`/`r8`, or, for `sub_8020010`, just `r8` alone
+through `r7`), while r7 itself is used only as scratch inside disjoint
+single-instruction islands (the `+0x29` nibble reload, the
+collected-bits pack's mask-byte reload) - never a value this compiler's
+own allocator tracks as live across a wider span, which is the
+precondition every technique in this project's toolbox needs to get a
+register into the callee-saved set at all. No new technique was tried
+this pass beyond what `sub_8021280`/`sub_8021480`/`sub_802190C` and the
+nine `graphics_loading_1ef0c.c` functions already exhausted for this
+exact wall - transcribed instruction-for-instruction from the ROM
+disassembly instead, per this project's established NAKED escape hatch.
+Every instruction's *operation* was confirmed matching via isolated
+compile before transcription for all twelve. Two tail-shape variants
+worth noting that hadn't appeared in quite this form before:
+
+- **`sub_802062C`/`sub_8020788`** need all three extra high registers
+  (`sl`/`sb`/`r8`) simultaneously, the widest register footprint of any
+  function in this file - `sub_802062C` additionally spills its `+0x28`
+  record address to a 4-byte stack slot (`sub sp, #4`) across the
+  `sub_8008E94` manager-registration call, reloading it from `sp`
+  afterward rather than keeping it in a register the call might
+  clobber.
+- **`sub_80204EC`/`sub_8020D4C`** share a "dependent `sub r0, #0x4b`"
+  mask idiom distinct from this cluster's usual `mov #N`/`neg` idiom:
+  `part->field_0A` is set to `0xa` (leaving that value live in `r0`),
+  then `r0` is directly decremented by `0x4b` (`0xa - 0x4b = -0x41`) and
+  ANDed into the flags byte - reusing the just-stored constant rather
+  than materializing a fresh negated mask from zero.
+
+### Verification
+
+Full clean `make compare` (`La suma coincide`) and `make NON_MATCHING=1
+report`, both passing. This retires `asm/code_3_2_17_1feec.s` entirely -
+the file no longer exists, replaced by `src/graphics/graphics_loading_1feec.c`
+at the same point in `ldscript.txt`. 1 of the 13 functions in this file is
+real C, the other 12 are NAKED, tracked in `docs/status/graphics_loading.md`
+and `tools/report_units.py`. Issue #31 stays open - the remaining raw/parked
+scope (the "trigger effect type N" twin-family shape at
+`sub_801EA5C`-`sub_801EE3C`, plus every NAKED/`NON_MATCHING` entry this
+issue has accumulated across all seven passes) is unchanged by this pass
+beyond adding twelve more already-parked NAKED entries.
