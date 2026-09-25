@@ -924,3 +924,197 @@ full clean `rm -rf build && make NON_MATCHING=1 report` (no warnings)
 and `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` (`crashbandicootxs.gba: La suma
 coincide`).
+
+## Phase 4 (this pass): `sub_800C6A8`/`sub_800C860`/`sub_800C87C`/`sub_800C898` closed - the `menu_ui` connection resolved
+
+Follow-up session, tackling the last four functions of the old
+`asm/code_3_2_17_c6a8.s` (now fully retired): `sub_800C6A8` (440 B,
+`docs/rom_map.md`'s "menu_ui's own 31-callsite 18-state dialog-widget
+update"), and the three small `self+0x70`-relative accessor triples
+the existing tracking comment already flagged, `sub_800C860`/
+`sub_800C87C`/`sub_800C898` (28 B/28 B/20 B, 76 B total). This is the
+last raw remainder of the original 43-function `0x0800B8DC`-`0x0800D040`
+cluster's `asm/code_3_2_17_c6a8.s` slice (other still-raw asm files
+split off by earlier phases are unaffected by this session - see "What's
+still open" below).
+
+### Resolving the "menu_ui" framing: same struct, not a different one
+
+`docs/rom_map.md`'s existing note ("A parallel fork then found a
+genuine surprise connecting two previously-separate categories")
+already established that `sub_800C6A8` is called from all 31 confirmed
+`menu_ui` dispatch-table entries and reads that as "the `+0x74`/
+18-state shape isn't only a player-physics pattern, it's a
+general-purpose stateful-widget convention reused for dialog boxes
+too" - explicitly *not* claiming the same struct, just the same
+convention. Reading `sub_800C6A8`'s full body this pass sharpens that:
+it isn't merely convention-sharing, it's the *literal same*
+`self`/`owner` object shape as the rest of this cluster - `self+0x70`
+("owner"), `self+0xc` ("anchor" record with the same `{s16 offset,
+void *fn}` pairs), `self+0x84` (the per-instance pointer table
+`sub_800C8CC` indexes by mode) - and its case bodies' `bl` targets are
+the *exact same* `sub_800B704`/`sub_800B838`/`sub_803AD84` primitives
+already matched for `sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC`
+(`actor_part113.c`, Phase 2). `menu_ui`'s dialog widgets are literal
+instances of the same object type the physics-actor cluster's own
+`sub_800B8DC` operates on (or at minimum, share 100% of the field
+layout and helper functions this function touches) - not a
+structurally-similar sibling type as the "convention, not struct"
+phrasing left open.
+
+One consequence worth flagging for whoever eventually commits a named
+struct: `sub_800C6A8`'s case bodies never call `sub_800C8AC`/
+`sub_800C8BC`/`sub_800C8CC` as functions. Each case that needs their
+behavior *manually re-inlines* those three helpers' own instruction
+sequences instead (confirmed by the raw `bl` targets: `sub_800B838`/
+`sub_800B704` directly, never the three wrapper functions themselves) -
+i.e. this particular translation unit's source didn't factor the
+`(self,mode)` triggers out into the shared helpers the rest of the
+cluster uses, even though it performs the exact same operations.
+
+### `sub_800C6A8`'s 18-state dispatch map
+
+`self+0x74` is the state selector, same 1-18 range-check shape as
+`sub_800B8DC`. Every state ultimately funnels into one of two
+building blocks: an inlined "fire the anchor's `+0x50`/`+0x54` pair via
+`self->0x84[mode]`" trigger (the exact operations `sub_800C8CC`
+performs, just not through a call to it) and/or an inlined
+`sub_800C8BC`/`sub_800C8AC`-equivalent call to `sub_800B838`/
+`sub_800B704` (mode cached into `self->0x78`/`self->0x7c` first, same
+as the real wrappers).
+
+| States | Behavior |
+|---|---|
+| 1, 3, 17 | Inlined trigger, mode 0. |
+| 2, 15 | `self->0x78=1; sub_800B838(self,owner,1)` (i.e. `sub_800C8BC(self,1)`-equivalent), then inlined trigger mode 0. |
+| 4, 14, 16 | If `self->0x38 < self->0x30`: inlined trigger mode 0, then if `self->0x6c != 0x1b` return immediately (skip the tail below). Else (`self->0x38 >= self->0x30`): inlined trigger mode 4 (`self->0x84[4]` instead of `[0]`). Either way (except the early return above), falls into a shared tail: `owner->0x30 = keyframeTable[owner->0x2d].0x16 - 1` (`owner->0x20`'s own first field is the actual 28-byte-stride table base - the same "`+0x20` table pointer, `+0x2d` row index, 28-byte stride" convention `sub_800D040`/`sub_800C40C` already establish, here read directly by `sub_800C6A8` rather than through those functions). |
+| 5 | Inline-only, no trigger call: seeds `owner`'s full `0x48`-`0x5c`/`0x64` velocity-target sextet with a fixed Q8.8 impulse (`-1.5` X, `4.0` Y - `owner->0x60=owner->0x48=owner->0x50=-0x180`, `owner->0x4c=0`, `owner->0x64=owner->0x54=owner->0x5c=0x400`, `owner->0x58=0`) and sets `owner->0xc` bit 7 (`|= 0x80`). |
+| 6, 9, 10, 11 | Inlined trigger, mode 0 - a *second*, separately-compiled copy of the exact same instruction sequence as states {1,3,17}, at a different jump-table address (see "Matching" below for why this matters). |
+| 7 | `self->0x78=2; sub_800B838(self,owner,2)`, inlined trigger mode 0, then `self->0x80=0`. |
+| 8 | `self->0x78=3; sub_800B838(self,owner,3)`; `self->0x7c=3; sub_800B704(self,owner,3)` (i.e. both `sub_800C8BC(self,3)`- and `sub_800C8AC(self,3)`-equivalent), then inlined trigger mode 0. |
+| 12 | No-op (falls straight to the shared epilogue). |
+| 13, 18 | `self->0x78=1; sub_800B838(self,owner,1)`, then falls straight into the *same* body as states {4,14,16} (physically adjacent in ROM - no separate jump target). |
+
+**Shared epilogue (every state falls through to it, including the
+no-op default)**: `self->0x60 = owner->0; self->0x64 = owner->4` -
+caches `owner`'s current position into `self`'s own `0x60`/`0x64`
+fields every single call, regardless of which state ran.
+
+### `sub_800C860`/`sub_800C87C`/`sub_800C898`: the accessor triple
+
+All three read `owner` (`self+0x70`) and derive an X- or Y-axis
+homing-bound pair on `self`, the same `self+0x10`/`0x14` (X) and
+`self+0x18`/`0x1c` (Y) fields `sub_800C18C`/`sub_800C1E8` (Phase 3)
+already consume as their own bounds:
+
+- **`sub_800C860(self, radius, p2, p3)`**: `self->0x10 = owner->0 -
+  (radius<<8)`, `self->0x14 = owner->0 + (radius<<8)` (X bounds,
+  `radius` in tiles, converted to Q8.8), plus `self->0x5c = p3;
+  self->0x58 = p2` (two more `self`-local fields, not resolved further
+  this pass - not the same role as `owner`'s own `0x58`/`0x5c` velocity-
+  target slots, since these are `self`'s fields, and the two accessors
+  below overwrite them identically regardless of axis).
+- **`sub_800C87C(self, radius, p2, p3)`**: same shape, Y axis - note the
+  field order is reversed relative to X: `self->0x1c` (the *lower*
+  bound) is `owner->4 - (radius<<8)` and `self->0x18` (the *upper*
+  bound) is `owner->4 + (radius<<8)`, i.e. `0x18` before `0x1c` in
+  offset order but *after* it in "low/high" role order - confirmed
+  directly from the ROM's own store order, not assumed.
+- **`sub_800C898(self, radius)`**: `sub_800C860`'s X-bounds half only,
+  no `p2`/`p3` cache, no `owner` field beyond `+0`.
+
+### Matching
+
+**`sub_800C6A8`**: NAKED, not real C - the size/branch-count and
+`self`/`owner` multi-field-liveness shape already established as
+resistant throughout this cluster (`sub_800B8DC`/`sub_800BD48`/
+`sub_800C074`/`sub_800C244`/`sub_800C40C`/`sub_800C5D4`, all NAKED for
+the same underlying reason), plus a second, independent hazard unique
+to this function: states {1,3,17} and {6,9,10,11} compile the
+*textually identical* inlined trigger sequence at *two different*,
+never-merged jump-table addresses. This is the exact tail-merging trap
+the Phase 3 "leaves" section already documents this agbcc build
+hitting on `sub_800C18C` (there, unifying two call sites the ROM keeps
+duplicated) - a real-C `switch` with two case groups sharing one
+literal body would very likely get cross-jump-merged by gcc 2.9's
+`-O2` into one shared block, producing code that's byte-*shorter* than
+the ROM's own (which keeps them apart), the same failure mode already
+proven unfixable for `sub_800C18C` even after heavy register-pinning.
+Given both hazards are independently already-documented-unfixable in
+this exact ROM neighborhood, and per this session's brief explicit
+permission to skip re-litigating an already-proven-resistant shape for
+a function this large, no real-C attempt was made - transcribed
+directly as NAKED asm instead, following this project's established
+conventions (unified mnemonics, GNU-as local numeric labels - all
+forward references only, since this function's control flow never
+branches backward, `ldr rX, =literal` + explicit `.pool` at each of the
+ROM's own two internal literal-flush points, matching
+`actor_part112.c`'s own established style for this exact family of
+dispatcher).
+
+**`sub_800C860`/`sub_800C87C`/`sub_800C898`**: matched as real C,
+needing one iteration each. The naive direct translation
+(`self->field = *(s32*)owner - (radius<<8); self->otherField =
+*(s32*)owner + (radius<<8);`) got every field and the reload-not-cache
+behavior right (the ROM genuinely reloads `owner`'s position fresh for
+each of the two stores, rather than caching it in a local - confirmed
+by the ROM's own two separate `ldr` instructions) but placed the
+`radius<<8` shift *before* the `owner` field load in each pair, while
+the ROM computes the load first. Fixed with a register-pinned local
+plus an empty `asm volatile("" : "+r"(x))` compiler barrier
+immediately after each load (the established
+`matching_decomp_register_pinning` idiom) - forcing the load to
+materialize before the shift can be scheduled, without changing which
+physical register either the compiler or the ROM already agreed on
+(`r4` for `sub_800C860`/`sub_800C87C`, `r2` for the leaf-function
+`sub_800C898`, matching each function's own natural register choice
+exactly). `sub_800C898` additionally needed the
+`matching_decomp_alignment_fix` trailing `asm(".align 2, 0")` idiom
+(its own 20-byte body isn't 4-byte-aligned against the next function's
+start, `sub_800C8AC` at the cluster's already-matched
+`actor_part113.c` boundary).
+
+Confirmed byte-identical to `baserom.gba` at `0x0800C6A8`-`0x0800C8AC`
+(516 bytes, all four functions) via the isolated cpp/agbcc/as +
+objcopy/cmp pipeline (the only differences from a direct ROM slice
+were the jump table's own absolute-address entries and `bl` relocation
+sites, both of which resolve correctly once linked), plus a full clean
+`rm -rf build && make NON_MATCHING=1 report` (no warnings) and
+`rm -rf build crashbandicootxs.elf crashbandicootxs.gba
+crashbandicootxs.map && make compare` (`crashbandicootxs.gba: La suma
+coincide`).
+
+### Techniques used
+
+- Hand-transcribed NAKED asm for `sub_800C6A8` (established escape
+  hatch for this ROM region), all-forward-reference GNU-as local
+  numeric labels (this function has no backward branches at all, every
+  jump-table entry and every internal `b`/`bne`/`blt` targets a label
+  physically later in the function).
+- `matching_decomp_register_pinning`: a register-pinned local plus an
+  empty `asm volatile` compiler barrier, forcing the ROM's own
+  "load-then-shift" instruction order in `sub_800C860`/`sub_800C87C`/
+  `sub_800C898` without otherwise changing the generated code.
+- `matching_decomp_alignment_fix`: trailing `asm(".align 2, 0")` for
+  `sub_800C898`'s own non-4-aligned trailing byte count.
+
+### Build layout
+
+All four functions now live in the new `src/graphics/actor_part122.c`.
+`asm/code_3_2_17_c6a8.s` is fully consumed and removed. `ldscript.txt`'s
+single `build/crashbandicootxs/asm/code_3_2_17_c6a8.o(.text);` line is
+replaced with `build/crashbandicootxs/src/graphics/actor_part122.o(.text);`
+in place. `tools/report_units.py`'s `(0x0800C6A8, None, "graphics")`
+placeholder is replaced with a matched entry for `actor_part122.o`.
+
+### What's still open in the wider cluster
+
+This closes the entire old `asm/code_3_2_17_c6a8.s` slice. As of this
+pass, the cluster's remaining raw asm files are `asm/code_3_2_17_bfa8.s`
+(just `sub_800BFA8` itself, ~204 B, a further `self+0x68`/`0x74`-style
+dispatcher per `docs/rom_map.md`), `asm/code_3_2_17_ca04.s`
+(`sub_800CA04`-`sub_800CBC0`, unexamined this pass), and
+`asm/code_3_2_17_cbf4.s` (`sub_800CBF4` onward through `sub_800CCE0` -
+includes `sub_800CBF4` itself, already flagged in the Phase 3 leaves
+section as "three repetitions of the flag-active-plus-bitmap-set idiom
+... left raw for time-budget reasons, not because found resistant").
