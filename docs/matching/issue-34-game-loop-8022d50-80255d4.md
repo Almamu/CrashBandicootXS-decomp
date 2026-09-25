@@ -180,3 +180,136 @@ pass and stayed parked `NON_MATCHING` in `src/system/game_loop12.c` at
 the time - it has since been matched as real C (the whole raw file is
 now gone) - see
 [docs/matching/issue-41-game-loop-25894.md](issue-41-game-loop-25894.md).
+
+## `UpdateGameFrame` - NAKED transcription, `src/system/game_loop55.c`
+
+Picked up the last big raw piece of the `UpdateGameFrame`-`MainLoop`
+cluster: `UpdateGameFrame` itself (ROM `0x080225A0`-`0x08022BF0`, ~730
+instructions), called once a frame from `MainLoop`
+(`src/system/main_loop.c`) with `self` = `gUnknown_030012C0` - the same
+per-level state object `sub_8022BF0`/`sub_8022CA0` (`game_loop.c`) and
+the `self+0x80`-`0xc4`/`+2` accessor family (`game_loop2.c`) already
+operate on. `docs/matching.md`'s original entry for this chunk (search
+"GitHub issue #34: `0x080225A0`-`0x080231C4`") sketched the shape but
+flagged its own transition-target list as possibly loose transcription
+and left the end-of-frame stack slots uncharacterized; this pass traced
+every branch against the raw ROM bytes directly and confirms/corrects
+both.
+
+**Confirmed 5-case player-state dispatch map.** The switch key is
+`self->0xc4 - 0x14` (`bhi`-gated to 0-4; anything else falls through to
+a separate `self->0xdc`-level-object-state-3` OR-set branch, see
+below). Crucially, `self->0xc4` is *not* a separate "player state"
+field distinct from the retry-loop's frame-tick counter documented
+below - it is the exact same field, doing double duty: clamped to
+`<=0x17` (23) and fed to `sub_801BAF0` every retry-loop pass, *and*
+used as the switch key here. So the 5 special states are literally
+`self->0xc4` values `0x14`-`0x18` (20-24). Corrected transition-target
+map (the original doc's `sub_8023190`/`8184`/`819C`/`80231A8`
+ordering was slightly off against the real per-case targets):
+
+| case | gate (skip transition if true) | transition callee | extra work | `sub_8022468` mode |
+|---|---|---|---|---|
+| 0 | `sub_80231BC` | `sub_8023190` | `sub_801D41C`, `sub_80067D4` | 4 |
+| 1 | `sub_80231CC` | `sub_80231A8` | `sub_801D41C`, `sub_80067C4` | 5 |
+| 2 | `sub_80231B4` | `sub_8023184` | `sub_801D41C`, `sub_80067B4` | 6 |
+| 3 | `sub_80231C4` | `sub_802319C` | `sub_801D41C`, `sub_80067A4`, then unconditionally: `sub_800697C(self) > 0x63` frames increments `self->0xc4` (advances to the next state) and zeroes `*(self+0xc8)`, mode 8, `goto` the post-category-reset block directly; otherwise mode 0xa | 8 or 0xa |
+| 4 | (none - unconditional) | (none) | `sub_80354BC` | 9 |
+
+Values >4 (i.e. `self->0xc4` outside `0x14`-`0x18`) instead check
+`self->0xdc`'s level object's `+8` state field; if it's `3`,
+OR-sets bit 0 on `sub_8023404(self)`'s returned byte pointer (a flags
+byte on a per-frame sub-object). All 5 gate functions return "still
+in this state, do nothing more" when true; the transition callee only
+fires when the gate says "no longer in this state."
+
+**Level-load loop** (function entry, before the state dispatch):
+allocates a `0x220`-byte scratch buffer (`sub_8026EDC`, matches
+`src/graphics/level_graphics.c`'s own doc comment for this exact
+allocation) and hands it straight to `LoadLevelGraphics`, then polls
+`sub_8035E14`; while it returns `2` ("still loading") the loop calls
+`sub_80354BC` (map/progress-screen trigger) and repeats. Once
+`sub_8035E14` returns something else: `0` triggers
+`sub_8022468(*gUnknown_030012C0, 2)`, anything nonzero triggers a
+`sub_8004D4C`/`sub_800300C(1,0)`/`sub_8004D20` input-poll bracket
+(purpose not chased further, out of scope for this pass).
+
+**End-of-frame stack-slot semantics** (the doc's "8 still-
+uncharacterized SP-relative locals" - there are 7 word-slots plus the
+one scratch halfword at `sp+0`, all now traced):
+
+- `sp+0x0` (halfword): a single zeroed halfword, used once as the DMA3
+  fixed-source operand for the entry-time zero-fill below; dead after.
+- `sp+0x4`: a snapshot of `self->0x78` taken once, at the start of each
+  fresh per-level dispatch round (`self->0x78` is a progress/lives-style
+  counter judging by `game_loop.c`'s `sub_8022BF0`). Read back exactly
+  once, at the *top* of the outer state-dispatch loop (label reached
+  only via the loop-back branches at the very end of the function):
+  when the just-finished category loop's status flag (`r8`) was `2`
+  ("done"), `self->0x78` gets clamped to not exceed this saved value -
+  a rollback guard preventing the counter from advancing past what it
+  was when the current dispatch round started.
+- `sp+0x8` = `&self->0xac`.
+- `sp+0xc` = `&self->0xbc`.
+- `sp+0x10` = `&self->0xcc`.
+- `sp+0x14` = `&self->0xe0` (byte field).
+- `sp+0x18` = `&self->0xe4`.
+
+`self->0xe4` and `self->0x14c` are a **double-buffered `0x68`-byte
+snapshot pair** of `self`'s own first `0x68` bytes (`0xe4 + 0x68 ==
+0x14c`, confirmed adjacent) - DMA3-zeroed via the classic fixed-source
+trick at function entry (`self[0:0x68)` zeroed by 52 fixed-source
+16-bit DMA3 writes, control word `0x81000034`: bits 24-23 = `10`
+source-fixed, bit 26 = 0 sixteen-bit unit, count = `0x34` = 52
+halfwords = `0x68` bytes), then copied to `self+0x14c` as the initial
+backup. Every pass through the retry loop (top label reached both from
+function entry and via `beq`-back-to-self) restores `self[0:0x68)`
+*from* `self+0x14c` (undo whatever the previous attempt did), then
+re-snapshots the freshly-restored bytes into `self+0xe4` (a second,
+independent backup) before deciding via `sub_801BAF0(&self->0xc4)`
+whether to proceed (byte result `0`) or poll input and possibly clear
+`self->0xe0` and retry (nonzero result).
+
+**Category-processing loop** (the function's other major loop,
+entered once the retry loop and state dispatch above both settle):
+walks `self->0xdc`-style "current category" objects, gating everything
+on an `r8`-resident status flag persisted across iterations - `0`
+means "keep going," `1` means "check `sub_803AFEC(self) < 0` for an
+early exit," `2` means "stop the whole per-category loop now." Inside
+each iteration: `sub_8024404`/`sub_80232B8` gate one
+`gUnknown_030012B4` bitmap flush+ping-pong-to-`self+0x1b4` cycle into
+`sub_8022BF0`; `sub_80243E0`/`sub_8023290` gate a parallel second
+cycle into `sub_80235E4` (same ping-pong shape, different consumer -
+apparently two independent bitmap "channels"). The loop's tail
+(`sub_80232B8`/`sub_8023290` again) decides between two closing
+branches that both refresh the HUD icon via `sub_8024464` +
+`sub_8028568`: the "true" branch also refills `self+0xb0`/`0xb8`/`0xb4`
+(`sub_802325C`/`sub_803AFEC`/`sub_8023414`) via `sub_8024540`; the
+"false" branch only refills `self+0xb4` via `sub_8024524`. Either way
+the loop re-enters at its own top unless `sub_802455C(&self->0xc4)`
+says otherwise, at which point control falls to the end-of-frame block
+that (if `gUnknown_03001318`, the HUD object, is non-null) calls
+`sub_8028574(hud, 3)`, then decides whether to loop all the way back to
+the outer state-dispatch entry (`sub_803AFEC(self) >= 0`, or
+`sub_8034CB0()` true after also re-running `sub_80231E4(self)`) or
+finally return to `MainLoop` - meaning a single `UpdateGameFrame` call
+from `MainLoop` can internally re-run its entire state-dispatch +
+category-loop body multiple times before actually returning.
+
+**NAKED, not plain C.** At this instruction count with three registers
+persisted across the *entire* function body (`r7` = `&self->0xc4`, `sl`
+= `&self->0xc8`, `r8`/`sb` alternating as a category-status flag and
+`&gUnknown_030012B4`) plus the six SP-relative field-address slots
+above all live simultaneously across two nested nine-way-branch loops,
+this is well past the register-pressure range this project's C
+reconstruction toolbox (register pins, opaque `asm volatile`
+materialization, `goto`-based restructuring) has closed in one pass -
+no attempt was made to force a plain-C reconstruction of the whole
+730-instruction body; the semantic trace above stands on its own.
+Transcribed mechanically from the confirmed-traced ROM disassembly
+(previously `asm/code_3_2_17_225a0.s`, now retired) - every mnemonic
+converted to this project's suffix-less-Thumb-mnemonic convention and
+every named label renumbered to GNU local numeric labels, with no
+semantic changes. Full clean `make compare` (`La suma coincide`)
+confirms the transcription byte-exact; `make NON_MATCHING=1 report`
+compiles the new `src/system/game_loop55.c` warning-free.
