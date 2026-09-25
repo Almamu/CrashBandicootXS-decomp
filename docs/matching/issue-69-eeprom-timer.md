@@ -326,3 +326,164 @@ identical class of gap, documented in their own issues:
   entry.
 - `docs/status/system.md`, `docs/status/util.md`,
   `docs/status/actor.md` - matched/parked lists updated.
+
+## `sub_803AA08` un-parked: real C, not NAKED (follow-up pass)
+
+Revisited the four still-`NAKED`-transcription functions from the pass
+above (`sub_803AA08`/`sub_803AAD4`/`sub_803AB54`/`sub_803AC04`) to see
+whether any of the previously-catalogued register-allocation gaps were
+actually closeable with techniques not yet tried, rather than accepting
+the NAKED transcriptions as final. **`sub_803AA08` closed** (now real C
+in `src/system/timer_util.c`, byte-verified via a full clean `make
+compare`); the other three did not, for reasons recorded below.
+
+**What closed `sub_803AA08`:** all three gaps the original "narrowed
+this pass" write-up above left open turned out to be fixable, plus one
+new one surfaced along the way:
+
+1. **The `REG_IF`/`REG_IE` shift operand-order gap.** Splitting
+   `idx = gUnknown_03001620;` onto its own statement line before
+   `*regAddr = bit << idx;` forces the index load before the constant
+   load, matching the ROM - the same "own statement" fix already
+   established for `sub_803AA90`'s analogous `REG_IE &=` line. The
+   `REG_IE` half's shift reuses `bit`'s pinned register **in place**
+   (`bit <<= idx;`) rather than copying to a fresh temp first, since
+   its value isn't needed again afterward - this falls out naturally
+   from writing it as a compound assignment instead of a second
+   `tmp = bit; tmp <<= idx;` copy. One trap along the way: writing the
+   *first* (`REG_IF`) computation as `u16 tmp = bit; tmp <<= idx;`
+   with `tmp` a plain (unpinned) local produces an extra, ROM-absent
+   `lsls r1, r1, #0x10` / `lsrs r1, r1, #0x10` truncate-and-shift pair
+   - this compiler appears to only trust a shift's 16-bit truncation to
+   already be correct when the destination is a pinned register or the
+   shift is a single expression (`*regAddr = bit << idx;`), not when
+   it's assigned into an intermediate plain `u16` local first. Using
+   the single-expression form for the first computation avoids the
+   spurious truncate and still lets the compiler pick its own r7
+   scratch copy for `bit`'s value (needed since `bit` must survive
+   unmodified for the second, in-place-shifted use below it) - r7 was
+   never pinned, consistent with `matching_decomp_register_pinning`'s
+   categorical r7 ban; it's what the unforced allocator reaches for on
+   its own once `bit`'s cross-statement lifetime forces *some* register
+   to hold the copy.
+2. **`regAddr` walking from `REG_ADDR_IF` to `REG_ADDR_IE` via
+   `regAddr--;`** (pointer arithmetic on the already-loaded address)
+   rather than a second absolute-address load reproduces the ROM's
+   `subs r3, #2` instead of a second `ldr`.
+3. **The final-restore-reuses-r8 gap, PLUS a new prerequisite gap it
+   was hiding:** pinning a `vu16 * volatile *addrPtrPin asm("r8")` and
+   assigning it from the plain `addrPtr` local (itself now pinned
+   `asm("r3")` to match the ROM's own register choice there) is not
+   enough on its own - this compiler proves the r8 copy is redundant
+   (the value is still live in a low register for the whole function
+   anyway) and silently elides the pin *and* the entire r8 detour,
+   keeping everything in one low register start-to-finish instead of
+   stashing across the busy IF/IE section the way the ROM does. This
+   is the same class of "pin silently dropped once proven unnecessary"
+   behavior `matching_decomp_register_pinning` documents for r7, except
+   here it hit r8 too, on a pin that's semantically necessary for the
+   *shape* to match even though it's redundant for *correctness*. Fix:
+   an `asm volatile("" : "+r" (addrPtrPin))` barrier immediately after
+   the assignment forces the value to actually materialize in r8 at
+   that point (the compiler can no longer prove the copy has no
+   observable effect once an opaque asm statement claims to both read
+   and write it). With the pin genuinely surviving, reloading it into a
+   *fresh* plain local (`lowPtr = addrPtrPin;`) right before the first
+   of the two trailing stores, then using that same `lowPtr` - not
+   `addrPtrPin` again - for the second store, reproduces the ROM's
+   "one r8 reload, reused for both stores" shape exactly instead of
+   two separate reloads.
+4. **`arg0` has to be walked with `arg0++; *arg0` / `arg0[1]`, not
+   `arg0[1]` / `arg0[2]` indexed from the original base.** The ROM's
+   own `adds r0, #2` between the first and second halfword reads only
+   appears when the pointer is actually incremented in C; computing
+   both offsets from the same unmodified base collapses to two
+   `ldrh`s with different immediate offsets and no increment
+   instruction at all.
+5. **Three remaining scratch-register picks needed explicit, narrowly-
+   scoped pins to land on the exact register the ROM's own compile
+   picked**, where this compiler's unforced allocator preferred a
+   different (but equally valid) one: the two `REG_IME` low-register
+   copies bracketing the busy middle section (`r2` for the first,
+   `r3` for the last - each introduced as its own `register vu16
+   *imeScratchN asm("rN")` in a small nested `{ }` scope, assigned from
+   the already-pinned `imeAddr` and used immediately, rather than one
+   pin reused twice) and the `gUnknown_03001628`-pointer load itself
+   (`addrPtr`, pinned `r3`). Left unpinned, this compiler consistently
+   preferred `r1` for all three instead - not wrong, just not what the
+   ROM's own build happened to pick.
+6. **One statement-order trap on the very last store**, caught only by
+   the full-build checksum (the isolated per-file compile matched
+   instruction-for-instruction *before* this fix was even needed,
+   which turned out to be misleading - see below): writing
+   `imeScratch2 = imeAddr; *imeScratch2 = 1;` materializes the `r3`
+   copy *before* the constant `1`, but the ROM does `movs r0, #1`
+   *first* and only then `mov r3, sb` - i.e. the constant has to be
+   assigned to its own named local (`u16 one; one = 1; imeScratch2 =
+   imeAddr; *imeScratch2 = one;`) so the constant-materialization
+   statement textually precedes the pointer-copy statement, the same
+   operand-order principle as point 1 above, just applied to a store's
+   value operand instead of a shift's.
+
+**A methodology note worth recording:** the isolated per-file compile
+matched the real ROM instruction-for-instruction, register-for-
+register, literal-pool-entry-for-literal-pool-entry - by every
+diagnostic available *before* the full build - and still produced a
+mismatching checksum on the first attempt (point 6 above). Per
+`docs/workflow.md` step 3/6, an isolated compile is a diagnostic tool,
+never proof, and this is exactly the kind of case that principle is
+for: `cmp`-ing the built ROM against `baserom.gba` and disassembling
+around the first differing byte (`0x0803AA61`, inside the function's
+final `mov`/`movs` pair) found the swapped statement order immediately.
+Do not skip the full clean `make compare` step even when an isolated
+diff already looks perfect.
+
+**Why `sub_803AAD4`/`sub_803AB54`/`sub_803AC04` still didn't close:**
+this pass re-attempted `sub_803AAD4`'s busy-wait tail specifically,
+since `sub_803AA08`'s r8-pin fix (point 3 above) suggested the
+"compiler proves something's redundant and silently drops it" family
+of gaps might be more generally fixable with the same `asm volatile("" 
+: "+r" (x))` barrier trick. It **partially** works: wrapping the
+barrier around the loop's address pointer, positioned between the
+leading `if` check and the trailing `do {} while`, **does** force a
+genuine two-basic-block `if` + `do-while` control-flow shape instead of
+the single top-tested `while` loop every previous phrasing (plain
+`while`, `if`+`do-while`, `if`+`while`, `goto`) collapsed into - a real,
+new result. What it does *not* fix is the register/literal-pool
+duplication the ROM also has: the ROM's first check computes
+`DMA3CNT_H`'s address via runtime pointer arithmetic reusing the
+register that's still live from the immediately-preceding
+`DMA3CNT = ...` store (`add r1, #2`), while its second check
+(inside the loop) loads a completely separate literal-pool entry for
+the same absolute address into a different register. Because
+`&REG_DMA3CNT + 2` and `REG_ADDR_DMA3CNT_H` are both compile-time
+constants that fold to the identical literal value, this compiler's
+constant-folding unifies them into one shared literal-pool entry and
+one shared address register for both checks regardless of the barrier
+- the barrier prevents the *loaded value* from being reused (forcing
+the real second `ldrh`/`ands`/`cmp`/`bne` block to exist at all), but
+an `asm volatile` memory clobber doesn't stop two provably-equal
+compile-time address constants from sharing a register, since no
+memory was read to produce the address in the first place. Forcing a
+literal, un-folded second load would need routing the second address
+through opaque inline asm (e.g. `asm volatile("ldr %0, =0x040000DE" :
+"=r" (p))`), which is no longer really "plain C" and trades this gap
+for exactly the kind of hand-embedded-literal-pool problem the
+original `sub_803AAD4` doc comment above already ruled out for the
+same reason. Left parked. `sub_803AB54`/`sub_803AC04` were not
+re-attempted this pass - their documented gaps (the outer bit-unpack
+loop's mask/counter spilling into `r12` once this compiler's allocator
+runs out of low registers at that point, and `sub_803AC04`'s busy-wait
+tail hitting the identical loop-shape-collapse issue analyzed above for
+`sub_803AAD4`) are a genuine low-register-pressure ceiling for the
+former and the same unresolved constant-folding issue for the latter,
+not a gap this pass's new techniques had any real leverage on.
+
+**Files touched this pass:**
+- `src/system/timer_util.c` - `sub_803AA08` now real C, matched (no
+  longer `NAKED`).
+- `tools/report_units.py` - `sub_803AA08`'s entry merged into the
+  preceding `sub_803A944` `timer_util.o` entry (both now point at the
+  same matched object).
+- `docs/status/system.md` - `sub_803AA08` moved from the "Parked -
+  NAKED asm transcription" list into the matched `timer_util.c` entry.

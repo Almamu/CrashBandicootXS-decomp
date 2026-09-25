@@ -34,12 +34,15 @@ category page - see [game_loop.md](./game_loop.md).
   un-improvable trampolines with no real C logic to express, kept
   matched per `docs/matching.md`'s frozen convention), `sub_803A968`
   (picks a 12-byte `EepromConfig` table by chip-size code), `sub_803A9D0`
-  (claims a hardware timer, hands back an IRQ-handler-stub address) -
-  GitHub issue #69, see `docs/matching/issue-69-eeprom-timer.md`. (Its
-  `sub_803AA08` is a NAKED transcription tracked as parked - see below.)
+  (claims a hardware timer, hands back an IRQ-handler-stub address),
+  `sub_803AA08` (arms the claimed timer - real C, not NAKED; register-
+  pinning/statement-ordering techniques documented in the function's own
+  doc comment) - GitHub issue #69, see
+  `docs/matching/issue-69-eeprom-timer.md`.
 - `src/system/timer_util_aa90.c` (own file - its real ROM address,
-  `0x0803AA90`, sits between the parked `sub_803AA08` and `sub_803AAD4`,
-  so it isn't adjacent to `timer_util.c`'s own matched functions):
+  `0x0803AA90`, sits between the matched `sub_803AA08` and the parked
+  `sub_803AAD4`, so it isn't adjacent to `timer_util.c`'s own matched
+  functions):
   `sub_803AA90` (disarms the timer `sub_803AA08` claims) - GitHub issue
   #69, see `docs/matching/issue-69-eeprom-timer.md`. (Its `sub_803AAD4`
   is a NAKED transcription tracked as parked - see below.)
@@ -92,10 +95,6 @@ frozen decomp.dev baseline now (`expected/legacy.s`) - see
 
 ## Parked - NAKED asm transcription (byte-correct, not decompiled C)
 
-- **`sub_803AA08`** (`src/system/timer_util.c`, arms the claimed
-  hardware timer) - a handful of narrow register-allocation gaps a
-  plain-C reconstruction couldn't close. GitHub issue #69, see
-  `docs/matching/issue-69-eeprom-timer.md`.
 - **`sub_803AAD4`** (`src/system/timer_util_aa90.c`, the DMA3
   block-transfer helper used by the whole EEPROM cluster) - the
   busy-wait tail's loop-rotation/literal-pool-placement shape isn't

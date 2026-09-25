@@ -129,85 +129,105 @@ extern u16 gUnknown_03001622;
  * IF/IE, copies `arg0`'s three u16 fields into the module's globals and
  * the timer's reload/control registers, then restores IME.
  *
- * Written as NAKED asm, not plain C: an earlier pass's plain-C
- * reconstruction (see docs/matching/issue-69-eeprom-timer.md) got the
- * field/register access and literal-pool ordering right but never
- * closed the last few instructions - the `REG_IF = 8 <<
- * gUnknown_03001620` shift's operand-evaluation order, the following
- * `REG_IE |=` store's result register, and the final restore re-using
- * the still-live r8 copy instead of re-fetching it - a cluster of
- * small scratch-register choices this compiler wouldn't reproduce
- * simultaneously no matter how the C was rephrased. Every one of those
- * was already independently confirmed correct at the semantic level in
- * that pass's write-up, so this is a mechanical, byte-verified
- * transcription of the ROM's own instructions (translated from the
- * disassembler's unified syntax to this project's established NAKED
- * plain/divided syntax, local labels renumbered per
- * docs/matching/issue-4-sio-settings-sync.md's convention), not an
- * inferred control-flow guess. */
-NAKED void sub_803AA08(u16 *arg0)
+ * Real C, not NAKED asm: the last three register-allocation gaps this
+ * function parked on (the `REG_IF = 8 << gUnknown_03001620` shift's
+ * operand-evaluation order, the `REG_IE |=` store's result register,
+ * and the final restore re-fetching r8 instead of reusing the still-
+ * live low-register copy from three instructions earlier) all turned
+ * out to be closeable, not fundamental compiler limitations:
+ * - The shift-order gap: writing `idx = gUnknown_03001620;` as its own
+ *   statement before `*regAddr = bit << idx;` forces the index load
+ *   before the constant, matching the ROM (same fix as
+ *   `sub_803AA90`'s `REG_IE &=` line); the REG_IE half reuses `bit`'s
+ *   register in place for its second, in-place shift instead of a
+ *   fresh copy, exactly like the ROM.
+ * - `regAddr` walks IF -> IE via `regAddr--` (pointer arithmetic on
+ *   the already-loaded address) rather than a second absolute load,
+ *   reproducing the ROM's `subs r3, #2`.
+ * - The `gUnknown_03001628`-pointer dance needed an
+ *   `asm volatile("" : "+r" (addrPtrPin))` barrier right after copying
+ *   it into the r8-pinned variable: without it, gcc proves the r8 copy
+ *   redundant (the address is still live in a low register the whole
+ *   function) and elides the pin entirely, keeping everything in a low
+ *   register instead of stashing across the busy IF/IE section the way
+ *   the ROM does. The barrier forces the value to actually live in r8,
+ *   after which reloading it into a fresh low-register local right
+ *   before both trailing stores (and reusing that same local, not the
+ *   pin again, for the second store) reproduces the ROM's "one r8
+ *   reload, reused for both stores" shape exactly.
+ * - `arg0` has to be walked with `arg0++`/`*arg0`, not `arg0[1]`/
+ *   `arg0[2]` indexing - the ROM's own `adds r0, #2` between the first
+ *   and second halfword reads only appears when the pointer is
+ *   actually incremented in C, not when both offsets are computed from
+ *   the original base.
+ * - Three remaining scratch-register picks (the two `REG_IME` low-
+ *   register copies bracketing the busy middle section, and the
+ *   `gUnknown_03001628` load itself) needed explicit pins (`r2`/`r3`/
+ *   `r3` respectively, each in their own short-lived nested scope) to
+ *   land on the exact registers the ROM's compile picked over the
+ *   ones this compiler's unforced allocator preferred instead; per
+ *   `matching_decomp_register_pinning`, r7 was never pinned - the
+ *   ROM's own `r7` scratch copy in the IF computation falls out of
+ *   natural allocation once `bit`'s value has to survive to be reused
+ *   unshifted in the IE computation below it.
+ * Verified instruction-for-instruction against an isolated compile of
+ * this file before being folded into the full build - see
+ * docs/matching/issue-69-eeprom-timer.md. */
+void sub_803AA08(u16 *arg0)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sb\n\t"
-        "mov r6, r8\n\t"
-        "push {r6, r7}\n\t"
-        "ldr r2, 1f\n\t"
-        "ldr r1, 2f\n\t"
-        "mov sb, r1\n\t"
-        "ldrh r1, [r1]\n\t"
-        "strh r1, [r2]\n\t"
-        "mov r6, #0\n\t"
-        "mov r2, sb\n\t"
-        "strh r6, [r2]\n\t"
-        "ldr r3, 3f\n\t"
-        "mov r8, r3\n\t"
-        "ldr r5, [r3]\n\t"
-        "strh r6, [r5, #2]\n\t"
-        "ldr r3, 4f\n\t"
-        "ldr r4, 5f\n\t"
-        "ldrb r1, [r4]\n\t"
-        "mov r2, #8\n\t"
-        "add r7, r2, #0\n\t"
-        "lsl r7, r1\n\t"
-        "add r1, r7, #0\n\t"
-        "strh r1, [r3]\n\t"
-        "sub r3, #2\n\t"
-        "ldrb r1, [r4]\n\t"
-        "lsl r2, r1\n\t"
-        "ldrh r1, [r3]\n\t"
-        "orr r1, r2\n\t"
-        "strh r1, [r3]\n\t"
-        "ldr r1, 6f\n\t"
-        "strb r6, [r1]\n\t"
-        "ldr r2, 7f\n\t"
-        "ldrh r1, [r0]\n\t"
-        "strh r1, [r2]\n\t"
-        "add r0, #2\n\t"
-        "ldrh r1, [r0]\n\t"
-        "strh r1, [r5]\n\t"
-        "add r1, r5, #2\n\t"
-        "mov r2, r8\n\t"
-        "str r1, [r2]\n\t"
-        "ldrh r0, [r0, #2]\n\t"
-        "strh r0, [r5, #2]\n\t"
-        "str r5, [r2]\n\t"
-        "mov r0, #1\n\t"
-        "mov r3, sb\n\t"
-        "strh r0, [r3]\n\t"
-        "pop {r3, r4}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "1: .4byte gUnknown_0300162C\n"
-    "2: .4byte 0x04000208\n"
-    "3: .4byte gUnknown_03001628\n"
-    "4: .4byte 0x04000202\n"
-    "5: .4byte gUnknown_03001620\n"
-    "6: .4byte gUnknown_03001624\n"
-    "7: .4byte gUnknown_03001622\n"
-    );
+    register vu16 *imeAddr asm("r9");
+    register vu16 * volatile *addrPtr asm("r3");
+    register vu16 * volatile *addrPtrPin asm("r8");
+    vu16 * volatile *lowPtr;
+    vu16 *ptr;
+    register u8 idx asm("r1");
+    register u16 bit asm("r2");
+    register u16 zero asm("r6");
+    vu16 *regAddr;
+
+    gUnknown_0300162C = *(imeAddr = (vu16 *)REG_ADDR_IME);
+    zero = 0;
+    {
+        register vu16 *imeScratch asm("r2");
+        imeScratch = imeAddr;
+        *imeScratch = zero;
+    }
+
+    addrPtr = &gUnknown_03001628;
+    addrPtrPin = addrPtr;
+    asm volatile("" : "+r" (addrPtrPin));
+    ptr = *addrPtr;
+    *(vu16 *)((u8 *)ptr + 2) = zero;
+
+    regAddr = (vu16 *)REG_ADDR_IF;
+    idx = gUnknown_03001620;
+    bit = 8;
+    *regAddr = bit << idx;
+    regAddr--;
+
+    idx = gUnknown_03001620;
+    bit <<= idx;
+    *regAddr |= bit;
+
+    gUnknown_03001624 = zero;
+
+    gUnknown_03001622 = arg0[0];
+    arg0++;
+    *ptr = *arg0;
+
+    {
+        vu16 *incPtr = (vu16 *)((u8 *)ptr + 2);
+        lowPtr = addrPtrPin;
+        *lowPtr = incPtr;
+    }
+    ((u16 *)ptr)[1] = arg0[1];
+    *lowPtr = ptr;
+
+    {
+        u16 one;
+        register vu16 *imeScratch2 asm("r3");
+        one = 1;
+        imeScratch2 = imeAddr;
+        *imeScratch2 = one;
+    }
 }
