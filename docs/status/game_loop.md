@@ -62,8 +62,8 @@ system from "core" system startup/init code.
   `sub_802375C` - the level-start dispatcher that allocates the
   per-level HUD widget set, the player actor, and the text-box
   singleton, then dispatches on a widget-kind field to construct one of
-  three counter/ring-buffer widgets before handing off to the still-raw
-  `sub_8023A1C`. See
+  three counter/ring-buffer widgets before handing off to `sub_8023A1C`
+  (now parked `NAKED`, see below). See
   [docs/matching/issue-37-game-loop-2375c.md](../matching/issue-37-game-loop-2375c.md)
   for the register-pinning/evaluation-order gotchas that closed this
   out.
@@ -320,6 +320,36 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
+
+- **`sub_8023A1C`** (`src/system/game_loop56.c`, new file - GitHub
+  issue #37, ROM `0x08023A1C`-`0x0802400C`) - the ~650-instruction
+  level-lifecycle state machine `sub_802375C` unconditionally hands off
+  to (`game_loop39.c`). Its 6-case jump table (state `1`/`6` share one
+  code block) fires `sub_8027018` "fx queue" calls - a palette
+  color-cycle animation (`(u16 *)0x05000000`, GBA palette RAM, passed
+  as the queue's own `targets` argument) rather than the HUD-digit
+  rotation that function's other call sites drive - against
+  `gStaticData_0816C814`/`0816C81E`/`0816C830`/`0816C842`/`0816C862`,
+  now confirmed as plain, tightly-packed `u16[]` index-list arguments
+  (each exactly `list_count * 2` bytes, back-to-back in ROM) rather
+  than per-level records with their own shape - closing that open
+  question. Past the dispatch, a shared tail rebuilds the player's OAM
+  entry and re-derives its `+0x29` low nibble, then a wait loop polls
+  `sub_80241B0` (`gUnknown_03000830`, `game_loop9.c`) until ready before
+  firing the fade (`sub_80014A4`), and a post-fade tail counts
+  `gUnknown_0300130C` entries in physics state `0xA`
+  (`gStaticData_0816BC98`'s own convention,
+  [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md))
+  before flushing every hot IWRAM widget-manager global. Parked `NAKED`
+  rather than real C: beyond the sheer instruction count, the state
+  `1`/`6` and state `5` jump-table targets converge on one shared
+  physical tail block *mid-case-body* (after state 1/6's second
+  `sub_8027018` call has already begun loading its own arguments) -
+  compiler-internal cross-jump-table-target block sharing this
+  project's `goto`-restructuring toolbox targets *within* one `switch`,
+  not across two separate jump-table entries. See
+  [docs/matching/issue-37-game-loop-2375c.md](../matching/issue-37-game-loop-2375c.md)
+  for the full dispatch map. **This closes GitHub issue #37.**
 
 These are byte-exact (confirmed by a full clean `make compare`), but
 as `NAKED` functions whose body is the ROM's own disassembly
@@ -835,18 +865,3 @@ plain C didn't converge.
   [docs/matching/issue-14-0x08010d54-physics-apply.md](../matching/issue-14-0x08010d54-physics-apply.md)
   for the full write-up. **This closes the entire `0x08010D54`
   physics/collision-apply chunk (GitHub issue #12/#14).**
-
-## Still raw, category-mapped (GitHub issue #34/#40)
-
-- **`sub_8023A1C`** (`asm/code_3_2_17_23a1c.s`, ROM
-  `0x08023A1C`-`0x08024007`, GitHub issue #37) - a ~650-instruction
-  jump-table-driven level-lifecycle continuation, called
-  unconditionally from `sub_802375C` (now matched, `game_loop39.c` -
-  see
-  [docs/matching/issue-37-game-loop-2375c.md](../matching/issue-37-game-loop-2375c.md)).
-  `sub_8027018`'s call shape is now confirmed against all four of this
-  function's own call sites, but the `gStaticData_0816C8xx` tables it
-  indexes and a few other callees (`sub_80266BC`, `sub_8023484`) aren't
-  characterized precisely enough yet to commit to a byte-exact
-  reconstruction of this size - see
-  [docs/matching/issue-37-game-loop-2375c.md](../matching/issue-37-game-loop-2375c.md).

@@ -157,3 +157,154 @@ their record shape not derived. A good next target for a dedicated pass.
 
 See [docs/status/game_loop.md](../status/game_loop.md) for the updated
 matched/parked/raw lists.
+
+## `sub_8023A1C` - closed, parked `NAKED` (dedicated follow-up pass)
+
+Full branch-by-branch trace, confirming and extending everything the
+previous pass above left open.
+
+### The 6-case dispatch map
+
+Opening: index `gStaticData_0816C86C` by `self+0` (the confirmed
+36-slot, 0x24-byte-stride per-level master table - `settings_menu19.c`/
+`oam_count.c`/`game_loop17.c` all have their own struct view of it).
+Read its `+0x1c` "initialized" guard byte (calls `sub_8023484` once if
+still clear), feed its `+0x14`/`+0x18` fields straight through to
+`sub_8023118`/`sub_8023110`, then dispatch on its `+4` field
+(`state - 1`, clamped `[0,5]`; `state == 0` or `state > 6` takes the
+`default` path):
+
+| jump-table index | `state` | code |
+| --- | --- | --- |
+| 0 | 1 | `_08023B20` (shared with index 5) |
+| 1 | 2 | `_08023AF4` |
+| 2 | 3 | `_08023B60` |
+| 3 | 4 | `_08023BC4` (== `default`) |
+| 4 | 5 | `_08023B8C` |
+| 5 | 6 | `_08023B20` (shared with index 0) |
+
+Every non-default case resets `gUnknown_030012C8` (the `hud_fx_queue`
+`hud_icon_slot.c` documents) via `sub_8027088`, then fires
+`sub_8027018(queue, targets, lists, angle, list_count, direction)`:
+
+- **state 1 or 6**: *two* calls -
+  `sub_8027018(queue, (u16 *)0x05000000, gStaticData_0816C81E, 0x10, 9, 0)`
+  then `sub_8027018(queue, (u16 *)0x05000000, gStaticData_0816C830, 0x14, 9, 0)`.
+- **state 2**: `sub_8027018(queue, (u16 *)0x05000000, gStaticData_0816C814, 6, 5, 1)`
+  (the only case with `direction=1`).
+- **state 3**: `sub_8027018(queue, (u16 *)0x05000000, gStaticData_0816C842, 0xa, 0x10, 0)`.
+- **state 5**: `sub_8027018(queue, (u16 *)0x05000000, gStaticData_0816C862, 0x14, 5, 0)`.
+- **default** (state 0/4/`>6`): no reset, no `sub_8027018` call - just
+  clears the queue's own `active` byte directly.
+
+`(u16 *)0x05000000` is GBA palette RAM itself, passed straight through
+as the queue's `targets` argument - this is a **palette color-cycle
+animation**, reusing the exact same generic rotate-by-index-list engine
+`sub_8026F54`/`sub_8027018`'s other (HUD-digit) call sites drive, not a
+new mechanism.
+
+**Resolves the open table-shape question**: `gStaticData_0816C814`
+(5 entries), `0816C81E` (9), `0816C830` (9), `0816C842` (0x10), and
+`0816C862` (5) are not per-level records - they're plain, tightly
+packed `u16[]` "permutation index list" arguments to `sub_8027018`'s
+own `lists` parameter. Confirmed via address deltas exactly matching
+each call site's own `list_count` argument (`0816C814`->`0816C81E`:
+0xA = 5*2; `0816C81E`->`0816C830`: 0x12 = 9*2; `0816C830`->`0816C842`:
+0x12 = 9*2; `0816C842`->`0816C862`: 0x20 = 0x10*2) - no gap, no
+padding, no further struct needed.
+
+**A genuine compiler-internal code-sharing quirk, not a modeling
+error**: state 5's setup falls straight into label `_08023BA6`
+(`mov r3, #0x14; bl sub_8027018; b _08023BCC`), and state 1/6's *second*
+`sub_8027018` call (after its first call has already completed and its
+second call's `targets`/`list_count` args are already loaded into
+`sb`/`r8`) jumps into that *same* physical label mid-setup, rather than
+having its own separate `angle=0x14`/`bl`/`b` copy. Both calls share
+`angle=0x14, direction=0`; only the `lists` pointer and `list_count`
+differ, and the compiler evidently folded the two calls' identical
+tails into one block. This is cross-jump-table-target block sharing,
+not a within-one-switch-statement `goto`-fallthrough shape - out of
+reach for this project's usual `goto`-restructuring technique, which
+targets exactly the latter.
+
+### Shared tail, wait loop, and post-fade
+
+The 5 non-default cases (plus the default's direct clear) converge on
+one tail: `sub_80240E4(self)`/`sub_802423C()`, then a widget-kind check
+(`self->0x18->+8`, the same field `sub_802375C` dispatched its own
+widget-construction switch on) that - if `1` - re-stamps the player's
+`+0x2d` byte to `0x1f` and refreshes its OAM entry
+(`sub_80087C0`/`sub_80087B4`/`sub_800872C`), then unconditionally
+recomputes the player's `+0x29` low nibble from `sub_800815C(player)`
+(the established negative-constant bit-clear idiom) and fires
+`sub_8006D08` against the tile-asset cache using a `player+0x20`-table
+lookup indexed by `player+0x2d * 7` (0x1c-byte stride), then flushes
+`gUnknown_030012D4` (`sub_8026DFC`) and the text-box singleton
+(`sub_8026984`).
+
+If the widget kind is `0`: probes `sub_80232B8`/`sub_8024404` or
+`sub_8023290`/`sub_80243E0` (level-object and self readiness checks);
+on success, clears the player's busy bit 7, re-stamps `+0x2d` to
+`0x29`, refreshes the OAM entry again, plays a sound effect
+(`gUnknown_030012BC` as sample id, priority `0x2c`, via `PlaySfx`),
+fires the `player+0x44`-table's `sub_803AD80` trampoline (mode
+`0x29`), repeats the same `sub_8006D08` tile-cache call, and pings
+`gUnknown_03001318` (`sub_8028504`).
+
+Either way: flushes the four HUD ring-buffer managers (`sub_8008C80`
+on `030012F4`/`EC`/`F0`/`F8`), a `sub_802400C(self)` refresh, and the
+fade-cluster `sub_8001524(0)`/`sub_80015E0`/`sub_8001614`/`sub_8001624`
+reset quartet, landing at the **wait loop** (confirming and completing
+`docs/rom_map.md`'s earlier trace): poll `sub_80241B0` each iteration;
+while not ready and the player's `+0xc` bit 0 is clear, run one more
+pass (`sub_802423C`/`sub_802400C`, a `sub_8004D74` input-driven mini-
+dispatch that can early-exit the whole function with return value `1`
+or `2` after firing `sub_80241BC`'s level-end teardown, a
+`gUnknown_030007E0` input-flag-gated `sub_8028504` ping, `sub_800891C`
+on three ring-buffer managers, two `sub_803AD7C` trampoline probes
+against the player's own `+0x18`/`+0x38`/`+0x18` tables, `sub_80091D4`
+on `gUnknown_0300130C`, `sub_8028400`, and a `gUnknown_030012C0+0x8c`-
+gated `sub_8022F2C` call) before looping back. Once ready: fires the
+fade (`sub_80014A4`).
+
+**Post-fade** (converging at `_08023F92`): sets the return value to
+`0`, tries two `sub_802356C` "spawn" dispatches gated by
+`sub_8024404`/`sub_80232B8`/`sub_8023104` or
+`sub_80243E0`/`sub_8023290` (both skip straight to the flush tail on
+failure); falling through both, loops `gUnknown_0300130C` counting
+entries whose `sub_803AD7C` trampoline probe returns `3` *and* whose
+own `+0x4e` tag is `0xa` (the physics-subsystem state tag
+`gStaticData_0816BC98` indexes,
+[docs/matching/issue-12-physics-collision.md](issue-12-physics-collision.md)),
+then calls `sub_8023140(gUnknown_030012C0, count)`.
+
+**Final tail** (every path converges here): flushes all five hot IWRAM
+widget-manager globals (`sub_8008CEC` on `030012E8`/`EC`/`F0`/`F8`/`F4`,
+`sub_8009914` on `0300130C`), resets the fade cluster's own bitfield
+accessors (`sub_8001578`/`sub_8001564`/`sub_8001550`/`sub_800153C`/
+`sub_800158C`/`sub_80006A8`/`sub_8001614`), and returns `sl` - `1` by
+default, `2` from the wait-loop's `sub_8004D74`-driven early exit, or
+`0` once the post-fade branch was reached. `sub_802375C` itself stashes
+and returns this value unmodified.
+
+### Matching result: parked `NAKED`
+
+Not attempted as real C. Beyond the ~650-instruction size (already
+past this project's demonstrated C-reconstruction ceiling for
+`game_loop`-neighborhood jump-table functions - `UpdateGameFrame`,
+`sub_8017AB0`), the state 1/6 <-> state 5 shared-tail quirk documented
+above is a *cross-jump-table-target* code-sharing decision, not the
+*within-one-switch* `goto`-fallthrough shape this project's toolbox is
+built to reproduce - forcing it from plain C would mean fighting the
+compiler's own switch lowering rather than working with it, for a
+function already well past the size where that's been worth trying.
+
+Transcribed instruction-for-instruction into `src/system/game_loop56.c`
+(new file - `asm/code_3_2_17_23a1c.s` is now gone entirely), keeping
+the ROM's own `_0XXXXXXX` hex-address labels verbatim as file-local asm
+symbols, the same convention used throughout this project's other
+NAKED transcriptions. `ldscript.txt` swaps the retired `.o` entry for
+`game_loop56.o` in place. Verified via a full clean
+`make NON_MATCHING=1 report` (no warnings for this file) and a full
+clean `make compare` (`crashbandicootxs.gba: La suma coincide`).
+**This closes GitHub issue #37.**
