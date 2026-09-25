@@ -279,6 +279,24 @@ system from "core" system startup/init code.
   - both UNUSED (no caller anywhere in the ROM), matched anyway per this
   project's usual practice. `asm/code_3_2_17_26bf8.s` trimmed to begin
   at `sub_8026C90`.
+- **`sub_800E620`/`sub_800ED08`** (`src/system/game_loop48.c`, new file
+  - GitHub issue #12 Phase 2, lower-address half) - two of
+  `sub_0800D18C`'s/`sub_800E08C`'s per-edge jump-table dispatch
+  targets, matched as real C: `sub_800E620` (dispatch id `0xe`)
+  switches `self` into hitbox tag `0x14`, rebuilds its hitbox record,
+  and re-derives a low-nibble sub-animation value via the shared
+  `+0x20`-table/`+0x2d`-tag convention's own `sub_8006DF8` tile-asset-
+  cache lookup - needing several register-pinned/inline-asm-anchored
+  blocks for this compiler's usual operand-materialization-order and
+  register-choice gaps in this shape (a field-store's immediate loaded
+  before vs. after the field address, a byte-mask computed via runtime
+  negation instead of a folded 8-bit AND immediate, and which of two
+  operands' registers an OR's result lands in); `sub_800ED08`
+  (dispatch id `0xf`) is a small `self+0x48 & 7` state switch
+  forwarding to `sub_800EAFC`/`sub_800EEF0` or spawning a bonus object.
+  See
+  [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md)'s
+  Phase 2 writeup.
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -319,6 +337,20 @@ plain C didn't converge.
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md)'s
   Phase 1 appendix for the confirmed dispatch maps (the basis for this
   issue's Phase 2 parallel split of the remaining 18 leaf functions).
+- **`sub_800E560`/`sub_800E6B0`/`sub_800E7A8`/`sub_800E888`/
+  `sub_800EAFC`/`sub_800EDBC`** (`src/system/game_loop48.c`, new file -
+  GitHub issue #12 Phase 2, lower-address half) - NAKED transcriptions
+  of the direct dispatch targets both `sub_0800D18C`'s and
+  `sub_800E08C`'s per-edge jump tables call (`sub_800E560`,
+  `sub_800E6B0`, `sub_800E7A8`) plus their own transitive callees
+  (`sub_800E888`, called from `sub_800E7A8`; `sub_800EAFC`/
+  `sub_800EDBC`, called from `sub_800E888`) - jump-table-heavy
+  (`sub_800E888`'s own 23-case table is the largest in this subsystem
+  after `sub_0800D18C`'s three) and/or built on this subsystem's
+  confirmed `r8`/`sb`/`sl`-triple-accumulator-resistant shape
+  (`sub_800EDBC`). See
+  [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md)'s
+  Phase 2 writeup.
 - **`sub_800E494`/`sub_800E4E4`** (`src/system/game_loop7.c`, GitHub
   issue #12) - bidirectional linked-list walkers (`sub_801070C`/
   `sub_8010708`) clearing/setting each neighbor's `+0x58` flag. See
@@ -595,16 +627,12 @@ plain C didn't converge.
 
 ## Still raw, category-mapped (GitHub issue #12/#34/#40)
 
-- **`sub_800E560` onward through `sub_800F990`** (`asm/code_3_2_17_e560.s`,
-  ROM `0x0800E560`-`0x0800FC70`, GitHub issue #12) - the rest of this
-  chunk's 25-function list: the collision-response jump-table handlers
-  `sub_0800D18C` itself dispatches to (`sub_800E620`, `sub_800E6B0`,
-  `sub_800E7A8`, `sub_800E888`, `sub_800EAFC`, `sub_800ED08`,
-  `sub_800EDBC`, `sub_800EEF0`, `sub_800F06C`, `sub_800F1B8`,
-  `sub_800F258`, `sub_800F2BC`, `sub_800F368`, `sub_800F4F4`,
-  `sub_800F5B8`, `sub_800F6B8`, `sub_800F798`, `sub_800F8E0`,
-  `sub_800F990`), each a moderately-sized state-machine function with
-  several sibling calls within this same still-raw neighborhood; left
+- **`sub_800EEF0` onward through `sub_800F990`** (`asm/code_3_2_17_e560.s`,
+  ROM `0x0800EEF0`-`0x0800FC70`, GitHub issue #12) - the upper-address
+  half of this chunk's remaining tail (`sub_800EEF0`, `sub_800F06C`,
+  `sub_800F1B8`, `sub_800F258`, `sub_800F2BC`, `sub_800F368`,
+  `sub_800F4F4`, `sub_800F5B8`, `sub_800F6B8`, `sub_800F798`,
+  `sub_800F8E0`, `sub_800F990`), a parallel pass's own territory; left
   untouched for this pass - see
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md).
 - **`sub_800FF0C`** (`asm/code_3_2_17_e560_ff0c.s`, ROM `0x0800FF0C`,

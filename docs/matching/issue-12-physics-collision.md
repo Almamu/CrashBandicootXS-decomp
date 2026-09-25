@@ -394,14 +394,224 @@ group per direct entry point (7 groups), each agent reading its entry
 point first to discover which of the ~12 remaining leaves it pulls in,
 rather than guessing the sub-call graph up front from this doc alone.
 
+## Phase 2 (lower-address half): sub_800E560-sub_800EDBC closed
+
+Closes 8 of the ~18-20 remaining leaf functions from Phase 1's grouping
+hint: the lower-address group of direct dispatch targets
+(`sub_800E560`, `sub_800E620`, `sub_800E6B0`, `sub_800E7A8`) and their
+own transitive callees, everything up to but not including
+`sub_800EEF0` (a sibling parallel pass's own territory, covering
+`sub_800EEF0`-`sub_800F990`). All 8 verified byte-exact by a full clean
+`make compare` ("La suma coincide"). New file `src/system/game_loop48.c`,
+inserted in `ldscript.txt` between `game_loop7.o` and (the now-trimmed)
+`code_3_2_17_e560.o`. `asm/code_3_2_17_e560.s` trimmed to begin at
+`sub_800EEF0` (its own header directives kept, since the sibling pass
+still needs the rest of the file).
+
+**Transitive closure derivation**: reading each of the four direct
+targets' own bodies (not just the dispatch map) found the actual
+sub-call graph is narrower than "each dispatcher owns one of the 7
+direct-callee groups" - `sub_800E560`/`sub_800E620`/`sub_800E6B0` call
+nothing else in this still-raw neighborhood (only already-matched
+siblings, `PlaySfx`, `rand`, or each other within the direct-target
+set), while `sub_800E7A8` calls `sub_800E888` (both times it needs a
+"dispatch id" leaf handler, cases 3/22 of `sub_800E7A8`'s own logic),
+and `sub_800E888` in turn calls `sub_800EDBC`, `sub_800EAFC`, and
+`sub_800ED08` (the latter two also reachable directly from
+`sub_800E888`'s own 23-case jump table) - plus `sub_800EEF0`, left for
+the sibling pass since it's out of this range. That's exactly 8
+functions, no more, no fewer, in this half.
+
+### What each function does
+
+- **`sub_800E560`** - dispatch-id-5 handler (both dispatchers' case 5).
+  Arms `self`'s `+0x48` frame-countdown to `0x168` the first time it's
+  seen at its sentinel value, clearing a `+0x51` retry counter
+  alongside it. While that countdown runs and `self+0x50` is zero,
+  bumps `+0x51` each call; past 4 retries (or once `+0x48` itself
+  expires), hands off to `sub_800E7A8(self, 0, 0, 0)`. Otherwise arms
+  `self+0x4d` bit `0x80`, `gUnknown_030012D8+0x80 = 1`, a fresh
+  `+0x4f = 6` sub-timer, and spawns a pair of `sub_8025CA4` particle
+  effects (kind `0xe`) at `self`'s position, offset `-6`/`+3` pixels on
+  Y/X.
+- **`sub_800E620`** - case-2 handler (dispatch id `0xe`, both
+  dispatchers). Switches `self` into hitbox tag `0x14`, rebuilds its
+  hitbox record (the `sub_80087C0`/`sub_80087B4`/`sub_800872C` trio
+  every hitbox-rebuild call in this subsystem uses), registers it with
+  the object-pool grid (`sub_8009150`), re-derives a low-nibble
+  sub-animation value from the freshly selected hitbox record's `+0x14`
+  byte via `sub_8006DF8`'s tile-asset-cache lookup, plays SFX `0x11`,
+  arms a `+0x4f = 0x3c` (60-frame) countdown.
+- **`sub_800E6B0`** - dispatch-id-5's own sibling case (both
+  dispatchers' case 5, same table slot `sub_800E560` covers on the
+  *other* dispatcher; the two are not actually the same handler despite
+  sharing a case index - each dispatcher's 6-case table independently
+  selects its own target per row). Spawns a particle-effect object
+  (`sub_8025BAC`, kind `0x2a`) at `self`'s position (minus 10 pixels on
+  X), initializes its trajectory fields, switches `self` itself into
+  hitbox tag `0x1b`, rebuilds its hitbox record, plays SFX `0x17`,
+  notifies `sub_80259D4` unless `self+8` is the sentinel `0xffff`,
+  conditionally reactivates the viewport, tells `sub_8022CA0` whether
+  `self+0x50` is nonzero, and resets `self+0x4d` to `1`.
+- **`sub_800E7A8(self, edgeFlag, walkFlag, dir)`** - case-3 handler
+  (both dispatchers). Counts `self` into `gUnknown_030012D8+0x91`'s
+  "objects handled this frame" tally (gated on `walkFlag`), then walks
+  `self`'s neighbor chain (`dir==4` "get prev", `dir==8` "get next")
+  past every node whose `+0x4d & 0x7f` state is already `1`, stopping
+  at the first node that isn't (or the last reachable node if the
+  whole chain is state `1`; neither `dir` value falls back to `self`
+  itself). Unless `gStaticData_0816BBDA[target+0x4e]` is nonzero,
+  dispatches to `sub_800E888(target, edgeFlag)`.
+- **`sub_800E888(self, edgeFlag)`** - `sub_800E7A8`'s shared tail.
+  Early-outs if `self+0x4d & 0x7f == 1`. Otherwise registers `self`
+  with the object-pool grid, resets `self+0x4d` to `0x81`, switches
+  `self` into hitbox tag `0x1d` and rebuilds its record, re-derives its
+  `+0x29` sub-animation value and clamps `+0x30`'s index to the newly
+  selected record's own `+0x16` count, conditionally reactivates the
+  viewport, flips one bit of `gUnknown_030012B4`'s bit-grid keyed by
+  `self+8`, calls `sub_800EDBC` (neighbor "impact spread"
+  propagation), then dispatches its own 23-case jump table on `self`'s
+  freshly-cached `+0x4e` state id to one of
+  `sub_801085C`/`sub_801089C`/`sub_800F368`/`sub_800F2BC`/
+  `sub_800EAFC`/`sub_800ED08`/`sub_800EEF0`/`sub_8022EA8`/a
+  SFX-3-plus-particle-spawn fallback (`sub_8025CA4`) - the largest
+  jump table in this subsystem after `sub_0800D18C`'s own three.
+- **`sub_800EAFC(self, walkFlag)`** - case-11 handler of
+  `sub_800E888`'s table (dispatch id `0xb`). Plays SFX 3, then (the
+  first time `self+0x51` is exactly `9`) rolls a random "escalation
+  level" (`1`/`4`/`7`/`8`) into that byte. Dispatches its own 10-case
+  jump table on `(self+0x51 - 1)`: cases 5 down through 0 deliberately
+  cascade-fall-through into each other (an escalating "more debris"
+  particle burst, `sub_8025CA4`, at slightly different offsets the
+  further the level counted down); case 6 fires a screen-shake
+  (`sub_803AD88`) plus SFX; case 7 spawns a `sub_8025A64` bonus object;
+  case 9 spawns one final small puff.
+- **`sub_800ED08(self, walkFlag)`** - case-15 handler of
+  `sub_800E888`'s table (dispatch id `0xf`). Plays SFX 3, then
+  switches on `self+0x48 & 7`: `1` plays SFX 3 again, notifies
+  `sub_80259D4`, and spawns a `sub_8025A64` bonus object 3 pixels below
+  `self`; `2` forwards to `sub_800EAFC`; `3` clears `self+0x4d` bit
+  `0x80` and calls `sub_800EEF0(self, 1)`; any other value does
+  nothing further.
+- **`sub_800EDBC(self, walkFlag)`** - neighbor "impact spread"
+  propagation, called once from `sub_800E888`'s own body (not through
+  its jump table). Derives a base spread budget from `self`'s hitbox
+  record's own `+9` byte, then walks `self`'s "get next" neighbor chain
+  redistributing that budget across each visited node's `+0x40`/`+0x44`
+  "remaining spread" fields, nudging each node's `+0x4c` byte toward 0,
+  re-registering it with the object-pool grid, and - for any node past
+  a `gStaticData_0816BBC4`/`+0x48`/`+0x44` threshold gate - "graduating"
+  it into state `+0x48 = 1`.
+
+### Matching notes
+
+- **`sub_800E620`/`sub_800ED08` matched as real C** - both are fairly
+  linear (no loops, `sub_800ED08` a small `switch` rather than a
+  computed jump table), unlike this half's other 6 functions. Three
+  distinct gcc-2.9 gaps needed register-pinned/inline-asm anchoring in
+  `sub_800E620` alone, all confirmed by direct byte comparison against
+  a fresh `objdump` disassembly of `baserom.gba` (not just the
+  isolated-compile eyeball check, which this pass got wrong twice
+  before catching it against the real linked ROM bytes - see
+  "Gotchas" below):
+  1. `self[0xc] |= 0x10;` - the ROM materializes the `0x10` immediate
+     *before* loading `self[0xc]`, not after; a plain C statement (in
+     either operand order) always loads the field first. Anchored with
+     a 2-instruction inline-asm block taking `self` as an input operand
+     (so the compiler substitutes whichever register it lands in,
+     rather than hardcoding `r4`).
+  2. The `self+0x20`-pointer-to-table/`+0x2d`-tag/28-byte-stride record
+     lookup (the same convention `sub_800D040`'s "AABB1" shape uses) -
+     plain C picks a different register pair than the ROM for the
+     table-pointer/tag values even when the source statement order
+     already matches ROM's load order; closed with explicit
+     `register T x asm("rN")` pins for both, plus a small inline-asm
+     block for the `tag*28 + table` address arithmetic itself (matching
+     ROM's specific dest-register choice for the running sum).
+  3. `self[0x29] = (self[0x29] & ~0xf) | (lo & 0xf);` - the ROM
+     computes `&self[0x29]` *before* masking `lo` down to its low
+     nibble (a plain C statement here always masks first regardless of
+     source statement order), and materializes the `~0xf` clear-mask at
+     runtime (`movs r1,#0x10; rsbs r1,r1,#0`, the negative-constant
+     register-pinned mask idiom already established for
+     `sub_8010480`/game_loop35.c) rather than folding it into an 8-bit
+     AND immediate. Anchored as one inline-asm block covering the whole
+     sequence, taking the freshly-extracted `lo` value as an in-out
+     operand.
+- **The other 6 (`sub_800E560`/`sub_800E6B0`/`sub_800E7A8`/
+  `sub_800E888`/`sub_800EAFC`/`sub_800EDBC`) closed as NAKED
+  transcriptions**, the same escape hatch Phase 1's two dispatchers
+  used - jump-table density (`sub_800E888`'s 23 cases, `sub_800EAFC`'s
+  10, both with cascading-fallthrough or heavily-reused pool constants)
+  and/or this subsystem's confirmed `r8`/`sb`/`sl`-triple-accumulator
+  shape (`sub_800EDBC`, matching `sub_0800D18C`'s own AABB-build
+  register reuse) made a plain-C attempt not worth chasing given this
+  project's established precedent for the same shapes elsewhere in
+  this subsystem.
+
+### Gotchas found along the way (useful beyond this issue)
+
+1. **An isolated-compile "eyeball match" against the wrong copy of the
+   disassembly is not proof, even when it looks byte-identical
+   line-for-line.** This pass initially cross-checked its C
+   reconstruction and its NAKED transcriptions against the raw text
+   already read out of `asm/code_3_2_17_e560.s` earlier in the same
+   session - and still shipped two real bugs anyway:
+   - `sub_800E620`'s `self[0x29]` mask-then-address vs.
+     address-then-mask ordering (see "Matching notes" above) - a
+     misreading of which operation the ROM actually does first,
+     caught only once the *first* full clean `make compare` attempt
+     failed and the mismatch's exact byte offset was traced back with
+     a fresh `objdump -D -b binary -m arm --adjust-vma=0x08000000
+     -M force-thumb baserom.gba` disassembly of `baserom.gba` itself
+     (not the project's own pre-split `asm/*.s`, and not the isolated
+     `agbcc` output) at that precise address.
+   - `sub_800E6B0`'s constant-pool placement - all 8 of this function's
+     pool words genuinely sit together at the very end of the function
+     (right after its own `bx r0`) in the ROM, since nothing forces
+     earlier emission in a function this short with only one internal
+     branch; this pass's first NAKED draft instead invented an
+     interspersed placement (a pool block after each first use,
+     matching the *general* pattern several of this subsystem's other,
+     longer/more-branchy functions do need) without rereading the
+     specific function's own already-correctly-transcribed pool
+     positions before writing the `asm()` block. Since a NAKED
+     function's `ldr rX, label` forward-references resolve correctly
+     regardless of where `label` physically sits in the source, this
+     produces working, self-consistent code that even disassembles
+     plausibly - it just isn't byte-identical to the ROM's own
+     instruction stream, because moving a pool word earlier shifts
+     every subsequent PC-relative `ldr`'s displacement.
+   - Practical upshot: for any NAKED transcription, copy the
+     pool-word `.align`/`.4byte` placement from the source disassembly
+     *verbatim*, in its exact original position relative to the
+     surrounding code, rather than reconstructing "where a pool
+     probably goes" from a general pattern seen elsewhere - and after
+     a full clean `make compare` failure, drill into the exact
+     mismatching address range with a *fresh* disassembly of
+     `baserom.gba` itself before re-editing anything, since that's the
+     only source immune to a prior transcription mistake being carried
+     forward into the "reference" text being checked against.
+2. **`objdump -h`/`-j` needs the ELF's actual section name, not the
+   assumed `.text`.** This project's `ldscript.txt` names the ROM
+   output section `ROM` (see its own `SECTIONS` block), not `.text` -
+   `arm-none-eabi-objdump -d --start-address=<addr> --stop-address=<addr>
+   -j .text crashbandicootxs.elf` silently reports "section '.text'
+   ... not found" (exit 0, easy to miss); `-j ROM` is what actually
+   filters to the right address range for pulling out one function's
+   real linked bytes/disassembly for inspection.
+
 ## Cross-references
 
 - `docs/status/game_loop.md` - matched/parked/raw lists updated,
   including the `graphics` -> `game_loop` recategorization for this
-  address span, and Phase 1's `sub_0800D18C`/`sub_800E08C` closure.
+  address span, Phase 1's `sub_0800D18C`/`sub_800E08C` closure, and
+  Phase 2's (lower-address half) 8-function closure.
 - `tools/report_units.py` - `UNITS` list split/recategorized for
-  `0x0800D040`-`0x0800FC70`, and Phase 1's entry updated to point at
-  the new `src/system/game_loop47.o`.
+  `0x0800D040`-`0x0800FC70`, Phase 1's entry updated to point at the
+  new `src/system/game_loop47.o`, and Phase 2's `0x0800E560` entry
+  split into a matched `src/system/game_loop48.o` unit and a
+  still-raw `0x0800EEF0` unit for the sibling pass's own range.
 - `docs/rom_map.md` - "Confirmed: a shared physics/collision
   subsystem, entered from multiple different entity types" and the
   preceding "Cross-checked the `UpdateGameFrame`-`MainLoop` cluster"
