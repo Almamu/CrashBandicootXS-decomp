@@ -745,20 +745,43 @@ plain C didn't converge.
   the C source phrases the addition - not one isolated register to pin).
   Confirmed by a full clean `make compare` ("La suma coincide").
   `asm/code_3_2_17_e560_10d54.s` further trimmed to end at
-  `sub_80111B8`; the tail (`sub_8011448`-`sub_801192C`) split off into
-  the new `asm/code_3_2_17_e560_11448.s` - see
+  `sub_80111B8` - see
   [docs/matching/issue-14-0x08010d54-physics-apply.md](../matching/issue-14-0x08010d54-physics-apply.md)'s
   Phase 2 findings for the full field map.
+- **`sub_8011448`/`sub_8011548`/`sub_801173C`/`sub_8011870`/`sub_801191C`/
+  `sub_801192C`** (`src/system/game_loop53.c`, new file - Phase 2,
+  a parallel slice of the same 24-function chunk) - the chunk's tail 6
+  functions, contiguous through to the already-matched `actor_part39.c`.
+  `sub_8011448` is a randomized-position spawn/despawn picker;
+  `sub_8011548` is an entity-vtable-dispatched velocity integrator
+  (mode 0-3 on `self->0x48`, with a PlaySfx+`sub_8023430`+
+  collision-bitmap arrival tail and a `sub_8025CA4` mode-3 spawn);
+  `sub_801173C` is the achievement/unlock-icon spawn helper;
+  `sub_8011870` is `sub_80111B8`'s alternative; `sub_801191C`/
+  `sub_801192C` are a tiny mode setter and a `gStaticData_0816A820`
+  table helper. All but `sub_801191C` (trivial, real C) closed as NAKED
+  transcription - this neighborhood reconfirms the same gcc-2.9
+  register-pressure hazards (r7/r8/sb) already documented at length for
+  `sub_800D040`/`sub_0800D18C`/`sub_8010B6C` and the already-NAKED
+  `sub_8025A64`/`sub_8025CA4` wrappers. Matched, confirmed by a full
+  clean `make compare`. `sub_8010E34`/`sub_8010EAC`/`sub_8010F8C`/
+  `sub_80111B8` were also read and isolated-verified this pass but left
+  un-integrated (still raw, in the range below) - see
+  [docs/matching/issue-14-0x08010d54-physics-apply.md](../matching/issue-14-0x08010d54-physics-apply.md)
+  for why.
 
 ## Still raw, category-mapped (GitHub issue #12/#34/#40)
 
 - **`sub_8010E34`-`sub_80111B8`** (`asm/code_3_2_17_e560_10d54.s`,
-  trimmed at both ends) and **`sub_8011448`-`sub_801192C`**
-  (`asm/code_3_2_17_e560_11448.s`, new file, split off when
-  `sub_8011248`-`sub_8011390` were carved out of the middle) - the
-  still-unexamined remainder of the former 24-function tail
-  `sub_8010D54` (above) was the entry point of; still category-mapped
-  `graphics` pending examination - see
+  trimmed at both ends) - the still-unexamined middle of the former
+  24-function tail `sub_8010D54` (above) was the entry point of, now
+  that its front (`sub_8010E14`/`sub_8010E2C`), its own accessor
+  cluster (`sub_8011248`-`sub_8011390`), and its tail 6 functions
+  (`sub_8011448`-`sub_801192C`, `game_loop53.c`) are all matched above;
+  still category-mapped `graphics` pending its own examination, though
+  `sub_8010E34`/`sub_8010EAC`/`sub_8010F8C`/`sub_80111B8` are
+  individually characterized and isolated-verified (not yet integrated)
+  - see
   [docs/matching/issue-14-0x08010d54-physics-apply.md](../matching/issue-14-0x08010d54-physics-apply.md)'s
   Phase 2 planning section for the full function/size list.
 - **`UpdateGameFrame`** (`asm/code_3_2_17_225a0.s`, ROM `0x080225A0`) -
