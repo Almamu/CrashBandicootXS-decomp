@@ -227,6 +227,15 @@ system from "core" system startup/init code.
   digit-cascade rewrites for `sub_8022F2C`'s front half and `else`
   branch). Real bytes formerly in `asm/code_3_2_17_22ea8.s` (now
   removed, folded into `src/system/game_loop2.o`).
+- **`sub_8026628`** (`src/system/game_loop43.c`, new file - dedicated
+  deep investigation) - independently flagged "still unexamined" from
+  two other closed call sites this session (`sub_8009BE0`'s physics/
+  collision step-probe and `sub_800AAEC`'s input-action-check gate) and
+  sketched in `docs/rom_map.md` as an umbrella dispatcher unifying
+  `sub_8026AE8`/`sub_8026A18` (still raw) under one API. A small
+  (148 B) 4-arm `switch` on `mode`, matched on the first isolated-
+  compile attempt with no register pins needed - see
+  [docs/matching/issue-9-10-41-0x08026628-game-loop.md](../matching/issue-9-10-41-0x08026628-game-loop.md).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
