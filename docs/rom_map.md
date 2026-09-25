@@ -2471,7 +2471,11 @@ the circular ring buffer's **full initial contents**, rather than the
 per-frame incremental updates `sub_8024BAC`/`sub_8024C08` do - the
 constructor half of that streaming system. **`sub_8026628`** is an
 umbrella 5-mode dispatcher unifying the already-documented
-`sub_8026AE8`/`sub_8026A18` collision resolvers under one API.
+`sub_8026AE8`/`sub_8026A18` collision resolvers under one API
+(**resolved in a later pass**: 4 real dispatch arms, not 5 - the "5th"
+is a no-op default; now matched as real C, see
+`docs/matching/issue-9-10-41-0x08026628-game-loop.md`, which also
+pins down which of `sub_8026AE8`/`sub_8026A18` resolves which axis).
 **`sub_802306C`/`sub_8022FEC`** are two more entry points into the
 `sub_8022BF0` wraparound lap-counter system (same `self+0x70`/`0xbc`
 field pair), and on threshold-cross call `sub_801EB04` with the same
