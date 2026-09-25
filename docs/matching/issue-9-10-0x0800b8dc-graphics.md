@@ -924,3 +924,90 @@ full clean `rm -rf build && make NON_MATCHING=1 report` (no warnings)
 and `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` (`crashbandicootxs.gba: La suma
 coincide`).
+
+## `sub_800BFA8`: the last raw function in `asm/code_3_2_17_bfa8.s`
+
+Closing pass on `sub_800BFA8` (ROM `0x0800BFA8`-`0x0800C074`, 204
+bytes), the sole remaining function in `asm/code_3_2_17_bfa8.s` -
+`tools/report_units.py`'s own placeholder comment for it called it "a
+further `self+0x68`/`0x74`-selector dispatcher per docs/rom_map.md,
+not yet examined." It's called exactly once, from `sub_800B8DC` state
+15 (case 42 in that function's own jump table, right after
+`sub_800C40C`).
+
+### Shape
+
+A small `self+0x68`-keyed dispatcher, gated by a `sub_803AE4C` "close
+enough" scalar check - the same primitive `sub_800C40C`'s own case 3/4
+use, but here against `gUnknown_0300082C` read as a **plain word**
+(`sub_803AE4C(gUnknown_0300082C + self->0x48 - self->0x4c,
+self->0x48)`), not the table-base-pointer role `sub_800C40C` uses that
+same still-unexplained global in. This is a fourth confirmed
+"multi-shaped" site for `gUnknown_0300082C` (joining the "plain word"
+sites `sub_8016C94`/`sub_801B624` and the "table base pointer" site
+`sub_800C40C` already flagged in `docs/rom_map.md`).
+
+- **Check passes (result `0`)**: `self->0x68 == 0` triggers
+  `sub_800C8CC(self, 2)`; `self->0x68 == 4` triggers
+  `sub_800C8CC(self, 7)`; anything else is a no-op. Function returns.
+- **Check fails**: re-dispatch moves to `owner` (`self->0x70`).
+  - `owner->0x38` (the cluster's established "enabled" byte) set:
+    `self->0x68 == 2` triggers `sub_800C8CC(self, 0)`; `== 7` triggers
+    `sub_800C8CC(self, 4)`; anything else a no-op. Returns.
+  - `owner->0x38` clear: `self->0x68 == 2`/`7` each gate a
+    `sub_800C9C8(0xc, 6, 0, d, 0x400, owner)` call behind an
+    `owner->0x30`/`owner->0x34` magic-constant check (`d = -0xa` when
+    `owner->0x30==0xa && owner->0x34==0` for mode 2; `d = 8` when
+    `owner->0x30==8 && owner->0x34==0` for mode 7 - the same
+    blocking-condition-pair shape this doc's field table already
+    documents at offsets `0x30`/`0x34`). On success (non-null return),
+    the returned record's `+0xa` byte is set to `8`.
+
+### Matching as real C
+
+Small enough (no nested loops, only 2-deep dispatch) to avoid this
+cluster's usual `self`/`owner` multi-field-liveness register-pressure
+trap that forced every `self+0x68`-dispatching sibling
+(`sub_800C074`/`sub_800C244`/`sub_800C40C`/`sub_800C5D4`) to NAKED.
+Straightforward pointer-offset-cast C (this neighborhood's established
+convention - `u8 *self = selfArg;` plus `*(s32 *)(self + off)`, per
+`actor_part113.c`/`actor_part117.c`) got every branch, constant, and
+call argument right on the first pass and diffed to within two
+register-allocation quirks of the ROM, both resolved via
+[[matching_decomp_register_pinning]] (see that memory doc / the
+project's `docs/matching.md`):
+
+1. **`self` pinned to `asm("r4")`** (`register u8 *self asm("r4") =
+   selfArg;`). Unpinned, gcc's own allocator duplicated `self` into a
+   spare `r5` register (`push {r4, r5, lr}` / `add r5, r4, #0`) purely
+   to re-read `self->0x68` a second time in the `owner->0x38==0`
+   branch, even though `r4` was still live and unused at that point -
+   the ROM never touches a second register for `self` at all
+   (`push {r4, lr}` only). Pinning eliminated the duplicate register
+   and its push/pop entirely.
+2. **Statement-order hoist for two independent loads.** The prelude's
+   `gUnknown_0300082C` global read and `self->0x48` field read have no
+   data dependency on each other (only their *sum* does), so gcc 2.9's
+   scheduler was free to reorder them - and did, emitting
+   `self->0x48`'s load first even though the C source computed it
+   second. Simply computing the global read into its own named local
+   (`s32 base = (s32)gUnknown_0300082C;`) as the *first* statement,
+   ahead of `s32 field48 = *(s32 *)(self + 0x48);`, was enough to make
+   the scheduler honor that order - no inline-asm anchor needed here
+   (contrast with [[matching_decomp_register_pinning]] technique 6,
+   which was the fallback plan if this hadn't worked).
+
+Confirmed byte-identical to `baserom.gba`'s own raw bytes at
+`0x0800BFA8`-`0x0800C074` via the isolated cpp/agbcc/as +
+objcopy/cmp pipeline (26 differing bytes total, all at the 5 `bl`
+relocation sites and the `gUnknown_0300082C` literal-pool word - the
+same expected relocation-only gap documented throughout this cluster)
+plus a full clean `rm -rf build && make NON_MATCHING=1 report` (no
+warnings) and `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
+crashbandicootxs.map && make compare` (`crashbandicootxs.gba: La suma
+coincide`).
+
+This was the last function in `asm/code_3_2_17_bfa8.s` - the file is
+now empty and has been deleted, with its `ldscript.txt` entry replaced
+by `build/crashbandicootxs/src/graphics/actor_part121.o(.text);`
+(new file, `src/graphics/actor_part121.c`).
