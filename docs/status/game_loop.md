@@ -643,6 +643,44 @@ plain C didn't converge.
   gets allocated one single register for its whole lifetime instead.
   See
   [docs/matching/issue-34-game-loop-8022d50-80255d4.md](../matching/issue-34-game-loop-8022d50-80255d4.md).
+- **`UpdateGameFrame`** (`src/system/game_loop55.c`, GitHub issue #34,
+  ROM `0x080225A0`-`0x08022BF0`) - the main per-frame game-loop driver,
+  called once a frame from `MainLoop` with `self` =
+  `gUnknown_030012C0`. Traced branch-by-branch: a level-load loop
+  (`LoadLevelGraphics`/`sub_8035E14`/`sub_80354BC`) that spins until the
+  level finishes loading; a confirmed 5-case jump table on
+  `self->0xc4` (doubling as both the literal player-state enum value
+  *and* the retry-loop's `sub_801BAF0` seed) - gates
+  `sub_80231BC`/`sub_80231CC`/`sub_80231B4`/`sub_80231C4` transition to
+  `sub_8023190`/`sub_80231A8`/`sub_8023184`/`sub_802319C` respectively
+  (case 3's own gate additionally free-runs a `sub_800697C` timeout
+  that increments `self->0xc4` past 0x63 frames), case 4 has no gate/
+  transition and is unconditional; states past this table's range
+  (`self->0xc4 - 0x14 > 4`) instead OR-set a flag byte on
+  `sub_8023404`'s object when `self->0xdc`'s level object is in state
+  3. End-of-frame: a double-buffered `self+0xe4`/`self+0x14c` snapshot
+  pair (each exactly `0x68` bytes, DMA3 fixed-source zero-filled at
+  entry then restored/re-saved every retry-loop pass), an actor-
+  category processing loop keyed on an `r8`-resident status flag (0 =
+  keep going, 1 = check `sub_803AFEC` for early-out, 2 = done this
+  frame) that ping-pongs the `gUnknown_030012B4` collision-bitmap
+  buffer between `self+0x1b4`'s two halves via `sub_8025A5C`/
+  `sub_8026EDC(0x408)`, and refreshes the HUD icon (`sub_8028568`) each
+  pass. The whole per-category loop, and even the outer state-dispatch
+  block above it, can run several times within one call (loops back via
+  `sub_803AFEC`/`sub_8034CB0` gating) before the function actually
+  returns to `MainLoop`. At ~730 instructions with three persistent
+  cross-call registers (`r7` = `&self->0xc4`, `sl` = `&self->0xc8`,
+  `r8`/`sb`) plus six SP-relative field-address slots (`&self->0xe0`,
+  `&self->0xe4`, `&self->0xcc`, `&self->0xbc`, `&self->0xac`, and a
+  saved `self->0x78` snapshot) all live simultaneously across this
+  nested loop structure, a real C reconstruction was well past what
+  this project's register-pin/`asm volatile`/`goto`-restructuring
+  toolbox has closed in one pass on a function this size; closed
+  instead as a byte-exact NAKED transcription (mechanically converted
+  from the confirmed-traced ROM disassembly, formerly
+  `asm/code_3_2_17_225a0.s`, now retired). See `docs/matching.md`'s
+  entry for this function for the full trace.
 - **`sub_8010B6C`** (`src/system/game_loop28.c`, GitHub issue #14,
   follow-up pass) - the chunk's last and largest function, a
   collision-candidate scan/resolve helper `sub_80106DC`
@@ -800,10 +838,6 @@ plain C didn't converge.
 
 ## Still raw, category-mapped (GitHub issue #34/#40)
 
-- **`UpdateGameFrame`** (`asm/code_3_2_17_225a0.s`, ROM `0x080225A0`) -
-  the main per-frame game-loop driver, a ~730-instruction jump-table
-  state machine. Not understood branch-by-branch with the precision a
-  byte-exact reconstruction needs yet - see `docs/matching.md`.
 - **`sub_8023A1C`** (`asm/code_3_2_17_23a1c.s`, ROM
   `0x08023A1C`-`0x08024007`, GitHub issue #37) - a ~650-instruction
   jump-table-driven level-lifecycle continuation, called
