@@ -114,12 +114,18 @@ for the full write-up, GitHub issue #68):
 - `src/audio/gax_sound_handler_unknownc.c` - `nullsub_41` (UNUSED - no
   caller anywhere in the ROM), `sub_803A22C` (the "UnknownC" type's
   init_fn), `nullsub_42` (its unknown_fn)
+- `src/audio/gax_channel_bind_instrument.c` - `sub_803985C` (binds a new
+  instrument entry to a per-channel voice object and resets its
+  envelope/state fields) - closed by pinning `self` to `ip` for the
+  whole function, the same idiom that closed `sub_80259D4`; see the
+  "Update" section of
+  [`docs/matching/issue-68-channel-bind-envelope-note.md`](../matching/issue-68-channel-bind-envelope-note.md)
 
-6 of this chunk's 21 functions are matched as real C; two further
+7 of this chunk's 21 functions are matched as real C; two further
 passes (see [`docs/matching/issue-68-0x08039818-audio.md`](../matching/issue-68-0x08039818-audio.md)'s
 updated write-up and
 [`docs/matching/issue-68-note-trigger-trampoline.md`](../matching/issue-68-note-trigger-trampoline.md))
-parked the remaining 15 as byte-verified NAKED transcriptions - see
+parked the remaining 14 as byte-verified NAKED transcriptions - see
 "Parked - NAKED asm transcription(s)" below. Most hit the same
 many-register (`r8`/`sb`/`sl`) gcc-2.9 allocation ceiling already
 documented for `sub_8038538`'s cluster; the rest (`sub_803A278` family,
@@ -223,14 +229,6 @@ See docs/matching.md for `PlaySfx`'s remaining gap.
 
   See [docs/matching/issue-67-gax-voice-steal.md](../matching/issue-67-gax-voice-steal.md)
   for all three functions' full write-up.
-- **`sub_803985C`** (`src/audio/gax_channel_bind_instrument.c`, binds a
-  new instrument entry to a per-channel voice object and resets its
-  envelope/state fields) - a real C reconstruction reproduced every field
-  write, but the ROM's `self` register choreography - reloaded fresh from
-  `ip` into a rotating r0/r1/r3 cast, with `r3` itself later mutated in
-  place - always needed one extra callee-saved register the ROM doesn't
-  spend; already set aside for the same reason in a prior pass. Byte-
-  verified NAKED transcription.
 - **`sub_80398DC`** (`src/audio/gax_channel_note_scheduler.c`, per-tick
   pattern-note/priority-steal scheduler with a 15-way command jump table)
   - keeps `r8`/`sb` live as genuine scratch across the whole priority-
@@ -245,11 +243,15 @@ See docs/matching.md for `PlaySfx`'s remaining gap.
   verified NAKED transcription.
 - **`sub_8039F30`** (`src/audio/gax_note_lookup.c`, resolves a pattern-
   note index into an interpolated pitch/volume byte from a sorted
-  breakpoint table) - a real C reconstruction matched this function's
-  full control flow, but the ROM's specific register choices (`self` in
-  `r5`, `table` kept in `r3` throughout, a zero-extension dance for the
-  note-index parameter) didn't come out byte-identical from the C forms
-  tried. Byte-verified NAKED transcription.
+  breakpoint table) - narrowed to a single residual instruction: every
+  operation/operand/register matches except gcc-2.9's own constant-pool
+  materialization for the `0x8AD0` sentinel, which picks `r2` instead of
+  the ROM's `r0` (confirmed at the level of gcc's own generated
+  intermediate assembly, a genuine codegen limitation, not an
+  unexplored phrasing) - a near-matching C reconstruction is kept
+  in-tree under `#if NON_MATCHING`; see the "Update" section of
+  [`docs/matching/issue-68-channel-bind-envelope-note.md`](../matching/issue-68-channel-bind-envelope-note.md).
+  Byte-verified NAKED transcription remains the default build.
 
   See [docs/matching/issue-68-channel-bind-envelope-note.md](../matching/issue-68-channel-bind-envelope-note.md)
   for all four functions' full write-up (none of this particular

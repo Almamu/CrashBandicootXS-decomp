@@ -1,4 +1,7 @@
 #include "core.h"
+#include "audio.h"
+
+extern struct GaxPlayerState *gUnknown_03001630;
 
 /* Binds a new instrument/entry to a per-channel voice object (`self`) from
  * `table->0x10[cmd]` and resets most of the voice's envelope/state fields
@@ -10,91 +13,106 @@
  * (same situation as the neighboring GAX2 engine internals in this
  * directory) - kept as raw offsets throughout.
  *
- * Written as NAKED asm, not plain C: a real C reconstruction reproduced
- * every field write and the two-separate-zero-constants split (matching
- * `sub_803A104`'s "two named zero temps" idiom in gax_channel_init.c) but
- * the ROM's own register choreography for `self` - reloaded fresh from
- * `ip` (never spilled to a callee-saved register) into a rotating cast of
- * r0/r1/r3 exactly when each group of field writes needs it, with `r3`
- * itself later mutated in place (`adds r3, #0x23`) once its prior value is
- * no longer needed - never came out byte-identical from any C phrasing
- * tried (every version needed one extra callee-saved register, `r5`, that
- * the ROM's version simply doesn't spend). A prior pass had already set
- * this same function aside for the same reason ("several honest attempts,
- * each fix for one instruction's register choice regressed a different
- * one" - see docs/matching/issue-68-0x08039818-audio.md's `sub_803985C`
- * entry); this pass's fresh attempts, informed by the redundant-re-fetch
- * technique that closed `sub_8038FD0`'s cluster, still didn't close this
- * one, confirming it as a genuine gap rather than an easy miss. Mechanical,
- * byte-verified transcription of the ROM's own instructions. */
-NAKED void sub_803985C(void *self, void *unused, s32 cmd, void *table)
+ * Was NAKED asm, not plain C, for two prior passes: the ROM's own
+ * register choreography for `self` - reloaded fresh from `ip` (never
+ * spilled to a callee-saved register) into a rotating cast of r0/r1/r3
+ * exactly when each group of field writes needs it, with `r3` itself
+ * mutated in place (`adds r3, #0x23`) once its prior value is no longer
+ * needed - always needed one extra callee-saved register that the ROM's
+ * version doesn't spend. Closed this pass using the same "self lives in
+ * ip for the whole leaf-ish function" idiom already established for
+ * `sub_80259D4` (game_loop13.c, see
+ * docs/matching/naked-sub_80259d4-matched.md): `self` is pinned to a
+ * `register void *asm("ip")` local, materialized from the incoming `r0`
+ * together with `cmd`'s own copy (`r4`) via one opaque `asm volatile`
+ * instruction pair (this compiler always schedules a lone `n`-copy ahead
+ * of the `self`-stash otherwise, regardless of C statement order), and
+ * every "mov rX, ip" the ROM does to re-derive `self` for the next group
+ * of field writes is reproduced as its own register-pinned local
+ * (`s1`/`s3`/`s0`/`s3b`/... below, one per ROM `mov`). The one genuine
+ * surprise: the final `str r2, [r3, #0x3c]` (clearing the binding back
+ * out) reuses the register holding the already-materialized `zero16`
+ * constant, but plain C (even referencing the same pinned local, `*(s32
+ * *)(...) = zero16;`) let `-O2`'s constant propagation flatten it back
+ * to a fresh literal load in a different scratch register - a single
+ * opaque `asm volatile("str %1, [%0, #0x3c]" ...)` anchor, spelling out
+ * the exact instruction with both already-pinned operands, was needed to
+ * stop that. */
+void sub_803985C(void *self, void *unused, s32 cmd, void *table)
 {
-    asm(
-        "push {r4, lr}\n\t"
-        "mov ip, r0\n\t"
-        "add r4, r2, #0\n\t"
-        "cmp r4, #0\n\t"
-        "beq L985C_0\n\t"
-        "ldr r1, [r3, #0x10]\n\t"
-        "lsl r0, r4, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, ip\n\t"
-        "str r0, [r1, #0x3c]\n\t"
-        "mov r1, #0\n\t"
-        "mov r2, #0\n\t"
-        "mov r3, ip\n\t"
-        "strh r2, [r3, #0x38]\n\t"
-        "mov r0, ip\n\t"
-        "add r0, #0x22\n\t"
-        "strb r1, [r0]\n\t"
-        "strh r2, [r3, #0x3a]\n\t"
-        "ldr r0, [r3, #0x3c]\n\t"
-        "ldrb r0, [r0, #8]\n\t"
-        "add r3, #0x23\n\t"
-        "strb r0, [r3]\n\t"
-        "mov r0, ip\n\t"
-        "strh r2, [r0, #0x36]\n\t"
-        "strb r1, [r0, #0x1f]\n\t"
-        "add r0, #0x20\n\t"
-        "strb r1, [r0]\n\t"
-        "mov r0, #0xff\n\t"
-        "mov r1, ip\n\t"
-        "strb r0, [r1, #0x15]\n\t"
-        "ldr r1, [r1, #0x3c]\n\t"
-        "add r0, r1, #0\n\t"
-        "add r0, #0x84\n\t"
-        "ldrb r0, [r0]\n\t"
-        "mov r3, ip\n\t"
-        "strb r0, [r3, #0x1e]\n\t"
-        "strh r2, [r3, #0x32]\n\t"
-        "strh r2, [r3, #0x30]\n\t"
-        "ldrb r0, [r1]\n\t"
-        "cmp r0, #0\n\t"
-        "beq L985C_1\n\t"
-        "str r2, [r3, #0x3c]\n\t"
-        "L985C_1:\n\t"
-        "mov r1, ip\n\t"
-        "ldr r0, [r1, #0x3c]\n\t"
-        "cmp r0, #0\n\t"
-        "beq L985C_0\n\t"
-        "ldr r0, L985C_2\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0, #4]\n\t"
-        "ldr r1, [r0, #0x34]\n\t"
-        "cmp r1, #0\n\t"
-        "beq L985C_0\n\t"
-        "mov r0, ip\n\t"
-        "add r0, #0x53\n\t"
-        "ldrb r0, [r0]\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "strb r4, [r0]\n\t"
-        "L985C_0:\n\t"
-        "pop {r4}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n\t"
-        "L985C_2: .4byte gUnknown_03001630\n\t"
-    );
+    register void *selfIP asm("ip");
+    register s32 n asm("r4");
+
+    asm volatile("mov %0, %2\n\tadd %1, %3, #0" : "=r"(selfIP), "=r"(n) : "r"(self), "r"(cmd));
+
+    if (n != 0) {
+        void **entryTable = *(void ***)((u8 *)table + 0x10);
+        void *entry = entryTable[n];
+
+        {
+            register u8 *s1 asm("r1") = (u8 *)selfIP;
+            *(void **)(s1 + 0x3c) = entry;
+        }
+
+        {
+            register u8 zero8 asm("r1") = 0;
+            register u16 zero16 asm("r2") = 0;
+            register u8 *s3 asm("r3") = (u8 *)selfIP;
+            *(u16 *)(s3 + 0x38) = zero16;
+
+            {
+                register u8 *s0 asm("r0") = (u8 *)selfIP + 0x22;
+                *s0 = zero8;
+            }
+
+            *(u16 *)(s3 + 0x3a) = zero16;
+
+            {
+                void *entry2 = *(void **)(s3 + 0x3c);
+                u8 v8 = *(u8 *)((u8 *)entry2 + 8);
+                register u8 *s3b asm("r3") = s3 + 0x23;
+                *s3b = v8;
+
+                {
+                    register u8 *s0b asm("r0") = (u8 *)selfIP;
+                    *(u16 *)(s0b + 0x36) = zero16;
+                    *(u8 *)(s0b + 0x1f) = zero8;
+                    *(u8 *)(s0b + 0x20) = zero8;
+                }
+
+                {
+                    register u8 ff asm("r0") = 0xff;
+                    register u8 *s1b asm("r1") = (u8 *)selfIP;
+                    *(u8 *)(s1b + 0x15) = ff;
+
+                    {
+                        void *entry3 = *(void **)(s1b + 0x3c);
+                        u8 v84 = *((u8 *)entry3 + 0x84);
+                        register u8 *s3c asm("r3") = (u8 *)selfIP;
+                        *(u8 *)(s3c + 0x1e) = v84;
+                        *(u16 *)(s3c + 0x32) = zero16;
+                        *(u16 *)(s3c + 0x30) = zero16;
+
+                        if (*(u8 *)entry3 != 0) {
+                            asm volatile("str %1, [%0, #0x3c]" :: "r"(s3c), "r"(zero16));
+                        }
+                    }
+                }
+            }
+        }
+
+        {
+            register u8 *s1c asm("r1") = (u8 *)selfIP;
+            void *bound = *(void **)(s1c + 0x3c);
+            if (bound != 0) {
+                void *songPtr = gUnknown_03001630->songPtr;
+                u8 *slotTable = *(u8 **)((u8 *)songPtr + 0x34);
+                if (slotTable != 0) {
+                    register u8 *s0d asm("r0") = (u8 *)selfIP + 0x53;
+                    u8 idx = *s0d;
+                    slotTable[idx * 4] = n;
+                }
+            }
+        }
+    }
 }
