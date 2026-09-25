@@ -545,3 +545,140 @@ entry this issue accumulated across all five passes, don't count) but this
 retires the last raw bytes this issue's own scope covers - what's left
 open against #31 from here is exclusively already-parked functions
 (NAKED or `NON_MATCHING`), tracked in docs/status/graphics_loading.md.
+
+## Sixth pass: `sub_801EF0C`-`sub_801FCB4` (12 more, the range before `sub_801FDEC`)
+
+The fifth pass's "last raw bytes this issue's own scope covers" claim
+above turned out to miss one stretch: `sub_801EF0C`-`sub_801FCB4`, 12
+more "two-line text popup" siblings sitting in the *original*
+`asm/code_3_2_17_1e990.s` (the file `sub_801FDEC` itself was extracted
+from, back in the second pass) rather than the
+`asm/code_3_2_17_1feec.s`/`asm/code_3_2_17_21280.s` files the third
+through fifth passes worked through. `tools/report_units.py`'s
+`0x0801EA5C` entry flagged this exact range as "a promising real-C
+target for whoever picks this up next" and "out of scope" for the pass
+that wrote that note - this pass is that follow-up. Semantics for all
+12 are the numbered list at the top of this document, unchanged - every
+one allocates via `sub_8009ED0` (or, for `sub_801F680`, the bigger
+`sub_800A604` constructor), hooks its own fixed offset into the
+`gUnknown_030012D0`-rooted table at `+0x20`, updates its `+0x29` frame
+nibble via `sub_800815C`, packs the `gUnknown_030012B4` "collected" bits
+into `+0x28`, registers into `gUnknown_030012F0`, and closes with one of
+several tail shapes this cluster's earlier passes already catalogued
+(a single header write, a "second `header->0x84` rewrite plus a
+struct-field or record-field copy", an OAM trio, a bit-27 re-test, or -
+for `sub_801F680` alone - a `PlaySfx` call). New file:
+`src/graphics/graphics_loading_1ef0c.c`, replacing
+`asm/code_3_2_17_1e990.o` at that point in `ldscript.txt` (the raw file
+itself shrinks to just `sub_801EA5C`-`sub_801EE3C`, the still-raw
+"trigger effect type N" twin-family shape noted at the top of this
+document - genuinely out of scope for this pass, a separate already-
+parked wall per issue #31's own scope note).
+
+### Matched: `sub_801F050`, `sub_801F170`, `sub_801F680`
+
+Real C, confirmed by a full clean `make compare`. These three are the
+only ones in the range whose ROM disassembly doesn't need `r7` in its
+callee-saved push/pop set - `sub_801F050`/`sub_801F170` shadow only
+`sb`/`r8` (two extra high registers) through `r5`/`r6`, and
+`sub_801F680` shadows only `r8` (one extra) through `r6`, all comfortably
+inside this compiler's own natural register choices at `O2` without
+needing to reach for `r7` anywhere. Each needed the same category of
+fix, confirmed by isolated-compile diff against the ROM disassembly:
+
+- **Value-before-address (or address-before-value) ordering.** A single
+  offset write like `part->0x20 = value` or `hdr->0x44 = header` compiles
+  fine either way semantically, but this compiler schedules whichever
+  sub-expression is declared/computed first into its own register move
+  *first* - the ROM's own order isn't always "compute the address, then
+  the value" (see `sub_801F050`'s `part->0x20` write, which needs the
+  value materialized into `r0` before `part`'s `r8`→`r1` copy) or always
+  the reverse (its `hdr->0x44` write wants `part`'s copy computed
+  *after* the store to `hdr->0x6c`, not before). Fixed by reordering the
+  C statements/nested-block declarations to match, the same technique
+  `sub_801FDEC` already established.
+- **A bare-constant register pin is silently ignored.** Exactly the
+  `sub_8021388` gotcha this document's fourth/fifth passes already
+  flagged (`register s32 off asm("r3") = 0x18;` lands the two-step
+  mov/lsl synthesis in whatever register this compiler likes, not the
+  pinned one) recurred for `sub_801F170`'s second `sub_803AD80`
+  trampoline call, whose `+0x18` offset constant needs `r3` specifically
+  (the *first* trampoline call in the same function reuses `r2` instead -
+  the classic "no CSE across a call" scheduling gap this whole cluster's
+  earlier passes already documented, just for a register choice this
+  time instead of a reload). Fixed by hand-spelling the whole trampoline
+  call - argument marshalling, offset constant, and `bl` - as one
+  `asm volatile` block, the same escape hatch `sub_8021388` used for its
+  own `+0x20` table-offset constant. The identical fix was needed for
+  both of `sub_801F680`'s two trampoline calls (`hdr` lives in `r8`
+  there, so the "avoid an immediate-offset load off a high-register
+  base" idiom `sub_802155C` established layers on top of the same
+  constant-pin gotcha).
+- **A hard-pinned register still "reserved" after its C-level scope
+  ends can't be reused for an unrelated later value in the same
+  function - unless the reuse is spelled out as raw asm text.** Plain-C
+  re-declaration of a *second*, differently-scoped `register T x
+  asm("r5")` local later in `sub_801F170` (after the first `r5`-pinned
+  local's block had already closed) silently landed in `r3` instead,
+  even though the exact same "reuse a hard register across sibling
+  blocks" technique works everywhere else in this cluster for r0-r3.
+  Only `r5` specifically hit this in this pass; reusing `r0`/`r1` for
+  unrelated locals in later blocks of the same functions worked with no
+  issue. Fixed by writing the final struct-field-write block as one
+  `asm volatile` island instead of separately-pinned C locals.
+- **`sub_801F050`'s `part` lives in `r8`, `sub_801F170`'s `part` lives in
+  `r4`.** Same `sub_801FDEC`-style "pin whichever register the ROM
+  actually used" technique, just for `part` instead of `hdr` this time -
+  confirms the technique generalizes to any of this family's live
+  pointers, not just the header.
+
+### Parked as NAKED: the other nine
+
+`sub_801EF0C`, `sub_801F2BC`, `sub_801F3DC`, `sub_801F528`,
+`sub_801F7B8`, `sub_801F8DC`, `sub_801FA3C`, `sub_801FB74`,
+`sub_801FCB4` all hit the confirmed `r7`-in-the-callee-saved-set gap
+`sub_8021280`/`sub_8021480`/`sub_802190C` already established for this
+project: each one's ROM disassembly needs `r7` in its
+`push {..., r7, lr}`/`pop {..., r7}` prologue/epilogue, shadowing a
+third extra high register (`sl`, alongside `sb`/`r8`) through `r7`
+itself, or `r7` gets used as pure scratch inside one or two *disjoint*
+single-instruction-island spots (the `+0x29` nibble reload, or the
+collected-bits pack's own mask-byte reload) that never asks the
+compiler to treat `r7` as live across a wider span. Every one of these
+nine had every instruction's *operation* already confirmed matching via
+isolated compile before being transcribed - this is purely the
+categorical toolchain gap, not a semantics gap. No new register-pinning
+technique was found for this pass (the same techniques that worked for
+`sub_801F050`/`sub_801F170`/`sub_801F680` above, and every real-C match
+elsewhere in this cluster, were tried first and consistently failed to
+get `r7` into the push/pop list here, exactly as documented for
+`sub_8021280`/`sub_8021480` in the fifth pass above) - transcribed
+instruction-for-instruction from the ROM disassembly instead, the same
+escape hatch used throughout this project. Two additional tail-shape
+variants get their first real writeup here (the rest reuse shapes
+already catalogued by earlier passes in this document):
+
+- **`sub_801F3DC`** computes a genuine average-then-quarter: `s32 half =
+  (record.f4 + record.f8) / 2; s32 quarter = half / 4;`, written into
+  `hdr->0x48`/`hdr->0x4c` - this compiler's own signed-division-by-a-
+  power-of-2 idiom (the branchless `(x + ((unsigned)x >> 31)) >> 1` trick
+  for `/2`, but the branching `cmp`/`bge`/`add #3`/`asr #2` form for the
+  second `/4` on an already-computed value) reproduced exactly in the
+  transcription.
+- **`sub_801FB74`** is the "bit-27 test on `part->field_28` gating a
+  different tag value" variant the second pass's writeup flagged but
+  never worked through: after the OAM trio, it re-reads the same
+  `+0x28` byte the collected-bits pack just wrote, tests bit 4 via
+  `lsl r0, r2, #0x1b` (putting that bit at the sign position for a
+  `blt`), and re-toggles it before the closing `sub_800C6A8` call - no
+  `header->0x84` rewrite or record relookup in this one's tail at all.
+
+### Verification
+
+Full clean `make compare` (`La suma coincide`) and `make NON_MATCHING=1
+report`, both passing. This retires `asm/code_3_2_17_1e990.s` down to
+just `sub_801EA5C`-`sub_801EE3C` (the still-raw "trigger effect type N"
+twin-family shape, a separate already-parked wall per this issue's own
+scope note at the top of this document) - the whole `sub_801EF0C`-
+`sub_801FCB4` stretch is now real, always-compiled code (3 matched, 9
+NAKED), tracked in `docs/status/graphics_loading.md`.
