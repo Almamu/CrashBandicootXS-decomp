@@ -660,6 +660,36 @@ plain C didn't converge.
   instead. `asm/code_3_2_17_e560_10b6c.s` is now gone entirely - the
   function is folded into `src/system/game_loop28.o`. See
   [docs/matching/issue-14-0x08010a0c-graphics.md](../matching/issue-14-0x08010a0c-graphics.md).
+- **`sub_80104E4`** (`src/system/game_loop51.c`, new file, GitHub
+  issue #13) - a ~195-instruction per-frame state-machine dispatcher:
+  throttles/re-triggers `sub_800F8E0`/`sub_800F990`/`sub_800F4F4` off
+  `self+0x4e`'s settle-state byte, always calls `sub_800FC70`, then -
+  gated on `self+0x4d`'s bit 7 and `self+0x38` - re-derives
+  `self+0x30`'s index via the same `self+0x20`/`self+0x2d`-tag/
+  0x1c-stride hitbox-record clamp `sub_8010480` (`game_loop35.c`)
+  uses and settles state 6/3, or otherwise re-triggers `sub_800F798`;
+  finally hands off to the `sub_803AD7C` table-trampoline convention
+  `sub_8007048`/`sub_80070D4` (`graphics.c`) establish. A plain-C
+  attempt (the same register-pin-per-nested-scope technique that
+  matched `sub_8010480`'s near-identical hitbox-record clamp) matched
+  the first ~10 instructions but diverged once a *second* field
+  address needed the same "computed once, copied to a callee-saved
+  register, reused later" shape - this compiler's liveness tracking
+  for register-`asm`-pinned locals produced an extra dead register
+  copy the ROM never makes. Beyond that, field *addresses* thread
+  through r0/r1/r6/r2/r5/r8/ip across many `bl` calls with an
+  inconsistent reuse pattern (sometimes recomputed fresh a few
+  instructions after an equivalent address was already live) - the
+  same "which anonymous scratch register" gap as `sub_800D040`/
+  `sub_8010B6C` above, at a finer grain spread across the whole
+  function rather than one isolated block. Replaces
+  `asm/code_3_2_17_e560_104e4.o` in `ldscript.txt`, sitting between
+  `src/system/game_loop35.o` and `game_loop23.o`. Filed as
+  `game_loop51.c`, not `game_loop50.c`, after a merge conflict with
+  the concurrently-matched `sub_8010D54` below, which took the
+  `game_loop50.c` name first. See
+  [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md)'s
+  "Update: `sub_80104E4` matched" section.
 - **`sub_8010D54`** (`src/system/game_loop50.c`, new file - Phase 1 of
   the next still-unexamined chunk past issue #14's own range) - the
   physics/collision subsystem's **apply/commit step**, the call
@@ -687,10 +717,6 @@ plain C didn't converge.
 
 ## Still raw, category-mapped (GitHub issue #12/#34/#40)
 
-- **`sub_80104E4`** (`asm/code_3_2_17_e560_104e4.s`, ROM `0x080104E4`,
-  GitHub issue #13) - a further ~195-instruction state dispatcher
-  calling several still-raw siblings; not attempted - see
-  [docs/matching/issue-13-fc70-second-continuation.md](../matching/issue-13-fc70-second-continuation.md).
 - **24 functions, `0x08010E14`-`0x080119A8`** (`asm/code_3_2_17_e560_10d54.s`,
   trimmed) - the remainder of the chunk `sub_8010D54` (above) was the
   entry point of; still category-mapped `graphics` pending its own
