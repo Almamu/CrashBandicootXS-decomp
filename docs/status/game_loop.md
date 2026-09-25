@@ -709,18 +709,52 @@ plain C didn't converge.
   isolated register letter to pin, so closed via NAKED transcription
   instead (no branches or literal pool in this function, so no label
   renumbering was needed). Matched, confirmed by a full clean `make
-  compare` ("La suma coincide"). `asm/code_3_2_17_e560_10d54.s` trimmed
-  to begin at `sub_8010E14` (24 functions still raw, `0x08010E14`-
-  `0x080119A8`) - see
+  compare` ("La suma coincide"). Phase 2's own "quick win" group later
+  folded `sub_8010E14`/`sub_8010E2C` into this same file (both real C):
+  `sub_8010E14` is byte-identical in shape to `graphics.c`'s already-
+  matched `sub_8006AF4` (`if (arg1 & 1) sub_8026ED0(arg0);`) - a VRAM-
+  manager-refresh gate that happens to be called from `actor_part15.c`
+  with `arg1 = 2` (bit 0 clear), so that particular call site is itself
+  a no-op; `sub_8010E2C` is a trivial two-field queue reset
+  (`count`/`unk4[0]`). `asm/code_3_2_17_e560_10d54.s` trimmed to begin
+  at `sub_8010E34` - see
   [docs/matching/issue-14-0x08010d54-physics-apply.md](../matching/issue-14-0x08010d54-physics-apply.md)
-  for the full semantic map and Phase 2 planning notes on those 24.
+  for the full semantic map and Phase 2 planning notes on the rest of
+  the former 24-function tail.
+- **`sub_8011248`-`sub_8011390`** (`src/system/game_loop52.c`, new file
+  - Phase 2's "accessor cluster" group) - 11 functions, a small
+  "orbiting hazard" behavior family on a further still-unnamed "part"
+  object distinct from `struct actor` and from `sub_8010D54`'s own
+  `struct collision_queue`: `sub_8011364` seeds an orbit anchor+start
+  position, `sub_8011378` (re)starts the orbit at a given mode/phase 0,
+  `sub_8011388` sets an adjacent still-unexamined byte, `sub_8011248` is
+  the per-frame orbit-position update (two lookups into the shared sine
+  table `gStaticData_0816A820` at different strides, combined via the
+  overflow-avoiding fixed-point multiply `sub_80008FC`), `sub_8011330`
+  fires a `self->table`-driven hit trampoline once "spawned"
+  (`self+0x48 == 0`) and a player flag is set, `sub_80112C4` re-derives
+  visibility from a `sub_8007A84`/`self+0x38` gate, `sub_80112F4`/
+  `sub_8011310`/`sub_8011308` are a small init/reset/table-repoint trio
+  (same `sub_80084A4`/table-swap shape as `actor_part8.c`), and
+  `sub_8011390` is the per-frame player-proximity/hit-resolve step
+  (AABB-tests against the player, choosing primary vs. secondary AABB
+  build depending on the player's own state, and on overlap tail-calls
+  the despawn picker `sub_8011448`). All matched as real C except
+  `sub_8011248` (NAKED transcription: gcc 2.9 persistently picks the
+  opposite operand order for the shared-table pointer adds no matter how
+  the C source phrases the addition - not one isolated register to pin).
+  Confirmed by a full clean `make compare` ("La suma coincide").
+  `asm/code_3_2_17_e560_10d54.s` further trimmed to end at
+  `sub_80111B8` - see
+  [docs/matching/issue-14-0x08010d54-physics-apply.md](../matching/issue-14-0x08010d54-physics-apply.md)'s
+  Phase 2 findings for the full field map.
 - **`sub_8011448`/`sub_8011548`/`sub_801173C`/`sub_8011870`/`sub_801191C`/
   `sub_801192C`** (`src/system/game_loop53.c`, new file - Phase 2,
-  second parallel slice of the 24-function chunk above) - the chunk's
-  tail 6 functions, contiguous through to the already-matched
-  `actor_part39.c`. `sub_8011448` is a randomized-position spawn/despawn
-  picker; `sub_8011548` is an entity-vtable-dispatched velocity
-  integrator (mode 0-3 on `self->0x48`, with a PlaySfx+`sub_8023430`+
+  a parallel slice of the same 24-function chunk) - the chunk's tail 6
+  functions, contiguous through to the already-matched `actor_part39.c`.
+  `sub_8011448` is a randomized-position spawn/despawn picker;
+  `sub_8011548` is an entity-vtable-dispatched velocity integrator
+  (mode 0-3 on `self->0x48`, with a PlaySfx+`sub_8023430`+
   collision-bitmap arrival tail and a `sub_8025CA4` mode-3 spawn);
   `sub_801173C` is the achievement/unlock-icon spawn helper;
   `sub_8011870` is `sub_80111B8`'s alternative; `sub_801191C`/
@@ -738,12 +772,13 @@ plain C didn't converge.
 
 ## Still raw, category-mapped (GitHub issue #12/#34/#40)
 
-- **18 functions, `0x08010E14`-`0x08011448`** (`asm/code_3_2_17_e560_10d54.s`,
-  trimmed) - the remainder of the chunk `sub_8010D54` (above) was the
-  entry point of, now that the tail 6 functions were carved into
-  `game_loop53.c` (above); still category-mapped `graphics` pending its
-  own examination, though the first two functions are confirmed direct
-  siblings of `sub_8010D54`'s own collision-queue record, and
+- **`sub_8010E34`-`sub_80111B8`** (`asm/code_3_2_17_e560_10d54.s`,
+  trimmed at both ends) - the still-unexamined middle of the former
+  24-function tail `sub_8010D54` (above) was the entry point of, now
+  that its front (`sub_8010E14`/`sub_8010E2C`), its own accessor
+  cluster (`sub_8011248`-`sub_8011390`), and its tail 6 functions
+  (`sub_8011448`-`sub_801192C`, `game_loop53.c`) are all matched above;
+  still category-mapped `graphics` pending its own examination, though
   `sub_8010E34`/`sub_8010EAC`/`sub_8010F8C`/`sub_80111B8` are
   individually characterized and isolated-verified (not yet integrated)
   - see
