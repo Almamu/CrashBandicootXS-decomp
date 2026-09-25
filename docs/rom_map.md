@@ -2475,7 +2475,9 @@ umbrella 5-mode dispatcher unifying the already-documented
 (**resolved in a later pass**: 4 real dispatch arms, not 5 - the "5th"
 is a no-op default; now matched as real C, see
 `docs/matching/issue-9-10-41-0x08026628-game-loop.md`, which also
-pins down which of `sub_8026AE8`/`sub_8026A18` resolves which axis).
+pins down which of `sub_8026AE8`/`sub_8026A18` resolves which axis;
+a further pass closed `sub_8026AE8`/`sub_8026A18` themselves too, as
+hand-transcribed NAKED functions - same doc).
 **`sub_802306C`/`sub_8022FEC`** are two more entry points into the
 `sub_8022BF0` wraparound lap-counter system (same `self+0x70`/`0xbc`
 field pair), and on threshold-cross call `sub_801EB04` with the same
