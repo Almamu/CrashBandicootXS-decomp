@@ -232,9 +232,22 @@ system from "core" system startup/init code.
   two other closed call sites this session (`sub_8009BE0`'s physics/
   collision step-probe and `sub_800AAEC`'s input-action-check gate) and
   sketched in `docs/rom_map.md` as an umbrella dispatcher unifying
-  `sub_8026AE8`/`sub_8026A18` (still raw) under one API. A small
-  (148 B) 4-arm `switch` on `mode`, matched on the first isolated-
-  compile attempt with no register pins needed - see
+  `sub_8026AE8`/`sub_8026A18` under one API. A small (148 B) 4-arm
+  `switch` on `mode`, matched on the first isolated-compile attempt
+  with no register pins needed - see
+  [docs/matching/issue-9-10-41-0x08026628-game-loop.md](../matching/issue-9-10-41-0x08026628-game-loop.md).
+- **`sub_8026A18`**/**`sub_8026AE8`** (`src/system/game_loop46.c`, new
+  file - closing pass on `sub_8026628`'s own axis resolvers, semantics
+  already fully derived by that investigation) - the Y-axis (floor/
+  ceiling) and X-axis (wall) tile-scan resolvers, 208/216 B. Same
+  gcc-2.9 register-allocation-permutation gap already forced NAKED on
+  `sub_8025130`/`sub_8025228`/`sub_8025460`/`sub_8024F24` next door
+  (`self`/`pos`/`outValue`/`hit` packed into `sl`/`r7`/`r8`/`sb`
+  simultaneously) - an isolated-compile attempt at plain C never
+  reproduced the ROM's own register assignment even with register
+  pins (pinning made it worse, the same symptom `sub_8024F24`'s own
+  comment already documented). Closed both as hand-transcribed NAKED
+  functions instead - see
   [docs/matching/issue-9-10-41-0x08026628-game-loop.md](../matching/issue-9-10-41-0x08026628-game-loop.md).
 - **`sub_8026BC0`** (`src/system/game_loop44.c`, new file - dedicated
   deep investigation) - independently flagged "still raw" by two
