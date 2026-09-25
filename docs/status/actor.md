@@ -656,6 +656,19 @@ plain C didn't converge.
   retry) before giving up. Fully understood; parked on a register-
   reload quirk in the retry loop. See
   `docs/matching/naked-spatial-grid-tail.md`.
+- **`sub_800CD00`** (`src/graphics/actor_part109.c`, GitHub issue
+  #9/#10) - `sub_800AAEC`'s only callee: builds three AABBs (the
+  entry's own current hitbox, the player's current hitbox, and the
+  player's hitbox for the caller's target action) via the same
+  `self+0x20`-table-at-28-byte-stride "keyframe/hitbox record"
+  convention `sub_800D040` (`game_loop6.c`) documents, then returns
+  whether the entry's hitbox overlaps the target-action hitbox without
+  already overlapping the current one. A strict superset of
+  `sub_800D040`'s own two-AABB shape, already documented there as
+  resistant to gcc 2.9 C reconstruction (the `r7`/`r8`/`sb`
+  register-reuse pattern across AABB blocks) - not re-attempted as C
+  here; transcribed directly as byte-exact NAKED asm instead. See
+  [docs/matching/issue-9-10-0x0800aaec-graphics.md](../matching/issue-9-10-0x0800aaec-graphics.md).
 - **`sub_801434C`** (`src/graphics/actor_part18.c`) - the shared
   handler `sub_80142B0` tail-calls; one of the `gStaticData_0816BF20`
   action-table entries. See `docs/matching/issue-18-0x08014f8c-actor.md`.
@@ -1184,6 +1197,23 @@ embedded as asm instead. They're tracked as parked, not matched.
   accepted-as-unclosable class as `sub_8008AD8`/`sub_8008D80` right
   next door (`actor_part7.c`) and `PlaySfx` (issue #3). See
   [docs/matching/issue-9-10-0x0800ab9c-graphics.md](../matching/issue-9-10-0x0800ab9c-graphics.md).
+- **`sub_800AAEC`** (`src/graphics/actor_part108.c`, GitHub issue
+  #9/#10) - the input-action-check function the 42-slot
+  `gStaticData_0816BF20` action-dispatch table's entries call: gates a
+  `sub_8026628` proximity probe against the player, then walks
+  `gUnknown_0300130C`'s object list, testing each entry via
+  `sub_803AD7C` and calling `sub_800CD00` (now examined and closed,
+  `actor_part109.c`) on a hit. Every instruction matches except one
+  5-instruction pair (the `gUnknown_0300130C` list-walk's loop-
+  condition-check/loop-entry register roles - the ROM re-loads
+  `&gUnknown_0300130C` from the literal pool fresh every iteration,
+  landing it in `r0` and reusing that register as the dereferenced
+  value in place; no C phrasing tried reproduced that exact
+  per-iteration reload shape without either losing the reload
+  entirely via gcc's own loop-invariant hoisting, or costing an extra
+  callee-saved register). Default build uses a byte-exact NAKED
+  transcription instead - see
+  [docs/matching/issue-9-10-0x0800aaec-graphics.md](../matching/issue-9-10-0x0800aaec-graphics.md).
 - **`sub_800B6A0`/`sub_800B6D0`** (`src/graphics/actor_part16.c`) -
   mirror-flag-gated 3-vector copies. This compiler unconditionally
   spills the `vec` pointer to a callee-saved register (`push
@@ -1392,10 +1422,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   update/collision dispatchers built on unmatched
   `sub_8008200`/`sub_8026628`/`sub_8026C3C`/`sub_8026BF8` - see
   `docs/matching/issue-9-0x08007634-actor.md`.
-- **`sub_800AAEC`** (`asm/code_3_2_16.s`, ROM 0x0800AAEC, GitHub issue
-  #9/#10) - a global-list iterator blocked on still-fully-unexamined
-  `sub_800CD00`; left raw - see
-  `docs/matching/issue-9-10-0x0800ab9c-graphics.md`.
 - **`sub_800AC2C`/`sub_800AFF4`** (`asm/code_3_2_16_ac2c.s`, ROM
   0x0800AC2C-0x0800B270, GitHub issue #9/#10) - a 38-case player
   action-state machine and a high-register-pressure hitbox commit
