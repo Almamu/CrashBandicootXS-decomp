@@ -1317,3 +1317,183 @@ This was the last function in `asm/code_3_2_17_bfa8.s` - the file is
 now empty and has been deleted, with its `ldscript.txt` entry replaced
 by `build/crashbandicootxs/src/graphics/actor_part121.o(.text);`
 (new file, `src/graphics/actor_part121.c`).
+
+## Closing the small gap: `asm/code_3_2_17_ca04.s` (19 functions)
+
+Follow-up session, closing a small gap the three parallel closing
+sessions above (Phase 4, the `sub_800BFA8` pass, and the final
+`sub_800CBF4` pass) all missed: `asm/code_3_2_17_ca04.s`, ROM
+`0x0800CA04`-`0x0800CBD4` (464 bytes, 19 functions/stubs), sitting
+directly between two already-matched neighbors from this same overall
+cluster investigation - `sub_800C9C8` (`actor_part116.c`) just before
+it, and `sub_800CBD4` (`actor_part117.c`) - which calls this file's own
+`nullsub_14` as its own tail-call hook - immediately after.
+`tools/report_units.py` still carried a `(0x0800CA04, None, "graphics")`
+placeholder for it ("remainder of the cluster past sub_800C9C8 up to
+sub_800CBD4 - not yet examined").
+
+### What each one does
+
+Given the file's small size (464 bytes / 19 functions, ~24 bytes
+average), nearly all of them turned out to be tiny single-field
+accessors on this cluster's already-well-characterized `self`/`owner`
+object shape, plus two slightly larger helpers and one instance of an
+idiom already matched elsewhere in this cluster:
+
+- **`sub_800CA04(self, owner)`**: `self->0x70 = owner;` - the first
+  confirmed *writer* of the `owner` pointer field anywhere in this
+  cluster (every other function across the whole 43-function
+  investigation only ever reads `self+0x70`).
+- **`sub_800CA08(x, y)`**: the exact "distance-scaled ambient sound
+  volume" calculation `sub_800B8DC` state 18 (`actor_part112.c`)
+  already documents inline - `max(|x-cameraX|, |y-cameraY|)` against
+  `gUnknown_030012D8` (the player/camera object), clamped to
+  `[0x20,0xa0]`, converted to `0x100 - (clamped-0x20)*2`. Whether this
+  is literally the function that inline block compiles from, or an
+  independently-written sibling with identical logic, isn't resolved
+  here.
+- **`sub_800CA48(self)`**: resets `self->0x70` (owner), `self->0x84`
+  (the per-instance mode-indexed pointer table Phase 2 already
+  identified) and `self->0x88` (the floating-popup child pointer) to
+  null, and re-points `self->4` (the "manager" pointer Phase 2 already
+  identified) at the fixed `gStaticData_0816BB6C` table.
+- **`sub_800CA60(self, flags)`** / **`sub_800CBC0(self, flags)`**: both
+  the same "double-set" shape as `sub_800CCCC` (`actor_part123.c`) -
+  set `self+0xc`'s table pointer (to `gStaticData_087E3EE4` and
+  `gStaticData_087E3FA4` respectively - the same two anchor tables
+  `sub_800B8DC`/`sub_800BD48` and `sub_800CBD4` themselves already use)
+  then tail-call `sub_800B8A8`, which unconditionally resets
+  `self+0xc` right back to `gStaticData_087E3E7C` regardless - the same
+  harmless dead-store double-set pattern already established for
+  `sub_8018858`/`sub_8017A78`/`sub_8017FD4`/`sub_800CCCC`.
+- **`sub_800CA74(self)`**: the "reset, re-point, hook, return self"
+  constructor shape already matched for `sub_801886C`/`sub_8018858`/
+  `sub_800CBD4`/`sub_800CCE0` - resets via `sub_800B8C8`, re-points
+  `self+0xc` at `gStaticData_087E3EE4`, calls `sub_800CA48` above (its
+  own hook), returns `self`.
+- **`sub_800CA94(self, a, b, c)`**: `self->0x3c/0x40/0x44` setter - the
+  sine-oscillator parameters (divisor, phase offset, amplitude)
+  `sub_800C8F8`/`sub_800C940`/`sub_800C97C` (`actor_part116.c`) already
+  consume.
+- **`sub_800CA9C(self, a, b)`**: `self->0x48/0x4c` setter - the exact
+  fields `sub_800BFA8`'s (`actor_part121.c`) own `sub_803AE4C` "close
+  enough" gate reads.
+- **`sub_800CAA4(self, a, b, c)`**: `self->0x30/0x34/0x38` setter - the
+  "blocking condition" pair plus "enabled" byte the Phase 1 doc's field
+  table already names.
+- **`sub_800CAAC(self, a, b, c, d)`**: full 4-corner
+  `self->0x20/0x24/0x28/0x2c` setter - the per-instance AABB trigger
+  box `sub_800C5D4` (`actor_part116.c`) already builds from.
+- **`sub_800CAC0(self, a)`**: `self->0x84` setter - the per-instance
+  mode-indexed pointer table `sub_800C8CC`/`sub_800C6A8`
+  (`actor_part113.c`/`actor_part122.c`) both trigger through.
+- **`sub_800CAC8(self, a)`**: `self->0x6c` setter - the "second,
+  larger-range state/anim-id byte" the Phase 1 doc's field table
+  already names.
+- **`sub_800CACC(self)`**: if `self`'s own X position is within
+  `[0xa1,0x18f]` tiles of `gUnknown_030012D8`'s (the player/camera)
+  own X position, runs the same `sub_803AE4C` "close enough" gate
+  `sub_800BFA8` already uses (here against `self->0x20`/`self->0x24`,
+  the AABB corners `sub_800CAAC` sets), and on a pass fires
+  `sub_803AD88((void*)0xffff, (u16)selfX, (u16)(self->4>>8), 0)` - the
+  same "directional-target table trigger" primitive `sub_800B8DC`
+  state 11 and `sub_800BD48` states 19-20 already call directly. Also
+  reads `self->0x1c` (the Y-axis homing bound `sub_800CB60` below
+  sets) into a value that's never used for anything - a genuine dead
+  read the ROM's own compiled output still performs.
+- **`sub_800CB20(self, flags)`**: sets `self->0x18`'s table pointer
+  (the struct-actor-shaped "table" field role) to `gStaticData_087E3BEC`
+  - the same table `graphics.c`'s own constructors use - then, only if
+  `flags` bit 0 is set, fires `sub_8026ED0(self)`.
+- **`sub_800CB40(self)`**: calls `sub_800725C(self)` (already matched,
+  `graphics.c`, return value discarded), sets `self->0x18` to
+  `gStaticData_087E3F4C`, returns `self`.
+- **`sub_800CB58(self, a, b)`**: `self->0x20/0x24` partial (position-
+  only) setter - the same AABB fields `sub_800CAAC` sets all four
+  corners of.
+- **`sub_800CB60(self, a)`**: `self->0x1c` setter - the Y-axis homing
+  bound `sub_800C87C`/`sub_800C898` (`actor_part122.c`) already write.
+- **`sub_800CB64(self, other)`**: `self` (the first argument) is never
+  read - only `other` matters. Reads `other+0x18`'s own table pointer,
+  fires a `sub_803AD7C` hit-probe against its `+0x28`/`+0x2c`
+  `{s16 offset, void *fn}` pair (the same convention
+  `src/system/game_loop8.c`'s `sub_802400C` and `actor_part123.c`'s
+  `sub_800CBF4` both already read from their own `table+0x28`/`+0x2c`),
+  and - only when that probe reports *no* hit - runs the "flag active +
+  bitmap-set" idiom on `other` (`other+0xc` bit 0; unless `other+8`'s
+  id sentinel-checks as `0xffff`, also sets its bit in the
+  `gUnknown_030012B4+0x108` bitmap) - the exact idiom
+  `actor_part27c.c`'s `sub_8018884` already matches as real C.
+- **`nullsub_14(self)`**: genuine empty stub (`bx lr`) - `sub_800CBD4`'s
+  own tail-call hook, per that function's own doc comment.
+
+### Matching
+
+All 19 matched as **real C**, no NAKED fallback needed anywhere in
+this file - a pleasant surprise given how much of the rest of this
+cluster required NAKED transcription for its `self`/`owner`
+multi-field-liveness resistant shape. The 15 straightforward
+single/multi-field setters and the two "double-set"/"reset-and-hook"
+constructor-shaped functions matched immediately, first attempt, no
+register-pinning needed. Three functions needed this project's
+established `[[matching_decomp_register_pinning]]` toolbox:
+
+- **`sub_800CA08`**: pinning `x`/`y` to `r0`/`r1` and every
+  intermediate to the ROM's own `r2`/`r3` register choices was needed
+  to get gcc 2.9 to emit the ROM's own branch-free sign-mask abs idiom
+  (`mask = v >> 31; v = (v ^ mask) - mask;`) without spilling one of
+  the two distance values to `r4` - unpinned, the compiler kept the
+  X-axis distance live across the Y-axis computation in a spilled `r4`,
+  forcing an unwanted `push {r4, lr}`/`pop {r4}` pair the ROM's own
+  leaf function (no `bl` calls at all, single `bx lr` return) never
+  has. The final low-bound clamp also needed rephrasing as
+  `d = (d >= 0x20) ? d : 0x20` rather than the more natural
+  `if (d < 0x20) d = 0x20;`, to stop gcc canonicalizing the negated
+  branch condition from `cmp r1,#0x20; bge` into `cmp r1,#0x1f; bgt` -
+  functionally identical, but byte-different from the ROM.
+- **`sub_800CACC`**: needed one pin - the dead `self+0x1c` read had to
+  be pinned to `r4` explicitly (the register `self` itself was already
+  using, and free again by the point of that read) - unpinned, gcc
+  picked a spare `r3` for it instead, a harmless but byte-different
+  register choice from the ROM's own `ldr r4, [r4, #0x1c]`.
+- **`sub_800CB64`**: needed the same register-pinning chain
+  `actor_part27c.c`'s `sub_8018884` doc comment already documents for
+  this exact "flag active + bitmap-set" idiom - `other` pinned to
+  `r4` (matching the ROM's own choice, freed up again by the time the
+  bitmap-set idiom's own `0x108`-offset computation reuses it), plus
+  the same `register ... asm("rN")` chain and `volatile` reload of
+  `other+8` that function's own doc comment explains is needed to stop
+  this compiler CSE-ing away the ROM's own seemingly-redundant second
+  `ldrh` and folding the shift-setup pair into a single instruction.
+
+Three functions (`sub_800CA94`, `sub_800CAAC`, `sub_800CAC0`) also
+needed the `[[matching_decomp_alignment_fix]]` trailing
+`asm(".align 2, 0")` idiom for their own non-4-aligned trailing byte
+counts, as did `nullsub_14` itself.
+
+Confirmed byte-identical to `baserom.gba` at `0x0800CA04`-`0x0800CBD4`
+(464 bytes, all 19 functions) via the isolated cpp/agbcc/as +
+objcopy/cmp pipeline - cross-checked against the object file's own
+relocation table (`objdump -r`) to confirm every one of the 63
+differing bytes in the raw isolated compare landed exactly on one of
+the file's 18 `R_ARM_THM_CALL`/`R_ARM_ABS32` relocation sites (9 `bl`
+targets, 9 literal-pool globals) and nowhere else - plus a full clean
+`rm -rf build && make NON_MATCHING=1 report` (no warnings) and
+`rm -rf build crashbandicootxs.elf crashbandicootxs.gba
+crashbandicootxs.map && make compare` (`crashbandicootxs.gba: La suma
+coincide`).
+
+### Build layout
+
+All 19 functions now live in the new `src/graphics/actor_part124.c`.
+`asm/code_3_2_17_ca04.s` is fully consumed and deleted;
+`ldscript.txt`'s `build/crashbandicootxs/asm/code_3_2_17_ca04.o(.text);`
+line is replaced with
+`build/crashbandicootxs/src/graphics/actor_part124.o(.text);` in
+place. `tools/report_units.py`'s `(0x0800CA04, None, "graphics")`
+placeholder is replaced with a matched entry for `actor_part124.o`.
+
+This closes the small gap left over from the three parallel closing
+sessions above - the entire 43-function `0x0800B8DC`-`0x0800D040`
+cluster (and this small adjacent stretch) is now fully matched, with
+no raw bytes remaining anywhere in the span.
