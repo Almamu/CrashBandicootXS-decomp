@@ -719,6 +719,26 @@ plain C didn't converge.
   at all, a structurally different solution rather than a near-miss).
   Transcribed directly as byte-exact NAKED asm instead. See
   [docs/matching/issue-9-0x0800a178-graphics.md](../matching/issue-9-0x0800a178-graphics.md).
+- **`sub_800AFF4`** (`src/graphics/actor_part111.c`, GitHub issue
+  #9/#10) - the per-frame update for a "stars orbiting a dizzy head"
+  companion effect, gated on `gUnknown_030012C0+0x78`'s mode field:
+  mode 3 (stun-entry) repositions and flickers a `self+0xb0` child
+  object next to `self`'s head and blinks `self` itself via
+  `sub_8007A84` on a `self+0x8c` deadline, ending the stun
+  (`sub_80231EC(gUnknown_030012C0, 2)`) once that deadline clears;
+  modes 1/2 (idle-orbit) drive the same child object in an elliptical
+  path from `self`'s own 8-frame-delayed position-history ring buffer
+  (`self+0xb4`/`self+0xb8`) plus the shared `gStaticData_0816A820`
+  sine-ish table. Both the mode-3 and mode-1/2 branches reuse the same
+  `self+0x20`-table/`+0x2d`-tag 28-byte-record clamp-and-store idiom
+  (`actor_part79.c`'s sibling shape) to pick the child's own variant.
+  Keeps `sb`/`sl`/`r8`/`ip` all simultaneously live across the
+  ring-buffer and trig-table math - the same register-pressure shape
+  already proven gcc-2.9-resistant on `sub_800CD00`/`sub_800A178`/
+  `sub_800A420` above and `sub_8026AE8`/`sub_8026A18` elsewhere this
+  session; not attempted as C, transcribed directly as byte-exact
+  NAKED asm instead. See
+  [docs/matching/issue-9-10-0x0800aff4-graphics.md](../matching/issue-9-10-0x0800aff4-graphics.md).
 - **`sub_801434C`** (`src/graphics/actor_part18.c`) - the shared
   handler `sub_80142B0` tail-calls; one of the `gStaticData_0816BF20`
   action-table entries. See `docs/matching/issue-18-0x08014f8c-actor.md`.
@@ -1467,11 +1487,12 @@ embedded as asm instead. They're tracked as parked, not matched.
   `docs/matching.md` as needing "a dedicated session" of its own, not
   attempted again here - see
   `docs/matching/issue-9-0x08007634-actor.md`.
-- **`sub_800AC2C`/`sub_800AFF4`** (`asm/code_3_2_16_ac2c.s`, ROM
-  0x0800AC2C-0x0800B270, GitHub issue #9/#10) - a 38-case player
-  action-state machine and a high-register-pressure hitbox commit
-  function, each calling one or more still-unexamined helpers; left
-  raw - see `docs/matching/issue-9-10-0x0800ab9c-graphics.md`.
+- **`sub_800AC2C`** (`asm/code_3_2_16_ac2c.s`, ROM 0x0800AC2C, GitHub
+  issue #9/#10) - a 38-case player action-state jump-table dispatcher
+  calling a dozen still-unexamined state-transition functions; left
+  raw per this project's established policy for this exact dispatcher
+  shape (same as `sub_8018008`, issue #22) - see
+  `docs/matching/issue-9-10-0x0800ab9c-graphics.md`.
 - **`sub_8016048`** (`asm/code_3_2_17_16048.s`, ROM 0x08016048, GitHub
   issue #19) - a smaller joystick-input-gated dispatcher; left raw, out
   of scope for this pass - see
