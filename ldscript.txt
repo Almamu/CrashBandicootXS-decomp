@@ -137,7 +137,7 @@ SECTIONS
         build/crashbandicootxs/src/graphics/actor_part109.o(.text);
         build/crashbandicootxs/src/system/game_loop42.o(.text);
         build/crashbandicootxs/src/system/game_loop6.o(.text);
-        build/crashbandicootxs/asm/code_3_2_17_d18c.o(.text);
+        build/crashbandicootxs/src/system/game_loop47.o(.text);
         build/crashbandicootxs/src/system/game_loop7.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_e560.o(.text);
         build/crashbandicootxs/src/system/game_loop32.o(.text);
