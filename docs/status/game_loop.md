@@ -319,6 +319,24 @@ plain C didn't converge.
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md)'s
   Phase 1 appendix for the confirmed dispatch maps (the basis for this
   issue's Phase 2 parallel split of the remaining 18 leaf functions).
+- **`sub_800EEF0` through `sub_800F990`** (12 functions:
+  `sub_800EEF0`, `sub_800F06C`, `sub_800F1B8`, `sub_800F258`,
+  `sub_800F2BC`, `sub_800F368`, `sub_800F4F4`, `sub_800F5B8`,
+  `sub_800F6B8`, `sub_800F798`, `sub_800F8E0`, `sub_800F990` -
+  `src/system/game_loop49.c`, new file - GitHub issue #12 Phase 2,
+  higher-address half) - the direct/transitive callees of
+  `sub_0800D18C`'s and `sub_800E08C`'s per-edge jump table reachable
+  from `sub_800EEF0` up through the end of this whole cluster
+  (0x0800EEF0-0x0800FC70). All twelve closed by NAKED transcription for
+  the same gcc-2.9-resistant register-shape reasons as Phase 1's two
+  dispatchers - each re-triggers either the `+0x20`/`+0x2d`-hitbox-record
+  AABB-build idiom or plain high-register (`r8`/`sb`/`sl`) cross-block
+  reuse under -O2. Verified byte-exact via a full clean `make compare`.
+  `asm/code_3_2_17_e560.s` now ends right after `sub_800EDBC` (the
+  sibling Phase 2 pass's own still-raw territory, `sub_800E560` through
+  `sub_800EDBC`, is untouched here). See
+  [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md)'s
+  Phase 2 appendix for the confirmed per-function roles.
 - **`sub_800E494`/`sub_800E4E4`** (`src/system/game_loop7.c`, GitHub
   issue #12) - bidirectional linked-list walkers (`sub_801070C`/
   `sub_8010708`) clearing/setting each neighbor's `+0x58` flag. See
@@ -595,17 +613,16 @@ plain C didn't converge.
 
 ## Still raw, category-mapped (GitHub issue #12/#34/#40)
 
-- **`sub_800E560` onward through `sub_800F990`** (`asm/code_3_2_17_e560.s`,
-  ROM `0x0800E560`-`0x0800FC70`, GitHub issue #12) - the rest of this
-  chunk's 25-function list: the collision-response jump-table handlers
+- **`sub_800E560` onward through `sub_800EDBC`** (`asm/code_3_2_17_e560.s`,
+  ROM `0x0800E560`-`0x0800EEF0`, GitHub issue #12) - the lower-address
+  half of this chunk's remaining collision-response jump-table handlers
   `sub_0800D18C` itself dispatches to (`sub_800E620`, `sub_800E6B0`,
   `sub_800E7A8`, `sub_800E888`, `sub_800EAFC`, `sub_800ED08`,
-  `sub_800EDBC`, `sub_800EEF0`, `sub_800F06C`, `sub_800F1B8`,
-  `sub_800F258`, `sub_800F2BC`, `sub_800F368`, `sub_800F4F4`,
-  `sub_800F5B8`, `sub_800F6B8`, `sub_800F798`, `sub_800F8E0`,
-  `sub_800F990`), each a moderately-sized state-machine function with
+  `sub_800EDBC`), each a moderately-sized state-machine function with
   several sibling calls within this same still-raw neighborhood; left
-  untouched for this pass - see
+  untouched for this pass (a parallel Phase 2 sibling's own territory -
+  the higher-address half, `sub_800EEF0` through `sub_800F990`, is now
+  matched, see above) - see
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md).
 - **`sub_800FF0C`** (`asm/code_3_2_17_e560_ff0c.s`, ROM `0x0800FF0C`,
   GitHub issue #13) - a large (~660-instruction) projectile/
