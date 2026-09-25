@@ -15,197 +15,207 @@
  * the sign and relative magnitude of `dx = a - pos` vs `dy = b -
  * count`, the classic 4-case Bresenham octant split - each case is a
  * fixed single-octant variant of the same shape
- * `sub_8010784`/`sub_80107C4` (game_loop31.c) already establish:
+ * `sub_8010784`/`sub_80107C4` (game_loop31.c) already establish.
  *
- *   dx = a - pos; dy = b - count;
- *   if (dx > 0) {
- *       if (dx > dy) {           // X major, increasing
- *           for (twoDx = dx*2, twoDy = dy*2, diff = twoDy-twoDx,
- *                err = twoDy-dx, n = dx-1; n != -1; n--) {
- *               if (err >= 0) { count++; err += diff; } else { err += twoDy; }
- *               if (++pos >= limit) return count;
- *           }
- *       } else {                 // Y major, X advances conditionally, increasing
- *           for (twoDx = dx*2, twoDy = dy*2, diff = twoDx-twoDy,
- *                err = twoDx-dy, n = dy-1; n != -1; n--) {
- *               if (err >= 0) { if (++pos >= limit) return count; err += diff; }
- *               else { err += twoDx; }
- *               count++;
- *           }
- *       }
- *   } else {
- *       absDx = -dx;
- *       if (absDx > dy) {        // X major, decreasing
- *           for (twoAbsDx = absDx*2, twoDy = dy*2, diff = twoDy-twoAbsDx,
- *                err = twoDy-absDx, n = absDx-1; n != -1; n--) {
- *               if (err >= 0) { count++; err += diff; } else { err += twoDy; }
- *               if (--pos >= limit) return count;
- *           }
- *       } else {                 // Y major, X advances conditionally, decreasing
- *           for (twoAbsDx = absDx*2, twoDy = dy*2, diff = twoAbsDx-twoDy,
- *                err = twoAbsDx-dy, n = dy-1; n != -1; n--) {
- *               if (err >= 0) { if (--pos >= limit) return count; err += diff; }
- *               else { err += twoAbsDx; }
- *               count++;
- *           }
- *       }
- *   }
- *   return -1;
- *
- * Written as NAKED asm, not plain C: this compiler's cross-jump pass
- * notices the X-major-increasing case's own early-return (`adds
+ * Was NAKED asm, not plain C: this compiler's cross-jump pass used to
+ * notice the X-major-increasing case's own early-return (`adds
  * r0,r1,#0; b <exit>`) is byte-identical to the shared early-return
- * the other three cases already fold into one physical copy (matching
- * the ROM's own choice there), and folds *all four* into a single
- * shared tail - 4 bytes shorter than the ROM, which keeps the first
- * case's copy separate (its own early-return is never reached from
- * any other case) while still sharing the other three. A `asm
- * volatile("" : "+r"(count))` barrier right at that one return site
- * (the established fix for a same-value provable-equal cross-jump,
- * see docs/matching.md's `text_layout.c` entry) has no effect here
- * since this merge isn't value-driven - the barrier's own zero
- * instructions vanish before the late-stage cross-jump pass runs, and
- * no combination of restructuring found kept that one return
- * physically separate without changing the byte count elsewhere.
- * Every instruction below is checked byte-identical to the ROM. */
-NAKED s32 sub_800FDC8(s32 pos, s32 count, s32 a, s32 b, s32 limit)
+ * the other three cases fold into one physical copy (matching the
+ * ROM's own choice there), and folded *all four* into a single shared
+ * tail - 4 bytes shorter than the ROM, which keeps the first case's
+ * copy separate (its own early-return is never reached from any other
+ * case) while still sharing the other three. Closed with the same
+ * `goto`-to-a-physically-earlier-label technique already proven for
+ * `sub_8010914`/`sub_801095C` (docs/matching/naked-sub_8010914-matched.md):
+ * the X-major-increasing case's own return is written as a `goto
+ * returnSolo;` whose target is placed immediately after that case's
+ * own loop (before case 2's code, matching the ROM's own block
+ * order), while the other three cases keep plain `return count;`
+ * statements that this compiler's own cross-jump pass still merges
+ * into a single shared tail on its own - exactly reproducing the
+ * ROM's "one solo copy, one copy shared by three" layout instead of a
+ * single 4-way merge. The solo copy is additionally materialized as a
+ * literal two-instruction `asm volatile` block (`add r0, <count>,
+ * #0`) rather than a plain `return count;`: with matching source
+ * structure alone, gcc's crossjump pass still recognized the solo
+ * `mov r0,r1;b <exit>` sequence as identical to the shared one purely
+ * by instruction content (irrespective of source placement) and
+ * folded them anyway. An inline-asm block is a fundamentally
+ * different (opaque) RTL node to that pass, so it can never be
+ * unified with the plain-C-generated shared copy even when the final
+ * bytes coincide.
+ *
+ * Each case's `diff`/`err` computation additionally needed `diff`/
+ * `err` pinned to `r6`/`r0` (the ROM's own fixed register roles for
+ * these values in every one of the four cases) plus a small
+ * `asm volatile` for the `diff` calculation itself
+ * (`lsl r0, <subtrahend>, #1` / `sub <diff>, <minuend*2>, r0`):
+ * unconstrained, this compiler computes the doubled subtrahend
+ * directly into `diff`'s own pinned register (`r6`) as scratch,
+ * whereas the ROM always uses `r0` (the not-yet-live `err`'s own
+ * register) as that scratch instead - materializing the exact
+ * instruction/register pair as opaque asm reproduces the ROM's
+ * choice. `count` is pinned to `r1` throughout (the ROM's own choice,
+ * matching its role as both an ordinary accumulator and the eventual
+ * return value) - required to avoid an extra copy elsewhere in the
+ * function once `err` claims `r0`. None of this pins `r7`: `limit`
+ * (alive across all four cases, matching the ROM's own persistent
+ * `r7`) is left as a completely unconstrained parameter - with `r0`/
+ * `r1`/`r6` already claimed by `err`/`count`/`diff`, this compiler's
+ * own allocator has nowhere else to put it and picks `r7` on its own,
+ * matching the ROM exactly (see `matching_decomp_register_pinning`
+ * memory point 10 / docs/matching.md's extensive r7-must-stay-
+ * unpinned notes - pinning `r7` explicitly is a confirmed toolchain
+ * bug that silently drops it from the prologue's push/pop list). */
+s32 sub_800FDC8(s32 pos, s32 countArg, s32 a, s32 b, s32 limit)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r7, [sp, #0x14]\n\t"
-        "cmp r1, r3\n\t"
-        "ble 1f\n\t"
-        "add r0, r1, #0\n\t"
-        "add r1, r3, #0\n\t"
-        "add r3, r0, #0\n\t"
-        "add r0, r4, #0\n\t"
-        "add r4, r2, #0\n\t"
-        "add r2, r0, #0\n\t"
-    "1:\n\t"
-        "sub r2, r2, r4\n\t"
-        "sub r3, r3, r1\n\t"
-        "cmp r2, #0\n\t"
-        "ble 8f\n\t"
-        "cmp r2, r3\n\t"
-        "ble 5f\n\t"
-        "lsl r3, r3, #1\n\t"
-        "lsl r0, r2, #1\n\t"
-        "sub r6, r3, r0\n\t"
-        "sub r0, r3, r2\n\t"
-        "sub r2, #1\n\t"
-        "mov r5, #1\n\t"
-        "neg r5, r5\n\t"
-        "cmp r2, r5\n\t"
-        "beq 13f\n\t"
-    "2:\n\t"
-        "cmp r0, #0\n\t"
-        "blt 3f\n\t"
-        "add r1, #1\n\t"
-        "add r0, r0, r6\n\t"
-        "b 4f\n\t"
-    "3:\n\t"
-        "add r0, r0, r3\n\t"
-    "4:\n\t"
-        "add r4, #1\n\t"
-        "cmp r4, r7\n\t"
-        "bge 12f\n\t"
-        "sub r2, #1\n\t"
-        "cmp r2, r5\n\t"
-        "bne 2b\n\t"
-        "b 13f\n\t"
-    "12:\n\t"
-        "add r0, r1, #0\n\t"
-        "b 14f\n\t"
-    "5:\n\t"
-        "lsl r2, r2, #1\n\t"
-        "lsl r0, r3, #1\n\t"
-        "sub r6, r2, r0\n\t"
-        "sub r0, r2, r3\n\t"
-        "sub r3, #1\n\t"
-        "mov r5, #1\n\t"
-        "neg r5, r5\n\t"
-        "cmp r3, r5\n\t"
-        "beq 13f\n\t"
-    "6:\n\t"
-        "cmp r0, #0\n\t"
-        "blt 7f\n\t"
-        "add r4, #1\n\t"
-        "cmp r4, r7\n\t"
-        "bge 11f\n\t"
-        "add r0, r0, r6\n\t"
-        "b 9f\n\t"
-    "7:\n\t"
-        "add r0, r0, r2\n\t"
-    "9:\n\t"
-        "add r1, #1\n\t"
-        "sub r3, #1\n\t"
-        "cmp r3, r5\n\t"
-        "bne 6b\n\t"
-        "b 13f\n\t"
-    "8:\n\t"
-        "neg r2, r2\n\t"
-        "cmp r2, r3\n\t"
-        "ble 10f\n\t"
-        "lsl r3, r3, #1\n\t"
-        "lsl r0, r2, #1\n\t"
-        "sub r6, r3, r0\n\t"
-        "sub r0, r3, r2\n\t"
-        "sub r2, #1\n\t"
-        "mov r5, #1\n\t"
-        "neg r5, r5\n\t"
-        "cmp r2, r5\n\t"
-        "beq 13f\n\t"
-    "16:\n\t"
-        "cmp r0, #0\n\t"
-        "blt 17f\n\t"
-        "add r1, #1\n\t"
-        "add r0, r0, r6\n\t"
-        "b 18f\n\t"
-    "17:\n\t"
-        "add r0, r0, r3\n\t"
-    "18:\n\t"
-        "sub r4, #1\n\t"
-        "cmp r4, r7\n\t"
-        "bge 11f\n\t"
-        "sub r2, #1\n\t"
-        "cmp r2, r5\n\t"
-        "bne 16b\n\t"
-        "b 13f\n\t"
-    "11:\n\t"
-        "add r0, r1, #0\n\t"
-        "b 14f\n\t"
-    "10:\n\t"
-        "lsl r2, r2, #1\n\t"
-        "lsl r0, r3, #1\n\t"
-        "sub r6, r2, r0\n\t"
-        "sub r0, r2, r3\n\t"
-        "sub r3, #1\n\t"
-        "mov r5, #1\n\t"
-        "neg r5, r5\n\t"
-        "cmp r3, r5\n\t"
-        "beq 13f\n\t"
-    "19:\n\t"
-        "cmp r0, #0\n\t"
-        "blt 20f\n\t"
-        "sub r4, #1\n\t"
-        "cmp r4, r7\n\t"
-        "bge 11b\n\t"
-        "add r0, r0, r6\n\t"
-        "b 21f\n\t"
-    "20:\n\t"
-        "add r0, r0, r2\n\t"
-    "21:\n\t"
-        "add r1, #1\n\t"
-        "sub r3, #1\n\t"
-        "cmp r3, r5\n\t"
-        "bne 19b\n\t"
-    "13:\n\t"
-        "mov r0, #1\n\t"
-        "neg r0, r0\n\t"
-    "14:\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-    );
+    register s32 count asm("r1") = countArg;
+    s32 dx, dy, absDx;
+    s32 tmp;
+
+    if (count > b) {
+        tmp = count; count = b; b = tmp;
+        tmp = pos; pos = a; a = tmp;
+    }
+
+    dx = a - pos;
+    dy = b - count;
+
+    if (dx > 0) {
+        if (dx > dy) {
+            /* X major, increasing */
+            s32 twoDy = dy * 2;
+            register s32 diff asm("r6");
+            register s32 err asm("r0");
+            s32 n;
+
+            asm volatile(
+                "lsl r0, %1, #1\n\t"
+                "sub %0, %2, r0\n\t"
+                : "=r"(diff)
+                : "r"(dx), "r"(twoDy)
+                : "r0"
+            );
+            err = twoDy - dx;
+            n = dx - 1;
+            if (n != -1) {
+                do {
+                    if (err >= 0) {
+                        count++;
+                        err += diff;
+                    } else {
+                        err += twoDy;
+                    }
+                    if (++pos >= limit) {
+                        goto returnSolo;
+                    }
+                    n--;
+                } while (n != -1);
+            }
+            goto returnNeg1;
+
+returnSolo:
+            {
+                register s32 retVal asm("r0");
+                asm volatile("add %0, %1, #0" : "=r"(retVal) : "r"(count));
+                return retVal;
+            }
+        } else {
+            /* Y major, X advances conditionally, increasing */
+            s32 twoDx = dx * 2;
+            register s32 diff asm("r6");
+            register s32 err asm("r0");
+            s32 n;
+
+            asm volatile(
+                "lsl r0, %1, #1\n\t"
+                "sub %0, %2, r0\n\t"
+                : "=r"(diff)
+                : "r"(dy), "r"(twoDx)
+                : "r0"
+            );
+            err = twoDx - dy;
+            n = dy - 1;
+            if (n != -1) {
+                do {
+                    if (err >= 0) {
+                        if (++pos >= limit) {
+                            return count;
+                        }
+                        err += diff;
+                    } else {
+                        err += twoDx;
+                    }
+                    count++;
+                    n--;
+                } while (n != -1);
+            }
+        }
+    } else {
+        absDx = -dx;
+        if (absDx > dy) {
+            /* X major, decreasing */
+            s32 twoDy = dy * 2;
+            register s32 diff asm("r6");
+            register s32 err asm("r0");
+            s32 n;
+
+            asm volatile(
+                "lsl r0, %1, #1\n\t"
+                "sub %0, %2, r0\n\t"
+                : "=r"(diff)
+                : "r"(absDx), "r"(twoDy)
+                : "r0"
+            );
+            err = twoDy - absDx;
+            n = absDx - 1;
+            if (n != -1) {
+                do {
+                    if (err >= 0) {
+                        count++;
+                        err += diff;
+                    } else {
+                        err += twoDy;
+                    }
+                    if (--pos >= limit) {
+                        return count;
+                    }
+                    n--;
+                } while (n != -1);
+            }
+        } else {
+            /* Y major, X advances conditionally, decreasing */
+            s32 twoAbsDx = absDx * 2;
+            register s32 diff asm("r6");
+            register s32 err asm("r0");
+            s32 n;
+
+            asm volatile(
+                "lsl r0, %1, #1\n\t"
+                "sub %0, %2, r0\n\t"
+                : "=r"(diff)
+                : "r"(dy), "r"(twoAbsDx)
+                : "r0"
+            );
+            err = twoAbsDx - dy;
+            n = dy - 1;
+            if (n != -1) {
+                do {
+                    if (err >= 0) {
+                        if (--pos >= limit) {
+                            return count;
+                        }
+                        err += diff;
+                    } else {
+                        err += twoAbsDx;
+                    }
+                    count++;
+                    n--;
+                } while (n != -1);
+            }
+        }
+    }
+
+returnNeg1:
+    return -1;
 }
