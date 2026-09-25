@@ -4053,6 +4053,36 @@ recategorization issue #12 already applied to the neighboring
 `sub_800D040`. This closes the last raw gap between `sub_800CD00`
 (issue #9/#10) and `sub_800D040` (issue #12).
 
+## Follow-up: `sub_800A178`'s `self+0x74` note confirmed and completed, both it and `sub_800A420` closed
+
+A dedicated deep-investigation pass
+(`docs/matching/issue-9-0x0800a178-graphics.md`) read the real
+disassembly for the `sub_800A178` note above (line ~2624) and its
+sibling `sub_800A420`. The `self+0x74` zeroing observation is confirmed
+exactly as described - unconditional once the function's two leading
+gate checks pass - and the "presumably recomputed" half is now fully
+traced: `self+0x74` is a per-call bitmask of which movement
+axes/directions actually resolved a collision that call, rebuilt bit
+by bit (OR'd with `self+0x24`'s own per-axis `mode` value) at each of
+three `sub_8026628` tile-scan probe blocks in the function's second
+half, gated on each probe reporting a hit. The trampoline call flagged
+as "matching the established width-measurement pattern ... not
+confirmed as text work" turned out to be unrelated to text/width work
+at all - it's the `self->table[0x38]/[0x3c]` gate, whose truthiness
+just decides whether the rest of the function runs (its own callee's
+purpose beyond that boolean wasn't traced further).
+
+Both `sub_800A178` and its sibling `sub_800A420` (a single Y-axis
+"floor" probe `sub_800A178` itself calls, built on the newly-read
+`sub_8026BF8`) are now NAKED-transcribed, byte-exact matched (confirmed
+via a full clean `make compare`) - the same `r7`/`r8`/`sb` cross-block
+register-reuse resistance already established four times over in this
+immediate ROM neighborhood (`sub_8009BE0`, `sub_800CD00`,
+`sub_800CEAC`, `sub_800CF70`), confirmed directly rather than assumed
+via one isolated-compile attempt. `sub_800A0FC`, the two functions'
+only caller, stays raw - its own gate logic depends on the also-still-
+raw `sub_8009BE0`.
+
 ## Everything else
 
 The remaining small gaps between landmarks (a few hundred bytes to ~20

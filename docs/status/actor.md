@@ -669,6 +669,28 @@ plain C didn't converge.
   register-reuse pattern across AABB blocks) - not re-attempted as C
   here; transcribed directly as byte-exact NAKED asm instead. See
   [docs/matching/issue-9-10-0x0800aaec-graphics.md](../matching/issue-9-10-0x0800aaec-graphics.md).
+- **`sub_800A178`/`sub_800A420`** (`src/graphics/actor_part110.c`,
+  GitHub issue #9/#10) - the part-object movement-resolution pair
+  `docs/matching/issue-9-0x08007634-actor.md` flagged as built on
+  `sub_8008200`/`sub_8026628`/`sub_8026C3C`/`sub_8026BF8` (the first
+  two now matched, see `actor_part4.c`/`game_loop43.c`). `sub_800A420`
+  is a single Y-axis "floor" probe via `sub_8026BF8`; `sub_800A178` is
+  the larger orchestrator - two gate checks, an unconditional
+  `self+0x74` zero (confirming and completing `docs/rom_map.md`'s own
+  partial note: `self+0x74` accumulates which movement axes/directions
+  collided this call), a fast quad-based floor/wall probe via
+  `sub_800A420`/`sub_8026C3C`, then a per-axis fallback through the
+  already-matched `sub_8026628` tile-scan API. Both keep `sb`/`sl`/`r8`
+  (and, for `sub_800A178`, `r7` too) live simultaneously across many
+  `bl` calls, reused for different values block to block - the same
+  `r7`/`r8`/`sb` cross-block register-reuse shape this exact ROM
+  neighborhood already established as gcc-2.9-resistant (`sub_8009BE0`,
+  `sub_800CD00` above, `sub_800CEAC`/`sub_800CF70` below); confirmed
+  directly via one isolated-compile attempt against `sub_800A420`
+  (this compiler's natural register allocation used no high registers
+  at all, a structurally different solution rather than a near-miss).
+  Transcribed directly as byte-exact NAKED asm instead. See
+  [docs/matching/issue-9-0x0800a178-graphics.md](../matching/issue-9-0x0800a178-graphics.md).
 - **`sub_801434C`** (`src/graphics/actor_part18.c`) - the shared
   handler `sub_80142B0` tail-calls; one of the `gStaticData_0816BF20`
   action-table entries. See `docs/matching/issue-18-0x08014f8c-actor.md`.
@@ -1417,10 +1439,12 @@ embedded as asm instead. They're tracked as parked, not matched.
   `docs/matching.md` as needing "a dedicated session" of its own, not
   attempted again here - see
   `docs/matching/issue-9-0x08007634-actor.md`.
-- **`sub_800A0FC`/`sub_800A178`/`sub_800A420`** (`asm/code_3_2_11.s`,
-  ROM 0x0800A0FC-0x0800A5F4, GitHub issue #9) - part-object
-  update/collision dispatchers built on unmatched
-  `sub_8008200`/`sub_8026628`/`sub_8026C3C`/`sub_8026BF8` - see
+- **`sub_800A0FC`** (`asm/code_3_2_11.s`, ROM 0x0800A0FC, GitHub issue
+  #9) - a part-object update/collision dispatcher calling `sub_800A178`
+  (now examined and NAKED-parked, see "Parked - NAKED transcription"
+  above and `docs/matching/issue-9-0x0800a178-graphics.md`) and
+  `sub_8009BE0` (also NAKED-parked); left raw itself since its own gate
+  logic depends on `sub_8009BE0`'s still-unresolved semantics - see
   `docs/matching/issue-9-0x08007634-actor.md`.
 - **`sub_800AC2C`/`sub_800AFF4`** (`asm/code_3_2_16_ac2c.s`, ROM
   0x0800AC2C-0x0800B270, GitHub issue #9/#10) - a 38-case player
