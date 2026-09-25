@@ -672,6 +672,19 @@ plain C didn't converge.
   rest. Fully understood; parked on a many-high-register allocation
   gap across its three inner-loop branches. See
   `docs/matching/naked-spatial-grid-tail.md`.
+- **`sub_8017AB0`** (`src/graphics/actor_part27a.c`, ROM 0x08017AB0-
+  0x08017ECC, GitHub issue #22) - a ~500-instruction, fully-understood
+  3-state dispatcher (player-vs-camera-viewport gating on
+  `gUnknown_030012D8+0x104` and `other+0x28` bit 4; see
+  `docs/matching/issue-22-0x08017ab0-actor.md` for the full state map).
+  Two independent, already-diagnosed-elsewhere gcc-2.9 gaps recur here:
+  the `gUnknown_0300130C` object-list walk's per-iteration literal-pool
+  reload (`actor_part108.c`'s `sub_800AAEC`'s own unclosable gap) and
+  `sub_8008A40`'s 7-argument/3-stack-slot marshalling order
+  (`actor_part81.c`'s `sub_800AB9C`'s own unclosable gap, confirmed by
+  this ROM call using the identical stack-argument order) - recognized
+  from precedent and NAKED-transcribed directly rather than
+  re-litigating either wall at 5x the previous scale.
 - **`sub_8009868`** (`src/graphics/actor_part11d.c`) - another
   3-bucket-window grid pass, this one reading the player's state to
   dispatch `sub_800D040`/`sub_80109A4` per object. Fully understood;
@@ -1471,10 +1484,6 @@ embedded as asm instead. They're tracked as parked, not matched.
 
 ## Left raw (not attempted, or attempted and set aside)
 
-- **`sub_8017AB0`** (`asm/code_3_2_17_17ab0.s`, ROM 0x08017AB0-
-  0x08017ECC, GitHub issue #22) - a ~500-instruction player-vs-camera-
-  viewport state dispatcher; left raw, out of scope for this pass - see
-  `docs/matching/issue-22-0x08017a44-actor.md`.
 - **`sub_8018008`/`sub_8018400`/`sub_801865C`/`sub_80186F0`**
   (`asm/code_3_2_17_18008.s`, ROM 0x08018008-0x080186F0, GitHub issue
   #22) - a ~480-instruction jump-table player action-state machine
