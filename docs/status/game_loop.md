@@ -327,6 +327,26 @@ plain C didn't converge.
   live as two extra callee-saved accumulators throughout, the same gap
   as `sub_800D040` above. See
   [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
+- **`sub_800B8DC`**/**`sub_800BD48`** (`src/graphics/actor_part112.c`,
+  new file - GitHub issue #9/#10, foundational investigation of the
+  large still-raw `0x0800B8DC`-`0x0800D040` cluster). Two independent
+  entity-vtable slots of the *same* object type (`gStaticData_087E3EE4`)
+  sitting adjacent in ROM but never calling each other.
+  `sub_800B8DC` (1132 B) is an 18-state dispatcher on `self+0x74` (the
+  same "stateful widget" field shape `sub_800C6A8`'s `menu_ui` dialogs
+  and `sub_800CD00` also use) - most states delegate to a handful of
+  further `self+0x68`-dispatching siblings, five have real inline logic
+  (a distance-band velocity-target gate, a position-anchor cache, a
+  conditional directional-target trigger, a landing/jump-impulse
+  handler, and a proximity-ambient-sound-plus-popup-text handler).
+  `sub_800BD48` (608 B) is a second, shallower 22-case dispatcher on its
+  own third argument - 17 of the 22 states are no-ops, the other two
+  distinct paths are an ambient-sound-spawn-plus-reflag tail and a
+  spawn-and-launch-a-child-object handler. Both NAKED: the same
+  `self`/`owner`-multi-field register-allocation gap as every other
+  entry in this section. See
+  [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)
+  for the full 18-case and 22-case dispatch maps.
 - **`sub_8025A64`** (`src/system/game_loop29.c`, new file - not
   contiguous with any other matched run once its three siblings below
   stayed parked - GitHub issue #41) - a part-object spawn helper; hits
