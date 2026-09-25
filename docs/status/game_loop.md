@@ -385,6 +385,29 @@ plain C didn't converge.
   fixed `gStaticData_087E3FA4` table) both matched as real C. See
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)'s
   "Phase 3" section for the full writeup.
+- **`sub_800C6A8`/`sub_800C860`/`sub_800C87C`/`sub_800C898`**
+  (`src/graphics/actor_part122.c`, new file - GitHub issue #9/#10, the
+  last four functions of the old `asm/code_3_2_17_c6a8.s`, now fully
+  retired). `sub_800C6A8` is the `menu_ui` dialog-widget system's own
+  18-state `self+0x74` update, called from all 31 confirmed `menu_ui`
+  dispatch-table entries - despite the "menu_ui" framing it turns out to
+  run on the exact same `self`/`owner`/`self+0xc`-anchor/`self+0x84`-table
+  object shape as the rest of this cluster, and its case bodies manually
+  re-inline `sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC`'s own `bl` targets
+  rather than calling those three wrapper functions - confirming these
+  are literal instances of the same object type, not merely a
+  structurally-similar sibling. NAKED: several case groups compile the
+  identical inlined `sub_800C8CC(self,0)` sequence at deliberately
+  separate, unmerged jump-table addresses, the exact tail-merging trap
+  the Phase 3 entry above already documents this agbcc build hitting,
+  combined with the same `self`/`owner` register-pressure shape the rest
+  of this cluster's dispatchers share. `sub_800C860`/`sub_800C87C`/
+  `sub_800C898` (the `self+0x70`-relative X/Y homing-bound accessor
+  triple) matched as real C on the first attempt, using a register-pinned
+  local plus an empty `asm volatile` barrier to force the ROM's own
+  "load owner field, then shift the radius" instruction order. See
+  [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)'s
+  "Phase 4" section for the full writeup.
 - **`sub_800CBF4`/`nullsub_15`/`nullsub_3`/`sub_800CCCC`/`sub_800CCE0`**
   (`src/graphics/actor_part123.c`, new file - GitHub issue #9/#10, the
   final piece of the `0x0800B8DC`-cluster investigation, closing out
