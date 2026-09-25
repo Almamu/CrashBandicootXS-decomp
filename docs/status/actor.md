@@ -886,6 +886,25 @@ plain C didn't converge.
   a further sibling/callee handling frame-counter thresholds, D-pad
   input, and `sub_8012A7C`'s busy-check. See
   `docs/matching/issue-16-actor-remainder.md`.
+- **`sub_8012FBC`**, **`sub_8013228`** (`src/graphics/actor_part_12fbc.c`),
+  **`sub_80134B8`** (`src/graphics/actor_part_134b8.c`), **`sub_80138E8`**,
+  **`sub_8013994`** (`src/graphics/actor_part_138e8.c`), GitHub issue #17
+  (leading portion) - five more members of the same 42-slot action-
+  dispatch table: `sub_8012FBC`/`sub_80134B8` show the same unexplained
+  extended-register-budget shape as this table's other NAKED members
+  (`r8` alone, and `r8`/`sb`/`sl` together respectively, on top of the
+  usual `r4-r7`); `sub_8013228`'s ordinary-looking `r4-r6`/`lr` prologue
+  still diverged in a first plain-C attempt (an extra `r7` push plus the
+  usual runtime-negated-mask idiom needed for `part[0xd] &= ~2`-style
+  bit clears); `sub_80138E8`/`sub_8013994` each reproduce the exact
+  `part[0x38]`-gated single-vs-double trampoline shape already confirmed
+  unmatchable for `sub_80156EC` (above). New files are address-suffixed
+  (`actor_part_<addr>.c`) rather than the next sequential `actor_partNN`,
+  since `actor_part85.c` is independently claimed by unrelated issue #63
+  work. Issue #17's own chunk continues past this pass's range
+  (0x0801426C) through 0x08014F8C; the remainder stays raw in the
+  trimmed `asm/code_3_2_17_12af4.s`. See
+  `docs/matching/issue-17-0x08012fbc-actor.md`.
 - **`InitActorCategory`** (`src/graphics/actor_part101.c`, GitHub issue
   #48) - the category (re)initialization + per-VBlank loading-screen
   driver. Fully understood; sustains four simultaneous high-register
