@@ -209,12 +209,15 @@ plain C didn't converge.
   full-spawn effect triggers gated by a `gUnknown_030012C0+2` flag bit.
   See
   [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md).
-  Still parked/NAKED in the default build - a follow-up pass got
-  `sub_8020E84` to within 11 bytes (out of 248) of byte-exact as real C
-  (kept in-tree under `#if NON_MATCHING`, see
+  Still parked/NAKED in the default build - follow-up passes got all
+  four functions within a handful of bytes of byte-exact as real C
+  (each kept in-tree under `#if NON_MATCHING`, see
   [issue-31-trigger-effect-type-n.md](../matching/issue-31-trigger-effect-type-n.md))
-  but could not close the last few register-choice/scheduling gaps; the
-  other three siblings are untouched.
+  but could not close the last few register-choice/scheduling gaps for
+  any of them - `sub_8020F7C`/`sub_802107C` hit the exact same two
+  residual gaps `sub_8020E84` did, and `sub_802117C` (a genuinely
+  harder, distinctly-shaped register allocation) landed a bit further
+  off, with one extra 4-byte stack-spill gap on top of those two.
 - **`sub_802190C`** (`src/graphics/graphics_loading_21668.o`) - a
   gated `sub_801A878`/`sub_80234F4` dispatcher, same OR-gated id-choice
   shape as the twin family above. See
