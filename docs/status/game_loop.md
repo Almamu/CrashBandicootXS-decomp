@@ -236,6 +236,18 @@ system from "core" system startup/init code.
   (148 B) 4-arm `switch` on `mode`, matched on the first isolated-
   compile attempt with no register pins needed - see
   [docs/matching/issue-9-10-41-0x08026628-game-loop.md](../matching/issue-9-10-41-0x08026628-game-loop.md).
+- **`sub_8026BC0`** (`src/system/game_loop44.c`, new file - dedicated
+  deep investigation) - independently flagged "still raw" by two
+  already-documented callers (`sub_800A884`'s camera-probe tail and a
+  jump-table dispatch context in `sub_8007634`'s own write-up). A
+  56-byte wrapper around the already-matched terrain-tile-cache lookup
+  `sub_8025460` (`game_loop4.c`, GitHub issue #40): converts `(x, y)`
+  to that cache's lookup units via a plain `>>3` clamped to `>= 0` on
+  each axis independently, then calls `sub_8025460` and returns only
+  the flags byte it also returns directly (the `hi` out-param is
+  discarded, unread by either known caller). Matched on the first
+  isolated-compile attempt with no register pins needed - see
+  [docs/matching/issue-9-10-0x0800a884-graphics.md](../matching/issue-9-10-0x0800a884-graphics.md).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
