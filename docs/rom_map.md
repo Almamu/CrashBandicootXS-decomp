@@ -4083,6 +4083,21 @@ via one isolated-compile attempt. `sub_800A0FC`, the two functions'
 only caller, stays raw - its own gate logic depends on the also-still-
 raw `sub_8009BE0`.
 
+**Update (follow-up session)**: `sub_8009BE0` is now fully understood
+(a physics/collision step-probe, `docs/matching/naked-spatial-grid-tail.md`),
+which unblocked `sub_800A0FC` itself - now matched as real C (not
+NAKED), see `docs/matching/issue-9-0x0800a178-graphics.md`'s "Follow-up"
+section. `self+0x68`, the byte `sub_800A0FC` reads/writes/returns, is a
+persistent per-object cumulative collision-axis mask (OR'd from
+`sub_800A178`'s own per-call result), distinct from `self+0x74`'s
+per-call scratch mask documented above. `sub_800A0FC` cross-checks its
+own Y-axis bit against a second, independent `sub_8009BE0` step-probe
+before trusting it. This closes the entire former `sub_800A0FC`-
+`sub_800A420` raw/parked span at the real-C-or-NAKED level (only
+`sub_800A0FC` itself is real C; `sub_800A178`/`sub_800A420` remain
+NAKED, per the gcc-2.9-resistant register shape already documented
+above) - `asm/code_3_2_11.s` is retired entirely.
+
 ## Everything else
 
 The remaining small gaps between landmarks (a few hundred bytes to ~20
