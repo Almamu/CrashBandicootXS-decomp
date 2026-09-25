@@ -248,6 +248,24 @@ system from "core" system startup/init code.
   discarded, unread by either known caller). Matched on the first
   isolated-compile attempt with no register pins needed - see
   [docs/matching/issue-9-10-0x0800a884-graphics.md](../matching/issue-9-10-0x0800a884-graphics.md).
+- **`sub_8026BF8`/`sub_8026C3C`/`sub_8026C80`/`sub_8026C8C`**
+  (`src/system/game_loop45.c`, new file - GitHub issue #9/#10, matching
+  pass on functions already fully understood from
+  `docs/matching/issue-9-0x0800a178-graphics.md`) - the single-point
+  terrain-height ("floor") probes `sub_800A178`/`sub_800A420`
+  (`src/graphics/actor_part110.c`) call. Both `s32 fn(void *player,
+  struct probe_pos *pos, s32 *outValue)`: `sub_8026BF8` reads a signed
+  height byte via the raw terrain streamer `sub_80250BC`; `sub_8026C3C`
+  gets it via the CheckTerrainFlag-style `sub_8025228`. `sub_8026C3C`
+  matched on the first isolated-compile attempt; `sub_8026BF8` needed a
+  narrow register-pinned inline-asm materialization of `ldrsb` (this
+  agbcc build never emits Thumb `LDRSB` from any C-level signed-byte
+  array read - confirmed categorically with a minimal standalone test -
+  always lowering to `ldrb`+shift instead). Bonus pass also closed the
+  two tiny functions immediately following, `sub_8026C80`/`sub_8026C8C`
+  - both UNUSED (no caller anywhere in the ROM), matched anyway per this
+  project's usual practice. `asm/code_3_2_17_26bf8.s` trimmed to begin
+  at `sub_8026C90`.
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
