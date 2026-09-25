@@ -709,19 +709,56 @@ plain C didn't converge.
   isolated register letter to pin, so closed via NAKED transcription
   instead (no branches or literal pool in this function, so no label
   renumbering was needed). Matched, confirmed by a full clean `make
-  compare` ("La suma coincide"). `asm/code_3_2_17_e560_10d54.s` trimmed
-  to begin at `sub_8010E14` (24 functions still raw, `0x08010E14`-
-  `0x080119A8`) - see
+  compare` ("La suma coincide"). Phase 2's own "quick win" group later
+  folded `sub_8010E14`/`sub_8010E2C` into this same file (both real C):
+  `sub_8010E14` is byte-identical in shape to `graphics.c`'s already-
+  matched `sub_8006AF4` (`if (arg1 & 1) sub_8026ED0(arg0);`) - a VRAM-
+  manager-refresh gate that happens to be called from `actor_part15.c`
+  with `arg1 = 2` (bit 0 clear), so that particular call site is itself
+  a no-op; `sub_8010E2C` is a trivial two-field queue reset
+  (`count`/`unk4[0]`). `asm/code_3_2_17_e560_10d54.s` trimmed to begin
+  at `sub_8010E34` - see
   [docs/matching/issue-14-0x08010d54-physics-apply.md](../matching/issue-14-0x08010d54-physics-apply.md)
-  for the full semantic map and Phase 2 planning notes on those 24.
+  for the full semantic map and Phase 2 planning notes on the rest of
+  the former 24-function tail.
+- **`sub_8011248`-`sub_8011390`** (`src/system/game_loop52.c`, new file
+  - Phase 2's "accessor cluster" group) - 11 functions, a small
+  "orbiting hazard" behavior family on a further still-unnamed "part"
+  object distinct from `struct actor` and from `sub_8010D54`'s own
+  `struct collision_queue`: `sub_8011364` seeds an orbit anchor+start
+  position, `sub_8011378` (re)starts the orbit at a given mode/phase 0,
+  `sub_8011388` sets an adjacent still-unexamined byte, `sub_8011248` is
+  the per-frame orbit-position update (two lookups into the shared sine
+  table `gStaticData_0816A820` at different strides, combined via the
+  overflow-avoiding fixed-point multiply `sub_80008FC`), `sub_8011330`
+  fires a `self->table`-driven hit trampoline once "spawned"
+  (`self+0x48 == 0`) and a player flag is set, `sub_80112C4` re-derives
+  visibility from a `sub_8007A84`/`self+0x38` gate, `sub_80112F4`/
+  `sub_8011310`/`sub_8011308` are a small init/reset/table-repoint trio
+  (same `sub_80084A4`/table-swap shape as `actor_part8.c`), and
+  `sub_8011390` is the per-frame player-proximity/hit-resolve step
+  (AABB-tests against the player, choosing primary vs. secondary AABB
+  build depending on the player's own state, and on overlap tail-calls
+  the despawn picker `sub_8011448`). All matched as real C except
+  `sub_8011248` (NAKED transcription: gcc 2.9 persistently picks the
+  opposite operand order for the shared-table pointer adds no matter how
+  the C source phrases the addition - not one isolated register to pin).
+  Confirmed by a full clean `make compare` ("La suma coincide").
+  `asm/code_3_2_17_e560_10d54.s` further trimmed to end at
+  `sub_80111B8`; the tail (`sub_8011448`-`sub_801192C`) split off into
+  the new `asm/code_3_2_17_e560_11448.s` - see
+  [docs/matching/issue-14-0x08010d54-physics-apply.md](../matching/issue-14-0x08010d54-physics-apply.md)'s
+  Phase 2 findings for the full field map.
 
 ## Still raw, category-mapped (GitHub issue #12/#34/#40)
 
-- **24 functions, `0x08010E14`-`0x080119A8`** (`asm/code_3_2_17_e560_10d54.s`,
-  trimmed) - the remainder of the chunk `sub_8010D54` (above) was the
-  entry point of; still category-mapped `graphics` pending its own
-  examination, though the first two functions are confirmed direct
-  siblings of `sub_8010D54`'s own collision-queue record - see
+- **`sub_8010E34`-`sub_80111B8`** (`asm/code_3_2_17_e560_10d54.s`,
+  trimmed at both ends) and **`sub_8011448`-`sub_801192C`**
+  (`asm/code_3_2_17_e560_11448.s`, new file, split off when
+  `sub_8011248`-`sub_8011390` were carved out of the middle) - the
+  still-unexamined remainder of the former 24-function tail
+  `sub_8010D54` (above) was the entry point of; still category-mapped
+  `graphics` pending examination - see
   [docs/matching/issue-14-0x08010d54-physics-apply.md](../matching/issue-14-0x08010d54-physics-apply.md)'s
   Phase 2 planning section for the full function/size list.
 - **`UpdateGameFrame`** (`asm/code_3_2_17_225a0.s`, ROM `0x080225A0`) -

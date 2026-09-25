@@ -186,3 +186,40 @@ NAKED void sub_8010D54(struct collision_queue *self, void *neighbor, s32 kind,
         ".align 2, 0\n"
     );
 }
+
+/* Already matched/documented elsewhere in the codebase (graphics.c's
+ * `sub_8006AF4`, `src/graphics/graphics.c`) as the exact same
+ * one-line "conditional call on bit 0" shape: `sub_8026ED0` (VRAM
+ * upload manager, matched in graphics.c) only fires when `arg1`'s low
+ * bit is set. `src/graphics/actor_part15.c` already externs this
+ * function and calls it as `sub_8010E14(self + 0x108, 2)` - i.e. bit 0
+ * clear, so that call site is itself a no-op (the manager call never
+ * fires); nevertheless this confirms `self` is the same
+ * `struct collision_queue` `sub_8010D54` above operates on (Phase 2 of
+ * docs/matching/issue-14-0x08010d54-physics-apply.md's own planning:
+ * this was already flagged there as a "mode-parameterized insert"
+ * sibling before being read branch-by-branch - turns out to be this
+ * simpler shape instead, `arg1` gates a VRAM-manager refresh rather
+ * than selecting an insert mode). */
+extern void sub_8026ED0(void *arg0);
+
+void sub_8010E14(void *arg0, s32 arg1)
+{
+    if (arg1 & 1) {
+        sub_8026ED0(arg0);
+    }
+}
+
+/* Sibling reset: clears just `count` (`+0x00`) and `unk4`'s first byte
+ * (`+0x04`) - confirming (per `src/graphics/actor_part77.c`'s own doc
+ * comment, already noting this exact function) that `unk4` is read
+ * back elsewhere as a real field, not unexamined padding, though its
+ * own full meaning/width past this one byte remains open. Called as
+ * `sub_8010E2C(self + 0x108)` from `actor_part77.c`. */
+void sub_8010E2C(void *arg0)
+{
+    struct collision_queue *self = arg0;
+
+    self->count = 0;
+    self->unk4[0] = 0;
+}

@@ -251,3 +251,148 @@ actually read, rather than guessing from two data points.
 - `docs/rom_map.md` - the read-only reconnaissance (`sub_0800D18C`'s
   own hand-off to `sub_8010D54`, and the `sub_8010EAC`/`sub_8010F8C`/
   `sub_8011448`/`sub_8011548` notes used in the Phase 2 table above).
+
+## Phase 2 update: "quick win" (sub_8010E14/sub_8010E2C) and "accessor cluster" (sub_8011248-sub_8011390) groups closed
+
+Two of Phase 2's own proposed groups (see the planning table above),
+worked as a single combined pass since both were expected to be
+small/fast. Both fully matched; confirmed by a full clean `make
+NON_MATCHING=1 report` (no warnings) followed by `make compare`
+("La suma coincide").
+
+### `sub_8010E14`/`sub_8010E2C` - folded into `game_loop50.c`
+
+Both trivially small (24B/8B) and already semantically understood from
+Phase 1's own pass (see above). Reading the raw bytes confirmed:
+
+- `sub_8010E14(void *arg0, s32 arg1)`:
+  ```c
+  void sub_8010E14(void *arg0, s32 arg1)
+  {
+      if (arg1 & 1) {
+          sub_8026ED0(arg0);
+      }
+  }
+  ```
+  This is **byte-identical in shape** to an already-matched function
+  elsewhere in the codebase - `src/graphics/graphics.c`'s own
+  `sub_8006AF4(void *arg0, u32 arg1) { if (arg1 & 1) { sub_8026ED0(arg0); } }`.
+  Not a "mode-parameterized insert" after all (Phase 1's own guess,
+  written before this function was read branch-by-branch) - `arg1`
+  gates a VRAM-upload-manager refresh (`sub_8026ED0`, matched
+  elsewhere), unrelated to the insert-mode idea. `actor_part15.c`'s own
+  call site (`sub_8010E14(self + 0x108, 2)`) passes `arg1 = 2`, whose
+  bit 0 is clear - so that specific call is itself a no-op at runtime,
+  though it still confirms `self` is the same `struct collision_queue`
+  `sub_8010D54` operates on.
+- `sub_8010E2C(void *arg0)`: `self->count = 0; self->unk4[0] = 0;` -
+  matches Phase 1's own prediction exactly (a two-field reset, only the
+  first byte of `unk4` cleared despite the field being reserved as
+  `u8 unk4[4]`).
+
+Both matched as plain, unremarkable real C on the first isolated
+compile pass (no register pinning needed). New object `src/system/game_loop50.o`'s
+own `.text` grows to include these two (contiguous, no gap, since they
+immediately follow `sub_8010D54` in the ROM); `asm/code_3_2_17_e560_10d54.s`
+trimmed further to begin at `sub_8010E34`.
+
+### `sub_8011248`-`sub_8011390` - new `src/system/game_loop52.c` (11 functions)
+
+Zero prior cross-references (per Phase 1's own table). Reading all 11
+functions' raw bytes at once (as planned) revealed a shared struct
+immediately: `sub_8011364` (seed anchor+position) and `sub_8011248`
+(per-frame position update) both touch `self+0x0`/`self+4` (current
+Q8 x/y) and `self+0x4c`/`self+0x50` (Q8 anchor x/y) with the exact same
+offsets, and `sub_8011378`/`sub_8011388`/`sub_8011330`/`sub_8011390`
+all touch the adjacent `self+0x48`-`self+0x4b` byte run - a small
+**"orbiting hazard" behavior** family on a further still-unnamed "part"
+object (distinct from `struct actor`'s own 0x1c bytes and from
+`sub_8010D54`'s own `struct collision_queue`):
+
+| Function | Size | Role |
+|---|---|---|
+| `sub_8011248` | 124B | Per-frame orbit-position update: two lookups into the shared sine table `gStaticData_0816A820` (`self+0x4b`'s phase, at strides `*4` and `*2`), combined via the overflow-avoiding fixed-point multiply `sub_80008FC` (already matched, `math_util.c`) - `self+4` (`y`) is always anchor-y minus the y-offset; `self` (`x`) is anchor-x minus/plus the x-offset depending on `self+0x4a` (mode 1/2), or just the anchor x unchanged for any other mode value. |
+| `sub_80112C4` | 44B | Re-derives visibility via `sub_8007A84(gUnknown_030012CC, self)` (already matched), clears flags bit 3 when `self+0x38` is nonzero. |
+| `sub_80112F0` | 4B | Trivial - always returns 2. |
+| `sub_80112F4` | 20B | Repoints `self->table` at `gStaticData_087E40DC`, tail-calls `sub_8008484` (already matched) with `self`+its own 2nd argument passed through. |
+| `sub_8011308` | 8B | Clears the "spawned/active" gate byte `self+0x48`. |
+| `sub_8011310` | 32B | `sub_80084A4(self)` (already matched, return discarded) + table repoint (`gStaticData_087E40DC`) + `sub_8011308(self)`; returns `self`. Same init/reset/table-repoint trio shape as `actor_part8.c`. |
+| `sub_8011330` | 52B | If `self+0x48 == 0` and the player's `+0xc` bit 7 is set, fires `self->table+0x68/0x6c`'s trampoline (`sub_803AD7C`, already matched) - the usual "offset + fn pointer" pair convention. Always returns 0. |
+| `sub_8011364` | 20B | Seeds `self`/`self+4` (Q8 x/y) from raw `x`/`y` arguments (`<<8`), mirrors both into `self+0x4c`/`self+0x50` (the orbit anchor). |
+| `sub_8011378` | 16B | Sets orbit mode (`self+0x4a`), resets orbit phase (`self+0x4b`) to 0. |
+| `sub_8011388` | 8B | Unexamined byte setter, `self+0x49` - address-adjacent to the mode/phase pair but not read by anything else in this group. |
+| `sub_8011390` | 184B | Per-frame player-proximity/hit-resolve step: gated by the same orbit-mode/phase fields plus flags bits 2/3 (`self+0xc`), AABB-tests `self` against the player (`gUnknown_030012D8`) - primary AABB (`sub_8007C30`) when the player's own `+0xa == 0x13`, secondary AABB (`sub_8007B98`) otherwise - and on overlap sets flags bit 3 and tail-calls the despawn picker `sub_8011448` (Phase 2's neighboring group, not read this pass - only extern'd) with a mode that differs per path, playing a hit SFX only on the primary-AABB path. |
+
+All matched as real C except `sub_8011248`, closed as a NAKED
+transcription: a plain-C reconstruction reproduces the ROM's exact
+*shape* (same struct-copy local via `ldm`/`stm`, same two
+`gStaticData_0816A820` lookups at the right strides and program-order
+position, same mode-1/mode-2/else branch structure) but gcc 2.9 -O2
+persistently picks the opposite register/operand order for the two
+`table + phase*stride` pointer adds (`adds r0, r4, r0` instead of the
+ROM's own `adds r0, r0, r4`) no matter how the C source phrases the
+addition - pointer-arithmetic normalizes the pointer operand first
+internally in this compiler, so this isn't one isolated register letter
+to pin (same category of gap as `sub_8010D54` itself, Phase 1 above).
+
+Two smaller gcc-2.9 quirks recurred across the *real-C* functions in
+this group and needed the project's established register-pinning/
+opaque-materialization toolbox:
+
+- `self[0xc] &= ~8` (a byte-sized bit-clear) compiles as a single
+  folded `mov r0, #0xf7` immediate by default, but the ROM computes the
+  full 32-bit `~8` mask at runtime instead (`movs r0, #9; rsbs r0, r0,
+  #0`) - not something a byte-typed mask needs, but apparently how this
+  particular call site's own source was phrased. Fixed via a
+  `register s32 mask asm("r0") = 9; mask = -mask;` opaque
+  materialization (`sub_80112C4`, and the two `self[0xc] |= 8` sites in
+  `sub_8011390`, same idiom with `+=`/`|=` swapped appropriately) -
+  same technique as the project's established `matching_decomp_register_pinning`
+  memory point.
+- `self[0x4a] = mode; self[0x4b] = 0;`-shaped byte-pair setters
+  (`sub_8011378`) compile the `0` constant lazily, right before its own
+  use, but the ROM materializes it *earlier*, between the address
+  computation and the first store, reusing the same scratch register
+  for both stores' worth of bookkeeping. Fixed by writing the local
+  `zero` variable's assignment as an explicit statement positioned
+  between the address computation and the first store (source order
+  controls scratch-register lifetime for this compiler beyond just the
+  final `-O2` schedule).
+- `sub_8011364`'s trailing `self->anchor = self->pos;` mirror reads
+  compile away entirely (the optimizer sees `self->pos` was *just*
+  written with a known value and reuses the register instead of
+  reloading) but the ROM does reload from memory - fixed via
+  `*(volatile s32 *)self` casts on the two mirror reads, forcing real
+  `ldr` instructions.
+- `sub_8011390`'s own trailing byte-padding: its body isn't a multiple
+  of 4 bytes and gcc's own default function-end alignment padding is a
+  `nop`/`mov r8, r8` instruction, not the ROM's own zero-byte padding -
+  fixed with an explicit `asm(".align 2, 0");` after the function body,
+  the same `matching_decomp_alignment_fix` technique already used
+  elsewhere in this codebase (e.g. `game_loop27.c`'s `sub_8010AEC`).
+
+`asm/code_3_2_17_e560_10d54.s` further trimmed to end at `sub_80111B8`
+(its own tail, `sub_8011448`-`sub_801192C`, split off into the new
+`asm/code_3_2_17_e560_11448.s` since it's no longer address-adjacent to
+the file's own remaining front half once the middle was carved out).
+New object `src/system/game_loop52.o` inserted between the two in
+`ldscript.txt`. Categorized `actor` in `tools/report_units.py` (not
+`game_loop`): this is per-entity behavior state on the "part" object
+family, not the shared physics/collision-queue infrastructure
+`sub_8010D54`/`sub_8010E14`/`sub_8010E2C` operate on - unlike those
+three, nothing here touches the `self+0x108` queue or is called from
+the `sub_0800D18C`/`sub_800E08C` dispatch chain.
+
+### Cross-references (this update)
+
+- `docs/status/game_loop.md` - both groups' matched entries added, the
+  "still raw" entry split into its two remaining pieces.
+- `tools/report_units.py` - the `0x08010D54` entry's comment extended;
+  the old `0x08010E14` raw entry split into `0x08010E34` (still raw),
+  `0x08011248` (`game_loop52.o`, matched), and `0x08011448` (still raw).
+- `src/graphics/actor_part15.c` / `src/graphics/actor_part77.c` - the
+  external call-site confirmation for `sub_8010E14`/`sub_8010E2C`
+  already used in Phase 1, re-verified against the actual instruction
+  bytes this pass.
+- `src/graphics/graphics.c` - `sub_8006AF4`, the already-matched twin
+  shape that confirmed `sub_8010E14`'s own semantics.
