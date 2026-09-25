@@ -371,3 +371,148 @@ shows `LoadObjSpriteTiles` at 100% fuzzy-match) and a full clean
 crashbandicootxs.map && make compare` (`La suma coincide`).
 `tools/report_units.py`'s entry for `LoadObjSpriteTiles` updated to
 describe it as matched rather than parked.
+
+## Fourth pass: `LoadBg2Background`'s r7 gap narrowed further, still not closed
+
+Revisited the still-`NAKED` `LoadBg2Background`, specifically trying the
+"raise register pressure via genuinely separate, *unpinned* plain C
+locals" technique documented for `sub_8006600`'s prologue fix (rather
+than an explicit dummy-register pin, already ruled out for this
+function in the second pass above) and the "explicit pin gets silently
+dropped, but the natural allocator's own choice survives" pattern from
+`sub_803AA08` (`docs/matching/issue-69-eeprom-timer.md`). All work this
+pass was isolated-compile only (`cpp`+`agbcc`+`arm-none-eabi-as`,
+diffed byte-for-byte against a raw `baserom.gba` extract at
+`0x080355E0` via `objdump -d -M force-thumb`); nothing was integrated
+into the tree, since the gap did not close. Two genuinely new, isolated
+results came out of this:
+
+1. **The dead `r7` shuttle in the ROM's prologue is not actually a
+   "dead" register in the strict sense** - re-reading the raw ROM
+   disassembly directly (rather than relying on the second pass's
+   prose summary) shows the ROM's remap loop itself reads/writes real
+   `r7` once per iteration, as scratch for the second (`+2`) halfword
+   load (`ldrh r7, [r2, #2]`). The "extra push/pop" is `r7` being
+   preserved as a genuine (if transient, single-instruction-lifetime)
+   scratch register the loop body itself clobbers - not a pressure-
+   counting-pass artifact with no runtime use at all, as the earlier
+   prose characterized it. This matters because it reopens the
+   "unforced natural allocation" avenue: if some C-level value
+   legitimately needs a register at that point in the loop and the
+   compiler's own unforced allocator reaches for `r7` on its own, both
+   the loop instruction *and* the prologue/epilogue push/pop should
+   follow, per the `sub_8006600`/`sub_800132C` precedent.
+2. **This does happen, but not for the same variable the ROM uses.**
+   Restructuring the remap loop into the ROM's actual instruction shape
+   (a `mask` copy into a fresh scratch *before* each raw halfword load,
+   not an in-place `mask & src[n]`, matching the operand-order
+   principle from `sub_803AA08`/`sub_803AA90`) plus explicit
+   (non-`r7`) pins for `i`→`r3` and the walk pointer `src`→`r2`
+   (matching the ROM's own choice for those, confirmed safe since
+   neither survives a call) reproduces the ROM's prologue/epilogue
+   **exactly**, byte-for-byte: `push {r4,r5,r6,r7,lr}` / `mov r7,r8` /
+   `push {r7}` ... `pop {r3}` / `mov r8,r3` / `pop {r4,r5,r6,r7}` /
+   `pop {r0}` / `bx r0`. Every other instruction in the function
+   (both `width*height` multiplications, including their ROM-matching
+   reversed operand order between the alloc-size calc and the loop-
+   bound calc; the literal-pool layout and order) also came out
+   byte-identical. But the register-lettering **inside** the loop and
+   the trailing `REG_BG2CNT` setup rotates relative to the ROM: this
+   reconstruction's unforced allocator puts the accumulator in `r5`
+   (ROM: `r1`), the second raw halfword load in `r1` (ROM: `r7`), and
+   the uninitialized `REG_BG2CNT` scratch in `r7` (ROM: `r5`) - a
+   clean 3-cycle permutation (`r1→r5→r7→r1`) of the same three
+   registers the ROM itself uses, just assigned to different roles.
+
+Extensive follow-up on that 3-cycle, none of which closed it:
+
+- **Declaration order has zero effect here**, contradicting the
+  `LoadObjSpriteTiles`/`sub_8006600` precedent that textual declaration
+  order controls otherwise-untied locals' register order. Moving the
+  `REG_BG2CNT` scratch's declaration earlier or later in the function,
+  or reversing the four loop-local declarations' textual order, produced
+  byte-identical output every time - this specific rotation is
+  apparently driven by something other than declaration order (possibly
+  total live pseudo-register count at each point, or an internal
+  pseudo-creation-order counter not reflected in the C source's textual
+  layout).
+- **Explicitly pinning any one of the three rotating values (to `r1` or
+  `r5` - never `r7`, per the categorical ban) does not just fail
+  silently, it actively regresses the already-correct prologue.**
+  Pinning the accumulator to `r1` and/or the `REG_BG2CNT` scratch to
+  `r5` both independently triggered the same unexpected pathology: an
+  otherwise-unrelated value (the loop accumulator) got promoted to a
+  genuinely new **high** register (`r9`) with its own extra
+  `mov r9,r4`/`push{r5,r6}`-shuttle prologue construct, entirely
+  unlike anything the ROM does, and the carefully-won exact-match
+  prologue was lost. Plausible mechanism: an explicit
+  `register T x asm("rN")` block-scoped local is, in this compiler,
+  effectively a *whole-function* global register reservation (matching
+  this project's existing understanding of why an `r7` pin breaks
+  things), and `r1` in particular is also used as an argument register
+  by this function's own `LoadTaggedAsset` calls earlier in the body -
+  pinning a loop-local value to `r1` appears to force the compiler to
+  also treat `r1` as needing preservation around those *earlier* calls,
+  cascading into unrelated register reassignment elsewhere.
+- **An opaque `asm volatile` island for the loop body** (the technique
+  that closed three similar gaps in `LoadObjSpriteTiles`, third pass
+  above), hand-transcribing the ROM's exact
+  `add`/`ldrh`/`and`/`add`/`ldrh`/`and`/`lsl`/`orr`/`strh` sequence with
+  bare `r0`/`r1`/`r7` register names in the asm text, **does** reproduce
+  the loop body byte-for-byte (including the real `r7` use) and, as a
+  side effect, the `REG_BG2CNT` scratch's *own* natural allocation
+  shifts to the correct `r5` (apparently because the opaque block no
+  longer creates competing pseudo-registers for the loop's own values,
+  changing how many "extra" pseudos exist by the time `REG_BG2CNT`'s
+  scratch is allocated). But this technique has the **opposite**
+  problem: asm-text-only (bare-name or clobber-list) uses of `r7` are
+  invisible to whatever pass in this compiler decides the function's
+  push/pop set - the prologue reverts to a 3-register shuttle via `r6`
+  (`push {r4,r5,r6,lr}` / `mov r6,r8` / `push {r6}`), silently dropping
+  `r7` from both push and pop, exactly the "explicit/opaque register
+  use doesn't count" failure mode already documented for the dummy-pin
+  attempt in the second pass, just triggered by a clobber list instead
+  of a `register` declaration this time. Tested with `r7` both present
+  and absent from the clobber list - no difference to the emitted
+  push/pop set either way (confirming this is really about what the
+  prologue-generation pass scans, not a correctness-vs-optimizer
+  question).
+- **Trying to force a *third*, genuinely fresh, unforced low-register
+  pseudo to exist after the (opaque-asm) loop**, hoping it would
+  consume `r5` and bump `REG_BG2CNT`'s own natural choice up to `r7`
+  (reproducing the ROM's registers **and** getting `r7` back into the
+  push/pop set for free), consistently failed differently than hoped:
+  a trivial copy (`spacer = i;`) got optimized away entirely (no new
+  register consumed, since the constraint was satisfiable by reusing
+  `i`'s own register); a genuinely-materialized fresh value (an
+  output-only `asm volatile` operand, with or without a real
+  instruction in the template) was instead assigned a **new high
+  register** (`r9`, with its own unwanted shuttle prologue) rather than
+  either of the two free low registers (`r5`/`r7`) - suggesting this
+  compiler's fallback for an unconstrained fresh pseudo with no
+  register-copy/coalescing hint prefers a high register over a "free"
+  low one, unlike the `REG_BG2CNT` scratch (which does inherit some
+  low-register-preferring coloring hint from being the destination of a
+  real `&=`/`|=` chain feeding a real store, not just an opaque
+  asm operand).
+
+Net result: two mutually exclusive near-misses (exact prologue/epilogue
+with wrong loop-body register letters, vs. exact loop body with wrong
+prologue/epilogue), and no combination of the pinning/declaration-
+order/opaque-asm/pressure-raising techniques tried managed to get both
+at once - each fix for one side consistently regressed the other, via
+mechanisms (the `r9`-promotion pathology, the asm-clobber/push-pop
+blind spot) that aren't fully understood. This is the same flavor of
+stubborn, non-monotonic register-letter permutation already documented
+as unresolved for `sub_8006600`'s second half and `sub_803AAD4`
+(`docs/matching/issue-69-eeprom-timer.md`) - manual C-level
+restructuring hit a wall in the same way. **Left as-is**: `LoadBg2Background`
+remains the `NAKED` transcription from the second pass (byte-correct,
+tracked as parked in `tools/report_units.py`, `base_object = None`); no
+tree changes from this pass, since nothing closed. If revisited, the
+most promising untried angle (per the `sub_8006600` write-up's own
+suggestion for its analogous unresolved half) is a permuter search
+scoped narrowly to just the loop-body-register-letters vs.
+prologue-shuttle-register tradeoff, rather than further manual
+C-level probing - four qualitatively different manual techniques have
+now each independently failed to reconcile the two sides.
