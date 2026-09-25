@@ -302,6 +302,23 @@ plain C didn't converge.
   (`sub_8007B00`/`sub_8007B98` in `actor_part.c`), dispatches to
   `sub_800EEF0`/`sub_800E7A8` on overlap. See
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md).
+- **`sub_0800D18C`/`sub_800E08C`** (`src/system/game_loop47.c`, new
+  file - GitHub issue #12 Phase 1) - the physics/collision subsystem's
+  two largest, most tangled dispatchers, closed by NAKED transcription
+  rather than real C: `sub_0800D18C` (~3840 B, not the ~1960 B this
+  issue's original read-only pass estimated) is the subsystem's
+  collision-response commit - three nested jump tables (a 7-case hitbox
+  selector, the 6-case per-edge handler dispatch
+  `docs/rom_map.md`/this issue's write-up already described, and a
+  9-case post-processing dispatch), a 5-slot "recently touched" ring
+  buffer inside `gUnknown_030012D8`, and ~30 distinct callees.
+  `sub_800E08C` (1032 B) is a further 6-case jump-table dispatcher
+  `sub_0800D18C` itself calls into, sharing the exact same per-edge
+  handler family. Both verified byte-exact via a full clean
+  `make compare`. `asm/code_3_2_17_d18c.s` is now gone entirely - see
+  [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md)'s
+  Phase 1 appendix for the confirmed dispatch maps (the basis for this
+  issue's Phase 2 parallel split of the remaining 18 leaf functions).
 - **`sub_800E494`/`sub_800E4E4`** (`src/system/game_loop7.c`, GitHub
   issue #12) - bidirectional linked-list walkers (`sub_801070C`/
   `sub_8010708`) clearing/setting each neighbor's `+0x58` flag. See
@@ -578,16 +595,6 @@ plain C didn't converge.
 
 ## Still raw, category-mapped (GitHub issue #12/#34/#40)
 
-- **`sub_0800D18C`/`sub_800E08C`** (`asm/code_3_2_17_d18c.s`, ROM
-  `0x0800D18C`-`0x0800E494`, GitHub issue #12) - the physics/collision
-  subsystem's largest, most tangled functions (docs/rom_map.md:
-  "Confirmed: a shared physics/collision subsystem, entered from
-  multiple different entity types" - `sub_0800D18C` alone is ~1960B, a
-  6-case jump-table collision-response commit that maintains a 5-slot
-  ring buffer inside `gUnknown_030012D8` and calls 27 other functions
-  in this same neighborhood). Not understood branch-by-branch with the
-  precision a byte-exact reconstruction needs yet - see
-  [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md).
 - **`sub_800E560` onward through `sub_800F990`** (`asm/code_3_2_17_e560.s`,
   ROM `0x0800E560`-`0x0800FC70`, GitHub issue #12) - the rest of this
   chunk's 25-function list: the collision-response jump-table handlers
