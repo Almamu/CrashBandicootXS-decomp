@@ -347,6 +347,21 @@ plain C didn't converge.
   entry in this section. See
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)
   for the full 18-case and 22-case dispatch maps.
+- **`sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC`** (`src/graphics/actor_part113.c`,
+  new file - GitHub issue #9/#10, Phase 2 of the `0x0800B8DC`-cluster
+  investigation above, tackling the three `(self, mode)`-shaped trigger
+  primitives that pass's own doc flagged as shared by nearly every
+  dispatch state). All three real C, matched clean - much smaller and,
+  unlike `sub_800B8DC`/`sub_800BD48`, free of the `self`/`owner`
+  register-allocation gap (straight-line, no branches). `sub_800C8AC`/
+  `sub_800C8BC` cache `mode` into `self+0x7c`/`self+0x78` and delegate
+  to the already-matched `sub_800B704`/`sub_800B838`
+  (`actor_part17.c`); `sub_800C8CC` caches into `self+0x68` and fires
+  `sub_803AD84` directly, indexing `self+0x84`'s own pointer array by
+  `mode` rather than going through the shared `gStaticData_0816B304`
+  table the other two use. See
+  [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)'s
+  "Phase 2" section for the full writeup.
 - **`sub_8025A64`** (`src/system/game_loop29.c`, new file - not
   contiguous with any other matched run once its three siblings below
   stayed parked - GitHub issue #41) - a part-object spawn helper; hits
