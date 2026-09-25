@@ -123,11 +123,11 @@ SECTIONS
         build/crashbandicootxs/src/graphics/actor_part17.o(.text);
         build/crashbandicootxs/src/graphics/actor_part112.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_bfa8.o(.text);
-        build/crashbandicootxs/src/graphics/actor_part114.o(.text);
+        build/crashbandicootxs/src/graphics/actor_part118.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_c18c.o(.text);
-        build/crashbandicootxs/src/graphics/actor_part115.o(.text);
+        build/crashbandicootxs/src/graphics/actor_part119.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_c314.o(.text);
-        build/crashbandicootxs/src/graphics/actor_part116.o(.text);
+        build/crashbandicootxs/src/graphics/actor_part120.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_c6a8.o(.text);
         build/crashbandicootxs/src/graphics/actor_part113.o(.text);
         build/crashbandicootxs/asm/code_3_2_17_c8f8.o(.text);
