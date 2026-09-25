@@ -518,3 +518,197 @@ layout (four pairs identified, exact total size/count still unknown)
 and `self+4`'s "manager" object (pointer chain + 8-byte record array,
 also still unnamed) are both good candidates for whoever next needs to
 commit a named struct for this object shape.
+
+## Phase 3 (parallel pass): the remaining single-purpose leaves
+
+A second parallel session, tackling exactly the "remaining leaves" the
+Phase 1 doc's own priority list named
+(`sub_800C18C`/`sub_800C1E8`/`sub_800C314`/`sub_800C940`/`sub_800C97C`/
+`sub_800C8F8`/`sub_800BFA8`/`sub_800C9C8`/`sub_800CBD4`/the function
+formerly guessed as `sub_800CBD4` but actually `sub_800CBF4`), working
+non-overlapping byte ranges from the four `self+0x68` dispatchers
+another parallel session was assigned (`sub_800C074`/`sub_800C40C`/
+`sub_800C5D4`/`sub_800C244`, all left completely untouched, still raw).
+
+**Closed, real C**: `sub_800C9C8` (the floating-popup spawner, state
+18's `sub_800C9C8(0x1D, 0, 0, 0x2B, 0, owner)` callee - a thin
+`sub_8025B0C` wrapper, `src/graphics/actor_part116.c`) and `sub_800CBD4`
+(`src/graphics/actor_part117.c`, see below).
+
+**Closed, NAKED**: `sub_800C18C`/`sub_800C1E8` (`actor_part114.c`),
+`sub_800C314` (`actor_part115.c`), `sub_800C8F8`/`sub_800C940`/
+`sub_800C97C` (`actor_part116.c`) - each is small (60-248B),
+straight-line or shallow-branching, and semantically fully understood
+(documented in each file's own doc comment), but every one hit a
+*different* flavor of gcc-2.9/this-agbcc-build code-selection gap that
+resisted real-C reconstruction even after substantial iteration -
+these are recorded here as a durable reference for the next session
+tempted to re-attempt them:
+
+- **`sub_800C18C`/`sub_800C1E8`** (the X/Y-axis "homing velocity-target
+  setter" pair the Phase 1 doc flagged as the cluster's single most
+  promising quick win): an isolated real-C attempt reproduced every
+  branch's *polarity* correctly (after several iterations - the naive
+  first draft had every single comparison inverted from the ROM, a
+  useful lesson that gcc-2.9's -O2 branch-layout choice for an
+  `if(cond){A}else{B-with-return}` is *not* simply "negate cond, skip
+  A" - it can just as easily place the returning branch as the
+  fallthrough and the continuing branch as the jump target, and which
+  one it picks depends on details not fully characterized here) and
+  even matched three of the function's four distinct `{vx,vy}`-store
+  sites exactly - but this agbcc build's own cross-jump/tail-merging
+  pass kept unifying the far-band "bound hit" case's three stores with
+  the shared near-band tail's own three stores into one block
+  (mismatching which register holds which value at the merge point),
+  while the ROM's own compiled output keeps that exact 3-instruction
+  "`vx=0, vy=0x10`" sequence *duplicated* verbatim at both of its call
+  sites, never merged. This held regardless of `goto`-based
+  restructuring, self-contained duplicate-store blocks, or
+  `register`/`volatile` pins on the store operands (register pins
+  *did* successfully suppress the merge in one direction, but only by
+  also flipping the branch polarity back to wrong).
+- **`sub_800C314`**: an isolated attempt reproduced the entire
+  dispatch/switch structure exactly, and even reproduced the
+  established `(s32)(x << 27) < 0` mirror-flag-bit-test idiom
+  (`src/graphics/actor_part17.c`) correctly for both of this
+  function's own bit-toggle sites - but could not reproduce the ROM's
+  own instruction *sequencing* for folding the toggled bit back into
+  the byte (compute 0/1 flag via the shift-test, shift it into bit
+  position, materialize the "clear that bit" mask via a
+  `movs #imm; rsbs r,r,#0` negate-trick, AND, OR - all as one shared
+  tail, matching the exact shape `src/graphics/actor_part27c.c`'s
+  `sub_8018884` doc comment already documents needing heavy register
+  pinning for on a related idiom). Every C rephrasing tried (nested
+  ternary, a separate `bit = cond ? 0 : 1;` statement, full if/else
+  with separate per-branch stores) got a *different* but still-
+  mismatched instruction order/selection - one variant even had the
+  compiler algebraically reuse an already-live register left over from
+  an earlier unrelated computation (`self->0x80 & 1`'s leftover
+  literal `1`) instead of the ROM's fresh literal load for the mask.
+- **`sub_800C8F8`/`sub_800C940`/`sub_800C97C`** (the sine-wave
+  oscillator family, `gStaticData_0816A820` + `gUnknown_0300082C`):
+  fully traced semantically (see `actor_part116.c`'s own doc comment
+  for the per-function field/phase-derivation breakdown), and an
+  isolated attempt got every field access and the table lookup itself
+  correct, but two ROM-specific micro-choices resisted: (1) the ROM's
+  `self->0x40 - 0x100` is always materialized as a full 32-bit literal
+  `0xFFFFFF00` added in (since 256 doesn't fit Thumb's 8-bit `subs`
+  immediate range), while a natural `... - 0x100` C expression lets
+  the compiler re-associate into a same-value different-encoding form
+  that skips the extra literal entirely; writing the constant as an
+  explicit named `s32` local assigned `+ (s32)0xFFFFFF00` fixed this
+  one. (2) The final `tableVal * self->0x44` product needs a spare
+  register freed up for `owner` via a `mov`-style register copy of one
+  of the two operands - but *which* operand gets copied, and into
+  which register, depends on downstream allocator choices that proved
+  impossible to pin down exactly even after matching fix (1) and
+  trying direct `register asm("rN")` pins on every intermediate.
+  `sub_800C940` additionally pushes 4 registers (`r4`-`r6`, `lr`)
+  though only 3 hold live values anywhere in its own body - presumably
+  8-byte stack-alignment padding this agbcc build doesn't reproduce for
+  a leaf function making no `bl` calls.
+
+**A genuine bug caught mid-investigation**: the first hand-decode pass
+over `sub_800C314`'s raw bytes misread both `rsbs r0, r0, #0` negate-
+mask idioms as clearing *two* bits each (e.g. `-0x11` clearing bits 0
+*and* 4) by conflating two's-complement negation with bitwise
+complement - `NOT(x) = -x - 1`, so `-0x11` (0xFFFFFFEF) clears *only*
+bit 4, not bits 0 and 4. Caught by cross-checking against
+`sub_800C9C8`'s own `-0x41` mask (clears only bit 6, confirmed against
+its real-C match) before committing any wrong semantics to a doc or a
+struct.
+
+**`sub_800CBD4` resolves two Phase 1 open questions**: it takes
+exactly **one** argument (`self`) - `sub_800BD48`'s own states 19-20
+call it immediately after `sub_8026EDC(0x10)` with no registers set
+explicitly, relying entirely on that allocator's leftover return value
+in `r0`, confirming the Phase 1 doc's "may take 0 or 1 arguments"
+question in favor of 1. And `self+0xc` (the "anchor" record every
+`sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC` call reads) is set here to a
+**fixed global table**, `gStaticData_087E3FA4` - every object
+constructed through this path shares the same anchor record, not a
+per-instance one. Matches the exact "reset via `sub_800B8C8`, re-point
+`self+0xc`, return `self`" shape already established for sibling
+constructors `sub_801886C`/`sub_8018858`.
+
+**Still not attempted**: `sub_800BFA8` (~204B, a further
+`self+0x68`/`0x74`-style dispatcher per `docs/rom_map.md`'s existing
+note) and `sub_800CBF4` (~208B, three repetitions of the "flag active +
+bitmap-set" idiom gated behind a hit-probe and two more flag tests -
+the same idiom `sub_8018884`'s doc comment already documents as
+needing heavy register pinning, here appearing three times over) -
+both left raw for time-budget reasons, not because they were found
+resistant. Good next targets given `sub_800C8AC`/`sub_800C8BC`/
+`sub_800C8CC` and the mirror-flag idiom are now both fully understood.
+
+### Build layout
+
+`asm/code_3_2_17_bfa8.s` is trimmed further to end right after
+`sub_800C074` (still raw, `sub_800C074` is one of the other parallel
+session's four `self+0x68` targets). The removed
+`sub_800C18C`/`sub_800C1E8` now live in the new
+`src/graphics/actor_part114.c`. `sub_800C244` (untouched, another
+`self+0x68` target) was carved into its own new `asm/code_3_2_17_c244.s`
+so it wouldn't need to move again once its own session closes it. The
+removed `sub_800C314` now lives in the new
+`src/graphics/actor_part115.c`. `sub_800C40C` onward (through
+`sub_800C898` - `sub_800C40C`/`sub_800C5D4` untouched `self+0x68`
+targets, plus `sub_800C6A8`/`sub_800C860`/`sub_800C87C`/`sub_800C898`,
+none of this pass's or the parallel session's concern) moved to the new
+`asm/code_3_2_17_c40c.s`.
+
+Likewise, `asm/code_3_2_17_c8f8.s` is fully consumed: the removed
+`sub_800C8F8`/`sub_800C940`/`sub_800C97C`/`sub_800C9C8` now live in the
+new `src/graphics/actor_part116.c`; the untouched, still-raw
+`sub_800CA04`-`sub_800CBC0` remainder moved to the new
+`asm/code_3_2_17_ca04.s`; the removed `sub_800CBD4` now lives in the
+new `src/graphics/actor_part117.c`; the untouched, still-raw
+`sub_800CBF4` onward (through `sub_800CCE0`) moved to the new
+`asm/code_3_2_17_cbf4.s`.
+
+`ldscript.txt` now reads, in this stretch:
+
+```
+build/crashbandicootxs/src/graphics/actor_part112.o(.text);
+build/crashbandicootxs/asm/code_3_2_17_bfa8.o(.text);
+build/crashbandicootxs/src/graphics/actor_part114.o(.text);
+build/crashbandicootxs/asm/code_3_2_17_c244.o(.text);
+build/crashbandicootxs/src/graphics/actor_part115.o(.text);
+build/crashbandicootxs/asm/code_3_2_17_c40c.o(.text);
+build/crashbandicootxs/src/graphics/actor_part113.o(.text);
+build/crashbandicootxs/src/graphics/actor_part116.o(.text);
+build/crashbandicootxs/asm/code_3_2_17_ca04.o(.text);
+build/crashbandicootxs/src/graphics/actor_part117.o(.text);
+build/crashbandicootxs/asm/code_3_2_17_cbf4.o(.text);
+build/crashbandicootxs/src/graphics/actor_part109.o(.text);
+```
+
+`tools/report_units.py`'s two placeholder entries
+(`0x0800BFA8`/`0x0800C8F8`) are each split into the matched/still-raw
+sub-ranges described above.
+
+### A trailing-alignment gotcha caught by `make compare`
+
+`sub_800C1E8`'s own trailing byte count (92B) is *not* a multiple of 4
+past its own `.pool` literal, leaving a genuine 2-byte ROM zero-padding
+gap before `sub_800C244` begins - the exact
+`matching_decomp_alignment_fix`-documented scenario. Missing the
+explicit trailing `asm(".align 2, 0")` after `sub_800C1E8` passed
+`make NON_MATCHING=1 report` cleanly (no warnings) but failed
+`make compare` with exactly a 2-byte mismatch at that boundary (the
+linker's default `0xc046` NOP-fill instead of the ROM's own `0x0000`) -
+caught immediately by the mandatory full-clean `make compare` step,
+confirming why that step is non-negotiable even when the isolated
+per-function byte-compare already looked clean.
+
+### Verification
+
+All seven closed functions (`sub_800C18C`, `sub_800C1E8`,
+`sub_800C314`, `sub_800C8F8`, `sub_800C940`, `sub_800C97C`,
+`sub_800C9C8`, `sub_800CBD4` - eight total) confirmed byte-identical to
+`baserom.gba` via the isolated cpp/agbcc/as + objcopy/cmp pipeline
+(only `bl`/literal-pool relocation sites differ in every case) plus a
+full clean `rm -rf build && make NON_MATCHING=1 report` (no warnings)
+and `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
+crashbandicootxs.map && make compare` (`crashbandicootxs.gba: La suma
+coincide`).

@@ -362,6 +362,29 @@ plain C didn't converge.
   table the other two use. See
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)'s
   "Phase 2" section for the full writeup.
+- **`sub_800C18C`/`sub_800C1E8`/`sub_800C314`/`sub_800C8F8`/
+  `sub_800C940`/`sub_800C97C`/`sub_800C9C8`/`sub_800CBD4`**
+  (`src/graphics/actor_part114.c`-`actor_part117.c`, new files - GitHub
+  issue #9/#10, Phase 3 of the `0x0800B8DC`-cluster investigation, the
+  "remaining leaves" the Phase 1 doc's priority list named). `sub_800C18C`/
+  `sub_800C1E8` are the X-axis/Y-axis "homing velocity-target setter"
+  pair; `sub_800C314` is state 7's `self+0x68`-dispatched callee (a
+  mirror-flag toggle plus a wrapping 0-3 counter advance);
+  `sub_800C8F8`/`sub_800C940`/`sub_800C97C` are a `gStaticData_0816A820`
+  sine-wave-oscillator family. All six matched as NAKED - each hit a
+  *different* gcc-2.9/this-agbcc-build code-selection gap (branch-
+  polarity/cross-jump-merging differences for the first pair, bit-
+  toggle instruction-sequencing for the third, constant-materialization
+  and register-copy-operand choices for the oscillator trio) despite
+  isolated real-C attempts getting the full branch/dispatch structure
+  and even established idioms like the `(s32)(x<<27)<0` mirror-flag
+  test right - see the doc's own "Phase 3" section for the full
+  per-function breakdown. `sub_800C9C8` (a thin `sub_8025B0C` wrapper,
+  state 18's floating-popup spawner) and `sub_800CBD4` (`sub_800BD48`
+  states 19-20's child-object allocator, resolving `self+0xc` to the
+  fixed `gStaticData_087E3FA4` table) both matched as real C. See
+  [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)'s
+  "Phase 3" section for the full writeup.
 - **`sub_8025A64`** (`src/system/game_loop29.c`, new file - not
   contiguous with any other matched run once its three siblings below
   stayed parked - GitHub issue #41) - a part-object spawn helper; hits
