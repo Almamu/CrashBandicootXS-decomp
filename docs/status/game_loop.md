@@ -408,6 +408,48 @@ plain C didn't converge.
   "load owner field, then shift the radius" instruction order. See
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)'s
   "Phase 4" section for the full writeup.
+- **`sub_800CBF4`/`nullsub_15`/`nullsub_3`/`sub_800CCCC`/`sub_800CCE0`**
+  (`src/graphics/actor_part123.c`, new file - GitHub issue #9/#10, the
+  final piece of the `0x0800B8DC`-cluster investigation, closing out
+  the entire 43-function cluster). `sub_800CBF4` (NAKED) inlines the
+  "flag active + bitmap-set" idiom (`actor_part27c.c`'s `sub_8018884`)
+  three times over, each independently gated (a `sub_803AD7C` hit-probe
+  reporting no hit, a flags-bit-3 test, and a `+0x38` byte test).
+  `nullsub_15`/`nullsub_3` are genuine empty stubs, matched as real C.
+  `sub_800CCCC`/`sub_800CCE0` (both real C) are two more constructors in
+  the `sub_801886C`/`sub_8018858`/`sub_800CBD4` family, both re-pointing
+  `self+0xc` at `gStaticData_087E400C`. `sub_800CCE0` sits right at the
+  physics/collision subsystem's own boundary
+  ([docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md))
+  but is confirmed to still be a plain entity constructor in this
+  cluster, immediately followed with no gap by the already-matched
+  `sub_800CD00` (`actor_part109.c`). See
+  [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)'s
+  final section for the full writeup.
+- **`sub_800BFA8`** (`src/graphics/actor_part121.c`, new file - GitHub
+  issue #9/#10) - the last raw function in the cluster's own
+  `asm/code_3_2_17_bfa8.s` chunk, called only from `sub_800B8DC` state
+  15. A small `self+0x68`-keyed 2-way dispatcher gated by a
+  `sub_803AE4C` "close enough" check against `gUnknown_0300082C` (here
+  read as a plain word, not the table-base-pointer role `sub_800C40C`
+  uses it in) plus `self->0x48`/`self->0x4c`; on pass, triggers
+  `sub_800C8CC(self,2)`/`sub_800C8CC(self,7)` for `self->0x68==0`/`4`.
+  On failure, re-dispatches through `owner` (`self->0x70`):
+  `owner->0x38` set triggers `sub_800C8CC(self,0)`/`sub_800C8CC(self,4)`
+  for `self->0x68==2`/`7`; `owner->0x38` clear instead gates a
+  `sub_800C9C8(0xc,6,0,d,0x400,owner)` call (`d=-0xa` for mode 2,
+  `d=8` for mode 7) behind an `owner->0x30`/`owner->0x34` magic-constant
+  check, tagging the returned record's `+0xa` byte with `8` on success.
+  Small enough to avoid this cluster's usual `self`/`owner`
+  register-pressure trap - matched as real C, needing `self` pinned to
+  `asm("r4")` (gcc's unforced allocator otherwise duplicates `self`
+  into a spare `r5` just to re-read `self->0x68` a second time) and the
+  `gUnknown_0300082C` read hoisted into its own statement ahead of
+  `self->0x48`'s (two independent loads gcc's scheduler otherwise
+  reorders vs. the ROM). This fully consumes `asm/code_3_2_17_bfa8.s` -
+  retired from `ldscript.txt` entirely. See
+  [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)'s
+  "`sub_800BFA8`" entry.
 - **`sub_8025A64`** (`src/system/game_loop29.c`, new file - not
   contiguous with any other matched run once its three siblings below
   stayed parked - GitHub issue #41) - a part-object spawn helper; hits

@@ -1118,3 +1118,202 @@ dispatcher per `docs/rom_map.md`), `asm/code_3_2_17_ca04.s`
 includes `sub_800CBF4` itself, already flagged in the Phase 3 leaves
 section as "three repetitions of the flag-active-plus-bitmap-set idiom
 ... left raw for time-budget reasons, not because found resistant").
+
+**Superseded by the "Final pass" section immediately below**: a
+parallel session closed all three of these remaining raw ranges
+(`sub_800BFA8`, and `sub_800CBF4` onward) around the same time as this
+Phase 4 pass, closing out the entire 43-function cluster.
+
+## Final pass: `sub_800CBF4`/`nullsub_15`/`nullsub_3`/`sub_800CCCC`/`sub_800CCE0` closed - the whole 43-function cluster is done
+
+Follow-up session, closing the last raw file in the cluster,
+`asm/code_3_2_17_cbf4.s` (ROM `0x0800CBF4`-`0x0800CD00`, 268 bytes,
+5 functions/stubs) - contiguous, no gap on either side: it starts
+exactly where `actor_part117.c`'s `sub_800CBD4` ends and ends exactly
+where the already-matched `sub_800CD00` (`actor_part109.c`) begins.
+This closes the entire 43-function `0x0800B8DC`-`0x0800D040` cluster
+investigation that began with `sub_800B8DC`/`sub_800BD48` at the top of
+this doc.
+
+### What each one does
+
+- **`sub_800CBF4(void *self, void *other)`** (208 B) - `self` is never
+  read; only `other` matters. Runs the "flag active + bitmap-set" idiom
+  (`other->0xc |= 1`, then, unless `other`'s `+8` id sentinel-checks as
+  `0xFFFF`, sets bit `other->8 & 0x1f` of word `other->8 >> 5` in the
+  `gUnknown_030012B4+0x108` bitmap - the exact idiom `actor_part27c.c`'s
+  `sub_8018884` already matches as real C) **three times**, each
+  independently gated: once when a `sub_803AD7C(other + offset, fn)`
+  hit-probe - reading its `{s16 offset, void *fn}` pair from
+  `other->table+0x28`/`+0x2c`, the exact shape
+  `src/system/game_loop8.c`'s `sub_802400C` already matches as real C -
+  reports *no* hit; once when `other->0xc` bit 3 is already set; and
+  once when `other->0x38` is nonzero. `other` shares `struct actor`'s
+  leading header layout (id @8, flags @0xc, table @0x18) but is read at
+  `+0x38` too, past `struct actor`'s own 0x1c-byte size, so kept as raw
+  offsets rather than that struct - same reasoning `actor_part27c.c`
+  already documents for its own `other`/`part`.
+- **`nullsub_15`/`nullsub_3`** (4 B each) - genuine empty stubs
+  (`bx lr`), no different from any other `nullsub_N` in this project.
+- **`sub_800CCCC(void *self, s32 flags)`** (20 B) - sets `self+0xc`'s
+  table pointer to `gStaticData_087E400C`, then tail-calls
+  `sub_800B8A8(self, flags)` - the exact same "double-set" constructor
+  shape as `sub_8018858`/`sub_8017A78`/`sub_8017FD4`.
+- **`sub_800CCE0(void *self)`** (32 B) - resets via `sub_800B8C8`,
+  re-points `self+0xc` at the same `gStaticData_087E400C` table, calls
+  `nullsub_3(self)`, returns `self` - the exact same "reset, re-point,
+  return self" constructor shape as `sub_801886C`/`sub_8018858`/
+  `sub_800CBD4`, with `nullsub_3` playing the same tail-call-hook role
+  `nullsub_14` plays for `sub_800CBD4`.
+
+### `sub_800CCE0` confirmed to stay in this cluster, not the physics subsystem
+
+The brief for this pass flagged `sub_800CCE0` as possibly transitional
+given how close it sits to `sub_800D040`'s already-documented
+physics/collision boundary
+([docs/matching/issue-12-physics-collision.md](./issue-12-physics-collision.md)).
+Reading its body settles this: it is a plain entity-object constructor
+(reset + table re-point + `nullsub_3` hook + return `self`), structurally
+identical to three other constructors already confirmed part of this
+same 93-vtable entity-object family (`sub_801886C`, `sub_8018858`,
+`sub_800CBD4`) and with none of the physics subsystem's own
+characteristic shapes (no AABB build, no neighbor-list walk, no
+`self+0x4d`/`+0x4e`/`+0x50` field access `sub_800D040`'s own doc
+comment documents). It is immediately followed in ROM, with no gap, by
+the already-matched `sub_800CD00` (`actor_part109.c`) - itself already
+established as part of this cluster, not the physics one, despite also
+sitting right at the same boundary. `sub_800D040` itself, one function
+later, is where the physics subsystem's own recognizable shape actually
+starts.
+
+### Matching
+
+`sub_800CBF4` closed as hand-transcribed **NAKED** asm - `actor_part27c.c`'s
+`sub_8018884` doc comment already documents this exact "flag active +
+bitmap-set" idiom needing heavy `register asm` pinning and a `volatile`
+reload to match even a *single* occurrence (defeating this compiler's
+CSE and shift-instruction folding otherwise); `sub_800CBF4` inlines the
+same idiom three times over with no shared-helper `bl` in the ROM to
+call instead, compounding that already-documented resistant shape
+rather than presenting a new one worth re-litigating. `nullsub_15`,
+`nullsub_3`, `sub_800CCCC`, and `sub_800CCE0` all matched as **real C**
+on the first attempt, following the established empty-stub and
+constructor templates named above exactly.
+
+Confirmed byte-identical to `baserom.gba` at `0x0800CBF4`-`0x0800CD00`
+(268 bytes, all five) via the isolated `cpp`/`agbcc`/`as` +
+`objcopy`/`cmp` pipeline (the only differences from a direct ROM slice
+were the `bl sub_803AD7C`/`bl sub_800B8A8`/`bl sub_800B8C8`/
+`bl nullsub_3` relocation sites and the `gUnknown_030012B4`/
+`gStaticData_087E400C` literal-pool addresses - both expected, resolving
+correctly once linked), plus a full clean `rm -rf build && make
+NON_MATCHING=1 report` (no warnings) and `rm -rf build
+crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
+compare` (`crashbandicootxs.gba: La suma coincide`).
+
+### Build layout
+
+All five functions now live in the new `src/graphics/actor_part123.c`.
+`asm/code_3_2_17_cbf4.s` is now empty and deleted; `ldscript.txt`'s
+`build/crashbandicootxs/asm/code_3_2_17_cbf4.o(.text);` line is replaced
+with `build/crashbandicootxs/src/graphics/actor_part123.o(.text);`,
+sitting between `actor_part117.o` and `actor_part109.o` exactly as the
+removed asm block did. `tools/report_units.py`'s
+`(0x0800CBF4, None, "graphics")` placeholder is replaced with a matched
+entry for `actor_part123.o`.
+
+### The cluster is closed
+
+With this file done, every one of the 43 functions originally scoped
+into the `0x0800B8DC`-`0x0800D040` cluster (GitHub issue #9/#10) is now
+either matched (real C or NAKED) or - for the handful recategorized
+into the neighboring physics/collision subsystem along the way
+(`sub_800CD00`'s own doc, `sub_800CEAC`/`sub_800CF70`) - closed under
+that subsystem's own issue #12/#13 tracking instead. No raw bytes
+remain anywhere in the original `0x0800B8DC`-`0x0800D040` span.
+## `sub_800BFA8`: the last raw function in `asm/code_3_2_17_bfa8.s`
+
+Closing pass on `sub_800BFA8` (ROM `0x0800BFA8`-`0x0800C074`, 204
+bytes), the sole remaining function in `asm/code_3_2_17_bfa8.s` -
+`tools/report_units.py`'s own placeholder comment for it called it "a
+further `self+0x68`/`0x74`-selector dispatcher per docs/rom_map.md,
+not yet examined." It's called exactly once, from `sub_800B8DC` state
+15 (case 42 in that function's own jump table, right after
+`sub_800C40C`).
+
+### Shape
+
+A small `self+0x68`-keyed dispatcher, gated by a `sub_803AE4C` "close
+enough" scalar check - the same primitive `sub_800C40C`'s own case 3/4
+use, but here against `gUnknown_0300082C` read as a **plain word**
+(`sub_803AE4C(gUnknown_0300082C + self->0x48 - self->0x4c,
+self->0x48)`), not the table-base-pointer role `sub_800C40C` uses that
+same still-unexplained global in. This is a fourth confirmed
+"multi-shaped" site for `gUnknown_0300082C` (joining the "plain word"
+sites `sub_8016C94`/`sub_801B624` and the "table base pointer" site
+`sub_800C40C` already flagged in `docs/rom_map.md`).
+
+- **Check passes (result `0`)**: `self->0x68 == 0` triggers
+  `sub_800C8CC(self, 2)`; `self->0x68 == 4` triggers
+  `sub_800C8CC(self, 7)`; anything else is a no-op. Function returns.
+- **Check fails**: re-dispatch moves to `owner` (`self->0x70`).
+  - `owner->0x38` (the cluster's established "enabled" byte) set:
+    `self->0x68 == 2` triggers `sub_800C8CC(self, 0)`; `== 7` triggers
+    `sub_800C8CC(self, 4)`; anything else a no-op. Returns.
+  - `owner->0x38` clear: `self->0x68 == 2`/`7` each gate a
+    `sub_800C9C8(0xc, 6, 0, d, 0x400, owner)` call behind an
+    `owner->0x30`/`owner->0x34` magic-constant check (`d = -0xa` when
+    `owner->0x30==0xa && owner->0x34==0` for mode 2; `d = 8` when
+    `owner->0x30==8 && owner->0x34==0` for mode 7 - the same
+    blocking-condition-pair shape this doc's field table already
+    documents at offsets `0x30`/`0x34`). On success (non-null return),
+    the returned record's `+0xa` byte is set to `8`.
+
+### Matching as real C
+
+Small enough (no nested loops, only 2-deep dispatch) to avoid this
+cluster's usual `self`/`owner` multi-field-liveness register-pressure
+trap that forced every `self+0x68`-dispatching sibling
+(`sub_800C074`/`sub_800C244`/`sub_800C40C`/`sub_800C5D4`) to NAKED.
+Straightforward pointer-offset-cast C (this neighborhood's established
+convention - `u8 *self = selfArg;` plus `*(s32 *)(self + off)`, per
+`actor_part113.c`/`actor_part117.c`) got every branch, constant, and
+call argument right on the first pass and diffed to within two
+register-allocation quirks of the ROM, both resolved via
+[[matching_decomp_register_pinning]] (see that memory doc / the
+project's `docs/matching.md`):
+
+1. **`self` pinned to `asm("r4")`** (`register u8 *self asm("r4") =
+   selfArg;`). Unpinned, gcc's own allocator duplicated `self` into a
+   spare `r5` register (`push {r4, r5, lr}` / `add r5, r4, #0`) purely
+   to re-read `self->0x68` a second time in the `owner->0x38==0`
+   branch, even though `r4` was still live and unused at that point -
+   the ROM never touches a second register for `self` at all
+   (`push {r4, lr}` only). Pinning eliminated the duplicate register
+   and its push/pop entirely.
+2. **Statement-order hoist for two independent loads.** The prelude's
+   `gUnknown_0300082C` global read and `self->0x48` field read have no
+   data dependency on each other (only their *sum* does), so gcc 2.9's
+   scheduler was free to reorder them - and did, emitting
+   `self->0x48`'s load first even though the C source computed it
+   second. Simply computing the global read into its own named local
+   (`s32 base = (s32)gUnknown_0300082C;`) as the *first* statement,
+   ahead of `s32 field48 = *(s32 *)(self + 0x48);`, was enough to make
+   the scheduler honor that order - no inline-asm anchor needed here
+   (contrast with [[matching_decomp_register_pinning]] technique 6,
+   which was the fallback plan if this hadn't worked).
+
+Confirmed byte-identical to `baserom.gba`'s own raw bytes at
+`0x0800BFA8`-`0x0800C074` via the isolated cpp/agbcc/as +
+objcopy/cmp pipeline (26 differing bytes total, all at the 5 `bl`
+relocation sites and the `gUnknown_0300082C` literal-pool word - the
+same expected relocation-only gap documented throughout this cluster)
+plus a full clean `rm -rf build && make NON_MATCHING=1 report` (no
+warnings) and `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
+crashbandicootxs.map && make compare` (`crashbandicootxs.gba: La suma
+coincide`).
+
+This was the last function in `asm/code_3_2_17_bfa8.s` - the file is
+now empty and has been deleted, with its `ldscript.txt` entry replaced
+by `build/crashbandicootxs/src/graphics/actor_part121.o(.text);`
+(new file, `src/graphics/actor_part121.c`).
