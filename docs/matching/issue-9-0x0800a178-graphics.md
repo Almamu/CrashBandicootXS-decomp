@@ -513,3 +513,157 @@ in link order, with no raw `.s` gap between `actor_part9.o` and
   the `0x0800A178` unit's comment updated to note it now shares that
   object with the matched `sub_800A0FC`.
 - `ldscript.txt` - `asm/code_3_2_11.o` line removed.
+
+## Second follow-up: `sub_8026BF8`/`sub_8026C3C`, closing the last two
+## flagged callees (issue #9/#10)
+
+A third dedicated pass, this time a matching-only session against the
+two callees this doc's own "`sub_8026C3C`/`sub_8026BF8`: single-point
+terrain-height probes" section (above) had already fully worked out
+semantically but explicitly left unattempted as C reconstructions
+("Neither was attempted as a byte-exact C match this session"). Nothing
+about their semantics changed from the account above - `s32 fn(void
+*player, struct probe_pos *pos, s32 *outValue)`, `player+0x20`'s
+terrain-data pointer, `pos->x>>3`/`pos->y>>3` tile coords, a signed
+height-byte lookup (`sub_80250BC` row read for `sub_8026BF8`,
+`sub_8025228` for `sub_8026C3C`), `((tileY<<3)+height-pos->y)<<8`
+accumulated into `*outValue` - this pass just closes them as real C.
+
+### Matching
+
+Both matched as real C, no `NON_MATCHING` gap and no NAKED fallback
+needed - the earlier "same resistant multi-high-register shape this ROM
+neighborhood already hit four times" caution (about `sub_800A178`/
+`sub_800A420` themselves) turned out not to apply to these two smaller
+leaf functions, which only ever need `r0`-`r6`, matching the ROM's own
+register choices directly once the right C shape was found:
+
+- Branch polarity: the natural `if (row == NULL) return 0; ... hit
+  code ...` phrasing compiles to the *opposite* branch polarity from the
+  ROM (this compiler tests the null case and skips forward over the hit
+  code; the ROM tests the hit case and skips forward over the `return
+  0`). Rewriting as `if (row != NULL) { ... hit code ...; return 1; }
+  return 0;` (and the equivalent `if (height >= 0) { ... } return 0;`
+  for `sub_8026C3C`) reproduces the ROM's own `bne`-to-hit-code shape
+  exactly.
+- Load-order: the ROM reloads `pos->y` (and, for `sub_8026BF8`,
+  `pos->x`) from memory a second time inside the hit block, in a
+  specific order (`y` before `x`), even though the pre-shifted `tileY`
+  is still live in a callee-saved register from the top of the
+  function. Matched by hoisting `s32 y = pos->y;` as its own local
+  right at the top of the hit block (mirroring the ROM's own early
+  reload) and writing the final accumulation with the row-byte/height
+  operand evaluated first - `height + (tileY << 3) - y` for
+  `sub_8026BF8` (whose height depends on the row lookup, so evaluating
+  it first also keeps the byte-load and its address computation
+  contiguous, avoiding the compiler's scheduler hoisting the unrelated
+  `tileY << 3` computation in between - the same "fold into a single
+  expression / keep the two loads in the ROM's actual order" scheduler
+  workaround `docs/matching/issue-68-0x08039818-audio.md` already
+  documented for an unrelated function), `(tileY << 3) + height - y` for
+  `sub_8026C3C` (whose `height` is already available before the branch,
+  via the call's own return value, so no equivalent hoist risk exists
+  there).
+- `sub_8026BF8`'s signed-byte row read: this specific agbcc build never
+  emits a Thumb `LDRSB` (register-offset signed-byte load) from *any*
+  C-level signed-byte array/pointer read, confirmed categorically with a
+  minimal standalone `s32 f(s8 *arr, s32 i) { return arr[i]; }` test,
+  which still lowers to `ldrb` + `lsl #24` + `asr #24` regardless of how
+  the array access is phrased (a separate `s8 height = row[idx];` local
+  vs. inlined into the final expression made no difference). Thumb's
+  `LDRSB` has no immediate-offset encoding at all (unlike `LDRB`), so
+  once the base+index add is folded into a single address register this
+  compiler's cost model apparently never reconsiders the register-offset
+  signed load - it always prefers the unsigned-byte-load-plus-shift
+  fallback. Closed with a narrow, targeted inline-asm materialization of
+  the exact `mov r1,#0`/`ldrsb r1,[r0,r1]` instruction pair the ROM
+  itself uses - `register s8 *addr asm("r0")` pinned to `row + (pos->x &
+  7)`, `register s32 height asm("r1")` initialized to `0` and used as
+  both the register-offset input and the load's destination
+  (`"+r"(height)`), not a blanket opaque block - the one instruction
+  class this compiler categorically can't select on its own.
+
+Confirmed byte-exact via the isolated `cpp`/`agbcc`/`as` +
+`objcopy`/`cmp` pipeline against `baserom.gba`'s own bytes at
+`0x08026BF8`-`0x08026C80` (136 bytes, both functions) - the only
+differing bytes are the two expected `bl` relocation sites (`sub_80250BC`,
+`sub_8025228`), both resolving correctly once linked. Full clean `rm -rf
+build && make NON_MATCHING=1 report` (no warnings) and `rm -rf build
+crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
+compare` - `crashbandicootxs.gba: La suma coincide`.
+
+One documentation-writing pitfall worth recording: this agbcc build's
+`cpp` will occasionally warn about "missing terminating `'`/`\"`
+character" for ordinary English apostrophes/quotes inside `/* ... */`
+doc comments (an old-cpp lexer quirk scanning raw comment text for quote
+balance) - harmless to compilation but a real warning that breaks the
+"no warnings" full-report requirement, so doc comments in this codebase
+should stick to backticks for code references and avoid stray straight
+apostrophes/double-quoted phrases spanning multiple comment lines.
+Separately, and more seriously: the glob-style path `src/**/*.c`
+(intended to mean "every `.c` file under `src/`") literally contains the
+C block-comment closer `*/` as a substring, which prematurely ends the
+enclosing `/* ... */` doc comment and turns the rest of the comment into
+real (broken) code - avoid that exact character sequence in comments
+project-wide; spell it out in prose instead (e.g. "every `.c` file under
+`src/`").
+
+### Bonus: `sub_8026C80`/`sub_8026C8C`, two adjacent UNUSED stubs
+
+The same survey that originally flagged `sub_8026C3C`/`sub_8026BF8`
+("15 more reads" pass, `docs/rom_map.md` line ~2581) also flagged the
+two tiny functions immediately following them in the same file as
+"possibly trampolines/stubs". Read directly and matched alongside the
+main pair, since both turned out to be trivially small (10 and 4 bytes)
+and matched on the first isolated-compile attempt with zero register
+pins:
+
+- **`sub_8026C80(void *arg0, s32 arg1, s32 *arg2)`**: `arg0` is never
+  touched (dead parameter). If `arg1` is nonzero, dereferences `arg2`
+  and discards the result - a real load with no observable effect,
+  needing `arg2` typed `volatile` to survive optimization (matching the
+  ROM's own unconditional `ldr r0, [r2]`, whose loaded value is
+  immediately clobbered by the trailing `movs r0, #0`). Always returns
+  `0` regardless of which path was taken.
+- **`sub_8026C8C(void)`**: unconditionally returns `0`, touching no
+  parameters at all. Not given the `nullsub_N` name (see
+  `docs/naming.md`) since that convention is reserved for a genuinely
+  *empty* function body (`bx lr` alone), not a one-instruction
+  always-returns-a-constant stub; left as `sub_8026C8C` per the
+  project's own "when in doubt, leave it `sub_XXXXXXXX`" guidance.
+
+Both are **UNUSED** - checked every `asm/*.s`, `expected/*.s` (aside
+from their own definitions there), and every `.c` file under `src/` for
+a `bl`/`.4byte` reference to either symbol, none found. Matched anyway
+per this project's standing "genuinely dead code still goes through the
+full workflow" convention (`docs/naming.md`) rather than skipped.
+Confirmed byte-exact the same way as the main pair, against
+`baserom.gba`'s bytes at `0x08026C80`-`0x08026C90` (16 bytes including
+the inter-function alignment pad) - zero relocation sites, so this slice
+is byte-identical with no exceptions.
+
+### Build layout (second follow-up)
+
+New object `src/system/game_loop45.c` holds all four functions
+(`sub_8026BF8`, `sub_8026C3C`, `sub_8026C80`, `sub_8026C8C`), following
+the `game_loop43.c`/`game_loop44.c` naming precedent already established
+for this exact ROM neighborhood (both matched in the same immediate
+area, both reusing `struct probe_pos`/`struct tile_cache` conventions
+this new file also reuses rather than redefining differently).
+`asm/code_3_2_17_26bf8.s` is trimmed to begin at `sub_8026C90` (the next
+still-raw function); `game_loop45.o` is inserted into `ldscript.txt`
+directly between `game_loop44.o` and the trimmed `code_3_2_17_26bf8.o`,
+exactly where these four functions' real bytes already sat.
+
+### Cross-references (second follow-up)
+
+- `docs/status/game_loop.md` - new bullet in "Matched" for
+  `sub_8026BF8`/`sub_8026C3C`/`sub_8026C80`/`sub_8026C8C`
+  (`src/system/game_loop45.c`).
+- `tools/report_units.py` - new unit at `0x08026BF8`
+  (`"src/system/game_loop45.o"`, category `game_loop`); the `0x0800A178`
+  unit's comment updated to note all four of `sub_8008200`/
+  `sub_8026628`/`sub_8026C3C`/`sub_8026BF8` are now matched, not just
+  the first two.
+- `ldscript.txt` - `build/crashbandicootxs/src/system/game_loop45.o(.text);`
+  line added, between `game_loop44.o` and `code_3_2_17_26bf8.o`.
