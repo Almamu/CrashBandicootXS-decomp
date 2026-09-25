@@ -180,9 +180,27 @@ system from "core" system startup/init code.
   it with the shared copy purely by instruction content) and per-case
   `diff`/`err` register pins (`r6`/`r0`, the ROM's own fixed roles) -
   see [naked-sub_800fdc8-matched.md](../matching/naked-sub_800fdc8-matched.md).
+- `src/system/game_loop36.c` (GitHub issue #13, fourth pass, new file -
+  replaces the trimmed `asm/code_3_2_17_e560_ff0c.s`, now deleted):
+  `sub_800FF0C` - the `sub_800FF0C` entity-constructor trampoline
+  family's own target function (two whole files, `graphics_loading_21bfc.c`/
+  `graphics_loading_21668.c`, exist purely to call it with a fixed
+  `type` constant). Allocates a 0x64-byte object, sets `self+0x18` to
+  `&gStaticData_087E4074` (a `+0x18` outlier of the usual `+0xC`
+  table-pointer convention), then dispatches on `type` (0-0x12,
+  externally confirmed by every trampoline caller) through two nested
+  jump tables (15 and 19 cases) to tag `self+0x2d` and initialize
+  per-type fields - including a confirmed call to `sub_800F5B8`
+  (game_loop49.c, issue #12) for `type == 5`. `NAKED` transcription
+  (byte-correct, not real decompiled C): three extended registers
+  (`r8`/`sb`/`sl`) live across the whole function, the same
+  gcc-2.9-resistant shape already established for `sub_0800D18C`/
+  `sub_800E08C` (game_loop47.c/game_loop48.c). See
+  [docs/matching/issue-13-0x0800ff0c-graphics.md](../matching/issue-13-0x0800ff0c-graphics.md)
+  for the full type-code-to-behavior table.
 - `src/system/game_loop35.c` (GitHub issue #13, third pass, new file -
-  it sits between the still-raw `sub_800FF0C` and `sub_80104E4`, so it
-  can't join either neighbor's file): `sub_8010480` - a
+  it sits between `sub_800FF0C` (now `game_loop36.c`) and `sub_80104E4`,
+  so it can't join either neighbor's file): `sub_8010480` - a
   `self+0x4d`-gated reset of `self+0x30`/`self+0x38` via the
   `self+0x20`-pointer-to-manager/`self+0x2d`-tag/0x1c-stride
   hitbox-record convention `sub_800D040` (game_loop6.c) also uses,
@@ -645,14 +663,6 @@ plain C didn't converge.
 
 ## Still raw, category-mapped (GitHub issue #12/#34/#40)
 
-- **`sub_800FF0C`** (`asm/code_3_2_17_e560_ff0c.s`, ROM `0x0800FF0C`,
-  GitHub issue #13) - a large (~660-instruction) projectile/
-  hazard-spawn dispatcher with two big jump tables and packed bitfield
-  arguments; still out of scope for a single pass - see
-  [docs/matching/issue-13-fc70-second-continuation.md](../matching/issue-13-fc70-second-continuation.md)
-  (`sub_8010480`/`sub_8010674`, the two functions that used to share
-  this raw span with it, are now matched - see `game_loop35.c`/
-  `game_loop23.c` above).
 - **`sub_80104E4`** (`asm/code_3_2_17_e560_104e4.s`, ROM `0x080104E4`,
   GitHub issue #13) - a further ~195-instruction state dispatcher
   calling several still-raw siblings; not attempted - see
