@@ -140,7 +140,7 @@ SECTIONS
         build/crashbandicootxs/src/system/game_loop47.o(.text);
         build/crashbandicootxs/src/system/game_loop7.o(.text);
         build/crashbandicootxs/src/system/game_loop48.o(.text);
-        build/crashbandicootxs/asm/code_3_2_17_e560.o(.text);
+        build/crashbandicootxs/src/system/game_loop49.o(.text);
         build/crashbandicootxs/src/system/game_loop32.o(.text);
         build/crashbandicootxs/src/system/game_loop33.o(.text);
         build/crashbandicootxs/src/system/game_loop22.o(.text);

@@ -351,6 +351,24 @@ plain C didn't converge.
   (`sub_800EDBC`). See
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md)'s
   Phase 2 writeup.
+- **`sub_800EEF0` through `sub_800F990`** (12 functions:
+  `sub_800EEF0`, `sub_800F06C`, `sub_800F1B8`, `sub_800F258`,
+  `sub_800F2BC`, `sub_800F368`, `sub_800F4F4`, `sub_800F5B8`,
+  `sub_800F6B8`, `sub_800F798`, `sub_800F8E0`, `sub_800F990` -
+  `src/system/game_loop49.c`, new file - GitHub issue #12 Phase 2,
+  higher-address half, sibling pass) - the direct/transitive callees of
+  `sub_0800D18C`'s and `sub_800E08C`'s per-edge jump table reachable
+  from `sub_800EEF0` up through the end of this whole cluster
+  (0x0800EEF0-0x0800FC70). All twelve closed by NAKED transcription for
+  the same gcc-2.9-resistant register-shape reasons as Phase 1's two
+  dispatchers - each re-triggers either the `+0x20`/`+0x2d`-hitbox-record
+  AABB-build idiom or plain high-register (`r8`/`sb`/`sl`) cross-block
+  reuse under -O2. Verified byte-exact via a full clean `make compare`.
+  `asm/code_3_2_17_e560.s` is now gone entirely - both this half and
+  the lower-address half above (`src/system/game_loop48.c`) are fully
+  consumed. See
+  [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md)'s
+  Phase 2 appendix for the confirmed per-function roles.
 - **`sub_800E494`/`sub_800E4E4`** (`src/system/game_loop7.c`, GitHub
   issue #12) - bidirectional linked-list walkers (`sub_801070C`/
   `sub_8010708`) clearing/setting each neighbor's `+0x58` flag. See
@@ -627,14 +645,6 @@ plain C didn't converge.
 
 ## Still raw, category-mapped (GitHub issue #12/#34/#40)
 
-- **`sub_800EEF0` onward through `sub_800F990`** (`asm/code_3_2_17_e560.s`,
-  ROM `0x0800EEF0`-`0x0800FC70`, GitHub issue #12) - the upper-address
-  half of this chunk's remaining tail (`sub_800EEF0`, `sub_800F06C`,
-  `sub_800F1B8`, `sub_800F258`, `sub_800F2BC`, `sub_800F368`,
-  `sub_800F4F4`, `sub_800F5B8`, `sub_800F6B8`, `sub_800F798`,
-  `sub_800F8E0`, `sub_800F990`), a parallel pass's own territory; left
-  untouched for this pass - see
-  [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md).
 - **`sub_800FF0C`** (`asm/code_3_2_17_e560_ff0c.s`, ROM `0x0800FF0C`,
   GitHub issue #13) - a large (~660-instruction) projectile/
   hazard-spawn dispatcher with two big jump tables and packed bitfield
