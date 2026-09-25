@@ -39,6 +39,26 @@ system from "core" system startup/init code.
   lazily initialize this object - GitHub issue #37's last standing
   gap) - all matched as real C, no `NAKED` fallbacks needed. See
   [docs/matching/issue-35-36-0x080231cc-game-loop.md](../matching/issue-35-36-0x080231cc-game-loop.md)
+- `src/system/game_loop57.c` (new file, GitHub issue #39): `sub_8024810`-
+  `sub_8024E24` (25 functions) - extends `struct SoundChannelList`
+  (game_loop37.c/38.c) with more fields, plus the "visual scrolling
+  background streamer" family (docs/rom_map.md): a circular 4x4-block
+  ring-buffer tilemap fed by the same custom RLE/delta token-stream
+  decoder as the terrain-tile cache's `sub_8025334` (`sub_8024960`), its
+  per-frame axis-crossing driver (`sub_8024AA0`, matched as real C on
+  the first attempt), its row/column incremental streamers
+  (`sub_8024BAC`/`sub_8024C08`) and full "level load" seeder
+  (`sub_8024C64`), three wrapped-address helpers (`sub_8024B18`/
+  `sub_8024B48`/`sub_8024B78`, matched as real C), and the object's
+  construction/accessors (`sub_8024CF0`/`sub_8024D0C`/`sub_8024D38`/
+  `sub_8024D58`/`sub_8024D5C`/`sub_8024D60`/`sub_8024D6C`/`sub_8024D74`/
+  `sub_8024DAC`/`sub_8024DCC`/`sub_8024DE0`/`sub_8024DFC`/`sub_8024E24`,
+  all matched as real C). 20 matched as real C, 5 (`sub_8024820`/
+  `sub_8024960`/`sub_8024BAC`/`sub_8024C08`/`sub_8024C64`) closed as
+  `NAKED` transcriptions - the same gcc-2.9 register-allocation-
+  permutation class of gap as the neighboring terrain-tile-cache cluster
+  (issue #40). `asm/code_3_2_17_24810.s` is now fully retired. See
+  [docs/matching/issue-39-0x08024810-game-loop.md](../matching/issue-39-0x08024810-game-loop.md)
 - `src/system/game_loop3.c` (GitHub issue #40): `sub_8024E68`,
   `sub_8024E90`, `sub_8024EB4` (a viewport/parallax-scroll-layer object)
   and `sub_8024F04`/`sub_8024F0C`/`sub_8024F10`/`sub_8024F14`/
