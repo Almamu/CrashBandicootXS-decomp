@@ -620,3 +620,198 @@ follow-up rather than guessed at or force-fit around the constraint.
   the `0x08010E14` entry's own note updated for the reduced range.
 - `docs/matching.md` - technique 10 (`r7` hazard) and the high-register
   save/restore idiom (technique 8), both reconfirmed here.
+
+## Final mop-up: `sub_8010E34`/`sub_8010EAC`/`sub_8010F8C`/`sub_8011114`/
+`sub_80111B8` matched - **entire chunk closed**
+
+The 5 functions the "Not integrated this pass" section above left as
+drafted-but-unwired (`sub_8010E34`, `sub_8010EAC`, `sub_8010F8C`,
+`sub_80111B8`, plus `sub_8011114` which two sibling parallel sessions
+had deliberately left untouched since it sits physically between
+`sub_8010F8C` and `sub_80111B8` and its own filename-collision
+avoidance convention hadn't reserved a slot for it) are now all matched,
+in a new file `src/system/game_loop54.c` (the next available
+`game_loopNN.c` slot after this session's `50`-`53`). **This closes the
+entire `0x08010D54` physics/collision-apply chunk (GitHub issue
+#12/#14): every function between `sub_8010D54` and the already-matched
+`src/graphics/actor_part39.c` (`sub_80119A8`) is now matched.**
+`asm/code_3_2_17_e560_10d54.s` is fully consumed and removed from the
+tree; its `ldscript.txt` line is replaced by `game_loop54.o` (inserted
+between `game_loop50.o` and `game_loop52.o`, its own correct ROM-order
+position).
+
+### Semantics confirmed
+
+- **`sub_8010E34`** (120B) - a bounds-checked AABB gate, previously
+  without any cross-reference. Reading it directly revealed it shares
+  its *entire* opening gate verbatim with `sub_8011390`
+  (`game_loop52.c`, already matched): `if (self->0x4a != 0 &&
+  self->0x4b <= 0x16 && player->0x88 != 3) return;` followed by the same
+  flags-bit-3-clear/bit-2-set test (compiled via the
+  `(u32)flags << 0x18` shift-extract idiom, not a direct `& 8`/`& 4` -
+  confirmed this is genuinely how gcc 2.9 -O2 compiles this exact
+  bit-test phrasing in this codebase, not a hand-picked quirk). Past the
+  gate: builds `self`'s own AABB and the player's AABB via two
+  `sub_8007B98` calls (in that order - `self` first), tests overlap via
+  `sub_8001688`, and on overlap sets flags bit 3 and calls
+  `sub_8010EAC(self, 0)` - i.e. this is `sub_8010EAC`'s own player-
+  proximity trigger, the "randomized-behavior family"'s entry point.
+- **`sub_8010EAC`** (224B) - `docs/rom_map.md`'s "randomized-behavior"
+  family sibling of `sub_8016048`, confirmed as one more member of the
+  "(dx,dy) offset then distance-pair" tail shape shared with
+  `sub_8011448`/`sub_8011870`/`sub_80111B8`: plays a hit SFX, sets
+  `self->0x3c = 0xa0`, then either derives a randomized `(dx,dy)` from
+  `rand()` (`randomize` nonzero - three `rand()`-driven bands select the
+  x-offset, `self->0x49` tags which one, `self->0x48 = 2`) or uses a
+  fixed `(0xb400, 0xc00)` offset and fires
+  `sub_80284A4(gUnknown_03001318)` (`self->0x48 = 1`); either way,
+  `self->0xc |= 0x10`, `self->0x25 = 1`, `sub_8007174(...)`, then
+  `self->0x40`/`self->0x44` become `-sub_80008F0(newPos<<8 - offset,
+  0x1400)`.
+- **`sub_8010F8C`** (392B) - the bounds-checked, mode-selected
+  rotating/orbiting hazard state machine `docs/rom_map.md` already
+  flagged. Mode 1: integrates position by velocity, and once inside
+  screen bounds (`|x|<=0xb4`, `|y|<=0xc`) plays a hit SFX, calls
+  `sub_8023464(gUnknown_030012C0)`, sets flags bit 0, and (unless
+  `self->8 == 0xffff`) sets `self->8`'s bit in the
+  `gUnknown_030012B4+0x108` collision bitmap. Mode 2: integrates
+  position, wraps a `self->0x3c` timer up or down depending on
+  `self->0x49`, and on wrap fires the identical
+  PlaySfx-less-but-otherwise-same trigger tail. Any other mode (0, or
+  3+): gated by `self->0x4a`, advances `self->0x49`/`self->0x4b`
+  (wrapping the gate off after 32 ticks). Shared tail: unless
+  `self->0x48 != 0`, computes an orbit step via
+  `gStaticData_0816A820[self->0x49 & 0x7f]` and `sub_80008FC` added into
+  `self->0x50`, stored to `self->y`, when `self->0x4a` is clear, or
+  calls `sub_8011248` (`game_loop52.c`'s orbit-position updater) when
+  set - then always tail-calls `sub_8008364`.
+- **`sub_8011114`** (164B) - `struct actor *sub_8011114(u16 arg0, u16
+  arg1, u16 arg2, s32 arg3)`, the part-object spawn helper
+  extern-declared in `game_loop29.c`. Confirmed `arg3` is genuinely
+  dead - the ROM hardcodes the three fields it would otherwise feed
+  (`self+0x29`/`+0x2a`/`+0x2b`) to a compile-time `0` regardless,
+  matching the extern's own always-`0` call sites. Allocates a
+  `0x54`-byte object, re-initializes it, repoints `self->table` at
+  `gStaticData_087E40DC`, clears the "spawned/active" gate
+  (`sub_8011308`), stores `arg0` at `self+8` and `arg1`/`arg2` (Q8) at
+  `self+0`/`self+4` mirrored into the orbit anchor
+  `self+0x4c`/`self+0x50`, joins the `gUnknown_030012EC`
+  `dual_array_manager` list, derives `self+0x30` from the
+  `table[self->0x2d]->+0x16` clamp idiom, clears bits 0/5 of
+  `self+0x28`, and returns the new part.
+- **`sub_80111B8`** (144B) - `void sub_80111B8(void *part)`, confirmed
+  as the documented "mutually exclusive alternative" to `sub_8011870`
+  (`game_loop53.c`) - reading both side by side, `sub_80111B8` is
+  notably *simpler*: it has no `self->0x3c`/`self->0x30` table-lookup-
+  clamp setup at all, just `self->0x48 = 1`, `self->x -=
+  self->0x4a<<8`, `self->0x25 = 1`, `sub_8007174(...)`, the same
+  distance-pair derivation with fixed `(0xb400, 0xc00)` offsets, then
+  `sub_80284A4(gUnknown_03001318)` (not `sub_80284D4`, unlike
+  `sub_8011870`).
+
+### Matching result: 3 of 5 real C, 2 NAKED
+
+Unlike the previous Phase 2 slice (5 of 6 NAKED), most of this final
+slice closed as **real C** - `sub_8010E34`, `sub_8010EAC`, and
+`sub_80111B8`. Neither uses `r7`/`r8`/`sb` at all (all three push only
+`r4`-`r6`), so the confirmed-unfixable `r7` hazard documented at length
+for their siblings (`sub_8011448`/`sub_8011870`) simply doesn't apply
+here - the extra table-lookup-clamp section that drags `r7` into the
+picture for those two is entirely absent from `sub_8010EAC`/
+`sub_80111B8`.
+
+Three genuine gcc-2.9 -O2 codegen-order quirks were hit and fixed with
+this project's established register-pinning/opaque-materialization
+toolbox (not new techniques - direct re-applications of
+`matching_decomp_register_pinning`):
+
+- **`sub_8010EAC`'s prologue**: a plain `u8 *self = selfArg;` as the
+  first statement still let gcc schedule the `randomize` parameter's
+  8-bit truncation *before* the `self` register copy, opposite the
+  ROM's own order. Fixed with `asm volatile("" : "+r"(self));`
+  immediately after the assignment - an empty compiler barrier forcing
+  `self`'s materialization to actually happen at that program point
+  rather than being freely reordered.
+- **`sub_8010EAC`'s `self->0xc |= 0x10;`/`self->0x25 = 1;` pair**: gcc
+  naturally loads the existing field value before materializing the
+  small integer constant; the ROM does the opposite (constant into `r0`
+  first, then the field load/address computation second). Fixed with
+  `register s32 mask asm("r0") = 0x10;` / `register u8 one asm("r0") =
+  1;` pins, forcing constant-first evaluation order - the same
+  established idiom as `game_loop52.c`'s `sub_80112C4`, just for a
+  plain positive immediate instead of a negated one.
+- **`sub_80111B8`'s `self->x -= self->0x4a<<8;`**: the ROM loads
+  `self->0x4a` directly into the same register that held its own
+  address (dead after the load), then shifts the result into a
+  *different* register, freeing the first for reuse holding `self->x`'s
+  current value. A natural plain-C compile picks the opposite pairing.
+  Fixed by explicitly splitting the load and shift into two named
+  locals, each pinned to a specific register: `register s32 off
+  asm("r0") = self[0x4a]; register s32 shifted asm("r1") = off << 8;`
+  then `*(s32 *)self -= shifted;` - a two-register pin, one step beyond
+  the single-register pins used elsewhere in this codebase, needed
+  because both the source and destination registers of the shift
+  mattered to the byte match, not just the shift's own presence.
+- A **sign bug caught by the isolated-verification step**: an early
+  draft wrote the fixed offsets in `sub_80111B8` as the raw 32-bit
+  pool-word patterns seen in the ROM's own literal pool
+  (`newX - 0xFFFF4C00`), not realizing those patterns are already the
+  *negative* two's-complement encoding (`0xFFFF4C00 == -0xb400`) that
+  the ROM's own `adds` (not `subs`) instruction then adds back - i.e.
+  the actual arithmetic is `newX - 0xb400`, and writing the raw pool
+  word literal computed `newX + 0xb400` instead (double-negated, wrong
+  by `2*0xb400`). Caught immediately by the isolated `cmp`/disassembly
+  diff (gcc synthesized a `movs`/`lsls` positive-immediate sequence
+  instead of a literal-pool load, a dead giveaway of a wrong-sign
+  constant) before it ever reached `make compare` - worth flagging
+  since the raw ROM `.4byte` pool value and the "correct C literal to
+  write" are not the same number whenever the ROM's own compile chose
+  `adds`-with-negative-literal over `subs`-with-positive-immediate for
+  an oversized immediate.
+
+`sub_8010F8C` and `sub_8011114` both closed via **NAKED transcription**,
+verified structurally byte-exact via the isolated `cpp`/`agbcc`/`as` +
+`objcopy`/disassembly-diff pass (every difference found was exactly the
+expected class: `bl` targets and external-symbol literal-pool values,
+both unresolved in an isolated unlinked compile) before the
+authoritative full clean `make NON_MATCHING=1 report` (no warnings)
+followed by `make compare` ("La suma coincide"):
+
+- `sub_8010F8C` duplicates its own "PlaySfx+`sub_8023464`+collision-
+  bitmap" trigger tail twice (once per arrival mode), each with a
+  different register allocation surviving from that mode's own
+  preceding branch - notably mode 1's copy opportunistically reuses
+  `r5` (still holding the just-tested `self->0x48 == 1` mode value) as
+  the literal `1` for its `1 << bit` shift, which a natural compile of
+  the same C logic can't be coaxed into reproducing since it's a
+  coincidence of *which* mode is being tested, not something expressible
+  as source-level intent. Exactly the same "shared tail duplicated with
+  different register survivors" shape already documented for
+  `sub_8011548` (`game_loop53.c`).
+- `sub_8011114` needs a `0` sentinel alive in `r8` across the
+  `sub_8026EDC`/`sub_80084A4`/`sub_8011308` call sequence purely so it
+  can later be spilled back out for three trailing byte stores - the
+  same confirmed `mov r_lo,r_hi`/`push {r_lo,...}` high-register
+  save/restore dance this compiler only reproduces when its own
+  *unforced* allocator picks those registers itself, already documented
+  for `sub_801173C`/`sub_8011548` (`game_loop53.c`) - `sub_8011114` is
+  in fact one of the functions those two ultimately spawn through,
+  reconfirming the same root cause a third time in this one chunk.
+
+### Cross-references (this section)
+
+- `docs/status/game_loop.md` - the chunk's former "still raw" entry
+  replaced with `game_loop54.c`'s matched entry, explicitly flagged as
+  closing the entire chunk.
+- `tools/report_units.py` - the `0x08010E34` entry now points at
+  `game_loop54.o`/category `game_loop`; the `0x08011448` entry's own
+  "NOT integrated" note updated to point at the new file.
+- `ldscript.txt` - `asm/code_3_2_17_e560_10d54.o` removed entirely,
+  replaced by `game_loop54.o` in the correct ROM-order position (between
+  `game_loop50.o` and `game_loop52.o`).
+- `src/system/game_loop29.c` - the `sub_8011114`/`sub_80111B8` extern
+  declarations and call-site context used to confirm both signatures.
+- `src/system/game_loop52.c`/`game_loop53.c` - the sibling functions
+  (`sub_8011390`, `sub_8011448`/`sub_8011548`/`sub_8011870`) whose
+  already-documented gate/tail/register-hazard shapes this pass reused
+  or explicitly confirmed did *not* apply.

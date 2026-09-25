@@ -766,24 +766,40 @@ plain C didn't converge.
   `sub_8025A64`/`sub_8025CA4` wrappers. Matched, confirmed by a full
   clean `make compare`. `sub_8010E34`/`sub_8010EAC`/`sub_8010F8C`/
   `sub_80111B8` were also read and isolated-verified this pass but left
-  un-integrated (still raw, in the range below) - see
+  un-integrated at the time - see the `game_loop54.c` entry below for
+  their eventual integration.
+- **`sub_8010E34`/`sub_8010EAC`/`sub_8010F8C`/`sub_8011114`/
+  `sub_80111B8`** (`src/system/game_loop54.c`, new file - Phase 2
+  mop-up, the chunk's final slice) - the last 5 functions of the former
+  24-function tail, closing the entire `sub_8010D54` chunk (issue
+  #12/#14). `sub_8010E34` (real C) is a bounds-checked AABB gate that
+  calls `sub_8010EAC(self, 0)` on overlap, sharing its opening gate and
+  bit-test idiom verbatim with `sub_8011390` (`game_loop52.c`).
+  `sub_8010EAC`/`sub_80111B8` (both real C) are two more members of the
+  "randomized/fixed `(dx,dy)` offset, `PlaySfx`, `sub_8007174`,
+  `-sub_80008F0(...)` distance-pair" tail shape already documented for
+  `sub_8011448`/`sub_8011870` (`game_loop53.c`) - unlike those two,
+  both closed as real C this time, needing a handful of register-pinned/
+  opaque-materialization fixes (forced constant-first evaluation order
+  for `self->0xc |= mask` and `self->0x25 = 1`, and a two-register
+  `r0`/`r1` pin to reproduce the ROM's own "shift into a different
+  register, reuse the freed one" idiom for the `self->0x4a` offset
+  nudge). `sub_8010F8C` (392B, NAKED) is the mode-dispatched rotating/
+  orbiting hazard state machine `docs/rom_map.md` already flagged,
+  duplicating its own "PlaySfx+`sub_8023464`+collision-bitmap" tail per
+  mode with different register survivors each time (same shape as
+  `sub_8011548`). `sub_8011114` (164B, NAKED) is the part-object spawn
+  helper extern-declared in `game_loop29.c`, needing the confirmed
+  `r8`-sentinel-spill dance already documented for `sub_801173C`/
+  `sub_8011548`. Matched, confirmed by a full clean `make compare`
+  ("La suma coincide"). `asm/code_3_2_17_e560_10d54.s` is now fully
+  consumed and retired from `ldscript.txt` entirely - see
   [docs/matching/issue-14-0x08010d54-physics-apply.md](../matching/issue-14-0x08010d54-physics-apply.md)
-  for why.
+  for the full write-up. **This closes the entire `0x08010D54`
+  physics/collision-apply chunk (GitHub issue #12/#14).**
 
-## Still raw, category-mapped (GitHub issue #12/#34/#40)
+## Still raw, category-mapped (GitHub issue #34/#40)
 
-- **`sub_8010E34`-`sub_80111B8`** (`asm/code_3_2_17_e560_10d54.s`,
-  trimmed at both ends) - the still-unexamined middle of the former
-  24-function tail `sub_8010D54` (above) was the entry point of, now
-  that its front (`sub_8010E14`/`sub_8010E2C`), its own accessor
-  cluster (`sub_8011248`-`sub_8011390`), and its tail 6 functions
-  (`sub_8011448`-`sub_801192C`, `game_loop53.c`) are all matched above;
-  still category-mapped `graphics` pending its own examination, though
-  `sub_8010E34`/`sub_8010EAC`/`sub_8010F8C`/`sub_80111B8` are
-  individually characterized and isolated-verified (not yet integrated)
-  - see
-  [docs/matching/issue-14-0x08010d54-physics-apply.md](../matching/issue-14-0x08010d54-physics-apply.md)'s
-  Phase 2 planning section for the full function/size list.
 - **`UpdateGameFrame`** (`asm/code_3_2_17_225a0.s`, ROM `0x080225A0`) -
   the main per-frame game-loop driver, a ~730-instruction jump-table
   state machine. Not understood branch-by-branch with the precision a
