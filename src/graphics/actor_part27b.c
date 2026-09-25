@@ -1,8 +1,8 @@
 #include "core.h"
 
 /* GitHub issue #22, ROM 0x08017ECC-0x08017FE8 - non-adjacent to
- * actor_part20.c since the raw `sub_8017AB0` sits between them (see
- * asm/code_3_2_17_17ab0.s). `self` uses the same `self+4` double-
+ * actor_part20.c since `sub_8017AB0` (NAKED-parked, see
+ * actor_part27a.c) sits between them. `self` uses the same `self+4` double-
  * pointer-chain record lookup as `sub_800B704`/`sub_800B838`
  * (actor_part17.c): `self+4` is a manager pointer whose own first
  * word is an array of 8-byte records, indexed here by `index`. Each
