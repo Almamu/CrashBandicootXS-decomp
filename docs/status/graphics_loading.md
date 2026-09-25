@@ -78,11 +78,24 @@ below.)
   manager - see
   [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md)
   for the three compiler-codegen quirks (all fixed with small
-  `asm volatile` blocks) needed to close this one byte-exact. ~20
-  more instances of the same family remain raw in
-  `asm/code_3_2_17_1e990.s`/`asm/code_3_2_17_1feec.s` - same doc has
-  the full list and what's known about each one's tail-shape
-  variant.
+  `asm volatile` blocks) needed to close this one byte-exact. The rest
+  of the family is now closed too - see `sub_801EF0C`-`sub_801FCB4`
+  below (issue #31, sixth pass) and `sub_8021280`-`sub_802155C`
+  further down for the rest of what used to be raw in
+  `asm/code_3_2_17_1e990.s`/`asm/code_3_2_17_1feec.s`.
+- **`sub_801F050`**, **`sub_801F170`**, **`sub_801F680`**
+  (`src/graphics/graphics_loading_1ef0c.c`) - issue #31, sixth pass:
+  three more "two-line text popup" siblings, real C (the other nine
+  functions in this same file - `sub_801EF0C`, `sub_801F2BC`,
+  `sub_801F3DC`, `sub_801F528`, `sub_801F7B8`, `sub_801F8DC`,
+  `sub_801FA3C`, `sub_801FB74`, `sub_801FCB4` - are NAKED, see "Parked -
+  NAKED transcription" below). `sub_801F680` is the one instance built
+  via `sub_800A604` instead of `sub_8009ED0`. This closes the whole
+  `sub_801EF0C`-`sub_801FCB4` stretch of what used to be
+  `asm/code_3_2_17_1e990.s` (now trimmed to just `sub_801EA5C`-
+  `sub_801EE3C`, the still-raw "trigger effect type N" twins) - see
+  [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md)'s
+  "Sixth pass".
 - **`sub_8021668`**/**`sub_8021748`**/**`sub_80217D0`**/**`sub_802183C`**/
   **`sub_80218C4`**/**`sub_80218E8`**/**`sub_8021974`**/**`sub_8021998`**/
   **`sub_80219BC`**/**`sub_80219E0`**/**`nullsub_21`**/**`sub_8021A00`**/
@@ -211,6 +224,24 @@ Both hit the same confirmed `r7`-pin gap as `sub_8007114`
 (src/graphics/graphics.c) and `sub_802190C` above - see
 [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md)'s
 "Fifth pass".
+- **`sub_801EF0C`**, **`sub_801F2BC`**, **`sub_801F3DC`**,
+  **`sub_801F528`**, **`sub_801F7B8`**, **`sub_801F8DC`**,
+  **`sub_801FA3C`**, **`sub_801FB74`**, **`sub_801FCB4`**
+  (`src/graphics/graphics_loading_1ef0c.c`) - nine more "two-line text
+  popup" siblings (issue #31, sixth pass). Every instruction's operation
+  matches the ROM (confirmed via isolated compile), but each one's ROM
+  disassembly needs `r7` in its callee-saved push/pop set (shadowed
+  through `r5`/`r6`/`r7` alongside `sl`/`sb`/`r8`, or just `r6`/`r7`
+  alongside `sb`/`r8`) purely as scratch inside one or two disjoint
+  inline-asm islands (the `+0x29` nibble reload, the collected-bits
+  pack's own mask-byte reload) - the same "this compiler only adds a
+  hard-pinned register to a function's callee-saved set when it tracks
+  that register as holding a value live across a wider span than a
+  single inline-asm block" gap already documented for `sub_8021280`/
+  `sub_8021480`/`sub_802190C` above. Transcribed instruction-for-
+  instruction instead. See
+  [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md)'s
+  "Sixth pass".
 - **`LoadGraphicsPackage`** (`src/graphics/graphics_package_1e578.c`) -
   the cluster's own namesake; the palette/tileset/tilemap loader itself,
   using the shared `struct bg_package` (`include/graphics_package.h`).
