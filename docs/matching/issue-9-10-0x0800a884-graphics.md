@@ -309,6 +309,104 @@ None of the left-raw functions were force-matched or guessed at; each
 is blocked on genuinely unexamined callees, exactly the reasoning the
 original issue-9 write-up already gave for this same neighborhood.
 
+## Follow-up: `sub_8026BC0` closed (dedicated deep investigation)
+
+The camera-probe tail above flagged `sub_8026BC0` as "still raw, only
+its return value matters". A follow-up dedicated investigation session
+closed it, independently confirming both this doc's own reference and
+[issue-9-0x08007634-actor.md](./issue-9-0x08007634-actor.md) (line
+~214, "the unexamined `sub_8026BC0`" from a jump-table dispatch
+context - that second reference turned out to be the same call site
+this doc already covers, not a separate one).
+
+`sub_8026BC0` sat right after the already-matched `sub_8026628`
+(`docs/matching/issue-9-10-41-0x08026628-game-loop.md`) in
+`asm/code_3_2_17_266bc.s`, exactly 56 bytes
+(`0x08026BC0`-`0x08026BF8`). Reading its ~14 instructions directly
+resolved the whole function:
+
+```c
+extern u16 sub_8025460(void *self, s32 x, s32 y, u8 *flagsOut, s32 *hiOut);
+
+s32 sub_8026BC0(void *arg0, s32 x, s32 y)
+{
+    u8 flagsOut = 0;
+    s32 hiOut = 0;
+    s32 tileX = x >> 3;
+    s32 tileY = y >> 3;
+
+    if (tileX < 0)
+        tileX = 0;
+    if (tileY < 0)
+        tileY = 0;
+
+    sub_8025460(*(void **)((u8 *)arg0 + 0x20), tileX, tileY, &flagsOut, &hiOut);
+
+    return flagsOut;
+}
+```
+
+It's a thin wrapper around the already-matched terrain-tile-cache
+lookup `sub_8025460` (`src/system/game_loop4.c`, GitHub issue #40):
+`arg0+0x20` is `gUnknown_03001308`'s own tile-cache-pointer field (the
+same global whose `+0x29`/`+0x2a` fields this doc's own leading block
+already established), `x`/`y` get divided by 8 and clamped to a
+non-negative minimum independently per axis (not a single combined
+clamp - each axis can hit zero on its own), and the two out-parameters
+`sub_8025460` writes through (`flagsOut`, `hiOut`) are both zero-
+initialized locals. Only `flagsOut` - which `sub_8025460` also returns
+directly as its own `u16` return value - is returned here; `hiOut`
+(the decoded cell's top nibble) is written but never read back,
+exactly the "discarded outValue" idiom `sub_8026628`'s own
+`sub_8026AE8`/`sub_8026A18` calls already established right next door
+in this same neighborhood.
+
+This confirms the caller-side reading above: the "camera-probe" in
+`sub_800A884`'s tail passes an already-pixel-unit `{x, y}` (de-Q8'd via
+`>>8`, same convention as `sub_8026628`'s own `pos`), and
+`sub_8026BC0` itself does the pixel-to-tile-cache-lookup-unit
+conversion, so the `code == 6` test in the caller really is just
+"did `sub_8025460` report terrain type 6 at this tile" - an opaque
+enum comparison, not a geometric hit-test of its own.
+
+Matched as real C on the **first isolated-compile attempt** - no
+register pins, opaque `asm volatile`, or statement-order juggling
+needed, following `sub_8026628`'s own "matched on the first attempt"
+precedent right next door in the same file. Confirmed byte-identical
+to the ROM's own instructions (register for register, operand for
+operand) via the isolated `cpp`/`agbcc`/`as` + `objcopy`/`cmp`
+pipeline against `baserom.gba`'s raw bytes at `0x08026BC0`-`0x08026BF8`
+(the only difference being the `bl sub_8025460` relocation site, which
+resolves correctly once linked), plus a full clean `rm -rf build &&
+make NON_MATCHING=1 report` (no warnings) and `rm -rf build
+crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
+compare` (`crashbandicootxs.gba: La suma coincide`). Already flush to
+a 4-byte boundary (56 bytes total) with no trailing `.align 2, 0` gap
+in the ROM, unlike `sub_8026628`'s own end-of-function padding quirk.
+
+### Build layout
+
+`asm/code_3_2_17_266bc.s` is trimmed to end right after `sub_8026AE8`'s
+own trailing `.align 2, 0` (685 lines, matching the same "everything
+before, everything after" split `sub_8026628` itself used to get
+carved out of this same file). `src/system/game_loop44.c` (new file)
+holds the matched `sub_8026BC0`. The remainder - `sub_8026BF8` onward,
+still raw/unexamined this session (including `sub_8026C90`,
+`sub_8026D8C`, `sub_8026DFC`, `sub_8026E6C` and others referencing
+`gUnknown_03001308` and per-object velocity-style fields) - moved
+unchanged to the new `asm/code_3_2_17_26bf8.s`, inserted between the
+two in `ldscript.txt`:
+
+```
+asm/code_3_2_17_266bc.o(.text);
+src/system/game_loop44.o(.text);
+asm/code_3_2_17_26bf8.o(.text);
+```
+
+`sub_800A884` itself (this doc's own primary subject) is unaffected -
+it still calls `sub_8026BC0` exactly as before; only the callee's own
+body moved from opaque raw bytes to matched, documented C.
+
 ## Cross-references
 
 - `docs/status/actor.md` / `docs/status/graphics.md` - matched/parked
