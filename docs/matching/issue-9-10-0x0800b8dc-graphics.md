@@ -343,20 +343,20 @@ coincide`).
 
 `asm/code_3_2_17.s` (which held this whole cluster, `sub_800B8DC`
 through `sub_800CCE0`) is removed entirely. `sub_800B8DC`/`sub_800BD48`
-now live in the new `src/graphics/actor_part111.c`; the unchanged
+now live in the new `src/graphics/actor_part112.c`; the unchanged
 remainder (`sub_800BFA8` onward - the cluster's other ~41 functions,
 still fully raw and unexamined) moved to the new
 `asm/code_3_2_17_bfa8.s`. `ldscript.txt` now reads:
 
 ```
-build/crashbandicootxs/src/graphics/actor_part111.o(.text);
+build/crashbandicootxs/src/graphics/actor_part112.o(.text);
 build/crashbandicootxs/asm/code_3_2_17_bfa8.o(.text);
 build/crashbandicootxs/src/graphics/actor_part109.o(.text);
 ```
 
 `tools/report_units.py`'s single `(0x0800B8DC, None, "graphics")`
 placeholder entry is replaced with a matched entry for
-`actor_part111.o` plus a new `(0x0800BFA8, None, "graphics")`
+`actor_part112.o` plus a new `(0x0800BFA8, None, "graphics")`
 placeholder for the still-raw remainder.
 
 ## What's still open

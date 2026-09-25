@@ -327,7 +327,7 @@ plain C didn't converge.
   live as two extra callee-saved accumulators throughout, the same gap
   as `sub_800D040` above. See
   [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
-- **`sub_800B8DC`**/**`sub_800BD48`** (`src/graphics/actor_part111.c`,
+- **`sub_800B8DC`**/**`sub_800BD48`** (`src/graphics/actor_part112.c`,
   new file - GitHub issue #9/#10, foundational investigation of the
   large still-raw `0x0800B8DC`-`0x0800D040` cluster). Two independent
   entity-vtable slots of the *same* object type (`gStaticData_087E3EE4`)

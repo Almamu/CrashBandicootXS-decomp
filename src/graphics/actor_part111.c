@@ -1,926 +1,438 @@
 #include "core.h"
 
-/* GitHub issue #9/#10: foundational investigation of the large, fully
- * raw 0x0800B8DC-0x0800D040 cluster (43 functions, ~5988 bytes) sitting
- * right after `actor_part17.c`'s span and right before the already-
- * documented physics/collision subsystem (`sub_800D040`,
- * game_loop6.c). See docs/matching/issue-9-10-0x0800b8dc-graphics.md
- * for the full semantic map this pass produced - the 18-case dispatch
- * table, `sub_800BD48`'s own 22-case table, and field-layout notes for
- * whoever picks up the cluster's other ~41 functions next.
+/* GitHub issue #9/#10, dedicated deep-investigation session:
+ * `sub_800AFF4` (0x0800AFF4-0x0800B270), the second function in the
+ * `sub_800AC2C`-through-`sub_800AFF4` raw span `tools/report_units.py`
+ * tracked as parked (`base_object=None`). `sub_800AC2C` itself (the
+ * 38-case player action-state jump-table dispatcher directly above
+ * this function) is left untouched - same standing exclusion as
+ * `sub_8018008`, issue #22 - real bytes for it stay in
+ * `asm/code_3_2_16_ac2c.s`, now trimmed to end right after it.
  *
- * Both functions here are entity-vtable slots (their own thumb-bit-set
- * addresses were found as raw pointer values inside the documented
- * 93-entry `gStaticData_087Exxx` family - `sub_800B8DC` sits at
- * `gStaticData_087E3EE4+0xC`, per docs/rom_map.md's "Found it" section)
- * - NOT caller/callee: `sub_800BD48` is never `bl`'d from `sub_800B8DC`,
- * confirmed by reading `sub_800B8DC`'s own bytes in full. They're two
- * independent per-object-type behavior slots that merely sit next to
- * each other in ROM address order. */
-
-extern void *gUnknown_030012D8;
-extern void *gUnknown_030012B4;
-extern void *gUnknown_030012BC;
-extern void *gUnknown_030012E4;
-extern void *gUnknown_03001308;
-extern s32 gUnknown_030012A0;
-extern s32 gUnknown_030012A4;
-extern s32 gUnknown_030012A8;
-extern s32 gUnknown_030012AC;
-
-/* All of the following are still-raw siblings in this same cluster
- * (asm/code_3_2_17.s) - treated as opaque callees for this pass, per
- * this investigation's own scope (dispatch shape first, callee
- * semantics are the next phase's job). Signatures are inferred purely
- * from the registers each call site sets. */
-extern void sub_800C074(void *self);
-extern void sub_800C18C(void *self);
-extern void sub_800C1E8(void *self);
-extern void sub_800C244(void *self);
-extern void sub_800C314(void *self);
-extern void sub_800C40C(void *self);
-extern void sub_800C5D4(void *self);
-extern void sub_800C8AC(void *self, s32 mode);
-extern void sub_800C8BC(void *self, s32 mode);
-extern void sub_800C8CC(void *self, s32 mode);
-extern void sub_800C8F8(void *self);
-extern void sub_800C940(void *self);
-extern void sub_800C97C(void *self);
-extern void *sub_800C9C8(s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
-extern void sub_800BFA8(void *self);
-extern void sub_800CBD4(void); /* return value used as a fresh object pointer - likely an allocator/lookup, arg count unconfirmed */
-extern void *sub_8026EDC(s32 size);
-extern void *sub_803AD7C(void *arg0, void *fn);
-extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
-extern void sub_803AD88(void *arg0, s32 arg1, s32 arg2, s32 arg3);
-extern s32 sub_80019F8(void *ctx, s32 sfxId, s32 arg2, s32 volume);
-extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
-extern s32 sub_8000E1C(s32 max);
-extern void *sub_8025BAC(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
-
-/* An 18-state dispatcher keyed off `self+0x74` (state values 1-18;
- * `self+0x74 == 0` or `> 18` is a silent no-op, matched by the ROM's
- * own `subs r0, #1` / `cmp r0, #0x11` / `bls` range check). Reached
- * only through the entity-vtable slot noted above - this is a
- * per-object-type "update" callback, not called directly anywhere else
- * in the ROM.
+ * `docs/rom_map.md`'s "eight more core reads" passage had already
+ * flagged this function's shape from one angle ("reaches [the 28-byte-
+ * record table] through a *child* object's `+0x20` field and reads a
+ * third offset, byte `+0x16` this time, clamping the result into
+ * `self+0x30`" - actually the *child's* own `+0x30`, not `self`'s; see
+ * below) - reading the raw bytes directly confirms and extends that.
  *
- * `self+0x74`'s 18-state/comparison shape is the SAME convention
- * `sub_800C6A8` (a `menu_ui` dialog-widget update, 26 callers across
- * all 31 `gStaticData_0816C744` dispatch-table entries) and
- * `sub_800C40C`'s own `self+0x68` dispatch already use elsewhere in
- * this ROM (docs/rom_map.md) - a general-purpose "stateful widget"
- * idiom reused for unrelated object types, not proof this is the same
- * struct as those. `self+0x70` is a second object pointer ("owner" in
- * the comments below) that most states read/write through instead of
- * `self` itself - `self` and `owner` share several suspiciously
- * matching field offsets (0x28 mirror-flag byte, 0x2d table index,
- * 0x30/0x34, 0x48-0x5c velocity-target triples, 0x60/0x64, 0x68/0x6c
- * state bytes) suggesting they're two instances of the *same* larger
- * struct rather than unrelated types - flagged for the next phase
- * rather than resolved here. See the full field-by-field writeup in
- * docs/matching/issue-9-10-0x0800b8dc-graphics.md.
+ * `self` is the same wide, still-unnamed "big object" struct
+ * (0x108+ bytes) referenced by raw offset throughout this ROM
+ * neighborhood (`actor_part16.c`/`actor_part79.c`/`actor_part108.c`
+ * etc.) - `self+0xc` (flags byte), `self+0x18` (per-category
+ * `{s16 offset; void *fn}` trampoline table pointer, the
+ * `sub_803AD7C` convention `actor_part108.c` already established),
+ * `self+0x20` (per-tag 28-byte-record table pointer,
+ * `*(self+0x20) + tag*0x1c`, the exact convention `actor_part79.c`
+ * documents from a sibling call site), `self+0x28` bit 4 (the
+ * mirror-flag bit `actor_part16.c`/`actor_part17.c`/`actor_part108.c`
+ * already read), `self+0x2d` (per-tag selector byte), and `self+0x8c`
+ * (a `gUnknown_0300082C`-relative deadline - the exact
+ * `IsTimerArmed`/`SetTimer` convention `actor_part16.c` names:
+ * `*(u32 *)(self+0x8c) > gUnknown_0300082C` means "still armed").
+ * `self+0xb0` is a pointer to a single "child" companion object (the
+ * same object across every use in this function); `self+0xb4` is a
+ * write index into an 8-slot circular buffer of `self`'s own recent
+ * `{x, y}` Q8 positions at `self+0xb8` (`struct { s32 x, y; }
+ * posHistory[8]`, 8-byte stride); `self+0x38` is a one-shot flag
+ * consumed at the very end.
  *
- * NAKED transcription, not real C: an honest first-pass real-C attempt
- * (plain `switch` on `self+0x74`, ROM block declaration order,
- * matching this project's established jump-table-shape technique - see
- * docs/matching.md's `sub_8008484`/`sub_80084C4` entries) was not
- * pursued to convergence given this function's sheer size (1132 B, 18
- * branches, several inline blocks juggling `self`+`owner`+4-5 more
- * live locals/temporaries across `bl` calls) - exactly the
- * "self"/"pos"/"owner"-style multi-field shape this project's own
- * matching.md repeatedly documents as resistant to gcc 2.9's register
- * allocator (`sub_8024F24`, `sub_8025130`/`sub_8025228`/`sub_8025460`,
- * `sub_800D040`, `sub_800CD00`, `sub_800CEAC`/`sub_800CF70` are all
- * NAKED for the same reason). Transcribed instruction-for-instruction
- * from the ROM disassembly instead (translating unified-syntax
- * mnemonics to this project's divided/suffix-less convention -
- * `adds`->`add`, `movs`->`mov`, `subs`->`sub`, `asrs`->`asr`,
- * `ands`->`and`, `lsls`->`lsl`, `lsrs`->`lsr`, `eors`->`eor`,
- * `orrs`->`orr`, `rsbs rX, rX, #0`->`neg rX, rX`, and GNU-as local
- * numeric labels for the ROM disassembly's own `_080xxxxx` global
- * labels), including the ROM's own mid-function `.pool` splits (six of
- * them, exactly where the ROM's own ".align 2, 0" + literal-word runs
- * sit). Confirmed byte-identical to `baserom.gba`'s own raw bytes at
- * `0x0800B8DC`-`0x0800BD48` via the isolated cpp/agbcc/as +
- * objcopy/cmp pipeline (the only differences were `bl` relocation
- * sites, which resolve correctly once linked) plus a full clean
- * `rm -rf build && make NON_MATCHING=1 report` (no warnings) and
- * `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
- * crashbandicootxs.map && make compare` (`La suma coincide`). */
-NAKED void sub_800B8DC(void *self)
+ * Read together, this is the per-frame update for a "stars orbiting a
+ * dizzy head" companion effect, gated on `gUnknown_030012C0+0x78`
+ * (the central game-state "mode" field several other functions in
+ * this doc already gate on):
+ *
+ * - **mode == 3** ("just got hit" / stun-entry): every ~8 frames
+ *   (`gUnknown_0300082C & 7 == 0`) re-rolls `gUnknown_03000818` to
+ *   `(u16)sub_8000E1C(2) + 2 - (mirrored ? 2 : 0)` (0/1 if mirrored,
+ *   2/3 otherwise - which side the effect "starts" from, based on
+ *   facing). Clamps that value against the child's own hitbox/variant
+ *   record's `+0x16` byte (via the child's own `+0x20`-table,
+ *   `+0x2d`-tag convention) and stores the clamp into the child's own
+ *   `+0x30`. Repositions the child directly next to `self`'s own
+ *   *current* position (`self.x +/- 0x600` depending on the mirror
+ *   flag, `self.y - 0x1300`, both Q8 - a fixed offset near the head).
+ *   Toggles the child's own `+0x2d` tag between `1`/`2` on a 4-frame
+ *   parity of `gUnknown_0300082C` (a flicker), then fires the child's
+ *   own `+0x18`-table `+0x20`/`+0x24` trampoline (the `sub_803AD7C`
+ *   refresh/notify convention). Also (regardless of the mode-3 gate,
+ *   using `self`'s own blink deadline at `self+0x8c`) draws `self`
+ *   itself via `sub_8007A84(gUnknown_030012CC, self)` (matched,
+ *   `actor_part.c` - queues `self`'s own OAM using its own Q8
+ *   position) either unconditionally (mode == 3, or the deadline has
+ *   expired) or, while the deadline is still armed, only on the same
+ *   4-frame parity - a standard hit-invincibility blink. Once that
+ *   deadline is no longer armed while mode == 3, calls
+ *   `sub_80231EC(gUnknown_030012C0, 2)` (matched pattern,
+ *   `actor_part84.c`/`actor_part58.c` - a mode-transition/"state
+ *   close" call) - ends the stun state, transitioning mode 3 -> 2.
+ *
+ * - Unconditionally (any mode): pushes `self`'s own current `{x, y}`
+ *   into the 8-slot `self+0xb8` position-history ring buffer at
+ *   `self+0xb4`, advancing the index mod 8.
+ *
+ * - **mode == 1 or mode == 2** (ongoing idle-orbit): every ~8 frames,
+ *   random-walks `gUnknown_0300081C` by `sub_8000E1C(3) - 1` (-1/0/+1),
+ *   clamped to `[0, 3]`. Clamps that value against the same child
+ *   record's `+0x16` byte and stores it into the child's own `+0x30`
+ *   (same clamp-and-store idiom as the mode-3 branch, different source
+ *   counter). Reads the *oldest* surviving entry of the position-
+ *   history ring buffer (the slot about to be overwritten next frame -
+ *   effectively `self`'s own position from up to 8 frames ago, a
+ *   fixed trailing delay) and adds a rotating offset built from the
+ *   shared 256-entry sine-ish table `gStaticData_0816A820` (already
+ *   confirmed `extern s16 gStaticData_0816A820[];`,
+ *   `actor_part72.c`): `child.x = oldX + (table[frame & 0xff] << 4)`,
+ *   `child.y = oldY + (table[(frame >> 1) & 0xff] << 3) - 0x1800`
+ *   (Q8 `-24.0`) - two different angular speeds (full-speed X,
+ *   half-speed Y) around a point 24 px above the trailed position, the
+ *   classic elliptical "orbiting stars" motion. Sets the child's own
+ *   `+0x2d` tag to `mode - 1` (`0`/`1`) and fires the same
+ *   `+0x18`-table trampoline refresh.
+ *
+ * - Finally, if `self+0x38` is nonzero, clears bit 3 (`0x08`) of
+ *   `self+0xc` - a one-shot "orbit effect (re)armed" flag consumed
+ *   once.
+ *
+ * **Matching**: not attempted as a C reconstruction. This is the
+ * exact register-pressure shape this session's own risk flag named up
+ * front (`sb`/`sl`/`r8`/`ip` all simultaneously live - the ring-buffer
+ * base pointers `sb`/`sl` and the saved-mode/saved-child-address
+ * `r8`/`ip` all stay live across the trig-table lookups and the two
+ * child-record clamp blocks) and the same shape this project has
+ * already proven resistant to gcc 2.9 reconstruction on several other
+ * functions this session (`sub_800CD00`, `sub_800A178`/`sub_800A420`,
+ * `sub_8026AE8`/`sub_8026A18`) - transcribed directly as byte-exact
+ * NAKED asm instead, verified instruction-for-instruction against the
+ * ROM disassembly (`asm/code_3_2_16_ac2c.s`'s own former content at
+ * this address) and confirmed byte-exact via the isolated
+ * `cpp`/`agbcc`/`as` + `objcopy`/`cmp` pipeline against `baserom.gba`
+ * at `0x0800AFF4`-`0x0800B270` (the only differences at relocation
+ * sites - `bl` calls and `.4byte` literals - which resolve correctly
+ * once linked). See docs/matching/issue-9-10-0x0800aff4-graphics.md
+ * for the full write-up. */
+
+NAKED void sub_800AFF4(void *selfArg)
 {
     asm(
         "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, r8\n\t"
-        "push {r7}\n\t"
-        "sub sp, #8\n\t"
-        "add r5, r0, #0\n\t"
-        "ldr r0, [r5, #0x74]\n\t"
-        "sub r0, #1\n\t"
-        "cmp r0, #0x11\n\t"
-        "bls 1f\n\t"
-        "b 43f\n\t"
-    "1:\n\t"
-        "lsl r0, r0, #2\n\t"
-        "ldr r1, =2f\n\t"
-        "add r0, r0, r1\n\t"
+        "mov r7, sl\n\t"
+        "mov r6, sb\n\t"
+        "mov r5, r8\n\t"
+        "push {r5, r6, r7}\n\t"
+        "sub sp, #4\n\t"
+        "add r7, r0, #0\n\t"
+        "ldr r0, 20f\n\t"
         "ldr r0, [r0]\n\t"
-        "mov pc, r0\n\t"
-        ".pool\n\t"
-    "2:\n\t"
-        ".4byte 43f\n\t" /* case 0 */
-        ".4byte 29f\n\t" /* case 1 */
-        ".4byte 28f\n\t" /* case 2 */
-        ".4byte 31f\n\t" /* case 3 */
-        ".4byte 11f\n\t" /* case 4 */
-        ".4byte 33f\n\t" /* case 5 */
-        ".4byte 34f\n\t" /* case 6 */
-        ".4byte 35f\n\t" /* case 7 */
-        ".4byte 36f\n\t" /* case 8 */
-        ".4byte 41f\n\t" /* case 9 */
-        ".4byte 39f\n\t" /* case 10 */
-        ".4byte 43f\n\t" /* case 11 */
-        ".4byte 30f\n\t" /* case 12 */
-        ".4byte 32f\n\t" /* case 13 */
-        ".4byte 40f\n\t" /* case 14 */
-        ".4byte 42f\n\t" /* case 15 */
-        ".4byte 3f\n\t"  /* case 16 */
-        ".4byte 16f\n\t" /* case 17 */
-    "3:\n\t"
-        "ldr r2, [r5, #0x70]\n\t"
-        "ldr r1, [r2, #4]\n\t"
-        "ldr r0, [r5, #0x64]\n\t"
-        "cmp r1, r0\n\t"
-        "blt 7f\n\t"
-        "ldr r0, [r2, #0x60]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 4f\n\t"
-        "ldr r0, [r2, #0x64]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 4f\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800C8AC\n\t"
-        "b 7f\n\t"
-    "4:\n\t"
-        "ldr r1, [r5, #0x70]\n\t"
-        "ldr r0, [r1, #0x60]\n\t"
-        "cmp r0, #0\n\t"
-        "bge 6f\n\t"
-        "add r0, r1, #0\n\t"
-        "add r0, #0x38\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 5f\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800C8CC\n\t"
-    "5:\n\t"
-        "ldr r0, [r5, #0x70]\n\t"
-        "ldr r2, [r0, #0x18]\n\t"
-        "mov r3, #0x28\n\t"
-        "ldrsh r1, [r2, r3]\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r1, [r2, #0x2c]\n\t"
-        "bl sub_803AD7C\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r4, r0, #0x18\n\t"
-        "cmp r4, #0\n\t"
+        "ldr r0, [r0, #0x78]\n\t"
+        "cmp r0, #3\n\t"
         "bne 7f\n\t"
-        "ldr r2, [r5, #0x70]\n\t"
-        "ldr r1, [r5, #0x60]\n\t"
-        "ldr r0, [r5, #0x64]\n\t"
-        "ldr r6, =0xFFFF9C00\n\t"
-        "add r0, r0, r6\n\t"
-        "str r1, [r2]\n\t"
-        "str r0, [r2, #4]\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800C8BC\n\t"
-        "ldr r1, [r5, #0x70]\n\t"
-        "mov r0, #0x80\n\t"
-        "str r0, [r1, #0x64]\n\t"
-        "str r0, [r1, #0x54]\n\t"
-        "str r4, [r1, #0x58]\n\t"
-        "str r0, [r1, #0x5c]\n\t"
-        "mov r0, #0x10\n\t"
-        "ldrb r2, [r1, #0xc]\n\t"
-        "orr r0, r2\n\t"
-        "strb r0, [r1, #0xc]\n\t"
-        "b 7f\n\t"
-        ".pool\n\t"
-    "6:\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_800C5D4\n\t"
-    "7:\n\t"
-        "ldr r4, [r5, #0x70]\n\t"
-        "ldr r0, [r4, #0x30]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 8f\n\t"
-        "b 43f\n\t"
-    "8:\n\t"
-        "ldr r0, [r4, #0x34]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 9f\n\t"
-        "b 43f\n\t"
-    "9:\n\t"
-        "ldr r1, [r4, #0x18]\n\t"
-        "mov r3, #0x28\n\t"
-        "ldrsh r0, [r1, r3]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r1, #0x2c]\n\t"
-        "bl sub_803AD7C\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "bne 10f\n\t"
-        "b 43f\n\t"
-    "10:\n\t"
-        "ldr r0, =gUnknown_030012BC\n\t"
+        "ldr r0, 21f\n\t"
         "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0x13\n\t"
-        "bl PlaySfx\n\t"
-        "b 43f\n\t"
-        ".pool\n\t"
-    "11:\n\t"
-        "ldr r2, [r5, #0x70]\n\t"
-        "ldr r1, [r2, #4]\n\t"
-        "ldr r3, =gUnknown_03001308\n\t"
-        "ldr r0, [r3]\n\t"
-        "ldr r0, [r0, #0x10]\n\t"
-        "ldr r0, [r0, #0x14]\n\t"
-        "lsl r0, r0, #8\n\t"
-        "ldr r4, =0xFFFFE200\n\t"
-        "add r0, r0, r4\n\t"
-        "cmp r1, r0\n\t"
-        "ble 14f\n\t"
-        "mov r0, #0x7f\n\t"
-        "ldrb r6, [r2, #0xc]\n\t"
-        "and r0, r6\n\t"
-        "strb r0, [r2, #0xc]\n\t"
-        "ldr r4, [r5, #0x70]\n\t"
-        "ldr r1, [r4, #4]\n\t"
-        "ldr r0, [r3]\n\t"
-        "ldr r0, [r0, #0x10]\n\t"
-        "ldr r0, [r0, #0x14]\n\t"
-        "lsl r0, r0, #8\n\t"
-        "mov r2, #0xf0\n\t"
-        "lsl r2, r2, #5\n\t"
-        "add r0, r0, r2\n\t"
-        "cmp r1, r0\n\t"
-        "bgt 12f\n\t"
-        "b 43f\n\t"
-    "12:\n\t"
-        "mov r0, #1\n\t"
-        "ldrb r3, [r4, #0xc]\n\t"
-        "orr r0, r3\n\t"
-        "strb r0, [r4, #0xc]\n\t"
-        "ldr r0, =0xFFFF\n\t"
-        "ldrh r6, [r4, #8]\n\t"
-        "cmp r6, r0\n\t"
-        "bne 13f\n\t"
-        "b 43f\n\t"
-    "13:\n\t"
-        "ldrh r4, [r4, #8]\n\t"
-        "ldr r0, =gUnknown_030012B4\n\t"
-        "ldr r2, [r0]\n\t"
-        "add r0, r4, #0\n\t"
-        "asr r0, r0, #5\n\t"
-        "lsl r1, r0, #2\n\t"
-        "mov r3, #0x84\n\t"
-        "lsl r3, r3, #1\n\t"
-        "add r2, r2, r3\n\t"
-        "add r2, r2, r1\n\t"
-        "lsl r0, r0, #5\n\t"
-        "sub r0, r4, r0\n\t"
-        "mov r1, #1\n\t"
-        "lsl r1, r0\n\t"
-        "ldr r0, [r2]\n\t"
-        "orr r0, r1\n\t"
-        "str r0, [r2]\n\t"
-        "b 43f\n\t"
-        ".pool\n\t"
-    "14:\n\t"
-        "add r0, r2, #0\n\t"
-        "add r0, #0x68\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #8\n\t"
-        "bne 15f\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [r2, #0x64]\n\t"
-        "str r0, [r2, #0x54]\n\t"
-        "str r0, [r2, #0x58]\n\t"
-        "str r0, [r2, #0x5c]\n\t"
-        "b 43f\n\t"
-    "15:\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #3\n\t"
-        "mov r1, #0\n\t"
-        "str r0, [r2, #0x64]\n\t"
-        "str r0, [r2, #0x54]\n\t"
-        "str r1, [r2, #0x58]\n\t"
-        "str r0, [r2, #0x5c]\n\t"
-        "b 43f\n\t"
-    "16:\n\t"
-        "ldr r0, [r5, #0x70]\n\t"
-        "ldr r1, [r0]\n\t"
-        "asr r1, r1, #8\n\t"
-        "ldr r2, [r0, #4]\n\t"
-        "asr r2, r2, #8\n\t"
-        "ldr r0, =gUnknown_030012D8\n\t"
-        "ldr r3, [r0]\n\t"
-        "ldr r0, [r3]\n\t"
-        "asr r0, r0, #8\n\t"
-        "sub r1, r1, r0\n\t"
-        "asr r0, r1, #0x1f\n\t"
-        "eor r1, r0\n\t"
-        "sub r1, r1, r0\n\t"
-        "ldr r0, [r3, #4]\n\t"
-        "asr r0, r0, #8\n\t"
-        "sub r2, r2, r0\n\t"
-        "asr r0, r2, #0x1f\n\t"
-        "eor r2, r0\n\t"
-        "sub r2, r2, r0\n\t"
-        "cmp r2, r1\n\t"
-        "bge 17f\n\t"
-        "add r2, r1, #0\n\t"
-    "17:\n\t"
-        "cmp r2, #0x20\n\t"
-        "bge 18f\n\t"
-        "mov r2, #0x20\n\t"
-    "18:\n\t"
-        "cmp r2, #0xa0\n\t"
-        "ble 19f\n\t"
-        "mov r2, #0xa0\n\t"
-    "19:\n\t"
-        "add r3, r2, #0\n\t"
-        "sub r3, #0x20\n\t"
-        "lsl r3, r3, #1\n\t"
-        "mov r4, #0x80\n\t"
-        "lsl r4, r4, #1\n\t"
-        "mov r8, r4\n\t"
-        "sub r3, r4, r3\n\t"
-        "ldr r7, =gUnknown_030012BC\n\t"
-        "ldr r0, [r7]\n\t"
-        "mov r2, sp\n\t"
-        "mov r1, #0\n\t"
-        "strb r1, [r2]\n\t"
-        "mov r1, #0x2b\n\t"
-        "mov r2, #8\n\t"
-        "bl sub_80019F8\n\t"
-        "ldr r1, [r5, #0x70]\n\t"
-        "add r0, r1, #0\n\t"
-        "add r0, #0x38\n\t"
-        "ldrb r0, [r0]\n\t"
+        "mov r1, #7\n\t"
+        "and r0, r1\n\t"
+        "mov r1, #0x28\n\t"
+        "add r1, r1, r7\n\t"
+        "mov r8, r1\n\t"
         "cmp r0, #0\n\t"
-        "beq 20f\n\t"
-        "ldr r6, [r5, #0x68]\n\t"
-        "cmp r6, #3\n\t"
-        "bne 20f\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [sp]\n\t"
-        "str r1, [sp, #4]\n\t"
-        "mov r0, #0x1d\n\t"
-        "mov r1, #0\n\t"
-        "mov r2, #0\n\t"
-        "mov r3, #0x2b\n\t"
-        "bl sub_800C9C8\n\t"
-        "add r4, r5, #0\n\t"
-        "add r4, #0x88\n\t"
-        "str r0, [r4]\n\t"
-        "strb r6, [r0, #0xa]\n\t"
-        "ldr r0, [r7]\n\t"
-        "mov r1, #0x12\n\t"
+        "bne 1f\n\t"
+        "ldr r4, 22f\n\t"
+        "mov r0, #2\n\t"
+        "bl sub_8000E1C\n\t"
         "mov r2, r8\n\t"
-        "bl PlaySfx\n\t"
-        "b 22f\n\t"
-        ".pool\n\t"
-    "20:\n\t"
-        "ldr r0, [r5, #0x70]\n\t"
-        "add r0, #0x38\n\t"
-        "ldrb r0, [r0]\n\t"
-        "add r4, r5, #0\n\t"
-        "add r4, #0x88\n\t"
-        "cmp r0, #0\n\t"
-        "beq 22f\n\t"
-        "ldr r0, [r5, #0x68]\n\t"
-        "cmp r0, #5\n\t"
-        "bne 22f\n\t"
-        "ldr r1, [r4]\n\t"
-        "mov r0, #1\n\t"
-        "ldrb r6, [r1, #0xc]\n\t"
-        "orr r0, r6\n\t"
-        "strb r0, [r1, #0xc]\n\t"
-        "ldr r0, =0xFFFF\n\t"
-        "ldrh r2, [r1, #8]\n\t"
-        "cmp r2, r0\n\t"
-        "beq 21f\n\t"
-        "ldrh r3, [r1, #8]\n\t"
-        "ldr r0, =gUnknown_030012B4\n\t"
-        "ldr r2, [r0]\n\t"
-        "add r0, r3, #0\n\t"
-        "asr r0, r0, #5\n\t"
-        "lsl r1, r0, #2\n\t"
-        "mov r6, #0x84\n\t"
-        "lsl r6, r6, #1\n\t"
-        "add r2, r2, r6\n\t"
-        "add r2, r2, r1\n\t"
-        "lsl r0, r0, #5\n\t"
-        "sub r0, r3, r0\n\t"
-        "mov r1, #1\n\t"
-        "lsl r1, r0\n\t"
-        "ldr r0, [r2]\n\t"
-        "orr r0, r1\n\t"
-        "str r0, [r2]\n\t"
-    "21:\n\t"
-        "mov r0, #0\n\t"
+        "ldrb r2, [r2]\n\t"
+        "lsl r1, r2, #0x1b\n\t"
+        "lsr r1, r1, #0x1f\n\t"
+        "lsl r0, r0, #0x10\n\t"
+        "lsr r0, r0, #0x10\n\t"
+        "add r0, #2\n\t"
+        "lsl r1, r1, #1\n\t"
+        "sub r0, r0, r1\n\t"
         "str r0, [r4]\n\t"
-    "22:\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_800C074\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_800C40C\n\t"
-        "ldr r0, [r5, #0x68]\n\t"
-        "cmp r0, #1\n\t"
-        "bne 24f\n\t"
-        "ldr r0, [r5, #0x70]\n\t"
-        "add r3, r0, #0\n\t"
-        "add r3, #0x28\n\t"
-        "ldrb r2, [r3]\n\t"
-        "lsl r0, r2, #0x1b\n\t"
-        "mov r1, #0\n\t"
-        "cmp r0, #0\n\t"
-        "blt 23f\n\t"
-        "mov r1, #1\n\t"
-    "23:\n\t"
-        "lsl r1, r1, #4\n\t"
-        "mov r0, #0x11\n\t"
-        "neg r0, r0\n\t"
-        "and r0, r2\n\t"
-        "orr r0, r1\n\t"
-        "strb r0, [r3]\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800C8CC\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r1, #1\n\t"
-        "bl sub_800C8BC\n\t"
-        "b 26f\n\t"
-        ".pool\n\t"
-    "24:\n\t"
-        "cmp r0, #6\n\t"
-        "bne 26f\n\t"
-        "ldr r0, [r5, #0x70]\n\t"
-        "add r3, r0, #0\n\t"
-        "add r3, #0x28\n\t"
-        "ldrb r2, [r3]\n\t"
-        "lsl r0, r2, #0x1b\n\t"
-        "mov r1, #0\n\t"
-        "cmp r0, #0\n\t"
-        "blt 25f\n\t"
-        "mov r1, #1\n\t"
-    "25:\n\t"
-        "lsl r1, r1, #4\n\t"
-        "mov r0, #0x11\n\t"
-        "neg r0, r0\n\t"
-        "and r0, r2\n\t"
-        "orr r0, r1\n\t"
-        "strb r0, [r3]\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r1, #4\n\t"
-        "bl sub_800C8CC\n\t"
-        "ldr r1, [r5, #0x70]\n\t"
-        "ldr r0, [r1, #0x20]\n\t"
-        "add r3, r1, #0\n\t"
+    "1:\n\t"
+        "ldr r0, 22f\n\t"
+        "add r2, r7, #0\n\t"
+        "add r2, #0xb0\n\t"
+        "ldr r5, [r2]\n\t"
+        "ldr r4, [r0]\n\t"
+        "ldr r0, [r5, #0x20]\n\t"
+        "add r3, r5, #0\n\t"
         "add r3, #0x2d\n\t"
-        "ldr r2, [r0]\n\t"
+        "ldr r1, [r0]\n\t"
         "ldrb r6, [r3]\n\t"
         "lsl r0, r6, #3\n\t"
         "sub r0, r0, r6\n\t"
         "lsl r0, r0, #2\n\t"
-        "add r0, r0, r2\n\t"
+        "add r0, r0, r1\n\t"
         "ldrb r0, [r0, #0x16]\n\t"
-        "sub r0, #1\n\t"
-        "str r0, [r1, #0x30]\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r1, #1\n\t"
-        "bl sub_800C8BC\n\t"
-    "26:\n\t"
-        "ldr r4, [r4]\n\t"
-        "cmp r4, #0\n\t"
-        "bne 27f\n\t"
-        "b 43f\n\t"
-    "27:\n\t"
-        "ldr r0, [r5, #0x70]\n\t"
+        "add r3, r2, #0\n\t"
+        "cmp r4, r0\n\t"
+        "blt 2f\n\t"
+        "sub r4, r0, #1\n\t"
+    "2:\n\t"
+        "str r4, [r5, #0x30]\n\t"
+        "mov r1, r8\n\t"
+        "ldrb r1, [r1]\n\t"
+        "lsl r0, r1, #0x1b\n\t"
+        "cmp r0, #0\n\t"
+        "bge 3f\n\t"
+        "ldr r0, [r7]\n\t"
+        "ldr r1, [r7, #4]\n\t"
+        "ldr r2, [r3]\n\t"
+        "ldr r4, 23f\n\t"
+        "add r0, r0, r4\n\t"
+        "ldr r5, 24f\n\t"
+        "add r1, r1, r5\n\t"
+        "b 4f\n\t"
+        ".align 2, 0\n"
+    "20: .4byte gUnknown_030012C0\n"
+    "21: .4byte gUnknown_0300082C\n"
+    "22: .4byte gUnknown_03000818\n"
+    "23: .4byte 0xFFFFFA00\n"
+    "24: .4byte 0xFFFFED00\n"
+    "3:\n\t"
+        "ldr r0, [r7]\n\t"
+        "ldr r1, [r7, #4]\n\t"
+        "ldr r2, [r3]\n\t"
+        "mov r6, #0xc0\n\t"
+        "lsl r6, r6, #3\n\t"
+        "add r0, r0, r6\n\t"
+        "ldr r4, 25f\n\t"
+        "add r1, r1, r4\n\t"
+    "4:\n\t"
+        "str r0, [r2]\n\t"
+        "str r1, [r2, #4]\n\t"
+        "ldr r0, 26f\n\t"
         "ldr r0, [r0]\n\t"
-        "str r0, [r4]\n\t"
-        "b 43f\n\t"
-    "28:\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_800C5D4\n\t"
-        "b 43f\n\t"
-    "29:\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_800C074\n\t"
-        "b 43f\n\t"
-    "30:\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_800C074\n\t"
-    "31:\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_800C40C\n\t"
-        "b 43f\n\t"
-    "32:\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_800C40C\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_800C97C\n\t"
-        "b 43f\n\t"
-    "33:\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_800C940\n\t"
-        "b 43f\n\t"
-    "34:\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_800C314\n\t"
-        "b 43f\n\t"
-    "35:\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_800C244\n\t"
-        "b 43f\n\t"
-    "36:\n\t"
-        "ldr r2, =gUnknown_030012A4\n\t"
-        "ldr r0, [r2]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 37f\n\t"
-        "ldr r0, [r5, #0x70]\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldr r0, =gUnknown_030012A0\n\t"
-        "str r1, [r0]\n\t"
-        "mov r0, #1\n\t"
-        "str r0, [r2]\n\t"
-    "37:\n\t"
-        "ldr r2, =gUnknown_030012AC\n\t"
-        "ldr r0, [r2]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 38f\n\t"
-        "ldr r0, [r5, #0x70]\n\t"
-        "ldr r1, [r0, #4]\n\t"
-        "ldr r0, =gUnknown_030012A8\n\t"
-        "str r1, [r0]\n\t"
-        "mov r0, #1\n\t"
-        "str r0, [r2]\n\t"
-    "38:\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_800C18C\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_800C8F8\n\t"
-        "ldr r2, [r5, #0x70]\n\t"
-        "ldr r1, [r2]\n\t"
-        "ldr r0, =gUnknown_030012A0\n\t"
-        "str r1, [r0]\n\t"
-        "ldr r1, [r2, #4]\n\t"
-        "ldr r0, =gUnknown_030012A8\n\t"
-        "str r1, [r0]\n\t"
-        "b 43f\n\t"
-        ".pool\n\t"
-    "39:\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_800C18C\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_800C1E8\n\t"
-        "ldr r0, [r5, #0x70]\n\t"
-        "ldrb r0, [r0, #0xc]\n\t"
-        "lsr r0, r0, #3\n\t"
-        "mov r1, #1\n\t"
+        "mov r1, #4\n\t"
         "and r0, r1\n\t"
         "cmp r0, #0\n\t"
-        "beq 43f\n\t"
-        "ldr r0, [r5, #0x6c]\n\t"
-        "cmp r0, #6\n\t"
-        "bne 43f\n\t"
-        "ldr r1, [r5, #0xc]\n\t"
-        "mov r2, #0x10\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r4, [r1, #0x14]\n\t"
-        "mov r1, #0\n\t"
-        "mov r2, #1\n\t"
-        "mov r3, #0\n\t"
-        "bl sub_803AD88\n\t"
-        "ldr r0, =gUnknown_030012BC\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #4\n\t"
-        "bl PlaySfx\n\t"
-        "b 43f\n\t"
-        ".pool\n\t"
-    "40:\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_800C074\n\t"
-    "41:\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_800C1E8\n\t"
-        "b 43f\n\t"
-    "42:\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_800C40C\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_800BFA8\n\t"
-    "43:\n\t"
-        "add sp, #8\n\t"
-        "pop {r3}\n\t"
-        "mov r8, r3\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0"
-    );
-}
-
-/* `sub_800BD48`'s own state selector (`arg2`, values 1-22) dispatches
- * through a *second*, independent jump table after a shared prelude
- * (a `gUnknown_030012D8+0x88` state-object bit-flip + bitmap-set, or
- * the same on `self+0x88` if that global gate is off). Case values
- * 1-17 and 20-21 collapse to the same shared "camera-anchored ambient
- * sound + bitmap-flag" tail (case 0's own code, reused); only 18/19
- * (a spawn-and-launch-a-child-object handler) and 0/20/21 (the ambient
- * sound tail) do real, distinct work - 17 of the 22 declared states are
- * pure no-ops sharing one target, the same "mostly-empty dense switch"
- * shape `sub_800B8DC` itself has for states 1/12.
- *
- * `gUnknown_030012D8+0x88`'s object (when non-null and `state==1`) or
- * `self+0x88`'s own object get the same "flip `+0xc` bit0, bitmap-set
- * `+8`'s halfword id into `gUnknown_030012B4`" treatment already
- * documented in `sub_800B8DC`'s doc comment above and in several
- * matched sibling functions - a widely-reused "flag a nearby collision
- * bucket active" idiom, not specific to either function.
- *
- * NAKED transcription for the same reason as `sub_800B8DC` above (same
- * `self`+`owner`-style multi-field shape, same project-wide precedent
- * for this exact pattern resisting gcc 2.9). Confirmed byte-identical
- * to `baserom.gba`'s own raw bytes at `0x0800BD48`-`0x0800BFA8` via the
- * isolated cpp/agbcc/as + objcopy/cmp pipeline (only `bl` relocation
- * sites differ) plus the same full clean `make NON_MATCHING=1 report` /
- * `make compare` verification. */
-NAKED void sub_800BD48(void *self, s32 unused, s32 state)
-{
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "sub sp, #8\n\t"
-        "add r5, r0, #0\n\t"
-        "add r6, r2, #0\n\t"
-        "ldr r0, =gUnknown_030012D8\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r0, #0x88\n\t"
-        "ldrb r4, [r0]\n\t"
-        "cmp r4, #1\n\t"
-        "bne 2f\n\t"
-        "ldr r1, [r5, #0x70]\n\t"
-        "mov r0, #1\n\t"
-        "ldrb r2, [r1, #0xc]\n\t"
-        "orr r0, r2\n\t"
-        "strb r0, [r1, #0xc]\n\t"
-        "ldr r0, =0xFFFF\n\t"
-        "ldrh r3, [r1, #8]\n\t"
-        "cmp r3, r0\n\t"
-        "beq 1f\n\t"
-        "ldrh r3, [r1, #8]\n\t"
-        "ldr r0, =gUnknown_030012B4\n\t"
-        "ldr r1, [r0]\n\t"
-        "add r0, r3, #0\n\t"
-        "asr r0, r0, #5\n\t"
-        "lsl r2, r0, #2\n\t"
-        "mov r6, #0x84\n\t"
-        "lsl r6, r6, #1\n\t"
-        "add r1, r1, r6\n\t"
-        "add r1, r1, r2\n\t"
-        "lsl r0, r0, #5\n\t"
-        "sub r0, r3, r0\n\t"
-        "lsl r4, r0\n\t"
-        "ldr r0, [r1]\n\t"
-        "orr r0, r4\n\t"
-        "str r0, [r1]\n\t"
-    "1:\n\t"
-        "ldr r0, [r5, #0x70]\n\t"
-        "ldr r3, [r0]\n\t"
-        "asr r3, r3, #8\n\t"
-        "ldr r1, [r0, #4]\n\t"
-        "asr r1, r1, #8\n\t"
-        "ldr r0, =gUnknown_030012E4\n\t"
-        "ldr r0, [r0]\n\t"
-        "str r1, [sp]\n\t"
-        "mov r1, #0\n\t"
-        "str r1, [sp, #4]\n\t"
-        "mov r1, #0x28\n\t"
-        "mov r2, #2\n\t"
-        "bl sub_8025BAC\n\t"
-        "ldr r0, =gUnknown_030012BC\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #0x5a\n\t"
-        "mov r2, #0x80\n\t"
-        "bl PlaySfx\n\t"
-        "b 10f\n\t"
-        ".pool\n\t"
-    "2:\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x88\n\t"
-        "ldr r1, [r0]\n\t"
-        "cmp r1, #0\n\t"
-        "beq 3f\n\t"
-        "mov r0, #1\n\t"
-        "ldrb r2, [r1, #0xc]\n\t"
-        "orr r0, r2\n\t"
-        "strb r0, [r1, #0xc]\n\t"
-        "ldr r0, =0xFFFF\n\t"
-        "ldrh r3, [r1, #8]\n\t"
-        "cmp r3, r0\n\t"
-        "beq 3f\n\t"
-        "ldrh r3, [r1, #8]\n\t"
-        "ldr r0, =gUnknown_030012B4\n\t"
-        "ldr r2, [r0]\n\t"
-        "add r0, r3, #0\n\t"
-        "asr r0, r0, #5\n\t"
-        "lsl r1, r0, #2\n\t"
-        "mov r4, #0x84\n\t"
-        "lsl r4, r4, #1\n\t"
-        "add r2, r2, r4\n\t"
-        "add r2, r2, r1\n\t"
-        "lsl r0, r0, #5\n\t"
-        "sub r0, r3, r0\n\t"
+        "beq 5f\n\t"
+        "ldr r0, [r3]\n\t"
         "mov r1, #1\n\t"
-        "lsl r1, r0\n\t"
-        "ldr r0, [r2]\n\t"
-        "orr r0, r1\n\t"
-        "str r0, [r2]\n\t"
-    "3:\n\t"
-        "sub r0, r6, #1\n\t"
-        "cmp r0, #0x15\n\t"
-        "bls 4f\n\t"
-        "b 10f\n\t"
-    "4:\n\t"
-        "lsl r0, r0, #2\n\t"
-        "ldr r1, =5f\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov pc, r0\n\t"
-        ".pool\n\t"
+        "b 6f\n\t"
+        ".align 2, 0\n"
+    "25: .4byte 0xFFFFED00\n"
+    "26: .4byte gUnknown_0300082C\n"
     "5:\n\t"
-        ".4byte 9f\n\t"  /* case 0 */
-        ".4byte 10f\n\t" /* case 1 */
-        ".4byte 10f\n\t" /* case 2 */
-        ".4byte 10f\n\t" /* case 3 */
-        ".4byte 10f\n\t" /* case 4 */
-        ".4byte 10f\n\t" /* case 5 */
-        ".4byte 10f\n\t" /* case 6 */
-        ".4byte 10f\n\t" /* case 7 */
-        ".4byte 10f\n\t" /* case 8 */
-        ".4byte 10f\n\t" /* case 9 */
-        ".4byte 10f\n\t" /* case 10 */
-        ".4byte 10f\n\t" /* case 11 */
-        ".4byte 10f\n\t" /* case 12 */
-        ".4byte 10f\n\t" /* case 13 */
-        ".4byte 10f\n\t" /* case 14 */
-        ".4byte 10f\n\t" /* case 15 */
-        ".4byte 10f\n\t" /* case 16 */
-        ".4byte 10f\n\t" /* case 17 */
-        ".4byte 6f\n\t"  /* case 18 */
-        ".4byte 6f\n\t"  /* case 19 */
-        ".4byte 9f\n\t"  /* case 20 */
-        ".4byte 9f\n\t"  /* case 21 */
+        "ldr r0, [r3]\n\t"
+        "mov r1, #2\n\t"
     "6:\n\t"
-        "mov r0, #0x10\n\t"
-        "bl sub_8026EDC\n\t"
-        "bl sub_800CBD4\n\t"
-        "ldr r1, [r5, #0x70]\n\t"
-        "str r0, [r1, #0x44]\n\t"
-        "ldr r3, [r0, #0xc]\n\t"
-        "mov r6, #0x18\n\t"
-        "ldrsh r2, [r3, r6]\n\t"
-        "add r0, r0, r2\n\t"
-        "ldr r2, [r3, #0x1c]\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r1, [r5, #0x70]\n\t"
-        "mov r0, #0x7f\n\t"
-        "ldrb r2, [r1, #0xc]\n\t"
-        "and r0, r2\n\t"
-        "strb r0, [r1, #0xc]\n\t"
-        "ldr r3, [r5, #0x70]\n\t"
-        "ldr r1, [r3]\n\t"
-        "ldr r0, =gUnknown_030012D8\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r1, r0\n\t"
-        "ble 7f\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #5\n\t"
-        "mov r1, #0\n\t"
-        "mov r2, #0xc0\n\t"
-        "lsl r2, r2, #5\n\t"
-        "b 8f\n\t"
-        ".pool\n\t"
+        "add r0, #0x2d\n\t"
+        "strb r1, [r0]\n\t"
+        "ldr r0, [r3]\n\t"
+        "ldr r2, [r0, #0x18]\n\t"
+        "mov r5, #0x20\n\t"
+        "ldrsh r1, [r2, r5]\n\t"
+        "add r0, r0, r1\n\t"
+        "ldr r1, [r2, #0x24]\n\t"
+        "bl sub_803AD7C\n\t"
     "7:\n\t"
-        "ldr r0, =0xFFFFF000\n\t"
-        "mov r1, #0\n\t"
-        "ldr r2, =0xFFFFE800\n\t"
+        "ldr r0, 27f\n\t"
+        "ldr r0, [r0]\n\t"
+        "ldr r0, [r0, #0x78]\n\t"
+        "cmp r0, #3\n\t"
+        "beq 9f\n\t"
+        "mov r2, #0\n\t"
+        "add r0, r7, #0\n\t"
+        "add r0, #0x8c\n\t"
+        "ldr r1, 28f\n\t"
+        "ldr r0, [r0]\n\t"
+        "ldr r1, [r1]\n\t"
+        "cmp r0, r1\n\t"
+        "bls 8f\n\t"
+        "mov r2, #1\n\t"
     "8:\n\t"
-        "str r0, [r3, #0x60]\n\t"
-        "str r0, [r3, #0x48]\n\t"
-        "str r1, [r3, #0x4c]\n\t"
-        "str r2, [r3, #0x50]\n\t"
+        "cmp r2, #0\n\t"
+        "beq 9f\n\t"
+        "mov r0, #4\n\t"
+        "and r1, r0\n\t"
+        "cmp r1, #0\n\t"
+        "beq 10f\n\t"
+    "9:\n\t"
+        "ldr r0, 29f\n\t"
+        "ldr r0, [r0]\n\t"
+        "add r1, r7, #0\n\t"
+        "bl sub_8007A84\n\t"
+    "10:\n\t"
+        "ldr r0, 27f\n\t"
+        "ldr r3, [r0]\n\t"
+        "ldr r0, [r3, #0x78]\n\t"
+        "cmp r0, #3\n\t"
+        "bne 12f\n\t"
+        "mov r4, #0\n\t"
+        "add r0, r7, #0\n\t"
+        "add r0, #0x8c\n\t"
+        "ldr r1, 28f\n\t"
+        "ldr r2, [r0]\n\t"
+        "ldr r0, [r1]\n\t"
+        "cmp r2, r0\n\t"
+        "bls 11f\n\t"
+        "mov r4, #1\n\t"
+    "11:\n\t"
+        "cmp r4, #0\n\t"
+        "bne 12f\n\t"
+        "add r0, r3, #0\n\t"
+        "mov r1, #2\n\t"
+        "bl sub_80231EC\n\t"
+    "12:\n\t"
+        "ldr r2, [r7]\n\t"
+        "add r1, r7, #0\n\t"
+        "add r1, #0xb4\n\t"
+        "ldr r0, [r1]\n\t"
+        "lsl r0, r0, #3\n\t"
+        "add r4, r7, #0\n\t"
+        "add r4, #0xb8\n\t"
+        "add r0, r4, r0\n\t"
+        "str r2, [r0]\n\t"
+        "ldr r2, [r7, #4]\n\t"
+        "ldr r0, [r1]\n\t"
+        "lsl r0, r0, #3\n\t"
+        "add r3, r7, #0\n\t"
+        "add r3, #0xbc\n\t"
+        "add r0, r3, r0\n\t"
+        "str r2, [r0]\n\t"
+        "ldr r5, [r1]\n\t"
+        "add r2, r5, #1\n\t"
+        "add r0, r2, #0\n\t"
+        "str r1, [sp]\n\t"
+        "mov sb, r4\n\t"
+        "mov sl, r3\n\t"
+        "cmp r2, #0\n\t"
+        "bge 13f\n\t"
+        "add r0, r5, #0\n\t"
+        "add r0, #8\n\t"
+    "13:\n\t"
+        "asr r0, r0, #3\n\t"
+        "lsl r0, r0, #3\n\t"
+        "sub r0, r2, r0\n\t"
+        "ldr r6, [sp]\n\t"
+        "str r0, [r6]\n\t"
+        "ldr r0, 27f\n\t"
+        "ldr r0, [r0]\n\t"
+        "ldr r0, [r0, #0x78]\n\t"
+        "mov r8, r0\n\t"
+        "sub r0, #1\n\t"
+        "cmp r0, #1\n\t"
+        "bhi 18f\n\t"
+        "ldr r0, 28f\n\t"
+        "ldr r1, [r0]\n\t"
+        "mov r2, #7\n\t"
+        "and r1, r2\n\t"
+        "add r4, r0, #0\n\t"
+        "cmp r1, #0\n\t"
+        "bne 16f\n\t"
+        "ldr r5, 30f\n\t"
         "mov r0, #3\n\t"
         "bl sub_8000E1C\n\t"
         "lsl r0, r0, #0x10\n\t"
-        "lsr r0, r0, #7\n\t"
-        "ldr r3, =0xFFFFFE00\n\t"
-        "add r0, r0, r3\n\t"
-        "ldr r1, [r5, #0x70]\n\t"
-        "mov r2, #0\n\t"
-        "str r0, [r1, #0x64]\n\t"
-        "str r0, [r1, #0x54]\n\t"
-        "str r2, [r1, #0x58]\n\t"
-        "str r0, [r1, #0x5c]\n\t"
-        "mov r0, #5\n\t"
-        "neg r0, r0\n\t"
-        "ldrb r4, [r1, #0xc]\n\t"
-        "and r0, r4\n\t"
-        "strb r0, [r1, #0xc]\n\t"
-        "ldr r0, =gUnknown_030012BC\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #5\n\t"
-        "mov r2, #0x80\n\t"
-        "bl PlaySfx\n\t"
-        "cmp r5, #0\n\t"
-        "beq 10f\n\t"
-        "ldr r1, [r5, #0xc]\n\t"
-        "add r1, #0x48\n\t"
-        "mov r6, #0\n\t"
-        "ldrsh r0, [r1, r6]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r2, [r1, #4]\n\t"
+        "lsr r0, r0, #0x10\n\t"
+        "ldr r1, [r5]\n\t"
+        "add r1, r1, r0\n\t"
+        "sub r1, #1\n\t"
+        "str r1, [r5]\n\t"
+        "cmp r1, #3\n\t"
+        "ble 14f\n\t"
         "mov r1, #3\n\t"
-        "bl sub_803AD80\n\t"
-        "b 10f\n\t"
-        ".pool\n\t"
-    "9:\n\t"
-        "ldr r0, [r5, #0x70]\n\t"
-        "ldr r3, [r0]\n\t"
-        "asr r3, r3, #8\n\t"
-        "ldr r1, [r0, #4]\n\t"
-        "asr r1, r1, #8\n\t"
-        "ldr r0, =gUnknown_030012E4\n\t"
-        "ldr r0, [r0]\n\t"
-        "str r1, [sp]\n\t"
+    "14:\n\t"
+        "cmp r1, #0\n\t"
+        "bge 15f\n\t"
         "mov r1, #0\n\t"
-        "str r1, [sp, #4]\n\t"
-        "mov r1, #0x29\n\t"
-        "mov r2, #2\n\t"
-        "bl sub_8025BAC\n\t"
-        "mov r1, #5\n\t"
-        "neg r1, r1\n\t"
-        "ldrb r2, [r0, #0xc]\n\t"
-        "and r1, r2\n\t"
-        "strb r1, [r0, #0xc]\n\t"
-        "add r0, #0x28\n\t"
-        "mov r2, #1\n\t"
-        "mov r1, #4\n\t"
-        "neg r1, r1\n\t"
-        "ldrb r3, [r0]\n\t"
-        "and r1, r3\n\t"
-        "orr r1, r2\n\t"
-        "strb r1, [r0]\n\t"
-        "ldr r1, [r5, #0x70]\n\t"
-        "ldrb r4, [r1, #0xc]\n\t"
-        "orr r2, r4\n\t"
-        "strb r2, [r1, #0xc]\n\t"
-        "ldr r0, =0xFFFF\n\t"
-        "ldrh r6, [r1, #8]\n\t"
-        "cmp r6, r0\n\t"
-        "beq 10f\n\t"
-        "ldrh r3, [r1, #8]\n\t"
-        "ldr r0, =gUnknown_030012B4\n\t"
-        "ldr r2, [r0]\n\t"
-        "add r0, r3, #0\n\t"
-        "asr r0, r0, #5\n\t"
-        "lsl r1, r0, #2\n\t"
-        "mov r4, #0x84\n\t"
-        "lsl r4, r4, #1\n\t"
-        "add r2, r2, r4\n\t"
+    "15:\n\t"
+        "str r1, [r5]\n\t"
+    "16:\n\t"
+        "ldr r0, 30f\n\t"
+        "mov r1, #0xb0\n\t"
+        "add r1, r1, r7\n\t"
+        "mov ip, r1\n\t"
+        "ldr r5, [r1]\n\t"
+        "ldr r3, [r0]\n\t"
+        "ldr r0, [r5, #0x20]\n\t"
+        "add r2, r5, #0\n\t"
+        "add r2, #0x2d\n\t"
+        "ldr r1, [r0]\n\t"
+        "ldrb r6, [r2]\n\t"
+        "lsl r0, r6, #3\n\t"
+        "sub r0, r0, r6\n\t"
+        "lsl r0, r0, #2\n\t"
+        "add r0, r0, r1\n\t"
+        "ldrb r0, [r0, #0x16]\n\t"
+        "cmp r3, r0\n\t"
+        "blt 17f\n\t"
+        "sub r3, r0, #1\n\t"
+    "17:\n\t"
+        "str r3, [r5, #0x30]\n\t"
+        "ldr r0, [sp]\n\t"
+        "ldr r3, [r0]\n\t"
+        "lsl r3, r3, #3\n\t"
+        "add sb, r3\n\t"
+        "ldr r5, 31f\n\t"
+        "ldr r1, [r4]\n\t"
+        "mov r4, #0xff\n\t"
+        "add r0, r1, #0\n\t"
+        "and r0, r4\n\t"
+        "lsl r0, r0, #1\n\t"
+        "add r0, r0, r5\n\t"
+        "mov r6, #0\n\t"
+        "ldrsh r2, [r0, r6]\n\t"
+        "add r3, sl\n\t"
+        "lsr r1, r1, #1\n\t"
+        "and r1, r4\n\t"
+        "lsl r1, r1, #1\n\t"
+        "add r1, r1, r5\n\t"
+        "mov r4, #0\n\t"
+        "ldrsh r0, [r1, r4]\n\t"
+        "mov r5, ip\n\t"
+        "ldr r4, [r5]\n\t"
+        "lsl r2, r2, #4\n\t"
+        "mov r6, sb\n\t"
+        "ldr r1, [r6]\n\t"
         "add r2, r2, r1\n\t"
-        "lsl r0, r0, #5\n\t"
-        "sub r0, r3, r0\n\t"
-        "mov r1, #1\n\t"
-        "lsl r1, r0\n\t"
-        "ldr r0, [r2]\n\t"
-        "orr r0, r1\n\t"
-        "str r0, [r2]\n\t"
-    "10:\n\t"
-        "add sp, #8\n\t"
-        "pop {r4, r5, r6}\n\t"
+        "lsl r0, r0, #3\n\t"
+        "ldr r1, [r3]\n\t"
+        "add r0, r0, r1\n\t"
+        "ldr r1, 32f\n\t"
+        "add r0, r0, r1\n\t"
+        "str r2, [r4]\n\t"
+        "str r0, [r4, #4]\n\t"
+        "ldr r0, [r5]\n\t"
+        "mov r1, r8\n\t"
+        "sub r1, #1\n\t"
+        "add r0, #0x2d\n\t"
+        "strb r1, [r0]\n\t"
+        "ldr r0, [r5]\n\t"
+        "ldr r2, [r0, #0x18]\n\t"
+        "mov r3, #0x20\n\t"
+        "ldrsh r1, [r2, r3]\n\t"
+        "add r0, r0, r1\n\t"
+        "ldr r1, [r2, #0x24]\n\t"
+        "bl sub_803AD7C\n\t"
+    "18:\n\t"
+        "add r0, r7, #0\n\t"
+        "add r0, #0x38\n\t"
+        "ldrb r0, [r0]\n\t"
+        "cmp r0, #0\n\t"
+        "beq 19f\n\t"
+        "mov r0, #9\n\t"
+        "neg r0, r0\n\t"
+        "ldrb r4, [r7, #0xc]\n\t"
+        "and r0, r4\n\t"
+        "strb r0, [r7, #0xc]\n\t"
+    "19:\n\t"
+        "add sp, #4\n\t"
+        "pop {r3, r4, r5}\n\t"
+        "mov r8, r3\n\t"
+        "mov sb, r4\n\t"
+        "mov sl, r5\n\t"
+        "pop {r4, r5, r6, r7}\n\t"
         "pop {r0}\n\t"
         "bx r0\n\t"
-        ".pool"
+        ".align 2, 0\n"
+    "27: .4byte gUnknown_030012C0\n"
+    "28: .4byte gUnknown_0300082C\n"
+    "29: .4byte gUnknown_030012CC\n"
+    "30: .4byte gUnknown_0300081C\n"
+    "31: .4byte gStaticData_0816A820\n"
+    "32: .4byte 0xFFFFE800\n"
     );
 }
