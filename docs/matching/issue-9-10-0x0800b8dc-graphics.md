@@ -374,3 +374,147 @@ quick, likely-real-C match - notably *simpler* register pressure than
 either function this pass closed), then the remaining single-purpose
 leaves (`sub_800C314`, `sub_800C940`, `sub_800C97C`, `sub_800C8F8`,
 `sub_800BFA8`, `sub_800C9C8`, `sub_800CBD4`).
+
+## Phase 2 (this pass): `sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC` solved
+
+Follow-up session, tackling exactly the three functions the Phase 1
+pass above flagged as the single best next target. All three matched
+as **real C**, first attempt clean - much smaller and, unlike
+`sub_800B8DC`/`sub_800BD48`, entirely free of the `self`/`owner`
+register-allocation resistance documented above (no branches, only a
+handful of straight-line loads/stores per function). Sizes confirmed
+from the raw ROM bytes: `sub_800C8AC` 16 B, `sub_800C8BC` 16 B,
+`sub_800C8CC` 44 B (76 B total, `0x0800C8AC`-`0x0800C8F8`).
+
+### What they actually do
+
+All three share the same two-step shape: **cache `mode` (`arg1`) into a
+`self`-local field, then delegate to a shared "fire an anchor-record
+trigger" primitive.** The delegate differs per function:
+
+- **`sub_800C8AC(self, mode)`**: `self->0x7c = mode;` then calls the
+  *already-matched* `sub_800B704(self, self->0x70 /* owner */, mode)`
+  (`src/graphics/actor_part17.c`). `sub_800B704` itself: looks up an
+  8-byte record at `(*(self+4))[mode]`, reads that record's **second**
+  word (`+4`) as a type index into the shared, 12-byte-stride
+  `gStaticData_0816B304` table, then reads `self->0xc`'s "anchor"
+  pointer (called `part` in `sub_800B704`'s own existing comment) and
+  its **`+0x30`/`+0x34`** `{s16 offset, void *fn}` pair, and fires
+  `sub_803AD84(self + offset, owner, tableEntry, fn)`.
+- **`sub_800C8BC(self, mode)`**: identical shape, `self->0x78 = mode;`
+  then `sub_800B838(self, owner, mode)` - the sibling accessor that
+  reads the record's **first** word (`+0`) as the type index and the
+  anchor's **`+0x28`/`+0x2c`** pair instead.
+- **`sub_800C8CC(self, mode)`**: `self->0x68 = mode;` then triggers
+  *directly*, with no `gStaticData_0816B304` lookup at all: reads the
+  anchor's **`+0x50`/`+0x54`** pair for the offset/fn, and gets its
+  table-entry argument by indexing **`self->0x84`'s own pointer array
+  directly by `mode`** (`((void **)self->0x84)[mode]`), then fires the
+  same `sub_803AD84(self + offset, owner, entry, fn)`.
+
+### What this resolves from the Phase 1 doc
+
+- **`self+0xc`'s anchor record** now has *four* of its `{s16 offset,
+  void *fn}` pairs identified by offset: `+0x10`/`+0x14` (read directly
+  by `sub_800B8DC` state 11, per the table above), `+0x28`/`+0x2c`
+  (`sub_800C8BC`/`sub_800B838`), `+0x30`/`+0x34`
+  (`sub_800C8AC`/`sub_800B704`), `+0x48`/`+0x4c` (read directly by
+  `sub_800BD48`'s states 19-20), and now also `+0x50`/`+0x54`
+  (`sub_800C8CC`). Strongly suggests a small, densely-packed array of
+  these pairs (stride looks like 8 bytes: `0x10`, `0x28`... no - `0x28`
+  to `0x30` to `0x48` to `0x50` isn't a fixed stride, so it's more
+  likely a handful of individually-named slots for different
+  event/direction kinds rather than an indexed array - still not fully
+  resolved, but four concrete offsets is a solid base for whoever names
+  this struct next).
+- **`self+0x84`** - the Phase 1 doc's guess ("pointer to a small record
+  with `+0xC`/`+0x14` bytes ... looks like a surface/material-type
+  lookup") was based on a *different*, unrelated caller elsewhere in
+  the cluster and doesn't describe what `sub_800C8CC` does with it:
+  here it's read as `*(void ***)(self+0x84)` and direct-indexed by
+  `mode` (`table[mode]`, 4-byte stride) - i.e. a **per-instance array
+  of pointers**, playing the exact same "table entry" role
+  `gStaticData_0816B304[type]` plays for `sub_800C8AC`/`sub_800C8BC`.
+  Reads as a per-object override table parallel to the shared global
+  one (`self->0x84[mode]` instead of `gStaticData_0816B304[recordType]`).
+  The Phase 1 doc's original `+0xC`/`+0x14`-record guess isn't
+  necessarily wrong for that *other* caller - `self->0x84` may simply
+  be reused with two different shapes by two different call sites, not
+  yet reconciled.
+- **`self+4`** (newly identified, not previously in the Phase 1 doc's
+  field table): a pointer to a "manager" object whose own first word is
+  itself a pointer to an array of 8-byte records, indexed by `mode`
+  (`(*(void ***)(self+4))[mode]`, 8-byte stride) - the record
+  `sub_800B704`/`sub_800B838` read their type index from. Each 8-byte
+  record apparently encodes *two* different type indices (word 0 vs.
+  word 1) for the two different anchor-pair "axes"
+  `sub_800C8BC`/`sub_800C8AC` respectively trigger.
+
+### Matching
+
+All three matched as real C on the first structured attempt (raw
+pointer-arithmetic casts, matching the established convention of the
+immediately-neighboring already-matched `sub_800B704`/`sub_800B838` in
+`src/graphics/actor_part17.c` - no named structs committed yet, same
+reasoning as the Phase 1 pass: several of the object's fields are still
+not fully reconciled across all its callers). `sub_800C8AC`/
+`sub_800C8BC` compiled byte-exact immediately. `sub_800C8CC` needed one
+iteration: writing the anchor-pointer arithmetic as `self->0xc` read
+once into a temporary, then `rec += 0x50`, then dereferencing that
+*same* incremented pointer at `+0` and `+4` (rather than computing
+`part+0x50` and `part+0x54` as two independent expressions) reproduced
+gcc 2.9's own register reuse for `part+0x54`'s `ldr r3, [r3, #4]` - the
+independent-expressions version instead computed a fresh base in `r2`
+for the `+0x50` read and cost one extra 2-byte instruction. Also needed
+a trailing `asm(".align 2, 0")` after `sub_800C8CC` (following the
+`matching_decomp_alignment_fix` convention, same idiom already used
+after `nullsub_13` in `actor_part17.c`): the ROM zero-pads
+`sub_800C8CC`'s trailing 2 bytes to the next 4-byte boundary, but
+without an explicit trailing align directive the linker instead filled
+that gap with its default NOP-fill (`0xc046`) when placing the next
+object file's own leading alignment.
+
+Confirmed byte-identical to `baserom.gba` at `0x0800C8AC`-`0x0800C8F8`
+(76 bytes) via the isolated `cpp`/`agbcc`/`as`+`objcopy` pipeline (the
+only differences from a direct ROM slice were exactly the three `bl`
+relocation sites - `sub_800B704`, `sub_800B838`, `sub_803AD84`), plus a
+full clean `rm -rf build && make NON_MATCHING=1 report` (no warnings)
+and `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
+crashbandicootxs.map && make compare` (`crashbandicootxs.gba: La suma
+coincide`).
+
+### Build layout
+
+The three functions now live in the new `src/graphics/actor_part113.c`.
+`asm/code_3_2_17_bfa8.s` is trimmed to end right before `sub_800C8AC`
+(unchanged otherwise - still holds `sub_800BFA8` through `sub_800C898`,
+raw); the remainder from `sub_800C8F8` onward (`sub_800C940` through
+`sub_800CCE0`, still fully raw, unchanged bytes) moved verbatim to the
+new `asm/code_3_2_17_c8f8.s`. `ldscript.txt` now reads, in this
+stretch:
+
+```
+build/crashbandicootxs/src/graphics/actor_part112.o(.text);
+build/crashbandicootxs/asm/code_3_2_17_bfa8.o(.text);
+build/crashbandicootxs/src/graphics/actor_part113.o(.text);
+build/crashbandicootxs/asm/code_3_2_17_c8f8.o(.text);
+build/crashbandicootxs/src/graphics/actor_part109.o(.text);
+```
+
+`tools/report_units.py`'s single `(0x0800BFA8, None, "graphics")`
+placeholder is replaced with: the same placeholder (now only covering
+`sub_800BFA8`-`sub_800C898`), a matched entry for `actor_part113.o`,
+and a new `(0x0800C8F8, None, "graphics")` placeholder for the
+still-raw remainder in `asm/code_3_2_17_c8f8.s`.
+
+### Still open
+
+`sub_800C074`/`sub_800C40C`/`sub_800C5D4`/`sub_800C244` (the four
+`self+0x68` dispatchers) remain the next highest-value target per the
+Phase 1 doc's own priority order - all four now have one *fewer*
+opaque callee each, since `sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC`'s
+own semantics are fully known. The anchor record's own full field
+layout (four pairs identified, exact total size/count still unknown)
+and `self+4`'s "manager" object (pointer chain + 8-byte record array,
+also still unnamed) are both good candidates for whoever next needs to
+commit a named struct for this object shape.
