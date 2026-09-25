@@ -660,6 +660,30 @@ plain C didn't converge.
   instead. `asm/code_3_2_17_e560_10b6c.s` is now gone entirely - the
   function is folded into `src/system/game_loop28.o`. See
   [docs/matching/issue-14-0x08010a0c-graphics.md](../matching/issue-14-0x08010a0c-graphics.md).
+- **`sub_8010D54`** (`src/system/game_loop50.c`, new file - Phase 1 of
+  the next still-unexamined chunk past issue #14's own range) - the
+  physics/collision subsystem's **apply/commit step**, the call
+  `sub_0800D18C` (`game_loop47.c`) makes at the very end of its own
+  per-edge dispatch. Appends one 0x24-byte "collision candidate" record
+  to a per-entity queue at `self->candidates[self->count]` (`self` is
+  the caller's own `entity+0x108` - the player's
+  `gUnknown_030012D8+0x108` at this specific call site - the same
+  record shape `sub_8010B6C`/`game_loop28.c` already reads back, per
+  its own doc comment calling `sub_8010D54` its "mirror image"). A
+  plain-C reconstruction reproduces the ROM's exact instruction *shape*
+  (the same 8-way common-subexpression grouping for the repeated
+  `self->count` index computation, sharing a computation between
+  adjacent field writes in exactly the same places the ROM does) but
+  gcc 2.9 -O2 picks a different scratch register for the "copy of
+  `self` used to read `self->count`" step almost every time - not one
+  isolated register letter to pin, so closed via NAKED transcription
+  instead (no branches or literal pool in this function, so no label
+  renumbering was needed). Matched, confirmed by a full clean `make
+  compare` ("La suma coincide"). `asm/code_3_2_17_e560_10d54.s` trimmed
+  to begin at `sub_8010E14` (24 functions still raw, `0x08010E14`-
+  `0x080119A8`) - see
+  [docs/matching/issue-14-0x08010d54-physics-apply.md](../matching/issue-14-0x08010d54-physics-apply.md)
+  for the full semantic map and Phase 2 planning notes on those 24.
 
 ## Still raw, category-mapped (GitHub issue #12/#34/#40)
 
@@ -667,6 +691,13 @@ plain C didn't converge.
   GitHub issue #13) - a further ~195-instruction state dispatcher
   calling several still-raw siblings; not attempted - see
   [docs/matching/issue-13-fc70-second-continuation.md](../matching/issue-13-fc70-second-continuation.md).
+- **24 functions, `0x08010E14`-`0x080119A8`** (`asm/code_3_2_17_e560_10d54.s`,
+  trimmed) - the remainder of the chunk `sub_8010D54` (above) was the
+  entry point of; still category-mapped `graphics` pending its own
+  examination, though the first two functions are confirmed direct
+  siblings of `sub_8010D54`'s own collision-queue record - see
+  [docs/matching/issue-14-0x08010d54-physics-apply.md](../matching/issue-14-0x08010d54-physics-apply.md)'s
+  Phase 2 planning section for the full function/size list.
 - **`UpdateGameFrame`** (`asm/code_3_2_17_225a0.s`, ROM `0x080225A0`) -
   the main per-frame game-loop driver, a ~730-instruction jump-table
   state machine. Not understood branch-by-branch with the precision a
