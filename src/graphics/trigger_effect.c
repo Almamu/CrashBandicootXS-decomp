@@ -349,7 +349,126 @@ NAKED void sub_8020E84(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
 /* Same shape as `sub_8020E84` above (twin sibling, tests bit 1 of
  * `gUnknown_030012C0+2` instead of bit 0), sound ids `3`/`0xC`, tag
- * value `5`. Same NAKED-transcription rationale as `sub_8020E84`. */
+ * value `5`. See docs/matching/issue-31-trigger-effect-type-n.md for
+ * the near-miss account (this sibling's register shape differs from
+ * `sub_8020E84`'s own: `self` lives in r1 not r0, the address-of
+ * `gUnknown_030012C0` stays in r8 (not r9) as `pAddr`, and the bit
+ * result lives in r9 (not r8) - the mask constant is also
+ * materialized into r0 *before* the byte load like `sub_8020E84`, but
+ * here the AND's destination is the mask register, not the loaded
+ * byte, and needs an explicit byte truncation afterward). */
+#if NON_MATCHING
+void sub_8020F7C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+{
+    /* arg1/arg2 are deliberately left unpinned - see sub_8020E84's own
+     * comment above: natural allocation reaches r6/r7 on its own, and
+     * an explicit r7 pin hits the confirmed categorical toolchain bug. */
+    register u16 a3 asm("r5") = arg3;
+    register void *addrReg asm("r0") = (void *)&gUnknown_030012C0;
+    register void *self asm("r1");
+    register void **pAddr asm("r8");
+    register u8 bit asm("r9");
+
+    /* addrReg = &gUnknown_030012C0 (plain C initializer, correct
+     * literal-pool placement - see sub_8020E84's comment); pAddr =
+     * addrReg; self = *addrReg; addrReg = (2 & self[2]), truncated to
+     * u8; bit = addrReg. Spelled out because this compiler otherwise
+     * schedules the mask constant after the byte load (the ROM
+     * materializes it first, same gotcha as sub_8020E84's bit test). */
+    asm volatile(
+        "mov r8, r0\n\t"
+        "ldr r1, [r0]\n\t"
+        "mov r0, #2\n\t"
+        "ldrb r2, [r1, #2]\n\t"
+        "and r0, r2\n\t"
+        "lsl r0, r0, #0x18\n\t"
+        "lsr r0, r0, #0x18\n\t"
+        "mov r9, r0\n\t"
+        : "+r" (addrReg), "=r" (self), "=r" (pAddr), "=r" (bit)
+        :
+        : "r2");
+
+    if (addrReg) {
+        u16 a0;
+        s32 id;
+        struct actor *ret;
+
+        if (sub_8023278(self))
+            goto id_c;
+        {
+            /* Re-dereferences gUnknown_030012C0 through pAddr (r8)
+             * rather than reusing `self` (r1) - matches the ROM's own
+             * reload-after-call, same idiom as sub_8020E84. */
+            register void **tmp asm("r3") = pAddr;
+            register u8 val asm("r0") = *((u8 *)*tmp + 0x8c);
+            if (!val)
+                goto id_b;
+        }
+
+    id_c:
+        a0 = (u16)arg0;
+        id = 0xc;
+        goto do_call;
+
+    id_b:
+        a0 = (u16)arg0;
+        id = 3;
+
+    do_call:
+        {
+            u16 a1 = arg1;
+            u16 a2 = arg2;
+            ret = (struct actor *)sub_801A878(a0, a1, a2, a3, id);
+        }
+        sub_80234E8(gUnknown_030012C0, (s32)ret);
+    } else {
+        /* tag reuses r8 (pAddr's register), freed once this branch is
+         * reached - same idiom sub_8020E84 uses with r9. */
+        register u8 tag asm("r8") = 5;
+        struct actor *part;
+        {
+            u16 a1 = arg1;
+            u16 a2 = arg2;
+            part = sub_8008434((u16)arg0, a1, a2, a3);
+        }
+
+        *(void **)((u8 *)part + 0x20) =
+            (u8 *)*(void **)*(void **)gUnknown_030012D0 + 0x180;
+        *((u8 *)part + 0x2d) = tag;
+
+        sub_80087C0(part);
+        sub_80087B4(part);
+        sub_800872C(part, 0);
+
+        {
+            register s32 result asm("r0") = sub_800815C(part);
+            register u8 *addr asm("r2") = (u8 *)part + 0x29;
+            register s32 acc asm("r1");
+
+            result &= 0xf;
+            /* acc = -0x10; - see sub_801FDEC/sub_8020E84's own version
+             * of this fix. */
+            asm volatile("mov r1, #0x10\n\tneg r1, r1\n\t" : "=r" (acc));
+            acc &= *addr;
+            acc |= result;
+            *addr = acc;
+        }
+
+        *((u8 *)part + 0xa) = bit;
+
+        sub_8008E94(gUnknown_030012EC, part);
+        {
+            register s32 negFive asm("r0");
+
+            /* part->flags &= -5; - the negative-constant bit-clear
+             * idiom, same as sub_8020E84. */
+            asm volatile("mov r0, #5\n\tneg r0, r0\n\t" : "=r" (negFive));
+            negFive &= part->flags;
+            part->flags = negFive;
+        }
+    }
+}
+#else
 NAKED void sub_8020F7C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     asm(
@@ -476,10 +595,107 @@ NAKED void sub_8020F7C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     "23: .4byte gUnknown_030012EC\n"
     );
 }
+#endif /* NON_MATCHING */
 
 /* Same shape as `sub_8020E84` above (twin sibling, tests bit 2 of
  * `gUnknown_030012C0+2`), sound ids `0xA`/`0xC`, tag value `6`. Same
- * NAKED-transcription rationale as `sub_8020E84`. */
+ * register shape as `sub_8020F7C` immediately above (self in r1, `pAddr`
+ * in r8, bit result in r9) - see
+ * docs/matching/issue-31-trigger-effect-type-n.md. */
+#if NON_MATCHING
+void sub_802107C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+{
+    register u16 a3 asm("r5") = arg3;
+    register void *addrReg asm("r0") = (void *)&gUnknown_030012C0;
+    register void *self asm("r1");
+    register void **pAddr asm("r8");
+    register u8 bit asm("r9");
+
+    asm volatile(
+        "mov r8, r0\n\t"
+        "ldr r1, [r0]\n\t"
+        "mov r0, #4\n\t"
+        "ldrb r2, [r1, #2]\n\t"
+        "and r0, r2\n\t"
+        "lsl r0, r0, #0x18\n\t"
+        "lsr r0, r0, #0x18\n\t"
+        "mov r9, r0\n\t"
+        : "+r" (addrReg), "=r" (self), "=r" (pAddr), "=r" (bit)
+        :
+        : "r2");
+
+    if (addrReg) {
+        u16 a0;
+        s32 id;
+        struct actor *ret;
+
+        if (sub_8023278(self))
+            goto id_c;
+        {
+            register void **tmp asm("r3") = pAddr;
+            register u8 val asm("r0") = *((u8 *)*tmp + 0x8c);
+            if (!val)
+                goto id_b;
+        }
+
+    id_c:
+        a0 = (u16)arg0;
+        id = 0xc;
+        goto do_call;
+
+    id_b:
+        a0 = (u16)arg0;
+        id = 0xa;
+
+    do_call:
+        {
+            u16 a1 = arg1;
+            u16 a2 = arg2;
+            ret = (struct actor *)sub_801A878(a0, a1, a2, a3, id);
+        }
+        sub_80234E8(gUnknown_030012C0, (s32)ret);
+    } else {
+        register u8 tag asm("r8") = 6;
+        struct actor *part;
+        {
+            u16 a1 = arg1;
+            u16 a2 = arg2;
+            part = sub_8008434((u16)arg0, a1, a2, a3);
+        }
+
+        *(void **)((u8 *)part + 0x20) =
+            (u8 *)*(void **)*(void **)gUnknown_030012D0 + 0x180;
+        *((u8 *)part + 0x2d) = tag;
+
+        sub_80087C0(part);
+        sub_80087B4(part);
+        sub_800872C(part, 0);
+
+        {
+            register s32 result asm("r0") = sub_800815C(part);
+            register u8 *addr asm("r2") = (u8 *)part + 0x29;
+            register s32 acc asm("r1");
+
+            result &= 0xf;
+            asm volatile("mov r1, #0x10\n\tneg r1, r1\n\t" : "=r" (acc));
+            acc &= *addr;
+            acc |= result;
+            *addr = acc;
+        }
+
+        *((u8 *)part + 0xa) = bit;
+
+        sub_8008E94(gUnknown_030012EC, part);
+        {
+            register s32 negFive asm("r0");
+
+            asm volatile("mov r0, #5\n\tneg r0, r0\n\t" : "=r" (negFive));
+            negFive &= part->flags;
+            part->flags = negFive;
+        }
+    }
+}
+#else
 NAKED void sub_802107C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     asm(
@@ -606,13 +822,133 @@ NAKED void sub_802107C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     "23: .4byte gUnknown_030012EC\n"
     );
 }
+#endif /* NON_MATCHING */
 
 /* Same shape as `sub_8020E84` above (twin sibling, tests bit 3 of
- * `gUnknown_030012C0+2`), sound ids `9`/`0xC`, tag value `8`. Same
- * NAKED-transcription rationale as `sub_8020E84` - this sibling needs
- * a third extra callee-saved register (`sl`/r10, holding the `8` tag
- * constant across the whole function) since gcc never reproduced this
- * one's shifted `r5`/`r6`/`r7` dx/dy/dz register roles either. */
+ * `gUnknown_030012C0+2`), sound ids `9`/`0xC`, tag value `8`. This
+ * sibling's bit-test mask (`8`) and tag value (`8`) happen to be the
+ * *same* literal, and the ROM materializes it once into a third
+ * callee-saved register (`sl`/r10) up front, reusing it for both the
+ * mask test and, unconditionally, the later `+0x2d` tag store - not
+ * re-derived per branch like the other three siblings' distinct
+ * mask/tag pairs. It also uses a genuinely different dx/dy/dz
+ * register mapping (`arg1`/`arg2`/`arg3` -> r5/r6/r7, not r6/r7/r5) -
+ * see docs/matching/issue-31-trigger-effect-type-n.md for the account,
+ * including why `arg3` is left unpinned rather than explicitly forced
+ * into r7 (the categorical r7-pin toolchain bug). */
+#if NON_MATCHING
+void sub_802117C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+{
+    /* arg1/arg2 are pinned explicitly (r5/r6 - neither is the buggy
+     * r7) since natural allocation alone doesn't reach this sibling's
+     * shifted register roles; arg3 is deliberately left unpinned,
+     * hoping natural allocation reaches r7 on its own - an explicit
+     * `register ... asm("r7")` pin is off the table (categorical
+     * toolchain bug, see sub_8020E84's own comment above). */
+    register u16 a1 asm("r5") = arg1;
+    register u16 a2 asm("r6") = arg2;
+    u16 a3 = arg3;
+    register void *addrReg asm("r0") = (void *)&gUnknown_030012C0;
+    register void *self asm("r1");
+    register void **pAddr asm("r8");
+    register u8 bit asm("r9");
+    register u8 maskTag asm("r10");
+
+    /* addrReg = &gUnknown_030012C0; pAddr = addrReg; self = *addrReg;
+     * maskTag = 8 (materialized fresh into sl here, matching the ROM's
+     * own position for it - not a plain C initializer above, since
+     * that would let the compiler schedule it before the address-of
+     * instead of after); addrReg = (maskTag & self[2]), truncated to
+     * u8; bit = addrReg. */
+    asm volatile(
+        "mov r8, r0\n\t"
+        "ldr r1, [r0]\n\t"
+        "mov r2, #8\n\t"
+        "mov r10, r2\n\t"
+        "mov r0, r10\n\t"
+        "ldrb r3, [r1, #2]\n\t"
+        "and r0, r3\n\t"
+        "lsl r0, r0, #0x18\n\t"
+        "lsr r0, r0, #0x18\n\t"
+        "mov r9, r0\n\t"
+        : "+r" (addrReg), "=r" (self), "=r" (pAddr), "=r" (bit),
+          "=r" (maskTag)
+        :
+        : "r2", "r3");
+
+    if (addrReg) {
+        u16 a0;
+        s32 id;
+        struct actor *ret;
+
+        if (sub_8023278(self))
+            goto id_c;
+        {
+            /* Re-dereferences gUnknown_030012C0 through pAddr (r8),
+             * landing the reload in r1 (self's own now-dead register)
+             * rather than r3 like the other three siblings - r3 isn't
+             * otherwise live here since arg3 lives in r7 in this
+             * sibling, not r3. */
+            register void **tmp asm("r1") = pAddr;
+            register u8 val asm("r0") = *((u8 *)*tmp + 0x8c);
+            if (!val)
+                goto id_b;
+        }
+
+    id_c:
+        a0 = (u16)arg0;
+        id = 0xc;
+        goto do_call;
+
+    id_b:
+        a0 = (u16)arg0;
+        id = 9;
+
+    do_call:
+        ret = (struct actor *)sub_801A878(a0, a1, a2, a3, id);
+        sub_80234E8(gUnknown_030012C0, (s32)ret);
+    } else {
+        struct actor *part;
+
+        part = sub_8008434((u16)arg0, a1, a2, a3);
+
+        *(void **)((u8 *)part + 0x20) =
+            (u8 *)*(void **)*(void **)gUnknown_030012D0 + 0x180;
+        *((u8 *)part + 0x2d) = maskTag;
+
+        sub_80087C0(part);
+        sub_80087B4(part);
+        sub_800872C(part, 0);
+
+        {
+            register s32 result asm("r0") = sub_800815C(part);
+            register u8 *addr asm("r2") = (u8 *)part + 0x29;
+            register s32 acc asm("r1");
+
+            result &= 0xf;
+            /* acc = -0x10; - see sub_801FDEC/sub_8020E84's own version
+             * of this fix. */
+            asm volatile("mov r1, #0x10\n\tneg r1, r1\n\t" : "=r" (acc));
+            acc &= *addr;
+            acc |= result;
+            *addr = acc;
+        }
+
+        *((u8 *)part + 0xa) = bit;
+
+        sub_8008E94(gUnknown_030012EC, part);
+        {
+            register s32 negFive asm("r0");
+
+            /* part->flags &= -5; - the negative-constant bit-clear
+             * idiom, same as sub_8020E84. */
+            asm volatile("mov r0, #5\n\tneg r0, r0\n\t" : "=r" (negFive));
+            negFive &= part->flags;
+            part->flags = negFive;
+        }
+    }
+}
+#else
 NAKED void sub_802117C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     asm(
@@ -741,3 +1077,4 @@ NAKED void sub_802117C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     "23: .4byte gUnknown_030012EC\n"
     );
 }
+#endif /* NON_MATCHING */
