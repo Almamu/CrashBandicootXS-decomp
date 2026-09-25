@@ -254,6 +254,22 @@ plain C didn't converge.
   issue #12) - bidirectional linked-list walkers (`sub_801070C`/
   `sub_8010708`) clearing/setting each neighbor's `+0x58` flag. See
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md).
+- **`sub_800CEAC`/`sub_800CF70`** (`src/system/game_loop42.c`, new
+  file - dedicated deep investigation) - the two functions formerly
+  tracked as unexamined raw bytes between `sub_800CD00` (issue #9/#10)
+  and `sub_800D040` (issue #12); recategorized `graphics` -> `game_loop`
+  since both are called only from `sub_0800D18C`. `sub_800CF70` walks
+  `self`'s `sub_801070C`/`sub_8010708` neighbor list, sets a caller
+  out-param when either exists, and - for the "prev" neighbor, gated by
+  the subsystem's own `self+0x4d&0x7f==1` exclusion - builds its AABB
+  via the shared `+0x20`-table convention and tests it against a
+  caller-supplied box, confirming and sharpening `docs/rom_map.md`'s
+  existing partial note on this function. `sub_800CEAC` builds a hybrid
+  AABB (the player's hitbox quad positioned at `self`'s location,
+  optionally widened when player state byte `+0x90` is set) and tests
+  it the same way. Both NAKED: the same single-inlined-AABB-build shape
+  `sub_800D040`/`sub_800CD00` already document as gcc-2.9-resistant. See
+  [docs/matching/issue-9-10-0x0800ceac-graphics.md](../matching/issue-9-10-0x0800ceac-graphics.md).
 - **`sub_800FC70`** (`src/system/game_loop32.c`, GitHub issue #13,
   second pass) - a per-frame position-wrap advance keeping `sb`/`r8`
   live as two extra callee-saved accumulators throughout, the same gap
