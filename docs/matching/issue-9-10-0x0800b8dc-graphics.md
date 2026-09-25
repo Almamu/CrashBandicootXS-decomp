@@ -507,7 +507,8 @@ placeholder is replaced with: the same placeholder (now only covering
 and a new `(0x0800C8F8, None, "graphics")` placeholder for the
 still-raw remainder in `asm/code_3_2_17_c8f8.s`.
 
-### Still open
+### Still open (superseded by Phase 3 below for the four `self+0x68`
+dispatchers)
 
 `sub_800C074`/`sub_800C40C`/`sub_800C5D4`/`sub_800C244` (the four
 `self+0x68` dispatchers) remain the next highest-value target per the
@@ -519,6 +520,186 @@ and `self+4`'s "manager" object (pointer chain + 8-byte record array,
 also still unnamed) are both good candidates for whoever next needs to
 commit a named struct for this object shape.
 
+## Phase 3 (this pass): the four `self+0x68` dispatchers closed
+
+Follow-up session, tackling exactly the four functions Phase 1/2 flagged
+as the next highest-value target: `sub_800C074` (280 B), `sub_800C244`
+(208 B), `sub_800C40C` (456 B), `sub_800C5D4` (212 B). All four closed
+as hand-transcribed **NAKED** asm, not real C - each one independently
+hit the same `self`/`owner` multi-field-liveness register-pressure gap
+this ROM neighborhood's other dispatchers (`sub_800B8DC`/`sub_800BD48`)
+already document, plus a specific extra wrinkle worth recording for
+whoever next attempts a real-C reconstruction in this cluster: **a
+"shared-retest" CFG diamond** appears in `sub_800C074`'s mode 0/4 gate
+blocks (and the structurally identical gate in `sub_800C314`, still
+raw) - the ROM computes a mirror-flag sign test once, branches on it,
+and then *re-tests the exact same cached value* on the fallthrough edge
+before a second bound comparison, rather than letting either edge skip
+straight to the bound check. A plain `if (signTest >= 0) goto hi; ...
+hi: if (signTest < 0) break; ...` C reconstruction of this exact shape
+gets silently optimized by gcc 2.9 at `-O2` into a smaller, branch-free
+equivalent (jump-threading removes the provably-redundant retest) -
+*shorter* than the ROM's own output, meaning the ROM's real source
+almost certainly used a different idiom that defeats this optimization
+(not identified in this pass), or simply accepted the same
+resistant-shape NAKED fallback as everything else in this immediate ROM
+neighborhood.
+
+### What each one does
+
+- **`sub_800C074`** (called from `sub_800B8DC` states 2/13/15/18): a
+  4-case dispatcher on `self+0x68` (modes 0, 1, 4, 6; anything else is a
+  silent no-op). Modes 0/4 share the mirror-aware position gate described
+  above (`owner`'s X position against `self+0x10`/`self+0x14`, direction
+  picked by `owner+0x28` bit 4) before triggering `sub_800C8CC` with mode
+  1 or 6 respectively and always `sub_800C8BC(self, 0)`. Modes 1/6 both
+  toggle `owner+0x28` bit 4 (via the `-0x11`-materialized mask-and-or
+  idiom already established in `actor_part6.c`'s `sub_80086F4`/
+  `sub_8008710` - `mask = -0x11; result = mask & flags; result |=
+  bit << 4;`, **not** a plain XOR, which gcc would compile to a
+  shorter/different instruction sequence) when `owner+0x38` is set, then
+  trigger `sub_800C8CC`/`sub_800C8BC` with different constants (0/1 vs
+  4/1). Mode 1 additionally clamps `owner+0x30` to
+  `min(8, keyframeRecord->0x16 - 1)` when `self+0x6c == 0xf`, reusing the
+  `owner+0x20`-table[`owner+0x2d`]-at-28-byte-stride keyframe-record
+  convention `sub_800D040` documents at length.
+- **`sub_800C244`** (called from state 8): unconditional prelude - once
+  `owner->4` (Y) catches up to `self->0x64`, latches `owner->4 =
+  self->0x64` and fires `sub_800C8BC(self,0)` + `sub_800C8AC(self,0)`
+  every single call after that point (same "guard only matters once,
+  real work happens every call" shape the Phase 1 doc already flagged
+  for `sub_800B8DC` state 9). Two further `self+0x68`-keyed sub-cases
+  split on `owner->0x38`: clear -> modes 0/1 trigger `sub_800C8CC(self,1)`
+  or toggle `owner->0x28` bit 4 then trigger mode 0; set (further gated
+  by `owner->0x30==8 && owner->0x34==0`, the established "blocking
+  condition" pair) -> modes 0/1 both trigger `sub_800C8BC`/
+  `sub_800C8AC(self,3)` and play SFX `0x14`, mode 1 additionally forcing
+  `owner->0x28`'s mirror bit clear first (`sub_800C8BC(self,0)` instead
+  of `sub_800C8BC(self,3)`).
+- **`sub_800C40C`** (called from states 4/13/14/16 - the specific
+  function `docs/rom_map.md` already flagged as sharing `sub_800B8DC`'s
+  own `self+0x68` field): the largest and most complex of the four, a
+  6-case dispatcher (modes 0, 3, 4, 5; 1/2/anything-else a no-op). Modes
+  0/4 share an "impact distance" gate via `sub_803AE4C` (the
+  divide/modulo-style "close enough" scalar primitive) against a
+  `gUnknown_0300082C`-relative table indexed by `self->0x30`/`0x34`/
+  `0x38`, then consult `self->0x84`'s pointed record (`+0xc` for mode 0,
+  `+0x14` for mode 4) against the constant `8` to pick between two
+  `sub_800C8CC` trigger constants; mode 0 also clears `owner->0xd` bit 3
+  and re-triggers `sub_800C8BC(self,0)` when `self->0x6c==0xf`, or when
+  `self->0x6c` is `0x12`/`0x1a`. Mode 3 is the largest single case: when
+  `owner->0x38` is set, triggers `sub_800C8CC(self,4)`, then on
+  `self->0x6c` `0x12`/`0x1a` sets `owner->0xd` bit 3 and plays SFX
+  `0x26`, or on `self->0x6c==0xf` plays SFX `9`; then *unconditionally*
+  (regardless of the `owner->0x38` gate), if `self->0x6c==0x17` and
+  `owner->0x30==9`/`owner->0x34==0`, spawns a part via
+  `sub_8025B0C(gUnknown_030012E4, 0x17, 4, -0x2d, 2, owner)` (matching
+  `game_loop14.c`'s own `sub_8025B0C(arg0, arg1, arg2, margin, z, src)`
+  signature - `gUnknown_030012E4` as the pool, `owner` as `src`, `2` as
+  `z`, `-0x2d` as `margin`), tags the new part's `+0xc` flags/`+0xa`
+  bitmap-id fields (same idiom family as the "flag active + bitmap-set"
+  idiom elsewhere in this cluster), and plays SFX `0x1e`. Mode 5 mirrors
+  mode 3's `owner->0x38` gate into `sub_800C8CC(self,0)` (plus, only for
+  `self->0x6c==0xf`, `sub_800C8BC(self,1)`); a shared tail (also reached
+  directly when `owner->0x38` was already clear) plays SFX `0x23` when
+  `self->0x6c==0xf` and `owner->0x30==8`/`owner->0x34==0`.
+- **`sub_800C5D4`** (called from state 3, and state 13's fallthrough): a
+  3-case dispatcher (modes 0, 2; anything else falls to a shared tail).
+  Unconditional prelude: if `self->0x6c==0xb` and `owner->4 <
+  self->0x64`, latches `owner->4 = self->0x64` and fires
+  `sub_800C8AC(self,0)`. Mode 0 builds a `struct aabb` (the same shape
+  `actor_part4.c`/`actor_part15.c` already use, via `sub_803AFE4`/
+  `sub_803AFDC`) at `owner`'s position offset by `self->0x20`/`0x24`,
+  sized by `self->0x28-0x20`/`self->0x2c-0x24` - a per-instance trigger
+  box distinct from `owner`'s own smaller flags-byte field layout at the
+  same nominal offsets (confirming `self` and `owner`, while sharing
+  *some* field roles per the Phase 1 doc's table, are not literally
+  identical-layout instances at every offset) - mirrors it per
+  `owner->0x28` bit 4, and tests it against the player
+  (`gUnknown_030012D8`) via `sub_800B37C`. On overlap: triggers
+  `sub_800C8CC(self,2)` and, only when `self->0x6c==0xb`, seeds
+  `owner`'s `0x48`-`0x64` velocity-target fields with a fixed knockback
+  impulse (`0x300`/`0x20`/`0`/`-0x200` pattern - same family as
+  `sub_800B8DC` state 17's own fixed jump impulse). Mode 2 triggers
+  `sub_800C8CC(self,0)` only when `owner->0x38` is set.
+
+### Matching
+
+All four transcribed as hand-written NAKED asm, following this
+project's established conventions (unified-syntax mnemonics, numeric
+local labels, `.pool` directives placed at the ROM's own literal-flush
+points). `sub_800C5D4` additionally needed the
+`matching_decomp_alignment_fix` trailing `asm(".align 2, 0")` idiom (its
+own trailing 2 bytes zero-pad to the next 4-byte boundary, same as
+`nullsub_13`/`sub_800C8CC`). Two multi-word `.pool` placement bugs were
+caught and fixed during this pass (both in `sub_800C40C`): the ROM
+places each `.pool` *after* the full conditional block that follows the
+literal's use (not immediately after the `ldr =`/`bl` pair that
+references it) - getting this wrong changes where the assembler inserts
+2-byte alignment padding and desyncs everything downstream by a
+half-instruction, an easy trap confirmed twice in this same function
+before switching to always verifying literal-pool placement via an `-al`
+assembler listing against the ROM's own label offsets rather than
+guessing from the source text alone.
+
+Confirmed byte-identical to `baserom.gba` at `0x0800C074`-`0x0800C246`,
+`0x0800C244`-`0x0800C316` (sic, verified individually per function's own
+address range), `0x0800C40C`-`0x0800C6A8`, and `0x0800C5D4`-`0x0800C6A8`
+(456 B and 212 B respectively for the last two, contiguous with no gap)
+via the isolated `cpp`/`agbcc`/`as` + `objcopy`/`cmp` pipeline (the only
+differences from a direct ROM slice were `bl`/`.word` relocation sites),
+plus a full clean `rm -rf build && make NON_MATCHING=1 report` (no
+warnings from any of the four) and `rm -rf build crashbandicootxs.elf
+crashbandicootxs.gba crashbandicootxs.map && make compare`
+(`crashbandicootxs.gba: La suma coincide`).
+
+A real-C reconstruction was attempted first for all four (this pass's
+initial approach, not skipped) - `sub_800C074`'s dispatch-chain shape,
+case-body ordering, and the mask-and-or bit-toggle idiom were all
+successfully coaxed to match byte-for-byte using register-pinned locals
+and an `asm volatile` block for the boolean materialization (see
+`actor_part6.c`'s own established precedent for this exact idiom), but
+the mode 0/4 "shared-retest" gate (described above) could not be
+reproduced without gcc 2.9 collapsing it to fewer instructions than the
+ROM actually emits - at that point, given the other three functions
+share the identical `self`/`owner` register-pressure shape already
+established as resistant throughout this ROM region, all four were
+switched to NAKED transcription instead of individually re-litigating
+the same wall four times.
+
+### Techniques used
+
+- Hand-transcribed NAKED asm (established escape hatch for this ROM
+  region), reusing the unique-per-function numeric local label
+  convention from `actor_part112.c`.
+- `-al` assembler listing cross-checked against the ROM's own literal
+  label offsets to place every `.pool` directive correctly on the
+  (eventual) first try, after two placement bugs in `sub_800C40C`
+  surfaced the failure mode.
+- `matching_decomp_alignment_fix` trailing `asm(".align 2, 0")` for
+  `sub_800C5D4`'s own non-4-aligned trailing byte count.
+- Verified each function byte-exact in isolation *and* as physically
+  combined into a shared object file (`sub_800C40C`+`sub_800C5D4` in one
+  `actor_part116.c`) - the combined-file build caught a real bug
+  (duplicate/misplaced `.pool` directives reintroduced by hand-copying
+  from the isolated scratch files into the production file) that the
+  per-function isolated tests alone did not, underscoring that the
+  mandatory full `make compare` step is not just a formality even after
+  isolated verification passes.
+
+### Build layout
+
+The four functions now live in three new files: `src/graphics/
+actor_part114.c` (`sub_800C074`), `src/graphics/actor_part115.c`
+(`sub_800C244`), and `src/graphics/actor_part116.c` (`sub_800C40C` +
+`sub_800C5D4`, contiguous in ROM with no gap). The single raw
+`asm/code_3_2_17_bfa8.s` (which held `sub_800BFA8` through
+`sub_800C898`) is split into four pieces around the newly-matched
+functions: `asm/code_3_2_17_bfa8.s` (trimmed to just `sub_800BFA8`),
+`asm/code_3_2_17_c18c.s` (`sub_800C18C`/`sub_800C1E8`, still raw),
+`asm/code_3_2_17_c314.s` (`sub_800C314`, still raw), and
+`asm/code_3_2_17_c6a8.s` (`sub_800C6A8`/`sub_800C860`/`sub_800C87C`/
+`sub_800C898`, still raw). `ldscript.txt` now reads, in this stretch:
 ## Phase 3 (parallel pass): the remaining single-purpose leaves
 
 A second parallel session, tackling exactly the "remaining leaves" the
@@ -672,6 +853,37 @@ new `src/graphics/actor_part117.c`; the untouched, still-raw
 build/crashbandicootxs/src/graphics/actor_part112.o(.text);
 build/crashbandicootxs/asm/code_3_2_17_bfa8.o(.text);
 build/crashbandicootxs/src/graphics/actor_part114.o(.text);
+build/crashbandicootxs/asm/code_3_2_17_c18c.o(.text);
+build/crashbandicootxs/src/graphics/actor_part115.o(.text);
+build/crashbandicootxs/asm/code_3_2_17_c314.o(.text);
+build/crashbandicootxs/src/graphics/actor_part116.o(.text);
+build/crashbandicootxs/asm/code_3_2_17_c6a8.o(.text);
+build/crashbandicootxs/src/graphics/actor_part113.o(.text);
+build/crashbandicootxs/asm/code_3_2_17_c8f8.o(.text);
+```
+
+`tools/report_units.py`'s single `(0x0800BFA8, None, "graphics")`
+placeholder is replaced with seven entries: the same placeholder (now
+only covering `sub_800BFA8`), matched entries for `actor_part114.o`/
+`actor_part115.o`/`actor_part116.o`, and new placeholders
+`(0x0800C18C, None, "graphics")`, `(0x0800C314, None, "graphics")`, and
+`(0x0800C6A8, None, "graphics")` for the still-raw remainders.
+
+### Still open
+
+`sub_800C18C`/`sub_800C1E8` (the X/Y "homing velocity-target setter"
+pair, already fully traced in the Phase 1 doc's own field notes - "self
++0x10-0x1c bounds, gUnknown_030012D8's position, writes owner's
+0x48-0x5c triples", flagged there as "notably simpler register pressure"
+than the dispatchers) remain the single best next target - both are
+called directly from several of `sub_800B8DC`'s own states (10, 11, 15)
+and from `sub_800C5D4` itself. `sub_800C314` (self+0x80 bit-0/parity
+idiom, two different owner+0x28 mirror-bit-toggle bit positions,
+sub_800C8AC/sub_800C8BC/sub_800C8CC triggers) and the `sub_800C6A8`/
+`sub_800C860`/`sub_800C87C`/`sub_800C898` group (the `menu_ui` 31-slot
+dialog dispatcher plus three small `self+0x70`-relative accessor
+triples) round out the rest of this now much-smaller raw remainder
+between `sub_800BFA8` and `sub_800C8AC`.
 build/crashbandicootxs/asm/code_3_2_17_c244.o(.text);
 build/crashbandicootxs/src/graphics/actor_part115.o(.text);
 build/crashbandicootxs/asm/code_3_2_17_c40c.o(.text);
