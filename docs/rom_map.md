@@ -4028,6 +4028,27 @@ register-write helper) is functionally accurate as described, but
 mechanically it's a raw BIOS `CpuSet` SWI wrapper, not a hand-written
 helper.
 
+## Follow-up: `sub_800CF70`'s partial note confirmed, `sub_800CEAC` found and both closed
+
+A dedicated deep-investigation pass (`docs/matching/issue-9-10-0x0800ceac-graphics.md`)
+read the real disassembly for the `sub_800CF70` note above (line ~2137)
+and its immediately-preceding, previously entirely-unremarked sibling
+`sub_800CEAC`. The existing note is confirmed correct and sharpened:
+`sub_800CF70` isn't just "functionally part of" the physics/collision
+subsystem in a loose sense - its entire body is one AABB-build-and-
+overlap-test cycle using that subsystem's own `+0x20`-table convention
+and `self+0x4d&0x7f==1` exclusion gate, operating on the `sub_8010708`
+("get prev") neighbor. `sub_800CEAC` turned out to be a related but
+distinct hybrid-AABB overlap test (player's hitbox quad positioned at
+`self`'s location, optionally widened via an unconfirmed player state
+byte `gUnknown_030012D8+0x90`). Both are called only from
+`sub_0800D18C` and are now NAKED-transcribed, byte-exact matched
+(confirmed via a full clean `make compare`), and recategorized
+`graphics` -> `game_loop` to match their caller - the same
+recategorization issue #12 already applied to the neighboring
+`sub_800D040`. This closes the last raw gap between `sub_800CD00`
+(issue #9/#10) and `sub_800D040` (issue #12).
+
 ## Everything else
 
 The remaining small gaps between landmarks (a few hundred bytes to ~20
