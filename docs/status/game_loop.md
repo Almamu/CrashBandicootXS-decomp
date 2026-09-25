@@ -26,7 +26,19 @@ system from "core" system startup/init code.
   `sub_802319C`, `sub_80231A8`, `sub_80231B4`, `sub_80231BC`,
   `sub_80231C4` (GitHub issue #34, `UpdateGameFrame`-`MainLoop` cluster -
   a `self+0x80`/`0x84`/`0x88`/`0xac`/`0xc0`/`+2`-flags accessor family
-  plus the two frame-counter/limit tick functions)
+  plus the two frame-counter/limit tick functions), and (GitHub issues
+  #35/#36) `sub_80231CC` through `sub_8023484` (49 more functions,
+  formerly `asm/code_3_2_17_231cc.s`, now retired - a direct, fully
+  contiguous continuation of the same `gUnknown_030012C0`-pointed
+  "level" object: more `self+2` flag bits, the `self+0x6c`/`0x70`/
+  `0x74`/`0x78`/`0xbc` counter/threshold-pair family, the `self+0xa4`-
+  `0xa9` busy-flag bank, `self+0x7c`/`0x8c`/`0x90`/`0x94`/`0x98`/`0xc4`/
+  `0xc8`/`0x1c8` fields, five thin `sub_8024428`-family forwarders, two
+  `self+0xc4` "current index" dispatchers, and `sub_8023484` (the
+  counter-notification consumer `sub_8023A1C`/`game_loop56.c` calls to
+  lazily initialize this object - GitHub issue #37's last standing
+  gap) - all matched as real C, no `NAKED` fallbacks needed. See
+  [docs/matching/issue-35-36-0x080231cc-game-loop.md](../matching/issue-35-36-0x080231cc-game-loop.md)
 - `src/system/game_loop3.c` (GitHub issue #40): `sub_8024E68`,
   `sub_8024E90`, `sub_8024EB4` (a viewport/parallax-scroll-layer object)
   and `sub_8024F04`/`sub_8024F0C`/`sub_8024F10`/`sub_8024F14`/
