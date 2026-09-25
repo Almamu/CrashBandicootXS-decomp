@@ -178,3 +178,24 @@ second pass against those five.
   `0x08010914` all now point at their new `.o` files.
 - `docs/matching/issue-13-graphics-fc70.md` - the first pass against
   this same issue, left these five units raw.
+
+## Update: `sub_800FDC8` since matched as real C
+
+`sub_800FDC8`, parked above as a NAKED transcription, is now matched
+as real decompiled C - see
+[naked-sub_800fdc8-matched.md](./naked-sub_800fdc8-matched.md). The
+`goto`-to-a-physically-earlier-label technique that closed
+`sub_8010914`/`sub_801095C` above was necessary but not sufficient
+here: this function's ROM layout keeps *two* genuinely separate
+physical copies of the shared-tail-shaped return (one solo, one shared
+by three), where `sub_8010914`'s gap was a single shared copy in the
+*wrong position*. Closing the anti-merge (not just placement) needed
+the solo copy's return materialized as an opaque `asm volatile` block
+- gcc's cross-jump pass still unified plain-C-goto-placed identical
+instruction sequences by content regardless of source position, but
+never unifies an inline-asm block with a compiler-generated one. This
+entry is left as-is above (a frozen historical record of why the
+function was originally parked); `tools/report_units.py`'s
+`0x0800FDC8` entry now points at `src/system/game_loop33.o` instead of
+`None`, and `docs/status/game_loop.md`'s parked-list entry for it was
+removed in favor of a matched-list entry.

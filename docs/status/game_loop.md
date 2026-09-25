@@ -168,6 +168,18 @@ system from "core" system startup/init code.
   pair) and `sub_8010784`/`sub_80107C4` (two fixed single-octant
   Bresenham-line-style step algorithms). See
   [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
+- `src/system/game_loop33.c` (GitHub issue #13, third pass): `sub_800FDC8`
+  - the full 4-octant Bresenham-line-style line-stepper `sub_8010784`/
+  `sub_80107C4` (game_loop31.c) are fixed single-octant variants of -
+  previously NAKED, now matched as real C via the same source-order
+  block-placement technique as `sub_8010914`/`sub_801095C` (a `goto`
+  to a physically-earlier shared-return label) plus an opaque-asm
+  materialization of the one octant case whose own return must stay
+  physically separate from that shared tail (plain-C placement alone
+  wasn't enough here - this compiler's cross-jump pass still unified
+  it with the shared copy purely by instruction content) and per-case
+  `diff`/`err` register pins (`r6`/`r0`, the ROM's own fixed roles) -
+  see [naked-sub_800fdc8-matched.md](../matching/naked-sub_800fdc8-matched.md).
 - `src/system/game_loop35.c` (GitHub issue #13, third pass, new file -
   it sits between the still-raw `sub_800FF0C` and `sub_80104E4`, so it
   can't join either neighbor's file): `sub_8010480` - a
@@ -246,14 +258,6 @@ plain C didn't converge.
   second pass) - a per-frame position-wrap advance keeping `sb`/`r8`
   live as two extra callee-saved accumulators throughout, the same gap
   as `sub_800D040` above. See
-  [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
-- **`sub_800FDC8`** (`src/system/game_loop33.c`, GitHub issue #13,
-  second pass) - the full 4-octant Bresenham-line-style line-stepper
-  `sub_8010784`/`sub_80107C4` (game_loop31.c) are fixed single-octant
-  variants of; every octant case was individually matched as plain C,
-  but this compiler's cross-jump pass over-merges one octant's own
-  early-return into the shared tail the other three legitimately share
-  in the ROM too (4 bytes short). See
   [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
 - **`sub_8025A64`** (`src/system/game_loop29.c`, new file - not
   contiguous with any other matched run once its three siblings below
