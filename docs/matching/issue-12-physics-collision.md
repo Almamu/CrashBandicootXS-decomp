@@ -394,14 +394,163 @@ group per direct entry point (7 groups), each agent reading its entry
 point first to discover which of the ~12 remaining leaves it pulls in,
 rather than guessing the sub-call graph up front from this doc alone.
 
+## Phase 2, higher-address half: `sub_800EEF0`-`sub_800F990` closed
+
+One of two parallel Phase 2 passes over this cluster's remaining
+18-20-function tail, split by address range (see Phase 1's "grouping
+hint" above). This pass covers the **higher-address half**: the twelve
+functions from `sub_800EEF0` up through the end of the whole cluster,
+`sub_800F990` (`0x0800EEF0`-`0x0800FC70`) - `sub_800EEF0`, `sub_800F06C`,
+`sub_800F1B8`, `sub_800F258`, `sub_800F2BC`, `sub_800F368`,
+`sub_800F4F4`, `sub_800F5B8`, `sub_800F6B8`, `sub_800F798`,
+`sub_800F8E0`, `sub_800F990`. A sibling pass covers the lower-address
+half (`sub_800E560` through `sub_800EDBC`) separately.
+
+All twelve are now **matched via NAKED transcription**, confirmed by a
+full clean `make compare` ("La suma coincide"), the same escape hatch
+Phase 1 used for `sub_0800D18C`/`sub_800E08C`: every one of them
+re-triggers either the `self+0x20`-table/`+0x2d`-tag/28-byte-stride
+AABB-build register shape, or plain high-register (`r8`/`sb`/`sl`)
+cross-block reuse under `-O2` this compiler's allocator doesn't
+reproduce - and given this batch's size (12 functions, ~1730 lines of
+disassembly), transcription was the reliable path to a byte-exact result
+for all of them at once. New file `src/system/game_loop49.c`; real bytes
+formerly the tail of `asm/code_3_2_17_e560.s` (from `sub_800EEF0`
+onward - that file now ends right after `sub_800EDBC`, the sibling
+pass's own territory).
+
+**Mechanics note for future NAKED-transcription passes**: this pass's
+transcription was done with a small Python script (mnemonic map +
+per-function local-label renumbering, the same algorithm Phase 1
+describes) rather than by hand, which is worth reusing for any future
+batch this size. One real bug surfaced and fixed while writing it: a
+`.4byte` literal-pool entry whose *value* is itself a same-function local
+label (a jump-table base address referenced via `ldr rX, =tableLabel`
+immediately followed by `tableLabel: @ jump table`, hit once in
+`sub_800F5B8`) needs its value resolved to an `Nf`/`Nb` local reference
+too, not just the pool entry's own defining label - naively emitting the
+raw ROM label name there produces an undefined-symbol assembler error.
+A second near-miss: a naive `_[0-9A-F]{8}` regex for "is this operand a
+local label reference" also matches *inside* an unrelated global
+symbol's name (e.g. `gUnknown_030012D8` contains `_030012D8`, which
+satisfies the same 8-hex-digit pattern) - needs a
+`(?<![A-Za-z0-9_])...(?![0-9A-F])` boundary guard or it corrupts global
+symbol references in pool data.
+
+**Isolated-compile verification caveat (confirmed again here)**: an
+isolated `cpp`/`agbcc`/`as` + `objcopy`/`cmp` pass against the raw ROM
+bytes at `0x0800EEF0` shows ~470 of 3456 bytes differing purely from
+unresolved relocations (`bl` targets not yet linked, and literal-pool
+words for global addresses reading as 0 in the unlinked object) - not a
+real mismatch. Disassembling both sides and diffing confirms every
+divergent byte is one of exactly these two categories; the authoritative
+check is the full clean `make compare`, which passed outright.
+
+### Per-function roles
+
+- **`sub_800EEF0(self, u8 arg1)`** - the per-edge dispatch's shared
+  **case 4 target** (both `sub_0800D18C`'s and `sub_800E08C`'s own case
+  4: `self+0x4d & 0x7f == 0` gates a call with `arg1=1`). Also called
+  directly by several siblings below (`arg1=0`) whenever their own
+  overlap/state checks reach the same "commit an edge collision"
+  outcome. Clears `self+0x4f`/`self+0x4d`'s low 7 bits, sets `self+0xc`
+  bit `0x10`, re-adds `self` to `gUnknown_0300130C`'s active list
+  (`sub_8009150`), sets `self+0x4d` bit `0x80` then ORs in `arg1` as the
+  low bit. Tags `self+0x2d` (`0x21`, or a `self+0x4e-0x21`-offset
+  rewind when already `0xa`) via the `sub_80087C0`/`sub_80087B4`/
+  `sub_800872C` "set tag, refresh sprite/animation" triplet every
+  state-transition function in this cluster shares. Marks a cell in
+  `gUnknown_030012B4`'s 32x32 collision bitmap, plays a fixed sound
+  (id 4), calls `sub_800EDBC(self)` (sibling pass's territory), and -
+  gated on a combo/proximity check against `gUnknown_0300082C`/
+  `gUnknown_030012D8+0x8c` - `sub_803AD88(self, 0, 4, 0)`. Forces
+  `self+0x4e = 0x13` in the common case (see `sub_800F8E0` below).
+- **`sub_800F06C(self, u32 arg1)`** - called only by `sub_800F798`
+  below (`arg1` = `0x14` or `0x28`, a proximity radius). Two
+  `gUnknown_0300130C` list-scan passes: settles every nearby object via
+  `gStaticData_0816BBC4`/`gStaticData_0816BBAE`-driven dispatch to
+  `sub_800E7A8`/`sub_800F368`/`sub_800F2BC`/`sub_800EEF0`, then a second
+  pass over `gUnknown_030012EC` calling `sub_8011448`. Resets
+  `self+0x48` to the `-1` sentinel at the end.
+- **`sub_800F1B8(void)`** - no arguments. Calls `sub_800F258` first
+  (flush pending case-`0xa` commits), then an up-to-twice
+  `gUnknown_0300130C` list scan removing/re-classifying objects via
+  `sub_8009AA0`/`sub_803AD80`/`sub_803AD7C`, driven by a
+  `gUnknown_030012B0` one-shot re-scan flag.
+- **`sub_800F258(void)`** - no arguments. Settles every
+  `gUnknown_0300130C` object stuck at `+0x4e==0xa`/`+0x4d&0x7f==0` via
+  `sub_800EEF0(other, 0)`. Called by both `sub_800F1B8` and
+  `sub_800F2BC` as a "flush leftovers from last frame" first step.
+- **`sub_800F2BC(self)`** - per-edge dispatch id-row-`6` target (shared
+  by `sub_0800D18C`'s/`sub_800E08C`'s case 0/1). Tags `self+0x2d=0x23`,
+  runs the tag/refresh triplet plus a `sub_8006DF8`-driven `self+0x29`
+  nibble update, flushes via `sub_800F258`, bumps a combo counter
+  (`sub_8028474`), plays sound id 4, arms `self+0x48=1`.
+- **`sub_800F368(self)`** - per-edge dispatch id-row-`3` target (sibling
+  of `sub_800F2BC`, same case). Tags `self+0x2d=0x22`, same triplet +
+  nibble update, marks the collision bitmap (`sub_8025A0C`), then scans
+  `gUnknown_0300130C` for up to 0x20 simultaneously-triggered
+  same-`+0x50`-group neighbors, allocating (`sub_8026EC0`) a linked
+  group list at `self+0x48` when any are found (`-1` sentinel
+  otherwise). Seeds `self+0x4f` from `self+0x4c`.
+- **`sub_800F4F4(self)`** - bumps `self+0x50` against a `self+0x51`
+  cap; once reached, frees `self+0x48`'s group (`sub_8026EB4`) and
+  resets to the `0x13`/`0x14`/`0x15` "settle" family via `self+0x4e=7`.
+  While under the cap, recursively settles every other member of
+  `self+0x48`'s triggered group via `sub_800F5B8`, playing one shared
+  sound (id `0xf`) for the batch.
+- **`sub_800F5B8(self)`** - the group-settle worker `sub_800F4F4`
+  calls. Reinterprets `self+0x48` as a byte offset subtracted into
+  `self+0x4e`, then a 0x13-entry jump table mapping each resulting
+  sub-case to one of a small set of `self+0x2d` tag constants, each
+  through the same tag/refresh triplet, converging on a
+  `sub_800815C`-driven nibble update.
+- **`sub_800F6B8(s32 x, s32 y, s32 arg2, s32 arg3)`** - the one function
+  here taking a raw probe box instead of `self` (existing extern in
+  `actor_part.c`: `sub_800F6B8(part->x>>8, part->y>>8, 0x40, 0x12)`).
+  Scans `gUnknown_0300130C` for objects within `(arg2,arg3)` of the box,
+  dispatching via `gStaticData_0816BBC4`/`gStaticData_0816BBAE` to
+  `sub_800E6B0`/`sub_800E7A8`/`sub_800EEF0` - the same "settle nearby
+  objects" shape as `sub_800F06C`/`sub_800F798`, box-driven instead of
+  `self`-driven.
+- **`sub_800F798(self)`** - the per-edge dispatch's re-entry point once
+  `self+0x4d&0x7f==1` (commit already underway; called from the
+  still-raw `0x080104E4` continuation, outside this issue's scope).
+  Dispatches to `sub_800F06C` per `self+0x30`/`gStaticData_0816BBC4`,
+  unlinks `self` from its neighbor list when `self+0x38` is set
+  (`sub_8010710`/`sub_8010714`), and marks/clears
+  `gUnknown_030012B0`/`gUnknown_030012D8+0x94`'s ring-buffer re-visit
+  bookkeeping.
+- **`sub_800F8E0(self)`** - the `0x13`/`0x14`/`0x15` "settle" family's
+  own small state cycle, guarded by `self+0x4f`'s cooldown throttle.
+  `0x14`->`0x13` and `0x15`->`0x14` each retag/replay the triplet, play
+  a sound (id `0x11`), and set a ~1s cooldown; `0x13` (once
+  `self+0x4d&0x7f==0`) calls `sub_800EEF0(self, 0)`, closing the loop
+  back to the top of this list.
+- **`sub_800F990(self)`** - the cluster's last and largest function
+  (~736 B), called for `self+0x4e==0xf`. A per-frame position-wrap/
+  edge-scan advance structurally similar to the already-parked
+  `sub_800FC70` that immediately follows this whole cluster (see
+  `docs/matching/issue-13-fc70-continuation.md`): clamps `self` within
+  0x4f/0x3f px of the player into a packed `self+0x48` byte, then (only
+  when `self+0x2d==8`) runs a 4-phase `self+0x48&7` state rotation
+  calling `sub_8010A50` to decide whether each phase continues or
+  commits. Self-contained (no calls out to any other function in this
+  cluster) - a full branch-by-branch semantic write-up was not attempted
+  for this pass, since the NAKED transcription's byte-exactness doesn't
+  depend on it.
+
 ## Cross-references
 
 - `docs/status/game_loop.md` - matched/parked/raw lists updated,
   including the `graphics` -> `game_loop` recategorization for this
-  address span, and Phase 1's `sub_0800D18C`/`sub_800E08C` closure.
+  address span, Phase 1's `sub_0800D18C`/`sub_800E08C` closure, and
+  Phase 2's `sub_800EEF0`-`sub_800F990` closure (higher-address half).
 - `tools/report_units.py` - `UNITS` list split/recategorized for
-  `0x0800D040`-`0x0800FC70`, and Phase 1's entry updated to point at
-  the new `src/system/game_loop47.o`.
+  `0x0800D040`-`0x0800FC70`, Phase 1's entry updated to point at the
+  new `src/system/game_loop47.o`, and Phase 2's `0x0800E560` entry split
+  in two at `0x0800EEF0` to point the higher half at the new
+  `src/system/game_loop49.o`.
 - `docs/rom_map.md` - "Confirmed: a shared physics/collision
   subsystem, entered from multiple different entity types" and the
   preceding "Cross-checked the `UpdateGameFrame`-`MainLoop` cluster"
