@@ -35,7 +35,8 @@
  * and `lsl #18/lsr #18`, `lsl #16/lsr #30` field extraction. The
  * refcount updates use an r1-pinned temp, `sub_8026448`'s `+0x34`
  * update is a narrow inline-asm block (same case as `sub_8025D74`), and
- * `sub_80264F8` is parked - see its comment. See
+ * `sub_80264F8` needs two more (constant-before-load for the residency
+ * test, and its refcount update) - see the comments there. See
  * docs/matching/issue-43-level-layers.md.
  *
  * Real bytes formerly the tail of `asm/code_3_2_17_25fc8.s` (that file
@@ -173,34 +174,26 @@ void sub_802648C(struct tile_slot_pool *pool)
         pool->refCount[i] = 0;
 }
 
-/* Parked: fully understood, but not byte-exact as C. The C below differs
- * from the ROM only in the order of two independent instructions ahead of
- * the "already resident?" test: the ROM materializes the 0x200 constant
- * (`mov r1, #0x80; lsl r1, r1, #2`) before the `ldrh r0, [r0]` of
- * `slotForTile[id]`, this compiler emits the load first. Every other
- * instruction and register matches. Tried: constant/operand order and
- * type (`0x200 != cur`, `(u16)`, `0x200u`, `sizeof`-derived), unpinned
- * and s32-typed `cur`, `==`-with-swapped-branches, predicate inline
- * helpers, pinning the constant to r1 before or after the load, pinning
- * the entry address to r0, an inline-asm constant+load pair and an empty
- * asm barrier - each either reorders the constant ahead of unrelated
- * setup or perturbs the whole function's register allocation. The
- * matching build uses a NAKED transcription of the ROM instructions
- * instead; `make NON_MATCHING=1` builds the C. See
- * docs/matching/issue-43-level-layers.md. */
-#if NON_MATCHING
 u16 sub_80264F8(struct tile_slot_pool *pool, u16 tile)
 {
     union tile_ref ref;
     union bg_entry out;
     u16 slot;
-    register u16 count asm("r1");
 
     ref.raw = tile;
     {
         s32 id = ref.bits.id;
-        register u16 cur asm("r0") = pool->slotForTile[id];
-        if (cur != TILE_SLOT_NONE)
+        register u32 cur asm("r0");
+        register s32 none asm("r1");
+
+        /* The ROM materializes 0x200 before loading the entry; gcc always
+         * loads a compare's memory operand first. The "m" operand keeps
+         * the address computation (and its ordering) in the compiler's
+         * hands - only the constant and the load are fixed here. */
+        asm("mov %1, #0x80\n\tlsl %1, %1, #2\n\tldrh %0, %2"
+            : "=r"(cur), "=&r"(none)
+            : "m"(pool->slotForTile[id]));
+        if (cur != none)
             slot = GetTileSlot(pool, id);
         else
         {
@@ -209,100 +202,18 @@ u16 sub_80264F8(struct tile_slot_pool *pool, u16 tile)
             sub_80265FC(pool, id, slot);
         }
     }
-    count = pool->refCount[slot] + 1;
-    pool->refCount[slot] = count;
+    {
+        /* A plain `pool->refCount[slot]++` swaps r0/r1 against the ROM, and
+         * pinning the count to r1 instead swaps r4/r5 for the whole
+         * function; fixing just the three-instruction update closes both. */
+        u32 c;
+
+        asm("ldrh %0, %1\n\tadd %0, #1\n\tstrh %0, %1" : "=&l"(c), "+m"(pool->refCount[slot]));
+    }
     out.raw = slot;
     out.bits.flip = ref.bits.flip;
     return out.raw;
 }
-#else /* !NON_MATCHING */
-NAKED u16 sub_80264F8(struct tile_slot_pool *pool, u16 tile)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, r8\n\t"
-        "push {r7}\n\t"
-        "add r5, r0, #0\n\t"
-        "lsl r1, r1, #0x10\n\t"
-        "lsr r1, r1, #0x10\n\t"
-        "ldr r0, _08026530\n\t"
-        "mov r2, r8\n\t"
-        "and r2, r0\n\t"
-        "orr r2, r1\n\t"
-        "mov r8, r2\n\t"
-        "lsl r0, r2, #0x12\n\t"
-        "lsr r0, r0, #0x12\n\t"
-        "mov ip, r0\n\t"
-        "lsl r7, r0, #1\n\t"
-        "mov r4, #0x81\n\t"
-        "lsl r4, r4, #3\n\t"
-        "add r0, r5, r4\n\t"
-        "add r0, r0, r7\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #2\n\t"
-        "ldrh r0, [r0]\n\t"
-        "cmp r0, r1\n\t"
-        "beq _08026534\n\t"
-        "add r0, r5, r4\n\t"
-        "add r0, r0, r7\n\t"
-        "ldrh r4, [r0]\n\t"
-        "b _0802655E\n\t"
-        ".align 2, 0\n"
-        "_08026530: .4byte 0xFFFF0000\n\t"
-        "_08026534:\n"
-        "ldr r0, _08026590\n\t"
-        "add r3, r5, r0\n\t"
-        "ldr r1, [r3]\n\t"
-        "lsl r2, r1, #1\n\t"
-        "ldr r4, _08026594\n\t"
-        "add r0, r5, r4\n\t"
-        "add r0, r0, r2\n\t"
-        "ldrh r0, [r0]\n\t"
-        "add r1, #1\n\t"
-        "str r1, [r3]\n\t"
-        "add r4, r0, #0\n\t"
-        "mov r1, #0x81\n\t"
-        "lsl r1, r1, #3\n\t"
-        "add r0, r5, r1\n\t"
-        "add r0, r0, r7\n\t"
-        "strh r4, [r0]\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r1, ip\n\t"
-        "add r2, r4, #0\n\t"
-        "bl sub_80265FC\n\t"
-        "_0802655E:\n"
-        "lsl r1, r4, #1\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #8\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrh r1, [r0]\n\t"
-        "add r1, #1\n\t"
-        "strh r1, [r0]\n\t"
-        "ldr r0, _08026598\n\t"
-        "and r6, r0\n\t"
-        "orr r6, r4\n\t"
-        "mov r2, r8\n\t"
-        "lsl r0, r2, #0x10\n\t"
-        "lsr r0, r0, #0x1e\n\t"
-        "lsl r0, r0, #0xa\n\t"
-        "ldr r1, _0802659C\n\t"
-        "and r6, r1\n\t"
-        "orr r6, r0\n\t"
-        "lsl r0, r6, #0x10\n\t"
-        "lsr r0, r0, #0x10\n\t"
-        "pop {r3}\n\t"
-        "mov r8, r3\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n"
-        "_08026590: .4byte 0x00004808\n\t"
-        "_08026594: .4byte 0x00004408\n\t"
-        "_08026598: .4byte 0xFFFF0000\n\t"
-        "_0802659C: .4byte 0xFFFFF3FF\n\t"
-    );
-}
-#endif /* NON_MATCHING */
 
 void sub_80265A0(struct tile_slot_pool *pool, u32 tile)
 {

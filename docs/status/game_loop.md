@@ -299,15 +299,16 @@ system from "core" system startup/init code.
   comment already documented). Closed both as hand-transcribed NAKED
   functions instead - see
   [docs/matching/issue-9-10-41-0x08026628-game-loop.md](../matching/issue-9-10-41-0x08026628-game-loop.md).
-- **`sub_8026418`/`sub_8026448`/`sub_8026480`/`sub_802648C`/`sub_80265A0`/`sub_80265FC`/`sub_8026618`**
+- **`sub_8026418`/`sub_8026448`/`sub_8026480`/`sub_802648C`/`sub_80264F8`/`sub_80265A0`/`sub_80265FC`/`sub_8026618`**
   (`src/system/tile_slot_pool.c`, new file - GitHub issue #43) - BG
   layer 0 of the level-layers singleton (constructor/destructor chaining
   to the `sub_8025D74` BG-scroll-layer base) and its reference-counted
   VRAM tile-slot pool (0x2000 source tiles onto 0x200 slots): reset,
-  release, tile DMA, base setup. Static-inline push/slot-table helpers
+  acquire, release, tile DMA, base setup. Static-inline push/slot-table helpers
   reproduce the ROM's uncached address recomputation; r1-pinned refcount
   temps; a narrow inline-asm `+0x34` bitfield update (same case as
-  `sub_8025D74`). `sub_80264F8` (acquire) is parked, see below. See
+  `sub_8025D74`); `sub_80264F8` (acquire) needed two more
+  three-instruction asm anchors (constant-before-load, refcount update). See
   [docs/matching/issue-43-level-layers.md](../matching/issue-43-level-layers.md).
 - **`sub_80266BC`/`sub_80267A0`/`sub_802680C`/`sub_80268AC`/`sub_80268D0`/`sub_80268F8`/`sub_802692C`/`sub_8026984`/`sub_80269DC`/`sub_80269F8`/`sub_8026A14`**
   (`src/system/level_layers.c`, new file - GitHub issue #43) - the
@@ -370,14 +371,6 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
-- **`sub_80264F8`** (`src/system/tile_slot_pool.c` - GitHub issue #43) -
-  tile-slot acquire: looks up / allocates a VRAM slot for a source tile,
-  queues its DMA, bumps the refcount, returns a BG map entry with the
-  tile's flip bits moved to bits 10-11. The `NON_MATCHING` C differs
-  from the ROM only by the order of the `0x200` constant materialization
-  and the `slotForTile` load ahead of the residency test; the matching
-  build uses a NAKED transcription. See
-  [docs/matching/issue-43-level-layers.md](../matching/issue-43-level-layers.md).
 - **`sub_8023A1C`** (`src/system/game_loop56.c`, new file - GitHub
   issue #37, ROM `0x08023A1C`-`0x0802400C`) - the ~650-instruction
   level-lifecycle state machine `sub_802375C` unconditionally hands off

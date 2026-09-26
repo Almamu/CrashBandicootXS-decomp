@@ -2,9 +2,9 @@
 
 `sub_8026628`, `sub_8026A18`, `sub_8026AE8`, `sub_8026BC0`, `sub_8026BF8`
 and `sub_8026C3C` were already matched before this pass. Of the remaining
-19 functions, 18 are byte-exact matched as C and one (`sub_80264F8`) is
-parked under `NON_MATCHING` with a NAKED transcription in the matching
-build. Nothing left raw.
+19 functions, all 19 are byte-exact matched as C (three of them with
+narrow inline-asm anchors, described below). Nothing parked, nothing left
+raw.
 
 - `src/system/level_layers.c` - 11 functions, the whole of the former
   `asm/code_3_2_17_266bc.s`.
@@ -114,22 +114,30 @@ character base block `n` and a source.
 - **Trailing `asm(".align 2, 0")`** on `tile_slot_pool.c` (caught by the
   full build as a 2-byte `46C0` vs `0000` pad at `0x08026626`).
 
-### `sub_80264F8` - parked
+### `sub_80264F8` - two narrow inline-asm anchors
 
-With all of the above, the C differs from the ROM only in the order of
-two independent instructions ahead of the residency test: the ROM
-materializes `0x200` (`mov r1, #0x80; lsl r1, r1, #2`) before `ldrh r0,
-[r0]` of `slotForTile[id]`, this compiler emits the load first. Tried:
-comparison operand order and constant type (`0x200 != cur`, `(u16)`,
-`0x200u`, a `sizeof`-derived count), unpinned / `s32` / r0-pinned
-`cur`, `==` with swapped branches (different block layout), predicate
-inline helpers (loses the reload in the hit path), pinning the constant
-to r1 before the load (hoists it above unrelated setup), pinning the
-entry address to r0 (reshuffles every callee-saved register), a
-combined inline-asm constant+load (adds a zero-extend and reshuffles),
-and an empty asm barrier. Parked under `#if NON_MATCHING` with the
-3-instruction-diff C; the matching build uses a NAKED transcription
-generated directly from the original `asm/code_3_2_17_25fc8.s` block.
+With all of the above, plain C gets within one instruction swap: the
+ROM materializes `0x200` (`mov r1, #0x80; lsl r1, r1, #2`) *before* the
+`ldrh r0, [r0]` of `slotForTile[id]` it's compared against, and this
+compiler always loads a comparison's memory operand first (`-fforce-mem`
+at `-O2`). Plain-C attempts that didn't work: comparison operand order and
+constant type (`0x200 != cur`, `(u16)`, `0x200u`, a `sizeof`-derived
+count), arithmetic/`switch`/`goto` forms of the test, unpinned / `s32` /
+r0-pinned `cur`, a pinned constant before or after the load, `volatile`
+(breaks the other functions), pointer locals for the entry (lets CSE drop
+the hit path's reload, which the ROM keeps), and inline helpers taking
+the entry address and constant as arguments (gets the constant order
+right but re-associates the address as `(id*2 + 0x408) + pool`).
+
+What closes it: an asm block containing just the constant and the load,
+taking the entry as an `"m"` operand so the compiler still computes the
+address itself (in the ROM's `(pool + 0x408) + id*2` order), with `cur`/
+`none` pinned to r0/r1 for the following `cmp r0, r1`. That leaves the
+refcount update: plain `pool->refCount[slot]++` swaps r0/r1 against the
+ROM, and pinning the new count to r1 (the `sub_80265A0` fix) swaps r4/r5
+across the whole function once the first asm block is present. A second
+three-instruction block for the update (`ldrh`/`add #1`/`strh` on a
+`"+m"` operand, unpinned `"=&l"` temp) closes both.
 
 Verified with a full clean `rm -rf build && make NON_MATCHING=1 report`
 and `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
