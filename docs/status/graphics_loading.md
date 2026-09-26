@@ -165,6 +165,14 @@ below.)
   with no extra `mov` - see
   [docs/matching/naked-sub_801e990-matched.md](../matching/naked-sub_801e990-matched.md)
   for the full derivation.
+- **`sub_80360C0`** (`src/graphics/graphics_loading_35780.c`) - a
+  standalone one-shot rolling-hash update (rotate-left-1 then multiply
+  by 521), the same primitive `sub_8035D1C` inlines for its "cheat code"
+  detector. Matched as real C once the rotate was register-pinned
+  (`hi`/`lo` to `r3`/`r2`) to stop agbcc folding the natural
+  `(v << 1) | (v >> 31)` idiom into a single Thumb `ROR` instruction the
+  ROM's own build never emits. See
+  [issue-65-0x08035780-graphics-loading.md](../matching/issue-65-0x08035780-graphics-loading.md).
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
@@ -315,6 +323,27 @@ Both hit the same confirmed `r7`-pin gap as `sub_8007114`
   `sub_801E688` above and `sub_80240E4` (`src/system/game_loop8.c`).
   Transcribed instruction-for-instruction instead. See
   [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md).
+- **`sub_8035780`**, **`sub_80358A8`**, **`sub_8035D1C`**, **`sub_8035E14`**,
+  **`sub_8035F9C`**, **`sub_8035FEC`**, **`sub_8036068`**, **`sub_80360DC`**,
+  **`sub_8036154`**, **`sub_80361B0`**, **`sub_8036528`**, **`sub_8036600`**,
+  **`sub_8036668`**, **`sub_803686C`**, **`sub_8036CF4`**, **`sub_8036E20`**,
+  **`sub_8036EC4`**, **`sub_8036FBC`** (`src/graphics/graphics_loading_35780.c`)
+  - the rest of issue #65's chunk: a 9-slot (later, 20-slot) position/
+  velocity record-array updater family operating on the same 0x220-byte
+  scratch object `LoadLevelGraphics` returns, a BG2 affine-scroll setup/
+  flush pair, a 7-slot rolling-hash "cheat code" detector, the level-
+  object subsystem's own init/run/teardown driver and its BG2 tileset/
+  palette/tilemap-remap loaders, and (unrelated to the scratch object)
+  an actor-part constructor/animation-state-machine/OAM-builder trio.
+  Each was attempted as real C first; each hit a different flavor of
+  this compiler's register-allocation or code-layout gaps (cross-jump/
+  tail-merging collapsing the ROM's own duplicated address computations,
+  a shared-base pointer the ROM never hoists, extensive `sb`/`sl`/`r8`/
+  `ip` shuffling) that didn't converge within a reasonable number of
+  passes, so all 18 are NAKED transcriptions instead - confirmed
+  byte-identical via a direct assemble + `objcopy --only-section=.text`
+  + byte comparison against `baserom.gba` before integrating. See
+  [issue-65-0x08035780-graphics-loading.md](../matching/issue-65-0x08035780-graphics-loading.md).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
