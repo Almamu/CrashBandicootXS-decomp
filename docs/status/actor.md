@@ -546,6 +546,16 @@ from "core" graphics.
   see
   [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
   `nullsub_27` - a genuine no-op stub.
+- `src/graphics/actor_part128.c` (new file, ROM `0x0802E0A4`-
+  `0x0802F0DC`, the gap between issue #54's chunk and issue #56's
+  chunk): `sub_802E0A4` (a state-3 anim-frame edge reset) and
+  `sub_802E484`/`sub_802E504`/`sub_802E57C`/`sub_802E5B0` (four
+  `mem_alloc`-plus-forwarding-call constructors, part of the
+  `sub_802E170` 31-case dispatcher's own per-"kind" case family). Just
+  4 of this gap's 25 functions matched as real C; the other 21 are
+  NAKED-parked in the same file, see the "Parked - NAKED transcription"
+  section below. See
+  [docs/matching/issue-54-issue-56-gap-e0a4.md](../matching/issue-54-issue-56-gap-e0a4.md).
 - `src/graphics/actor_part63.c`/`actor_part65.c`/`actor_part67.c`/
   `actor_part69.c`/`actor_part71.c`/`actor_part72.c`/`actor_part73.c`
   (new files, GitHub issue #63, ROM 0x08033EF4-0x08034AA4 - three
@@ -680,6 +690,23 @@ doesn't advance that even when byte-correct. See
 established convention, and each entry's linked write-up for why
 plain C didn't converge.
 
+- **`sub_802E0CC`**, **`sub_802E170`**, **`sub_802E3CC`**,
+  **`sub_802E420`**, **`sub_802E4B8`**, **`sub_802E538`**,
+  **`sub_802E5E4`**, **`sub_802E62C`**, **`sub_802E674`**,
+  **`sub_802E6CC`**, **`sub_802E710`**, **`sub_802E740`**,
+  **`sub_802E84C`**, **`sub_802E9FC`**, **`sub_802EB78`**,
+  **`sub_802EC64`**, **`sub_802ED10`**, **`sub_802EDBC`**,
+  **`sub_802EED0`**, **`sub_802EFD8`** (`src/graphics/actor_part128.c`,
+  ROM `0x0802E0A4`-`0x0802F0DC`, the gap between issues #54 and #56) -
+  a 31-case jump-table dispatcher (`sub_802E170`, indexing a stride-40
+  per-"kind" RAM table `docs/rom_map.md` already flagged), the rest of
+  its own per-"kind" constructor-family case bodies (each with `r8`/
+  `sb`, and for `sub_802E9FC` also `sl`, simultaneously live), and a
+  run of `self`-object position-offset/physics/hazard-timer helpers.
+  Parked outright rather than chased at the C level given this gap's
+  size and how heavily this whole neighborhood already needs the NAKED
+  escape hatch. See
+  [docs/matching/issue-54-issue-56-gap-e0a4.md](../matching/issue-54-issue-56-gap-e0a4.md).
 - **`sub_802B364`**, **`sub_802B5B4`**, **`sub_802B730`**,
   **`sub_802B7E0`**, **`sub_802B864`**, **`sub_802B8E8`**,
   **`sub_802B990`**, **`sub_802BA5C`**, **`sub_802BAD0`**,

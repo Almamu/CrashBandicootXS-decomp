@@ -411,7 +411,31 @@ UNITS = [
     (0x0802DFBC, "src/graphics/actor_part60.o", "actor"),  # sub_802DFBC-sub_802DFDC (issue #54): the gUnknown_030014BC object's state-flag setter, destructor, and constructor; matched - see docs/matching/issue-54-actor-d3a8.md
     (0x0802E058, None, "actor"),  # sub_802E058 (issue #54) - a parameterized twin of sub_802DE70's VRAM gauge-tile pattern loop - NAKED transcription, byte-correct but not real decompiled C, tracked as parked - see docs/matching/issue-54-actor-d3a8.md
     (0x0802E0A0, "src/graphics/actor_part61.o", "actor"),  # nullsub_27 (issue #54): genuine no-op stub; matched
-    (0x0802E0A4, None, "actor"),  # remainder of the actor zone after issue #54's chunk, still raw
+    (0x0802E0A4, "src/graphics/actor_part128.o", "actor"),  # sub_802E0A4 (0x0802E0A4-0x0802F0DC gap, between issues #54/#56): state-3 anim-frame edge reset; matched - see docs/matching/issue-54-issue-56-gap-e0a4.md
+    (0x0802E0CC, None, "actor"),  # sub_802E0CC: kind-classification/spawn dispatch helper (sub_8031040/sub_802E170/sub_8033264 tail calls); NAKED, real bytes in src/graphics/actor_part128.c - see docs/matching/issue-54-issue-56-gap-e0a4.md
+    (0x0802E170, None, "actor"),  # sub_802E170: the 31-case jump-table dispatcher docs/rom_map.md flagged (gUnknown_030014D8 stride-40 per-"kind" table); NAKED (switch-codegen-exactness risk) - see docs/matching/issue-54-issue-56-gap-e0a4.md
+    (0x0802E3CC, None, "actor"),  # sub_802E3CC: NAKED - see docs/matching/issue-54-issue-56-gap-e0a4.md
+    (0x0802E420, None, "actor"),  # sub_802E420: NAKED - see docs/matching/issue-54-issue-56-gap-e0a4.md
+    (0x0802E484, "src/graphics/actor_part128.o", "actor"),  # sub_802E484: sub_802E170's kind-0 constructor (mem_alloc + sub_8032890 forward); matched - see docs/matching/issue-54-issue-56-gap-e0a4.md
+    (0x0802E4B8, None, "actor"),  # sub_802E4B8: NAKED (r8/sb pressure) - see docs/matching/issue-54-issue-56-gap-e0a4.md
+    (0x0802E504, "src/graphics/actor_part128.o", "actor"),  # sub_802E504: same constructor shape as sub_802E484, forwards to sub_80342D4; matched - see docs/matching/issue-54-issue-56-gap-e0a4.md
+    (0x0802E538, None, "actor"),  # sub_802E538: NAKED (r8 pressure) - see docs/matching/issue-54-issue-56-gap-e0a4.md
+    (0x0802E57C, "src/graphics/actor_part128.o", "actor"),  # sub_802E57C: same constructor shape as sub_802E484, forwards to sub_8033EF4; matched - see docs/matching/issue-54-issue-56-gap-e0a4.md
+    (0x0802E5B0, "src/graphics/actor_part128.o", "actor"),  # sub_802E5B0: same constructor shape as sub_802E484, forwards to sub_8033BB8; matched - see docs/matching/issue-54-issue-56-gap-e0a4.md
+    (0x0802E5E4, None, "actor"),  # sub_802E5E4: NAKED (r8/sb pressure) - see docs/matching/issue-54-issue-56-gap-e0a4.md
+    (0x0802E62C, None, "actor"),  # sub_802E62C: NAKED - see docs/matching/issue-54-issue-56-gap-e0a4.md
+    (0x0802E674, None, "actor"),  # sub_802E674: NAKED (r8/sb pressure) - see docs/matching/issue-54-issue-56-gap-e0a4.md
+    (0x0802E6CC, None, "actor"),  # sub_802E6CC: NAKED (r8/sb pressure) - see docs/matching/issue-54-issue-56-gap-e0a4.md
+    (0x0802E710, None, "actor"),  # sub_802E710: NAKED - see docs/matching/issue-54-issue-56-gap-e0a4.md
+    (0x0802E740, None, "actor"),  # sub_802E740: NAKED - see docs/matching/issue-54-issue-56-gap-e0a4.md
+    (0x0802E84C, None, "actor"),  # sub_802E84C: NAKED - see docs/matching/issue-54-issue-56-gap-e0a4.md
+    (0x0802E9FC, None, "actor"),  # sub_802E9FC: NAKED (r8/sb/sl pressure) - see docs/matching/issue-54-issue-56-gap-e0a4.md
+    (0x0802EB78, None, "actor"),  # sub_802EB78: NAKED - see docs/matching/issue-54-issue-56-gap-e0a4.md
+    (0x0802EC64, None, "actor"),  # sub_802EC64: NAKED - see docs/matching/issue-54-issue-56-gap-e0a4.md
+    (0x0802ED10, None, "actor"),  # sub_802ED10: NAKED - see docs/matching/issue-54-issue-56-gap-e0a4.md
+    (0x0802EDBC, None, "actor"),  # sub_802EDBC: NAKED - see docs/matching/issue-54-issue-56-gap-e0a4.md
+    (0x0802EED0, None, "actor"),  # sub_802EED0: NAKED - see docs/matching/issue-54-issue-56-gap-e0a4.md
+    (0x0802EFD8, None, "actor"),  # sub_802EFD8: NAKED - see docs/matching/issue-54-issue-56-gap-e0a4.md
     (0x0802F0DC, "src/graphics/actor_part43.o", "actor"),  # sub_802F0DC/sub_802F164 (issue #56): constructor/reset plus the ~160-instruction state-machine update (incl. a `mov pc, r0` 5-case jump table) for the second boss-weapon "spawn/pre-attack" singleton; both matched
     (0x0802F338, "src/graphics/actor_part43b.o", "actor"),  # sub_802F338 (issue #56): computes two keyframe-driven tile-cache sizes via AllocVramTileBlock; matched
     (0x0802F3BC, "src/graphics/actor_part44.o", "actor"),  # sub_802F3BC-sub_802F6DC (issue #56, 14 functions): accumulator-drain/reward-dispenser, accessors, accumulator drivers, state-transition idioms, and the singleton's teardown/destructor; matched
