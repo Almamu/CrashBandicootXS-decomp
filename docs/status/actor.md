@@ -674,6 +674,29 @@ from "core" graphics.
   `sub_80306A4`/`sub_8033CF0`) - see
   [docs/matching/issue-59-0x08031784-actor.md](../matching/issue-59-0x08031784-actor.md).
 
+- `src/graphics/actor_part130.c` (new file, ROM 0x080326E4-0x08033804,
+  Phase 2 second half of the boss-weapon/singleton cluster's gap between
+  issue #58 and issue #62 - a sibling pass, `actor_part129.c`, covers
+  the first half, `0x08031A6C`-`0x080326E4`): `sub_80326E4` (`InitActorPart`
+  constructor), `sub_8032714`/`sub_803290C` (trivial "true" getters),
+  `sub_8032890` (homing "spawn effect" constructor, byte-for-byte twin
+  of `sub_802C3E8`), `sub_8032910`/`sub_8032A24` (damage/death-transition
+  and patrol-speed decay + death transition, sharing the same
+  state/anim-frame reset tail as `sub_80318B4`), `sub_80329D4`
+  (`InitActorPart` constructor, same shape as `sub_8033BB8`, `c`
+  pinned to `r8`), `sub_8032A1C`/`sub_8032AF0` (trivial `self+0x68`
+  byte setter/getter), `sub_8032AF8` (the P2 VRAM-meter's palette
+  blink/flash effect, gated by `sub_8033804`'s one-shot latch),
+  `sub_8033048` (singleton patrol/oscillation driver, structurally
+  parallel to the boss cluster's `sub_8030734`), `sub_8033550`
+  (singleton's own BG2 affine-matrix committer, mirrors `sub_80312C4`),
+  `sub_80337E4`/`nullsub_34`/`sub_80337FC`/`nullsub_35` (singleton
+  destructor, no-op stub, trivial "false" getter, no-op stub) - opens
+  the singleton's own camera-follow/scroll-velocity RAM family
+  (`gUnknown_030015A0`-`030015FF`, reusing `actor_part28.c`'s existing
+  naming for the fields that family already touches) - see
+  [docs/matching/issue-60-61-gap-31a6c-part2.md](../matching/issue-60-61-gap-31a6c-part2.md).
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
@@ -1084,6 +1107,74 @@ plain C didn't converge.
   by `self+0x28`. Fully understood; resists a byte-exact reproduction
   of the ROM's specific `r7`-as-table-base-pin choice. See
   `docs/matching/issue-59-0x08031784-actor.md`.
+- **`sub_803283C`** (`src/graphics/actor_part130.c`) - reward-dispensing
+  teardown (same shared shape as `sub_803B0C4`). Fully understood; this
+  compiler's parameter-register prologue shuffle copies the incoming
+  `flags`/`self` pair in the opposite order from the ROM's own build,
+  and forcing that order with a compiler barrier hits the categorical
+  `r7` push/pop-drop hazard instead. See
+  `docs/matching/issue-60-61-gap-31a6c-part2.md`.
+- **`sub_8032718`/`sub_8032A94`** (`src/graphics/actor_part130.c`) -
+  the shared anim-frame-advance-and-clamp idiom (`sub_8032718`) and a
+  `gStaticData_0817C450` stride-8 table-lookup (`sub_8032A94`). Fully
+  understood; hit the same established gaps as `sub_80318D0`'s idiom and
+  `sub_8031A08`'s `r7`-table-base pin respectively. See
+  `docs/matching/issue-60-61-gap-31a6c-part2.md`.
+- **`sub_80327A4`** (`src/graphics/actor_part130.c`) - bounding-box-culled
+  sprite draw via `GetAnimFrameData`/`sub_803B060`/`SetupSpriteFrameOam`.
+  Fully understood; hits the same `r8`-flag-across-calls shape already
+  documented in full for `UpdateAnimatedActorPart` (issue #50,
+  `actor_part55.c`). See `docs/matching/issue-60-61-gap-31a6c-part2.md`.
+- **`sub_8032950`** (`src/graphics/actor_part130.c`) - the same
+  `gStaticData_0817C450` table-lookup as `sub_8032A94`, plus a
+  popup/predicate tail. Fully understood; same `r7`-table-base pin gap.
+  See `docs/matching/issue-60-61-gap-31a6c-part2.md`.
+- **`sub_8032B6C`** (`src/graphics/actor_part130.c`) - the P1/P2
+  speed-toggle dispatcher (fully inlining `sub_8033828`'s own shape
+  twice, once per schedule case) plus a category-vtable animation
+  dispatch. Fully understood; inlines the same cross-jump-merging
+  register-pin hazard `sub_8033828` (issue #62) needed exact pins to
+  avoid, twice over, plus an outer frame-counter dispatch. See
+  `docs/matching/issue-60-61-gap-31a6c-part2.md`.
+- **`sub_8032C0C`/`sub_8032EA0`** (`src/graphics/actor_part130.c`) -
+  opens the singleton's own camera-follow/scroll-velocity smoothing
+  computation (`gUnknown_030015B4`-`030015EC`), split across two
+  functions. Fully understood; many-high-register (`ip`/`sb`/`r8`)
+  allocation gap, the same class already documented for `sub_8031604`.
+  See `docs/matching/issue-60-61-gap-31a6c-part2.md`.
+- **`sub_80330FC`** (`src/graphics/actor_part130.c`) - the singleton's
+  own BG-tilemap-blit tile consumer, same mechanics as the boss
+  cluster's `sub_8030D48` on a separate global cluster. Fully
+  understood; many-high-register (`sl`/`sb`/`r8`) allocation gap. See
+  `docs/matching/issue-60-61-gap-31a6c-part2.md`.
+- **`sub_80331BC`** (`src/graphics/actor_part130.c`) - the missing
+  constructor for the whole `gUnknown_030015AC` singleton system - see
+  `docs/rom_map.md`'s "`sub_80331BC` closes a long-open question".
+  Fully understood; a plain-C attempt kept the freshly allocated
+  pointer and `&gUnknown_030015AC` in the same register and only used
+  one "zero" register where the ROM keeps two, 4 bytes short of the
+  ROM once linked (undetectable from the isolated compile alone). See
+  `docs/matching/issue-60-61-gap-31a6c-part2.md`.
+- **`sub_8033264`** (`src/graphics/actor_part130.c`) - the
+  animation-system-wired constructor/init step for the singleton
+  object, burst-spawning effect objects around it. Fully understood;
+  many-high-register (`sb`/`sl`/`r8`) allocation gap. See
+  `docs/matching/issue-60-61-gap-31a6c-part2.md`.
+- **`sub_8033470`** (`src/graphics/actor_part130.c`) - the singleton's
+  per-frame animate+project+tile-stream update driver, structurally
+  parallel to the boss cluster's `sub_8031504`. Fully understood; a
+  plain-C attempt produced 4 *extra* bytes once linked. See
+  `docs/matching/issue-60-61-gap-31a6c-part2.md`.
+- **`sub_8033604`** (`src/graphics/actor_part130.c`) - the top-level
+  per-frame driver for the whole singleton system, fired once by
+  `sub_80331BC`. Fully understood; a plain-C attempt using the
+  `DmaSet()` macro was 24 bytes short of the ROM once linked. See
+  `docs/matching/issue-60-61-gap-31a6c-part2.md`.
+- **`sub_80336CC`** (`src/graphics/actor_part130.c`) - the P2-side VRAM
+  fill-level meter, a near-identical twin of the already-matched
+  `sub_8031604` (issue #58, `actor_part26c.c`). Fully understood; same
+  many-high-register (`sl`/`sb`/`r8`) allocation gap documented there
+  in full. See `docs/matching/issue-60-61-gap-31a6c-part2.md`.
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
