@@ -457,6 +457,16 @@ from "core" graphics.
   matched in a later pass that closed the register-pinning/pool-split
   gaps documented in that same writeup (all 25 of this chunk's functions
   are now real C, none NAKED).
+- `src/graphics/actor_part127.c` (new file, ROM `0x0802B364`-`0x0802BC68`
+  - the start of the actor zone before issue #52, right before
+  `actor_part107.c`'s own range): `sub_802BB4C` - a frame-counter
+  threshold DMA driver sharing the same reset idiom as `sub_802B730`.
+  Just 1 of this gap's 11 functions matched as real C; the other 10
+  (`sub_802B364`, `sub_802B5B4`, `sub_802B730`, `sub_802B7E0`,
+  `sub_802B864`, `sub_802B8E8`, `sub_802B990`, `sub_802BA5C`,
+  `sub_802BAD0`, `sub_802BBE4`) are NAKED-parked in the same file, see
+  the "Parked - NAKED transcription" section below. See
+  [docs/matching/issue-52-gap-b364.md](../matching/issue-52-gap-b364.md).
 - `src/graphics/actor_part107.c` (new file, ROM 0x0802BC68-0x0802BED8 -
   the literal tail of `asm/code_3_2_20_8b7c_ac28.s`, one raw file's
   leftover portion out of GitHub issue #50's original chunk scope;
@@ -658,6 +668,21 @@ doesn't advance that even when byte-correct. See
 established convention, and each entry's linked write-up for why
 plain C didn't converge.
 
+- **`sub_802B364`**, **`sub_802B5B4`**, **`sub_802B730`**,
+  **`sub_802B7E0`**, **`sub_802B864`**, **`sub_802B8E8`**,
+  **`sub_802B990`**, **`sub_802BA5C`**, **`sub_802BAD0`**,
+  **`sub_802BBE4`** (`src/graphics/actor_part127.c`, ROM
+  `0x0802B364`-`0x0802BC68`, the start of the actor zone before issue
+  #52) - a countdown-timer/respawn state machine, a sprite-frame OAM
+  queuer (`r8`/`sb`/`sl` all simultaneously live), a VRAM-tile-block
+  allocator pair, and a run of spawn/reset-trigger and camera-catch-up
+  functions on the `gUnknown_0300148x`-`gUnknown_030014Bx` object
+  cluster. Each hit its own gcc-2.9 gap (heavy multi-register reuse, the
+  "materialize into one register then copy to a second" idiom, or a
+  ROM branch layout - an early-return sharing its epilogue with the
+  main fallthrough path - this compiler's own scheduling wouldn't
+  reproduce from an equivalent C guard clause). See
+  [docs/matching/issue-52-gap-b364.md](../matching/issue-52-gap-b364.md).
 - **`sub_80159F8`/`sub_8015C6C`** (`src/graphics/actor_part86.c`, ROM
   0x080159F8-0x08015DF8, GitHub issue #19) and **`sub_8015DF8`**
   (`src/graphics/actor_part86b.c`, ROM 0x08015DF8-0x08015FD0, split
