@@ -629,6 +629,19 @@ from "core" graphics.
   into `r0` via the ABI, but `mode0` has no such call to hint it).
   Retires the old raw `asm/code_3_2_15.o` guard entirely.
 
+- `src/graphics/actor_part125.c` (new file, ROM 0x08031784-0x08031A6C,
+  Phase 1 of the boss-weapon/singleton cluster's gap between issue #58
+  and issue #62): `sub_8031784` (tracker "ready" check scaling the
+  countdown via `sub_803ADB4`), `sub_80317C4` (tracker destructor,
+  `sub_8030F88`'s counterpart), `nullsub_30`/`nullsub_31`/`nullsub_32`
+  (no-op stubs), `sub_8031850` (trivial `self+0x58` setter),
+  `sub_80318B4` (full state/accumulator/anim-frame reset idiom),
+  `sub_8031920` (`InitActorPart`-based constructor), and `sub_8031A64`
+  (trivial `self+0x5c` getter, needed a trailing `asm(".align 2, 0")`
+  for the same lone-function-at-end-of-TU padding gap as
+  `sub_80306A4`/`sub_8033CF0`) - see
+  [docs/matching/issue-59-0x08031784-actor.md](../matching/issue-59-0x08031784-actor.md).
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
@@ -981,6 +994,32 @@ plain C didn't converge.
   (`sub_80309B4`/`sub_8031040`/`sub_80311C4`,
   `actor_part21f.c`/`23e.c`/`23f.c`). See
   `docs/matching/issue-63-final-raw-actor.md`.
+- **`sub_80317E0`** (`src/graphics/actor_part125.c`) - a proximity-
+  gated event trigger: syncs via `sub_802A980`, checks a camera-
+  relative bound against `self+0x34`, flushes a pending trampoline
+  call at `self+0x58`, and either draws a text popup through the event
+  table at `self+0x50` or falls back to `sub_8031A08`. Fully
+  understood; this compiler doesn't reach for `r4` as the whole-
+  function `self` pin the ROM uses without also perturbing the branch
+  layout. See `docs/matching/issue-59-0x08031784-actor.md`.
+- **`sub_8031858`** (`src/graphics/actor_part125.c`) - a health/
+  damage-countdown death transition at `self+0x54`, same overall shape
+  as the boss cluster's `sub_8030530`. Fully understood; the death-
+  byte store's `1`/`0` constants need to stay live and shared across
+  both the early-flush branch and the later state-transition block in
+  a way that resisted a register-pin reproduction without changing the
+  branch shape. See `docs/matching/issue-59-0x08031784-actor.md`.
+- **`sub_80318D0`/`sub_8031954`/`sub_80319A0`** (`src/graphics/actor_part125.c`)
+  - three instances of the same shared anim-frame-advance-and-clamp
+  idiom (the first stashes 3 incoming args, the third adds an
+  oscillation drive). Fully understood; this compiler always schedules
+  the `#4`/`#6` `ldrsh` constant loads one instruction earlier than the
+  ROM's own build. See `docs/matching/issue-59-0x08031784-actor.md`.
+- **`sub_8031A08`** (`src/graphics/actor_part125.c`) - draws a
+  keyframe-table-relative text popup, indexing `gStaticData_0817C414`
+  by `self+0x28`. Fully understood; resists a byte-exact reproduction
+  of the ROM's specific `r7`-as-table-base-pin choice. See
+  `docs/matching/issue-59-0x08031784-actor.md`.
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
