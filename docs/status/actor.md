@@ -265,6 +265,18 @@ from "core" graphics.
   range-keyed offset. See
   [docs/matching/issue-53-actor-c7a8.md](../matching/issue-53-actor-c7a8.md).
 
+- `src/graphics/actor_part126.c` (new file, `0x0802CDE4`-`0x0802D2DC`,
+  the remainder of the `0x0802CC9C`-`0x0802D3A8` gap between issues #53
+  and #54): `sub_802CDE4`/`sub_802CE38`/`sub_802CF0C`/`sub_802D0C8`/
+  `sub_802D1B8` - `InitActorPart`-based constructors on the same `self`
+  object family; `sub_802CE5C` - a 3-way `self+0x28` state dispatch;
+  `sub_802CF30` plus its `sub_802D044` homing-velocity helper - a
+  velocity/proximity state machine; `sub_802CE10`/`sub_802D0F4` - small
+  proximity-gated state advances; `sub_802D204`/`sub_802D2DC` - a
+  VRAM-gauge/state-transition pair for a `gUnknown_030014B8`-counted
+  effect. 12 functions, all matched. See
+  [docs/matching/issue-53-issue-54-gap-cc9c.md](../matching/issue-53-issue-54-gap-cc9c.md).
+
 - `src/graphics/actor_aabb_setup.c` (new file, GitHub issue #70, ROM
   `0x0803AFDC`-`0x0803B060` - right after the parked division/modulo
   trio in `src/util/math_div_util.c`, see that file's `docs/matching.md`
@@ -1042,6 +1054,14 @@ embedded as asm instead. They're tracked as parked, not matched.
   `r7` shape as `sub_802D7B0`/`sub_802DD9C` below - hits the same
   confirmed categorical gcc-2.9 r7-pin bug. GitHub issue #53, see
   [docs/matching/issue-53-actor-c7a8.md](../matching/issue-53-actor-c7a8.md).
+- **`sub_802CC9C`** (`src/graphics/actor_part126.c`) - a heavy AABB-
+  overlap/proximity state machine: reuses `self+0x38` as a scratch box
+  across three `gStaticData_0817A7xx` record snapshots and two
+  `sub_802A6EC`/`sub_802DD9C`/`sub_802B7E0` proximity checks, with
+  `r5`/`r6`/`r7` each switching roles mid-function. Same categorical
+  gcc-2.9 register-reuse family as `sub_802D7B0`/`sub_802DD9C` below.
+  Between issues #53 and #54, see
+  [docs/matching/issue-53-issue-54-gap-cc9c.md](../matching/issue-53-issue-54-gap-cc9c.md).
 - **`sub_802D3A8`** (`src/graphics/actor_part62.c`) - eases `self`'s
   cached position toward a per-state target/table-scatter offset. Hits
   this project's confirmed categorical gcc-2.9 r7-pin bug. GitHub issue

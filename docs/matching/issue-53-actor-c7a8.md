@@ -214,3 +214,11 @@ chunk, not all of it - issue #53 stays open.
 
 See [docs/status/actor.md](../status/actor.md) for the running
 matched/parked/left-raw list this entry feeds into.
+
+## Follow-up: the rest of the 0x0802CC9C-0x0802D3A8 gap
+
+A later pass closed out `sub_802CC9C` (NAKED-parked - the heavy
+`r5`/`r6`/`r7`-reuse state machine flagged above) and the 12 functions
+after it, finishing this whole gap up to issue #54's own
+`sub_802D3A8`. See
+[docs/matching/issue-53-issue-54-gap-cc9c.md](./issue-53-issue-54-gap-cc9c.md).
