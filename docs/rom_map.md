@@ -1491,6 +1491,30 @@ twins, independently re-confirmed this round) compute a Manhattan-
 distance-based directional velocity split for their spawned objects -
 consistent with the earlier "homing/seek-toward-point" reading.
 
+### Issue #59 Phase 2 second half closes the singleton's camera-follow RAM family, and corrects a floor/ceiling misreading
+
+`docs/matching/issue-60-61-gap-31a6c-part2.md` matched/NAKED all 30
+functions from `0x080326E4` to `0x08033804` (`src/graphics/actor_part130.c`).
+Two things worth recording here rather than only in that writeup:
+
+- **This pass's "second RAM-struct family" guess above turned out not
+  to need a struct at all.** `sub_8032C0C`/`sub_8032EA0` are the first
+  functions in ROM order to touch most of `gUnknown_030015B4`-
+  `030015EC`, but the *later* issue #62 pass (`actor_part28.c`-
+  `actor_part37.c`, already merged) had already established these as
+  flat, independently-linked `extern` globals - not fields of a struct
+  reached through a common base pointer, since the linked BSS layout
+  doesn't put them in one contiguous allocation. This pass reused that
+  existing convention/naming rather than introducing a struct wrapper
+  that wouldn't match how the bytes are actually laid out.
+- **`sub_8032A24`'s patrol-speed clamp is a floor, not a ceiling** -
+  corrected during this pass's full-link verification (the isolated
+  compile alone didn't catch the inverted branch condition): the
+  decaying `self+0x60` value gets clamped back up to `0x14` once it
+  drops to `0x13` or below, not clamped down when it exceeds `0x13`.
+  Matches the same "floored at 0x14" shape as `sub_8033048`'s own
+  patrol oscillator.
+
 ## Subdividing `game_loop`
 
 `game_loop`'s 112.7 KB has been one undifferentiated bucket even after
