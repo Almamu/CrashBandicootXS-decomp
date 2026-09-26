@@ -510,7 +510,25 @@ UNITS = [
     (0x080354E0, "src/graphics/level_graphics.o", "graphics_loading"),  # GitHub issue #65: LoadLevelGraphics; matched, real C
     (0x080355E0, None, "graphics_loading"),  # GitHub issue #65: LoadBg2Background - NAKED transcription (byte-correct, not real decompiled C - the ROM's prologue/epilogue push/pop one extra dead callee-saved r7 that plain C, even with an explicit dummy-register asm barrier, never reproduces), tracked as parked - see docs/matching/issue-65-graphics-loading.md
     (0x08035684, "src/graphics/level_graphics.o", "graphics_loading"),  # GitHub issue #65: LoadObjSpriteTiles - matched, real C (register-pinning + opaque asm-island pass) - see docs/matching/issue-65-graphics-loading.md
-    (0x08035780, None, "graphics_loading"),  # remainder of issue #65's chunk (sub_8035780-sub_8036FBC) - left raw, out of scope for this pass
+    (0x08035780, None, "graphics_loading"),  # GitHub issue #65: sub_8035780 - NAKED transcription (byte-correct, not real decompiled C - the ROM never hoists a shared `self+i*0x34` base pointer across its field-copy/accumulate blocks the way this compiler's CSE always does), tracked as parked - see docs/matching/issue-65-0x08035780-graphics-loading.md
+    (0x080358A8, None, "graphics_loading"),  # GitHub issue #65: sub_80358A8 - NAKED transcription (heavy sb/sl/r8/ip register shuffling this compiler never reproduces from plain C), tracked as parked
+    (0x08035D1C, None, "graphics_loading"),  # GitHub issue #65: sub_8035D1C - NAKED transcription (this compiler's cross-jump/tail-merging pass collapses the ROM's own duplicated per-branch slot-address computation), tracked as parked
+    (0x08035E14, None, "graphics_loading"),  # GitHub issue #65: sub_8035E14 - NAKED transcription, tracked as parked
+    (0x08035F9C, None, "graphics_loading"),  # GitHub issue #65: sub_8035F9C - NAKED transcription (the ROM derives REG_BG2PA's address from REG_BG2Y's via a runtime offset rather than a fresh literal), tracked as parked
+    (0x08035FEC, None, "graphics_loading"),  # GitHub issue #65: sub_8035FEC - NAKED transcription, tracked as parked
+    (0x08036068, None, "graphics_loading"),  # GitHub issue #65: sub_8036068 - NAKED transcription, tracked as parked
+    (0x080360C0, "src/graphics/graphics_loading_35780.o", "graphics_loading"),  # GitHub issue #65: sub_80360C0 - matched, real C (register-pinned rotate to stop agbcc folding it into a single ROR)
+    (0x080360DC, None, "graphics_loading"),  # GitHub issue #65: sub_80360DC - NAKED transcription (sub_8035780's init-time twin), tracked as parked
+    (0x08036154, None, "graphics_loading"),  # GitHub issue #65: sub_8036154 - NAKED transcription, tracked as parked
+    (0x080361B0, None, "graphics_loading"),  # GitHub issue #65: sub_80361B0 - NAKED transcription (the level-object subsystem's init/run/teardown driver), tracked as parked
+    (0x08036528, None, "graphics_loading"),  # GitHub issue #65: sub_8036528 - NAKED transcription, tracked as parked
+    (0x08036600, None, "graphics_loading"),  # GitHub issue #65: sub_8036600 - NAKED transcription, tracked as parked
+    (0x08036668, None, "graphics_loading"),  # GitHub issue #65: sub_8036668 - NAKED transcription, tracked as parked
+    (0x0803686C, None, "graphics_loading"),  # GitHub issue #65: sub_803686C - NAKED transcription, tracked as parked
+    (0x08036CF4, None, "graphics_loading"),  # GitHub issue #65: sub_8036CF4 - NAKED transcription (BG2 tilemap-remap loader, same shape as LoadBg2Background/LoadObjSpriteTiles), tracked as parked
+    (0x08036E20, None, "graphics_loading"),  # GitHub issue #65: sub_8036E20 - NAKED transcription (actor-part constructor, unrelated struct anim_part_instance object), tracked as parked
+    (0x08036EC4, None, "graphics_loading"),  # GitHub issue #65: sub_8036EC4 - NAKED transcription, tracked as parked
+    (0x08036FBC, None, "graphics_loading"),  # GitHub issue #65: sub_8036FBC - NAKED transcription, tracked as parked; last function of this chunk, real bytes all now live in src/graphics/graphics_loading_35780.c, see docs/matching/issue-65-0x08035780-graphics-loading.md
     (0x08037110, "src/audio/counter_selector.o", "audio"),  # sub_8037110/nullsub_7/sub_8037154/sub_803716C/sub_80371B4/sub_8037224 - a small on-screen 0-5 "counter" widget (increments/decrements with input, confirms/cancels with PlaySfx), reads like game/HUD-side code using PlaySfx rather than GAX2 internals; sub_803716C is UNUSED (no caller found); matched
     (0x080372BC, None, "audio"),  # sub_80372BC/sub_8037388 - NAKED transcription, byte-correct but not real decompiled C, tracked as parked (same many-register gcc-2.9 allocation ceiling documented for sub_8006600/src/graphics/oam_count.c and sub_80062A8/src/graphics/settings_menu14.c, whose tail is this same sub_803AD7C/sub_8006C58/constant-reuse idiom); real bytes now live in src/audio/counter_selector_icons.c, see docs/matching/issue-67-counter-selector-icons.md
     (0x080374D0, "src/audio/counter_selector_setup.o", "audio"),  # sub_80374D0/sub_8037534/sub_8037548/sub_8037578/sub_80375A0/sub_80375EC/sub_8037620 - the widget's graphics/BG setup, draw-flush, and init/teardown pair; matched
