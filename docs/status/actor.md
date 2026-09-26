@@ -674,6 +674,27 @@ from "core" graphics.
   `sub_80306A4`/`sub_8033CF0`) - see
   [docs/matching/issue-59-0x08031784-actor.md](../matching/issue-59-0x08031784-actor.md).
 
+- `src/graphics/actor_part129.c` (new file, ROM 0x08031B0C-0x08032688,
+  first 30 of issue #59 Phase 2's 60-function remainder): the
+  "type-byte event dispatch" family (`sub_8031B0C`/`sub_8031C0C`/
+  `sub_8031D04`/`sub_8031D7C`/`sub_8031E80`), three `sub_802E4B8`-based
+  "spawn effect type N" constructors (`sub_8031F78`/`sub_8032054`/
+  `sub_80320C4`), trivial setters/getters (`sub_8032138`/`sub_8032478`/
+  `sub_8032350`/`sub_8032680`), a full reset idiom (`sub_8032140`), a
+  countdown-gated trampoline-flush transition (`sub_8032170`), a
+  doubly-linked-list unlink/`mem_free` destructor (`sub_80321D0`), a
+  no-op stub (`nullsub_33`), a trivial accumulator (`sub_8032274`), a
+  second independent orbital-motion consumer of the shared trig table
+  `gStaticData_0816A820` (`sub_8032290`, alongside the already-flagged
+  `sub_8032480`), a state-1 trampoline-flush/proximity transition
+  (`sub_8032358`), more countdown transitions (`sub_80323F4`/
+  `sub_80325A4`), `sub_8032480` itself (the orbital-motion consumer,
+  plus its state-transition helper `sub_803256C`), and a type-byte-gated
+  proximity check (`sub_8032688`) - see
+  [docs/matching/issue-59-60-gap-31a6c-part1.md](../matching/issue-59-60-gap-31a6c-part1.md).
+  (Two InitActorPart-based constructors originally attempted as real C
+  in this same file, `sub_8032440`/`sub_80325EC`, ended up NAKED-parked
+  instead - see below.)
 - `src/graphics/actor_part130.c` (new file, ROM 0x080326E4-0x08033804,
   Phase 2 second half of the boss-weapon/singleton cluster's gap between
   issue #58 and issue #62 - a sibling pass, `actor_part129.c`, covers
@@ -696,6 +717,22 @@ from "core" graphics.
   (`gUnknown_030015A0`-`030015FF`, reusing `actor_part28.c`'s existing
   naming for the fields that family already touches) - see
   [docs/matching/issue-60-61-gap-31a6c-part2.md](../matching/issue-60-61-gap-31a6c-part2.md).
+- `src/graphics/actor_part131.c` (new file, ROM 0x08034AA4-0x080354E0,
+  GitHub issue #64): `sub_8034C40` (the fade overlay's Yes/No-dialog
+  blink/toggle helper), `sub_8034C5C` (fade overlay per-frame "yield"
+  helper), `sub_8034C84` (fade overlay teardown), `sub_8034CB0` (the
+  "Are you sure?" confirmation-dialog trigger), `sub_8034E2C` (the
+  between-level map/progress screen's per-frame driver - needed a
+  register-pinned `mask &= p->pressed` accumulate-into-existing-register
+  rewrite of a plain `&` boolean test, plus a `void *unused` parameter
+  kept on `sub_803544C` since the ROM's own call site passes `self` into
+  it even though the callee never reads it), `sub_803544C` (map screen
+  end-of-frame commit), `sub_803547C` (map screen teardown), and
+  `sub_80354BC` (the map screen's top-level entry point) all matched as
+  real C; `sub_8034AA4`, `sub_8034CEC`, `sub_8034EF0`, `sub_80350A4`,
+  and `sub_80352AC` transcribed as NAKED (see "Parked - NAKED
+  transcription" below) - see
+  [docs/matching/issue-64-0x08034aa4-actor.md](../matching/issue-64-0x08034aa4-actor.md).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -756,6 +793,37 @@ plain C didn't converge.
   computations through an extra scratch-register copy that this
   compiler's allocator always collapses away) blocked the last step
   in all three. See `docs/matching/issue-19-0x08015840-actor.md`.
+- **`sub_8031A6C`**, **`sub_80322F4`** (`src/graphics/actor_part129.c`,
+  ROM `0x08031A6C`-`0x08032688`, issue #59 Phase 2 part 1) - near-
+  duplicate keyframe-table-relative dispatch helpers (indexing
+  `gStaticData_0817C42C`), structurally identical to the already-parked
+  `sub_8031A08` (issue #59 Phase 1) - same `r7`-as-table-base-pin gap.
+- **`sub_80321FC`** (`src/graphics/actor_part129.c`, same range) - a
+  parameterized `sub_802E4B8`-based constructor (the "kind" is a 6th
+  caller-supplied argument here, rather than one of the fixed literals
+  `sub_8031F78`/`sub_8032054`/`sub_80320C4` use). This compiler always
+  re-materializes the incoming `c` argument register from its own
+  cached copy for the `InitActorPart` call, instead of leaving the
+  ROM's original parameter register untouched until the call, and
+  separately defers the "kind" byte truncation to its point of use
+  rather than the ROM's eager truncation right after loading it from
+  the stack. See
+  [docs/matching/issue-59-60-gap-31a6c-part1.md](../matching/issue-59-60-gap-31a6c-part1.md).
+- **`sub_8032440`** (`src/graphics/actor_part129.c`, same range) - an
+  `InitActorPart`-based constructor forcing a fixed `0xFFFF0600` bias
+  for its own 4th argument. This compiler's independent-instruction
+  scheduler always groups the pure register loads (the `d` argument off
+  the stack, the `0xFFFF0600` constant) together regardless of source
+  order, while the ROM's own build interleaves them with the
+  intervening `str`/`adds` steps.
+- **`sub_80325EC`** (`src/graphics/actor_part129.c`, same range) - a
+  clamping `InitActorPart`-based constructor. This compiler couldn't be
+  steered into the ROM's exact register choreography for the `d`
+  argument (transiently held in `r0`, pushed to the outgoing stack
+  slot, then `r0` reused for `self`) simultaneous with the health
+  literal (`1`) needing to survive in `r4` across the same call. See
+  [docs/matching/issue-59-60-gap-31a6c-part1.md](../matching/issue-59-60-gap-31a6c-part1.md)
+  for both.
 - **`sub_8009008`** (`src/graphics/actor_part11b.c`) - the
   spatial-hash-grid removal primitive `sub_8009A30`/`sub_8009AA0`
   call: a two-phase search (the object's own primary bucket, then
@@ -1175,6 +1243,39 @@ plain C didn't converge.
   `sub_8031604` (issue #58, `actor_part26c.c`). Fully understood; same
   many-high-register (`sl`/`sb`/`r8`) allocation gap documented there
   in full. See `docs/matching/issue-60-61-gap-31a6c-part2.md`.
+- **`sub_8034AA4`** (`src/graphics/actor_part131.c`, GitHub issue #64) -
+  the fade overlay's Yes/No dialog draw, another instance of the
+  "refresh OAM + center text" pattern: `self` (r6), the OAM-shadow-
+  buffer address (sl), the constant `0x87` (r7), and two `0x130`/`0x98<<1`
+  index constants (r8/sb) all stay resident across many `bl` sites with
+  no register left over. See
+  [docs/matching/issue-64-0x08034aa4-actor.md](../matching/issue-64-0x08034aa4-actor.md).
+- **`sub_8034CEC`** (`src/graphics/actor_part131.c`, GitHub issue #64) -
+  the map screen's constructor: `self` (r5), a zero constant (r8), and
+  `&gUnknown_030012E0` (sb) stay resident across a long run of `bl`
+  sites, while r4/r6 each get rebound to a different global's address
+  multiple times over that same span with several unrelated calls in
+  between each rebinding - the same shape `sub_803487C`
+  (actor_part88.c) hit. See
+  [docs/matching/issue-64-0x08034aa4-actor.md](../matching/issue-64-0x08034aa4-actor.md).
+- **`sub_8034EF0`** (`src/graphics/actor_part131.c`, GitHub issue #64) -
+  the map screen's per-frame OAM-icon draw dispatcher for the minimap
+  object: the inner tile loop keeps six independent running values live
+  simultaneously (sl/sb/r8 plus r4-r7) across a `bl` inside a nested
+  loop. See
+  [docs/matching/issue-64-0x08034aa4-actor.md](../matching/issue-64-0x08034aa4-actor.md).
+- **`sub_80350A4`** (`src/graphics/actor_part131.c`, GitHub issue #64) -
+  the map screen's floating-text popup driver: `self` (r5), the
+  list-tail pointer (r8), the running max-width accumulator (sb), and
+  the horizontal pen-position accumulator (sl) all stay resident across
+  many `bl` sites spanning several nested loops. See
+  [docs/matching/issue-64-0x08034aa4-actor.md](../matching/issue-64-0x08034aa4-actor.md).
+- **`sub_80352AC`** (`src/graphics/actor_part131.c`, GitHub issue #64) -
+  the map screen's popup-text asset loader: the innermost tile-index
+  loop holds seven live values simultaneously (r8/sl/sb/ip plus r0-r6),
+  a fully packed register budget with no `bl` inside the innermost loop
+  to even attempt a spill. See
+  [docs/matching/issue-64-0x08034aa4-actor.md](../matching/issue-64-0x08034aa4-actor.md).
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
