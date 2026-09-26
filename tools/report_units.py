@@ -433,7 +433,18 @@ UNITS = [
     (0x08031504, None, "actor"),  # sub_8031504 (issue #58, NAKED, byte-correct but not real decompiled C, tracked as parked) - DMA/tile-cache setup + palette fade; real bytes live in src/graphics/actor_part26b.c
     (0x08031604, None, "actor"),  # sub_8031604 (issue #58, NAKED, byte-correct but not real decompiled C, tracked as parked) - VRAM fill-level meter nibble-repack loop (docs/rom_map.md); real bytes live in src/graphics/actor_part26c.c
     (0x0803171C, "src/graphics/actor_part26.o", "actor"),  # sub_803171C/sub_8031744 (issue #58): palette flash-color select and DMA-queued palette-strip animation refresh; matched
-    (0x08031784, None, "actor"),  # remainder of the actor zone before issue #62's chunk, still raw
+    (0x08031784, "src/graphics/actor_part125.o", "actor"),  # sub_8031784/sub_80317C4/nullsub_30/nullsub_31 (issue #58/#62 follow-up gap): tracker "ready" check, tracker destructor, two no-op stubs; matched
+    (0x080317E0, None, "actor"),  # sub_80317E0 (NAKED, byte-correct but not real decompiled C, tracked as parked) - proximity-gated event trigger/text-popup dispatch; real bytes live in src/graphics/actor_part125.c
+    (0x08031850, "src/graphics/actor_part125.o", "actor"),  # sub_8031850: trivial self+0x58 clearing setter; matched
+    (0x08031858, None, "actor"),  # sub_8031858 (NAKED, byte-correct but not real decompiled C, tracked as parked) - health/damage-countdown death transition; real bytes live in src/graphics/actor_part125.c
+    (0x080318B4, "src/graphics/actor_part125.o", "actor"),  # sub_80318B4: full state/accumulator/anim-frame reset idiom; matched
+    (0x080318D0, None, "actor"),  # sub_80318D0 (NAKED, byte-correct but not real decompiled C, tracked as parked) - arg stash + shared anim-frame-advance-and-clamp idiom; real bytes live in src/graphics/actor_part125.c
+    (0x08031920, "src/graphics/actor_part125.o", "actor"),  # sub_8031920: InitActorPart-based constructor; matched
+    (0x08031954, None, "actor"),  # sub_8031954/sub_80319A0 (NAKED, byte-correct but not real decompiled C, tracked as parked) - shared anim-frame-advance-and-clamp idiom, the second with an oscillation drive; real bytes live in src/graphics/actor_part125.c
+    (0x08031A04, "src/graphics/actor_part125.o", "actor"),  # nullsub_32: no-op stub; matched
+    (0x08031A08, None, "actor"),  # sub_8031A08 (NAKED, byte-correct but not real decompiled C, tracked as parked) - keyframe-table-relative text popup draw; real bytes live in src/graphics/actor_part125.c
+    (0x08031A64, "src/graphics/actor_part125.o", "actor"),  # sub_8031A64: trivial self+0x5c byte getter; matched
+    (0x08031A6C, None, "actor"),  # remainder of the actor zone before issue #62's chunk, still raw (issues #59 (rest)/#60/#61 - Phase 2 of docs/matching/issue-59-0x08031784-actor.md)
     (0x08033804, "src/graphics/actor_part28.o", "actor"),  # sub_8033804-nullsub_37 (issue #62): the gUnknown_030015AC singleton's one-shot latch, a P1/P2 mirror speed-override toggle, its field getters, and the two shared state-transition/anim-frame-reset setters (sub_803390C/sub_803395C); matched
     (0x080339DC, "src/graphics/actor_part29.o", "actor"),  # sub_80339DC (issue #62, parked, NON_MATCHING) - a proximity-triggered effect/hazard detector measuring self's distance to the player after syncing to the singleton's position; real bytes live in asm/code_3_2_20_28568_c99c_31784_339dc.s
     (0x08033AE0, "src/graphics/actor_part30.o", "actor"),  # sub_8033AE0 (issue #62): TakeDamage-style health countdown + death-state transition for this "self" object; matched
