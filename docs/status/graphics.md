@@ -82,6 +82,27 @@ and [graphics_loading.md](./graphics_loading.md).
   inlined "mark actor gone" bitmap sequence matched without inline asm.
   See [docs/matching/issue-21-input-ctrl.md](../matching/issue-21-input-ctrl.md).
 
+- `src/graphics/actor_part_188d0.c` (new file - GitHub issue #23):
+  23 of the 25 functions in `sub_80188D0`-`sub_8019660` as real C -
+  method-table ("vtable" at `self+0xc`) constructor/destructor pairs
+  (`sub_8018948` is UNUSED), a part-gone bitmap setter, the
+  squares-table constructor `sub_80189EC`, the two-part effect's child
+  spawners `sub_8018BDC`/`sub_8018CB0`, the "mover" object
+  (`sub_8018D70` spawner, `sub_8018E4C` per-frame update, `sub_8019094`
+  state setter, `sub_8019214` hit-effect spawner), the part hit test
+  `sub_8019324`, and two more per-frame methods (`sub_8019464`,
+  `sub_80194E0`). The other two are NAKED - see "Parked" below. See
+  [docs/matching/issue-23-graphics.md](../matching/issue-23-graphics.md).
+- `src/graphics/actor_part_1b85c.c` (new file - GitHub issue #26):
+  `sub_801B85C`-`sub_801B980` (the player-follow child `sub_8017600`
+  spawns), `sub_801B984`-`sub_801BAD0` (a 0x78-byte sprite subclass),
+  `sub_801BAF0` (the modal level-select screen), `sub_801C040`,
+  `sub_801C104`, `sub_801C2B0`, `sub_801C364`, `sub_801C3E8`,
+  `sub_801C51C`, `sub_801CCF8`, `sub_801CDE0`, `sub_801CE60` (its
+  destructor, per-frame update/draw, record panel and cursor moves) -
+  22 of the chunk's 25 functions as plain C; the other three are parked
+  below. See
+  [docs/matching/issue-26-level-select-menu.md](../matching/issue-26-level-select-menu.md).
 - `src/graphics/actor_part_1967c.c` (new file - GitHub issue #24):
   `sub_801967C`-`sub_801A780` except the two NAKED ones below (23 of 25
   functions) - six small C++ actor-part controller classes (method
@@ -99,6 +120,22 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 
 ## Parked - NAKED asm transcriptions (byte-correct, not decompiled C)
 
+- **`sub_8018A30`** and **`sub_801961C`** (`src/graphics/actor_part_188d0.c`,
+  issue #23) - NAKED transcriptions, C kept under `#if NON_MATCHING`.
+  `sub_8018A30` (two-part effect state machine) needs r7 as a
+  short-lived scratch register, which this compiler never chooses and
+  which can't be pinned; `sub_801961C` stores a one-byte by-value struct
+  argument after its slot address, the reverse of every C shape tried.
+  See [docs/matching/issue-23-graphics.md](../matching/issue-23-graphics.md).
+- **`sub_801BC28`**, **`sub_801C608`**, **`sub_801C96C`**
+  (`src/graphics/actor_part_1b85c.c`, issue #26) - the level-select
+  screen's constructor, record loader and main loop. Each has a full C
+  reconstruction under `#if NON_MATCHING` that gets the instruction
+  stream right; the residue is register allocation only (constants and
+  addresses the ROM keeps in `sb`/`r8`/`sl` across long call chains,
+  the scratch registers reload picks for copies out of them, and in
+  `sub_801C96C` the register the `REG_BLDY` byte is loaded into). See
+  [issue-26-level-select-menu.md](../matching/issue-26-level-select-menu.md).
 - **`sub_801A03C`**, **`sub_801A114`** (`src/graphics/actor_part_1967c.c`,
   issue #24) - a floor-part spawner and the `gStaticData_087E490C`
   controller's per-frame update. Both C reconstructions are complete and kept under
