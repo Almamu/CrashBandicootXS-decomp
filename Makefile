@@ -1,3 +1,5 @@
+.DEFAULT_GOAL := compare
+
 #### Tools ####
 
 PREFIX	 := arm-none-eabi-
