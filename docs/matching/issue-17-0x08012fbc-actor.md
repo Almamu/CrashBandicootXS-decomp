@@ -365,3 +365,104 @@ differ only in register roles:
 Issue #17 stays open. This pass leaves no raw functions, but the chunk
 still has 10 NAKED functions: the first pass's five and this pass's
 five.
+
+## Third pass: old_agbcc retry of the 10 NAKED functions
+
+This pass retried the chunk's ten NAKED functions under old_agbcc. Seven
+are now real C. Three stay NAKED, each with its best C under
+`#if NON_MATCHING`.
+
+| function | file | result |
+|---|---|---|
+| `sub_8012FBC`, `sub_8013228` | `actor_part_12fbc.c` | matched |
+| `sub_80134B8` | `actor_part_134b8.c` | matched |
+| `sub_80138E8`, `sub_8013994` | `actor_part_138e8.c` | matched |
+| `sub_8014084` | `actor_part_13c60.c` | NAKED |
+| `sub_8014674`, `sub_8014B54` | `actor_part_14674.c` | NAKED |
+| `sub_8014BCC`, `sub_8014D18` | `actor_part_14674.c` | matched |
+
+`actor_part_12fbc.o`, `actor_part_134b8.o` and `actor_part_138e8.o` now
+build with old_agbcc (Makefile `OLD_AGBCC_OBJS`). The first pass left
+all three with NAKED functions only, so moving the whole object was
+safe and no split was needed. All five first-pass functions match under
+old_agbcc. Their "unexplained extended-register-budget" walls (`r8`,
+`r8`/`sb`/`sl`) and `sub_80138E8`'s "unmatchable `sub_80156EC` shape"
+were just the wrong compiler. `sub_80138E8` matches under both
+compilers. `sub_8013994` differs in 35 bytes under the current agbcc.
+
+### What made them match
+
+- **Trio helpers with parameters.** `include/action_obj.h`'s
+  `ActSetNext` idea applies to the +0x31/+0x2F/+0x27 trio too. Each file
+  has local inline helpers. `ActQueue27(self, cur, next)` stores a
+  literal 1 in +0x2F. `ActTrio27(self, cur, flag, next)` stores a caller
+  value there, for the paths where the ROM reuses a 1 already in a
+  register. The `...P` forms store the action through a pointer the
+  caller already holds, when the ROM tests and stores through the same
+  `&self->next27`/`&self->next28`. old_agbcc materializes inline
+  parameters before the stores, which is the ROM's order. Which form a
+  store needs is visible in the ROM: a constant loaded before the first
+  store, a fresh `movs rX, #1` at the +0x2F store, or a register.
+- **Duplicated tails.** Where the ROM shares one method call plus trio
+  between two paths (`sub_8013994`'s 0x12/0x11 tails, `sub_8014D18`'s
+  0x22/0x23 idle animations, `sub_8014BCC`'s alt/idle trio), the C
+  writes the tail out on each path. gcc's cross-jumping merges them back
+  and each copy keeps its own CSE state. A shared `goto` label instead
+  starts a new basic block, and the 1 stored after it gets reloaded.
+- **`ACT_CALL1`/`ACT_CALL2`** (new in `include/action_obj.h`). These
+  are the method-call macros in `if (1) { ... } else (void)0` form, the
+  same finding as `include/actor_self.h`. `ACT_VCALL`'s
+  `do { } while (0)` puts loop notes around every call. CSE then won't
+  carry the fire test's constant 1 (kept in `r6`/`r7`) into the +0x2F
+  stores after the calls, but the ROM does. `sub_8012FBC`,
+  `sub_8014BCC` and `sub_8014D18` need `ACT_CALL`. `sub_8013D94`
+  (already matched) needs `ACT_VCALL` and breaks with `ACT_CALL`, so
+  the header keeps both forms.
+- **Zero/one kept across calls.** Where the ROM loads a 0 into a
+  callee-saved register before a pair of method calls and stores it
+  afterwards (`self->frames = 0` in `sub_8013994`/`sub_8012FBC`,
+  `self->frame = 0` in `sub_8014BCC`), a `s32 zero = 0;` local declared
+  before the calls reproduces it. `sub_8013228` keeps its 9/8 +0x30 1
+  apart from the `cur & 1` test's constant behind one `asm("" : "+r")`
+  barrier. That is the only barrier in these files, and the plain C
+  differs in 187 bytes.
+- **Bitfields for the spawned objects' masks.** `sub_8012FBC`'s and
+  `sub_80134B8`'s spawned objects clear and set bits in +0x0C/+0x28. As
+  bitfields, gcc emits the ROM's `-5`/`-4` masks, and the `| 1` in
+  QImode picks up the ROM's `r4` 1. `sub_80134B8`'s -0x11 mirror mask
+  goes through an `s32`-parameter helper so it stays in SImode. The
+  ROM derives it from the 1 already in `r7` (`subs r7, #0x12`). The
+  first spark's bit-2 clear is written twice. The second store folds
+  away, but the extra use of the -5 mask gives it `sb` (and the -0x11
+  mask `r8`), as in the ROM.
+- **Smaller shapes.** `sub_8012FBC` takes `&gUnknown_03001304` into a
+  local up front, which is what keeps the address in `r8` across the
+  calls. `sub_80134B8` computes the spark coordinates as
+  `x = pl->x; x >>= 8; x += 0x14;` and passes them through an inline
+  `SpawnSpark(x, y, mirror)`, which fixes their evaluation order.
+  `sub_8013228`/`sub_80134B8` clear `part+0x68` through
+  `ActSetContact(part, 0)`, an inline with an `s32` parameter, so the 0
+  is loaded before the part pointer. `sub_8014D18` switches on the
+  record kind with separate case bodies for 1..5, which is what makes
+  gcc emit the ROM's 7-entry jump table.
+
+### Still NAKED
+
+- **`sub_8014084`.** The facing block needs the second
+  `flags28 << 27` test to use different hard registers from the first.
+  That is what stops jump2's thread_jumps from folding it away, as it
+  does for every C tried. The ROM loads `self->part` into `r0` and keeps
+  a copy in `r2`. In every form tried, gcc either merges the two
+  pseudos or gives the re-test the same registers.
+- **`sub_8014674`.** The contact path's `tag == 0xD`/`tag == 0x18`
+  re-tests have the same problem. The ROM keeps `cmp #0xD` / `cmp #0x18`
+  after the `||` test. The C gets them threaded, and the constant 1 is
+  then carried through into the 0x18 block. Tried: an inline `Land()`
+  helper, a `switch`, a barrier-copied tag, and `do`/`while` around the
+  path. `decomp-permuter` didn't find a form either.
+- **`sub_8014B54`.** One reload register is off: the 0x600 constant goes
+  to `r2`, the ROM's to `r3`. The rest is byte-exact. Reload picks it
+  from its spill-register rotation (`order_regs_for_reload` /
+  `allocate_reload_reg`). Nothing tried in the C (a pinned or named
+  constant, `-=`, a pointer to `y`, an inline) moves it. `ACT_CALL`
+  doesn't change it either.

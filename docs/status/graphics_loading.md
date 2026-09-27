@@ -69,35 +69,6 @@ below.)
   all matched (`sub_8021D04`, type `0`, closed via register-pinning the
   table-resolution chain to the ROM's own registers) - see
   [issue-33-0x08021bfc-graphics-loading.md](../matching/issue-33-0x08021bfc-graphics-loading.md).
-- **`sub_801FDEC`** (`src/graphics/graphics_loading_1fdec.c`) - one
-  instance of the "two-line text popup" spawner family (issue #31,
-  second pass); spawns a part-object via `sub_8009ED0`, fires a
-  `sub_803AD80` animation-table trampoline twice, packs two
-  "collected" bits from a `gUnknown_030012B4`-rooted table into its
-  `+0x28` bitfield, and registers itself into `gUnknown_030012F0`'s
-  manager - see
-  [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md)
-  for the three compiler-codegen quirks (all fixed with small
-  `asm volatile` blocks) needed to close this one byte-exact. The rest
-  of the family is now closed too - see `sub_801EF0C`-`sub_801FCB4`
-  below (issue #31, sixth pass), `sub_801FEEC`-`sub_8020D4C` (issue #31,
-  seventh pass), and `sub_8021280`-`sub_802155C` further down for the
-  rest of what used to be raw in `asm/code_3_2_17_1e990.s`/
-  `asm/code_3_2_17_1feec.s` (both now fully retired).
-- **`sub_801F050`**, **`sub_801F170`**, **`sub_801F680`**
-  (`src/graphics/graphics_loading_1ef0c.c`) - issue #31, sixth pass:
-  three more "two-line text popup" siblings, real C (the other nine
-  functions in this same file - `sub_801EF0C`, `sub_801F2BC`,
-  `sub_801F3DC`, `sub_801F528`, `sub_801F7B8`, `sub_801F8DC`,
-  `sub_801FA3C`, `sub_801FB74`, `sub_801FCB4` - are NAKED, see "Parked -
-  NAKED transcription" below). `sub_801F680` is the one instance built
-  via `sub_800A604` instead of `sub_8009ED0`. This closes the whole
-  `sub_801EF0C`-`sub_801FCB4` stretch of what used to be
-  `asm/code_3_2_17_1e990.s` (then trimmed to just `sub_801EA5C`-
-  `sub_801EE3C`, the "trigger effect type N" twins - since matched, see
-  the next entry) - see
-  [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md)'s
-  "Sixth pass".
 - **`sub_801EA5C`**, **`sub_801EB04`**, **`sub_801EBF0`**,
   **`sub_801EC9C`**, **`sub_801ED6C`**, **`sub_801EE3C`**
   (`src/graphics/graphics_loading_1ea5c.c`) - issue #30: six "trigger
@@ -129,51 +100,19 @@ below.)
   Real C, current agbcc (both compilers match). Retires
   `asm/code_3_2_17_22354.s`. See
   [gap-22354-game-context.md](../matching/gap-22354-game-context.md).
-- **`sub_8021668`**/**`sub_8021748`**/**`sub_80217D0`**/**`sub_802183C`**/
-  **`sub_80218C4`**/**`sub_80218E8`**/**`sub_8021974`**/**`sub_8021998`**/
-  **`sub_80219BC`**/**`sub_80219E0`**/**`nullsub_21`**/**`sub_8021A00`**/
-  **`sub_8021A4C`**/**`sub_8021A70`**/**`sub_8021A94`**/**`sub_8021AB8`**/
-  **`sub_8021ADC`**/**`sub_8021B00`**/**`sub_8021B24`**/**`sub_8021B48`**/
-  **`sub_8021B6C`**/**`sub_8021B90`**/**`sub_8021BB4`**/**`sub_8021BD8`**
-  (`src/graphics/graphics_loading_21668.o`) - issue #31, fourth pass:
-  the last "two-line text popup" sibling (OAM-trio tail variant), the
-  `gStaticData_084A5600`-record spawner family registering into
-  `gUnknown_030012F8`, plain `sub_801A878`/`sub_801B984` trampolines, a
-  `sub_800CB40`-based constructor, and 12 more plain `sub_800FF0C`
-  entity-constructor trampolines (types `0x12`-`7`) - matched. This runs
-  through to the end of what used to be `asm/code_3_2_17_21280.s`.
-  `sub_802190C`, interleaved between two matched
-  ranges of this same file, is NAKED - see "Parked - NAKED
-  transcription" below. See
-  [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md)'s
-  "Fourth pass".
-- **`sub_8020B0C`** (`src/graphics/graphics_loading_1feec.c`) - issue #31,
-  seventh pass: the one function in what used to be
-  `asm/code_3_2_17_1feec.s` that avoids the r7-callee-saved-set wall
-  (push {r4,r5,r6,lr} plus one extra high register via r8, not r7) - a
-  "two-line text popup" sibling, tag 0x13, whose header is dereferenced
-  through its own fresh r0 return value before aliasing into r8 (the
-  same idiom `sub_801F680`/`sub_802155C` already established), matched.
-  The other twelve functions in this file (`sub_801FEEC`, `sub_8020010`,
-  `sub_8020138`, `sub_802026C`, `sub_80203A8`, `sub_80204EC`,
-  `sub_802062C`, `sub_8020788`, `sub_80208C4`, `sub_80209EC`,
-  `sub_8020C18`, `sub_8020D4C`) are NAKED, see "Parked - NAKED
-  transcription" below. This retires `asm/code_3_2_17_1feec.s` entirely -
-  the file no longer exists, replaced by this new object at the same
-  point in `ldscript.txt`. See
-  [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md)'s
-  "Seventh pass".
-- **`sub_8021388`**, **`sub_802155C`** (`src/graphics/graphics_loading_21280.c`)
-  - issue #31, fifth pass: two more "two-line text popup" siblings
-  (`sub_8021388` builds its header via `sub_801A838`; `sub_802155C` is
-  the OAM-trio tail variant, registering into `gUnknown_030012F4`) -
-  matched. This retires `asm/code_3_2_17_21280.s` entirely - the file no
-  longer exists, replaced by this new object at the same point in
-  `ldscript.txt`. `sub_8021280`/`sub_8021480`, interleaved between/around
-  these two matched functions in the same file, are NAKED - see "Parked -
-  NAKED transcription" below. See
-  [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md)'s
-  "Fifth pass".
+- **`sub_801EF0C`**-**`sub_801FCB4`** (`src/graphics/graphics_loading_1ef0c.c`),
+  **`sub_801FDEC`** (`graphics_loading_1fdec.c`), **`sub_801FEEC`**-
+  **`sub_8020D4C`** except `sub_802062C` (`graphics_loading_1feec.c`),
+  **`sub_8021388`**-**`sub_802155C`** (`graphics_loading_21280.c`) and
+  **`sub_8021668`**-**`sub_8021BD8`** (`graphics_loading_21668.c`) - the
+  "two-line text popup" spawners (issue #31) and the spawner-table
+  entries that follow them. All five files are built with old_agbcc and
+  share `include/text_popup.h`. 33 functions were rewritten as plain C with no pins or
+  asm; 22 of them were NAKED under agbcc, parked on the "r7 in the
+  callee-saved set" gap, which was really a compiler mismatch.
+  `sub_801F170` keeps its agbcc-era pinned C (plain C is 5 halfwords
+  off). See
+  [issue-31-old-agbcc.md](../matching/issue-31-old-agbcc.md).
 - **`sub_8021D80`**, **`sub_8021DFC`**, **`sub_8021E78`**, **`sub_8021EF4`**,
   **`sub_8021F70`**, **`sub_802200C`**, **`sub_80220C4`**, **`sub_802209C`**,
   **`sub_8022158`**, **`nullsub_22`**, **`sub_802218C`**, **`sub_80221A4`**,
@@ -269,56 +208,18 @@ plain C didn't converge.
   attempt. See
   [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)'s
   "Ninth pass".
-- **`sub_802190C`** (`src/graphics/graphics_loading_21668.o`) - a
-  gated `sub_801A878`/`sub_80234F4` dispatcher, same OR-gated id-choice
-  shape as the twin family above. See
-  [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md)'s
-  "Fourth pass".
+- **`sub_802062C`** (`src/graphics/graphics_loading_1feec.c`) - text
+  popup, tag 0x17. Plain C under old_agbcc is 62 halfwords off: the ROM
+  spills `part+0x28` to its one stack slot and keeps the constant 1 in
+  r8, while the reconstruction spills the constant and
+  `&gUnknown_030012B4` instead. See
+  [issue-31-old-agbcc.md](../matching/issue-31-old-agbcc.md).
 - **`sub_8021280`** (`src/graphics/graphics_loading_21280.c`) - a
-  three-way dispatcher (not part of the "two-line text popup" family)
-  gated by a `gStaticData_0816C86C`-indexed guard check.
-- **`sub_8021480`** (`src/graphics/graphics_loading_21280.c`) - one more
-  "two-line text popup" sibling.
-- **`sub_801FEEC`**, **`sub_8020010`**, **`sub_8020138`**,
-  **`sub_802026C`**, **`sub_80203A8`**, **`sub_80204EC`**,
-  **`sub_802062C`**, **`sub_8020788`**, **`sub_80208C4`**,
-  **`sub_80209EC`**, **`sub_8020C18`**, **`sub_8020D4C`**
-  (`src/graphics/graphics_loading_1feec.c`) - issue #31, seventh pass:
-  twelve more "two-line text popup" siblings. Every instruction's
-  operation matches the ROM (confirmed via isolated compile), but each
-  one's ROM disassembly needs r7 in its callee-saved push/pop set
-  (shadowed through r5/r6/r7 alongside sb/r8, or sl/sb/r8, or just r6/r7
-  alongside sb/r8) - the same "this compiler only adds a hard-pinned
-  register to a function's callee-saved set when it tracks that
-  register as holding a value live across a wider span than a single
-  inline-asm block" gap already documented for `sub_8021280`/
-  `sub_8021480`/`sub_802190C` and the nine `graphics_loading_1ef0c.c`
-  functions above. Transcribed instruction-for-instruction instead. See
-  [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md)'s
-  "Seventh pass".
-
-Both hit the same confirmed `r7`-pin gap as `sub_8007114`
-(src/graphics/graphics.c) and `sub_802190C` above - see
-[issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md)'s
-"Fifth pass".
-- **`sub_801EF0C`**, **`sub_801F2BC`**, **`sub_801F3DC`**,
-  **`sub_801F528`**, **`sub_801F7B8`**, **`sub_801F8DC`**,
-  **`sub_801FA3C`**, **`sub_801FB74`**, **`sub_801FCB4`**
-  (`src/graphics/graphics_loading_1ef0c.c`) - nine more "two-line text
-  popup" siblings (issue #31, sixth pass). Every instruction's operation
-  matches the ROM (confirmed via isolated compile), but each one's ROM
-  disassembly needs `r7` in its callee-saved push/pop set (shadowed
-  through `r5`/`r6`/`r7` alongside `sl`/`sb`/`r8`, or just `r6`/`r7`
-  alongside `sb`/`r8`) purely as scratch inside one or two disjoint
-  inline-asm islands (the `+0x29` nibble reload, the collected-bits
-  pack's own mask-byte reload) - the same "this compiler only adds a
-  hard-pinned register to a function's callee-saved set when it tracks
-  that register as holding a value live across a wider span than a
-  single inline-asm block" gap already documented for `sub_8021280`/
-  `sub_8021480`/`sub_802190C` above. Transcribed instruction-for-
-  instruction instead. See
-  [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md)'s
-  "Sixth pass".
+  three-way spawner gated by the `gStaticData_0816C86C` guard. Plain C
+  under old_agbcc is 9 halfwords off: the ROM computes the
+  `{x - 2, y - 0x1e}` point into fresh r2/r3, the reconstruction
+  subtracts in place (the same gap as `sub_802209C`). See
+  [issue-31-old-agbcc.md](../matching/issue-31-old-agbcc.md).
 - **`LoadGraphicsPackage`** (`src/graphics/graphics_package_1e578.c`) -
   the cluster's own namesake; the palette/tileset/tilemap loader itself,
   using the shared `struct bg_package` (`include/graphics_package.h`).

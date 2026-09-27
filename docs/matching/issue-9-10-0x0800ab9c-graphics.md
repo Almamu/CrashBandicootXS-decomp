@@ -1,5 +1,9 @@
 # Issues #9/#10: `sub_800AB9C` follow-up (graphics)
 
+> **Update:** `sub_800AB9C` is now matched. See "Matched: old_agbcc and
+> a by-value box" at the end. The sections below describe the earlier
+> parked attempt.
+
 This is the write-up for a follow-up session against the two raw
 regions `tools/report_units.py` still flagged in the graphics category
 as of
@@ -215,3 +219,38 @@ as of
 - `docs/matching/issue-3-overlay-ui-audio-wrapper.md` - `PlaySfx`'s
   own precedent for the same "scheduler policy, not steerable from C
   source" gap class, cited above.
+
+## Matched: old_agbcc and a by-value box
+
+`sub_800AB9C` is now real C (`src/graphics/actor_part81.c`), and
+`asm/code_3_2_16_ab9c.s` is gone. `actor_part81.o` is on the Makefile's
+`OLD_AGBCC_OBJS`. It is the only function in that file, so no other
+function had to be rechecked.
+
+- **Compiler.** The same C is byte-exact under old_agbcc. The current
+  agbcc differs in 4 bytes: both bit tests load the flag byte into `r0`
+  and shift it in place, where the ROM loads into `r1` and shifts into
+  `r0`. Under old_agbcc that "byte in r1, result in r0" shape comes from
+  plain `(self->flags0C >> 1) & 1` / `self->flags0C >> 7`. It was the
+  reason for the register pins in the first draft. This is some evidence
+  that the 0x0800Axxx neighborhood (`sub_800A884`, `sub_800AAEC`) was
+  built with old_agbcc too. Nobody has retried those under it yet.
+- **The argument order.** `sub_8008A40` takes the box by value, as
+  PR #432 found for `sub_8017AB0` (`actor_part27a.c`). Three words go in
+  `r1`-`r3` and the fourth on the stack. gcc stores a partly-in-registers
+  argument after the plain stack arguments, which gives the ROM's order:
+  6th, 7th, then the box's last word. The "gap" was never a scheduling
+  quirk.
+- **The copy.** The ROM builds the AABB at `sp+0xC` (`sub_8007C30` with
+  a destination pointer) and `sub_800014C`-copies it to `sp+0x1C`. The
+  copy is what gets passed. A separate `struct aabb` local at a nonzero
+  frame offset fails, because its address counts as invalid for a
+  BLKmode operand before reload. gcc then keeps `sp+0x1C` in a
+  callee-saved register and loads the words through it. Declaring the
+  original and the copy as two members of one frame object
+  (`struct aabb_copy { struct aabb src, copy; }`) makes the copy's words
+  load straight from `sp`, as in the ROM.
+- **The rest** needs no pins. It uses a struct view of the object
+  (`flags0C`, `unk_24`, the `+0x105` latch and a `{u32; u8}` pair at
+  `+0x108`). The pair's shared base comes from storing through a
+  `struct ab9c_link *`.

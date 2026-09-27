@@ -667,3 +667,9 @@ exactly where these four functions' real bytes already sat.
   the first two.
 - `ldscript.txt` - `build/crashbandicootxs/src/system/game_loop45.o(.text);`
   line added, between `game_loop44.o` and `code_3_2_17_26bf8.o`.
+
+## Later pass (issue #9 NAKED retry)
+
+`sub_800A420` now has an old_agbcc C draft under `NON_MATCHING` that is
+15 halfwords off. All of the gap is register choice in the first probe's
+hit path. `sub_800A178` was not retried. See [issue-9-naked-retry.md](./issue-9-naked-retry.md) for details.

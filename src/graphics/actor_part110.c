@@ -705,6 +705,69 @@ NAKED u8 sub_800A178(void *self)
  * trampoline result `sub_800A178` also uses), `outFlag` a caller-owned
  * byte set to `1` only on the specific all-miss-with-bit-1-already-set
  * path described above. Returns the final probe's hit boolean. */
+/* Later pass (docs/matching/issue-9-naked-retry.md): the draft below
+ * (old_agbcc) is 15 halfwords off, all in the first probe's hit path:
+ * the ROM keeps the masked y in r3 and copies the flags byte to r1 only
+ * after the bit-1 test, where this C gets y in r2 and the copy in r3
+ * before the test (the second probe's hit path then picks r2/r1 the
+ * other way round too). The shared final `strb` to +0xd is a common
+ * store (`val`) the three exits jump to. */
+#if NON_MATCHING
+#include "box_part.h"
+
+struct probe_pos {
+    s32 x;
+    s32 y;
+};
+
+u8 sub_800A420(struct box_part *self, struct part_box *quad, u8 *outFlag)
+{
+    s32 origY = self->y;
+    struct probe_pos pos;
+    u8 hit;
+    s32 val;
+
+    pos = *(struct probe_pos *)self;
+    sub_8008200(&pos, 8, quad);
+    pos.x >>= 8;
+    pos.y >>= 8;
+    if (!((self->flags2 >> 1) & 1))
+        pos.y--;
+    if (self->mirrorX)
+        pos.x -= quad->w >> 1;
+    else
+        pos.x += quad->w >> 1;
+    hit = sub_8026BF8(gUnknown_03001308, &pos, &origY);
+    if (hit) {
+        u8 f;
+        self->y = origY & 0xFFFFFF00;
+        f = self->flags2;
+        if (!((f >> 1) & 1))
+            self->y += (s32)0xFFFFFF00;
+        val = 2 | f;
+    } else {
+        u8 f = self->flags2;
+        if (!((f >> 1) & 1)) {
+            pos.y++;
+            hit = sub_8026BF8(gUnknown_03001308, &pos, &origY);
+            if (hit) {
+                self->y = origY & 0xFFFFFF00;
+                val = 2 | self->flags2;
+                goto store;
+            }
+            f = self->flags2;
+            if (!((f >> 1) & 1))
+                goto clear;
+        }
+        *outFlag = 1;
+    clear:
+        val = f & ~2;
+    }
+store:
+    self->flags2 = val;
+    return hit;
+}
+#else
 NAKED u8 sub_800A420(void *selfArg, void *quad, u8 *outFlag)
 {
     asm(
@@ -846,3 +909,4 @@ NAKED u8 sub_800A420(void *selfArg, void *quad, u8 *outFlag)
         "bx r1\n\t"
     );
 }
+#endif /* NON_MATCHING */
