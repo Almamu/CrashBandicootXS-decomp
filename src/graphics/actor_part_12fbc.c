@@ -1,730 +1,346 @@
 #include "core.h"
+#include "action_obj.h"
 
-/* GitHub issue #17 (leading portion): the next examined chunk past
- * issue #16's range (which ended at 0x08012D24, matched/NAKED-
- * transcribed across actor_part79.c/actor_part80.c/actor_part83.c/
- * actor_part84.c and docs/matching/issue-16-actor-12160.md/issue-16-
- * actor-remainder.md). `sub_8012FBC`/`sub_8013228`/`sub_80134B8`/
- * `sub_8013994` (leading into `gStaticData_0816BF20`'s 42-slot
- * action-dispatch table, `actor_part18.c`, already matched) share the
- * exact same "self" child-object family and `self+0xc`/`self+0x10`/
- * `+0x27`..`+0x32` field-offset conventions those files document - see
- * docs/matching/issue-17-0x08012fbc-actor.md. Issue #17's own chunk
- * continues past this pass's range (0x0801426C) through 0x08014F8C;
- * the remainder (sub_8013C60 onward) stays raw in the trimmed
- * `asm/code_3_2_17_12af4.s` for a future pass.
- *
- * Named `actor_part_12fbc.c` (address-suffixed, not the next sequential
- * `actor_partNN`) since the plain sequential numbers are independently
- * claimed by unrelated, non-ROM-adjacent parallel work elsewhere in the
- * tree (`actor_part85.c` already exists for the 0x08033EF4 cluster,
- * issue #63) - address-suffixing avoids that collision risk entirely.
- *
- * Both functions here are NAKED transcriptions, not real C: the same
- * unexplained-frame-shape/register-budget gap this table's sibling
- * members hit throughout docs/status/actor.md's "Parked - NAKED
- * transcription" section. A first plain-C attempt at `sub_8013228`
- * (whose prologue looks ordinary, just `r4-r6`/`lr`) still diverged
- * immediately: gcc 2.9 pushed an extra `r7` this compiler's own
- * register allocator wanted for the live `mgr`/`part` pointers, and the
- * `part[0xd] &= ~2` idiom needs the same runtime `-2`/`-3` negated-mask
- * materialization already confirmed elsewhere (docs/matching.md) rather
- * than a folded AND-immediate - not a quick fix given how many more
- * `self+0xc`/`self+0x10` trampoline-pair call sites the rest of the
- * function repeats. `sub_8012FBC` additionally uses `r8` (holding
- * `&gUnknown_03001304` across a `sub_8012A7C` call) on top of the usual
- * `r4-r7`, the same "5th callee-saved register" shape flagged as a
- * confirmed wall in docs/matching/issue-16-actor-remainder.md. Given
- * this whole neighborhood (both ROM-adjacent chunks) is already an
- * established wall for this exact table family, both were transcribed
- * instruction-for-instruction from the ROM disassembly instead (keeping
- * the ROM's own `_0XXXXXXX` labels verbatim as plain, file-local asm
- * symbols rather than renumbering them, to eliminate transcription risk
- * - the same approach `actor_part82.c`'s `sub_8011BD4` uses), the same
- * escape hatch used for `sub_8001CB8`/`sub_8001DB4`
- * (src/system/link_cable.c) and `sub_801434C` (actor_part18.c). */
+/* GitHub issue #17, ROM 0x08012FBC-0x080134B8 (details in
+ * docs/matching/issue-17-0x08012fbc-actor.md, "Third pass"). Two more
+ * gStaticData_0816BF20 action-table handlers for the player/action object
+ * (include/action_obj.h). Built with old_agbcc. */
 
-/* Bails immediately (no `sub_80122CC` call at all) if `sub_8012A7C(self)`
- * reports busy. Otherwise reads `gUnknown_030007E0`'s high 16 bits:
- * bit 0 plays a fixed sound (id `0xd`), fires the `+0x20`/`+0x24` and
- * `+0x50`/`+0x54` trampoline pairs (ids `5`/`0x13`), sets the trio
- * `self+0x18=0`/`+0x32=0`/`+0x30=1`/`+0x28=7`, then returns directly -
- * skipping the shared tail entirely, unlike every other case. Bit 1
- * tail-calls `sub_8015398(self)`. Bit `0x100` plays a different sound
- * (id `0x1a`), fires another trampoline pair (ids `0xc`/`0xf`), resets
- * `self+0x18`/`+0x1c`, clears the trio `+0x31`/`+0x2f`/`+0x27` to
- * `0`/`1`/`0x1e`, zeroes the player's `+0x94` byte (written twice, the
- * same "no redundant-store folding across statements" quirk
- * docs/matching.md already documents for this compiler), then spawns an
- * object via `sub_8025B0C(gUnknown_030012E4, 0x29, 1, 0, 0xa, 0,
- * gUnknown_030012D8)` and clears two bits (`~5` on `+0xc`, then a
- * `(~4)|1` pack on `+0x28`) on the returned object. All three of these
- * cases (and the "none of the above" fallthrough) then converge on a
- * shared tail: dispatching `sub_8000760(gUnknown_03001304)`'s result -
- * `2`, or `7..8` - resets `self+0x1c=0`, fires one more trampoline pair
- * (ids `0x10`/`3`), and sets the trio to `0x1d`/`1`/`0` directly; `0`
- * instead calls `sub_8015780(self, 0, 0x12, 0, 0)` then re-sets the same
- * trio fields to the same `0x1d`/`1`/`0`/`0x1d` shape by hand. Finally,
- * if `gUnknown_030007E0`'s low-half bit `0x200` is set: for `self+8==3`,
- * gates `sub_80231C4(gUnknown_030012C0)` to set `self+0x29=1`, fire a
- * trampoline pair (ids `4`/`0x18`), and set the trio to `0`/`1`/`0x1b`;
- * for `self+8==4`, sets `self+0x29` from the bit test and tail-calls
- * `sub_8015460(self)`; otherwise, while `self+0x18` is already nonzero,
- * overwrites it with the same bit-test value. Every path but the very
- * first (bit-0) case ends with `sub_80122CC(self)`. */
-NAKED void sub_8012FBC(void *selfArg)
+asm(".set _call_via_r2, sub_803AD80\n"
+    ".set _call_via_r3, sub_803AD84\n");
+
+/* The object sub_8025B0C spawns for the 0x100 path, as far as it is used. */
+struct spawned
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, r8\n\t"
-        "push {r7}\n\t"
-        "sub sp, #0x10\n\t"
-        "add r6, r0, #0\n\t"
-        "ldr r0, _08013034\n\t"
-        "mov r8, r0\n\t"
-        "ldr r0, _08013038\n\t"
-        "ldr r0, [r0]\n\t"
-        "str r0, [sp, #0xc]\n\t"
-        "add r0, r6, #0\n\t"
-        "bl sub_8012A7C\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r4, r0, #0x18\n\t"
-        "cmp r4, #0\n\t"
-        "beq _08012FE0\n\t"
-        "b _0801321A\n\t"
-        "_08012FE0:\n"
-        "add r0, sp, #0xc\n\t"
-        "ldrh r1, [r0, #2]\n\t"
-        "mov r7, #1\n\t"
-        "mov r0, #1\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "beq _08013040\n\t"
-        "ldr r0, _0801303C\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0xd\n\t"
-        "bl PlaySfx\n\t"
-        "ldr r1, [r6, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r6, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #5\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r2, [r6, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r2, r1]\n\t"
-        "add r0, r6, r0\n\t"
-        "ldr r1, [r6, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, #0x13\n\t"
-        "bl sub_803AD84\n\t"
-        "str r4, [r6, #0x18]\n\t"
-        "mov r1, #7\n\t"
-        "add r0, r6, #0\n\t"
-        "add r0, #0x32\n\t"
-        "strb r4, [r0]\n\t"
-        "sub r0, #2\n\t"
-        "strb r7, [r0]\n\t"
-        "sub r0, #8\n\t"
-        "strb r1, [r0]\n\t"
-        "b _0801321A\n\t"
-        ".align 2, 0\n"
-        "_08013034: .4byte gUnknown_03001304\n"
-        "_08013038: .4byte gUnknown_030007E0\n"
-        "_0801303C: .4byte gUnknown_030012BC\n"
-        "_08013040:\n"
-        "mov r0, #2\n\t"
-        "and r0, r1\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r5, r0, #0x10\n\t"
-        "cmp r5, #0\n\t"
-        "beq _08013054\n\t"
-        "add r0, r6, #0\n\t"
-        "bl sub_8015398\n\t"
-        "b _0801321A\n\t"
-        "_08013054:\n"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r0, r2, #0\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "beq _080130E4\n\t"
-        "ldr r0, _08013100\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #0x1a\n\t"
-        "bl PlaySfx\n\t"
-        "mov r4, #0x10\n\t"
-        "ldr r1, [r6, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r6, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #0xc\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r2, [r6, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r2, r1]\n\t"
-        "add r0, r6, r0\n\t"
-        "ldr r1, [r6, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, #0xf\n\t"
-        "bl sub_803AD84\n\t"
-        "str r5, [r6, #0x18]\n\t"
-        "str r4, [r6, #0x1c]\n\t"
-        "mov r0, #0x1e\n\t"
-        "add r1, r6, #0\n\t"
-        "add r1, #0x31\n\t"
-        "strb r5, [r1]\n\t"
-        "sub r1, #2\n\t"
-        "mov r4, #1\n\t"
-        "strb r7, [r1]\n\t"
-        "sub r1, #8\n\t"
-        "strb r0, [r1]\n\t"
-        "ldr r2, _08013104\n\t"
-        "ldr r0, [r2]\n\t"
-        "add r0, #0x94\n\t"
-        "strb r5, [r0]\n\t"
-        "ldr r0, [r2]\n\t"
-        "add r0, #0x94\n\t"
-        "strb r5, [r0]\n\t"
-        "ldr r0, _08013108\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #0xa\n\t"
-        "str r1, [sp]\n\t"
-        "str r5, [sp, #4]\n\t"
-        "ldr r1, [r2]\n\t"
-        "str r1, [sp, #8]\n\t"
-        "mov r1, #0x29\n\t"
-        "mov r2, #1\n\t"
-        "mov r3, #0\n\t"
-        "bl sub_8025B0C\n\t"
-        "mov r1, #5\n\t"
-        "neg r1, r1\n\t"
-        "ldrb r2, [r0, #0xc]\n\t"
-        "and r1, r2\n\t"
-        "strb r1, [r0, #0xc]\n\t"
-        "add r0, #0x28\n\t"
-        "mov r1, #4\n\t"
-        "neg r1, r1\n\t"
-        "ldrb r2, [r0]\n\t"
-        "and r1, r2\n\t"
-        "orr r1, r4\n\t"
-        "strb r1, [r0]\n\t"
-        "_080130E4:\n"
-        "mov r1, r8\n\t"
-        "ldr r0, [r1]\n\t"
-        "bl sub_8000760\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r4, r0, #0x18\n\t"
-        "cmp r4, #2\n\t"
-        "beq _0801314E\n\t"
-        "cmp r4, #2\n\t"
-        "bgt _0801310C\n\t"
-        "cmp r4, #0\n\t"
-        "beq _08013116\n\t"
-        "b _0801318C\n\t"
-        ".align 2, 0\n"
-        "_08013100: .4byte gUnknown_030012BC\n"
-        "_08013104: .4byte gUnknown_030012D8\n"
-        "_08013108: .4byte gUnknown_030012E4\n"
-        "_0801310C:\n"
-        "cmp r4, #8\n\t"
-        "bgt _0801318C\n\t"
-        "cmp r4, #7\n\t"
-        "blt _0801318C\n\t"
-        "b _0801314E\n\t"
-        "_08013116:\n"
-        "str r4, [sp]\n\t"
-        "add r0, r6, #0\n\t"
-        "mov r1, #0\n\t"
-        "mov r2, #0x12\n\t"
-        "mov r3, #0\n\t"
-        "bl sub_8015780\n\t"
-        "add r3, r6, #0\n\t"
-        "add r3, #0x31\n\t"
-        "strb r4, [r3]\n\t"
-        "add r2, r6, #0\n\t"
-        "add r2, #0x2f\n\t"
-        "strb r7, [r2]\n\t"
-        "add r1, r6, #0\n\t"
-        "add r1, #0x27\n\t"
-        "strb r4, [r1]\n\t"
-        "add r0, r6, #0\n\t"
-        "add r0, #0x32\n\t"
-        "strb r4, [r0]\n\t"
-        "sub r0, #2\n\t"
-        "strb r7, [r0]\n\t"
-        "sub r0, #8\n\t"
-        "strb r4, [r0]\n\t"
-        "mov r0, #0x1d\n\t"
-        "strb r4, [r3]\n\t"
-        "strb r7, [r2]\n\t"
-        "strb r0, [r1]\n\t"
-        "b _0801318C\n\t"
-        "_0801314E:\n"
-        "mov r4, #0\n\t"
-        "ldr r1, [r6, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r6, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #0x10\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r2, [r6, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r2, r1]\n\t"
-        "add r0, r6, r0\n\t"
-        "ldr r1, [r6, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, #3\n\t"
-        "bl sub_803AD84\n\t"
-        "str r4, [r6, #0x1c]\n\t"
-        "mov r1, #0x1d\n\t"
-        "add r0, r6, #0\n\t"
-        "add r0, #0x31\n\t"
-        "strb r4, [r0]\n\t"
-        "add r2, r6, #0\n\t"
-        "add r2, #0x2f\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r2]\n\t"
-        "add r0, r6, #0\n\t"
-        "add r0, #0x27\n\t"
-        "strb r1, [r0]\n\t"
-        "_0801318C:\n"
-        "add r1, sp, #0xc\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #2\n\t"
-        "ldrh r1, [r1]\n\t"
-        "and r0, r1\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r1, r0, #0x10\n\t"
-        "cmp r1, #0\n\t"
-        "beq _080131F8\n\t"
-        "ldr r0, [r6, #8]\n\t"
-        "cmp r0, #3\n\t"
-        "bne _08013214\n\t"
-        "ldr r0, _080131F4\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_80231C4\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "beq _08013214\n\t"
-        "add r0, r6, #0\n\t"
-        "add r0, #0x29\n\t"
-        "mov r5, #0\n\t"
-        "mov r4, #1\n\t"
-        "strb r4, [r0]\n\t"
-        "ldr r1, [r6, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r6, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #4\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r2, [r6, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r2, r1]\n\t"
-        "add r0, r6, r0\n\t"
-        "ldr r1, [r6, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, #0x18\n\t"
-        "bl sub_803AD84\n\t"
-        "mov r0, #0x1b\n\t"
-        "add r1, r6, #0\n\t"
-        "add r1, #0x31\n\t"
-        "strb r5, [r1]\n\t"
-        "sub r1, #2\n\t"
-        "strb r4, [r1]\n\t"
-        "sub r1, #8\n\t"
-        "strb r0, [r1]\n\t"
-        "b _08013214\n\t"
-        ".align 2, 0\n"
-        "_080131F4: .4byte gUnknown_030012C0\n"
-        "_080131F8:\n"
-        "ldr r0, [r6, #8]\n\t"
-        "cmp r0, #4\n\t"
-        "bne _0801320C\n\t"
-        "add r0, r6, #0\n\t"
-        "add r0, #0x29\n\t"
-        "strb r1, [r0]\n\t"
-        "add r0, r6, #0\n\t"
-        "bl sub_8015460\n\t"
-        "b _08013214\n\t"
-        "_0801320C:\n"
-        "ldr r0, [r6, #0x18]\n\t"
-        "cmp r0, #0\n\t"
-        "beq _08013214\n\t"
-        "str r1, [r6, #0x18]\n\t"
-        "_08013214:\n"
-        "add r0, r6, #0\n\t"
-        "bl sub_80122CC\n\t"
-        "_0801321A:\n"
-        "add sp, #0x10\n\t"
-        "pop {r3}\n\t"
-        "mov r8, r3\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0"
-    );
+    u8 unk_00[0xC];
+    u8 unk_0C_0:2;
+    u8 unk_0C_2:1;
+    u8 unk_0C_3:5;
+    u8 unk_0D[0x1B];
+    u8 unk_28_0:2;
+    u8 unk_28_2:6;
+};
+
+extern u32 gUnknown_030007E0;
+extern void *gUnknown_030012BC;
+extern void *gUnknown_030012C0;
+extern u8 *gUnknown_030012D8;
+extern void *gUnknown_030012E4;
+extern void *gUnknown_03001304;
+extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
+extern u8 sub_8000760(void *pad);
+extern u8 sub_8012A7C(struct act *self);
+extern void sub_80122CC(struct act *self);
+extern void sub_800B334(struct act_part *part);
+extern void sub_8015398(struct act *self);
+extern void sub_8015460(struct act *self);
+extern void sub_8015780(struct act *self, s32 a, s32 b, s32 c, s32 d);
+extern u8 sub_80231C4(void *self);
+extern struct spawned *sub_8025B0C(void *pool, s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
+
+/* Stores to the two "next action" trios. As inline parameters, old_agbcc
+ * materializes the values before the stores; the `Set` forms store a
+ * literal 0/1 for the first two bytes, and the `P` forms store the action
+ * through a pointer the caller already holds (the ROM keeps the one it
+ * tested). */
+static inline void ActQueue27(struct act *self, s32 cur, s32 next)
+{
+    self->next31 = cur;
+    self->flag2F = 1;
+    self->next27 = next;
 }
 
-/* First clears two `part+0xd` bits (`&= ~2`, then `&= ~3`, each via the
- * runtime-negated-mask idiom, not a folded AND-immediate). If
- * `part+0x68` bit 2 is set: fires the `+0x20`/`+0x24` and `+0x50`/
- * `+0x54` trampoline pairs (ids `0x1a`/`0x15`), clamps `part+0x30`'s
- * index against the `part+0x20`-pointer-to-manager/`part+0x2d`-tag/
- * 28-byte-stride record's own `+0x16` count (the same table-lookup
- * convention `sub_8010480`, game_loop35.c, and
- * docs/matching/issue-13-fc70-second-continuation.md establish), calls
- * `sub_800B334(part)`, then clears `part+0x68`. Otherwise, while
- * `self+0x26==0` and `gUnknown_030007E0`'s high-half bit 1 is set: plays
- * a fixed sound (id `0xa`), fires another trampoline pair (ids `0xe`/
- * `0x10`), resets `self+0x18`/`+0x1c` and the `+0x21..+0x24` byte run,
- * and clears the player's `+0x92` byte. Otherwise, while `part+0x38` is
- * set: depending on `gUnknown_030007E0`'s low bits (`1` and `0x30`) and
- * whether `part+0x2d==6`, fires one or two more trampoline-pair
- * combinations (ids `9`/`6`, or `7`/`0xc`) and, while `self+0x28==7`,
- * resets the trio to one of `0xa`/`9`/`8` depending on those same bits.
- * Finally, every path but the first converges on dispatching
- * `sub_8000760(gUnknown_03001304)`'s D-pad-remap result: `<=2` resets
- * the trio to `0`/`1`/`0` while the player's `+0x100` flag is clear;
- * otherwise, a `self+0x27` tag of `0x1b`/`0x1c` resets it to `1`/`1`/
- * `0x1c`; a nonzero `self+0x18` (tag `!=0xd`) resets it to `0`/`1`/
- * `0xd`; and a clear player `+0x100` flag resets it to `0`/`1`/`7` -
- * before tail-calling `sub_80122CC(self)`. */
-NAKED void sub_8013228(void *selfArg)
+static inline void ActTrio27(struct act *self, s32 cur, s32 flag, s32 next)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "sub sp, #4\n\t"
-        "add r5, r0, #0\n\t"
-        "ldr r1, [r5, #0x10]\n\t"
-        "mov r0, #2\n\t"
-        "neg r0, r0\n\t"
-        "ldrb r2, [r1, #0xd]\n\t"
-        "and r0, r2\n\t"
-        "strb r0, [r1, #0xd]\n\t"
-        "ldr r1, [r5, #0x10]\n\t"
-        "mov r0, #3\n\t"
-        "neg r0, r0\n\t"
-        "ldrb r6, [r1, #0xd]\n\t"
-        "and r0, r6\n\t"
-        "strb r0, [r1, #0xd]\n\t"
-        "ldr r1, [r5, #0x10]\n\t"
-        "add r1, #0x68\n\t"
-        "mov r0, #4\n\t"
-        "ldrb r1, [r1]\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "beq _080132A8\n\t"
-        "ldr r1, [r5, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #0x1a\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r2, [r5, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r6, #0\n\t"
-        "ldrsh r0, [r2, r6]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r1, [r5, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, #0x15\n\t"
-        "bl sub_803AD84\n\t"
-        "ldr r3, [r5, #0x10]\n\t"
-        "mov r4, #2\n\t"
-        "ldr r0, [r3, #0x20]\n\t"
-        "add r2, r3, #0\n\t"
-        "add r2, #0x2d\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldrb r6, [r2]\n\t"
-        "lsl r0, r6, #3\n\t"
-        "sub r0, r0, r6\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrb r0, [r0, #0x16]\n\t"
-        "cmp r4, r0\n\t"
-        "blt _08013296\n\t"
-        "sub r4, r0, #1\n\t"
-        "_08013296:\n"
-        "str r4, [r3, #0x30]\n\t"
-        "add r0, r3, #0\n\t"
-        "bl sub_800B334\n\t"
-        "ldr r0, [r5, #0x10]\n\t"
-        "mov r1, #0\n\t"
-        "add r0, #0x68\n\t"
-        "strb r1, [r0]\n\t"
-        "b _080134AA\n\t"
-        "_080132A8:\n"
-        "ldr r1, _08013320\n\t"
-        "ldr r0, [r1]\n\t"
-        "str r0, [sp]\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x26\n\t"
-        "ldrb r6, [r0]\n\t"
-        "add r2, r1, #0\n\t"
-        "cmp r6, #0\n\t"
-        "bne _0801332C\n\t"
-        "mov r0, sp\n\t"
-        "ldrh r1, [r0, #2]\n\t"
-        "mov r0, #2\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "beq _0801332C\n\t"
-        "ldr r0, _08013324\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0xa\n\t"
-        "bl PlaySfx\n\t"
-        "mov r4, #0x18\n\t"
-        "ldr r1, [r5, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #0xe\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r2, [r5, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r2, r1]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r1, [r5, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, #0x10\n\t"
-        "bl sub_803AD84\n\t"
-        "str r6, [r5, #0x18]\n\t"
-        "str r4, [r5, #0x1c]\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x21\n\t"
-        "strb r6, [r0]\n\t"
-        "sub r0, #1\n\t"
-        "strb r6, [r0]\n\t"
-        "add r0, #2\n\t"
-        "strb r6, [r0]\n\t"
-        "add r0, #1\n\t"
-        "strb r6, [r0]\n\t"
-        "add r0, #1\n\t"
-        "strb r6, [r0]\n\t"
-        "ldr r0, _08013328\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r0, #0x92\n\t"
-        "strb r6, [r0]\n\t"
-        "b _080134AA\n\t"
-        ".align 2, 0\n"
-        "_08013320: .4byte gUnknown_030007E0\n"
-        "_08013324: .4byte gUnknown_030012BC\n"
-        "_08013328: .4byte gUnknown_030012D8\n"
-        "_0801332C:\n"
-        "ldr r1, [r5, #0x10]\n\t"
-        "add r0, r1, #0\n\t"
-        "add r0, #0x38\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq _08013402\n\t"
-        "ldr r4, [r2]\n\t"
-        "mov r0, #1\n\t"
-        "and r0, r4\n\t"
-        "cmp r0, #0\n\t"
-        "beq _080133A8\n\t"
-        "mov r0, #0x30\n\t"
-        "and r0, r4\n\t"
-        "cmp r0, #0\n\t"
-        "beq _080133A8\n\t"
-        "add r0, r1, #0\n\t"
-        "add r0, #0x2d\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #6\n\t"
-        "bne _08013366\n\t"
-        "ldr r1, [r5, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #9\n\t"
-        "bl sub_803AD80\n\t"
-        "b _0801338A\n\t"
-        "_08013366:\n"
-        "ldr r1, [r5, #0xc]\n\t"
-        "mov r6, #0x20\n\t"
-        "ldrsh r0, [r1, r6]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #9\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r2, [r5, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r2, r1]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r1, [r5, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, #6\n\t"
-        "bl sub_803AD84\n\t"
-        "_0801338A:\n"
-        "add r3, r5, #0\n\t"
-        "add r3, #0x28\n\t"
-        "ldrb r2, [r3]\n\t"
-        "cmp r2, #7\n\t"
-        "bne _08013402\n\t"
-        "mov r2, #0xa\n\t"
-        "add r1, r5, #0\n\t"
-        "add r1, #0x32\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r1]\n\t"
-        "sub r1, #2\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r1]\n\t"
-        "strb r2, [r3]\n\t"
-        "b _08013402\n\t"
-        "_080133A8:\n"
-        "ldr r1, [r5, #0xc]\n\t"
-        "mov r6, #0x20\n\t"
-        "ldrsh r0, [r1, r6]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #7\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r2, [r5, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r2, r1]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r1, [r5, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, #0xc\n\t"
-        "bl sub_803AD84\n\t"
-        "add r3, r5, #0\n\t"
-        "add r3, #0x28\n\t"
-        "ldrb r2, [r3]\n\t"
-        "cmp r2, #7\n\t"
-        "bne _08013402\n\t"
-        "mov r6, #1\n\t"
-        "mov r2, #1\n\t"
-        "and r2, r4\n\t"
-        "cmp r2, #0\n\t"
-        "beq _080133F4\n\t"
-        "mov r0, #9\n\t"
-        "add r2, r5, #0\n\t"
-        "add r2, #0x32\n\t"
-        "mov r1, #0\n\t"
-        "strb r1, [r2]\n\t"
-        "add r1, r5, #0\n\t"
-        "add r1, #0x30\n\t"
-        "strb r6, [r1]\n\t"
-        "strb r0, [r3]\n\t"
-        "b _08013402\n\t"
-        "_080133F4:\n"
-        "mov r1, #8\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x32\n\t"
-        "strb r2, [r0]\n\t"
-        "sub r0, #2\n\t"
-        "strb r6, [r0]\n\t"
-        "strb r1, [r3]\n\t"
-        "_08013402:\n"
-        "ldr r0, _08013438\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_8000760\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "cmp r0, #2\n\t"
-        "bhi _08013440\n\t"
-        "ldr r0, _0801343C\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r6, #0x80\n\t"
-        "lsl r6, r6, #1\n\t"
-        "add r0, r0, r6\n\t"
-        "ldrb r1, [r0]\n\t"
-        "cmp r1, #0\n\t"
-        "bne _080134A4\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x31\n\t"
-        "strb r1, [r0]\n\t"
-        "add r2, r5, #0\n\t"
-        "add r2, #0x2f\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r2]\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x27\n\t"
-        "strb r1, [r0]\n\t"
-        "b _080134A4\n\t"
-        ".align 2, 0\n"
-        "_08013438: .4byte gUnknown_03001304\n"
-        "_0801343C: .4byte gUnknown_030012D8\n"
-        "_08013440:\n"
-        "add r3, r5, #0\n\t"
-        "add r3, #0x27\n\t"
-        "ldrb r1, [r3]\n\t"
-        "add r0, r1, #0\n\t"
-        "sub r0, #0x1b\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "cmp r0, #1\n\t"
-        "bhi _08013460\n\t"
-        "mov r1, #0x1c\n\t"
-        "add r2, r5, #0\n\t"
-        "add r2, #0x31\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r2]\n\t"
-        "sub r2, #2\n\t"
-        "b _080134A0\n\t"
-        "_08013460:\n"
-        "ldr r0, [r5, #0x18]\n\t"
-        "cmp r0, #0\n\t"
-        "beq _08013482\n\t"
-        "lsl r0, r1, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "cmp r0, #0xd\n\t"
-        "beq _080134A4\n\t"
-        "mov r0, #0xd\n\t"
-        "add r2, r5, #0\n\t"
-        "add r2, #0x31\n\t"
-        "mov r1, #0\n\t"
-        "strb r1, [r2]\n\t"
-        "sub r2, #2\n\t"
-        "mov r1, #1\n\t"
-        "strb r1, [r2]\n\t"
-        "strb r0, [r3]\n\t"
-        "b _080134A4\n\t"
-        "_08013482:\n"
-        "ldr r0, _080134B4\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #1\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrb r2, [r0]\n\t"
-        "cmp r2, #0\n\t"
-        "bne _080134A4\n\t"
-        "mov r1, #7\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x31\n\t"
-        "strb r2, [r0]\n\t"
-        "add r2, r5, #0\n\t"
-        "add r2, #0x2f\n\t"
-        "mov r0, #1\n\t"
-        "_080134A0:\n"
-        "strb r0, [r2]\n\t"
-        "strb r1, [r3]\n\t"
-        "_080134A4:\n"
-        "add r0, r5, #0\n\t"
-        "bl sub_80122CC\n\t"
-        "_080134AA:\n"
-        "add sp, #4\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-        "_080134B4: .4byte gUnknown_030012D8\n"
-    );
+    self->next31 = cur;
+    self->flag2F = flag;
+    self->next27 = next;
 }
+
+static inline void ActTrio28(struct act *self, s32 cur, s32 flag, s32 next)
+{
+    self->next32 = cur;
+    self->flag30 = flag;
+    self->next28 = next;
+}
+
+static inline void ActSetNextP(struct act *self, u8 *slot, s32 next)
+{
+    self->next32 = 0;
+    self->flag30 = 1;
+    *slot = next;
+}
+
+static inline void ActNext28P(struct act *self, u8 *slot, s32 flag, s32 next)
+{
+    self->next32 = 0;
+    self->flag30 = flag;
+    *slot = next;
+}
+
+static inline void ActSetNext27P(struct act *self, u8 *slot, s32 next)
+{
+    self->next31 = 0;
+    self->flag2F = 1;
+    *slot = next;
+}
+
+static inline void ActHold27P(struct act *self, u8 *slot, s32 next)
+{
+    self->next31 = 1;
+    self->flag2F = 1;
+    *slot = next;
+}
+
+/* Like the header's ActAndFlags0D: as an inline parameter the value is
+ * materialized before the part pointer's +0x68 address. */
+static inline void ActSetContact(struct act_part *p, s32 v)
+{
+    p->contact = v;
+}
+
+/* Unless sub_8012A7C reports busy: fire (pressed bit 0) plays action 5's
+ * animations and queues action 7; alt (bit 1) hands off to sub_8015398;
+ * bit 8 plays animations 0xC/0xF, queues 0x1E, clears the player's +0x94
+ * and spawns a 0x29 object from gUnknown_030012E4. Then the D-pad: 0 goes
+ * through sub_8015780 and queues 0x1D by hand, 2/7/8 play animations
+ * 0x10/3 and queue 0x1D. Held bit 9 in state 3 (and sub_80231C4) plays
+ * 4/0x18 and queues 0x1B; without it, state 4 hands off to sub_8015460.
+ *
+ * The method calls use ACT_CALL (include/action_obj.h): with the
+ * do/while form CSE doesn't carry the fire test's 1 (r7) into the +0x2F
+ * stores after the calls. gUnknown_03001304's address is taken up front,
+ * which is what keeps it in r8 across the calls, and the spawned object's
+ * bits are bitfields so their masks come out as the ROM's -5/-4. */
+void sub_8012FBC(struct act *self)
+{
+    void **pad = &gUnknown_03001304;
+    u32 in = gUnknown_030007E0;
+    u8 busy = sub_8012A7C(self);
+
+    if (busy)
+        return;
+    if (INPUT_PRESSED(in) & 1)
+    {
+        PlaySfx(gUnknown_030012BC, 0xD, 0x100);
+        ACT_CALL1(self, m20, 5);
+        ACT_CALL2(self, m50, self->part, 0x13);
+        self->frame = busy;
+        ActSetNext(self, 7);
+        return;
+    }
+    {
+        u16 alt = INPUT_PRESSED(in) & 2;
+
+        if (alt)
+        {
+            sub_8015398(self);
+            return;
+        }
+        if (INPUT_PRESSED(in) & 0x100)
+        {
+            s32 frames;
+            struct spawned *obj;
+
+            PlaySfx(gUnknown_030012BC, 0x1A, 0x100);
+            frames = 0x10;
+            ACT_CALL1(self, m20, 0xC);
+            ACT_CALL2(self, m50, self->part, 0xF);
+            self->frame = alt;
+            self->frames = frames;
+            ActQueue27(self, alt, 0x1E);
+            gUnknown_030012D8[0x94] = alt;
+            gUnknown_030012D8[0x94] = alt;
+            obj = sub_8025B0C(gUnknown_030012E4, 0x29, 1, 0, 0xA, alt, gUnknown_030012D8);
+            obj->unk_0C_2 = 0;
+            obj->unk_28_0 = 1;
+        }
+    }
+    {
+        u8 dir = sub_8000760(*pad);
+
+        switch (dir)
+        {
+        case 0:
+            sub_8015780(self, 0, 0x12, 0, dir);
+            ActTrio27(self, dir, 1, dir);
+            ActTrio28(self, dir, 1, dir);
+            ActTrio27(self, dir, 1, 0x1D);
+            break;
+        case 2:
+        case 7:
+        case 8:
+        {
+            s32 zero = 0;
+
+            ACT_CALL1(self, m20, 0x10);
+            ACT_CALL2(self, m50, self->part, 3);
+            self->frames = zero;
+            ActQueue27(self, zero, 0x1D);
+            break;
+        }
+        }
+    }
+    {
+        s32 held = (u16)(INPUT_HELD(in) & 0x200);
+
+        if (held)
+        {
+            if (self->state == 3 && sub_80231C4(gUnknown_030012C0))
+            {
+                s32 zero;
+
+                self->unk_29 = 1;
+                zero = 0;
+                ACT_CALL1(self, m20, 4);
+                ACT_CALL2(self, m50, self->part, 0x18);
+                ActTrio27(self, zero, 1, 0x1B);
+            }
+        }
+        else if (self->state == 4)
+        {
+            self->unk_29 = held;
+            sub_8015460(self);
+        }
+        else if (self->frame != 0)
+        {
+            self->frame = held;
+        }
+    }
+    sub_80122CC(self);
+}
+
+
+/* Clears part+0x0D bits 0/1, then: on contact bit 2 plays animations
+ * 0x1A/0x15, holds the part on frame 2 and hands it to sub_800B334; on the
+ * alt edge (with +0x26 clear) plays 0xE/0x10 and clears the charge state
+ * and the player's +0x92; once the part's animation is done, picks the
+ * next attack animation from the held fire/shoulder bits (9/6 or 7/0xC)
+ * and queues 0xA/9/8 while action 7 is pending. Finally the D-pad queues
+ * idle, 0x1C (from 0x1B/0x1C), 0xD or 7.
+ *
+ * The 1 for the 9/8 +0x30 stores is set before the `cur & 1` test and
+ * kept apart from the test's own constant (which the ROM rematerializes);
+ * the barrier keeps gcc from folding the two into one register. */
+void sub_8013228(struct act *self)
+{
+    ActAndFlags0D(self->part, -2);
+    ActAndFlags0D(self->part, -3);
+    if (self->part->contact & 4)
+    {
+        struct act_part *part;
+        s32 frame;
+        s32 count;
+
+        ACT_VCALL1(self, m20, 0x1A);
+        ACT_VCALL2(self, m50, self->part, 0x15);
+        part = self->part;
+        frame = 2;
+        count = part->bank->records[part->tag].frameCount;
+        if (frame >= count)
+            frame = count - 1;
+        part->frame = frame;
+        sub_800B334(part);
+        ActSetContact(self->part, 0);
+        return;
+    }
+    {
+        u32 in = gUnknown_030007E0;
+        u8 busy = self->unk_26;
+
+        if (busy == 0 && (INPUT_PRESSED(in) & 2))
+        {
+            s32 frames;
+
+            PlaySfx(gUnknown_030012BC, 0xA, 0x100);
+            frames = 0x18;
+            ACT_VCALL1(self, m20, 0xE);
+            ACT_VCALL2(self, m50, self->part, 0x10);
+            self->frame = busy;
+            self->frames = frames;
+            self->unk_21 = busy;
+            self->charge = busy;
+            self->unk_22 = busy;
+            self->unk_23 = busy;
+            self->unk_24[0] = busy;
+            gUnknown_030012D8[0x92] = busy;
+            return;
+        }
+    }
+    {
+        struct act_part *part = self->part;
+
+        if (part->animDone)
+        {
+            u32 cur = gUnknown_030007E0;
+
+            if ((cur & 1) && (cur & 0x30))
+            {
+                if (part->tag == 6)
+                {
+                    ACT_VCALL1(self, m20, 9);
+                }
+                else
+                {
+                    ACT_VCALL1(self, m20, 9);
+                    ACT_VCALL2(self, m50, self->part, 6);
+                }
+                {
+                    u8 *slot = &self->next28;
+
+                    if (*slot == 7)
+                        ActSetNextP(self, slot, 0xA);
+                }
+            }
+            else
+            {
+                ACT_VCALL1(self, m20, 7);
+                ACT_VCALL2(self, m50, self->part, 0xC);
+                {
+                    u8 *slot = &self->next28;
+
+                    if (*slot == 7)
+                    {
+                        s32 one = 1;
+
+                        asm("" : "+r"(one));
+
+                        if (cur & 1)
+                            ActNext28P(self, slot, one, 9);
+                        else
+                            ActNext28P(self, slot, one, 8);
+                    }
+                }
+            }
+        }
+    }
+    if (sub_8000760(gUnknown_03001304) <= 2)
+    {
+        if (gUnknown_030012D8[0x100] == 0)
+        {
+            self->next31 = 0;
+            self->flag2F = 1;
+            self->next27 = 0;
+        }
+    }
+    else
+    {
+        u8 *slot = &self->next27;
+
+        if (*slot == 0x1B || *slot == 0x1C)
+        {
+            ActHold27P(self, slot, 0x1C);
+        }
+        else if (self->frame != 0)
+        {
+            if (*slot != 0xD)
+                ActSetNext27P(self, slot, 0xD);
+        }
+        else if (gUnknown_030012D8[0x100] == 0)
+        {
+            ActSetNext27P(self, slot, 7);
+        }
+    }
+    sub_80122CC(self);
+}
+asm(".align 2, 0");

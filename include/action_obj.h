@@ -112,6 +112,26 @@ typedef void (*act_fn2)(void *self, void *a, s32 b);
         ((act_fn2)_m->fn)((u8 *)(obj) + _m->thisOffset, (void *)(a), (s32)(b)); \
     } while (0)
 
+/* The same calls wrapped in `if (1) { ... } else (void)0` instead of
+ * `do { ... } while (0)` (include/actor_self.h explains the difference).
+ * agbcc treats the `do`/`while` as a loop, which keeps CSE from carrying
+ * a constant from before the call to a store after it. Most handlers match
+ * either way; sub_8013D94 needs the loop form and sub_8014D18 (and the
+ * other handlers that keep a 1 in a callee-saved register across the
+ * calls) needs this one. */
+#define ACT_CALL1(obj, m, a)                                                   \
+    if (1)                                                                     \
+    {                                                                          \
+        struct act_method *_m = &(obj)->vt->m;                                 \
+        ((act_fn1)_m->fn)((u8 *)(obj) + _m->thisOffset, (s32)(a));             \
+    } else (void)0
+#define ACT_CALL2(obj, m, a, b)                                                \
+    if (1)                                                                     \
+    {                                                                          \
+        struct act_method *_m = &(obj)->vt->m;                                 \
+        ((act_fn2)_m->fn)((u8 *)(obj) + _m->thisOffset, (void *)(a), (s32)(b)); \
+    } else (void)0
+
 /* gUnknown_030007E0 is the input word: low half held, high half newly
  * pressed. Handlers copy it to a stack slot and read the halves back from
  * there; the halves go through the local's address (a union or struct
