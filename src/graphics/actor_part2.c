@@ -197,6 +197,108 @@ extern void *gUnknown_030012B4;
  * hard-compiler-limitation cases (`src/system/link_cable.c`'s several
  * NAKED functions, `src/audio/gax_swi.c`'s `sub_80392C4`). See
  * docs/matching/naked-sub_8007dbc.md for the conversion write-up. */
+/* Later pass (docs/matching/issue-9-naked-retry.md): under old_agbcc
+ * the draft below gets the r7-cached global and everything else right
+ * and is 42 halfwords off in two spots: the `gone` bit set (the ROM ORs
+ * in the r6 constant 1 kept from the flag tests, `ldrb; orrs r0, r6`,
+ * where this C rematerializes `movs #1` first and instead reuses r6 for
+ * the bitmap's `1 << bit`), and the spawned part's mode/flag update
+ * (the ROM materializes `movs r1, #1` before the `-4` mask). */
+#if NON_MATCHING
+struct collect_method {
+    s16 thisOffset;
+    u8 unk_02[2];
+    void (*fn)(void *self, s32 a, s32 b, s32 c);
+};
+
+struct collect_part {
+    s32 x;
+    s32 y;
+    u16 id;             // 0x08
+    u8 kind;            // 0x0A
+    u8 unk_0B;
+    u8 gone:1;          // 0x0C
+    u8 unk_0C_1:1;
+    u8 visible:1;
+    u8 hit:1;
+    u8 unk_0C_4:3;
+    u8 solid:1;
+    u8 unk_0D[0xb];
+    u8 *vtable;         // 0x18
+    u8 unk_1C[0xc];
+    u8 mode:2;          // 0x28
+    u8 unk_28_2:6;
+};
+
+#define COLLECT_FLAGS(p) (*((u8 *)(p) + 0xc))
+
+static inline struct collect_part *SpawnPickup(s32 kind, s32 x, s32 y)
+{
+    return sub_8025BAC(gUnknown_030012E4, 0x2b, kind, x, y, 0);
+}
+
+s32 sub_8007DBC(struct collect_part *part)
+{
+    struct aabb a, b;
+    struct collect_part *player;
+    struct collect_part *spawned;
+    u32 flags = COLLECT_FLAGS(part) << 24;
+
+    if (!((flags >> 27) & 1) && ((flags >> 26) & 1)) {
+        sub_8007B98(&a, part);
+        if (COLLECT_FLAGS(gUnknown_030012D8) >> 7) {
+            sub_8007B98(&b, gUnknown_030012D8);
+            if (sub_8001688(&b, &a)) {
+                COLLECT_FLAGS(part) |= 8;
+                player = (struct collect_part *)gUnknown_030012D8;
+                {
+                    struct collect_method *m = (struct collect_method *)(player->vtable + 0x68);
+                    m->fn((u8 *)player + m->thisOffset, 0, part->kind, 0);
+                }
+                COLLECT_FLAGS(part) |= 1;
+                if (part->id != 0xFFFF) do {
+                    s32 id = part->id;
+                    u8 *base = gUnknown_030012B4;
+                    s32 word = id / 32;
+                    s32 off = word * 4;
+                    u32 *slot = (u32 *)(base + 0x108);
+
+                    slot = (u32 *)((u8 *)slot + off);
+                    *slot |= 1 << (id - word * 32);
+                } while (0);
+
+                spawned = NULL;
+                switch (part->kind) {
+                case 0x1d:
+                case 0x1e:
+                    spawned = SpawnPickup(1, part->x >> 8, part->y >> 8);
+                    break;
+                case 0x21:
+                    spawned = SpawnPickup(6, part->x >> 8, part->y >> 8);
+                    break;
+                case 0x1f:
+                    spawned = SpawnPickup(5, part->x >> 8, part->y >> 8);
+                    break;
+                case 0x22:
+                    spawned = SpawnPickup(0, part->x >> 8, part->y >> 8);
+                    break;
+                case 0x20:
+                    spawned = SpawnPickup(3, part->x >> 8, part->y >> 8);
+                    break;
+                case 0x1b:
+                    spawned = SpawnPickup(4, part->x >> 8, part->y >> 8);
+                    break;
+                }
+                if (spawned) {
+                    spawned->mode = 1;
+                    spawned->visible = 0;
+                }
+            }
+        }
+    }
+    return 0;
+}
+#else
 NAKED void sub_8007DBC(struct actor *part)
 {
     asm(
@@ -420,4 +522,5 @@ NAKED void sub_8007DBC(struct actor *part)
     "25: .4byte gUnknown_030012E4\n"
     );
 }
+#endif /* NON_MATCHING */
 

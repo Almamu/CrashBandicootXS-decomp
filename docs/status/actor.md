@@ -11,6 +11,16 @@ from "core" graphics.
 
 ## Matched
 
+- **Issue #9 NAKED retry** ([docs/matching/issue-9-naked-retry.md](../matching/issue-9-naked-retry.md)):
+  `sub_8007B00`/`sub_8007B98` (`actor_part.c`), `sub_8008044`
+  (`actor_part3.c`), `sub_8008A40`/`sub_8008AD8` (`actor_part7.c`),
+  `sub_8008D80` (`actor_part7b.c`), `sub_8009528` (`actor_part11f.c`),
+  `sub_80096C0` (`actor_part11e.c`), `sub_8009868` (`actor_part11d.c`),
+  `sub_80099F0` (`actor_part12.c`) - all under old_agbcc (the whole
+  objects moved to `OLD_AGBCC_OBJS`), mostly by passing the collision
+  box by value - and `sub_800AAEC` (`actor_part108.c`, either compiler,
+  guarded do-while list walk). Previously parked as NAKED below.
+
 - `src/graphics/actor_part.c` (new file - `sub_8007A48`'s real ROM
   address isn't adjacent to `graphics.c`'s matched functions, since
   `sub_8007634` sits unclaimed between them; see
@@ -881,7 +891,7 @@ plain C didn't converge.
   in gcc's rotation (`sub_8014B54`), and a shared method-call tail
   (`sub_8014D18`). See `docs/matching/issue-17-0x08012fbc-actor.md`,
   "Second pass".
-- **`sub_8009868`** (`src/graphics/actor_part11d.c`) - another
+- **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/issue-9-naked-retry.md); entry kept for history.** **`sub_8009868`** (`src/graphics/actor_part11d.c`) - another
   3-bucket-window grid pass, this one reading the player's state to
   dispatch `sub_800D040`/`sub_80109A4` per object. Fully understood;
   parked on a cross-branch register-role gap (`r8` reused for two
@@ -1560,7 +1570,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   accepted-as-unclosable class as `sub_8008AD8`/`sub_8008D80` right
   next door (`actor_part7.c`) and `PlaySfx` (issue #3). See
   [docs/matching/issue-9-10-0x0800ab9c-graphics.md](../matching/issue-9-10-0x0800ab9c-graphics.md).
-- **`sub_800AAEC`** (`src/graphics/actor_part108.c`, GitHub issue
+- **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/issue-9-naked-retry.md); entry kept for history.** **`sub_800AAEC`** (`src/graphics/actor_part108.c`, GitHub issue
   #9/#10) - the input-action-check function the 42-slot
   `gStaticData_0816BF20` action-dispatch table's entries call: gates a
   `sub_8026628` proximity probe against the player, then walks
@@ -1587,7 +1597,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   `goto`-based flow) all produced an identical 8-byte-larger result -
   see `docs/matching.md`, "A new unnamed object:
   `actor_part15.c`/`actor_part16.c`".
-- **`sub_8007B00`/`sub_8007B98`** (`src/graphics/actor_part.c`),
+- **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/issue-9-naked-retry.md); entry kept for history.** **`sub_8007B00`/`sub_8007B98`** (`src/graphics/actor_part.c`),
   **`sub_8008044`** (`src/graphics/actor_part3.c`), and
   **`sub_800891C`/`sub_8008A40`/`sub_8008AD8`**
   (`src/graphics/actor_part7.c`) / **`sub_8008D80`**
@@ -1629,7 +1639,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   doesn't count as "matched" the way real decompiled C does, so it
   stays filed here rather than in "Matched" above - see
   `docs/matching/naked-sub_8008f20-sub_8009914-freelist.md`.
-- **`sub_8009528`** (`src/graphics/actor_part11f.c`) - the spatial-
+- **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/issue-9-naked-retry.md); entry kept for history.** **`sub_8009528`** (`src/graphics/actor_part11f.c`) - the spatial-
   hash-grid-cluster analog of `sub_8008A40`: the same grid-iteration
   shape as `sub_800944C`, dispatching each hit to `sub_80096C0`/
   `sub_80099F0` exactly like `sub_8008A40` dispatches to
@@ -1644,7 +1654,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   real decompiled C does, so it stays filed here rather than in
   "Matched" above - see `docs/matching.md`, "Parked, not matched:
   `sub_8009528`".
-- **`sub_80096C0`** (`src/graphics/actor_part11e.c`) - `sub_8008AD8`'s
+- **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/issue-9-naked-retry.md); entry kept for history.** **`sub_80096C0`** (`src/graphics/actor_part11e.c`) - `sub_8008AD8`'s
   twin: byte-identical collision-hit resolution logic, operating in
   this spatial-hash-grid cluster instead of the plain array manager -
   in fact its instruction stream is byte-identical to `sub_8008AD8`'s,
@@ -1676,7 +1686,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   "matched" the way real decompiled C does, so it stays filed here
   rather than in "Matched" above - see
   `docs/matching/naked-sub_8008f20-sub_8009914-freelist.md`.
-- **`sub_80099F0`** (`src/graphics/actor_part12.c`) - `sub_8008D80`'s
+- **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/issue-9-naked-retry.md); entry kept for history.** **`sub_80099F0`** (`src/graphics/actor_part12.c`) - `sub_8008D80`'s
   twin: byte-identical in shape (same collision-hit-resolve logic,
   same "dead read" trampoline call), called from elsewhere in this
   cluster - in fact its instruction stream is byte-identical to

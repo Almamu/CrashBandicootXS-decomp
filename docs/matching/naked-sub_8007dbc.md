@@ -64,3 +64,10 @@ held only `sub_8007DBC`, immediately followed by `sub_8007F78`
 deleted and its `ldscript.txt` line removed, the same "retire an
 emptied split" convention as `asm/code_3_1.s`/`sub_80007EC` and
 `asm/code_3_1_697c.o`/`sub_800697C` before it (see `docs/matching.md`).
+
+## Later pass (issue #9 NAKED retry)
+
+Under old_agbcc the global lands in r7 by itself, with no pins. A C
+draft (kept under `NON_MATCHING`) is 42 halfwords off in two places:
+where the gone-bit OR gets its constant 1, and the spawned part's mode
+update. See [issue-9-naked-retry.md](./issue-9-naked-retry.md) for details.

@@ -154,3 +154,11 @@ matched: sub_8008188" entry (and its `sub_8008200`/`sub_8008278`/
 had been tried and failed before this session. The remaining nine
 functions in this batch are unaffected and remain NAKED, tracked as
 parked.
+
+## Later pass (issue #9 NAKED retry)
+
+`sub_8007B00`/`sub_8007B98`, `sub_8008044`, `sub_8008A40`/`sub_8008AD8`
+and `sub_8008D80` are now real C under old_agbcc. The box builders
+return the box by value. `sub_8008A40`/`sub_8008AD8`/`sub_8008D80` take
+it by value, which fixes the "stack-layout coincidence". `sub_800891C`
+is still NAKED, with a C draft 18 halfwords off. See [issue-9-naked-retry.md](./issue-9-naked-retry.md) for details.
