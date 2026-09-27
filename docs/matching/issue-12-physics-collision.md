@@ -747,6 +747,84 @@ check is the full clean `make compare`, which passed outright.
   for this pass, since the NAKED transcription's byte-exactness doesn't
   depend on it.
 
+## NAKED retry: 18 of 24 promoted to real C under old_agbcc
+
+A later pass went back over all 24 NAKED functions in this cluster.
+This cluster was built with the **older compiler**
+(`tools/agbcc/bin/old_agbcc`). The "`0x7f` mask immediate loaded before
+the `ldrb`" gap documented above is that compiler's usual instruction
+order, not a scheduling quirk. `game_loop7.c`, `game_loop48.c` and
+`game_loop49.c` now sit on the Makefile's `OLD_AGBCC_OBJS`.
+`sub_800E620`, the one function already in C, matches under both
+compilers. The object layout is named in `include/phys_obj.h`
+(`struct phys_obj`, `phys_obj_list`, `phys_player`, the
+`PHYS_CALL`/`PhysSetTag`/`PHYS_SET_ID_BIT` helpers).
+
+**Closed (18):**
+
+- `sub_800E494`/`sub_800E4E4` (game_loop7.c): old_agbcc as-is. The
+  first function needs a goto-into-`do` loop so the loop enters at the
+  call. The second needs a per-loop `u8 one = 1` local, which makes gcc
+  hoist the constant into r7/r6.
+- `sub_800F258`/`sub_800F1B8`/`sub_800F6B8`/`sub_800F06C`/`sub_800F368`:
+  these are list scans. The vtable `+0x48` class query is written as
+  `PHYS_CALL` (`_call_via_r1`). Two things were needed:
+  - Byte tests written with `&&` got combined into one word compare
+    (`ldr [o,#0x4c]` masked against `0x7fff00`). Nested `if`s split
+    them.
+  - Where the ROM hoists `gStaticData_0816BBC4` into a register, a
+    `u32 commit = (u32)table` local indexed as `*(u8 *)(kind + commit)`
+    reproduces it, including the `kind + table` operand order.
+- `sub_800F368`: `n++; n &= 0x1f;` (not `n = (n + 1) & 0x1f`) keeps
+  the ROM's signed `ble` loop pre-test. The copy loop is
+  `((struct phys_obj **)g)[i + 1] = found[i]`.
+- `sub_800F2BC`/`sub_800EEF0`/`sub_800E6B0`/`sub_800F4F4`: a small `u8`
+  local holding a constant (`one`, `kind = 7`) gives the ROM's order
+  and its reuse of that register. Tag changes go through the
+  `PhysSetTag` inline, whose parameter puts the constant first.
+- `sub_800EEF0`/`sub_800F798`: the bitmap setter is the
+  do/while(0) `PHYS_SET_ID_BIT`, the same as actor_part_16048.c. The
+  "gone" flag is a `u8 gone:1` bitfield view.
+- `sub_800F5B8`/`sub_800F8E0`: plain switches over `PhysSetTag`.
+  `sub_800815C` returns `s32`.
+- `sub_800E7A8`: the neighbor walks are written as the ROM's goto loops.
+  One variable (`q`) holds both the walk candidate and the final
+  target.
+- `sub_800ED08`: an empty `case 0:` gives the ROM's compare order.
+- `sub_800E560`/`sub_800EAFC`/`sub_800ED08`: these call
+  `sub_8025CA4`/`sub_8025A64`. Both take a stack word plus a stack
+  *byte* that the ROM stores with `strb`, and this compiler widens a
+  stack byte to `str`. The workaround:
+  - The caller declares two locals first (`s32 argP4; u32 argP5;`, at
+    sp+0/sp+4) and calls through a 4-argument view (`SPAWN_CALL`).
+  - The stores sit inside the last argument, and x/y are bound first
+    (the `PHYS_SPAWN` macro), so the order matches the ROM.
+  - Where the byte is a constant, the ROM computes the slot address
+    before the constant. That needs `register ... asm("r4"/"r5")`
+    pins, never r7.
+  - In `sub_800EAFC`, the inlined `sub_801085C`/`sub_801089C` SFX calls
+    go through a `PhysSfx(id)` inline so the id loads before the volume.
+
+**Not closed (6):**
+
+- `sub_800D040` (game_loop6.c): old_agbcc gets the push list, but gcc
+  keeps the player box's address `sp+16` in a callee-saved register,
+  where the ROM recomputes `add r0, sp, #16` at each use. Separate
+  structs, an array, and a static inline accessor all gave the same
+  result.
+- `sub_800E888`: every block is right, but `self`/`chained` land in
+  r5/r8 instead of r4/r7 (~120 halfwords).
+- `sub_800EDBC`: register allocation, with `self` in r8 and the delta
+  byte spilled to `[sp]` in the ROM.
+- `sub_800F990`: the `+0x48` phase/count/direction byte is updated with
+  word loads and stores and 8-bit masks. Neither u8/u32 bitfield views
+  nor explicit masks reproduce the ROM's unfolded `(n & 7) & 4` test
+  and its register set (~280 halfwords).
+- `sub_0800D18C` (~3840 B) and `sub_800E08C` (1032 B): too large for
+  this pass. These are the next candidates for a C draft under
+  old_agbcc; the helpers in `include/phys_obj.h` cover most of their
+  callee patterns.
+
 ## Cross-references
 
 - `docs/status/game_loop.md` - matched/parked/raw lists updated,

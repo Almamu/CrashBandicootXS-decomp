@@ -364,7 +364,17 @@ system from "core" system startup/init code.
   `asm(".align 2, 0")` - see
   [docs/matching/issue-44-camera-follow.md](../matching/issue-44-camera-follow.md).
   `asm/code_3_2_17_26bf8.s` removed.
-- **`sub_800E620`/`sub_800ED08`** (`src/system/game_loop48.c`, new file
+- **Issue #12 NAKED retry (old_agbcc)**: `sub_800E494`/`sub_800E4E4`
+  (`src/system/game_loop7.c`), `sub_800E560`/`sub_800E6B0`/`sub_800E7A8`/
+  `sub_800EAFC`/`sub_800ED08` (`src/system/game_loop48.c`) and
+  `sub_800EEF0`/`sub_800F06C`/`sub_800F1B8`/`sub_800F258`/`sub_800F2BC`/
+  `sub_800F368`/`sub_800F4F4`/`sub_800F5B8`/`sub_800F6B8`/`sub_800F798`/
+  `sub_800F8E0` (`src/system/game_loop49.c`) promoted from NAKED to real
+  C - all three files moved to `OLD_AGBCC_OBJS`, the shared object
+  layout named in `include/phys_obj.h`. See
+  [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md)'s
+  NAKED-retry section.
+- **`sub_800E620`** (`src/system/game_loop48.c`, new file
   - GitHub issue #12 Phase 2, lower-address half) - two of
   `sub_0800D18C`'s/`sub_800E08C`'s per-edge jump-table dispatch
   targets, matched as real C: `sub_800E620` (dispatch id `0xe`)
@@ -458,8 +468,10 @@ plain C didn't converge.
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md)'s
   Phase 1 appendix for the confirmed dispatch maps (the basis for this
   issue's Phase 2 parallel split of the remaining 18 leaf functions).
-- **`sub_800E560`/`sub_800E6B0`/`sub_800E7A8`/`sub_800E888`/
-  `sub_800EAFC`/`sub_800EDBC`** (`src/system/game_loop48.c`, new file -
+- **`sub_800E888`/`sub_800EDBC`** (`src/system/game_loop48.c`; the
+  rest of this file was promoted to C by the NAKED-retry pass, see
+  Matched) (originally with `sub_800E560`/`sub_800E6B0`/`sub_800E7A8`/
+  `sub_800EAFC`,, new file -
   GitHub issue #12 Phase 2, lower-address half) - NAKED transcriptions
   of the direct dispatch targets both `sub_0800D18C`'s and
   `sub_800E08C`'s per-edge jump tables call (`sub_800E560`,
@@ -472,7 +484,8 @@ plain C didn't converge.
   (`sub_800EDBC`). See
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md)'s
   Phase 2 writeup.
-- **`sub_800EEF0` through `sub_800F990`** (12 functions:
+- **`sub_800F990`** (the only one of the following still NAKED after
+  the NAKED-retry pass; the other eleven are real C, see Matched) - **`sub_800EEF0` through `sub_800F990`** (12 functions:
   `sub_800EEF0`, `sub_800F06C`, `sub_800F1B8`, `sub_800F258`,
   `sub_800F2BC`, `sub_800F368`, `sub_800F4F4`, `sub_800F5B8`,
   `sub_800F6B8`, `sub_800F798`, `sub_800F8E0`, `sub_800F990` -
@@ -490,10 +503,6 @@ plain C didn't converge.
   consumed. See
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md)'s
   Phase 2 appendix for the confirmed per-function roles.
-- **`sub_800E494`/`sub_800E4E4`** (`src/system/game_loop7.c`, GitHub
-  issue #12) - bidirectional linked-list walkers (`sub_801070C`/
-  `sub_8010708`) clearing/setting each neighbor's `+0x58` flag. See
-  [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md).
 - **`sub_800CEAC`/`sub_800CF70`** (`src/system/game_loop42.c`, new
   file - dedicated deep investigation) - the two functions formerly
   tracked as unexamined raw bytes between `sub_800CD00` (issue #9/#10)

@@ -170,7 +170,10 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/system/game_loop4.o \
                   $(C_BUILDDIR)/system/game_loop40.o \
                   $(C_BUILDDIR)/system/game_loop46.o \
+                  $(C_BUILDDIR)/system/game_loop48.o \
+                  $(C_BUILDDIR)/system/game_loop49.o \
                   $(C_BUILDDIR)/system/game_loop57.o \
+                  $(C_BUILDDIR)/system/game_loop7.o \
                   $(C_BUILDDIR)/system/game_loop8.o
 $(OLD_AGBCC_OBJS): CC1 := $(CC1_OLD)
 $(OLD_AGBCC_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1FLAGS))
