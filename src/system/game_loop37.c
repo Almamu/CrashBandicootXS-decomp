@@ -3,15 +3,9 @@
 
 /* GitHub issue #38: 0x08024590-0x08024783 (game_loop), the sound-channel-
  * handle helper family - see docs/matching/issue-38-medal-results-tally.md
- * for the original write-up describing this whole group as left raw, and
- * docs/matching/issue-38-sound-channel-family.md for this follow-up pass
- * (plus its own second-pass addendum for `sub_8024590`/`sub_8024708`'s
- * final disposition). `sub_8024640` (the per-item driver loop),
- * `sub_80246D8` (the "find next self->0x10==1 item" index scanner), and
- * `sub_8024708` (the VRAM-bank tile-asset streamer) are all matched here
- * as real C. `sub_8024590` is a NAKED transcription (byte-correct but not
- * real decompiled C, tracked as parked) - see its own comment below for
- * the confirmed toolchain-bug gap that forced this. */
+ * and docs/matching/issue-38-sound-channel-family.md. All four functions
+ * are real C, built with old_agbcc - see
+ * docs/matching/game-loop-old-agbcc.md. */
 
 struct AudioContext;
 
@@ -64,125 +58,32 @@ extern void *gUnknown_03001314;
 extern void sub_8024708(struct SoundChannelList *self, s32 idx);
 extern s32 sub_80246D8(struct SoundChannelList *self, s32 startIdx, u8 condFlag);
 
-/* Starts/re-selects a sound cue for `self->items[idx]` (`sub_8001B54`),
- * then either plays its secondary sfx (`field_18`) immediately if the
- * channel already reports the requested cue id playing, or busy-polls
- * `sub_8001AB8` until it does before playing it. Either way, also ORs
- * bit 7 into `field_08`'s low byte and passes it to `sub_800132C` (a
- * screen-brightness-fade start, see src/graphics/fade_util.c) - once
- * immediately if the id already matched, or before the busy-wait
- * otherwise.
- *
- * NAKED, not plain C: a second pass on this function's plain-C
- * reconstruction (docs/matching/issue-38-sound-channel-family.md) closed
- * two of its three documented gaps for real - the `field_08 | -0x80`
- * redundant register-copy step (fixed with the `asm volatile("" : "=r"(v)
- * : "0"(expr))` forced-same-register-move idiom `settings_menu13.c`
- * documents) and a mismatched initial `self->items[idx]` pointer load
- * (fixed by splitting the transient first-use load, fed straight to
- * `sub_8001B54`, from the persistent `item` local the rest of the
- * function reloads - the "differently-named pointer variable avoids
- * reuse" gotcha, also from `settings_menu13.c`). The third gap resists
- * every C-level technique for a different, well-precedented reason: the
- * ROM's busy-poll loop in the `playing != item->field_14` branch needs
- * `push {r4, r5, r6, r7, lr}` (caching `&gUnknown_030012BC` in r7 and a
- * copy of the item byte-offset in r6 across the loop), but this
- * compiler's `register T x asm("r7")` never adds an inline-asm-clobbered
- * or even genuinely-written-and-read r7 to the function's own push/pop
- * list - the same confirmed, extensively-precedented toolchain gap
- * documented at length for `sub_8022D50` (game_loop40.c),
- * `LoadGraphicsPackage` (graphics_package_1e578.c), and every other
- * `asm("r7")` call-out project-wide. Transcribed straight from the
- * confirmed-correct ROM disassembly instead of re-chasing this specific
- * combination further - see docs/matching/issue-38-sound-channel-family.md. */
-NAKED void sub_8024590(struct SoundChannelList *self0, s32 idx)
+/* Starts sound cue `items[idx]->field_14` on the audio context. If the
+ * channel already reports that cue, plays the item's secondary sfx
+ * (unless it is the 0x63 "none" sentinel) and then starts the item's
+ * fade; otherwise starts the fade first, then busy-waits for the cue
+ * before playing the sfx. */
+void sub_8024590(struct SoundChannelList *self, s32 idx)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "add r5, r0, #0\n\t"
-        "ldr r6, 1f\n\t"
-        "ldr r0, [r6]\n\t"
-        "ldr r2, [r5]\n\t"
-        "lsl r4, r1, #2\n\t"
-        "add r2, r4, r2\n\t"
-        "ldr r1, [r2]\n\t"
-        "ldr r1, [r1, #0x14]\n\t"
-        "bl sub_8001B54\n\t"
-        "ldr r0, [r6]\n\t"
-        "bl sub_8001AB8\n\t"
-        "ldr r1, [r5]\n\t"
-        "add r1, r4, r1\n\t"
-        "ldr r2, [r1]\n\t"
-        "ldr r1, [r2, #0x14]\n\t"
-        "cmp r0, r1\n\t"
-        "bne 2f\n\t"
-        "ldr r1, [r2, #0x18]\n\t"
-        "cmp r1, #0x63\n\t"
-        "beq 3f\n\t"
-        "ldr r0, [r6]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "bl PlaySfx\n\t"
-    "3:\n\t"
-        "ldr r0, [r5]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0, #8]\n\t"
-        "mov r2, #0x80\n\t"
-        "neg r2, r2\n\t"
-        "add r1, r2, #0\n\t"
-        "orr r0, r0, r1\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "mov r1, #1\n\t"
-        "mov r2, #0\n\t"
-        "bl sub_800132C\n\t"
-        "b 4f\n\t"
-        ".align 2, 0\n"
-    "1: .4byte gUnknown_030012BC\n"
-    "2:\n\t"
-        "ldr r0, [r2, #8]\n\t"
-        "mov r2, #0x80\n\t"
-        "neg r2, r2\n\t"
-        "add r1, r2, #0\n\t"
-        "orr r0, r0, r1\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "mov r1, #1\n\t"
-        "mov r2, #0\n\t"
-        "bl sub_800132C\n\t"
-        "ldr r0, [r5]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0, #0x18]\n\t"
-        "cmp r0, #0x63\n\t"
-        "beq 4f\n\t"
-        "add r7, r6, #0\n\t"
-        "add r6, r4, #0\n\t"
-    "5:\n\t"
-        "ldr r0, [r7]\n\t"
-        "bl sub_8001AB8\n\t"
-        "ldr r2, [r5]\n\t"
-        "add r1, r4, r2\n\t"
-        "ldr r1, [r1]\n\t"
-        "ldr r1, [r1, #0x14]\n\t"
-        "cmp r0, r1\n\t"
-        "bne 5b\n\t"
-        "ldr r0, 6f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r1, r6, r2\n\t"
-        "ldr r1, [r1]\n\t"
-        "ldr r1, [r1, #0x18]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "bl PlaySfx\n\t"
-    "4:\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "6: .4byte gUnknown_030012BC\n"
-    );
+    struct SoundChannelItem *item;
+
+    sub_8001B54(gUnknown_030012BC, self->items[idx]->field_14);
+    if (sub_8001AB8(gUnknown_030012BC) == (item = self->items[idx])->field_14)
+    {
+        if (item->field_18 != 0x63)
+            PlaySfx(gUnknown_030012BC, item->field_18, 0x100);
+        sub_800132C(self->items[idx]->field_08 | -0x80, 1, 0);
+    }
+    else
+    {
+        sub_800132C(item->field_08 | -0x80, 1, 0);
+        if (self->items[idx]->field_18 != 0x63)
+        {
+            while (sub_8001AB8(gUnknown_030012BC) != self->items[idx]->field_14)
+                ;
+            PlaySfx(gUnknown_030012BC, self->items[idx]->field_18, 0x100);
+        }
+    }
 }
 
 /* Per-frame driver loop over `self`'s item list: for each index, streams
@@ -194,7 +95,7 @@ NAKED void sub_8024590(struct SoundChannelList *self0, s32 idx)
  * "still active" item via `sub_80246D8`. */
 void sub_8024640(struct SoundChannelList *self0)
 {
-    register struct SoundChannelList *self asm("r4") = self0;
+    struct SoundChannelList *self = self0;
     s32 i;
 
     for (i = 0; i < self->count; i++) {

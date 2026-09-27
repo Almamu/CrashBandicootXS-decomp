@@ -3,8 +3,7 @@
 /* GitHub issue #34/#40/#41, `UpdateGameFrame`-`MainLoop` cluster: the
  * second of the two raw functions `docs/matching/issue-34-game-loop-
  * 8022d50-80255d4.md` left for a follow-up pass (the first,
- * `sub_8022D50`, is `game_loop40.c`, NAKED-parked for a different,
- * unrelated register-pressure gap).
+ * `sub_8022D50`, is `game_loop40.c`, now plain C).
  *
  * `self` is `*gUnknown_030012B4` (the same collision-bitmap base
  * `sub_8025944`/`sub_8025968`/`sub_802599C`, game_loop12.c, and
@@ -30,63 +29,22 @@
  * never-reset-per-group counter as its own `self` argument, indexing
  * `gUnknown_030012E4`'s table.
  *
- * Second half (gated on `redirectInfo`, a `{count:u32, {u32,u32}[]}`
- * array - null skips it entirely): walks `gUnknown_0300130C` (a
- * `struct actor_list`, game_loop24.c) in reverse; for each entry whose
- * `+8` id matches `redirectInfo`'s array's `.a` field, the paired `.b`
- * value is chased as a target id back into `gUnknown_0300130C` (again
- * in reverse) - a direct hit links the two entries via `sub_8010714`/
- * `sub_8010710` (the neighbor-list set-next/set-prev pair,
- * game_loop23.c); a miss instead re-looks-up the *current* target id
- * in `redirectInfo`'s own array a second time (treating it as an
- * id->id redirect chain) and retries the actor-list search with the
- * newly resolved id, except that a redirect hit at array index 0
- * specifically is treated as "give up" rather than "keep chasing" (an
- * asymmetry transcribed verbatim from the ROM - matching entry 0 skips
- * the array's `.b`-becomes-new-target rule the ROM applies to every
- * other index). A second, independent forward pass over
- * `redirectInfo`'s array then looks each entry's `.a` id (this time
- * read as a `u16`, not the first pass's `u32` - genuinely different
- * load widths for the exact same field, transcribed as-is) up in
- * `gUnknown_0300130C` directly; on a miss it chases the same kind of
- * id->id redirect chain through the array (again via `.a`/`.b`, again
- * `u16`-width this time) until an actor-list match is found or the
- * chain runs out. Once a match is found, its `+0x18`-table's `+0x10`/
- * `+0x14` `sub_803AD7C` trampoline record's returned `+5` byte becomes
- * a `(byte+1)<<8` Q8 delta added to the matched entry's own `+4` field,
- * then every entry in its `sub_801070C` ("get next") neighbor chain has
- * `sub_8007398(entry, entry+0, entry+4+delta)` fired on it in turn.
+ * Second half (skipped when `links` is NULL): each actor in
+ * `gUnknown_0300130C` whose id is a link's `from` is chained
+ * (`sub_8010714`/`sub_8010710`) to the actor with the link's `to` id,
+ * following further links while `to` isn't spawned. Then each link whose
+ * `from` actor doesn't exist resolves its `to` chain to a spawned actor
+ * and moves that actor's neighbour chain (`sub_801070C`/`sub_8007398`)
+ * up by its `+0x10` method's height.
  *
- * NAKED, not plain C: every field, offset, branch and call argument in
- * both halves is confirmed against the ROM (this write-up is the
- * result of that trace), and a real C reconstruction was attempted and
- * got remarkably close - matching the whole first half (the DMA/
- * `CpuSet`/group-item-walk block) instruction-for-instruction once
- * `self` and the first-half `counter` were pinned to their ROM
- * registers (`r6`/`r7`). The second half is where it breaks down: the
- * ROM keeps `redirectInfo`'s `{count,array}` decomposition split across
- * `r8` (count) and `sb`/`r9` (array base) for the *entire* second half,
- * but never caches the array base in a single low register the way a
- * normal C local would - at every individual use site that needs it in
- * a 3-operand Thumb add (`sb` is a high register, which Thumb restricts
- * there), the ROM instead re-issues a fresh `mov rX, sb` into whichever
- * low register happens to be free at that exact point (`r1` here,
- * `r4`/`r6` there, and so on, a different choice practically every
- * time). A plain C array-pointer local gets allocated to one single
- * register for its entire lifetime instead (landing on `r7` in the
- * closest reconstruction attempted here, once `r8`/`r9`/`sl` were
- * otherwise accounted for), which is a real, different, and *smaller*
- * register footprint than the ROM's own repeated-rematerialization
- * pattern - not something a source-level rephrasing or a single
- * register pin can reproduce without effectively hand-placing a
- * distinct inline-asm anchor at every one of the dozen-plus individual
- * use sites (at which point it stops being a C reconstruction in any
- * meaningful sense). This is the same family of gcc-2.9
- * high-register/3-operand-add materialization gap already parked
- * elsewhere in this ROM region for similarly register-heavy functions
- * (see `docs/status/game_loop.md`'s NAKED list). Transcribed straight
- * from the confirmed-correct ROM disassembly. */
-NAKED void sub_80255D4(void *self, void *list, void *redirectInfo, s32 posArg)
+ * NAKED: plain C under old_agbcc is 153 halfwords off (732 bytes vs the
+ * ROM's 704). Everything through the first link pass is byte-exact; in
+ * the second pass the ROM walks each actor-list search with a
+ * strength-reduced item pointer and a cached count, with no peeled first
+ * iteration, while the reconstruction compiles the searches index-based
+ * with the first iteration peeled.
+ */
+NAKED void sub_80255D4(void *self, void *list, void *links, s32 posArg)
 {
     asm(
         "push {r4, r5, r6, r7, lr}\n\t"
