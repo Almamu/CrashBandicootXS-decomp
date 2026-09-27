@@ -74,6 +74,22 @@ and [graphics_loading.md](./graphics_loading.md).
   `sub_80007EC` - BG2 affine setup for a full-screen intro image; see
   `docs/matching.md` for the statement-ordering gotchas.
 
+- `src/graphics/actor_part_16048.c` (new file - GitHub issue #20, plus
+  issue #19's last raw function `sub_8016048`): `sub_8016048`-
+  `sub_801751C` (26 functions), all real C - the player-input controller
+  class (method table `gStaticData_087E428C`, struct in
+  `include/player_ctrl.h`): per-frame update `sub_8016288` (D-pad
+  auto-repeat level stepping, animation re-apply, pointer-to-member state
+  dispatch through `gStaticData_0816C250` to the eight state handlers
+  `sub_8016B1C`...`sub_8017184`), message handler `sub_8016128`, mode/
+  animation setter `sub_8017264`, player record writer `sub_80172D0`,
+  constructor/destructor `sub_80174EC`/`sub_80174D8`. Nine UNUSED
+  (`sub_8016AB0`, `sub_801721C`, `sub_8017240`, `sub_8017330`,
+  `sub_8017348`, `sub_80174BC`, `sub_801750C`, `sub_8017514`,
+  `sub_801751C`). Built with `tools/agbcc/bin/old_agbcc`; register pins
+  only in `sub_8016AB0`. See
+  [docs/matching/issue-20-player-ctrl.md](../matching/issue-20-player-ctrl.md).
+
 - `src/graphics/actor_part_17524.c` (new file - GitHub issue #21):
   `sub_8017524`-`sub_8017A40` (25 functions) - six byte accessors, then a
   D-pad-driven actor-part subclass (method table `gStaticData_087E42F4`):

@@ -2626,7 +2626,7 @@ never individually named in this document's prose.** For completeness:
 display), `sub_80236AC`/`sub_80236EC` (a getter/setter pair for a
 packed state round-tripping through `sub_800014C`), `sub_8024E24`
 (a two-line text draw, same family as the icon-renderer shapes), and
-`sub_8026108`/`sub_802613E` (tile-alignment modulo-32 helpers). Two
+`sub_8026108`/`sub_802613E` (tile-alignment modulo-32 helpers; `sub_802613E` really starts at `0x0802613C` and a third, `sub_802612C`, sits between them - see docs/matching/issue-42-bg-scroll-layer.md). Two
 functions are genuinely new to this pass: **`sub_80262E8`/`sub_8026328`**
 are bounded-range bulk-release helpers for the cache-slot system -
 each loops calling the already-documented single-call release

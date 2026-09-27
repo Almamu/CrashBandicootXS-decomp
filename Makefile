@@ -130,17 +130,19 @@ $(ELF): $(OBJS) $(LDSCRIPT)
 # where the current agbcc loads the byte first - see
 # docs/matching/issue-24-boss-actor.md. old_agbcc has no
 # -fprologue-bugfix option.
-OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part_13c60.o \
+OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part27a.o \
+                  $(C_BUILDDIR)/graphics/actor_part_13c60.o \
                   $(C_BUILDDIR)/graphics/actor_part_14674.o \
-                  $(C_BUILDDIR)/graphics/actor_part27a.o \
-                  $(C_BUILDDIR)/graphics/actor_part_18008.o \
+                  $(C_BUILDDIR)/graphics/actor_part_16048.o \
+                  $(C_BUILDDIR)/graphics/actor_part_18008.o
                   $(C_BUILDDIR)/graphics/actor_part_188d0.o \
                   $(C_BUILDDIR)/graphics/actor_part_1967c.o \
                   $(C_BUILDDIR)/graphics/actor_part_1a878.o \
                   $(C_BUILDDIR)/graphics/actor_part_1b85c.o \
                   $(C_BUILDDIR)/graphics/actor_part_1cee0.o \
                   $(C_BUILDDIR)/graphics/actor_part_1da38.o \
-                  $(C_BUILDDIR)/graphics/actor_part_1dfec.o
+                  $(C_BUILDDIR)/graphics/actor_part_1dfec.o \
+                  $(C_BUILDDIR)/system/bg_scroll_layer_25fc8.o
 $(OLD_AGBCC_OBJS): CC1 := $(CC1_OLD)
 $(OLD_AGBCC_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1FLAGS))
 

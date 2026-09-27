@@ -1,4 +1,5 @@
 #include "core.h"
+#include "actor_self.h"
 
 /* Second half of issue #59's Phase 2 gap (`sub_80326E4`-`nullsub_35`,
  * the tail of `asm/code_3_2_20_28568_c99c_31784_31a6c.s`) - see
@@ -45,7 +46,6 @@ extern s32 sub_803B060(void *self);
 extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
 extern void sub_803B0A8(void *self, s32 idx);
 extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
-extern s32 sub_803AD84(void *arg0);
 extern void sub_802A7B8(void *self);
 extern s32 sub_803ADB4(s32 dividend, s32 divisor);
 extern s32 sub_8029E98(void);
@@ -58,6 +58,7 @@ extern void sub_802A4F8(void);
 extern void sub_802F0DC(void *arg0);
 extern void sub_8023430(void *self);
 extern u8 *mem_alloc(u32 size, s32 flags);
+extern struct actor_pmf gStaticData_0817C450[];
 extern void mem_free(void *ptr);
 extern void sub_8032AF8(void);
 extern void sub_8032B6C(void);
@@ -121,6 +122,16 @@ extern u8 gStaticData_08169CE8[];
 extern u8 gStaticData_0817C4BC[];
 extern void *gStaticData_0817C4C8[];
 
+ACTOR_CALL_VIA_ALIASES
+
+/* The homing spawn effect advanced by sub_8032718. */
+struct actor_2718 {
+    struct actor_self base;
+    s32 hp;             // 0x54
+    s32 velX;           // 0x58
+    s32 velY;           // 0x5C
+};
+
 /* An `InitActorPart`-based constructor: forwards its 4 real arguments
  * straight through (the 5th, `d`, is itself stack-passed), marks
  * `self+0x54 = 1` (health-like), sets `self+0x50`'s event/trampoline
@@ -147,91 +158,37 @@ s32 sub_8032714(void *self)
     return 1;
 }
 
-/* NAKED transcription: same shared anim-frame-advance-and-clamp idiom
- * already documented (and NAKED-transcribed) for `sub_80318D0`/
- * `sub_8031954`/`sub_80319A0` (issue #59, `actor_part125.c`) - gated
- * here by an out-of-bounds check on `self+0x1c`/`self+0x20` (position
- * accumulators advanced by `self+0x58`/`self+0x5c` velocity fields,
- * matching the shape `sub_8032890` below produces for a homing spawn
- * effect). This compiler consistently schedules the `#4`/`#6` `ldrsh`
- * constant loads one instruction earlier than the ROM's own build in
- * every prior instance of this exact idiom - a genuine scheduling gap,
- * not a register choice, so this one is transcribed directly rather
- * than re-attempting a fix already shown not to work three times over. */
-NAKED void sub_8032718(void *selfArg)
+/* Homing spawn effect step: advances the position by the velocity at
+ * `+0x58`/`+0x5c`; once it leaves the positive quadrant past 0x1000,
+ * plays sound 0xE and destroys itself, otherwise runs the shared
+ * anim-frame-advance-and-clamp idiom. The idiom's `#4`/`#6` scheduling
+ * gap closes by re-indexing `anims[animIndex]` for each field instead
+ * of through a record pointer (docs/matching/pmf-dispatch-retry.md). */
+void sub_8032718(void *selfArg)
 {
-    asm(
-        "push {r4, r5, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "mov r5, #1\n\t"
-        "str r5, [r4, #0x14]\n\t"
-        "ldr r1, [r4, #0x1c]\n\t"
-        "ldr r0, [r4, #0x58]\n\t"
-        "add r1, r1, r0\n\t"
-        "str r1, [r4, #0x1c]\n\t"
-        "ldr r2, [r4, #0x20]\n\t"
-        "ldr r0, [r4, #0x5c]\n\t"
-        "add r2, r2, r0\n\t"
-        "str r2, [r4, #0x20]\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #5\n\t"
-        "cmp r1, r0\n\t"
-        "ble 1f\n\t"
-        "cmp r2, r0\n\t"
-        "bgt 2f\n\t"
-    "1:\n\t"
-        "ldr r0, 5f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0xe\n\t"
-        "bl PlaySfx\n\t"
-        "cmp r4, #0\n\t"
-        "beq 3f\n\t"
-        "ldr r1, [r4, #0x50]\n\t"
-        "mov r2, #8\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r2, [r1, #0xc]\n\t"
-        "mov r1, #3\n\t"
-        "bl sub_803AD80\n\t"
-        "b 3f\n\t"
-        ".align 2, 0\n"
-    "5: .4byte gUnknown_030012BC\n"
-    "2:\n\t"
-        "mov r3, #0x10\n\t"
-        "ldrsh r1, [r4, r3]\n\t"
-        "ldr r0, [r4, #8]\n\t"
-        "add r0, r0, r1\n\t"
-        "str r0, [r4, #8]\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r4, #0x12]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl GetAnimFrameBaseOffset\n\t"
-        "ldr r2, [r4, #0xc]\n\t"
-        "ldr r3, [r4]\n\t"
-        "lsl r1, r2, #1\n\t"
-        "add r1, r1, r2\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r1, r1, r3\n\t"
-        "mov r3, #4\n\t"
-        "ldrsh r2, [r1, r3]\n\t"
-        "cmp r0, r2\n\t"
-        "blt 3f\n\t"
-        "mov r0, #6\n\t"
-        "ldrsh r1, [r1, r0]\n\t"
-        "sub r1, r2, r1\n\t"
-        "lsl r1, r1, #8\n\t"
-        "ldr r0, [r4, #8]\n\t"
-        "sub r0, r0, r1\n\t"
-        "str r0, [r4, #8]\n\t"
-        "strb r5, [r4, #0x12]\n\t"
-    "3:\n\t"
-        "pop {r4, r5}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    );
+    struct actor_2718 *self = selfArg;
+    s32 one = 1;
+    s32 x, y;
+    s32 base;
+
+    self->base.visible = one;
+    x = self->base.x += self->velX;
+    y = self->base.y += self->velY;
+    if (x <= 0x1000 || y <= 0x1000) {
+        PlaySfx(gUnknown_030012BC, 0xE, 0x100);
+        if (self != NULL) {
+            ACTOR_VCALL(&self->base, m08, 3);
+        }
+        return;
+    }
+    self->base.animTime += *(s16 *)&self->base.animTimer;
+    self->base.animDone = 0;
+    base = GetAnimFrameBaseOffset(self);
+    if (base >= self->base.anims[self->base.animIndex].loopThreshold) {
+        self->base.animTime -= (self->base.anims[self->base.animIndex].loopThreshold
+                                - self->base.anims[self->base.animIndex].loopBase) << 8;
+        self->base.animDone = one;
+    }
 }
 
 /* NAKED transcription: bounding-box-culled sprite draw via
@@ -327,68 +284,37 @@ NAKED void sub_80327A4(void *selfArg)
     );
 }
 
-/* NAKED transcription: dispenses `self+0x60` score/reward increments
- * via `sub_8023430` (the same "scoring/counter" call already documented
- * for several "player reaction" sites), temporarily wearing a different
- * vtable (`gStaticData_087E5474`, also `sub_8032890`'s constructor
- * table) while it does, then runs the exact same shared per-"kind"
- * teardown body as the already-matched `sub_803B0C4` (`actor_anim.c`):
- * retag the vtable to the shared "dead" table, unlink from the
- * `+0x48`/`+0x4c` circular list, and free `self` if `flags & 1`. Every
- * instruction here matches a straightforward reconstruction of that
- * shape (verified via an isolated compile) except the very first two:
- * this compiler's parameter-register prologue shuffle emits the incoming
- * `flags` (r1) copy before the `self` (r0) one regardless of C
- * declaration order, the opposite of the ROM's own build - and forcing
- * the order with a compiler barrier hits this project's confirmed
- * categorical r7 hazard instead (an explicit `register ... asm("r7")`
- * still compiles correct instructions but silently drops r7 from the
- * generated push/pop list once its copy is forced second). Transcribed
- * directly rather than ship code that corrupts the caller's r7. */
-NAKED void sub_803283C(void *selfArg, u32 flags)
+/* Destructor: dispenses `reward` score increments via `sub_8023430`
+ * while temporarily wearing `gStaticData_087E5474` (`sub_8032890`'s
+ * constructor table), then runs the same teardown as `sub_803B0C4`
+ * (actor_anim.c): retag to the shared "dead" table, unlink from the
+ * `+0x48`/`+0x4c` circular list, and free `self` if `flags & 1`. The
+ * parameter-copy order the earlier NAKED note blamed on the compiler
+ * comes out as in the ROM from this plain form
+ * (docs/matching/pmf-dispatch-retry.md). */
+struct actor_283c {
+    u8 unk_00[0x48];
+    struct actor_283c *l48;
+    struct actor_283c *l4c;
+    void *vtable;
+    u8 unk_54[0xc];
+    s32 reward;
+};
+
+void sub_803283C(struct actor_283c *self, u32 flags)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "add r7, r1, #0\n\t"
-        "ldr r0, 1f\n\t"
-        "str r0, [r4, #0x50]\n\t"
-        "mov r5, #0\n\t"
-        "ldr r0, [r4, #0x60]\n\t"
-        "cmp r5, r0\n\t"
-        "bge 2f\n\t"
-        "ldr r6, 3f\n\t"
-    "4:\n\t"
-        "ldr r0, [r6]\n\t"
-        "bl sub_8023430\n\t"
-        "add r5, #1\n\t"
-        "ldr r0, [r4, #0x60]\n\t"
-        "cmp r5, r0\n\t"
-        "blt 4b\n\t"
-    "2:\n\t"
-        "ldr r0, 5f\n\t"
-        "str r0, [r4, #0x50]\n\t"
-        "ldr r1, [r4, #0x4c]\n\t"
-        "ldr r0, [r4, #0x48]\n\t"
-        "str r0, [r1, #0x48]\n\t"
-        "ldr r1, [r4, #0x48]\n\t"
-        "ldr r0, [r4, #0x4c]\n\t"
-        "str r0, [r1, #0x4c]\n\t"
-        "mov r0, #1\n\t"
-        "and r0, r7\n\t"
-        "cmp r0, #0\n\t"
-        "beq 6f\n\t"
-        "add r0, r4, #0\n\t"
-        "bl mem_free\n\t"
-    "6:\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "1: .4byte gStaticData_087E5474\n"
-    "3: .4byte gUnknown_030012C0\n"
-    "5: .4byte gStaticData_087E4DF4\n"
-    );
+    s32 i;
+
+    self->vtable = gStaticData_087E5474;
+    for (i = 0; i < self->reward; i++) {
+        sub_8023430(gUnknown_030012C0);
+    }
+    self->vtable = gStaticData_087E4DF4;
+    self->l4c->l48 = self->l48;
+    self->l48->l4c = self->l4c;
+    if (flags & 1) {
+        mem_free(self);
+    }
 }
 
 /* "Spawn effect type N" homing/seek-toward-point constructor - a
@@ -485,90 +411,23 @@ void sub_8032910(void *selfArg, s32 delta)
     }
 }
 
-/* NAKED transcription: `sub_8032A94`'s same-shape twin (see that
- * function's own comment below), with an extra popup/predicate tail.
- * Resists byte-exact reproduction for the same reason: the ROM keeps
- * `gStaticData_0817C450`'s base address alive in `r7` across the whole
- * function, but this project's gcc-2.9 build never allocates `r7` on
- * its own (an explicit pin compiles but silently drops `r7` from the
- * generated push/pop list - the categorical hazard already documented
- * for `sub_8031A08`/`sub_8033B44`/`sub_8033C84`/`sub_8033E80`), and
- * `r7` is genuinely dead before this function's one call here too, so
- * even the "another high register forces the relay" workaround those
- * NAKED siblings benefited from doesn't apply. */
-NAKED void sub_8032950(void *selfArg)
+/* Per-state member-pointer dispatch, `(this->*gStaticData_0817C450
+ * [this->state])()` (see `ACTOR_PMF_CALL`), then "destroy" once the
+ * state-1 animation has played through, else the standard sub_802A7B8
+ * step. */
+void sub_8032950(void *selfArg)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r1, 7f\n\t"
-        "ldr r0, [r4, #0x28]\n\t"
-        "lsl r3, r0, #3\n\t"
-        "add r0, r3, r1\n\t"
-        "mov r7, #2\n\t"
-        "ldrsh r2, [r0, r7]\n\t"
-        "add r7, r1, #0\n\t"
-        "cmp r2, #0\n\t"
-        "ble 1f\n\t"
-        "mov r1, #4\n\t"
-        "ldrsh r0, [r0, r1]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r0]\n\t"
-        "lsl r0, r2, #3\n\t"
-        "add r0, r0, r1\n\t"
-        "sub r0, #8\n\t"
-        "ldr r5, [r0]\n\t"
-        "ldr r6, [r0, #4]\n\t"
-        "add r3, r6, #0\n\t"
-        "b 2f\n\t"
-        ".align 2, 0\n"
-    "7: .4byte gStaticData_0817C450\n"
-    "1:\n\t"
-        "add r0, r7, #4\n\t"
-        "add r0, r3, r0\n\t"
-        "ldr r3, [r0]\n\t"
-    "2:\n\t"
-        "ldr r0, [r4, #0x28]\n\t"
-        "lsl r0, r0, #3\n\t"
-        "add r0, r0, r7\n\t"
-        "mov r7, #0\n\t"
-        "ldrsh r1, [r0, r7]\n\t"
-        "cmp r2, #0\n\t"
-        "ble 3f\n\t"
-        "lsl r0, r5, #0x10\n\t"
-        "asr r0, r0, #0x10\n\t"
-        "add r0, r0, r1\n\t"
-        "b 4f\n\t"
-    "3:\n\t"
-        "add r0, r1, #0\n\t"
-    "4:\n\t"
-        "add r0, r4, r0\n\t"
-        "bl sub_803AD84\n\t"
-        "ldr r0, [r4, #0x28]\n\t"
-        "cmp r0, #1\n\t"
-        "bne 5f\n\t"
-        "ldrb r0, [r4, #0x12]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 5f\n\t"
-        "cmp r4, #0\n\t"
-        "beq 6f\n\t"
-        "ldr r1, [r4, #0x50]\n\t"
-        "mov r2, #8\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r2, [r1, #0xc]\n\t"
-        "mov r1, #3\n\t"
-        "bl sub_803AD80\n\t"
-        "b 6f\n\t"
-    "5:\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_802A7B8\n\t"
-    "6:\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    );
+    struct actor_self *self = selfArg;
+
+    ACTOR_PMF_CALL(self, gStaticData_0817C450);
+
+    if (self->state == 1 && self->animDone != 0) {
+        if (self != NULL) {
+            ACTOR_VCALL(self, m08, 3);
+        }
+    } else {
+        sub_802A7B8(self);
+    }
 }
 
 /* Same shared shape as `sub_80329D4`/`sub_8033BB8` (issue #62,
@@ -660,64 +519,13 @@ void sub_8032A24(void *selfArg)
     }
 }
 
-/* NAKED transcription: same table-lookup shape as `sub_8032950` above,
- * without the popup/predicate tail - resists byte-exact reproduction
- * for the identical r7-table-base reason (see that function's comment;
- * this one hits the exact same gap since it's the same table access
- * pattern with a shorter tail). */
-NAKED void sub_8032A94(void *selfArg)
+/* `sub_8032950`'s dispatch without its tail: `(this->*gStaticData_
+ * 0817C450[this->state])()` (see `ACTOR_PMF_CALL`). */
+void sub_8032A94(void *selfArg)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r1, 3f\n\t"
-        "ldr r0, [r4, #0x28]\n\t"
-        "lsl r3, r0, #3\n\t"
-        "add r0, r3, r1\n\t"
-        "mov r7, #2\n\t"
-        "ldrsh r2, [r0, r7]\n\t"
-        "add r7, r1, #0\n\t"
-        "cmp r2, #0\n\t"
-        "ble 1f\n\t"
-        "mov r1, #4\n\t"
-        "ldrsh r0, [r0, r1]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r0]\n\t"
-        "lsl r0, r2, #3\n\t"
-        "add r0, r0, r1\n\t"
-        "sub r0, #8\n\t"
-        "ldr r5, [r0]\n\t"
-        "ldr r6, [r0, #4]\n\t"
-        "add r3, r6, #0\n\t"
-        "b 2f\n\t"
-        ".align 2, 0\n"
-    "3: .4byte gStaticData_0817C450\n"
-    "1:\n\t"
-        "add r0, r7, #4\n\t"
-        "add r0, r3, r0\n\t"
-        "ldr r3, [r0]\n\t"
-    "2:\n\t"
-        "ldr r0, [r4, #0x28]\n\t"
-        "lsl r0, r0, #3\n\t"
-        "add r0, r0, r7\n\t"
-        "mov r7, #0\n\t"
-        "ldrsh r1, [r0, r7]\n\t"
-        "cmp r2, #0\n\t"
-        "ble 4f\n\t"
-        "lsl r0, r5, #0x10\n\t"
-        "asr r0, r0, #0x10\n\t"
-        "add r0, r0, r1\n\t"
-        "b 5f\n\t"
-    "4:\n\t"
-        "add r0, r1, #0\n\t"
-    "5:\n\t"
-        "add r0, r4, r0\n\t"
-        "bl sub_803AD84\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    );
+    struct actor_self *self = selfArg;
+
+    ACTOR_PMF_CALL(self, gStaticData_0817C450);
 }
 
 /* Trivial `self+0x68` byte getter. */
