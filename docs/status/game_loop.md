@@ -329,6 +329,20 @@ system from "core" system startup/init code.
   - both UNUSED (no caller anywhere in the ROM), matched anyway per this
   project's usual practice. `asm/code_3_2_17_26bf8.s` trimmed to begin
   at `sub_8026C90`.
+- **`sub_8026C90`/`sub_8026D8C`/`sub_8026DFC`/`sub_8026E6C`/`sub_8026EB4`/`sub_8026EC0`/`sub_8026ED0`/`sub_8026EDC`**
+  (`src/system/camera_follow.c`, new file - GitHub issue #44) - the
+  `gUnknown_030012D4` camera follower: Q8 position eased a quarter-step
+  per frame toward `target + look-ahead`, published centered on screen
+  (`- (120 << 8)`, `- (80 << 8)`) through `sub_80268D0`'s level-bounds
+  clamp. Mode 2 (`sub_8026C90`) steers the look-ahead from `target+0x24`
+  direction bits, mode 1 (`sub_8026D8C`) from the `target+0x28` mirror
+  flag; `sub_8026DFC` snaps, `sub_8026E6C` is the per-frame dispatcher.
+  Plus two `mem_free`/`mem_alloc(size, MEM_HEAP_EWRAM)` wrapper pairs.
+  Needed r2/r3 pins on the target position, an r4-pinned easing temp, an
+  empty `case 3` for the switch's decision-tree shape, and a trailing
+  `asm(".align 2, 0")` - see
+  [docs/matching/issue-44-camera-follow.md](../matching/issue-44-camera-follow.md).
+  `asm/code_3_2_17_26bf8.s` removed.
 - **`sub_800E620`/`sub_800ED08`** (`src/system/game_loop48.c`, new file
   - GitHub issue #12 Phase 2, lower-address half) - two of
   `sub_0800D18C`'s/`sub_800E08C`'s per-edge jump-table dispatch
