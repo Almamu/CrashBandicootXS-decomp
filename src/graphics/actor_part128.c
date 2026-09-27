@@ -1,37 +1,170 @@
 #include "core.h"
+#include "actor_self.h"
 
 /* Covers the 0x0802E0A4-0x0802F0DC gap between issue #54's chunk
  * (`actor_part61.c`, ending at `nullsub_27`/`sub_802E0A0`) and issue
- * #56's chunk (`actor_part43.c`, starting at `sub_802F0DC`) - a
- * scoping investigation of the actor zone found this whole 4152-byte
- * range still raw. `docs/rom_map.md` had already partly read this
- * range from disassembly alone: `sub_802E170` is "a 31-case jump table
- * paired with a new stride-40 RAM table, `gUnknown_030014D8`, fetching
- * a position-offset pair per case"; the run of near-identical
- * `mem_alloc`-plus-forwarding-call constructors (`sub_802E484`,
- * `sub_802E504`, `sub_802E4B8`, `sub_802E538`, `sub_802E57C`,
- * `sub_802E5B0`) are `sub_802E170`'s own per-"kind" case bodies - each
- * allocates a fixed-size struct and forwards to a different kind-
- * specific initializer, indexed into `gUnknown_030014D8`'s array of
- * per-kind data tables by a fixed byte offset. The rest of this range
- * is a `self`-object family (position/state fields at the usual
- * offsets) driving position-offset computations, hazard-flash timers,
- * and physics/collision helpers for these same "kind" objects.
+ * #56's chunk (`actor_part43.c`, starting at `sub_802F0DC`). Two things
+ * live here:
  *
- * Given how heavily this whole neighborhood (issues #50/#52/#56, see
- * their own matching docs) has needed the NAKED-transcription escape
- * hatch for gcc-2.9 register-pressure/branch-layout gaps, and the size
- * of this particular gap, only the four lowest-register-pressure
- * functions (the plain `mem_alloc`-plus-single-forwarding-call
- * constructors with no `r8`/`sb`/`sl` involved) were attempted as real
- * C; everything else is NAKED-transcribed instruction-for-instruction
- * from the ROM disassembly, using the same small scratch-only Python
- * script (mechanical label renumbering plus mnemonic translation) this
- * project has used for other large NAKED batches. */
+ * - The level's spawn dispatcher `sub_802E170` (a 31-case `switch` over
+ *   the spawn "kind", indexing the stride-40 per-kind record table
+ *   `gUnknown_030014D8`) and its helpers: `sub_802E0CC` picks a spawn
+ *   record's kind byte and forwards to it, and the run of small
+ *   `new Foo(...)` constructors (`sub_802E3CC`-`sub_802E6CC`) each
+ *   allocate one object and hand it a fixed record of the same table.
+ * - The player's vehicle object (method table gStaticData_087E5144,
+ *   built by `sub_802E710`/`sub_802E740`): its per-frame update
+ *   (`sub_802E84C`), sprite draw (`sub_802E9FC`), damage handler
+ *   (`sub_802EB78`), d-pad steering (`sub_802EC64`/`sub_802ED10`) and
+ *   the per-state input steps (`sub_802EDBC`-`sub_802EFD8`). Its state
+ *   lives in the `gUnknown_030014DC`-`gUnknown_03001518` singletons.
+ *
+ * Built with old_agbcc: `sub_802E9FC` only matches under it (current
+ * agbcc loads its `attr` halfword straight into the callee-saved
+ * register instead of via r0); every other function here compiles
+ * identically under both. */
+
+/* One record of the `gUnknown_030014D8` per-kind table (stride 40). */
+struct kind_entry {
+    u8 unk_00[0x20];
+    s32 dx;         // 0x20 - added to the spawn X
+    s32 dy;         // 0x24 - added to the spawn Y
+};
+
+/* A level spawn record, as passed to `sub_802E0CC`. */
+struct spawn_rec {
+    u8 kind[3];     // 0x00 - normal / alternate-mode / `alt`-gated kind
+    u8 pad;
+    s32 x;          // 0x04 - tile units (<< 8 to Q8)
+    s32 y;          // 0x08
+    s32 z;          // 0x0C
+};
+
+/* `actor_self` plus the hit-point word every class built here keeps at
+ * +0x54. */
+struct actor_hp {
+    struct actor_self base;
+    s32 hp;         // 0x54
+};
+
+/* The camera-ish object `sub_802E9FC` reads through `self+0x30`. */
+struct cam_ref {
+    u8 unk_00[0x10];
+    s32 depth;      // 0x10 - the depth at which sprites draw unscaled
+};
+
+struct keys_pair {
+    u16 held;
+    u16 pressed;
+};
+
+/* A one-byte by-value argument: the ROM stores it into its stack slot
+ * with `strb` (a promoted `u8` would be stored with `str`). */
+struct byte_arg {
+    u8 v;
+} __attribute__((packed));
 
 extern u8 *mem_alloc(u32 size, s32 flags);
-extern void *gUnknown_030014D8;
+extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
+extern void InitActorPart(void *self, void *part, s32 b, s32 c, s32 d);
+extern s32 GetAnimFrameBaseOffset(void *self);
+extern u32 GetSpriteShapeSizeBits(u8 *frame);
+extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority);
+extern void sub_80019F8(void *ctx, s32 id, s32 frame, s32 vol, struct byte_arg force);
+extern u8 sub_8023418(void *self);
+extern void sub_8023234(void *self);
+extern u8 sub_8029794(void);
+extern s32 sub_8029B2C(void);
+extern void sub_8029BAC(s32 a);
+extern void sub_8029D8C(s32 x, s32 y);
+extern s32 sub_8029E98(void);
+extern s32 sub_8029EB4(void);
+extern u8 sub_802AA80(void *spawn);
+extern void sub_802F338(void *self);
+extern void sub_802F3BC(void *self);
+extern void sub_802F4CC(void *self);
+extern void sub_8031040(s32 k, s32 x, s32 y, s32 z);
+extern void sub_8033264(s32 k, s32 x, s32 y, s32 z);
+extern s32 sub_802FD8C(void *obj, struct kind_entry *rec, s32 x, s32 y, s32 z, void *spawn);
+extern s32 sub_802FF08(void *obj, struct kind_entry *rec, s32 x, s32 y, s32 z);
+extern s32 sub_8032054(void *obj, struct kind_entry *rec, s32 x, s32 y, s32 z);
+extern s32 sub_80320C4(void *obj, struct kind_entry *rec, s32 x, s32 y, s32 z, void *spawn);
+extern s32 sub_8031F78(void *obj, struct kind_entry *rec, s32 x, s32 y, s32 z);
+extern s32 sub_8032440(void *obj, struct kind_entry *rec, s32 x, s32 y, s32 z);
+extern s32 sub_80325EC(void *obj, struct kind_entry *rec, s32 x, s32 y, s32 z);
+extern s32 sub_80326E4(void *obj, struct kind_entry *rec, s32 x, s32 y, s32 z);
+extern s32 sub_8031920(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c, s32 d);
+extern s32 sub_8032890(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c);
+extern s32 sub_80342D4(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c);
+extern void *sub_8034058(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c, struct byte_arg d);
+extern s32 sub_8033EF4(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c);
+extern s32 sub_8033BB8(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c);
+extern void sub_80329D4(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c);
+extern void sub_80305F8(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c);
+extern void sub_8030300(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c, s32 d, s32 e);
+extern void sub_802FA04(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c, s32 d, s32 e);
+
+extern struct actor_self *gUnknown_03000884;
+extern void (*gUnknown_03000874)(void *dst, u8 *frame);
+extern struct keys_pair gUnknown_030007E0;
+extern void *gUnknown_030012BC;
+extern u8 *gUnknown_030012C0;
 extern void *gUnknown_030014BC;
+extern struct kind_entry *gUnknown_030014D8;
+extern s32 gUnknown_030014DC;
+extern s32 gUnknown_030014E0;
+extern s32 gUnknown_030014E4;
+extern u8 gUnknown_030014E8;
+extern s32 gUnknown_030014EC;
+extern s32 gUnknown_030014F0;
+extern s32 gUnknown_030014F4;
+extern s32 gUnknown_030014F8;
+extern s32 gUnknown_030014FC;
+extern s32 gUnknown_03001500;
+extern u8 gUnknown_03001504;
+extern u8 gUnknown_03001505;
+extern u8 gUnknown_03001506;
+extern u8 gUnknown_03001507;
+extern s32 gUnknown_03001508;
+extern s32 gUnknown_0300150C;
+extern s32 gUnknown_03001510;
+extern u8 *gUnknown_03001514;
+extern u8 *gUnknown_03001518[2];
+extern struct actor_pmf gStaticData_0817C1C0[];
+extern u8 gStaticData_087E50D4[];
+extern u8 gStaticData_087E510C[];
+extern u8 gStaticData_087E5144[];
+
+ACTOR_CALL_VIA_ALIASES
+asm(".set __divsi3, sub_803ADB4");
+
+/* `operator new`: the ROM materializes the size before the heap flags. */
+static inline void *AllocActor(u32 size)
+{
+    return mem_alloc(size, 0x80000000);
+}
+
+/* The inlined base constructor of the hit-point classes: the hit-point
+ * value is an argument, so it's materialized before the call. */
+static inline void InitHpActor(struct actor_hp *obj, struct kind_entry *rec, s32 x, s32 y, s32 z, s32 hp)
+{
+    InitActorPart(obj, rec, x, y, z);
+    obj->hp = hp;
+}
+
+/* Branchless `abs()` (`asrs`/`eors`/`subs`), as the ROM computes it. */
+static inline s32 Abs(s32 x)
+{
+    s32 s = x >> 31;
+
+    return (x ^ s) - s;
+}
+
+/* Clamps a steering speed to +-0x240, keeping its sign. */
+#define CLAMP_SPEED(v)                                                         \
+    if (Abs(v) > 0x240)                                                        \
+        (v) = (v) < 0 ? -0x240 : ((v) != 0 ? 0x240 : 0);                      \
+    else (void)0
 
 /* On the state-3 anim-frame edge, resets `self` (`gUnknown_030014BC`)
  * back to state 3/table-index 0 with a fresh anim frame from `self`'s
@@ -54,2118 +187,541 @@ void sub_802E0A4(void)
     }
 }
 
-/* Dispatch/spawn helper: classifies a "kind" byte from `self`'s own
- * bytes (offset 0, 1, or 2, depending on the current game-mode pause
- * flag and an `arg2` gate), then either fires `sub_8031040` (kinds
- * 0x10-0x12), `sub_802E170` (most other kinds - the 31-case jump
- * table), or `sub_8033264` (kind 0xa) with a position computed from
- * `self`'s own `+4`/`+8`/`+0xc` fields plus `arg2`. Semantics fully
- * understood; NAKED-transcribed (heavy multi-register forwarding
- * across three tail-call sites). */
-NAKED s32 sub_802E0CC(void *selfArg, s32 arg1, s32 arg2)
+s32 sub_802E170(u8 kind, s32 x, s32 y, s32 z, void *spawn);
+
+/* Spawns the object a level spawn record describes: its kind comes from
+ * byte 0, byte 1 in the alternate game mode (kind 0x17 there becomes
+ * 0x14) or byte 2 when `alt` is set. Kind 0x1d only spawns while
+ * `sub_8023418` allows it; kinds 0, 0x3e and 0x20-0x25 never do. */
+s32 sub_802E0CC(struct spawn_rec *rec, u8 alt, s32 dz)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "sub sp, #4\n\t"
-        "add r5, r0, #0\n\t"
-        "add r6, r2, #0\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "lsr r2, r1, #0x18\n\t"
-        "ldrb r4, [r5]\n\t"
-        "ldr r1, 1f\n\t"
-        "ldr r0, [r1]\n\t"
-        "add r0, #0x8c\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 2f\n\t"
-        "ldrb r4, [r5, #1]\n\t"
-        "cmp r4, #0x17\n\t"
-        "bne 3f\n\t"
-        "mov r4, #0x14\n\t"
-        "b 3f\n\t"
-        ".align 2, 0\n"
-    "1: .4byte gUnknown_030012C0\n"
-    "2:\n\t"
-        "cmp r2, #0\n\t"
-        "beq 3f\n\t"
-        "ldrb r4, [r5, #2]\n\t"
-    "3:\n\t"
-        "cmp r4, #0x1d\n\t"
-        "bne 4f\n\t"
-        "ldr r0, [r1]\n\t"
-        "bl sub_8023418\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "beq 7f\n\t"
-    "4:\n\t"
-        "cmp r4, #0\n\t"
-        "beq 7f\n\t"
-        "cmp r4, #0x3e\n\t"
-        "beq 7f\n\t"
-        "add r0, r4, #0\n\t"
-        "sub r0, #0x20\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "cmp r0, #5\n\t"
-        "bls 7f\n\t"
-        "ldr r0, [r5, #4]\n\t"
-        "lsl r2, r0, #8\n\t"
-        "ldr r0, [r5, #8]\n\t"
-        "lsl r3, r0, #8\n\t"
-        "ldr r0, [r5, #0xc]\n\t"
-        "lsl r0, r0, #8\n\t"
-        "add r6, r0, r6\n\t"
-        "add r1, r4, #0\n\t"
-        "sub r1, #0x10\n\t"
-        "lsl r0, r1, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "cmp r0, #2\n\t"
-        "bhi 5f\n\t"
-        "add r0, r1, #0\n\t"
-        "add r1, r2, #0\n\t"
-        "add r2, r3, #0\n\t"
-        "add r3, r6, #0\n\t"
-        "bl sub_8031040\n\t"
-        "b 7f\n\t"
-    "5:\n\t"
-        "cmp r4, #0xa\n\t"
-        "beq 6f\n\t"
-        "str r5, [sp]\n\t"
-        "add r0, r4, #0\n\t"
-        "add r1, r2, #0\n\t"
-        "add r2, r3, #0\n\t"
-        "add r3, r6, #0\n\t"
-        "bl sub_802E170\n\t"
-        "b 8f\n\t"
-    "6:\n\t"
-        "mov r0, #0\n\t"
-        "add r1, r2, #0\n\t"
-        "add r2, r3, #0\n\t"
-        "add r3, r6, #0\n\t"
-        "bl sub_8033264\n\t"
-    "7:\n\t"
-        "mov r0, #0\n\t"
-    "8:\n\t"
-        "add sp, #4\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-    );
+    u8 kind = rec->kind[0];
+    s32 x, y, z;
+
+    if (gUnknown_030012C0[0x8c] != 0) {
+        kind = rec->kind[1];
+        if (kind == 0x17)
+            kind = 0x14;
+    } else if (alt != 0) {
+        kind = rec->kind[2];
+    }
+    if (kind == 0x1d && !sub_8023418(gUnknown_030012C0))
+        return 0;
+    if (kind == 0 || kind == 0x3e || (u8)(kind - 0x20) <= 5)
+        return 0;
+    x = rec->x << 8;
+    y = rec->y << 8;
+    z = (rec->z << 8) + dz;
+    if ((u8)(kind - 0x10) <= 2) {
+        sub_8031040(kind - 0x10, x, y, z);
+    } else if (kind != 0xa) {
+        return sub_802E170(kind, x, y, z, rec);
+    } else {
+        sub_8033264(0, x, y, z);
+    }
+    return 0;
 }
 
-/* The 31-case jump-table dispatcher `docs/rom_map.md` already flagged:
- * indexes `gUnknown_030014D8` (a stride-40 per-"kind" data table) by
- * `kind`, then either forwards to one of the `mem_alloc`-plus-
- * forwarding-call constructors below (matched separately, as their own
- * functions - this dispatcher only reaches them via `bl`, they're not
- * inlined here) or falls back to a small set of shared default cases.
- * Fully understood; NAKED-transcribed given the jump table's own size
- * and the near-certainty of an exact-byte-match risk in reproducing
- * gcc's own switch codegen for a 31-case dispatch from scratch. */
-NAKED void sub_802E170(s32 kind, s32 x, s32 y, s32 z, s32 arg4)
+/* The spawn dispatcher: offsets the position by the kind's record and
+ * constructs the kind's object. Kind 23 turns into kind 20's object
+ * when `sub_802AA80` says so; kind 31 spawns a kind-43 companion first. */
+s32 sub_802E170(u8 kind, s32 x, s32 y, s32 z, void *spawn)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sb\n\t"
-        "mov r6, r8\n\t"
-        "push {r6, r7}\n\t"
-        "sub sp, #8\n\t"
-        "add r5, r1, #0\n\t"
-        "mov r8, r2\n\t"
-        "add r7, r3, #0\n\t"
-        "ldr r4, [sp, #0x24]\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r6, r0, #0x18\n\t"
-        "ldr r0, 2f\n\t"
-        "ldr r1, [r0]\n\t"
-        "lsl r0, r6, #2\n\t"
-        "add r0, r0, r6\n\t"
-        "lsl r0, r0, #3\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r1, [r0, #0x20]\n\t"
-        "add r5, r5, r1\n\t"
-        "ldr r0, [r0, #0x24]\n\t"
-        "add r8, r0\n\t"
-        "sub r0, r6, #1\n\t"
-        "cmp r0, #0x1e\n\t"
-        "bls 1f\n\t"
-        "b 24f\n\t"
-        "1:\n\t"
-        "lsl r0, r0, #2\n\t"
-        "ldr r1, 3f\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov pc, r0\n\t"
-        ".align 2, 0\n"
-        "2: .4byte gUnknown_030014D8\n"
-        "3: .4byte 4f\n"
-        "4:\n\t"
-        ".4byte 5f\n\t"
-        ".4byte 24f\n\t"
-        ".4byte 24f\n\t"
-        ".4byte 7f\n\t"
-        ".4byte 7f\n\t"
-        ".4byte 7f\n\t"
-        ".4byte 7f\n\t"
-        ".4byte 7f\n\t"
-        ".4byte 7f\n\t"
-        ".4byte 24f\n\t"
-        ".4byte 24f\n\t"
-        ".4byte 24f\n\t"
-        ".4byte 24f\n\t"
-        ".4byte 24f\n\t"
-        ".4byte 24f\n\t"
-        ".4byte 24f\n\t"
-        ".4byte 24f\n\t"
-        ".4byte 24f\n\t"
-        ".4byte 9f\n\t"
-        ".4byte 13f\n\t"
-        ".4byte 13f\n\t"
-        ".4byte 13f\n\t"
-        ".4byte 11f\n\t"
-        ".4byte 16f\n\t"
-        ".4byte 16f\n\t"
-        ".4byte 16f\n\t"
-        ".4byte 18f\n\t"
-        ".4byte 20f\n\t"
-        ".4byte 16f\n\t"
-        ".4byte 24f\n\t"
-        ".4byte 22f\n\t"
-        "5:\n\t"
-        "mov r0, #0x80\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "bl mem_alloc\n\t"
-        "ldr r1, 6f\n\t"
-        "lsl r2, r6, #2\n\t"
-        "add r2, r2, r6\n\t"
-        "lsl r2, r2, #3\n\t"
-        "ldr r1, [r1]\n\t"
-        "add r1, r1, r2\n\t"
-        "str r7, [sp]\n\t"
-        "str r4, [sp, #4]\n\t"
-        "add r2, r5, #0\n\t"
-        "mov r3, r8\n\t"
-        "bl sub_802FD8C\n\t"
-        "b 25f\n\t"
-        ".align 2, 0\n"
-        "6: .4byte gUnknown_030014D8\n"
-        "7:\n\t"
-        "mov r0, #0x64\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "bl mem_alloc\n\t"
-        "ldr r1, 8f\n\t"
-        "lsl r2, r6, #2\n\t"
-        "add r2, r2, r6\n\t"
-        "lsl r2, r2, #3\n\t"
-        "ldr r1, [r1]\n\t"
-        "add r1, r1, r2\n\t"
-        "str r7, [sp]\n\t"
-        "add r2, r5, #0\n\t"
-        "mov r3, r8\n\t"
-        "bl sub_802FF08\n\t"
-        "b 25f\n\t"
-        ".align 2, 0\n"
-        "8: .4byte gUnknown_030014D8\n"
-        "9:\n\t"
-        "mov r0, #0x70\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "bl mem_alloc\n\t"
-        "ldr r1, 10f\n\t"
-        "lsl r2, r6, #2\n\t"
-        "add r2, r2, r6\n\t"
-        "lsl r2, r2, #3\n\t"
-        "ldr r1, [r1]\n\t"
-        "add r1, r1, r2\n\t"
-        "str r7, [sp]\n\t"
-        "add r2, r5, #0\n\t"
-        "mov r3, r8\n\t"
-        "bl sub_8032054\n\t"
-        "b 25f\n\t"
-        ".align 2, 0\n"
-        "10: .4byte gUnknown_030014D8\n"
-        "11:\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_802AA80\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "beq 13f\n\t"
-        "mov r0, #0x74\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "bl mem_alloc\n\t"
-        "ldr r1, 12f\n\t"
-        "ldr r1, [r1]\n\t"
-        "mov r2, #0xc8\n\t"
-        "lsl r2, r2, #2\n\t"
-        "b 14f\n\t"
-        ".align 2, 0\n"
-        "12: .4byte gUnknown_030014D8\n"
-        "13:\n\t"
-        "mov r0, #0x74\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "bl mem_alloc\n\t"
-        "ldr r1, 15f\n\t"
-        "lsl r2, r6, #2\n\t"
-        "add r2, r2, r6\n\t"
-        "lsl r2, r2, #3\n\t"
-        "ldr r1, [r1]\n\t"
-        "14:\n\t"
-        "add r1, r1, r2\n\t"
-        "str r7, [sp]\n\t"
-        "str r4, [sp, #4]\n\t"
-        "add r2, r5, #0\n\t"
-        "mov r3, r8\n\t"
-        "bl sub_80320C4\n\t"
-        "b 25f\n\t"
-        ".align 2, 0\n"
-        "15: .4byte gUnknown_030014D8\n"
-        "16:\n\t"
-        "mov r0, #0x70\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "bl mem_alloc\n\t"
-        "ldr r1, 17f\n\t"
-        "lsl r2, r6, #2\n\t"
-        "add r2, r2, r6\n\t"
-        "lsl r2, r2, #3\n\t"
-        "ldr r1, [r1]\n\t"
-        "add r1, r1, r2\n\t"
-        "str r7, [sp]\n\t"
-        "add r2, r5, #0\n\t"
-        "mov r3, r8\n\t"
-        "bl sub_8031F78\n\t"
-        "b 25f\n\t"
-        ".align 2, 0\n"
-        "17: .4byte gUnknown_030014D8\n"
-        "18:\n\t"
-        "mov r0, #0x60\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "bl mem_alloc\n\t"
-        "ldr r1, 19f\n\t"
-        "lsl r2, r6, #2\n\t"
-        "add r2, r2, r6\n\t"
-        "lsl r2, r2, #3\n\t"
-        "ldr r1, [r1]\n\t"
-        "add r1, r1, r2\n\t"
-        "str r7, [sp]\n\t"
-        "add r2, r5, #0\n\t"
-        "mov r3, r8\n\t"
-        "bl sub_8032440\n\t"
-        "b 25f\n\t"
-        ".align 2, 0\n"
-        "19: .4byte gUnknown_030014D8\n"
-        "20:\n\t"
-        "mov r0, #0x68\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "bl mem_alloc\n\t"
-        "ldr r1, 21f\n\t"
-        "lsl r2, r6, #2\n\t"
-        "add r2, r2, r6\n\t"
-        "lsl r2, r2, #3\n\t"
-        "ldr r1, [r1]\n\t"
-        "add r1, r1, r2\n\t"
-        "str r7, [sp]\n\t"
-        "add r2, r5, #0\n\t"
-        "mov r3, r8\n\t"
-        "bl sub_80325EC\n\t"
-        "b 25f\n\t"
-        ".align 2, 0\n"
-        "21: .4byte gUnknown_030014D8\n"
-        "22:\n\t"
-        "mov r0, #0x5c\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "bl mem_alloc\n\t"
-        "ldr r3, 23f\n\t"
-        "mov sb, r3\n\t"
-        "ldr r2, [r3]\n\t"
-        "mov r3, #0xd7\n\t"
-        "lsl r3, r3, #3\n\t"
-        "add r1, r2, r3\n\t"
-        "lsl r4, r6, #2\n\t"
-        "add r4, r4, r6\n\t"
-        "lsl r4, r4, #3\n\t"
-        "add r2, r4, r2\n\t"
-        "ldr r2, [r2, #0x20]\n\t"
-        "sub r2, r5, r2\n\t"
-        "ldr r3, [r1, #0x20]\n\t"
-        "add r2, r2, r3\n\t"
-        "str r7, [sp]\n\t"
-        "mov r3, r8\n\t"
-        "bl sub_80326E4\n\t"
-        "mov r0, #0x5c\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "bl mem_alloc\n\t"
-        "mov r2, sb\n\t"
-        "ldr r1, [r2]\n\t"
-        "add r1, r1, r4\n\t"
-        "str r7, [sp]\n\t"
-        "add r2, r5, #0\n\t"
-        "mov r3, r8\n\t"
-        "bl sub_80326E4\n\t"
-        "b 25f\n\t"
-        ".align 2, 0\n"
-        "23: .4byte gUnknown_030014D8\n"
-        "24:\n\t"
-        "mov r0, #0\n\t"
-        "25:\n\t"
-        "add sp, #8\n\t"
-        "pop {r3, r4}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-    );
+    x += gUnknown_030014D8[kind].dx;
+    y += gUnknown_030014D8[kind].dy;
+    switch (kind) {
+    case 1:
+        return sub_802FD8C(AllocActor(0x80), &gUnknown_030014D8[kind], x, y, z, spawn);
+    case 4:
+    case 5:
+    case 6:
+    case 7:
+    case 8:
+    case 9:
+        return sub_802FF08(AllocActor(0x64), &gUnknown_030014D8[kind], x, y, z);
+    case 19:
+        return sub_8032054(AllocActor(0x70), &gUnknown_030014D8[kind], x, y, z);
+    case 23:
+        if (sub_802AA80(spawn))
+            return sub_80320C4(AllocActor(0x74), &gUnknown_030014D8[20], x, y, z, spawn);
+        /* fallthrough */
+    case 20:
+    case 21:
+    case 22:
+        return sub_80320C4(AllocActor(0x74), &gUnknown_030014D8[kind], x, y, z, spawn);
+    case 24:
+    case 25:
+    case 26:
+    case 29:
+        return sub_8031F78(AllocActor(0x70), &gUnknown_030014D8[kind], x, y, z);
+    case 27:
+        return sub_8032440(AllocActor(0x60), &gUnknown_030014D8[kind], x, y, z);
+    case 28:
+        return sub_80325EC(AllocActor(0x68), &gUnknown_030014D8[kind], x, y, z);
+    case 31:
+        sub_80326E4(AllocActor(0x5c), &gUnknown_030014D8[43],
+                    x - gUnknown_030014D8[kind].dx + gUnknown_030014D8[43].dx, y, z);
+        return sub_80326E4(AllocActor(0x5c), &gUnknown_030014D8[kind], x, y, z);
+    }
+    return 0;
 }
 
-/* Semantics understood as part of the sub_802E170 kind-object
- * family/position-offset helpers this gap covers; NAKED-
- * transcribed per this project's established escape hatch for
- * this neighborhood's register-pressure/branch-layout gaps -
- * see docs/matching/issue-54-issue-56-gap-e0a4.md. */
-NAKED void sub_802E3CC(void)
+/* Plays sfx 0x17 and spawns a 1-hit-point kind-46 object at the origin. */
+void sub_802E3CC(void)
 {
-    asm(
-        "push {r4, r5, lr}\n\t"
-        "sub sp, #4\n\t"
-        "ldr r0, 1f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0x17\n\t"
-        "bl PlaySfx\n\t"
-        "mov r0, #0x58\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "bl mem_alloc\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r0, 2f\n\t"
-        "ldr r1, [r0]\n\t"
-        "mov r0, #0xe6\n\t"
-        "lsl r0, r0, #3\n\t"
-        "add r1, r1, r0\n\t"
-        "mov r0, #0\n\t"
-        "mov r5, #1\n\t"
-        "str r0, [sp]\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r2, #0\n\t"
-        "mov r3, #0\n\t"
-        "bl InitActorPart\n\t"
-        "str r5, [r4, #0x54]\n\t"
-        "ldr r0, 3f\n\t"
-        "str r0, [r4, #0x50]\n\t"
-        "add sp, #4\n\t"
-        "pop {r4, r5}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-        "1: .4byte gUnknown_030012BC\n"
-        "2: .4byte gUnknown_030014D8\n"
-        "3: .4byte gStaticData_087E50D4\n"
-    );
+    struct actor_hp *obj;
+
+    PlaySfx(gUnknown_030012BC, 0x17, 0x100);
+    obj = AllocActor(0x58);
+    InitHpActor(obj, &gUnknown_030014D8[46], 0, 0, 0, 1);
+    obj->base.vtable = (struct actor_vtable *)gStaticData_087E50D4;
 }
 
-/* Semantics understood as part of the sub_802E170 kind-object
- * family/position-offset helpers this gap covers; NAKED-
- * transcribed per this project's established escape hatch for
- * this neighborhood's register-pressure/branch-layout gaps -
- * see docs/matching/issue-54-issue-56-gap-e0a4.md. */
-NAKED s32 sub_802E420(s32 x, s32 y, s32 z, s32 kind)
+/* Plays sfx 4 and spawns a 1-hit-point kind-45 object at (x, y, z). */
+void sub_802E420(s32 x, s32 y, s32 z)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6}\n\t"
-        "sub sp, #4\n\t"
-        "mov r8, r0\n\t"
-        "mov sb, r1\n\t"
-        "add r6, r2, #0\n\t"
-        "ldr r0, 1f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #4\n\t"
-        "bl PlaySfx\n\t"
-        "mov r0, #0x58\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "bl mem_alloc\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r0, 2f\n\t"
-        "ldr r1, [r0]\n\t"
-        "mov r0, #0xe1\n\t"
-        "lsl r0, r0, #3\n\t"
-        "add r1, r1, r0\n\t"
-        "mov r5, #1\n\t"
-        "str r6, [sp]\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r2, r8\n\t"
-        "mov r3, sb\n\t"
-        "bl InitActorPart\n\t"
-        "str r5, [r4, #0x54]\n\t"
-        "ldr r0, 3f\n\t"
-        "str r0, [r4, #0x50]\n\t"
-        "add sp, #4\n\t"
-        "pop {r3, r4}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-        "1: .4byte gUnknown_030012BC\n"
-        "2: .4byte gUnknown_030014D8\n"
-        "3: .4byte gStaticData_087E510C\n"
-    );
+    struct actor_hp *obj;
+
+    PlaySfx(gUnknown_030012BC, 4, 0x100);
+    obj = AllocActor(0x58);
+    InitHpActor(obj, &gUnknown_030014D8[45], x, y, z, 1);
+    obj->base.vtable = (struct actor_vtable *)gStaticData_087E510C;
 }
 
-extern s32 sub_8032890(void *obj, void *entry, s32 a, s32 b, s32 c);
-
-/* One of `sub_802E170`'s per-"kind" case bodies: allocates a 0x64-byte
- * struct and forwards to `sub_8032890` with the kind-specific data
- * table entry (`gUnknown_030014D8 + 0x6E0`). */
+/* Kind-44 constructor. */
 void sub_802E484(s32 a, s32 b, s32 c)
 {
-    void *obj;
-    {
-        register u32 size asm("r0") = 0x64;
-        register s32 flags asm("r1") = 0x80000000;
-
-        obj = mem_alloc(size, flags);
-    }
-
-    sub_8032890(obj, (u8 *)gUnknown_030014D8 + 0x6E0, a, b, c);
+    sub_8032890(AllocActor(0x64), &gUnknown_030014D8[44], a, b, c);
 }
 
-/* Semantics understood as part of the sub_802E170 kind-object
- * family/position-offset helpers this gap covers; NAKED-
- * transcribed per this project's established escape hatch for
- * this neighborhood's register-pressure/branch-layout gaps -
- * see docs/matching/issue-54-issue-56-gap-e0a4.md. */
-NAKED s32 sub_802E4B8(s32 kind, s32 a1, s32 a2, s32 a3, s32 a4)
+/* `sub_8031920`-class constructor for any kind. */
+s32 sub_802E4B8(u8 kind, s32 a, s32 b, s32 c, s32 d)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6}\n\t"
-        "sub sp, #8\n\t"
-        "add r4, r0, #0\n\t"
-        "mov r8, r1\n\t"
-        "mov sb, r2\n\t"
-        "add r5, r3, #0\n\t"
-        "ldr r6, [sp, #0x20]\n\t"
-        "lsl r4, r4, #0x18\n\t"
-        "lsr r4, r4, #0x18\n\t"
-        "mov r0, #0x64\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "bl mem_alloc\n\t"
-        "ldr r1, 1f\n\t"
-        "lsl r2, r4, #2\n\t"
-        "add r2, r2, r4\n\t"
-        "lsl r2, r2, #3\n\t"
-        "ldr r1, [r1]\n\t"
-        "add r1, r1, r2\n\t"
-        "str r5, [sp]\n\t"
-        "str r6, [sp, #4]\n\t"
-        "mov r2, r8\n\t"
-        "mov r3, sb\n\t"
-        "bl sub_8031920\n\t"
-        "add sp, #8\n\t"
-        "pop {r3, r4}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n"
-        "1: .4byte gUnknown_030014D8\n"
-    );
+    return sub_8031920(AllocActor(0x64), &gUnknown_030014D8[kind], a, b, c, d);
 }
 
-extern s32 sub_80342D4(void *obj, void *entry, s32 a, s32 b, s32 c);
-
-/* Same shape as `sub_802E484`, 0x5c-byte struct, table offset 0x230,
- * forwards to `sub_80342D4`. */
+/* Kind-14 constructor. */
 void sub_802E504(s32 a, s32 b, s32 c)
 {
-    void *obj;
-    {
-        register u32 size asm("r0") = 0x5c;
-        register s32 flags asm("r1") = 0x80000000;
-
-        obj = mem_alloc(size, flags);
-    }
-
-    sub_80342D4(obj, (u8 *)gUnknown_030014D8 + 0x230, a, b, c);
+    sub_80342D4(AllocActor(0x5c), &gUnknown_030014D8[14], a, b, c);
 }
 
-/* Semantics understood as part of the sub_802E170 kind-object
- * family/position-offset helpers this gap covers; NAKED-
- * transcribed per this project's established escape hatch for
- * this neighborhood's register-pressure/branch-layout gaps -
- * see docs/matching/issue-54-issue-56-gap-e0a4.md. */
-NAKED void *sub_802E538(void *arg0, s32 arg1, s32 arg2, s32 arg3)
+/* Kind-13 constructor; the last argument is passed as a single byte. */
+void sub_802E538(s32 a, s32 b, s32 c, u8 d)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "mov r6, r8\n\t"
-        "push {r6}\n\t"
-        "sub sp, #8\n\t"
-        "add r6, r0, #0\n\t"
-        "mov r8, r1\n\t"
-        "add r5, r2, #0\n\t"
-        "lsl r4, r3, #0x18\n\t"
-        "lsr r4, r4, #0x18\n\t"
-        "mov r0, #0x70\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "bl mem_alloc\n\t"
-        "ldr r1, 1f\n\t"
-        "ldr r1, [r1]\n\t"
-        "mov r2, #0x82\n\t"
-        "lsl r2, r2, #2\n\t"
-        "add r1, r1, r2\n\t"
-        "str r5, [sp]\n\t"
-        "add r2, sp, #4\n\t"
-        "strb r4, [r2]\n\t"
-        "add r2, r6, #0\n\t"
-        "mov r3, r8\n\t"
-        "bl sub_8034058\n\t"
-        "add sp, #8\n\t"
-        "pop {r3}\n\t"
-        "mov r8, r3\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-        "1: .4byte gUnknown_030014D8\n"
-    );
+    struct byte_arg arg;
+
+    arg.v = d;
+    sub_8034058(AllocActor(0x70), &gUnknown_030014D8[13], a, b, c, arg);
 }
 
-extern s32 sub_8033EF4(void *obj, void *entry, s32 a, s32 b, s32 c);
-
-/* Same shape as `sub_802E484`, 0x70-byte struct, table offset 0x1E0,
- * forwards to `sub_8033EF4`. */
+/* Kind-12 constructor. */
 void sub_802E57C(s32 a, s32 b, s32 c)
 {
-    void *obj;
-    {
-        register u32 size asm("r0") = 0x70;
-        register s32 flags asm("r1") = 0x80000000;
-
-        obj = mem_alloc(size, flags);
-    }
-
-    sub_8033EF4(obj, (u8 *)gUnknown_030014D8 + 0x1E0, a, b, c);
+    sub_8033EF4(AllocActor(0x70), &gUnknown_030014D8[12], a, b, c);
 }
 
-extern s32 sub_8033BB8(void *obj, void *entry, s32 a, s32 b, s32 c);
-
-/* Same shape as `sub_802E484`, 0x70-byte struct, table offset 0x1B8,
- * forwards to `sub_8033BB8`. */
+/* Kind-11 constructor. */
 void sub_802E5B0(s32 a, s32 b, s32 c)
 {
-    void *obj;
-    {
-        register u32 size asm("r0") = 0x70;
-        register s32 flags asm("r1") = 0x80000000;
+    sub_8033BB8(AllocActor(0x70), &gUnknown_030014D8[11], a, b, c);
+}
 
-        obj = mem_alloc(size, flags);
+/* Plays sfx 0x38 and spawns a kind-39 object. */
+void sub_802E5E4(s32 x, s32 y, s32 z)
+{
+    PlaySfx(gUnknown_030012BC, 0x38, 0x100);
+    sub_80329D4(AllocActor(0x6c), &gUnknown_030014D8[39], x, y, z);
+}
+
+/* Plays sfx 0x38 and spawns a kind-38 object. */
+void sub_802E62C(s32 x, s32 y, s32 z)
+{
+    PlaySfx(gUnknown_030012BC, 0x38, 0x100);
+    sub_80305F8(AllocActor(0x6c), &gUnknown_030014D8[38], x, y, z);
+}
+
+/* Plays sfx 0x30 and spawns a kind-3 object. */
+void sub_802E674(s32 a, s32 b, s32 c, s32 d, s32 e)
+{
+    PlaySfx(gUnknown_030012BC, 0x30, 0x100);
+    sub_8030300(AllocActor(0x60), &gUnknown_030014D8[3], a, b, c, d, e);
+}
+
+/* Spawns a kind-2 object (the vehicle's shot - see `sub_802EDBC`). */
+void sub_802E6CC(s32 a, s32 b, s32 c, s32 d, s32 e)
+{
+    sub_802FA04(AllocActor(0x60), &gUnknown_030014D8[2], a, b, c, d, e);
+}
+
+struct actor_hp *sub_802E740(struct actor_hp *self, struct kind_entry *rec, s32 z);
+
+/* Installs the level's per-kind table and builds the player vehicle
+ * from its first record, making it the (self-linked) player object. */
+void sub_802E710(struct kind_entry *table, s32 z)
+{
+    struct actor_hp *p;
+
+    gUnknown_030014D8 = table;
+    gUnknown_03000884 = &(p = sub_802E740(AllocActor(0x58), gUnknown_030014D8, z))->base;
+    ((void **)p->base.unk_48)[0] = p;
+    ((void **)p->base.unk_48)[1] = p;
+}
+
+/* The player vehicle's constructor: 100 hit points (0x78 when
+ * `sub_8029794` says so), and a reset of all its singleton state. A
+ * nonzero start depth starts it in state 7. */
+struct actor_hp *sub_802E740(struct actor_hp *self, struct kind_entry *rec, s32 z)
+{
+    s32 y = 0;
+
+    if (z == 0)
+        y = -0x9600;
+    InitHpActor(self, rec, 0, y, z, 100);
+    self->base.vtable = (struct actor_vtable *)gStaticData_087E5144;
+    sub_802F338(self);
+    gUnknown_0300150C = 0;
+    if (self->base.z != 0) {
+        gUnknown_03001508 = 0;
+        ACTOR_SET_STATE(&self->base, 7, 0);
+        sub_8029BAC(0x28);
+    } else {
+        sub_8029BAC(0x1e);
+        gUnknown_03001508 = 0x180;
     }
-
-    sub_8033BB8(obj, (u8 *)gUnknown_030014D8 + 0x1B8, a, b, c);
+    gUnknown_03001507 = 0;
+    gUnknown_03001506 = 1;
+    gUnknown_03001500 = 0;
+    gUnknown_03001505 = 0;
+    gUnknown_03001504 = 0;
+    gUnknown_030014FC = 0;
+    gUnknown_030014F8 = 0;
+    gUnknown_030014F4 = 0;
+    gUnknown_030014EC = -0xbe;
+    gUnknown_030014F0 = 0;
+    gUnknown_030014E8 = 0;
+    if (sub_8029794())
+        self->hp = 0x78;
+    gUnknown_030014E4 = self->hp;
+    gUnknown_030014E0 = 0;
+    gUnknown_030014DC = 0;
+    return self;
 }
 
-/* Semantics understood as part of the sub_802E170 kind-object
- * family/position-offset helpers this gap covers; NAKED-
- * transcribed per this project's established escape hatch for
- * this neighborhood's register-pressure/branch-layout gaps -
- * see docs/matching/issue-54-issue-56-gap-e0a4.md. */
-NAKED void sub_802E5E4(s32 x, s32 y)
+/* The vehicle's per-frame update: engine-sound throttle, fire cooldown,
+ * movement by the steering speeds (clamped to the play area unless
+ * `gUnknown_03001506` is set), depth, animation, then the current
+ * state's handler from gStaticData_0817C1C0. */
+void sub_802E84C(struct actor_hp *self)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "sub sp, #4\n\t"
-        "add r5, r0, #0\n\t"
-        "add r6, r1, #0\n\t"
-        "add r4, r2, #0\n\t"
-        "ldr r0, 1f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0x38\n\t"
-        "bl PlaySfx\n\t"
-        "mov r0, #0x6c\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "bl mem_alloc\n\t"
-        "ldr r1, 2f\n\t"
-        "ldr r1, [r1]\n\t"
-        "mov r2, #0xc3\n\t"
-        "lsl r2, r2, #3\n\t"
-        "add r1, r1, r2\n\t"
-        "str r4, [sp]\n\t"
-        "add r2, r5, #0\n\t"
-        "add r3, r6, #0\n\t"
-        "bl sub_80329D4\n\t"
-        "add sp, #4\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-        "1: .4byte gUnknown_030012BC\n"
-        "2: .4byte gUnknown_030014D8\n"
-    );
+    s32 x, y;
+
+    if (gUnknown_030014E0 != 0) {
+        if (gUnknown_030014DC-- <= 0) {
+            s32 vol;
+
+            gUnknown_030014DC = 0x16;
+            vol = gUnknown_030014E0 * 48;
+            if (vol > 0x100)
+                vol = 0x100;
+            PlaySfx(gUnknown_030012BC, 0x37, vol);
+        }
+        gUnknown_030014E0 = 0;
+    }
+    if (gUnknown_03001500 != 0)
+        gUnknown_03001500--;
+    sub_802F4CC(self);
+    sub_802F3BC(self);
+    x = self->base.x += gUnknown_0300150C;
+    y = self->base.y += gUnknown_03001508;
+    if (gUnknown_03001506 == 0) {
+        self->base.x = x < -0x8000 ? -0x8000 : x;
+        self->base.x = self->base.x > 0x8000 ? 0x8000 : self->base.x;
+        self->base.y = y < -0x4b00 ? -0x4b00 : y;
+        self->base.y = self->base.y > 0x4b00 ? 0x4b00 : self->base.y;
+    }
+    if (gUnknown_03001504 == 0) {
+        self->base.depth = 0x1c00;
+        self->base.z = (sub_8029B2C() << 8) + self->base.depth;
+    }
+    {
+        s32 d = (self->base.depth >> 1) & 0x7f80;
+
+        self->base.visible = d | (((Abs(self->base.y) + Abs(self->base.x)) >> 11) & 0x7f);
+    }
+    self->base.stateTime++;
+    self->base.animTime += *(s16 *)&self->base.animTimer;
+    self->base.animDone = 0;
+    if (GetAnimFrameBaseOffset(self) >= self->base.anims[self->base.animIndex].loopThreshold) {
+        self->base.animTime -= (self->base.anims[self->base.animIndex].loopThreshold
+                                - self->base.anims[self->base.animIndex].loopBase) << 8;
+        self->base.animDone = 1;
+    }
+    sub_8029D8C(self->base.x, self->base.y);
+    ACTOR_PMF_CALL(&self->base, gStaticData_0817C1C0);
 }
 
-/* Semantics understood as part of the sub_802E170 kind-object
- * family/position-offset helpers this gap covers; NAKED-
- * transcribed per this project's established escape hatch for
- * this neighborhood's register-pressure/branch-layout gaps -
- * see docs/matching/issue-54-issue-56-gap-e0a4.md. */
-NAKED s32 sub_802E62C(s32 x, s32 y, s32 z)
+asm(".align 2, 0");
+
+/* The anim_part_instance accessors (actor_anim.c), inlined. */
+static inline s32 AnimBase(struct actor_self *self)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "sub sp, #4\n\t"
-        "add r5, r0, #0\n\t"
-        "add r6, r1, #0\n\t"
-        "add r4, r2, #0\n\t"
-        "ldr r0, 1f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0x38\n\t"
-        "bl PlaySfx\n\t"
-        "mov r0, #0x6c\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "bl mem_alloc\n\t"
-        "ldr r1, 2f\n\t"
-        "ldr r1, [r1]\n\t"
-        "mov r2, #0xbe\n\t"
-        "lsl r2, r2, #3\n\t"
-        "add r1, r1, r2\n\t"
-        "str r4, [sp]\n\t"
-        "add r2, r5, #0\n\t"
-        "add r3, r6, #0\n\t"
-        "bl sub_80305F8\n\t"
-        "add sp, #4\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-        "1: .4byte gUnknown_030012BC\n"
-        "2: .4byte gUnknown_030014D8\n"
-    );
+    return self->animTime >> 8;
 }
 
-/* Semantics understood as part of the sub_802E170 kind-object
- * family/position-offset helpers this gap covers; NAKED-
- * transcribed per this project's established escape hatch for
- * this neighborhood's register-pressure/branch-layout gaps -
- * see docs/matching/issue-54-issue-56-gap-e0a4.md. */
-NAKED s32 sub_802E674(s32 x, s32 y, s32 z, s32 w)
+static inline u8 *CurFrame(struct actor_self *self)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6}\n\t"
-        "sub sp, #0xc\n\t"
-        "mov r8, r0\n\t"
-        "mov sb, r1\n\t"
-        "add r4, r2, #0\n\t"
-        "add r5, r3, #0\n\t"
-        "ldr r6, [sp, #0x24]\n\t"
-        "ldr r0, 1f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0x30\n\t"
-        "bl PlaySfx\n\t"
-        "mov r0, #0x60\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "bl mem_alloc\n\t"
-        "ldr r1, 2f\n\t"
-        "ldr r1, [r1]\n\t"
-        "add r1, #0x78\n\t"
-        "str r4, [sp]\n\t"
-        "str r5, [sp, #4]\n\t"
-        "str r6, [sp, #8]\n\t"
-        "mov r2, r8\n\t"
-        "mov r3, sb\n\t"
-        "bl sub_8030300\n\t"
-        "add sp, #0xc\n\t"
-        "pop {r3, r4}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-        "1: .4byte gUnknown_030012BC\n"
-        "2: .4byte gUnknown_030014D8\n"
-    );
+    s32 base = AnimBase(self);
+    s32 idx = self->animIndex;
+    struct anim_frame_record *table = self->anims;
+    s32 val = table[idx].frameIndex;
+
+    val += base;
+    return (u8 *)self->frameOffsets[val];
 }
 
-/* Semantics understood as part of the sub_802E170 kind-object
- * family/position-offset helpers this gap covers; NAKED-
- * transcribed per this project's established escape hatch for
- * this neighborhood's register-pressure/branch-layout gaps -
- * see docs/matching/issue-54-issue-56-gap-e0a4.md. */
-NAKED s32 sub_802E6CC(s32 a0, s32 a1, s32 a2, s32 a3)
+static inline s32 CurAttr(struct actor_self *self)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6}\n\t"
-        "sub sp, #0xc\n\t"
-        "mov r8, r0\n\t"
-        "mov sb, r1\n\t"
-        "add r4, r2, #0\n\t"
-        "add r5, r3, #0\n\t"
-        "ldr r6, [sp, #0x24]\n\t"
-        "mov r0, #0x60\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "bl mem_alloc\n\t"
-        "ldr r1, 1f\n\t"
-        "ldr r1, [r1]\n\t"
-        "add r1, #0x50\n\t"
-        "str r4, [sp]\n\t"
-        "str r5, [sp, #4]\n\t"
-        "str r6, [sp, #8]\n\t"
-        "mov r2, r8\n\t"
-        "mov r3, sb\n\t"
-        "bl sub_802FA04\n\t"
-        "add sp, #0xc\n\t"
-        "pop {r3, r4}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-        "1: .4byte gUnknown_030014D8\n"
-    );
+    s32 idx = self->animIndex;
+    struct anim_frame_record *table = self->anims;
+
+    return (s32)table[idx].attr << 16;
 }
 
-/* Semantics understood as part of the sub_802E170 kind-object
- * family/position-offset helpers this gap covers; NAKED-
- * transcribed per this project's established escape hatch for
- * this neighborhood's register-pressure/branch-layout gaps -
- * see docs/matching/issue-54-issue-56-gap-e0a4.md. */
-NAKED void *sub_802E710(void *arg0, s32 arg1)
+/* The vehicle's sprite draw: projects the position by depth (scaled
+ * and double-sized when drawn behind the reference depth), culls
+ * against the screen, uploads the frame's tiles into the other of the
+ * two VRAM buffers when the frame changed, and queues the OAM entry. */
+void sub_802E9FC(struct actor_hp *self)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "add r5, r1, #0\n\t"
-        "ldr r4, 1f\n\t"
-        "str r0, [r4]\n\t"
-        "ldr r6, 2f\n\t"
-        "mov r0, #0x58\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "bl mem_alloc\n\t"
-        "ldr r1, [r4]\n\t"
-        "add r2, r5, #0\n\t"
-        "bl sub_802E740\n\t"
-        "str r0, [r6]\n\t"
-        "str r0, [r0, #0x48]\n\t"
-        "str r0, [r0, #0x4c]\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-        "1: .4byte gUnknown_030014D8\n"
-        "2: .4byte gUnknown_03000884\n"
-    );
+    s32 scale;
+    s32 attr1 = 0;
+    u8 *frame;
+    u32 w, h;
+    s32 halfW, halfH;
+    s32 sx, sy;
+
+    frame = CurFrame(&self->base);
+    w = frame[0];
+    halfW = w * 4;
+    h = frame[1];
+    halfH = h * 4;
+    if (self->base.depth == (*(struct cam_ref **)&self->base.unk_2C[4])->depth) {
+        scale = 0x100;
+        sy = (self->base.y + sub_8029E98()) >> 8;
+        sx = (self->base.x + sub_8029EB4()) >> 8;
+    } else {
+        s32 depth = self->base.depth;
+        s32 f;
+
+        scale = (depth << 8) / (*(struct cam_ref **)&self->base.unk_2C[4])->depth;
+        f = 0x1c00000 / depth;
+        sy = (((self->base.y * f) >> 12) + sub_8029E98()) >> 8;
+        sx = (((self->base.x * f) >> 12) + sub_8029EB4()) >> 8;
+        attr1 = 0x100;
+        if (scale <= 0xff) {
+            attr1 |= 0x200;
+            halfW = w * 8;
+            halfH = h * 8;
+        }
+    }
+    sx -= halfW;
+    sy -= halfH;
+    if (sy <= 0x9f && sy + halfH * 2 >= 0 && sx <= 0xef && sx + halfW * 2 >= 0) {
+        u32 attr = CurAttr(&self->base);
+
+        attr1 |= (sy & 0xff) | ((sx & 0x1ff) << 16) | attr | GetSpriteShapeSizeBits(frame);
+        if (frame != gUnknown_03001514) {
+            gUnknown_03001510 ^= 1;
+            gUnknown_03000874(gUnknown_03001518[gUnknown_03001510], frame);
+            gUnknown_03001514 = frame;
+        }
+        {
+            /* the ROM computes the tile number in r0 */
+            register u32 tile asm("r0") = GET_TILE_NUM(gUnknown_03001518[gUnknown_03001510]);
+
+            QueueSpriteFrameOam(attr1, tile | (self->base.unk_18 << 12), scale);
+        }
+    }
 }
 
-/* Semantics understood as part of the sub_802E170 kind-object
- * family/position-offset helpers this gap covers; NAKED-
- * transcribed per this project's established escape hatch for
- * this neighborhood's register-pressure/branch-layout gaps -
- * see docs/matching/issue-54-issue-56-gap-e0a4.md. */
-NAKED void sub_802E740(void *selfArg, s32 arg1, s32 arg2)
+/* Damage handler: ignored during the first 16 frames of states 2/3.
+ * Out of hit points, the vehicle enters state 4 (anim 3), input is
+ * locked and the steering speeds are cut; otherwise sfx 0x42 plays. */
+void sub_802EB78(struct actor_hp *self, s32 dmg)
 {
-    asm(
-        "push {r4, r5, lr}\n\t"
-        "sub sp, #4\n\t"
-        "add r5, r0, #0\n\t"
-        "mov r3, #0\n\t"
-        "cmp r2, #0\n\t"
-        "bne 1f\n\t"
-        "ldr r3, 2f\n\t"
-        "1:\n\t"
-        "mov r4, #0x64\n\t"
-        "str r2, [sp]\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r2, #0\n\t"
-        "bl InitActorPart\n\t"
-        "str r4, [r5, #0x54]\n\t"
-        "ldr r0, 3f\n\t"
-        "str r0, [r5, #0x50]\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_802F338\n\t"
-        "ldr r0, 4f\n\t"
-        "mov r2, #0\n\t"
-        "str r2, [r0]\n\t"
-        "ldr r0, [r5, #0x24]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 6f\n\t"
-        "ldr r0, 5f\n\t"
-        "str r2, [r0]\n\t"
-        "mov r0, #7\n\t"
-        "str r0, [r5, #0x28]\n\t"
-        "str r2, [r5, #0x44]\n\t"
-        "str r2, [r5, #0xc]\n\t"
-        "ldr r0, [r5]\n\t"
-        "ldrh r0, [r0]\n\t"
-        "mov r1, #0\n\t"
-        "strh r0, [r5, #0x10]\n\t"
-        "strb r1, [r5, #0x12]\n\t"
-        "str r2, [r5, #8]\n\t"
-        "mov r0, #0x28\n\t"
-        "bl sub_8029BAC\n\t"
-        "b 7f\n\t"
-        ".align 2, 0\n"
-        "2: .4byte 0xFFFF6A00\n"
-        "3: .4byte gStaticData_087E5144\n"
-        "4: .4byte gUnknown_0300150C\n"
-        "5: .4byte gUnknown_03001508\n"
-        "6:\n\t"
-        "mov r0, #0x1e\n\t"
-        "bl sub_8029BAC\n\t"
-        "ldr r1, 9f\n\t"
-        "mov r0, #0xc0\n\t"
-        "lsl r0, r0, #1\n\t"
-        "str r0, [r1]\n\t"
-        "7:\n\t"
-        "ldr r1, 10f\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r1]\n\t"
-        "ldr r1, 11f\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r1]\n\t"
-        "ldr r0, 12f\n\t"
-        "mov r4, #0\n\t"
-        "str r4, [r0]\n\t"
-        "ldr r0, 13f\n\t"
-        "strb r4, [r0]\n\t"
-        "ldr r0, 14f\n\t"
-        "strb r4, [r0]\n\t"
-        "ldr r0, 15f\n\t"
-        "str r4, [r0]\n\t"
-        "ldr r0, 16f\n\t"
-        "str r4, [r0]\n\t"
-        "ldr r0, 17f\n\t"
-        "str r4, [r0]\n\t"
-        "ldr r1, 18f\n\t"
-        "mov r0, #0xbe\n\t"
-        "neg r0, r0\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r0, 19f\n\t"
-        "str r4, [r0]\n\t"
-        "ldr r0, 20f\n\t"
-        "strb r4, [r0]\n\t"
-        "bl sub_8029794\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "beq 8f\n\t"
-        "mov r0, #0x78\n\t"
-        "str r0, [r5, #0x54]\n\t"
-        "8:\n\t"
-        "ldr r1, 21f\n\t"
-        "ldr r0, [r5, #0x54]\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r0, 22f\n\t"
-        "str r4, [r0]\n\t"
-        "ldr r0, 23f\n\t"
-        "str r4, [r0]\n\t"
-        "add r0, r5, #0\n\t"
-        "add sp, #4\n\t"
-        "pop {r4, r5}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n"
-        "9: .4byte gUnknown_03001508\n"
-        "10: .4byte gUnknown_03001507\n"
-        "11: .4byte gUnknown_03001506\n"
-        "12: .4byte gUnknown_03001500\n"
-        "13: .4byte gUnknown_03001505\n"
-        "14: .4byte gUnknown_03001504\n"
-        "15: .4byte gUnknown_030014FC\n"
-        "16: .4byte gUnknown_030014F8\n"
-        "17: .4byte gUnknown_030014F4\n"
-        "18: .4byte gUnknown_030014EC\n"
-        "19: .4byte gUnknown_030014F0\n"
-        "20: .4byte gUnknown_030014E8\n"
-        "21: .4byte gUnknown_030014E4\n"
-        "22: .4byte gUnknown_030014E0\n"
-        "23: .4byte gUnknown_030014DC\n"
-    );
+    if ((u32)(self->base.state - 2) <= 1 && self->base.stateTime <= 0x10)
+        return;
+    self->hp -= dmg;
+    gUnknown_030014F4 = 0x12;
+    if (self->hp <= 0) {
+        self->hp = 0;
+        PlaySfx(gUnknown_030012BC, 0x3a, 0x100);
+        ACTOR_SET_STATE(&self->base, 4, 3);
+        if (gUnknown_030012C0[0x8c] == 0)
+            sub_8023234(gUnknown_030012C0);
+        gUnknown_03001507 = 0;
+        gUnknown_030014E8 = 1;
+        gUnknown_03001506 = 1;
+        sub_8029BAC(0x1e);
+        gUnknown_03001508 = 0;
+        CLAMP_SPEED(gUnknown_0300150C);
+        gUnknown_0300150C /= 2;
+    } else {
+        PlaySfx(gUnknown_030012BC, 0x42, 0x100);
+    }
 }
 
-/* Semantics understood as part of the sub_802E170 kind-object
- * family/position-offset helpers this gap covers; NAKED-
- * transcribed per this project's established escape hatch for
- * this neighborhood's register-pressure/branch-layout gaps -
- * see docs/matching/issue-54-issue-56-gap-e0a4.md. */
-NAKED void sub_802E84C(void *selfArg)
+/* The key word read as a whole (the ROM does a 32-bit load). */
+static inline struct keys_pair ReadKeys(void)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r0, 12f\n\t"
-        "ldr r2, [r0]\n\t"
-        "cmp r2, #0\n\t"
-        "beq 3f\n\t"
-        "ldr r3, 13f\n\t"
-        "ldr r0, [r3]\n\t"
-        "add r1, r0, #0\n\t"
-        "sub r0, #1\n\t"
-        "str r0, [r3]\n\t"
-        "cmp r1, #0\n\t"
-        "bgt 2f\n\t"
-        "mov r0, #0x16\n\t"
-        "str r0, [r3]\n\t"
-        "lsl r0, r2, #1\n\t"
-        "add r0, r0, r2\n\t"
-        "lsl r2, r0, #4\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #1\n\t"
-        "cmp r2, r0\n\t"
-        "ble 1f\n\t"
-        "add r2, r0, #0\n\t"
-        "1:\n\t"
-        "ldr r0, 14f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #0x37\n\t"
-        "bl PlaySfx\n\t"
-        "2:\n\t"
-        "ldr r1, 12f\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [r1]\n\t"
-        "3:\n\t"
-        "ldr r1, 15f\n\t"
-        "ldr r0, [r1]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 4f\n\t"
-        "sub r0, #1\n\t"
-        "str r0, [r1]\n\t"
-        "4:\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_802F4CC\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_802F3BC\n\t"
-        "ldr r0, 16f\n\t"
-        "ldr r1, [r4, #0x1c]\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r2, r1, r0\n\t"
-        "str r2, [r4, #0x1c]\n\t"
-        "ldr r0, 17f\n\t"
-        "ldr r1, [r4, #0x20]\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r3, r1, r0\n\t"
-        "str r3, [r4, #0x20]\n\t"
-        "ldr r0, 18f\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 9f\n\t"
-        "add r1, r2, #0\n\t"
-        "ldr r0, 19f\n\t"
-        "cmp r1, r0\n\t"
-        "bge 5f\n\t"
-        "add r1, r0, #0\n\t"
-        "5:\n\t"
-        "str r1, [r4, #0x1c]\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #8\n\t"
-        "cmp r1, r0\n\t"
-        "ble 6f\n\t"
-        "add r1, r0, #0\n\t"
-        "6:\n\t"
-        "str r1, [r4, #0x1c]\n\t"
-        "add r1, r3, #0\n\t"
-        "ldr r0, 20f\n\t"
-        "cmp r1, r0\n\t"
-        "bge 7f\n\t"
-        "add r1, r0, #0\n\t"
-        "7:\n\t"
-        "str r1, [r4, #0x20]\n\t"
-        "mov r0, #0x96\n\t"
-        "lsl r0, r0, #7\n\t"
-        "cmp r1, r0\n\t"
-        "ble 8f\n\t"
-        "add r1, r0, #0\n\t"
-        "8:\n\t"
-        "str r1, [r4, #0x20]\n\t"
-        "9:\n\t"
-        "ldr r0, 21f\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 10f\n\t"
-        "mov r0, #0xe0\n\t"
-        "lsl r0, r0, #5\n\t"
-        "str r0, [r4, #0x34]\n\t"
-        "bl sub_8029B2C\n\t"
-        "lsl r0, r0, #8\n\t"
-        "ldr r1, [r4, #0x34]\n\t"
-        "add r0, r0, r1\n\t"
-        "str r0, [r4, #0x24]\n\t"
-        "10:\n\t"
-        "ldr r3, [r4, #0x34]\n\t"
-        "asr r3, r3, #1\n\t"
-        "mov r0, #0xff\n\t"
-        "lsl r0, r0, #7\n\t"
-        "and r3, r0\n\t"
-        "ldr r1, [r4, #0x20]\n\t"
-        "asr r0, r1, #0x1f\n\t"
-        "eor r1, r0\n\t"
-        "sub r1, r1, r0\n\t"
-        "ldr r0, [r4, #0x1c]\n\t"
-        "asr r2, r0, #0x1f\n\t"
-        "eor r0, r2\n\t"
-        "sub r0, r0, r2\n\t"
-        "add r1, r1, r0\n\t"
-        "asr r1, r1, #0xb\n\t"
-        "mov r0, #0x7f\n\t"
-        "and r1, r0\n\t"
-        "orr r3, r1\n\t"
-        "str r3, [r4, #0x14]\n\t"
-        "ldr r0, [r4, #0x44]\n\t"
-        "add r0, #1\n\t"
-        "str r0, [r4, #0x44]\n\t"
-        "mov r0, #0x10\n\t"
-        "ldrsh r1, [r4, r0]\n\t"
-        "ldr r0, [r4, #8]\n\t"
-        "add r0, r0, r1\n\t"
-        "str r0, [r4, #8]\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r4, #0x12]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl GetAnimFrameBaseOffset\n\t"
-        "ldr r2, [r4, #0xc]\n\t"
-        "ldr r3, [r4]\n\t"
-        "lsl r1, r2, #1\n\t"
-        "add r1, r1, r2\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r1, r1, r3\n\t"
-        "mov r3, #4\n\t"
-        "ldrsh r2, [r1, r3]\n\t"
-        "cmp r0, r2\n\t"
-        "blt 11f\n\t"
-        "mov r7, #6\n\t"
-        "ldrsh r0, [r1, r7]\n\t"
-        "sub r0, r2, r0\n\t"
-        "lsl r0, r0, #8\n\t"
-        "ldr r1, [r4, #8]\n\t"
-        "sub r1, r1, r0\n\t"
-        "str r1, [r4, #8]\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r4, #0x12]\n\t"
-        "11:\n\t"
-        "ldr r0, [r4, #0x1c]\n\t"
-        "ldr r1, [r4, #0x20]\n\t"
-        "bl sub_8029D8C\n\t"
-        "ldr r3, 22f\n\t"
-        "ldr r0, [r4, #0x28]\n\t"
-        "lsl r1, r0, #3\n\t"
-        "add r0, r1, r3\n\t"
-        "mov r7, #2\n\t"
-        "ldrsh r2, [r0, r7]\n\t"
-        "cmp r2, #0\n\t"
-        "ble 23f\n\t"
-        "mov r1, #4\n\t"
-        "ldrsh r0, [r0, r1]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r0]\n\t"
-        "lsl r0, r2, #3\n\t"
-        "add r0, r0, r1\n\t"
-        "sub r0, #8\n\t"
-        "ldr r5, [r0]\n\t"
-        "ldr r6, [r0, #4]\n\t"
-        "add r3, r6, #0\n\t"
-        "b 24f\n\t"
-        ".align 2, 0\n"
-        "12: .4byte gUnknown_030014E0\n"
-        "13: .4byte gUnknown_030014DC\n"
-        "14: .4byte gUnknown_030012BC\n"
-        "15: .4byte gUnknown_03001500\n"
-        "16: .4byte gUnknown_0300150C\n"
-        "17: .4byte gUnknown_03001508\n"
-        "18: .4byte gUnknown_03001506\n"
-        "19: .4byte 0xFFFF8000\n"
-        "20: .4byte 0xFFFFB500\n"
-        "21: .4byte gUnknown_03001504\n"
-        "22: .4byte gStaticData_0817C1C0\n"
-        "23:\n\t"
-        "add r0, r3, #4\n\t"
-        "add r0, r1, r0\n\t"
-        "ldr r3, [r0]\n\t"
-        "24:\n\t"
-        "ldr r1, 25f\n\t"
-        "ldr r0, [r4, #0x28]\n\t"
-        "lsl r0, r0, #3\n\t"
-        "add r0, r0, r1\n\t"
-        "mov r7, #0\n\t"
-        "ldrsh r1, [r0, r7]\n\t"
-        "cmp r2, #0\n\t"
-        "ble 26f\n\t"
-        "lsl r0, r5, #0x10\n\t"
-        "asr r0, r0, #0x10\n\t"
-        "add r0, r0, r1\n\t"
-        "b 27f\n\t"
-        ".align 2, 0\n"
-        "25: .4byte gStaticData_0817C1C0\n"
-        "26:\n\t"
-        "add r0, r1, #0\n\t"
-        "27:\n\t"
-        "add r0, r4, r0\n\t"
-        "bl sub_803AD84\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    );
+    return gUnknown_030007E0;
 }
 
-/* Semantics understood as part of the sub_802E170 kind-object
- * family/position-offset helpers this gap covers; NAKED-
- * transcribed per this project's established escape hatch for
- * this neighborhood's register-pressure/branch-layout gaps -
- * see docs/matching/issue-54-issue-56-gap-e0a4.md. */
-NAKED void sub_802E9FC(s32 a0, s32 a1, s32 a2, s32 a3)
+/* Moves a steering speed 0x40 toward zero. */
+static inline void DecaySpeed(s32 *p)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sl\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6, r7}\n\t"
-        "sub sp, #0x10\n\t"
-        "add r7, r0, #0\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [sp, #4]\n\t"
-        "ldr r2, [r7, #8]\n\t"
-        "asr r2, r2, #8\n\t"
-        "ldr r1, [r7, #0xc]\n\t"
-        "ldr r3, [r7]\n\t"
-        "lsl r0, r1, #1\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r3\n\t"
-        "mov r1, #2\n\t"
-        "ldrsh r0, [r0, r1]\n\t"
-        "add r0, r0, r2\n\t"
-        "ldr r1, [r7, #4]\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov sl, r0\n\t"
-        "ldrb r0, [r0]\n\t"
-        "str r0, [sp, #8]\n\t"
-        "lsl r0, r0, #2\n\t"
-        "mov sb, r0\n\t"
-        "mov r1, sl\n\t"
-        "ldrb r1, [r1, #1]\n\t"
-        "str r1, [sp, #0xc]\n\t"
-        "lsl r1, r1, #2\n\t"
-        "mov r8, r1\n\t"
-        "ldr r0, [r7, #0x30]\n\t"
-        "ldr r4, [r7, #0x34]\n\t"
-        "ldr r1, [r0, #0x10]\n\t"
-        "cmp r4, r1\n\t"
-        "bne 1f\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #1\n\t"
-        "str r0, [sp]\n\t"
-        "bl sub_8029E98\n\t"
-        "ldr r1, [r7, #0x20]\n\t"
-        "add r1, r1, r0\n\t"
-        "asr r5, r1, #8\n\t"
-        "bl sub_8029EB4\n\t"
-        "ldr r1, [r7, #0x1c]\n\t"
-        "add r1, r1, r0\n\t"
-        "asr r6, r1, #8\n\t"
-        "b 2f\n\t"
-        "1:\n\t"
-        "lsl r0, r4, #8\n\t"
-        "bl sub_803ADB4\n\t"
-        "str r0, [sp]\n\t"
-        "mov r0, #0xe0\n\t"
-        "lsl r0, r0, #0x11\n\t"
-        "add r1, r4, #0\n\t"
-        "bl sub_803ADB4\n\t"
-        "add r4, r0, #0\n\t"
-        "bl sub_8029E98\n\t"
-        "ldr r1, [r7, #0x20]\n\t"
-        "mul r1, r4, r1\n\t"
-        "asr r1, r1, #0xc\n\t"
-        "add r1, r1, r0\n\t"
-        "asr r5, r1, #8\n\t"
-        "bl sub_8029EB4\n\t"
-        "ldr r1, [r7, #0x1c]\n\t"
-        "mul r1, r4, r1\n\t"
-        "asr r1, r1, #0xc\n\t"
-        "add r1, r1, r0\n\t"
-        "asr r6, r1, #8\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #1\n\t"
-        "str r1, [sp, #4]\n\t"
-        "ldr r0, [sp]\n\t"
-        "cmp r0, #0xff\n\t"
-        "bgt 2f\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #2\n\t"
-        "orr r1, r0\n\t"
-        "str r1, [sp, #4]\n\t"
-        "ldr r1, [sp, #8]\n\t"
-        "lsl r1, r1, #3\n\t"
-        "mov sb, r1\n\t"
-        "ldr r0, [sp, #0xc]\n\t"
-        "lsl r0, r0, #3\n\t"
-        "mov r8, r0\n\t"
-        "2:\n\t"
-        "mov r1, sb\n\t"
-        "sub r6, r6, r1\n\t"
-        "mov r0, r8\n\t"
-        "sub r5, r5, r0\n\t"
-        "cmp r5, #0x9f\n\t"
-        "bgt 4f\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r0, r5, r0\n\t"
-        "cmp r0, #0\n\t"
-        "blt 4f\n\t"
-        "cmp r6, #0xef\n\t"
-        "bgt 4f\n\t"
-        "lsl r0, r1, #1\n\t"
-        "add r0, r6, r0\n\t"
-        "cmp r0, #0\n\t"
-        "blt 4f\n\t"
-        "ldr r1, [r7, #0xc]\n\t"
-        "ldr r2, [r7]\n\t"
-        "lsl r0, r1, #1\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r2\n\t"
-        "ldrh r0, [r0, #8]\n\t"
-        "lsl r4, r0, #0x10\n\t"
-        "mov r0, sl\n\t"
-        "bl GetSpriteShapeSizeBits\n\t"
-        "mov r1, #0xff\n\t"
-        "and r5, r1\n\t"
-        "ldr r1, 5f\n\t"
-        "and r6, r1\n\t"
-        "lsl r1, r6, #0x10\n\t"
-        "orr r5, r1\n\t"
-        "orr r5, r4\n\t"
-        "orr r5, r0\n\t"
-        "ldr r1, [sp, #4]\n\t"
-        "orr r1, r5\n\t"
-        "str r1, [sp, #4]\n\t"
-        "ldr r4, 6f\n\t"
-        "ldr r0, [r4]\n\t"
-        "cmp sl, r0\n\t"
-        "beq 3f\n\t"
-        "ldr r2, 7f\n\t"
-        "ldr r0, [r2]\n\t"
-        "mov r1, #1\n\t"
-        "eor r0, r1\n\t"
-        "str r0, [r2]\n\t"
-        "ldr r2, 8f\n\t"
-        "ldr r1, 9f\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r2, [r2]\n\t"
-        "mov r1, sl\n\t"
-        "bl sub_803AD80\n\t"
-        "mov r0, sl\n\t"
-        "str r0, [r4]\n\t"
-        "3:\n\t"
-        "ldr r1, 9f\n\t"
-        "ldr r0, 7f\n\t"
-        "ldr r0, [r0]\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, 10f\n\t"
-        "add r0, r0, r1\n\t"
-        "lsr r0, r0, #5\n\t"
-        "ldr r1, [r7, #0x18]\n\t"
-        "lsl r1, r1, #0xc\n\t"
-        "orr r1, r0\n\t"
-        "lsl r1, r1, #0x10\n\t"
-        "lsr r1, r1, #0x10\n\t"
-        "ldr r0, [sp, #4]\n\t"
-        "ldr r2, [sp]\n\t"
-        "bl QueueSpriteFrameOam\n\t"
-        "4:\n\t"
-        "add sp, #0x10\n\t"
-        "pop {r3, r4, r5}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov sl, r5\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-        "5: .4byte 0x000001FF\n"
-        "6: .4byte gUnknown_03001514\n"
-        "7: .4byte gUnknown_03001510\n"
-        "8: .4byte gUnknown_03000874\n"
-        "9: .4byte gUnknown_03001518\n"
-        "10: .4byte 0xF9FF0000\n"
-    );
+    s32 v = *p;
+
+    if (v >= 0) {
+        if (v != 0)
+            v -= 0x40;
+    } else {
+        v += 0x40;
+    }
+    *p = v;
 }
 
-/* Semantics understood as part of the sub_802E170 kind-object
- * family/position-offset helpers this gap covers; NAKED-
- * transcribed per this project's established escape hatch for
- * this neighborhood's register-pressure/branch-layout gaps -
- * see docs/matching/issue-54-issue-56-gap-e0a4.md. */
-NAKED void sub_802EB78(void *selfArg)
+/* Vertical steering (a C++ method; `this` is unused): up/down change
+ * `gUnknown_03001508` by 0x40 while input is enabled, otherwise it
+ * decays to zero; clamped to +-0x240. */
+void sub_802EC64(void *self)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r0, [r4, #0x28]\n\t"
-        "sub r0, #2\n\t"
-        "cmp r0, #1\n\t"
-        "bhi 1f\n\t"
-        "ldr r0, [r4, #0x44]\n\t"
-        "cmp r0, #0x10\n\t"
-        "ble 17f\n\t"
-        "1:\n\t"
-        "ldr r0, [r4, #0x54]\n\t"
-        "sub r0, r0, r1\n\t"
-        "str r0, [r4, #0x54]\n\t"
-        "ldr r2, 3f\n\t"
-        "mov r1, #0x12\n\t"
-        "str r1, [r2]\n\t"
-        "cmp r0, #0\n\t"
-        "bgt 16f\n\t"
-        "mov r5, #0\n\t"
-        "str r5, [r4, #0x54]\n\t"
-        "ldr r0, 4f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0x3a\n\t"
-        "bl PlaySfx\n\t"
-        "mov r0, #4\n\t"
-        "mov r1, #3\n\t"
-        "str r0, [r4, #0x28]\n\t"
-        "str r5, [r4, #0x44]\n\t"
-        "str r1, [r4, #0xc]\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldrh r0, [r0, #0x24]\n\t"
-        "mov r6, #0\n\t"
-        "strh r0, [r4, #0x10]\n\t"
-        "strb r6, [r4, #0x12]\n\t"
-        "str r5, [r4, #8]\n\t"
-        "ldr r0, 5f\n\t"
-        "ldr r1, [r0]\n\t"
-        "add r0, r1, #0\n\t"
-        "add r0, #0x8c\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 2f\n\t"
-        "add r0, r1, #0\n\t"
-        "bl sub_8023234\n\t"
-        "2:\n\t"
-        "ldr r0, 6f\n\t"
-        "strb r6, [r0]\n\t"
-        "ldr r0, 7f\n\t"
-        "mov r1, #1\n\t"
-        "strb r1, [r0]\n\t"
-        "ldr r0, 8f\n\t"
-        "strb r1, [r0]\n\t"
-        "mov r0, #0x1e\n\t"
-        "bl sub_8029BAC\n\t"
-        "ldr r0, 9f\n\t"
-        "str r5, [r0]\n\t"
-        "ldr r3, 10f\n\t"
-        "ldr r2, [r3]\n\t"
-        "asr r1, r2, #0x1f\n\t"
-        "add r0, r2, #0\n\t"
-        "eor r0, r1\n\t"
-        "sub r0, r0, r1\n\t"
-        "mov r1, #0x90\n\t"
-        "lsl r1, r1, #2\n\t"
-        "cmp r0, r1\n\t"
-        "ble 13f\n\t"
-        "cmp r2, #0\n\t"
-        "blt 11f\n\t"
-        "mov r0, #0\n\t"
-        "cmp r2, #0\n\t"
-        "beq 12f\n\t"
-        "add r0, r1, #0\n\t"
-        "b 12f\n\t"
-        ".align 2, 0\n"
-        "3: .4byte gUnknown_030014F4\n"
-        "4: .4byte gUnknown_030012BC\n"
-        "5: .4byte gUnknown_030012C0\n"
-        "6: .4byte gUnknown_03001507\n"
-        "7: .4byte gUnknown_030014E8\n"
-        "8: .4byte gUnknown_03001506\n"
-        "9: .4byte gUnknown_03001508\n"
-        "10: .4byte gUnknown_0300150C\n"
-        "11:\n\t"
-        "ldr r0, 14f\n\t"
-        "12:\n\t"
-        "str r0, [r3]\n\t"
-        "13:\n\t"
-        "ldr r0, 15f\n\t"
-        "ldr r1, [r0]\n\t"
-        "lsr r2, r1, #0x1f\n\t"
-        "add r1, r1, r2\n\t"
-        "asr r1, r1, #1\n\t"
-        "str r1, [r0]\n\t"
-        "b 17f\n\t"
-        ".align 2, 0\n"
-        "14: .4byte 0xFFFFFDC0\n"
-        "15: .4byte gUnknown_0300150C\n"
-        "16:\n\t"
-        "ldr r0, 18f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0x42\n\t"
-        "bl PlaySfx\n\t"
-        "17:\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-        "18: .4byte gUnknown_030012BC\n"
-    );
+    if (gUnknown_03001507 && (ReadKeys().held & 0x40))
+        gUnknown_03001508 -= 0x40;
+    else if (gUnknown_03001507 && (ReadKeys().held & 0x80))
+        gUnknown_03001508 += 0x40;
+    else {
+        DecaySpeed(&gUnknown_03001508);
+        if (Abs(gUnknown_03001508) <= 0x40)
+            gUnknown_03001508 = 0;
+    }
+    CLAMP_SPEED(gUnknown_03001508);
 }
 
-/* Semantics understood as part of the sub_802E170 kind-object
- * family/position-offset helpers this gap covers; NAKED-
- * transcribed per this project's established escape hatch for
- * this neighborhood's register-pressure/branch-layout gaps -
- * see docs/matching/issue-54-issue-56-gap-e0a4.md. */
-NAKED s32 sub_802EC64(void)
+/* Horizontal steering, same shape with left/right and
+ * `gUnknown_0300150C`. */
+void sub_802ED10(void *self)
 {
-    asm(
-        "ldr r0, 1f\n\t"
-        "ldrb r1, [r0]\n\t"
-        "add r2, r0, #0\n\t"
-        "cmp r1, #0\n\t"
-        "beq 4f\n\t"
-        "ldr r0, 2f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #0x40\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "beq 4f\n\t"
-        "ldr r1, 3f\n\t"
-        "ldr r0, [r1]\n\t"
-        "sub r0, #0x40\n\t"
-        "b 5f\n\t"
-        ".align 2, 0\n"
-        "1: .4byte gUnknown_03001507\n"
-        "2: .4byte gUnknown_030007E0\n"
-        "3: .4byte gUnknown_03001508\n"
-        "4:\n\t"
-        "ldrb r0, [r2]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 8f\n\t"
-        "ldr r0, 6f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #0x80\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "beq 8f\n\t"
-        "ldr r1, 7f\n\t"
-        "ldr r0, [r1]\n\t"
-        "add r0, #0x40\n\t"
-        "5:\n\t"
-        "str r0, [r1]\n\t"
-        "add r3, r1, #0\n\t"
-        "b 12f\n\t"
-        ".align 2, 0\n"
-        "6: .4byte gUnknown_030007E0\n"
-        "7: .4byte gUnknown_03001508\n"
-        "8:\n\t"
-        "ldr r1, 9f\n\t"
-        "ldr r0, [r1]\n\t"
-        "add r3, r1, #0\n\t"
-        "cmp r0, #0\n\t"
-        "blt 10f\n\t"
-        "cmp r0, #0\n\t"
-        "beq 11f\n\t"
-        "sub r0, #0x40\n\t"
-        "b 11f\n\t"
-        ".align 2, 0\n"
-        "9: .4byte gUnknown_03001508\n"
-        "10:\n\t"
-        "add r0, #0x40\n\t"
-        "11:\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r0, [r3]\n\t"
-        "asr r1, r0, #0x1f\n\t"
-        "eor r0, r1\n\t"
-        "sub r0, r0, r1\n\t"
-        "cmp r0, #0x40\n\t"
-        "bgt 12f\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [r3]\n\t"
-        "12:\n\t"
-        "ldr r2, [r3]\n\t"
-        "asr r1, r2, #0x1f\n\t"
-        "add r0, r2, #0\n\t"
-        "eor r0, r1\n\t"
-        "sub r0, r0, r1\n\t"
-        "mov r1, #0x90\n\t"
-        "lsl r1, r1, #2\n\t"
-        "cmp r0, r1\n\t"
-        "ble 15f\n\t"
-        "add r0, r3, #0\n\t"
-        "cmp r2, #0\n\t"
-        "blt 13f\n\t"
-        "mov r3, #0\n\t"
-        "cmp r2, #0\n\t"
-        "beq 14f\n\t"
-        "add r3, r1, #0\n\t"
-        "b 14f\n\t"
-        "13:\n\t"
-        "ldr r3, 16f\n\t"
-        "14:\n\t"
-        "str r3, [r0]\n\t"
-        "15:\n\t"
-        "bx lr\n\t"
-        ".align 2, 0\n"
-        "16: .4byte 0xFFFFFDC0\n"
-    );
+    if (gUnknown_03001507 && (ReadKeys().held & 0x20))
+        gUnknown_0300150C -= 0x40;
+    else if (gUnknown_03001507 && (ReadKeys().held & 0x10))
+        gUnknown_0300150C += 0x40;
+    else {
+        DecaySpeed(&gUnknown_0300150C);
+        if (Abs(gUnknown_0300150C) <= 0x40)
+            gUnknown_0300150C = 0;
+    }
+    CLAMP_SPEED(gUnknown_0300150C);
 }
 
-/* Semantics understood as part of the sub_802E170 kind-object
- * family/position-offset helpers this gap covers; NAKED-
- * transcribed per this project's established escape hatch for
- * this neighborhood's register-pressure/branch-layout gaps -
- * see docs/matching/issue-54-issue-56-gap-e0a4.md. */
-NAKED s32 sub_802ED10(void)
+/* Normal-state step: steering, then R/L enter the roll states 2/3 and
+ * A fires a shot (sfx 0x24, `sub_802E6CC`) when the cooldown allows. */
+void sub_802EDBC(struct actor_hp *self)
 {
-    asm(
-        "ldr r0, 1f\n\t"
-        "ldrb r1, [r0]\n\t"
-        "add r2, r0, #0\n\t"
-        "cmp r1, #0\n\t"
-        "beq 4f\n\t"
-        "ldr r0, 2f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #0x20\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "beq 4f\n\t"
-        "ldr r1, 3f\n\t"
-        "ldr r0, [r1]\n\t"
-        "sub r0, #0x40\n\t"
-        "b 5f\n\t"
-        ".align 2, 0\n"
-        "1: .4byte gUnknown_03001507\n"
-        "2: .4byte gUnknown_030007E0\n"
-        "3: .4byte gUnknown_0300150C\n"
-        "4:\n\t"
-        "ldrb r0, [r2]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 8f\n\t"
-        "ldr r0, 6f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #0x10\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "beq 8f\n\t"
-        "ldr r1, 7f\n\t"
-        "ldr r0, [r1]\n\t"
-        "add r0, #0x40\n\t"
-        "5:\n\t"
-        "str r0, [r1]\n\t"
-        "add r3, r1, #0\n\t"
-        "b 12f\n\t"
-        ".align 2, 0\n"
-        "6: .4byte gUnknown_030007E0\n"
-        "7: .4byte gUnknown_0300150C\n"
-        "8:\n\t"
-        "ldr r1, 9f\n\t"
-        "ldr r0, [r1]\n\t"
-        "add r3, r1, #0\n\t"
-        "cmp r0, #0\n\t"
-        "blt 10f\n\t"
-        "cmp r0, #0\n\t"
-        "beq 11f\n\t"
-        "sub r0, #0x40\n\t"
-        "b 11f\n\t"
-        ".align 2, 0\n"
-        "9: .4byte gUnknown_0300150C\n"
-        "10:\n\t"
-        "add r0, #0x40\n\t"
-        "11:\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r0, [r3]\n\t"
-        "asr r1, r0, #0x1f\n\t"
-        "eor r0, r1\n\t"
-        "sub r0, r0, r1\n\t"
-        "cmp r0, #0x40\n\t"
-        "bgt 12f\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [r3]\n\t"
-        "12:\n\t"
-        "ldr r2, [r3]\n\t"
-        "asr r1, r2, #0x1f\n\t"
-        "add r0, r2, #0\n\t"
-        "eor r0, r1\n\t"
-        "sub r0, r0, r1\n\t"
-        "mov r1, #0x90\n\t"
-        "lsl r1, r1, #2\n\t"
-        "cmp r0, r1\n\t"
-        "ble 15f\n\t"
-        "add r0, r3, #0\n\t"
-        "cmp r2, #0\n\t"
-        "blt 13f\n\t"
-        "mov r3, #0\n\t"
-        "cmp r2, #0\n\t"
-        "beq 14f\n\t"
-        "add r3, r1, #0\n\t"
-        "b 14f\n\t"
-        "13:\n\t"
-        "ldr r3, 16f\n\t"
-        "14:\n\t"
-        "str r3, [r0]\n\t"
-        "15:\n\t"
-        "bx lr\n\t"
-        ".align 2, 0\n"
-        "16: .4byte 0xFFFFFDC0\n"
-    );
+    sub_802EC64(self);
+    sub_802ED10(self);
+    if (gUnknown_03001507) {
+        struct keys_pair keys = gUnknown_030007E0;
+
+        if (keys.held & 0x200) {
+            gUnknown_030014F4 = 0x12;
+            PlaySfx(gUnknown_030012BC, 0xa, 0x100);
+            ACTOR_SET_STATE(&self->base, 2, 1);
+        } else if (keys.held & 0x100) {
+            gUnknown_030014F4 = 0x12;
+            PlaySfx(gUnknown_030012BC, 0xa, 0x100);
+            ACTOR_SET_STATE(&self->base, 3, 2);
+        } else if (gUnknown_03001500 == 0 && (keys.held & 1)) {
+            struct byte_arg one;
+            s32 x, y;
+
+            gUnknown_03001500 = 0x12;
+            one.v = 1;
+            sub_80019F8(gUnknown_030012BC, 0x24, 1000, 0xa0, one);
+            x = self->base.x + 0x1200;
+            y = self->base.y - 0x1800;
+            sub_802E6CC(x, y, self->base.z + 10, (x * 0x199) >> 12, (y * 0x199) >> 12);
+        }
+    }
 }
 
-/* Semantics understood as part of the sub_802E170 kind-object
- * family/position-offset helpers this gap covers; NAKED-
- * transcribed per this project's established escape hatch for
- * this neighborhood's register-pressure/branch-layout gaps -
- * see docs/matching/issue-54-issue-56-gap-e0a4.md. */
-NAKED void sub_802EDBC(void *selfArg)
+/* Roll state 2: a quick leftward burst for 5 frames, then the horizontal
+ * speed recovers; after 0x21 frames R/L may chain another roll, and the
+ * animation's end returns to state 1. */
+void sub_802EED0(struct actor_hp *self)
 {
-    asm(
-        "push {r4, r5, lr}\n\t"
-        "sub sp, #4\n\t"
-        "add r4, r0, #0\n\t"
-        "bl sub_802EC64\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_802ED10\n\t"
-        "ldr r0, 1f\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 9f\n\t"
-        "ldr r0, 2f\n\t"
-        "ldr r2, [r0]\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r1, r0, #0\n\t"
-        "add r0, r2, #0\n\t"
-        "and r0, r1\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r5, r0, #0x10\n\t"
-        "cmp r5, #0\n\t"
-        "beq 5f\n\t"
-        "ldr r1, 3f\n\t"
-        "mov r0, #0x12\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r0, 4f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0xa\n\t"
-        "bl PlaySfx\n\t"
-        "mov r0, #2\n\t"
-        "mov r1, #1\n\t"
-        "str r0, [r4, #0x28]\n\t"
-        "mov r2, #0\n\t"
-        "str r2, [r4, #0x44]\n\t"
-        "str r1, [r4, #0xc]\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldrh r0, [r0, #0xc]\n\t"
-        "mov r1, #0\n\t"
-        "strh r0, [r4, #0x10]\n\t"
-        "strb r1, [r4, #0x12]\n\t"
-        "str r2, [r4, #8]\n\t"
-        "b 9f\n\t"
-        ".align 2, 0\n"
-        "1: .4byte gUnknown_03001507\n"
-        "2: .4byte gUnknown_030007E0\n"
-        "3: .4byte gUnknown_030014F4\n"
-        "4: .4byte gUnknown_030012BC\n"
-        "5:\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r1, r0, #0\n\t"
-        "add r0, r2, #0\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "beq 8f\n\t"
-        "ldr r1, 6f\n\t"
-        "mov r0, #0x12\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r0, 7f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0xa\n\t"
-        "bl PlaySfx\n\t"
-        "mov r0, #3\n\t"
-        "mov r1, #2\n\t"
-        "str r0, [r4, #0x28]\n\t"
-        "str r5, [r4, #0x44]\n\t"
-        "str r1, [r4, #0xc]\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldrh r0, [r0, #0x18]\n\t"
-        "mov r1, #0\n\t"
-        "strh r0, [r4, #0x10]\n\t"
-        "strb r1, [r4, #0x12]\n\t"
-        "str r5, [r4, #8]\n\t"
-        "b 9f\n\t"
-        ".align 2, 0\n"
-        "6: .4byte gUnknown_030014F4\n"
-        "7: .4byte gUnknown_030012BC\n"
-        "8:\n\t"
-        "ldr r1, 10f\n\t"
-        "ldr r0, [r1]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 9f\n\t"
-        "mov r3, #1\n\t"
-        "and r2, r3\n\t"
-        "cmp r2, #0\n\t"
-        "beq 9f\n\t"
-        "mov r0, #0x12\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r0, 11f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0xfa\n\t"
-        "lsl r2, r2, #2\n\t"
-        "mov r1, sp\n\t"
-        "strb r3, [r1]\n\t"
-        "mov r1, #0x24\n\t"
-        "mov r3, #0xa0\n\t"
-        "bl sub_80019F8\n\t"
-        "ldr r0, [r4, #0x1c]\n\t"
-        "mov r1, #0x90\n\t"
-        "lsl r1, r1, #5\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r1, [r4, #0x20]\n\t"
-        "ldr r2, 12f\n\t"
-        "add r1, r1, r2\n\t"
-        "ldr r2, [r4, #0x24]\n\t"
-        "add r2, #0xa\n\t"
-        "ldr r4, 13f\n\t"
-        "add r3, r0, #0\n\t"
-        "mul r3, r4, r3\n\t"
-        "asr r3, r3, #0xc\n\t"
-        "mul r4, r1, r4\n\t"
-        "asr r4, r4, #0xc\n\t"
-        "str r4, [sp]\n\t"
-        "bl sub_802E6CC\n\t"
-        "9:\n\t"
-        "add sp, #4\n\t"
-        "pop {r4, r5}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-        "10: .4byte gUnknown_03001500\n"
-        "11: .4byte gUnknown_030012BC\n"
-        "12: .4byte 0xFFFFE800\n"
-        "13: .4byte 0x00000199\n"
-    );
+    sub_802EC64(self);
+    if (self->base.stateTime <= 5) {
+        gUnknown_0300150C += -0x100;
+        if (gUnknown_0300150C < -0x500)
+            gUnknown_0300150C = -0x500;
+    } else {
+        gUnknown_0300150C += 0x2d;
+        if (Abs(gUnknown_0300150C) <= 0x2d)
+            gUnknown_0300150C = 0;
+    }
+    if (self->base.stateTime > 0x21) {
+        struct keys_pair keys;
+
+        sub_802ED10(self);
+        keys = gUnknown_030007E0;
+        if (keys.held & 0x200) {
+            gUnknown_030014F4 = 0x12;
+            PlaySfx(gUnknown_030012BC, 0xa, 0x100);
+            ACTOR_SET_STATE(&self->base, 2, 1);
+        } else if (keys.held & 0x100) {
+            gUnknown_030014F4 = 0x12;
+            PlaySfx(gUnknown_030012BC, 0xa, 0x100);
+            ACTOR_SET_STATE(&self->base, 3, 2);
+        }
+    }
+    if (self->base.animDone) {
+        ACTOR_SET_STATE(&self->base, 1, 0);
+    }
 }
 
-/* Semantics understood as part of the sub_802E170 kind-object
- * family/position-offset helpers this gap covers; NAKED-
- * transcribed per this project's established escape hatch for
- * this neighborhood's register-pressure/branch-layout gaps -
- * see docs/matching/issue-54-issue-56-gap-e0a4.md. */
-NAKED void sub_802EED0(void *selfArg)
+/* Roll state 3: the rightward mirror of `sub_802EED0`. */
+void sub_802EFD8(struct actor_hp *self)
 {
-    asm(
-        "push {r4, r5, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "bl sub_802EC64\n\t"
-        "ldr r0, [r4, #0x44]\n\t"
-        "cmp r0, #5\n\t"
-        "bgt 4f\n\t"
-        "ldr r1, 1f\n\t"
-        "ldr r0, [r1]\n\t"
-        "ldr r2, 2f\n\t"
-        "add r0, r0, r2\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r2, 3f\n\t"
-        "cmp r0, r2\n\t"
-        "bge 5f\n\t"
-        "str r2, [r1]\n\t"
-        "b 5f\n\t"
-        ".align 2, 0\n"
-        "1: .4byte gUnknown_0300150C\n"
-        "2: .4byte 0xFFFFFF00\n"
-        "3: .4byte 0xFFFFFB00\n"
-        "4:\n\t"
-        "ldr r2, 6f\n\t"
-        "ldr r0, [r2]\n\t"
-        "add r0, #0x2d\n\t"
-        "str r0, [r2]\n\t"
-        "asr r1, r0, #0x1f\n\t"
-        "eor r0, r1\n\t"
-        "sub r0, r0, r1\n\t"
-        "cmp r0, #0x2d\n\t"
-        "bgt 5f\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [r2]\n\t"
-        "5:\n\t"
-        "ldr r0, [r4, #0x44]\n\t"
-        "cmp r0, #0x21\n\t"
-        "ble 11f\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_802ED10\n\t"
-        "ldr r0, 7f\n\t"
-        "ldr r2, [r0]\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r1, r0, #0\n\t"
-        "add r0, r2, #0\n\t"
-        "and r0, r1\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r5, r0, #0x10\n\t"
-        "cmp r5, #0\n\t"
-        "beq 10f\n\t"
-        "ldr r1, 8f\n\t"
-        "mov r0, #0x12\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r0, 9f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0xa\n\t"
-        "bl PlaySfx\n\t"
-        "mov r0, #2\n\t"
-        "mov r1, #1\n\t"
-        "str r0, [r4, #0x28]\n\t"
-        "mov r2, #0\n\t"
-        "str r2, [r4, #0x44]\n\t"
-        "str r1, [r4, #0xc]\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldrh r0, [r0, #0xc]\n\t"
-        "mov r1, #0\n\t"
-        "strh r0, [r4, #0x10]\n\t"
-        "strb r1, [r4, #0x12]\n\t"
-        "str r2, [r4, #8]\n\t"
-        "b 11f\n\t"
-        ".align 2, 0\n"
-        "6: .4byte gUnknown_0300150C\n"
-        "7: .4byte gUnknown_030007E0\n"
-        "8: .4byte gUnknown_030014F4\n"
-        "9: .4byte gUnknown_030012BC\n"
-        "10:\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #1\n\t"
-        "add r0, r1, #0\n\t"
-        "and r2, r0\n\t"
-        "cmp r2, #0\n\t"
-        "beq 11f\n\t"
-        "ldr r1, 13f\n\t"
-        "mov r0, #0x12\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r0, 14f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0xa\n\t"
-        "bl PlaySfx\n\t"
-        "mov r0, #3\n\t"
-        "mov r1, #2\n\t"
-        "str r0, [r4, #0x28]\n\t"
-        "str r5, [r4, #0x44]\n\t"
-        "str r1, [r4, #0xc]\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldrh r0, [r0, #0x18]\n\t"
-        "mov r1, #0\n\t"
-        "strh r0, [r4, #0x10]\n\t"
-        "strb r1, [r4, #0x12]\n\t"
-        "str r5, [r4, #8]\n\t"
-        "11:\n\t"
-        "ldrb r0, [r4, #0x12]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 12f\n\t"
-        "mov r0, #1\n\t"
-        "mov r2, #0\n\t"
-        "str r0, [r4, #0x28]\n\t"
-        "str r2, [r4, #0x44]\n\t"
-        "str r2, [r4, #0xc]\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldrh r0, [r0]\n\t"
-        "mov r1, #0\n\t"
-        "strh r0, [r4, #0x10]\n\t"
-        "strb r1, [r4, #0x12]\n\t"
-        "str r2, [r4, #8]\n\t"
-        "12:\n\t"
-        "pop {r4, r5}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-        "13: .4byte gUnknown_030014F4\n"
-        "14: .4byte gUnknown_030012BC\n"
-    );
-}
+    sub_802EC64(self);
+    if (self->base.stateTime <= 5) {
+        gUnknown_0300150C += 0x100;
+        if (gUnknown_0300150C > 0x500)
+            gUnknown_0300150C = 0x500;
+    } else {
+        gUnknown_0300150C -= 0x2d;
+        if (Abs(gUnknown_0300150C) <= 0x2d)
+            gUnknown_0300150C = 0;
+    }
+    if (self->base.stateTime > 0x21) {
+        struct keys_pair keys;
 
-/* Semantics understood as part of the sub_802E170 kind-object
- * family/position-offset helpers this gap covers; NAKED-
- * transcribed per this project's established escape hatch for
- * this neighborhood's register-pressure/branch-layout gaps -
- * see docs/matching/issue-54-issue-56-gap-e0a4.md. */
-NAKED void sub_802EFD8(void *selfArg)
-{
-    asm(
-        "push {r4, r5, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "bl sub_802EC64\n\t"
-        "ldr r0, [r4, #0x44]\n\t"
-        "cmp r0, #5\n\t"
-        "bgt 2f\n\t"
-        "ldr r1, 1f\n\t"
-        "ldr r0, [r1]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r0, r0, r2\n\t"
-        "str r0, [r1]\n\t"
-        "mov r2, #0xa0\n\t"
-        "lsl r2, r2, #3\n\t"
-        "cmp r0, r2\n\t"
-        "ble 3f\n\t"
-        "str r2, [r1]\n\t"
-        "b 3f\n\t"
-        ".align 2, 0\n"
-        "1: .4byte gUnknown_0300150C\n"
-        "2:\n\t"
-        "ldr r2, 4f\n\t"
-        "ldr r0, [r2]\n\t"
-        "sub r0, #0x2d\n\t"
-        "str r0, [r2]\n\t"
-        "asr r1, r0, #0x1f\n\t"
-        "eor r0, r1\n\t"
-        "sub r0, r0, r1\n\t"
-        "cmp r0, #0x2d\n\t"
-        "bgt 3f\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [r2]\n\t"
-        "3:\n\t"
-        "ldr r0, [r4, #0x44]\n\t"
-        "cmp r0, #0x21\n\t"
-        "ble 9f\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_802ED10\n\t"
-        "ldr r0, 5f\n\t"
-        "ldr r2, [r0]\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r1, r0, #0\n\t"
-        "add r0, r2, #0\n\t"
-        "and r0, r1\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r5, r0, #0x10\n\t"
-        "cmp r5, #0\n\t"
-        "beq 8f\n\t"
-        "ldr r1, 6f\n\t"
-        "mov r0, #0x12\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r0, 7f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0xa\n\t"
-        "bl PlaySfx\n\t"
-        "mov r0, #2\n\t"
-        "mov r1, #1\n\t"
-        "str r0, [r4, #0x28]\n\t"
-        "mov r2, #0\n\t"
-        "str r2, [r4, #0x44]\n\t"
-        "str r1, [r4, #0xc]\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldrh r0, [r0, #0xc]\n\t"
-        "mov r1, #0\n\t"
-        "strh r0, [r4, #0x10]\n\t"
-        "strb r1, [r4, #0x12]\n\t"
-        "str r2, [r4, #8]\n\t"
-        "b 9f\n\t"
-        ".align 2, 0\n"
-        "4: .4byte gUnknown_0300150C\n"
-        "5: .4byte gUnknown_030007E0\n"
-        "6: .4byte gUnknown_030014F4\n"
-        "7: .4byte gUnknown_030012BC\n"
-        "8:\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #1\n\t"
-        "add r0, r1, #0\n\t"
-        "and r2, r0\n\t"
-        "cmp r2, #0\n\t"
-        "beq 9f\n\t"
-        "ldr r1, 11f\n\t"
-        "mov r0, #0x12\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r0, 12f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0xa\n\t"
-        "bl PlaySfx\n\t"
-        "mov r0, #3\n\t"
-        "mov r1, #2\n\t"
-        "str r0, [r4, #0x28]\n\t"
-        "str r5, [r4, #0x44]\n\t"
-        "str r1, [r4, #0xc]\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldrh r0, [r0, #0x18]\n\t"
-        "mov r1, #0\n\t"
-        "strh r0, [r4, #0x10]\n\t"
-        "strb r1, [r4, #0x12]\n\t"
-        "str r5, [r4, #8]\n\t"
-        "9:\n\t"
-        "ldrb r0, [r4, #0x12]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 10f\n\t"
-        "mov r0, #1\n\t"
-        "mov r2, #0\n\t"
-        "str r0, [r4, #0x28]\n\t"
-        "str r2, [r4, #0x44]\n\t"
-        "str r2, [r4, #0xc]\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldrh r0, [r0]\n\t"
-        "mov r1, #0\n\t"
-        "strh r0, [r4, #0x10]\n\t"
-        "strb r1, [r4, #0x12]\n\t"
-        "str r2, [r4, #8]\n\t"
-        "10:\n\t"
-        "pop {r4, r5}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-        "11: .4byte gUnknown_030014F4\n"
-        "12: .4byte gUnknown_030012BC\n"
-    );
+        sub_802ED10(self);
+        keys = gUnknown_030007E0;
+        if (keys.held & 0x200) {
+            gUnknown_030014F4 = 0x12;
+            PlaySfx(gUnknown_030012BC, 0xa, 0x100);
+            ACTOR_SET_STATE(&self->base, 2, 1);
+        } else if (keys.held & 0x100) {
+            gUnknown_030014F4 = 0x12;
+            PlaySfx(gUnknown_030012BC, 0xa, 0x100);
+            ACTOR_SET_STATE(&self->base, 3, 2);
+        }
+    }
+    if (self->base.animDone) {
+        ACTOR_SET_STATE(&self->base, 1, 0);
+    }
 }
 
 asm(".align 2, 0");

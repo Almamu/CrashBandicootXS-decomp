@@ -146,6 +146,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part27a.o \
                   $(C_BUILDDIR)/graphics/actor_part_1da38.o \
                   $(C_BUILDDIR)/graphics/actor_part_1dfec.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_1ea5c.o \
+                  $(C_BUILDDIR)/graphics/actor_part128.o \
                   $(C_BUILDDIR)/system/bg_scroll_layer_25fc8.o
 $(OLD_AGBCC_OBJS): CC1 := $(CC1_OLD)
 $(OLD_AGBCC_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1FLAGS))
