@@ -2,7 +2,7 @@ on:
   push:
     branches: [ main ]
   pull_request:
-  pull_request_target:
+    branches: [ main ]
 
 jobs:
   build:
@@ -24,11 +24,8 @@ jobs:
       working-directory: agbcc
       run: ./build.sh && ./install.sh ../
 
-    - name: Fetch baserom
-      run: curl -o baserom.gba -u '${{ secrets.BASEROM_USERNAME }}:${{ secrets.BASEROM_PASSWORD }}' ${{ secrets.BASEROM_URL }}
-      
     - name: Build and compare
-      run: make
+      run: make compare
 
     # Progress report for decomp.dev (see docs/decomp_dev.md) - doesn't need
     # baserom.gba at all, since expected/code_3.s (checked into the repo) is
