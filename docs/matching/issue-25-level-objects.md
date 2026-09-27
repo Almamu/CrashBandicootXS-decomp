@@ -1,0 +1,133 @@
+# Issue #25: 0x0801A794-0x0801B85C, graphics - level objects and their platform mover
+
+All 25 functions of the former `asm/code_3_2_17_188d0_1a794.s` are now in C
+(the file is deleted). **23 are real C, byte-exact; 2 are parked as NAKED
+transcriptions** (`sub_801A878`, `sub_801AB98`), each with its near-miss C
+reconstruction kept under `#if NON_MATCHING`. Verified with a clean
+`make compare` (`crashbandicootxs.gba: OK`).
+
+The range is split by address into five objects so that
+`tools/report_units.py` can track the two NAKED functions as unmatched:
+
+| file | functions | state |
+|---|---|---|
+| `src/graphics/actor_part_1a794.c` | `sub_801A794`-`sub_801A874` (6) | matched |
+| `src/graphics/actor_part_1a878.c` | `sub_801A878` | NAKED (C under NON_MATCHING) |
+| `src/graphics/actor_part_1ab34.c` | `sub_801AB34` | matched |
+| `src/graphics/actor_part_1ab98.c` | `sub_801AB98` | NAKED (C under NON_MATCHING) |
+| `src/graphics/actor_part_1b208.c` | `sub_801B208`-`sub_801B854` (16) | matched |
+
+Shared structs, externs and the virtual-call macros live in
+`include/gobj_1a794.h`.
+
+## What the code is
+
+Found by scanning the ROM for Thumb pointers to each function; the method
+tables are gcc 2.x C++ vtables (`{s16 this-adjust; pad; fn}` entries,
+called through the `sub_803AD7C`/`AD80`/`AD84`/`AD88` "call via
+r1/r2/r3/r4" thunks), like issue #21's `input_ctrl`.
+
+- **`sub_801A794`/`sub_801A824`/`sub_801A838`**: constructor/destructor
+  bodies of two subclasses of the `sub_8017A8C` object family
+  (`actor_part27.c`), method tables `gStaticData_087E490C` and
+  `gStaticData_087E4974` (`sub_801A824` is the latter's +0x4C destructor).
+  `sub_801A838` is called from `graphics_loading_21280.c`.
+  `sub_801A7AC` is `sub_8017F14`'s mirror-gated velocity copy, but taking
+  its record index straight from `gStaticData_0816C418` (8-byte `{a, b}`
+  pairs into the 12-byte `gStaticData_0816C3B8` vectors).
+- **`struct gobj`** (0x80 bytes, method table `gStaticData_087E49DC`):
+  `sub_801A878(id, x, y, index, kind)` allocates and constructs one (it
+  inlines the constructor `sub_801B2E4`), looks its spawn record up through
+  the level header at `*gUnknown_030012B4` (u16 offset table at +8, records
+  at +0xC), derives `type` (+0x78) from the record or forces it from `kind`
+  (3/9-12 -> 4, 4 -> 2, 5 -> 3, 6 -> 6, 8 -> 7), and for types 1/5/6/7
+  attaches a `struct mover` (type 6 uses `sub_801961C` instead when
+  `sub_80233B4(gUnknown_030012C0) == 1`). Callers: `trigger_effect.c`,
+  `graphics_loading_21280.c`, `graphics_loading_21668.c`.
+  - `sub_801AB34` (+0x0C) gates `sub_801AB98` on the player
+    (`gUnknown_030012D8`) being active and within 0x7FFF on both axes.
+  - `sub_801AB98` resolves player-vs-object contact: two AABBs from
+    `sub_8007B98`, overlap via `sub_8001688`, then a classification into
+    push-left/right (1/2), land-on-top (8) or hit-from-below (4) using the
+    player's anim-record collision box (`anim_rec` +4..+9) and the
+    `sub_800FDC8` edge probe; it then moves the player (`sub_8007398`),
+    sets `carried` (+0xAC) / `+0x68 = 8` when landing, and fires the
+    player's method +0x68 (`sub_803AD88`) with event 0x0C/0x0F/0x10/0x11
+    depending on the object type (the 3/4 variants gated on
+    `sub_80232A0`/`sub_8023278` and `gUnknown_030012C0+0x8C`). Without
+    overlap it only refreshes `carried` or clears the mover's `active`.
+  - `sub_801B208` (+0x1C) steps or destroys the object and forwards to its
+    mover; `sub_801B29C`/`sub_801B2A8` read/write bit 4 of +0x0D
+    (`sub_801B29C` is called from `game_loop56.c`); `sub_801B2D8` clears
+    bit 6 of +0x0C; `sub_801B2C4` is the destructor.
+- **`struct mover`** (0x38 bytes, method table `gStaticData_087E4A54`,
+  constructor `sub_801B7D8`, destructor `sub_801B7C4`): an oscillating
+  platform driver. `sub_801B304` (+0x0C) starts each axis with velocity
+  record 1 of its `set` (12-byte records in `gStaticData_0816C460`,
+  sign-flipped by `dirX`/`dirY`), accumulates the distance travelled and
+  reverses once it exceeds `rangeX`/`rangeY` (twice the constructor's
+  distance); kinds 5/6/7 add timed behaviour (see the function comment).
+  `sub_801B624` drags the player along by the owner's per-frame
+  displacement while `active`. `sub_801B77C`/`sub_801B7A0` (+0x64/+0x5C)
+  resolve a record and tail-call `sub_800B6D0`/`sub_800B7B0`.
+
+UNUSED (no `bl`/`.4byte` in `asm/`, no C caller, no Thumb pointer in the
+ROM): `sub_801A870`, `sub_801A874`, `sub_801B2E4` (inlined instead),
+`sub_801B6EC`, `sub_801B734`, `sub_801B854`.
+
+## Matching notes
+
+- **Bit clears/sets with the constant loaded before the `ldrb`**
+  (`movs r1, #0x41; negs r1, r1; ldrb r2, [r0, #0xc]; ands`): plain
+  `f &= ~0x40` folds to `#0xbf` after the load, and a bitfield loads
+  first. Holding the mask in an `s32` local (`s32 m = ~0x40; f = m & f;`)
+  reproduces it without asm; for OR the constant must be a `u8` local.
+- **Reload CSE of small constants**: where the ROM rematerialises a mask
+  (`movs r2, #0x11; negs`) right after using `1` or `0xF` in the same
+  register, reload rewrites it as `subs r2, #0x12`. An empty
+  `asm("" : "+r"(one))` on the earlier constant hides its value.
+- **`sub_801B7D8`'s stack-passed byte**: the ROM reads it with
+  `add r0, sp, #0x18; ldrb r7, [r0]`. Only the address is computed in asm;
+  the byte load is C.
+- **`sub_801B624`** writes `p->unk_68` through `&p->carried - 0x44` (the
+  ROM reuses that address register), written that way explicitly.
+- **`sub_801B304`**: gcc's `abs()` expands to a branch here; the ROM's
+  `asr/eor/sub` is the in-place `ABS32` macro (as in `actor_part50.c`).
+  The "mark actor gone" bitmap update is `sub_80178EC`'s signed-division
+  idiom. The rest is register pins (commented in the source).
+- **`sub_801A7AC`**: `index` pinned to r5 and kept live with an empty
+  `asm("" : : "r"(index))` so the second lookup doesn't shift it in place.
+- **`sub_801B29C`**: `(flags2 >> 4) & 1` (a bitfield read gives
+  `lsl #27; lsr #31`).
+
+## Parked: `sub_801A878` and `sub_801AB98`
+
+Both C reconstructions reproduce control flow, stack layout (including
+`sub_801AB98`'s 0x44-byte frame and all six spill slots, which needed the
+locals declared in slot order) and nearly every instruction. What's left
+is reload's choice of scratch register: gcc 2.x `allocate_reload_reg`
+walks the spill registers round-robin from `last_spill_reg`, so every
+`mov rN, r8` base copy and every `movs rN, #c; str rN, [sp, #x]` lands in
+a register decided by how many reloads came before it in the function.
+
+- `sub_801AB98`: the rotation is two steps off from the first constant
+  store on. The ROM loads the player's anim-record tag byte into r3 as a
+  reload (so the next reload gets r0); this source's equivalent load is an
+  ordinary pseudo, and pinning it to r3 fixes the instruction but not the
+  rotation. Unpinned, `px`, `self`, `result` and `ty` also land in the
+  ROM's registers except `px`, which needs a pin plus a pinned r0 load
+  temp.
+- `sub_801A878`: 24 instructions still differ, all reload register choices
+  (the spawn record lives in r8 and each use copies it to a low register).
+  An exhaustive search over all 4096 on/off combinations of the 12
+  register pins it uses (script-driven) bottomed out at 24; pinning
+  individual copy sites moves the rotation elsewhere. This function also
+  needs a hand-built outgoing-argument block for the `strb` of
+  `sub_801B7D8`'s 5th argument (this compiler always stores stack
+  arguments as words): stores through `volatile` casts into a local struct
+  at sp+0 and a call through a 4-argument function-pointer view. The
+  spawn-record lookup needs `rec` to stay in the index register
+  (`asm("" : "+r"(rec))`) to reproduce `add r8, r0`.
+
+Both are transcribed instruction-for-instruction as `NAKED` functions for
+the matching build.
