@@ -124,6 +124,16 @@ $(ELF): $(OBJS) $(LDSCRIPT)
 %.gba: %.elf
 	$(OBJCOPY) -O binary $< $@
 
+# Translation units the original build compiled with the older agbcc
+# (tools/agbcc/bin/old_agbcc). Its scheduler loads a constant *before*
+# the byte it is combined with (`movs rA, #K; ldrb rB, [..]; ands rA, rB`)
+# where the current agbcc loads the byte first - see
+# docs/matching/issue-24-boss-actor.md. old_agbcc has no
+# -fprologue-bugfix option.
+OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part_1967c.o
+$(OLD_AGBCC_OBJS): CC1 := $(CC1_OLD)
+$(OLD_AGBCC_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1FLAGS))
+
 $(C_BUILDDIR)/%.o : $(C_SUBDIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CPP) $(CPPFLAGS) $< | $(CC1) $(CC1FLAGS) -o $(C_BUILDDIR)/$*.s
