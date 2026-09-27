@@ -106,6 +106,16 @@ and [graphics_loading.md](./graphics_loading.md).
   22 of the chunk's 25 functions as plain C; the other three are parked
   below. Built with `tools/agbcc/bin/old_agbcc`. See
   [docs/matching/issue-26-level-select-menu.md](../matching/issue-26-level-select-menu.md).
+- `src/graphics/actor_part_1cee0.c` (new file - GitHub issue #27, shared
+  structs in `include/level_menu.h`): all 25 functions of
+  `sub_801CEE0`-`sub_801D828` as plain C - the rest of the level-select
+  screen: the page-turn animation `sub_801CEE0` and its Down/Up handlers
+  `sub_801D4C4`/`sub_801D548`, the A/Start exit loops `sub_801D110`/
+  `sub_801D300`, the page-entry refresh (`sub_801D5CC`/`sub_801D638`/
+  `sub_801D668`), the BG1 page strip (`sub_801D77C`-`sub_801D7F8`) and
+  the BG2 icon layer's constructor `sub_801D828`. `sub_801D698` is
+  UNUSED. Compiled with `old_agbcc`. See
+  [docs/matching/issue-27-level-select-pages.md](../matching/issue-27-level-select-pages.md).
 - `src/graphics/actor_part_1967c.c` (new file - GitHub issue #24):
   `sub_801967C`-`sub_801A780` except the two NAKED ones below (23 of 25
   functions) - six small C++ actor-part controller classes (method
@@ -129,6 +139,19 @@ and [graphics_loading.md](./graphics_loading.md).
   [docs/matching/old-agbcc-retry.md](../matching/old-agbcc-retry.md)).
   `sub_801AB98` from the same range is parked below. See
   [docs/matching/issue-25-level-objects.md](../matching/issue-25-level-objects.md).
+- GitHub issues #28/#29 (0x0801DA38-0x0801E578, shared structs in
+  `include/level_select_parts.h`, both files built with `old_agbcc`):
+  `src/graphics/actor_part_1da38.c` (`sub_801DA38`-`sub_801DF98`, all
+  25) - the level-select screen's zooming BG2 picture (`struct
+  zoom_bg`: destructor, state machine, affine draw/commit, state
+  queries, twinkle sprites) and the level entry's methods (`struct
+  level_item`, method table `gStaticData_087E4BAC`);
+  `src/graphics/actor_part_1dfec.c` (`sub_801DFEC`-`sub_801E524`, all
+  16) - the level entry's constructor and the cursor panel (`struct
+  cursor_panel`: Bresenham glide, idle animation cycle, affine OBJ
+  grow/shrink). `sub_801E3D4`, `sub_801E3E4` and `sub_801E4E4` are
+  UNUSED. All real C. See
+  [docs/matching/issue-28-29-level-select-parts.md](../matching/issue-28-29-level-select-parts.md).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.

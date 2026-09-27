@@ -1,0 +1,113 @@
+# Issue #27: 0x0801CEE0-0x0801DA38, graphics - level-select page turns and background layers
+
+All 25 functions of the former `asm/code_3_2_17_188d0_1cee0.s` are now
+plain C in `src/graphics/actor_part_1cee0.c`. The `.s` file is deleted.
+There are no NAKED or `NON_MATCHING` functions. The shared structs are in
+the new `include/level_menu.h`. Verified with a clean
+`make NON_MATCHING=1 report` and a clean `make compare`
+(`crashbandicootxs.gba: OK`).
+
+**The file is compiled with `old_agbcc`.** It is on the Makefile's
+`OLD_AGBCC_OBJS` list, next to `actor_part_1967c.o`. In the first draft
+compiled with both compilers, the current `agbcc` got 12 functions wrong
+and `old_agbcc` got 9 wrong. Every byte read-modify-write here (the
+blend-register shadows, BG2CNT, the sprites' mirror/mode/palette bits)
+came out constant-first under `old_agbcc` as plain bitfield C. So the
+`Opaque()`/pin workarounds from #23/#25/#26 were not needed. What was
+left was loop shape and evaluation order, described below.
+
+## What the code is
+
+This is the rest of issue #26's level-select screen (`struct level_menu`,
+0xAC bytes, built by `sub_801BC28`), plus its two background objects.
+
+- **Page turns.** `sub_801D4C4` (Down) and `sub_801D548` (Up) are the
+  handlers `sub_801C96C` dispatches. If the move is allowed
+  (`sub_801D428`: `world != 0`; `sub_801D434`: bit 5/7/6 of save byte 2
+  for pages 0/1/2), each one settles the cursor (`sub_801CCF8`) and
+  plays 0x56/0x55. Then it loops while the key stays held: step `world`,
+  move BG1's scroll target a page (`sub_801D790` +0x100 /
+  `sub_801D79C` -0x100), run `sub_801CEE0`, wait a frame. After the loop,
+  `sub_801D470` switches the page-title sprite's animation
+  (`gStaticData_0816C548[world]`) and puts the cursor panel back on the
+  clamped cursor. A blocked move plays 0x48.
+- **`sub_801CEE0`** runs frames until BG1's scroll reaches its target
+  (`sub_801D7AC` eases it 8 per frame). When the low byte of the scroll
+  reaches 0xA0 (the halfway point), it reloads the page entries. This
+  is `sub_801D638` (item method +0x10 `(world, slot)`),
+  `sub_801D5CC` (choose the cursor layout
+  `gStaticData_0816C508`/`4D8` and `lastIndex` 5/4, depending on whether
+  all five levels of the page are cleared, then item method +0x18
+  `(&positions[i])`) and `sub_801D668`
+  (`sub_801DF0C(item, gStaticData_0816C538[world])`), all three inlined.
+- **Exits.** `sub_801D110` handles A on an open entry: sound 0x52, panel
+  to (0x78, 0x35), wait for the panel and the icon layer, then fade
+  (`BLDCNT` effect 3 on all first targets, `evy = t / 2`).
+  `sub_801D300` handles Start: sound 0x49, the same fade, and
+  `result = 1`. `sub_801D05C` is the "wait for the panel" loop.
+  `sub_801D730` reloads palette 0xF and re-applies it to the eight
+  sprites.
+- **`struct page_bg`** (BG1, `sub_801D7F8`): the `sub_801E644`
+  background descriptor, then `scroll`/`target` (Q8, starting at
+  0x300) and the BG1HOFS/VOFS pair (`sub_801D7D0` returns both as one
+  word, `sub_801D7D4` resets them). `sub_801D7E0` is its destructor
+  body.
+- **`struct icon_bg`** (BG2, `sub_801D828`, 0x8C bytes): the BG2CNT
+  shadow (priority 1, 256 colours), a cleared screen block with an 8x4
+  block of tile entries, and four corner sprites (bank `+0x258`,
+  positions `gStaticData_0816C5F0` around (0x78, 0x35), mirrored X/Y
+  per corner) registered through `sub_801DDB4`. The rest of this class
+  is in issue #28's range.
+- `sub_801D41C` sets `gUnknown_03000824` (called from `game_loop55.c`).
+
+**UNUSED:** `sub_801D698` (one frame of the screen without the menu's
+update). It has no `bl`/`.4byte` reference and no Thumb pointer anywhere
+in the ROM. It is matched anyway.
+
+`actor_part_1b85c.c` still has its own copies of these structs. It was
+left alone because another pass is revising that file. It can switch to
+`include/level_menu.h`. The two layouts agree, except that the header
+types the save block (`struct menu_save`) and the two background layers.
+
+## Matching notes
+
+- **Loops written with `goto`** (`sub_801D4C4`/`sub_801D548`). The ROM
+  jumps into the loop test and keeps the key test's exit inside the
+  body. A `while` with `break` gives gcc's rotated loop with a duplicated
+  test instead.
+- **`sub_801D428`**: `world != 0` compiles to a compare and a branch.
+  The ROM's `neg/orr/lsr #31` is `(-w | w) >> 31` on a `u32` copy.
+- **`sub_801D434`**: explicit shifts (`(b >> 5) & 1`). A bitfield read
+  gives `lsl/lsr`, and the ROM drops the `& 1` only for bit 7, which
+  gcc does on its own.
+- **`sub_801D470`**: an inline `SetAnim(sprite, u32 idx)`. Passing the
+  table word (not a `u8`) keeps the word load, and the load happens
+  after the sprite pointer, as in the ROM.
+- **`sub_801D5CC`'s cleared count**: `levels[k].b.cleared`, with
+  `k = world * 5 + j` in its own local and `j` a counter separate from
+  the second loop's `i`. This gives the ROM's order (world*5, then load
+  `save`, then *4) and its registers. A byte-wide view of the save word
+  (`union level_record`) gives the `ldrb`.
+- **`sub_801D730`**: `self->sprites[i]` indexed twice. A pointer local
+  gets strength-reduced and the loop reversed.
+- **`sub_801CEE0`**: `(x & 0xFF) == 0xA0` for the ROM's
+  `movs #0xff; ands` (a `(u8)` cast gives `lsl/lsr`).
+- **`sub_801D828`** needed five things:
+  - The tile block is written `dst[j] = v` in the inner loop with
+    `dst += 8` after it. With that form, gcc's loop pass hoists the
+    later field addresses into the same `sl`/`r8`/`ip`/`sb` registers
+    as the ROM.
+  - The slot loop indexes `self->slots[i]` directly. It passes
+    `&self->slots[i]` to `sub_801DDB4` instead of using a slot pointer
+    local. This fixes the order of the three induction-variable
+    increments and the two stack spills.
+  - Field stores go through inline setters (`SetMode`/`SetFlipX`/
+    `SetFlipY`/`SetPalette`/`SetPos`), as the C++ member functions would
+    have. A parameter keeps the full clear-then-or for a 1-bit field
+    (a literal `= 1` compiles to a bare `orr`). `SetMode`'s `s32`
+    parameter makes the loop hoist the `1` into `sb`.
+  - The stores run in the order `unk_28 = unk_2C = unk_30 = 0` and
+    `unk_3C = unk_38 = 0x2000`, which gives the ROM's store order.
+  - The `bgcnt` union and `struct sprite_f28` need
+    `__attribute__((packed))`; otherwise ARM's 4-byte struct rounding
+    moves every later field.
