@@ -694,12 +694,16 @@ from "core" graphics.
   `sub_8032480`), a state-1 trampoline-flush/proximity transition
   (`sub_8032358`), more countdown transitions (`sub_80323F4`/
   `sub_80325A4`), `sub_8032480` itself (the orbital-motion consumer,
-  plus its state-transition helper `sub_803256C`), and a type-byte-gated
-  proximity check (`sub_8032688`) - see
-  [docs/matching/issue-59-60-gap-31a6c-part1.md](../matching/issue-59-60-gap-31a6c-part1.md).
-  (Two InitActorPart-based constructors originally attempted as real C
-  in this same file, `sub_8032440`/`sub_80325EC`, ended up NAKED-parked
-  instead - see below.)
+  plus its state-transition helper `sub_803256C`), a type-byte-gated
+  proximity check (`sub_8032688`), and (promoted from NAKED in a later
+  pass) **`sub_8032440`**, another `InitActorPart`-based constructor
+  forcing a fixed `0xFFFF0600` bias - see
+  [docs/matching/issue-59-60-gap-31a6c-part1.md](../matching/issue-59-60-gap-31a6c-part1.md)
+  and
+  [docs/matching/issue-59-60-m-operand-scheduling.md](../matching/issue-59-60-m-operand-scheduling.md).
+  (One InitActorPart-based constructor also re-attempted as real C in
+  this same later pass, `sub_80321FC`, plus the original
+  `sub_80325EC`, stayed NAKED-parked - see below.)
 - `src/graphics/actor_part130.c` (new file, ROM 0x080326E4-0x08033804,
   Phase 2 second half of the boss-weapon/singleton cluster's gap between
   issue #58 and issue #62 - a sibling pass, `actor_part129.c`, covers
@@ -810,21 +814,20 @@ plain C didn't converge.
 - **`sub_80321FC`** (`src/graphics/actor_part129.c`, same range) - a
   parameterized `sub_802E4B8`-based constructor (the "kind" is a 6th
   caller-supplied argument here, rather than one of the fixed literals
-  `sub_8031F78`/`sub_8032054`/`sub_80320C4` use). This compiler always
-  re-materializes the incoming `c` argument register from its own
-  cached copy for the `InitActorPart` call, instead of leaving the
-  ROM's original parameter register untouched until the call, and
-  separately defers the "kind" byte truncation to its point of use
-  rather than the ROM's eager truncation right after loading it from
-  the stack. See
-  [docs/matching/issue-59-60-gap-31a6c-part1.md](../matching/issue-59-60-gap-31a6c-part1.md).
-- **`sub_8032440`** (`src/graphics/actor_part129.c`, same range) - an
-  `InitActorPart`-based constructor forcing a fixed `0xFFFF0600` bias
-  for its own 4th argument. This compiler's independent-instruction
-  scheduler always groups the pure register loads (the `d` argument off
-  the stack, the `0xFFFF0600` constant) together regardless of source
-  order, while the ROM's own build interleaves them with the
-  intervening `str`/`adds` steps.
+  `sub_8031F78`/`sub_8032054`/`sub_80320C4` use). A later pass closed
+  two of this function's originally-documented gaps (a dual `r3`/`r6`
+  register pin reproduces the ROM's "leave `c`'s parameter register
+  untouched for the call, use a separate copy after" split, and a
+  narrow inline-asm `lsl`/`lsr` forces the "kind" byte truncation
+  eager instead of deferred), but hit a third, previously-undocumented
+  one: this compiler's own parameter-register-save order for
+  `b`/`c`/`d` (ascending destination register number) can't be
+  reordered to match the ROM's own choice (`b` first) without either
+  leaving the order wrong or triggering the categorical `r7`-pin bug
+  (`docs/matching.md`'s "why not just pin r7") when forcing `d`'s
+  ordering costs it its correct, naturally-allocated `r7` home. See
+  [docs/matching/issue-59-60-m-operand-scheduling.md](../matching/issue-59-60-m-operand-scheduling.md)
+  for the full account.
 - **`sub_80325EC`** (`src/graphics/actor_part129.c`, same range) - a
   clamping `InitActorPart`-based constructor. This compiler couldn't be
   steered into the ROM's exact register choreography for the `d`

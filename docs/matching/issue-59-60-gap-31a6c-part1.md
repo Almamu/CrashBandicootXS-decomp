@@ -142,6 +142,11 @@ established "cut at the boundary" convention.
 
 ## Parked - NAKED transcription (5 of 30 functions, byte-correct but not counted as matched)
 
+**Update**: `sub_8032440` was matched to real C in a later session (see
+the "Update" note on its own entry below and
+[issue-59-60-m-operand-scheduling.md](issue-59-60-m-operand-scheduling.md)),
+leaving 4 of 30 still parked.
+
 - **`sub_8031A6C`**, **`sub_80322F4`** - near-duplicate keyframe-table-
   relative dispatch helpers indexing `gStaticData_0817C42C` (stride 8)
   by `self+0x28`, structurally identical in their core to the
@@ -168,6 +173,12 @@ established "cut at the boundary" convention.
   `asm volatile` compiler barrier forced the truncation to happen early
   but didn't reproduce the `c`-register gap - transcribed NAKED
   instead, byte-verified.
+  **Update**: a later session closed both of these gaps (a dual
+  `r3`/`r6` register pin for `c`; a narrow inline-asm `lsl`/`lsr` for
+  the eager truncation), but hit a third, previously-undocumented gap
+  that still blocks a full match - see
+  [issue-59-60-m-operand-scheduling.md](issue-59-60-m-operand-scheduling.md)
+  for the full account. Still NAKED.
 - **`sub_8032440`** - `InitActorPart`-based constructor forcing a fixed
   `0xFFFF0600` bias for its own 4th argument, stashing the caller's
   real `c` into `self+0x5c`. This compiler's independent-instruction
@@ -177,6 +188,9 @@ established "cut at the boundary" convention.
   register pins, while the ROM's own build interleaves them with the
   `str`/`adds` steps in between - transcribed NAKED after several
   reordering attempts didn't change the scheduler's grouping.
+  **Update**: matched in a later session - see
+  [issue-59-60-m-operand-scheduling.md](issue-59-60-m-operand-scheduling.md).
+  No longer NAKED.
 - **`sub_80325EC`** - clamping `InitActorPart`-based constructor (kind
   `1`, `InitActorPart`'s own 4th argument forced to `0xfa00`): clamps
   the caller's `c` into `self+0x5c` (±`0x3f00`), mirrors a clamped
