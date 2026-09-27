@@ -130,7 +130,7 @@ $(ELF): $(OBJS) $(LDSCRIPT)
 # where the current agbcc loads the byte first - see
 # docs/matching/issue-24-boss-actor.md. old_agbcc has no
 # -fprologue-bugfix option.
-OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part_1967c.o
+OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part_1967c.o $(C_BUILDDIR)/graphics/actor_part_1cee0.o
 $(OLD_AGBCC_OBJS): CC1 := $(CC1_OLD)
 $(OLD_AGBCC_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1FLAGS))
 
