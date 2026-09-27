@@ -552,9 +552,17 @@ from "core" graphics.
   bytes, the `gStaticData_087E4224` double-table-set idiom already seen
   in `actor_part27.c`, and a larger field-reset pair; see
   [docs/matching/issue-19-0x08015840-actor.md](../matching/issue-19-0x08015840-actor.md).
+- `src/graphics/actor_part86.c`/`actor_part86b.c` (GitHub issue #19, ROM
+  0x080159F8-0x08015FDC, built with old_agbcc): `sub_80159F8`,
+  `sub_8015C6C`, `sub_8015DF8` - the player-input controller's three
+  jump-table dispatchers (`level`-indexed speed tables, a kind-4 spawn and
+  the `sub_80172D0`/`sub_8015FDC` feed), promoted from NAKED once built
+  with old_agbcc; see
+  [docs/matching/issue-19-0x08015840-actor.md](../matching/issue-19-0x08015840-actor.md).
 - `src/graphics/actor_part57b.c` (new file, GitHub issue #19, ROM
-  0x08015FDC, non-adjacent to actor_part57.c since the left-raw
-  `sub_80159F8`/`sub_8015C6C`/`sub_8015DF8` sit between them):
+  0x08015FDC, non-adjacent to actor_part57.c since
+  `sub_80159F8`/`sub_8015C6C`/`sub_8015DF8` (`actor_part86.c`/`86b.c`)
+  sit between them):
   `sub_8015FDC` - a player-velocity-relative record writer; see
   [docs/matching/issue-19-0x08015840-actor.md](../matching/issue-19-0x08015840-actor.md).
 - `src/graphics/actor_part58.c` (new file, GitHub issue #54, non-
@@ -737,9 +745,12 @@ from "core" graphics.
   [docs/matching/issue-59-60-gap-31a6c-part1.md](../matching/issue-59-60-gap-31a6c-part1.md)
   and
   [docs/matching/issue-59-60-m-operand-scheduling.md](../matching/issue-59-60-m-operand-scheduling.md).
-  (One InitActorPart-based constructor also re-attempted as real C in
-  this same later pass, `sub_80321FC`, plus the original
-  `sub_80325EC`, stayed NAKED-parked - see below.)
+  **`sub_80321FC`** (the parameterized `sub_802E4B8`-based constructor)
+  and **`sub_80325EC`** (the clamping `InitActorPart`-based constructor)
+  were promoted from NAKED in a still later pass - the first as plain C,
+  the second by passing its `0xfa00` constant through a static inline
+  wrapper around `InitActorPart` - see
+  [docs/matching/issue-59-60-m-operand-scheduling.md](../matching/issue-59-60-m-operand-scheduling.md).
 - `src/graphics/actor_part130.c` (new file, ROM 0x080326E4-0x08033804,
   Phase 2 second half of the boss-weapon/singleton cluster's gap between
   issue #58 and issue #62 - a sibling pass, `actor_part129.c`, covers
@@ -849,42 +860,6 @@ plain C didn't converge.
   early-return-sharing-an-epilogue functions, were promoted to real C
   using the `goto`-shared-tail idiom instead of staying parked here -
   see [docs/matching/issue-52-gap-b364.md](../matching/issue-52-gap-b364.md).
-- **`sub_80159F8`/`sub_8015C6C`** (`src/graphics/actor_part86.c`, ROM
-  0x080159F8-0x08015DF8, GitHub issue #19) and **`sub_8015DF8`**
-  (`src/graphics/actor_part86b.c`, ROM 0x08015DF8-0x08015FD0, split
-  into its own unit) - three large (13-case and 9-case) jump-table
-  state-machine dispatchers on the part object's `+0x60`/`+0x64`
-  velocity fields, `self+0x21` state, and (for `sub_8015DF8`) a
-  `sub_8025BAC` object-spawn call. Fully understood and near-matched
-  as real C - a recurring gcc-2.9 gap (ROM routes several `(x*3)>>2`
-  computations through an extra scratch-register copy that this
-  compiler's allocator always collapses away) blocked the last step
-  in all three. See `docs/matching/issue-19-0x08015840-actor.md`.
-- **`sub_80321FC`** (`src/graphics/actor_part129.c`, same range) - a
-  parameterized `sub_802E4B8`-based constructor (the "kind" is a 6th
-  caller-supplied argument here, rather than one of the fixed literals
-  `sub_8031F78`/`sub_8032054`/`sub_80320C4` use). A later pass closed
-  two of this function's originally-documented gaps (a dual `r3`/`r6`
-  register pin reproduces the ROM's "leave `c`'s parameter register
-  untouched for the call, use a separate copy after" split, and a
-  narrow inline-asm `lsl`/`lsr` forces the "kind" byte truncation
-  eager instead of deferred), but hit a third, previously-undocumented
-  one: this compiler's own parameter-register-save order for
-  `b`/`c`/`d` (ascending destination register number) can't be
-  reordered to match the ROM's own choice (`b` first) without either
-  leaving the order wrong or triggering the categorical `r7`-pin bug
-  (`docs/matching.md`'s "why not just pin r7") when forcing `d`'s
-  ordering costs it its correct, naturally-allocated `r7` home. See
-  [docs/matching/issue-59-60-m-operand-scheduling.md](../matching/issue-59-60-m-operand-scheduling.md)
-  for the full account.
-- **`sub_80325EC`** (`src/graphics/actor_part129.c`, same range) - a
-  clamping `InitActorPart`-based constructor. This compiler couldn't be
-  steered into the ROM's exact register choreography for the `d`
-  argument (transiently held in `r0`, pushed to the outgoing stack
-  slot, then `r0` reused for `self`) simultaneous with the health
-  literal (`1`) needing to survive in `r4` across the same call. See
-  [docs/matching/issue-59-60-gap-31a6c-part1.md](../matching/issue-59-60-gap-31a6c-part1.md)
-  for both.
 - **`sub_8009008`** (`src/graphics/actor_part11b.c`) - the
   spatial-hash-grid removal primitive `sub_8009A30`/`sub_8009AA0`
   call: a two-phase search (the object's own primary bucket, then

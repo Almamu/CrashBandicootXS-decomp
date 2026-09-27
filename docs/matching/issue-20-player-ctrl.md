@@ -33,6 +33,15 @@ flag bits, a plain `records[tag * 28 + 0x14]` read), matches under
 old_agbcc and is 30 bytes off under agbcc. The file itself was not
 changed. Moving it to `OLD_AGBCC_OBJS` would probably let most of its pins
 and the `volatile` id reload go (see the `do`/`while (0)` finding below).
+A later pass did that: `actor_part_17524.o` is on `OLD_AGBCC_OBJS` with
+no pins, `volatile` or barriers left (see
+[issue-21-input-ctrl.md](./issue-21-input-ctrl.md)). The same pass
+matched issue #19's `sub_80159F8`/`sub_8015C6C`/`sub_8015DF8`
+(`0x080159F8`-`0x08015FDC`, `actor_part86.o`/`actor_part86b.o`) under
+old_agbcc too (the issue #17 pass had already found old_agbcc code at
+`0x08013C60`-`0x08014F8C`, `actor_part_13c60.c`/`actor_part_14674.c`).
+`sub_8015C6C` has the tell; `actor_part57b.c` in between still does not
+tell the compilers apart.
 
 ## What the code is
 

@@ -698,121 +698,30 @@ void sub_80321D0(void *selfArg, s32 flags)
 /* Same `sub_802E4B8`-based constructor shape as `sub_8031F78`, but
  * fully parameterized: the "kind" (`0x28`/`0x29`/`0x2a`/etc there) is a
  * 6th caller-supplied byte argument here rather than a fixed literal,
- * and this one doesn't reassign `self+0x50`'s event table afterward. */
-/* Semantics understood as part of the shared "spawn effect type N"
- * constructor family (`sub_8031F78`/`sub_8032054`/`sub_80320C4` above):
- * the "kind" is a 6th caller-supplied byte argument here instead of a
- * fixed literal, and this one doesn't reassign `self+0x50`'s event
- * table afterward. Resists a byte-exact plain-C reconstruction: this
- * compiler always re-materializes the incoming `c` argument register
- * for the `InitActorPart` call from its own cached copy (`r6`) instead
- * of leaving the ROM's original parameter register (`r3`) untouched
- * until the call, and separately defers the `kind` byte truncation to
- * its point of use rather than the ROM's eager truncation right after
- * loading it from the stack - transcribed NAKED, byte-verified against
- * the original disassembly.
+ * and this one doesn't reassign `self+0x50`'s event table afterward.
  *
- * Both of those two originally-documented gaps are individually
- * closeable: a dual register pin (`register s32 cCall asm("r3") = c;`
- * kept untouched for `InitActorPart`'s call, alongside a separate
- * `register s32 cSaved asm("r6") = c;` for the later `self+0x64`
- * store/second-call argument) reproduces the ROM's exact "leave r3
- * alone, use r6 for everything after" split; and forcing a physical
- * `lsl`/`lsr` by 24 on `kind`'s own register right after its load
- * (via a narrow inline-asm snippet on an otherwise-plain `s32`, not
- * the C `u8` type alone, which this compiler only masks at point of
- * use) reproduces the eager truncation. A third, previously-
- * undocumented gap blocks a full byte-exact match even with both of
- * those fixed: this compiler's own prologue-adjacent parameter-
- * register-save sequence for `b`/`c`/`d` (all three needed in
- * callee-saved registers across the first `InitActorPart` call) always
- * comes out ordered by ascending destination register number - `c`
- * (r6), then `d` (r7), then `b` (r9) - the opposite of the ROM's own
- * order (`b` saved first, immediately after `self`, then `c`, then
- * `d` last). No amount of C-level statement reordering, per-variable
- * `asm volatile` barriers, or bundling `b`/`c` into one ordered inline-
- * asm block (which *does* fix their own relative order against each
- * other) changes `d`'s position - it always floats back to being
- * computed first, before the block, matching this session's broader
- * finding that this compiler schedules independent stack loads with no
- * blocking dependency as early as possible regardless of source
- * position. Forcing an artificial dependency to delay `d`'s load (an
- * inline-asm read of `d` bogus-dependent on `c`'s already-saved value)
- * *does* fix the ordering, but only by pushing this compiler's register
- * allocator to give `d` a *different* permanent home (`r10`/`sl`)
- * instead of the ROM's `r7` - `d` must stay a completely plain, unpinned
- * local for gcc's natural allocator to land it on `r7` at all (per
- * `docs/matching.md`'s "why not just pin r7": explicitly pinning `r7`
- * - or, it turns out, constraining an inline-asm operand strongly
- * enough to indirectly force it - is a confirmed agbcc bug that
- * silently drops r7 from the push/pop list, corrupting the caller's
- * r7 across this function's own call to `InitActorPart`), and that
- * natural-allocation path is exactly what schedules `d`'s load early.
- * The two mechanisms are mutually exclusive for this specific function:
- * fixing the order costs the correct register, and the correct register
- * costs the order. Every combination tried (dependency on `b`/`c`/`self`
- * individually, `"l"`-constrained vs plain `"r"` outputs, folding `d`
- * into the same combined block as `b`/`c` with a fully symbolic
- * output) either reproduced this same trade or hit the categorical r7
- * bug outright - transcribed NAKED, byte-verified against the original
- * disassembly. */
-NAKED void *sub_80321FC(void *selfArg, s32 a, s32 b, s32 c, s32 d, s32 kind)
+ * Once parked NAKED over three claimed gaps (`c` re-materialized from
+ * r6, a late `kind` truncation and a b/c/d parameter-save order the
+ * compiler "couldn't reproduce"); none of them exists for this plain
+ * form - `kind` declared `u8` and `health` an ordinary local - which
+ * matches under both agbcc and old_agbcc (see
+ * docs/matching/issue-59-60-m-operand-scheduling.md). */
+void *sub_80321FC(void *selfArg, s32 a, s32 b, s32 c, s32 d, u8 kind)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sb\n\t"
-        "mov r6, r8\n\t"
-        "push {r6, r7}\n\t"
-        "sub sp, #4\n\t"
-        "add r4, r0, #0\n\t"
-        "mov sb, r2\n\t"
-        "add r6, r3, #0\n\t"
-        "ldr r7, [sp, #0x20]\n\t"
-        "ldr r5, [sp, #0x24]\n\t"
-        "lsl r5, r5, #0x18\n\t"
-        "lsr r5, r5, #0x18\n\t"
-        "mov r0, #2\n\t"
-        "mov r8, r0\n\t"
-        "str r7, [sp]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl InitActorPart\n\t"
-        "mov r0, r8\n\t"
-        "str r0, [r4, #0x54]\n\t"
-        "ldr r0, 1f\n\t"
-        "str r0, [r4, #0x50]\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x5c\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r1]\n\t"
-        "mov r0, sb\n\t"
-        "str r0, [r4, #0x60]\n\t"
-        "str r6, [r4, #0x64]\n\t"
-        "mov r0, #0xff\n\t"
-        "bl sub_8000E1C\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r0, r0, #0x10\n\t"
-        "str r0, [r4, #0x68]\n\t"
-        "ldr r0, 2f\n\t"
-        "add r6, r6, r0\n\t"
-        "str r4, [sp]\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r1, sb\n\t"
-        "add r2, r6, #0\n\t"
-        "add r3, r7, #0\n\t"
-        "bl sub_802E4B8\n\t"
-        "str r0, [r4, #0x58]\n\t"
-        "add r0, r4, #0\n\t"
-        "add sp, #4\n\t"
-        "pop {r3, r4}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n"
-    "1: .4byte gStaticData_087E538C\n"
-    "2: .4byte 0xFFFFC24A\n"
-    );
+    u8 *self = selfArg;
+    s32 health = 2;
+
+    InitActorPart(self, a, b, c, d);
+    *(s32 *)(self + 0x54) = health;
+    *(void **)(self + 0x50) = gStaticData_087E538C;
+    self[0x5c] = 0;
+    *(s32 *)(self + 0x60) = b;
+    *(s32 *)(self + 0x64) = c;
+    *(s32 *)(self + 0x68) = (u16)sub_8000E1C(0xff);
+
+    *(s32 *)(self + 0x58) = sub_802E4B8(kind, b, c + (s32)0xFFFFC24A, d, self);
+
+    return self;
 }
 
 void nullsub_33(void *selfArg)
@@ -1174,91 +1083,48 @@ void sub_80325A4(void *selfArg, s32 delta)
     }
 }
 
+/* The base-class constructor call, as an inline wrapper. Passing the
+ * constant through an inline's parameter is what places its load after
+ * the outgoing stack store and the `self` copy, as in the ROM: a constant
+ * written directly as a call argument is precomputed into a register
+ * before the stack arguments are stored, while an inline's parameter is
+ * a register when the call is expanded and only becomes the constant
+ * when the inline is integrated. */
+static inline void InitActorPartInline(void *self, s32 a, s32 b, s32 c, s32 d)
+{
+    InitActorPart(self, a, b, c, d);
+}
+
 /* `InitActorPart`-based constructor (kind `1`, `InitActorPart`'s own 4th
  * argument replaced with a fixed `0xfa00` bias); clamps the caller's
  * `c` into `self+0x5c` (+-0x3f00), mirrors a clamped `self+0x1c` into
  * `self+0x58` (+-0x8000), and derives `self+0x60` from
- * `sub_803ADB4(self+0x5c - 0xfa00, 0xc6)`. Semantics fully understood
- * and every branch/store confirmed correct in a real-C attempt, but
- * this compiler couldn't be steered into the ROM's exact register
- * choreography for the `d` argument (transiently held in `r0`, pushed
- * to the outgoing stack slot, then `r0` reused for `self`) simultaneous
- * with `health` (`1`) needing to survive in `r4` across the
- * `InitActorPart` call - transcribed NAKED, byte-verified. */
-NAKED void *sub_80325EC(void *selfArg, s32 a, s32 b, s32 c, s32 d)
+ * `sub_803ADB4(self+0x5c - 0xfa00, 0xc6)`. Once parked NAKED over the
+ * `0xfa00` load's position (see InitActorPartInline above). */
+void *sub_80325EC(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "sub sp, #4\n\t"
-        "add r5, r0, #0\n\t"
-        "add r6, r3, #0\n\t"
-        "ldr r0, [sp, #0x14]\n\t"
-        "mov r4, #1\n\t"
-        "str r0, [sp]\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r3, #0xfa\n\t"
-        "lsl r3, r3, #8\n\t"
-        "bl InitActorPart\n\t"
-        "str r4, [r5, #0x54]\n\t"
-        "ldr r0, 1f\n\t"
-        "str r0, [r5, #0x50]\n\t"
-        "mov r0, #0xfc\n\t"
-        "lsl r0, r0, #6\n\t"
-        "cmp r6, r0\n\t"
-        "ble 2f\n\t"
-        "add r6, r0, #0\n\t"
-    "2:\n\t"
-        "ldr r0, 3f\n\t"
-        "cmp r6, r0\n\t"
-        "bge 4f\n\t"
-        "add r6, r0, #0\n\t"
-    "4:\n\t"
-        "str r6, [r5, #0x5c]\n\t"
-        "ldr r0, [r5, #0x1c]\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #8\n\t"
-        "cmp r0, r1\n\t"
-        "ble 5f\n\t"
-        "str r1, [r5, #0x1c]\n\t"
-    "5:\n\t"
-        "ldr r0, [r5, #0x1c]\n\t"
-        "ldr r1, 6f\n\t"
-        "cmp r0, r1\n\t"
-        "bge 7f\n\t"
-        "str r1, [r5, #0x1c]\n\t"
-    "7:\n\t"
-        "ldr r0, [r5, #0x1c]\n\t"
-        "str r0, [r5, #0x58]\n\t"
-        "ldr r0, [r5, #0x5c]\n\t"
-        "ldr r1, 8f\n\t"
-        "add r0, r0, r1\n\t"
-        "mov r1, #0xc6\n\t"
-        "bl sub_803ADB4\n\t"
-        "str r0, [r5, #0x60]\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x65\n\t"
-        "mov r1, #0\n\t"
-        "strb r1, [r0]\n\t"
-        "sub r0, #1\n\t"
-        "strb r1, [r0]\n\t"
-        "ldr r0, 9f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0x2d\n\t"
-        "bl PlaySfx\n\t"
-        "add r0, r5, #0\n\t"
-        "add sp, #4\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n"
-    "1: .4byte gStaticData_087E5404\n"
-    "3: .4byte 0xFFFFC100\n"
-    "6: .4byte 0xFFFF8000\n"
-    "8: .4byte 0xFFFF0600\n"
-    "9: .4byte gUnknown_030012BC\n"
-    );
+    u8 *self = selfArg;
+    s32 health = 1;
+
+    InitActorPartInline(self, a, b, 0xfa00, d);
+    *(s32 *)(self + 0x54) = health;
+    *(void **)(self + 0x50) = gStaticData_087E5404;
+    if (c > 0x3f00)
+        c = 0x3f00;
+    if (c < -0x3f00)
+        c = -0x3f00;
+    *(s32 *)(self + 0x5c) = c;
+    if (*(s32 *)(self + 0x1c) > 0x8000)
+        *(s32 *)(self + 0x1c) = 0x8000;
+    if (*(s32 *)(self + 0x1c) < -0x8000)
+        *(s32 *)(self + 0x1c) = -0x8000;
+    *(s32 *)(self + 0x58) = *(s32 *)(self + 0x1c);
+    *(s32 *)(self + 0x60) = sub_803ADB4(*(s32 *)(self + 0x5c) - 0xfa00, 0xc6);
+    self[0x65] = 0;
+    self[0x64] = 0;
+    PlaySfx(gUnknown_030012BC, 0x2d, 0x100);
+
+    return self;
 }
 
 /* Trivial `self+0x64` byte getter. */

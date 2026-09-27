@@ -33,14 +33,19 @@
  * `sub_8017554`, `sub_8017A20`, `sub_8017A28`, `sub_8017A30`,
  * `sub_8017A38`, `sub_8017A40`. Matched anyway.
  *
+ * Built with the older compiler, tools/agbcc/bin/old_agbcc (the Makefile's
+ * OLD_AGBCC_OBJS), like actor_part_16048.c before it. Under old_agbcc the
+ * whole file is plain C: no register pins, `volatile` re-reads or empty
+ * `asm` barriers (those were needed to imitate old_agbcc's output with the
+ * current agbcc).
+ *
  * Matching notes (details in docs/matching/issue-21-input-ctrl.md): the
  * virtual-call macros take the method-table entry's address once; the
  * `SetAnimA`/`SetAnimB`/`SetChildSpeed` inline helpers reproduce the ROM
  * evaluating the stored constant before the store's own loads; the
- * "mark actor gone" bitmap sequence (sub_80072D8's, inlined twice) needs
- * register pins but no inline asm - its word index comes from a signed
- * division of the zero-extended id; a few other spots are register-pinned
- * where noted. */
+ * "mark actor gone" bitmap sequence (sub_80072D8's, inlined twice) is
+ * MARK_GONE, actor_part_16048.c's MarkGone - its word index comes from a signed
+ * division of the zero-extended id. */
 
 struct flag_pair_owner
 {
@@ -77,7 +82,10 @@ struct ctrl_target
     s32 y;            // 0x04
     u16 field_08;     // 0x08 - bitmap id (see sub_80072D8)
     u8 unk_0A[2];
-    u8 flags;         // 0x0C
+    u8 gone:1;        // 0x0C - bit 0: removed (see sub_80072D8)
+    u8 unk_0C_1:5;
+    u8 flag6:1;
+    u8 flag7:1;
     u8 unk_0D[0x13];
     struct { u8 *records; } *table; // 0x20
     u8 unk_24[5];
@@ -95,9 +103,10 @@ struct ctrl_child
 {
     s32 x;            // 0x00
     s32 y;            // 0x04
-    u16 field_08;     // 0x08
+    u16 field_08;     // 0x08 - bitmap id
     u8 unk_0A[2];
-    u8 flags;         // 0x0C
+    u8 gone:1;        // 0x0C - bit 0: removed
+    u8 unk_0C_1:7;
     u8 unk_0D[0x6B];
     s32 unk_78;       // 0x78
 };
@@ -172,19 +181,43 @@ extern void sub_800B8A8(void *self, s32 flags);
 extern void sub_800B8C8(void *self);
 
 /* A virtual call as gcc 2.x lowers it: take the method-table entry's
- * address once, then read its `this` adjustment and function from it. */
+ * address once, then read its `this` adjustment and function from it.
+ * `if (1) { } else (void)0` rather than `do { } while (0)`, whose loop
+ * notes are not neutral under this compiler (include/actor_self.h). */
 #define CTRL_CALL2(obj, m, a)                                                  \
-    do                                                                         \
-    {                                                                          \
+    if (1) {                                                                   \
         struct ctrl_method *_m = &(obj)->vtable->m;                            \
         sub_803AD80((u8 *)(obj) + _m->thisOffset, (a), _m->fn);                \
-    } while (0)
+    } else (void)0
 #define CTRL_CALL3(obj, m, a, b)                                               \
-    do                                                                         \
-    {                                                                          \
+    if (1) {                                                                   \
         struct ctrl_method *_m = &(obj)->vtable->m;                            \
         sub_803AD84((u8 *)(obj) + _m->thisOffset, (a), (b), _m->fn);           \
+    } else (void)0
+
+/* sub_80072D8's "set the id's bit in the gUnknown_030012B4+0x108 bitmap"
+ * (see actor_part_16048.c: the do/while(0) loop notes are what reproduce
+ * the id reload after the 0xFFFF test) */
+#define SET_ID_BIT(idExpr)                                                     \
+    do                                                                         \
+    {                                                                          \
+        s32 _id = (idExpr);                                                    \
+        u8 *_base = gUnknown_030012B4;                                         \
+        s32 _word = _id / 32;                                                  \
+        s32 _off = _word * 4;                                                  \
+        u32 *_slot = (u32 *)(_base + 0x108);                                   \
+                                                                               \
+        _slot = (u32 *)((u8 *)_slot + _off);                                   \
+        *_slot |= 1 << (_id - _word * 32);                                     \
     } while (0)
+
+/* "Mark gone": sub_80072D8's sequence (graphics.c), inlined */
+#define MARK_GONE(t)                                                           \
+    {                                                                          \
+        (t)->gone = 1;                                                         \
+        if ((t)->field_08 != 0xFFFF)                                           \
+            SET_ID_BIT((t)->field_08);                                         \
+    }
 
 static inline void SetChildSpeed(struct input_ctrl *self, s32 speed)
 {
@@ -245,48 +278,15 @@ void sub_8017564(struct input_ctrl *self, void *arg)
     PlaySfx(gUnknown_030012BC, 0x1B, 0x100);
     CTRL_CALL2(self, method_20, 3);
     CTRL_CALL3(self, method_50, self->target, arg);
-    {
-        register struct ctrl_target *t asm("r1") = self->target;
-        register s32 m asm("r0") = 0x7F;
-        register s32 f asm("r2") = t->flags;
-
-        m &= f;
-        t->flags = m;
-    }
-    {
-        register struct ctrl_target *t asm("r1") = self->target;
-        register s32 m asm("r0") = -0x41;
-        register s32 f asm("r5") = t->flags;
-
-        m &= f;
-        t->flags = m;
-    }
-    {
-        register u8 *p asm("r0") = (u8 *)self->target;
-        register s32 off asm("r1") = 0x104;
-
-        asm("" : "+r"(off));
-        p += off;
-        *p = 1;
-    }
+    self->target->flag7 = 0;
+    self->target->flag6 = 0;
+    self->target->unk_104 = 1;
     sub_8023234(gUnknown_030012C0);
     {
         void *cache = gUnknown_030012B8;
-        register struct ctrl_target *t asm("r3") = self->target;
+        struct ctrl_target *t = self->target;
 
-        u32 slot = t->slot;
-        register u8 *records asm("r4");
-        register u32 tag asm("r5");
-
-        {
-            void *table = t->table;
-            u8 *tagp = &t->tag;
-
-            records = ((struct { u8 *records; } *)table)->records;
-            tag = *tagp;
-        }
-        asm("" : "+r"(records), "+r"(tag));
-        sub_8006D08(cache, slot, records[tag * 28 + 0x14]);
+        sub_8006D08(cache, t->slot, t->table->records[t->tag * 28 + 0x14]);
     }
 }
 
@@ -316,39 +316,10 @@ void sub_8017650(struct input_ctrl *self)
 
         if (x > (gUnknown_03001308->layer0->width << 8) - 0xA00)
         {
-            register struct ctrl_child *c asm("r1") = self->child;
-
             {
-                register s32 v asm("r0") = 1;
-                register s32 f asm("r3") = c->flags;
+                struct ctrl_child *c = self->child;
 
-                v |= f;
-                c->flags = v;
-            }
-            {
-                register s32 none asm("r0") = 0xFFFF;
-                register u32 cur asm("r5") = c->field_08;
-
-                if (cur != none)
-                {
-                    register s32 id asm("r3") = *(vu16 *)&c->field_08;
-                    u8 *base = gUnknown_030012B4;
-                    register s32 word asm("r0") = id;
-                    s32 off;
-                    register u32 *slot asm("r2");
-
-                    word /= 32;
-                    off = word * 4;
-                    {
-                        register s32 k asm("r6") = 0x108;
-
-                        asm("" : "+r"(k));
-                        slot = (u32 *)(base + k);
-                    }
-                    slot = (u32 *)((u8 *)slot + off);
-                    word = id - word * 32;
-                    *slot |= 1 << word;
-                }
+                MARK_GONE(c);
             }
             self->child = NULL;
             sub_80241A4();
@@ -362,24 +333,17 @@ void sub_8017650(struct input_ctrl *self)
         }
         else
         {
-            if (keys & DPAD_DOWN)
+            if ((keys & DPAD_DOWN) && self->dirState != 2)
             {
-                register u32 d asm("r1") = self->dirState;
-
-                if (d != 2)
-                {
-                    SetAnimB(self, 5);
-                    self->dirState = 2;
-                    goto dir_done;
-                }
+                SetAnimB(self, 5);
+                self->dirState = 2;
             }
-            if (!(keys & (DPAD_UP | DPAD_DOWN)))
+            else if (!(keys & (DPAD_UP | DPAD_DOWN)))
             {
                 SetAnimB(self, 0);
                 self->dirState = 0;
             }
         }
-    dir_done:
 
         if ((keys & DPAD_LEFT) && self->flag20)
         {
@@ -438,22 +402,12 @@ void sub_8017650(struct input_ctrl *self)
     sub_8017808(self);
 }
 
-/* The register pins below are load-bearing (docs/workflow.md step 7):
- * the ROM keeps the table base in r1, the index byte in r2 and the
- * scaled sum in r0 (`off + base` order), and re-reads `dirtyB` into r2;
- * every unpinned arrangement tried lands these in other registers. */
 void sub_8017808(struct input_ctrl *self)
 {
     if (self->dirtyA == 1)
     {
-        register struct anim_pair *e asm("r1") = self->animSet->entries;
-        register u32 idx asm("r2") = self->animA;
-        register struct anim_pair *entry asm("r0");
-        u8 *rec;
+        u8 *rec = gStaticData_0816B8C0 + self->animSet->entries[self->animA].a * 12;
 
-        asm("" : "+r"(idx));
-        entry = (struct anim_pair *)((idx << 3) + (u32)e);
-        rec = gStaticData_0816B8C0 + entry->a * 12;
         if (self->altA)
             CTRL_CALL3(self, method_38, self->target, rec);
         else
@@ -461,25 +415,16 @@ void sub_8017808(struct input_ctrl *self)
         self->dirtyA = 0;
         self->altA = 0;
     }
+    if (self->dirtyB == 1)
     {
-        register u32 dirty asm("r2") = self->dirtyB;
-        if (dirty == 1)
-        {
-            register struct anim_pair *e asm("r1") = self->animSet->entries;
-            register u32 idx asm("r2") = self->animB;
-            register struct anim_pair *entry asm("r0");
-            u8 *rec;
+        u8 *rec = gStaticData_0816B8C0 + self->animSet->entries[self->animB].b * 12;
 
-            asm("" : "+r"(idx));
-            entry = (struct anim_pair *)((idx << 3) + (u32)e);
-            rec = gStaticData_0816B8C0 + entry->b * 12;
-            if (self->altB)
-                CTRL_CALL3(self, method_40, self->target, rec);
-            else
-                CTRL_CALL3(self, method_30, self->target, rec);
-            self->dirtyB = 0;
-            self->altB = 0;
-        }
+        if (self->altB)
+            CTRL_CALL3(self, method_40, self->target, rec);
+        else
+            CTRL_CALL3(self, method_30, self->target, rec);
+        self->dirtyB = 0;
+        self->altB = 0;
     }
 }
 
@@ -489,49 +434,12 @@ void sub_80178BC(struct input_ctrl *self, s32 mode, void *arg, s32 unused3, s32 
     CTRL_CALL3(self, method_50, self->target, arg);
 }
 
-/* The same "mark actor gone" sequence as sub_80072D8 (graphics.c), inlined:
- * set flags bit 0, then unless the id is 0xFFFF set its bit in the
- * gUnknown_030012B4+0x108 bitmap. Register pins are load-bearing
- * (docs/workflow.md step 7) - they reproduce the ROM's allocation,
- * including its use of callee-saved r4 in a leaf function. The id is
- * re-read (`volatile`) after the 0xFFFF test, and the word index comes
- * from a *signed* division of that zero-extended value, which is what
- * produces the ROM's copy + `asr #5` + subtract (no inline asm needed). */
 void sub_80178EC(struct input_ctrl *self)
 {
-    register struct ctrl_target *t asm("r1") = self->target;
+    struct ctrl_target *t = self->target;
 
     if (t->unk_38)
-    {
-        {
-            register s32 v asm("r0") = 1;
-            register s32 f asm("r2") = t->flags;
-
-            v |= f;
-            t->flags = v;
-        }
-        {
-            register s32 none asm("r0") = 0xFFFF;
-            register u32 cur asm("r4") = t->field_08;
-
-            if (cur != none)
-            {
-                register s32 id asm("r3") = *(vu16 *)&t->field_08;
-                u8 *base = gUnknown_030012B4;
-                register s32 word asm("r0") = id;
-                s32 off;
-                u32 *slot;
-
-                word /= 32;
-                off = word * 4;
-
-                slot = (u32 *)(base + 0x108);
-                slot = (u32 *)((u8 *)slot + off);
-                word = id - word * 32;
-                *slot |= 1 << word;
-            }
-        }
-    }
+        MARK_GONE(t);
 }
 
 void sub_801793C(struct input_ctrl *self)

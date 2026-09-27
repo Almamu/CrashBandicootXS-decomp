@@ -179,6 +179,9 @@ leaving 4 of 30 still parked.
   that still blocks a full match - see
   [issue-59-60-m-operand-scheduling.md](issue-59-60-m-operand-scheduling.md)
   for the full account. Still NAKED.
+  **Update 2**: matched as plain C in a later pass - that third gap does
+  not exist either. See the "Later pass" section of
+  [issue-59-60-m-operand-scheduling.md](issue-59-60-m-operand-scheduling.md).
 - **`sub_8032440`** - `InitActorPart`-based constructor forcing a fixed
   `0xFFFF0600` bias for its own 4th argument, stashing the caller's
   real `c` into `self+0x5c`. This compiler's independent-instruction
@@ -203,6 +206,11 @@ leaving 4 of 30 still parked.
   `asm volatile` barriers tried either dropped the `health`-in-`r4`
   persistence or reintroduced an extra register (`r7`) for `d` that the
   ROM's build never needed - transcribed NAKED instead.
+  **Update**: matched in a later pass. The real gap was only the
+  `0xfa00` load's position, fixed by passing the constant through a
+  `static inline` wrapper around `InitActorPart` - see the "Later pass"
+  section of
+  [issue-59-60-m-operand-scheduling.md](issue-59-60-m-operand-scheduling.md).
 
 ## A note on isolated-compile confidence (again)
 
