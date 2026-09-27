@@ -103,6 +103,17 @@ and [graphics_loading.md](./graphics_loading.md).
   22 of the chunk's 25 functions as plain C; the other three are parked
   below. See
   [docs/matching/issue-26-level-select-menu.md](../matching/issue-26-level-select-menu.md).
+- `src/graphics/actor_part_1967c.c` (new file - GitHub issue #24):
+  `sub_801967C`-`sub_801A780` except the two NAKED ones below (23 of 25
+  functions) - six small C++ actor-part controller classes (method
+  tables `gStaticData_087E4704`/`476C`/`47D4`/`483C`/`48A4`/`490C`:
+  constructors, destructors and per-frame updates), plus the
+  `087E4974` boss-like state machine `sub_80197F8`, its state-entry
+  dispatcher `sub_8019CE4` and the part spawners `sub_8019EBC`/
+  `sub_801A584`. First file compiled with `tools/agbcc/bin/old_agbcc`.
+  `sub_8019718` and `sub_80197F4` are UNUSED (no caller or pointer
+  anywhere in the ROM). See
+  [docs/matching/issue-24-boss-actor.md](../matching/issue-24-boss-actor.md).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -125,6 +136,14 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   the scratch registers reload picks for copies out of them, and in
   `sub_801C96C` the register the `REG_BLDY` byte is loaded into). See
   [issue-26-level-select-menu.md](../matching/issue-26-level-select-menu.md).
+- **`sub_801A03C`**, **`sub_801A114`** (`src/graphics/actor_part_1967c.c`,
+  issue #24) - a floor-part spawner and the `gStaticData_087E490C`
+  controller's per-frame update. Both C reconstructions are complete and kept under
+  `#if NON_MATCHING`; each differs from the ROM only in register
+  allocation (part/controller swapped between r4/r5 in the spawner;
+  `self`/`other`/the player-global address/the box pointer in r7/r9/r10/
+  r8 in the update). See
+  [docs/matching/issue-24-boss-actor.md](../matching/issue-24-boss-actor.md).
 
 - **`sub_8000EE4`** (`src/graphics/text_layout.c`) - word-wrap text
   renderer. A full C reconstruction matched the ROM instruction-for-
