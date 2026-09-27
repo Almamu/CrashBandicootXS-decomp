@@ -276,3 +276,92 @@ compare`) confirms `La suma coincide` against the real ROM. Issue #17
 itself stays open - only 5 of its 25 scoped functions are covered here
 (and all 5 as NAKED, not real C, so none count as "matched" either);
 `sub_8013C60` through 0x08014F8C remains for a future pass.
+
+## Second pass: 0x08013C60-0x08014F8C (14 functions)
+
+This pass covers the rest of the chunk, the two raw files
+`asm/code_3_2_17_12af4.s` (`sub_8013C60`-`sub_8014084`, now
+`src/graphics/actor_part_13c60.c`) and `asm/code_3_2_17_14674.s`
+(`sub_8014674`-`sub_8014EE0`, now `src/graphics/actor_part_14674.c`).
+Both raw files are retired. Of the 14 functions, 9 are real C and 5 are
+NAKED transcriptions, each with its C kept under `#if NON_MATCHING`.
+
+| function | result |
+|---|---|
+| `sub_8013C60`, `sub_8013D94`, `sub_8013EAC`, `sub_8013FD4` | matched |
+| `sub_8014084` | NAKED |
+| `sub_8014674` | NAKED |
+| `sub_8014940`, `sub_80149BC`, `sub_8014A3C`, `sub_8014AEC` | matched |
+| `sub_8014B54`, `sub_8014BCC`, `sub_8014D18` | NAKED |
+| `sub_8014EE0` | matched |
+
+### Compiler: old_agbcc
+
+This range was built with old_agbcc too. The ROM shows its tell
+throughout (`movs r0, #8; ldrb r1, [r1]; ands r0, r1` for `contact &
+8`). `sub_8013FD4` is the cleanest proof: the same C is byte-exact under
+old_agbcc and differs in 8 bytes under the current agbcc. Both new objects are
+on `OLD_AGBCC_OBJS`. The chunk's first five functions
+(`actor_part_12fbc.c`/`_134b8.c`/`_138e8.c`, all NAKED without C) were
+parked against the current agbcc. They are candidates for an old_agbcc
+retry, which this pass did not attempt.
+
+### Shared header
+
+The player/action object now has a struct view, `include/action_obj.h`
+(`struct act`, `struct act_part`). The header also holds the method-call
+macros, the input-snapshot accessors and the trio helpers both files
+use. The older files in this family still use raw offsets.
+
+### What made them match
+
+- **The input snapshot.** Every handler copies `gUnknown_030007E0` to a
+  stack word and reads its halves back with `ldrh [sp, #0]`/`[sp, #2]`.
+  A union or struct member read gets folded into a halfword load of the
+  global itself, so the halves are read through the local's address
+  (`INPUT_PRESSED`/`INPUT_HELD`). Where the ROM loads `sub_8000760`'s
+  argument before taking the snapshot, a `pad` local fixes the order.
+- **Byte stores and the dead `& 0`.** As in `actor_part_18008.c`
+  (`docs/matching/issue-22-0x08018008-hopper.md`), a struct-member byte
+  store leaves a 0 that CSE reuses for a later zero store. So the
+  `part+0x0D`/`+0x0C` flag RMWs go through a byte pointer, and the
+  constant arrives as an inline `s32` parameter
+  (`ActAndFlags0D`/`ActOrFlags0D`).
+- **The "next action" trios.** `ActSetNext(self, next)` makes the ROM
+  load `next` before the three stores. In `sub_8013C60`/`sub_8013EAC`
+  the ROM loads a fresh 1 for +0x30 on the fire path, where C reuses the
+  `& 1` test's constant from a callee-saved register. A barriered,
+  pinned variant (`ActSetNextB`) handles that.
+- **Ranges.** `dir` range tests the ROM writes as `cmp #8; bgt; cmp #3;
+  blt` come from a GNU range `case 3 ... 8:`. An `if` gets folded to an
+  unsigned `dir - 3 <= 5`.
+- **`sub_8014940`'s bitmap set** is `actor_part_188d0.c`'s
+  `MARK_GONE_BITMAP` with the same pins. Its word index needs a barriered
+  signed shift: gcc knows a zero-extended `u16` can't be negative and
+  would use `lsr`.
+
+### Why five are NAKED
+
+In all five, the C has the ROM's blocks and instruction sequence. They
+differ only in register roles:
+
+- `sub_8014084`: in the facing block the ROM loads `self->part` into
+  r0, tests its +0x28 bit through r1, and keeps a copy in r2 for the
+  rest of the block. Every phrasing tried either merges the two
+  pseudo-registers or loads straight into r2. That covers a separate
+  local, the assignment inside the test, a pinned or barriered copy, and
+  a `mirror` bitfield.
+- `sub_8014B54`: the `+= 0x600` constant is a reload that the ROM puts
+  in r3 where gcc picks r2. Pinning it shifts the rotation for every
+  later reload instead.
+- `sub_8014BCC`, `sub_8014D18`, `sub_8014674`: the ROM keeps the
+  constant 1 (and in `sub_8014BCC` the `&self->next27` pointer, in r8)
+  in different callee-saved registers from gcc's choice. `sub_8014D18`
+  also shares one `sub_803AD84` call between its 0x22/0x23 animation
+  paths.
+
+### Status
+
+Issue #17 stays open. This pass leaves no raw functions, but the chunk
+still has 10 NAKED functions: the first pass's five and this pass's
+five.
