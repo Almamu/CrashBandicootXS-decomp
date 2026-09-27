@@ -1,5 +1,10 @@
 # `graphics_loading` chunk `0x0801FA3C`-`0x08021668` (issue #31), second pass
 
+> **Superseded for the NAKED functions below:** this region was built with
+> old_agbcc, and the "r7 gap" passes here were fighting the wrong compiler.
+> All but `sub_802062C` and `sub_8021280` are now plain C - see
+> [issue-31-old-agbcc.md](issue-31-old-agbcc.md).
+
 Continues the first pass (PR #202, recorded in `docs/matching.md` under
 "`graphics_loading` chunk `0x0801FA3C`-`0x08021668` (issue #31)"), which
 matched/parked the 4-function "trigger effect type N" twin family

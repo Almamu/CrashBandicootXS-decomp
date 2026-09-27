@@ -134,3 +134,13 @@ clean, no warnings for `actor_part128.c`.
 
 See [docs/status/actor.md](../status/actor.md) for the running
 matched/parked list this entry feeds into.
+
+## Later pass (issue #55 retry)
+
+All 21 NAKED functions above were promoted to real C, and the whole
+file now builds with old_agbcc (`sub_802E9FC` needs it). The reasons
+given for parking them didn't hold up. `sub_802E170` is a plain
+`switch`. The "r8/sb pressure" constructors only needed the
+`AllocActor` inline wrapper, or an inline base constructor that takes
+the hit-point value as an argument. See
+[issue-55-naked-retry.md](issue-55-naked-retry.md).

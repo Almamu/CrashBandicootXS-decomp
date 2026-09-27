@@ -283,3 +283,10 @@ coincide` (checksum matches).
   shape.
 - `src/graphics/actor_part.c` - `sub_8007A84`'s own matched definition
   (confirms it's an OAM-queue/draw call, not a hitbox operation).
+
+## Later pass (issue #9 NAKED retry)
+
+A first C attempt under old_agbcc got about 170 halfwords off. The
+mode-3 block and the blink/timer block already have the ROM's structure.
+Two things are still wrong: `self` lands in r6 instead of r7, and the
+orbit tail caches addresses differently. No draft is kept. See [issue-9-naked-retry.md](./issue-9-naked-retry.md) for details.
