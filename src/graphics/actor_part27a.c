@@ -62,564 +62,341 @@
  *   state 2's busy-bit-set path - the `0x50`/`0x20`/`0x58` trio with
  *   modes 2/0/0 (the "deactivate" shape).
  *
- * Written as a NAKED, instruction-for-instruction transcription rather
- * than real C: two separate blocks independently reproduce gcc-2.9
- * codegen gaps this project has already exhaustively chased down
- * elsewhere and confirmed unclosable from any C phrasing tried -
- * re-litigating either here would just rediscover the same dead end at
- * ~5x the size:
- *
- * 1. The `gUnknown_0300130C` list walk reloads `&gUnknown_0300130C`
- *    from the literal pool fresh on *every* loop-condition check *and*
- *    every loop-body entry (5 do-nothing-but-reload instructions per
- *    the ROM's own choice) - the exact shape `actor_part108.c`'s
- *    `sub_800AAEC` (`#if NON_MATCHING` branch's own doc comment) already
- *    tried a plain `for`, a cached-`&var`-inside-an-`if` idiom, and an
- *    explicit `goto`-loop with both the address and dereferenced value
- *    pinned to fixed registers against - all three failed to reproduce
- *    the same per-iteration re-materialize-in-place quirk.
- * 2. The `sub_8008A40(manager, boxX, boxY, boxW, boxH, unused,
- *    compareViewport)` call (7 args, 3 on the stack) reproduces the
- *    exact "which order the compiler batches its outgoing stack-
- *    argument stores in" gap `actor_part81.c`'s `sub_800AB9C` (`#if
- *    NON_MATCHING` branch) already documents as unclosable from *any*
- *    C-level phrasing tried (inlined values, named locals in ROM order,
- *    an `asm volatile("":::"memory")` scheduling barrier) - and,
- *    tellingly, the *stack-argument* order this ROM call actually uses
- *    (`unused`, `compareViewport`, `boxH`) is identical to that
- *    already-parked call's own order, strong independent confirmation
- *    it's a fixed compiler policy rather than anything source-order-
- *    steerable.
- *
- * Transcribed mechanically from `asm/code_3_2_17_17ab0.s` (now retired
- * - its only function moves here), keeping the ROM's own `_0XXXXXXX`
- * hex-address labels verbatim as plain, file-local asm symbols (safe
- * since each is a unique ROM address) - same approach used throughout
- * this object family for NAKED transcriptions (`actor_part82.c`,
- * `actor_part_12fbc.c`, `actor_part18.c`'s `sub_801434C`). Verified
- * structurally byte-exact via an isolated `cpp`/`agbcc`/`arm-none-eabi-
- * as` + `objcopy` comparison against the ROM's own raw bytes, and via a
- * full clean `make compare` once wired into the real build. */
-NAKED void sub_8017AB0(void *selfArg, void *otherArg)
+ * Real C, built with old_agbcc (Makefile OLD_AGBCC_OBJS) - the same
+ * compiler as actor_part_18008.c/actor_part_188d0.c after it. This used to
+ * be a NAKED transcription: the two "unclosable" agbcc gaps recorded for
+ * it both close under old_agbcc - the list walk's per-iteration pointer
+ * reload is a guarded do-while, and the sub_8008A40 stack-argument order
+ * comes from passing the box by value. See
+ * docs/matching/issue-22-0x08018008-hopper.md. */
+
+asm(".set _call_via_r1, sub_803AD7C\n"
+    ".set _call_via_r2, sub_803AD80\n"
+    ".set _call_via_r3, sub_803AD84\n"
+    ".set _call_via_r4, sub_803AD88\n");
+
+struct ab_method
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "sub sp, #0x1c\n\t"
-        "add r4, r0, #0\n\t"
-        "add r5, r1, #0\n\t"
-        "ldr r1, [r4, #0x1c]\n\t"
-        "mov r0, #1\n\t"
-        "neg r0, r0\n\t"
-        "cmp r1, r0\n\t"
-        "bne _08017AD0\n\t"
-        "add r0, r4, #0\n\t"
-        "add r1, r5, #0\n\t"
-        "mov r2, #1\n\t"
-        "bl sub_8017F14\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [r4, #0x1c]\n\t"
-    "_08017AD0:\n"
-        "ldr r0, [r4, #8]\n\t"
-        "cmp r0, #1\n\t"
-        "beq _08017B10\n\t"
-        "cmp r0, #1\n\t"
-        "bgt _08017AE0\n\t"
-        "cmp r0, #0\n\t"
-        "beq _08017AE8\n\t"
-        "b _08017EC4\n\t"
-    "_08017AE0:\n"
-        "cmp r0, #2\n\t"
-        "bne _08017AE6\n\t"
-        "b _08017DC0\n\t"
-    "_08017AE6:\n"
-        "b _08017EC4\n\t"
-    "_08017AE8:\n"
-        "ldr r0, _08017B0C\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #0x82\n\t"
-        "lsl r1, r1, #1\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq _08017AFA\n\t"
-        "b _08017EC4\n\t"
-    "_08017AFA:\n"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x28\n\t"
-        "ldrb r0, [r0]\n\t"
-        "lsl r0, r0, #0x1b\n\t"
-        "cmp r0, #0\n\t"
-        "bge _08017B08\n\t"
-        "b _08017E42\n\t"
-    "_08017B08:\n"
-        "b _08017E5C\n\t"
-        ".align 2, 0\n"
-    "_08017B0C: .4byte gUnknown_030012D8\n"
-    "_08017B10:\n"
-        "ldr r0, _08017B8C\n\t"
-        "ldr r1, [r0]\n\t"
-        "mov r3, #0x82\n\t"
-        "lsl r3, r3, #1\n\t"
-        "add r0, r1, r3\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne _08017B28\n\t"
-        "ldr r0, [r1, #0x44]\n\t"
-        "ldr r0, [r0, #8]\n\t"
-        "cmp r0, #0x1e\n\t"
-        "bne _08017B60\n\t"
-    "_08017B28:\n"
-        "ldr r1, [r4, #0xc]\n\t"
-        "add r1, #0x50\n\t"
-        "mov r2, #0\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r3, [r1, #4]\n\t"
-        "add r1, r5, #0\n\t"
-        "mov r2, #2\n\t"
-        "bl sub_803AD84\n\t"
-        "ldr r1, [r4, #0xc]\n\t"
-        "mov r3, #0x20\n\t"
-        "ldrsh r0, [r1, r3]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r1, [r4, #0xc]\n\t"
-        "add r1, #0x58\n\t"
-        "mov r2, #0\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r3, [r1, #4]\n\t"
-        "add r1, r5, #0\n\t"
-        "mov r2, #0\n\t"
-        "bl sub_803AD84\n\t"
-    "_08017B60:\n"
-        "ldr r1, [r5, #0x18]\n\t"
-        "mov r3, #0x28\n\t"
-        "ldrsh r0, [r1, r3]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r1, [r1, #0x2c]\n\t"
-        "bl sub_803AD7C\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "beq _08017B94\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x20\n\t"
-        "ldrb r0, [r1]\n\t"
-        "cmp r0, #0\n\t"
-        "bne _08017B94\n\t"
-        "ldr r0, _08017B90\n\t"
-        "ldr r0, [r0]\n\t"
-        "str r0, [r4, #0x1c]\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r1]\n\t"
-        "b _08017BBC\n\t"
-        ".align 2, 0\n"
-    "_08017B8C: .4byte gUnknown_030012D8\n"
-    "_08017B90: .4byte gUnknown_0300082C\n"
-    "_08017B94:\n"
-        "ldr r1, [r5, #0x18]\n\t"
-        "mov r2, #0x28\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r1, [r1, #0x2c]\n\t"
-        "bl sub_803AD7C\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r2, r0, #0x18\n\t"
-        "cmp r2, #0\n\t"
-        "bne _08017BBC\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x20\n\t"
-        "ldrb r0, [r1]\n\t"
-        "cmp r0, #0\n\t"
-        "beq _08017BBC\n\t"
-        "ldr r0, _08017BF4\n\t"
-        "ldr r0, [r0]\n\t"
-        "str r0, [r4, #0x1c]\n\t"
-        "strb r2, [r1]\n\t"
-    "_08017BBC:\n"
-        "ldr r1, [r4, #0x1c]\n\t"
-        "cmp r1, #0\n\t"
-        "beq _08017C0E\n\t"
-        "ldr r0, _08017BF4\n\t"
-        "ldr r0, [r0]\n\t"
-        "sub r0, r0, r1\n\t"
-        "cmp r0, #0x3c\n\t"
-        "bls _08017C0E\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [r4, #0x1c]\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x28\n\t"
-        "ldrb r0, [r0]\n\t"
-        "lsl r0, r0, #0x1b\n\t"
-        "cmp r0, #0\n\t"
-        "blt _08017C04\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x20\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq _08017BF8\n\t"
-        "add r0, r4, #0\n\t"
-        "add r1, r5, #0\n\t"
-        "mov r2, #1\n\t"
-        "bl sub_8017F14\n\t"
-        "b _08017C0E\n\t"
-        ".align 2, 0\n"
-    "_08017BF4: .4byte gUnknown_0300082C\n"
-    "_08017BF8:\n"
-        "add r0, r4, #0\n\t"
-        "add r1, r5, #0\n\t"
-        "mov r2, #2\n\t"
-        "bl sub_8017F14\n\t"
-        "b _08017C0E\n\t"
-    "_08017C04:\n"
-        "add r0, r4, #0\n\t"
-        "add r1, r5, #0\n\t"
-        "mov r2, #3\n\t"
-        "bl sub_8017F14\n\t"
-    "_08017C0E:\n"
-        "ldr r0, _08017CD8\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldr r0, [r5]\n\t"
-        "cmp r1, r0\n\t"
-        "bge _08017C46\n\t"
-        "add r2, r5, #0\n\t"
-        "add r2, #0x28\n\t"
-        "ldrb r1, [r2]\n\t"
-        "lsl r0, r1, #0x1b\n\t"
-        "cmp r0, #0\n\t"
-        "blt _08017C46\n\t"
-        "mov r0, #0x11\n\t"
-        "neg r0, r0\n\t"
-        "and r0, r1\n\t"
-        "mov r1, #0x10\n\t"
-        "orr r0, r1\n\t"
-        "strb r0, [r2]\n\t"
-        "ldr r1, [r4, #0xc]\n\t"
-        "add r1, #0x58\n\t"
-        "mov r3, #0\n\t"
-        "ldrsh r0, [r1, r3]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r3, [r1, #4]\n\t"
-        "add r1, r5, #0\n\t"
-        "mov r2, #3\n\t"
-        "bl sub_803AD84\n\t"
-    "_08017C46:\n"
-        "ldr r0, _08017CD8\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldr r0, [r5]\n\t"
-        "mov r2, #0xa0\n\t"
-        "lsl r2, r2, #4\n\t"
-        "add r0, r0, r2\n\t"
-        "cmp r1, r0\n\t"
-        "ble _08017C80\n\t"
-        "add r2, r5, #0\n\t"
-        "add r2, #0x28\n\t"
-        "ldrb r1, [r2]\n\t"
-        "lsl r0, r1, #0x1b\n\t"
-        "cmp r0, #0\n\t"
-        "bge _08017C80\n\t"
-        "mov r0, #0x11\n\t"
-        "neg r0, r0\n\t"
-        "and r0, r1\n\t"
-        "strb r0, [r2]\n\t"
-        "ldr r1, [r4, #0xc]\n\t"
-        "add r1, #0x58\n\t"
-        "mov r3, #0\n\t"
-        "ldrsh r0, [r1, r3]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r3, [r1, #4]\n\t"
-        "add r1, r5, #0\n\t"
-        "mov r2, #1\n\t"
-        "bl sub_803AD84\n\t"
-    "_08017C80:\n"
-        "ldr r0, _08017CD8\n\t"
-        "ldr r2, [r0]\n\t"
-        "ldr r0, [r2]\n\t"
-        "ldr r1, [r5]\n\t"
-        "sub r0, r0, r1\n\t"
-        "asr r1, r0, #0x1f\n\t"
-        "eor r0, r1\n\t"
-        "sub r0, r0, r1\n\t"
-        "ldr r1, _08017CDC\n\t"
-        "cmp r0, r1\n\t"
-        "bgt _08017CE4\n\t"
-        "ldr r0, [r2, #4]\n\t"
-        "ldr r1, [r5, #4]\n\t"
-        "sub r0, r0, r1\n\t"
-        "asr r1, r0, #0x1f\n\t"
-        "eor r0, r1\n\t"
-        "sub r0, r0, r1\n\t"
-        "ldr r1, _08017CE0\n\t"
-        "cmp r0, r1\n\t"
-        "bgt _08017CE4\n\t"
-        "add r0, r4, #0\n\t"
-        "add r1, r5, #0\n\t"
-        "mov r2, #0\n\t"
-        "bl sub_8017F14\n\t"
-        "ldr r1, [r4, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #2\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r1, [r4, #0xc]\n\t"
-        "add r1, #0x50\n\t"
-        "mov r3, #0\n\t"
-        "ldrsh r0, [r1, r3]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r3, [r1, #4]\n\t"
-        "add r1, r5, #0\n\t"
-        "mov r2, #1\n\t"
-        "bl sub_803AD84\n\t"
-        "b _08017EC4\n\t"
-        ".align 2, 0\n"
-    "_08017CD8: .4byte gUnknown_030012D8\n"
-    "_08017CDC: .4byte 0x000027FF\n"
-    "_08017CE0: .4byte 0x000031FF\n"
-    "_08017CE4:\n"
-        "add r0, sp, #0xc\n\t"
-        "add r1, r5, #0\n\t"
-        "bl sub_8007B98\n\t"
-        "ldr r0, _08017D90\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #0\n\t"
-        "str r1, [sp, #4]\n\t"
-        "str r5, [sp, #8]\n\t"
-        "ldr r1, [sp, #0x18]\n\t"
-        "str r1, [sp]\n\t"
-        "ldr r1, [sp, #0xc]\n\t"
-        "ldr r2, [sp, #0x10]\n\t"
-        "ldr r3, [sp, #0x14]\n\t"
-        "bl sub_8008A40\n\t"
-        "mov r6, #0\n\t"
-        "ldr r0, _08017D94\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r6, r0\n\t"
-        "blt _08017D12\n\t"
-        "b _08017EC4\n\t"
-    "_08017D12:\n"
-        "ldr r0, _08017D94\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [r0, #8]\n\t"
-        "lsl r0, r6, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r4, [r0]\n\t"
-        "ldr r1, [r4, #0x18]\n\t"
-        "add r1, #0x48\n\t"
-        "mov r2, #0\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r1, #4]\n\t"
-        "bl sub_803AD7C\n\t"
-        "cmp r0, #3\n\t"
-        "bne _08017DAC\n\t"
-        "add r2, r4, #0\n\t"
-        "ldr r0, [r4]\n\t"
-        "asr r0, r0, #8\n\t"
-        "ldr r1, [r5]\n\t"
-        "asr r1, r1, #8\n\t"
-        "sub r0, r0, r1\n\t"
-        "asr r1, r0, #0x1f\n\t"
-        "eor r0, r1\n\t"
-        "sub r0, r0, r1\n\t"
-        "cmp r0, #0x27\n\t"
-        "bgt _08017DAC\n\t"
-        "ldr r0, [r4, #4]\n\t"
-        "asr r0, r0, #8\n\t"
-        "ldr r1, [r5, #4]\n\t"
-        "asr r1, r1, #8\n\t"
-        "sub r0, r0, r1\n\t"
-        "asr r1, r0, #0x1f\n\t"
-        "eor r0, r1\n\t"
-        "sub r0, r0, r1\n\t"
-        "cmp r0, #0x3b\n\t"
-        "bgt _08017DAC\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x4d\n\t"
-        "mov r0, #0x7f\n\t"
-        "ldrb r1, [r1]\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "bne _08017DAC\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x4e\n\t"
-        "ldrb r1, [r0]\n\t"
-        "cmp r1, #0xe\n\t"
-        "beq _08017D84\n\t"
-        "cmp r1, #0x13\n\t"
-        "beq _08017D84\n\t"
-        "cmp r1, #0x14\n\t"
-        "beq _08017D84\n\t"
-        "cmp r1, #0x15\n\t"
-        "beq _08017D84\n\t"
-        "cmp r1, #0xa\n\t"
-        "bne _08017D98\n\t"
-    "_08017D84:\n"
-        "add r0, r2, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800EEF0\n\t"
-        "b _08017DAC\n\t"
-        ".align 2, 0\n"
-    "_08017D90: .4byte gUnknown_030012F0\n"
-    "_08017D94: .4byte gUnknown_0300130C\n"
-    "_08017D98:\n"
-        "add r0, r4, #0\n\t"
-        "bl sub_8010908\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "beq _08017DAC\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #1\n\t"
-        "bl sub_800E888\n\t"
-    "_08017DAC:\n"
-        "add r6, #1\n\t"
-        "ldr r0, _08017DBC\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r6, r0\n\t"
-        "blt _08017D12\n\t"
-        "b _08017EC4\n\t"
-        ".align 2, 0\n"
-    "_08017DBC: .4byte gUnknown_0300130C\n"
-    "_08017DC0:\n"
-        "ldr r0, [r5, #0x30]\n\t"
-        "cmp r0, #8\n\t"
-        "bne _08017E1C\n\t"
-        "ldr r0, [r5, #0x34]\n\t"
-        "cmp r0, #0\n\t"
-        "bne _08017E1C\n\t"
-        "ldr r0, _08017E10\n\t"
-        "ldr r2, [r0]\n\t"
-        "ldr r0, [r2]\n\t"
-        "ldr r1, [r5]\n\t"
-        "sub r0, r0, r1\n\t"
-        "asr r1, r0, #0x1f\n\t"
-        "eor r0, r1\n\t"
-        "sub r0, r0, r1\n\t"
-        "ldr r1, _08017E14\n\t"
-        "cmp r0, r1\n\t"
-        "ble _08017DE4\n\t"
-        "b _08017AFA\n\t"
-    "_08017DE4:\n"
-        "ldr r0, [r2, #4]\n\t"
-        "ldr r1, [r5, #4]\n\t"
-        "sub r0, r0, r1\n\t"
-        "asr r1, r0, #0x1f\n\t"
-        "eor r0, r1\n\t"
-        "sub r0, r0, r1\n\t"
-        "ldr r1, _08017E18\n\t"
-        "cmp r0, r1\n\t"
-        "ble _08017DF8\n\t"
-        "b _08017AFA\n\t"
-    "_08017DF8:\n"
-        "ldr r1, [r2, #0x18]\n\t"
-        "add r1, #0x68\n\t"
-        "mov r3, #0\n\t"
-        "ldrsh r0, [r1, r3]\n\t"
-        "add r0, r2, r0\n\t"
-        "ldr r4, [r1, #4]\n\t"
-        "mov r1, #0\n\t"
-        "mov r2, #1\n\t"
-        "mov r3, #0\n\t"
-        "bl sub_803AD88\n\t"
-        "b _08017EC4\n\t"
-        ".align 2, 0\n"
-    "_08017E10: .4byte gUnknown_030012D8\n"
-    "_08017E14: .4byte 0x000027FF\n"
-    "_08017E18: .4byte 0x000031FF\n"
-    "_08017E1C:\n"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x38\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq _08017EC4\n\t"
-        "ldr r0, _08017E58\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r3, #0x82\n\t"
-        "lsl r3, r3, #1\n\t"
-        "add r0, r0, r3\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne _08017E8C\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x28\n\t"
-        "ldrb r0, [r0]\n\t"
-        "lsl r0, r0, #0x1b\n\t"
-        "cmp r0, #0\n\t"
-        "bge _08017E5C\n\t"
-    "_08017E42:\n"
-        "ldr r1, [r4, #0xc]\n\t"
-        "add r1, #0x58\n\t"
-        "mov r2, #0\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r3, [r1, #4]\n\t"
-        "add r1, r5, #0\n\t"
-        "mov r2, #3\n\t"
-        "bl sub_803AD84\n\t"
-        "b _08017E66\n\t"
-        ".align 2, 0\n"
-    "_08017E58: .4byte gUnknown_030012D8\n"
-    "_08017E5C:\n"
-        "add r0, r4, #0\n\t"
-        "add r1, r5, #0\n\t"
-        "mov r2, #1\n\t"
-        "bl sub_8017F14\n\t"
-    "_08017E66:\n"
-        "ldr r1, [r4, #0xc]\n\t"
-        "add r1, #0x50\n\t"
-        "mov r3, #0\n\t"
-        "ldrsh r0, [r1, r3]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r3, [r1, #4]\n\t"
-        "add r1, r5, #0\n\t"
-        "mov r2, #0\n\t"
-        "bl sub_803AD84\n\t"
-        "ldr r1, [r4, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #1\n\t"
-        "bl sub_803AD80\n\t"
-        "b _08017EC4\n\t"
-    "_08017E8C:\n"
-        "ldr r1, [r4, #0xc]\n\t"
-        "add r1, #0x50\n\t"
-        "mov r3, #0\n\t"
-        "ldrsh r0, [r1, r3]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r3, [r1, #4]\n\t"
-        "add r1, r5, #0\n\t"
-        "mov r2, #2\n\t"
-        "bl sub_803AD84\n\t"
-        "ldr r1, [r4, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r1, [r4, #0xc]\n\t"
-        "add r1, #0x58\n\t"
-        "mov r3, #0\n\t"
-        "ldrsh r0, [r1, r3]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r3, [r1, #4]\n\t"
-        "add r1, r5, #0\n\t"
-        "mov r2, #0\n\t"
-        "bl sub_803AD84\n\t"
-    "_08017EC4:\n"
-        "add sp, #0x1c\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-    );
+    s16 thisOffset;
+    u8 unk_2[2];
+    void *fn;
+};
+
+struct ab_vtable
+{
+    u8 unk_00[0x20];
+    struct ab_method m20; // 0x20
+    struct ab_method m28; // 0x28
+    u8 unk_30[0x18];
+    struct ab_method m48; // 0x48
+    struct ab_method m50; // 0x50
+    struct ab_method m58; // 0x58
+    u8 unk_60[8];
+    struct ab_method m68; // 0x68
+};
+
+struct ab_self
+{
+    u8 unk_00[8];
+    s32 state;              // 0x08
+    struct ab_vtable *vt;   // 0x0C
+    u8 unk_10[0xC];
+    s32 stamp;              // 0x1C
+    u8 latch;               // 0x20
+};
+
+struct ab_ctrl
+{
+    u8 unk_00[8];
+    s32 state;              // 0x08
+};
+
+struct ab_player
+{
+    s32 x;                  // 0x00
+    s32 y;                  // 0x04
+    u8 unk_08[0x10];
+    struct ab_vtable *vt;   // 0x18
+    u8 unk_1C[0x28];
+    struct ab_ctrl *ctrl;   // 0x44
+    u8 unk_48[0xBC];
+    u8 busy;                // 0x104
+};
+
+struct ab_part
+{
+    s32 x;                  // 0x00
+    s32 y;                  // 0x04
+    u8 unk_08[0x10];
+    struct ab_vtable *vt;   // 0x18
+    u8 unk_1C[0xC];
+    u8 flags28;             // 0x28 - bit 4: X mirror
+    u8 unk_29[7];
+    s32 frame;              // 0x30
+    s32 unk_34;             // 0x34
+    u8 animDone;            // 0x38
+    u8 unk_39[0x14];
+    u8 unk_4D;              // 0x4D
+    u8 kind;                // 0x4E
+};
+
+struct ab_list
+{
+    s32 count;              // 0x00
+    u8 unk_04[4];
+    struct ab_part **items; // 0x08
+};
+
+struct ab_box
+{
+    s32 x;
+    s32 y;
+    s32 w;
+    s32 h;
+};
+
+typedef void (*ab_fn1)(void *self, s32 a);
+typedef void (*ab_fn2)(void *self, void *a, s32 b);
+typedef void (*ab_fn3)(void *self, s32 a, s32 b, s32 c);
+typedef u8 (*ab_probe)(void *self);
+typedef s32 (*ab_probe_s)(void *self);
+
+#define VCALL1(obj, m, a)                                                      \
+    do                                                                         \
+    {                                                                          \
+        struct ab_method *_m = &(obj)->vt->m;                                  \
+        ((ab_fn1)_m->fn)((u8 *)(obj) + _m->thisOffset, (s32)(a));              \
+    } while (0)
+#define VCALL2(obj, m, a, b)                                                   \
+    do                                                                         \
+    {                                                                          \
+        struct ab_method *_m = &(obj)->vt->m;                                  \
+        ((ab_fn2)_m->fn)((u8 *)(obj) + _m->thisOffset, (void *)(a), (s32)(b)); \
+    } while (0)
+
+/* virtual queries on `part`'s own method table (+0x18) */
+static inline u8 Probe28(struct ab_part *p)
+{
+    struct ab_method *m = &p->vt->m28;
+
+    return ((ab_probe)m->fn)((u8 *)p + m->thisOffset);
 }
-asm(".align 2, 0");
+
+static inline s32 Probe48(struct ab_part *p)
+{
+    struct ab_method *m = &p->vt->m48;
+
+    return ((ab_probe_s)m->fn)((u8 *)p + m->thisOffset);
+}
+
+/* The player's busy byte (+0x104). Written in place, the 0x104 offset is
+ * a reload whose register rotates through r1-r3; the ROM's rotation is one
+ * step off from what gcc picks for this C, so two of the three reads spell
+ * out the ROM's registers (r3 for the offset, r0 for the address). */
+static inline u8 Busy(struct ab_player *pl)
+{
+    register s32 off asm("r3") = 0x104;
+    register u8 *p asm("r0");
+
+    asm("" : "+r"(off));
+    p = (u8 *)pl + off;
+    return *p;
+}
+
+static inline s32 Abs(s32 v)
+{
+    s32 sign = v >> 31;
+
+    return (v ^ sign) - sign;
+}
+
+extern u32 gUnknown_0300082C;
+extern struct ab_player *gUnknown_030012D8;
+extern void *gUnknown_030012F0;
+extern struct ab_list *gUnknown_0300130C;
+extern void sub_8017F14(void *self, void *part, s32 index);
+extern struct ab_box sub_8007B98(void *obj);
+extern void sub_8008A40(void *manager, struct ab_box box, s32 unused, void *compareViewport);
+extern void sub_800EEF0(struct ab_part *p, s32 arg);
+extern u8 sub_8010908(struct ab_part *p, s32 kind);
+extern void sub_800E888(struct ab_part *p, s32 arg);
+
+void sub_8017AB0(struct ab_self *self, struct ab_part *other)
+{
+    struct ab_box box;
+
+    if (self->stamp == -1)
+    {
+        sub_8017F14(self, other, 1);
+        self->stamp = 0;
+    }
+
+    switch (self->state)
+    {
+    case 0:
+        if (gUnknown_030012D8->busy != 0)
+            return;
+    test:
+        if ((s8)(other->flags28 << 3) < 0)
+            goto mirrored;
+        goto plain;
+    case 1:
+    {
+        s32 i;
+        s32 px;
+
+        if (Busy(gUnknown_030012D8) != 0 || gUnknown_030012D8->ctrl->state == 0x1E)
+        {
+            VCALL2(self, m50, other, 2);
+            VCALL1(self, m20, 0);
+            VCALL2(self, m58, other, 0);
+        }
+        if (Probe28(other) && self->latch == 0)
+        {
+            self->stamp = gUnknown_0300082C;
+            self->latch = 1;
+        }
+        else
+        {
+            u8 hit = Probe28(other);
+
+            if (hit == 0 && self->latch != 0)
+            {
+                self->stamp = gUnknown_0300082C;
+                self->latch = hit;
+            }
+        }
+        if (self->stamp != 0 && gUnknown_0300082C - self->stamp > 0x3C)
+        {
+            self->stamp = 0;
+            if ((s8)(other->flags28 << 3) >= 0)
+            {
+                if (self->latch != 0)
+                    sub_8017F14(self, other, 1);
+                else
+                    sub_8017F14(self, other, 2);
+            }
+            else
+                sub_8017F14(self, other, 3);
+        }
+        if (gUnknown_030012D8->x < other->x)
+        {
+            u8 f = other->flags28;
+
+            if ((s8)(f << 3) >= 0)
+            {
+                s32 m = -0x11;
+
+                m &= f;
+                m |= 0x10;
+                other->flags28 = m;
+                VCALL2(self, m58, other, 3);
+            }
+        }
+        /* read into a local first: in place, gcc loads it after the sum */
+        px = gUnknown_030012D8->x;
+        if (px > other->x + 0xA00)
+        {
+            u8 f = other->flags28;
+
+            if ((s8)(f << 3) < 0)
+            {
+                s32 m = -0x11;
+
+                m &= f;
+                other->flags28 = m;
+                VCALL2(self, m58, other, 1);
+            }
+        }
+        {
+            struct ab_player *pl = gUnknown_030012D8;
+
+            if (Abs(pl->x - other->x) <= 0x27FF && Abs(pl->y - other->y) <= 0x31FF)
+            {
+                sub_8017F14(self, other, 0);
+                VCALL1(self, m20, 2);
+                VCALL2(self, m50, other, 1);
+                return;
+            }
+        }
+        /* The box goes to sub_8008A40 by value (three words in r1-r3, the
+         * fourth on the stack): that is what gives the ROM's stack-argument
+         * order (6th, 7th, then the box's last word). */
+        box = sub_8007B98(other);
+        sub_8008A40(gUnknown_030012F0, box, 0, other);
+        /* a guarded do-while: a `for` shares the list pointer between the
+         * entry test and the body, where the ROM reloads it */
+        i = 0;
+        if (i < gUnknown_0300130C->count)
+        {
+            do
+            {
+                struct ab_part *e = gUnknown_0300130C->items[i];
+
+                if (Probe48(e) == 3)
+                {
+                    /* the ROM passes sub_800EEF0 a copy of `e` made here,
+                     * and loads `kind` straight into r1 (sub_8010908's
+                     * second argument) */
+                    struct ab_part *t = e;
+
+                    asm("" : "+r"(t));
+                    if (Abs((e->x >> 8) - (other->x >> 8)) <= 0x27
+                        && Abs((e->y >> 8) - (other->y >> 8)) <= 0x3B
+                        && (e->unk_4D & 0x7F) == 0)
+                    {
+                        register s32 kind asm("r1") = e->kind;
+
+                        if (kind == 0xE || kind == 0x13 || kind == 0x14
+                            || kind == 0x15 || kind == 0xA)
+                            sub_800EEF0(t, 0);
+                        else if (sub_8010908(e, kind))
+                            sub_800E888(e, 1);
+                    }
+                }
+                i++;
+            } while (i < gUnknown_0300130C->count);
+        }
+        return;
+    }
+    case 2:
+        if (other->frame == 8 && other->unk_34 == 0)
+        {
+            struct ab_player *pl = gUnknown_030012D8;
+
+            if (Abs(pl->x - other->x) > 0x27FF || Abs(pl->y - other->y) > 0x31FF)
+                goto test;
+            {
+                struct ab_method *m = &pl->vt->m68;
+                void *t = (u8 *)pl + m->thisOffset;
+
+                ((ab_fn3)m->fn)(t, 0, 1, 0);
+            }
+            return;
+        }
+        if (!other->animDone)
+            return;
+        if (Busy(gUnknown_030012D8) == 0)
+        {
+            if ((s8)(other->flags28 << 3) < 0)
+            {
+            mirrored:
+                VCALL2(self, m58, other, 3);
+            }
+            else
+            {
+            plain:
+                sub_8017F14(self, other, 1);
+            }
+            VCALL2(self, m50, other, 0);
+            VCALL1(self, m20, 1);
+        }
+        else
+        {
+            VCALL2(self, m50, other, 2);
+            VCALL1(self, m20, 0);
+            VCALL2(self, m58, other, 0);
+        }
+        return;
+    }
+}

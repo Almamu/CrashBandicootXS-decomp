@@ -321,6 +321,27 @@ from "core" graphics.
   raw `sub_8018008`-`sub_80186F0` block sits between them):
   `sub_80187FC`, `sub_8018858`, `sub_801886C`, `sub_8018884`; see
   `docs/matching/issue-22-0x08017a44-actor.md`.
+- `src/graphics/actor_part27a.c` (GitHub issue #22, ROM
+  0x08017AB0-0x08017ECC): `sub_8017AB0` - the player-vs-part 3-state
+  dispatcher, previously a NAKED transcription, now real C built with
+  old_agbcc; see `docs/matching/issue-22-0x08018008-hopper.md`.
+- `src/graphics/actor_part_18008.c` (new file, GitHub issue #22, ROM
+  0x08018008-0x080187FC, built with old_agbcc): `sub_8018008`,
+  `sub_8018400`, `sub_801865C`, `sub_80186F0` - the
+  `gStaticData_087E4564` hopping boss's update/enter-state methods,
+  target picker and falling-hazard spawner; see
+  `docs/matching/issue-22-0x08018008-hopper.md`.
+- `src/graphics/actor_part_13c60.c` (new file, GitHub issue #17, ROM
+  0x08013C60-0x08014084, built with old_agbcc): `sub_8013C60`,
+  `sub_8013D94`, `sub_8013EAC`, `sub_8013FD4` - four more
+  `gStaticData_0816BF20` action-table handlers (`sub_8014084`, in the
+  same file, is parked below); see
+  `docs/matching/issue-17-0x08012fbc-actor.md`, "Second pass".
+- `src/graphics/actor_part_14674.c` (new file, GitHub issue #17, ROM
+  0x08014674-0x08014F8C, built with old_agbcc): `sub_8014940`,
+  `sub_80149BC`, `sub_8014A3C`, `sub_8014AEC`, `sub_8014EE0` (the file's
+  other four functions are parked below); see
+  `docs/matching/issue-17-0x08012fbc-actor.md`, "Second pass".
 - `src/graphics/actor_part28.c`/`actor_part30.c`/`actor_part32.c`/
   `actor_part34.c`/`actor_part36.c` (new files, GitHub issue #62, ROM
   0x08033804-0x08033EF4 - the `gUnknown_030015AC` singleton system's
@@ -880,19 +901,15 @@ plain C didn't converge.
   rest. Fully understood; parked on a many-high-register allocation
   gap across its three inner-loop branches. See
   `docs/matching/naked-spatial-grid-tail.md`.
-- **`sub_8017AB0`** (`src/graphics/actor_part27a.c`, ROM 0x08017AB0-
-  0x08017ECC, GitHub issue #22) - a ~500-instruction, fully-understood
-  3-state dispatcher (player-vs-camera-viewport gating on
-  `gUnknown_030012D8+0x104` and `other+0x28` bit 4; see
-  `docs/matching/issue-22-0x08017ab0-actor.md` for the full state map).
-  Two independent, already-diagnosed-elsewhere gcc-2.9 gaps recur here:
-  the `gUnknown_0300130C` object-list walk's per-iteration literal-pool
-  reload (`actor_part108.c`'s `sub_800AAEC`'s own unclosable gap) and
-  `sub_8008A40`'s 7-argument/3-stack-slot marshalling order
-  (`actor_part81.c`'s `sub_800AB9C`'s own unclosable gap, confirmed by
-  this ROM call using the identical stack-argument order) - recognized
-  from precedent and NAKED-transcribed directly rather than
-  re-litigating either wall at 5x the previous scale.
+- **`sub_8014084`** (`src/graphics/actor_part_13c60.c`), **`sub_8014674`**,
+  **`sub_8014B54`**, **`sub_8014BCC`**, **`sub_8014D18`**
+  (`src/graphics/actor_part_14674.c`), GitHub issue #17 - action-table
+  handlers whose old_agbcc C (kept under `NON_MATCHING`) differs from
+  the ROM only in register roles: which callee-saved register holds the
+  hoisted constant 1 or a kept pointer, one reload register one step off
+  in gcc's rotation (`sub_8014B54`), and a shared method-call tail
+  (`sub_8014D18`). See `docs/matching/issue-17-0x08012fbc-actor.md`,
+  "Second pass".
 - **`sub_8009868`** (`src/graphics/actor_part11d.c`) - another
   3-bucket-window grid pass, this one reading the player's state to
   dispatch `sub_800D040`/`sub_80109A4` per object. Fully understood;
@@ -1103,9 +1120,8 @@ plain C didn't converge.
   unmatchable for `sub_80156EC` (above). New files are address-suffixed
   (`actor_part_<addr>.c`) rather than the next sequential `actor_partNN`,
   since `actor_part85.c` is independently claimed by unrelated issue #63
-  work. Issue #17's own chunk continues past this pass's range
-  (0x0801426C) through 0x08014F8C; the remainder stays raw in the
-  trimmed `asm/code_3_2_17_12af4.s`. See
+  work. The rest of issue #17's chunk (0x08013C60-0x08014F8C) was
+  done in a second pass (see above). See
   `docs/matching/issue-17-0x08012fbc-actor.md`.
 - **`InitActorCategory`** (`src/graphics/actor_part101.c`, GitHub issue
   #48) - the category (re)initialization + per-VBlank loading-screen
@@ -1734,11 +1750,6 @@ embedded as asm instead. They're tracked as parked, not matched.
 
 ## Left raw (not attempted, or attempted and set aside)
 
-- **`sub_8018008`/`sub_8018400`/`sub_801865C`/`sub_80186F0`**
-  (`asm/code_3_2_17_18008.s`, ROM 0x08018008-0x080186F0, GitHub issue
-  #22) - a ~480-instruction jump-table player action-state machine
-  plus two high-register-pressure helpers it calls; left raw, out of
-  scope for this pass - see `docs/matching/issue-22-0x08017a44-actor.md`.
 - **`sub_8011BD4`** (`asm/code_3_2_17_11bd4.s`, ROM 0x08011BD4, GitHub
   issue #16) - `docs/rom_map.md`'s documented ~1420B, 25-case/7-case
   nested jump-table companion state machine to `sub_8016288` (still
@@ -1769,7 +1780,9 @@ embedded as asm instead. They're tracked as parked, not matched.
   issue #9/#10) - a 38-case player action-state jump-table dispatcher
   calling a dozen still-unexamined state-transition functions; left
   raw per this project's established policy for this exact dispatcher
-  shape (same as `sub_8018008`, issue #22) - see
+  shape (`sub_8018008`, issue #22, has since matched as a plain `switch`
+  under old_agbcc - see `docs/matching/issue-22-0x08018008-hopper.md`) -
+  see
   `docs/matching/issue-9-10-0x0800ab9c-graphics.md`.
 - ~~**`sub_8016048`**~~ (ROM 0x08016048, GitHub issue #19) - matched
   as real C with issue #20 in `src/graphics/actor_part_16048.c` (listed
