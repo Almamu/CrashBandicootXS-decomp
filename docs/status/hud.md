@@ -90,10 +90,11 @@ system from "core" graphics.
 GitHub issue #45's dispatcher family (`hud_stat_widget2.c`,
 `hud_digit_array.c`, `hud_stat_widget3.c` - `sub_802757C`/`sub_802763C`,
 `sub_8027138`/`sub_802732C`, `sub_8027940`/`sub_8027D5C`/`sub_8027E88`)
-are all `NAKED` transcriptions, tracked as parked, not matched - see
-below and `docs/matching/issue-45-hud-stat-widget-dispatcher.md`. All 24
-functions in the `0x08026EEC`-`0x08028568` chunk are now byte-exact, but
-7 of them (this dispatcher family) are parked rather than matched.
+are `NAKED` transcriptions, tracked as parked, not matched - see below
+and `docs/matching/issue-45-hud-stat-widget-dispatcher.md` - except
+`sub_8027138`, now plain C (`hud_digit_array.c` is built with old_agbcc,
+see `docs/matching/game-loop-old-agbcc.md`). All 24 functions in the
+`0x08026EEC`-`0x08028568` chunk are byte-exact; 6 of them are parked.
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -134,15 +135,11 @@ embedded as asm instead. They're tracked as parked, not matched.
   gcc-2.9 miscompile. GitHub issue #45, see
   `docs/matching/issue-45-hud-stat-widget-dispatcher.md`'s
   "NAKED-transcription pass" section.
-- **`sub_8027138`**/**`sub_802732C`** (`src/graphics/hud_digit_array.c`)
-  - the 35-slot `struct hud_digit_part` array's constructor and its own
-  tail; every clamp site hit the same r7-pinned-byte-as-array-subscript
-  miscompile as `sub_802757C`/`sub_802763C` above, and `sub_802732C`'s
-  own loop additionally needed `sl`/`sb`/`r8` held live across the whole
-  loop the way `settings_menu6.c`'s own comment already documented gcc
-  2.9 giving up on for four near-identical functions. GitHub issue #45,
-  see `docs/matching/issue-45-hud-stat-widget-dispatcher.md`'s "Fourth
-  pass" section.
+- **`sub_802732C`** (`src/graphics/hud_digit_array.c`) - the 35-slot
+  icon array's per-mode slot refresh. `hud_digit_array.c` is built with
+  old_agbcc; plain C there is 32 bytes short, because the ROM keeps three
+  separate copies of one nibble insert that the compiler merges. Its
+  sibling `sub_8027138` is matched. See [docs/matching/game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md).
 - **`sub_8027940`**/**`sub_8027D5C`**/**`sub_8027E88`**
   (`src/graphics/hud_stat_widget3.c`) - the remaining three callees of
   the dispatcher (two score-style digit counters and the

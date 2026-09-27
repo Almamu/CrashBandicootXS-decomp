@@ -138,3 +138,8 @@ convention as earlier batches) in favor of a new
 Full clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` confirms `La suma coincide`
 after this batch, alongside `make NON_MATCHING=1 report`.
+
+## Later pass (issue #9 NAKED retry)
+
+`sub_8009868` is now real C under old_agbcc. `sub_8009BE0`,
+`sub_8009008` and `sub_80091D4` are still NAKED. See [issue-9-naked-retry.md](./issue-9-naked-retry.md) for details.

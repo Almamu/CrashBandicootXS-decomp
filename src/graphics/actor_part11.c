@@ -223,6 +223,107 @@ struct dual_array_manager *sub_8008EE4(struct dual_array_manager *manager, s32 c
  * the identical gap - see that function's own writeup
  * (`actor_part11i.c`) for the shared technique applied there. See
  * docs/matching.md, "Parked, not matched: sub_8008F20". */
+/* Later pass (docs/matching/issue-9-naked-retry.md): the draft below
+ * (old_agbcc) has the ROM's size and shape - the tail is an inline
+ * helper (sub_8009914 ends with the same code), the grid clear a goto
+ * loop, the free-list loop a guarded do-while - and is 15 halfwords
+ * off, all register choice around the grid clear: the ROM keeps the
+ * cached count in r3 and copies `&freeListArray` into ip straight from
+ * sb at the loop head, where this C keeps the address live in r1
+ * through the grid clear, pushing the count to r6. */
+#if NON_MATCHING
+struct pool_init_link;
+
+struct pool_init_node {
+    void *unk_00;
+    void *unk_04;
+    struct pool_init_link *link;  // 0x08
+    void *unk_0C;
+    u8 unk_10;
+};
+
+struct pool_init_link {
+    struct pool_init_node *node;
+    struct pool_init_link *next;
+};
+
+struct pool_init {
+    s32 activeCount;
+    s32 capacity;
+    void **slotArray;
+    struct pool_init_node *nodeArray;
+    void *gridHead[256];
+    void *gridTail[256];
+    struct pool_init_link *freeListArray;
+    struct pool_init_link *freeListHead;
+};
+
+static inline void PoolResetFreeList(struct pool_init *m)
+{
+    s32 i;
+    s32 n = m->capacity;
+    struct pool_init_link **freeList = &m->freeListArray;
+    struct pool_init_link **freeHead = &m->freeListHead;
+    {
+        void *zero = NULL;
+        void **tail = m->gridTail;
+        void **head = m->gridHead;
+
+        i = 255;
+    loop:
+        *head = zero;
+        head++;
+        *tail = zero;
+        tail++;
+        if (--i >= 0)
+            goto loop;
+    }
+    i = 0;
+    if (i < n) do {
+        struct pool_init_link *link;
+        struct pool_init_link *arr;
+
+        m->freeListArray[i].node = &m->nodeArray[i];
+        m->nodeArray[i].unk_00 = NULL;
+        m->nodeArray[i].unk_04 = NULL;
+        m->nodeArray[i].unk_0C = NULL;
+        m->nodeArray[i].unk_10 = 0;
+        m->nodeArray[i].link = link = &(arr = m->freeListArray)[i];
+        if (i == m->capacity - 1)
+            link->next = NULL;
+        else
+            link->next = &arr[i + 1];
+        i++;
+    } while (i < m->capacity);
+    *freeHead = *freeList;
+}
+
+struct pool_init *sub_8008F20(struct pool_init *m, s32 count)
+{
+    m->activeCount = 0;
+    m->capacity = count;
+    m->slotArray = sub_8026EC0(count * 4);
+    m->nodeArray = sub_8026EC0(m->capacity * sizeof(struct pool_init_node));
+    {
+        struct pool_init_link **p = &m->freeListArray;
+        *p = sub_8026EC0(m->capacity * sizeof(struct pool_init_link));
+    }
+    {
+        s32 j = m->capacity;
+        if (j > 0) {
+            void *zero = NULL;
+            void **p = m->slotArray;
+            do {
+                *p = zero;
+                p++;
+                j--;
+            } while (j != 0);
+        }
+    }
+    PoolResetFreeList(m);
+    return m;
+}
+#else
 NAKED void *sub_8008F20(void *manager, s32 count)
 {
     asm(
@@ -347,6 +448,7 @@ NAKED void *sub_8008F20(void *manager, s32 count)
         "bx r1\n\t"
     );
 }
+#endif /* NON_MATCHING */
 asm(".align 2, 0");
 
 /* Same pool-manager struct sub_8008F20 initializes and actor_part12.c

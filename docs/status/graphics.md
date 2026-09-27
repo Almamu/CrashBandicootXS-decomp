@@ -96,6 +96,8 @@ and [graphics_loading.md](./graphics_loading.md).
   per-frame animation/speed selection from the held keys, a gcc 2.x
   pointer-to-member state dispatch (`gStaticData_0816C290`), and the
   inlined "mark actor gone" bitmap sequence matched without inline asm.
+  Built with old_agbcc since a later pass, which dropped all of its
+  register pins and barriers.
   See [docs/matching/issue-21-input-ctrl.md](../matching/issue-21-input-ctrl.md).
 
 - `src/graphics/actor_part_188d0.c` (new file - GitHub issue #23):

@@ -1,5 +1,6 @@
 #include "core.h"
 #include "mover_new.h"
+#include "gfx_part.h"
 
 /* GitHub issue #23: 0x080188D0-0x0801967C, formerly
  * asm/code_3_2_17_188d0.s (details in docs/matching/issue-23-graphics.md).
@@ -10,7 +11,8 @@
  * table pointer) plus a destructor (table pointer, then the base
  * destructor), and a handful of per-frame update methods that drive one
  * "part" - a sub_8009ED0-built on-screen object (struct gfx_part below)
- * whose animation tag/frame, mirror bit and flags they set. Virtual calls
+ * whose animation tag/frame, mirror bit and flags they set
+ * (include/gfx_part.h). Virtual calls
  * go through the sub_803AD80/AD84/AD88 call-via-register trampolines with
  * gcc 2.x's {this-adjust, fn} method entries.
  *
@@ -57,58 +59,6 @@ struct gfx_vtable
     struct gfx_method method_50; // 0x50
 };
 
-struct anim_record
-{
-    u8 unk_00[0x16];
-    u8 frameCount; // 0x16
-    u8 unk_17[5];
-};
-
-struct anim_bank
-{
-    struct anim_record *records;
-};
-
-struct gfx_vec
-{
-    s32 x;
-    s32 y;
-};
-
-struct gfx_part
-{
-    struct gfx_vec pos;     // 0x00
-    u16 id;                 // 0x08
-    u8 unk_0A;              // 0x0A
-    u8 unk_0B;
-    u8 gone:1;              // 0x0C bit 0
-    u8 flags_1:1;
-    u8 hidden:1;            // 0x0C bit 2
-    u8 flags_3:1;
-    u8 active:1;            // 0x0C bit 4
-    u8 flags_5:3;
-    u8 unk_0D[0x13];
-    struct anim_bank *bank; // 0x20
-    u8 unk_24[4];
-    u8 unk_28_0:4;          // 0x28
-    u8 flipX:1;
-    u8 unk_28_5:3;
-    u8 frameNibble:4;       // 0x29
-    u8 unk_29_4:4;
-    u8 unk_2A[2];
-    u8 unk_2C;              // 0x2C
-    u8 tag;                 // 0x2D
-    u8 unk_2E[2];
-    s32 frame;              // 0x30
-    u8 unk_34[4];
-    u8 animDone;            // 0x38
-    u8 unk_39[0xB];
-    void *ctrl;             // 0x44
-};
-
-/* The whole flags byte at +0x0C, for the spots that update it as one
- * byte through register pins (see sub_80188FC). */
-#define PART_FLAGS(p) (*((u8 *)(p) + 0xC))
 
 struct gfx_ctrl
 {

@@ -222,3 +222,11 @@ coincide` (checksum matches).
   `sub_800D040`) resists gcc 2.9 C reconstruction even in its simplest
   two-block form - not attempting a C draft here was a judgment call
   informed by that existing precedent, not a shortcut.
+
+## Later pass (issue #9 NAKED retry)
+
+`sub_800AAEC` is now real C, and it matches under both compilers. Three
+changes closed it. The list walk is a guarded do-while
+(`i = 0; if (i < n) do {...} while (i < list->count)`), which gives the
+per-iteration literal reload. The position is read as one struct copy.
+The record pointer's `+4` is a separate `rec += 4` statement. See [issue-9-naked-retry.md](./issue-9-naked-retry.md) for details.

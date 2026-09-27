@@ -53,19 +53,19 @@ system from "core" system startup/init code.
   construction/accessors (`sub_8024CF0`/`sub_8024D0C`/`sub_8024D38`/
   `sub_8024D58`/`sub_8024D5C`/`sub_8024D60`/`sub_8024D6C`/`sub_8024D74`/
   `sub_8024DAC`/`sub_8024DCC`/`sub_8024DE0`/`sub_8024DFC`/`sub_8024E24`,
-  all matched as real C). 20 matched as real C, 5 (`sub_8024820`/
-  `sub_8024960`/`sub_8024BAC`/`sub_8024C08`/`sub_8024C64`) closed as
-  `NAKED` transcriptions - the same gcc-2.9 register-allocation-
-  permutation class of gap as the neighboring terrain-tile-cache cluster
-  (issue #40). `asm/code_3_2_17_24810.s` is now fully retired. See
+  all matched as real C). 23 are real C (built with old_agbcc, see
+  [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md)); `sub_8024820` and `sub_8024960` remain `NAKED` transcriptions. `asm/code_3_2_17_24810.s` is now fully retired. See
   [docs/matching/issue-39-0x08024810-game-loop.md](../matching/issue-39-0x08024810-game-loop.md)
 - `src/system/game_loop3.c` (GitHub issue #40): `sub_8024E68`,
   `sub_8024E90`, `sub_8024EB4` (a viewport/parallax-scroll-layer object)
   and `sub_8024F04`/`sub_8024F0C`/`sub_8024F10`/`sub_8024F14`/
-  `sub_8024F18`/`sub_8024F1C`/`sub_8024F20` (its field accessors)
+  `sub_8024F18`/`sub_8024F1C`/`sub_8024F20` (its field accessors), and
+  the terrain tile cache's `sub_8024F24`/`sub_80250BC`/`sub_8025130`/
+  `sub_8025228` (plain C, built with old_agbcc - see [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md);
+  `sub_8025334` is still parked below)
 - `src/system/game_loop4.c` (GitHub issue #40): `sub_8025444`,
-  `nullsub_4`, `sub_8025460` (matched `NAKED`, closing the whole issue
-  #40 terrain-tile-cache cluster - see below)
+  `nullsub_4`, `sub_8025460` (plain C, built with old_agbcc - see
+  [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md))
 - `src/system/game_loop5.c` (GitHub issue #40): `sub_80254C0`,
   `sub_80254F8`, `sub_8025554`, `sub_8025588`, `sub_80255A8`,
   `sub_80255C4` - the terrain tile-record decode cache's constructor,
@@ -84,10 +84,8 @@ system from "core" system startup/init code.
   allocates and returns `gUnknown_03000828`
 - `src/system/game_loop8.c` (GitHub issue #37): `sub_802400C` - the
   DMA3/VRAM refresh pass gated on `self+0x0 <= 0x1000` - and
-  `sub_80240E4` - the `REG_BLDCNT`/`REG_BLDALPHA` shadow-word rebuild,
-  matched `NAKED` via a literal ROM-instruction transcription (a
-  gcc-2.9 r7-pin bug drops r7 from the compiler's own prologue/epilogue
-  push/pop otherwise). See
+  `sub_80240E4` - the `REG_BLDCNT`/`REG_BLDALPHA` shadow-word rebuild
+  (plain C, built with old_agbcc - see [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md)). See
   [docs/matching/issue-37-game-loop-234e8.md](../matching/issue-37-game-loop-234e8.md)
   for the details.
 - `src/system/game_loop39.c` (GitHub issue #37, follow-up pass):
@@ -248,7 +246,8 @@ system from "core" system startup/init code.
   `sub_8024640` (per-item sound-channel driver loop), `sub_80246D8`
   (its "find next active item" index scanner), and - as of a second
   follow-up pass - `sub_8024708` (VRAM-bank tile-asset streamer) too.
-  `sub_8024590` in the same file is NAKED-parked, see below. See
+  `sub_8024590` (plain C once built with old_agbcc - see [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md)) closes
+  the file. See
   [docs/matching/issue-38-sound-channel-family.md](../matching/issue-38-sound-channel-family.md)
   and its second-pass addendum.
 - `src/system/game_loop38.c` (GitHub issue #38, follow-up pass):
@@ -286,18 +285,9 @@ system from "core" system startup/init code.
   `switch` on `mode`, matched on the first isolated-compile attempt
   with no register pins needed - see
   [docs/matching/issue-9-10-41-0x08026628-game-loop.md](../matching/issue-9-10-41-0x08026628-game-loop.md).
-- **`sub_8026A18`**/**`sub_8026AE8`** (`src/system/game_loop46.c`, new
-  file - closing pass on `sub_8026628`'s own axis resolvers, semantics
-  already fully derived by that investigation) - the Y-axis (floor/
-  ceiling) and X-axis (wall) tile-scan resolvers, 208/216 B. Same
-  gcc-2.9 register-allocation-permutation gap already forced NAKED on
-  `sub_8025130`/`sub_8025228`/`sub_8025460`/`sub_8024F24` next door
-  (`self`/`pos`/`outValue`/`hit` packed into `sl`/`r7`/`r8`/`sb`
-  simultaneously) - an isolated-compile attempt at plain C never
-  reproduced the ROM's own register assignment even with register
-  pins (pinning made it worse, the same symptom `sub_8024F24`'s own
-  comment already documented). Closed both as hand-transcribed NAKED
-  functions instead - see
+- **`sub_8026A18`**/**`sub_8026AE8`** (`src/system/game_loop46.c`) -
+  `sub_8026628`'s Y-axis (floor/ceiling) and X-axis (wall) tile-scan
+  resolvers, 208/216 B. Plain C, built with old_agbcc - see [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md) and
   [docs/matching/issue-9-10-41-0x08026628-game-loop.md](../matching/issue-9-10-41-0x08026628-game-loop.md).
 - **`sub_8025FC8`/`sub_802602C`/`sub_802608C`/`sub_80260B4`/`sub_80260D4`/`sub_8026108`/`sub_802612C`/`sub_802613C`/`sub_802614C`/`sub_8026160`/`sub_8026174`/`sub_8026184`/`sub_8026190`/`sub_80261A8`/`sub_80261B0`/`sub_80261B8`/`sub_80261CC`/`sub_8026250`/`sub_8026264`/`sub_80262A4`/`sub_80262E8`/`sub_8026328`/`sub_8026368`/`sub_80263DC`/`sub_80263F8`/`nullsub_26`**
   (`src/system/bg_scroll_layer_25fc8.c`, new file - GitHub issue #42,
@@ -374,7 +364,17 @@ system from "core" system startup/init code.
   `asm(".align 2, 0")` - see
   [docs/matching/issue-44-camera-follow.md](../matching/issue-44-camera-follow.md).
   `asm/code_3_2_17_26bf8.s` removed.
-- **`sub_800E620`/`sub_800ED08`** (`src/system/game_loop48.c`, new file
+- **Issue #12 NAKED retry (old_agbcc)**: `sub_800E494`/`sub_800E4E4`
+  (`src/system/game_loop7.c`), `sub_800E560`/`sub_800E6B0`/`sub_800E7A8`/
+  `sub_800EAFC`/`sub_800ED08` (`src/system/game_loop48.c`) and
+  `sub_800EEF0`/`sub_800F06C`/`sub_800F1B8`/`sub_800F258`/`sub_800F2BC`/
+  `sub_800F368`/`sub_800F4F4`/`sub_800F5B8`/`sub_800F6B8`/`sub_800F798`/
+  `sub_800F8E0` (`src/system/game_loop49.c`) promoted from NAKED to real
+  C - all three files moved to `OLD_AGBCC_OBJS`, the shared object
+  layout named in `include/phys_obj.h`. See
+  [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md)'s
+  NAKED-retry section.
+- **`sub_800E620`** (`src/system/game_loop48.c`, new file
   - GitHub issue #12 Phase 2, lower-address half) - two of
   `sub_0800D18C`'s/`sub_800E08C`'s per-edge jump-table dispatch
   targets, matched as real C: `sub_800E620` (dispatch id `0xe`)
@@ -395,6 +395,12 @@ system from "core" system startup/init code.
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
+
+- **`sub_8022D50`** (`game_loop40.c`), **`sub_8025A64`** (`game_loop29.c`),
+  **`sub_8025BAC`** (`game_loop14.c`), **`sub_8025E98`**/**`sub_8025F3C`**
+  (`game_loop16.c`), and the other functions above marked "built with
+  old_agbcc" - 17 former `NAKED` transcriptions in 0x08022D50-0x08026BC0,
+  now plain C. This ROM region was built with old_agbcc; see [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md).
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
@@ -462,8 +468,10 @@ plain C didn't converge.
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md)'s
   Phase 1 appendix for the confirmed dispatch maps (the basis for this
   issue's Phase 2 parallel split of the remaining 18 leaf functions).
-- **`sub_800E560`/`sub_800E6B0`/`sub_800E7A8`/`sub_800E888`/
-  `sub_800EAFC`/`sub_800EDBC`** (`src/system/game_loop48.c`, new file -
+- **`sub_800E888`/`sub_800EDBC`** (`src/system/game_loop48.c`; the
+  rest of this file was promoted to C by the NAKED-retry pass, see
+  Matched) (originally with `sub_800E560`/`sub_800E6B0`/`sub_800E7A8`/
+  `sub_800EAFC`,, new file -
   GitHub issue #12 Phase 2, lower-address half) - NAKED transcriptions
   of the direct dispatch targets both `sub_0800D18C`'s and
   `sub_800E08C`'s per-edge jump tables call (`sub_800E560`,
@@ -476,7 +484,8 @@ plain C didn't converge.
   (`sub_800EDBC`). See
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md)'s
   Phase 2 writeup.
-- **`sub_800EEF0` through `sub_800F990`** (12 functions:
+- **`sub_800F990`** (the only one of the following still NAKED after
+  the NAKED-retry pass; the other eleven are real C, see Matched) - **`sub_800EEF0` through `sub_800F990`** (12 functions:
   `sub_800EEF0`, `sub_800F06C`, `sub_800F1B8`, `sub_800F258`,
   `sub_800F2BC`, `sub_800F368`, `sub_800F4F4`, `sub_800F5B8`,
   `sub_800F6B8`, `sub_800F798`, `sub_800F8E0`, `sub_800F990` -
@@ -494,10 +503,6 @@ plain C didn't converge.
   consumed. See
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md)'s
   Phase 2 appendix for the confirmed per-function roles.
-- **`sub_800E494`/`sub_800E4E4`** (`src/system/game_loop7.c`, GitHub
-  issue #12) - bidirectional linked-list walkers (`sub_801070C`/
-  `sub_8010708`) clearing/setting each neighbor's `+0x58` flag. See
-  [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md).
 - **`sub_800CEAC`/`sub_800CF70`** (`src/system/game_loop42.c`, new
   file - dedicated deep investigation) - the two functions formerly
   tracked as unexamined raw bytes between `sub_800CD00` (issue #9/#10)
@@ -642,114 +647,26 @@ plain C didn't converge.
   retired from `ldscript.txt` entirely. See
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)'s
   "`sub_800BFA8`" entry.
-- **`sub_8025A64`** (`src/system/game_loop29.c`, new file - not
-  contiguous with any other matched run once its three siblings below
-  stayed parked - GitHub issue #41) - a part-object spawn helper; hits
-  the confirmed `register T x asm("r7")`-never-saved toolchain bug plus
-  an unfixable `& -0x10` mask-fold. See
-  [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
-- **`sub_8025B0C`/`sub_8025BAC`/`sub_8025CA4`** (`src/system/game_loop14.c`,
-  prepended ahead of the already-matched `sub_8025D28` run - GitHub
-  issue #41) - three more part-object spawn helpers; `sub_8025BAC`
-  alone repeats `sub_8025A64`'s unfixable mask-fold three times over.
-  See [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
-- **`sub_8025E98`/`sub_8025F3C`** (`src/system/game_loop16.c`, GitHub
-  issue #41) - the screen-edge tile-coordinate computer/streaming
-  driver, and the circular-buffer decoded-tile streaming loop; both
-  keep `r8` live across most of their bodies. See
-  [docs/matching/issue-41-game-loop-25894.md](../matching/issue-41-game-loop-25894.md).
-- **`sub_8024F24`** (`src/system/game_loop3.c`, GitHub issue #40) - the
-  16-slot terrain tile-record decode/LRU cache's lookup dispatcher (16
-  fixed `recordId == self->id[N]` checks plus an LRU-evict-and-decode
-  miss path). Semantics/control-flow/total size were already fully
-  confirmed as real C; the only gap was this compiler's register
-  allocator always picking the opposite of the ROM's `self`/`recordId`
-  <-> `r7`/`r3` assignment, and explicit register pins on either
-  variable making it worse (falls back to `sp`-relative addressing
-  instead of using the pinned register as a base pointer at all) - the
-  same symptom independently confirmed for `sub_801E688`/
-  `LoadGraphicsPackage`/`LoadBg2Background`. See
-  [docs/matching/issue-40-terrain-tile-cache.md](../matching/issue-40-terrain-tile-cache.md).
-- **`sub_80250BC`/`sub_8025130`/`sub_8025228`** (`src/system/game_loop3.c`,
-  GitHub issue #40, follow-up pass) - `sub_8024F24`'s three `(x, y)`
-  tile-lookup consumers (a terrain-property-table pointer lookup, its
-  `mode`-selected/`flagsOut`-writing sibling, and a `mode`-dispatched
-  single-flag-byte variant). Same register-allocation-permutation gap as
-  `sub_8024F24` above; closed the same way, including reproducing the
-  ROM's own mid-function `.pool` literal-pool splits exactly. See
-  [docs/matching/issue-40-terrain-tile-cache.md](../matching/issue-40-terrain-tile-cache.md).
+- **`sub_8025B0C`/`sub_8025CA4`** (`src/system/game_loop14.c`, GitHub
+  issue #41) - two part-object spawn helpers. Under old_agbcc, plain C
+  is 61 and 5 halfwords off (register allocation, and one constant
+  load's scheduling); their sibling `sub_8025BAC` is matched. See
+  [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md).
 - **`sub_8025334`** (`src/system/game_loop3.c`, GitHub issue #40) - the
-  16-slot terrain tile-record decode/LRU cache's RLE/delta
-  token-stream decoder. Decode-loop mechanics and control flow were
-  already fully confirmed as real C; the gap was that the ROM keeps a
-  "bytes-written" byte-offset write pointer alive in `r7` across the
-  whole function, using it *directly* as the store target only for the
-  delta-run mode's first/last writes while every other write (in all
-  three modes) recomputes a fresh `dest + written*2` pointer from
-  `r8`/`ip` instead, even though `r7` holds the identical value in
-  lockstep - a redundant shadow-register shape no index-based C
-  reconstruction reproduces. Closed as NAKED, the same way as its
-  siblings above. `asm/code_3_2_17_24f24.s` is now gone entirely - this
-  was the last function still living there. See
-  [docs/matching/issue-40-terrain-tile-cache.md](../matching/issue-40-terrain-tile-cache.md).
-- **`sub_8025460`** (`src/system/game_loop4.c`, GitHub issue #40) - the
-  last of `sub_8024F24`'s `(x, y)`-tile-lookup consumers: returns the
-  raw decoded halfword directly (no bounds check, no terrain-table
-  lookup) while also writing the cell's top nibble out through
-  `hiOut`. Same register-allocation-permutation gap as
-  `sub_8025130`/`sub_8025228` above; closed the same way, hand-
-  transcribed from the ROM disassembly (formerly
-  `asm/code_3_2_17_25460.s`, now retired). No mid-function `.pool`
-  split was needed - the function has no literal-pool references at
-  all. This was the last unclosed member of the issue #40
-  terrain-tile-cache cluster - the whole issue is now closed. See
-  [docs/matching/issue-40-terrain-tile-cache.md](../matching/issue-40-terrain-tile-cache.md).
-- **`sub_8022D50`** (`src/system/game_loop40.c`, GitHub issue #34) - the
-  level-start/reset routine (`self+0x8c`/`0x90`-`0xa0` clears, the
-  `self+0x1b8`/`0x1bc` actor-slot teardown, the `gUnknown_030012EC`
-  array walk firing `sub_803AD7C` trampolines and setting bits in the
-  `gUnknown_030012B4+0x108` collision bitmap); every piece matches
-  byte-for-byte in isolation, but the loop's own `0xffff` sentinel has
-  to live in r7 for the whole array walk and hits the confirmed
-  never-adds-an-inline-asm-clobbered-r7-to-the-function's-own-push/pop-
-  list toolchain bug once every other quirk in the function is also
-  anchored. See
-  [docs/matching/issue-34-game-loop-8022d50-80255d4.md](../matching/issue-34-game-loop-8022d50-80255d4.md).
-- **`sub_8024590`** (`src/system/game_loop37.c`, GitHub issue #38, second
-  follow-up pass) - starts/re-selects a sound cue and plays its secondary
-  sfx immediately or after a busy-wait; a second pass on this function's
-  previously-NON_MATCHING C reconstruction closed two of its three
-  documented gaps for real (a redundant register-copy step, fixed with a
-  forced-same-register-move `asm volatile` idiom; a mismatched initial
-  item-pointer load, fixed by splitting the transient first-use load from
-  the persistent one) but hits the same confirmed
-  never-adds-an-inline-asm-clobbered-(or even genuinely written-and-read)-
-  r7-to-the-function's-own-push/pop-list toolchain bug as `sub_8022D50`
-  above for its busy-poll loop tail, which needs `push {r4, r5, r6, r7,
-  lr}`. See [docs/matching/issue-38-sound-channel-family.md](../matching/issue-38-sound-channel-family.md)'s
-  second-pass addendum.
+  terrain tile cache's RLE/delta token-stream decoder. Plain C under
+  old_agbcc is 30 halfwords off: the accumulator and the pair loop's
+  induction pointer swap r4 and r5. See
+  [docs/matching/issue-40-terrain-tile-cache.md](../matching/issue-40-terrain-tile-cache.md)
+  and [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md).
 - **`sub_80255D4`** (`src/system/game_loop41.c`, GitHub issue #34/#40/
-  #41 - the second half of the same follow-up pass as `sub_8022D50`
-  above) - `self` is `*gUnknown_030012B4`: a `self+0`-cache-gated DMA3
-  zero-fill/`CpuSet` refresh of the `self+8`/`0x208`/`0x108`/`0x308`
-  collision-bitmap family, then a `list` group/item walk firing
-  `sub_8025D28` trampolines (the same shape `sub_8025894`, matched
-  above, documents for a sibling list), then a
-  `gUnknown_0300130C`
-  actor-list redirect-chain linker/position-sync pass keyed off a
-  count-prefixed `redirectInfo` array (every field, offset, branch and
-  call argument confirmed - see the linked write-up for the full
-  trace). A real C reconstruction got the entire first half
-  byte-for-byte once `self`/the group-loop counter were pinned to their
-  ROM registers (`r6`/`r7`), but the second half's persistent
-  `redirectInfo`-array base lives in `sb`/`r9` in the ROM only as a
-  *source* value - at every individual 3-operand-Thumb-add use site
-  (`sb` being a high register Thumb restricts there) the ROM re-issues
-  a fresh `mov rX, sb` into whichever low register is free at that
-  exact point, never the same one twice, where a plain C pointer local
-  gets allocated one single register for its whole lifetime instead.
-  See
-  [docs/matching/issue-34-game-loop-8022d50-80255d4.md](../matching/issue-34-game-loop-8022d50-80255d4.md).
+  #41) - `self` is `*gUnknown_030012B4`: refreshes the collision
+  bitmaps, spawns `list`'s unseen items through `sub_8025D28`, then
+  links spawned actors by a `links` array. Plain C under old_agbcc is
+  153 halfwords off: everything through the first link pass is
+  byte-exact, but the ROM walks the second pass's actor-list searches
+  with a strength-reduced pointer and no peeled first iteration. See
+  [docs/matching/issue-34-game-loop-8022d50-80255d4.md](../matching/issue-34-game-loop-8022d50-80255d4.md)
+  and [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md).
 - **`UpdateGameFrame`** (`src/system/game_loop55.c`, GitHub issue #34,
   ROM `0x080225A0`-`0x08022BF0`) - the main per-frame game-loop driver,
   called once a frame from `MainLoop` with `self` =
