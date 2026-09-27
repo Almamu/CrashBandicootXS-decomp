@@ -112,6 +112,15 @@ below.)
   `include/gfx_part.h` (moved out of `actor_part_188d0.c`). See
   [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)'s
   "Tenth pass".
+- **`sub_8020E84`**, **`sub_8020F7C`**, **`sub_802107C`**,
+  **`sub_802117C`** (`src/graphics/trigger_effect.c`) - issue #31: the
+  "trigger effect type N" spawners (4 of the 15-slot
+  `gStaticData_0816C7D8` dispatch table's slots): sound-only-or-
+  full-spawn effect triggers gated by a `gUnknown_030012C0+2` flag bit.
+  Parked as NAKED for a long time; all four are plain C with no pins
+  once built with **old_agbcc** (`OLD_AGBCC_OBJS`). See
+  [issue-31-trigger-effect-type-n.md](../matching/issue-31-trigger-effect-type-n.md)'s
+  "Old-compiler pass".
 - **`sub_8022354`** (UNUSED), **`sub_8022468`**
   (`src/graphics/graphics_loading_22354.c`) - the gap between issues #33
   and #34 (no issue of its own): the game context's never-called
@@ -260,22 +269,6 @@ plain C didn't converge.
   attempt. See
   [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)'s
   "Ninth pass".
-- **`sub_8020E84`**, **`sub_8020F7C`**, **`sub_802107C`**,
-  **`sub_802117C`** (`src/graphics/trigger_effect.c`) - the
-  "trigger effect type N" twin family (4 of the 15-slot
-  `gStaticData_0816C7D8` dispatch table's slots): sound-only-or-
-  full-spawn effect triggers gated by a `gUnknown_030012C0+2` flag bit.
-  See
-  [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md).
-  Still parked/NAKED in the default build - follow-up passes got all
-  four functions within a handful of bytes of byte-exact as real C
-  (each kept in-tree under `#if NON_MATCHING`, see
-  [issue-31-trigger-effect-type-n.md](../matching/issue-31-trigger-effect-type-n.md))
-  but could not close the last few register-choice/scheduling gaps for
-  any of them - `sub_8020F7C`/`sub_802107C` hit the exact same two
-  residual gaps `sub_8020E84` did, and `sub_802117C` (a genuinely
-  harder, distinctly-shaped register allocation) landed a bit further
-  off, with one extra 4-byte stack-spill gap on top of those two.
 - **`sub_802190C`** (`src/graphics/graphics_loading_21668.o`) - a
   gated `sub_801A878`/`sub_80234F4` dispatcher, same OR-gated id-choice
   shape as the twin family above. See

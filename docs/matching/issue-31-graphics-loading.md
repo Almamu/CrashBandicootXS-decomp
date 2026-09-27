@@ -800,3 +800,12 @@ scope (the "trigger effect type N" twin-family shape at
 `sub_801EA5C`-`sub_801EE3C`, plus every NAKED/`NON_MATCHING` entry this
 issue has accumulated across all seven passes) is unchanged by this pass
 beyond adding twelve more already-parked NAKED entries.
+
+## Later pass: `trigger_effect.c` under old_agbcc
+
+`sub_8020E84`/`sub_8020F7C`/`sub_802107C`/`sub_802117C`, NAKED since the
+third pass, are now plain C built with old_agbcc (`OLD_AGBCC_OBJS`). There
+are no pins. The only non-obvious part is writing the sound arm as two
+`sub_801A878` calls, which gcc cross-jumps into the ROM's shape. See
+[issue-31-trigger-effect-type-n.md](./issue-31-trigger-effect-type-n.md)'s
+"Old-compiler pass".
