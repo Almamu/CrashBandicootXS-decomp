@@ -242,7 +242,7 @@ SECTIONS
         build/crashbandicootxs/src/system/game_loop14.o(.text);
         build/crashbandicootxs/src/system/game_loop15.o(.text);
         build/crashbandicootxs/src/system/game_loop16.o(.text);
-        build/crashbandicootxs/asm/code_3_2_17_25fc8.o(.text);
+        build/crashbandicootxs/src/system/bg_scroll_layer_25fc8.o(.text);
         build/crashbandicootxs/src/system/tile_slot_pool.o(.text);
         build/crashbandicootxs/src/system/game_loop43.o(.text);
         build/crashbandicootxs/src/system/level_layers.o(.text);

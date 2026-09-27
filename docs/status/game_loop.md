@@ -299,6 +299,19 @@ system from "core" system startup/init code.
   comment already documented). Closed both as hand-transcribed NAKED
   functions instead - see
   [docs/matching/issue-9-10-41-0x08026628-game-loop.md](../matching/issue-9-10-41-0x08026628-game-loop.md).
+- **`sub_8025FC8`/`sub_802602C`/`sub_802608C`/`sub_80260B4`/`sub_80260D4`/`sub_8026108`/`sub_802612C`/`sub_802613C`/`sub_802614C`/`sub_8026160`/`sub_8026174`/`sub_8026184`/`sub_8026190`/`sub_80261A8`/`sub_80261B0`/`sub_80261B8`/`sub_80261CC`/`sub_8026250`/`sub_8026264`/`sub_80262A4`/`sub_80262E8`/`sub_8026328`/`sub_8026368`/`sub_80263DC`/`sub_80263F8`/`nullsub_26`**
+  (`src/system/bg_scroll_layer_25fc8.c`, new file - GitHub issue #42,
+  compiled with **old_agbcc**) - the BG-scroll layer's methods (base
+  table `gStaticData_087E4C14`: destroy, reset, load tiles, draw row,
+  draw all visible rows), its BGnCNT-shadow setters/getters, the
+  32-entry wrap helpers, and the tile-slot-pooled layer-0 overrides
+  (table `gStaticData_087E4C64`: draw row/column through the pool,
+  release a row/column, shrink the resident range, reset, load tiles,
+  clamp a scroll step). All plain C; `sub_8025FC8` needed a goto loop.
+  `sub_802612C` was hidden in the old disassembly and `sub_802613E` was
+  mislabelled (it starts at `0x0802613C`). `asm/code_3_2_17_25fc8.s`
+  removed. See
+  [docs/matching/issue-42-bg-scroll-layer.md](../matching/issue-42-bg-scroll-layer.md).
 - **`sub_8026418`/`sub_8026448`/`sub_8026480`/`sub_802648C`/`sub_80264F8`/`sub_80265A0`/`sub_80265FC`/`sub_8026618`**
   (`src/system/tile_slot_pool.c`, new file - GitHub issue #43) - BG
   layer 0 of the level-layers singleton (constructor/destructor chaining
