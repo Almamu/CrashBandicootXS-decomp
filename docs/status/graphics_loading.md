@@ -93,10 +93,33 @@ below.)
   NAKED transcription" below). `sub_801F680` is the one instance built
   via `sub_800A604` instead of `sub_8009ED0`. This closes the whole
   `sub_801EF0C`-`sub_801FCB4` stretch of what used to be
-  `asm/code_3_2_17_1e990.s` (now trimmed to just `sub_801EA5C`-
-  `sub_801EE3C`, the still-raw "trigger effect type N" twins) - see
+  `asm/code_3_2_17_1e990.s` (then trimmed to just `sub_801EA5C`-
+  `sub_801EE3C`, the "trigger effect type N" twins - since matched, see
+  the next entry) - see
   [issue-31-graphics-loading.md](../matching/issue-31-graphics-loading.md)'s
   "Sixth pass".
+- **`sub_801EA5C`**, **`sub_801EB04`**, **`sub_801EBF0`**,
+  **`sub_801EC9C`**, **`sub_801ED6C`**, **`sub_801EE3C`**
+  (`src/graphics/graphics_loading_1ea5c.c`) - issue #30: six "trigger
+  effect type N" spawners (a `sub_8023404`/`gUnknown_030012C0+2`
+  collected-bit test, then a `sub_8008434` part with a fixed bank
+  offset, tag and type byte registered with `gUnknown_030012EC`; the
+  last three hand over to `sub_8018D70` in level mode 1). All plain C
+  once built with **old_agbcc** (`OLD_AGBCC_OBJS`), whose mask-before-
+  `ldrb` order the ROM shows; the current agbcc misses all six, which is
+  likely also what parked the `trigger_effect.c` siblings.
+  Retires `asm/code_3_2_17_1e990.s`. Uses the new shared
+  `include/gfx_part.h` (moved out of `actor_part_188d0.c`). See
+  [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)'s
+  "Tenth pass".
+- **`sub_8022354`** (UNUSED), **`sub_8022468`**
+  (`src/graphics/graphics_loading_22354.c`) - the gap between issues #33
+  and #34 (no issue of its own): the game context's never-called
+  destructor (tears down every singleton `sub_8022230` builds) and the
+  per-level text-list pager with its palette blank/BG2-affine reset.
+  Real C, current agbcc (both compilers match). Retires
+  `asm/code_3_2_17_22354.s`. See
+  [gap-22354-game-context.md](../matching/gap-22354-game-context.md).
 - **`sub_8021668`**/**`sub_8021748`**/**`sub_80217D0`**/**`sub_802183C`**/
   **`sub_80218C4`**/**`sub_80218E8`**/**`sub_8021974`**/**`sub_8021998`**/
   **`sub_80219BC`**/**`sub_80219E0`**/**`nullsub_21`**/**`sub_8021A00`**/

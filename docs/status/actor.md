@@ -526,7 +526,7 @@ from "core" graphics.
   everything before it in that raw file - `sub_802AC28`'s giant
   kind-dispatch actor-part-factory constructor and the run of actor-
   part-factory/animation-table-state functions between it and here -
-  stays raw, still out of scope; see
+  stayed raw then, since matched in `actor_part_2ac28.c` (below); see
   [docs/matching/issue-50-actor-bc68.md](../matching/issue-50-actor-bc68.md)):
   `sub_802BC68`, `sub_802BD18`, `sub_802BD24`, `sub_802BD64`,
   `sub_802BDD0`, `sub_802BE34`, `sub_802BE80` - an accumulator-drain/
@@ -812,6 +812,17 @@ from "core" graphics.
   re-indexing `anims[animIndex]` per field, and the destructor
   `sub_803283C` compiled to the ROM's parameter-copy order in plain C.
   See [docs/matching/pmf-dispatch-retry.md](../matching/pmf-dispatch-retry.md).
+- `src/graphics/actor_part_2ac28.c` (new file, GitHub issue #51, ROM
+  `0x0802AC28`-`0x0802B364`, formerly `asm/code_3_2_20_8b7c_ac28.s`, now
+  retired): `sub_802AC28`, `sub_802B12C`, `sub_802B174`, `sub_802B1A8`,
+  `ConstructAnimTableState`, `sub_802B218`, `ConstructActorPart` - the
+  per-kind actor factory (a 39-case switch of inlined `new Foo(...)`
+  constructors over the `struct anim_table_record` table at
+  `gUnknown_0300147C`), three fixed-record constructors, category vtable
+  slots 0/1 (install the animation table and build the player; turn a
+  level spawn record into a factory call) and the player constructor.
+  All 7 real C, current agbcc (both compilers match). See
+  [docs/matching/issue-51-actor-2ac28.md](../matching/issue-51-actor-2ac28.md).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.

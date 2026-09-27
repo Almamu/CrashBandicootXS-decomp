@@ -29,7 +29,10 @@ struct anim_table_record {
     u32 *table_B;               // 0x08 - frame address/offset array, see the comment above struct sprite_frame
     u8 header_byte;              // 0x0C - copied into the runtime per-part instance at offset +0x18 by InitActorPart; role beyond that not traced
     u8 pad_0D[3];
-    u8 unknown_10[0x18];         // 0x10 - always 0 in every record observed
+    u8 unknown_10[4];            // 0x10 - always 0 in every record observed
+    u8 vector_14[0xC];           // 0x14 - copied into the runtime per-part instance at +0x38 by InitActorPart; always 0 in every record observed
+    s32 spawnX;                  // 0x20 - added to the spawn X by sub_802AC28 (the per-kind actor factory); always 0 in every record observed
+    s32 spawnY;                  // 0x24 - added to the spawn Y by sub_802AC28; always 0 in every record observed
 }; // 0x28
 COMPILE_TIME_ASSERT(sizeof(struct anim_table_record) == 0x28);
 
