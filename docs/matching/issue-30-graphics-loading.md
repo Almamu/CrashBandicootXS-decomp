@@ -657,3 +657,77 @@ Verified via a full clean `rm -rf build && make NON_MATCHING=1 report`
 (clean compile, no warnings) + `objdiff-cli report generate` and a full
 clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` (`La suma coincide`).
+
+## Tenth pass: `sub_801EA5C`-`sub_801EE3C` matched as real C under old_agbcc
+
+The last raw stretch of this issue, `asm/code_3_2_17_1e990.s`
+(`0x0801EA5C`-`0x0801EF0C`, six functions), is now real C in
+`src/graphics/graphics_loading_1ea5c.c`, and the raw file is retired.
+
+These are the "trigger effect type N" spawners the fifth pass flagged
+as likely to hit the same register-rotation gap that parked
+`sub_8020E84`-`sub_802117C` (`trigger_effect.c`) as NAKED. That gap was
+the compiler. The ROM's bit tests read `movs rA, #mask; ldrb rB, [..];
+ands rA, rB` - the constant is materialized before the byte it is ANDed
+with - which is old_agbcc's tell (docs/matching/issue-24-boss-actor.md).
+Built with `tools/agbcc/bin/old_agbcc` (the object is on the Makefile's
+`OLD_AGBCC_OBJS`), all six match as plain C with no register pins, no
+inline asm and no `goto`s. Under the current agbcc the same source
+differs in all six (20-34 changed instructions each).
+
+What the six do (all four-argument `(u32 a0, u16 a1, u16 a2, u16 a3)`
+spawners reached through the trigger dispatch table at
+`gStaticData_0816C6C0`; `sub_801EB04` is also called directly from
+`game_loop2.c`):
+
+- `sub_801EA5C`/`sub_801EB04`/`sub_801EBF0` test bit 0/1/2 of the byte
+  `sub_8023404(gUnknown_030012C0)` returns a pointer to. If it is clear
+  they spawn a `sub_8008434` part, point its animation bank at
+  `**gUnknown_030012D0 + 0x1BC` (`sub_801EA5C`) or `+ 0x180`, set its
+  tag (+0x2D) and type byte (+0x0A: 0x1B/0x1D/0x1E), run the
+  `sub_80087C0`/`sub_80087B4`/`sub_800872C` trio, store `sub_800815C`'s
+  frame nibble and register the part with the `gUnknown_030012EC`
+  manager. `sub_801EB04` additionally spawns effect 0x2B through
+  `sub_8025BAC(gUnknown_030012E4, ...)` and sets bits 0-1 of its +0x28
+  to 1 and clears its "hidden" flag bit.
+- `sub_801EC9C`/`sub_801ED6C`/`sub_801EE3C` first call
+  `sub_80233B4(gUnknown_030012C0)`; if that returns 1 they hand the
+  spawn to `sub_8018D70` (`actor_part_188d0.c`) with kind 0/1/2.
+  Otherwise they test bit 0/2/1 of `gUnknown_030012C0+2` and spawn the
+  same way (tags 3/2/0, types 0x1F/0x20/0x22).
+
+The only things the C has to get right:
+
+- **`tag`/`type` as locals.** The ROM loads both constants into
+  callee-saved registers (`r8`/`sb`) before the `sub_8008434` call and
+  stores them from there afterwards. That is how this compiler treats a
+  variable assigned before the call; a literal at the store site is
+  loaded at the store instead.
+- **The bit's type.** `sub_801EB04`/`sub_801EE3C` keep the tested bit
+  (it is stored as the tag, or passed on to `sub_8025BAC`) and the ROM
+  narrows it with `lsls #24; lsrs #24`, so it is `u8`; `sub_801EA5C`
+  keeps it unnarrowed, so it is `s32` there.
+- **Branch layout of the mode-1 hand-off.** The ROM tests
+  `sub_80233B4(...) == 1` with a `beq` to the `sub_8018D70` call placed
+  after the spawn body, which is `if (... != 1) { spawn } else {
+  sub_8018D70(...); }` - the other nesting puts the hand-off first.
+
+The part object is `struct gfx_part`, moved out of
+`actor_part_188d0.c` into the new shared `include/gfx_part.h` (bits 0-3
+of +0x28 split into two 2-bit fields for `sub_801EB04`'s write; nothing
+in `actor_part_188d0.c` used them, and it still matches).
+
+The four `trigger_effect.c` siblings (`sub_8020E84`, `sub_8020F7C`,
+`sub_802107C`, `sub_802117C`, NAKED with `#if NON_MATCHING` near-misses
+written against the current agbcc) have the same mask-first tell and
+very likely fall to the same switch. They were outside this pass's
+scope and are unchanged.
+
+Issue #30 stays open: `LoadGraphicsPackage`, `sub_801E644`,
+`sub_801E688`, `sub_801E788` and the other NAKED parks listed above are
+still NAKED.
+
+Verified via a full clean `rm -rf build && make NON_MATCHING=1 report`
+(no warnings from the new file) and a full clean `rm -rf build
+crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
+compare` (`crashbandicootxs.gba: OK`).

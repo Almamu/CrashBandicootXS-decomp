@@ -14,7 +14,11 @@ struct icon_slot {
 };
 
 struct icon_record {
-    u8 unused_00[0x10];
+    u8 unused_00[8];
+    /* The object's destructor entry (gcc 2.x {this-adjust, fn} method
+     * record): sub_8022354 tears both icon managers down by calling it
+     * with the "delete" flags 3. */
+    struct icon_slot destroy;
     /* A 7th slot (index 6, offset 0x40) is read by sub_8037388 - extends
      * the 6-slot record sub_8006600/sub_8000EE4 already established. */
     struct icon_slot slots[7];
