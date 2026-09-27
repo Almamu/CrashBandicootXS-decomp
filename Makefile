@@ -131,18 +131,19 @@ $(ELF): $(OBJS) $(LDSCRIPT)
 # docs/matching/issue-24-boss-actor.md. old_agbcc has no
 # -fprologue-bugfix option.
 OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
-                  $(C_BUILDDIR)/graphics/actor_part3.o \
-                  $(C_BUILDDIR)/graphics/actor_part7.o \
-                  $(C_BUILDDIR)/graphics/actor_part7b.o \
                   $(C_BUILDDIR)/graphics/actor_part11d.o \
                   $(C_BUILDDIR)/graphics/actor_part11e.o \
                   $(C_BUILDDIR)/graphics/actor_part11f.o \
                   $(C_BUILDDIR)/graphics/actor_part12.o \
+                  $(C_BUILDDIR)/graphics/actor_part128.o \
                   $(C_BUILDDIR)/graphics/actor_part27a.o \
-                  $(C_BUILDDIR)/graphics/actor_part_13c60.o \
-                  $(C_BUILDDIR)/graphics/actor_part_14674.o \
+                  $(C_BUILDDIR)/graphics/actor_part3.o \
+                  $(C_BUILDDIR)/graphics/actor_part7.o \
+                  $(C_BUILDDIR)/graphics/actor_part7b.o \
                   $(C_BUILDDIR)/graphics/actor_part86.o \
                   $(C_BUILDDIR)/graphics/actor_part86b.o \
+                  $(C_BUILDDIR)/graphics/actor_part_13c60.o \
+                  $(C_BUILDDIR)/graphics/actor_part_14674.o \
                   $(C_BUILDDIR)/graphics/actor_part_16048.o \
                   $(C_BUILDDIR)/graphics/actor_part_17524.o \
                   $(C_BUILDDIR)/graphics/actor_part_18008.o \
@@ -154,7 +155,23 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/actor_part_1da38.o \
                   $(C_BUILDDIR)/graphics/actor_part_1dfec.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_1ea5c.o \
-                  $(C_BUILDDIR)/system/bg_scroll_layer_25fc8.o
+                  $(C_BUILDDIR)/graphics/graphics_loading_1ef0c.o \
+                  $(C_BUILDDIR)/graphics/graphics_loading_1fdec.o \
+                  $(C_BUILDDIR)/graphics/graphics_loading_1feec.o \
+                  $(C_BUILDDIR)/graphics/graphics_loading_21280.o \
+                  $(C_BUILDDIR)/graphics/graphics_loading_21668.o \
+                  $(C_BUILDDIR)/graphics/hud_digit_array.o \
+                  $(C_BUILDDIR)/system/bg_scroll_layer_25fc8.o \
+                  $(C_BUILDDIR)/system/game_loop14.o \
+                  $(C_BUILDDIR)/system/game_loop16.o \
+                  $(C_BUILDDIR)/system/game_loop29.o \
+                  $(C_BUILDDIR)/system/game_loop3.o \
+                  $(C_BUILDDIR)/system/game_loop37.o \
+                  $(C_BUILDDIR)/system/game_loop4.o \
+                  $(C_BUILDDIR)/system/game_loop40.o \
+                  $(C_BUILDDIR)/system/game_loop46.o \
+                  $(C_BUILDDIR)/system/game_loop57.o \
+                  $(C_BUILDDIR)/system/game_loop8.o
 $(OLD_AGBCC_OBJS): CC1 := $(CC1_OLD)
 $(OLD_AGBCC_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1FLAGS))
 
