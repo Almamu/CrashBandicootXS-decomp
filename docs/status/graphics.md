@@ -82,6 +82,17 @@ and [graphics_loading.md](./graphics_loading.md).
   inlined "mark actor gone" bitmap sequence matched without inline asm.
   See [docs/matching/issue-21-input-ctrl.md](../matching/issue-21-input-ctrl.md).
 
+- `src/graphics/actor_part_188d0.c` (new file - GitHub issue #23):
+  23 of the 25 functions in `sub_80188D0`-`sub_8019660` as real C -
+  method-table ("vtable" at `self+0xc`) constructor/destructor pairs
+  (`sub_8018948` is UNUSED), a part-gone bitmap setter, the
+  squares-table constructor `sub_80189EC`, the two-part effect's child
+  spawners `sub_8018BDC`/`sub_8018CB0`, the "mover" object
+  (`sub_8018D70` spawner, `sub_8018E4C` per-frame update, `sub_8019094`
+  state setter, `sub_8019214` hit-effect spawner), the part hit test
+  `sub_8019324`, and two more per-frame methods (`sub_8019464`,
+  `sub_80194E0`). The other two are NAKED - see "Parked" below. See
+  [docs/matching/issue-23-graphics.md](../matching/issue-23-graphics.md).
 - `src/graphics/actor_part_1b85c.c` (new file - GitHub issue #26):
   `sub_801B85C`-`sub_801B980` (the player-follow child `sub_8017600`
   spawns), `sub_801B984`-`sub_801BAD0` (a 0x78-byte sprite subclass),
@@ -98,6 +109,13 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 
 ## Parked - NAKED asm transcriptions (byte-correct, not decompiled C)
 
+- **`sub_8018A30`** and **`sub_801961C`** (`src/graphics/actor_part_188d0.c`,
+  issue #23) - NAKED transcriptions, C kept under `#if NON_MATCHING`.
+  `sub_8018A30` (two-part effect state machine) needs r7 as a
+  short-lived scratch register, which this compiler never chooses and
+  which can't be pinned; `sub_801961C` stores a one-byte by-value struct
+  argument after its slot address, the reverse of every C shape tried.
+  See [docs/matching/issue-23-graphics.md](../matching/issue-23-graphics.md).
 - **`sub_801BC28`**, **`sub_801C608`**, **`sub_801C96C`**
   (`src/graphics/actor_part_1b85c.c`, issue #26) - the level-select
   screen's constructor, record loader and main loop. Each has a full C

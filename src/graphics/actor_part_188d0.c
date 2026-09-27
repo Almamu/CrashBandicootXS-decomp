@@ -1,0 +1,1538 @@
+#include "core.h"
+
+/* GitHub issue #23: 0x080188D0-0x0801967C, formerly
+ * asm/code_3_2_17_188d0.s (details in docs/matching/issue-23-graphics.md).
+ *
+ * Small method-table ("vtable" at self+0x0C) objects of the same C++-style
+ * family as actor_part_17524.c/actor_part27*.c: each class here is a
+ * constructor (base sub_800B8C8/sub_8017A8C/sub_801B7D8, then its own
+ * table pointer) plus a destructor (table pointer, then the base
+ * destructor), and a handful of per-frame update methods that drive one
+ * "part" - a sub_8009ED0-built on-screen object (struct gfx_part below)
+ * whose animation tag/frame, mirror bit and flags they set. Virtual calls
+ * go through the sub_803AD80/AD84/AD88 call-via-register trampolines with
+ * gcc 2.x's {this-adjust, fn} method entries.
+ *
+ * - sub_8018A30/sub_8018BDC/sub_8018CB0: a two-part effect that spawns two
+ *   child parts, aims them at each other and sinks off the bottom of the
+ *   level.
+ * - sub_8018D70/sub_8018E4C/sub_8019094/sub_8019214: a "mover" that glides
+ *   its part between targets (sub_80196B8 sets the target, sub_8018E4C
+ *   interpolates it), bouncing across the level in a height pattern chosen
+ *   by the level config (gStaticData_0816C358-0816C362 per-config timings),
+ *   and spawns hit effects (sub_8019214).
+ * - sub_8019324: hit test of a part against the player and the
+ *   gUnknown_030012F0 list (sub_8007xxx boxes, sub_8001688 overlap).
+ * - sub_80189EC: allocates a 257-entry table of i*i>>8 squares.
+ *
+ * Matching notes: this code materializes a byte-RMW's constant/mask
+ * before loading the byte, and computes stored values before their
+ * addresses, where plain C does the opposite - hence the small
+ * barrier-carrying helpers (OrFlags, SetFrameNibble, ...), pins, and a
+ * couple of per-site macros. Two functions (sub_8018A30, sub_801961C) are
+ * NAKED transcriptions with their C kept under NON_MATCHING.
+ *
+ * UNUSED - no caller anywhere in the ROM (checked the asm/ and expected/
+ * sources, every .c file under src/, and every word-aligned Thumb pointer
+ * in baserom.gba): sub_8018948 (the gStaticData_087E44FC class's
+ * constructor). Matched anyway. */
+
+struct gfx_method
+{
+    s16 thisOffset;
+    u8 unk_2[2];
+    void *fn;
+};
+
+struct gfx_vtable
+{
+    u8 unk_00[0x18];
+    struct gfx_method method_18; // 0x18 - "attach to part"
+    struct gfx_method method_20; // 0x20 - "set state"
+    u8 unk_28[0x28];
+    struct gfx_method method_50; // 0x50
+};
+
+struct anim_record
+{
+    u8 unk_00[0x16];
+    u8 frameCount; // 0x16
+    u8 unk_17[5];
+};
+
+struct anim_bank
+{
+    struct anim_record *records;
+};
+
+struct gfx_vec
+{
+    s32 x;
+    s32 y;
+};
+
+struct gfx_part
+{
+    struct gfx_vec pos;     // 0x00
+    u16 id;                 // 0x08
+    u8 unk_0A;              // 0x0A
+    u8 unk_0B;
+    u8 gone:1;              // 0x0C bit 0
+    u8 flags_1:1;
+    u8 hidden:1;            // 0x0C bit 2
+    u8 flags_3:1;
+    u8 active:1;            // 0x0C bit 4
+    u8 flags_5:3;
+    u8 unk_0D[0x13];
+    struct anim_bank *bank; // 0x20
+    u8 unk_24[4];
+    u8 unk_28_0:4;          // 0x28
+    u8 flipX:1;
+    u8 unk_28_5:3;
+    u8 frameNibble:4;       // 0x29
+    u8 unk_29_4:4;
+    u8 unk_2A[2];
+    u8 unk_2C;              // 0x2C
+    u8 tag;                 // 0x2D
+    u8 unk_2E[2];
+    s32 frame;              // 0x30
+    u8 unk_34[4];
+    u8 animDone;            // 0x38
+    u8 unk_39[0xB];
+    void *ctrl;             // 0x44
+};
+
+/* The whole flags byte at +0x0C, for the spots that update it as one
+ * byte through register pins (see sub_80188FC). */
+#define PART_FLAGS(p) (*((u8 *)(p) + 0xC))
+
+struct gfx_ctrl
+{
+    u8 unk_00[8];
+    s32 state;                  // 0x08
+    struct gfx_vtable *vtable;  // 0x0C
+};
+
+/* sub_80189EC/sub_80189C4 (vtable gStaticData_087E4564) */
+struct gfx_squares
+{
+    u8 unk_00[0xC];
+    struct gfx_vtable *vtable;  // 0x0C
+    u8 unk_10[0x14];
+    s32 unk_24;                 // 0x24
+    u8 unk_28[0x20];
+    s16 *squares;               // 0x48
+};
+
+/* sub_8018A30 */
+struct gfx_pair_ctrl
+{
+    u8 unk_00[8];
+    s32 state;                  // 0x08
+    struct gfx_vtable *vtable;  // 0x0C
+    s32 counter;                // 0x10
+    u8 unk_14[8];
+    struct gfx_part *childA;    // 0x1C
+    struct gfx_part *childB;    // 0x20
+};
+
+/* sub_8018978 */
+struct gfx_offset_ctrl
+{
+    u8 unk_00[0x30];
+    s32 x;      // 0x30
+    s32 y;      // 0x34
+    s32 unk_38; // 0x38
+    s32 unk_3C; // 0x3C
+    s32 dy;     // 0x40
+    s32 dx;     // 0x44
+};
+
+struct gfx_level_cfg
+{
+    u8 unk_00[0x10];
+    s32 index;  // 0x10
+};
+
+/* sub_8018E4C/sub_8019094/sub_8019214 */
+struct gfx_mover
+{
+    u8 unk_00[8];
+    s32 state;                  // 0x08
+    struct gfx_vtable *vtable;  // 0x0C
+    u8 dirLeft;                 // 0x10
+    u8 high;                    // 0x11
+    u8 top;                     // 0x12
+    u8 unk_13;
+    s32 targetX;                // 0x14
+    s32 targetY;                // 0x18
+    s32 deltaX;                 // 0x1C
+    s32 deltaY;                 // 0x20
+    s32 stepsLeft;              // 0x24
+    s32 steps;                  // 0x28
+    s32 nextState;              // 0x2C
+    s32 timer;                  // 0x30
+    s32 blink;                  // 0x34
+    u8 blinking;                // 0x38
+    u8 unk_39[3];
+    struct gfx_level_cfg *cfg;  // 0x3C
+};
+
+/* sub_8019324 */
+struct gfx_hit_ctrl
+{
+    u8 unk_00[0x10];
+    u8 enabled;                 // 0x10
+    u8 unk_11[3];
+    struct gfx_ctrl *owner;     // 0x14
+};
+
+/* sub_80194E0 */
+struct gfx_kind_ctrl
+{
+    u8 unk_00[8];
+    s32 state;                  // 0x08
+    struct gfx_vtable *vtable;  // 0x0C
+    s32 kind;                   // 0x10
+};
+
+struct gfx_box
+{
+    s32 x;
+    s32 y;
+    s32 w;
+    s32 h;
+};
+
+struct gfx_player
+{
+    s32 x;                      // 0x00
+    s32 y;                      // 0x04
+    u8 unk_08[0x10];
+    u8 *vtable;                 // 0x18
+    u8 unk_1C[0xE8];
+    u8 unk_104;                 // 0x104
+};
+
+struct gfx_list
+{
+    u8 unk_00[4];
+    s32 count;                  // 0x04
+    u8 unk_08[4];
+    struct gfx_part **items;    // 0x0C
+};
+
+struct gfx_level
+{
+    u8 unk_00[0x10];
+    struct { u8 unk_00[0x10]; s32 width; s32 height; } *layer0;
+};
+
+extern void *gUnknown_030012B4;
+extern void *gUnknown_030012BC;
+extern void *gUnknown_030012C0;
+extern u8 ***gUnknown_030012D0;
+extern struct gfx_player *gUnknown_030012D8;
+extern struct gfx_list *gUnknown_030012F0;
+extern void *gUnknown_030012F4;
+extern struct gfx_level *gUnknown_03001308;
+extern u8 gStaticData_087E4494[];
+extern u8 gStaticData_087E44FC[];
+extern u8 gStaticData_087E4564[];
+extern u8 gStaticData_087E45CC[];
+extern u8 gStaticData_087E4634[];
+extern u8 gStaticData_087E469C[];
+extern u8 gStaticData_0816C35C[];
+extern u8 gStaticData_0816C35F[];
+extern u8 gStaticData_0816C362[];
+
+extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
+extern void sub_800B8A8(void *self, s32 flags);
+extern void sub_800B8C8(void *self);
+extern void sub_8017A78(void *self, s32 flags);
+extern void *sub_8017A8C(void *self);
+extern void sub_8026EB4(void *ptr);
+extern void *sub_8026EC0(u32 size);
+extern void *sub_8026EDC(u32 size);
+extern struct gfx_part *sub_8009ED0(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
+extern void sub_80087C0(void *part);
+extern void sub_80087B4(void *part);
+extern void sub_800872C(void *part, u8 val);
+extern s32 sub_800815C(void *part);
+extern void sub_8008E94(void *manager, void *value);
+extern s32 sub_803AD80(void *self, s32 arg, void *fn);
+extern s32 sub_803AD84(void *self, void *arg1, s32 arg2, void *fn);
+extern void sub_803AD88(void *arg0, s32 arg1, s32 arg2, s32 arg3);
+extern s32 sub_803ADB4(s32 dividend, s32 divisor);
+extern s32 sub_8037E54(s32 value, s32 divisor);
+extern u8 sub_80231C4(void *self);
+extern void sub_80241A4(void);
+extern void *sub_8007CF8(void *dest, void *pt);
+extern void *sub_8007C30(void *dest, void *pt);
+extern void *sub_8007B98(void *dest, void *pt);
+extern u8 sub_8001688(void *buf1, void *buf2);
+extern void sub_801B7C4(void *self, s32 flags);
+/* sub_801B7D8's fifth argument is a one-byte struct passed by value: the
+ * ROM stores just that byte (`strb`) into its outgoing stack slot, and the
+ * callee reads it back through the slot's address. */
+struct gfx_byte_arg
+{
+    u8 value[1];
+} __attribute__((packed));
+
+extern void sub_801B7D8(void *self, s32 a1, s32 a2, u8 a3, struct gfx_byte_arg a4, s32 a5);
+extern void *sub_8019758(void *mem);
+extern void *sub_80196F8(void *mem, void *owner);
+extern void sub_80196B8(void *self, struct gfx_part *part, s32 x, s32 y);
+extern void sub_801967C(void *self, u8 flag);
+extern void sub_8019770(void *self, struct gfx_part *part, s32 mode);
+
+void sub_8018BDC(struct gfx_pair_ctrl *self, struct gfx_part *part);
+void sub_8018CB0(struct gfx_pair_ctrl *self, struct gfx_part *part);
+void sub_8019094(struct gfx_mover *self, struct gfx_part *part, s32 mode);
+void sub_8019214(struct gfx_mover *self, struct gfx_part *part, s32 kind);
+void *sub_80195EC(void *self, s32 kind);
+void *sub_8019660(void *self, void *cfg);
+
+#define CALL2(obj, m, a)                                                       \
+    do                                                                         \
+    {                                                                          \
+        struct gfx_method *_m = &(obj)->vtable->m;                             \
+        sub_803AD80((u8 *)(obj) + _m->thisOffset, (a), _m->fn);                \
+    } while (0)
+#define CALL3(obj, m, a, b)                                                    \
+    do                                                                         \
+    {                                                                          \
+        struct gfx_method *_m = &(obj)->vtable->m;                             \
+        sub_803AD84((u8 *)(obj) + _m->thisOffset, (a), (b), _m->fn);           \
+    } while (0)
+
+static inline void SetTag(struct gfx_part *part, s32 tag)
+{
+    register s32 t asm("r0") = tag;
+
+    asm("" : "+r"(t));
+    part->tag = t;
+    sub_80087C0(part);
+    sub_80087B4(part);
+    sub_800872C(part, 0);
+}
+
+
+
+static inline void AndFlags(struct gfx_part *part, s32 mask)
+{
+    asm("" : "+r"(mask));
+    PART_FLAGS(part) = mask & PART_FLAGS(part);
+}
+
+/* Read-modify-write helpers for the byte-wide bitfields at +0x0C/+0x28/
+ * +0x29. The ROM always materializes the mask/constant *before* loading
+ * the byte it applies to; plain bitfield assignments load the byte first,
+ * so each helper passes its constant through an empty asm barrier. */
+static inline void OrFlags(struct gfx_part *part, s32 bits)
+{
+    asm("" : "+r"(bits));
+    PART_FLAGS(part) = bits | PART_FLAGS(part);
+}
+
+static inline void SetFrameNibbleM(struct gfx_part *part, s32 v, s32 mask)
+{
+    register s32 val asm("r0") = v;
+    register u8 *p asm("r2") = (u8 *)part + 0x29;
+    register s32 m asm("r1");
+    register s32 b asm("r3");
+
+    val &= mask;
+    asm volatile("mov %0, #0x10\n\tneg %0, %0" : "=r"(m));
+    b = *p;
+    m &= b;
+    m |= val;
+    *p = m;
+}
+
+static inline void SetFrameNibble(struct gfx_part *part, s32 v)
+{
+    register s32 val asm("r0") = v;
+    register u8 *p asm("r2") = (u8 *)part + 0x29;
+    register s32 m asm("r1");
+    register s32 b asm("r3");
+
+    val &= 0xF;
+    asm volatile("mov %0, #0x10\n\tneg %0, %0" : "=r"(m));
+    b = *p;
+    m &= b;
+    m |= val;
+    *p = m;
+}
+
+static inline void CopyFlipX(struct gfx_part *dst, struct gfx_part *src)
+{
+    u32 sv = (u32)src + 0x28;
+    register u8 *dp asm("r2") = (u8 *)dst + 0x28;
+    register s32 bit asm("r1") = 0x10;
+    register s32 m asm("r0");
+    register s32 b asm("r3");
+
+    asm("" : "+r"(bit));
+    sv = *(u8 *)sv;
+    bit &= sv;
+    m = -0x11;
+    asm("" : "+r"(m));
+    b = *dp;
+    m &= b;
+    m |= bit;
+    *dp = m;
+}
+
+
+
+static inline s32 Abs(s32 v)
+{
+    s32 sign = v >> 31;
+
+    return (v ^ sign) - sign;
+}
+
+static inline void SetFrame(struct gfx_part *part, s32 frame)
+{
+    struct anim_bank *bank = part->bank;
+    u8 *tag = &part->tag;
+    struct anim_record *records = bank->records;
+    s32 count = records[*tag].frameCount;
+
+    if (frame >= count)
+        frame = count - 1;
+    part->frame = frame;
+}
+
+/* SetFrame with the ROM's register choice spelled out: the record table in
+ * r1, the tag's address in r2 and the tag itself in R_TAG (a callee-saved
+ * register the allocator reaches for because r0-r3 are all busy at that
+ * point in the ROM's allocation). */
+#define SET_FRAME_R(part, frameExpr, R_FRAME, R_TAG)                           \
+    do                                                                         \
+    {                                                                          \
+        register s32 _frame asm(R_FRAME) = (frameExpr);                        \
+        struct anim_bank *_bank = (part)->bank;                                \
+        register u8 *_tagp asm("r2") = &(part)->tag;                           \
+        register struct anim_record *_records asm("r1") = _bank->records;      \
+        register u32 _tag asm(R_TAG) = *_tagp;                                 \
+        s32 _count = _records[_tag].frameCount;                                \
+                                                                               \
+        if (_frame >= _count)                                                  \
+            _frame = _count - 1;                                               \
+        (part)->frame = _frame;                                                \
+    } while (0)
+
+/* "Mark part gone": set flags bit 0, then unless its id is 0xFFFF set the
+ * id's bit in the gUnknown_030012B4+0x108 bitmap - the same sequence as
+ * sub_80072D8 (graphics.c) and sub_80178EC (actor_part_17524.c), inlined.
+ * The id is re-read (`volatile`) after the 0xFFFF test, and the word index
+ * is a *signed* division of that zero-extended value, which is what gives
+ * the ROM's copy + `asr #5` + subtract. The register pins are
+ * load-bearing (docs/workflow.md step 7) and differ per call site, so they
+ * are macro parameters: the flags scratch register, the register the
+ * first id read lands in, and the bitmap base. */
+#define MARK_GONE(t, R_FLAGS, R_CUR, R_BASE)                                   \
+    do                                                                         \
+    {                                                                          \
+        {                                                                      \
+            register s32 _v asm("r0") = 1;                                     \
+            register s32 _f asm(R_FLAGS) = PART_FLAGS(t);                      \
+                                                                               \
+            _v |= _f;                                                          \
+            PART_FLAGS(t) = _v;                                                \
+        }                                                                      \
+        MARK_GONE_BITMAP(t, R_CUR, R_BASE);                                    \
+    } while (0)
+
+#define GONE_SLOT(slot, base) slot = (u32 *)((base) + 0x108)
+/* sub_8019324: the ROM holds the 0x108 bitmap offset in r4, where the
+ * allocator would otherwise pick r5 */
+#define GONE_SLOT_R4(slot, base)                                               \
+    {                                                                          \
+        register s32 _k asm("r4") = 0x108;                                     \
+                                                                               \
+        asm("" : "+r"(_k));                                                    \
+        slot = (u32 *)((base) + _k);                                           \
+    }
+
+#define MARK_GONE_BITMAP(t, R_CUR, R_BASE)                                     \
+    MARK_GONE_BITMAP_OFF(t, R_CUR, R_BASE, GONE_SLOT)
+#define MARK_GONE_BITMAP_R4(t, R_CUR, R_BASE)                                  \
+    MARK_GONE_BITMAP_OFF(t, R_CUR, R_BASE, GONE_SLOT_R4)
+
+#define MARK_GONE_BITMAP_OFF(t, R_CUR, R_BASE, OFFSET_STMT)                    \
+    do                                                                         \
+    {                                                                          \
+        {                                                                      \
+            register s32 _none asm("r0") = 0xFFFF;                             \
+            register u32 _cur asm(R_CUR) = (t)->id;                            \
+                                                                               \
+            if (_cur != _none)                                                 \
+            {                                                                  \
+                register s32 _id asm("r3") = *(vu16 *)&(t)->id;                \
+                register u8 *_base asm(R_BASE) = gUnknown_030012B4;            \
+                register s32 _word asm("r0") = _id;                            \
+                s32 _off;                                                      \
+                u32 *_slot;                                                    \
+                                                                               \
+                _word /= 32;                                                   \
+                _off = _word * 4;                                              \
+                OFFSET_STMT(_slot, _base);                                     \
+                _slot = (u32 *)((u8 *)_slot + _off);                           \
+                _word = _id - _word * 32;                                      \
+                *_slot |= 1 << _word;                                          \
+            }                                                                  \
+        }                                                                      \
+    } while (0)
+
+void *sub_80188D0(struct gfx_ctrl *self)
+{
+    sub_800B8C8(self);
+    self->vtable = (struct gfx_vtable *)gStaticData_087E4494;
+    return self;
+}
+
+void sub_80188E8(struct gfx_ctrl *self, s32 flags)
+{
+    self->vtable = (struct gfx_vtable *)gStaticData_087E4494;
+    sub_800B8A8(self, flags);
+}
+
+void sub_80188FC(struct gfx_ctrl *self, struct gfx_part *part)
+{
+    register struct gfx_part *t asm("r1") = part;
+
+    if (t->animDone)
+        MARK_GONE(t, "r2", "r4", "r2");
+}
+
+/* UNUSED - see the top-of-file comment. */
+void *sub_8018948(struct gfx_ctrl *self)
+{
+    sub_800B8C8(self);
+    self->vtable = (struct gfx_vtable *)gStaticData_087E44FC;
+    return self;
+}
+
+void sub_8018960(struct gfx_ctrl *self, s32 flags)
+{
+    self->vtable = (struct gfx_vtable *)gStaticData_087E44FC;
+    sub_800B8A8(self, flags);
+}
+
+void nullsub_19(void)
+{
+}
+
+void sub_8018978(struct gfx_offset_ctrl *self, struct gfx_part *partArg)
+{
+    register struct gfx_part *part asm("ip") = partArg;
+    s32 px = part->pos.x;
+
+    if (self->x <= px)
+    {
+        register u8 *p asm("r0") = (u8 *)part + 0x28;
+        register s32 m asm("r1") = -0x11;
+        register s32 b asm("r2");
+
+        asm("" : "+r"(m));
+        b = *p;
+        m &= b;
+        b = 0x10;
+        m |= b;
+        *p = m;
+    }
+    else
+    {
+        register u8 *p asm("r1") = (u8 *)part + 0x28;
+        register s32 m asm("r0") = -0x11;
+        register s32 b asm("r2");
+
+        asm("" : "+r"(m));
+        b = *p;
+        m &= b;
+        *p = m;
+    }
+    self->unk_38 = 0x1A;
+    self->unk_3C = 0x1A;
+    {
+        register struct gfx_part *q asm("r1") = part;
+        self->dy = q->pos.y - self->y;
+    }
+    {
+        register struct gfx_part *q asm("r2") = part;
+        self->dx = q->pos.x - self->x;
+    }
+}
+
+void sub_80189C4(struct gfx_squares *self, s32 flags)
+{
+    self->vtable = (struct gfx_vtable *)gStaticData_087E4564;
+    if (self->squares != NULL)
+        sub_8026EB4(self->squares);
+    sub_8017A78(self, flags);
+}
+
+void *sub_80189EC(struct gfx_squares *self)
+{
+    s32 i;
+
+    sub_8017A8C(self);
+    self->vtable = (struct gfx_vtable *)gStaticData_087E4564;
+    self->unk_24 = -1;
+    self->squares = sub_8026EC0(0x202);
+    for (i = 0; i <= 0x100; i++)
+        self->squares[i] = (i * i) >> 8;
+    return self;
+}
+
+/* State machine for the two-part effect built by sub_8018BDC/sub_8018CB0:
+ * state 0 spawns both children and moves to state 1; state 1 picks the
+ * first child's animation tag from the second child's height, mirrors
+ * both parts towards the second child and sets both parts' frame from
+ * the horizontal distance (0-5, scaled by the level width); state 2
+ * counts to 3 before moving on; state 3 sinks everything 0x80 per frame
+ * until it leaves the bottom of the level, then signals sub_80241A4.
+ *
+ * NAKED (see docs/matching/issue-23-graphics.md): the C below reproduces
+ * every instruction's operation and the jump table, but the ROM uses r7
+ * as a short-lived scratch register in three places (the flip-bit byte,
+ * the first frame-clamp's tag byte, the 0x4000 constant in state 3) with
+ * `self`/`part` in r5/r6. Unpinned, this compiler puts `self`/`part` in
+ * r6/r7 instead; pinning them to r5/r6 makes it spill to r8 rather than
+ * ever choosing r7 for scratch, and r7 itself can't be pinned (the
+ * agbcc push/pop bug). The C is kept under NON_MATCHING. */
+#if NON_MATCHING
+void sub_8018A30(struct gfx_pair_ctrl *self, struct gfx_part *part)
+{
+    switch (self->state)
+    {
+    case 0:
+        sub_8018BDC(self, part);
+        sub_8018CB0(self, part);
+        AndFlags(part, -5);
+        goto mode1;
+    case 1:
+    {
+        s32 y = self->childB->pos.y;
+        s32 n;
+
+        if (y <= 0x5000)
+            SetTag(self->childA, 5);
+        else if (y <= 0x7800)
+            SetTag(self->childA, 4);
+        else
+            SetTag(self->childA, 3);
+
+        n = self->childB->pos.x - part->pos.x;
+        part->flipX = n >= 0;
+        self->childA->flipX = n >= 0;
+        {
+            s32 w = gUnknown_03001308->layer0->width << 8;
+
+            n = sub_8037E54(Abs(n) * 12, w);
+        }
+        if (n > 5)
+            n = 5;
+        n = 5 - n;
+        SetFrame(part, n);
+        SetFrame(self->childA, n);
+        break;
+    }
+    case 2:
+        if (++self->counter > 2)
+        {
+            sub_8019770(self, part, 3);
+            break;
+        }
+    mode1:
+        sub_8019770(self, part, 1);
+        break;
+    case 4:
+        break;
+    case 3:
+        self->childA->pos.y += 0x80;
+        part->pos.y += 0x80;
+        if (part->pos.y >= (gUnknown_03001308->layer0->height << 8) + 0x4000)
+        {
+            if (sub_80231C4(gUnknown_030012C0))
+                sub_80241A4();
+            sub_8019770(self, part, 4);
+        }
+        break;
+    }
+}
+#else
+NAKED void sub_8018A30(struct gfx_pair_ctrl *self, struct gfx_part *part)
+{
+    asm(
+        "push {r4, r5, r6, r7, lr}\n\t"
+        "add r5, r0, #0\n\t"
+        "add r6, r1, #0\n\t"
+        "ldr r0, [r5, #8]\n\t"
+        "cmp r0, #4\n\t"
+        "bls _08018A3E\n\t"
+        "b _08018BCC\n\t"
+    "_08018A3E:\n"
+        "lsl r0, r0, #2\n\t"
+        "ldr r1, _08018A48\n\t"
+        "add r0, r0, r1\n\t"
+        "ldr r0, [r0]\n\t"
+        "mov pc, r0\n\t"
+        ".align 2, 0\n"
+    "_08018A48: .4byte _08018A4C\n"
+    "_08018A4C:\n"
+        ".4byte _08018A60\n"
+        ".4byte _08018A7C\n"
+        ".4byte _08018B6C\n"
+        ".4byte _08018B8E\n"
+        ".4byte _08018BCC\n"
+    "_08018A60:\n"
+        "add r0, r5, #0\n\t"
+        "add r1, r6, #0\n\t"
+        "bl sub_8018BDC\n\t"
+        "add r0, r5, #0\n\t"
+        "add r1, r6, #0\n\t"
+        "bl sub_8018CB0\n\t"
+        "mov r0, #5\n\t"
+        "neg r0, r0\n\t"
+        "ldrb r1, [r6, #0xc]\n\t"
+        "and r0, r1\n\t"
+        "strb r0, [r6, #0xc]\n\t"
+        "b _08018B82\n\t"
+    "_08018A7C:\n"
+        "ldr r0, [r5, #0x20]\n\t"
+        "ldr r1, [r0, #4]\n\t"
+        "mov r0, #0xa0\n\t"
+        "lsl r0, r0, #7\n\t"
+        "cmp r1, r0\n\t"
+        "bgt _08018A8E\n\t"
+        "ldr r4, [r5, #0x1c]\n\t"
+        "mov r0, #5\n\t"
+        "b _08018A9A\n\t"
+    "_08018A8E:\n"
+        "mov r0, #0xf0\n\t"
+        "lsl r0, r0, #7\n\t"
+        "cmp r1, r0\n\t"
+        "bgt _08018AB6\n\t"
+        "ldr r4, [r5, #0x1c]\n\t"
+        "mov r0, #4\n\t"
+    "_08018A9A:\n"
+        "add r1, r4, #0\n\t"
+        "add r1, #0x2d\n\t"
+        "strb r0, [r1]\n\t"
+        "add r0, r4, #0\n\t"
+        "bl sub_80087C0\n\t"
+        "add r0, r4, #0\n\t"
+        "bl sub_80087B4\n\t"
+        "add r0, r4, #0\n\t"
+        "mov r1, #0\n\t"
+        "bl sub_800872C\n\t"
+        "b _08018AD4\n\t"
+    "_08018AB6:\n"
+        "ldr r4, [r5, #0x1c]\n\t"
+        "mov r0, #3\n\t"
+        "add r1, r4, #0\n\t"
+        "add r1, #0x2d\n\t"
+        "strb r0, [r1]\n\t"
+        "add r0, r4, #0\n\t"
+        "bl sub_80087C0\n\t"
+        "add r0, r4, #0\n\t"
+        "bl sub_80087B4\n\t"
+        "add r0, r4, #0\n\t"
+        "mov r1, #0\n\t"
+        "bl sub_800872C\n\t"
+    "_08018AD4:\n"
+        "ldr r0, [r5, #0x20]\n\t"
+        "ldr r1, [r0]\n\t"
+        "ldr r0, [r6]\n\t"
+        "sub r4, r1, r0\n\t"
+        "mvn r2, r4\n\t"
+        "add r3, r6, #0\n\t"
+        "add r3, #0x28\n\t"
+        "lsr r2, r2, #0x1f\n\t"
+        "lsl r2, r2, #4\n\t"
+        "mov r1, #0x11\n\t"
+        "neg r1, r1\n\t"
+        "add r0, r1, #0\n\t"
+        "ldrb r7, [r3]\n\t"
+        "and r0, r7\n\t"
+        "orr r0, r2\n\t"
+        "strb r0, [r3]\n\t"
+        "ldr r0, [r5, #0x1c]\n\t"
+        "add r0, #0x28\n\t"
+        "ldrb r3, [r0]\n\t"
+        "and r1, r3\n\t"
+        "orr r1, r2\n\t"
+        "strb r1, [r0]\n\t"
+        "ldr r0, _08018B68\n\t"
+        "ldr r0, [r0]\n\t"
+        "ldr r0, [r0, #0x10]\n\t"
+        "ldr r1, [r0, #0x10]\n\t"
+        "lsl r1, r1, #8\n\t"
+        "asr r2, r4, #0x1f\n\t"
+        "eor r4, r2\n\t"
+        "sub r2, r4, r2\n\t"
+        "lsl r0, r2, #1\n\t"
+        "add r0, r0, r2\n\t"
+        "lsl r0, r0, #2\n\t"
+        "bl sub_8037E54\n\t"
+        "add r4, r0, #0\n\t"
+        "cmp r4, #5\n\t"
+        "ble _08018B22\n\t"
+        "mov r4, #5\n\t"
+    "_08018B22:\n"
+        "mov r0, #5\n\t"
+        "sub r4, r0, r4\n\t"
+        "add r3, r4, #0\n\t"
+        "ldr r0, [r6, #0x20]\n\t"
+        "add r2, r6, #0\n\t"
+        "add r2, #0x2d\n\t"
+        "ldr r1, [r0]\n\t"
+        "ldrb r7, [r2]\n\t"
+        "lsl r0, r7, #3\n\t"
+        "add r2, r7, #0\n\t"
+        "sub r0, r0, r2\n\t"
+        "lsl r0, r0, #2\n\t"
+        "add r0, r0, r1\n\t"
+        "ldrb r0, [r0, #0x16]\n\t"
+        "cmp r4, r0\n\t"
+        "blt _08018B44\n\t"
+        "sub r3, r0, #1\n\t"
+    "_08018B44:\n"
+        "str r3, [r6, #0x30]\n\t"
+        "ldr r5, [r5, #0x1c]\n\t"
+        "add r2, r4, #0\n\t"
+        "ldr r0, [r5, #0x20]\n\t"
+        "add r3, r5, #0\n\t"
+        "add r3, #0x2d\n\t"
+        "ldr r1, [r0]\n\t"
+        "ldrb r4, [r3]\n\t"
+        "lsl r0, r4, #3\n\t"
+        "sub r0, r0, r4\n\t"
+        "lsl r0, r0, #2\n\t"
+        "add r0, r0, r1\n\t"
+        "ldrb r0, [r0, #0x16]\n\t"
+        "cmp r2, r0\n\t"
+        "blt _08018B64\n\t"
+        "sub r2, r0, #1\n\t"
+    "_08018B64:\n"
+        "str r2, [r5, #0x30]\n\t"
+        "b _08018BCC\n\t"
+        ".align 2, 0\n"
+    "_08018B68: .4byte gUnknown_03001308\n"
+    "_08018B6C:\n"
+        "ldr r0, [r5, #0x10]\n\t"
+        "add r0, #1\n\t"
+        "str r0, [r5, #0x10]\n\t"
+        "cmp r0, #2\n\t"
+        "ble _08018B82\n\t"
+        "add r0, r5, #0\n\t"
+        "add r1, r6, #0\n\t"
+        "mov r2, #3\n\t"
+        "bl sub_8019770\n\t"
+        "b _08018BCC\n\t"
+    "_08018B82:\n"
+        "add r0, r5, #0\n\t"
+        "add r1, r6, #0\n\t"
+        "mov r2, #1\n\t"
+        "bl sub_8019770\n\t"
+        "b _08018BCC\n\t"
+    "_08018B8E:\n"
+        "ldr r1, [r5, #0x1c]\n\t"
+        "ldr r0, [r1, #4]\n\t"
+        "add r0, #0x80\n\t"
+        "str r0, [r1, #4]\n\t"
+        "ldr r1, [r6, #4]\n\t"
+        "add r1, #0x80\n\t"
+        "str r1, [r6, #4]\n\t"
+        "ldr r0, _08018BD4\n\t"
+        "ldr r0, [r0]\n\t"
+        "ldr r0, [r0, #0x10]\n\t"
+        "ldr r0, [r0, #0x14]\n\t"
+        "lsl r0, r0, #8\n\t"
+        "mov r7, #0x80\n\t"
+        "lsl r7, r7, #7\n\t"
+        "add r0, r0, r7\n\t"
+        "cmp r1, r0\n\t"
+        "blt _08018BCC\n\t"
+        "ldr r0, _08018BD8\n\t"
+        "ldr r0, [r0]\n\t"
+        "bl sub_80231C4\n\t"
+        "lsl r0, r0, #0x18\n\t"
+        "cmp r0, #0\n\t"
+        "beq _08018BC2\n\t"
+        "bl sub_80241A4\n\t"
+    "_08018BC2:\n"
+        "add r0, r5, #0\n\t"
+        "add r1, r6, #0\n\t"
+        "mov r2, #4\n\t"
+        "bl sub_8019770\n\t"
+    "_08018BCC:\n"
+        "pop {r4, r5, r6, r7}\n\t"
+        "pop {r0}\n\t"
+        "bx r0\n\t"
+        ".align 2, 0\n"
+    "_08018BD4: .4byte gUnknown_03001308\n"
+    "_08018BD8: .4byte gUnknown_030012C0\n"
+    );
+}
+#endif
+
+void sub_8018BDC(struct gfx_pair_ctrl *self, struct gfx_part *part)
+{
+    struct gfx_part *c = sub_8009ED0(0xFFFF, 0, 0, 0);
+    struct gfx_ctrl *ctrl;
+
+    c->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x27C);
+    SetTag(c, 3);
+    c->unk_2C = 0;
+    ctrl = sub_8019758(sub_8026EDC(0x10));
+    SetFrameNibble(c, sub_800815C(c));
+    c->ctrl = ctrl;
+    sub_803AD80((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
+    c->pos = part->pos;
+    CopyFlipX(c, part);
+    OrFlags(c, 0x10);
+    sub_8008E94(gUnknown_030012F4, c);
+    {
+        register struct gfx_pair_ctrl *s asm("r2") = self;
+
+        asm("" : "+r"(s));
+        s->childA = c;
+    }
+}
+
+void sub_8018CB0(struct gfx_pair_ctrl *self, struct gfx_part *part)
+{
+    struct gfx_part *c = sub_8009ED0(0xFFFF, 0, 0, 0);
+    struct gfx_ctrl *ctrl;
+    s32 x, y;
+
+    c->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x27C);
+    {
+        /* the ROM keeps 0xF in r5 across the calls and reuses it as the
+         * frame-nibble mask below */
+        register s32 t asm("r0") = 0xF;
+        register s32 k asm("r5");
+
+        asm("" : "+r"(t));
+        {
+            u8 *p = &c->tag;
+
+            k = 0xF;
+            asm("" : "+r"(k));
+            *p = t;
+        }
+        sub_80087C0(c);
+        sub_80087B4(c);
+        sub_800872C(c, 0);
+        SetFrameNibbleM(c, sub_800815C(c), k);
+    }
+    ctrl = sub_80196F8(sub_8026EDC(0x40), self);
+    c->ctrl = ctrl;
+    sub_803AD80((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
+    x = part->pos.x;
+    y = part->pos.y;
+    x += 0x2000;
+    y -= 0x4000;
+    c->pos.x = x;
+    c->pos.y = y;
+    OrFlags(c, 0x10);
+    sub_8008E94(gUnknown_030012F4, c);
+    {
+        register struct gfx_pair_ctrl *s asm("r2") = self;
+
+        asm("" : "+r"(s));
+        s->childB = c;
+    }
+}
+
+void sub_8018D70(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
+{
+    struct gfx_part *c = sub_8009ED0(a0, a1, a2, a3);
+    struct gfx_ctrl *ctrl;
+
+    c->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x180);
+    switch (kind)
+    {
+    case 0:
+        SetTag(c, 3);
+        break;
+    case 1:
+        SetTag(c, 2);
+        break;
+    case 2:
+        SetTag(c, 0);
+        break;
+    }
+    SetFrameNibble(c, sub_800815C(c));
+    ctrl = sub_80195EC(sub_8026EDC(0x14), kind);
+    c->ctrl = ctrl;
+    sub_803AD80((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
+    c->unk_0A = 0;
+    {
+        s32 m = -5;
+
+        asm("" : "+r"(m));
+        m &= PART_FLAGS(c);
+        PART_FLAGS(c) = m | 0x10;
+    }
+    sub_8008E94(gUnknown_030012F0, c);
+}
+
+void sub_8018E4C(struct gfx_mover *self, struct gfx_part *partArg)
+{
+    /* pinned so `self` is left the ROM's r7 */
+    register struct gfx_part *part asm("r6") = partArg;
+    register s32 n asm("r5");
+
+    if ((n = self->stepsLeft) != 0)
+    {
+        register s32 steps asm("r8");
+        s32 t;
+        s32 x, y;
+
+        self->stepsLeft = --n;
+        t = self->deltaX * n;
+        steps = self->steps;
+        x = self->targetX - sub_803ADB4(t, steps);
+        y = self->targetY - sub_803ADB4(self->deltaY * n, steps);
+        part->pos.x = x;
+        part->pos.y = y;
+    }
+
+    switch (self->state)
+    {
+    case 0:
+    {
+        register s32 m asm("r0") = -5;
+        register s32 b asm("r2");
+
+        asm("" : "+r"(m));
+        b = PART_FLAGS(part);
+        m &= b;
+        PART_FLAGS(part) = m;
+        sub_8019094(self, part, 1);
+        break;
+    }
+    case 1:
+    case 2:
+    case 6:
+        if (self->stepsLeft != 0)
+            break;
+        goto next;
+    case 3:
+    {
+        /* as in sub_80194E0: the ROM's reload picks r4 for this call's
+         * zero `ldrsh` index where every C shape gets r2 */
+        struct gfx_method *m;
+        register s32 zero asm("r4");
+        s32 off;
+
+        self->nextState = 4;
+        m = &self->vtable->method_50;
+        zero = 0;
+        asm("ldrsh %0, [%1, %2]" : "=l"(off) : "l"(m), "l"(zero));
+        sub_803AD84((u8 *)self + off, part, 0x12, m->fn);
+        sub_8019094(self, part, 7);
+        break;
+    }
+    case 4:
+        sub_8019214(self, part, 0);
+        sub_8019094(self, part, 2);
+        CALL3(self, method_50, part, 0xF);
+        break;
+    case 7:
+        if (part->animDone)
+        {
+        next:
+            sub_8019094(self, part, self->nextState);
+        }
+        break;
+    case 5:
+    {
+        register u8 *blinking asm("r5");
+        s32 left;
+
+        {
+            register u8 *bp asm("r0") = &self->blinking;
+            register u32 on asm("r1") = *bp;
+
+            asm("mov %0, %1" : "=l"(blinking) : "l"(bp));
+            if (on && ++self->blink > 9)
+            {
+                self->blink = 0;
+                SET_FRAME_R(part, part->frame ^ 1, "r3", "r4");
+            }
+        }
+        if ((left = self->stepsLeft) != 0)
+            break;
+        if (--self->timer == 0)
+        {
+            sub_8019094(self, part, 1);
+            sub_8019214(self, part, 1);
+            break;
+        }
+        if (self->timer == gStaticData_0816C35F[self->cfg->index])
+        {
+            PlaySfx(gUnknown_030012BC, 0x5C, 0x100);
+            part->unk_2C = left;
+            CALL3(self, method_50, part, 0x10);
+            *blinking = 1;
+            self->blink = left;
+        }
+        if (self->timer == gStaticData_0816C362[self->cfg->index])
+        {
+            part->unk_2C = left;
+            CALL3(self, method_50, part, 0x10);
+            *blinking = left;
+            SET_FRAME_R(part, 1, "r3", "r4");
+        }
+        sub_80196B8(self, part, gUnknown_030012D8->x, gUnknown_030012D8->y - 0xA00);
+        {
+            s32 i = self->cfg->index;
+
+            self->stepsLeft = self->steps = gStaticData_0816C35C[i];
+        }
+        break;
+    }
+    case 8:
+        self->nextState = 10;
+        sub_8019094(self, part, 6);
+        break;
+    case 9:
+        sub_8019094(self, part, 8);
+        break;
+    case 10:
+        break;
+    }
+}
+
+/* Advance the mover's height pattern for the level config's `index`:
+ * 0 - high mirrors the horizontal direction, 1 - alternate high/low,
+ * 2 - alternate high/low and flip `top` every second step.
+ *
+ * Written as the switch's compare tree by hand: the ROM loads the index
+ * into r0, copies it to r1, runs the first three compares on r0 and the
+ * `== 2` one on r1 - the shape an inlined call's parameter copy leaves -
+ * which no plain `switch` reproduced (docs/workflow.md step 7). The
+ * `1` constants are materialized before their byte loads, as everywhere
+ * in this file. */
+static inline void StepHeight(struct gfx_mover *self, s32 pattern)
+{
+    register s32 v asm("r0") = pattern;
+    register s32 p asm("r1");
+
+    asm("mov %0, %1" : "=l"(p) : "l"(v));
+    if (v == 1)
+        goto toggle;
+    if (v > 1)
+        goto above1;
+    if (v == 0)
+        goto mirror;
+    return;
+above1:
+    if (p == 2)
+        goto toggleTop;
+    return;
+mirror:
+    self->high = self->dirLeft;
+    return;
+toggle:
+    {
+        register s32 one asm("r0") = 1;
+        register s32 b asm("r1");
+
+        asm("" : "+r"(one));
+        b = self->high;
+        one ^= b;
+        self->high = one;
+    }
+    return;
+toggleTop:
+    {
+        register s32 one asm("r3") = 1;
+        s32 h;
+
+        asm("" : "+r"(one));
+        h = self->high ^ one;
+        self->high = h;
+        if (h == 0)
+            self->top ^= one;
+    }
+}
+
+void sub_8019094(struct gfx_mover *self, struct gfx_part *part, s32 mode)
+{
+    switch (mode)
+    {
+    case 8:
+        sub_80196B8(self, part, (u32)(gUnknown_03001308->layer0->width << 8) >> 1,
+                    (gUnknown_03001308->layer0->height << 8) + 0x2000);
+        break;
+    case 1:
+    {
+        register s32 zero asm("r4");
+
+        sub_801967C(self, 0);
+        {
+            u8 *p = &part->unk_2C;
+
+            zero = 0;
+            asm("" : "+r"(zero));
+            *p = mode;
+        }
+        CALL3(self, method_50, part, 0xF);
+        self->dirLeft = mode;
+        self->high = mode;
+        self->top = zero;
+    }
+        sub_80196B8(self, part, (gUnknown_03001308->layer0->width << 8) - 0x400, 0x9800);
+        self->nextState = 2;
+        break;
+    case 2:
+    {
+        s32 x, y;
+
+        self->nextState = 3;
+        x = self->targetX;
+        if (self->dirLeft)
+        {
+            if (x - 0x1800 <= 0x400)
+                self->dirLeft = 0;
+        }
+        else if (x + 0x1C00 >= gUnknown_03001308->layer0->width << 8)
+        {
+            self->nextState = 5;
+        }
+        StepHeight(self, self->cfg->index);
+        if (self->dirLeft)
+        {
+            x -= 0x1800;
+        }
+        else
+        {
+            register s32 k asm("r1") = 0x1800;
+
+            asm("" : "+r"(k));
+            x += k;
+        }
+        if (self->high)
+        {
+            u8 top = self->top;
+
+            y = 0x9800;
+            if (top)
+                y = 0x3E00;
+        }
+        else
+        {
+            y = 0x8200;
+        }
+        sub_80196B8(self, part, x, y);
+        break;
+    }
+    case 5:
+        self->blinking = 0;
+        sub_801967C(self, 1);
+        self->timer = 0x14;
+        break;
+    }
+    CALL2(self, method_20, mode);
+}
+
+void sub_8019214(struct gfx_mover *self, struct gfx_part *partArg, s32 kindArg)
+{
+    /* pinned so `self` is left the ROM's r7 (see the file comment) */
+    register struct gfx_part *part asm("r6") = partArg;
+    register s32 kind asm("r5") = kindArg;
+    struct gfx_part *c = sub_8009ED0(0xFFFF, 0, 0, 0);
+    struct { u8 unk_00[0xC]; struct gfx_vtable *vtable; u8 fast; } *ctrl;
+
+    c->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x27C);
+    switch (kind)
+    {
+    case 0:
+        SetTag(c, 0xE);
+        break;
+    case 1:
+        SetTag(c, 0x11);
+        break;
+    }
+    SetFrameNibble(c, sub_800815C(c));
+    ctrl = sub_8019660(sub_8026EDC(0x18), self->cfg);
+    ctrl->fast = kind == 1;
+    c->ctrl = ctrl;
+    sub_803AD80((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
+    c->pos = part->pos;
+    {
+        register s32 m asm("r0") = -5;
+        register s32 b asm("r1");
+
+        asm("" : "+r"(m));
+        b = PART_FLAGS(c);
+        m &= b;
+        b = 1;
+        c->unk_0A = b;
+        b = 0x10;
+        m |= b;
+        PART_FLAGS(c) = m;
+    }
+    sub_8008E94(gUnknown_030012F4, c);
+    if (kind == 1)
+        PlaySfx(gUnknown_030012BC, 0x31, 0x100);
+    else
+        PlaySfx(gUnknown_030012BC, 0x32, 0x100);
+}
+
+void sub_8019324(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
+{
+    register struct gfx_part *part asm("r8") = partArg;
+    struct gfx_box a;
+    struct gfx_box b;
+    struct gfx_box c;
+
+    if (part->unk_0A == 1)
+    {
+        sub_8007CF8(&a, gUnknown_030012D8);
+        if (a.w == 0)
+        {
+            sub_8007C30(&b, gUnknown_030012D8);
+            a = b;
+        }
+        sub_8007C30(&b, part);
+        if (sub_8001688(&a, &b))
+        {
+            struct gfx_player *p = gUnknown_030012D8;
+
+            if (p->unk_104 == 0)
+            {
+                /* sub_803AD88 calls through r4: the method's function
+                 * pointer is loaded there but never passed in r0-r3 (same
+                 * idiom as actor_part78.c's sub_803AD88 calls) */
+                u8 *tbl = p->vtable + 0x68;
+                void *thisp = (u8 *)p + *(s16 *)tbl;
+                register void *fn asm("r4") = *(void *volatile *)(tbl + 4);
+
+                (void)fn;
+                sub_803AD88(thisp, 0, 9, 0);
+            }
+            {
+                register s32 zero asm("r0") = 0;
+                register struct gfx_part *q asm("r4") = part;
+
+                asm("" : "+r"(q));
+                q->unk_0A = zero;
+            }
+        }
+        else if (self->enabled)
+        {
+            s32 n = gUnknown_030012F0->count;
+            register s32 i asm("r5");
+
+            for (i = 0; i < n; i++)
+            {
+                struct gfx_part *e = gUnknown_030012F0->items[i];
+
+                sub_8007B98(&c, e);
+                if (sub_8001688(&c, &b))
+                {
+                    CALL2(self->owner, method_20, 2);
+                    e->unk_0A = 1;
+                    {
+                        register s32 zero asm("r2") = 0;
+                        register struct gfx_part *q asm("r1") = part;
+
+                        asm("" : "+r"(q));
+                        q->unk_0A = zero;
+                    }
+                }
+            }
+        }
+    }
+    if (part->animDone)
+    {
+        /* MARK_GONE, but `part` lives in r8 here: the flags byte is read
+         * through an r3 copy and everything after through an r4 copy */
+        register s32 v asm("r0") = 1;
+        register struct gfx_part *t asm("r4");
+
+        {
+            register u32 q asm("r3") = (u32)part;
+
+            asm("" : "+r"(q));
+            q = PART_FLAGS((struct gfx_part *)q);
+            v |= q;
+        }
+        t = part;
+        asm("" : "+r"(t));
+        PART_FLAGS(t) = v;
+        MARK_GONE_BITMAP_R4(t, "r5", "r2");
+    }
+}
+
+void sub_8019464(struct gfx_ctrl *self, struct gfx_part *part)
+{
+    s32 target;
+
+    if (self->state == 0)
+    {
+        SET_FRAME_R(part, 0x1A, "r4", "r6");
+        self->state = 1;
+    }
+    target = 0x1A;
+    if (part->unk_0A == 1)
+        target = 10;
+    if (part->frame == target)
+    {
+        part->unk_2C = 0;
+    }
+    else
+    {
+        register s32 one asm("r1") = 1;
+        register u8 *p asm("r0") = &part->unk_2C;
+
+        *p = one;
+        p += 0x38 - 0x2C;
+        asm("" : "+r"(p));
+        if (*p)
+            SET_FRAME_R(part, 0, "r4", "r5");
+    }
+}
+
+void sub_80194E0(struct gfx_kind_ctrl *self, struct gfx_part *partArg)
+{
+    register struct gfx_part *part asm("r4") = partArg;
+
+    switch (self->state)
+    {
+    case 0:
+        if (part->unk_0A == 1)
+        {
+            part->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x27C);
+            switch (self->kind)
+            {
+            case 0:
+                CALL3(self, method_50, part, 0xC);
+                break;
+            case 1:
+            {
+                /* The ROM's reload picks r3, not r2, for this one call's
+                 * zero `ldrsh` index; every C shape tried gets r2, so the
+                 * single load is spelled out (docs/workflow.md step 7). */
+                struct gfx_method *m = &self->vtable->method_50;
+                register s32 zero asm("r3") = 0;
+                s32 off;
+
+                asm("ldrsh %0, [%1, %2]" : "=l"(off) : "l"(m), "l"(zero));
+                sub_803AD84((u8 *)self + off, part, 0xB, m->fn);
+                break;
+            }
+            case 2:
+                CALL3(self, method_50, part, 0xD);
+                break;
+            }
+            SetFrameNibble(part, sub_800815C(part));
+            CALL2(self, method_20, 1);
+        }
+        break;
+    case 1:
+        if (part->animDone)
+            MARK_GONE(part, "r1", "r2", "r1");
+        break;
+    }
+}
+
+void sub_80195D8(struct gfx_ctrl *self, s32 flags)
+{
+    self->vtable = (struct gfx_vtable *)gStaticData_087E45CC;
+    sub_800B8A8(self, flags);
+}
+
+void *sub_80195EC(void *selfArg, s32 kind)
+{
+    struct gfx_kind_ctrl *self = selfArg;
+
+    sub_800B8C8(self);
+    self->vtable = (struct gfx_vtable *)gStaticData_087E45CC;
+    self->kind = kind;
+    return self;
+}
+
+void sub_8019608(struct gfx_ctrl *self, s32 flags)
+{
+    self->vtable = (struct gfx_vtable *)gStaticData_087E4634;
+    sub_801B7C4(self, flags);
+}
+
+/* Constructor: base-constructs through sub_801B7D8(self, 0, 0, 0, {0}, 6)
+ * and points the method table at gStaticData_087E4634.
+ *
+ * NAKED (see docs/matching/issue-23-graphics.md): sub_801B7D8's fifth
+ * argument is a one-byte value the ROM stores with `strb` into its
+ * outgoing stack slot (the callee reads it back through the slot's
+ * address). A `u8` parameter gets promoted to a word `str`; a packed
+ * one-byte struct/union reproduces the `strb`, but this compiler then
+ * materializes the 0 before the `mov r1, sp` slot address, the reverse
+ * of the ROM's order, in every variant tried (local, initializer,
+ * compound literal, cast-to-union, byte array). The C is kept under
+ * NON_MATCHING. */
+#if NON_MATCHING
+void *sub_801961C(struct gfx_ctrl *self)
+{
+    struct gfx_byte_arg arg;
+
+    arg.value[0] = 0;
+    sub_801B7D8(self, 0, 0, 0, arg, 6);
+    self->vtable = (struct gfx_vtable *)gStaticData_087E4634;
+    return self;
+}
+#else
+NAKED void *sub_801961C(struct gfx_ctrl *self)
+{
+    asm(
+        "push {r4, lr}\n\t"
+        "sub sp, #8\n\t"
+        "add r4, r0, #0\n\t"
+        "mov r1, sp\n\t"
+        "mov r0, #0\n\t"
+        "strb r0, [r1]\n\t"
+        "mov r0, #6\n\t"
+        "str r0, [sp, #4]\n\t"
+        "add r0, r4, #0\n\t"
+        "mov r1, #0\n\t"
+        "mov r2, #0\n\t"
+        "mov r3, #0\n\t"
+        "bl sub_801B7D8\n\t"
+        "ldr r0, _08019648\n\t"
+        "str r0, [r4, #0xc]\n\t"
+        "add r0, r4, #0\n\t"
+        "add sp, #8\n\t"
+        "pop {r4}\n\t"
+        "pop {r1}\n\t"
+        "bx r1\n\t"
+        ".align 2, 0\n"
+    "_08019648: .4byte gStaticData_087E4634\n"
+    );
+}
+#endif
+
+void sub_801964C(struct gfx_ctrl *self, s32 flags)
+{
+    self->vtable = (struct gfx_vtable *)gStaticData_087E469C;
+    sub_800B8A8(self, flags);
+}
+
+void *sub_8019660(void *selfArg, void *cfg)
+{
+    struct { u8 unk_00[0xC]; struct gfx_vtable *vtable; u8 unk_10[4]; void *cfg; } *self = selfArg;
+
+    sub_800B8C8(self);
+    self->vtable = (struct gfx_vtable *)gStaticData_087E469C;
+    self->cfg = cfg;
+    return self;
+}
