@@ -74,6 +74,14 @@ and [graphics_loading.md](./graphics_loading.md).
   `sub_80007EC` - BG2 affine setup for a full-screen intro image; see
   `docs/matching.md` for the statement-ordering gotchas.
 
+- `src/graphics/actor_part_17524.c` (new file - GitHub issue #21):
+  `sub_8017524`-`sub_8017A40` (25 functions) - six byte accessors, then a
+  D-pad-driven actor-part subclass (method table `gStaticData_087E42F4`):
+  per-frame animation/speed selection from the held keys, a gcc 2.x
+  pointer-to-member state dispatch (`gStaticData_0816C290`), and the
+  inlined "mark actor gone" bitmap sequence matched without inline asm.
+  See [docs/matching/issue-21-input-ctrl.md](../matching/issue-21-input-ctrl.md).
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
