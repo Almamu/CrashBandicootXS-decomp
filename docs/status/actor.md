@@ -1844,7 +1844,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   raw per this project's established policy for this exact dispatcher
   shape (same as `sub_8018008`, issue #22) - see
   `docs/matching/issue-9-10-0x0800ab9c-graphics.md`.
-- **`sub_8016048`** (`asm/code_3_2_17_16048.s`, ROM 0x08016048, GitHub
-  issue #19) - a smaller joystick-input-gated dispatcher; left raw, out
-  of scope for this pass - see
-  `docs/matching/issue-19-0x08015840-actor.md`.
+- ~~**`sub_8016048`**~~ (ROM 0x08016048, GitHub issue #19) - matched
+  as real C with issue #20 in `src/graphics/actor_part_16048.c` (listed
+  under `graphics.md`) - see `docs/matching/issue-20-player-ctrl.md`.
