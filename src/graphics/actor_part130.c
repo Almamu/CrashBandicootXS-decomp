@@ -61,6 +61,7 @@ extern u8 *mem_alloc(u32 size, s32 flags);
 extern void mem_free(void *ptr);
 extern void sub_8032AF8(void);
 extern void sub_8032B6C(void);
+extern void sub_803AD78(void *fn);
 extern void sub_80330FC(void *tileRow);
 extern void sub_8033550(void);
 extern void sub_8033604(void);
@@ -118,6 +119,7 @@ extern u8 gStaticData_087E54AC[];
 extern u16 gStaticData_08169AE8[];
 extern u8 gStaticData_08169CE8[];
 extern u8 gStaticData_0817C4BC[];
+extern void *gStaticData_0817C4C8[];
 
 /* An `InitActorPart`-based constructor: forwards its 4 real arguments
  * straight through (the 5th, `d`, is itself stack-passed), marks
@@ -780,99 +782,73 @@ void sub_8032AF8(void)
     }
 }
 
-/* NAKED transcription: a frame counter (`gUnknown_030015F4`) drives the
- * same P1/P2-mirrored speed-override toggle already matched for
- * `sub_8033828` (issue #62, `actor_part28.c`) - fully inlined twice
- * here (once forcing "max speed" every 16th frame, once restoring the
- * cached normal speed every 8th-but-not-16th frame) rather than calling
- * that function, matching the ROM exactly. `sub_8033828`'s own writeup
- * already documents that this compiler's register choice merges
- * byte-identical branch tails via cross-jump optimization unless each
- * branch's registers are pinned to the ROM's exact choices; this
- * function inlines the same hazard twice over plus an outer
- * frame-counter dispatch, so it is transcribed directly rather than
- * re-deriving an even more delicate set of pins. Tail: runs
- * `sub_8032AF8` (the meter blink above) then dispatches the singleton's
- * current animation "kind" through the third table family
- * (`gStaticData_0817C4C8`), the same convention already documented for
- * the entity/actor category vtables. */
-NAKED void sub_8032B6C(void)
+/* A frame counter (`gUnknown_030015F4`) drives the same P1/P2-mirrored
+ * speed-override toggle already matched for `sub_8033828` (issue #62,
+ * `actor_part28.c`) - inlined twice here (once forcing "max speed"
+ * every 16th frame, once restoring the cached normal speed every
+ * 8th-but-not-16th frame) rather than calling that function, matching
+ * the ROM exactly (the ROM's own build never emits a `bl sub_8033828`
+ * here, so the original source duplicated the logic rather than
+ * sharing it). `sub_8033828`'s own body confirms the same "reload
+ * `gUnknown_030008B4`'s pointer value through a register-pinned `p`,
+ * assign the register-pinned `val` in its own statement" idiom closes
+ * the exact register split this compiler otherwise collapses (loading
+ * a >255 constant like `0x7FFF` straight into a pre-existing
+ * register-pinned variable forces this compiler to materialize it in
+ * a fresh register first, then copy - the `asm("" : "+r"(p))` barrier
+ * between the pointer reload and the value assignment keeps that
+ * reload from being folded into the shared tail the two call sites
+ * below happen to converge on). Tail: runs `sub_8032AF8` (the meter
+ * blink above) then dispatches the singleton's current animation
+ * "kind" through the third table family (`gStaticData_0817C4C8`), the
+ * same convention already documented for the entity/actor category
+ * vtables. */
+static inline void CommitSpeed(u8 *p, u16 val)
 {
-    asm(
-        "push {lr}\n\t"
-        "ldr r1, 1f\n\t"
-        "ldr r0, [r1]\n\t"
-        "add r2, r0, #1\n\t"
-        "str r2, [r1]\n\t"
-        "mov r0, #0xf\n\t"
-        "and r0, r2\n\t"
-        "cmp r0, #0\n\t"
-        "bne 2f\n\t"
-        "ldr r2, 3f\n\t"
-        "ldr r0, [r2]\n\t"
-        "ldr r3, 4f\n\t"
-        "cmp r0, #0\n\t"
-        "bne 5f\n\t"
-        "ldr r1, 6f\n\t"
-        "ldr r0, [r3]\n\t"
-        "ldrh r0, [r0, #0x1e]\n\t"
-        "strh r0, [r1]\n\t"
-        "mov r0, #1\n\t"
-        "str r0, [r2]\n\t"
-    "5:\n\t"
-        "ldr r0, [r3]\n\t"
-        "ldr r2, 7f\n\t"
-        "add r1, r2, #0\n\t"
-        "b 8f\n\t"
-        ".align 2, 0\n"
-    "1: .4byte gUnknown_030015F4\n"
-    "3: .4byte gUnknown_03001594\n"
-    "4: .4byte gUnknown_030008B4\n"
-    "6: .4byte gUnknown_03001590\n"
-    "7: .4byte 0x00007FFF\n"
-    "2:\n\t"
-        "mov r0, #7\n\t"
-        "and r2, r0\n\t"
-        "cmp r2, #0\n\t"
-        "bne 9f\n\t"
-        "ldr r2, 10f\n\t"
-        "ldr r0, [r2]\n\t"
-        "ldr r1, 11f\n\t"
-        "ldr r3, 12f\n\t"
-        "cmp r0, #0\n\t"
-        "bne 13f\n\t"
-        "ldr r0, [r3]\n\t"
-        "ldrh r0, [r0, #0x1e]\n\t"
-        "strh r0, [r1]\n\t"
-        "mov r0, #1\n\t"
-        "str r0, [r2]\n\t"
-    "13:\n\t"
-        "ldr r0, [r3]\n\t"
-        "ldrh r1, [r1]\n\t"
-    "8:\n\t"
-        "strh r1, [r0, #0x1e]\n\t"
-        "ldr r0, 14f\n\t"
-        "ldr r0, [r0]\n\t"
-        "strh r1, [r0, #0x1e]\n\t"
-    "9:\n\t"
-        "bl sub_8032AF8\n\t"
-        "ldr r1, 15f\n\t"
-        "ldr r0, 16f\n\t"
-        "ldr r0, [r0]\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_803AD78\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "10: .4byte gUnknown_03001594\n"
-    "11: .4byte gUnknown_03001590\n"
-    "12: .4byte gUnknown_030008B4\n"
-    "14: .4byte gUnknown_030008B8\n"
-    "15: .4byte gStaticData_0817C4C8\n"
-    "16: .4byte gUnknown_030015B0\n"
-    );
+    *(u16 *)(p + 0x1e) = val;
+    *(u16 *)((u8 *)gUnknown_030008B8 + 0x1e) = val;
+}
+
+void sub_8032B6C(void)
+{
+    s32 counter = gUnknown_030015F4 + 1;
+    gUnknown_030015F4 = counter;
+
+    if ((counter & 0xf) == 0)
+    {
+        if (gUnknown_03001594 == 0)
+        {
+            gUnknown_03001590 = *(u16 *)((u8 *)gUnknown_030008B4 + 0x1e);
+            gUnknown_03001594 = 1;
+        }
+        {
+            register u8 *p asm("r0") = gUnknown_030008B4;
+            register u16 val asm("r1");
+
+            asm("" : "+r"(p));
+            val = 0x7FFF;
+            CommitSpeed(p, val);
+        }
+    }
+    else if ((counter & 7) == 0)
+    {
+        if (gUnknown_03001594 == 0)
+        {
+            gUnknown_03001590 = *(u16 *)((u8 *)gUnknown_030008B4 + 0x1e);
+            gUnknown_03001594 = 1;
+        }
+        {
+            register u8 *p asm("r0") = gUnknown_030008B4;
+            register u16 val asm("r1");
+
+            asm("" : "+r"(p));
+            val = gUnknown_03001590;
+            CommitSpeed(p, val);
+        }
+    }
+
+    sub_8032AF8();
+    sub_803AD78(gStaticData_0817C4C8[gUnknown_030015B0]);
 }
 
 /* NAKED transcription: opens the singleton's own camera-follow/scroll-

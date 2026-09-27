@@ -173,6 +173,16 @@ below.)
   `(v << 1) | (v >> 31)` idiom into a single Thumb `ROR` instruction the
   ROM's own build never emits. See
   [issue-65-0x08035780-graphics-loading.md](../matching/issue-65-0x08035780-graphics-loading.md).
+- **`sub_8035780`** (`src/graphics/graphics_loading_35780.c`) - the
+  9-slot record-array per-frame updater documented under "Parked" below
+  for its siblings; promoted to real C in a follow-up pass via the
+  static-inline anti-CSE technique first demonstrated in
+  `tile_slot_pool.c` (issue #43): every `self+CONST+i*0x34` field access
+  gets its own tiny `static inline` accessor (13 of them, one per
+  offset), which stops this compiler's inliner from hoisting a shared
+  `self+i*0x34` slot-base register the way any single plain-C
+  reconstruction otherwise does. See
+  [issue-59-60-static-inline-cse-promotion.md](../matching/issue-59-60-static-inline-cse-promotion.md).
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
@@ -323,7 +333,7 @@ Both hit the same confirmed `r7`-pin gap as `sub_8007114`
   `sub_801E688` above and `sub_80240E4` (`src/system/game_loop8.c`).
   Transcribed instruction-for-instruction instead. See
   [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md).
-- **`sub_8035780`**, **`sub_80358A8`**, **`sub_8035D1C`**, **`sub_8035E14`**,
+- **`sub_80358A8`**, **`sub_8035D1C`**, **`sub_8035E14`**,
   **`sub_8035F9C`**, **`sub_8035FEC`**, **`sub_8036068`**, **`sub_80360DC`**,
   **`sub_8036154`**, **`sub_80361B0`**, **`sub_8036528`**, **`sub_8036600`**,
   **`sub_8036668`**, **`sub_803686C`**, **`sub_8036CF4`**, **`sub_8036E20`**,
@@ -340,9 +350,15 @@ Both hit the same confirmed `r7`-pin gap as `sub_8007114`
   tail-merging collapsing the ROM's own duplicated address computations,
   a shared-base pointer the ROM never hoists, extensive `sb`/`sl`/`r8`/
   `ip` shuffling) that didn't converge within a reasonable number of
-  passes, so all 18 are NAKED transcriptions instead - confirmed
+  passes, so these 17 are NAKED transcriptions instead - confirmed
   byte-identical via a direct assemble + `objcopy --only-section=.text`
-  + byte comparison against `baserom.gba` before integrating. See
+  + byte comparison against `baserom.gba` before integrating.
+  `sub_8035780` (the field-copy/accumulate updater) was promoted to real
+  C in a later pass via the static-inline anti-CSE technique - see
+  [issue-59-60-static-inline-cse-promotion.md](../matching/issue-59-60-static-inline-cse-promotion.md).
+  `sub_8035D1C` was re-attempted with the same technique and did *not*
+  close (its blocker is cross-jump/tail-merging of branch *bodies*, not
+  repeated address arithmetic - same doc). See
   [issue-65-0x08035780-graphics-loading.md](../matching/issue-65-0x08035780-graphics-loading.md).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
