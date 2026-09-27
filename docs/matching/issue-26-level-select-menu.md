@@ -9,6 +9,15 @@ transcriptions** with their C reconstructions kept under
 `rm -rf build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make compare`
 (`crashbandicootxs.gba: OK`).
 
+**Update (old_agbcc retry, docs/matching/old-agbcc-retry.md):** the
+object is now built with `tools/agbcc/bin/old_agbcc` (Makefile
+`OLD_AGBCC_OBJS`), the compiler this region was originally built with.
+All 22 plain-C functions match under it; `sub_801B984` needed its zero/id
+pins dropped to do so, and the pins/barriers of `sub_801B8BC`,
+`sub_801B984`, `sub_801C104`, `sub_801C364` and `sub_801C51C` turned out
+to be unnecessary and were removed. The three NAKED functions still don't
+match under old_agbcc (see "Parked" below) and are unchanged.
+
 ## What the code is
 
 Three gcc 2.x C++ classes (method tables, virtual calls through the
@@ -126,6 +135,40 @@ their method tables.
   at the end. The fade-in `evy--` only matches with a u8 bitfield view
   of BLDY, which in turn breaks `sub_801CCF8`'s commit; the
   reconstruction uses the u32 view.
+
+### Under old_agbcc
+
+The NON_MATCHING C (unchanged in the tree) was recompiled with old_agbcc;
+none of the three matches, but two got much closer with small changes
+(recorded here, not applied):
+
+- **`sub_801C96C`**: the three `CommitDisplay` BLDY-register problems
+  disappear under old_agbcc. Two differences remain: the fade-in
+  (`evy--`) and the key-word copy. Reading/decrementing `evy` through a
+  packed `struct { u8 evy:5; u8 rest:3; }` view of `self->bldy` fixes the
+  fade (908 bytes, same as the ROM). The ROM's `adds r1, r2, #0` key copy
+  (made before the 0x80 test, used only by the 0x20 test) gets eaten by
+  CSE for every plain `union key_state k = keys` placement. With an
+  `asm("" : "+r"(k.all))` barrier it survives, but it lands either in the
+  wrong block (after the 0x80 branch, 10 bytes off) or in the right block
+  with `keys`/`k` in r3/r2 instead of r2/r1 (12 bytes off).
+- **`sub_801C608`**: taking `SetAnim`'s index as `s32` instead of `u8`
+  fixes the rank-icon load (the ROM loads the table word, then `strb`s
+  it; with a `u8` parameter old_agbcc narrows the load to `ldrb`).
+  Testing the saved time with `*(u16 *)sv & 0xFFF8` gives the ROM's
+  `ldrh`/mask test, and the ROM's compares are unsigned (`bhi`). What is
+  left: the ROM's frame is 12 bytes (it spills the `info` pointer to
+  `[sp]` besides the `unk_90`/`unk_94` addresses; this C has an 8-byte
+  frame), and the ROM keeps `time << 16` live and re-shifts `>> 19` for
+  each compare, reusing the loaded threshold registers as the next
+  `FormatCentiseconds` argument.
+- **`sub_801BC28`**: with `SetAnim(s32)` the long middle of the function
+  (the sprite setup) matches instruction for instruction. It is still
+  off in the opening blend/BLDY/DISPCNT blocks (the ROM keeps `0`/`1`/`2`/
+  `0x10` in sb/r3/r8/r5 and addresses DISPCNT's second byte through its
+  own `self + 0xA9` register), in the six-item loop's counter/pointer
+  registers (r4/r5 swapped), and in hoisting the sprites' `0x80` constant
+  into r8 ahead of the eight-sprite loop.
 
 ## Struct notes
 

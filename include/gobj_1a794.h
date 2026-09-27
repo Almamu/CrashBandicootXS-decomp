@@ -1,6 +1,8 @@
 #ifndef GUARD_GOBJ_1A794_H
 #define GUARD_GOBJ_1A794_H
 
+#include "mover_new.h"
+
 /* Shared by src/graphics/actor_part_1a794.c/_1a878.c/_1ab34.c/_1ab98.c/
  * _1b208.c (GitHub issue #25, ROM 0x0801A794-0x0801B85C).
  *
@@ -238,24 +240,8 @@ static inline struct gobj *GobjInit(struct gobj *self)
     return self;
 }
 void sub_801B2A8(struct gobj *self, u8 value);
-struct mover *sub_801B7D8(struct mover *self, s32 distX, s32 distY, u32 dirX, u8 dirY, s32 kind);
 void sub_801AB98(struct gobj *self, void *unused);
 void sub_801B624(struct mover *self, struct gobj *obj);
-
-/* sub_801B7D8's 5th/6th arguments are passed on the stack, the 5th as a
- * genuine byte (`strb`); this compiler always widens a stack-passed
- * argument to a word `str`, so the caller writes both slots itself into
- * `args` (the only thing in its frame, i.e. at sp+0/sp+4 - exactly the
- * outgoing-argument area) and calls through a 4-argument view. */
-struct mover_stack_args
-{
-    u8 dirY;
-    u8 unk_1[3];
-    s32 kind;
-};
-
-typedef struct mover *(*MoverCtor4)(void *mem, s32 distX, s32 distY, u32 dirX);
-#define MOVER_NEW(mem, dX, dY, fX) ((MoverCtor4)sub_801B7D8)((mem), (dX), (dY), (fX))
 
 /* Branchless absolute value, updating `x` in place (same helper as
  * actor_part50.c) - the ROM's asr/eor/sub sequence. */

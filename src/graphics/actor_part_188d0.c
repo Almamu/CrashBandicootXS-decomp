@@ -1,4 +1,5 @@
 #include "core.h"
+#include "mover_new.h"
 
 /* GitHub issue #23: 0x080188D0-0x0801967C, formerly
  * asm/code_3_2_17_188d0.s (details in docs/matching/issue-23-graphics.md).
@@ -28,9 +29,12 @@
  * Matching notes: this code materializes a byte-RMW's constant/mask
  * before loading the byte, and computes stored values before their
  * addresses, where plain C does the opposite - hence the small
- * barrier-carrying helpers (OrFlags, SetFrameNibble, ...), pins, and a
- * couple of per-site macros. Two functions (sub_8018A30, sub_801961C) are
- * NAKED transcriptions with their C kept under NON_MATCHING.
+ * barrier-carrying helpers (SetFrameNibble, CopyFlipX, ...), pins, and a
+ * couple of per-site macros. Those were written against the current
+ * agbcc; the ROM was built with the older compiler, and this file is
+ * built with old_agbcc (Makefile OLD_AGBCC_OBJS,
+ * docs/matching/old-agbcc-retry.md), under which sub_8018A30 and
+ * sub_801961C match as C and several of the workarounds were dropped.
  *
  * UNUSED - no caller anywhere in the ROM (checked the asm/ and expected/
  * sources, every .c file under src/, and every word-aligned Thumb pointer
@@ -272,15 +276,6 @@ extern void *sub_8007C30(void *dest, void *pt);
 extern void *sub_8007B98(void *dest, void *pt);
 extern u8 sub_8001688(void *buf1, void *buf2);
 extern void sub_801B7C4(void *self, s32 flags);
-/* sub_801B7D8's fifth argument is a one-byte struct passed by value: the
- * ROM stores just that byte (`strb`) into its outgoing stack slot, and the
- * callee reads it back through the slot's address. */
-struct gfx_byte_arg
-{
-    u8 value[1];
-} __attribute__((packed));
-
-extern void sub_801B7D8(void *self, s32 a1, s32 a2, u8 a3, struct gfx_byte_arg a4, s32 a5);
 extern void *sub_8019758(void *mem);
 extern void *sub_80196F8(void *mem, void *owner);
 extern void sub_80196B8(void *self, struct gfx_part *part, s32 x, s32 y);
@@ -309,31 +304,26 @@ void *sub_8019660(void *self, void *cfg);
 
 static inline void SetTag(struct gfx_part *part, s32 tag)
 {
-    register s32 t asm("r0") = tag;
-
-    asm("" : "+r"(t));
-    part->tag = t;
+    part->tag = tag;
     sub_80087C0(part);
     sub_80087B4(part);
     sub_800872C(part, 0);
 }
 
-
-
-static inline void AndFlags(struct gfx_part *part, s32 mask)
-{
-    asm("" : "+r"(mask));
-    PART_FLAGS(part) = mask & PART_FLAGS(part);
-}
-
 /* Read-modify-write helpers for the byte-wide bitfields at +0x0C/+0x28/
  * +0x29. The ROM always materializes the mask/constant *before* loading
- * the byte it applies to; plain bitfield assignments load the byte first,
- * so each helper passes its constant through an empty asm barrier. */
+ * the byte it applies to. For the flags byte an inline helper taking the
+ * constant as an `s32` parameter is enough under old_agbcc (the same
+ * statement written in place loads the byte first); the nibble/flip
+ * helpers still spell out their registers. */
+static inline void AndFlags(struct gfx_part *part, s32 mask)
+{
+    PART_FLAGS(part) &= mask;
+}
+
 static inline void OrFlags(struct gfx_part *part, s32 bits)
 {
-    asm("" : "+r"(bits));
-    PART_FLAGS(part) = bits | PART_FLAGS(part);
+    PART_FLAGS(part) |= bits;
 }
 
 static inline void SetFrameNibbleM(struct gfx_part *part, s32 v, s32 mask)
@@ -503,10 +493,8 @@ void sub_80188E8(struct gfx_ctrl *self, s32 flags)
 
 void sub_80188FC(struct gfx_ctrl *self, struct gfx_part *part)
 {
-    register struct gfx_part *t asm("r1") = part;
-
-    if (t->animDone)
-        MARK_GONE(t, "r2", "r4", "r2");
+    if (part->animDone)
+        MARK_GONE(part, "r2", "r4", "r2");
 }
 
 /* UNUSED - see the top-of-file comment. */
@@ -527,45 +515,31 @@ void nullsub_19(void)
 {
 }
 
-void sub_8018978(struct gfx_offset_ctrl *self, struct gfx_part *partArg)
+void sub_8018978(struct gfx_offset_ctrl *self, struct gfx_part *part)
 {
-    register struct gfx_part *part asm("ip") = partArg;
     s32 px = part->pos.x;
 
     if (self->x <= px)
     {
-        register u8 *p asm("r0") = (u8 *)part + 0x28;
-        register s32 m asm("r1") = -0x11;
-        register s32 b asm("r2");
+        u8 *p = (u8 *)part + 0x28;
+        s32 m = -0x11;
 
-        asm("" : "+r"(m));
-        b = *p;
-        m &= b;
-        b = 0x10;
-        m |= b;
+        m &= *p;
+        m |= 0x10;
         *p = m;
     }
     else
     {
-        register u8 *p asm("r1") = (u8 *)part + 0x28;
-        register s32 m asm("r0") = -0x11;
-        register s32 b asm("r2");
+        u8 *p = (u8 *)part + 0x28;
+        s32 m = -0x11;
 
-        asm("" : "+r"(m));
-        b = *p;
-        m &= b;
+        m &= *p;
         *p = m;
     }
     self->unk_38 = 0x1A;
     self->unk_3C = 0x1A;
-    {
-        register struct gfx_part *q asm("r1") = part;
-        self->dy = q->pos.y - self->y;
-    }
-    {
-        register struct gfx_part *q asm("r2") = part;
-        self->dx = q->pos.x - self->x;
-    }
+    self->dy = part->pos.y - self->y;
+    self->dx = part->pos.x - self->x;
 }
 
 void sub_80189C4(struct gfx_squares *self, s32 flags)
@@ -597,15 +571,8 @@ void *sub_80189EC(struct gfx_squares *self)
  * counts to 3 before moving on; state 3 sinks everything 0x80 per frame
  * until it leaves the bottom of the level, then signals sub_80241A4.
  *
- * NAKED (see docs/matching/issue-23-graphics.md): the C below reproduces
- * every instruction's operation and the jump table, but the ROM uses r7
- * as a short-lived scratch register in three places (the flip-bit byte,
- * the first frame-clamp's tag byte, the 0x4000 constant in state 3) with
- * `self`/`part` in r5/r6. Unpinned, this compiler puts `self`/`part` in
- * r6/r7 instead; pinning them to r5/r6 makes it spill to r8 rather than
- * ever choosing r7 for scratch, and r7 itself can't be pinned (the
- * agbcc push/pop bug). The C is kept under NON_MATCHING. */
-#if NON_MATCHING
+ * Parked as NAKED under the current agbcc (it put `self`/`part` in r6/r7
+ * where the ROM uses r7 as scratch); matches unchanged under old_agbcc. */
 void sub_8018A30(struct gfx_pair_ctrl *self, struct gfx_part *part)
 {
     switch (self->state)
@@ -665,222 +632,6 @@ void sub_8018A30(struct gfx_pair_ctrl *self, struct gfx_part *part)
         break;
     }
 }
-#else
-NAKED void sub_8018A30(struct gfx_pair_ctrl *self, struct gfx_part *part)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "add r5, r0, #0\n\t"
-        "add r6, r1, #0\n\t"
-        "ldr r0, [r5, #8]\n\t"
-        "cmp r0, #4\n\t"
-        "bls _08018A3E\n\t"
-        "b _08018BCC\n\t"
-    "_08018A3E:\n"
-        "lsl r0, r0, #2\n\t"
-        "ldr r1, _08018A48\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov pc, r0\n\t"
-        ".align 2, 0\n"
-    "_08018A48: .4byte _08018A4C\n"
-    "_08018A4C:\n"
-        ".4byte _08018A60\n"
-        ".4byte _08018A7C\n"
-        ".4byte _08018B6C\n"
-        ".4byte _08018B8E\n"
-        ".4byte _08018BCC\n"
-    "_08018A60:\n"
-        "add r0, r5, #0\n\t"
-        "add r1, r6, #0\n\t"
-        "bl sub_8018BDC\n\t"
-        "add r0, r5, #0\n\t"
-        "add r1, r6, #0\n\t"
-        "bl sub_8018CB0\n\t"
-        "mov r0, #5\n\t"
-        "neg r0, r0\n\t"
-        "ldrb r1, [r6, #0xc]\n\t"
-        "and r0, r1\n\t"
-        "strb r0, [r6, #0xc]\n\t"
-        "b _08018B82\n\t"
-    "_08018A7C:\n"
-        "ldr r0, [r5, #0x20]\n\t"
-        "ldr r1, [r0, #4]\n\t"
-        "mov r0, #0xa0\n\t"
-        "lsl r0, r0, #7\n\t"
-        "cmp r1, r0\n\t"
-        "bgt _08018A8E\n\t"
-        "ldr r4, [r5, #0x1c]\n\t"
-        "mov r0, #5\n\t"
-        "b _08018A9A\n\t"
-    "_08018A8E:\n"
-        "mov r0, #0xf0\n\t"
-        "lsl r0, r0, #7\n\t"
-        "cmp r1, r0\n\t"
-        "bgt _08018AB6\n\t"
-        "ldr r4, [r5, #0x1c]\n\t"
-        "mov r0, #4\n\t"
-    "_08018A9A:\n"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x2d\n\t"
-        "strb r0, [r1]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087C0\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087B4\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800872C\n\t"
-        "b _08018AD4\n\t"
-    "_08018AB6:\n"
-        "ldr r4, [r5, #0x1c]\n\t"
-        "mov r0, #3\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x2d\n\t"
-        "strb r0, [r1]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087C0\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087B4\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800872C\n\t"
-    "_08018AD4:\n"
-        "ldr r0, [r5, #0x20]\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldr r0, [r6]\n\t"
-        "sub r4, r1, r0\n\t"
-        "mvn r2, r4\n\t"
-        "add r3, r6, #0\n\t"
-        "add r3, #0x28\n\t"
-        "lsr r2, r2, #0x1f\n\t"
-        "lsl r2, r2, #4\n\t"
-        "mov r1, #0x11\n\t"
-        "neg r1, r1\n\t"
-        "add r0, r1, #0\n\t"
-        "ldrb r7, [r3]\n\t"
-        "and r0, r7\n\t"
-        "orr r0, r2\n\t"
-        "strb r0, [r3]\n\t"
-        "ldr r0, [r5, #0x1c]\n\t"
-        "add r0, #0x28\n\t"
-        "ldrb r3, [r0]\n\t"
-        "and r1, r3\n\t"
-        "orr r1, r2\n\t"
-        "strb r1, [r0]\n\t"
-        "ldr r0, _08018B68\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0, #0x10]\n\t"
-        "ldr r1, [r0, #0x10]\n\t"
-        "lsl r1, r1, #8\n\t"
-        "asr r2, r4, #0x1f\n\t"
-        "eor r4, r2\n\t"
-        "sub r2, r4, r2\n\t"
-        "lsl r0, r2, #1\n\t"
-        "add r0, r0, r2\n\t"
-        "lsl r0, r0, #2\n\t"
-        "bl sub_8037E54\n\t"
-        "add r4, r0, #0\n\t"
-        "cmp r4, #5\n\t"
-        "ble _08018B22\n\t"
-        "mov r4, #5\n\t"
-    "_08018B22:\n"
-        "mov r0, #5\n\t"
-        "sub r4, r0, r4\n\t"
-        "add r3, r4, #0\n\t"
-        "ldr r0, [r6, #0x20]\n\t"
-        "add r2, r6, #0\n\t"
-        "add r2, #0x2d\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldrb r7, [r2]\n\t"
-        "lsl r0, r7, #3\n\t"
-        "add r2, r7, #0\n\t"
-        "sub r0, r0, r2\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrb r0, [r0, #0x16]\n\t"
-        "cmp r4, r0\n\t"
-        "blt _08018B44\n\t"
-        "sub r3, r0, #1\n\t"
-    "_08018B44:\n"
-        "str r3, [r6, #0x30]\n\t"
-        "ldr r5, [r5, #0x1c]\n\t"
-        "add r2, r4, #0\n\t"
-        "ldr r0, [r5, #0x20]\n\t"
-        "add r3, r5, #0\n\t"
-        "add r3, #0x2d\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldrb r4, [r3]\n\t"
-        "lsl r0, r4, #3\n\t"
-        "sub r0, r0, r4\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrb r0, [r0, #0x16]\n\t"
-        "cmp r2, r0\n\t"
-        "blt _08018B64\n\t"
-        "sub r2, r0, #1\n\t"
-    "_08018B64:\n"
-        "str r2, [r5, #0x30]\n\t"
-        "b _08018BCC\n\t"
-        ".align 2, 0\n"
-    "_08018B68: .4byte gUnknown_03001308\n"
-    "_08018B6C:\n"
-        "ldr r0, [r5, #0x10]\n\t"
-        "add r0, #1\n\t"
-        "str r0, [r5, #0x10]\n\t"
-        "cmp r0, #2\n\t"
-        "ble _08018B82\n\t"
-        "add r0, r5, #0\n\t"
-        "add r1, r6, #0\n\t"
-        "mov r2, #3\n\t"
-        "bl sub_8019770\n\t"
-        "b _08018BCC\n\t"
-    "_08018B82:\n"
-        "add r0, r5, #0\n\t"
-        "add r1, r6, #0\n\t"
-        "mov r2, #1\n\t"
-        "bl sub_8019770\n\t"
-        "b _08018BCC\n\t"
-    "_08018B8E:\n"
-        "ldr r1, [r5, #0x1c]\n\t"
-        "ldr r0, [r1, #4]\n\t"
-        "add r0, #0x80\n\t"
-        "str r0, [r1, #4]\n\t"
-        "ldr r1, [r6, #4]\n\t"
-        "add r1, #0x80\n\t"
-        "str r1, [r6, #4]\n\t"
-        "ldr r0, _08018BD4\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0, #0x10]\n\t"
-        "ldr r0, [r0, #0x14]\n\t"
-        "lsl r0, r0, #8\n\t"
-        "mov r7, #0x80\n\t"
-        "lsl r7, r7, #7\n\t"
-        "add r0, r0, r7\n\t"
-        "cmp r1, r0\n\t"
-        "blt _08018BCC\n\t"
-        "ldr r0, _08018BD8\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_80231C4\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "beq _08018BC2\n\t"
-        "bl sub_80241A4\n\t"
-    "_08018BC2:\n"
-        "add r0, r5, #0\n\t"
-        "add r1, r6, #0\n\t"
-        "mov r2, #4\n\t"
-        "bl sub_8019770\n\t"
-    "_08018BCC:\n"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "_08018BD4: .4byte gUnknown_03001308\n"
-    "_08018BD8: .4byte gUnknown_030012C0\n"
-    );
-}
-#endif
 
 void sub_8018BDC(struct gfx_pair_ctrl *self, struct gfx_part *part)
 {
@@ -898,12 +649,7 @@ void sub_8018BDC(struct gfx_pair_ctrl *self, struct gfx_part *part)
     CopyFlipX(c, part);
     OrFlags(c, 0x10);
     sub_8008E94(gUnknown_030012F4, c);
-    {
-        register struct gfx_pair_ctrl *s asm("r2") = self;
-
-        asm("" : "+r"(s));
-        s->childA = c;
-    }
+    self->childA = c;
 }
 
 void sub_8018CB0(struct gfx_pair_ctrl *self, struct gfx_part *part)
@@ -976,8 +722,6 @@ void sub_8018D70(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
     c->unk_0A = 0;
     {
         s32 m = -5;
-
-        asm("" : "+r"(m));
         m &= PART_FLAGS(c);
         PART_FLAGS(c) = m | 0x10;
     }
@@ -992,7 +736,7 @@ void sub_8018E4C(struct gfx_mover *self, struct gfx_part *partArg)
 
     if ((n = self->stepsLeft) != 0)
     {
-        register s32 steps asm("r8");
+        s32 steps;
         s32 t;
         s32 x, y;
 
@@ -1011,8 +755,6 @@ void sub_8018E4C(struct gfx_mover *self, struct gfx_part *partArg)
     {
         register s32 m asm("r0") = -5;
         register s32 b asm("r2");
-
-        asm("" : "+r"(m));
         b = PART_FLAGS(part);
         m &= b;
         PART_FLAGS(part) = m;
@@ -1026,21 +768,10 @@ void sub_8018E4C(struct gfx_mover *self, struct gfx_part *partArg)
             break;
         goto next;
     case 3:
-    {
-        /* as in sub_80194E0: the ROM's reload picks r4 for this call's
-         * zero `ldrsh` index where every C shape gets r2 */
-        struct gfx_method *m;
-        register s32 zero asm("r4");
-        s32 off;
-
         self->nextState = 4;
-        m = &self->vtable->method_50;
-        zero = 0;
-        asm("ldrsh %0, [%1, %2]" : "=l"(off) : "l"(m), "l"(zero));
-        sub_803AD84((u8 *)self + off, part, 0x12, m->fn);
+        CALL3(self, method_50, part, 0x12);
         sub_8019094(self, part, 7);
         break;
-    }
     case 4:
         sub_8019214(self, part, 0);
         sub_8019094(self, part, 2);
@@ -1176,14 +907,13 @@ void sub_8019094(struct gfx_mover *self, struct gfx_part *part, s32 mode)
         break;
     case 1:
     {
-        register s32 zero asm("r4");
+        s32 zero;
 
         sub_801967C(self, 0);
         {
             u8 *p = &part->unk_2C;
 
             zero = 0;
-            asm("" : "+r"(zero));
             *p = mode;
         }
         CALL3(self, method_50, part, 0xF);
@@ -1211,16 +941,9 @@ void sub_8019094(struct gfx_mover *self, struct gfx_part *part, s32 mode)
         }
         StepHeight(self, self->cfg->index);
         if (self->dirLeft)
-        {
             x -= 0x1800;
-        }
         else
-        {
-            register s32 k asm("r1") = 0x1800;
-
-            asm("" : "+r"(k));
-            x += k;
-        }
+            x += 0x1800;
         if (self->high)
         {
             u8 top = self->top;
@@ -1272,8 +995,6 @@ void sub_8019214(struct gfx_mover *self, struct gfx_part *partArg, s32 kindArg)
     {
         register s32 m asm("r0") = -5;
         register s32 b asm("r1");
-
-        asm("" : "+r"(m));
         b = PART_FLAGS(c);
         m &= b;
         b = 1;
@@ -1291,7 +1012,7 @@ void sub_8019214(struct gfx_mover *self, struct gfx_part *partArg, s32 kindArg)
 
 void sub_8019324(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
 {
-    register struct gfx_part *part asm("r8") = partArg;
+    struct gfx_part *part = partArg;
     struct gfx_box a;
     struct gfx_box b;
     struct gfx_box c;
@@ -1406,7 +1127,7 @@ void sub_8019464(struct gfx_ctrl *self, struct gfx_part *part)
 
 void sub_80194E0(struct gfx_kind_ctrl *self, struct gfx_part *partArg)
 {
-    register struct gfx_part *part asm("r4") = partArg;
+    struct gfx_part *part = partArg;
 
     switch (self->state)
     {
@@ -1420,18 +1141,8 @@ void sub_80194E0(struct gfx_kind_ctrl *self, struct gfx_part *partArg)
                 CALL3(self, method_50, part, 0xC);
                 break;
             case 1:
-            {
-                /* The ROM's reload picks r3, not r2, for this one call's
-                 * zero `ldrsh` index; every C shape tried gets r2, so the
-                 * single load is spelled out (docs/workflow.md step 7). */
-                struct gfx_method *m = &self->vtable->method_50;
-                register s32 zero asm("r3") = 0;
-                s32 off;
-
-                asm("ldrsh %0, [%1, %2]" : "=l"(off) : "l"(m), "l"(zero));
-                sub_803AD84((u8 *)self + off, part, 0xB, m->fn);
+                CALL3(self, method_50, part, 0xB);
                 break;
-            }
             case 2:
                 CALL3(self, method_50, part, 0xD);
                 break;
@@ -1472,54 +1183,21 @@ void sub_8019608(struct gfx_ctrl *self, s32 flags)
 /* Constructor: base-constructs through sub_801B7D8(self, 0, 0, 0, {0}, 6)
  * and points the method table at gStaticData_087E4634.
  *
- * NAKED (see docs/matching/issue-23-graphics.md): sub_801B7D8's fifth
- * argument is a one-byte value the ROM stores with `strb` into its
- * outgoing stack slot (the callee reads it back through the slot's
- * address). A `u8` parameter gets promoted to a word `str`; a packed
- * one-byte struct/union reproduces the `strb`, but this compiler then
- * materializes the 0 before the `mov r1, sp` slot address, the reverse
- * of the ROM's order, in every variant tried (local, initializer,
- * compound literal, cast-to-union, byte array). The C is kept under
- * NON_MATCHING. */
-#if NON_MATCHING
+ * The fifth argument is a byte the ROM stores with `strb` into its
+ * outgoing stack slot; like sub_801A878 (actor_part_1a878.c), the call
+ * writes both stack slots itself through MOVER_NEW's 4-argument view
+ * (include/mover_new.h), which also gives the ROM's `mov r1, sp` before
+ * the 0. */
 void *sub_801961C(struct gfx_ctrl *self)
 {
-    struct gfx_byte_arg arg;
+    struct mover_stack_args args;
 
-    arg.value[0] = 0;
-    sub_801B7D8(self, 0, 0, 0, arg, 6);
+    *(volatile u8 *)&args.dirY = 0;
+    *(volatile s32 *)&args.kind = 6;
+    MOVER_NEW(self, 0, 0, 0);
     self->vtable = (struct gfx_vtable *)gStaticData_087E4634;
     return self;
 }
-#else
-NAKED void *sub_801961C(struct gfx_ctrl *self)
-{
-    asm(
-        "push {r4, lr}\n\t"
-        "sub sp, #8\n\t"
-        "add r4, r0, #0\n\t"
-        "mov r1, sp\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r1]\n\t"
-        "mov r0, #6\n\t"
-        "str r0, [sp, #4]\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "mov r2, #0\n\t"
-        "mov r3, #0\n\t"
-        "bl sub_801B7D8\n\t"
-        "ldr r0, _08019648\n\t"
-        "str r0, [r4, #0xc]\n\t"
-        "add r0, r4, #0\n\t"
-        "add sp, #8\n\t"
-        "pop {r4}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n"
-    "_08019648: .4byte gStaticData_087E4634\n"
-    );
-}
-#endif
 
 void sub_801964C(struct gfx_ctrl *self, s32 flags)
 {

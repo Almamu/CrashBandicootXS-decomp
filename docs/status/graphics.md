@@ -83,16 +83,19 @@ and [graphics_loading.md](./graphics_loading.md).
   See [docs/matching/issue-21-input-ctrl.md](../matching/issue-21-input-ctrl.md).
 
 - `src/graphics/actor_part_188d0.c` (new file - GitHub issue #23):
-  23 of the 25 functions in `sub_80188D0`-`sub_8019660` as real C -
+  all 25 functions in `sub_80188D0`-`sub_8019660` as real C -
   method-table ("vtable" at `self+0xc`) constructor/destructor pairs
-  (`sub_8018948` is UNUSED), a part-gone bitmap setter, the
-  squares-table constructor `sub_80189EC`, the two-part effect's child
-  spawners `sub_8018BDC`/`sub_8018CB0`, the "mover" object
-  (`sub_8018D70` spawner, `sub_8018E4C` per-frame update, `sub_8019094`
-  state setter, `sub_8019214` hit-effect spawner), the part hit test
-  `sub_8019324`, and two more per-frame methods (`sub_8019464`,
-  `sub_80194E0`). The other two are NAKED - see "Parked" below. See
-  [docs/matching/issue-23-graphics.md](../matching/issue-23-graphics.md).
+  (`sub_8018948` is UNUSED; `sub_801961C` base-constructs through
+  `sub_801B7D8`), a part-gone bitmap setter, the squares-table
+  constructor `sub_80189EC`, the two-part effect (state machine
+  `sub_8018A30`, child spawners `sub_8018BDC`/`sub_8018CB0`), the "mover"
+  object (`sub_8018D70` spawner, `sub_8018E4C` per-frame update,
+  `sub_8019094` state setter, `sub_8019214` hit-effect spawner), the part
+  hit test `sub_8019324`, and two more per-frame methods (`sub_8019464`,
+  `sub_80194E0`). Built with `tools/agbcc/bin/old_agbcc`, under which
+  `sub_8018A30` and `sub_801961C` (NAKED under agbcc) closed. See
+  [docs/matching/issue-23-graphics.md](../matching/issue-23-graphics.md)
+  and [docs/matching/old-agbcc-retry.md](../matching/old-agbcc-retry.md).
 - `src/graphics/actor_part_1b85c.c` (new file - GitHub issue #26):
   `sub_801B85C`-`sub_801B980` (the player-follow child `sub_8017600`
   spawns), `sub_801B984`-`sub_801BAD0` (a 0x78-byte sprite subclass),
@@ -101,7 +104,7 @@ and [graphics_loading.md](./graphics_loading.md).
   `sub_801C51C`, `sub_801CCF8`, `sub_801CDE0`, `sub_801CE60` (its
   destructor, per-frame update/draw, record panel and cursor moves) -
   22 of the chunk's 25 functions as plain C; the other three are parked
-  below. See
+  below. Built with `tools/agbcc/bin/old_agbcc`. See
   [docs/matching/issue-26-level-select-menu.md](../matching/issue-26-level-select-menu.md).
 - `src/graphics/actor_part_1cee0.c` (new file - GitHub issue #27, shared
   structs in `include/level_menu.h`): all 25 functions of
@@ -130,8 +133,11 @@ and [graphics_loading.md](./graphics_loading.md).
   (`sub_801AB34`) and `src/graphics/actor_part_1b208.c`
   (`sub_801B208`-`sub_801B854`) - 23 functions: the level-object class
   (`gStaticData_087E49DC`) and its oscillating-platform mover
-  (`gStaticData_087E4A54`). `sub_801A878`/`sub_801AB98` from the same
-  range are parked below. See
+  (`gStaticData_087E4A54`) - plus `src/graphics/actor_part_1a878.c`
+  (`sub_801A878`, the level-object spawner, built with
+  `tools/agbcc/bin/old_agbcc`; NAKED under agbcc, see
+  [docs/matching/old-agbcc-retry.md](../matching/old-agbcc-retry.md)).
+  `sub_801AB98` from the same range is parked below. See
   [docs/matching/issue-25-level-objects.md](../matching/issue-25-level-objects.md).
 - GitHub issues #28/#29 (0x0801DA38-0x0801E578, shared structs in
   `include/level_select_parts.h`, both files built with `old_agbcc`):
@@ -152,22 +158,15 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 
 ## Parked - NAKED asm transcriptions (byte-correct, not decompiled C)
 
-- **`sub_8018A30`** and **`sub_801961C`** (`src/graphics/actor_part_188d0.c`,
-  issue #23) - NAKED transcriptions, C kept under `#if NON_MATCHING`.
-  `sub_8018A30` (two-part effect state machine) needs r7 as a
-  short-lived scratch register, which this compiler never chooses and
-  which can't be pinned; `sub_801961C` stores a one-byte by-value struct
-  argument after its slot address, the reverse of every C shape tried.
-  See [docs/matching/issue-23-graphics.md](../matching/issue-23-graphics.md).
 - **`sub_801BC28`**, **`sub_801C608`**, **`sub_801C96C`**
   (`src/graphics/actor_part_1b85c.c`, issue #26) - the level-select
   screen's constructor, record loader and main loop. Each has a full C
-  reconstruction under `#if NON_MATCHING` that gets the instruction
-  stream right; the residue is register allocation only (constants and
-  addresses the ROM keeps in `sb`/`r8`/`sl` across long call chains,
-  the scratch registers reload picks for copies out of them, and in
-  `sub_801C96C` the register the `REG_BLDY` byte is loaded into). See
-  [issue-26-level-select-menu.md](../matching/issue-26-level-select-menu.md).
+  reconstruction under `#if NON_MATCHING`, written against agbcc. The
+  file now builds with old_agbcc, and none of the three matches under it
+  either; `sub_801C96C` gets within one register copy with two small
+  changes. See
+  [issue-26-level-select-menu.md](../matching/issue-26-level-select-menu.md)
+  and [old-agbcc-retry.md](../matching/old-agbcc-retry.md).
 - **`sub_801A03C`**, **`sub_801A114`** (`src/graphics/actor_part_1967c.c`,
   issue #24) - a floor-part spawner and the `gStaticData_087E490C`
   controller's per-frame update. Both C reconstructions are complete and kept under
@@ -176,11 +175,12 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   `self`/`other`/the player-global address/the box pointer in r7/r9/r10/
   r8 in the update). See
   [docs/matching/issue-24-boss-actor.md](../matching/issue-24-boss-actor.md).
-- **`sub_801A878`** (`src/graphics/actor_part_1a878.c`, level-object
-  spawner) and **`sub_801AB98`** (`src/graphics/actor_part_1ab98.c`,
-  player-vs-object collision resolver) - GitHub issue #25. NAKED; the C
-  reconstructions under `#if NON_MATCHING` differ only in reload's
-  round-robin scratch-register choices - see
+- **`sub_801AB98`** (`src/graphics/actor_part_1ab98.c`, player-vs-object
+  collision resolver) - GitHub issue #25. NAKED; the C reconstruction
+  under `#if NON_MATCHING` differs in reload's round-robin
+  scratch-register choices under agbcc and still doesn't match under
+  old_agbcc (the ROM cross-jumps the overlap computations into a shared
+  tail) - see
   [issue-25-level-objects.md](../matching/issue-25-level-objects.md).
 
 - **`sub_8000EE4`** (`src/graphics/text_layout.c`) - word-wrap text
