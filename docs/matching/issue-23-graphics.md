@@ -2,10 +2,17 @@
 
 All 25 functions of the former `asm/code_3_2_17_188d0.s` now live in
 `src/graphics/actor_part_188d0.c` (file retired; `ldscript.txt` links
-`actor_part_188d0.o` in its place). **23 are real C, 2 are NAKED**
-transcriptions (C kept under `#if NON_MATCHING`), 0 left raw. Full clean
-`make compare` passes; `make NON_MATCHING=1 report` builds with no warnings
-for this file. Issue #23 stays open for the two NAKED functions.
+`actor_part_188d0.o` in its place). **All 25 are real C**, 0 NAKED, 0
+left raw. Full clean `make compare` passes; `make NON_MATCHING=1 report`
+builds with no warnings for this file.
+
+**Update (old_agbcc retry, docs/matching/old-agbcc-retry.md):** this
+region was built with the older compiler, `tools/agbcc/bin/old_agbcc`.
+The whole file now builds with it (Makefile `OLD_AGBCC_OBJS`), which
+closed the two functions that were NAKED under the current agbcc
+(`sub_8018A30`, `sub_801961C`) and made several of the workarounds below
+unnecessary - they have been removed. The notes below describe the
+original agbcc pass; where a workaround has since gone, it is marked.
 
 ## What the code is
 
@@ -101,10 +108,18 @@ Fixes, all plain C plus pins/barriers unless noted:
 - **Zero `ldrsh` index**: gcc's reload picks r2 for the zero index of the
   method-table `ldrsh`; for one call in `sub_80194E0` (r3) and one in
   `sub_8018E4C` (r4) the ROM picked another register, so that single load
-  is a narrow `asm("ldrsh %0, [%1, %2]")` with the index pinned.
+  was a narrow `asm("ldrsh %0, [%1, %2]")` with the index pinned.
+  *Gone under old_agbcc*: both are plain `CALL3`s now.
 - **Hoisted zero**: `sub_8019094` case 1 keeps a 0 in r4 across two calls
   (loaded between the `unk_2C` store's address and the store itself) -
-  reproduced with an r4 pin.
+  reproduced with an r4 pin. *Under old_agbcc* the pin is gone; the
+  `zero` local itself is still needed.
+- *Removed under old_agbcc* as well: the `SetTag` r0 pin/barrier, the
+  `AndFlags`/`OrFlags` barriers (the inline helper's parameter is
+  enough), the pins and barriers in `sub_80188FC`, `sub_8018978`,
+  `sub_8018BDC`, `sub_8018D70`, `sub_8019094` and `sub_80194E0`, the
+  barriers in `sub_8018E4C`/`sub_8019214`, `sub_8018E4C`'s r8 pin and
+  `sub_8019324`'s r8 pin on `part`.
 - Smaller ones: `x += 0x2000; y -= 0x4000` as separate statements
   (`sub_8018CB0`); `c->pos = part->pos` struct copy for the ldr/ldr/str/str
   order; `self->squares[i]` indexing instead of a walking pointer
@@ -114,19 +129,23 @@ Fixes, all plain C plus pins/barriers unless noted:
   loaded into r4 through a volatile read (the `actor_part78.c` idiom);
   `part` pinned to `ip` in `sub_8018978`.
 
-## NAKED (C kept under NON_MATCHING)
+## Formerly NAKED, matched under old_agbcc
 
-- **`sub_8018A30`**: every operation and the 5-entry jump table are
-  reproduced, but the ROM keeps `self`/`part` in r5/r6 and uses r7 as a
-  short-lived scratch register three times (the flip byte, the first
-  frame clamp's tag, the `0x4000` constant). Unpinned, this compiler puts
-  `self`/`part` in r6/r7; pinning them to r5/r6 makes it spill to r8
-  rather than ever using r7 for scratch, and r7 itself can't be pinned
-  (agbcc's push/pop bug).
-- **`sub_801961C`**: `sub_801B7D8`'s fifth argument is a one-byte value
-  passed by value - the caller `strb`s it into the outgoing stack slot and
-  the callee reads it back through the slot's address. A `u8` parameter
-  is promoted to a word `str`; a packed one-byte struct/union gives the
-  `strb`, but the 0 is always materialized before the `mov r1, sp` slot
-  address, the reverse of the ROM (tried: local, initializer, compound
-  literal, cast-to-union, byte array, inline constructor).
+- **`sub_8018A30`**: under agbcc every operation and the 5-entry jump
+  table were reproduced, but the ROM keeps `self`/`part` in r5/r6 and
+  uses r7 as a short-lived scratch register three times (the flip byte,
+  the first frame clamp's tag, the `0x4000` constant), which agbcc never
+  did. The unchanged NON_MATCHING C matches byte-for-byte under
+  old_agbcc; only `AndFlags`'s barrier was dropped afterwards.
+- **`sub_801961C`**: `sub_801B7D8`'s fifth argument is a byte the caller
+  `strb`s into the outgoing stack slot. Both compilers widen a `u8`
+  stack argument to a word `str`, and a packed one-byte struct always
+  materializes the 0 before the `mov r1, sp` slot address (the reverse
+  of the ROM) under either compiler. What matches is the idiom
+  `sub_801A878` uses (`include/mover_new.h`): write both stack slots
+  through `volatile` stores into a `struct mover_stack_args` local (the
+  only thing in the frame, so it *is* the outgoing-argument area) and
+  call through a 4-argument function-pointer view (`MOVER_NEW`). A
+  constant `strb` to a stack slot legitimizes the address first, which
+  gives the ROM's order. (This form also matches under the current
+  agbcc.)

@@ -35,7 +35,12 @@
  * the ROM (their C reconstructions are kept under `#if NON_MATCHING`);
  * everything else is plain C. Details, and the two techniques that
  * closed most of the rest (`Opaque` constants, inline member helpers),
- * are in docs/matching/issue-26-level-select-menu.md. */
+ * are in docs/matching/issue-26-level-select-menu.md.
+ *
+ * Built with old_agbcc (Makefile OLD_AGBCC_OBJS), the compiler this
+ * region was originally built with; see docs/matching/old-agbcc-retry.md.
+ * The NON_MATCHING reconstructions were written against the current
+ * agbcc and still don't match under old_agbcc. */
 
 struct method
 {
@@ -583,8 +588,8 @@ void sub_801B8BC(struct follow_child *self)
 
     sub_8009FB0(self);
     {
-        register s32 one asm("r1") = 1;
-        register s32 zero asm("r2");
+        s32 one = 1;
+        s32 zero;
         u8 *p = &self->unk_24;
 
         zero = 0;
@@ -661,59 +666,42 @@ s32 sub_801B980(struct follow_child *self)
  * constructor inlined): places it at (x, y) pixels with record id `id`,
  * registers it with gUnknown_030012F0, and starts animation 0 of the
  * table at `**gUnknown_030012D0 + 0x150`. Called from sub_8021668's
- * family (graphics_loading_21668.c). The store sequence is register-
- * pinned throughout; the two mask constants are materialized with
- * `mov/neg` asm like graphics_loading_21668.c's sub_8021668, since the
- * compiler otherwise derives them from constants already in registers. */
+ * family (graphics_loading_21668.c). The two mask constants are
+ * materialized with `mov/neg` asm like graphics_loading_21668.c's
+ * sub_8021668, since the compiler otherwise derives them from constants
+ * already in registers. */
 struct sprite *sub_801B984(u16 id, u16 x, u16 y)
 {
     struct sprite *obj = sub_8026EDC(0x78);
-    s32 z;
 
     sub_8009F90(obj);
     obj->vtable = (struct method *)gStaticData_087E4B34;
     sub_801BAC4(obj);
-    {
-        register u16 idr asm("r2");
-        register s32 zero asm("r1") = 0;
-        asm("" : "+r"(zero));
-        z = zero;
-        idr = id;
-        asm("" : "+r"(idr));
-        obj->id = idr;
-    }
+    obj->id = id;
     obj->x = x << 8;
-    {
-        register s32 yy asm("r5") = y << 8;
-        obj->y = yy;
-    }
+    obj->y = y << 8;
     sub_8008E94(gUnknown_030012F0, obj);
-    {
-        u8 *t = **gUnknown_030012D0;
-        register s32 off asm("r3") = 0x150;
-        asm("" : "+r"(off));
-        obj->anim = (struct anim_table *)(t + off);
-    }
-    obj->animIndex = z;
+    obj->anim = (struct anim_table *)(**gUnknown_030012D0 + 0x150);
+    obj->animIndex = 0;
     sub_80087C0(obj);
     sub_80087B4(obj);
     sub_800872C(obj, 0);
     {
-        register u8 *p28 asm("r2") = (u8 *)obj + 0x28;
-        register s32 m asm("r0");
+        u8 *p28 = (u8 *)obj + 0x28;
+        s32 m;
         asm("mov %0, #0x11\n\tneg %0, %0" : "=r"(m));
         m &= *p28;
         m &= -0x21;
         *p28 = m;
     }
     {
-        register struct anim_record *recs asm("r1") = obj->anim->records;
-        register u32 idx asm("r2") = obj->animIndex;
+        struct anim_record *recs = obj->anim->records;
+        u32 idx = obj->animIndex;
         struct anim_record *rec = &recs[idx];
-        register s32 pal asm("r0") = (u8)sub_8006DF8(gUnknown_030012B8, rec->tileRecord);
-        register s32 m asm("r1");
-        register u8 *p asm("r2") = (u8 *)obj + 0x29;
-        register u8 b asm("r3");
+        s32 pal = (u8)sub_8006DF8(gUnknown_030012B8, rec->tileRecord);
+        s32 m;
+        u8 *p = (u8 *)obj + 0x29;
+        u8 b;
         pal &= 0xF;
         asm("mov %0, #0x10\n\tneg %0, %0" : "=r"(m));
         b = *p;
@@ -1545,30 +1533,19 @@ void sub_801C104(struct level_menu *self)
     }
     if (sub_801DD28(self->bg2))
     {
-        register s32 m asm("r0") = -5;
-        register u8 *q asm("r1") = (u8 *)&self->dispcnt + 1;
-        register u8 *q2 asm("r2");
+        u8 *q = (u8 *)&self->dispcnt + 1;
+        s32 m = -5;
 
-        asm("" : "+r"(q));
         m &= *q;
-        q2 = (u8 *)&self->dispcnt + 1;
-        asm("" : "+r"(q2));
-        *q2 = m;
+        *q = m;
     }
     else
     {
-        register s32 m asm("r0") = 4;
-        register u8 *q asm("r3") = (u8 *)&self->dispcnt + 1;
-        register u8 *q2 asm("r5");
+        u8 *q = (u8 *)&self->dispcnt + 1;
+        s32 m = 4;
 
-        register s32 b asm("r3");
-
-        asm("" : "+r"(q));
-        b = *q;
-        m |= b;
-        q2 = (u8 *)&self->dispcnt + 1;
-        asm("" : "+r"(q2));
-        *q2 = m;
+        m |= *q;
+        *q = m;
     }
     sub_8006A48(gUnknown_03001300);
 }
@@ -1666,11 +1643,11 @@ void sub_801C364(struct level_menu *self)
     if (self->rank != 5)
         sub_8008890(self->sprites[4], -self->unk_80, self->unk_8C);
     {
-        register u8 **ps asm("r1") = &self->save;
-        register s32 off asm("r0") = self->levelId * 4 + 4;
-        register struct level_save *sv asm("r1") = (struct level_save *)(*ps + off);
-        register s32 one asm("r0") = 1;
-        register s32 b asm("r2") = *(u8 *)sv;
+        u8 **ps = &self->save;
+        s32 off = self->levelId * 4 + 4;
+        struct level_save *sv = (struct level_save *)(*ps + off);
+        s32 one = 1;
+        s32 b = *(u8 *)sv;
 
         one &= b;
         if (one != 0)
@@ -1728,8 +1705,6 @@ void sub_801C51C(struct level_menu *self)
         return;
     {
         s32 done = sub_801E464(self->panel) << 24;
-
-        asm volatile("" : "+r"(self));
         items = self->items;
         if (!done)
             goto draw;

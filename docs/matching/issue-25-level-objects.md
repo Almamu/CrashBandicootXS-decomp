@@ -1,18 +1,22 @@
 # Issue #25: 0x0801A794-0x0801B85C, graphics - level objects and their platform mover
 
 All 25 functions of the former `asm/code_3_2_17_188d0_1a794.s` are now in C
-(the file is deleted). **23 are real C, byte-exact; 2 are parked as NAKED
-transcriptions** (`sub_801A878`, `sub_801AB98`), each with its near-miss C
-reconstruction kept under `#if NON_MATCHING`. Verified with a clean
-`make compare` (`crashbandicootxs.gba: OK`).
+(the file is deleted). **24 are real C, byte-exact; 1 is parked as a NAKED
+transcription** (`sub_801AB98`) with its near-miss C reconstruction kept
+under `#if NON_MATCHING`. Verified with a clean `make compare`
+(`crashbandicootxs.gba: OK`). `sub_801A878` was NAKED too until the
+old_agbcc retry (docs/matching/old-agbcc-retry.md): its object is now
+built with `tools/agbcc/bin/old_agbcc` (Makefile `OLD_AGBCC_OBJS`), under
+which it matches with all of its register pins removed.
 
 The range is split by address into five objects so that
-`tools/report_units.py` can track the two NAKED functions as unmatched:
+`tools/report_units.py` can track the NAKED function as unmatched (and so
+`sub_801A878` could move to old_agbcc on its own):
 
 | file | functions | state |
 |---|---|---|
 | `src/graphics/actor_part_1a794.c` | `sub_801A794`-`sub_801A874` (6) | matched |
-| `src/graphics/actor_part_1a878.c` | `sub_801A878` | NAKED (C under NON_MATCHING) |
+| `src/graphics/actor_part_1a878.c` | `sub_801A878` | matched (old_agbcc) |
 | `src/graphics/actor_part_1ab34.c` | `sub_801AB34` | matched |
 | `src/graphics/actor_part_1ab98.c` | `sub_801AB98` | NAKED (C under NON_MATCHING) |
 | `src/graphics/actor_part_1b208.c` | `sub_801B208`-`sub_801B854` (16) | matched |
@@ -100,7 +104,25 @@ ROM): `sub_801A870`, `sub_801A874`, `sub_801B2E4` (inlined instead),
 - **`sub_801B29C`**: `(flags2 >> 4) & 1` (a bitfield read gives
   `lsl #27; lsr #31`).
 
-## Parked: `sub_801A878` and `sub_801AB98`
+## Parked: `sub_801AB98` (and, until the old_agbcc retry, `sub_801A878`)
+
+**`sub_801A878` is matched now.** Built with old_agbcc, the reload
+rotation described below comes out as in the ROM once every register pin
+and the `rec` barrier are removed (with them left in, old_agbcc is still
+off - 696 vs 700 bytes, first difference at +0x60). The spawn-record lookup is plain
+`recs + offsets[index]`. Two workarounds remain: the hand-built
+outgoing-argument block (old_agbcc also widens a `u8` stack argument to
+`str`; the struct and `MOVER_NEW` moved to `include/mover_new.h`, shared
+with `sub_801961C`), and the barrier on the palette nibble's `0xF`.
+
+`sub_801AB98` stays NAKED: under old_agbcc its NON_MATCHING C is still
+~290 diff lines off (1608 vs 1648 bytes). The first divergence is
+structural rather than register choice - the ROM cross-jumps the
+`x + w - x' + 1` / `y + h - y'` overlap computations of both branches
+into one shared tail, where this source computes part of the sum before
+the branch - and stripping the pins makes it worse, not better.
+
+The agbcc-era analysis of both:
 
 Both C reconstructions reproduce control flow, stack layout (including
 `sub_801AB98`'s 0x44-byte frame and all six spill slots, which needed the
@@ -129,5 +151,5 @@ a register decided by how many reloads came before it in the function.
   spawn-record lookup needs `rec` to stay in the index register
   (`asm("" : "+r"(rec))`) to reproduce `add r8, r0`.
 
-Both are transcribed instruction-for-instruction as `NAKED` functions for
-the matching build.
+`sub_801AB98` is transcribed instruction-for-instruction as a `NAKED`
+function for the matching build.
