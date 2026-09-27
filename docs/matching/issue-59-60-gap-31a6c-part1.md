@@ -260,3 +260,11 @@ matched/parked list this entry feeds into, and
 [docs/matching/issue-59-0x08031784-actor.md](issue-59-0x08031784-actor.md)
 for the Phase 1 pass and full 60-function Phase 2 scope this pass is
 the first half of.
+
+## Later pass: member-pointer dispatch
+
+A later pass promoted `sub_8031A6C`/`sub_80322F4` (`actor_part129.c`) from NAKED to real C. The "r7 table-base"
+shape was gcc 2.x's pointer-to-member-function call
+`(this->*table[this->state])()`, which `ACTOR_PMF_CALL` in
+`include/actor_self.h` reproduces with no register pins. See
+[pmf-dispatch-retry.md](pmf-dispatch-retry.md).

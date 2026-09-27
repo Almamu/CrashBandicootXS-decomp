@@ -359,3 +359,11 @@ boundaries - not by re-reading the isolated compiles more carefully.
 
 See [docs/status/actor.md](../status/actor.md) for the running
 matched/parked list this entry feeds into.
+
+## Later pass: member-pointer dispatch
+
+A later pass promoted `sub_8033FE4` (`actor_part64.c`) from NAKED to real C. The "r7 table-base"
+shape was gcc 2.x's pointer-to-member-function call
+`(this->*table[this->state])()`, which `ACTOR_PMF_CALL` in
+`include/actor_self.h` reproduces with no register pins. See
+[pmf-dispatch-retry.md](pmf-dispatch-retry.md).

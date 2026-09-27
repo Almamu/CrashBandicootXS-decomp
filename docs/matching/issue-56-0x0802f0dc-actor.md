@@ -279,3 +279,11 @@ All 25 functions in this chunk are now either matched or parked
 
 See [docs/status/actor.md](../status/actor.md) for the running
 matched/parked list this entry feeds into.
+
+## Later pass: member-pointer dispatch
+
+A later pass promoted `sub_802F748` (`actor_part44b.c`) and `sub_802FA38` (`actor_part46b.c`; its damage block needed plain `/` for `sub_803ADB4`, i.e. `__divsi3`, instead of explicit calls, and no register pins) from NAKED to real C. The "r7 table-base"
+shape was gcc 2.x's pointer-to-member-function call
+`(this->*table[this->state])()`, which `ACTOR_PMF_CALL` in
+`include/actor_self.h` reproduces with no register pins. See
+[pmf-dispatch-retry.md](pmf-dispatch-retry.md).

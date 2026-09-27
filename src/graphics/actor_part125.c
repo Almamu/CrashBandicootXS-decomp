@@ -1,4 +1,5 @@
 #include "core.h"
+#include "actor_self.h"
 
 /* Start of the boss-weapon/singleton-object cluster's next raw range
  * (issue #58/#62's shared "self" object family continues here - state
@@ -14,21 +15,30 @@ extern void mem_free(void *ptr);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern s32 sub_803AD7C(void *addr, void *fn);
-extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
-extern s32 sub_803AD84(void *arg0, void *arg1);
 extern void sub_802A980(void *self);
-extern void sub_8032138(s32 arg0);
-extern void sub_8031A08(void *self);
+extern void sub_8032138(void *obj);
 
 extern s32 gUnknown_03001538;
 extern s32 gUnknown_0300156C;
 extern void *gUnknown_03001568;
 extern void *gUnknown_03001534;
 extern s32 gUnknown_030013C0;
+extern void sub_8031A08(struct actor_self *self);
 extern void *gUnknown_030012BC;
 extern u8 gStaticData_087E5294[];
-extern u8 gStaticData_0817C414[];
+extern struct actor_pmf gStaticData_0817C414[];
+
+ACTOR_CALL_VIA_ALIASES
+
+/* The gStaticData_087E5294 class built by sub_8031920. */
+struct actor_5294 {
+    struct actor_self base;
+    s32 hp;             // 0x54
+    struct actor_self *pending; // 0x58
+    u8 dying;           // 0x5C
+    u8 unk_5D[3];
+    s32 velY;           // 0x60
+};
 
 /* Gates the boss-weapon tracker's own "ready" check: while the tracker
  * is inactive (`gUnknown_03001538 == 0`), reports "not ready" (-1).
@@ -71,75 +81,32 @@ void nullsub_31(void)
 {
 }
 
-/* Semantics understood (proximity-gated event trigger: syncs via
- * `sub_802A980`, checks a camera-relative bound against `self+0x34`,
- * flushes a pending trampoline call at `self+0x58` via `sub_8032138`,
- * checks the shared `self+0x28`/`self+0x12`/`self+0x20` state gate, and
- * either draws a text popup through the event table at `self+0x50` or
- * falls back to `sub_8031A08`), but resists a byte-exact plain-C
- * reconstruction in isolation (this compiler doesn't reach for `r4` as
- * the whole-function `self` pin the ROM uses without also perturbing
- * the branch layout) - transcribed NAKED, byte-verified against the
- * original disassembly. */
-NAKED void sub_80317E0(void *selfArg)
+/* Per-frame update: syncs via `sub_802A980`; once `self` has fallen
+ * behind the camera (`depth` below `gUnknown_030013C0 - 0x200`) it
+ * releases its pending linked object (`sub_8032138`) and destroys
+ * itself, as it also does once the state-2 animation has played through
+ * or state 1 has sunk past a height; otherwise runs the member-pointer
+ * dispatch `sub_8031A08`. The shared destroy tail is a `goto` target, as
+ * the ROM's branch layout shares it between both paths. */
+void sub_80317E0(struct actor_5294 *self)
 {
-    asm(
-        "push {r4, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "bl sub_802A980\n\t"
-        "ldr r0, 1f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, 2f\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r1, [r4, #0x34]\n\t"
-        "cmp r1, r0\n\t"
-        "bge 3f\n\t"
-        "ldr r0, [r4, #0x58]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 5f\n\t"
-        "bl sub_8032138\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [r4, #0x58]\n\t"
-        "b 5f\n\t"
-        ".align 2, 0\n"
-    "1: .4byte gUnknown_030013C0\n"
-    "2: .4byte 0xFFFFFE00\n"
-    "3:\n\t"
-        "ldr r1, [r4, #0x28]\n\t"
-        "cmp r1, #2\n\t"
-        "bne 4f\n\t"
-        "ldrb r0, [r4, #0x12]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 5f\n\t"
-    "4:\n\t"
-        "cmp r1, #1\n\t"
-        "bne 7f\n\t"
-        "ldr r1, [r4, #0x20]\n\t"
-        "ldr r0, 6f\n\t"
-        "cmp r1, r0\n\t"
-        "bge 7f\n\t"
-    "5:\n\t"
-        "cmp r4, #0\n\t"
-        "beq 8f\n\t"
-        "ldr r1, [r4, #0x50]\n\t"
-        "mov r2, #8\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r2, [r1, #0xc]\n\t"
-        "mov r1, #3\n\t"
-        "bl sub_803AD80\n\t"
-        "b 8f\n\t"
-        ".align 2, 0\n"
-    "6: .4byte 0xFFFF1F00\n"
-    "7:\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_8031A08\n\t"
-    "8:\n\t"
-        "pop {r4}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    );
+    sub_802A980(self);
+    if (self->base.depth < gUnknown_030013C0 - 0x200) {
+        if (self->pending != NULL) {
+            sub_8032138(self->pending);
+            self->pending = NULL;
+        }
+        goto destroy;
+    }
+    if ((self->base.state == 2 && self->base.animDone != 0)
+        || (self->base.state == 1 && self->base.y < -0xE100)) {
+    destroy:
+        if (self != NULL) {
+            ACTOR_VCALL(&self->base, m08, 3);
+        }
+    } else {
+        sub_8031A08(&self->base);
+    }
 }
 
 /* Trivial `self+0x58` clearing setter. */
@@ -149,67 +116,25 @@ void sub_8031850(void *selfArg)
     *(s32 *)(self + 0x58) = 0;
 }
 
-/* Health/damage-countdown transition at `self+0x54`: once it expires,
- * marks the death byte at `self+0x5c`, flushes a pending trampoline
- * call at `self+0x58` (`sub_803AD7C` on the event table's `+0x50`/
- * `+0x3c` fields), plays a fixed death sound cue, and fires the
- * state-2/table-index-1 transition (anim frame from `self`'s own part
- * table at `+0xc`) - same overall shape as the boss cluster's
- * `sub_8030530` (actor_part20.c). Transcribed NAKED: the death-byte
- * store's `1`/`0` constants (`r5`/`r6`) need to stay live and shared
- * across both the early flush branch and the later state-transition
- * block in the ROM's own register choice, in a way a plain-C
- * reconstruction's register pins couldn't reproduce without changing
- * the branch shape. */
-NAKED void sub_8031858(void *selfArg, s32 delta)
+/* Damage handler: once hit points run out, marks `self` dying,
+ * releases the pending linked object through its method table's `m38`
+ * slot, plays the death cue and enters state 2 with animation 1. Same
+ * overall shape as the boss cluster's `sub_8030530` (actor_part20.c). */
+void sub_8031858(struct actor_5294 *self, s32 damage)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r0, [r4, #0x54]\n\t"
-        "sub r0, r0, r1\n\t"
-        "str r0, [r4, #0x54]\n\t"
-        "cmp r0, #0\n\t"
-        "bgt 2f\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x5c\n\t"
-        "mov r5, #0\n\t"
-        "mov r6, #1\n\t"
-        "strb r6, [r0]\n\t"
-        "ldr r2, [r4, #0x58]\n\t"
-        "cmp r2, #0\n\t"
-        "beq 1f\n\t"
-        "ldr r1, [r2, #0x50]\n\t"
-        "mov r3, #0x38\n\t"
-        "ldrsh r0, [r1, r3]\n\t"
-        "add r0, r2, r0\n\t"
-        "ldr r1, [r1, #0x3c]\n\t"
-        "bl sub_803AD7C\n\t"
-        "str r5, [r4, #0x58]\n\t"
-    "1:\n\t"
-        "ldr r0, 3f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0x2e\n\t"
-        "bl PlaySfx\n\t"
-        "mov r0, #2\n\t"
-        "str r0, [r4, #0x28]\n\t"
-        "str r5, [r4, #0x44]\n\t"
-        "str r6, [r4, #0xc]\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldrh r0, [r0, #0xc]\n\t"
-        "mov r1, #0\n\t"
-        "strh r0, [r4, #0x10]\n\t"
-        "strb r1, [r4, #0x12]\n\t"
-        "str r5, [r4, #8]\n\t"
-    "2:\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "3: .4byte gUnknown_030012BC\n"
-    );
+    if ((self->hp -= damage) > 0) {
+        return;
+    }
+    self->dying = 1;
+    if (self->pending != NULL) {
+        struct actor_self *pending = self->pending;
+        struct actor_vtable *vt = pending->vtable;
+
+        ((void (*)(void *))vt->m38.fn)((u8 *)pending + vt->m38.thisOffset);
+        self->pending = NULL;
+    }
+    PlaySfx(gUnknown_030012BC, 0x2E, 0x100);
+    ACTOR_SET_STATE(&self->base, 2, 1);
 }
 
 /* Full reset idiom (state=1, counter/accumulator/table-index cleared,
@@ -239,57 +164,27 @@ void sub_80318B4(void *selfArg)
     *(s32 *)(self + 8) = zero;
 }
 
-/* Semantics understood (stashes 3 args into `self+0x1c`/`0x20`/`0x24`,
- * then runs the shared anim-frame-advance-and-clamp idiom below), but
- * this specific compiler always schedules the two `ldrsh`/subtract
- * constant loads (`#4`/`#6`) one instruction earlier than the ROM's own
- * build - transcribed NAKED, byte-verified. Same shared tail as
- * `sub_8031954`/`sub_80319A0` below. */
-NAKED void sub_80318D0(void *selfArg, s32 a, s32 b, s32 c)
+/* Moves `self` to (x, y, z), then runs the shared
+ * anim-frame-advance-and-clamp idiom. Each `anims[animIndex]` field is
+ * re-indexed rather than read through a record pointer - that is what
+ * gives the ROM's `#4`/`#6` constant scheduling
+ * (docs/matching/pmf-dispatch-retry.md). */
+void sub_80318D0(struct actor_self *self, s32 x, s32 y, s32 z)
 {
-    asm(
-        "push {r4, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "str r1, [r4, #0x1c]\n\t"
-        "str r2, [r4, #0x20]\n\t"
-        "str r3, [r4, #0x24]\n\t"
-        "ldr r0, [r4, #0x44]\n\t"
-        "add r0, #1\n\t"
-        "str r0, [r4, #0x44]\n\t"
-        "mov r0, #0x10\n\t"
-        "ldrsh r1, [r4, r0]\n\t"
-        "ldr r0, [r4, #8]\n\t"
-        "add r0, r0, r1\n\t"
-        "str r0, [r4, #8]\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r4, #0x12]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl GetAnimFrameBaseOffset\n\t"
-        "ldr r2, [r4, #0xc]\n\t"
-        "ldr r3, [r4]\n\t"
-        "lsl r1, r2, #1\n\t"
-        "add r1, r1, r2\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r1, r1, r3\n\t"
-        "mov r3, #4\n\t"
-        "ldrsh r2, [r1, r3]\n\t"
-        "cmp r0, r2\n\t"
-        "blt 1f\n\t"
-        "mov r3, #6\n\t"
-        "ldrsh r0, [r1, r3]\n\t"
-        "sub r0, r2, r0\n\t"
-        "lsl r0, r0, #8\n\t"
-        "ldr r1, [r4, #8]\n\t"
-        "sub r1, r1, r0\n\t"
-        "str r1, [r4, #8]\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r4, #0x12]\n\t"
-    "1:\n\t"
-        "pop {r4}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    );
+    s32 base;
+
+    self->x = x;
+    self->y = y;
+    self->z = z;
+    self->stateTime++;
+    self->animTime += *(s16 *)&self->animTimer;
+    self->animDone = 0;
+    base = GetAnimFrameBaseOffset(self);
+    if (base >= self->anims[self->animIndex].loopThreshold) {
+        self->animTime -= (self->anims[self->animIndex].loopThreshold
+                           - self->anims[self->animIndex].loopBase) << 8;
+        self->animDone = 1;
+    }
 }
 
 /* An `InitActorPart`-based constructor: forwards its first 4 real
@@ -314,179 +209,55 @@ void *sub_8031920(void *selfArg, s32 a, s32 b, s32 c, s32 d, s32 e)
     return self;
 }
 
-/* Same shared anim-frame-advance-and-clamp idiom as `sub_80318D0`, no
- * incoming-argument stashes. Transcribed NAKED for the same scheduling
- * gap. */
-NAKED void sub_8031954(void *selfArg)
+/* The shared anim-frame-advance-and-clamp idiom on its own (see
+ * `sub_80318D0`). */
+void sub_8031954(struct actor_self *self)
 {
-    asm(
-        "push {r4, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r0, [r4, #0x44]\n\t"
-        "add r0, #1\n\t"
-        "str r0, [r4, #0x44]\n\t"
-        "mov r0, #0x10\n\t"
-        "ldrsh r1, [r4, r0]\n\t"
-        "ldr r0, [r4, #8]\n\t"
-        "add r0, r0, r1\n\t"
-        "str r0, [r4, #8]\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r4, #0x12]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl GetAnimFrameBaseOffset\n\t"
-        "ldr r2, [r4, #0xc]\n\t"
-        "ldr r3, [r4]\n\t"
-        "lsl r1, r2, #1\n\t"
-        "add r1, r1, r2\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r1, r1, r3\n\t"
-        "mov r3, #4\n\t"
-        "ldrsh r2, [r1, r3]\n\t"
-        "cmp r0, r2\n\t"
-        "blt 1f\n\t"
-        "mov r3, #6\n\t"
-        "ldrsh r0, [r1, r3]\n\t"
-        "sub r0, r2, r0\n\t"
-        "lsl r0, r0, #8\n\t"
-        "ldr r1, [r4, #8]\n\t"
-        "sub r1, r1, r0\n\t"
-        "str r1, [r4, #8]\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r4, #0x12]\n\t"
-    "1:\n\t"
-        "pop {r4}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    );
+    s32 base;
+
+    self->stateTime++;
+    self->animTime += *(s16 *)&self->animTimer;
+    self->animDone = 0;
+    base = GetAnimFrameBaseOffset(self);
+    if (base >= self->anims[self->animIndex].loopThreshold) {
+        self->animTime -= (self->anims[self->animIndex].loopThreshold
+                           - self->anims[self->animIndex].loopBase) << 8;
+        self->animDone = 1;
+    }
 }
 
-/* An oscillation drive (`self+0x20 += self+0x60`, decaying `self+0x60`
- * by 6/frame floored at `-0x12c`) feeding the same shared anim-frame-
- * advance-and-clamp tail as `sub_8031954`/`sub_80318D0`. Transcribed
- * NAKED for the same scheduling gap. */
-NAKED void sub_80319A0(void *selfArg)
+/* Falls under a decaying vertical velocity (`velY` drops by 6 per
+ * frame, floored at -0x12C), then the shared anim-frame-advance-and-
+ * clamp idiom (see `sub_80318D0`). */
+void sub_80319A0(struct actor_5294 *self)
 {
-    asm(
-        "push {r4, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r0, [r4, #0x20]\n\t"
-        "ldr r1, [r4, #0x60]\n\t"
-        "add r0, r0, r1\n\t"
-        "str r0, [r4, #0x20]\n\t"
-        "sub r1, #6\n\t"
-        "str r1, [r4, #0x60]\n\t"
-        "ldr r0, 2f\n\t"
-        "cmp r1, r0\n\t"
-        "ble 1f\n\t"
-        "str r0, [r4, #0x60]\n\t"
-    "1:\n\t"
-        "ldr r0, [r4, #0x44]\n\t"
-        "add r0, #1\n\t"
-        "str r0, [r4, #0x44]\n\t"
-        "mov r0, #0x10\n\t"
-        "ldrsh r1, [r4, r0]\n\t"
-        "ldr r0, [r4, #8]\n\t"
-        "add r0, r0, r1\n\t"
-        "str r0, [r4, #8]\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r4, #0x12]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl GetAnimFrameBaseOffset\n\t"
-        "ldr r2, [r4, #0xc]\n\t"
-        "ldr r3, [r4]\n\t"
-        "lsl r1, r2, #1\n\t"
-        "add r1, r1, r2\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r1, r1, r3\n\t"
-        "mov r3, #4\n\t"
-        "ldrsh r2, [r1, r3]\n\t"
-        "cmp r0, r2\n\t"
-        "blt 3f\n\t"
-        "mov r3, #6\n\t"
-        "ldrsh r0, [r1, r3]\n\t"
-        "sub r0, r2, r0\n\t"
-        "lsl r0, r0, #8\n\t"
-        "ldr r1, [r4, #8]\n\t"
-        "sub r1, r1, r0\n\t"
-        "str r1, [r4, #8]\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r4, #0x12]\n\t"
-    "3:\n\t"
-        "pop {r4}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "2: .4byte 0xFFFFFED4\n"
-    );
+    s32 base;
+
+    self->base.y += self->velY;
+    self->velY -= 6;
+    if (self->velY > -0x12C) {
+        self->velY = -0x12C;
+    }
+    self->base.stateTime++;
+    self->base.animTime += *(s16 *)&self->base.animTimer;
+    self->base.animDone = 0;
+    base = GetAnimFrameBaseOffset(self);
+    if (base >= self->base.anims[self->base.animIndex].loopThreshold) {
+        self->base.animTime -= (self->base.anims[self->base.animIndex].loopThreshold
+                                - self->base.anims[self->base.animIndex].loopBase) << 8;
+        self->base.animDone = 1;
+    }
 }
 
 void nullsub_32(void)
 {
 }
 
-/* Draws the keyframe-table-relative text popup: indexes
- * `gStaticData_0817C414` by `self+0x28` (stride 8), and - when the
- * indexed entry's own `+2` halfword is positive - reads a *second*,
- * `+4`-offset-relative table entry's `+0`/`+4` fields (a 12-byte-stride
- * indirect record), otherwise falls back to the direct `+4` entry.
- * Structurally close to the already-documented `sub_8031A6C`/keyframe-
- * table family (`docs/rom_map.md`) but resists a byte-exact plain-C
- * reconstruction of the ROM's specific `r7`-as-table-base-pin choice -
- * transcribed NAKED, byte-verified. */
-NAKED void sub_8031A08(void *selfArg)
+/* Per-state member-pointer dispatch, `(this->*gStaticData_0817C414
+ * [this->state])()` (see `ACTOR_PMF_CALL`). */
+void sub_8031A08(struct actor_self *self)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r1, 1f\n\t"
-        "ldr r0, [r4, #0x28]\n\t"
-        "lsl r3, r0, #3\n\t"
-        "add r0, r3, r1\n\t"
-        "mov r7, #2\n\t"
-        "ldrsh r2, [r0, r7]\n\t"
-        "add r7, r1, #0\n\t"
-        "cmp r2, #0\n\t"
-        "ble 2f\n\t"
-        "mov r1, #4\n\t"
-        "ldrsh r0, [r0, r1]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r0]\n\t"
-        "lsl r0, r2, #3\n\t"
-        "add r0, r0, r1\n\t"
-        "sub r0, #8\n\t"
-        "ldr r5, [r0]\n\t"
-        "ldr r6, [r0, #4]\n\t"
-        "add r3, r6, #0\n\t"
-        "b 3f\n\t"
-        ".align 2, 0\n"
-    "1: .4byte gStaticData_0817C414\n"
-    "2:\n\t"
-        "add r0, r7, #4\n\t"
-        "add r0, r3, r0\n\t"
-        "ldr r3, [r0]\n\t"
-    "3:\n\t"
-        "ldr r0, [r4, #0x28]\n\t"
-        "lsl r0, r0, #3\n\t"
-        "add r0, r0, r7\n\t"
-        "mov r7, #0\n\t"
-        "ldrsh r1, [r0, r7]\n\t"
-        "cmp r2, #0\n\t"
-        "ble 4f\n\t"
-        "lsl r0, r5, #0x10\n\t"
-        "asr r0, r0, #0x10\n\t"
-        "add r0, r0, r1\n\t"
-        "b 5f\n\t"
-    "4:\n\t"
-        "add r0, r1, #0\n\t"
-    "5:\n\t"
-        "add r0, r4, r0\n\t"
-        "bl sub_803AD84\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    );
+    ACTOR_PMF_CALL(self, gStaticData_0817C414);
 }
 
 /* Trivial `self+0x5c` byte getter. Needs a trailing `asm(".align 2, 0")`
