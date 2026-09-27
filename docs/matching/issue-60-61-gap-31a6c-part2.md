@@ -201,6 +201,12 @@ elsewhere in this project, re-confirmed rather than re-derived here:
   speed-toggle shape (issue #62) *twice*, once per frame-counter
   schedule case, plus an outer dispatch - the same cross-jump-merging
   register-pin hazard that function's own writeup documents, doubled.
+  **Update:** promoted to real C in a later pass via the static-inline
+  anti-CSE technique (register-pinned `p`/`val` locals matching
+  `sub_8033828`'s own idiom exactly, plus an `asm("" : "+r"(p))` barrier
+  to keep each branch's pointer reload from being merged into the shared
+  tail) - see
+  [issue-59-60-static-inline-cse-promotion.md](issue-59-60-static-inline-cse-promotion.md).
 - **`sub_8032C0C`/`sub_8032EA0`/`sub_80330FC`/`sub_8033264`/
   `sub_80336CC`** - many-high-register (`ip`/`sb`/`sl`/`r8`)
   allocation, the same gcc-2.9 difficulty already documented

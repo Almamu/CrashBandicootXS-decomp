@@ -722,6 +722,11 @@ from "core" graphics.
   (`gUnknown_030015A0`-`030015FF`, reusing `actor_part28.c`'s existing
   naming for the fields that family already touches) - see
   [docs/matching/issue-60-61-gap-31a6c-part2.md](../matching/issue-60-61-gap-31a6c-part2.md).
+  `sub_8032B6C` (the P1/P2 speed-toggle dispatcher + category-vtable
+  animation dispatch) was originally NAKED-parked here too, then
+  promoted to real C in a follow-up pass via the static-inline anti-CSE
+  technique - see
+  [issue-59-60-static-inline-cse-promotion.md](../matching/issue-59-60-static-inline-cse-promotion.md).
 - `src/graphics/actor_part131.c` (new file, ROM 0x08034AA4-0x080354E0,
   GitHub issue #64): `sub_8034C40` (the fade overlay's Yes/No-dialog
   blink/toggle helper), `sub_8034C5C` (fade overlay per-frame "yield"
@@ -1201,13 +1206,6 @@ plain C didn't converge.
   `gStaticData_0817C450` table-lookup as `sub_8032A94`, plus a
   popup/predicate tail. Fully understood; same `r7`-table-base pin gap.
   See `docs/matching/issue-60-61-gap-31a6c-part2.md`.
-- **`sub_8032B6C`** (`src/graphics/actor_part130.c`) - the P1/P2
-  speed-toggle dispatcher (fully inlining `sub_8033828`'s own shape
-  twice, once per schedule case) plus a category-vtable animation
-  dispatch. Fully understood; inlines the same cross-jump-merging
-  register-pin hazard `sub_8033828` (issue #62) needed exact pins to
-  avoid, twice over, plus an outer frame-counter dispatch. See
-  `docs/matching/issue-60-61-gap-31a6c-part2.md`.
 - **`sub_8032C0C`/`sub_8032EA0`** (`src/graphics/actor_part130.c`) -
   opens the singleton's own camera-follow/scroll-velocity smoothing
   computation (`gUnknown_030015B4`-`030015EC`), split across two

@@ -128,164 +128,217 @@ extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, void *frameData,
  * the new record's own head (`+0`, a signed 16-bit "hold" count) into
  * the slot's live fields; on a nonzero countdown, instead accumulates
  * each live position/velocity pair (`+0x18..+0x38` in
- * value/delta pairs) by its own delta once. */
-NAKED void sub_8035780(u32 *self)
+ * value/delta pairs) by its own delta once.
+ *
+ * This was originally NAKED (see docs/matching/issue-65-0x08035780-
+ * graphics-loading.md) because the ROM keeps recomputing `self +
+ * CONST + i*0x34` fresh for every single field access instead of
+ * hoisting a shared `self+i*0x34` slot-base register the way any
+ * plain-C phrasing (raw pointer casts included) naturally does; a bare
+ * `asm volatile("" ::: "memory")` barrier didn't stop the fold either,
+ * since it invalidates memory contents, not an already-computed pure-
+ * address register. What closed it (see also `tile_slot_pool.c`'s
+ * `PushFreeSlot`/`GetTileSlot`/`SetTileSlot` for the same idea): give
+ * every field its own tiny `static inline` accessor, each its own
+ * distinct call site, so this compiler's inliner treats every access
+ * as a fresh expansion instead of one shared subexpression it can
+ * hoist. Two more subtleties were needed on top of that for a fully
+ * byte-exact match: (1) `self+CONST` has to be materialized as its own
+ * named local *before* adding the `i*0x34` stride (an expression like
+ * `self + CONST + stride` gets silently reassociated by this compiler
+ * into `stride + CONST` first, `+ self` last - the opposite of what
+ * the ROM does); and (2) a handful of individual loads (the "delta
+ * record" pointer bump, and the three `<<16` position fields) needed
+ * explicit register pins to land in the exact temp registers the
+ * ROM's own build chose instead of whatever this compiler naturally
+ * picks. */
+struct delta_record
 {
-    asm(
-        "\tpush {r4, r5, lr}\n"
-        "\tmov ip, r0\n"
-        "\tmov r5, #0\n"
-        "_08035786:\n"
-        "\tmov r0, #0x34\n"
-        "\tadd r3, r5, #0\n"
-        "\tmul r3, r0, r3\n"
-        "\tmov r0, ip\n"
-        "\tadd r0, #0x14\n"
-        "\tadd r4, r0, r3\n"
-        "\tldr r0, [r4]\n"
-        "\tcmp r0, #0\n"
-        "\tbne _0803579A\n"
-        "\tb _0803589A\n"
-        "_0803579A:\n"
-        "\tsub r0, #1\n"
-        "\tstr r0, [r4]\n"
-        "\tcmp r0, #0\n"
-        "\tbne _08035836\n"
-        "\tmov r1, ip\n"
-        "\tadd r1, #0x40\n"
-        "\tadd r1, r1, r3\n"
-        "\tldr r0, [r1]\n"
-        "\tadd r2, r0, #0\n"
-        "\tadd r0, #0x20\n"
-        "\tstr r0, [r1]\n"
-        "\tmov r0, ip\n"
-        "\tadd r1, r0, r3\n"
-        "\tmov r0, #1\n"
-        "\tstrb r0, [r1, #0x10]\n"
-        "\tmov r1, #0\n"
-        "\tldrsh r0, [r2, r1]\n"
-        "\tstr r0, [r4]\n"
-        "\tcmp r0, #0\n"
-        "\tbeq _0803589A\n"
-        "\tmov r0, ip\n"
-        "\tadd r0, #0x20\n"
-        "\tadd r0, r0, r3\n"
-        "\tldrh r4, [r2, #6]\n"
-        "\tlsl r1, r4, #0x10\n"
-        "\tstr r1, [r0]\n"
-        "\tmov r0, ip\n"
-        "\tadd r0, #0x34\n"
-        "\tadd r0, r0, r3\n"
-        "\tldr r1, [r2, #0x14]\n"
-        "\tstr r1, [r0]\n"
-        "\tmov r1, ip\n"
-        "\tadd r1, #0x24\n"
-        "\tadd r1, r1, r3\n"
-        "\tmov r4, #8\n"
-        "\tldrsh r0, [r2, r4]\n"
-        "\tlsl r0, r0, #8\n"
-        "\tstr r0, [r1]\n"
-        "\tmov r0, ip\n"
-        "\tadd r0, #0x38\n"
-        "\tadd r0, r0, r3\n"
-        "\tldr r1, [r2, #0x18]\n"
-        "\tstr r1, [r0]\n"
-        "\tmov r1, ip\n"
-        "\tadd r1, #0x28\n"
-        "\tadd r1, r1, r3\n"
-        "\tmov r4, #0xa\n"
-        "\tldrsh r0, [r2, r4]\n"
-        "\tlsl r0, r0, #8\n"
-        "\tstr r0, [r1]\n"
-        "\tmov r0, ip\n"
-        "\tadd r0, #0x3c\n"
-        "\tadd r0, r0, r3\n"
-        "\tldr r1, [r2, #0x1c]\n"
-        "\tstr r1, [r0]\n"
-        "\tmov r0, ip\n"
-        "\tadd r0, #0x18\n"
-        "\tadd r0, r0, r3\n"
-        "\tldrh r4, [r2, #2]\n"
-        "\tlsl r1, r4, #0x10\n"
-        "\tstr r1, [r0]\n"
-        "\tmov r0, ip\n"
-        "\tadd r0, #0x2c\n"
-        "\tadd r0, r0, r3\n"
-        "\tldr r1, [r2, #0xc]\n"
-        "\tstr r1, [r0]\n"
-        "\tmov r0, ip\n"
-        "\tadd r0, #0x1c\n"
-        "\tadd r0, r0, r3\n"
-        "\tldrh r4, [r2, #4]\n"
-        "\tlsl r1, r4, #0x10\n"
-        "\tstr r1, [r0]\n"
-        "\tmov r0, ip\n"
-        "\tadd r0, #0x30\n"
-        "\tadd r0, r0, r3\n"
-        "\tldr r1, [r2, #0x10]\n"
-        "\tstr r1, [r0]\n"
-        "\tb _0803589A\n"
-        "_08035836:\n"
-        "\tmov r2, ip\n"
-        "\tadd r2, #0x20\n"
-        "\tadd r2, r2, r3\n"
-        "\tmov r0, ip\n"
-        "\tadd r0, #0x34\n"
-        "\tadd r0, r0, r3\n"
-        "\tldr r1, [r2]\n"
-        "\tldr r0, [r0]\n"
-        "\tadd r1, r1, r0\n"
-        "\tstr r1, [r2]\n"
-        "\tmov r2, ip\n"
-        "\tadd r2, #0x24\n"
-        "\tadd r2, r2, r3\n"
-        "\tmov r0, ip\n"
-        "\tadd r0, #0x38\n"
-        "\tadd r0, r0, r3\n"
-        "\tldr r1, [r2]\n"
-        "\tldr r0, [r0]\n"
-        "\tadd r1, r1, r0\n"
-        "\tstr r1, [r2]\n"
-        "\tmov r2, ip\n"
-        "\tadd r2, #0x28\n"
-        "\tadd r2, r2, r3\n"
-        "\tmov r0, ip\n"
-        "\tadd r0, #0x3c\n"
-        "\tadd r0, r0, r3\n"
-        "\tldr r1, [r2]\n"
-        "\tldr r0, [r0]\n"
-        "\tadd r1, r1, r0\n"
-        "\tstr r1, [r2]\n"
-        "\tmov r2, ip\n"
-        "\tadd r2, #0x18\n"
-        "\tadd r2, r2, r3\n"
-        "\tmov r0, ip\n"
-        "\tadd r0, #0x2c\n"
-        "\tadd r0, r0, r3\n"
-        "\tldr r1, [r2]\n"
-        "\tldr r0, [r0]\n"
-        "\tadd r1, r1, r0\n"
-        "\tstr r1, [r2]\n"
-        "\tmov r2, ip\n"
-        "\tadd r2, #0x1c\n"
-        "\tadd r2, r2, r3\n"
-        "\tmov r0, ip\n"
-        "\tadd r0, #0x30\n"
-        "\tadd r0, r0, r3\n"
-        "\tldr r1, [r2]\n"
-        "\tldr r0, [r0]\n"
-        "\tadd r1, r1, r0\n"
-        "\tstr r1, [r2]\n"
-        "_0803589A:\n"
-        "\tadd r5, #1\n"
-        "\tcmp r5, #8\n"
-        "\tbgt _080358A2\n"
-        "\tb _08035786\n"
-        "_080358A2:\n"
-        "\tpop {r4, r5}\n"
-        "\tpop {r0}\n"
-        "\tbx r0\n"
-    );
+    s16 hold;      // 0x0 - countdown reload value
+    u16 dPosA;     // 0x2 - Q16.16 position (<<16)
+    u16 dPosB;     // 0x4 - Q16.16 position (<<16)
+    u16 dPosC;     // 0x6 - Q16.16 position (<<16)
+    s16 dVelA;     // 0x8 - Q24.8 velocity (<<8)
+    s16 dVelB;     // 0xa - Q24.8 velocity (<<8)
+    s32 deltaA;    // 0xc  - raw delta for dPosA's live field
+    s32 deltaB;    // 0x10 - raw delta for dPosB's live field
+    s32 deltaC;    // 0x14 - raw delta for dPosC's live field
+    s32 deltaD;    // 0x18 - raw delta for dVelA's live field
+    s32 deltaE;    // 0x1c - raw delta for dVelB's live field
+};
+
+static inline struct delta_record **RecordAt(u32 *self, s32 stride)
+{
+    u8 *base = (u8 *)self + 0x40;
+    return (struct delta_record **)(base + stride);
+}
+static inline u8 *SlotBase(u32 *self, s32 stride)
+{
+    u8 *base = (u8 *)self;
+    return base + stride;
+}
+static inline s32 *PosCAt(u32 *self, s32 stride)
+{
+    u8 *base = (u8 *)self + 0x20;
+    return (s32 *)(base + stride);
+}
+static inline s32 *VelAAt(u32 *self, s32 stride)
+{
+    u8 *base = (u8 *)self + 0x24;
+    return (s32 *)(base + stride);
+}
+static inline s32 *DeltaCAt(u32 *self, s32 stride)
+{
+    u8 *base = (u8 *)self + 0x34;
+    return (s32 *)(base + stride);
+}
+static inline s32 *DeltaDAt(u32 *self, s32 stride)
+{
+    u8 *base = (u8 *)self + 0x38;
+    return (s32 *)(base + stride);
+}
+static inline s32 *VelBAt(u32 *self, s32 stride)
+{
+    u8 *base = (u8 *)self + 0x28;
+    return (s32 *)(base + stride);
+}
+static inline s32 *DeltaEAt(u32 *self, s32 stride)
+{
+    u8 *base = (u8 *)self + 0x3c;
+    return (s32 *)(base + stride);
+}
+static inline s32 *PosAAt(u32 *self, s32 stride)
+{
+    u8 *base = (u8 *)self + 0x18;
+    return (s32 *)(base + stride);
+}
+static inline s32 *DeltaAAt(u32 *self, s32 stride)
+{
+    u8 *base = (u8 *)self + 0x2c;
+    return (s32 *)(base + stride);
+}
+static inline s32 *PosBAt(u32 *self, s32 stride)
+{
+    u8 *base = (u8 *)self + 0x1c;
+    return (s32 *)(base + stride);
+}
+static inline s32 *DeltaBAt(u32 *self, s32 stride)
+{
+    u8 *base = (u8 *)self + 0x30;
+    return (s32 *)(base + stride);
+}
+
+void sub_8035780(u32 *self_arg)
+{
+    register u32 *self asm("ip") = self_arg;
+    s32 i;
+
+    for (i = 0; i <= 8; i++)
+    {
+        s32 stride = i * 0x34;
+        u8 *countdownBase = (u8 *)self + 0x14;
+        s32 *countdownPtr = (s32 *)(countdownBase + stride);
+
+        if (*countdownPtr != 0)
+        {
+            s32 countdown = *countdownPtr - 1;
+            *countdownPtr = countdown;
+            if (countdown == 0)
+            {
+                struct delta_record **recordPtrAddr = RecordAt(self, stride);
+                /* Pinned to r0 to match the ROM's own register split:
+                 * the loaded pointer is kept in one temp (r0) purely to
+                 * compute the advanced pointer stored back below, while
+                 * `record` gets its own copy for every later dereference. */
+                register struct delta_record *recordLoaded asm("r0") = *recordPtrAddr;
+                struct delta_record *record = recordLoaded;
+
+                *recordPtrAddr = (struct delta_record *)((u8 *)recordLoaded + 0x20);
+                SlotBase(self, stride)[0x10] = 1;
+
+                {
+                    s32 hold = record->hold;
+                    *countdownPtr = hold;
+                    if (hold != 0)
+                    {
+                        {
+                            s32 *dst = PosCAt(self, stride);
+                            register u16 tmp asm("r4") = record->dPosC;
+                            register s32 shifted asm("r1") = (s32)tmp << 16;
+                            *dst = shifted;
+                        }
+                        *DeltaCAt(self, stride) = record->deltaC;
+                        *VelAAt(self, stride) = record->dVelA << 8;
+                        *DeltaDAt(self, stride) = record->deltaD;
+                        *VelBAt(self, stride) = record->dVelB << 8;
+                        *DeltaEAt(self, stride) = record->deltaE;
+                        {
+                            s32 *dst = PosAAt(self, stride);
+                            register u16 tmp asm("r4") = record->dPosA;
+                            register s32 shifted asm("r1") = (s32)tmp << 16;
+                            *dst = shifted;
+                        }
+                        *DeltaAAt(self, stride) = record->deltaA;
+                        {
+                            s32 *dst = PosBAt(self, stride);
+                            register u16 tmp asm("r4") = record->dPosB;
+                            register s32 shifted asm("r1") = (s32)tmp << 16;
+                            *dst = shifted;
+                        }
+                        *DeltaBAt(self, stride) = record->deltaB;
+                    }
+                }
+            }
+            else
+            {
+                {
+                    u8 *dstBase = (u8 *)self + 0x20;
+                    s32 *dst = (s32 *)(dstBase + stride);
+                    u8 *srcBase = (u8 *)self + 0x34;
+                    s32 *src = (s32 *)(srcBase + stride);
+                    s32 val = *dst;
+                    val += *src;
+                    *dst = val;
+                }
+                {
+                    u8 *dstBase = (u8 *)self + 0x24;
+                    s32 *dst = (s32 *)(dstBase + stride);
+                    u8 *srcBase = (u8 *)self + 0x38;
+                    s32 *src = (s32 *)(srcBase + stride);
+                    s32 val = *dst;
+                    val += *src;
+                    *dst = val;
+                }
+                {
+                    u8 *dstBase = (u8 *)self + 0x28;
+                    s32 *dst = (s32 *)(dstBase + stride);
+                    u8 *srcBase = (u8 *)self + 0x3c;
+                    s32 *src = (s32 *)(srcBase + stride);
+                    s32 val = *dst;
+                    val += *src;
+                    *dst = val;
+                }
+                {
+                    u8 *dstBase = (u8 *)self + 0x18;
+                    s32 *dst = (s32 *)(dstBase + stride);
+                    u8 *srcBase = (u8 *)self + 0x2c;
+                    s32 *src = (s32 *)(srcBase + stride);
+                    s32 val = *dst;
+                    val += *src;
+                    *dst = val;
+                }
+                {
+                    u8 *dstBase = (u8 *)self + 0x1c;
+                    s32 *dst = (s32 *)(dstBase + stride);
+                    u8 *srcBase = (u8 *)self + 0x30;
+                    s32 *src = (s32 *)(srcBase + stride);
+                    s32 val = *dst;
+                    val += *src;
+                    *dst = val;
+                }
+            }
+        }
+    }
 }
 
 /* Builds an OAM affine-sprite entry (via `sub_803ADB4`'s Q8 sine/cosine
