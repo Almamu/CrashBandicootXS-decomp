@@ -114,6 +114,15 @@ and [graphics_loading.md](./graphics_loading.md).
   `sub_8019718` and `sub_80197F4` are UNUSED (no caller or pointer
   anywhere in the ROM). See
   [docs/matching/issue-24-boss-actor.md](../matching/issue-24-boss-actor.md).
+- GitHub issue #25 (0x0801A794-0x0801B85C, shared structs in
+  `include/gobj_1a794.h`): `src/graphics/actor_part_1a794.c`
+  (`sub_801A794`-`sub_801A874`), `src/graphics/actor_part_1ab34.c`
+  (`sub_801AB34`) and `src/graphics/actor_part_1b208.c`
+  (`sub_801B208`-`sub_801B854`) - 23 functions: the level-object class
+  (`gStaticData_087E49DC`) and its oscillating-platform mover
+  (`gStaticData_087E4A54`). `sub_801A878`/`sub_801AB98` from the same
+  range are parked below. See
+  [docs/matching/issue-25-level-objects.md](../matching/issue-25-level-objects.md).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -144,6 +153,12 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   `self`/`other`/the player-global address/the box pointer in r7/r9/r10/
   r8 in the update). See
   [docs/matching/issue-24-boss-actor.md](../matching/issue-24-boss-actor.md).
+- **`sub_801A878`** (`src/graphics/actor_part_1a878.c`, level-object
+  spawner) and **`sub_801AB98`** (`src/graphics/actor_part_1ab98.c`,
+  player-vs-object collision resolver) - GitHub issue #25. NAKED; the C
+  reconstructions under `#if NON_MATCHING` differ only in reload's
+  round-robin scratch-register choices - see
+  [issue-25-level-objects.md](../matching/issue-25-level-objects.md).
 
 - **`sub_8000EE4`** (`src/graphics/text_layout.c`) - word-wrap text
   renderer. A full C reconstruction matched the ROM instruction-for-
