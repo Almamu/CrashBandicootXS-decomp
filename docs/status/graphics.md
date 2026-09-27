@@ -133,6 +133,19 @@ and [graphics_loading.md](./graphics_loading.md).
   (`gStaticData_087E4A54`). `sub_801A878`/`sub_801AB98` from the same
   range are parked below. See
   [docs/matching/issue-25-level-objects.md](../matching/issue-25-level-objects.md).
+- GitHub issues #28/#29 (0x0801DA38-0x0801E578, shared structs in
+  `include/level_select_parts.h`, both files built with `old_agbcc`):
+  `src/graphics/actor_part_1da38.c` (`sub_801DA38`-`sub_801DF98`, all
+  25) - the level-select screen's zooming BG2 picture (`struct
+  zoom_bg`: destructor, state machine, affine draw/commit, state
+  queries, twinkle sprites) and the level entry's methods (`struct
+  level_item`, method table `gStaticData_087E4BAC`);
+  `src/graphics/actor_part_1dfec.c` (`sub_801DFEC`-`sub_801E524`, all
+  16) - the level entry's constructor and the cursor panel (`struct
+  cursor_panel`: Bresenham glide, idle animation cycle, affine OBJ
+  grow/shrink). `sub_801E3D4`, `sub_801E3E4` and `sub_801E4E4` are
+  UNUSED. All real C. See
+  [docs/matching/issue-28-29-level-select-parts.md](../matching/issue-28-29-level-select-parts.md).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
