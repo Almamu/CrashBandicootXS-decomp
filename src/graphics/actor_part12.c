@@ -1,5 +1,9 @@
 #include "core.h"
 #include "actor.h"
+#include "actor_self.h"
+#include "box_part.h"
+
+ACTOR_CALL_VIA_ALIASES
 
 /* The fixed-slot object-pool manager struct `sub_8008F20`
  * (`actor_part11.c`) initializes: `slotArray` holds the active
@@ -29,63 +33,28 @@ extern void sub_8009B3C(struct pool_manager *manager, void *obj);
 extern void sub_8026EB4(void *ptr);
 extern void sub_8026ED0(void *manager);
 
-extern s32 sub_8009FF4(void *part, void *region);
-extern void sub_803AD88(void *arg0, s32 arg1, s32 arg2, s32 arg3);
+typedef void (*part_method3_fn)(void *self, s32 a, s32 b, s32 c);
 
-/* `sub_8008D80`'s sibling: the same collision-hit resolver, called
- * from elsewhere in this AI/collision cluster (`manager` itself is
- * never read here either, a dead parameter kept for a uniform call
- * signature). Tests `part` against the incoming box via `sub_8009FF4`;
- * on a hit, fires a `part->table+0x68`-driven trampoline (same
- * "dead read" idiom already established for `sub_8008AD8`/
- * `sub_8008D80`) with `otherViewport->field_0A` as the third
- * argument, then sets `otherViewport->flags` bit 3.
+extern s32 sub_8009FF4(struct box_part *part, struct part_aabb *box);
+
+/* `sub_8008D80`'s twin (actor_part7b.c): the same collision-hit
+ * resolver, called from elsewhere in this AI/collision cluster (`list`
+ * is never read). Tests `part` against the incoming box via
+ * `sub_8009FF4`; on a hit, calls `part`'s method-table +0x68 method
+ * with `other->kind` as the second argument, then sets `other`'s hit
+ * flag (bit 3).
  *
- * PARKED AS NAKED: identical structural gap as `sub_8008D80` - this
- * compiler has no way to leave `boxH` untouched in its own incoming
- * stack slot while still building a 4-word AABB pointer that includes
- * it, the ABI stack-layout trick the ROM's own tighter local frame
- * relies on. Every load, store, branch and computed delta is
- * confirmed correct (in fact this function's instruction stream is
- * byte-identical to `sub_8008D80`'s, down to the label offsets), so
- * it's hand-transcribed as literal Thumb asm instead of guessed at in
- * C - same technique as `sub_8008D80` (`actor_part7b.c`). See
- * `docs/matching.md`, "Parked, not matched: `sub_80099F0`". */
-NAKED void sub_80099F0(void *manager, s32 boxX, s32 boxY, s32 boxW, s32 boxH, void *partArg, void *otherViewportArg)
+ * The box arrives by value (three words in r1-r3, one on the stack) -
+ * the old "leave one scalar in its incoming stack slot" blocker was
+ * just that. See docs/matching/issue-9-naked-retry.md. */
+void sub_80099F0(struct part_list *list, struct part_aabb box, struct box_part *part, struct box_part *other)
 {
-    asm(
-        "sub sp, #0xc\n\t"
-        "push {r4, r5, lr}\n\t"
-        "str r1, [sp, #0xc]\n\t"
-        "str r2, [sp, #0x10]\n\t"
-        "str r3, [sp, #0x14]\n\t"
-        "ldr r4, [sp, #0x1c]\n\t"
-        "ldr r5, [sp, #0x20]\n\t"
-        "add r0, r4, #0\n\t"
-        "add r1, sp, #0xc\n\t"
-        "bl sub_8009FF4\n\t"
-        "cmp r0, #0\n\t"
-        "beq 1f\n\t"
-        "ldr r1, [r4, #0x18]\n\t"
-        "add r1, #0x68\n\t"
-        "mov r2, #0\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldrb r2, [r5, #0xa]\n\t"
-        "ldr r4, [r1, #4]\n\t"
-        "mov r1, #1\n\t"
-        "mov r3, #0\n\t"
-        "bl sub_803AD88\n\t"
-        "mov r0, #8\n\t"
-        "ldrb r1, [r5, #0xc]\n\t"
-        "orr r0, r1\n\t"
-        "strb r0, [r5, #0xc]\n\t"
-    "1:\n\t"
-        "pop {r4, r5}\n\t"
-        "pop {r3}\n\t"
-        "add sp, #0xc\n\t"
-        "bx r3\n\t"
-    );
+    if (sub_8009FF4(part, &box)) {
+        struct part_method *m = PART_METHOD(part, 0x68);
+
+        ((part_method3_fn)m->fn)((u8 *)part + m->thisOffset, 1, other->kind, 0);
+        other->flags |= 8;
+    }
 }
 asm(".align 2, 0");
 

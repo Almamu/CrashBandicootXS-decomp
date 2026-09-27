@@ -286,3 +286,7 @@ documentation behind.
   physics/collision subsystem several of this issue's left-raw
   functions (`sub_8009868` via `sub_80109A4`, `sub_800AFF4`) eventually
   lead into.
+
+## Later pass (issue #9 NAKED retry)
+
+This pass closed 11 of this range's 21 NAKED functions. See [issue-9-naked-retry.md](./issue-9-naked-retry.md) for details.
