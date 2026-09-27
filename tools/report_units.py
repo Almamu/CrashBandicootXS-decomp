@@ -254,7 +254,11 @@ UNITS = [
     (0x080188D0, None, "graphics"),  # sub_80188D0-sub_8019660 (GitHub issue #23) - still raw, not yet examined; real bytes in asm/code_3_2_17_188d0.s
     (0x0801967C, None, "graphics"),  # sub_801967C-sub_801A780 (GitHub issue #24) - still raw, not yet examined; real bytes in asm/code_3_2_17_188d0_1967c.s
     (0x0801A794, None, "graphics"),  # sub_801A794-sub_801B854 (GitHub issue #25) - still raw, not yet examined; real bytes in asm/code_3_2_17_188d0_1a794.s
-    (0x0801B85C, None, "graphics"),  # sub_801B85C-sub_801CE60 (GitHub issue #26) - still raw, not yet examined; real bytes in asm/code_3_2_17_188d0_1b85c.s
+    (0x0801B85C, "src/graphics/actor_part_1b85c.o", "graphics"),  # sub_801B85C-sub_801BAF0 (GitHub issue #26): the player-follow child sub_8017600 spawns (sub_801B85C-sub_801B980), a 0x78-byte sprite subclass (sub_801B984-sub_801BAD0) and the modal level-select screen sub_801BAF0; matched. Formerly asm/code_3_2_17_188d0_1b85c.s (retired) - see docs/matching/issue-26-level-select-menu.md
+    (0x0801BC28, None, "graphics"),  # sub_801BC28 (level-select screen constructor) - NAKED transcription, byte-correct but not real decompiled C (C reconstruction under #if NON_MATCHING), tracked as parked - issue #26, see docs/matching/issue-26-level-select-menu.md. Real bytes linked from actor_part_1b85c.o
+    (0x0801C040, "src/graphics/actor_part_1b85c.o", "graphics"),  # sub_801C040-sub_801C51C (issue #26): level-select destructor, per-frame update, page arrows, record panel and draw step; matched
+    (0x0801C608, None, "graphics"),  # sub_801C608/sub_801C96C (level-select record loader and main loop) - NAKED transcriptions, byte-correct but not real decompiled C (C reconstructions under #if NON_MATCHING), tracked as parked - issue #26, see docs/matching/issue-26-level-select-menu.md. Real bytes linked from actor_part_1b85c.o
+    (0x0801CCF8, "src/graphics/actor_part_1b85c.o", "graphics"),  # sub_801CCF8-sub_801CE60 (issue #26): level-select settle loop and left/right cursor moves; matched
     (0x0801CEE0, None, "graphics"),  # sub_801CEE0-sub_801D828 (GitHub issue #27) - still raw, not yet examined; real bytes in asm/code_3_2_17_188d0_1cee0.s
     (0x0801DA38, None, "graphics"),  # sub_801DA38-sub_801DF98 (GitHub issue #28) - still raw, not yet examined; real bytes in asm/code_3_2_17_188d0_1da38.s
     (0x0801DFEC, None, "graphics"),  # sub_801DFEC-sub_801E524 (GitHub issue #29) - still raw, not yet examined; real bytes in asm/code_3_2_17_188d0_1dfec.s

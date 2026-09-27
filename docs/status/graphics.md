@@ -82,10 +82,31 @@ and [graphics_loading.md](./graphics_loading.md).
   inlined "mark actor gone" bitmap sequence matched without inline asm.
   See [docs/matching/issue-21-input-ctrl.md](../matching/issue-21-input-ctrl.md).
 
+- `src/graphics/actor_part_1b85c.c` (new file - GitHub issue #26):
+  `sub_801B85C`-`sub_801B980` (the player-follow child `sub_8017600`
+  spawns), `sub_801B984`-`sub_801BAD0` (a 0x78-byte sprite subclass),
+  `sub_801BAF0` (the modal level-select screen), `sub_801C040`,
+  `sub_801C104`, `sub_801C2B0`, `sub_801C364`, `sub_801C3E8`,
+  `sub_801C51C`, `sub_801CCF8`, `sub_801CDE0`, `sub_801CE60` (its
+  destructor, per-frame update/draw, record panel and cursor moves) -
+  22 of the chunk's 25 functions as plain C; the other three are parked
+  below. See
+  [docs/matching/issue-26-level-select-menu.md](../matching/issue-26-level-select-menu.md).
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
 ## Parked - NAKED asm transcriptions (byte-correct, not decompiled C)
+
+- **`sub_801BC28`**, **`sub_801C608`**, **`sub_801C96C`**
+  (`src/graphics/actor_part_1b85c.c`, issue #26) - the level-select
+  screen's constructor, record loader and main loop. Each has a full C
+  reconstruction under `#if NON_MATCHING` that gets the instruction
+  stream right; the residue is register allocation only (constants and
+  addresses the ROM keeps in `sb`/`r8`/`sl` across long call chains,
+  the scratch registers reload picks for copies out of them, and in
+  `sub_801C96C` the register the `REG_BLDY` byte is loaded into). See
+  [issue-26-level-select-menu.md](../matching/issue-26-level-select-menu.md).
 
 - **`sub_8000EE4`** (`src/graphics/text_layout.c`) - word-wrap text
   renderer. A full C reconstruction matched the ROM instruction-for-
