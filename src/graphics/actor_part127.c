@@ -566,160 +566,142 @@ NAKED void sub_802B5B4(void *selfArg)
  * `sub_8029BAC(0)`/`sub_802DFBC()` - or, while a tier is already
  * active, arms a fixed `gUnknown_0300149C` countdown and forwards to
  * `sub_802D4B0` (the "remove a mask" helper, `actor_part58.c`)
- * instead. Either way reports "not yet used" (0). */
-NAKED s32 sub_802B730(void *selfArg)
+ * instead. Either way reports "not yet used" (0).
+ *
+ * The ROM keeps the "already used" early return sharing the exact same
+ * epilogue as the main fallthrough path's own final `return 0`, rather
+ * than duplicating it - a single `return result;` at one shared `end`
+ * label (reached by `goto` from the early-return case) reproduces that,
+ * per the `goto`-shared-tail idiom in
+ * `docs/matching/issue-52-gap-b364.md`. The three addresses this
+ * function keeps alive throughout (`gUnknown_0300149C`, `gUnknown_
+ * 03001494`, `&gUnknown_030012C0`) are each read once into their own
+ * pointer local and reused from there, matching the ROM's own register
+ * lifetime (never re-deriving an address it already has); `self`
+ * itself is reused for the unrelated `1` constant once its own fields
+ * are no longer needed (`one`, sharing r4 with the now-dead `self`). */
+s32 sub_802B730(void *selfArg)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r1, 1f\n\t"
-        "ldr r0, [r1]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 2f\n\t"
-        "mov r0, #1\n\t"
-        "b 14f\n\t"
-        ".align 2, 0\n"
-    "1: .4byte gUnknown_0300149C\n"
-    "2:\n\t"
-        "ldr r2, 4f\n\t"
-        "ldr r7, 5f\n\t"
-        "ldr r0, [r7]\n\t"
-        "ldr r5, [r0, #0x78]\n\t"
-        "cmp r5, #0\n\t"
-        "bne 12f\n\t"
-        "ldr r0, 6f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0x1b\n\t"
-        "bl PlaySfx\n\t"
-        "ldr r0, 7f\n\t"
-        "ldr r1, 8f\n\t"
-        "mov r2, #0x20\n\t"
-        "mov r3, #0x10\n\t"
-        "bl QueueVramDmaTransfer\n\t"
-        "mov r0, #6\n\t"
-        "mov r1, #5\n\t"
-        "str r0, [r4, #0x28]\n\t"
-        "str r5, [r4, #0x44]\n\t"
-        "str r1, [r4, #0xc]\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldrh r0, [r0, #0x3c]\n\t"
-        "mov r6, #0\n\t"
-        "strh r0, [r4, #0x10]\n\t"
-        "strb r6, [r4, #0x12]\n\t"
-        "str r5, [r4, #8]\n\t"
-        "ldr r0, 9f\n\t"
-        "mov r4, #1\n\t"
-        "strb r4, [r0]\n\t"
-        "ldr r1, [r7]\n\t"
-        "add r0, r1, #0\n\t"
-        "add r0, #0x8c\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 3f\n\t"
-        "add r0, r1, #0\n\t"
-        "bl sub_8023234\n\t"
-    "3:\n\t"
-        "ldr r0, 10f\n\t"
-        "strb r6, [r0]\n\t"
-        "ldr r0, 11f\n\t"
-        "strb r4, [r0]\n\t"
-        "mov r0, #0\n\t"
-        "bl sub_8029BAC\n\t"
-        "bl sub_802DFBC\n\t"
-        "b 13f\n\t"
-        ".align 2, 0\n"
-    "4: .4byte gUnknown_03001494\n"
-    "5: .4byte gUnknown_030012C0\n"
-    "6: .4byte gUnknown_030012BC\n"
-    "7: .4byte gStaticData_0817A728\n"
-    "8: .4byte 0x05000200\n"
-    "9: .4byte gUnknown_03001480\n"
-    "10: .4byte gUnknown_030014A3\n"
-    "11: .4byte gUnknown_030014A0\n"
-    "12:\n\t"
-        "mov r0, #0x4b\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r0, [r2]\n\t"
-        "bl sub_802D4B0\n\t"
-    "13:\n\t"
-        "mov r0, #0\n\t"
-    "14:\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-    );
+    u8 *self = selfArg;
+    register s32 result asm("r0");
+    register s32 *usedTimer asm("r1") = &gUnknown_0300149C;
+
+    if (*usedTimer != 0) {
+        result = 1;
+        goto end;
+    }
+
+    {
+        register void **effectAddr asm("r2") = &gUnknown_03001494;
+        void **playerAddr = (void **)&gUnknown_030012C0;
+        s32 tier = *(s32 *)((u8 *)(*playerAddr) + 0x78);
+
+        if (tier == 0) {
+            PlaySfx(gUnknown_030012BC, 0x1b, 0x100);
+            QueueVramDmaTransfer(gStaticData_0817A728, (void *)0x05000200, 0x20, 0x10);
+            {
+                register s32 state asm("r0") = 6;
+                register s32 idx asm("r1") = 5;
+
+                *(s32 *)(self + 0x28) = state;
+                *(s32 *)(self + 0x44) = tier;
+                *(s32 *)(self + 0xc) = idx;
+                {
+                    register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0x3c);
+                    register u8 zero asm("r6") = 0;
+
+                    *(u16 *)(self + 0x10) = anim;
+                    self[0x12] = zero;
+                    *(s32 *)(self + 8) = tier;
+
+                    {
+                        u8 *reg1480 = &gUnknown_03001480;
+                        register u8 one asm("r4") = 1;
+
+                        *reg1480 = one;
+                        {
+                            u8 *player = *playerAddr;
+
+                            if (player[0x8c] == 0) {
+                                sub_8023234(player);
+                            }
+                        }
+                        gUnknown_030014A3 = zero;
+                        gUnknown_030014A0 = one;
+                    }
+                }
+            }
+            sub_8029BAC(0);
+            sub_802DFBC();
+        } else {
+            *usedTimer = 0x4b;
+            sub_802D4B0(*effectAddr);
+        }
+    }
+
+    result = 0;
+end:
+    return result;
 }
 
 /* Same shape as `sub_802B730` (twin trigger, different reset target -
  * state 0xc/table-index 0xb): once-only spawn/reset gated the same way
- * on `gUnknown_0300149C`/hazard tier, or forwards to `sub_802D4B0`. */
-NAKED s32 sub_802B7E0(void *selfArg)
+ * on `gUnknown_0300149C`/hazard tier, or forwards to `sub_802D4B0`.
+ *
+ * Same `goto`-shared-tail idiom as `sub_802B730` above (single `return
+ * result;` at one shared `end` label) and the same three
+ * persistent-address-local shape, except here `effectAddr` itself
+ * (`&gUnknown_03001494`, in r4) is the register reused for the
+ * unrelated `0` constant once its own address is no longer needed on
+ * the tier-clear path (the tier-active path never touches that reuse,
+ * since it reads through the original `effectAddr` before this
+ * function would ever take the tier-clear branch). */
+s32 sub_802B7E0(void *selfArg)
 {
-    asm(
-        "push {r4, lr}\n\t"
-        "add r2, r0, #0\n\t"
-        "ldr r1, 1f\n\t"
-        "ldr r0, [r1]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 2f\n\t"
-        "mov r0, #1\n\t"
-        "b 10f\n\t"
-        ".align 2, 0\n"
-    "1: .4byte gUnknown_0300149C\n"
-    "2:\n\t"
-        "ldr r4, 3f\n\t"
-        "ldr r0, 4f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r3, [r0, #0x78]\n\t"
-        "cmp r3, #0\n\t"
-        "bne 8f\n\t"
-        "mov r0, #0xc\n\t"
-        "mov r1, #0xb\n\t"
-        "str r0, [r2, #0x28]\n\t"
-        "str r3, [r2, #0x44]\n\t"
-        "str r1, [r2, #0xc]\n\t"
-        "ldr r0, [r2]\n\t"
-        "add r0, #0x84\n\t"
-        "ldrh r0, [r0]\n\t"
-        "mov r4, #0\n\t"
-        "strh r0, [r2, #0x10]\n\t"
-        "strb r4, [r2, #0x12]\n\t"
-        "str r3, [r2, #8]\n\t"
-        "ldr r0, 5f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0x33\n\t"
-        "bl PlaySfx\n\t"
-        "ldr r0, 6f\n\t"
-        "strb r4, [r0]\n\t"
-        "ldr r1, 7f\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r1]\n\t"
-        "mov r0, #0\n\t"
-        "bl sub_8029BAC\n\t"
-        "bl sub_802DFBC\n\t"
-        "b 9f\n\t"
-        ".align 2, 0\n"
-    "3: .4byte gUnknown_03001494\n"
-    "4: .4byte gUnknown_030012C0\n"
-    "5: .4byte gUnknown_030012BC\n"
-    "6: .4byte gUnknown_030014A3\n"
-    "7: .4byte gUnknown_030014A0\n"
-    "8:\n\t"
-        "mov r0, #0x4b\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r0, [r4]\n\t"
-        "bl sub_802D4B0\n\t"
-    "9:\n\t"
-        "mov r0, #0\n\t"
-    "10:\n\t"
-        "pop {r4}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-    );
+    u8 *self = selfArg;
+    register s32 result asm("r0");
+    register s32 *usedTimer asm("r1") = &gUnknown_0300149C;
+
+    if (*usedTimer != 0) {
+        result = 1;
+        goto end;
+    }
+
+    {
+        register void **effectAddr asm("r4") = &gUnknown_03001494;
+        void **playerAddr = (void **)&gUnknown_030012C0;
+        s32 tier = *(s32 *)((u8 *)(*playerAddr) + 0x78);
+
+        if (tier == 0) {
+            register s32 state asm("r0") = 0xc;
+            register s32 idx asm("r1") = 0xb;
+
+            *(s32 *)(self + 0x28) = state;
+            *(s32 *)(self + 0x44) = tier;
+            *(s32 *)(self + 0xc) = idx;
+            {
+                register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0x84);
+                register u8 zero asm("r4") = 0;
+
+                *(u16 *)(self + 0x10) = anim;
+                self[0x12] = zero;
+                *(s32 *)(self + 8) = tier;
+
+                PlaySfx(gUnknown_030012BC, 0x33, 0x100);
+                gUnknown_030014A3 = zero;
+            }
+            gUnknown_030014A0 = 1;
+            sub_8029BAC(0);
+            sub_802DFBC();
+        } else {
+            *usedTimer = 0x4b;
+            sub_802D4B0(*effectAddr);
+        }
+    }
+
+    result = 0;
+end:
+    return result;
 }
 
 /* Allocates the pair of VRAM tile blocks this cluster's gauge display
@@ -909,111 +891,118 @@ NAKED void sub_802B8E8(void *selfArg)
  * `gUnknown_030014A3` edge, fires up to two more `gUnknown_030007E0`
  * input-gated one-shot transitions (state 4/table-index 3 with a cue
  * and a `gUnknown_030014A4` reset, and state 2/table-index 0 with
- * `sub_8029BAC(0x38)`). */
-NAKED void sub_802B990(void *selfArg)
+ * `sub_8029BAC(0x38)`).
+ *
+ * The ROM keeps the "self+0xc == 0" reset case and the
+ * `sub_8000E1C`-gated case's two outcomes sharing one physical tail
+ * (the anim-frame refresh) rather than each duplicating it - a plain
+ * nested if/else here reproduces the checks but not that exact tail
+ * sharing (this compiler inlines the tail into each arm on its own
+ * schedule instead of always jumping to one shared copy), so the
+ * branch structure below is written with explicit `goto`s to the same
+ * `tail`/`join` labels the ROM's own branches target, per the
+ * `goto`-shared-tail idiom documented in
+ * `docs/matching/issue-52-gap-b364.md`. */
+void sub_802B990(void *selfArg)
 {
-    asm(
-        "push {r4, r5, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "ldrb r0, [r4, #0x12]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 4f\n\t"
-        "mov r0, #0x24\n\t"
-        "bl sub_8029BAC\n\t"
-        "ldr r5, [r4, #0xc]\n\t"
-        "cmp r5, #0\n\t"
-        "beq 1f\n\t"
-        "mov r2, #0\n\t"
-        "str r2, [r4, #0xc]\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldrh r0, [r0]\n\t"
-        "mov r1, #0\n\t"
-        "strh r0, [r4, #0x10]\n\t"
-        "strb r1, [r4, #0x12]\n\t"
-        "str r2, [r4, #8]\n\t"
-        "b 4f\n\t"
-    "1:\n\t"
-        "mov r0, #3\n\t"
-        "bl sub_8000E1C\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "cmp r0, #0\n\t"
-        "bne 2f\n\t"
-        "mov r0, #1\n\t"
-        "str r0, [r4, #0xc]\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldrh r0, [r0, #0xc]\n\t"
-        "b 3f\n\t"
-    "2:\n\t"
-        "str r5, [r4, #0xc]\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldrh r0, [r0]\n\t"
-    "3:\n\t"
-        "mov r1, #0\n\t"
-        "strh r0, [r4, #0x10]\n\t"
-        "strb r1, [r4, #0x12]\n\t"
-        "str r5, [r4, #8]\n\t"
-    "4:\n\t"
-        "ldr r0, 7f\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 6f\n\t"
-        "ldr r5, 8f\n\t"
-        "mov r0, #1\n\t"
-        "ldrh r1, [r5, #2]\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "beq 5f\n\t"
-        "mov r0, #4\n\t"
-        "mov r1, #3\n\t"
-        "str r0, [r4, #0x28]\n\t"
-        "mov r2, #0\n\t"
-        "str r2, [r4, #0x44]\n\t"
-        "str r1, [r4, #0xc]\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldrh r0, [r0, #0x24]\n\t"
-        "mov r1, #0\n\t"
-        "strh r0, [r4, #0x10]\n\t"
-        "strb r1, [r4, #0x12]\n\t"
-        "str r2, [r4, #8]\n\t"
-        "ldr r0, 9f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0xd\n\t"
-        "bl PlaySfx\n\t"
-        "ldr r1, 10f\n\t"
-        "ldr r0, 11f\n\t"
-        "str r0, [r1]\n\t"
-    "5:\n\t"
-        "ldr r0, [r5]\n\t"
-        "mov r1, #2\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "beq 6f\n\t"
-        "mov r0, #2\n\t"
-        "str r0, [r4, #0x28]\n\t"
-        "mov r2, #0\n\t"
-        "str r2, [r4, #0x44]\n\t"
-        "str r0, [r4, #0xc]\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldrh r0, [r0, #0x18]\n\t"
-        "mov r1, #0\n\t"
-        "strh r0, [r4, #0x10]\n\t"
-        "strb r1, [r4, #0x12]\n\t"
-        "str r2, [r4, #8]\n\t"
-        "mov r0, #0x38\n\t"
-        "bl sub_8029BAC\n\t"
-    "6:\n\t"
-        "pop {r4, r5}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "7: .4byte gUnknown_030014A3\n"
-    "8: .4byte gUnknown_030007E0\n"
-    "9: .4byte gUnknown_030012BC\n"
-    "10: .4byte gUnknown_030014A4\n"
-    "11: .4byte 0xFFFFF880\n"
-    );
+    u8 *self = selfArg;
+    register s32 index asm("r5");
+    register u16 anim asm("r0");
+
+    if (self[0x12] == 0)
+        goto tail;
+
+    sub_8029BAC(0x24);
+    index = *(s32 *)(self + 0xc);
+    if (index == 0)
+        goto gated;
+
+    {
+        register s32 zero asm("r2") = 0;
+
+        *(s32 *)(self + 0xc) = zero;
+        {
+            register u16 a asm("r0") = *(u16 *)(*(u8 **)self + 0);
+            register u8 zero1 asm("r1") = 0;
+
+            *(u16 *)(self + 0x10) = a;
+            self[0x12] = zero1;
+        }
+        *(s32 *)(self + 8) = zero;
+    }
+    goto tail;
+
+gated:
+    if ((u16)sub_8000E1C(3) != 0)
+        goto restore;
+
+    *(s32 *)(self + 0xc) = 1;
+    anim = *(u16 *)(*(u8 **)self + 0xc);
+    goto join;
+
+restore:
+    *(s32 *)(self + 0xc) = index;
+    anim = *(u16 *)(*(u8 **)self + 0);
+
+join:
+    {
+        register u8 zero1 asm("r1") = 0;
+
+        *(u16 *)(self + 0x10) = anim;
+        self[0x12] = zero1;
+    }
+    *(s32 *)(self + 8) = index;
+
+tail:
+    if (gUnknown_030014A3 != 0) {
+        register struct held_pressed_pair *addr asm("r5") = &gUnknown_030007E0;
+        register s32 bit1 asm("r0") = 1;
+        u16 pressed = addr->pressed;
+
+        bit1 &= pressed;
+        if (bit1 != 0) {
+            register s32 state asm("r0") = 4;
+            register s32 idx asm("r1") = 3;
+
+            *(s32 *)(self + 0x28) = state;
+            {
+                register s32 zero asm("r2") = 0;
+
+                *(s32 *)(self + 0x44) = zero;
+                *(s32 *)(self + 0xc) = idx;
+                {
+                    register u16 a asm("r0") = *(u16 *)(*(u8 **)self + 0x24);
+                    register u8 zero1 asm("r1") = 0;
+
+                    *(u16 *)(self + 0x10) = a;
+                    self[0x12] = zero1;
+                }
+                *(s32 *)(self + 8) = zero;
+            }
+            PlaySfx(gUnknown_030012BC, 0xd, 0x100);
+            gUnknown_030014A4 = 0xFFFFF880;
+        }
+        if ((*(u32 *)addr & 2) != 0) {
+            register s32 state asm("r0") = 2;
+
+            *(s32 *)(self + 0x28) = state;
+            {
+                register s32 zero asm("r2") = 0;
+
+                *(s32 *)(self + 0x44) = zero;
+                *(s32 *)(self + 0xc) = state;
+                {
+                    register u16 a asm("r0") = *(u16 *)(*(u8 **)self + 0x18);
+                    register u8 zero1 asm("r1") = 0;
+
+                    *(u16 *)(self + 0x10) = a;
+                    self[0x12] = zero1;
+                }
+                *(s32 *)(self + 8) = zero;
+            }
+            sub_8029BAC(0x38);
+        }
+    }
 }
 
 /* Camera catch-up accumulate/threshold reset: drains

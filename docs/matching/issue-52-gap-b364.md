@@ -19,7 +19,7 @@ at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
 `self+0x12`, an accumulator at `self+8`, a frame counter at `self+
 0x44`).
 
-## Matched (1 of 11 functions)
+## Matched (4 of 11 functions)
 
 - **`sub_802BB4C`** (`src/graphics/actor_part127.c`) - frame-counter
   threshold DMA driver: past `0x2c` frames, DMAs a gauge-strip pair and
@@ -33,18 +33,80 @@ at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
   literal per store instead of reusing the two already-loaded registers
   the ROM keeps live across both.
 
+- **`sub_802B730`**/**`sub_802B7E0`** (`src/graphics/actor_part127.c`) -
+  the once-only spawn/reset trigger pair described below, promoted from
+  NAKED using the **`goto`-shared-tail idiom**: instead of a plain
+  `if (already_used) return 1; ... return 0;` guard clause (which this
+  compiler inlines the early return into its own copy of the tail
+  rather than jumping to one shared epilogue), the C uses a single
+  `register s32 result asm("r0")` local, an explicit `goto end;` for
+  the early-return case, and exactly one `return result;` at a shared
+  `end:` label - forcing one physical epilogue both paths jump/fall
+  into, matching the ROM's own layout. Two more gaps needed closing
+  alongside that restructuring, both found by isolated-compile diffing
+  against `expected/code_3.s` instruction-by-instruction:
+  - The three addresses this function keeps alive throughout
+    (`&gUnknown_0300149C`, `&gUnknown_03001494`, `&gUnknown_030012C0`)
+    each need their own persistent pointer local, read once and reused
+    from there (`register s32 *usedTimer asm("r1")`, `register void
+    **effectAddr asm("r2")`/`asm("r4")` in the two functions
+    respectively, and an unpinned `void **playerAddr` that the
+    compiler's own liveness analysis happily put in `r7` on its own -
+    no `r7` pin needed, consistent with this project's categorical
+    "never pin r7 explicitly" rule). Reading `*playerAddr` a second
+    time as its own fresh local (rather than keeping one `player`
+    variable alive across both dereferences) was needed to reproduce
+    the ROM's own two separate loads into two different registers.
+  - `self` (`sub_802B730`) and the `effectAddr` pointer itself
+    (`sub_802B7E0`) get reused for an unrelated constant once their own
+    value is no longer needed on the "tier clear" path - modeled by
+    declaring a *fresh* `register` variable pinned to the same
+    register name in a nested scope (`register u8 one asm("r4") = 1;`
+    / `register u8 zero asm("r4") = 0;`), the same reuse idiom already
+    established for `sub_802BB4C` above, not a real aliasing hazard
+    since the two lifetimes never overlap (mutually exclusive
+    branches).
+  - Order-of-evaluation gotcha: a plain `u8 *p = &g; register u8 one
+    asm("r4") = 1; *p = one;` sequence compiles the register
+    initializer (`mov r4, #1`) *before* the address load, but the ROM
+    computes the address first. Splitting the address into its own
+    plain (unregistered) local declared *before* the register variable
+    forced the load-then-materialize order the ROM actually uses.
+
+- **`sub_802B990`** (`src/graphics/actor_part127.c`) - the state-0x12
+  anim-frame edge reset described below, promoted using the same
+  `goto`-shared-tail idiom but for an *interior* shared tail rather than
+  the whole function's epilogue: explicit `goto tail;`/`goto gated;`/
+  `goto join;` labels reproduce the ROM's exact three-way branch order
+  (skip-reset fallthrough / `self+0xc != 0` reset inlined then jumping
+  past / `sub_8000E1C`-gated pair sharing one physical anim-frame-
+  refresh tail) instead of a nested if/else-if this compiler reordered
+  differently. The two `gUnknown_030007E0`-gated one-shot transitions
+  in the shared tail needed one more fix beyond the established
+  "materialize sibling constants" idiom: `gUnknown_030007E0.pressed`'s
+  bit-0 test had to read the struct's base address into its own local
+  *before* materializing the `1` test-mask constant (`register struct
+  held_pressed_pair *addr asm("r5") = &gUnknown_030007E0;` declared
+  before `register s32 bit1 asm("r0") = 1;`), matching the ROM's
+  `ldr r5, =gUnknown_030007E0` / `movs r0, #1` order - the reverse
+  order compiles fine but swaps those two instructions. That same `r5`
+  address local is then reused (as a plain `u32` read through it) for
+  the second transition's `gUnknown_030007E0` bit-1 test, matching the
+  ROM's own reload-free reuse of `r5` there.
+
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
-All 10 in `src/graphics/actor_part127.c`. Every one was fully
-understood semantically; each resisted a byte-exact plain-C
-reconstruction for a different reason, transcribed instruction-for-
-instruction from the ROM disassembly instead (this project's
-established escape hatch, `docs/matching/issue-4-sio-settings-
-sync.md`'s "general strategy"). A small scratch-only Python script
-(mechanical `_08XXXXXX:` label renumbering to GNU-as local numeric
-labels, plus unified-to-plain mnemonic translation) was used to avoid
-hand-transcription typos, the same approach this project has used for
-other large NAKED batches.
+The remaining 7 in `src/graphics/actor_part127.c` (`sub_802B730`,
+`sub_802B7E0`, and `sub_802B990` were promoted to the "Matched" section
+above in a later pass). Every one was fully understood semantically;
+each resisted a byte-exact plain-C reconstruction for a different
+reason, transcribed instruction-for-instruction from the ROM
+disassembly instead (this project's established escape hatch,
+`docs/matching/issue-4-sio-settings-sync.md`'s "general strategy"). A
+small scratch-only Python script (mechanical `_08XXXXXX:` label
+renumbering to GNU-as local numeric labels, plus unified-to-plain
+mnemonic translation) was used to avoid hand-transcription typos, the
+same approach this project has used for other large NAKED batches.
 
 - **`sub_802B364`** - the countdown-timer/respawn state machine
   `docs/rom_map.md` already flagged. Tail-calls `sub_802BC68` first,
@@ -63,23 +125,6 @@ other large NAKED batches.
   codebase's other DMA/OAM functions are consistently NAKED-parked for
   (`docs/matching/issue-56-0x0802f0dc-actor.md`'s `sub_802F7B0`/
   `sub_802F8E8` entry).
-- **`sub_802B730`**/**`sub_802B7E0`** - a once-only spawn/reset trigger
-  pair (different reset targets - state 6/table-index 5 vs state 0xc/
-  table-index 0xb): if the shared "used" respawn timer
-  (`gUnknown_0300149C`) is already counting down, report "still used"
-  without doing anything; otherwise, while the current hazard tier is
-  clear, play a cue, DMA a gauge strip (`sub_802B730` only), reset
-  `self`, arm `gUnknown_03001480`, kick the mode transition, and arm
-  `gUnknown_030014A0`/clear `gUnknown_030014A3` - or, while a tier is
-  already active, arm a fixed `gUnknown_0300149C` countdown and forward
-  to `sub_802D4B0` (`actor_part58.c`). Both functions reuse the
-  incoming `self` register for an unrelated `1` constant partway
-  through (once `self`'s own fields are no longer needed) - the ROM's
-  real branch layout keeps the "already used" early-return case sharing
-  the exact same epilogue as the main "not yet used" fallthrough case,
-  which this compiler's own scheduling would not reproduce as a plain
-  `if (...) return 1;` guard clause (it inlines the early-return
-  differently instead of jumping to the shared tail).
 - **`sub_802B864`** - allocates a pair of VRAM tile blocks
   (`gUnknown_030014B0[0]`/`[1]`), each sized from the same keyframe-
   table byte-pair lookup (`self`'s part table, indexed by `self+0xc`,
@@ -98,15 +143,6 @@ other large NAKED batches.
   `sub_8029BAC(0x19)`. The spawned-object pointer needed to stay live in
   its own ROM-chosen register (`r0`) across several stores rather than
   being copied to a fresh one, which this compiler did unprompted.
-- **`sub_802B990`** - on the state-0x12 anim-frame edge, plays a
-  "confirm" cue then either resets `self` to idle (table-index 0) or,
-  gated on `sub_8000E1C(3)`'s own result, restores or transitions
-  `self+0xc`; independently, on the `gUnknown_030014A3` edge, fires up
-  to two more `gUnknown_030007E0`-gated one-shot transitions. The ROM's
-  three-way branch structure (skip-reset / sub_8000E1C-gated branch /
-  shared tail) didn't survive translation into an equivalent nested
-  if/else-if in C - this compiler reordered the reset-vs-check branches
-  relative to the `sub_8029BAC(0x24)` call.
 - **`sub_802BA5C`**/**`sub_802BAD0`** - camera catch-up accumulate/
   threshold-reset pair and a `gUnknown_030007E0`-gated one-shot
   transition pair, both sharing the same reset idiom as
@@ -149,6 +185,14 @@ identical `graphics/`/`sound/` source trees via `diff -rq` - every
 `.c`/`.s` file that actually changed was still fully recompiled and
 relinked from scratch.) `make NON_MATCHING=1 report` also compiled
 clean, no warnings for `actor_part127.c`.
+
+A later pass promoted `sub_802B730`/`sub_802B7E0`/`sub_802B990` from
+that NAKED batch to real C using the `goto`-shared-tail idiom (see the
+"Matched" section above); re-verified with a fresh `rm -rf build &&
+make NON_MATCHING=1 report` (clean, no warnings for
+`actor_part127.c`) followed by `rm -rf build crashbandicootxs.elf
+crashbandicootxs.gba crashbandicootxs.map && make compare`:
+`crashbandicootxs.gba: OK`.
 
 See [docs/status/actor.md](../status/actor.md) for the running
 matched/parked list this entry feeds into.
