@@ -32,24 +32,16 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   [issue-47-graphics-loading.md](../matching/issue-47-graphics-loading.md)
   for the full write-up (issue #47).
 
-- **`sub_801E640`** (`src/graphics/graphics_package_1e640.c`)
-- **`sub_801E8F8`** (`src/graphics/graphics_package_1e8f8.c`) - DMA3
-  fills one VRAM tile with a solid color
-- **`sub_801E950`** (`src/graphics/graphics_package_1e8f8.c`) - packs a
-  second bitfield into the same scratch-buffer byte `sub_801E8F8`
-  writes; closed via the same `mov #N; neg` opaque-asm negative-mask
-  idiom as `UPDATE_ICON_FRAME_NIBBLE` (src/graphics/settings_menu6.c)
-- **`sub_801E964`**, **`sub_801E96C`**
-  (`src/graphics/graphics_package_1e964.c`)
-
-All five are accessors on the same 0x10-byte `LoadGraphicsPackage`
-scratch buffer - see
-[issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)
-for the full write-up, including two real compiler-codegen gotchas
-(a DMA-register load-order fix, and a trailing `asm(".align 2, 0")`
-zero-padding fix) found along the way. (`sub_801E644`, also in these
-files, is a NAKED transcription - see "Parked - NAKED transcription"
-below.)
+- **`LoadGraphicsPackage`**-**`sub_801E96C`** (`src/graphics/graphics_package_1e578.c`,
+  `_1e640.c`, `_1e688.c`, `_1e8f8.c`, `_1e964.c`) - issue #30's BG
+  loader and its `struct bg_setup` accessors (`include/graphics_package.h`)
+  and the sprite-box fitter `sub_801E688`/`sub_801E788`. All built with
+  old_agbcc (as is `graphics_loading_1e990.c`). The four that were NAKED
+  under agbcc (the dropped-`r7` gap) are now plain C. See
+  [issue-30-old-agbcc.md](../matching/issue-30-old-agbcc.md), and
+  [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)
+  for the earlier accessor passes (`sub_801E8F8`'s DMA-register load
+  order, the trailing `asm(".align 2, 0")` zero-padding fix).
 
 - **`LoadLevelGraphics`** (`src/graphics/level_graphics.c`) - the
   per-level setup entry point `UpdateGameFrame` calls; stashes the
@@ -168,46 +160,6 @@ doesn't advance that even when byte-correct. See
 established convention, and each entry's linked write-up for why
 plain C didn't converge.
 
-- **`sub_801E644`** (`src/graphics/graphics_package_1e640.c`) - a
-  five-field constructor on the same scratch buffer as `sub_801E640`.
-  See [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md).
-- **`sub_801E688`** (`src/graphics/graphics_package_1e688.c`) -
-  `LoadGraphicsPackage`'s tile-cell-selection helper (best-fit box
-  search over the shared `gStaticData_0816C644`/`674` preset table,
-  plus Q8.8 scale-factor computation). Every operation was already
-  confirmed correct by an earlier plain-C reconstruction, but this
-  ~110-instruction, register-starved function hits the exact same `r7`
-  gap as its sibling `sub_801E788` below, just via a new mechanism: the
-  ROM needs `r7` in its callee-save push/pop list, and this compiler's
-  prologue-generation pass never adds `r7` to that list from any
-  inline-asm-based hint (confirmed two ways: a bare clobber, and a
-  dummy `register ... asm("r7")` output operand - both produced a
-  body byte-identical to the ROM but silently dropped `r7` from both
-  the push and pop). Transcribed instruction-for-instruction instead.
-  See [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)'s
-  "Seventh pass".
-- **`sub_801E788`** (`src/graphics/graphics_package_1e688.c`) -
-  `LoadGraphicsPackage`'s viewport-centering helper (position math on
-  one of 4 packed modes, then an unconditional shadow-OAM insert that
-  also allocates and writes one affine-parameter group when centering
-  is active). Every operation was already confirmed correct by an
-  earlier plain-C reconstruction, but hits the exact same `r7` gap
-  documented for `sub_801E688` above, via yet another mechanism: the
-  ROM needs `self` in `r7` for the entire function (matching its
-  4-register `push {r4-r7}`), but this compiler only folds
-  `self[offset]` into a single `ldrb/ldrh/ldr rX,[r7,#imm]` when
-  `self` is an ordinary (non-`register`) local - pinning `self` to
-  `r7` via `register u8 *self asm("r7")` makes it stop folding offsets
-  entirely, emitting a separate `add rX,rX,#imm` before every
-  zero-offset dereference instead (confirmed with a minimal one-line
-  repro). This is specifically an artifact of plain-C register-pin
-  semantics, though, not something a `NAKED` transcription runs into
-  at all (no addressing-mode-folding pass to fight when every
-  instruction is written literally) - transcribed
-  instruction-for-instruction and matched byte-identical on the first
-  attempt. See
-  [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)'s
-  "Ninth pass".
 - **`sub_802062C`** (`src/graphics/graphics_loading_1feec.c`) - text
   popup, tag 0x17. Plain C under old_agbcc is 62 halfwords off: the ROM
   spills `part+0x28` to its one stack slot and keeps the constant 1 in
@@ -220,20 +172,6 @@ plain C didn't converge.
   `{x - 2, y - 0x1e}` point into fresh r2/r3, the reconstruction
   subtracts in place (the same gap as `sub_802209C`). See
   [issue-31-old-agbcc.md](../matching/issue-31-old-agbcc.md).
-- **`LoadGraphicsPackage`** (`src/graphics/graphics_package_1e578.c`) -
-  the cluster's own namesake; the palette/tileset/tilemap loader itself,
-  using the shared `struct bg_package` (`include/graphics_package.h`).
-  Every operation and register choice was already confirmed correct
-  against the ROM by an earlier plain-C reconstruction (heavy register
-  pinning across every one of r0-r8/sb/sl/ip), but hit the same dropped-
-  `r7`-push/pop gap documented for `sub_801E644`/`sub_801E688` above and
-  `LoadBg2Background` below: reusing r6 for one more scratch temp (to
-  match the ROM's own mid-loop `ldrh r6,...`) makes this compiler stop
-  treating `src`'s r7 as needing a callee-save push/pop at all, even
-  though the function body still writes and reads it afterwards.
-  Transcribed instruction-for-instruction instead. See
-  [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)'s
-  "Eighth pass".
 - **`LoadBg2Background`** (`src/graphics/level_graphics.c`) - BG2's
   palette/tileset/tilemap loader, remapping the tilemap's per-tile
   palette-select nibble into VRAM. Every operation and register in the
@@ -246,9 +184,10 @@ plain C didn't converge.
   `register u32 r7dummy asm("r7")` referenced via an empty asm barrier
   (the same "real register variable, not just a clobber" fix that
   unblocks other registers in this project) made no difference either -
-  the same gcc-2.9 allocator artifact documented for `sub_801E644` and
-  `sub_801E688` above and `sub_80240E4` (`src/system/game_loop8.c`).
-  Transcribed instruction-for-instruction instead. See
+  the same artifact `sub_801E644`/`sub_801E688` had under agbcc, which
+  old_agbcc resolved there (see
+  [issue-30-old-agbcc.md](../matching/issue-30-old-agbcc.md)) - worth
+  retrying here. Transcribed instruction-for-instruction instead. See
   [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md).
 - **`sub_80358A8`**, **`sub_8035D1C`**, **`sub_8035E14`**,
   **`sub_8035F9C`**, **`sub_8035FEC`**, **`sub_8036068`**, **`sub_80360DC`**,

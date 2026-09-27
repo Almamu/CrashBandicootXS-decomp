@@ -1,5 +1,9 @@
 # Issue #30: 0x0801E578-0x0801FA3C - `LoadGraphicsPackage`'s scratch buffer accessors
 
+> **Superseded for the NAKED functions below:** this region was built
+> with old_agbcc. `LoadGraphicsPackage`, `sub_801E644`, `sub_801E688`
+> and `sub_801E788` are now plain C - see [issue-30-old-agbcc.md](issue-30-old-agbcc.md).
+
 GitHub issue #30 (`decomp-chunk`, category `graphics_loading`) listed 25
 raw functions in `asm/code_3_2_17_188d0.s`, the front of the
 `LoadGraphicsPackage` cluster `docs/rom_map.md` already anchored (see
