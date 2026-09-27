@@ -43,6 +43,8 @@ struct actor_vtable {
     struct actor_method m08;   // 0x08 - "hit/destroy" (called with arg 3)
     u8 unk_10[0x10];
     struct actor_method m20;   // 0x20 - "damage" (called on the player with a strength)
+    u8 unk_28[0x10];
+    struct actor_method m38;   // 0x38 - "release" (no argument; sub_8031858)
 };
 
 /* A gcc 2.x pointer-to-member-function record, as stored in the
@@ -65,7 +67,8 @@ struct actor_self {
     s32 animIndex;              // 0x0C - current index into anims
     u16 animTimer;              // 0x10
     u8 animDone;                // 0x12 - set once the current sequence has played through
-    u8 unk_13[5];
+    u8 unk_13;
+    s32 visible;                // 0x14 - set to 1 by sub_8032718 (meaning unconfirmed)
     s32 unk_18;                 // 0x18
     s32 x;                      // 0x1C
     s32 y;                      // 0x20

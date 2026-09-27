@@ -233,3 +233,11 @@ issue #58 and issue #62 (`0x08031784`-`0x08033804`) is closed.
 
 See [docs/status/actor.md](../status/actor.md) for the running
 matched/parked list this entry feeds into.
+
+## Later pass: member-pointer dispatch
+
+A later pass promoted `sub_8032718`, `sub_803283C`, `sub_8032950` and `sub_8032A94` (`actor_part130.c`). `sub_803283C`'s parameter-copy order came out right from a plain C destructor with no barrier; `sub_8032718`'s anim idiom needed per-field `anims[animIndex]` indexing. The other NAKED functions here (many-high-register, DMA/tile, constructor cases) were not retried from NAKED to real C. The "r7 table-base"
+shape was gcc 2.x's pointer-to-member-function call
+`(this->*table[this->state])()`, which `ACTOR_PMF_CALL` in
+`include/actor_self.h` reproduces with no register pins. See
+[pmf-dispatch-retry.md](pmf-dispatch-retry.md).

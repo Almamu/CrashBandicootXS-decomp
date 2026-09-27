@@ -46,3 +46,11 @@ this same chunk that got closed out later.
 Verified byte-identical with a full clean `make compare` (`La suma
 coincide`) and `make NON_MATCHING=1 report`, but none of the six are
 recorded as matched - see the note above.
+
+## Later pass: member-pointer dispatch
+
+A later pass promoted `sub_802C208` (`actor_part19e.c`) from NAKED to real C. The "r7 table-base"
+shape was gcc 2.x's pointer-to-member-function call
+`(this->*table[this->state])()`, which `ACTOR_PMF_CALL` in
+`include/actor_self.h` reproduces with no register pins. See
+[pmf-dispatch-retry.md](pmf-dispatch-retry.md).
