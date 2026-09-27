@@ -1,5 +1,7 @@
 #include "core.h"
 
+/* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
+
 extern void *gUnknown_03001308;
 
 extern void sub_8024DFC(void *self, void *vec2);
@@ -153,237 +155,52 @@ struct tile_cache {
 
 extern void sub_8025334(struct tile_cache *self, s32 recordId, void *dest);
 
-/* Looks up (or decodes-and-inserts) the cache slot for `recordId`: 16
- * fixed `recordId == self->id[N]` checks (slot 0 returns directly,
- * slots 1-15 fall into a shared "add offset to self, return" tail -
- * `_080250AC`/`_080250AE` below, mirroring the ROM's own labels), and
- * on a miss on all 16, decodes into the LRU-evicted slot via
- * `sub_8025334` and advances the ring-buffer cursor. Semantics,
- * control flow and total size were already fully confirmed as real C
- * (see the `#if NON_MATCHING` reconstruction this replaced, and
- * docs/matching/issue-40-terrain-tile-cache.md) - the only gap was
- * this compiler's register allocator always picking the opposite of
- * the ROM's `self`/`recordId` <-> `r7`/`r3` assignment (every
- * comparison/address-add byte differed as a result, despite every
- * instruction *shape* matching one-for-one), and explicit
- * `register ... asm("r7")`/`asm("r3")` pins on either variable making
- * it worse (the compiler stopped using the pinned register as a base
- * pointer at all and fell back to `sp`-relative addressing instead).
- * Closed as a NAKED transcription instead - the same escape hatch
- * already used for `sub_801E688`/`LoadGraphicsPackage`/
- * `LoadBg2Background` this session for the identical symptom - which
- * sidesteps the C-level register allocator entirely. Hand-transcribed
- * instruction-for-instruction from the ROM disassembly
- * (`0x08024F24`-`0x080250BC`, formerly `asm/code_3_2_17_24f24.s`'s
- * first function). */
-NAKED void *sub_8024F24(struct tile_cache *self, s32 recordId)
+/* Returns the cache slot holding decoded record recordId. On a miss,
+ * decodes it (sub_8025334) into the slot just behind the ring cursor and
+ * advances the cursor. */
+void *sub_8024F24(struct tile_cache *self, s32 recordId)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, r8\n\t"
-        "push {r7}\n\t"
-        "sub sp, #4\n\t"
-        "add r7, r0, #0\n\t"
-        "add r3, r1, #0\n\t"
-        "mov r1, #0x81\n\t"
-        "lsl r1, r1, #5\n\t"
-        "add r0, r7, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r3, r0\n\t"
-        "bne 1f\n\t"
-        "add r0, r7, #0\n\t"
-        "add r0, #0x20\n\t"
-        "b 18f\n\t"
-        "1:\n\t"
-        "ldr r1, =0x00001024\n\t"
-        "add r0, r7, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r3, r0\n\t"
-        "bne 2f\n\t"
-        "mov r1, #0x90\n\t"
-        "lsl r1, r1, #1\n\t"
-        "b 17f\n\t"
-        ".pool\n\t"
-        "2:\n\t"
-        "ldr r1, =0x00001028\n\t"
-        "add r0, r7, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r3, r0\n\t"
-        "bne 3f\n\t"
-        "mov r1, #0x88\n\t"
-        "lsl r1, r1, #2\n\t"
-        "b 17f\n\t"
-        ".pool\n\t"
-        "3:\n\t"
-        "ldr r1, =0x0000102C\n\t"
-        "add r0, r7, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r3, r0\n\t"
-        "bne 4f\n\t"
-        "mov r1, #0xc8\n\t"
-        "lsl r1, r1, #2\n\t"
-        "b 17f\n\t"
-        ".pool\n\t"
-        "4:\n\t"
-        "ldr r1, =0x00001030\n\t"
-        "add r0, r7, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r3, r0\n\t"
-        "bne 5f\n\t"
-        "mov r1, #0x84\n\t"
-        "lsl r1, r1, #3\n\t"
-        "b 17f\n\t"
-        ".pool\n\t"
-        "5:\n\t"
-        "ldr r1, =0x00001034\n\t"
-        "add r0, r7, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r3, r0\n\t"
-        "bne 6f\n\t"
-        "mov r1, #0xa4\n\t"
-        "lsl r1, r1, #3\n\t"
-        "b 17f\n\t"
-        ".pool\n\t"
-        "6:\n\t"
-        "ldr r1, =0x00001038\n\t"
-        "add r0, r7, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r3, r0\n\t"
-        "bne 7f\n\t"
-        "mov r1, #0xc4\n\t"
-        "lsl r1, r1, #3\n\t"
-        "b 17f\n\t"
-        ".pool\n\t"
-        "7:\n\t"
-        "ldr r1, =0x0000103C\n\t"
-        "add r0, r7, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r3, r0\n\t"
-        "bne 8f\n\t"
-        "mov r1, #0xe4\n\t"
-        "lsl r1, r1, #3\n\t"
-        "b 17f\n\t"
-        ".pool\n\t"
-        "8:\n\t"
-        "mov r1, #0x82\n\t"
-        "lsl r1, r1, #5\n\t"
-        "add r0, r7, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r3, r0\n\t"
-        "bne 9f\n\t"
-        "mov r1, #0x82\n\t"
-        "lsl r1, r1, #4\n\t"
-        "b 17f\n\t"
-        "9:\n\t"
-        "ldr r1, =0x00001044\n\t"
-        "add r0, r7, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r3, r0\n\t"
-        "bne 10f\n\t"
-        "mov r1, #0x92\n\t"
-        "lsl r1, r1, #4\n\t"
-        "b 17f\n\t"
-        ".pool\n\t"
-        "10:\n\t"
-        "ldr r1, =0x00001048\n\t"
-        "add r0, r7, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r3, r0\n\t"
-        "bne 11f\n\t"
-        "mov r1, #0xa2\n\t"
-        "lsl r1, r1, #4\n\t"
-        "b 17f\n\t"
-        ".pool\n\t"
-        "11:\n\t"
-        "ldr r1, =0x0000104C\n\t"
-        "add r0, r7, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r3, r0\n\t"
-        "bne 12f\n\t"
-        "mov r1, #0xb2\n\t"
-        "lsl r1, r1, #4\n\t"
-        "b 17f\n\t"
-        ".pool\n\t"
-        "12:\n\t"
-        "ldr r1, =0x00001050\n\t"
-        "add r0, r7, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r3, r0\n\t"
-        "bne 13f\n\t"
-        "mov r1, #0xc2\n\t"
-        "lsl r1, r1, #4\n\t"
-        "b 17f\n\t"
-        ".pool\n\t"
-        "13:\n\t"
-        "ldr r1, =0x00001054\n\t"
-        "add r0, r7, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r3, r0\n\t"
-        "bne 14f\n\t"
-        "mov r1, #0xd2\n\t"
-        "lsl r1, r1, #4\n\t"
-        "b 17f\n\t"
-        ".pool\n\t"
-        "14:\n\t"
-        "ldr r1, =0x00001058\n\t"
-        "add r0, r7, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r3, r0\n\t"
-        "bne 15f\n\t"
-        "mov r1, #0xe2\n\t"
-        "lsl r1, r1, #4\n\t"
-        "b 17f\n\t"
-        ".pool\n\t"
-        "15:\n\t"
-        "ldr r1, =0x0000105C\n\t"
-        "add r0, r7, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r3, r0\n\t"
-        "beq 16f\n\t"
-        "mov r0, #0x83\n\t"
-        "lsl r0, r0, #5\n\t"
-        "add r6, r7, r0\n\t"
-        "ldr r4, [r6]\n\t"
-        "add r4, #0xf\n\t"
-        "mov r1, #0xf\n\t"
-        "mov r8, r1\n\t"
-        "and r4, r1\n\t"
-        "lsl r5, r4, #8\n\t"
-        "add r5, #0x20\n\t"
-        "add r5, r7, r5\n\t"
-        "add r0, r7, #0\n\t"
-        "add r1, r3, #0\n\t"
-        "add r2, r5, #0\n\t"
-        "str r3, [sp]\n\t"
-        "bl sub_8025334\n\t"
-        "lsl r4, r4, #2\n\t"
-        "mov r1, #0x81\n\t"
-        "lsl r1, r1, #5\n\t"
-        "add r0, r7, r1\n\t"
-        "add r0, r0, r4\n\t"
-        "ldr r3, [sp]\n\t"
-        "str r3, [r0]\n\t"
-        "ldr r0, [r6]\n\t"
-        "add r0, #1\n\t"
-        "mov r1, r8\n\t"
-        "and r0, r1\n\t"
-        "str r0, [r6]\n\t"
-        "add r0, r5, #0\n\t"
-        "b 18f\n\t"
-        ".pool\n\t"
-        "16:\n\t"
-        "mov r1, #0xf2\n\t"
-        "lsl r1, r1, #4\n\t"
-        "17:\n\t"
-        "add r0, r7, r1\n\t"
-        "18:\n\t"
-        "add sp, #4\n\t"
-        "pop {r3}\n\t"
-        "mov r8, r3\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1"
-    );
+    if (recordId == self->id[0])
+        return self->buf[0];
+    if (recordId == self->id[1])
+        return self->buf[1];
+    if (recordId == self->id[2])
+        return self->buf[2];
+    if (recordId == self->id[3])
+        return self->buf[3];
+    if (recordId == self->id[4])
+        return self->buf[4];
+    if (recordId == self->id[5])
+        return self->buf[5];
+    if (recordId == self->id[6])
+        return self->buf[6];
+    if (recordId == self->id[7])
+        return self->buf[7];
+    if (recordId == self->id[8])
+        return self->buf[8];
+    if (recordId == self->id[9])
+        return self->buf[9];
+    if (recordId == self->id[10])
+        return self->buf[10];
+    if (recordId == self->id[11])
+        return self->buf[11];
+    if (recordId == self->id[12])
+        return self->buf[12];
+    if (recordId == self->id[13])
+        return self->buf[13];
+    if (recordId == self->id[14])
+        return self->buf[14];
+    if (recordId == self->id[15])
+        return self->buf[15];
+    {
+        s32 slot = (self->nextSlot + 15) & 0xf;
+        u8 *dest = self->buf[slot];
+
+        sub_8025334(self, recordId, dest);
+        self->id[slot] = recordId;
+        self->nextSlot = (self->nextSlot + 1) & 0xf;
+        return dest;
+    }
 }
 /* Trailing byte count isn't a multiple of 4 in the ROM's own raw block
  * (a bare `.align 2, 0` follows `bx r1` there too) - see the
@@ -392,408 +209,157 @@ asm(".align 2, 0");
 
 extern u8 gStaticData_081725AC[];
 
-/* `x`/`y` in pixels, 16x8px collision-tile granularity. Looks up the
- * decoded tile record for `(x>>4, y>>3)` and, unless out of bounds,
- * returns a pointer into the 36-byte-stride terrain-property table
- * (`gStaticData_081725AC`) for the tile's low-byte type index. Writes
- * the decoded high nibble to a stack-local byte nothing ever reads back
- * (mirrors `sub_8025130`'s `flagsOut` write, but this sibling has no
- * caller-supplied out-parameter).
- *
- * Same register-allocation-permutation gap `sub_8024F24` had before it
- * was closed as NAKED (see that function's own comment above) - closed
- * the same way: hand-transcribed instruction-for-instruction from the
- * ROM disassembly (formerly `asm/code_3_2_17_24f24.s`'s first
- * function). See docs/matching/issue-40-terrain-tile-cache.md. */
-NAKED void *sub_80250BC(struct tile_cache *self, s32 x, s32 y)
+/* The decoded cell at pixel (x, y): 16x8-pixel tiles, one 256-byte cache
+ * slot per tile record. */
+static inline u16 GetCell(struct tile_cache *self, s32 x, s32 y)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "sub sp, #4\n\t"
-        "add r5, r0, #0\n\t"
-        "add r4, r1, #0\n\t"
-        "add r6, r2, #0\n\t"
-        "mov r7, sp\n\t"
-        "cmp r4, #0\n\t"
-        "blt 2f\n\t"
-        "cmp r6, #0\n\t"
-        "blt 2f\n\t"
-        "asr r3, r4, #4\n\t"
-        "asr r1, r6, #3\n\t"
-        "ldr r2, [r5]\n\t"
-        "ldr r0, [r5, #0x18]\n\t"
-        "mul r0, r1, r0\n\t"
-        "add r0, r0, r3\n\t"
-        "ldr r1, [r2]\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrh r1, [r0]\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_8024F24\n\t"
-        "mov r1, #7\n\t"
-        "and r1, r6\n\t"
-        "mov r2, #0xf\n\t"
-        "and r4, r2\n\t"
-        "lsl r1, r1, #4\n\t"
-        "add r1, r1, r4\n\t"
-        "lsl r1, r1, #1\n\t"
-        "add r1, r1, r0\n\t"
-        "ldrh r1, [r1]\n\t"
-        "lsl r0, r1, #0x10\n\t"
-        "lsr r3, r0, #0x10\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "and r0, r2\n\t"
-        "cmp r0, #0\n\t"
-        "beq 1f\n\t"
-        "strb r0, [r7]\n\t"
-        "1:\n\t"
-        "mov r1, #0xff\n\t"
-        "and r1, r3\n\t"
-        "cmp r1, #0\n\t"
-        "beq 2f\n\t"
-        "cmp r1, #0x23\n\t"
-        "ble 3f\n\t"
-        "2:\n\t"
-        "mov r0, #0\n\t"
-        "b 4f\n\t"
-        "3:\n\t"
-        "lsl r0, r1, #3\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r0, r0, #2\n\t"
-        "ldr r1, =gStaticData_081725AC\n\t"
-        "add r0, r0, r1\n\t"
-        "4:\n\t"
-        "add sp, #4\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".pool"
-    );
+    s32 tileX = x >> 4;
+    s32 tileY = y >> 3;
+    u16 *buf = sub_8024F24(self, (*(u16 **)self->source)[tileY * self->width + tileX]);
+    return buf[(y & 7) * 16 + (x & 0xf)];
+}
+
+/* The terrain-property row (36 bytes, gStaticData_081725AC) for the cell at
+ * pixel (x, y), or NULL when out of bounds or the type is 0 or above 0x23.
+ * The cell's flag nibble goes to a local nothing reads. */
+void *sub_80250BC(struct tile_cache *self, s32 x, s32 y)
+{
+    u8 hi;
+    u8 *hiOut = &hi;
+    u16 cell;
+    u8 nibble;
+    s32 type;
+
+    if (x < 0 || y < 0)
+        return NULL;
+    cell = GetCell(self, x, y);
+    nibble = (cell >> 8) & 0xf;
+    if (nibble)
+        *hiOut = nibble;
+    type = cell & 0xff;
+    if (type == 0 || type > 0x23)
+        return NULL;
+    return gStaticData_081725AC + type * 36;
 }
 
 extern u8 gStaticData_081725B4[];
 extern u8 gStaticData_081725BC[];
 extern u8 gStaticData_081725C4[];
 
-/* Sibling of `sub_80250BC`, adding an output flag-nibble pointer
- * (`flagsOut`) and a `mode`-selected terrain-property table (mirroring
- * `sub_8025228`'s mode dispatch, but each mode's flag test differs and
- * the return is the full table-row pointer rather than a single
- * byte).
- *
- * Same register-allocation-permutation gap as `sub_8024F24`/
- * `sub_80250BC` above (the ROM packs `self`/`x`/`y`/`mode` as r5/r4/r6/
- * r7; several C phrasings landed on other permutations instead) -
- * closed the same way: hand-transcribed instruction-for-instruction
- * from the ROM disassembly, including the ROM's own mid-function
- * `.pool` splits (one after each of the first three mode cases; the
- * fourth table address is shared with the function's own trailing
- * pool). See docs/matching/issue-40-terrain-tile-cache.md. */
-NAKED void *sub_8025130(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut)
+/* Like sub_80250BC with a collision mode (0-3): each mode has its own
+ * property table and its own "not solid" bit in the cell's top nibble.
+ * The flag nibble is written to flagsOut. */
+void *sub_8025130(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, r8\n\t"
-        "push {r7}\n\t"
-        "add r5, r0, #0\n\t"
-        "add r4, r1, #0\n\t"
-        "add r6, r2, #0\n\t"
-        "add r7, r3, #0\n\t"
-        "mov r0, #0\n\t"
-        "mov r8, r0\n\t"
-        "mov r3, #0\n\t"
-        "cmp r4, #0\n\t"
-        "blt 1f\n\t"
-        "cmp r6, #0\n\t"
-        "bge 2f\n\t"
-        "1:\n\t"
-        "mov r1, #0\n\t"
-        "b 4f\n\t"
-        "2:\n\t"
-        "asr r3, r4, #4\n\t"
-        "asr r1, r6, #3\n\t"
-        "ldr r2, [r5]\n\t"
-        "ldr r0, [r5, #0x18]\n\t"
-        "mul r0, r1, r0\n\t"
-        "add r0, r0, r3\n\t"
-        "ldr r1, [r2]\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrh r1, [r0]\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_8024F24\n\t"
-        "mov r1, #7\n\t"
-        "and r1, r6\n\t"
-        "mov r2, #0xf\n\t"
-        "and r4, r2\n\t"
-        "lsl r1, r1, #4\n\t"
-        "add r1, r1, r4\n\t"
-        "lsl r1, r1, #1\n\t"
-        "add r1, r1, r0\n\t"
-        "ldrh r1, [r1]\n\t"
-        "lsl r0, r1, #0x10\n\t"
-        "lsr r4, r0, #0x10\n\t"
-        "lsr r3, r0, #0x1c\n\t"
-        "lsr r1, r0, #0x18\n\t"
-        "and r1, r2\n\t"
-        "cmp r1, #0\n\t"
-        "beq 3f\n\t"
-        "ldr r0, [sp, #0x18]\n\t"
-        "strb r1, [r0]\n\t"
-        "3:\n\t"
-        "mov r1, #0xff\n\t"
-        "and r1, r4\n\t"
-        "4:\n\t"
-        "cmp r1, #0x23\n\t"
-        "bgt 5f\n\t"
-        "mov r0, #0\n\t"
-        "b 18f\n\t"
-        "5:\n\t"
-        "cmp r7, #1\n\t"
-        "beq 9f\n\t"
-        "cmp r7, #1\n\t"
-        "bgt 6f\n\t"
-        "cmp r7, #0\n\t"
-        "beq 7f\n\t"
-        "b 17f\n\t"
-        "6:\n\t"
-        "cmp r7, #2\n\t"
-        "beq 11f\n\t"
-        "cmp r7, #3\n\t"
-        "beq 13f\n\t"
-        "b 17f\n\t"
-        "7:\n\t"
-        "mov r0, #4\n\t"
-        "and r3, r0\n\t"
-        "cmp r3, #0\n\t"
-        "beq 8f\n\t"
-        "mov r0, #0\n\t"
-        "b 16f\n\t"
-        "8:\n\t"
-        "lsl r0, r1, #3\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r0, r0, #2\n\t"
-        "ldr r1, =gStaticData_081725AC\n\t"
-        "b 15f\n\t"
-        ".pool\n\t"
-        "9:\n\t"
-        "and r3, r7\n\t"
-        "cmp r3, #0\n\t"
-        "beq 10f\n\t"
-        "mov r0, #0\n\t"
-        "b 16f\n\t"
-        "10:\n\t"
-        "lsl r0, r1, #3\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r0, r0, #2\n\t"
-        "ldr r1, =gStaticData_081725B4\n\t"
-        "b 15f\n\t"
-        ".pool\n\t"
-        "11:\n\t"
-        "mov r0, #8\n\t"
-        "and r3, r0\n\t"
-        "cmp r3, #0\n\t"
-        "beq 12f\n\t"
-        "mov r0, #0\n\t"
-        "b 16f\n\t"
-        "12:\n\t"
-        "lsl r0, r1, #3\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r0, r0, #2\n\t"
-        "ldr r1, =gStaticData_081725BC\n\t"
-        "b 15f\n\t"
-        ".pool\n\t"
-        "13:\n\t"
-        "mov r0, #2\n\t"
-        "and r3, r0\n\t"
-        "cmp r3, #0\n\t"
-        "beq 14f\n\t"
-        "mov r0, #0\n\t"
-        "b 16f\n\t"
-        "14:\n\t"
-        "lsl r0, r1, #3\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r0, r0, #2\n\t"
-        "ldr r1, =gStaticData_081725C4\n\t"
-        "15:\n\t"
-        "add r0, r0, r1\n\t"
-        "16:\n\t"
-        "mov r8, r0\n\t"
-        "17:\n\t"
-        "mov r0, r8\n\t"
-        "18:\n\t"
-        "pop {r3}\n\t"
-        "mov r8, r3\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".pool"
-    );
+    void *result = NULL;
+    s32 hi = 0;
+    s32 type;
+
+    if (x < 0 || y < 0)
+        type = 0;
+    else
+    {
+        u16 cell = GetCell(self, x, y);
+        u8 nibble;
+
+        hi = cell >> 12;
+        nibble = (cell >> 8) & 0xf;
+        if (nibble)
+            *flagsOut = nibble;
+        type = cell & 0xff;
+    }
+    if (type <= 0x23)
+        return NULL;
+    switch (mode)
+    {
+    case 0:
+        if (hi & 4)
+            result = NULL;
+        else
+            result = gStaticData_081725AC + type * 36;
+        break;
+    case 1:
+        if (hi & mode)
+            result = NULL;
+        else
+            result = gStaticData_081725B4 + type * 36;
+        break;
+    case 2:
+        if (hi & 8)
+            result = NULL;
+        else
+            result = gStaticData_081725BC + type * 36;
+        break;
+    case 3:
+        if (hi & 2)
+            result = NULL;
+        else
+            result = gStaticData_081725C4 + type * 36;
+        break;
+    }
+    return result;
 }
 
-extern u8 gStaticData_081725A8[];
-
-/* The `CheckTerrainFlag(x, y, mode)`-style API docs/rom_map.md
- * identified: re-derives the same tile lookup as `sub_80250BC`, then
- * returns one of 4 adjacent flag bytes from `gStaticData_081725A8`
- * depending on `mode`, each independently bounds-gated by its own bit
- * of the cell's high nibble.
- *
- * Same register-allocation-permutation gap as `sub_8025130` above -
- * closed the same way: hand-transcribed instruction-for-instruction
- * from the ROM disassembly, including its four separate mid-/
- * end-function `.pool` splits for the four `gStaticData_081725A8`
- * references (the ROM never reuses one literal-pool slot for more than
- * one `ldr`, even though all four load the same symbol). See
- * docs/matching/issue-40-terrain-tile-cache.md. */
-NAKED s8 sub_8025228(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut)
+struct terrain_type
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, r8\n\t"
-        "push {r7}\n\t"
-        "add r5, r0, #0\n\t"
-        "add r4, r1, #0\n\t"
-        "add r6, r2, #0\n\t"
-        "add r7, r3, #0\n\t"
-        "mov r0, #0\n\t"
-        "mov r8, r0\n\t"
-        "mov r3, #0\n\t"
-        "cmp r4, #0\n\t"
-        "blt 1f\n\t"
-        "cmp r6, #0\n\t"
-        "bge 2f\n\t"
-        "1:\n\t"
-        "mov r2, #0\n\t"
-        "b 4f\n\t"
-        "2:\n\t"
-        "asr r3, r4, #4\n\t"
-        "asr r1, r6, #3\n\t"
-        "ldr r2, [r5]\n\t"
-        "ldr r0, [r5, #0x18]\n\t"
-        "mul r0, r1, r0\n\t"
-        "add r0, r0, r3\n\t"
-        "ldr r1, [r2]\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrh r1, [r0]\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_8024F24\n\t"
-        "mov r1, #7\n\t"
-        "and r1, r6\n\t"
-        "mov r2, #0xf\n\t"
-        "and r4, r2\n\t"
-        "lsl r1, r1, #4\n\t"
-        "add r1, r1, r4\n\t"
-        "lsl r1, r1, #1\n\t"
-        "add r1, r1, r0\n\t"
-        "ldrh r1, [r1]\n\t"
-        "lsl r0, r1, #0x10\n\t"
-        "lsr r4, r0, #0x10\n\t"
-        "lsr r3, r0, #0x1c\n\t"
-        "lsr r1, r0, #0x18\n\t"
-        "and r1, r2\n\t"
-        "cmp r1, #0\n\t"
-        "beq 3f\n\t"
-        "ldr r0, [sp, #0x18]\n\t"
-        "strb r1, [r0]\n\t"
-        "3:\n\t"
-        "mov r2, #0xff\n\t"
-        "and r2, r4\n\t"
-        "4:\n\t"
-        "cmp r2, #0x23\n\t"
-        "bgt 5f\n\t"
-        "mov r0, #1\n\t"
-        "neg r0, r0\n\t"
-        "b 17f\n\t"
-        "5:\n\t"
-        "cmp r7, #1\n\t"
-        "beq 8f\n\t"
-        "cmp r7, #1\n\t"
-        "bgt 6f\n\t"
-        "cmp r7, #0\n\t"
-        "beq 7f\n\t"
-        "b 16f\n\t"
-        "6:\n\t"
-        "cmp r7, #2\n\t"
-        "beq 10f\n\t"
-        "cmp r7, #3\n\t"
-        "beq 13f\n\t"
-        "b 16f\n\t"
-        "7:\n\t"
-        "mov r0, #4\n\t"
-        "and r3, r0\n\t"
-        "cmp r3, #0\n\t"
-        "bne 11f\n\t"
-        "ldr r1, =gStaticData_081725A8\n\t"
-        "lsl r0, r2, #3\n\t"
-        "add r0, r0, r2\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrb r0, [r0]\n\t"
-        "b 15f\n\t"
-        ".pool\n\t"
-        "8:\n\t"
-        "and r3, r7\n\t"
-        "cmp r3, #0\n\t"
-        "beq 9f\n\t"
-        "mov r0, #0\n\t"
-        "b 15f\n\t"
-        "9:\n\t"
-        "ldr r1, =gStaticData_081725A8\n\t"
-        "lsl r0, r2, #3\n\t"
-        "add r0, r0, r2\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrb r0, [r0, #1]\n\t"
-        "b 15f\n\t"
-        ".pool\n\t"
-        "10:\n\t"
-        "mov r0, #8\n\t"
-        "and r3, r0\n\t"
-        "cmp r3, #0\n\t"
-        "beq 12f\n\t"
-        "11:\n\t"
-        "mov r1, #0\n\t"
-        "mov r8, r1\n\t"
-        "b 16f\n\t"
-        "12:\n\t"
-        "ldr r1, =gStaticData_081725A8\n\t"
-        "lsl r0, r2, #3\n\t"
-        "add r0, r0, r2\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrb r0, [r0, #2]\n\t"
-        "b 15f\n\t"
-        ".pool\n\t"
-        "13:\n\t"
-        "mov r0, #2\n\t"
-        "and r3, r0\n\t"
-        "cmp r3, #0\n\t"
-        "beq 14f\n\t"
-        "mov r0, #0\n\t"
-        "b 15f\n\t"
-        "14:\n\t"
-        "ldr r1, =gStaticData_081725A8\n\t"
-        "lsl r0, r2, #3\n\t"
-        "add r0, r0, r2\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrb r0, [r0, #3]\n\t"
-        "15:\n\t"
-        "mov r8, r0\n\t"
-        "16:\n\t"
-        "mov r1, r8\n\t"
-        "lsl r0, r1, #0x18\n\t"
-        "asr r0, r0, #0x18\n\t"
-        "17:\n\t"
-        "pop {r3}\n\t"
-        "mov r8, r3\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".pool"
-    );
+    u8 modeValue[4];
+    u8 unk_04[0x20];
+};
+
+extern struct terrain_type gStaticData_081725A8[];
+
+/* The mode byte (0-3) of the cell's terrain type at pixel (x, y): -1
+ * when out of bounds or the type is 0x23 or below, 0 when the mode's
+ * "not solid" bit is set in the cell's top nibble. */
+s8 sub_8025228(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut)
+{
+    s8 result = 0;
+    s32 hi = 0;
+    s32 type;
+
+    if (x < 0 || y < 0)
+        type = 0;
+    else
+    {
+        u16 cell = GetCell(self, x, y);
+        u8 nibble;
+
+        hi = cell >> 12;
+        nibble = (cell >> 8) & 0xf;
+        if (nibble)
+            *flagsOut = nibble;
+        type = cell & 0xff;
+    }
+    if (type <= 0x23)
+        return -1;
+    switch (mode)
+    {
+    case 0:
+        if (hi & 4)
+            result = 0;
+        else
+            result = gStaticData_081725A8[type].modeValue[0];
+        break;
+    case 1:
+        if (hi & mode)
+            result = 0;
+        else
+            result = gStaticData_081725A8[type].modeValue[1];
+        break;
+    case 2:
+        if (hi & 8)
+            result = 0;
+        else
+            result = gStaticData_081725A8[type].modeValue[2];
+        break;
+    case 3:
+        if (hi & 2)
+            result = 0;
+        else
+            result = gStaticData_081725A8[type].modeValue[3];
+        break;
+    }
+    return result;
 }
 
 /* Custom RLE/delta token-stream decoder (docs/rom_map.md's "A new find:
@@ -804,34 +370,10 @@ NAKED s8 sub_8025228(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsO
  * raw-copy run - writing the decoded halfwords into `dest` (a linear
  * 256-byte cache slot in `sub_8024F24`'s caller).
  *
- * Semantics, control flow and total size were already fully confirmed
- * as real C (see the `#if NON_MATCHING` reconstruction this replaced,
- * and docs/matching/issue-40-terrain-tile-cache.md) - the remaining gap
- * was that this loop's "bytes-written" state is kept alive very
- * differently between the ROM and this compiler's natural allocation:
- * the ROM keeps a byte-offset write pointer alive across the whole
- * function in `r7` (used *directly* as the store target for the
- * delta-run mode's first and last writes, while the literal-fill and
- * raw-copy modes instead recompute a fresh `dest + written*2` pointer
- * from `r8`/`ip` every time despite `r7` holding the identical value in
- * lockstep) and never hoists the repeated `0x8000`/`0x4000` bit-test
- * masks out of the loop - an index-based C reconstruction can't be
- * coaxed into reproducing that particular redundant-shadow-register
- * shape. Closed as a NAKED transcription instead - the same escape
- * hatch already used for `sub_8024F24`/`sub_80250BC`/`sub_8025130`/
- * `sub_8025228` above (and, this session, for `sub_801E688`/
- * `LoadGraphicsPackage`/`LoadBg2Background`) for the identical class of
- * "correct C, wrong register permutation" gap. Hand-transcribed
- * instruction-for-instruction from the ROM disassembly
- * (`0x08025334`-`0x08025444`, formerly `asm/code_3_2_17_24f24.s`'s last
- * remaining function - that file is now gone, and this cluster's raw
- * bytes are fully retired), including its own trailing 2-byte zero pad
- * (see the `asm(".align 2, 0")` note after `sub_8024F24` above for why
- * that has to be spelled out explicitly rather than left to the
- * assembler's default NOP-fill alignment). Verified byte-identical via
- * isolated compile + `arm-none-eabi-as` assemble, a direct byte
- * comparison against `baserom.gba` at `0x08025334`, and a full clean
- * `make compare`. */
+ * NAKED: plain C under old_agbcc is 30 halfwords off. The accumulator
+ * and the pair loop's induction pointer swap r4 and r5 (allocation
+ * priorities 2.4 vs 2.5); the ROM's r7 "shadow pointer" is gcc's own
+ * strength-reduced `&dest[written]`, not a C variable. */
 NAKED void sub_8025334(struct tile_cache *self, s32 recordId, void *dest)
 {
     asm(

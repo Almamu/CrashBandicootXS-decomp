@@ -147,7 +147,18 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part27a.o \
                   $(C_BUILDDIR)/graphics/actor_part_1dfec.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_1ea5c.o \
                   $(C_BUILDDIR)/graphics/actor_part128.o \
-                  $(C_BUILDDIR)/system/bg_scroll_layer_25fc8.o
+                  $(C_BUILDDIR)/graphics/hud_digit_array.o \
+                  $(C_BUILDDIR)/system/game_loop40.o \
+                  $(C_BUILDDIR)/system/game_loop8.o \
+                  $(C_BUILDDIR)/system/game_loop37.o \
+                  $(C_BUILDDIR)/system/game_loop57.o \
+                  $(C_BUILDDIR)/system/game_loop3.o \
+                  $(C_BUILDDIR)/system/game_loop4.o \
+                  $(C_BUILDDIR)/system/game_loop29.o \
+                  $(C_BUILDDIR)/system/game_loop14.o \
+                  $(C_BUILDDIR)/system/game_loop16.o \
+                  $(C_BUILDDIR)/system/bg_scroll_layer_25fc8.o \
+                  $(C_BUILDDIR)/system/game_loop46.o
 $(OLD_AGBCC_OBJS): CC1 := $(CC1_OLD)
 $(OLD_AGBCC_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1FLAGS))
 
