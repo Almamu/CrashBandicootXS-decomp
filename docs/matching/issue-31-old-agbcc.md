@@ -1,0 +1,94 @@
+# Issue #31: the text popup spawners under old_agbcc
+
+Issue #31's passes (docs/matching/issue-31-graphics-loading.md) left 24
+functions of the "two-line text popup" family NAKED. Almost all of them
+were parked on the same gap: the ROM's prologue pushes r7 (often along
+with r8/sb/sl), and no plain-C or register-pin rewrite made the current
+`agbcc` put r7 in the callee-saved set. The functions that did match
+needed heavy register pins and `asm volatile` islands.
+
+Like issue #24's region (docs/matching/old-agbcc-retry.md), this ROM
+region was built with `tools/agbcc/bin/old_agbcc`. Its scheduler has the
+usual tell here too: `sub_801FDEC` loads the `0x7f` mask before the
+`ldrb` of `part->flags`. Under old_agbcc the r7 "gap" goes away. The
+allocator uses r7 as a byte-load scratch register on its own, and the
+prologue comes out as `push {r4-r7,lr}` plus the high registers, exactly
+as in the ROM.
+
+## Result
+
+All five files move to old_agbcc whole: `graphics_loading_1ef0c.c`,
+`graphics_loading_1fdec.c`, `graphics_loading_1feec.c`,
+`graphics_loading_21280.c` and `graphics_loading_21668.c`. Every function
+in them already matched under old_agbcc as written (NAKED bodies and asm
+islands are literal), so no file needed a split.
+
+33 functions were rewritten as plain C with no register pins, no asm and
+no NAKED:
+
+| file | rewritten | was NAKED |
+|---|---|---|
+| `graphics_loading_1ef0c.c` | 11 of 12 | 9 |
+| `graphics_loading_1fdec.c` | 1 of 1 | 0 |
+| `graphics_loading_1feec.c` | 12 of 13 | 11 |
+| `graphics_loading_21280.c` | 3 of 4 | 1 |
+| `graphics_loading_21668.c` | 6 (the rest were already plain C) | 1 |
+
+Three functions keep their previous form:
+
+- `sub_801F170` keeps its agbcc-era pinned C, which matches under
+  old_agbcc. Plain C is 5 halfwords off: three constant loads (1 into r9,
+  0 into sl, 1 into r8) come out in a different order. Writing `field_0A`
+  through `SetPartField0A` fixes that order but swaps hdr and the
+  bitfield constant between registers.
+- `sub_802062C` stays NAKED. Plain C is 62 halfwords off. The ROM spills
+  `part+0x28` to its one stack slot and keeps the constant 1 in r8. The
+  reconstruction spills the constant and `&gUnknown_030012B4` instead.
+- `sub_8021280` stays NAKED. Plain C is 9 halfwords off. The ROM computes
+  the `{x - 2, y - 0x1e}` point into fresh r2/r3, and the reconstruction
+  subtracts in place. This is the same gap as `sub_802209C`
+  (graphics_loading_21d80.c).
+
+## Shared header
+
+`include/text_popup.h` holds the shared types:
+
+- `struct popup_part`, the sub_8009ED0 part. Its layout matches
+  actor_part_188d0.c's `struct gfx_part`: `flipX` is bit 4 of +0x28,
+  `frameNibble` is +0x29 and `hdr` is +0x44.
+- `struct popup_hdr`, the sub_800CA74 header.
+- `struct level_record`, the gUnknown_030012B4 record.
+
+It also has the `POPUP_ATTACH`/`LEVEL_RECORD` macros and the inline
+setters.
+
+## What mattered under old_agbcc
+
+- **u32 bitfields at +0x28.** With `u8` bitfields, the `1` constant the
+  two "collected" bits share is a QImode pseudo. CSE merges it with
+  `field_0A = 1`, which stretches its live range, so it loses r6 to hdr.
+  Declared on `u32`, it gets its own SImode pseudo and the ROM's
+  registers.
+- **Value before address.** A store whose value is loaded before its
+  address (`hdr->gfx`, `part->tag`, `field_0A`) only comes out that way
+  when the value arrives as an inline helper's parameter. This is the
+  same effect the issue #23 `AndFlags`/`OrFlags` helpers rely on.
+  `AndPartFlags` takes its mask as an `s32` for the same reason: old_agbcc
+  then derives the mask from the still-live `field_0A` constant
+  (`subs r0, #0x43`).
+- **Load-all-then-store-all copies.** The copies of record fields into
+  hdr+0x20..0x4c load every value before storing any. That comes from a
+  multi-parameter inline (`SetPopupRect`, `SetPopupSpan`,
+  `SetPopupBox`). Separate statements interleave the loads and stores.
+- **A second `rec2` local.** When a function looks the record up twice,
+  the second lookup has to go into its own local, computed before the
+  next call. Reusing `rec` changes the whole allocation.
+- **The flipX toggle** is `{ s32 f = part->flipX; part->flipX = f == 0; }`.
+  Written in place as `!part->flipX`, it schedules differently.
+
+## Other agbcc-era gaps worth retrying
+
+The same "r7 never enters the callee-saved set" gap parked other
+functions nearby, among them `LoadGraphicsPackage`, `sub_801E644` and
+`sub_801E688` (graphics_package_1e578.c and neighbours, issue #30). They
+are good candidates for the same old_agbcc retry.
