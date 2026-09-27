@@ -1,4 +1,5 @@
 #include "core.h"
+#include "phys_obj.h"
 
 /* GitHub issue #12: 0x0800D040-0x0800FC70, the physics/collision
  * subsystem (see game_loop6.c's header comment and
@@ -12,23 +13,48 @@
  * `sub_800EEF0` onward - the head, `sub_800E560` through `sub_800EDBC`,
  * is a sibling pass's territory and untouched here).
  *
- * All twelve are NAKED transcriptions, not decompiled C, for the same
- * reason as this issue's other parked/NAKED functions
- * (`sub_800D040`/`sub_800E494`/`sub_800E4E4`/`sub_0800D18C`/
- * `sub_800E08C`): every one of them re-triggers the same
- * gcc-2.9-resistant register shapes already documented there (the
- * `self+0x20`/`+0x2d`/28-byte-stride AABB-record idiom, or plain
- * high-register/cross-block reuse under -O2 that this compiler's
- * allocator doesn't reproduce), and given the size of this batch,
- * transcription was the reliable path to a byte-exact result for all of
- * them at once rather than re-fighting each function's register
- * allocation individually. Mnemonics translated from the disassembler's
- * unified syntax to the plain/divided syntax this project's other
- * `NAKED` functions use (`adds`->`add`, `movs`->`mov`, `ands`->`and`,
- * `lsls`/`lsrs`->`lsl`/`lsr`, `asrs`->`asr`, `orrs`->`orr`,
- * `eors`->`eor`, `rsbs rX,rX,#0`->`neg rX,rX`), with the original
- * `_08XXXXXX:` labels renumbered to GNU-as local numeric labels
- * (per-function, first-definition order). */
+ * Compiled with old_agbcc (the Makefile's OLD_AGBCC_OBJS): eleven of
+ * the twelve are real C (see docs/matching/issue-12-physics-collision.md's
+ * NAKED-retry section); `sub_800F990` is still a NAKED transcription. */
+
+asm(".set _call_via_r1, sub_803AD7C\n"
+    ".set _call_via_r2, sub_803AD80\n"
+    ".set _call_via_r3, sub_803AD84\n"
+    ".set _call_via_r4, sub_803AD88\n");
+
+extern struct phys_obj_list *gUnknown_0300130C;
+extern u8 gUnknown_030012B0;
+extern void sub_800EEF0(struct phys_obj *self, u8 arg1);
+extern void sub_8009AA0(struct phys_obj_list *list, s32 index);
+extern void *gUnknown_030012BC;
+extern void *gUnknown_03001318;
+extern void PlaySfx(void *ctx, s32 id, s32 volume);
+extern void sub_8028474(void *arg);
+extern void sub_802306C(void *arg);
+extern void sub_800F258(void);
+extern void sub_800F5B8(struct phys_obj *self);
+extern s32 sub_800815C(void *self);
+extern void sub_8026EB4(void *p);
+extern u8 gStaticData_0816BBC4[];
+extern u8 gStaticData_0816BBAE[];
+extern void sub_800E6B0(void *self);
+extern void sub_8011448(struct phys_obj *obj, s32 arg);
+extern void sub_800F368(struct phys_obj *self);
+extern void sub_800F2BC(struct phys_obj *self);
+extern void sub_8009150(struct phys_obj_list *list, struct phys_obj *obj);
+extern void sub_8025A0C(u8 *bitmap, u16 id);
+extern void *sub_8026EC0(u32 size);
+extern void *sub_8010708(void *obj);
+extern void *sub_801070C(void *obj);
+extern void sub_8010710(void *obj, void *prev);
+extern void sub_8010714(void *obj, void *next);
+extern void sub_800F06C(struct phys_obj *self, s32 dist);
+extern u8 gStaticData_0816BB98[];
+extern void sub_8022FEC(void *arg);
+extern void sub_800EDBC(struct phys_obj *self);
+extern void sub_800E7A8(void *self, u32 arg1, u32 arg2, u32 arg3);
+extern u32 sub_8010A50(struct phys_obj *self);
+extern u8 gStaticData_0816BB94[];
 
 
 /* Per-edge jump table's **case 4 handler**
@@ -79,190 +105,62 @@
  * state most of this cluster's state machines converge on - see
  * `sub_800F8E0` below). */
 
-NAKED void sub_800EEF0(void *self, u8 arg1)
+static inline s32 PhysComboMaxed(struct gobj *player)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "lsr r7, r1, #0x18\n\t"
-        "add r5, r4, #0\n\t"
-        "add r5, #0x4d\n\t"
-        "mov r2, #0x7f\n\t"
-        "add r0, r2, #0\n\t"
-        "ldrb r1, [r5]\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #1\n\t"
-        "bne 1f\n\t"
-        "b 11f\n\t"
-    "1:\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x4f\n\t"
-        "mov r1, #0\n\t"
-        "strb r1, [r0]\n\t"
-        "add r0, r2, #0\n\t"
-        "ldrb r2, [r5]\n\t"
-        "and r0, r2\n\t"
-        "strb r0, [r5]\n\t"
-        "ldr r0, 2f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r0, #0x80\n\t"
-        "strb r1, [r0]\n\t"
-        "mov r0, #0x10\n\t"
-        "ldrb r3, [r4, #0xc]\n\t"
-        "orr r0, r3\n\t"
-        "strb r0, [r4, #0xc]\n\t"
-        "ldr r0, 3f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r1, r4, #0\n\t"
-        "bl sub_8009150\n\t"
-        "mov r1, #1\n\t"
-        "mov r0, #0x80\n\t"
-        "ldrb r2, [r5]\n\t"
-        "and r0, r2\n\t"
-        "orr r0, r1\n\t"
-        "strb r0, [r5]\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x4e\n\t"
-        "add r6, r0, #0\n\t"
-        "ldrb r3, [r6]\n\t"
-        "cmp r3, #0xa\n\t"
-        "bne 4f\n\t"
-        "sub r0, #0x21\n\t"
-        "strb r1, [r0]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087C0\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087B4\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800872C\n\t"
-        "b 5f\n\t"
-        ".align 2, 0\n"
-    "2: .4byte gUnknown_030012D8\n"
-    "3: .4byte gUnknown_0300130C\n"
-    "4:\n\t"
-        "mov r0, #0x21\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x2d\n\t"
-        "strb r0, [r1]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087C0\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087B4\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800872C\n\t"
-    "5:\n\t"
-        "ldr r0, 12f\n\t"
-        "ldrb r5, [r6]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 6f\n\t"
-        "ldr r0, 13f\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_8022FEC\n\t"
-    "6:\n\t"
-        "ldrh r3, [r4, #8]\n\t"
-        "ldr r0, 14f\n\t"
-        "ldr r2, [r0]\n\t"
-        "add r0, r3, #0\n\t"
-        "asr r0, r0, #5\n\t"
-        "lsl r1, r0, #2\n\t"
-        "mov r5, #0x84\n\t"
-        "lsl r5, r5, #1\n\t"
-        "add r2, r2, r5\n\t"
-        "add r2, r2, r1\n\t"
-        "lsl r0, r0, #5\n\t"
-        "sub r0, r3, r0\n\t"
-        "mov r1, #1\n\t"
-        "lsl r1, r0\n\t"
-        "ldr r0, [r2]\n\t"
-        "orr r0, r1\n\t"
-        "str r0, [r2]\n\t"
-        "ldr r0, 15f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #4\n\t"
-        "bl PlaySfx\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_800EDBC\n\t"
-        "ldr r0, 16f\n\t"
-        "ldr r3, [r0]\n\t"
-        "ldrb r1, [r3, #0xc]\n\t"
-        "lsr r0, r1, #6\n\t"
-        "mov r1, #1\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "beq 10f\n\t"
-        "mov r5, #0\n\t"
-        "add r0, r3, #0\n\t"
-        "add r0, #0x8c\n\t"
-        "ldr r1, 17f\n\t"
-        "ldr r2, [r0]\n\t"
-        "ldr r0, [r1]\n\t"
-        "cmp r2, r0\n\t"
-        "bls 7f\n\t"
-        "mov r5, #1\n\t"
-    "7:\n\t"
-        "cmp r5, #0\n\t"
-        "bne 10f\n\t"
-        "ldr r0, [r3]\n\t"
-        "asr r0, r0, #8\n\t"
-        "ldr r1, [r4]\n\t"
-        "asr r1, r1, #8\n\t"
-        "sub r0, r0, r1\n\t"
-        "asr r1, r0, #0x1f\n\t"
-        "eor r0, r1\n\t"
-        "sub r0, r0, r1\n\t"
-        "cmp r0, #0x1d\n\t"
-        "bgt 8f\n\t"
-        "ldr r0, [r3, #4]\n\t"
-        "asr r0, r0, #8\n\t"
-        "ldr r1, [r4, #4]\n\t"
-        "asr r1, r1, #8\n\t"
-        "sub r0, r0, r1\n\t"
-        "asr r1, r0, #0x1f\n\t"
-        "eor r0, r1\n\t"
-        "sub r0, r0, r1\n\t"
-        "cmp r0, #0x1d\n\t"
-        "ble 9f\n\t"
-    "8:\n\t"
-        "cmp r7, #0\n\t"
-        "beq 10f\n\t"
-    "9:\n\t"
-        "ldr r0, 16f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [r0, #0x18]\n\t"
-        "add r1, #0x68\n\t"
-        "mov r3, #0\n\t"
-        "ldrsh r2, [r1, r3]\n\t"
-        "add r0, r0, r2\n\t"
-        "ldr r4, [r1, #4]\n\t"
-        "mov r1, #0\n\t"
-        "mov r2, #4\n\t"
-        "mov r3, #0\n\t"
-        "bl sub_803AD88\n\t"
-    "10:\n\t"
-        "ldrb r5, [r6]\n\t"
-        "cmp r5, #0xa\n\t"
-        "beq 11f\n\t"
-        "mov r0, #0x13\n\t"
-        "strb r0, [r6]\n\t"
-    "11:\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "12: .4byte gStaticData_0816BB98\n"
-    "13: .4byte gUnknown_030012C0\n"
-    "14: .4byte gUnknown_030012B4\n"
-    "15: .4byte gUnknown_030012BC\n"
-    "16: .4byte gUnknown_030012D8\n"
-    "17: .4byte gUnknown_0300082C\n"
-    );
+    s32 maxed = FALSE;
+
+    if (*(u32 *)((u8 *)player + 0x8c) > gUnknown_0300082C)
+        maxed = TRUE;
+    return maxed;
+}
+
+void sub_800EEF0(struct phys_obj *self, u8 near)
+{
+    u8 one;
+
+    if ((self->state & 0x7f) == 1)
+        return;
+
+    self->timer = 0;
+    self->state &= 0x7f;
+    PHYS_PLAYER->busy = 0;
+    self->flags |= 0x10;
+    sub_8009150(gUnknown_0300130C, self);
+    one = 1;
+    self->state = (self->state & 0x80) | one;
+    if (self->kind == 0xa) {
+        self->tag = one;
+        sub_80087C0(self);
+        sub_80087B4(self);
+        sub_800872C(self, 0);
+    } else
+        PhysSetTag(self, 0x21);
+    if (gStaticData_0816BB98[self->kind])
+        sub_8022FEC(gUnknown_030012C0);
+    PHYS_SET_ID_BIT(self->id);
+    PlaySfx(gUnknown_030012BC, 4, 0x100);
+    sub_800EDBC(self);
+
+    if ((gUnknown_030012D8->flags >> 6) & 1 && !PhysComboMaxed(gUnknown_030012D8)) {
+        struct gobj *p;
+        s32 t1 = (gUnknown_030012D8->x >> 8) - (self->x >> 8);
+        s32 dx = (t1 ^ (t1 >> 31)) - (t1 >> 31);
+
+        if (dx <= 0x1d) {
+            s32 t2 = (gUnknown_030012D8->y >> 8) - (self->y >> 8);
+            s32 dy = (t2 ^ (t2 >> 31)) - (t2 >> 31);
+
+            if (dy <= 0x1d)
+                goto call;
+        }
+        if (near) {
+        call:
+            p = gUnknown_030012D8;
+            PhysCall3(p, &p->vtable->m68, 0, 4, 0);
+        }
+    }
+    if (self->kind != 0xa)
+        self->kind = 0x13;
 }
 
 /* Called from `sub_800F798` (`sub_800F06C(self, 0x14)` /
@@ -293,176 +191,62 @@ NAKED void sub_800EEF0(void *self, u8 arg1)
  * Ends by resetting `self+0x48` to `-1` (0xFFFFFFFF), a sentinel this
  * whole cluster uses for "no pending sub-state timer". */
 
-NAKED void sub_800F06C(void *self, u32 arg1)
+void sub_800F06C(struct phys_obj *self, s32 dist)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, r8\n\t"
-        "push {r7}\n\t"
-        "add r6, r0, #0\n\t"
-        "mov r8, r1\n\t"
-        "mov r5, #0\n\t"
-        "ldr r0, 2f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r5, r0\n\t"
-        "bge 9f\n\t"
-        "ldr r7, 3f\n\t"
-    "1:\n\t"
-        "ldr r0, 2f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [r0, #8]\n\t"
-        "lsl r0, r5, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r4, [r0]\n\t"
-        "ldr r1, [r4, #0x18]\n\t"
-        "add r1, #0x48\n\t"
-        "mov r2, #0\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r1, #4]\n\t"
-        "bl sub_803AD7C\n\t"
-        "cmp r0, #3\n\t"
-        "bne 8f\n\t"
-        "ldr r2, [r4]\n\t"
-        "asr r2, r2, #8\n\t"
-        "ldr r0, [r6]\n\t"
-        "asr r0, r0, #8\n\t"
-        "sub r2, r2, r0\n\t"
-        "asr r0, r2, #0x1f\n\t"
-        "eor r2, r0\n\t"
-        "sub r2, r2, r0\n\t"
-        "ldr r1, [r4, #4]\n\t"
-        "asr r1, r1, #8\n\t"
-        "ldr r0, [r6, #4]\n\t"
-        "asr r0, r0, #8\n\t"
-        "sub r1, r1, r0\n\t"
-        "asr r0, r1, #0x1f\n\t"
-        "eor r1, r0\n\t"
-        "sub r1, r1, r0\n\t"
-        "add r2, r2, r1\n\t"
-        "cmp r2, r8\n\t"
-        "bgt 8f\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x4d\n\t"
-        "mov r0, #0x7f\n\t"
-        "ldrb r1, [r1]\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "bne 8f\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x4e\n\t"
-        "ldrb r1, [r0]\n\t"
-        "add r0, r1, r7\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 4f\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800EEF0\n\t"
-        "b 8f\n\t"
-        ".align 2, 0\n"
-    "2: .4byte gUnknown_0300130C\n"
-    "3: .4byte gStaticData_0816BBC4\n"
-    "4:\n\t"
-        "ldr r0, 5f\n\t"
-        "add r0, r1, r0\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 6f\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #1\n\t"
-        "mov r2, #0\n\t"
-        "mov r3, #0\n\t"
-        "bl sub_800E7A8\n\t"
-        "b 8f\n\t"
-        ".align 2, 0\n"
-    "5: .4byte gStaticData_0816BBAE\n"
-    "6:\n\t"
-        "cmp r1, #3\n\t"
-        "bne 7f\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_800F368\n\t"
-        "b 8f\n\t"
-    "7:\n\t"
-        "cmp r1, #6\n\t"
-        "bne 8f\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_800F2BC\n\t"
-    "8:\n\t"
-        "add r5, #1\n\t"
-        "ldr r0, 13f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r5, r0\n\t"
-        "blt 1b\n\t"
-    "9:\n\t"
-        "mov r5, #0\n\t"
-        "ldr r1, 14f\n\t"
-        "ldr r0, [r1]\n\t"
-        "ldr r0, [r0, #4]\n\t"
-        "cmp r5, r0\n\t"
-        "bge 12f\n\t"
-        "add r7, r1, #0\n\t"
-    "10:\n\t"
-        "ldr r0, [r7]\n\t"
-        "ldr r1, [r0, #0xc]\n\t"
-        "lsl r0, r5, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r4, [r0]\n\t"
-        "ldr r1, [r4, #0x18]\n\t"
-        "add r1, #0x48\n\t"
-        "mov r2, #0\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r1, #4]\n\t"
-        "bl sub_803AD7C\n\t"
-        "cmp r0, #2\n\t"
-        "bne 11f\n\t"
-        "ldr r2, [r4]\n\t"
-        "asr r2, r2, #8\n\t"
-        "ldr r0, [r6]\n\t"
-        "asr r0, r0, #8\n\t"
-        "sub r2, r2, r0\n\t"
-        "asr r0, r2, #0x1f\n\t"
-        "eor r2, r0\n\t"
-        "sub r2, r2, r0\n\t"
-        "ldr r1, [r4, #4]\n\t"
-        "asr r1, r1, #8\n\t"
-        "ldr r0, [r6, #4]\n\t"
-        "asr r0, r0, #8\n\t"
-        "sub r1, r1, r0\n\t"
-        "asr r0, r1, #0x1f\n\t"
-        "eor r1, r0\n\t"
-        "sub r1, r1, r0\n\t"
-        "add r2, r2, r1\n\t"
-        "cmp r2, r8\n\t"
-        "bgt 11f\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #1\n\t"
-        "bl sub_8011448\n\t"
-        "mov r0, #0x10\n\t"
-        "ldrb r1, [r4, #0xc]\n\t"
-        "orr r0, r1\n\t"
-        "strb r0, [r4, #0xc]\n\t"
-    "11:\n\t"
-        "add r5, #1\n\t"
-        "ldr r0, [r7]\n\t"
-        "ldr r0, [r0, #4]\n\t"
-        "cmp r5, r0\n\t"
-        "blt 10b\n\t"
-    "12:\n\t"
-        "mov r0, #0xff\n\t"
-        "str r0, [r6, #0x48]\n\t"
-        "pop {r3}\n\t"
-        "mov r8, r3\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "13: .4byte gUnknown_0300130C\n"
-    "14: .4byte gUnknown_030012EC\n"
-    );
+    s32 i = 0;
+
+    if (i < gUnknown_0300130C->count) {
+        u32 commit = (u32)gStaticData_0816BBC4;
+
+        do {
+            struct phys_obj *o = gUnknown_0300130C->items[i];
+
+            if (PHYS_CALL(o, m48) == 3) {
+                s32 t1 = (o->x >> 8) - (self->x >> 8);
+                s32 dx = (t1 ^ (t1 >> 31)) - (t1 >> 31);
+                s32 t2 = (o->y >> 8) - (self->y >> 8);
+                s32 dy = (t2 ^ (t2 >> 31)) - (t2 >> 31);
+
+                if (dx + dy <= dist && (o->state & 0x7f) == 0) {
+                    u32 kind = o->kind;
+
+                    if (*(u8 *)(kind + commit))
+                        sub_800EEF0(o, 0);
+                    else if (gStaticData_0816BBAE[kind])
+                        sub_800E7A8(o, 1, 0, 0);
+                    else if (kind == 3)
+                        sub_800F368(o);
+                    else if (kind == 6)
+                        sub_800F2BC(o);
+
+                }
+            }
+            i++;
+        } while (i < gUnknown_0300130C->count);
+    }
+
+    i = 0;
+    if (i < ((struct phys_obj_list2 *)gUnknown_030012EC)->count) {
+        struct phys_obj_list2 **list = (struct phys_obj_list2 **)&gUnknown_030012EC;
+
+        do {
+            struct phys_obj *o = (*list)->items[i];
+
+            if (PHYS_CALL(o, m48) == 2) {
+                s32 t1 = (o->x >> 8) - (self->x >> 8);
+                s32 dx = (t1 ^ (t1 >> 31)) - (t1 >> 31);
+                s32 t2 = (o->y >> 8) - (self->y >> 8);
+                s32 dy = (t2 ^ (t2 >> 31)) - (t2 >> 31);
+
+                if (dx + dy <= dist) {
+                    sub_8011448(o, 1);
+                    o->flags |= 0x10;
+                }
+            }
+            i++;
+        } while (i < (*list)->count);
+    }
+    self->u48.n = 0xff;
 }
 
 /* Takes no arguments - a pure `gUnknown_0300130C` list-scan helper,
@@ -483,90 +267,28 @@ NAKED void sub_800F06C(void *self, u32 arg1)
  * a *different* box (`other+0x18+0x18`/`+0x1c`, not `+0x48`/`+4`) with
  * no further action - just a classification side effect. */
 
-NAKED void sub_800F1B8(void)
+void sub_800F1B8(void)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, r8\n\t"
-        "push {r7}\n\t"
-        "bl sub_800F258\n\t"
-        "ldr r0, 4f\n\t"
-        "mov r8, r0\n\t"
-    "1:\n\t"
-        "mov r0, #0\n\t"
-        "mov r1, r8\n\t"
-        "strb r0, [r1]\n\t"
-        "mov r5, #0\n\t"
-        "ldr r7, 5f\n\t"
-        "ldr r0, [r7]\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r5, r0\n\t"
-        "bge 8f\n\t"
-        "add r6, r7, #0\n\t"
-    "2:\n\t"
-        "ldr r0, [r6]\n\t"
-        "ldr r1, [r0, #8]\n\t"
-        "lsl r0, r5, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r4, [r0]\n\t"
-        "ldr r1, [r4, #0x18]\n\t"
-        "add r1, #0x48\n\t"
-        "mov r2, #0\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r1, #4]\n\t"
-        "bl sub_803AD7C\n\t"
-        "cmp r0, #3\n\t"
-        "bne 7f\n\t"
-        "mov r0, #1\n\t"
-        "ldrb r1, [r4, #0xc]\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "beq 6f\n\t"
-        "ldr r0, [r6]\n\t"
-        "add r1, r5, #0\n\t"
-        "bl sub_8009AA0\n\t"
-        "cmp r4, #0\n\t"
-        "beq 3f\n\t"
-        "ldr r1, [r4, #0x18]\n\t"
-        "add r1, #0x50\n\t"
-        "mov r2, #0\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r2, [r1, #4]\n\t"
-        "mov r1, #3\n\t"
-        "bl sub_803AD80\n\t"
-    "3:\n\t"
-        "sub r5, #1\n\t"
-        "b 7f\n\t"
-        ".align 2, 0\n"
-    "4: .4byte gUnknown_030012B0\n"
-    "5: .4byte gUnknown_0300130C\n"
-    "6:\n\t"
-        "ldr r1, [r4, #0x18]\n\t"
-        "mov r2, #0x18\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r1, #0x1c]\n\t"
-        "bl sub_803AD7C\n\t"
-    "7:\n\t"
-        "add r5, #1\n\t"
-        "ldr r0, [r7]\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r5, r0\n\t"
-        "blt 2b\n\t"
-    "8:\n\t"
-        "mov r1, r8\n\t"
-        "ldrb r0, [r1]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 1b\n\t"
-        "pop {r3}\n\t"
-        "mov r8, r3\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    );
+    s32 i;
+
+    sub_800F258();
+    do {
+        gUnknown_030012B0 = 0;
+        for (i = 0; i < gUnknown_0300130C->count; i++) {
+            struct phys_obj *o = gUnknown_0300130C->items[i];
+
+            if (PHYS_CALL(o, m48) == 3) {
+                if (o->flags & 1) {
+                    sub_8009AA0(gUnknown_0300130C, i);
+                    if (o != NULL)
+                        PHYS_CALL1(o, m50, 3);
+                    i--;
+                } else {
+                    PHYS_CALL(o, m18);
+                }
+            }
+        }
+    } while (gUnknown_030012B0);
 }
 
 /* Takes no arguments. A short `gUnknown_0300130C` list-scan: for every
@@ -579,60 +301,23 @@ NAKED void sub_800F1B8(void)
  * (below), always as a "flush anything left over from a previous
  * frame" pass before running this frame's own dispatch. */
 
-NAKED void sub_800F258(void)
+void sub_800F258(void)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "mov r5, #0\n\t"
-        "ldr r1, 4f\n\t"
-        "ldr r0, [r1]\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r5, r0\n\t"
-        "bge 3f\n\t"
-        "add r6, r1, #0\n\t"
-    "1:\n\t"
-        "ldr r0, [r6]\n\t"
-        "ldr r1, [r0, #8]\n\t"
-        "lsl r0, r5, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r4, [r0]\n\t"
-        "ldr r1, [r4, #0x18]\n\t"
-        "add r1, #0x48\n\t"
-        "mov r2, #0\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r1, #4]\n\t"
-        "bl sub_803AD7C\n\t"
-        "cmp r0, #3\n\t"
-        "bne 2f\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x4e\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0xa\n\t"
-        "bne 2f\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x4d\n\t"
-        "mov r0, #0x7f\n\t"
-        "ldrb r1, [r1]\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "bne 2f\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800EEF0\n\t"
-    "2:\n\t"
-        "add r5, #1\n\t"
-        "ldr r0, [r6]\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r5, r0\n\t"
-        "blt 1b\n\t"
-    "3:\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "4: .4byte gUnknown_0300130C\n"
-    );
+    s32 i = 0;
+
+    if (i < gUnknown_0300130C->count) {
+        struct phys_obj_list **list = &gUnknown_0300130C;
+
+        do {
+            struct phys_obj *o = (*list)->items[i];
+
+            if (PHYS_CALL(o, m48) == 3 && o->kind == 0xa) {
+                if ((o->state & 0x7f) == 0)
+                    sub_800EEF0(o, 0);
+            }
+            i++;
+        } while (i < (*list)->count);
+    }
 }
 
 /* Per-edge jump table's **case 0/1 handler when the dispatch-id row is
@@ -659,84 +344,29 @@ NAKED void sub_800F258(void)
  * timer `sub_800F06C` later drains back to `-1`) and calls
  * `sub_802306C(gUnknown_030012C0)` (external, unread). */
 
-NAKED void sub_800F2BC(void *self)
+void sub_800F2BC(struct phys_obj *self)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "add r6, r0, #0\n\t"
-        "ldr r0, [r6, #0x48]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 1f\n\t"
-        "add r1, r6, #0\n\t"
-        "add r1, #0x4d\n\t"
-        "mov r0, #0x80\n\t"
-        "ldrb r2, [r1]\n\t"
-        "orr r0, r2\n\t"
-        "strb r0, [r1]\n\t"
-        "ldr r0, 2f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r4, #1\n\t"
-        "add r0, #0x80\n\t"
-        "strb r4, [r0]\n\t"
-        "mov r0, #0x23\n\t"
-        "add r5, r6, #0\n\t"
-        "add r5, #0x2d\n\t"
-        "strb r0, [r5]\n\t"
-        "add r0, r6, #0\n\t"
-        "bl sub_80087C0\n\t"
-        "add r0, r6, #0\n\t"
-        "bl sub_80087B4\n\t"
-        "add r0, r6, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800872C\n\t"
-        "ldr r0, [r6, #0x20]\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldrb r3, [r5]\n\t"
-        "lsl r0, r3, #3\n\t"
-        "sub r0, r0, r3\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r1, r1, r0\n\t"
-        "ldr r0, 3f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldrb r1, [r1, #0x14]\n\t"
-        "bl sub_8006DF8\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "add r2, r6, #0\n\t"
-        "add r2, #0x29\n\t"
-        "mov r1, #0xf\n\t"
-        "and r0, r1\n\t"
-        "mov r1, #0x10\n\t"
-        "neg r1, r1\n\t"
-        "ldrb r3, [r2]\n\t"
-        "and r1, r3\n\t"
-        "orr r1, r0\n\t"
-        "strb r1, [r2]\n\t"
-        "bl sub_800F258\n\t"
-        "ldr r0, 4f\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_8028474\n\t"
-        "ldr r0, 5f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #4\n\t"
-        "bl PlaySfx\n\t"
-        "str r4, [r6, #0x48]\n\t"
-        "ldr r0, 6f\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_802306C\n\t"
-    "1:\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "2: .4byte gUnknown_030012D8\n"
-    "3: .4byte gUnknown_030012B8\n"
-    "4: .4byte gUnknown_03001318\n"
-    "5: .4byte gUnknown_030012BC\n"
-    "6: .4byte gUnknown_030012C0\n"
-    );
+    if (self->u48.n == 0) {
+        s32 one;
+        struct anim_rec *recs;
+        struct anim_rec *rec;
+
+        self->state |= 0x80;
+        {
+            u8 *player = (u8 *)gUnknown_030012D8;
+            one = 1;
+            player[0x80] = one;
+        }
+        PhysSetTag(self, 0x23);
+        recs = self->anim->records;
+        rec = &recs[self->tag];
+        self->slot = sub_8006DF8(gUnknown_030012B8, rec->unk_14);
+        sub_800F258();
+        sub_8028474(gUnknown_03001318);
+        PlaySfx(gUnknown_030012BC, 4, 0x100);
+        self->u48.n = one;
+        sub_802306C(gUnknown_030012C0);
+    }
 }
 
 /* Per-edge jump table's **case 0/1 handler when the dispatch-id row is
@@ -771,205 +401,64 @@ NAKED void sub_800F2BC(void *self)
  * `self+0x4f` (per-object throttle fields also touched by
  * `sub_800F4F4`/`sub_800F5B8` below). */
 
-NAKED void sub_800F368(void *self)
+void sub_800F368(struct phys_obj *self)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sl\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6, r7}\n\t"
-        "sub sp, #0x80\n\t"
-        "add r6, r0, #0\n\t"
-        "mov r7, #0\n\t"
-        "ldr r1, [r6, #0x48]\n\t"
-        "mov r0, #1\n\t"
-        "neg r0, r0\n\t"
-        "cmp r1, r0\n\t"
-        "bne 1f\n\t"
-        "b 14f\n\t"
-    "1:\n\t"
-        "cmp r1, #0\n\t"
-        "beq 2f\n\t"
-        "b 14f\n\t"
-    "2:\n\t"
-        "mov r0, #0x10\n\t"
-        "ldrb r1, [r6, #0xc]\n\t"
-        "orr r0, r1\n\t"
-        "strb r0, [r6, #0xc]\n\t"
-        "ldr r4, 8f\n\t"
-        "ldr r0, [r4]\n\t"
-        "add r1, r6, #0\n\t"
-        "bl sub_8009150\n\t"
-        "add r1, r6, #0\n\t"
-        "add r1, #0x4d\n\t"
-        "mov r0, #0x80\n\t"
-        "ldrb r2, [r1]\n\t"
-        "orr r0, r2\n\t"
-        "strb r0, [r1]\n\t"
-        "ldr r0, 9f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #1\n\t"
-        "add r0, #0x80\n\t"
-        "strb r1, [r0]\n\t"
-        "mov r0, #0x22\n\t"
-        "add r5, r6, #0\n\t"
-        "add r5, #0x2d\n\t"
-        "strb r0, [r5]\n\t"
-        "add r0, r6, #0\n\t"
-        "bl sub_80087C0\n\t"
-        "add r0, r6, #0\n\t"
-        "bl sub_80087B4\n\t"
-        "add r0, r6, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800872C\n\t"
-        "ldr r0, [r6, #0x20]\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldrb r3, [r5]\n\t"
-        "lsl r0, r3, #3\n\t"
-        "sub r0, r0, r3\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r1, r1, r0\n\t"
-        "ldr r0, 10f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldrb r1, [r1, #0x14]\n\t"
-        "bl sub_8006DF8\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "add r2, r6, #0\n\t"
-        "add r2, #0x29\n\t"
-        "mov r1, #0xf\n\t"
-        "and r0, r1\n\t"
-        "mov r1, #0x10\n\t"
-        "neg r1, r1\n\t"
-        "ldrb r3, [r2]\n\t"
-        "and r1, r3\n\t"
-        "orr r1, r0\n\t"
-        "strb r1, [r2]\n\t"
-        "ldr r0, 11f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldrh r1, [r6, #8]\n\t"
-        "bl sub_8025A0C\n\t"
-        "mov r5, #0\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #0x50\n\t"
-        "add r1, r1, r6\n\t"
-        "mov r8, r1\n\t"
-        "mov r2, #0x4c\n\t"
-        "add r2, r2, r6\n\t"
-        "mov sb, r2\n\t"
-        "mov r3, #0x4f\n\t"
-        "add r3, r3, r6\n\t"
-        "mov sl, r3\n\t"
-        "cmp r7, r0\n\t"
-        "bge 5f\n\t"
-    "3:\n\t"
-        "ldr r0, 8f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [r0, #8]\n\t"
-        "lsl r0, r5, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r4, [r0]\n\t"
-        "ldr r1, [r4, #0x18]\n\t"
-        "add r1, #0x48\n\t"
-        "mov r2, #0\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r1, #4]\n\t"
-        "bl sub_803AD7C\n\t"
-        "cmp r0, #3\n\t"
-        "bne 4f\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x4d\n\t"
-        "mov r0, #0x7f\n\t"
-        "ldrb r1, [r1]\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "bne 4f\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x4e\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #5\n\t"
-        "bne 4f\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x50\n\t"
-        "ldrb r0, [r0]\n\t"
-        "mov r3, r8\n\t"
-        "ldrb r3, [r3]\n\t"
-        "cmp r0, r3\n\t"
-        "bne 4f\n\t"
-        "lsl r0, r7, #2\n\t"
-        "add r0, sp\n\t"
-        "str r4, [r0]\n\t"
-        "add r7, #1\n\t"
-        "mov r0, #0x1f\n\t"
-        "and r7, r0\n\t"
-        "ldr r0, 11f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldrh r1, [r4, #8]\n\t"
-        "bl sub_8025A0C\n\t"
-    "4:\n\t"
-        "add r5, #1\n\t"
-        "ldr r0, 8f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r5, r0\n\t"
-        "blt 3b\n\t"
-    "5:\n\t"
-        "cmp r7, #0\n\t"
-        "beq 12f\n\t"
-        "add r0, r7, #1\n\t"
-        "lsl r0, r0, #2\n\t"
-        "bl sub_8026EC0\n\t"
-        "add r2, r0, #0\n\t"
-        "add r1, r6, #0\n\t"
-        "add r1, #0x59\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r1]\n\t"
-        "str r7, [r2]\n\t"
-        "cmp r7, #0\n\t"
-        "ble 7f\n\t"
-        "mov r3, sp\n\t"
-        "add r1, r2, #0\n\t"
-        "add r5, r7, #0\n\t"
-    "6:\n\t"
-        "ldm r3!, {r0}\n\t"
-        "str r0, [r1, #4]\n\t"
-        "add r1, #4\n\t"
-        "sub r5, #1\n\t"
-        "cmp r5, #0\n\t"
-        "bne 6b\n\t"
-    "7:\n\t"
-        "str r2, [r6, #0x48]\n\t"
-        "b 13f\n\t"
-        ".align 2, 0\n"
-    "8: .4byte gUnknown_0300130C\n"
-    "9: .4byte gUnknown_030012D8\n"
-    "10: .4byte gUnknown_030012B8\n"
-    "11: .4byte gUnknown_030012B4\n"
-    "12:\n\t"
-        "mov r0, #1\n\t"
-        "neg r0, r0\n\t"
-        "str r0, [r6, #0x48]\n\t"
-    "13:\n\t"
-        "mov r0, #0\n\t"
-        "mov r1, r8\n\t"
-        "strb r0, [r1]\n\t"
-        "mov r2, sb\n\t"
-        "ldrb r0, [r2]\n\t"
-        "mov r3, sl\n\t"
-        "strb r0, [r3]\n\t"
-    "14:\n\t"
-        "add sp, #0x80\n\t"
-        "pop {r3, r4, r5}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov sl, r5\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-    );
+    struct phys_obj *found[32];
+    s32 n = 0;
+    s32 i;
+
+    if (self->u48.group == PHYS_NO_GROUP)
+        return;
+    if (self->u48.group != NULL)
+        return;
+
+    self->flags |= 0x10;
+    sub_8009150(gUnknown_0300130C, self);
+    self->state |= 0x80;
+    {
+        u8 *player = (u8 *)gUnknown_030012D8;
+        u8 one = 1;
+        player[0x80] = one;
+    }
+    PhysSetTag(self, 0x22);
+    {
+        struct anim_rec *recs = self->anim->records;
+        struct anim_rec *rec = &recs[self->tag];
+
+        self->slot = sub_8006DF8(gUnknown_030012B8, rec->unk_14);
+    }
+    sub_8025A0C(gUnknown_030012B4, self->id);
+
+    i = 0;
+    if (i < gUnknown_0300130C->count) {
+        do {
+            struct phys_obj *o = gUnknown_0300130C->items[i];
+
+            if (PHYS_CALL(o, m48) == 3 && (o->state & 0x7f) == 0) {
+                if (o->kind == 5 && o->unk_50 == self->unk_50) {
+                    found[n] = o;
+                    n++;
+                    n &= 0x1f;
+                    sub_8025A0C(gUnknown_030012B4, o->id);
+                }
+            }
+            i++;
+        } while (i < gUnknown_0300130C->count);
+    }
+
+    if (n != 0) {
+        struct phys_group *g = sub_8026EC0((n + 1) * 4);
+
+        self->unk_59 = 1;
+        g->count = n;
+        for (i = 0; i < n; i++)
+            ((struct phys_obj **)g)[i + 1] = found[i];
+        self->u48.group = g;
+    } else {
+        self->u48.group = PHYS_NO_GROUP;
+    }
+    self->unk_50 = 0;
+    self->timer = self->unk_4C;
 }
 
 /* Called from `sub_800F5B8`'s own jump-table-driven state machine
@@ -992,111 +481,47 @@ NAKED void sub_800F368(void *self)
  * settled this call (a `once`-flag local keeps it from repeating per
  * member). */
 
-NAKED void sub_800F4F4(void *self)
+void sub_800F4F4(struct phys_obj *self)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sb\n\t"
-        "mov r6, r8\n\t"
-        "push {r6, r7}\n\t"
-        "add r4, r0, #0\n\t"
-        "add r3, r4, #0\n\t"
-        "add r3, #0x4f\n\t"
-        "ldrb r5, [r3]\n\t"
-        "cmp r5, #0\n\t"
-        "bne 7f\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x50\n\t"
-        "ldrb r0, [r1]\n\t"
-        "add r0, #1\n\t"
-        "strb r0, [r1]\n\t"
-        "add r2, r4, #0\n\t"
-        "add r2, #0x51\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "add r7, r1, #0\n\t"
-        "ldrb r2, [r2]\n\t"
-        "cmp r0, r2\n\t"
-        "blo 3f\n\t"
-        "ldr r1, [r4, #0x48]\n\t"
-        "add r0, r1, #1\n\t"
-        "cmp r0, #1\n\t"
-        "bls 2f\n\t"
-        "cmp r1, #0\n\t"
-        "beq 1f\n\t"
-        "add r0, r1, #0\n\t"
-        "bl sub_8026EB4\n\t"
-    "1:\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x59\n\t"
-        "strb r5, [r0]\n\t"
-    "2:\n\t"
-        "mov r0, #1\n\t"
-        "neg r0, r0\n\t"
-        "str r0, [r4, #0x48]\n\t"
-        "mov r1, #7\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x4e\n\t"
-        "strb r1, [r0]\n\t"
-        "b 7f\n\t"
-    "3:\n\t"
-        "ldr r1, [r4, #0x48]\n\t"
-        "add r0, r1, #1\n\t"
-        "mov sb, r3\n\t"
-        "add r4, #0x4c\n\t"
-        "mov r8, r4\n\t"
-        "cmp r0, #1\n\t"
-        "bls 6f\n\t"
-        "ldm r1!, {r2}\n\t"
-        "add r0, r1, #0\n\t"
-        "mov r6, #0\n\t"
-        "cmp r2, #0\n\t"
-        "ble 6f\n\t"
-        "add r4, r0, #0\n\t"
-        "add r5, r2, #0\n\t"
-    "4:\n\t"
-        "ldr r0, [r4]\n\t"
-        "add r1, r0, #0\n\t"
-        "add r1, #0x4e\n\t"
-        "ldrb r1, [r1]\n\t"
-        "cmp r1, #5\n\t"
-        "bne 5f\n\t"
-        "add r1, r0, #0\n\t"
-        "add r1, #0x51\n\t"
-        "ldrb r2, [r7]\n\t"
-        "ldrb r1, [r1]\n\t"
-        "cmp r2, r1\n\t"
-        "blo 5f\n\t"
-        "bl sub_800F5B8\n\t"
-        "cmp r6, #0\n\t"
-        "bne 5f\n\t"
-        "ldr r0, 8f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #0xf\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "bl PlaySfx\n\t"
-        "mov r6, #1\n\t"
-    "5:\n\t"
-        "add r4, #4\n\t"
-        "sub r5, #1\n\t"
-        "cmp r5, #0\n\t"
-        "bne 4b\n\t"
-    "6:\n\t"
-        "mov r1, r8\n\t"
-        "ldrb r0, [r1]\n\t"
-        "mov r2, sb\n\t"
-        "strb r0, [r2]\n\t"
-    "7:\n\t"
-        "pop {r3, r4}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "8: .4byte gUnknown_030012BC\n"
-    );
+    if (self->timer != 0)
+        return;
+
+    if (++self->unk_50 >= self->unk_51) {
+        struct phys_group *g = self->u48.group;
+
+        if (PHYS_HAS_GROUP(g)) {
+            if (g != NULL)
+                sub_8026EB4(g);
+            self->unk_59 = 0;
+        }
+        self->u48.group = PHYS_NO_GROUP;
+        {
+            u8 kind = 7;
+            self->kind = kind;
+        }
+    } else {
+        struct phys_group *g = self->u48.group;
+
+        if (PHYS_HAS_GROUP(g)) {
+            s32 i;
+            s32 n = g->count;
+            struct phys_obj **items = g->items;
+            s32 played = FALSE;
+
+            for (i = 0; i < n; i++) {
+                struct phys_obj *o = items[i];
+
+                if (o->kind == 5 && self->unk_50 >= o->unk_51) {
+                    sub_800F5B8(o);
+                    if (!played) {
+                        PlaySfx(gUnknown_030012BC, 0xf, 0x100);
+                        played = TRUE;
+                    }
+                }
+            }
+        }
+        self->timer = self->unk_4C;
+    }
 }
 
 /* Called by `sub_800F4F4` above (settling every member of a triggered
@@ -1118,128 +543,55 @@ NAKED void sub_800F4F4(void *self)
  * (`sub_800815C` instead of `sub_8006DF8` directly - presumably an
  * already-classified variant). */
 
-NAKED void sub_800F5B8(void *self)
+void sub_800F5B8(struct phys_obj *self)
 {
-    asm(
-        "push {r4, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r0, [r4, #0x48]\n\t"
-        "sub r0, #0x15\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x4e\n\t"
-        "strb r0, [r1]\n\t"
-        "ldrb r0, [r1]\n\t"
-        "cmp r0, #0x12\n\t"
-        "bhi 18f\n\t"
-        "lsl r0, r0, #2\n\t"
-        "ldr r1, 1f\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov pc, r0\n\t"
-        ".align 2, 0\n"
-    "1: .4byte 2f\n"
-    "2:\n\t"
-        ".4byte 3f\n\t"
-        ".4byte 4f\n\t"
-        ".4byte 5f\n\t"
-        ".4byte 18f\n\t"
-        ".4byte 6f\n\t"
-        ".4byte 18f\n\t"
-        ".4byte 7f\n\t"
-        ".4byte 8f\n\t"
-        ".4byte 9f\n\t"
-        ".4byte 18f\n\t"
-        ".4byte 10f\n\t"
-        ".4byte 18f\n\t"
-        ".4byte 11f\n\t"
-        ".4byte 12f\n\t"
-        ".4byte 13f\n\t"
-        ".4byte 18f\n\t"
-        ".4byte 14f\n\t"
-        ".4byte 15f\n\t"
-        ".4byte 17f\n\t"
-    "3:\n\t"
-        "mov r0, #0x1f\n\t"
-        "b 16f\n\t"
-    "4:\n\t"
-        "mov r0, #0x1a\n\t"
-        "b 16f\n\t"
-    "5:\n\t"
-        "mov r0, #0x17\n\t"
-        "b 16f\n\t"
-    "6:\n\t"
-        "mov r0, #0x18\n\t"
-        "b 16f\n\t"
-    "7:\n\t"
-        "mov r0, #4\n\t"
-        "b 16f\n\t"
-    "8:\n\t"
-        "mov r0, #0x20\n\t"
-        "b 16f\n\t"
-    "9:\n\t"
-        "mov r0, #2\n\t"
-        "b 16f\n\t"
-    "10:\n\t"
-        "mov r0, #5\n\t"
-        "b 16f\n\t"
-    "11:\n\t"
-        "mov r0, #0x2a\n\t"
-        "neg r0, r0\n\t"
-        "str r0, [r4, #0x48]\n\t"
-        "mov r0, #0x19\n\t"
-        "b 16f\n\t"
-    "12:\n\t"
-        "mov r0, #6\n\t"
-        "b 16f\n\t"
-    "13:\n\t"
-        "mov r0, #0x11\n\t"
-        "b 16f\n\t"
-    "14:\n\t"
-        "mov r0, #0xe\n\t"
-        "b 16f\n\t"
-    "15:\n\t"
-        "mov r0, #0xf\n\t"
-    "16:\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x2d\n\t"
-        "strb r0, [r1]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087C0\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087B4\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800872C\n\t"
-        "b 18f\n\t"
-    "17:\n\t"
-        "mov r0, #0x10\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x2d\n\t"
-        "strb r0, [r1]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087C0\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087B4\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800872C\n\t"
-    "18:\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_800815C\n\t"
-        "add r2, r4, #0\n\t"
-        "add r2, #0x29\n\t"
-        "mov r1, #0xf\n\t"
-        "and r0, r1\n\t"
-        "mov r1, #0x10\n\t"
-        "neg r1, r1\n\t"
-        "ldrb r3, [r2]\n\t"
-        "and r1, r3\n\t"
-        "orr r1, r0\n\t"
-        "strb r1, [r2]\n\t"
-        "pop {r4}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-    );
+    self->kind = self->u48.n - 0x15;
+    switch (self->kind) {
+    case 0:
+        PhysSetTag(self, 0x1f);
+        break;
+    case 1:
+        PhysSetTag(self, 0x1a);
+        break;
+    case 2:
+        PhysSetTag(self, 0x17);
+        break;
+    case 4:
+        PhysSetTag(self, 0x18);
+        break;
+    case 6:
+        PhysSetTag(self, 4);
+        break;
+    case 7:
+        PhysSetTag(self, 0x20);
+        break;
+    case 8:
+        PhysSetTag(self, 2);
+        break;
+    case 10:
+        PhysSetTag(self, 5);
+        break;
+    case 12:
+        self->u48.n = -0x2a;
+        PhysSetTag(self, 0x19);
+        break;
+    case 13:
+        PhysSetTag(self, 6);
+        break;
+    case 14:
+        PhysSetTag(self, 0x11);
+        break;
+    case 16:
+        PhysSetTag(self, 0xe);
+        break;
+    case 17:
+        PhysSetTag(self, 0xf);
+        break;
+    case 18:
+        PhysSetTag(self, 0x10);
+        break;
+    }
+    self->slot = sub_800815C(self);
 }
 
 /* `sub_800F6B8(s32 x, s32 y, s32 arg2, s32 arg3)` - the one function in
@@ -1259,120 +611,36 @@ NAKED void sub_800F5B8(void *self)
  * `sub_800F06C`/`sub_800F798`, just driven by an explicit box rather
  * than `self`'s own hitbox record. */
 
-NAKED void sub_800F6B8(s32 x, s32 y, s32 arg2, s32 arg3)
+void sub_800F6B8(s32 x, s32 y, s32 dist, s32 height)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sl\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6, r7}\n\t"
-        "mov sb, r0\n\t"
-        "mov r8, r1\n\t"
-        "add r7, r2, #0\n\t"
-        "add r6, r3, #0\n\t"
-        "mov r5, #0\n\t"
-        "ldr r0, 2f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r5, r0\n\t"
-        "bge 8f\n\t"
-        "ldr r0, 3f\n\t"
-        "mov sl, r0\n\t"
-    "1:\n\t"
-        "ldr r0, 2f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [r0, #8]\n\t"
-        "lsl r0, r5, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r4, [r0]\n\t"
-        "ldr r1, [r4, #0x18]\n\t"
-        "add r1, #0x48\n\t"
-        "mov r2, #0\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r1, #4]\n\t"
-        "bl sub_803AD7C\n\t"
-        "cmp r0, #3\n\t"
-        "bne 7f\n\t"
-        "ldr r1, [r4]\n\t"
-        "asr r1, r1, #8\n\t"
-        "mov r0, sb\n\t"
-        "sub r1, r1, r0\n\t"
-        "asr r0, r1, #0x1f\n\t"
-        "eor r1, r0\n\t"
-        "sub r1, r1, r0\n\t"
-        "ldr r0, [r4, #4]\n\t"
-        "asr r0, r0, #8\n\t"
-        "mov r2, r8\n\t"
-        "sub r0, r0, r2\n\t"
-        "asr r2, r0, #0x1f\n\t"
-        "eor r0, r2\n\t"
-        "sub r0, r0, r2\n\t"
-        "add r1, r1, r0\n\t"
-        "cmp r1, r7\n\t"
-        "bgt 7f\n\t"
-        "cmp r0, r6\n\t"
-        "bge 7f\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x4d\n\t"
-        "mov r0, #0x7f\n\t"
-        "ldrb r1, [r1]\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "bne 7f\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x4e\n\t"
-        "ldrb r1, [r0]\n\t"
-        "mov r2, sl\n\t"
-        "add r0, r1, r2\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 4f\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800EEF0\n\t"
-        "b 7f\n\t"
-        ".align 2, 0\n"
-    "2: .4byte gUnknown_0300130C\n"
-    "3: .4byte gStaticData_0816BBC4\n"
-    "4:\n\t"
-        "ldr r0, 5f\n\t"
-        "add r0, r1, r0\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 7f\n\t"
-        "cmp r1, #1\n\t"
-        "bne 6f\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_800E6B0\n\t"
-        "b 7f\n\t"
-        ".align 2, 0\n"
-    "5: .4byte gStaticData_0816BBAE\n"
-    "6:\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "mov r2, #0\n\t"
-        "mov r3, #0\n\t"
-        "bl sub_800E7A8\n\t"
-    "7:\n\t"
-        "add r5, #1\n\t"
-        "ldr r0, 9f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r5, r0\n\t"
-        "blt 1b\n\t"
-    "8:\n\t"
-        "pop {r3, r4, r5}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov sl, r5\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "9: .4byte gUnknown_0300130C\n"
-    );
+    s32 i = 0;
+
+    if (i < gUnknown_0300130C->count) {
+        u8 *commit = gStaticData_0816BBC4;
+
+        do {
+            struct phys_obj *o = gUnknown_0300130C->items[i];
+
+            if (PHYS_CALL(o, m48) == 3) {
+                s32 t1 = (o->x >> 8) - x;
+                s32 dx = (t1 ^ (t1 >> 31)) - (t1 >> 31);
+                s32 t2 = (o->y >> 8) - y;
+                s32 dy = (t2 ^ (t2 >> 31)) - (t2 >> 31);
+
+                if (dx + dy <= dist && dy < height && (o->state & 0x7f) == 0) {
+                    if (*(u8 *)(o->kind + (u32)commit))
+                        sub_800EEF0(o, 0);
+                    else if (gStaticData_0816BBAE[o->kind]) {
+                        if (o->kind == 1)
+                            sub_800E6B0(o);
+                        else
+                            sub_800E7A8(o, 0, 0, 0);
+                    }
+                }
+            }
+            i++;
+        } while (i < gUnknown_0300130C->count);
+    }
 }
 
 /* Called from the still-raw `0x080104E4` continuation
@@ -1398,173 +666,55 @@ NAKED void sub_800F6B8(s32 x, s32 y, s32 arg2, s32 arg3)
  * `gUnknown_030012B0 = 1` (a one-shot "re-scan next pass" flag -
  * `sub_800F1B8`'s own outer loop condition above) unconditionally. */
 
-NAKED void sub_800F798(void *self)
+static inline struct phys_obj *PhysRingAt(struct phys_player *p, s32 i)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "add r6, r0, #0\n\t"
-        "ldr r0, 1f\n\t"
-        "add r1, r6, #0\n\t"
-        "add r1, #0x4e\n\t"
-        "ldrb r1, [r1]\n\t"
-        "add r0, r1, r0\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 3f\n\t"
-        "ldr r0, [r6, #0x34]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 3f\n\t"
-        "ldr r0, [r6, #0x30]\n\t"
-        "cmp r0, #3\n\t"
-        "bne 2f\n\t"
-        "add r0, r6, #0\n\t"
-        "mov r1, #0x14\n\t"
-        "bl sub_800F06C\n\t"
-        "b 3f\n\t"
-        ".align 2, 0\n"
-    "1: .4byte gStaticData_0816BBC4\n"
-    "2:\n\t"
-        "cmp r0, #6\n\t"
-        "bne 3f\n\t"
-        "add r0, r6, #0\n\t"
-        "mov r1, #0x28\n\t"
-        "bl sub_800F06C\n\t"
-    "3:\n\t"
-        "add r0, r6, #0\n\t"
-        "add r0, #0x38\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 17f\n\t"
-        "add r0, r6, #0\n\t"
-        "bl sub_8010708\n\t"
-        "add r5, r0, #0\n\t"
-        "add r0, r6, #0\n\t"
-        "bl sub_801070C\n\t"
-        "add r4, r0, #0\n\t"
-        "cmp r5, #0\n\t"
-        "beq 4f\n\t"
-        "cmp r4, #0\n\t"
-        "beq 5f\n\t"
-        "add r1, r5, #0\n\t"
-        "bl sub_8010710\n\t"
-        "add r0, r5, #0\n\t"
-        "add r1, r4, #0\n\t"
-        "bl sub_8010714\n\t"
-        "b 6f\n\t"
-    "4:\n\t"
-        "cmp r4, #0\n\t"
-        "beq 5f\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_8010710\n\t"
-        "b 6f\n\t"
-    "5:\n\t"
-        "cmp r5, #0\n\t"
-        "beq 6f\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_8010714\n\t"
-    "6:\n\t"
-        "add r0, r6, #0\n\t"
-        "add r0, #0x4e\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #1\n\t"
-        "beq 18f\n\t"
-        "ldr r0, 10f\n\t"
-        "mov r1, #1\n\t"
-        "strb r1, [r0]\n\t"
-        "ldrb r0, [r6, #0xc]\n\t"
-        "orr r1, r0\n\t"
-        "strb r1, [r6, #0xc]\n\t"
-        "ldr r0, 11f\n\t"
-        "ldrh r1, [r6, #8]\n\t"
-        "cmp r1, r0\n\t"
-        "beq 7f\n\t"
-        "ldrh r3, [r6, #8]\n\t"
-        "ldr r0, 12f\n\t"
-        "ldr r2, [r0]\n\t"
-        "add r0, r3, #0\n\t"
-        "asr r0, r0, #5\n\t"
-        "lsl r1, r0, #2\n\t"
-        "mov r4, #0x84\n\t"
-        "lsl r4, r4, #1\n\t"
-        "add r2, r2, r4\n\t"
-        "add r2, r2, r1\n\t"
-        "lsl r0, r0, #5\n\t"
-        "sub r0, r3, r0\n\t"
-        "mov r1, #1\n\t"
-        "lsl r1, r0\n\t"
-        "ldr r0, [r2]\n\t"
-        "orr r0, r1\n\t"
-        "str r0, [r2]\n\t"
-    "7:\n\t"
-        "mov r3, #0\n\t"
-        "ldr r1, 13f\n\t"
-        "ldr r0, [r1]\n\t"
-        "add r0, #0x94\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r3, r0\n\t"
-        "bge 18f\n\t"
-        "add r4, r1, #0\n\t"
-    "8:\n\t"
-        "ldr r2, [r4]\n\t"
-        "add r0, r2, #0\n\t"
-        "add r0, #0x88\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 14f\n\t"
-        "cmp r3, #4\n\t"
-        "ble 9f\n\t"
-        "add r0, r2, #0\n\t"
-        "add r0, #0x94\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r3, r0\n\t"
-        "bge 14f\n\t"
-    "9:\n\t"
-        "lsl r1, r3, #2\n\t"
-        "add r0, r2, #0\n\t"
-        "add r0, #0x98\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "b 15f\n\t"
-        ".align 2, 0\n"
-    "10: .4byte gUnknown_030012B0\n"
-    "11: .4byte 0x0000FFFF\n"
-    "12: .4byte gUnknown_030012B4\n"
-    "13: .4byte gUnknown_030012D8\n"
-    "14:\n\t"
-        "mov r0, #0\n\t"
-    "15:\n\t"
-        "cmp r0, r6\n\t"
-        "bne 16f\n\t"
-        "ldr r0, [r4]\n\t"
-        "add r0, #0x94\n\t"
-        "mov r1, #0\n\t"
-        "strb r1, [r0]\n\t"
-    "16:\n\t"
-        "add r3, #1\n\t"
-        "ldr r0, [r4]\n\t"
-        "add r0, #0x94\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r3, r0\n\t"
-        "blt 8b\n\t"
-        "b 18f\n\t"
-    "17:\n\t"
-        "add r0, r6, #0\n\t"
-        "add r0, #0x4e\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #1\n\t"
-        "beq 18f\n\t"
-        "ldr r1, 19f\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r1]\n\t"
-    "18:\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "19: .4byte gUnknown_030012B0\n"
-    );
+    if (p->ringLocked == 0 && (i <= 4 || i < p->ringCount))
+        return p->ring[i];
+    return NULL;
+}
+
+void sub_800F798(struct phys_obj *self)
+{
+    if (gStaticData_0816BBC4[self->kind] && *(s32 *)((u8 *)self + 0x34) == 0) {
+        if (self->frame == 3)
+            sub_800F06C(self, 0x14);
+        else if (self->frame == 6)
+            sub_800F06C(self, 0x28);
+    }
+
+    if (*((u8 *)self + 0x38)) {
+        struct phys_obj *prev = sub_8010708(self);
+        struct phys_obj *next = sub_801070C(self);
+        s32 i;
+
+        if (prev != NULL && next != NULL) {
+            sub_8010710(next, prev);
+            sub_8010714(prev, next);
+        } else if (next != NULL) {
+            sub_8010710(next, NULL);
+        } else if (prev != NULL) {
+            sub_8010714(prev, NULL);
+        }
+
+        if (self->kind == 1)
+            return;
+        gUnknown_030012B0 = 1;
+        PHYS_GONE(self) = 1;
+        if (self->id != 0xffff)
+            PHYS_SET_ID_BIT(self->id);
+        i = 0;
+        if (i < PHYS_PLAYER->ringCount) {
+            struct phys_player **pp = (struct phys_player **)&gUnknown_030012D8;
+
+            do {
+                if (PhysRingAt(*pp, i) == self)
+                    (*pp)->ringCount = 0;
+                i++;
+            } while (i < (*pp)->ringCount);
+        }
+    } else if (self->kind != 1) {
+        gUnknown_030012B0 = 1;
+    }
 }
 
 /* Called from `sub_800EEF0` indirectly (both converge on
@@ -1588,93 +738,32 @@ NAKED void sub_800F798(void *self)
  *   itself makes, closing the loop back into `sub_800EEF0` above.
  * - anything else: no-op. */
 
-NAKED void sub_800F8E0(void *self)
+void sub_800F8E0(struct phys_obj *self)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "add r6, r4, #0\n\t"
-        "add r6, #0x4f\n\t"
-        "ldrb r0, [r6]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 7f\n\t"
-        "add r5, r4, #0\n\t"
-        "add r5, #0x4e\n\t"
-        "ldrb r0, [r5]\n\t"
-        "add r1, r0, #0\n\t"
-        "cmp r0, #0x14\n\t"
-        "beq 3f\n\t"
-        "cmp r0, #0x14\n\t"
-        "bgt 1f\n\t"
-        "cmp r0, #0x13\n\t"
-        "beq 6f\n\t"
-        "b 7f\n\t"
-    "1:\n\t"
-        "cmp r1, #0x15\n\t"
-        "bne 7f\n\t"
-        "mov r0, #0x13\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x2d\n\t"
-        "strb r0, [r1]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087C0\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087B4\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800872C\n\t"
-        "ldr r0, 2f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0x11\n\t"
-        "bl PlaySfx\n\t"
-        "mov r0, #0x14\n\t"
-        "b 4f\n\t"
-        ".align 2, 0\n"
-    "2: .4byte gUnknown_030012BC\n"
-    "3:\n\t"
-        "mov r0, #0x12\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x2d\n\t"
-        "strb r0, [r1]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087C0\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087B4\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800872C\n\t"
-        "ldr r0, 5f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0x11\n\t"
-        "bl PlaySfx\n\t"
-        "mov r0, #0x13\n\t"
-    "4:\n\t"
-        "strb r0, [r5]\n\t"
-        "mov r0, #0x3c\n\t"
-        "strb r0, [r6]\n\t"
-        "b 7f\n\t"
-        ".align 2, 0\n"
-    "5: .4byte gUnknown_030012BC\n"
-    "6:\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x4d\n\t"
-        "mov r0, #0x7f\n\t"
-        "ldrb r1, [r1]\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "bne 7f\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800EEF0\n\t"
-    "7:\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-    );
+    u8 kind;
+
+    if (self->timer != 0)
+        return;
+
+    kind = self->kind;
+    switch (kind) {
+    case 0x15:
+        PhysSetTag(self, 0x13);
+        PlaySfx(gUnknown_030012BC, 0x11, 0x100);
+        self->kind = 0x14;
+        self->timer = 0x3c;
+        break;
+    case 0x14:
+        PhysSetTag(self, 0x12);
+        PlaySfx(gUnknown_030012BC, 0x11, 0x100);
+        self->kind = 0x13;
+        self->timer = 0x3c;
+        break;
+    case 0x13:
+        if ((self->state & 0x7f) == 0)
+            sub_800EEF0(self, 0);
+        break;
+    }
 }
 
 /* The largest and last function in this cluster
@@ -1709,7 +798,7 @@ NAKED void sub_800F8E0(void *self)
  * pass - the NAKED transcription is verified byte-exact independent of
  * that understanding. */
 
-NAKED void sub_800F990(void *self)
+NAKED void sub_800F990(struct phys_obj *self)
 {
     asm(
         "push {r4, r5, r6, r7, lr}\n\t"
