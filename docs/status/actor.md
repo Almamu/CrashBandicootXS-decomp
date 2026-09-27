@@ -449,6 +449,21 @@ from "core" graphics.
   and the singleton's teardown/destructor, all sharing
   `actor_part17.c`/`actor_part18.c`/`actor_part20.c`'s established
   "self" object conventions.
+- `src/graphics/actor_part_2fbf0.c` (new file, GitHub issue #57 plus
+  issue #58's first two functions, ROM 0x0802FBF0-0x08030530, formerly
+  `asm/code_3_2_20_28568_c99c_2fbf0.s`): three small C++ actor classes
+  (method tables `gStaticData_087E51B4`/`087E51EC`/`087E5224`) and the
+  orbiting-companion updaters - `sub_802FBF0`, `sub_802FD1C`,
+  `sub_802FD8C`, `sub_802FE04`, `sub_802FE1C`, `sub_802FE58`,
+  `sub_802FE78`, `sub_802FEA4`, `sub_802FF00`, `sub_802FF08`,
+  `sub_802FFB8`, `sub_80300B0`, `nullsub_28`, `sub_80300D8`,
+  `sub_80300E0`, `sub_803013C`, `sub_8030188`, `sub_80301CC`,
+  `nullsub_29`, `sub_80301EC`, `sub_8030234`, `sub_8030290`,
+  `sub_8030298`, `sub_8030300`, `sub_8030330`, `sub_8030334`,
+  `sub_803044C` (all 27 real C, including the pointer-to-member
+  dispatch shape parked NAKED elsewhere as the "r7 hazard"). First user
+  of the shared `include/actor_self.h`. See
+  [docs/matching/issue-57-0x0802fbf0-actor.md](../matching/issue-57-0x0802fbf0-actor.md).
 - `src/graphics/actor_part50.c`/`actor_part51.c`/`actor_part52.c`/
   `actor_part53.c`/`actor_part54.c`/`actor_part55.c`/`actor_part56.c`
   (new files, GitHub issue #50, ROM 0x0802A69C-0x0802AC28 - numbered

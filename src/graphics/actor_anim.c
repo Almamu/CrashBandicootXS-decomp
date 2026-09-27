@@ -1,18 +1,6 @@
 #include "core.h"
 #include "memory.h"
-
-/* One entry of `anim_part_instance.frameTable`, stride 12 - only the
- * five fields actually read by this file's functions are named; the
- * rest (0xa-0xb) isn't exercised by any function matched so far. */
-struct anim_frame_record {
-    u16 duration;   // 0x00 - copied into the owning self's +0x10 halfword by sub_803B0A8
-    s16 frameIndex; // 0x02 - added to GetAnimFrameBaseOffset()'s result, indexes frameOffsets
-    s16 loopThreshold; // 0x04 - sub_803B4EC wraps self->field_08 back once the frame base
-                        // offset reaches this value
-    s16 loopBase;       // 0x06 - subtracted from loopThreshold (then <<8) as the wrap amount
-    u16 attr;       // 0x08 - packed into the high halfword of sub_803B060's return value
-    u8 unknown_0a[2];
-};
+#include "actor_self.h" /* struct anim_frame_record */
 
 /* Partial view of the same large per-instance "self" object documented
  * at length in actor_part19.c (state at +0x28, table-index at +0xc,
@@ -20,8 +8,9 @@ struct anim_frame_record {
  * list, +0x50 trampoline record, etc.) - only the first 0x10 bytes this
  * file's functions actually touch are named here, per that file's own
  * "none of these objects' full shapes are pinned down yet" convention;
- * every other actor_part*.c file keeps using raw offsets into the same
- * bigger object rather than this struct. */
+ * most other actor_part*.c files keep using raw offsets into the same
+ * bigger object; include/actor_self.h's `struct actor_self` is the
+ * fuller view used from actor_part_2fbf0.c on. */
 struct anim_part_instance {
     struct anim_frame_record *frameTable; // 0x00
     u32 *frameOffsets;                    // 0x04 - stride 4, indexed by frameTable[idx].frameIndex + GetAnimFrameBaseOffset()
