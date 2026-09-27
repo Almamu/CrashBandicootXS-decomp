@@ -5,7 +5,8 @@ All 25 functions are byte-exact matched as plain C in the new
 `actor_part_12fbc.c`'s precedent, since what this object controls in-game
 isn't established). It replaces the tail of `asm/code_3_2_17_16048.s`,
 which now ends at `sub_801751C` (the rest of that file is issue #20).
-Register pins where noted below; no inline asm.
+Built with old_agbcc since a later pass (see "Later pass: old_agbcc" at the
+end); the pins and barriers described under "Matching notes" are gone.
 
 ## What the code is
 
@@ -98,6 +99,39 @@ Thumb pointer scan): the six byte accessors and `sub_8017A20`-
   which is what gives the ROM's `sub sp, #8` frame; the up/down `else if`
   chain is written with a pinned `dirState` read and a `goto` (the only
   form found that loads it into r1 as the ROM does).
+
+## Later pass: old_agbcc
+
+`actor_part_17524.o` is on the Makefile's `OLD_AGBCC_OBJS` now, like
+`actor_part_16048.o` before it (issue #20 showed `sub_8017564` stripped
+of its pins matches under old_agbcc and is 30 bytes off under agbcc).
+All 25 functions still match. What became unnecessary:
+
+- **`sub_8017564`**: all four pinned blocks. The two flag clears are
+  bitfield stores (`target->flag7 = 0; target->flag6 = 0;`, new 1-bit
+  fields at `+0x0C`), `+0x104` is a plain `unk_104 = 1`, and the
+  `sub_8006D08` call reads `t->table->records[t->tag * 28 + 0x14]`
+  directly. The two `asm("" : "+r")` barriers are gone. What remains is
+  the ordering `cache = gUnknown_030012B8;` before `t = self->target;`.
+- **The "mark gone" sequence** (`sub_80178EC` and `sub_8017650`): no pins
+  and no `volatile` id re-read. It is `MARK_GONE(t)` - `t->gone = 1`, then
+  `SET_ID_BIT(t->field_08)` unless the id is `0xFFFF` - the same
+  sequence as `actor_part_16048.c`'s `MarkGone`. `SET_ID_BIT` stays a
+  `do`/`while (0)` on purpose: its loop notes are what reproduce the id
+  reload. The target/child pointer is loaded into a local first.
+- **`sub_8017650`'s up/down chain**: the pinned `dirState` read and the
+  `goto` are gone. It is an ordinary `if`/`else if` chain.
+- **`sub_8017808`**: all pins and both `asm("" : "+r")` barriers. The
+  record is `gStaticData_0816B8C0 + self->animSet->entries[idx].a * 12`,
+  and the `dirtyB` test is a plain `if`.
+- The virtual-call macros use `if (1) { } else (void)0` instead of
+  `do`/`while (0)` (both match here; this is the form
+  `include/actor_self.h` uses).
+
+Still needed under old_agbcc: `sub_80179D4`'s `s32 lo = 1` lower bound
+(with a literal `1`, gcc folds `>= 1` into `> 0`), and the
+`SetAnimA`/`SetAnimB`/`SetChildSpeed` inline helpers (written inline,
+`sub_8017650` and `sub_801793C` stop matching).
 
 `tools/patch_expected_target.py`/`expected/corrections.txt` need nothing
 here: the frozen disassembly labels all 25 correctly.

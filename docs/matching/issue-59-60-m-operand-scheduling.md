@@ -213,6 +213,33 @@ build && make NON_MATCHING=1 report` (no new warnings), then `rm -rf
 build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map &&
 make compare` → `crashbandicootxs.gba: OK`.
 
+## Later pass: `sub_80321FC` and `sub_80325EC` matched as plain C
+
+Both are real C now (in `src/graphics/actor_part129.c`, still built with
+the current agbcc; both also match under old_agbcc).
+
+- **`sub_80321FC`**: none of the three gaps above exists. The plain
+  version - `kind` declared as a `u8` parameter, `health` an ordinary
+  `s32` local, the same body as `sub_8031F78` - compiles to the ROM's
+  exact bytes, including the `b`, `c`, `d` save order and the eager
+  `kind` truncation. The pins and inline asm tried above were what
+  produced the wrong orders, as PR #431 found for `sub_803283C`.
+- **`sub_80325EC`**: plain C got everything except the position of the
+  `0xfa00` load, which came before the outgoing `d` store instead of
+  after `self`'s copy into r0. The cause is in gcc's `expand_call`: an
+  argument that is a costly constant (more than one instruction to
+  build, as `0xfa00` is in Thumb) is copied into a register before the
+  stack arguments are stored. A register argument is only moved into
+  its argument register afterwards, in argument-register order. The fix
+  is to pass the constant through a `static inline` wrapper around
+  `InitActorPart`. When the wrapper is expanded, its parameter is a
+  register, so the move to r3 is emitted after the stack store and the
+  `self` copy. The inliner then substitutes the constant into that move
+  in place. In the C++ original this was probably an inlined
+  base-class constructor. The same wrapper should also be able to
+  replace `sub_8032440`'s inline-asm call sequence above (not tried in
+  this pass).
+
 See [issue-59-60-gap-31a6c-part1.md](issue-59-60-gap-31a6c-part1.md) for
 the original pass this follows up on, and
 [docs/status/actor.md](../status/actor.md) for the running matched/
