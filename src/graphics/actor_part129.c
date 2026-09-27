@@ -788,7 +788,52 @@ void sub_80321D0(void *selfArg, s32 flags)
  * until the call, and separately defers the `kind` byte truncation to
  * its point of use rather than the ROM's eager truncation right after
  * loading it from the stack - transcribed NAKED, byte-verified against
- * the original disassembly. */
+ * the original disassembly.
+ *
+ * Both of those two originally-documented gaps are individually
+ * closeable: a dual register pin (`register s32 cCall asm("r3") = c;`
+ * kept untouched for `InitActorPart`'s call, alongside a separate
+ * `register s32 cSaved asm("r6") = c;` for the later `self+0x64`
+ * store/second-call argument) reproduces the ROM's exact "leave r3
+ * alone, use r6 for everything after" split; and forcing a physical
+ * `lsl`/`lsr` by 24 on `kind`'s own register right after its load
+ * (via a narrow inline-asm snippet on an otherwise-plain `s32`, not
+ * the C `u8` type alone, which this compiler only masks at point of
+ * use) reproduces the eager truncation. A third, previously-
+ * undocumented gap blocks a full byte-exact match even with both of
+ * those fixed: this compiler's own prologue-adjacent parameter-
+ * register-save sequence for `b`/`c`/`d` (all three needed in
+ * callee-saved registers across the first `InitActorPart` call) always
+ * comes out ordered by ascending destination register number - `c`
+ * (r6), then `d` (r7), then `b` (r9) - the opposite of the ROM's own
+ * order (`b` saved first, immediately after `self`, then `c`, then
+ * `d` last). No amount of C-level statement reordering, per-variable
+ * `asm volatile` barriers, or bundling `b`/`c` into one ordered inline-
+ * asm block (which *does* fix their own relative order against each
+ * other) changes `d`'s position - it always floats back to being
+ * computed first, before the block, matching this session's broader
+ * finding that this compiler schedules independent stack loads with no
+ * blocking dependency as early as possible regardless of source
+ * position. Forcing an artificial dependency to delay `d`'s load (an
+ * inline-asm read of `d` bogus-dependent on `c`'s already-saved value)
+ * *does* fix the ordering, but only by pushing this compiler's register
+ * allocator to give `d` a *different* permanent home (`r10`/`sl`)
+ * instead of the ROM's `r7` - `d` must stay a completely plain, unpinned
+ * local for gcc's natural allocator to land it on `r7` at all (per
+ * `docs/matching.md`'s "why not just pin r7": explicitly pinning `r7`
+ * - or, it turns out, constraining an inline-asm operand strongly
+ * enough to indirectly force it - is a confirmed agbcc bug that
+ * silently drops r7 from the push/pop list, corrupting the caller's
+ * r7 across this function's own call to `InitActorPart`), and that
+ * natural-allocation path is exactly what schedules `d`'s load early.
+ * The two mechanisms are mutually exclusive for this specific function:
+ * fixing the order costs the correct register, and the correct register
+ * costs the order. Every combination tried (dependency on `b`/`c`/`self`
+ * individually, `"l"`-constrained vs plain `"r"` outputs, folding `d`
+ * into the same combined block as `b`/`c` with a fully symbolic
+ * output) either reproduced this same trade or hit the categorical r7
+ * bug outright - transcribed NAKED, byte-verified against the original
+ * disassembly. */
 NAKED void *sub_80321FC(void *selfArg, s32 a, s32 b, s32 c, s32 d, s32 kind)
 {
     asm(
@@ -1051,44 +1096,68 @@ void sub_80323F4(void *selfArg, s32 delta)
  * through but replaces its own `c` with a fixed bias constant
  * (`0xFFFF0600`) for `InitActorPart`'s own 4th argument, stashing the
  * caller's real `c` into `self+0x5c` instead; `d` still forwards to
- * `InitActorPart` untouched. Semantics fully understood and every
- * real-C attempt reproduced the ROM's exact register choices, but this
- * compiler's own independent-instruction scheduler always groups the
- * two pure register loads (`d` off the stack, the `0xFFFF0600`
- * constant) together regardless of source order, while the ROM's own
- * build interleaves them with the `str`/`adds` steps in between -
- * transcribed NAKED, byte-verified. */
-NAKED void *sub_8032440(void *selfArg, s32 a, s32 b, s32 c, s32 d)
+ * `InitActorPart` untouched.
+ *
+ * The blocker (issue #59/#60 gap write-up) was pure instruction
+ * scheduling, not register allocation: whatever C expression carries
+ * the `0xFFFF0600` constant, this compiler's call-argument evaluation
+ * always computes it right next to `d`'s own stack load, while only
+ * ever deferring the plain reg-to-reg copy of an *already-resident*
+ * value (`self`, sitting in r4 the whole function) to just before the
+ * call - a `d`-occupies-r0-until-its-own-store hazard, not a
+ * scheduling hint, is what actually delays that copy. Manually writing
+ * the call's last few instructions - the outgoing stack slot for `d`,
+ * `self`-into-r0, the constant, and the `bl` itself - reproduces the
+ * same hazard for the constant too and pins the ROM's exact order;
+ * `d`'s own address is still entirely the compiler's choice via the
+ * outgoing slot's "m" operand, and `a`/`b` pass through r1/r2
+ * untouched. The `0xFFFF0600`/`gStaticData_087E53CC` literal pool
+ * needed manual placement too (a trailing file-scope `asm` right after
+ * the function) since inline asm's own `=constant` load syntax dumps
+ * its literal in the assembler's default pool location instead of
+ * immediately after the function like this compiler's own `-fhex-asm`
+ * literals. */
+void *sub_8032440(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "sub sp, #4\n\t"
-        "add r4, r0, #0\n\t"
-        "add r6, r3, #0\n\t"
-        "ldr r0, [sp, #0x14]\n\t"
-        "mov r5, #2\n\t"
-        "str r0, [sp]\n\t"
-        "add r0, r4, #0\n\t"
+    u8 *self = selfArg;
+    register s32 aReg asm("r1") = a;
+    register s32 bReg asm("r2") = b;
+    register s32 dReg asm("r0") = d;
+    register s32 health asm("r5") = 2;
+    s32 outSlot;
+
+    /* A plain call `InitActorPart(self, a, b, (s32)0xFFFF0600, d)` (or
+     * any C expression/inline-asm value merely *passed* as its 4th
+     * argument) always gets evaluated right next to `d`'s own stack
+     * load - this compiler's call-argument evaluation puts every
+     * "compute a fresh value" argument first, regardless of source
+     * order, and only defers the plain reg-to-reg copy of an
+     * already-resident value (`self`, sitting in r4 the whole function)
+     * to just before the call. Manually writing the call's last few
+     * instructions - the outgoing stack slot for `d`, `self`-into-r0,
+     * the `0xFFFF0600` constant, and the `bl` itself - is what actually
+     * pins their position, matching the ROM's own order; `a`/`b` are
+     * passed through untouched via r1/r2, and the outgoing slot for `d`
+     * is a plain local ("m" operand) so the compiler still owns its own
+     * single stack-frame reservation instead of a hand-managed sp
+     * adjustment local to this block. */
+    asm volatile(
+        "str %1, %0\n\t"
+        "add r0, %2, #0\n\t"
         "ldr r3, 1f\n\t"
         "bl InitActorPart\n\t"
-        "str r5, [r4, #0x54]\n\t"
-        "ldr r0, 2f\n\t"
-        "str r0, [r4, #0x50]\n\t"
-        "str r6, [r4, #0x5c]\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x58\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r1]\n\t"
-        "add r0, r4, #0\n\t"
-        "add sp, #4\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n"
-    "1: .4byte 0xFFFF0600\n"
-    "2: .4byte gStaticData_087E53CC\n"
-    );
+        : "=m"(outSlot)
+        : "r"(dReg), "l"(self), "r"(aReg), "r"(bReg)
+        : "r0", "r3", "r12", "lr", "memory", "cc");
+
+    *(s32 *)(self + 0x54) = health;
+    asm("ldr r0, 2f\n\tstr r0, [%0, #0x50]" : : "l"(self) : "r0", "memory");
+    *(s32 *)(self + 0x5c) = c;
+    self[0x58] = 0;
+
+    return self;
 }
+asm(".align 2, 0\n1: .4byte 0xFFFF0600\n2: .4byte gStaticData_087E53CC\n");
 
 /* Trivial `self+0x58` byte getter. */
 u8 sub_8032478(void *selfArg)
