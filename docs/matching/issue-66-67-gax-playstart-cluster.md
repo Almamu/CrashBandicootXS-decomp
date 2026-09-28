@@ -176,3 +176,18 @@ NON_MATCHING=1 report` also verified clean (356 units, 9 categories).
 ## Later pass: GAX toolchain retry
 
 `sub_8038A1C` now matches as plain C against the structs in `include/audio.h`. `sub_8038240` and `sub_8038538` stay NAKED with drafts under `#if NON_MATCHING` (register-assignment gaps, not an allocation "ceiling"). See [gax-toolchain-retry.md](./gax-toolchain-retry.md).
+
+## Later pass: GAX NAKED retry 2
+
+`sub_8038240` is now real C, under current agbcc with the normal flags.
+What closed it:
+- `/` for the rate division (sub_8037E54 is `__udivsi3`, so the call
+  is a const libcall);
+- a separate child-count local;
+- `t->childTypes[j]` re-read in the linking loop;
+- a block-scoped `next`;
+- index-first addressing.
+
+`sub_8038538`'s draft is improved: `maxRate`/`fmt` are now in the ROM's
+r8/r9, and it is ~294 halfwords off by alignment-insensitive count (was
+~364). It stays NAKED. See [gax-naked-retry-2.md](./gax-naked-retry-2.md).

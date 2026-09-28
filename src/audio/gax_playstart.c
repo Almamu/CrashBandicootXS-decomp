@@ -41,11 +41,20 @@
  * pre-loaded source pointers). What's left is register choice: agbcc
  * gives the format pointer r8 and `maxRate` r9 where the ROM has them
  * the other way round, which cascades through the rest of the function.
- * Still NAKED. */
+ * Still NAKED.
+ * GAX NAKED retry 2 (docs/matching/gax-naked-retry-2.md): draft now
+ * ~294 halfwords off by alignment-insensitive count (was ~364): `/` for
+ * the echo length (sub_8037E54 is `__udivsi3`), the tap/alternative-
+ * layout scans in sub_8037FC0's matched shape, an s32 copy counter, and
+ * a no-code `maxRate` reference that gives it r8 and `fmt` r9 like the
+ * ROM. Left: register choice in the ALIGN4 after `field_1c` (new size in
+ * r3), the first tap scan's `layout` copy, the order of the constants
+ * hoisted before the ARM-code copy loops, and the tail. */
 #if NON_MATCHING
-asm(".set _call_via_r1, sub_803AD7C\n.set __divsi3, sub_803ADB4\n");
+asm(".set _call_via_r1, sub_803AD7C\n.set __divsi3, sub_803ADB4\n.set __udivsi3, sub_8037E54\n");
 
 struct RateEntry { u32 rate; u32 timer; };
+struct GaxLayoutList { u32 count; struct GaxHandlerLayout *layouts[1]; };
 extern struct GaxHandlerLayout gStaticData_085A4C5C;
 extern struct RateEntry gStaticData_085A6150[];
 extern const u8 *gStaticData_085A614C;
@@ -79,6 +88,8 @@ u32 sub_8038538(struct GaxSongHeader *p)
     u32 n;
     u32 i;
     s32 idx;
+    s32 k;
+    struct GaxHandlerLayout *layout;
 
     if (size <= 0x18b)
         goto fail;
@@ -135,26 +146,38 @@ u32 sub_8038538(struct GaxSongHeader *p)
     sub_8037F3C((void *)gUnknown_03001630->field_18, gUnknown_03001630->format->frames * 2);
     ALIGN4(buf, size);
     {
-        struct GaxHandlerLayout *layout;
         struct GaxDspTap *tap;
 
         i = 0;
         layout = p->layout;
-        for (tap = layout->types[0]->data.dsp->taps; i <= 2; tap++, i++) {
+        tap = layout->types[0]->data.dsp->taps;
+        for (; i <= 2; i++) {
             if (tap->rate > maxRate)
                 maxRate = tap->rate;
+            /* no code: an extra reference that lifts `maxRate` over
+             * `fmt` in global.c's priority order (ROM: r8/r9) */
+            asm("" : : "r"(maxRate));
+            tap++;
         }
-        if (!(p->flags & 0x10)) {
-            struct GaxHandlerLayout *subs = (struct GaxHandlerLayout *)layout->types[2];
-            if (subs != NULL) {
-                s32 j;
-                for (j = 0; j < (s32)subs->count; j++) {
-                    struct GaxHandlerLayout *sub = (struct GaxHandlerLayout *)subs->types[j];
-                    i = 0;
-                    for (tap = sub->types[0]->data.dsp->taps; i <= 2; tap++, i++) {
-                        if (tap->rate > maxRate)
-                            maxRate = tap->rate;
-                    }
+    }
+    if (!(p->flags & 0x10) && layout->types[2] != NULL) {
+        struct GaxLayoutList *subs = (struct GaxLayoutList *)layout->types[2];
+
+        {
+            s32 j;
+            s32 next;
+
+            for (j = 0; j < (s32)subs->count; j = next) {
+                struct GaxDspTap *tap;
+                struct GaxHandlerLayout *l = *(j + subs->layouts);
+
+                i = 0;
+                next = j + 1;
+                tap = l->types[0]->data.dsp->taps;
+                for (; i <= 2; i++) {
+                    if (tap->rate > maxRate)
+                        maxRate = tap->rate;
+                    tap++;
                 }
             }
         }
@@ -174,7 +197,7 @@ u32 sub_8038538(struct GaxSongHeader *p)
         buf = echo;
         left = size - 24;
         size = left;
-        len = sub_8037E54(maxRate * fmt->mixRate, 1000) * 2;
+        len = maxRate * fmt->mixRate / 1000 * 2;
         if (left < len)
             goto fail;
         g->field_20 = (u32)echo;
@@ -190,16 +213,16 @@ u32 sub_8038538(struct GaxSongHeader *p)
     const u32 *a818;
     const u32 *src;
 
-    i = 0;
+    k = 0;
     layout = p->layout;
     a73c = gStaticData_0803A73C;
     a818 = gStaticData_0803A818;
     src = gStaticData_0803A630;
-    for (; i <= 20; i++)
-        gUnknown_03001630->dspCode48[i] = *src++;
+    for (; k <= 20; k++)
+        gUnknown_03001630->dspCode48[k] = *src++;
     src = a73c;
-    for (i = 0; i <= 55; i++)
-        gUnknown_03001630->dspCode9c[i] = *src++;
+    for (k = 0; k <= 55; k++)
+        gUnknown_03001630->dspCode9c[k] = *src++;
     {
         s32 words;
         if (layout->types[1]->data.song->field_1b != 0 || (u16)(p->flags & 0x20)) {
@@ -215,8 +238,8 @@ u32 sub_8038538(struct GaxSongHeader *p)
         buf += words * 4;
         size -= words * 4;
         src = a818;
-        for (i = 0; (s32)i < words; i++)
-            ((u32 *)gUnknown_03001630->field_44)[i] = *src++;
+        for (k = 0; (s32)k < words; k++)
+            ((u32 *)gUnknown_03001630->field_44)[k] = *src++;
     }
     }
     if ((u16)(p->flags & 4)) {
@@ -225,8 +248,8 @@ u32 sub_8038538(struct GaxSongHeader *p)
         gUnknown_03001630->dspFn17c = buf;
         buf += 240;
         size -= 240;
-        for (i = 0; i <= 59; i++)
-            ((u32 *)gUnknown_03001630->dspFn17c)[i] = gStaticData_0803A67C[i];
+        for (k = 0; k <= 59; k++)
+            ((u32 *)gUnknown_03001630->dspFn17c)[k] = gStaticData_0803A67C[k];
     } else {
         gUnknown_03001630->dspFn17c = NULL;
     }
@@ -244,7 +267,7 @@ u32 sub_8038538(struct GaxSongHeader *p)
     GAX_INFO()->field_20 = (p->flags >> 3) & 1;
     GAX_SONG()->field_39 = 0;
     GAX_SONG()->field_3a = 0;
-    if ((u16)(p->flags & 2) && ((u32 *)GAX_MIXER()->type->data.dsp)[1] != 0)
+    if ((p->flags & 2) && ((u32 *)GAX_MIXER()->type->data.dsp)[1] != 0)
         gUnknown_03001630->field_40 = 1;
     else
         gUnknown_03001630->field_40 = 0;

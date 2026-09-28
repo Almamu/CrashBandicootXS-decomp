@@ -102,6 +102,11 @@ constructor.
 cluster - see
 [`docs/matching/issue-66-67-gax-playstart-cluster.md`](../matching/issue-66-67-gax-playstart-cluster.md)):
 
+- `src/audio/gax_work_size.c` - `sub_8037FC0` (the GAX2 work-RAM size
+  estimator; matched in the GAX NAKED retry 2, see
+  [docs/matching/gax-naked-retry-2.md](../matching/gax-naked-retry-2.md))
+- `src/audio/gax_channel_table_alloc.c` - `sub_8038240` (instantiates
+  and links a player's handlers; matched in the GAX NAKED retry 2)
 - `src/audio/gax_hw_reset.c` - `sub_80384DC` (hardware sound-register
   reset: DMA1/SOUNDCNT_H/SOUNDBIAS)
 - `src/audio/gax_playback_ticker.c` - `sub_8038B68` (per-frame DMA1/
@@ -175,19 +180,13 @@ for the per-function notes.
 
 ## Parked - NAKED asm transcription (byte-correct, not decompiled C)
 
-- **`sub_8037FC0`** (`src/audio/gax_work_size.c`, which replaced the raw
-  `asm/code_3_2_20c.s` in the late-ROM NAKED retry - the GAX2 work-RAM
-  size estimator) - draft under `#if NON_MATCHING` with the ROM's
-  control flow; ~240 halfwords of spill-slot/register assignment still
-  differ (see
-  [docs/matching/late-rom-naked-retry.md](../matching/late-rom-naked-retry.md)).
-- **`sub_8038240`** (`src/audio/gax_channel_table_alloc.c`, instantiates
-  and links a player's handlers) - draft under `#if NON_MATCHING`; the
-  carving loop's register/spill assignment differs and cascades.
 - **`sub_8038538`** (`src/audio/gax_playstart.c`, the play-start/init
   entry point) - close draft under `#if NON_MATCHING` (same control
   flow, buffer carving, literal pool); agbcc swaps the r8/r9 homes of
-  the format pointer and the max tap rate, which cascades.
+  the format pointer and the max tap rate, which cascades. (GAX NAKED
+  retry 2: the r8/r9 swap is fixed in the draft by a no-code reference
+  nudge; ~294 halfwords left by alignment-insensitive count - see
+  [docs/matching/gax-naked-retry-2.md](../matching/gax-naked-retry-2.md).)
 - **`sub_8039B44`** (`src/audio/gax_note_trigger.c`, the per-channel
   mixer; `sub_8039E50` is only the ARM call's return point inside it) -
   the call is no longer a blocker (`GAX_CALL_ARM_R`); a complete draft
@@ -223,9 +222,8 @@ from the `0x08037110`-`0x08038538` pass specifically:
   helper) now lives in `src/audio/gax_zero_fill.c`.
 - `sub_8037FC0` - computes the work-RAM size a GAX2 song header needs
   (handler instances plus mix/echo buffers); was raw
-  (`asm/code_3_2_20c.s`, issue #66), now a NAKED transcription with a C
-  draft in `src/audio/gax_work_size.c` - see "Parked - NAKED asm
-  transcription" above.
+  (`asm/code_3_2_20c.s`, issue #66), now matched real C in
+  `src/audio/gax_work_size.c`.
   `sub_8038240`/
   `sub_80384DC` (the rest of issue #66) are now matched/parked - see
   [docs/matching/issue-66-67-gax-playstart-cluster.md](../matching/issue-66-67-gax-playstart-cluster.md).
