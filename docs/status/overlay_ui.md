@@ -105,6 +105,8 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   `sub_8003BDC`/`sub_8003C90`, the per-row stat renderer `sub_8003F30`
   and its 4-row driver `sub_80041BC` - all plain C, were NAKED. See
   [issue-4-6-8-naked-retry.md](../matching/issue-4-6-8-naked-retry.md).
+  The value-label/pair draw `sub_8003D3C` followed in the early-ROM
+  NAKED retry ([early-rom-naked-retry.md](../matching/early-rom-naked-retry.md)).
 - `src/graphics/settings_menu23.c` (issue #6 retry): `sub_8004914`,
   `sub_80049CC` - plain C, were NAKED.
 - `src/graphics/settings_menu10.c` (issue #8 retry, old_agbcc):
@@ -122,18 +124,14 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 ## Parked - NAKED asm transcriptions (byte-correct, not decompiled C)
 
 - **`sub_8002E20`** (`src/graphics/settings_menu8a2.c`) - the SIO pump's
-  RX drain step (issue #5). Plain C is ~100 halfwords off: the ROM
-  computes `playerIndex * 0xc8` twice and keeps its loop test as
-  `n - 1 != -1`, where gcc shares the multiply and folds the test. See
-  [old-agbcc-round5.md](../matching/old-agbcc-round5.md).
+  RX drain step (issue #5). A NON_MATCHING draft is now in the file,
+  about 100 halfwords off: it keeps the ROM's `n - 1 != -1` loop tests,
+  but gcc shares the `playerIndex * 0xc8 + s` the ROM computes twice.
+  See [early-rom-naked-retry.md](../matching/early-rom-naked-retry.md).
 - **`sub_8002AA4`** (`src/graphics/settings_menu8e.c`) - checksum
-  validate/repair-via-DMA. GitHub issue #4. NON_MATCHING draft 18
-  halfwords off (the ROM holds the four marker-byte addresses in
-  r6/sb/r7/r8 across the row loop) - see [issue-4-6-8-naked-retry.md](../matching/issue-4-6-8-naked-retry.md).
-- **`sub_8003D3C`** (`src/graphics/settings_menu.c`) - value label plus
-  a highlighted/plain pair. NON_MATCHING draft 9 halfwords off under
-  both compilers (two long-lived constants in r8/sb swapped). Issue #6,
-  see [issue-4-6-8-naked-retry.md](../matching/issue-4-6-8-naked-retry.md).
+  validate/repair-via-DMA. GitHub issue #4. NON_MATCHING draft 6
+  halfwords off (`&flags`/`&field_1fb` computed in the other order to
+  get the ROM's r7/r8) - see [early-rom-naked-retry.md](../matching/early-rom-naked-retry.md).
 - **`sub_800450C`** (`src/graphics/settings_menu.c` draft, real bytes
   still raw in `asm/code_3_1_10_4.s`) - the screen's init routine.
   NON_MATCHING draft 5 halfwords off under old_agbcc (loop pre-header

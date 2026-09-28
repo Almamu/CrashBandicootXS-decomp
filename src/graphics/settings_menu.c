@@ -30,8 +30,9 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
 
 /* The functions below (0x08003B40-0x080041BC) were NAKED
  * transcriptions until the issue #4/#6/#8 retry
- * (docs/matching/issue-4-6-8-naked-retry.md). All but sub_8003D3C now
- * match as plain C; the file is built with old_agbcc (Makefile
+ * (docs/matching/issue-4-6-8-naked-retry.md); sub_8003D3C followed in
+ * docs/matching/early-rom-naked-retry.md. All now match as plain C;
+ * the file is built with old_agbcc (Makefile
  * OLD_AGBCC_OBJS) because the NON_MATCHING draft of `sub_800450C` at
  * the end of this file (raw bytes still in `asm/code_3_1_10_4.s`) is
  * closest under it - every matched function here compiles identically
@@ -151,24 +152,30 @@ extern u8 gStaticData_0816B138[];
  * clear/overwrite step rather than a width probe (the return value is
  * never used).
  *
- * Still NAKED; a near-miss draft is kept under NON_MATCHING below. */
-#if NON_MATCHING
-/* 9 halfwords off under both compilers: the ROM keeps the record
- * offset 0x130 in r8 and the Y constant 0x87 in sb; this draft swaps
- * the two. */
+ * Once a NAKED transcription; it matches as plain C under both
+ * compilers. The ROM keeps the record offset 0x130 in r8 and the Y
+ * constant 0x87 in sb: `y` is pinned to r9 and set after the
+ * manager pointer is loaded (the unpinned draft swapped the two, as
+ * global-alloc ranks 0x87 slightly above 0x130). */
 void sub_8003D3C(struct pause_options_screen *self, s32 value)
 {
     s32 w;
+    register s32 y asm("r9");
 
     sub_8028A30(gUnknown_030012DC, 0);
     w = ICON_TEXT_CALL(gUnknown_030012DC, 0, sub_8026F38(value));
-    set_icon_mgr_pos(gUnknown_030012DC, 0xa0 - w, 0x87);
+    {
+        s32 x = 0xa0 - w;
+        struct icon_manager *m = gUnknown_030012DC;
+        y = 0x87;
+        set_icon_mgr_pos(m, x, y);
+    }
     ICON_TEXT_CALL(gUnknown_030012DC, 2, sub_8026F38(value));
     sub_8028A30(gUnknown_030012DC, ((self->flags >> 2) & 1) ? 1 : 2);
     if (!self->field_10) {
-        set_icon_mgr_pos(gUnknown_030012DC, 0xa8, 0x87);
+        set_icon_mgr_pos(gUnknown_030012DC, 0xa8, y);
         ICON_TEXT_CALL(gUnknown_030012DC, 2, gStaticData_0816B138);
-        set_icon_mgr_pos(gUnknown_030012DC, 0xb0, 0x87);
+        set_icon_mgr_pos(gUnknown_030012DC, 0xb0, y);
         ICON_TEXT_CALL(gUnknown_030012DC, 2, sub_8026F38(0x29));
     } else {
         set_icon_mgr_pos(gUnknown_030012DC, 0xa8, 0x91);
@@ -185,249 +192,6 @@ void sub_8003D3C(struct pause_options_screen *self, s32 value)
         ICON_TEXT_CALL(gUnknown_030012DC, 2, sub_8026F38(0x29));
     }
 }
-#else
-NAKED void sub_8003D3C(struct pause_options_screen *self, s32 value)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sl\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6, r7}\n\t"
-        "mov sl, r0\n\t"
-        "add r6, r1, #0\n\t"
-        "ldr r7, 2f\n\t"
-        "ldr r0, [r7]\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_8028A30\n\t"
-        "ldr r4, [r7]\n\t"
-        "mov r0, #0x98\n\t"
-        "lsl r0, r0, #1\n\t"
-        "mov r8, r0\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r5, r0, #0\n\t"
-        "add r5, #0x10\n\t"
-        "mov r1, #0x10\n\t"
-        "ldrsh r0, [r0, r1]\n\t"
-        "add r4, r4, r0\n\t"
-        "add r0, r6, #0\n\t"
-        "bl sub_8026F38\n\t"
-        "add r1, r0, #0\n\t"
-        "ldr r2, [r5, #4]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_803AD80\n\t"
-        "mov r1, #0xa0\n\t"
-        "sub r1, r1, r0\n\t"
-        "ldr r4, [r7]\n\t"
-        "mov r2, #0x87\n\t"
-        "mov sb, r2\n\t"
-        "mov r3, #0x88\n\t"
-        "lsl r3, r3, #1\n\t"
-        "add r0, r4, r3\n\t"
-        "str r1, [r0]\n\t"
-        "mov r1, #0x8a\n\t"
-        "lsl r1, r1, #1\n\t"
-        "add r0, r4, r1\n\t"
-        "str r2, [r0]\n\t"
-        "mov r2, r8\n\t"
-        "add r0, r4, r2\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r5, r0, #0\n\t"
-        "add r5, #0x20\n\t"
-        "mov r3, #0x20\n\t"
-        "ldrsh r0, [r0, r3]\n\t"
-        "add r4, r4, r0\n\t"
-        "add r0, r6, #0\n\t"
-        "bl sub_8026F38\n\t"
-        "add r1, r0, #0\n\t"
-        "ldr r2, [r5, #4]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r2, [r7]\n\t"
-        "mov r4, sl\n\t"
-        "ldr r0, [r4, #4]\n\t"
-        "asr r0, r0, #2\n\t"
-        "mov r1, #1\n\t"
-        "and r0, r1\n\t"
-        "mov r1, #2\n\t"
-        "cmp r0, #0\n\t"
-        "beq 1f\n\t"
-        "mov r1, #1\n\t"
-    "1:\n\t"
-        "add r0, r2, #0\n\t"
-        "bl sub_8028A30\n\t"
-        "mov r1, sl\n\t"
-        "ldr r0, [r1, #0x10]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 4f\n\t"
-        "ldr r0, [r7]\n\t"
-        "mov r2, #0xa8\n\t"
-        "mov r3, #0x88\n\t"
-        "lsl r3, r3, #1\n\t"
-        "add r1, r0, r3\n\t"
-        "str r2, [r1]\n\t"
-        "mov r4, #0x8a\n\t"
-        "lsl r4, r4, #1\n\t"
-        "add r1, r0, r4\n\t"
-        "mov r2, sb\n\t"
-        "str r2, [r1]\n\t"
-        "mov r3, r8\n\t"
-        "add r1, r0, r3\n\t"
-        "ldr r2, [r1]\n\t"
-        "mov r4, #0x20\n\t"
-        "ldrsh r1, [r2, r4]\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r1, 3f\n\t"
-        "ldr r2, [r2, #0x24]\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r4, [r7]\n\t"
-        "mov r1, #0xb0\n\t"
-        "mov r2, #0x88\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r0, r4, r2\n\t"
-        "str r1, [r0]\n\t"
-        "mov r3, #0x8a\n\t"
-        "lsl r3, r3, #1\n\t"
-        "add r0, r4, r3\n\t"
-        "mov r1, sb\n\t"
-        "str r1, [r0]\n\t"
-        "mov r2, r8\n\t"
-        "add r0, r4, r2\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r5, r0, #0\n\t"
-        "add r5, #0x20\n\t"
-        "mov r3, #0x20\n\t"
-        "ldrsh r0, [r0, r3]\n\t"
-        "add r4, r4, r0\n\t"
-        "mov r0, #0x29\n\t"
-        "bl sub_8026F38\n\t"
-        "add r1, r0, #0\n\t"
-        "ldr r2, [r5, #4]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_803AD80\n\t"
-        "b 5f\n\t"
-        ".align 2, 0\n\t"
-    "2: .4byte gUnknown_030012DC\n\t"
-    "3: .4byte gStaticData_0816B138\n\t"
-    "4:\n\t"
-        "ldr r0, [r7]\n\t"
-        "mov r2, #0xa8\n\t"
-        "mov r5, #0x91\n\t"
-        "mov r4, #0x88\n\t"
-        "lsl r4, r4, #1\n\t"
-        "add r1, r0, r4\n\t"
-        "str r2, [r1]\n\t"
-        "add r2, #0x6c\n\t"
-        "add r1, r0, r2\n\t"
-        "str r5, [r1]\n\t"
-        "mov r3, r8\n\t"
-        "add r1, r0, r3\n\t"
-        "ldr r2, [r1]\n\t"
-        "mov r4, #0x20\n\t"
-        "ldrsh r1, [r2, r4]\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r1, 6f\n\t"
-        "ldr r2, [r2, #0x24]\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r4, [r7]\n\t"
-        "mov r1, #0xb0\n\t"
-        "mov r2, #0x88\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r0, r4, r2\n\t"
-        "str r1, [r0]\n\t"
-        "mov r3, #0x8a\n\t"
-        "lsl r3, r3, #1\n\t"
-        "add r0, r4, r3\n\t"
-        "str r5, [r0]\n\t"
-        "mov r1, r8\n\t"
-        "add r0, r4, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r5, r0, #0\n\t"
-        "add r5, #0x20\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r0, r2]\n\t"
-        "add r4, r4, r0\n\t"
-        "mov r0, #0x2a\n\t"
-        "bl sub_8026F38\n\t"
-        "add r1, r0, #0\n\t"
-        "ldr r2, [r5, #4]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_803AD80\n\t"
-    "5:\n\t"
-        "ldr r4, 7f\n\t"
-        "ldr r0, [r4]\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_8028A30\n\t"
-        "mov r3, sl\n\t"
-        "ldr r0, [r3, #0x10]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 8f\n\t"
-        "ldr r3, [r4]\n\t"
-        "mov r1, #0xb0\n\t"
-        "mov r2, #0x91\n\t"
-        "mov r4, #0x88\n\t"
-        "lsl r4, r4, #1\n\t"
-        "add r0, r3, r4\n\t"
-        "str r1, [r0]\n\t"
-        "add r1, #0x64\n\t"
-        "add r0, r3, r1\n\t"
-        "str r2, [r0]\n\t"
-        "add r2, #0x9f\n\t"
-        "add r0, r3, r2\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r5, r0, #0\n\t"
-        "add r5, #0x20\n\t"
-        "mov r1, #0x20\n\t"
-        "ldrsh r4, [r0, r1]\n\t"
-        "add r4, r3, r4\n\t"
-        "mov r0, #0x2a\n\t"
-        "bl sub_8026F38\n\t"
-        "add r1, r0, #0\n\t"
-        "ldr r2, [r5, #4]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_803AD80\n\t"
-        "b 9f\n\t"
-        ".align 2, 0\n\t"
-    "6: .4byte gStaticData_0816B138\n\t"
-    "7: .4byte gUnknown_030012DC\n\t"
-    "8:\n\t"
-        "ldr r3, [r4]\n\t"
-        "mov r1, #0xb0\n\t"
-        "mov r2, #0x87\n\t"
-        "mov r4, #0x88\n\t"
-        "lsl r4, r4, #1\n\t"
-        "add r0, r3, r4\n\t"
-        "str r1, [r0]\n\t"
-        "add r1, #0x64\n\t"
-        "add r0, r3, r1\n\t"
-        "str r2, [r0]\n\t"
-        "add r2, #0xa9\n\t"
-        "add r0, r3, r2\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r5, r0, #0\n\t"
-        "add r5, #0x20\n\t"
-        "mov r1, #0x20\n\t"
-        "ldrsh r4, [r0, r1]\n\t"
-        "add r4, r3, r4\n\t"
-        "mov r0, #0x29\n\t"
-        "bl sub_8026F38\n\t"
-        "add r1, r0, #0\n\t"
-        "ldr r2, [r5, #4]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_803AD80\n\t"
-    "9:\n\t"
-        "pop {r3, r4, r5}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov sl, r5\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n\t"
-    );
-}
-#endif
 
 extern u8 sub_8002CE8(void *handle, s32 rowIndex);
 extern void sub_8008890(void *arg0, s32 arg1, s32 arg2);
@@ -607,7 +371,15 @@ asm(".align 2, 0");
  * still raw in asm/code_3_1_10_4.s; this draft is 5 halfwords off under
  * old_agbcc (23 under agbcc): only the loop pre-header differs - the
  * ROM hoists the 0x80 constant into sb before copying the rowObjB/C
- * loop pointers, the draft after. */
+ * loop pointers, the draft after. The loop dump shows why: loop.c's
+ * first pass moves four invariants (the gUnknown_030012D0 address, 15
+ * and the two -16s of the nibble insert) and each move lowers its
+ * threshold by 3, so the 0x80 (and the field_3c read-modify-write's
+ * HI 0) are "not desirable" and only move on the rerun, after strength
+ * reduction has emitted the pointer copies. Other nibble spellings,
+ * plain/cast `field_3c` stores, dropping `Opaque`, loop shapes and the
+ * loop flags (-fmove-all-movables, -freduce-all-givs) don't change the
+ * first pass. */
 #if NON_MATCHING
 extern struct oam_shadow_buffer *gUnknown_03001300;
 extern void sub_8006A90(struct oam_shadow_buffer *arg0);

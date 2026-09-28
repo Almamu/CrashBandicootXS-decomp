@@ -185,3 +185,13 @@ decompiled C does - so `sub_80019F8` is tracked as **parked** in
 though its bytes are provably correct. `PlaySfx` was not attempted this
 pass and remains parked for its own, separate reason (a prologue
 register-save-scheduling gap).
+
+## Later pass: `sub_80019F8` matched
+
+The early-ROM NAKED retry
+([early-rom-naked-retry.md](early-rom-naked-retry.md)) rewrote
+`sub_80019F8` as C and it matched on the first compile, under both
+compilers. The fifth argument is a one-byte struct passed by value. The
+`base + 8 + offset` address of the `baseVolume` read is just how gcc
+computes a non-zero field offset from the table base. The CSE gap
+described above is not real.
