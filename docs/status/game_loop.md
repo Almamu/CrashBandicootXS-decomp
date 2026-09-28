@@ -898,6 +898,10 @@ plain C didn't converge.
   The third big NAKED retry brought the `sub_8011548` draft to the
   ROM's size, 21 halfwords off (register allocation) - see
   [big-naked-retry-3.md](../matching/big-naked-retry-3.md).
+  *gap4 pass:* `sub_801173C` is real C (old_agbcc). `self` is pinned to r4
+  up to the list join, `phase` is an opaqued 0, and the tag is stored
+  through a pointer - see
+  [gap4-naked-retry.md](../matching/gap4-naked-retry.md).
   *Mix NAKED retry 5:* `sub_8011548` is real C (old_agbcc) - two
   no-code references on each velocity, the spawn argument's address
   taken by an `asm`, and locals for the state-3 tail; see
