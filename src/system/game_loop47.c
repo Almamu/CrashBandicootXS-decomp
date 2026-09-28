@@ -74,7 +74,12 @@
  * elsewhere (constants and temps in r0/r2/r3/r4/r5) and the `kind * 4`
  * spill slot order. Under current agbcc the draft is 1629 halfwords off
  * and 8 bytes long. See docs/matching/huge-naked-retry.md and
- * docs/matching/sp-box-retry.md. */
+ * docs/matching/sp-box-retry.md.
+ * Last-five retry (docs/matching/last5-naked-retry.md): writing the
+ * `dy > 2 || (dx <= 3 && sub_800B324())` arm as `goto edge_x` gives the
+ * ROM's block order there; with BOX_ADDR on the rebuilt box too, the
+ * register-blind diff drops from 98 to 57 instructions, but the function
+ * is then 4 bytes long, so neither is applied yet. */
 #include "phys_obj.h"
 
 /* The player (gUnknown_030012D8) as this function reads it. */

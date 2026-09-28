@@ -153,3 +153,12 @@ a register decided by how many reloads came before it in the function.
 
 `sub_801AB98` is transcribed instruction-for-instruction as a `NAKED`
 function for the matching build.
+
+## Later pass: sub_801AB98 matched (last-five NAKED retry)
+
+`sub_801AB98` is now real C under old_agbcc (`actor_part_1ab98.o` joined
+`OLD_AGBCC_OBJS`). An r8 hard-register hold up to the first overlap test
+gives `result` r8 and `self` sb; both `sub_800FDC8` calls pass a
+reassigned `px`; the player position goes through a `PosPtr` inline
+instead of a `pp` local; the vtable call is an inline through the
+method pointer. See [last5-naked-retry.md](last5-naked-retry.md).
