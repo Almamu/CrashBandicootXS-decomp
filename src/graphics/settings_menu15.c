@@ -19,7 +19,7 @@ extern void sub_8006EF0(struct tile_asset_cache *self, u16 count, const u8 *reco
 extern s32 sub_8006D50(struct tile_asset_cache *self, s32 index);
 extern void sub_8006F94(struct tile_asset_cache *self, u32 flags);
 extern void sub_803A94C(const void *src, void *dst, u32 cnt);
-extern void sub_8028A40(struct icon_manager *self, u32 unused);
+extern void sub_8028A40(struct icon_manager *self);
 extern void *sub_803AD7C(void *arg0, void *fn);
 extern void sub_8006C4C(struct vram_upload_cursor *self);
 extern void *sub_8026EDC(s32 size);
@@ -41,17 +41,85 @@ extern void sub_8005004(struct pause_screen_results *self, u32 flags);
  * down (`sub_8005004`, flags=3) and restores the original tile cache
  * before returning `sub_8005100`'s result.
  *
- * Written as NAKED asm, not plain C: hits the same class of gcc-2.9
- * register/scheduling nondeterminism already documented at length for
- * `sub_8006600` (src/graphics/oam_count.c) - see
- * docs/matching/issue-7-0x08004d74-overlay-ui.md for the previous pass's
- * specific gap (the ROM keeps a literal 0 live in r8 across ~100
- * intervening instructions and shares shifted-constant computations this
- * compiler never reached for from plain C, even with heavy register
- * pinning). Every instruction below is transcribed directly from and
- * checked against the ROM's own disassembly, like this project's other
- * hard-compiler-limitation cases (src/system/link_cable.c's
- * `sub_8001CB8`/`sub_8001DB4`, `src/audio/gax_swi.c`'s `sub_80392C4`). */
+ * Still NAKED (transcribed from the ROM). The C draft under
+ * NON_MATCHING is 54 halfwords off under either compiler. It already
+ * gets the r8 zero (both `0`s come from inline-function parameters,
+ * which CSE then shares) and the `_call_via_r1` slot-6 calls. What is
+ * left is allocation: the ROM keeps &gUnknown_030012B8 in r6 and the
+ * two icon-manager addresses in r4/r5, which leaves no register for
+ * the 0x12c offset, so it is re-materialized. The draft uses r7 and
+ * r5/r6 and keeps 0x12c in r4. */
+#if NON_MATCHING
+extern struct tile_asset_cache *sub_8006FB4(void *mem);
+
+/* sub_803AD7C is libgcc's `_call_via_r1`. */
+asm(".set _call_via_r1, sub_803AD7C\n");
+
+/* Fires an icon manager's slot-6 method (a gcc 2.x virtual call). */
+#define ICON_SLOT6_CALL(mgr)                                                   \
+    if (1)                                                                     \
+    {                                                                          \
+        struct icon_slot *_s = &(mgr)->record->slots[6];                       \
+        ((void (*)(void *))_s->ptr)((u8 *)(mgr) + _s->offset);                 \
+    } else (void)0
+
+struct pause_gfx_pkg {
+    u8 unused_00[8];
+    const u8 *records;
+    u8 unused_0c[2];
+    u16 count;
+};
+
+static inline void init_icon_mgr(struct icon_manager *mgr, u32 base)
+{
+    mgr->field_108 = base;
+    ICON_SLOT6_CALL(mgr);
+}
+
+static inline void reserve_icon_vram(u32 n)
+{
+    gUnknown_030012FC->field_08 = n;
+    sub_8006C4C(gUnknown_030012FC);
+}
+
+s32 sub_8004D74(void)
+{
+    struct tile_asset_cache *oldCache;
+    struct pause_screen_results *screen;
+    s32 result;
+
+    mem_free_bytes(MEM_HEAP_BOTH);
+    sub_80019E8(gUnknown_030012BC);
+    sub_80006A8();
+    *(vu16 *)PLTT = 0;
+    *(vu16 *)REG_ADDR_DISPCNT = 0;
+
+    oldCache = gUnknown_030012B8;
+    gUnknown_030012B8 = sub_8006FB4(sub_8026EDC(sizeof(struct tile_asset_cache)));
+    sub_8006EF0(gUnknown_030012B8, ((struct pause_gfx_pkg *)gStaticData_084A5600)->count,
+                ((struct pause_gfx_pkg *)gStaticData_084A5600)->records);
+    sub_8006D50(gUnknown_030012B8, 0xf);
+    sub_803A94C(gStaticData_0816B2C0, (u8 *)gUnknown_030012B8 + (0x83 << 2), 0x10);
+
+    sub_8028A40(gUnknown_030012DC);
+    sub_8028A40(gUnknown_030012E0);
+    init_icon_mgr(gUnknown_030012DC, 0);
+    init_icon_mgr(gUnknown_030012E0, gUnknown_030012DC->field_12c);
+    reserve_icon_vram(gUnknown_030012DC->field_12c + gUnknown_030012E0->field_12c);
+
+    screen = sub_8004EC0(sub_8026EDC(0xd4));
+    result = sub_8005100(screen);
+    if (screen != NULL)
+        sub_8005004(screen, 3);
+
+    reserve_icon_vram(0);
+    if (gUnknown_030012B8 != NULL)
+        sub_8006F94(gUnknown_030012B8, 3);
+    gUnknown_030012B8 = oldCache;
+    mem_free_bytes(MEM_HEAP_BOTH);
+    return result;
+}
+#else
 NAKED s32 sub_8004D74(void)
 {
     asm(
@@ -199,6 +267,7 @@ NAKED s32 sub_8004D74(void)
     "9: .4byte gUnknown_030012FC\n"
     );
 }
+#endif
 
 extern void *sub_801E644(void *buf, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern void LoadGraphicsPackage(void *buf, void *asset);

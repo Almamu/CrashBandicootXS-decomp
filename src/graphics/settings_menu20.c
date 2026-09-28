@@ -36,22 +36,143 @@ extern void PlaySfx(struct AudioContext *self, u32 id, u32 volumeParam);
  * currently-selected row's slider (sub_800609C/sub_8006084, playing a
  * confirm-ish SFX and arming a short flash via field_68), the D-pad
  * bumps the selected row's value up/down with an initial-press vs
- * held-repeat distinction (sub_8005EF4/FBC), and A confirms only when
- * the selected row's type tag is 4 or 5 (an "editable" row - anything
- * else just plays a cancel SFX and keeps looping), B cancels
- * outright. On confirm, ramps the fade level back up to 0x10 (the
- * screen's fade-out) before returning the confirmed row's type tag;
- * on cancel, returns 0 without ramping back up (`field_cc` is instead
- * force-set to 0x40 in the low byte and DISPCNT reapplied once).
+ * held-repeat distinction (sub_8005EF4/FBC), and A confirms the
+ * selected row unless its type tag is 4 or 5 (the editable-percentage
+ * rows just play SFX 0x48 and keep looping); B cancels (result 0).
+ * Either way, ramps the fade level back up to 0x10, resets the DISPCNT
+ * shadow `field_d0` to just bit 6 and applies it once more, and returns
+ * the confirmed row's type tag (or 0).
  *
- * Written as NAKED asm, not plain C: fully understood (every field/
- * global here is independently confirmed by sub_8004EC0/sub_8005304/
- * sub_8006250's own matched bytes), but by far the largest and most
- * control-flow-heavy function in this chunk - the same class of
- * register-pressure/scheduling difficulty documented at length for
- * `sub_80057E0`/`sub_8005E5C`/`sub_80053F4` above. Every instruction
- * below is transcribed directly from and checked against the ROM's own
- * disassembly. */
+ * Still NAKED (transcribed from the ROM). The C draft under
+ * NON_MATCHING matches everywhere except the L/R key-repeat tests
+ * under old_agbcc (14 halfwords): the ROM re-materializes the key mask
+ * and reads the pressed half with `lsr #16`, while the draft copies the
+ * mask register and gets an `ldrh [keys+2]`. The input loop is a goto
+ * loop (no loop-invariant hoisting, as in the ROM); the two fade loops
+ * are real loops. */
+#if NON_MATCHING
+extern struct AudioContext *gUnknown_030012BC;
+extern void sub_80053F4(struct pause_screen_results *self);
+
+/* gUnknown_030007E0 as the {held, newly pressed} key-state pair. */
+struct pause_keys {
+    u16 held;
+    u16 pressed;
+};
+#define KEYS (*(struct pause_keys *)&gUnknown_030007E0)
+
+/* field_cc: REG_BLDY fade level in the low 5 bits. */
+struct pause_fade {
+    u8 level:5;
+    u8 rest:3;
+} __attribute__((packed));
+#define FADE(self) ((struct pause_fade *)&(self)->field_cc)
+
+/* field_d0: REG_DISPCNT shadow; bit 6 is set on exit. */
+struct pause_dispcnt {
+    u16 lo:6;
+    u16 bit6:1;
+    u16 hi:9;
+};
+
+struct pause_row {
+    void *label;
+    s32 type;
+};
+
+static inline void draw_frame(struct pause_screen_results *self)
+{
+    sub_80053F4(self);
+    sub_8006250(self);
+    sub_8005304(self);
+}
+
+s32 sub_8005100(struct pause_screen_results *self)
+{
+    s32 result;
+    u16 *disp;
+
+    while (FADE(self)->level != 0) {
+        FADE(self)->level--;
+        draw_frame(self);
+    }
+
+    disp = &self->field_d0;
+    goto body;
+
+top:
+    if (KEYS.pressed & 8) {
+        PlaySfx(gUnknown_030012BC, 0x49, 0x100);
+        result = 0;
+        goto fade_in;
+    }
+body:
+    {
+        u32 in;
+        u32 key;
+        u32 pressed;
+
+        draw_frame(self);
+        sub_80007AC(gUnknown_03001304);
+        if (KEYS.pressed & 0x40) {
+            sub_800609C(self);
+            self->field_68 = 0x1e;
+            PlaySfx(gUnknown_030012BC, 0x46, 0x100);
+        }
+        if (KEYS.pressed & 0x80) {
+            sub_8006084(self);
+            self->field_68 = 0x1e;
+            PlaySfx(gUnknown_030012BC, 0x46, 0x100);
+        }
+        in = gUnknown_030007E0;
+        pressed = in >> 16;
+        key = 0x20;
+        if (pressed & key) {
+            sub_8005EF4(self);
+            self->field_68 = 0x1e;
+        } else if (in & key) {
+            if (self->field_68 == 0) {
+                sub_8005EF4(self);
+                self->field_68 = 5;
+            } else {
+                self->field_68--;
+            }
+        }
+        in = gUnknown_030007E0;
+        pressed = in >> 16;
+        key = 0x10;
+        if (pressed & key) {
+            sub_8005FBC(self);
+            self->field_68 = 0x1e;
+        } else if (in & key) {
+            if (self->field_68 == 0) {
+                sub_8005FBC(self);
+                self->field_68 = 5;
+            } else {
+                self->field_68--;
+            }
+        }
+    }
+    if (!(KEYS.pressed & 1))
+        goto top;
+    result = ((struct pause_row *)self->field_14)[self->field_18].type;
+    if ((u32)(result - 4) <= 1) {
+        PlaySfx(gUnknown_030012BC, 0x48, 0x100);
+        goto top;
+    }
+    PlaySfx(gUnknown_030012BC, 0x49, 0x100);
+
+fade_in:
+    while (FADE(self)->level != 0x10) {
+        FADE(self)->level++;
+        draw_frame(self);
+    }
+    *disp = 0;
+    ((struct pause_dispcnt *)disp)->bit6 = 1;
+    sub_8006250(self);
+    return result;
+}
+#else
 NAKED s32 sub_8005100(struct pause_screen_results *self)
 {
     asm(
@@ -308,4 +429,5 @@ NAKED s32 sub_8005100(struct pause_screen_results *self)
     "28: .4byte gUnknown_030012BC\n"
     );
 }
+#endif
 

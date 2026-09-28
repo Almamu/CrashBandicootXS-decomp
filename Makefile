@@ -177,6 +177,8 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/hud_icon_widget_85c4.o \
                   $(C_BUILDDIR)/graphics/hud_icon_widget_8890.o \
                   $(C_BUILDDIR)/graphics/hud_icon_widget_8994.o \
+                  $(C_BUILDDIR)/graphics/settings_menu22.o \
+                  $(C_BUILDDIR)/graphics/settings_menu6.o \
                   $(C_BUILDDIR)/graphics/trigger_effect.o \
                   $(C_BUILDDIR)/system/bg_scroll_layer_25fc8.o \
                   $(C_BUILDDIR)/system/game_loop14.o \
