@@ -114,7 +114,10 @@ void sub_8002D44(struct settings_sync_pump *self)
  * session pointer or the byte offset don't reproduce the ROM's second
  * `muls` (104-115 hw). The wrap loop also differs: the ROM re-sets
  * `movs r0,#0` before each `cmp #0x7f`, where the draft hoists 0 into
- * sb. */
+ * sb.
+ * Inline-argument-order pass: `&s->rx[i]` inline accessors, byte-offset
+ * channel addresses and a re-read global still CSE the product
+ * (100-121 hw). */
 #if NON_MATCHING
 void sub_8002E20(struct settings_sync_pump *self, s32 playerIndex)
 {

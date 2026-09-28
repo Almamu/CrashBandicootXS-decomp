@@ -225,7 +225,11 @@ void sub_80204EC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * for the second LEVEL_RECORD; the ROM zero-extends a copy in r4 and
  * doubles it in place. A `u32` copy of arg3 behind `asm("" : "+r")`
  * puts it in r4 but moves the zero-extension after the first call (120
- * hw). r4/r5 holds over parts of the part+0x28 range were worse (80+). */
+ * hw). r4/r5 holds over parts of the part+0x28 range were worse (80+).
+ * Inline-argument-order pass: in the ROM, part+0x28 is in r3 and is
+ * caller-saved around sub_8008E94 (`str r3,[sp]` before the call).
+ * Zero-length r4/r5 holds at every statement boundary put arg3/hdr+0x84
+ * in r4/r5, but part+0x28 then goes to r8, not r3 (80+ hw). */
 #if NON_MATCHING
 void sub_802062C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {

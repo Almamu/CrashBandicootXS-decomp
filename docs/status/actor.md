@@ -930,6 +930,20 @@ from "core" graphics.
   from NAKED to real C, both matching under either compiler. See
   [near-miss-polish-2.md](../matching/near-miss-polish-2.md).
 
+### Matched in the inline-argument-order retry
+
+- `src/graphics/actor_part111.c` - `sub_800AFF4` (the dizzy-stars
+  orbit update), old_agbcc (the object was already on
+  `OLD_AGBCC_OBJS`). The last 40 halfwords were the orbit tail. It now
+  passes its two sums straight to an inline setter
+  (`SetChildPos(child, hist.x + tbl[t & 0xff] * 16, hist.y + tbl[(t >> 1) & 0xff] * 8 - 0x1800)`).
+  gcc 2.x expands all of an inline call's arguments, leaving each sum
+  unforced, before it copies them into the parameters. That gives the
+  ROM's order: history addresses and table reads first, then the
+  `child` load, the shifts, the history loads and the adds. The r4/r5
+  swap went away with it. See
+  [docs/matching/inline-arg-order-retry.md](../matching/inline-arg-order-retry.md).
+
 ### Matched in the issue #9 hold pass
 
 - `src/graphics/actor_part11c.c` - `sub_80091D4` (the 3-bucket grid
@@ -1141,30 +1155,6 @@ plain C didn't converge.
   at all, a structurally different solution rather than a near-miss).
   Transcribed directly as byte-exact NAKED asm instead. See
   [docs/matching/issue-9-0x0800a178-graphics.md](../matching/issue-9-0x0800a178-graphics.md).
-- **`sub_800AFF4`** (`src/graphics/actor_part111.c`, GitHub issue
-  #9/#10) - the per-frame update for a "stars orbiting a dizzy head"
-  companion effect, gated on `gUnknown_030012C0+0x78`'s mode field:
-  mode 3 (stun-entry) repositions and flickers a `self+0xb0` child
-  object next to `self`'s head and blinks `self` itself via
-  `sub_8007A84` on a `self+0x8c` deadline, ending the stun
-  (`sub_80231EC(gUnknown_030012C0, 2)`) once that deadline clears;
-  modes 1/2 (idle-orbit) drive the same child object in an elliptical
-  path from `self`'s own 8-frame-delayed position-history ring buffer
-  (`self+0xb4`/`self+0xb8`) plus the shared `gStaticData_0816A820`
-  sine-ish table. Both the mode-3 and mode-1/2 branches reuse the same
-  `self+0x20`-table/`+0x2d`-tag 28-byte-record clamp-and-store idiom
-  (`actor_part79.c`'s sibling shape) to pick the child's own variant.
-  Keeps `sb`/`sl`/`r8`/`ip` all simultaneously live across the
-  ring-buffer and trig-table math - the same register-pressure shape
-  already proven gcc-2.9-resistant on `sub_800CD00`/`sub_800A178`/
-  `sub_800A420` above and `sub_8026AE8`/`sub_8026A18` elsewhere this
-  session; not attempted as C, transcribed directly as byte-exact
-  NAKED asm instead. See
-  [docs/matching/issue-9-10-0x0800aff4-graphics.md](../matching/issue-9-10-0x0800aff4-graphics.md).
-  A C draft that is 40 halfwords off (old_agbcc) is now under
-  `#if NON_MATCHING`. See
-  [docs/matching/issue-9-raw-asm-pass.md](../matching/issue-9-raw-asm-pass.md),
-  "Hold pass".
 - **`sub_8015038`** (`src/graphics/actor_part38.c`) - a three-arm
   mgr-trampoline handler keyed on `self+0x24`/`self+0x22`, picking one
   of three table-index fallbacks. See
