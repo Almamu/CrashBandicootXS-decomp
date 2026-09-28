@@ -90,6 +90,16 @@ no caller).
   Pinning sb/sl moves the loads to the declaration point, and pointer
   locals let gcc hoist the dereferences as well, so neither helps.
 
+### Later pass: all three closed
+
+[actor-zone-naked-retry.md](actor-zone-naked-retry.md) closed the
+three, so issue #54 has nothing left. `sub_802D7B0` and `sub_802DD9C`
+keep their boxes as members of one stack-frame struct, which makes gcc
+rematerialize `&b` from sp the way the ROM does (old_agbcc;
+`actor_part75.c` moved to it). `sub_802DE70` passes
+`gUnknown_030014BC` straight into a `CurFrame()` inline instead of
+going through an `obj` local, which fixes the r8/sb/sl order.
+
 ## Verification
 
 `rm -rf build && make NON_MATCHING=1 report` gives no warnings from the

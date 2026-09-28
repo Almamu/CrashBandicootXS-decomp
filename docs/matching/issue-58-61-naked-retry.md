@@ -46,6 +46,24 @@ old_agbcc. The files stay on current agbcc, and no file was split.
 | `sub_8031378` (`actor_part24b.c`) | About 50 halfwords off. The shape is right (inline `BoxOffset`, a struct-returning `SelfBox`, the self-`sub_800014C` copy), but `&c` gets hoisted into `r4` before the box copy and costs an extra `r6` push. |
 | `sub_8031604` (`actor_part26c.c`), `sub_80336CC` (`actor_part130.c`) | About 95-105 halfwords off. These are the 4-row and 1-row versions of the same meter builder, so a shared inline is likely. The ROM re-reads each height from the stack after the row-pointer store (`ldm r1!`), which suggests the store can alias the height array. It also allocates the nibble-expansion temporaries differently. |
 
+### Later pass: four more closed
+
+[actor-zone-naked-retry.md](actor-zone-naked-retry.md) closed
+`sub_8030D48`, `sub_80330FC`, `sub_8030E08` and `sub_8031378`:
+
+- The blit twins read the bias as `u8 bias = <s32 global>;` and declare
+  `row` before `i`, which breaks the global-alloc tie between `row + 0x20`
+  and `i + 1` the ROM's way. `actor_part23b.c` and `actor_part130.c`
+  moved to old_agbcc.
+- `sub_8030E08` stores the X step once and the Y step once per branch.
+  The reference counts that global-alloc sees then give the Y velocity
+  copy r4. It matches under both compilers.
+- `sub_8031378` uses the frame-struct box layout from `sub_802DD9C`
+  (old_agbcc; `actor_part24b.c` moved).
+
+`sub_8031604` and `sub_80336CC` are still NAKED, so issues #58 and #61
+stay open.
+
 ## Techniques worth reusing
 
 - `fold` reassociation cuts both ways. `a - (b - K)` becomes
