@@ -41,18 +41,8 @@ extern void *gUnknown_03001308;
  *    instead), mirroring `sub_800944C`'s own primary/secondary-pass
  *    marking convention (there via `node+0x11`).
  *
- * Written as NAKED asm, not plain C: the semantics above are fully
- * confirmed (every branch, field offset, and call argument traced
- * against the ROM disassembly), but this function juggles more live
- * cross-branch state across three high registers (`r8`/`sb`/`sl`, each
- * reused for a different purpose in each of the three inner-loop
- * branches) than any C-level reconstruction attempted here reproduced
- * exactly - the same category of many-register allocation gap already
- * documented for `sub_8008F20`/`sub_8009914` in `actor_part11.c`.
- * Parked as a direct transcription of the ROM's own confirmed-correct
- * instructions instead. The NON_MATCHING draft below is now 7
- * halfwords off (see the note on it). */
-#if NON_MATCHING
+ * Built with old_agbcc (see `OLD_AGBCC_OBJS` in the Makefile).
+ * docs/matching/issue-9-raw-asm-pass.md has how it was matched. */
 struct pool_node {
     struct box_part *data;
     struct pool_node *next;
@@ -83,12 +73,14 @@ struct track_obj {
     s32 *pos;
 };
 
-/* `sub_8009A30`'s body, inlined. */
-static inline void pool_remove(struct pool_manager *manager, struct box_part *target)
+/* `sub_8009A30`'s body, inlined. `holdR2` is a constant: nonzero only
+ * for the first loop's copy (see the hold below). */
+static inline void pool_remove(struct pool_manager *manager, struct box_part *target, s32 holdR2)
 {
     s32 i = 0;
     s32 searchCount = manager->capacity;
     struct box_part **base;
+    register s32 hold asm("r2");
 
     /* Emits no code. It keeps gcse's copy of `capacity` from landing
      * right after the load; cse2 would otherwise swap the two and put
@@ -114,10 +106,19 @@ static inline void pool_remove(struct pool_manager *manager, struct box_part *ta
         }
     }
 
+    /* Hard-register hold (emits no code): in the first loop's copy, r2
+     * is live from here until `base[i]` is read, so `base` (live across
+     * that span) can't take r2. It goes to r3 and `capacity` gets r2,
+     * as in the ROM. The second loop's copy already matches without it. */
+    if (holdR2)
+        asm("" : "=r"(hold));
     if (i < manager->capacity) {
         s32 off = i * 4;
         struct box_part *item = base[i];
 
+        /* End of the hold above (emits no code). */
+        if (holdR2)
+            asm("" : : "r"(hold));
         sub_8009008(manager, item);
 
         {
@@ -156,19 +157,12 @@ static inline void part_destroy(struct box_part *part)
  * pointer (the ROM's sb/ip and sl/sb pairs). */
 #define PART_COPY(p) ({ struct box_part *_t = (p); _t; })
 
-static inline void pool_destroy(struct pool_manager *manager, struct box_part *obj)
+static inline void pool_destroy(struct pool_manager *manager, struct box_part *obj, s32 holdR2)
 {
-    pool_remove(manager, PART_COPY(obj));
+    pool_remove(manager, PART_COPY(obj), holdR2);
     part_destroy(PART_COPY(obj));
 }
 
-/* 7 halfwords off under old_agbcc (was 215); agbcc is further off.
- * What's left: in the first loop's inlined search the ROM puts the
- * `capacity` load in r2 and the `slotArray` copy in r3, and this build
- * swaps them. Also `gridHeadBase[i]` comes out as `adds r0, r0, r2`
- * where the ROM has `adds r0, r2, r0`. Loop-shape changes (brief item
- * 9), extra-reference nudges, padding asm and do/while(0) depth changes
- * did not fix the swap without breaking the second loop. */
 void sub_80091D4(struct pool_manager *manager)
 {
     s32 box[4];
@@ -199,7 +193,9 @@ void sub_80091D4(struct pool_manager *manager)
     gridHeadBase = manager->gridHead;
     gridHead255 = &manager->gridHead[255];
     do {
-        node = gridHeadBase[i];
+        /* Byte arithmetic on the base gives the ROM's `adds r0, r2, r0`
+         * operand order; `gridHeadBase[i]` swaps the operands. */
+        node = *(struct pool_node **)((s32)gridHeadBase + (i << 2));
         next = i - 1;
         while (node != NULL) {
             /* Reading `node->data` twice gives the ROM's load into r2
@@ -225,7 +221,7 @@ void sub_80091D4(struct pool_manager *manager)
                 manager->gridTail[255] = newNode;
                 node->link = newNode;
             } else if (part->flags & 1) {
-                pool_destroy(manager, PART_COPY(part));
+                pool_destroy(manager, PART_COPY(part), 1);
             } else {
                 struct part_method *m = PART_METHOD(part, 0x40);
 
@@ -246,7 +242,7 @@ void sub_80091D4(struct pool_manager *manager)
         struct box_part *part = node->data;
 
         if (part->flags & 1) {
-            pool_destroy(manager, PART_COPY(part));
+            pool_destroy(manager, PART_COPY(part), 0);
         } else if (node->link->mark == 0) {
             struct part_method *m = PART_METHOD(part, 0x18);
 
@@ -256,330 +252,4 @@ void sub_80091D4(struct pool_manager *manager)
         }
     }
 }
-#else
-NAKED void sub_80091D4(void *manager)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sl\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6, r7}\n\t"
-        "sub sp, #0x1c\n\t"
-        "add r7, r0, #0\n\t"
-        "mov r0, #0xdc\n\t"
-        "lsl r0, r0, #9\n\t"
-        "mov r1, #0x8c\n\t"
-        "lsl r1, r1, #9\n\t"
-        "str r0, [sp, #8]\n\t"
-        "str r1, [sp, #0xc]\n\t"
-        "ldr r0, 6f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r2, [r0, #0x10]\n\t"
-        "ldr r1, [r2]\n\t"
-        "lsl r1, r1, #8\n\t"
-        "ldr r0, 7f\n\t"
-        "add r1, r1, r0\n\t"
-        "ldr r0, [r2, #4]\n\t"
-        "lsl r0, r0, #8\n\t"
-        "ldr r3, 8f\n\t"
-        "add r0, r0, r3\n\t"
-        "str r1, [sp]\n\t"
-        "str r0, [sp, #4]\n\t"
-        "ldr r2, [r2]\n\t"
-        "asr r2, r2, #8\n\t"
-        "str r2, [sp, #0x10]\n\t"
-        "cmp r2, #0\n\t"
-        "bge 1f\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [sp, #0x10]\n\t"
-    "1:\n\t"
-        "ldr r1, [sp, #0x10]\n\t"
-        "add r1, #2\n\t"
-        "add r2, r7, #0\n\t"
-        "add r2, #0x10\n\t"
-        "str r2, [sp, #0x18]\n\t"
-        "ldr r3, 9f\n\t"
-        "add r3, r3, r7\n\t"
-        "mov sl, r3\n\t"
-    "2:\n\t"
-        "lsl r0, r1, #2\n\t"
-        "ldr r2, [sp, #0x18]\n\t"
-        "add r0, r2, r0\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r8, r0\n\t"
-        "sub r1, #1\n\t"
-        "str r1, [sp, #0x14]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 3f\n\t"
-        "b 19f\n\t"
-    "3:\n\t"
-        "mov r3, r8\n\t"
-        "ldr r2, [r3]\n\t"
-        "ldrb r0, [r2, #0xc]\n\t"
-        "lsr r1, r0, #4\n\t"
-        "mov r0, #1\n\t"
-        "and r1, r0\n\t"
-        "add r5, r2, #0\n\t"
-        "cmp r1, #0\n\t"
-        "beq 12f\n\t"
-        "ldr r4, [r3, #0xc]\n\t"
-        "cmp r4, #0\n\t"
-        "bne 12f\n\t"
-        "ldr r1, 10f\n\t"
-        "add r2, r7, r1\n\t"
-        "ldr r1, [r2]\n\t"
-        "ldr r3, [r1]\n\t"
-        "ldr r0, [r1, #4]\n\t"
-        "str r0, [r2]\n\t"
-        "str r4, [r1, #4]\n\t"
-        "str r5, [r3]\n\t"
-        "str r4, [r3, #4]\n\t"
-        "mov r2, r8\n\t"
-        "str r2, [r3, #0xc]\n\t"
-        "strb r4, [r3, #0x10]\n\t"
-        "strb r4, [r3, #0x11]\n\t"
-        "mov r1, sl\n\t"
-        "ldr r0, [r1]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 4f\n\t"
-        "str r3, [r1]\n\t"
-    "4:\n\t"
-        "ldr r2, 11f\n\t"
-        "add r1, r7, r2\n\t"
-        "ldr r0, [r1]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 5f\n\t"
-        "str r3, [r0, #4]\n\t"
-    "5:\n\t"
-        "str r3, [r1]\n\t"
-        "mov r0, r8\n\t"
-        "str r3, [r0, #0xc]\n\t"
-        "b 18f\n\t"
-        ".align 2, 0\n"
-    "6: .4byte gUnknown_03001308\n"
-    "7: .4byte 0xFFFF9C00\n"
-    "8: .4byte 0xFFFFC400\n"
-    "9: .4byte 0x0000040C\n"
-    "10: .4byte 0x00000814\n"
-    "11: .4byte 0x0000080C\n"
-    "12:\n\t"
-        "mov r4, #1\n\t"
-        "add r0, r4, #0\n\t"
-        "ldrb r1, [r5, #0xc]\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "beq 17f\n\t"
-        "mov sb, r5\n\t"
-        "mov ip, r5\n\t"
-        "mov r6, #0\n\t"
-        "ldr r2, [r7, #4]\n\t"
-        "add r4, r2, #0\n\t"
-        "cmp r6, r4\n\t"
-        "bge 15f\n\t"
-        "ldr r0, [r7, #8]\n\t"
-        "ldr r1, [r0]\n\t"
-        "add r3, r0, #0\n\t"
-        "cmp r1, r5\n\t"
-        "beq 14f\n\t"
-        "add r1, r3, #0\n\t"
-    "13:\n\t"
-        "add r1, #4\n\t"
-        "add r6, #1\n\t"
-        "cmp r6, r2\n\t"
-        "bge 15f\n\t"
-        "ldr r0, [r1]\n\t"
-        "cmp r0, ip\n\t"
-        "bne 13b\n\t"
-    "14:\n\t"
-        "cmp r6, r4\n\t"
-        "bge 15f\n\t"
-        "lsl r4, r6, #2\n\t"
-        "add r0, r4, r3\n\t"
-        "ldr r1, [r0]\n\t"
-        "add r0, r7, #0\n\t"
-        "bl sub_8009008\n\t"
-        "add r0, r4, #4\n\t"
-        "ldr r1, [r7, #8]\n\t"
-        "add r0, r1, r0\n\t"
-        "add r1, r1, r4\n\t"
-        "ldr r2, [r7]\n\t"
-        "sub r2, r2, r6\n\t"
-        "ldr r3, 16f\n\t"
-        "and r2, r3\n\t"
-        "mov r3, #0x80\n\t"
-        "lsl r3, r3, #0x13\n\t"
-        "orr r2, r3\n\t"
-        "bl sub_803A94C\n\t"
-        "ldr r2, [r7]\n\t"
-        "ldr r1, [r7, #8]\n\t"
-        "lsl r0, r2, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "sub r0, #4\n\t"
-        "mov r1, #0\n\t"
-        "str r1, [r0]\n\t"
-        "sub r2, #1\n\t"
-        "str r2, [r7]\n\t"
-    "15:\n\t"
-        "mov r2, sb\n\t"
-        "cmp r2, #0\n\t"
-        "beq 18f\n\t"
-        "ldr r1, [r2, #0x18]\n\t"
-        "add r1, #0x50\n\t"
-        "mov r3, #0\n\t"
-        "ldrsh r0, [r1, r3]\n\t"
-        "add r0, sb\n\t"
-        "ldr r2, [r1, #4]\n\t"
-        "mov r1, #3\n\t"
-        "bl sub_803AD80\n\t"
-        "b 18f\n\t"
-        ".align 2, 0\n"
-    "16: .4byte 0x001FFFFF\n"
-    "17:\n\t"
-        "ldr r1, [r5, #0x18]\n\t"
-        "add r1, #0x40\n\t"
-        "mov r2, #0\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r2, [r1, #4]\n\t"
-        "mov r1, sp\n\t"
-        "bl sub_803AD80\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "beq 18f\n\t"
-        "mov r3, r8\n\t"
-        "ldr r0, [r3]\n\t"
-        "ldr r2, [r0, #0x18]\n\t"
-        "mov r3, #0x18\n\t"
-        "ldrsh r1, [r2, r3]\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r1, [r2, #0x1c]\n\t"
-        "bl sub_803AD7C\n\t"
-        "mov r0, r8\n\t"
-        "strb r4, [r0, #0x10]\n\t"
-    "18:\n\t"
-        "mov r1, r8\n\t"
-        "ldr r1, [r1, #4]\n\t"
-        "mov r8, r1\n\t"
-        "cmp r1, #0\n\t"
-        "beq 19f\n\t"
-        "b 3b\n\t"
-    "19:\n\t"
-        "ldr r1, [sp, #0x14]\n\t"
-        "ldr r2, [sp, #0x10]\n\t"
-        "cmp r1, r2\n\t"
-        "blt 20f\n\t"
-        "b 2b\n\t"
-    "20:\n\t"
-        "mov r3, sl\n\t"
-        "ldr r3, [r3]\n\t"
-        "mov r8, r3\n\t"
-        "cmp r3, #0\n\t"
-        "beq 29f\n\t"
-    "21:\n\t"
-        "mov r0, r8\n\t"
-        "ldr r2, [r0]\n\t"
-        "mov r3, #1\n\t"
-        "ldrb r1, [r2, #0xc]\n\t"
-        "and r3, r1\n\t"
-        "cmp r3, #0\n\t"
-        "beq 26f\n\t"
-        "mov sl, r2\n\t"
-        "mov sb, r2\n\t"
-        "mov r5, #0\n\t"
-        "ldr r6, [r7, #4]\n\t"
-        "add r4, r6, #0\n\t"
-        "cmp r5, r4\n\t"
-        "bge 24f\n\t"
-        "ldr r0, [r7, #8]\n\t"
-        "ldr r1, [r0]\n\t"
-        "add r3, r0, #0\n\t"
-        "cmp r1, r2\n\t"
-        "beq 23f\n\t"
-        "add r1, r3, #0\n\t"
-    "22:\n\t"
-        "add r1, #4\n\t"
-        "add r5, #1\n\t"
-        "cmp r5, r6\n\t"
-        "bge 24f\n\t"
-        "ldr r0, [r1]\n\t"
-        "cmp r0, sb\n\t"
-        "bne 22b\n\t"
-    "23:\n\t"
-        "cmp r5, r4\n\t"
-        "bge 24f\n\t"
-        "lsl r4, r5, #2\n\t"
-        "add r0, r4, r3\n\t"
-        "ldr r1, [r0]\n\t"
-        "add r0, r7, #0\n\t"
-        "bl sub_8009008\n\t"
-        "add r0, r4, #4\n\t"
-        "ldr r1, [r7, #8]\n\t"
-        "add r0, r1, r0\n\t"
-        "add r1, r1, r4\n\t"
-        "ldr r2, [r7]\n\t"
-        "sub r2, r2, r5\n\t"
-        "ldr r3, 25f\n\t"
-        "and r2, r3\n\t"
-        "mov r3, #0x80\n\t"
-        "lsl r3, r3, #0x13\n\t"
-        "orr r2, r3\n\t"
-        "bl sub_803A94C\n\t"
-        "ldr r2, [r7]\n\t"
-        "ldr r1, [r7, #8]\n\t"
-        "lsl r0, r2, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "sub r0, #4\n\t"
-        "mov r1, #0\n\t"
-        "str r1, [r0]\n\t"
-        "sub r2, #1\n\t"
-        "str r2, [r7]\n\t"
-    "24:\n\t"
-        "mov r2, sl\n\t"
-        "cmp r2, #0\n\t"
-        "beq 28f\n\t"
-        "ldr r1, [r2, #0x18]\n\t"
-        "add r1, #0x50\n\t"
-        "mov r3, #0\n\t"
-        "ldrsh r0, [r1, r3]\n\t"
-        "add r0, sl\n\t"
-        "ldr r2, [r1, #4]\n\t"
-        "mov r1, #3\n\t"
-        "bl sub_803AD80\n\t"
-        "b 28f\n\t"
-        ".align 2, 0\n"
-    "25: .4byte 0x001FFFFF\n"
-    "26:\n\t"
-        "mov r0, r8\n\t"
-        "ldr r1, [r0, #0xc]\n\t"
-        "ldrb r0, [r1, #0x10]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 27f\n\t"
-        "ldr r1, [r2, #0x18]\n\t"
-        "mov r3, #0x18\n\t"
-        "ldrsh r0, [r1, r3]\n\t"
-        "add r0, r2, r0\n\t"
-        "ldr r1, [r1, #0x1c]\n\t"
-        "bl sub_803AD7C\n\t"
-        "b 28f\n\t"
-    "27:\n\t"
-        "strb r3, [r1, #0x10]\n\t"
-    "28:\n\t"
-        "mov r0, r8\n\t"
-        "ldr r0, [r0, #4]\n\t"
-        "mov r8, r0\n\t"
-        "cmp r0, #0\n\t"
-        "bne 21b\n\t"
-    "29:\n\t"
-        "add sp, #0x1c\n\t"
-        "pop {r3, r4, r5}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov sl, r5\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-    );
-}
-#endif
 asm(".align 2, 0");

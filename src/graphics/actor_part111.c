@@ -367,16 +367,16 @@ void sub_800AC2C(struct ac2c_self *self, s32 a, s32 code, s32 c)
 }
 
 #if NON_MATCHING
-/* C draft (issue #9-#11 NAKED retry, old_agbcc): same shape as the ROM
- * but not converged (246 halfwords off, 624 bytes vs 636). The first
- * ~40 instructions now match. What's left: the ROM keeps `self` in r7
- * and needs only one spill slot (`&histIdx` at [sp]), with sb/sl
- * holding `&hist[0].x`/`&hist[0].y`, `&self->child` in ip and `&82C` in
- * r4. This draft puts `self` in r6 and spills `&histIdx` and the y base.
- * Because the reload registers then rotate differently, gcc
- * cross-jumps the -0x1300 add in the mirror branches, which the ROM
- * keeps apart. The child repositioning goes through an inline whose
- * argument order (x, y, child) gives the ROM's load order. */
+/* C draft (old_agbcc): 40 halfwords off, same size (636 bytes). Two r6
+ * holds give `self` r7 and the ROM's single spill (`&histIdx` at [sp],
+ * sb/sl = `&hist[0].x`/`.y`, r8 = mode, ip = `&self->child`). The
+ * first ~190 instructions match. What's left, all in the mode 1/2
+ * block: `&82C` and `&81C` get r5/r4 where the ROM has r4/r5 (holds on
+ * r4/r5 only add spills), and the orbit tail computes `idx * 8` and
+ * the x/y history addresses after the table reads instead of before
+ * them (the ROM adds the offset into sb in place). The child
+ * repositioning goes through an inline whose argument order (x, y,
+ * child) gives the ROM's load order. */
 #include "box_part.h"
 
 struct orbit_pos {
@@ -388,7 +388,9 @@ struct orbit_self {
     s32 x;                      // 0x00
     s32 y;                      // 0x04
     u8 unk_08[4];
-    u8 flags;                   // 0x0C - bit 3 cleared once +0x38 is set
+    u8 flags_0:3;               // 0x0C
+    u8 flag3:1;                 // bit 3 cleared once +0x38 is set
+    u8 flags_4:4;
     u8 unk_0D[0x1b];
     u32 unk_28_0:4;             // 0x28
     u32 mirrorX:1;
@@ -451,6 +453,8 @@ static inline void RefreshChild(struct box_part *child)
 
 void sub_800AFF4(struct orbit_self *self)
 {
+    register s32 hold asm("r6");
+
     if (gUnknown_030012C0->mode == 3) {
         if (!(gUnknown_0300082C & 7))
             /* One expression, so the store address is loaded before
@@ -475,24 +479,39 @@ void sub_800AFF4(struct orbit_self *self)
             SetFrame(self->child, 2);
         RefreshChild(self->child);
     }
+    /* Hard-register hold (emits no code): r6 live across the blink
+     * call keeps `self` out of r6, so it gets r7 as in the ROM. */
+    asm("" : "=r"(hold));
     if (gUnknown_030012C0->mode == 3 || !BlinkArmed(self) || (gUnknown_0300082C & 4))
         sub_8007A84(gUnknown_030012CC, self);
+    /* End of the hold above (emits no code). */
+    asm("" : : "r"(hold));
     {
         struct orbit_game *game = gUnknown_030012C0;
 
         if (game->mode == 3 && !BlinkArmed(self))
             sub_80231EC(game, 2);
     }
-    self->hist[self->histIdx].x = self->x;
-    self->hist[self->histIdx].y = self->y;
+    {
+        s32 x = self->x;
+
+        self->hist[self->histIdx].x = x;
+    }
+    {
+        s32 y = self->y;
+
+        self->hist[self->histIdx].y = y;
+    }
     self->histIdx = (self->histIdx + 1) % 8;
     {
         s32 mode = gUnknown_030012C0->mode;
 
         if ((u32)(mode - 1) <= 1) {
             if (!(gUnknown_0300082C & 7)) {
-                s32 v = (gUnknown_0300081C += (u16)sub_8000E1C(3) - 1);
+                s32 v;
 
+                gUnknown_0300081C = gUnknown_0300081C + (u16)sub_8000E1C(3) - 1;
+                v = gUnknown_0300081C;
                 if (v > 3)
                     v = 3;
                 if (v < 0)
@@ -501,23 +520,26 @@ void sub_800AFF4(struct orbit_self *self)
             }
             ClampTick(self->child, gUnknown_0300081C);
             {
+                s32 idx = self->histIdx;
                 u32 t = gUnknown_0300082C;
                 s32 a = gStaticData_0816A820[t & 0xff];
                 s32 b = gStaticData_0816A820[(t >> 1) & 0xff];
-                struct box_part *child = self->child;
 
-                s32 nx = (a << 4) + self->hist[self->histIdx].x;
-                s32 ny = (b << 3) + self->hist[self->histIdx].y + (s32)0xFFFFE800;
-
-                child->x = nx;
-                child->y = ny;
+                SetPos(a << 4, (b << 3) - 0x1800, self->child, self->hist[idx].x, self->hist[idx].y);
             }
+            /* Hard-register hold (emits no code): r6 live here keeps
+             * `&self->child` out of r6 (it goes to ip), which leaves r6
+             * for `&histIdx` in global-alloc; reload then evicts it to
+             * [sp], giving the ROM's single spill and sb/sl/r8 layout. */
+            asm("" : "=r"(hold));
             self->child->frame = mode - 1;
             RefreshChild(self->child);
+            /* End of the hold above (emits no code). */
+            asm("" : : "r"(hold));
         }
     }
     if (self->unk_38)
-        self->flags &= ~8;
+        self->flag3 = 0;
 }
 #else
 NAKED void sub_800AFF4(void *selfArg)

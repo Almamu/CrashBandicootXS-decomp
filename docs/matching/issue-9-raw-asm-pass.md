@@ -158,3 +158,53 @@ place; the NAKED bodies are unchanged.
   rather than a declared frame struct. A frame-struct draft was not
   tried. Matching by spilling means reproducing global-alloc's choices
   across the whole function, which didn't fit the budget.
+
+## Hold pass: `sub_80091D4` closed, `sub_800AFF4` 246 → 40
+
+This pass applied the hard-register hold from #489
+(`register s32 hold asm("rN"); asm("" : "=r"(hold)); ...
+asm("" : : "r"(hold));`) to the two drafts above.
+
+- **`sub_80091D4`: matched** (old_agbcc; `actor_part11c.o` joined
+  `OLD_AGBCC_OBJS`. It is the only function in that file, and it is
+  still 28 halfwords off under agbcc).
+  - The `(s32)gridHeadBase + (i << 2)` byte-offset form fixes the
+    `adds r0, r2, r0` operand order (7 → 6).
+  - The last 6 were the r2/r3 swap in the first loop's inlined search.
+    Holding r2 from just before `if (i < manager->capacity)` until
+    `base[i]` has been read makes `base` (the `slotArray` copy, still
+    live there) conflict with r2. It goes to r3, and `capacity`, which
+    is dead by then, takes r2 as in the ROM.
+  - The hold is only in the first loop's copy. `pool_remove` takes a
+    constant `holdR2` argument, which is 1 from the first loop and 0
+    from the second, and wraps both asm statements in `if (holdR2)`.
+    After inlining, the dead branch folds away, and the second loop's
+    code is unchanged.
+  - Holding r2 or r3 across the `capacity` load, or anywhere from the
+    load to the found-test, either did nothing or also changed the
+    second loop, as the earlier nudges did.
+- **`sub_800AFF4`: 246 → 40 halfwords, same size** (636 bytes). Not
+  closed; the draft under `#if NON_MATCHING` was updated.
+  - An r6 hold across the `sub_8007A84` blink call puts `self` in r7.
+    With `self` in r6, r7 had been the reload register.
+  - A value-first history store (`s32 x = self->x;` before
+    `self->hist[self->histIdx].x = x;`) matches the ROM's load order.
+    `gUnknown_0300081C = gUnknown_0300081C + (u16)r - 1` gives its add
+    order. `self+0xc` bit 3 is a bitfield, which gives the ROM's
+    `movs #9; negs` mask instead of `#0xf7`.
+  - With those changes, the single spill came from a second r6 hold
+    around the tail's `frame` store and `RefreshChild` call. It keeps
+    `&self->child` out of r6, so it goes to ip as in the ROM. That
+    leaves r6 to `&histIdx` in global-alloc. Reload then evicts
+    `&histIdx` to `[sp]`, and the hist bases go to sb/sl and `mode` to
+    r8, which is the ROM's layout. The r6 reloads in the ROM are
+    consistent with this.
+  - What's left:
+    - `&gUnknown_0300082C` and `&gUnknown_0300081C` are in r5/r4 where
+      the ROM has r4/r5. Every r4/r5 hold window in the mode block adds
+      spills.
+    - The orbit tail builds `idx * 8` and the x/y history addresses
+      after the sine-table reads. The ROM builds them first, adding the
+      offset into sb in place. None of 16 tail spellings tried
+      (pointer locals, byte offsets, a `struct orbit_pos *`, `SetPos`
+      argument orders) reproduced that.

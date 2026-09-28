@@ -930,6 +930,17 @@ from "core" graphics.
   from NAKED to real C, both matching under either compiler. See
   [near-miss-polish-2.md](../matching/near-miss-polish-2.md).
 
+### Matched in the issue #9 hold pass
+
+- `src/graphics/actor_part11c.c` - `sub_80091D4` (the 3-bucket grid
+  maintenance pass), old_agbcc (`actor_part11c.o` joined
+  `OLD_AGBCC_OBJS`; it is the only function in the file). A
+  hard-register hold on r2, only in the first loop's inlined search
+  and only from the found-test to the `base[i]` read, pushes the
+  `slotArray` copy to r3 so `capacity` takes r2. A byte-offset
+  `(s32)gridHeadBase + (i << 2)` fixes one `adds` operand order. See
+  [docs/matching/issue-9-raw-asm-pass.md](../matching/issue-9-raw-asm-pass.md).
+
 ### Matched in the late NAKED retry 3
 
 - `src/graphics/actor_part_14674.c` - `sub_8014B54` (the jump-start
@@ -1066,7 +1077,7 @@ doesn't advance that even when byte-correct. See
 established convention, and each entry's linked write-up for why
 plain C didn't converge.
 
-- **`sub_80091D4`** (`src/graphics/actor_part11c.c`) - a per-frame
+- **Now matched as real C (issue #9 hold pass, see Matched and docs/matching/issue-9-raw-asm-pass.md); entry kept for history.** **`sub_80091D4`** (`src/graphics/actor_part11c.c`) - a per-frame
   grid-maintenance pass over the 3-bucket window around the tracked
   sub-object's own column (plus bucket 255): lazily links newly-large
   objects into bucket 255 (`sub_8009150`'s own body, inlined), removes
@@ -1150,6 +1161,10 @@ plain C didn't converge.
   session; not attempted as C, transcribed directly as byte-exact
   NAKED asm instead. See
   [docs/matching/issue-9-10-0x0800aff4-graphics.md](../matching/issue-9-10-0x0800aff4-graphics.md).
+  A C draft that is 40 halfwords off (old_agbcc) is now under
+  `#if NON_MATCHING`. See
+  [docs/matching/issue-9-raw-asm-pass.md](../matching/issue-9-raw-asm-pass.md),
+  "Hold pass".
 - **`sub_8015038`** (`src/graphics/actor_part38.c`) - a three-arm
   mgr-trampoline handler keyed on `self+0x24`/`self+0x22`, picking one
   of three table-index fallbacks. See
