@@ -117,20 +117,42 @@ void sub_8002D44(struct settings_sync_pump *self)
  * sb.
  * Inline-argument-order pass: `&s->rx[i]` inline accessors, byte-offset
  * channel addresses and a re-read global still CSE the product
- * (100-121 hw). */
+ * (100-121 hw).
+ * Last-six pass (docs/matching/last-six-naked-retry.md): 97 hw, 4 bytes
+ * long, both loops now match instruction for instruction. The count
+ * test is a byte-offset sum (`s + i * 0xc8 + 0x18c`, the ROM's operand
+ * order), the channel pointer uses an `asm volatile` copy of the index
+ * (a second `muls`), and the loops go through `rd = &ch->readPos` with
+ * `nw = 0; if (old != 0x7f) nw = old + 1;` (the ROM's `movs r0,#0`
+ * inside the wrap loop). Left: the second `muls` copies the index
+ * instead of multiplying into the 0xc8 register, and the channel
+ * base's +0x108 is folded into its field offsets. Pinning s/index/0xc8
+ * to r3/r1/r2 reaches 47 hw (not adopted). */
 #if NON_MATCHING
 void sub_8002E20(struct settings_sync_pump *self, s32 playerIndex)
 {
     struct sio_session *s = gUnknown_03000804;
-    s32 n = s->rx[playerIndex].count;
+    s32 n;
 
+    n = *(s32 *)((u8 *)s + playerIndex * 0xc8 + 0x18c);
     if (n != 0)
     {
         u8 *dst = self->writePtr;
-        struct sio_channel *ch = &s->rx[playerIndex];
+        struct sio_channel *ch;
+        s32 *rd;
         s32 i;
 
-        if (ch->readPos < 0x80 - n)
+        {
+            s32 j = playerIndex;
+
+            /* A second copy of the index (no code): keeps CSE from
+             * reusing the count test's product, so `j * 0xc8` is
+             * multiplied again as in the ROM. */
+            asm volatile("" : "+r"(j));
+            ch = &s->rx[j];
+        }
+        rd = &ch->readPos;
+        if (*rd < 0x80 - n)
         {
             for (i = n - 1; i != -1; i--)
             {
@@ -143,11 +165,14 @@ void sub_8002E20(struct settings_sync_pump *self, s32 playerIndex)
         {
             for (i = n - 1; i != -1; i--)
             {
-                s32 p = ch->readPos;
+                s32 old = *rd;
+                s32 nw = 0;
 
-                ch->readPos = p == 0x7f ? 0 : p + 1;
+                if (old != 0x7f)
+                    nw = old + 1;
+                *rd = nw;
                 ch->count--;
-                *dst++ = ch->ring[p];
+                *dst++ = ch->ring[old];
             }
         }
         self->writePtr += n;

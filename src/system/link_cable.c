@@ -681,14 +681,15 @@ s32 sub_8001F50(struct link_session *self)
 #if NON_MATCHING
 /* C draft (docs/matching/big-naked-retry-3.md,
  * docs/matching/early-rom-naked-retry-2.md,
- * docs/matching/last-four-naked-retry.md): same size as the ROM
- * (1488 bytes) under old_agbcc, 16 halfwords off (was 422). Control
- * flow, block order and the stack frame match. What is left:
- * - the first receive loop: the ROM's `data[i]` load giv is in r1 and
- *   the 0xffff test giv in r3 (here swapped), and its spilled counter
- *   reloads into r0 (here r7);
- * - the `q[0]` low-nibble test: the ROM splits its `lsls`/`lsrs #28`
- *   pair around the right-hand sum (here they are adjacent).
+ * docs/matching/last-four-naked-retry.md,
+ * docs/matching/last-six-naked-retry.md): same size as the ROM
+ * (1488 bytes) under old_agbcc, 6 halfwords off (was 16). Control
+ * flow, block order and the stack frame match. What is left is the
+ * first receive loop only: the ROM's `data[i]` load giv is in r1 and
+ * the 0xffff test giv in r3 (here swapped), and its spilled counter
+ * reloads into r0 (here r7). Taking the test address first
+ * (`u16 *t = &d2[i]`) fixes the load/test pair but puts the `w[i]`
+ * giv first; see the doc for the giv-order analysis.
  * `data` is SIOMULTI0-3 (link_cable2.c passes 0x04000120). */
 /* A received SIOMULTI word, read back from a stack copy. */
 struct link_rx_word {
@@ -840,7 +841,13 @@ void sub_8002114(struct link_session *self, u16 *data)
         if (LINK_NIB(&q[1]).lo == LINK_NIB(&q[0]).hi
          || LINK_NIB(&q[1]).lo == ((LINK_NIB(&q[0]).hi - 1) & 0xf)) {
             if (LINK_NIB(&q[1]).hi <= 4) {
-                if (LINK_NIB(&q[0]).lo == ((LINK_NIB(&q[0]).hi + ((q[7] << 8) | q[6])) & 0xf))
+                /* A u8 against a u16: the compare is done in HImode, so
+                 * `lo`'s zero-extension is emitted at the compare (the
+                 * ROM's split lsls/lsrs #28 pair). */
+                u8 lo = LINK_NIB(&q[0]).lo;
+                u16 sum = (u16)(LINK_NIB(&q[0]).hi + ((q[7] << 8) | q[6])) % 16;
+
+                if (lo == sum)
                     ok = 1;
             }
         }
