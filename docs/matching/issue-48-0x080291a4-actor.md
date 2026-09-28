@@ -134,3 +134,14 @@ the column test, and `sub_802996C` inlines the same body twice.
 `sub_8029890` is still NAKED, with a 37-halfword draft under
 `NON_MATCHING`. `InitActorCategory` was not attempted. See
 [issue-48-49-52-aabb-naked-retry.md](issue-48-49-52-aabb-naked-retry.md).
+
+## Later pass: second near-miss sweep
+
+`sub_8029890` is real C (both compilers). The ROM stores
+`gUnknown_030013A4` once and reloads it for the division through a copy
+of its address taken before the `if`. `asm("" : "=r"(reload) : "0"(a4))`
+makes that copy. Evaluation order does the rest: the flag goes through a
+pointer to `gUnknown_030013B8` loaded first, `area` is assigned inside
+the `gUnknown_030013A0` store, and `size` is read back from
+`gUnknown_030013A0` between taking the address and copying it. See
+[near-miss-polish-2.md](near-miss-polish-2.md).

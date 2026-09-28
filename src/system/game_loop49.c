@@ -799,16 +799,21 @@ void sub_800F8E0(struct phys_obj *self)
  * that understanding. */
 
 #if NON_MATCHING
-/* Near miss under old_agbcc (58 halfwords off, same size): the
- * u48 word is handled with explicit byte masks; what is left is
- * register choice/order in the phase/count updates (the ROM updates `w`
- * in place in some blocks and into a fresh register in others, loads
- * u48 into r0 and copies it to r2 before the phase test, and computes
- * `(r - 1) << 24` before reloading u48 in the count update). */
+/* Near miss under old_agbcc: 7 halfwords off, same size (58 before the
+ * second near-miss sweep). The sweep gave the phase test (`w1`), the
+ * loop (`lw`) and the `0x38` switch (`w2`) their own locals, added an
+ * `asm("" : : "r"(lw))` extra reference so `lw` wins r1 over `nx`, pins
+ * the phase test's `& 4` ahead of the u48 copy with an
+ * `asm("" : "+r"(ph0))`, and computes `(u8)(r - 1)` into `t` before
+ * reloading u48. Left: in the count update the ROM's `& 0xc7` writes
+ * the reloaded word's register (r1, with `t` in r2); this writes the
+ * constant's (r0, with `t` in r1). Operand order, a fresh local and
+ * extra references on `w`/`t` didn't change it. */
 void sub_800F990(struct phys_obj *self)
 {
     s32 w;
     s32 ph0;
+    s32 w1;
 
     w = self->u48.n;
     if (!(w & 0xc0))
@@ -838,9 +843,11 @@ void sub_800F990(struct phys_obj *self)
     }
     if (self->timer != 0)
         return;
-    w = self->u48.n;
-    ph0 = w & 7;
-    if ((ph0 & 4) && self->tag == 8)
+    ph0 = self->u48.n & 7;
+    ph0 &= 4;
+    asm("" : "+r"(ph0));
+    w1 = self->u48.n;
+    if (ph0 && self->tag == 8)
     {
         s32 done = 0;
 
@@ -848,12 +855,14 @@ void sub_800F990(struct phys_obj *self)
         {
             s32 ph;
             s32 nx;
+            s32 lw;
 
-            w = self->u48.n;
-            nx = ((w & 7) + 1) & 3;
+            lw = self->u48.n;
+            nx = ((lw & 7) + 1) & 3;
             ph = nx;
-            w = (w & 0xf8) | nx;
-            self->u48.n = w;
+            lw = (lw & 0xf8) | nx;
+            asm("" : : "r"(lw));
+            self->u48.n = lw;
             switch (ph)
             {
             case 0:
@@ -864,24 +873,25 @@ void sub_800F990(struct phys_obj *self)
 
                     if (r != 0)
                     {
+                        u32 t = (u8)(r - 1);
+
                         w = self->u48.n;
-                        w = (w & 0xc7) | ((u8)(r - 1) << 3);
+                        w = (w & 0xc7) | (t << 3);
                         self->u48.n = w;
                     }
                     w = self->u48.n;
                     if (!(w & 0x38))
                     {
-                        w = (w & 0xc7) | 0x10;
-                        self->u48.n = w;
-                        switch ((s32)((u32)(w & 0xc0) >> 6))
+                        s32 w2 = (w & 0xc7) | 0x10;
+
+                        self->u48.n = w2;
+                        switch ((s32)((u32)(w2 & 0xc0) >> 6))
                         {
                         case 1:
-                            w = (w & 0x3f) | 0x80;
-                            self->u48.n = w;
+                            self->u48.n = (w2 & 0x3f) | 0x80;
                             break;
                         case 2:
-                            w = (w & 0x3f) | 0xc0;
-                            self->u48.n = w;
+                            self->u48.n = (w2 & 0x3f) | 0xc0;
                             break;
                         case 3:
                             PhysSetTag(self, 0x20);
@@ -930,11 +940,11 @@ void sub_800F990(struct phys_obj *self)
     else
     {
         {
-            s32 p = (w & 7) | 4;
+            s32 p = (w1 & 7) | 4;
 
-            w = p | (w & 0xf8);
+            w1 = p | (w1 & 0xf8);
         }
-        self->u48.n = w;
+        self->u48.n = w1;
         self->timer = 1;
         if (self->tag == 0xc)
             PhysSetTag(self, 0xa);

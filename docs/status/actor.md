@@ -923,6 +923,10 @@ from "core" graphics.
   level spawn record into a factory call) and the player constructor.
   All 7 real C, current agbcc (both compilers match). See
   [docs/matching/issue-51-actor-2ac28.md](../matching/issue-51-actor-2ac28.md).
+- **Second near-miss sweep:** `sub_8029890` (`actor_part95.c`, console
+  geometry setup) and `SelectActorCategory` (`actor_part102.c`) promoted
+  from NAKED to real C, both matching under either compiler. See
+  [near-miss-polish-2.md](../matching/near-miss-polish-2.md).
 
 ### Matched in the late-ROM NAKED retry
 
@@ -1111,18 +1115,6 @@ plain C didn't converge.
   to the original raw disassembly (both assembled independently and
   compared directly, not just against `baserom.gba`). See
   [docs/matching/issue-48-0x080291a4-actor.md](../matching/issue-48-0x080291a4-actor.md).
-- **`sub_8029890`** (`src/graphics/actor_part95.c`, GitHub issue #48) -
-  the console/text-plane geometry (re)configuration entry point. The
-  `NON_MATCHING` draft is 37 halfwords off under both compilers, all in
-  the `gUnknown_030013A4` store/reload block. See
-  [docs/matching/issue-48-49-52-aabb-naked-retry.md](../matching/issue-48-49-52-aabb-naked-retry.md).
-- **`SelectActorCategory`** (`src/graphics/actor_part102.c`, GitHub
-  issue #49) - sets up the selected category's runtime state and runs a
-  two-pass `sub_effect_table` threshold scan. The `NON_MATCHING` draft
-  has the ROM's instruction sequence, but `&gUnknown_03001404` and the
-  cached `sub_8029B2C()` value swap `r7`/`r8`. See
-  [docs/matching/issue-49-0x08029e4c-actor.md](../matching/issue-49-0x08029e4c-actor.md)
-  and [docs/matching/issue-48-49-52-aabb-naked-retry.md](../matching/issue-48-49-52-aabb-naked-retry.md).
 - **`sub_802A208`** (`src/graphics/actor_part103.c`, GitHub issue #49) -
   a scroll enter/exit trampoline + `sub_effect_table` draw loop +
   double actor-list walk. Not the AABB shape above - a related but

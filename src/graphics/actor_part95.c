@@ -93,32 +93,48 @@ extern s32 gUnknown_030013BC;
 extern void sub_802996C(void);
 extern s32 sub_803ADB4(s32 a, s32 b);
 
-/* NAKED - (re)configures the console/text-plane cell geometry from a
- * fresh cell record at `arg1` (a `{..., s16 width @0x200,
- * s16 height @0x202}` layout) - cell pixel area, its DMA-scroll-wrap
- * threshold, and the initial X/Y scroll accumulators - then rebuilds
- * both VRAM screen blocks via `sub_802996C`.
+/* (Re)configures the console/text-plane cell geometry from a fresh
+ * cell record at `arg1` (a `{..., s16 width @0x200, s16 height @0x202}`
+ * layout) - cell pixel area, its DMA-scroll-wrap threshold, and the
+ * initial X/Y scroll accumulators - then rebuilds both VRAM screen
+ * blocks via `sub_802996C`.
  *
- * The draft below is 37 halfwords off under both compilers, all in the
- * `gUnknown_030013A4` block: the ROM stores A4 once, after the `if`,
- * and then reloads it for the division; the draft stores it twice.
- * Storing a `size` local once instead makes gcc forward the value into
- * the division (no reload), and the flag byte loses `r5`. */
-#if NON_MATCHING
+ * Matched in the second near-miss sweep. The ROM stores
+ * `gUnknown_030013A4` once, after the `if`, then reloads it for the
+ * division through a *copy* of its address taken before the branch
+ * (`ldr r4, =A4; ...; add r1, r4, #0`). The copy is
+ * `asm("" : "=r"(reload) : "0"(a4))`, which emits no code but gives
+ * gcc a second pointer it can't merge back into `a4`. Evaluation order
+ * fixes the rest: the flag goes through a pointer to
+ * `gUnknown_030013B8` loaded first, `area` is assigned inside the
+ * `gUnknown_030013A0` store so that global's address loads before the
+ * multiply, and `size` is read back from `gUnknown_030013A0` between
+ * taking the address and copying it. Matches under both compilers. */
 void sub_8029890(s32 arg0, s32 arg1, s32 arg2, s32 arg3)
 {
     u8 *cell = (u8 *)arg1;
     s32 area;
+    s32 flag;
+    s32 size;
+    u8 *pFlag = &gUnknown_030013B8;
 
-    gUnknown_030013B8 = (arg0 == 0);
+    flag = (arg0 == 0);
+    *pFlag = flag;
     gUnknown_03001394 = cell;
     gUnknown_03001398 = *(s16 *)(cell + 0x200);
     gUnknown_0300139C = *(s16 *)(cell + 0x202);
-    area = gUnknown_03001398 * gUnknown_0300139C;
-    gUnknown_030013A4 = gUnknown_030013A0 = area << 5;
-    if (gUnknown_030013B8)
-        gUnknown_030013A4 += (area + 7) / 8 * 4;
-    gUnknown_030013AC = sub_803ADB4(arg2 - 0x204, gUnknown_030013A4) << 8;
+    gUnknown_030013A0 = (area = gUnknown_03001398 * gUnknown_0300139C) << 5;
+    {
+        s32 *a4 = &gUnknown_030013A4;
+        s32 *reload;
+
+        size = gUnknown_030013A0;
+        asm("" : "=r"(reload) : "0"(a4));
+        if (flag)
+            size += (area + 7) / 8 * 4;
+        *a4 = size;
+        gUnknown_030013AC = sub_803ADB4(arg2 - 0x204, *reload) << 8;
+    }
     gUnknown_030013B0 = 0;
     sub_802996C();
     gUnknown_030013B4 = 0;
@@ -128,112 +144,6 @@ void sub_8029890(s32 arg0, s32 arg1, s32 arg2, s32 arg3)
         gUnknown_030013A8 = (arg3 + gUnknown_030013C8) >> 8;
     gUnknown_030013BC = 0;
 }
-#else
-NAKED void sub_8029890(s32 arg0, s32 arg1, s32 arg2, s32 arg3)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "add r4, r1, #0\n\t"
-        "add r6, r2, #0\n\t"
-        "add r7, r3, #0\n\t"
-        "ldr r1, 1f\n\t"
-        "mov r5, #0\n\t"
-        "cmp r0, #0\n\t"
-        "bne 2f\n\t"
-        "mov r5, #1\n\t"
-        "2:\n\t"
-        "strb r5, [r1]\n\t"
-        "ldr r0, 3f\n\t"
-        "str r4, [r0]\n\t"
-        "ldr r1, 4f\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #2\n\t"
-        "add r0, r4, r2\n\t"
-        "mov r3, #0\n\t"
-        "ldrsh r2, [r0, r3]\n\t"
-        "str r2, [r1]\n\t"
-        "ldr r1, 5f\n\t"
-        "ldr r3, 6f\n\t"
-        "add r0, r4, r3\n\t"
-        "mov r3, #0\n\t"
-        "ldrsh r0, [r0, r3]\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r1, 7f\n\t"
-        "mul r2, r0, r2\n\t"
-        "lsl r0, r2, #5\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r4, 8f\n\t"
-        "add r3, r0, #0\n\t"
-        "add r1, r4, #0\n\t"
-        "cmp r5, #0\n\t"
-        "beq 9f\n\t"
-        "add r0, r2, #7\n\t"
-        "cmp r0, #0\n\t"
-        "bge 10f\n\t"
-        "add r0, #7\n\t"
-        "10:\n\t"
-        "asr r0, r0, #3\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r3, r3, r0\n\t"
-        "9:\n\t"
-        "str r3, [r4]\n\t"
-        "ldr r4, 11f\n\t"
-        "ldr r2, 12f\n\t"
-        "add r0, r6, r2\n\t"
-        "ldr r1, [r1]\n\t"
-        "bl sub_803ADB4\n\t"
-        "lsl r0, r0, #8\n\t"
-        "str r0, [r4]\n\t"
-        "ldr r0, 13f\n\t"
-        "mov r4, #0\n\t"
-        "str r4, [r0]\n\t"
-        "bl sub_802996C\n\t"
-        "ldr r0, 14f\n\t"
-        "str r4, [r0]\n\t"
-        "ldr r0, 1f\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 15f\n\t"
-        "ldr r1, 16f\n\t"
-        "ldr r0, 17f\n\t"
-        "ldr r0, [r0]\n\t"
-        "sub r0, r7, r0\n\t"
-        "b 18f\n\t"
-        ".align 2, 0\n"
-        "1: .4byte gUnknown_030013B8\n"
-        "3: .4byte gUnknown_03001394\n"
-        "4: .4byte gUnknown_03001398\n"
-        "5: .4byte gUnknown_0300139C\n"
-        "6: .4byte 0x00000202\n"
-        "7: .4byte gUnknown_030013A0\n"
-        "8: .4byte gUnknown_030013A4\n"
-        "11: .4byte gUnknown_030013AC\n"
-        "12: .4byte 0xFFFFFDFC\n"
-        "13: .4byte gUnknown_030013B0\n"
-        "14: .4byte gUnknown_030013B4\n"
-        "16: .4byte gUnknown_030013A8\n"
-        "17: .4byte gUnknown_030013C8\n"
-        "15:\n\t"
-        "ldr r1, 19f\n\t"
-        "ldr r0, 20f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r0, r7, r0\n\t"
-        "18:\n\t"
-        "asr r0, r0, #8\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r1, 21f\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [r1]\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-        "19: .4byte gUnknown_030013A8\n"
-        "20: .4byte gUnknown_030013C8\n"
-        "21: .4byte gUnknown_030013BC\n"
-    );
-}
-#endif
 
 /* `sub_8029BC4` (actor_part98.c), inlined here twice: fills screen
  * block 0x0600E400 (or 0x0600F400 when `arg0` is set, numbering on
