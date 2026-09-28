@@ -185,6 +185,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/actor_part_188d0.o \
                   $(C_BUILDDIR)/graphics/actor_part_1967c.o \
                   $(C_BUILDDIR)/graphics/actor_part_1a878.o \
+                  $(C_BUILDDIR)/graphics/actor_part_1ab98.o \
                   $(C_BUILDDIR)/graphics/actor_part_1b85c.o \
                   $(C_BUILDDIR)/graphics/actor_part_1cee0.o \
                   $(C_BUILDDIR)/graphics/actor_part_1da38.o \
@@ -229,6 +230,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/system/game_loop41.o \
                   $(C_BUILDDIR)/system/game_loop42.o \
                   $(C_BUILDDIR)/system/game_loop46.o \
+                  $(C_BUILDDIR)/system/game_loop47.o \
                   $(C_BUILDDIR)/system/game_loop48.o \
                   $(C_BUILDDIR)/system/game_loop49.o \
                   $(C_BUILDDIR)/system/game_loop51.o \

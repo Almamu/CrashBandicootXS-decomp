@@ -890,3 +890,11 @@ callee-saved register across the builder calls, and `px`/`py` are
 shared by both blocks, as in the ROM's r7/r8. `sub_0800D18C` (938
 halfwords off, was 968) and `sub_800E08C` (49) stay NAKED. See
 [sp-box-retry.md](sp-box-retry.md).
+
+## Later pass: sub_800E08C matched (last-five NAKED retry)
+
+`sub_800E08C` is now real C under old_agbcc (`game_loop47.o` joined
+`OLD_AGBCC_OBJS`). The first flag byte is a register union of a u32 and
+a one-byte struct, passed to `sub_800E7A8` as that struct (QImode), which
+gives the ROM's `mov r5, sp; ldrb` reload. `sub_0800D18C` stays NAKED;
+see [last5-naked-retry.md](last5-naked-retry.md) for what the pass found.

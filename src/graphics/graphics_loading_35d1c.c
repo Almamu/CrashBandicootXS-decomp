@@ -1130,7 +1130,10 @@ void sub_8036668(u32 *self)
  * flag in r7). 329 halfwords differ under old_agbcc. Six or more bare
  * `asm("")` in the row loop keep the 0x100 in it (loop.c's insn-count
  * threshold), but `buf + 0x60` still isn't reduced
- * (docs/matching/late-naked-retry-3.md). */
+ * (docs/matching/late-naked-retry-3.md). Last-five retry: an explicit
+ * second pointer `d = buf + 0x60` stepped by 0x100 compiles the same
+ * as this draft, and holds on sl/r9/r8 change only a few registers
+ * (docs/matching/last5-naked-retry.md). */
 struct oam_attrs
 {
     u32 y:8;            // 0x00

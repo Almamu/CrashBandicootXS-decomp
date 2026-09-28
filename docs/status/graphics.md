@@ -155,7 +155,8 @@ and [graphics_loading.md](./graphics_loading.md).
   (`sub_801A878`, the level-object spawner, built with
   `tools/agbcc/bin/old_agbcc`; NAKED under agbcc, see
   [docs/matching/old-agbcc-retry.md](../matching/old-agbcc-retry.md)).
-  `sub_801AB98` from the same range is parked below. See
+  `sub_801AB98` from the same range was parked, now matched (last-five
+  NAKED retry, below). See
   [docs/matching/issue-25-level-objects.md](../matching/issue-25-level-objects.md).
 - GitHub issues #28/#29 (0x0801DA38-0x0801E578, shared structs in
   `include/level_select_parts.h`, both files built with `old_agbcc`):
@@ -190,19 +191,19 @@ and [graphics_loading.md](./graphics_loading.md).
   as in the ROM; the state-0 BLDCNT accumulator is a block-scoped r5
   variable set through the constant-init asm. See
   [docs/matching/hard-register-hold-retry.md](../matching/hard-register-hold-retry.md).
+- **Last-five NAKED retry:** `sub_801AB98` (`actor_part_1ab98.c`, issue
+  #25, player-vs-object collision resolver) promoted from NAKED to real
+  C under old_agbcc (object added to `OLD_AGBCC_OBJS`). An r8 hold gives
+  `result` r8 and `self` sb; the sub_800FDC8 calls pass a reassigned
+  `px`; the player's position is read through a `PosPtr` inline instead
+  of a `pp` pointer; the vtable call is an inline through the method's
+  function pointer. See
+  [docs/matching/last5-naked-retry.md](../matching/last5-naked-retry.md).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
 ## Parked - NAKED asm transcriptions (byte-correct, not decompiled C)
-
-- **`sub_801AB98`** (`src/graphics/actor_part_1ab98.c`, player-vs-object
-  collision resolver) - GitHub issue #25. NAKED; the C reconstruction
-  under `#if NON_MATCHING` differs in reload's round-robin
-  scratch-register choices under agbcc and still doesn't match under
-  old_agbcc (the ROM cross-jumps the overlap computations into a shared
-  tail) - see
-  [issue-25-level-objects.md](../matching/issue-25-level-objects.md).
 
 - **`sub_8000EE4`** (`src/graphics/text_layout.c`) - word-wrap text
   renderer. A full C reconstruction matched the ROM instruction-for-

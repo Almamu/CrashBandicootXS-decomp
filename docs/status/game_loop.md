@@ -502,6 +502,14 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   entity constructor behind the trampoline family) promoted from NAKED
   to real C under old_agbcc (`game_loop36.o` joined `OLD_AGBCC_OBJS`).
   See [docs/matching/size2-naked-retry.md](../matching/size2-naked-retry.md).
+- **Last-five NAKED retry:** `sub_800E08C` (`game_loop47.c`, issue #12,
+  the second per-edge dispatcher) promoted from NAKED to real C under
+  old_agbcc (`game_loop47.o` joined `OLD_AGBCC_OBJS`; the NAKED
+  `sub_0800D18C` beside it is compiler-independent). The first flag
+  byte is a register union of a u32 and a one-byte struct, passed to
+  `sub_800E7A8` as that struct, so it goes in QImode and its spill slot
+  is reloaded with `mov r5, sp; ldrb`. See
+  [docs/matching/last5-naked-retry.md](../matching/last5-naked-retry.md).
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
@@ -572,6 +580,9 @@ plain C didn't converge.
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md)'s
   Phase 1 appendix for the confirmed dispatch maps (the basis for this
   issue's Phase 2 parallel split of the remaining 18 leaf functions).
+  `sub_800E08C` is now real C (last-five NAKED retry, see Matched);
+  `sub_0800D18C` stays NAKED with its near-miss draft - see
+  [docs/matching/last5-naked-retry.md](../matching/last5-naked-retry.md).
 - **Now matched as real C (issue #12/#13/#25 NAKED retry, see Matched); entry kept for history.** **`sub_800E888`** (`src/system/game_loop48.c`; `sub_800EDBC` was
   promoted by the issue #12/#24/#26 retry; the
   rest of this file was promoted to C by the NAKED-retry pass, see
