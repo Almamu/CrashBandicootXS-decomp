@@ -110,6 +110,233 @@
  * `lsl`/`lsr`, `orrs`->`orr`, `subs`->`sub`, `rsbs rX,rX,#0`->
  * `neg rX,rX`), with the original `_08XXXXXX:` labels renumbered to
  * GNU-as local numeric labels (first-definition order). */
+#if NON_MATCHING
+/* First full C draft (not close yet: 1416 bytes vs the ROM's 1396 under
+ * old_agbcc). The control flow, both jump tables and every field store
+ * are reconstructed; the register allocation differs from the start
+ * (the ROM keeps `type` in r7 and slot*2 in r8, this draft the other way
+ * round), and a few tag stores are not yet shared the ROM's way. */
+#include "phys_obj.h"
+extern void *sub_8026EDC(u32 size);
+extern void sub_80084A4(void *self);
+extern void sub_800FEB0(struct phys_obj *self);
+extern u8 sub_802599C(void *level, s32 id);
+extern s32 sub_80232E0(void *self);
+extern s32 sub_8023128(void *self);
+extern s32 sub_800815C(struct phys_obj *self);
+extern void sub_8009B70(void *list, struct phys_obj *self);
+extern void sub_800F5B8(struct phys_obj *self);
+extern struct phys_obj_vtable gStaticData_087E4074;
+extern u8 gStaticData_0816BB94[];
+extern void *gUnknown_0300130C;
+
+struct placement_level
+{
+    u8 unk_00[8];
+    u16 *offsets;       // 0x08
+    u8 *records;        // 0x0C
+};
+
+#define PLACEMENT_LEVEL (*(struct placement_level **)gUnknown_030012B4)
+#define PLACEMENT(i) (PLACEMENT_LEVEL->records + PLACEMENT_LEVEL->offsets[i])
+void *sub_800FF0C(u16 id, u16 x, u16 y, u16 slot, u8 type)
+{
+    struct phys_obj *self;
+    s32 special;
+    s32 flagged;
+
+    {
+        void *obj = sub_8026EDC(0x64);
+
+        sub_80084A4(obj);
+        ((struct phys_obj *)obj)->vtable = &gStaticData_087E4074;
+        ((struct phys_obj *)obj)->unk_59 = 0;
+        sub_800FEB0(obj);
+        self = obj;
+    }
+    self->id = id;
+    if (type == 9 && id != 0xffff && sub_802599C(gUnknown_030012B4, id))
+        type = 0;
+    if (*((u8 *)gUnknown_030012C0 + 0x8c) == 0
+        && sub_80232E0(gUnknown_030012C0) >= sub_8023128(gUnknown_030012C0))
+    {
+        if (type == 0xb)
+        {
+            u8 *rec = PLACEMENT(slot);
+
+            if (rec[0] & 0x40)
+                type = 2;
+            else if (rec[0] & 0x80)
+                type = 1;
+            else if (rec[1] & 1)
+                type = 9;
+        }
+        else if (type == 0xf)
+        {
+            u8 *rec = PLACEMENT(slot);
+
+            if (rec[0] & 0x40)
+                type = 2;
+            else if (rec[0] & 0x80)
+                type = 1;
+            else if (rec[1] & 1)
+                type = 9;
+        }
+    }
+    special = 0;
+    self->anim = (struct anim_table *)(**gUnknown_030012D0 + 0x174);
+    switch (type)
+    {
+    case 1:
+    case 9:
+    case 11:
+    case 12:
+    case 15:
+        special = 1;
+        break;
+    case 3:
+        if (sub_802599C(gUnknown_030012B4, id))
+            type = 7;
+        break;
+    }
+    flagged = 0;
+    {
+        u8 *rec = PLACEMENT(slot);
+
+        if (special || (rec[0] & 0x20))
+        {
+            flagged = 1;
+            if (*(u16 *)(rec + 4) == 0x1b)
+                self->unk_54 = 0x15;
+            else
+                self->unk_54 = *(s16 *)(rec + 4);
+            if (*((u8 *)gUnknown_030012C0 + 0x8c))
+                type = self->unk_54 - 0x15;
+        }
+    }
+    switch (type)
+    {
+    case 0:
+        PhysSetTag(self, 0x1f);
+        break;
+    case 1:
+        self->unk_50 = (PLACEMENT(slot)[0] >> 6) & 1;
+        PhysSetTag(self, 0x1a);
+        break;
+    case 2:
+        PhysSetTag(self, 0x17);
+        break;
+    case 3:
+        {
+            u8 *rec = PLACEMENT(slot);
+
+            PhysSetTag(self, 3);
+            self->unk_50 = rec[6];
+            self->unk_51 = rec[7];
+            self->unk_4C = rec[8];
+        }
+        break;
+    case 4:
+        PhysSetTag(self, 0x18);
+        break;
+    case 5:
+        {
+            u8 *rec = PLACEMENT(slot);
+
+            PhysSetTag(self, 0x15);
+            self->unk_50 = rec[6];
+            self->unk_51 = rec[7];
+            self->u48.n = *(s16 *)(rec + 8);
+        }
+        break;
+    case 6:
+        PhysSetTag(self, 4);
+        break;
+    case 7:
+        PhysSetTag(self, 0x20);
+        break;
+    case 8:
+        PhysSetTag(self, 2);
+        break;
+    case 9:
+        PhysSetTag(self, 0x1c);
+        if (!flagged)
+        {
+            self->unk_54 = 0x15;
+            if (*((u8 *)gUnknown_030012C0 + 0x8c))
+                type = 0;
+        }
+        break;
+    case 10:
+        PhysSetTag(self, 5);
+        break;
+    case 11:
+        {
+            u8 *rec = PLACEMENT(slot);
+
+            PhysSetTag(self, 0);
+            self->unk_51 = rec[6];
+        }
+        break;
+    case 12:
+        self->u48.n = -0x2a;
+        PhysSetTag(self, 0x19);
+        break;
+    case 13:
+        PhysSetTag(self, 6);
+        break;
+    case 14:
+        PhysSetTag(self, 0x11);
+        break;
+    case 15:
+        {
+            u8 *rec = PLACEMENT(slot);
+
+            sub_8006DF8(gUnknown_030012B8, self->anim->records[8].unk_14);
+            self->u48.n = (self->u48.n & 0x3f) & 0xf8;
+            PhysSetTag(self, 7);
+            self->timer = gStaticData_0816BB94[(self->u48.n & 0x38) >> 3];
+            self->unk_51 = rec[6];
+            self->unk_50 = 0;
+            if (rec[1] & 2)
+                self->unk_50 = 1;
+            if (rec[1] & 4)
+                self->unk_50 |= 2;
+            if (rec[1] & 8)
+                self->unk_50 |= 4;
+        }
+        break;
+    case 16:
+        PhysSetTag(self, 0xe);
+        break;
+    case 17:
+        PhysSetTag(self, 0xf);
+        break;
+    case 18:
+        PhysSetTag(self, 0x10);
+        break;
+    }
+    self->flipX = 0;
+    self->flipY = 0;
+    self->slot = sub_800815C(self);
+    self->x = x << 8;
+    self->y = y << 8;
+    if (sub_802599C(gUnknown_030012B4, id) && (type == 0xb || type == 0xf)
+        && (PLACEMENT(slot)[0] & 0x80))
+        type = 1;
+    if (type == 1 && id != 0xffff && sub_802599C(gUnknown_030012B4, id))
+    {
+        PhysSetTag(self, 0x1b);
+        self->frame = self->anim->records[self->tag].frames - 1;
+        self->state = (self->state & 0x80) | type;
+    }
+    self->kind = type;
+    if (type == 5 && sub_802599C(gUnknown_030012B4, id))
+        sub_800F5B8(self);
+    sub_8009B70(*(void **)gUnknown_0300130C, self);
+    return self;
+}
+#else
 NAKED void *sub_800FF0C(u16 arg0, u16 arg1, u16 arg2, u16 arg3, u8 type)
 {
     asm(
@@ -774,3 +1001,4 @@ NAKED void *sub_800FF0C(u16 arg0, u16 arg1, u16 arg2, u16 arg3, u8 type)
     "63: .4byte gUnknown_0300130C\n"
     );
 }
+#endif

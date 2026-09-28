@@ -285,3 +285,13 @@ file family; it sits between the still-differently-addressed
 `game_loop35.o` and `game_loop23.o` in ROM order, so - like
 `sub_8010480` before it - it needs its own file rather than joining
 either neighbor).
+
+## Later pass: issue #12/#13/#25 NAKED retry
+
+`sub_800FC70` and `sub_80104E4` are real C under old_agbcc
+(`game_loop32.o` and `game_loop51.o` joined `OLD_AGBCC_OBJS`). Neither
+needed a register pin: the "accumulators" and "threaded field addresses"
+come from GCSE copies of fields the source re-reads, nested `if`s that
+stop gcc folding a range test or merging two byte compares, and a
+frame-clamp inline whose constant argument keeps its own register. See
+[issue-12-13-25-naked-retry.md](issue-12-13-25-naked-retry.md).

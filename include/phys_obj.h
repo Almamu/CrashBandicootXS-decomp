@@ -15,7 +15,8 @@ struct phys_obj_vtable
     u8 unk_20[0x28];
     struct method m48; // 0x48 - returns the object's class id (3: box)
     struct method m50; // 0x50
-    u8 unk_58[0x10];
+    u8 unk_58[8];
+    struct method m60; // 0x60 - per-frame update tail (sub_80104E4)
     struct method m68; // 0x68
 };
 
@@ -37,10 +38,13 @@ struct phys_b48
 struct phys_flag_bits
 {
     u8 gone:1;          // removed (see sub_80072D8)
-    u8 unk_1:7;
+    u8 unk_1:3;
+    u8 bit4:1;          // set by sub_800E888 (also `flags |= 0x10` elsewhere)
+    u8 unk_5:3;
 };
 
 #define PHYS_GONE(obj) (((struct phys_flag_bits *)&(obj)->flags)->gone)
+#define PHYS_FLAG4(obj) (((struct phys_flag_bits *)&(obj)->flags)->bit4)
 
 /* A group of objects that trigger together (sub_800F368 builds it). */
 struct phys_group
@@ -75,7 +79,9 @@ struct phys_obj
     u8 tag;             // 0x2D
     u8 unk_2E[2];
     s32 frame;          // 0x30
-    u8 unk_34[0xC];
+    u8 unk_34[4];
+    u8 unk_38;          // 0x38 - nonzero: reset `frame` once the busy bit is seen
+    u8 unk_39[7];
     s32 unk_40;         // 0x40
     s32 unk_44;         // 0x44
     union {
@@ -89,7 +95,8 @@ struct phys_obj
     u8 timer;           // 0x4F
     u8 unk_50;          // 0x50
     u8 unk_51;          // 0x51
-    u8 unk_52[6];
+    u8 unk_52[2];
+    s32 unk_54;         // 0x54
     u8 touched;         // 0x58
     u8 unk_59;          // 0x59
 };
@@ -98,16 +105,35 @@ struct phys_obj
  * this cluster uses: a 5-slot ring of recently touched boxes. */
 struct phys_player
 {
-    u8 unk_00[0x80];
+    s32 x;              // 0x00
+    s32 y;              // 0x04
+    u8 unk_08[0x10];
+    struct gobj_vtable *vtable; // 0x18
+    u8 unk_1C[8];
+    u8 dir;             // 0x24 - bit 2: blocks the landing checks
+    u8 unk_25[0x2F];
+    s32 velX;           // 0x54
+    s32 velY;           // 0x58
+    s32 velZ;           // 0x5C
+    u8 unk_60[4];
+    s32 speedY;         // 0x64
+    u8 standMode;       // 0x68 - 8: standing on `carried`
+    u8 unk_69[0xB];
+    u32 hitMask;        // 0x74
+    u8 unk_78[8];
     u8 busy;            // 0x80
     u8 unk_81[7];
     u8 ringLocked;      // 0x88
     u8 unk_89[8];
     u8 handled;         // 0x91
-    u8 unk_92[2];
+    u8 bounce;          // 0x92
+    u8 unk_93;
     u8 ringCount;       // 0x94
     u8 unk_95[3];
     struct phys_obj *ring[5]; // 0x98
+    struct phys_obj *carried; // 0xAC
+    u8 unk_B0[0x5C];
+    u8 unk_10C;         // 0x10C - nonzero: sub_800E08C leaves the position alone
 };
 
 #define PHYS_PLAYER ((struct phys_player *)gUnknown_030012D8)
@@ -161,6 +187,19 @@ static inline void PhysSetTag(struct phys_obj *self, u8 tag)
     sub_80087C0(self);
     sub_80087B4(self);
     sub_800872C(self, 0);
+}
+
+/* Sets `frame` to `idx`, clamped to the current tag's frame count. `idx`
+ * being a parameter matters: the inlined copy keeps the constant
+ * argument in its own register, which the callers' later zero/constant
+ * stores reuse (sub_800E888, sub_80104E4). */
+static inline void PhysSetFrame(struct phys_obj *obj, s32 idx)
+{
+    u8 n = obj->anim->records[obj->tag].frames;
+
+    if (idx >= n)
+        idx = n - 1;
+    obj->frame = idx;
 }
 
 /* Sets bit `id` of the gUnknown_030012B4+0x108 bitmap - the same

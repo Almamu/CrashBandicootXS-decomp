@@ -427,6 +427,15 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 - **Issue #12 NAKED retry:** `sub_800EDBC` (`game_loop48.c`, old_agbcc,
   the neighbor "impact spread" walk) promoted from NAKED to real C. See
   [docs/matching/issue-24-26-12-naked-retry.md](../matching/issue-24-26-12-naked-retry.md).
+- **Issue #12/#13/#25 NAKED retry:** `sub_800E888` (`game_loop48.c`,
+  the shared "apply the collision response" landing point),
+  `sub_800FC70` (`game_loop32.c`, the position-wrap advance) and
+  `sub_80104E4` (`game_loop51.c`, the per-frame state tick) promoted
+  from NAKED to real C, all under old_agbcc (`game_loop32.o` and
+  `game_loop51.o` joined `OLD_AGBCC_OBJS`). `sub_800D040`,
+  `sub_800E08C`, `sub_800F990` and `sub_800FF0C` stay NAKED with new
+  C drafts under `#if NON_MATCHING`. See
+  [docs/matching/issue-12-13-25-naked-retry.md](../matching/issue-12-13-25-naked-retry.md).
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
@@ -477,6 +486,9 @@ plain C didn't converge.
   (`sub_8007B00`/`sub_8007B98` in `actor_part.c`), dispatches to
   `sub_800EEF0`/`sub_800E7A8` on overlap. See
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md).
+  The issue #12/#13/#25 retry left a near-miss C draft (old_agbcc: gcc
+  keeps the player box's `sp+0x10` in a register), see
+  [docs/matching/issue-12-13-25-naked-retry.md](../matching/issue-12-13-25-naked-retry.md).
 - **`sub_0800D18C`/`sub_800E08C`** (`src/system/game_loop47.c`, new
   file - GitHub issue #12 Phase 1) - the physics/collision subsystem's
   two largest, most tangled dispatchers, closed by NAKED transcription
@@ -494,7 +506,7 @@ plain C didn't converge.
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md)'s
   Phase 1 appendix for the confirmed dispatch maps (the basis for this
   issue's Phase 2 parallel split of the remaining 18 leaf functions).
-- **`sub_800E888`** (`src/system/game_loop48.c`; `sub_800EDBC` was
+- **Now matched as real C (issue #12/#13/#25 NAKED retry, see Matched); entry kept for history.** **`sub_800E888`** (`src/system/game_loop48.c`; `sub_800EDBC` was
   promoted by the issue #12/#24/#26 retry; the
   rest of this file was promoted to C by the NAKED-retry pass, see
   Matched) (originally with `sub_800E560`/`sub_800E6B0`/`sub_800E7A8`/
@@ -546,7 +558,7 @@ plain C didn't converge.
   it the same way. Both NAKED: the same single-inlined-AABB-build shape
   `sub_800D040`/`sub_800CD00` already document as gcc-2.9-resistant. See
   [docs/matching/issue-9-10-0x0800ceac-graphics.md](../matching/issue-9-10-0x0800ceac-graphics.md).
-- **`sub_800FC70`** (`src/system/game_loop32.c`, GitHub issue #13,
+- **Now matched as real C (issue #12/#13/#25 NAKED retry, see Matched); entry kept for history.** **`sub_800FC70`** (`src/system/game_loop32.c`, GitHub issue #13,
   second pass) - a per-frame position-wrap advance keeping `sb`/`r8`
   live as two extra callee-saved accumulators throughout, the same gap
   as `sub_800D040` above. See
@@ -739,7 +751,7 @@ plain C didn't converge.
   from the confirmed-traced ROM disassembly, formerly
   `asm/code_3_2_17_225a0.s`, now retired). See `docs/matching.md`'s
   entry for this function for the full trace.
-- **`sub_80104E4`** (`src/system/game_loop51.c`, new file, GitHub
+- **Now matched as real C (issue #12/#13/#25 NAKED retry, see Matched); entry kept for history.** **`sub_80104E4`** (`src/system/game_loop51.c`, new file, GitHub
   issue #13) - a ~195-instruction per-frame state-machine dispatcher:
   throttles/re-triggers `sub_800F8E0`/`sub_800F990`/`sub_800F4F4` off
   `self+0x4e`'s settle-state byte, always calls `sub_800FC70`, then -

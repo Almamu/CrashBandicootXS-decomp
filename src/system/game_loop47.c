@@ -2039,6 +2039,220 @@ NAKED void sub_0800D18C(void *self, u32 arg1)
  * Written as NAKED asm for the same reason as `sub_0800D18C` above -
  * see docs/matching/issue-12-physics-collision.md. Transcribed
  * instruction-for-instruction from the ROM disassembly. */
+#if NON_MATCHING
+/* Near miss under old_agbcc: identical except for the case-3 read of
+ * the first flag byte - the ROM reloads it as a byte from its spill
+ * slot (`mov r5, sp; ldrb r2, [r5]`), this draft as a word, which
+ * shifts the rest of that case by one halfword. */
+#include "phys_obj.h"
+extern void PlaySfx(void *ctx, s32 id, s32 volume);
+extern void *gUnknown_030012BC;
+extern s32 gStaticData_0816BC98[][7];
+extern void sub_800F2BC(struct phys_obj *self);
+extern void sub_800F368(struct phys_obj *self);
+extern void sub_800E620(struct phys_obj *self);
+extern void sub_800E560(struct phys_obj *self);
+extern void sub_800E7A8(struct phys_obj *self, u32 a, u32 b, u32 c);
+extern void sub_800EEF0(struct phys_obj *self, u8 a);
+extern void sub_800E6B0(struct phys_obj *self);
+
+struct e08c_pos
+{
+    s32 x;
+    s32 y;
+};
+
+struct flag8
+{
+    u8 value;
+} __attribute__((packed));
+
+/* sub_803AD88 is libgcc's `_call_via_r4`. */
+asm(".set _call_via_r4, sub_803AD88\n");
+
+#define E08C_CALL68(a, b) \
+    PhysCall3(PHYS_PLAYER, (struct method *)&PHYS_PLAYER->vtable->m68, 0, (a), (b))
+
+void sub_800E08C(struct phys_obj *self, s32 kind, s32 code, s32 edge, s32 depth,
+                 struct e08c_pos pos, s32 hit, struct flag8 p20, struct flag8 p21,
+                 struct flag8 pforced)
+{
+    u8 f20 = p20.value;
+    u8 f21 = p21.value;
+    u8 forcedIn = pforced.value;
+    u8 forced;
+
+    if ((self->state & 0x7f) != 0)
+        goto commit;
+    if (PHYS_PLAYER->ringLocked == 1 && code > 2)
+    {
+        pos.x = PHYS_PLAYER->x;
+        pos.y = PHYS_PLAYER->y;
+    }
+    if ((u32)(code - 2) <= 1 || code == 5)
+    {
+        u8 k = self->kind;
+        s32 dir = PHYS_PLAYER->dir;
+        s32 d4 = dir & 4;
+
+        if (d4 == 0)
+        {
+            if (k != 0xd)
+            {
+                if (kind == 2)
+                {
+                    if (k == 4 || k == 8)
+                    {
+                        PlaySfx(gUnknown_030012BC, 2, 0x100);
+                        E08C_CALL68(0xe, 8);
+                    }
+                    else
+                        E08C_CALL68(0xd, 8);
+                    PHYS_PLAYER->speedY = 0;
+                    PHYS_PLAYER->velX = 0;
+                    PHYS_PLAYER->velY = 0;
+                    PHYS_PLAYER->velZ = 0;
+                }
+                else if ((u32)(kind - 5) <= 1 && k == 8)
+                {
+                    PlaySfx(gUnknown_030012BC, 2, 0x100);
+                    E08C_CALL68(0xe, 8);
+                    PHYS_PLAYER->speedY = 0;
+                    PHYS_PLAYER->velX = 0;
+                    PHYS_PLAYER->velY = 0;
+                    PHYS_PLAYER->velZ = 0;
+                }
+            }
+            else if (code == 2)
+            {
+                self->state |= 0x80;
+                {
+                    u8 one = 1;
+
+                    PHYS_PLAYER->busy = one;
+                }
+                code = 1;
+            }
+        }
+    }
+    if (code == 3 && self->kind == 0xf && (self->u48.n & 7) == 3)
+    {
+        {
+            u8 e = 0xe;
+
+            self->kind = e;
+            self->u48.n = 0;
+        }
+        code = gStaticData_0816BC98[self->kind][kind];
+    }
+    forced = forcedIn;
+    if (code == 1 && kind == 4 && PHYS_PLAYER->bounce == 1 && !(PHYS_PLAYER->dir & 0xc))
+    {
+        code = gStaticData_0816BC98[self->kind][kind];
+        PHYS_PLAYER->bounce = 2;
+        PHYS_PLAYER->bounce++;
+        PHYS_PLAYER->bounce++;
+        PHYS_PLAYER->bounce++;
+        forced = 1;
+    }
+    switch (code)
+    {
+    case 0:
+    case 1:
+        if (!(PHYS_PLAYER->dir & 4) && f21 != 0)
+        {
+            if ((edge == 8 && depth <= 1) || (depth <= 1 && code == 1) || (depth <= 7 && code == 1 && edge == 8))
+            {
+                PHYS_PLAYER->carried = self;
+                {
+                    u8 m = 8;
+
+                    PHYS_PLAYER->standMode = m;
+                }
+                {
+                    struct e08c_pos *pp = &pos;
+                    s32 y = PHYS_PLAYER->y;
+
+                    pp->y = y - ((depth - 1) << 8);
+                    hit = 0;
+                    pp->x = PHYS_PLAYER->x;
+                }
+            }
+        }
+        if (code != 1)
+            goto commit;
+        if ((u32)(edge - 1) <= 1 && kind <= 1)
+        {
+            hit = 0;
+            pos.x = PHYS_PLAYER->x;
+        }
+        if (self->kind == 6)
+            sub_800F2BC(self);
+        else if (self->kind == 3)
+            sub_800F368(self);
+        goto commit;
+    case 2:
+        if (self->kind == 0xe)
+            sub_800E620(self);
+        else if (self->kind == 0xc)
+            sub_800E560(self);
+        else
+        {
+            self->state |= 0x80;
+            {
+                struct phys_player *p = PHYS_PLAYER;
+                u8 one = 1;
+
+                p->busy = one;
+            }
+        }
+        goto commit;
+    case 3:
+        if ((u32)(kind - 5) <= 1)
+            sub_800E7A8(self, 0, 0, 0);
+        else if (self->unk_44 != 0)
+            sub_800E7A8(self, 0, 0, 4);
+        else if (kind == 2)
+            sub_800E7A8(self, 0, f20, edge);
+        else
+        {
+            struct phys_player **pp = (struct phys_player **)&gUnknown_030012D8;
+
+            if ((*pp)->ringCount != 0 && forced == 0)
+                return;
+            if (edge == 8 || edge == 4)
+            {
+                sub_800E7A8(self, 0, 0, edge);
+                if ((*pp)->ringLocked == 0 && (*pp)->ringCount <= 4)
+                    (*pp)->ring[(*pp)->ringCount] = self;
+                if (PHYS_PLAYER->ringLocked == 0)
+                    PHYS_PLAYER->ringCount++;
+            }
+        }
+        return;
+    case 4:
+        if ((self->state & 0x7f) == 0)
+            sub_800EEF0(self, 1);
+        return;
+    case 5:
+        sub_800E6B0(self);
+        return;
+    }
+commit:
+    {
+        struct phys_player *p = PHYS_PLAYER;
+        u8 *q = (u8 *)p + 0x108;
+
+        if (q[4] == 0)
+            sub_8007398((struct gobj *)p, pos.x, pos.y);
+    }
+    if (hit != 0)
+    {
+        E08C_CALL68(0xc, hit);
+        PHYS_PLAYER->hitMask |= hit;
+    }
+}
+#else
 NAKED void sub_800E08C(void *self, u32 arg1, u32 arg2, u32 arg3, u8 arg4, u8 arg5, u8 arg6)
 {
     asm(
@@ -2569,6 +2783,7 @@ NAKED void sub_800E08C(void *self, u32 arg1, u32 arg2, u32 arg3, u8 arg4, u8 arg
     "49: .4byte gUnknown_030012D8\n"
     );
 }
+#endif
 /* Trailing byte count isn't a multiple of 4 - without this, `as` pads
  * with its default NOP fill instead of the ROM's zero fill (see
  * docs/matching.md's alignment-padding gotcha). */

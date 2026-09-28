@@ -851,3 +851,15 @@ was not the blocker; `spread = n->unk_40; spread -= n->y;` (two steps)
 puts `self`/`spread`/`carry`/`base` in r8/r7/r9/r10 like the ROM. See
 [issue-24-26-12-naked-retry.md](issue-24-26-12-naked-retry.md) for the
 remaining source-shape details.
+
+### Later pass: issue #12/#13/#25 NAKED retry
+
+`sub_800E888` is real C under old_agbcc. The "r8/sb accumulators" were
+ordinary: `sb` is the CSE'd `&self->kind` and `r8` a local `one = 1`
+that the state store and the bitmap shift share. What mattered was
+switching the tag through the `PhysSetTag` inline, clamping the frame
+through the new `PhysSetFrame(self, 3)` inline, setting `flags` bit 4
+as a bitfield, and writing the switch cases in the ROM's block order.
+`sub_800D040`, `sub_800E08C` and `sub_800F990` now have near-miss drafts
+and `sub_0800D18C` is still untouched. See
+[issue-12-13-25-naked-retry.md](issue-12-13-25-naked-retry.md).

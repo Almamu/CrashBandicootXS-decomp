@@ -438,304 +438,107 @@ other:
  * SFX-3-plus-particle-spawn fallback) before converging on a shared
  * epilogue.
  *
- * (NAKED-retry pass, old_agbcc: a plain C draft gets every block
- * right but lands `self`/`chained` in r5/r8 instead of r4/r7 - ~120
- * halfwords of register-letter differences.)
- *
- * NAKED transcription, not real C: a 23-case jump table (the largest
- * in this subsystem after `sub_0800D18C`'s own three) inside a
- * function that also needs `r8`/`sb` as two extra callee-saved
- * accumulators live across most of the body (`self+0x4e`'s address
- * cached in `sb`, a `1`/`self`-derived flag cached in `r8`) - the
- * same confirmed gcc-2.9-resistant shape `sub_800D040`'s own doc
- * comment documents, again here. See
- * docs/matching/issue-12-physics-collision.md. */
-NAKED void sub_800E888(struct phys_obj *self, u32 arg1)
+ * Real C under old_agbcc (the old "r8/sb accumulators" note was wrong;
+ * see docs/matching/issue-12-13-25-naked-retry.md): the tag switch goes
+ * through PhysSetTag (constant loaded before the tag address), the
+ * frame clamp through PhysSetFrame(self, 3), bit 4 of `flags` is set as
+ * a bitfield (a plain `|= 0x10` leaves a zero pseudo that CSE shares
+ * with the `busy` store), the constant 1 of the state store is a local
+ * `one` that the bitmap shift reuses (the ROM's r8), and the switch
+ * cases are in the ROM's block order with an explicit empty case 22. */
+void sub_800E888(struct phys_obj *self, u32 arg1)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sb\n\t"
-        "mov r6, r8\n\t"
-        "push {r6, r7}\n\t"
-        "sub sp, #8\n\t"
-        "add r4, r0, #0\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "lsr r6, r1, #0x18\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x4d\n\t"
-        "mov r0, #0x7f\n\t"
-        "ldrb r1, [r1]\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #1\n\t"
-        "bne 1f\n\t"
-        "b 32f\n\t"
-    "1:\n\t"
-        "mov r7, #0\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_801070C\n\t"
-        "cmp r0, #0\n\t"
-        "beq 2f\n\t"
-        "cmp r6, #0\n\t"
-        "bne 2f\n\t"
-        "mov r7, #1\n\t"
-    "2:\n\t"
-        "mov r0, #0x10\n\t"
-        "ldrb r1, [r4, #0xc]\n\t"
-        "orr r0, r1\n\t"
-        "strb r0, [r4, #0xc]\n\t"
-        "ldr r0, 6f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r1, r4, #0\n\t"
-        "bl sub_8009150\n\t"
-        "add r2, r4, #0\n\t"
-        "add r2, #0x4d\n\t"
-        "mov r0, #0x7f\n\t"
-        "ldrb r3, [r2]\n\t"
-        "and r0, r3\n\t"
-        "mov r1, #0\n\t"
-        "strb r0, [r2]\n\t"
-        "ldr r0, 7f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r0, #0x80\n\t"
-        "strb r1, [r0]\n\t"
-        "mov r5, #1\n\t"
-        "mov r8, r5\n\t"
-        "mov r0, #0x80\n\t"
-        "ldrb r1, [r2]\n\t"
-        "and r0, r1\n\t"
-        "orr r0, r5\n\t"
-        "strb r0, [r2]\n\t"
-        "mov r0, #0x1d\n\t"
-        "add r5, r4, #0\n\t"
-        "add r5, #0x2d\n\t"
-        "strb r0, [r5]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087C0\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087B4\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800872C\n\t"
-        "ldr r0, [r4, #0x20]\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldrb r2, [r5]\n\t"
-        "lsl r0, r2, #3\n\t"
-        "sub r0, r0, r2\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r1, r1, r0\n\t"
-        "ldr r0, 8f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldrb r1, [r1, #0x14]\n\t"
-        "bl sub_8006DF8\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "add r2, r4, #0\n\t"
-        "add r2, #0x29\n\t"
-        "mov r1, #0xf\n\t"
-        "and r0, r1\n\t"
-        "mov r1, #0x10\n\t"
-        "neg r1, r1\n\t"
-        "ldrb r3, [r2]\n\t"
-        "and r1, r3\n\t"
-        "orr r1, r0\n\t"
-        "strb r1, [r2]\n\t"
-        "mov r2, #3\n\t"
-        "ldr r0, [r4, #0x20]\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldrb r3, [r5]\n\t"
-        "lsl r0, r3, #3\n\t"
-        "sub r0, r0, r3\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrb r0, [r0, #0x16]\n\t"
-        "cmp r2, r0\n\t"
-        "blt 3f\n\t"
-        "sub r2, r0, #1\n\t"
-    "3:\n\t"
-        "str r2, [r4, #0x30]\n\t"
-        "ldr r0, 9f\n\t"
-        "mov r5, #0x4e\n\t"
-        "add r5, r5, r4\n\t"
-        "mov sb, r5\n\t"
-        "ldrb r1, [r5]\n\t"
-        "add r0, r1, r0\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 4f\n\t"
-        "ldr r0, 10f\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_8022FEC\n\t"
-    "4:\n\t"
-        "ldrh r3, [r4, #8]\n\t"
-        "ldr r0, 11f\n\t"
-        "ldr r2, [r0]\n\t"
-        "add r0, r3, #0\n\t"
-        "asr r0, r0, #5\n\t"
-        "lsl r1, r0, #2\n\t"
-        "mov r5, #0x84\n\t"
-        "lsl r5, r5, #1\n\t"
-        "add r2, r2, r5\n\t"
-        "add r2, r2, r1\n\t"
-        "lsl r0, r0, #5\n\t"
-        "sub r0, r3, r0\n\t"
-        "mov r1, r8\n\t"
-        "lsl r1, r0\n\t"
-        "ldr r0, [r2]\n\t"
-        "orr r0, r1\n\t"
-        "str r0, [r2]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_800EDBC\n\t"
-        "mov r1, sb\n\t"
-        "ldrb r0, [r1]\n\t"
-        "cmp r0, #0x16\n\t"
-        "bls 5f\n\t"
-        "b 32f\n\t"
-    "5:\n\t"
-        "lsl r0, r0, #2\n\t"
-        "ldr r1, 12f\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov pc, r0\n\t"
-        ".align 2, 0\n"
-    "6: .4byte gUnknown_0300130C\n"
-    "7: .4byte gUnknown_030012D8\n"
-    "8: .4byte gUnknown_030012B8\n"
-    "9: .4byte gStaticData_0816BB98\n"
-    "10: .4byte gUnknown_030012C0\n"
-    "11: .4byte gUnknown_030012B4\n"
-    "12: .4byte 13f\n"
-    "13:\n\t"
-        ".4byte 29f\n\t"
-        ".4byte 32f\n\t"
-        ".4byte 14f\n\t"
-        ".4byte 16f\n\t"
-        ".4byte 19f\n\t"
-        ".4byte 32f\n\t"
-        ".4byte 17f\n\t"
-        ".4byte 32f\n\t"
-        ".4byte 32f\n\t"
-        ".4byte 15f\n\t"
-        ".4byte 21f\n\t"
-        ".4byte 18f\n\t"
-        ".4byte 19f\n\t"
-        ".4byte 19f\n\t"
-        ".4byte 21f\n\t"
-        ".4byte 22f\n\t"
-        ".4byte 23f\n\t"
-        ".4byte 25f\n\t"
-        ".4byte 27f\n\t"
-        ".4byte 21f\n\t"
-        ".4byte 21f\n\t"
-        ".4byte 21f\n\t"
-        ".4byte 32f\n\t"
-    "14:\n\t"
-        "cmp r6, #0\n\t"
-        "bne 32f\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_801085C\n\t"
-        "b 32f\n\t"
-    "15:\n\t"
-        "cmp r6, #0\n\t"
-        "bne 32f\n\t"
-        "add r0, r4, #0\n\t"
-        "add r1, r7, #0\n\t"
-        "bl sub_801089C\n\t"
-        "b 32f\n\t"
-    "16:\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_800F368\n\t"
-        "b 32f\n\t"
-    "17:\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_800F2BC\n\t"
-        "b 32f\n\t"
-    "18:\n\t"
-        "cmp r6, #0\n\t"
-        "bne 32f\n\t"
-        "add r0, r4, #0\n\t"
-        "add r1, r7, #0\n\t"
-        "bl sub_800EAFC\n\t"
-        "b 32f\n\t"
-    "19:\n\t"
-        "ldr r0, 20f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #3\n\t"
-        "bl PlaySfx\n\t"
-        "b 32f\n\t"
-        ".align 2, 0\n"
-    "20: .4byte gUnknown_030012BC\n"
-    "21:\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800EEF0\n\t"
-        "b 32f\n\t"
-    "22:\n\t"
-        "cmp r6, #0\n\t"
-        "bne 32f\n\t"
-        "add r0, r4, #0\n\t"
-        "add r1, r7, #0\n\t"
-        "bl sub_800ED08\n\t"
-        "b 32f\n\t"
-    "23:\n\t"
-        "ldr r0, 24f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #1\n\t"
-        "bl sub_8022EA8\n\t"
-        "b 32f\n\t"
-        ".align 2, 0\n"
-    "24: .4byte gUnknown_030012C0\n"
-    "25:\n\t"
-        "ldr r0, 26f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #2\n\t"
-        "bl sub_8022EA8\n\t"
-        "b 32f\n\t"
-        ".align 2, 0\n"
-    "26: .4byte gUnknown_030012C0\n"
-    "27:\n\t"
-        "ldr r0, 28f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #3\n\t"
-        "bl sub_8022EA8\n\t"
-        "b 32f\n\t"
-        ".align 2, 0\n"
-    "28: .4byte gUnknown_030012C0\n"
-    "29:\n\t"
-        "ldr r1, [r4]\n\t"
-        "asr r1, r1, #8\n\t"
-        "ldr r2, [r4, #4]\n\t"
-        "asr r2, r2, #8\n\t"
-        "add r2, #3\n\t"
-        "ldr r0, 30f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r3, #3\n\t"
-        "str r3, [sp]\n\t"
-        "add r3, sp, #4\n\t"
-        "strb r7, [r3]\n\t"
-        "mov r3, #0\n\t"
-        "bl sub_8025CA4\n\t"
-        "cmp r6, #0\n\t"
-        "bne 32f\n\t"
-        "ldr r0, 31f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #3\n\t"
-        "bl PlaySfx\n\t"
-    "32:\n\t"
-        "add sp, #8\n\t"
-        "pop {r3, r4}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "30: .4byte gUnknown_030012E4\n"
-    "31: .4byte gUnknown_030012BC\n"
-    );
+    s32 argP4;
+    u32 argP5;
+    u8 flag = arg1;
+    u8 chained;
+    u8 one;
+
+    if ((self->state & 0x7f) == 1)
+        return;
+    chained = 0;
+    if (sub_801070C(self) != NULL && flag == 0)
+        chained = 1;
+    PHYS_FLAG4(self) = 1;
+    sub_8009150(gUnknown_0300130C, self);
+    self->state &= 0x7f;
+    PHYS_PLAYER->busy = 0;
+    one = 1;
+    self->state = (self->state & 0x80) | one;
+    PhysSetTag(self, 0x1d);
+    {
+        struct anim_rec *recs = self->anim->records;
+        struct anim_rec *rec = &recs[self->tag];
+
+        self->slot = sub_8006DF8(gUnknown_030012B8, rec->unk_14);
+    }
+    PhysSetFrame(self, 3);
+    if (gStaticData_0816BB98[self->kind])
+        sub_8022FEC(gUnknown_030012C0);
+    {
+        s32 id = self->id;
+        u8 *base = gUnknown_030012B4;
+        s32 word = id / 32;
+        s32 off = word * 4;
+        u32 *slot = (u32 *)(base + 0x108);
+
+        slot = (u32 *)((u8 *)slot + off);
+        *slot |= one << (id - word * 32);
+    }
+    sub_800EDBC(self);
+    switch (self->kind)
+    {
+    case 2:
+        if (flag == 0)
+            sub_801085C(self);
+        break;
+    case 9:
+        if (flag == 0)
+            sub_801089C(self, chained);
+        break;
+    case 3:
+        sub_800F368(self);
+        break;
+    case 6:
+        sub_800F2BC(self);
+        break;
+    case 11:
+        if (flag == 0)
+            sub_800EAFC(self, chained);
+        break;
+    case 4:
+    case 12:
+    case 13:
+        PlaySfx(gUnknown_030012BC, 3, 0x100);
+        break;
+    case 10:
+    case 14:
+    case 19:
+    case 20:
+    case 21:
+        sub_800EEF0(self, 0);
+        break;
+    case 15:
+        if (flag == 0)
+            sub_800ED08(self, chained);
+        break;
+    case 16:
+        sub_8022EA8(gUnknown_030012C0, 1);
+        break;
+    case 17:
+        sub_8022EA8(gUnknown_030012C0, 2);
+        break;
+    case 18:
+        sub_8022EA8(gUnknown_030012C0, 3);
+        break;
+    case 0:
+        PHYS_SPAWN(self->x >> 8, (self->y >> 8) + 3, 0, 3, chained);
+        if (flag == 0)
+            PlaySfx(gUnknown_030012BC, 3, 0x100);
+        break;
+    case 22:
+        break;
+    }
 }
 
 /* Case-11 handler of `sub_800E888`'s own 23-case jump table (dispatch
