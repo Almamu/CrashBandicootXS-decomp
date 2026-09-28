@@ -59,6 +59,837 @@
  * same escape hatch used for `sub_8001CB8`/`sub_8001DB4`
  * (src/system/link_cable.c) and this issue's own `sub_800D040`/
  * `sub_800E494`/`sub_800E4E4`. */
+#if NON_MATCHING
+/* Structurally complete draft, the ROM's exact size (3840 bytes) under
+ * old_agbcc, 968 halfwords off. The control flow, block order, jump
+ * tables, stack frame layout (boxes at sp+0x1c/0x2c/0x3c, spill slots in
+ * the ROM's order) and the high-register allocation (self sl, obj/q/tgt
+ * r8, dy and the GCSE temps sb) match. What's left is low-register
+ * allocation: cse keeps `&f.b` in a callee-saved register across the
+ * two box-builder calls (the ROM recomputes `add r0, sp, #0x3c` each
+ * time), which pushes the rebuilt box's w/h into r5/r6 and the
+ * `&gUnknown_030012D8` GCSE temp into sb instead of r6. Under current
+ * agbcc the draft is 1629 halfwords off and 8 bytes long. See
+ * docs/matching/huge-naked-retry.md. */
+#include "phys_obj.h"
+
+/* The player (gUnknown_030012D8) as this function reads it. */
+struct d18c_player
+{
+    s32 x;              // 0x00
+    s32 y;              // 0x04
+    u8 unk_08[4];
+    u8 flags;           // 0x0C - bit 6
+    u8 unk_0D[0xB];
+    struct phys_obj_vtable *vtable; // 0x18
+    u8 unk_1C[4];
+    struct anim_table *anim; // 0x20
+    u8 dir;             // 0x24
+    u8 unk_25[3];
+    u32 unk_28_0:4;     // 0x28
+    s32 flipX:1;
+    s32 flipY:1;
+    u32 unk_28_6:2;
+    u32 unk_29:24;
+    u8 unk_2C;
+    u8 tag;             // 0x2D
+    u8 unk_2E[0x26];
+    s32 velX;           // 0x54
+    s32 velY;           // 0x58
+    s32 velZ;           // 0x5C
+    u8 unk_60[4];
+    s32 speedY;         // 0x64
+    u8 standMode;       // 0x68
+    u8 unk_69[0xB];
+    u32 hitMask;        // 0x74
+    u8 unk_78[8];
+    u8 busy;            // 0x80
+    u8 unk_81[7];
+    u8 ringLocked;      // 0x88
+    u8 unk_89[3];
+    u32 timer;          // 0x8C
+    u8 unk_90[2];
+    u8 bounce;          // 0x92
+    u8 unk_93;
+    u8 ringCount;       // 0x94
+    u8 unk_95[3];
+    struct phys_obj *ring[5]; // 0x98
+};
+
+#define D18C_P ((struct d18c_player *)gUnknown_030012D8)
+/* sub_8010D54's queue, at player+0x108 (+4: "position committed"). */
+#define D18C_QUEUE(p) ((u8 *)(p) + 0x108)
+#define D18C_COMMIT()                                                          \
+    if (1)                                                                     \
+    {                                                                          \
+        u8 *_q = D18C_QUEUE(D18C_P);                                           \
+                                                                               \
+        _q[4] = 1;                                                             \
+    }                                                                          \
+    else                                                                       \
+        (void)0
+
+struct d18c_level
+{
+    u8 unk_00[0x78];
+    s32 mode;           // 0x78
+};
+
+struct d18c_quad
+{
+    s16 xOff;
+    s16 yOff;
+    u8 w;
+    u8 h;
+};
+
+struct d18c_pos
+{
+    s32 x;
+    s32 y;
+};
+
+struct d18c_flag8
+{
+    u8 value;
+} __attribute__((packed));
+
+extern void sub_803AFE4(void *buf, s32 x, s32 y);
+extern void sub_803AFDC(void *buf, s32 w, s32 h);
+extern s32 gStaticData_0816BBF0[];
+extern u8 gStaticData_0816BBDA[];
+extern u8 gStaticData_0816BF00[];
+extern u8 gStaticData_0816B2F8[];
+extern s32 gStaticData_0816BC98[][7];
+extern void *sub_80083B8(void *part);
+extern u8 sub_8001640(struct aabb *a, struct aabb *b);
+extern u8 sub_800CEAC(void *self, struct d18c_quad *quad, struct aabb *box, s32 x, s32 y);
+extern struct phys_obj *sub_800CF70(struct phys_obj *self, struct aabb *box, u8 *found);
+extern struct phys_obj *sub_8010708(struct phys_obj *obj);
+extern struct phys_obj *sub_801070C(struct phys_obj *obj);
+extern struct phys_obj *sub_801095C(struct phys_obj *obj);
+extern struct phys_obj *sub_8010914(struct phys_obj *obj);
+extern u8 sub_800B324(void *self);
+extern void sub_80231EC(void *self, s32 arg);
+extern void sub_800E494(struct phys_obj *self);
+extern void sub_800E4E4(struct phys_obj *self, struct aabb *box);
+extern void sub_800F2BC(struct phys_obj *self);
+extern void sub_800F368(struct phys_obj *self);
+extern void sub_800E620(struct phys_obj *self);
+extern void sub_800E7A8(struct phys_obj *self, u32 a, u32 b, u32 c);
+extern void sub_800EEF0(struct phys_obj *self, u8 a);
+extern void sub_800E6B0(struct phys_obj *self);
+extern void sub_8010D54(void *queue, struct phys_obj *obj, s32 kind, s32 code,
+                        s32 edge, s32 depth, struct d18c_pos pos, s32 hit,
+                        struct d18c_flag8 f20, struct d18c_flag8 f21);
+
+/* sub_803AD88 is libgcc's `_call_via_r4`. */
+asm(".set _call_via_r4, sub_803AD88\n");
+
+#define D18C_CALL68(a, b, c) \
+    PhysCall3(D18C_P, (struct method *)&D18C_P->vtable->m68, (a), (b), (c))
+
+/* sub_8008518 inlined: the player's current hitbox quad. */
+#define D18C_HITBOX(dst, part)                                                 \
+    if (1)                                                                     \
+    {                                                                          \
+        u8 *_info = sub_80083B8(part);                                         \
+                                                                               \
+        switch (**(u8 **)(_info + 4) >> 4)                                     \
+        {                                                                      \
+        case 0:                                                                \
+            (dst) = (struct d18c_quad *)(_info + 0x1c);                        \
+            break;                                                             \
+        case 1:                                                                \
+        case 2:                                                                \
+        case 3:                                                                \
+            (dst) = (struct d18c_quad *)gStaticData_0816B2F8;                  \
+            break;                                                             \
+        case 4:                                                                \
+            (dst) = (struct d18c_quad *)(_info + 0x1c);                        \
+            break;                                                             \
+        case 5:                                                                \
+        case 6:                                                                \
+            (dst) = (struct d18c_quad *)gStaticData_0816B2F8;                  \
+            break;                                                             \
+        default:                                                               \
+            (dst) = (struct d18c_quad *)gStaticData_0816B2F8;                  \
+            break;                                                             \
+        }                                                                      \
+    }                                                                          \
+    else                                                                       \
+        (void)0
+
+/* Pushes `obj` onto the player's 5-slot ring of touched boxes. */
+#define D18C_RING_PUSH(obj)                                                    \
+    if (1)                                                                     \
+    {                                                                          \
+        if (D18C_P->ringLocked == 0 && D18C_P->ringCount <= 4)                 \
+            D18C_P->ring[D18C_P->ringCount] = (obj);                           \
+        if (D18C_P->ringLocked == 0)                                           \
+            D18C_P->ringCount++;                                               \
+    }                                                                          \
+    else                                                                       \
+        (void)0
+
+static inline s32 D18C_Span(s32 a, s32 b, s32 c)
+{
+    return a + b - c;
+}
+
+static inline void D18C_Hit(struct d18c_player *p, u32 bit)
+{
+    p->hitMask |= bit;
+}
+
+static inline void D18C_SetBusy(struct d18c_player *p, u8 v)
+{
+    p->busy = v;
+}
+
+static inline s32 D18C_TimerOver(void)
+{
+    return D18C_P->timer > gUnknown_0300082C;
+}
+
+void sub_0800D18C(struct phys_obj *self, s32 idx)
+{
+    struct
+    {
+        struct aabb a;
+        struct aabb c;
+        struct aabb b;
+        u8 found;
+        struct d18c_pos p1;
+        struct d18c_pos p2;
+        struct d18c_pos p3;
+        struct d18c_pos pos;
+    } f;
+    s32 px;
+    s32 py;
+    s32 kind;
+    s32 edge;
+    s32 dirX;
+    s32 dirY;
+    s32 f21;
+    s32 hit;
+    s32 f20;
+    struct phys_obj *obj;
+    struct phys_obj *tgt;
+    s32 code;
+    s32 dx;
+    s32 dy;
+    s32 n;
+    struct d18c_quad *q;
+    struct d18c_pos *pp;
+    struct d18c_quad *hb;
+
+    {
+        u8 *rec = (u8 *)&self->anim->records[self->tag];
+        struct d18c_quad *pb = (struct d18c_quad *)(rec + 4);
+        s32 offX;
+        s32 offY;
+        u8 w;
+        u8 h;
+
+        px = self->x >> 8;
+        py = self->y >> 8;
+        offX = pb->xOff;
+        offY = pb->yOff;
+        w = pb->w;
+        h = pb->h;
+        sub_803AFE4(&f.a, offX + px, offY + py);
+        sub_803AFDC(&f.a, w, h);
+        if (self->flipX)
+            f.a.x = px * 2 - (f.a.x + f.a.w);
+        if (self->flipY)
+            f.a.y = py * 2 - (f.a.y + f.a.h);
+    }
+    px = D18C_P->x >> 8;
+    py = D18C_P->y >> 8;
+    if (((struct d18c_level *)gUnknown_030012C0)->mode == 3)
+        kind = 6;
+    else
+    {
+        kind = gStaticData_0816BBF0[idx];
+        if (self->kind == 0xd && kind == 5 && D18C_P->dir == 4)
+            kind = 2;
+    }
+    if ((self->state & 0x7f) == 1)
+        goto tail;
+    if (self->unk_44 != 0)
+        goto tail;
+    {
+        s32 empty;
+
+        D18C_HITBOX(hb, D18C_P);
+        empty = 0;
+        if (hb->w == 0)
+            if (hb->h == 0)
+                empty = 1;
+        if (empty)
+            goto tail;
+    }
+    {
+        s32 offX;
+        s32 offY;
+        u8 w;
+        u8 h;
+
+        offX = hb->xOff;
+        offY = hb->yOff;
+        w = hb->w;
+        h = hb->h;
+        sub_803AFE4(&f.b, offX + px, offY + py);
+        sub_803AFDC(&f.b, w, h);
+        if (D18C_P->flipX)
+            f.b.x = px * 2 - (f.b.x + f.b.w);
+        if (D18C_P->flipY)
+            f.b.y = py * 2 - (f.b.y + f.b.h);
+    }
+    if (!sub_8001688(&f.a, &f.b))
+        goto tail;
+    f.found = 0;
+    if (kind <= 4)
+        obj = sub_800CF70(self, &f.b, &f.found);
+    else
+        obj = self;
+    code = gStaticData_0816BC98[obj->kind][kind];
+    {
+        s32 bnc = D18C_P->bounce;
+
+        if (bnc > 4)
+            code = 0;
+    }
+    if (f.found != 0 && D18C_P->ringCount != 0)
+    {
+        s32 i;
+
+        for (i = 0; i < D18C_P->ringCount; i++)
+        {
+            struct phys_obj *e;
+
+            if (D18C_P->ringLocked == 0 && (i <= 4 || i < D18C_P->ringCount))
+                e = D18C_P->ring[i];
+            else
+                e = NULL;
+            if (e != NULL)
+            {
+                struct phys_obj *h = sub_8010708(e);
+
+                if (h != NULL)
+                {
+                    while (sub_8010708(h) != NULL)
+                        h = sub_8010708(h);
+                }
+                else
+                    h = e;
+                for (; h != NULL; h = sub_801070C(h))
+                {
+                    if (self == h)
+                    {
+                        code = 0;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    n = 0;
+    switch (code)
+    {
+    case 0:
+    case 1:
+        if (obj->kind == 6)
+            sub_800F2BC(obj);
+        else if (obj->kind == 3)
+            sub_800F368(obj);
+        break;
+    case 2:
+        obj->state |= 0x80;
+        D18C_SetBusy(D18C_P, 1);
+        break;
+    case 3:
+        sub_800E7A8(obj, 0, 0, 0);
+        if (D18C_P->ringCount == 0)
+        {
+            u8 *rec = (u8 *)&D18C_P->anim->records[D18C_P->tag];
+
+            if (kind != 3 && sub_800CEAC(self, (struct d18c_quad *)(rec + 4), &f.a, px, py))
+            {
+                struct phys_obj *e = sub_801070C(obj);
+
+                if (e != NULL && (e->state & 0x7f) != 1)
+                {
+                    s32 c2 = gStaticData_0816BC98[e->kind][kind];
+
+                    if (c2 == 3)
+                        sub_800E7A8(e, 0, 0, 0);
+                    else if (c2 == 2)
+                    {
+                        e->state |= 0x80;
+                        D18C_SetBusy(D18C_P, 1);
+                    }
+                    else if (c2 == 4)
+                        sub_800EEF0(e, 1);
+                }
+            }
+            else if (D18C_P->dir != 0)
+                n += 2;
+        }
+        if (f.found == 0)
+            return;
+        if ((D18C_P->x >> 8) < (self->x >> 8))
+        {
+            if (kind != 3 || sub_801070C(obj) != NULL)
+            {
+                D18C_CALL68(0, 0xc, 1);
+                D18C_Hit(D18C_P, 1);
+            }
+        }
+        else if (kind != 3 || sub_801070C(obj) != NULL)
+        {
+            D18C_CALL68(0, 0xc, 2);
+            D18C_Hit(D18C_P, 2);
+        }
+        D18C_RING_PUSH(obj);
+        if (D18C_P->bounce == 0)
+            D18C_P->bounce = 1;
+        for (; n != 0; n--)
+            D18C_RING_PUSH(NULL);
+        return;
+    case 4:
+        if ((obj->state & 0x7f) == 0)
+            sub_800EEF0(obj, 1);
+        return;
+    case 5:
+        sub_800E6B0(obj);
+        return;
+    }
+tail:
+    if (kind == 5)
+    {
+        if (D18C_P->dir == 4)
+            kind = 2;
+    }
+    else if (kind == 3)
+        kind = 1;
+    if (self->touched != 0)
+    {
+        self->touched = 0;
+        if (self->unk_44 == 0)
+            return;
+    }
+    f.c = f.a;
+    if (kind != 6)
+        sub_800E4E4(self, &f.a);
+    {
+        u8 *rec = (u8 *)&D18C_P->anim->records[D18C_P->tag];
+        s32 offX;
+        s32 offY;
+        u8 w;
+        u8 h;
+
+        q = (struct d18c_quad *)(rec + 4);
+        offX = q->xOff;
+        offY = q->yOff;
+        w = q->w;
+        h = q->h;
+        sub_803AFE4(&f.b, offX + px, offY + py);
+        sub_803AFDC(&f.b, w, h);
+        if (D18C_P->flipX)
+            f.b.x = px * 2 - (f.b.x + f.b.w);
+        if (D18C_P->flipY)
+            f.b.y = py * 2 - (f.b.y + f.b.h);
+    }
+    if (!sub_8001640(&f.a, &f.b))
+        return;
+    edge = 0;
+    f21 = 0;
+    if (f.b.y < f.a.y)
+        f21 = 1;
+    if (self->unk_44 != 0)
+    {
+        if (!sub_8001640(&f.c, &f.b))
+            return;
+        if (gStaticData_0816BBDA[self->kind] != 0)
+        {
+            /* `side` is dead on this path: flow deletes its sets, jump2
+             * deletes the compare after reload, and the ROM keeps the
+             * reload of px (`ldr r1, [sp, #0x70]`) right after the call. */
+            s32 ax = sub_8009EC4((struct gobj *)D18C_P);
+            s32 side = 2;
+
+            if (px > ax)
+                side = 1;
+            if ((D18C_P->x >> 8) < (self->x >> 8))
+            {
+                dirX = 1;
+                dx = D18C_Span(f.b.x, f.b.w, f.c.x) + 1;
+            }
+            else
+            {
+                dirX = 2;
+                dx = D18C_Span(f.c.x, f.c.w, f.b.x) + 1;
+            }
+            if ((D18C_P->y >> 8) > (self->y >> 8))
+            {
+                dirY = 4;
+                dy = D18C_Span(f.c.y, f.c.h, f.b.y);
+            }
+            else
+            {
+                dirY = 8;
+                dy = D18C_Span(f.b.y, f.b.h, f.c.y);
+            }
+            if (dx > 5 && f21 == 0)
+            {
+                if ((((struct d18c_level *)gUnknown_030012C0)->mode == 0
+                     && ((D18C_P->flags >> 6) & 1)
+                     && !D18C_TimerOver())
+                    || self->kind != 0xd)
+                {
+                    D18C_P->flags |= 0x40;
+                    sub_80231EC(gUnknown_030012C0, 0);
+                    D18C_CALL68(0, 0xa, 0);
+                }
+                else
+                {
+                    sub_800E7A8(self, 0, 0, 0);
+                    D18C_CALL68(0, 1, 0);
+                }
+                return;
+            }
+            else if (dx > 6 && dy > 1 && f21 != 0)
+            {
+                s32 y;
+
+                f.p1.x = D18C_P->x;
+                y = D18C_P->y;
+                pp = &f.p1;
+                pp->y = y - ((dy - 1) << 8);
+                D18C_P->speedY = 0;
+                sub_8007398((struct gobj *)D18C_P, f.p1.x, pp->y);
+                D18C_COMMIT();
+                D18C_Hit(D18C_P, dirY);
+                return;
+            }
+            else if (dx <= 6 && dy > 2)
+            {
+                f.p2.x = D18C_P->x;
+                pp = &f.p2;
+                pp->y = D18C_P->y;
+                if (dirX == 2)
+                    f.p2.x = (dx << 8) + f.p2.x;
+                else if (dirX == 1)
+                    f.p2.x -= dx << 8;
+                sub_8007398((struct gobj *)D18C_P, f.p2.x, pp->y);
+                D18C_COMMIT();
+                D18C_CALL68(0, 0xc, dirX);
+                D18C_Hit(D18C_P, dirX);
+                return;
+            }
+            else
+            {
+                if (D18C_P->ringLocked != 1)
+                    return;
+                f.p3.x = D18C_P->x;
+                pp = &f.p3;
+                pp->y = D18C_P->y;
+                if (dirY == 4)
+                    pp->y = (dy << 8) + pp->y;
+                else if (dirX == 8)
+                    pp->y -= dy << 8;
+                sub_8007398((struct gobj *)D18C_P, f.p3.x, pp->y);
+                D18C_COMMIT();
+                D18C_CALL68(0, 0xc, dirY);
+                D18C_Hit(D18C_P, dirY);
+                return;
+            }
+        }
+        else
+        {
+            struct phys_obj *e = self;
+
+            while ((e = sub_8010708(e)) != NULL)
+            {
+                if (gStaticData_0816BBDA[e->kind] != 0 && (e->state & 0x7f) == 0)
+                    return;
+            }
+            code = gStaticData_0816BC98[self->kind][5];
+            dx = 0;
+            dy = 0;
+            dirX = 0;
+            dirY = 0;
+        }
+    }
+    else
+    {
+        s32 ax = sub_8009EC4((struct gobj *)D18C_P);
+        s32 ay = sub_8009EBC((struct gobj *)D18C_P);
+        s32 side = 2;
+
+        if (px > ax)
+            side = 1;
+        /* Emits nothing: one extra reference to `ay` so it outranks the
+         * player hitbox pointer `q` in global allocation (brief item 8).
+         * That gives the ROM's cascade - ay in r7, q in r8, dy in sb,
+         * self in sl and px on the stack. */
+        asm("" : : "r"(ay));
+        if ((D18C_P->x >> 8) < (self->x >> 8))
+        {
+            dirX = 1;
+            dx = D18C_Span(f.b.x, f.b.w, f.a.x) + 1;
+        }
+        else
+        {
+            dirX = 2;
+            dx = D18C_Span(f.a.x, f.a.w, f.b.x) + 1;
+        }
+        if ((D18C_P->y >> 8) > (self->y >> 8))
+        {
+            dirY = 4;
+            dy = D18C_Span(f.a.y, f.a.h, f.b.y);
+        }
+        else
+        {
+            dirY = 8;
+            dy = D18C_Span(f.b.y, f.b.h, f.a.y);
+        }
+        if (ay == py)
+        {
+            if (ax == px)
+            {
+                if (dy > 2)
+                    goto edge_x;
+                edge = 4;
+                if (f21 != 0)
+                    edge = 8;
+            }
+            else if (dy > 2 || (dx <= 3 && sub_800B324(D18C_P)))
+                edge = dirX;
+            else
+            {
+                edge = 4;
+                if (f21 != 0)
+                    edge = 8;
+            }
+        }
+        else if (ax == px)
+        {
+            edge = dirY;
+            if (dy > 2)
+            {
+                edge = dirX;
+                if (dy <= 7 && dx > 3)
+                    edge = dirY;
+            }
+        }
+        else if (ay <= py && f21 != 0)
+        {
+            ay += q->yOff + q->h;
+            if (ay > f.a.y + f.a.h)
+                goto edge_x;
+            {
+                edge = 0;
+                if (side == 1)
+                {
+                    if (f.b.x + f.b.w >= f.a.x && dx > 4)
+                        edge = 8;
+                }
+                else if (f.b.x <= f.a.x + f.a.w && dx > 4)
+                    edge = 8;
+                if (edge == 0)
+                {
+                    s32 r;
+                    s32 lim;
+
+                    py += q->yOff + q->h;
+                    if (dirX == 1)
+                    {
+                        ax += q->xOff + q->w;
+                        px = f.b.x + f.b.w;
+                        lim = f.a.x;
+                    }
+                    else
+                    {
+                        ax += q->xOff;
+                        px = f.b.x;
+                        lim = f.a.x + f.a.w;
+                    }
+                    r = sub_800FDC8(ax, ay, px, py, lim);
+                    if ((r < 0 && f21 != 0 && dx > 4) || (r > 0 && r <= f.a.y))
+                        edge = 8;
+                    else
+                        edge = dirX;
+                }
+            }
+        }
+        else
+        {
+            ay += q->yOff;
+            if (ay < f.a.y)
+                goto edge_x;
+            {
+                edge = 0;
+                if (side == 1)
+                {
+                    if (f.b.x + f.b.w >= f.a.x && dx > 5)
+                        edge = 4;
+                }
+                else if (f.b.x <= f.a.x + f.a.w && dx > 5)
+                    edge = 4;
+                if (edge == 0)
+                {
+                    s32 r;
+                    s32 lim;
+
+                    py += q->yOff;
+                    if (dirX == 1)
+                    {
+                        ax += q->xOff + q->w;
+                        px = f.b.x + f.b.w;
+                        lim = f.a.x;
+                    }
+                    else
+                    {
+                        ax += q->xOff;
+                        px = f.b.x;
+                        lim = f.a.x + f.a.w;
+                    }
+                    r = sub_800FDC8(ax, ay, px, py, lim);
+                    if (D18C_P->ringLocked == 1)
+                        r += 2;
+                    if ((r < 0 && f21 == 0 && dx > 5) || (r > 0 && r >= f.a.y + f.a.h))
+                        edge = 4;
+                    else
+                        edge = dirX;
+                }
+            }
+        }
+        goto edge_done;
+    edge_x:
+        edge = dirX;
+    edge_done:
+        code = 0;
+    }
+    f.pos.x = D18C_P->x;
+    pp = &f.pos;
+    pp->y = D18C_P->y;
+    if (dx < 0)
+        dx = 0;
+    if (dy < 0)
+        dy = 0;
+    hit = 0;
+    f20 = gStaticData_0816BF00[kind];
+    tgt = self;
+    switch (edge)
+    {
+    case 0:
+    case 3:
+    case 5:
+    case 6:
+    case 7:
+        break;
+    case 4:
+        tgt = sub_801095C(self);
+        code = gStaticData_0816BC98[tgt->kind][kind];
+        if (tgt->kind == 4 && kind == 2)
+            code = 3;
+        if (kind <= 3 || kind == 6 || (kind == 4 && code <= 2))
+        {
+            D18C_CALL68(0, 0xc, 4);
+            D18C_Hit(D18C_P, 4);
+            if (D18C_P->standMode != 8)
+                pp->y = (dy << 8) + pp->y;
+        }
+        break;
+    case 8:
+        tgt = sub_8010914(self);
+        code = gStaticData_0816BC98[tgt->kind][kind];
+        if (kind == 4 && tgt->kind != 0xa && D18C_P->ringCount != 0)
+        {
+            D18C_P->speedY = 0;
+            D18C_P->velX = 0;
+            D18C_P->velY = 0;
+            D18C_P->velZ = 0;
+            code = 1;
+        }
+        if (code == 1 || code == 2)
+        {
+            pp->y -= (dy - 1) << 8;
+            pp->y &= ~0xff;
+            sub_8007398((struct gobj *)D18C_P, f.pos.x, pp->y);
+            D18C_COMMIT();
+        }
+        else if (code == 0 || code == 2)
+            pp->y -= dy << 8;
+        pp->y &= ~0xff;
+        break;
+    case 1:
+    case 2:
+        hit = dirX;
+        if (!sub_8001640(&f.c, &f.b))
+        {
+            code = 0;
+            sub_800E494(self);
+            hit = 0;
+        }
+        else
+        {
+            if ((self->state & 0x7f) == 0)
+            {
+                if (hit == 2)
+                    f.pos.x += dx << 8;
+                else if (hit == 1)
+                    f.pos.x -= dx << 8;
+            }
+            if (kind > 2)
+            {
+                code = gStaticData_0816BC98[self->kind][kind];
+                if (kind == 4 && code == 2)
+                    code = 0;
+                if (kind == 5 && code == 3)
+                    f.pos.x = D18C_P->x;
+            }
+            else if (dy <= 4 && dx > 3 && f21 != 0)
+            {
+                code = gStaticData_0816BC98[self->kind][kind];
+                if (code > 1)
+                    code = 0;
+            }
+            else if (gStaticData_0816BC98[self->kind][kind] == 4)
+            {
+                f.pos.x = D18C_P->x;
+                code = gStaticData_0816BC98[self->kind][kind];
+            }
+        }
+        if (code != 1 && hit != 0)
+        {
+            s32 ok = 1;
+            struct phys_obj *next = sub_801070C(self);
+            struct phys_obj *prev = sub_8010708(self);
+            s32 vy = D18C_P->speedY >> 8;
+
+            if (dirY == 8 && next == NULL && (vy >= dy - 1 || dy <= 2))
+                ok = 0;
+            else if (dirY == 4 && prev == NULL && (vy >= dy - 1 || dy <= 2))
+                ok = 0;
+            if (ok)
+            {
+                sub_8007398((struct gobj *)D18C_P, f.pos.x, pp->y);
+                D18C_COMMIT();
+            }
+        }
+        break;
+    }
+    if (D18C_P->ringLocked == 1 && self->kind == 0xe && code <= 1
+        && sub_8001640(&f.c, &f.b) == 1)
+        sub_800E620(tgt);
+    sub_8010D54(D18C_QUEUE(D18C_P), tgt, kind, code, edge, dy, f.pos, hit,
+                (struct d18c_flag8){f20}, (struct d18c_flag8){f21});
+}
+#else
 NAKED void sub_0800D18C(void *self, u32 arg1)
 {
     asm(
@@ -2021,6 +2852,7 @@ NAKED void sub_0800D18C(void *self, u32 arg1)
     "206: .4byte gUnknown_030012D8\n"
     );
 }
+#endif
 
 /* A further jump-table dispatcher in the same physics/collision
  * subsystem (1032 B), called only from `sub_0800D18C` (the 9-case
