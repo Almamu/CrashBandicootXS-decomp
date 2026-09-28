@@ -11,6 +11,17 @@ from "core" graphics.
 
 ## Matched
 
+- **Actor-zone NAKED near-miss retry** ([docs/matching/actor-zone-naked-retry.md](../matching/actor-zone-naked-retry.md)):
+  the AABB-overlap trio `sub_802D7B0` (`actor_part74.c`), `sub_802DD9C`
+  (`actor_part75.c`) and `sub_8031378` (`actor_part24b.c`) - the boxes
+  are members of one stack-frame struct, so their addresses are
+  rematerialized from sp as in the ROM; `sub_802DE70`
+  (`actor_part75.c`); the BG-tilemap blit twins `sub_8030D48`
+  (`actor_part23b.c`) and `sub_80330FC` (`actor_part130.c`); and the
+  easing helper `sub_8030E08` (`actor_part23c.c`). All plain C, no
+  register pins; they were NAKED. `actor_part23b.c`, `actor_part24b.c`,
+  `actor_part75.c` and `actor_part130.c` moved to old_agbcc.
+
 - **`sub_8012D24`** (`src/graphics/actor_part83.c`) and **`sub_801283C`**
   (`src/graphics/actor_part84.c`) - issue #16: two
   `gStaticData_0816BF20` action-table helpers on the player/action object
@@ -1026,20 +1037,6 @@ plain C didn't converge.
   `timer_util_aa90.c`) is NAKED too, not plain C with
   `REG_DMA3SAD`/`DAD`/`CNT` macros. See
   `docs/matching/issue-56-0x0802f0dc-actor.md`.
-- **`sub_8030D48`** (`src/graphics/actor_part23b.c`) - a rectangular
-  BG-tilemap blit routine (docs/rom_map.md). A `#if NON_MATCHING` draft
-  is 11 halfwords off under old_agbcc (the next-row pointer and the
-  hoisted bias-byte address copy swap `ip`/`r3`). See `docs/matching/issue-58-61-naked-retry.md`.
-- **`sub_8030E08`** (`src/graphics/actor_part23c.c`) - position-easing
-  helper called from `sub_8030734`/`sub_8030834`. A `#if NON_MATCHING`
-  draft is instruction-for-instruction right except that the two
-  velocity-address copies land in `r4`/`r6` swapped (19 halfwords). See
-  `docs/matching/issue-58-61-naked-retry.md`.
-- **`sub_8031378`** (`src/graphics/actor_part24b.c`) - AABB overlap
-  test against a keyframe-table box (same 12-byte box shape as
-  `sub_802DD9C`/`sub_802D7B0`). A `#if NON_MATCHING` draft has the right
-  shape but hoists the copy's address into `r4` early (~50 halfwords).
-  See `docs/matching/issue-58-61-naked-retry.md`.
 - **`sub_8031604`** (`src/graphics/actor_part26c.c`) - VRAM fill-level
   meter nibble-repack loop (docs/rom_map.md). A `#if NON_MATCHING` draft
   has the right shape (~95 halfwords off: the ROM re-reads each height
@@ -1109,7 +1106,8 @@ plain C didn't converge.
   differing only in guard byte; `sub_802A3AC` wraps the same test in an
   actor-list walk) hitting this project's confirmed categorical
   gcc-2.9 `r7` register-allocation bug - the same wall as
-  `sub_802D7B0`/`sub_802DD9C`/`sub_802C7A8` above. See
+  `sub_802C7A8` above (`sub_802D7B0`/`sub_802DD9C` have since matched
+  with the frame-struct box layout in actor-zone-naked-retry.md). See
   [docs/matching/issue-49-0x08029e4c-actor.md](../matching/issue-49-0x08029e4c-actor.md).
 - **`sub_802A208`** (`src/graphics/actor_part103.c`, GitHub issue #49) -
   a scroll enter/exit trampoline + `sub_effect_table` draw loop +
@@ -1138,10 +1136,6 @@ plain C didn't converge.
   (`sub_80309B4`/`sub_8031040`/`sub_80311C4`,
   `actor_part21f.c`/`23e.c`/`23f.c`). See
   `docs/matching/issue-63-final-raw-actor.md`.
-- **`sub_80330FC`** (`src/graphics/actor_part130.c`) - the singleton's
-  own BG-tilemap-blit tile consumer, twin of `sub_8030D48` and stuck the
-  same way (its `#if NON_MATCHING` draft is 11 halfwords off under
-  old_agbcc). See `docs/matching/issue-58-61-naked-retry.md`.
 - **`sub_80336CC`** (`src/graphics/actor_part130.c`) - the P2-side VRAM
   fill-level meter, the one-row twin of `sub_8031604`; its
   `#if NON_MATCHING` draft is off the same way. See `docs/matching/issue-58-61-naked-retry.md`.
@@ -1197,24 +1191,10 @@ embedded as asm instead. They're tracked as parked, not matched.
   actor list looking for type-4 nodes overlapping `self`'s own
   translated `self+0x38` box, firing the shared used-state transition
   on each match. Same heavy two-scratch-AABB-record-plus-loop-lifetime-
-  `r7` shape as `sub_802D7B0`/`sub_802DD9C` below - hits the same
-  confirmed categorical gcc-2.9 r7-pin bug. GitHub issue #53, see
+  `r7` shape as `sub_802D7B0`/`sub_802DD9C` (both since matched with the
+  frame-struct box layout, see actor-zone-naked-retry.md - worth trying
+  here). GitHub issue #53, see
   [docs/matching/issue-53-actor-c7a8.md](../matching/issue-53-actor-c7a8.md).
-- **`sub_802D7B0`** (`src/graphics/actor_part74.c`) - a confirmed slot
-  (index 3) of the type-0 `category_vtable` (also runs a full 3-axis
-  AABB overlap test against the player before dispatching a
-  `sub_803AD80` trampoline). A near-miss `#if NON_MATCHING` draft is in
-  tree (right size, ~52 halfwords off: `&b` gets hoisted into a
-  callee-saved register). GitHub issue #54, see
-  [docs/matching/issue-51-54-naked-retry.md](../matching/issue-51-54-naked-retry.md).
-- **`sub_802DD9C`**, **`sub_802DE70`** (`src/graphics/actor_part75.c`) -
-  the self-vs-player 3-axis AABB overlap test factored out of
-  `sub_802D7B0` (used by `sub_802D6A0`, `actor_part58.c`) and the
-  `gUnknown_030014BC` object's ~160-instruction VRAM gauge-tile bitmap
-  generator/DMA setup. Both have near-miss `#if NON_MATCHING` drafts
-  (`sub_802DE70` is 5 halfwords off - only its high-register
-  assignment). GitHub issue #54, see
-  [docs/matching/issue-51-54-naked-retry.md](../matching/issue-51-54-naked-retry.md).
 - **`sub_803B46C`** (`src/graphics/actor_anim.c`) - fixed-position
   (120, 106) OAM setup for one sprite frame - screen-space visibility
   cull, then builds the OAM attribute words and calls

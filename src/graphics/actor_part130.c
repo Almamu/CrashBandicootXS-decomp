@@ -877,26 +877,23 @@ void sub_8033048(void)
     }
 }
 
-/* NAKED transcription: the singleton's own BG-tilemap-blit tile
- * consumer, confirmed by `docs/rom_map.md` as the same mechanics as the
- * boss cluster's `sub_8030D48` (issue #58) but on the singleton's own
+/* The singleton's own BG-tilemap-blit tile consumer, confirmed by
+ * `docs/rom_map.md` as the same mechanics as the boss cluster's
+ * `sub_8030D48` (actor_part23b.c, issue #58) but on the singleton's own
  * separate global cluster (`gUnknown_030015A0`-family, not
- * `gUnknown_03001520`-family) - the same many-high-register
- * (`sl`/`sb`/`r8`) allocation gap as `sub_8032C0C`/`sub_8032EA0` above.
- * Mechanical, byte-verified transcription. */
-#if NON_MATCHING
-/* Near miss, same shape as its twin `sub_8030D48` (actor_part23b.c):
- * old_agbcc is 11 halfwords off (the next-row pointer and the hoisted
- * `&gUnknown_030015A8` copy swap `ip`/`r3`); agbcc is further off. */
+ * `gUnknown_03001520`-family). Same source as that twin: the bias is a
+ * plain `u8` narrowing of the `s32` global, and `row` is declared before
+ * `i` so `i + 1` wins the r7/ip tie. Needs old_agbcc, which is why this
+ * file is on OLD_AGBCC_OBJS (docs/matching/issue-58-61-naked-retry.md). */
 void sub_80330FC(void *tileRow)
 {
     u16 *src = tileRow;
-    s32 i, j;
     u8 *row = (u8 *)((gUnknown_03001598 + 0x18) << 11) + (0x06000000 + (0x20 - gUnknown_030015A0) / 4 * 2) + ((0x20 - gUnknown_030015A4) / 2 * 32 + 2);
+    s32 i, j;
 
     for (i = 0; i < gUnknown_030015A4; i++) {
         for (j = 0; j < gUnknown_030015A0 / 2; j++) {
-            u8 bias = *(u8 *)&gUnknown_030015A8;
+            u8 bias = gUnknown_030015A8;
             u16 lo = *src++ + bias;
             u16 hi = *src++ + bias;
             ((u16 *)row)[j] = lo | (hi << 8);
@@ -904,111 +901,6 @@ void sub_80330FC(void *tileRow)
         row += 0x20;
     }
 }
-#else
-NAKED void sub_80330FC(void *tileRow)
-{
-    asm(
-    "push {r4, r5, r6, r7, lr}\n\t"
-    "mov r7, sl\n\t"
-    "mov r6, sb\n\t"
-    "mov r5, r8\n\t"
-    "push {r5, r6, r7}\n\t"
-    "add r5, r0, #0\n\t"
-    "ldr r0, f0c__080331AC\n\t"
-    "ldr r0, [r0]\n\t"
-    "add r0, #0x18\n\t"
-    "lsl r2, r0, #0xb\n\t"
-    "ldr r7, f0c__080331B0\n\t"
-    "ldr r0, [r7]\n\t"
-    "mov r6, #0x20\n\t"
-    "sub r1, r6, r0\n\t"
-    "cmp r1, #0\n\t"
-    "bge f0c__0803311E\n\t"
-    "add r1, #3\n\t"
-    "f0c__0803311E:\n\t"
-    "asr r1, r1, #2\n\t"
-    "lsl r1, r1, #1\n\t"
-    "mov r0, #0xc0\n\t"
-    "lsl r0, r0, #0x13\n\t"
-    "add r1, r1, r0\n\t"
-    "add r1, r2, r1\n\t"
-    "ldr r3, f0c__080331B4\n\t"
-    "ldr r4, [r3]\n\t"
-    "sub r0, r6, r4\n\t"
-    "lsr r2, r0, #0x1f\n\t"
-    "add r0, r0, r2\n\t"
-    "asr r0, r0, #1\n\t"
-    "lsl r0, r0, #5\n\t"
-    "add r0, #2\n\t"
-    "add r6, r1, r0\n\t"
-    "mov r2, #0\n\t"
-    "mov sl, r3\n\t"
-    "cmp r2, r4\n\t"
-    "bge f0c__0803319E\n\t"
-    "mov r8, r7\n\t"
-    "ldr r1, f0c__080331B8\n\t"
-    "mov sb, r1\n\t"
-    "f0c__0803314A:\n\t"
-    "mov r4, #0\n\t"
-    "mov r0, r8\n\t"
-    "ldr r1, [r0]\n\t"
-    "lsr r0, r1, #0x1f\n\t"
-    "add r1, r1, r0\n\t"
-    "asr r1, r1, #1\n\t"
-    "mov r0, #0x20\n\t"
-    "add r0, r0, r6\n\t"
-    "mov ip, r0\n\t"
-    "add r7, r2, #1\n\t"
-    "cmp r4, r1\n\t"
-    "bge f0c__08033192\n\t"
-    "mov r3, sb\n\t"
-    "add r2, r6, #0\n\t"
-    "f0c__08033166:\n\t"
-    "ldrb r0, [r3]\n\t"
-    "ldrh r6, [r5]\n\t"
-    "add r1, r6, r0\n\t"
-    "lsl r1, r1, #0x10\n\t"
-    "lsr r1, r1, #0x10\n\t"
-    "add r5, #2\n\t"
-    "ldrh r6, [r5]\n\t"
-    "add r0, r6, r0\n\t"
-    "lsl r0, r0, #0x10\n\t"
-    "add r5, #2\n\t"
-    "lsr r0, r0, #8\n\t"
-    "orr r1, r0\n\t"
-    "strh r1, [r2]\n\t"
-    "add r2, #2\n\t"
-    "add r4, #1\n\t"
-    "mov r1, r8\n\t"
-    "ldr r0, [r1]\n\t"
-    "lsr r1, r0, #0x1f\n\t"
-    "add r0, r0, r1\n\t"
-    "asr r0, r0, #1\n\t"
-    "cmp r4, r0\n\t"
-    "blt f0c__08033166\n\t"
-    "f0c__08033192:\n\t"
-    "mov r6, ip\n\t"
-    "add r2, r7, #0\n\t"
-    "mov r1, sl\n\t"
-    "ldr r0, [r1]\n\t"
-    "cmp r2, r0\n\t"
-    "blt f0c__0803314A\n\t"
-    "f0c__0803319E:\n\t"
-    "pop {r3, r4, r5}\n\t"
-    "mov r8, r3\n\t"
-    "mov sb, r4\n\t"
-    "mov sl, r5\n\t"
-    "pop {r4, r5, r6, r7}\n\t"
-    "pop {r0}\n\t"
-    "bx r0\n\t"
-    ".align 2, 0\n"
-    "f0c__080331AC: .4byte gUnknown_03001598\n"
-    "f0c__080331B0: .4byte gUnknown_030015A0\n"
-    "f0c__080331B4: .4byte gUnknown_030015A4\n"
-    "f0c__080331B8: .4byte gUnknown_030015A8\n"
-    );
-}
-#endif
 
 /* The missing constructor for the whole singleton system - see
  * `docs/rom_map.md`'s "`sub_80331BC` closes a long-open question"
