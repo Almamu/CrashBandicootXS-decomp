@@ -97,3 +97,11 @@ registers swapped. `sub_802A208` is unchanged. See
 one more reference, so it outranks `base` and takes r7. Both scan loops
 still name the global directly, which gives the ROM's loop-local copies
 of the address. See [near-miss-polish-2.md](near-miss-polish-2.md).
+
+## Later pass: category driver retry
+
+`sub_802A208` is now plain C under old_agbcc. The extra `r9` came from
+the draft caching values across the sub-effect loop; the ROM is a plain
+`while` whose exit test gcc copies ahead of the loop, so the body
+starts at a label and re-reads every global. See
+[category-driver-naked-retry.md](category-driver-naked-retry.md).

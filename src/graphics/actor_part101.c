@@ -1,550 +1,252 @@
 #include "core.h"
 #include "actor_anim.h"
+#include "gba/dma_macros.h"
+#include "memory.h"
 
 /*
- * Referenced only through the NAKED asm below (bl <symbol>/.4byte
- * <symbol>) - listed here purely for documentation/cross-reference, the
- * same convention this file's sibling NAKED functions use. Types are
- * informational; the assembler resolves every call/data reference by
- * symbol name alone.
+ * `InitActorCategory` - the category (re)initialization + loading-screen
+ * driver: stores the category argument into gUnknown_03001380, resets the
+ * running counters, decompresses the category sprite sheet, rebuilds the
+ * tile-cache pins (SetupActorVramPool) and hands off to
+ * SelectActorCategory, then runs a per-VBlank loop (polling input,
+ * redrawing, flushing the VRAM DMA queue) until `sub_802A208` reports an
+ * exit state. Returns the loop's exit code (0-2); 1 re-runs the outer
+ * setup unless gUnknown_030012C0's own state (sub_803AFEC, its +0x8c
+ * byte) says to leave.
  *
- *   sub_8022CA0(void *arg0)
- *   DecompressCategorySpriteSheet(const u8 *sheet)      - matched, actor_part104.c's own predecessor unit
- *   SetupActorVramPool(void)                              - matched, actor_part104.c
- *   sub_802AAFC(void)
- *   sub_802ABFC(s32 flag)
- *   sub_8029C30(s32 kind)                                   - matched, actor_part98.c
- *   sub_803AFEC(void *state)
- *   sub_8023548(void *arg0)
- *   sub_800132C(s32 a, s32 b, s32 c)
- *   sub_8029890(s32 arg0, s32 arg1, s32 arg2, s32 arg3)       - NAKED-parked, actor_part95.c
- *   sub_802F7B0(void)
- *   sub_802AB08(void)
- *   SelectActorCategory(s32 type, void *subEffectTable, void *animTable, s32 activeFlag, s32 variantFlag, s32 tick)
- *   sub_80007AC(void *arg0)
- *   sub_8029B38(void)                                          - matched, actor_part97.c
- *   sub_802A208(void) -> s32                                    - NAKED-parked, AABB-cluster file
- *   sub_8022F2C(void *arg0)
- *   sub_8006C4C(struct vram_upload_cursor *self)
- *   sub_8006A78(void *arg0)
- *   sub_8028400(void *state)                                      - matched, hud_blink.c
- *   sub_80274EC(void *self)
- *   FlushSpriteFrameOamQueue(void)
- *   sub_80006A8(void)
- *   sub_8029E50(void)                                               - matched, actor_part99.c
- *   sub_8006AAC(void *arg0)
- *   FlushVramDmaQueue(void)
- *   sub_8029ADC(void)                                                - matched, actor_part96.c
- *   sub_802A650(void)                                                 - matched, actor_part94.c
- *   AgeSpriteFrameCache(void)
- *   sub_8001510(void) -> s32
- *   sub_802A5AC(void) -> s32                                           - matched, actor_part94.c
- *   mem_alloc(u32 size, s32 arg1) -> u8*                                - src/system/memory.c
- *   FreeSpriteFrameCache(void)
- *   FreeSpriteFrameOamQueue(void)
- *   FreeObjTileFreeList(void)
- *   sub_8004D74(void) -> s32
- *   mem_free(u8 *address)                                                - src/system/memory.c
- *   sub_802996C(void)                                                     - NAKED-parked, actor_part95.c
- *   sub_802A5C4(void)                                                      - matched, actor_part94.c
- *   sub_8028504(void *arg0)
- *   FreeCategorySpriteSheet(void)
- *   nullsub_5(void)                                                         - matched, actor_part106.c
- *   nullsub_6(void)                                                          - matched, actor_part92.c
- *   sub_802A5E4(void)                                                        - matched, actor_part94.c
- *
- * Globals: gUnknown_03001390/03001380/03000878/03001384/03001388/
- * 0300138C (all s32), gUnknown_030012C0/03001300/030012FC/03001318/
- * 03001304 (all pointers), gUnknown_030007E0 - all already declared
- * elsewhere in this project - gStaticData_08175558[]/gStaticData_08175584
- * (struct category_descriptor array, actor_anim.h).
+ * Matches under old_agbcc (current agbcc is 3 halfwords off in the
+ * option-screen block). What the old NAKED note called "four high-register
+ * pins" is loop.c's own invariant hoisting; the shape that reproduces it:
+ *  - `activeCount`/`variantCount` point at gUnknown_03001384/03001388
+ *    and are (re)assigned at the top of the outer loop. They end up
+ *    spilled, and every use rematerializes the address, which is what
+ *    puts the ROM's reload registers (r3/r7 in the prologue, r5 in the
+ *    `unknown_28` test, r0/r1/r3/r5 in the exit stores) where they are.
+ *    With plain globals the reload rotation shifts by one and jump2
+ *    cross-jumps the two `ret = 1` exits together.
+ *  - `state` (&gUnknown_030012C0) is assigned right before the inner
+ *    loop, so its load precedes the hoisted gUnknown_03001300 load in the
+ *    preheader, as in the ROM (sb before the sl/r8 copies).
+ *  - The exit-state tests are an if/else chain (a switch builds a
+ *    balanced compare tree); the "option screen" branch ends in
+ *    `continue` so the inner loop is not rotated.
+ *  - `-sub_802A5AC() < 0` gives the ROM's `neg; lsr #31` (`!= 0` adds
+ *    an `orr`), and the new-press test is `(keys >> 16) & 8` so it shares
+ *    the gUnknown_030007E0 literal with the `& 4` word test.
+ *  - `zero` is volatile, as in the DmaFill16 idiom (address before the
+ *    `strh`).
  */
 
-/* NAKED - the category (re)initialization + loading-screen driver:
- * stores the category argument into gUnknown_03001380, resets the
- * running active-instance counters, decompresses the category sprite
- * sheet, rebuilds the tile-cache pins (SetupActorVramPool), and hands
- * off to SelectActorCategory - then falls into a per-VBlank loading
- * loop (polling input, redrawing the category-select icon, flushing
- * the VRAM DMA queue) that keeps running, reselecting the category on
- * every confirmed input change, until the surrounding menu signals
- * exit via gUnknown_030012C0's own state (sub_803AFEC's return value
- * or its own +0x8c flag). Returns the loop's exit-state code (0-3),
- * matching the raw disassembly's own `ldr r0, [sp, #0xc]` return.
- *
- * Fully understood, but left as a byte-exact NAKED transcription
- * rather than real C: it sustains four simultaneous high-register
- * pins (sb/sl/r8/ip, each reused for two or three completely different
- * roles across the function's several sections) plus a stack-spilled
- * loop-state variable threaded through many non-adjacent gotos, on a
- * ~230-instruction, 20+-call, four-state loop body - a much larger
- * instance of the same "many-high-register-difficulty" gap this
- * project has already hit and parked repeatedly elsewhere (see
- * docs/status/actor.md's sub_80091D4/sub_8009868 entries). Tracked as
- * PARKED, not matched - see docs/workflow.md's NAKED-transcription
- * escape hatch. Verified byte-exact against baserom.gba (isolated
- * assemble + objcopy -O binary + relocation-aware diff: every
- * differing byte falls inside a bl/ABS32 relocation range). */
-NAKED s32 InitActorCategory(s32 category)
+extern s32 gUnknown_03001390;
+extern s32 gUnknown_03001380;
+extern s32 gUnknown_03000878;
+extern s32 gUnknown_03001384;
+extern s32 gUnknown_03001388;
+extern s32 gUnknown_0300138C;
+extern u8 *gUnknown_030012C0;
+extern void *gUnknown_03001300;
+extern void *gUnknown_03001304;
+extern void *gUnknown_030012FC;
+extern void *gUnknown_03001318;
+extern u32 gUnknown_030007E0;
+
+extern void sub_8022CA0(void *arg0);
+extern void DecompressCategorySpriteSheet(const u8 *sheet);
+extern void SetupActorVramPool(void);
+extern void sub_802AAFC(void);
+extern void sub_802ABFC(s32 flag);
+extern void sub_8029C30(s32 kind);
+extern s32 sub_803AFEC(void *state);
+extern void sub_8023548(void *arg0);
+extern void sub_800132C(s32 a, s32 b, s32 c);
+extern void sub_8029890(s32 arg0, void *arg1, u32 arg2, s32 arg3);
+extern void sub_802F7B0(void);
+extern void sub_802AB08(void);
+extern void SelectActorCategory(s32 type, void *subEffectTable, void *animTable, s32 activeFlag, s32 variant, s32 tick);
+extern void sub_80007AC(void *arg0);
+extern void sub_8029B38(void);
+extern s32 sub_802A208(void);
+extern void sub_8022F2C(void *arg0);
+extern void sub_8006C4C(void *self);
+extern void sub_8006A78(void *arg0);
+extern void sub_8028400(void *state);
+extern void sub_80274EC(void *self);
+extern void FlushSpriteFrameOamQueue(void);
+extern void sub_80006A8(void);
+extern void sub_8029E50(void);
+extern void sub_8006AAC(void *arg0);
+extern void FlushVramDmaQueue(void);
+extern void sub_8029ADC(void);
+extern void sub_802A650(void);
+extern void AgeSpriteFrameCache(void);
+extern u8 sub_8001510(void);
+extern u8 sub_802A5AC(void);
+extern void FreeSpriteFrameCache(void);
+extern void FreeSpriteFrameOamQueue(void);
+extern void FreeObjTileFreeList(void);
+extern s32 sub_8004D74(void);
+extern void sub_802996C(void);
+extern void sub_802A5C4(void);
+extern void sub_8028504(void *arg0);
+extern void FreeCategorySpriteSheet(void);
+extern void nullsub_5(void);
+extern void nullsub_6(void);
+extern void sub_802A5E4(void);
+
+#define CUR_CATEGORY (gStaticData_08175558[gUnknown_03001380])
+#define OBJ_PLTT_ADDR 0x05000200
+#define PAUSED (gUnknown_030012C0[0x8c])
+
+s32 InitActorCategory(s32 category)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sl\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6, r7}\n\t"
-        "sub sp, #0x10\n\t"
-        "mov r1, #1\n\t"
-        "str r1, [sp, #0xc]\n\t"
-        "ldr r2, 2f\n\t"
-        "mov r1, #0\n\t"
-        "str r1, [r2]\n\t"
-        "ldr r6, 3f\n\t"
-        "str r0, [r6]\n\t"
-        "ldr r0, 4f\n\t"
-        "str r1, [r0]\n\t"
-        "ldr r3, 5f\n\t"
-        "str r1, [r3]\n\t"
-        "ldr r7, 6f\n\t"
-        "str r1, [r7]\n\t"
-        "ldr r0, 7f\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_8022CA0\n\t"
-        "ldr r5, 8f\n\t"
-        "ldr r0, [r6]\n\t"
-        "mov r4, #0x34\n\t"
-        "mul r0, r4, r0\n\t"
-        "add r1, r5, #0\n\t"
-        "add r1, #0x1c\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl DecompressCategorySpriteSheet\n\t"
-        "bl SetupActorVramPool\n\t"
-        "bl sub_802AAFC\n\t"
-        "mov r1, #0\n\t"
-        "ldr r0, [r6]\n\t"
-        "mul r0, r4, r0\n\t"
-        "add r0, r0, r5\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 1f\n\t"
-        "mov r1, #1\n\t"
-        "1:\n\t"
-        "add r0, r1, #0\n\t"
-        "bl sub_802ABFC\n\t"
-        "ldr r0, [r6]\n\t"
-        "mul r0, r4, r0\n\t"
-        "add r0, r0, r5\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_8029C30\n\t"
-        "b 11f\n\t"
-        ".align 2, 0\n"
-        "2: .4byte gUnknown_03001390\n"
-        "3: .4byte gUnknown_03001380\n"
-        "4: .4byte gUnknown_03000878\n"
-        "5: .4byte gUnknown_03001384\n"
-        "6: .4byte gUnknown_03001388\n"
-        "7: .4byte gUnknown_030012C0\n"
-        "8: .4byte gStaticData_08175558\n"
-        "9:\n\t"
-        "ldr r4, 12f\n\t"
-        "ldr r0, [r4]\n\t"
-        "bl sub_803AFEC\n\t"
-        "cmp r0, #0\n\t"
-        "bge 10f\n\t"
-        "b 65f\n\t"
-        "10:\n\t"
-        "ldr r0, [r4]\n\t"
-        "add r0, #0x8c\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 11f\n\t"
-        "b 65f\n\t"
-        "11:\n\t"
-        "ldr r1, 13f\n\t"
-        "ldr r0, 14f\n\t"
-        "ldr r0, [r0]\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r0, 12f\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_8023548\n\t"
-        "ldr r0, 15f\n\t"
-        "ldr r1, [r0]\n\t"
-        "mov r0, #0x34\n\t"
-        "add r2, r1, #0\n\t"
-        "mul r2, r0, r2\n\t"
-        "ldr r0, 16f\n\t"
-        "add r0, #0x28\n\t"
-        "add r0, r2, r0\n\t"
-        "ldr r5, 17f\n\t"
-        "ldr r1, [r5]\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r1, r0\n\t"
-        "blt 22f\n\t"
-        "ldr r0, 16f\n\t"
-        "add r0, #0x30\n\t"
-        "add r0, r2, r0\n\t"
-        "b 23f\n\t"
-        ".align 2, 0\n"
-        "12: .4byte gUnknown_030012C0\n"
-        "13: .4byte gUnknown_0300138C\n"
-        "14: .4byte gUnknown_03001390\n"
-        "15: .4byte gUnknown_03001380\n"
-        "16: .4byte gStaticData_08175558\n"
-        "17: .4byte gUnknown_03001388\n"
-        "18:\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [sp, #0xc]\n\t"
-        "b 64f\n\t"
-        "19:\n\t"
-        "mov r1, #2\n\t"
-        "str r1, [sp, #0xc]\n\t"
-        "b 64f\n\t"
-        "20:\n\t"
-        "mov r3, #0\n\t"
-        "str r3, [sp, #0xc]\n\t"
-        "b 64f\n\t"
-        "21:\n\t"
-        "mov r5, #1\n\t"
-        "str r5, [sp, #0xc]\n\t"
-        "b 64f\n\t"
-        "22:\n\t"
-        "ldr r1, 29f\n\t"
-        "add r0, r2, r1\n\t"
-        "23:\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov sl, r0\n\t"
-        "add r1, sp, #8\n\t"
-        "mov r0, #0\n\t"
-        "strh r0, [r1]\n\t"
-        "ldr r6, 30f\n\t"
-        "str r1, [r6]\n\t"
-        "mov r0, #0xa0\n\t"
-        "lsl r0, r0, #0x13\n\t"
-        "str r0, [r6, #4]\n\t"
-        "ldr r0, 31f\n\t"
-        "str r0, [r6, #8]\n\t"
-        "ldr r0, [r6, #8]\n\t"
-        "mov r0, #0x80\n\t"
-        "mov r1, #2\n\t"
-        "mov r2, #1\n\t"
-        "bl sub_800132C\n\t"
-        "ldr r4, 32f\n\t"
-        "ldr r3, 33f\n\t"
-        "mov sb, r3\n\t"
-        "ldr r0, [r3]\n\t"
-        "mov r5, #0x34\n\t"
-        "mov r8, r5\n\t"
-        "mov r3, r8\n\t"
-        "mul r3, r0, r3\n\t"
-        "add r0, r3, r4\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r1, r4, #4\n\t"
-        "add r1, r3, r1\n\t"
-        "ldr r1, [r1]\n\t"
-        "add r2, r4, #0\n\t"
-        "add r2, #8\n\t"
-        "add r3, r3, r2\n\t"
-        "ldr r2, [r3]\n\t"
-        "ldr r5, 34f\n\t"
-        "ldr r3, [r5]\n\t"
-        "bl sub_8029890\n\t"
-        "mov r1, sb\n\t"
-        "ldr r0, [r1]\n\t"
-        "mov r3, r8\n\t"
-        "mul r3, r0, r3\n\t"
-        "add r0, r3, #0\n\t"
-        "ldr r5, 35f\n\t"
-        "add r0, r0, r5\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 24f\n\t"
-        "bl sub_802F7B0\n\t"
-        "24:\n\t"
-        "bl sub_802AB08\n\t"
-        "mov r1, sb\n\t"
-        "ldr r0, [r1]\n\t"
-        "mov r2, r8\n\t"
-        "mul r2, r0, r2\n\t"
-        "add r0, r2, r4\n\t"
-        "ldr r7, [r0]\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x14\n\t"
-        "add r0, r2, r0\n\t"
-        "ldr r3, [r0]\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x18\n\t"
-        "add r0, r2, r0\n\t"
-        "ldr r5, [r0]\n\t"
-        "mov r0, #0\n\t"
-        "mov ip, r0\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x24\n\t"
-        "add r2, r2, r0\n\t"
-        "ldr r0, 36f\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldr r0, [r2]\n\t"
-        "cmp r1, r0\n\t"
-        "blt 25f\n\t"
-        "mov r1, #1\n\t"
-        "mov ip, r1\n\t"
-        "25:\n\t"
-        "mov r0, sl\n\t"
-        "str r0, [sp]\n\t"
-        "ldr r1, 34f\n\t"
-        "ldr r0, [r1]\n\t"
-        "str r0, [sp, #4]\n\t"
-        "add r0, r7, #0\n\t"
-        "add r1, r3, #0\n\t"
-        "add r2, r5, #0\n\t"
-        "mov r3, ip\n\t"
-        "bl SelectActorCategory\n\t"
-        "mov r3, sb\n\t"
-        "ldr r0, [r3]\n\t"
-        "mov r5, r8\n\t"
-        "mul r5, r0, r5\n\t"
-        "add r0, r5, #0\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x10\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "str r0, [r6]\n\t"
-        "ldr r1, 37f\n\t"
-        "str r1, [r6, #4]\n\t"
-        "ldr r0, 38f\n\t"
-        "str r0, [r6, #8]\n\t"
-        "ldr r0, [r6, #8]\n\t"
-        "ldr r7, 39f\n\t"
-        "ldr r3, 40f\n\t"
-        "mov sb, r3\n\t"
-        "mov sl, r4\n\t"
-        "mov r8, r1\n\t"
-        "26:\n\t"
-        "ldr r0, 41f\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_80007AC\n\t"
-        "bl sub_8029B38\n\t"
-        "bl sub_802A208\n\t"
-        "add r5, r0, #0\n\t"
-        "ldr r1, [r7]\n\t"
-        "add r0, r1, #0\n\t"
-        "add r0, #0x8c\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 27f\n\t"
-        "add r0, r1, #0\n\t"
-        "bl sub_8022F2C\n\t"
-        "27:\n\t"
-        "ldr r0, 42f\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_8006C4C\n\t"
-        "mov r1, sb\n\t"
-        "ldr r0, [r1]\n\t"
-        "bl sub_8006A78\n\t"
-        "ldr r4, 43f\n\t"
-        "ldr r0, [r4]\n\t"
-        "bl sub_8028400\n\t"
-        "ldr r0, [r4]\n\t"
-        "bl sub_80274EC\n\t"
-        "bl FlushSpriteFrameOamQueue\n\t"
-        "bl sub_80006A8\n\t"
-        "bl sub_8029E50\n\t"
-        "mov r3, sb\n\t"
-        "ldr r0, [r3]\n\t"
-        "bl sub_8006AAC\n\t"
-        "bl FlushVramDmaQueue\n\t"
-        "bl sub_8029ADC\n\t"
-        "bl sub_802A650\n\t"
-        "bl AgeSpriteFrameCache\n\t"
-        "cmp r5, #0\n\t"
-        "beq 52f\n\t"
-        "cmp r5, #1\n\t"
-        "bne 28f\n\t"
-        "b 18b\n\t"
-        "28:\n\t"
-        "cmp r5, #2\n\t"
-        "bne 44f\n\t"
-        "ldr r0, [r7]\n\t"
-        "add r0, #0x8c\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 48f\n\t"
-        "b 46f\n\t"
-        ".align 2, 0\n"
-        "29: .4byte gStaticData_08175584\n"
-        "30: .4byte 0x040000D4\n"
-        "31: .4byte 0x81000200\n"
-        "32: .4byte gStaticData_08175558\n"
-        "33: .4byte gUnknown_03001380\n"
-        "34: .4byte gUnknown_03000878\n"
-        "35: .4byte gStaticData_08175564\n"
-        "36: .4byte gUnknown_03001384\n"
-        "37: .4byte 0x05000200\n"
-        "38: .4byte 0x80000100\n"
-        "39: .4byte gUnknown_030012C0\n"
-        "40: .4byte gUnknown_03001300\n"
-        "41: .4byte gUnknown_03001304\n"
-        "42: .4byte gUnknown_030012FC\n"
-        "43: .4byte gUnknown_03001318\n"
-        "44:\n\t"
-        "cmp r5, #3\n\t"
-        "beq 45f\n\t"
-        "b 64f\n\t"
-        "45:\n\t"
-        "ldr r0, [r7]\n\t"
-        "add r0, #0x8c\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 48f\n\t"
-        "ldr r0, 49f\n\t"
-        "ldr r1, [r0]\n\t"
-        "mov r0, #0x34\n\t"
-        "mul r0, r1, r0\n\t"
-        "add r0, sl\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 47f\n\t"
-        "46:\n\t"
-        "ldr r5, 50f\n\t"
-        "ldr r0, [r5]\n\t"
-        "add r0, #1\n\t"
-        "str r0, [r5]\n\t"
-        "47:\n\t"
-        "ldr r1, 51f\n\t"
-        "ldr r0, [r1]\n\t"
-        "add r0, #1\n\t"
-        "str r0, [r1]\n\t"
-        "48:\n\t"
-        "mov r3, #1\n\t"
-        "str r3, [sp, #0xc]\n\t"
-        "b 64f\n\t"
-        ".align 2, 0\n"
-        "49: .4byte gUnknown_03001380\n"
-        "50: .4byte gUnknown_03001388\n"
-        "51: .4byte gUnknown_03001384\n"
-        "52:\n\t"
-        "mov r4, #0\n\t"
-        "bl sub_8001510\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "bne 53f\n\t"
-        "ldr r1, 59f\n\t"
-        "mov r0, #8\n\t"
-        "ldrh r1, [r1, #2]\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "beq 53f\n\t"
-        "bl sub_802A5AC\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "neg r0, r0\n\t"
-        "lsr r4, r0, #0x1f\n\t"
-        "53:\n\t"
-        "cmp r4, #0\n\t"
-        "beq 57f\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #2\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "bl mem_alloc\n\t"
-        "add r4, r0, #0\n\t"
-        "mov r5, r8\n\t"
-        "str r5, [r6]\n\t"
-        "str r4, [r6, #4]\n\t"
-        "ldr r0, 60f\n\t"
-        "str r0, [r6, #8]\n\t"
-        "ldr r0, [r6, #8]\n\t"
-        "bl FreeSpriteFrameCache\n\t"
-        "bl FreeSpriteFrameOamQueue\n\t"
-        "bl FreeObjTileFreeList\n\t"
-        "bl sub_8004D74\n\t"
-        "add r5, r0, #0\n\t"
-        "bl SetupActorVramPool\n\t"
-        "mov r0, #0x80\n\t"
-        "mov r1, #1\n\t"
-        "mov r2, #1\n\t"
-        "bl sub_800132C\n\t"
-        "str r4, [r6]\n\t"
-        "mov r1, r8\n\t"
-        "str r1, [r6, #4]\n\t"
-        "ldr r3, 60f\n\t"
-        "str r3, [r6, #8]\n\t"
-        "ldr r0, [r6, #8]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl mem_free\n\t"
-        "bl sub_802996C\n\t"
-        "ldr r0, 61f\n\t"
-        "ldr r1, [r0]\n\t"
-        "mov r0, #0x34\n\t"
-        "mul r0, r1, r0\n\t"
-        "ldr r1, 62f\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 54f\n\t"
-        "bl sub_802F7B0\n\t"
-        "54:\n\t"
-        "bl sub_802A5C4\n\t"
-        "cmp r5, #2\n\t"
-        "bne 55f\n\t"
-        "b 19b\n\t"
-        "55:\n\t"
-        "cmp r5, #3\n\t"
-        "bne 56f\n\t"
-        "b 20b\n\t"
-        "56:\n\t"
-        "cmp r5, #1\n\t"
-        "bne 57f\n\t"
-        "b 21b\n\t"
-        "57:\n\t"
-        "ldr r0, 59f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #4\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "bne 58f\n\t"
-        "b 26b\n\t"
-        "58:\n\t"
-        "ldr r0, 63f\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_8028504\n\t"
-        "b 26b\n\t"
-        ".align 2, 0\n"
-        "59: .4byte gUnknown_030007E0\n"
-        "60: .4byte 0x80000100\n"
-        "61: .4byte gUnknown_03001380\n"
-        "62: .4byte gStaticData_08175564\n"
-        "63: .4byte gUnknown_03001318\n"
-        "64:\n\t"
-        "bl sub_802A5E4\n\t"
-        "bl nullsub_5\n\t"
-        "ldr r3, [sp, #0xc]\n\t"
-        "cmp r3, #1\n\t"
-        "bne 65f\n\t"
-        "b 9b\n\t"
-        "65:\n\t"
-        "bl nullsub_6\n\t"
-        "bl FreeSpriteFrameCache\n\t"
-        "bl FreeSpriteFrameOamQueue\n\t"
-        "bl FreeObjTileFreeList\n\t"
-        "bl FreeCategorySpriteSheet\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #0x13\n\t"
-        "mov r0, #0x41\n\t"
-        "strh r0, [r1]\n\t"
-        "mov r1, #0xa0\n\t"
-        "lsl r1, r1, #0x13\n\t"
-        "mov r0, #0\n\t"
-        "strh r0, [r1]\n\t"
-        "ldr r0, [sp, #0xc]\n\t"
-        "add sp, #0x10\n\t"
-        "pop {r3, r4, r5}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov sl, r5\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n"
-    );
+    s32 ret = 1;
+    s32 *activeCount;
+    s32 *variantCount;
+    u8 **state;
+    struct dma_regs *dma;
+    vu16 zero;
+    u32 variant;
+    s32 status;
+    s32 result;
+    u8 open;
+    void *buf;
+
+    gUnknown_03001390 = 0;
+    gUnknown_03001380 = category;
+    gUnknown_03000878 = 0;
+    gUnknown_03001384 = 0;
+    gUnknown_03001388 = 0;
+    sub_8022CA0(gUnknown_030012C0);
+    DecompressCategorySpriteSheet(CUR_CATEGORY.sprite_sheet);
+    SetupActorVramPool();
+    sub_802AAFC();
+    sub_802ABFC(CUR_CATEGORY.type == 0);
+    sub_8029C30(CUR_CATEGORY.type);
+
+    do {
+        activeCount = &gUnknown_03001384;
+        variantCount = &gUnknown_03001388;
+        gUnknown_0300138C = gUnknown_03001390;
+        sub_8023548(gUnknown_030012C0);
+        if (*variantCount >= (s32)CUR_CATEGORY.unknown_28)
+            variant = CUR_CATEGORY.unknown_30;
+        else
+            variant = CUR_CATEGORY.position_offset_flag;
+        zero = 0;
+        dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
+        dma->src = (u32)&zero;
+        dma->dst = PLTT;
+        dma->cnt = 0x81000200;
+        dma->cnt;
+        sub_800132C(0x80, 2, 1);
+        sub_8029890(CUR_CATEGORY.type, CUR_CATEGORY.family_shared_04, CUR_CATEGORY.family_shared_08,
+                    gUnknown_03000878);
+        if (CUR_CATEGORY.conditional_ptr_0C != NULL)
+            sub_802F7B0();
+        sub_802AB08();
+        SelectActorCategory(CUR_CATEGORY.type, CUR_CATEGORY.sub_effect_table, CUR_CATEGORY.anim_table,
+                            *activeCount >= (s32)CUR_CATEGORY.active_count_threshold, variant,
+                            gUnknown_03000878);
+        dma->src = (u32)CUR_CATEGORY.palette;
+        dma->dst = OBJ_PLTT_ADDR;
+        dma->cnt = 0x80000100;
+        dma->cnt;
+
+        state = &gUnknown_030012C0;
+        for (;;) {
+            sub_80007AC(gUnknown_03001304);
+            sub_8029B38();
+            status = sub_802A208();
+            if ((*state)[0x8c] != 0)
+                sub_8022F2C(*state);
+            sub_8006C4C(gUnknown_030012FC);
+            sub_8006A78(gUnknown_03001300);
+            sub_8028400(gUnknown_03001318);
+            sub_80274EC(gUnknown_03001318);
+            FlushSpriteFrameOamQueue();
+            sub_80006A8();
+            sub_8029E50();
+            sub_8006AAC(gUnknown_03001300);
+            FlushVramDmaQueue();
+            sub_8029ADC();
+            sub_802A650();
+            AgeSpriteFrameCache();
+
+            if (status != 0) {
+                if (status == 1) {
+                    ret = 0;
+                } else if (status == 2) {
+                    if ((*state)[0x8c] != 0)
+                        goto again;
+                    goto both;
+                } else if (status == 3) {
+                    if ((*state)[0x8c] != 0)
+                        goto again;
+                    if (CUR_CATEGORY.type != 0) {
+                    both:
+                        (*variantCount)++;
+                    }
+                    (*activeCount)++;
+                again:
+                    ret = 1;
+                }
+            } else {
+                open = 0;
+                if (sub_8001510() == 0 && ((gUnknown_030007E0 >> 16) & 8))
+                    open = -sub_802A5AC() < 0;
+                if (open) {
+                    buf = mem_alloc(0x200, 0x80000000);
+                    dma->src = OBJ_PLTT_ADDR;
+                    dma->dst = (u32)buf;
+                    dma->cnt = 0x80000100;
+                    dma->cnt;
+                    FreeSpriteFrameCache();
+                    FreeSpriteFrameOamQueue();
+                    FreeObjTileFreeList();
+                    result = sub_8004D74();
+                    SetupActorVramPool();
+                    sub_800132C(0x80, 1, 1);
+                    dma->src = (u32)buf;
+                    dma->dst = OBJ_PLTT_ADDR;
+                    dma->cnt = 0x80000100;
+                    dma->cnt;
+                    mem_free(buf);
+                    sub_802996C();
+                    if (CUR_CATEGORY.conditional_ptr_0C != NULL)
+                        sub_802F7B0();
+                    sub_802A5C4();
+                    if (result == 2) {
+                        ret = 2;
+                        goto done;
+                    }
+                    if (result == 3) {
+                        ret = 0;
+                        goto done;
+                    }
+                    if (result == 1) {
+                        ret = 1;
+                        goto done;
+                    }
+                }
+                if (gUnknown_030007E0 & 4)
+                    sub_8028504(gUnknown_03001318);
+                continue;
+            }
+            break;
+        }
+    done:
+        sub_802A5E4();
+        nullsub_5();
+    } while (ret == 1 && sub_803AFEC(gUnknown_030012C0) >= 0 && PAUSED == 0);
+
+    nullsub_6();
+    FreeSpriteFrameCache();
+    FreeSpriteFrameOamQueue();
+    FreeObjTileFreeList();
+    FreeCategorySpriteSheet();
+    REG_DISPCNT = 0x41;
+    *(vu16 *)PLTT = 0;
+    return ret;
 }
+
+asm(".align 2, 0");
