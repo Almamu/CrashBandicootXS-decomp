@@ -173,3 +173,14 @@ Two are left:
   5 halfwords off under old_agbcc, in the loop pre-header only. Its raw
   bytes in `asm/code_3_1_10_4.s` are now guarded with
   `.if NON_MATCHING == 0`.
+
+## Later pass: hard-register hold
+
+`sub_800450C` is now real C in `src/graphics/settings_menu.c` (old_agbcc)
+and `asm/code_3_1_10_4.s` is gone. The loop pre-header was already fixed
+by plain `u8 *`/`u16 *` stores (early-rom-naked-retry-2.md). The last 6
+halfwords were the third icon: the frame-0 store takes its address in r0
+through a pinned pointer, and an r1 hold at the nibble mask makes reload
+pick r3 as in the ROM. The hold's asm statements shift the stack-slot
+order, and three bare `asm("")` at the top restore it. See
+[hard-register-hold-retry.md](hard-register-hold-retry.md).

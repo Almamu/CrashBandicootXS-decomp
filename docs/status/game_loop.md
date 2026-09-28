@@ -483,10 +483,19 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   `asm("" : "+r")` copy so cse doesn't hold `sp+16` in a callee-saved
   register, and `px`/`py` are shared by both blocks. See
   [docs/matching/sp-box-retry.md](../matching/sp-box-retry.md).
+- **Hard-register hold pass:** `sub_8023A1C` (`game_loop56.c`, issue
+  #37, the level-lifecycle state machine) promoted from NAKED to real C
+  under old_agbcc (`game_loop56.o` joined `OLD_AGBCC_OBJS`). The
+  one-byte `direction` stack argument of `sub_8027018` is a struct with
+  a zero-length array member, which makes it BLKmode, so the compound
+  literal is stored straight into the outgoing slot (address first, as
+  in the ROM). An r0/r1 hard-register hold puts the post-fade
+  player-position copy's pointer in r2. See
+  [docs/matching/hard-register-hold-retry.md](../matching/hard-register-hold-retry.md).
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
-- **`sub_8023A1C`** (`src/system/game_loop56.c`, new file - GitHub
+- **Now matched as real C (hard-register hold pass, see Matched); entry kept for history.** **`sub_8023A1C`** (`src/system/game_loop56.c`, new file - GitHub
   issue #37, ROM `0x08023A1C`-`0x0802400C`) - the ~650-instruction
   level-lifecycle state machine `sub_802375C` unconditionally hands off
   to (`game_loop39.c`). Its 6-case jump table (state `1`/`6` share one

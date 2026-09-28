@@ -69,3 +69,11 @@ The early-ROM NAKED retry
 ([early-rom-naked-retry.md](early-rom-naked-retry.md)) brought the
 `sub_8005100` draft to 5 halfwords. The key-repeat tests now match. The
 other three are unchanged.
+
+## Later pass: hard-register hold
+
+`sub_80053F4` is now real C (both compilers). In each computed-x
+`set_icon_mgr_pos` call, an r2 hold over the x computation puts y in r2
+and the address reloads rotate as in the ROM. Extra references on the
+temporaries (`0xf0 - w`, the 0x8c and `width`) stop local-alloc tying
+them to x. See [hard-register-hold-retry.md](hard-register-hold-retry.md).

@@ -2897,7 +2897,12 @@ NAKED void sub_0800D18C(void *self, u32 arg1)
  * computes the address early into r0 and changes the other flags'
  * prologue; an `asm`-hidden `s32` with a `(u8)` cast gives `ldr; lsl;
  * lsr`; passing the struct or calling through an unprototyped or `u8`
- * pointer changed nothing (docs/matching/sp-box-retry.md). */
+ * pointer changed nothing (docs/matching/sp-box-retry.md).
+ * Hard-register hold pass: the reload itself is `(set r2 (mem:SI sp))`
+ * because the spilled `f20` is a promoted SImode pseudo and nothing
+ * asks for its QImode part; a hold only changes which register a reload
+ * gets, not its mode. `u32`/`s32`/`u16`/`s8` `f20` with a `(u8)` cast
+ * and calls through `u8`-parameter function pointers stay at 49-51 hw. */
 #include "phys_obj.h"
 extern void PlaySfx(void *ctx, s32 id, s32 volume);
 extern void *gUnknown_030012BC;

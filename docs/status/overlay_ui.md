@@ -53,8 +53,9 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
 - `src/graphics/settings_menu7.c` (issue #7 retry): the per-row
   percentage dec/inc pair `sub_8005EF4`, `sub_8005FBC`.
 - `src/graphics/settings_menu21.c` (issue #7 retry): the per-row list
-  renderer `sub_800556C` (`sub_80053F4` in the same file is still
-  NAKED).
+  renderer `sub_800556C`, and (hard-register hold pass) the per-frame
+  row draw step `sub_80053F4` - plain C, was NAKED. See
+  [hard-register-hold-retry.md](../matching/hard-register-hold-retry.md).
 - `src/graphics/settings_menu22.c` (issue #7 retry, old_agbcc): the
   icon-row fraction readouts `sub_80057E0`, `sub_80058C0`.
 - `src/graphics/settings_menu8d.c` (new file - issue #4,
@@ -107,7 +108,10 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   and its 4-row driver `sub_80041BC` - all plain C, were NAKED. See
   [issue-4-6-8-naked-retry.md](../matching/issue-4-6-8-naked-retry.md).
   The value-label/pair draw `sub_8003D3C` followed in the early-ROM
-  NAKED retry ([early-rom-naked-retry.md](../matching/early-rom-naked-retry.md)).
+  NAKED retry ([early-rom-naked-retry.md](../matching/early-rom-naked-retry.md)),
+  and the screen's init routine `sub_800450C` (was raw asm in the now
+  retired `asm/code_3_1_10_4.s`) in the hard-register hold pass
+  ([hard-register-hold-retry.md](../matching/hard-register-hold-retry.md)).
 - `src/graphics/settings_menu23.c` (issue #6 retry): `sub_8004914`,
   `sub_80049CC` - plain C, were NAKED.
 - `src/graphics/settings_menu10.c` (issue #8 retry, old_agbcc):
@@ -135,21 +139,15 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   about 100 halfwords off: it keeps the ROM's `n - 1 != -1` loop tests,
   but gcc shares the `playerIndex * 0xc8 + s` the ROM computes twice.
   See [early-rom-naked-retry.md](../matching/early-rom-naked-retry.md).
-- **`sub_800450C`** (`src/graphics/settings_menu.c` draft, real bytes
-  still raw in `asm/code_3_1_10_4.s`) - the screen's init routine.
-  NON_MATCHING draft 5 halfwords off under old_agbcc (loop pre-header
-  order). Issue #6, see [issue-4-6-8-naked-retry.md](../matching/issue-4-6-8-naked-retry.md)
-  and [early-rom-naked-retry-2.md](../matching/early-rom-naked-retry-2.md).
-- **`sub_80053F4`**,
-  **`sub_8005E5C`** - both are
-  byte-exact via `NAKED` asm transcription (the whole function body is
-  a hand-transcribed copy of the ROM's own disassembly, not real
-  decompiled C), so they're tracked here as parked rather than matched
-  - see `docs/matching/issue-7-0x08004d74-overlay-ui.md`/
+- **`sub_8005E5C`** - byte-exact via `NAKED` asm transcription (the
+  whole function body is a hand-transcribed copy of the ROM's own
+  disassembly, not real decompiled C), so it's tracked here as parked
+  rather than matched - see
   `docs/matching/issue-8-0x080060ac-overlay-ui.md`'s "Third pass"
-  writeups for the technical detail on each. Both have
-  near-miss C drafts under `NON_MATCHING` from the issue #7 retry
-  (`docs/matching/issue-7-naked-retry.md`). Eleven former members of
+  writeup. It has a near-miss C draft under `NON_MATCHING` from the
+  issue #7 retry (`docs/matching/issue-7-naked-retry.md`).
+  `sub_80053F4` and the raw `sub_800450C` are now real C (hard-register
+  hold pass). Eleven former members of
   this list (`sub_8004D74`, `sub_800556C`, `sub_80057E0`, `sub_80058C0`,
   `sub_8005AE8`, `sub_8005B80`, `sub_8005C58`, `sub_8005D44`,
   `sub_8005EF4`, `sub_8005FBC`, and since the early-ROM NAKED retry 2

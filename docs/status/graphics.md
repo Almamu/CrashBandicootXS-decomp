@@ -183,17 +183,19 @@ and [graphics_loading.md](./graphics_loading.md).
   old_agbcc: the ROM's stack-spilled second copy of the record pointer
   is a separate local that `info` copies. See
   [docs/matching/near-miss-polish-3.md](../matching/near-miss-polish-3.md).
+- **Hard-register hold pass:** `sub_801A114` (`actor_part_1967c.c`,
+  issue #24, the `gStaticData_087E490C` controller's per-frame update)
+  promoted from NAKED to real C under old_agbcc. r5/r6 held live across
+  the box builders make global-alloc start the long-lived values at r7,
+  as in the ROM; the state-0 BLDCNT accumulator is a block-scoped r5
+  variable set through the constant-init asm. See
+  [docs/matching/hard-register-hold-retry.md](../matching/hard-register-hold-retry.md).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
 ## Parked - NAKED asm transcriptions (byte-correct, not decompiled C)
 
-- **`sub_801A114`** (`src/graphics/actor_part_1967c.c`, issue #24) -
-  the `gStaticData_087E490C` controller's per-frame update. C draft under
-  `#if NON_MATCHING`; register allocation differs (`self`/`other`/the
-  player-global address/the box pointer in r7/r9/r10/r8). See
-  [docs/matching/issue-24-26-12-naked-retry.md](../matching/issue-24-26-12-naked-retry.md).
 - **`sub_801AB98`** (`src/graphics/actor_part_1ab98.c`, player-vs-object
   collision resolver) - GitHub issue #25. NAKED; the C reconstruction
   under `#if NON_MATCHING` differs in reload's round-robin

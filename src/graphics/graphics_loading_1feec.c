@@ -219,7 +219,13 @@ void sub_80204EC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * the rec2 load or the tail), and other flip spellings (`!`, `^= 1`,
  * ternary, if/else, a u8-parameter setter, u8/u32 temp) are all 62 hw
  * or worse. In the draft the part+0x28 pointer outranks arg3 for a low
- * callee-saved register, which is the reverse of the ROM. */
+ * callee-saved register, which is the reverse of the ROM.
+ * Hard-register hold pass: the draft also keeps `arg3 << 16` (the
+ * zero-extension's first half) alive, spilled, to rebuild `arg3 * 2`
+ * for the second LEVEL_RECORD; the ROM zero-extends a copy in r4 and
+ * doubles it in place. A `u32` copy of arg3 behind `asm("" : "+r")`
+ * puts it in r4 but moves the zero-extension after the first call (120
+ * hw). r4/r5 holds over parts of the part+0x28 range were worse (80+). */
 #if NON_MATCHING
 void sub_802062C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {

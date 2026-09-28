@@ -940,31 +940,20 @@ void sub_801A03C(struct boss *self, u16 x, u16 y, u8 facing)
  * states 3/4 toggle `other`'s blink bit every 20 frames until the
  * blinks run out (then state 5).
  *
- * NAKED: under old_agbcc the pin-free C below has the right shape but is
- * ~159 halfwords off on allocation. The ROM puts `self` in r7, `other` in
- * r9, &gUnknown_030012D8 in r10 and `&b` in r8, leaving r4-r6 unused for
- * long-lived values; gcc uses r4-r8 for those four. The unfolded `orr`
- * chain in state 0 is reproduced by setting `bld` outside the case block
- * (CSE can't see its constant there); the ROM then keeps it in r5, gcc
- * rematerializes it into a scratch register. Plain-block VCALL1 (the fix
- * for sub_801A03C) and hard-register or empty-asm tricks didn't move the
- * allocation.
- * Later pass (gap4): the size gap (392 vs 404) is only the extra
- * hi-register saves and moves. The ROM's four globals come out in the
- * same priority order as the draft's (self, &b, other, &gUnknown_030012D8),
- * starting at r7 instead of r5. So r5 and r6 must be taken by something
- * live across the first half that emits no code of its own. Pinning `bld`
- * to r5 and setting it before the first call moves self to r6 and shifts
- * everything else one step toward the ROM. No natural source for the
- * second blocker (r6) was found. Extra `other` references, an
- * uninitialised `bld` and a live-from-entry pinned dummy were tried: they
- * either fold the orr chain or leave `&b` in r5. */
-#if NON_MATCHING
+ * Was NAKED (~159 halfwords off as C). The ROM leaves r4-r6 unused for
+ * the long-lived values (`self` r7, `&b` r8, `other` r9,
+ * &gUnknown_030012D8 r10); the draft's allocation order was already the
+ * ROM's, but it started at r5. Holding r5 and r6 across the box builders
+ * (docs/matching/hard-register-hold-retry.md) makes global-alloc skip
+ * them. The state-0 BLDCNT accumulator lives in r5 in the ROM: a
+ * block-scoped r5 variable, initialised through the constant-init asm so
+ * the orr chain is neither folded nor reordered, reproduces it. */
 void sub_801A114(struct obj_490c *self, struct part *other)
 {
     struct box a;
     struct box b;
-    u32 bld;
+    register s32 hr5 asm("r5");
+    register s32 hr6 asm("r6");
 
     {
         struct vmethod *m = &other->vt->m28;
@@ -972,6 +961,11 @@ void sub_801A114(struct obj_490c *self, struct part *other)
         {
             if (!gUnknown_030012D8->busy)
             {
+                /* Hard-register hold (no code): r5 and r6 stay live
+                 * across the box builders, so no long-lived pseudo gets
+                 * them. */
+                asm("" : "=r"(hr5));
+                asm("" : "=r"(hr6));
                 a = sub_8007C30(other);
                 b = sub_8007CF8(gUnknown_030012D8);
                 if (!BOX_VALID(b))
@@ -980,6 +974,9 @@ void sub_801A114(struct obj_490c *self, struct part *other)
 
                     *pb = sub_8007C30(gUnknown_030012D8);
                 }
+                /* End of the hold. */
+                asm("" : : "r"(hr5));
+                asm("" : : "r"(hr6));
                 if (sub_8001688(&b, &a))
                 {
                     struct part *pl = gUnknown_030012D8;
@@ -991,17 +988,21 @@ void sub_801A114(struct obj_490c *self, struct part *other)
         }
     }
 
-    bld = BLDCNT_TGT1_OBJ;
     switch (self->state)
     {
     case 0:
-        bld |= BLDCNT_TGT2_BG0;
-        bld |= BLDCNT_TGT2_BG1;
-        bld |= BLDCNT_TGT2_BG2;
-        bld |= BLDCNT_TGT2_BG3;
         {
-            u32 w = bld | BLDCNT_TGT2_OBJ;
+            register u32 acc asm("r5");
+            u32 w;
 
+            /* Constant-init (emits the `movs r5, #0x10`): a plain
+             * assignment is folded into the orr chain. */
+            asm("" : "=r"(acc) : "0"(BLDCNT_TGT1_OBJ));
+            acc |= BLDCNT_TGT2_BG0;
+            acc |= BLDCNT_TGT2_BG1;
+            acc |= BLDCNT_TGT2_BG2;
+            acc |= BLDCNT_TGT2_BG3;
+            w = acc | BLDCNT_TGT2_OBJ;
             w |= 0x100000;
             w |= 0x10000000;
             *(vu32 *)REG_ADDR_BLDCNT = w;
@@ -1034,206 +1035,6 @@ void sub_801A114(struct obj_490c *self, struct part *other)
         break;
     }
 }
-#else
-NAKED void sub_801A114(struct obj_490c *self, struct part *other)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sl\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6, r7}\n\t"
-        "sub sp, #0x30\n\t"
-        "add r7, r0, #0\n\t"
-        "mov sb, r1\n\t"
-        "ldr r1, [r1, #0x18]\n\t"
-        "mov r2, #0x28\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, sb\n\t"
-        "ldr r1, [r1, #0x2c]\n\t"
-        "bl sub_803AD7C\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "beq _0801A1A6\n\t"
-        "ldr r3, _0801A1B8\n\t"
-        "mov sl, r3\n\t"
-        "ldr r0, [r3]\n\t"
-        "mov r1, #0x82\n\t"
-        "lsl r1, r1, #1\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne _0801A1A6\n\t"
-        "mov r0, sp\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_8007C30\n\t"
-        "add r2, sp, #0x10\n\t"
-        "mov r8, r2\n\t"
-        "mov r3, sl\n\t"
-        "ldr r1, [r3]\n\t"
-        "mov r0, r8\n\t"
-        "bl sub_8007CF8\n\t"
-        "ldr r0, [sp, #0x18]\n\t"
-        "cmp r0, #0\n\t"
-        "bne _0801A17C\n\t"
-        "mov r0, sl\n\t"
-        "ldr r1, [r0]\n\t"
-        "add r4, sp, #0x20\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_8007C30\n\t"
-        "mov r0, r8\n\t"
-        "ldmia r4!, {r1, r2, r3}\n\t"
-        "stmia r0!, {r1, r2, r3}\n\t"
-        "ldr r1, [r4]\n\t"
-        "str r1, [r0]\n\t"
-        "_0801A17C:\n"
-        "mov r0, r8\n\t"
-        "mov r1, sp\n\t"
-        "bl sub_8001688\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "beq _0801A1A6\n\t"
-        "mov r1, sl\n\t"
-        "ldr r0, [r1]\n\t"
-        "ldr r1, [r0, #0x18]\n\t"
-        "add r1, #0x68\n\t"
-        "mov r3, #0\n\t"
-        "ldrsh r2, [r1, r3]\n\t"
-        "add r0, r0, r2\n\t"
-        "mov r3, sb\n\t"
-        "ldrb r2, [r3, #0xa]\n\t"
-        "ldr r4, [r1, #4]\n\t"
-        "mov r1, #0\n\t"
-        "mov r3, #0\n\t"
-        "bl sub_803AD88\n\t"
-        "_0801A1A6:\n"
-        "ldr r0, [r7, #8]\n\t"
-        "cmp r0, #5\n\t"
-        "bhi _0801A298\n\t"
-        "lsl r0, r0, #2\n\t"
-        "ldr r1, _0801A1BC\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov pc, r0\n\t"
-        ".align 2, 0\n\t"
-        "_0801A1B8: .4byte gUnknown_030012D8\n\t"
-        "_0801A1BC: .4byte _0801A1C0\n\t"
-        "_0801A1C0:\n"
-        ".4byte _0801A1D8\n\t"
-        ".4byte _0801A220\n\t"
-        ".4byte _0801A23A\n\t"
-        ".4byte _0801A254\n\t"
-        ".4byte _0801A254\n\t"
-        ".4byte _0801A298\n\t"
-        "_0801A1D8:\n"
-        "mov r5, #0x10\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #1\n\t"
-        "orr r5, r0\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #2\n\t"
-        "orr r5, r0\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #3\n\t"
-        "orr r5, r0\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #4\n\t"
-        "orr r5, r0\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #5\n\t"
-        "orr r0, r5\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #0xd\n\t"
-        "orr r0, r1\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #0x15\n\t"
-        "orr r0, r1\n\t"
-        "ldr r1, _0801A21C\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r1, [r7, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r7, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #5\n\t"
-        "bl sub_803AD80\n\t"
-        "b _0801A298\n\t"
-        ".align 2, 0\n\t"
-        "_0801A21C: .4byte 0x04000050\n\t"
-        "_0801A220:\n"
-        "mov r0, #2\n\t"
-        "str r0, [r7, #0x20]\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [r7, #0x1c]\n\t"
-        "ldr r1, [r7, #0xc]\n\t"
-        "mov r3, #0x20\n\t"
-        "ldrsh r0, [r1, r3]\n\t"
-        "add r0, r7, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #3\n\t"
-        "bl sub_803AD80\n\t"
-        "b _0801A298\n\t"
-        "_0801A23A:\n"
-        "mov r0, #2\n\t"
-        "str r0, [r7, #0x20]\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [r7, #0x1c]\n\t"
-        "ldr r1, [r7, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r7, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #4\n\t"
-        "bl sub_803AD80\n\t"
-        "b _0801A298\n\t"
-        "_0801A254:\n"
-        "ldr r0, [r7, #0x1c]\n\t"
-        "cmp r0, #0\n\t"
-        "bne _0801A294\n\t"
-        "mov r0, #0x14\n\t"
-        "str r0, [r7, #0x1c]\n\t"
-        "mov r3, sb\n\t"
-        "ldrb r2, [r3, #0xd]\n\t"
-        "lsr r1, r2, #2\n\t"
-        "mov r0, #1\n\t"
-        "eor r1, r0\n\t"
-        "and r1, r0\n\t"
-        "lsl r1, r1, #2\n\t"
-        "mov r0, #5\n\t"
-        "neg r0, r0\n\t"
-        "and r0, r2\n\t"
-        "orr r0, r1\n\t"
-        "strb r0, [r3, #0xd]\n\t"
-        "ldr r0, [r7, #0x20]\n\t"
-        "cmp r0, #0\n\t"
-        "bne _0801A28C\n\t"
-        "ldr r1, [r7, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r7, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #5\n\t"
-        "bl sub_803AD80\n\t"
-        "_0801A28C:\n"
-        "ldr r0, [r7, #0x20]\n\t"
-        "sub r0, #1\n\t"
-        "str r0, [r7, #0x20]\n\t"
-        "ldr r0, [r7, #0x1c]\n\t"
-        "_0801A294:\n"
-        "sub r0, #1\n\t"
-        "str r0, [r7, #0x1c]\n\t"
-        "_0801A298:\n"
-        "add sp, #0x30\n\t"
-        "pop {r3, r4, r5}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov sl, r5\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-    );
-}
-#endif
 
 void sub_801A2A8(struct obj_48a4 *self, struct part *other)
 {
