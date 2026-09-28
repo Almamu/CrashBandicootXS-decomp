@@ -202,3 +202,10 @@ between the 0x80 test's `ands` and `cmp`. A statement expression puts
 the copy (`k = keys` plus an empty `asm("" : "+r"(k.all))`) at that
 point. `sub_801C608` stays parked: no source form tried makes the ROM's
 spill of `info` appear. See [near-miss-polish.md](near-miss-polish.md).
+
+## Later pass: third near-miss sweep
+
+`sub_801C608` is real C under old_agbcc. The ROM's spill of `info` is a
+second variable: `entry` holds the record pointer, `info` is a plain
+copy of it, and the `time0` test reads `entry`, which is spilled. See
+[near-miss-polish-3.md](near-miss-polish-3.md).

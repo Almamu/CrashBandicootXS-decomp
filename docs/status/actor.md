@@ -991,6 +991,20 @@ See [docs/matching/category-driver-naked-retry.md](../matching/category-driver-n
 
 See [docs/matching/issue-15-16-naked-retry-3.md](../matching/issue-15-16-naked-retry-3.md).
 
+### Matched in the third near-miss sweep
+
+- `src/graphics/actor_part_13c60.c` - `sub_8014084` (issue #17),
+  old_agbcc. The facing block's second branch writes through a scoped
+  `volatile u8 *`, which keeps the `+0x28` address in the part copy's
+  register ahead of the -0x11 mask.
+- `src/graphics/actor_part130.c` - `sub_80336CC` (P2 fill-level meter),
+  both compilers. The 0xf mask is an opaque value
+  (`asm("" : "=r"(m) : "0"(0xf))`) ANDed as `m & b`, the second byte has
+  its own local, the second loop has its own counter, and the row
+  header is written step by step in ROM order.
+
+See [docs/matching/near-miss-polish-3.md](../matching/near-miss-polish-3.md).
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
@@ -1017,11 +1031,10 @@ plain C didn't converge.
   halfwords off, now sits under `#if NON_MATCHING` - see
   `docs/matching/fresh-naked-retry.md`). See
   `docs/matching/naked-spatial-grid-tail.md`.
-- **`sub_8014084`** (`src/graphics/actor_part_13c60.c`), **`sub_8014674`**,
-  **`sub_8014B54`** (`src/graphics/actor_part_14674.c`), GitHub issue #17 -
-  action-table handlers whose old_agbcc C (kept under `NON_MATCHING`)
-  still differs from the ROM. `sub_8014084` is down to one misplaced
-  instruction (docs/matching/issue-15-16-17-naked-retry-2.md). In
+- **`sub_8014674`**, **`sub_8014B54`** (`src/graphics/actor_part_14674.c`),
+  GitHub issue #17 - action-table handlers whose old_agbcc C (kept under
+  `NON_MATCHING`) still differs from the ROM (`sub_8014084` from this
+  entry is matched since the third near-miss sweep). In
   `sub_8014674` gcc threads away a re-test of the part's tag that the
   ROM keeps. In `sub_8014B54` one reload register is one step off in
   gcc's rotation. See `docs/matching/issue-17-0x08012fbc-actor.md`,
@@ -1127,11 +1140,6 @@ plain C didn't converge.
   register-pinning gauntlet already exhausted throughout this section
   for smaller members of the same table. See
   `docs/matching/issue-16-actor-remainder.md`.
-- **`sub_80336CC`** (`src/graphics/actor_part130.c`) - the P2-side VRAM
-  fill-level meter, the one-row twin of `sub_8031604`; its
-  `#if NON_MATCHING` draft is 29 halfwords off, the same nibble-temporary
-  permutation plus two small header differences. See
-  `docs/matching/late-rom-naked-retry.md`.
 - **`sub_80352AC`** (`src/graphics/actor_part131.c`, GitHub issue #64) -
   the map screen's popup-text asset loader. The issue #64/#65 NAKED
   retry left a near-miss C draft under `#if NON_MATCHING` (old_agbcc):

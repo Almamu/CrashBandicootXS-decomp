@@ -201,27 +201,13 @@ void sub_8010EAC(void *selfArg, u8 randomize)
  * when `self->0x4a` is set - then always tail-calls `sub_8008364`
  * (already matched, `actor_part5.c`).
  *
- * NAKED, not plain C: this function's two independently-inlined
- * "collision bitmap" tails (mode 1's and mode 2's) each recompute their
- * own address/shift chain with a different register allocation
- * depending on which registers survive from that mode's own preceding
- * branch - notably mode 1's tail opportunistically reuses `r5` (still
- * holding the just-tested `self->0x48 == 1` mode value) as the literal
- * `1` for its `1 << bit` shift, something a natural plain-C compile of
- * the same logic can't be coaxed into reproducing (the two tails are
- * textually identical C but the ROM's own register choice differs
- * between them) - the same "shared tail duplicated near-identically
- * with different register survivors" shape already documented for
- * `sub_8011548` in this exact neighborhood (`game_loop53.c`).
- * Transcribed straight from the confirmed-correct ROM disassembly. */
-#if NON_MATCHING
-/* Near miss under old_agbcc, 22 halfwords off (same size). The `"+r"`
- * copy below reproduces mode 1's recomputed `x + velX`; what's left is
- * register choice: mode 1's id compare uses r6 (ROM r2), mode 2 loads
- * x/velX into r0/r1 instead of r1/r0 and its fire tail uses r1/r2
- * where the ROM uses r5/r6/r1. A switch, u8/u32 `fire` and split x/y
- * statements didn't help. The timer reload in mode 2 needs the
- * volatile read. */
+ *
+ * old_agbcc. The `"+r"` copy in mode 1 reproduces its recomputed
+ * `x + velX`. In mode 2 the timer is re-read through `self` after the
+ * store and the id compared without a local, so both become the ROM's
+ * reloads from memory (`ldrh` at the compare); two extra references on
+ * each velocity give it r0 and the position r1 (third near-miss sweep;
+ * the draft was 22 halfwords off). */
 #define SET_ID_BIT(idExpr, one)                                                \
     do                                                                         \
     {                                                                          \
@@ -262,8 +248,24 @@ void sub_8010F8C(struct orbit_part *self)
     } else if (state == 2) {
         s32 fire;
 
-        self->base.x += self->velX;
-        self->base.y += self->velY;
+        /* Two extra references on each velocity: it wins r0 and the
+         * position/sum r1, as in the ROM. */
+        {
+            s32 x = self->base.x;
+            s32 v = self->velX;
+
+            asm("" : : "r"(v));
+            asm("" : : "r"(v));
+            self->base.x = x + v;
+        }
+        {
+            s32 y = self->base.y;
+            s32 v = self->velY;
+
+            asm("" : : "r"(v));
+            asm("" : : "r"(v));
+            self->base.y = y + v;
+        }
         fire = 0;
         if (self->counter == 0) {
             s32 t = self->timer - 4;
@@ -274,14 +276,14 @@ void sub_8010F8C(struct orbit_part *self)
         } else {
             s32 t;
 
-            self->timer += 0xc;
-            t = *(vu16 *)&self->timer;
+            self->timer = self->timer + 0xc;
+            t = self->timer;
             if (t > 0x1b0)
                 fire = 1;
         }
         if (fire) {
             self->base.flags |= 1;
-            if (*(vu16 *)&self->base.field_08 != 0xffff)
+            if (self->base.field_08 != 0xffff)
                 SET_ID_BIT(self->base.field_08, 1);
         }
     } else {
@@ -302,209 +304,6 @@ void sub_8010F8C(struct orbit_part *self)
     }
     sub_8008364(&self->base);
 }
-#else
-NAKED void sub_8010F8C(void *self)
-{
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "add r0, #0x48\n\t"
-        "ldrb r5, [r0]\n\t"
-        "cmp r5, #1\n\t"
-        "bne 3f\n\t"
-        "ldr r1, [r4]\n\t"
-        "ldr r3, [r4, #0x40]\n\t"
-        "add r0, r1, r3\n\t"
-        "str r0, [r4]\n\t"
-        "ldr r2, [r4, #4]\n\t"
-        "ldr r0, [r4, #0x44]\n\t"
-        "add r0, r2, r0\n\t"
-        "str r0, [r4, #4]\n\t"
-        "add r1, r1, r3\n\t"
-        "asr r1, r1, #8\n\t"
-        "cmp r1, #0xb4\n\t"
-        "ble 1f\n\t"
-        "b 9f\n\t"
-    "1:\n\t"
-        "asr r0, r0, #8\n\t"
-        "cmp r0, #0xc\n\t"
-        "ble 2f\n\t"
-        "b 9f\n\t"
-    "2:\n\t"
-        "ldr r0, 20f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0xe\n\t"
-        "bl PlaySfx\n\t"
-        "ldr r0, 21f\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_8023464\n\t"
-        "mov r0, #1\n\t"
-        "ldrb r1, [r4, #0xc]\n\t"
-        "orr r0, r1\n\t"
-        "strb r0, [r4, #0xc]\n\t"
-        "ldr r0, 22f\n\t"
-        "ldrh r2, [r4, #8]\n\t"
-        "cmp r2, r0\n\t"
-        "beq 9f\n\t"
-        "ldrh r3, [r4, #8]\n\t"
-        "ldr r0, 23f\n\t"
-        "ldr r1, [r0]\n\t"
-        "add r0, r3, #0\n\t"
-        "asr r0, r0, #5\n\t"
-        "lsl r2, r0, #2\n\t"
-        "mov r6, #0x84\n\t"
-        "lsl r6, r6, #1\n\t"
-        "add r1, r1, r6\n\t"
-        "add r1, r1, r2\n\t"
-        "lsl r0, r0, #5\n\t"
-        "sub r0, r3, r0\n\t"
-        "lsl r5, r0\n\t"
-        "ldr r0, [r1]\n\t"
-        "orr r0, r5\n\t"
-        "str r0, [r1]\n\t"
-        "b 9f\n\t"
-        ".align 2, 0\n"
-    "20: .4byte gUnknown_030012BC\n"
-    "21: .4byte gUnknown_030012C0\n"
-    "22: .4byte 0x0000FFFF\n"
-    "23: .4byte gUnknown_030012B4\n"
-    "3:\n\t"
-        "cmp r5, #2\n\t"
-        "bne 7f\n\t"
-        "ldr r1, [r4]\n\t"
-        "ldr r0, [r4, #0x40]\n\t"
-        "add r1, r1, r0\n\t"
-        "str r1, [r4]\n\t"
-        "ldr r1, [r4, #4]\n\t"
-        "ldr r0, [r4, #0x44]\n\t"
-        "add r1, r1, r0\n\t"
-        "str r1, [r4, #4]\n\t"
-        "mov r1, #0\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x49\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 4f\n\t"
-        "ldrh r0, [r4, #0x3c]\n\t"
-        "sub r0, #4\n\t"
-        "strh r0, [r4, #0x3c]\n\t"
-        "cmp r0, #0x3f\n\t"
-        "bgt 5f\n\t"
-        "b 6f\n\t"
-    "4:\n\t"
-        "ldrh r0, [r4, #0x3c]\n\t"
-        "add r0, #0xc\n\t"
-        "strh r0, [r4, #0x3c]\n\t"
-        "mov r0, #0xd8\n\t"
-        "lsl r0, r0, #1\n\t"
-        "ldrh r2, [r4, #0x3c]\n\t"
-        "cmp r2, r0\n\t"
-        "ble 5f\n\t"
-        "mov r1, #1\n\t"
-    "5:\n\t"
-        "cmp r1, #0\n\t"
-        "beq 9f\n\t"
-    "6:\n\t"
-        "mov r0, #1\n\t"
-        "ldrb r5, [r4, #0xc]\n\t"
-        "orr r0, r5\n\t"
-        "strb r0, [r4, #0xc]\n\t"
-        "ldr r0, 24f\n\t"
-        "ldrh r6, [r4, #8]\n\t"
-        "cmp r6, r0\n\t"
-        "beq 9f\n\t"
-        "ldrh r3, [r4, #8]\n\t"
-        "ldr r0, 25f\n\t"
-        "ldr r2, [r0]\n\t"
-        "add r0, r3, #0\n\t"
-        "asr r0, r0, #5\n\t"
-        "lsl r1, r0, #2\n\t"
-        "mov r5, #0x84\n\t"
-        "lsl r5, r5, #1\n\t"
-        "add r2, r2, r5\n\t"
-        "add r2, r2, r1\n\t"
-        "lsl r0, r0, #5\n\t"
-        "sub r0, r3, r0\n\t"
-        "mov r1, #1\n\t"
-        "lsl r1, r0\n\t"
-        "ldr r0, [r2]\n\t"
-        "orr r0, r1\n\t"
-        "str r0, [r2]\n\t"
-        "b 9f\n\t"
-        ".align 2, 0\n"
-    "24: .4byte 0x0000FFFF\n"
-    "25: .4byte gUnknown_030012B4\n"
-    "7:\n\t"
-        "add r2, r4, #0\n\t"
-        "add r2, #0x4a\n\t"
-        "ldrb r0, [r2]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 8f\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x49\n\t"
-        "ldrb r0, [r1]\n\t"
-        "add r0, #1\n\t"
-        "strb r0, [r1]\n\t"
-        "b 9f\n\t"
-    "8:\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x4b\n\t"
-        "ldrb r0, [r1]\n\t"
-        "add r0, #1\n\t"
-        "strb r0, [r1]\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "cmp r0, #0x1f\n\t"
-        "bls 9f\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r2]\n\t"
-    "9:\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x48\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 11f\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x4a\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 10f\n\t"
-        "ldr r1, 26f\n\t"
-        "add r2, r4, #0\n\t"
-        "add r2, #0x49\n\t"
-        "mov r0, #0x7f\n\t"
-        "ldrb r2, [r2]\n\t"
-        "and r0, r2\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "mov r6, #0\n\t"
-        "ldrsh r2, [r0, r6]\n\t"
-        "mov r1, #0xa0\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r0, r2, #0\n\t"
-        "bl sub_80008FC\n\t"
-        "add r2, r0, #0\n\t"
-        "ldr r0, [r4, #0x50]\n\t"
-        "add r0, r0, r2\n\t"
-        "str r0, [r4, #4]\n\t"
-        "b 11f\n\t"
-        ".align 2, 0\n"
-    "26: .4byte gStaticData_0816A820\n"
-    "10:\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_8011248\n\t"
-    "11:\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_8008364\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    );
-}
-#endif
 
 /* `struct actor *sub_8011114(u16 arg0, u16 arg1, u16 arg2, s32 arg3)` -
  * spawns a part-object; extern already declared in `game_loop29.c`.

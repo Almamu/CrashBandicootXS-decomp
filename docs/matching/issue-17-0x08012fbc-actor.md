@@ -475,3 +475,11 @@ See docs/matching/issue-15-16-17-naked-retry-2.md. `sub_801434C` and
 block now reads `self->part` for every access (GCSE produces the ROM's
 r2 copy) and spells the two bit tests differently so the second is not
 threaded away. `sub_8014674` and `sub_8014B54` are unchanged.
+
+## Later pass: third near-miss sweep
+
+`sub_8014084` is real C under old_agbcc. The facing block's second
+branch writes through a scoped `volatile u8 *`, which keeps its `adds
+r2, #40` in the part copy's register ahead of the -0x11 mask.
+`sub_8014674` and `sub_8014B54` are unchanged. See
+[near-miss-polish-3.md](near-miss-polish-3.md).
