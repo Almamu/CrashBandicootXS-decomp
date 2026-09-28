@@ -19,7 +19,11 @@
  * part.
  *
  * This translation unit is old_agbcc code (see the Makefile's
- * OLD_AGBCC_OBJS). The first pass here transcribed 18 of the 19
+ * OLD_AGBCC_OBJS), built with -fno-strength-reduce on top of -O2 (the
+ * Makefile's NO_STRENGTH_REDUCE_OBJS - it is what lets `sub_8036600`
+ * match and changes nothing else here; see
+ * docs/matching/per-file-flags-investigation.md). The first pass here
+ * transcribed 18 of the 19
  * functions as NAKED; with the right compiler and the later project
  * techniques (static-inline accessors, bitfield structs for the
  * DISPCNT/BGCNT/OAM words, `_call_via_rN` / `__divsi3` aliases) most of
@@ -1416,35 +1420,51 @@ NAKED u32 sub_8035D1C(u32 *self, u32 pressed)
  * fade-out tail. Returns `self[0]`, a small state/counter field several
  * of this cluster's other functions also read. */
 #if NON_MATCHING
-/* NON_MATCHING draft (old_agbcc): the post-loop phases are in shape;
- * the 9-slot seed loop is not - the ROM keeps the counter,
- * re-materializes 0 and -1 every iteration and leaves `i<<3`/`i<<2`
- * unreduced, which this compiler's loop optimizer does not reproduce
- * from this phrasing. */
+/* NON_MATCHING draft (old_agbcc, 100 halfwords off, right size): the
+ * ROM's seed loop hoists nothing (0, -1, `self+0x14`, `self+0x40` and
+ * `seedBase+4` are all recomputed every iteration) while the later
+ * `while` loop does hoist its REG_BLDCNT address, so the seed loop never
+ * went through gcc's loop optimizer at all - -fno-strength-reduce cannot
+ * explain that, a `goto` loop (no loop notes) does. In this goto form
+ * the seed loop's shape is exact; what is left is register choice
+ * (`i`/`slot` swapped between r3 and r5, which shifts the rest). See
+ * docs/matching/per-file-flags-investigation.md. */
 s32 sub_8035E14(u32 *self_arg)
 {
     register u32 *self asm("r4") = self_arg;
     s32 i;
-    struct slot_seed *seed = (struct slot_seed *)gStaticData_0817CFA4;
+    struct slot_seed *seedBase;
+    struct slot_seed *seed;
+    u8 *slot;
+    s32 stride;
     s32 zero;
     u32 pressed;
 
-    for (i = 0; i <= 8; i++)
+    i = 0;
+    seedBase = (struct slot_seed *)gStaticData_0817CFA4;
+    seed = seedBase;
+    slot = (u8 *)self;
+    stride = 0;
+seedLoop:
+    zero = 0;
+    slot[0x10] = zero;
     {
-        s32 stride = i * 0x34;
-
-        zero = 0;
-        SlotBase(self, stride)[0x10] = zero;
-        {
-            u8 *countdownBase = (u8 *)self + 0x14;
-            *(s32 *)(countdownBase + stride) = seed[i].hold + 1;
-        }
-        *RecordAt(self, stride) = seed[i].record;
-        {
-            u8 *base = (u8 *)self + 0x1e4;
-            *(s32 *)(base + (i << 2)) = -1;
-        }
+        u8 *countdownBase = (u8 *)self + 0x14;
+        s32 *dst = (s32 *)(countdownBase + stride);
+        u8 *holdBase = (u8 *)seedBase + 4;
+        *dst = *(s32 *)((i << 3) + holdBase) + 1;
     }
+    *RecordAt(self, stride) = seed->record;
+    {
+        u8 *base = (u8 *)self + 0x1e4;
+        *(s32 *)((i << 2) + base) = -1;
+    }
+    seed++;
+    slot += 0x34;
+    stride += 0x34;
+    i++;
+    if (i <= 8)
+        goto seedLoop;
     *(s32 *)((u8 *)self + 0x20c) = zero;
     ((u8 *)self)[8] = zero;
     while (self[5] != 0)
@@ -1809,31 +1829,50 @@ void sub_80360C0(u32 *selfArg, u32 val)
  * a plain store - the same operation, a different ROM-side register
  * allocation). Clears the header hold flag (`self+0x20c`). */
 #if NON_MATCHING
-/* NON_MATCHING draft (old_agbcc): same seed-loop problem as sub_8035E14
- * (the countdown/record accessors match with `self` pinned to r3; the
- * seed-table walk, the hoisted 0/-1 constants and the post-incremented
- * high-register counter pointer do not). */
-void sub_80360DC(u32 *self_arg)
+/* NON_MATCHING draft (old_agbcc, 18 halfwords off, right size): the ROM
+ * loop hoists nothing (0 and -1 re-materialized every iteration,
+ * `self+0x14`/`self+0x40`/`seedBase+4` recomputed), so it never went
+ * through gcc's loop optimizer - a `goto` loop (no loop notes)
+ * reproduces the whole shape, and -fno-strength-reduce is irrelevant to
+ * it. The pointer walks (`seed`, `slot`, `stride`) are therefore the
+ * source's own. What is left is register choice: the ROM puts
+ * `seedBase`/`counter`/`zero` in r8/sb/ip and `stride`/`slot` in r4/r5,
+ * this gives sb/ip/r8 and r5/r4. See
+ * docs/matching/per-file-flags-investigation.md. */
+void sub_80360DC(u32 *self)
 {
-    register u32 *self asm("r3") = self_arg;
     s32 i;
-    s32 *counter = (s32 *)((u8 *)self + 0x1e4);
-    struct slot_seed *seed = (struct slot_seed *)gStaticData_0817CFA4;
+    struct slot_seed *seedBase;
+    s32 *counter;
+    struct slot_seed *seed;
+    u8 *slot;
+    s32 stride;
     s32 zero;
 
-    for (i = 0; i <= 8; i++)
+    i = 0;
+    seedBase = (struct slot_seed *)gStaticData_0817CFA4;
+    counter = (s32 *)((u8 *)self + 0x1e4);
+    seed = seedBase;
+    slot = (u8 *)self;
+    stride = 0;
+loop:
+    zero = 0;
+    slot[0x10] = zero;
     {
-        s32 stride = i * 0x34;
+        u8 *countdownBase = (u8 *)self + 0x14;
+        s32 *dst = (s32 *)(countdownBase + stride);
+        u8 *holdBase = (u8 *)seedBase + 4;
 
-        zero = 0;
-        SlotBase(self, stride)[0x10] = zero;
-        {
-            u8 *countdownBase = (u8 *)self + 0x14;
-            *(s32 *)(countdownBase + stride) = seed[i].hold + 1;
-        }
-        *RecordAt(self, stride) = seed[i].record;
-        *counter++ = -1;
+        *dst = *(s32 *)((i << 3) + holdBase) + 1;
     }
+    *RecordAt(self, stride) = seed->record;
+    *counter++ = -1;
+    seed++;
+    slot += 0x34;
+    stride += 0x34;
+    i++;
+    if (i <= 8)
+        goto loop;
     *(s32 *)((u8 *)self + 0x20c) = zero;
 }
 #else
@@ -2189,22 +2228,31 @@ void sub_8036528(u32 *self)
  * `+1`, and the delta-record pointer (`self+0x2c+i*0x34`) from that
  * same table's `+i*8` head. Also clears 3 header fields
  * (`self+0x438`/`self+0x43c`/`self+0x440`). */
-#if NON_MATCHING
-/* NON_MATCHING draft (old_agbcc): the loop body is right but this
- * compiler reverses the 20-iteration loop into a count-down while the
- * ROM keeps `i` counting up; the second loop and tail differ only in
- * register choice. */
+/* Matches only because this object is built with -fno-strength-reduce
+ * (see NO_STRENGTH_REDUCE_OBJS in the Makefile and
+ * docs/matching/per-file-flags-investigation.md): with strength
+ * reduction on, gcc's loop optimizer reverses the first loop into a
+ * count-down (its counter is only used by the exit test) while the ROM
+ * keeps `i` counting up. The pointer walks are the source's own - with
+ * strength reduction off nothing would have produced them. The second
+ * loop's `1` lives in a local assigned before its counter and pointer
+ * (the ROM materializes it first). */
 void sub_8036600(u32 *self)
 {
     s32 i;
     u8 zero;
-    struct slot_seed *seed = (struct slot_seed *)gStaticData_0817D6C0;
-    u8 *active = (u8 *)self;
-    s32 *hold = &seed->hold;
-    s32 *countdown = (s32 *)((u8 *)self + 4);
+    struct slot_seed *seed;
+    u8 *active;
+    s32 *hold;
+    s32 *countdown;
 
+    i = 0;
     zero = 0;
-    for (i = 0; i <= 0x13; i++)
+    seed = (struct slot_seed *)gStaticData_0817D6C0;
+    active = (u8 *)self;
+    hold = &seed->hold;
+    countdown = (s32 *)((u8 *)self + 4);
+    for (; i <= 0x13; i++)
     {
         *active = zero;
         *countdown = *hold + 1;
@@ -2215,72 +2263,17 @@ void sub_8036600(u32 *self)
         hold += 2;
     }
     {
+        u8 one = 1;
+        s32 j = 0x11;
         u8 *flags = (u8 *)self + 0x421;
-        for (i = 0x11; i >= 0; i--)
-            *flags-- = 1;
+
+        for (; j >= 0; j--)
+            *flags-- = one;
     }
     *(s32 *)((u8 *)self + 0x438) = 0;
     *(s32 *)((u8 *)self + 0x43c) = 0;
     *(s32 *)((u8 *)self + 0x440) = 0;
 }
-#else
-NAKED void sub_8036600(u32 *self)
-{
-    asm(
-        "\tpush {r4, r5, r6, r7, lr}\n"
-        "\tadd r5, r0, #0\n"
-        "\tmov r6, #0\n"
-        "\tmov r7, #0\n"
-        "\tldr r3, _0803665C\n"
-        "\tadd r2, r5, #0\n"
-        "\tadd r4, r3, #4\n"
-        "\tadd r1, r5, #4\n"
-        "_08036610:\n"
-        "\tstrb r7, [r2]\n"
-        "\tldr r0, [r4]\n"
-        "\tadd r0, #1\n"
-        "\tstr r0, [r1]\n"
-        "\tldr r0, [r3]\n"
-        "\tstr r0, [r1, #0x2c]\n"
-        "\tadd r3, #8\n"
-        "\tadd r2, #0x34\n"
-        "\tadd r1, #0x34\n"
-        "\tadd r4, #8\n"
-        "\tadd r6, #1\n"
-        "\tcmp r6, #0x13\n"
-        "\tble _08036610\n"
-        "\tmov r2, #1\n"
-        "\tmov r1, #0x11\n"
-        "\tldr r3, _08036660\n"
-        "\tadd r0, r5, r3\n"
-        "_08036632:\n"
-        "\tstrb r2, [r0]\n"
-        "\tsub r0, #1\n"
-        "\tsub r1, #1\n"
-        "\tcmp r1, #0\n"
-        "\tbge _08036632\n"
-        "\tmov r1, #0x87\n"
-        "\tlsl r1, r1, #3\n"
-        "\tadd r0, r5, r1\n"
-        "\tmov r1, #0\n"
-        "\tstr r1, [r0]\n"
-        "\tldr r2, _08036664\n"
-        "\tadd r0, r5, r2\n"
-        "\tstr r1, [r0]\n"
-        "\tmov r3, #0x88\n"
-        "\tlsl r3, r3, #3\n"
-        "\tadd r0, r5, r3\n"
-        "\tstr r1, [r0]\n"
-        "\tpop {r4, r5, r6, r7}\n"
-        "\tpop {r0}\n"
-        "\tbx r0\n"
-        "\t.align 2, 0\n"
-        "\t_0803665C: .4byte gStaticData_0817D6C0\n"
-        "\t_08036660: .4byte 0x00000421\n"
-        "\t_08036664: .4byte 0x0000043C\n"
-    );
-}
-#endif
 
 /* `sub_8036528`'s per-frame slot-array updater, only while the header
  * hold-word (`self+0x448`) equals -1: for each of 20 slots, mirrors
@@ -2292,9 +2285,13 @@ NAKED void sub_8036600(u32 *self)
  * `self+i*0x34+8` sub-timer, resetting `self+0x444`/`self+0x448` if any
  * slot's timer crosses its ceiling. */
 #if NON_MATCHING
-/* NON_MATCHING draft (old_agbcc, 20 halfwords off): only the drain
+/* NON_MATCHING draft (old_agbcc, 19 halfwords off): only the drain
  * loop's preheader order (end pointer before the two hoisted constants)
- * and the tail's 0x444/0x448 constant registers differ. */
+ * and the tail's 0x444/0x448 constant registers differ. The drain loop
+ * is a pointer do-while with a signed compare - the ROM's reduced
+ * pointer, signed `ble` and missing entry test would come from strength
+ * reduction of an `i` loop, but this phrasing gives the same loop with
+ * or without -fno-strength-reduce (which this object is built with). */
 #define SLOT20_ACCESSOR(name, type, off)                   \
     static inline type *name(u32 *self, s32 stride)        \
     {                                                      \
@@ -2401,10 +2398,10 @@ void sub_8036668(u32 *self)
     if (*timer == 0)
     {
         s32 allDone = 1;
-        for (i = 0; i <= 0x13; i++)
+        u8 *slot;
+        slot = (u8 *)self;
+        do
         {
-            u8 *slot = (u8 *)self + i * 0x34;
-
             if (*slot != 0)
             {
                 s32 y;
@@ -2415,7 +2412,8 @@ void sub_8036668(u32 *self)
                 if (y < -0x7f0000)
                     *slot = allDone;
             }
-        }
+            slot += 0x34;
+        } while ((s32)slot <= (s32)((u8 *)self + 0x3dc));
         if (allDone)
         {
             *(s32 *)((u8 *)self + 0x444) = 0x10;
