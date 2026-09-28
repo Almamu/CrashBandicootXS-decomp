@@ -308,3 +308,13 @@ NAKED transcriptions. `ldscript.txt` swaps the retired `.o` entry for
 `make NON_MATCHING=1 report` (no warnings for this file) and a full
 clean `make compare` (`crashbandicootxs.gba: La suma coincide`).
 **This closes GitHub issue #37.**
+
+## Later pass: hard-register hold
+
+`sub_8023A1C` is now real C under old_agbcc; `game_loop56.o` joined
+`OLD_AGBCC_OBJS` (it is the file's only function). `struct fx_direction`
+gained a zero-length array member, which makes it BLKmode: the compound
+literal is then stored straight into the outgoing stack slot, address
+first, as in the ROM (12 halfwords). An r0/r1 hold replaces the old r2
+pin in the post-fade position copy (2 halfwords). See
+[hard-register-hold-retry.md](hard-register-hold-retry.md).

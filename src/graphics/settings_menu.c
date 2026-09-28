@@ -31,13 +31,13 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
 /* The functions below (0x08003B40-0x080041BC) were NAKED
  * transcriptions until the issue #4/#6/#8 retry
  * (docs/matching/issue-4-6-8-naked-retry.md); sub_8003D3C followed in
- * docs/matching/early-rom-naked-retry.md. All now match as plain C;
- * the file is built with old_agbcc (Makefile
- * OLD_AGBCC_OBJS) because the NON_MATCHING draft of `sub_800450C` at
- * the end of this file (raw bytes still in `asm/code_3_1_10_4.s`) is
- * closest under it - every matched function here compiles identically
- * under both compilers. Their siblings `sub_8004914`/`sub_80049CC` live
- * in `src/graphics/settings_menu23.c`. */
+ * docs/matching/early-rom-naked-retry.md, and the raw `sub_800450C` at
+ * the end of the file in docs/matching/hard-register-hold-retry.md.
+ * All now match as plain C; the file is built with old_agbcc (Makefile
+ * OLD_AGBCC_OBJS) because `sub_800450C` only matches under it - every
+ * other function here compiles identically under both compilers. Their
+ * siblings `sub_8004914`/`sub_80049CC` live in
+ * `src/graphics/settings_menu23.c`. */
 
 extern void *sub_8026EDC(s32 size);
 extern void sub_8002FCC(void *newObj, void *tmpl);
@@ -362,34 +362,6 @@ void sub_80041BC(struct pause_options_screen *self, void *handle, s32 selectedIn
 }
 asm(".align 2, 0");
 
-/* sub_800450C, the screen's init routine: resets the OAM shadow buffer
- * and the tile cache, loads four 16-colour palettes into cache slots
- * 0-3, re-initialises both icon managers (the same IconSetup/
- * IconReserve sequence as sub_80062A8), builds the three 5-entry icon
- * arrays `rowObjA/B/C` (keyframe-table bases 0x180/0x18c/0x1bc, frames
- * 1/2/0, `field_3c` = 0x80) and places five of them. The real bytes are
- * still raw in asm/code_3_1_10_4.s; this draft is 5 halfwords off under
- * old_agbcc (23 under agbcc): only the loop pre-header differs - the
- * ROM hoists the 0x80 constant into sb before copying the rowObjB/C
- * loop pointers, the draft after. The loop dump shows why: loop.c's
- * first pass moves four invariants (the gUnknown_030012D0 address, 15
- * and the two -16s of the nibble insert) and each move lowers its
- * threshold by 3, so the 0x80 (and the field_3c read-modify-write's
- * HI 0) are "not desirable" and only move on the rerun, after strength
- * reduction has emitted the pointer copies. Other nibble spellings,
- * plain/cast `field_3c` stores, dropping `Opaque`, loop shapes and the
- * loop flags (-fmove-all-movables, -freduce-all-givs) don't change the
- * first pass. Second pass (docs/matching/early-rom-naked-retry-2.md):
- * old_agbcc expands every narrow struct-field store as a read-modify-
- * write, and CSE leaves the RMW's zero mask behind as a dead movable
- * constant (`field_3c`'s HImode 0 here). Storing `frameIndex` and
- * `field_3c` through plain `u8 *`/`u16 *` casts and inserting the nibble
- * with an SImode `-16` local (one movable, not a QI/SI pair) leaves
- * three moves before 0x80, and the pre-header then matches the ROM
- * exactly; but the third icon's `frameIndex = 0` then stores a zero
- * pseudo (r0) after its address (r1), where the ROM's RMW-folded store
- * reloads a constant into r1 after the address in r0 (6 halfwords). */
-#if NON_MATCHING
 extern struct oam_shadow_buffer *gUnknown_03001300;
 extern void sub_8006A90(struct oam_shadow_buffer *arg0);
 extern void sub_8006A48(struct oam_shadow_buffer *arg0);
@@ -455,20 +427,66 @@ static inline void new_row_icon(struct settings_icon_actor **slot, u32 tblOff, u
     icon = (struct settings_icon_actor *)sub_8008904((struct actor *)sub_8026EDC(0x40));
     *slot = icon;
     icon->field_20 = (void **)((u8 *)(**gUnknown_030012D0) + tblOff);
-    icon->frameIndex = Opaque(frame);
+    /* Plain `u8 *` store: old_agbcc's read-modify-write struct store
+     * leaves a dead zero mask that the loop pass counts as a movable,
+     * which kept 0x80 out of the loop pre-header. */
+    if (frame)
+        *(u8 *)&icon->frameIndex = Opaque(frame);
+    else {
+        /* The ROM computes the address first, in r0, and reloads the 0
+         * into r1 after it; this pin reproduces that for frame 0. */
+        register u8 *fp asm("r0") = &icon->frameIndex;
+        *fp = 0;
+    }
     sub_80087C0(&icon->base);
     sub_80087B4(&icon->base);
     sub_800872C(&icon->base, 0);
-    SET_ICON_FRAME_NIBBLE(*slot);
-    (*slot)->field_3c = 0x80;
+    {
+        s32 lo = sub_800815C(&(*slot)->base);
+        u8 *p = &(*slot)->field_29;
+        s32 m = -16;
+
+        if (frame == 0) {
+            /* Hard-register hold (no code): keeping r1 live here makes
+             * reload skip it when it copies the 15 from sl, so the third
+             * icon takes r3 as in the ROM. The ROM reloaded the 0 above,
+             * which moved the round-robin on; the pinned store doesn't. */
+            register s32 hold asm("r1");
+            asm("" : "=r"(hold));
+            lo &= 15;
+            asm("" : : "r"(hold));
+        } else
+            lo &= 15;
+        *p = (*p & m) | lo;
+    }
+    *(u16 *)&(*slot)->field_3c = 0x80;
 }
 
+/* sub_800450C, the screen's init routine: resets the OAM shadow buffer
+ * and the tile cache, loads four 16-colour palettes into cache slots
+ * 0-3, re-initialises both icon managers (the same IconSetup/
+ * IconReserve sequence as sub_80062A8), builds the three 5-entry icon
+ * arrays `rowObjA/B/C` (keyframe-table bases 0x180/0x18c/0x1bc, frames
+ * 1/2/0, `field_3c` = 0x80) and places five of them.
+ *
+ * Was raw asm (asm/code_3_1_10_4.s) with a NON_MATCHING draft; closed
+ * in docs/matching/hard-register-hold-retry.md. The plain-pointer
+ * stores in new_row_icon fix the loop pre-header (see
+ * docs/matching/early-rom-naked-retry-2.md); the frame-0 address pin,
+ * the r1 hold and the padding below fix the last 6 halfwords. */
 void sub_800450C(struct pause_options_screen *self)
 {
     u16 (*pal)[16];
     struct settings_icon_actor **a, **b, **c;
     s32 i;
 
+    /* Instruction-count padding (no code): the hold's asm statements in
+     * new_row_icon shift gcc's temporary numbering, which swaps the
+     * rowObj pointer stack slots; three bare asm("") restore the ROM's
+     * slot order. */
+    asm("");
+    asm("");
+    asm("");
     sub_8006A90(gUnknown_03001300);
     sub_8006A48(gUnknown_03001300);
     sub_80006A8();
@@ -514,4 +532,3 @@ void sub_800450C(struct pause_options_screen *self)
     SET_ROW_OBJ_POS(self->rowObjB[2], 0x14, 0x4b);
     SET_ROW_OBJ_POS(self->rowObjC[0], 0x78, 0x50);
 }
-#endif

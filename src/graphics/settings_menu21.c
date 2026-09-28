@@ -61,17 +61,14 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
  * hides `self->field_c0` (the row-cursor icon) if its blink countdown
  * (`field_c4`) has reached 0.
  *
- * Still NAKED (transcribed from the ROM). The C draft under
- * NON_MATCHING is 20 halfwords off under either compiler, all in the
- * two computed-x `set_icon_mgr_pos` calls: the ROM puts x in r3 and y
- * in r2, the draft x in r1/r2 and y in r3. The `field_74` block
- * (constant position) and the jump table already match.
- * Mix-6 pass: `asm("" : : "r"(x))` / `"+r"` on x, y, m or width,
- * `"=r"/"0"` on y, `/ 2`, s32 width/params and macro setters all stay
- * at 20 hw or get worse. The ROM also takes r4 (not r3) for the
- * following `ldrsh` offset constant, so something besides x/y priority
- * differs. */
-#if NON_MATCHING
+ * Was NAKED; matches as plain C under both compilers since the
+ * hard-register hold pass (docs/matching/hard-register-hold-retry.md).
+ * In both computed-x `set_icon_mgr_pos` calls the ROM keeps r2 free
+ * while it computes x (r3), and never ties x to the value it is
+ * computed from (r1). An r2 hold over the x computation puts y in r2,
+ * and the address reloads that follow rotate as in the ROM (r4, r3,
+ * then r4/r6 for the `ldrsh` offset). The extra references on the
+ * temporaries stop local-alloc tying them to x. */
 void sub_80053F4(struct pause_screen_results *self)
 {
     void *label;
@@ -79,8 +76,23 @@ void sub_80053F4(struct pause_screen_results *self)
 
     sub_8006A90(gUnknown_03001300);
     sub_8006C28(gUnknown_030012FC);
-    width = ICON_SLOT_CALL(gUnknown_030012E0, 0, self->field_70);
-    set_icon_mgr_pos(gUnknown_030012E0, (0xf0 - width) >> 1, 0xe);
+    {
+        u32 w = ICON_SLOT_CALL(gUnknown_030012E0, 0, self->field_70);
+        u32 x, t;
+        register s32 hold asm("r2");
+
+        /* Hard-register hold (no code): r2 stays live across the x
+         * computation, so y takes it afterwards. */
+        asm("" : "=r"(hold));
+        t = 0xf0 - w;
+        x = t >> 1;
+        /* Extra reference (no code): keeps `t` (r1) from being tied
+         * to `x` (r3). */
+        asm("" : : "r"(t));
+        /* End of the hold. */
+        asm("" : : "r"(hold));
+        set_icon_mgr_pos(gUnknown_030012E0, x, 0xe);
+    }
     ICON_SLOT_CALL(gUnknown_030012E0, 2, self->field_70);
     label = self->field_74;
     if (label != NULL) {
@@ -89,7 +101,21 @@ void sub_80053F4(struct pause_screen_results *self)
         ICON_SLOT_CALL(gUnknown_030012E0, 2, self->buf78);
     }
     width = ICON_SLOT_CALL(gUnknown_030012E0, 0, self->buf41);
-    set_icon_mgr_pos(gUnknown_030012E0, 0x8c - width, 0x88);
+    {
+        u32 x, t;
+        register s32 hold asm("r2");
+
+        /* Hard-register hold (no code), as above. */
+        asm("" : "=r"(hold));
+        t = 0x8c;
+        x = t - width;
+        /* Extra references (no code): neither the 0x8c (r1) nor
+         * `width` (r0) is tied to `x` (r3). */
+        asm("" : : "r"(t), "r"(width));
+        /* End of the hold. */
+        asm("" : : "r"(hold));
+        set_icon_mgr_pos(gUnknown_030012E0, x, 0x88);
+    }
     ICON_SLOT_CALL(gUnknown_030012E0, 2, self->buf41);
     sub_800556C(self);
     sub_80061E8(self);
@@ -114,184 +140,6 @@ void sub_80053F4(struct pause_screen_results *self)
         sub_8008890(self->field_c0, 0, 0);
     sub_8006A48(gUnknown_03001300);
 }
-#else
-NAKED void sub_80053F4(struct pause_screen_results *self)
-{
-    asm(
-    "push {r4, r5, r6, r7, lr}\n\t"
-    "add r5, r0, #0\n\t"
-    "ldr r0, 2f\n\t"
-    "ldr r0, [r0]\n\t"
-    "bl sub_8006A90\n\t"
-    "ldr r0, 3f\n\t"
-    "ldr r0, [r0]\n\t"
-    "bl sub_8006C28\n\t"
-    "ldr r6, 4f\n\t"
-    "ldr r0, [r6]\n\t"
-    "mov r7, #0x98\n\t"
-    "lsl r7, r7, #1\n\t"
-    "add r1, r0, r7\n\t"
-    "ldr r2, [r1]\n\t"
-    "mov r3, #0x10\n\t"
-    "ldrsh r1, [r2, r3]\n\t"
-    "add r0, r0, r1\n\t"
-    "ldr r1, [r5, #0x70]\n\t"
-    "ldr r2, [r2, #0x14]\n\t"
-    "bl sub_803AD80\n\t"
-    "mov r1, #0xf0\n\t"
-    "sub r1, r1, r0\n\t"
-    "lsr r3, r1, #1\n\t"
-    "ldr r0, [r6]\n\t"
-    "mov r2, #0xe\n\t"
-    "mov r4, #0x88\n\t"
-    "lsl r4, r4, #1\n\t"
-    "add r1, r0, r4\n\t"
-    "str r3, [r1]\n\t"
-    "mov r3, #0x8a\n\t"
-    "lsl r3, r3, #1\n\t"
-    "add r1, r0, r3\n\t"
-    "str r2, [r1]\n\t"
-    "add r1, r0, r7\n\t"
-    "ldr r2, [r1]\n\t"
-    "mov r4, #0x20\n\t"
-    "ldrsh r1, [r2, r4]\n\t"
-    "add r0, r0, r1\n\t"
-    "ldr r1, [r5, #0x70]\n\t"
-    "ldr r2, [r2, #0x24]\n\t"
-    "bl sub_803AD80\n\t"
-    "ldr r4, [r5, #0x74]\n\t"
-    "cmp r4, #0\n\t"
-    "beq 1f\n\t"
-    "ldr r3, [r6]\n\t"
-    "mov r1, #0x20\n\t"
-    "mov r0, #0x26\n\t"
-    "mov ip, r0\n\t"
-    "mov r2, #0x88\n\t"
-    "lsl r2, r2, #1\n\t"
-    "add r0, r3, r2\n\t"
-    "str r1, [r0]\n\t"
-    "add r1, #0xf4\n\t"
-    "add r0, r3, r1\n\t"
-    "mov r2, ip\n\t"
-    "str r2, [r0]\n\t"
-    "add r1, r7, #0\n\t"
-    "add r0, r3, r1\n\t"
-    "ldr r1, [r0]\n\t"
-    "mov r2, #0x20\n\t"
-    "ldrsh r0, [r1, r2]\n\t"
-    "add r0, r3, r0\n\t"
-    "ldr r2, [r1, #0x24]\n\t"
-    "add r1, r4, #0\n\t"
-    "bl sub_803AD80\n\t"
-    "ldr r0, [r6]\n\t"
-    "add r3, r7, #0\n\t"
-    "add r1, r0, r3\n\t"
-    "ldr r2, [r1]\n\t"
-    "mov r4, #0x20\n\t"
-    "ldrsh r1, [r2, r4]\n\t"
-    "add r0, r0, r1\n\t"
-    "add r1, r5, #0\n\t"
-    "add r1, #0x78\n\t"
-    "ldr r2, [r2, #0x24]\n\t"
-    "bl sub_803AD80\n\t"
-    "1:\n\t"
-    "ldr r0, [r6]\n\t"
-    "add r1, r0, r7\n\t"
-    "ldr r2, [r1]\n\t"
-    "mov r3, #0x10\n\t"
-    "ldrsh r1, [r2, r3]\n\t"
-    "add r0, r0, r1\n\t"
-    "add r4, r5, #0\n\t"
-    "add r4, #0x41\n\t"
-    "ldr r2, [r2, #0x14]\n\t"
-    "add r1, r4, #0\n\t"
-    "bl sub_803AD80\n\t"
-    "mov r1, #0x8c\n\t"
-    "sub r3, r1, r0\n\t"
-    "ldr r0, [r6]\n\t"
-    "mov r2, #0x88\n\t"
-    "mov r6, #0x88\n\t"
-    "lsl r6, r6, #1\n\t"
-    "add r1, r0, r6\n\t"
-    "str r3, [r1]\n\t"
-    "mov r3, #0x8a\n\t"
-    "lsl r3, r3, #1\n\t"
-    "add r1, r0, r3\n\t"
-    "str r2, [r1]\n\t"
-    "add r1, r0, r7\n\t"
-    "ldr r2, [r1]\n\t"
-    "mov r6, #0x20\n\t"
-    "ldrsh r1, [r2, r6]\n\t"
-    "add r0, r0, r1\n\t"
-    "ldr r2, [r2, #0x24]\n\t"
-    "add r1, r4, #0\n\t"
-    "bl sub_803AD80\n\t"
-    "add r0, r5, #0\n\t"
-    "bl sub_800556C\n\t"
-    "add r0, r5, #0\n\t"
-    "bl sub_80061E8\n\t"
-    "ldr r0, [r5, #0x24]\n\t"
-    "cmp r0, #4\n\t"
-    "bhi 12f\n\t"
-    "lsl r0, r0, #2\n\t"
-    "ldr r1, 5f\n\t"
-    "add r0, r0, r1\n\t"
-    "ldr r0, [r0]\n\t"
-    "mov pc, r0\n\t"
-    ".align 2, 0\n"
-    "2: .4byte gUnknown_03001300\n"
-    "3: .4byte gUnknown_030012FC\n"
-    "4: .4byte gUnknown_030012E0\n"
-    "5: .4byte 6f\n"
-    "6:\n\t"
-    ".4byte 7f\n"
-    ".4byte 8f\n"
-    ".4byte 9f\n"
-    ".4byte 10f\n"
-    ".4byte 11f\n"
-    "7:\n\t"
-    "add r0, r5, #0\n\t"
-    "bl sub_800619C\n\t"
-    "b 12f\n\t"
-    "8:\n\t"
-    "add r0, r5, #0\n\t"
-    "bl sub_800570C\n\t"
-    "b 12f\n\t"
-    "9:\n\t"
-    "add r0, r5, #0\n\t"
-    "bl sub_80057E0\n\t"
-    "b 12f\n\t"
-    "10:\n\t"
-    "add r0, r5, #0\n\t"
-    "bl sub_80058C0\n\t"
-    "b 12f\n\t"
-    "11:\n\t"
-    "add r0, r5, #0\n\t"
-    "bl sub_8006124\n\t"
-    "12:\n\t"
-    "add r0, r5, #0\n\t"
-    "add r0, #0xc4\n\t"
-    "ldr r0, [r0]\n\t"
-    "cmp r0, #0\n\t"
-    "bne 13f\n\t"
-    "add r0, r5, #0\n\t"
-    "add r0, #0xc0\n\t"
-    "ldr r0, [r0]\n\t"
-    "mov r1, #0\n\t"
-    "mov r2, #0\n\t"
-    "bl sub_8008890\n\t"
-    "13:\n\t"
-    "ldr r0, 14f\n\t"
-    "ldr r0, [r0]\n\t"
-    "bl sub_8006A48\n\t"
-    "pop {r4, r5, r6, r7}\n\t"
-    "pop {r0}\n\t"
-    "bx r0\n\t"
-    ".align 2, 0\n"
-    "14: .4byte gUnknown_03001300\n"
-    );
-}
-#endif
 
 extern s32 sub_8028A30(struct icon_manager *self, s32 val);
 

@@ -203,3 +203,12 @@ swapped the part/controller registers, and `facing` is stored into the
 held constant 1). `sub_801A114` stays NAKED; its state-0 `orr` chain is
 now reproduced (see
 [issue-24-26-12-naked-retry.md](issue-24-26-12-naked-retry.md)).
+
+## Later pass: hard-register hold
+
+`sub_801A114` is now real C (old_agbcc, also identical under agbcc).
+r5 and r6 held live across the box builders make global-alloc start
+the long-lived values at r7, as the gap4 note predicted (159 -> 16
+halfwords). The state-0 BLDCNT accumulator is a block-scoped r5
+variable initialised through the constant-init asm (16 -> 0). See
+[hard-register-hold-retry.md](hard-register-hold-retry.md).
