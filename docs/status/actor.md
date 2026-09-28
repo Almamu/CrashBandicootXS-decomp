@@ -539,8 +539,9 @@ from "core" graphics.
   0x0802F0DC-0x0802FBF0 - a second boss-weapon "spawn/pre-attack"
   singleton and its `self` object, non-adjacent since the parked
   `sub_802F338`/`sub_802FA04`, `sub_802F748`
-  (`actor_part44b.c`, now matched - see below), the NAKED-transcribed
-  `sub_802F7B0`/`sub_802F8E8` (`actor_part45d.c`) and `sub_802FA38`
+  (`actor_part44b.c`, now matched - see below), `sub_802F7B0`/
+  `sub_802F8E8` (`actor_part45d.c`: 8E8 matched, 7B0 still NAKED - see
+  below) and `sub_802FA38`
   (`actor_part46b.c`, now matched - see below) sit interleaved between them; see
   [docs/matching/issue-56-0x0802f0dc-actor.md](../matching/issue-56-0x0802f0dc-actor.md)):
   `sub_802F0DC`, `sub_802F164`, `sub_802F3BC`, `sub_802F46C`, `sub_802F47C`,
@@ -923,6 +924,16 @@ from "core" graphics.
   All 7 real C, current agbcc (both compilers match). See
   [docs/matching/issue-51-actor-2ac28.md](../matching/issue-51-actor-2ac28.md).
 
+### Matched in the late-ROM NAKED retry
+
+- `src/graphics/actor_part45d.c` - `sub_802F8E8` (the shared BG1 map
+  repack loop, issue #56). Declared `inline` ahead of `sub_802F7B0`,
+  which inlines it; gcc's deferred output of inlinable functions puts it
+  after 7B0, as in the ROM. old_agbcc (the object joined
+  `OLD_AGBCC_OBJS`), with the map entry read in two statements and the
+  high nibble masked. See
+  [docs/matching/late-rom-naked-retry.md](../matching/late-rom-naked-retry.md).
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
@@ -1045,8 +1056,9 @@ plain C didn't converge.
 - **`sub_80156EC`** (`src/graphics/actor_part38c.c`) -
   `part+0x38`/`sub_80231BC`-gated mgr-trampoline dispatcher. See
   `docs/matching/issue-18-0x08014f8c-actor.md`.
-- **`sub_802F7B0`**/**`sub_802F8E8`** (`src/graphics/actor_part45d.c`,
-  issue #56) - a pair of VRAM tile-remap/nibble-repack loops (4-bit
+- **`sub_802F7B0`** (`src/graphics/actor_part45d.c`, issue #56; its
+  partner `sub_802F8E8` is now matched - see "Matched in the late-ROM
+  NAKED retry" below) - a pair of VRAM tile-remap/nibble-repack loops (4-bit
   palette-index packing into a `0x0600D000`-based tile buffer via raw
   `REG_DMA3SAD`/`DAD`/`CNT` pokes at `0x040000D4`); each nested loop
   keeps three high registers (`r8`, `sb`, `sl`) simultaneously live
@@ -1056,7 +1068,11 @@ plain C didn't converge.
   `fade_screen_mode.c`, `hud_digit_array.c`, `settings_menu8e.c`,
   `timer_util_aa90.c`) is NAKED too, not plain C with
   `REG_DMA3SAD`/`DAD`/`CNT` macros. See
-  `docs/matching/issue-56-0x0802f0dc-actor.md`.
+  `docs/matching/issue-56-0x0802f0dc-actor.md`. Later pass
+  (`docs/matching/late-rom-naked-retry.md`): 7B0 inlines 8E8 (declared
+  `inline`, which gcc emits at the end of the file); the draft under
+  `#if NON_MATCHING` has the ROM's instructions but two register swaps
+  (nibble pointer/`dest` r5/r6, `cols`/row+1 r8/sl).
 - **`sub_8031604`** (`src/graphics/actor_part26c.c`) - VRAM fill-level
   meter nibble-repack loop (docs/rom_map.md). A `#if NON_MATCHING` draft
   has the right shape (~95 halfwords off: the ROM re-reads each height
@@ -1131,7 +1147,10 @@ plain C didn't converge.
   already NAKED throughout this codebase
   (`sub_80309B4`/`sub_8031040`/`sub_80311C4`,
   `actor_part21f.c`/`23e.c`/`23f.c`). See
-  `docs/matching/issue-63-final-raw-actor.md`.
+  `docs/matching/issue-63-final-raw-actor.md`. Later pass
+  (`docs/matching/late-rom-naked-retry.md`): the draft under
+  `#if NON_MATCHING` is 2 halfwords off (old_agbcc) - one r0/r1 swap in
+  the first input test.
 - **`sub_80336CC`** (`src/graphics/actor_part130.c`) - the P2-side VRAM
   fill-level meter, the one-row twin of `sub_8031604`; its
   `#if NON_MATCHING` draft is off the same way. See `docs/matching/issue-58-61-naked-retry.md`.

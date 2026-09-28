@@ -287,3 +287,17 @@ shape was gcc 2.x's pointer-to-member-function call
 `(this->*table[this->state])()`, which `ACTOR_PMF_CALL` in
 `include/actor_self.h` reproduces with no register pins. See
 [pmf-dispatch-retry.md](pmf-dispatch-retry.md).
+
+## Later pass: late-ROM NAKED retry
+
+`sub_802F8E8` is real C (old_agbcc; `actor_part45d.o` joined
+`OLD_AGBCC_OBJS`). It is the shared loop: declared `inline` ahead of
+`sub_802F7B0`, which inlines it - the inlined copy is what gives 7B0 its
+separately strength-reduced `dest[c]`/`dest[c + 0x3e0]` pointers, and
+gcc's deferred output of inlinable functions is why 8E8 follows 7B0 in
+the ROM. The old notes' two register swaps were spelling: reading the map
+entry as `v = *map; v += base;` fixes map/`dest` (r5/r6), and masking
+the high nibble, `(*nib >> 4) & 0xf`, fixes the next-row pointer/row+1
+(ip/r9). `sub_802F7B0` stays NAKED; its draft (the inlining version) is
+off by two register-priority swaps. See
+[late-rom-naked-retry.md](late-rom-naked-retry.md).
