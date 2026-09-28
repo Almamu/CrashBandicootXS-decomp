@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor.h"
+#include "orbit_part.h"
 
 /* GitHub issue #12/#14 Phase 2, second parallel slice: the tail 6
  * functions of the still-large 24-function chunk past sub_8010D54
@@ -24,6 +25,28 @@ extern void *gUnknown_030012BC;
 extern void *gUnknown_03001318;
 extern void *gUnknown_030012C0;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
+extern void sub_8007174(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4);
+extern s32 sub_80008F0(s32 arg0, s32 arg1);
+extern s32 sub_80008FC(s32 a, s32 b);
+extern void sub_80284D4(void *state);
+extern s16 gStaticData_0816A820[];
+extern s32 rand(void);
+
+/* Built with old_agbcc (Makefile OLD_AGBCC_OBJS) since the issue #15
+ * NAKED retry: sub_8011448 and sub_801192C match only under it, and the
+ * rest of the file compiles identically under either compiler. */
+
+/* `frame = min(0, frameCount - 1)` against the part's current animation
+ * record - the clamp every spawner/launcher in this family repeats. */
+static inline void OrbitClampFrame(struct orbit_part *self)
+{
+    s32 frame = 0;
+    s32 count = self->bank->records[self->tag].frameCount;
+
+    if (frame >= count)
+        frame = count - 1;
+    self->frame = frame;
+}
 
 /* sub_8011448: "randomized-position spawn/despawn picker" (docs/rom_map.md),
  * called as `sub_8011448(entry, 1)`/`(other, 1)` from game_loop40.c/
@@ -41,151 +64,54 @@ extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
  * 0x1400)) from the results - the exact same tail shape sub_8010EAC/
  * sub_80111B8/sub_8011870 all share in this subsystem.
  *
- * NAKED, not plain C: a real C reconstruction gets every field, branch,
- * and call argument byte-identical (confirmed via isolated cpp/agbcc/as
- * + objcopy/cmp against this function's own raw ROM bytes) except that
- * the ROM's own compile keeps the self->0x2d "tag" byte alive in r7
- * across the table-lookup (`push {r4,r5,r6,r7,lr}`), while a natural
- * plain-C compile never pressures the allocator into using r7 at all
- * (`push {r4,r5,r6,lr}` - one register short). This is exactly the
- * confirmed-unfixable r7 hazard already documented at length for this
- * subsystem's other NAKED functions (docs/matching.md's
- * `register_pinning` notes, technique 10: an explicit `register T x
- * asm("r7")` pin never makes it into this compiler's own push/pop list,
- * and matching gcc's *unforced* choice of r7 depends on reproducing an
- * unknown original register-pressure shape) - so transcribed straight
- * from the confirmed-correct ROM disassembly instead of chasing it. */
-NAKED void sub_8011448(void *self, u8 randomize)
+ * The `self->0x25 = 1` store goes through a `u8` local so old_agbcc
+ * materializes the 1 before the field address, as the ROM does. (Earlier
+ * notes blamed an r7 allocation gap; under old_agbcc the tag lands in r7
+ * on its own.) */
+void sub_8011448(struct orbit_part *self, u8 randomize)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "sub sp, #0xc\n\t"
-        "add r5, r0, #0\n\t"
-        "lsl r4, r1, #0x18\n\t"
-        "lsr r4, r4, #0x18\n\t"
-        "ldr r0, 1f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #8\n\t"
-        "bl PlaySfx\n\t"
-        "cmp r4, #0\n\t"
-        "beq 2f\n\t"
-        "bl rand\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r2, r0, #0x10\n\t"
-        "mov r1, #1\n\t"
-        "add r0, r2, #0\n\t"
-        "and r0, r1\n\t"
-        "add r1, r5, #0\n\t"
-        "add r1, #0x49\n\t"
-        "strb r0, [r1]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 4f\n\t"
-        "mov r0, #2\n\t"
-        "and r0, r2\n\t"
-        "cmp r0, #0\n\t"
-        "beq 3f\n\t"
-        "mov r0, #0x3f\n\t"
-        "and r0, r2\n\t"
-        "add r0, #5\n\t"
-        "b 5f\n\t"
-        ".align 2, 0\n"
-    "1: .4byte gUnknown_030012BC\n"
-    "3:\n\t"
-        "mov r1, #0x3f\n\t"
-        "and r1, r2\n\t"
-        "mov r0, #0xeb\n\t"
-        "sub r0, r0, r1\n\t"
-        "b 5f\n\t"
-    "4:\n\t"
-        "mov r0, #0x7f\n\t"
-        "and r0, r2\n\t"
-        "add r0, #0x24\n\t"
-    "5:\n\t"
-        "lsl r4, r0, #8\n\t"
-        "mov r0, #0x1f\n\t"
-        "and r0, r2\n\t"
-        "add r0, #0x10\n\t"
-        "lsl r6, r0, #8\n\t"
-        "add r1, r5, #0\n\t"
-        "add r1, #0x48\n\t"
-        "mov r0, #2\n\t"
-        "strb r0, [r1]\n\t"
-        "b 6f\n\t"
-    "2:\n\t"
-        "mov r6, #0x80\n\t"
-        "lsl r6, r6, #5\n\t"
-        "add r4, r6, #0\n\t"
-        "add r1, r5, #0\n\t"
-        "add r1, #0x48\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r1]\n\t"
-        "ldr r0, 7f\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_80284D4\n\t"
-    "6:\n\t"
-        "mov r0, #0xa0\n\t"
-        "strh r0, [r5, #0x3c]\n\t"
-        "mov r3, #0\n\t"
-        "ldr r0, [r5, #0x20]\n\t"
-        "add r2, r5, #0\n\t"
-        "add r2, #0x2d\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldrb r7, [r2]\n\t"
-        "lsl r0, r7, #3\n\t"
-        "add r2, r7, #0\n\t"
-        "sub r0, r0, r2\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrb r0, [r0, #0x16]\n\t"
-        "cmp r3, r0\n\t"
-        "blt 8f\n\t"
-        "sub r3, r0, #1\n\t"
-    "8:\n\t"
-        "str r3, [r5, #0x30]\n\t"
-        "mov r0, #1\n\t"
-        "add r1, r5, #0\n\t"
-        "add r1, #0x25\n\t"
-        "strb r0, [r1]\n\t"
-        "mov r0, #0x10\n\t"
-        "ldrb r1, [r5, #0xc]\n\t"
-        "orr r0, r1\n\t"
-        "strb r0, [r5, #0xc]\n\t"
-        "ldr r1, [r5]\n\t"
-        "asr r1, r1, #8\n\t"
-        "ldr r2, [r5, #4]\n\t"
-        "asr r2, r2, #8\n\t"
-        "add r0, sp, #8\n\t"
-        "str r0, [sp]\n\t"
-        "add r0, r5, #0\n\t"
-        "add r3, sp, #4\n\t"
-        "bl sub_8007174\n\t"
-        "ldr r0, [sp, #4]\n\t"
-        "lsl r0, r0, #8\n\t"
-        "str r0, [r5]\n\t"
-        "sub r0, r0, r4\n\t"
-        "mov r4, #0xa0\n\t"
-        "lsl r4, r4, #5\n\t"
-        "add r1, r4, #0\n\t"
-        "bl sub_80008F0\n\t"
-        "neg r0, r0\n\t"
-        "str r0, [r5, #0x40]\n\t"
-        "ldr r0, [sp, #8]\n\t"
-        "lsl r0, r0, #8\n\t"
-        "str r0, [r5, #4]\n\t"
-        "sub r0, r0, r6\n\t"
-        "add r1, r4, #0\n\t"
-        "bl sub_80008F0\n\t"
-        "neg r0, r0\n\t"
-        "str r0, [r5, #0x44]\n\t"
-        "add sp, #0xc\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "7: .4byte gUnknown_03001318\n"
-    );
+    s32 dx, dy;
+    s32 outX, outY;
+    s32 newX, newY;
+
+    PlaySfx(gUnknown_030012BC, 8, 0x100);
+    if (randomize) {
+        u32 rv = (u16)rand();
+        u8 lowbit = rv & 1;
+
+        self->counter = lowbit;
+        if (lowbit) {
+            if (rv & 2)
+                dx = ((rv & 0x3f) + 5) << 8;
+            else
+                dx = (0xeb - (rv & 0x3f)) << 8;
+        } else {
+            dx = ((rv & 0x7f) + 0x24) << 8;
+        }
+        dy = ((rv & 0x1f) + 0x10) << 8;
+        self->state = 2;
+    } else {
+        dx = dy = 0x1000;
+        self->state = 1;
+        sub_80284D4(gUnknown_03001318);
+    }
+    self->timer = 0xa0;
+    OrbitClampFrame(self);
+    {
+        u8 one = 1;
+
+        self->unk_25 = one;
+    }
+    self->base.flags |= 0x10;
+
+    sub_8007174(self, self->base.x >> 8, self->base.y >> 8, &outX, &outY);
+
+    newX = outX << 8;
+    self->base.x = newX;
+    self->velX = -sub_80008F0(newX - dx, 0x1400);
+    newY = outY << 8;
+    self->base.y = newY;
+    self->velY = -sub_80008F0(newY - dy, 0x1400);
 }
 
 /* sub_8011548: "entity-vtable-dispatched velocity integrator" (docs/
@@ -535,6 +461,60 @@ NAKED void sub_8011548(void *self)
  * save dance this compiler only reproduces when the *unforced* allocator
  * picks those registers itself - transcribed straight from the
  * confirmed-correct ROM disassembly instead of fighting it. */
+#if NON_MATCHING
+/* Near miss under old_agbcc: same instructions, but the ROM keeps `id` in
+ * r8, `special` in sb and `mode` in r7, and shares the +0x4B zero with the
+ * frame clamp's compare; old_agbcc assigns those the other way round. */
+extern void *gUnknown_030012EC;
+extern void *gUnknown_030012F4;
+extern void ***gUnknown_030012D0;
+extern void *gUnknown_030012B8;
+extern u8 gStaticData_087E414C[];
+extern void *sub_8026EDC(s32 size);
+extern struct actor *sub_80084A4(struct actor *self);
+extern void sub_8008E94(void *manager, void *value);
+extern void sub_80119EC(struct orbit_part *self);
+extern void sub_801191C(struct actor *self);
+extern void sub_80087C0(struct orbit_part *part);
+extern void sub_80087B4(struct orbit_part *part);
+extern void sub_800872C(struct orbit_part *part, u8 val);
+extern u8 sub_8006DF8(void *cache, u8 record);
+
+struct orbit_part *sub_801173C(u16 id, u16 x, u16 y, u16 special)
+{
+    struct orbit_part *self;
+    u8 mode = 0;
+    u8 phase = 0;
+
+    self = sub_8026EDC(0x54);
+    sub_80084A4(&self->base);
+    self->base.table = gStaticData_087E414C;
+    sub_80119EC(self);
+    self->base.field_08 = id;
+    self->base.x = x << 8;
+    self->base.y = y << 8;
+    self->anchor = ORBIT_POS(self);
+    if (special == 0xffff)
+        sub_8008E94(gUnknown_030012F4, self);
+    else
+        sub_8008E94(gUnknown_030012EC, self);
+    self->bank = (struct act_anim_bank *)((u8 *)**gUnknown_030012D0 + 0xd2 * 2);
+    self->tag = 1;
+    sub_80087C0(self);
+    sub_80087B4(self);
+    sub_800872C(self, 0);
+    OrbitClampFrame(self);
+    self->flipX = 0;
+    self->flipY = 0;
+    self->counter = 0;
+    self->mode = mode;
+    self->phase = phase;
+    if (mode == 0xff)
+        sub_801191C(&self->base);
+    self->slotNibble = sub_8006DF8(gUnknown_030012B8, self->bank->records->unk_14);
+    return self;
+}
+#else
 NAKED struct actor *sub_801173C(u16 id, u16 x, u16 y, u16 special)
 {
     asm(
@@ -683,6 +663,7 @@ NAKED struct actor *sub_801173C(u16 id, u16 x, u16 y, u16 special)
     "11: .4byte gUnknown_030012B8\n"
     );
 }
+#endif
 
 /* sub_8011870: alternative to sub_80111B8 (game_loop29.c), called from
  * game_loop14.c "instead of sub_80111B8" per that file's own doc
@@ -696,93 +677,37 @@ NAKED struct actor *sub_801173C(u16 id, u16 x, u16 y, u16 special)
  * then, unlike sub_8011448/sub_80111B8, finishes with
  * sub_80284D4(gUnknown_03001318) instead of sub_80284A4.
  *
- * NAKED, not plain C: same self->0x2d-tag-in-r7-across-the-table-lookup
- * shape as sub_8011448 above (confirmed r7 hazard, docs/matching.md) -
- * transcribed straight from the confirmed-correct ROM disassembly. */
-NAKED void sub_8011870(void *self)
+ * The fixed -0x1000 offsets go through `OrbitOffset` (an inline taking
+ * the offset as a parameter): that is what makes old_agbcc reload the
+ * 0xFFFFF000 constant from the pool for each axis instead of keeping one
+ * copy across the call, as the ROM does. (The earlier "r7 hazard" note
+ * was a symptom of compiling with the wrong compiler.) */
+static inline s32 OrbitOffset(s32 pos, s32 off)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "sub sp, #0xc\n\t"
-        "add r5, r0, #0\n\t"
-        "ldr r0, 1f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #8\n\t"
-        "bl PlaySfx\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x48\n\t"
-        "mov r4, #1\n\t"
-        "strb r4, [r0]\n\t"
-        "add r0, #2\n\t"
-        "ldrb r0, [r0]\n\t"
-        "lsl r1, r0, #8\n\t"
-        "ldr r0, [r5]\n\t"
-        "sub r0, r0, r1\n\t"
-        "str r0, [r5]\n\t"
-        "mov r0, #0xa0\n\t"
-        "strh r0, [r5, #0x3c]\n\t"
-        "mov r3, #0\n\t"
-        "ldr r0, [r5, #0x20]\n\t"
-        "add r2, r5, #0\n\t"
-        "add r2, #0x2d\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldrb r6, [r2]\n\t"
-        "lsl r0, r6, #3\n\t"
-        "sub r0, r0, r6\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrb r0, [r0, #0x16]\n\t"
-        "cmp r3, r0\n\t"
-        "blt 2f\n\t"
-        "sub r3, r0, #1\n\t"
-    "2:\n\t"
-        "str r3, [r5, #0x30]\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x25\n\t"
-        "strb r4, [r0]\n\t"
-        "ldr r1, [r5]\n\t"
-        "asr r1, r1, #8\n\t"
-        "ldr r2, [r5, #4]\n\t"
-        "asr r2, r2, #8\n\t"
-        "add r0, sp, #8\n\t"
-        "str r0, [sp]\n\t"
-        "add r0, r5, #0\n\t"
-        "add r3, sp, #4\n\t"
-        "bl sub_8007174\n\t"
-        "ldr r0, [sp, #4]\n\t"
-        "lsl r0, r0, #8\n\t"
-        "str r0, [r5]\n\t"
-        "ldr r1, 3f\n\t"
-        "add r0, r0, r1\n\t"
-        "mov r4, #0xa0\n\t"
-        "lsl r4, r4, #5\n\t"
-        "add r1, r4, #0\n\t"
-        "bl sub_80008F0\n\t"
-        "neg r0, r0\n\t"
-        "str r0, [r5, #0x40]\n\t"
-        "ldr r0, [sp, #8]\n\t"
-        "lsl r0, r0, #8\n\t"
-        "str r0, [r5, #4]\n\t"
-        "ldr r6, 3f\n\t"
-        "add r0, r0, r6\n\t"
-        "add r1, r4, #0\n\t"
-        "bl sub_80008F0\n\t"
-        "neg r0, r0\n\t"
-        "str r0, [r5, #0x44]\n\t"
-        "ldr r0, 4f\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_80284D4\n\t"
-        "add sp, #0xc\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "1: .4byte gUnknown_030012BC\n"
-    "3: .4byte 0xFFFFF000\n"
-    "4: .4byte gUnknown_03001318\n"
-    );
+    return pos - off;
+}
+
+void sub_8011870(struct orbit_part *self)
+{
+    s32 outX, outY;
+    s32 newX, newY;
+
+    PlaySfx(gUnknown_030012BC, 8, 0x100);
+    self->state = 1;
+    self->base.x -= self->mode << 8;
+    self->timer = 0xa0;
+    OrbitClampFrame(self);
+    self->unk_25 = 1;
+
+    sub_8007174(self, self->base.x >> 8, self->base.y >> 8, &outX, &outY);
+
+    newX = outX << 8;
+    self->base.x = newX;
+    self->velX = -sub_80008F0(OrbitOffset(newX, 0x1000), 0x1400);
+    newY = outY << 8;
+    self->base.y = newY;
+    self->velY = -sub_80008F0(OrbitOffset(newY, 0x1000), 0x1400);
+    sub_80284D4(gUnknown_03001318);
 }
 
 /* sub_801191C: sibling of sub_8011870 above - sets self->0x48 = 3 (mode)
@@ -809,84 +734,33 @@ void sub_801191C(struct actor *self)
  * Called from sub_8011548's own default-mode tail above when
  * self->0x4a is nonzero.
  *
- * NAKED, not plain C: a real C reconstruction (a `struct { s32 v[3]; }`
- * local block-copied from the global, matching the ROM's own
- * `ldmia`/`stmia` pair byte-for-byte) gets the control flow, field
- * offsets, and table-stride arithmetic all correct - confirmed via
- * isolated cpp/agbcc/as + objcopy/cmp, same instruction count - but
- * gcc 2.9 -O2 consistently drops one extra register-to-register `mov`
- * the ROM's own call-argument marshalling has (loading each table value
- * into one register, then copying it into r0 right before the
- * `sub_80008FC` call, rather than loading directly into r0), and picks
- * r0/r1 instead of the ROM's r1/r2-then-r0 sequence for the repeated
- * `self->0x4b` reload - the same class of "close but gcc's own register
- * choice differs" gap already documented at length for this subsystem's
- * NAKED functions elsewhere, not resolved by named temporaries or
- * pointer-caching the field address (both tried). Transcribed straight
- * from the confirmed-correct ROM disassembly. */
-NAKED void sub_801192C(struct actor *self)
+ * Same shape as sub_8011248 (game_loop52.c) with a 0x3000 y-scale: the
+ * sine sample goes through one reused local, which old_agbcc keeps in r2
+ * across both calls exactly like the ROM. */
+struct three_words {
+    s32 a[3];
+};
+
+extern struct three_words gStaticData_0816BF14;
+
+void sub_801192C(struct orbit_part *self)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "sub sp, #0xc\n\t"
-        "add r5, r0, #0\n\t"
-        "mov r1, sp\n\t"
-        "ldr r0, 1f\n\t"
-        "ldm r0!, {r2, r3, r4}\n\t"
-        "stm r1!, {r2, r3, r4}\n\t"
-        "ldr r4, 2f\n\t"
-        "add r6, r5, #0\n\t"
-        "add r6, #0x4b\n\t"
-        "ldrb r1, [r6]\n\t"
-        "lsl r0, r1, #3\n\t"
-        "add r0, r0, r4\n\t"
-        "mov r3, #0\n\t"
-        "ldrsh r2, [r0, r3]\n\t"
-        "mov r1, #0xc0\n\t"
-        "lsl r1, r1, #6\n\t"
-        "add r0, r2, #0\n\t"
-        "bl sub_80008FC\n\t"
-        "ldr r1, [r5, #0x50]\n\t"
-        "sub r1, r1, r0\n\t"
-        "str r1, [r5, #4]\n\t"
-        "ldrb r6, [r6]\n\t"
-        "lsl r0, r6, #2\n\t"
-        "add r0, r0, r4\n\t"
-        "mov r4, #0\n\t"
-        "ldrsh r2, [r0, r4]\n\t"
-        "add r4, r5, #0\n\t"
-        "add r4, #0x4a\n\t"
-        "ldrb r0, [r4]\n\t"
-        "sub r0, #1\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, sp\n\t"
-        "ldr r1, [r0]\n\t"
-        "add r0, r2, #0\n\t"
-        "bl sub_80008FC\n\t"
-        "add r2, r0, #0\n\t"
-        "ldrb r0, [r4]\n\t"
-        "cmp r0, #1\n\t"
-        "bne 3f\n\t"
-        "ldr r0, [r5, #0x4c]\n\t"
-        "sub r0, r0, r2\n\t"
-        "b 5f\n\t"
-        ".align 2, 0\n"
-    "1: .4byte gStaticData_0816BF14\n"
-    "2: .4byte gStaticData_0816A820\n"
-    "3:\n\t"
-        "cmp r0, #2\n\t"
-        "bne 4f\n\t"
-        "ldr r0, [r5, #0x4c]\n\t"
-        "add r0, r0, r2\n\t"
-        "b 5f\n\t"
-    "4:\n\t"
-        "ldr r0, [r5, #0x4c]\n\t"
-    "5:\n\t"
-        "str r0, [r5]\n\t"
-        "add sp, #0xc\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    );
+    struct three_words scales = gStaticData_0816BF14;
+    s32 dy;
+    s32 sn;
+
+    sn = gStaticData_0816A820[self->phase * 4];
+    dy = sub_80008FC(sn, 0x3000);
+    self->base.y = self->anchor.y - dy;
+    sn = gStaticData_0816A820[self->phase * 2];
+    sn = sub_80008FC(sn, scales.a[self->mode - 1]);
+    if (self->mode == 1)
+        self->base.x = self->anchor.x - sn;
+    else if (self->mode == 2)
+        self->base.x = self->anchor.x + sn;
+    else
+        self->base.x = self->anchor.x;
 }
+
+/* The ROM pads this function to the next word with zeros, not a nop. */
+asm(".align 2, 0");

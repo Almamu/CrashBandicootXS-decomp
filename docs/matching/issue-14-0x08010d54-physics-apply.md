@@ -815,3 +815,17 @@ followed by `make compare` ("La suma coincide"):
   (`sub_8011390`, `sub_8011448`/`sub_8011548`/`sub_8011870`) whose
   already-documented gate/tail/register-hazard shapes this pass reused
   or explicitly confirmed did *not* apply.
+
+## Later pass: issue #15 NAKED retry
+
+Six of this chunk's NAKED functions are real C now: `sub_8010D54`
+(game_loop50.c, either compiler), `sub_8011248` (game_loop52.c),
+`sub_8011448`/`sub_8011870`/`sub_801192C` (game_loop53.c) and
+`sub_8011114` (game_loop54.c), the last five under old_agbcc -
+game_loop52/53/54 moved to `OLD_AGBCC_OBJS` (their other functions
+compile identically under both). The "part" object these files poke at
+by raw offset is `struct orbit_part` in the new `include/orbit_part.h`.
+`sub_8010F8C`, `sub_8011548` and `sub_801173C` stay NAKED (drafts for
+the first and last under `NON_MATCHING`). Details and techniques in
+[issue-15-16-naked-retry.md](issue-15-16-naked-retry.md).
+

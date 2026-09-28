@@ -17,13 +17,20 @@
  * comment already calls `sub_8010D54` its "mirror image" for exactly
  * this reason). 0x24 bytes (0x22 bytes of real fields, naturally
  * padded to a 4-byte multiple by the trailing `s32` alignment). */
+/* A position pair, copied into the record as one 8-byte struct (the
+ * ROM's paired `ldr; ldr; str; str` at +0x04/+0x08 is a by-value struct
+ * copy, not two independent field stores). */
+struct pos_pair {
+    s32 x;
+    s32 y;
+};
+
 struct collision_candidate {
     void *neighbor; // 0x00 - the other entity involved in the collision
-    s32 field4;      // 0x04 - part of a position pair (see field8)
-    s32 field8;       // 0x08
+    struct pos_pair pos; // 0x04 - position pair
     s32 kind;          // 0x0c - a collision-state/dispatch id
-    void *field10;       // 0x10
-    void *field14;         // 0x14
+    s32 field10;         // 0x10
+    s32 field14;           // 0x14
     s32 field18;             // 0x18
     s32 field1c;               // 0x1c
     u8 field20;                  // 0x20 - one of two flag bytes
@@ -64,127 +71,38 @@ struct collision_queue {
  * its adjusted dispatch id, and the rest are packed position/rect
  * fields already accumulated across `sub_0800D18C`'s three jump tables.
  *
- * Written as NAKED asm, not plain C: an equivalent straight-line C
- * reconstruction (`self->candidates[self->count].field = value;`
- * repeated per field, in the same order as the ROM's own stores)
- * reproduces the ROM's exact *shape* - same 8-way common-subexpression
- * grouping of the repeated `self->count`-based index computation
- * (consecutive field writes to the same record share one computation,
- * exactly where the ROM's own disassembly does and nowhere else) - but
- * gcc 2.9 -O2 picks a different scratch register for the "copy of
- * `self` used to read `self->count`" step almost every time (e.g. `r4`
- * where the ROM uses `r1`, forcing the ROM to cache the `neighbor`
- * argument into `sb` before clobbering `r1`, something the plain-C
- * version never needs). This isn't one isolated register letter to pin
- * - it recurs at nearly every one of the 8 index computations - so
- * transcribed instruction-for-instruction from the ROM disassembly
- * instead, the same escape hatch already established throughout this
- * subsystem (`sub_0800D18C`/`sub_800E08C`, game_loop47.c, and others).
- * No branches and no literal pool in this function (every operand is
- * either an argument or a small immediate), so the transcription needed
- * no label renumbering or pool-placement care. */
-NAKED void sub_8010D54(struct collision_queue *self, void *neighbor, s32 kind,
-                        void *field10, void *field14, s32 field18, s32 field4,
-                        s32 field8, s32 field1c, u8 field20, u8 field21)
+ * The two trailing byte arguments are read straight out of their stack
+ * words with `ldrb` (both addresses formed first, then both loads), which
+ * a plain `u8` parameter never produces under agbcc (it loads the whole
+ * promoted word). `STACK_ARG_U8_ADDR` below hides each slot's address
+ * behind an empty asm so the two `add rX, sp, #N` stay ahead of the loads;
+ * the `r4` pin puts the second address where the ROM keeps it. Everything
+ * else is plain C (matches under both agbcc and old_agbcc). */
+#define STACK_ARG_U8_ADDR(ptr, arg) asm("" : "=r"(ptr) : "0"(&(arg)))
+
+void sub_8010D54(struct collision_queue *self, void *neighbor, s32 kind,
+                 s32 field10, s32 field14, s32 field18, struct pos_pair pos,
+                 s32 field1c, s32 field20, s32 field21)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sb\n\t"
-        "mov r6, r8\n\t"
-        "push {r6, r7}\n\t"
-        "mov ip, r0\n\t"
-        "mov sb, r1\n\t"
-        "ldr r7, [sp, #0x1c]\n\t"
-        "ldr r6, [sp, #0x2c]\n\t"
-        "add r0, sp, #0x30\n\t"
-        "add r4, sp, #0x34\n\t"
-        "ldrb r0, [r0]\n\t"
-        "mov r8, r0\n\t"
-        "ldrb r5, [r4]\n\t"
-        "mov r1, ip\n\t"
-        "ldr r0, [r1]\n\t"
-        "lsl r4, r0, #3\n\t"
-        "add r4, r4, r0\n\t"
-        "lsl r4, r4, #2\n\t"
-        "mov r0, ip\n\t"
-        "add r0, #8\n\t"
-        "add r0, r0, r4\n\t"
-        "mov r1, sb\n\t"
-        "str r1, [r0]\n\t"
-        "mov r0, ip\n\t"
-        "add r0, #0x14\n\t"
-        "add r0, r0, r4\n\t"
-        "str r2, [r0]\n\t"
-        "mov r2, ip\n\t"
-        "ldr r0, [r2]\n\t"
-        "lsl r1, r0, #3\n\t"
-        "add r1, r1, r0\n\t"
-        "lsl r1, r1, #2\n\t"
-        "mov r0, ip\n\t"
-        "add r0, #0x18\n\t"
-        "add r0, r0, r1\n\t"
-        "str r3, [r0]\n\t"
-        "ldr r1, [r2]\n\t"
-        "lsl r0, r1, #3\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, ip\n\t"
-        "add r0, #0x29\n\t"
-        "strb r5, [r0]\n\t"
-        "ldr r0, [r2]\n\t"
-        "lsl r1, r0, #3\n\t"
-        "add r1, r1, r0\n\t"
-        "lsl r1, r1, #2\n\t"
-        "mov r0, ip\n\t"
-        "add r0, #0x24\n\t"
-        "add r0, r0, r1\n\t"
-        "str r6, [r0]\n\t"
-        "ldr r0, [r2]\n\t"
-        "lsl r1, r0, #3\n\t"
-        "add r1, r1, r0\n\t"
-        "lsl r1, r1, #2\n\t"
-        "mov r0, ip\n\t"
-        "add r0, #0x1c\n\t"
-        "add r0, r0, r1\n\t"
-        "str r7, [r0]\n\t"
-        "ldr r1, [r2]\n\t"
-        "lsl r0, r1, #3\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, ip\n\t"
-        "add r0, #0x28\n\t"
-        "mov r1, r8\n\t"
-        "strb r1, [r0]\n\t"
-        "ldr r1, [r2]\n\t"
-        "lsl r0, r1, #3\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, ip\n\t"
-        "ldr r1, [sp, #0x24]\n\t"
-        "ldr r2, [sp, #0x28]\n\t"
-        "str r1, [r0, #0xc]\n\t"
-        "str r2, [r0, #0x10]\n\t"
-        "mov r2, ip\n\t"
-        "ldr r0, [r2]\n\t"
-        "lsl r1, r0, #3\n\t"
-        "add r1, r1, r0\n\t"
-        "lsl r1, r1, #2\n\t"
-        "mov r0, ip\n\t"
-        "add r0, #0x20\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r1, [sp, #0x20]\n\t"
-        "str r1, [r0]\n\t"
-        "ldr r0, [r2]\n\t"
-        "add r0, #1\n\t"
-        "str r0, [r2]\n\t"
-        "pop {r3, r4}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    );
+    u8 *p20;
+    register u8 *p21 asm("r4");
+    u8 f20, f21;
+
+    STACK_ARG_U8_ADDR(p20, field20);
+    STACK_ARG_U8_ADDR(p21, field21);
+    f20 = *p20;
+    f21 = *p21;
+
+    self->candidates[self->count].neighbor = neighbor;
+    self->candidates[self->count].kind = kind;
+    self->candidates[self->count].field10 = field10;
+    self->candidates[self->count].field21 = f21;
+    self->candidates[self->count].field1c = field1c;
+    self->candidates[self->count].field14 = field14;
+    self->candidates[self->count].field20 = f20;
+    self->candidates[self->count].pos = pos;
+    self->candidates[self->count].field18 = field18;
+    self->count++;
 }
 
 /* Already matched/documented elsewhere in the codebase (graphics.c's
