@@ -36,10 +36,17 @@
  * `self`/`info`/`flag`/`vol` in r6/r4/r5/r7, `row` in sb, the step in
  * sl and the wave pointer spilled to the stack, where agbcc puts `self`
  * in r5, `info` in ip and the wave in sl - see
- * docs/matching/gax-toolchain-retry.md. */
+ * docs/matching/gax-toolchain-retry.md.
+ * Mix retry 5 (docs/matching/mix-naked-retry-5.md): the step is a plain
+ * 64-bit `*` through a `__muldi3` alias and the ping-pong test re-reads
+ * `self->instrument`/`self->row`; ~202 halfwords off by the
+ * alignment-insensitive count (was ~237). Left: `self`/`info`/`flag`
+ * still land in r5/r7/r9 instead of r6/r4/r5, which cascades. */
 #if NON_MATCHING
-/* sub_800014C is this ROM's memcpy (the work item's initializer). */
-asm(".set memcpy, sub_800014C\n");
+/* sub_800014C is this ROM's memcpy (the work item's initializer) and
+ * sub_8037ECC is `__muldi3`: as a libcall the 64-bit multiply does not
+ * clobber memory (see docs/matching/gax-naked-retry-2.md). */
+asm(".set memcpy, sub_800014C\n.set __muldi3, sub_8037ECC\n");
 
 struct GaxMixItem {
     u8 *src;
@@ -61,7 +68,6 @@ extern u8 gStaticData_0803A874[];
 extern u8 gStaticData_0803A884[];
 extern u8 gStaticData_0803A8B4[];
 extern u8 gStaticData_0803A8C4[];
-extern s64 sub_8037ECC(s64 a, s64 b);
 extern void sub_8037F3C(void *dest, s32 count);
 
 /* Rewrites the halfword at `label` in the IWRAM copy of the ARM mixer. */
@@ -113,10 +119,11 @@ u32 sub_8039B44(struct GaxChannelState *self, struct GaxInfoHandler *info, void 
         vol = vol * info->field_1f >> 8;
     if (flag == 0)
         vol = vol * info->type->data.song->volume >> 8;
-    step = sub_8037ECC((s32)period, gUnknown_03001618) >> 32;
+    step = ((s64)(s32)period * (s64)gUnknown_03001618) >> 32;
     len = wave->length;
     pingpong = 0;
-    if (inst->rows[row].field_00 == 0 && inst->rows[row].sweepMin < inst->rows[row].sweepMax)
+    if (self->instrument->rows[self->row].field_00 == 0
+        && self->instrument->rows[self->row].sweepMin < self->instrument->rows[self->row].sweepMax)
         pingpong = 1;
     {
         struct GaxMixItem item = {

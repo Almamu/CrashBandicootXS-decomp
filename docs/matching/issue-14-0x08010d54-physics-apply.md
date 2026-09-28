@@ -837,3 +837,12 @@ the id through `self` without `volatile`, which gives the ROM's
 loads-at-the-compare, and two extra references on each velocity local
 settle the r0/r1 choice. See
 [near-miss-polish-3.md](near-miss-polish-3.md).
+
+## Later pass: mix NAKED retry 5
+
+`sub_8011548` is real C under old_agbcc. Two no-code references on each
+velocity (`ORBIT_STEP`) give it r0 and the position r1, the spawn's
+byte argument is stored through a pointer an `asm` takes from
+`&argP5` (so `add r3, sp, #4` comes before `movs r5, #1`), and the
+state-3 tail computes both coordinates into locals before storing.
+See [mix-naked-retry-5.md](mix-naked-retry-5.md).

@@ -890,6 +890,10 @@ plain C didn't converge.
   The third big NAKED retry brought the `sub_8011548` draft to the
   ROM's size, 21 halfwords off (register allocation) - see
   [big-naked-retry-3.md](../matching/big-naked-retry-3.md).
+  *Mix NAKED retry 5:* `sub_8011548` is real C (old_agbcc) - two
+  no-code references on each velocity, the spawn argument's address
+  taken by an `asm`, and locals for the state-3 tail; see
+  [mix-naked-retry-5.md](../matching/mix-naked-retry-5.md).
 - **`sub_8010E34`/`sub_8010EAC`/`sub_8010F8C`/`sub_8011114`/
   `sub_80111B8`** (`src/system/game_loop54.c`, new file - Phase 2
   mop-up, the chunk's final slice) - the last 5 functions of the former

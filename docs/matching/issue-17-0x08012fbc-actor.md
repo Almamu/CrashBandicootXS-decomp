@@ -483,3 +483,12 @@ branch writes through a scoped `volatile u8 *`, which keeps its `adds
 r2, #40` in the part copy's register ahead of the -0x11 mask.
 `sub_8014674` and `sub_8014B54` are unchanged. See
 [near-miss-polish-3.md](near-miss-polish-3.md).
+
+## Later pass: mix NAKED retry 5
+
+`sub_8014674` is real C under old_agbcc. The 0xD/0x18 tag test is a
+`switch (tag = self->part->tag)` with a shared `case 0xD: case 0x18:`
+and the inner tests on `tag`. That threads the `beq` for 0xD past the
+inner re-test while the 0x18 path keeps it, which no `||` spelling
+did. `sub_8014B54` is unchanged (3 halfwords, the 0x600 reload
+register). See [mix-naked-retry-5.md](mix-naked-retry-5.md).
