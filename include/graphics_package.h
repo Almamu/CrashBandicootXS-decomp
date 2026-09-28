@@ -18,4 +18,26 @@ struct bg_package {
     void *mapAsset;
 };
 
+/* The BG setup buffer callers fill with sub_801E644 before calling
+ * LoadGraphicsPackage; sub_801E640 reads the control value back for
+ * REG_BGnCNT. */
+struct bg_setup {
+    u32 charBlock;      // 0x00
+    u32 screenBlock;    // 0x04
+    u32 paletteBank;    // 0x08
+    union {
+        u16 raw;
+        struct {
+            u16 priority:2;
+            u16 charBase:2;
+            u16 unk_4:2;
+            u16 mosaic:1;
+            u16 colorMode:1;
+            u16 screenBase:5;
+            u16 wrap:1;
+            u16 size:2;
+        } bits;
+    } ctrl;             // 0x0C - BGnCNT
+};
+
 #endif /* __GRAPHICS_PACKAGE_H__ */
