@@ -926,13 +926,22 @@ from "core" graphics.
 
 ### Matched in the late-ROM NAKED retry
 
-- `src/graphics/actor_part45d.c` - `sub_802F8E8` (the shared BG1 map
-  repack loop, issue #56). Declared `inline` ahead of `sub_802F7B0`,
-  which inlines it; gcc's deferred output of inlinable functions puts it
-  after 7B0, as in the ROM. old_agbcc (the object joined
-  `OLD_AGBCC_OBJS`), with the map entry read in two statements and the
-  high nibble masked. See
-  [docs/matching/late-rom-naked-retry.md](../matching/late-rom-naked-retry.md).
+- `src/graphics/actor_part45d.c` - `sub_802F7B0` and `sub_802F8E8`
+  (the BG1 picture loader and its map repack loop, issue #56), old_agbcc
+  (the object is on `OLD_AGBCC_OBJS`). 7B0 inlines a `static inline`
+  copy of the loop (the ROM's 7B0 has the inlined loop's two store
+  pointers); 8E8 is the loop as its own function. The map entry is read
+  in two statements and the high nibble masked; 7B0 also needs three
+  empty `asm("" : : "r"(x))` extra references (`dest` after the loop,
+  `cols` twice before the call) to settle two register-priority ties.
+- `src/graphics/actor_part89.c` - `sub_8034994` (the fade overlay's
+  per-frame input driver, issue #63), old_agbcc (object added to
+  `OLD_AGBCC_OBJS`). An extra reference to `audio` at the top of the
+  loop replaces the old r8 pin on the pair counter, and a `"+r"` asm on
+  the input copy between the `& 1` and `& 8` tests keeps their shifts
+  apart.
+
+See [docs/matching/late-rom-naked-retry.md](../matching/late-rom-naked-retry.md).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -1056,28 +1065,13 @@ plain C didn't converge.
 - **`sub_80156EC`** (`src/graphics/actor_part38c.c`) -
   `part+0x38`/`sub_80231BC`-gated mgr-trampoline dispatcher. See
   `docs/matching/issue-18-0x08014f8c-actor.md`.
-- **`sub_802F7B0`** (`src/graphics/actor_part45d.c`, issue #56; its
-  partner `sub_802F8E8` is now matched - see "Matched in the late-ROM
-  NAKED retry" below) - a pair of VRAM tile-remap/nibble-repack loops (4-bit
-  palette-index packing into a `0x0600D000`-based tile buffer via raw
-  `REG_DMA3SAD`/`DAD`/`CNT` pokes at `0x040000D4`); each nested loop
-  keeps three high registers (`r8`, `sb`, `sl`) simultaneously live
-  across the whole loop body. Every other DMA3-setup function in this
-  codebase with the same `0x040000D4`/`0x0600D000` literal-pool shape
-  (`actor_part26b.c`, `actor_part74.c`, `actor_part75.c`,
-  `fade_screen_mode.c`, `hud_digit_array.c`, `settings_menu8e.c`,
-  `timer_util_aa90.c`) is NAKED too, not plain C with
-  `REG_DMA3SAD`/`DAD`/`CNT` macros. See
-  `docs/matching/issue-56-0x0802f0dc-actor.md`. Later pass
-  (`docs/matching/late-rom-naked-retry.md`): 7B0 inlines 8E8 (declared
-  `inline`, which gcc emits at the end of the file); the draft under
-  `#if NON_MATCHING` has the ROM's instructions but two register swaps
-  (nibble pointer/`dest` r5/r6, `cols`/row+1 r8/sl).
 - **`sub_8031604`** (`src/graphics/actor_part26c.c`) - VRAM fill-level
-  meter nibble-repack loop (docs/rom_map.md). A `#if NON_MATCHING` draft
-  has the right shape (~95 halfwords off: the ROM re-reads each height
-  from the stack after the row-pointer store, and allocates the nibble
-  temporaries differently). See `docs/matching/issue-58-61-naked-retry.md`.
+  meter nibble-repack loop (docs/rom_map.md). The `#if NON_MATCHING`
+  draft is 56 halfwords off: the first loop now matches (a `"+m"` asm
+  makes gcc re-read the height after the row-pointer store); the nibble
+  temporaries are still permuted (the ROM copies the hoisted 0xf and
+  ANDs the byte into it, gcc copies the byte). See
+  `docs/matching/late-rom-naked-retry.md`.
 - **`sub_8011BD4`** (`src/graphics/actor_part82.c`, GitHub issue #16) -
   docs/rom_map.md's documented companion state machine to `sub_8016288`
   (still raw), sharing its type-`0x1d` gate: a 25-case jump table on a
@@ -1135,25 +1129,11 @@ plain C didn't converge.
   distinct gap, needing one extra high register (`r9`) beyond the ROM's
   single `r8` to keep three values simultaneously live. See
   [docs/matching/issue-49-0x08029e4c-actor.md](../matching/issue-49-0x08029e4c-actor.md).
-- **`sub_8034994`** (`src/graphics/actor_part89.c`, GitHub issue #63) -
-  the `struct fade_overlay` object's (`sub_803472C`/`sub_803487C`,
-  actor_part87.c/actor_part88.c) per-frame input-poll/blend-alpha
-  driver: busy-loops polling input twice per outer iteration (confirm
-  exits with a cue; L/R step a one-shot flag with a cue), ping-ponging a
-  0-15 blend-alpha counter into `REG_BLDCNT`/`BLDALPHA` every two
-  iterations. Six live values (`sb`, `sl`, `r8`, three of `r4`-`r7`)
-  across four different `bl` sites with no spare register - the same
-  "many high registers held live across calls inside a loop" shape
-  already NAKED throughout this codebase
-  (`sub_80309B4`/`sub_8031040`/`sub_80311C4`,
-  `actor_part21f.c`/`23e.c`/`23f.c`). See
-  `docs/matching/issue-63-final-raw-actor.md`. Later pass
-  (`docs/matching/late-rom-naked-retry.md`): the draft under
-  `#if NON_MATCHING` is 2 halfwords off (old_agbcc) - one r0/r1 swap in
-  the first input test.
 - **`sub_80336CC`** (`src/graphics/actor_part130.c`) - the P2-side VRAM
   fill-level meter, the one-row twin of `sub_8031604`; its
-  `#if NON_MATCHING` draft is off the same way. See `docs/matching/issue-58-61-naked-retry.md`.
+  `#if NON_MATCHING` draft is 29 halfwords off, the same nibble-temporary
+  permutation plus two small header differences. See
+  `docs/matching/late-rom-naked-retry.md`.
 - **`sub_80352AC`** (`src/graphics/actor_part131.c`, GitHub issue #64) -
   the map screen's popup-text asset loader. The issue #64/#65 NAKED
   retry left a near-miss C draft under `#if NON_MATCHING` (old_agbcc):

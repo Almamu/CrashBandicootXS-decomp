@@ -107,3 +107,72 @@ down to spelling:
   alone doesn't change the count; the r8/r9 swap of the max tap rate
   and the format pointer still cascades (the max rate's initial 0 is
   also the CSE'd zero stored to `numSfx` and the state fields).
+
+## Second pass: the near-misses (2 of 4 closed)
+
+A follow-up aimed at the four drafts above that were closest, with the
+extra-reference nudge from #468: `asm("" : : "r"(x))` emits no code but
+adds one reference to `x`, which raises its global-allocation priority.
+A brute-force variant runner found both matches.
+
+| Function | File | Compiler | What it took |
+|---|---|---|---|
+| `sub_8034994` | `actor_part89.c` (object joined `OLD_AGBCC_OBJS`) | old_agbcc | `asm("" : "+r"(k))` on the input copy between the `& 1` and `& 8` tests, and one extra reference to `audio` at the top of the loop in place of the r8 pin. |
+| `sub_802F7B0` | `actor_part45d.c` | old_agbcc | The DMA width fixed, one extra reference to `dest` after the loop, two to `cols` before the call, and 7B0 inlining its own `static inline` copy of the loop. |
+
+### `sub_8034994`
+
+The first test's r0/r1 swap came from the separate `u16 p` local that
+stopped CSE sharing the shift with the `& 8` test. Testing
+`k.pressed & 1` directly and putting `asm("" : "+r"(k))` inside the
+second operand of the `||` (as a statement expression) keeps the two
+shifts apart and gives the ROM's registers. Without the pin, the pair
+counter took r7 from `audio`. One extra reference to `audio` at the top
+of the loop restores the ROM's order (`audio` r7, counter r8). The same
+reference before the loop does nothing.
+
+### `sub_802F7B0`
+
+- The draft copied the palette with `DmaCopy32(3, pic, PLTT, 0x400)`,
+  which gives control word 0x84000100. The ROM's is 0x80000100,
+  `DmaCopy16(3, pic, PLTT, 0x200)`. That accounted for one of the 32
+  "register" halfwords.
+- Two `asm("" : : "r"(cols))` before the call settle the `cols`/row+1
+  tie (r8/sl).
+- One `asm("" : : "r"(dest))` after the loop lifts `dest` over the
+  nibble pointer (r5/r6). A reference at the top of the row loop also
+  works. The call argument is spelled `tileData + tiles * 32`, which
+  gives the ROM's `adds r6, r1, r5` operand order.
+- Any `dest` reference in the shared body breaks `sub_802F8E8`, and no
+  placement satisfies both. So 7B0 inlines a `static inline MapFill`
+  copy that has the reference, and 8E8 is the plain loop written out
+  after 7B0. A wrapper 8E8 that inlines `MapFill` doesn't work: the
+  inlined copy has 7B0's two separate store pointers.
+
+### Not closed: `sub_8031604` / `sub_80336CC` (#58/#61)
+
+Both drafts improved (95 to 56, and 105 to 29 halfwords):
+
+- **Height re-read.** `asm("" : "+m"(heights[k]))` right after the
+  row-pointer store makes gcc reload the height, which is the ROM's
+  `ldm r1!`. `&gUnknown_03001530` then lands in r7, as in the ROM.
+  Walking pointers, `s32 x` temporaries and struct forms didn't do it.
+- **`dst` split.** The ROM keeps `dst` in r3 between rows and in sb
+  inside the row. A copy `u32 *d = dst;` for the inner loop, then
+  `dst = d;`, reproduces that.
+- **Left (both):** in the nibble expansion the ROM copies the hoisted
+  0xf and ANDs the byte into it (`adds r4, r6, #0; ands r4, r0`). gcc
+  copies the byte instead (`adds r4, r0, #0; ands r4, r6`), and that
+  permutes the other temporaries. None of these changed it: `0xf & b`,
+  a mask variable (function scope or loop scope, any type),
+  `p = 0xf; p &= b;` (right order, but then the 0xf isn't hoisted),
+  in-place `b >>= 4`, u8/u32/s32 variants of `MeterPx`, or
+  `src++`/`*src++` placement.
+- **Left (80336CC only):** the ROM starts the reversed row counter
+  from `sum`'s zero register (`adds r2, r5, #0`), and orders the
+  second loop's header loads slightly differently.
+- **Spellings.** The twin's draft uses the "nibble into a variable,
+  then `MeterPx(p)`, `src++` after the high nibble" spelling, which has
+  the ROM's instruction order. In 8031604 the same spelling costs 4
+  bytes in the outer loop header (a `mov rX, sp` copy), so that draft
+  keeps the `*src++` spelling.

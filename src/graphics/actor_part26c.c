@@ -34,10 +34,17 @@ extern u8 gStaticData_08167AD4[];
 extern u8 *gUnknown_03001580[];
 
 #if NON_MATCHING
-/* Draft, ~95 halfwords off under both compilers: right shape, but the
- * ROM re-reads each height from the stack after the row-pointer store
- * (`ldm r1!`) and allocates the nibble-expansion temporaries
- * differently. `sub_80336CC` (actor_part130.c) is the one-row twin. */
+/* Draft, 56 halfwords off under both compilers. The first loop matches:
+ * `asm("" : "+m"(heights[k]))` after the row-pointer store makes gcc
+ * re-read the height (the ROM's `ldm r1!`), and the ROM's
+ * `&gUnknown_03001530` in r7 follows. The copy `d` of `dst` for the
+ * inner loop gives the ROM's r3/sb split. What's left is the nibble
+ * expansion: the ROM copies the hoisted 0xf and ANDs the byte into it
+ * (`adds r4, r6, #0; ands r4, r0`), gcc copies the byte instead, and
+ * that permutes the temporaries. The actor_part130.c twin's inner-loop
+ * spelling (`src++` after the high nibble) gets the instruction order
+ * but costs 4 bytes in this one's outer loop. `sub_80336CC`
+ * (actor_part130.c) is the one-row twin. */
 static inline u8 MeterPx(u8 v)
 {
     u8 r = 0;
@@ -58,10 +65,12 @@ void sub_8031604(void)
 
     stride = (u32)(gUnknown_03001528 * gUnknown_0300152C + 1) >> 1 << 2;
     for (k = 0; k < 4; k++) {
-        heights[k] = *(s32 *)(gStaticData_08167AD4 + off);
-        sum += heights[k];
+        s32 x = *(s32 *)(gStaticData_08167AD4 + off);
+        heights[k] = x;
+        sum += x;
         off += 4;
         rows[k] = gStaticData_08167AD4 + off;
+        asm("" : "+m"(heights[k]));
         off += stride;
         off += heights[k] << 5;
     }
@@ -71,20 +80,20 @@ void sub_8031604(void)
         u8 *src = gUnknown_03001580[k] + stride;
         s32 n = heights[k];
         s32 j;
+        u32 *d = dst;
 
         for (j = 0; j < n << 4; j++) {
             u32 b, p0, p1, p2, p3;
 
-            b = *src;
+            b = *src++;
             p0 = MeterPx(b & 0xf);
             p1 = MeterPx((b >> 4) & 0xf);
-            src++;
-            b = *src;
+            b = *src++;
             p2 = MeterPx(b & 0xf);
             p3 = MeterPx((b >> 4) & 0xf);
-            src++;
-            *dst++ = p0 | (p1 << 8) | (p2 << 16) | (p3 << 24);
+            *d++ = p0 | (p1 << 8) | (p2 << 16) | (p3 << 24);
         }
+        dst = d;
     }
 }
 #else

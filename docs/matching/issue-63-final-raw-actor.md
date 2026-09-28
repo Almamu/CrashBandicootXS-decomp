@@ -233,3 +233,9 @@ matched/parked list this entry feeds into.
 `sub_8034994` got a C draft under `#if NON_MATCHING` that is 2 halfwords
 off under old_agbcc (a single r0/r1 swap in the first input test); it
 stays NAKED. See [late-rom-naked-retry.md](./late-rom-naked-retry.md).
+
+A second late-ROM pass closed it (old_agbcc; `actor_part89.o` joined
+`OLD_AGBCC_OBJS`). `asm("" : "+r"(k))` on the input copy between the
+`& 1` and `& 8` tests gives the first test the ROM's registers, and an
+extra reference to `audio` at the top of the loop gives it r7, which
+puts the pair counter in r8 without the old pin.

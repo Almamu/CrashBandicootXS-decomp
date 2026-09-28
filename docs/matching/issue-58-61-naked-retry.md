@@ -64,6 +64,13 @@ old_agbcc. The files stay on current agbcc, and no file was split.
 `sub_8031604` and `sub_80336CC` are still NAKED, so issues #58 and #61
 stay open.
 
+Later pass ([late-rom-naked-retry.md](late-rom-naked-retry.md)): the
+height re-read is reproduced (a `"+m"` asm on `heights[k]` after the
+row-pointer store), and so is the `dst` r3/sb split (a copy `d` for the
+inner loop). The drafts are now 56 and 29 halfwords off. What's left is
+mostly the nibble AND: the ROM copies the hoisted 0xf and ANDs the byte
+into it, gcc copies the byte.
+
 ## Techniques worth reusing
 
 - `fold` reassociation cuts both ways. `a - (b - K)` becomes
