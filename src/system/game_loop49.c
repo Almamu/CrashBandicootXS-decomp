@@ -798,6 +798,175 @@ void sub_800F8E0(struct phys_obj *self)
  * pass - the NAKED transcription is verified byte-exact independent of
  * that understanding. */
 
+#if NON_MATCHING
+/* Near miss under old_agbcc (58 halfwords off, same size): the
+ * u48 word is handled with explicit byte masks; what is left is
+ * register choice/order in the phase/count updates (the ROM updates `w`
+ * in place in some blocks and into a fresh register in others, loads
+ * u48 into r0 and copies it to r2 before the phase test, and computes
+ * `(r - 1) << 24` before reloading u48 in the count update). */
+void sub_800F990(struct phys_obj *self)
+{
+    s32 w;
+    s32 ph0;
+
+    w = self->u48.n;
+    if (!(w & 0xc0))
+    {
+        struct gobj *pl = gUnknown_030012D8;
+        s32 d;
+
+        d = pl->x >> 8;
+        d -= self->x >> 8;
+        if (d < 0)
+            d = -d;
+        if (d <= 0x4f)
+        {
+            d = pl->y >> 8;
+            d -= self->y >> 8;
+            if (d < 0)
+                d = -d;
+            if (d <= 0x3f)
+            {
+                w &= 0x3f;
+                w |= 0x40;
+                w &= 0xc7;
+                w |= 0x10;
+                self->u48.n = w;
+            }
+        }
+    }
+    if (self->timer != 0)
+        return;
+    w = self->u48.n;
+    ph0 = w & 7;
+    if ((ph0 & 4) && self->tag == 8)
+    {
+        s32 done = 0;
+
+        do
+        {
+            s32 ph;
+            s32 nx;
+
+            w = self->u48.n;
+            nx = ((w & 7) + 1) & 3;
+            ph = nx;
+            w = (w & 0xf8) | nx;
+            self->u48.n = w;
+            switch (ph)
+            {
+            case 0:
+                PhysSetTag(self, 7);
+                if (self->u48.n & 0xc0)
+                {
+                    u8 r = sub_8010A50(self);
+
+                    if (r != 0)
+                    {
+                        w = self->u48.n;
+                        w = (w & 0xc7) | ((u8)(r - 1) << 3);
+                        self->u48.n = w;
+                    }
+                    w = self->u48.n;
+                    if (!(w & 0x38))
+                    {
+                        w = (w & 0xc7) | 0x10;
+                        self->u48.n = w;
+                        switch ((s32)((u32)(w & 0xc0) >> 6))
+                        {
+                        case 1:
+                            w = (w & 0x3f) | 0x80;
+                            self->u48.n = w;
+                            break;
+                        case 2:
+                            w = (w & 0x3f) | 0xc0;
+                            self->u48.n = w;
+                            break;
+                        case 3:
+                            PhysSetTag(self, 0x20);
+                            self->kind = 7;
+                            break;
+                        }
+                    }
+                }
+                goto out;
+            case 1:
+                if (self->unk_50 & 2)
+                {
+                    PhysSetTag(self, 9);
+                    goto out;
+                }
+                break;
+            case 2:
+                if (self->unk_50 & 1)
+                {
+                    PhysSetTag(self, 0xb);
+                    goto out;
+                }
+                break;
+            case 3:
+                if (self->unk_50 & 4)
+                {
+                    PhysSetTag(self, 0xd);
+                    done = 1;
+                }
+                break;
+            }
+        } while (!done);
+    out:
+        {
+            struct anim_rec *recs = self->anim->records;
+            struct anim_rec *rec = &recs[self->tag];
+
+            self->slot = sub_8006DF8(gUnknown_030012B8, rec->unk_14);
+        }
+        {
+            s32 d = (s32)((u32)(self->u48.n & 0xc0) >> 6);
+
+            self->timer = gStaticData_0816BB94[d];
+        }
+    }
+    else
+    {
+        {
+            s32 p = (w & 7) | 4;
+
+            w = p | (w & 0xf8);
+        }
+        self->u48.n = w;
+        self->timer = 1;
+        if (self->tag == 0xc)
+            PhysSetTag(self, 0xa);
+        else if (self->tag == 0xa)
+            PhysSetTag(self, 8);
+        else
+        {
+            switch ((s32)((u32)(self->u48.n & 0xc0) >> 6))
+            {
+            case 0:
+            case 1:
+                PhysSetTag(self, 0xc);
+                break;
+            case 2:
+                PhysSetTag(self, 0xa);
+                break;
+            case 3:
+                PhysSetTag(self, 8);
+                break;
+            }
+        }
+        {
+            struct anim_rec *recs = self->anim->records;
+            struct anim_rec *rec = &recs[self->tag];
+
+            self->slot = sub_8006DF8(gUnknown_030012B8, rec->unk_14);
+        }
+        if (self->u48.n & 0xc0)
+            PlaySfx(gUnknown_030012BC, 0x10, 0x100);
+    }
+}
+#else
 NAKED void sub_800F990(struct phys_obj *self)
 {
     asm(
@@ -1175,3 +1344,4 @@ NAKED void sub_800F990(struct phys_obj *self)
     "33: .4byte gUnknown_030012BC\n"
     );
 }
+#endif

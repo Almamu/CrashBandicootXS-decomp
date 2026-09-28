@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor.h"
+#include "box_part.h"
 
 /* GitHub issue #12: 0x0800D040-0x0800FC70, the physics/collision
  * subsystem documented in docs/rom_map.md ("Confirmed: a shared
@@ -14,6 +15,7 @@ extern void sub_803AFE4(void *buf, s32 arg1, s32 arg2);
 extern void sub_803AFDC(void *buf, s32 arg1, s32 arg2);
 extern u8 sub_8001688(void *buf1, void *buf2);
 extern void *gUnknown_030012D8;
+#define gPlayerPart (*(struct box_part **)&gUnknown_030012D8)
 extern u8 gStaticData_0816BBC4[];
 extern void sub_800EEF0(void *self, u8 arg1);
 extern void sub_800E7A8(void *self, u8 arg1, u8 arg2, u8 arg3);
@@ -51,6 +53,80 @@ extern void sub_800E7A8(void *self, u8 arg1, u8 arg2, u8 arg3);
  * `self` throughout, matching the C reconstruction's own local
  * variable layout (stack offsets 0x0-0xc hold `self`'s AABB, 0x10-0x1c
  * the player's). */
+#if NON_MATCHING
+/* Near miss under old_agbcc: the first box and the tail match; in the
+ * player block gcc keeps `&f.b` (sp+0x10) in r7 across the two builder
+ * calls instead of re-adding it, which pushes px/py/&gUnknown_030012D8
+ * into r9/sl/r8 (ROM: r7/r8/sb). No flag or scoping variant tried
+ * removed that pseudo (see docs/matching/issue-12-13-25-naked-retry.md). */
+void sub_800D040(struct box_part *self)
+{
+    struct {
+        struct part_aabb a;
+        struct part_aabb b;
+    } f;
+
+    if ((self->physMode & 0x7f) == 1)
+        return;
+    {
+        s32 px;
+        s32 py;
+        u8 *rec;
+        struct part_box *pb;
+        s32 offX;
+        s32 offY;
+        u8 w;
+        u8 h;
+
+        rec = (u8 *)&(*self->keyframes)[self->frame];
+        pb = (struct part_box *)(rec + 4);
+        px = self->x >> 8;
+        py = self->y >> 8;
+        offX = pb->offX;
+        offY = pb->offY;
+        w = pb->w;
+        h = pb->h;
+        sub_803AFE4(&f.a, offX + px, offY + py);
+        sub_803AFDC(&f.a, w, h);
+        if (self->mirrorX)
+            f.a.x = px * 2 - (f.a.x + f.a.w);
+        if (self->mirrorY)
+            f.a.y = py * 2 - (f.a.y + f.a.h);
+    }
+    {
+        s32 px;
+        s32 py;
+        u8 *rec;
+        struct part_box *pb;
+        s32 offX;
+        s32 offY;
+        u8 w;
+        u8 h;
+
+        px = gPlayerPart->x >> 8;
+        py = gPlayerPart->y >> 8;
+        rec = (u8 *)&(*gPlayerPart->keyframes)[gPlayerPart->frame];
+        pb = (struct part_box *)(rec + 4);
+        offX = pb->offX;
+        offY = pb->offY;
+        w = pb->w;
+        h = pb->h;
+        sub_803AFE4(&f.b, offX + px, offY + py);
+        sub_803AFDC(&f.b, w, h);
+        if (gPlayerPart->mirrorX)
+            f.b.x = px * 2 - (f.b.x + f.b.w);
+        if (gPlayerPart->mirrorY)
+            f.b.y = py * 2 - (f.b.y + f.b.h);
+    }
+    if (sub_8001688(&f.a, &f.b))
+    {
+        if (gStaticData_0816BBC4[self->state] == 1)
+            sub_800EEF0(self, 1);
+        else
+            sub_800E7A8(self, 0, 0, 0);
+    }
+}
+#else
 NAKED void sub_800D040(void *self)
 {
     asm(
@@ -220,6 +296,7 @@ NAKED void sub_800D040(void *self)
         "bx r0"
     );
 }
+#endif
 /* Trailing byte count isn't a multiple of 4 - without this, `as` pads
  * with its default NOP fill instead of the ROM's zero fill (see
  * docs/matching.md's alignment-padding gotcha). */

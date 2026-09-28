@@ -1,4 +1,12 @@
 #include "core.h"
+#include "phys_obj.h"
+
+extern u8 gUnknown_030012B0;
+extern u8 gStaticData_0816BBC4[];
+extern struct phys_obj *sub_8010708(struct phys_obj *obj);
+extern struct phys_obj *sub_801070C(struct phys_obj *obj);
+extern void sub_800EEF0(struct phys_obj *self, u8 arg1);
+extern void sub_800E620(struct phys_obj *self);
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see game_loop17.c's header comment and
@@ -24,196 +32,115 @@
  * toward a clamped max of 5 (saturating, never decremented back down
  * by this function).
  *
- * Written as NAKED asm, not plain C: the ROM keeps both `sb` and `r8`
- * live as extra callee-saved accumulators for the whole function -
- * the same "two extra high-register accumulators live throughout" gap
- * already parked (and later NAKED-transcribed) for `sub_800D040`
- * (game_loop6.c) and its own `sub_8007B98` precedent in this exact
- * physics/collision subsystem, see
- * docs/matching/issue-12-physics-collision.md. Every instruction below
- * is checked byte-identical to the ROM. */
-NAKED void sub_800FC70(void *selfArg)
+ * Matches under old_agbcc (the NAKED note blamed the "two extra
+ * high-register accumulators"; see
+ * docs/matching/issue-12-13-25-naked-retry.md). What mattered: the
+ * speed byte is re-read through `self->unk_4C` each time (GCSE keeps
+ * its address in sb), `speed--` is written in both step arms, the
+ * neighbour walk skips the first neighbour, and one temporary `t` both
+ * carries `unk_40` into `y` and re-reads `x` at the bottom of the loop
+ * (the ROM's r1). */
+void sub_800FC70(struct phys_obj *self)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sb\n\t"
-        "mov r6, r8\n\t"
-        "push {r6, r7}\n\t"
-        "add r5, r0, #0\n\t"
-        "ldr r7, [r5, #0x44]\n\t"
-        "cmp r7, #0\n\t"
-        "bne 1f\n\t"
-        "b 23f\n\t"
-    "1:\n\t"
-        "ldr r0, 4f\n\t"
-        "mov r1, #1\n\t"
-        "strb r1, [r0]\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x4c\n\t"
-        "mov r6, #0\n\t"
-        "ldrsb r6, [r0, r6]\n\t"
-        "mov sb, r0\n\t"
-        "cmp r6, #0\n\t"
-        "bne 2f\n\t"
-        "mov r6, #1\n\t"
-    "2:\n\t"
-        "mov r0, #0\n\t"
-        "mov r8, r0\n\t"
-        "ldr r1, [r5]\n\t"
-        "cmp r6, #0\n\t"
-        "bge 6f\n\t"
-        "ldr r2, 5f\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #1\n\t"
-    "3:\n\t"
-        "add r8, r2\n\t"
-        "add r7, r7, r0\n\t"
-        "add r6, #1\n\t"
-        "cmp r6, #0\n\t"
-        "bne 3b\n\t"
-        "b 20f\n\t"
-        ".align 2, 0\n"
-    "4: .4byte gUnknown_030012B0\n"
-    "5: .4byte 0xFFFFFF00\n"
-    "6:\n\t"
-        "cmp r7, #0\n\t"
-        "ble 10f\n\t"
-        "ldr r0, 7f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r0, #0x88\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #1\n\t"
-        "bne 8f\n\t"
-        "mov r1, #0x40\n\t"
-        "add r8, r1\n\t"
-        "sub r7, #0x40\n\t"
-        "sub r6, #1\n\t"
-        "b 19f\n\t"
-        ".align 2, 0\n"
-    "7: .4byte gUnknown_030012D8\n"
-    "8:\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r8, r0\n\t"
-        "ldr r1, 9f\n\t"
-        "add r7, r7, r1\n\t"
-        "sub r6, #1\n\t"
-        "b 19f\n\t"
-        ".align 2, 0\n"
-    "9: .4byte 0xFFFFFF00\n"
-    "10:\n\t"
-        "mov r6, #1\n\t"
-        "ldr r1, [r5, #0x40]\n\t"
-        "str r1, [r5, #4]\n\t"
-        "mov r0, #0\n\t"
-        "mov r8, r0\n\t"
-        "str r7, [r5, #0x44]\n\t"
-        "ldr r0, 11f\n\t"
-        "add r1, r5, #0\n\t"
-        "add r1, #0x4e\n\t"
-        "ldrb r1, [r1]\n\t"
-        "add r0, r1, r0\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 15f\n\t"
-        "ldr r0, [r5, #0x48]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 12f\n\t"
-        "cmp r1, #0xa\n\t"
-        "bne 13f\n\t"
-    "12:\n\t"
-        "add r1, r5, #0\n\t"
-        "add r1, #0x4d\n\t"
-        "mov r0, #0x7f\n\t"
-        "ldrb r1, [r1]\n\t"
-        "and r0, r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "bne 15f\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800EEF0\n\t"
-        "b 15f\n\t"
-        ".align 2, 0\n"
-    "11: .4byte gStaticData_0816BBC4\n"
-    "13:\n\t"
-        "cmp r1, #0xe\n\t"
-        "bne 15f\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_801070C\n\t"
-        "add r4, r0, #0\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_8010708\n\t"
-        "cmp r4, #0\n\t"
-        "bne 14f\n\t"
-        "cmp r0, #0\n\t"
-        "bne 15f\n\t"
-    "14:\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_800E620\n\t"
-    "15:\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_8010708\n\t"
-        "add r4, r0, #0\n\t"
-        "sub r6, #1\n\t"
-        "cmp r4, #0\n\t"
-        "beq 19f\n\t"
-        "b 18f\n\t"
-    "16:\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x4e\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0xe\n\t"
-        "bne 17f\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_800E620\n\t"
-    "17:\n\t"
-        "add r0, r4, #0\n\t"
-    "18:\n\t"
-        "bl sub_8010708\n\t"
-        "add r4, r0, #0\n\t"
-        "cmp r4, #0\n\t"
-        "bne 16b\n\t"
-    "19:\n\t"
-        "ldr r1, [r5]\n\t"
-        "cmp r6, #0\n\t"
-        "bne 6b\n\t"
-    "20:\n\t"
-        "ldr r0, [r5, #4]\n\t"
-        "add r0, r8\n\t"
-        "str r1, [r5]\n\t"
-        "str r0, [r5, #4]\n\t"
-        "str r7, [r5, #0x44]\n\t"
-        "cmp r7, #0\n\t"
-        "bne 21f\n\t"
-        "mov r1, sb\n\t"
-        "strb r7, [r1]\n\t"
-        "b 23f\n\t"
-    "21:\n\t"
-        "mov r2, sb\n\t"
-        "ldrb r1, [r2]\n\t"
-        "add r1, #1\n\t"
-        "strb r1, [r2]\n\t"
-        "lsl r0, r1, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "bne 22f\n\t"
-        "add r0, r1, #1\n\t"
-        "strb r0, [r2]\n\t"
-    "22:\n\t"
-        "mov r1, sb\n\t"
-        "mov r0, #0\n\t"
-        "ldrsb r0, [r1, r0]\n\t"
-        "cmp r0, #5\n\t"
-        "ble 23f\n\t"
-        "mov r0, #5\n\t"
-        "strb r0, [r1]\n\t"
-    "23:\n\t"
-        "pop {r3, r4}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-    );
+    s32 remaining = self->unk_44;
+    s32 speed;
+    s32 acc;
+    s32 t;
+
+    if (remaining == 0)
+        return;
+    gUnknown_030012B0 = 1;
+    speed = self->unk_4C;
+    if (speed == 0)
+        speed = 1;
+    acc = 0;
+    t = self->x;
+    if (speed < 0)
+    {
+        do
+        {
+            acc -= 0x100;
+            remaining += 0x100;
+            speed++;
+        } while (speed != 0);
+    }
+    else
+    {
+        do
+        {
+            if (remaining > 0)
+            {
+                if (PHYS_PLAYER->ringLocked == 1)
+                {
+                    acc += 0x40;
+                    remaining -= 0x40;
+                    speed--;
+                }
+                else
+                {
+                    acc += 0x100;
+                    remaining -= 0x100;
+                    speed--;
+                }
+            }
+            else
+            {
+                struct phys_obj *n;
+                u8 kind;
+
+                speed = 1;
+                t = self->unk_40;
+                self->y = t;
+                acc = 0;
+                self->unk_44 = remaining;
+                if (gStaticData_0816BBC4[kind = self->kind])
+                {
+                    if (self->u48.n != 0 || kind == 10)
+                    {
+                        if ((self->state & 0x7f) == 0)
+                            sub_800EEF0(self, 0);
+                    }
+                    else if (kind == 0xe)
+                    {
+                        struct phys_obj *next = sub_801070C(self);
+                        struct phys_obj *prev = sub_8010708(self);
+
+                        if (next != NULL || prev == NULL)
+                            sub_800E620(self);
+                    }
+                }
+                n = sub_8010708(self);
+                speed--;
+                if (n != NULL)
+                {
+                    n = sub_8010708(n);
+                    while (n != NULL)
+                    {
+                        if (n->kind == 0xe)
+                            sub_800E620(n);
+                        n = sub_8010708(n);
+                    }
+                }
+            }
+            t = self->x;
+        } while (speed != 0);
+    }
+    {
+        s32 y = self->y + acc;
+
+        self->x = t;
+        self->y = y;
+    }
+    self->unk_44 = remaining;
+    if (remaining == 0)
+        self->unk_4C = 0;
+    else
+    {
+        if (++self->unk_4C == 0)
+            ++self->unk_4C;
+        if (self->unk_4C > 5)
+            self->unk_4C = 5;
+    }
 }
 /* Trailing byte-padding mismatch fix: the function body is 342 bytes
  * (not 4-aligned), and the ROM pads the 2-byte gap before the next
