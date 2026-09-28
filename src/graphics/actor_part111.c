@@ -3,11 +3,10 @@
 /* GitHub issue #9/#10, dedicated deep-investigation session:
  * `sub_800AFF4` (0x0800AFF4-0x0800B270), the second function in the
  * `sub_800AC2C`-through-`sub_800AFF4` raw span `tools/report_units.py`
- * tracked as parked (`base_object=None`). `sub_800AC2C` itself (the
- * 38-case player action-state jump-table dispatcher directly above
- * this function) is left untouched - same standing exclusion as
- * `sub_8018008`, issue #22 - real bytes for it stay in
- * `asm/code_3_2_16_ac2c.s`, now trimmed to end right after it.
+ * tracked as parked (`base_object=None`). `sub_800AC2C` (the 38-case
+ * event dispatcher right before it) was moved here from
+ * `asm/code_3_2_16_ac2c.s` as real C in the issue #9 raw-asm pass; see
+ * its own comment below.
  *
  * `docs/rom_map.md`'s "eight more core reads" passage had already
  * flagged this function's shape from one angle ("reaches [the 28-byte-
@@ -112,6 +111,261 @@
  * once linked). See docs/matching/issue-9-10-0x0800aff4-graphics.md
  * for the full write-up. */
 
+#include "actor_self.h"
+
+ACTOR_CALL_VIA_ALIASES
+
+struct ac2c_pos {
+    s32 x;
+    s32 y;
+};
+
+struct ac2c_method {
+    s16 thisOffset;
+    u8 unk_02[2];
+    void *fn;
+};
+
+struct ac2c_listener {
+    u8 unk_00[0xc];
+    u8 *vtable;                 // 0x0C
+};
+
+struct ac2c_child {
+    s32 x;                      // 0x00
+    s32 y;                      // 0x04
+    u8 unk_08[0x20];
+    u32 unk_28_0:4;             // 0x28
+    u32 mirrorX:1;
+    u32 unk_28_5:3;
+};
+
+struct ac2c_self {
+    s32 x;                      // 0x00
+    s32 y;                      // 0x04
+    u8 unk_08[4];
+    u8 flags;                   // 0x0C - bit 6: can be hit
+    u8 unk_0D[0x37];
+    struct ac2c_listener *listener; // 0x44
+    u8 unk_48[0xc];
+    s32 unk_54;                 // 0x54
+    s32 unk_58;                 // 0x58
+    s32 unk_5c;                 // 0x5C
+    u8 unk_60[0x2c];
+    u32 deadline;               // 0x8C
+    u8 unk_90[0x20];
+    struct ac2c_child *child;   // 0xB0
+    s32 histIdx;                // 0xB4
+    struct ac2c_pos hist[8];    // 0xB8
+};
+
+struct orbit_game {
+    u8 unk_00[2];
+    u8 flags2;                  // 0x02
+    u8 unk_03[0x75];
+    s32 mode;                   // 0x78
+    u8 unk_7C[0x10];
+    u8 unk_8c;                  // 0x8C
+};
+
+struct ac2c_player {
+    u8 unk_00[0x88];
+    u8 unk_88;                  // 0x88
+};
+
+typedef void (*ac2c_fn3)(void *self, s32 a, s32 b, s32 c);
+
+extern struct orbit_game *gUnknown_030012C0;
+extern void *gUnknown_030012BC;
+extern struct ac2c_player *gUnknown_030012D8;
+extern void *gUnknown_030012E4;
+extern void *gUnknown_03001318;
+extern u32 gUnknown_0300082C;
+extern u8 *sub_8023404(void *game);
+extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
+extern void sub_80241A4(void);
+extern void sub_8028504(void *arg0);
+extern void sub_8022EA8(void *game, s32 n);
+extern void sub_802352C(void *game);
+extern void sub_8023510(void *game);
+extern void sub_8022D50(void *game);
+extern void sub_8023224(void *game);
+extern void sub_80232E4(void *game);
+extern void sub_80231EC(void *game, s32 mode);
+extern void *sub_8025BAC(void *pool, s32 a, s32 kind, s32 x, s32 y, s32 mirror);
+
+#define NOTIFY(self, a, b, c)                                                  \
+    if (1) {                                                                   \
+        struct ac2c_listener *_l = (self)->listener;                           \
+        struct ac2c_method *_m = (struct ac2c_method *)(_l->vtable + 0x10);    \
+        ((ac2c_fn3)_m->fn)((u8 *)_l + _m->thisOffset, (a), (b), (c));          \
+    } else (void)0
+
+static inline s32 Ac2cArmed(struct ac2c_self *self)
+{
+    s32 armed = 0;
+
+    if (self->deadline > gUnknown_0300082C)
+        armed = 1;
+    return armed;
+}
+
+/* Event handler of the player-side object: `code` selects the event
+ * (1-38). Hits (1-10) start a 90-frame invulnerability window, drop the
+ * game mode by one, play two sounds, forward event 0xB to `listener`
+ * and spawn a star burst at the child; events 29-34 play sfx 0x1F and
+ * set a bit in the game's flag bytes; 26 resets the position history
+ * and may call sub_8023224; the rest forward `code` to `listener`'s
+ * method at vtable+0x10, some after clearing +0x54..+0x5C.
+ *
+ * Real C under old_agbcc (issue #9 raw-asm pass). The case bodies are in
+ * the ROM's block order. Mode 0 sits in the else branch so it is laid
+ * out last. The star-burst arguments go through locals so the pool
+ * pointer is loaded after them. The ROM reloads the game mode after the
+ * listener call and never uses it; only a volatile read reproduces that
+ * load. */
+void sub_800AC2C(struct ac2c_self *self, s32 a, s32 code, s32 c)
+{
+    switch (code) {
+    case 27:
+        *sub_8023404(gUnknown_030012C0) |= 1;
+        PlaySfx(gUnknown_030012BC, 0x1c, 0x100);
+        break;
+    case 18:
+        sub_80241A4();
+        sub_8028504(gUnknown_03001318);
+        break;
+    case 17:
+        {
+            struct orbit_game *game = gUnknown_030012C0;
+
+            if (game->unk_8c)
+                sub_8022EA8(game, 100);
+        }
+        NOTIFY(self, a, code, c);
+        sub_8028504(gUnknown_03001318);
+        break;
+    case 15:
+        sub_802352C(gUnknown_030012C0);
+        NOTIFY(self, a, code, c);
+        break;
+    case 16:
+        sub_8023510(gUnknown_030012C0);
+        NOTIFY(self, a, code, c);
+        break;
+    case 28:
+        if (gUnknown_030012C0->mode == 3)
+            self->deadline = 0;
+        PlaySfx(gUnknown_030012BC, 0x18, 0x100);
+        sub_8022D50(gUnknown_030012C0);
+        break;
+    case 29:
+        PlaySfx(gUnknown_030012BC, 0x1f, 0x100);
+        *sub_8023404(gUnknown_030012C0) |= 2;
+        break;
+    case 30:
+        PlaySfx(gUnknown_030012BC, 0x1f, 0x100);
+        *sub_8023404(gUnknown_030012C0) |= 4;
+        break;
+    case 34:
+        PlaySfx(gUnknown_030012BC, 0x1f, 0x100);
+        gUnknown_030012C0->flags2 |= 2;
+        break;
+    case 32:
+        PlaySfx(gUnknown_030012BC, 0x1f, 0x100);
+        gUnknown_030012C0->flags2 |= 4;
+        break;
+    case 31:
+        PlaySfx(gUnknown_030012BC, 0x1f, 0x100);
+        gUnknown_030012C0->flags2 |= 1;
+        break;
+    case 33:
+        PlaySfx(gUnknown_030012BC, 0x1f, 0x100);
+        gUnknown_030012C0->flags2 |= 8;
+        break;
+    case 35:
+    case 36:
+    case 37:
+    case 38:
+        sub_80241A4();
+        break;
+    case 26:
+        if (gUnknown_030012C0->mode == 0) {
+            struct ac2c_pos *h = self->hist;
+            s32 i;
+
+            for (i = 7; i >= 0; i--)
+                *h++ = *(struct ac2c_pos *)self;
+        }
+        {
+            s32 mode = gUnknown_030012C0->mode;
+
+            if ((mode <= 2 && gUnknown_030012D8->unk_88 != 1) || mode <= 1)
+                sub_8023224(gUnknown_030012C0);
+        }
+        if (gUnknown_030012C0->mode == 3)
+            self->deadline = gUnknown_0300082C + 1200;
+        break;
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+    case 7:
+    case 8:
+    case 9:
+    case 10:
+        if ((self->flags >> 6) & 1) {
+            if (!Ac2cArmed(self)) {
+                struct orbit_game *game = gUnknown_030012C0;
+
+                if (game->mode != 0) {
+                    if (game->mode <= 2) {
+                        struct ac2c_child *child;
+                        s32 x, y, m;
+
+                        self->deadline = gUnknown_0300082C + 90;
+                        sub_80231EC(game, game->mode - 1);
+                        PlaySfx(gUnknown_030012BC, 0, 0x100);
+                        PlaySfx(gUnknown_030012BC, 0x1b, 0x100);
+                        NOTIFY(self, a, 0xb, c);
+                        /* The ROM reloads the mode here and never uses it. */
+                        (void)*(volatile s32 *)&gUnknown_030012C0->mode;
+                        child = self->child;
+                        x = child->x >> 8;
+                        y = child->y >> 8;
+                        m = child->mirrorX;
+                        sub_8025BAC(gUnknown_030012E4, 0x22, 3, x, y, m);
+                    }
+                } else {
+                    sub_80232E4(game);
+                    NOTIFY(self, a, code, c);
+                }
+            }
+        }
+        break;
+    case 23:
+    case 24:
+        self->unk_54 = 0;
+        self->unk_58 = 0;
+        self->unk_5c = 0;
+        NOTIFY(self, a, code, c);
+        break;
+    case 12:
+        NOTIFY(self, a, code, c);
+        break;
+    case 13:
+    case 14:
+    case 25:
+        self->unk_54 = 0;
+        self->unk_58 = 0;
+        self->unk_5c = 0;
+        NOTIFY(self, a, code, c);
+        break;
+    }
+}
+
 #if NON_MATCHING
 /* C draft (issue #9-#11 NAKED retry, old_agbcc): same shape as the ROM
  * but not converged (624 bytes vs 636) - the ROM keeps `self` in r7
@@ -145,19 +399,11 @@ struct orbit_self {
     struct orbit_pos hist[8];   // 0xB8
 };
 
-struct orbit_game {
-    u8 unk_00[0x78];
-    s32 mode;                   // 0x78
-};
-
-extern struct orbit_game *gUnknown_030012C0;
-extern u32 gUnknown_0300082C;
 extern s32 gUnknown_03000818;
 extern s32 gUnknown_0300081C;
 extern void *gUnknown_030012CC;
 extern s16 gStaticData_0816A820[];
 extern s32 sub_8000E1C(s32 max);
-extern void sub_80231EC(void *self, s32 arg);
 extern void sub_8007A84(void *self, void *part);
 extern s32 sub_803AD7C(void *addr, void *fn);
 

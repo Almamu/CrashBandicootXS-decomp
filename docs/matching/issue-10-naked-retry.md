@@ -63,3 +63,7 @@ both pass.
 `sub_800B8DC` is real C under old_agbcc now (`actor_part112.o` joined
 `OLD_AGBCC_OBJS`). `sub_800BD48` is still NAKED with its 21-halfword
 draft. See [big-naked-retry-2.md](big-naked-retry-2.md).
+
+## Later pass (issue #9/#10 raw-asm pass)
+
+`sub_800C940`/`sub_800C97C` are real C. The unused saved register comes from an empty asm clobber, not from `-fprologue-bugfix` (all four compiler/flag combinations give identical code). See [issue-9-raw-asm-pass.md](issue-9-raw-asm-pass.md).

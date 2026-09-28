@@ -294,3 +294,7 @@ orbit tail caches addresses differently. No draft is kept. See [issue-9-naked-re
 ## Later pass (issue #9-#11 NAKED retry)
 
 `sub_800AFF4` now has an old_agbcc C draft under `NON_MATCHING` (not converged: `self` lands in r6 instead of r7 and it spills one slot too many). Still NAKED. See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).
+
+## Later pass (issue #9/#10 raw-asm pass)
+
+`sub_800AFF4` is still NAKED. Its file now builds with old_agbcc (for `sub_800AC2C`), and the draft is 256 halfwords off there. See [issue-9-raw-asm-pass.md](issue-9-raw-asm-pass.md).

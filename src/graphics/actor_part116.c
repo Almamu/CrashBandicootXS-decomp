@@ -62,12 +62,7 @@
  * which leaves r1 for the target. The phase bias goes through an inline
  * parameter (Wave) to keep the ROM's `phase + 0xFFFFFF00` literal
  * instead of a folded `+ 0x100`.
- *
- * sub_800C940 (10 hw) / sub_800C97C (27 hw, 8 bytes short) are still
- * NAKED; the drafts are under NON_MATCHING. The ROM saves a callee-saved
- * register it never uses (r5 in C940 via a 4-register push, r8 in C97C
- * - with r7 skipped, possibly a register pair whose r7 half agbcc drops
- * from the push), and swaps the target/table registers. */
+ */
 #include "part_ctrl.h"
 
 extern s16 gStaticData_0816A820[];
@@ -93,99 +88,43 @@ void sub_800C8F8(struct part_ctrl *self)
     target->x = self->baseX + v;
 }
 
-#if NON_MATCHING
+/* sub_800C940 and sub_800C97C are real C (issue #10 retry). The ROM
+ * saves a callee-saved register neither body uses (r5 in C940, r8 in
+ * C97C). -fprologue-bugfix is not the cause: agbcc with or without it
+ * and old_agbcc all emit the same code for these. What reproduces it is
+ * an empty asm clobbering that register, which marks it live without
+ * emitting code. The other pieces:
+ * - C940: `target` pinned to r3 and the -0x100 bias created in r6 through
+ *   a constant-init asm (brief item 10), which keeps it from being folded
+ *   and loaded early.
+ * - C97C: `table` pinned to r6, which puts `target` in r5 as in the ROM. */
 void sub_800C940(struct part_ctrl *self)
 {
-    struct ctrl_target *target = self->target;
+    register struct ctrl_target *target asm("r3") = self->target;
     s16 *table = gStaticData_0816A820;
+    u32 t;
+    s32 ph;
+    register s32 k asm("r6");
 
-    target->y = self->baseY + Wave(table, gUnknown_0300082C >> 1, self->phase - 0x100) * self->amplitude;
+    /* Empty: marks r5 as used so the prologue saves it, as in the ROM. */
+    asm("" : : : "r5");
+    t = gUnknown_0300082C >> 1;
+    ph = self->phase;
+    /* Emits only the `ldr r6, =0xFFFFFF00`; see above. */
+    asm("" : "=r"(k) : "0"(-0x100));
+    target->y = self->baseY + Wave(table, t, ph + k) * self->amplitude;
 }
 
 void sub_800C97C(struct part_ctrl *self)
 {
     struct ctrl_target *target = self->target;
-    s16 *table = gStaticData_0816A820;
+    register s16 *table asm("r6") = gStaticData_0816A820;
     s32 t = sub_8037E54(gUnknown_0300082C << 8, self->period);
 
+    /* Empty: marks r8 as used so the prologue saves it, as in the ROM. */
+    asm("" : : : "r8");
     target->y = self->baseY + Wave(table, t, self->phase - 0x100) * self->amplitude;
 }
-#else
-/* Y-axis sibling of `sub_800C8F8` above, but *without* the
- * `sub_8037E54` call - see the family doc comment above. */
-NAKED void sub_800C940(void *self)
-{
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "ldr r3, [r0, #0x70]\n\t"
-        "ldr r4, =gStaticData_0816A820\n\t"
-        "ldr r1, =gUnknown_0300082C\n\t"
-        "ldr r1, [r1]\n\t"
-        "lsr r1, r1, #1\n\t"
-        "ldr r2, [r0, #0x40]\n\t"
-        "ldr r6, =0xFFFFFF00\n\t"
-        "add r2, r2, r6\n\t"
-        "sub r1, r1, r2\n\t"
-        "mov r2, #0xff\n\t"
-        "and r1, r2\n\t"
-        "lsl r1, r1, #1\n\t"
-        "add r1, r1, r4\n\t"
-        "mov r4, #0\n\t"
-        "ldrsh r2, [r1, r4]\n\t"
-        "ldr r1, [r0, #0x44]\n\t"
-        "mul r1, r2, r1\n\t"
-        "ldr r0, [r0, #0x64]\n\t"
-        "add r0, r0, r1\n\t"
-        "str r0, [r3, #4]\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".pool"
-    );
-}
-
-/* Y-axis sibling of `sub_800C8F8` above, *with* the `sub_8037E54`
- * call (same phase derivation as `sub_800C8F8`, but writing owner's Y
- * axis / `self->0x64` base like `sub_800C940`) - see the family doc
- * comment above. */
-NAKED void sub_800C97C(void *self)
-{
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "mov r6, r8\n\t"
-        "push {r6}\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r5, [r4, #0x70]\n\t"
-        "ldr r6, =gStaticData_0816A820\n\t"
-        "ldr r0, =gUnknown_0300082C\n\t"
-        "ldr r0, [r0]\n\t"
-        "lsl r0, r0, #8\n\t"
-        "ldr r1, [r4, #0x3c]\n\t"
-        "bl sub_8037E54\n\t"
-        "ldr r1, [r4, #0x40]\n\t"
-        "ldr r2, =0xFFFFFF00\n\t"
-        "add r1, r1, r2\n\t"
-        "sub r0, r0, r1\n\t"
-        "mov r1, #0xff\n\t"
-        "and r0, r1\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r0, r0, r6\n\t"
-        "mov r2, #0\n\t"
-        "ldrsh r1, [r0, r2]\n\t"
-        "ldr r0, [r4, #0x44]\n\t"
-        "mul r1, r0, r1\n\t"
-        "ldr r0, [r4, #0x64]\n\t"
-        "add r0, r0, r1\n\t"
-        "str r0, [r5, #4]\n\t"
-        "pop {r3}\n\t"
-        "mov r8, r3\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".pool"
-    );
-}
-#endif
 
 /* `sub_800B8DC` state 18's floating-popup spawner
  * (`sub_800C9C8(0x1D, 0, 0, 0x2B, 0, owner)`, per the Phase 1 doc) -

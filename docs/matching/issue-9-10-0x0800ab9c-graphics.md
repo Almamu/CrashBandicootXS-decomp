@@ -254,3 +254,7 @@ function had to be rechecked.
   (`flags0C`, `unk_24`, the `+0x105` latch and a `{u32; u8}` pair at
   `+0x108`). The pair's shared base comes from storing through a
   `struct ab9c_link *`.
+
+## Later pass (issue #9/#10 raw-asm pass)
+
+`sub_800AC2C` now matches as real C under old_agbcc in `actor_part111.c` (on `OLD_AGBCC_OBJS`), and `asm/code_3_2_16_ac2c.s` is gone. See [issue-9-raw-asm-pass.md](issue-9-raw-asm-pass.md).
