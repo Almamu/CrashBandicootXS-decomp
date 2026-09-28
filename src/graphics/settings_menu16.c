@@ -34,7 +34,10 @@ extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
  * Inline-argument-order pass: `r6 = r7; r7 += 4` is postreload move2add
  * on fresh 0x110/0x114 constant loads, so the second half's offsets
  * must not be CSE'd with the first half's 0x110. `do { } while (0)`
- * draws and per-field `"=r"/"0"` offsets didn't do that (56+ hw). */
+ * draws and per-field `"=r"/"0"` offsets didn't do that (56+ hw).
+ * Last-six pass: `asm volatile` escapes on the second half's source or
+ * destination manager (or both), an escaped 0x110 offset and an
+ * escaped `&posX` pair were all 67-75 hw. */
 #if NON_MATCHING
 static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
 {

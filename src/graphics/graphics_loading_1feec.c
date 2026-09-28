@@ -229,7 +229,13 @@ void sub_80204EC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * Inline-argument-order pass: in the ROM, part+0x28 is in r3 and is
  * caller-saved around sub_8008E94 (`str r3,[sp]` before the call).
  * Zero-length r4/r5 holds at every statement boundary put arg3/hdr+0x84
- * in r4/r5, but part+0x28 then goes to r8, not r3 (80+ hw). */
+ * in r4/r5, but part+0x28 then goes to r8, not r3 (80+ hw).
+ * Last-six pass (docs/matching/last-six-naked-retry.md): global.c only
+ * caller-saves a pseudo when no callee-saved register is free when its
+ * turn comes. In the draft part+0x28 (6 refs over 49 insns) is
+ * allocated before arg3 (3/63), &gUnknown_030012B4 (3/94, then left
+ * unallocated and rematerialized) and -0x11 (3/86), so it gets r5. An
+ * escaped `&gUnknown_030012B4` local gets sl but is 88 hw. */
 #if NON_MATCHING
 void sub_802062C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
