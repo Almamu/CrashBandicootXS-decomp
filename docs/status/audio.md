@@ -121,16 +121,47 @@ for the full write-up, GitHub issue #68):
   "Update" section of
   [`docs/matching/issue-68-channel-bind-envelope-note.md`](../matching/issue-68-channel-bind-envelope-note.md)
 
-7 of this chunk's 21 functions are matched as real C; two further
-passes (see [`docs/matching/issue-68-0x08039818-audio.md`](../matching/issue-68-0x08039818-audio.md)'s
-updated write-up and
-[`docs/matching/issue-68-note-trigger-trampoline.md`](../matching/issue-68-note-trigger-trampoline.md))
-parked the remaining 14 as byte-verified NAKED transcriptions - see
-"Parked - NAKED asm transcription(s)" below. Most hit the same
-many-register (`r8`/`sb`/`sl`) gcc-2.9 allocation ceiling already
-documented for `sub_8038538`'s cluster; the rest (`sub_803A278` family,
-`sub_8039B44`/`sub_8039E50`) are entangled with a neighboring function
-via a manual return-address-trampoline idiom. None left raw.
+7 of this chunk's 21 functions were matched as real C in the first
+passes; the rest were parked as NAKED transcriptions (see the history
+below). A later toolchain retry
+([`docs/matching/gax-toolchain-retry.md`](../matching/gax-toolchain-retry.md))
+matched most of them as real C - see the next section.
+
+### Matched in the GAX toolchain retry (issues #66-#68)
+
+GAX2 turned out to be ordinary current-agbcc output (not old_agbcc, not
+ARM); what had parked these functions was mostly heavily register-pinned
+drafts. Written plainly against the handler/channel structs now in
+`include/audio.h` they match outright. See
+[`docs/matching/gax-toolchain-retry.md`](../matching/gax-toolchain-retry.md)
+for the per-function notes.
+
+- `src/audio/counter_selector_icons.c` - `sub_80372BC` (counter widget
+  digit-icon draw loop)
+- `src/audio/gax_zero_fill.c` - `sub_8037F3C` (split out of
+  `src/util/math_div64_util.c`, unchanged C)
+- `src/audio/gax_channel_pool_alloc.c` - `sub_8038A1C` (builds the SFX
+  player out of the work buffer)
+- `src/audio/gax_voice_steal.c` - `sub_8038C88` (per-frame mixer tick),
+  `sub_8038DC0` (UNUSED voice steal), `sub_8038E74` (SFX voice allocator)
+- `src/audio/gax_swi.c` - `sub_80392C4` (HuffUnComp wrapper; the ROM's
+  missing r7 save is agbcc's own r7-pin bug, reproduced deliberately)
+- `src/audio/gax_sound_handler_channel_init.c` - `sub_8039518`
+- `src/audio/gax_sound_handler_channel_play.c` - `sub_80395A4`,
+  `sub_8039658` (pattern-row decoder)
+- `src/audio/gax_channel_note_scheduler.c` - `sub_80398DC` (instrument
+  sequence stepper)
+- `src/audio/gax_channel_envelope_tick.c` - `sub_8039AA4`
+- `src/audio/gax_note_lookup.c` - `sub_8039F30`
+- `src/audio/gax_channel_pos_sweep.c` - `sub_803A03C`
+- `src/audio/gax_channel_note_cut_driver.c` - `sub_803A158`
+- `src/audio/gax_unknownc_play.c` - `sub_803A278`, `sub_803A2C8`,
+  `sub_803A324`, `sub_803A5A8` (the Thumb-to-ARM call is GAX2's own
+  inline-asm idiom, `GAX_CALL_ARM`; `sub_803A318`/`sub_803A608` were
+  only its return points, not functions)
+- `src/util/math_div64_util.c` - `sub_8037648`/`sub_8037A7C`/
+  `sub_8037ECC` (`__divdi3`/`__udivdi3`/`__muldi3`, category `util` -
+  see [docs/status/util.md](./util.md))
 
 ## Parked
 
@@ -142,15 +173,6 @@ See docs/matching.md for `PlaySfx`'s remaining gap.
 
 ## Parked - NAKED asm transcription (byte-correct, not decompiled C)
 
-- **`sub_80372BC`/`sub_8037388`** (`src/audio/counter_selector_icons.c`,
-  the counter widget's per-frame icon draw loop and its one-time
-  tile-cache init helper) - fully understood, but hit the same
-  many-register gcc-2.9 allocation ceiling already documented for
-  `sub_8006600` (`src/graphics/oam_count.c`) and `sub_80062A8`
-  (`src/graphics/settings_menu14.c`, whose tail is this same
-  `sub_803AD7C`/`sub_8006C58`/constant-reuse idiom `sub_8037388`'s tail
-  uses). Byte-verified NAKED transcriptions - see
-  [docs/matching/issue-67-counter-selector-icons.md](../matching/issue-67-counter-selector-icons.md).
 - **`sub_80019F8`** (`src/audio/audio_context.c`, ambient-sfx-channel
   play-request driver) - a full C reconstruction closed the `u8`
   stack-parameter byte-load gap but left a base-volume field-address
@@ -159,168 +181,37 @@ See docs/matching.md for `PlaySfx`'s remaining gap.
   real decompiled C, so tracked here as parked, not matched. See
   [docs/matching/issue-3-overlay-ui-audio-wrapper.md](../matching/issue-3-overlay-ui-audio-wrapper.md)
   for the original gap analysis this closed.
-- **`sub_8039518`** (`src/audio/gax_sound_handler_channel_init.c`, the
-  "Channel" SoundHandler type's init_fn) - a real C reconstruction
-  landed the division call's previously-unreproducible `ldr rX,=0`/
-  `ldr rX,=1` literal-pool loads (passing them as one real `(s64)1 <<
-  32` constant), but two further gaps (an unavoidable extra
-  defensive-copy instruction from pinning the division's second
-  argument to `r2`, and the ROM's single shared 4-word literal pool
-  splitting into two once any of that call site becomes hand-placed
-  asm) resisted every C-level fix. Byte-verified NAKED transcription.
-- **`sub_80395A4`/`sub_8039658`** (`src/audio/gax_sound_handler_channel_play.c`,
-  the "Channel" SoundHandler type's play_fn and its direct callee) -
-  `sub_80395A4`'s entire body matched in isolation except its
-  3-instruction parameter-homing prologue order, which this compiler
-  never reproduces (with or without register pins, and `chanArg` can't
-  be pinned to `r7` to force the issue without hitting this toolchain's
-  confirmed r7-pin bug); `sub_8039658` hits the same many-register
-  (`r8`/`sb`) allocation ceiling as `sub_8038538`'s cluster below. Both
-  byte-verified NAKED transcriptions - see
-  [docs/matching/issue-67-68-channel-init-play.md](../matching/issue-67-68-channel-init-play.md)
-  for both functions' full write-up.
-- **`sub_8038240`** (`src/audio/gax_channel_table_alloc.c`, core GAX2
-  channel-table allocator/wiring over `gUnknown_03001630`) - fully
-  understood, but its prologue keeps all three of `r8`/`sb`/`sl` live as
-  genuine scratch across several nested loops, the same many-register
-  gcc-2.9 allocation ceiling as `sub_8038538` below. Byte-verified NAKED
-  transcription.
+- **`sub_8037388`** (`src/audio/counter_selector_icons.c`, the counter
+  widget's tile-cache/icon-manager init) - a draft under
+  `#if NON_MATCHING` matches through the tile-copy loop; the tail's
+  field-offset constants get CSE'd into callee-saved registers across
+  the calls, where the ROM rematerializes them after every call.
+- **`sub_8038240`** (`src/audio/gax_channel_table_alloc.c`, instantiates
+  and links a player's handlers) - draft under `#if NON_MATCHING`; the
+  carving loop's register/spill assignment differs and cascades.
 - **`sub_8038538`** (`src/audio/gax_playstart.c`, the play-start/init
-  entry point, docs/audio.md) - fully understood, but its prologue keeps
-  `r8`/`sb`/`sl` live across the whole function (a running priority-
-  maximum accumulator in `r8` spanning two nested voice-scan loops, plus
-  `sb`/`sl` holding intermediate bank/table pointers across several
-  calls) - the same many-register ceiling already documented for
-  `sub_8006600`/`sub_80372BC`. Byte-verified NAKED transcription.
-- **`sub_8038A1C`** (`src/audio/gax_channel_pool_alloc.c`, per-channel
-  voice-pool allocator) - fully understood, but needs `r8`/`sb` as
-  genuine scratch across a multi-level pointer-chase and two calls, the
-  same allocation ceiling as its neighbors above. Byte-verified NAKED
-  transcription.
+  entry point) - close draft under `#if NON_MATCHING` (same control
+  flow, buffer carving, literal pool); agbcc swaps the r8/r9 homes of
+  the format pointer and the max tap rate, which cascades.
+- **`sub_8039B44`** (`src/audio/gax_note_trigger.c`, the per-channel
+  mixer; `sub_8039E50` is only the ARM call's return point inside it) -
+  the call is no longer a blocker (`GAX_CALL_ARM_R`); a complete draft
+  is kept under `#if NON_MATCHING`, register allocation differs
+  throughout.
 
-  See [docs/matching/issue-66-67-gax-playstart-cluster.md](../matching/issue-66-67-gax-playstart-cluster.md)
-  for all three functions' full write-up, plus this pass's two real
-  matches (`sub_80384DC`/`sub_8038B68`, listed under "Matched" above).
-- **`sub_8038C88`** (`src/audio/gax_voice_steal.c`, per-frame mixer
-  tick) - fully understood (zero-fills a per-song scratch buffer,
-  mirrors a clamped byte into the current voice, and - when
-  `curChannelIdx == 1` and a song flag is set - resets it to 0 and
-  re-links every channel row's voice pointer), not attempted as real C
-  this pass - a deeply nested `p->channels[curChannelIdx]` chase
-  repeated 5 times, deprioritized versus `sub_8038DC0`'s real-C attempt
-  below. Byte-verified NAKED transcription.
-- **`sub_8038DC0`** (`src/audio/gax_voice_steal.c`, UNUSED - no caller
-  anywhere in the ROM) - a standalone near-twin of `sub_8038E74`'s
-  unconditional lowest-priority scan. Extensively attempted as real C
-  (several reconstructions came very close, including matching the
-  ROM's own apparent uninitialized-`bestIdx`-when-empty behavior), but
-  no version landed the ROM's exact `r4`/`r5`/`r6`/`r7` register
-  combination at once - including an explicit `register ... asm("r7")`
-  pin on the parameter, which the allocator overrode with an unrelated
-  value instead of honoring (confirmed by direct byte comparison
-  against the ROM, not assumed). Byte-verified NAKED transcription.
-- **`sub_8038E74`** (`src/audio/gax_voice_steal.c`, the voice-stealing
-  mixer allocator, docs/audio.md - one of `PlaySfx`'s two direct
-  callees) - fully understood, but keeps `self` in `r8` and a saved
-  `&gUnknown_03001630` copy in `ip` live across the whole function
-  including two scan loops, the same many-register ceiling as
-  `sub_8038240`/`sub_8038538`/`sub_8038A1C` above. Byte-verified NAKED
-  transcription.
+`sub_8037E54` (`__udivsi3`, `src/util/math_div64_util.c`) also stays
+NAKED - it's lib1funcs.asm's hand-written routine, not compiler output
+(see [docs/status/util.md](./util.md)).
 
-  See [docs/matching/issue-67-gax-voice-steal.md](../matching/issue-67-gax-voice-steal.md)
-  for all three functions' full write-up.
-- **`sub_80398DC`** (`src/audio/gax_channel_note_scheduler.c`, per-tick
-  pattern-note/priority-steal scheduler with a 15-way command jump table)
-  - keeps `r8`/`sb` live as genuine scratch across the whole priority-
-  steal block and the jump table, the same many-register ceiling
-  documented throughout this region. Byte-verified NAKED transcription.
-- **`sub_8039AA4`** (`src/audio/gax_channel_envelope_tick.c`, per-tick
-  envelope/portamento-pitch update) - a real C reconstruction (register-
-  pinning `self` and the clamp temporaries) landed everything except a
-  handful of `ldrsh`-with-non-immediate-offset reads in the portamento
-  tail (same gotcha as `sub_803943C`), whose individual register-pins
-  kept perturbing an earlier, already-correct block's codegen. Byte-
-  verified NAKED transcription.
-- **`sub_8039F30`** (`src/audio/gax_note_lookup.c`, resolves a pattern-
-  note index into an interpolated pitch/volume byte from a sorted
-  breakpoint table) - narrowed to a single residual instruction: every
-  operation/operand/register matches except gcc-2.9's own constant-pool
-  materialization for the `0x8AD0` sentinel, which picks `r2` instead of
-  the ROM's `r0` (confirmed at the level of gcc's own generated
-  intermediate assembly, a genuine codegen limitation, not an
-  unexplored phrasing) - a near-matching C reconstruction is kept
-  in-tree under `#if NON_MATCHING`; see the "Update" section of
-  [`docs/matching/issue-68-channel-bind-envelope-note.md`](../matching/issue-68-channel-bind-envelope-note.md).
-  Byte-verified NAKED transcription remains the default build.
-
-  See [docs/matching/issue-68-channel-bind-envelope-note.md](../matching/issue-68-channel-bind-envelope-note.md)
-  for all four functions' full write-up (none of this particular
-  `0x0803985C`-`0x08039FFC` cluster landed as real C this pass - the
-  `sub_8038FD0` cluster right before it did, in a separate pass, see
-  [docs/matching/issue-67-channel-mute-volume-dma-stop.md](../matching/issue-67-channel-mute-volume-dma-stop.md)).
-- **`sub_803A03C`** (`src/audio/gax_channel_pos_sweep.c`, per-tick
-  ping-pong position sweep) - an 81.3%-matching C reconstruction (the
-  `r8` pin and the `self+0x13` OR-with-0xff idiom both closed; the
-  residual is register-choice/instruction-selection diffs in the
-  repeated columnar-table addressing) is kept in-tree under
-  `#if NON_MATCHING` - see
-  [docs/matching/naked-sub_803a03c-matched.md](../matching/naked-sub_803a03c-matched.md)
-  for the full derivation and what's still open.
-  Byte-verified NAKED transcription (confirmed via direct binary
-  comparison against the ROM's own assembled bytes, not just an
-  instruction listing).
-- **`sub_803A158`** (`src/audio/gax_channel_note_cut_driver.c`,
-  per-tick note-cut/retrigger driver) - a wider near-twin of the
-  matched-but-NAKED `sub_80395A4`'s calling pattern: needs `r8`
-  (caching a field address across several branches) and `sb`/`sl`
-  (preserving two incoming parameters across five separate `bl` calls)
-  all three simultaneously live for most of the function. Byte-verified
-  NAKED transcription.
-- **`sub_803A278`/`sub_803A2C8`/`sub_803A324`/`sub_803A5A8`**
-  (`src/audio/gax_unknownc_play.c`, the "UnknownC" type's `play_fn`
-  (`sub_803A324`) and three of its callees) - all four use a manual
-  return-address-trampoline idiom (`mov r2, pc; adds r2, #5;
-  mov lr, r2; bx r1`) to call an interworked function pointer from
-  Thumb on ARMv4T, which has no `blx reg` - not expressible in portable
-  C at all. `sub_803A2C8`'s trampoline return address lands inside what
-  the ROM's own disassembly labels as a separate function,
-  `sub_803A318` (itself nothing but `sub_803A2C8`'s own epilogue, never
-  called from anywhere in the ROM); `sub_803A5A8`/`sub_803A608` are the
-  same fusion. Both fused pairs are transcribed as one physical NAKED
-  body each (`sub_803A318`/`sub_803A608` still get their own
-  `.thumb_func`/label pair purely so the address carries its ROM name,
-  not as separate callable C functions). `sub_803A324` additionally
-  hits the many-register gcc-2.9 allocation ceiling (confirmed via
-  isolated compile of an earlier real-C attempt). This same
-  translation unit also carries the raw ARM-mode DSP/mixer code block
-  right after it (`gStaticData_0803A630` onward, per docs/audio.md) as
-  an untouched trailing byte transcription, folded in purely because
-  its own start address has no label in `expected/code_3.s` for
-  `tools/report_units.py`'s slicing to target - it is not disassembled
-  as real code at all yet. All four functions byte-verified (confirmed
-  via direct binary comparison against the ROM's own assembled bytes
-  across the full 0x0803A278-0x0803A944 span).
-
-  See [docs/matching/issue-68-0x08039818-audio.md](../matching/issue-68-0x08039818-audio.md)
-  for all eight functions' full write-up.
-- **`sub_8039B44`/`sub_8039E50`** (`src/audio/gax_note_trigger.c`, the
-  per-channel note-trigger routine - issue #68's last raw pair) - the
-  ROM's own compiler split this single logical function into two
-  disassembly labels, glued together by the same manual
-  return-address-trampoline idiom as the `sub_803A278` family above:
-  `sub_8039B44`'s tail computes a return address into `lr` and
-  `bx`-jumps into `sub_8039E50`, whose first instruction is a `nop`
-  (`mov r8, r8`) alignment pad, the same trampoline-landing tell
-  already seen at `sub_803A2C8`/`sub_803A318`. Unlike the rest of this
-  cluster's NAKED entries, this one is a structural gap, not a
-  register-allocation one: the trampoline sits in the middle of the
-  function, so no real-C reconstruction of "the part before"/"the part
-  after" is possible without breaking the hand-computed-PC-offset
-  relationship between the two halves. Byte-verified (confirmed both
-  via direct binary comparison of the isolated assembled object against
-  the ROM's own reassembled original, and via a full clean `make
-  compare`, "La suma coincide") - see
-  [docs/matching/issue-68-note-trigger-trampoline.md](../matching/issue-68-note-trigger-trampoline.md).
+History of the earlier parking notes for the functions matched above:
+[issue-67-counter-selector-icons.md](../matching/issue-67-counter-selector-icons.md),
+[issue-67-68-channel-init-play.md](../matching/issue-67-68-channel-init-play.md),
+[issue-66-67-gax-playstart-cluster.md](../matching/issue-66-67-gax-playstart-cluster.md),
+[issue-67-gax-voice-steal.md](../matching/issue-67-gax-voice-steal.md),
+[issue-68-channel-bind-envelope-note.md](../matching/issue-68-channel-bind-envelope-note.md),
+[naked-sub_803a03c-matched.md](../matching/naked-sub_803a03c-matched.md),
+[issue-68-0x08039818-audio.md](../matching/issue-68-0x08039818-audio.md),
+[issue-68-note-trigger-trampoline.md](../matching/issue-68-note-trigger-trampoline.md).
 
 ## Left raw (not attempted, or attempted and set aside)
 
@@ -329,15 +220,17 @@ Everything else in `asm/code_3.s`'s `0x08037110`-`0x0803B0C4` range
 actually audio-related - see [docs/audio.md](../audio.md)), including,
 from the `0x08037110`-`0x08038538` pass specifically:
 
-- `sub_8037648`/`sub_8037A7C`/`sub_8037E54`/`sub_8037ECC`/`sub_8037F3C` -
-  confirmed *not* GAX2 code at all (per `docs/audio.md`'s own
-  `sub_8037648`/`sub_8037A7C` entries) - a generic 64-bit software
-  division/multiply helper family, now matched/parked under category
-  `util` in `src/util/math_div64_util.c` (issue #66) rather than this
-  page - see [docs/status/util.md](./util.md) and
-  [docs/matching/issue-66-67-math-div64-util.md](../matching/issue-66-67-math-div64-util.md).
-- `sub_8037FC0` - genuine GAX2 mixer/timing internals over
-  `gStaticData_085A6150`; not attempted, issue #66. `sub_8038240`/
+- `sub_8037648`/`sub_8037A7C`/`sub_8037E54`/`sub_8037ECC` - GAX2's
+  bundled libgcc helpers (`__divdi3`/`__udivdi3`/`__udivsi3`/
+  `__muldi3`), matched/parked under category `util` in
+  `src/util/math_div64_util.c` (issue #66) rather than this page - see
+  [docs/status/util.md](./util.md). `sub_8037F3C` (GAX2's zero-fill
+  helper) now lives in `src/audio/gax_zero_fill.c`.
+- `sub_8037FC0` - computes the work-RAM size a GAX2 song header needs
+  (handler instances plus mix/echo buffers); still raw
+  (`asm/code_3_2_20c.s`, issue #66). A first C draft is described in
+  [docs/matching/gax-toolchain-retry.md](../matching/gax-toolchain-retry.md).
+  `sub_8038240`/
   `sub_80384DC` (the rest of issue #66) are now matched/parked - see
   [docs/matching/issue-66-67-gax-playstart-cluster.md](../matching/issue-66-67-gax-playstart-cluster.md).
 

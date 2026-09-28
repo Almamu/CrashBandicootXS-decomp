@@ -115,3 +115,7 @@ crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
 compare` - `crashbandicootxs.gba: La suma coincide`. Unchanged from
 before this investigation; `tools/report_units.py`'s entry for
 `0x08039AA4` stays `base_object=None` (parked, not matched).
+
+## Later pass: GAX toolchain retry
+
+Closed: written plainly against `struct GaxChannelState` with no pins or asm, `sub_8039AA4` matches outright. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).

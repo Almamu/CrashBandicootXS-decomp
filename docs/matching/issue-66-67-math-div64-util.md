@@ -110,3 +110,7 @@ as real C:
 Full clean `rm -rf build && make NON_MATCHING=1 report` followed by
 `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` - `La suma coincide`.
+
+## Later pass: GAX toolchain retry
+
+The non-interworking return was a build flag, not a C gap: built without `-mthumb-interwork` (Makefile `NO_INTERWORK_OBJS`), `sub_8037648`/`sub_8037A7C`/`sub_8037ECC` are gcc 2.x `libgcc2.c`'s own `__divdi3`/`__udivdi3`/`__muldi3` and now match as real C. `sub_8037E54` (`__udivsi3`) is lib1funcs.asm hand-written asm and stays NAKED for good. `sub_8037F3C` moved to `src/audio/gax_zero_fill.c`. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).

@@ -1,202 +1,78 @@
 #include "core.h"
+#include "audio.h"
 
-/* GAX2 per-channel voice-pool allocator, called from sub_8038538 (play-start)
- * and from itself indirectly via the child-init trampoline chain. `self`
- * (arg0) is the same "instrument bank" pointer `sub_8038240` below takes as
- * its own first argument. Reads `gUnknown_03001630->0x184`/`0x188` (a
- * scratch buffer pointer/size pair whose shape isn't modeled), and if the
- * song's own flag word (`songPtr->0xc` bit 0x10) is armed, either shows
- * GAX2's fatal-error screen (when `songPtr->0x38` is also set) and returns,
- * or falls through to zero that scratch buffer (sub_8037F3C) and prime a
- * fresh channel (`curChannelIdx = 1`, `state = 0`), compute how many words
- * of scratch space this channel's slot needs, and - if there's enough left
- * - carve a slice off the buffer and recurse into `sub_8038240` to actually
- * allocate/initialize the channel table, chaining into `sub_803AD7C`'s
- * child-init trampoline on success. On failure (either not enough scratch
- * space, or `sub_8038240` itself reporting failure), falls through to a
- * shared tail that shows the fatal-error screen if the song flags it and
- * returns 0. Object shape not confidently modeled (same situation as the
- * other GAX2_SoundHandler functions in this cluster) - kept as raw offsets
- * throughout.
+/* sub_803AD7C is libgcc's `_call_via_r1` (the mixer's `type->init`). */
+asm(".set _call_via_r1, sub_803AD7C\n");
+
+/* GAX2's fatal-error screen messages. */
+extern const char gStaticData_085A61EC[];
+extern const char gStaticData_085A61F8[];
+extern const char gStaticData_085A61D0[];
+extern const char gStaticData_085A61DC[];
+extern void sub_80392E0(const char *a, const char *b);
+extern void sub_8037F3C(void *dest, s32 count);
+extern u8 sub_8038240(struct GaxHandlerLayout *layout, struct GaxHandlerType **sfx, u32 numSfx, u8 **bufp,
+                      u32 *sizep);
+
+/* Builds player 1 (the sound-effect player) out of the caller-supplied
+ * work buffer (`gUnknown_03001630->workBuf`/`workSize`): refuses (with
+ * GAX2's fatal-error screen, if the song asks for it) when the song's
+ * flag 0x10 is set; otherwise clears the buffer, carves player 1's
+ * handler array plus every handler out of it (`sub_8038240`), links
+ * the song's channels in as the mixer's SFX voices, and runs the
+ * mixer's `init`. Returns 1 on success, 0 (again with the optional
+ * fatal-error screen) if the buffer is too small.
  *
- * Written as NAKED asm, not plain C: this function's prologue
- * (`push {r4-r7,lr}; mov r7,sb; mov r6,r8; push {r6,r7}`) needs both
- * `r8`/`sb` as genuine scratch across several struct/array chases and two
- * calls (`sub_8038240`, `sub_803AD7C`) - the same many-register gcc-2.9
- * allocation ceiling already documented throughout this ROM region for
- * `sub_8038538`'s cluster (docs/status/audio.md), which a NAKED function
- * sidesteps entirely since nothing asks gcc's allocator to decide
- * anything. Mechanical, byte-verified transcription of the ROM's own
- * instructions (translated from the disassembler's unified syntax to this
- * project's established NAKED plain/divided syntax, local labels renumbered
- * per docs/matching/issue-4-sio-settings-sync.md's convention), not an
- * inferred control-flow guess. */
-NAKED u32 sub_8038A1C(void *self)
+ * Was NAKED ("r8/sb allocation ceiling"); written plainly against the
+ * player/handler structs in include/audio.h it matches outright - the
+ * one subtlety is writing the "0" stores as constants (the ROM reuses
+ * the register holding the known-zero flag test for them) - see
+ * docs/matching/gax-toolchain-retry.md. */
+u32 sub_8038A1C(struct GaxHandlerLayout *layout)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sb\n\t"
-        "mov r6, r8\n\t"
-        "push {r6, r7}\n\t"
-        "sub sp, #0xc\n\t"
-        "mov sb, r0\n\t"
-        "ldr r6, L8A1C_8\n\t"
-        "ldr r1, [r6]\n\t"
-        "mov r2, #0xc2\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r0, r1, r2\n\t"
-        "ldr r4, [r0]\n\t"
-        "str r4, [sp, #4]\n\t"
-        "add r2, #4\n\t"
-        "add r0, r1, r2\n\t"
-        "ldr r3, [r0]\n\t"
-        "str r3, [sp, #8]\n\t"
-        "ldr r2, [r1, #4]\n\t"
-        "ldrh r1, [r2, #0xc]\n\t"
-        "mov r0, #0x10\n\t"
-        "and r0, r1\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r7, r0, #0x10\n\t"
-        "cmp r7, #0\n\t"
-        "beq L8A1C_0\n\t"
-        "add r0, r2, #0\n\t"
-        "add r0, #0x38\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq L8A1C_6\n\t"
-        "ldr r0, L8A1C_9\n\t"
-        "ldr r1, L8A1C_10\n\t"
-        "b L8A1C_5\n\t"
-        ".align 2, 0\n\t"
-        "L8A1C_8: .4byte gUnknown_03001630\n\t"
-        "L8A1C_9: .4byte gStaticData_085A61EC\n\t"
-        "L8A1C_10: .4byte gStaticData_085A61F8\n\t"
-        "L8A1C_0:\n\t"
-        "add r0, r4, #0\n\t"
-        "add r1, r3, #0\n\t"
-        "bl sub_8037F3C\n\t"
-        "ldr r3, [r6]\n\t"
-        "str r7, [r3, #0x30]\n\t"
-        "mov r0, #1\n\t"
-        "mov r8, r0\n\t"
-        "str r0, [r3, #0x10]\n\t"
-        "mov r1, sb\n\t"
-        "ldr r2, [r1]\n\t"
-        "ldr r4, [r3, #4]\n\t"
-        "ldr r5, [r4, #0x2c]\n\t"
-        "cmp r5, #0\n\t"
-        "beq L8A1C_1\n\t"
-        "ldrh r0, [r4, #0xe]\n\t"
-        "add r2, r2, r0\n\t"
-        "L8A1C_1:\n\t"
-        "ldr r0, [sp, #4]\n\t"
-        "str r0, [r3, #0xc]\n\t"
-        "lsl r2, r2, #2\n\t"
-        "ldr r1, [sp, #8]\n\t"
-        "cmp r1, r2\n\t"
-        "bhs L8A1C_2\n\t"
-        "mov r2, r8\n\t"
-        "str r2, [r3, #0x30]\n\t"
-        "str r7, [r3, #0x10]\n\t"
-        "b L8A1C_4\n\t"
-        "L8A1C_2:\n\t"
-        "add r0, r0, r2\n\t"
-        "str r0, [sp, #4]\n\t"
-        "sub r0, r1, r2\n\t"
-        "str r0, [sp, #8]\n\t"
-        "ldrh r2, [r4, #0xe]\n\t"
-        "add r0, sp, #8\n\t"
-        "str r0, [sp]\n\t"
-        "mov r0, sb\n\t"
-        "add r1, r5, #0\n\t"
-        "add r3, sp, #4\n\t"
-        "bl sub_8038240\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r1, r0, #0x18\n\t"
-        "cmp r1, #0\n\t"
-        "beq L8A1C_3\n\t"
-        "ldr r2, [r6]\n\t"
-        "ldr r0, [r2, #0x10]\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r3, r2, #0\n\t"
-        "add r3, #8\n\t"
-        "add r0, r3, r0\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldr r0, [r2, #4]\n\t"
-        "ldrh r0, [r0, #0xe]\n\t"
-        "str r0, [r1, #0x14]\n\t"
-        "ldr r0, [r2, #0x10]\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r3, r0\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldr r0, [r2, #0x1c]\n\t"
-        "str r0, [r1, #0x10]\n\t"
-        "ldr r0, [r2, #0x10]\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r3, r3, r0\n\t"
-        "ldr r0, [r3]\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldr r1, [r1]\n\t"
-        "bl sub_803AD7C\n\t"
-        "ldr r0, [r6]\n\t"
-        "ldr r1, [r0, #0x10]\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r0, #8\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0, #4]\n\t"
-        "add r0, #0x20\n\t"
-        "mov r1, r8\n\t"
-        "strb r1, [r0]\n\t"
-        "ldr r0, [r6]\n\t"
-        "ldr r0, [r0, #4]\n\t"
-        "add r0, #0x39\n\t"
-        "strb r7, [r0]\n\t"
-        "ldr r0, [r6]\n\t"
-        "ldr r0, [r0, #4]\n\t"
-        "add r0, #0x3a\n\t"
-        "strb r7, [r0]\n\t"
-        "ldr r0, [r6]\n\t"
-        "add r0, #0x41\n\t"
-        "strb r1, [r0]\n\t"
-        "ldr r0, [r6]\n\t"
-        "mov r2, r8\n\t"
-        "str r2, [r0, #0x30]\n\t"
-        "mov r0, #1\n\t"
-        "b L8A1C_7\n\t"
-        "L8A1C_3:\n\t"
-        "ldr r0, [r6]\n\t"
-        "mov r2, r8\n\t"
-        "str r2, [r0, #0x30]\n\t"
-        "str r1, [r0, #0x10]\n\t"
-        "L8A1C_4:\n\t"
-        "ldr r0, L8A1C_11\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0, #4]\n\t"
-        "add r0, #0x38\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq L8A1C_6\n\t"
-        "ldr r0, L8A1C_12\n\t"
-        "ldr r1, L8A1C_13\n\t"
-        "L8A1C_5:\n\t"
-        "bl sub_80392E0\n\t"
-        "L8A1C_6:\n\t"
-        "mov r0, #0\n\t"
-        "L8A1C_7:\n\t"
-        "add sp, #0xc\n\t"
-        "pop {r3, r4}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n\t"
-        "L8A1C_11: .4byte gUnknown_03001630\n\t"
-        "L8A1C_12: .4byte gStaticData_085A61D0\n\t"
-        "L8A1C_13: .4byte gStaticData_085A61DC\n\t"
-    );
+    u8 *buf = gUnknown_03001630->workBuf;
+    u32 size = gUnknown_03001630->workSize;
+    u16 busy = GAX_SONG()->flags & 0x10;
+    u32 n;
+    struct GaxHandlerType **sfx;
+    struct GaxSongHeader *song;
+
+    if (busy) {
+        if (GAX_SONG()->showErrors)
+            sub_80392E0(gStaticData_085A61EC, gStaticData_085A61F8);
+        return 0;
+    }
+    sub_8037F3C(buf, size);
+    gUnknown_03001630->state = 0;
+    gUnknown_03001630->curChannelIdx = 1;
+    n = layout->count;
+    song = GAX_SONG();
+    sfx = song->sfxTypes;
+    if (sfx)
+        n += song->numSfx;
+    gUnknown_03001630->channels[1] = buf;
+    n *= 4;
+    if (size < n) {
+        gUnknown_03001630->state = 1;
+        gUnknown_03001630->curChannelIdx = 0;
+    } else {
+        buf += n;
+        size -= n;
+        if (sub_8038240(layout, sfx, song->numSfx, &buf, &size)) {
+            GAX_MIXER()->extraChildren = GAX_SONG()->numSfx;
+            GAX_MIXER()->field_10 = gUnknown_03001630->field_1c;
+            GAX_MIXER()->type->init(GAX_MIXER());
+            GAX_INFO()->field_20 = 1;
+            GAX_SONG()->field_39 = 0;
+            GAX_SONG()->field_3a = 0;
+            gUnknown_03001630->field_41 = 1;
+            gUnknown_03001630->state = 1;
+            return 1;
+        }
+        gUnknown_03001630->state = 1;
+        gUnknown_03001630->curChannelIdx = 0;
+    }
+    if (GAX_SONG()->showErrors)
+        sub_80392E0(gStaticData_085A61D0, gStaticData_085A61DC);
+    return 0;
 }

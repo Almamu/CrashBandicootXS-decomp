@@ -1,28 +1,27 @@
 #include "core.h"
 
 /* HuffUnComp (SWI 0x13) wrapper, GAX2-internal - preserves r0/r1 across
- * the call (via r7/r8, plus dead `sub sp, #8`/stack-store traffic that
- * nothing ever reads back) instead of just falling straight through
- * like this project's other bare SWI wrappers (see
- * src/system/timer_util.c). That unused stack traffic reads like a
- * hand-written asm stub rather than compiler-generated C, so this is
- * transcribed directly as NAKED asm rather than guessed-at C. */
-NAKED void sub_80392C4(void)
+ * the call via r7/r8 plus a dead `sub sp, #8`/stack-store of both args
+ * that nothing reads back.
+ *
+ * Note the ROM saves r8 but *not* r7, even though r7 is clobbered: that
+ * is exactly agbcc's known bug of dropping an explicitly pinned r7 from
+ * the push/pop list (the reason this project never pins r7 by choice).
+ * Here the bug is the evidence: the original source pinned `src` to r7
+ * and `dst` to r8, and reproducing it needs that same r7 pin. The
+ * empty `"m"` asm stands in for whatever forced both args into stack
+ * slots (the dead stores), and the final pinned r0/r1 inputs reproduce
+ * the ROM's `add r0, r7, #0; mov r1, r8` restore after the SWI. */
+void sub_80392C4(void *src, void *dst)
 {
-    asm(
-        "mov r3, r8\n\t"
-        "push {r3}\n\t"
-        "sub sp, #8\n\t"
-        "str r0, [sp]\n\t"
-        "str r1, [sp, #4]\n\t"
-        "add r7, r0, #0\n\t"
-        "mov r8, r1\n\t"
-        "svc #0x13\n\t"
-        "add r0, r7, #0\n\t"
-        "mov r1, r8\n\t"
-        "add sp, #8\n\t"
-        "pop {r3}\n\t"
-        "mov r8, r3\n\t"
-        "bx lr"
-    );
+    register void *savedSrc asm("r7") = src;
+    register void *savedDst asm("r8") = dst;
+
+    asm volatile("" : : "m"(src), "m"(dst));
+    asm volatile("swi 0x13" : : : "r0", "r1");
+    {
+        register void *r0 asm("r0") = savedSrc;
+        register void *r1 asm("r1") = savedDst;
+        asm volatile("" : : "r"(r0), "r"(r1));
+    }
 }

@@ -207,6 +207,14 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
 $(OLD_AGBCC_OBJS): CC1 := $(CC1_OLD)
 $(OLD_AGBCC_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1FLAGS))
 
+# GAX2's bundled libgcc2.c code (__divdi3/__udivdi3/__muldi3) was built
+# without -mthumb-interwork: its functions are the only ones in the ROM
+# that return via a combined `pop {r4-r7, pc}`, and with the flag
+# dropped they compile from libgcc2.c's own source byte-for-byte - see
+# src/util/math_div64_util.c and docs/matching/gax-toolchain-retry.md.
+NO_INTERWORK_OBJS := $(C_BUILDDIR)/util/math_div64_util.o
+$(NO_INTERWORK_OBJS): CC1FLAGS := $(filter-out -mthumb-interwork,$(CC1FLAGS))
+
 $(C_BUILDDIR)/%.o : $(C_SUBDIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CPP) $(CPPFLAGS) $< | $(CC1) $(CC1FLAGS) -o $(C_BUILDDIR)/$*.s
