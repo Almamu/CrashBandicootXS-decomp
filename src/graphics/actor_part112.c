@@ -363,24 +363,19 @@ void sub_800B8DC(struct part_ctrl *self)
  * matched sibling functions - a widely-reused "flag a nearby collision
  * bucket active" idiom, not specific to either function.
  *
- * Still a NAKED transcription (its C draft below is off only in reload
- * scratch registers; `sub_800B8DC` above, once parked for the same
- * reason, is real C now). Confirmed byte-identical
- * to `baserom.gba`'s own raw bytes at `0x0800BD48`-`0x0800BFA8` via the
- * isolated cpp/agbcc/as + objcopy/cmp pipeline (only `bl` relocation
- * sites differ) plus the same full clean `make NON_MATCHING=1 report` /
- * `make compare` verification. */
-#if NON_MATCHING
-/* Near-miss C draft (issue #10 NAKED retry, old_agbcc): 21 halfwords
- * off, nearly all of them reload scratch registers (the `ldrh` of the
- * id in the MarkGone copies, the `-0x200` literal, the `ldrsh` of the
- * launch method's offset) - the ROM cycles r3, r3, r3, r4, r6, r2, ...
- * where this picks r6, r4, r4, r6, r2, ... The one real code difference
- * left is in states 1/21/22: the ROM materializes the layer's `1`
- * before the `-4` mask (`movs r2, #1; movs r1, #4; negs ...`) and
- * reuses that same r2 as the `gone` OR's operand and destination
- * (`orrs r2, r4`); a `u32` local for the 1 gets the order right but
- * costs a register copy (4 bytes over) - issue #9-#11 NAKED retry. */
+ * Real C since the late NAKED retry 3 (old_agbcc,
+ * docs/matching/late-naked-retry-3.md). The draft was off only in
+ * reload registers and in where the layer's `1` is loaded:
+ * - The first MarkGone's id compare is a reload. The ROM uses r3 for
+ *   it; reload would spill r2, the lowest free register.
+ *   `MarkGoneHeld` keeps r2 live across the compare with a register
+ *   variable that only empty asms set and use (no code). That puts r3 in reload's spill-register set, and
+ *   every later reload then rotates through the same registers as the
+ *   ROM's.
+ * - States 1/21/22 store the layer from an `s32 one` local, so the `1`
+ *   is loaded before the `-4` mask and shared with the `gone` OR.
+ *   `MarkGoneFreshBit` builds its bitmap `1` with the constant-init
+ *   asm after the shift count, so it doesn't reuse `one`. */
 struct player_ring {
     u8 unk_00[0x88];
     u8 ringLocked;      // 0x88
@@ -401,10 +396,58 @@ static inline struct ctrl_target *SpawnAt(s32 kind, s32 x, s32 y)
     return sub_8025BAC(gUnknown_030012E4, kind, 2, x, y, 0);
 }
 
+/* MarkGone with r2 held live across the id compare (see above). */
+static inline void MarkGoneHeld(struct ctrl_target *t)
+{
+    register s32 hold asm("r2");
+
+    t->gone = 1;
+    asm("" : "=r"(hold)); /* no code: r2 live from here */
+    if (t->id != 0xFFFF)
+        do {
+            s32 id;
+            u8 *base;
+            s32 word;
+            s32 off;
+            u32 *slot;
+
+            asm("" : : "r"(hold)); /* no code: ...to here */
+            id = t->id;
+            base = gUnknown_030012B4;
+            word = id / 32;
+            off = word * 4;
+            slot = (u32 *)(base + 0x108);
+            slot = (u32 *)((u8 *)slot + off);
+            *slot |= 1 << (id - word * 32);
+        } while (0);
+}
+
+/* MarkGone whose bitmap `1` is loaded after the shift count and isn't
+ * shared with an earlier 1 (see above). */
+static inline void MarkGoneFreshBit(struct ctrl_target *t)
+{
+    t->gone = 1;
+    if (t->id != 0xFFFF)
+        do {
+            s32 id = t->id;
+            u8 *base = gUnknown_030012B4;
+            s32 word = id / 32;
+            s32 off = word * 4;
+            u32 *slot = (u32 *)(base + 0x108);
+            s32 bit;
+            s32 sh;
+
+            slot = (u32 *)((u8 *)slot + off);
+            sh = id - word * 32;
+            asm("" : "=r"(bit) : "0"(1)); /* movs #1 here, not CSE'd */
+            *slot |= bit << sh;
+        } while (0);
+}
+
 void sub_800BD48(struct part_ctrl *self, s32 unused, s32 state)
 {
     if (((struct player_ring *)gUnknown_030012D8)->ringLocked == 1) {
-        MarkGone(self->target);
+        MarkGoneHeld(self->target);
         SpawnAt(0x28, self->target->x >> 8, self->target->y >> 8);
         PlaySfx(gUnknown_030012BC, 0x5a, 0x80);
         return;
@@ -444,272 +487,12 @@ void sub_800BD48(struct part_ctrl *self, s32 unused, s32 state)
     case 22:
         {
             struct ctrl_target *obj = SpawnAt(0x29, self->target->x >> 8, self->target->y >> 8);
+            s32 one = 1;
 
             obj->visible = 0;
-            obj->mirror.u.layer = 1;
-            MarkGone(self->target);
+            obj->mirror.u.layer = one;
+            MarkGoneFreshBit(self->target);
         }
         break;
     }
 }
-#else
-NAKED void sub_800BD48(void *self, s32 unused, s32 state)
-{
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "sub sp, #8\n\t"
-        "add r5, r0, #0\n\t"
-        "add r6, r2, #0\n\t"
-        "ldr r0, =gUnknown_030012D8\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r0, #0x88\n\t"
-        "ldrb r4, [r0]\n\t"
-        "cmp r4, #1\n\t"
-        "bne 2f\n\t"
-        "ldr r1, [r5, #0x70]\n\t"
-        "mov r0, #1\n\t"
-        "ldrb r2, [r1, #0xc]\n\t"
-        "orr r0, r2\n\t"
-        "strb r0, [r1, #0xc]\n\t"
-        "ldr r0, =0xFFFF\n\t"
-        "ldrh r3, [r1, #8]\n\t"
-        "cmp r3, r0\n\t"
-        "beq 1f\n\t"
-        "ldrh r3, [r1, #8]\n\t"
-        "ldr r0, =gUnknown_030012B4\n\t"
-        "ldr r1, [r0]\n\t"
-        "add r0, r3, #0\n\t"
-        "asr r0, r0, #5\n\t"
-        "lsl r2, r0, #2\n\t"
-        "mov r6, #0x84\n\t"
-        "lsl r6, r6, #1\n\t"
-        "add r1, r1, r6\n\t"
-        "add r1, r1, r2\n\t"
-        "lsl r0, r0, #5\n\t"
-        "sub r0, r3, r0\n\t"
-        "lsl r4, r0\n\t"
-        "ldr r0, [r1]\n\t"
-        "orr r0, r4\n\t"
-        "str r0, [r1]\n\t"
-    "1:\n\t"
-        "ldr r0, [r5, #0x70]\n\t"
-        "ldr r3, [r0]\n\t"
-        "asr r3, r3, #8\n\t"
-        "ldr r1, [r0, #4]\n\t"
-        "asr r1, r1, #8\n\t"
-        "ldr r0, =gUnknown_030012E4\n\t"
-        "ldr r0, [r0]\n\t"
-        "str r1, [sp]\n\t"
-        "mov r1, #0\n\t"
-        "str r1, [sp, #4]\n\t"
-        "mov r1, #0x28\n\t"
-        "mov r2, #2\n\t"
-        "bl sub_8025BAC\n\t"
-        "ldr r0, =gUnknown_030012BC\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #0x5a\n\t"
-        "mov r2, #0x80\n\t"
-        "bl PlaySfx\n\t"
-        "b 10f\n\t"
-        ".pool\n\t"
-    "2:\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x88\n\t"
-        "ldr r1, [r0]\n\t"
-        "cmp r1, #0\n\t"
-        "beq 3f\n\t"
-        "mov r0, #1\n\t"
-        "ldrb r2, [r1, #0xc]\n\t"
-        "orr r0, r2\n\t"
-        "strb r0, [r1, #0xc]\n\t"
-        "ldr r0, =0xFFFF\n\t"
-        "ldrh r3, [r1, #8]\n\t"
-        "cmp r3, r0\n\t"
-        "beq 3f\n\t"
-        "ldrh r3, [r1, #8]\n\t"
-        "ldr r0, =gUnknown_030012B4\n\t"
-        "ldr r2, [r0]\n\t"
-        "add r0, r3, #0\n\t"
-        "asr r0, r0, #5\n\t"
-        "lsl r1, r0, #2\n\t"
-        "mov r4, #0x84\n\t"
-        "lsl r4, r4, #1\n\t"
-        "add r2, r2, r4\n\t"
-        "add r2, r2, r1\n\t"
-        "lsl r0, r0, #5\n\t"
-        "sub r0, r3, r0\n\t"
-        "mov r1, #1\n\t"
-        "lsl r1, r0\n\t"
-        "ldr r0, [r2]\n\t"
-        "orr r0, r1\n\t"
-        "str r0, [r2]\n\t"
-    "3:\n\t"
-        "sub r0, r6, #1\n\t"
-        "cmp r0, #0x15\n\t"
-        "bls 4f\n\t"
-        "b 10f\n\t"
-    "4:\n\t"
-        "lsl r0, r0, #2\n\t"
-        "ldr r1, =5f\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov pc, r0\n\t"
-        ".pool\n\t"
-    "5:\n\t"
-        ".4byte 9f\n\t"  /* case 0 */
-        ".4byte 10f\n\t" /* case 1 */
-        ".4byte 10f\n\t" /* case 2 */
-        ".4byte 10f\n\t" /* case 3 */
-        ".4byte 10f\n\t" /* case 4 */
-        ".4byte 10f\n\t" /* case 5 */
-        ".4byte 10f\n\t" /* case 6 */
-        ".4byte 10f\n\t" /* case 7 */
-        ".4byte 10f\n\t" /* case 8 */
-        ".4byte 10f\n\t" /* case 9 */
-        ".4byte 10f\n\t" /* case 10 */
-        ".4byte 10f\n\t" /* case 11 */
-        ".4byte 10f\n\t" /* case 12 */
-        ".4byte 10f\n\t" /* case 13 */
-        ".4byte 10f\n\t" /* case 14 */
-        ".4byte 10f\n\t" /* case 15 */
-        ".4byte 10f\n\t" /* case 16 */
-        ".4byte 10f\n\t" /* case 17 */
-        ".4byte 6f\n\t"  /* case 18 */
-        ".4byte 6f\n\t"  /* case 19 */
-        ".4byte 9f\n\t"  /* case 20 */
-        ".4byte 9f\n\t"  /* case 21 */
-    "6:\n\t"
-        "mov r0, #0x10\n\t"
-        "bl sub_8026EDC\n\t"
-        "bl sub_800CBD4\n\t"
-        "ldr r1, [r5, #0x70]\n\t"
-        "str r0, [r1, #0x44]\n\t"
-        "ldr r3, [r0, #0xc]\n\t"
-        "mov r6, #0x18\n\t"
-        "ldrsh r2, [r3, r6]\n\t"
-        "add r0, r0, r2\n\t"
-        "ldr r2, [r3, #0x1c]\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r1, [r5, #0x70]\n\t"
-        "mov r0, #0x7f\n\t"
-        "ldrb r2, [r1, #0xc]\n\t"
-        "and r0, r2\n\t"
-        "strb r0, [r1, #0xc]\n\t"
-        "ldr r3, [r5, #0x70]\n\t"
-        "ldr r1, [r3]\n\t"
-        "ldr r0, =gUnknown_030012D8\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r1, r0\n\t"
-        "ble 7f\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #5\n\t"
-        "mov r1, #0\n\t"
-        "mov r2, #0xc0\n\t"
-        "lsl r2, r2, #5\n\t"
-        "b 8f\n\t"
-        ".pool\n\t"
-    "7:\n\t"
-        "ldr r0, =0xFFFFF000\n\t"
-        "mov r1, #0\n\t"
-        "ldr r2, =0xFFFFE800\n\t"
-    "8:\n\t"
-        "str r0, [r3, #0x60]\n\t"
-        "str r0, [r3, #0x48]\n\t"
-        "str r1, [r3, #0x4c]\n\t"
-        "str r2, [r3, #0x50]\n\t"
-        "mov r0, #3\n\t"
-        "bl sub_8000E1C\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r0, r0, #7\n\t"
-        "ldr r3, =0xFFFFFE00\n\t"
-        "add r0, r0, r3\n\t"
-        "ldr r1, [r5, #0x70]\n\t"
-        "mov r2, #0\n\t"
-        "str r0, [r1, #0x64]\n\t"
-        "str r0, [r1, #0x54]\n\t"
-        "str r2, [r1, #0x58]\n\t"
-        "str r0, [r1, #0x5c]\n\t"
-        "mov r0, #5\n\t"
-        "neg r0, r0\n\t"
-        "ldrb r4, [r1, #0xc]\n\t"
-        "and r0, r4\n\t"
-        "strb r0, [r1, #0xc]\n\t"
-        "ldr r0, =gUnknown_030012BC\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #5\n\t"
-        "mov r2, #0x80\n\t"
-        "bl PlaySfx\n\t"
-        "cmp r5, #0\n\t"
-        "beq 10f\n\t"
-        "ldr r1, [r5, #0xc]\n\t"
-        "add r1, #0x48\n\t"
-        "mov r6, #0\n\t"
-        "ldrsh r0, [r1, r6]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r2, [r1, #4]\n\t"
-        "mov r1, #3\n\t"
-        "bl sub_803AD80\n\t"
-        "b 10f\n\t"
-        ".pool\n\t"
-    "9:\n\t"
-        "ldr r0, [r5, #0x70]\n\t"
-        "ldr r3, [r0]\n\t"
-        "asr r3, r3, #8\n\t"
-        "ldr r1, [r0, #4]\n\t"
-        "asr r1, r1, #8\n\t"
-        "ldr r0, =gUnknown_030012E4\n\t"
-        "ldr r0, [r0]\n\t"
-        "str r1, [sp]\n\t"
-        "mov r1, #0\n\t"
-        "str r1, [sp, #4]\n\t"
-        "mov r1, #0x29\n\t"
-        "mov r2, #2\n\t"
-        "bl sub_8025BAC\n\t"
-        "mov r1, #5\n\t"
-        "neg r1, r1\n\t"
-        "ldrb r2, [r0, #0xc]\n\t"
-        "and r1, r2\n\t"
-        "strb r1, [r0, #0xc]\n\t"
-        "add r0, #0x28\n\t"
-        "mov r2, #1\n\t"
-        "mov r1, #4\n\t"
-        "neg r1, r1\n\t"
-        "ldrb r3, [r0]\n\t"
-        "and r1, r3\n\t"
-        "orr r1, r2\n\t"
-        "strb r1, [r0]\n\t"
-        "ldr r1, [r5, #0x70]\n\t"
-        "ldrb r4, [r1, #0xc]\n\t"
-        "orr r2, r4\n\t"
-        "strb r2, [r1, #0xc]\n\t"
-        "ldr r0, =0xFFFF\n\t"
-        "ldrh r6, [r1, #8]\n\t"
-        "cmp r6, r0\n\t"
-        "beq 10f\n\t"
-        "ldrh r3, [r1, #8]\n\t"
-        "ldr r0, =gUnknown_030012B4\n\t"
-        "ldr r2, [r0]\n\t"
-        "add r0, r3, #0\n\t"
-        "asr r0, r0, #5\n\t"
-        "lsl r1, r0, #2\n\t"
-        "mov r4, #0x84\n\t"
-        "lsl r4, r4, #1\n\t"
-        "add r2, r2, r4\n\t"
-        "add r2, r2, r1\n\t"
-        "lsl r0, r0, #5\n\t"
-        "sub r0, r3, r0\n\t"
-        "mov r1, #1\n\t"
-        "lsl r1, r0\n\t"
-        "ldr r0, [r2]\n\t"
-        "orr r0, r1\n\t"
-        "str r0, [r2]\n\t"
-    "10:\n\t"
-        "add sp, #8\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".pool"
-    );
-}
-#endif

@@ -412,8 +412,9 @@ from "core" graphics.
   0x08014674-0x08014F8C, built with old_agbcc): `sub_8014674` (since
   the mix NAKED retry 5, `docs/matching/mix-naked-retry-5.md`),
   `sub_8014940`, `sub_80149BC`, `sub_8014A3C`, `sub_8014AEC`,
-  `sub_8014BCC`, `sub_8014D18`, `sub_8014EE0` (`sub_8014B54` is parked
-  below); see `docs/matching/issue-17-0x08012fbc-actor.md`, "Second
+  `sub_8014B54` (since the late NAKED retry 3,
+  `docs/matching/late-naked-retry-3.md`), `sub_8014BCC`, `sub_8014D18`,
+  `sub_8014EE0`; see `docs/matching/issue-17-0x08012fbc-actor.md`, "Second
   pass" and "Third pass".
 - `src/graphics/actor_part_12fbc.c`, `actor_part_134b8.c`,
   `actor_part_138e8.c` (GitHub issue #17, ROM 0x08012FBC-0x08013C60, now
@@ -929,6 +930,14 @@ from "core" graphics.
   from NAKED to real C, both matching under either compiler. See
   [near-miss-polish-2.md](../matching/near-miss-polish-2.md).
 
+### Matched in the late NAKED retry 3
+
+- `src/graphics/actor_part_14674.c` - `sub_8014B54` (the jump-start
+  handler, issue #17), old_agbcc. The 0x600 is a reload; an r2
+  register variable that only empty asms set and use keeps r2 live
+  across the add, so reload spills r3 for it as the ROM does. See
+  [late-naked-retry-3.md](../matching/late-naked-retry-3.md).
+
 ### Matched in the late-ROM NAKED retry
 
 - `src/graphics/actor_part45d.c` - `sub_802F7B0` and `sub_802F8E8`
@@ -1067,7 +1076,7 @@ plain C didn't converge.
   halfwords off, now sits under `#if NON_MATCHING` - see
   `docs/matching/fresh-naked-retry.md`). See
   `docs/matching/naked-spatial-grid-tail.md`.
-- **`sub_8014B54`** (`src/graphics/actor_part_14674.c`), GitHub issue
+- **Now matched as real C (late NAKED retry 3, see Matched and docs/matching/late-naked-retry-3.md); entry kept for history.** **`sub_8014B54`** (`src/graphics/actor_part_14674.c`), GitHub issue
   #17 - the jump-start handler, whose old_agbcc C (kept under
   `NON_MATCHING`) is 3 halfwords off: the reloaded 0x600 lands in r2
   where the ROM uses r3. (`sub_8014674` from this entry is matched since

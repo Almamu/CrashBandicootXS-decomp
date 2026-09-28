@@ -349,20 +349,23 @@ void sub_8014AEC(struct act *self)
  * sets animations 0x1A/0x1B, holds the part on its last frame and queues
  * action 4.
  *
- * NAKED: the C below is off by one register - the 0x600 constant is a
- * reload the ROM puts in r3 where gcc picks r2 (its reload-register
- * rotation is one step apart), and pinning it shifts every later reload
- * instead - see docs/matching/issue-17-0x08012fbc-actor.md, "Second pass".
- * Padding, extra references and helper spellings didn't move it either
- * (docs/matching/mix-naked-retry-5.md). */
-#if NON_MATCHING
+ * The 0x600 is a reload, and the ROM loads it into r3. When reload
+ * picks a spill register for that insn, r2 and r3 are both free, and it
+ * takes the lower one (r2). Every later reload then rotates through the
+ * spill-register set {1,2,6} instead of the ROM's {1,3,6}. `hold` is a
+ * register variable in r2, set and used only by empty asms (no code).
+ * It keeps r2 live across the add, so reload spills r3 there instead
+ * (docs/matching/late-naked-retry-3.md). */
 void sub_8014B54(struct act *self)
 {
     struct act_part *part;
     s32 count;
+    register s32 hold asm("r2");
 
     self->part->unk_101 = 0;
+    asm("" : "=r"(hold)); /* r2 live from here: no code */
     self->part->y += 0x600;
+    asm("" : : "r"(hold)); /* ...to here, so the 0x600 reload takes r3 */
     ACT_VCALL1(self, m20, 0x1A);
     ACT_VCALL2(self, m50, self->part, 0x1B);
     part = self->part;
@@ -370,70 +373,6 @@ void sub_8014B54(struct act *self)
     part->frame = count - 1;
     ActSetNext(self, 4);
 }
-#else
-NAKED void sub_8014B54(struct act *self)
-{
-    asm(".syntax unified\n"
-        "\tpush {r4, r5, r6, lr}\n"
-        "\tadds r4, r0, #0\n"
-        "\tldr r0, [r4, #0x10]\n"
-        "\tldr r1, _08014BC8\n"
-        "\tadds r0, r0, r1\n"
-        "\tmovs r5, #0\n"
-        "\tstrb r5, [r0]\n"
-        "\tldr r1, [r4, #0x10]\n"
-        "\tldr r0, [r1, #4]\n"
-        "\tmovs r3, #0xc0\n"
-        "\tlsls r3, r3, #3\n"
-        "\tadds r0, r0, r3\n"
-        "\tstr r0, [r1, #4]\n"
-        "\tldr r1, [r4, #0xc]\n"
-        "\tmovs r6, #0x20\n"
-        "\tldrsh r0, [r1, r6]\n"
-        "\tadds r0, r4, r0\n"
-        "\tldr r2, [r1, #0x24]\n"
-        "\tmovs r1, #0x1a\n"
-        "\tbl sub_803AD80\n"
-        "\tldr r2, [r4, #0xc]\n"
-        "\tadds r2, #0x50\n"
-        "\tmovs r1, #0\n"
-        "\tldrsh r0, [r2, r1]\n"
-        "\tadds r0, r4, r0\n"
-        "\tldr r1, [r4, #0x10]\n"
-        "\tldr r3, [r2, #4]\n"
-        "\tmovs r2, #0x1b\n"
-        "\tbl sub_803AD84\n"
-        "\tldr r1, [r4, #0x10]\n"
-        "\tldr r0, [r1, #0x20]\n"
-        "\tadds r3, r1, #0\n"
-        "\tadds r3, #0x2d\n"
-        "\tldr r2, [r0]\n"
-        "\tldrb r6, [r3]\n"
-        "\tlsls r0, r6, #3\n"
-        "\tsubs r0, r0, r6\n"
-        "\tlsls r0, r0, #2\n"
-        "\tadds r0, r0, r2\n"
-        "\tldrb r0, [r0, #0x16]\n"
-        "\tsubs r0, #1\n"
-        "\tstr r0, [r1, #0x30]\n"
-        "\tmovs r2, #4\n"
-        "\tadds r0, r4, #0\n"
-        "\tadds r0, #0x32\n"
-        "\tstrb r5, [r0]\n"
-        "\tadds r1, r4, #0\n"
-        "\tadds r1, #0x30\n"
-        "\tmovs r0, #1\n"
-        "\tstrb r0, [r1]\n"
-        "\tadds r4, #0x28\n"
-        "\tstrb r2, [r4]\n"
-        "\tpop {r4, r5, r6}\n"
-        "\tpop {r0}\n"
-        "\tbx r0\n"
-        "\t.align 2, 0\n"
-        "_08014BC8: .4byte 0x00000101\n"
-        ".syntax divided\n");
-}
-#endif
 
 /* Crouch/aim handler: fire jumps (sub_8014B54), alt hands off to
  * sub_80153FC, an idle D-pad plays animations 0x28/0x22, a sideways one
