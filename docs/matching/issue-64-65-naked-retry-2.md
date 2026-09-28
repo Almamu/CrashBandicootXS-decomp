@@ -108,6 +108,10 @@ counts up, like `sub_80358A8`'s strength-reduced loops. So it may also
 need strength reduction on, which would mean another split, or moving
 it next to `sub_80358A8`'s object if the boundaries allow.
 
+*Later pass (big NAKED retry):* a full C draft is now under
+`#if NON_MATCHING`, 329 halfwords off. It does need strength reduction
+on. Still NAKED; see [big-naked-retry.md](big-naked-retry.md).
+
 ## Techniques worth reusing
 
 - **Local-alloc doubles the live length of a pseudo set from a

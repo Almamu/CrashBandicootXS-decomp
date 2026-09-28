@@ -5319,6 +5319,9 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
   function's own branch-by-branch semantics to commit a byte-precise
   reconstruction with confidence in one session - a natural next
   chunk for whoever picks this up.
+  *Later pass (big NAKED retry):* now real C under old_agbcc in
+  `src/system/game_loop55.c`. See
+  [docs/matching/big-naked-retry.md](matching/big-naked-retry.md).
 - **`sub_8022D50`** (`asm/code_3_2_17_22d50.s`, ROM `0x08022D50`-
   `0x08022EA8`) - a level-start/reset routine: clears `self+0x8c`/
   `0x90`-`0xa0`, tears down two actor slots at `self+0x1bc`/`0x1c0` via

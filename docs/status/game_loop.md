@@ -437,6 +437,13 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   `sub_800E08C`, `sub_800F990` and `sub_800FF0C` stay NAKED with new
   C drafts under `#if NON_MATCHING`. See
   [docs/matching/issue-12-13-25-naked-retry.md](../matching/issue-12-13-25-naked-retry.md).
+- **Big NAKED retry:** `UpdateGameFrame` (`game_loop55.c`, GitHub issue
+  #34, ~730 instructions) promoted from NAKED to real C under old_agbcc
+  (`game_loop55.o` joined `OLD_AGBCC_OBJS`). The level loop and the
+  attempt loop are real `for (;;)` loops that gcc rotates, the restore
+  step is a `goto` loop, and a `bitmap` pointer local set right before
+  the attempt loop gives the ROM's `sb`. See
+  [docs/matching/big-naked-retry.md](../matching/big-naked-retry.md).
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
@@ -708,7 +715,7 @@ plain C didn't converge.
   with a strength-reduced pointer and no peeled first iteration. See
   [docs/matching/issue-34-game-loop-8022d50-80255d4.md](../matching/issue-34-game-loop-8022d50-80255d4.md)
   and [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md).
-- **`UpdateGameFrame`** (`src/system/game_loop55.c`, GitHub issue #34,
+- **Now matched as real C (big NAKED retry, see Matched and docs/matching/big-naked-retry.md); entry kept for history.** **`UpdateGameFrame`** (`src/system/game_loop55.c`, GitHub issue #34,
   ROM `0x080225A0`-`0x08022BF0`) - the main per-frame game-loop driver,
   called once a frame from `MainLoop` with `self` =
   `gUnknown_030012C0`. Traced branch-by-branch: a level-load loop

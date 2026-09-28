@@ -215,10 +215,13 @@ plain C didn't converge.
   it worse. See
   [issue-31-old-agbcc.md](../matching/issue-31-old-agbcc.md).
 - **`sub_803686C`** (`src/graphics/graphics_loading_35d1c.c`) - the
-  20-slot OAM builder, the same shape as `sub_80358A8`. Not attempted
-  yet. The `sub_80358A8` result suggests it may also need strength
-  reduction on (its slot pointer walks while `i` counts up), which would
-  mean building it outside the `-fno-strength-reduce` object. See
+  20-slot OAM builder, the same shape as `sub_80358A8`. The big NAKED
+  retry left a full C draft under `#if NON_MATCHING` (329 halfwords off
+  under old_agbcc). It needs strength reduction on, so closing it also
+  means splitting the file at `0x0803686C`. The header and slot loops
+  have the ROM's instructions; the row-copy loop and the registers
+  around it do not. See
+  [big-naked-retry.md](../matching/big-naked-retry.md) and
   [issue-64-65-naked-retry-2.md](../matching/issue-64-65-naked-retry-2.md).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
