@@ -264,6 +264,12 @@ system from "core" system startup/init code.
   "collision box" record `sub_8010A00`/`sub_800FEB0` already operate
   on. See
   [docs/matching/issue-14-0x08010a0c-graphics.md](../matching/issue-14-0x08010a0c-graphics.md).
+- **`sub_8010B6C`** (`src/system/game_loop28.c`) - issue #14's last
+  function, the collision-candidate scan/resolve helper `sub_80106DC`
+  calls once a frame. Plain C; it was NAKED. The "twelve running
+  pointers" were gcc's own loop strength reduction of
+  `self->records[i].field`. See
+  [issues-14-53-60-last-naked.md](../matching/issues-14-53-60-last-naked.md).
 - **`sub_8022EA8`/`sub_8022F2C`** (`src/system/game_loop2.c`, GitHub
   issue #34) - record 47's periodic-trigger setter/decrementer; closed
   with a targeted register-pinning recipe after the ROM's cross-call
@@ -401,6 +407,16 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   (`game_loop16.c`), and the other functions above marked "built with
   old_agbcc" - 17 former `NAKED` transcriptions in 0x08022D50-0x08026BC0,
   now plain C. This ROM region was built with old_agbcc; see [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md).
+- **Issue #10 NAKED retry**: `sub_800C18C`/`sub_800C1E8`
+  (`actor_part114.c`), `sub_800C314` (`actor_part115.c`), `sub_800C074`
+  (`actor_part118.c`, old_agbcc), `sub_800C40C` (`actor_part120.c`,
+  old_agbcc) and `sub_800C6A8` (`actor_part122.c`, old_agbcc) promoted
+  from NAKED to real C. `actor_part118.o`, `actor_part120.o` and
+  `actor_part122.o` moved to `OLD_AGBCC_OBJS`; under old_agbcc
+  `actor_part122.c`'s bounds setters (`sub_800C860`/`sub_800C87C`/
+  `sub_800C898`) no longer need register pins. The controller/target
+  layout is in the new `include/part_ctrl.h`. See
+  [docs/matching/issue-10-naked-retry.md](../matching/issue-10-naked-retry.md).
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
@@ -541,7 +557,10 @@ plain C didn't converge.
   distinct paths are an ambient-sound-spawn-plus-reflag tail and a
   spawn-and-launch-a-child-object handler. Both NAKED: the same
   `self`/`owner`-multi-field register-allocation gap as every other
-  entry in this section. See
+  entry in this section. (Issue #10 NAKED retry: `sub_800BD48` has a
+  21-halfword old_agbcc draft under `NON_MATCHING`, off only in reload
+  scratch registers; `sub_800B8DC` didn't converge - see
+  [issue-10-naked-retry.md](../matching/issue-10-naked-retry.md).) See
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)
   for the full 18-case and 22-case dispatch maps.
 - **`sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC`** (`src/graphics/actor_part113.c`,
@@ -559,7 +578,10 @@ plain C didn't converge.
   table the other two use. See
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)'s
   "Phase 2" section for the full writeup.
-- **`sub_800C18C`/`sub_800C1E8`/`sub_800C314`/`sub_800C8F8`/
+- **`sub_800C8F8`/`sub_800C940`/`sub_800C97C`** (still NAKED after the
+  issue #10 NAKED retry, drafts under `NON_MATCHING`; `sub_800C18C`/
+  `sub_800C1E8`/`sub_800C314` are now real C, see Matched) - originally
+  **`sub_800C18C`/`sub_800C1E8`/`sub_800C314`/`sub_800C8F8`/
   `sub_800C940`/`sub_800C97C`/`sub_800C9C8`/`sub_800CBD4`**
   (`src/graphics/actor_part114.c`-`actor_part117.c`, new files - GitHub
   issue #9/#10, Phase 3 of the `0x0800B8DC`-cluster investigation, the
@@ -582,8 +604,9 @@ plain C didn't converge.
   fixed `gStaticData_087E3FA4` table) both matched as real C. See
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)'s
   "Phase 3" section for the full writeup.
-- **`sub_800C6A8`/`sub_800C860`/`sub_800C87C`/`sub_800C898`**
-  (`src/graphics/actor_part122.c`, new file - GitHub issue #9/#10, the
+- **`sub_800C6A8`/`sub_800C860`/`sub_800C87C`/`sub_800C898`** (all
+  real C since the issue #10 NAKED retry, see Matched; kept here for
+  the history) (`src/graphics/actor_part122.c`, new file - GitHub issue #9/#10, the
   last four functions of the old `asm/code_3_2_17_c6a8.s`, now fully
   retired). `sub_800C6A8` is the `menu_ui` dialog-widget system's own
   18-state `self+0x74` update, called from all 31 confirmed `menu_ui`
@@ -705,23 +728,6 @@ plain C didn't converge.
   from the confirmed-traced ROM disassembly, formerly
   `asm/code_3_2_17_225a0.s`, now retired). See `docs/matching.md`'s
   entry for this function for the full trace.
-- **`sub_8010B6C`** (`src/system/game_loop28.c`, GitHub issue #14,
-  follow-up pass) - the chunk's last and largest function, a
-  collision-candidate scan/resolve helper `sub_80106DC`
-  (`game_loop23.c`) already calls once a frame. Every field offset/
-  branch/call argument was already understood and cross-referenced
-  against the mirror-image `sub_8010D54` and its caller when this was
-  first parked; the ROM builds nearly every record-field address as a
-  running pointer incremented by `0x24` per loop iteration, with up to
-  twelve of them (`r8`/`sb`/`sl` included) live across a `0x68`-byte
-  stack frame - the same gap already parked for `sub_800A734`/
-  `sub_800A528` in docs/matching/issue-9-0x08007634-actor.md, at a
-  much larger scale (three times the live-cursor count, on a stack
-  frame twice the size) - beyond what C-level register pins can
-  realistically express, so closed as a byte-exact NAKED transcription
-  instead. `asm/code_3_2_17_e560_10b6c.s` is now gone entirely - the
-  function is folded into `src/system/game_loop28.o`. See
-  [docs/matching/issue-14-0x08010a0c-graphics.md](../matching/issue-14-0x08010a0c-graphics.md).
 - **`sub_80104E4`** (`src/system/game_loop51.c`, new file, GitHub
   issue #13) - a ~195-instruction per-frame state-machine dispatcher:
   throttles/re-triggers `sub_800F8E0`/`sub_800F990`/`sub_800F4F4` off

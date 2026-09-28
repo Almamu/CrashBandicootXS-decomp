@@ -22,173 +22,62 @@
  * `sub_800D040`-style 28-byte-stride record convention) when
  * `self+0x6c == 0xf`. Any other mode is a silent no-op.
  *
- * NAKED transcription, not real C: this exact `self`/`owner`
- * multi-field shape (several simultaneously-live fields across `bl`
- * calls, plus a shared-retest CFG diamond in the position-gate blocks
- * that a plain if/else or goto reconstruction couldn't reproduce
- * byte-for-byte without fighting gcc 2.9's own jump-threading) matches
- * this ROM neighborhood's already-documented resistant shape (see
- * docs/matching/issue-9-10-0x0800b8dc-graphics.md's own "Matching"
- * section for `sub_800B8DC`/`sub_800BD48`) - transcribed directly from
- * the confirmed-correct ROM disassembly instead. Confirmed byte-exact
- * via the isolated cpp/agbcc/as + objcopy pipeline (the only
- * differences from a direct ROM slice are the six `bl` relocation
- * sites) and a full clean `make compare`. */
+ * Real C under old_agbcc (issue #10 NAKED retry,
+ * docs/matching/issue-10-naked-retry.md). Two details carry it:
+ *  - The position gate's second clause re-tests the mirror bit (`cmp r3,
+ *    #0; blt`) instead of being jump-threaded away. That needs the two
+ *    tests to differ in RTL until after jump threading: the first reads
+ *    the bit through the unsigned view, the second through the signed
+ *    one (`struct ctrl_target`'s `mirror` union); combine turns both into
+ *    the same sign test of one shared `lsl #27` afterwards.
+ *  - The toggle reads the bit into a local first (`m = bit; bit = !m;`).
+ */
+#include "part_ctrl.h"
 
-extern void sub_800C8AC(void *self, s32 mode);
-extern void sub_800C8BC(void *self, s32 mode);
-extern void sub_800C8CC(void *self, s32 mode);
-
-NAKED void sub_800C074(void *selfArg)
+void sub_800C074(struct part_ctrl *self)
 {
-    asm(
-        "push {r4, r5, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r0, [r4, #0x68]\n\t"
-        "cmp r0, #1\n\t"
-        "beq 1f\n\t"
-        "cmp r0, #1\n\t"
-        "bgt 2f\n\t"
-        "cmp r0, #0\n\t"
-        "beq 3f\n\t"
-        "b 4f\n\t"
-    "2:\n\t"
-        "cmp r0, #4\n\t"
-        "beq 5f\n\t"
-        "cmp r0, #6\n\t"
-        "beq 6f\n\t"
-        "b 4f\n\t"
-    "3:\n\t"
-        "ldr r2, [r4, #0x70]\n\t"
-        "add r0, r2, #0\n\t"
-        "add r0, #0x28\n\t"
-        "ldrb r0, [r0]\n\t"
-        "lsl r3, r0, #0x1b\n\t"
-        "cmp r3, #0\n\t"
-        "bge 7f\n\t"
-        "ldr r1, [r2]\n\t"
-        "ldr r0, [r4, #0x10]\n\t"
-        "cmp r1, r0\n\t"
-        "blt 8f\n\t"
-    "7:\n\t"
-        "cmp r3, #0\n\t"
-        "blt 4f\n\t"
-        "ldr r1, [r2]\n\t"
-        "ldr r0, [r4, #0x14]\n\t"
-        "cmp r1, r0\n\t"
-        "ble 4f\n\t"
-    "8:\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #1\n\t"
-        "b 9f\n\t"
-    "1:\n\t"
-        "ldr r1, [r4, #0x70]\n\t"
-        "add r0, r1, #0\n\t"
-        "add r0, #0x38\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 4f\n\t"
-        "add r3, r1, #0\n\t"
-        "add r3, #0x28\n\t"
-        "ldrb r2, [r3]\n\t"
-        "lsl r0, r2, #0x1b\n\t"
-        "mov r1, #0\n\t"
-        "cmp r0, #0\n\t"
-        "blt 10f\n\t"
-        "mov r1, #1\n\t"
-    "10:\n\t"
-        "lsl r0, r1, #4\n\t"
-        "mov r1, #0x11\n\t"
-        "neg r1, r1\n\t"
-        "and r1, r1, r2\n\t"
-        "orr r1, r1, r0\n\t"
-        "strb r1, [r3]\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800C8CC\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #1\n\t"
-        "bl sub_800C8BC\n\t"
-        "ldr r0, [r4, #0x6c]\n\t"
-        "cmp r0, #0xf\n\t"
-        "bne 4f\n\t"
-        "ldr r3, [r4, #0x70]\n\t"
-        "mov r4, #8\n\t"
-        "ldr r0, [r3, #0x20]\n\t"
-        "add r2, r3, #0\n\t"
-        "add r2, #0x2d\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldrb r5, [r2]\n\t"
-        "lsl r0, r5, #3\n\t"
-        "sub r0, r0, r5\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrb r0, [r0, #0x16]\n\t"
-        "cmp r4, r0\n\t"
-        "blt 11f\n\t"
-        "sub r4, r0, #1\n\t"
-    "11:\n\t"
-        "str r4, [r3, #0x30]\n\t"
-        "b 4f\n\t"
-    "5:\n\t"
-        "ldr r2, [r4, #0x70]\n\t"
-        "add r0, r2, #0\n\t"
-        "add r0, #0x28\n\t"
-        "ldrb r0, [r0]\n\t"
-        "lsl r3, r0, #0x1b\n\t"
-        "cmp r3, #0\n\t"
-        "bge 12f\n\t"
-        "ldr r1, [r2]\n\t"
-        "ldr r0, [r4, #0x10]\n\t"
-        "cmp r1, r0\n\t"
-        "blt 13f\n\t"
-    "12:\n\t"
-        "cmp r3, #0\n\t"
-        "blt 4f\n\t"
-        "ldr r1, [r2]\n\t"
-        "ldr r0, [r4, #0x14]\n\t"
-        "cmp r1, r0\n\t"
-        "ble 4f\n\t"
-    "13:\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #6\n\t"
-    "9:\n\t"
-        "bl sub_800C8CC\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800C8BC\n\t"
-        "b 4f\n\t"
-    "6:\n\t"
-        "ldr r1, [r4, #0x70]\n\t"
-        "add r0, r1, #0\n\t"
-        "add r0, #0x38\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 4f\n\t"
-        "add r3, r1, #0\n\t"
-        "add r3, #0x28\n\t"
-        "ldrb r2, [r3]\n\t"
-        "lsl r0, r2, #0x1b\n\t"
-        "mov r1, #0\n\t"
-        "cmp r0, #0\n\t"
-        "blt 14f\n\t"
-        "mov r1, #1\n\t"
-    "14:\n\t"
-        "lsl r1, r1, #4\n\t"
-        "mov r0, #0x11\n\t"
-        "neg r0, r0\n\t"
-        "and r0, r0, r2\n\t"
-        "orr r0, r0, r1\n\t"
-        "strb r0, [r3]\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #4\n\t"
-        "bl sub_800C8CC\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #1\n\t"
-        "bl sub_800C8BC\n\t"
-    "4:\n\t"
-        "pop {r4, r5}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-    );
+    struct ctrl_target *target;
+    s32 t;
+    s32 steps;
+
+    switch (self->mode) {
+    case 0:
+        if ((self->target->mirror.u.x && self->target->x < self->rangeX[0])
+            || (!self->target->mirror.s.x && self->target->x > self->rangeX[1])) {
+            sub_800C8CC(self, 1);
+            sub_800C8BC(self, 0);
+        }
+        break;
+    case 1:
+        if (self->target->animDone) {
+            u32 m = self->target->mirror.u.x;
+            self->target->mirror.u.x = !m;
+            sub_800C8CC(self, 0);
+            sub_800C8BC(self, 1);
+            if (self->kind == 15) {
+                target = self->target;
+                t = 8;
+                steps = (*target->keyframes)[target->frame].steps;
+                if (t >= steps)
+                    t = steps - 1;
+                target->tick = t;
+            }
+        }
+        break;
+    case 4:
+        if ((self->target->mirror.u.x && self->target->x < self->rangeX[0])
+            || (!self->target->mirror.s.x && self->target->x > self->rangeX[1])) {
+            sub_800C8CC(self, 6);
+            sub_800C8BC(self, 0);
+        }
+        break;
+    case 6:
+        if (self->target->animDone) {
+            u32 m = self->target->mirror.u.x;
+            self->target->mirror.u.x = !m;
+            sub_800C8CC(self, 4);
+            sub_800C8BC(self, 1);
+        }
+        break;
+    }
 }

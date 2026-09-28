@@ -1497,3 +1497,16 @@ This closes the small gap left over from the three parallel closing
 sessions above - the entire 43-function `0x0800B8DC`-`0x0800D040`
 cluster (and this small adjacent stretch) is now fully matched, with
 no raw bytes remaining anywhere in the span.
+
+## Later pass: issue #10 NAKED retry
+
+`sub_800C18C`, `sub_800C1E8`, `sub_800C314`, `sub_800C074`,
+`sub_800C40C` and `sub_800C6A8` are now real C. The last three need
+old_agbcc, so `actor_part118.o`, `actor_part120.o` and
+`actor_part122.o` build with it. The earlier notes above about
+cross-jumping, bit-toggle sequencing and the gate's CFG diamond all
+turned out to be source shape or compiler choice. `sub_800B8DC`,
+`sub_800BD48`, `sub_800C244`, `sub_800C5D4` and the oscillator trio
+are still NAKED. All but `sub_800B8DC` have C drafts under
+`NON_MATCHING`. The `self`/owner layout is now `include/part_ctrl.h`.
+See [issue-10-naked-retry.md](issue-10-naked-retry.md).

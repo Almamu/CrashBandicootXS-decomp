@@ -1,4 +1,5 @@
 #include "core.h"
+#include "actor_self.h"
 
 /* Continues the `InitActorPart`/`gUnknown_03000884`-rooted "self" object
  * family (state at `self+0x28`, table-index/"kind" at `self+0xc`, an
@@ -22,7 +23,7 @@ extern s32 gUnknown_0300088C[];
 extern u8 sub_802A6EC(void *self);
 extern u8 sub_802DD9C(void *self);
 extern u8 sub_802B730(void *arg0);
-extern s32 sub_802B7E0(void *arg0);
+extern u8 sub_802B7E0(void *arg0);
 extern void sub_802A7B8(void *self);
 extern void sub_802A980(void *self);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
@@ -51,193 +52,99 @@ extern u8 gStaticData_087E4FF4[];
 extern u8 gStaticData_087E5014[];
 extern u8 gStaticData_087E5034[];
 
-/* Once-per-frame hazard/proximity state machine on the same `self`
- * object as `actor_part19*.c`: latches `self+0x2c` once `self+0x34`
- * (a cached depth) exceeds `0x15FF`. If not already "used"
- * (`self+0xc == 0`), snapshots the owning part table's own `+0x14`
- * 12-byte record into `self+0x38` and runs `sub_802DD9C`'s player
- * overlap test against it, transitioning to the "used" state (index 1)
- * on a hit; then, regardless, re-snapshots one of three static 12-byte
- * `gStaticData_0817A7xx` records into `self+0x38` and probes
- * `sub_802A6EC` against each in turn (the player's own
- * `sub_802B7E0`-mediated hazard for the first, plain proximity for the
- * other two), each on a hit also transitioning to "used". Once already
- * "used" (`self+0xc != 0`), skips all of that and just fires the
- * `self+0x50` trampoline (index 3) while `self+0x12` is set, or falls
- * back to `sub_802A7B8`.
- *
- * NAKED: every one of the three 12-byte record snapshots reuses the
- * same `self+0x38` scratch pointer (kept live in `r6`) across an
- * intervening `sub_802A6EC`/`sub_802DD9C` call, with `r5`/`r7` each
- * also switching roles (old state, then a "confirmed zero" reused for
- * every reset block's `self+0x44`/`self+8` clear) mid-function - the
- * exact "heavy r5/r6/r7 register reuse" shape
- * docs/matching/issue-53-actor-c7a8.md flagged as unattempted, and the
- * same categorical stack/register-reuse family already NAKED-parked
- * for `sub_802D7B0`/`sub_802DD9C` (docs/matching/issue-54-actor-
- * d3a8.md). Semantics are fully understood (see above); transcribed
- * instruction-for-instruction from the ROM disassembly rather than
- * chased further at the C level, per this project's established
- * escape hatch for this exact register-pressure family. */
-NAKED void sub_802CC9C(void *selfArg)
+/* A 12-byte AABB record (the same shape actor_part19g.c copies as
+ * `struct vec3_words`). */
+struct box12 {
+    s32 a, b, c;
+};
+
+struct hazard_part {
+    u8 unk_00[0x14];
+    struct box12 box;           // 0x14
+};
+
+/* actor_self with this class's own fields over its unk_ areas. */
+struct hazard {
+    struct anim_frame_record *anims; // 0x00
+    u32 *frameOffsets;          // 0x04
+    s32 animTime;               // 0x08
+    s32 animIndex;              // 0x0C
+    u16 animTimer;              // 0x10
+    u8 animDone;                // 0x12
+    u8 unk_13;
+    s32 visible;                // 0x14
+    s32 unk_18;
+    s32 x;                      // 0x1C
+    s32 y;                      // 0x20
+    s32 z;                      // 0x24
+    s32 state;                  // 0x28
+    u8 deep;                    // 0x2C
+    u8 unk_2D[3];
+    struct hazard_part *part;   // 0x30
+    s32 depth;                  // 0x34
+    struct box12 box;           // 0x38
+    s32 stateTime;              // 0x44
+    u8 unk_48[8];
+    struct actor_vtable *vtable; // 0x50
+};
+
+ACTOR_CALL_VIA_ALIASES
+
+/* Plays the pickup sound and restarts animation sequence 1 ("used").
+ * Wrapped in `if (1)` rather than `do { } while (0)` or an inline: both
+ * of those change the block layout gcc emits. */
+#define HAZARD_HIT(self)                                                       \
+    if (1)                                                                     \
+    {                                                                          \
+        PlaySfx(gUnknown_030012BC, 4, 0x100);                                  \
+        (self)->animIndex = 1;                                                 \
+        (self)->animTimer = (self)->anims[1].duration;                         \
+        (self)->animDone = 0;                                                  \
+        (self)->animTime = 0;                                                  \
+    } else (void)0
+
+/* Once-per-frame hazard/proximity update. Latches `deep` once `depth`
+ * passes 0x15FF. While unused (sequence 0) it tests the part table's own
+ * box with sub_802DD9C, then gStaticData_0817A78C's box with sub_802A6EC
+ * (a hit there only counts if sub_802B7E0 agrees), or failing that the
+ * 0817A774 and 0817A780 boxes; any hit switches to sequence 1. Once used,
+ * fires method 0x08 with 3 when the sequence has played through. */
+void sub_802CC9C(void *selfArg)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r1, [r4, #0x34]\n\t"
-        "ldr r0, 4f\n\t"
-        "cmp r1, r0\n\t"
-        "ble 1f\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x2c\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r1]\n\t"
-    "1:\n\t"
-        "ldr r7, [r4, #0xc]\n\t"
-        "cmp r7, #0\n\t"
-        "beq 2f\n\t"
-        "b 13f\n\t"
-    "2:\n\t"
-        "ldr r0, [r4, #0x30]\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x38\n\t"
-        "add r0, #0x14\n\t"
-        "ldm r0!, {r2, r3, r5}\n\t"
-        "stm r1!, {r2, r3, r5}\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_802DD9C\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "add r6, r4, #0\n\t"
-        "add r6, #0x38\n\t"
-        "cmp r0, #0\n\t"
-        "beq 3f\n\t"
-        "ldr r0, 5f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #4\n\t"
-        "bl PlaySfx\n\t"
-        "mov r0, #1\n\t"
-        "str r0, [r4, #0xc]\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldrh r0, [r0, #0xc]\n\t"
-        "mov r1, #0\n\t"
-        "strh r0, [r4, #0x10]\n\t"
-        "strb r1, [r4, #0x12]\n\t"
-        "str r7, [r4, #8]\n\t"
-    "3:\n\t"
-        "add r0, r6, #0\n\t"
-        "ldr r1, 6f\n\t"
-        "ldm r1!, {r2, r3, r5}\n\t"
-        "stm r0!, {r2, r3, r5}\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_802A6EC\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r5, r0, #0x18\n\t"
-        "cmp r5, #0\n\t"
-        "beq 8f\n\t"
-        "ldr r0, 7f\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_802B7E0\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "beq 14f\n\t"
-        "ldr r0, 5f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #4\n\t"
-        "bl PlaySfx\n\t"
-        "mov r0, #1\n\t"
-        "str r0, [r4, #0xc]\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldrh r0, [r0, #0xc]\n\t"
-        "mov r1, #0\n\t"
-        "strh r0, [r4, #0x10]\n\t"
-        "strb r1, [r4, #0x12]\n\t"
-        "str r7, [r4, #8]\n\t"
-        "b 14f\n\t"
-        ".align 2, 0\n"
-    "4: .4byte 0x000015FF\n"
-    "5: .4byte gUnknown_030012BC\n"
-    "6: .4byte gStaticData_0817A78C\n"
-    "7: .4byte gUnknown_03000884\n"
-    "8:\n\t"
-        "add r0, r6, #0\n\t"
-        "ldr r1, 10f\n\t"
-        "ldm r1!, {r2, r3, r7}\n\t"
-        "stm r0!, {r2, r3, r7}\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_802A6EC\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "beq 9f\n\t"
-        "ldr r0, 11f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #4\n\t"
-        "bl PlaySfx\n\t"
-        "mov r0, #1\n\t"
-        "str r0, [r4, #0xc]\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldrh r0, [r0, #0xc]\n\t"
-        "mov r1, #0\n\t"
-        "strh r0, [r4, #0x10]\n\t"
-        "strb r1, [r4, #0x12]\n\t"
-        "str r5, [r4, #8]\n\t"
-    "9:\n\t"
-        "add r0, r6, #0\n\t"
-        "ldr r1, 12f\n\t"
-        "ldm r1!, {r2, r6, r7}\n\t"
-        "stm r0!, {r2, r6, r7}\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_802A6EC\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "beq 14f\n\t"
-        "ldr r0, 11f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #4\n\t"
-        "bl PlaySfx\n\t"
-        "mov r0, #1\n\t"
-        "str r0, [r4, #0xc]\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldrh r0, [r0, #0xc]\n\t"
-        "mov r1, #0\n\t"
-        "strh r0, [r4, #0x10]\n\t"
-        "strb r1, [r4, #0x12]\n\t"
-        "str r5, [r4, #8]\n\t"
-        "b 14f\n\t"
-        ".align 2, 0\n"
-    "10: .4byte gStaticData_0817A774\n"
-    "11: .4byte gUnknown_030012BC\n"
-    "12: .4byte gStaticData_0817A780\n"
-    "13:\n\t"
-        "ldrb r0, [r4, #0x12]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 14f\n\t"
-        "cmp r4, #0\n\t"
-        "beq 15f\n\t"
-        "ldr r1, [r4, #0x50]\n\t"
-        "mov r3, #8\n\t"
-        "ldrsh r0, [r1, r3]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r2, [r1, #0xc]\n\t"
-        "mov r1, #3\n\t"
-        "bl sub_803AD80\n\t"
-        "b 15f\n\t"
-    "14:\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_802A7B8\n\t"
-    "15:\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-    );
+    struct hazard *self = selfArg;
+
+    if (self->depth > 0x15ff)
+        self->deep = 1;
+
+    if (self->animIndex == 0) {
+        self->box = self->part->box;
+        if (sub_802DD9C(self)) {
+            HAZARD_HIT(self);
+        }
+        self->box = *(struct box12 *)gStaticData_0817A78C;
+        if (sub_802A6EC(self)) {
+            if (sub_802B7E0(gUnknown_03000884)) {
+                HAZARD_HIT(self);
+            }
+        } else {
+            self->box = *(struct box12 *)gStaticData_0817A774;
+            if (sub_802A6EC(self)) {
+                HAZARD_HIT(self);
+            }
+            self->box = *(struct box12 *)gStaticData_0817A780;
+            if (sub_802A6EC(self)) {
+                HAZARD_HIT(self);
+            }
+        }
+    } else if (self->animDone) {
+        if (self) {
+            ACTOR_VCALL(self, m08, 3);
+        }
+        return;
+    }
+    sub_802A7B8(self);
 }
+
 
 /* `InitActorPart`-based constructor: forwards `a`/`b`/`c`/`d` straight
  * through, installs `self+0x50 = gStaticData_087E4FB4`, and clears the

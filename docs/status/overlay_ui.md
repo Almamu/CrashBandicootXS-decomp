@@ -26,8 +26,8 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   `sub_800306C`, `sub_800312C`, `sub_80031E4`, `sub_80032E8`,
   `sub_80033E8`, `sub_80034BC`, `sub_80035C0`, `sub_8003698`,
   `sub_800376C`, `sub_8003824`, `sub_80038D0`, `sub_800397C`,
-  `sub_8003A60`. (`sub_8002D44`/`sub_8002E20` are NAKED transcriptions
-  tracked as parked, not matched - see below.)
+  `sub_8003A60`. (`sub_8002E20` is a NAKED transcription tracked as
+  parked, not matched - see below.)
 - `src/graphics/settings_menu2.c` (new file - the composite pause/
   options screen's BG-load helper and per-row stats gatherer/
   aggregator; see `docs/rom_map.md`'s `overlay_ui` section):
@@ -45,8 +45,18 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   counter pair on a settings-row sub-widget): `sub_8006084`,
   `sub_800609C`
 - `src/graphics/settings_menu6.c` (new file - first of the composite
-  screen's settings-row icon-widget constructors): `sub_8005A78`. See
-  `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
+  screen's settings-row icon-widget constructors): `sub_8005A78`, plus
+  (issue #7 retry, old_agbcc) `sub_8005AE8`, `sub_8005B80`,
+  `sub_8005C58`, `sub_8005D44`. See
+  `docs/matching/issue-7-0x08004d74-overlay-ui.md` and
+  `docs/matching/issue-7-naked-retry.md`.
+- `src/graphics/settings_menu7.c` (issue #7 retry): the per-row
+  percentage dec/inc pair `sub_8005EF4`, `sub_8005FBC`.
+- `src/graphics/settings_menu21.c` (issue #7 retry): the per-row list
+  renderer `sub_800556C` (`sub_80053F4` in the same file is still
+  NAKED).
+- `src/graphics/settings_menu22.c` (issue #7 retry, old_agbcc): the
+  icon-row fraction readouts `sub_80057E0`, `sub_80058C0`.
 - `src/graphics/settings_menu8d.c` (new file - issue #4,
   0x08002A08-0x08002AA4): the settings-sync record's EEPROM-load-with-
   retry orchestrator, muting the music player across the transfer:
@@ -94,13 +104,17 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
+- **`sub_8002D44`** (`src/graphics/settings_menu8a2.c`) - the SIO pump's
+  TX fill step (issue #5). Plain C; it was NAKED. The old "r7 can never be
+  pushed" note was wrong - plain C gives the r7/r8/sb prologue. See [old-agbcc-round5.md](../matching/old-agbcc-round5.md).
+
 ## Parked - NAKED asm transcriptions (byte-correct, not decompiled C)
 
-- **`sub_8002D44`**, **`sub_8002E20`** (`src/graphics/settings_menu8a2.c`)
-  - the SIO send/receive pump's TX/RX drain-fill steps, both needing r7
-  (and sb/r8) as genuine scratch across their fill loops. GitHub issue
-  #5, see `docs/matching/issue-5-overlay-ui-sync.md`'s
-  "NAKED-transcription pass" section.
+- **`sub_8002E20`** (`src/graphics/settings_menu8a2.c`) - the SIO pump's
+  RX drain step (issue #5). Plain C is ~100 halfwords off: the ROM
+  computes `playerIndex * 0xc8` twice and keeps its loop test as
+  `n - 1 != -1`, where gcc shares the multiply and folds the test. See
+  [old-agbcc-round5.md](../matching/old-agbcc-round5.md).
 - **`sub_8002AA4`** (`src/graphics/settings_menu8e.c`) - checksum
   validate/repair-via-DMA. GitHub issue #4, see
   `docs/matching/issue-4-sio-settings-sync.md`.
@@ -125,14 +139,16 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   icon-manager centered-glyph/label draws, same NAKED-transcription
   class as `settings_menu.c` above.
 - **`sub_8004D74`**, **`sub_8005100`**, **`sub_80053F4`**,
-  **`sub_800556C`**, **`sub_80057E0`**, **`sub_80058C0`**,
-  **`sub_8005AE8`**, **`sub_8005B80`**, **`sub_8005C58`**,
-  **`sub_8005D44`**, **`sub_8005E5C`**, **`sub_8005EF4`**,
-  **`sub_8005FBC`**, **`sub_8006124`**, **`sub_800619C`**,
-  **`sub_80061E8`**, **`sub_80062A8`**, **`sub_8006518`** - all 18 are
+  **`sub_8005E5C`**, **`sub_8006124`**, **`sub_800619C`**,
+  **`sub_80061E8`**, **`sub_80062A8`**, **`sub_8006518`** - all 9 are
   byte-exact via `NAKED` asm transcription (the whole function body is
   a hand-transcribed copy of the ROM's own disassembly, not real
   decompiled C), so they're tracked here as parked rather than matched
   - see `docs/matching/issue-7-0x08004d74-overlay-ui.md`/
   `docs/matching/issue-8-0x080060ac-overlay-ui.md`'s "Third pass"
-  writeups for the technical detail on each.
+  writeups for the technical detail on each. The first four have
+  near-miss C drafts under `NON_MATCHING` from the issue #7 retry
+  (`docs/matching/issue-7-naked-retry.md`). Nine former members of
+  this list (`sub_800556C`, `sub_80057E0`, `sub_80058C0`,
+  `sub_8005AE8`, `sub_8005B80`, `sub_8005C58`, `sub_8005D44`,
+  `sub_8005EF4`, `sub_8005FBC`) are now real C - see Matched.
