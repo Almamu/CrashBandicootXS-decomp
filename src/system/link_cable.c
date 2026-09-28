@@ -15,6 +15,75 @@ extern void sub_80005A0(s32 interruptIndex, irq_handler_t *fn);
 extern void sub_8002830(void);
 extern void sub_8002848(void);
 
+/* The layouts below are what the NON_MATCHING drafts of sub_8001CB8/
+ * sub_8001DB4/sub_8001F50 establish (docs/matching/
+ * issue-4-6-8-naked-retry.md). */
+struct nibble_pair {
+    u8 lo:4;
+    u8 hi:4;
+} __attribute__((packed));
+
+/* A 0x90-byte receive ring (the session header has one at +0x40, each
+ * player record one at +0x38). */
+struct link_ring {
+    u8 unused_00[0x84];
+    s32 field_84;
+    s32 field_88;
+    s32 field_8c;       /* reset to 0x7f */
+};
+
+/* One per-player 0xc8-byte record of the link session. */
+struct link_player {
+    u8 id[6];           /* 0x00 - copy of the session handshake id */
+    u16 field_6;        /* 0x06 - overwrites the id's hash with 0x1234 */
+    u16 field_8;        /* 0x08 */
+    u8 unused_0a[0x2c - 0x0a];
+    s32 field_2c;       /* 0x2c */
+    s32 field_30;       /* 0x30 */
+    s32 field_34;       /* 0x34 */
+    struct link_ring ring; /* 0x38 */
+};
+
+struct link_id_word {
+    u16 lo:4;
+    u16 hi:12;
+} __attribute__((packed));
+
+/* The link session object (`*gUnknown_03000804`). */
+struct link_session {
+    u8 unused_00[4];
+    u8 field_4;
+    u8 field_5;
+    u8 field_6;
+    u8 field_7;
+    u8 field_8;
+    u8 unused_09[3];
+    s32 field_c;
+    s32 field_10;
+    s32 field_14;
+    u8 field_18;
+    u8 unused_19[3];
+    s32 field_1c;
+    struct link_id_word field_20;
+    u8 unused_22[2];
+    s32 field_24;
+    u8 field_28[8];
+    u8 id[8];           /* 0x30 - sub_8001CB8's handshake id */
+    s32 field_38;
+    s32 field_3c;
+    struct link_ring ring;         /* 0x40 */
+    struct link_player players[4]; /* 0xd0 */
+    s32 field_3f0;
+    s32 field_3f4;
+    s32 field_3f8;
+    s32 field_3fc;
+    u16 field_400;
+    u8 unused_402[2];
+    s32 field_404;
+};
+COMPILE_TIME_ASSERT(sizeof(struct link_player) == 0xc8);
+COMPILE_TIME_ASSERT(sizeof(struct link_session) == 0x408);
+
 /* Fills `self`'s first 8 bytes with a fixed 0xEC pattern (byte 0 masked
  * to its low nibble, byte 1 zeroed), then hashes bytes 1-5 with a
  * CRC-16-style table walk seeded at 0x1234 (`gStaticData_0816AF10`,
@@ -47,6 +116,36 @@ extern void sub_8002848(void);
  * (`src/util/math_div_util.c`'s `nullsub_8`, `src/audio/gax_swi.c`'s
  * `sub_80392C4`), is more honest than continuing to chase individual
  * register choices. */
+#if NON_MATCHING
+/* 49 halfwords off under old_agbcc (63 under agbcc). The hash loop
+ * (`i != -1` countdown) and the table lookup match. The ROM's fill loop
+ * is strength-reduced into a pointer compared signed (`cmp r0, r3; bge`)
+ * and the final nibble fold reloads byte 6; the draft keeps the index
+ * and folds `(self[7] << 8) | self[6]` back into `hash`. */
+void sub_8001CB8(u8 *self)
+{
+    u8 *p;
+    u16 hash;
+    s32 i;
+
+    p = self + 7;
+    i = 7;
+    do {
+        *p-- = 0xec;
+    } while (--i >= 0);
+    self[0] &= 0xf;
+    self[1] = 0;
+    hash = 0x1234;
+    p = self + 1;
+    for (i = 4; i != -1; i--) {
+        hash = (hash << 8) ^ gStaticData_0816AF10[((hash >> 8) ^ *p) & 0xff];
+        p++;
+    }
+    self[6] = hash;
+    self[7] = hash >> 8;
+    ((struct nibble_pair *)self)->lo = ((struct nibble_pair *)self)->hi + ((self[7] << 8) | self[6]);
+}
+#else
 NAKED void sub_8001CB8(u8 *self)
 {
     asm(
@@ -112,13 +211,16 @@ NAKED void sub_8001CB8(u8 *self)
     "4: .4byte gStaticData_0816AF10\n"
     );
 }
+#endif
 
 /* "Stop" step of the link session: disables the Serial and Timer3 IRQ
  * lines (each individually IME-guarded), clears their installed
  * handlers, restores IME, resets RCNT to general-purpose mode, sets
  * SIOCNT to a fixed idle value, reloads Timer3 (stopped) with 0xBBBC,
- * and acknowledges both IRQ flags in IF. Always returns 0. */
-s32 sub_8001D30(void)
+ * and acknowledges both IRQ flags in IF. Always returns 0. Its callers
+ * in this file pass the session in r0 (`self` is unused), which the
+ * NON_MATCHING drafts below reproduce by passing it. */
+s32 sub_8001D30(struct link_session *self)
 {
     u16 savedIme;
 
@@ -170,6 +272,68 @@ s32 sub_8001D30(void)
  * loop) making per-register archaeology impractical. Full NAKED
  * transcription instead, like `sub_8001CB8` above and this project's
  * other hard-compiler-limitation cases. */
+#if NON_MATCHING
+static inline void ring_reset(struct link_ring *r)
+{
+    r->field_84 = 0;
+    r->field_88 = 0;
+    r->field_8c = 0x7f;
+}
+
+/* 136 halfwords off under old_agbcc (same size as the ROM). The
+ * `link_ring` resets, the id copies and the tail match in shape; the
+ * per-player loop allocates differently: the ROM recomputes `i * 0xc8`
+ * for each field, precomputes `i + 1` before the inner copy loop and
+ * keeps that loop counting up. */
+s32 sub_8001DB4(struct link_session *self)
+{
+    s32 i, j;
+
+    self->field_6 = 0;
+    self->field_8 = 0;
+    self->field_7 = 0;
+    gUnknown_03000800 = 1;
+    self->field_4 = 0;
+    self->field_1c = -1;
+    self->field_3fc = -1;
+    ring_reset(&self->ring);
+    sub_8001CB8(self->id);
+    for (i = 0; i <= 3; i++) {
+        u32 v = (self->id[i * 2 + 1] << 8) | self->id[i * 2];
+        u32 lo = v & 0xff;
+
+        self->field_28[i * 2] = lo;
+        self->field_28[i * 2 + 1] = v >> 8;
+    }
+    self->field_c = 0;
+    self->field_24 = 0;
+    for (i = 0; i <= 3; i++) {
+        ring_reset(&self->players[i].ring);
+        self->players[i].field_30 = 0;
+        for (j = 0; j <= 3; j++) {
+            u32 w = (self->id[j * 2 + 1] << 8) | self->id[j * 2];
+            u32 lo = w & 0xff;
+
+            self->players[i].id[j * 2] = lo;
+            self->players[i].id[j * 2 + 1] = w >> 8;
+        }
+        ((struct nibble_pair *)&self->players[i].id[1])->lo--;
+        self->players[i].field_34 = 0;
+        self->players[i].field_2c = 0;
+        self->players[i].field_8 = (self->players[i].field_6 = 0x1234);
+    }
+    self->field_3f0 = 0;
+    self->field_3f4 = 0;
+    self->field_3f8 = 0;
+    self->field_38 = 0;
+    self->field_3c = 0;
+    self->field_20.hi = 0xF0B;
+    self->field_20.lo = 0;
+    self->field_400 = *(u16 *)&self->field_20;
+    REG_SIOMLT_SEND = self->field_400;
+    return 0;
+}
+#else
 NAKED void sub_8001DB4(u8 *self)
 {
     asm(
@@ -380,6 +544,7 @@ NAKED void sub_8001DB4(u8 *self)
     "7: .4byte 0x0400012A\n"
     );
 }
+#endif
 
 /* Link-connection/handshake driver - see docs/rom_map.md's SIO/link-
  * cable section. Called repeatedly (once per frame) until the link is
@@ -424,6 +589,100 @@ NAKED void sub_8001DB4(u8 *self)
  * C control-flow guess, so it carries none of that risk: every
  * instruction below was checked instruction-by-instruction against the
  * ROM disassembly (`objdump`) before being counted as matched. */
+#if NON_MATCHING
+/* 37 halfwords off under both compilers (same size as the ROM).
+ * Everything from the timeout counter on matches. Left: the ROM holds
+ * the constant 1 in sb (test, `field_8`, IME) and a second 1 in r1 for
+ * the arm3 flag, which it computes with eor/and; with `one` the draft
+ * gets `bic`, and the IME/IE save sequence is scheduled differently. */
+s32 sub_8001F50(struct link_session *self)
+{
+    s32 arm3;
+    u16 saved;
+    s32 one;
+
+    if (!self->field_5)
+        return 0;
+    if (!self->field_6) {
+        REG_RCNT = 0;
+        REG_SIOCNT = 0x2000;
+        REG_SIOCNT |= 0x4003;
+        self->field_6 = 1;
+    }
+    if (!self->field_8) {
+        one = 1;
+        if (!((REG_SIOCNT >> 3) & one)) {
+            sub_8001D30(self);
+            REG_RCNT = 0;
+            REG_SIOCNT = 0x2000;
+            REG_SIOCNT |= 0x4003;
+            return 0;
+        }
+        self->field_8 = one;
+        arm3 = ((REG_SIOCNT >> 2) ^ one) & one;
+        REG_IME = 0;
+        saved = REG_IME;
+        REG_IME = 0;
+        REG_IE &= ~0x80;
+        REG_IME = saved;
+        saved = REG_IME;
+        REG_IME = 0;
+        REG_IE &= ~0x40;
+        REG_IME = saved;
+        sub_8000544(INTR_INDEX_TIMER3);
+        sub_80005A0(INTR_INDEX_SERIAL, (irq_handler_t *)sub_8002830);
+        REG_IE |= 0x80;
+        if (arm3) {
+            sub_80005A0(INTR_INDEX_TIMER3, (irq_handler_t *)sub_8002848);
+            REG_IE |= 0x40;
+            REG_TM3CNT = 0x00C0BBBC;
+        }
+        REG_IME = one;
+        self->field_3fc = -1;
+        self->field_14 = 0;
+        self->field_404 = 0;
+        self->field_18 = 0;
+    }
+    if (self->field_404 > 15) {
+        self->field_c = -15;
+        self->field_14 = 0x708;
+    }
+    self->field_404++;
+    if (!self->field_7) {
+        if (self->field_3fc < 0)
+            self->field_c = self->field_c - 1;
+        else
+            self->field_c = self->field_c + 1;
+        if (self->field_c > 14) {
+            self->field_7 = 1;
+            self->field_14 = 0;
+            self->field_10 = 0;
+        } else if (self->field_c > -15) {
+            return 0;
+        } else {
+            sub_8001D30(self);
+            sub_8001DB4(self);
+        }
+    }
+    {
+        s32 a = self->field_10;
+        s32 b = self->field_14;
+
+        if (a < b)
+            a = b;
+        self->field_10 = a;
+        b = self->field_18 ? 0 : b + 1;
+        self->field_14 = b;
+        self->field_18 = 0;
+        if (b > 0x1d) {
+            sub_8001D30(self);
+            sub_8001DB4(self);
+        }
+    }
+    self->field_c++;
+    return 1;
+}
+#else
 NAKED s32 sub_8001F50(void *self)
 {
     asm(
@@ -650,6 +909,7 @@ NAKED s32 sub_8001F50(void *self)
         ".align 2, 0\n"
     );
 }
+#endif
 
 /* Per-frame SIO data-exchange pump - see docs/rom_map.md's SIO/link-
  * cable section (called from the Serial IRQ handler `sub_8002830` in

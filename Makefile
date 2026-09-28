@@ -186,6 +186,8 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/hud_icon_widget_8890.o \
                   $(C_BUILDDIR)/graphics/hud_icon_widget_8994.o \
                   $(C_BUILDDIR)/graphics/level_graphics.o \
+                  $(C_BUILDDIR)/graphics/settings_menu.o \
+                  $(C_BUILDDIR)/graphics/settings_menu10.o \
                   $(C_BUILDDIR)/graphics/settings_menu22.o \
                   $(C_BUILDDIR)/graphics/settings_menu6.o \
                   $(C_BUILDDIR)/graphics/trigger_effect.o \
@@ -205,7 +207,8 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/system/game_loop54.o \
                   $(C_BUILDDIR)/system/game_loop57.o \
                   $(C_BUILDDIR)/system/game_loop7.o \
-                  $(C_BUILDDIR)/system/game_loop8.o
+                  $(C_BUILDDIR)/system/game_loop8.o \
+                  $(C_BUILDDIR)/system/link_cable.o
 $(OLD_AGBCC_OBJS): CC1 := $(CC1_OLD)
 $(OLD_AGBCC_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1FLAGS))
 

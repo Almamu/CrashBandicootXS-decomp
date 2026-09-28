@@ -152,3 +152,24 @@ understood with confidence - see the two open questions above) was not
 attempted this pass and stays fully raw in `asm/code_3_1_10_4.s`
 (trimmed to just this one function once its five siblings graduated
 out of the file). `sub_800450C` and issue #6 both stay open.
+
+## Later pass: 7 of 9 are real C
+
+The issue #4/#6/#8 retry ([issue-4-6-8-naked-retry.md](issue-4-6-8-naked-retry.md)) matched these as plain C:
+
+- `sub_8003B40`, `sub_8003BDC`, `sub_8003C90`, `sub_8003F30` and
+  `sub_80041BC` in `settings_menu.c`, which is now on `OLD_AGBCC_OBJS`
+  (the matched functions compile the same under both compilers).
+- `sub_8004914` and `sub_80049CC` in `settings_menu23.c`.
+
+`sub_8003F30`'s byte argument is a packed one-byte struct.
+`sub_80041BC` inlines `sub_8004914`.
+
+Two are left:
+
+- `sub_8003D3C` is still NAKED. Its draft is 9 halfwords off because
+  two constants' registers are swapped.
+- `sub_800450C` now has a C reconstruction under `NON_MATCHING`. It is
+  5 halfwords off under old_agbcc, in the loop pre-header only. Its raw
+  bytes in `asm/code_3_1_10_4.s` are now guarded with
+  `.if NON_MATCHING == 0`.

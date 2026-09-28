@@ -3,11 +3,11 @@
 .syntax unified
 .arm
 
-@ sub_800450C's semantics aren't confidently understood yet in
-@ full (a large screen-init routine touching several still-raw
-@ helpers and an unconfirmed triple-pointer-dereference table) -
-@ left fully untouched rather than force a low-confidence
-@ reconstruction. See the PR/issue for this chunk.
+@ sub_800450C is reconstructed (but not yet byte-matching - 5 halfwords
+@ off under old_agbcc) as C in src/graphics/settings_menu.c, guarded by
+@ #if NON_MATCHING - this raw version is only assembled for the default
+@ (matching) build. See docs/matching/issue-4-6-8-naked-retry.md.
+.if NON_MATCHING == 0
 	thumb_func_start sub_800450C
 sub_800450C: @ 0x0800450C
 	push {r4, r5, r6, r7, lr}
@@ -341,3 +341,4 @@ _080047E8: .4byte gUnknown_030012DC
 _080047EC: .4byte gUnknown_030012E0
 _080047F0: .4byte gUnknown_030012FC
 _080047F4: .4byte gUnknown_030012D0
+.endif

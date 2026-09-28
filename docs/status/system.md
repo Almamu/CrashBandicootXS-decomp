@@ -110,3 +110,7 @@ frozen decomp.dev baseline now (`expected/legacy.s`) - see
   (link-connection/handshake driver), **`sub_8002114`** (1488 B
   per-frame SIO data-exchange pump, this file's biggest function).
   GitHub issue #4, see `docs/matching/issue-4-sio-settings-sync.md`.
+  The issue #4 retry left NON_MATCHING drafts for the first three
+  (49/136/37 halfwords off under old_agbcc, which the file now builds
+  with) and the `struct link_session` layout they establish - see
+  [issue-4-6-8-naked-retry.md](../matching/issue-4-6-8-naked-retry.md).

@@ -28,6 +28,57 @@ extern void sub_8002B70(struct settings_sync_record *self);
  * scratch/callee-saved-register-choice class this project documents at
  * length elsewhere. Full NAKED transcription like
  * `sub_8001CB8`/`sub_8001DB4`/`sub_8002868`/`sub_8002938`. */
+#if NON_MATCHING
+/* 18 halfwords off under both compilers. The checksum (an inlined
+ * copy of sub_8002B44, result pinned to r1 as there) and the DMA fill
+ * match. The ROM computes the four marker-byte addresses ahead of the
+ * row loop and keeps them in r6/sb/r7/r8 (as if hoisted out of a loop);
+ * plain field stores compute them after the loop, and the local
+ * pointers below get them early but in other registers, with 0x1fb
+ * derived from 0x1f8 instead of its own literal. */
+/* An inlined copy of sub_8002B44 below. */
+static inline u32 checksum_ok(struct settings_sync_record *self)
+{
+    u32 *p = (u32 *)self;
+    u32 sum = 0;
+    s32 i;
+    register u32 result asm("r1");
+
+    for (i = 0x7e; i >= 0; i--) {
+        sum += *p++;
+    }
+
+    result = 0;
+    if (sum == self->checksum) {
+        result = 1;
+    }
+    return result;
+}
+
+void sub_8002AA4(struct settings_sync_record *self)
+{
+    s32 i;
+
+    if (!checksum_ok(self)) {
+        u8 *marker, *version, *flags, *f1fb;
+
+        DmaFill16(3, 0, self, 0x200);
+        i = 0;
+        version = &self->versionNibble;
+        marker = &self->field_1f8;
+        f1fb = &self->field_1fb;
+        flags = &self->flags;
+        for (; i <= 3; i++) {
+            sub_8002C6C(self, i);
+        }
+        *marker = 0x43;
+        *version = 0x12;
+        *flags = 0;
+        *f1fb = 0;
+        sub_8002B70(self);
+    }
+}
+#else
 NAKED void sub_8002AA4(struct settings_sync_record *self)
 {
     asm(
@@ -112,6 +163,7 @@ NAKED void sub_8002AA4(struct settings_sync_record *self)
     "8: .4byte 0x000001FB\n"
     );
 }
+#endif
 
 /* Recomputes this record's additive word-sum checksum over its first
  * 0x1fc bytes (127 words) and compares it against the stored
