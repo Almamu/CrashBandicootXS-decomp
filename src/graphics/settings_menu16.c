@@ -18,14 +18,44 @@ extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
  * `label2` there (slot 2). `self` is unused - the ROM never reads it
  * either.
  *
- * Written as NAKED asm, not plain C: same class of gcc-2.9 register-
- * allocation difficulty already documented at length for `sub_8006600`
- * (src/graphics/oam_count.c) - the two long-lived
- * `&gUnknown_030012DC`/`&gUnknown_030012E0` address pointers and the
- * `label2` argument (all three genuinely live across the three
- * sub_803AD80 calls) never reached the ROM's own r5/r6/r8 choice from
- * plain C. Every instruction below is transcribed directly from and
- * checked against the ROM's own disassembly. */
+ * Still NAKED (transcribed from the ROM). The C draft under
+ * NON_MATCHING is 73 halfwords off (16 bytes long) under either
+ * compiler. The ROM keeps 0x130 (record) and 0x110 (posX) in r4/r7
+ * across the calls but re-materializes 0x114 (posY) in the first
+ * reposition, and later derives it as r7 + 4. The draft CSEs 0x114 as
+ * well, which pushes label2 and the two icon-manager addresses into
+ * r8-r10. */
+#if NON_MATCHING
+static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
+{
+    m->posX = x;
+    m->posY = y;
+}
+
+/* Calls the icon manager's `record->slots[slot]` method on `label` (a
+ * gcc 2.x virtual call; sub_803AD80 is `_call_via_r2`). */
+#define DRAW_ICON_SLOT(mgrExpr, slot, label)                                          \
+    {                                                                                 \
+        struct icon_manager *_m = (mgrExpr);                                          \
+        struct icon_record *_r = _m->record;                                          \
+        sub_803AD80((u8 *)_m + _r->slots[slot].offset, (label), _r->slots[slot].ptr); \
+    }
+
+void sub_8005E5C(struct pause_screen_results *self, void *label1, void *label2)
+{
+    u32 x, y;
+
+    DRAW_ICON_SLOT(gUnknown_030012DC, 2, label1);
+    x = gUnknown_030012DC->posX;
+    y = gUnknown_030012DC->posY;
+    set_icon_mgr_pos(gUnknown_030012E0, x - 2, y);
+    DRAW_ICON_SLOT(gUnknown_030012E0, 4, (void *)0x2f);
+    x = gUnknown_030012E0->posX;
+    y = gUnknown_030012E0->posY;
+    set_icon_mgr_pos(gUnknown_030012DC, x - 5, y + 8);
+    DRAW_ICON_SLOT(gUnknown_030012DC, 2, label2);
+}
+#else
 NAKED void sub_8005E5C(struct pause_screen_results *self, void *label1, void *label2)
 {
     asm(
@@ -103,3 +133,4 @@ NAKED void sub_8005E5C(struct pause_screen_results *self, void *label1, void *la
     "2: .4byte gUnknown_030012E0\n"
     );
 }
+#endif

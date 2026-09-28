@@ -330,3 +330,17 @@ also converted all six of those to NAKED and matched them byte-exact
 (see `docs/status/overlay_ui.md`'s `settings_menu6.c`/`settings_menu7.c`
 entries). With that, every one of GitHub issue #7's 25 functions is now
 byte-exact matched. This PR closes issue #7.
+
+## Later pass: NAKED retry
+
+The issue #7 NAKED retry ([issue-7-naked-retry.md](issue-7-naked-retry.md))
+turned 9 of the 13 NAKED functions above back into real C:
+`sub_8005AE8`, `sub_8005B80`, `sub_8005C58`, `sub_8005D44` and
+`sub_80057E0`/`sub_80058C0` (old_agbcc), and `sub_8005EF4`/`sub_8005FBC`
+and `sub_800556C` (either compiler). `sub_8004D74`, `sub_8005100`,
+`sub_80053F4` and `sub_8005E5C` are still NAKED, each with a near-miss C
+draft under `NON_MATCHING`. The "register-pressure" explanations given
+above were mostly wrong. The real causes were an argument the old
+drafts dropped (`count * 5`), `sub_803AD7C`/`sub_803AD80` being
+`_call_via_rN` virtual calls, and loop and evaluation-order effects.
+Issue #7 therefore still has NAKED functions.

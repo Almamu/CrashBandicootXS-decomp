@@ -118,14 +118,14 @@ UNITS = [
     (0x08004EC0, "src/graphics/settings_menu15.o", "overlay_ui"),  # sub_8004EC0/sub_8005004 (screen-object constructor/teardown pair); matched - issue #7
     (0x08005100, None, "overlay_ui"),  # sub_8005100 - blocking cursor/confirm/cancel driver - NAKED transcription, byte-correct but not real decompiled C, tracked as parked - issue #7, see docs/matching/issue-7-0x08004d74-overlay-ui.md
     (0x08005304, "src/graphics/settings_menu17.o", "overlay_ui"),  # sub_8005304 (icon-group reveal/cycle + row-cursor blink); matched - issue #7
-    (0x080053F4, None, "overlay_ui"),  # sub_80053F4/sub_800556C (per-frame row draw step + per-row list renderer) - NAKED transcription, byte-correct but not real decompiled C, tracked as parked - issue #7
+    (0x080053F4, None, "overlay_ui"),  # sub_80053F4 (per-frame row draw step) - NAKED transcription, byte-correct but not real decompiled C, tracked as parked - issue #7, see docs/matching/issue-7-naked-retry.md
+    (0x0800556C, "src/graphics/settings_menu21.o", "overlay_ui"),  # sub_800556C (per-row list renderer); matched - issue #7 retry, see docs/matching/issue-7-naked-retry.md
     (0x0800570C, "src/graphics/settings_menu18.o", "overlay_ui"),  # sub_800570C (icons8c per-bit show + fallback label); matched - issue #7
-    (0x080057E0, None, "overlay_ui"),  # sub_80057E0/sub_80058C0 (icons9c/iconsB0 per-row fraction readouts) - NAKED transcription, byte-correct but not real decompiled C, tracked as parked - issue #7
+    (0x080057E0, "src/graphics/settings_menu22.o", "overlay_ui"),  # sub_80057E0/sub_80058C0 (icons9c/iconsB0 per-row fraction readouts); matched (old_agbcc) - issue #7 retry, see docs/matching/issue-7-naked-retry.md
     (0x0800599C, "src/graphics/settings_menu19.o", "overlay_ui"),  # sub_800599C (results sub-region constructor); matched - issue #7
-    (0x08005A78, "src/graphics/settings_menu6.o", "overlay_ui"),  # sub_8005A78 (settings-row icon widget constructor); matched - issue #7
-    (0x08005AE8, None, "overlay_ui"),  # sub_8005AE8/sub_8005B80/sub_8005C58/sub_8005D44 (settings-row icon widget constructors) - NAKED transcription, byte-correct but not real decompiled C, tracked as parked - issue #7
+    (0x08005A78, "src/graphics/settings_menu6.o", "overlay_ui"),  # sub_8005A78-sub_8005D44 (settings-row icon widget constructors); matched (old_agbcc) - issue #7, see docs/matching/issue-7-naked-retry.md
     (0x08005E5C, None, "overlay_ui"),  # sub_8005E5C - icon-manager fraction-readout draw - NAKED transcription, byte-correct but not real decompiled C, tracked as parked - issue #7
-    (0x08005EF4, None, "overlay_ui"),  # sub_8005EF4/sub_8005FBC (per-row percentage inc/dec pair) - NAKED transcription, byte-correct but not real decompiled C, tracked as parked - issue #7
+    (0x08005EF4, "src/graphics/settings_menu7.o", "overlay_ui"),  # sub_8005EF4/sub_8005FBC (per-row percentage inc/dec pair); matched - issue #7 retry, see docs/matching/issue-7-naked-retry.md
     (0x08006084, "src/graphics/settings_menu5.o", "overlay_ui"),  # sub_8006084/sub_800609C - a small counter/threshold wrap-increment/decrement pair on the settings-row sub-widget; matched
     (0x080060AC, "src/graphics/settings_menu9.o", "overlay_ui"),  # sub_80060AC/sub_80060F8 (decimal itoa helper + a " <NN%>"-shaped percentage-string formatter built on it); matched - GitHub issue #8
     (0x08006124, None, "overlay_ui"),  # sub_8006124/sub_800619C/sub_80061E8 (icon-manager centered-label draws) - NAKED transcription, byte-correct but not real decompiled C, tracked as parked - issue #8, see docs/matching/issue-8-0x080060ac-overlay-ui.md
