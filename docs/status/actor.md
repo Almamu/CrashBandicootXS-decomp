@@ -409,9 +409,10 @@ from "core" graphics.
   same file, is parked below); see
   `docs/matching/issue-17-0x08012fbc-actor.md`, "Second pass".
 - `src/graphics/actor_part_14674.c` (new file, GitHub issue #17, ROM
-  0x08014674-0x08014F8C, built with old_agbcc): `sub_8014940`,
-  `sub_80149BC`, `sub_8014A3C`, `sub_8014AEC`, `sub_8014BCC`,
-  `sub_8014D18`, `sub_8014EE0` (the file's other two functions are parked
+  0x08014674-0x08014F8C, built with old_agbcc): `sub_8014674` (since
+  the mix NAKED retry 5, `docs/matching/mix-naked-retry-5.md`),
+  `sub_8014940`, `sub_80149BC`, `sub_8014A3C`, `sub_8014AEC`,
+  `sub_8014BCC`, `sub_8014D18`, `sub_8014EE0` (`sub_8014B54` is parked
   below); see `docs/matching/issue-17-0x08012fbc-actor.md`, "Second
   pass" and "Third pass".
 - `src/graphics/actor_part_12fbc.c`, `actor_part_134b8.c`,
@@ -1054,15 +1055,13 @@ plain C didn't converge.
   halfwords off, now sits under `#if NON_MATCHING` - see
   `docs/matching/fresh-naked-retry.md`). See
   `docs/matching/naked-spatial-grid-tail.md`.
-- **`sub_8014674`**, **`sub_8014B54`** (`src/graphics/actor_part_14674.c`),
-  GitHub issue #17 - action-table handlers whose old_agbcc C (kept under
-  `NON_MATCHING`) still differs from the ROM (`sub_8014084` from this
-  entry is matched since the third near-miss sweep). In
-  `sub_8014674` (one halfword off since the fourth mid-range retry,
-  `docs/matching/mid-range-naked-retry-4.md`) the ROM's `beq` for tag
-  0xD jumps past the re-test of 0xD; here it lands on it. In `sub_8014B54` one reload register is one step off in
-  gcc's rotation. See `docs/matching/issue-17-0x08012fbc-actor.md`,
-  "Third pass".
+- **`sub_8014B54`** (`src/graphics/actor_part_14674.c`), GitHub issue
+  #17 - the jump-start handler, whose old_agbcc C (kept under
+  `NON_MATCHING`) is 3 halfwords off: the reloaded 0x600 lands in r2
+  where the ROM uses r3. (`sub_8014674` from this entry is matched since
+  the mix NAKED retry 5, `docs/matching/mix-naked-retry-5.md`, and
+  `sub_8014084` since the third near-miss sweep.) See
+  `docs/matching/issue-17-0x08012fbc-actor.md`, "Third pass".
 - **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/issue-9-naked-retry.md); entry kept for history.** **`sub_8009868`** (`src/graphics/actor_part11d.c`) - another
   3-bucket-window grid pass, this one reading the player's state to
   dispatch `sub_800D040`/`sub_80109A4` per object. Fully understood;

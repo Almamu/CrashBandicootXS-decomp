@@ -57,17 +57,6 @@ static inline void SetTag(struct act_part *part, s32 tag)
     sub_800872C(part, 0);
 }
 
-/* On contact (part+0x68 bit 3), picks the landing action from the part's
- * tag (0xD: the +0x29-gated landing, 0x18: re-arm +0x29) or state 0xE;
- * otherwise handles the fire/alt/shoulder inputs and, with the D-pad
- * idle, clears the +0x31/+0x2F/+0x27 trio.
- *
- * NAKED: the C below (old_agbcc) is one halfword off (fourth retry, see
- * docs/matching/mid-range-naked-retry-4.md): every instruction and
- * register matches, but the ROM's `beq` for tag 0xD jumps past the
- * re-test of 0xD (jump threading) while here it lands on it. Spellings
- * of the tag tests either do the same or drop the re-test entirely. */
-#if NON_MATCHING
 static inline void ActTrio28(struct act *self, s32 a, s32 b, s32 c)
 {
     self->next32 = a;
@@ -82,6 +71,15 @@ static inline void ActHold27(struct act *self, u8 *slot, s32 next)
     *slot = next;
 }
 
+/* On contact (part+0x68 bit 3), picks the landing action from the part's
+ * tag (0xD: the +0x29-gated landing, 0x18: re-arm +0x29) or state 0xE;
+ * otherwise handles the fire/alt/shoulder inputs and, with the D-pad
+ * idle, clears the +0x31/+0x2F/+0x27 trio.
+ *
+ * The tag test is a `switch` with a shared 0xD/0x18 case: the ROM's
+ * `beq` for 0xD is threaded past the inner re-test of 0xD while the
+ * 0x18 path keeps it, which an `||` test does not reproduce (see
+ * docs/matching/mix-naked-retry-5.md). */
 void sub_8014674(struct act *self)
 {
     u8 hit = self->part->contact & 8;
@@ -100,10 +98,11 @@ void sub_8014674(struct act *self)
             z = 0;
             *p34 = z;
         }
-        tag = self->part->tag;
-        if (tag == 0xD || tag == 0x18)
+        switch (tag = self->part->tag)
         {
-            if (self->part->tag == 0xD)
+        case 0xD:
+        case 0x18:
+            if (tag == 0xD)
             {
                 if (self->unk_29)
                 {
@@ -125,7 +124,7 @@ void sub_8014674(struct act *self)
                 }
                 ActSetNext(self, 0);
             }
-            else if (self->part->tag == 0x18)
+            else if (tag == 0x18)
             {
                 ACT_VCALL1(self, m20, 4);
                 self->next32 = 0;
@@ -134,31 +133,33 @@ void sub_8014674(struct act *self)
                 self->unk_29 = 1;
                 ActQueue27(self, 0, 0x1B);
             }
-        }
-        else if (self->state == 0xE)
-        {
-            if (gUnknown_030007E0 & 0x30)
+            break;
+        default:
+            if (self->state == 0xE)
             {
-                ActQueue27(self, 0, 1);
+                if (gUnknown_030007E0 & 0x30)
+                {
+                    ActQueue27(self, 0, 1);
+                }
+                else
+                {
+                    self->next31 = z;
+                    self->flag2F = 1;
+                    self->next27 = z;
+                }
+                ActSetNext(self, 0);
+                ACT_VCALL1(self, m20, 0xD);
             }
             else
             {
-                self->next31 = z;
+                ACT_VCALL1(self, m20, 0);
+                self->next32 = z;
+                self->flag30 = 1;
+                self->next28 = 0;
+                self->next31 = 0;
                 self->flag2F = 1;
-                self->next27 = z;
+                self->next27 = 0;
             }
-            ActSetNext(self, 0);
-            ACT_VCALL1(self, m20, 0xD);
-        }
-        else
-        {
-            ACT_VCALL1(self, m20, 0);
-            self->next32 = z;
-            self->flag30 = 1;
-            self->next28 = 0;
-            self->next31 = 0;
-            self->flag2F = 1;
-            self->next27 = 0;
         }
         return;
     }
@@ -236,375 +237,6 @@ void sub_8014674(struct act *self)
         }
     }
 }
-#else
-NAKED void sub_8014674(struct act *self)
-{
-    asm(".syntax unified\n"
-        "\tpush {r4, r5, r6, r7, lr}\n"
-        "\tsub sp, #4\n"
-        "\tadds r4, r0, #0\n"
-        "\tldr r2, [r4, #0x10]\n"
-        "\tadds r1, r2, #0\n"
-        "\tadds r1, #0x68\n"
-        "\tmovs r0, #8\n"
-        "\tldrb r1, [r1]\n"
-        "\tands r0, r1\n"
-        "\tlsls r0, r0, #0x18\n"
-        "\tlsrs r5, r0, #0x18\n"
-        "\tcmp r5, #0\n"
-        "\tbne _08014690\n"
-        "\tb _0801480A\n"
-        "_08014690:\n"
-        "\tmovs r0, #1\n"
-        "\tldrb r1, [r2, #0xd]\n"
-        "\torrs r0, r1\n"
-        "\tstrb r0, [r2, #0xd]\n"
-        "\tadds r0, r4, #0\n"
-        "\tadds r0, #0x34\n"
-        "\tmovs r5, #0\n"
-        "\tstrb r5, [r0]\n"
-        "\tldr r2, [r4, #0x10]\n"
-        "\tadds r0, r2, #0\n"
-        "\tadds r0, #0x2d\n"
-        "\tldrb r0, [r0]\n"
-        "\tcmp r0, #0xd\n"
-        "\tbeq _080146B4\n"
-        "\tcmp r0, #0x18\n"
-        "\tbne _08014778\n"
-        "\tcmp r0, #0xd\n"
-        "\tbne _0801473E\n"
-        "_080146B4:\n"
-        "\tadds r0, r4, #0\n"
-        "\tadds r0, #0x29\n"
-        "\tldrb r0, [r0]\n"
-        "\tcmp r0, #0\n"
-        "\tbeq _080146FC\n"
-        "\tstr r5, [r4, #0x18]\n"
-        "\tldr r1, [r4, #0xc]\n"
-        "\tadds r1, #0x50\n"
-        "\tmovs r3, #0\n"
-        "\tldrsh r0, [r1, r3]\n"
-        "\tadds r0, r4, r0\n"
-        "\tldr r3, [r1, #4]\n"
-        "\tadds r1, r2, #0\n"
-        "\tmovs r2, #0x18\n"
-        "\tbl sub_803AD84\n"
-        "\tldr r1, [r4, #0xc]\n"
-        "\tmovs r2, #0x20\n"
-        "\tldrsh r0, [r1, r2]\n"
-        "\tadds r0, r4, r0\n"
-        "\tldr r2, [r1, #0x24]\n"
-        "\tmovs r1, #4\n"
-        "\tbl sub_803AD80\n"
-        "\tmovs r1, #0x1b\n"
-        "\tadds r0, r4, #0\n"
-        "\tadds r0, #0x31\n"
-        "\tstrb r5, [r0]\n"
-        "\tadds r2, r4, #0\n"
-        "\tadds r2, #0x2f\n"
-        "\tmovs r0, #1\n"
-        "\tstrb r0, [r2]\n"
-        "\tadds r0, r4, #0\n"
-        "\tadds r0, #0x27\n"
-        "\tstrb r1, [r0]\n"
-        "\tb _08014726\n"
-        "_080146FC:\n"
-        "\tstr r5, [r4, #0x18]\n"
-        "\tldr r1, [r4, #0xc]\n"
-        "\tmovs r3, #0x20\n"
-        "\tldrsh r0, [r1, r3]\n"
-        "\tadds r0, r4, r0\n"
-        "\tldr r2, [r1, #0x24]\n"
-        "\tmovs r1, #3\n"
-        "\tbl sub_803AD80\n"
-        "\tadds r2, r4, #0\n"
-        "\tadds r2, #0x27\n"
-        "\tldrb r0, [r2]\n"
-        "\tcmp r0, #1\n"
-        "\tbeq _08014726\n"
-        "\tmovs r0, #1\n"
-        "\tadds r1, r4, #0\n"
-        "\tadds r1, #0x31\n"
-        "\tstrb r5, [r1]\n"
-        "\tsubs r1, #2\n"
-        "\tstrb r0, [r1]\n"
-        "\tstrb r0, [r2]\n"
-        "_08014726:\n"
-        "\tmovs r2, #0\n"
-        "\tadds r0, r4, #0\n"
-        "\tadds r0, #0x32\n"
-        "\tstrb r2, [r0]\n"
-        "\tadds r1, r4, #0\n"
-        "\tadds r1, #0x30\n"
-        "\tmovs r0, #1\n"
-        "\tstrb r0, [r1]\n"
-        "\tadds r0, r4, #0\n"
-        "\tadds r0, #0x28\n"
-        "\tstrb r2, [r0]\n"
-        "\tb _08014934\n"
-        "_0801473E:\n"
-        "\tcmp r0, #0x18\n"
-        "\tbeq _08014744\n"
-        "\tb _08014934\n"
-        "_08014744:\n"
-        "\tldr r1, [r4, #0xc]\n"
-        "\tmovs r2, #0x20\n"
-        "\tldrsh r0, [r1, r2]\n"
-        "\tadds r0, r4, r0\n"
-        "\tldr r2, [r1, #0x24]\n"
-        "\tmovs r1, #4\n"
-        "\tbl sub_803AD80\n"
-        "\tadds r0, r4, #0\n"
-        "\tadds r0, #0x32\n"
-        "\tstrb r5, [r0]\n"
-        "\tsubs r0, #2\n"
-        "\tmovs r1, #1\n"
-        "\tstrb r1, [r0]\n"
-        "\tsubs r0, #8\n"
-        "\tstrb r5, [r0]\n"
-        "\tadds r0, #1\n"
-        "\tstrb r1, [r0]\n"
-        "\tmovs r2, #0x1b\n"
-        "\tadds r0, #8\n"
-        "\tstrb r5, [r0]\n"
-        "\tsubs r0, #2\n"
-        "\tstrb r1, [r0]\n"
-        "\tsubs r0, #8\n"
-        "\tstrb r2, [r0]\n"
-        "\tb _08014934\n"
-        "_08014778:\n"
-        "\tldr r0, [r4, #8]\n"
-        "\tcmp r0, #0xe\n"
-        "\tbne _080147DC\n"
-        "\tldr r0, _0801479C\n"
-        "\tldr r0, [r0]\n"
-        "\tmovs r1, #0x30\n"
-        "\tands r0, r1\n"
-        "\tcmp r0, #0\n"
-        "\tbeq _080147A0\n"
-        "\tmovs r0, #1\n"
-        "\tadds r1, r4, #0\n"
-        "\tadds r1, #0x31\n"
-        "\tstrb r5, [r1]\n"
-        "\tsubs r1, #2\n"
-        "\tstrb r0, [r1]\n"
-        "\tsubs r1, #8\n"
-        "\tstrb r0, [r1]\n"
-        "\tb _080147B4\n"
-        "\t.align 2, 0\n"
-        "_0801479C: .4byte gUnknown_030007E0\n"
-        "_080147A0:\n"
-        "\tadds r0, r4, #0\n"
-        "\tadds r0, #0x31\n"
-        "\tstrb r5, [r0]\n"
-        "\tadds r1, r4, #0\n"
-        "\tadds r1, #0x2f\n"
-        "\tmovs r0, #1\n"
-        "\tstrb r0, [r1]\n"
-        "\tadds r0, r4, #0\n"
-        "\tadds r0, #0x27\n"
-        "\tstrb r5, [r0]\n"
-        "_080147B4:\n"
-        "\tmovs r2, #0\n"
-        "\tadds r0, r4, #0\n"
-        "\tadds r0, #0x32\n"
-        "\tstrb r2, [r0]\n"
-        "\tadds r1, r4, #0\n"
-        "\tadds r1, #0x30\n"
-        "\tmovs r0, #1\n"
-        "\tstrb r0, [r1]\n"
-        "\tadds r0, r4, #0\n"
-        "\tadds r0, #0x28\n"
-        "\tstrb r2, [r0]\n"
-        "\tldr r1, [r4, #0xc]\n"
-        "\tmovs r3, #0x20\n"
-        "\tldrsh r0, [r1, r3]\n"
-        "\tadds r0, r4, r0\n"
-        "\tldr r2, [r1, #0x24]\n"
-        "\tmovs r1, #0xd\n"
-        "\tbl sub_803AD80\n"
-        "\tb _08014934\n"
-        "_080147DC:\n"
-        "\tldr r1, [r4, #0xc]\n"
-        "\tmovs r2, #0x20\n"
-        "\tldrsh r0, [r1, r2]\n"
-        "\tadds r0, r4, r0\n"
-        "\tldr r2, [r1, #0x24]\n"
-        "\tmovs r1, #0\n"
-        "\tbl sub_803AD80\n"
-        "\tadds r0, r4, #0\n"
-        "\tadds r0, #0x32\n"
-        "\tstrb r5, [r0]\n"
-        "\tsubs r0, #2\n"
-        "\tmovs r1, #1\n"
-        "\tstrb r1, [r0]\n"
-        "\tsubs r0, #8\n"
-        "\tstrb r5, [r0]\n"
-        "\tadds r0, #9\n"
-        "\tstrb r5, [r0]\n"
-        "\tsubs r0, #2\n"
-        "\tstrb r1, [r0]\n"
-        "\tsubs r0, #8\n"
-        "\tstrb r5, [r0]\n"
-        "\tb _08014934\n"
-        "_0801480A:\n"
-        "\tldr r7, _08014858\n"
-        "\tldr r0, [r7]\n"
-        "\tstr r0, [sp]\n"
-        "\tmov r0, sp\n"
-        "\tldrh r1, [r0, #2]\n"
-        "\tmovs r6, #1\n"
-        "\tmovs r3, #1\n"
-        "\tands r3, r1\n"
-        "\tcmp r3, #0\n"
-        "\tbeq _0801485C\n"
-        "\tldr r1, [r4, #0xc]\n"
-        "\tmovs r3, #0x20\n"
-        "\tldrsh r0, [r1, r3]\n"
-        "\tadds r0, r4, r0\n"
-        "\tldr r2, [r1, #0x24]\n"
-        "\tmovs r1, #5\n"
-        "\tbl sub_803AD80\n"
-        "\tldr r2, [r4, #0xc]\n"
-        "\tadds r2, #0x50\n"
-        "\tmovs r1, #0\n"
-        "\tldrsh r0, [r2, r1]\n"
-        "\tadds r0, r4, r0\n"
-        "\tldr r1, [r4, #0x10]\n"
-        "\tldr r3, [r2, #4]\n"
-        "\tmovs r2, #0x13\n"
-        "\tbl sub_803AD84\n"
-        "\tstr r5, [r4, #0x18]\n"
-        "\tmovs r1, #7\n"
-        "\tadds r0, r4, #0\n"
-        "\tadds r0, #0x32\n"
-        "\tstrb r5, [r0]\n"
-        "\tsubs r0, #2\n"
-        "\tstrb r6, [r0]\n"
-        "\tsubs r0, #8\n"
-        "\tstrb r1, [r0]\n"
-        "\tb _08014910\n"
-        "\t.align 2, 0\n"
-        "_08014858: .4byte gUnknown_030007E0\n"
-        "_0801485C:\n"
-        "\tmovs r0, #2\n"
-        "\tands r0, r1\n"
-        "\tlsls r0, r0, #0x10\n"
-        "\tlsrs r5, r0, #0x10\n"
-        "\tcmp r5, #0\n"
-        "\tbeq _080148C0\n"
-        "\tmovs r0, #1\n"
-        "\tldrb r1, [r2, #0xd]\n"
-        "\torrs r0, r1\n"
-        "\tstrb r0, [r2, #0xd]\n"
-        "\tadds r0, r4, #0\n"
-        "\tadds r0, #0x34\n"
-        "\tstrb r3, [r0]\n"
-        "\tldr r1, [r7]\n"
-        "\tmovs r0, #0x30\n"
-        "\tands r1, r0\n"
-        "\tcmp r1, #0\n"
-        "\tbeq _08014890\n"
-        "\tadds r0, r4, #0\n"
-        "\tadds r0, #0x31\n"
-        "\tstrb r3, [r0]\n"
-        "\tsubs r0, #2\n"
-        "\tstrb r6, [r0]\n"
-        "\tsubs r0, #8\n"
-        "\tstrb r6, [r0]\n"
-        "\tb _0801489E\n"
-        "_08014890:\n"
-        "\tadds r0, r4, #0\n"
-        "\tadds r0, #0x31\n"
-        "\tstrb r1, [r0]\n"
-        "\tsubs r0, #2\n"
-        "\tstrb r6, [r0]\n"
-        "\tsubs r0, #8\n"
-        "\tstrb r1, [r0]\n"
-        "_0801489E:\n"
-        "\tldr r0, [r4, #8]\n"
-        "\tsubs r0, #0xd\n"
-        "\tcmp r0, #1\n"
-        "\tbls _080148AE\n"
-        "\tadds r0, r4, #0\n"
-        "\tbl sub_8015398\n"
-        "\tb _08014910\n"
-        "_080148AE:\n"
-        "\tldr r1, [r4, #0xc]\n"
-        "\tmovs r2, #0x20\n"
-        "\tldrsh r0, [r1, r2]\n"
-        "\tadds r0, r4, r0\n"
-        "\tldr r2, [r1, #0x24]\n"
-        "\tmovs r1, #0xd\n"
-        "\tbl sub_803AD80\n"
-        "\tb _08014910\n"
-        "_080148C0:\n"
-        "\tmov r1, sp\n"
-        "\tmovs r0, #0x80\n"
-        "\tlsls r0, r0, #1\n"
-        "\tldrh r1, [r1]\n"
-        "\tands r0, r1\n"
-        "\tcmp r0, #0\n"
-        "\tbeq _08014910\n"
-        "\tmovs r0, #1\n"
-        "\tldrb r3, [r2, #0xd]\n"
-        "\torrs r0, r3\n"
-        "\tstrb r0, [r2, #0xd]\n"
-        "\tadds r0, r4, #0\n"
-        "\tadds r0, #0x34\n"
-        "\tstrb r5, [r0]\n"
-        "\tldr r1, [r4, #0xc]\n"
-        "\tmovs r2, #0x20\n"
-        "\tldrsh r0, [r1, r2]\n"
-        "\tadds r0, r4, r0\n"
-        "\tldr r2, [r1, #0x24]\n"
-        "\tmovs r1, #0x10\n"
-        "\tbl sub_803AD80\n"
-        "\tldr r2, [r4, #0xc]\n"
-        "\tadds r2, #0x50\n"
-        "\tmovs r3, #0\n"
-        "\tldrsh r0, [r2, r3]\n"
-        "\tadds r0, r4, r0\n"
-        "\tldr r1, [r4, #0x10]\n"
-        "\tldr r3, [r2, #4]\n"
-        "\tmovs r2, #3\n"
-        "\tbl sub_803AD84\n"
-        "\tstr r5, [r4, #0x1c]\n"
-        "\tadds r0, r4, #0\n"
-        "\tadds r0, #0x31\n"
-        "\tstrb r5, [r0]\n"
-        "\tsubs r0, #2\n"
-        "\tstrb r6, [r0]\n"
-        "\tsubs r0, #8\n"
-        "\tstrb r5, [r0]\n"
-        "_08014910:\n"
-        "\tldr r0, _0801493C\n"
-        "\tldr r0, [r0]\n"
-        "\tbl sub_8000760\n"
-        "\tlsls r0, r0, #0x18\n"
-        "\tlsrs r1, r0, #0x18\n"
-        "\tcmp r1, #0\n"
-        "\tbne _08014934\n"
-        "\tadds r0, r4, #0\n"
-        "\tadds r0, #0x31\n"
-        "\tstrb r1, [r0]\n"
-        "\tadds r2, r4, #0\n"
-        "\tadds r2, #0x2f\n"
-        "\tmovs r0, #1\n"
-        "\tstrb r0, [r2]\n"
-        "\tadds r0, r4, #0\n"
-        "\tadds r0, #0x27\n"
-        "\tstrb r1, [r0]\n"
-        "_08014934:\n"
-        "\tadd sp, #4\n"
-        "\tpop {r4, r5, r6, r7}\n"
-        "\tpop {r0}\n"
-        "\tbx r0\n"
-        "\t.align 2, 0\n"
-        "_0801493C: .4byte gUnknown_03001304\n"
-        ".syntax divided\n");
-}
-#endif
 
 void sub_8014940(struct act *self)
 {
@@ -720,7 +352,9 @@ void sub_8014AEC(struct act *self)
  * NAKED: the C below is off by one register - the 0x600 constant is a
  * reload the ROM puts in r3 where gcc picks r2 (its reload-register
  * rotation is one step apart), and pinning it shifts every later reload
- * instead - see docs/matching/issue-17-0x08012fbc-actor.md, "Second pass". */
+ * instead - see docs/matching/issue-17-0x08012fbc-actor.md, "Second pass".
+ * Padding, extra references and helper spellings didn't move it either
+ * (docs/matching/mix-naked-retry-5.md). */
 #if NON_MATCHING
 void sub_8014B54(struct act *self)
 {

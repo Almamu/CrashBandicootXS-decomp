@@ -151,42 +151,17 @@ void sub_8011448(struct orbit_part *self, u8 randomize)
  * with a tail call to sub_8008364(self) (already matched elsewhere,
  * src/graphics/actor_part5.c).
  *
- * NAKED, not plain C: this is the largest function in this file (500
- * bytes) and, per this subsystem's own established pattern, hits the
- * same class of gcc-2.9 register-pressure mismatches already documented
- * at length for its neighbors (sub_800D040/sub_0800D18C/sub_8010B6C/
- * sub_8011448 above) - specifically the shared "self->0xc bit 0 +
- * collision-bitmap" tail duplicated after modes 1/2/3 each recomputes
- * its own address/shift chain slightly differently depending on which
- * registers are still live from that mode's own preceding branch, a
- * shape a natural compile collapses into one shared subroutine instead
- * of the ROM's own three near-identical inlined copies. Transcribed
- * straight from the confirmed-correct ROM disassembly - every field
- * offset, branch, and call argument (including the mode-3 spawn call's
- * exact fixed args) was cross-referenced against the semantic read
- * above before transcription. */
-#if NON_MATCHING
-/* First C draft (old_agbcc): control flow and every call are right,
- * including the mode-3 spawn's stack arguments (the game_loop48.c
- * argP4/argP5 trick), but it is 84 bytes too long. In the ROM,
- * cross-jumping merged the three "flags |= 1; set the id bit" tails
- * (mode 1 jumps into the bit-set part, modes 2 and 3 share everything
- * from the `orr`); here their register allocations differ, so the
- * copies stay separate. The mode-3 `++phase > 9` test also uses
- * `ands` with a hoisted 0xff instead of the ROM's `lsl`/`lsr`.
- *
- * Second pass (docs/matching/big-naked-retry-3.md): size-exact, 21
- * halfwords off. The tails now merge: the spawn's byte argument is a
- * plain `*(volatile u8 *)&argP5 = 1`, so its 1 is a QImode constant
- * that cse reuses for mode 3's `flags |= 1` but not for the SImode
- * `1 << bit`; the phase test spells out the zero-extension as shifts
- * (a QImode 0xff register was otherwise shared across the call); the
- * timer re-reads go through an `s32` inline so the compare stays the
- * ROM's signed `ble` after a fresh `ldrh`; the state is re-read for
- * each test. Left: modes 1/2 load x/y into r0 and the velocity into r1
- * (the ROM has them the other way round), the spawn's `movs r5, #1`
- * comes one instruction before `add r3, sp, #4`, and the state-3 tail
- * stores x before computing y. */
+ * Matched (old_agbcc) over three passes, see
+ * docs/matching/big-naked-retry-3.md and
+ * docs/matching/mix-naked-retry-5.md. The three "flags |= 1, set the id
+ * bit" tails are merged by cross-jumping as in the ROM: the spawn's byte
+ * argument is a plain `*(volatile u8 *)` store of a QImode 1 that cse
+ * reuses for mode 3's `flags |= 1` but not for the SImode `1 << bit`;
+ * the phase test spells out the zero-extension as shifts; the timer
+ * re-reads go through an `s32` inline so the compare stays the ROM's
+ * signed `ble`; the state is re-read for each test. The integrate step
+ * (ORBIT_STEP), the spawn argument's address and the state-3 tail's
+ * locals settle the last register and order differences. */
 extern void *gUnknown_030012B4;
 extern void *gUnknown_030012E4;
 extern struct orbit_part *gUnknown_030012D8;
@@ -228,14 +203,27 @@ static inline s32 OrbitTimer(struct orbit_part *self)
     return self->timer;
 }
 
+/* pos += vel. The two empty asms each add a reference to the velocity
+ * (brief item 8), which raises its allocation priority so that it gets
+ * r0 and the position r1, as in the ROM. */
+#define ORBIT_STEP(pos, vel)                                                   \
+    {                                                                          \
+        s32 _p = (pos);                                                        \
+        s32 _v = (vel);                                                        \
+                                                                               \
+        asm("" : : "r"(_v));                                                   \
+        asm("" : : "r"(_v));                                                   \
+        (pos) = _p + _v;                                                       \
+    }
+
 void sub_8011548(struct orbit_part *self)
 {
     s32 argP4;
     u32 argP5;
 
     if (self->state == 1) {
-        self->base.x += self->velX;
-        self->base.y += self->velY;
+        ORBIT_STEP(self->base.x, self->velX);
+        ORBIT_STEP(self->base.y, self->velY);
         if (self->timer != 0) {
             self->timer += 4;
             if (OrbitTimer(self) > 0x100)
@@ -249,8 +237,8 @@ void sub_8011548(struct orbit_part *self)
     } else if (self->state == 2) {
         s32 fire;
 
-        self->base.x += self->velX;
-        self->base.y += self->velY;
+        ORBIT_STEP(self->base.x, self->velX);
+        ORBIT_STEP(self->base.y, self->velY);
         fire = 0;
         if (self->counter == 0) {
             s32 t = self->timer - 4;
@@ -273,9 +261,15 @@ void sub_8011548(struct orbit_part *self)
                 s32 sx = self->base.x >> 8;
                 s32 sy = self->base.y >> 8;
 
+                volatile u8 *q;
+
+                /* The empty asm takes `&argP5` into a register as its own
+                 * insn, so its `add r3, sp, #4` comes before the `movs r5,
+                 * #1` (as an address reload of the store, it came after). */
                 ((OrbitSpawn4)sub_8025CA4)(gUnknown_030012E4, sx, sy,
                     (*(volatile s32 *)&argP4 = 0,
-                     *(volatile u8 *)&argP5 = 1, 0));
+                     ({ asm("" : "=r"(q) : "0"(&argP5)); 0; }),
+                     *q = 1, 0));
             }
             {
                 u32 ph = self->phase + 1;
@@ -305,273 +299,13 @@ void sub_8011548(struct orbit_part *self)
     } else if (self->state == 3) {
         struct orbit_part *p = gUnknown_030012D8;
         s32 px = p->base.x, py = p->base.y;
+        s32 nx = px - 0x400, ny = py - 0xe00;
 
-        self->base.x = px - 0x400;
-        self->base.y = py - 0xe00;
+        self->base.x = nx;
+        self->base.y = ny;
     }
     sub_8008364(&self->base);
 }
-#else
-NAKED void sub_8011548(void *self)
-{
-    asm(
-        "push {r4, r5, lr}\n\t"
-        "sub sp, #8\n\t"
-        "add r4, r0, #0\n\t"
-        "add r0, #0x48\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #1\n\t"
-        "bne 2f\n\t"
-        "ldr r1, [r4]\n\t"
-        "ldr r0, [r4, #0x40]\n\t"
-        "add r1, r1, r0\n\t"
-        "str r1, [r4]\n\t"
-        "ldr r1, [r4, #4]\n\t"
-        "ldr r0, [r4, #0x44]\n\t"
-        "add r1, r1, r0\n\t"
-        "str r1, [r4, #4]\n\t"
-        "ldrh r0, [r4, #0x3c]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 3f\n\t"
-        "add r0, #4\n\t"
-        "strh r0, [r4, #0x3c]\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #1\n\t"
-        "ldrh r1, [r4, #0x3c]\n\t"
-        "cmp r1, r0\n\t"
-        "ble 3f\n\t"
-        "mov r0, #0\n\t"
-        "strh r0, [r4, #0x3c]\n\t"
-    "3:\n\t"
-        "ldr r0, [r4]\n\t"
-        "asr r0, r0, #8\n\t"
-        "cmp r0, #0x10\n\t"
-        "ble 4f\n\t"
-        "b 15f\n\t"
-    "4:\n\t"
-        "ldr r0, [r4, #4]\n\t"
-        "asr r0, r0, #8\n\t"
-        "cmp r0, #0x10\n\t"
-        "ble 5f\n\t"
-        "b 15f\n\t"
-    "5:\n\t"
-        "ldr r0, 20f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0xe\n\t"
-        "bl PlaySfx\n\t"
-        "ldr r0, 21f\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_8023430\n\t"
-        "mov r0, #1\n\t"
-        "ldrb r2, [r4, #0xc]\n\t"
-        "orr r0, r2\n\t"
-        "strb r0, [r4, #0xc]\n\t"
-        "ldr r0, 22f\n\t"
-        "ldrh r5, [r4, #8]\n\t"
-        "cmp r5, r0\n\t"
-        "bne 6f\n\t"
-        "b 15f\n\t"
-    "6:\n\t"
-        "b 14f\n\t"
-        ".align 2, 0\n"
-    "20: .4byte gUnknown_030012BC\n"
-    "21: .4byte gUnknown_030012C0\n"
-    "22: .4byte 0x0000FFFF\n"
-    "2:\n\t"
-        "cmp r0, #2\n\t"
-        "bne 7f\n\t"
-        "ldr r1, [r4]\n\t"
-        "ldr r0, [r4, #0x40]\n\t"
-        "add r1, r1, r0\n\t"
-        "str r1, [r4]\n\t"
-        "ldr r1, [r4, #4]\n\t"
-        "ldr r0, [r4, #0x44]\n\t"
-        "add r1, r1, r0\n\t"
-        "str r1, [r4, #4]\n\t"
-        "mov r1, #0\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x49\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 8f\n\t"
-        "ldrh r0, [r4, #0x3c]\n\t"
-        "sub r0, #4\n\t"
-        "strh r0, [r4, #0x3c]\n\t"
-        "cmp r0, #0x3f\n\t"
-        "bgt 9f\n\t"
-        "b 10f\n\t"
-    "8:\n\t"
-        "ldrh r0, [r4, #0x3c]\n\t"
-        "add r0, #0xc\n\t"
-        "strh r0, [r4, #0x3c]\n\t"
-        "mov r0, #0xd8\n\t"
-        "lsl r0, r0, #1\n\t"
-        "ldrh r2, [r4, #0x3c]\n\t"
-        "cmp r2, r0\n\t"
-        "ble 9f\n\t"
-        "mov r1, #1\n\t"
-    "9:\n\t"
-        "cmp r1, #0\n\t"
-        "beq 15f\n\t"
-    "10:\n\t"
-        "mov r0, #1\n\t"
-        "ldrb r5, [r4, #0xc]\n\t"
-        "b 13f\n\t"
-    "7:\n\t"
-        "cmp r0, #3\n\t"
-        "bne 16f\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x49\n\t"
-        "ldrb r0, [r1]\n\t"
-        "add r0, #1\n\t"
-        "mov r3, #0\n\t"
-        "strb r0, [r1]\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "cmp r0, #0xa\n\t"
-        "bls 15f\n\t"
-        "strb r3, [r1]\n\t"
-        "ldr r1, [r4]\n\t"
-        "asr r1, r1, #8\n\t"
-        "ldr r2, [r4, #4]\n\t"
-        "asr r2, r2, #8\n\t"
-        "ldr r0, 23f\n\t"
-        "ldr r0, [r0]\n\t"
-        "str r3, [sp]\n\t"
-        "add r3, sp, #4\n\t"
-        "mov r5, #1\n\t"
-        "strb r5, [r3]\n\t"
-        "mov r3, #0\n\t"
-        "bl sub_8025CA4\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x4b\n\t"
-        "ldrb r0, [r1]\n\t"
-        "add r0, #1\n\t"
-        "strb r0, [r1]\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "cmp r0, #9\n\t"
-        "bls 15f\n\t"
-        "ldrb r0, [r4, #0xc]\n\t"
-    "13:\n\t"
-        "orr r0, r5\n\t"
-        "strb r0, [r4, #0xc]\n\t"
-        "ldr r0, 24f\n\t"
-        "ldrh r1, [r4, #8]\n\t"
-        "cmp r1, r0\n\t"
-        "beq 15f\n\t"
-    "14:\n\t"
-        "ldrh r3, [r4, #8]\n\t"
-        "ldr r0, 25f\n\t"
-        "ldr r2, [r0]\n\t"
-        "add r0, r3, #0\n\t"
-        "asr r0, r0, #5\n\t"
-        "lsl r1, r0, #2\n\t"
-        "mov r5, #0x84\n\t"
-        "lsl r5, r5, #1\n\t"
-        "add r2, r2, r5\n\t"
-        "add r2, r2, r1\n\t"
-        "lsl r0, r0, #5\n\t"
-        "sub r0, r3, r0\n\t"
-        "mov r1, #1\n\t"
-        "lsl r1, r0\n\t"
-        "ldr r0, [r2]\n\t"
-        "orr r0, r1\n\t"
-        "str r0, [r2]\n\t"
-        "b 15f\n\t"
-        ".align 2, 0\n"
-    "23: .4byte gUnknown_030012E4\n"
-    "24: .4byte 0x0000FFFF\n"
-    "25: .4byte gUnknown_030012B4\n"
-    "16:\n\t"
-        "add r2, r4, #0\n\t"
-        "add r2, #0x4a\n\t"
-        "ldrb r0, [r2]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 17f\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x49\n\t"
-        "ldrb r0, [r1]\n\t"
-        "add r0, #1\n\t"
-        "strb r0, [r1]\n\t"
-        "b 15f\n\t"
-    "17:\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x4b\n\t"
-        "ldrb r0, [r1]\n\t"
-        "add r0, #1\n\t"
-        "strb r0, [r1]\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "cmp r0, #0x1f\n\t"
-        "bls 15f\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r2]\n\t"
-    "15:\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x48\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 11f\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x4a\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 18f\n\t"
-        "ldr r1, 26f\n\t"
-        "add r2, r4, #0\n\t"
-        "add r2, #0x49\n\t"
-        "mov r0, #0x7f\n\t"
-        "ldrb r2, [r2]\n\t"
-        "and r0, r2\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r2, [r0, r1]\n\t"
-        "mov r1, #0xa0\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r0, r2, #0\n\t"
-        "bl sub_80008FC\n\t"
-        "add r2, r0, #0\n\t"
-        "ldr r0, [r4, #0x50]\n\t"
-        "add r0, r0, r2\n\t"
-        "str r0, [r4, #4]\n\t"
-        "b 19f\n\t"
-        ".align 2, 0\n"
-    "26: .4byte gStaticData_0816A820\n"
-    "18:\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_801192C\n\t"
-        "b 19f\n\t"
-    "11:\n\t"
-        "cmp r0, #3\n\t"
-        "bne 19f\n\t"
-        "ldr r0, 27f\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldr r0, [r1]\n\t"
-        "ldr r1, [r1, #4]\n\t"
-        "ldr r2, 28f\n\t"
-        "add r0, r0, r2\n\t"
-        "ldr r5, 29f\n\t"
-        "add r1, r1, r5\n\t"
-        "str r0, [r4]\n\t"
-        "str r1, [r4, #4]\n\t"
-    "19:\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_8008364\n\t"
-        "add sp, #8\n\t"
-        "pop {r4, r5}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "27: .4byte gUnknown_030012D8\n"
-    "28: .4byte 0xFFFFFC00\n"
-    "29: .4byte 0xFFFFF200\n"
-    );
-}
-#endif
 
 /* sub_801173C: the achievement/unlock-icon spawn helper (docs/rom_map.md),
  * extern-declared as `void sub_801173C(u16 arg0)` in
