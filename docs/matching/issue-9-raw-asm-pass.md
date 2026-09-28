@@ -208,3 +208,23 @@ asm("" : : "r"(hold));`) to the two drafts above.
       offset into sb in place. None of 16 tail spellings tried
       (pointer locals, byte offsets, a `struct orbit_pos *`, `SetPos`
       argument orders) reproduced that.
+
+## Later pass: `sub_800AFF4` closed
+
+`sub_800AFF4` is real C now (old_agbcc, same 636 bytes). The orbit tail
+passes its two sums straight in as arguments to a small inline setter:
+
+```c
+SetChildPos(self->child,
+            self->hist[idx].x + gStaticData_0816A820[gUnknown_0300082C & 0xff] * 16,
+            self->hist[idx].y + gStaticData_0816A820[(gUnknown_0300082C >> 1) & 0xff] * 8 - 0x1800);
+```
+
+gcc 2.x expands all of an inline call's arguments before it copies them
+into the parameters. A sum comes back unforced, as
+`(plus (mult ...) (mem ...))`, and is only forced at that copy. That
+gives the ROM's order: `idx * 8` added into sb and the table reads
+first, then the `child` load, the shifts, the history loads and the
+adds. It also fixed the `&82C`/`&81C` r4/r5 swap. The two r6 holds from
+the hold pass stay. See
+[inline-arg-order-retry.md](inline-arg-order-retry.md).
