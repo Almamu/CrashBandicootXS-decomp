@@ -299,7 +299,13 @@ static inline void ring_reset(struct link_ring *r)
  * `link_ring` resets, the id copies and the tail match in shape; the
  * per-player loop allocates differently: the ROM recomputes `i * 0xc8`
  * for each field, precomputes `i + 1` before the inner copy loop and
- * keeps that loop counting up. */
+ * keeps that loop counting up. Later pass: do/while, goto, `continue`
+ * and explicit src/dst pointer forms of the inner loop all still get
+ * reversed by old_agbcc (-fno-strength-reduce is worse: the ROM's first
+ * id loop *is* reversed and pointer-reduced). The ROM also doesn't hoist
+ * `self + 0xd0` out of the outer loop (it builds the inner dst giv as
+ * `i * 0xc8 + (self + 0xd0)` each pass) and re-reads `field_400` after
+ * storing it. */
 s32 sub_8001DB4(struct link_session *self)
 {
     s32 i, j;

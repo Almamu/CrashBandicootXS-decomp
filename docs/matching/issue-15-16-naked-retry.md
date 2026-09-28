@@ -82,3 +82,7 @@ The second retry (docs/matching/issue-15-16-17-naked-retry-2.md) closed
 through a local (old_agbcc's GCSE turns those reloads into the ROM's r2
 copy), and `pressed & 1` folds into `pressed`'s assignment. The other
 functions listed as not closed above are still NAKED.
+
+A third pass (docs/matching/issue-15-16-naked-retry-3.md) closed
+`sub_8012420` and `sub_8012AF4` as real C under old_agbcc, and left new
+or updated drafts for `sub_8011548` and `sub_801173C`.

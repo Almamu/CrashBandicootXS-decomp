@@ -162,3 +162,8 @@ the `struct act` player/action object from `include/action_obj.h`.
 under `NON_MATCHING`; `sub_8011BD4` wasn't attempted. See
 [issue-15-16-naked-retry.md](issue-15-16-naked-retry.md).
 
+
+## Later pass (third issue #15/#16 NAKED retry)
+
+`sub_8012420` and `sub_8012AF4` are real C under old_agbcc now. See
+[issue-15-16-naked-retry-3.md](issue-15-16-naked-retry-3.md).

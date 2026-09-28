@@ -10,8 +10,8 @@
  *
  * Built with old_agbcc (Makefile OLD_AGBCC_OBJS) since the issue #15/#16
  * NAKED retry (docs/matching/issue-15-16-naked-retry.md): `sub_8012D24`
- * matches as plain C under it. `sub_8012AF4` is still a NAKED
- * transcription; its C draft sits under NON_MATCHING. */
+ * matches as plain C under it, and `sub_8012AF4` followed in the
+ * issue #15/#16 NAKED retry 2 (docs/matching/issue-15-16-naked-retry.md). */
 
 asm(".set _call_via_r2, sub_803AD80\n"
     ".set _call_via_r3, sub_803AD84\n");
@@ -84,15 +84,17 @@ static inline u8 PartByte(struct act_part *part, s32 offset)
  * repeats a near-identical stack-record/rescale/trampoline sequence
  * keyed on `self+0x28`'s tag against the same table, then clears
  * `self+0x30`. */
-#if NON_MATCHING
-/* Near miss under old_agbcc: same instructions and control flow, but the
- * register allocation differs throughout (the ROM puts short-lived
- * constants in r5/r6 and keeps the +0x27 slot in r8). */
+/*
+ * The +0x2f flag and the +0x27 tag are read straight through `self`
+ * each time: old_agbcc's GCSE then makes the address copies the ROM
+ * keeps (the flag address in r7, the tag address copied into r8), and
+ * the record index is added to the table base after it is computed
+ * (`*(table + i)`), which loads the table address late like the ROM.
+ */
 void sub_8012AF4(struct act *self)
 {
     struct anim_rec rec;
     struct act_part *p;
-    u8 *flag;
 
     p = gUnknown_030012D8;
     if (p->unk_102 == 0) {
@@ -110,37 +112,40 @@ void sub_8012AF4(struct act *self)
     }
 skip:
     if (self->state == 0) {
-        p = gUnknown_030012D8;
+        struct act_part *p = gUnknown_030012D8;
         if (p->unk_60 == 0 && p->bank->unk_0A != 0x12 && self->unk_33 == 0) {
             sub_80019A8(gUnknown_030012BC, 0x36);
             ACT_CALL2(self, m50, gUnknown_030012D8, 0x12);
         }
     }
     if (self->state == 0 || self->state == 0x11) {
-        p = gUnknown_030012D8;
-        flag = &self->flag2F;
+        struct act_part *p = gUnknown_030012D8;
         if (p->unk_60 != 0 && p->unk_100 == 0) {
             self->next31 = 0;
-            *flag = 1;
+            self->flag2F = 1;
             self->next27 = 0;
         }
-    } else {
-        flag = &self->flag2F;
     }
     {
-        u8 f = *flag;
+        u8 f = self->flag2F;
 
         if (f == 1) {
-            u8 *tag = &self->next27;
+            struct act_part *q;
 
-            rec = gStaticData_0816B304[(*self->anims)[*tag].first];
-            p = gUnknown_030012D8;
-            if (p->unk_100 && self->part->contact == 8 && p->unk_60 != 0) {
+            rec = *(gStaticData_0816B304 + (*self->anims)[self->next27].first);
+            q = gUnknown_030012D8;
+            if (q->unk_100 && self->part->contact == 8 && q->unk_60 != 0) {
                 self->next31 = f;
+                /* Three extra references to `self` (no code): they raise its
+                 * allocation priority so the ROM's register choice for the
+                 * tag-address copy and the rescale temporaries comes out. */
+                asm("" : : "r"(self));
+                asm("" : : "r"(self));
+                asm("" : : "r"(self));
                 rec.c = sub_80008FC(rec.c, 0x180);
                 rec.b /= 2;
             }
-            if (*tag == 0x1E) {
+            if (self->next27 == 0x1E) {
                 self->next31 = 0;
                 if (gUnknown_030012D8->unk_100) {
                     rec.b = sub_80008FC(rec.b, 0x200);
@@ -151,309 +156,20 @@ skip:
                 ACT_CALL2(self, m38, self->part, &rec);
             else
                 ACT_CALL2(self, m28, self->part, &rec);
-            *flag = 0;
+            self->flag2F = 0;
         }
     }
     {
-        u8 *f30 = &self->flag30;
-
-        if (*f30 == 1) {
-            rec = gStaticData_0816B304[(*self->anims)[self->next28].second];
+        if (self->flag30 == 1) {
+            rec = *(gStaticData_0816B304 + (*self->anims)[self->next28].second);
             if (self->next32)
                 ACT_CALL2(self, m40, self->part, &rec);
             else
                 ACT_CALL2(self, m30, self->part, &rec);
-            *f30 = 0;
+            self->flag30 = 0;
         }
     }
 }
-#else
-NAKED void sub_8012AF4(void *selfArg)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, r8\n\t"
-        "push {r7}\n\t"
-        "sub sp, #0xc\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r0, 40f\n\t"
-        "ldr r2, [r0]\n\t"
-        "mov r3, #0x81\n\t"
-        "lsl r3, r3, #1\n\t"
-        "add r1, r2, r3\n\t"
-        "ldrb r1, [r1]\n\t"
-        "add r3, r0, #0\n\t"
-        "cmp r1, #0\n\t"
-        "bne 1f\n\t"
-        "ldr r5, 41f\n\t"
-        "add r0, r2, r5\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 5f\n\t"
-    "1:\n\t"
-        "ldr r0, [r4, #0x10]\n\t"
-        "add r0, #0x68\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #8\n\t"
-        "bne 5f\n\t"
-        "cmp r1, #0\n\t"
-        "beq 2f\n\t"
-        "ldr r0, [r2]\n\t"
-        "ldr r6, 42f\n\t"
-        "add r0, r0, r6\n\t"
-        "b 3f\n\t"
-        ".align 2, 0\n"
-    "40: .4byte gUnknown_030012D8\n"
-    "41: .4byte 0x00000103\n"
-    "42: .4byte 0xFFFFFF00\n"
-    "2:\n\t"
-        "ldr r1, 43f\n\t"
-        "add r0, r2, r1\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 4f\n\t"
-        "ldr r0, [r2]\n\t"
-        "mov r5, #0x80\n\t"
-        "lsl r5, r5, #1\n\t"
-        "add r0, r0, r5\n\t"
-    "3:\n\t"
-        "str r0, [r2]\n\t"
-    "4:\n\t"
-        "ldr r0, [r3]\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldr r2, [r0, #4]\n\t"
-        "bl sub_8009EA8\n\t"
-    "5:\n\t"
-        "ldr r0, [r4, #8]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 7f\n\t"
-        "ldr r5, 44f\n\t"
-        "ldr r1, [r5]\n\t"
-        "ldr r0, [r1, #0x60]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 6f\n\t"
-        "ldr r0, [r1, #0x20]\n\t"
-        "ldrh r0, [r0, #0xa]\n\t"
-        "cmp r0, #0x12\n\t"
-        "beq 6f\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x33\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 6f\n\t"
-        "ldr r0, 45f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #0x36\n\t"
-        "bl sub_80019A8\n\t"
-        "ldr r2, [r4, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r6, #0\n\t"
-        "ldrsh r0, [r2, r6]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r5]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, #0x12\n\t"
-        "bl sub_803AD84\n\t"
-    "6:\n\t"
-        "ldr r0, [r4, #8]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 8f\n\t"
-    "7:\n\t"
-        "add r7, r4, #0\n\t"
-        "add r7, #0x2f\n\t"
-        "cmp r0, #0x11\n\t"
-        "bne 9f\n\t"
-    "8:\n\t"
-        "ldr r0, 44f\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldr r0, [r1, #0x60]\n\t"
-        "add r7, r4, #0\n\t"
-        "add r7, #0x2f\n\t"
-        "cmp r0, #0\n\t"
-        "beq 9f\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r0, r1, r2\n\t"
-        "ldrb r1, [r0]\n\t"
-        "cmp r1, #0\n\t"
-        "bne 9f\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x31\n\t"
-        "strb r1, [r0]\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r7]\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x27\n\t"
-        "strb r1, [r0]\n\t"
-    "9:\n\t"
-        "ldrb r3, [r7]\n\t"
-        "mov ip, r3\n\t"
-        "cmp r3, #1\n\t"
-        "bne 14f\n\t"
-        "ldr r0, [r4, #4]\n\t"
-        "add r3, r4, #0\n\t"
-        "add r3, #0x27\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldrb r5, [r3]\n\t"
-        "lsl r0, r5, #3\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r1, [r0]\n\t"
-        "lsl r0, r1, #1\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r0, r0, #2\n\t"
-        "ldr r2, 46f\n\t"
-        "mov r1, sp\n\t"
-        "add r0, r0, r2\n\t"
-        "ldm r0!, {r2, r5, r6}\n\t"
-        "stm r1!, {r2, r5, r6}\n\t"
-        "ldr r0, 44f\n\t"
-        "ldr r1, [r0]\n\t"
-        "mov r6, #0x80\n\t"
-        "lsl r6, r6, #1\n\t"
-        "add r0, r1, r6\n\t"
-        "ldrb r0, [r0]\n\t"
-        "add r5, r4, #0\n\t"
-        "add r5, #0x31\n\t"
-        "mov r8, r3\n\t"
-        "cmp r0, #0\n\t"
-        "beq 10f\n\t"
-        "ldr r0, [r4, #0x10]\n\t"
-        "add r0, #0x68\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #8\n\t"
-        "bne 10f\n\t"
-        "ldr r0, [r1, #0x60]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 10f\n\t"
-        "mov r0, ip\n\t"
-        "strb r0, [r5]\n\t"
-        "ldr r0, [sp, #8]\n\t"
-        "mov r1, #0xc0\n\t"
-        "lsl r1, r1, #1\n\t"
-        "bl sub_80008FC\n\t"
-        "str r0, [sp, #8]\n\t"
-        "ldr r0, [sp, #4]\n\t"
-        "lsr r1, r0, #0x1f\n\t"
-        "add r0, r0, r1\n\t"
-        "asr r0, r0, #1\n\t"
-        "str r0, [sp, #4]\n\t"
-    "10:\n\t"
-        "mov r1, r8\n\t"
-        "ldrb r1, [r1]\n\t"
-        "cmp r1, #0x1e\n\t"
-        "bne 11f\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r5]\n\t"
-        "ldr r0, 44f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r0, r0, r2\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 11f\n\t"
-        "ldr r0, [sp, #4]\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #2\n\t"
-        "bl sub_80008FC\n\t"
-        "str r0, [sp, #4]\n\t"
-        "ldr r0, [sp]\n\t"
-        "mov r1, #0xc0\n\t"
-        "lsl r1, r1, #1\n\t"
-        "bl sub_80008FC\n\t"
-        "str r0, [sp]\n\t"
-    "11:\n\t"
-        "ldrb r0, [r5]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 12f\n\t"
-        "ldr r2, [r4, #0xc]\n\t"
-        "mov r3, #0x38\n\t"
-        "ldrsh r0, [r2, r3]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r4, #0x10]\n\t"
-        "ldr r3, [r2, #0x3c]\n\t"
-        "mov r2, sp\n\t"
-        "bl sub_803AD84\n\t"
-        "b 13f\n\t"
-        ".align 2, 0\n"
-    "43: .4byte 0x00000103\n"
-    "44: .4byte gUnknown_030012D8\n"
-    "45: .4byte gUnknown_030012BC\n"
-    "46: .4byte gStaticData_0816B304\n"
-    "12:\n\t"
-        "ldr r2, [r4, #0xc]\n\t"
-        "mov r5, #0x28\n\t"
-        "ldrsh r0, [r2, r5]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r4, #0x10]\n\t"
-        "ldr r3, [r2, #0x2c]\n\t"
-        "mov r2, sp\n\t"
-        "bl sub_803AD84\n\t"
-    "13:\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r7]\n\t"
-    "14:\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x30\n\t"
-        "add r5, r0, #0\n\t"
-        "ldrb r6, [r5]\n\t"
-        "cmp r6, #1\n\t"
-        "bne 17f\n\t"
-        "ldr r0, [r4, #4]\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x28\n\t"
-        "ldr r2, [r0]\n\t"
-        "ldrb r1, [r1]\n\t"
-        "lsl r0, r1, #3\n\t"
-        "add r0, r0, r2\n\t"
-        "ldr r1, [r0, #4]\n\t"
-        "lsl r0, r1, #1\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r0, r0, #2\n\t"
-        "ldr r2, 47f\n\t"
-        "mov r1, sp\n\t"
-        "add r0, r0, r2\n\t"
-        "ldm r0!, {r2, r3, r6}\n\t"
-        "stm r1!, {r2, r3, r6}\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x32\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 15f\n\t"
-        "ldr r2, [r4, #0xc]\n\t"
-        "add r2, #0x40\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r2, r1]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r4, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, sp\n\t"
-        "bl sub_803AD84\n\t"
-        "b 16f\n\t"
-        ".align 2, 0\n"
-    "47: .4byte gStaticData_0816B304\n"
-    "15:\n\t"
-        "ldr r2, [r4, #0xc]\n\t"
-        "mov r3, #0x30\n\t"
-        "ldrsh r0, [r2, r3]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r4, #0x10]\n\t"
-        "ldr r3, [r2, #0x34]\n\t"
-        "mov r2, sp\n\t"
-        "bl sub_803AD84\n\t"
-    "16:\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r5]\n\t"
-    "17:\n\t"
-        "add sp, #0xc\n\t"
-        "pop {r3}\n\t"
-        "mov r8, r3\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0"
-    );
-}
-#endif
 
 /* A further sibling/callee of the same action-table family. Reads the
  * D-pad (`sub_8000760`) and ticks `self+0x25` down on release. If

@@ -973,6 +973,24 @@ See [docs/matching/category-driver-naked-retry.md](../matching/category-driver-n
   pinned to r1. See
   [docs/matching/fresh-naked-retry.md](../matching/fresh-naked-retry.md).
 
+### Matched in the third issue #15/#16 NAKED retry
+
+- `src/graphics/actor_part84.c` - `sub_8012420` (issue #16), old_agbcc
+  (the file's compiler). Each `self->part` re-read has its own local and
+  both camera tests read `y` into a local first; `unk_94` goes through
+  an `s32` (keeps the signed `bgt`); the queued-state store is
+  `ActQueue27`; the input mask is an opaque 0x100; the switch bodies are
+  in ROM order. The PMF method record then gets its 8-byte stack slot
+  (and the unused `r7` push) by itself.
+- `src/graphics/actor_part83.c` - `sub_8012AF4` (issue #16), old_agbcc
+  (the file's compiler). No flag/tag pointer locals: `self->flag2F` and
+  `self->next27` are read through `self` each time and old_agbcc's GCSE
+  makes the ROM's address copies; the record lookup is
+  `*(gStaticData_0816B304 + i)`; three empty `asm("" : : "r"(self))`
+  extra references settle the remaining register ties.
+
+See [docs/matching/issue-15-16-naked-retry-3.md](../matching/issue-15-16-naked-retry-3.md).
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
@@ -1103,27 +1121,12 @@ plain C didn't converge.
   sub-dispatch on a nibble of a child object's `+4` byte. The single
   largest still-unmatched member of the `gStaticData_0816BF20` action-
   dispatch-table family (1420 B) - a first plain-C attempt at the
-  smaller sibling `sub_8012420` (below) diverged immediately at the
+  smaller sibling `sub_8012420` (since matched) diverged immediately at the
   prologue, and a jump table this wide (25 outer cases plus two
   independent 7-case inner ones) was judged not worth the same
   register-pinning gauntlet already exhausted throughout this section
   for smaller members of the same table. See
   `docs/matching/issue-16-actor-remainder.md`.
-- **`sub_8012420`** (`src/graphics/actor_part84.c`, GitHub issue #16) -
-  another member of the same 42-slot action-dispatch table
-  (`gStaticData_0816BF20`): a `part`-visibility/OAM-priority
-  housekeeping pass (with a gcc 2.x pointer-to-member call through the
-  table and a trailing 22-case jump table). Old_agbcc C draft under
-  `NON_MATCHING`: the ROM keeps the PMF method record in an 8-byte stack
-  slot and pushes an unused `r7` (a spilled DImode pair). Its sibling
-  `sub_8012694` is matched (see Matched). See
-  [issue-15-16-naked-retry.md](../matching/issue-15-16-naked-retry.md).
-- **`sub_8012AF4`** (`src/graphics/actor_part83.c`, GitHub issue #16) -
-  an animation pass keyed on a `gStaticData_0816B304` per-action
-  12-byte stack-local record (copied via `ldm`/`stm`). Old_agbcc C draft
-  under `NON_MATCHING`, same instructions but register allocation
-  differs throughout. See
-  [issue-15-16-naked-retry.md](../matching/issue-15-16-naked-retry.md).
 - **`sub_80336CC`** (`src/graphics/actor_part130.c`) - the P2-side VRAM
   fill-level meter, the one-row twin of `sub_8031604`; its
   `#if NON_MATCHING` draft is 29 halfwords off, the same nibble-temporary
