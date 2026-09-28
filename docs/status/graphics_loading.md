@@ -128,6 +128,15 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   with no extra `mov` - see
   [docs/matching/naked-sub_801e990-matched.md](../matching/naked-sub_801e990-matched.md)
   for the full derivation.
+- **`sub_8035D1C`**, **`sub_8036668`**, **`sub_8036CF4`**
+  (`src/graphics/graphics_loading_35780.c`, issue #65) - the "cheat
+  code" detector, the 20-slot updater and BG2's tilemap-remap loader,
+  NAKED until the issue #64/#65 NAKED retry: the held/pressed pair read
+  into a local struct first (the ROM's `0x100` mask built in r4 and
+  copied), the drain loop's end pointer as its own local (computed ahead
+  of the hoisted constants), and `*dest++` in both remap branches
+  (doubles `dest`'s reference count, giving it r4). See
+  [issue-64-65-naked-retry.md](../matching/issue-64-65-naked-retry.md).
 - **`sub_80360C0`** (`src/graphics/graphics_loading_35780.c`) - a
   standalone one-shot rolling-hash update (rotate-left-1 then multiply
   by 521), the same primitive `sub_8035D1C` inlines for its "cheat code"
@@ -195,25 +204,22 @@ plain C didn't converge.
   `{x - 2, y - 0x1e}` point into fresh r2/r3, the reconstruction
   subtracts in place (the same gap as `sub_802209C`). See
   [issue-31-old-agbcc.md](../matching/issue-31-old-agbcc.md).
-- **`sub_80358A8`**, **`sub_8035D1C`**, **`sub_8035E14`**,
-  **`sub_80360DC`**, **`sub_8036668`**,
-  **`sub_803686C`**, **`sub_8036CF4`** (`src/graphics/graphics_loading_35780.c`)
-  - the rest of issue #65's chunk: the OAM builders for the 9-slot and
-  20-slot record arrays, the rolling-hash "cheat code" detector, the
-  intro sequencer, the 9-slot seeder, the 20-slot updater and
-  BG2's tilemap-remap loader. All but `sub_803686C` now carry a
-  near-miss C draft under `#if NON_MATCHING` (old_agbcc) with a
-  one-line note on what is left: `sub_8035D1C` is one register copy off,
-  `sub_80360DC` 18 halfwords, `sub_8036668` 19 and `sub_8036CF4` 30
-  (register choice only); `sub_80360DC`/`sub_8035E14`'s seed loops
-  hoist nothing in the ROM, so they are written as `goto` loops that
-  skip gcc's loop optimizer, which gets the shape exact and leaves
-  register choice (`sub_8035E14` is still 100 halfwords off because
-  that shifts the rest of it; see
-  [per-file-flags-investigation.md](../matching/per-file-flags-investigation.md)); `sub_80358A8`
-  is structurally right but its loops' register/stack-slot allocation
+- **`sub_80358A8`**, **`sub_8035E14`**, **`sub_80360DC`**,
+  **`sub_803686C`** (`src/graphics/graphics_loading_35780.c`) - the
+  rest of issue #65's chunk: the OAM builders for the 9-slot and
+  20-slot record arrays, the intro sequencer and the 9-slot seeder.
+  All but `sub_803686C` carry a near-miss C draft under
+  `#if NON_MATCHING` (old_agbcc) with a one-line note on what is left:
+  `sub_80360DC`/`sub_8035E14`'s seed loops hoist nothing in the ROM, so
+  they are written as `goto` loops that skip gcc's loop optimizer,
+  which gets the shape exact and leaves register choice (`sub_80360DC`
+  18 halfwords; `sub_8035E14` 100 because that shifts the rest of it;
+  declaration order, index/base spelling and a real loop were all
+  tried again in the issue #64/#65 retry); `sub_80358A8` is
+  structurally right but its loops' register/stack-slot allocation
   differs. `sub_803686C` (the 20-slot OAM builder, same shape as
-  `sub_80358A8`) was not attempted in the retry. See
+  `sub_80358A8`) has not been attempted. See
+  [issue-64-65-naked-retry.md](../matching/issue-64-65-naked-retry.md),
   [issue-65-naked-retry.md](../matching/issue-65-naked-retry.md) and
   [issue-65-0x08035780-graphics-loading.md](../matching/issue-65-0x08035780-graphics-loading.md).
 

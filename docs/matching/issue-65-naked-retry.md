@@ -62,3 +62,13 @@ whose argument copies are set inside the loop.
 
 - `rm -rf build && make NON_MATCHING=1 report`: no warnings from either file.
 - `rm -rf build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make compare`: `crashbandicootxs.gba: OK`.
+
+## Later pass (issue #64/#65 NAKED retry)
+
+`sub_8035D1C`, `sub_8036668` and `sub_8036CF4` are now real C (same
+old_agbcc + `-fno-strength-reduce` object; `sub_8036600` had already
+closed through that flag). The flag itself changed none of the drafts;
+what closed them were source-shape details - see
+[issue-64-65-naked-retry.md](issue-64-65-naked-retry.md).
+`sub_80358A8`, `sub_8035E14`, `sub_80360DC` and `sub_803686C` are still
+NAKED.

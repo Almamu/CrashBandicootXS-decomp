@@ -237,3 +237,13 @@ its `ldscript.txt` line replaced by the new `actor_part131.o`.
 
 See [docs/status/actor.md](../status/actor.md) for the running
 matched/parked list this entry feeds into.
+
+## Later pass (issue #64/#65 NAKED retry)
+
+`sub_8034AA4`, `sub_8034CEC`, `sub_8034EF0` and `sub_80350A4` are now
+real C; the "many high registers live across calls" notes above were
+not the obstacle. The object moved to old_agbcc: `sub_8034CEC`,
+`sub_8034EF0` and `sub_80350A4` need it, and everything else in the
+file compiles identically under both compilers.
+`sub_80352AC` is still NAKED with a near-miss draft. See
+[issue-64-65-naked-retry.md](issue-64-65-naked-retry.md).

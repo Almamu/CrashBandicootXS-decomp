@@ -871,9 +871,14 @@ from "core" graphics.
   it even though the callee never reads it), `sub_803544C` (map screen
   end-of-frame commit), `sub_803547C` (map screen teardown), and
   `sub_80354BC` (the map screen's top-level entry point) all matched as
-  real C; `sub_8034AA4`, `sub_8034CEC`, `sub_8034EF0`, `sub_80350A4`,
-  and `sub_80352AC` transcribed as NAKED (see "Parked - NAKED
-  transcription" below) - see
+  real C; `sub_8034AA4`, `sub_8034CEC`, `sub_8034EF0` and `sub_80350A4`
+  (first transcribed as NAKED) were promoted to real C in the issue
+  #64/#65 NAKED retry, which also moved the object to old_agbcc (the
+  whole file matches under it; `sub_8034CEC`, `sub_8034EF0` and
+  `sub_80350A4` need it) - see
+  [docs/matching/issue-64-65-naked-retry.md](../matching/issue-64-65-naked-retry.md);
+  `sub_80352AC` is still NAKED (see "Parked - NAKED transcription"
+  below) - see
   [docs/matching/issue-64-0x08034aa4-actor.md](../matching/issue-64-0x08034aa4-actor.md).
 
 - `src/graphics/actor_part19e.c` (`sub_802C208`),
@@ -1126,39 +1131,14 @@ plain C didn't converge.
 - **`sub_80336CC`** (`src/graphics/actor_part130.c`) - the P2-side VRAM
   fill-level meter, the one-row twin of `sub_8031604`; its
   `#if NON_MATCHING` draft is off the same way. See `docs/matching/issue-58-61-naked-retry.md`.
-- **`sub_8034AA4`** (`src/graphics/actor_part131.c`, GitHub issue #64) -
-  the fade overlay's Yes/No dialog draw, another instance of the
-  "refresh OAM + center text" pattern: `self` (r6), the OAM-shadow-
-  buffer address (sl), the constant `0x87` (r7), and two `0x130`/`0x98<<1`
-  index constants (r8/sb) all stay resident across many `bl` sites with
-  no register left over. See
-  [docs/matching/issue-64-0x08034aa4-actor.md](../matching/issue-64-0x08034aa4-actor.md).
-- **`sub_8034CEC`** (`src/graphics/actor_part131.c`, GitHub issue #64) -
-  the map screen's constructor: `self` (r5), a zero constant (r8), and
-  `&gUnknown_030012E0` (sb) stay resident across a long run of `bl`
-  sites, while r4/r6 each get rebound to a different global's address
-  multiple times over that same span with several unrelated calls in
-  between each rebinding - the same shape `sub_803487C`
-  (actor_part88.c) hit. See
-  [docs/matching/issue-64-0x08034aa4-actor.md](../matching/issue-64-0x08034aa4-actor.md).
-- **`sub_8034EF0`** (`src/graphics/actor_part131.c`, GitHub issue #64) -
-  the map screen's per-frame OAM-icon draw dispatcher for the minimap
-  object: the inner tile loop keeps six independent running values live
-  simultaneously (sl/sb/r8 plus r4-r7) across a `bl` inside a nested
-  loop. See
-  [docs/matching/issue-64-0x08034aa4-actor.md](../matching/issue-64-0x08034aa4-actor.md).
-- **`sub_80350A4`** (`src/graphics/actor_part131.c`, GitHub issue #64) -
-  the map screen's floating-text popup driver: `self` (r5), the
-  list-tail pointer (r8), the running max-width accumulator (sb), and
-  the horizontal pen-position accumulator (sl) all stay resident across
-  many `bl` sites spanning several nested loops. See
-  [docs/matching/issue-64-0x08034aa4-actor.md](../matching/issue-64-0x08034aa4-actor.md).
 - **`sub_80352AC`** (`src/graphics/actor_part131.c`, GitHub issue #64) -
-  the map screen's popup-text asset loader: the innermost tile-index
-  loop holds seven live values simultaneously (r8/sl/sb/ip plus r0-r6),
-  a fully packed register budget with no `bl` inside the innermost loop
-  to even attempt a spill. See
-  [docs/matching/issue-64-0x08034aa4-actor.md](../matching/issue-64-0x08034aa4-actor.md).
+  the map screen's popup-text asset loader. The issue #64/#65 NAKED
+  retry left a near-miss C draft under `#if NON_MATCHING` (old_agbcc):
+  the "seven live values" allocation is right; what is left is that gcc
+  computes the palette-slot address `slot << 5` ahead of the tile loops
+  and spills it (4 bytes of extra frame), where the ROM computes it at
+  the palette copy. See
+  [docs/matching/issue-64-65-naked-retry.md](../matching/issue-64-65-naked-retry.md).
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 

@@ -1213,16 +1213,9 @@ NAKED void sub_80358A8(u32 *self)
  * slot now equals the fixed target `0x3034AF3B` - if so, plays song
  * `0xc` and resets the slot, consuming the input (returns 0) either
  * way once the gate was held. */
-#if NON_MATCHING
-/* NON_MATCHING draft (old_agbcc): everything matches, including the
- * cross-jumped hash branches, except the R-shoulder gate - the ROM
- * builds the 0x100 mask in r4 and copies it to r1 (one extra
- * instruction), this draft builds it in r1 directly. */
-static inline struct held_pressed_pair ReadHeldPressed(void)
-{
-    return gUnknown_030007E0;
-}
-
+/* Closed in the issue #64/#65 NAKED retry: copying the whole
+ * held/pressed pair into a local struct first is what makes the ROM
+ * build the 0x100 mask in r4 and copy it to r1. */
 static inline void HashInput(u32 *self, u32 val)
 {
     u32 *slot = (u32 *)((u8 *)self + 0x210);
@@ -1244,7 +1237,9 @@ static inline void HashInput(u32 *self, u32 val)
 
 u32 sub_8035D1C(u32 *self, u32 pressed)
 {
-    if (!(ReadHeldPressed().held & 0x100))
+    struct held_pressed_pair input = gUnknown_030007E0;
+
+    if (!(input.held & 0x100))
     {
         *(u32 *)((u8 *)self + 0x210) = 0;
         return pressed;
@@ -1270,142 +1265,6 @@ u32 sub_8035D1C(u32 *self, u32 pressed)
     }
     return 0;
 }
-#else
-NAKED u32 sub_8035D1C(u32 *self, u32 pressed)
-{
-    asm(
-        "\tpush {r4, lr}\n"
-        "\tadd r3, r0, #0\n"
-        "\tadd r2, r1, #0\n"
-        "\tldr r0, _08035D44\n"
-        "\tldr r0, [r0]\n"
-        "\tmov r4, #0x80\n"
-        "\tlsl r4, r4, #1\n"
-        "\tadd r1, r4, #0\n"
-        "\tand r0, r1\n"
-        "\tlsl r0, r0, #0x10\n"
-        "\tlsr r1, r0, #0x10\n"
-        "\tcmp r1, #0\n"
-        "\tbne _08035D48\n"
-        "\tmov r4, #0x84\n"
-        "\tlsl r4, r4, #2\n"
-        "\tadd r0, r3, r4\n"
-        "\tstr r1, [r0]\n"
-        "\tadd r0, r2, #0\n"
-        "\tb _08035E02\n"
-        "\t.align 2, 0\n"
-        "\t_08035D44: .4byte gUnknown_030007E0\n"
-        "_08035D48:\n"
-        "\tmov r0, #0x20\n"
-        "\tand r0, r2\n"
-        "\tcmp r0, #0\n"
-        "\tbeq _08035D58\n"
-        "\tldr r1, _08035D54\n"
-        "\tb _08035DCA\n"
-        "\t.align 2, 0\n"
-        "\t_08035D54: .4byte 0x12345678\n"
-        "_08035D58:\n"
-        "\tmov r0, #0x10\n"
-        "\tand r0, r2\n"
-        "\tcmp r0, #0\n"
-        "\tbeq _08035D70\n"
-        "\tldr r1, _08035D6C\n"
-        "\tmov r4, #0x84\n"
-        "\tlsl r4, r4, #2\n"
-        "\tadd r2, r3, r4\n"
-        "\tb _08035DD0\n"
-        "\t.align 2, 0\n"
-        "\t_08035D6C: .4byte 0x31415926\n"
-        "_08035D70:\n"
-        "\tmov r0, #0x40\n"
-        "\tand r0, r2\n"
-        "\tcmp r0, #0\n"
-        "\tbeq _08035D80\n"
-        "\tldr r1, _08035D7C\n"
-        "\tb _08035DCA\n"
-        "\t.align 2, 0\n"
-        "\t_08035D7C: .4byte 0xC0DEBA1D\n"
-        "_08035D80:\n"
-        "\tmov r0, #0x80\n"
-        "\tand r0, r2\n"
-        "\tcmp r0, #0\n"
-        "\tbeq _08035D98\n"
-        "\tldr r1, _08035D94\n"
-        "\tmov r4, #0x84\n"
-        "\tlsl r4, r4, #2\n"
-        "\tadd r2, r3, r4\n"
-        "\tb _08035DD0\n"
-        "\t.align 2, 0\n"
-        "\t_08035D94: .4byte 0xDEADBEEF\n"
-        "_08035D98:\n"
-        "\tmov r0, #2\n"
-        "\tand r0, r2\n"
-        "\tcmp r0, #0\n"
-        "\tbeq _08035DA8\n"
-        "\tldr r1, _08035DA4\n"
-        "\tb _08035DCA\n"
-        "\t.align 2, 0\n"
-        "\t_08035DA4: .4byte 0xB1E4B1E4\n"
-        "_08035DA8:\n"
-        "\tmov r0, #1\n"
-        "\tand r0, r2\n"
-        "\tcmp r0, #0\n"
-        "\tbeq _08035DC0\n"
-        "\tldr r1, _08035DBC\n"
-        "\tmov r4, #0x84\n"
-        "\tlsl r4, r4, #2\n"
-        "\tadd r2, r3, r4\n"
-        "\tb _08035DD0\n"
-        "\t.align 2, 0\n"
-        "\t_08035DBC: .4byte 0x71839406\n"
-        "_08035DC0:\n"
-        "\tmov r0, #8\n"
-        "\tand r0, r2\n"
-        "\tcmp r0, #0\n"
-        "\tbeq _08035DE4\n"
-        "\tldr r1, _08035E08\n"
-        "_08035DCA:\n"
-        "\tmov r0, #0x84\n"
-        "\tlsl r0, r0, #2\n"
-        "\tadd r2, r3, r0\n"
-        "_08035DD0:\n"
-        "\tldr r0, [r2]\n"
-        "\teor r0, r1\n"
-        "\tlsl r1, r0, #1\n"
-        "\tlsr r0, r0, #0x1f\n"
-        "\torr r1, r0\n"
-        "\tlsl r0, r1, #6\n"
-        "\tadd r0, r0, r1\n"
-        "\tlsl r0, r0, #3\n"
-        "\tadd r0, r0, r1\n"
-        "\tstr r0, [r2]\n"
-        "_08035DE4:\n"
-        "\tmov r0, #0x84\n"
-        "\tlsl r0, r0, #2\n"
-        "\tadd r4, r3, r0\n"
-        "\tldr r1, [r4]\n"
-        "\tldr r0, _08035E0C\n"
-        "\tcmp r1, r0\n"
-        "\tbne _08035E00\n"
-        "\tldr r0, _08035E10\n"
-        "\tldr r0, [r0]\n"
-        "\tmov r1, #0xc\n"
-        "\tbl sub_8001B54\n"
-        "\tmov r0, #0\n"
-        "\tstr r0, [r4]\n"
-        "_08035E00:\n"
-        "\tmov r0, #0\n"
-        "_08035E02:\n"
-        "\tpop {r4}\n"
-        "\tpop {r1}\n"
-        "\tbx r1\n"
-        "\t.align 2, 0\n"
-        "\t_08035E08: .4byte 0x828A048B\n"
-        "\t_08035E0C: .4byte 0x3034AF3B\n"
-        "\t_08035E10: .4byte gUnknown_030012BC\n"
-    );
-}
-#endif
 
 /* Drives what looks like a level-intro/tally sequence on the scratch
  * object: seeds all 9 slots' `self+0x40+i*0x34` delta-record pointers
@@ -2284,14 +2143,10 @@ void sub_8036600(u32 *self)
  * `self+0x43c` and, separately, ages every active slot's own
  * `self+i*0x34+8` sub-timer, resetting `self+0x444`/`self+0x448` if any
  * slot's timer crosses its ceiling. */
-#if NON_MATCHING
-/* NON_MATCHING draft (old_agbcc, 19 halfwords off): only the drain
- * loop's preheader order (end pointer before the two hoisted constants)
- * and the tail's 0x444/0x448 constant registers differ. The drain loop
- * is a pointer do-while with a signed compare - the ROM's reduced
- * pointer, signed `ble` and missing entry test would come from strength
- * reduction of an `i` loop, but this phrasing gives the same loop with
- * or without -fno-strength-reduce (which this object is built with). */
+/* Closed in the issue #64/#65 NAKED retry: the drain loop's end pointer
+ * is its own local set before the do-while (so it is computed ahead of
+ * the two constants loop.c hoists), which also settles the tail's
+ * 0x444/0x448 registers. */
 #define SLOT20_ACCESSOR(name, type, off)                   \
     static inline type *name(u32 *self, s32 stride)        \
     {                                                      \
@@ -2399,7 +2254,10 @@ void sub_8036668(u32 *self)
     {
         s32 allDone = 1;
         u8 *slot;
+        u8 *end;
+
         slot = (u8 *)self;
+        end = (u8 *)self + 0x3dc;
         do
         {
             if (*slot != 0)
@@ -2413,7 +2271,7 @@ void sub_8036668(u32 *self)
                     *slot = allDone;
             }
             slot += 0x34;
-        } while ((s32)slot <= (s32)((u8 *)self + 0x3dc));
+        } while ((s32)slot <= (s32)end);
         if (allDone)
         {
             *(s32 *)((u8 *)self + 0x444) = 0x10;
@@ -2421,278 +2279,6 @@ void sub_8036668(u32 *self)
         }
     }
 }
-#else
-NAKED void sub_8036668(u32 *self)
-{
-    asm(
-        "\tpush {r4, r5, r6, r7, lr}\n"
-        "\tadd r4, r0, #0\n"
-        "\tmov r0, #0x89\n"
-        "\tlsl r0, r0, #3\n"
-        "\tadd r2, r4, r0\n"
-        "\tldr r1, [r2]\n"
-        "\tmov r0, #1\n"
-        "\tneg r0, r0\n"
-        "\tcmp r1, r0\n"
-        "\tbeq _0803667E\n"
-        "\tb _080367DC\n"
-        "_0803667E:\n"
-        "\tmov r6, #0\n"
-        "\tadd r1, r4, #4\n"
-        "\tmov ip, r1\n"
-        "\tadd r7, r2, #0\n"
-        "_08036686:\n"
-        "\tmov r0, #0x34\n"
-        "\tadd r3, r6, #0\n"
-        "\tmul r3, r0, r3\n"
-        "\tmov r0, ip\n"
-        "\tadd r5, r0, r3\n"
-        "\tldr r0, [r5]\n"
-        "\tcmp r0, #0\n"
-        "\tbne _08036698\n"
-        "\tb _08036798\n"
-        "_08036698:\n"
-        "\tsub r0, #1\n"
-        "\tstr r0, [r5]\n"
-        "\tcmp r0, #0\n"
-        "\tbne _08036732\n"
-        "\tadd r1, r4, #0\n"
-        "\tadd r1, #0x30\n"
-        "\tadd r1, r1, r3\n"
-        "\tldr r0, [r1]\n"
-        "\tadd r2, r0, #0\n"
-        "\tadd r0, #0x20\n"
-        "\tstr r0, [r1]\n"
-        "\tadd r1, r4, r3\n"
-        "\tmov r0, #1\n"
-        "\tstrb r0, [r1]\n"
-        "\tmov r1, #0\n"
-        "\tldrsh r0, [r2, r1]\n"
-        "\tstr r0, [r5]\n"
-        "\tcmp r0, #0\n"
-        "\tbeq _0803679E\n"
-        "\tadd r0, r4, #0\n"
-        "\tadd r0, #0x10\n"
-        "\tadd r0, r0, r3\n"
-        "\tldrh r5, [r2, #6]\n"
-        "\tlsl r1, r5, #0x10\n"
-        "\tstr r1, [r0]\n"
-        "\tadd r0, r4, #0\n"
-        "\tadd r0, #0x24\n"
-        "\tadd r0, r0, r3\n"
-        "\tldr r1, [r2, #0x14]\n"
-        "\tstr r1, [r0]\n"
-        "\tadd r1, r4, #0\n"
-        "\tadd r1, #0x14\n"
-        "\tadd r1, r1, r3\n"
-        "\tmov r5, #8\n"
-        "\tldrsh r0, [r2, r5]\n"
-        "\tlsl r0, r0, #8\n"
-        "\tstr r0, [r1]\n"
-        "\tadd r0, r4, #0\n"
-        "\tadd r0, #0x28\n"
-        "\tadd r0, r0, r3\n"
-        "\tldr r1, [r2, #0x18]\n"
-        "\tstr r1, [r0]\n"
-        "\tadd r1, r4, #0\n"
-        "\tadd r1, #0x18\n"
-        "\tadd r1, r1, r3\n"
-        "\tmov r5, #0xa\n"
-        "\tldrsh r0, [r2, r5]\n"
-        "\tlsl r0, r0, #8\n"
-        "\tstr r0, [r1]\n"
-        "\tadd r0, r4, #0\n"
-        "\tadd r0, #0x2c\n"
-        "\tadd r0, r0, r3\n"
-        "\tldr r1, [r2, #0x1c]\n"
-        "\tstr r1, [r0]\n"
-        "\tadd r0, r4, #0\n"
-        "\tadd r0, #8\n"
-        "\tadd r0, r0, r3\n"
-        "\tldrh r5, [r2, #2]\n"
-        "\tlsl r1, r5, #0x10\n"
-        "\tstr r1, [r0]\n"
-        "\tadd r0, r4, #0\n"
-        "\tadd r0, #0x1c\n"
-        "\tadd r0, r0, r3\n"
-        "\tldr r1, [r2, #0xc]\n"
-        "\tstr r1, [r0]\n"
-        "\tadd r0, r4, #0\n"
-        "\tadd r0, #0xc\n"
-        "\tadd r0, r0, r3\n"
-        "\tldrh r5, [r2, #4]\n"
-        "\tlsl r1, r5, #0x10\n"
-        "\tstr r1, [r0]\n"
-        "\tadd r0, r4, #0\n"
-        "\tadd r0, #0x20\n"
-        "\tadd r0, r0, r3\n"
-        "\tldr r1, [r2, #0x10]\n"
-        "\tstr r1, [r0]\n"
-        "\tb _0803679E\n"
-        "_08036732:\n"
-        "\tadd r2, r4, #0\n"
-        "\tadd r2, #0x10\n"
-        "\tadd r2, r2, r3\n"
-        "\tadd r0, r4, #0\n"
-        "\tadd r0, #0x24\n"
-        "\tadd r0, r0, r3\n"
-        "\tldr r1, [r2]\n"
-        "\tldr r0, [r0]\n"
-        "\tadd r1, r1, r0\n"
-        "\tstr r1, [r2]\n"
-        "\tadd r2, r4, #0\n"
-        "\tadd r2, #0x14\n"
-        "\tadd r2, r2, r3\n"
-        "\tadd r0, r4, #0\n"
-        "\tadd r0, #0x28\n"
-        "\tadd r0, r0, r3\n"
-        "\tldr r1, [r2]\n"
-        "\tldr r0, [r0]\n"
-        "\tadd r1, r1, r0\n"
-        "\tstr r1, [r2]\n"
-        "\tadd r2, r4, #0\n"
-        "\tadd r2, #0x18\n"
-        "\tadd r2, r2, r3\n"
-        "\tadd r0, r4, #0\n"
-        "\tadd r0, #0x2c\n"
-        "\tadd r0, r0, r3\n"
-        "\tldr r1, [r2]\n"
-        "\tldr r0, [r0]\n"
-        "\tadd r1, r1, r0\n"
-        "\tstr r1, [r2]\n"
-        "\tadd r2, r4, #0\n"
-        "\tadd r2, #8\n"
-        "\tadd r2, r2, r3\n"
-        "\tadd r0, r4, #0\n"
-        "\tadd r0, #0x1c\n"
-        "\tadd r0, r0, r3\n"
-        "\tldr r1, [r2]\n"
-        "\tldr r0, [r0]\n"
-        "\tadd r1, r1, r0\n"
-        "\tstr r1, [r2]\n"
-        "\tadd r2, r4, #0\n"
-        "\tadd r2, #0xc\n"
-        "\tadd r2, r2, r3\n"
-        "\tadd r0, r4, #0\n"
-        "\tadd r0, #0x20\n"
-        "\tadd r0, r0, r3\n"
-        "\tldr r1, [r2]\n"
-        "\tldr r0, [r0]\n"
-        "\tadd r1, r1, r0\n"
-        "\tstr r1, [r2]\n"
-        "\tb _0803679E\n"
-        "_08036798:\n"
-        "\tmov r0, #2\n"
-        "\tneg r0, r0\n"
-        "\tstr r0, [r7]\n"
-        "_0803679E:\n"
-        "\tadd r6, #1\n"
-        "\tcmp r6, #0x13\n"
-        "\tbgt _080367A6\n"
-        "\tb _08036686\n"
-        "_080367A6:\n"
-        "\tldr r0, _08036858\n"
-        "\tadd r2, r4, r0\n"
-        "\tldr r0, [r2]\n"
-        "\tcmp r0, #1\n"
-        "\tbgt _080367DC\n"
-        "\tmov r5, #0x88\n"
-        "\tlsl r5, r5, #3\n"
-        "\tadd r1, r4, r5\n"
-        "\tldr r0, [r1]\n"
-        "\tadd r0, #1\n"
-        "\tstr r0, [r1]\n"
-        "\tcmp r0, #3\n"
-        "\tble _080367DC\n"
-        "\tmov r3, #0\n"
-        "\tstr r3, [r1]\n"
-        "\tmov r0, #0x87\n"
-        "\tlsl r0, r0, #3\n"
-        "\tadd r1, r4, r0\n"
-        "\tldr r0, [r1]\n"
-        "\tadd r0, #1\n"
-        "\tstr r0, [r1]\n"
-        "\tcmp r0, #9\n"
-        "\tble _080367DC\n"
-        "\tstr r3, [r1]\n"
-        "\tldr r0, [r2]\n"
-        "\tadd r0, #1\n"
-        "\tstr r0, [r2]\n"
-        "_080367DC:\n"
-        "\tmov r1, #0x89\n"
-        "\tlsl r1, r1, #3\n"
-        "\tadd r5, r4, r1\n"
-        "\tldr r1, [r5]\n"
-        "\tmov r0, #2\n"
-        "\tneg r0, r0\n"
-        "\tcmp r1, r0\n"
-        "\tbne _080367F0\n"
-        "\tmov r0, #0xf0\n"
-        "\tstr r0, [r5]\n"
-        "_080367F0:\n"
-        "\tldr r0, [r5]\n"
-        "\tcmp r0, #0\n"
-        "\tble _0803680C\n"
-        "\tsub r0, #1\n"
-        "\tstr r0, [r5]\n"
-        "\tcmp r0, #0\n"
-        "\tbne _08036850\n"
-        "\tldr r0, _0803685C\n"
-        "\tldr r0, [r0]\n"
-        "\tmov r2, #0x80\n"
-        "\tlsl r2, r2, #1\n"
-        "\tmov r1, #0x50\n"
-        "\tbl PlaySfx\n"
-        "_0803680C:\n"
-        "\tldr r0, [r5]\n"
-        "\tcmp r0, #0\n"
-        "\tbne _08036850\n"
-        "\tmov r2, #1\n"
-        "\tadd r1, r4, #0\n"
-        "\tmov r5, #0xf7\n"
-        "\tlsl r5, r5, #2\n"
-        "\tadd r3, r4, r5\n"
-        "\tldr r6, _08036860\n"
-        "\tldr r5, _08036864\n"
-        "_08036820:\n"
-        "\tldrb r0, [r1]\n"
-        "\tcmp r0, #0\n"
-        "\tbeq _08036834\n"
-        "\tmov r2, #0\n"
-        "\tldr r0, [r1, #8]\n"
-        "\tadd r0, r0, r6\n"
-        "\tstr r0, [r1, #8]\n"
-        "\tcmp r0, r5\n"
-        "\tbge _08036834\n"
-        "\tstrb r2, [r1]\n"
-        "_08036834:\n"
-        "\tadd r1, #0x34\n"
-        "\tcmp r1, r3\n"
-        "\tble _08036820\n"
-        "\tcmp r2, #0\n"
-        "\tbeq _08036850\n"
-        "\tldr r0, _08036868\n"
-        "\tadd r1, r4, r0\n"
-        "\tmov r0, #0x10\n"
-        "\tstr r0, [r1]\n"
-        "\tmov r5, #0x89\n"
-        "\tlsl r5, r5, #3\n"
-        "\tadd r1, r4, r5\n"
-        "\tsub r0, #0x13\n"
-        "\tstr r0, [r1]\n"
-        "_08036850:\n"
-        "\tpop {r4, r5, r6, r7}\n"
-        "\tpop {r0}\n"
-        "\tbx r0\n"
-        "\t.align 2, 0\n"
-        "\t_08036858: .4byte 0x0000043C\n"
-        "\t_0803685C: .4byte gUnknown_030012BC\n"
-        "\t_08036860: .4byte 0xFFF80000\n"
-        "\t_08036864: .4byte 0xFF810000\n"
-        "\t_08036868: .4byte 0x00000444\n"
-    );
-}
-#endif
 
 /* The other half of `sub_8036668`'s per-frame slot-array update: if
  * the header's own `self+0x3dc` byte is set, positions the header's own
@@ -3292,11 +2878,10 @@ NAKED void sub_803686C(u32 *self)
  * (`gUnknown_03001288`) active. Takes no arguments - this package's
  * pointer lives entirely in the static table, not the scratch
  * object. */
-#if NON_MATCHING
-/* NON_MATCHING draft (old_agbcc, 30 halfwords off): the BGCNT/DISPCNT
- * bitfields and the remap loop match in shape; `dest`/`y`/`bg2cnt` land
- * in r6/r4/r5 instead of the ROM's r4/r5/r6 (declaration order has no
- * effect). */
+/* Closed in the issue #64/#65 NAKED retry: each branch stores through
+ * `dest++` itself (cross-jumping merges the two stores back into the
+ * ROM's single shared `strh`), which doubles `dest`'s reference count
+ * and gives it r4 ahead of `y`/`bg2cnt`. */
 void sub_8036CF4(u32 *self)
 {
     struct bg_package *pkg = (struct bg_package *)gStaticData_0817D7A4;
@@ -3326,17 +2911,15 @@ void sub_8036CF4(u32 *self)
     {
         for (x = 0; x <= 0x1f; x += 2)
         {
-            u16 v;
             if (y < (s32)pkg->height && x < (s32)pkg->width)
             {
                 s32 i = (s32)pkg->width * y + x;
-                v = (mapBuf[i] & 0xff) | ((mapBuf[i + 1] & 0xff) << 8);
+                *dest++ = (mapBuf[i] & 0xff) | ((mapBuf[i + 1] & 0xff) << 8);
             }
             else
             {
-                v = 0;
+                *dest++ = 0;
             }
-            *dest++ = v;
         }
     }
     bg2cnt.raw = 0;
@@ -3351,153 +2934,6 @@ void sub_8036CF4(u32 *self)
     if (mapBuf != NULL)
         sub_8026EB4(mapBuf);
 }
-#else
-NAKED void sub_8036CF4(u32 *self)
-{
-    asm(
-        "\tpush {r4, r5, r6, r7, lr}\n"
-        "\tmov r7, sl\n"
-        "\tmov r6, sb\n"
-        "\tmov r5, r8\n"
-        "\tpush {r5, r6, r7}\n"
-        "\tldr r0, _08036D8C\n"
-        "\tmov sb, r0\n"
-        "\tmov r0, #0x80\n"
-        "\tlsl r0, r0, #2\n"
-        "\tbl sub_8026EC0\n"
-        "\tadd r4, r0, #0\n"
-        "\tmov r1, sb\n"
-        "\tldr r0, [r1, #8]\n"
-        "\tadd r1, r4, #0\n"
-        "\tbl LoadTaggedAsset\n"
-        "\tldr r1, _08036D90\n"
-        "\tadd r0, r4, #2\n"
-        "\tstr r0, [r1]\n"
-        "\tldr r0, _08036D94\n"
-        "\tstr r0, [r1, #4]\n"
-        "\tldr r0, _08036D98\n"
-        "\tstr r0, [r1, #8]\n"
-        "\tldr r0, [r1, #8]\n"
-        "\tcmp r4, #0\n"
-        "\tbeq _08036D30\n"
-        "\tadd r0, r4, #0\n"
-        "\tbl sub_8026EB4\n"
-        "_08036D30:\n"
-        "\tmov r2, sb\n"
-        "\tldr r0, [r2, #0xc]\n"
-        "\tldr r1, _08036D9C\n"
-        "\tbl LoadTaggedAsset\n"
-        "\tmov r0, sb\n"
-        "\tldr r1, [r0, #4]\n"
-        "\tldr r0, [r0]\n"
-        "\tmul r0, r1, r0\n"
-        "\tlsl r0, r0, #1\n"
-        "\tbl sub_8026EC0\n"
-        "\tmov sl, r0\n"
-        "\tmov r1, sb\n"
-        "\tldr r0, [r1, #0x10]\n"
-        "\tmov r1, sl\n"
-        "\tbl LoadTaggedAsset\n"
-        "\tldr r4, _08036DA0\n"
-        "\tmov r5, #0\n"
-        "\tmov r2, sb\n"
-        "\tldr r2, [r2, #4]\n"
-        "\tmov ip, r2\n"
-        "\tmov r0, #0xff\n"
-        "\tmov r8, r0\n"
-        "_08036D62:\n"
-        "\tmov r3, #0\n"
-        "\tadd r7, r5, #1\n"
-        "_08036D66:\n"
-        "\tcmp r5, ip\n"
-        "\tbge _08036DA4\n"
-        "\tmov r1, sb\n"
-        "\tldr r0, [r1]\n"
-        "\tcmp r3, r0\n"
-        "\tbge _08036DA4\n"
-        "\tmul r0, r5, r0\n"
-        "\tadd r0, r0, r3\n"
-        "\tlsl r0, r0, #1\n"
-        "\tadd r0, sl\n"
-        "\tmov r2, r8\n"
-        "\tldrh r1, [r0]\n"
-        "\tand r2, r1\n"
-        "\tmov r1, r8\n"
-        "\tldrh r0, [r0, #2]\n"
-        "\tand r1, r0\n"
-        "\tlsl r1, r1, #8\n"
-        "\torr r2, r1\n"
-        "\tb _08036DA6\n"
-        "\t.align 2, 0\n"
-        "\t_08036D8C: .4byte gStaticData_0817D7A4\n"
-        "\t_08036D90: .4byte 0x040000D4\n"
-        "\t_08036D94: .4byte 0x05000002\n"
-        "\t_08036D98: .4byte 0x80000040\n"
-        "\t_08036D9C: .4byte 0x06008000\n"
-        "\t_08036DA0: .4byte 0x0600F000\n"
-        "_08036DA4:\n"
-        "\tmov r2, #0\n"
-        "_08036DA6:\n"
-        "\tstrh r2, [r4]\n"
-        "\tadd r4, #2\n"
-        "\tadd r3, #2\n"
-        "\tcmp r3, #0x1f\n"
-        "\tble _08036D66\n"
-        "\tadd r5, r7, #0\n"
-        "\tcmp r5, #0x1f\n"
-        "\tble _08036D62\n"
-        "\tldr r0, _08036E10\n"
-        "\tand r6, r0\n"
-        "\tmov r0, #8\n"
-        "\torr r6, r0\n"
-        "\tmov r0, #0xf0\n"
-        "\tlsl r0, r0, #5\n"
-        "\torr r6, r0\n"
-        "\tmov r0, #0x80\n"
-        "\torr r6, r0\n"
-        "\tmov r0, #1\n"
-        "\torr r6, r0\n"
-        "\tldr r0, _08036E14\n"
-        "\tand r6, r0\n"
-        "\tmov r0, #0x80\n"
-        "\tlsl r0, r0, #7\n"
-        "\torr r6, r0\n"
-        "\tldr r0, _08036E18\n"
-        "\tstrh r6, [r0]\n"
-        "\tmov r0, #4\n"
-        "\tldr r1, _08036E1C\n"
-        "\tldrb r1, [r1, #1]\n"
-        "\torr r0, r1\n"
-        "\tldr r2, _08036E1C\n"
-        "\tstrb r0, [r2, #1]\n"
-        "\tmov r0, #8\n"
-        "\tneg r0, r0\n"
-        "\tldrb r1, [r2]\n"
-        "\tand r0, r1\n"
-        "\tmov r1, #1\n"
-        "\torr r0, r1\n"
-        "\tstrb r0, [r2]\n"
-        "\tmov r2, sl\n"
-        "\tcmp r2, #0\n"
-        "\tbeq _08036E00\n"
-        "\tmov r0, sl\n"
-        "\tbl sub_8026EB4\n"
-        "_08036E00:\n"
-        "\tpop {r3, r4, r5}\n"
-        "\tmov r8, r3\n"
-        "\tmov sb, r4\n"
-        "\tmov sl, r5\n"
-        "\tpop {r4, r5, r6, r7}\n"
-        "\tpop {r0}\n"
-        "\tbx r0\n"
-        "\t.align 2, 0\n"
-        "\t_08036E10: .4byte 0xFFFF0000\n"
-        "\t_08036E14: .4byte 0xFFFF3FFF\n"
-        "\t_08036E18: .4byte 0x0400000C\n"
-        "\t_08036E1C: .4byte gUnknown_03001288\n"
-    );
-}
-#endif
 
 /* Constructs an actor-part object via `InitActorPart(self, ?, 0, 0,
  * 0x100)` (the "a" parameter is passed straight through from this

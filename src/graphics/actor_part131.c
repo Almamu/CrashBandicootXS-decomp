@@ -3,6 +3,7 @@
 #include "icon_manager.h"
 #include "vram_pool.h"
 #include "audio.h"
+#include "gba/dma_macros.h"
 
 /* GitHub issue #64 (0x08034AA4-0x080354E0, 13 functions). Continues
  * straight on from issue #63's fade-overlay cluster (actor_part87.c/
@@ -40,28 +41,39 @@ struct fade_overlay {
  * fourth thing in this file" section) - a combined minimap-reveal +
  * floating-text-popup screen driven from `UpdateGameFrame`'s level-load
  * state machine, allocated `sub_8026EDC(0x98)` by `sub_80354BC`. Only
- * the fields this file's real-C functions actually touch are named;
- * `asset0`-`asset4` are five 0x18-apart pointer fields (each the head of
- * a separately heap-allocated buffer `sub_80352AC` DMA-fills and
- * `sub_803547C` frees) - the 0x14 bytes between each pair belong to
- * this same struct too, just not touched by any function in this file. */
+ * the fields this file's functions actually touch are named. */
+
+/* One timed text-popup node (0x18 bytes, `sub_8026EDC`-allocated by
+ * sub_80350A4, drawn by sub_8034EF0). */
+struct popup_node {
+    struct popup_node *next; /* 0x00 */
+    s32 x;                   /* 0x04 */
+    s32 y;                   /* 0x08 - counts down while alive */
+    s32 timer;               /* 0x0c - node dies once y + timer <= 0 */
+    s32 mode;                /* 0x10 - 0/1: text via icon manager DC/E0, 2: glyph */
+    u8 index;                /* 0x14 - glyph index / character */
+};
+
+/* One of the five custom popup glyphs `sub_80352AC` loads (0x18 bytes
+ * each, at `map_screen+0x1c`). */
+struct popup_glyph {
+    s32 cols;    /* 0x00 - width in 32-px OAM cells */
+    s32 rows;    /* 0x04 - height in 32-px OAM cells */
+    s32 height;  /* 0x08 - pixel height */
+    s32 width;   /* 0x0c - pixel advance */
+    u8 palette;  /* 0x10 */
+    void *tiles; /* 0x14 - heap buffer, freed by sub_803547C */
+};
+
 struct map_screen {
-    void *popupListHead; /* 0x00 - timed text-popup node list, see sub_80350A4 */
+    struct popup_node *popupListHead; /* 0x00 - timed text-popup node list, see sub_80350A4 */
     const void *streamBase;   /* 0x04 - popup byte-opcode stream base */
     const void *streamCursor; /* 0x08 - popup byte-opcode stream cursor */
     void *mapObj;             /* 0x0c - the minimap object, sub_8034374 */
     s32 drawMode;              /* 0x10 */
     s32 suppressCounter;        /* 0x14 */
-    u8 unused_18[0x18];
-    void *asset0; /* 0x30 */
-    u8 unused_34[0x14];
-    void *asset1; /* 0x48 */
-    u8 unused_4c[0x14];
-    void *asset2; /* 0x60 */
-    u8 unused_64[0x14];
-    void *asset3; /* 0x78 */
-    u8 unused_7c[0x14];
-    void *asset4; /* 0x90 */
+    u8 unused_18[4];
+    struct popup_glyph glyphs[5]; /* 0x1c */
     u32 frameParity; /* 0x94 */
 };
 
@@ -84,208 +96,64 @@ extern void FlushVramDmaQueue(void);
  * `sub_8028A30` in between, and finally re-commits the OAM shadow
  * buffer.
  *
- * Written as NAKED asm, not plain C: `self` (r6), the OAM-shadow-buffer
- * address (sl), the constant 0x87 (r7), and the two 0x130/0x98<<1 index
- * constants (r8/sb) all stay resident in high registers across many
- * `bl` sites with no register left over - the same "many live values
- * across calls, no spare register" shape already NAKED throughout this
- * codebase (e.g. `sub_8034994`, actor_part89.c) - and this function was
- * flagged as exactly this class of difficulty in
- * docs/matching/issue-63-0x08033ef4-actor.md before this pass even
- * started. Every instruction below is transcribed directly from and
- * checked against the ROM's own disassembly. */
-NAKED void sub_8034AA4(struct fade_overlay *selfArg)
+ * Was a NAKED transcription until the issue #64/#65 NAKED retry: each
+ * label draw is a gcc 2.x virtual call through the icon manager's
+ * method record (`record->slots[n]`, `_call_via_r2` = `sub_803AD80`),
+ * the same `ICON_TEXT_CALL` shape settings_menu.c already matches, and
+ * with that the "many live values across calls" allocation falls out
+ * of plain C. */
+extern struct vram_upload_cursor *gUnknown_030012FC;
+extern u8 gStaticData_0817C510[];
+extern void sub_8006A90(struct oam_shadow_buffer *arg0);
+extern void sub_8006A48(struct oam_shadow_buffer *arg0);
+extern void sub_8006C28(struct vram_upload_cursor *arg0);
+extern s32 sub_8028A30(void *mgr, u8 arg1);
+extern s32 sub_8026F38(s32 arg0);
+extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
+s32 sub_8034C40(struct fade_overlay *self, s32 mode);
+
+/* `record->slots[n]` on an icon manager, called with `label` (slot 0
+ * measures and returns the pixel width, slot 2 draws). */
+#define ICON_TEXT_CALL(mgrExpr, n, label)                                       \
+    ({                                                                          \
+        struct icon_manager *_m = (mgrExpr);                                    \
+        struct icon_slot *_s = &_m->record->slots[n];                           \
+        sub_803AD80((u8 *)_m + _s->offset, (void *)(label), _s->ptr);           \
+    })
+
+static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sl\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6, r7}\n\t"
-        "add r6, r0, #0\n\t"
-        "ldr r0, _08034C34\n\t"
-        "mov sl, r0\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_8006A90\n\t"
-        "ldr r0, _08034C38\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_8006C28\n\t"
-        "ldr r4, [r6, #0x18]\n\t"
-        "mov r1, #0x98\n\t"
-        "lsl r1, r1, #1\n\t"
-        "mov r8, r1\n\t"
-        "add r0, r4, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r5, r0, #0\n\t"
-        "add r5, #0x10\n\t"
-        "mov r2, #0x10\n\t"
-        "ldrsh r0, [r0, r2]\n\t"
-        "add r4, r4, r0\n\t"
-        "mov r0, #0x28\n\t"
-        "bl sub_8026F38\n\t"
-        "add r1, r0, #0\n\t"
-        "ldr r2, [r5, #4]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_803AD80\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r0, [r6, #0x18]\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_8028A30\n\t"
-        "mov r1, #0x88\n\t"
-        "sub r1, r1, r4\n\t"
-        "ldr r4, [r6, #0x18]\n\t"
-        "mov r7, #0x87\n\t"
-        "mov r3, #0x88\n\t"
-        "lsl r3, r3, #1\n\t"
-        "add r0, r4, r3\n\t"
-        "str r1, [r0]\n\t"
-        "mov r1, #0x8a\n\t"
-        "lsl r1, r1, #1\n\t"
-        "add r0, r4, r1\n\t"
-        "str r7, [r0]\n\t"
-        "mov r2, r8\n\t"
-        "add r0, r4, r2\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r5, r0, #0\n\t"
-        "add r5, #0x20\n\t"
-        "mov r3, #0x20\n\t"
-        "ldrsh r0, [r0, r3]\n\t"
-        "add r4, r4, r0\n\t"
-        "mov r0, #0x28\n\t"
-        "bl sub_8026F38\n\t"
-        "add r1, r0, #0\n\t"
-        "ldr r2, [r5, #4]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r4, [r6, #0x18]\n\t"
-        "add r0, r6, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_8034C40\n\t"
-        "add r1, r0, #0\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "lsr r1, r1, #0x18\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_8028A30\n\t"
-        "ldr r0, [r6, #0x20]\n\t"
-        "cmp r0, #0\n\t"
-        "bne _08034B6E\n\t"
-        "ldr r3, [r6, #0x18]\n\t"
-        "mov r1, #0x90\n\t"
-        "mov r4, #0x88\n\t"
-        "lsl r4, r4, #1\n\t"
-        "add r0, r3, r4\n\t"
-        "str r1, [r0]\n\t"
-        "add r1, #0x84\n\t"
-        "add r0, r3, r1\n\t"
-        "str r7, [r0]\n\t"
-        "mov r2, #0x98\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r0, r3, r2\n\t"
-        "ldr r2, [r0]\n\t"
-        "mov r4, #0x20\n\t"
-        "ldrsh r0, [r2, r4]\n\t"
-        "add r0, r3, r0\n\t"
-        "ldr r1, _08034C3C\n\t"
-        "ldr r2, [r2, #0x24]\n\t"
-        "bl sub_803AD80\n"
-    "_08034B6E:\n\t"
-        "ldr r4, [r6, #0x18]\n\t"
-        "mov r0, #0x98\n\t"
-        "mov sb, r0\n\t"
-        "mov r1, #0x88\n\t"
-        "lsl r1, r1, #1\n\t"
-        "add r0, r4, r1\n\t"
-        "mov r2, sb\n\t"
-        "str r2, [r0]\n\t"
-        "mov r3, #0x8a\n\t"
-        "lsl r3, r3, #1\n\t"
-        "add r0, r4, r3\n\t"
-        "str r7, [r0]\n\t"
-        "mov r1, r8\n\t"
-        "add r0, r4, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r5, r0, #0\n\t"
-        "add r5, #0x20\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r0, r2]\n\t"
-        "add r4, r4, r0\n\t"
-        "mov r0, #0x29\n\t"
-        "bl sub_8026F38\n\t"
-        "add r1, r0, #0\n\t"
-        "ldr r2, [r5, #4]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r4, [r6, #0x18]\n\t"
-        "add r0, r6, #0\n\t"
-        "mov r1, #1\n\t"
-        "bl sub_8034C40\n\t"
-        "add r1, r0, #0\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "lsr r1, r1, #0x18\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_8028A30\n\t"
-        "ldr r0, [r6, #0x20]\n\t"
-        "cmp r0, #1\n\t"
-        "bne _08034BEA\n\t"
-        "ldr r0, [r6, #0x18]\n\t"
-        "mov r2, #0x90\n\t"
-        "mov r3, #0x91\n\t"
-        "mov r4, #0x88\n\t"
-        "lsl r4, r4, #1\n\t"
-        "add r1, r0, r4\n\t"
-        "str r2, [r1]\n\t"
-        "add r2, #0x84\n\t"
-        "add r1, r0, r2\n\t"
-        "str r3, [r1]\n\t"
-        "mov r3, r8\n\t"
-        "add r1, r0, r3\n\t"
-        "ldr r2, [r1]\n\t"
-        "mov r4, #0x20\n\t"
-        "ldrsh r1, [r2, r4]\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r1, _08034C3C\n\t"
-        "ldr r2, [r2, #0x24]\n\t"
-        "bl sub_803AD80\n"
-    "_08034BEA:\n\t"
-        "ldr r4, [r6, #0x18]\n\t"
-        "mov r1, #0x91\n\t"
-        "mov r2, #0x88\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r0, r4, r2\n\t"
-        "mov r3, sb\n\t"
-        "str r3, [r0]\n\t"
-        "add r2, #4\n\t"
-        "add r0, r4, r2\n\t"
-        "str r1, [r0]\n\t"
-        "mov r3, r8\n\t"
-        "add r0, r4, r3\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r5, r0, #0\n\t"
-        "add r5, #0x20\n\t"
-        "mov r1, #0x20\n\t"
-        "ldrsh r0, [r0, r1]\n\t"
-        "add r4, r4, r0\n\t"
-        "mov r0, #0x2a\n\t"
-        "bl sub_8026F38\n\t"
-        "add r1, r0, #0\n\t"
-        "ldr r2, [r5, #4]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_803AD80\n\t"
-        "mov r2, sl\n\t"
-        "ldr r0, [r2]\n\t"
-        "bl sub_8006A48\n\t"
-        "pop {r3, r4, r5}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov sl, r5\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "_08034C34: .4byte gUnknown_03001300\n"
-    "_08034C38: .4byte gUnknown_030012FC\n"
-    "_08034C3C: .4byte gStaticData_0817C510\n"
-    );
+    m->posX = x;
+    m->posY = y;
+}
+
+void sub_8034AA4(struct fade_overlay *self)
+{
+    s32 w;
+
+    sub_8006A90(gUnknown_03001300);
+    sub_8006C28(gUnknown_030012FC);
+    w = ICON_TEXT_CALL(self->icons, 0, sub_8026F38(0x28));
+    sub_8028A30(self->icons, 0);
+    set_icon_mgr_pos(self->icons, 0x88 - w, 0x87);
+    ICON_TEXT_CALL(self->icons, 2, sub_8026F38(0x28));
+    sub_8028A30(self->icons, sub_8034C40(self, 0));
+    if (self->selection == 0)
+    {
+        set_icon_mgr_pos(self->icons, 0x90, 0x87);
+        ICON_TEXT_CALL(self->icons, 2, gStaticData_0817C510);
+    }
+    set_icon_mgr_pos(self->icons, 0x98, 0x87);
+    ICON_TEXT_CALL(self->icons, 2, sub_8026F38(0x29));
+    sub_8028A30(self->icons, sub_8034C40(self, 1));
+    if (self->selection == 1)
+    {
+        set_icon_mgr_pos(self->icons, 0x90, 0x91);
+        ICON_TEXT_CALL(self->icons, 2, gStaticData_0817C510);
+    }
+    set_icon_mgr_pos(self->icons, 0x98, 0x91);
+    ICON_TEXT_CALL(self->icons, 2, sub_8026F38(0x2a));
+    sub_8006A48(gUnknown_03001300);
 }
 
 asm(".align 2, 0");
@@ -384,155 +252,90 @@ asm(".align 2, 0");
  * the audio context (`sub_8001B54(gUnknown_030012BC, 0x11)`). Returns
  * `self`.
  *
- * Written as NAKED asm, not plain C: `self` (r5), the zero constant
- * (r8), and `&gUnknown_030012E0` (sb) all stay resident across a long
- * run of `bl` sites, while r4/r6 each get rebound to a *different*
- * global's address multiple times over that same span (first
- * `&gUnknown_03001300`, then `&gUnknown_030012B8`, then
- * `&gUnknown_030012FC` for r4; `&gUnknown_030012DC` for r6) with several
- * unrelated calls in between each rebinding - the same "many high
- * registers held live across calls, with mid-function register
- * rebinding" shape already NAKED throughout this codebase for this
- * exact reason (compare `sub_803487C`, actor_part88.c, this cluster's
- * own sibling constructor, parked `NON_MATCHING` over a related
- * register-lifetime gap). Every instruction below is transcribed
- * directly from and checked against the ROM's own disassembly. */
-NAKED struct map_screen *sub_8034CEC(struct map_screen *selfArg)
+ * Was a NAKED transcription until the issue #64/#65 NAKED retry. The
+ * "high registers rebound across calls" shape is just cse keeping each
+ * global's address live; what it took was the ROM's own evaluation
+ * order - the two icon-manager steps (`IconSetBase`, `IconReserveVram`)
+ * as inline helpers taking the manager as a parameter (so each keeps
+ * its own rematerialized 0x108/0x12c/0x130 offsets and the E0 base
+ * value is read before E0 itself), and old_agbcc (the DISPCNT byte OR
+ * loads the 0x10 constant before the `ldrb`; this whole object matches
+ * under old_agbcc, so it moved to the Makefile's OLD_AGBCC_OBJS). The
+ * empty `asm("")` after the E0 reset produces no code; it only
+ * lengthens the live ranges crossing it by one insn, which is what tips
+ * the allocator into giving `&gUnknown_030012B8`/`&gUnknown_030012FC`
+ * r4 and `&gUnknown_030012DC` r6 as the ROM does. */
+extern void *sub_8034374(void *arg0);
+extern void sub_8006EA8(struct tile_asset_cache *cache);
+extern void sub_8028A40(struct icon_manager *mgr);
+extern void sub_80352AC(struct map_screen *self);
+extern void sub_8006DC8(struct tile_asset_cache *arg0);
+extern void sub_8006C4C(struct vram_upload_cursor *self);
+extern s32 sub_8006C58(struct vram_upload_cursor *self, s32 size);
+extern void sub_8006C30(struct vram_upload_cursor *self);
+extern void sub_803AD7C(void *self, void *fn);
+extern void sub_8001614(void);
+extern void sub_8001B54(struct AudioContext *self, u32 id);
+extern struct tile_asset_cache *gUnknown_030012B8;
+extern struct icon_manager *gUnknown_030012DC;
+extern struct icon_manager *gUnknown_030012E0;
+extern u8 gUnknown_03001288[2];
+extern struct AudioContext *gUnknown_030012BC;
+extern u8 gStaticData_0817C5D0[];
+extern void *sub_8026EDC(s32 size);
+
+/* Sets the manager's glyph tile base and fires its slot-6 method. */
+static inline void IconSetBase(struct icon_manager *m, u32 base)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6}\n\t"
-        "add r5, r0, #0\n\t"
-        "mov r0, #0x14\n\t"
-        "bl sub_8026EDC\n\t"
-        "bl sub_8034374\n\t"
-        "str r0, [r5, #0xc]\n\t"
-        "ldr r4, _08034E0C\n\t"
-        "ldr r0, [r4]\n\t"
-        "bl sub_8006A90\n\t"
-        "ldr r0, [r4]\n\t"
-        "bl sub_8006A48\n\t"
-        "bl sub_80006A8\n\t"
-        "ldr r0, [r4]\n\t"
-        "bl sub_8006AAC\n\t"
-        "ldr r4, _08034E10\n\t"
-        "ldr r0, [r4]\n\t"
-        "bl sub_8006EA8\n\t"
-        "ldr r6, _08034E14\n\t"
-        "ldr r0, [r6]\n\t"
-        "bl sub_8028A40\n\t"
-        "ldr r0, _08034E18\n\t"
-        "mov sb, r0\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_8028A30\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_80352AC\n\t"
-        "ldr r0, [r4]\n\t"
-        "bl sub_8006DC8\n\t"
-        "ldr r4, _08034E1C\n\t"
-        "ldr r0, [r4]\n\t"
-        "mov r1, #0\n\t"
-        "mov r8, r1\n\t"
-        "str r1, [r0, #8]\n\t"
-        "bl sub_8006C4C\n\t"
-        "ldr r0, [r4]\n\t"
-        "bl sub_8006C4C\n\t"
-        "ldr r0, [r6]\n\t"
-        "mov r2, #0x84\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r1, r0, r2\n\t"
-        "mov r3, r8\n\t"
-        "str r3, [r1]\n\t"
-        "add r2, #0x28\n\t"
-        "add r1, r0, r2\n\t"
-        "ldr r1, [r1]\n\t"
-        "add r1, #0x40\n\t"
-        "mov r3, #0\n\t"
-        "ldrsh r2, [r1, r3]\n\t"
-        "add r0, r0, r2\n\t"
-        "ldr r1, [r1, #4]\n\t"
-        "bl sub_803AD7C\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldr r1, [r6]\n\t"
-        "mov r2, #0x96\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r1, r1, r2\n\t"
-        "ldr r1, [r1]\n\t"
-        "lsl r1, r1, #5\n\t"
-        "bl sub_8006C58\n\t"
-        "ldr r0, [r6]\n\t"
-        "mov r3, #0x96\n\t"
-        "lsl r3, r3, #1\n\t"
-        "add r0, r0, r3\n\t"
-        "ldr r2, [r0]\n\t"
-        "mov r1, sb\n\t"
-        "ldr r0, [r1]\n\t"
-        "sub r3, #0x24\n\t"
-        "add r1, r0, r3\n\t"
-        "str r2, [r1]\n\t"
-        "mov r2, #0x98\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r1, r0, r2\n\t"
-        "ldr r1, [r1]\n\t"
-        "add r1, #0x40\n\t"
-        "mov r3, #0\n\t"
-        "ldrsh r2, [r1, r3]\n\t"
-        "add r0, r0, r2\n\t"
-        "ldr r1, [r1, #4]\n\t"
-        "bl sub_803AD7C\n\t"
-        "ldr r0, [r4]\n\t"
-        "mov r2, sb\n\t"
-        "ldr r1, [r2]\n\t"
-        "mov r3, #0x96\n\t"
-        "lsl r3, r3, #1\n\t"
-        "add r1, r1, r3\n\t"
-        "ldr r1, [r1]\n\t"
-        "lsl r1, r1, #5\n\t"
-        "bl sub_8006C58\n\t"
-        "ldr r0, [r4]\n\t"
-        "bl sub_8006C30\n\t"
-        "mov r0, r8\n\t"
-        "str r0, [r5]\n\t"
-        "str r0, [r5, #0x10]\n\t"
-        "ldr r0, _08034E20\n\t"
-        "str r0, [r5, #4]\n\t"
-        "str r0, [r5, #8]\n\t"
-        "mov r1, r8\n\t"
-        "str r1, [r5, #0x14]\n\t"
-        "ldr r1, _08034E24\n\t"
-        "mov r0, #0x10\n\t"
-        "ldrb r2, [r1, #1]\n\t"
-        "orr r0, r2\n\t"
-        "strb r0, [r1, #1]\n\t"
-        "bl sub_8001614\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x94\n\t"
-        "mov r3, r8\n\t"
-        "str r3, [r0]\n\t"
-        "ldr r0, _08034E28\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #0x11\n\t"
-        "bl sub_8001B54\n\t"
-        "add r0, r5, #0\n\t"
-        "pop {r3, r4}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n"
-    "_08034E0C: .4byte gUnknown_03001300\n"
-    "_08034E10: .4byte gUnknown_030012B8\n"
-    "_08034E14: .4byte gUnknown_030012DC\n"
-    "_08034E18: .4byte gUnknown_030012E0\n"
-    "_08034E1C: .4byte gUnknown_030012FC\n"
-    "_08034E20: .4byte gStaticData_0817C5D0\n"
-    "_08034E24: .4byte gUnknown_03001288\n"
-    "_08034E28: .4byte gUnknown_030012BC\n"
-    );
+    struct icon_slot *slot;
+
+    m->field_108 = base;
+    slot = &m->record->slots[6];
+    sub_803AD7C((u8 *)m + slot->offset, slot->ptr);
+}
+
+/* Reserves `m`'s glyph tiles (`field_12c` tiles) from the VRAM upload
+ * cursor `c`. */
+static inline void IconReserveVram(struct vram_upload_cursor *c, struct icon_manager *m)
+{
+    sub_8006C58(c, m->field_12c << 5);
+}
+
+struct map_screen *sub_8034CEC(struct map_screen *self)
+{
+    self->mapObj = sub_8034374(sub_8026EDC(0x14));
+    sub_8006A90(gUnknown_03001300);
+    sub_8006A48(gUnknown_03001300);
+    sub_80006A8();
+    sub_8006AAC(gUnknown_03001300);
+    sub_8006EA8(gUnknown_030012B8);
+    sub_8028A40(gUnknown_030012DC);
+    sub_8028A30(gUnknown_030012E0, 0);
+    asm("");
+    sub_80352AC(self);
+    sub_8006DC8(gUnknown_030012B8);
+    gUnknown_030012FC->field_08 = 0;
+    sub_8006C4C(gUnknown_030012FC);
+    sub_8006C4C(gUnknown_030012FC);
+    IconSetBase(gUnknown_030012DC, 0);
+    IconReserveVram(gUnknown_030012FC, gUnknown_030012DC);
+    {
+        u32 base = gUnknown_030012DC->field_12c;
+
+        IconSetBase(gUnknown_030012E0, base);
+    }
+    IconReserveVram(gUnknown_030012FC, gUnknown_030012E0);
+    sub_8006C30(gUnknown_030012FC);
+    self->popupListHead = NULL;
+    self->drawMode = 0;
+    self->streamBase = gStaticData_0817C5D0;
+    self->streamCursor = gStaticData_0817C5D0;
+    self->suppressCounter = 0;
+    gUnknown_03001288[1] |= 0x10;
+    sub_8001614();
+    self->frameParity = 0;
+    sub_8001B54(gUnknown_030012BC, 0x11);
+    return self;
 }
 
 asm(".align 2, 0");
@@ -625,233 +428,92 @@ asm(".align 2, 0");
  * them via `sub_8006AC8`, before advancing to the next linked object in
  * `mapObj`'s list and repeating.
  *
- * Written as NAKED asm, not plain C: the inner tile loop keeps six
- * independent running values live simultaneously across a `bl
- * sub_8006AC8` call inside a nested loop (`sl`/`sb`/`r8`, plus r4-r7) -
- * the same "many high registers held live across calls inside a loop"
- * shape already NAKED throughout this codebase (see
- * docs/matching/issue-63-final-raw-actor.md's `sub_8034994` entry for
- * the fullest write-up of this recurring pattern). Every instruction
- * below, including the mid-function literal-pool placements, is
- * transcribed directly from and checked against the ROM's own
- * disassembly. */
-NAKED void sub_8034EF0(struct map_screen *selfArg)
+ * Was a NAKED transcription until the issue #64/#65 NAKED retry: the
+ * "six running values across a call in a nested loop" allocation is
+ * plain gcc output under old_agbcc once the source order matches (the
+ * icon position set through `set_icon_mgr_pos` so x/y are loaded before
+ * the stores, `h * w` for the tile count, the OAM request's size and
+ * palette as bitfields of a stack `struct popup_oam`). */
+struct popup_oam {
+    u8 y;
+    u8 unk_1;
+    u16 x:9;
+    u16 unk_2:5;
+    u16 size:2;
+    u16 tile:10;
+    u16 unk_4:2;
+    u16 palette:4;
+};
+
+extern s32 sub_8006C44(struct vram_upload_cursor *self);
+extern s32 sub_8006C84(struct vram_upload_cursor *self, void *src, s32 size);
+extern void sub_803A94C(void *src, void *dst, s32 control);
+extern void sub_8006AC8(struct oam_shadow_buffer *self, void *record);
+extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
+
+void sub_8034EF0(struct map_screen *self)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sl\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6, r7}\n\t"
-        "sub sp, #0x24\n\t"
-        "str r0, [sp, #0xc]\n\t"
-        "ldr r0, _08034F34\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_8006A90\n\t"
-        "ldr r0, _08034F38\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_8006C28\n\t"
-        "ldr r0, [sp, #0xc]\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov sb, r0\n\t"
-        "cmp r0, #0\n\t"
-        "bne _08034F1A\n\t"
-        "b _0803506E\n"
-    "_08034F1A:\n\t"
-        "mov r1, sp\n\t"
-        "add r1, #4\n\t"
-        "str r1, [sp, #0x10]\n"
-    "_08034F20:\n\t"
-        "mov r2, sb\n\t"
-        "ldr r0, [r2, #0x10]\n\t"
-        "cmp r0, #1\n\t"
-        "beq _08034F4C\n\t"
-        "cmp r0, #1\n\t"
-        "bgt _08034F3C\n\t"
-        "cmp r0, #0\n\t"
-        "beq _08034F42\n\t"
-        "b _08035062\n\t"
-        ".align 2, 0\n"
-    "_08034F34: .4byte gUnknown_03001300\n"
-    "_08034F38: .4byte gUnknown_030012FC\n"
-    "_08034F3C:\n\t"
-        "cmp r0, #2\n\t"
-        "beq _08034F84\n\t"
-        "b _08035062\n"
-    "_08034F42:\n\t"
-        "ldr r0, _08034F48\n\t"
-        "b _08034F4E\n\t"
-        ".align 2, 0\n"
-    "_08034F48: .4byte gUnknown_030012DC\n"
-    "_08034F4C:\n\t"
-        "ldr r0, _08034F80\n"
-    "_08034F4E:\n\t"
-        "ldr r3, [r0]\n\t"
-        "mov r4, sb\n\t"
-        "ldr r1, [r4, #4]\n\t"
-        "ldr r2, [r4, #8]\n\t"
-        "mov r4, #0x88\n\t"
-        "lsl r4, r4, #1\n\t"
-        "add r0, r3, r4\n\t"
-        "str r1, [r0]\n\t"
-        "mov r1, #0x8a\n\t"
-        "lsl r1, r1, #1\n\t"
-        "add r0, r3, r1\n\t"
-        "str r2, [r0]\n\t"
-        "mov r2, #0x98\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r0, r3, r2\n\t"
-        "ldr r2, [r0]\n\t"
-        "mov r4, #0x30\n\t"
-        "ldrsh r0, [r2, r4]\n\t"
-        "add r0, r3, r0\n\t"
-        "mov r3, sb\n\t"
-        "ldrb r1, [r3, #0x14]\n\t"
-        "ldr r2, [r2, #0x34]\n\t"
-        "bl sub_803AD80\n\t"
-        "b _08035062\n\t"
-        ".align 2, 0\n"
-    "_08034F80: .4byte gUnknown_030012E0\n"
-    "_08034F84:\n\t"
-        "mov r4, sb\n\t"
-        "ldrb r4, [r4, #0x14]\n\t"
-        "lsl r0, r4, #1\n\t"
-        "mov r1, sb\n\t"
-        "ldrb r1, [r1, #0x14]\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r0, r0, #3\n\t"
-        "add r0, #0x1c\n\t"
-        "ldr r2, [sp, #0xc]\n\t"
-        "add r6, r2, r0\n\t"
-        "ldr r4, _08035088\n\t"
-        "ldr r0, [r4]\n\t"
-        "bl sub_8006C44\n\t"
-        "mov sl, r0\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldr r1, [r6, #0x14]\n\t"
-        "ldr r3, [r6, #4]\n\t"
-        "ldr r2, [r6]\n\t"
-        "mul r2, r3, r2\n\t"
-        "lsl r2, r2, #9\n\t"
-        "bl sub_8006C84\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [sp]\n\t"
-        "mov r0, sp\n\t"
-        "ldr r1, [sp, #0x10]\n\t"
-        "ldr r2, _0803508C\n\t"
-        "bl sub_803A94C\n\t"
-        "ldr r3, [sp, #0x10]\n\t"
-        "ldrb r1, [r3, #3]\n\t"
-        "mov r0, #0x3f\n\t"
-        "and r0, r1\n\t"
-        "mov r1, #0x80\n\t"
-        "orr r0, r1\n\t"
-        "strb r0, [r3, #3]\n\t"
-        "ldrb r4, [r6, #0x10]\n\t"
-        "lsl r1, r4, #4\n\t"
-        "mov r0, #0xf\n\t"
-        "ldrb r2, [r3, #5]\n\t"
-        "and r0, r2\n\t"
-        "orr r0, r1\n\t"
-        "strb r0, [r3, #5]\n\t"
-        "mov r3, sb\n\t"
-        "ldr r3, [r3, #8]\n\t"
-        "mov r8, r3\n\t"
-        "mov r1, #0\n\t"
-        "ldr r0, [r6, #4]\n\t"
-        "mov r4, sp\n\t"
-        "add r4, #4\n\t"
-        "str r4, [sp, #0x20]\n\t"
-        "cmp r1, r0\n\t"
-        "bge _08035062\n"
-    "_08034FF0:\n\t"
-        "mov r2, r8\n\t"
-        "ldr r0, [sp, #0x20]\n\t"
-        "strb r2, [r0]\n\t"
-        "mov r3, sb\n\t"
-        "ldr r5, [r3, #4]\n\t"
-        "mov r7, #0\n\t"
-        "ldr r0, [r6]\n\t"
-        "mov r4, r8\n\t"
-        "add r4, #0x20\n\t"
-        "str r4, [sp, #0x18]\n\t"
-        "add r1, #1\n\t"
-        "str r1, [sp, #0x14]\n\t"
-        "cmp r7, r0\n\t"
-        "bge _08035056\n\t"
-        "ldr r4, [sp, #0x20]\n"
-    "_0803500E:\n\t"
-        "mov r0, r8\n\t"
-        "add r0, #0x1f\n\t"
-        "cmp r0, #0xbe\n\t"
-        "bhi _08035048\n\t"
-        "ldr r1, _08035090\n\t"
-        "add r0, r1, #0\n\t"
-        "add r2, r5, #0\n\t"
-        "and r2, r0\n\t"
-        "ldrh r0, [r4, #2]\n\t"
-        "ldr r3, _08035094\n\t"
-        "add r1, r3, #0\n\t"
-        "and r0, r1\n\t"
-        "orr r0, r2\n\t"
-        "strh r0, [r4, #2]\n\t"
-        "ldr r1, _08035098\n\t"
-        "add r0, r1, #0\n\t"
-        "mov r1, sl\n\t"
-        "and r1, r0\n\t"
-        "ldr r2, _0803509C\n\t"
-        "add r0, r2, #0\n\t"
-        "ldrh r3, [r4, #4]\n\t"
-        "and r0, r3\n\t"
-        "orr r0, r1\n\t"
-        "strh r0, [r4, #4]\n\t"
-        "ldr r0, _080350A0\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r1, r4, #0\n\t"
-        "bl sub_8006AC8\n"
-    "_08035048:\n\t"
-        "mov r0, #0x10\n\t"
-        "add sl, r0\n\t"
-        "add r5, #0x20\n\t"
-        "add r7, #1\n\t"
-        "ldr r0, [r6]\n\t"
-        "cmp r7, r0\n\t"
-        "blt _0803500E\n"
-    "_08035056:\n\t"
-        "ldr r1, [sp, #0x18]\n\t"
-        "mov r8, r1\n\t"
-        "ldr r1, [sp, #0x14]\n\t"
-        "ldr r0, [r6, #4]\n\t"
-        "cmp r1, r0\n\t"
-        "blt _08034FF0\n"
-    "_08035062:\n\t"
-        "mov r2, sb\n\t"
-        "ldr r2, [r2]\n\t"
-        "mov sb, r2\n\t"
-        "cmp r2, #0\n\t"
-        "beq _0803506E\n\t"
-        "b _08034F20\n"
-    "_0803506E:\n\t"
-        "ldr r0, _080350A0\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_8006A48\n\t"
-        "add sp, #0x24\n\t"
-        "pop {r3, r4, r5}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov sl, r5\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "_08035088: .4byte gUnknown_030012FC\n"
-    "_0803508C: .4byte 0x05000002\n"
-    "_08035090: .4byte 0x000001FF\n"
-    "_08035094: .4byte 0xFFFFFE00\n"
-    "_08035098: .4byte 0x000003FF\n"
-    "_0803509C: .4byte 0xFFFFFC00\n"
-    "_080350A0: .4byte gUnknown_03001300\n"
-    );
+    struct popup_node *node;
+
+    sub_8006A90(gUnknown_03001300);
+    sub_8006C28(gUnknown_030012FC);
+    for (node = self->popupListHead; node != NULL; node = node->next)
+    {
+        struct icon_manager *m;
+
+        switch (node->mode)
+        {
+        case 0:
+            m = gUnknown_030012DC;
+            goto draw;
+        case 1:
+            m = gUnknown_030012E0;
+        draw:
+            set_icon_mgr_pos(m, node->x, node->y);
+            sub_803AD80((u8 *)m + m->record->slots[4].offset, (void *)(u32)node->index, m->record->slots[4].ptr);
+            break;
+        case 2:
+        {
+            /* `node->index` is read twice, as the ROM does. */
+            struct popup_glyph *glyph = (struct popup_glyph *)((u8 *)self + 0x1c + (node->index * 2 + node->index) * 8);
+            s32 tile;
+            u32 zero;
+            struct popup_oam oam;
+            s32 y;
+            s32 i;
+
+            tile = sub_8006C44(gUnknown_030012FC);
+            sub_8006C84(gUnknown_030012FC, glyph->tiles, (glyph->rows * glyph->cols) << 9);
+            zero = 0;
+            sub_803A94C(&zero, &oam, 0x05000002);
+            oam.size = 2;
+            oam.palette = glyph->palette;
+            y = node->y;
+            for (i = 0; i < glyph->rows; i++)
+            {
+                s32 x;
+                s32 j;
+
+                oam.y = y;
+                x = node->x;
+                for (j = 0; j < glyph->cols; j++)
+                {
+                    if ((u32)(y + 0x1f) <= 0xbe)
+                    {
+                        oam.x = x;
+                        oam.tile = tile;
+                        sub_8006AC8(gUnknown_03001300, &oam);
+                    }
+                    tile += 0x10;
+                    x += 0x20;
+                }
+                y += 0x20;
+            }
+            break;
+        }
+        }
+    }
+    sub_8006A48(gUnknown_03001300);
 }
 
 asm(".align 2, 0");
@@ -871,293 +533,191 @@ asm(".align 2, 0");
  * from the measured line width and walks the popup list one more time
  * shifting each node horizontally into position.
  *
- * Written as NAKED asm, not plain C: `self` (r5), the list-tail pointer
- * (r8), the running max-width accumulator (sb), and the horizontal
- * pen-position accumulator (sl) all stay resident across many `bl`
- * sites spanning several nested loops - the same "many high registers
- * held live across calls, no spare register" shape already NAKED
- * throughout this codebase (see docs/matching/issue-63-final-raw-actor.md's
- * `sub_8034994` entry). Every instruction below, including the
- * mid-function literal-pool placements, is transcribed directly from
- * and checked against the ROM's own disassembly. */
-NAKED void sub_80350A4(struct map_screen *selfArg)
+ * Was a NAKED transcription until the issue #64/#65 NAKED retry; under
+ * old_agbcc the "many high registers across calls" allocation is plain
+ * gcc output once the source order matches. The glyph height/width
+ * reads go through `GlyphHeightAt`/`GlyphWidthAt` (base field address
+ * first, then the `index * 0x18` offset) so loop.c hoists
+ * `&glyphs[0].height` the way the ROM does; the first height read spells
+ * the index as `index * 2 + index`, re-reading the byte it just stored,
+ * as the ROM does; the cursor advance and the popup y placement keep
+ * their own temporaries so the old/new cursor and the `y + 0xa0` term are
+ * formed in the ROM's order. */
+extern s32 sub_8028968(struct icon_manager *mgr, const u8 *text);
+extern s32 sub_803AD84(void *self, const void *a, s32 b, void *fn);
+extern void *sub_8026EDC(s32 size);
+extern u8 gStaticData_0817CF3C[];
+
+#define ICON_TEXT_CALL3(mgrExpr, n, a, b)                                      \
+    ({                                                                          \
+        struct icon_manager *_m = (mgrExpr);                                    \
+        struct icon_slot *_s = &_m->record->slots[n];                           \
+        sub_803AD84((u8 *)_m + _s->offset, (a), (b), _s->ptr);                  \
+    })
+
+static inline s32 *GlyphHeightAt(struct map_screen *self, s32 off)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sl\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6, r7}\n\t"
-        "sub sp, #0x10\n\t"
-        "add r5, r0, #0\n\t"
-        "add r4, r5, #0\n\t"
-        "ldr r0, [r5]\n\t"
-        "cmp r0, #0\n\t"
-        "beq _080350DE\n"
-    "_080350BA:\n\t"
-        "ldr r2, [r4]\n\t"
-        "ldr r0, [r2, #8]\n\t"
-        "sub r0, #1\n\t"
-        "str r0, [r2, #8]\n\t"
-        "ldr r1, [r2, #0xc]\n\t"
-        "add r0, r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "bgt _080350D6\n\t"
-        "ldr r0, [r2]\n\t"
-        "str r0, [r4]\n\t"
-        "add r0, r2, #0\n\t"
-        "bl sub_8026ED0\n\t"
-        "b _080350D8\n"
-    "_080350D6:\n\t"
-        "add r4, r2, #0\n"
-    "_080350D8:\n\t"
-        "ldr r0, [r4]\n\t"
-        "cmp r0, #0\n\t"
-        "bne _080350BA\n"
-    "_080350DE:\n\t"
-        "ldr r0, [r5, #0x14]\n\t"
-        "cmp r0, #0\n\t"
-        "beq _080350EA\n\t"
-        "sub r0, #1\n\t"
-        "str r0, [r5, #0x14]\n\t"
-        "b _08035298\n"
-    "_080350EA:\n\t"
-        "mov r8, r5\n\t"
-        "ldr r0, [r5]\n\t"
-        "ldr r1, _08035154\n\t"
-        "ldr r4, _08035158\n\t"
-        "cmp r0, #0\n\t"
-        "beq _08035102\n"
-    "_080350F6:\n\t"
-        "mov r0, r8\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r8, r0\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne _080350F6\n"
-    "_08035102:\n\t"
-        "mov r7, r8\n\t"
-        "ldr r0, [r1]\n\t"
-        "add r1, r4, #0\n\t"
-        "bl sub_8028968\n\t"
-        "str r0, [sp]\n\t"
-        "ldr r0, _0803515C\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r1, r4, #0\n\t"
-        "bl sub_8028968\n\t"
-        "str r0, [sp, #4]\n\t"
-        "ldr r1, [sp]\n\t"
-        "mov sb, r1\n\t"
-        "mov r2, #0\n\t"
-        "mov sl, r2\n\t"
-        "ldr r0, [r5, #8]\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne _0803512E\n\t"
-        "ldr r0, [r5, #4]\n\t"
-        "str r0, [r5, #8]\n"
-    "_0803512E:\n\t"
-        "ldr r4, [r5, #8]\n\t"
-        "ldrb r0, [r4]\n\t"
-        "cmp r0, #0xa\n\t"
-        "bne _08035138\n\t"
-        "b _08035254\n"
-    "_08035138:\n\t"
-        "cmp r0, #0\n\t"
-        "bne _0803513E\n\t"
-        "b _0803524C\n"
-    "_0803513E:\n\t"
-        "add r3, r5, #0\n\t"
-        "add r3, #0x24\n\t"
-        "str r3, [sp, #8]\n"
-    "_08035144:\n\t"
-        "mov r2, #0\n\t"
-        "mov r6, #0\n\t"
-        "ldrb r0, [r4]\n\t"
-        "cmp r0, #2\n\t"
-        "bne _08035160\n\t"
-        "str r6, [r5, #0x10]\n\t"
-        "b _08035230\n\t"
-        ".align 2, 0\n"
-    "_08035154: .4byte gUnknown_030012DC\n"
-    "_08035158: .4byte gStaticData_0817CF3C\n"
-    "_0803515C: .4byte gUnknown_030012E0\n"
-    "_08035160:\n\t"
-        "cmp r0, #3\n\t"
-        "bne _0803516A\n\t"
-        "mov r0, #1\n\t"
-        "str r0, [r5, #0x10]\n\t"
-        "b _08035230\n"
-    "_0803516A:\n\t"
-        "cmp r0, #1\n\t"
-        "bne _080351B4\n\t"
-        "add r0, r4, #1\n\t"
-        "str r0, [r5, #8]\n\t"
-        "mov r0, #0x18\n\t"
-        "bl sub_8026EDC\n\t"
-        "str r0, [r7]\n\t"
-        "mov r1, #2\n\t"
-        "str r1, [r0, #0x10]\n\t"
-        "str r6, [r0, #8]\n\t"
-        "mov r1, sl\n\t"
-        "str r1, [r0, #4]\n\t"
-        "ldr r1, [r5, #8]\n\t"
-        "ldrb r1, [r1]\n\t"
-        "strb r1, [r0, #0x14]\n\t"
-        "lsl r1, r1, #1\n\t"
-        "ldrb r2, [r0, #0x14]\n\t"
-        "add r1, r1, r2\n\t"
-        "lsl r1, r1, #3\n\t"
-        "ldr r3, [sp, #8]\n\t"
-        "add r1, r3, r1\n\t"
-        "ldr r1, [r1]\n\t"
-        "str r1, [r0, #0xc]\n\t"
-        "str r6, [r0]\n\t"
-        "add r7, r0, #0\n\t"
-        "ldrb r0, [r7, #0x14]\n\t"
-        "lsl r1, r0, #1\n\t"
-        "add r1, r1, r0\n\t"
-        "lsl r1, r1, #3\n\t"
-        "add r0, r3, r1\n\t"
-        "ldr r6, [r0]\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x28\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r2, [r0]\n\t"
-        "b _08035230\n"
-    "_080351B4:\n\t"
-        "ldr r0, [r5, #0x10]\n\t"
-        "cmp r0, #0\n\t"
-        "bne _080351E0\n\t"
-        "ldr r0, _080351DC\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x98\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r1, r0, r2\n\t"
-        "ldr r2, [r1]\n\t"
-        "mov r3, #0x18\n\t"
-        "ldrsh r1, [r2, r3]\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r3, [r2, #0x1c]\n\t"
-        "add r1, r4, #0\n\t"
-        "mov r2, #1\n\t"
-        "bl sub_803AD84\n\t"
-        "add r2, r0, #0\n\t"
-        "ldr r6, [sp]\n\t"
-        "b _08035200\n\t"
-        ".align 2, 0\n"
-    "_080351DC: .4byte gUnknown_030012DC\n"
-    "_080351E0:\n\t"
-        "ldr r0, _080352A8\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x98\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r1, r0, r2\n\t"
-        "ldr r2, [r1]\n\t"
-        "mov r3, #0x18\n\t"
-        "ldrsh r1, [r2, r3]\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r3, [r2, #0x1c]\n\t"
-        "add r1, r4, #0\n\t"
-        "mov r2, #1\n\t"
-        "bl sub_803AD84\n\t"
-        "add r2, r0, #0\n\t"
-        "ldr r6, [sp, #4]\n"
-    "_08035200:\n\t"
-        "ldr r0, [r5, #8]\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0x20\n\t"
-        "beq _08035230\n\t"
-        "mov r0, #0x18\n\t"
-        "str r2, [sp, #0xc]\n\t"
-        "bl sub_8026EDC\n\t"
-        "str r0, [r7]\n\t"
-        "ldr r1, [r5, #0x10]\n\t"
-        "str r1, [r0, #0x10]\n\t"
-        "mov r1, #0\n\t"
-        "str r1, [r0, #8]\n\t"
-        "mov r3, sl\n\t"
-        "str r3, [r0, #4]\n\t"
-        "ldr r1, [r5, #8]\n\t"
-        "ldrb r1, [r1]\n\t"
-        "strb r1, [r0, #0x14]\n\t"
-        "ldr r0, [r7]\n\t"
-        "str r6, [r0, #0xc]\n\t"
-        "add r7, r0, #0\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [r7]\n\t"
-        "ldr r2, [sp, #0xc]\n"
-    "_08035230:\n\t"
-        "add sl, r2\n\t"
-        "cmp sb, r6\n\t"
-        "bge _08035238\n\t"
-        "mov sb, r6\n"
-    "_08035238:\n\t"
-        "ldr r0, [r5, #8]\n\t"
-        "add r1, r0, #1\n\t"
-        "str r1, [r5, #8]\n\t"
-        "ldrb r0, [r0, #1]\n\t"
-        "cmp r0, #0xa\n\t"
-        "beq _08035254\n\t"
-        "add r4, r1, #0\n\t"
-        "cmp r0, #0\n\t"
-        "beq _0803524C\n\t"
-        "b _08035144\n"
-    "_0803524C:\n\t"
-        "ldr r0, [r5, #8]\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0xa\n\t"
-        "bne _0803525A\n"
-    "_08035254:\n\t"
-        "ldr r0, [r5, #8]\n\t"
-        "add r0, #1\n\t"
-        "str r0, [r5, #8]\n"
-    "_0803525A:\n\t"
-        "mov r1, r8\n\t"
-        "ldr r3, [r1]\n\t"
-        "mov r6, sb\n\t"
-        "add r6, #6\n\t"
-        "cmp r3, #0\n\t"
-        "beq _08035296\n\t"
-        "mov r0, #0xf0\n\t"
-        "mov r2, sl\n\t"
-        "sub r0, r0, r2\n\t"
-        "lsr r1, r0, #0x1f\n\t"
-        "add r0, r0, r1\n\t"
-        "asr r4, r0, #1\n"
-    "_08035272:\n\t"
-        "ldr r0, [r3, #8]\n\t"
-        "add r2, r0, #0\n\t"
-        "add r2, #0xa0\n\t"
-        "ldr r1, [r3, #0xc]\n\t"
-        "add r0, r0, r1\n\t"
-        "mov r1, sb\n\t"
-        "sub r0, r1, r0\n\t"
-        "lsr r1, r0, #0x1f\n\t"
-        "add r0, r0, r1\n\t"
-        "asr r0, r0, #1\n\t"
-        "add r2, r2, r0\n\t"
-        "str r2, [r3, #8]\n\t"
-        "ldr r0, [r3, #4]\n\t"
-        "add r0, r0, r4\n\t"
-        "str r0, [r3, #4]\n\t"
-        "ldr r3, [r3]\n\t"
-        "cmp r3, #0\n\t"
-        "bne _08035272\n"
-    "_08035296:\n\t"
-        "str r6, [r5, #0x14]\n"
-    "_08035298:\n\t"
-        "add sp, #0x10\n\t"
-        "pop {r3, r4, r5}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov sl, r5\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "_080352A8: .4byte gUnknown_030012E0\n"
-    );
+    u8 *base = (u8 *)&self->glyphs[0].height;
+    return (s32 *)(base + off);
+}
+
+static inline s32 *GlyphWidthAt(struct map_screen *self, s32 off)
+{
+    u8 *base = (u8 *)&self->glyphs[0].width;
+    return (s32 *)(base + off);
+}
+
+void sub_80350A4(struct map_screen *self)
+{
+    struct popup_node **link;
+    struct popup_node *lineStart;
+    struct popup_node *tail;
+    s32 widthA;
+    s32 widthB;
+    s32 maxHeight;
+    s32 penX;
+    const u8 *p;
+
+    link = (struct popup_node **)&self->popupListHead;
+    while (*link != NULL)
+    {
+        struct popup_node *n = *link;
+
+        if (--n->y + n->timer <= 0)
+        {
+            *link = n->next;
+            sub_8026ED0(n);
+        }
+        else
+        {
+            link = &n->next;
+        }
+    }
+
+    if (self->suppressCounter != 0)
+    {
+        self->suppressCounter--;
+        return;
+    }
+
+    lineStart = (struct popup_node *)self;
+    while (lineStart->next != NULL)
+        lineStart = lineStart->next;
+    tail = lineStart;
+
+    widthA = sub_8028968(gUnknown_030012DC, gStaticData_0817CF3C);
+    widthB = sub_8028968(gUnknown_030012E0, gStaticData_0817CF3C);
+    maxHeight = widthA;
+    penX = 0;
+    if (*(const u8 *)self->streamCursor == 0)
+        self->streamCursor = self->streamBase;
+    p = self->streamCursor;
+    if (*p != '\n')
+    {
+        if (*p != 0)
+        {
+            u8 c;
+
+            do
+            {
+                s32 advance = 0;
+                s32 height = 0;
+
+                if (*p == 2)
+                {
+                    self->drawMode = height;
+                }
+                else if (*p == 3)
+                {
+                    self->drawMode = 1;
+                }
+                else if (*p == 1)
+                {
+                    struct popup_node *n;
+
+                    self->streamCursor = p + 1;
+                    n = sub_8026EDC(0x18);
+                    tail->next = n;
+                    n->mode = 2;
+                    n->y = height;
+                    n->x = penX;
+                    n->index = *(const u8 *)self->streamCursor;
+                    n->timer = *GlyphHeightAt(self, (n->index * 2 + n->index) * 8);
+                    n->next = NULL;
+                    tail = n;
+                    {
+                        s32 off = n->index * sizeof(struct popup_glyph);
+
+                        height = *GlyphHeightAt(self, off);
+                        advance = *GlyphWidthAt(self, off);
+                    }
+                }
+                else
+                {
+                    if (self->drawMode == 0)
+                    {
+                        advance = ICON_TEXT_CALL3(gUnknown_030012DC, 1, p, 1);
+                        height = widthA;
+                    }
+                    else
+                    {
+                        advance = ICON_TEXT_CALL3(gUnknown_030012E0, 1, p, 1);
+                        height = widthB;
+                    }
+                    if (*(const u8 *)self->streamCursor != ' ')
+                    {
+                        struct popup_node *n = sub_8026EDC(0x18);
+
+                        tail->next = n;
+                        n->mode = self->drawMode;
+                        n->y = 0;
+                        n->x = penX;
+                        n->index = *(const u8 *)self->streamCursor;
+                        tail->next->timer = height;
+                        tail = tail->next;
+                        tail->next = NULL;
+                    }
+                }
+                penX += advance;
+                if (maxHeight < height)
+                    maxHeight = height;
+                {
+                    const u8 *q = self->streamCursor;
+
+                    self->streamCursor = q + 1;
+                    c = q[1];
+                    if (c == '\n')
+                        goto newline;
+                    p = q + 1;
+                }
+            } while (c != 0);
+        }
+        if (*(const u8 *)self->streamCursor != '\n')
+            goto place;
+    }
+newline:
+    self->streamCursor = (const u8 *)self->streamCursor + 1;
+place:
+    {
+        struct popup_node *n = lineStart->next;
+        s32 counter = maxHeight + 6;
+
+        if (n != NULL)
+        {
+            s32 dx = (0xf0 - penX) / 2;
+
+            do
+            {
+                s32 y = n->y;
+                s32 top = y + 0xa0;
+
+                n->y = top + (maxHeight - (y + n->timer)) / 2;
+                n->x += dx;
+                n = n->next;
+            } while (n != NULL);
+        }
+        self->suppressCounter = counter;
+    }
 }
 
 asm(".align 2, 0");
@@ -1181,6 +741,103 @@ asm(".align 2, 0");
  * wall already NAKED throughout this codebase. Every instruction below,
  * including the mid-function literal-pool placement, is transcribed
  * directly from and checked against the ROM's own disassembly. */
+#if NON_MATCHING
+/* NON_MATCHING draft (old_agbcc, 4 bytes too large, one extra word of
+ * frame): everything lines up except that gcc computes the palette
+ * slot address `slot << 5` before the tile loops (next to the `slot + 1`
+ * and `i + 1` biv increments it also hoists there, which the ROM does
+ * too) and spills it to its own stack slot; the ROM computes it at the
+ * palette copy. Copy-loop spelling, `u32 slot`, `palSlots` forms and
+ * -fno-strength-reduce don't change it (issue #64/#65 NAKED retry). */
+/* One `gStaticData_0817CF40` record (0x14 bytes): a popup glyph's size
+ * in 8-px tiles and its tagged palette/tile assets. */
+struct popup_glyph_src {
+    s32 w;               /* 0x00 */
+    s32 h;               /* 0x04 */
+    const u32 *palette;  /* 0x08 - tagged asset, size in the header's bits 9+ */
+    const u32 *tiles;    /* 0x0c - tagged asset, size in the header's bits 8+ */
+    u32 unk_10;
+};
+
+extern struct popup_glyph_src gStaticData_0817CF40[];
+extern void *sub_8026EC0(u32 size);
+extern void sub_8026EB4(void *ptr);
+extern void LoadTaggedAsset(const void *asset, void *dest);
+extern s32 sub_8006D50(struct tile_asset_cache *cache, s32 index);
+
+void sub_80352AC(struct map_screen *self)
+{
+    u8 (*palSlots)[TILE_SIZE_4BPP] = gUnknown_030012B8->slots;
+    s32 slot = 1;
+    s32 i;
+
+    for (i = 0; i <= 4; i++)
+    {
+        struct popup_glyph_src *src = &gStaticData_0817CF40[i];
+        struct popup_glyph *glyph = (struct popup_glyph *)((u8 *)self + 0x1c + (i * 2 + i) * 8);
+        u8 *tiles;
+        u16 *pal;
+        s32 size;
+        s32 y;
+
+        {
+            s32 w = src->w;
+            s32 h = src->h;
+
+            glyph->height = h << 3;
+            glyph->width = w << 3;
+            glyph->cols = (w + 3) / 4;
+            glyph->rows = (h + 3) / 4;
+        }
+        tiles = sub_8026EC0(*src->tiles >> 8);
+        LoadTaggedAsset(src->tiles, tiles);
+        size = (glyph->cols * glyph->rows) << 9;
+        glyph->tiles = sub_8026EC0(size);
+        {
+            u32 zero = 0;
+            struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
+
+            dma->src = (u32)&zero;
+            dma->dst = (u32)glyph->tiles;
+            dma->cnt = (size / 4) | 0x85000000;
+            dma->cnt;
+        }
+        for (y = 0; y < src->h; y++)
+        {
+            s32 x;
+
+            for (x = 0; x < src->w; x++)
+            {
+                s32 cell = (y >> 2) * glyph->cols + (x >> 2);
+                s32 sub = (x & 3) + ((y & 3) << 2);
+                struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
+
+                dma->src = (u32)(tiles + (y * src->w + x) * 32);
+                dma->dst = (u32)((u8 *)glyph->tiles + (((cell << 4) + sub) << 5));
+                dma->cnt = 0x84000008;
+                dma->cnt;
+            }
+        }
+        if (tiles != NULL)
+            sub_8026EB4(tiles);
+        pal = sub_8026EC0((*src->palette >> 9) << 1);
+        LoadTaggedAsset(src->palette, pal);
+        {
+            u16 *s = pal;
+            u16 *d = (u16 *)palSlots[slot];
+            s32 k;
+
+            for (k = 15; k >= 0; k--)
+                *d++ = *s++;
+        }
+        if (pal != NULL)
+            sub_8026EB4(pal);
+        sub_8006D50(gUnknown_030012B8, slot);
+        *(s32 *)&glyph->palette = slot;
+        slot++;
+    }
+}
+#else
 NAKED void sub_80352AC(struct map_screen *selfArg)
 {
     asm(
@@ -1395,6 +1052,7 @@ NAKED void sub_80352AC(struct map_screen *selfArg)
     "_08035448: .4byte 0x84000008\n"
     );
 }
+#endif
 
 asm(".align 2, 0");
 
@@ -1436,7 +1094,7 @@ void sub_803547C(struct map_screen *self, s32 mode)
     if (self->mapObj != NULL)
         sub_80346FC(self->mapObj, 3);
 
-    slot = (u8 *)&self->asset0;
+    slot = (u8 *)&self->glyphs[0].tiles;
     i = 4;
     do {
         if (*(void **)slot != NULL)
