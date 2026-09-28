@@ -202,6 +202,16 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
 $(OLD_AGBCC_OBJS): CC1 := $(CC1_OLD)
 $(OLD_AGBCC_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1FLAGS))
 
+# Objects built with -fno-strength-reduce on top of their compiler's -O2.
+# graphics_loading_35780: sub_8036600's first loop keeps its up-counting
+# `i` (with strength reduction on, gcc reverses a loop whose counter only
+# feeds the exit test), and the flag leaves every other real-C function in
+# the file byte-identical. It is NOT a global property: adding it to all
+# old_agbcc objects breaks matched functions in 11 other files. See
+# docs/matching/per-file-flags-investigation.md.
+NO_STRENGTH_REDUCE_OBJS := $(C_BUILDDIR)/graphics/graphics_loading_35780.o
+$(NO_STRENGTH_REDUCE_OBJS): CC1FLAGS += -fno-strength-reduce
+
 $(C_BUILDDIR)/%.o : $(C_SUBDIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CPP) $(CPPFLAGS) $< | $(CC1) $(CC1FLAGS) -o $(C_BUILDDIR)/$*.s

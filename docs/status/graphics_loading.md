@@ -161,6 +161,14 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   destination pointer taken before an allocation call, a nested block
   for the ROM's stack-slot order). See
   [issue-65-naked-retry.md](../matching/issue-65-naked-retry.md).
+- **`sub_8036600`** (`src/graphics/graphics_loading_35780.c`) - the
+  20-slot seeder. Real C once the object is built with
+  `-fno-strength-reduce` (the Makefile's `NO_STRENGTH_REDUCE_OBJS`):
+  with strength reduction on, gcc reverses the first loop into a
+  count-down, the ROM keeps `i` counting up. The flag changes no other
+  real-C function in the file; it is not a global property of the
+  old_agbcc objects. See
+  [per-file-flags-investigation.md](../matching/per-file-flags-investigation.md).
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
@@ -188,18 +196,21 @@ plain C didn't converge.
   subtracts in place (the same gap as `sub_802209C`). See
   [issue-31-old-agbcc.md](../matching/issue-31-old-agbcc.md).
 - **`sub_80358A8`**, **`sub_8035D1C`**, **`sub_8035E14`**,
-  **`sub_80360DC`**, **`sub_8036600`**, **`sub_8036668`**,
+  **`sub_80360DC`**, **`sub_8036668`**,
   **`sub_803686C`**, **`sub_8036CF4`** (`src/graphics/graphics_loading_35780.c`)
   - the rest of issue #65's chunk: the OAM builders for the 9-slot and
   20-slot record arrays, the rolling-hash "cheat code" detector, the
-  intro sequencer, the two slot-array seeders, the 20-slot updater and
+  intro sequencer, the 9-slot seeder, the 20-slot updater and
   BG2's tilemap-remap loader. All but `sub_803686C` now carry a
   near-miss C draft under `#if NON_MATCHING` (old_agbcc) with a
   one-line note on what is left: `sub_8035D1C` is one register copy off,
-  `sub_8036668` 20 halfwords and `sub_8036CF4` 30 (register choice
-  only); the seeders/sequencer (`sub_80360DC`/`sub_8036600`/
-  `sub_8035E14`) are blocked on the loop optimizer (the ROM keeps its
-  counters and leaves some induction variables unreduced); `sub_80358A8`
+  `sub_80360DC` 18 halfwords, `sub_8036668` 19 and `sub_8036CF4` 30
+  (register choice only); `sub_80360DC`/`sub_8035E14`'s seed loops
+  hoist nothing in the ROM, so they are written as `goto` loops that
+  skip gcc's loop optimizer, which gets the shape exact and leaves
+  register choice (`sub_8035E14` is still 100 halfwords off because
+  that shifts the rest of it; see
+  [per-file-flags-investigation.md](../matching/per-file-flags-investigation.md)); `sub_80358A8`
   is structurally right but its loops' register/stack-slot allocation
   differs. `sub_803686C` (the 20-slot OAM builder, same shape as
   `sub_80358A8`) was not attempted in the retry. See
