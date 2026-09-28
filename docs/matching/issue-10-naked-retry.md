@@ -67,3 +67,12 @@ draft. See [big-naked-retry-2.md](big-naked-retry-2.md).
 ## Later pass (issue #9/#10 raw-asm pass)
 
 `sub_800C940`/`sub_800C97C` are real C. The unused saved register comes from an empty asm clobber, not from `-fprologue-bugfix` (all four compiler/flag combinations give identical code). See [issue-9-raw-asm-pass.md](issue-9-raw-asm-pass.md).
+
+## Later pass (late NAKED retry 3)
+
+`sub_800BD48` is real C under old_agbcc, so `actor_part112.c` has no
+NAKED functions left. An `r2` register variable held live (by empty
+asms only) across the first MarkGone's id compare gets r3 into reload's
+spill set and fixes the whole reload rotation. States 1/21/22 store the
+layer from an `s32` local and build the bitmap bit with the
+constant-init asm. See [late-naked-retry-3.md](late-naked-retry-3.md).

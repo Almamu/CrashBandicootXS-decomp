@@ -1127,7 +1127,10 @@ void sub_8036668(u32 *self)
  * 0x100 step inside the loop, then reuses that register for the
  * `pa != 0x100` compare) and the register choices around it (the ROM
  * has self in sb and i in sl, the tail's slot copy in r8 and the affine
- * flag in r7). 329 halfwords differ under old_agbcc. */
+ * flag in r7). 329 halfwords differ under old_agbcc. Six or more bare
+ * `asm("")` in the row loop keep the 0x100 in it (loop.c's insn-count
+ * threshold), but `buf + 0x60` still isn't reduced
+ * (docs/matching/late-naked-retry-3.md). */
 struct oam_attrs
 {
     u32 y:8;            // 0x00

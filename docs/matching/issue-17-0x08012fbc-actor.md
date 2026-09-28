@@ -492,3 +492,11 @@ and the inner tests on `tag`. That threads the `beq` for 0xD past the
 inner re-test while the 0x18 path keeps it, which no `||` spelling
 did. `sub_8014B54` is unchanged (3 halfwords, the 0x600 reload
 register). See [mix-naked-retry-5.md](mix-naked-retry-5.md).
+
+## Later pass: late NAKED retry 3
+
+`sub_8014B54` is real C under old_agbcc, the last NAKED function in the
+issue's range. The 0x600 is still a reload. An `r2` register variable,
+set and used only by empty asms around the add, keeps r2 live there, so
+reload spills r3 for the constant as the ROM does. See
+[late-naked-retry-3.md](late-naked-retry-3.md).

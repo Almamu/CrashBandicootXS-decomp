@@ -458,6 +458,16 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   was statement order and locals. See
   [docs/matching/big-naked-retry-2.md](../matching/big-naked-retry-2.md).
 
+- **Late NAKED retry 3:** `sub_800BD48` (`actor_part112.c`, GitHub
+  issue #10, 608 bytes, the 22-state dispatcher) promoted from NAKED to
+  real C under old_agbcc. An r2 register variable held live (by empty
+  asms only) across the first MarkGone's id compare puts r3 in reload's
+  spill-register set, which fixes the whole reload rotation. States
+  1/21/22 store the layer from an `s32` local and build the bitmap bit
+  with the constant-init asm. `actor_part112.c` has no NAKED functions
+  left. See
+  [docs/matching/late-naked-retry-3.md](../matching/late-naked-retry-3.md).
+
 - **Third big NAKED retry:** `sub_80255D4` (`game_loop41.c`, GitHub
   issue #40, 704 bytes, the collision-bitmap refresh + actor link pass)
   promoted from NAKED to real C under old_agbcc (`game_loop41.o` joined
@@ -600,7 +610,7 @@ plain C didn't converge.
   live as two extra callee-saved accumulators throughout, the same gap
   as `sub_800D040` above. See
   [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
-- **`sub_800BD48`** (`src/graphics/actor_part112.c`, new file - GitHub
+- **Now matched as real C (late NAKED retry 3, see docs/matching/late-naked-retry-3.md); entry kept for history.** **`sub_800BD48`** (`src/graphics/actor_part112.c`, new file - GitHub
   issue #9/#10, foundational investigation of the large still-raw
   `0x0800B8DC`-`0x0800D040` cluster). An entity-vtable slot of the same
   object type (`gStaticData_087E3EE4`) as its ROM neighbour

@@ -754,7 +754,9 @@ asm(".align 2, 0");
  * `slot << 5`, `slot + 1` and `i + 1` to the y loop's pre-test; the ROM
  * has only the last two there. `-fno-gcse` removes it but breaks the
  * rest. Every address spelling, index-form copy loops, and asm copies
- * or "+m" on `slot` still leave it hoisted or add a copy. */
+ * or "+m" on `slot` still leave it hoisted or add a copy. Late retry 3
+ * (docs/matching/late-naked-retry-3.md): a `"+r"` escape on `slot` after
+ * the palette load stops the hoist (right size) but also `slot + 1`'s. */
 /* One `gStaticData_0817CF40` record (0x14 bytes): a popup glyph's size
  * in 8-px tiles and its tagged palette/tile assets. */
 struct popup_glyph_src {
