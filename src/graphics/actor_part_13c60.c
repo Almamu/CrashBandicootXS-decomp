@@ -230,14 +230,21 @@ void sub_8013FD4(struct act *self)
  * and - with neither shoulder button held - either starts action 2 on a
  * sub_800AAEC(part, 2) hit or falls back to idle.
  *
- * NAKED: the C below differs from the ROM only in the facing block's
- * registers - the ROM loads `self->part` into r0, tests its +0x28 bit
- * through r1 and keeps a copy of the pointer in r2 for the rest of the
- * block, where every phrasing tried (a separate local, the assignment
- * inside the test, a pinned/barriered copy, a `mirror` bitfield) either
- * merges the two or loads straight into r2 - see
- * docs/matching/issue-17-0x08012fbc-actor.md, "Second pass". */
+ * NAKED: the C below (old_agbcc) is one instruction off. The facing
+ * block reads `self->part` each time (GCSE turns the reloads into the
+ * ROM's r2 copy) and spells its two bit tests differently so gcc doesn't
+ * thread the second into the first; only the second branch's `adds r2,
+ * #40` lands after the -0x11 mask instead of before it (writing the
+ * pointer first moves it to r0) - see
+ * docs/matching/issue-15-16-17-naked-retry-2.md. */
 #if NON_MATCHING
+static inline void ActQueue27(struct act *self, s32 cur, s32 next)
+{
+    self->next31 = cur;
+    self->flag2F = 1;
+    self->next27 = next;
+}
+
 void sub_8014084(struct act *self)
 {
     u32 in;
@@ -263,33 +270,27 @@ void sub_8014084(struct act *self)
         return;
 
     turned = 0;
+    if ((s32)(self->part->flags28 << 27) < 0 && (dir == 4 || dir == 6 || dir == 8))
     {
-        struct act_part *part = self->part;
+        u8 *p = &self->part->flags28;
+        s32 m = -0x11;
 
-        if ((s8)(part->flags28 << 3) < 0 && (dir == 4 || dir == 6 || dir == 8))
-        {
-            u8 *p = &part->flags28;
-            s32 m = -0x11;
+        m &= *p;
+        *p = m;
+        self->flag2F = 1;
+        turned = 1;
+        goto turn_done;
+    }
+    if ((s8)(self->part->flags28 << 3) >= 0 && (dir == 3 || dir == 5 || dir == 7))
+    {
+        s32 m;
 
-            m &= *p;
-            *p = m;
-            self->flag2F = 1;
-            turned = 1;
-            goto turn_done;
-        }
-        if ((s8)(part->flags28 << 3) >= 0 && (dir == 3 || dir == 5 || dir == 7))
-        {
-            u8 *p;
-            s32 m;
-
-            turned = 1;
-            p = &part->flags28;
-            m = -0x11;
-            m &= *p;
-            m |= 0x10;
-            *p = m;
-            self->flag2F = turned;
-        }
+        turned = 1;
+        m = -0x11;
+        m &= self->part->flags28;
+        m |= 0x10;
+        self->part->flags28 = m;
+        self->flag2F = turned;
     }
 turn_done:
 
@@ -304,9 +305,7 @@ turn_done:
         case 8:
             ACT_VCALL1(self, m20, 0x13);
             ACT_VCALL2(self, m50, self->part, 0x14);
-            self->next31 = moved;
-            self->flag2F = 1;
-            self->next27 = 3;
+            ActQueue27(self, moved, 3);
             moved = 1;
             break;
         }

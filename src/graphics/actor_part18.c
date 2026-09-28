@@ -1,4 +1,5 @@
 #include "core.h"
+#include "action_obj.h"
 
 /* This file (and actor_part18b.c, its non-adjacent continuation) covers
  * part of `gStaticData_0816BF20`, the 42-slot per-level action dispatch
@@ -27,6 +28,9 @@ extern void sub_801434C(void *self);
 extern void sub_8015508(void *self);
 extern void sub_8015780(void *self, s32 a, s32 b, s32 c, s32 d);
 
+asm(".set _call_via_r2, sub_803AD80\n"
+    ".set _call_via_r3, sub_803AD84\n");
+
 /* Clears `part+0x38`'s "busy" flag by resetting the shared
  * flag/counter/table-index trio (`+0x31`/`+0x2f`/`+0x27` and
  * `+0x32`/`+0x30`/`+0x28`) via `sub_8015780`, but only while that flag
@@ -52,9 +56,7 @@ void sub_801426C(void *selfArg)
  * negation rather than a folded mask - see docs/matching.md), and hands
  * off to `sub_8015508`. Otherwise, while `part+0x38` is set, fires the
  * usual base+offset+fn-pointer trampoline pair and tail-calls
- * `sub_801434C` (still raw/parked - see docs/matching.md, "Parked, not
- * matched: sub_801434C" - real bytes live in asm/code_3_2_17_1434c.s,
- * linked right after this object). */
+ * `sub_801434C` (below). */
 void sub_80142B0(void *selfArg)
 {
     u8 *self = selfArg;
@@ -101,6 +103,15 @@ extern u8 sub_8012A7C(void *self);
 extern void sub_80122CC(void *self);
 extern void *gUnknown_03001304;
 
+/* Queues action `next` on the +0x31/+0x2F/+0x27 trio; as inline
+ * parameters, `cur`/`next` are materialized before the stores. */
+static inline void ActQueue27(struct act *self, s32 cur, s32 next)
+{
+    self->next31 = cur;
+    self->flag2F = 1;
+    self->next27 = next;
+}
+
 /* The shared handler `sub_80142B0` tail-calls: same "confirm" edge check
  * (short-circuits before reaching `sub_8012A7C` when it fires), then
  * (once `sub_8012A7C(self)` is clear) dispatches on `sub_8000760`'s
@@ -110,212 +121,69 @@ extern void *gUnknown_03001304;
  * fired, runs a third trampoline pair and finishes with
  * `sub_80122CC`.
  *
- * Written as NAKED asm, not plain C: every load/store, branch and call
- * was already confirmed correct and in the ROM's own case order, but
- * two small blocks (the `case 0`/`case 2` field-write trio's
- * value-vs-address evaluation order, and the closing
- * `snap & 0x180` block's address/constant/load ordering) never landed
- * in gcc 2.9's own scheduling order - see docs/matching.md, "Parked,
- * not matched: sub_801434C". Transcribed instruction-for-instruction
- * from the ROM disassembly instead, the same escape hatch used for
- * `sub_8001CB8`/`sub_8001DB4` (src/system/link_cable.c). */
-NAKED void sub_801434C(void *selfArg)
+ * Formerly NAKED; matches under old_agbcc (this whole file is built with
+ * it, see docs/matching/issue-15-16-17-naked-retry-2.md): the case 0/2
+ * trio goes through ActQueue27 so its 0 is materialized before the
+ * stores, and the case 1 trio is written out in both branches, with the
+ * calls in the do/while ACT_VCALL form, so gcc cross-jumps the shared
+ * `bl` of the second method call as the ROM does (the if/else ACT_CALL
+ * form there changes the whole block). */
+void sub_801434C(void *selfArg)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "sub sp, #4\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r0, 20f\n\t"
-        "ldr r0, [r0]\n\t"
-        "str r0, [sp]\n\t"
-        "mov r0, sp\n\t"
-        "ldrh r1, [r0, #2]\n\t"
-        "mov r0, #1\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "beq 1f\n\t"
-        "ldr r0, [r4, #0x10]\n\t"
-        "mov r1, #0xb\n\t"
-        "bl sub_800AAEC\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "cmp r0, #1\n\t"
-        "bne 1f\n\t"
-        "ldr r0, 21f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0xc\n\t"
-        "bl PlaySfx\n\t"
-        "ldr r1, [r4, #0x10]\n\t"
-        "mov r0, #2\n\t"
-        "neg r0, r0\n\t"
-        "ldrb r2, [r1, #0xd]\n\t"
-        "and r0, r2\n\t"
-        "strb r0, [r1, #0xd]\n\t"
-        "ldr r1, [r4, #0x10]\n\t"
-        "mov r0, #3\n\t"
-        "neg r0, r0\n\t"
-        "ldrb r2, [r1, #0xd]\n\t"
-        "and r0, r2\n\t"
-        "strb r0, [r1, #0xd]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_8015508\n\t"
-        "b 10f\n\t"
-        ".align 2, 0\n"
-    "20: .4byte gUnknown_030007E0\n"
-    "21: .4byte gUnknown_030012BC\n"
-    "1:\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_8012A7C\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r6, r0, #0x18\n\t"
-        "cmp r6, #0\n\t"
-        "beq 2f\n\t"
-        "b 10f\n\t"
-    "2:\n\t"
-        "ldr r0, 22f\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_8000760\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r5, r0, #0x18\n\t"
-        "cmp r5, #1\n\t"
-        "beq 6f\n\t"
-        "cmp r5, #1\n\t"
-        "bgt 3f\n\t"
-        "cmp r5, #0\n\t"
-        "beq 4f\n\t"
-        "b 5f\n\t"
-        ".align 2, 0\n"
-    "22: .4byte gUnknown_03001304\n"
-    "3:\n\t"
-        "cmp r5, #2\n\t"
-        "bne 5f\n\t"
-    "4:\n\t"
-        "ldr r1, [r4, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #0x1b\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r2, [r4, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r2, r1]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r4, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, #1\n\t"
-        "bl sub_803AD84\n\t"
-        "mov r1, #0\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x31\n\t"
-        "strb r1, [r0]\n\t"
-        "add r2, r4, #0\n\t"
-        "add r2, #0x2f\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r2]\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x27\n\t"
-        "strb r1, [r0]\n\t"
-        "b 5f\n\t"
-    "6:\n\t"
-        "ldr r0, [r4, #0x10]\n\t"
-        "mov r1, #2\n\t"
-        "bl sub_800AAEC\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "cmp r0, #1\n\t"
-        "bne 7f\n\t"
-        "ldr r1, [r4, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #0x15\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r2, [r4, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r2, r1]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r4, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, #2\n\t"
-        "b 8f\n\t"
-    "7:\n\t"
-        "ldr r1, [r4, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #0x11\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r2, [r4, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r2, r1]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r4, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, #4\n\t"
-    "8:\n\t"
-        "bl sub_803AD84\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x31\n\t"
-        "strb r6, [r0]\n\t"
-        "sub r0, #2\n\t"
-        "strb r5, [r0]\n\t"
-        "sub r0, #8\n\t"
-        "strb r6, [r0]\n\t"
-    "5:\n\t"
-        "mov r0, sp\n\t"
-        "mov r5, #0xc0\n\t"
-        "lsl r5, r5, #1\n\t"
-        "ldrh r0, [r0]\n\t"
-        "and r5, r0\n\t"
-        "cmp r5, #0\n\t"
-        "bne 9f\n\t"
-        "ldr r0, [r4, #0x10]\n\t"
-        "mov r1, #2\n\t"
-        "bl sub_800AAEC\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r6, r0, #0x18\n\t"
-        "cmp r6, #1\n\t"
-        "bne 9f\n\t"
-        "ldr r1, [r4, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #0x12\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r2, [r4, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r2, r1]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r4, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, #2\n\t"
-        "bl sub_803AD84\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x31\n\t"
-        "strb r5, [r0]\n\t"
-        "sub r0, #2\n\t"
-        "strb r6, [r0]\n\t"
-        "sub r0, #8\n\t"
-        "strb r5, [r0]\n\t"
-    "9:\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80122CC\n\t"
-    "10:\n\t"
-        "add sp, #4\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0"
-    );
+    struct act *self = selfArg;
+    u32 in = gUnknown_030007E0;
+    u8 busy;
+    u8 dir;
+    u8 hit;
+    u32 held;
+
+    if ((INPUT_PRESSED(in) & 1) && sub_800AAEC(self->part, 0xB) == 1)
+    {
+        PlaySfx(gUnknown_030012BC, 0xC, 0x100);
+        ActAndFlags0D(self->part, -2);
+        ActAndFlags0D(self->part, -3);
+        sub_8015508(self);
+        return;
+    }
+    busy = sub_8012A7C(self);
+    if (busy != 0)
+        return;
+    dir = sub_8000760(gUnknown_03001304);
+    switch (dir)
+    {
+    case 0:
+    case 2:
+        ACT_CALL1(self, m20, 0x1B);
+        ACT_CALL2(self, m50, self->part, 1);
+        ActQueue27(self, 0, 0);
+        break;
+    case 1:
+        if (sub_800AAEC(self->part, 2) == 1)
+        {
+            ACT_VCALL1(self, m20, 0x15);
+            ACT_VCALL2(self, m50, self->part, 2);
+            self->next31 = busy;
+            self->flag2F = dir;
+            self->next27 = busy;
+            break;
+        }
+        ACT_VCALL1(self, m20, 0x11);
+        ACT_VCALL2(self, m50, self->part, 4);
+        self->next31 = busy;
+        self->flag2F = dir;
+        self->next27 = busy;
+        break;
+    }
+    held = INPUT_HELD(in) & 0x180;
+    if (held == 0 && (hit = sub_800AAEC(self->part, 2)) == 1)
+    {
+        ACT_CALL1(self, m20, 0x12);
+        ACT_CALL2(self, m50, self->part, 2);
+        self->next31 = held;
+        self->flag2F = hit;
+        self->next27 = held;
+    }
+    sub_80122CC(self);
 }
 /* Trailing byte count isn't a multiple of 4 - without this, `as` pads
  * with its default NOP fill instead of the ROM's zero fill (see

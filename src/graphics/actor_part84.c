@@ -9,8 +9,9 @@
  *
  * Built with old_agbcc (Makefile OLD_AGBCC_OBJS) since the issue #15/#16
  * NAKED retry (docs/matching/issue-15-16-naked-retry.md): `sub_801283C`
- * matches as plain C under it. `sub_8012420` and `sub_8012694` are still
- * NAKED transcriptions with their C drafts under NON_MATCHING. */
+ * matches as plain C under it, and `sub_8012694` since the second retry
+ * (docs/matching/issue-15-16-17-naked-retry-2.md). `sub_8012420` is still
+ * a NAKED transcription with its C draft under NON_MATCHING. */
 
 asm(".set _call_via_r2, sub_803AD80\n"
     ".set _call_via_r3, sub_803AD84\n"
@@ -595,12 +596,13 @@ NAKED void sub_8012420(void *selfArg)
  * own extra `+0x30 >= 0` gate) matches, bumps `self+0x18`, fires the
  * `+0x50`/`+0x54` and `+0x20`/`+0x24` trampoline pairs with type-keyed
  * ids, resets the state/flag/table-index trio to a type-keyed value,
- * plays a fixed sound, and returns 1; otherwise returns 0. */
-#if NON_MATCHING
-/* Near miss: everything matches except register choice in the tag tests -
- * the ROM loads `self->part` into r0, keeps the copy in r2 and recomputes
- * the +0x2D address for each test; old_agbcc keeps the part in r1 and
- * reuses the address. */
+ * plays a fixed sound, and returns 1; otherwise returns 0.
+ *
+ * Formerly NAKED (docs/matching/issue-15-16-17-naked-retry-2.md): the
+ * tag tests read `self->part` each time instead of through a local - GCSE
+ * turns the reloads into the ROM's copy of the pointer in r2 - and the
+ * `pressed & 1` test is folded into `pressed`'s assignment, which puts
+ * the constant after `one` as in the ROM. */
 u8 sub_8012694(struct act *self)
 {
     u32 in = gUnknown_030007E0;
@@ -609,15 +611,13 @@ u8 sub_8012694(struct act *self)
 
     if (self->state == 0xE)
         return 0;
-    pressed = INPUT_PRESSED(in);
+    pressed = INPUT_PRESSED(in) & 1;
     one = 1;
-    if (pressed & 1) {
+    if (pressed) {
         s32 frame = self->frame;
 
         if (frame == 0 && sub_80231CC(gUnknown_030012C0)) {
-            struct act_part *part = self->part;
-
-            if (part->tag == 6 && part->frame >= 0) {
+            if (self->part->tag == 6 && self->part->frame >= 0) {
                 self->frame++;
                 *PartBytePtr(gUnknown_030012D8, 0x100) = frame;
                 ACT_CALL2(self, m50, self->part, 0x12);
@@ -627,7 +627,7 @@ u8 sub_8012694(struct act *self)
                 ActTrio28(self, frame, one, 0xD);
                 PlaySfx(gUnknown_030012BC, 0xC, 0x100);
                 return 1;
-            } else if (part->tag == 0xB && part->frame >= 0) {
+            } else if (self->part->tag == 0xB && self->part->frame >= 0) {
                 self->frame++;
                 ACT_CALL1(self, m20, 0xB);
                 ACT_CALL2(self, m50, self->part, 0xA);
@@ -635,7 +635,7 @@ u8 sub_8012694(struct act *self)
                 ActSet28(self, 0xE);
                 PlaySfx(gUnknown_030012BC, 0xC, 0x100);
                 return 1;
-            } else if (part->tag == 0xC) {
+            } else if (self->part->tag == 0xC) {
                 self->frame++;
                 ACT_CALL1(self, m20, 0xB);
                 ACT_CALL2(self, m50, self->part, 0xA);
@@ -648,223 +648,6 @@ u8 sub_8012694(struct act *self)
     }
     return 0;
 }
-#else
-NAKED u8 sub_8012694(struct act *self)
-{
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "sub sp, #4\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r0, 40f\n\t"
-        "ldr r0, [r0]\n\t"
-        "str r0, [sp]\n\t"
-        "ldr r0, [r4, #8]\n\t"
-        "cmp r0, #0xe\n\t"
-        "bne 1f\n\t"
-        "b 9f\n\t"
-    "1:\n\t"
-        "mov r0, sp\n\t"
-        "ldrh r1, [r0, #2]\n\t"
-        "mov r6, #1\n\t"
-        "mov r0, #1\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "bne 2f\n\t"
-        "b 9f\n\t"
-    "2:\n\t"
-        "ldr r5, [r4, #0x18]\n\t"
-        "cmp r5, #0\n\t"
-        "beq 3f\n\t"
-        "b 9f\n\t"
-    "3:\n\t"
-        "ldr r0, 41f\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_80231CC\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "bne 4f\n\t"
-        "b 9f\n\t"
-    "4:\n\t"
-        "ldr r0, [r4, #0x10]\n\t"
-        "add r1, r0, #0\n\t"
-        "add r1, #0x2d\n\t"
-        "add r2, r0, #0\n\t"
-        "ldrb r1, [r1]\n\t"
-        "cmp r1, #6\n\t"
-        "bne 5f\n\t"
-        "ldr r0, [r2, #0x30]\n\t"
-        "cmp r0, #0\n\t"
-        "blt 5f\n\t"
-        "ldr r0, [r4, #0x18]\n\t"
-        "add r0, #1\n\t"
-        "str r0, [r4, #0x18]\n\t"
-        "ldr r0, 42f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #1\n\t"
-        "add r0, r0, r1\n\t"
-        "strb r5, [r0]\n\t"
-        "ldr r2, [r4, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r2, r1]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r4, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, #0x12\n\t"
-        "bl sub_803AD84\n\t"
-        "ldr r1, [r4, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #9\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r2, [r4, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r2, r1]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r4, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, #6\n\t"
-        "bl sub_803AD84\n\t"
-        "mov r1, #0xd\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x31\n\t"
-        "strb r5, [r0]\n\t"
-        "sub r0, #2\n\t"
-        "strb r6, [r0]\n\t"
-        "sub r0, #8\n\t"
-        "strb r1, [r0]\n\t"
-        "add r0, #0xb\n\t"
-        "strb r5, [r0]\n\t"
-        "sub r0, #2\n\t"
-        "strb r6, [r0]\n\t"
-        "sub r0, #8\n\t"
-        "strb r1, [r0]\n\t"
-        "b 7f\n\t"
-        ".align 2, 0\n"
-    "40: .4byte gUnknown_030007E0\n"
-    "41: .4byte gUnknown_030012C0\n"
-    "42: .4byte gUnknown_030012D8\n"
-    "5:\n\t"
-        "add r0, r2, #0\n\t"
-        "add r0, #0x2d\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0xb\n\t"
-        "bne 6f\n\t"
-        "ldr r0, [r2, #0x30]\n\t"
-        "cmp r0, #0\n\t"
-        "blt 6f\n\t"
-        "ldr r0, [r4, #0x18]\n\t"
-        "add r0, #1\n\t"
-        "str r0, [r4, #0x18]\n\t"
-        "ldr r1, [r4, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #0xb\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r2, [r4, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r2, r1]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r4, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, #0xa\n\t"
-        "bl sub_803AD84\n\t"
-        "mov r2, #0xe\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x31\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r1]\n\t"
-        "add r3, r4, #0\n\t"
-        "add r3, #0x2f\n\t"
-        "mov r1, #1\n\t"
-        "strb r1, [r3]\n\t"
-        "sub r3, #8\n\t"
-        "strb r2, [r3]\n\t"
-        "add r3, #0xb\n\t"
-        "strb r0, [r3]\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x30\n\t"
-        "strb r1, [r0]\n\t"
-        "sub r0, #8\n\t"
-        "strb r2, [r0]\n\t"
-        "ldr r0, 43f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r2, #0xf2\n\t"
-        "b 8f\n\t"
-        ".align 2, 0\n"
-    "43: .4byte gUnknown_030012BC\n"
-    "6:\n\t"
-        "add r0, r2, #0\n\t"
-        "add r0, #0x2d\n\t"
-        "ldrb r5, [r0]\n\t"
-        "cmp r5, #0xc\n\t"
-        "bne 9f\n\t"
-        "ldr r0, [r4, #0x18]\n\t"
-        "add r0, #1\n\t"
-        "str r0, [r4, #0x18]\n\t"
-        "ldr r1, [r4, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #0xb\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r2, [r4, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r2, r1]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r4, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, #0xa\n\t"
-        "bl sub_803AD84\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x31\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r1]\n\t"
-        "add r2, r4, #0\n\t"
-        "add r2, #0x2f\n\t"
-        "mov r1, #1\n\t"
-        "strb r1, [r2]\n\t"
-        "sub r2, #8\n\t"
-        "strb r5, [r2]\n\t"
-        "add r2, #0xb\n\t"
-        "strb r0, [r2]\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x30\n\t"
-        "strb r1, [r0]\n\t"
-        "sub r0, #8\n\t"
-        "strb r5, [r0]\n\t"
-    "7:\n\t"
-        "ldr r0, 44f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-    "8:\n\t"
-        "mov r1, #0xc\n\t"
-        "bl PlaySfx\n\t"
-        "mov r0, #1\n\t"
-        "b 10f\n\t"
-        ".align 2, 0\n"
-    "44: .4byte gUnknown_030012BC\n"
-    "9:\n\t"
-        "mov r0, #0\n\t"
-    "10:\n\t"
-        "add sp, #4\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r1}\n\t"
-        "bx r1"
-    );
-}
-
-#endif
 
 /* A proximity-triggered indicator: if `part->field_0x64` is within
  * `0x27f` (or, failing that, `sub_8012694` fires), dispatches on

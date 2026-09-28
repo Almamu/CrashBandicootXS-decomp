@@ -1,8 +1,8 @@
 #include "core.h"
+#include "action_obj.h"
 
 /* Continuation of actor_part18.c's `gStaticData_0816BF20` action-table
- * entries - non-adjacent to it since the parked `sub_801434C` sits raw
- * between them (asm/code_3_2_17_1434c.s). See actor_part18.c's own
+ * entries. See actor_part18.c's own
  * top-of-file comment for the shared field-offset conventions
  * (`self+0xc`/`self+0x10`/`+0x27`.."+0x32" etc.) these functions use. */
 
@@ -81,12 +81,9 @@ void sub_8014524(void *selfArg)
         }
     }
 }
-/* Trailing byte count isn't a multiple of 4 and this is the last
- * actually-emitted function in the file (sub_80145E4 below is
- * NON_MATCHING-guarded, so it compiles to nothing here in the default
- * build) - without this, `as` pads with its default NOP fill instead of
- * the ROM's zero fill (see docs/matching.md's alignment-padding
- * gotcha). */
+/* Trailing byte count isn't a multiple of 4 - without this, `as` pads
+ * with its default NOP fill instead of the ROM's zero fill (see
+ * docs/matching.md's alignment-padding gotcha). */
 asm(".align 2, 0");
 
 extern void sub_8012D24(void *self);
@@ -100,90 +97,37 @@ extern void sub_8012D24(void *self);
  * stores here - unlike `sub_8014524`'s `!= 0`-normalized version of the
  * same test), then tail-calls `sub_8012D24`.
  *
- * Written as NAKED asm, not plain C: every load/store and branch
- * matches the ROM - the one residual gap was the opening bit-test
- * (`gUnknown_030007E0 & 0x100`) materializing its `u16` result into a
- * scratch register before copying it into the register `flag` keeps
- * for the rest of the function, where the ROM computes it directly
- * into that same register in one instruction - see docs/matching.md,
- * "Parked, not matched: sub_80145E4". Transcribed
- * instruction-for-instruction from the ROM disassembly instead, the
- * same escape hatch used for `sub_8001CB8`/`sub_8001DB4`
- * (src/system/link_cable.c). */
-NAKED void sub_80145E4(void *selfArg)
+ * Formerly NAKED (docs/matching/issue-15-16-17-naked-retry-2.md): the
+ * old gap - the masked bit landing in a scratch register before being
+ * copied to the register `flag` keeps - goes away when the assignment
+ * sits inside the test, `if ((flag = ...) != 0)`. Matches under both
+ * compilers. */
+asm(".set _call_via_r2, sub_803AD80\n"
+    ".set _call_via_r3, sub_803AD84\n");
+
+void sub_80145E4(struct act *self)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "sub sp, #4\n\t"
-        "add r4, r0, #0\n\t"
-        "mov r6, #0\n\t"
-        "str r6, [r4, #0x18]\n\t"
-        "ldr r0, 20f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #1\n\t"
-        "and r0, r1\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r5, r0, #0x10\n\t"
-        "cmp r5, #0\n\t"
-        "beq 1f\n\t"
-        "ldr r1, [r4, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #0x10\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r2, [r4, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r2, r1]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r4, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, #3\n\t"
-        "bl sub_803AD84\n\t"
-        "str r6, [r4, #0x1c]\n\t"
-        "b 3f\n\t"
-        ".align 2, 0\n"
-    "20: .4byte gUnknown_030007E0\n"
-    "1:\n\t"
-        "ldr r0, [r4, #0x10]\n\t"
-        "add r0, #0x38\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 2f\n\t"
-        "str r5, [sp]\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "mov r2, #0x12\n\t"
-        "mov r3, #0\n\t"
-        "bl sub_8015780\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x31\n\t"
-        "strb r5, [r0]\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x2f\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r1]\n\t"
-        "sub r1, #8\n\t"
-        "strb r5, [r1]\n\t"
-        "add r1, #0xb\n\t"
-        "strb r5, [r1]\n\t"
-        "sub r1, #2\n\t"
-        "strb r0, [r1]\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x28\n\t"
-        "strb r5, [r0]\n\t"
-    "2:\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_8012D24\n\t"
-    "3:\n\t"
-        "add sp, #4\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0"
-    );
+    u16 flag;
+
+    self->frame = 0;
+    if ((flag = gUnknown_030007E0 & 0x100) != 0)
+    {
+        ACT_CALL1(self, m20, 0x10);
+        ACT_CALL2(self, m50, self->part, 3);
+        self->frames = 0;
+        return;
+    }
+    if (self->part->animDone)
+    {
+        sub_8015780(self, 0, 0x12, 0, flag);
+        self->next31 = flag;
+        self->flag2F = 1;
+        self->next27 = flag;
+        self->next32 = flag;
+        self->flag30 = 1;
+        self->next28 = flag;
+    }
+    sub_8012D24(self);
 }
 /* Trailing byte count isn't a multiple of 4 - without this, `as` pads
  * with its default NOP fill instead of the ROM's zero fill (see

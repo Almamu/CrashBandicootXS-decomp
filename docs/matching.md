@@ -5682,6 +5682,11 @@ Parked (`.if NON_MATCHING == 0` in `asm/code_3_2_17_1434c.s`/
 `asm/code_3_2_17_145e4.s`, `#if NON_MATCHING` C reconstruction in
 `actor_part18.c`/`actor_part18b.c`):
 
+*Later pass: both are now real C (docs/matching/issue-15-16-17-naked-retry-2.md).
+`sub_801434C` matches under old_agbcc (`actor_part18.o` moved to it) with
+no pins; `sub_80145E4` matches under either compiler once the bit test is
+written `if ((flag = ...) != 0)`.*
+
 - **`sub_801434C`** - every load/store, branch and call is confirmed
   correct, including the ROM's case-`0`/`2`-before-case-`1` switch
   layout and the shared `sub_803AD84` tail the case-`1` arms reach via
