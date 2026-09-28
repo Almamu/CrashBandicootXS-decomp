@@ -133,9 +133,9 @@ $(ELF): $(OBJS) $(LDSCRIPT)
 # docs/matching/issue-24-boss-actor.md. old_agbcc has no
 # -fprologue-bugfix option.
 OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
+                  $(C_BUILDDIR)/graphics/actor_part118.o \
                   $(C_BUILDDIR)/graphics/actor_part11d.o \
                   $(C_BUILDDIR)/graphics/actor_part11e.o \
-                  $(C_BUILDDIR)/graphics/actor_part118.o \
                   $(C_BUILDDIR)/graphics/actor_part11f.o \
                   $(C_BUILDDIR)/graphics/actor_part12.o \
                   $(C_BUILDDIR)/graphics/actor_part120.o \
@@ -146,6 +146,8 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/actor_part7.o \
                   $(C_BUILDDIR)/graphics/actor_part7b.o \
                   $(C_BUILDDIR)/graphics/actor_part81.o \
+                  $(C_BUILDDIR)/graphics/actor_part83.o \
+                  $(C_BUILDDIR)/graphics/actor_part84.o \
                   $(C_BUILDDIR)/graphics/actor_part86.o \
                   $(C_BUILDDIR)/graphics/actor_part86b.o \
                   $(C_BUILDDIR)/graphics/actor_part88.o \
@@ -171,6 +173,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_1feec.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_21280.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_21668.o \
+                  $(C_BUILDDIR)/graphics/graphics_loading_35780.o \
                   $(C_BUILDDIR)/graphics/graphics_package_1e578.o \
                   $(C_BUILDDIR)/graphics/graphics_package_1e640.o \
                   $(C_BUILDDIR)/graphics/graphics_package_1e688.o \
@@ -180,6 +183,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/hud_icon_widget_85c4.o \
                   $(C_BUILDDIR)/graphics/hud_icon_widget_8890.o \
                   $(C_BUILDDIR)/graphics/hud_icon_widget_8994.o \
+                  $(C_BUILDDIR)/graphics/level_graphics.o \
                   $(C_BUILDDIR)/graphics/settings_menu22.o \
                   $(C_BUILDDIR)/graphics/settings_menu6.o \
                   $(C_BUILDDIR)/graphics/trigger_effect.o \
@@ -194,6 +198,9 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/system/game_loop46.o \
                   $(C_BUILDDIR)/system/game_loop48.o \
                   $(C_BUILDDIR)/system/game_loop49.o \
+                  $(C_BUILDDIR)/system/game_loop52.o \
+                  $(C_BUILDDIR)/system/game_loop53.o \
+                  $(C_BUILDDIR)/system/game_loop54.o \
                   $(C_BUILDDIR)/system/game_loop57.o \
                   $(C_BUILDDIR)/system/game_loop7.o \
                   $(C_BUILDDIR)/system/game_loop8.o

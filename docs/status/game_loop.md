@@ -788,7 +788,12 @@ plain C didn't converge.
   at `sub_8010E34` - see
   [docs/matching/issue-14-0x08010d54-physics-apply.md](../matching/issue-14-0x08010d54-physics-apply.md)
   for the full semantic map and Phase 2 planning notes on the rest of
-  the former 24-function tail.
+  the former 24-function tail. *Later pass (issue #15 NAKED retry):*
+  `sub_8010D54` is real C now - the two trailing byte arguments are read
+  with `ldrb` from their stack words through an empty-asm-hidden address
+  (the ROM's `add; add; ldrb; ldrb`), and the +0x04/+0x08 pair is a
+  by-value struct copy. See
+  [docs/matching/issue-15-16-naked-retry.md](../matching/issue-15-16-naked-retry.md).
 - **`sub_8011248`-`sub_8011390`** (`src/system/game_loop52.c`, new file
   - Phase 2's "accessor cluster" group) - 11 functions, a small
   "orbiting hazard" behavior family on a further still-unnamed "part"
@@ -815,7 +820,11 @@ plain C didn't converge.
   `asm/code_3_2_17_e560_10d54.s` further trimmed to end at
   `sub_80111B8` - see
   [docs/matching/issue-14-0x08010d54-physics-apply.md](../matching/issue-14-0x08010d54-physics-apply.md)'s
-  Phase 2 findings for the full field map.
+  Phase 2 findings for the full field map. *Later pass (issue #15
+  NAKED retry):* `sub_8011248` is real C under old_agbcc (the file moved
+  to `OLD_AGBCC_OBJS`); the object is now `struct orbit_part`
+  (`include/orbit_part.h`). See
+  [docs/matching/issue-15-16-naked-retry.md](../matching/issue-15-16-naked-retry.md).
 - **`sub_8011448`/`sub_8011548`/`sub_801173C`/`sub_8011870`/`sub_801191C`/
   `sub_801192C`** (`src/system/game_loop53.c`, new file - Phase 2,
   a parallel slice of the same 24-function chunk) - the chunk's tail 6
@@ -835,7 +844,12 @@ plain C didn't converge.
   clean `make compare`. `sub_8010E34`/`sub_8010EAC`/`sub_8010F8C`/
   `sub_80111B8` were also read and isolated-verified this pass but left
   un-integrated at the time - see the `game_loop54.c` entry below for
-  their eventual integration.
+  their eventual integration. *Later pass (issue #15 NAKED retry):*
+  `sub_8011448`, `sub_8011870` and `sub_801192C` are real C under
+  old_agbcc (the file moved to `OLD_AGBCC_OBJS`); `sub_8011548` and
+  `sub_801173C` stay NAKED (`sub_801173C` with a C draft under
+  `NON_MATCHING`). See
+  [docs/matching/issue-15-16-naked-retry.md](../matching/issue-15-16-naked-retry.md).
 - **`sub_8010E34`/`sub_8010EAC`/`sub_8010F8C`/`sub_8011114`/
   `sub_80111B8`** (`src/system/game_loop54.c`, new file - Phase 2
   mop-up, the chunk's final slice) - the last 5 functions of the former
@@ -864,4 +878,8 @@ plain C didn't converge.
   consumed and retired from `ldscript.txt` entirely - see
   [docs/matching/issue-14-0x08010d54-physics-apply.md](../matching/issue-14-0x08010d54-physics-apply.md)
   for the full write-up. **This closes the entire `0x08010D54`
-  physics/collision-apply chunk (GitHub issue #12/#14).**
+  physics/collision-apply chunk (GitHub issue #12/#14).** *Later pass
+  (issue #15 NAKED retry):* `sub_8011114` is real C under old_agbcc (the
+  file moved to `OLD_AGBCC_OBJS`); `sub_8010F8C` stays NAKED with a C
+  draft under `NON_MATCHING`. See
+  [docs/matching/issue-15-16-naked-retry.md](../matching/issue-15-16-naked-retry.md).

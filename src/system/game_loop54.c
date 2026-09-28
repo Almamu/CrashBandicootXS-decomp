@@ -1,4 +1,5 @@
 #include "core.h"
+#include "orbit_part.h"
 
 /* GitHub issue #12/#14 Phase 2 mop-up: the last 5 raw functions of the
  * still-large 24-function tail past `sub_8010D54`
@@ -8,8 +9,9 @@
  * file finishes integrating: `sub_8010E34`, `sub_8010EAC`, `sub_8010F8C`,
  * `sub_8011114`, `sub_80111B8`. All 5 operate on the same still-unnamed
  * "part" object `src/system/game_loop52.c`/`game_loop53.c` already
- * document (raw `u8 *`/offset convention, matching those two sibling
- * files - no named struct exists yet for this object). This closes out
+ * document (the older functions use raw `u8 *` offsets; the ones
+ * turned into C by the issue #15 NAKED retry use `struct orbit_part`,
+ * include/orbit_part.h). This closes out
  * the entire `0x08010D54` chunk (issue #12/#14): every function between
  * `sub_8010D54` and the already-matched `src/graphics/actor_part39.c`
  * (`sub_80119A8`) is now matched. */
@@ -37,6 +39,22 @@ extern void sub_8011248(void *self);
 extern void sub_8008364(struct actor *part);
 extern s16 gStaticData_0816A820[];
 extern u8 gStaticData_087E40DC[];
+
+/* Built with old_agbcc (Makefile OLD_AGBCC_OBJS) since the issue #15
+ * NAKED retry: sub_8011114 matches only under it, and the rest of the
+ * file compiles identically under either compiler. */
+
+/* `frame = min(0, frameCount - 1)` against the part's current animation
+ * record (same clamp as game_loop53.c's copy). */
+static inline void OrbitClampFrame(struct orbit_part *self)
+{
+    s32 frame = 0;
+    s32 count = self->bank->records[self->tag].frameCount;
+
+    if (frame >= count)
+        frame = count - 1;
+    self->frame = frame;
+}
 extern s32 rand(void);
 
 void sub_8010EAC(void *selfArg, u8 randomize);
@@ -196,6 +214,82 @@ void sub_8010EAC(void *selfArg, u8 randomize)
  * with different register survivors" shape already documented for
  * `sub_8011548` in this exact neighborhood (`game_loop53.c`).
  * Transcribed straight from the confirmed-correct ROM disassembly. */
+#if NON_MATCHING
+/* Near miss under old_agbcc: same instructions except that mode 1 keeps
+ * the new x in a register where the ROM recomputes `x + velX` for the
+ * bound check, and the collision-bitmap tails use r1/r2/r6 where the ROM
+ * uses r5/r6. The timer reload in mode 2 needs the volatile read. */
+#define SET_ID_BIT(idExpr, one)                                                \
+    do                                                                         \
+    {                                                                          \
+        s32 _id = (idExpr);                                                    \
+        u8 *_base = gUnknown_030012B4;                                         \
+        s32 _word = _id / 32;                                                  \
+        s32 _off = _word * 4;                                                  \
+        u32 *_slot = (u32 *)(_base + 0x108);                                   \
+                                                                               \
+        _slot = (u32 *)((u8 *)_slot + _off);                                   \
+        *_slot |= one << (_id - _word * 32);                                     \
+    } while (0)
+
+void sub_8010F8C(struct orbit_part *self)
+{
+    u8 state = self->state;
+
+    if (state == 1) {
+        self->base.x += self->velX;
+        self->base.y += self->velY;
+        if (self->base.x >> 8 <= 0xb4 && self->base.y >> 8 <= 0xc) {
+            PlaySfx(gUnknown_030012BC, 0xe, 0x100);
+            sub_8023464(gUnknown_030012C0);
+            self->base.flags |= 1;
+            if (self->base.field_08 != 0xffff)
+                SET_ID_BIT(self->base.field_08, state);
+        }
+    } else if (state == 2) {
+        s32 fire;
+
+        self->base.x += self->velX;
+        self->base.y += self->velY;
+        fire = 0;
+        if (self->counter == 0) {
+            s32 t = self->timer - 4;
+
+            self->timer = t;
+            if (t < 0x40)
+                fire = 1;
+        } else {
+            s32 t;
+
+            self->timer += 0xc;
+            t = *(vu16 *)&self->timer;
+            if (t > 0x1b0)
+                fire = 1;
+        }
+        if (fire) {
+            self->base.flags |= 1;
+            if (self->base.field_08 != 0xffff)
+                SET_ID_BIT(self->base.field_08, 1);
+        }
+    } else {
+        if (self->mode == 0)
+            self->counter++;
+        else if (++self->phase > 0x1f)
+            self->mode = 0;
+    }
+
+    if (self->state == 0) {
+        if (self->mode == 0) {
+            s32 sn = gStaticData_0816A820[(self->counter & 0x7f) * 2];
+            sn = sub_80008FC(sn, 0x280);
+            self->base.y = self->anchor.y + sn;
+        } else {
+            sub_8011248(self);
+        }
+    }
+    sub_8008364(&self->base);
+}
+#else
 NAKED void sub_8010F8C(void *self)
 {
     asm(
@@ -397,6 +491,7 @@ NAKED void sub_8010F8C(void *self)
         ".align 2, 0\n"
     );
 }
+#endif
 
 /* `struct actor *sub_8011114(u16 arg0, u16 arg1, u16 arg2, s32 arg3)` -
  * spawns a part-object; extern already declared in `game_loop29.c`.
@@ -416,97 +511,31 @@ NAKED void sub_8010F8C(void *self)
  * and always tags `self+0x29`/`+0x2a`/`+0x2b` all `0`, returning the
  * new part.
  *
- * NAKED, not plain C: needs the `0` sentinel alive in `r8` across the
- * `sub_8026EDC`/`sub_80084A4`/`sub_8011308` call sequence purely so it
- * can later be spilled back out for the three trailing `self+0x29`/
- * `+0x2a`/`+0x2b` byte stores - the same confirmed
- * `mov r_lo,r_hi`/`push {r_lo,...}` high-register save/restore dance
- * this compiler only reproduces when its own *unforced* allocator picks
- * those registers itself, already documented at length for this exact
- * object family's other spawn helpers (`sub_801173C`/`sub_8011548`,
- * `game_loop53.c`). Transcribed straight from the confirmed-correct ROM
- * disassembly. */
-NAKED struct actor *sub_8011114(u16 arg0, u16 arg1, u16 arg2, s32 arg3)
+ * Under old_agbcc this is plain C: the `0` sentinel held in `r8` across
+ * sub_8008E94 is just the `zero` local below, and the anchor copy is a
+ * struct copy of the head x/y pair (`ORBIT_POS`). */
+struct orbit_part *sub_8011114(u16 id, u16 x, u16 y, s32 unused)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, r8\n\t"
-        "push {r7}\n\t"
-        "add r6, r0, #0\n\t"
-        "add r4, r1, #0\n\t"
-        "add r5, r2, #0\n\t"
-        "lsl r6, r6, #0x10\n\t"
-        "lsr r6, r6, #0x10\n\t"
-        "lsl r4, r4, #0x10\n\t"
-        "lsr r4, r4, #0x10\n\t"
-        "lsl r5, r5, #0x10\n\t"
-        "lsr r5, r5, #0x10\n\t"
-        "mov r0, #0x54\n\t"
-        "bl sub_8026EDC\n\t"
-        "add r7, r0, #0\n\t"
-        "bl sub_80084A4\n\t"
-        "ldr r0, 2f\n\t"
-        "str r0, [r7, #0x18]\n\t"
-        "add r0, r7, #0\n\t"
-        "bl sub_8011308\n\t"
-        "mov r0, #0\n\t"
-        "mov r8, r0\n\t"
-        "strh r6, [r7, #8]\n\t"
-        "lsl r4, r4, #8\n\t"
-        "str r4, [r7]\n\t"
-        "lsl r5, r5, #8\n\t"
-        "str r5, [r7, #4]\n\t"
-        "ldr r0, [r7]\n\t"
-        "ldr r1, [r7, #4]\n\t"
-        "str r0, [r7, #0x4c]\n\t"
-        "str r1, [r7, #0x50]\n\t"
-        "ldr r0, 3f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r1, r7, #0\n\t"
-        "bl sub_8008E94\n\t"
-        "mov r3, #0\n\t"
-        "ldr r0, [r7, #0x20]\n\t"
-        "add r2, r7, #0\n\t"
-        "add r2, #0x2d\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldrb r4, [r2]\n\t"
-        "lsl r0, r4, #3\n\t"
-        "sub r0, r0, r4\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrb r0, [r0, #0x16]\n\t"
-        "cmp r3, r0\n\t"
-        "blt 1f\n\t"
-        "sub r3, r0, #1\n\t"
-    "1:\n\t"
-        "str r3, [r7, #0x30]\n\t"
-        "add r0, r7, #0\n\t"
-        "add r0, #0x28\n\t"
-        "mov r1, #0x11\n\t"
-        "neg r1, r1\n\t"
-        "ldrb r2, [r0]\n\t"
-        "and r1, r2\n\t"
-        "mov r2, #0x21\n\t"
-        "neg r2, r2\n\t"
-        "and r1, r2\n\t"
-        "strb r1, [r0]\n\t"
-        "add r0, #0x21\n\t"
-        "mov r4, r8\n\t"
-        "strb r4, [r0]\n\t"
-        "add r0, #1\n\t"
-        "strb r4, [r0]\n\t"
-        "add r0, #1\n\t"
-        "strb r4, [r0]\n\t"
-        "add r0, r7, #0\n\t"
-        "pop {r3}\n\t"
-        "mov r8, r3\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n"
-    "2: .4byte gStaticData_087E40DC\n"
-    "3: .4byte gUnknown_030012EC\n"
-    );
+    struct orbit_part *self;
+    u8 zero;
+
+    self = sub_8026EDC(0x54);
+    sub_80084A4(&self->base);
+    self->base.table = gStaticData_087E40DC;
+    sub_8011308(self);
+    zero = 0;
+    self->base.field_08 = id;
+    self->base.x = x << 8;
+    self->base.y = y << 8;
+    self->anchor = ORBIT_POS(self);
+    sub_8008E94(gUnknown_030012EC, self);
+    OrbitClampFrame(self);
+    self->flipX = 0;
+    self->flipY = 0;
+    self->counter = zero;
+    self->mode = zero;
+    self->phase = zero;
+    return self;
 }
 
 /* `void sub_80111B8(void *part)` - extern already declared in

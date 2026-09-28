@@ -11,6 +11,12 @@ from "core" graphics.
 
 ## Matched
 
+- **`sub_8012D24`** (`src/graphics/actor_part83.c`) and **`sub_801283C`**
+  (`src/graphics/actor_part84.c`) - issue #16: two
+  `gStaticData_0816BF20` action-table helpers on the player/action object
+  (`include/action_obj.h`). Plain C under old_agbcc (both files moved to
+  `OLD_AGBCC_OBJS`); they were NAKED transcriptions. See
+  [issue-15-16-naked-retry.md](../matching/issue-15-16-naked-retry.md).
 - **Issues #58/#61 NAKED retry** ([docs/matching/issue-58-61-naked-retry.md](../matching/issue-58-61-naked-retry.md)):
   the boss-weapon cluster's `sub_8030734` (`actor_part21d.c`),
   `sub_8030834` (`actor_part21e.c`), `sub_80309B4` (`actor_part21f.c`),
@@ -1057,29 +1063,23 @@ plain C didn't converge.
   register-pinning gauntlet already exhausted throughout this section
   for smaller members of the same table. See
   `docs/matching/issue-16-actor-remainder.md`.
-- **`sub_8012420`**, **`sub_8012694`**, **`sub_801283C`**
-  (`src/graphics/actor_part84.c`, GitHub issue #16) - three more
-  members of the same 42-slot action-dispatch table
-  (`gStaticData_0816BF20`): a `part`-visibility/OAM-priority
-  housekeeping pass with a trailing 22-case jump table, a proximity-
-  gated child-object-type dispatch that fires a `+0x50`/`+0x54`
-  trampoline pair, and a proximity-triggered indicator dispatching on
-  `self+8`'s type against per-type distance thresholds. A first plain-C
-  attempt at `sub_8012420` compiled logically-equivalent code that
-  diverged in overall stack-frame shape (the ROM reserves an unused
-  8-byte stack slot and a 5th callee-saved register, `r7`, that the
-  straightforward translation never needed) - the same unexplained-
-  frame-shape gap this table's sibling members hit throughout this
-  section. See `docs/matching/issue-16-actor-remainder.md`.
-- **`sub_8012AF4`**, **`sub_8012D24`** (`src/graphics/actor_part83.c`,
-  GitHub issue #16) - the chunk's final two functions: an OAM-
-  visibility/priority pass keyed on a `gStaticData_0816B304` per-tag
-  12-byte stack-local record (copied via `ldm`/`stm`, with `r8` holding
-  a value across several calls - a real step up in register-allocation
-  complexity from every other member of this table matched so far), and
-  a further sibling/callee handling frame-counter thresholds, D-pad
-  input, and `sub_8012A7C`'s busy-check. See
-  `docs/matching/issue-16-actor-remainder.md`.
+- **`sub_8012420`**, **`sub_8012694`** (`src/graphics/actor_part84.c`,
+  GitHub issue #16) - two more members of the same 42-slot
+  action-dispatch table (`gStaticData_0816BF20`): a `part`-visibility/
+  OAM-priority housekeeping pass (with a gcc 2.x pointer-to-member call
+  through the table and a trailing 22-case jump table), and a
+  proximity-gated child-object-type dispatch that fires a
+  `+0x50`/`+0x54` trampoline pair. Old_agbcc C drafts under
+  `NON_MATCHING`: `sub_8012694` is off only in the tag-test registers;
+  `sub_8012420`'s ROM keeps the PMF method record in an 8-byte stack slot
+  and pushes an unused `r7` (a spilled DImode pair). See
+  [issue-15-16-naked-retry.md](../matching/issue-15-16-naked-retry.md).
+- **`sub_8012AF4`** (`src/graphics/actor_part83.c`, GitHub issue #16) -
+  an animation pass keyed on a `gStaticData_0816B304` per-action
+  12-byte stack-local record (copied via `ldm`/`stm`). Old_agbcc C draft
+  under `NON_MATCHING`, same instructions but register allocation
+  differs throughout. See
+  [issue-15-16-naked-retry.md](../matching/issue-15-16-naked-retry.md).
 - **`InitActorCategory`** (`src/graphics/actor_part101.c`, GitHub issue
   #48) - the category (re)initialization + per-VBlank loading-screen
   driver. Fully understood; sustains four simultaneous high-register
@@ -1646,19 +1646,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   this pass - see
   [docs/matching/issue-16-actor-11b0c.md](../matching/issue-16-actor-11b0c.md)
   and
-  [docs/matching/issue-16-actor-12160.md](../matching/issue-16-actor-12160.md).
-- **`sub_8012420`/`sub_8012694`/`sub_801283C`** (`asm/code_3_2_17_12420.s`,
-  ROM 0x08012420-0x08012A7C, GitHub issue #16) - further members of the
-  42-slot action-dispatch-table family (`gStaticData_0816BF20`) reading/
-  writing the same still-unnamed "child object" struct `sub_8012160`/
-  `sub_8012238`/`sub_80122CC` (matched below) now operate on; not
-  attempted to byte-exact precision this pass. Left raw - see
-  [docs/matching/issue-16-actor-12160.md](../matching/issue-16-actor-12160.md).
-- **`sub_8012AF4`/`sub_8012D24`** (`asm/code_3_2_17_12af4.s`, ROM
-  0x08012AF4-0x08012FBC, GitHub issue #16) - `sub_8012AF4` uses a
-  stack-local 12-byte record copy and `r8`; `sub_8012D24` is a further
-  sibling; neither attempted to byte-exact precision this pass. Left
-  raw - see
   [docs/matching/issue-16-actor-12160.md](../matching/issue-16-actor-12160.md).
 - **`sub_8007634`** (`asm/code_3_2.s`, ROM 0x08007634, GitHub issue #9)
   - real GBA hardware-affine sprite-matrix setup; already flagged in
