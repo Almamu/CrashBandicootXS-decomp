@@ -3,43 +3,30 @@
 /* Same "spawn/pre-attack" singleton family as actor_part39.c - see that
  * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md.
  *
- * A pair of ~130-170-instruction VRAM tile-remap loops (issue #56),
- * both 4-bit palette-index repacking loops into a `0x0600D000`-based
- * tile buffer via raw `REG_DMA3SAD`/`DAD`/`CNT` (`0x040000D4`) pokes:
+ * Two BG1 picture loaders (issue #56) sharing one repack loop: for each
+ * of `rows` rows of `cols` map entries, add the tile base
+ * (`sub_8029AC4() - 0x200`) to the entry, OR in a 4-bit palette bank
+ * taken alternately from the low and high nibble of the next byte, and
+ * store it at `0x0600D000 + row * 0x40` (columns 0x20 and up go to the
+ * second screen block, +0x7C0).
  *
- * - `sub_802F7B0(u8 *src)`: starts a DMA3 32-bit copy of `src` itself
- *   into some destination read back from `src+0x200`/`src+0x202`
- *   (halfwords) and a header dword at `src+0x204`, computes a
- *   rounded-average buffer size from those two halfwords via
- *   `sub_8029AC4()`'s VRAM-tile-allocator result, then repacks a
- *   `src`-relative halfword array plus a nibble-packed byte array into
- *   two interleaved 32x-wide output rows (odd/even nibble halves) at
- *   that buffer, alternating source nibble high/low half each output
- *   row via an `ip`-held toggle flag; finishes by starting a second
- *   DMA3 copy (BG palette-ish header poke via `0x0400000A`) and a
- *   final `REG_DMA3CNT`-style transfer using the same rounded buffer
- *   size and row-derived sizing.
- * - `sub_802F8E8(u8 *dest, u16 *src, s32 rowCount, s32 colCount)`:
- *   the same nibble-toggling 32-wide interleaved-row repack loop
- *   (odd/even output row split via a `> 0x1f` column-index check)
- *   feeding a `0x0600D000`-based destination directly from explicit
- *   arguments instead of `sub_802F7B0`'s own header-driven setup,
- *   sharing the exact inner-loop shape and nibble-toggle idiom.
+ * - `sub_802F7B0(pic)`: DMA3-copies `pic`'s 0x200-byte palette to
+ *   PLTT, reads cols/rows (s16 at +0x200/+0x202) and the tile count
+ *   (+0x204), runs the loop over the map at +0x208 with the nibbles
+ *   after the tiles, then enables BG1 (DISPCNT |= 0x200, BG1CNT =
+ *   0x5A07) and DMA3-copies the tiles to VRAM + sub_8029AC4() * 32.
+ * - `sub_802F8E8(nibbles, map, cols, rows)`: the same loop on explicit
+ *   arguments.
  *
- * Transcribed as NAKED asm, not plain C: both loops keep three extra
- * high registers (`r8`, `sb`/r9, `sl`/r10) simultaneously live across
- * the whole nested loop body (row count/pointer in one, column
- * bookkeeping in another, the alternating-row output pointer in the
- * third), on top of the raw `0x040000D4`/`0x0600D000` DMA hardware
- * pokes - every other DMA3-setup function already in this codebase
- * with this same `0x040000D4`/`0x0600D000` literal-pool shape
- * (actor_part26b.c, actor_part74.c, actor_part75.c, fade_screen_mode.c,
- * hud_digit_array.c, settings_menu8e.c, timer_util_aa90.c) is NAKED
- * too, not plain C with `REG_DMA3SAD`/`DAD`/`CNT` macros - this
- * compiler's register allocator never reproduces the ROM's specific
- * three-high-register nested-loop allocation for this shape. Every
- * load/store, branch and call below is confirmed correct against the
- * ROM disassembly - see docs/matching/issue-56-0x0802f0dc-actor.md. */
+ * Both stay NAKED. Under old_agbcc, plain C for `sub_802F8E8`
+ * (`dest[col]` / `dest[col + 0x3e0]` stores, `n = (n << 12) | v`) is
+ * 15 halfwords off, all register choice: the map pointer and `dest`
+ * swap r5/r6 (the tile value `v` outranks the map pointer in global
+ * allocation), and the next-row pointer and row+1 swap ip/r9.
+ * `sub_802F7B0`'s header setup matches when `pic` itself is walked
+ * (`pic += 0x204; tileCount = *(u32 *)pic; pic += 4;` gives the ROM's
+ * `ldm r0!`), but its loop spills differently (the ROM keeps base and
+ * `v` on the stack and both store pointers live). */
 extern s32 sub_8029AC4(void);
 
 NAKED void sub_802F7B0(void *srcArg)
@@ -205,11 +192,7 @@ NAKED void sub_802F7B0(void *srcArg)
     );
 }
 
-/* Same nibble-toggling 32-wide interleaved-row repack loop as
- * `sub_802F7B0` above, feeding a `0x0600D000`-based destination
- * directly from explicit arguments instead of `sub_802F7B0`'s own
- * header-driven setup - see that function's comment for the full
- * account of why this is NAKED. */
+/* The repack loop on explicit arguments - see the file comment. */
 NAKED void sub_802F8E8(void *destArg, void *srcArg, s32 rowCount, s32 colCount)
 {
     asm(

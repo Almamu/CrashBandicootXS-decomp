@@ -11,6 +11,11 @@ from "core" graphics.
 
 ## Matched
 
+- **`sub_803487C`** (`src/graphics/actor_part88.c`) - issue #63: the fade
+  overlay's other setup half (icon manager hookup, tile-cache seeding
+  loop). Plain C, built with old_agbcc; it was raw asm
+  (`asm/code_3_2_20_28568_c99c_31784_33ef4_3487c.s`, now removed). See
+  [old-agbcc-round5.md](../matching/old-agbcc-round5.md).
 - **`sub_80327A4`** (`src/graphics/actor_part130.c`) - issue #60's last
   function, a bounding-box-culled sprite draw (`UpdateAnimatedActorPart`'s
   shape with the scale flag fixed at 0). Plain C; it was NAKED. See
@@ -1693,15 +1698,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   cache to `r7` here (matching the ROM) would silently corrupt the
   caller's `r7` - see `docs/matching/issue-62-0x08033804-actor.md`,
   issue #62.
-
-- **`sub_803487C`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_3487c.s`, C
-  in `src/graphics/actor_part88.c`, GitHub issue #63) - the fade
-  overlay's other setup half: VRAM upload cursor flush, icon-manager
-  hookup, and a 16-iteration tile-cache seeding loop; matched except the
-  loop's trip counter, which the ROM keeps live in r7 for the whole
-  loop - this project's confirmed categorical gcc-2.9 r7-pin bug (see
-  `graphics_package_1e688.c`/`oam_count.c`/`actor_part7.c`) - see
-  `docs/matching/issue-63-final-raw-actor.md`.
 
 ## Left raw (not attempted, or attempted and set aside)
 
