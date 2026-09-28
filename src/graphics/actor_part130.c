@@ -191,97 +191,58 @@ void sub_8032718(void *selfArg)
     }
 }
 
-/* NAKED transcription: bounding-box-culled sprite draw via
- * `GetAnimFrameData`/`sub_803B060`/`SetupSpriteFrameOam` - same family
- * of functions as the hard-won `UpdateAnimatedActorPart` (issue #50,
- * `actor_part55.c`), which needed a `register ... asm("r8")` pin for a
- * caller-saved "oversize scale" flag threaded across two calls plus an
- * explicit stack spill of a second caller-saved flag just to reproduce
- * this compiler's exact register choices. This function hits the same
- * r8-flag-across-calls shape (the flag here is 0/`0x200`, matching the
- * scale-doubling `sub_803B060`/`SetupSpriteFrameOam` OR-in), so it is
- * transcribed directly rather than re-deriving an equally elaborate fix
- * for a single function. */
-NAKED void sub_80327A4(void *selfArg)
+/* Draws `self`'s current anim frame at its Q8 position, centered on the
+ * frame's width/height bytes, unless it is entirely off screen. Same
+ * shape as UpdateAnimatedActorPart (actor_part55.c) with the scale
+ * doubling fixed off: `scaled` starts at 0 (halving nothing) and becomes
+ * the 0x100 OBJ-affine bit once the sprite is known to be visible. The
+ * third OAM word takes `self->unk_18` as its priority nibble, plus 0x800
+ * when bit 15 of `self->visible` is set. */
+void sub_80327A4(void *selfArg)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, r8\n\t"
-        "push {r7}\n\t"
-        "add r6, r0, #0\n\t"
-        "ldr r0, [r6, #0x1c]\n\t"
-        "ldr r1, [r6, #0x20]\n\t"
-        "asr r4, r0, #8\n\t"
-        "asr r5, r1, #8\n\t"
-        "add r0, r6, #0\n\t"
-        "bl GetAnimFrameData\n\t"
-        "add r7, r0, #0\n\t"
-        "mov r0, #0\n\t"
-        "mov r8, r0\n\t"
-        "ldrb r0, [r7]\n\t"
-        "lsl r2, r0, #2\n\t"
-        "ldrb r1, [r7, #1]\n\t"
-        "lsl r0, r1, #2\n\t"
-        "sub r4, r4, r2\n\t"
-        "sub r5, r5, r0\n\t"
-        "cmp r5, #0x9f\n\t"
-        "bgt 1f\n\t"
-        "lsl r0, r1, #3\n\t"
-        "add r0, r5, r0\n\t"
-        "cmp r0, #0\n\t"
-        "blt 1f\n\t"
-        "cmp r4, #0xef\n\t"
-        "bgt 1f\n\t"
-        "lsl r0, r2, #1\n\t"
-        "add r0, r4, r0\n\t"
-        "cmp r0, #0\n\t"
-        "blt 1f\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #1\n\t"
-        "mov r8, r0\n\t"
-        "add r0, r6, #0\n\t"
-        "bl sub_803B060\n\t"
-        "mov r3, #0xff\n\t"
-        "and r3, r5\n\t"
-        "ldr r1, 4f\n\t"
-        "and r4, r1\n\t"
-        "lsl r1, r4, #0x10\n\t"
-        "orr r3, r1\n\t"
-        "orr r3, r0\n\t"
-        "mov r0, r8\n\t"
-        "orr r3, r0\n\t"
-        "ldr r4, [r6, #0x18]\n\t"
-        "lsl r2, r4, #0xc\n\t"
-        "ldr r0, [r6, #0x14]\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #8\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "beq 2f\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #4\n\t"
-        "orr r2, r0\n\t"
-        "lsl r0, r2, #0x10\n\t"
-        "b 3f\n\t"
-        ".align 2, 0\n"
-    "4: .4byte 0x000001FF\n"
-    "2:\n\t"
-        "lsl r0, r4, #0x1c\n\t"
-    "3:\n\t"
-        "lsr r2, r0, #0x10\n\t"
-        "add r0, r7, #0\n\t"
-        "add r1, r3, #0\n\t"
-        "mov r3, #0xc0\n\t"
-        "lsl r3, r3, #1\n\t"
-        "bl SetupSpriteFrameOam\n\t"
-    "1:\n\t"
-        "pop {r3}\n\t"
-        "mov r8, r3\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    );
+    struct actor_self *self = selfArg;
+    s32 x;
+    s32 y;
+    u8 *frame;
+    u32 scaled;
+    s32 halfW;
+    s32 halfH;
+    u32 attr;
+    u32 attr2;
+    u16 attr2Out;
+    s32 oamPriority = 0x180;
+    u32 highBit = 0x800;
+
+    {
+        s32 qx = self->x, qy = self->y;
+
+        x = qx >> 8;
+        y = qy >> 8;
+    }
+    frame = GetAnimFrameData(self);
+    scaled = 0;
+    halfW = scaled ? frame[0] << 3 : frame[0] << 2;
+    halfH = scaled ? frame[1] << 3 : frame[1] << 2;
+    x -= halfW;
+    y -= halfH;
+    if (y > 0x9f)
+        return;
+    if (y + halfH * 2 < 0)
+        return;
+    if (x > 0xef)
+        return;
+    if (x + halfW * 2 < 0)
+        return;
+
+    scaled |= 0x100;
+    attr = (y & 0xff) | ((x & 0x1ff) << 16) | sub_803B060(self) | scaled;
+    x = self->unk_18;
+    attr2 = x << 12;
+    if (self->visible & 0x8000)
+        attr2Out = attr2 | highBit;
+    else
+        attr2Out = attr2;
+    SetupSpriteFrameOam(frame, attr, attr2Out, oamPriority);
 }
 
 /* Destructor: dispenses `reward` score increments via `sub_8023430`
