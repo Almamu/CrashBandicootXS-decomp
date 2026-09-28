@@ -1116,6 +1116,249 @@ void sub_8036668(u32 *self)
  * "extra" slot pair fed from `self+0x424`/`self+0x42c`/`self+0x434`
  * (the same header fields `sub_8036528` populates), queuing a
  * `QueueVramDmaTransfer` for its tile data first. */
+#if NON_MATCHING
+/* Near-miss draft (big NAKED retry, docs/matching/big-naked-retry.md):
+ * needs strength reduction ON (the header loop is written up-counting
+ * so check_dbra_loop reverses it after the hoisted &oamA, as in the
+ * ROM), so closing it also means splitting this file at 0x0803686C.
+ * With strength reduction on, the header and slot loops have the
+ * ROM's instructions and differ only in registers. What is left is the
+ * row-copy loop (the ROM keeps `buf + 0x60` as a reduced giv and its
+ * 0x100 step inside the loop, then reuses that register for the
+ * `pa != 0x100` compare) and the register choices around it (the ROM
+ * has self in sb and i in sl, the tail's slot copy in r8 and the affine
+ * flag in r7). 329 halfwords differ under old_agbcc. */
+struct oam_attrs
+{
+    u32 y:8;            // 0x00
+    u32 affineMode:2;   // 0x01
+    u32 objMode:2;
+    u32 mosaic:1;
+    u32 bpp:1;
+    u32 shape:2;
+    u32 x:9;            // 0x02
+    u32 matrixLo:3;
+    u32 matrixBit3:1;
+    u32 matrixBit4:1;
+    u32 size:2;
+    u16 tileNum:10;     // 0x04
+    u16 priority:2;
+    u16 palette:4;
+    u16 affineParam;    // 0x06
+};
+
+struct oam_entry
+{
+    u16 attr0;
+    u16 attr1;
+    u16 attr2;
+    s16 affineParam;
+};
+
+struct oam_buf
+{
+    s32 count;
+    s32 field_04;
+    s32 field_08;
+    struct oam_entry entries[128];
+};
+
+/* One 0x34-byte slot of the 20-slot array `sub_8036600` seeds. */
+struct obj_slot
+{
+    u8 active;          // 0x00
+    u8 pad_01[3];
+    s32 countdown;      // 0x04
+    union {
+        s32 q;          // 0x08 - Q16.16 x
+        struct { u16 frac; s16 i; } h;
+    } posA;
+    union {
+        s32 q;          // 0x0c - Q16.16 y
+        struct { u16 frac; s16 i; } h;
+    } posB;
+    s32 posC;           // 0x10
+    s32 velA;           // 0x14 - x scale
+    s32 velB;           // 0x18 - y scale
+    u8 pad_1c[0x18];
+};
+
+static inline void SetAffine(struct oam_buf *buf, s32 m, u16 pa, u16 pb, u16 pc, u16 pd)
+{
+    s32 idx = m * 4;
+
+    buf->entries[idx].affineParam = pa;
+    buf->entries[idx + 3].affineParam = pd;
+    buf->entries[idx + 1].affineParam = pb;
+    buf->entries[idx + 2].affineParam = pc;
+}
+
+#define SLOT_AT(self, i) (&((struct obj_slot *)(self))[i])
+#define OAMBUF ((struct oam_buf *)gUnknown_03001300)
+
+#define ClearOam(oam)                                           \
+{                                                               \
+    struct dma_regs *dma;                                       \
+    zero = 0;                                                   \
+    dma = (struct dma_regs *)REG_ADDR_DMA3SAD;                  \
+    dma->src = (u32)&zero;                                      \
+    dma->dst = (u32)(oam);                                      \
+    dma->cnt = 0x81000004;                                      \
+    dma->cnt;                                                   \
+}
+
+void sub_803686C(u32 *self)
+{
+    vu16 zero;
+    vu32 zero32;
+    struct oam_attrs oamA;
+    struct oam_attrs oamB;
+    struct oam_attrs oamC;
+    s32 matrix = 1;
+    s32 i;
+
+    {
+        struct obj_slot *hdr = SLOT_AT(self, 19);
+
+        if (hdr->active)
+        {
+            u32 tiles;
+            s32 j;
+
+            ClearOam(&oamA);
+            tiles = *(u32 *)((u8 *)self + 0x428);
+            oamA.palette = 0xd;
+            oamA.size = 2;
+            oamA.shape = 1;
+            oamA.y = hdr->posB.q >> 16;
+            oamA.x = hdr->posA.h.i;
+            oamA.tileNum = tiles >> 5;
+            for (j = 0; j < 4; j++)
+            {
+                sub_8006AC8(gUnknown_03001300, &oamA);
+                oamA.tileNum += 8;
+                oamA.x += 0x20;
+            }
+        }
+    }
+    {
+        struct obj_slot *slot = SLOT_AT(self, 1);
+        u32 tile = (*(u32 *)((u8 *)self + 0x424) - 0x06010000) >> 5;
+
+        for (i = 0; i <= 0x11; i++)
+        {
+            if (slot->active)
+            {
+                s32 pa, pd, affine;
+
+                ClearOam(&oamB);
+                pa = 0x1000000 / slot->velA;
+                pd = 0x1000000 / slot->velB;
+                affine = (pa != 0x100 || pd != pa);
+                if (affine)
+                {
+                    u8 *flags = (u8 *)self + 0x410;
+                    u8 *flag = flags + i;
+
+                    if (*flag)
+                    {
+                        *flag = 0;
+                        PlaySfx(gUnknown_030012BC, 0x4e, 0x100);
+                    }
+                    SetAffine(OAMBUF, matrix, pa, 0, 0, pd);
+                    oamB.affineMode = 1;
+                    oamB.matrixLo = matrix;
+                    matrix++;
+                }
+                oamB.palette = 0xe;
+                oamB.size = 2;
+                oamB.shape = 2;
+                oamB.y = (slot->posB.q >> 16) - 0x10;
+                oamB.x = slot->posA.h.i - 8;
+                oamB.tileNum = tile;
+                sub_8006AC8(gUnknown_03001300, &oamB);
+            }
+            tile += 8;
+            slot++;
+        }
+    }
+    {
+        struct obj_slot *slot = SLOT_AT(self, 0);
+
+        if (slot->active)
+        {
+            u8 *flag = (u8 *)self + 0x410;
+            u32 tile;
+            u8 *buf;
+            u8 *src;
+            s32 row;
+            s32 pa, pd, affine;
+            struct dma_regs *dma;
+
+            if (*flag)
+            {
+                PlaySfx(gUnknown_030012BC, 0x4d, 0x100);
+                *flag = 0;
+            }
+            tile = (*(u32 *)((u8 *)self + 0x42c) - 0x06010000) >> 5;
+            zero32 = 0;
+            dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
+            dma->src = (u32)&zero32;
+            buf = *(u8 **)((u8 *)self + 0x434);
+            dma->dst = (u32)buf;
+            dma->cnt = 0x85000400;
+            dma->cnt;
+            src = *(u8 **)((u8 *)self + 0x430) + *(s32 *)((u8 *)self + 0x438) * 0xa00;
+            for (row = 0; row < 8; row++)
+            {
+                dma->src = (u32)src;
+                dma->dst = (u32)(buf + 0x60);
+                dma->cnt = 0x80000050;
+                dma->cnt;
+                src += 0xa0;
+                dma->src = (u32)src;
+                dma->dst = (u32)(buf + 0x800);
+                dma->cnt = 0x80000050;
+                dma->cnt;
+                src += 0xa0;
+                buf += 0x100;
+            }
+            QueueVramDmaTransfer(*(void **)((u8 *)self + 0x434), *(void **)((u8 *)self + 0x42c), 0x1000, 0x10);
+            ClearOam(&oamC);
+            pa = 0x1000000 / slot->velA;
+            pd = 0x1000000 / slot->velB;
+            affine = (pa != 0x100 || pd != pa);
+            if (affine)
+            {
+                SetAffine(OAMBUF, matrix, pa, 0, 0, pd);
+                oamC.affineMode = 3;
+                oamC.matrixLo = matrix;
+            }
+            oamC.palette = 0xf;
+            oamC.size = 3;
+            oamC.shape = 0;
+            if (affine)
+            {
+                oamC.y = (slot->posB.q >> 16) - 0x40;
+                oamC.x = slot->posA.h.i - ((slot->velA << 5) >> 16) - 0x40;
+            }
+            else
+            {
+                oamC.y = (slot->posB.q >> 16) - 0x20;
+                oamC.x = slot->posA.h.i - 0x40;
+            }
+            oamC.tileNum = tile;
+            sub_8006AC8(gUnknown_03001300, &oamC);
+            if (affine)
+                oamC.x = ((slot->velA << 5) >> 16) + slot->posA.h.i - 0x40;
+            else
+                oamC.x = slot->posA.h.i;
+            oamC.tileNum = tile + 0x40;
+            sub_8006AC8(gUnknown_03001300, &oamC);
+        }
+    }
+}
+#else
 NAKED void sub_803686C(u32 *self)
 {
     asm(
@@ -1689,6 +1932,7 @@ NAKED void sub_803686C(u32 *self)
         "\t_08036CF0: .4byte gUnknown_03001300\n"
     );
 }
+#endif
 
 /* BG2's tilemap remap loader (the same "remap the tilemap's per-tile
  * palette-select nibble while copying it to VRAM" shape
