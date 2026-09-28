@@ -4977,6 +4977,9 @@ register for that one dereference.
 
 ### Parked: `PlaySfx` and `sub_80019F8`
 
+> Later: `PlaySfx` is matched as real C (docs/matching/near-miss-polish.md),
+> and `sub_80019F8` too (docs/matching/early-rom-naked-retry.md).
+
 Both fully understood, both extensively iterated on (many register-
 pinning permutations tried, verified against the real ROM
 instruction-by-instruction, not just eyeballed), both left one small

@@ -328,3 +328,10 @@ The link-cable drafts establish `struct link_session`,
 pass in r0; the parameter is unused and its code is unchanged.
 `sub_8002114` was not attempted. Nothing in this range closed, so the
 issue stays open.
+
+## Later pass: near-miss polish
+
+`sub_8002AA4` is real C. The draft's only remaining gap was the r7/r8
+swap between `flags` and `field_1fb`. An empty `asm("" : : "r"(flags))`
+adds one reference to `flags`, which puts it ahead of `field_1fb` in
+global-alloc's priority order. See [near-miss-polish.md](near-miss-polish.md).

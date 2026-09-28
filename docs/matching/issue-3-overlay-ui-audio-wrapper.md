@@ -195,3 +195,11 @@ compilers. The fifth argument is a one-byte struct passed by value. The
 `base + 8 + offset` address of the `baseVolume` read is just how gcc
 computes a non-zero field offset from the table base. The CSE gap
 described above is not real.
+
+## Later pass: near-miss polish
+
+`PlaySfx` is real C, and `asm/code_3_1_10.s` is gone. Without the r9 pin
+on `self`, the instruction stream matches and only the r8/r9/sl
+assignment differs. One empty `asm("" : : "r"(&gUnknown_030007FC))`
+raises that address's global-alloc priority to the ROM's. See
+[near-miss-polish.md](near-miss-polish.md).

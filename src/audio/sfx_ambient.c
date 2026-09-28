@@ -2,9 +2,8 @@
 #include "audio.h"
 
 /* `PlaySfx` sits right after the matched `sub_80017BC` (src/audio/
- * music_player.c) and before the matched functions this file holds. */
+ * music_player.c) and before the other functions this file holds. */
 
-#if NON_MATCHING
 extern u32 gUnknown_030007FC;
 extern s32 sub_8038E74(u32 handle, s32 channel, s32 pitchOffset, s32 priority);
 extern void sub_80390F8(s32 channel, u32 volume);
@@ -20,24 +19,18 @@ extern void sub_80390F8(s32 channel, u32 volume);
  * last played `sfxId` in `lastSfxId`, for `sub_80019A8`'s
  * stop-if-playing scan.
  *
- * Parked: every instruction matches except the prologue's register
- * save order. The ROM does `mov sb,r0` (cache `self`) immediately,
- * before `mov sl,r1` (cache `id`); this compiler always defers the
- * `self` save to just before `self->state` is first dereferenced
- * (the point `r0` actually gets clobbered) once `self` is bound to an
- * explicit high-register variable - tried an inline-asm register
- * "touch" barrier right after binding it (forces the save, but as a
- * literal extra instruction, not earlier scheduling), reordering the
- * declaration relative to other locals, and leaving `self` unbound
- * (register allocator then picks the right registers late instead of
- * early, and a different pair besides). Every combination reproduces
- * the ROM's exact instruction stream except this one prologue
- * ordering - same class of gap as sub_80014A4's loop-invariant-hoisting
- * entry in this doc. */
+ * Matched in the near-miss polish pass (docs/matching/
+ * near-miss-polish.md). The older draft pinned `self` to r9, which
+ * made its save a body statement placed after the other parameter
+ * copies. Unpinned, the instruction stream is the ROM's, but global-alloc
+ * ranks `self` > `id` > `&gUnknown_030007FC` where the ROM has the
+ * address first (r8, then r9, then sl). The empty
+ * `asm("" : : "r"(&gUnknown_030007FC))` emits nothing; it adds one
+ * reference to the address pseudo, lifting its priority to the top. */
 void PlaySfx(struct AudioContext *self, u32 id, u32 volumeParam)
 {
     s32 isPlaying;
-    register struct AudioContext *pself asm("r9") = self;
+    struct AudioContext *pself = self;
 
     isPlaying = 0;
     if (pself->state == 1) {
@@ -51,6 +44,8 @@ void PlaySfx(struct AudioContext *self, u32 id, u32 volumeParam)
             u32 chanArg = gStaticData_0816AA6C[id].chanArg;
             s32 voice = sub_8038E74(handle, toggle, chanArg, -1);
 
+            /* No code: one extra use of the address for global-alloc. */
+            asm("" : : "r"(&gUnknown_030007FC));
             if (voice == -1) {
                 toggle = gUnknown_030007FC ^ 1;
                 gUnknown_030007FC = toggle;
@@ -68,7 +63,6 @@ void PlaySfx(struct AudioContext *self, u32 id, u32 volumeParam)
         }
     }
 }
-#endif /* NON_MATCHING */
 
 extern u32 gUnknown_0300082C;
 extern void sub_80390F8(s32 channel, u32 volume);
