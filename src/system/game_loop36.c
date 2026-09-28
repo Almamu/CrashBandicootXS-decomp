@@ -111,11 +111,23 @@
  * `neg rX,rX`), with the original `_08XXXXXX:` labels renumbered to
  * GNU-as local numeric labels (first-definition order). */
 #if NON_MATCHING
-/* First full C draft (not close yet: 1416 bytes vs the ROM's 1396 under
- * old_agbcc). The control flow, both jump tables and every field store
- * are reconstructed; the register allocation differs from the start
- * (the ROM keeps `type` in r7 and slot*2 in r8, this draft the other way
- * round), and a few tag stores are not yet shared the ROM's way. */
+/* C draft, 1388 bytes vs the ROM's 1396 (old_agbcc; agbcc gives the same
+ * size). The control flow, both jump tables and every field store are
+ * reconstructed. Three empty-asm references to `type` fix the type/slot*2
+ * swap (type r7, slot*2 r8), which also removed the extra hi-register
+ * moves that made the first draft 20 bytes too long. What's left:
+ * - The ROM copies the placement-record pointer before using it in the
+ *   0xb pre-check (`add r2,r0,#0`), in the `flagged` block (`add r3,r1,#0`,
+ *   the copy feeds the `ldrsh`) and in case 15 (`mov sl,r6`, the copy
+ *   feeds the last flag test). This looks like old_agbcc GCSE's
+ *   reaching-register copy for a re-read PLACEMENT(slot), but re-reading
+ *   it in those places either changes nothing or recomputes the whole
+ *   chain.
+ * - id sits in sl (ROM sb), and self and &gUnknown_030012C0 are swapped
+ *   (ROM self r5, &gUnknown_030012C0 r6).
+ * - Case 15's `(u48 & 0x3f) & 0xf8` is folded to one `and`. Writing it as
+ *   two `&=` statements keeps both ands but changes the frame (x stays
+ *   in a register instead of being spilled next to y). */
 #include "phys_obj.h"
 extern void *sub_8026EDC(u32 size);
 extern void sub_80084A4(void *self);
@@ -220,7 +232,7 @@ void *sub_800FF0C(u16 id, u16 x, u16 y, u16 slot, u8 type)
         PhysSetTag(self, 0x1f);
         break;
     case 1:
-        self->unk_50 = (PLACEMENT(slot)[0] >> 6) & 1;
+        self->unk_50 = (u32)(PLACEMENT(slot)[0] << 25) >> 31;
         PhysSetTag(self, 0x1a);
         break;
     case 2:
@@ -295,7 +307,7 @@ void *sub_800FF0C(u16 id, u16 x, u16 y, u16 slot, u8 type)
             sub_8006DF8(gUnknown_030012B8, self->anim->records[8].unk_14);
             self->u48.n = (self->u48.n & 0x3f) & 0xf8;
             PhysSetTag(self, 7);
-            self->timer = gStaticData_0816BB94[(self->u48.n & 0x38) >> 3];
+            self->timer = gStaticData_0816BB94[(u32)(self->u48.n & 0x38) >> 3];
             self->unk_51 = rec[6];
             self->unk_50 = 0;
             if (rec[1] & 2)
@@ -331,6 +343,12 @@ void *sub_800FF0C(u16 id, u16 x, u16 y, u16 slot, u8 type)
         self->state = (self->state & 0x80) | type;
     }
     self->kind = type;
+    /* three extra references to `type`: raise its allocation priority so
+     * it gets r7 and slot*2 gets r8, as in the ROM (one or two are not
+     * enough) */
+    asm("" : : "r"(type));
+    asm("" : : "r"(type));
+    asm("" : : "r"(type));
     if (type == 5 && sub_802599C(gUnknown_030012B4, id))
         sub_800F5B8(self);
     sub_8009B70(*(void **)gUnknown_0300130C, self);

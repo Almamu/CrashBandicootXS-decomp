@@ -335,28 +335,21 @@ void sub_8011548(struct orbit_part *self)
  * `sub_8006DF8` bitfield combine `sub_8025A64`/`sub_8025CA4` already use,
  * then returns the new part.
  *
- * NAKED, not plain C: identical shape to `sub_8025A64`/`sub_8025CA4`
- * (game_loop29.c/game_loop14.c, both already matched NAKED for exactly
- * this reason) - `x`/`y`/`special` have to stay truncated-and-live in
- * `r8`/`sb` across the `sub_8026EDC`/`sub_80084A4`/`sub_80119EC` call
- * sequence, the confirmed `mov r_lo,r_hi`/`push {r_lo,...}` high-register
- * save dance this compiler only reproduces when the *unforced* allocator
- * picks those registers itself - transcribed straight from the
- * confirmed-correct ROM disassembly instead of fighting it. */
-#if NON_MATCHING
-/* Near miss under old_agbcc: same instructions, but the ROM keeps `id` in
- * r8, `special` in sb and `mode` in r7, and shares the +0x4B zero with the
- * frame clamp's compare; old_agbcc assigns those the other way round.
- * Later pass: here x/y/id/special live only in the first basic block, so
- * local-alloc takes r4-r6/r8 for them before global-alloc places `self`
- * (r7) and `mode` (sb). The ROM's layout (self r4, mode r7) is what you
- * get when all of them go through global-alloc; extra references after
- * the list `if`/`else` get that (self r4, &tag r5, phase r6), but change
- * the parameter copies. Passing `phase` into the clamp as its start value
- * (`if (start >= count)`) reproduces the +0x49 fresh zero / +0x4B shared
- * zero split. `mode` needs `asm("" : "=r"(mode) : "0"(0))` to be
- * referenced at all. Best combination found was still ~110 halfwords
- * off. */
+ * Matched (old_agbcc) with three nudges:
+ * - `self` is pinned to r4 for the spawn/list-join part. That keeps
+ *   local-alloc from handing r4 to the truncated u16 parameters (it puts
+ *   them in r5/r6/r8/sb, skipping r7 as it always does), which leaves r7
+ *   for the global `mode`, as in the ROM. After the list `if`/`else` the
+ *   code uses an unpinned copy `p`, so CSE can keep `&p->tag` in r5
+ *   across the anim-setup calls the way the ROM does (a hard-register
+ *   pointer loses that).
+ * - `mode` is a plain 0 set before the first call. CSE loses it at the
+ *   list `if`/`else` join, so the ROM's dead `cmp r7,#0xff` stays.
+ * - `phase` is 0 opaqued by an empty asm. The clamp compares it against the
+ *   frame count (`cmp r6,r0`) while the stored frame is a fresh 0, and
+ *   +0x4B stores it where +0x49 gets its own fresh zero. Writing the tag
+ *   through `t` with the byte `one` places the `mov r6,#0` between the
+ *   tag address and its `strb`. */
 extern void *gUnknown_030012EC;
 extern void *gUnknown_030012F4;
 extern void ***gUnknown_030012D0;
@@ -374,9 +367,10 @@ extern u8 sub_8006DF8(void *cache, u8 record);
 
 struct orbit_part *sub_801173C(u16 id, u16 x, u16 y, u16 special)
 {
-    struct orbit_part *self;
+    register struct orbit_part *self asm("r4");
+    struct orbit_part *p;
     u8 mode = 0;
-    u8 phase = 0;
+    u8 phase;
 
     self = sub_8026EDC(0x54);
     sub_80084A4(&self->base);
@@ -390,172 +384,39 @@ struct orbit_part *sub_801173C(u16 id, u16 x, u16 y, u16 special)
         sub_8008E94(gUnknown_030012F4, self);
     else
         sub_8008E94(gUnknown_030012EC, self);
-    self->bank = (struct act_anim_bank *)((u8 *)**gUnknown_030012D0 + 0xd2 * 2);
-    self->tag = 1;
-    sub_80087C0(self);
-    sub_80087B4(self);
-    sub_800872C(self, 0);
-    OrbitClampFrame(self);
-    self->flipX = 0;
-    self->flipY = 0;
-    self->counter = 0;
-    self->mode = mode;
-    self->phase = phase;
+    p = self;
+    p->bank = (struct act_anim_bank *)((u8 *)**gUnknown_030012D0 + 0xd2 * 2);
+    {
+        u8 one = 1;
+        u8 *t = &p->tag;
+
+        phase = 0;
+        /* opaque 0: keeps the clamp's `cmp r6,r0` and the +0x4B store
+         * from being folded to constants */
+        asm("" : "+r"(phase));
+        *t = one;
+    }
+    sub_80087C0(p);
+    sub_80087B4(p);
+    sub_800872C(p, 0);
+    {
+        s32 frame = 0;
+        s32 count = p->bank->records[p->tag].frameCount;
+
+        if (phase >= count)
+            frame = count - 1;
+        p->frame = frame;
+    }
+    p->flipX = 0;
+    p->flipY = 0;
+    p->counter = 0;
+    p->mode = mode;
+    p->phase = phase;
     if (mode == 0xff)
-        sub_801191C(&self->base);
-    self->slotNibble = sub_8006DF8(gUnknown_030012B8, self->bank->records->unk_14);
-    return self;
+        sub_801191C(&p->base);
+    p->slotNibble = sub_8006DF8(gUnknown_030012B8, p->bank->records->unk_14);
+    return p;
 }
-#else
-NAKED struct actor *sub_801173C(u16 id, u16 x, u16 y, u16 special)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sb\n\t"
-        "mov r6, r8\n\t"
-        "push {r6, r7}\n\t"
-        "mov r8, r0\n\t"
-        "add r5, r1, #0\n\t"
-        "add r6, r2, #0\n\t"
-        "mov sb, r3\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r0, r0, #0x10\n\t"
-        "mov r8, r0\n\t"
-        "lsl r5, r5, #0x10\n\t"
-        "lsr r5, r5, #0x10\n\t"
-        "lsl r6, r6, #0x10\n\t"
-        "lsr r6, r6, #0x10\n\t"
-        "mov r1, sb\n\t"
-        "lsl r1, r1, #0x10\n\t"
-        "lsr r1, r1, #0x10\n\t"
-        "mov sb, r1\n\t"
-        "mov r7, #0\n\t"
-        "mov r0, #0x54\n\t"
-        "bl sub_8026EDC\n\t"
-        "add r4, r0, #0\n\t"
-        "bl sub_80084A4\n\t"
-        "ldr r0, 1f\n\t"
-        "str r0, [r4, #0x18]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80119EC\n\t"
-        "mov r3, r8\n\t"
-        "strh r3, [r4, #8]\n\t"
-        "lsl r5, r5, #8\n\t"
-        "str r5, [r4]\n\t"
-        "lsl r6, r6, #8\n\t"
-        "str r6, [r4, #4]\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldr r1, [r4, #4]\n\t"
-        "str r0, [r4, #0x4c]\n\t"
-        "str r1, [r4, #0x50]\n\t"
-        "ldr r0, 2f\n\t"
-        "cmp sb, r0\n\t"
-        "bne 4f\n\t"
-        "ldr r0, 3f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r1, r4, #0\n\t"
-        "bl sub_8008E94\n\t"
-        "b 5f\n\t"
-        ".align 2, 0\n"
-    "1: .4byte gStaticData_087E414C\n"
-    "2: .4byte 0x0000FFFF\n"
-    "3: .4byte gUnknown_030012F4\n"
-    "4:\n\t"
-        "ldr r0, 9f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r1, r4, #0\n\t"
-        "bl sub_8008E94\n\t"
-    "5:\n\t"
-        "ldr r0, 10f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #0xd2\n\t"
-        "lsl r1, r1, #1\n\t"
-        "add r0, r0, r1\n\t"
-        "str r0, [r4, #0x20]\n\t"
-        "mov r0, #1\n\t"
-        "add r5, r4, #0\n\t"
-        "add r5, #0x2d\n\t"
-        "mov r6, #0\n\t"
-        "strb r0, [r5]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087C0\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087B4\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800872C\n\t"
-        "mov r2, #0\n\t"
-        "ldr r0, [r4, #0x20]\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldrb r3, [r5]\n\t"
-        "lsl r0, r3, #3\n\t"
-        "sub r0, r0, r3\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrb r0, [r0, #0x16]\n\t"
-        "cmp r6, r0\n\t"
-        "blt 6f\n\t"
-        "sub r2, r0, #1\n\t"
-    "6:\n\t"
-        "str r2, [r4, #0x30]\n\t"
-        "add r2, r4, #0\n\t"
-        "add r2, #0x28\n\t"
-        "mov r0, #0x11\n\t"
-        "neg r0, r0\n\t"
-        "ldrb r1, [r2]\n\t"
-        "and r0, r1\n\t"
-        "mov r1, #0x21\n\t"
-        "neg r1, r1\n\t"
-        "and r0, r1\n\t"
-        "strb r0, [r2]\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x49\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r1]\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x4a\n\t"
-        "strb r7, [r0]\n\t"
-        "add r0, #1\n\t"
-        "strb r6, [r0]\n\t"
-        "cmp r7, #0xff\n\t"
-        "bne 7f\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_801191C\n\t"
-    "7:\n\t"
-        "ldr r0, 11f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [r4, #0x20]\n\t"
-        "ldr r1, [r1]\n\t"
-        "ldrb r1, [r1, #0x14]\n\t"
-        "bl sub_8006DF8\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "add r2, r4, #0\n\t"
-        "add r2, #0x29\n\t"
-        "mov r1, #0xf\n\t"
-        "and r0, r1\n\t"
-        "mov r1, #0x10\n\t"
-        "neg r1, r1\n\t"
-        "ldrb r3, [r2]\n\t"
-        "and r1, r3\n\t"
-        "orr r1, r0\n\t"
-        "strb r1, [r2]\n\t"
-        "add r0, r4, #0\n\t"
-        "pop {r3, r4}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n"
-    "9: .4byte gUnknown_030012EC\n"
-    "10: .4byte gUnknown_030012D0\n"
-    "11: .4byte gUnknown_030012B8\n"
-    );
-}
-#endif
 
 /* sub_8011870: alternative to sub_80111B8 (game_loop29.c), called from
  * game_loop14.c "instead of sub_80111B8" per that file's own doc

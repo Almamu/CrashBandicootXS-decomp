@@ -13,8 +13,34 @@
  * the ROM loads the anim-record tag byte through a reload register (r3),
  * which this source's equivalent load does not need - so most
  * `movs rN, #c; str rN, [sp, #x]` pairs and hi-register base copies land
- * in different low registers. */
+ * in different low registers.
+ *
+ * Later pass (gap4): three structural fixes brought the draft from 1608
+ * bytes (40 short) to 1640 of 1648, 565 halfwords off under old_agbcc:
+ * - `switch (result)` gets an empty `case 0`. With cases 0, 1-2, 4 and 8
+ *   gcc builds the ROM's 9-entry jump table; without it (three case
+ *   ranges) it emitted a compare tree, which was the 40 missing bytes.
+ * - ox/oy go through the `Span` inline, so all three stack loads come
+ *   before the add/sub as in the ROM (the argument copies are evaluated
+ *   first).
+ * - Both `result = hdir` fallbacks for the ty range test are the `else`
+ *   arm, sharing one `set_hdir` block at the end of the chain. The ROM
+ *   reaches that block from the `above` side with `ble; b` (a far
+ *   branch).
+ * What's left is register-level, including the four missing instructions.
+ * All four are register copies: padY into r3 before the ty compare, and
+ * `add r2,r5` / `add r5,r2` around each sub_800FDC8 argument setup. The
+ * ROM also keeps `&b` in r4 into the no-collision switch. The draft
+ * re-adds sp there, and a `pb = &b` local keeps it live everywhere
+ * instead. The reload scratch registers are out of phase as described
+ * above. */
 #if NON_MATCHING
+
+/* x + w - o with the three operands evaluated first (see above) */
+static inline s32 Span(s32 x, s32 w, s32 o)
+{
+    return x + w - o;
+}
 
 void sub_801AB98(struct gobj *selfArg, void *unused)
 {
@@ -66,22 +92,22 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
         if ((gUnknown_030012D8->x >> 8) < (self->x >> 8))
         {
             hdir = 1;
-            ox = b.x + b.w - a.x + 1;
+            ox = Span(b.x, b.w, a.x) + 1;
         }
         else
         {
             hdir = 2;
-            ox = a.x + a.w - b.x + 1;
+            ox = Span(a.x, a.w, b.x) + 1;
         }
         if ((gUnknown_030012D8->y >> 8) > (self->y >> 8))
         {
             vdir = 4;
-            oy = a.y + a.h - b.y;
+            oy = Span(a.y, a.h, b.y);
         }
         else
         {
             vdir = 8;
-            oy = b.y + b.h - a.y;
+            oy = Span(b.y, b.h, a.y);
         }
         if (self->type != 1 && self->type != 5 && self->type != 6)
         {
@@ -109,9 +135,7 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
             if (result == 0)
             {
                 ty += box->offY + box->padY;
-                if (ty > a.y + a.h)
-                    result = hdir;
-                else
+                if (ty <= a.y + a.h)
                 {
                     s32 r;
 
@@ -144,14 +168,14 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
                             result = hdir;
                     }
                 }
+                else
+                    goto set_hdir;
             }
         }
         else if (result == 0)
         {
             ty += box->offY;
-            if (ty < a.y)
-                result = hdir;
-            else
+            if (ty >= a.y)
             {
                 s32 r;
 
@@ -184,6 +208,11 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
                         result = hdir;
                 }
             }
+            else
+            {
+            set_hdir:
+                result = hdir;
+            }
         }
 
         pos.x = gUnknown_030012D8->x;
@@ -196,6 +225,8 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
         flags = 0;
         switch (result)
         {
+        case 0: /* empty case: makes gcc use the ROM's jump table */
+            break;
         case 4:
             {
                 struct gobj *q = gUnknown_030012D8;

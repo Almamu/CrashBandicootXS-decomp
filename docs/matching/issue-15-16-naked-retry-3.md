@@ -70,6 +70,10 @@ themselves. So did the first draft's "temporaries in r6".
   +0x49 and the shared zero at +0x4B. `mode` is only referenced at all
   after `asm("" : "=r"(mode) : "0"(0))`. Best found: about 110
   halfwords off.
+  *Later pass (gap4): closed.* Pinning `self` to r4 until the list
+  `if`/`else` keeps local-alloc off r4, which gives the ROM's parameter
+  registers and leaves r7 for `mode`. An unpinned copy is used after the
+  join. See [gap4-naked-retry.md](gap4-naked-retry.md).
 - **`sub_8011548`.** New draft, modelled on `sub_8010F8C`'s
   (`game_loop54.c`). The mode-3 spawn uses `game_loop48.c`'s
   argP4/argP5 stack-argument trick. Control flow and calls are right,

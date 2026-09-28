@@ -948,7 +948,17 @@ void sub_801A03C(struct boss *self, u16 x, u16 y, u8 facing)
  * (CSE can't see its constant there); the ROM then keeps it in r5, gcc
  * rematerializes it into a scratch register. Plain-block VCALL1 (the fix
  * for sub_801A03C) and hard-register or empty-asm tricks didn't move the
- * allocation. */
+ * allocation.
+ * Later pass (gap4): the size gap (392 vs 404) is only the extra
+ * hi-register saves and moves. The ROM's four globals come out in the
+ * same priority order as the draft's (self, &b, other, &gUnknown_030012D8),
+ * starting at r7 instead of r5. So r5 and r6 must be taken by something
+ * live across the first half that emits no code of its own. Pinning `bld`
+ * to r5 and setting it before the first call moves self to r6 and shifts
+ * everything else one step toward the ROM. No natural source for the
+ * second blocker (r6) was found. Extra `other` references, an
+ * uninitialised `bld` and a live-from-entry pinned dummy were tried: they
+ * either fold the orr chain or leave `&b` in r5. */
 #if NON_MATCHING
 void sub_801A114(struct obj_490c *self, struct part *other)
 {
