@@ -893,8 +893,9 @@ from "core" graphics.
   whole file matches under it; `sub_8034CEC`, `sub_8034EF0` and
   `sub_80350A4` need it) - see
   [docs/matching/issue-64-65-naked-retry.md](../matching/issue-64-65-naked-retry.md);
-  `sub_80352AC` is still NAKED (see "Parked - NAKED transcription"
-  below) - see
+  `sub_80352AC` was the last NAKED function there and is real C since
+  the size2 NAKED retry
+  ([docs/matching/size2-naked-retry.md](../matching/size2-naked-retry.md)) - see
   [docs/matching/issue-64-0x08034aa4-actor.md](../matching/issue-64-0x08034aa4-actor.md).
 
 - `src/graphics/actor_part19e.c` (`sub_802C208`),
@@ -1075,6 +1076,18 @@ See [docs/matching/mid-range-naked-retry-4.md](../matching/mid-range-naked-retry
 
 See [docs/matching/sp-box-retry.md](../matching/sp-box-retry.md).
 
+### Matched in the size2 NAKED retry
+
+- `src/graphics/actor_part131.c` - `sub_80352AC` (issue #64, the map
+  screen's popup-text asset loader), old_agbcc. A non-volatile asm with
+  outputs is an ordinary expression to GCSE, so PRE hoisted even a
+  `"+r"` copy of `slot`. The palette index is a copy passed through
+  `asm volatile`, which GCSE never enters in its table; `slot + 1` is
+  still hoisted as in the ROM. The copy is an r1 register variable with
+  one extra reference after the shift, so the shift result lands in r0.
+
+See [docs/matching/size2-naked-retry.md](../matching/size2-naked-retry.md).
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
@@ -1169,7 +1182,7 @@ plain C didn't converge.
 - **`sub_80156EC`** (`src/graphics/actor_part38c.c`) -
   `part+0x38`/`sub_80231BC`-gated mgr-trampoline dispatcher. See
   `docs/matching/issue-18-0x08014f8c-actor.md`.
-- **`sub_80352AC`** (`src/graphics/actor_part131.c`, GitHub issue #64) -
+- **Now matched as real C (size2 NAKED retry, see Matched and docs/matching/size2-naked-retry.md); entry kept for history.** **`sub_80352AC`** (`src/graphics/actor_part131.c`, GitHub issue #64) -
   the map screen's popup-text asset loader. The issue #64/#65 NAKED
   retry left a near-miss C draft under `#if NON_MATCHING` (old_agbcc):
   the "seven live values" allocation is right; what is left is that gcc

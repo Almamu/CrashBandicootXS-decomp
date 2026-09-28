@@ -197,3 +197,9 @@ Verified byte-exact via a full clean `make compare`
   `asm/code_3_2_17_e560_ff0c.o` in link order (immediately before
   `game_loop35.o`).
 - `asm/code_3_2_17_e560_ff0c.s` - deleted, fully consumed.
+
+*Later pass (size2 NAKED retry):* `sub_800FF0C` is real C under
+old_agbcc (`game_loop36.o` joined `OLD_AGBCC_OBJS`; under agbcc the C is
+8 bytes long). The three placement-record pointer copies come from an
+inline `Placement(slot)` whose return value is copied; the other reads
+use the plain macro. See [size2-naked-retry.md](size2-naked-retry.md).

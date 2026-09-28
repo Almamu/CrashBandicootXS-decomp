@@ -129,3 +129,6 @@ on. Still NAKED; see [big-naked-retry.md](big-naked-retry.md).
   touched files.
 - `rm -rf build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make compare`:
   `crashbandicootxs.gba: OK`.
+
+*Later pass (size2 NAKED retry):* `sub_80352AC` is matched; see
+[size2-naked-retry.md](size2-naked-retry.md).

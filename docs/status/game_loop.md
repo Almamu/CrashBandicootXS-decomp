@@ -235,7 +235,13 @@ system from "core" system startup/init code.
   gcc-2.9-resistant shape already established for `sub_0800D18C`/
   `sub_800E08C` (game_loop47.c/game_loop48.c). See
   [docs/matching/issue-13-0x0800ff0c-graphics.md](../matching/issue-13-0x0800ff0c-graphics.md)
-  for the full type-code-to-behavior table.
+  for the full type-code-to-behavior table. *Later pass (size2 NAKED
+  retry):* real C under old_agbcc (`game_loop36.o` joined
+  `OLD_AGBCC_OBJS`). The ROM's three placement-record pointer copies
+  come from reading the record through an inline `Placement(slot)`
+  (its return value is copied) in the 0xb pre-check, the `flagged`
+  block and case 15. See
+  [docs/matching/size2-naked-retry.md](../matching/size2-naked-retry.md).
 - `src/system/game_loop35.c` (GitHub issue #13, third pass, new file -
   it sits between `sub_800FF0C` (now `game_loop36.c`) and `sub_80104E4`,
   so it can't join either neighbor's file): `sub_8010480` - a
@@ -492,6 +498,10 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   in the ROM). An r0/r1 hard-register hold puts the post-fade
   player-position copy's pointer in r2. See
   [docs/matching/hard-register-hold-retry.md](../matching/hard-register-hold-retry.md).
+- **Size2 NAKED retry:** `sub_800FF0C` (`game_loop36.c`, issue #13, the
+  entity constructor behind the trampoline family) promoted from NAKED
+  to real C under old_agbcc (`game_loop36.o` joined `OLD_AGBCC_OBJS`).
+  See [docs/matching/size2-naked-retry.md](../matching/size2-naked-retry.md).
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
