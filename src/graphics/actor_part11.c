@@ -204,34 +204,17 @@ struct dual_array_manager *sub_8008EE4(struct dual_array_manager *manager, s32 c
  * isn't needed to confirm every individual load/store here, which are
  * all confirmed correct.
  *
- * PARKED AS NAKED: this compiler allocates the persistent cross-loop
- * values (item count, the +0x810/+0x814 field addresses, the loop
- * index reused from the zero-fill counter, the running "next" byte
- * offset) across r3/sb/sl/r4/r8 in a specific combination no C-level
- * reconstruction tried reproduces - the isolated compile produces the
- * right *shape* (same branches, same use of `ip`/r8, and even a
- * matching high-register save/restore prologue/epilogue) but a
- * different concrete register assignment for several of the four
- * long-lived scalars. Hand-transcribed instruction-for-instruction
- * from the ROM disassembly instead, the same technique already
- * established for this exact class of many-register allocation gap
- * (`sub_8010B6C`, game_loop28.c) - the ROM's suffixed Thumb mnemonics
- * (`movs`/`adds`/`subs`/`lsls`) are written in their suffix-less forms
- * here (`mov`/`add`/`sub`/`lsl`), which this project's assembler
- * invocation accepts identically. `sub_8009914`'s own tail is a
- * byte-for-byte copy of this function's free-list-build loop and hits
- * the identical gap - see that function's own writeup
- * (`actor_part11i.c`) for the shared technique applied there. See
- * docs/matching.md, "Parked, not matched: sub_8008F20". */
-/* Later pass (docs/matching/issue-9-naked-retry.md): the draft below
- * (old_agbcc) has the ROM's size and shape - the tail is an inline
- * helper (sub_8009914 ends with the same code), the grid clear a goto
- * loop, the free-list loop a guarded do-while - and is 15 halfwords
- * off, all register choice around the grid clear: the ROM keeps the
- * cached count in r3 and copies `&freeListArray` into ip straight from
- * sb at the loop head, where this C keeps the address live in r1
- * through the grid clear, pushing the count to r6. */
-#if NON_MATCHING
+ * Real C (issue #9-#11 NAKED retry; matches under both compilers). The
+ * tail is the `PoolResetFreeList` inline (sub_8009914 ends with the same
+ * code). Two source details carry the register assignment the old
+ * notes blamed on the allocator: the grid clear is a plain indexed
+ * `for` loop (gcc reverses it into the ROM's `i = 255 .. 0` countdown
+ * with two post-increment pointers), and the free-list loop reads the
+ * wrapper array through a `fl = freeList` copy taken inside the
+ * `if (i < n)` guard, right before the `do` - that is the ROM's
+ * `mov ip, sb` at the loop head. With `m->freeListArray` read directly
+ * instead, the loop optimizer hoists `m + 0x810` above the grid clear,
+ * which ties up r1 there and pushes the cached count out of r3. */
 struct pool_init_link;
 
 struct pool_init_node {
@@ -264,37 +247,32 @@ static inline void PoolResetFreeList(struct pool_init *m)
     s32 n = m->capacity;
     struct pool_init_link **freeList = &m->freeListArray;
     struct pool_init_link **freeHead = &m->freeListHead;
-    {
-        void *zero = NULL;
-        void **tail = m->gridTail;
-        void **head = m->gridHead;
+    struct pool_init_link **fl;
 
-        i = 255;
-    loop:
-        *head = zero;
-        head++;
-        *tail = zero;
-        tail++;
-        if (--i >= 0)
-            goto loop;
+    for (i = 0; i < 256; i++) {
+        m->gridHead[i] = NULL;
+        m->gridTail[i] = NULL;
     }
     i = 0;
-    if (i < n) do {
-        struct pool_init_link *link;
-        struct pool_init_link *arr;
+    if (i < n) {
+        fl = freeList;
+        do {
+            struct pool_init_link *link;
+            struct pool_init_link *arr;
 
-        m->freeListArray[i].node = &m->nodeArray[i];
-        m->nodeArray[i].unk_00 = NULL;
-        m->nodeArray[i].unk_04 = NULL;
-        m->nodeArray[i].unk_0C = NULL;
-        m->nodeArray[i].unk_10 = 0;
-        m->nodeArray[i].link = link = &(arr = m->freeListArray)[i];
-        if (i == m->capacity - 1)
-            link->next = NULL;
-        else
-            link->next = &arr[i + 1];
-        i++;
-    } while (i < m->capacity);
+            (*fl)[i].node = &m->nodeArray[i];
+            m->nodeArray[i].unk_00 = NULL;
+            m->nodeArray[i].unk_04 = NULL;
+            m->nodeArray[i].unk_0C = NULL;
+            m->nodeArray[i].unk_10 = 0;
+            m->nodeArray[i].link = link = &(arr = *fl)[i];
+            if (i == m->capacity - 1)
+                link->next = NULL;
+            else
+                link->next = &arr[i + 1];
+            i++;
+        } while (i < m->capacity);
+    }
     *freeHead = *freeList;
 }
 
@@ -323,132 +301,6 @@ struct pool_init *sub_8008F20(struct pool_init *m, s32 count)
     PoolResetFreeList(m);
     return m;
 }
-#else
-NAKED void *sub_8008F20(void *manager, s32 count)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sl\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6, r7}\n\t"
-        "add r5, r0, #0\n\t"
-        "add r0, r1, #0\n\t"
-        "mov r1, #0\n\t"
-        "str r1, [r5]\n\t"
-        "str r0, [r5, #4]\n\t"
-        "lsl r0, r0, #2\n\t"
-        "bl sub_8026EC0\n\t"
-        "str r0, [r5, #8]\n\t"
-        "ldr r1, [r5, #4]\n\t"
-        "lsl r0, r1, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r0, r0, #2\n\t"
-        "bl sub_8026EC0\n\t"
-        "str r0, [r5, #0xc]\n\t"
-        "mov r0, #0x81\n\t"
-        "lsl r0, r0, #4\n\t"
-        "add r4, r5, r0\n\t"
-        "ldr r0, [r5, #4]\n\t"
-        "lsl r0, r0, #3\n\t"
-        "bl sub_8026EC0\n\t"
-        "str r0, [r4]\n\t"
-        "ldr r0, [r5, #4]\n\t"
-        "cmp r0, #0\n\t"
-        "ble 2f\n\t"
-        "mov r2, #0\n\t"
-        "ldr r1, [r5, #8]\n\t"
-    "1:\n\t"
-        "stm r1!, {r2}\n\t"
-        "sub r0, #1\n\t"
-        "cmp r0, #0\n\t"
-        "bne 1b\n\t"
-    "2:\n\t"
-        "ldr r3, [r5, #4]\n\t"
-        "mov r1, #0x81\n\t"
-        "lsl r1, r1, #4\n\t"
-        "add r1, r1, r5\n\t"
-        "mov sb, r1\n\t"
-        "ldr r2, 5f\n\t"
-        "add r2, r2, r5\n\t"
-        "mov sl, r2\n\t"
-        "mov r0, #0\n\t"
-        "mov r1, #0x82\n\t"
-        "lsl r1, r1, #3\n\t"
-        "add r2, r5, r1\n\t"
-        "add r1, r5, #0\n\t"
-        "add r1, #0x10\n\t"
-        "mov r4, #0xff\n\t"
-    "3:\n\t"
-        "stm r1!, {r0}\n\t"
-        "stm r2!, {r0}\n\t"
-        "sub r4, #1\n\t"
-        "cmp r4, #0\n\t"
-        "bge 3b\n\t"
-        "mov r4, #0\n\t"
-        "cmp r4, r3\n\t"
-        "bge 8f\n\t"
-        "mov ip, sb\n\t"
-        "mov r7, #0\n\t"
-        "mov r2, #8\n\t"
-        "mov r8, r2\n\t"
-        "mov r6, #0\n\t"
-    "4:\n\t"
-        "mov r0, ip\n\t"
-        "ldr r1, [r0]\n\t"
-        "lsl r2, r4, #3\n\t"
-        "add r1, r2, r1\n\t"
-        "ldr r0, [r5, #0xc]\n\t"
-        "add r0, r0, r6\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r0, [r5, #0xc]\n\t"
-        "add r0, r6, r0\n\t"
-        "str r7, [r0]\n\t"
-        "str r7, [r0, #4]\n\t"
-        "str r7, [r0, #0xc]\n\t"
-        "strb r7, [r0, #0x10]\n\t"
-        "ldr r0, [r5, #0xc]\n\t"
-        "add r0, r6, r0\n\t"
-        "mov r1, ip\n\t"
-        "ldr r3, [r1]\n\t"
-        "add r1, r3, r2\n\t"
-        "str r1, [r0, #8]\n\t"
-        "ldr r0, [r5, #4]\n\t"
-        "sub r0, #1\n\t"
-        "cmp r4, r0\n\t"
-        "bne 6f\n\t"
-        "str r7, [r1, #4]\n\t"
-        "b 7f\n\t"
-        ".align 2, 0\n"
-    "5: .4byte 0x00000814\n"
-    "6:\n\t"
-        "mov r2, r8\n\t"
-        "add r0, r3, r2\n\t"
-        "str r0, [r1, #4]\n\t"
-    "7:\n\t"
-        "mov r0, #8\n\t"
-        "add r8, r0\n\t"
-        "add r6, #0x14\n\t"
-        "add r4, #1\n\t"
-        "ldr r0, [r5, #4]\n\t"
-        "cmp r4, r0\n\t"
-        "blt 4b\n\t"
-    "8:\n\t"
-        "mov r1, sb\n\t"
-        "ldr r0, [r1]\n\t"
-        "mov r2, sl\n\t"
-        "str r0, [r2]\n\t"
-        "add r0, r5, #0\n\t"
-        "pop {r3, r4, r5}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov sl, r5\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-    );
-}
-#endif /* NON_MATCHING */
 asm(".align 2, 0");
 
 /* Same pool-manager struct sub_8008F20 initializes and actor_part12.c

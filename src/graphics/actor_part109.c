@@ -73,6 +73,98 @@
  * that fragment is trimmed to end right before this function, with the
  * remainder from `sub_800CEAC` onward moved to the new
  * `asm/code_3_2_17_ceac.s`). */
+#if NON_MATCHING
+/* C draft (issue #9-#11 NAKED retry, old_agbcc): 42 halfwords off. The
+ * two stack boxes are one frame struct and everything but two spots
+ * matches: the ROM rematerializes the player box's address with
+ * `add r0, sp, #16` for its first build and only takes it into r6 at the
+ * first overlap test, where CSE here keeps it in r6 from the first build
+ * on; and the player record's address lands in r0 instead of r1. */
+#include "box_part.h"
+
+extern void sub_803AFE4(struct part_aabb *buf, s32 x, s32 y);
+extern void sub_803AFDC(struct part_aabb *buf, s32 w, s32 h);
+extern u8 sub_8001640(struct part_aabb *a, struct part_aabb *b);
+extern struct box_part *gUnknown_030012D8;
+
+u8 sub_800CD00(struct box_part *self, s32 action)
+{
+    struct {
+        struct part_aabb a;
+        struct part_aabb b;
+    } f;
+    struct part_aabb *pb;
+    s32 px, py;
+    u8 state = self->state;
+
+    if (state == 5 || state == 0xa)
+        return 0;
+    {
+        u8 *rec = (u8 *)&(*self->keyframes)[self->frame];
+        struct part_box *q = (struct part_box *)(rec + 4);
+        s32 offX, offY;
+        u8 w, h;
+
+        px = self->x >> 8;
+        py = self->y >> 8;
+        offX = q->offX;
+        offY = q->offY;
+        w = q->w;
+        h = q->h;
+        sub_803AFE4(&f.a, offX + px, offY + py);
+        sub_803AFDC(&f.a, w, h);
+        if (self->mirrorX)
+            f.a.x = px * 2 - (f.a.x + f.a.w);
+        if (self->mirrorY)
+            f.a.y = py * 2 - (f.a.y + f.a.h);
+    }
+    {
+        struct box_part *pl = gUnknown_030012D8;
+        u8 *rec;
+        struct part_box *q;
+        s32 offX, offY;
+        u8 w, h;
+
+        px = pl->x >> 8;
+        py = pl->y >> 8;
+        rec = (u8 *)&(*pl->keyframes)[pl->frame];
+        q = (struct part_box *)(rec + 4);
+        offX = q->offX;
+        offY = q->offY;
+        w = q->w;
+        h = q->h;
+        sub_803AFE4(&f.b, offX + px, offY + py);
+        sub_803AFDC(&f.b, w, h);
+        if (gUnknown_030012D8->mirrorX)
+            f.b.x = px * 2 - (f.b.x + f.b.w);
+        if (gUnknown_030012D8->mirrorY)
+            f.b.y = py * 2 - (f.b.y + f.b.h);
+    }
+    pb = &f.b;
+    if (sub_8001640(&f.a, pb))
+        return 0;
+    {
+        u8 *rec = (u8 *)&(*gUnknown_030012D8->keyframes)[action];
+        struct part_box *q = (struct part_box *)(rec + 4);
+        s32 offX, offY;
+        u8 w, h;
+
+        offX = q->offX;
+        offY = q->offY;
+        w = q->w;
+        h = q->h;
+        sub_803AFE4(pb, offX + px, offY + py);
+        sub_803AFDC(pb, w, h);
+        if (gUnknown_030012D8->mirrorX)
+            f.b.x = px * 2 - (f.b.x + f.b.w);
+        if (gUnknown_030012D8->mirrorY)
+            f.b.y = py * 2 - (f.b.y + f.b.h);
+    }
+    if (sub_8001640(&f.a, pb) != 1)
+        return 0;
+    return 1;
+}
+#else
 NAKED u8 sub_800CD00(void *self, s32 x)
 {
     asm(
@@ -293,3 +385,4 @@ NAKED u8 sub_800CD00(void *self, s32 x)
         ".align 2, 0\n"
     );
 }
+#endif

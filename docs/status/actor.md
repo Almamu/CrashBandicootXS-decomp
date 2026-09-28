@@ -11,6 +11,13 @@ from "core" graphics.
 
 ## Matched
 
+- **Issue #9-#11 box/collision NAKED retry** ([docs/matching/issue-9-11-box-naked-retry.md](../matching/issue-9-11-box-naked-retry.md)):
+  `sub_8007DBC` (`actor_part2.c`), `sub_800891C` (`actor_part7.c`),
+  `sub_8008F20` (`actor_part11.c`), `sub_8009914` (`actor_part11i.c`),
+  `sub_8009BE0` (`actor_part12b.c`) and `sub_800A178`/`sub_800A420`
+  (`actor_part110.c`) are real C now; they were NAKED. `actor_part2.o`
+  and `actor_part110.o` moved to old_agbcc (whole-file matches).
+
 - **Issues #48/#49/#52 NAKED retry** ([docs/matching/issue-48-49-52-aabb-naked-retry.md](../matching/issue-48-49-52-aabb-naked-retry.md)):
   the AABB-overlap group `sub_802A018`, `sub_802A110`, `sub_802A3AC`
   (`actor_part103.c`) and `sub_802C7A8` (`actor_part19h.c`) - one shared
@@ -20,6 +27,7 @@ from "core" graphics.
   branch; `sub_80297C8` (`actor_part95.c`); and the trampolines
   `sub_802A674`/`sub_802A688` (`actor_part94.c`), which return the
   callee's result.
+
 - **Actor-zone NAKED near-miss retry** ([docs/matching/actor-zone-naked-retry.md](../matching/actor-zone-naked-retry.md)):
   the AABB-overlap trio `sub_802D7B0` (`actor_part74.c`), `sub_802DD9C`
   (`actor_part75.c`) and `sub_8031378` (`actor_part24b.c`) - the boxes
@@ -956,7 +964,7 @@ plain C didn't converge.
   parked on a cross-branch register-role gap (`r8` reused for two
   different base addresses). See
   `docs/matching/naked-spatial-grid-tail.md`.
-- **`sub_8009BE0`** (`src/graphics/actor_part12b.c`) - a physics/
+- **Now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/issue-9-11-box-naked-retry.md); entry kept for history.** **`sub_8009BE0`** (`src/graphics/actor_part12b.c`) - a physics/
   collision step-probe: runs `self`'s position through `sub_8008278`,
   then probes it via `sub_8026628` up to 4 times (nudging Y each
   retry) before giving up. Fully understood; parked on a register-
@@ -975,7 +983,7 @@ plain C didn't converge.
   register-reuse pattern across AABB blocks) - not re-attempted as C
   here; transcribed directly as byte-exact NAKED asm instead. See
   [docs/matching/issue-9-10-0x0800aaec-graphics.md](../matching/issue-9-10-0x0800aaec-graphics.md).
-- **`sub_800A178`/`sub_800A420`** (`src/graphics/actor_part110.c`,
+- **Now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/issue-9-11-box-naked-retry.md); entry kept for history.** **`sub_800A178`/`sub_800A420`** (`src/graphics/actor_part110.c`,
   GitHub issue #9/#10) - the part-object movement-resolution pair
   `docs/matching/issue-9-0x08007634-actor.md` flagged as built on
   `sub_8008200`/`sub_8026628`/`sub_8026C3C`/`sub_8026BF8` (the first
@@ -1149,7 +1157,7 @@ entire function body is hand-transcribed disassembly wrapped in inline
 `asm()` - the C-level matching attempt failed and the raw bytes got
 embedded as asm instead. They're tracked as parked, not matched.
 
-- **`sub_8007DBC`** (`src/graphics/actor_part2.c`) - the player-collision
+- **Now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/issue-9-11-box-naked-retry.md); entry kept for history.** **`sub_8007DBC`** (`src/graphics/actor_part2.c`) - the player-collision
   "kind" spawner. Hits this project's confirmed categorical r7-pin
   compiler bug. GitHub issue not tracked separately, see
   `docs/matching/naked-sub_8007dbc.md`.
@@ -1464,7 +1472,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   see "Matched" above and `docs/matching.md`'s "Parked, not matched:
   sub_8008770"/"Parked, not matched: sub_8008188" entries (and the
   latter's siblings) for those accounts.
-- **`sub_8008F20`** (`src/graphics/actor_part11.c`) - initializes a
+- **Now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/issue-9-11-box-naked-retry.md); entry kept for history.** **`sub_8008F20`** (`src/graphics/actor_part11.c`) - initializes a
   fixed-slot object-pool manager struct: two big 256-word zeroed
   tables (likely a pair of spatial-partition/collision grids), plus a
   singly-linked free list built over an allocated node array. Every
@@ -1511,7 +1519,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   `docs/matching.md`, "Parked, not matched: `sub_80096C0`".
   `sub_8008AD8` itself (`src/graphics/actor_part7.c`) is unaffected by
   this change and remains its own separate `NAKED` function.
-- **`sub_8009914`** (`src/graphics/actor_part11i.c`, new file - its
+- **Now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/issue-9-11-box-naked-retry.md); entry kept for history.** **`sub_8009914`** (`src/graphics/actor_part11i.c`, new file - its
   real ROM address, `0x08009914`, doesn't sit adjacent to
   `actor_part11.c`'s own functions, the same reason `sub_80096C0`
   above got its own `actor_part11e.c` (named "i" - `sub_8009528`

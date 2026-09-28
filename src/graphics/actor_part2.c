@@ -178,33 +178,18 @@ extern void *gUnknown_030012B4;
  * `+0x28`/`+0xc` flag bytes get tagged - kept as raw offsets since the
  * spawned object's own type isn't established yet.
  *
- * Written as NAKED asm, not plain C: every instruction's operation,
- * operand, and order was already confirmed against the ROM by the
- * earlier plain-C reconstruction (the paragraph above is that
- * derivation) - the only gap was one systematic register choice, the
- * cached address of the `gUnknown_030012D8` global landing in r6
- * instead of the ROM's r7, cascading into nearly every later register
- * number since it's read from repeatedly across several basic blocks
- * (both collision-AABB calls, the sound-position lookup). This is
- * this project's well-documented "explicit `register T x asm("r7")`
- * pin compiles correct instructions/order but silently drops r7 from
- * the prologue/epilogue push/pop list" gcc-2.9 bug - and here it's
- * worse than usual: pinning the cached-address local directly to r7
- * crashes the compiler outright (`internal error--unrecognizable
- * insn`) instead of just mis-scheduling. Register-pinning archaeology
- * is a dead end for this specific function, confirmed multiple ways -
- * full NAKED transcription instead, like this project's other
- * hard-compiler-limitation cases (`src/system/link_cable.c`'s several
- * NAKED functions, `src/audio/gax_swi.c`'s `sub_80392C4`). See
- * docs/matching/naked-sub_8007dbc.md for the conversion write-up. */
-/* Later pass (docs/matching/issue-9-naked-retry.md): under old_agbcc
- * the draft below gets the r7-cached global and everything else right
- * and is 42 halfwords off in two spots: the `gone` bit set (the ROM ORs
- * in the r6 constant 1 kept from the flag tests, `ldrb; orrs r0, r6`,
- * where this C rematerializes `movs #1` first and instead reuses r6 for
- * the bitmap's `1 << bit`), and the spawned part's mode/flag update
- * (the ROM materializes `movs r1, #1` before the `-4` mask). */
-#if NON_MATCHING
+ * Real C under old_agbcc (issue #9-#11 NAKED retry; the whole file
+ * matches under it, so actor_part2.o is in OLD_AGBCC_OBJS - old_agbcc
+ * is also what puts the cached player global in r7). Two details: the
+ * flag tests' constant 1 is a variable pinned to r6 and assigned inside
+ * the first test (`& (one = 1)`), and the `gone` OR uses it (`orrs r0,
+ * r6`) - as a plain constant CSE rematerializes it; and the spawned
+ * part's `mode = 1` goes through a `u32` local, which materializes the
+ * 1 before the `-4` mask as the ROM does. */
+/* The player's +0x68 method call goes through libgcc's `_call_via_r4`,
+ * which is sub_803AD88 in this ROM. */
+asm(".set _call_via_r4, sub_803AD88\n");
+
 struct collect_method {
     s16 thisOffset;
     u8 unk_02[2];
@@ -243,8 +228,9 @@ s32 sub_8007DBC(struct collect_part *part)
     struct collect_part *player;
     struct collect_part *spawned;
     u32 flags = COLLECT_FLAGS(part) << 24;
+    register u32 one asm("r6");
 
-    if (!((flags >> 27) & 1) && ((flags >> 26) & 1)) {
+    if (!((flags >> 27) & (one = 1)) && ((flags >> 26) & one)) {
         sub_8007B98(&a, part);
         if (COLLECT_FLAGS(gUnknown_030012D8) >> 7) {
             sub_8007B98(&b, gUnknown_030012D8);
@@ -255,7 +241,7 @@ s32 sub_8007DBC(struct collect_part *part)
                     struct collect_method *m = (struct collect_method *)(player->vtable + 0x68);
                     m->fn((u8 *)player + m->thisOffset, 0, part->kind, 0);
                 }
-                COLLECT_FLAGS(part) |= 1;
+                COLLECT_FLAGS(part) |= one;
                 if (part->id != 0xFFFF) do {
                     s32 id = part->id;
                     u8 *base = gUnknown_030012B4;
@@ -290,7 +276,9 @@ s32 sub_8007DBC(struct collect_part *part)
                     break;
                 }
                 if (spawned) {
-                    spawned->mode = 1;
+                    u32 m1 = 1;
+
+                    spawned->mode = m1;
                     spawned->visible = 0;
                 }
             }
@@ -298,229 +286,4 @@ s32 sub_8007DBC(struct collect_part *part)
     }
     return 0;
 }
-#else
-NAKED void sub_8007DBC(struct actor *part)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "sub sp, #0x28\n\t"
-        "add r5, r0, #0\n\t"
-        "ldrb r0, [r5, #0xc]\n\t"
-        "lsl r1, r0, #0x18\n\t"
-        "lsr r0, r1, #0x1b\n\t"
-        "mov r6, #1\n\t"
-        "and r0, r6\n\t"
-        "cmp r0, #0\n\t"
-        "beq 1f\n\t"
-        "b 24f\n\t"
-    "1:\n\t"
-        "lsr r0, r1, #0x1a\n\t"
-        "and r0, r6\n\t"
-        "cmp r0, #0\n\t"
-        "bne 2f\n\t"
-        "b 24f\n\t"
-    "2:\n\t"
-        "add r0, sp, #8\n\t"
-        "add r1, r5, #0\n\t"
-        "bl sub_8007B98\n\t"
-        "ldr r7, 6f\n\t"
-        "ldr r1, [r7]\n\t"
-        "ldrb r2, [r1, #0xc]\n\t"
-        "lsr r0, r2, #7\n\t"
-        "cmp r0, #0\n\t"
-        "bne 3f\n\t"
-        "b 24f\n\t"
-    "3:\n\t"
-        "add r4, sp, #0x18\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_8007B98\n\t"
-        "add r0, r4, #0\n\t"
-        "add r1, sp, #8\n\t"
-        "bl sub_8001688\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "bne 4f\n\t"
-        "b 24f\n\t"
-    "4:\n\t"
-        "mov r0, #8\n\t"
-        "ldrb r3, [r5, #0xc]\n\t"
-        "orr r0, r3\n\t"
-        "strb r0, [r5, #0xc]\n\t"
-        "ldr r0, [r7]\n\t"
-        "ldr r1, [r0, #0x18]\n\t"
-        "add r1, #0x68\n\t"
-        "mov r4, #0\n\t"
-        "ldrsh r2, [r1, r4]\n\t"
-        "add r0, r0, r2\n\t"
-        "ldrb r2, [r5, #0xa]\n\t"
-        "ldr r4, [r1, #4]\n\t"
-        "mov r1, #0\n\t"
-        "mov r3, #0\n\t"
-        "bl sub_803AD88\n\t"
-        "ldrb r0, [r5, #0xc]\n\t"
-        "orr r0, r6\n\t"
-        "strb r0, [r5, #0xc]\n\t"
-        "ldr r0, 7f\n\t"
-        "ldrh r1, [r5, #8]\n\t"
-        "cmp r1, r0\n\t"
-        "beq 5f\n\t"
-        "ldrh r3, [r5, #8]\n\t"
-        "ldr r0, 8f\n\t"
-        "ldr r2, [r0]\n\t"
-        "add r0, r3, #0\n\t"
-        "asr r0, r0, #5\n\t"
-        "lsl r1, r0, #2\n\t"
-        "mov r4, #0x84\n\t"
-        "lsl r4, r4, #1\n\t"
-        "add r2, r2, r4\n\t"
-        "add r2, r2, r1\n\t"
-        "lsl r0, r0, #5\n\t"
-        "sub r0, r3, r0\n\t"
-        "mov r1, #1\n\t"
-        "lsl r1, r0\n\t"
-        "ldr r0, [r2]\n\t"
-        "orr r0, r1\n\t"
-        "str r0, [r2]\n\t"
-    "5:\n\t"
-        "mov r3, #0\n\t"
-        "ldrb r0, [r5, #0xa]\n\t"
-        "sub r0, #0x1b\n\t"
-        "cmp r0, #7\n\t"
-        "bhi 23f\n\t"
-        "lsl r0, r0, #2\n\t"
-        "ldr r1, 9f\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov pc, r0\n\t"
-        ".align 2, 0\n"
-    "6: .4byte gUnknown_030012D8\n"
-    "7: .4byte 0x0000FFFF\n"
-    "8: .4byte gUnknown_030012B4\n"
-    "9: .4byte 10f\n"
-    "10: .4byte 21f\n\t"
-        ".4byte 23f\n\t"
-        ".4byte 11f\n\t"
-        ".4byte 11f\n\t"
-        ".4byte 15f\n\t"
-        ".4byte 19f\n\t"
-        ".4byte 13f\n\t"
-        ".4byte 17f\n"
-    "11:\n\t"
-        "ldr r3, [r5]\n\t"
-        "asr r3, r3, #8\n\t"
-        "ldr r1, [r5, #4]\n\t"
-        "asr r1, r1, #8\n\t"
-        "ldr r0, 12f\n\t"
-        "ldr r0, [r0]\n\t"
-        "str r1, [sp]\n\t"
-        "mov r1, #0\n\t"
-        "str r1, [sp, #4]\n\t"
-        "mov r1, #0x2b\n\t"
-        "mov r2, #1\n\t"
-        "b 22f\n\t"
-        ".align 2, 0\n"
-    "12: .4byte gUnknown_030012E4\n"
-    "13:\n\t"
-        "ldr r3, [r5]\n\t"
-        "asr r3, r3, #8\n\t"
-        "ldr r1, [r5, #4]\n\t"
-        "asr r1, r1, #8\n\t"
-        "ldr r0, 14f\n\t"
-        "ldr r0, [r0]\n\t"
-        "str r1, [sp]\n\t"
-        "mov r1, #0\n\t"
-        "str r1, [sp, #4]\n\t"
-        "mov r1, #0x2b\n\t"
-        "mov r2, #6\n\t"
-        "b 22f\n\t"
-        ".align 2, 0\n"
-    "14: .4byte gUnknown_030012E4\n"
-    "15:\n\t"
-        "ldr r3, [r5]\n\t"
-        "asr r3, r3, #8\n\t"
-        "ldr r1, [r5, #4]\n\t"
-        "asr r1, r1, #8\n\t"
-        "ldr r0, 16f\n\t"
-        "ldr r0, [r0]\n\t"
-        "str r1, [sp]\n\t"
-        "mov r1, #0\n\t"
-        "str r1, [sp, #4]\n\t"
-        "mov r1, #0x2b\n\t"
-        "mov r2, #5\n\t"
-        "b 22f\n\t"
-        ".align 2, 0\n"
-    "16: .4byte gUnknown_030012E4\n"
-    "17:\n\t"
-        "ldr r3, [r5]\n\t"
-        "asr r3, r3, #8\n\t"
-        "ldr r1, [r5, #4]\n\t"
-        "asr r1, r1, #8\n\t"
-        "ldr r0, 18f\n\t"
-        "ldr r0, [r0]\n\t"
-        "str r1, [sp]\n\t"
-        "mov r1, #0\n\t"
-        "str r1, [sp, #4]\n\t"
-        "mov r1, #0x2b\n\t"
-        "mov r2, #0\n\t"
-        "b 22f\n\t"
-        ".align 2, 0\n"
-    "18: .4byte gUnknown_030012E4\n"
-    "19:\n\t"
-        "ldr r3, [r5]\n\t"
-        "asr r3, r3, #8\n\t"
-        "ldr r1, [r5, #4]\n\t"
-        "asr r1, r1, #8\n\t"
-        "ldr r0, 20f\n\t"
-        "ldr r0, [r0]\n\t"
-        "str r1, [sp]\n\t"
-        "mov r1, #0\n\t"
-        "str r1, [sp, #4]\n\t"
-        "mov r1, #0x2b\n\t"
-        "mov r2, #3\n\t"
-        "b 22f\n\t"
-        ".align 2, 0\n"
-    "20: .4byte gUnknown_030012E4\n"
-    "21:\n\t"
-        "ldr r3, [r5]\n\t"
-        "asr r3, r3, #8\n\t"
-        "ldr r1, [r5, #4]\n\t"
-        "asr r1, r1, #8\n\t"
-        "ldr r0, 25f\n\t"
-        "ldr r0, [r0]\n\t"
-        "str r1, [sp]\n\t"
-        "mov r1, #0\n\t"
-        "str r1, [sp, #4]\n\t"
-        "mov r1, #0x2b\n\t"
-        "mov r2, #4\n\t"
-    "22:\n\t"
-        "bl sub_8025BAC\n\t"
-        "add r3, r0, #0\n\t"
-    "23:\n\t"
-        "cmp r3, #0\n\t"
-        "beq 24f\n\t"
-        "add r2, r3, #0\n\t"
-        "add r2, #0x28\n\t"
-        "mov r1, #1\n\t"
-        "mov r0, #4\n\t"
-        "neg r0, r0\n\t"
-        "ldrb r4, [r2]\n\t"
-        "and r0, r4\n\t"
-        "orr r0, r1\n\t"
-        "strb r0, [r2]\n\t"
-        "mov r0, #5\n\t"
-        "neg r0, r0\n\t"
-        "ldrb r1, [r3, #0xc]\n\t"
-        "and r0, r1\n\t"
-        "strb r0, [r3, #0xc]\n\t"
-    "24:\n\t"
-        "mov r0, #0\n\t"
-        "add sp, #0x28\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n"
-    "25: .4byte gUnknown_030012E4\n"
-    );
-}
-#endif /* NON_MATCHING */
 

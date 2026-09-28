@@ -56,11 +56,9 @@
  * order, and the `+0xC` flag writes are bitfield stores (QImode `-0x41`/
  * `-9` masks). `sub_803AE4C` is a remainder (`a % b`).
  *
- * `sub_800C5D4` is still a NAKED transcription; the C draft under
- * NON_MATCHING is 6 halfwords off, all in the `kind == 0xB` prelude:
- * the ROM keeps the target in r1 and `baseY` in r2, the draft swaps
- * them (global-alloc priority of the two pseudos). Everything else,
- * including the knockback stores, matches. `sub_800C5D4`'s trailing
+ * `sub_800C5D4` is real C too (issue #9-#11 NAKED retry): holding
+ * `self->target` in a block-local pinned to r1 reproduces the prelude's
+ * load order and registers. `sub_800C5D4`'s trailing
  * byte count needs the trailing `asm(".align 2, 0")` (the ROM
  * zero-pads its last 2 bytes to the next 4-byte boundary). */
 #include "part_ctrl.h"
@@ -141,17 +139,19 @@ void sub_800C40C(struct part_ctrl *self)
     }
 }
 
-#if NON_MATCHING
 void sub_800C5D4(struct part_ctrl *self)
 {
     s32 mode;
     struct part_aabb box;
     s32 x, y, w, h;
-    s32 ty;
 
-    if (self->kind == 0xb && self->target->y < (ty = self->baseY)) {
-        self->target->y = ty;
-        sub_800C8AC(self, 0);
+    if (self->kind == 0xb) {
+        /* r1 pin: the allocator otherwise swaps target/baseY (r2/r1). */
+        register struct ctrl_target *t asm("r1") = self->target;
+        if (t->y < self->baseY) {
+            t->y = self->baseY;
+            sub_800C8AC(self, 0);
+        }
     }
     switch (mode = self->mode) {
     case 0:
@@ -187,112 +187,4 @@ void sub_800C5D4(struct part_ctrl *self)
         break;
     }
 }
-#else
-NAKED void sub_800C5D4(void *selfArg)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "sub sp, #0x10\n\t"
-        "add r6, r0, #0\n\t"
-        "ldr r0, [r6, #0x6c]\n\t"
-        "cmp r0, #0xb\n\t"
-        "bne 1f\n\t"
-        "ldr r1, [r6, #0x70]\n\t"
-        "ldr r0, [r1, #4]\n\t"
-        "ldr r2, [r6, #0x64]\n\t"
-        "cmp r0, r2\n\t"
-        "bge 1f\n\t"
-        "str r2, [r1, #4]\n\t"
-        "add r0, r6, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800C8AC\n\t"
-    "1:\n\t"
-        "ldr r7, [r6, #0x68]\n\t"
-        "cmp r7, #0\n\t"
-        "beq 2f\n\t"
-        "cmp r7, #2\n\t"
-        "beq 3f\n\t"
-        "b 4f\n\t"
-    "2:\n\t"
-        "ldr r0, [r6, #0x70]\n\t"
-        "ldr r1, [r0]\n\t"
-        "asr r1, r1, #8\n\t"
-        "ldr r2, [r0, #4]\n\t"
-        "asr r2, r2, #8\n\t"
-        "ldr r5, [r6, #0x28]\n\t"
-        "ldr r3, [r6, #0x20]\n\t"
-        "sub r5, r5, r3\n\t"
-        "ldr r4, [r6, #0x2c]\n\t"
-        "ldr r0, [r6, #0x24]\n\t"
-        "sub r4, r4, r0\n\t"
-        "add r1, r1, r3\n\t"
-        "add r2, r2, r0\n\t"
-        "mov r0, sp\n\t"
-        "bl sub_803AFE4\n\t"
-        "mov r0, sp\n\t"
-        "add r1, r5, #0\n\t"
-        "add r2, r4, #0\n\t"
-        "bl sub_803AFDC\n\t"
-        "ldr r1, [r6, #0x70]\n\t"
-        "add r0, r1, #0\n\t"
-        "add r0, #0x28\n\t"
-        "ldrb r0, [r0]\n\t"
-        "lsl r0, r0, #0x1b\n\t"
-        "cmp r0, #0\n\t"
-        "bge 5f\n\t"
-        "ldr r0, [r1]\n\t"
-        "asr r0, r0, #8\n\t"
-        "lsl r0, r0, #1\n\t"
-        "ldr r1, [sp]\n\t"
-        "ldr r2, [sp, #8]\n\t"
-        "add r1, r1, r2\n\t"
-        "sub r0, r0, r1\n\t"
-        "str r0, [sp]\n\t"
-    "5:\n\t"
-        "ldr r0, =gUnknown_030012D8\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, sp\n\t"
-        "bl sub_800B37C\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "beq 4f\n\t"
-        "add r0, r6, #0\n\t"
-        "mov r1, #2\n\t"
-        "bl sub_800C8CC\n\t"
-        "ldr r0, [r6, #0x6c]\n\t"
-        "cmp r0, #0xb\n\t"
-        "bne 4f\n\t"
-        "ldr r0, [r6, #0x70]\n\t"
-        "mov r1, #0xc0\n\t"
-        "lsl r1, r1, #2\n\t"
-        "mov r2, #0x20\n\t"
-        "str r1, [r0, #0x64]\n\t"
-        "str r1, [r0, #0x54]\n\t"
-        "str r2, [r0, #0x58]\n\t"
-        "str r7, [r0, #0x5c]\n\t"
-        "ldr r1, =0xFFFFFE00\n\t"
-        "str r7, [r0, #0x60]\n\t"
-        "str r7, [r0, #0x48]\n\t"
-        "str r2, [r0, #0x4c]\n\t"
-        "str r1, [r0, #0x50]\n\t"
-        "b 4f\n\t"
-        ".pool\n\t"
-    "3:\n\t"
-        "ldr r0, [r6, #0x70]\n\t"
-        "add r0, #0x38\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 4f\n\t"
-        "add r0, r6, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800C8CC\n\t"
-    "4:\n\t"
-        "add sp, #0x10\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".pool\n\t"
-    );
-}
-#endif
 asm(".align 2, 0");

@@ -226,3 +226,7 @@ coincide` (checksum matches).
 - `docs/matching/issue-12-physics-collision.md` - the
   `sub_800D040`/`sub_800CD00`/`sub_800E494`/`sub_800E4E4` precedent this
   session's NAKED-transcription judgment call is based on.
+
+## Later pass (issue #9-#11 NAKED retry)
+
+`sub_800CEAC` and `sub_800CF70` are real C now (`game_loop42.o` builds with old_agbcc). See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).

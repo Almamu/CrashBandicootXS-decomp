@@ -28,7 +28,7 @@
  * the "divisor" slot, most plausibly for some angle/period-wrapping
  * role given the caller context, not resolved further in this pass.
  *
- * NAKED transcriptions, not real C: all three are straight-line (no
+ * Originally parked as NAKED transcriptions: all three are straight-line (no
  * branches) and an isolated real-C attempt got very close - correct
  * fields, correct table lookup, correct final store - but could not
  * reproduce two ROM-specific micro-choices: (1) the ROM's `-0x100`
@@ -57,18 +57,17 @@
  * report` (no warnings) and `rm -rf build crashbandicootxs.elf
  * crashbandicootxs.gba crashbandicootxs.map && make compare`
  * (`crashbandicootxs.gba: La suma coincide`). */
-#if NON_MATCHING
-/* Near-miss C drafts (issue #10 NAKED retry), same under both
- * compilers. The phase bias has to go through an inline parameter
- * (Wave) to keep the ROM's `phase + 0xFFFFFF00` literal instead of a
- * folded `+ 0x100`. What's left:
- *  - sub_800C8F8 (13 hw): the ROM multiplies into a fresh register
- *    (`mov r2, r1; mul r2, r0`) and loads the target into r1; this
- *    multiplies in place and puts the target in r2.
- *  - sub_800C940 (10 hw) / sub_800C97C (27 hw, 8 bytes short): the ROM
- *    saves one callee-saved register it never uses (r5 in C940 via a
- *    4-register push, r8 in C97C), and swaps the target/table
- *    registers. Some extra long-lived pseudo that later dies - not found. */
+/* sub_800C8F8 is real C (issue #9-#11 NAKED retry): the product goes
+ * into a fresh `v` pinned to r2 (the ROM's `mov r2, r1; mul r2, r0`),
+ * which leaves r1 for the target. The phase bias goes through an inline
+ * parameter (Wave) to keep the ROM's `phase + 0xFFFFFF00` literal
+ * instead of a folded `+ 0x100`.
+ *
+ * sub_800C940 (10 hw) / sub_800C97C (27 hw, 8 bytes short) are still
+ * NAKED; the drafts are under NON_MATCHING. The ROM saves a callee-saved
+ * register it never uses (r5 in C940 via a 4-register push, r8 in C97C
+ * - with r7 skipped, possibly a register pair whose r7 half agbcc drops
+ * from the push), and swaps the target/table registers. */
 #include "part_ctrl.h"
 
 extern s16 gStaticData_0816A820[];
@@ -84,11 +83,17 @@ void sub_800C8F8(struct part_ctrl *self)
 {
     s16 *table = gStaticData_0816A820;
     s32 t = sub_8037E54(gUnknown_0300082C << 8, self->period);
-    s32 v = Wave(table, t, self->phase - 0x100) * self->amplitude;
+    register s32 v asm("r2");
+    s32 w;
+    struct ctrl_target *target;
 
-    self->target->x = self->baseX + v;
+    w = Wave(table, t, self->phase - 0x100);
+    v = w * self->amplitude;
+    target = self->target;
+    target->x = self->baseX + v;
 }
 
+#if NON_MATCHING
 void sub_800C940(struct part_ctrl *self)
 {
     struct ctrl_target *target = self->target;
@@ -106,41 +111,6 @@ void sub_800C97C(struct part_ctrl *self)
     target->y = self->baseY + Wave(table, t, self->phase - 0x100) * self->amplitude;
 }
 #else
-NAKED void sub_800C8F8(void *self)
-{
-    asm(
-        "push {r4, r5, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r5, =gStaticData_0816A820\n\t"
-        "ldr r0, =gUnknown_0300082C\n\t"
-        "ldr r0, [r0]\n\t"
-        "lsl r0, r0, #8\n\t"
-        "ldr r1, [r4, #0x3c]\n\t"
-        "bl sub_8037E54\n\t"
-        "ldr r1, [r4, #0x40]\n\t"
-        "ldr r2, =0xFFFFFF00\n\t"
-        "add r1, r1, r2\n\t"
-        "sub r0, r0, r1\n\t"
-        "mov r1, #0xff\n\t"
-        "and r0, r1\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r0, r0, r5\n\t"
-        "mov r2, #0\n\t"
-        "ldrsh r1, [r0, r2]\n\t"
-        "ldr r0, [r4, #0x44]\n\t"
-        "add r2, r1, #0\n\t"
-        "mul r2, r0, r2\n\t"
-        "ldr r1, [r4, #0x70]\n\t"
-        "ldr r0, [r4, #0x60]\n\t"
-        "add r0, r0, r2\n\t"
-        "str r0, [r1]\n\t"
-        "pop {r4, r5}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".pool"
-    );
-}
-
 /* Y-axis sibling of `sub_800C8F8` above, but *without* the
  * `sub_8037E54` call - see the family doc comment above. */
 NAKED void sub_800C940(void *self)

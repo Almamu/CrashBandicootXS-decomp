@@ -1,4 +1,5 @@
 #include "core.h"
+#include "box_part.h"
 
 /* Dedicated deep investigation (GitHub issue #9/#10,
  * docs/matching/issue-9-0x0800a178-graphics.md): `sub_800A178`/
@@ -137,43 +138,13 @@
  *
  * ## Matching
  *
- * Both `sub_800A178`/`sub_800A420` keep `sb`/`sl`/`r8` (and, for
- * `sub_800A178`, `r7` too) live simultaneously across several `bl`
- * calls and reused for genuinely different values block to block
- * (e.g. `sub_800A420`'s `r8` holds `&gUnknown_03001308` across two
- * separate `sub_8026BF8` calls rather than re-deriving it each time;
- * `sub_800A178`'s `sb` accumulates a result bitmask across five
- * different probe blocks while `sl` independently tracks a "found
- * ground" boolean and `r8` holds the quad pointer for the whole
- * function) - the exact `r7`/`r8`/`sb` cross-block register-reuse
- * shape this ROM neighborhood's own precedent (`sub_800CD00`,
- * `sub_800CEAC`, `sub_800CF70`, all documented in
- * docs/matching/issue-9-10-0x0800aaec-graphics.md and
- * issue-9-10-0x0800ceac-graphics.md) already established resists gcc
- * 2.9 C reconstruction. A single honest isolated-compile attempt
- * against `sub_800A420` (the smaller of the two, with the cleanest
- * worked-out C-level logic of the pair) confirmed the same resistance
- * directly: this compiler's natural register allocation used no high
- * registers at all (`r4`-`r7` sufficed), diverging immediately from
- * the ROM's own deliberate `sb`/`r8` choice - not a near-miss
- * needing one or two register pins, but a structurally different
- * solution. Recognizing the established pattern rather than
- * re-litigating it from scratch, both are transcribed directly as
- * byte-exact NAKED asm instead: the ROM disassembly translated
- * instruction-for-instruction, unified-syntax mnemonics converted to
- * this project's plain/divided-syntax NAKED convention (`adds`->`add`,
- * `movs`->`mov`, `ands`->`and`, `lsls`/`lsrs`->`lsl`/`lsr`,
- * `asrs`->`asr`, `rsbs`->`neg`), with the original `_08XXXXXX:` labels
- * renumbered to GNU-as local numeric labels.
- *
- * Verified byte-exact via the isolated `cpp`/`agbcc`/`as` +
- * `objcopy`/`cmp` pipeline against `baserom.gba`'s own bytes at
- * `0x0800A178`-`0x0800A528` (944 bytes total): the only differing
- * bytes fell into exactly the expected relocation-site set - 16 `bl`
- * calls (`sub_803AD7C`x2, `sub_800A420`x3, `sub_8008200`x2,
- * `sub_8026C3C`x1, `sub_8026628`x3, `sub_8008278`x3, `sub_8026BF8`x2)
- * plus 3 `.4byte gUnknown_03001308` literal-pool words - which resolve
- * correctly once linked. */
+ * All three functions in this file are real C built with old_agbcc
+ * (Makefile OLD_AGBCC_OBJS; issue #9-#11 NAKED retry,
+ * docs/matching/issue-9-11-box-naked-retry.md). They were first parked
+ * as NAKED transcriptions on the theory that the ROM's `sb`/`sl`/`r8`
+ * cross-block register reuse resists gcc 2.9 - under the right
+ * compiler it falls out of plain C; the few source-shape details that
+ * mattered are noted next to each function. */
 
 /* Follow-up (same investigation): `sub_800A0FC`, the only caller of
  * `sub_800A178` (both live right next to each other, `sub_800A0FC`
@@ -222,123 +193,46 @@
  * a second, independent step-probe (`sub_8009BE0`) before trusting it
  * enough to leave the bit set in the persistent `self+0x68` mask.
  *
- * Matched as real C with no `NON_MATCHING` gap, via direct register
- * pinning to reproduce the ROM's exact register choices at several
- * points where this compiler's natural allocation otherwise diverged:
- * a `flags`(r1)/`bit7`(r0) pair for the leading `self+0xc >> 7` gate
- * test (this compiler naturally reused one register for both the load
- * and the shift result; the ROM keeps them separate), the established
- * "negative-constant register-pinned mask" idiom (`register s32 mask
- * asm("r0") = -0x21`, matching `sub_800A734`'s own precedent,
- * `actor_part48.c`) for the `self+0xc &= ~0x21` clear, a
- * `dByte`(r2)/`shifted`(r0)/`one`(r1)/`bit1`(r0) chain for the
- * `(self+0xd >> 1) & 1` gate (the same bit-1 accessor shape as
- * `sub_800A6C4`, `actor_part14.c`, but needing explicit pinning here
- * since it's inlined alongside other already-pinned locals rather than
- * standing alone), the same `addr`(r0)/`fn`(r1) "compute the trampoline
- * address before loading the function pointer" ordering `sub_800A050`
- * already established for its own `self->table+0x70/0x74` trampoline
- * (here reused for `self->table+0x10/0x14`, the "hitbox quad"
- * accessor - the natural, unpinned C already matched the ROM's
- * register-offset `ldrsh` addressing for the `+0x10` field, since
- * Thumb's `LDRSH` has no immediate-offset encoding and must always
- * materialize the offset into a register), and two more
- * `mask`(r0)/`byte`(r1 or r2)/`result`(r0) pairs (mirroring the
- * `~0x21` clear's own idiom) for the final `self+0xc |= 0x20` and
- * `self+0x68 &= 7` writes, both of which this compiler naturally
- * ordered constant-then-byte in the opposite register slots from the
- * ROM's own choice.
- *
- * Verified via the isolated `cpp`/`agbcc`/`as` + `objcopy`/`cmp`
- * pipeline against `baserom.gba`'s own bytes at `0x0800A0FC`-
- * `0x0800A178` (124 bytes) before integration, then confirmed again
- * via a full clean `make compare` after linking - `sub_800A0FC` is
- * genuinely byte-exact, register-for-register, not just
- * behaviorally equivalent. */
+ * Real C, built with old_agbcc (issue #9-#11 NAKED retry: the file
+ * moved to OLD_AGBCC_OBJS for `sub_800A420`). Under old_agbcc the
+ * register pins this function needed under the current compiler are
+ * gone; the one shape left is the `self+0xc` clear, which goes through
+ * an `s32` local so the mask stays the SImode `-0x21` (`movs #0x21;
+ * negs`) instead of a folded QImode `0xDF`. The mask clears bit 5 only
+ * (`~0x20`), not `~0x21` as the older notes had it. */
 
 extern s32 sub_803AD7C(void *addr, void *fn);
-extern u8 sub_800A178(void *self);
+extern s32 sub_800A178(struct box_part *self);
 extern s32 sub_800A050(void *self);
 extern u8 sub_8009BE0(void *self, s32 mode, void *quad);
 
-u8 sub_800A0FC(void *self)
+u8 sub_800A0FC(struct box_part *self)
 {
-    u8 *p = (u8 *)self + 0x68;
+    u8 *p = &self->hitAxes;
     u8 val = *p;
-    register u8 flags asm("r1") = *(u8 *)((u8 *)self + 0xc);
-    register u32 bit7 asm("r0");
 
-    bit7 = flags >> 7;
-    if (bit7)
-    {
+    if (self->flags >> 7) {
         val |= sub_800A178(self);
         *p = val;
-
         sub_800A050(self);
-
-        {
-        register s32 mask asm("r0") = 8;
-        register s32 byte asm("r2") = *p;
-        register s32 result asm("r0");
-
-        result = mask & byte;
-        if (result)
-        {
+        if (*p & 8) {
             {
-                register s32 mask asm("r0") = -0x21;
-                register s32 byte asm("r1") = *(u8 *)((u8 *)self + 0xc);
-                register s32 result asm("r0");
+                s32 f = self->flags & ~0x20;
 
-                result = mask & byte;
-                *(u8 *)((u8 *)self + 0xc) = result;
+                self->flags = f;
             }
+            if (!((self->flags2 >> 1) & 1)) {
+                struct part_method *m = PART_METHOD(self, 0x10);
+                void *quad = (void *)sub_803AD7C((u8 *)self + m->thisOffset, m->fn);
 
-            {
-                register u8 dByte asm("r2") = *(u8 *)((u8 *)self + 0xd);
-                register u32 shifted asm("r0");
-                register u32 one asm("r1");
-                register u32 bit1 asm("r0");
-
-                shifted = dByte >> 1;
-                one = 1;
-                bit1 = shifted & one;
-                if (!bit1)
-                {
-                    void *quad;
-                    void *table = *(void **)((u8 *)self + 0x18);
-                    register void *addr asm("r0");
-                    register void *fn asm("r1");
-
-                    addr = (u8 *)self + *(s16 *)((u8 *)table + 0x10);
-                    fn = *(void **)((u8 *)table + 0x14);
-                    quad = (void *)sub_803AD7C(addr, fn);
-
-                    if (!sub_8009BE0(self, 8, quad))
-                    {
-                        {
-                            register s32 mask asm("r0") = 0x20;
-                            register s32 byte asm("r1") = *(u8 *)((u8 *)self + 0xc);
-                            register s32 result asm("r0");
-
-                            result = mask | byte;
-                            *(u8 *)((u8 *)self + 0xc) = result;
-                        }
-                        {
-                            register s32 mask asm("r0") = 7;
-                            register s32 byte asm("r2") = *p;
-                            register s32 result asm("r0");
-
-                            result = mask & byte;
-                            *p = result;
-                        }
-                    }
+                if (!sub_8009BE0(self, 8, quad)) {
+                    self->flags |= 0x20;
+                    *p &= 7;
                 }
             }
         }
-        }
     }
-
-    return *(u8 *)((u8 *)self + 0x68);
+    return self->hitAxes;
 }
 
 extern s32 sub_803AD7C(void *addr, void *fn);
@@ -349,376 +243,161 @@ extern s32 sub_8026C3C(void *player, void *pos, void *outValue);
 extern s32 sub_8026BF8(void *player, void *pos, void *outValue);
 extern void *gUnknown_03001308;
 
-/* See the file-level header comment above for the full account of this
- * function's semantics and why it's a NAKED transcription rather than
- * real C. `self`'s only argument; returns the accumulated result
- * bitmask (`self+0x24`'s per-axis mode bits, OR'd in as each
- * `sub_8026628` probe reports a hit). */
-NAKED u8 sub_800A178(void *self)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sl\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6, r7}\n\t"
-        "sub sp, #0x1c\n\t"
-        "add r6, r0, #0\n\t"
-        "mov r0, #0\n\t"
-        "mov sb, r0\n\t"
-        "add r0, sp, #4\n\t"
-        "mov r1, sb\n\t"
-        "strb r1, [r0]\n\t"
-        "mov r2, #0\n\t"
-        "mov sl, r2\n\t"
-        "ldr r1, [r6, #0x18]\n\t"
-        "mov r2, #0x38\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r6, r0\n\t"
-        "ldr r1, [r1, #0x3c]\n\t"
-        "bl sub_803AD7C\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "bne 1f\n\t"
-        "b 15f\n\t"
-    "1:\n\t"
-        "ldrb r1, [r6, #0xc]\n\t"
-        "lsr r0, r1, #7\n\t"
-        "cmp r0, #0\n\t"
-        "bne 2f\n\t"
-        "b 15f\n\t"
-    "2:\n\t"
-        "add r1, r6, #0\n\t"
-        "add r1, #0x24\n\t"
-        "mov r0, #0xc\n\t"
-        "ldrb r2, [r1]\n\t"
-        "and r0, r2\n\t"
-        "str r1, [sp, #0x18]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 3f\n\t"
-        "mov r0, #1\n\t"
-        "ldrb r1, [r6, #0xd]\n\t"
-        "and r0, r1\n\t"
-        "neg r1, r0\n\t"
-        "orr r1, r0\n\t"
-        "asr r1, r1, #0x1f\n\t"
-        "mov sb, r1\n\t"
-        "mov r0, #8\n\t"
-        "mov r2, sb\n\t"
-        "and r2, r0\n\t"
-        "mov sb, r2\n\t"
-    "3:\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [r6, #0x74]\n\t"
-        "ldr r1, [r6, #0x18]\n\t"
-        "mov r2, #0x10\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r6, r0\n\t"
-        "ldr r1, [r1, #0x14]\n\t"
-        "bl sub_803AD7C\n\t"
-        "mov r8, r0\n\t"
-        "mov r0, #1\n\t"
-        "ldrb r1, [r6, #0xd]\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "beq 4f\n\t"
-        "add r0, r6, #0\n\t"
-        "mov r1, r8\n\t"
-        "add r2, sp, #4\n\t"
-        "bl sub_800A420\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "mov sl, r0\n\t"
-    "4:\n\t"
-        "mov r2, sl\n\t"
-        "cmp r2, #0\n\t"
-        "beq 5f\n\t"
-        "mov r0, sb\n\t"
-        "cmp r0, #0\n\t"
-        "bne 5f\n\t"
-        "mov r1, #8\n\t"
-        "mov sb, r1\n\t"
-    "5:\n\t"
-        "add r0, sp, #4\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #1\n\t"
-        "bne 12f\n\t"
-        "ldr r0, [r6, #4]\n\t"
-        "str r0, [sp, #0x10]\n\t"
-        "ldr r0, [r6]\n\t"
-        "ldr r1, [r6, #4]\n\t"
-        "str r0, [sp, #8]\n\t"
-        "str r1, [sp, #0xc]\n\t"
-        "add r4, sp, #8\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #8\n\t"
-        "mov r2, r8\n\t"
-        "bl sub_8008200\n\t"
-        "ldr r0, [sp, #8]\n\t"
-        "asr r0, r0, #8\n\t"
-        "str r0, [sp, #8]\n\t"
-        "ldr r0, [r4, #4]\n\t"
-        "asr r0, r0, #8\n\t"
-        "str r0, [r4, #4]\n\t"
-        "add r0, r6, #0\n\t"
-        "add r0, #0x28\n\t"
-        "ldrb r0, [r0]\n\t"
-        "lsl r0, r0, #0x1b\n\t"
-        "cmp r0, #0\n\t"
-        "bge 6f\n\t"
-        "mov r2, r8\n\t"
-        "ldrb r2, [r2, #4]\n\t"
-        "lsr r1, r2, #1\n\t"
-        "ldr r0, [sp, #8]\n\t"
-        "sub r0, r0, r1\n\t"
-        "b 7f\n\t"
-    "6:\n\t"
-        "mov r0, r8\n\t"
-        "ldrb r0, [r0, #4]\n\t"
-        "lsr r1, r0, #1\n\t"
-        "ldr r0, [sp, #8]\n\t"
-        "add r0, r0, r1\n\t"
-    "7:\n\t"
-        "str r0, [sp, #8]\n\t"
-        "ldr r0, 8f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r2, sp, #0x10\n\t"
-        "add r1, r4, #0\n\t"
-        "bl sub_8026C3C\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "mov r2, sp\n\t"
-        "add r2, #5\n\t"
-        "mov r1, #0\n\t"
-        "strb r1, [r2]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 11f\n\t"
-        "ldr r0, [sp, #0x10]\n\t"
-        "ldr r4, 9f\n\t"
-        "and r0, r4\n\t"
-        "str r0, [r6, #4]\n\t"
-        "add r0, r6, #0\n\t"
-        "mov r1, r8\n\t"
-        "bl sub_800A420\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "mov sl, r0\n\t"
-        "mov r0, #3\n\t"
-        "ldr r1, [sp, #0x18]\n\t"
-        "ldrb r1, [r1]\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "beq 13f\n\t"
-        "cmp r0, #2\n\t"
-        "bne 10f\n\t"
-        "ldr r0, [r6]\n\t"
-        "add r0, r0, r4\n\t"
-        "str r0, [r6]\n\t"
-        "b 12f\n\t"
-        ".align 2, 0\n"
-    "8: .4byte gUnknown_03001308\n"
-    "9: .4byte 0xFFFFFF00\n"
-    "10:\n\t"
-        "ldr r0, [r6]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r0, r0, r2\n\t"
-        "str r0, [r6]\n\t"
-        "b 12f\n\t"
-    "11:\n\t"
-        "ldr r0, [r6, #4]\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #1\n\t"
-        "add r0, r0, r1\n\t"
-        "str r0, [r6, #4]\n\t"
-        "add r0, r6, #0\n\t"
-        "mov r1, r8\n\t"
-        "bl sub_800A420\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "mov sl, r0\n\t"
-    "12:\n\t"
-        "mov r7, #3\n\t"
-        "ldr r2, [sp, #0x18]\n\t"
-        "ldrb r2, [r2]\n\t"
-        "and r7, r2\n\t"
-        "cmp r7, #0\n\t"
-        "beq 13f\n\t"
-        "mov r0, sl\n\t"
-        "cmp r0, #0\n\t"
-        "bne 13f\n\t"
-        "ldr r0, [r6]\n\t"
-        "ldr r1, [r6, #4]\n\t"
-        "str r0, [sp, #8]\n\t"
-        "str r1, [sp, #0xc]\n\t"
-        "mov r1, r8\n\t"
-        "ldrb r5, [r1, #5]\n\t"
-        "sub r5, #0x10\n\t"
-        "ldr r0, [r6]\n\t"
-        "str r0, [sp, #0x14]\n\t"
-        "add r4, sp, #8\n\t"
-        "add r0, r4, #0\n\t"
-        "add r1, r7, #0\n\t"
-        "mov r2, r8\n\t"
-        "bl sub_8008278\n\t"
-        "ldr r0, [sp, #8]\n\t"
-        "asr r0, r0, #8\n\t"
-        "str r0, [sp, #8]\n\t"
-        "ldr r0, [r4, #4]\n\t"
-        "asr r0, r0, #8\n\t"
-        "add r0, #8\n\t"
-        "str r0, [r4, #4]\n\t"
-        "ldr r0, 16f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r1, sp, #0x14\n\t"
-        "str r1, [sp]\n\t"
-        "add r1, r7, #0\n\t"
-        "add r2, r4, #0\n\t"
-        "add r3, r5, #0\n\t"
-        "bl sub_8026628\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "beq 13f\n\t"
-        "ldr r0, [r6, #0x74]\n\t"
-        "orr r0, r7\n\t"
-        "str r0, [r6, #0x74]\n\t"
-        "mov r2, sb\n\t"
-        "orr r2, r7\n\t"
-        "mov sb, r2\n\t"
-        "ldr r0, [sp, #0x14]\n\t"
-        "str r0, [r6]\n\t"
-    "13:\n\t"
-        "mov r7, #0xc\n\t"
-        "ldr r0, [sp, #0x18]\n\t"
-        "ldrb r0, [r0]\n\t"
-        "and r7, r0\n\t"
-        "cmp r7, #0\n\t"
-        "beq 14f\n\t"
-        "mov r1, sl\n\t"
-        "cmp r1, #0\n\t"
-        "bne 14f\n\t"
-        "ldr r0, [r6]\n\t"
-        "ldr r1, [r6, #4]\n\t"
-        "str r0, [sp, #8]\n\t"
-        "str r1, [sp, #0xc]\n\t"
-        "mov r2, r8\n\t"
-        "ldrb r5, [r2, #4]\n\t"
-        "ldr r0, [r6]\n\t"
-        "str r0, [sp, #0x14]\n\t"
-        "ldr r0, [r6, #4]\n\t"
-        "str r0, [sp, #0x10]\n\t"
-        "add r4, sp, #8\n\t"
-        "add r0, r4, #0\n\t"
-        "add r1, r7, #0\n\t"
-        "bl sub_8008278\n\t"
-        "ldr r0, [sp, #8]\n\t"
-        "asr r0, r0, #8\n\t"
-        "str r0, [sp, #8]\n\t"
-        "ldr r0, [r4, #4]\n\t"
-        "asr r0, r0, #8\n\t"
-        "str r0, [r4, #4]\n\t"
-        "ldr r0, 16f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r1, sp, #0x10\n\t"
-        "str r1, [sp]\n\t"
-        "add r1, r7, #0\n\t"
-        "add r2, r4, #0\n\t"
-        "add r3, r5, #0\n\t"
-        "bl sub_8026628\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "beq 14f\n\t"
-        "mov r0, sb\n\t"
-        "orr r0, r7\n\t"
-        "mov sb, r0\n\t"
-        "ldr r0, [r6, #0x74]\n\t"
-        "orr r0, r7\n\t"
-        "str r0, [r6, #0x74]\n\t"
-        "ldr r0, [sp, #0x10]\n\t"
-        "str r0, [r6, #4]\n\t"
-    "14:\n\t"
-        "mov r7, #3\n\t"
-        "ldr r1, [sp, #0x18]\n\t"
-        "ldrb r1, [r1]\n\t"
-        "and r7, r1\n\t"
-        "cmp r7, #0\n\t"
-        "beq 15f\n\t"
-        "mov r2, sl\n\t"
-        "cmp r2, #0\n\t"
-        "bne 15f\n\t"
-        "ldr r0, [r6]\n\t"
-        "ldr r1, [r6, #4]\n\t"
-        "str r0, [sp, #8]\n\t"
-        "str r1, [sp, #0xc]\n\t"
-        "mov r0, r8\n\t"
-        "ldrb r5, [r0, #5]\n\t"
-        "ldr r0, [r6]\n\t"
-        "str r0, [sp, #0x14]\n\t"
-        "add r4, sp, #8\n\t"
-        "add r0, r4, #0\n\t"
-        "add r1, r7, #0\n\t"
-        "mov r2, r8\n\t"
-        "bl sub_8008278\n\t"
-        "ldr r0, [sp, #8]\n\t"
-        "asr r0, r0, #8\n\t"
-        "str r0, [sp, #8]\n\t"
-        "ldr r0, [r4, #4]\n\t"
-        "asr r0, r0, #8\n\t"
-        "str r0, [r4, #4]\n\t"
-        "ldr r0, 16f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r1, sp, #0x14\n\t"
-        "str r1, [sp]\n\t"
-        "add r1, r7, #0\n\t"
-        "add r2, r4, #0\n\t"
-        "add r3, r5, #0\n\t"
-        "bl sub_8026628\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "beq 15f\n\t"
-        "ldr r0, [r6, #0x74]\n\t"
-        "orr r0, r7\n\t"
-        "str r0, [r6, #0x74]\n\t"
-        "mov r1, sb\n\t"
-        "orr r1, r7\n\t"
-        "mov sb, r1\n\t"
-        "ldr r0, [sp, #0x14]\n\t"
-        "str r0, [r6]\n\t"
-    "15:\n\t"
-        "mov r0, sb\n\t"
-        "add sp, #0x1c\n\t"
-        "pop {r3, r4, r5}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov sl, r5\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n"
-    "16: .4byte gUnknown_03001308\n"
-    );
-}
-
-/* See the file-level header comment above for the full account of this
- * function's semantics and why it's a NAKED transcription rather than
- * real C. `self`'s a part object, `quad` its `{s16 xOff, s16 yOff, u8
- * w, u8 h}` hitbox quad pointer (the `self->table[0x10]/[0x14]`
- * trampoline result `sub_800A178` also uses), `outFlag` a caller-owned
- * byte set to `1` only on the specific all-miss-with-bit-1-already-set
- * path described above. Returns the final probe's hit boolean. */
-/* Later pass (docs/matching/issue-9-naked-retry.md): the draft below
- * (old_agbcc) is 15 halfwords off, all in the first probe's hit path:
- * the ROM keeps the masked y in r3 and copies the flags byte to r1 only
- * after the bit-1 test, where this C gets y in r2 and the copy in r3
- * before the test (the second probe's hit path then picks r2/r1 the
- * other way round too). The shared final `strb` to +0xd is a common
- * store (`val`) the three exits jump to. */
-#if NON_MATCHING
-#include "box_part.h"
-
 struct probe_pos {
     s32 x;
     s32 y;
 };
+
+u8 sub_800A420(struct box_part *self, struct part_box *quad, u8 *outFlag);
+
+/* See the file-level header comment above for this function's
+ * semantics. `self`'s only argument; returns the accumulated result
+ * bitmask (`self+0x24`'s per-axis mode bits, OR'd in as each
+ * `sub_8026628` probe reports a hit).
+ *
+ * Source-shape details that matter: the result is an `s32` set by a
+ * `? 8 : result` conditional (expanded as `-(x != 0)` into the result
+ * register, then `&= 8` - the ROM's `mov r2, sb; and r2, r0; mov sb, r2`
+ * reload); the `self+0x24` pointer is taken after its `& 0xc` test
+ * value (so its spill store follows the `and`); the two out-bytes of
+ * sub_800A420 are separate `u8` locals (sp+4 and sp+5, the second
+ * addressed as `sp + 5`, not `&arr[1]`). The Y-axis block stores
+ * `origX` too although it probes with `&origY`, as the ROM does. */
+s32 sub_800A178(struct box_part *self)
+{
+    s32 origX;
+    s32 origY;
+    struct probe_pos pos;
+    u8 unused;
+    u8 floorMiss;
+    s32 result;
+    u8 hit;
+    struct part_box *quad;
+    u8 *axes;
+    struct part_method *m;
+    s32 mode;
+
+    result = 0;
+    floorMiss = result;
+    hit = 0;
+    m = PART_METHOD(self, 0x38);
+    if (!(u8)sub_803AD7C((u8 *)self + m->thisOffset, m->fn))
+        goto done;
+    if (!(self->flags >> 7))
+        goto done;
+    {
+        u32 t = self->moveAxes & 0xc;
+
+        axes = &self->moveAxes;
+        if (!t)
+            result = (self->flags2 & 1) ? 8 : result;
+    }
+    self->hitMask = 0;
+    m = PART_METHOD(self, 0x10);
+    quad = (struct part_box *)sub_803AD7C((u8 *)self + m->thisOffset, m->fn);
+    if (self->flags2 & 1)
+        hit = sub_800A420(self, quad, &floorMiss);
+    if (hit && result == 0)
+        result = 8;
+    if (floorMiss == 1) {
+        u8 c;
+
+        origY = self->y;
+        pos = *(struct probe_pos *)self;
+        sub_8008200(&pos, 8, quad);
+        pos.x >>= 8;
+        pos.y >>= 8;
+        if (self->mirrorX)
+            pos.x -= quad->w >> 1;
+        else
+            pos.x += quad->w >> 1;
+        c = sub_8026C3C(gUnknown_03001308, &pos, &origY);
+        unused = 0;
+        if (c) {
+            self->y = origY & 0xFFFFFF00;
+            hit = sub_800A420(self, quad, &unused);
+            {
+                u32 xm = *axes & 3;
+
+                if (xm == 0)
+                    goto y_probe;
+                if (xm == 2)
+                    self->x += (s32)0xFFFFFF00;
+                else
+                    self->x += 0x100;
+            }
+        } else {
+            self->y += 0x100;
+            hit = sub_800A420(self, quad, &unused);
+        }
+    }
+    mode = *axes & 3;
+    if (mode && !hit) {
+        s32 span;
+
+        pos = *(struct probe_pos *)self;
+        span = quad->h - 0x10;
+        origX = self->x;
+        sub_8008278(&pos, mode, quad);
+        pos.x >>= 8;
+        pos.y = (pos.y >> 8) + 8;
+        if ((u8)sub_8026628(gUnknown_03001308, mode, &pos, span, &origX)) {
+            self->hitMask |= mode;
+            result |= mode;
+            self->x = origX;
+        }
+    }
+y_probe:
+    mode = *axes & 0xc;
+    if (mode && !hit) {
+        s32 span;
+
+        pos = *(struct probe_pos *)self;
+        span = quad->w;
+        origX = self->x;
+        origY = self->y;
+        sub_8008278(&pos, mode, quad);
+        pos.x >>= 8;
+        pos.y >>= 8;
+        if ((u8)sub_8026628(gUnknown_03001308, mode, &pos, span, &origY)) {
+            result |= mode;
+            self->hitMask |= mode;
+            self->y = origY;
+        }
+    }
+    mode = *axes & 3;
+    if (mode && !hit) {
+        s32 span;
+
+        pos = *(struct probe_pos *)self;
+        span = quad->h;
+        origX = self->x;
+        sub_8008278(&pos, mode, quad);
+        pos.x >>= 8;
+        pos.y >>= 8;
+        if ((u8)sub_8026628(gUnknown_03001308, mode, &pos, span, &origX)) {
+            self->hitMask |= mode;
+            result |= mode;
+            self->x = origX;
+        }
+    }
+done:
+    return result;
+}
+
+/* See the file-level header comment above for this function's
+ * semantics. `self`'s a part object, `quad` its `{s16 xOff, s16 yOff,
+ * u8 w, u8 h}` hitbox quad pointer (the `self->table[0x10]/[0x14]`
+ * trampoline result `sub_800A178` also uses), `outFlag` a caller-owned
+ * byte set to `1` only on the specific all-miss-with-bit-1-already-set
+ * path described above. Returns the final probe's hit boolean.
+ *
+ * Real C under old_agbcc (issue #9-#11 NAKED retry). The first probe's
+ * hit path computes the bit-1 test into its own local before copying
+ * the flags byte to `v`, with `f` pinned to r2 and `v` to r1: that is
+ * the ROM's `lsrs; movs #1; ands; adds r1, r2, #0` order, and it frees
+ * r2 for the `0xFFFFFF00` literal. The shared final `strb` to +0xd is a
+ * common store (`val`) the three exits jump to. */
 
 u8 sub_800A420(struct box_part *self, struct part_box *quad, u8 *outFlag)
 {
@@ -739,12 +418,18 @@ u8 sub_800A420(struct box_part *self, struct part_box *quad, u8 *outFlag)
         pos.x += quad->w >> 1;
     hit = sub_8026BF8(gUnknown_03001308, &pos, &origY);
     if (hit) {
-        u8 f;
-        self->y = origY & 0xFFFFFF00;
+        s32 y;
+        register u8 f asm("r2");
+        u32 t;
+        register s32 v asm("r1");
+
+        self->y = y = origY & 0xFFFFFF00;
         f = self->flags2;
-        if (!((f >> 1) & 1))
-            self->y += (s32)0xFFFFFF00;
-        val = 2 | f;
+        t = (f >> 1) & 1;
+        v = f;
+        if (!t)
+            self->y = y + (s32)0xFFFFFF00;
+        val = 2 | v;
     } else {
         u8 f = self->flags2;
         if (!((f >> 1) & 1)) {
@@ -767,146 +452,3 @@ store:
     self->flags2 = val;
     return hit;
 }
-#else
-NAKED u8 sub_800A420(void *selfArg, void *quad, u8 *outFlag)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sb\n\t"
-        "mov r6, r8\n\t"
-        "push {r6, r7}\n\t"
-        "sub sp, #0xc\n\t"
-        "add r4, r0, #0\n\t"
-        "add r5, r1, #0\n\t"
-        "mov sb, r2\n\t"
-        "ldr r0, [r4, #4]\n\t"
-        "str r0, [sp, #8]\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldr r1, [r4, #4]\n\t"
-        "str r0, [sp]\n\t"
-        "str r1, [sp, #4]\n\t"
-        "mov r0, sp\n\t"
-        "mov r1, #8\n\t"
-        "add r2, r5, #0\n\t"
-        "bl sub_8008200\n\t"
-        "ldr r0, [sp]\n\t"
-        "asr r0, r0, #8\n\t"
-        "str r0, [sp]\n\t"
-        "ldr r0, [sp, #4]\n\t"
-        "asr r2, r0, #8\n\t"
-        "str r2, [sp, #4]\n\t"
-        "ldrb r1, [r4, #0xd]\n\t"
-        "lsr r0, r1, #1\n\t"
-        "mov r1, #1\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "bne 1f\n\t"
-        "sub r0, r2, #1\n\t"
-        "str r0, [sp, #4]\n\t"
-    "1:\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x28\n\t"
-        "ldrb r0, [r0]\n\t"
-        "lsl r0, r0, #0x1b\n\t"
-        "cmp r0, #0\n\t"
-        "bge 2f\n\t"
-        "ldrb r5, [r5, #4]\n\t"
-        "lsr r1, r5, #1\n\t"
-        "ldr r0, [sp]\n\t"
-        "sub r0, r0, r1\n\t"
-        "b 3f\n\t"
-    "2:\n\t"
-        "ldrb r5, [r5, #4]\n\t"
-        "lsr r1, r5, #1\n\t"
-        "ldr r0, [sp]\n\t"
-        "add r0, r0, r1\n\t"
-    "3:\n\t"
-        "str r0, [sp]\n\t"
-        "ldr r2, 5f\n\t"
-        "mov r8, r2\n\t"
-        "ldr r0, [r2]\n\t"
-        "add r6, sp, #8\n\t"
-        "mov r1, sp\n\t"
-        "add r2, r6, #0\n\t"
-        "bl sub_8026BF8\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r5, r0, #0x18\n\t"
-        "cmp r5, #0\n\t"
-        "beq 7f\n\t"
-        "ldr r3, [sp, #8]\n\t"
-        "ldr r0, 6f\n\t"
-        "and r3, r0\n\t"
-        "str r3, [r4, #4]\n\t"
-        "ldrb r2, [r4, #0xd]\n\t"
-        "lsr r0, r2, #1\n\t"
-        "mov r1, #1\n\t"
-        "and r0, r1\n\t"
-        "add r1, r2, #0\n\t"
-        "cmp r0, #0\n\t"
-        "bne 4f\n\t"
-        "ldr r2, 6f\n\t"
-        "add r0, r3, r2\n\t"
-        "str r0, [r4, #4]\n\t"
-    "4:\n\t"
-        "mov r0, #2\n\t"
-        "orr r0, r1\n\t"
-        "b 12f\n\t"
-        ".align 2, 0\n"
-    "5: .4byte gUnknown_03001308\n"
-    "6: .4byte 0xFFFFFF00\n"
-    "7:\n\t"
-        "ldrb r1, [r4, #0xd]\n\t"
-        "lsr r0, r1, #1\n\t"
-        "mov r7, #1\n\t"
-        "and r0, r7\n\t"
-        "cmp r0, #0\n\t"
-        "bne 10f\n\t"
-        "ldr r0, [sp, #4]\n\t"
-        "add r0, #1\n\t"
-        "str r0, [sp, #4]\n\t"
-        "mov r1, r8\n\t"
-        "ldr r0, [r1]\n\t"
-        "mov r1, sp\n\t"
-        "add r2, r6, #0\n\t"
-        "bl sub_8026BF8\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r5, r0, #0x18\n\t"
-        "cmp r5, #0\n\t"
-        "beq 9f\n\t"
-        "ldr r0, [sp, #8]\n\t"
-        "ldr r1, 8f\n\t"
-        "and r0, r1\n\t"
-        "str r0, [r4, #4]\n\t"
-        "mov r0, #2\n\t"
-        "ldrb r2, [r4, #0xd]\n\t"
-        "orr r0, r2\n\t"
-        "b 12f\n\t"
-        ".align 2, 0\n"
-    "8: .4byte 0xFFFFFF00\n"
-    "9:\n\t"
-        "ldrb r1, [r4, #0xd]\n\t"
-        "lsr r0, r1, #1\n\t"
-        "and r0, r7\n\t"
-        "cmp r0, #0\n\t"
-        "beq 11f\n\t"
-    "10:\n\t"
-        "mov r0, #1\n\t"
-        "mov r2, sb\n\t"
-        "strb r0, [r2]\n\t"
-    "11:\n\t"
-        "mov r0, #3\n\t"
-        "neg r0, r0\n\t"
-        "and r0, r1\n\t"
-    "12:\n\t"
-        "strb r0, [r4, #0xd]\n\t"
-        "add r0, r5, #0\n\t"
-        "add sp, #0xc\n\t"
-        "pop {r3, r4}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-    );
-}
-#endif /* NON_MATCHING */

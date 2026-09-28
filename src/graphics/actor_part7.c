@@ -318,27 +318,23 @@ extern void sub_803A94C(const void *src, void *dst, u32 cnt);
  * (per-frame update) and, if the +0x30 method says it is on screen,
  * appends it to `visible`.
  *
- * **Build toggle**: default builds use the `#else` branch's NAKED
- * transcription of the ROM's instructions. The `#if NON_MATCHING` C
- * (old_agbcc, see docs/matching/issue-9-naked-retry.md) is 18
- * halfwords off: the ROM stores the screen box's x/y sp-relative and
- * only then materializes `&screen` in r0 for the w/h stores (and keeps
- * it in r8 for the loop); this C gets the pointer in r2 before the x/y
- * stores, which swaps r1/r2 for `count` and `i * 4` in the loop. */
-#if NON_MATCHING
+ * Real C under old_agbcc (issue #9-#11 NAKED retry): the two boxes are
+ * members of one frame object (so the screen box's x/y go straight to
+ * sp offsets), and the w/h stores go through a `&screen` pointer taken
+ * after them - that pointer is the one the loop keeps in r8. */
 void sub_800891C(struct part_list *list)
 {
-    struct part_aabb near;
-    struct part_aabb screen;
+    struct { struct part_aabb near; struct part_aabb screen; } f;
     struct camera_pos *cam;
     s32 i;
     s32 zero;
+    struct part_aabb *ps;
 
     {
         s32 w = 440 << 8;
         s32 h = 280 << 8;
-        near.w = w;
-        near.h = h;
+        f.near.w = w;
+        f.near.h = h;
     }
     cam = gUnknown_03001308->camera;
     {
@@ -349,20 +345,21 @@ void sub_800891C(struct part_list *list)
         zero = 0;
         x -= 100 << 8;
         y = (cam->y << 8) - (60 << 8);
-        near.x = x;
-        near.y = y;
+        f.near.x = x;
+        f.near.y = y;
     }
     {
         s32 x = cam->x << 8;
         s32 y = cam->y << 8;
-        screen.x = x;
-        screen.y = y;
+        f.screen.x = x;
+        f.screen.y = y;
     }
+    ps = &f.screen;
     {
         s32 w = 240 << 8;
         s32 h = 160 << 8;
-        screen.w = w;
-        screen.h = h;
+        ps->w = w;
+        ps->h = h;
     }
     list->visibleCount = zero;
 
@@ -384,168 +381,18 @@ void sub_800891C(struct part_list *list)
         } else {
             struct part_method *m = PART_METHOD(part, 0x40);
 
-            if ((u8)sub_803AD80((u8 *)part + m->thisOffset, &near, m->fn)) {
+            if ((u8)sub_803AD80((u8 *)part + m->thisOffset, &f.near, m->fn)) {
                 struct part_method *m2 = PART_METHOD(part, 0x18);
                 struct part_method *m3;
 
                 sub_803AD7C((u8 *)part + m2->thisOffset, m2->fn);
                 m3 = PART_METHOD(part, 0x30);
-                if ((u8)sub_803AD80((u8 *)part + m3->thisOffset, &screen, m3->fn))
+                if ((u8)sub_803AD80((u8 *)part + m3->thisOffset, &f.screen, m3->fn))
                     list->visible[list->visibleCount++] = part;
             }
         }
     }
 }
-#else
-NAKED void sub_800891C(void *self)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, r8\n\t"
-        "push {r7}\n\t"
-        "sub sp, #0x20\n\t"
-        "add r5, r0, #0\n\t"
-        "mov r0, #0xdc\n\t"
-        "lsl r0, r0, #9\n\t"
-        "mov r1, #0x8c\n\t"
-        "lsl r1, r1, #9\n\t"
-        "str r0, [sp, #8]\n\t"
-        "str r1, [sp, #0xc]\n\t"
-        "ldr r0, 4f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r2, [r0, #0x10]\n\t"
-        "ldr r1, [r2]\n\t"
-        "lsl r1, r1, #8\n\t"
-        "mov r3, #0\n\t"
-        "ldr r0, 5f\n\t"
-        "add r1, r1, r0\n\t"
-        "ldr r0, [r2, #4]\n\t"
-        "lsl r0, r0, #8\n\t"
-        "ldr r4, 6f\n\t"
-        "add r0, r0, r4\n\t"
-        "str r1, [sp]\n\t"
-        "str r0, [sp, #4]\n\t"
-        "ldr r1, [r2]\n\t"
-        "lsl r1, r1, #8\n\t"
-        "ldr r0, [r2, #4]\n\t"
-        "lsl r0, r0, #8\n\t"
-        "str r1, [sp, #0x10]\n\t"
-        "str r0, [sp, #0x14]\n\t"
-        "add r0, sp, #0x10\n\t"
-        "mov r1, #0xf0\n\t"
-        "lsl r1, r1, #8\n\t"
-        "mov r2, #0xa0\n\t"
-        "lsl r2, r2, #8\n\t"
-        "str r1, [r0, #8]\n\t"
-        "str r2, [r0, #0xc]\n\t"
-        "str r3, [r5, #8]\n\t"
-        "mov r7, #0\n\t"
-        "ldr r2, [r5, #4]\n\t"
-        "mov r8, r0\n\t"
-        "cmp r7, r2\n\t"
-        "bge 10f\n\t"
-    "1:\n\t"
-        "ldr r3, [r5, #0xc]\n\t"
-        "lsl r1, r7, #2\n\t"
-        "add r6, r1, r3\n\t"
-        "mov ip, r6\n\t"
-        "ldr r4, [r6]\n\t"
-        "mov r0, #1\n\t"
-        "ldrb r6, [r4, #0xc]\n\t"
-        "and r0, r6\n\t"
-        "cmp r0, #0\n\t"
-        "beq 8f\n\t"
-        "ldr r0, [r5]\n\t"
-        "cmp r7, r0\n\t"
-        "bge 2f\n\t"
-        "add r0, r1, #4\n\t"
-        "add r0, r3, r0\n\t"
-        "sub r2, r2, r7\n\t"
-        "ldr r1, 7f\n\t"
-        "and r2, r1\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #0x13\n\t"
-        "orr r2, r1\n\t"
-        "mov r1, ip\n\t"
-        "bl sub_803A94C\n\t"
-        "ldr r0, [r5, #4]\n\t"
-        "sub r0, #1\n\t"
-        "str r0, [r5, #4]\n\t"
-        "ldr r1, [r5, #0xc]\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "mov r1, #0\n\t"
-        "str r1, [r0]\n\t"
-    "2:\n\t"
-        "cmp r4, #0\n\t"
-        "beq 3f\n\t"
-        "ldr r1, [r4, #0x18]\n\t"
-        "add r1, #0x50\n\t"
-        "mov r2, #0\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r2, [r1, #4]\n\t"
-        "mov r1, #3\n\t"
-        "bl sub_803AD80\n\t"
-    "3:\n\t"
-        "sub r7, #1\n\t"
-        "b 9f\n\t"
-        ".align 2, 0\n"
-    "4: .4byte gUnknown_03001308\n"
-    "5: .4byte 0xFFFF9C00\n"
-    "6: .4byte 0xFFFFC400\n"
-    "7: .4byte 0x001FFFFF\n"
-    "8:\n\t"
-        "ldr r1, [r4, #0x18]\n\t"
-        "add r1, #0x40\n\t"
-        "mov r6, #0\n\t"
-        "ldrsh r0, [r1, r6]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r2, [r1, #4]\n\t"
-        "mov r1, sp\n\t"
-        "bl sub_803AD80\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "beq 9f\n\t"
-        "ldr r1, [r4, #0x18]\n\t"
-        "mov r2, #0x18\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r1, #0x1c]\n\t"
-        "bl sub_803AD7C\n\t"
-        "ldr r1, [r4, #0x18]\n\t"
-        "mov r6, #0x30\n\t"
-        "ldrsh r0, [r1, r6]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r2, [r1, #0x34]\n\t"
-        "mov r1, r8\n\t"
-        "bl sub_803AD80\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "beq 9f\n\t"
-        "ldr r0, [r5, #8]\n\t"
-        "ldr r2, [r5, #0x10]\n\t"
-        "lsl r1, r0, #2\n\t"
-        "add r1, r1, r2\n\t"
-        "str r4, [r1]\n\t"
-        "add r0, #1\n\t"
-        "str r0, [r5, #8]\n\t"
-    "9:\n\t"
-        "add r7, #1\n\t"
-        "ldr r2, [r5, #4]\n\t"
-        "cmp r7, r2\n\t"
-        "blt 1b\n\t"
-    "10:\n\t"
-        "add sp, #0x20\n\t"
-        "pop {r3}\n\t"
-        "mov r8, r3\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    );
-}
-#endif /* NON_MATCHING */
 
 extern void *sub_800014C(void *dst, const void *src, s32 size); /* memcpy (asm/crt0.s) */
 extern void sub_8008AD8(struct part_list *list, struct part_aabb box, struct box_part *part);

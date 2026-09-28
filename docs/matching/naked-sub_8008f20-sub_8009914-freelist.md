@@ -132,3 +132,7 @@ report` + `objdiff-cli report generate` (both functions report as
 their own `raw_0800XXXX` units, matching the established parked-NAKED
 convention - `actor_part11`'s own unit is 100% matched across its 6
 remaining real functions).
+
+## Later pass (issue #9-#11 NAKED retry)
+
+Both functions are real C now (under both compilers): the grid clear is a plain indexed `for` loop and the free-list loop reads the wrapper array through a copy of `&freeListArray` taken right before the `do`. See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).

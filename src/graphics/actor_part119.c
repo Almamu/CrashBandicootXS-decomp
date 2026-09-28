@@ -23,49 +23,43 @@
  *    mode 1 forces it clear (`sub_800C8BC(self,0)`) before the same
  *    `sub_800C8AC(self,3)` + SFX tail.
  *
- * NAKED transcription, not real C: the same `self`/`owner`
- * multi-field-liveness shape already established as resistant
- * throughout this ROM neighborhood (docs/matching/issue-9-10-0x0800b8dc-graphics.md's
- * "Matching" section) - transcribed directly from the confirmed-correct
- * ROM disassembly. Confirmed byte-exact via the isolated
- * cpp/agbcc/as + objcopy pipeline (the only differences from a direct
- * ROM slice are the `bl` and `.word` relocation sites) and a full clean
- * `make compare`. */
+ * Real C since the issue #9-#11 NAKED retry (see below). */
 
 #include "part_ctrl.h"
 
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void *gUnknown_030012BC;
 
-#if NON_MATCHING
-/* Near-miss C draft (issue #10 NAKED retry): 7 halfwords off under
- * both compilers, all register choice right after the two calls - the
- * ROM keeps the target in r2 and `baseY` in r1 (`ldr r2, [r4, #0x70];
- * ldr r1, [r4, #0x64]; str r1, [r2, #4]`), this puts them in r1/r0,
- * which shifts the mode-1 toggle and the tick/timer test by one
- * register. Moving the loads into locals, reordering the statements
- * and if/else instead of the switches didn't change it. */
+/* Real C (issue #9-#11 NAKED retry): the only gap in the old draft was
+ * the post-call `target->y = baseY` store - `baseY` pinned to r1 gives the
+ * ROM's r2/r1 split, and every later access reuses the same `t`. */
 void sub_800C244(struct part_ctrl *self)
 {
+    struct ctrl_target *t;
+
     if (self->target->y < self->baseY)
         return;
     sub_800C8BC(self, 0);
     sub_800C8AC(self, 0);
-    self->target->y = self->baseY;
-    if (self->target->animDone) {
+    t = self->target;
+    {
+        register s32 by asm("r1") = self->baseY;
+        t->y = by;
+    }
+    if (t->animDone) {
         switch (self->mode) {
         case 0:
             sub_800C8CC(self, 1);
             break;
         case 1:
             {
-                u32 m = self->target->mirror.u.x;
-                self->target->mirror.u.x = !m;
+                u32 m = t->mirror.u.x;
+                t->mirror.u.x = !m;
             }
             sub_800C8CC(self, 0);
             break;
         }
-    } else if (self->target->tick == 8 && self->target->timer == 0) {
+    } else if (t->tick == 8 && t->timer == 0) {
         switch (self->mode) {
         case 0:
             sub_800C8BC(self, 3);
@@ -80,108 +74,3 @@ void sub_800C244(struct part_ctrl *self)
         }
     }
 }
-#else
-NAKED void sub_800C244(void *selfArg)
-{
-    asm(
-        "push {r4, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r0, [r4, #0x70]\n\t"
-        "ldr r1, [r0, #4]\n\t"
-        "ldr r0, [r4, #0x64]\n\t"
-        "cmp r1, r0\n\t"
-        "blt 1f\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800C8BC\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800C8AC\n\t"
-        "ldr r2, [r4, #0x70]\n\t"
-        "ldr r1, [r4, #0x64]\n\t"
-        "str r1, [r2, #4]\n\t"
-        "add r0, r2, #0\n\t"
-        "add r0, #0x38\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 2f\n\t"
-        "ldr r0, [r4, #0x68]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 3f\n\t"
-        "cmp r0, #1\n\t"
-        "beq 4f\n\t"
-        "b 1f\n\t"
-    "3:\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #1\n\t"
-        "bl sub_800C8CC\n\t"
-        "b 1f\n\t"
-    "4:\n\t"
-        "add r3, r2, #0\n\t"
-        "add r3, #0x28\n\t"
-        "ldrb r2, [r3]\n\t"
-        "lsl r0, r2, #0x1b\n\t"
-        "mov r1, #0\n\t"
-        "cmp r0, #0\n\t"
-        "blt 5f\n\t"
-        "mov r1, #1\n\t"
-    "5:\n\t"
-        "lsl r1, r1, #4\n\t"
-        "mov r0, #0x11\n\t"
-        "neg r0, r0\n\t"
-        "and r0, r0, r2\n\t"
-        "orr r0, r0, r1\n\t"
-        "strb r0, [r3]\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800C8CC\n\t"
-        "b 1f\n\t"
-    "2:\n\t"
-        "ldr r0, [r2, #0x30]\n\t"
-        "cmp r0, #8\n\t"
-        "bne 1f\n\t"
-        "ldr r0, [r2, #0x34]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 1f\n\t"
-        "ldr r0, [r4, #0x68]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 6f\n\t"
-        "cmp r0, #1\n\t"
-        "beq 7f\n\t"
-        "b 1f\n\t"
-    "6:\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #3\n\t"
-        "bl sub_800C8BC\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #3\n\t"
-        "bl sub_800C8AC\n\t"
-        "ldr r0, =gUnknown_030012BC\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0x14\n\t"
-        "bl PlaySfx\n\t"
-        "b 1f\n\t"
-        ".pool\n\t"
-    "7:\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800C8BC\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #3\n\t"
-        "bl sub_800C8AC\n\t"
-        "ldr r0, =gUnknown_030012BC\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0x14\n\t"
-        "bl PlaySfx\n\t"
-    "1:\n\t"
-        "pop {r4}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".pool\n\t"
-    );
-}
-#endif
