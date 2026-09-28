@@ -84,14 +84,18 @@ system from "core" graphics.
   the family's other callees) touch inside what was previously opaque
   padding.
 
-GitHub issue #45's dispatcher family (`hud_stat_widget2.c`,
-`hud_digit_array.c`, `hud_stat_widget3.c` - `sub_802757C`/`sub_802763C`,
-`sub_8027138`/`sub_802732C`, `sub_8027940`/`sub_8027D5C`/`sub_8027E88`)
-are `NAKED` transcriptions, tracked as parked, not matched - see below
-and `docs/matching/issue-45-hud-stat-widget-dispatcher.md` - except
-`sub_8027138`, now plain C (`hud_digit_array.c` is built with old_agbcc,
-see `docs/matching/game-loop-old-agbcc.md`). All 24 functions in the
-`0x08026EEC`-`0x08028568` chunk are byte-exact; 6 of them are parked.
+- `src/graphics/hud_stat_widget2.c`, `hud_digit_array.c`,
+  `hud_stat_widget3.c` (GitHub issue #45's dispatcher family):
+  `sub_802757C`, `sub_802763C`, `sub_8027138`, `sub_802732C`,
+  `sub_8027940`, `sub_8027D5C`, `sub_8027E88`. All plain C built with
+  old_agbcc (`hud_stat_widget2.c`/`hud_stat_widget3.c` moved to it). Six
+  of them were NAKED until the NAKED retry pass. The "r7 miscompile"
+  that parked them turned out to be a compiler mismatch: under
+  old_agbcc the plain clamp compiles byte for byte. See
+  [naked-retry-mid45.md](../matching/naked-retry-mid45.md).
+
+All 24 functions in the `0x08026EEC`-`0x08028568` chunk are byte-exact,
+and all of them are real C.
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -124,22 +128,4 @@ entire function body is hand-transcribed disassembly wrapped in inline
 `asm()` - the C-level matching attempt failed and the raw bytes got
 embedded as asm instead. They're tracked as parked, not matched.
 
-- **`sub_802757C`**/**`sub_802763C`** (`src/graphics/hud_stat_widget2.c`)
-  - the icon-indicator widget and three more change-detection-gated
-  digit/icon widgets; every phrasing of a per-slot `anim_index` byte
-  kept in r7 up to its use as an array subscript hit a reproducible
-  gcc-2.9 miscompile. GitHub issue #45, see
-  `docs/matching/issue-45-hud-stat-widget-dispatcher.md`'s
-  "NAKED-transcription pass" section.
-- **`sub_802732C`** (`src/graphics/hud_digit_array.c`) - the 35-slot
-  icon array's per-mode slot refresh. `hud_digit_array.c` is built with
-  old_agbcc; plain C there is 32 bytes short, because the ROM keeps three
-  separate copies of one nibble insert that the compiler merges. Its
-  sibling `sub_8027138` is matched. See [docs/matching/game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md).
-- **`sub_8027940`**/**`sub_8027D5C`**/**`sub_8027E88`**
-  (`src/graphics/hud_stat_widget3.c`) - the remaining three callees of
-  the dispatcher (two score-style digit counters and the
-  percentage-counter widget); same r7 miscompile reason as above.
-  GitHub issue #45, see
-  `docs/matching/issue-45-hud-stat-widget-dispatcher.md`'s "Fourth pass"
-  section.
+- None left in this category.

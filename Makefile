@@ -196,6 +196,8 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/hud_icon_widget_85c4.o \
                   $(C_BUILDDIR)/graphics/hud_icon_widget_8890.o \
                   $(C_BUILDDIR)/graphics/hud_icon_widget_8994.o \
+                  $(C_BUILDDIR)/graphics/hud_stat_widget2.o \
+                  $(C_BUILDDIR)/graphics/hud_stat_widget3.o \
                   $(C_BUILDDIR)/graphics/level_graphics.o \
                   $(C_BUILDDIR)/graphics/settings_menu.o \
                   $(C_BUILDDIR)/graphics/settings_menu10.o \

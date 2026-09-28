@@ -3,11 +3,10 @@
 
 /* Shared shapes for the HUD stat-widget/icon-slot family documented in
  * docs/rom_map.md's "hud" investigation (the dispatcher at sub_80274EC
- * and its digit/icon-counter callees). Only `sub_8027838`
- * (src/graphics/hud_counter.c) and the icon-slot constructor family in
- * src/graphics/hud_icon_slot.c use these so far - the rest of the
- * family (sub_80274EC, sub_802757C, sub_802763C, sub_8027940,
- * sub_8027D5C, sub_8027E88) is still raw asm. */
+ * and its digit/icon-counter callees): `sub_8027838`
+ * (src/graphics/hud_counter.c), the icon-slot constructor family in
+ * src/graphics/hud_icon_slot.c, the dispatcher (hud_stat_widget.c) and
+ * its callees (hud_stat_widget2.c, hud_stat_widget3.c). */
 
 struct hud_anim_record {
     u8 unknown_00[0x16];
@@ -27,7 +26,9 @@ struct hud_anim_data {
  * system, treating this object as one. The rest of the fields
  * (animation state) are specific to this widget family. */
 struct hud_digit_part {
-    u8 unknown_00[0x18];
+    s32 x;                 /* +0x00 - position, 24.8 fixed point */
+    s32 y;                 /* +0x04 */
+    u8 unknown_08[0x10];
     void *table;           /* +0x18 - see `struct actor.table` */
     u8 unknown_1c[4];
     struct hud_anim_data *anim_data;

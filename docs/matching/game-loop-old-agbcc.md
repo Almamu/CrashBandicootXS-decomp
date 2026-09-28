@@ -79,3 +79,10 @@ with all of their register pins removed, so the pins are gone:
 `sub_8024B78` (game_loop57.c) and `sub_802400C` (game_loop8.c).
 `sub_8025D28` and `sub_8024708` still need theirs (5 and 3 halfwords off
 without them).
+
+## Later pass: NAKED retry (mid45)
+
+`sub_802732C` (`hud_digit_array.c`) is now plain C. Its three separate
+nibble-insert copies survive when the two inner stores go through a
+`SetPal` inline, and the slot tests are `switch`es. See
+[naked-retry-mid45.md](naked-retry-mid45.md).

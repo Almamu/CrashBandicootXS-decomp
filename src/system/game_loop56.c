@@ -138,7 +138,459 @@
  * plain, file-local asm symbols. Verified structurally byte-exact via
  * an isolated `cpp`/`agbcc`/`arm-none-eabi-as` + `objcopy` comparison
  * against the ROM's own raw bytes, and via a full clean `make compare`
- * once wired into the real build. */
+ * once wired into the real build.
+ *
+ * Later pass (#37 retry): the `#if NON_MATCHING` draft below is 15
+ * halfwords off under old_agbcc (same size; the shared `_08023BA6` tail
+ * is ordinary cross-jumping and comes out on its own). What is left: the
+ * one-byte `direction` stack argument - passing it as a packed one-byte
+ * struct gets the ROM's `strb` into the outgoing slot, but the ROM
+ * computes the slot address (`add rN, sp, #4`) before materializing
+ * the constant, which every C spelling tried (compound literal, local,
+ * union cast, inline wrapper) reverses - plus one register choice in the
+ * post-fade player-position copy. */
+#if NON_MATCHING
+struct gl_point
+{
+    s32 x;
+    s32 y;
+};
+
+struct gl_method
+{
+    s16 delta;
+    u8 unk_02[2];
+    void *fn;
+};
+
+struct gl_vtable
+{
+    u8 unk_00[0x18];
+    struct gl_method m18;           /* +0x18 */
+    u8 unk_20[0x18];
+    struct gl_method m38;           /* +0x38 */
+    u8 unk_40[8];
+    struct gl_method m48;           /* +0x48 */
+};
+
+struct gl_attach_vtable
+{
+    u8 unk_00[0x20];
+    struct gl_method attach;        /* +0x20 */
+};
+
+struct gl_attach
+{
+    u8 unk_00[0xC];
+    struct gl_attach_vtable *vtable; /* +0x0C */
+};
+
+struct gl_anim_record
+{
+    u8 unk_00[0x14];
+    u8 tileRecord;                  /* +0x14 */
+    u8 unk_15[7];
+};
+
+struct gl_player
+{
+    struct gl_point pos;            /* +0x00 */
+    u8 unk_08[4];
+    u8 flags;                       /* +0x0C */
+    u8 unk_0D[0xB];
+    struct gl_vtable *vtable;       /* +0x18 */
+    u8 unk_1C[4];
+    struct gl_anim_record **anim;   /* +0x20 */
+    u8 unk_24[5];
+    u8 frameNibble:4;               /* +0x29 */
+    u8 unk_29_4:4;
+    u8 unk_2A[3];
+    u8 animIndex;                   /* +0x2D */
+    u8 unk_2E[0x16];
+    struct gl_attach *attach;       /* +0x44 */
+    u8 unk_48[0x3C];
+    u8 unk_84[0x80];
+    u8 inputLock;                   /* +0x104 */
+};
+
+struct gl_entity
+{
+    u8 unk_00[0x18];
+    struct gl_vtable *vtable;       /* +0x18 */
+    u8 unk_1C[0x32];
+    u8 tag;                         /* +0x4E */
+};
+
+struct gl_entity_list
+{
+    s32 count;
+    u8 unk_04[4];
+    struct gl_entity **items;       /* +0x08 */
+};
+
+struct gl_level_entry
+{
+    s32 unk_00;
+    s32 state;                      /* +0x04 */
+    u8 unk_08[0xC];
+    s32 unk_14;
+    s32 unk_18;
+    u8 initialized;                 /* +0x1C */
+    u8 unk_1D[7];
+};
+
+struct gl_widget_kind
+{
+    u8 unk_00[8];
+    s32 kind;                       /* +0x08 */
+};
+
+struct gl_self
+{
+    s32 level;                      /* +0x00 */
+    u8 unk_04[0x14];
+    struct gl_widget_kind *widget;  /* +0x18 */
+};
+
+struct gl_scratch
+{
+    u8 unk_00[0x10];
+    void *player;                   /* +0x10 */
+    s32 unk_14;                     /* +0x14 */
+};
+
+struct gl_level
+{
+    u8 unk_00[0x8C];
+    u8 busy;                        /* +0x8C */
+};
+
+union gl_input
+{
+    u32 held;
+    struct
+    {
+        u16 lo;
+        u16 hi;
+    } half;
+};
+
+extern struct gl_player *gUnknown_030012D8;
+extern struct gl_scratch *gUnknown_030012D4;
+extern void *gUnknown_03001308;
+extern struct gl_level *gUnknown_030012C0;
+extern u8 *gUnknown_030012C8;
+extern void *gUnknown_030012B8;
+extern void *gUnknown_030012BC;
+extern void *gUnknown_03001318;
+extern void *gUnknown_030012F4;
+extern void *gUnknown_030012EC;
+extern void *gUnknown_030012F0;
+extern void *gUnknown_030012F8;
+extern void *gUnknown_030012E8;
+extern void *gUnknown_03001304;
+extern struct gl_entity_list *gUnknown_0300130C;
+extern s32 gUnknown_0300082C;
+extern union gl_input gUnknown_030007E0;
+extern struct gl_level_entry gStaticData_0816C86C[];
+extern u16 gStaticData_0816C814[];
+extern u16 gStaticData_0816C81E[];
+extern u16 gStaticData_0816C830[];
+extern u16 gStaticData_0816C842[];
+extern u16 gStaticData_0816C862[];
+
+extern void sub_800A810(void *player);
+extern void sub_80266BC(void *box, void *widget);
+extern void sub_8023484(void *level);
+extern u8 sub_80232C8(void *level);
+extern void sub_800F1B8(void);
+extern void sub_8023118(void *level, s32 value);
+extern void sub_8023110(void *level, s32 value);
+extern void sub_8027088(void *queue);
+/* The direction flag travels as a one-byte struct by value - the ROM
+ * stores it into its stack slot with `strb`. */
+struct fx_direction
+{
+    u8 value;
+} __attribute__((packed));
+
+extern void sub_8027018(void *queue, u16 *targets, u16 *lists, s32 angle, s32 count, struct fx_direction direction);
+
+#define FX_CYCLE(lists, angle, count, dir) \
+    sub_8027018(gUnknown_030012C8, PAL_RAM, (lists), (angle), (count), \
+                (struct fx_direction){ (dir) })
+extern void sub_80240E4(struct gl_self *self);
+extern void sub_802423C(void);
+extern void sub_80087C0(void *part);
+extern void sub_80087B4(void *part);
+extern void sub_800872C(void *part, s32 arg);
+extern s32 sub_800815C(void *part);
+extern void sub_8006D08(void *cache, s32 slot, s32 recordId);
+extern void sub_8026DFC(void *scratch);
+extern void sub_8026984(void *box);
+extern u8 sub_80232B8(void *level);
+extern u8 sub_8023290(void *level);
+extern u8 sub_8024404(struct gl_self *self);
+extern u8 sub_80243E0(struct gl_self *self);
+extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
+extern s32 sub_803AD80(void *self, s32 arg, void *fn);
+extern s32 sub_803AD7C(void *self, void *fn);
+extern void sub_8028504(void *arg);
+extern void sub_8008C80(void *mgr);
+extern void sub_802400C(struct gl_self *self);
+extern void sub_8001524(s32 arg);
+extern void sub_8001604(void);
+extern void sub_80015E0(void);
+extern void sub_8001614(void);
+extern void sub_8001624(void);
+extern void sub_80007AC(void *arg);
+extern s32 sub_8004D74(void);
+extern void sub_80241BC(struct gl_self *self);
+extern void sub_800891C(void *mgr);
+extern void sub_80091D4(void *list);
+extern void sub_8028400(void *arg);
+extern void sub_8022F2C(struct gl_level *level);
+extern u8 sub_80241B0(void);
+extern void sub_80014A4(void);
+extern s32 *sub_8023104(void *level);
+extern s32 sub_801B29C(s32 *arg);
+extern void sub_802356C(void *level, s32 arg, s32 *point);
+extern void sub_8023140(void *level, s32 count);
+extern void sub_8008CEC(void *mgr);
+extern void sub_8009914(void *list);
+extern void sub_8001578(void);
+extern void sub_8001564(void);
+extern void sub_8001550(void);
+extern void sub_800153C(void);
+extern void sub_800158C(void);
+extern void sub_80006A8(void);
+
+#define PAL_RAM ((u16 *)0x05000000)
+
+/* obj->vtable->slot(obj), through `_call_via_r1` (sub_803AD7C). */
+#define PMF_CALL(obj, slot)                                                    \
+    ({                                                                         \
+        struct gl_method *_m = &(obj)->vtable->slot;                           \
+        sub_803AD7C((u8 *)(obj) + _m->delta, _m->fn);                          \
+    })
+
+static inline void SetPoint(struct gl_point *point, s32 x, s32 y)
+{
+    point->x = x;
+    point->y = y;
+}
+
+static inline void SpawnNearPlayer(s32 x, s32 y)
+{
+    struct gl_point point;
+    struct gl_level *level;
+
+    point.x = x;
+    point.y = y;
+    level = gUnknown_030012C0;
+    sub_802356C(level, sub_801B29C(sub_8023104(level)), &point.x);
+}
+
+static inline void RestartPlayerAnim(struct gl_player *p, s32 anim)
+{
+    p->animIndex = anim;
+    sub_80087C0(p);
+    sub_80087B4(p);
+    sub_800872C(p, 0);
+}
+
+static inline void RefreshPlayerTiles(void)
+{
+    void *cache = gUnknown_030012B8;
+    struct gl_player *p = gUnknown_030012D8;
+
+    sub_8006D08(cache, p->frameNibble, (*p->anim)[p->animIndex].tileRecord);
+}
+
+s32 sub_8023A1C(struct gl_self *self)
+{
+    s32 ret = 1;
+    s32 i;
+
+    sub_800A810(gUnknown_030012D8);
+    gUnknown_030012D4->player = gUnknown_030012D8;
+    gUnknown_030012D4->unk_14 = ret;
+    sub_80266BC(gUnknown_03001308, self->widget);
+    if (!gStaticData_0816C86C[self->level].initialized)
+        sub_8023484(gUnknown_030012C0);
+    if (sub_80232C8(gUnknown_030012C0))
+        sub_800F1B8();
+    sub_8023118(gUnknown_030012C0, gStaticData_0816C86C[self->level].unk_14);
+    sub_8023110(gUnknown_030012C0, gStaticData_0816C86C[self->level].unk_18);
+
+    switch (gStaticData_0816C86C[self->level].state)
+    {
+    case 2:
+        sub_8027088(gUnknown_030012C8);
+        FX_CYCLE(gStaticData_0816C814, 6, 5, 1);
+        break;
+    case 1:
+    case 6:
+        sub_8027088(gUnknown_030012C8);
+        FX_CYCLE(gStaticData_0816C81E, 0x10, 9, 0);
+        FX_CYCLE(gStaticData_0816C830, 0x14, 9, 0);
+        break;
+    case 3:
+        sub_8027088(gUnknown_030012C8);
+        FX_CYCLE(gStaticData_0816C842, 0xA, 0x10, 0);
+        break;
+    case 5:
+        sub_8027088(gUnknown_030012C8);
+        FX_CYCLE(gStaticData_0816C862, 0x14, 5, 0);
+        break;
+    default:
+        *gUnknown_030012C8 = 0;
+        break;
+    }
+
+    sub_80240E4(self);
+    sub_802423C();
+    if (self->widget->kind == 1)
+    {
+        RestartPlayerAnim(gUnknown_030012D8, 0x1F);
+        gUnknown_030012D4->unk_14 = 2;
+    }
+    gUnknown_030012D8->frameNibble = sub_800815C(gUnknown_030012D8);
+    RefreshPlayerTiles();
+    sub_8026DFC(gUnknown_030012D4);
+    sub_8026984(gUnknown_03001308);
+
+    if (self->widget->kind == 0)
+    {
+        if ((sub_80232B8(gUnknown_030012C0) && sub_8024404(self))
+            || (sub_8023290(gUnknown_030012C0) && sub_80243E0(self)))
+        {
+            struct gl_attach *a;
+
+            gUnknown_030012D8->flags &= 0x7F;
+            RestartPlayerAnim(gUnknown_030012D8, 0x29);
+            PlaySfx(gUnknown_030012BC, 0x2C, 0x100);
+            a = gUnknown_030012D8->attach;
+            sub_803AD80((u8 *)a + a->vtable->attach.delta, 0x29, a->vtable->attach.fn);
+            RefreshPlayerTiles();
+            sub_8028504(gUnknown_03001318);
+        }
+    }
+    sub_8008C80(gUnknown_030012F4);
+    sub_8008C80(gUnknown_030012EC);
+    sub_8008C80(gUnknown_030012F0);
+    sub_8008C80(gUnknown_030012F8);
+    sub_802400C(self);
+    sub_8001524(0);
+    sub_8001604();
+    sub_80015E0();
+    sub_8001614();
+    sub_8001624();
+
+    while (!sub_80241B0() && !(gUnknown_030012D8->flags & 1))
+    {
+        struct gl_player *p;
+
+        sub_802423C();
+        sub_802400C(self);
+        sub_80007AC(gUnknown_03001304);
+        if (!gUnknown_030012D8->inputLock && (gUnknown_030007E0.half.hi & 8))
+        {
+            s32 r = sub_8004D74();
+
+            if (r == 0)
+            {
+                sub_80241BC(self);
+                sub_80007AC(gUnknown_03001304);
+            }
+            if (r == 1)
+            {
+                ret = 1;
+                goto fade;
+            }
+            if (r == 2)
+            {
+                ret = 2;
+                goto fade;
+            }
+        }
+        if (gUnknown_030007E0.held & 4)
+            sub_8028504(gUnknown_03001318);
+        sub_800891C(gUnknown_030012F4);
+        sub_800891C(gUnknown_030012E8);
+        if ((u8)PMF_CALL(gUnknown_030012D8, m38))
+            PMF_CALL(gUnknown_030012D8, m18);
+        sub_80091D4(gUnknown_0300130C);
+        sub_800891C(gUnknown_030012EC);
+        sub_800891C(gUnknown_030012F0);
+        sub_800891C(gUnknown_030012F8);
+        sub_8028400(gUnknown_03001318);
+        if (gUnknown_030012C0->busy)
+            sub_8022F2C(gUnknown_030012C0);
+        gUnknown_0300082C++;
+    }
+fade:
+    sub_80014A4();
+    if (sub_80241B0())
+    {
+        ret = 0;
+        if (!sub_8024404(self) && sub_80232B8(gUnknown_030012C0))
+        {
+            struct gl_point point;
+            s32 x;
+
+            x = *sub_8023104(gUnknown_030012C0) + -0x1E00;
+            i = gUnknown_030012D8->pos.y + 0x1200;
+            point.x = x;
+            point.y = i;
+            x = (s32)gUnknown_030012C0;
+            sub_802356C((void *)x, sub_801B29C(sub_8023104((void *)x)), &point.x);
+        }
+        else if (!sub_80243E0(self) && sub_8023290(gUnknown_030012C0))
+        {
+            struct gl_point point;
+            register struct gl_player *pl asm("r2") = gUnknown_030012D8;
+
+            point = pl->pos;
+            sub_802356C(gUnknown_030012C0, 0, &point.x);
+        }
+        else
+        {
+            s32 count = 0;
+            struct gl_entity_list **list;
+
+            i = 0;
+            if (count < gUnknown_0300130C->count)
+            {
+                list = &gUnknown_0300130C;
+                do
+                {
+                    struct gl_entity *e = (*list)->items[i];
+
+                    if (PMF_CALL(e, m48) == 3 && e->tag == 0xA)
+                        count++;
+                    i++;
+                } while (i < (*list)->count);
+            }
+            sub_8023140(gUnknown_030012C0, count);
+        }
+    }
+    sub_8008CEC(gUnknown_030012E8);
+    sub_8009914(gUnknown_0300130C);
+    sub_8008CEC(gUnknown_030012EC);
+    sub_8008CEC(gUnknown_030012F0);
+    sub_8008CEC(gUnknown_030012F8);
+    sub_8008CEC(gUnknown_030012F4);
+    sub_8001578();
+    sub_8001564();
+    sub_8001550();
+    sub_800153C();
+    sub_800158C();
+    sub_80006A8();
+    sub_8001614();
+    return ret;
+}
+#else
 NAKED s32 sub_8023A1C(void *selfArg)
 {
     asm(
@@ -797,3 +1249,4 @@ NAKED s32 sub_8023A1C(void *selfArg)
     "_08024008: .4byte gUnknown_030012F4\n"
     );
 }
+#endif

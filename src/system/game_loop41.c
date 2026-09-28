@@ -43,7 +43,291 @@
  * strength-reduced item pointer and a cached count, with no peeled first
  * iteration, while the reconstruction compiles the searches index-based
  * with the first iteration peeled.
+ *
+ * Later pass (#40 retry): the `#if NON_MATCHING` draft below is now
+ * size-exact (704 bytes) under old_agbcc but ~219 halfwords off, mostly
+ * block placement: the ROM lays the link-chasing do-while out with its
+ * actor search first (entered via `b` to the loop test) and the
+ * link-list scan after it, where this compile places the scan first;
+ * the third pass's "found" flags also land in different registers.
  */
+#if NON_MATCHING
+struct lk_item
+{
+    u16 tableIdx;
+    u16 p1;
+    u16 p2;
+    u16 p3;
+};
+
+struct lk_group
+{
+    u16 unk_00;
+    u16 count;                      /* +0x02 */
+    struct lk_item *items;          /* +0x04 */
+};
+
+struct lk_list
+{
+    u16 unk_00;
+    u16 count;                      /* +0x02 */
+    struct lk_group *groups;        /* +0x04 */
+};
+
+struct lk_self
+{
+    struct lk_list *list;           /* +0x000 */
+    s32 pos;                        /* +0x004 */
+    u8 bits0[0x100];                /* +0x008 */
+    u8 bits0Copy[0x100];            /* +0x108 */
+    u8 bits1[0x100];                /* +0x208 */
+    u8 bits1Copy[0x100];            /* +0x308 */
+};
+
+struct lk_link
+{
+    s32 from;
+    s32 to;
+};
+
+struct lk_links
+{
+    s32 count;
+    struct lk_link links[0];
+};
+
+struct lk_point
+{
+    s32 x;
+    s32 y;
+};
+
+struct lk_method
+{
+    s16 delta;
+    u8 unk_02[2];
+    void *fn;
+};
+
+struct lk_vtable
+{
+    u8 unk_00[0x10];
+    struct lk_method height;        /* +0x10 */
+};
+
+struct lk_actor
+{
+    struct lk_point pos;            /* +0x00 */
+    u16 id;                         /* +0x08 */
+    u8 unk_0A[0xE];
+    struct lk_vtable *vtable;       /* +0x18 */
+};
+
+struct lk_actor_list
+{
+    s32 count;
+    u8 unk_04[4];
+    struct lk_actor **items;        /* +0x08 */
+};
+
+extern void *gUnknown_030012E4;
+extern struct lk_actor_list *gUnknown_0300130C;
+extern void sub_803A94C(void *src, void *dst, s32 control);
+extern u8 sub_8025968(struct lk_self *self, s32 n);
+extern void sub_8025D28(void *table, s32 n, struct lk_item *item);
+extern void sub_8010714(struct lk_actor *a, struct lk_actor *b);
+extern void sub_8010710(struct lk_actor *a, struct lk_actor *b);
+extern struct lk_actor *sub_801070C(struct lk_actor *a);
+extern void sub_8007398(struct lk_actor *a, struct lk_point pos);
+extern u8 *sub_803AD7C(void *self, void *fn);
+
+void sub_80255D4(struct lk_self *self, struct lk_list *list, struct lk_links *links, s32 posArg)
+{
+    s32 counter;
+    s32 g;
+    s32 n;
+    struct lk_link *lk;
+
+    if (list != self->list)
+    {
+        self->list = list;
+        DmaFill32(3, 0, self->bits0, 64);
+        DmaFill32(3, 0, self->bits1, 64);
+    }
+    sub_803A94C(self->bits0, self->bits0Copy, 0x04000040);
+    sub_803A94C(self->bits1, self->bits1Copy, 0x04000040);
+    self->pos = posArg >> 8;
+
+    counter = 0;
+    for (g = self->list->count - 1; g >= 0; g--)
+    {
+        struct lk_group *group = &self->list->groups[g];
+        s32 k;
+
+        for (k = 0; k < group->count; k++)
+        {
+            if (!sub_8025968(self, counter))
+                sub_8025D28(gUnknown_030012E4, counter, &group->items[k]);
+            counter++;
+        }
+    }
+
+    if (links == NULL)
+        return;
+    n = links->count;
+    lk = links->links;
+
+    {
+        s32 i;
+
+        for (i = gUnknown_0300130C->count - 1; i >= 0; i--)
+        {
+            struct lk_actor *actor = gUnknown_0300130C->items[i];
+            u16 id = actor->id;
+            s32 j;
+
+            for (j = 0; j < n; j++)
+            {
+                if (id == lk[j].from)
+                {
+                    s32 done = 0;
+                    s32 to = lk[j].to;
+
+                    do
+                    {
+                        s32 k;
+                        s32 missing;
+                        s32 m;
+
+                        for (k = gUnknown_0300130C->count - 1; k >= 0; k--)
+                        {
+                            struct lk_actor *other = gUnknown_0300130C->items[k];
+
+                            if (to == other->id)
+                            {
+                                sub_8010714(actor, other);
+                                sub_8010710(other, actor);
+                                done = 1;
+                                break;
+                            }
+                        }
+                        if (done)
+                            break;
+                        missing = 1;
+                        for (m = 0; m < n; m++)
+                        {
+                            if (to == lk[m].from)
+                            {
+                                to = lk[m].to;
+                                missing = 0;
+                                break;
+                            }
+                        }
+                        if (missing)
+                            done = 1;
+                    } while (!done);
+                    break;
+                }
+            }
+        }
+    }
+
+    {
+        s32 j;
+
+        for (j = 0; j < n; j++)
+        {
+            u16 from = lk[j].from;
+            struct lk_actor *actor;
+            s32 to;
+            s32 found;
+
+            {
+                s32 k;
+                s32 cnt = gUnknown_0300130C->count;
+                struct lk_actor **items;
+
+                found = 0;
+                if (0 < cnt)
+                {
+                    items = gUnknown_0300130C->items;
+                    for (k = 0; k < cnt; k++, items++)
+                    {
+                        if ((*items)->id == from)
+                        {
+                            found = 1;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (found)
+                continue;
+
+            to = (u16)lk[j].to;
+            actor = NULL;
+            for (;;)
+            {
+                s32 missing = 1;
+                s32 next = 0;
+                s32 m;
+
+                for (m = 0; m < n; m++)
+                {
+                    if (to == lk[m].from)
+                    {
+                        s32 k;
+
+                        missing = 0;
+                        next = (u16)lk[m].to;
+                        for (k = 0; k < gUnknown_0300130C->count; k++)
+                        {
+                            actor = gUnknown_0300130C->items[k];
+                            if (actor->id == to)
+                                goto move;
+                        }
+                        break;
+                    }
+                }
+                if (missing)
+                {
+                    s32 k;
+
+                    for (k = 0; k < gUnknown_0300130C->count; k++)
+                    {
+                        struct lk_actor *a = gUnknown_0300130C->items[k];
+
+                        if (a->id == to)
+                        {
+                            actor = a;
+                            goto move;
+                        }
+                    }
+                    break;
+                }
+                to = next;
+            }
+            continue;
+        move:
+            if (actor != NULL)
+            {
+                struct lk_method *hm = &actor->vtable->height;
+                s32 lift = (sub_803AD7C((u8 *)actor + hm->delta, hm->fn)[5] + 1) << 8;
+
+                do
+                {
+                    struct lk_point p;
+
+                    p.x = actor->pos.x;
+                    p.y = actor->pos.y + lift;
+                    sub_8007398(actor, p);
+                    actor = sub_801070C(actor);
+                } while (actor != NULL);
+            }
+        }
+    }
+}
+#else
 NAKED void sub_80255D4(void *self, void *list, void *links, s32 posArg)
 {
     asm(
@@ -422,3 +706,4 @@ NAKED void sub_80255D4(void *self, void *list, void *links, s32 posArg)
         ".align 2, 0\n"
     );
 }
+#endif
