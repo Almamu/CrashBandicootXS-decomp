@@ -30,7 +30,90 @@
  * and explicitly flagged as this class of difficulty for this exact
  * function in docs/matching/issue-63-0x08033ef4-actor.md before this
  * pass. Every instruction below is transcribed directly from and
- * checked against the ROM's own disassembly. */
+ * checked against the ROM's own disassembly.
+ *
+ * Later pass (docs/matching/late-rom-naked-retry.md): the six live
+ * values are not the obstacle - the C draft below is 2 halfwords off,
+ * one register swap in the first input test. */
+#if NON_MATCHING
+/* Draft (old_agbcc), 2 halfwords off: in the first input test the ROM
+ * puts `pressed` in r1 and the mask/result in r0 (`lsrs r1, r2, #16;
+ * movs r0, #1; ands r0, r1`), this gives r0/r1 the other way round.
+ * Getting here took: `k` as a struct copy of the input word (the ROM's
+ * word load + `lsrs #16` per test, then a fresh `ldrh` for the 0x80
+ * test after the calls), a separate `u16` for the first test (else CSE
+ * shares its shift with the `& 8` test), the loop written as
+ * `while (dir >= 0)` (with `while (1)` jump.c moves the return
+ * computation to the `break`), and the pair counter pinned to r8. */
+struct fade_overlay89 {
+    u8 unused_00[0x10];
+    u8 bldcntLo;
+    u8 bldcntHi;
+    u8 eva : 5;
+    u8 evaHi : 3;
+    u8 bldalphaHi;
+    u8 unused_14[0xc];
+    s32 flag_20;
+};
+
+struct keys89 {
+    u16 held;
+    u16 pressed;
+};
+
+extern void sub_80007AC(void *arg0);
+extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
+extern void *gUnknown_03001304;
+extern u32 gUnknown_030007E0;
+extern void *gUnknown_030012BC;
+extern void sub_8034AA4(struct fade_overlay89 *self);
+extern void sub_8034C5C(struct fade_overlay89 *self);
+
+s32 sub_8034994(struct fade_overlay89 *self)
+{
+    s32 dir = 1;
+    register s32 i asm("r8") = 0;
+    s32 level = self->eva;
+    struct keys89 *input = (struct keys89 *)&gUnknown_030007E0;
+    void **audio = &gUnknown_030012BC;
+
+    while (dir >= 0) {
+        sub_80007AC(gUnknown_03001304);
+        {
+            struct keys89 k = *input;
+            u16 p = k.pressed;
+
+            if ((p & 1) || (u16)(k.pressed & 8)) {
+                PlaySfx(*audio, 0x49, 0x100);
+                break;
+            }
+            if ((k.pressed & 0x40) && self->flag_20 == 1) {
+                PlaySfx(*audio, 0x46, 0x100);
+                self->flag_20 = 0;
+            }
+        }
+        if ((input->pressed & 0x80) && self->flag_20 == 0) {
+            PlaySfx(*audio, 0x46, 0x100);
+            self->flag_20 = 1;
+        }
+        sub_8034AA4(self);
+        sub_8034C5C(self);
+        if (++i > 1) {
+            i = 0;
+            if (dir) {
+                if (--level <= 0)
+                    dir = 0;
+            } else {
+                if (++level > 15)
+                    dir = 1;
+            }
+            self->eva = level;
+            *(vu32 *)0x04000050 = *(u32 *)&self->bldcntLo;
+        }
+    }
+    return self->flag_20 == 0;
+}
+#else
 NAKED s32 sub_8034994(void *selfArg)
 {
     asm(
@@ -171,5 +254,6 @@ NAKED s32 sub_8034994(void *selfArg)
         "bx r1"
     );
 }
+#endif
 
 asm(".align 2, 0");

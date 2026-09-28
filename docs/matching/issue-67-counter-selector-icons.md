@@ -89,3 +89,12 @@ prints "La suma coincide").
 ## Later pass: GAX toolchain retry
 
 `sub_80372BC` now matches as real C (calling the `sub_803AD80` method trampoline directly, glyph assigned inside the first call's arguments). `sub_8037388` stays NAKED with a draft that matches through the tile-copy loop. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).
+
+## Later pass: late-ROM NAKED retry
+
+`sub_8037388` now matches as real C under both compilers: the two
+icon-manager steps written as `static inline` helpers taking the manager
+(the idiom `sub_8034CEC` in actor_part131.c established - each expansion
+rematerializes its own `0x108`/`0x12c`/`0x130` offsets), plus one `u32
+zero` local shared by the `field_8`/`field_108` stores, which is the 0
+the ROM keeps in r8. See [late-rom-naked-retry.md](./late-rom-naked-retry.md).

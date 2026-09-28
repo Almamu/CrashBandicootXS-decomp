@@ -143,7 +143,11 @@ drafts. Written plainly against the handler/channel structs now in
 for the per-function notes.
 
 - `src/audio/counter_selector_icons.c` - `sub_80372BC` (counter widget
-  digit-icon draw loop)
+  digit-icon draw loop); `sub_8037388` (the widget's tile-cache/
+  icon-manager init) followed in the late-ROM NAKED retry - the two
+  icon-manager steps as `static inline` helpers plus a shared `zero`
+  local, see
+  [`docs/matching/late-rom-naked-retry.md`](../matching/late-rom-naked-retry.md)
 - `src/audio/gax_zero_fill.c` - `sub_8037F3C` (split out of
   `src/util/math_div64_util.c`, unchanged C)
 - `src/audio/gax_channel_pool_alloc.c` - `sub_8038A1C` (builds the SFX
@@ -171,11 +175,12 @@ for the per-function notes.
 
 ## Parked - NAKED asm transcription (byte-correct, not decompiled C)
 
-- **`sub_8037388`** (`src/audio/counter_selector_icons.c`, the counter
-  widget's tile-cache/icon-manager init) - a draft under
-  `#if NON_MATCHING` matches through the tile-copy loop; the tail's
-  field-offset constants get CSE'd into callee-saved registers across
-  the calls, where the ROM rematerializes them after every call.
+- **`sub_8037FC0`** (`src/audio/gax_work_size.c`, which replaced the raw
+  `asm/code_3_2_20c.s` in the late-ROM NAKED retry - the GAX2 work-RAM
+  size estimator) - draft under `#if NON_MATCHING` with the ROM's
+  control flow; ~240 halfwords of spill-slot/register assignment still
+  differ (see
+  [docs/matching/late-rom-naked-retry.md](../matching/late-rom-naked-retry.md)).
 - **`sub_8038240`** (`src/audio/gax_channel_table_alloc.c`, instantiates
   and links a player's handlers) - draft under `#if NON_MATCHING`; the
   carving loop's register/spill assignment differs and cascades.
@@ -217,9 +222,10 @@ from the `0x08037110`-`0x08038538` pass specifically:
   [docs/status/util.md](./util.md). `sub_8037F3C` (GAX2's zero-fill
   helper) now lives in `src/audio/gax_zero_fill.c`.
 - `sub_8037FC0` - computes the work-RAM size a GAX2 song header needs
-  (handler instances plus mix/echo buffers); still raw
-  (`asm/code_3_2_20c.s`, issue #66). A first C draft is described in
-  [docs/matching/gax-toolchain-retry.md](../matching/gax-toolchain-retry.md).
+  (handler instances plus mix/echo buffers); was raw
+  (`asm/code_3_2_20c.s`, issue #66), now a NAKED transcription with a C
+  draft in `src/audio/gax_work_size.c` - see "Parked - NAKED asm
+  transcription" above.
   `sub_8038240`/
   `sub_80384DC` (the rest of issue #66) are now matched/parked - see
   [docs/matching/issue-66-67-gax-playstart-cluster.md](../matching/issue-66-67-gax-playstart-cluster.md).
@@ -256,8 +262,9 @@ matched `sub_80392E0`) is now matched, real C - see
 and the "Matched" section above.
 
 `sub_80372BC`/`sub_8037388` (icon-manager draw loop / tile-cache init for
-the counter widget, from the `0x08037110`-`0x08038538` pass) are now
-parked as byte-verified NAKED transcriptions - see
+the counter widget, from the `0x08037110`-`0x08038538` pass) were
+parked as byte-verified NAKED transcriptions (both since matched - see
+"Matched in the GAX toolchain retry") - see
 [docs/matching/issue-67-counter-selector-icons.md](../matching/issue-67-counter-selector-icons.md)
 and the "Parked - NAKED asm transcription(s)" section below.
 

@@ -115,12 +115,12 @@ Recurring details that mattered:
 | Function | File | Result |
 |---|---|---|
 | `sub_80372BC` | counter_selector_icons.c | **C** (direct trampoline call) |
-| `sub_8037388` | counter_selector_icons.c | NAKED, draft |
+| `sub_8037388` | counter_selector_icons.c | NAKED, draft (later: **C**, [late-rom-naked-retry.md](./late-rom-naked-retry.md)) |
 | `sub_8037648` | math_div64_util.c | **C** (libgcc2 `__divdi3`, no-interwork) |
 | `sub_8037A7C` | math_div64_util.c | **C** (libgcc2 `__udivdi3`, no-interwork) |
 | `sub_8037E54` | math_div64_util.c | NAKED - hand-written asm (final) |
 | `sub_8037ECC` | math_div64_util.c | **C** (libgcc2 `__muldi3`, no-interwork) |
-| `sub_8037FC0` | asm/code_3_2_20c.s | raw, see below |
+| `sub_8037FC0` | asm/code_3_2_20c.s | raw, see below (later: NAKED + draft in gax_work_size.c) |
 | `sub_8038240` | gax_channel_table_alloc.c | NAKED, draft |
 | `sub_8038538` | gax_playstart.c | NAKED, close draft |
 | `sub_8038A1C` | gax_channel_pool_alloc.c | **C** |

@@ -1,7 +1,7 @@
 #include "core.h"
 
 /* Continuation of actor_part19.c's player/action-object family, right
- * after the parked `sub_802C208` (see actor_part19e.c) - same `self`
+ * after `sub_802C208` (matched C, see actor_part19e.c) - same `self`
  * object and conventions documented there. */
 
 extern u8 gUnknown_030014A0;

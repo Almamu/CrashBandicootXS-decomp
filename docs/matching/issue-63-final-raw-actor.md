@@ -227,3 +227,9 @@ count toward closing per this project's convention (see
 
 See [docs/status/actor.md](../status/actor.md) for the running
 matched/parked list this entry feeds into.
+
+## Later pass: late-ROM NAKED retry
+
+`sub_8034994` got a C draft under `#if NON_MATCHING` that is 2 halfwords
+off under old_agbcc (a single r0/r1 swap in the first input test); it
+stays NAKED. See [late-rom-naked-retry.md](./late-rom-naked-retry.md).
