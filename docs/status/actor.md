@@ -947,6 +947,23 @@ from "core" graphics.
 
 See [docs/matching/late-rom-naked-retry.md](../matching/late-rom-naked-retry.md).
 
+### Matched in the category-driver NAKED retry
+
+- `src/graphics/actor_part101.c` - `InitActorCategory` (issue #48), the
+  category setup + per-VBlank loading loop, old_agbcc (object added to
+  `OLD_AGBCC_OBJS`). First C draft; the "four high-register pins" were
+  loop.c's own hoisting. Pointer locals for the two counters assigned at
+  the top of the outer loop, `&gUnknown_030012C0` assigned right before
+  the inner loop, an if/else exit-state chain and a volatile DMA fill
+  source reproduce the ROM's reload registers and preheader order.
+- `src/graphics/actor_part103.c` - `sub_802A208` (issue #49), old_agbcc
+  (the file's compiler). The sub-effect loop is a plain `while` whose
+  exit test gcc copies ahead of the loop; the test is a macro (an inline
+  function's block notes stop the copy) building the next-record address
+  as `off`, then `base + 0x14`.
+
+See [docs/matching/category-driver-naked-retry.md](../matching/category-driver-naked-retry.md).
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
@@ -1104,23 +1121,6 @@ plain C didn't converge.
   under `NON_MATCHING`, same instructions but register allocation
   differs throughout. See
   [issue-15-16-naked-retry.md](../matching/issue-15-16-naked-retry.md).
-- **`InitActorCategory`** (`src/graphics/actor_part101.c`, GitHub issue
-  #48) - the category (re)initialization + per-VBlank loading-screen
-  driver. Fully understood; sustains four simultaneous high-register
-  pins (`sb`/`sl`/`r8`/`ip`, each reused for 2-3 different roles) plus a
-  stack-spilled loop-state variable threaded through many non-adjacent
-  gotos, on a ~230-instruction, 20+-call, four-state loop body - a much
-  larger instance of this project's "many-high-register-difficulty" gap
-  (`sub_80091D4`/`sub_8009868` above). Verified byte-for-byte identical
-  to the original raw disassembly (both assembled independently and
-  compared directly, not just against `baserom.gba`). See
-  [docs/matching/issue-48-0x080291a4-actor.md](../matching/issue-48-0x080291a4-actor.md).
-- **`sub_802A208`** (`src/graphics/actor_part103.c`, GitHub issue #49) -
-  a scroll enter/exit trampoline + `sub_effect_table` draw loop +
-  double actor-list walk. Not the AABB shape above - a related but
-  distinct gap, needing one extra high register (`r9`) beyond the ROM's
-  single `r8` to keep three values simultaneously live. See
-  [docs/matching/issue-49-0x08029e4c-actor.md](../matching/issue-49-0x08029e4c-actor.md).
 - **`sub_80336CC`** (`src/graphics/actor_part130.c`) - the P2-side VRAM
   fill-level meter, the one-row twin of `sub_8031604`; its
   `#if NON_MATCHING` draft is 29 halfwords off, the same nibble-temporary

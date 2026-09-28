@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor_self.h"
+#include "actor_anim.h"
 
 ACTOR_CALL_VIA_ALIASES
 
@@ -29,8 +30,8 @@ ACTOR_CALL_VIA_ALIASES
  * that pointer is taken, which puts its `add r4, sp, #0xc` after the
  * three loads. The old note blamed an unreachable `r7`; the file
  * simply needs old_agbcc (current agbcc schedules the `asr`s
- * differently, 24-26 halfwords off). `sub_802A208` is NAKED and
- * assembles the same under either compiler. */
+ * differently, 24-26 halfwords off). `sub_802A208` matches under
+ * old_agbcc as well. */
 
 extern struct actor_self *gUnknown_03000884;
 extern u8 gUnknown_030014A0;
@@ -127,228 +128,102 @@ s32 sub_802A110(struct actor_self *self)
  * set through `sub_803AD80` then a second `sub_803AD7C` pass on a
  * different trampoline-record offset).
  *
- * A careful multi-iteration plain-C reconstruction reproduced the exact
- * same control flow, literal pool contents, and instruction shapes but
- * consistently needed one extra high register (`r9` on top of the ROM's
- * own single `r8`) to hold the function-lifetime
- * `gUnknown_03001418`/`gUnknown_03001400` addresses and the cached
- * `scroll` value simultaneously - the same "more live values than the
- * ROM's own build had to keep" register-pressure gap this project's
- * matching.md catalogs throughout (every attempt at re-deriving *which*
- * value the ROM's C source kept in a true local vs. re-read fresh from
- * the global at each use converged on the same 6-register shape, one
- * over the ROM's 5). NAKED per docs/workflow.md's escape hatch; every
- * instruction below is transcribed directly from the ROM disassembly
- * (`asm/code_3_2_20_8b7c.s`) and verified byte-for-byte against
- * `baserom.gba`, not inferred. */
+ * The old note blamed a missing high register (a C draft needed `r9`).
+ * That draft cached values across the sub-effect loop; the ROM is a
+ * plain `while` whose exit test gcc copies ahead of the loop
+ * (jump.c's duplicate_loop_exit_test), so the loop body starts at a
+ * label and re-reads every global. The test must stay free of inline
+ * functions (their block notes stop the copy), hence the macro, and
+ * builds the "next record" address in the `sub_802A51C` order
+ * (`off`, then `base + 0x14`, then the sum) through two locals.
+ * Matches under old_agbcc, this file's compiler. */
 
-extern void *gUnknown_03001408;
-extern void *gUnknown_03000880;
+extern struct category_vtable *gUnknown_03001418;
+extern s32 gUnknown_03001410;
+extern s32 gUnknown_03001420;
+extern struct sub_effect_record *gUnknown_03001400;
+extern u8 gUnknown_0300141C;
+extern s32 gUnknown_03001404;
+extern u8 gUnknown_03001414;
+extern struct actor_self **gUnknown_03001408;
+extern s32 gUnknown_0300140C;
+extern void (*gUnknown_03000880)(s32 count, struct actor_self **list);
+extern s32 gUnknown_03001424;
 
-NAKED s32 sub_802A208(void)
+extern void sub_803AD78(void *fn);
+extern s32 sub_8029B2C(void);
+extern s32 sub_8029B8C(void);
+
+/* Method slots 0x10 ("draw") and 0x18 ("draw overlay") of the actor
+ * method table. */
+struct actor_draw_methods {
+    u8 unk_00[0x10];
+    struct actor_method m10;
+    struct actor_method m18;
+};
+
+typedef void (*actor_draw_fn)(void *self);
+
+/* "The next sub-effect record's threshold has scrolled into view":
+ * `gUnknown_03001400[idx + 1].field_00 + gUnknown_03001420 <= scroll +
+ * vtable slot 7` (read as a value), bounded by record 0's entry count. */
+#define SUB_EFFECT_DUE()                                                       \
+    (gUnknown_03001404 < gUnknown_03001400->field_04                           \
+     && (off = gUnknown_03001404 * 0x14, tb = (u8 *)gUnknown_03001400 + 0x14, \
+         *(s32 *)(tb + off)) + gUnknown_03001420                              \
+            <= scroll + (s32)gUnknown_03001418->fn[7])
+
+s32 sub_802A208(void)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, r8\n\t"
-        "push {r7}\n\t"
-        "ldr r7, 11f\n\t"
-        "ldr r0, [r7]\n\t"
-        "ldr r0, [r0, #0xc]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 1f\n\t"
-        "bl sub_803AD78\n\t"
-        "1:\n\t"
-        "ldr r1, 12f\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [r1]\n\t"
-        "bl sub_8029B2C\n\t"
-        "add r6, r0, #0\n\t"
-        "ldr r5, 13f\n\t"
-        "ldr r1, [r5]\n\t"
-        "sub r1, r6, r1\n\t"
-        "ldr r4, 14f\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r1, r0\n\t"
-        "ble 2f\n\t"
-        "ldr r0, [r7]\n\t"
-        "ldr r0, [r0, #0x28]\n\t"
-        "bl sub_803AD78\n\t"
-        "2:\n\t"
-        "ldr r0, 15f\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 3f\n\t"
-        "bl sub_8029B8C\n\t"
-        "ldr r1, [r5]\n\t"
-        "add r1, r1, r0\n\t"
-        "str r1, [r5]\n\t"
-        "b 5f\n\t"
-        ".align 2, 0\n"
-        "11: .4byte gUnknown_03001418\n"
-        "12: .4byte gUnknown_03001410\n"
-        "13: .4byte gUnknown_03001420\n"
-        "14: .4byte gUnknown_03001400\n"
-        "15: .4byte gUnknown_0300141C\n"
-        "3:\n\t"
-        "ldr r0, 16f\n\t"
-        "mov ip, r0\n\t"
-        "ldr r3, [r4]\n\t"
-        "ldr r2, [r0]\n\t"
-        "ldr r0, [r3, #4]\n\t"
-        "cmp r2, r0\n\t"
-        "bge 5f\n\t"
-        "lsl r1, r2, #2\n\t"
-        "add r1, r1, r2\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r0, r3, #0\n\t"
-        "add r0, #0x14\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldr r0, [r5]\n\t"
-        "add r1, r1, r0\n\t"
-        "ldr r0, [r7]\n\t"
-        "ldr r0, [r0, #0x1c]\n\t"
-        "add r0, r6, r0\n\t"
-        "cmp r1, r0\n\t"
-        "bgt 5f\n\t"
-        "mov r8, r7\n\t"
-        "add r7, r4, #0\n\t"
-        "mov r4, ip\n\t"
-        "4:\n\t"
-        "mov r2, r8\n\t"
-        "ldr r3, [r2]\n\t"
-        "ldr r0, [r4]\n\t"
-        "lsl r1, r0, #2\n\t"
-        "add r1, r1, r0\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r1, #8\n\t"
-        "ldr r0, [r7]\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r1, 17f\n\t"
-        "ldrb r1, [r1]\n\t"
-        "ldr r2, [r5]\n\t"
-        "lsl r2, r2, #8\n\t"
-        "ldr r3, [r3, #4]\n\t"
-        "bl sub_803AD84\n\t"
-        "ldr r0, [r4]\n\t"
-        "add r2, r0, #1\n\t"
-        "str r2, [r4]\n\t"
-        "ldr r3, [r7]\n\t"
-        "ldr r0, [r3, #4]\n\t"
-        "cmp r2, r0\n\t"
-        "bge 5f\n\t"
-        "lsl r1, r2, #2\n\t"
-        "add r1, r1, r2\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r0, r3, #0\n\t"
-        "add r0, #0x14\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldr r0, [r5]\n\t"
-        "add r1, r1, r0\n\t"
-        "mov r3, r8\n\t"
-        "ldr r0, [r3]\n\t"
-        "ldr r0, [r0, #0x1c]\n\t"
-        "add r0, r6, r0\n\t"
-        "cmp r1, r0\n\t"
-        "ble 4b\n\t"
-        "5:\n\t"
-        "ldr r0, 18f\n\t"
-        "ldr r3, [r0]\n\t"
-        "add r5, r0, #0\n\t"
-        "6:\n\t"
-        "ldr r4, [r3, #0x4c]\n\t"
-        "ldr r1, [r3, #0x50]\n\t"
-        "mov r2, #0x10\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r3, r0\n\t"
-        "ldr r1, [r1, #0x14]\n\t"
-        "bl sub_803AD7C\n\t"
-        "add r3, r4, #0\n\t"
-        "ldr r0, [r5]\n\t"
-        "cmp r3, r0\n\t"
-        "bne 6b\n\t"
-        "ldr r0, 19f\n\t"
-        "mov r1, #0\n\t"
-        "str r1, [r0]\n\t"
-        "ldr r1, 18f\n\t"
-        "ldr r3, [r1]\n\t"
-        "add r5, r0, #0\n\t"
-        "ldr r0, 20f\n\t"
-        "mov r8, r0\n\t"
-        "ldr r2, 21f\n\t"
-        "mov ip, r2\n\t"
-        "add r4, r5, #0\n\t"
-        "mov r7, r8\n\t"
-        "add r6, r1, #0\n\t"
-        "7:\n\t"
-        "add r0, r3, #0\n\t"
-        "add r0, #0x2c\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 8f\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldr r2, [r7]\n\t"
-        "lsl r1, r0, #2\n\t"
-        "add r1, r1, r2\n\t"
-        "str r3, [r1]\n\t"
-        "add r0, #1\n\t"
-        "str r0, [r4]\n\t"
-        "8:\n\t"
-        "ldr r3, [r3, #0x4c]\n\t"
-        "ldr r0, [r6]\n\t"
-        "cmp r3, r0\n\t"
-        "bne 7b\n\t"
-        "ldr r0, [r5]\n\t"
-        "mov r3, r8\n\t"
-        "ldr r1, [r3]\n\t"
-        "mov r3, ip\n\t"
-        "ldr r2, [r3]\n\t"
-        "bl sub_803AD80\n\t"
-        "mov r4, #0\n\t"
-        "ldr r0, [r5]\n\t"
-        "cmp r4, r0\n\t"
-        "bge 10f\n\t"
-        "9:\n\t"
-        "ldr r0, 20f\n\t"
-        "ldr r1, [r0]\n\t"
-        "lsl r0, r4, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r2, [r0, #0x50]\n\t"
-        "mov r3, #0x18\n\t"
-        "ldrsh r1, [r2, r3]\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r1, [r2, #0x1c]\n\t"
-        "bl sub_803AD7C\n\t"
-        "add r4, #1\n\t"
-        "ldr r0, 19f\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r4, r0\n\t"
-        "blt 9b\n\t"
-        "10:\n\t"
-        "ldr r1, 22f\n\t"
-        "ldr r0, [r1]\n\t"
-        "add r0, #1\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r0, 23f\n\t"
-        "ldr r0, [r0]\n\t"
-        "pop {r3}\n\t"
-        "mov r8, r3\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n"
-        "16: .4byte gUnknown_03001404\n"
-        "17: .4byte gUnknown_03001414\n"
-        "18: .4byte gUnknown_03000884\n"
-        "19: .4byte gUnknown_0300140C\n"
-        "20: .4byte gUnknown_03001408\n"
-        "21: .4byte gUnknown_03000880\n"
-        "22: .4byte gUnknown_03001424\n"
-        "23: .4byte gUnknown_03001410\n"
-    );
+    s32 scroll;
+    struct actor_self *n;
+    s32 i;
+    u8 *tb;
+    s32 off;
+
+    if (gUnknown_03001418->fn[3] != NULL)
+        sub_803AD78(gUnknown_03001418->fn[3]);
+    gUnknown_03001410 = 0;
+    scroll = sub_8029B2C();
+    if (scroll - gUnknown_03001420 > gUnknown_03001400->field_00)
+        sub_803AD78(gUnknown_03001418->fn[10]);
+    if (gUnknown_0300141C != 0) {
+        gUnknown_03001420 += sub_8029B8C();
+    } else {
+        while (SUB_EFFECT_DUE()) {
+            ((void (*)(void *, s32, s32))gUnknown_03001418->fn[1])(
+                (u8 *)gUnknown_03001400 + (gUnknown_03001404 * 0x14 + 8),
+                gUnknown_03001414, gUnknown_03001420 << 8);
+            gUnknown_03001404++;
+        }
+    }
+
+    n = gUnknown_03000884;
+    do {
+        struct actor_self *next = ACTOR_NEXT(n);
+        struct actor_draw_methods *vt = (struct actor_draw_methods *)n->vtable;
+
+        ((actor_draw_fn)vt->m10.fn)((u8 *)n + vt->m10.thisOffset);
+        n = next;
+    } while (n != gUnknown_03000884);
+
+    gUnknown_0300140C = 0;
+    n = gUnknown_03000884;
+    do {
+        if (n->unk_2C[0] != 0)
+            gUnknown_03001408[gUnknown_0300140C++] = n;
+        n = ACTOR_NEXT(n);
+    } while (n != gUnknown_03000884);
+    gUnknown_03000880(gUnknown_0300140C, gUnknown_03001408);
+
+    for (i = 0; i < gUnknown_0300140C; i++) {
+        struct actor_self *a = gUnknown_03001408[i];
+        struct actor_draw_methods *vt = (struct actor_draw_methods *)a->vtable;
+
+        ((actor_draw_fn)vt->m18.fn)((u8 *)a + vt->m18.thisOffset);
+    }
+    gUnknown_03001424++;
+    return gUnknown_03001410;
 }
 
 /* `sub_802A3AC`: walks the whole `gUnknown_03000884`-rooted circular

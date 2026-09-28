@@ -145,3 +145,10 @@ pointer to `gUnknown_030013B8` loaded first, `area` is assigned inside
 the `gUnknown_030013A0` store, and `size` is read back from
 `gUnknown_030013A0` between taking the address and copying it. See
 [near-miss-polish-2.md](near-miss-polish-2.md).
+
+## Later pass: category driver retry
+
+`InitActorCategory` is now plain C, matching under old_agbcc
+(`actor_part101.o` is on `OLD_AGBCC_OBJS`; current agbcc is 3 halfwords
+off). The high-register roles are loop.c's invariant hoisting, not
+pins. See [category-driver-naked-retry.md](category-driver-naked-retry.md).
