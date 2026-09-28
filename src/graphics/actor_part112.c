@@ -18,6 +18,8 @@
  * independent per-object-type behavior slots that merely sit next to
  * each other in ROM address order. */
 
+#include "part_ctrl.h"
+
 extern void *gUnknown_030012D8;
 extern void *gUnknown_030012B4;
 extern void *gUnknown_030012BC;
@@ -40,15 +42,12 @@ extern void sub_800C244(void *self);
 extern void sub_800C314(void *self);
 extern void sub_800C40C(void *self);
 extern void sub_800C5D4(void *self);
-extern void sub_800C8AC(void *self, s32 mode);
-extern void sub_800C8BC(void *self, s32 mode);
-extern void sub_800C8CC(void *self, s32 mode);
 extern void sub_800C8F8(void *self);
 extern void sub_800C940(void *self);
 extern void sub_800C97C(void *self);
 extern void *sub_800C9C8(s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
 extern void sub_800BFA8(void *self);
-extern void sub_800CBD4(void); /* return value used as a fresh object pointer - likely an allocator/lookup, arg count unconfirmed */
+extern void *sub_800CBD4(void *mem); /* constructor: resets the fresh object and points its +0xC table at gStaticData_087E3FA4 (actor_part117.c) */
 extern void *sub_8026EDC(s32 size);
 extern void *sub_803AD7C(void *arg0, void *fn);
 extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
@@ -665,6 +664,118 @@ NAKED void sub_800B8DC(void *self)
  * isolated cpp/agbcc/as + objcopy/cmp pipeline (only `bl` relocation
  * sites differ) plus the same full clean `make NON_MATCHING=1 report` /
  * `make compare` verification. */
+#if NON_MATCHING
+/* Near-miss C draft (issue #10 NAKED retry, old_agbcc): 21 halfwords
+ * off, nearly all of them reload scratch registers (the `ldrh` of the
+ * id in the MarkGone copies, the `-0x200` literal, the `ldrsh` of the
+ * launch method's offset) - the ROM cycles r3, r3, r3, r4, r6, r2, ...
+ * where this picks r6, r4, r4, r6, r2, ... The one real code difference
+ * left is in states 1/21/22: the ROM materializes the layer's `1`
+ * before the `-4` mask (`movs r2, #1; movs r1, #4; negs ...`). */
+struct player_ring {
+    u8 unk_00[0x88];
+    u8 ringLocked;      // 0x88
+};
+
+struct launch_obj {
+    u8 unk_00[0xC];
+    u8 *vtable;         // 0x0C
+};
+
+typedef void (*bd48_method_fn)(void *self, void *arg);
+typedef void (*bd48_method_i_fn)(void *self, s32 arg);
+
+asm(".set _call_via_r2, sub_803AD80\n");
+
+static inline void MarkGone(struct ctrl_target *t)
+{
+    t->gone = 1;
+    if (t->id != 0xFFFF)
+        do {
+            s32 id = t->id;
+            u8 *base = gUnknown_030012B4;
+            s32 word = id / 32;
+            s32 off = word * 4;
+            u32 *slot = (u32 *)(base + 0x108);
+
+            slot = (u32 *)((u8 *)slot + off);
+            *slot |= 1 << (id - word * 32);
+        } while (0);
+}
+
+static inline void SetVelX(struct ctrl_target *t, s32 a, s32 b, s32 c)
+{
+    t->speedX = a;
+    t->velA[0] = a;
+    t->velA[1] = b;
+    t->velA[2] = c;
+}
+
+static inline void SetVelY(struct ctrl_target *t, s32 a, s32 b, s32 c)
+{
+    t->speedY = a;
+    t->velB[0] = a;
+    t->velB[1] = b;
+    t->velB[2] = c;
+}
+
+static inline struct ctrl_target *SpawnAt(s32 kind, s32 x, s32 y)
+{
+    return sub_8025BAC(gUnknown_030012E4, kind, 2, x, y, 0);
+}
+
+void sub_800BD48(struct part_ctrl *self, s32 unused, s32 state)
+{
+    if (((struct player_ring *)gUnknown_030012D8)->ringLocked == 1) {
+        MarkGone(self->target);
+        SpawnAt(0x28, self->target->x >> 8, self->target->y >> 8);
+        PlaySfx(gUnknown_030012BC, 0x5a, 0x80);
+        return;
+    }
+    if (self->popup)
+        MarkGone(self->popup);
+    switch (state) {
+    case 19:
+    case 20:
+        {
+            struct launch_obj *obj = sub_800CBD4(sub_8026EDC(0x10));
+            struct part_method *m;
+            struct ctrl_target *t;
+            s32 a, v;
+
+            *(struct launch_obj **)((u8 *)self->target + 0x44) = obj;
+            m = (struct part_method *)(obj->vtable + 0x18);
+            ((bd48_method_fn)m->fn)((u8 *)obj + m->thisOffset, self->target);
+            self->target->flag7 = 0;
+            t = self->target;
+            if ((a = t->x) > ((struct ctrl_target *)gUnknown_030012D8)->x)
+                SetVelX(t, 0x1000, 0, 0x1800);
+            else
+                SetVelX(t, -0x1000, 0, -0x1800);
+            v = ((u16)sub_8000E1C(3) << 9) - 0x200;
+            SetVelY(self->target, v, 0, v);
+            self->target->visible = 0;
+            PlaySfx(gUnknown_030012BC, 5, 0x80);
+            if (self) {
+                struct part_method *m2 = &self->anchor->launch;
+                ((bd48_method_i_fn)m2->fn)((u8 *)self + m2->thisOffset, 3);
+            }
+        }
+        break;
+    case 1:
+    case 21:
+    case 22:
+        {
+            struct ctrl_target *obj = SpawnAt(0x29, self->target->x >> 8, self->target->y >> 8);
+
+            obj->visible = 0;
+            obj->mirror.u.layer = 1;
+            MarkGone(self->target);
+        }
+        break;
+    }
+}
+#else
 NAKED void sub_800BD48(void *self, s32 unused, s32 state)
 {
     asm(
@@ -924,3 +1035,4 @@ NAKED void sub_800BD48(void *self, s32 unused, s32 state)
         ".pool"
     );
 }
+#endif

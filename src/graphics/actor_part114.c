@@ -20,156 +20,68 @@
  * carrying the diagonal-approach rate while this axis's own drift
  * stops.
  *
- * NAKED transcription, not real C: an isolated real-C attempt got
- * the branch *polarity* and all four `{vx, vy}` cases semantically
- * right (confirmed via a side-by-side disassembly diff), but this
- * agbcc build's cross-jump/tail-merging pass keeps unifying the
- * "vx=0, vy=0x10" case's three stores with the shared "near band"
- * tail's own three stores into one block, while the ROM keeps that
- * exact 3-instruction sequence *duplicated* at both of its two call
- * sites (confirmed byte-for-byte identical in the ROM disassembly:
- * `movs r1, #0` / `movs r0, #0x10` / `b _0800C1DA` appears twice,
- * verbatim) - i.e. whatever produced the ROM did *not* cross-jump
- * here, but this toolchain's -O2 does, regardless of `goto`-based
- * restructuring, register-variable pins, or `volatile`-qualified
- * stores (all tried). Not a register-allocation gap this project's
- * usual pin toolbox addresses - a genuine code-layout/tail-merging
- * divergence between this agbcc build and whatever produced the ROM.
- * Transcribed instruction-for-instruction instead, following this
- * project's usual NAKED-transcription conventions (unified-syntax
- * mnemonics to divided/suffix-less form, GNU-as local numeric labels,
- * the ROM's own mid-function `.pool` split reproduced exactly).
- * Confirmed byte-identical to `baserom.gba` at
- * `0x0800C18C`-`0x0800C244` (184 bytes total) via the isolated
- * cpp/agbcc/as + objcopy/cmp pipeline (only `bl`-shaped relocation
- * sites differ - actually neither function makes any `bl` call, so
- * the isolated objects matched with zero relocation differences at
- * all) plus a full clean `rm -rf build && make NON_MATCHING=1 report`
- * (no warnings) and `rm -rf build crashbandicootxs.elf
- * crashbandicootxs.gba crashbandicootxs.map && make compare`
- * (`crashbandicootxs.gba: La suma coincide`). */
-NAKED void sub_800C18C(void *self)
+ * Real C (issue #10 NAKED retry, see docs/matching/issue-10-naked-retry.md).
+ * The earlier "cross-jump divergence" note was a source-shape problem:
+ * each of the five cases does its own `{a, b, a}` store triple through
+ * a block-scoped `a`/`b` pair (SET_VEL below); the compiler's cross-jump
+ * then merges four of them into the shared tail and leaves the `0, 0x10`
+ * moves duplicated, exactly as in the ROM. The `-speed` case keeps its
+ * own stores because its registers differ. Same bytes under both
+ * compilers. */
+#include "part_ctrl.h"
+
+extern struct ctrl_target *gUnknown_030012D8;
+
+#define SET_VEL(v, a_, b_) \
+    {                      \
+        s32 a = (a_);      \
+        s32 b = (b_);      \
+        (v)[0] = a;        \
+        (v)[1] = b;        \
+        (v)[2] = a;        \
+    }
+
+void sub_800C18C(struct part_ctrl *self)
 {
-    asm(
-        "push {r4, lr}\n\t"
-        "add r3, r0, #0\n\t"
-        "ldr r2, [r3, #0x70]\n\t"
-        "ldr r4, [r2]\n\t"
-        "ldr r0, =gUnknown_030012D8\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0]\n\t"
-        "sub r1, r4, r0\n\t"
-        "cmp r1, #0x14\n\t"
-        "ble 1f\n\t"
-        "ldr r0, [r3, #0x10]\n\t"
-        "cmp r4, r0\n\t"
-        "bge 2f\n\t"
-        "mov r1, #0\n\t"
-        "mov r0, #0x10\n\t"
-        "b 3f\n\t"
-        ".pool\n\t"
-    "2:\n\t"
-        "ldr r0, [r3, #0x58]\n\t"
-        "neg r0, r0\n\t"
-        "ldr r1, [r3, #0x5c]\n\t"
-        "str r0, [r2, #0x48]\n\t"
-        "str r1, [r2, #0x4c]\n\t"
-        "str r0, [r2, #0x50]\n\t"
-        "b 4f\n\t"
-    "1:\n\t"
-        "mov r0, #0x14\n\t"
-        "neg r0, r0\n\t"
-        "cmp r1, r0\n\t"
-        "bge 5f\n\t"
-        "ldr r0, [r3, #0x14]\n\t"
-        "cmp r4, r0\n\t"
-        "ble 6f\n\t"
-        "mov r1, #0\n\t"
-        "mov r0, #0x10\n\t"
-        "b 3f\n\t"
-    "6:\n\t"
-        "ldr r1, [r3, #0x58]\n\t"
-        "b 7f\n\t"
-    "5:\n\t"
-        "mov r1, #0\n\t"
-    "7:\n\t"
-        "ldr r0, [r3, #0x5c]\n\t"
-    "3:\n\t"
-        "str r1, [r2, #0x48]\n\t"
-        "str r0, [r2, #0x4c]\n\t"
-        "str r1, [r2, #0x50]\n\t"
-    "4:\n\t"
-        "pop {r4}\n\t"
-        "pop {r0}\n\t"
-        "bx r0"
-    );
+    struct ctrl_target *target = self->target;
+    s32 x = target->x;
+    s32 d = x - gUnknown_030012D8->x;
+
+    if (d > 20) {
+        if (x < self->rangeX[0])
+            SET_VEL(target->velA, 0, 0x10)
+        else
+            SET_VEL(target->velA, -self->speed, self->accel)
+    } else if (d < -20) {
+        if (x > self->rangeX[1])
+            SET_VEL(target->velA, 0, 0x10)
+        else
+            SET_VEL(target->velA, self->speed, self->accel)
+    } else {
+        SET_VEL(target->velA, 0, self->accel)
+    }
 }
 
-/* Y-axis mirror of `sub_800C18C` above - same shape, `self+0x18`/
- * `0x1c` bounds instead of `0x10`/`0x14`, `owner+4` instead of
- * `owner+0` for the position read, `gUnknown_030012D8`'s own `+4`
- * instead of `+0`, and `owner+0x54`/`0x58`/`0x5c` instead of
- * `owner+0x48`/`0x4c`/`0x50` for the velocity-target triple. Same
- * NAKED-transcription rationale as `sub_800C18C` above (identical
- * cross-jump-merging divergence hit on an isolated real-C attempt).
- * Confirmed byte-identical to `baserom.gba` at
- * `0x0800C1E8`-`0x0800C244` (92 bytes) via the same pipeline, plus
- * the same full clean `make NON_MATCHING=1 report`/`make compare`
- * verification. */
-NAKED void sub_800C1E8(void *self)
+/* Y-axis mirror of `sub_800C18C` above: `target->y`, `velB`, and the
+ * `rangeY` bounds tested in the opposite order. */
+void sub_800C1E8(struct part_ctrl *self)
 {
-    asm(
-        "push {r4, lr}\n\t"
-        "add r3, r0, #0\n\t"
-        "ldr r2, [r3, #0x70]\n\t"
-        "ldr r4, [r2, #4]\n\t"
-        "ldr r0, =gUnknown_030012D8\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0, #4]\n\t"
-        "sub r1, r4, r0\n\t"
-        "cmp r1, #0x14\n\t"
-        "ble 1f\n\t"
-        "ldr r0, [r3, #0x1c]\n\t"
-        "cmp r4, r0\n\t"
-        "bge 2f\n\t"
-        "mov r1, #0\n\t"
-        "mov r0, #0x10\n\t"
-        "b 3f\n\t"
-        ".pool\n\t"
-    "2:\n\t"
-        "ldr r0, [r3, #0x58]\n\t"
-        "neg r0, r0\n\t"
-        "ldr r1, [r3, #0x5c]\n\t"
-        "str r0, [r2, #0x54]\n\t"
-        "str r1, [r2, #0x58]\n\t"
-        "str r0, [r2, #0x5c]\n\t"
-        "b 4f\n\t"
-    "1:\n\t"
-        "mov r0, #0x14\n\t"
-        "neg r0, r0\n\t"
-        "cmp r1, r0\n\t"
-        "bge 5f\n\t"
-        "ldr r0, [r3, #0x18]\n\t"
-        "cmp r4, r0\n\t"
-        "ble 6f\n\t"
-        "mov r1, #0\n\t"
-        "mov r0, #0x10\n\t"
-        "b 3f\n\t"
-    "6:\n\t"
-        "ldr r1, [r3, #0x58]\n\t"
-        "b 7f\n\t"
-    "5:\n\t"
-        "mov r1, #0\n\t"
-    "7:\n\t"
-        "ldr r0, [r3, #0x5c]\n\t"
-    "3:\n\t"
-        "str r1, [r2, #0x54]\n\t"
-        "str r0, [r2, #0x58]\n\t"
-        "str r1, [r2, #0x5c]\n\t"
-    "4:\n\t"
-        "pop {r4}\n\t"
-        "pop {r0}\n\t"
-        "bx r0"
-    );
+    struct ctrl_target *target = self->target;
+    s32 y = target->y;
+    s32 d = y - gUnknown_030012D8->y;
+
+    if (d > 20) {
+        if (y < self->rangeY[1])
+            SET_VEL(target->velB, 0, 0x10)
+        else
+            SET_VEL(target->velB, -self->speed, self->accel)
+    } else if (d < -20) {
+        if (y > self->rangeY[0])
+            SET_VEL(target->velB, 0, 0x10)
+        else
+            SET_VEL(target->velB, self->speed, self->accel)
+    } else {
+        SET_VEL(target->velB, 0, self->accel)
+    }
 }
 asm(".align 2, 0");
