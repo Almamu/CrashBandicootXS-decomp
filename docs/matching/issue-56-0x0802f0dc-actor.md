@@ -301,3 +301,11 @@ the high nibble, `(*nib >> 4) & 0xf`, fixes the next-row pointer/row+1
 (ip/r9). `sub_802F7B0` stays NAKED; its draft (the inlining version) is
 off by two register-priority swaps. See
 [late-rom-naked-retry.md](late-rom-naked-retry.md).
+
+A second late-ROM pass closed `sub_802F7B0` (old_agbcc). The draft's
+palette copy had the wrong DMA width (`DmaCopy16(3, pic, PLTT, 0x200)`,
+control word 0x80000100). The two register ties fell to empty
+`asm("" : : "r"(x))` extra references: one to `dest` after the loop
+(r5/r6), two to `cols` before the call (r8/sl). The `dest` reference
+breaks 8E8, so 7B0 now inlines a `static inline` copy of the loop
+(`MapFill`) and 8E8 is written out as its own function after 7B0.

@@ -163,6 +163,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/actor_part83.o \
                   $(C_BUILDDIR)/graphics/actor_part84.o \
                   $(C_BUILDDIR)/graphics/actor_part86.o \
+                  $(C_BUILDDIR)/graphics/actor_part89.o \
                   $(C_BUILDDIR)/graphics/actor_part86b.o \
                   $(C_BUILDDIR)/graphics/actor_part88.o \
                   $(C_BUILDDIR)/graphics/actor_part_12fbc.o \
