@@ -1514,3 +1514,8 @@ See [issue-10-naked-retry.md](issue-10-naked-retry.md).
 ## Later pass (issue #9-#11 NAKED retry)
 
 `sub_800C244`, `sub_800C5D4`, `sub_800C8F8` and `sub_800CBF4` are real C now. `sub_800B8DC`, `sub_800BD48`, `sub_800C940` and `sub_800C97C` are still NAKED. See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).
+
+## Later pass (second big NAKED retry)
+
+`sub_800B8DC` is real C now (old_agbcc). See
+[big-naked-retry-2.md](big-naked-retry-2.md).

@@ -167,3 +167,8 @@ under `NON_MATCHING`; `sub_8011BD4` wasn't attempted. See
 
 `sub_8012420` and `sub_8012AF4` are real C under old_agbcc now. See
 [issue-15-16-naked-retry-3.md](issue-15-16-naked-retry-3.md).
+
+## Later pass (second big NAKED retry)
+
+`sub_8011BD4` is real C under old_agbcc now (`actor_part82.o` joined
+`OLD_AGBCC_OBJS`). See [big-naked-retry-2.md](big-naked-retry-2.md).

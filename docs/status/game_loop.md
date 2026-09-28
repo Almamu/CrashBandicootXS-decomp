@@ -450,6 +450,14 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   under old_agbcc (the files' compiler). See
   [docs/matching/near-miss-polish-3.md](../matching/near-miss-polish-3.md).
 
+- **Second big NAKED retry:** `sub_800B8DC` (`actor_part112.c`, GitHub
+  issue #10, 1132 bytes, the 18-state controller update) promoted from
+  NAKED to real C under old_agbcc (`actor_part112.o` joined
+  `OLD_AGBCC_OBJS`). State 18's second `animDone` test reads the byte
+  through a `vu8` so jump threading keeps the ROM's re-test; the rest
+  was statement order and locals. See
+  [docs/matching/big-naked-retry-2.md](../matching/big-naked-retry-2.md).
+
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
 - **`sub_8023A1C`** (`src/system/game_loop56.c`, new file - GitHub
@@ -576,29 +584,20 @@ plain C didn't converge.
   live as two extra callee-saved accumulators throughout, the same gap
   as `sub_800D040` above. See
   [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
-- **`sub_800B8DC`**/**`sub_800BD48`** (`src/graphics/actor_part112.c`,
-  new file - GitHub issue #9/#10, foundational investigation of the
-  large still-raw `0x0800B8DC`-`0x0800D040` cluster). Two independent
-  entity-vtable slots of the *same* object type (`gStaticData_087E3EE4`)
-  sitting adjacent in ROM but never calling each other.
-  `sub_800B8DC` (1132 B) is an 18-state dispatcher on `self+0x74` (the
-  same "stateful widget" field shape `sub_800C6A8`'s `menu_ui` dialogs
-  and `sub_800CD00` also use) - most states delegate to a handful of
-  further `self+0x68`-dispatching siblings, five have real inline logic
-  (a distance-band velocity-target gate, a position-anchor cache, a
-  conditional directional-target trigger, a landing/jump-impulse
-  handler, and a proximity-ambient-sound-plus-popup-text handler).
-  `sub_800BD48` (608 B) is a second, shallower 22-case dispatcher on its
-  own third argument - 17 of the 22 states are no-ops, the other two
-  distinct paths are an ambient-sound-spawn-plus-reflag tail and a
-  spawn-and-launch-a-child-object handler. Both NAKED: the same
-  `self`/`owner`-multi-field register-allocation gap as every other
-  entry in this section. (Issue #10 NAKED retry: `sub_800BD48` has a
+- **`sub_800BD48`** (`src/graphics/actor_part112.c`, new file - GitHub
+  issue #9/#10, foundational investigation of the large still-raw
+  `0x0800B8DC`-`0x0800D040` cluster). An entity-vtable slot of the same
+  object type (`gStaticData_087E3EE4`) as its ROM neighbour
+  `sub_800B8DC` (now real C, see Matched), never called by it. A
+  22-case dispatcher on its own third argument - 17 of the 22 states
+  are no-ops, the other two distinct paths are an
+  ambient-sound-spawn-plus-reflag tail and a
+  spawn-and-launch-a-child-object handler. (Issue #10 NAKED retry: a
   21-halfword old_agbcc draft under `NON_MATCHING`, off only in reload
-  scratch registers; `sub_800B8DC` didn't converge - see
+  scratch registers - see
   [issue-10-naked-retry.md](../matching/issue-10-naked-retry.md).) See
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)
-  for the full 18-case and 22-case dispatch maps.
+  for the 22-case dispatch map.
 - **`sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC`** (`src/graphics/actor_part113.c`,
   new file - GitHub issue #9/#10, Phase 2 of the `0x0800B8DC`-cluster
   investigation above, tackling the three `(self, mode)`-shaped trigger

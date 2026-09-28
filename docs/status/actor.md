@@ -1005,6 +1005,18 @@ See [docs/matching/issue-15-16-naked-retry-3.md](../matching/issue-15-16-naked-r
 
 See [docs/matching/near-miss-polish-3.md](../matching/near-miss-polish-3.md).
 
+### Matched in the second big NAKED retry
+
+- `src/graphics/actor_part82.c` - `sub_8011BD4` (issue #16, 1420 bytes,
+  the 25-case action dispatcher with two nested 7-case keyframe
+  lookups), old_agbcc (object added to `OLD_AGBCC_OBJS`). First C
+  draft; the nested lookup is a macro that assigns its destination in
+  each case, the trio's `1` in the fire-button cases is an
+  `asm`-initialised local kept apart from the `& 1` test, and a
+  volatile read reproduces a dead `ldr` of `self->state`.
+
+See [docs/matching/big-naked-retry-2.md](../matching/big-naked-retry-2.md).
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
@@ -1127,19 +1139,6 @@ plain C didn't converge.
   temporaries are still permuted (the ROM copies the hoisted 0xf and
   ANDs the byte into it, gcc copies the byte). See
   `docs/matching/late-rom-naked-retry.md`.
-- **`sub_8011BD4`** (`src/graphics/actor_part82.c`, GitHub issue #16) -
-  docs/rom_map.md's documented companion state machine to `sub_8016288`
-  (still raw), sharing its type-`0x1d` gate: a 25-case jump table on a
-  second parameter, with two of those cases sharing a further 7-case
-  sub-dispatch on a nibble of a child object's `+4` byte. The single
-  largest still-unmatched member of the `gStaticData_0816BF20` action-
-  dispatch-table family (1420 B) - a first plain-C attempt at the
-  smaller sibling `sub_8012420` (since matched) diverged immediately at the
-  prologue, and a jump table this wide (25 outer cases plus two
-  independent 7-case inner ones) was judged not worth the same
-  register-pinning gauntlet already exhausted throughout this section
-  for smaller members of the same table. See
-  `docs/matching/issue-16-actor-remainder.md`.
 - **`sub_80352AC`** (`src/graphics/actor_part131.c`, GitHub issue #64) -
   the map screen's popup-text asset loader. The issue #64/#65 NAKED
   retry left a near-miss C draft under `#if NON_MATCHING` (old_agbcc):
@@ -1576,14 +1575,6 @@ embedded as asm instead. They're tracked as parked, not matched.
 
 ## Left raw (not attempted, or attempted and set aside)
 
-- **`sub_8011BD4`** (`asm/code_3_2_17_11bd4.s`, ROM 0x08011BD4, GitHub
-  issue #16) - `docs/rom_map.md`'s documented ~1420B, 25-case/7-case
-  nested jump-table companion state machine to `sub_8016288` (still
-  raw, type-`0x1d` player-control family); left raw, out of scope for
-  this pass - see
-  [docs/matching/issue-16-actor-11b0c.md](../matching/issue-16-actor-11b0c.md)
-  and
-  [docs/matching/issue-16-actor-12160.md](../matching/issue-16-actor-12160.md).
 - **`sub_8007634`** (`asm/code_3_2.s`, ROM 0x08007634, GitHub issue #9)
   - real GBA hardware-affine sprite-matrix setup; already flagged in
   `docs/matching.md` as needing "a dedicated session" of its own, not
