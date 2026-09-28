@@ -148,7 +148,12 @@
  * computes the slot address (`add rN, sp, #4`) before materializing
  * the constant, which every C spelling tried (compound literal, local,
  * union cast, inline wrapper) reverses - plus one register choice in the
- * post-fade player-position copy. */
+ * post-fade player-position copy.
+ * Mix-6 pass: also no effect or worse - `"=r"/"0"` and `"+r"` escapes
+ * on the value, `u8`/`u8[1]`/`u8:8` field, a `u8` prototype (loses the
+ * ROM's sl register, 447 hw), a struct-by-value inline wrapper, and
+ * dropping the `r2` pin (17 hw). The file builds with agbcc (57 hw
+ * there), so a close would also need a split to old_agbcc. */
 #if NON_MATCHING
 struct gl_point
 {

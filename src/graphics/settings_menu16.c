@@ -24,7 +24,13 @@ extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
  * across the calls but re-materializes 0x114 (posY) in the first
  * reposition, and later derives it as r7 + 4. The draft CSEs 0x114 as
  * well, which pushes label2 and the two icon-manager addresses into
- * r8-r10. */
+ * r8-r10.
+ * Mix-6 pass: reading the first posY through a fresh `"=r"/"0"` 0x114
+ * offset reproduces the ROM's first half up to one register (the
+ * &gUnknown_030012E0 pool address goes to r8 instead of r6). The
+ * second half (0x110 copied to r6, then r7 += 4 for posY) does not come
+ * out of any spelling tried: `p[0]/p[1]`, `*p++`, a `u32 *q` store pair
+ * (best, 62 hw, 4 bytes long). */
 #if NON_MATCHING
 static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
 {

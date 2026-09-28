@@ -214,7 +214,12 @@ void sub_80204EC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * Still NAKED (draft under NON_MATCHING): the plain-C version is 62 halfwords off under old_agbcc,
  * all register allocation. The ROM keeps arg3 in r4 and
  * &gUnknown_030012B4 in sb, and spills part+0x28 to a single stack slot;
- * the C spills the shared constant 1 and &gUnknown_030012B4 instead. */
+ * the C spills the shared constant 1 and &gUnknown_030012B4 instead.
+ * Mix-6 pass: extra references or `"+r"` on arg3 (before the anim store,
+ * the rec2 load or the tail), and other flip spellings (`!`, `^= 1`,
+ * ternary, if/else, a u8-parameter setter, u8/u32 temp) are all 62 hw
+ * or worse. In the draft the part+0x28 pointer outranks arg3 for a low
+ * callee-saved register, which is the reverse of the ROM. */
 #if NON_MATCHING
 void sub_802062C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {

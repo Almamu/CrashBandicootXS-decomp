@@ -109,7 +109,12 @@ void sub_8002D44(struct settings_sync_pump *self)
  * CSEs the second into the first and folds the field offsets. Per-file
  * CSE flags (-fno-cse-follow-jumps/-skip-blocks, -fno-rerun-cse-after-
  * loop) don't split it. The old "r7 can't be pushed" reason was wrong:
- * sub_8002D44 gets its r7/r8/sb prologue from plain C. */
+ * sub_8002D44 gets its r7/r8/sb prologue from plain C.
+ * Mix-6 pass: `"+r"` escapes on the index, the channel pointer, the
+ * session pointer or the byte offset don't reproduce the ROM's second
+ * `muls` (104-115 hw). The wrap loop also differs: the ROM re-sets
+ * `movs r0,#0` before each `cmp #0x7f`, where the draft hoists 0 into
+ * sb. */
 #if NON_MATCHING
 void sub_8002E20(struct settings_sync_pump *self, s32 playerIndex)
 {
