@@ -345,3 +345,14 @@ the flag's 1 from merging into `one`. The ready test uses a literal 1.
 An empty `asm("" : "+r"(arm3))` between the `^` and the `&` stops
 combine from folding `(x ^ 1) & 1` into `bic`. Matches under both
 compilers. See [near-miss-polish-2.md](near-miss-polish-2.md).
+
+## Later pass: `sub_8001CB8` matched
+
+`sub_8001CB8` is plain C under old_agbcc now, with no pins or `asm`.
+`hash` is a u32 that the loop truncates with a `(u16)` cast. The tail
+reads it back as `(u16)hash >> 8` into a u32 `hi`. With a u16 `hash`,
+CSE folds `hash >> 8` into `(x << 16) >> 24` of the loop's zero-extend
+temporary. The new low nibble is masked in SImode before the bitfield
+store. That makes the 15 an SImode constant, so reload's move2add can
+build the ROM's -16 from it (`sub r0, #0x1f`). See
+[early-rom-naked-retry-2.md](early-rom-naked-retry-2.md).

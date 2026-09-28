@@ -210,6 +210,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/level_graphics.o \
                   $(C_BUILDDIR)/graphics/settings_menu.o \
                   $(C_BUILDDIR)/graphics/settings_menu10.o \
+                  $(C_BUILDDIR)/graphics/settings_menu20.o \
                   $(C_BUILDDIR)/graphics/settings_menu22.o \
                   $(C_BUILDDIR)/graphics/settings_menu6.o \
                   $(C_BUILDDIR)/graphics/trigger_effect.o \
