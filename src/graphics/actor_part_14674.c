@@ -62,12 +62,11 @@ static inline void SetTag(struct act_part *part, s32 tag)
  * otherwise handles the fire/alt/shoulder inputs and, with the D-pad
  * idle, clears the +0x31/+0x2F/+0x27 trio.
  *
- * NAKED: the C below (old_agbcc, second retry - see
- * docs/matching/issue-15-16-17-naked-retry-2.md) has the ROM's layout;
- * what is left is registers: the tag is copied to r1 for the 0x18
- * re-test, the state-0xE `& 0x30` test and its else-trio use r1 where
- * the ROM uses r0/r5, and the `fire` test ANDs `pressed` into a copy
- * instead of into a fresh 1. */
+ * NAKED: the C below (old_agbcc) is one halfword off (fourth retry, see
+ * docs/matching/mid-range-naked-retry-4.md): every instruction and
+ * register matches, but the ROM's `beq` for tag 0xD jumps past the
+ * re-test of 0xD (jump threading) while here it lands on it. Spellings
+ * of the tag tests either do the same or drop the re-test entirely. */
 #if NON_MATCHING
 static inline void ActTrio28(struct act *self, s32 a, s32 b, s32 c)
 {
@@ -90,9 +89,17 @@ void sub_8014674(struct act *self)
     if (hit)
     {
         u8 tag;
+        /* the ROM's r5 zero, reused by the state-0xE else trio; without
+         * it that trio stores the `& 0x30` result register */
+        u8 z;
 
         ACT_PART_FLAGS0D(self->part) |= 1;
-        self->unk_34 = 0;
+        {
+            u8 *p34 = &self->unk_34;
+
+            z = 0;
+            *p34 = z;
+        }
         tag = self->part->tag;
         if (tag == 0xD || tag == 0x18)
         {
@@ -118,7 +125,7 @@ void sub_8014674(struct act *self)
                 }
                 ActSetNext(self, 0);
             }
-            else if (tag == 0x18)
+            else if (self->part->tag == 0x18)
             {
                 ACT_VCALL1(self, m20, 4);
                 self->next32 = 0;
@@ -136,9 +143,9 @@ void sub_8014674(struct act *self)
             }
             else
             {
-                self->next31 = 0;
+                self->next31 = z;
                 self->flag2F = 1;
-                self->next27 = 0;
+                self->next27 = z;
             }
             ActSetNext(self, 0);
             ACT_VCALL1(self, m20, 0xD);
@@ -146,7 +153,7 @@ void sub_8014674(struct act *self)
         else
         {
             ACT_VCALL1(self, m20, 0);
-            self->next32 = 0;
+            self->next32 = z;
             self->flag30 = 1;
             self->next28 = 0;
             self->next31 = 0;
@@ -159,10 +166,16 @@ void sub_8014674(struct act *self)
         u32 in = gUnknown_030007E0;
         s32 fire;
         s32 one;
+        u16 p;
 
+        p = INPUT_PRESSED(in);
         one = 1;
-        fire = 1;
-        fire &= INPUT_PRESSED(in);
+        /* a fresh 1 for `fire` (the ROM's `movs r3, #1; ands r3, r1`),
+         * not a copy of `one` */
+        asm("" : "=r"(fire) : "0"(1));
+        fire &= p;
+        /* extra reference: keeps `one` in r6 and the input pointer in r7 */
+        asm("" : : "r"(one));
         if (fire)
         {
             ACT_VCALL1(self, m20, 5);
@@ -172,7 +185,11 @@ void sub_8014674(struct act *self)
         }
         else
         {
-            u16 alt = INPUT_PRESSED(in) & 2;
+            u16 alt;
+            s32 t = 2;
+
+            t &= p;
+            alt = t;
 
             if (alt)
             {
