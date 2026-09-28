@@ -91,3 +91,70 @@ Each empty asm has a comment in the source.
   210. `manager` and `node` still land in r8/sb instead of r7/r8. Brief
   item 9 (loop shape) would need the grid walk restructured, which this
   pass didn't have time for.
+
+## Later pass: the four holdouts again (nothing closed)
+
+A second pass retried `sub_80091D4`, `sub_800AFF4`, `sub_800A884` and
+`sub_8007634`. None closed. Two drafts got closer and were updated in
+place; the NAKED bodies are unchanged.
+
+- **`sub_80091D4`: 215 → 7 halfwords** (old_agbcc; agbcc 35). The r8/sb
+  problem was not about loop shape. It came from how the removal is
+  inlined:
+  - `pool_destroy(manager, obj)` wraps the search/compaction and the
+    destroy call, and each of those gets its own copy of the pointer
+    through a statement expression (`PART_COPY`). In testing, the
+    inliner used a plain variable argument directly and gave a
+    statement-expression argument its own copy. That gives the ROM's
+    `mov sb, r5; mov ip, r5` pair, and with it `manager` goes to r7 and
+    `node` to r8.
+  - The first loop reads `node->data` twice (the flag test, then
+    `part`), which gives the ROM's `ldr r2` and `adds r5, r2, #0`.
+  - `next` declared at function scope puts it at `[sp, #0x14]` ahead of
+    `gridHeadBase`. `base = pos[0]; base >>= 8;` reuses the `pos`
+    register.
+  - In the search, gcse copies `capacity` for the post-test, and cse2
+    swaps the load and the copy when they are adjacent. That put the
+    loaded value in the pre/post tests where the ROM uses the copy. An
+    empty `asm("")` between the load and the pre-test keeps them apart
+    (commented in the source).
+
+  What's left: in the first loop's search, the `capacity` load and the
+  `slotArray` copy get r3/r2 where the ROM has r2/r3. The second loop
+  gets them right. Global-alloc priorities come out the same for both
+  inlined copies, so no change inside the shared inline moves only the
+  first. Nudges, padding asm and extra `do {} while (0)` depth all
+  broke the second loop instead. The last diff is `gridHeadBase[i]`
+  being built as `adds r0, r0, r2` rather than `adds r0, r2, r0`. A
+  `(s32)gridHeadBase + (i << 2)` cast fixes that one, but it isn't in
+  the draft.
+- **`sub_800AFF4`: 256 → 246.** The first ~40 instructions now match:
+  - The mirror jitter is one assignment whose right-hand side is a
+    statement expression. The store address then loads before the call,
+    and `+ 2` isn't folded into the mirror term.
+  - `SetPos` computes both sums before storing.
+  - The `0x0300081C` update uses `+=` (the ROM stores the sum before
+    clamping).
+
+  What's left: `self` is in r6, not r7, and the history section spills
+  twice. As a result the reload registers rotate differently, and gcc
+  cross-jumps the shared `-0x1300` add of the two mirror branches.
+- **`sub_800A884`: unchanged (127).** The ROM's "walking" offset
+  register is not a source-level pointer. gcc folds `self + 0x10x`
+  into one add with a large constant, reload puts the constant in a
+  reload register, and `reload_cse_move2add` turns the next constant
+  load into `adds/subs #k` when the same reload register comes round
+  again. Which register reload picks rotates from one reload to the
+  next, so every reload before this point has to match. The first
+  mismatch is already the `movs #0` index for the `+0x70` method's
+  `ldrsh` (r2 in the ROM, r3 here). A pointer walk, bitfield
+  `f100..f103`, and a value-first `one` local were tried. The
+  value-first local does reproduce the ROM's `movs rX, #1` before the
+  offset, but the registers still differ.
+- **`sub_8007634`: not attempted past reading.** It is 1044 bytes, and
+  the ROM spills nearly every local, including both parameters at
+  `[sp, #8]`/`[sp, #0xc]`. Each value is stored as soon as it is
+  produced and reloaded at every use, which looks like reload spilling
+  rather than a declared frame struct. A frame-struct draft was not
+  tried. Matching by spilling means reproducing global-alloc's choices
+  across the whole function, which didn't fit the budget.
