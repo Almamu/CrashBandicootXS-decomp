@@ -176,3 +176,16 @@ Both drafts improved (95 to 56, and 105 to 29 halfwords):
   the ROM's instruction order. In 8031604 the same spelling costs 4
   bytes in the outer loop header (a `mov rX, sp` copy), so that draft
   keeps the `*src++` spelling.
+
+## Later pass: GAX NAKED retry 2
+
+`sub_8037FC0` and `sub_8038240` are now real C. Every open point listed
+above for `sub_8037FC0` came down to source shape:
+- `p->layout`/`p->flags` re-read at every use, so GCSE makes the halfword
+  flags slot and the unreduced carving loop;
+- `/` for both divisions;
+- one shared loop counter;
+- four documented no-code `asm("")` that set GCSE's hash-table size,
+  and with it the stack-slot order.
+
+See [gax-naked-retry-2.md](./gax-naked-retry-2.md).

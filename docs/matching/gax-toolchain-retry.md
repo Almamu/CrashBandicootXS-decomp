@@ -185,3 +185,10 @@ All current agbcc, normal flags, except the three libgcc2 functions
 were only return points), so objdiff will pair `sub_803A2C8`/
 `sub_803A5A8` against a shorter target symbol. The ROM is unaffected;
 `expected/corrections.txt` has no "merge" directive for this yet.
+
+## Later pass
+
+[gax-naked-retry-2.md](./gax-naked-retry-2.md) probed the toolchain again
+(compilers x -O levels x flags against all 50 matched GAX functions).
+It confirms current agbcc with the normal flags. It also closed
+`sub_8037FC0` and `sub_8038240` as real C.

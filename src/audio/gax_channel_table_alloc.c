@@ -1,64 +1,45 @@
 #include "core.h"
 #include "audio.h"
 
-/* Core GAX2 mixer-state wiring: allocates/binds a channel's runtime table
- * slots out of `self`'s "instrument bank"-shaped array (`self->0`'s count,
- * conditionally widened by `extra` when `gUnknown_03001630->curChannelIdx`
- * is still zero) against a scratch buffer the caller carves off
- * (`bufPtr`/`bufSize`, passed both as `arg3`/a 5th argument on the stack -
- * `ldr r2, [sp, #0x48]` below reads it straight out of the caller's own
- * frame, the standard Thumb 5th-argument stack-passing convention, not a
- * hand-tuned caller/callee coupling), fills in cross-links between three
- * different `gUnknown_03001630`-rooted arrays (the "instrument bank" at
- * `+0x8`, a table at `+0x44`/`+0x9c`ish, and each entry's own `+0xc`/`+0x10`
- * child list) for every bank item, then - only when `flag` (own `arg1`) is
- * set - copies two more parallel per-item field pairs, primes a
- * `+0x53`-relative priority byte for every item past the first 3, and
- * finally (only if `gUnknown_03001630->0x24` is non-zero) computes 3
- * fixed-point playback-rate/offset pairs via `sub_8037E54` (a 64-bit
- * division helper, not GAX2-specific) into a small array at
- * `gUnknown_03001630->0x24`. Called from both `sub_8038538` (play-start)
- * and `sub_8038A1C` (per-channel pool allocator) with different `flag`
- * values. Object shape not confidently modeled - kept as raw offsets
- * throughout, same as the other GAX2_SoundHandler functions in this
- * cluster.
+/* GAX2's handler instantiation/linking for one player (`sub_8038538`
+ * play start, `sub_8038A1C` per-channel pool): carves a `struct
+ * GaxHandler` header, the type's instance and its child-pointer array
+ * out of `*bufp`/`*sizep` for every handler type of `layout` (and, for
+ * player 0, the SFX voice types in `sfx`) - slot 2 holds the list of
+ * alternative layouts and is skipped - then links every handler's
+ * children by type, hands player 0's SFX voices to player 1 (or wires
+ * them into the mixer), numbers the channels (`+0x53`), and fills the
+ * mixer's DSP rate table (`step = rate * mixRate / 1000 * 2`). Returns 0
+ * if the buffer runs out.
  *
- * Written as NAKED asm, not plain C: this function's prologue
- * (`push {r4-r7,lr}; mov r7,sl; mov r6,sb; mov r5,r8; push {r5,r6,r7}`)
- * needs `r8`/`sb`/`sl` as genuine scratch across several nested loops (a
- * bank-item fixup loop, a voice-stealing-style double loop matching
- * children against a bank item's `ip`-held loop bound, and the final
- * rate/offset loop) - the same many-register gcc-2.9 allocation ceiling
- * already documented throughout this ROM region for `sub_8038538`'s
- * cluster (docs/status/audio.md), which a NAKED function sidesteps
- * entirely since nothing asks gcc's allocator to decide anything.
- * Mechanical, byte-verified transcription of the ROM's own instructions
- * (translated from the disassembler's unified syntax to this project's
- * established NAKED plain/divided syntax, local labels renumbered per
- * docs/matching/issue-4-sio-settings-sync.md's convention), not an
- * inferred control-flow guess. */
-/* Later pass (docs/matching/gax-toolchain-retry.md): a plain draft
- * against the handler structs in include/audio.h (below) has the ROM's
- * shape - instantiate each layout type (and, for player 0, the SFX voice
- * types) into the work buffer, link every handler's children by type,
- * hand player 0's SFX voices to player 1, number the channels, and fill
- * the mixer's DSP rate table - but the register allocation of the first
- * (carving) loop differs: the ROM spills the loop's handler pointer and
- * keeps the layout count in a stack slot the draft doesn't need, and the
- * difference cascades. Still NAKED. */
-#if NON_MATCHING
+ * Matched in the GAX NAKED retry (docs/matching/gax-naked-retry-2.md).
+ * What it took:
+ * - the division is a plain `/`: sub_8037E54 is lib1funcs' `__udivsi3`
+ *   (see gax-toolchain-retry.md), so the call is a libcall, not an
+ *   ordinary call - which is what lets GCSE carry the spilled
+ *   `gUnknown_03001630` address into the rate loop (`ldr r1, =...`);
+ * - the carving loop's child count goes through its own local (`cnt`)
+ *   and `need` is one expression, so `n` lands in r8 and `need` in ip;
+ * - the linking loop compares against `t->childTypes[j]` directly (the
+ *   ROM loads it twice), and keeps `i + 1` in a block-scoped `next`;
+ * - index-first address arithmetic (`*(i + layout->types)`, `i * 8 +
+ *   base`, `(i + taps)->rate`) for the ROM's `adds rX, rIdx, rBase`
+ *   operand order. */
 struct GaxDspRate {
     u32 step;
     u32 value;
 };
 
-extern s32 sub_8037E54(s32 value, s32 divisor);
+asm(".set __udivsi3, sub_8037E54");
+
+/* Player 0's mixer handler (the SFX voices' owner). */
+#define GAX_PLAYER0_MIXER() (((struct GaxMixerHandler **)gUnknown_03001630->channels[0])[0])
 
 u8 sub_8038240(struct GaxHandlerLayout *layout, struct GaxHandlerType **sfx, u32 numSfx, u8 **bufp,
                u32 *sizep)
 {
     u32 total = layout->count;
-    u32 i;
+    s32 i;
 
     if (sfx != NULL && gUnknown_03001630->curChannelIdx == 0)
         total += numSfx;
@@ -71,43 +52,47 @@ u8 sub_8038240(struct GaxHandlerLayout *layout, struct GaxHandlerType **sfx, u32
         else
             t = sfx[i - layout->count];
         if (i != 2) {
-            u32 n = t->childCount;
-            u32 need, size;
+            u32 n, need, size;
+            u32 cnt = t->childCount;
 
             if (i == 0)
-                n += numSfx;
-            n *= 4;
-            need = n + sizeof(struct GaxHandler) + t->instanceSize;
+                cnt += numSfx;
+            n = cnt * 4;
+            need = n + (sizeof(struct GaxHandler) + t->instanceSize);
             size = *sizep;
             if (size < need)
                 return 0;
             GAX_PLAYER()[i] = h;
             h->type = t;
             h->format = gUnknown_03001630->format;
-            h->children = (struct GaxHandler **)((u8 *)h + (sizeof(struct GaxHandler) + t->instanceSize));
+            h->children = (struct GaxHandler **)(*bufp + sizeof(struct GaxHandler) + t->instanceSize);
             *bufp = (u8 *)h->children + n;
             *sizep = size - need;
         }
     }
-    for (i = 0; i < total; i++) {
-        struct GaxHandler *h = GAX_PLAYER()[i];
-        struct GaxHandlerType *t;
-        u32 j;
+    {
+        s32 next;
 
-        if ((s32)i < (s32)layout->count)
-            t = layout->types[i];
-        else
-            t = sfx[i - layout->count];
-        if (i != 2) {
-            for (j = 0; j < t->childCount; j++) {
-                if (t->childTypes[j] != NULL) {
-                    struct GaxHandlerType *want = t->childTypes[j];
-                    u32 k;
+        for (i = 0; i < total; i = next) {
+            struct GaxHandler *h = GAX_PLAYER()[i];
+            struct GaxHandlerType *t;
+            u32 j;
 
-                    for (k = 0; k < total; k++) {
-                        if (GAX_PLAYER()[k]->type == want) {
-                            h->children[j] = GAX_PLAYER()[k];
-                            break;
+            if ((s32)i < (s32)layout->count)
+                t = *(i + layout->types);
+            else
+                t = sfx[i - layout->count];
+            next = i + 1;
+            if (i != 2) {
+                for (j = 0; j < t->childCount; j++) {
+                    if (t->childTypes[j] != NULL) {
+                        u32 k;
+
+                        for (k = 0; k < total; k++) {
+                            if (GAX_PLAYER()[k]->type == t->childTypes[j]) {
+                                h->children[j] = GAX_PLAYER()[k];
+                                break;
+                            }
                         }
                     }
                 }
@@ -115,404 +100,34 @@ u8 sub_8038240(struct GaxHandlerLayout *layout, struct GaxHandlerType **sfx, u32
         }
     }
     if (gUnknown_03001630->curChannelIdx == 1) {
-        s32 k;
-
         if (sfx == NULL)
             goto done;
-        for (k = 0; k < (s32)numSfx; k++) {
-            struct GaxMixerHandler *m = ((struct GaxMixerHandler **)gUnknown_03001630->channels[0])[0];
-            GAX_PLAYER()[layout->count + k] = m->children[m->type->childCount + k];
-        }
+        for (i = 0; i < (s32)numSfx; i++)
+            GAX_PLAYER()[layout->count + i] = GAX_PLAYER0_MIXER()->children[GAX_PLAYER0_MIXER()->type->childCount + i];
     }
     if (sfx != NULL) {
-        s32 k;
-
-        for (k = 0; k < (s32)numSfx; k++) {
-            GAX_PLAYER()[layout->count + k]->children[0] = GAX_PLAYER()[1];
-            GAX_MIXER()->children[GAX_MIXER()->type->childCount + k] = GAX_PLAYER()[layout->count + k];
+        for (i = 0; i < (s32)numSfx; i++) {
+            GAX_PLAYER()[layout->count + i]->children[0] = GAX_PLAYER()[1];
+            GAX_MIXER()->children[GAX_MIXER()->type->childCount + i] = GAX_PLAYER()[layout->count + i];
         }
     }
 done:
-    {
-        s32 k;
-
-        for (k = 0; k < (s32)(layout->count - 3); k++)
-            ((struct GaxChannelState *)GAX_PLAYER()[k + 3])->index = k;
-    }
+    for (i = 0; i < (s32)(layout->count - 3); i++)
+        ((struct GaxChannelState *)GAX_PLAYER()[i + 3])->index = i;
     if (gUnknown_03001630->field_24 != 0) {
-        s32 k;
-        struct GaxHandlerType *t = layout->types[0];
+        struct GaxHandlerType *t;
 
-        for (k = 0; k <= 2; k++) {
-            struct GaxDspRate *r = &((struct GaxDspRate *)gUnknown_03001630->field_24)[k];
+        i = 0;
+        t = layout->types[0];
+        for (; i <= 2; i++) {
+            struct GaxDspRate *r;
+            u32 base = gUnknown_03001630->field_24;
 
-            r->step = sub_8037E54(t->data.dsp->taps[k].rate * gUnknown_03001630->format->mixRate, 1000) * 2;
-            r->value = t->data.dsp->taps[k + 1].value;
+            r = (struct GaxDspRate *)(i * 8 + base);
+            r->step = (i + t->data.dsp->taps)->rate * gUnknown_03001630->format->mixRate / 1000 * 2;
+            /* taps[i + 1].value, addressed off taps[i] like the ROM */
+            r->value = ((u32 *)t->data.dsp)[i * 2 + 2];
         }
     }
     return 1;
 }
-#else /* !NON_MATCHING */
-NAKED u32 sub_8038240(void *self, u32 flag, u32 extra, void *arg3, void *bufPtr, u32 bufSize)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sl\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6, r7}\n\t"
-        "sub sp, #0x28\n\t"
-        "str r0, [sp]\n\t"
-        "str r1, [sp, #4]\n\t"
-        "str r2, [sp, #8]\n\t"
-        "str r3, [sp, #0xc]\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov sb, r0\n\t"
-        "cmp r1, #0\n\t"
-        "beq L8240_0\n\t"
-        "ldr r0, L8240_26\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0, #0x10]\n\t"
-        "cmp r0, #0\n\t"
-        "bne L8240_0\n\t"
-        "add sb, r2\n\t"
-        "L8240_0:\n\t"
-        "mov r6, #0\n\t"
-        "ldr r1, [sp]\n\t"
-        "ldr r1, [r1]\n\t"
-        "str r1, [sp, #0x18]\n\t"
-        "cmp r6, sb\n\t"
-        "bhs L8240_7\n\t"
-        "mov r2, #0\n\t"
-        "str r2, [sp, #0x20]\n\t"
-        "lsl r0, r1, #2\n\t"
-        "ldr r3, [sp, #4]\n\t"
-        "sub r0, r3, r0\n\t"
-        "str r0, [sp, #0x24]\n\t"
-        "ldr r0, [sp]\n\t"
-        "mov sl, r0\n\t"
-        "str r1, [sp, #0x10]\n\t"
-        "L8240_1:\n\t"
-        "ldr r1, [sp, #0xc]\n\t"
-        "ldr r5, [r1]\n\t"
-        "str r5, [sp, #0x1c]\n\t"
-        "ldr r2, [sp, #0x10]\n\t"
-        "cmp r6, r2\n\t"
-        "bge L8240_2\n\t"
-        "mov r3, sl\n\t"
-        "ldr r4, [r3, #4]\n\t"
-        "b L8240_3\n\t"
-        ".align 2, 0\n\t"
-        "L8240_26: .4byte gUnknown_03001630\n\t"
-        "L8240_2:\n\t"
-        "ldr r0, [sp, #0x24]\n\t"
-        "ldr r4, [r0]\n\t"
-        "L8240_3:\n\t"
-        "cmp r6, #2\n\t"
-        "beq L8240_6\n\t"
-        "ldr r0, [r4, #0xc]\n\t"
-        "cmp r6, #0\n\t"
-        "bne L8240_4\n\t"
-        "ldr r1, [sp, #8]\n\t"
-        "add r0, r0, r1\n\t"
-        "L8240_4:\n\t"
-        "lsl r0, r0, #2\n\t"
-        "mov r8, r0\n\t"
-        "add r0, #0xc\n\t"
-        "ldr r3, [r4, #0x14]\n\t"
-        "add r0, r0, r3\n\t"
-        "mov ip, r0\n\t"
-        "ldr r2, [sp, #0x48]\n\t"
-        "ldr r7, [r2]\n\t"
-        "cmp r7, ip\n\t"
-        "bhs L8240_5\n\t"
-        "mov r0, #0\n\t"
-        "b L8240_25\n\t"
-        "L8240_5:\n\t"
-        "ldr r0, L8240_27\n\t"
-        "ldr r2, [r0]\n\t"
-        "ldr r1, [r2, #0x10]\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r0, r2, #0\n\t"
-        "add r0, #8\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [sp, #0x20]\n\t"
-        "add r0, r1, r0\n\t"
-        "str r5, [r0]\n\t"
-        "str r4, [r5]\n\t"
-        "ldr r0, [r2, #0x14]\n\t"
-        "str r0, [r5, #4]\n\t"
-        "add r0, r3, #0\n\t"
-        "add r0, #0xc\n\t"
-        "ldr r2, [sp, #0x1c]\n\t"
-        "add r0, r2, r0\n\t"
-        "str r0, [r5, #8]\n\t"
-        "add r0, r8\n\t"
-        "ldr r3, [sp, #0xc]\n\t"
-        "str r0, [r3]\n\t"
-        "mov r1, ip\n\t"
-        "sub r0, r7, r1\n\t"
-        "ldr r2, [sp, #0x48]\n\t"
-        "str r0, [r2]\n\t"
-        "L8240_6:\n\t"
-        "ldr r3, [sp, #0x20]\n\t"
-        "add r3, #4\n\t"
-        "str r3, [sp, #0x20]\n\t"
-        "ldr r0, [sp, #0x24]\n\t"
-        "add r0, #4\n\t"
-        "str r0, [sp, #0x24]\n\t"
-        "mov r1, #4\n\t"
-        "add sl, r1\n\t"
-        "add r6, #1\n\t"
-        "cmp r6, sb\n\t"
-        "blo L8240_1\n\t"
-        "L8240_7:\n\t"
-        "mov r6, #0\n\t"
-        "cmp r6, sb\n\t"
-        "bhs L8240_16\n\t"
-        "L8240_8:\n\t"
-        "ldr r2, L8240_27\n\t"
-        "ldr r0, [r2]\n\t"
-        "ldr r1, [r0, #0x10]\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r0, #8\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "lsl r1, r6, #2\n\t"
-        "add r0, r1, r0\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov ip, r0\n\t"
-        "ldr r3, [sp, #0x18]\n\t"
-        "cmp r6, r3\n\t"
-        "bge L8240_9\n\t"
-        "ldr r2, [sp]\n\t"
-        "add r0, r1, r2\n\t"
-        "ldr r0, [r0, #4]\n\t"
-        "b L8240_10\n\t"
-        ".align 2, 0\n\t"
-        "L8240_27: .4byte gUnknown_03001630\n\t"
-        "L8240_9:\n\t"
-        "ldr r3, [sp, #0x18]\n\t"
-        "sub r0, r6, r3\n\t"
-        "lsl r0, r0, #2\n\t"
-        "ldr r1, [sp, #4]\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "L8240_10:\n\t"
-        "add r2, r6, #1\n\t"
-        "str r2, [sp, #0x14]\n\t"
-        "cmp r6, #2\n\t"
-        "beq L8240_15\n\t"
-        "mov r2, #0\n\t"
-        "ldr r3, [r0, #0xc]\n\t"
-        "mov r8, r3\n\t"
-        "cmp r2, r8\n\t"
-        "bhs L8240_15\n\t"
-        "ldr r7, [r0, #0x10]\n\t"
-        "mov sl, r7\n\t"
-        "L8240_11:\n\t"
-        "lsl r0, r2, #2\n\t"
-        "mov r3, sl\n\t"
-        "add r1, r0, r3\n\t"
-        "ldr r1, [r1]\n\t"
-        "add r3, r0, #0\n\t"
-        "add r5, r2, #1\n\t"
-        "cmp r1, #0\n\t"
-        "beq L8240_14\n\t"
-        "mov r2, #0\n\t"
-        "cmp r2, sb\n\t"
-        "bhs L8240_14\n\t"
-        "ldr r6, L8240_28\n\t"
-        "add r0, r3, r7\n\t"
-        "ldr r4, [r0]\n\t"
-        "L8240_12:\n\t"
-        "ldr r0, [r6]\n\t"
-        "ldr r1, [r0, #0x10]\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r0, #8\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r1, [r0]\n\t"
-        "lsl r0, r2, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldr r0, [r1]\n\t"
-        "cmp r0, r4\n\t"
-        "bne L8240_13\n\t"
-        "mov r2, ip\n\t"
-        "ldr r0, [r2, #8]\n\t"
-        "add r0, r3, r0\n\t"
-        "str r1, [r0]\n\t"
-        "b L8240_14\n\t"
-        ".align 2, 0\n\t"
-        "L8240_28: .4byte gUnknown_03001630\n\t"
-        "L8240_13:\n\t"
-        "add r2, #1\n\t"
-        "cmp r2, sb\n\t"
-        "blo L8240_12\n\t"
-        "L8240_14:\n\t"
-        "add r2, r5, #0\n\t"
-        "cmp r2, r8\n\t"
-        "blo L8240_11\n\t"
-        "L8240_15:\n\t"
-        "ldr r6, [sp, #0x14]\n\t"
-        "cmp r6, sb\n\t"
-        "blo L8240_8\n\t"
-        "L8240_16:\n\t"
-        "ldr r3, L8240_29\n\t"
-        "ldr r0, [r3]\n\t"
-        "ldr r0, [r0, #0x10]\n\t"
-        "cmp r0, #1\n\t"
-        "bne L8240_18\n\t"
-        "ldr r0, [sp, #4]\n\t"
-        "cmp r0, #0\n\t"
-        "beq L8240_20\n\t"
-        "mov r6, #0\n\t"
-        "ldr r1, [sp, #8]\n\t"
-        "cmp r6, r1\n\t"
-        "bge L8240_18\n\t"
-        "add r5, r3, #0\n\t"
-        "ldr r2, [sp, #0x18]\n\t"
-        "lsl r4, r2, #2\n\t"
-        "L8240_17:\n\t"
-        "ldr r2, [r5]\n\t"
-        "ldr r1, [r2, #0x10]\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r0, r2, #0\n\t"
-        "add r0, #8\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r3, [r0]\n\t"
-        "add r3, r4, r3\n\t"
-        "ldr r0, [r2, #8]\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldr r0, [r1]\n\t"
-        "ldr r0, [r0, #0xc]\n\t"
-        "add r0, r0, r6\n\t"
-        "ldr r1, [r1, #8]\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "str r0, [r3]\n\t"
-        "add r4, #4\n\t"
-        "add r6, #1\n\t"
-        "ldr r3, [sp, #8]\n\t"
-        "cmp r6, r3\n\t"
-        "blt L8240_17\n\t"
-        "L8240_18:\n\t"
-        "ldr r0, [sp, #4]\n\t"
-        "cmp r0, #0\n\t"
-        "beq L8240_20\n\t"
-        "mov r6, #0\n\t"
-        "ldr r1, [sp, #8]\n\t"
-        "cmp r6, r1\n\t"
-        "bge L8240_20\n\t"
-        "ldr r4, L8240_29\n\t"
-        "L8240_19:\n\t"
-        "ldr r1, [r4]\n\t"
-        "ldr r0, [r1, #0x10]\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r1, #8\n\t"
-        "add r1, r1, r0\n\t"
-        "ldr r2, [sp, #0x18]\n\t"
-        "add r3, r2, r6\n\t"
-        "ldr r2, [r1]\n\t"
-        "lsl r3, r3, #2\n\t"
-        "add r0, r3, r2\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [r0, #8]\n\t"
-        "ldr r0, [r2, #4]\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldr r1, [r0, #0x10]\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r0, #8\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r2, [r0]\n\t"
-        "ldr r1, [r2]\n\t"
-        "ldr r0, [r1]\n\t"
-        "ldr r0, [r0, #0xc]\n\t"
-        "add r0, r0, r6\n\t"
-        "ldr r1, [r1, #8]\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "add r3, r3, r2\n\t"
-        "ldr r1, [r3]\n\t"
-        "str r1, [r0]\n\t"
-        "add r6, #1\n\t"
-        "ldr r3, [sp, #8]\n\t"
-        "cmp r6, r3\n\t"
-        "blt L8240_19\n\t"
-        "L8240_20:\n\t"
-        "mov r6, #0\n\t"
-        "ldr r0, [sp, #0x18]\n\t"
-        "sub r0, #3\n\t"
-        "cmp r6, r0\n\t"
-        "bge L8240_22\n\t"
-        "ldr r2, L8240_29\n\t"
-        "L8240_21:\n\t"
-        "ldr r0, [r2]\n\t"
-        "ldr r1, [r0, #0x10]\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r0, #8\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r1, [r0]\n\t"
-        "lsl r0, r6, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0, #0xc]\n\t"
-        "add r0, #0x53\n\t"
-        "strb r6, [r0]\n\t"
-        "add r6, #1\n\t"
-        "ldr r1, [sp]\n\t"
-        "ldr r0, [r1]\n\t"
-        "sub r0, #3\n\t"
-        "cmp r6, r0\n\t"
-        "blt L8240_21\n\t"
-        "L8240_22:\n\t"
-        "ldr r2, L8240_29\n\t"
-        "ldr r0, [r2]\n\t"
-        "ldr r0, [r0, #0x24]\n\t"
-        "cmp r0, #0\n\t"
-        "beq L8240_24\n\t"
-        "mov r6, #0\n\t"
-        "ldr r3, [sp]\n\t"
-        "ldr r7, [r3, #4]\n\t"
-        "L8240_23:\n\t"
-        "ldr r1, L8240_29\n\t"
-        "ldr r0, [r1]\n\t"
-        "ldr r5, [r0, #0x24]\n\t"
-        "lsl r4, r6, #3\n\t"
-        "add r5, r4, r5\n\t"
-        "ldr r1, [r7, #0x18]\n\t"
-        "add r1, r4, r1\n\t"
-        "ldr r0, [r0, #0x14]\n\t"
-        "ldrh r2, [r0, #2]\n\t"
-        "ldr r0, [r1, #4]\n\t"
-        "mul r0, r2, r0\n\t"
-        "mov r1, #0xfa\n\t"
-        "lsl r1, r1, #2\n\t"
-        "bl sub_8037E54\n\t"
-        "lsl r0, r0, #1\n\t"
-        "str r0, [r5]\n\t"
-        "ldr r0, [r7, #0x18]\n\t"
-        "add r4, r4, r0\n\t"
-        "ldr r0, [r4, #8]\n\t"
-        "str r0, [r5, #4]\n\t"
-        "add r6, #1\n\t"
-        "cmp r6, #2\n\t"
-        "ble L8240_23\n\t"
-        "L8240_24:\n\t"
-        "mov r0, #1\n\t"
-        "L8240_25:\n\t"
-        "add sp, #0x28\n\t"
-        "pop {r3, r4, r5}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov sl, r5\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n\t"
-        "L8240_29: .4byte gUnknown_03001630\n\t"
-    );
-}
-#endif /* NON_MATCHING */
