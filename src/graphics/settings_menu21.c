@@ -65,7 +65,12 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
  * NON_MATCHING is 20 halfwords off under either compiler, all in the
  * two computed-x `set_icon_mgr_pos` calls: the ROM puts x in r3 and y
  * in r2, the draft x in r1/r2 and y in r3. The `field_74` block
- * (constant position) and the jump table already match. */
+ * (constant position) and the jump table already match.
+ * Mix-6 pass: `asm("" : : "r"(x))` / `"+r"` on x, y, m or width,
+ * `"=r"/"0"` on y, `/ 2`, s32 width/params and macro setters all stay
+ * at 20 hw or get worse. The ROM also takes r4 (not r3) for the
+ * following `ldrsh` offset constant, so something besides x/y priority
+ * differs. */
 #if NON_MATCHING
 void sub_80053F4(struct pause_screen_results *self)
 {
