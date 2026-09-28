@@ -145,6 +145,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/actor_part81.o \
                   $(C_BUILDDIR)/graphics/actor_part86.o \
                   $(C_BUILDDIR)/graphics/actor_part86b.o \
+                  $(C_BUILDDIR)/graphics/actor_part88.o \
                   $(C_BUILDDIR)/graphics/actor_part_12fbc.o \
                   $(C_BUILDDIR)/graphics/actor_part_134b8.o \
                   $(C_BUILDDIR)/graphics/actor_part_138e8.o \
@@ -173,6 +174,9 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/graphics_package_1e8f8.o \
                   $(C_BUILDDIR)/graphics/graphics_package_1e964.o \
                   $(C_BUILDDIR)/graphics/hud_digit_array.o \
+                  $(C_BUILDDIR)/graphics/hud_icon_widget_85c4.o \
+                  $(C_BUILDDIR)/graphics/hud_icon_widget_8890.o \
+                  $(C_BUILDDIR)/graphics/hud_icon_widget_8994.o \
                   $(C_BUILDDIR)/graphics/trigger_effect.o \
                   $(C_BUILDDIR)/system/bg_scroll_layer_25fc8.o \
                   $(C_BUILDDIR)/system/game_loop14.o \

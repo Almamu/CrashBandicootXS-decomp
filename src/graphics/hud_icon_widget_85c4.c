@@ -1,16 +1,9 @@
 #include "core.h"
 #include "icon_manager.h"
 
-/* sub_8028808 (at the end of this file) is matched, byte-exact.
- * sub_80285C4/InitHudIconWidgetA/InitHudIconWidgetB below are also
- * matched now, but as NAKED asm transcriptions rather than plain C -
- * see docs/matching/issue-46-hud-icon-widget.md's "NAKED-transcription
- * pass" section for why: all three are blocked by this toolchain's
- * confirmed r7-pinning bug (an explicit `register T x asm("r7")`, or
- * even an indirect starve of the unforced allocator's own r7 choice,
- * compiles with no push/pop of r7 at all - see docs/matching.md's "Why
- * not just pin r7"), which a NAKED function sidesteps entirely since
- * nothing asks gcc's allocator to decide anything. */
+/* GitHub issue #46: the HUD icon/text widget's glyph drawer and its two
+ * constructors. Built with old_agbcc: under agbcc, sub_80285C4 derives
+ * its bitfield masks differently. */
 extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
 
 extern void sub_803A94C(void *src, void *dst, s32 control);
@@ -26,349 +19,123 @@ extern u8 gStaticData_085A551C[];
 extern u8 gStaticData_08175188[];
 extern u8 gStaticData_081751D4[];
 
-/* Builds one glyph's OAM-scratch draw request (`self->oam_scratch`) from
- * `self->glyphRecords[glyphIndex]` and the current cursor position, hands
- * it to `sub_8006AC8` to actually draw, then advances `posX` by the
- * glyph's width. `charByte` is looked up through `charLookup` first -
- * callers pass a raw character byte, not a glyph index.
- *
- * Field map (see include/icon_manager.h): +8+charByte is
- * `charLookup[charByte]` (glyphIndex); +0x110/+0x114 are `posX`/`posY`
- * (only `posX`'s low 9 bits and `posY`'s low byte are read here);
- * +0x10c is `glyphRecords` (reloaded fresh around the `sub_8006AC8`
- * call, matching the ROM); +0x108/+0x124 are `field_108`/`field_124`.
- *
- * Transcribed as NAKED asm (not plain C): `self` sits in `r3` here, with
- * too many other simultaneously-live values (the glyph index, three
- * re-derived `rec` pointers, `self` itself across the `sub_8006AC8`
- * call) for this compiler's allocator to fit into r4-r7 the way the ROM
- * does - tried caching `&self->posX`/`&self->glyphRecords` into explicit
- * locals and plain repeated field access, neither changed the register
- * choice. Every instruction below is checked byte-identical to the
- * ROM. */
-NAKED void sub_80285C4(struct icon_manager *self, u8 charByte)
+/* `icon_manager.oam_scratch` viewed as the OAM-shaped draw request
+ * sub_8006AC8 consumes: attr0's Y byte and 2-bit shape, attr1's 9-bit X
+ * and 2-bit size, attr2's 10-bit tile number. */
+struct glyph_oam
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "add r3, r0, #0\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "lsr r1, r1, #0x18\n\t"
-        "add r0, #8\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrb r2, [r0]\n\t"
-        "mov r0, #0x88\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r6, r3, r0\n\t"
-        "ldr r1, [r6]\n\t"
-        "ldr r4, 1f\n\t"
-        "add r0, r4, #0\n\t"
-        "and r1, r0\n\t"
-        "ldr r0, 2f\n\t"
-        "ldrh r7, [r3, #2]\n\t"
-        "and r0, r7\n\t"
-        "orr r0, r1\n\t"
-        "strh r0, [r3, #2]\n\t"
-        "mov r0, #0x8a\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r1, r3, r0\n\t"
-        "sub r4, #0xf3\n\t"
-        "add r5, r3, r4\n\t"
-        "ldr r0, [r5]\n\t"
-        "lsl r4, r2, #1\n\t"
-        "add r4, r4, r2\n\t"
-        "lsl r4, r4, #2\n\t"
-        "add r0, r4, r0\n\t"
-        "ldrb r0, [r0, #8]\n\t"
-        "ldrb r1, [r1]\n\t"
-        "add r0, r0, r1\n\t"
-        "strb r0, [r3]\n\t"
-        "ldr r0, [r5]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r0, #4]\n\t"
-        "lsl r1, r1, #6\n\t"
-        "mov r0, #0x3f\n\t"
-        "ldrb r7, [r3, #1]\n\t"
-        "and r0, r7\n\t"
-        "orr r0, r1\n\t"
-        "strb r0, [r3, #1]\n\t"
-        "mov r1, #0x84\n\t"
-        "lsl r1, r1, #1\n\t"
-        "add r0, r3, r1\n\t"
-        "ldr r1, [r0]\n\t"
-        "mov r7, #0x92\n\t"
-        "lsl r7, r7, #1\n\t"
-        "add r0, r3, r7\n\t"
-        "ldr r0, [r0]\n\t"
-        "mul r0, r2, r0\n\t"
-        "add r1, r1, r0\n\t"
-        "ldr r2, 3f\n\t"
-        "add r0, r2, #0\n\t"
-        "and r1, r0\n\t"
-        "ldr r0, 4f\n\t"
-        "ldrh r7, [r3, #4]\n\t"
-        "and r0, r7\n\t"
-        "orr r0, r1\n\t"
-        "strh r0, [r3, #4]\n\t"
-        "ldr r0, 5f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r1, r3, #0\n\t"
-        "bl sub_8006AC8\n\t"
-        "ldr r0, [r5]\n\t"
-        "add r4, r4, r0\n\t"
-        "ldr r0, [r6]\n\t"
-        "ldr r1, [r4]\n\t"
-        "add r0, r0, r1\n\t"
-        "str r0, [r6]\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "1: .4byte 0x000001FF\n"
-    "2: .4byte 0xFFFFFE00\n"
-    "3: .4byte 0x000003FF\n"
-    "4: .4byte 0xFFFFFC00\n"
-    "5: .4byte gUnknown_03001300\n"
-    );
+    u8 y;
+    u8 unk_1:6;
+    u8 shape:2;
+    u16 x:9;
+    u16 unk_2:5;
+    u16 size:2;
+    u16 tile:10;
+    u16 unk_4:6;
+};
+
+/* The value arrives as a parameter so old_agbcc loads the 0x1ff mask
+ * from the literal pool, as the ROM does. */
+static inline void SetGlyphX(struct glyph_oam *oam, s32 x)
+{
+    oam->x = x;
 }
 
-/* Constructs a `struct icon_manager` for the "A" icon/text widget
- * family: zeroes the leading OAM-scratch pair of words, resets cursor
- * position and left margin, points `record` at `gStaticData_087E4DAC`
- * (the first store to `gStaticData_087E4DAC` is a genuinely dead write
- * that's really in the ROM - see actor_aabb_setup.c's
- * sub_803AFF0/sub_803B024 for the identical documented pattern),
- * configures the line-height/space-width/glyph-stride fields, and
- * builds `charLookup` from the `gStaticData_08174D84` font-glyph-order
- * table (see include/icon_manager.h).
- *
- * Transcribed as NAKED asm (not plain C): the charLookup-building loop
- * keeps the font table's leading count byte permanently in `r7` and a
- * constant zero in `ip` across the whole loop - `register T x
- * asm("r7")` cannot be used to force this, since that's the confirmed
- * silent ABI-violation bug in this toolchain (no push/pop of r7 at all
- * - see docs/matching.md's "Why not just pin r7"). The preceding
- * `record`/`posX`/`posY`/`field_118`/`field_12c` preamble also has its
- * own address-computation-order-vs-store-order mismatches that plain C
- * never reproduced simultaneously (tried: plain struct-field
- * assignment both orderings, raw `(u8 *)self + N` casts both orderings,
- * a shared base-pointer local - see the second-pass writeup for the
- * full account). Every instruction below is checked byte-identical to
- * the ROM. */
-NAKED struct icon_manager *InitHudIconWidgetA(struct icon_manager *self)
+/* Builds one glyph's draw request in `self->oam_scratch` from
+ * `glyphRecords[charLookup[charByte]]` and the cursor, draws it with
+ * sub_8006AC8, then advances `posX` by the glyph's width. */
+void sub_80285C4(struct icon_manager *self, u8 charByte)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "sub sp, #4\n\t"
-        "add r4, r0, #0\n\t"
-        "mov r0, #0x98\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r1, r4, r0\n\t"
-        "ldr r0, 5f\n\t"
-        "str r0, [r1]\n\t"
-        "mov r1, #0x88\n\t"
-        "lsl r1, r1, #1\n\t"
-        "add r2, r4, r1\n\t"
-        "add r1, #4\n\t"
-        "add r0, r4, r1\n\t"
-        "mov r1, #0\n\t"
-        "str r1, [r0]\n\t"
-        "str r1, [r2]\n\t"
-        "mov r2, #0x8c\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r0, r4, r2\n\t"
-        "str r1, [r0]\n\t"
-        "add r2, #0x14\n\t"
-        "add r0, r4, r2\n\t"
-        "str r1, [r0]\n\t"
-        "str r1, [sp]\n\t"
-        "mov r0, sp\n\t"
-        "add r1, r4, #0\n\t"
-        "ldr r2, 6f\n\t"
-        "bl sub_803A94C\n\t"
-        "mov r0, #0x98\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r1, r4, r0\n\t"
-        "ldr r0, 7f\n\t"
-        "str r0, [r1]\n\t"
-        "mov r2, #0x8e\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r1, r4, r2\n\t"
-        "mov r0, #9\n\t"
-        "str r0, [r1]\n\t"
-        "mov r0, #0x90\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r1, r4, r0\n\t"
-        "mov r0, #4\n\t"
-        "str r0, [r1]\n\t"
-        "add r2, #0xc\n\t"
-        "add r1, r4, r2\n\t"
-        "ldr r0, 8f\n\t"
-        "str r0, [r1]\n\t"
-        "mov r0, #0x92\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r1, r4, r0\n\t"
-        "mov r0, #2\n\t"
-        "str r0, [r1]\n\t"
-        "sub r2, #0x1c\n\t"
-        "add r1, r4, r2\n\t"
-        "ldr r0, 9f\n\t"
-        "str r0, [r1]\n\t"
-        "mov r2, #0\n\t"
-        "add r5, r4, #0\n\t"
-        "add r5, #8\n\t"
-        "ldr r6, 10f\n\t"
-        "ldrb r7, [r6]\n\t"
-        "mov ip, r2\n\t"
-    "1:\n\t"
-        "add r0, r5, r2\n\t"
-        "mov r1, ip\n\t"
-        "strb r1, [r0]\n\t"
-        "mov r1, #0\n\t"
-        "add r3, r2, #1\n\t"
-        "cmp r7, r2\n\t"
-        "beq 3f\n\t"
-    "2:\n\t"
-        "add r1, #1\n\t"
-        "cmp r1, #0x4f\n\t"
-        "bhi 4f\n\t"
-        "add r0, r1, r6\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, r2\n\t"
-        "bne 2b\n\t"
-        "add r0, r5, r2\n\t"
-    "3:\n\t"
-        "strb r1, [r0]\n\t"
-    "4:\n\t"
-        "add r2, r3, #0\n\t"
-        "cmp r2, #0xff\n\t"
-        "bls 1b\n\t"
-        "add r0, r4, #0\n\t"
-        "add sp, #4\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n"
-    "5: .4byte gStaticData_087E4DAC\n"
-    "6: .4byte 0x05000002\n"
-    "7: .4byte gStaticData_087E4D64\n"
-    "8: .4byte gStaticData_085A4E70\n"
-    "9: .4byte gStaticData_08174DD4\n"
-    "10: .4byte gStaticData_08174D84\n"
-    );
+    struct glyph_oam *oam = (struct glyph_oam *)self->oam_scratch;
+    u8 glyph = self->charLookup[charByte];
+
+    SetGlyphX(oam, self->posX);
+    {
+        u8 *posY = (u8 *)&self->posY;
+
+        oam->y = self->glyphRecords[glyph].field_8 + *posY;
+    }
+    oam->shape = self->glyphRecords[glyph].field_4;
+    oam->tile = self->field_108 + glyph * self->field_124;
+    sub_8006AC8(gUnknown_03001300, self);
+    self->posX += self->glyphRecords[glyph].width;
 }
 
-/* Same shape as InitHudIconWidgetA above, "B" icon/text widget family -
- * different data tables and line-height/glyph-stride constants. Same
- * NAKED-transcription rationale and residual r7 gap as
- * InitHudIconWidgetA - see that function's comment for the full
- * account. */
-NAKED struct icon_manager *InitHudIconWidgetB(struct icon_manager *self)
+/* The part both widget constructors share: resets the cursor, left
+ * margin and field_12c, zeroes the OAM scratch buffer, and points
+ * `record` at gStaticData_087E4DAC (which the constructors then
+ * overwrite). */
+static inline void InitIconManager(struct icon_manager *self)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "sub sp, #4\n\t"
-        "add r4, r0, #0\n\t"
-        "mov r0, #0x98\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r1, r4, r0\n\t"
-        "ldr r0, 5f\n\t"
-        "str r0, [r1]\n\t"
-        "mov r1, #0x88\n\t"
-        "lsl r1, r1, #1\n\t"
-        "add r2, r4, r1\n\t"
-        "add r1, #4\n\t"
-        "add r0, r4, r1\n\t"
-        "mov r1, #0\n\t"
-        "str r1, [r0]\n\t"
-        "str r1, [r2]\n\t"
-        "mov r2, #0x8c\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r0, r4, r2\n\t"
-        "str r1, [r0]\n\t"
-        "add r2, #0x14\n\t"
-        "add r0, r4, r2\n\t"
-        "str r1, [r0]\n\t"
-        "str r1, [sp]\n\t"
-        "mov r0, sp\n\t"
-        "add r1, r4, #0\n\t"
-        "ldr r2, 6f\n\t"
-        "bl sub_803A94C\n\t"
-        "mov r0, #0x98\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r1, r4, r0\n\t"
-        "ldr r0, 7f\n\t"
-        "str r0, [r1]\n\t"
-        "mov r2, #0x8e\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r1, r4, r2\n\t"
-        "mov r0, #0x10\n\t"
-        "str r0, [r1]\n\t"
-        "mov r0, #0x90\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r1, r4, r0\n\t"
-        "mov r0, #6\n\t"
-        "str r0, [r1]\n\t"
-        "add r2, #8\n\t"
-        "add r1, r4, r2\n\t"
-        "mov r0, #4\n\t"
-        "str r0, [r1]\n\t"
-        "mov r0, #0x86\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r1, r4, r0\n\t"
-        "ldr r0, 8f\n\t"
-        "str r0, [r1]\n\t"
-        "add r2, #4\n\t"
-        "add r1, r4, r2\n\t"
-        "ldr r0, 9f\n\t"
-        "str r0, [r1]\n\t"
-        "mov r0, #0x3f\n\t"
-        "ldrb r1, [r4, #3]\n\t"
-        "and r0, r1\n\t"
-        "mov r1, #0x40\n\t"
-        "orr r0, r1\n\t"
-        "strb r0, [r4, #3]\n\t"
-        "mov r2, #0\n\t"
-        "add r5, r4, #0\n\t"
-        "add r5, #8\n\t"
-        "ldr r6, 10f\n\t"
-        "ldrb r7, [r6]\n\t"
-        "mov ip, r2\n\t"
-    "1:\n\t"
-        "add r0, r5, r2\n\t"
-        "mov r1, ip\n\t"
-        "strb r1, [r0]\n\t"
-        "mov r1, #0\n\t"
-        "add r3, r2, #1\n\t"
-        "cmp r7, r2\n\t"
-        "beq 3f\n\t"
-    "2:\n\t"
-        "add r1, #1\n\t"
-        "cmp r1, #0x4b\n\t"
-        "bhi 4f\n\t"
-        "add r0, r1, r6\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, r2\n\t"
-        "bne 2b\n\t"
-        "add r0, r5, r2\n\t"
-    "3:\n\t"
-        "strb r1, [r0]\n\t"
-    "4:\n\t"
-        "add r2, r3, #0\n\t"
-        "cmp r2, #0xff\n\t"
-        "bls 1b\n\t"
-        "add r0, r4, #0\n\t"
-        "add sp, #4\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n"
-    "5: .4byte gStaticData_087E4DAC\n"
-    "6: .4byte 0x05000002\n"
-    "7: .4byte gStaticData_087E4D1C\n"
-    "8: .4byte gStaticData_081751D4\n"
-    "9: .4byte gStaticData_085A551C\n"
-    "10: .4byte gStaticData_08175188\n"
-    );
+    u32 zero;
+
+    self->record = (struct icon_record *)gStaticData_087E4DAC;
+    self->posX = self->posY = 0;
+    self->field_118 = 0;
+    self->field_12c = 0;
+    zero = 0;
+    sub_803A94C(&zero, self, 0x05000002);
+}
+
+/* Constructs the "A" widget: 9-pixel lines, 4-pixel spaces, glyph
+ * stride 2, and a charLookup built from the gStaticData_08174D84 font
+ * order table (see include/icon_manager.h). */
+struct icon_manager *InitHudIconWidgetA(struct icon_manager *self)
+{
+    u32 i;
+    u32 j;
+
+    InitIconManager(self);
+    self->record = (struct icon_record *)gStaticData_087E4D64;
+    self->field_11c = 9;
+    self->spaceWidth = 4;
+    self->field_128 = gStaticData_085A4E70;
+    self->field_124 = 2;
+    self->glyphRecords = (struct icon_glyph_metrics *)gStaticData_08174DD4;
+    for (i = 0; i <= 0xff; i++)
+    {
+        self->charLookup[i] = 0;
+        for (j = 0; j <= 0x4f; j++)
+        {
+            if (gStaticData_08174D84[j] == i)
+            {
+                self->charLookup[i] = j;
+                break;
+            }
+        }
+    }
+    return self;
+}
+
+/* Constructs the "B" widget: 16-pixel lines, 6-pixel spaces, glyph
+ * stride 4, OBJ size 1, and a charLookup built from the
+ * gStaticData_08175188 font order table. */
+struct icon_manager *InitHudIconWidgetB(struct icon_manager *self)
+{
+    u32 i;
+    u32 j;
+
+    InitIconManager(self);
+    self->record = (struct icon_record *)gStaticData_087E4D1C;
+    self->field_11c = 0x10;
+    self->spaceWidth = 6;
+    self->field_124 = 4;
+    self->glyphRecords = (struct icon_glyph_metrics *)gStaticData_081751D4;
+    self->field_128 = gStaticData_085A551C;
+    ((struct glyph_oam *)self->oam_scratch)->size = 1;
+    for (i = 0; i <= 0xff; i++)
+    {
+        self->charLookup[i] = 0;
+        for (j = 0; j <= 0x4b; j++)
+        {
+            if (gStaticData_08175188[j] == i)
+            {
+                self->charLookup[i] = j;
+                break;
+            }
+        }
+    }
+    return self;
 }
 
 /* sub_8028808 is matched, byte-exact.

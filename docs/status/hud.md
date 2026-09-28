@@ -43,17 +43,14 @@ system from "core" graphics.
 
 - `src/graphics/hud_icon_widget_85c4.c` (GitHub issue #46, second pass):
   `sub_8028808` - the per-character newline/space/glyph-dispatch
-  trampoline. (This file's `sub_80285C4`/`InitHudIconWidgetA`/
-  `InitHudIconWidgetB` are NAKED transcriptions tracked as parked, not
-  matched - see below.)
+  trampoline.
 
 - `src/graphics/hud_icon_widget2.c` (new file, GitHub issue #46):
   `sub_8028860` - draws a fixed-count run of characters via the
   `struct icon_manager` widget's own record trampoline.
 
 - `src/graphics/hud_icon_widget_8890.c` (GitHub issue #46, second pass):
-  `sub_8028890`. (This file's `sub_8028900`, transcribed as NAKED asm
-  third pass, is tracked as parked, not matched - see below.)
+  `sub_8028890`.
 
 - `src/graphics/hud_icon_widget3.c` (new file, GitHub issue #46):
   `sub_8028968` - total text-block-height helper.
@@ -105,6 +102,13 @@ GitHub issue #45's second-pass write-up (the stat-widget dispatcher, and
 why the rest of the family stayed raw) is
 [docs/matching/issue-45-hud-stat-widget-dispatcher.md](../matching/issue-45-hud-stat-widget-dispatcher.md).
 
+- **`sub_80285C4`**, **`InitHudIconWidgetA`**, **`InitHudIconWidgetB`**
+  (`src/graphics/hud_icon_widget_85c4.c`), **`sub_8028900`**
+  (`hud_icon_widget_8890.c`) and **`MeasureText`** (`hud_icon_widget_8994.c`)
+  - GitHub issue #46's last five, the glyph writer, the two icon-manager
+  constructors and the text walkers. Plain C, built with old_agbcc (all
+  three files move to it); they were NAKED. See [old-agbcc-round5.md](../matching/old-agbcc-round5.md).
+
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
 - GitHub issue #46: none `NON_MATCHING` - all 25 functions in the chunk
@@ -120,14 +124,6 @@ entire function body is hand-transcribed disassembly wrapped in inline
 `asm()` - the C-level matching attempt failed and the raw bytes got
 embedded as asm instead. They're tracked as parked, not matched.
 
-- **`sub_80285C4`**/**`InitHudIconWidgetA`**/**`InitHudIconWidgetB`**
-  (`src/graphics/hud_icon_widget_85c4.c`) - GitHub issue #46, see the
-  issue write-up's "Third pass: NAKED-transcription" section:
-  [docs/matching/issue-46-hud-icon-widget.md](../matching/issue-46-hud-icon-widget.md).
-- **`sub_8028900`** (`src/graphics/hud_icon_widget_8890.c`) - GitHub
-  issue #46, same write-up.
-- **`MeasureText`** (`src/graphics/hud_icon_widget_8994.c`) - GitHub
-  issue #46, same write-up.
 - **`sub_802757C`**/**`sub_802763C`** (`src/graphics/hud_stat_widget2.c`)
   - the icon-indicator widget and three more change-detection-gated
   digit/icon widgets; every phrasing of a per-slot `anim_index` byte
