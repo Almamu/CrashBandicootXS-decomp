@@ -1132,8 +1132,10 @@ plain C didn't converge.
   the "seven live values" allocation is right; what is left is that gcc
   computes the palette-slot address `slot << 5` ahead of the tile loops
   and spills it (4 bytes of extra frame), where the ROM computes it at
-  the palette copy. See
-  [docs/matching/issue-64-65-naked-retry.md](../matching/issue-64-65-naked-retry.md).
+  the palette copy. The second retry traced the early `slot << 5` to
+  GCSE's PRE, not loop.c. See
+  [docs/matching/issue-64-65-naked-retry.md](../matching/issue-64-65-naked-retry.md)
+  and [issue-64-65-naked-retry-2.md](../matching/issue-64-65-naked-retry-2.md).
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 

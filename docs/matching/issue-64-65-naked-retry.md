@@ -54,3 +54,11 @@ Scratch helpers (not committed) that made this fast:
 
 - `rm -rf build && make NON_MATCHING=1 report`: no warnings from the touched files.
 - `rm -rf build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make compare`: `crashbandicootxs.gba: OK`.
+
+## Later pass
+
+The issues #64/#65 second NAKED retry closed `sub_80360DC`,
+`sub_8035E14` and `sub_80358A8`, and split the file at `sub_8035D1C`
+(`graphics_loading_35d1c.c`). `sub_80352AC` is still NAKED: its early
+`slot << 5` comes from GCSE's PRE. See
+[issue-64-65-naked-retry-2.md](issue-64-65-naked-retry-2.md).

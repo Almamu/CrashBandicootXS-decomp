@@ -748,7 +748,13 @@ asm(".align 2, 0");
  * and `i + 1` biv increments it also hoists there, which the ROM does
  * too) and spills it to its own stack slot; the ROM computes it at the
  * palette copy. Copy-loop spelling, `u32 slot`, `palSlots` forms and
- * -fno-strength-reduce don't change it (issue #64/#65 NAKED retry). */
+ * -fno-strength-reduce don't change it (issue #64/#65 NAKED retry).
+ * Second retry: the early `slot << 5` is GCSE's PRE, not loop.c
+ * (`-dG`: "PRE/HOIST: end of bb 7 ... expression 56"). PRE hoists
+ * `slot << 5`, `slot + 1` and `i + 1` to the y loop's pre-test; the ROM
+ * has only the last two there. `-fno-gcse` removes it but breaks the
+ * rest. Every address spelling, index-form copy loops, and asm copies
+ * or "+m" on `slot` still leave it hoisted or add a copy. */
 /* One `gStaticData_0817CF40` record (0x14 bytes): a popup glyph's size
  * in 8-px tiles and its tagged palette/tile assets. */
 struct popup_glyph_src {

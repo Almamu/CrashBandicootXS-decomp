@@ -190,6 +190,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_21280.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_21668.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_35780.o \
+                  $(C_BUILDDIR)/graphics/graphics_loading_35d1c.o \
                   $(C_BUILDDIR)/graphics/graphics_package_1e578.o \
                   $(C_BUILDDIR)/graphics/graphics_package_1e640.o \
                   $(C_BUILDDIR)/graphics/graphics_package_1e688.o \
@@ -232,13 +233,16 @@ $(OLD_AGBCC_OBJS): CC1 := $(CC1_OLD)
 $(OLD_AGBCC_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1FLAGS))
 
 # Objects built with -fno-strength-reduce on top of their compiler's -O2.
-# graphics_loading_35780: sub_8036600's first loop keeps its up-counting
+# graphics_loading_35d1c: sub_8036600's first loop keeps its up-counting
 # `i` (with strength reduction on, gcc reverses a loop whose counter only
 # feeds the exit test), and the flag leaves every other real-C function in
 # the file byte-identical. It is NOT a global property: adding it to all
-# old_agbcc objects breaks matched functions in 11 other files. See
-# docs/matching/per-file-flags-investigation.md.
-NO_STRENGTH_REDUCE_OBJS := $(C_BUILDDIR)/graphics/graphics_loading_35780.o
+# old_agbcc objects breaks matched functions in 11 other files, and
+# sub_80358A8 (graphics_loading_35780.o, split off for this reason) needs
+# strength reduction ON: its up-counting inner loop must be reversed. See
+# docs/matching/per-file-flags-investigation.md and
+# docs/matching/issue-64-65-naked-retry-2.md.
+NO_STRENGTH_REDUCE_OBJS := $(C_BUILDDIR)/graphics/graphics_loading_35d1c.o
 $(NO_STRENGTH_REDUCE_OBJS): CC1FLAGS += -fno-strength-reduce
 
 # GAX2's bundled libgcc2.c code (__divdi3/__udivdi3/__muldi3) was built

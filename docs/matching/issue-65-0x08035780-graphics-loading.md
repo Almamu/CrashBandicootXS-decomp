@@ -237,3 +237,10 @@ old_agbcc (`sub_8035F9C`, `sub_8035FEC`, `sub_8036068`, `sub_8036154`,
 and `sub_8036CF4` stay NAKED, each with a near-miss draft under
 `#if NON_MATCHING`. `sub_803686C` was not attempted. See
 [issue-65-naked-retry.md](issue-65-naked-retry.md).
+
+## Later pass (issues #64/#65 second NAKED retry)
+
+`sub_80360DC`, `sub_8035E14` and `sub_80358A8` are now real C. The file
+was split at `sub_8035D1C` into `graphics_loading_35d1c.c`, because
+`sub_80358A8` needs strength reduction on and `sub_8036600` needs it
+off. See [issue-64-65-naked-retry-2.md](issue-64-65-naked-retry-2.md).
