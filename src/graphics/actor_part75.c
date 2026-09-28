@@ -1,4 +1,5 @@
 #include "core.h"
+#include "actor_self.h"
 
 /* Sits right after actor_part59.c's `sub_802DCC0` and before
  * actor_part60.c's `sub_802DFBC` - the whole contiguous range that used
@@ -29,7 +30,63 @@ extern void *sub_800014C(void *dest, void *src, s32 size);
  *
  * Written as NAKED asm for the same register-pressure reasons as
  * `sub_802D7B0` (actor_part74.c) - mechanical, byte-verified
- * transcription, not an inferred guess. */
+ * transcription, not an inferred guess.
+ *
+ * NON_MATCHING draft (see docs/matching/issue-51-54-naked-retry.md):
+ * right size, box A now built in the ROM's order (a `BoxMove` with a
+ * zero Y), but `&b` is still hoisted into r5 ahead of the player-box
+ * build, costing an extra r6 push - same wall as `sub_802D7B0`. */
+#if NON_MATCHING
+struct box16 {
+    s16 x, y, z;
+    s16 w, h, d;
+};
+
+static inline void BoxMove(struct box16 *b, s32 x, s32 y, s32 z)
+{
+    b->x += x;
+    b->y += y;
+    b->z += z;
+}
+
+static inline struct box16 ActorBox(struct actor_self *obj)
+{
+    struct box16 t = *(struct box16 *)obj->unk_38;
+    s32 px = obj->x >> 8;
+    s32 py = obj->y >> 8;
+    s32 pz = obj->z >> 8;
+
+    BoxMove(&t, px, py, pz);
+    return t;
+}
+
+static inline u8 BoxOverlap(struct box16 *b, struct box16 *a)
+{
+    if (b->z < a->z + a->d && b->z + b->d > a->z
+        && b->y < a->y + a->h && b->y + b->h > a->y
+        && b->x < a->x + a->w && b->x + b->w > a->x)
+        goto hit;
+    return 0;
+hit:
+    return 1;
+}
+
+static inline u8 CopyOverlap(struct box16 *a, struct box16 *b)
+{
+    sub_800014C(b, b, sizeof(*b));
+    return BoxOverlap(a, b);
+}
+
+u8 sub_802DD9C(struct actor_self *self)
+{
+    struct box16 a, b;
+
+    a = *(struct box16 *)gStaticData_0817AA8C;
+    BoxMove(&a, gUnknown_030014C4 >> 8, 0, gUnknown_030014C8 >> 8);
+    b = ActorBox(self);
+    return CopyOverlap(&a, &b);
+}
+#else
 NAKED u8 sub_802DD9C(void *self)
 {
     asm(
@@ -141,10 +198,11 @@ NAKED u8 sub_802DD9C(void *self)
         ".align 2, 0\n"
     );
 }
+#endif
 
 extern u8 gUnknown_030014C0;
-extern void *gUnknown_03000898;
-extern void *gUnknown_030014BC;
+extern void (*gUnknown_03000898)(void *frame, s32 arg);
+extern struct actor_self *gUnknown_030014BC;
 extern void sub_803AD80(void *arg0, s32 arg1, void *fn);
 extern u8 gUnknown_030014C1;
 extern void sub_802DA68(void);
@@ -172,7 +230,59 @@ extern void sub_802D9A8(void);
  * reconstruction - mechanical, byte-verified transcription of the
  * already-fully-understood semantics above (every operand/order
  * confirmed against `expected/code_3.s` first), not an inferred
- * control-flow guess. */
+ * control-flow guess.
+ *
+ * NON_MATCHING draft (see docs/matching/issue-51-54-naked-retry.md):
+ * 5 halfwords off under either compiler. Everything else matches; the
+ * three addresses hoisted into high registers land in r8/sb/sl in
+ * source order (C0, 898, BC) where the ROM gives BC r8 and the other
+ * two sb/sl. */
+#if NON_MATCHING
+static inline void FillDotPattern(u8 *dst, u8 seed)
+{
+    s32 y, x;
+
+    for (y = 0; y < 16; y++) {
+        for (x = 0; x < 16; x++) {
+            if ((u32)(x - 3) > 9 || y <= 2 || y > 12)
+                dst[y * 16 + x] = 0xff;
+            else
+                dst[y * 16 + x] = seed++;
+        }
+    }
+}
+
+void sub_802DE70(void)
+{
+    u8 buf[0x100];
+
+    *(vu16 *)0x04000000 |= 0x400;
+    FillDotPattern(buf, 0);
+    DmaCopy16(3, buf, (void *)0x0600D000, 0x100);
+    FillDotPattern(buf, 0x80);
+    DmaCopy16(3, buf, (void *)0x0600D800, 0x100);
+    {
+        s32 base = 0x0600BFC0;
+        u32 zero = 0;
+        s32 p;
+
+        for (p = base + 0x3c; p >= base; p -= 4)
+            *(u32 *)p = zero;
+    }
+    {
+        struct actor_self *obj;
+        s32 t;
+
+        gUnknown_030014C0 = 1;
+        obj = gUnknown_030014BC;
+        t = obj->animTime >> 8;
+        gUnknown_03000898((u8 *)obj->frameOffsets[obj->anims[obj->animIndex].frameIndex + t] + 4, 1);
+    }
+    gUnknown_030014C1 = 1;
+    sub_802DA68();
+    sub_802D9A8();
+}
+#else
 NAKED void sub_802DE70(void)
 {
     asm(
@@ -344,5 +454,6 @@ NAKED void sub_802DE70(void)
         "22: .4byte gUnknown_030014C1\n"
     );
 }
+#endif
 
 asm(".align 2, 0");

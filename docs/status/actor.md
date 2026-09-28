@@ -566,10 +566,11 @@ from "core" graphics.
   fallthrough path, instead of a plain `if`/`return` guard clause this
   compiler would inline differently) - see
   [docs/matching/issue-52-gap-b364.md](../matching/issue-52-gap-b364.md).
-  4 of this gap's 11 functions are now real C; the other 7
+  All 11 of this gap's functions are now real C: the other 7
   (`sub_802B364`, `sub_802B5B4`, `sub_802B864`, `sub_802B8E8`,
-  `sub_802BA5C`, `sub_802BAD0`, `sub_802BBE4`) are still NAKED-parked in
-  the same file, see the "Parked - NAKED transcription" section below.
+  `sub_802BA5C`, `sub_802BAD0`, `sub_802BBE4`) were promoted from NAKED
+  in the issue #51/#54 retry, with the file switched to old_agbcc - see
+  [docs/matching/issue-51-54-naked-retry.md](../matching/issue-51-54-naked-retry.md).
 - `src/graphics/actor_part107.c` (new file, ROM 0x0802BC68-0x0802BED8 -
   the literal tail of `asm/code_3_2_20_8b7c_ac28.s`, one raw file's
   leftover portion out of GitHub issue #50's original chunk scope;
@@ -645,6 +646,14 @@ from "core" graphics.
   see
   [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
   `nullsub_27` - a genuine no-op stub.
+- `src/graphics/actor_part62.c`, `actor_part74.c`, `actor_part76.c`
+  (GitHub issue #54, promoted from NAKED in the issue #51/#54 retry -
+  see
+  [docs/matching/issue-51-54-naked-retry.md](../matching/issue-51-54-naked-retry.md)):
+  `sub_802D3A8` (per-state position easing), `sub_802D9A8`/`sub_802DA68`
+  (the `gUnknown_030014BC` gauge's palette ramp and affine BG2 setup;
+  `actor_part74.c` now builds with old_agbcc) and `sub_802E058` (an
+  unused copy of the gauge's dot-pattern fill).
 - `src/graphics/actor_part128.c` (new file, ROM `0x0802E0A4`-
   `0x0802F0DC`, the gap between issue #54's chunk and issue #56's
   chunk, tracked as issue #55; built with old_agbcc): all 25 functions -
@@ -892,20 +901,6 @@ doesn't advance that even when byte-correct. See
 established convention, and each entry's linked write-up for why
 plain C didn't converge.
 
-- **`sub_802B364`**, **`sub_802B5B4`**, **`sub_802B864`**,
-  **`sub_802B8E8`**, **`sub_802BA5C`**, **`sub_802BAD0`**,
-  **`sub_802BBE4`** (`src/graphics/actor_part127.c`, ROM
-  `0x0802B364`-`0x0802BC68`, the start of the actor zone before issue
-  #52) - a countdown-timer/respawn state machine, a sprite-frame OAM
-  queuer (`r8`/`sb`/`sl` all simultaneously live), a VRAM-tile-block
-  allocator pair, and a run of spawn/reset-trigger and camera-catch-up
-  functions on the `gUnknown_0300148x`-`gUnknown_030014Bx` object
-  cluster. Each hit its own gcc-2.9 gap (heavy multi-register reuse or
-  the "materialize into one register then copy to a second" idiom).
-  `sub_802B730`/`sub_802B7E0`/`sub_802B990`, this same file's other
-  early-return-sharing-an-epilogue functions, were promoted to real C
-  using the `goto`-shared-tail idiom instead of staying parked here -
-  see [docs/matching/issue-52-gap-b364.md](../matching/issue-52-gap-b364.md).
 - **`sub_8009008`** (`src/graphics/actor_part11b.c`) - the
   spatial-hash-grid removal primitive `sub_8009A30`/`sub_8009AA0`
   call: a two-phase search (the object's own primary bucket, then
@@ -1205,28 +1200,21 @@ embedded as asm instead. They're tracked as parked, not matched.
   `r7` shape as `sub_802D7B0`/`sub_802DD9C` below - hits the same
   confirmed categorical gcc-2.9 r7-pin bug. GitHub issue #53, see
   [docs/matching/issue-53-actor-c7a8.md](../matching/issue-53-actor-c7a8.md).
-- **`sub_802D3A8`** (`src/graphics/actor_part62.c`) - eases `self`'s
-  cached position toward a per-state target/table-scatter offset. Hits
-  this project's confirmed categorical gcc-2.9 r7-pin bug. GitHub issue
-  #54, see
-  [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md).
-- **`sub_802D7B0`**, **`sub_802D9A8`**, **`sub_802DA68`**
-  (`src/graphics/actor_part74.c`) - a confirmed slot (index 3) of the
-  type-0 `category_vtable` (also runs a full 3-axis AABB overlap test
-  against the player before dispatching a `sub_803AD80` trampoline) and
-  a palette-gradient/hardware-sound cursor pair for the
-  `gUnknown_030014BC` object. GitHub issue #54, see
-  [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md).
+- **`sub_802D7B0`** (`src/graphics/actor_part74.c`) - a confirmed slot
+  (index 3) of the type-0 `category_vtable` (also runs a full 3-axis
+  AABB overlap test against the player before dispatching a
+  `sub_803AD80` trampoline). A near-miss `#if NON_MATCHING` draft is in
+  tree (right size, ~52 halfwords off: `&b` gets hoisted into a
+  callee-saved register). GitHub issue #54, see
+  [docs/matching/issue-51-54-naked-retry.md](../matching/issue-51-54-naked-retry.md).
 - **`sub_802DD9C`**, **`sub_802DE70`** (`src/graphics/actor_part75.c`) -
   the self-vs-player 3-axis AABB overlap test factored out of
   `sub_802D7B0` (used by `sub_802D6A0`, `actor_part58.c`) and the
   `gUnknown_030014BC` object's ~160-instruction VRAM gauge-tile bitmap
-  generator/DMA setup. GitHub issue #54, see
-  [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md).
-- **`sub_802E058`** (`src/graphics/actor_part76.c`) - a parameterized
-  twin of `sub_802DE70`'s VRAM gauge-tile triangular-fill loop. GitHub
-  issue #54, see
-  [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md).
+  generator/DMA setup. Both have near-miss `#if NON_MATCHING` drafts
+  (`sub_802DE70` is 5 halfwords off - only its high-register
+  assignment). GitHub issue #54, see
+  [docs/matching/issue-51-54-naked-retry.md](../matching/issue-51-54-naked-retry.md).
 - **`sub_803B46C`** (`src/graphics/actor_anim.c`) - fixed-position
   (120, 106) OAM setup for one sprite frame - screen-space visibility
   cull, then builds the OAM attribute words and calls

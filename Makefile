@@ -140,10 +140,12 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/actor_part12.o \
                   $(C_BUILDDIR)/graphics/actor_part120.o \
                   $(C_BUILDDIR)/graphics/actor_part122.o \
+                  $(C_BUILDDIR)/graphics/actor_part127.o \
                   $(C_BUILDDIR)/graphics/actor_part128.o \
                   $(C_BUILDDIR)/graphics/actor_part27a.o \
                   $(C_BUILDDIR)/graphics/actor_part3.o \
                   $(C_BUILDDIR)/graphics/actor_part7.o \
+                  $(C_BUILDDIR)/graphics/actor_part74.o \
                   $(C_BUILDDIR)/graphics/actor_part7b.o \
                   $(C_BUILDDIR)/graphics/actor_part81.o \
                   $(C_BUILDDIR)/graphics/actor_part83.o \

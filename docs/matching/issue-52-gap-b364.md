@@ -196,3 +196,16 @@ crashbandicootxs.gba crashbandicootxs.map && make compare`:
 
 See [docs/status/actor.md](../status/actor.md) for the running
 matched/parked list this entry feeds into.
+
+## Later pass: the other 7 promoted (issue #51/#54 NAKED retry)
+
+`sub_802B364`, `sub_802B5B4`, `sub_802B864`, `sub_802B8E8`,
+`sub_802BA5C`, `sub_802BAD0` and `sub_802BBE4` are now real C too, so
+the whole gap is decompiled. None of the reasons recorded above held
+up: `actor_part127.c` is an old_agbcc file (`sub_802BAD0` materializes
+its `1` mask before the `ldrh`; `sub_802B5B4`/`sub_802B864` differ only
+in load/multiply operand order under the current agbcc), the "stride-8
+keyframe lookup" in `sub_802B364` is a C++ pointer-to-member call
+(`ACTOR_PMF_CALL` on `gStaticData_0817A6B8`), and `sub_802B5B4` is the
+same code as `actor_part128.c`'s `sub_802E9FC`. No register pins. See
+[issue-51-54-naked-retry.md](issue-51-54-naked-retry.md).
