@@ -100,6 +100,17 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
 - `src/graphics/settings_menu19.c` (new file - issue #7,
   0x0800599C-0x08005A78): the results sub-region constructor:
   `sub_800599C`. See `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
+- `src/graphics/settings_menu.c` (issue #6 retry, old_agbcc): the
+  "connecting..." spinner dialog `sub_8003B40`, the centered-label draws
+  `sub_8003BDC`/`sub_8003C90`, the per-row stat renderer `sub_8003F30`
+  and its 4-row driver `sub_80041BC` - all plain C, were NAKED. See
+  [issue-4-6-8-naked-retry.md](../matching/issue-4-6-8-naked-retry.md).
+- `src/graphics/settings_menu23.c` (issue #6 retry): `sub_8004914`,
+  `sub_80049CC` - plain C, were NAKED.
+- `src/graphics/settings_menu10.c` (issue #8 retry, old_agbcc):
+  `sub_8006518`; `settings_menu11.c`: `sub_8006124`, `sub_800619C`,
+  `sub_80061E8`; `settings_menu14.c`: `sub_80062A8` - plain C, were
+  NAKED.
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -116,31 +127,19 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   `n - 1 != -1`, where gcc shares the multiply and folds the test. See
   [old-agbcc-round5.md](../matching/old-agbcc-round5.md).
 - **`sub_8002AA4`** (`src/graphics/settings_menu8e.c`) - checksum
-  validate/repair-via-DMA. GitHub issue #4, see
-  `docs/matching/issue-4-sio-settings-sync.md`.
-- **`sub_8003B40`** (SIO-handshake "connecting..." spinner dialog),
-  **`sub_8003BDC`**, **`sub_8003C90`**, **`sub_8003D3C`**,
-  **`sub_8003F30`** (per-row numeric display, issue #6),
-  **`sub_80041BC`** (`src/graphics/settings_menu.c`, ROM
-  `0x08003B40`-`0x080041BC`) - icon-manager centered-label/positioned-
-  glyph draws plus a SIO-handshake spinner dialog, all built on the same
-  primitive as `sub_8006600` (`docs/status/graphics.md`). Every
-  load/store, branch, and call is semantically confirmed for all six;
-  each hit the same class of gcc-2.9 scratch-register nondeterminism
-  `sub_8006600` documents at length, so all six were converted to
-  byte-verified NAKED asm transcriptions instead of plain C - byte-exact
-  but not real decompiled C, so tracked here as parked, not matched.
-  `sub_800450C` (this file's own init routine, ROM `0x0800450C`, right
-  after `sub_80041BC`) stays fully raw/unattempted - see
-  `docs/matching/issue-6-0x08003f30-overlay-ui.md`.
-- **`sub_8004914`**, **`sub_80049CC`** (`src/graphics/settings_menu23.c`,
-  new file, ROM `0x08004914`-`0x080049CC`, right after
-  `settings_menu2.c` and before `settings_menu3.c`) - two more
-  icon-manager centered-glyph/label draws, same NAKED-transcription
-  class as `settings_menu.c` above.
+  validate/repair-via-DMA. GitHub issue #4. NON_MATCHING draft 18
+  halfwords off (the ROM holds the four marker-byte addresses in
+  r6/sb/r7/r8 across the row loop) - see [issue-4-6-8-naked-retry.md](../matching/issue-4-6-8-naked-retry.md).
+- **`sub_8003D3C`** (`src/graphics/settings_menu.c`) - value label plus
+  a highlighted/plain pair. NON_MATCHING draft 9 halfwords off under
+  both compilers (two long-lived constants in r8/sb swapped). Issue #6,
+  see [issue-4-6-8-naked-retry.md](../matching/issue-4-6-8-naked-retry.md).
+- **`sub_800450C`** (`src/graphics/settings_menu.c` draft, real bytes
+  still raw in `asm/code_3_1_10_4.s`) - the screen's init routine.
+  NON_MATCHING draft 5 halfwords off under old_agbcc (loop pre-header
+  order). Issue #6, see [issue-4-6-8-naked-retry.md](../matching/issue-4-6-8-naked-retry.md).
 - **`sub_8004D74`**, **`sub_8005100`**, **`sub_80053F4`**,
-  **`sub_8005E5C`**, **`sub_8006124`**, **`sub_800619C`**,
-  **`sub_80061E8`**, **`sub_80062A8`**, **`sub_8006518`** - all 9 are
+  **`sub_8005E5C`** - all 4 are
   byte-exact via `NAKED` asm transcription (the whole function body is
   a hand-transcribed copy of the ROM's own disassembly, not real
   decompiled C), so they're tracked here as parked rather than matched
@@ -151,4 +150,6 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   (`docs/matching/issue-7-naked-retry.md`). Nine former members of
   this list (`sub_800556C`, `sub_80057E0`, `sub_80058C0`,
   `sub_8005AE8`, `sub_8005B80`, `sub_8005C58`, `sub_8005D44`,
-  `sub_8005EF4`, `sub_8005FBC`) are now real C - see Matched.
+  `sub_8005EF4`, `sub_8005FBC`) are now real C, and so are issue #8's
+  `sub_8006124`, `sub_800619C`, `sub_80061E8`, `sub_80062A8`,
+  `sub_8006518` - see Matched.

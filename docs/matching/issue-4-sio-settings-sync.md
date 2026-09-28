@@ -309,3 +309,22 @@ against the function's own slice of `raw_08002938_target.o`, since
 function stops being `base_object=None`). `tools/report_units.py`'s
 entries for both `0x08002868` and `0x08002938` now point at
 `src/graphics/settings_menu8d.o`.
+
+## Later pass: drafts for four of the five
+
+The issue #4/#6/#8 retry ([issue-4-6-8-naked-retry.md](issue-4-6-8-naked-retry.md)) wrote C drafts, kept under
+`NON_MATCHING`, for these four:
+
+| Function | Halfwords off |
+|---|---|
+| `sub_8001CB8` | 49 (old_agbcc) |
+| `sub_8001DB4` | 136 (old_agbcc, same size as the ROM) |
+| `sub_8001F50` | 37 (same size as the ROM) |
+| `sub_8002AA4` | 18 |
+
+The link-cable drafts establish `struct link_session`,
+`struct link_player` and `struct link_ring`. `link_cable.c` is now on
+`OLD_AGBCC_OBJS`. `sub_8001D30` takes the session pointer its callers
+pass in r0; the parameter is unused and its code is unchanged.
+`sub_8002114` was not attempted. Nothing in this range closed, so the
+issue stays open.
