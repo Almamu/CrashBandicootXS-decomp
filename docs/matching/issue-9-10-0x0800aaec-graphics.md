@@ -234,3 +234,12 @@ The record pointer's `+4` is a separate `rec += 4` statement. See [issue-9-naked
 ## Later pass (issue #9-#11 NAKED retry)
 
 `sub_800CD00` now has an old_agbcc C draft under `NON_MATCHING` (42 halfwords off: the player box's address is held in r6 from its first build instead of being rematerialized from sp until the first overlap test). Still NAKED. See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).
+
+## Later pass (stack-box NAKED retry)
+
+`sub_800CD00` is now real C under old_agbcc (`actor_part109.o` joined
+`OLD_AGBCC_OBJS`). The player box's address goes through an empty
+`asm("" : "+r")` copy at each builder call and at the first overlap
+test, so cse no longer keeps `sp+16` in r6 from the first build on.
+The first build's x/y are computed before the call, and `rec` is shared
+by the first two blocks. See [sp-box-retry.md](sp-box-retry.md).

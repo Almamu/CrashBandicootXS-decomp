@@ -466,6 +466,14 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   test, so the searches leave with `goto`. See
   [docs/matching/big-naked-retry-3.md](../matching/big-naked-retry-3.md).
 
+- **Stack-box NAKED retry:** `sub_800D040` (`game_loop6.c`, GitHub
+  issue #12, the self/player box overlap dispatch) promoted from NAKED
+  to real C under old_agbcc (`game_loop6.o` joined `OLD_AGBCC_OBJS`).
+  Each use of the player box's address goes through an empty
+  `asm("" : "+r")` copy so cse doesn't hold `sp+16` in a callee-saved
+  register, and `px`/`py` are shared by both blocks. See
+  [docs/matching/sp-box-retry.md](../matching/sp-box-retry.md).
+
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
 - **`sub_8023A1C`** (`src/system/game_loop56.c`, new file - GitHub
@@ -509,7 +517,7 @@ doesn't advance that even when byte-correct. See
 established convention, and each entry's linked write-up for why
 plain C didn't converge.
 
-- **`sub_800D040`** (`src/system/game_loop6.c`, GitHub issue #12) -
+- **Now matched as real C (stack-box NAKED retry, see Matched and docs/matching/sp-box-retry.md); entry kept for history.** **`sub_800D040`** (`src/system/game_loop6.c`, GitHub issue #12) -
   builds `self`'s and the player's AABB from the shared
   `+0x20`-table-pointer/`+0x2d`-tag hitbox-record convention
   (`sub_8007B00`/`sub_8007B98` in `actor_part.c`), dispatches to
