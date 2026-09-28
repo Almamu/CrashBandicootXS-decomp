@@ -166,3 +166,13 @@ alternative bodies for one function and reports each.
 `rm -rf build && make NON_MATCHING=1 report` shows no warnings from the
 touched files. `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` prints `crashbandicootxs.gba: OK`.
+
+## Later pass
+
+The early-ROM NAKED retry
+([early-rom-naked-retry.md](early-rom-naked-retry.md)) closed
+`sub_8003D3C`. `y` is pinned to r9 and set after the manager pointer is
+loaded. Global-alloc was ranking the 0x87 constant just above the 0x130
+offset (0.0714 vs 0.070), which is why they swapped. The
+`sub_8002AA4`, `sub_8001CB8` and `sub_800450C` drafts are closer (6, 11
+and 5 halfwords). The same doc says what is left in each.

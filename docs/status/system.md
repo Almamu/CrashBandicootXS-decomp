@@ -114,3 +114,5 @@ frozen decomp.dev baseline now (`expected/legacy.s`) - see
   (49/136/37 halfwords off under old_agbcc, which the file now builds
   with) and the `struct link_session` layout they establish - see
   [issue-4-6-8-naked-retry.md](../matching/issue-4-6-8-naked-retry.md).
+  The early-ROM NAKED retry brought the `sub_8001CB8` draft to 11
+  halfwords ([early-rom-naked-retry.md](../matching/early-rom-naked-retry.md)).

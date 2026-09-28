@@ -21,122 +21,52 @@ extern void sub_80390F8(s32 channel, u32 volume);
  * `pendingSfx` and forces the current record to expire on the very
  * next tick instead of playing over it.
  *
- * Written as NAKED asm, not plain C: a full C reconstruction (kept in
- * git history) closed one gap (the ROM's `add rX,sp,#0x14; ldrb
- * rX,[rX]` stack-byte-parameter read, via an inline-asm anchor) but
- * left one open - the ROM recomputes
- * `&gStaticData_0816AA6C[id].baseVolume` fully from `tableBase`+
- * offset+8 for the volume read, even though the identical address was
- * already computed for the `slotId` read a few instructions earlier
- * and is still live; this compiler's CSE always reuses that live
- * address instead (fewer instructions), and once folded, the following
- * `baseVolume * volumeMul` multiply's register-copy step also lands on
- * this compiler's generic "mov Rd,Rs" encoding rather than the ROM's
- * "adds Rd,Rs,#0" form. Raw-offset casts, memory-clobber barriers,
- * operand reordering, and pinning the loaded value straight into a
- * register all failed to close it (see git history for the blow-by-
- * blow). Every instruction below is confirmed byte-identical to the
- * ROM - full NAKED transcription, like this project's other
- * hard-compiler-limitation cases (see `src/util/printf_util.c`'s
- * `sub_8000CBC` for the established pattern), is more honest than
- * continuing to chase this one CSE decision through plain C. */
-NAKED void sub_80019F8(struct AudioContext *self, u32 id, u32 frameOffset, s32 volumeMul, u8 forceFlag)
+ * Once a NAKED transcription; it matches as plain C under both
+ * compilers. The fifth argument is a one-byte struct passed by value
+ * (the ROM's `add rX,sp,#0x14; ldrb` read), and the volume read is
+ * `gStaticData_0816AA6C[id].baseVolume`, whose `base+8+offset` address
+ * is simply what gcc emits for a non-zero field offset - the earlier
+ * note blamed a CSE decision that is not there. */
+struct sfx_byte_arg {
+    u8 v;
+} __attribute__((packed));
+
+void sub_80019F8(struct AudioContext *self, u32 id, u32 frameOffset, s32 volumeMul, struct sfx_byte_arg force)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "add r6, r1, #0\n\t"
-        "add r7, r2, #0\n\t"
-        "add r0, sp, #0x14\n\t"
-        "ldrb r0, [r0]\n\t"
-        "mov ip, r0\n\t"
-        "ldr r5, 2f\n\t"
-        "lsl r0, r6, #1\n\t"
-        "add r0, r0, r6\n\t"
-        "lsl r1, r0, #2\n\t"
-        "add r0, r1, r5\n\t"
-        "ldr r2, [r0]\n\t"
-        "cmp r2, #0\n\t"
-        "beq 1f\n\t"
-        "cmp r3, #0\n\t"
-        "ble 1f\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #8\n\t"
-        "add r0, r1, r0\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r1, r0, #0\n\t"
-        "mul r1, r3, r1\n\t"
-        "ldr r0, [r4, #0x2c]\n\t"
-        "mul r0, r1, r0\n\t"
-        "lsr r5, r0, #0x10\n\t"
-        "ldr r1, [r4, #0x38]\n\t"
-        "cmp r1, #0x63\n\t"
-        "bne 4f\n\t"
-        "mov r3, #1\n\t"
-        "neg r3, r3\n\t"
-        "add r0, r2, #0\n\t"
-        "mov r1, #2\n\t"
-        "mov r2, #0\n\t"
-        "bl sub_8038E74\n\t"
-        "ldr r1, [r4, #0x34]\n\t"
-        "mov r0, #2\n\t"
-        "bl sub_80390F8\n\t"
-        "str r6, [r4, #0x38]\n\t"
-        "ldr r0, 3f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r0, r0, r7\n\t"
-        "str r0, [r4, #0x3c]\n\t"
-        "str r5, [r4, #0x40]\n\t"
-        "b 1f\n\t"
-        ".align 2, 0\n\t"
-    "2: .4byte gStaticData_0816AA6C\n\t"
-    "3: .4byte gUnknown_0300082C\n\t"
-    "4:\n\t"
-        "ldr r0, [r4, #0x40]\n\t"
-        "cmp r5, r0\n\t"
-        "blt 1f\n\t"
-        "cmp r1, r6\n\t"
-        "bne 7f\n\t"
-        "ldr r0, 5f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r0, r0, r7\n\t"
-        "str r0, [r4, #0x3c]\n\t"
-        "str r5, [r4, #0x40]\n\t"
-        "mov r0, ip\n\t"
-        "cmp r0, #0\n\t"
-        "beq 6f\n\t"
-        "mov r3, #1\n\t"
-        "neg r3, r3\n\t"
-        "add r0, r2, #0\n\t"
-        "mov r1, #2\n\t"
-        "mov r2, #0\n\t"
-        "bl sub_8038E74\n\t"
-        "ldr r1, [r4, #0x34]\n\t"
-        "mov r0, #2\n\t"
-        "bl sub_80390F8\n\t"
-    "6:\n\t"
-        "mov r0, #0x63\n\t"
-        "str r0, [r4, #0x44]\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [r4, #0x4c]\n\t"
-        "b 1f\n\t"
-        ".align 2, 0\n\t"
-    "5: .4byte gUnknown_0300082C\n\t"
-    "7:\n\t"
-        "str r6, [r4, #0x44]\n\t"
-        "ldr r0, 8f\n\t"
-        "ldr r1, [r0]\n\t"
-        "add r0, r1, r7\n\t"
-        "str r0, [r4, #0x48]\n\t"
-        "str r5, [r4, #0x4c]\n\t"
-        "str r1, [r4, #0x3c]\n\t"
-    "1:\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n\t"
-    "8: .4byte gUnknown_0300082C\n\t"
-    );
+    u8 forceFlag = force.v;
+    u32 handle = gStaticData_0816AA6C[id].slotId;
+
+    if (handle != 0 && volumeMul > 0) {
+        s32 volume = (gStaticData_0816AA6C[id].baseVolume * volumeMul) * self->sfxVolume >> 16;
+        u32 cur = self->activeSfx.id;
+
+        if (cur == 0x63) {
+            sub_8038E74(handle, 2, 0, -1);
+            sub_80390F8(2, self->field_34);
+            self->activeSfx.id = id;
+            self->activeSfx.deadline = gUnknown_0300082C + frameOffset;
+            self->activeSfx.volume = volume;
+        } else if (volume >= self->activeSfx.volume) {
+            if (cur == id) {
+                self->activeSfx.deadline = gUnknown_0300082C + frameOffset;
+                self->activeSfx.volume = volume;
+                if (forceFlag) {
+                    sub_8038E74(handle, 2, 0, -1);
+                    sub_80390F8(2, self->field_34);
+                }
+                self->pendingSfx.id = 0x63;
+                self->pendingSfx.volume = 0;
+            } else {
+                u32 now;
+
+                self->pendingSfx.id = id;
+                now = gUnknown_0300082C;
+                self->pendingSfx.deadline = now + frameOffset;
+                self->pendingSfx.volume = volume;
+                self->activeSfx.deadline = now;
+            }
+        }
+    }
 }
 
 extern void sub_8039064(s32 channel, u32 volume);
@@ -359,7 +289,7 @@ struct AudioContext *sub_8001C2C(struct AudioContext *self)
  * `sub_8000654` (VBlank) in src/system/irq.c. */
 void sub_8001C64(void)
 {
-    register vu8 *dispstat asm("r1") = REG_ADDR_DISPSTAT;
+    register vu8 *dispstat asm("r1") = (vu8 *)REG_ADDR_DISPSTAT;
     u8 tmp = DISPSTAT_VCOUNT_INTR;
 
     *dispstat &= ~tmp;

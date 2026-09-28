@@ -101,14 +101,56 @@ void sub_8002D44(struct settings_sync_pump *self)
  * into `self->data` via `self->writePtr`, and marks `field_218` once
  * `totalReceived` reaches a full record's worth.
  *
- * Still NAKED. The plain-C version (same shape as sub_8002D44, reading
- * `rx[playerIndex].count` and then walking a `struct sio_channel *`) is
- * about 100 halfwords off under both compilers: the ROM computes
- * `playerIndex * 0xc8` twice (once for the count test, once for the
- * channel pointer) and keeps the loops' `n - 1 != -1` test, while every
- * C spelling tried lets CSE share the first multiply and fold the entry
- * test to `n != 0`. The old "r7 can't be pushed" reason was wrong:
+ * Still NAKED. The draft below keeps the ROM's `n - 1 != -1` loop
+ * tests (the old note said C folds them to `n != 0`; it doesn't) but is
+ * still about 100 halfwords off under both compilers: the ROM computes
+ * `playerIndex * 0xc8 + s` twice (once for the count test, once for
+ * the channel pointer, which then carries its own +0x108), and gcc
+ * CSEs the second into the first and folds the field offsets. Per-file
+ * CSE flags (-fno-cse-follow-jumps/-skip-blocks, -fno-rerun-cse-after-
+ * loop) don't split it. The old "r7 can't be pushed" reason was wrong:
  * sub_8002D44 gets its r7/r8/sb prologue from plain C. */
+#if NON_MATCHING
+void sub_8002E20(struct settings_sync_pump *self, s32 playerIndex)
+{
+    struct sio_session *s = gUnknown_03000804;
+    s32 n = s->rx[playerIndex].count;
+
+    if (n != 0)
+    {
+        u8 *dst = self->writePtr;
+        struct sio_channel *ch = &s->rx[playerIndex];
+        s32 i;
+
+        if (ch->readPos < 0x80 - n)
+        {
+            for (i = n - 1; i != -1; i--)
+            {
+                *dst++ = ch->ring[ch->readPos];
+                ch->readPos++;
+                ch->count--;
+            }
+        }
+        else
+        {
+            for (i = n - 1; i != -1; i--)
+            {
+                s32 p = ch->readPos;
+
+                ch->readPos = p == 0x7f ? 0 : p + 1;
+                ch->count--;
+                *dst++ = ch->ring[p];
+            }
+        }
+        self->writePtr += n;
+        self->totalReceived += n;
+    }
+    else if (self->totalReceived == 0x200)
+    {
+        self->field_218 = 1;
+    }
+}
+#else
 NAKED void sub_8002E20(struct settings_sync_pump *self, s32 playerIndex)
 {
     asm(
@@ -232,3 +274,4 @@ NAKED void sub_8002E20(struct settings_sync_pump *self, s32 playerIndex)
         ".align 2, 0\n"
     );
 }
+#endif

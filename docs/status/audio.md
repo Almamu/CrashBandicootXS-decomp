@@ -24,7 +24,9 @@ for the full write-up.
 - `src/audio/sfx_ambient.c`: `sub_800190C` (ambient/looping-sfx-channel
   tick update), `sub_80019A8` (stop-if-playing scan), `sub_80019CC`
   (reset), `sub_80019E8` (force-expire).
-- `src/audio/audio_context.c`: `sub_8001AB8`,
+- `src/audio/audio_context.c`: `sub_80019F8` (ambient-sfx play request;
+  plain C since the early-ROM NAKED retry, see
+  [early-rom-naked-retry.md](../matching/early-rom-naked-retry.md)), `sub_8001AB8`,
   `sub_8001ABC`, `sub_8001AC0`, `sub_8001AC4`, `sub_8001AD8`,
   `sub_8001AEC`, `sub_8001B00`, `sub_8001B14`, `sub_8001B30`,
   `sub_8001B50`, `sub_8001B54`, `sub_8001B88`, `sub_8001BAC`,
@@ -173,14 +175,6 @@ See docs/matching.md for `PlaySfx`'s remaining gap.
 
 ## Parked - NAKED asm transcription (byte-correct, not decompiled C)
 
-- **`sub_80019F8`** (`src/audio/audio_context.c`, ambient-sfx-channel
-  play-request driver) - a full C reconstruction closed the `u8`
-  stack-parameter byte-load gap but left a base-volume field-address
-  CSE difference the compiler always makes. Converted to a
-  byte-verified NAKED asm transcription instead - byte-exact but not
-  real decompiled C, so tracked here as parked, not matched. See
-  [docs/matching/issue-3-overlay-ui-audio-wrapper.md](../matching/issue-3-overlay-ui-audio-wrapper.md)
-  for the original gap analysis this closed.
 - **`sub_8037388`** (`src/audio/counter_selector_icons.c`, the counter
   widget's tile-cache/icon-manager init) - a draft under
   `#if NON_MATCHING` matches through the tile-copy loop; the tail's

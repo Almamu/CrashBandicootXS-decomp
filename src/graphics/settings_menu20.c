@@ -44,12 +44,16 @@ extern void PlaySfx(struct AudioContext *self, u32 id, u32 volumeParam);
  * the confirmed row's type tag (or 0).
  *
  * Still NAKED (transcribed from the ROM). The C draft under
- * NON_MATCHING matches everywhere except the L/R key-repeat tests
- * under old_agbcc (14 halfwords): the ROM re-materializes the key mask
- * and reads the pressed half with `lsr #16`, while the draft copies the
- * mask register and gets an `ldrh [keys+2]`. The input loop is a goto
- * loop (no loop-invariant hoisting, as in the ROM); the two fade loops
- * are real loops. */
+ * NON_MATCHING is 5 halfwords off under old_agbcc. The L/R key-repeat
+ * tests now match: `pressed` pinned to r1 keeps the word load plus
+ * `lsr #16` (unpinned, combine folds it into `ldrh [keys+2]`), `key`
+ * pinned to r3 and the pressed test spelled with the literal give the
+ * ROM's two `mov #K`. What's left: the ROM computes the fade pointer
+ * (self+0xcc, which CSE carries into the fade-in loop) before
+ * `disp = &self->field_d0`; here it lands after it. A `fade` local
+ * changes the fade loops. The input loop is a goto loop (no
+ * loop-invariant hoisting, as in the ROM); the two fade loops are real
+ * loops. */
 #if NON_MATCHING
 extern struct AudioContext *gUnknown_030012BC;
 extern void sub_80053F4(struct pause_screen_results *self);
@@ -109,8 +113,8 @@ top:
 body:
     {
         u32 in;
-        u32 key;
-        u32 pressed;
+        register u32 key asm("r3");
+        register u32 pressed asm("r1");
 
         draw_frame(self);
         sub_80007AC(gUnknown_03001304);
@@ -127,7 +131,7 @@ body:
         in = gUnknown_030007E0;
         pressed = in >> 16;
         key = 0x20;
-        if (pressed & key) {
+        if (pressed & 0x20) {
             sub_8005EF4(self);
             self->field_68 = 0x1e;
         } else if (in & key) {
@@ -141,7 +145,7 @@ body:
         in = gUnknown_030007E0;
         pressed = in >> 16;
         key = 0x10;
-        if (pressed & key) {
+        if (pressed & 0x10) {
             sub_8005FBC(self);
             self->field_68 = 0x1e;
         } else if (in & key) {

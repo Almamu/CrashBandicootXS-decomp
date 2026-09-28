@@ -117,33 +117,48 @@ COMPILE_TIME_ASSERT(sizeof(struct link_session) == 0x408);
  * `sub_80392C4`), is more honest than continuing to chase individual
  * register choices. */
 #if NON_MATCHING
-/* 49 halfwords off under old_agbcc (63 under agbcc). The hash loop
- * (`i != -1` countdown) and the table lookup match. The ROM's fill loop
- * is strength-reduced into a pointer compared signed (`cmp r0, r3; bge`)
- * and the final nibble fold reloads byte 6; the draft keeps the index
- * and folds `(self[7] << 8) | self[6]` back into `hash`. */
+/* 11 halfwords off under old_agbcc. The fill loop is written over an
+ * integer address so the compare is the ROM's signed `cmp; bge` (the
+ * ROM got it from strength-reducing `self[i]`, which gcc here declines:
+ * "giv not worth while"); `c` ahead of it puts the 0xec load first. The
+ * hash loop matches with `tbl[idx] ^ (hash << 8)`, and the tail matches
+ * once the high nibble is read before `(hi << 8) | self[6]` is formed.
+ * Left: CSE folds `hash >> 8` after the loop into `(x << 16) >> 24` of
+ * the loop's zero-extend temporary (the ROM truncates in place and
+ * shifts the result by 8), and -16 comes out as `mov #16; neg` instead
+ * of the ROM's post-reload `sub r0, #31` from the 15 in r0. */
 void sub_8001CB8(u8 *self)
 {
     u8 *p;
     u16 hash;
     s32 i;
 
-    p = self + 7;
-    i = 7;
-    do {
-        *p-- = 0xec;
-    } while (--i >= 0);
+    {
+        u8 c = 0xec;
+        s32 a = (s32)self + 7;
+
+        do {
+            *(u8 *)a = c;
+        } while (--a >= (s32)self);
+    }
     self[0] &= 0xf;
     self[1] = 0;
     hash = 0x1234;
     p = self + 1;
     for (i = 4; i != -1; i--) {
-        hash = (hash << 8) ^ gStaticData_0816AF10[((hash >> 8) ^ *p) & 0xff];
+        hash = gStaticData_0816AF10[((hash >> 8) ^ *p) & 0xff] ^ (hash << 8);
         p++;
     }
-    self[6] = hash;
-    self[7] = hash >> 8;
-    ((struct nibble_pair *)self)->lo = ((struct nibble_pair *)self)->hi + ((self[7] << 8) | self[6]);
+    {
+        u8 hi;
+        u32 v, n;
+
+        self[6] = hash;
+        self[7] = hi = hash >> 8;
+        n = ((struct nibble_pair *)self)->hi;
+        v = (hi << 8) | self[6];
+        ((struct nibble_pair *)self)->lo = n + v;
+    }
 }
 #else
 NAKED void sub_8001CB8(u8 *self)

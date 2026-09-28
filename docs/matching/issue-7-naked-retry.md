@@ -62,3 +62,10 @@ No file needed splitting.
 `rm -rf build && make NON_MATCHING=1 report` shows no warnings from the
 touched files. `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` prints `crashbandicootxs.gba: OK`.
+
+## Later pass
+
+The early-ROM NAKED retry
+([early-rom-naked-retry.md](early-rom-naked-retry.md)) brought the
+`sub_8005100` draft to 5 halfwords. The key-repeat tests now match. The
+other three are unchanged.
