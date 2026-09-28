@@ -241,3 +241,13 @@ shape was gcc 2.x's pointer-to-member-function call
 `(this->*table[this->state])()`, which `ACTOR_PMF_CALL` in
 `include/actor_self.h` reproduces with no register pins. See
 [pmf-dispatch-retry.md](pmf-dispatch-retry.md).
+
+## Later pass: NAKED retry
+
+A later pass promoted `sub_8032C0C`, `sub_8032EA0`, `sub_80331BC`,
+`sub_8033264`, `sub_8033470` and `sub_8033604` to plain C, mostly by
+porting fixes from their issue #58 twins. The link-time byte-count gaps
+noted above came from a reused `self` pseudo (`sub_8033470`) and the
+tile-clear loop's form (`sub_8033604`). `sub_80330FC` and `sub_80336CC`
+stay NAKED with `#if NON_MATCHING` drafts. See
+[issue-58-61-naked-retry.md](issue-58-61-naked-retry.md).

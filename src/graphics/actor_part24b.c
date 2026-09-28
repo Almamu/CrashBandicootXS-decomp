@@ -1,4 +1,5 @@
 #include "core.h"
+#include "actor_self.h"
 
 /* Same "boss-weapon self" object family as actor_part20.c (see that
  * file's header comment and docs/matching/issue-58-0x08030334-actor.md),
@@ -24,6 +25,51 @@ extern s32 gUnknown_03001544;
 extern s32 gUnknown_03001548;
 extern void *sub_800014C(void *dest, void *src, s32 size);
 
+#if NON_MATCHING
+/* Draft, ~50 halfwords off under both compilers: same shape, but the
+ * `&c` pointer gets hoisted into `r4` before the box copy (so the ROM's
+ * `r4` scratch in the `ldm`/`stm` becomes an extra `r6` push). */
+struct box3 {
+    s16 x, y, z;
+    s16 w, h, d;
+};
+
+static inline void BoxOffset(struct box3 *b, s32 x, s32 y, s32 z)
+{
+    b->x += x;
+    b->y += y;
+    b->z += z;
+}
+
+static inline struct box3 SelfBox(struct actor_self *self)
+{
+    struct box3 b = *(struct box3 *)self->unk_38;
+    BoxOffset(&b, self->x >> 8, self->y >> 8, self->z >> 8);
+    return b;
+}
+
+u8 sub_8031378(void *selfArg)
+{
+    struct actor_self *self = selfArg;
+
+    if ((u32)(gUnknown_03001538 - 2) <= 1) {
+        struct box3 a, c;
+        struct box3 *pa, *pc;
+
+        a = *(struct box3 *)gStaticData_0817C3D8;
+        BoxOffset(&a, gUnknown_03001540 >> 8, gUnknown_03001544 >> 8, gUnknown_03001548 >> 8);
+        c = SelfBox(self);
+        sub_800014C(&c, &c, sizeof(c));
+        pa = &a;
+        pc = &c;
+        if (pa->z < pc->z + pc->d && pa->z + pa->d > pc->z
+         && pa->y < pc->y + pc->h && pa->y + pa->h > pc->y
+         && pa->x < pc->x + pc->w && pa->x + pa->w > pc->x)
+            return 1;
+    }
+    return 0;
+}
+#else
 NAKED u8 sub_8031378(void *self)
 {
     asm(
@@ -149,3 +195,4 @@ NAKED u8 sub_8031378(void *self)
         ".align 2, 0\n"
     );
 }
+#endif
