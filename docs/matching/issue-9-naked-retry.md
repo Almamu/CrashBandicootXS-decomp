@@ -58,3 +58,7 @@ The shared layout of these objects is in the new `include/box_part.h`:
 ## Later pass (issue #9-#11 NAKED retry)
 
 `sub_8007DBC`, `sub_800891C`, `sub_8008F20`, `sub_8009914`, `sub_8009BE0`, `sub_800A178` and `sub_800A420` are real C now. `sub_8009008`, `sub_80091D4` and `sub_800AFF4` are still NAKED (`sub_800AFF4` now has a draft). See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).
+
+## Later pass (fresh NAKED retry)
+
+`sub_8009008` is real C now (old_agbcc; the ROM's `bucket = 0x100` is written out, and the free-list head is pinned to r1). `sub_80091D4` stays NAKED with a same-size draft that is 215 hw off. See [fresh-naked-retry.md](fresh-naked-retry.md).

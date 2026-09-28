@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor.h"
+#include "box_part.h"
 
 extern void sub_8009008(void *manager, void *item);
 extern void sub_803A94C(void *src, void *dst, s32 control);
@@ -50,6 +51,205 @@ extern void *gUnknown_03001308;
  * documented for `sub_8008F20`/`sub_8009914` in `actor_part11.c`.
  * Parked as a direct transcription of the ROM's own confirmed-correct
  * instructions instead. */
+#if NON_MATCHING
+struct pool_node {
+    struct box_part *data;
+    struct pool_node *next;
+    void *wrap;
+    struct pool_node *link;
+    u8 mark;
+    u8 mark2;
+};
+
+struct pool_entry {
+    struct pool_node *node;
+    struct pool_entry *next;
+};
+
+struct pool_manager {
+    s32 activeCount;
+    s32 capacity;
+    struct box_part **slotArray;
+    void *nodeArray;
+    struct pool_node *gridHead[256];
+    struct pool_node *gridTail[256];
+    void *freeListArray;
+    struct pool_entry *freeListHead;
+};
+
+struct track_obj {
+    u8 unused_00[0x10];
+    s32 *pos;
+};
+
+static inline void pool_remove(struct pool_manager *manager, struct box_part *target)
+{
+    s32 i = 0;
+    s32 searchCount = manager->capacity;
+    struct box_part **base;
+
+    if (i >= searchCount) {
+        goto done;
+    }
+    {
+        struct box_part **p0 = manager->slotArray;
+        struct box_part *val = *p0;
+        base = p0;
+        if (val != target) {
+            struct box_part **p = base;
+            do {
+                p++;
+                i++;
+                if (i >= searchCount) {
+                    goto done;
+                }
+            } while (*p != target);
+        }
+    }
+
+    if (i < manager->capacity) {
+        s32 off = i * 4;
+        struct box_part *item = base[i];
+
+        sub_8009008(manager, item);
+
+        {
+            s32 srcOff = off + 4;
+            struct box_part **base2 = manager->slotArray;
+            void *src = (u8 *)base2 + srcOff;
+            void *dst = (u8 *)base2 + off;
+            s32 control = (manager->activeCount - i) & 0x1FFFFF;
+            s32 cnt;
+            struct box_part **base3;
+
+            control |= 0x4000000;
+            sub_803A94C(src, dst, control);
+
+            cnt = manager->activeCount;
+            base3 = manager->slotArray;
+            *(void **)((u8 *)base3 + cnt * 4 - 4) = 0;
+            cnt -= 1;
+            manager->activeCount = cnt;
+        }
+    }
+done:
+    return;
+}
+
+static inline void part_destroy(struct box_part *part)
+{
+    if (part != NULL) {
+        struct part_method *m = PART_METHOD(part, 0x50);
+
+        sub_803AD80((u8 *)part + m->thisOffset, (void *)3, m->fn);
+    }
+}
+
+/* Same size as the ROM, 215 halfwords off under old_agbcc (the removal
+ * path is `sub_8009A30`'s body inlined). The structure lines up; the
+ * allocation doesn't: the ROM keeps `manager` in r7 and `node` in r8,
+ * this build puts them in r8/sb, and the three copies of `part`
+ * (r5, ip for the search, sb for the destroy call) land differently. */
+void sub_80091D4(struct pool_manager *manager)
+{
+    s32 box[4];
+    s32 *pos;
+    s32 base;
+    s32 i;
+    struct pool_node *node;
+    struct pool_node **gridHeadBase;
+    struct pool_node **gridHead255;
+    s32 v2, v3, v0, v1;
+
+    v2 = 0x1b800;
+    v3 = 0x11800;
+    box[2] = v2;
+    box[3] = v3;
+    pos = ((struct track_obj *)gUnknown_03001308)->pos;
+    v0 = (pos[0] << 8) - 0x6400;
+    v1 = (pos[1] << 8) - 0x3c00;
+    box[0] = v0;
+    box[1] = v1;
+    base = pos[0] >> 8;
+    if (base < 0)
+        base = 0;
+
+    i = base + 2;
+    gridHeadBase = manager->gridHead;
+    gridHead255 = &manager->gridHead[255];
+    do {
+        s32 next;
+
+        node = gridHeadBase[i];
+        next = i - 1;
+        if (node != NULL) {
+        do {
+            struct box_part *part = node->data;
+
+            if (((part->flags >> 4) & 1) && node->link == NULL) {
+                struct pool_entry *entry = manager->freeListHead;
+                struct pool_node *newNode = entry->node;
+
+                manager->freeListHead = entry->next;
+                entry->next = NULL;
+                newNode->data = part;
+                newNode->next = NULL;
+                newNode->link = node;
+                newNode->mark = 0;
+                newNode->mark2 = 0;
+                if (*gridHead255 == NULL)
+                    *gridHead255 = newNode;
+                if (manager->gridTail[255] != NULL)
+                    manager->gridTail[255]->next = newNode;
+                manager->gridTail[255] = newNode;
+                node->link = newNode;
+            } else if (part->flags & 1) {
+                struct box_part *d = part;
+
+                /* Keeps `d` a separate copy of `part` (the ROM holds
+                 * the destroy target in its own high register). */
+                asm("" : "+r"(d));
+                pool_remove(manager, part);
+                part_destroy(d);
+            } else {
+                struct part_method *m = PART_METHOD(part, 0x40);
+
+                if ((u8)sub_803AD80((u8 *)part + m->thisOffset, box, m->fn)) {
+                    struct box_part *p2 = node->data;
+                    struct part_method *m2 = PART_METHOD(p2, 0x18);
+
+                    sub_803AD7C((u8 *)p2 + m2->thisOffset, m2->fn);
+                    node->mark = 1;
+                }
+            }
+            node = node->next;
+        } while (node != NULL);
+        }
+        i = next;
+    } while (i >= base);
+
+    for (node = *gridHead255; node != NULL; node = node->next) {
+        struct box_part *part = node->data;
+
+        if (part->flags & 1) {
+            struct box_part *d = part, *t = part;
+
+            /* Separate copies for the destroy target and the search
+             * target, as in the ROM (sl/sb). */
+            asm("" : "+r"(d));
+            asm("" : "+r"(t));
+            pool_remove(manager, t);
+            part_destroy(d);
+        } else if (node->link->mark == 0) {
+            struct part_method *m = PART_METHOD(part, 0x18);
+
+            sub_803AD7C((u8 *)part + m->thisOffset, m->fn);
+        } else {
+            node->link->mark = 0;
+        }
+    }
+}
+#else
 NAKED void sub_80091D4(void *manager)
 {
     asm(
@@ -374,4 +574,5 @@ NAKED void sub_80091D4(void *manager)
         "bx r0\n\t"
     );
 }
+#endif
 asm(".align 2, 0");

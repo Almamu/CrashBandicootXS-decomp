@@ -215,10 +215,13 @@ void sub_8010EAC(void *selfArg, u8 randomize)
  * `sub_8011548` in this exact neighborhood (`game_loop53.c`).
  * Transcribed straight from the confirmed-correct ROM disassembly. */
 #if NON_MATCHING
-/* Near miss under old_agbcc: same instructions except that mode 1 keeps
- * the new x in a register where the ROM recomputes `x + velX` for the
- * bound check, and the collision-bitmap tails use r1/r2/r6 where the ROM
- * uses r5/r6. The timer reload in mode 2 needs the volatile read. */
+/* Near miss under old_agbcc, 22 halfwords off (same size). The `"+r"`
+ * copy below reproduces mode 1's recomputed `x + velX`; what's left is
+ * register choice: mode 1's id compare uses r6 (ROM r2), mode 2 loads
+ * x/velX into r0/r1 instead of r1/r0 and its fire tail uses r1/r2
+ * where the ROM uses r5/r6/r1. A switch, u8/u32 `fire` and split x/y
+ * statements didn't help. The timer reload in mode 2 needs the
+ * volatile read. */
 #define SET_ID_BIT(idExpr, one)                                                \
     do                                                                         \
     {                                                                          \
@@ -237,9 +240,19 @@ void sub_8010F8C(struct orbit_part *self)
     u8 state = self->state;
 
     if (state == 1) {
-        self->base.x += self->velX;
-        self->base.y += self->velY;
-        if (self->base.x >> 8 <= 0xb4 && self->base.y >> 8 <= 0xc) {
+        s32 x = self->base.x, vx = self->velX, y;
+
+        self->base.x = x + vx;
+        /* Hides that `vx` is unchanged, so the bound check below
+         * recomputes `x + vx` as the ROM does instead of reusing the
+         * stored sum. */
+        asm("" : "+r"(vx));
+        y = self->base.y + self->velY;
+        self->base.y = y;
+        if ((x + vx) >> 8 <= 0xb4 && y >> 8 <= 0xc) {
+            /* Extra reference: puts velX in r3 and y in r2, as in the
+             * ROM. */
+            asm("" : : "r"(vx));
             PlaySfx(gUnknown_030012BC, 0xe, 0x100);
             sub_8023464(gUnknown_030012C0);
             self->base.flags |= 1;
@@ -268,7 +281,7 @@ void sub_8010F8C(struct orbit_part *self)
         }
         if (fire) {
             self->base.flags |= 1;
-            if (self->base.field_08 != 0xffff)
+            if (*(vu16 *)&self->base.field_08 != 0xffff)
                 SET_ID_BIT(self->base.field_08, 1);
         }
     } else {

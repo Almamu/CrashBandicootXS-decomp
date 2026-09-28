@@ -964,6 +964,15 @@ See [docs/matching/late-rom-naked-retry.md](../matching/late-rom-naked-retry.md)
 
 See [docs/matching/category-driver-naked-retry.md](../matching/category-driver-naked-retry.md).
 
+### Matched in the fresh NAKED retry
+
+- `src/graphics/actor_part11b.c` - `sub_8009008` (the grid-removal
+  primitive, issue #9), old_agbcc (the object was added to
+  `OLD_AGBCC_OBJS`). The ROM sets the phase-2 bucket index to 0x100
+  after each removal, so the C does that too. The free-list head is
+  pinned to r1. See
+  [docs/matching/fresh-naked-retry.md](../matching/fresh-naked-retry.md).
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
@@ -980,21 +989,15 @@ doesn't advance that even when byte-correct. See
 established convention, and each entry's linked write-up for why
 plain C didn't converge.
 
-- **`sub_8009008`** (`src/graphics/actor_part11b.c`) - the
-  spatial-hash-grid removal primitive `sub_8009A30`/`sub_8009AA0`
-  call: a two-phase search (the object's own primary bucket, then
-  every bucket 255 down to 0) that unlinks its pool node(s) from the
-  `struct pool_manager` grid (`actor_part12.c`) and returns them to
-  the free list. Fully understood; parked on a single-instruction
-  register-discard quirk in phase 2's early-exit path. See
-  `docs/matching/naked-spatial-grid-tail.md`.
 - **`sub_80091D4`** (`src/graphics/actor_part11c.c`) - a per-frame
   grid-maintenance pass over the 3-bucket window around the tracked
   sub-object's own column (plus bucket 255): lazily links newly-large
   objects into bucket 255 (`sub_8009150`'s own body, inlined), removes
   and destroys objects flagged for removal, and box-tests/marks the
   rest. Fully understood; parked on a many-high-register allocation
-  gap across its three inner-loop branches. See
+  gap across its three inner-loop branches (a same-size C draft, 215
+  halfwords off, now sits under `#if NON_MATCHING` - see
+  `docs/matching/fresh-naked-retry.md`). See
   `docs/matching/naked-spatial-grid-tail.md`.
 - **`sub_8014084`** (`src/graphics/actor_part_13c60.c`), **`sub_8014674`**,
   **`sub_8014B54`** (`src/graphics/actor_part_14674.c`), GitHub issue #17 -
