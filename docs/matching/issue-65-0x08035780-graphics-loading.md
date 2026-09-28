@@ -226,3 +226,14 @@ crashbandicootxs.gba crashbandicootxs.map && make compare`
 
 See [docs/status/graphics_loading.md](../status/graphics_loading.md)
 for the running matched/parked list.
+
+## Later pass: NAKED retry
+
+The retry pass closed 9 of this file's NAKED functions as real C under
+old_agbcc (`sub_8035F9C`, `sub_8035FEC`, `sub_8036068`, `sub_8036154`,
+`sub_80361B0`, `sub_8036528`, `sub_8036E20`, `sub_8036EC4`,
+`sub_8036FBC`). The object is now on `OLD_AGBCC_OBJS`. `sub_80358A8`,
+`sub_8035D1C`, `sub_8035E14`, `sub_80360DC`, `sub_8036600`, `sub_8036668`
+and `sub_8036CF4` stay NAKED, each with a near-miss draft under
+`#if NON_MATCHING`. `sub_803686C` was not attempted. See
+[issue-65-naked-retry.md](issue-65-naked-retry.md).

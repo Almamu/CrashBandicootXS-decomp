@@ -167,12 +167,14 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_1feec.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_21280.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_21668.o \
+                  $(C_BUILDDIR)/graphics/graphics_loading_35780.o \
                   $(C_BUILDDIR)/graphics/graphics_package_1e578.o \
                   $(C_BUILDDIR)/graphics/graphics_package_1e640.o \
                   $(C_BUILDDIR)/graphics/graphics_package_1e688.o \
                   $(C_BUILDDIR)/graphics/graphics_package_1e8f8.o \
                   $(C_BUILDDIR)/graphics/graphics_package_1e964.o \
                   $(C_BUILDDIR)/graphics/hud_digit_array.o \
+                  $(C_BUILDDIR)/graphics/level_graphics.o \
                   $(C_BUILDDIR)/graphics/trigger_effect.o \
                   $(C_BUILDDIR)/system/bg_scroll_layer_25fc8.o \
                   $(C_BUILDDIR)/system/game_loop14.o \

@@ -146,6 +146,21 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   `self+i*0x34` slot-base register the way any single plain-C
   reconstruction otherwise does. See
   [issue-59-60-static-inline-cse-promotion.md](../matching/issue-59-60-static-inline-cse-promotion.md).
+- **`LoadBg2Background`** (`src/graphics/level_graphics.c`), and
+  **`sub_8035F9C`**, **`sub_8035FEC`**, **`sub_8036068`**,
+  **`sub_8036154`**, **`sub_80361B0`**, **`sub_8036528`**,
+  **`sub_8036E20`**, **`sub_8036EC4`**, **`sub_8036FBC`**
+  (`src/graphics/graphics_loading_35780.c`) - promoted from NAKED to
+  real C in the issue #65 retry pass. Both files turned out to be
+  old_agbcc code (both are now on the Makefile's `OLD_AGBCC_OBJS`);
+  `LoadBg2Background`'s long-documented "dead r7 in the push list" gap
+  was simply the wrong compiler. The others needed the usual later
+  techniques: `__divsi3`/`_call_via_rN` aliases, bitfield structs for
+  the DISPCNT shadow/BGCNT, an inline `operator new` wrapper, and a few
+  source-order details (a chained `REG_BG2PA = scale = ...`, a
+  destination pointer taken before an allocation call, a nested block
+  for the ROM's stack-slot order). See
+  [issue-65-naked-retry.md](../matching/issue-65-naked-retry.md).
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
@@ -172,49 +187,23 @@ plain C didn't converge.
   `{x - 2, y - 0x1e}` point into fresh r2/r3, the reconstruction
   subtracts in place (the same gap as `sub_802209C`). See
   [issue-31-old-agbcc.md](../matching/issue-31-old-agbcc.md).
-- **`LoadBg2Background`** (`src/graphics/level_graphics.c`) - BG2's
-  palette/tileset/tilemap loader, remapping the tilemap's per-tile
-  palette-select nibble into VRAM. Every operation and register in the
-  body was already confirmed to match the ROM exactly via plain C
-  (isolated compile, instruction-for-instruction), but the ROM's
-  prologue/epilogue pushes/pops one extra dead callee-saved register
-  (`r7`, via `mov r7, r8`/`push {r7}`) that the body never reads or
-  writes - no plain-C phrasing reproduces it alongside the correct body
-  registers at the same time, and an explicit dummy
-  `register u32 r7dummy asm("r7")` referenced via an empty asm barrier
-  (the same "real register variable, not just a clobber" fix that
-  unblocks other registers in this project) made no difference either -
-  the same artifact `sub_801E644`/`sub_801E688` had under agbcc, which
-  old_agbcc resolved there (see
-  [issue-30-old-agbcc.md](../matching/issue-30-old-agbcc.md)) - worth
-  retrying here. Transcribed instruction-for-instruction instead. See
-  [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md).
 - **`sub_80358A8`**, **`sub_8035D1C`**, **`sub_8035E14`**,
-  **`sub_8035F9C`**, **`sub_8035FEC`**, **`sub_8036068`**, **`sub_80360DC`**,
-  **`sub_8036154`**, **`sub_80361B0`**, **`sub_8036528`**, **`sub_8036600`**,
-  **`sub_8036668`**, **`sub_803686C`**, **`sub_8036CF4`**, **`sub_8036E20`**,
-  **`sub_8036EC4`**, **`sub_8036FBC`** (`src/graphics/graphics_loading_35780.c`)
-  - the rest of issue #65's chunk: a 9-slot (later, 20-slot) position/
-  velocity record-array updater family operating on the same 0x220-byte
-  scratch object `LoadLevelGraphics` returns, a BG2 affine-scroll setup/
-  flush pair, a 7-slot rolling-hash "cheat code" detector, the level-
-  object subsystem's own init/run/teardown driver and its BG2 tileset/
-  palette/tilemap-remap loaders, and (unrelated to the scratch object)
-  an actor-part constructor/animation-state-machine/OAM-builder trio.
-  Each was attempted as real C first; each hit a different flavor of
-  this compiler's register-allocation or code-layout gaps (cross-jump/
-  tail-merging collapsing the ROM's own duplicated address computations,
-  a shared-base pointer the ROM never hoists, extensive `sb`/`sl`/`r8`/
-  `ip` shuffling) that didn't converge within a reasonable number of
-  passes, so these 17 are NAKED transcriptions instead - confirmed
-  byte-identical via a direct assemble + `objcopy --only-section=.text`
-  + byte comparison against `baserom.gba` before integrating.
-  `sub_8035780` (the field-copy/accumulate updater) was promoted to real
-  C in a later pass via the static-inline anti-CSE technique - see
-  [issue-59-60-static-inline-cse-promotion.md](../matching/issue-59-60-static-inline-cse-promotion.md).
-  `sub_8035D1C` was re-attempted with the same technique and did *not*
-  close (its blocker is cross-jump/tail-merging of branch *bodies*, not
-  repeated address arithmetic - same doc). See
+  **`sub_80360DC`**, **`sub_8036600`**, **`sub_8036668`**,
+  **`sub_803686C`**, **`sub_8036CF4`** (`src/graphics/graphics_loading_35780.c`)
+  - the rest of issue #65's chunk: the OAM builders for the 9-slot and
+  20-slot record arrays, the rolling-hash "cheat code" detector, the
+  intro sequencer, the two slot-array seeders, the 20-slot updater and
+  BG2's tilemap-remap loader. All but `sub_803686C` now carry a
+  near-miss C draft under `#if NON_MATCHING` (old_agbcc) with a
+  one-line note on what is left: `sub_8035D1C` is one register copy off,
+  `sub_8036668` 20 halfwords and `sub_8036CF4` 30 (register choice
+  only); the seeders/sequencer (`sub_80360DC`/`sub_8036600`/
+  `sub_8035E14`) are blocked on the loop optimizer (the ROM keeps its
+  counters and leaves some induction variables unreduced); `sub_80358A8`
+  is structurally right but its loops' register/stack-slot allocation
+  differs. `sub_803686C` (the 20-slot OAM builder, same shape as
+  `sub_80358A8`) was not attempted in the retry. See
+  [issue-65-naked-retry.md](../matching/issue-65-naked-retry.md) and
   [issue-65-0x08035780-graphics-loading.md](../matching/issue-65-0x08035780-graphics-loading.md).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
