@@ -119,3 +119,6 @@ frozen decomp.dev baseline now (`expected/legacy.s`) - see
   [issue-4-6-8-naked-retry.md](../matching/issue-4-6-8-naked-retry.md).
   The early-ROM NAKED retry brought the `sub_8001CB8` draft to 11
   halfwords ([early-rom-naked-retry.md](../matching/early-rom-naked-retry.md)).
+  The third big NAKED retry added a first `sub_8002114` draft: same
+  size as the ROM, 514 halfwords off under old_agbcc (register
+  allocation) - see [big-naked-retry-3.md](../matching/big-naked-retry-3.md).

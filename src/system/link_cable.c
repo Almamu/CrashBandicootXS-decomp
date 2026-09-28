@@ -26,7 +26,8 @@ struct nibble_pair {
 /* A 0x90-byte receive ring (the session header has one at +0x40, each
  * player record one at +0x38). */
 struct link_ring {
-    u8 unused_00[0x84];
+    u8 unused_00[4];
+    u8 buf[0x80];       /* 0x04 - written/read at field_8c/field_88 */
     s32 field_84;
     s32 field_88;
     s32 field_8c;       /* reset to 0x7f */
@@ -37,7 +38,8 @@ struct link_player {
     u8 id[6];           /* 0x00 - copy of the session handshake id */
     u16 field_6;        /* 0x06 - overwrites the id's hash with 0x1234 */
     u16 field_8;        /* 0x08 */
-    u8 unused_0a[0x2c - 0x0a];
+    u16 rx[16];         /* 0x0a - last 16 received words, at field_2c */
+    u8 unused_2a[2];
     s32 field_2c;       /* 0x2c */
     s32 field_30;       /* 0x30 */
     s32 field_34;       /* 0x34 */
@@ -749,6 +751,260 @@ s32 sub_8001F50(struct link_session *self)
  * field names/struct layout and replace this transcription with
  * genuine C, using this comment as a starting point rather than a
  * finished answer. */
+#if NON_MATCHING
+/* First C draft (docs/matching/big-naked-retry-3.md): same size as the
+ * ROM (1488 bytes) under old_agbcc, 514 halfwords off. Control flow and
+ * block order match; what is left is register allocation that shifts
+ * everything after it:
+ * - the ROM keeps the `field_4 = 1` constant in r2 and reuses it for
+ *   both SIOCNT bit tests (here the store's QImode 1 is not shared);
+ * - the first receive loop walks `data` with two pointers (one for the
+ *   word copy, one for the 0xffff test); here the givs are combined;
+ * - the ring pushes/pops recompute the ring field addresses in each
+ *   loop's preheader and keep `n` in r7 (here `n` reuses the r8 byte);
+ *   the session pop reaches the ring through a pointer in r7 (an inline
+ *   `LinkRingPop` gives that but is 12 bytes longer).
+ * `data` is SIOMULTI0-3 (link_cable2.c passes 0x04000120). */
+/* A received SIOMULTI word, read back from a stack copy. */
+struct link_rx_word {
+    u32 lo:4;
+    u32 hi:12;
+    u32 unused_10:16;
+};
+
+#define LINK_NIB(p) (*(struct nibble_pair *)(p))
+
+/* The CRC-16 walk sub_8001CB8 also uses, over bytes 1-5 of an id. */
+#define LINK_HASH(hash, p)                                                     \
+    {                                                                          \
+        s32 _k;                                                                \
+        u8 *_p = (p);                                                          \
+                                                                               \
+        for (_k = 4; _k != -1; _k--) {                                         \
+            hash = gStaticData_0816AF10[((hash >> 8) ^ *_p) & 0xff] ^ (hash << 8); \
+            _p++;                                                              \
+        }                                                                      \
+    }
+
+/* Copies an 8-byte id as four byte-assembled halfwords. */
+#define LINK_COPY_ID(dst, src)                                                 \
+    {                                                                          \
+        s32 _j;                                                                \
+                                                                               \
+        for (_j = 0; _j <= 3; _j++) {                                          \
+            u32 _v = ((src)[_j * 2 + 1] << 8) | (src)[_j * 2];                 \
+            u32 _lo = _v & 0xff;                                               \
+                                                                               \
+            (dst)[_j * 2] = _lo;                                               \
+            (dst)[_j * 2 + 1] = _v >> 8;                                       \
+        }                                                                      \
+    }
+
+void sub_8002114(struct link_session *self, u16 *data)
+{
+    struct link_rx_word w[4];
+    s32 i;
+    s32 changed;
+    s32 nib;
+    u16 siocnt;
+
+    self->field_404 = 0;
+    if (self->field_4) {
+        u16 v = self->field_400;
+
+        REG_SIOMLT_SEND = v;
+        return;
+    }
+    self->field_4 = 1;
+    siocnt = REG_SIOCNT;
+    changed = 0;
+    nib = LINK_NIB(&self->id[1]).lo + 1;
+    nib &= 0xf;
+    if ((siocnt >> 6) & 1)
+        goto send;
+    if (!self->field_7) {
+        s32 nId, nFree, same;
+
+        if (!((siocnt >> 3) & 1))
+            goto send;
+        nId = 0;
+        nFree = 0;
+        for (i = 0; i <= 3; i++) {
+            w[i] = *(struct link_rx_word *)&data[i];
+            if (w[i].hi == 0xF0B)
+                nId++;
+            if (data[i] == 0xffff)
+                nFree++;
+        }
+        same = 1;
+        for (i = 0; i < nId; i++) {
+            if (w[i].lo != nId)
+                same = 0;
+        }
+        if (nFree + nId == 4 && same && nId > 1) {
+            self->field_1c = nId;
+            {
+                s32 me = (REG_SIOCNT & 0x30) >> 4;
+
+                self->field_3fc = me;
+            }
+            self->field_3f8 = ~(-1 << nId);
+            self->field_3f8 &= ~(1 << self->field_3fc);
+        }
+        self->field_20.lo = nId;
+        self->field_400 = *(u16 *)&self->field_20;
+        goto send;
+    }
+
+    for (i = 0; i < self->field_1c; i++) {
+        struct link_player *p;
+        u8 *q;
+        s32 ok;
+
+        if (i == self->field_3fc)
+            continue;
+        p = &self->players[i];
+        p->rx[p->field_2c] = data[i];
+        p->field_2c = (p->field_2c + 1) & 0xf;
+        if (p->field_2c <= 3)
+            continue;
+        q = (u8 *)&p->rx[p->field_2c - 4];
+        ok = 0;
+        if (LINK_NIB(&q[1]).lo == LINK_NIB(&q[0]).hi
+         || LINK_NIB(&q[1]).lo == ((LINK_NIB(&q[0]).hi - 1) & 0xf)) {
+            if (LINK_NIB(&q[1]).hi <= 4) {
+                if (LINK_NIB(&q[0]).lo == ((LINK_NIB(&q[0]).hi + ((q[7] << 8) | q[6])) & 0xf))
+                    ok = 1;
+            }
+        }
+        if (!ok)
+            continue;
+        {
+            if ((q[1] & 0xf) == (p->id[1] & 0xf)) {
+                u16 want = (q[7] << 8) | q[6];
+                u16 hash = p->field_8;
+
+                LINK_HASH(hash, &q[1]);
+                if (want == hash)
+                    goto copy;
+                continue;
+            } else {
+                u16 want;
+                u16 hash;
+                s32 n, k;
+                u8 *src;
+
+                if (LINK_NIB(&q[1]).lo != p->field_30)
+                    continue;
+                want = (q[7] << 8) | q[6];
+                hash = p->field_6;
+                LINK_HASH(hash, &q[1]);
+                if (want != hash)
+                    continue;
+                n = p->id[1] >> 4;
+                src = &p->id[2];
+                if (p->ring.field_8c < 0x80 - n) {
+                    for (k = n - 1; k != -1; k--) {
+                        p->ring.field_8c++;
+                        p->ring.field_84++;
+                        p->ring.buf[p->ring.field_8c] = *src++;
+                    }
+                } else {
+                    for (k = n - 1; k != -1; k--) {
+                        u8 b = *src++;
+
+                        p->ring.field_8c = p->ring.field_8c == 0x7f ? 0 : p->ring.field_8c + 1;
+                        p->ring.field_84++;
+                        p->ring.buf[p->ring.field_8c] = b;
+                    }
+                }
+                p->field_34 += n;
+                p->field_8 = p->field_6;
+                p->field_30 = (p->field_30 + 1) & 0xf;
+                self->field_3f4 |= 1 << i;
+            }
+        }
+    copy:
+        LINK_COPY_ID(p->id, q);
+        if (LINK_NIB(&p->id[0]).hi == nib)
+            self->field_3f0 |= 1 << i;
+        p->field_2c = 0;
+        changed = 1;
+    }
+
+    if (changed) {
+        changed = 0;
+        if (self->field_3f0 == self->field_3f8) {
+            s32 n, k;
+            u8 *dst;
+            u16 hash;
+
+            self->field_3f0 = 0;
+            LINK_COPY_ID(self->field_28, self->id);
+            n = self->ring.field_84;
+            if (n > 4)
+                n = 4;
+            LINK_NIB(&self->id[1]).hi = n;
+            dst = &self->id[2];
+            if (self->ring.field_88 < 0x80 - n) {
+                for (k = n - 1; k != -1; k--) {
+                    *dst++ = self->ring.buf[self->ring.field_88];
+                    self->ring.field_88++;
+                    self->ring.field_84--;
+                }
+            } else {
+                for (k = n - 1; k != -1; k--) {
+                    s32 old = self->ring.field_88;
+
+                    self->ring.field_88 = old == 0x7f ? 0 : old + 1;
+                    self->ring.field_84--;
+                    *dst++ = self->ring.buf[old];
+                }
+            }
+            self->field_24 += n;
+            LINK_NIB(&self->id[1]).lo = nib;
+            hash = *(u16 *)&self->id[6];
+            LINK_HASH(hash, &self->id[1]);
+            *(u16 *)&self->id[6] = hash;
+            self->field_3c = 0;
+            changed = 1;
+        }
+        if (self->field_3f4 == self->field_3f8) {
+            self->field_3f4 = 0;
+            LINK_NIB(&self->id[0]).hi++;
+            changed = 1;
+        }
+        if (changed) {
+            self->field_38 = 0;
+            self->field_18 = 1;
+            LINK_NIB(&self->id[0]).lo = LINK_NIB(&self->id[0]).hi + ((self->id[7] << 8) | self->id[6]);
+        }
+    }
+    {
+        u8 *lo, *hi;
+
+        if ((self->field_3c & 3) == 3) {
+            lo = &self->field_28[self->field_38 * 2];
+            hi = &self->field_28[self->field_38 * 2 + 1];
+        } else {
+            lo = &self->id[self->field_38 * 2];
+            hi = &self->id[self->field_38 * 2 + 1];
+        }
+        self->field_400 = (*hi << 8) | *lo;
+    }
+    if (++self->field_38 == 4) {
+        self->field_38 = 0;
+        self->field_3c++;
+    }
+send:
+    {
+        u16 v = self->field_400;
+
+        REG_SIOMLT_SEND = v;
+    }
+    self->field_4 = 0;
+}
+#else
 NAKED void sub_8002114(void *self, u16 data)
 {
     asm(
@@ -1543,3 +1799,4 @@ NAKED void sub_8002114(void *self, u16 data)
         "60: .4byte 0x0400012A\n"
     );
 }
+#endif

@@ -458,6 +458,14 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   was statement order and locals. See
   [docs/matching/big-naked-retry-2.md](../matching/big-naked-retry-2.md).
 
+- **Third big NAKED retry:** `sub_80255D4` (`game_loop41.c`, GitHub
+  issue #40, 704 bytes, the collision-bitmap refresh + actor link pass)
+  promoted from NAKED to real C under old_agbcc (`game_loop41.o` joined
+  `OLD_AGBCC_OBJS`). Most of it was loop shape: old_agbcc's loop
+  rotation takes a `break` inside a search loop as the loop's exit
+  test, so the searches leave with `goto`. See
+  [docs/matching/big-naked-retry-3.md](../matching/big-naked-retry-3.md).
+
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
 - **`sub_8023A1C`** (`src/system/game_loop56.c`, new file - GitHub
@@ -710,7 +718,7 @@ plain C didn't converge.
   is 61 and 5 halfwords off (register allocation, and one constant
   load's scheduling); their sibling `sub_8025BAC` is matched. See
   [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md).
-- **`sub_80255D4`** (`src/system/game_loop41.c`, GitHub issue #34/#40/
+- **Now matched as real C (third big NAKED retry, see Matched and docs/matching/big-naked-retry-3.md); entry kept for history.** **`sub_80255D4`** (`src/system/game_loop41.c`, GitHub issue #34/#40/
   #41) - `self` is `*gUnknown_030012B4`: refreshes the collision
   bitmaps, spawns `list`'s unseen items through `sub_8025D28`, then
   links spawned actors by a `links` array. Plain C under old_agbcc is
@@ -879,6 +887,9 @@ plain C didn't converge.
   `sub_801173C` stay NAKED (`sub_801173C` with a C draft under
   `NON_MATCHING`). See
   [docs/matching/issue-15-16-naked-retry.md](../matching/issue-15-16-naked-retry.md).
+  The third big NAKED retry brought the `sub_8011548` draft to the
+  ROM's size, 21 halfwords off (register allocation) - see
+  [big-naked-retry-3.md](../matching/big-naked-retry-3.md).
 - **`sub_8010E34`/`sub_8010EAC`/`sub_8010F8C`/`sub_8011114`/
   `sub_80111B8`** (`src/system/game_loop54.c`, new file - Phase 2
   mop-up, the chunk's final slice) - the last 5 functions of the former

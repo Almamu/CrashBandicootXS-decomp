@@ -220,6 +220,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/system/game_loop37.o \
                   $(C_BUILDDIR)/system/game_loop4.o \
                   $(C_BUILDDIR)/system/game_loop40.o \
+                  $(C_BUILDDIR)/system/game_loop41.o \
                   $(C_BUILDDIR)/system/game_loop42.o \
                   $(C_BUILDDIR)/system/game_loop46.o \
                   $(C_BUILDDIR)/system/game_loop48.o \
