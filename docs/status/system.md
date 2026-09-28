@@ -73,8 +73,10 @@ category page - see [game_loop.md](./game_loop.md).
   byte-for-byte) - all
   matched, GitHub
   issue #4, see `docs/matching/issue-4-sio-settings-sync.md`. (This
-  file's `sub_8001CB8`/`sub_8001DB4`/`sub_8001F50`/`sub_8002114` are
-  NAKED transcriptions tracked as parked - see below.)
+  file's `sub_8001CB8`/`sub_8001DB4`/`sub_8002114` are NAKED
+  transcriptions tracked as parked - see below. `sub_8001F50`, the
+  link handshake driver, is real C since the second near-miss sweep -
+  see [near-miss-polish-2.md](../matching/near-miss-polish-2.md).)
 
 GitHub issue #70 (`0x0803ADB4`-`0x0803B060`, right after
 `reg_trampolines.c` above) was categorized `system` by the chunk
@@ -106,9 +108,10 @@ frozen decomp.dev baseline now (`expected/legacy.s`) - see
   issue #69, see `docs/matching/issue-69-eeprom-timer.md`.
 - **`sub_8001CB8`** (`src/system/link_cable.c`, per-player
   CRC-16-style handshake-id hash helper), **`sub_8001DB4`**
-  (link-session reset/init), **`sub_8001F50`**
-  (link-connection/handshake driver), **`sub_8002114`** (1488 B
+  (link-session reset/init), **`sub_8002114`** (1488 B
   per-frame SIO data-exchange pump, this file's biggest function).
+  (`sub_8001F50`, the link handshake driver, was here too; it is real C
+  since the second near-miss sweep.)
   GitHub issue #4, see `docs/matching/issue-4-sio-settings-sync.md`.
   The issue #4 retry left NON_MATCHING drafts for the first three
   (49/136/37 halfwords off under old_agbcc, which the file now builds

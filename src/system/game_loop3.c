@@ -370,23 +370,30 @@ s8 sub_8025228(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut)
  * raw-copy run - writing the decoded halfwords into `dest` (a linear
  * 256-byte cache slot in `sub_8024F24`'s caller).
  *
- * NAKED: plain C under old_agbcc is 30 halfwords off. The accumulator
- * and the pair loop's induction pointer swap r4 and r5 (allocation
- * priorities 2.4 vs 2.5); the ROM's r7 "shadow pointer" is gcc's own
- * strength-reduced `&dest[written]`, not a C variable.
- *
- * Later pass (#40 retry): the `#if NON_MATCHING` draft is 33 halfwords
- * off under old_agbcc (same size). `acc`/`pair` as `s16` reproduce the
- * ROM's per-use `lsl/asr` sign extensions and a do-while pair loop its
- * missing entry test; left are the r4/r5 swap above and the ROM
- * interleaving the `(s8)pair` shift pair around `acc`'s extension. */
-#if NON_MATCHING
+ * Matched (near-miss sweep 2, old_agbcc). Three pieces closed the old
+ * 33-halfword gap:
+ * - `src` is first loaded with `decodeBase` itself and then advanced by
+ *   the record's word offset, so the base lives in `src`'s register (r6)
+ *   rather than a scratch one.
+ * - The delta run's sign extensions are spelled as explicit `<< 24` /
+ *   `<< 16` shifts into an `s32` local, then `acc` is copied into an `s32`
+ *   before the `>> 24`. That makes gcc emit the pair's left shift, then
+ *   `acc`'s own `lsl/asr #16`, then the pair's `asr #24`, which is the
+ *   ROM's interleaving; `(s8)pair` emits the two shifts back to back.
+ * - `asm("" : : "r"(n))` after `n -= 2` (an extra-reference nudge that
+ *   emits no code, see #468) gives `n` one more reference, so the pair
+ *   loop's run counter wins r3 and `acc` keeps r4. Without it the
+ *   allocator swaps the two. */
 void sub_8025334(struct tile_cache *self, s32 recordId, void *dest)
 {
     u16 *out = dest;
-    u16 *src = (u16 *)((u32 *)self->decodeBase + ((u16 *)self->decodeBase)[recordId]);
-    s32 budget = 0x7F;
-    s32 written = 0;
+    u16 *src = self->decodeBase;
+    s32 budget;
+    s32 written;
+
+    src = (u16 *)((u32 *)src + src[recordId]);
+    budget = 0x7F;
+    written = 0;
 
     do
     {
@@ -417,19 +424,32 @@ void sub_8025334(struct tile_cache *self, s32 recordId, void *dest)
             written++;
             do
             {
-                s16 pair = *src++;
+                u16 pair = *src++;
 
-                acc += (s8)pair;
+                {
+                    s32 lo = pair << 24;
+                    s32 a = acc;
+
+                    acc = a + (lo >> 24);
+                }
                 out[written++] = acc;
-                acc += pair >> 8;
+                {
+                    s32 hi = pair << 16;
+                    s32 a = acc;
+
+                    acc = a + (hi >> 24);
+                }
                 out[written++] = acc;
                 n -= 2;
+                asm("" : : "r"(n));
             } while (n > 1);
             if (n != 0)
             {
-                s16 last = *src++;
+                u16 last = *src++;
+                s32 lo = last << 24;
+                s32 a = acc;
 
-                out[written] = acc + (s8)last;
+                out[written] = a + (lo >> 24);
                 written++;
             }
         }
@@ -445,155 +465,6 @@ void sub_8025334(struct tile_cache *self, s32 recordId, void *dest)
         }
     } while (budget >= 0);
 }
-#else
-NAKED void sub_8025334(struct tile_cache *self, s32 recordId, void *dest)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sb\n\t"
-        "mov r6, r8\n\t"
-        "push {r6, r7}\n\t"
-        "mov r8, r2\n\t"
-        "ldr r6, [r0, #4]\n\t"
-        "lsl r1, r1, #1\n\t"
-        "add r1, r1, r6\n\t"
-        "ldrh r1, [r1]\n\t"
-        "lsl r0, r1, #2\n\t"
-        "add r6, r6, r0\n\t"
-        "mov r0, #0x7f\n\t"
-        "mov sb, r0\n\t"
-        "mov r1, #0\n\t"
-        "mov ip, r1\n\t"
-        "mov r7, r8\n\t"
-        "1:\n\t"
-        "ldrh r1, [r6]\n\t"
-        "ldrb r3, [r6]\n\t"
-        "add r6, #2\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #8\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "beq 3f\n\t"
-        "ldrh r2, [r6]\n\t"
-        "add r6, #2\n\t"
-        "mov r4, sb\n\t"
-        "sub r4, r4, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov r1, ip\n\t"
-        "lsl r0, r1, #1\n\t"
-        "mov r4, r8\n\t"
-        "add r1, r0, r4\n\t"
-        "2:\n\t"
-        "strh r2, [r1]\n\t"
-        "add r1, #2\n\t"
-        "add r7, #2\n\t"
-        "mov r0, #1\n\t"
-        "add ip, r0\n\t"
-        "sub r0, r3, #1\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r3, r0, #0x10\n\t"
-        "cmp r3, #0\n\t"
-        "bne 2b\n\t"
-        "b 7f\n\t"
-        "3:\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #7\n\t"
-        "and r1, r0\n\t"
-        "cmp r1, #0\n\t"
-        "beq 5f\n\t"
-        "mov r1, sb\n\t"
-        "sub r1, r1, r3\n\t"
-        "mov sb, r1\n\t"
-        "ldrh r4, [r6]\n\t"
-        "add r6, #2\n\t"
-        "strh r4, [r7]\n\t"
-        "sub r0, r3, #1\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r3, r0, #0x10\n\t"
-        "add r7, #2\n\t"
-        "mov r2, #1\n\t"
-        "add ip, r2\n\t"
-        "mov r1, ip\n\t"
-        "lsl r0, r1, #1\n\t"
-        "mov r2, r8\n\t"
-        "add r5, r0, r2\n\t"
-        "4:\n\t"
-        "ldrh r2, [r6]\n\t"
-        "add r6, #2\n\t"
-        "lsl r1, r2, #0x18\n\t"
-        "lsl r0, r4, #0x10\n\t"
-        "asr r0, r0, #0x10\n\t"
-        "asr r1, r1, #0x18\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r4, r0, #0x10\n\t"
-        "strh r4, [r5]\n\t"
-        "add r5, #2\n\t"
-        "lsl r2, r2, #0x10\n\t"
-        "lsl r0, r4, #0x10\n\t"
-        "asr r0, r0, #0x10\n\t"
-        "asr r2, r2, #0x18\n\t"
-        "add r0, r0, r2\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r4, r0, #0x10\n\t"
-        "strh r4, [r5]\n\t"
-        "add r5, #2\n\t"
-        "add r7, #4\n\t"
-        "mov r0, #2\n\t"
-        "add ip, r0\n\t"
-        "sub r0, r3, #2\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r3, r0, #0x10\n\t"
-        "cmp r3, #1\n\t"
-        "bhi 4b\n\t"
-        "cmp r3, #0\n\t"
-        "beq 7f\n\t"
-        "ldrh r1, [r6]\n\t"
-        "add r6, #2\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "lsl r0, r4, #0x10\n\t"
-        "asr r0, r0, #0x10\n\t"
-        "asr r1, r1, #0x18\n\t"
-        "add r0, r0, r1\n\t"
-        "strh r0, [r7]\n\t"
-        "add r7, #2\n\t"
-        "mov r1, #1\n\t"
-        "add ip, r1\n\t"
-        "b 7f\n\t"
-        "5:\n\t"
-        "mov r2, sb\n\t"
-        "sub r2, r2, r3\n\t"
-        "mov sb, r2\n\t"
-        "mov r4, ip\n\t"
-        "lsl r0, r4, #1\n\t"
-        "mov r2, r8\n\t"
-        "add r1, r0, r2\n\t"
-        "6:\n\t"
-        "ldrh r0, [r6]\n\t"
-        "strh r0, [r1]\n\t"
-        "add r6, #2\n\t"
-        "add r1, #2\n\t"
-        "add r7, #2\n\t"
-        "mov r4, #1\n\t"
-        "add ip, r4\n\t"
-        "sub r0, r3, #1\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r3, r0, #0x10\n\t"
-        "cmp r3, #0\n\t"
-        "bne 6b\n\t"
-        "7:\n\t"
-        "mov r0, sb\n\t"
-        "cmp r0, #0\n\t"
-        "bge 1b\n\t"
-        "pop {r3, r4}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0"
-    );
-}
-#endif
 /* Trailing byte count isn't a multiple of 4 in the ROM's own raw block
  * (a bare `.align 2, 0` follows `bx r0` there too) - see the
  * `matching_decomp_alignment_fix` precedent. */

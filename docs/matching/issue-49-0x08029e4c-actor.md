@@ -88,3 +88,12 @@ plain C: they return the callee's result. `SelectActorCategory` has a
 `NON_MATCHING` draft with the ROM's instruction sequence but two
 registers swapped. `sub_802A208` is unchanged. See
 [issue-48-49-52-aabb-naked-retry.md](issue-48-49-52-aabb-naked-retry.md).
+
+## Later pass: second near-miss sweep
+
+`SelectActorCategory` is real C (both compilers). The zeroing store of
+`gUnknown_03001404` goes through a local pointer. An empty
+`asm("" : : "r"(idx))` after the `sub_8029B2C` call gives that pointer
+one more reference, so it outranks `base` and takes r7. Both scan loops
+still name the global directly, which gives the ROM's loop-local copies
+of the address. See [near-miss-polish-2.md](near-miss-polish-2.md).

@@ -335,3 +335,13 @@ issue stays open.
 swap between `flags` and `field_1fb`. An empty `asm("" : : "r"(flags))`
 adds one reference to `flags`, which puts it ahead of `field_1fb` in
 global-alloc's priority order. See [near-miss-polish.md](near-miss-polish.md).
+
+## Later pass: second near-miss sweep
+
+`sub_8001F50` is real C. The ROM loads two separate 1s after reading
+SIOCNT: one for `field_8`/IME, and one in r1 for the arm3 flag, which
+it computes with `eor` then `and`. An empty `asm("" : "+r"(one1))` keeps
+the flag's 1 from merging into `one`. The ready test uses a literal 1.
+An empty `asm("" : "+r"(arm3))` between the `^` and the `&` stops
+combine from folding `(x ^ 1) & 1` into `bic`. Matches under both
+compilers. See [near-miss-polish-2.md](near-miss-polish-2.md).

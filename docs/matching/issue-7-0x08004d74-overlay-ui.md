@@ -344,3 +344,13 @@ above were mostly wrong. The real causes were an argument the old
 drafts dropped (`count * 5`), `sub_803AD7C`/`sub_803AD80` being
 `_call_via_rN` virtual calls, and loop and evaluation-order effects.
 Issue #7 therefore still has NAKED functions.
+
+## Later pass: second near-miss sweep
+
+`sub_8004D74` is real C. The draft was 54 halfwords off because CSE
+shared the 0x12c offset between the `field_12c` reads, and holding it
+used up the register the ROM gives &gUnknown_030012FC. Reading the
+field through a `static inline` accessor stops the sharing. Loading the
+two VRAM-reservation operands into locals before `gUnknown_030012FC`,
+and the tile cache base into a local before the `sub_803A94C` source
+address, fixes the last two load-order differences. See [near-miss-polish-2.md](near-miss-polish-2.md).

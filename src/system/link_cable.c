@@ -594,22 +594,17 @@ NAKED void sub_8001DB4(u8 *self)
  * Finally increments `self+0xc` and returns 1 ("handshake in
  * progress/succeeded").
  *
- * Written as NAKED asm, not plain C: this function's branch web
- * (11 branch targets over ~180 instructions, `sb`/`r8` register-bank
- * juggling identical in shape to `sub_8001DB4`/`sub_8002AA4` above) was
- * left completely untouched by the previous matching pass rather than
- * risk a low-confidence C reconstruction of the retry/timeout state
- * machine's exact edge cases - this is a mechanical, byte-verified
- * transcription of the ROM's own instructions instead of an inferred
- * C control-flow guess, so it carries none of that risk: every
- * instruction below was checked instruction-by-instruction against the
- * ROM disassembly (`objdump`) before being counted as matched. */
-#if NON_MATCHING
-/* 37 halfwords off under both compilers (same size as the ROM).
- * Everything from the timeout counter on matches. Left: the ROM holds
- * the constant 1 in sb (test, `field_8`, IME) and a second 1 in r1 for
- * the arm3 flag, which it computes with eor/and; with `one` the draft
- * gets `bic`, and the IME/IE save sequence is scheduled differently. */
+ * Matched in the second near-miss sweep (37 halfwords before). The ROM
+ * materializes two separate 1s after reading SIOCNT: r2 (copied to sb)
+ * for `field_8`/IME and r1 for the arm3 flag. Three things reproduce
+ * that:
+ * - `asm("" : "+r"(one1))` keeps the flag's 1 from being merged into
+ *   `one`.
+ * - The ready test uses a literal 1, so `one` is a copy of that
+ *   constant's register.
+ * - `asm("" : "+r"(arm3))` between the eor and the and stops combine
+ *   from folding `(x ^ 1) & 1` into a `bic`, which the ROM doesn't have.
+ * Both asm statements emit no code. Matches under both compilers. */
 s32 sub_8001F50(struct link_session *self)
 {
     s32 arm3;
@@ -625,8 +620,13 @@ s32 sub_8001F50(struct link_session *self)
         self->field_6 = 1;
     }
     if (!self->field_8) {
+        s32 one1;
+        u32 v = REG_SIOCNT >> 3;
+
+        one1 = 1;
+        asm("" : "+r"(one1)); /* keep the flag's own 1 (r1) */
         one = 1;
-        if (!((REG_SIOCNT >> 3) & one)) {
+        if (!(v & 1)) {
             sub_8001D30(self);
             REG_RCNT = 0;
             REG_SIOCNT = 0x2000;
@@ -634,7 +634,9 @@ s32 sub_8001F50(struct link_session *self)
             return 0;
         }
         self->field_8 = one;
-        arm3 = ((REG_SIOCNT >> 2) ^ one) & one;
+        arm3 = (REG_SIOCNT >> 2) ^ one1;
+        asm("" : "+r"(arm3)); /* keep eor/and, not bic */
+        arm3 &= one1;
         REG_IME = 0;
         saved = REG_IME;
         REG_IME = 0;
@@ -697,234 +699,6 @@ s32 sub_8001F50(struct link_session *self)
     self->field_c++;
     return 1;
 }
-#else
-NAKED s32 sub_8001F50(void *self)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sb\n\t"
-        "mov r6, r8\n\t"
-        "push {r6, r7}\n\t"
-        "add r5, r0, #0\n\t"
-        "ldrb r0, [r5, #5]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 2f\n\t"
-        "ldrb r1, [r5, #6]\n\t"
-        "cmp r1, #0\n\t"
-        "bne 1f\n\t"
-        "ldr r0, 3f\n\t"
-        "strh r1, [r0]\n\t"
-        "ldr r2, 4f\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #6\n\t"
-        "add r0, r1, #0\n\t"
-        "strh r0, [r2]\n\t"
-        "ldrh r0, [r2]\n\t"
-        "ldr r3, 5f\n\t"
-        "add r1, r3, #0\n\t"
-        "orr r0, r1\n\t"
-        "strh r0, [r2]\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r5, #6]\n\t"
-    "1:\n\t"
-        "ldrb r7, [r5, #8]\n\t"
-        "cmp r7, #0\n\t"
-        "bne 8f\n\t"
-        "ldr r4, 4f\n\t"
-        "ldrh r0, [r4]\n\t"
-        "lsr r0, r0, #3\n\t"
-        "mov r1, #1\n\t"
-        "mov r2, #1\n\t"
-        "mov sb, r2\n\t"
-        "and r0, r2\n\t"
-        "cmp r0, #0\n\t"
-        "bne 6f\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_8001D30\n\t"
-        "ldr r0, 3f\n\t"
-        "strh r7, [r0]\n\t"
-        "mov r3, #0x80\n\t"
-        "lsl r3, r3, #6\n\t"
-        "add r0, r3, #0\n\t"
-        "strh r0, [r4]\n\t"
-        "ldrh r0, [r4]\n\t"
-        "ldr r2, 5f\n\t"
-        "add r1, r2, #0\n\t"
-        "orr r0, r1\n\t"
-        "strh r0, [r4]\n\t"
-    "2:\n\t"
-        "mov r0, #0\n\t"
-        "b 27f\n\t"
-        ".align 2, 0\n"
-    "3: .4byte 0x04000134\n"
-    "4: .4byte 0x04000128\n"
-    "5: .4byte 0x00004003\n"
-    "6:\n\t"
-        "mov r3, sb\n\t"
-        "strb r3, [r5, #8]\n\t"
-        "ldrh r4, [r4]\n\t"
-        "lsr r4, r4, #2\n\t"
-        "eor r4, r1\n\t"
-        "and r4, r1\n\t"
-        "ldr r0, 10f\n\t"
-        "mov r8, r0\n\t"
-        "strh r7, [r0]\n\t"
-        "ldrh r1, [r0]\n\t"
-        "strh r7, [r0]\n\t"
-        "ldr r6, 11f\n\t"
-        "ldrh r2, [r6]\n\t"
-        "ldr r0, 12f\n\t"
-        "and r0, r2\n\t"
-        "strh r0, [r6]\n\t"
-        "mov r2, r8\n\t"
-        "strh r1, [r2]\n\t"
-        "ldrh r1, [r2]\n\t"
-        "strh r7, [r2]\n\t"
-        "ldrh r2, [r6]\n\t"
-        "ldr r0, 13f\n\t"
-        "and r0, r2\n\t"
-        "strh r0, [r6]\n\t"
-        "mov r3, r8\n\t"
-        "strh r1, [r3]\n\t"
-        "mov r0, #6\n\t"
-        "bl sub_8000544\n\t"
-        "ldr r1, 14f\n\t"
-        "mov r0, #7\n\t"
-        "bl sub_80005A0\n\t"
-        "ldrh r0, [r6]\n\t"
-        "mov r1, #0x80\n\t"
-        "orr r0, r1\n\t"
-        "strh r0, [r6]\n\t"
-        "cmp r4, #0\n\t"
-        "beq 7f\n\t"
-        "ldr r1, 15f\n\t"
-        "mov r0, #6\n\t"
-        "bl sub_80005A0\n\t"
-        "ldrh r0, [r6]\n\t"
-        "mov r1, #0x40\n\t"
-        "orr r0, r1\n\t"
-        "strh r0, [r6]\n\t"
-        "ldr r1, 16f\n\t"
-        "ldr r0, 17f\n\t"
-        "str r0, [r1]\n\t"
-    "7:\n\t"
-        "mov r1, sb\n\t"
-        "mov r0, r8\n\t"
-        "strh r1, [r0]\n\t"
-        "mov r2, #0xff\n\t"
-        "lsl r2, r2, #2\n\t"
-        "add r1, r5, r2\n\t"
-        "mov r0, #1\n\t"
-        "neg r0, r0\n\t"
-        "str r0, [r1]\n\t"
-        "str r7, [r5, #0x14]\n\t"
-        "ldr r3, 18f\n\t"
-        "add r0, r5, r3\n\t"
-        "str r7, [r0]\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r5, #0x18]\n\t"
-    "8:\n\t"
-        "ldr r0, 18f\n\t"
-        "add r1, r5, r0\n\t"
-        "ldr r0, [r1]\n\t"
-        "cmp r0, #0xf\n\t"
-        "ble 9f\n\t"
-        "mov r0, #0xf\n\t"
-        "neg r0, r0\n\t"
-        "str r0, [r5, #0xc]\n\t"
-        "mov r0, #0xe1\n\t"
-        "lsl r0, r0, #3\n\t"
-        "str r0, [r5, #0x14]\n\t"
-    "9:\n\t"
-        "ldr r0, [r1]\n\t"
-        "add r0, #1\n\t"
-        "str r0, [r1]\n\t"
-        "ldrb r0, [r5, #7]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 23f\n\t"
-        "mov r1, #0xff\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r0, r5, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bge 19f\n\t"
-        "ldr r0, [r5, #0xc]\n\t"
-        "sub r0, #1\n\t"
-        "b 20f\n\t"
-        ".align 2, 0\n"
-    "10: .4byte 0x04000208\n"
-    "11: .4byte 0x04000200\n"
-    "12: .4byte 0x0000FF7F\n"
-    "13: .4byte 0x0000FFBF\n"
-    "14: .4byte sub_8002830\n"
-    "15: .4byte sub_8002848\n"
-    "16: .4byte 0x0400010C\n"
-    "17: .4byte 0x00C0BBBC\n"
-    "18: .4byte 0x00000404\n"
-    "19:\n\t"
-        "ldr r0, [r5, #0xc]\n\t"
-        "add r0, #1\n\t"
-    "20:\n\t"
-        "str r0, [r5, #0xc]\n\t"
-        "ldr r1, [r5, #0xc]\n\t"
-        "cmp r1, #0xe\n\t"
-        "ble 21f\n\t"
-        "mov r1, #0\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r5, #7]\n\t"
-        "str r1, [r5, #0x14]\n\t"
-        "str r1, [r5, #0x10]\n\t"
-        "b 23f\n\t"
-    "21:\n\t"
-        "mov r0, #0xf\n\t"
-        "neg r0, r0\n\t"
-        "cmp r1, r0\n\t"
-        "ble 22f\n\t"
-        "b 2b\n\t"
-    "22:\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_8001D30\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_8001DB4\n\t"
-    "23:\n\t"
-        "ldr r0, [r5, #0x10]\n\t"
-        "ldr r1, [r5, #0x14]\n\t"
-        "cmp r0, r1\n\t"
-        "bge 24f\n\t"
-        "add r0, r1, #0\n\t"
-    "24:\n\t"
-        "str r0, [r5, #0x10]\n\t"
-        "ldrb r0, [r5, #0x18]\n\t"
-        "add r1, #1\n\t"
-        "cmp r0, #0\n\t"
-        "beq 25f\n\t"
-        "mov r1, #0\n\t"
-    "25:\n\t"
-        "str r1, [r5, #0x14]\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r5, #0x18]\n\t"
-        "cmp r1, #0x1d\n\t"
-        "ble 26f\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_8001D30\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_8001DB4\n\t"
-    "26:\n\t"
-        "ldr r0, [r5, #0xc]\n\t"
-        "add r0, #1\n\t"
-        "str r0, [r5, #0xc]\n\t"
-        "mov r0, #1\n\t"
-    "27:\n\t"
-        "pop {r3, r4}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n"
-    );
-}
-#endif
 
 /* Per-frame SIO data-exchange pump - see docs/rom_map.md's SIO/link-
  * cable section (called from the Serial IRQ handler `sub_8002830` in

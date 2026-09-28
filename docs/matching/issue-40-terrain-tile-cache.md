@@ -235,3 +235,13 @@ issue is where they got turned into (attempted) byte-exact C.
   decoder" and "More of the cluster: the frame-end flush hub, a
   `CheckTerrainFlag`-style API, and collision response" sections are
   the read-only reconnaissance this issue's matching work is based on.
+
+## Later pass: second near-miss sweep
+
+`sub_8025334` is real C (old_agbcc). `src` starts as `decodeBase`
+itself, then gets advanced, so the base lives in r6 as in the ROM. The
+delta run's sign extensions are written as `<< 24` / `<< 16` shifts into
+an `s32`, with `acc` copied into an `s32` before the `>> 24`. That
+interleaves the shift pairs the way the ROM does. An empty
+`asm("" : : "r"(n))` after `n -= 2` fixes the old r4/r5 swap between
+`acc` and the run counter. See [near-miss-polish-2.md](near-miss-polish-2.md).

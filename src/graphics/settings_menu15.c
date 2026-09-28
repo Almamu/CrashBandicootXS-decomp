@@ -41,15 +41,18 @@ extern void sub_8005004(struct pause_screen_results *self, u32 flags);
  * down (`sub_8005004`, flags=3) and restores the original tile cache
  * before returning `sub_8005100`'s result.
  *
- * Still NAKED (transcribed from the ROM). The C draft under
- * NON_MATCHING is 54 halfwords off under either compiler. It already
- * gets the r8 zero (both `0`s come from inline-function parameters,
- * which CSE then shares) and the `_call_via_r1` slot-6 calls. What is
- * left is allocation: the ROM keeps &gUnknown_030012B8 in r6 and the
- * two icon-manager addresses in r4/r5, which leaves no register for
- * the 0x12c offset, so it is re-materialized. The draft uses r7 and
- * r5/r6 and keeps 0x12c in r4. */
-#if NON_MATCHING
+ * Matched in the second near-miss sweep (the old draft was 54 halfwords
+ * off). The ROM never shares the 0x12c offset constant between the
+ * `field_12c` reads; it rebuilds it for each one. Reading `field_12c`
+ * through the `static inline` accessor `mgr_12c` stops CSE from sharing
+ * it, which frees the register the draft spent on it and lets
+ * &gUnknown_030012B8/&gUnknown_030012DC/&gUnknown_030012E0/
+ * &gUnknown_030012FC land in r6/r4/r5/r7 as in the ROM. The two
+ * `field_12c` reads for the VRAM reservation are taken into locals
+ * before `gUnknown_030012FC` is loaded, and the tile cache's base is
+ * read into a local before `gStaticData_0816B2C0`'s address, both to
+ * match the ROM's load order. The two `0`s still come from
+ * inline-function parameters, which CSE shares into r8. */
 extern struct tile_asset_cache *sub_8006FB4(void *mem);
 
 /* sub_803AD7C is libgcc's `_call_via_r1`. */
@@ -82,6 +85,12 @@ static inline void reserve_icon_vram(u32 n)
     sub_8006C4C(gUnknown_030012FC);
 }
 
+/* Keeps CSE from sharing the 0x12c offset between reads (see above). */
+static inline u32 mgr_12c(struct icon_manager *m)
+{
+    return m->field_12c;
+}
+
 s32 sub_8004D74(void)
 {
     struct tile_asset_cache *oldCache;
@@ -99,13 +108,23 @@ s32 sub_8004D74(void)
     sub_8006EF0(gUnknown_030012B8, ((struct pause_gfx_pkg *)gStaticData_084A5600)->count,
                 ((struct pause_gfx_pkg *)gStaticData_084A5600)->records);
     sub_8006D50(gUnknown_030012B8, 0xf);
-    sub_803A94C(gStaticData_0816B2C0, (u8 *)gUnknown_030012B8 + (0x83 << 2), 0x10);
+    {
+        u8 *dst = (u8 *)gUnknown_030012B8;
+
+        sub_803A94C(gStaticData_0816B2C0, dst + (0x83 << 2), 0x10);
+    }
 
     sub_8028A40(gUnknown_030012DC);
     sub_8028A40(gUnknown_030012E0);
     init_icon_mgr(gUnknown_030012DC, 0);
-    init_icon_mgr(gUnknown_030012E0, gUnknown_030012DC->field_12c);
-    reserve_icon_vram(gUnknown_030012DC->field_12c + gUnknown_030012E0->field_12c);
+    init_icon_mgr(gUnknown_030012E0, mgr_12c(gUnknown_030012DC));
+    {
+        u32 a = mgr_12c(gUnknown_030012DC);
+        u32 b = mgr_12c(gUnknown_030012E0);
+
+        gUnknown_030012FC->field_08 = a + b;
+        sub_8006C4C(gUnknown_030012FC);
+    }
 
     screen = sub_8004EC0(sub_8026EDC(0xd4));
     result = sub_8005100(screen);
@@ -119,155 +138,6 @@ s32 sub_8004D74(void)
     mem_free_bytes(MEM_HEAP_BOTH);
     return result;
 }
-#else
-NAKED s32 sub_8004D74(void)
-{
-    asm(
-    "push {r4, r5, r6, r7, lr}\n\t"
-    "mov r7, sl\n\t"
-    "mov r6, sb\n\t"
-    "mov r5, r8\n\t"
-    "push {r5, r6, r7}\n\t"
-    "mov r0, #0xc0\n\t"
-    "lsl r0, r0, #0x18\n\t"
-    "mov sl, r0\n\t"
-    "bl mem_free_bytes\n\t"
-    "ldr r0, 3f\n\t"
-    "ldr r0, [r0]\n\t"
-    "bl sub_80019E8\n\t"
-    "bl sub_80006A8\n\t"
-    "mov r0, #0xa0\n\t"
-    "lsl r0, r0, #0x13\n\t"
-    "mov r1, #0\n\t"
-    "strh r1, [r0]\n\t"
-    "mov r0, #0x80\n\t"
-    "lsl r0, r0, #0x13\n\t"
-    "strh r1, [r0]\n\t"
-    "ldr r6, 4f\n\t"
-    "ldr r1, [r6]\n\t"
-    "mov sb, r1\n\t"
-    "mov r0, #0x8c\n\t"
-    "lsl r0, r0, #2\n\t"
-    "bl sub_8026EDC\n\t"
-    "bl sub_8006FB4\n\t"
-    "str r0, [r6]\n\t"
-    "ldr r2, 5f\n\t"
-    "ldrh r1, [r2, #0xe]\n\t"
-    "ldr r2, [r2, #8]\n\t"
-    "bl sub_8006EF0\n\t"
-    "ldr r0, [r6]\n\t"
-    "mov r1, #0xf\n\t"
-    "bl sub_8006D50\n\t"
-    "ldr r1, [r6]\n\t"
-    "ldr r0, 6f\n\t"
-    "mov r2, #0x83\n\t"
-    "lsl r2, r2, #2\n\t"
-    "add r1, r1, r2\n\t"
-    "mov r2, #0x10\n\t"
-    "bl sub_803A94C\n\t"
-    "ldr r4, 7f\n\t"
-    "ldr r0, [r4]\n\t"
-    "bl sub_8028A40\n\t"
-    "ldr r5, 8f\n\t"
-    "ldr r0, [r5]\n\t"
-    "bl sub_8028A40\n\t"
-    "ldr r0, [r4]\n\t"
-    "mov r3, #0\n\t"
-    "mov r8, r3\n\t"
-    "mov r2, #0x84\n\t"
-    "lsl r2, r2, #1\n\t"
-    "add r1, r0, r2\n\t"
-    "str r3, [r1]\n\t"
-    "mov r3, #0x98\n\t"
-    "lsl r3, r3, #1\n\t"
-    "add r1, r0, r3\n\t"
-    "ldr r1, [r1]\n\t"
-    "add r1, #0x40\n\t"
-    "mov r3, #0\n\t"
-    "ldrsh r2, [r1, r3]\n\t"
-    "add r0, r0, r2\n\t"
-    "ldr r1, [r1, #4]\n\t"
-    "bl sub_803AD7C\n\t"
-    "ldr r0, [r4]\n\t"
-    "mov r1, #0x96\n\t"
-    "lsl r1, r1, #1\n\t"
-    "add r0, r0, r1\n\t"
-    "ldr r2, [r0]\n\t"
-    "ldr r0, [r5]\n\t"
-    "mov r3, #0x84\n\t"
-    "lsl r3, r3, #1\n\t"
-    "add r1, r0, r3\n\t"
-    "str r2, [r1]\n\t"
-    "mov r2, #0x98\n\t"
-    "lsl r2, r2, #1\n\t"
-    "add r1, r0, r2\n\t"
-    "ldr r1, [r1]\n\t"
-    "add r1, #0x40\n\t"
-    "mov r3, #0\n\t"
-    "ldrsh r2, [r1, r3]\n\t"
-    "add r0, r0, r2\n\t"
-    "ldr r1, [r1, #4]\n\t"
-    "bl sub_803AD7C\n\t"
-    "ldr r0, [r4]\n\t"
-    "mov r1, #0x96\n\t"
-    "lsl r1, r1, #1\n\t"
-    "add r0, r0, r1\n\t"
-    "ldr r1, [r0]\n\t"
-    "ldr r0, [r5]\n\t"
-    "mov r2, #0x96\n\t"
-    "lsl r2, r2, #1\n\t"
-    "add r0, r0, r2\n\t"
-    "ldr r2, [r0]\n\t"
-    "ldr r7, 9f\n\t"
-    "ldr r0, [r7]\n\t"
-    "add r1, r1, r2\n\t"
-    "str r1, [r0, #8]\n\t"
-    "bl sub_8006C4C\n\t"
-    "mov r0, #0xd4\n\t"
-    "bl sub_8026EDC\n\t"
-    "bl sub_8004EC0\n\t"
-    "add r4, r0, #0\n\t"
-    "bl sub_8005100\n\t"
-    "add r5, r0, #0\n\t"
-    "cmp r4, #0\n\t"
-    "beq 1f\n\t"
-    "add r0, r4, #0\n\t"
-    "mov r1, #3\n\t"
-    "bl sub_8005004\n\t"
-    "1:\n\t"
-    "ldr r0, [r7]\n\t"
-    "mov r3, r8\n\t"
-    "str r3, [r0, #8]\n\t"
-    "bl sub_8006C4C\n\t"
-    "ldr r0, [r6]\n\t"
-    "cmp r0, #0\n\t"
-    "beq 2f\n\t"
-    "mov r1, #3\n\t"
-    "bl sub_8006F94\n\t"
-    "2:\n\t"
-    "mov r0, sb\n\t"
-    "str r0, [r6]\n\t"
-    "mov r0, sl\n\t"
-    "bl mem_free_bytes\n\t"
-    "add r0, r5, #0\n\t"
-    "pop {r3, r4, r5}\n\t"
-    "mov r8, r3\n\t"
-    "mov sb, r4\n\t"
-    "mov sl, r5\n\t"
-    "pop {r4, r5, r6, r7}\n\t"
-    "pop {r1}\n\t"
-    "bx r1\n\t"
-    ".align 2, 0\n"
-    "3: .4byte gUnknown_030012BC\n"
-    "4: .4byte gUnknown_030012B8\n"
-    "5: .4byte gStaticData_084A5600\n"
-    "6: .4byte gStaticData_0816B2C0\n"
-    "7: .4byte gUnknown_030012DC\n"
-    "8: .4byte gUnknown_030012E0\n"
-    "9: .4byte gUnknown_030012FC\n"
-    );
-}
-#endif
 
 extern void *sub_801E644(void *buf, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern void LoadGraphicsPackage(void *buf, void *asset);

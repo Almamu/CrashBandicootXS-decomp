@@ -68,8 +68,9 @@ system from "core" system startup/init code.
   and `sub_8024F04`/`sub_8024F0C`/`sub_8024F10`/`sub_8024F14`/
   `sub_8024F18`/`sub_8024F1C`/`sub_8024F20` (its field accessors), and
   the terrain tile cache's `sub_8024F24`/`sub_80250BC`/`sub_8025130`/
-  `sub_8025228` (plain C, built with old_agbcc - see [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md);
-  `sub_8025334` is still parked below)
+  `sub_8025228` (plain C, built with old_agbcc - see [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md)),
+  and `sub_8025334`, the RLE/delta decoder (real C since the second
+  near-miss sweep - see [near-miss-polish-2.md](../matching/near-miss-polish-2.md))
 - `src/system/game_loop4.c` (GitHub issue #40): `sub_8025444`,
   `nullsub_4`, `sub_8025460` (plain C, built with old_agbcc - see
   [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md))
@@ -698,12 +699,6 @@ plain C didn't converge.
   is 61 and 5 halfwords off (register allocation, and one constant
   load's scheduling); their sibling `sub_8025BAC` is matched. See
   [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md).
-- **`sub_8025334`** (`src/system/game_loop3.c`, GitHub issue #40) - the
-  terrain tile cache's RLE/delta token-stream decoder. Plain C under
-  old_agbcc is 30 halfwords off: the accumulator and the pair loop's
-  induction pointer swap r4 and r5. See
-  [docs/matching/issue-40-terrain-tile-cache.md](../matching/issue-40-terrain-tile-cache.md)
-  and [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md).
 - **`sub_80255D4`** (`src/system/game_loop41.c`, GitHub issue #34/#40/
   #41) - `self` is `*gUnknown_030012B4`: refreshes the collision
   bitmaps, spawns `list`'s unseen items through `sub_8025D28`, then
