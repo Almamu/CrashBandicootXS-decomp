@@ -183,3 +183,14 @@ none of the three matches, but two got much closer with small changes
   the tile-cache record id at `+0x14` and the frame count at `+0x16`.
 - `struct item` (0x14, `sub_801DFEC`) has its method table at `+0x10`:
   `+0x08` update, `+0x20` draw, `+0x28` destructor.
+
+## Later pass (issue #12/#24/#26 NAKED retry)
+
+Under old_agbcc the `Opaque`/pinned shadow-register code is unnecessary:
+plain bitfield stores (`self->blend.bits.effect = 3; ...`) chain the
+`orr`s exactly like the ROM. `sub_801BC28` is real C (plus a separate
+counter for the six-entry loop and the sprite loop's 0x80 in a variable
+set with the counter). `struct level_save` became u16 bitfields,
+`struct level_info`'s thresholds u32, and `SetAnim` takes an int index;
+with these `sub_801C608` and `sub_801C96C` are each one allocation
+detail away. See [issue-24-26-12-naked-retry.md](issue-24-26-12-naked-retry.md).

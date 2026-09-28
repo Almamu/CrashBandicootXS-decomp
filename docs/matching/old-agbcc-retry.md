@@ -16,7 +16,7 @@ compared it against the ROM.
 | `sub_801961C` | `actor_part_188d0.c` (#23) | **matched**, rewritten with the `sub_801A878` stack-argument idiom |
 | `sub_801A878` | `actor_part_1a878.c` (#25) | **matched**, after removing every register pin |
 | `sub_801AB98` | `actor_part_1ab98.c` (#25) | still NAKED |
-| `sub_801BC28` | `actor_part_1b85c.c` (#26) | still NAKED |
+| `sub_801BC28` | `actor_part_1b85c.c` (#26) | still NAKED here; real C since the #12/#24/#26 retry |
 | `sub_801C608` | `actor_part_1b85c.c` (#26) | still NAKED |
 | `sub_801C96C` | `actor_part_1b85c.c` (#26) | still NAKED |
 

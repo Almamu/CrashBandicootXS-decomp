@@ -193,3 +193,13 @@ Pinning `other`/the global address/the box pointer to r9/r10/r8 plus
 per-step `asm("" : "+r")` barriers gets the prologue and state 0 close,
 but `self` then lands in r6 (r7 cannot be pinned) and an extra box
 temporary appears on the stack.
+
+## Later pass (issue #12/#24/#26 NAKED retry)
+
+`sub_801A03C` is real C now: its two virtual calls are plain blocks
+(`VCALL1_B`) instead of VCALL1's `do { } while (0)`, whose loop notes
+swapped the part/controller registers, and `facing` is stored into the
+1-bit field unmasked (the explicit `& 1` made the tag store reuse the
+held constant 1). `sub_801A114` stays NAKED; its state-0 `orr` chain is
+now reproduced (see
+[issue-24-26-12-naked-retry.md](issue-24-26-12-naked-retry.md)).

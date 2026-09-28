@@ -424,6 +424,9 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   `sub_800C898`) no longer need register pins. The controller/target
   layout is in the new `include/part_ctrl.h`. See
   [docs/matching/issue-10-naked-retry.md](../matching/issue-10-naked-retry.md).
+- **Issue #12 NAKED retry:** `sub_800EDBC` (`game_loop48.c`, old_agbcc,
+  the neighbor "impact spread" walk) promoted from NAKED to real C. See
+  [docs/matching/issue-24-26-12-naked-retry.md](../matching/issue-24-26-12-naked-retry.md).
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
@@ -491,7 +494,8 @@ plain C didn't converge.
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md)'s
   Phase 1 appendix for the confirmed dispatch maps (the basis for this
   issue's Phase 2 parallel split of the remaining 18 leaf functions).
-- **`sub_800E888`/`sub_800EDBC`** (`src/system/game_loop48.c`; the
+- **`sub_800E888`** (`src/system/game_loop48.c`; `sub_800EDBC` was
+  promoted by the issue #12/#24/#26 retry; the
   rest of this file was promoted to C by the NAKED-retry pass, see
   Matched) (originally with `sub_800E560`/`sub_800E6B0`/`sub_800E7A8`/
   `sub_800EAFC`,, new file -

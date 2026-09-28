@@ -903,182 +903,79 @@ void sub_800ED08(struct phys_obj *self, u32 arg1)
  * = 1` (unless a neighbor-adjacency/`+0x4d` gate blocks it). Stops
  * when the walk runs out of neighbors.
  *
- * (NAKED-retry pass, old_agbcc: still a register-allocation gap -
- * the C draft keeps `self` in r6 instead of r8 and never spills the
- * `-2`/`-4` delta byte to the stack like the ROM.)
- *
- * NAKED transcription, not real C: `r8`/`sb`/`sl` all stay live as
- * three extra callee-saved accumulators throughout the whole
- * neighbor-walk loop (`self` itself, the running spread remainder,
- * and the per-node base budget respectively) - the same confirmed
- * gcc-2.9-resistant "long-lived triple accumulator" shape
- * `sub_0800D18C`/`sub_800D040`'s own doc comments already document,
- * here combined with a loop whose back-edge condition itself depends
- * on which of two different `sb` initializations ran (a fresh `0` the
- * first iteration, the cached base budget every iteration after) -
- * not reproducible from a plain C loop. See
- * docs/matching/issue-12-physics-collision.md. */
-NAKED void sub_800EDBC(struct phys_obj *self)
+ * Matching notes (old_agbcc): the gStaticData_0816BBC4 pointer is a
+ * local set before the loop (only then does the ROM's reload-register
+ * choice come out), the record lookup takes the anim table
+ * first and the byte offset second, `spread` is built in two steps, the
+ * step delta is widened into its own int before the add, and
+ * `n->unk_40` is written in both arms of an if/else. */
+void sub_800EDBC(struct phys_obj *self)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sl\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6, r7}\n\t"
-        "sub sp, #4\n\t"
-        "mov r8, r0\n\t"
-        "mov r0, #0xfe\n\t"
-        "str r0, [sp]\n\t"
-        "mov r1, r8\n\t"
-        "ldr r0, [r1, #0x20]\n\t"
-        "mov r2, r8\n\t"
-        "add r2, #0x2d\n\t"
-        "ldrb r3, [r2]\n\t"
-        "lsl r1, r3, #3\n\t"
-        "sub r1, r1, r3\n\t"
-        "lsl r1, r1, #2\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrb r0, [r0, #9]\n\t"
-        "add r0, #1\n\t"
-        "lsl r0, r0, #8\n\t"
-        "mov sl, r0\n\t"
-        "mov r0, r8\n\t"
-        "bl sub_801070C\n\t"
-        "add r5, r0, #0\n\t"
-        "mov r1, r8\n\t"
-        "ldr r0, [r1, #0x44]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 1f\n\t"
-        "mov r2, #0xfc\n\t"
-        "str r2, [sp]\n\t"
-    "1:\n\t"
-        "cmp r5, #0\n\t"
-        "beq 12f\n\t"
-        "mov r3, r8\n\t"
-        "cmp r3, #0\n\t"
-        "beq 12f\n\t"
-        "cmp r0, #0\n\t"
-        "beq 2f\n\t"
-        "ldr r0, [r3, #0x40]\n\t"
-        "b 3f\n\t"
-    "2:\n\t"
-        "mov r1, r8\n\t"
-        "ldr r0, [r1, #4]\n\t"
-    "3:\n\t"
-        "str r0, [r5, #0x40]\n\t"
-        "ldr r7, [r5, #0x40]\n\t"
-        "ldr r0, [r5, #4]\n\t"
-        "sub r7, r7, r0\n\t"
-        "cmp r7, #0\n\t"
-        "bge 4f\n\t"
-        "mov r7, #0\n\t"
-    "4:\n\t"
-        "mov r2, #0\n\t"
-        "mov sb, r2\n\t"
-    "5:\n\t"
-        "cmp r5, #0\n\t"
-        "beq 12f\n\t"
-        "ldr r0, [r5, #0x44]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 6f\n\t"
-        "mov r3, sb\n\t"
-        "add r0, r7, r3\n\t"
-        "str r0, [r5, #0x44]\n\t"
-        "ldr r0, [r5, #0x40]\n\t"
-        "add r0, sb\n\t"
-        "b 7f\n\t"
-    "6:\n\t"
-        "str r7, [r5, #0x44]\n\t"
-        "ldr r0, [r5, #4]\n\t"
-        "add r0, sl\n\t"
-    "7:\n\t"
-        "str r0, [r5, #0x40]\n\t"
-        "add r2, r5, #0\n\t"
-        "add r2, #0x4c\n\t"
-        "mov r1, #0\n\t"
-        "ldrsb r1, [r2, r1]\n\t"
-        "cmp r1, #0\n\t"
-        "ble 8f\n\t"
-        "mov r1, #0\n\t"
-    "8:\n\t"
-        "ldr r3, [sp]\n\t"
-        "lsl r0, r3, #0x18\n\t"
-        "asr r0, r0, #0x18\n\t"
-        "add r0, r1, r0\n\t"
-        "strb r0, [r2]\n\t"
-        "mov r0, #0x10\n\t"
-        "ldrb r1, [r5, #0xc]\n\t"
-        "orr r0, r1\n\t"
-        "strb r0, [r5, #0xc]\n\t"
-        "ldr r0, 13f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r1, r5, #0\n\t"
-        "bl sub_8009150\n\t"
-        "add r6, r5, #0\n\t"
-        "add r6, #0x4e\n\t"
-        "ldrb r2, [r6]\n\t"
-        "ldr r3, 14f\n\t"
-        "add r0, r2, r3\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 11f\n\t"
-        "mov r1, r8\n\t"
-        "ldr r0, [r1, #0x48]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 11f\n\t"
-        "ldr r1, [r5, #0x44]\n\t"
-        "mov r0, #0xb0\n\t"
-        "lsl r0, r0, #5\n\t"
-        "cmp r1, r0\n\t"
-        "ble 11f\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_801070C\n\t"
-        "add r4, r0, #0\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_8010708\n\t"
-        "cmp r4, #0\n\t"
-        "bne 10f\n\t"
-        "cmp r0, #0\n\t"
-        "beq 10f\n\t"
-        "ldrb r6, [r6]\n\t"
-        "cmp r6, #0xa\n\t"
-        "bne 11f\n\t"
-        "add r1, r5, #0\n\t"
-        "add r1, #0x4d\n\t"
-        "mov r0, #0x7f\n\t"
-        "ldrb r1, [r1]\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "bne 11f\n\t"
-    "10:\n\t"
-        "add r1, r5, #0\n\t"
-        "add r1, #0x4f\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r1]\n\t"
-        "mov r0, #1\n\t"
-        "str r0, [r5, #0x48]\n\t"
-    "11:\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_801070C\n\t"
-        "add r5, r0, #0\n\t"
-        "mov r2, sb\n\t"
-        "cmp r2, #0\n\t"
-        "bne 5b\n\t"
-        "mov sb, sl\n\t"
-        "b 5b\n\t"
-        ".align 2, 0\n"
-    "13: .4byte gUnknown_0300130C\n"
-    "14: .4byte gStaticData_0816BBC4\n"
-    "12:\n\t"
-        "add sp, #4\n\t"
-        "pop {r3, r4, r5}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov sl, r5\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-    );
+    s8 delta = -2;
+    struct anim_table *anim = self->anim;
+    u32 off = self->tag * sizeof(struct anim_rec);
+    struct anim_rec *rec = (struct anim_rec *)((u8 *)anim->records + off);
+    s32 base = (rec->padY + 1) << 8;
+    struct phys_obj *n = sub_801070C(self);
+    s32 spread;
+    s32 carry;
+    u8 *tbl = gStaticData_0816BBC4;
+
+    if (self->unk_44 != 0)
+        delta = -4;
+    if (n == NULL || self == NULL)
+        return;
+    if (self->unk_44 != 0)
+        n->unk_40 = self->unk_40;
+    else
+        n->unk_40 = self->y;
+    spread = n->unk_40;
+    spread -= n->y;
+    if (spread < 0)
+        spread = 0;
+    carry = 0;
+    while (n != NULL)
+    {
+        s32 t;
+
+        if (n->unk_44 != 0)
+        {
+            n->unk_44 = spread + carry;
+            n->unk_40 = n->unk_40 + carry;
+        }
+        else
+        {
+            n->unk_44 = spread;
+            n->unk_40 = n->y + base;
+        }
+        t = n->unk_4C;
+        if (t > 0)
+            t = 0;
+        {
+            s32 d = delta;
+
+            n->unk_4C = t + d;
+        }
+        n->flags |= 0x10;
+        sub_8009150(gUnknown_0300130C, n);
+        if (tbl[n->kind] && self->u48.n == 0 && n->unk_44 > 0x1600)
+        {
+            struct phys_obj *next = sub_801070C(n);
+            struct phys_obj *prev = sub_8010708(n);
+
+            if (next == NULL && prev != NULL)
+            {
+                if (n->kind != 10)
+                    goto advance;
+                if (n->state & 0x7f)
+                    goto advance;
+            }
+            n->timer = 0;
+            n->u48.n = 1;
+        }
+    advance:
+        n = sub_801070C(n);
+        if (carry == 0)
+            carry = base;
+    }
 }

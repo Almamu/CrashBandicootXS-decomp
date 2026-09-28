@@ -843,3 +843,11 @@ compilers. The object layout is named in `include/phys_obj.h`
   preceding "Cross-checked the `UpdateGameFrame`-`MainLoop` cluster"
   section are the read-only reconnaissance this issue's matching work
   is based on.
+
+## Later pass (issue #12/#24/#26 NAKED retry)
+
+`sub_800EDBC` is real C under old_agbcc. The "triple accumulator" shape
+was not the blocker; `spread = n->unk_40; spread -= n->y;` (two steps)
+puts `self`/`spread`/`carry`/`base` in r8/r7/r9/r10 like the ROM. See
+[issue-24-26-12-naked-retry.md](issue-24-26-12-naked-retry.md) for the
+remaining source-shape details.
