@@ -165,6 +165,135 @@ void sub_8011448(struct orbit_part *self, u8 randomize)
  * offset, branch, and call argument (including the mode-3 spawn call's
  * exact fixed args) was cross-referenced against the semantic read
  * above before transcription. */
+#if NON_MATCHING
+/* First C draft (old_agbcc): control flow and every call are right,
+ * including the mode-3 spawn's stack arguments (the game_loop48.c
+ * argP4/argP5 trick), but it is 84 bytes too long. In the ROM,
+ * cross-jumping merged the three "flags |= 1; set the id bit" tails
+ * (mode 1 jumps into the bit-set part, modes 2 and 3 share everything
+ * from the `orr`); here their register allocations differ, so the
+ * copies stay separate. The mode-3 `++phase > 9` test also uses
+ * `ands` with a hoisted 0xff instead of the ROM's `lsl`/`lsr`. */
+extern void *gUnknown_030012B4;
+extern void *gUnknown_030012E4;
+extern struct orbit_part *gUnknown_030012D8;
+extern void sub_8023430(void *state);
+extern struct actor *sub_8025CA4(void *unused0, u16 x, u16 y, u8 p3, u8 p4, u8 p5);
+typedef struct actor *(*OrbitSpawn4)(void *pool, s32 x, s32 y, u8 p3);
+
+/* The spawn's byte argument, stored with `strb` as the ROM does. */
+static inline void OrbitArgByte(u8 *p, u8 v)
+{
+    *(volatile u8 *)p = v;
+}
+
+extern void sub_801192C(struct orbit_part *self);
+extern void sub_8008364(struct actor *self);
+
+#define ORBIT_SET_ID_BIT(idExpr, one)                                          \
+    if (1)                                                                     \
+    {                                                                          \
+        s32 _id = (idExpr);                                                    \
+        u8 *_base = gUnknown_030012B4;                                         \
+        s32 _word = _id / 32;                                                  \
+        s32 _off = _word * 4;                                                  \
+        u32 *_slot = (u32 *)(_base + 0x108);                                   \
+                                                                               \
+        _slot = (u32 *)((u8 *)_slot + _off);                                   \
+        *_slot |= (one) << (_id - _word * 32);                                 \
+    } else (void)0
+
+void sub_8011548(struct orbit_part *self)
+{
+    s32 argP4;
+    u32 argP5;
+    u8 state = self->state;
+
+    if (state == 1) {
+        self->base.x += self->velX;
+        self->base.y += self->velY;
+        if (self->timer != 0) {
+            self->timer += 4;
+            if (*(vu16 *)&self->timer > 0x100)
+                self->timer = 0;
+        }
+        if (self->base.x >> 8 <= 0x10 && self->base.y >> 8 <= 0x10) {
+            PlaySfx(gUnknown_030012BC, 0xe, 0x100);
+            sub_8023430(gUnknown_030012C0);
+            self->base.flags |= 1;
+            if (self->base.field_08 != 0xffff) {
+                ORBIT_SET_ID_BIT(self->base.field_08, 1);
+            }
+        }
+    } else if (state == 2) {
+        s32 fire;
+
+        self->base.x += self->velX;
+        self->base.y += self->velY;
+        fire = 0;
+        if (self->counter == 0) {
+            s32 t = self->timer - 4;
+
+            self->timer = t;
+            if (t < 0x40)
+                fire = 1;
+        } else {
+            s32 t;
+
+            self->timer += 0xc;
+            t = self->timer;
+            if (t > 0x1b0)
+                fire = 1;
+        }
+        if (fire) {
+            self->base.flags |= 1;
+            if (self->base.field_08 != 0xffff) {
+                ORBIT_SET_ID_BIT(self->base.field_08, 1);
+            }
+        }
+    } else if (state == 3) {
+        if (++self->counter > 10) {
+            self->counter = 0;
+            {
+                s32 sx = self->base.x >> 8;
+                s32 sy = self->base.y >> 8;
+
+                ((OrbitSpawn4)sub_8025CA4)(gUnknown_030012E4, sx, sy,
+                    (*(volatile s32 *)&argP4 = 0, OrbitArgByte((u8 *)&argP5, 1), 0));
+            }
+            if (++self->phase > 9) {
+                self->base.flags |= 1;
+                if (self->base.field_08 != 0xffff) {
+                    ORBIT_SET_ID_BIT(self->base.field_08, 1);
+                }
+            }
+        }
+    } else {
+        if (self->mode == 0)
+            self->counter++;
+        else if (++self->phase > 0x1f)
+            self->mode = 0;
+    }
+
+    if (self->state == 0) {
+        if (self->mode == 0) {
+            s32 sn = gStaticData_0816A820[(self->counter & 0x7f) * 2];
+
+            sn = sub_80008FC(sn, 0x280);
+            self->base.y = self->anchor.y + sn;
+        } else {
+            sub_801192C(self);
+        }
+    } else if (self->state == 3) {
+        struct orbit_part *p = gUnknown_030012D8;
+        s32 px = p->base.x, py = p->base.y;
+
+        self->base.x = px - 0x400;
+        self->base.y = py - 0xe00;
+    }
+    sub_8008364(&self->base);
+}
+#else
 NAKED void sub_8011548(void *self)
 {
     asm(
@@ -424,6 +553,7 @@ NAKED void sub_8011548(void *self)
     "29: .4byte 0xFFFFF200\n"
     );
 }
+#endif
 
 /* sub_801173C: the achievement/unlock-icon spawn helper (docs/rom_map.md),
  * extern-declared as `void sub_801173C(u16 arg0)` in
@@ -464,7 +594,17 @@ NAKED void sub_8011548(void *self)
 #if NON_MATCHING
 /* Near miss under old_agbcc: same instructions, but the ROM keeps `id` in
  * r8, `special` in sb and `mode` in r7, and shares the +0x4B zero with the
- * frame clamp's compare; old_agbcc assigns those the other way round. */
+ * frame clamp's compare; old_agbcc assigns those the other way round.
+ * Later pass: here x/y/id/special live only in the first basic block, so
+ * local-alloc takes r4-r6/r8 for them before global-alloc places `self`
+ * (r7) and `mode` (sb). The ROM's layout (self r4, mode r7) is what you
+ * get when all of them go through global-alloc; extra references after
+ * the list `if`/`else` get that (self r4, &tag r5, phase r6), but change
+ * the parameter copies. Passing `phase` into the clamp as its start value
+ * (`if (start >= count)`) reproduces the +0x49 fresh zero / +0x4B shared
+ * zero split. `mode` needs `asm("" : "=r"(mode) : "0"(0))` to be
+ * referenced at all. Best combination found was still ~110 halfwords
+ * off. */
 extern void *gUnknown_030012EC;
 extern void *gUnknown_030012F4;
 extern void ***gUnknown_030012D0;
