@@ -50,7 +50,8 @@ extern void *gUnknown_03001308;
  * exactly - the same category of many-register allocation gap already
  * documented for `sub_8008F20`/`sub_8009914` in `actor_part11.c`.
  * Parked as a direct transcription of the ROM's own confirmed-correct
- * instructions instead. */
+ * instructions instead. The NON_MATCHING draft below is now 7
+ * halfwords off (see the note on it). */
 #if NON_MATCHING
 struct pool_node {
     struct box_part *data;
@@ -82,11 +83,17 @@ struct track_obj {
     s32 *pos;
 };
 
+/* `sub_8009A30`'s body, inlined. */
 static inline void pool_remove(struct pool_manager *manager, struct box_part *target)
 {
     s32 i = 0;
     s32 searchCount = manager->capacity;
     struct box_part **base;
+
+    /* Emits no code. It keeps gcse's copy of `capacity` from landing
+     * right after the load; cse2 would otherwise swap the two and put
+     * the loaded value in the pre/post tests instead of the loop test. */
+    asm("");
 
     if (i >= searchCount) {
         goto done;
@@ -145,17 +152,30 @@ static inline void part_destroy(struct box_part *part)
     }
 }
 
-/* Same size as the ROM, 215 halfwords off under old_agbcc (the removal
- * path is `sub_8009A30`'s body inlined). The structure lines up; the
- * allocation doesn't: the ROM keeps `manager` in r7 and `node` in r8,
- * this build puts them in r8/sb, and the three copies of `part`
- * (r5, ip for the search, sb for the destroy call) land differently. */
+/* The statement expressions give each callee its own copy of the
+ * pointer (the ROM's sb/ip and sl/sb pairs). */
+#define PART_COPY(p) ({ struct box_part *_t = (p); _t; })
+
+static inline void pool_destroy(struct pool_manager *manager, struct box_part *obj)
+{
+    pool_remove(manager, PART_COPY(obj));
+    part_destroy(PART_COPY(obj));
+}
+
+/* 7 halfwords off under old_agbcc (was 215); agbcc is further off.
+ * What's left: in the first loop's inlined search the ROM puts the
+ * `capacity` load in r2 and the `slotArray` copy in r3, and this build
+ * swaps them. Also `gridHeadBase[i]` comes out as `adds r0, r0, r2`
+ * where the ROM has `adds r0, r2, r0`. Loop-shape changes (brief item
+ * 9), extra-reference nudges, padding asm and do/while(0) depth changes
+ * did not fix the swap without breaking the second loop. */
 void sub_80091D4(struct pool_manager *manager)
 {
     s32 box[4];
     s32 *pos;
     s32 base;
     s32 i;
+    s32 next;
     struct pool_node *node;
     struct pool_node **gridHeadBase;
     struct pool_node **gridHead255;
@@ -170,7 +190,8 @@ void sub_80091D4(struct pool_manager *manager)
     v1 = (pos[1] << 8) - 0x3c00;
     box[0] = v0;
     box[1] = v1;
-    base = pos[0] >> 8;
+    base = pos[0];
+    base >>= 8;
     if (base < 0)
         base = 0;
 
@@ -178,15 +199,15 @@ void sub_80091D4(struct pool_manager *manager)
     gridHeadBase = manager->gridHead;
     gridHead255 = &manager->gridHead[255];
     do {
-        s32 next;
-
         node = gridHeadBase[i];
         next = i - 1;
-        if (node != NULL) {
-        do {
+        while (node != NULL) {
+            /* Reading `node->data` twice gives the ROM's load into r2
+             * and the copy into r5. */
+            s32 large = (node->data->flags >> 4) & 1;
             struct box_part *part = node->data;
 
-            if (((part->flags >> 4) & 1) && node->link == NULL) {
+            if (large && node->link == NULL) {
                 struct pool_entry *entry = manager->freeListHead;
                 struct pool_node *newNode = entry->node;
 
@@ -204,13 +225,7 @@ void sub_80091D4(struct pool_manager *manager)
                 manager->gridTail[255] = newNode;
                 node->link = newNode;
             } else if (part->flags & 1) {
-                struct box_part *d = part;
-
-                /* Keeps `d` a separate copy of `part` (the ROM holds
-                 * the destroy target in its own high register). */
-                asm("" : "+r"(d));
-                pool_remove(manager, part);
-                part_destroy(d);
+                pool_destroy(manager, PART_COPY(part));
             } else {
                 struct part_method *m = PART_METHOD(part, 0x40);
 
@@ -223,7 +238,6 @@ void sub_80091D4(struct pool_manager *manager)
                 }
             }
             node = node->next;
-        } while (node != NULL);
         }
         i = next;
     } while (i >= base);
@@ -232,14 +246,7 @@ void sub_80091D4(struct pool_manager *manager)
         struct box_part *part = node->data;
 
         if (part->flags & 1) {
-            struct box_part *d = part, *t = part;
-
-            /* Separate copies for the destroy target and the search
-             * target, as in the ROM (sl/sb). */
-            asm("" : "+r"(d));
-            asm("" : "+r"(t));
-            pool_remove(manager, t);
-            part_destroy(d);
+            pool_destroy(manager, PART_COPY(part));
         } else if (node->link->mark == 0) {
             struct part_method *m = PART_METHOD(part, 0x18);
 

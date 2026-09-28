@@ -368,11 +368,15 @@ void sub_800AC2C(struct ac2c_self *self, s32 a, s32 code, s32 c)
 
 #if NON_MATCHING
 /* C draft (issue #9-#11 NAKED retry, old_agbcc): same shape as the ROM
- * but not converged (624 bytes vs 636) - the ROM keeps `self` in r7
- * and needs only one spill slot (`&histIdx` at [sp]); this draft puts
- * `self` in r6 and spills twice. The child repositioning goes through
- * an inline whose argument order (x, y, child) gives the ROM's load
- * order. */
+ * but not converged (246 halfwords off, 624 bytes vs 636). The first
+ * ~40 instructions now match. What's left: the ROM keeps `self` in r7
+ * and needs only one spill slot (`&histIdx` at [sp]), with sb/sl
+ * holding `&hist[0].x`/`&hist[0].y`, `&self->child` in ip and `&82C` in
+ * r4. This draft puts `self` in r6 and spills `&histIdx` and the y base.
+ * Because the reload registers then rotate differently, gcc
+ * cross-jumps the -0x1300 add in the mirror branches, which the ROM
+ * keeps apart. The child repositioning goes through an inline whose
+ * argument order (x, y, child) gives the ROM's load order. */
 #include "box_part.h"
 
 struct orbit_pos {
@@ -427,8 +431,10 @@ static inline void ClampTick(struct box_part *child, s32 v)
 
 static inline void SetPos(s32 x, s32 y, struct box_part *child, s32 dx, s32 dy)
 {
-    child->x = x + dx;
-    child->y = y + dy;
+    x += dx;
+    y += dy;
+    child->x = x;
+    child->y = y;
 }
 
 static inline void SetFrame(struct box_part *child, u8 frame)
@@ -447,7 +453,17 @@ void sub_800AFF4(struct orbit_self *self)
 {
     if (gUnknown_030012C0->mode == 3) {
         if (!(gUnknown_0300082C & 7))
-            gUnknown_03000818 = (u16)sub_8000E1C(2) + 2 - self->mirrorX * 2;
+            /* One expression, so the store address is loaded before
+             * the call; the locals keep `+ 2` from being folded into
+             * the mirror term and load the mirror bit before the u16
+             * mask, as in the ROM. */
+            gUnknown_03000818 = ({
+                s32 r = sub_8000E1C(2);
+                s32 m = self->mirrorX;
+                s32 v = (u16)r + 2;
+
+                v - m * 2;
+            });
         ClampTick(self->child, gUnknown_03000818);
         if (self->mirrorX)
             SetPos(self->x, self->y, self->child, -0x600, -0x1300);
@@ -475,7 +491,7 @@ void sub_800AFF4(struct orbit_self *self)
 
         if ((u32)(mode - 1) <= 1) {
             if (!(gUnknown_0300082C & 7)) {
-                s32 v = gUnknown_0300081C + (u16)sub_8000E1C(3) - 1;
+                s32 v = (gUnknown_0300081C += (u16)sub_8000E1C(3) - 1);
 
                 if (v > 3)
                     v = 3;
@@ -490,8 +506,11 @@ void sub_800AFF4(struct orbit_self *self)
                 s32 b = gStaticData_0816A820[(t >> 1) & 0xff];
                 struct box_part *child = self->child;
 
-                child->x = (a << 4) + self->hist[self->histIdx].x;
-                child->y = (b << 3) + self->hist[self->histIdx].y + (s32)0xFFFFE800;
+                s32 nx = (a << 4) + self->hist[self->histIdx].x;
+                s32 ny = (b << 3) + self->hist[self->histIdx].y + (s32)0xFFFFE800;
+
+                child->x = nx;
+                child->y = ny;
             }
             self->child->frame = mode - 1;
             RefreshChild(self->child);
