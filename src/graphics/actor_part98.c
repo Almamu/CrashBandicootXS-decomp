@@ -17,84 +17,38 @@ void sub_8029BAC(s32 arg0)
     *dest = sub_803ADB4(arg0 << 8, 0x3c);
 }
 
-/* NAKED - a genuine gcc-2.9 register-allocation gap. Every plain-C
- * reconstruction tried keeps the outer-loop base pointer and the
- * per-column tile-index counter alive across the whole nested loop but
- * this compiler never spills the "0x7c0 second-screen-block offset"
- * constant into r8 (a callee-saved high register, needing its own
- * push/pop pair) the way the ROM's own build does unless the register
- * pressure/live-range shape is reproduced exactly - and even once r8
- * was pinned to match, the remaining low-register roles (which of
- * base/tile/row/col/nextBase/nextCol/p1/p2 lands in which of
- * r0-r3/r5/r6) kept coming out as a different, but equivalent,
- * permutation from several structurally-faithful rewrites. Documented
- * per docs/workflow.md's NAKED escape hatch - see docs/matching.md's
- * many-high-register-loop entries for the same class of gap elsewhere
- * in this project. */
-NAKED void sub_8029BC4(s32 arg0, s32 count1, s32 count2)
+/* Fills screen block 0x0600E400 (0x0600F400 when `arg0` is set,
+ * numbering on from `w * h + 1`) with consecutive tile numbers for a
+ * `w` x `h` cell grid; columns past 31 go to the next screen block
+ * (+0x7c0 bytes). actor_part95.c's `sub_802996C` inlines the same body
+ * twice.
+ *
+ * The old NAKED note blamed an unreachable register permutation. The
+ * fix is `tile++` inside each branch of the column test: with one
+ * increment after the `if`, `tile` has fewer references than `base`
+ * and the two swap registers (the `r8`/`ip` roles of the 0x7c0 offset
+ * and `h` follow from that). Matches under both compilers. */
+void sub_8029BC4(s32 arg0, s32 w, s32 h)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, r8\n\t"
-        "push {r7}\n\t"
-        "add r7, r1, #0\n\t"
-        "mov ip, r2\n\t"
-        "ldr r4, 9f\n\t"
-        "cmp r0, #0\n\t"
-        "beq 1f\n\t"
-        "ldr r4, 10f\n\t"
-        "mov r0, ip\n\t"
-        "mul r0, r7, r0\n\t"
-        "add r0, #1\n\t"
-        "b 2f\n\t"
-        ".align 2, 0\n"
-    "9: .4byte 0x0600E400\n"
-    "10: .4byte 0x0600F400\n"
-    "1:\n\t"
-        "mov r0, #1\n\t"
-    "2:\n\t"
-        "mov r3, #0\n\t"
-        "cmp r3, ip\n\t"
-        "bge 8f\n\t"
-        "mov r1, #0xf8\n\t"
-        "lsl r1, r1, #3\n\t"
-        "mov r8, r1\n\t"
-    "3:\n\t"
-        "mov r2, #0\n\t"
-        "add r6, r4, #0\n\t"
-        "add r6, #0x40\n\t"
-        "add r5, r3, #1\n\t"
-        "cmp r2, r7\n\t"
-        "bge 7f\n\t"
-        "mov r3, r8\n\t"
-        "add r1, r4, r3\n\t"
-        "add r3, r4, #0\n\t"
-    "4:\n\t"
-        "cmp r2, #0x1f\n\t"
-        "bgt 5f\n\t"
-        "strh r0, [r3]\n\t"
-        "b 6f\n\t"
-    "5:\n\t"
-        "strh r0, [r1]\n\t"
-    "6:\n\t"
-        "add r0, #1\n\t"
-        "add r1, #2\n\t"
-        "add r3, #2\n\t"
-        "add r2, #1\n\t"
-        "cmp r2, r7\n\t"
-        "blt 4b\n\t"
-    "7:\n\t"
-        "add r4, r6, #0\n\t"
-        "add r3, r5, #0\n\t"
-        "cmp r3, ip\n\t"
-        "blt 3b\n\t"
-    "8:\n\t"
-        "pop {r3}\n\t"
-        "mov r8, r3\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-    );
+    u16 *base = (u16 *)0x0600E400;
+    s32 tile;
+    s32 row, col;
+
+    if (arg0 != 0) {
+        base = (u16 *)0x0600F400;
+        tile = h * w + 1;
+    } else {
+        tile = 1;
+    }
+    for (row = 0; row < h; row++) {
+        for (col = 0; col < w; col++) {
+            if (col <= 0x1f)
+                base[col] = tile++;
+            else
+                base[col + 0x3e0] = tile++;
+        }
+        base += 0x20;
+    }
 }
 
 extern s32 gUnknown_030013DC;

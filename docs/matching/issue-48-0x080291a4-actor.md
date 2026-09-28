@@ -125,3 +125,12 @@ None of this changes any function's understood *behavior* - every fix
 above is either a pure codegen-matching technique or a correction to an
 earlier pass's misreading of the ROM's own instruction sequence,
 confirmed against the raw disassembly bytes directly.
+
+## Later pass: NAKED retry
+
+`sub_80297C8`, `sub_802996C` and `sub_8029BC4` are now plain C, matching
+under both compilers. `sub_8029BC4` needed `tile++` in each branch of
+the column test, and `sub_802996C` inlines the same body twice.
+`sub_8029890` is still NAKED, with a 37-halfword draft under
+`NON_MATCHING`. `InitActorCategory` was not attempted. See
+[issue-48-49-52-aabb-naked-retry.md](issue-48-49-52-aabb-naked-retry.md).

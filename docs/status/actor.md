@@ -11,6 +11,15 @@ from "core" graphics.
 
 ## Matched
 
+- **Issues #48/#49/#52 NAKED retry** ([docs/matching/issue-48-49-52-aabb-naked-retry.md](../matching/issue-48-49-52-aabb-naked-retry.md)):
+  the AABB-overlap group `sub_802A018`, `sub_802A110`, `sub_802A3AC`
+  (`actor_part103.c`) and `sub_802C7A8` (`actor_part19h.c`) - one shared
+  inline with the three boxes in one frame struct, both files moved to
+  old_agbcc; the tile-map fill `sub_8029BC4` (`actor_part98.c`) and its
+  inlined twin in `sub_802996C` (`actor_part95.c`) - `tile++` in each
+  branch; `sub_80297C8` (`actor_part95.c`); and the trampolines
+  `sub_802A674`/`sub_802A688` (`actor_part94.c`), which return the
+  callee's result.
 - **Actor-zone NAKED near-miss retry** ([docs/matching/actor-zone-naked-retry.md](../matching/actor-zone-naked-retry.md)):
   the AABB-overlap trio `sub_802D7B0` (`actor_part74.c`), `sub_802DD9C`
   (`actor_part75.c`) and `sub_8031378` (`actor_part24b.c`) - the boxes
@@ -1083,45 +1092,23 @@ plain C didn't converge.
   to the original raw disassembly (both assembled independently and
   compared directly, not just against `baserom.gba`). See
   [docs/matching/issue-48-0x080291a4-actor.md](../matching/issue-48-0x080291a4-actor.md).
-- **`sub_80297C8`**, **`sub_8029890`**, **`sub_802996C`**
-  (`src/graphics/actor_part95.c`, GitHub issue #48) - a "console"/text-
-  plane cursor-cell DMA trigger, its geometry (re)configuration entry
-  point, and the VRAM tilemap double-buffer fill pair it calls. Same
-  register-role-permutation gap as `InitActorCategory` above, at
-  smaller scale. See
-  [docs/matching/issue-48-0x080291a4-actor.md](../matching/issue-48-0x080291a4-actor.md).
-- **`sub_8029BC4`** (`src/graphics/actor_part98.c`, GitHub issue #48) -
-  a VRAM tilemap-fill nested loop sharing `sub_802996C`'s shape and
-  register-pressure wall. See
-  [docs/matching/issue-48-0x080291a4-actor.md](../matching/issue-48-0x080291a4-actor.md).
+- **`sub_8029890`** (`src/graphics/actor_part95.c`, GitHub issue #48) -
+  the console/text-plane geometry (re)configuration entry point. The
+  `NON_MATCHING` draft is 37 halfwords off under both compilers, all in
+  the `gUnknown_030013A4` store/reload block. See
+  [docs/matching/issue-48-49-52-aabb-naked-retry.md](../matching/issue-48-49-52-aabb-naked-retry.md).
 - **`SelectActorCategory`** (`src/graphics/actor_part102.c`, GitHub
   issue #49) - sets up the selected category's runtime state and runs a
-  two-pass `sub_effect_table` threshold scan. A real-C attempt
-  reproduced every instruction but needed one extra live register
-  (`r9`) beyond the ROM's own `sb`/`r8` pair. See
-  [docs/matching/issue-49-0x08029e4c-actor.md](../matching/issue-49-0x08029e4c-actor.md).
-- **`sub_802A018`**, **`sub_802A110`**, **`sub_802A3AC`**
-  (`src/graphics/actor_part103.c`, GitHub issue #49) - `self`-vs-player
-  3-axis AABB overlap tests (`sub_802A018`/`sub_802A110` near-identical,
-  differing only in guard byte; `sub_802A3AC` wraps the same test in an
-  actor-list walk) hitting this project's confirmed categorical
-  gcc-2.9 `r7` register-allocation bug - the same wall as
-  `sub_802C7A8` above (`sub_802D7B0`/`sub_802DD9C` have since matched
-  with the frame-struct box layout in actor-zone-naked-retry.md). See
-  [docs/matching/issue-49-0x08029e4c-actor.md](../matching/issue-49-0x08029e4c-actor.md).
+  two-pass `sub_effect_table` threshold scan. The `NON_MATCHING` draft
+  has the ROM's instruction sequence, but `&gUnknown_03001404` and the
+  cached `sub_8029B2C()` value swap `r7`/`r8`. See
+  [docs/matching/issue-49-0x08029e4c-actor.md](../matching/issue-49-0x08029e4c-actor.md)
+  and [docs/matching/issue-48-49-52-aabb-naked-retry.md](../matching/issue-48-49-52-aabb-naked-retry.md).
 - **`sub_802A208`** (`src/graphics/actor_part103.c`, GitHub issue #49) -
   a scroll enter/exit trampoline + `sub_effect_table` draw loop +
   double actor-list walk. Not the AABB shape above - a related but
   distinct gap, needing one extra high register (`r9`) beyond the ROM's
   single `r8` to keep three values simultaneously live. See
-  [docs/matching/issue-49-0x08029e4c-actor.md](../matching/issue-49-0x08029e4c-actor.md).
-- **`sub_802A674`**, **`sub_802A688`** (`src/graphics/actor_part94.c`,
-  GitHub issue #49) - plain one-call trampolines, identical in shape to
-  already-matched siblings elsewhere (`actor_part50.c`'s `sub_802A69C`);
-  this compiler's epilogue register allocator picks `r1` instead of the
-  usual `r0` for these two specific functions, a quirk that looks tied
-  to this translation unit's cumulative pseudo-register count rather
-  than anything controllable per-function. See
   [docs/matching/issue-49-0x08029e4c-actor.md](../matching/issue-49-0x08029e4c-actor.md).
 - **`sub_8034994`** (`src/graphics/actor_part89.c`, GitHub issue #63) -
   the `struct fade_overlay` object's (`sub_803472C`/`sub_803487C`,
@@ -1186,15 +1173,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   "kind" spawner. Hits this project's confirmed categorical r7-pin
   compiler bug. GitHub issue not tracked separately, see
   `docs/matching/naked-sub_8007dbc.md`.
-- **`sub_802C7A8`** (`src/graphics/actor_part19h.c`) - a circular-list
-  AABB-overlap "chain pickup" scan: walks the whole `self+0x4c`-rooted
-  actor list looking for type-4 nodes overlapping `self`'s own
-  translated `self+0x38` box, firing the shared used-state transition
-  on each match. Same heavy two-scratch-AABB-record-plus-loop-lifetime-
-  `r7` shape as `sub_802D7B0`/`sub_802DD9C` (both since matched with the
-  frame-struct box layout, see actor-zone-naked-retry.md - worth trying
-  here). GitHub issue #53, see
-  [docs/matching/issue-53-actor-c7a8.md](../matching/issue-53-actor-c7a8.md).
 - **`sub_803B46C`** (`src/graphics/actor_anim.c`) - fixed-position
   (120, 106) OAM setup for one sprite frame - screen-space visibility
   cull, then builds the OAM attribute words and calls

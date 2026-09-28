@@ -78,3 +78,13 @@ functions (`SelectActorCategory` here, `InitActorCategory` in issue
 aware diff: every byte the isolated compile disagrees with the ROM on
 falls inside a `bl`/`ABS32` relocation range that resolves identically
 once linked).
+
+## Later pass: NAKED retry
+
+`sub_802A018`, `sub_802A110` and `sub_802A3AC` are now plain C under
+old_agbcc (`actor_part103.c` moved). They share one inline that keeps
+the three boxes in one frame struct. `sub_802A674`/`sub_802A688` are
+plain C: they return the callee's result. `SelectActorCategory` has a
+`NON_MATCHING` draft with the ROM's instruction sequence but two
+registers swapped. `sub_802A208` is unchanged. See
+[issue-48-49-52-aabb-naked-retry.md](issue-48-49-52-aabb-naked-retry.md).

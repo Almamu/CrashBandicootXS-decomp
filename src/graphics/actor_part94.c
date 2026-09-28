@@ -52,8 +52,8 @@ extern void **gUnknown_03001408;
 
 extern s32 sub_803AD78(void *arg);
 extern void sub_803AD80(s32 x, s32 mode, s32 color);
-extern void sub_802F4C0(void *arg);
-extern void sub_802BD18(void *arg);
+extern s32 sub_802F4C0(void *arg);
+extern s32 sub_802BD18(void *arg);
 
 /* Trivial getter - the big loading-loop call counter set by
  * InitActorCategory's own loop tail (still raw). */
@@ -252,40 +252,17 @@ void sub_802A668(s32 arg0)
     gUnknown_03001410 = arg0;
 }
 
-/* NAKED - plain trampolines identical in shape to already-matched
- * siblings elsewhere in this project (e.g. actor_part50.c's
- * sub_802A69C), but this compiler's epilogue register allocator picks
- * `r1` for these two specific functions' `pop`/`bx` pair instead of the
- * usual `r0` - a parity-like quirk tied to this translation unit's
- * cumulative pseudo-register count rather than anything controllable
- * per-function (confirmed: register-pinning the argument, and other
- * plain-C phrasings, all still compile `pop {r0}`/`bx r0`). Anchored as
- * NAKED rather than chasing the exact trigger further. */
-NAKED void sub_802A674(void)
+/* Both forward the callee's result untouched: the callees are `u8`
+ * (actor_part44.c / actor_part107.c), but this file's source saw them
+ * returning `int`, so there is no re-narrowing and the epilogue returns
+ * through `pop {r1}`. The old NAKED note blamed a TU-wide allocator
+ * quirk; it was just the missing return value. */
+s32 sub_802A674(void)
 {
-    asm(
-        "push {lr}\n\t"
-        "ldr r0, 1f\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_802F4C0\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n"
-        "1: .4byte gUnknown_03000884\n"
-    );
+    return sub_802F4C0(gUnknown_03000884);
 }
 
-/* NAKED - see sub_802A674 above for why. */
-NAKED void sub_802A688(void)
+s32 sub_802A688(void)
 {
-    asm(
-        "push {lr}\n\t"
-        "ldr r0, 1f\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_802BD18\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n"
-        "1: .4byte gUnknown_03000884\n"
-    );
+    return sub_802BD18(gUnknown_03000884);
 }
