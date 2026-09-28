@@ -516,3 +516,11 @@ scoped narrowly to just the loop-body-register-letters vs.
 prologue-shuttle-register tradeoff, rather than further manual
 C-level probing - four qualitatively different manual techniques have
 now each independently failed to reconcile the two sides.
+
+## Later pass: matched under old_agbcc
+
+`LoadBg2Background` is now real C. `level_graphics.c` is old_agbcc code
+(the Makefile's `OLD_AGBCC_OBJS`), and under that compiler plain C with
+indexed `mapBuf[i]`/`mapBuf[i + 1]` reads matches with no pins. The
+"dead r7" gap the second and fourth passes chased was the wrong
+compiler. See [issue-65-naked-retry.md](issue-65-naked-retry.md).

@@ -22,9 +22,15 @@ struct act_method
 
 struct act_vtable
 {
-    u8 unk_00[0x20];
+    u8 unk_00[0x10];
+    struct act_method m10; // 0x10
+    u8 unk_18[8];
     struct act_method m20; // 0x20 - "set animation"
-    u8 unk_28[0x28];
+    struct act_method m28; // 0x28
+    struct act_method m30; // 0x30
+    struct act_method m38; // 0x38
+    struct act_method m40; // 0x40
+    struct act_method m48; // 0x48
     struct act_method m50; // 0x50 - "set part animation"
 };
 
@@ -40,6 +46,8 @@ struct act_anim_record
 struct act_anim_bank
 {
     struct act_anim_record *records;
+    u8 unk_04[6];
+    u16 unk_0A;            // 0x0A
 };
 
 struct act_part
@@ -62,16 +70,38 @@ struct act_part
     s32 frame;             // 0x30
     s32 unk_34;            // 0x34
     u8 animDone;           // 0x38
-    u8 unk_39[0x2B];
+    u8 unk_39[0xF];
+    s32 unk_48;            // 0x48
+    s32 unk_4C;            // 0x4C
+    s32 unk_50;            // 0x50
+    u8 unk_54[0xC];
+    s32 unk_60;            // 0x60
     s32 unk_64;            // 0x64
     u8 contact;            // 0x68
-    u8 unk_69[0x98];
+    u8 unk_69[0x23];
+    s32 unk_8C;            // 0x8C
+    u8 unk_90;             // 0x90
+    u8 unk_91[3];
+    u8 unk_94;             // 0x94
+    u8 unk_95[0x6B];
+    u8 unk_100;            // 0x100
     u8 unk_101;            // 0x101
+    u8 unk_102;            // 0x102
+    u8 unk_103;            // 0x103
+};
+
+/* One entry of the per-object table `act.anims` points at: indices into
+ * gStaticData_0816B304's 12-byte records for the +0x27 and +0x28 actions. */
+struct act_anim_pair
+{
+    s32 first;
+    s32 second;
 };
 
 struct act
 {
-    u8 unk_00[8];
+    u8 unk_00[4];
+    struct act_anim_pair **anims; // 0x04
     s32 state;             // 0x08
     struct act_vtable *vt; // 0x0C
     struct act_part *part; // 0x10
@@ -111,6 +141,26 @@ typedef void (*act_fn2)(void *self, void *a, s32 b);
         struct act_method *_m = &(obj)->vt->m;                                 \
         ((act_fn2)_m->fn)((u8 *)(obj) + _m->thisOffset, (void *)(a), (s32)(b)); \
     } while (0)
+
+/* The same calls wrapped in `if (1) { ... } else (void)0` instead of
+ * `do { ... } while (0)` (include/actor_self.h explains the difference).
+ * agbcc treats the `do`/`while` as a loop, which keeps CSE from carrying
+ * a constant from before the call to a store after it. Most handlers match
+ * either way; sub_8013D94 needs the loop form and sub_8014D18 (and the
+ * other handlers that keep a 1 in a callee-saved register across the
+ * calls) needs this one. */
+#define ACT_CALL1(obj, m, a)                                                   \
+    if (1)                                                                     \
+    {                                                                          \
+        struct act_method *_m = &(obj)->vt->m;                                 \
+        ((act_fn1)_m->fn)((u8 *)(obj) + _m->thisOffset, (s32)(a));             \
+    } else (void)0
+#define ACT_CALL2(obj, m, a, b)                                                \
+    if (1)                                                                     \
+    {                                                                          \
+        struct act_method *_m = &(obj)->vt->m;                                 \
+        ((act_fn2)_m->fn)((u8 *)(obj) + _m->thisOffset, (void *)(a), (s32)(b)); \
+    } else (void)0
 
 /* gUnknown_030007E0 is the input word: low half held, high half newly
  * pressed. Handlers copy it to a stack slot and read the halves back from

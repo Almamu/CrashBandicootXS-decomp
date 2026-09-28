@@ -1,52 +1,36 @@
 #include "core.h"
 #include "gba/io_reg.h"
 #include "icon_manager.h"
+#include "actor_self.h"
+#include "gba/dma_macros.h"
+#include "graphics_package.h"
 
 /* GitHub issue #65's chunk (0x080354E0-0x08037110): the remaining 19
- * raw functions after `LoadLevelGraphics`/`LoadBg2Background`/
- * `LoadObjSpriteTiles` (src/graphics/level_graphics.c, matched/NAKED by
- * an earlier pass - see docs/matching/issue-65-graphics-loading.md).
- * All of these operate on the same 0x220-byte per-level scratch object
- * `LoadLevelGraphics` allocates and returns (still a raw `u32 *` here,
- * per that file's own note - most of its fields are only touched by
- * this cluster of functions, stride-0x34 records at `self+4` holding
- * position/velocity-shaped Q16.16/Q24.8 fields fed by a per-slot
- * "delta record" pointer array at `self+0x40`, a BG2 affine-scroll
- * setup at `self+0x214..0x21c`, and a 7-slot rolling-hash "cheat code"
- * detector at `self+0x210`), except `sub_8036CF4`/`sub_8036E20`/
- * `sub_8036EC4`/`sub_8036FBC`, which operate on the unrelated
- * `struct anim_part_instance`-shaped actor-part object already
- * documented in src/graphics/actor_anim.c/actor_part19.c (state at
- * `+0x28`, animation-frame accumulator at `+8`, table index at `+0xc`,
- * frame halfword/byte at `+0x10`/`+0x12`, counter at `+0x44`).
+ * functions after `LoadLevelGraphics`/`LoadBg2Background`/
+ * `LoadObjSpriteTiles` (src/graphics/level_graphics.c - see
+ * docs/matching/issue-65-graphics-loading.md). Most of them operate on
+ * the per-level scratch object `LoadLevelGraphics` allocates (still a
+ * raw `u32 *` here - stride-0x34 slot records at `self+0x10` holding
+ * Q16.16 position / velocity fields fed by a per-slot "delta record"
+ * pointer, a BG2 affine-scroll block at `self+0x214..0x21c` and a
+ * rolling-hash "cheat code" detector at `self+0x210`), or on the
+ * 20-slot variant `sub_80361B0`'s subsystem uses; `sub_8036E20`/
+ * `sub_8036EC4`/`sub_8036FBC` operate on a `struct actor_self` actor
+ * part.
  *
- * Every function below was attempted as real C first. `sub_80360C0`
- * (a standalone one-shot hash-update helper, factored out of the same
- * rotate-then-multiply-by-521 primitive `sub_8035D1C` also inlines)
- * matched cleanly once its rotate idiom was register-pinned to stop
- * agbcc's optimizer from folding it into a single `ROR` instruction
- * (which this ARMv4T/Thumb target's ROM never emits - Thumb's 2-operand
- * `ROR` exists, but the ROM's own compiled output always chose the
- * explicit shift-shift-or expansion instead). Every other function in
- * this chunk hit some flavor of the gcc-2.9/agbcc register-allocation
- * or code-layout gap already cataloged throughout this project
- * (docs/matching.md, docs/matching/issue-30/31/65-graphics-loading.md):
- * cross-jump/tail-merging that collapses textually-identical address
- * computations the ROM's own compiler left duplicated, a shared-base
- * (`self+i*0x34`) pointer the ROM never hoists across even a
- * non-branching sequence of field stores, and the extended families of
- * `sb`/`sl`/`r8`/`ip`-heavy register shuffles this whole ROM region
- * favors, none of which converged as plain C within a reasonable
- * number of passes. Each is instead transcribed instruction-for-
- * instruction from the ROM disassembly as `NAKED` - confirmed
- * byte-identical (modulo the inherent `bl` call-site-offset and
- * external-symbol literal-pool relocations of an unlinked, standalone
- * object) via a direct `arm-none-eabi-as` assemble +
- * `arm-none-eabi-objcopy --only-section=.text` + byte comparison
- * against `baserom.gba` before integrating, the same escape hatch
- * already used throughout this file's neighbors (`LoadBg2Background`
- * above). See docs/matching/issue-65-0x08035780-graphics-loading.md
- * for the full per-function write-up. */
+ * This translation unit is old_agbcc code (see the Makefile's
+ * OLD_AGBCC_OBJS), built with -fno-strength-reduce on top of -O2 (the
+ * Makefile's NO_STRENGTH_REDUCE_OBJS - it is what lets `sub_8036600`
+ * match and changes nothing else here; see
+ * docs/matching/per-file-flags-investigation.md). The first pass here
+ * transcribed 18 of the 19
+ * functions as NAKED; with the right compiler and the later project
+ * techniques (static-inline accessors, bitfield structs for the
+ * DISPCNT/BGCNT/OAM words, `_call_via_rN` / `__divsi3` aliases) most of
+ * them are now real C. The ones still NAKED carry a `#if NON_MATCHING`
+ * draft with a note on what is left. See
+ * docs/matching/issue-65-0x08035780-graphics-loading.md and
+ * docs/matching/issue-65-naked-retry.md. */
 
 extern struct oam_shadow_buffer *gUnknown_03001300;
 extern struct AudioContext *gUnknown_030012BC;
@@ -55,7 +39,7 @@ extern void *gUnknown_03001304;
 extern void *gUnknown_0300160C[2];
 extern s32 gUnknown_03001604;
 extern void *gUnknown_03001608;
-extern void *gUnknown_03000874;
+extern void (*gUnknown_03000874)(void *dst, u8 *frame);
 extern struct held_pressed_pair {
     u16 held;
     u16 pressed;
@@ -115,8 +99,73 @@ extern void sub_80346FC(void *self, s32 arg1);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern s32 GetSpriteShapeSizeBits(void *self);
-extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, void *frameData,
-                                 void *mapEntry);
+extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 scale);
+
+/* libgcc helpers under this ROM's names: `sub_803ADB4` is `__divsi3`,
+ * `sub_803AD80` is `_call_via_r2` (the Thumb indirect-call thunk). */
+asm(".set __divsi3, sub_803ADB4");
+asm(".set _call_via_r2, sub_803AD80");
+
+/* The camera-ish object an actor part reads through `self+0x30`
+ * (same shape as actor_part128.c's). */
+struct cam_ref {
+    u8 unk_00[0x10];
+    s32 depth;      // 0x10 - the depth at which sprites draw unscaled
+};
+
+/* `gUnknown_03001288`, the REG_DISPCNT shadow `sub_8001614` commits,
+ * viewed as its bitfields (field stores give the ROM's byte-wide
+ * and/or sequences). */
+struct dispcnt_bits
+{
+    u16 mode:3;
+    u16 cgbMode:1;
+    u16 frame:1;
+    u16 hblankOam:1;
+    u16 objMap1D:1;
+    u16 forcedBlank:1;
+    u16 bg0:1;
+    u16 bg1:1;
+    u16 bg2:1;
+    u16 bg3:1;
+    u16 obj:1;
+    u16 win0:1;
+    u16 win1:1;
+    u16 objWin:1;
+};
+
+/* REG_BGnCNT as bitfields (same layout as `struct bg_setup`'s ctrl in
+ * include/graphics_package.h). */
+union bgcnt
+{
+    u16 raw;
+    struct {
+        u16 priority:2;
+        u16 charBase:2;
+        u16 unk_4:2;
+        u16 mosaic:1;
+        u16 colorMode:1;
+        u16 screenBase:5;
+        u16 wrap:1;
+        u16 size:2;
+    } bits;
+};
+
+/* One entry of the 8-byte {delta-record pointer, initial hold} seed
+ * tables (`gStaticData_0817CFA4`/`gStaticData_0817D6C0`) the slot arrays
+ * are initialized from. */
+struct slot_seed
+{
+    struct delta_record *record;
+    s32 hold;
+};
+
+/* `sub_803AE4C` is libgcc's `__modsi3`. */
+asm(".set __modsi3, sub_803AE4C");
+
+void sub_80358A8(u32 *self);
+void sub_8036068(u32 *self);
+void sub_8035F9C(u32 *self);
 
 /* Per-frame updater for the scratch object's 9-slot (`i` = 0..8,
  * stride 0x34, base `self+4`) record array: while a slot's countdown
@@ -354,6 +403,243 @@ void sub_8035780(u32 *self_arg)
  * position outputs (`self+0x214`/`0x218`) from the header record's own
  * `self+0x210`/`+0x214`(BG scale) fields when the header's own hold
  * flag (`self+8`) is set. */
+#if NON_MATCHING
+/* NON_MATCHING draft (old_agbcc, ~400 halfwords off): the three
+ * OAM-builder bitfield sequences, SetAffine and the tail already match;
+ * what is left is register/stack-slot allocation in the two slot loops
+ * (the ROM hoists the DMA pointer into r9 and spills the offset-table
+ * pointer, this draft does the opposite). */
+struct oam_attrs
+{
+    u32 y:8;            // 0x00
+    u32 affineMode:2;   // 0x01
+    u32 objMode:2;
+    u32 mosaic:1;
+    u32 bpp:1;
+    u32 shape:2;
+    u32 x:9;            // 0x02
+    u32 matrixLo:3;
+    u32 matrixBit3:1;
+    u32 matrixBit4:1;
+    u32 size:2;
+    u16 tileNum:10;     // 0x04
+    u16 priority:2;
+    u16 palette:4;
+    u16 affineParam;    // 0x06
+};
+
+struct oam_entry
+{
+    u16 attr0;
+    u16 attr1;
+    u16 attr2;
+    s16 affineParam;
+};
+
+struct oam_buf
+{
+    s32 count;
+    s32 field_04;
+    s32 field_08;
+    struct oam_entry entries[128];
+};
+
+struct obj_slot
+{
+    u8 active;          // 0x00
+    u8 pad_01[3];
+    s32 countdown;      // 0x04
+    union {
+        s32 q;          // 0x08 - Q16.16 x
+        struct { u16 frac; s16 i; } h;
+    } posA;
+    union {
+        s32 q;          // 0x0c - Q16.16 y
+        struct { u16 frac; s16 i; } h;
+    } posB;
+    s32 posC;           // 0x10
+    s32 velA;           // 0x14 - depth
+    u8 pad_18[0x1c];
+};
+
+static inline void SetAffine(struct oam_buf *buf, s32 m, u16 pa, u16 pb, u16 pc, u16 pd)
+{
+    s32 idx = m * 4;
+
+    buf->entries[idx].affineParam = pa;
+    buf->entries[idx + 3].affineParam = pd;
+    buf->entries[idx + 1].affineParam = pb;
+    buf->entries[idx + 2].affineParam = pc;
+}
+
+#define SLOT_AT(self, i) (&((struct obj_slot *)((u8 *)(self) + 0x10))[i])
+static inline s32 *CounterAt(u32 *self, s32 i)
+{
+    u8 *base = (u8 *)self + 0x1e4;
+    return (s32 *)(base + i * 4);
+}
+
+#define OAMBUF ((struct oam_buf *)gUnknown_03001300)
+
+static inline void ClearOam(struct oam_attrs *oam)
+{
+    u16 zero = 0;
+    struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
+    dma->src = (u32)&zero;
+    dma->dst = (u32)oam;
+    dma->cnt = 0x81000004;
+    dma->cnt;
+}
+
+void sub_80358A8(u32 *self)
+{
+    s32 matrix = 0;
+    s32 i;
+    struct oam_attrs oamA;
+    struct oam_attrs oamB;
+    struct oam_attrs oamC;
+
+    {
+        struct obj_slot *slot = (struct obj_slot *)((u8 *)self + 0x1b0);
+
+        if (slot->active)
+        {
+            u16 scale = 0x1000000 / slot->velA;
+            SetAffine(OAMBUF, matrix, scale, 0, 0, scale);
+            ClearOam(&oamA);
+            oamA.affineMode = 3;
+            oamA.matrixLo = 0;
+            oamA.palette = 3;
+            oamA.size = 2;
+            oamA.shape = 1;
+            oamA.y = (slot->posB.q >> 16) - 16;
+            oamA.tileNum = 0x1c0;
+            oamA.x = (slot->posA.q >> 16) - 0x20 - ((slot->velA << 5) >> 16);
+            sub_8006AC8(gUnknown_03001300, &oamA);
+            oamA.tileNum += 8;
+            oamA.x = (slot->posA.q >> 16) - 0x20;
+            sub_8006AC8(gUnknown_03001300, &oamA);
+            oamA.tileNum += 8;
+            oamA.x = (slot->posA.q >> 16) + (((slot->velA << 5) >> 16) - 0x20);
+            sub_8006AC8(gUnknown_03001300, &oamA);
+            matrix = 2;
+        }
+    }
+    for (i = 0; i <= 4; i++)
+    {
+        struct obj_slot *slot = SLOT_AT(self, 7) - i;
+
+        if (slot->active)
+        {
+            s32 *cnt = CounterAt(self, 7 - i);
+            s32 d;
+            u16 scale;
+            s32 off;
+
+            if (*cnt != 0)
+            {
+                if (*cnt == -1)
+                    *cnt = 10;
+                if (--*cnt == 0)
+                    PlaySfx(gUnknown_030012BC, 0x4a, 0x100);
+            }
+            d = 0x1000000 / slot->velA;
+            scale = d;
+            SetAffine(OAMBUF, matrix, scale, 0, 0, scale);
+            ClearOam(&oamB);
+            off = 0;
+            if (d != 0x100)
+            {
+                off = -32;
+                oamB.affineMode = 3;
+            }
+            else
+            {
+                oamB.affineMode = 1;
+            }
+            oamB.matrixLo = matrix & 7;
+            matrix++;
+            oamB.palette = 0;
+            oamB.tileNum = i << 6;
+            oamB.size = 3;
+            oamB.x = (slot->posA.q >> 16) + (off - 32);
+            oamB.y = (slot->posB.q >> 16) - 32 + off;
+            sub_8006AC8(gUnknown_03001300, &oamB);
+        }
+    }
+    {
+        s32 *tbl = (s32 *)gStaticData_0817CFF4;
+
+        for (i = 0; i <= 1; i++)
+        {
+            struct obj_slot *slot = SLOT_AT(self, i);
+            s32 j;
+
+            if (slot->active)
+            {
+                s32 *cnt = CounterAt(self, i);
+
+                if (*cnt != 0)
+                {
+                    if (*cnt == -1)
+                    {
+                        *cnt = 8;
+                        PlaySfx(gUnknown_030012BC, 0x3d, 0x100);
+                    }
+                    else if (--*cnt == 0)
+                    {
+                        *(s32 *)((u8 *)self + 0x20c) = 30;
+                    }
+                }
+            }
+            ClearOam(&oamC);
+            oamC.palette = i + 1;
+            oamC.tileNum = (i << 6) + 0x140;
+            oamC.size = 2;
+            oamC.priority = 2;
+            for (j = 3; j >= 0; j--)
+            {
+                s32 x = (slot->posA.q >> 16) + *tbl++;
+                s32 y = (slot->posB.q >> 16) + *tbl++;
+
+                if (y <= 0x8b)
+                {
+                    oamC.x = x;
+                    oamC.y = y;
+                    if (slot->active)
+                        sub_8006AC8(gUnknown_03001300, &oamC);
+                }
+                oamC.tileNum += 0x10;
+            }
+        }
+    }
+    {
+        struct obj_slot *rec = SLOT_AT(self, 2);
+
+        if (rec->active)
+        {
+            s32 a, b;
+            s32 *shake;
+            s32 *q;
+
+            sub_80015B0();
+            a = rec->posA.q;
+            b = rec->posB.q;
+            shake = (s32 *)((u8 *)self + 0x20c);
+            if (*shake != 0)
+            {
+                --*shake;
+                a = a - 5 + (u16)sub_8000E1C(10);
+                b = b - 5 + (u16)sub_8000E1C(10);
+            }
+            q = (s32 *)((u8 *)self + 0x21c);
+            *q = 0x1000000 / rec->velA;
+            *(s32 *)((u8 *)self + 0x214) = *q * (-a >> 16) + 0x4000;
+            *(s32 *)((u8 *)self + 0x218) = (-b >> 16) * *q + 0x4000;
+        }
+    }
+}
+#else
 NAKED void sub_80358A8(u32 *self)
 {
     asm(
@@ -914,6 +1200,7 @@ NAKED void sub_80358A8(u32 *self)
         "\t_08035D18: .4byte gUnknown_03001300\n"
     );
 }
+#endif
 
 /* A 7-branch "cheat code" style detector: gated on
  * `gUnknown_030007E0.held`'s bit 0x100 (R shoulder) - if not held,
@@ -926,6 +1213,64 @@ NAKED void sub_80358A8(u32 *self)
  * slot now equals the fixed target `0x3034AF3B` - if so, plays song
  * `0xc` and resets the slot, consuming the input (returns 0) either
  * way once the gate was held. */
+#if NON_MATCHING
+/* NON_MATCHING draft (old_agbcc): everything matches, including the
+ * cross-jumped hash branches, except the R-shoulder gate - the ROM
+ * builds the 0x100 mask in r4 and copies it to r1 (one extra
+ * instruction), this draft builds it in r1 directly. */
+static inline struct held_pressed_pair ReadHeldPressed(void)
+{
+    return gUnknown_030007E0;
+}
+
+static inline void HashInput(u32 *self, u32 val)
+{
+    u32 *slot = (u32 *)((u8 *)self + 0x210);
+    register u32 v asm("r0") = *slot ^ val;
+    register u32 hi asm("r1");
+    register u32 lo asm("r0");
+    register u32 rotated asm("r1");
+    u32 out;
+
+    hi = v << 1;
+    lo = v >> 31;
+    asm("" : "+r"(hi));
+    rotated = hi | lo;
+    out = (rotated << 6) + rotated;
+
+    out = (out << 3) + rotated;
+    *slot = out;
+}
+
+u32 sub_8035D1C(u32 *self, u32 pressed)
+{
+    if (!(ReadHeldPressed().held & 0x100))
+    {
+        *(u32 *)((u8 *)self + 0x210) = 0;
+        return pressed;
+    }
+    if (pressed & 0x20)
+        HashInput(self, 0x12345678);
+    else if (pressed & 0x10)
+        HashInput(self, 0x31415926);
+    else if (pressed & 0x40)
+        HashInput(self, 0xC0DEBA1D);
+    else if (pressed & 0x80)
+        HashInput(self, 0xDEADBEEF);
+    else if (pressed & 2)
+        HashInput(self, 0xB1E4B1E4);
+    else if (pressed & 1)
+        HashInput(self, 0x71839406);
+    else if (pressed & 8)
+        HashInput(self, 0x828A048B);
+    if (*(u32 *)((u8 *)self + 0x210) == 0x3034AF3B)
+    {
+        sub_8001B54(gUnknown_030012BC, 0xc);
+        *(u32 *)((u8 *)self + 0x210) = 0;
+    }
+    return 0;
+}
+#else
 NAKED u32 sub_8035D1C(u32 *self, u32 pressed)
 {
     asm(
@@ -1060,6 +1405,7 @@ NAKED u32 sub_8035D1C(u32 *self, u32 pressed)
         "\t_08035E10: .4byte gUnknown_030012BC\n"
     );
 }
+#endif
 
 /* Drives what looks like a level-intro/tally sequence on the scratch
  * object: seeds all 9 slots' `self+0x40+i*0x34` delta-record pointers
@@ -1073,6 +1419,105 @@ NAKED u32 sub_8035D1C(u32 *self, u32 pressed)
  * nudging `self[0]`), followed by a fixed-length (17-frame) BG2
  * fade-out tail. Returns `self[0]`, a small state/counter field several
  * of this cluster's other functions also read. */
+#if NON_MATCHING
+/* NON_MATCHING draft (old_agbcc, 100 halfwords off, right size): the
+ * ROM's seed loop hoists nothing (0, -1, `self+0x14`, `self+0x40` and
+ * `seedBase+4` are all recomputed every iteration) while the later
+ * `while` loop does hoist its REG_BLDCNT address, so the seed loop never
+ * went through gcc's loop optimizer at all - -fno-strength-reduce cannot
+ * explain that, a `goto` loop (no loop notes) does. In this goto form
+ * the seed loop's shape is exact; what is left is register choice
+ * (`i`/`slot` swapped between r3 and r5, which shifts the rest). See
+ * docs/matching/per-file-flags-investigation.md. */
+s32 sub_8035E14(u32 *self_arg)
+{
+    register u32 *self asm("r4") = self_arg;
+    s32 i;
+    struct slot_seed *seedBase;
+    struct slot_seed *seed;
+    u8 *slot;
+    s32 stride;
+    s32 zero;
+    u32 pressed;
+
+    i = 0;
+    seedBase = (struct slot_seed *)gStaticData_0817CFA4;
+    seed = seedBase;
+    slot = (u8 *)self;
+    stride = 0;
+seedLoop:
+    zero = 0;
+    slot[0x10] = zero;
+    {
+        u8 *countdownBase = (u8 *)self + 0x14;
+        s32 *dst = (s32 *)(countdownBase + stride);
+        u8 *holdBase = (u8 *)seedBase + 4;
+        *dst = *(s32 *)((i << 3) + holdBase) + 1;
+    }
+    *RecordAt(self, stride) = seed->record;
+    {
+        u8 *base = (u8 *)self + 0x1e4;
+        *(s32 *)((i << 2) + base) = -1;
+    }
+    seed++;
+    slot += 0x34;
+    stride += 0x34;
+    i++;
+    if (i <= 8)
+        goto seedLoop;
+    *(s32 *)((u8 *)self + 0x20c) = zero;
+    ((u8 *)self)[8] = zero;
+    while (self[5] != 0)
+    {
+        sub_8035780(self);
+        sub_8036068(self);
+        sub_8034688(self[0x82]);
+        sub_80006A8();
+        *(vu32 *)REG_ADDR_BLDCNT = 0;
+        sub_8035F9C(self);
+    }
+    ((u8 *)self)[8] = 1;
+    *(u32 *)((u8 *)self + 0x210) = 0;
+    for (;;)
+    {
+        sub_8036068(self);
+        sub_8034688(self[0x82]);
+        sub_80007AC(gUnknown_03001304);
+        pressed = sub_8035D1C(self, gUnknown_030007E0.pressed);
+        if (pressed & 9)
+        {
+            PlaySfx(gUnknown_030012BC, 0x49, 0x100);
+            break;
+        }
+        if (pressed & 0x40)
+        {
+            PlaySfx(gUnknown_030012BC, 0x46, 0x100);
+            if (self[0] != 0)
+                self[0]--;
+            else
+                self[0] = 2;
+        }
+        if (pressed & 0x80)
+        {
+            PlaySfx(gUnknown_030012BC, 0x46, 0x100);
+            self[0]++;
+            self[0] = (s32)self[0] % 3;
+        }
+        sub_80006A8();
+        sub_8035F9C(self);
+    }
+    for (i = 0; i <= 0x10; i++)
+    {
+        sub_8036068(self);
+        sub_8034688(self[0x82]);
+        sub_80006A8();
+        REG_BLDY = i;
+        REG_BLDCNT = 0xff;
+        sub_8035F9C(self);
+    }
+    return self[0];
+}
+#else
 NAKED s32 sub_8035E14(u32 *self)
 {
     asm(
@@ -1260,57 +1705,34 @@ NAKED s32 sub_8035E14(u32 *self)
         "\t_08035F98: .4byte 0x04000050\n"
     );
 }
+#endif
+
+static inline void SetIconPos(struct icon_manager *m, u32 x, u32 y)
+{
+    m->posX = x;
+    m->posY = y;
+}
 
 /* Flushes the scratch object's BG2 affine-scroll fields
  * (`self+0x214`/`self+0x218` position, `self+0x21c` scale) to
  * `REG_BG2X`/`REG_BG2Y`/`REG_BG2PA`/`REG_BG2PD` (identity-shaped:
  * `PB`/`PC` cleared, `PA` == `PD`), then flushes the pending shadow-OAM
- * buffer (`sub_8001614` + `sub_8006AAC`). Every operation matches the
- * ROM (confirmed via isolated compile as plain C), but the ROM derives
- * `REG_BG2PA`'s address (`0x04000020`) from the just-computed
- * `REG_BG2Y` address via a runtime `-0xc` rather than loading a fresh
- * literal, a code-shape this compiler's constant-pool/CSE handling
- * never reproduces from any straightforward phrasing of the four
- * register writes tried. */
-NAKED void sub_8035F9C(u32 *self)
+ * buffer (`sub_8001614` + `sub_8006AAC`). The ROM derives
+ * `REG_BG2PA`'s address from `REG_BG2Y`'s (`-0xc`); that falls out of
+ * writing the PA store as a chained assignment (`REG_BG2PA = scale =
+ * ...`), which makes the address get computed before the load. */
+void sub_8035F9C(u32 *self)
 {
-    asm(
-        "\tpush {lr}\n"
-        "\tadd r2, r0, #0\n"
-        "\tldr r1, _08035FE0\n"
-        "\tmov r3, #0x85\n"
-        "\tlsl r3, r3, #2\n"
-        "\tadd r0, r2, r3\n"
-        "\tldr r0, [r0]\n"
-        "\tstr r0, [r1]\n"
-        "\tadd r1, #4\n"
-        "\tadd r3, #4\n"
-        "\tadd r0, r2, r3\n"
-        "\tldr r0, [r0]\n"
-        "\tstr r0, [r1]\n"
-        "\tsub r1, #0xc\n"
-        "\tadd r3, #4\n"
-        "\tadd r0, r2, r3\n"
-        "\tldr r2, [r0]\n"
-        "\tstrh r2, [r1]\n"
-        "\tldr r0, _08035FE4\n"
-        "\tmov r1, #0\n"
-        "\tstrh r1, [r0]\n"
-        "\tadd r0, #2\n"
-        "\tstrh r1, [r0]\n"
-        "\tadd r0, #2\n"
-        "\tstrh r2, [r0]\n"
-        "\tbl sub_8001614\n"
-        "\tldr r0, _08035FE8\n"
-        "\tldr r0, [r0]\n"
-        "\tbl sub_8006AAC\n"
-        "\tpop {r0}\n"
-        "\tbx r0\n"
-        "\t.align 2, 0\n"
-        "\t_08035FE0: .4byte 0x04000028\n"
-        "\t_08035FE4: .4byte 0x04000022\n"
-        "\t_08035FE8: .4byte gUnknown_03001300\n"
-    );
+    s32 scale;
+
+    REG_BG2X = self[0x85];
+    REG_BG2Y = self[0x86];
+    REG_BG2PA = scale = self[0x87];
+    REG_BG2PB = 0;
+    REG_BG2PC = 0;
+    REG_BG2PD = scale;
+    sub_8001614();
+    sub_8006AAC(gUnknown_03001300);
 }
 
 /* Icon-manager position helper: for `variant == 0`, bumps a play
@@ -1321,71 +1743,32 @@ NAKED void sub_8035F9C(u32 *self)
  * up at `self+0xc` + a fixed table offset) through `sub_803AD80` twice
  * (once for the icon at its own position, once for a second icon
  * `0xf0` px to its right), positioning them from the icon-manager's own
- * anchor record. */
-NAKED void sub_8035FEC(u32 *self, s32 hdrOffset, s32 variant)
+ * anchor record. The two `sub_803AD80` calls are `_call_via_r2`
+ * virtual calls through the icon manager's `record->slots[0]`/`[2]`
+ * entries (same shape as `actor_part_1b85c.c`). */
+
+void sub_8035FEC(u32 *self, s32 text, s32 variant)
 {
-    asm(
-        "\tpush {r4, r5, r6, r7, lr}\n"
-        "\tadd r5, r0, #0\n"
-        "\tadd r7, r1, #0\n"
-        "\tadd r6, r2, #0\n"
-        "\tldr r0, [r5]\n"
-        "\tcmp r6, r0\n"
-        "\tbne _08036010\n"
-        "\tldr r1, [r5, #4]\n"
-        "\tadd r1, #1\n"
-        "\tstr r1, [r5, #4]\n"
-        "\tldr r0, [r5, #0xc]\n"
-        "\tasr r1, r1, #2\n"
-        "\tmov r2, #1\n"
-        "\tand r1, r2\n"
-        "\tadd r1, #0xe\n"
-        "\tbl sub_8028A30\n"
-        "\tb _08036018\n"
-        "_08036010:\n"
-        "\tldr r0, [r5, #0xc]\n"
-        "\tmov r1, #0xd\n"
-        "\tbl sub_8028A30\n"
-        "_08036018:\n"
-        "\tldr r0, [r5, #0xc]\n"
-        "\tmov r4, #0x98\n"
-        "\tlsl r4, r4, #1\n"
-        "\tadd r1, r0, r4\n"
-        "\tldr r2, [r1]\n"
-        "\tmov r3, #0x10\n"
-        "\tldrsh r1, [r2, r3]\n"
-        "\tadd r0, r0, r1\n"
-        "\tldr r2, [r2, #0x14]\n"
-        "\tadd r1, r7, #0\n"
-        "\tbl sub_803AD80\n"
-        "\tmov r3, #0xf0\n"
-        "\tsub r3, r3, r0\n"
-        "\tasr r3, r3, #1\n"
-        "\tldr r0, [r5, #0xc]\n"
-        "\tlsl r1, r6, #2\n"
-        "\tadd r1, r1, r6\n"
-        "\tlsl r1, r1, #1\n"
-        "\tadd r1, #0x80\n"
-        "\tmov r5, #0x88\n"
-        "\tlsl r5, r5, #1\n"
-        "\tadd r2, r0, r5\n"
-        "\tstr r3, [r2]\n"
-        "\tmov r3, #0x8a\n"
-        "\tlsl r3, r3, #1\n"
-        "\tadd r2, r0, r3\n"
-        "\tstr r1, [r2]\n"
-        "\tadd r4, r0, r4\n"
-        "\tldr r2, [r4]\n"
-        "\tmov r5, #0x20\n"
-        "\tldrsh r1, [r2, r5]\n"
-        "\tadd r0, r0, r1\n"
-        "\tldr r2, [r2, #0x24]\n"
-        "\tadd r1, r7, #0\n"
-        "\tbl sub_803AD80\n"
-        "\tpop {r4, r5, r6, r7}\n"
-        "\tpop {r0}\n"
-        "\tbx r0\n"
-    );
+    struct icon_manager *im;
+    struct icon_slot *slot;
+    s32 x;
+
+    if (variant == self[0])
+    {
+        s32 count = self[1] + 1;
+        self[1] = count;
+        sub_8028A30((struct icon_manager *)self[3], ((count >> 2) & 1) + 0xe);
+    }
+    else
+    {
+        sub_8028A30((struct icon_manager *)self[3], 0xd);
+    }
+    slot = &((struct icon_manager *)self[3])->record->slots[0];
+    x = (0xf0 - sub_803AD80((u8 *)self[3] + slot->offset, (void *)text, slot->ptr)) >> 1;
+    im = (struct icon_manager *)self[3];
+    SetIconPos(im, x, variant * 10 + 0x80);
+    slot = &im->record->slots[2];
+    sub_803AD80((u8 *)im + slot->offset, (void *)text, slot->ptr);
 }
 
 /* Per-frame flush helper: resets the shadow-OAM buffer
@@ -1394,46 +1777,17 @@ NAKED void sub_8035FEC(u32 *self, s32 hdrOffset, s32 variant)
  * positions three icon-manager slots (ids 0x1a/0x1b/0x3b, one call
  * each via `sub_8035FEC`) before releasing the shadow-OAM buffer
  * (`sub_8006A48`). */
-NAKED void sub_8036068(u32 *self)
+void sub_8036068(u32 *self)
 {
-    asm(
-        "\tpush {r4, r5, lr}\n"
-        "\tadd r4, r0, #0\n"
-        "\tldr r5, _080360BC\n"
-        "\tldr r0, [r5]\n"
-        "\tbl sub_8006A90\n"
-        "\tadd r0, r4, #0\n"
-        "\tbl sub_80358A8\n"
-        "\tldrb r0, [r4, #8]\n"
-        "\tcmp r0, #0\n"
-        "\tbeq _080360B0\n"
-        "\tmov r0, #0x1a\n"
-        "\tbl sub_8026F38\n"
-        "\tadd r1, r0, #0\n"
-        "\tadd r0, r4, #0\n"
-        "\tmov r2, #0\n"
-        "\tbl sub_8035FEC\n"
-        "\tmov r0, #0x1b\n"
-        "\tbl sub_8026F38\n"
-        "\tadd r1, r0, #0\n"
-        "\tadd r0, r4, #0\n"
-        "\tmov r2, #1\n"
-        "\tbl sub_8035FEC\n"
-        "\tmov r0, #0x3b\n"
-        "\tbl sub_8026F38\n"
-        "\tadd r1, r0, #0\n"
-        "\tadd r0, r4, #0\n"
-        "\tmov r2, #2\n"
-        "\tbl sub_8035FEC\n"
-        "_080360B0:\n"
-        "\tldr r0, [r5]\n"
-        "\tbl sub_8006A48\n"
-        "\tpop {r4, r5}\n"
-        "\tpop {r0}\n"
-        "\tbx r0\n"
-        "\t.align 2, 0\n"
-        "\t_080360BC: .4byte gUnknown_03001300\n"
-    );
+    sub_8006A90(gUnknown_03001300);
+    sub_80358A8(self);
+    if (((u8 *)self)[8] != 0)
+    {
+        sub_8035FEC(self, sub_8026F38(0x1a), 0);
+        sub_8035FEC(self, sub_8026F38(0x1b), 1);
+        sub_8035FEC(self, sub_8026F38(0x3b), 2);
+    }
+    sub_8006A48(gUnknown_03001300);
 }
 
 /* Standalone one-shot rolling-hash update: XORs `val` into the same
@@ -1474,6 +1828,54 @@ void sub_80360C0(u32 *selfArg, u32 val)
  * `sub_8035780`'s own countdown-reset shape, just via `stm` instead of
  * a plain store - the same operation, a different ROM-side register
  * allocation). Clears the header hold flag (`self+0x20c`). */
+#if NON_MATCHING
+/* NON_MATCHING draft (old_agbcc, 18 halfwords off, right size): the ROM
+ * loop hoists nothing (0 and -1 re-materialized every iteration,
+ * `self+0x14`/`self+0x40`/`seedBase+4` recomputed), so it never went
+ * through gcc's loop optimizer - a `goto` loop (no loop notes)
+ * reproduces the whole shape, and -fno-strength-reduce is irrelevant to
+ * it. The pointer walks (`seed`, `slot`, `stride`) are therefore the
+ * source's own. What is left is register choice: the ROM puts
+ * `seedBase`/`counter`/`zero` in r8/sb/ip and `stride`/`slot` in r4/r5,
+ * this gives sb/ip/r8 and r5/r4. See
+ * docs/matching/per-file-flags-investigation.md. */
+void sub_80360DC(u32 *self)
+{
+    s32 i;
+    struct slot_seed *seedBase;
+    s32 *counter;
+    struct slot_seed *seed;
+    u8 *slot;
+    s32 stride;
+    s32 zero;
+
+    i = 0;
+    seedBase = (struct slot_seed *)gStaticData_0817CFA4;
+    counter = (s32 *)((u8 *)self + 0x1e4);
+    seed = seedBase;
+    slot = (u8 *)self;
+    stride = 0;
+loop:
+    zero = 0;
+    slot[0x10] = zero;
+    {
+        u8 *countdownBase = (u8 *)self + 0x14;
+        s32 *dst = (s32 *)(countdownBase + stride);
+        u8 *holdBase = (u8 *)seedBase + 4;
+
+        *dst = *(s32 *)((i << 3) + holdBase) + 1;
+    }
+    *RecordAt(self, stride) = seed->record;
+    *counter++ = -1;
+    seed++;
+    slot += 0x34;
+    stride += 0x34;
+    i++;
+    if (i <= 8)
+        goto loop;
+    *(s32 *)((u8 *)self + 0x20c) = zero;
+}
+#else
 NAKED void sub_80360DC(u32 *self)
 {
     asm(
@@ -1540,587 +1942,284 @@ NAKED void sub_80360DC(u32 *self)
         "\t_08036150: .4byte gStaticData_0817CFA4\n"
     );
 }
+#endif
 
-/* Teardown/reset helper: if the header record's play-counter
- * (`self+0x208`) is active, stops it (`sub_80346FC(self, 3)`); clears
- * `gUnknown_03001288`'s low byte, flushes the shadow-OAM buffer
- * (`sub_8001614`), zeroes all 256 OAM attribute-2 halfwords directly
- * (`0x07000000`+`2`-stride), resets `REG_DMA3CNT`-adjacent registers
- * (`0x04000050`/`+4`), and - only if `flag`'s bit 0 is set - releases
- * the scratch object via `sub_8026ED0`. */
-NAKED void sub_8036154(u32 *self, u32 flag)
+/* Teardown/reset helper: if the object at `self+0x208` exists, destroys
+ * it (`sub_80346FC(obj, 3)`); clears the DISPCNT shadow
+ * (`gUnknown_03001288`) and commits it (`sub_8001614`), zeroes all 256
+ * BG palette entries (`0x05000000`), sets REG_BLDCNT/REG_BLDY to a full
+ * fade (0xff/0x10), and - only if `flag`'s bit 0 is set - frees the
+ * scratch object via `sub_8026ED0`. The palette clear needs its zero
+ * in a local assigned before the pointer (the ROM materializes it
+ * first). */
+void sub_8036154(u32 *self, u32 flag)
 {
-    asm(
-        "\tpush {r4, r5, lr}\n"
-        "\tadd r4, r0, #0\n"
-        "\tadd r5, r1, #0\n"
-        "\tmov r1, #0x82\n"
-        "\tlsl r1, r1, #2\n"
-        "\tadd r0, r4, r1\n"
-        "\tldr r0, [r0]\n"
-        "\tcmp r0, #0\n"
-        "\tbeq _0803616C\n"
-        "\tmov r1, #3\n"
-        "\tbl sub_80346FC\n"
-        "_0803616C:\n"
-        "\tldr r1, _080361A8\n"
-        "\tmov r0, #0\n"
-        "\tstrh r0, [r1]\n"
-        "\tbl sub_8001614\n"
-        "\tmov r2, #0\n"
-        "\tmov r1, #0xa0\n"
-        "\tlsl r1, r1, #0x13\n"
-        "\tmov r0, #0xff\n"
-        "_0803617E:\n"
-        "\tstrh r2, [r1]\n"
-        "\tadd r1, #2\n"
-        "\tsub r0, #1\n"
-        "\tcmp r0, #0\n"
-        "\tbge _0803617E\n"
-        "\tldr r1, _080361AC\n"
-        "\tmov r0, #0xff\n"
-        "\tstrh r0, [r1]\n"
-        "\tadd r1, #4\n"
-        "\tmov r0, #0x10\n"
-        "\tstrh r0, [r1]\n"
-        "\tmov r0, #1\n"
-        "\tand r0, r5\n"
-        "\tcmp r0, #0\n"
-        "\tbeq _080361A2\n"
-        "\tadd r0, r4, #0\n"
-        "\tbl sub_8026ED0\n"
-        "_080361A2:\n"
-        "\tpop {r4, r5}\n"
-        "\tpop {r0}\n"
-        "\tbx r0\n"
-        "\t.align 2, 0\n"
-        "\t_080361A8: .4byte gUnknown_03001288\n"
-        "\t_080361AC: .4byte 0x04000050\n"
-    );
+    s32 i;
+    u16 *pal;
+    s32 zero;
+
+    if (self[0x82] != 0)
+        sub_80346FC((void *)self[0x82], 3);
+    *(u16 *)gUnknown_03001288 = 0;
+    sub_8001614();
+    zero = 0;
+    pal = (u16 *)0x05000000;
+    for (i = 0xff; i >= 0; i--)
+        *pal++ = zero;
+    REG_BLDCNT = 0xff;
+    REG_BLDY = 0x10;
+    if (flag & 1)
+        sub_8026ED0(self);
+}
+
+/* `sub_803AD7C` is the Thumb `_call_via_r1` thunk. */
+asm(".set _call_via_r1, sub_803AD7C");
+
+/* The part's method table as `sub_80361B0` uses it (gcc 2.x C++
+ * {this-adjust, fn} records). */
+struct part_vtable
+{
+    u8 unk_00[8];
+    struct actor_method m08;    // 0x08 - destroy (arg 3)
+    struct actor_method m10;    // 0x10
+    struct actor_method m18;    // 0x18
+};
+
+void sub_8036CF4(u32 *self);
+struct actor_self *sub_8036E20(struct actor_self *self, void *a);
+void sub_8036528(u32 *self);
+void sub_8036600(u32 *self);
+void sub_8036668(u32 *self);
+void sub_803686C(u32 *self);
+
+/* `operator new`: an inline wrapper puts the size constant after the
+ * heap flag, as the ROM loads them. */
+static inline void *New(u32 size)
+{
+    return mem_alloc(size, 0x80000000);
 }
 
 /* The level-object subsystem's own init/run/teardown driver: sets up
  * the OBJ-tile free list, sprite-frame OAM queue and sprite-frame
- * cache, allocates a 0x54-byte header record (`mem_alloc`), constructs
- * a `gStaticData_0817D698`-tagged actor-part object via `sub_8036E20`,
- * loads the BG2 tileset/palette/tilemap via `sub_8036528` and seeds the
- * scratch object's slot array via `sub_8036600`, allocates and
- * constructs a second small object (`sub_8034374(sub_8026EDC(0x14))`),
- * and loads the BG2 tilemap remap via `sub_8036CF4`. Runs a fixed
- * fade-in ramp (17 frames of `REG_DMA3CNT`/song-volume-shaped register
- * writes interleaved with `sub_8034688`), then loops a per-frame
- * body - `sub_80007AC`/input poll, a 0x444-offset counter driving a
- * `PlaySfx`-scored fade curve, `sub_803ADB4` sine-based brightness
- * blend, `sub_8036668`/`sub_803686C` (slot-array per-frame update),
- * `FlushVramDmaQueue`/`AgeSpriteFrameCache` - until the counter drains,
- * then tears the whole subsystem back down (`sub_803AD80` trampoline
- * teardown, `sub_80346FC`, `sub_8026EB4` releases, and the free-list/
- * queue/cache/sprite-sheet frees mirroring the init calls above). */
-NAKED void sub_80361B0(u32 *self)
+ * cache, constructs the actor part (`sub_8036E20` on a 0x54-byte
+ * `mem_alloc` block), DMAs the OBJ palette, loads BG2's tilesets and
+ * the slot array (`sub_8036528`/`sub_8036600`), builds the particle
+ * background (`sub_8034374`) and BG2's tilemap (`sub_8036CF4`). Then
+ * a 60-frame fade-in, a zoom-in phase (BG2 affine scale driven by the
+ * `self+0x444` counter, A/Start skips ahead), and the main phase
+ * (the part's two per-frame methods, the slot-array update and OAM
+ * build, a blend fade-out once `self+0x444` is set) until the counter
+ * reaches 0; finally tears everything down again. Real C under
+ * old_agbcc: the zoom-in's decrement/grow/shrink is written as "step
+ * the counter, then test it again" (which gives the ROM's block order),
+ * the affine X/Y values are computed before either register store, and
+ * the fade-out value is pinned to r1 (the ROM's choice; without the pin
+ * it lands in r2 and costs a copy). */
+void sub_80361B0(u32 *self)
 {
-    asm(
-        "\tpush {r4, r5, r6, r7, lr}\n"
-        "\tmov r7, sl\n"
-        "\tmov r6, sb\n"
-        "\tmov r5, r8\n"
-        "\tpush {r5, r6, r7}\n"
-        "\tadd r6, r0, #0\n"
-        "\tldr r0, _08036220\n"
-        "\tbl InitObjTileFreeList\n"
-        "\tbl InitSpriteFrameOamQueue\n"
-        "\tbl InitSpriteFrameCache\n"
-        "\tmov r0, #0x54\n"
-        "\tmov r1, #0x80\n"
-        "\tlsl r1, r1, #0x18\n"
-        "\tbl mem_alloc\n"
-        "\tldr r1, _08036224\n"
-        "\tbl sub_8036E20\n"
-        "\tmov r8, r0\n"
-        "\tldr r1, _08036228\n"
-        "\tldr r0, _0803622C\n"
-        "\tstr r0, [r1]\n"
-        "\tldr r0, _08036230\n"
-        "\tstr r0, [r1, #4]\n"
-        "\tldr r0, _08036234\n"
-        "\tstr r0, [r1, #8]\n"
-        "\tldr r0, [r1, #8]\n"
-        "\tadd r0, r6, #0\n"
-        "\tbl sub_8036528\n"
-        "\tadd r0, r6, #0\n"
-        "\tbl sub_8036600\n"
-        "\tmov r0, #0x14\n"
-        "\tbl sub_8026EDC\n"
-        "\tbl sub_8034374\n"
-        "\tmov sb, r0\n"
-        "\tadd r0, r6, #0\n"
-        "\tbl sub_8036CF4\n"
-        "\tmov r4, #0\n"
-        "\tldr r5, _08036238\n"
-        "\tldr r7, _0803623C\n"
-        "_08036210:\n"
-        "\tcmp r4, #0x10\n"
-        "\tbgt _08036240\n"
-        "\tmov r0, #0xff\n"
-        "\tstrh r0, [r5]\n"
-        "\tmov r0, #0x10\n"
-        "\tsub r0, r0, r4\n"
-        "\tstrh r0, [r7]\n"
-        "\tb _08036244\n"
-        "\t.align 2, 0\n"
-        "\t_08036220: .4byte 0x06010000\n"
-        "\t_08036224: .4byte gStaticData_0817D698\n"
-        "\t_08036228: .4byte 0x040000D4\n"
-        "\t_0803622C: .4byte gStaticData_08178F80\n"
-        "\t_08036230: .4byte 0x05000200\n"
-        "\t_08036234: .4byte 0x80000100\n"
-        "\t_08036238: .4byte 0x04000050\n"
-        "\t_0803623C: .4byte 0x04000054\n"
-        "_08036240:\n"
-        "\tmov r0, #0\n"
-        "\tstr r0, [r5]\n"
-        "_08036244:\n"
-        "\tbl sub_80006A8\n"
-        "\tmov r0, sb\n"
-        "\tbl sub_8034688\n"
-        "\tadd r4, #1\n"
-        "\tcmp r4, #0x3b\n"
-        "\tble _08036210\n"
-        "\tldr r0, _08036308\n"
-        "\tldr r0, [r0]\n"
-        "\tmov r2, #0x80\n"
-        "\tlsl r2, r2, #1\n"
-        "\tmov r1, #0x4b\n"
-        "\tbl PlaySfx\n"
-        "\tmov r5, #0x80\n"
-        "\tlsl r5, r5, #6\n"
-        "\tldr r0, _0803630C\n"
-        "\tadd r1, r6, r0\n"
-        "\tmov r0, #1\n"
-        "\tneg r0, r0\n"
-        "\tstr r0, [r1]\n"
-        "_08036270:\n"
-        "\tldr r0, _08036310\n"
-        "\tldr r0, [r0]\n"
-        "\tbl sub_80007AC\n"
-        "\tldr r1, _08036314\n"
-        "\tmov r0, #9\n"
-        "\tldrh r1, [r1, #2]\n"
-        "\tand r0, r1\n"
-        "\tcmp r0, #0\n"
-        "\tbeq _08036292\n"
-        "\tldr r2, _0803630C\n"
-        "\tadd r1, r6, r2\n"
-        "\tldr r0, [r1]\n"
-        "\tcmp r0, #0x40\n"
-        "\tble _08036292\n"
-        "\tmov r0, #0x40\n"
-        "\tstr r0, [r1]\n"
-        "_08036292:\n"
-        "\tbl sub_80006A8\n"
-        "\tbl sub_8001614\n"
-        "\tldr r3, _0803630C\n"
-        "\tadd r4, r6, r3\n"
-        "\tldr r0, [r4]\n"
-        "\tmov r7, #1\n"
-        "\tneg r7, r7\n"
-        "\tmov sl, r7\n"
-        "\tcmp r0, sl\n"
-        "\tbeq _080362E0\n"
-        "\tcmp r0, #0x40\n"
-        "\tbne _080362BC\n"
-        "\tldr r0, _08036308\n"
-        "\tldr r0, [r0]\n"
-        "\tmov r1, #0x4c\n"
-        "\tmov r2, #0x80\n"
-        "\tlsl r2, r2, #1\n"
-        "\tbl PlaySfx\n"
-        "_080362BC:\n"
-        "\tldr r3, [r4]\n"
-        "\tcmp r3, #0x40\n"
-        "\tbgt _080362D8\n"
-        "\tasr r2, r3, #2\n"
-        "\tldr r1, _08036318\n"
-        "\tldr r7, _0803631C\n"
-        "\tadd r0, r7, #0\n"
-        "\tstrh r0, [r1]\n"
-        "\tadd r1, #2\n"
-        "\tmov r0, #0x10\n"
-        "\tsub r0, r0, r2\n"
-        "\tlsl r0, r0, #8\n"
-        "\torr r2, r0\n"
-        "\tstrh r2, [r1]\n"
-        "_080362D8:\n"
-        "\tsub r2, r3, #1\n"
-        "\tstr r2, [r4]\n"
-        "\tcmp r2, sl\n"
-        "\tbne _08036324\n"
-        "_080362E0:\n"
-        "\tldr r0, _08036320\n"
-        "\tcmp r5, r0\n"
-        "\tbgt _080362F0\n"
-        "\tmov r1, #0xc0\n"
-        "\tlsl r1, r1, #3\n"
-        "\tadd r5, r5, r1\n"
-        "\tcmp r5, r0\n"
-        "\tble _08036334\n"
-        "_080362F0:\n"
-        "\tmov r5, #0x80\n"
-        "\tlsl r5, r5, #9\n"
-        "\tldr r3, _0803630C\n"
-        "\tadd r2, r6, r3\n"
-        "\tldr r1, [r2]\n"
-        "\tmov r0, #1\n"
-        "\tneg r0, r0\n"
-        "\tcmp r1, r0\n"
-        "\tbne _08036334\n"
-        "\tmov r0, #0xf4\n"
-        "\tstr r0, [r2]\n"
-        "\tb _08036334\n"
-        "\t.align 2, 0\n"
-        "\t_08036308: .4byte gUnknown_030012BC\n"
-        "\t_0803630C: .4byte 0x00000444\n"
-        "\t_08036310: .4byte gUnknown_03001304\n"
-        "\t_08036314: .4byte gUnknown_030007E0\n"
-        "\t_08036318: .4byte 0x04000050\n"
-        "\t_0803631C: .4byte 0x00003F7F\n"
-        "\t_08036320: .4byte 0x0000FFFF\n"
-        "_08036324:\n"
-        "\tcmp r2, #0x40\n"
-        "\tbgt _08036334\n"
-        "\tlsl r0, r5, #3\n"
-        "\tadd r0, r0, r5\n"
-        "\tlsl r0, r0, #2\n"
-        "\tsub r0, r0, r5\n"
-        "\tlsl r0, r0, #3\n"
-        "\tasr r5, r0, #8\n"
-        "_08036334:\n"
-        "\tmov r0, #0x80\n"
-        "\tlsl r0, r0, #0x11\n"
-        "\tadd r1, r5, #0\n"
-        "\tbl sub_803ADB4\n"
-        "\tlsl r3, r0, #4\n"
-        "\tsub r3, r3, r0\n"
-        "\tlsl r3, r3, #3\n"
-        "\tneg r3, r3\n"
-        "\tmov r7, #0xf0\n"
-        "\tlsl r7, r7, #7\n"
-        "\tadd r3, r3, r7\n"
-        "\tlsl r1, r0, #2\n"
-        "\tadd r1, r1, r0\n"
-        "\tlsl r1, r1, #4\n"
-        "\tneg r1, r1\n"
-        "\tmov r2, #0xa0\n"
-        "\tlsl r2, r2, #7\n"
-        "\tadd r1, r1, r2\n"
-        "\tldr r2, _08036458\n"
-        "\tstr r3, [r2]\n"
-        "\tadd r2, #4\n"
-        "\tstr r1, [r2]\n"
-        "\tldr r1, _0803645C\n"
-        "\tstrh r0, [r1]\n"
-        "\tadd r1, #6\n"
-        "\tstrh r0, [r1]\n"
-        "\tldr r0, _08036460\n"
-        "\tmov r1, #0\n"
-        "\tstrh r1, [r0]\n"
-        "\tadd r0, #2\n"
-        "\tstrh r1, [r0]\n"
-        "\tmov r0, sb\n"
-        "\tbl sub_8034688\n"
-        "\tldr r3, _08036464\n"
-        "\tadd r0, r6, r3\n"
-        "\tldr r4, [r0]\n"
-        "\tcmp r4, #0\n"
-        "\tbeq _08036386\n"
-        "\tb _08036270\n"
-        "_08036386:\n"
-        "\tldr r2, _08036468\n"
-        "\tmov r0, #5\n"
-        "\tneg r0, r0\n"
-        "\tldrb r7, [r2, #1]\n"
-        "\tand r0, r7\n"
-        "\tmov r1, #0x10\n"
-        "\torr r0, r1\n"
-        "\tstrb r0, [r2, #1]\n"
-        "\tmov r0, #0x40\n"
-        "\tldrb r1, [r2]\n"
-        "\torr r0, r1\n"
-        "\tstrb r0, [r2]\n"
-        "\tbl sub_8001614\n"
-        "\tldr r0, _0803646C\n"
-        "\tstr r4, [r0]\n"
-        "\tldr r3, _08036464\n"
-        "\tadd r2, r6, r3\n"
-        "\tmov r1, #1\n"
-        "\tneg r1, r1\n"
-        "\tstr r1, [r2]\n"
-        "\tmov r7, #0x89\n"
-        "\tlsl r7, r7, #3\n"
-        "\tadd r0, r6, r7\n"
-        "\tstr r1, [r0]\n"
-        "\tldr r0, [r2]\n"
-        "\tcmp r0, #0\n"
-        "\tbeq _080364B4\n"
-        "_080363BE:\n"
-        "\tldr r0, _08036470\n"
-        "\tldr r0, [r0]\n"
-        "\tbl sub_80007AC\n"
-        "\tldr r1, _08036474\n"
-        "\tmov r0, #9\n"
-        "\tldrh r1, [r1, #2]\n"
-        "\tand r0, r1\n"
-        "\tcmp r0, #0\n"
-        "\tbeq _080363E2\n"
-        "\tmov r0, #0x89\n"
-        "\tlsl r0, r0, #3\n"
-        "\tadd r1, r6, r0\n"
-        "\tldr r0, [r1]\n"
-        "\tcmp r0, #0\n"
-        "\tble _080363E2\n"
-        "\tmov r0, #1\n"
-        "\tstr r0, [r1]\n"
-        "_080363E2:\n"
-        "\tmov r2, r8\n"
-        "\tldr r1, [r2, #0x50]\n"
-        "\tmov r3, #0x10\n"
-        "\tldrsh r0, [r1, r3]\n"
-        "\tadd r0, r8\n"
-        "\tldr r1, [r1, #0x14]\n"
-        "\tbl sub_803AD7C\n"
-        "\tmov r7, r8\n"
-        "\tldr r1, [r7, #0x50]\n"
-        "\tmov r2, #0x18\n"
-        "\tldrsh r0, [r1, r2]\n"
-        "\tadd r0, r8\n"
-        "\tldr r1, [r1, #0x1c]\n"
-        "\tbl sub_803AD7C\n"
-        "\tldr r0, _08036478\n"
-        "\tldr r0, [r0]\n"
-        "\tbl sub_8006A78\n"
-        "\tbl FlushSpriteFrameOamQueue\n"
-        "\tadd r0, r6, #0\n"
-        "\tbl sub_8036668\n"
-        "\tadd r0, r6, #0\n"
-        "\tbl sub_803686C\n"
-        "\tmov r0, sb\n"
-        "\tbl sub_8034688\n"
-        "\tbl sub_80006A8\n"
-        "\tldr r3, _08036464\n"
-        "\tadd r4, r6, r3\n"
-        "\tldr r1, [r4]\n"
-        "\tcmp r1, #0x10\n"
-        "\tble _08036484\n"
-        "\tsub r3, r1, #1\n"
-        "\tstr r3, [r4]\n"
-        "\tsub r1, #0x12\n"
-        "\tldr r5, _0803646C\n"
-        "\tldr r7, _0803647C\n"
-        "\tadd r0, r7, #0\n"
-        "\tstrh r0, [r5]\n"
-        "\tldr r2, _08036480\n"
-        "\tmov r0, #0x10\n"
-        "\tsub r0, r0, r1\n"
-        "\tlsl r1, r1, #8\n"
-        "\torr r0, r1\n"
-        "\tstrh r0, [r2]\n"
-        "\tcmp r3, #0x11\n"
-        "\tbne _0803649A\n"
-        "\tmov r0, #1\n"
-        "\tneg r0, r0\n"
-        "\tstr r0, [r4]\n"
-        "\tmov r0, #0\n"
-        "\tstr r0, [r5]\n"
-        "\tb _0803649A\n"
-        "\t.align 2, 0\n"
-        "\t_08036458: .4byte 0x04000028\n"
-        "\t_0803645C: .4byte 0x04000020\n"
-        "\t_08036460: .4byte 0x04000022\n"
-        "\t_08036464: .4byte 0x00000444\n"
-        "\t_08036468: .4byte gUnknown_03001288\n"
-        "\t_0803646C: .4byte 0x04000050\n"
-        "\t_08036470: .4byte gUnknown_03001304\n"
-        "\t_08036474: .4byte gUnknown_030007E0\n"
-        "\t_08036478: .4byte gUnknown_03001300\n"
-        "\t_0803647C: .4byte 0x00003F7F\n"
-        "\t_08036480: .4byte 0x04000052\n"
-        "_08036484:\n"
-        "\tcmp r1, #0\n"
-        "\tblt _0803649A\n"
-        "\tsub r1, #1\n"
-        "\tstr r1, [r4]\n"
-        "\tldr r2, _08036514\n"
-        "\tmov r0, #0x10\n"
-        "\tsub r0, r0, r1\n"
-        "\tstrh r0, [r2]\n"
-        "\tldr r1, _08036518\n"
-        "\tmov r0, #0xff\n"
-        "\tstrh r0, [r1]\n"
-        "_0803649A:\n"
-        "\tldr r0, _0803651C\n"
-        "\tldr r0, [r0]\n"
-        "\tbl sub_8006AAC\n"
-        "\tbl FlushVramDmaQueue\n"
-        "\tbl AgeSpriteFrameCache\n"
-        "\tldr r1, _08036520\n"
-        "\tadd r0, r6, r1\n"
-        "\tldr r0, [r0]\n"
-        "\tcmp r0, #0\n"
-        "\tbne _080363BE\n"
-        "_080364B4:\n"
-        "\tmov r2, r8\n"
-        "\tcmp r2, #0\n"
-        "\tbeq _080364CA\n"
-        "\tldr r1, [r2, #0x50]\n"
-        "\tmov r3, #8\n"
-        "\tldrsh r0, [r1, r3]\n"
-        "\tadd r0, r8\n"
-        "\tldr r2, [r1, #0xc]\n"
-        "\tmov r1, #3\n"
-        "\tbl sub_803AD80\n"
-        "_080364CA:\n"
-        "\tmov r7, sb\n"
-        "\tcmp r7, #0\n"
-        "\tbeq _080364D8\n"
-        "\tmov r0, sb\n"
-        "\tmov r1, #3\n"
-        "\tbl sub_80346FC\n"
-        "_080364D8:\n"
-        "\tldr r1, _08036524\n"
-        "\tadd r0, r6, r1\n"
-        "\tldr r0, [r0]\n"
-        "\tcmp r0, #0\n"
-        "\tbeq _080364E6\n"
-        "\tbl sub_8026EB4\n"
-        "_080364E6:\n"
-        "\tmov r2, #0x86\n"
-        "\tlsl r2, r2, #3\n"
-        "\tadd r0, r6, r2\n"
-        "\tldr r0, [r0]\n"
-        "\tcmp r0, #0\n"
-        "\tbeq _080364F6\n"
-        "\tbl sub_8026EB4\n"
-        "_080364F6:\n"
-        "\tbl FreeSpriteFrameCache\n"
-        "\tbl FreeSpriteFrameOamQueue\n"
-        "\tbl FreeObjTileFreeList\n"
-        "\tbl FreeCategorySpriteSheet\n"
-        "\tpop {r3, r4, r5}\n"
-        "\tmov r8, r3\n"
-        "\tmov sb, r4\n"
-        "\tmov sl, r5\n"
-        "\tpop {r4, r5, r6, r7}\n"
-        "\tpop {r0}\n"
-        "\tbx r0\n"
-        "\t.align 2, 0\n"
-        "\t_08036514: .4byte 0x04000054\n"
-        "\t_08036518: .4byte 0x04000050\n"
-        "\t_0803651C: .4byte gUnknown_03001300\n"
-        "\t_08036520: .4byte 0x00000444\n"
-        "\t_08036524: .4byte 0x00000434\n"
-    );
+    struct actor_self *part;
+    void *bgObj;
+    s32 i;
+    s32 scale;
+
+    InitObjTileFreeList((void *)0x06010000);
+    InitSpriteFrameOamQueue();
+    InitSpriteFrameCache();
+    part = sub_8036E20(New(0x54), gStaticData_0817D698);
+    {
+        struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
+        dma->src = (u32)gStaticData_08178F80;
+        dma->dst = 0x05000200;
+        dma->cnt = 0x80000100;
+        dma->cnt;
+    }
+    sub_8036528(self);
+    sub_8036600(self);
+    bgObj = sub_8034374(sub_8026EDC(0x14));
+    sub_8036CF4(self);
+    for (i = 0; i <= 0x3b; i++)
+    {
+        if (i <= 0x10)
+        {
+            REG_BLDCNT = 0xff;
+            REG_BLDY = 0x10 - i;
+        }
+        else
+        {
+            *(vu32 *)REG_ADDR_BLDCNT = 0;
+        }
+        sub_80006A8();
+        sub_8034688((s32)bgObj);
+    }
+    PlaySfx(gUnknown_030012BC, 0x4b, 0x100);
+    scale = 0x2000;
+    *(s32 *)((u8 *)self + 0x444) = -1;
+    do
+    {
+        s32 *fade;
+        s32 v;
+        s32 q;
+
+        sub_80007AC(gUnknown_03001304);
+        if (gUnknown_030007E0.pressed & 9)
+        {
+            if (*(s32 *)((u8 *)self + 0x444) > 0x40)
+                *(s32 *)((u8 *)self + 0x444) = 0x40;
+        }
+        sub_80006A8();
+        sub_8001614();
+        fade = (s32 *)((u8 *)self + 0x444);
+        if (*fade != -1)
+        {
+            if (*fade == 0x40)
+                PlaySfx(gUnknown_030012BC, 0x4c, 0x100);
+            v = *fade;
+            if (v <= 0x40)
+            {
+                s32 a = v >> 2;
+                REG_BLDCNT = 0x3f7f;
+                REG_BLDALPHA = a | ((0x10 - a) << 8);
+            }
+            *fade = v - 1;
+        }
+        if (*fade == -1)
+        {
+            if (scale > 0xffff || (scale += 0x600) > 0xffff)
+            {
+                scale = 0x10000;
+                if (*(s32 *)((u8 *)self + 0x444) == -1)
+                    *(s32 *)((u8 *)self + 0x444) = 0xf4;
+            }
+        }
+        else if (*fade <= 0x40)
+        {
+            scale = (scale * 0x118) >> 8;
+        }
+        q = 0x1000000 / scale;
+        {
+            s32 x = -(q * 120) + 0x7800;
+            s32 y = -(q * 80) + 0x5000;
+            REG_BG2X = x;
+            REG_BG2Y = y;
+        }
+        REG_BG2PA = q;
+        REG_BG2PD = q;
+        REG_BG2PB = 0;
+        REG_BG2PC = 0;
+        sub_8034688((s32)bgObj);
+    } while (*(s32 *)((u8 *)self + 0x444) != 0);
+    ((struct dispcnt_bits *)gUnknown_03001288)->bg2 = 0;
+    ((struct dispcnt_bits *)gUnknown_03001288)->obj = 1;
+    ((struct dispcnt_bits *)gUnknown_03001288)->objMap1D = 1;
+    sub_8001614();
+    *(vu32 *)REG_ADDR_BLDCNT = 0;
+    *(s32 *)((u8 *)self + 0x444) = -1;
+    *(s32 *)((u8 *)self + 0x448) = -1;
+    while (*(s32 *)((u8 *)self + 0x444) != 0)
+    {
+        s32 *fade;
+        register s32 v asm("r1");
+
+        sub_80007AC(gUnknown_03001304);
+        if (gUnknown_030007E0.pressed & 9)
+        {
+            if (*(s32 *)((u8 *)self + 0x448) > 0)
+                *(s32 *)((u8 *)self + 0x448) = 1;
+        }
+        {
+            struct part_vtable *vt = (struct part_vtable *)part->vtable;
+            ((void (*)(void *))vt->m10.fn)((u8 *)part + vt->m10.thisOffset);
+        }
+        {
+            struct part_vtable *vt = (struct part_vtable *)part->vtable;
+            ((void (*)(void *))vt->m18.fn)((u8 *)part + vt->m18.thisOffset);
+        }
+        sub_8006A78(gUnknown_03001300);
+        FlushSpriteFrameOamQueue();
+        sub_8036668(self);
+        sub_803686C(self);
+        sub_8034688((s32)bgObj);
+        sub_80006A8();
+        fade = (s32 *)((u8 *)self + 0x444);
+        v = *fade;
+        if (v > 0x10)
+        {
+            s32 n = v - 1;
+            s32 a;
+
+            *fade = n;
+            a = v - 0x12;
+            REG_BLDCNT = 0x3f7f;
+            REG_BLDALPHA = (0x10 - a) | (a << 8);
+            if (n == 0x11)
+            {
+                *fade = -1;
+                *(vu32 *)REG_ADDR_BLDCNT = 0;
+            }
+        }
+        else if (v >= 0)
+        {
+            v--;
+            *fade = v;
+            REG_BLDY = 0x10 - v;
+            REG_BLDCNT = 0xff;
+        }
+        sub_8006AAC(gUnknown_03001300);
+        FlushVramDmaQueue();
+        AgeSpriteFrameCache();
+    }
+    if (part != NULL)
+    {
+        struct part_vtable *vt = (struct part_vtable *)part->vtable;
+        ((void (*)(void *, s32))vt->m08.fn)((u8 *)part + vt->m08.thisOffset, 3);
+    }
+    if (bgObj != NULL)
+        sub_80346FC(bgObj, 3);
+    if (*(void **)((u8 *)self + 0x434) != NULL)
+        sub_8026EB4(*(void **)((u8 *)self + 0x434));
+    if (*(void **)((u8 *)self + 0x430) != NULL)
+        sub_8026EB4(*(void **)((u8 *)self + 0x430));
+    FreeSpriteFrameCache();
+    FreeSpriteFrameOamQueue();
+    FreeObjTileFreeList();
+    FreeCategorySpriteSheet();
 }
 
 /* BG2's own tileset/palette loader for this subsystem: allocates 3
- * VRAM tile blocks (`self+0x424`/`self+0x42c`, `sl`-held), DMA-loads 3
- * palette banks (`gStaticData_0817D768`/`_77c`/`_790`) to
- * `0x050003E0`/`_C0`/`_A0` and their matching tile data
- * (`sub_8037110`) into the 3 allocated blocks, then allocates and loads
- * a 4th tile block sized from the first package's own header byte
- * (`sub_8026EC0`/`LoadTaggedAsset`) and stashes its size
- * (`sub_8026EC0`'s return, `self+0x434`) for later use. */
-NAKED void sub_8036528(u32 *self)
+ * VRAM tile blocks (`self+0x424`/`0x428`/`0x42c`), loads 3 palette
+ * banks (`gStaticData_0817D768`/`_77c`/`_790`'s packages) to
+ * `0x050003E0`/`_C0`/`_A0` and two packages' tile data (`sub_8037110`)
+ * into the first two blocks, then allocates a buffer sized from the
+ * first package's tile-asset header (`self+0x430`) and unpacks into it,
+ * plus a 0x1000-byte scratch buffer (`self+0x434`). The last two
+ * stores go through a destination pointer taken before the allocation
+ * call, as the ROM computes the address first. */
+#define PKG_A ((struct bg_package *)gStaticData_0817D768)
+#define PKG_B ((struct bg_package *)gStaticData_0817D77C)
+#define PKG_C ((struct bg_package *)gStaticData_0817D790)
+
+void sub_8036528(u32 *self)
 {
-    asm(
-        "\tpush {r4, r5, r6, r7, lr}\n"
-        "\tmov r7, sl\n"
-        "\tmov r6, sb\n"
-        "\tmov r5, r8\n"
-        "\tpush {r5, r6, r7}\n"
-        "\tadd r4, r0, #0\n"
-        "\tmov r0, #0x90\n"
-        "\tlsl r0, r0, #5\n"
-        "\tbl AllocVramTileBlock\n"
-        "\tldr r1, _080365DC\n"
-        "\tadd r1, r1, r4\n"
-        "\tmov sb, r1\n"
-        "\tstr r0, [r1]\n"
-        "\tmov r0, #0x80\n"
-        "\tlsl r0, r0, #3\n"
-        "\tbl AllocVramTileBlock\n"
-        "\tmov r2, #0x85\n"
-        "\tlsl r2, r2, #3\n"
-        "\tadd r2, r2, r4\n"
-        "\tmov sl, r2\n"
-        "\tstr r0, [r2]\n"
-        "\tmov r7, #0x80\n"
-        "\tlsl r7, r7, #5\n"
-        "\tadd r0, r7, #0\n"
-        "\tbl AllocVramTileBlock\n"
-        "\tldr r2, _080365E0\n"
-        "\tadd r1, r4, r2\n"
-        "\tstr r0, [r1]\n"
-        "\tldr r0, _080365E4\n"
-        "\tmov r8, r0\n"
-        "\tldr r1, [r0, #8]\n"
-        "\tldr r2, _080365E8\n"
-        "\tadd r0, r4, #0\n"
-        "\tbl sub_8037110\n"
-        "\tldr r6, _080365EC\n"
-        "\tldr r1, [r6, #8]\n"
-        "\tldr r2, _080365F0\n"
-        "\tadd r0, r4, #0\n"
-        "\tbl sub_8037110\n"
-        "\tldr r5, _080365F4\n"
-        "\tldr r1, [r5, #8]\n"
-        "\tldr r2, _080365F8\n"
-        "\tadd r0, r4, #0\n"
-        "\tbl sub_8037110\n"
-        "\tldr r1, [r6, #0xc]\n"
-        "\tmov r0, sb\n"
-        "\tldr r2, [r0]\n"
-        "\tadd r0, r4, #0\n"
-        "\tbl sub_8037110\n"
-        "\tldr r1, [r5, #0xc]\n"
-        "\tmov r0, sl\n"
-        "\tldr r2, [r0]\n"
-        "\tadd r0, r4, #0\n"
-        "\tbl sub_8037110\n"
-        "\tmov r1, r8\n"
-        "\tldr r0, [r1, #0xc]\n"
-        "\tldr r0, [r0]\n"
-        "\tlsr r0, r0, #8\n"
-        "\tmov r2, #0x86\n"
-        "\tlsl r2, r2, #3\n"
-        "\tadd r5, r4, r2\n"
-        "\tbl sub_8026EC0\n"
-        "\tadd r1, r0, #0\n"
-        "\tstr r1, [r5]\n"
-        "\tmov r2, r8\n"
-        "\tldr r0, [r2, #0xc]\n"
-        "\tbl LoadTaggedAsset\n"
-        "\tldr r0, _080365FC\n"
-        "\tadd r4, r4, r0\n"
-        "\tadd r0, r7, #0\n"
-        "\tbl sub_8026EC0\n"
-        "\tstr r0, [r4]\n"
-        "\tpop {r3, r4, r5}\n"
-        "\tmov r8, r3\n"
-        "\tmov sb, r4\n"
-        "\tmov sl, r5\n"
-        "\tpop {r4, r5, r6, r7}\n"
-        "\tpop {r0}\n"
-        "\tbx r0\n"
-        "\t.align 2, 0\n"
-        "\t_080365DC: .4byte 0x00000424\n"
-        "\t_080365E0: .4byte 0x0000042C\n"
-        "\t_080365E4: .4byte gStaticData_0817D768\n"
-        "\t_080365E8: .4byte 0x050003E0\n"
-        "\t_080365EC: .4byte gStaticData_0817D77C\n"
-        "\t_080365F0: .4byte 0x050003C0\n"
-        "\t_080365F4: .4byte gStaticData_0817D790\n"
-        "\t_080365F8: .4byte 0x050003A0\n"
-        "\t_080365FC: .4byte 0x00000434\n"
-    );
+    self[0x109] = (u32)AllocVramTileBlock(0x1200);
+    self[0x10a] = (u32)AllocVramTileBlock(0x400);
+    self[0x10b] = (u32)AllocVramTileBlock(0x1000);
+    sub_8037110(self, PKG_A->paletteAsset, (void *)0x050003E0);
+    sub_8037110(self, PKG_B->paletteAsset, (void *)0x050003C0);
+    sub_8037110(self, PKG_C->paletteAsset, (void *)0x050003A0);
+    sub_8037110(self, PKG_B->tileAsset, (void *)self[0x109]);
+    sub_8037110(self, PKG_C->tileAsset, (void *)self[0x10a]);
+    {
+        u32 size = *(u32 *)PKG_A->tileAsset >> 8;
+        u32 *dst = &self[0x10c];
+        void *buf;
+
+        *dst = (u32)(buf = sub_8026EC0(size));
+        LoadTaggedAsset(PKG_A->tileAsset, buf);
+    }
+    {
+        u32 *dst = &self[0x10d];
+        *dst = (u32)sub_8026EC0(0x1000);
+    }
 }
 
 /* Slot-array field initializer: for all 20 (`0x13`+1) slots, clears
@@ -2129,61 +2228,51 @@ NAKED void sub_8036528(u32 *self)
  * `+1`, and the delta-record pointer (`self+0x2c+i*0x34`) from that
  * same table's `+i*8` head. Also clears 3 header fields
  * (`self+0x438`/`self+0x43c`/`self+0x440`). */
-NAKED void sub_8036600(u32 *self)
+/* Matches only because this object is built with -fno-strength-reduce
+ * (see NO_STRENGTH_REDUCE_OBJS in the Makefile and
+ * docs/matching/per-file-flags-investigation.md): with strength
+ * reduction on, gcc's loop optimizer reverses the first loop into a
+ * count-down (its counter is only used by the exit test) while the ROM
+ * keeps `i` counting up. The pointer walks are the source's own - with
+ * strength reduction off nothing would have produced them. The second
+ * loop's `1` lives in a local assigned before its counter and pointer
+ * (the ROM materializes it first). */
+void sub_8036600(u32 *self)
 {
-    asm(
-        "\tpush {r4, r5, r6, r7, lr}\n"
-        "\tadd r5, r0, #0\n"
-        "\tmov r6, #0\n"
-        "\tmov r7, #0\n"
-        "\tldr r3, _0803665C\n"
-        "\tadd r2, r5, #0\n"
-        "\tadd r4, r3, #4\n"
-        "\tadd r1, r5, #4\n"
-        "_08036610:\n"
-        "\tstrb r7, [r2]\n"
-        "\tldr r0, [r4]\n"
-        "\tadd r0, #1\n"
-        "\tstr r0, [r1]\n"
-        "\tldr r0, [r3]\n"
-        "\tstr r0, [r1, #0x2c]\n"
-        "\tadd r3, #8\n"
-        "\tadd r2, #0x34\n"
-        "\tadd r1, #0x34\n"
-        "\tadd r4, #8\n"
-        "\tadd r6, #1\n"
-        "\tcmp r6, #0x13\n"
-        "\tble _08036610\n"
-        "\tmov r2, #1\n"
-        "\tmov r1, #0x11\n"
-        "\tldr r3, _08036660\n"
-        "\tadd r0, r5, r3\n"
-        "_08036632:\n"
-        "\tstrb r2, [r0]\n"
-        "\tsub r0, #1\n"
-        "\tsub r1, #1\n"
-        "\tcmp r1, #0\n"
-        "\tbge _08036632\n"
-        "\tmov r1, #0x87\n"
-        "\tlsl r1, r1, #3\n"
-        "\tadd r0, r5, r1\n"
-        "\tmov r1, #0\n"
-        "\tstr r1, [r0]\n"
-        "\tldr r2, _08036664\n"
-        "\tadd r0, r5, r2\n"
-        "\tstr r1, [r0]\n"
-        "\tmov r3, #0x88\n"
-        "\tlsl r3, r3, #3\n"
-        "\tadd r0, r5, r3\n"
-        "\tstr r1, [r0]\n"
-        "\tpop {r4, r5, r6, r7}\n"
-        "\tpop {r0}\n"
-        "\tbx r0\n"
-        "\t.align 2, 0\n"
-        "\t_0803665C: .4byte gStaticData_0817D6C0\n"
-        "\t_08036660: .4byte 0x00000421\n"
-        "\t_08036664: .4byte 0x0000043C\n"
-    );
+    s32 i;
+    u8 zero;
+    struct slot_seed *seed;
+    u8 *active;
+    s32 *hold;
+    s32 *countdown;
+
+    i = 0;
+    zero = 0;
+    seed = (struct slot_seed *)gStaticData_0817D6C0;
+    active = (u8 *)self;
+    hold = &seed->hold;
+    countdown = (s32 *)((u8 *)self + 4);
+    for (; i <= 0x13; i++)
+    {
+        *active = zero;
+        *countdown = *hold + 1;
+        *(struct delta_record **)((u8 *)countdown + 0x2c) = seed->record;
+        seed++;
+        active += 0x34;
+        countdown = (s32 *)((u8 *)countdown + 0x34);
+        hold += 2;
+    }
+    {
+        u8 one = 1;
+        s32 j = 0x11;
+        u8 *flags = (u8 *)self + 0x421;
+
+        for (; j >= 0; j--)
+            *flags-- = one;
+    }
+    *(s32 *)((u8 *)self + 0x438) = 0;
+    *(s32 *)((u8 *)self + 0x43c) = 0;
+    *(s32 *)((u8 *)self + 0x440) = 0;
 }
 
 /* `sub_8036528`'s per-frame slot-array updater, only while the header
@@ -2195,6 +2284,144 @@ NAKED void sub_8036600(u32 *self)
  * `self+0x43c` and, separately, ages every active slot's own
  * `self+i*0x34+8` sub-timer, resetting `self+0x444`/`self+0x448` if any
  * slot's timer crosses its ceiling. */
+#if NON_MATCHING
+/* NON_MATCHING draft (old_agbcc, 19 halfwords off): only the drain
+ * loop's preheader order (end pointer before the two hoisted constants)
+ * and the tail's 0x444/0x448 constant registers differ. The drain loop
+ * is a pointer do-while with a signed compare - the ROM's reduced
+ * pointer, signed `ble` and missing entry test would come from strength
+ * reduction of an `i` loop, but this phrasing gives the same loop with
+ * or without -fno-strength-reduce (which this object is built with). */
+#define SLOT20_ACCESSOR(name, type, off)                   \
+    static inline type *name(u32 *self, s32 stride)        \
+    {                                                      \
+        u8 *base = (u8 *)self + (off);                     \
+        return (type *)(base + stride);                    \
+    }
+
+SLOT20_ACCESSOR(Rec20At, struct delta_record *, 0x30)
+SLOT20_ACCESSOR(PosC20At, s32, 0x10)
+SLOT20_ACCESSOR(DeltaC20At, s32, 0x24)
+SLOT20_ACCESSOR(VelA20At, s32, 0x14)
+SLOT20_ACCESSOR(DeltaD20At, s32, 0x28)
+SLOT20_ACCESSOR(VelB20At, s32, 0x18)
+SLOT20_ACCESSOR(DeltaE20At, s32, 0x2c)
+SLOT20_ACCESSOR(PosA20At, s32, 0x08)
+SLOT20_ACCESSOR(DeltaA20At, s32, 0x1c)
+SLOT20_ACCESSOR(PosB20At, s32, 0x0c)
+SLOT20_ACCESSOR(DeltaB20At, s32, 0x20)
+
+void sub_8036668(u32 *self)
+{
+    s32 i;
+    s32 *timer;
+
+    if (*(s32 *)((u8 *)self + 0x448) == -1)
+    {
+        for (i = 0; i <= 0x13; i++)
+        {
+            s32 stride = i * 0x34;
+            u8 *countdownBase = (u8 *)self + 4;
+            s32 *countdownPtr = (s32 *)(countdownBase + stride);
+
+            if (*countdownPtr != 0)
+            {
+                s32 countdown = *countdownPtr - 1;
+                *countdownPtr = countdown;
+                if (countdown == 0)
+                {
+                    struct delta_record **recordPtrAddr = Rec20At(self, stride);
+                    register struct delta_record *recordLoaded asm("r0") = *recordPtrAddr;
+                    struct delta_record *record = recordLoaded;
+
+                    *recordPtrAddr = (struct delta_record *)((u8 *)recordLoaded + 0x20);
+                    SlotBase(self, stride)[0] = 1;
+                    {
+                        s32 hold = record->hold;
+                        *countdownPtr = hold;
+                        if (hold != 0)
+                        {
+                            *PosC20At(self, stride) = record->dPosC << 16;
+                            *DeltaC20At(self, stride) = record->deltaC;
+                            *VelA20At(self, stride) = record->dVelA << 8;
+                            *DeltaD20At(self, stride) = record->deltaD;
+                            *VelB20At(self, stride) = record->dVelB << 8;
+                            *DeltaE20At(self, stride) = record->deltaE;
+                            *PosA20At(self, stride) = record->dPosA << 16;
+                            *DeltaA20At(self, stride) = record->deltaA;
+                            *PosB20At(self, stride) = record->dPosB << 16;
+                            *DeltaB20At(self, stride) = record->deltaB;
+                        }
+                    }
+                }
+                else
+                {
+                    *PosC20At(self, stride) += *DeltaC20At(self, stride);
+                    *VelA20At(self, stride) += *DeltaD20At(self, stride);
+                    *VelB20At(self, stride) += *DeltaE20At(self, stride);
+                    *PosA20At(self, stride) += *DeltaA20At(self, stride);
+                    *PosB20At(self, stride) += *DeltaB20At(self, stride);
+                }
+            }
+            else
+            {
+                *(s32 *)((u8 *)self + 0x448) = -2;
+            }
+        }
+        {
+            s32 *stage = (s32 *)((u8 *)self + 0x43c);
+            if (*stage <= 1)
+            {
+                s32 *sub = (s32 *)((u8 *)self + 0x440);
+                if (++*sub > 3)
+                {
+                    *sub = 0;
+                    sub = (s32 *)((u8 *)self + 0x438);
+                    if (++*sub > 9)
+                    {
+                        *sub = 0;
+                        ++*stage;
+                    }
+                }
+            }
+        }
+    }
+    timer = (s32 *)((u8 *)self + 0x448);
+    if (*timer == -2)
+        *timer = 0xf0;
+    if (*timer > 0)
+    {
+        if (--*timer != 0)
+            return;
+        PlaySfx(gUnknown_030012BC, 0x50, 0x100);
+    }
+    if (*timer == 0)
+    {
+        s32 allDone = 1;
+        u8 *slot;
+        slot = (u8 *)self;
+        do
+        {
+            if (*slot != 0)
+            {
+                s32 y;
+
+                allDone = 0;
+                y = *(s32 *)(slot + 8) - 0x80000;
+                *(s32 *)(slot + 8) = y;
+                if (y < -0x7f0000)
+                    *slot = allDone;
+            }
+            slot += 0x34;
+        } while ((s32)slot <= (s32)((u8 *)self + 0x3dc));
+        if (allDone)
+        {
+            *(s32 *)((u8 *)self + 0x444) = 0x10;
+            *(s32 *)((u8 *)self + 0x448) = -3;
+        }
+    }
+}
+#else
 NAKED void sub_8036668(u32 *self)
 {
     asm(
@@ -2465,6 +2692,7 @@ NAKED void sub_8036668(u32 *self)
         "\t_08036868: .4byte 0x00000444\n"
     );
 }
+#endif
 
 /* The other half of `sub_8036668`'s per-frame slot-array update: if
  * the header's own `self+0x3dc` byte is set, positions the header's own
@@ -3064,7 +3292,67 @@ NAKED void sub_803686C(u32 *self)
  * (`gUnknown_03001288`) active. Takes no arguments - this package's
  * pointer lives entirely in the static table, not the scratch
  * object. */
-NAKED void sub_8036CF4(void)
+#if NON_MATCHING
+/* NON_MATCHING draft (old_agbcc, 30 halfwords off): the BGCNT/DISPCNT
+ * bitfields and the remap loop match in shape; `dest`/`y`/`bg2cnt` land
+ * in r6/r4/r5 instead of the ROM's r4/r5/r6 (declaration order has no
+ * effect). */
+void sub_8036CF4(u32 *self)
+{
+    struct bg_package *pkg = (struct bg_package *)gStaticData_0817D7A4;
+    u16 *palBuf;
+    u16 *mapBuf;
+    u16 *dest;
+    s32 x;
+    s32 y;
+    union bgcnt bg2cnt;
+
+    palBuf = sub_8026EC0(0x200);
+    LoadTaggedAsset(pkg->paletteAsset, palBuf);
+    {
+        struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
+        dma->src = (u32)(palBuf + 1);
+        dma->dst = 0x05000002;
+        dma->cnt = 0x80000040;
+        dma->cnt;
+    }
+    if (palBuf != NULL)
+        sub_8026EB4(palBuf);
+    LoadTaggedAsset(pkg->tileAsset, (void *)0x06008000);
+    mapBuf = sub_8026EC0((s32)pkg->height * (s32)pkg->width * 2);
+    LoadTaggedAsset(pkg->mapAsset, mapBuf);
+    dest = (u16 *)0x0600F000;
+    for (y = 0; y <= 0x1f; y++)
+    {
+        for (x = 0; x <= 0x1f; x += 2)
+        {
+            u16 v;
+            if (y < (s32)pkg->height && x < (s32)pkg->width)
+            {
+                s32 i = (s32)pkg->width * y + x;
+                v = (mapBuf[i] & 0xff) | ((mapBuf[i + 1] & 0xff) << 8);
+            }
+            else
+            {
+                v = 0;
+            }
+            *dest++ = v;
+        }
+    }
+    bg2cnt.raw = 0;
+    bg2cnt.bits.charBase = 2;
+    bg2cnt.bits.screenBase = 0x1e;
+    bg2cnt.bits.colorMode = 1;
+    bg2cnt.bits.priority = 1;
+    bg2cnt.bits.size = 1;
+    REG_BG2CNT = bg2cnt.raw;
+    ((struct dispcnt_bits *)gUnknown_03001288)->bg2 = 1;
+    ((struct dispcnt_bits *)gUnknown_03001288)->mode = 1;
+    if (mapBuf != NULL)
+        sub_8026EB4(mapBuf);
+}
+#else
+NAKED void sub_8036CF4(u32 *self)
 {
     asm(
         "\tpush {r4, r5, r6, r7, lr}\n"
@@ -3209,6 +3497,7 @@ NAKED void sub_8036CF4(void)
         "\t_08036E1C: .4byte gUnknown_03001288\n"
     );
 }
+#endif
 
 /* Constructs an actor-part object via `InitActorPart(self, ?, 0, 0,
  * 0x100)` (the "a" parameter is passed straight through from this
@@ -3222,85 +3511,30 @@ NAKED void sub_8036CF4(void)
  * resetting the `gUnknown_03001604`/`gUnknown_03001608`
  * frame-tile-cache bookkeeping pair `sub_8036FBC` reads back. Returns
  * `self`. */
-NAKED void *sub_8036E20(void *self, void *categoryTable)
+static inline u8 *CurFrame(struct actor_self *self)
 {
-    asm(
-        "\tpush {r4, r5, lr}\n"
-        "\tsub sp, #4\n"
-        "\tadd r4, r0, #0\n"
-        "\tmov r0, #0x80\n"
-        "\tlsl r0, r0, #1\n"
-        "\tstr r0, [sp]\n"
-        "\tadd r0, r4, #0\n"
-        "\tmov r2, #0\n"
-        "\tmov r3, #0\n"
-        "\tbl InitActorPart\n"
-        "\tldr r0, _08036EB4\n"
-        "\tstr r0, [r4, #0x50]\n"
-        "\tldr r2, [r4, #8]\n"
-        "\tasr r2, r2, #8\n"
-        "\tldr r1, [r4, #0xc]\n"
-        "\tldr r3, [r4]\n"
-        "\tlsl r0, r1, #1\n"
-        "\tadd r0, r0, r1\n"
-        "\tlsl r0, r0, #2\n"
-        "\tadd r0, r0, r3\n"
-        "\tmov r1, #2\n"
-        "\tldrsh r0, [r0, r1]\n"
-        "\tadd r0, r0, r2\n"
-        "\tldr r1, [r4, #4]\n"
-        "\tlsl r0, r0, #2\n"
-        "\tadd r0, r0, r1\n"
-        "\tldr r0, [r0]\n"
-        "\tldrb r3, [r0]\n"
-        "\tldrb r1, [r0, #1]\n"
-        "\tadd r2, r3, #0\n"
-        "\tmul r2, r1, r2\n"
-        "\tadd r0, r2, #0\n"
-        "\tlsl r0, r0, #5\n"
-        "\tbl AllocVramTileBlock\n"
-        "\tldr r5, _08036EB8\n"
-        "\tstr r0, [r5]\n"
-        "\tldr r2, [r4, #8]\n"
-        "\tasr r2, r2, #8\n"
-        "\tldr r1, [r4, #0xc]\n"
-        "\tldr r3, [r4]\n"
-        "\tlsl r0, r1, #1\n"
-        "\tadd r0, r0, r1\n"
-        "\tlsl r0, r0, #2\n"
-        "\tadd r0, r0, r3\n"
-        "\tmov r3, #2\n"
-        "\tldrsh r0, [r0, r3]\n"
-        "\tadd r0, r0, r2\n"
-        "\tldr r1, [r4, #4]\n"
-        "\tlsl r0, r0, #2\n"
-        "\tadd r0, r0, r1\n"
-        "\tldr r0, [r0]\n"
-        "\tldrb r2, [r0]\n"
-        "\tldrb r3, [r0, #1]\n"
-        "\tadd r1, r2, #0\n"
-        "\tmul r1, r3, r1\n"
-        "\tadd r0, r1, #0\n"
-        "\tlsl r0, r0, #5\n"
-        "\tbl AllocVramTileBlock\n"
-        "\tstr r0, [r5, #4]\n"
-        "\tldr r1, _08036EBC\n"
-        "\tmov r0, #1\n"
-        "\tstr r0, [r1]\n"
-        "\tldr r1, _08036EC0\n"
-        "\tmov r0, #0\n"
-        "\tstr r0, [r1]\n"
-        "\tadd r0, r4, #0\n"
-        "\tadd sp, #4\n"
-        "\tpop {r4, r5}\n"
-        "\tpop {r1}\n"
-        "\tbx r1\n"
-        "\t.align 2, 0\n"
-        "\t_08036EB4: .4byte gStaticData_087E55C4\n"
-        "\t_08036EB8: .4byte gUnknown_0300160C\n"
-        "\t_08036EBC: .4byte gUnknown_03001604\n"
-        "\t_08036EC0: .4byte gUnknown_03001608\n"
-    );
+    s32 base = self->animTime >> 8;
+    s32 idx = self->animIndex;
+    struct anim_frame_record *table = self->anims;
+    s32 val = table[idx].frameIndex;
+
+    val += base;
+    return (u8 *)self->frameOffsets[val];
+}
+
+struct actor_self *sub_8036E20(struct actor_self *self, void *a)
+{
+    u8 *frame;
+
+    InitActorPart(self, (s32)a, 0, 0, 0x100);
+    self->vtable = (struct actor_vtable *)gStaticData_087E55C4;
+    frame = CurFrame(self);
+    gUnknown_0300160C[0] = AllocVramTileBlock(frame[1] * frame[0] * 32);
+    frame = CurFrame(self);
+    gUnknown_0300160C[1] = AllocVramTileBlock(frame[1] * frame[0] * 32);
+    gUnknown_03001604 = 1;
+    gUnknown_03001608 = 0;
+    return self;
 }
 
 /* One state (of at least 5, `self+0x28`) in an actor-part's own
@@ -3318,134 +3552,49 @@ NAKED void *sub_8036E20(void *self, void *categoryTable)
  * `GetAnimFrameBaseOffset` once it crosses the current keyframe's own
  * threshold (`+4`), wrapping the accumulator back by `(threshold -
  * loopBase) << 8` per `struct anim_frame_record`. */
-NAKED void sub_8036EC4(void *self)
+void sub_8036EC4(struct actor_self *self)
 {
-    asm(
-        "\tpush {r4, lr}\n"
-        "\tadd r4, r0, #0\n"
-        "\tldr r0, [r4, #0x44]\n"
-        "\tadd r1, r0, #1\n"
-        "\tstr r1, [r4, #0x44]\n"
-        "\tldr r0, [r4, #0x28]\n"
-        "\tcmp r0, #1\n"
-        "\tbeq _08036F00\n"
-        "\tcmp r0, #1\n"
-        "\tblo _08036EE2\n"
-        "\tcmp r0, #2\n"
-        "\tbeq _08036F38\n"
-        "\tcmp r0, #3\n"
-        "\tbeq _08036F60\n"
-        "\tb _08036F76\n"
-        "_08036EE2:\n"
-        "\tldrb r0, [r4, #0x12]\n"
-        "\tcmp r0, #0\n"
-        "\tbeq _08036F76\n"
-        "\tmov r0, #1\n"
-        "\tstr r0, [r4, #0x28]\n"
-        "\tmov r2, #0\n"
-        "\tstr r2, [r4, #0x44]\n"
-        "\tstr r0, [r4, #0xc]\n"
-        "\tldr r0, [r4]\n"
-        "\tldrh r0, [r0, #0xc]\n"
-        "\tmov r1, #0\n"
-        "\tstrh r0, [r4, #0x10]\n"
-        "\tstrb r1, [r4, #0x12]\n"
-        "\tstr r2, [r4, #8]\n"
-        "\tb _08036F76\n"
-        "_08036F00:\n"
-        "\tldr r0, [r4, #8]\n"
-        "\tasr r0, r0, #8\n"
-        "\tcmp r0, #0x12\n"
-        "\tbne _08036F76\n"
-        "\tmov r0, #2\n"
-        "\tmov r1, #7\n"
-        "\tstr r0, [r4, #0x28]\n"
-        "\tmov r2, #0\n"
-        "\tstr r2, [r4, #0x44]\n"
-        "\tstr r1, [r4, #0xc]\n"
-        "\tldr r0, [r4]\n"
-        "\tadd r0, #0x54\n"
-        "\tldrh r0, [r0]\n"
-        "\tmov r1, #0\n"
-        "\tstrh r0, [r4, #0x10]\n"
-        "\tstrb r1, [r4, #0x12]\n"
-        "\tstr r2, [r4, #8]\n"
-        "\tldr r0, _08036F34\n"
-        "\tldr r0, [r0]\n"
-        "\tmov r2, #0x80\n"
-        "\tlsl r2, r2, #1\n"
-        "\tmov r1, #0x4f\n"
-        "\tbl PlaySfx\n"
-        "\tb _08036F76\n"
-        "\t.align 2, 0\n"
-        "\t_08036F34: .4byte gUnknown_030012BC\n"
-        "_08036F38:\n"
-        "\tldr r0, [r4, #8]\n"
-        "\tasr r0, r0, #8\n"
-        "\tcmp r0, #7\n"
-        "\tbne _08036F76\n"
-        "\tmov r1, #0\n"
-        "\tstrh r1, [r4, #0x10]\n"
-        "\tmov r0, #3\n"
-        "\tstr r0, [r4, #0x28]\n"
-        "\tstr r1, [r4, #0x44]\n"
-        "\tldr r0, _08036F5C\n"
-        "\tldr r0, [r0]\n"
-        "\tmov r2, #0x80\n"
-        "\tlsl r2, r2, #1\n"
-        "\tmov r1, #0x1b\n"
-        "\tbl PlaySfx\n"
-        "\tb _08036F76\n"
-        "\t.align 2, 0\n"
-        "\t_08036F5C: .4byte gUnknown_030012BC\n"
-        "_08036F60:\n"
-        "\tldr r0, [r4, #0x24]\n"
-        "\tsub r0, #0xe\n"
-        "\tstr r0, [r4, #0x24]\n"
-        "\tldr r0, [r4, #0x20]\n"
-        "\tldr r2, _08036FB8\n"
-        "\tadd r0, r0, r2\n"
-        "\tstr r0, [r4, #0x20]\n"
-        "\tcmp r1, #0xf\n"
-        "\tble _08036F76\n"
-        "\tmov r0, #4\n"
-        "\tstr r0, [r4, #0x28]\n"
-        "_08036F76:\n"
-        "\tmov r3, #0x10\n"
-        "\tldrsh r1, [r4, r3]\n"
-        "\tldr r0, [r4, #8]\n"
-        "\tadd r0, r0, r1\n"
-        "\tstr r0, [r4, #8]\n"
-        "\tmov r0, #0\n"
-        "\tstrb r0, [r4, #0x12]\n"
-        "\tadd r0, r4, #0\n"
-        "\tbl GetAnimFrameBaseOffset\n"
-        "\tldr r2, [r4, #0xc]\n"
-        "\tldr r3, [r4]\n"
-        "\tlsl r1, r2, #1\n"
-        "\tadd r1, r1, r2\n"
-        "\tlsl r1, r1, #2\n"
-        "\tadd r1, r1, r3\n"
-        "\tmov r3, #4\n"
-        "\tldrsh r2, [r1, r3]\n"
-        "\tcmp r0, r2\n"
-        "\tblt _08036FB0\n"
-        "\tmov r3, #6\n"
-        "\tldrsh r0, [r1, r3]\n"
-        "\tsub r0, r2, r0\n"
-        "\tlsl r0, r0, #8\n"
-        "\tldr r1, [r4, #8]\n"
-        "\tsub r1, r1, r0\n"
-        "\tstr r1, [r4, #8]\n"
-        "\tmov r0, #1\n"
-        "\tstrb r0, [r4, #0x12]\n"
-        "_08036FB0:\n"
-        "\tpop {r4}\n"
-        "\tpop {r0}\n"
-        "\tbx r0\n"
-        "\t.align 2, 0\n"
-        "\t_08036FB8: .4byte 0xFFFFFF00\n"
-    );
+    s32 time = ++self->stateTime;
+
+    switch ((u32)self->state)
+    {
+    case 0:
+        if (self->animDone)
+        {
+            ACTOR_SET_STATE(self, 1, 1);
+        }
+        break;
+    case 1:
+        if ((self->animTime >> 8) == 0x12)
+        {
+            ACTOR_SET_STATE(self, 2, 7);
+            PlaySfx(gUnknown_030012BC, 0x4f, 0x100);
+        }
+        break;
+    case 2:
+        if ((self->animTime >> 8) == 7)
+        {
+            self->animTimer = 0;
+            self->state = 3;
+            self->stateTime = 0;
+            PlaySfx(gUnknown_030012BC, 0x1b, 0x100);
+        }
+        break;
+    case 3:
+        self->z -= 0xe;
+        self->y -= 0x100;
+        if (time > 0xf)
+            self->state = 4;
+        break;
+    }
+    self->animTime += *(s16 *)&self->animTimer;
+    self->animDone = 0;
+    if (GetAnimFrameBaseOffset(self) >= self->anims[self->animIndex].loopThreshold)
+    {
+        self->animTime -= (self->anims[self->animIndex].loopThreshold
+                           - self->anims[self->animIndex].loopBase) << 8;
+        self->animDone = 1;
+    }
 }
 
 /* The actor-part's own OAM builder, a no-op once its state machine
@@ -3460,173 +3609,71 @@ NAKED void sub_8036EC4(void *self)
  * two VRAM tile blocks `sub_8036E20` allocated isn't currently displayed
  * (`gUnknown_03001604` toggles which), before queuing the OAM entry
  * itself via `QueueSpriteFrameOam`. */
-NAKED void sub_8036FBC(void *self)
+void sub_8036FBC(struct actor_self *self)
 {
-    asm(
-        "\tpush {r4, r5, r6, r7, lr}\n"
-        "\tmov r7, sl\n"
-        "\tmov r6, sb\n"
-        "\tmov r5, r8\n"
-        "\tpush {r5, r6, r7}\n"
-        "\tsub sp, #0x14\n"
-        "\tadd r7, r0, #0\n"
-        "\tldr r0, [r7, #0x28]\n"
-        "\tcmp r0, #4\n"
-        "\tbne _08036FD2\n"
-        "\tb _080370E8\n"
-        "_08036FD2:\n"
-        "\tldr r2, [r7, #8]\n"
-        "\tasr r2, r2, #8\n"
-        "\tldr r1, [r7, #0xc]\n"
-        "\tldr r3, [r7]\n"
-        "\tlsl r0, r1, #1\n"
-        "\tadd r0, r0, r1\n"
-        "\tlsl r0, r0, #2\n"
-        "\tadd r0, r0, r3\n"
-        "\tstr r0, [sp, #8]\n"
-        "\tmov r1, #2\n"
-        "\tldrsh r0, [r0, r1]\n"
-        "\tadd r0, r0, r2\n"
-        "\tldr r1, [r7, #4]\n"
-        "\tlsl r0, r0, #2\n"
-        "\tadd r0, r0, r1\n"
-        "\tldr r0, [r0]\n"
-        "\tmov sl, r0\n"
-        "\tldrb r2, [r0]\n"
-        "\tstr r2, [sp, #0xc]\n"
-        "\tlsl r2, r2, #2\n"
-        "\tmov sb, r2\n"
-        "\tldrb r3, [r0, #1]\n"
-        "\tstr r3, [sp, #0x10]\n"
-        "\tlsl r3, r3, #2\n"
-        "\tmov r8, r3\n"
-        "\tldr r4, [r7, #0x24]\n"
-        "\tlsl r0, r4, #8\n"
-        "\tldr r1, [r7, #0x30]\n"
-        "\tldr r1, [r1, #0x10]\n"
-        "\tbl sub_803ADB4\n"
-        "\tstr r0, [sp]\n"
-        "\tmov r0, #0x80\n"
-        "\tlsl r0, r0, #0xd\n"
-        "\tadd r1, r4, #0\n"
-        "\tbl sub_803ADB4\n"
-        "\tldr r1, [r7, #0x20]\n"
-        "\tmul r1, r0, r1\n"
-        "\tasr r1, r1, #0xc\n"
-        "\tmov r2, #0xa0\n"
-        "\tlsl r2, r2, #7\n"
-        "\tadd r1, r1, r2\n"
-        "\tasr r5, r1, #8\n"
-        "\tldr r1, [r7, #0x1c]\n"
-        "\tmul r0, r1, r0\n"
-        "\tasr r0, r0, #0xc\n"
-        "\tmov r3, #0xf0\n"
-        "\tlsl r3, r3, #7\n"
-        "\tadd r0, r0, r3\n"
-        "\tasr r6, r0, #8\n"
-        "\tmov r0, #0x80\n"
-        "\tlsl r0, r0, #1\n"
-        "\tstr r0, [sp, #4]\n"
-        "\tldr r1, [sp]\n"
-        "\tcmp r1, #0xff\n"
-        "\tbgt _0803705A\n"
-        "\tmov r0, #0x80\n"
-        "\tlsl r0, r0, #2\n"
-        "\tldr r2, [sp, #4]\n"
-        "\torr r2, r0\n"
-        "\tstr r2, [sp, #4]\n"
-        "\tldr r3, [sp, #0xc]\n"
-        "\tlsl r3, r3, #3\n"
-        "\tmov sb, r3\n"
-        "\tldr r0, [sp, #0x10]\n"
-        "\tlsl r0, r0, #3\n"
-        "\tmov r8, r0\n"
-        "_0803705A:\n"
-        "\tmov r1, sb\n"
-        "\tsub r6, r6, r1\n"
-        "\tmov r2, r8\n"
-        "\tsub r5, r5, r2\n"
-        "\tcmp r5, #0x9f\n"
-        "\tbgt _080370E8\n"
-        "\tlsl r0, r2, #1\n"
-        "\tadd r0, r5, r0\n"
-        "\tcmp r0, #0\n"
-        "\tblt _080370E8\n"
-        "\tcmp r6, #0xef\n"
-        "\tbgt _080370E8\n"
-        "\tlsl r0, r1, #1\n"
-        "\tadd r0, r6, r0\n"
-        "\tcmp r0, #0\n"
-        "\tblt _080370E8\n"
-        "\tldr r3, [sp, #8]\n"
-        "\tldrh r3, [r3, #8]\n"
-        "\tlsl r4, r3, #0x10\n"
-        "\tmov r0, sl\n"
-        "\tbl GetSpriteShapeSizeBits\n"
-        "\tmov r1, #0xff\n"
-        "\tand r5, r1\n"
-        "\tldr r1, _080370F8\n"
-        "\tand r6, r1\n"
-        "\tlsl r1, r6, #0x10\n"
-        "\torr r5, r1\n"
-        "\torr r5, r4\n"
-        "\torr r5, r0\n"
-        "\tldr r0, [sp, #4]\n"
-        "\torr r0, r5\n"
-        "\tstr r0, [sp, #4]\n"
-        "\tldr r4, _080370FC\n"
-        "\tldr r0, [r4]\n"
-        "\tcmp sl, r0\n"
-        "\tbeq _080370C4\n"
-        "\tldr r2, _08037100\n"
-        "\tldr r0, [r2]\n"
-        "\tmov r1, #1\n"
-        "\teor r0, r1\n"
-        "\tstr r0, [r2]\n"
-        "\tldr r2, _08037104\n"
-        "\tldr r1, _08037108\n"
-        "\tlsl r0, r0, #2\n"
-        "\tadd r0, r0, r1\n"
-        "\tldr r0, [r0]\n"
-        "\tldr r2, [r2]\n"
-        "\tmov r1, sl\n"
-        "\tbl sub_803AD80\n"
-        "\tmov r1, sl\n"
-        "\tstr r1, [r4]\n"
-        "_080370C4:\n"
-        "\tldr r1, _08037108\n"
-        "\tldr r0, _08037100\n"
-        "\tldr r0, [r0]\n"
-        "\tlsl r0, r0, #2\n"
-        "\tadd r0, r0, r1\n"
-        "\tldr r0, [r0]\n"
-        "\tldr r2, _0803710C\n"
-        "\tadd r0, r0, r2\n"
-        "\tlsr r0, r0, #5\n"
-        "\tldr r1, [r7, #0x18]\n"
-        "\tlsl r1, r1, #0xc\n"
-        "\torr r1, r0\n"
-        "\tlsl r1, r1, #0x10\n"
-        "\tlsr r1, r1, #0x10\n"
-        "\tldr r0, [sp, #4]\n"
-        "\tldr r2, [sp]\n"
-        "\tbl QueueSpriteFrameOam\n"
-        "_080370E8:\n"
-        "\tadd sp, #0x14\n"
-        "\tpop {r3, r4, r5}\n"
-        "\tmov r8, r3\n"
-        "\tmov sb, r4\n"
-        "\tmov sl, r5\n"
-        "\tpop {r4, r5, r6, r7}\n"
-        "\tpop {r0}\n"
-        "\tbx r0\n"
-        "\t.align 2, 0\n"
-        "\t_080370F8: .4byte 0x000001FF\n"
-        "\t_080370FC: .4byte gUnknown_03001608\n"
-        "\t_08037100: .4byte gUnknown_03001604\n"
-        "\t_08037104: .4byte gUnknown_03000874\n"
-        "\t_08037108: .4byte gUnknown_0300160C\n"
-        "\t_0803710C: .4byte 0xF9FF0000\n"
-    );
+    s32 scale;
+    s32 attr1;
+    struct anim_frame_record *rec;
+    u8 *frame;
+
+    if (self->state == 4)
+        return;
+    {
+        s32 base = self->animTime >> 8;
+        s32 idx = self->animIndex;
+        struct anim_frame_record *table = self->anims;
+        s32 val;
+
+        val = table[idx].frameIndex;
+        rec = &table[idx];
+        val += base;
+        frame = (u8 *)self->frameOffsets[val];
+    }
+    /* Declared in a nested block so their stack slots land after
+     * `rec`'s, as in the ROM. */
+    {
+        u32 w, h;
+        s32 halfW, halfH;
+        s32 sx, sy;
+        s32 depth;
+        s32 f;
+
+        w = frame[0];
+        halfW = w * 4;
+        h = frame[1];
+        halfH = h * 4;
+        depth = self->z;
+        scale = (depth << 8) / (*(struct cam_ref **)&self->unk_2C[4])->depth;
+        f = 0x100000 / depth;
+        sy = (((self->y * f) >> 12) + 0x5000) >> 8;
+        sx = (((self->x * f) >> 12) + 0x7800) >> 8;
+        attr1 = 0x100;
+        if (scale <= 0xff)
+        {
+            attr1 |= 0x200;
+            halfW = w * 8;
+            halfH = h * 8;
+        }
+        sx -= halfW;
+        sy -= halfH;
+        if (sy <= 0x9f && sy + halfH * 2 >= 0 && sx <= 0xef && sx + halfW * 2 >= 0)
+        {
+            u32 attr = (s32)rec->attr << 16;
+
+            attr1 |= (sy & 0xff) | ((sx & 0x1ff) << 16) | attr | GetSpriteShapeSizeBits(frame);
+            if (frame != gUnknown_03001608)
+            {
+                gUnknown_03001604 ^= 1;
+                gUnknown_03000874(gUnknown_0300160C[gUnknown_03001604], frame);
+                gUnknown_03001608 = frame;
+            }
+            {
+                /* the ROM computes the tile number in r0 */
+                register u32 tile asm("r0") = GET_TILE_NUM(gUnknown_0300160C[gUnknown_03001604]);
+
+                QueueSpriteFrameOam(attr1, tile | (self->unk_18 << 12), scale);
+            }
+        }
+    }
 }
 

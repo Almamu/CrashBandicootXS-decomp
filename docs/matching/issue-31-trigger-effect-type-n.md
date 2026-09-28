@@ -1,5 +1,9 @@
 # `sub_8020E84`/`sub_8020F7C`/`sub_802107C`/`sub_802117C` (issue #31) - a near-miss pass
 
+> **Superseded:** all four functions are now matched as plain C under
+> old_agbcc - see "Old-compiler pass" at the end. The sections below
+> record the earlier current-agbcc attempts.
+
 Follow-up to the third pass recorded in
 [issue-31-graphics-loading.md](./issue-31-graphics-loading.md) ("the
 'trigger effect type N' twin family matched via NAKED transcription"),
@@ -336,3 +340,53 @@ with `sub_8020F7C`/`sub_802107C`), and this sibling's own unique 4-byte
 stack-spill/truncation-batching gap - genuinely harder to close than
 the other three, consistent with this sibling's register shape having
 already been flagged as unreproduced before this pass even started.
+
+## Old-compiler pass: all four matched as plain C
+
+All four functions are now plain C in `src/graphics/trigger_effect.c`,
+with no register pins, inline asm or `goto`s. The object is on the
+Makefile's `OLD_AGBCC_OBJS` list. The earlier passes above all used the
+current agbcc. The ROM's `mov rA, #mask` before `ldrb rB` is old_agbcc's
+tell, the same one that closed the neighbouring spawners
+`sub_801EA5C`-`sub_801EE3C` (`graphics_loading_1ea5c.c`, issue #30).
+Under old_agbcc the pinned drafts that were kept under `#if NON_MATCHING`
+were further off, not closer, so they were thrown away. The file was
+rewritten as the obvious C. It follows `graphics_loading_1ea5c.c`'s
+conventions: `struct gfx_part` from `include/gfx_part.h`, and a `u8 tag`
+local set before the `sub_8008434` call.
+
+Only one thing needed care. The sound arm is two separate `sub_801A878`
+calls, one per sound id:
+
+```c
+if (sub_8023278(gUnknown_030012C0) || gUnknown_030012C0->unk_8C)
+    snd = sub_801A878(a0, a1, a2, a3, 0xC);
+else
+    snd = sub_801A878(a0, a1, a2, a3, 0xB);
+```
+
+The ROM repeats the `a0` truncation (`lsl`/`lsr`) and the id load in
+both arms and then shares the rest of the call. That is gcc cross-jumping
+two identical call tails. It merges backwards from the end of each call
+and stops at the differing `mov r1, #id`. A single call with an `id`
+variable only truncates `a0` once, after the join. That version also
+loads `gUnknown_030012C0` for the `sub_80234E8` call early and pushes
+`sl`, so it misses by 89 halfwords.
+
+The "`self` in r1 vs r0" and "mask in `sl`" register differences between
+siblings that the notes above describe come out of old_agbcc on its own.
+The register differences come from the one-line changes between siblings
+(mask, sound id, tag). In `sub_802117C` the mask and the tag are the same
+constant, `8`, so they share one register.
+
+| function | bit | sound | tag | current agbcc | old_agbcc |
+|---|---|---|---|---|---|
+| `sub_8020E84` | 1 | 0xB | 7 | 85 halfwords off | match |
+| `sub_8020F7C` | 2 | 0x3 | 5 | 19 halfwords off | match |
+| `sub_802107C` | 4 | 0xA | 6 | 19 halfwords off | match |
+| `sub_802117C` | 8 | 0x9 | 8 | 40 halfwords off | match |
+
+`gUnknown_030012C0` is typed with a file-local `struct level_progress`
+(`collected` at +2, `unk_8C` at +0x8C) instead of raw byte offsets.
+Verified with `make NON_MATCHING=1 report` and a full clean
+`make compare`.

@@ -32,12 +32,55 @@
  * ROM slice are the `bl` and `.word` relocation sites) and a full clean
  * `make compare`. */
 
-extern void sub_800C8AC(void *self, s32 mode);
-extern void sub_800C8BC(void *self, s32 mode);
-extern void sub_800C8CC(void *self, s32 mode);
+#include "part_ctrl.h"
+
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void *gUnknown_030012BC;
 
+#if NON_MATCHING
+/* Near-miss C draft (issue #10 NAKED retry): 7 halfwords off under
+ * both compilers, all register choice right after the two calls - the
+ * ROM keeps the target in r2 and `baseY` in r1 (`ldr r2, [r4, #0x70];
+ * ldr r1, [r4, #0x64]; str r1, [r2, #4]`), this puts them in r1/r0,
+ * which shifts the mode-1 toggle and the tick/timer test by one
+ * register. Moving the loads into locals, reordering the statements
+ * and if/else instead of the switches didn't change it. */
+void sub_800C244(struct part_ctrl *self)
+{
+    if (self->target->y < self->baseY)
+        return;
+    sub_800C8BC(self, 0);
+    sub_800C8AC(self, 0);
+    self->target->y = self->baseY;
+    if (self->target->animDone) {
+        switch (self->mode) {
+        case 0:
+            sub_800C8CC(self, 1);
+            break;
+        case 1:
+            {
+                u32 m = self->target->mirror.u.x;
+                self->target->mirror.u.x = !m;
+            }
+            sub_800C8CC(self, 0);
+            break;
+        }
+    } else if (self->target->tick == 8 && self->target->timer == 0) {
+        switch (self->mode) {
+        case 0:
+            sub_800C8BC(self, 3);
+            sub_800C8AC(self, 3);
+            PlaySfx(gUnknown_030012BC, 0x14, 0x100);
+            break;
+        case 1:
+            sub_800C8BC(self, 0);
+            sub_800C8AC(self, 3);
+            PlaySfx(gUnknown_030012BC, 0x14, 0x100);
+            break;
+        }
+    }
+}
+#else
 NAKED void sub_800C244(void *selfArg)
 {
     asm(
@@ -141,3 +184,4 @@ NAKED void sub_800C244(void *selfArg)
         ".pool\n\t"
     );
 }
+#endif

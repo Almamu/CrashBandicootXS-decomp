@@ -43,17 +43,14 @@ system from "core" graphics.
 
 - `src/graphics/hud_icon_widget_85c4.c` (GitHub issue #46, second pass):
   `sub_8028808` - the per-character newline/space/glyph-dispatch
-  trampoline. (This file's `sub_80285C4`/`InitHudIconWidgetA`/
-  `InitHudIconWidgetB` are NAKED transcriptions tracked as parked, not
-  matched - see below.)
+  trampoline.
 
 - `src/graphics/hud_icon_widget2.c` (new file, GitHub issue #46):
   `sub_8028860` - draws a fixed-count run of characters via the
   `struct icon_manager` widget's own record trampoline.
 
 - `src/graphics/hud_icon_widget_8890.c` (GitHub issue #46, second pass):
-  `sub_8028890`. (This file's `sub_8028900`, transcribed as NAKED asm
-  third pass, is tracked as parked, not matched - see below.)
+  `sub_8028890`.
 
 - `src/graphics/hud_icon_widget3.c` (new file, GitHub issue #46):
   `sub_8028968` - total text-block-height helper.
@@ -90,10 +87,11 @@ system from "core" graphics.
 GitHub issue #45's dispatcher family (`hud_stat_widget2.c`,
 `hud_digit_array.c`, `hud_stat_widget3.c` - `sub_802757C`/`sub_802763C`,
 `sub_8027138`/`sub_802732C`, `sub_8027940`/`sub_8027D5C`/`sub_8027E88`)
-are all `NAKED` transcriptions, tracked as parked, not matched - see
-below and `docs/matching/issue-45-hud-stat-widget-dispatcher.md`. All 24
-functions in the `0x08026EEC`-`0x08028568` chunk are now byte-exact, but
-7 of them (this dispatcher family) are parked rather than matched.
+are `NAKED` transcriptions, tracked as parked, not matched - see below
+and `docs/matching/issue-45-hud-stat-widget-dispatcher.md` - except
+`sub_8027138`, now plain C (`hud_digit_array.c` is built with old_agbcc,
+see `docs/matching/game-loop-old-agbcc.md`). All 24 functions in the
+`0x08026EEC`-`0x08028568` chunk are byte-exact; 6 of them are parked.
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -103,6 +101,13 @@ GitHub issue #46's own write-up (icon/text-widget renderer, including
 GitHub issue #45's second-pass write-up (the stat-widget dispatcher, and
 why the rest of the family stayed raw) is
 [docs/matching/issue-45-hud-stat-widget-dispatcher.md](../matching/issue-45-hud-stat-widget-dispatcher.md).
+
+- **`sub_80285C4`**, **`InitHudIconWidgetA`**, **`InitHudIconWidgetB`**
+  (`src/graphics/hud_icon_widget_85c4.c`), **`sub_8028900`**
+  (`hud_icon_widget_8890.c`) and **`MeasureText`** (`hud_icon_widget_8994.c`)
+  - GitHub issue #46's last five, the glyph writer, the two icon-manager
+  constructors and the text walkers. Plain C, built with old_agbcc (all
+  three files move to it); they were NAKED. See [old-agbcc-round5.md](../matching/old-agbcc-round5.md).
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
@@ -119,14 +124,6 @@ entire function body is hand-transcribed disassembly wrapped in inline
 `asm()` - the C-level matching attempt failed and the raw bytes got
 embedded as asm instead. They're tracked as parked, not matched.
 
-- **`sub_80285C4`**/**`InitHudIconWidgetA`**/**`InitHudIconWidgetB`**
-  (`src/graphics/hud_icon_widget_85c4.c`) - GitHub issue #46, see the
-  issue write-up's "Third pass: NAKED-transcription" section:
-  [docs/matching/issue-46-hud-icon-widget.md](../matching/issue-46-hud-icon-widget.md).
-- **`sub_8028900`** (`src/graphics/hud_icon_widget_8890.c`) - GitHub
-  issue #46, same write-up.
-- **`MeasureText`** (`src/graphics/hud_icon_widget_8994.c`) - GitHub
-  issue #46, same write-up.
 - **`sub_802757C`**/**`sub_802763C`** (`src/graphics/hud_stat_widget2.c`)
   - the icon-indicator widget and three more change-detection-gated
   digit/icon widgets; every phrasing of a per-slot `anim_index` byte
@@ -134,15 +131,11 @@ embedded as asm instead. They're tracked as parked, not matched.
   gcc-2.9 miscompile. GitHub issue #45, see
   `docs/matching/issue-45-hud-stat-widget-dispatcher.md`'s
   "NAKED-transcription pass" section.
-- **`sub_8027138`**/**`sub_802732C`** (`src/graphics/hud_digit_array.c`)
-  - the 35-slot `struct hud_digit_part` array's constructor and its own
-  tail; every clamp site hit the same r7-pinned-byte-as-array-subscript
-  miscompile as `sub_802757C`/`sub_802763C` above, and `sub_802732C`'s
-  own loop additionally needed `sl`/`sb`/`r8` held live across the whole
-  loop the way `settings_menu6.c`'s own comment already documented gcc
-  2.9 giving up on for four near-identical functions. GitHub issue #45,
-  see `docs/matching/issue-45-hud-stat-widget-dispatcher.md`'s "Fourth
-  pass" section.
+- **`sub_802732C`** (`src/graphics/hud_digit_array.c`) - the 35-slot
+  icon array's per-mode slot refresh. `hud_digit_array.c` is built with
+  old_agbcc; plain C there is 32 bytes short, because the ROM keeps three
+  separate copies of one nibble insert that the compiler merges. Its
+  sibling `sub_8027138` is matched. See [docs/matching/game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md).
 - **`sub_8027940`**/**`sub_8027D5C`**/**`sub_8027E88`**
   (`src/graphics/hud_stat_widget3.c`) - the remaining three callees of
   the dispatcher (two score-style digit counters and the

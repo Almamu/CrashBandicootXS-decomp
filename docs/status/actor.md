@@ -11,6 +11,44 @@ from "core" graphics.
 
 ## Matched
 
+- **`sub_8012D24`** (`src/graphics/actor_part83.c`) and **`sub_801283C`**
+  (`src/graphics/actor_part84.c`) - issue #16: two
+  `gStaticData_0816BF20` action-table helpers on the player/action object
+  (`include/action_obj.h`). Plain C under old_agbcc (both files moved to
+  `OLD_AGBCC_OBJS`); they were NAKED transcriptions. See
+  [issue-15-16-naked-retry.md](../matching/issue-15-16-naked-retry.md).
+- **Issues #58/#61 NAKED retry** ([docs/matching/issue-58-61-naked-retry.md](../matching/issue-58-61-naked-retry.md)):
+  the boss-weapon cluster's `sub_8030734` (`actor_part21d.c`),
+  `sub_8030834` (`actor_part21e.c`), `sub_80309B4` (`actor_part21f.c`),
+  `sub_8030F88` (`actor_part23d.c`), `sub_8031040` (`actor_part23e.c`),
+  `sub_80311C4` (`actor_part23f.c`), `sub_8031504` (`actor_part26b.c`),
+  and the `gUnknown_030015AC` singleton's `sub_8032C0C`, `sub_8032EA0`,
+  `sub_80331BC`, `sub_8033264`, `sub_8033470`, `sub_8033604`
+  (`actor_part130.c`). Plain C under current agbcc, no register pins;
+  they were NAKED.
+- **`sub_803487C`** (`src/graphics/actor_part88.c`) - issue #63: the fade
+  overlay's other setup half (icon manager hookup, tile-cache seeding
+  loop). Plain C, built with old_agbcc; it was raw asm
+  (`asm/code_3_2_20_28568_c99c_31784_33ef4_3487c.s`, now removed). See
+  [old-agbcc-round5.md](../matching/old-agbcc-round5.md).
+- **`sub_80327A4`** (`src/graphics/actor_part130.c`) - issue #60's last
+  function, a bounding-box-culled sprite draw (`UpdateAnimatedActorPart`'s
+  shape with the scale flag fixed at 0). Plain C; it was NAKED. See
+  [issues-14-53-60-last-naked.md](../matching/issues-14-53-60-last-naked.md).
+- **`sub_802CC9C`** (`src/graphics/actor_part126.c`) - issue #53's last
+  function, a hazard/proximity state machine that tests the part's own
+  box and three `gStaticData_0817A7xx` boxes. Plain C; it was NAKED. See
+  [issues-14-53-60-last-naked.md](../matching/issues-14-53-60-last-naked.md).
+- **Issue #9 NAKED retry** ([docs/matching/issue-9-naked-retry.md](../matching/issue-9-naked-retry.md)):
+  `sub_8007B00`/`sub_8007B98` (`actor_part.c`), `sub_8008044`
+  (`actor_part3.c`), `sub_8008A40`/`sub_8008AD8` (`actor_part7.c`),
+  `sub_8008D80` (`actor_part7b.c`), `sub_8009528` (`actor_part11f.c`),
+  `sub_80096C0` (`actor_part11e.c`), `sub_8009868` (`actor_part11d.c`),
+  `sub_80099F0` (`actor_part12.c`) - all under old_agbcc (the whole
+  objects moved to `OLD_AGBCC_OBJS`), mostly by passing the collision
+  box by value - and `sub_800AAEC` (`actor_part108.c`, either compiler,
+  guarded do-while list walk). Previously parked as NAKED below.
+
 - `src/graphics/actor_part.c` (new file - `sub_8007A48`'s real ROM
   address isn't adjacent to `graphics.c`'s matched functions, since
   `sub_8007634` sits unclaimed between them; see
@@ -339,9 +377,21 @@ from "core" graphics.
   `docs/matching/issue-17-0x08012fbc-actor.md`, "Second pass".
 - `src/graphics/actor_part_14674.c` (new file, GitHub issue #17, ROM
   0x08014674-0x08014F8C, built with old_agbcc): `sub_8014940`,
-  `sub_80149BC`, `sub_8014A3C`, `sub_8014AEC`, `sub_8014EE0` (the file's
-  other four functions are parked below); see
-  `docs/matching/issue-17-0x08012fbc-actor.md`, "Second pass".
+  `sub_80149BC`, `sub_8014A3C`, `sub_8014AEC`, `sub_8014BCC`,
+  `sub_8014D18`, `sub_8014EE0` (the file's other two functions are parked
+  below); see `docs/matching/issue-17-0x08012fbc-actor.md`, "Second
+  pass" and "Third pass".
+- `src/graphics/actor_part_12fbc.c`, `actor_part_134b8.c`,
+  `actor_part_138e8.c` (GitHub issue #17, ROM 0x08012FBC-0x08013C60, now
+  built with old_agbcc): `sub_8012FBC`, `sub_8013228`, `sub_80134B8`,
+  `sub_80138E8`, `sub_8013994` - the chunk's first five action-table
+  handlers, formerly NAKED; see
+  `docs/matching/issue-17-0x08012fbc-actor.md`, "Third pass".
+- `src/graphics/actor_part81.c` (GitHub issue #9/#10, ROM
+  0x0800AB9C-0x0800AC2C, now built with old_agbcc): `sub_800AB9C`, the
+  big object's teardown/notification step, formerly parked
+  NON_MATCHING. The box goes to `sub_8008A40` by value; see
+  `docs/matching/issue-9-10-0x0800ab9c-graphics.md`.
 - `src/graphics/actor_part28.c`/`actor_part30.c`/`actor_part32.c`/
   `actor_part34.c`/`actor_part36.c` (new files, GitHub issue #62, ROM
   0x08033804-0x08033EF4 - the `gUnknown_030015AC` singleton system's
@@ -873,15 +923,14 @@ plain C didn't converge.
   gap across its three inner-loop branches. See
   `docs/matching/naked-spatial-grid-tail.md`.
 - **`sub_8014084`** (`src/graphics/actor_part_13c60.c`), **`sub_8014674`**,
-  **`sub_8014B54`**, **`sub_8014BCC`**, **`sub_8014D18`**
-  (`src/graphics/actor_part_14674.c`), GitHub issue #17 - action-table
-  handlers whose old_agbcc C (kept under `NON_MATCHING`) differs from
-  the ROM only in register roles: which callee-saved register holds the
-  hoisted constant 1 or a kept pointer, one reload register one step off
-  in gcc's rotation (`sub_8014B54`), and a shared method-call tail
-  (`sub_8014D18`). See `docs/matching/issue-17-0x08012fbc-actor.md`,
-  "Second pass".
-- **`sub_8009868`** (`src/graphics/actor_part11d.c`) - another
+  **`sub_8014B54`** (`src/graphics/actor_part_14674.c`), GitHub issue #17 -
+  action-table handlers whose old_agbcc C (kept under `NON_MATCHING`)
+  still differs from the ROM. In `sub_8014084`/`sub_8014674` gcc threads
+  away a re-test of the same value (the flip bit, the part's tag) that
+  the ROM keeps. In `sub_8014B54` one reload register is one step off in
+  gcc's rotation. See `docs/matching/issue-17-0x08012fbc-actor.md`,
+  "Third pass".
+- **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/issue-9-naked-retry.md); entry kept for history.** **`sub_8009868`** (`src/graphics/actor_part11d.c`) - another
   3-bucket-window grid pass, this one reading the player's state to
   dispatch `sub_800D040`/`sub_80109A4` per object. Fully understood;
   parked on a cross-branch register-role gap (`r8` reused for two
@@ -982,64 +1031,25 @@ plain C didn't converge.
   `timer_util_aa90.c`) is NAKED too, not plain C with
   `REG_DMA3SAD`/`DAD`/`CNT` macros. See
   `docs/matching/issue-56-0x0802f0dc-actor.md`.
-- **`sub_8030734`** (`src/graphics/actor_part21d.c`) - `sub_80306AC`'s
-  companion: ramps `gUnknown_03001560` toward a fixed target and, on
-  its phase counter's armed tick, spawns via `sub_802E62C`. A plain-C
-  reconstruction got everything but one statement's evaluation order
-  byte-identical - this compiler always computes a `*dest = *(source
-  expr)` assignment's RHS address before its LHS's, opposite of the
-  ROM's own build. See `docs/matching/issue-58-0x08030574-actor.md`.
-- **`sub_8030834`** (`src/graphics/actor_part21e.c`) - distance/speed-
-  gated variant of `sub_8030734`'s spawn (via `sub_802E674`); keeps the
-  weapon table's phase pointer/value alive in `sb`/`r8` across a real
-  `sub_803ADB4` call, the same many-high-register difficulty as
-  `sub_8006600` et al. See `docs/matching/issue-58-0x08030574-actor.md`.
-- **`sub_80309B4`** (`src/graphics/actor_part21f.c`) - large 5-way
-  weapon-kind projectile spawner dispatching on `gUnknown_0300153C`;
-  shares base coordinates across the dispatch in `r7`/`sb`/`sl`/`r8`.
-  See `docs/matching/issue-58-0x08030574-actor.md`.
 - **`sub_8030D48`** (`src/graphics/actor_part23b.c`) - a rectangular
-  BG-tilemap blit routine (docs/rom_map.md); nested loop keeps its
-  counters/cursor in `sl`/`sb`/`r8`/`ip`. See
-  `docs/matching/issue-58-0x08030574-actor.md`.
+  BG-tilemap blit routine (docs/rom_map.md). A `#if NON_MATCHING` draft
+  is 11 halfwords off under old_agbcc (the next-row pointer and the
+  hoisted bias-byte address copy swap `ip`/`r3`). See `docs/matching/issue-58-61-naked-retry.md`.
 - **`sub_8030E08`** (`src/graphics/actor_part23c.c`) - position-easing
-  helper called from `sub_8030734`/`sub_8030834`; keeps two accumulator
-  addresses and the player-position table in `sb`/`r8`/`sl`/`ip`. See
-  `docs/matching/issue-58-0x08030574-actor.md`.
-- **`sub_8030F88`** (`src/graphics/actor_part23d.c`) - the tracker
-  object's constructor (`mem_alloc` + the same state-0/table-index-0
-  transition idiom already matched elsewhere in this cluster); a first
-  plain-C attempt compiled shorter/differently-structured code and
-  wasn't pursued further given the ~50-instruction prologue's many
-  independent register-order choices. See
-  `docs/matching/issue-58-0x08030574-actor.md`.
-- **`sub_8031040`** (`src/graphics/actor_part23e.c`) - large "arm this
-  weapon-kind instance" setup; keeps its three position arguments and a
-  per-kind table pointer in `r8`/`sb`/`sl` across several real calls.
-  See `docs/matching/issue-58-0x08030574-actor.md`.
-- **`sub_80311C4`** (`src/graphics/actor_part23f.c`) - large per-frame
-  "advance this weapon-kind instance" driver; shares
-  `sub_8031040`'s accumulator-recompute tail and hits the same
-  operand-address-ordering gap as `sub_8030734`. See
-  `docs/matching/issue-58-0x08030574-actor.md`.
+  helper called from `sub_8030734`/`sub_8030834`. A `#if NON_MATCHING`
+  draft is instruction-for-instruction right except that the two
+  velocity-address copies land in `r4`/`r6` swapped (19 halfwords). See
+  `docs/matching/issue-58-61-naked-retry.md`.
 - **`sub_8031378`** (`src/graphics/actor_part24b.c`) - AABB overlap
-  test against a keyframe-table box; same 12-byte
-  `{s16 x,y,z,sizeX,sizeY,sizeZ}` shape and register-pressure reasons
-  as the already-parked `sub_802DD9C`/`sub_802D7B0`
-  (actor_part75.c/actor_part74.c). See
-  `docs/matching/issue-58-0x08030574-actor.md`.
-- **`sub_8031504`** (`src/graphics/actor_part26b.c`) - DMA/tile-cache
-  setup + palette fade; pinning `&gUnknown_03001538` to `r7` (matching
-  the ROM's own choice) hits a *correctness* hazard, not just a byte
-  mismatch - this compiler reuses the "spare" r7 as scratch for an
-  unrelated assignment in between the pin's two dereferences, so the
-  second read would silently come from the wrong place. Abandoned
-  immediately per docs/workflow.md step 3's warning. See
-  `docs/matching/issue-58-0x08030574-actor.md`.
+  test against a keyframe-table box (same 12-byte box shape as
+  `sub_802DD9C`/`sub_802D7B0`). A `#if NON_MATCHING` draft has the right
+  shape but hoists the copy's address into `r4` early (~50 halfwords).
+  See `docs/matching/issue-58-61-naked-retry.md`.
 - **`sub_8031604`** (`src/graphics/actor_part26c.c`) - VRAM fill-level
-  meter nibble-repack loop (docs/rom_map.md's "procedurally-generated
-  VRAM fill-level meter" finding); inner loop holds `r8`/`sb`/`sl`/`ip`
-  live simultaneously. See `docs/matching/issue-58-0x08030574-actor.md`.
+  meter nibble-repack loop (docs/rom_map.md). A `#if NON_MATCHING` draft
+  has the right shape (~95 halfwords off: the ROM re-reads each height
+  from the stack after the row-pointer store, and allocates the nibble
+  temporaries differently). See `docs/matching/issue-58-61-naked-retry.md`.
 - **`sub_8011BD4`** (`src/graphics/actor_part82.c`, GitHub issue #16) -
   docs/rom_map.md's documented companion state machine to `sub_8016288`
   (still raw), sharing its type-`0x1d` gate: a 25-case jump table on a
@@ -1053,47 +1063,23 @@ plain C didn't converge.
   register-pinning gauntlet already exhausted throughout this section
   for smaller members of the same table. See
   `docs/matching/issue-16-actor-remainder.md`.
-- **`sub_8012420`**, **`sub_8012694`**, **`sub_801283C`**
-  (`src/graphics/actor_part84.c`, GitHub issue #16) - three more
-  members of the same 42-slot action-dispatch table
-  (`gStaticData_0816BF20`): a `part`-visibility/OAM-priority
-  housekeeping pass with a trailing 22-case jump table, a proximity-
-  gated child-object-type dispatch that fires a `+0x50`/`+0x54`
-  trampoline pair, and a proximity-triggered indicator dispatching on
-  `self+8`'s type against per-type distance thresholds. A first plain-C
-  attempt at `sub_8012420` compiled logically-equivalent code that
-  diverged in overall stack-frame shape (the ROM reserves an unused
-  8-byte stack slot and a 5th callee-saved register, `r7`, that the
-  straightforward translation never needed) - the same unexplained-
-  frame-shape gap this table's sibling members hit throughout this
-  section. See `docs/matching/issue-16-actor-remainder.md`.
-- **`sub_8012AF4`**, **`sub_8012D24`** (`src/graphics/actor_part83.c`,
-  GitHub issue #16) - the chunk's final two functions: an OAM-
-  visibility/priority pass keyed on a `gStaticData_0816B304` per-tag
-  12-byte stack-local record (copied via `ldm`/`stm`, with `r8` holding
-  a value across several calls - a real step up in register-allocation
-  complexity from every other member of this table matched so far), and
-  a further sibling/callee handling frame-counter thresholds, D-pad
-  input, and `sub_8012A7C`'s busy-check. See
-  `docs/matching/issue-16-actor-remainder.md`.
-- **`sub_8012FBC`**, **`sub_8013228`** (`src/graphics/actor_part_12fbc.c`),
-  **`sub_80134B8`** (`src/graphics/actor_part_134b8.c`), **`sub_80138E8`**,
-  **`sub_8013994`** (`src/graphics/actor_part_138e8.c`), GitHub issue #17
-  (leading portion) - five more members of the same 42-slot action-
-  dispatch table: `sub_8012FBC`/`sub_80134B8` show the same unexplained
-  extended-register-budget shape as this table's other NAKED members
-  (`r8` alone, and `r8`/`sb`/`sl` together respectively, on top of the
-  usual `r4-r7`); `sub_8013228`'s ordinary-looking `r4-r6`/`lr` prologue
-  still diverged in a first plain-C attempt (an extra `r7` push plus the
-  usual runtime-negated-mask idiom needed for `part[0xd] &= ~2`-style
-  bit clears); `sub_80138E8`/`sub_8013994` each reproduce the exact
-  `part[0x38]`-gated single-vs-double trampoline shape already confirmed
-  unmatchable for `sub_80156EC` (above). New files are address-suffixed
-  (`actor_part_<addr>.c`) rather than the next sequential `actor_partNN`,
-  since `actor_part85.c` is independently claimed by unrelated issue #63
-  work. The rest of issue #17's chunk (0x08013C60-0x08014F8C) was
-  done in a second pass (see above). See
-  `docs/matching/issue-17-0x08012fbc-actor.md`.
+- **`sub_8012420`**, **`sub_8012694`** (`src/graphics/actor_part84.c`,
+  GitHub issue #16) - two more members of the same 42-slot
+  action-dispatch table (`gStaticData_0816BF20`): a `part`-visibility/
+  OAM-priority housekeeping pass (with a gcc 2.x pointer-to-member call
+  through the table and a trailing 22-case jump table), and a
+  proximity-gated child-object-type dispatch that fires a
+  `+0x50`/`+0x54` trampoline pair. Old_agbcc C drafts under
+  `NON_MATCHING`: `sub_8012694` is off only in the tag-test registers;
+  `sub_8012420`'s ROM keeps the PMF method record in an 8-byte stack slot
+  and pushes an unused `r7` (a spilled DImode pair). See
+  [issue-15-16-naked-retry.md](../matching/issue-15-16-naked-retry.md).
+- **`sub_8012AF4`** (`src/graphics/actor_part83.c`, GitHub issue #16) -
+  an animation pass keyed on a `gStaticData_0816B304` per-action
+  12-byte stack-local record (copied via `ldm`/`stm`). Old_agbcc C draft
+  under `NON_MATCHING`, same instructions but register allocation
+  differs throughout. See
+  [issue-15-16-naked-retry.md](../matching/issue-15-16-naked-retry.md).
 - **`InitActorCategory`** (`src/graphics/actor_part101.c`, GitHub issue
   #48) - the category (re)initialization + per-VBlank loading-screen
   driver. Fully understood; sustains four simultaneous high-register
@@ -1157,50 +1143,13 @@ plain C didn't converge.
   (`sub_80309B4`/`sub_8031040`/`sub_80311C4`,
   `actor_part21f.c`/`23e.c`/`23f.c`). See
   `docs/matching/issue-63-final-raw-actor.md`.
-- **`sub_80327A4`** (`src/graphics/actor_part130.c`) - bounding-box-culled
-  sprite draw via `GetAnimFrameData`/`sub_803B060`/`SetupSpriteFrameOam`.
-  Fully understood; hits the same `r8`-flag-across-calls shape already
-  documented in full for `UpdateAnimatedActorPart` (issue #50,
-  `actor_part55.c`). See `docs/matching/issue-60-61-gap-31a6c-part2.md`.
-- **`sub_8032C0C`/`sub_8032EA0`** (`src/graphics/actor_part130.c`) -
-  opens the singleton's own camera-follow/scroll-velocity smoothing
-  computation (`gUnknown_030015B4`-`030015EC`), split across two
-  functions. Fully understood; many-high-register (`ip`/`sb`/`r8`)
-  allocation gap, the same class already documented for `sub_8031604`.
-  See `docs/matching/issue-60-61-gap-31a6c-part2.md`.
 - **`sub_80330FC`** (`src/graphics/actor_part130.c`) - the singleton's
-  own BG-tilemap-blit tile consumer, same mechanics as the boss
-  cluster's `sub_8030D48` on a separate global cluster. Fully
-  understood; many-high-register (`sl`/`sb`/`r8`) allocation gap. See
-  `docs/matching/issue-60-61-gap-31a6c-part2.md`.
-- **`sub_80331BC`** (`src/graphics/actor_part130.c`) - the missing
-  constructor for the whole `gUnknown_030015AC` singleton system - see
-  `docs/rom_map.md`'s "`sub_80331BC` closes a long-open question".
-  Fully understood; a plain-C attempt kept the freshly allocated
-  pointer and `&gUnknown_030015AC` in the same register and only used
-  one "zero" register where the ROM keeps two, 4 bytes short of the
-  ROM once linked (undetectable from the isolated compile alone). See
-  `docs/matching/issue-60-61-gap-31a6c-part2.md`.
-- **`sub_8033264`** (`src/graphics/actor_part130.c`) - the
-  animation-system-wired constructor/init step for the singleton
-  object, burst-spawning effect objects around it. Fully understood;
-  many-high-register (`sb`/`sl`/`r8`) allocation gap. See
-  `docs/matching/issue-60-61-gap-31a6c-part2.md`.
-- **`sub_8033470`** (`src/graphics/actor_part130.c`) - the singleton's
-  per-frame animate+project+tile-stream update driver, structurally
-  parallel to the boss cluster's `sub_8031504`. Fully understood; a
-  plain-C attempt produced 4 *extra* bytes once linked. See
-  `docs/matching/issue-60-61-gap-31a6c-part2.md`.
-- **`sub_8033604`** (`src/graphics/actor_part130.c`) - the top-level
-  per-frame driver for the whole singleton system, fired once by
-  `sub_80331BC`. Fully understood; a plain-C attempt using the
-  `DmaSet()` macro was 24 bytes short of the ROM once linked. See
-  `docs/matching/issue-60-61-gap-31a6c-part2.md`.
+  own BG-tilemap-blit tile consumer, twin of `sub_8030D48` and stuck the
+  same way (its `#if NON_MATCHING` draft is 11 halfwords off under
+  old_agbcc). See `docs/matching/issue-58-61-naked-retry.md`.
 - **`sub_80336CC`** (`src/graphics/actor_part130.c`) - the P2-side VRAM
-  fill-level meter, a near-identical twin of the already-matched
-  `sub_8031604` (issue #58, `actor_part26c.c`). Fully understood; same
-  many-high-register (`sl`/`sb`/`r8`) allocation gap documented there
-  in full. See `docs/matching/issue-60-61-gap-31a6c-part2.md`.
+  fill-level meter, the one-row twin of `sub_8031604`; its
+  `#if NON_MATCHING` draft is off the same way. See `docs/matching/issue-58-61-naked-retry.md`.
 - **`sub_8034AA4`** (`src/graphics/actor_part131.c`, GitHub issue #64) -
   the fade overlay's Yes/No dialog draw, another instance of the
   "refresh OAM + center text" pattern: `self` (r6), the OAM-shadow-
@@ -1256,14 +1205,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   `r7` shape as `sub_802D7B0`/`sub_802DD9C` below - hits the same
   confirmed categorical gcc-2.9 r7-pin bug. GitHub issue #53, see
   [docs/matching/issue-53-actor-c7a8.md](../matching/issue-53-actor-c7a8.md).
-- **`sub_802CC9C`** (`src/graphics/actor_part126.c`) - a heavy AABB-
-  overlap/proximity state machine: reuses `self+0x38` as a scratch box
-  across three `gStaticData_0817A7xx` record snapshots and two
-  `sub_802A6EC`/`sub_802DD9C`/`sub_802B7E0` proximity checks, with
-  `r5`/`r6`/`r7` each switching roles mid-function. Same categorical
-  gcc-2.9 register-reuse family as `sub_802D7B0`/`sub_802DD9C` below.
-  Between issues #53 and #54, see
-  [docs/matching/issue-53-issue-54-gap-cc9c.md](../matching/issue-53-issue-54-gap-cc9c.md).
 - **`sub_802D3A8`** (`src/graphics/actor_part62.c`) - eases `self`'s
   cached position toward a per-state target/table-scatter offset. Hits
   this project's confirmed categorical gcc-2.9 r7-pin bug. GitHub issue
@@ -1546,21 +1487,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   from provable-constant-propagation that no placement of the source
   assignment moved or eliminated). See
   [docs/matching/issue-9-10-0x0800a884-graphics.md](../matching/issue-9-10-0x0800a884-graphics.md).
-- **`sub_800AB9C`** (`src/graphics/actor_part81.c`, GitHub issue #9/#10;
-  real bytes in `asm/code_3_2_16_ab9c.s`) - a two-flag-gated teardown/
-  notification step on the same still-unnamed "big object" (0x108+
-  bytes) `actor_part15.c`/`actor_part77.c` work on: relocates `self`'s
-  AABB onto a second stack slot before unpacking it for `sub_8008A40`
-  (bit 1), and clears `self+0x108`/`self+0x10c` plus fires three
-  teardown/notification calls (bit 7). Every instruction matches except
-  one gap: the ROM evaluates `sub_8008A40`'s 7 arguments in an order
-  (stack-bound values interleaved with their own store, register
-  values and the `r0`-bound `manager` last) this compiler never
-  reproduces from any C-level phrasing tried - the same already-
-  accepted-as-unclosable class as `sub_8008AD8`/`sub_8008D80` right
-  next door (`actor_part7.c`) and `PlaySfx` (issue #3). See
-  [docs/matching/issue-9-10-0x0800ab9c-graphics.md](../matching/issue-9-10-0x0800ab9c-graphics.md).
-- **`sub_800AAEC`** (`src/graphics/actor_part108.c`, GitHub issue
+- **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/issue-9-naked-retry.md); entry kept for history.** **`sub_800AAEC`** (`src/graphics/actor_part108.c`, GitHub issue
   #9/#10) - the input-action-check function the 42-slot
   `gStaticData_0816BF20` action-dispatch table's entries call: gates a
   `sub_8026628` proximity probe against the player, then walks
@@ -1587,7 +1514,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   `goto`-based flow) all produced an identical 8-byte-larger result -
   see `docs/matching.md`, "A new unnamed object:
   `actor_part15.c`/`actor_part16.c`".
-- **`sub_8007B00`/`sub_8007B98`** (`src/graphics/actor_part.c`),
+- **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/issue-9-naked-retry.md); entry kept for history.** **`sub_8007B00`/`sub_8007B98`** (`src/graphics/actor_part.c`),
   **`sub_8008044`** (`src/graphics/actor_part3.c`), and
   **`sub_800891C`/`sub_8008A40`/`sub_8008AD8`**
   (`src/graphics/actor_part7.c`) / **`sub_8008D80`**
@@ -1629,7 +1556,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   doesn't count as "matched" the way real decompiled C does, so it
   stays filed here rather than in "Matched" above - see
   `docs/matching/naked-sub_8008f20-sub_8009914-freelist.md`.
-- **`sub_8009528`** (`src/graphics/actor_part11f.c`) - the spatial-
+- **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/issue-9-naked-retry.md); entry kept for history.** **`sub_8009528`** (`src/graphics/actor_part11f.c`) - the spatial-
   hash-grid-cluster analog of `sub_8008A40`: the same grid-iteration
   shape as `sub_800944C`, dispatching each hit to `sub_80096C0`/
   `sub_80099F0` exactly like `sub_8008A40` dispatches to
@@ -1644,7 +1571,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   real decompiled C does, so it stays filed here rather than in
   "Matched" above - see `docs/matching.md`, "Parked, not matched:
   `sub_8009528`".
-- **`sub_80096C0`** (`src/graphics/actor_part11e.c`) - `sub_8008AD8`'s
+- **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/issue-9-naked-retry.md); entry kept for history.** **`sub_80096C0`** (`src/graphics/actor_part11e.c`) - `sub_8008AD8`'s
   twin: byte-identical collision-hit resolution logic, operating in
   this spatial-hash-grid cluster instead of the plain array manager -
   in fact its instruction stream is byte-identical to `sub_8008AD8`'s,
@@ -1676,7 +1603,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   "matched" the way real decompiled C does, so it stays filed here
   rather than in "Matched" above - see
   `docs/matching/naked-sub_8008f20-sub_8009914-freelist.md`.
-- **`sub_80099F0`** (`src/graphics/actor_part12.c`) - `sub_8008D80`'s
+- **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/issue-9-naked-retry.md); entry kept for history.** **`sub_80099F0`** (`src/graphics/actor_part12.c`) - `sub_8008D80`'s
   twin: byte-identical in shape (same collision-hit-resolve logic,
   same "dead read" trampoline call), called from elsewhere in this
   cluster - in fact its instruction stream is byte-identical to
@@ -1710,15 +1637,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   caller's `r7` - see `docs/matching/issue-62-0x08033804-actor.md`,
   issue #62.
 
-- **`sub_803487C`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_3487c.s`, C
-  in `src/graphics/actor_part88.c`, GitHub issue #63) - the fade
-  overlay's other setup half: VRAM upload cursor flush, icon-manager
-  hookup, and a 16-iteration tile-cache seeding loop; matched except the
-  loop's trip counter, which the ROM keeps live in r7 for the whole
-  loop - this project's confirmed categorical gcc-2.9 r7-pin bug (see
-  `graphics_package_1e688.c`/`oam_count.c`/`actor_part7.c`) - see
-  `docs/matching/issue-63-final-raw-actor.md`.
-
 ## Left raw (not attempted, or attempted and set aside)
 
 - **`sub_8011BD4`** (`asm/code_3_2_17_11bd4.s`, ROM 0x08011BD4, GitHub
@@ -1728,19 +1646,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   this pass - see
   [docs/matching/issue-16-actor-11b0c.md](../matching/issue-16-actor-11b0c.md)
   and
-  [docs/matching/issue-16-actor-12160.md](../matching/issue-16-actor-12160.md).
-- **`sub_8012420`/`sub_8012694`/`sub_801283C`** (`asm/code_3_2_17_12420.s`,
-  ROM 0x08012420-0x08012A7C, GitHub issue #16) - further members of the
-  42-slot action-dispatch-table family (`gStaticData_0816BF20`) reading/
-  writing the same still-unnamed "child object" struct `sub_8012160`/
-  `sub_8012238`/`sub_80122CC` (matched below) now operate on; not
-  attempted to byte-exact precision this pass. Left raw - see
-  [docs/matching/issue-16-actor-12160.md](../matching/issue-16-actor-12160.md).
-- **`sub_8012AF4`/`sub_8012D24`** (`asm/code_3_2_17_12af4.s`, ROM
-  0x08012AF4-0x08012FBC, GitHub issue #16) - `sub_8012AF4` uses a
-  stack-local 12-byte record copy and `r8`; `sub_8012D24` is a further
-  sibling; neither attempted to byte-exact precision this pass. Left
-  raw - see
   [docs/matching/issue-16-actor-12160.md](../matching/issue-16-actor-12160.md).
 - **`sub_8007634`** (`asm/code_3_2.s`, ROM 0x08007634, GitHub issue #9)
   - real GBA hardware-affine sprite-matrix setup; already flagged in

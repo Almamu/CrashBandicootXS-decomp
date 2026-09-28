@@ -63,12 +63,30 @@
  *   (`sub_8024DFC`/`sub_8024E24`) game_loop3.c's `sub_8024E68`/
  *   `sub_8024E90` already call into.
  *
- * None of this cluster's fields are given a named struct here, for the
- * same reason game_loop3.c's own viewport/parallax-layer object isn't:
- * several fields are only ever written/read by functions on both sides
- * of this ROM range (this file, game_loop3.c, and still-raw neighbors),
- * so committing a struct now risks getting a field wrong that only
- * surfaces once the rest is matched. */
+ * The streamer functions use `struct bg_streamer` below; the rest still
+ * take raw pointers. Built with old_agbcc - see
+ * docs/matching/game-loop-old-agbcc.md. */
+
+/* The room descriptor the streamer reads its tile map from. */
+struct stream_source
+{
+    u16 *map;                   // 0x00 - width x height tile ids
+    u8 unk_04[0x12];
+    u16 width;                  // 0x16 - in tiles
+    u16 height;                 // 0x18
+};
+
+/* The ring-buffer background streamer (see this file's header comment). */
+struct bg_streamer
+{
+    struct stream_source *source; // 0x00
+    u16 *records;               // 0x04 - decoder record table
+    u8 *ring;                   // 0x08 - 0x1000-byte 4x4-block ring buffer
+    s32 tileX;                  // 0x0C
+    s32 tileY;                  // 0x10
+    u8 subX;                    // 0x14 - mod-4 block of the left edge
+    u8 subY;                    // 0x15 - mod-4 block of the top edge
+};
 
 extern void sub_8024804(void *self);
 extern void sub_80247EC(void *self, s32 flags);
@@ -88,20 +106,11 @@ void *sub_8024810(void *self)
  * text-paging walk through a second per-item record array at `+0x10`.
  * See this file's header comment for the full shape.
  *
- * A first-pass plain-C reconstruction reproduced this control flow
- * exactly (confirmed against the ROM disassembly instruction-by-
- * instruction), but this compiler never assigns `self`/the running
- * item index/the held-input flag byte to the ROM's own `r4`/`r8`/`r7`
- * triple simultaneously live across the many calls this loop makes
- * (`sub_8024708`, the four-call OAM-shadow flush, `sub_8024590`,
- * `sub_8000EE4`, `sub_80010E0`, `sub_8024790`, `sub_80246D8`) - the
- * same register-allocation-permutation gap this file's background-
- * streamer functions hit, just with more live values at once. Closed as
- * a NAKED transcription instead, hand-transcribed instruction-for-
- * instruction from the ROM disassembly, including its own mid-function
- * literal pool (the `gUnknown_03001300` address, loaded three times
- * from the one pool slot placed right where the ROM's own conditional
- * branch jumps over it). */
+ * NAKED: plain C under old_agbcc is 77 halfwords off. The ROM reloads
+ * `&gUnknown_03001300` from the literal pool at each of the three OAM
+ * flushes, leaving r4 free for `self`; old_agbcc CSEs the address into
+ * r4 instead (its loop pass declines the hoist), shifting every other
+ * value one register. */
 NAKED void sub_8024820(void *self, void *box)
 {
     asm(
@@ -279,19 +288,11 @@ void *sub_8024948(void *self0)
  * cache's `sub_8025334` (game_loop3.c) - just writing into a 2D buffer
  * (row = idx>>4, 64-halfword row stride) instead of a flat one.
  *
- * Same class of gap as `sub_8025334`/`sub_8024F24`/`sub_80250BC`/
- * `sub_8025130`/`sub_8025228` (game_loop3.c, GitHub issue #40): decode
- * mechanics and total size confirmed correct in an isolated `#if
- * NON_MATCHING` C reconstruction, but the ROM keeps several
- * "bytes-written so far" and mask constants alive in specific fixed
- * registers (`r6`/`r7` across the whole loop, `r8`/`ip`/`sb` for the
- * budget counter and repeated `0xf` masks) that this compiler's
- * allocator never reproduces - closed as a NAKED transcription instead,
- * the same escape hatch already used for that whole sibling decoder
- * family. Hand-transcribed instruction-for-instruction from the ROM
- * disassembly (`0x08024960`-`0x08024AA0`, formerly
- * `asm/code_3_2_17_24810.s`). */
-NAKED void sub_8024960(void *self, s32 recordId, void *dest)
+ * NAKED: plain C under old_agbcc is 13 halfwords off. Registers and
+ * control flow match; the ROM computes the accumulator's sign extension
+ * between the two shifts that sign-extend the delta byte (3 places), and
+ * builds the copy loop's cell index in the other order. */
+NAKED void sub_8024960(struct bg_streamer *self, s32 recordId, void *dest)
 {
     asm(
         "push {r4, r5, r6, r7, lr}\n\t"
@@ -465,8 +466,8 @@ NAKED void sub_8024960(void *self, s32 recordId, void *dest)
     );
 }
 
-extern void sub_8024C08(void *self, s32 col);
-extern void sub_8024BAC(void *self, s32 row);
+extern void sub_8024C08(struct bg_streamer *self, s32 col);
+extern void sub_8024BAC(struct bg_streamer *self, s32 row);
 
 /* Per-frame background-streamer driver (docs/rom_map.md: "Visual
  * scrolling background streamer"): right-shifts the world position by
@@ -487,20 +488,20 @@ void sub_8024AA0(void *self0, void *worldpos0)
     s32 oldY = *(s32 *)(self + 0x10);
 
     if (tileX > oldX) {
-        sub_8024C08(self, oldX + 4);
+        sub_8024C08((struct bg_streamer *)self, oldX + 4);
         self[0x14] = (self[0x14] + 1) & 3;
     } else if (tileX < oldX) {
         self[0x14] = (self[0x14] - 1) & 3;
-        sub_8024C08(self, oldX - 1);
+        sub_8024C08((struct bg_streamer *)self, oldX - 1);
     }
     *(s32 *)(self + 0xc) = tileX;
 
     if (tileY > oldY) {
-        sub_8024BAC(self, oldY + 4);
+        sub_8024BAC((struct bg_streamer *)self, oldY + 4);
         self[0x15] = (self[0x15] + 1) & 3;
     } else if (tileY < oldY) {
         self[0x15] = (self[0x15] - 1) & 3;
-        sub_8024BAC(self, oldY - 1);
+        sub_8024BAC((struct bg_streamer *)self, oldY - 1);
     }
     *(s32 *)(self + 0x10) = tileY;
 }
@@ -517,9 +518,9 @@ void *sub_8024B18(void *self0, s32 x, s32 y, s32 *rowOut)
     u8 *self = (u8 *)self0;
     s32 col = x - *(s32 *)(self + 0xc) * 16;
     s32 row = y - *(s32 *)(self + 0x10) * 8;
-    register u8 subX asm("r5");
-    register u8 subY asm("r5");
-    register s32 shifted asm("r4");
+    u8 subX;
+    u8 subY;
+    s32 shifted;
     u8 *base;
     void *ret;
 
@@ -547,9 +548,9 @@ void *sub_8024B48(void *self0, s32 x, s32 y, s32 *colOut)
     u8 *self = (u8 *)self0;
     s32 col = x - *(s32 *)(self + 0xc) * 16;
     s32 row = y - *(s32 *)(self + 0x10) * 8;
-    register u8 subX asm("r5");
-    register u8 subY asm("r5");
-    register s32 shifted asm("r4");
+    u8 subX;
+    u8 subY;
+    s32 shifted;
     u8 *base;
     void *ret;
 
@@ -575,9 +576,9 @@ u16 sub_8024B78(void *self0, s32 x, s32 y)
     u8 *self = (u8 *)self0;
     s32 col = x - *(s32 *)(self + 0xc) * 16;
     s32 row = y - *(s32 *)(self + 0x10) * 8;
-    register u8 subX asm("r4");
-    register u8 subY asm("r4");
-    register s32 shifted asm("r3");
+    u8 subX;
+    u8 subY;
+    s32 shifted;
     u8 *base;
     s32 idx;
 
@@ -596,222 +597,101 @@ u16 sub_8024B78(void *self0, s32 x, s32 y)
     return *(u16 *)(base + idx);
 }
 
-/* `sub_8024AA0`'s Y-axis incremental streamer: for the newly-exposed
- * row `row` (bounds-checked against `self+0`'s source descriptor
- * `+0x18` height), streams in up to 4 tiles (the ring buffer's block
- * width) by decoding each via `sub_8024960` into the block-addressed
- * slot `self+8 + ((self+0x15+4)&3)<<10 + ((self+0x14+col+4)&3)<<5`.
- *
- * Same register-allocation-permutation gap as `sub_8024960` above (the
- * ROM packs `self`/the running linear tile index/the loop counter/a
- * constant `3` mask into `r4`/`r5`/`r6`/`r7` simultaneously across a
- * call to `sub_8024960`) - closed the same way: hand-transcribed
- * instruction-for-instruction from the ROM disassembly. */
-NAKED void sub_8024BAC(void *self, s32 row)
+/* Streams in the newly exposed tile row `row`: decodes each of its up to
+ * 4 in-bounds tiles into the row's ring-buffer blocks. */
+void sub_8024BAC(struct bg_streamer *self, s32 row)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldrh r2, [r0, #0x18]\n\t"
-        "cmp r1, r2\n\t"
-        "bge 3f\n\t"
-        "ldrh r0, [r0, #0x16]\n\t"
-        "add r5, r0, #0\n\t"
-        "mul r5, r5, r1\n\t"
-        "ldr r0, [r4, #0xc]\n\t"
-        "add r5, r5, r0\n\t"
-        "mov r6, #0\n\t"
-        "mov r7, #3\n\t"
-    "1:\n\t"
-        "ldr r0, [r4, #0xc]\n\t"
-        "add r0, r6, r0\n\t"
-        "ldr r1, [r4]\n\t"
-        "ldrh r3, [r1, #0x16]\n\t"
-        "cmp r0, r3\n\t"
-        "bge 2f\n\t"
-        "ldr r2, [r4, #8]\n\t"
-        "ldrb r0, [r4, #0x15]\n\t"
-        "add r0, r0, #4\n\t"
-        "and r0, r7\n\t"
-        "lsl r0, r0, #0xa\n\t"
-        "add r2, r2, r0\n\t"
-        "ldrb r3, [r4, #0x14]\n\t"
-        "add r0, r3, r6\n\t"
-        "add r0, r0, #4\n\t"
-        "and r0, r7\n\t"
-        "lsl r0, r0, #5\n\t"
-        "add r2, r2, r0\n\t"
-        "ldr r1, [r1]\n\t"
-        "lsl r0, r5, #1\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrh r1, [r0]\n\t"
-        "add r5, r5, #1\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_8024960\n\t"
-    "2:\n\t"
-        "add r6, r6, #1\n\t"
-        "cmp r6, #3\n\t"
-        "ble 1b\n\t"
-    "3:\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0"
-    );
+    s32 idx;
+    s32 i;
+
+    if (row < self->source->height)
+    {
+        idx = self->source->width;
+        idx *= row;
+        idx += self->tileX;
+        for (i = 0; i <= 3; i++)
+        {
+            if (i + self->tileX < self->source->width)
+            {
+                u8 *dest = self->ring;
+                dest += ((self->subY + 4) & 3) << 10;
+                dest += ((self->subX + i + 4) & 3) << 5;
+                sub_8024960(self, self->source->map[idx++], dest);
+            }
+        }
+    }
 }
 /* Trailing byte count isn't a multiple of 4 in the ROM's own raw block
  * (a bare `.align 2, 0` follows `bx r0` there too) - see the
  * `matching_decomp_alignment_fix` precedent. */
 asm(".align 2, 0");
 
-/* Sibling of `sub_8024BAC` above: same shape, X axis (`self+0`'s
- * `+0x16` width bound, `self+0x10`'s running tile-row base, `self+0x14`
- * as the per-column sub-block instead of `self+0x15`). Same
- * register-allocation-permutation gap, closed the same way. */
-NAKED void sub_8024C08(void *self, s32 col)
+/* Streams in the newly exposed tile column `col`: decodes each of its up
+ * to 4 in-bounds tiles into the column's ring-buffer blocks. */
+void sub_8024C08(struct bg_streamer *self, s32 col)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldrh r2, [r0, #0x16]\n\t"
-        "cmp r1, r2\n\t"
-        "bge 3f\n\t"
-        "ldr r0, [r4, #0x10]\n\t"
-        "add r5, r0, #0\n\t"
-        "mul r5, r5, r2\n\t"
-        "add r5, r5, r1\n\t"
-        "mov r6, #0\n\t"
-        "mov r7, #3\n\t"
-    "1:\n\t"
-        "ldr r0, [r4, #0x10]\n\t"
-        "add r0, r6, r0\n\t"
-        "ldr r3, [r4]\n\t"
-        "ldrh r1, [r3, #0x18]\n\t"
-        "cmp r0, r1\n\t"
-        "bge 2f\n\t"
-        "ldr r2, [r4, #8]\n\t"
-        "ldrb r1, [r4, #0x15]\n\t"
-        "add r0, r1, r6\n\t"
-        "add r0, r0, #4\n\t"
-        "and r0, r7\n\t"
-        "lsl r0, r0, #0xa\n\t"
-        "add r2, r2, r0\n\t"
-        "ldrb r0, [r4, #0x14]\n\t"
-        "add r0, r0, #4\n\t"
-        "and r0, r7\n\t"
-        "lsl r0, r0, #5\n\t"
-        "add r2, r2, r0\n\t"
-        "ldr r1, [r3]\n\t"
-        "lsl r0, r5, #1\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrh r1, [r0]\n\t"
-        "ldrh r3, [r3, #0x16]\n\t"
-        "add r5, r3, r5\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_8024960\n\t"
-    "2:\n\t"
-        "add r6, r6, #1\n\t"
-        "cmp r6, #3\n\t"
-        "ble 1b\n\t"
-    "3:\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0"
-    );
+    s32 idx;
+    s32 i;
+
+    if (col < self->source->width)
+    {
+        idx = self->tileY * self->source->width;
+        idx += col;
+        for (i = 0; i <= 3; i++)
+        {
+            struct stream_source *src;
+
+            if (i + self->tileY < (src = self->source)->height)
+            {
+                u8 *dest = self->ring;
+                u16 id;
+
+                dest += ((self->subY + i + 4) & 3) << 10;
+                dest += ((self->subX + 4) & 3) << 5;
+                id = src->map[idx];
+                idx += src->width;
+                sub_8024960(self, id, dest);
+            }
+        }
+    }
 }
 
-/* "Level load" constructor half of the background streamer
- * (docs/rom_map.md: "The background streamer's missing 'level load'
- * half"): zeroes the mod-4 sub-block accumulator, seeds
- * `self+0xc`/`self+0x10` from `source`'s world position (the exact same
- * `>>7`/`>>6` shift constants `sub_8024AA0` uses per-frame), then loops
- * the full 4x4 block grid (unlike `sub_8024BAC`/`sub_8024C08`'s single
- * row/column) decoding every tile via `sub_8024960` to seed the ring
- * buffer's entire initial contents.
- *
- * Same register-allocation-permutation gap as `sub_8024960`/
- * `sub_8024BAC`/`sub_8024C08` above (`self`/both loop counters/two
- * block-stride constants packed into `r4`/`r6`/`r7`/`sb`/`sl` across a
- * nested loop and a call to `sub_8024960`) - closed the same way:
- * hand-transcribed instruction-for-instruction from the ROM
- * disassembly. */
-NAKED void sub_8024C64(void *self, void *source)
+/* Seeds the whole ring buffer for a fresh camera position `pos` (Q8
+ * world x/y): resets the sub-block origin, derives the top-left tile
+ * (128x64 px tiles) and decodes all 4x4 in-bounds tiles. The row stride
+ * and block height stay in registers across the loops, as in the ROM. */
+void sub_8024C64(struct bg_streamer *self, s32 *pos)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sl\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6, r7}\n\t"
-        "add r4, r0, #0\n\t"
-        "mov r0, #0x40\n\t"
-        "mov sl, r0\n\t"
-        "mov r2, #0x20\n\t"
-        "mov sb, r2\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r4, #0x14]\n\t"
-        "strb r0, [r4, #0x15]\n\t"
-        "ldr r0, [r1]\n\t"
-        "asr r0, r0, #7\n\t"
-        "str r0, [r4, #0xc]\n\t"
-        "ldr r0, [r1, #4]\n\t"
-        "asr r0, r0, #6\n\t"
-        "str r0, [r4, #0x10]\n\t"
-        "mov r6, #0\n\t"
-    "1:\n\t"
-        "ldr r0, [r4, #0x10]\n\t"
-        "add r0, r6, r0\n\t"
-        "ldr r1, [r4]\n\t"
-        "add r3, r6, #1\n\t"
-        "mov r8, r3\n\t"
-        "ldrh r1, [r1, #0x18]\n\t"
-        "cmp r0, r1\n\t"
-        "bge 2f\n\t"
-        "mov r5, #0\n\t"
-        "lsl r0, r6, #3\n\t"
-        "mov r7, sl\n\t"
-        "mul r7, r7, r0\n\t"
-    "3:\n\t"
-        "ldr r0, [r4, #0xc]\n\t"
-        "add r3, r5, r0\n\t"
-        "ldr r1, [r4]\n\t"
-        "ldrh r2, [r1, #0x16]\n\t"
-        "cmp r3, r2\n\t"
-        "bge 4f\n\t"
-        "ldr r0, [r4, #0x10]\n\t"
-        "add r0, r0, r6\n\t"
-        "mul r0, r0, r2\n\t"
-        "add r0, r0, r3\n\t"
-        "ldr r1, [r1]\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrh r1, [r0]\n\t"
-        "ldr r2, [r4, #8]\n\t"
-        "mov r3, sb\n\t"
-        "asr r0, r3, #1\n\t"
-        "mul r0, r0, r5\n\t"
-        "add r0, r7, r0\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r2, r2, r0\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_8024960\n\t"
-    "4:\n\t"
-        "add r5, r5, #1\n\t"
-        "cmp r5, #3\n\t"
-        "ble 3b\n\t"
-    "2:\n\t"
-        "mov r6, r8\n\t"
-        "cmp r6, #3\n\t"
-        "ble 1b\n\t"
-        "pop {r3, r4, r5}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov sl, r5\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0"
-    );
+    s32 rowLen = 0x40;
+    s32 blockH = 0x20;
+    s32 j;
+    s32 i;
+
+    self->subX = 0;
+    self->subY = 0;
+    self->tileX = pos[0] >> 7;
+    self->tileY = pos[1] >> 6;
+    for (j = 0; j <= 3; j++)
+    {
+        if (j + self->tileY < self->source->height)
+        {
+            s32 rowBase;
+
+            for (i = 0, rowBase = rowLen * (j << 3); i <= 3; i++)
+            {
+                s32 x = i + self->tileX;
+                struct stream_source *src;
+
+                if (x < (src = self->source)->width)
+                {
+                    u16 id = src->map[(self->tileY + j) * src->width + x];
+                    u16 *ring = (u16 *)self->ring;
+
+                    sub_8024960(self, id, &ring[rowBase + (blockH >> 1) * i]);
+                }
+            }
+        }
+    }
 }
 /* Trailing byte count isn't a multiple of 4 in the ROM's own raw block
  * (a bare `.align 2, 0` follows `bx r0` there too) - see the

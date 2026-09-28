@@ -2,12 +2,19 @@ on:
   push:
     branches: [ main ]
   pull_request:
-  pull_request_target:
+
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-24.04
-    name: Crash Bandicoot XS European
+    # GitHub gives no repository secrets to pull_request runs from forks, so
+    # those can't fetch the ROM. They compile every C file and generate the
+    # objdiff report instead of linking and checksumming the ROM.
+    name: "${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'Crash Bandicoot XS European' || 'Crash Bandicoot XS European (fork PR: compile and report only, no ROM check)' }}"
+    env:
+      HAS_ROM: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     steps:
     - uses: actions/checkout@v5
 
@@ -19,16 +26,20 @@ jobs:
       with:
         path: agbcc
         repository: SAT-R/agbcc
-      
+
     - name: Install agbcc
       working-directory: agbcc
       run: ./build.sh && ./install.sh ../
 
     - name: Fetch baserom
-      run: curl -o baserom.gba -u '${{ secrets.BASEROM_USERNAME }}:${{ secrets.BASEROM_PASSWORD }}' ${{ secrets.BASEROM_URL }}
-      
+      if: env.HAS_ROM == 'true'
+      run: curl -fsS -o baserom.gba -u '${{ secrets.BASEROM_USERNAME }}:${{ secrets.BASEROM_PASSWORD }}' ${{ secrets.BASEROM_URL }}
+
+    # `make compare` links the ROM and runs `sha1sum -c checksum.sha1`, which
+    # fails the step on any byte mismatch.
     - name: Build and compare
-      run: make
+      if: env.HAS_ROM == 'true'
+      run: make compare
 
     # Progress report for decomp.dev (see docs/decomp_dev.md) - doesn't need
     # baserom.gba at all, since expected/code_3.s (checked into the repo) is

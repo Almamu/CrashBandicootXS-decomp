@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor.h"
+#include "box_part.h"
 
 extern void sub_8007174(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4);
 extern void sub_80073DC(void *unused, void *part, s32 *posPtr);
@@ -112,286 +113,64 @@ void sub_8007AB4(void *arg0)
     }
 }
 
-extern void sub_803AFE4(void *buf, s32 arg1, s32 arg2);
-extern void sub_803AFDC(void *buf, s32 arg1, s32 arg2);
-
-/* Confirmed by matching sub_8007B00 below (even though that function
- * itself is parked, this shape isn't in doubt - every field read
- * compiled byte-identically to the ROM). */
 struct aabb {
-    s32 field_0;
-    s32 field_4;
-    s32 field_8;
-    s32 field_c;
+    s32 x;
+    s32 y;
+    s32 w;
+    s32 h;
 };
 
-/* Builds an AABB (via the shared sub_803AFE4/sub_803AFDC primitive -
- * see docs/matching.md) for `part`'s current animation keyframe: the
- * keyframe table pointer at `part+0x20` indexed by the counter at
- * `part+0x2d` (0x1c bytes per record), whose own `+0xc`/`+0xe`/`+0x10`/
- * `+0x11` fields are {s16 xOffset, s16 yOffset, u8 w, u8 h} - the same
- * offset/text-table convention seen elsewhere, just with the AABB
- * dimensions instead of a text pointer. `part+0x28` bits 4/5 mirror
- * the AABB horizontally/vertically around `part`'s own position.
- *
- * **Build toggle**: default builds (`NON_MATCHING=0`) use the `#else`
- * branch's NAKED transcription of the ROM's own confirmed-correct
- * instructions, byte-exact, same technique as `sub_8006600`/
- * `sub_80073DC` above. The `#if NON_MATCHING` branch is a since-refined
- * C reconstruction (see docs/matching.md's "Parked, not matched:
- * sub_8007B00" for the earlier attempt this supersedes) that gets
- * every instruction byte-exact except one: pinning `dest`/`rec`/`addr`/
- * `idx`/`w`/`h` to r8/r1/r2/r3/r5/r6 (mirroring the register-pressure
- * trick that worked for `sub_8007B98` below, plus giving this function
- * a real `void *` return - reloading `pDest` into r0 right before the
- * epilogue, unused by the one call site, reproduces the ROM's own
- * redundant `mov r0, r8` and shifts the final `pop`'s register choice
- * to match too) gets `part` naturally onto r7 - closing the r6-vs-r7
- * prologue/epilogue mismatch this function was originally parked for -
- * and fixes both `part+0x28` bit-test scratch-register gaps via a
- * pinned two-step `flags`/`shifted` pair per test. The one holdout: the
- * first `ldrsh` (`offX`, `rec+0xc`) materializes its `0xc` offset into
- * r0 here where the ROM uses r5 - the exact same shape as the
- * still-unmatched first `ldrsh` in `sub_8007B98`'s own entry below (its
- * `offX` at `rec+4`), which already ruled out a scoped `register s32
- * shift asm("r5") = 0xc` local (gcc constant-propagates the literal
- * away regardless, still picking r0) and inline `asm("mov %0, #0xc")`
- * (forces the mov but then breaks the ldrsh's addressing-mode folding,
- * emitting an extra `add`/`mov r0,#0` instead) - both retried here with
- * the same outcome. Not byte-exact, so the NAKED branch stays the
- * default; kept here instead of only in git history since it's this
- * close (every instruction but one register letter). */
-#if NON_MATCHING
-void *sub_8007B00(void *dest, void *part)
+extern void sub_803AFE4(struct aabb *buf, s32 x, s32 y);
+extern void sub_803AFDC(struct aabb *buf, s32 w, s32 h);
+
+/* Builds the AABB (via the shared sub_803AFE4 set-position/sub_803AFDC
+ * set-size pair) for `part`'s current animation keyframe, whose box sits
+ * at record+0xc, and mirrors it horizontally/vertically around `part`'s
+ * own position per the 0x28 mirror bits. Returned by value (the hidden
+ * return pointer is the `dest` the ROM keeps in r8 and hands back in r0).
+ * Matches under old_agbcc - see docs/matching/issue-9-naked-retry.md. */
+struct aabb sub_8007B00(struct box_part *part)
 {
-    register struct aabb *pDest asm("r8");
-    struct aabb buf_;
-    s32 *buf = (s32 *)&buf_;
-    register void *rec asm("r1");
-    void *rec2;
-    register u8 *addr asm("r2");
-    register u8 idx asm("r3");
-    s32 offset;
-    s32 offX, offY;
-    register s32 w asm("r5");
-    register s32 h asm("r6");
-    s32 x, y;
+    struct aabb box;
+    u8 *rec = (u8 *)&(*part->keyframes)[part->frame];
+    struct part_box *pb = (struct part_box *)(rec + 0xc);
+    s32 px = part->x >> 8;
+    s32 offX = pb->offX;
+    s32 py = part->y >> 8;
+    s32 offY = pb->offY;
+    u8 w = pb->w;
+    u8 h = pb->h;
 
-    pDest = dest;
-    rec = *(void ***)((u8 *)part + 0x20);
-    addr = (u8 *)part + 0x2d;
-    idx = *addr;
-    offset = idx * 0x1c;
-    rec = *(void **)rec;
-    rec = (u8 *)rec + offset;
-    rec2 = (u8 *)rec + 0xc;
-
-    x = *(s32 *)part >> 8;
-    offX = *(s16 *)((u8 *)rec + 0xc);
-    y = *(s32 *)((u8 *)part + 4) >> 8;
-    w = 2;
-    offY = *(s16 *)((u8 *)rec2 + w);
-    w = *((u8 *)rec2 + 4);
-    h = *((u8 *)rec2 + 5);
-
-    offX = offX + x;
-    offY = offY + y;
-    sub_803AFE4(buf, offX, offY);
-    sub_803AFDC(buf, w, h);
-
-    {
-        register u8 flags asm("r1") = *((u8 *)part + 0x28);
-        register s32 shifted asm("r0") = (s32)(flags << 27);
-        if (shifted < 0) {
-            buf[0] = (*(s32 *)part >> 8) * 2 - (buf[0] + buf[2]);
-        }
-    }
-    {
-        register u8 flags asm("r3") = *(vu8 *)((u8 *)part + 0x28);
-        register s32 shifted asm("r0") = (s32)(flags << 26);
-        if (shifted < 0) {
-            buf[1] = (*(s32 *)((u8 *)part + 4) >> 8) * 2 - (buf[1] + buf[3]);
-        }
-    }
-
-    *pDest = buf_;
-    return pDest;
+    sub_803AFE4(&box, offX + px, offY + py);
+    sub_803AFDC(&box, w, h);
+    if (part->mirrorX)
+        box.x = (part->x >> 8) * 2 - (box.x + box.w);
+    if (part->mirrorY)
+        box.y = (part->y >> 8) * 2 - (box.y + box.h);
+    return box;
 }
-#else
-NAKED void *sub_8007B00(void *dest, void *part)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, r8\n\t"
-        "push {r7}\n\t"
-        "sub sp, #0x10\n\t"
-        "mov r8, r0\n\t"
-        "add r7, r1, #0\n\t"
-        "ldr r1, [r7, #0x20]\n\t"
-        "add r2, r7, #0\n\t"
-        "add r2, #0x2d\n\t"
-        "ldrb r3, [r2]\n\t"
-        "lsl r0, r3, #3\n\t"
-        "sub r0, r0, r3\n\t"
-        "lsl r0, r0, #2\n\t"
-        "ldr r1, [r1]\n\t"
-        "add r1, r1, r0\n\t"
-        "add r3, r1, #0\n\t"
-        "add r3, #0xc\n\t"
-        "ldr r4, [r7]\n\t"
-        "asr r4, r4, #8\n\t"
-        "mov r5, #0xc\n\t"
-        "ldrsh r1, [r1, r5]\n\t"
-        "ldr r0, [r7, #4]\n\t"
-        "asr r0, r0, #8\n\t"
-        "mov r5, #2\n\t"
-        "ldrsh r2, [r3, r5]\n\t"
-        "ldrb r5, [r3, #4]\n\t"
-        "ldrb r6, [r3, #5]\n\t"
-        "add r1, r1, r4\n\t"
-        "add r2, r2, r0\n\t"
-        "mov r0, sp\n\t"
-        "bl sub_803AFE4\n\t"
-        "mov r0, sp\n\t"
-        "add r1, r5, #0\n\t"
-        "add r2, r6, #0\n\t"
-        "bl sub_803AFDC\n\t"
-        "add r3, r7, #0\n\t"
-        "add r3, #0x28\n\t"
-        "ldrb r1, [r3]\n\t"
-        "lsl r0, r1, #0x1b\n\t"
-        "cmp r0, #0\n\t"
-        "bge 1f\n\t"
-        "ldr r0, [r7]\n\t"
-        "asr r0, r0, #8\n\t"
-        "lsl r0, r0, #1\n\t"
-        "ldr r1, [sp]\n\t"
-        "ldr r2, [sp, #8]\n\t"
-        "add r1, r1, r2\n\t"
-        "sub r0, r0, r1\n\t"
-        "str r0, [sp]\n\t"
-    "1:\n\t"
-        "ldrb r3, [r3]\n\t"
-        "lsl r0, r3, #0x1a\n\t"
-        "cmp r0, #0\n\t"
-        "bge 2f\n\t"
-        "ldr r0, [r7, #4]\n\t"
-        "asr r0, r0, #8\n\t"
-        "lsl r0, r0, #1\n\t"
-        "ldr r1, [sp, #4]\n\t"
-        "ldr r2, [sp, #0xc]\n\t"
-        "add r1, r1, r2\n\t"
-        "sub r0, r0, r1\n\t"
-        "str r0, [sp, #4]\n\t"
-    "2:\n\t"
-        "mov r0, r8\n\t"
-        "mov r1, sp\n\t"
-        "ldm r1!, {r2, r3, r4}\n\t"
-        "stm r0!, {r2, r3, r4}\n\t"
-        "ldr r1, [r1]\n\t"
-        "str r1, [r0]\n\t"
-        "mov r0, r8\n\t"
-        "add sp, #0x10\n\t"
-        "pop {r3}\n\t"
-        "mov r8, r3\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-    );
-}
-#endif /* NON_MATCHING */
 
-/* Same AABB-for-keyframe shape as sub_8007B00 above, for a second,
- * differently-laid-out keyframe table (offX/offY/w/h sit at rec+4/+6/+8/+9
- * here, not rec+0xc/+0xe/+0x10/+0x11) - reusing the shared `struct aabb`.
- * Also returns `dest` back to the caller (the ROM reloads r8 into r0
- * right before the epilogue), unlike sub_8007B00 which is void. See the
- * (now removed) NON_MATCHING C draft in git history for the full
- * commented C reconstruction - every instruction's operation, operand,
- * and order matched the ROM exactly except a recurring "which anonymous
- * scratch register" choice (about 10 of this function's ~73
- * instructions), which no C-level rephrasing closed (see
- * docs/matching.md's "Parked, not matched: sub_8007B98" for the full
- * account of what was tried). Written as NAKED asm here instead, same
- * technique as `sub_8007B00` above. */
-NAKED void *sub_8007B98(void *dest, void *part)
+/* Same as sub_8007B00 above for the other keyframe-table layout, whose
+ * box sits at record+0x4 instead (the collision box `struct anim_box` in
+ * include/gobj_1a794.h). */
+struct aabb sub_8007B98(struct box_part *part)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, r8\n\t"
-        "push {r7}\n\t"
-        "sub sp, #0x10\n\t"
-        "mov r8, r0\n\t"
-        "add r7, r1, #0\n\t"
-        "ldr r1, [r7, #0x20]\n\t"
-        "add r2, r7, #0\n\t"
-        "add r2, #0x2d\n\t"
-        "ldrb r3, [r2]\n\t"
-        "lsl r0, r3, #3\n\t"
-        "sub r0, r0, r3\n\t"
-        "lsl r0, r0, #2\n\t"
-        "ldr r1, [r1]\n\t"
-        "add r1, r1, r0\n\t"
-        "add r3, r1, #4\n\t"
-        "ldr r4, [r7]\n\t"
-        "asr r4, r4, #8\n\t"
-        "mov r5, #4\n\t"
-        "ldrsh r1, [r1, r5]\n\t"
-        "ldr r0, [r7, #4]\n\t"
-        "asr r0, r0, #8\n\t"
-        "mov r5, #2\n\t"
-        "ldrsh r2, [r3, r5]\n\t"
-        "ldrb r5, [r3, #4]\n\t"
-        "ldrb r6, [r3, #5]\n\t"
-        "add r1, r1, r4\n\t"
-        "add r2, r2, r0\n\t"
-        "mov r0, sp\n\t"
-        "bl sub_803AFE4\n\t"
-        "mov r0, sp\n\t"
-        "add r1, r5, #0\n\t"
-        "add r2, r6, #0\n\t"
-        "bl sub_803AFDC\n\t"
-        "add r3, r7, #0\n\t"
-        "add r3, #0x28\n\t"
-        "ldrb r1, [r3]\n\t"
-        "lsl r0, r1, #0x1b\n\t"
-        "cmp r0, #0\n\t"
-        "bge 1f\n\t"
-        "ldr r0, [r7]\n\t"
-        "asr r0, r0, #8\n\t"
-        "lsl r0, r0, #1\n\t"
-        "ldr r1, [sp]\n\t"
-        "ldr r2, [sp, #8]\n\t"
-        "add r1, r1, r2\n\t"
-        "sub r0, r0, r1\n\t"
-        "str r0, [sp]\n\t"
-    "1:\n\t"
-        "ldrb r3, [r3]\n\t"
-        "lsl r0, r3, #0x1a\n\t"
-        "cmp r0, #0\n\t"
-        "bge 2f\n\t"
-        "ldr r0, [r7, #4]\n\t"
-        "asr r0, r0, #8\n\t"
-        "lsl r0, r0, #1\n\t"
-        "ldr r1, [sp, #4]\n\t"
-        "ldr r2, [sp, #0xc]\n\t"
-        "add r1, r1, r2\n\t"
-        "sub r0, r0, r1\n\t"
-        "str r0, [sp, #4]\n\t"
-    "2:\n\t"
-        "mov r0, r8\n\t"
-        "mov r1, sp\n\t"
-        "ldm r1!, {r2, r3, r4}\n\t"
-        "stm r0!, {r2, r3, r4}\n\t"
-        "ldr r1, [r1]\n\t"
-        "str r1, [r0]\n\t"
-        "mov r0, r8\n\t"
-        "add sp, #0x10\n\t"
-        "pop {r3}\n\t"
-        "mov r8, r3\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-    );
+    struct aabb box;
+    u8 *rec = (u8 *)&(*part->keyframes)[part->frame];
+    struct part_box *pb = (struct part_box *)(rec + 4);
+    s32 px = part->x >> 8;
+    s32 offX = pb->offX;
+    s32 py = part->y >> 8;
+    s32 offY = pb->offY;
+    u8 w = pb->w;
+    u8 h = pb->h;
+
+    sub_803AFE4(&box, offX + px, offY + py);
+    sub_803AFDC(&box, w, h);
+    if (part->mirrorX)
+        box.x = (part->x >> 8) * 2 - (box.x + box.w);
+    if (part->mirrorY)
+        box.y = (part->y >> 8) * 2 - (box.y + box.h);
+    return box;
 }
 asm(".align 2, 0");

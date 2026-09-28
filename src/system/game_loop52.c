@@ -1,4 +1,5 @@
 #include "core.h"
+#include "orbit_part.h"
 
 /* GitHub issue #12/#14 Phase 2, "accessor cluster" group: `sub_8011248`
  * through `sub_8011390` (11 functions, `0x08011248`-`0x08011448`),
@@ -103,86 +104,31 @@ extern void sub_8011448(void *self, s32 mode);
  * any other value - the local `gStaticData_0816BF08` lookup still runs
  * for mode 3, its result simply unused). */
 struct three_words {
-    s32 a, b, c;
+    s32 a[3];
 };
 
-/* Written as NAKED asm, not plain C: a plain-C reconstruction (the
- * struct-copy local, two `gStaticData_0816A820` lookups at different
- * strides, the mode-1/mode-2/else branch) reproduces the ROM's exact
- * *shape* instruction-for-instruction, but gcc 2.9 -O2 persistently
- * picks the opposite register/operand order for the two
- * `table + phase*stride` pointer adds (`adds r0, r4, r0` instead of
- * the ROM's own `adds r0, r0, r4`) no matter how the C source orders
- * the addition (pointer-arithmetic normalizes the pointer operand
- * first internally) - not something a source-level register pin can
- * reach, so closed via NAKED transcription instead, the same escape
- * hatch already established throughout this subsystem
- * (`sub_8010D54`, `game_loop50.c`). */
-NAKED void sub_8011248(void *selfArg)
+/* Built with old_agbcc (Makefile OLD_AGBCC_OBJS): the sine sample goes
+ * through one reused local (`sn`), which old_agbcc keeps in r2 across
+ * both calls exactly like the ROM; current agbcc renumbers the first
+ * lookup's registers. Every other function in this file compiles the
+ * same under either compiler. */
+void sub_8011248(struct orbit_part *self)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "sub sp, #0xc\n\t"
-        "add r5, r0, #0\n\t"
-        "mov r1, sp\n\t"
-        "ldr r0, 1f\n\t"
-        "ldm r0!, {r2, r3, r4}\n\t"
-        "stm r1!, {r2, r3, r4}\n\t"
-        "ldr r4, 2f\n\t"
-        "add r6, r5, #0\n\t"
-        "add r6, #0x4b\n\t"
-        "ldrb r1, [r6]\n\t"
-        "lsl r0, r1, #3\n\t"
-        "add r0, r0, r4\n\t"
-        "mov r3, #0\n\t"
-        "ldrsh r2, [r0, r3]\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #4\n\t"
-        "add r0, r2, #0\n\t"
-        "bl sub_80008FC\n\t"
-        "ldr r1, [r5, #0x50]\n\t"
-        "sub r1, r1, r0\n\t"
-        "str r1, [r5, #4]\n\t"
-        "ldrb r6, [r6]\n\t"
-        "lsl r0, r6, #2\n\t"
-        "add r0, r0, r4\n\t"
-        "mov r4, #0\n\t"
-        "ldrsh r2, [r0, r4]\n\t"
-        "add r4, r5, #0\n\t"
-        "add r4, #0x4a\n\t"
-        "ldrb r0, [r4]\n\t"
-        "sub r0, #1\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, sp\n\t"
-        "ldr r1, [r0]\n\t"
-        "add r0, r2, #0\n\t"
-        "bl sub_80008FC\n\t"
-        "add r2, r0, #0\n\t"
-        "ldrb r0, [r4]\n\t"
-        "cmp r0, #1\n\t"
-        "bne 3f\n\t"
-        "ldr r0, [r5, #0x4c]\n\t"
-        "sub r0, r0, r2\n\t"
-        "b 4f\n\t"
-        ".align 2, 0\n"
-    "1: .4byte gStaticData_0816BF08\n"
-    "2: .4byte gStaticData_0816A820\n"
-    "3:\n\t"
-        "cmp r0, #2\n\t"
-        "bne 5f\n\t"
-        "ldr r0, [r5, #0x4c]\n\t"
-        "add r0, r0, r2\n\t"
-        "b 4f\n\t"
-    "5:\n\t"
-        "ldr r0, [r5, #0x4c]\n\t"
-    "4:\n\t"
-        "str r0, [r5]\n\t"
-        "add sp, #0xc\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    );
+    struct three_words scales = *(struct three_words *)gStaticData_0816BF08;
+    s32 dy;
+    s32 sn;
+
+    sn = gStaticData_0816A820[self->phase * 4];
+    dy = sub_80008FC(sn, 0x800);
+    self->base.y = self->anchor.y - dy;
+    sn = gStaticData_0816A820[self->phase * 2];
+    sn = sub_80008FC(sn, scales.a[self->mode - 1]);
+    if (self->mode == 1)
+        self->base.x = self->anchor.x - sn;
+    else if (self->mode == 2)
+        self->base.x = self->anchor.x + sn;
+    else
+        self->base.x = self->anchor.x;
 }
 
 /* Re-derives visibility via `sub_8007A84(gUnknown_030012CC, self)`

@@ -894,17 +894,12 @@ void sub_8019EBC(struct boss *self, s32 mode, u16 x, u16 y, struct part *arg)
  * `+0x30` table, `unk_0A` 6) at (x, y), with a gStaticData_087E483C
  * controller, facing `facing`, and registers it with gUnknown_030012F0.
  *
- * NAKED: the C below is instruction-for-instruction the ROM's except for
- * register allocation - gcc gives the controller r4 and the part r5,
- * where the ROM has the part in r4 and the controller in r5, and it
- * keeps the constant 1 used for `facing & 1` in r8 while re-materializing
- * a separate `mov r0, #1` for the tag store. Tried: inline/plain tag
- * store, a named `one` variable (s32/u32/u8, declared or chained
- * `p->tag = one = 1`), an inline facing setter, declaration order and
- * scoping of the controller, re-reading `p->ctl`. Pinning the part to r4
- * makes the controller's own `add r5, r5, r0` impossible, and pinning
- * `one` to r8 drops r8 from the push/pop (the documented agbcc
- * callee-saved-register bug). */
+ * NAKED: under old_agbcc the C below is 26 halfwords off, all register
+ * allocation. gcc gives the controller r4 and the part r5 (the ROM has them
+ * the other way round), and the tag store reuses the r8 constant 1 kept
+ * for `facing & 1`, where the ROM loads the tag's 1 separately. Named or
+ * late-assigned `one` variables, s32/u8/u32 tag and facing helpers, an
+ * inline tag-plus-OAM helper and scoping the controller didn't move it. */
 #if NON_MATCHING
 void sub_801A03C(struct boss *self, u16 x, u16 y, u8 facing)
 {
@@ -1041,15 +1036,11 @@ NAKED void sub_801A03C(struct boss *self, u16 x, u16 y, u8 facing)
  * states 3/4 toggle `other`'s blink bit every 20 frames until the
  * blinks run out (then state 5).
  *
- * NAKED: the ROM keeps `other` in r9, &gUnknown_030012D8 in r10, the
- * player-box address in r8 and `self` in r7, leaving r4-r6 for
- * temporaries - gcc puts all four long-lived values in r4-r7/r8 instead.
- * State 0's register value is also built with eight separate `orr`s
- * (two accumulators, r5 then r0) that gcc constant-folds even through
- * register variables; only per-step `asm("" : "+r")` barriers keep them
- * apart. Pinning `other`/the global address/the box pointer to r9/r10/r8
- * gets the prologue shape but still leaves `self` in r6 (r7 cannot be
- * pinned) and an extra box temporary on the stack. */
+ * NAKED: under old_agbcc the pin-free C below has the right shape but is
+ * 139 halfwords off on allocation. The ROM puts `self` in r7, `other` in
+ * r9, &gUnknown_030012D8 in r10 and `&b` in r8, leaving r4-r6 for
+ * temporaries; gcc uses r4-r8 for those four. State 0 also builds its
+ * BLDCNT/BLDALPHA value with separate `orr`s the compiler constant-folds. */
 #if NON_MATCHING
 void sub_801A114(struct obj_490c *self, struct part *other)
 {
@@ -1084,19 +1075,9 @@ void sub_801A114(struct obj_490c *self, struct part *other)
     switch (self->state)
     {
     case 0:
-    {
-        register u32 cnt asm("r5") = BLDCNT_TGT1_OBJ;
-        register u32 val asm("r0");
-
-        cnt |= BLDCNT_TGT2_BG0;
-        cnt |= BLDCNT_TGT2_BG1;
-        cnt |= BLDCNT_TGT2_BG2;
-        cnt |= BLDCNT_TGT2_BG3;
-        val = cnt | BLDCNT_TGT2_OBJ;
-        val |= BLDALPHA_BLEND(16, 0) << 16;
-        val |= BLDALPHA_BLEND(0, 16) << 16;
-        *(vu32 *)REG_ADDR_BLDCNT = val;
-    }
+        *(vu32 *)REG_ADDR_BLDCNT = BLDCNT_TGT1_OBJ | BLDCNT_TGT2_BG0 | BLDCNT_TGT2_BG1
+            | BLDCNT_TGT2_BG2 | BLDCNT_TGT2_BG3 | BLDCNT_TGT2_OBJ
+            | (BLDALPHA_BLEND(16, 16) << 16);
         VCALL1(self, m20, 5);
         break;
     case 1:

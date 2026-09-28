@@ -320,3 +320,18 @@ Every function in GitHub issue #8's original 9-function range
 (`sub_80060AC`-`sub_8006518`, including `sub_80062A8`/`sub_80063D8`
 which that issue's own checklist hadn't been marked complete for) is
 now byte-exact matched. This PR closes issue #8.
+
+## Later pass: the NAKED five are real C
+
+The issue #4/#6/#8 retry ([issue-4-6-8-naked-retry.md](issue-4-6-8-naked-retry.md)) replaced all five NAKED transcriptions
+from the third pass with plain C:
+
+- `sub_8006124`, `sub_800619C` and `sub_80061E8` match under both
+  compilers once the draws are written as `record->slots[n]` virtual
+  calls.
+- `sub_80062A8` matches under both with the `IconSetup`/`IconReserve`
+  helpers and a one-argument `sub_8028A40`.
+- `sub_8006518` matches under old_agbcc with a packed `level:5`
+  bitfield. `settings_menu10.c` is now on `OLD_AGBCC_OBJS`.
+
+The issue's range now has no NAKED, raw or NON_MATCHING functions.

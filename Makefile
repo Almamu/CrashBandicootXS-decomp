@@ -132,11 +132,30 @@ $(ELF): $(OBJS) $(LDSCRIPT)
 # where the current agbcc loads the byte first - see
 # docs/matching/issue-24-boss-actor.md. old_agbcc has no
 # -fprologue-bugfix option.
-OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part27a.o \
-                  $(C_BUILDDIR)/graphics/actor_part_13c60.o \
-                  $(C_BUILDDIR)/graphics/actor_part_14674.o \
+OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
+                  $(C_BUILDDIR)/graphics/actor_part118.o \
+                  $(C_BUILDDIR)/graphics/actor_part11d.o \
+                  $(C_BUILDDIR)/graphics/actor_part11e.o \
+                  $(C_BUILDDIR)/graphics/actor_part11f.o \
+                  $(C_BUILDDIR)/graphics/actor_part12.o \
+                  $(C_BUILDDIR)/graphics/actor_part120.o \
+                  $(C_BUILDDIR)/graphics/actor_part122.o \
+                  $(C_BUILDDIR)/graphics/actor_part128.o \
+                  $(C_BUILDDIR)/graphics/actor_part27a.o \
+                  $(C_BUILDDIR)/graphics/actor_part3.o \
+                  $(C_BUILDDIR)/graphics/actor_part7.o \
+                  $(C_BUILDDIR)/graphics/actor_part7b.o \
+                  $(C_BUILDDIR)/graphics/actor_part81.o \
+                  $(C_BUILDDIR)/graphics/actor_part83.o \
+                  $(C_BUILDDIR)/graphics/actor_part84.o \
                   $(C_BUILDDIR)/graphics/actor_part86.o \
                   $(C_BUILDDIR)/graphics/actor_part86b.o \
+                  $(C_BUILDDIR)/graphics/actor_part88.o \
+                  $(C_BUILDDIR)/graphics/actor_part_12fbc.o \
+                  $(C_BUILDDIR)/graphics/actor_part_134b8.o \
+                  $(C_BUILDDIR)/graphics/actor_part_138e8.o \
+                  $(C_BUILDDIR)/graphics/actor_part_13c60.o \
+                  $(C_BUILDDIR)/graphics/actor_part_14674.o \
                   $(C_BUILDDIR)/graphics/actor_part_16048.o \
                   $(C_BUILDDIR)/graphics/actor_part_17524.o \
                   $(C_BUILDDIR)/graphics/actor_part_18008.o \
@@ -147,11 +166,59 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part27a.o \
                   $(C_BUILDDIR)/graphics/actor_part_1cee0.o \
                   $(C_BUILDDIR)/graphics/actor_part_1da38.o \
                   $(C_BUILDDIR)/graphics/actor_part_1dfec.o \
+                  $(C_BUILDDIR)/graphics/graphics_loading_1e990.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_1ea5c.o \
-                  $(C_BUILDDIR)/graphics/actor_part128.o \
-                  $(C_BUILDDIR)/system/bg_scroll_layer_25fc8.o
+                  $(C_BUILDDIR)/graphics/graphics_loading_1ef0c.o \
+                  $(C_BUILDDIR)/graphics/graphics_loading_1fdec.o \
+                  $(C_BUILDDIR)/graphics/graphics_loading_1feec.o \
+                  $(C_BUILDDIR)/graphics/graphics_loading_21280.o \
+                  $(C_BUILDDIR)/graphics/graphics_loading_21668.o \
+                  $(C_BUILDDIR)/graphics/graphics_loading_35780.o \
+                  $(C_BUILDDIR)/graphics/graphics_package_1e578.o \
+                  $(C_BUILDDIR)/graphics/graphics_package_1e640.o \
+                  $(C_BUILDDIR)/graphics/graphics_package_1e688.o \
+                  $(C_BUILDDIR)/graphics/graphics_package_1e8f8.o \
+                  $(C_BUILDDIR)/graphics/graphics_package_1e964.o \
+                  $(C_BUILDDIR)/graphics/hud_digit_array.o \
+                  $(C_BUILDDIR)/graphics/hud_icon_widget_85c4.o \
+                  $(C_BUILDDIR)/graphics/hud_icon_widget_8890.o \
+                  $(C_BUILDDIR)/graphics/hud_icon_widget_8994.o \
+                  $(C_BUILDDIR)/graphics/level_graphics.o \
+                  $(C_BUILDDIR)/graphics/settings_menu.o \
+                  $(C_BUILDDIR)/graphics/settings_menu10.o \
+                  $(C_BUILDDIR)/graphics/settings_menu22.o \
+                  $(C_BUILDDIR)/graphics/settings_menu6.o \
+                  $(C_BUILDDIR)/graphics/trigger_effect.o \
+                  $(C_BUILDDIR)/system/bg_scroll_layer_25fc8.o \
+                  $(C_BUILDDIR)/system/game_loop14.o \
+                  $(C_BUILDDIR)/system/game_loop16.o \
+                  $(C_BUILDDIR)/system/game_loop29.o \
+                  $(C_BUILDDIR)/system/game_loop3.o \
+                  $(C_BUILDDIR)/system/game_loop37.o \
+                  $(C_BUILDDIR)/system/game_loop4.o \
+                  $(C_BUILDDIR)/system/game_loop40.o \
+                  $(C_BUILDDIR)/system/game_loop46.o \
+                  $(C_BUILDDIR)/system/game_loop48.o \
+                  $(C_BUILDDIR)/system/game_loop49.o \
+                  $(C_BUILDDIR)/system/game_loop52.o \
+                  $(C_BUILDDIR)/system/game_loop53.o \
+                  $(C_BUILDDIR)/system/game_loop54.o \
+                  $(C_BUILDDIR)/system/game_loop57.o \
+                  $(C_BUILDDIR)/system/game_loop7.o \
+                  $(C_BUILDDIR)/system/game_loop8.o \
+                  $(C_BUILDDIR)/system/link_cable.o
 $(OLD_AGBCC_OBJS): CC1 := $(CC1_OLD)
 $(OLD_AGBCC_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1FLAGS))
+
+# Objects built with -fno-strength-reduce on top of their compiler's -O2.
+# graphics_loading_35780: sub_8036600's first loop keeps its up-counting
+# `i` (with strength reduction on, gcc reverses a loop whose counter only
+# feeds the exit test), and the flag leaves every other real-C function in
+# the file byte-identical. It is NOT a global property: adding it to all
+# old_agbcc objects breaks matched functions in 11 other files. See
+# docs/matching/per-file-flags-investigation.md.
+NO_STRENGTH_REDUCE_OBJS := $(C_BUILDDIR)/graphics/graphics_loading_35780.o
+$(NO_STRENGTH_REDUCE_OBJS): CC1FLAGS += -fno-strength-reduce
 
 $(C_BUILDDIR)/%.o : $(C_SUBDIR)/%.c
 	@mkdir -p $(dir $@)

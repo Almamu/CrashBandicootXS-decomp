@@ -1,5 +1,10 @@
 # `graphics_loading` chunk `0x0801FA3C`-`0x08021668` (issue #31), second pass
 
+> **Superseded for the NAKED functions below:** this region was built with
+> old_agbcc, and the "r7 gap" passes here were fighting the wrong compiler.
+> All but `sub_802062C` and `sub_8021280` are now plain C - see
+> [issue-31-old-agbcc.md](issue-31-old-agbcc.md).
+
 Continues the first pass (PR #202, recorded in `docs/matching.md` under
 "`graphics_loading` chunk `0x0801FA3C`-`0x08021668` (issue #31)"), which
 matched/parked the 4-function "trigger effect type N" twin family
@@ -800,3 +805,12 @@ scope (the "trigger effect type N" twin-family shape at
 `sub_801EA5C`-`sub_801EE3C`, plus every NAKED/`NON_MATCHING` entry this
 issue has accumulated across all seven passes) is unchanged by this pass
 beyond adding twelve more already-parked NAKED entries.
+
+## Later pass: `trigger_effect.c` under old_agbcc
+
+`sub_8020E84`/`sub_8020F7C`/`sub_802107C`/`sub_802117C`, NAKED since the
+third pass, are now plain C built with old_agbcc (`OLD_AGBCC_OBJS`). There
+are no pins. The only non-obvious part is writing the sound arm as two
+`sub_801A878` calls, which gcc cross-jumps into the ROM's shape. See
+[issue-31-trigger-effect-type-n.md](./issue-31-trigger-effect-type-n.md)'s
+"Old-compiler pass".

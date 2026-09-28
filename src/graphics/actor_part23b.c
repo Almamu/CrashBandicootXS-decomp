@@ -24,6 +24,25 @@ extern s32 gUnknown_03001528;
 extern s32 gUnknown_0300152C;
 extern s32 gUnknown_03001530;
 
+#if NON_MATCHING
+/* Near miss: old_agbcc is 11 halfwords off (the next-row pointer and
+ * the hoisted `&gUnknown_03001530` copy swap `ip`/`r3`); agbcc is
+ * further off. */
+void sub_8030D48(u16 *src)
+{
+    s32 i, j;
+    u8 *row = (u8 *)((gUnknown_03001520 + 0x18) << 11) + (0x06000000 + (0x20 - gUnknown_03001528) / 4 * 2) + ((0x20 - gUnknown_0300152C) / 2 * 32 + 2);
+    for (i = 0; i < gUnknown_0300152C; i++) {
+        for (j = 0; j < gUnknown_03001528 / 2; j++) {
+            u8 bias = *(u8 *)&gUnknown_03001530;
+            u16 lo = *src++ + bias;
+            u16 hi = *src++ + bias;
+            ((u16 *)row)[j] = lo | (hi << 8);
+        }
+        row += 0x20;
+    }
+}
+#else
 NAKED void sub_8030D48(void *selfArg)
 {
     asm(
@@ -127,3 +146,4 @@ NAKED void sub_8030D48(void *selfArg)
     "5: .4byte gUnknown_03001530\n"
     );
 }
+#endif

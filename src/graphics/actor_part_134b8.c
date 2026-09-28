@@ -1,597 +1,290 @@
 #include "core.h"
+#include "action_obj.h"
 
-/* Continuation of actor_part_12fbc.c (GitHub issue #17) - see its
- * top-of-file comment for the shared field-offset conventions this
- * "self" child-object family uses, and for why these new files are
- * named `actor_part_<addr>.c` rather than the next sequential
- * `actor_partNN`. This single function (0x080134B8-0x080138E8) sits
- * between `sub_8013228` and `sub_80138E8`/`sub_8013994`
- * (actor_part_12fbc.c/actor_part_138e8.c), so it needs its own file.
- *
- * A NAKED transcription, not real C - by far the most extreme register-
- * budget shape of this whole chunk: on top of the usual `r4-r7`, the
- * ROM keeps `r8`/`sb`/`sl` (three extended registers) live simultaneously
- * through the object-spawn/tag-mask block around `sub_8025BAC`, the
- * same "5th+ callee-saved register" wall docs/matching/issue-16-actor-
- * remainder.md already confirmed for this exact action-table family
- * (there with just `r7`; here even more registers are needed). Given
- * the whole surrounding neighborhood (actor_part_12fbc.c on both sides)
- * is already an established wall for this table family, transcribed
- * instruction-for-instruction from the ROM disassembly instead (ROM's
- * own `_0XXXXXXX` labels kept verbatim, per actor_part_12fbc.c/
- * actor_part82.c's convention), the same escape hatch used for
- * `sub_8001CB8`/`sub_8001DB4` (src/system/link_cable.c). */
+/* GitHub issue #17, ROM 0x080134B8-0x080138E8 (details in
+ * docs/matching/issue-17-0x08012fbc-actor.md, "Third pass"). Built with
+ * old_agbcc. */
 
-/* Caches `part+0x68` (busy flag) and `sub_8000760`'s D-pad-remap result
- * up front. Unless `self+8==0xe`, `self+0x26!=0`, or
- * `gUnknown_030007E0`'s bits/`self+8` range checks fail, plays a fixed
- * sound (id `0xa`) and fires the usual `+0x20`/`+0x24` and `+0x50`/
- * `+0x54` trampoline pairs (ids `0xe`/`0x10`), resetting `self+0x18`/
- * `+0x1c` and the `+0x21..+0x24` run plus the player's `+0x92` byte -
- * the same shape `sub_8013228` (actor_part_12fbc.c) already establishes.
- * If `part+0x68` was clear: calls `sub_80122CC(self)`, then ticks
- * `self+0x25`'s countdown (resetting it once the D-pad result is also
- * clear) and returns. Otherwise (`part+0x68` set): calls
- * `sub_801283C(self)`; for `self+8==0x1a` with `self+0x28==0`, sets the
- * trio to `4`/`1`/`7` and returns. Otherwise, keyed on `part+0x68` bit
- * 2: when set, arms `part+0xd` bit 0 and `self+0x34=0`, fires a
- * trampoline pair (ids `0x1a`/`0x15`, skipped for `self+8==0xe`),
- * clamps `part+0x30` via the same table-lookup idiom `sub_8013228`
- * uses, and calls `sub_800B334(part)` (or, for `self+8==0x1a`, instead
- * re-runs `sub_80122CC`/`sub_801283C` and clears `part+0x68`); when
- * clear, a D-pad result of `1`/`2` similarly re-runs `sub_80122CC`/
- * `sub_801283C` and resets `part+0x68`, while bit 3 (and `part->0x64
- * >= 0`) arms `part+0xd` bit 0, clears `self+0x34`, and - for
- * `self+8` in `0x18..0x19` - spawns two objects via
- * `sub_8025BAC(gUnknown_030012E4, 0x29, 1, x, y, tag)` at the player's
- * de-Q8'd `+0x14`-anchored position (`+0x14` and `-0x14` X offsets),
- * packing bitmasked tag/flag bytes (`+0x28`, `+0xc`) into each spawned
- * object via the same `sl`/`sb`/`r8`-cached negated-mask idiom, and
- * clamping each one's own `part+0x30` the same way; calls
- * `sub_8014F8C(self)` for `self+8==0x19`; then, unless `self+8==0x1d`,
- * plays a further sound (id `0x19`) and fires one more trampoline pair
- * (ids `0x16`/`0x11`) before resetting the trio to `0`/`1`/`0`. Outside
- * the `0x18..0x19` range: for `self+8==0xe`, dispatches
- * `gUnknown_030007E0`'s low-half bit `0x30` to set the trio to either
- * `1`/`1`/`1c` or `0`/`1`/tag(0/1); otherwise, gated on
- * `gUnknown_030012D8+0x100` and `sub_8000760`'s result, fires one more
- * trampoline pair (ids `0x17`/`0x16`) and sets the trio to `0`/`1`. */
-NAKED void sub_80134B8(void *selfArg)
+asm(".set _call_via_r2, sub_803AD80\n"
+    ".set _call_via_r3, sub_803AD84\n");
+
+/* The spark object sub_8025BAC spawns, as far as it is used. */
+struct spark
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sl\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6, r7}\n\t"
-        "sub sp, #0xc\n\t"
-        "add r5, r0, #0\n\t"
-        "ldr r0, _08013580\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, _08013584\n\t"
-        "ldr r1, [r1]\n\t"
-        "str r1, [sp, #8]\n\t"
-        "ldr r1, [r5, #0x10]\n\t"
-        "add r1, #0x68\n\t"
-        "ldrb r7, [r1]\n\t"
-        "bl sub_8000760\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "mov r8, r0\n\t"
-        "ldr r2, [r5, #8]\n\t"
-        "cmp r2, #0xe\n\t"
-        "beq _0801355A\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x26\n\t"
-        "ldrb r6, [r0]\n\t"
-        "cmp r6, #0\n\t"
-        "bne _0801355A\n\t"
-        "add r0, sp, #8\n\t"
-        "ldrh r1, [r0, #2]\n\t"
-        "mov r0, #2\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "beq _0801355A\n\t"
-        "add r0, r2, #0\n\t"
-        "sub r0, #0x18\n\t"
-        "cmp r0, #1\n\t"
-        "bls _0801355A\n\t"
-        "ldr r0, _08013588\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0xa\n\t"
-        "bl PlaySfx\n\t"
-        "mov r4, #0x18\n\t"
-        "ldr r1, [r5, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #0xe\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r2, [r5, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r2, r1]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r1, [r5, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, #0x10\n\t"
-        "bl sub_803AD84\n\t"
-        "str r6, [r5, #0x18]\n\t"
-        "str r4, [r5, #0x1c]\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x21\n\t"
-        "strb r6, [r0]\n\t"
-        "sub r0, #1\n\t"
-        "strb r6, [r0]\n\t"
-        "add r0, #2\n\t"
-        "strb r6, [r0]\n\t"
-        "add r0, #1\n\t"
-        "strb r6, [r0]\n\t"
-        "add r0, #1\n\t"
-        "strb r6, [r0]\n\t"
-        "ldr r0, _0801358C\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r0, #0x92\n\t"
-        "strb r6, [r0]\n\t"
-        "_0801355A:\n"
-        "cmp r7, #0\n\t"
-        "bne _080135BE\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_80122CC\n\t"
-        "add r1, r5, #0\n\t"
-        "add r1, #0x25\n\t"
-        "ldrb r0, [r1]\n\t"
-        "cmp r0, #0\n\t"
-        "beq _08013590\n\t"
-        "sub r0, #1\n\t"
-        "strb r0, [r1]\n\t"
-        "mov r2, r8\n\t"
-        "cmp r2, #0\n\t"
-        "beq _0801357A\n\t"
-        "b _080138D6\n\t"
-        "_0801357A:\n"
-        "strb r7, [r1]\n\t"
-        "b _080138D6\n\t"
-        ".align 2, 0\n"
-        "_08013580: .4byte gUnknown_03001304\n"
-        "_08013584: .4byte gUnknown_030007E0\n"
-        "_08013588: .4byte gUnknown_030012BC\n"
-        "_0801358C: .4byte gUnknown_030012D8\n"
-        "_08013590:\n"
-        "add r0, r5, #0\n\t"
-        "bl sub_801283C\n\t"
-        "ldr r0, [r5, #8]\n\t"
-        "cmp r0, #0x1a\n\t"
-        "beq _0801359E\n\t"
-        "b _080138D6\n\t"
-        "_0801359E:\n"
-        "add r3, r5, #0\n\t"
-        "add r3, #0x28\n\t"
-        "ldrb r0, [r3]\n\t"
-        "cmp r0, #0\n\t"
-        "beq _080135AA\n\t"
-        "b _080138D6\n\t"
-        "_080135AA:\n"
-        "mov r2, #4\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x32\n\t"
-        "strb r7, [r0]\n\t"
-        "add r1, r5, #0\n\t"
-        "add r1, #0x30\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r1]\n\t"
-        "strb r2, [r3]\n\t"
-        "b _080138D6\n\t"
-        "_080135BE:\n"
-        "mov r0, #4\n\t"
-        "and r0, r7\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r6, r0, #0x18\n\t"
-        "cmp r6, #0\n\t"
-        "beq _08013648\n\t"
-        "ldr r0, [r5, #8]\n\t"
-        "cmp r0, #0x1a\n\t"
-        "beq _08013632\n\t"
-        "ldr r1, [r5, #0x10]\n\t"
-        "mov r0, #1\n\t"
-        "ldrb r6, [r1, #0xd]\n\t"
-        "orr r0, r6\n\t"
-        "strb r0, [r1, #0xd]\n\t"
-        "add r1, r5, #0\n\t"
-        "add r1, #0x34\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r1]\n\t"
-        "ldr r0, [r5, #8]\n\t"
-        "cmp r0, #0xe\n\t"
-        "beq _0801362C\n\t"
-        "ldr r1, [r5, #0xc]\n\t"
-        "mov r7, #0x20\n\t"
-        "ldrsh r0, [r1, r7]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #0x1a\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r2, [r5, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r2, r1]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r1, [r5, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, #0x15\n\t"
-        "bl sub_803AD84\n\t"
-        "ldr r3, [r5, #0x10]\n\t"
-        "mov r4, #2\n\t"
-        "ldr r0, [r3, #0x20]\n\t"
-        "add r2, r3, #0\n\t"
-        "add r2, #0x2d\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldrb r6, [r2]\n\t"
-        "lsl r0, r6, #3\n\t"
-        "sub r0, r0, r6\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrb r0, [r0, #0x16]\n\t"
-        "cmp r4, r0\n\t"
-        "blt _0801362A\n\t"
-        "sub r4, r0, #1\n\t"
-        "_0801362A:\n"
-        "str r4, [r3, #0x30]\n\t"
-        "_0801362C:\n"
-        "ldr r0, [r5, #0x10]\n\t"
-        "bl sub_800B334\n\t"
-        "_08013632:\n"
-        "add r0, r5, #0\n\t"
-        "bl sub_80122CC\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_801283C\n\t"
-        "ldr r0, [r5, #0x10]\n\t"
-        "mov r1, #0\n\t"
-        "add r0, #0x68\n\t"
-        "strb r1, [r0]\n\t"
-        "b _080138D6\n\t"
-        "_08013648:\n"
-        "sub r0, r7, #1\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "cmp r0, #1\n\t"
-        "bhi _08013666\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_80122CC\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_801283C\n\t"
-        "ldr r0, [r5, #0x10]\n\t"
-        "add r0, #0x68\n\t"
-        "strb r6, [r0]\n\t"
-        "b _080138D6\n\t"
-        "_08013666:\n"
-        "mov r0, #8\n\t"
-        "and r7, r0\n\t"
-        "cmp r7, #0\n\t"
-        "bne _08013670\n\t"
-        "b _080138C0\n\t"
-        "_08013670:\n"
-        "ldr r1, [r5, #0x10]\n\t"
-        "ldr r0, [r1, #0x64]\n\t"
-        "cmp r0, #0\n\t"
-        "bge _0801367A\n\t"
-        "b _080138C0\n\t"
-        "_0801367A:\n"
-        "ldrb r0, [r1, #0xd]\n\t"
-        "mov r7, #1\n\t"
-        "orr r0, r7\n\t"
-        "strb r0, [r1, #0xd]\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x34\n\t"
-        "strb r6, [r0]\n\t"
-        "ldr r1, [r5, #8]\n\t"
-        "add r0, r1, #0\n\t"
-        "sub r0, #0x18\n\t"
-        "cmp r0, #1\n\t"
-        "bls _08013694\n\t"
-        "b _080137C8\n\t"
-        "_08013694:\n"
-        "ldr r1, _080137BC\n\t"
-        "ldr r0, [r1]\n\t"
-        "ldr r3, [r0]\n\t"
-        "asr r3, r3, #8\n\t"
-        "add r3, #0x14\n\t"
-        "ldr r1, [r0, #4]\n\t"
-        "asr r1, r1, #8\n\t"
-        "add r1, #0xc\n\t"
-        "ldr r2, _080137C0\n\t"
-        "ldr r0, [r2]\n\t"
-        "str r1, [sp]\n\t"
-        "str r7, [sp, #4]\n\t"
-        "mov r1, #0x29\n\t"
-        "mov r2, #1\n\t"
-        "bl sub_8025BAC\n\t"
-        "add r3, r0, #0\n\t"
-        "add r2, r3, #0\n\t"
-        "add r2, #0x28\n\t"
-        "mov r0, #4\n\t"
-        "neg r0, r0\n\t"
-        "mov sl, r0\n\t"
-        "ldrb r1, [r2]\n\t"
-        "and r0, r1\n\t"
-        "orr r0, r7\n\t"
-        "strb r0, [r2]\n\t"
-        "mov r0, #5\n\t"
-        "neg r0, r0\n\t"
-        "mov sb, r0\n\t"
-        "ldrb r1, [r3, #0xc]\n\t"
-        "and r0, r1\n\t"
-        "strb r0, [r3, #0xc]\n\t"
-        "sub r7, #0x12\n\t"
-        "mov r8, r7\n\t"
-        "mov r0, r8\n\t"
-        "ldrb r1, [r2]\n\t"
-        "and r0, r1\n\t"
-        "mov r1, #0x10\n\t"
-        "orr r0, r1\n\t"
-        "strb r0, [r2]\n\t"
-        "mov r4, #3\n\t"
-        "ldr r0, [r3, #0x20]\n\t"
-        "add r2, #5\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldrb r7, [r2]\n\t"
-        "lsl r0, r7, #3\n\t"
-        "add r2, r7, #0\n\t"
-        "sub r0, r0, r2\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrb r0, [r0, #0x16]\n\t"
-        "cmp r4, r0\n\t"
-        "blt _08013700\n\t"
-        "sub r4, r0, #1\n\t"
-        "_08013700:\n"
-        "str r4, [r3, #0x30]\n\t"
-        "ldr r1, _080137BC\n\t"
-        "ldr r0, [r1]\n\t"
-        "ldr r3, [r0]\n\t"
-        "asr r3, r3, #8\n\t"
-        "sub r3, #0x14\n\t"
-        "ldr r1, [r0, #4]\n\t"
-        "asr r1, r1, #8\n\t"
-        "add r1, #0xc\n\t"
-        "ldr r2, _080137C0\n\t"
-        "ldr r0, [r2]\n\t"
-        "str r1, [sp]\n\t"
-        "str r6, [sp, #4]\n\t"
-        "mov r1, #0x29\n\t"
-        "mov r2, #1\n\t"
-        "bl sub_8025BAC\n\t"
-        "add r3, r0, #0\n\t"
-        "add r1, r3, #0\n\t"
-        "add r1, #0x28\n\t"
-        "mov r0, sl\n\t"
-        "ldrb r7, [r1]\n\t"
-        "and r0, r7\n\t"
-        "mov r2, #1\n\t"
-        "orr r0, r2\n\t"
-        "strb r0, [r1]\n\t"
-        "mov r0, sb\n\t"
-        "ldrb r7, [r3, #0xc]\n\t"
-        "and r0, r7\n\t"
-        "strb r0, [r3, #0xc]\n\t"
-        "mov r0, r8\n\t"
-        "ldrb r2, [r1]\n\t"
-        "and r0, r2\n\t"
-        "strb r0, [r1]\n\t"
-        "mov r4, #3\n\t"
-        "ldr r0, [r3, #0x20]\n\t"
-        "add r2, r3, #0\n\t"
-        "add r2, #0x2d\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldrb r7, [r2]\n\t"
-        "lsl r0, r7, #3\n\t"
-        "add r2, r7, #0\n\t"
-        "sub r0, r0, r2\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrb r0, [r0, #0x16]\n\t"
-        "cmp r4, r0\n\t"
-        "blt _08013762\n\t"
-        "sub r4, r0, #1\n\t"
-        "_08013762:\n"
-        "str r4, [r3, #0x30]\n\t"
-        "ldr r0, [r5, #8]\n\t"
-        "cmp r0, #0x19\n\t"
-        "bne _08013770\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_8014F8C\n\t"
-        "_08013770:\n"
-        "ldr r0, [r5, #8]\n\t"
-        "cmp r0, #0x1d\n\t"
-        "bne _08013778\n\t"
-        "b _080138D6\n\t"
-        "_08013778:\n"
-        "ldr r0, _080137C4\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0x19\n\t"
-        "bl PlaySfx\n\t"
-        "ldr r1, [r5, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #0x16\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r2, [r5, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r7, #0\n\t"
-        "ldrsh r0, [r2, r7]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r1, [r5, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, #0x11\n\t"
-        "bl sub_803AD84\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x32\n\t"
-        "strb r6, [r0]\n\t"
-        "sub r0, #2\n\t"
-        "mov r1, #1\n\t"
-        "strb r1, [r0]\n\t"
-        "sub r0, #8\n\t"
-        "strb r6, [r0]\n\t"
-        "b _080138D6\n\t"
-        ".align 2, 0\n"
-        "_080137BC: .4byte gUnknown_030012D8\n"
-        "_080137C0: .4byte gUnknown_030012E4\n"
-        "_080137C4: .4byte gUnknown_030012BC\n"
-        "_080137C8:\n"
-        "cmp r1, #0xe\n\t"
-        "bne _08013840\n\t"
-        "add r0, sp, #8\n\t"
-        "mov r2, #0x30\n\t"
-        "ldrh r0, [r0]\n\t"
-        "and r2, r0\n\t"
-        "cmp r2, #0\n\t"
-        "beq _080137EA\n\t"
-        "mov r0, #1\n\t"
-        "add r1, r5, #0\n\t"
-        "add r1, #0x31\n\t"
-        "strb r6, [r1]\n\t"
-        "sub r1, #2\n\t"
-        "strb r0, [r1]\n\t"
-        "sub r1, #8\n\t"
-        "strb r0, [r1]\n\t"
-        "b _080137FE\n\t"
-        "_080137EA:\n"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x31\n\t"
-        "strb r2, [r0]\n\t"
-        "add r1, r5, #0\n\t"
-        "add r1, #0x2f\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r1]\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x27\n\t"
-        "strb r2, [r0]\n\t"
-        "_080137FE:\n"
-        "mov r2, #0\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x32\n\t"
-        "strb r2, [r0]\n\t"
-        "add r1, r5, #0\n\t"
-        "add r1, #0x30\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r1]\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x28\n\t"
-        "strb r2, [r0]\n\t"
-        "sub r0, #6\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq _0801382E\n\t"
-        "ldr r1, [r5, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #0xf\n\t"
-        "bl sub_803AD80\n\t"
-        "b _080138D6\n\t"
-        "_0801382E:\n"
-        "ldr r1, [r5, #0xc]\n\t"
-        "mov r6, #0x20\n\t"
-        "ldrsh r0, [r1, r6]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #0xd\n\t"
-        "bl sub_803AD80\n\t"
-        "b _080138D6\n\t"
-        "_08013840:\n"
-        "ldr r0, _08013878\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r7, #0x80\n\t"
-        "lsl r7, r7, #1\n\t"
-        "add r0, r0, r7\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq _0801387C\n\t"
-        "ldr r1, [r5, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #0x17\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r2, [r5, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r6, #0\n\t"
-        "ldrsh r0, [r2, r6]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r1, [r5, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, #0x16\n\t"
-        "bl sub_803AD84\n\t"
-        "b _080138A0\n\t"
-        ".align 2, 0\n"
-        "_08013878: .4byte gUnknown_030012D8\n"
-        "_0801387C:\n"
-        "ldr r1, [r5, #0xc]\n\t"
-        "mov r7, #0x20\n\t"
-        "ldrsh r0, [r1, r7]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #0x17\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r2, [r5, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r2, r1]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r1, [r5, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, #0x16\n\t"
-        "bl sub_803AD84\n\t"
-        "_080138A0:\n"
-        "mov r1, #0\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x31\n\t"
-        "strb r1, [r0]\n\t"
-        "sub r0, #2\n\t"
-        "mov r2, #1\n\t"
-        "strb r2, [r0]\n\t"
-        "sub r0, #8\n\t"
-        "strb r1, [r0]\n\t"
-        "add r0, #0xb\n\t"
-        "strb r1, [r0]\n\t"
-        "sub r0, #2\n\t"
-        "strb r2, [r0]\n\t"
-        "sub r0, #8\n\t"
-        "strb r1, [r0]\n\t"
-        "b _080138D6\n\t"
-        "_080138C0:\n"
-        "mov r0, #0\n\t"
-        "add r1, r5, #0\n\t"
-        "add r1, #0x31\n\t"
-        "strb r0, [r1]\n\t"
-        "add r2, r5, #0\n\t"
-        "add r2, #0x2f\n\t"
-        "mov r1, #1\n\t"
-        "strb r1, [r2]\n\t"
-        "add r1, r5, #0\n\t"
-        "add r1, #0x27\n\t"
-        "strb r0, [r1]\n\t"
-        "_080138D6:\n"
-        "add sp, #0xc\n\t"
-        "pop {r3, r4, r5}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov sl, r5\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0"
-    );
+    u8 unk_00[0xC];
+    u8 unk_0C_0:2;
+    u8 unk_0C_2:1;
+    u8 unk_0C_3:5;
+    u8 unk_0D[0x13];
+    struct act_anim_bank *bank; // 0x20
+    u8 unk_24[4];
+    u8 unk_28_0:2;         // 0x28
+    u8 unk_28_2:6;
+    u8 unk_29[4];
+    u8 tag;                // 0x2D
+    u8 unk_2E[2];
+    s32 frame;             // 0x30
+};
+
+extern u32 gUnknown_030007E0;
+extern void *gUnknown_030012BC;
+extern struct act_part *gUnknown_030012D8;
+extern void *gUnknown_030012E4;
+extern void *gUnknown_03001304;
+extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
+extern u8 sub_8000760(void *pad);
+extern void sub_80122CC(struct act *self);
+extern void sub_801283C(struct act *self);
+extern void sub_800B334(struct act_part *part);
+extern void sub_8014F8C(struct act *self);
+extern struct spark *sub_8025BAC(void *pool, s32 a, s32 b, s32 x, s32 y, s32 mirror);
+
+/* Byte masks with the mask as an `s32` parameter: the AND stays in SImode
+ * (a plain `*p & -0x11` is narrowed to 0xEF), so the -0x11 the ROM derives
+ * from the 1 already in r7 (`subs r7, #0x12`) can be shared by both
+ * sparks. */
+static inline void AndByte(u8 *p, s32 clear)
+{
+    *p &= clear;
 }
-/* Trailing byte count isn't a multiple of 4 - without this, `as` pads
- * with its default NOP fill instead of the ROM's zero fill (see
- * docs/matching.md's alignment-padding gotcha). */
+
+static inline void OrMaskByte(u8 *p, s32 clear, s32 set)
+{
+    *p = (*p & clear) | set;
+}
+
+/* The coordinates are inline parameters, so they are computed before the
+ * pool pointer is loaded, as in the ROM. */
+static inline struct spark *SpawnSpark(s32 x, s32 y, s32 mirror)
+{
+    return sub_8025BAC(gUnknown_030012E4, 0x29, 1, x, y, mirror);
+}
+
+/* The "next action" trio stores (include/action_obj.h's ActSetNext for
+ * the other trio): inline parameters are materialized before the stores. */
+static inline void ActQueue27(struct act *self, s32 cur, s32 next)
+{
+    self->next31 = cur;
+    self->flag2F = 1;
+    self->next27 = next;
+}
+
+static inline void ActTrio27(struct act *self, s32 cur, s32 flag, s32 next)
+{
+    self->next31 = cur;
+    self->flag2F = flag;
+    self->next27 = next;
+}
+
+static inline void ActSetNextP(struct act *self, u8 *slot, s32 next)
+{
+    self->next32 = 0;
+    self->flag30 = 1;
+    *slot = next;
+}
+
+static inline void ActSetContact(struct act_part *p, s32 v)
+{
+    p->contact = v;
+}
+
+/* The table's shared "bonus/score popup" handler (docs/rom_map.md, reused
+ * by 6 of the 42 slots). The alt edge restarts the charge animation (as in
+ * sub_8013228); out of contact it ticks the +0x25 countdown and otherwise
+ * queues action 4 from state 0x1A. On contact bit 2 it lands the part (frame
+ * 2, sub_800B334); on contact bit 3 in states 0x18/0x19 it spawns two
+ * sparks at the player (+-0x14 px, the first mirrored) and plays 0x16/0x11;
+ * state 0xE queues from the shoulder bits; the rest plays 0x17/0x16.
+ *
+ * The first spark's bit-2 clear is written twice: the second store folds
+ * away, but its extra use of the -5 mask is what gives that mask sb (and
+ * the -0x11 r8) as in the ROM. */
+void sub_80134B8(struct act *self)
+{
+    void *pad = gUnknown_03001304;
+    u32 in = gUnknown_030007E0;
+    u8 contact = self->part->contact;
+    u8 dir = sub_8000760(pad);
+    s32 state = self->state;
+
+    if (state != 0xE)
+    {
+        u8 busy = self->unk_26;
+
+        if (busy == 0 && (INPUT_PRESSED(in) & 2) && (u32)(state - 0x18) > 1)
+        {
+            s32 frames;
+
+            PlaySfx(gUnknown_030012BC, 0xA, 0x100);
+            frames = 0x18;
+            ACT_VCALL1(self, m20, 0xE);
+            ACT_VCALL2(self, m50, self->part, 0x10);
+            self->frame = busy;
+            self->frames = frames;
+            self->unk_21 = busy;
+            self->charge = busy;
+            self->unk_22 = busy;
+            self->unk_23 = busy;
+            self->unk_24[0] = busy;
+            ((u8 *)gUnknown_030012D8)[0x92] = busy;
+        }
+    }
+    if (contact == 0)
+    {
+        u8 *timer;
+
+        sub_80122CC(self);
+        timer = &self->unk_24[1];
+        if (*timer != 0)
+        {
+            (*timer)--;
+            if (dir == 0)
+                *timer = contact;
+            return;
+        }
+        sub_801283C(self);
+        if (self->state == 0x1A)
+        {
+            u8 *slot = &self->next28;
+
+            if (*slot == 0)
+                ActSetNextP(self, slot, 4);
+        }
+        return;
+    }
+    {
+        u8 bit4 = contact & 4;
+
+        if (bit4)
+        {
+            if (self->state != 0x1A)
+            {
+                ActOrFlags0D(self->part, 1);
+                self->unk_34 = 0;
+                if (self->state != 0xE)
+                {
+                    struct act_part *part;
+                    s32 frame;
+                    s32 count;
+
+                    ACT_VCALL1(self, m20, 0x1A);
+                    ACT_VCALL2(self, m50, self->part, 0x15);
+                    part = self->part;
+                    frame = 2;
+                    count = part->bank->records[part->tag].frameCount;
+                    if (frame >= count)
+                        frame = count - 1;
+                    part->frame = frame;
+                }
+                sub_800B334(self->part);
+            }
+            sub_80122CC(self);
+            sub_801283C(self);
+            ActSetContact(self->part, 0);
+            return;
+        }
+        if (contact == 1 || contact == 2)
+        {
+            sub_80122CC(self);
+            sub_801283C(self);
+            self->part->contact = bit4;
+            return;
+        }
+        if ((contact & 8) && self->part->unk_64 >= 0)
+        {
+            s32 st;
+
+            ACT_PART_FLAGS0D(self->part) |= 1;
+            self->unk_34 = bit4;
+            st = self->state;
+            if ((u32)(st - 0x18) <= 1)
+            {
+                struct spark *obj;
+                s32 x;
+                s32 y;
+                s32 frame;
+                s32 count;
+
+                x = gUnknown_030012D8->x;
+                x >>= 8;
+                x += 0x14;
+                y = gUnknown_030012D8->y;
+                y >>= 8;
+                y += 0xC;
+                obj = SpawnSpark(x, y, 1);
+                obj->unk_28_0 = 1;
+                obj->unk_0C_2 = 0;
+                obj->unk_0C_2 = 0;
+                OrMaskByte((u8 *)obj + 0x28, -0x11, 0x10);
+                frame = 3;
+                count = obj->bank->records[obj->tag].frameCount;
+                if (frame >= count)
+                    frame = count - 1;
+                obj->frame = frame;
+
+                x = gUnknown_030012D8->x;
+                x >>= 8;
+                x -= 0x14;
+                y = gUnknown_030012D8->y;
+                y >>= 8;
+                y += 0xC;
+                obj = SpawnSpark(x, y, bit4);
+                obj->unk_28_0 = 1;
+                obj->unk_0C_2 = 0;
+                AndByte((u8 *)obj + 0x28, -0x11);
+                frame = 3;
+                count = obj->bank->records[obj->tag].frameCount;
+                if (frame >= count)
+                    frame = count - 1;
+                obj->frame = frame;
+
+                if (self->state == 0x19)
+                    sub_8014F8C(self);
+                if (self->state != 0x1D)
+                {
+                    PlaySfx(gUnknown_030012BC, 0x19, 0x100);
+                    ACT_VCALL1(self, m20, 0x16);
+                    ACT_VCALL2(self, m50, self->part, 0x11);
+                    self->next32 = bit4;
+                    self->flag30 = 1;
+                    self->next28 = bit4;
+                }
+                return;
+            }
+            if (st == 0xE)
+            {
+                u16 held = INPUT_HELD(in) & 0x30;
+
+                if (held)
+                    ActTrio27(self, bit4, 1, 1);
+                else
+                {
+                    self->next31 = held;
+                    self->flag2F = 1;
+                    self->next27 = held;
+                }
+                ActSetNext(self, 0);
+                if (self->unk_22)
+                    ACT_VCALL1(self, m20, 0xF);
+                else
+                    ACT_VCALL1(self, m20, 0xD);
+                return;
+            }
+            if (((u8 *)gUnknown_030012D8)[0x100])
+            {
+                ACT_VCALL1(self, m20, 0x17);
+                ACT_VCALL2(self, m50, self->part, 0x16);
+            }
+            else
+            {
+                ACT_VCALL1(self, m20, 0x17);
+                ACT_VCALL2(self, m50, self->part, 0x16);
+            }
+            ActQueue27(self, 0, 0);
+            ActSetNext(self, 0);
+            return;
+        }
+    }
+    ActQueue27(self, 0, 0);
+}
 asm(".align 2, 0");
