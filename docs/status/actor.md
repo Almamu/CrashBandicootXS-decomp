@@ -1414,7 +1414,8 @@ embedded as asm instead. They're tracked as parked, not matched.
   `docs/matching/issue-63-0x08033ef4-actor.md`.
 
 - **`sub_800A884`** (`src/graphics/actor_part78.c`, GitHub issue
-  #9/#10; real bytes in `asm/code_3_2_16_a884.s`) - a per-frame
+  #9/#10; NAKED in that file since the issue #9 raw-asm pass, which also
+  replaced the draft - see `docs/matching/issue-9-raw-asm-pass.md`) - a per-frame
   reentrancy-guard-shaped wrapper dispatching a pending-action "kind"
   byte (`gUnknown_03001308+0x29`) through a 10-case jump table, then a
   keyframe-lookup/camera-position probe via `sub_80083B8`/
@@ -1591,19 +1592,15 @@ embedded as asm instead. They're tracked as parked, not matched.
 
 ## Left raw (not attempted, or attempted and set aside)
 
-- **`sub_8007634`** (`asm/code_3_2.s`, ROM 0x08007634, GitHub issue #9)
-  - real GBA hardware-affine sprite-matrix setup; already flagged in
-  `docs/matching.md` as needing "a dedicated session" of its own, not
-  attempted again here - see
-  `docs/matching/issue-9-0x08007634-actor.md`.
-- **`sub_800AC2C`** (`asm/code_3_2_16_ac2c.s`, ROM 0x0800AC2C, GitHub
-  issue #9/#10) - a 38-case player action-state jump-table dispatcher
-  calling a dozen still-unexamined state-transition functions; left
-  raw per this project's established policy for this exact dispatcher
-  shape (`sub_8018008`, issue #22, has since matched as a plain `switch`
-  under old_agbcc - see `docs/matching/issue-22-0x08018008-hopper.md`) -
-  see
-  `docs/matching/issue-9-10-0x0800ab9c-graphics.md`.
+- **`sub_8007634`** (`src/graphics/graphics_7634.c`, ROM 0x08007634,
+  GitHub issue #9) - real GBA hardware-affine sprite-matrix setup. No
+  longer raw: moved out of `asm/code_3_2.s` as NAKED with a
+  `NON_MATCHING` C draft (468 halfwords off) in the issue #9 raw-asm
+  pass - see `docs/matching/issue-9-raw-asm-pass.md`.
+- ~~**`sub_800AC2C`**~~ (ROM 0x0800AC2C, GitHub issue #9/#10) - matched
+  as real C under old_agbcc in `src/graphics/actor_part111.c` (issue #9
+  raw-asm pass, `docs/matching/issue-9-raw-asm-pass.md`);
+  `asm/code_3_2_16_ac2c.s` is gone.
 - ~~**`sub_8016048`**~~ (ROM 0x08016048, GitHub issue #19) - matched
   as real C with issue #20 in `src/graphics/actor_part_16048.c` (listed
   under `graphics.md`) - see `docs/matching/issue-20-player-ctrl.md`.

@@ -290,3 +290,7 @@ documentation behind.
 ## Later pass (issue #9 NAKED retry)
 
 This pass closed 11 of this range's 21 NAKED functions. See [issue-9-naked-retry.md](./issue-9-naked-retry.md) for details.
+
+## Later pass (issue #9/#10 raw-asm pass)
+
+`sub_8007634` is no longer raw. It moved out of `asm/code_3_2.s` into `src/graphics/graphics_7634.c` as NAKED, with a NON_MATCHING C draft 468 halfwords off. See [issue-9-raw-asm-pass.md](issue-9-raw-asm-pass.md).

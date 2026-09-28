@@ -629,7 +629,7 @@ plain C didn't converge.
   table the other two use. See
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)'s
   "Phase 2" section for the full writeup.
-- **`sub_800C8F8` now matched as real C (issue #9-#11 NAKED retry, see docs/matching/issue-9-11-box-naked-retry.md); `sub_800C940`/`sub_800C97C` are still NAKED.** **`sub_800C8F8`/`sub_800C940`/`sub_800C97C`** (still NAKED after the
+- **`sub_800C8F8` now matched as real C (issue #9-#11 NAKED retry, see docs/matching/issue-9-11-box-naked-retry.md); `sub_800C940`/`sub_800C97C` are real C too since the issue #9/#10 raw-asm pass (docs/matching/issue-9-raw-asm-pass.md).** **`sub_800C8F8`/`sub_800C940`/`sub_800C97C`** (still NAKED after the
   issue #10 NAKED retry, drafts under `NON_MATCHING`; `sub_800C18C`/
   `sub_800C1E8`/`sub_800C314` are now real C, see Matched) - originally
   **`sub_800C18C`/`sub_800C1E8`/`sub_800C314`/`sub_800C8F8`/

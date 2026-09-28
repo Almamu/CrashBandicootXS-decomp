@@ -422,3 +422,7 @@ body moved from opaque raw bytes to matched, documented C.
 - `docs/matching/issue-12-physics-collision.md` - the physics/collision
   subsystem `sub_800B8DC` leads into, already flagged out of scope for
   the same reasons.
+
+## Later pass (issue #9/#10 raw-asm pass)
+
+`asm/code_3_2_16_a884.s` is gone. `sub_800A884` is NAKED in `actor_part78.c`, and the pin/asm-island draft was replaced with plain C (127 halfwords off under old_agbcc; the old draft was 137 off). The remaining gap is the one-register offset walk for +0x100/+0x102/+0x103. See [issue-9-raw-asm-pass.md](issue-9-raw-asm-pass.md).
