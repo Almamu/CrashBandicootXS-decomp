@@ -1,5 +1,8 @@
 # Issue #63's final raw span: 0x0803472C-0x08034AA4 (actor)
 
+> **Update:** `sub_803487C` is now plain C in `actor_part88.c` under old_agbcc, and
+> the raw asm file below is gone - see [old-agbcc-round5.md](old-agbcc-round5.md).
+
 This closes out the last three raw functions from issue #63's original
 25-function chunk (`sub_803472C`/`sub_803487C`/`sub_8034994`, previously
 left raw as "out of scope for this pass" - see

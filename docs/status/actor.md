@@ -11,6 +11,19 @@ from "core" graphics.
 
 ## Matched
 
+- **`sub_803487C`** (`src/graphics/actor_part88.c`) - issue #63: the fade
+  overlay's other setup half (icon manager hookup, tile-cache seeding
+  loop). Plain C, built with old_agbcc; it was raw asm
+  (`asm/code_3_2_20_28568_c99c_31784_33ef4_3487c.s`, now removed). See
+  [old-agbcc-round5.md](../matching/old-agbcc-round5.md).
+- **`sub_80327A4`** (`src/graphics/actor_part130.c`) - issue #60's last
+  function, a bounding-box-culled sprite draw (`UpdateAnimatedActorPart`'s
+  shape with the scale flag fixed at 0). Plain C; it was NAKED. See
+  [issues-14-53-60-last-naked.md](../matching/issues-14-53-60-last-naked.md).
+- **`sub_802CC9C`** (`src/graphics/actor_part126.c`) - issue #53's last
+  function, a hazard/proximity state machine that tests the part's own
+  box and three `gStaticData_0817A7xx` boxes. Plain C; it was NAKED. See
+  [issues-14-53-60-last-naked.md](../matching/issues-14-53-60-last-naked.md).
 - **Issue #9 NAKED retry** ([docs/matching/issue-9-naked-retry.md](../matching/issue-9-naked-retry.md)):
   `sub_8007B00`/`sub_8007B98` (`actor_part.c`), `sub_8008044`
   (`actor_part3.c`), `sub_8008A40`/`sub_8008AD8` (`actor_part7.c`),
@@ -1160,11 +1173,6 @@ plain C didn't converge.
   (`sub_80309B4`/`sub_8031040`/`sub_80311C4`,
   `actor_part21f.c`/`23e.c`/`23f.c`). See
   `docs/matching/issue-63-final-raw-actor.md`.
-- **`sub_80327A4`** (`src/graphics/actor_part130.c`) - bounding-box-culled
-  sprite draw via `GetAnimFrameData`/`sub_803B060`/`SetupSpriteFrameOam`.
-  Fully understood; hits the same `r8`-flag-across-calls shape already
-  documented in full for `UpdateAnimatedActorPart` (issue #50,
-  `actor_part55.c`). See `docs/matching/issue-60-61-gap-31a6c-part2.md`.
 - **`sub_8032C0C`/`sub_8032EA0`** (`src/graphics/actor_part130.c`) -
   opens the singleton's own camera-follow/scroll-velocity smoothing
   computation (`gUnknown_030015B4`-`030015EC`), split across two
@@ -1259,14 +1267,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   `r7` shape as `sub_802D7B0`/`sub_802DD9C` below - hits the same
   confirmed categorical gcc-2.9 r7-pin bug. GitHub issue #53, see
   [docs/matching/issue-53-actor-c7a8.md](../matching/issue-53-actor-c7a8.md).
-- **`sub_802CC9C`** (`src/graphics/actor_part126.c`) - a heavy AABB-
-  overlap/proximity state machine: reuses `self+0x38` as a scratch box
-  across three `gStaticData_0817A7xx` record snapshots and two
-  `sub_802A6EC`/`sub_802DD9C`/`sub_802B7E0` proximity checks, with
-  `r5`/`r6`/`r7` each switching roles mid-function. Same categorical
-  gcc-2.9 register-reuse family as `sub_802D7B0`/`sub_802DD9C` below.
-  Between issues #53 and #54, see
-  [docs/matching/issue-53-issue-54-gap-cc9c.md](../matching/issue-53-issue-54-gap-cc9c.md).
 - **`sub_802D3A8`** (`src/graphics/actor_part62.c`) - eases `self`'s
   cached position toward a per-state target/table-scatter offset. Hits
   this project's confirmed categorical gcc-2.9 r7-pin bug. GitHub issue
@@ -1698,15 +1698,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   cache to `r7` here (matching the ROM) would silently corrupt the
   caller's `r7` - see `docs/matching/issue-62-0x08033804-actor.md`,
   issue #62.
-
-- **`sub_803487C`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_3487c.s`, C
-  in `src/graphics/actor_part88.c`, GitHub issue #63) - the fade
-  overlay's other setup half: VRAM upload cursor flush, icon-manager
-  hookup, and a 16-iteration tile-cache seeding loop; matched except the
-  loop's trip counter, which the ROM keeps live in r7 for the whole
-  loop - this project's confirmed categorical gcc-2.9 r7-pin bug (see
-  `graphics_package_1e688.c`/`oam_count.c`/`actor_part7.c`) - see
-  `docs/matching/issue-63-final-raw-actor.md`.
 
 ## Left raw (not attempted, or attempted and set aside)
 

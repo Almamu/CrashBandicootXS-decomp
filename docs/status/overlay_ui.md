@@ -26,8 +26,8 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   `sub_800306C`, `sub_800312C`, `sub_80031E4`, `sub_80032E8`,
   `sub_80033E8`, `sub_80034BC`, `sub_80035C0`, `sub_8003698`,
   `sub_800376C`, `sub_8003824`, `sub_80038D0`, `sub_800397C`,
-  `sub_8003A60`. (`sub_8002D44`/`sub_8002E20` are NAKED transcriptions
-  tracked as parked, not matched - see below.)
+  `sub_8003A60`. (`sub_8002E20` is a NAKED transcription tracked as
+  parked, not matched - see below.)
 - `src/graphics/settings_menu2.c` (new file - the composite pause/
   options screen's BG-load helper and per-row stats gatherer/
   aggregator; see `docs/rom_map.md`'s `overlay_ui` section):
@@ -104,13 +104,17 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
+- **`sub_8002D44`** (`src/graphics/settings_menu8a2.c`) - the SIO pump's
+  TX fill step (issue #5). Plain C; it was NAKED. The old "r7 can never be
+  pushed" note was wrong - plain C gives the r7/r8/sb prologue. See [old-agbcc-round5.md](../matching/old-agbcc-round5.md).
+
 ## Parked - NAKED asm transcriptions (byte-correct, not decompiled C)
 
-- **`sub_8002D44`**, **`sub_8002E20`** (`src/graphics/settings_menu8a2.c`)
-  - the SIO send/receive pump's TX/RX drain-fill steps, both needing r7
-  (and sb/r8) as genuine scratch across their fill loops. GitHub issue
-  #5, see `docs/matching/issue-5-overlay-ui-sync.md`'s
-  "NAKED-transcription pass" section.
+- **`sub_8002E20`** (`src/graphics/settings_menu8a2.c`) - the SIO pump's
+  RX drain step (issue #5). Plain C is ~100 halfwords off: the ROM
+  computes `playerIndex * 0xc8` twice and keeps its loop test as
+  `n - 1 != -1`, where gcc shares the multiply and folds the test. See
+  [old-agbcc-round5.md](../matching/old-agbcc-round5.md).
 - **`sub_8002AA4`** (`src/graphics/settings_menu8e.c`) - checksum
   validate/repair-via-DMA. GitHub issue #4, see
   `docs/matching/issue-4-sio-settings-sync.md`.
