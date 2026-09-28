@@ -264,6 +264,12 @@ system from "core" system startup/init code.
   "collision box" record `sub_8010A00`/`sub_800FEB0` already operate
   on. See
   [docs/matching/issue-14-0x08010a0c-graphics.md](../matching/issue-14-0x08010a0c-graphics.md).
+- **`sub_8010B6C`** (`src/system/game_loop28.c`) - issue #14's last
+  function, the collision-candidate scan/resolve helper `sub_80106DC`
+  calls once a frame. Plain C; it was NAKED. The "twelve running
+  pointers" were gcc's own loop strength reduction of
+  `self->records[i].field`. See
+  [issues-14-53-60-last-naked.md](../matching/issues-14-53-60-last-naked.md).
 - **`sub_8022EA8`/`sub_8022F2C`** (`src/system/game_loop2.c`, GitHub
   issue #34) - record 47's periodic-trigger setter/decrementer; closed
   with a targeted register-pinning recipe after the ROM's cross-call
@@ -705,23 +711,6 @@ plain C didn't converge.
   from the confirmed-traced ROM disassembly, formerly
   `asm/code_3_2_17_225a0.s`, now retired). See `docs/matching.md`'s
   entry for this function for the full trace.
-- **`sub_8010B6C`** (`src/system/game_loop28.c`, GitHub issue #14,
-  follow-up pass) - the chunk's last and largest function, a
-  collision-candidate scan/resolve helper `sub_80106DC`
-  (`game_loop23.c`) already calls once a frame. Every field offset/
-  branch/call argument was already understood and cross-referenced
-  against the mirror-image `sub_8010D54` and its caller when this was
-  first parked; the ROM builds nearly every record-field address as a
-  running pointer incremented by `0x24` per loop iteration, with up to
-  twelve of them (`r8`/`sb`/`sl` included) live across a `0x68`-byte
-  stack frame - the same gap already parked for `sub_800A734`/
-  `sub_800A528` in docs/matching/issue-9-0x08007634-actor.md, at a
-  much larger scale (three times the live-cursor count, on a stack
-  frame twice the size) - beyond what C-level register pins can
-  realistically express, so closed as a byte-exact NAKED transcription
-  instead. `asm/code_3_2_17_e560_10b6c.s` is now gone entirely - the
-  function is folded into `src/system/game_loop28.o`. See
-  [docs/matching/issue-14-0x08010a0c-graphics.md](../matching/issue-14-0x08010a0c-graphics.md).
 - **`sub_80104E4`** (`src/system/game_loop51.c`, new file, GitHub
   issue #13) - a ~195-instruction per-frame state-machine dispatcher:
   throttles/re-triggers `sub_800F8E0`/`sub_800F990`/`sub_800F4F4` off
