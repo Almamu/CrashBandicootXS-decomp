@@ -85,3 +85,7 @@ via a full clean `rm -rf build && make NON_MATCHING=1 report` followed
 by `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` (`sha1sum -c checksum.sha1`
 prints "La suma coincide").
+
+## Later pass: GAX toolchain retry
+
+`sub_80372BC` now matches as real C (calling the `sub_803AD80` method trampoline directly, glyph assigned inside the first call's arguments). `sub_8037388` stays NAKED with a draft that matches through the tile-copy loop. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "audio.h"
 
 /* Core GAX2 mixer-state wiring: allocates/binds a channel's runtime table
  * slots out of `self`'s "instrument bank"-shaped array (`self->0`'s count,
@@ -36,6 +37,122 @@
  * established NAKED plain/divided syntax, local labels renumbered per
  * docs/matching/issue-4-sio-settings-sync.md's convention), not an
  * inferred control-flow guess. */
+/* Later pass (docs/matching/gax-toolchain-retry.md): a plain draft
+ * against the handler structs in include/audio.h (below) has the ROM's
+ * shape - instantiate each layout type (and, for player 0, the SFX voice
+ * types) into the work buffer, link every handler's children by type,
+ * hand player 0's SFX voices to player 1, number the channels, and fill
+ * the mixer's DSP rate table - but the register allocation of the first
+ * (carving) loop differs: the ROM spills the loop's handler pointer and
+ * keeps the layout count in a stack slot the draft doesn't need, and the
+ * difference cascades. Still NAKED. */
+#if NON_MATCHING
+struct GaxDspRate {
+    u32 step;
+    u32 value;
+};
+
+extern s32 sub_8037E54(s32 value, s32 divisor);
+
+u8 sub_8038240(struct GaxHandlerLayout *layout, struct GaxHandlerType **sfx, u32 numSfx, u8 **bufp,
+               u32 *sizep)
+{
+    u32 total = layout->count;
+    u32 i;
+
+    if (sfx != NULL && gUnknown_03001630->curChannelIdx == 0)
+        total += numSfx;
+    for (i = 0; i < total; i++) {
+        struct GaxHandlerType *t;
+        struct GaxHandler *h = (struct GaxHandler *)*bufp;
+
+        if ((s32)i < (s32)layout->count)
+            t = layout->types[i];
+        else
+            t = sfx[i - layout->count];
+        if (i != 2) {
+            u32 n = t->childCount;
+            u32 need, size;
+
+            if (i == 0)
+                n += numSfx;
+            n *= 4;
+            need = n + sizeof(struct GaxHandler) + t->instanceSize;
+            size = *sizep;
+            if (size < need)
+                return 0;
+            GAX_PLAYER()[i] = h;
+            h->type = t;
+            h->format = gUnknown_03001630->format;
+            h->children = (struct GaxHandler **)((u8 *)h + (sizeof(struct GaxHandler) + t->instanceSize));
+            *bufp = (u8 *)h->children + n;
+            *sizep = size - need;
+        }
+    }
+    for (i = 0; i < total; i++) {
+        struct GaxHandler *h = GAX_PLAYER()[i];
+        struct GaxHandlerType *t;
+        u32 j;
+
+        if ((s32)i < (s32)layout->count)
+            t = layout->types[i];
+        else
+            t = sfx[i - layout->count];
+        if (i != 2) {
+            for (j = 0; j < t->childCount; j++) {
+                if (t->childTypes[j] != NULL) {
+                    struct GaxHandlerType *want = t->childTypes[j];
+                    u32 k;
+
+                    for (k = 0; k < total; k++) {
+                        if (GAX_PLAYER()[k]->type == want) {
+                            h->children[j] = GAX_PLAYER()[k];
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (gUnknown_03001630->curChannelIdx == 1) {
+        s32 k;
+
+        if (sfx == NULL)
+            goto done;
+        for (k = 0; k < (s32)numSfx; k++) {
+            struct GaxMixerHandler *m = ((struct GaxMixerHandler **)gUnknown_03001630->channels[0])[0];
+            GAX_PLAYER()[layout->count + k] = m->children[m->type->childCount + k];
+        }
+    }
+    if (sfx != NULL) {
+        s32 k;
+
+        for (k = 0; k < (s32)numSfx; k++) {
+            GAX_PLAYER()[layout->count + k]->children[0] = GAX_PLAYER()[1];
+            GAX_MIXER()->children[GAX_MIXER()->type->childCount + k] = GAX_PLAYER()[layout->count + k];
+        }
+    }
+done:
+    {
+        s32 k;
+
+        for (k = 0; k < (s32)(layout->count - 3); k++)
+            ((struct GaxChannelState *)GAX_PLAYER()[k + 3])->index = k;
+    }
+    if (gUnknown_03001630->field_24 != 0) {
+        s32 k;
+        struct GaxHandlerType *t = layout->types[0];
+
+        for (k = 0; k <= 2; k++) {
+            struct GaxDspRate *r = &((struct GaxDspRate *)gUnknown_03001630->field_24)[k];
+
+            r->step = sub_8037E54(t->data.dsp->taps[k].rate * gUnknown_03001630->format->mixRate, 1000) * 2;
+            r->value = t->data.dsp->taps[k + 1].value;
+        }
+    }
+    return 1;
+}
+#else /* !NON_MATCHING */
 NAKED u32 sub_8038240(void *self, u32 flag, u32 extra, void *arg3, void *bufPtr, u32 bufSize)
 {
     asm(
@@ -398,3 +515,4 @@ NAKED u32 sub_8038240(void *self, u32 flag, u32 extra, void *arg3, void *bufPtr,
         "L8240_29: .4byte gUnknown_03001630\n\t"
     );
 }
+#endif /* NON_MATCHING */

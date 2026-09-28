@@ -1,76 +1,188 @@
 #include "core.h"
+#include "audio.h"
 
-/* GAX2 per-channel note-trigger routine (issue #68's last raw pair,
- * docs/status/audio.md), called by the matched-but-NAKED
- * `sub_80395A4`/`sub_803A158` (both `self+0xc == 0` tail calls) as
- * `sub_8039B44(self, info, arg1, arg2, info->0->0x18, flag)`. `self`
- * (r6) is the channel object shared with the rest of this cluster
- * (`sub_8039818`/`sub_8039FFC`/`sub_803A104`/... - `self+0x2a` is the
- * same signed-halfword "current note" field `sub_803A104` arms with the
- * `0x8AD0` "no note" sentinel); `info` (r4) is the shared handler
- * object.
+/* GAX2 per-channel mixer (issue #68): renders channel `self` into
+ * `buf` through the ARM resampling routine `gUnknown_03001630->field_44`
+ * points at (an IWRAM copy of the raw ARM code at
+ * `gStaticData_0803A818`, gax_unknownc_play.c). Called by the Channel
+ * play_fns `sub_80395A4`/`sub_803A158` as `sub_8039B44(self, info, buf,
+ * arg, type data, flag)`.
  *
- * Bails out early (returns 0) when `self+0x3c` (the bound instrument
- * table pointer) is NULL, when `self+0x2a` still holds the `0x8AD0`
- * "no note" sentinel, or when `self+0x10` (voice-table row index) is
- * out of the 0-3 range, or when the instrument row's own flag byte
- * (`instrument[self+0x10+1]`) is 0. Otherwise it derives a base pitch
- * from `self+0x2a`/`+0x2e`/`+0x21`/`+0x26`/`+0x11` plus the instrument
- * row's signed transpose byte, clamps it into `gStaticData_085A62DC`'s
- * period-lookup table (capped at `0xEF3`), derives a per-voice volume
- * by chaining `self+0x16`/`+0x17`/`+0x15`/`+0x18`/`info->0->0x18->8`
- * multiplies (each `0xff`-sentineled to "skip"), calls `sub_8037ECC`
- * (the 64-bit-division-backed pitch/period helper, `src/util/
- * math_div64_util.c`) on the result, then builds a stack work-item and
- * forwards it through `sub_800014C`. The remainder (from ROM label
- * `0x08039CDE` on, i.e. `sub_8039E50`'s half of this physical function)
- * loops the instrument's per-row envelope/pan table
- * (`gStaticData_0803A818`-relative row math against `self+0x3c`) while
- * `self+0x11` (a signed priority-looking byte) stays positive, updating
- * `gUnknown_03001630->0x44`'s pan/volume output halfword each
- * iteration via one of several `self+0xd`/`self+0x12`/`self+0x13`-gated
- * paths, calling `sub_8037F3C` once per row when `self+0xd` is set, and
- * finally re-arms the `0x8AD0` "no note" sentinel into `self+0x2a` (and
- * clears `self+0x2c`) once the loop's row count (`self+0x4`->`+0x4`,
- * a halfword) is exhausted, returning 1. Voice/instrument object shape
- * isn't modeled yet (same situation as the rest of this GAX2 cluster) -
- * kept as raw offsets throughout, matching the neighboring functions in
- * this directory.
+ * Bails out (returns 0) when no instrument is bound, no note is playing
+ * (`0x8AD0`), `row` is out of range or the row's wave is empty.
+ * Otherwise it looks up the sample step for `note + field_2e` (+ pitch
+ * slide and, for pattern channels, the order's transpose) + the row's
+ * tune in the period table `gStaticData_085A62DC` (capped at 0xEF3),
+ * scaled by the mix-rate reciprocal `gUnknown_03001618` (`__muldi3`),
+ * chains the envelope/volume/Info/song volumes, builds a 10-word work
+ * item on the stack, then loops calling the ARM routine - patching two
+ * of its instructions first to pick forward/backward stepping - and
+ * handles each return: buffer full, ping-pong bounce, sweep/loop wrap,
+ * or end of sample (clears the rest of the buffer and arms the "no
+ * note" state). Returns 1.
  *
- * Written as NAKED asm, not plain C, for a structural reason rather
- * than a register-allocation one: the ROM's own compiler split this
- * single logical function into two disassembly labels,
- * `sub_8039B44`/`sub_8039E50`, glued together by the same manual
- * return-address-trampoline idiom already documented for
- * `sub_803A278`/`sub_803A2C8`/`sub_803A324`/`sub_803A5A8`
- * (`gax_unknownc_play.c`) - `mov r2, pc; adds r2, #5; mov lr, r2;
- * bx r1` computes a Thumb-tagged return address by hand and jumps
- * through `r1` (`gUnknown_03001630`'s own `+0x44` function-pointer
- * slot, an interworked callback) instead of a normal `bl`, since
- * ARMv4T Thumb has no `blx reg`. That trampoline's return address
- * lands exactly at `sub_8039E50`'s first instruction - a `nop`
- * (`mov r8, r8`) alignment pad, the same tell already seen at
- * `sub_803A2C8`'s landing into `sub_803A318` - so the two ROM labels
- * are one physical function, not two independently callable ones; this
- * idiom itself is not expressible in portable C at all, regardless of
- * register pressure, so no real-C attempt was made for the trampoline
- * sequence. `sub_8039E50` keeps its own `.thumb_func`/`.global` label
- * pair purely so its ROM address still carries its name for anyone
- * disassembling the object (it is never itself called from anywhere in
- * the ROM - checked every `asm/*.s`/`expected/*.s`/`src/*` file for a
- * `bl sub_8039E50`/`.4byte sub_8039E50` reference, none exists), not as
- * a second callable C function - matching this project's established
- * NAKED-fused-pair policy (docs/status/audio.md's "Parked - NAKED asm
- * transcription(s)" section). Mechanical, byte-verified transcription
- * of the ROM's own instructions (translated from the disassembler's
- * unified syntax to this project's established NAKED plain/divided
- * syntax, local labels renumbered per
- * docs/matching/issue-4-sio-settings-sync.md's convention, using a
- * scratch Python script rather than by hand given this function's
- * size - ~380 real instructions - to avoid transcription-typo risk the
- * same way that convention's `sub_8002114` did), not an inferred
- * control-flow guess. This is PARKED, not matched, per this project's
- * NAKED-transcription policy: byte-correct but not real decompiled C. */
+ * `sub_8039E50` in the ROM disassembly is not a function: it's the
+ * `nop` the ARM call returns to (see `GAX_CALL_ARM_R`, include/audio.h),
+ * never called from anywhere; the NAKED body keeps the label so the
+ * address still carries its name.
+ *
+ * Still NAKED. The ARM call itself is no longer a blocker - it's the
+ * engine's own inline asm idiom, `GAX_CALL_ARM_R` (register-operand
+ * variant of the `GAX_CALL_ARM` that closed the four
+ * gax_unknownc_play.c functions). The draft below is a complete
+ * reconstruction with the ROM's control flow, work-item layout,
+ * instruction patches and tail merges (same size to within 12 bytes),
+ * but its register allocation differs throughout: the ROM keeps
+ * `self`/`info`/`flag`/`vol` in r6/r4/r5/r7, `row` in sb, the step in
+ * sl and the wave pointer spilled to the stack, where agbcc puts `self`
+ * in r5, `info` in ip and the wave in sl - see
+ * docs/matching/gax-toolchain-retry.md. */
+#if NON_MATCHING
+/* sub_800014C is this ROM's memcpy (the work item's initializer). */
+asm(".set memcpy, sub_800014C\n");
+
+struct GaxMixItem {
+    u8 *src;
+    void *buf;
+    s32 pos;     /* Q11 sample position */
+    s32 end;     /* Q11 end/turn-around position */
+    u32 frames;
+    u32 done;    /* samples written so far */
+    u32 volume;
+    u32 step;    /* Q11 per output sample */
+    u32 mode;
+    s32 loopLen; /* Q11 sweep loop length, 0 = none */
+};
+
+extern u64 gUnknown_03001618;
+extern const u32 gStaticData_085A62DC[];
+extern u8 gStaticData_0803A818[];
+extern u8 gStaticData_0803A874[];
+extern u8 gStaticData_0803A884[];
+extern u8 gStaticData_0803A8B4[];
+extern u8 gStaticData_0803A8C4[];
+extern s64 sub_8037ECC(s64 a, s64 b);
+extern void sub_8037F3C(void *dest, s32 count);
+
+/* Rewrites the halfword at `label` in the IWRAM copy of the ARM mixer. */
+#define GAX_PATCH_MIXER(label, value) \
+    (((u16 *)gUnknown_03001630->field_44)[((label) - gStaticData_0803A818 + 2) / 2] = (value))
+
+u32 sub_8039B44(struct GaxChannelState *self, struct GaxInfoHandler *info, void *buf, u32 arg,
+                struct GaxSongData *song, u8 flag)
+{
+    struct GaxChannelInstrument *inst;
+    struct GaxWave *wave;
+    u32 row;
+    s32 pitch;
+    u32 idx;
+    u32 period;
+    u32 vol;
+    u32 step;
+    u32 len;
+    u32 pingpong;
+
+    if (self->instrument == NULL || self->note == (s16)0x8ad0 || self->row > 3)
+        return 0;
+    row = self->row;
+    wave = &song->waves[self->instrument->waveIdx[row]];
+    if (wave->data == NULL)
+        return 0;
+
+    pitch = self->note + self->field_2e;
+    if (self->field_21 == 0) {
+        pitch += self->pitch;
+        if (flag == 0)
+            pitch += self->type->data.orders[info->orderPos].transpose << 5;
+    }
+    inst = self->instrument;
+    idx = pitch + inst->rows[row].tune;
+    if (idx > 0xef3)
+        idx = 0xef3;
+    period = gStaticData_085A62DC[idx];
+    vol = 0x100;
+    if (self->envOut != 0xff)
+        vol = self->envOut;
+    if (self->vol17 != 0xff)
+        vol = vol * self->vol17 >> 8;
+    if (self->vol15 != 0xff)
+        vol = vol * self->vol15 >> 8;
+    if ((u8)self->field_18 != 0xff)
+        vol = vol * (u8)self->field_18 >> 8;
+    if (info->field_1f != 0xff)
+        vol = vol * info->field_1f >> 8;
+    if (flag == 0)
+        vol = vol * info->type->data.song->volume >> 8;
+    step = sub_8037ECC((s32)period, gUnknown_03001618) >> 32;
+    len = wave->length;
+    pingpong = 0;
+    if (inst->rows[row].field_00 == 0 && inst->rows[row].sweepMin < inst->rows[row].sweepMax)
+        pingpong = 1;
+    {
+        struct GaxMixItem item = {
+            wave->data, buf, self->samplePos, len << 11, self->format->frames, 0, vol, step, 0,
+            self->sweepOn ? self->instrument->rows[self->row].sweepLen << 11 : 0,
+        };
+
+        while (item.done < self->format->frames) {
+            if (self->field_11 > 0) {
+                if (pingpong)
+                    item.end = self->instrument->rows[self->row].sweepMax << 11;
+                else if (self->sweepOn)
+                    item.end = (self->sweepPos + self->instrument->rows[self->row].sweepLen) << 11;
+                else
+                    item.end = wave->length << 11;
+                if (self->field_0d) {
+                    item.mode = 0;
+                    GAX_PATCH_MIXER(gStaticData_0803A874, 0xe082);
+                    GAX_PATCH_MIXER(gStaticData_0803A884, 0xbaff);
+                } else {
+                    item.mode = self->field_52;
+                    GAX_PATCH_MIXER(gStaticData_0803A8B4, 0xe082);
+                    GAX_PATCH_MIXER(gStaticData_0803A8C4, 0xbaff);
+                }
+            } else {
+                item.end = self->instrument->rows[self->row].sweepMin << 11;
+                if (self->field_0d) {
+                    item.mode = 0;
+                    GAX_PATCH_MIXER(gStaticData_0803A874, 0xe042);
+                    GAX_PATCH_MIXER(gStaticData_0803A884, 0xcaff);
+                } else {
+                    item.mode = 1;
+                    GAX_PATCH_MIXER(gStaticData_0803A8B4, 0xe042);
+                    GAX_PATCH_MIXER(gStaticData_0803A8C4, 0xcaff);
+                }
+            }
+            GAX_CALL_ARM_R(gUnknown_03001630->field_44, &item);
+            if (item.done == self->format->frames)
+                break;
+            if (pingpong) {
+                if (self->instrument->rows[self->row].pingPong != 0) {
+                    if (self->field_11 > 0)
+                        item.pos -= step * 2;
+                    else
+                        item.pos += step * 2;
+                    self->field_11 = ~self->field_11;
+                } else {
+                    item.pos -= (self->instrument->rows[self->row].sweepMax
+                                 - self->instrument->rows[self->row].sweepMin) << 11;
+                }
+            } else if (self->sweepOn) {
+                item.pos -= self->instrument->rows[self->row].sweepLen << 11;
+            } else {
+                if (self->field_0d)
+                    sub_8037F3C((u16 *)buf + item.done, (self->format->frames - item.done + 1) * 2);
+                self->note = 0x8ad0;
+                self->noteStep = 0;
+                self->priority = 0x80000000;
+                break;
+            }
+        }
+        self->samplePos = item.pos;
+    }
+    return 1;
+}
+#else /* !NON_MATCHING */
 NAKED u32 sub_8039B44(void *self, void *info, u32 arg1, u32 arg2, u32 arg5, u32 flag)
 {
     asm(
@@ -591,3 +703,4 @@ NAKED u32 sub_8039B44(void *self, void *info, u32 arg1, u32 arg2, u32 arg5, u32 
         ".align 2, 0\n\t"
     );
 }
+#endif /* NON_MATCHING */

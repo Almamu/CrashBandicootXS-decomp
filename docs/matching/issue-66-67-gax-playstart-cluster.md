@@ -172,3 +172,7 @@ removed) and adding `src/audio/gax_channel_table_alloc.o`/
 `gax_hw_reset.o`/`gax_playstart.o`/`gax_channel_pool_alloc.o`/
 `gax_playback_ticker.o` to `ldscript.txt` in their place. `make
 NON_MATCHING=1 report` also verified clean (356 units, 9 categories).
+
+## Later pass: GAX toolchain retry
+
+`sub_8038A1C` now matches as plain C against the structs in `include/audio.h`. `sub_8038240` and `sub_8038538` stay NAKED with drafts under `#if NON_MATCHING` (register-assignment gaps, not an allocation "ceiling"). See [gax-toolchain-retry.md](./gax-toolchain-retry.md).

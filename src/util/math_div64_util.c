@@ -1,1180 +1,203 @@
 #include "core.h"
 #include "gba/defines.h"
 
+/* The GAX2 library's own bundled copy of the libgcc 64-bit arithmetic
+ * helpers: `sub_8037648` = `__divdi3`, `sub_8037A7C` = `__udivdi3`,
+ * `sub_8037E54` = `__udivsi3`, `sub_8037ECC` = `__muldi3`. (The game's
+ * own copies of the 32-bit helpers are `math_div_util.c`'s
+ * `sub_803ADB4`/`sub_803AE4C`/`sub_803AF1C`.)
+ *
+ * This translation unit is built WITHOUT `-mthumb-interwork` (see the
+ * Makefile): all four return via a combined `pop {r4-r7, pc}` / `mov
+ * pc, lr`, a shape the rest of this ROM never uses and agbcc only emits
+ * when interworking is off. With that flag dropped, `__divdi3`,
+ * `__udivdi3` and `__muldi3` below are gcc 2.x's `libgcc2.c` *verbatim*
+ * (generic `longlong.h` macros - `__udiv_qrnnd_c`, the `__clz_tab`
+ * lookup `count_leading_zeros`, `umul_ppmm` - plus the
+ * `UDIV_NEEDS_NORMALIZATION` branch of `__udivmoddi4`) and match
+ * byte-for-byte under agbcc. Each of the two division objects carried
+ * its own static `__clz_tab` (`gStaticData_085A4C70`/`085A4D70`), as
+ * old libgcc2.c did.
+ *
+ * `sub_8037E54` (`__udivsi3`) stays a NAKED transcription: it's
+ * `lib1funcs.asm`'s hand-written Thumb routine (shift-4-then-1
+ * normalization, per-path `push {r4}`/`push {lr}` with `bl __div0` =
+ * `nullsub_8` on a zero divisor), not compiler output - the same
+ * situation as `math_div_util.c`'s `__divsi3`/`__modsi3`/`__umodsi3`.
+ *
+ * `sub_8037648` (`__divdi3`) is UNUSED - nothing in the ROM calls it;
+ * it rode along with the GAX2 library. `sub_8037A7C` is called from
+ * `sub_8039518`. */
+
+typedef unsigned int USItype;
+typedef int SItype;
+typedef long long DItype;
+typedef unsigned long long UDItype;
+typedef unsigned char UQItype;
+typedef int word_type;
+
+struct DIstruct {
+    SItype low, high;
+};
+
+typedef union {
+    struct DIstruct s;
+    DItype ll;
+} DIunion;
+
+/* `/` and `%` on USItype below compile to these. */
+asm(".set __udivsi3, sub_8037E54\n"
+    ".set __umodsi3, sub_803AF1C\n");
+
 extern void nullsub_8(void);
-extern u32 sub_803AF1C(u32 a, u32 b);
-extern s32 sub_8037E54(s32 value, s32 divisor);
+extern const UQItype gStaticData_085A4C70[256];
+extern const UQItype gStaticData_085A4D70[256];
 
-/* This whole file is a second, 64-bit-flavored sibling of
- * src/util/math_div_util.c's already-matched 32-bit division/modulo
- * trio (`sub_803ADB4`/`sub_803AE4C`/`sub_803AF1C`) - see docs/audio.md's
- * `sub_8037648`/`sub_8037A7C` entries, which already flagged this whole
- * address range (nominally inside the GAX2 audio block,
- * `asm/code_3_2_20b.s`) as "very likely not GAX2 code at all", generic
- * compiler-runtime 64-bit division/multiply helpers that just happen to
- * sit inside the audio address range. Filed under `src/util/` and
- * category `util` (not `audio`) for the same reason
- * `math_div_util.c` is - docs/workflow.md's category convention is
- * about what a function *does*, not the ROM neighborhood it happens to
- * ship in, and `sub_8037E54` in particular is already called from
- * several genuinely non-audio matched files project-wide
- * (`src/util/time_util.c`, `src/util/word_util.c`,
- * `src/graphics/hud_icon_widget5.c`, `src/graphics/hud_stat_widget2.c`)
- * as a generic `s32 sub_8037E54(s32 value, s32 divisor)` - this file
- * keeps that exact signature.
- *
- * `sub_8037648`/`sub_8037A7C`/`sub_8037E54`/`sub_8037ECC` all share one
- * hard, independently-confirmed gcc-2.9/agbcc gap distinct from (though
- * related to) `math_div_util.c`'s per-path shrink-wrapping gap: every
- * one of them returns via the ROM's combined `pop {r4-r7, pc}` (or, for
- * `sub_8037E54`'s main-body path, a bare `mov pc, lr`) - a genuinely
- * non-interworking epilogue shape. Across this project's entire
- * `expected/code_3.s` (~120k lines, the frozen original disassembly),
- * that exact combined-pop-with-pc shape appears in only 7 places total,
- * *all 7 inside this one division/multiply cluster*
- * (`sub_8037648`/`sub_8037A7C`/`sub_8037ECC` plus `math_div_util.c`'s
- * own `sub_803ADB4`/`sub_803AE4C`/`sub_803AF1C`) - strong, direct
- * evidence (not just precedent-following) that this whole cluster was
- * built without `-mthumb-interwork`, unlike the rest of this ROM.
- * Confirmed by direct experiment, not just inference: an isolated
- * `sub_8037ECC` reconstruction (no branches, no register-allocation
- * ambiguity at all - a completely straight-line `__muldi3`-shaped
- * 64x64->64 multiply) reproduces every single body instruction
- * byte-for-byte, including the exact `mul`/`and`/`orr` sequence, but
- * both `tools/agbcc/bin/agbcc` and `tools/agbcc/bin/old_agbcc` always
- * emit the interworking-safe split `pop {reg}; bx reg` return instead of
- * the ROM's combined `pop {r4-r7, pc}` - with no C-level phrasing able
- * to change that (this project's global `-mthumb-interwork` build flag
- * applies uniformly to every file, so nothing this file's own C source
- * can do reaches around it). Byte-verified NAKED transcriptions for all
- * four, translated from the disassembler's unified syntax to this
- * project's established NAKED plain/divided syntax (`adds`->`add`,
- * `movs`->`mov`, `rsbs rD,rN,#0`->`neg rD,rN`, etc, local labels
- * renumbered per docs/matching/issue-4-sio-settings-sync.md's
- * convention) - not an inferred control-flow guess, since every
- * instruction was cross-checked against the ROM's own disassembly.
- *
- * `sub_8037F3C` (the last function in this contiguous ROM stretch,
- * kept in this same file per docs/workflow.md's "one file per
- * contiguous ROM region" rule even though it isn't part of the
- * division/multiply family) is different: it uses the ordinary
- * interworking `pop {reg}; bx reg` return this project's compiler
- * *does* produce, and matched as real, genuinely reconstructed C - see
- * its own doc comment below. */
+#define SI_TYPE_SIZE 32
+#define __BITS4 (SI_TYPE_SIZE / 4)
+#define __ll_B (1L << (SI_TYPE_SIZE / 2))
+#define __ll_lowpart(t) ((USItype)(t) % __ll_B)
+#define __ll_highpart(t) ((USItype)(t) / __ll_B)
 
-/* Signed 64-bit division (`a / b`, truncating toward zero), the 64-bit
- * counterpart to `math_div_util.c`'s `sub_803ADB4`: negates both
- * operands' magnitude in place (tracking the running XOR-style overall
- * sign as an all-0s/all-1s word at `[sp]`, flipped via `mvn` each time
- * an operand gets negated) before calling into a shared unsigned 64/64
- * long-division core (the three near-identical big blocks below, one
- * per relative-magnitude case between the normalized dividend/divisor)
- * built from repeated calls to `sub_803AF1C` (32-bit unsigned modulo)
- * and `sub_8037E54` (32-bit unsigned division) against 16-bit-digit
- * chunks of the operands, then restores the correct sign on the 64-bit
- * quotient at the very end. `gStaticData_085A4C70` is a 256-entry
- * bit-normalization/leading-zero-count lookup table, the 64-bit
- * counterpart of the 32-bit division's own normalization step. NAKED
- * for the reason explained in this file's header comment.
- *
- * UNUSED - no caller anywhere in the ROM (checked every `asm/*.s`,
- * `expected/code_3.s`, `expected/legacy.s`, and every matched `.c` file
- * under `src/` for a `bl sub_8037648` / `.4byte sub_8037648` reference;
- * none exist).
- * `sub_8037A7C` (the unsigned sibling right below) *is* called, from
- * `sub_8039518`'s NAKED body - plausibly this signed variant and its
- * unsigned sibling shipped as two symbols inside the same compiled
- * library object (a common shape for `libgcc`-style archives, where
- * `__divdi3`/`__udivdi3` live in the same translation unit as shared
- * helpers), so pulling in the used one at link time dragged this one
- * along too, even though nothing in this game ever calls it. */
-NAKED s64 sub_8037648(s64 a, s64 b)
+#define sub_ddmmss(sh, sl, ah, al, bh, bl) \
+    do {                                   \
+        USItype __x;                       \
+        __x = (al) - (bl);                 \
+        (sh) = (ah) - (bh) - (__x > (al)); \
+        (sl) = __x;                        \
+    } while (0)
+
+#define umul_ppmm(w1, w0, u, v)                                         \
+    do {                                                                \
+        USItype __x0, __x1, __x2, __x3;                                 \
+        USItype __ul, __vl, __uh, __vh;                                 \
+                                                                        \
+        __ul = __ll_lowpart(u);                                         \
+        __uh = __ll_highpart(u);                                        \
+        __vl = __ll_lowpart(v);                                         \
+        __vh = __ll_highpart(v);                                        \
+                                                                        \
+        __x0 = (USItype)__ul * __vl;                                    \
+        __x1 = (USItype)__ul * __vh;                                    \
+        __x2 = (USItype)__uh * __vl;                                    \
+        __x3 = (USItype)__uh * __vh;                                    \
+                                                                        \
+        __x1 += __ll_highpart(__x0); /* this can't give carry */        \
+        __x1 += __x2;                /* but this indeed can */          \
+        if (__x1 < __x2)             /* did we get it? */               \
+            __x3 += __ll_B;          /* yes, add it in the proper pos. */ \
+                                                                        \
+        (w1) = __x3 + __ll_highpart(__x1);                              \
+        (w0) = __ll_lowpart(__x1) * __ll_B + __ll_lowpart(__x0);        \
+    } while (0)
+
+#define udiv_qrnnd(q, r, n1, n0, d)                   \
+    do {                                              \
+        USItype __d1, __d0, __q1, __q0;               \
+        USItype __r1, __r0, __m;                      \
+        __d1 = __ll_highpart(d);                      \
+        __d0 = __ll_lowpart(d);                       \
+                                                      \
+        __r1 = (n1) % __d1;                           \
+        __q1 = (n1) / __d1;                           \
+        __m = (USItype)__q1 * __d0;                   \
+        __r1 = __r1 * __ll_B | __ll_highpart(n0);     \
+        if (__r1 < __m) {                             \
+            __q1--, __r1 += (d);                      \
+            if (__r1 >= (d))                          \
+                if (__r1 < __m)                       \
+                    __q1--, __r1 += (d);              \
+        }                                             \
+        __r1 -= __m;                                  \
+                                                      \
+        __r0 = __r1 % __d1;                           \
+        __q0 = __r1 / __d1;                           \
+        __m = (USItype)__q0 * __d0;                   \
+        __r0 = __r0 * __ll_B | __ll_lowpart(n0);      \
+        if (__r0 < __m) {                             \
+            __q0--, __r0 += (d);                      \
+            if (__r0 >= (d))                          \
+                if (__r0 < __m)                       \
+                    __q0--, __r0 += (d);              \
+        }                                             \
+        __r0 -= __m;                                  \
+                                                      \
+        (q) = (USItype)__q1 * __ll_B | __q0;          \
+        (r) = __r0;                                   \
+    } while (0)
+
+#define count_leading_zeros(clz_tab, count, x)                                   \
+    do {                                                                         \
+        USItype __xr = (x);                                                      \
+        USItype __a;                                                             \
+                                                                                 \
+        __a = __xr < ((USItype)1 << 2 * __BITS4)                                 \
+            ? (__xr < ((USItype)1 << __BITS4) ? 0 : __BITS4)                     \
+            : (__xr < ((USItype)1 << 3 * __BITS4) ? 2 * __BITS4 : 3 * __BITS4);  \
+                                                                                 \
+        (count) = SI_TYPE_SIZE - ((clz_tab)[__xr >> __a] + __a);                 \
+    } while (0)
+
+static inline DItype __negdi2(DItype u)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sl\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6, r7}\n\t"
-        "sub sp, #0x34\n\t"
-        "mov r4, #0\n\t"
-        "str r4, [sp]\n\t"
-        "add r5, r1, #0\n\t"
-        "add r4, r0, #0\n\t"
-        "cmp r5, #0\n\t"
-        "bge 2f\n\t"
-        "ldr r0, [sp]\n\t"
-        "mvn r0, r0\n\t"
-        "str r0, [sp]\n\t"
-        "neg r0, r4\n\t"
-        "add r6, r0, #0\n\t"
-        "neg r1, r5\n\t"
-        "cmp r0, #0\n\t"
-        "beq 1f\n\t"
-        "sub r1, #1\n\t"
-    "1:\n\t"
-        "add r7, r1, #0\n\t"
-        "add r5, r7, #0\n\t"
-        "add r4, r6, #0\n\t"
-    "2:\n\t"
-        "cmp r3, #0\n\t"
-        "bge 4f\n\t"
-        "ldr r1, [sp]\n\t"
-        "mvn r1, r1\n\t"
-        "str r1, [sp]\n\t"
-        "neg r0, r2\n\t"
-        "str r0, [sp, #4]\n\t"
-        "neg r2, r3\n\t"
-        "cmp r0, #0\n\t"
-        "beq 3f\n\t"
-        "sub r2, #1\n\t"
-    "3:\n\t"
-        "str r2, [sp, #8]\n\t"
-        "ldr r2, [sp, #4]\n\t"
-        "ldr r3, [sp, #8]\n\t"
-    "4:\n\t"
-        "add r7, r2, #0\n\t"
-        "add r6, r3, #0\n\t"
-        "mov sl, r4\n\t"
-        "mov r8, r5\n\t"
-        "cmp r6, #0\n\t"
-        "beq 5f\n\t"
-        "b 29f\n\t"
-    "5:\n\t"
-        "cmp r7, r8\n\t"
-        "bls 15f\n\t"
-        "ldr r0, 6f\n\t"
-        "cmp r7, r0\n\t"
-        "bhi 7f\n\t"
-        "mov r1, #0\n\t"
-        "cmp r7, #0xff\n\t"
-        "bls 8f\n\t"
-        "mov r1, #8\n\t"
-        "b 8f\n\t"
-        ".align 2, 0\n"
-    "6: .4byte 0x0000FFFF\n"
-    "7:\n\t"
-        "ldr r0, 12f\n\t"
-        "mov r1, #0x18\n\t"
-        "cmp r7, r0\n\t"
-        "bhi 8f\n\t"
-        "mov r1, #0x10\n\t"
-    "8:\n\t"
-        "ldr r0, 13f\n\t"
-        "lsr r2, r1\n\t"
-        "add r0, r2, r0\n\t"
-        "ldrb r0, [r0]\n\t"
-        "add r0, r0, r1\n\t"
-        "mov r1, #0x20\n\t"
-        "sub r2, r1, r0\n\t"
-        "cmp r2, #0\n\t"
-        "beq 9f\n\t"
-        "lsl r7, r2\n\t"
-        "mov r3, r8\n\t"
-        "lsl r3, r2\n\t"
-        "sub r1, r1, r2\n\t"
-        "mov r0, sl\n\t"
-        "lsr r0, r1\n\t"
-        "orr r3, r0\n\t"
-        "mov r8, r3\n\t"
-        "mov r4, sl\n\t"
-        "lsl r4, r2\n\t"
-        "mov sl, r4\n\t"
-    "9:\n\t"
-        "lsr r0, r7, #0x10\n\t"
-        "mov sb, r0\n\t"
-        "ldr r1, 14f\n\t"
-        "and r1, r7\n\t"
-        "str r1, [sp, #0xc]\n\t"
-        "mov r0, r8\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_803AF1C\n\t"
-        "add r4, r0, #0\n\t"
-        "mov r0, r8\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_8037E54\n\t"
-        "add r6, r0, #0\n\t"
-        "ldr r3, [sp, #0xc]\n\t"
-        "add r2, r6, #0\n\t"
-        "mul r2, r3, r2\n\t"
-        "lsl r4, r4, #0x10\n\t"
-        "mov r1, sl\n\t"
-        "lsr r0, r1, #0x10\n\t"
-        "orr r4, r0\n\t"
-        "cmp r4, r2\n\t"
-        "bhs 10f\n\t"
-        "sub r6, #1\n\t"
-        "add r4, r4, r7\n\t"
-        "cmp r4, r7\n\t"
-        "blo 10f\n\t"
-        "cmp r4, r2\n\t"
-        "bhs 10f\n\t"
-        "sub r6, #1\n\t"
-        "add r4, r4, r7\n\t"
-    "10:\n\t"
-        "sub r4, r4, r2\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_803AF1C\n\t"
-        "add r5, r0, #0\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_8037E54\n\t"
-        "add r1, r0, #0\n\t"
-        "ldr r3, [sp, #0xc]\n\t"
-        "add r2, r1, #0\n\t"
-        "mul r2, r3, r2\n\t"
-        "lsl r5, r5, #0x10\n\t"
-        "ldr r0, 14f\n\t"
-        "mov r4, sl\n\t"
-        "and r4, r0\n\t"
-        "orr r5, r4\n\t"
-        "cmp r5, r2\n\t"
-        "bhs 11f\n\t"
-        "sub r1, #1\n\t"
-        "add r5, r5, r7\n\t"
-        "cmp r5, r7\n\t"
-        "blo 11f\n\t"
-        "cmp r5, r2\n\t"
-        "bhs 11f\n\t"
-        "sub r1, #1\n\t"
-    "11:\n\t"
-        "lsl r6, r6, #0x10\n\t"
-        "orr r6, r1\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [sp, #0x10]\n\t"
-        "b 45f\n\t"
-        ".align 2, 0\n"
-    "12: .4byte 0x00FFFFFF\n"
-    "13: .4byte gStaticData_085A4C70\n"
-    "14: .4byte 0x0000FFFF\n"
-    "15:\n\t"
-        "cmp r2, #0\n\t"
-        "bne 16f\n\t"
-        "mov r0, #1\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_8037E54\n\t"
-        "add r7, r0, #0\n\t"
-    "16:\n\t"
-        "add r1, r7, #0\n\t"
-        "ldr r0, 17f\n\t"
-        "cmp r7, r0\n\t"
-        "bhi 18f\n\t"
-        "mov r2, #0\n\t"
-        "cmp r7, #0xff\n\t"
-        "bls 19f\n\t"
-        "mov r2, #8\n\t"
-        "b 19f\n\t"
-        ".align 2, 0\n"
-    "17: .4byte 0x0000FFFF\n"
-    "18:\n\t"
-        "ldr r0, 20f\n\t"
-        "mov r2, #0x18\n\t"
-        "cmp r7, r0\n\t"
-        "bhi 19f\n\t"
-        "mov r2, #0x10\n\t"
-    "19:\n\t"
-        "ldr r0, 21f\n\t"
-        "lsr r1, r2\n\t"
-        "add r0, r1, r0\n\t"
-        "ldrb r0, [r0]\n\t"
-        "add r0, r0, r2\n\t"
-        "mov r1, #0x20\n\t"
-        "sub r2, r1, r0\n\t"
-        "cmp r2, #0\n\t"
-        "bne 22f\n\t"
-        "mov r1, r8\n\t"
-        "sub r1, r1, r7\n\t"
-        "mov r8, r1\n\t"
-        "mov r2, #1\n\t"
-        "str r2, [sp, #0x10]\n\t"
-        "b 25f\n\t"
-        ".align 2, 0\n"
-    "20: .4byte 0x00FFFFFF\n"
-    "21: .4byte gStaticData_085A4C70\n"
-    "22:\n\t"
-        "sub r1, r1, r2\n\t"
-        "lsl r7, r2\n\t"
-        "mov r5, r8\n\t"
-        "lsr r5, r1\n\t"
-        "mov r3, r8\n\t"
-        "lsl r3, r2\n\t"
-        "mov r0, sl\n\t"
-        "lsr r0, r1\n\t"
-        "orr r3, r0\n\t"
-        "mov r8, r3\n\t"
-        "mov r4, sl\n\t"
-        "lsl r4, r2\n\t"
-        "mov sl, r4\n\t"
-        "lsr r0, r7, #0x10\n\t"
-        "mov sb, r0\n\t"
-        "ldr r1, 28f\n\t"
-        "and r1, r7\n\t"
-        "str r1, [sp, #0x14]\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_803AF1C\n\t"
-        "add r4, r0, #0\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_8037E54\n\t"
-        "add r6, r0, #0\n\t"
-        "ldr r2, [sp, #0x14]\n\t"
-        "add r1, r6, #0\n\t"
-        "mul r1, r2, r1\n\t"
-        "lsl r4, r4, #0x10\n\t"
-        "mov r3, r8\n\t"
-        "lsr r0, r3, #0x10\n\t"
-        "orr r4, r0\n\t"
-        "cmp r4, r1\n\t"
-        "bhs 23f\n\t"
-        "sub r6, #1\n\t"
-        "add r4, r4, r7\n\t"
-        "cmp r4, r7\n\t"
-        "blo 23f\n\t"
-        "cmp r4, r1\n\t"
-        "bhs 23f\n\t"
-        "sub r6, #1\n\t"
-        "add r4, r4, r7\n\t"
-    "23:\n\t"
-        "sub r4, r4, r1\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_803AF1C\n\t"
-        "add r5, r0, #0\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_8037E54\n\t"
-        "add r2, r0, #0\n\t"
-        "ldr r4, [sp, #0x14]\n\t"
-        "add r1, r2, #0\n\t"
-        "mul r1, r4, r1\n\t"
-        "lsl r5, r5, #0x10\n\t"
-        "ldr r0, 28f\n\t"
-        "mov r3, r8\n\t"
-        "and r3, r0\n\t"
-        "orr r5, r3\n\t"
-        "cmp r5, r1\n\t"
-        "bhs 24f\n\t"
-        "sub r2, #1\n\t"
-        "add r5, r5, r7\n\t"
-        "cmp r5, r7\n\t"
-        "blo 24f\n\t"
-        "cmp r5, r1\n\t"
-        "bhs 24f\n\t"
-        "sub r2, #1\n\t"
-        "add r5, r5, r7\n\t"
-    "24:\n\t"
-        "lsl r6, r6, #0x10\n\t"
-        "orr r6, r2\n\t"
-        "str r6, [sp, #0x10]\n\t"
-        "sub r1, r5, r1\n\t"
-        "mov r8, r1\n\t"
-    "25:\n\t"
-        "lsr r4, r7, #0x10\n\t"
-        "mov sb, r4\n\t"
-        "ldr r0, 28f\n\t"
-        "and r0, r7\n\t"
-        "str r0, [sp, #0x18]\n\t"
-        "mov r0, r8\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_803AF1C\n\t"
-        "add r4, r0, #0\n\t"
-        "mov r0, r8\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_8037E54\n\t"
-        "add r6, r0, #0\n\t"
-        "ldr r1, [sp, #0x18]\n\t"
-        "add r2, r6, #0\n\t"
-        "mul r2, r1, r2\n\t"
-        "lsl r4, r4, #0x10\n\t"
-        "mov r3, sl\n\t"
-        "lsr r0, r3, #0x10\n\t"
-        "orr r4, r0\n\t"
-        "cmp r4, r2\n\t"
-        "bhs 26f\n\t"
-        "sub r6, #1\n\t"
-        "add r4, r4, r7\n\t"
-        "cmp r4, r7\n\t"
-        "blo 26f\n\t"
-        "cmp r4, r2\n\t"
-        "bhs 26f\n\t"
-        "sub r6, #1\n\t"
-        "add r4, r4, r7\n\t"
-    "26:\n\t"
-        "sub r4, r4, r2\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_803AF1C\n\t"
-        "add r5, r0, #0\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_8037E54\n\t"
-        "add r1, r0, #0\n\t"
-        "ldr r4, [sp, #0x18]\n\t"
-        "add r2, r1, #0\n\t"
-        "mul r2, r4, r2\n\t"
-        "lsl r5, r5, #0x10\n\t"
-        "ldr r0, 28f\n\t"
-        "mov r3, sl\n\t"
-        "and r3, r0\n\t"
-        "orr r5, r3\n\t"
-        "cmp r5, r2\n\t"
-        "bhs 27f\n\t"
-        "sub r1, #1\n\t"
-        "add r5, r5, r7\n\t"
-        "cmp r5, r7\n\t"
-        "blo 27f\n\t"
-        "cmp r5, r2\n\t"
-        "bhs 27f\n\t"
-        "sub r1, #1\n\t"
-    "27:\n\t"
-        "lsl r6, r6, #0x10\n\t"
-        "orr r6, r1\n\t"
-        "b 45f\n\t"
-        ".align 2, 0\n"
-    "28: .4byte 0x0000FFFF\n"
-    "29:\n\t"
-        "cmp r6, r8\n\t"
-        "bls 30f\n\t"
-        "mov r6, #0\n\t"
-        "mov r4, #0\n\t"
-        "str r4, [sp, #0x10]\n\t"
-        "b 45f\n\t"
-    "30:\n\t"
-        "add r1, r6, #0\n\t"
-        "ldr r0, 31f\n\t"
-        "cmp r6, r0\n\t"
-        "bhi 32f\n\t"
-        "mov r2, #0\n\t"
-        "cmp r6, #0xff\n\t"
-        "bls 33f\n\t"
-        "mov r2, #8\n\t"
-        "b 33f\n\t"
-        ".align 2, 0\n"
-    "31: .4byte 0x0000FFFF\n"
-    "32:\n\t"
-        "ldr r0, 35f\n\t"
-        "mov r2, #0x18\n\t"
-        "cmp r6, r0\n\t"
-        "bhi 33f\n\t"
-        "mov r2, #0x10\n\t"
-    "33:\n\t"
-        "ldr r0, 36f\n\t"
-        "lsr r1, r2\n\t"
-        "add r0, r1, r0\n\t"
-        "ldrb r0, [r0]\n\t"
-        "add r0, r0, r2\n\t"
-        "mov r1, #0x20\n\t"
-        "sub r2, r1, r0\n\t"
-        "cmp r2, #0\n\t"
-        "bne 38f\n\t"
-        "cmp r8, r6\n\t"
-        "bhi 34f\n\t"
-        "cmp sl, r7\n\t"
-        "blo 37f\n\t"
-    "34:\n\t"
-        "mov r6, #1\n\t"
-        "mov r1, sl\n\t"
-        "b 43f\n\t"
-        ".align 2, 0\n"
-    "35: .4byte 0x00FFFFFF\n"
-    "36: .4byte gStaticData_085A4C70\n"
-    "37:\n\t"
-        "mov r6, #0\n\t"
-        "b 44f\n\t"
-    "38:\n\t"
-        "sub r1, r1, r2\n\t"
-        "lsl r6, r2\n\t"
-        "add r0, r7, #0\n\t"
-        "lsr r0, r1\n\t"
-        "orr r6, r0\n\t"
-        "lsl r7, r2\n\t"
-        "mov r5, r8\n\t"
-        "lsr r5, r1\n\t"
-        "mov r3, r8\n\t"
-        "lsl r3, r2\n\t"
-        "mov r0, sl\n\t"
-        "lsr r0, r1\n\t"
-        "orr r3, r0\n\t"
-        "mov r8, r3\n\t"
-        "mov r4, sl\n\t"
-        "lsl r4, r2\n\t"
-        "mov sl, r4\n\t"
-        "lsr r0, r6, #0x10\n\t"
-        "mov sb, r0\n\t"
-        "ldr r1, 48f\n\t"
-        "and r1, r6\n\t"
-        "str r1, [sp, #0x1c]\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_803AF1C\n\t"
-        "add r4, r0, #0\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_8037E54\n\t"
-        "add r3, r0, #0\n\t"
-        "ldr r2, [sp, #0x1c]\n\t"
-        "add r1, r3, #0\n\t"
-        "mul r1, r2, r1\n\t"
-        "lsl r4, r4, #0x10\n\t"
-        "mov r2, r8\n\t"
-        "lsr r0, r2, #0x10\n\t"
-        "orr r4, r0\n\t"
-        "cmp r4, r1\n\t"
-        "bhs 39f\n\t"
-        "sub r3, #1\n\t"
-        "add r4, r4, r6\n\t"
-        "cmp r4, r6\n\t"
-        "blo 39f\n\t"
-        "cmp r4, r1\n\t"
-        "bhs 39f\n\t"
-        "sub r3, #1\n\t"
-        "add r4, r4, r6\n\t"
-    "39:\n\t"
-        "sub r4, r4, r1\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, sb\n\t"
-        "str r3, [sp, #0x30]\n\t"
-        "bl sub_803AF1C\n\t"
-        "add r5, r0, #0\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_8037E54\n\t"
-        "add r2, r0, #0\n\t"
-        "ldr r4, [sp, #0x1c]\n\t"
-        "add r1, r2, #0\n\t"
-        "mul r1, r4, r1\n\t"
-        "lsl r5, r5, #0x10\n\t"
-        "ldr r0, 48f\n\t"
-        "mov r4, r8\n\t"
-        "and r4, r0\n\t"
-        "orr r5, r4\n\t"
-        "ldr r3, [sp, #0x30]\n\t"
-        "cmp r5, r1\n\t"
-        "bhs 40f\n\t"
-        "sub r2, #1\n\t"
-        "add r5, r5, r6\n\t"
-        "cmp r5, r6\n\t"
-        "blo 40f\n\t"
-        "cmp r5, r1\n\t"
-        "bhs 40f\n\t"
-        "sub r2, #1\n\t"
-        "add r5, r5, r6\n\t"
-    "40:\n\t"
-        "lsl r6, r3, #0x10\n\t"
-        "orr r6, r2\n\t"
-        "sub r1, r5, r1\n\t"
-        "mov r8, r1\n\t"
-        "ldr r0, 48f\n\t"
-        "mov sb, r0\n\t"
-        "add r1, r6, #0\n\t"
-        "and r1, r0\n\t"
-        "lsr r3, r6, #0x10\n\t"
-        "add r0, r7, #0\n\t"
-        "mov r2, sb\n\t"
-        "and r0, r2\n\t"
-        "lsr r2, r7, #0x10\n\t"
-        "add r5, r1, #0\n\t"
-        "mul r5, r0, r5\n\t"
-        "add r4, r1, #0\n\t"
-        "mul r4, r2, r4\n\t"
-        "add r1, r3, #0\n\t"
-        "mul r1, r0, r1\n\t"
-        "mul r3, r2, r3\n\t"
-        "lsr r0, r5, #0x10\n\t"
-        "add r4, r4, r0\n\t"
-        "add r4, r4, r1\n\t"
-        "cmp r4, r1\n\t"
-        "bhs 41f\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #9\n\t"
-        "add r3, r3, r0\n\t"
-    "41:\n\t"
-        "lsr r0, r4, #0x10\n\t"
-        "add r3, r3, r0\n\t"
-        "mov r1, sb\n\t"
-        "and r4, r1\n\t"
-        "lsl r0, r4, #0x10\n\t"
-        "and r5, r1\n\t"
-        "add r1, r0, r5\n\t"
-        "cmp r3, r8\n\t"
-        "bhi 42f\n\t"
-        "cmp r3, r8\n\t"
-        "bne 44f\n\t"
-        "cmp r1, sl\n\t"
-        "bls 44f\n\t"
-    "42:\n\t"
-        "sub r6, #1\n\t"
-    "43:\n\t"
-        "sub r0, r1, r7\n\t"
-    "44:\n\t"
-        "mov r2, #0\n\t"
-        "str r2, [sp, #0x10]\n\t"
-    "45:\n\t"
-        "str r6, [sp, #0x20]\n\t"
-        "ldr r3, [sp, #0x10]\n\t"
-        "str r3, [sp, #0x24]\n\t"
-        "ldr r1, [sp, #0x20]\n\t"
-        "ldr r2, [sp, #0x24]\n\t"
-        "ldr r4, [sp]\n\t"
-        "cmp r4, #0\n\t"
-        "beq 47f\n\t"
-        "neg r0, r1\n\t"
-        "str r0, [sp, #0x28]\n\t"
-        "neg r1, r2\n\t"
-        "cmp r0, #0\n\t"
-        "beq 46f\n\t"
-        "sub r1, #1\n\t"
-    "46:\n\t"
-        "str r1, [sp, #0x2c]\n\t"
-        "ldr r1, [sp, #0x28]\n\t"
-        "ldr r2, [sp, #0x2c]\n\t"
-    "47:\n\t"
-        "add r0, r1, #0\n\t"
-        "add r1, r2, #0\n\t"
-        "add sp, #0x34\n\t"
-        "pop {r3, r4, r5}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov sl, r5\n\t"
-        "pop {r4, r5, r6, r7, pc}\n\t"
-        ".align 2, 0\n"
-    "48: .4byte 0x0000FFFF\n"
-    );
+    DIunion w;
+    DIunion uu;
+
+    uu.ll = u;
+
+    w.s.low = -uu.s.low;
+    w.s.high = -uu.s.high - ((USItype)w.s.low > 0);
+
+    return w.ll;
 }
 
-/* Unsigned 64-bit division (`a / b`), the 64-bit counterpart to
- * `math_div_util.c`'s `sub_803AF1C` - exactly `sub_8037648`'s same
- * three-block long-division core (same `sub_803AF1C`/`sub_8037E54`
- * calls, same shape), just with no sign handling at all and its own
- * copy of the 256-entry normalization table (`gStaticData_085A4D70`,
- * distinct from `sub_8037648`'s `gStaticData_085A4C70` - two separate
- * copies of conceptually the same kind of table, one per division
- * routine, per docs/audio.md's own note that this data cluster is
- * itself a mix of audio and non-audio tables). NAKED for the reason
- * explained in this file's header comment. */
-NAKED u64 sub_8037A7C(u64 a, u64 b)
+#define UDIVMODDI4 __udivmoddi4_divdi3
+#define CLZ_TAB gStaticData_085A4C70
+#include "libgcc2_udivmoddi4.h"
+#undef UDIVMODDI4
+#undef CLZ_TAB
+
+#define UDIVMODDI4 __udivmoddi4_udivdi3
+#define CLZ_TAB gStaticData_085A4D70
+#include "libgcc2_udivmoddi4.h"
+#undef UDIVMODDI4
+#undef CLZ_TAB
+
+/* `__divdi3`: signed 64-bit division, truncating toward zero. UNUSED. */
+DItype sub_8037648(DItype u, DItype v)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sl\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6, r7}\n\t"
-        "sub sp, #0x20\n\t"
-        "add r7, r2, #0\n\t"
-        "add r6, r3, #0\n\t"
-        "mov sl, r0\n\t"
-        "mov r8, r1\n\t"
-        "cmp r6, #0\n\t"
-        "beq 1f\n\t"
-        "b 25f\n\t"
-    "1:\n\t"
-        "cmp r7, r8\n\t"
-        "bls 11f\n\t"
-        "ldr r0, 2f\n\t"
-        "cmp r7, r0\n\t"
-        "bhi 3f\n\t"
-        "mov r1, #0\n\t"
-        "cmp r7, #0xff\n\t"
-        "bls 4f\n\t"
-        "mov r1, #8\n\t"
-        "b 4f\n\t"
-        ".align 2, 0\n"
-    "2: .4byte 0x0000FFFF\n"
-    "3:\n\t"
-        "ldr r0, 8f\n\t"
-        "mov r1, #0x18\n\t"
-        "cmp r7, r0\n\t"
-        "bhi 4f\n\t"
-        "mov r1, #0x10\n\t"
-    "4:\n\t"
-        "ldr r0, 9f\n\t"
-        "lsr r2, r1\n\t"
-        "add r0, r2, r0\n\t"
-        "ldrb r0, [r0]\n\t"
-        "add r0, r0, r1\n\t"
-        "mov r1, #0x20\n\t"
-        "sub r2, r1, r0\n\t"
-        "cmp r2, #0\n\t"
-        "beq 5f\n\t"
-        "lsl r7, r2\n\t"
-        "mov r0, r8\n\t"
-        "lsl r0, r2\n\t"
-        "mov r8, r0\n\t"
-        "sub r1, r1, r2\n\t"
-        "mov r0, sl\n\t"
-        "lsr r0, r1\n\t"
-        "mov r1, r8\n\t"
-        "orr r1, r0\n\t"
-        "mov r8, r1\n\t"
-        "mov r3, sl\n\t"
-        "lsl r3, r2\n\t"
-        "mov sl, r3\n\t"
-    "5:\n\t"
-        "lsr r4, r7, #0x10\n\t"
-        "mov sb, r4\n\t"
-        "ldr r0, 10f\n\t"
-        "and r0, r7\n\t"
-        "str r0, [sp]\n\t"
-        "mov r0, r8\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_803AF1C\n\t"
-        "add r4, r0, #0\n\t"
-        "mov r0, r8\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_8037E54\n\t"
-        "add r6, r0, #0\n\t"
-        "ldr r1, [sp]\n\t"
-        "add r2, r6, #0\n\t"
-        "mul r2, r1, r2\n\t"
-        "lsl r4, r4, #0x10\n\t"
-        "mov r3, sl\n\t"
-        "lsr r0, r3, #0x10\n\t"
-        "orr r4, r0\n\t"
-        "cmp r4, r2\n\t"
-        "bhs 6f\n\t"
-        "sub r6, #1\n\t"
-        "add r4, r4, r7\n\t"
-        "cmp r4, r7\n\t"
-        "blo 6f\n\t"
-        "cmp r4, r2\n\t"
-        "bhs 6f\n\t"
-        "sub r6, #1\n\t"
-        "add r4, r4, r7\n\t"
-    "6:\n\t"
-        "sub r4, r4, r2\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_803AF1C\n\t"
-        "add r5, r0, #0\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_8037E54\n\t"
-        "add r1, r0, #0\n\t"
-        "ldr r4, [sp]\n\t"
-        "add r2, r1, #0\n\t"
-        "mul r2, r4, r2\n\t"
-        "lsl r5, r5, #0x10\n\t"
-        "ldr r0, 10f\n\t"
-        "mov r3, sl\n\t"
-        "and r3, r0\n\t"
-        "orr r5, r3\n\t"
-        "cmp r5, r2\n\t"
-        "bhs 7f\n\t"
-        "sub r1, #1\n\t"
-        "add r5, r5, r7\n\t"
-        "cmp r5, r7\n\t"
-        "blo 7f\n\t"
-        "cmp r5, r2\n\t"
-        "bhs 7f\n\t"
-        "sub r1, #1\n\t"
-    "7:\n\t"
-        "lsl r6, r6, #0x10\n\t"
-        "orr r6, r1\n\t"
-        "b 26f\n\t"
-        ".align 2, 0\n"
-    "8: .4byte 0x00FFFFFF\n"
-    "9: .4byte gStaticData_085A4D70\n"
-    "10: .4byte 0x0000FFFF\n"
-    "11:\n\t"
-        "cmp r2, #0\n\t"
-        "bne 12f\n\t"
-        "mov r0, #1\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_8037E54\n\t"
-        "add r7, r0, #0\n\t"
-    "12:\n\t"
-        "add r1, r7, #0\n\t"
-        "ldr r0, 13f\n\t"
-        "cmp r7, r0\n\t"
-        "bhi 14f\n\t"
-        "mov r2, #0\n\t"
-        "cmp r7, #0xff\n\t"
-        "bls 15f\n\t"
-        "mov r2, #8\n\t"
-        "b 15f\n\t"
-        ".align 2, 0\n"
-    "13: .4byte 0x0000FFFF\n"
-    "14:\n\t"
-        "ldr r0, 16f\n\t"
-        "mov r2, #0x18\n\t"
-        "cmp r7, r0\n\t"
-        "bhi 15f\n\t"
-        "mov r2, #0x10\n\t"
-    "15:\n\t"
-        "ldr r0, 17f\n\t"
-        "lsr r1, r2\n\t"
-        "add r0, r1, r0\n\t"
-        "ldrb r0, [r0]\n\t"
-        "add r0, r0, r2\n\t"
-        "mov r1, #0x20\n\t"
-        "sub r2, r1, r0\n\t"
-        "cmp r2, #0\n\t"
-        "bne 18f\n\t"
-        "mov r0, r8\n\t"
-        "sub r0, r0, r7\n\t"
-        "mov r8, r0\n\t"
-        "mov r1, #1\n\t"
-        "str r1, [sp, #4]\n\t"
-        "b 21f\n\t"
-        ".align 2, 0\n"
-    "16: .4byte 0x00FFFFFF\n"
-    "17: .4byte gStaticData_085A4D70\n"
-    "18:\n\t"
-        "sub r1, r1, r2\n\t"
-        "lsl r7, r2\n\t"
-        "mov r5, r8\n\t"
-        "lsr r5, r1\n\t"
-        "mov r3, r8\n\t"
-        "lsl r3, r2\n\t"
-        "mov r0, sl\n\t"
-        "lsr r0, r1\n\t"
-        "orr r3, r0\n\t"
-        "mov r8, r3\n\t"
-        "mov r4, sl\n\t"
-        "lsl r4, r2\n\t"
-        "mov sl, r4\n\t"
-        "lsr r0, r7, #0x10\n\t"
-        "mov sb, r0\n\t"
-        "ldr r1, 24f\n\t"
-        "and r1, r7\n\t"
-        "str r1, [sp, #8]\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_803AF1C\n\t"
-        "add r4, r0, #0\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_8037E54\n\t"
-        "add r6, r0, #0\n\t"
-        "ldr r2, [sp, #8]\n\t"
-        "add r1, r6, #0\n\t"
-        "mul r1, r2, r1\n\t"
-        "lsl r4, r4, #0x10\n\t"
-        "mov r3, r8\n\t"
-        "lsr r0, r3, #0x10\n\t"
-        "orr r4, r0\n\t"
-        "cmp r4, r1\n\t"
-        "bhs 19f\n\t"
-        "sub r6, #1\n\t"
-        "add r4, r4, r7\n\t"
-        "cmp r4, r7\n\t"
-        "blo 19f\n\t"
-        "cmp r4, r1\n\t"
-        "bhs 19f\n\t"
-        "sub r6, #1\n\t"
-        "add r4, r4, r7\n\t"
-    "19:\n\t"
-        "sub r4, r4, r1\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_803AF1C\n\t"
-        "add r5, r0, #0\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_8037E54\n\t"
-        "add r2, r0, #0\n\t"
-        "ldr r4, [sp, #8]\n\t"
-        "add r1, r2, #0\n\t"
-        "mul r1, r4, r1\n\t"
-        "lsl r5, r5, #0x10\n\t"
-        "ldr r0, 24f\n\t"
-        "mov r3, r8\n\t"
-        "and r3, r0\n\t"
-        "orr r5, r3\n\t"
-        "cmp r5, r1\n\t"
-        "bhs 20f\n\t"
-        "sub r2, #1\n\t"
-        "add r5, r5, r7\n\t"
-        "cmp r5, r7\n\t"
-        "blo 20f\n\t"
-        "cmp r5, r1\n\t"
-        "bhs 20f\n\t"
-        "sub r2, #1\n\t"
-        "add r5, r5, r7\n\t"
-    "20:\n\t"
-        "lsl r6, r6, #0x10\n\t"
-        "orr r6, r2\n\t"
-        "str r6, [sp, #4]\n\t"
-        "sub r1, r5, r1\n\t"
-        "mov r8, r1\n\t"
-    "21:\n\t"
-        "lsr r4, r7, #0x10\n\t"
-        "mov sb, r4\n\t"
-        "ldr r0, 24f\n\t"
-        "and r0, r7\n\t"
-        "str r0, [sp, #0xc]\n\t"
-        "mov r0, r8\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_803AF1C\n\t"
-        "add r4, r0, #0\n\t"
-        "mov r0, r8\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_8037E54\n\t"
-        "add r6, r0, #0\n\t"
-        "ldr r1, [sp, #0xc]\n\t"
-        "add r2, r6, #0\n\t"
-        "mul r2, r1, r2\n\t"
-        "lsl r4, r4, #0x10\n\t"
-        "mov r3, sl\n\t"
-        "lsr r0, r3, #0x10\n\t"
-        "orr r4, r0\n\t"
-        "cmp r4, r2\n\t"
-        "bhs 22f\n\t"
-        "sub r6, #1\n\t"
-        "add r4, r4, r7\n\t"
-        "cmp r4, r7\n\t"
-        "blo 22f\n\t"
-        "cmp r4, r2\n\t"
-        "bhs 22f\n\t"
-        "sub r6, #1\n\t"
-        "add r4, r4, r7\n\t"
-    "22:\n\t"
-        "sub r4, r4, r2\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_803AF1C\n\t"
-        "add r5, r0, #0\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_8037E54\n\t"
-        "add r1, r0, #0\n\t"
-        "ldr r4, [sp, #0xc]\n\t"
-        "add r2, r1, #0\n\t"
-        "mul r2, r4, r2\n\t"
-        "lsl r5, r5, #0x10\n\t"
-        "ldr r0, 24f\n\t"
-        "mov r3, sl\n\t"
-        "and r3, r0\n\t"
-        "orr r5, r3\n\t"
-        "cmp r5, r2\n\t"
-        "bhs 23f\n\t"
-        "sub r1, #1\n\t"
-        "add r5, r5, r7\n\t"
-        "cmp r5, r7\n\t"
-        "blo 23f\n\t"
-        "cmp r5, r2\n\t"
-        "bhs 23f\n\t"
-        "sub r1, #1\n\t"
-    "23:\n\t"
-        "lsl r6, r6, #0x10\n\t"
-        "orr r6, r1\n\t"
-        "b 42f\n\t"
-        ".align 2, 0\n"
-    "24: .4byte 0x0000FFFF\n"
-    "25:\n\t"
-        "cmp r6, r8\n\t"
-        "bls 27f\n\t"
-        "mov r6, #0\n\t"
-    "26:\n\t"
-        "mov r4, #0\n\t"
-        "str r4, [sp, #4]\n\t"
-        "b 42f\n\t"
-    "27:\n\t"
-        "add r1, r6, #0\n\t"
-        "ldr r0, 28f\n\t"
-        "cmp r6, r0\n\t"
-        "bhi 29f\n\t"
-        "mov r2, #0\n\t"
-        "cmp r6, #0xff\n\t"
-        "bls 30f\n\t"
-        "mov r2, #8\n\t"
-        "b 30f\n\t"
-        ".align 2, 0\n"
-    "28: .4byte 0x0000FFFF\n"
-    "29:\n\t"
-        "ldr r0, 32f\n\t"
-        "mov r2, #0x18\n\t"
-        "cmp r6, r0\n\t"
-        "bhi 30f\n\t"
-        "mov r2, #0x10\n\t"
-    "30:\n\t"
-        "ldr r0, 33f\n\t"
-        "lsr r1, r2\n\t"
-        "add r0, r1, r0\n\t"
-        "ldrb r0, [r0]\n\t"
-        "add r0, r0, r2\n\t"
-        "mov r1, #0x20\n\t"
-        "sub r2, r1, r0\n\t"
-        "cmp r2, #0\n\t"
-        "bne 35f\n\t"
-        "cmp r8, r6\n\t"
-        "bhi 31f\n\t"
-        "cmp sl, r7\n\t"
-        "blo 34f\n\t"
-    "31:\n\t"
-        "mov r6, #1\n\t"
-        "mov r1, sl\n\t"
-        "b 40f\n\t"
-        ".align 2, 0\n"
-    "32: .4byte 0x00FFFFFF\n"
-    "33: .4byte gStaticData_085A4D70\n"
-    "34:\n\t"
-        "mov r6, #0\n\t"
-        "b 41f\n\t"
-    "35:\n\t"
-        "sub r1, r1, r2\n\t"
-        "lsl r6, r2\n\t"
-        "add r0, r7, #0\n\t"
-        "lsr r0, r1\n\t"
-        "orr r6, r0\n\t"
-        "lsl r7, r2\n\t"
-        "mov r5, r8\n\t"
-        "lsr r5, r1\n\t"
-        "mov r3, r8\n\t"
-        "lsl r3, r2\n\t"
-        "mov r0, sl\n\t"
-        "lsr r0, r1\n\t"
-        "orr r3, r0\n\t"
-        "mov r8, r3\n\t"
-        "mov r4, sl\n\t"
-        "lsl r4, r2\n\t"
-        "mov sl, r4\n\t"
-        "lsr r0, r6, #0x10\n\t"
-        "mov sb, r0\n\t"
-        "ldr r1, 43f\n\t"
-        "and r1, r6\n\t"
-        "str r1, [sp, #0x10]\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_803AF1C\n\t"
-        "add r4, r0, #0\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_8037E54\n\t"
-        "add r3, r0, #0\n\t"
-        "ldr r2, [sp, #0x10]\n\t"
-        "add r1, r3, #0\n\t"
-        "mul r1, r2, r1\n\t"
-        "lsl r4, r4, #0x10\n\t"
-        "mov r2, r8\n\t"
-        "lsr r0, r2, #0x10\n\t"
-        "orr r4, r0\n\t"
-        "cmp r4, r1\n\t"
-        "bhs 36f\n\t"
-        "sub r3, #1\n\t"
-        "add r4, r4, r6\n\t"
-        "cmp r4, r6\n\t"
-        "blo 36f\n\t"
-        "cmp r4, r1\n\t"
-        "bhs 36f\n\t"
-        "sub r3, #1\n\t"
-        "add r4, r4, r6\n\t"
-    "36:\n\t"
-        "sub r4, r4, r1\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, sb\n\t"
-        "str r3, [sp, #0x1c]\n\t"
-        "bl sub_803AF1C\n\t"
-        "add r5, r0, #0\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, sb\n\t"
-        "bl sub_8037E54\n\t"
-        "add r2, r0, #0\n\t"
-        "ldr r4, [sp, #0x10]\n\t"
-        "add r1, r2, #0\n\t"
-        "mul r1, r4, r1\n\t"
-        "lsl r5, r5, #0x10\n\t"
-        "ldr r0, 43f\n\t"
-        "mov r4, r8\n\t"
-        "and r4, r0\n\t"
-        "orr r5, r4\n\t"
-        "ldr r3, [sp, #0x1c]\n\t"
-        "cmp r5, r1\n\t"
-        "bhs 37f\n\t"
-        "sub r2, #1\n\t"
-        "add r5, r5, r6\n\t"
-        "cmp r5, r6\n\t"
-        "blo 37f\n\t"
-        "cmp r5, r1\n\t"
-        "bhs 37f\n\t"
-        "sub r2, #1\n\t"
-        "add r5, r5, r6\n\t"
-    "37:\n\t"
-        "lsl r6, r3, #0x10\n\t"
-        "orr r6, r2\n\t"
-        "sub r1, r5, r1\n\t"
-        "mov r8, r1\n\t"
-        "ldr r0, 43f\n\t"
-        "mov sb, r0\n\t"
-        "add r1, r6, #0\n\t"
-        "and r1, r0\n\t"
-        "lsr r3, r6, #0x10\n\t"
-        "add r0, r7, #0\n\t"
-        "mov r2, sb\n\t"
-        "and r0, r2\n\t"
-        "lsr r2, r7, #0x10\n\t"
-        "add r5, r1, #0\n\t"
-        "mul r5, r0, r5\n\t"
-        "add r4, r1, #0\n\t"
-        "mul r4, r2, r4\n\t"
-        "add r1, r3, #0\n\t"
-        "mul r1, r0, r1\n\t"
-        "mul r3, r2, r3\n\t"
-        "lsr r0, r5, #0x10\n\t"
-        "add r4, r4, r0\n\t"
-        "add r4, r4, r1\n\t"
-        "cmp r4, r1\n\t"
-        "bhs 38f\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #9\n\t"
-        "add r3, r3, r0\n\t"
-    "38:\n\t"
-        "lsr r0, r4, #0x10\n\t"
-        "add r3, r3, r0\n\t"
-        "mov r1, sb\n\t"
-        "and r4, r1\n\t"
-        "lsl r0, r4, #0x10\n\t"
-        "and r5, r1\n\t"
-        "add r1, r0, r5\n\t"
-        "cmp r3, r8\n\t"
-        "bhi 39f\n\t"
-        "cmp r3, r8\n\t"
-        "bne 41f\n\t"
-        "cmp r1, sl\n\t"
-        "bls 41f\n\t"
-    "39:\n\t"
-        "sub r6, #1\n\t"
-    "40:\n\t"
-        "sub r0, r1, r7\n\t"
-    "41:\n\t"
-        "mov r2, #0\n\t"
-        "str r2, [sp, #4]\n\t"
-    "42:\n\t"
-        "str r6, [sp, #0x14]\n\t"
-        "ldr r3, [sp, #4]\n\t"
-        "str r3, [sp, #0x18]\n\t"
-        "ldr r0, [sp, #0x14]\n\t"
-        "ldr r1, [sp, #0x18]\n\t"
-        "add sp, #0x20\n\t"
-        "pop {r3, r4, r5}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov sl, r5\n\t"
-        "pop {r4, r5, r6, r7, pc}\n\t"
-        ".align 2, 0\n"
-    "43: .4byte 0x0000FFFF\n"
-    );
+    word_type c = 0;
+    DIunion uu, vv;
+    DItype w;
+
+    uu.ll = u;
+    vv.ll = v;
+
+    if (uu.s.high < 0)
+        c = ~c,
+        uu.ll = __negdi2(uu.ll);
+    if (vv.s.high < 0)
+        c = ~c,
+        vv.ll = __negdi2(vv.ll);
+
+    w = __udivmoddi4_divdi3(uu.ll, vv.ll, (UDItype *)0);
+    if (c)
+        w = __negdi2(w);
+
+    return w;
 }
 
-/* Unsigned 32-bit division (`a / b`, quotient only) - a third sibling
- * of `math_div_util.c`'s `sub_803AF1C`, but with no sign handling and
- * no rotate-based remainder-correction mask, just the plain
- * shift-and-subtract quotient accumulation `sub_803ADB4`'s core loop
- * uses. The existing project-wide callers already declare it
- * `s32 sub_8037E54(s32 value, s32 divisor)` (this file keeps that exact
- * signature) even though the body never inspects either operand's
- * sign - every real call site already only ever passes non-negative
- * values. NAKED for the reason explained in this file's header
- * comment: the ROM has two different prologue shapes depending on
- * path (a bare `push {r4}` on the main path, ending in `mov pc, lr`;
- * a separate minimal `push {lr} ... bl nullsub_8 ... pop {pc}` only on
- * the divide-by-zero path) that this compiler's non-interworking-free
- * return convention can't reproduce from plain C, the same class of
- * gap `math_div_util.c`'s `sub_803ADB4`/`sub_803AE4C`/`sub_803AF1C`
- * already hit. */
+/* `__udivdi3`: unsigned 64-bit division. */
+UDItype sub_8037A7C(UDItype n, UDItype d)
+{
+    return __udivmoddi4_udivdi3(n, d, (UDItype *)0);
+}
+
+/* `__udivsi3`: unsigned 32-bit division, quotient only. Callers
+ * project-wide declare it `s32 sub_8037E54(s32 value, s32 divisor)`.
+ * NAKED because it's lib1funcs.asm's hand-written routine (see the
+ * header comment): its per-path `push {r4}` ... `mov pc, lr` vs `push
+ * {lr}; bl __div0; ...; pop {pc}` shape isn't compiler output. */
 NAKED s32 sub_8037E54(s32 value, s32 divisor)
 {
     asm(
@@ -1251,137 +274,22 @@ NAKED s32 sub_8037E54(s32 value, s32 divisor)
 }
 asm(".align 2, 0");
 
-/* 64x64->64 (truncating) multiply - this ROM's compiled copy of
- * libgcc2.c's classic `__muldi3` (with `__umulsidi3`'s 16-bit-half
- * `umul_ppmm` decomposition fully inlined into it, matching gcc's
- * well-known generic soft-multiply source exactly instruction-for-
- * instruction, confirmed by isolated compile: a plain-C `DWunion`-based
- * reconstruction of this exact algorithm reproduces every single body
- * instruction byte-for-byte). NAKED only for the epilogue gap explained
- * in this file's header comment - not because the body resisted C at
- * all, unlike its four siblings above (the body genuinely matches from
- * real C; only the final `pop {r4-r7, pc}` doesn't). Kept as NAKED
- * rather than a mixed C-body/asm-epilogue function so the whole thing
- * stays one mechanically-verified transcription, matching this file's
- * other NAKED functions. */
-NAKED s64 sub_8037ECC(s64 a, s64 b)
+/* `__muldi3`: 64x64->64 truncating multiply (`__umulsidi3` inlined). */
+DItype sub_8037ECC(DItype u, DItype v)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "sub sp, #0x10\n\t"
-        "str r0, [sp]\n\t"
-        "str r1, [sp, #4]\n\t"
-        "str r2, [sp, #8]\n\t"
-        "str r3, [sp, #0xc]\n\t"
-        "ldr r3, [sp]\n\t"
-        "ldr r0, 2f\n\t"
-        "mov ip, r0\n\t"
-        "add r2, r3, #0\n\t"
-        "and r2, r0\n\t"
-        "lsr r3, r3, #0x10\n\t"
-        "ldr r1, [sp, #8]\n\t"
-        "add r0, r1, #0\n\t"
-        "mov r4, ip\n\t"
-        "and r0, r4\n\t"
-        "lsr r1, r1, #0x10\n\t"
-        "add r5, r2, #0\n\t"
-        "mul r5, r0, r5\n\t"
-        "add r4, r2, #0\n\t"
-        "mul r4, r1, r4\n\t"
-        "add r2, r3, #0\n\t"
-        "mul r2, r0, r2\n\t"
-        "mul r3, r1, r3\n\t"
-        "lsr r0, r5, #0x10\n\t"
-        "add r4, r4, r0\n\t"
-        "add r4, r4, r2\n\t"
-        "cmp r4, r2\n\t"
-        "bhs 1f\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #9\n\t"
-        "add r3, r3, r0\n\t"
-    "1:\n\t"
-        "lsr r0, r4, #0x10\n\t"
-        "add r7, r3, r0\n\t"
-        "mov r1, ip\n\t"
-        "and r4, r1\n\t"
-        "lsl r0, r4, #0x10\n\t"
-        "and r5, r1\n\t"
-        "add r6, r0, #0\n\t"
-        "orr r6, r5\n\t"
-        "add r1, r7, #0\n\t"
-        "add r0, r6, #0\n\t"
-        "ldr r3, [sp]\n\t"
-        "ldr r4, [sp, #0xc]\n\t"
-        "add r2, r3, #0\n\t"
-        "mul r2, r4, r2\n\t"
-        "ldr r5, [sp, #4]\n\t"
-        "ldr r4, [sp, #8]\n\t"
-        "add r3, r5, #0\n\t"
-        "mul r3, r4, r3\n\t"
-        "add r2, r2, r3\n\t"
-        "add r1, r7, r2\n\t"
-        "add sp, #0x10\n\t"
-        "pop {r4, r5, r6, r7, pc}\n\t"
-        ".align 2, 0\n"
-    "2: .4byte 0x0000FFFF\n"
-    );
-}
+    DIunion w;
+    DIunion uu, vv;
 
-extern void sub_803A948(const void *src, void *dst, u32 control);
-
-/* Zero-fills `count` bytes at `dest` - a plain memset helper, not part
- * of the division/multiply family above (it uses this project's normal
- * interworking `pop {reg}; bx reg` return, unlike its four neighbors,
- * and matches real C cleanly), just kept in this same file because it's
- * the last function in this contiguous ROM stretch before
- * `song_slot_lookup.c` (docs/workflow.md's "one file per contiguous ROM
- * region" rule). Byte-fills up to 3 leading bytes one at a time to
- * reach 4-byte alignment, zero-fills the largest 32-byte-aligned chunk
- * of what's left via the BIOS `CpuFastSet` SWI (`sub_803A948`, fixed
- * source address so the same zero word is repeated - `FIXED_SRC`,
- * `0x01000000`), then finishes any trailing remainder one byte at a
- * time. The word count passed to `CpuFastSet` is computed as a signed
- * divide-by-4 of the 32-byte-aligned byte count (correct as-is since
- * that value is always non-negative in every real call site) then
- * masked to `CpuFastSet`'s 21-bit length field - both the signed
- * divide-by-4 and the mask are written out explicitly (rather than as
- * a plain `count / 4`) because that's what reproduces the ROM's own
- * `lsl #9`/`lsr #0xb` combined shift-and-mask codegen; a plain `/ 4`
- * compiles to a bare `asr #2` instead. `cnt`/`remaining` are pinned to
- * `r6`/`r1` (`matching_decomp_register_pinning`) to reproduce the ROM's
- * own register choices - left unpinned, this compiler picks the same
- * logic in `r5`/`r6` instead. */
-void sub_8037F3C(u8 *dest, s32 count)
-{
-    register s32 cnt asm("r6") = count;
-    s32 aligned;
-    u32 zero;
-
-    while ((u32)dest & 3) {
-        *dest++ = 0;
-        cnt--;
-    }
-
-    zero = 0;
-    aligned = cnt & ~0x1F;
-    {
-        s32 corrected = aligned;
-        if (corrected < 0) {
-            corrected += 3;
-        }
-        sub_803A948(&zero, dest, 0x01000000 | (((u32)corrected >> 2) & 0x1FFFFF));
-    }
+    uu.ll = u,
+    vv.ll = v;
 
     {
-        u8 *tail = dest + aligned;
-        register s32 remaining asm("r1") = cnt - aligned;
-
-        if (remaining > 0) {
-            do {
-                *tail++ = 0;
-                remaining--;
-            } while (remaining != 0);
-        }
+        DIunion __w;
+        umul_ppmm(__w.s.high, __w.s.low, uu.s.low, vv.s.low);
+        w.ll = __w.ll;
     }
+    w.s.high += ((USItype)uu.s.low * (USItype)vv.s.high
+                 + (USItype)uu.s.high * (USItype)vv.s.low);
+
+    return w.ll;
 }
-asm(".align 2, 0");

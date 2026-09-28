@@ -1,4 +1,5 @@
 #include "core.h"
+#include "audio.h"
 
 /* GAX2's play-start/init entry point (per docs/audio.md): initializes the
  * runtime player-state object at gUnknown_03001630 (magic, songPtr,
@@ -32,6 +33,228 @@
  * syntax to this project's established NAKED plain/divided syntax, local
  * labels renumbered per docs/matching/issue-4-sio-settings-sync.md's
  * convention), not an inferred control-flow guess. */
+/* Later pass (docs/matching/gax-toolchain-retry.md): the "r8/sb/sl
+ * ceiling" note above is not the real obstacle - a plain draft against
+ * the structs in include/audio.h (below) reproduces the ROM's control
+ * flow, buffer carving, literal pool and most instruction selection
+ * (the tap-table scans need a walking `tap` pointer, the ARM-code copies
+ * pre-loaded source pointers). What's left is register choice: agbcc
+ * gives the format pointer r8 and `maxRate` r9 where the ROM has them
+ * the other way round, which cascades through the rest of the function.
+ * Still NAKED. */
+#if NON_MATCHING
+asm(".set _call_via_r1, sub_803AD7C\n.set __divsi3, sub_803ADB4\n");
+
+struct RateEntry { u32 rate; u32 timer; };
+extern struct GaxHandlerLayout gStaticData_085A4C5C;
+extern struct RateEntry gStaticData_085A6150[];
+extern const u8 *gStaticData_085A614C;
+extern const u32 gStaticData_0803A630[];
+extern const u32 gStaticData_0803A67C[];
+extern const u32 gStaticData_0803A73C[];
+extern const u32 gStaticData_0803A818[];
+extern const char gStaticData_085A61D0[];
+extern const char gStaticData_085A61DC[];
+extern void sub_80392E0(const char *a, const char *b);
+extern void sub_8037F3C(void *dest, s32 count);
+extern s32 sub_8037FA0(u32 rate);
+extern s32 sub_8037E54(s32 a, s32 b);
+extern void sub_80384DC(void);
+extern u8 sub_8038240(struct GaxHandlerLayout *layout, struct GaxHandlerType **sfx, u32 numSfx, u8 **bufp,
+                      u32 *sizep);
+
+#define ALIGN4(buf, size)                                  \
+    {                                                      \
+        u32 pad_ = (((u32)(buf) + 4) & ~3) - (u32)(buf);   \
+        (buf) += pad_;                                     \
+        (size) -= pad_;                                    \
+    }
+
+u32 sub_8038538(struct GaxSongHeader *p)
+{
+    struct GaxChannelFormat *fmt;
+    u32 maxRate = 0;
+    u8 *buf = p->workBuf;
+    u32 size = p->workSize;
+    u32 n;
+    u32 i;
+    s32 idx;
+
+    if (size <= 0x18b)
+        goto fail;
+    gUnknown_03001630 = (struct GaxPlayerState *)buf;
+    buf += 0x18c;
+    size -= 0x18c;
+    if (p->layout == NULL)
+        p->layout = &gStaticData_085A4C5C;
+    if (p->sfxTypes == NULL)
+        p->numSfx = 0;
+    if (p->mixRate == 0xffff)
+        p->mixRate = p->layout->types[1]->data.song->mixRate;
+    if (p->numSfx == 0xffff)
+        p->numSfx = p->layout->types[1]->data.song->numSfx;
+    if (p->field_10 == 0xffff)
+        p->field_10 = 0xff;
+    gUnknown_03001630->magic = 0x47415832;
+    gUnknown_03001630->songPtr = p;
+    gUnknown_03001630->state = 0;
+    gUnknown_03001630->curChannelIdx = 0;
+    gUnknown_03001630->field_24 = 0;
+    gUnknown_03001630->field_41 = 0;
+    gUnknown_03001630->field_43 = 1;
+    n = p->layout->count;
+    if (p->sfxTypes != NULL)
+        n += p->numSfx;
+    gUnknown_03001630->channels[gUnknown_03001630->curChannelIdx] = buf;
+    size = size - n * 4;
+    fmt = (struct GaxChannelFormat *)(buf + n * 4);
+    buf = (u8 *)fmt + 8;
+    size -= 8;
+    gUnknown_03001630->format = fmt;
+    idx = sub_8037FA0(p->mixRate);
+    fmt->field_00 = 8;
+    fmt->channels = 1;
+    fmt->mixRate = gStaticData_085A6150[idx].rate;
+    fmt->frames = fmt->mixRate * 1000 / 0xe94f;
+    gUnknown_03001630->field_34 = gStaticData_085A6150[idx].timer;
+    gUnknown_03001630->field_40 = 0;
+    if (gStaticData_085A614C[2] != 'X' || gStaticData_085A614C[1] != 'A' || gStaticData_085A614C[0] != 'G')
+        gUnknown_03001630->field_34 <<= 1;
+    if (size < (gUnknown_03001630->format->frames + 4) * 2)
+        goto fail;
+    gUnknown_03001630->field_1c = (u32)buf;
+    buf += (gUnknown_03001630->format->frames + 4) * 2;
+    size -= (gUnknown_03001630->format->frames + 4) * 2;
+    ALIGN4(buf, size);
+    gUnknown_03001630->field_2c = 0;
+    if (size < gUnknown_03001630->format->frames * 2)
+        return 0;
+    gUnknown_03001630->field_18 = (u32)buf;
+    buf += gUnknown_03001630->format->frames * 2;
+    size -= gUnknown_03001630->format->frames * 2;
+    sub_8037F3C((void *)gUnknown_03001630->field_18, gUnknown_03001630->format->frames * 2);
+    ALIGN4(buf, size);
+    {
+        struct GaxHandlerLayout *layout;
+        struct GaxDspTap *tap;
+
+        i = 0;
+        layout = p->layout;
+        for (tap = layout->types[0]->data.dsp->taps; i <= 2; tap++, i++) {
+            if (tap->rate > maxRate)
+                maxRate = tap->rate;
+        }
+        if (!(p->flags & 0x10)) {
+            struct GaxHandlerLayout *subs = (struct GaxHandlerLayout *)layout->types[2];
+            if (subs != NULL) {
+                s32 j;
+                for (j = 0; j < (s32)subs->count; j++) {
+                    struct GaxHandlerLayout *sub = (struct GaxHandlerLayout *)subs->types[j];
+                    i = 0;
+                    for (tap = sub->types[0]->data.dsp->taps; i <= 2; tap++, i++) {
+                        if (tap->rate > maxRate)
+                            maxRate = tap->rate;
+                    }
+                }
+            }
+        }
+    }
+    if (maxRate != 0) {
+        struct GaxPlayerState *g;
+        u8 *echo;
+        u32 left;
+        u32 len;
+
+        ALIGN4(buf, size);
+        if (size <= 23)
+            goto fail;
+        g = gUnknown_03001630;
+        g->field_24 = (u32)buf;
+        echo = buf + 24;
+        buf = echo;
+        left = size - 24;
+        size = left;
+        len = sub_8037E54(maxRate * fmt->mixRate, 1000) * 2;
+        if (left < len)
+            goto fail;
+        g->field_20 = (u32)echo;
+        g->field_28 = len;
+        buf = echo + len;
+        size = left - len;
+        ALIGN4(buf, size);
+        sub_8037F3C(echo, len);
+    }
+    {
+    struct GaxHandlerLayout *layout;
+    const u32 *a73c;
+    const u32 *a818;
+    const u32 *src;
+
+    i = 0;
+    layout = p->layout;
+    a73c = gStaticData_0803A73C;
+    a818 = gStaticData_0803A818;
+    src = gStaticData_0803A630;
+    for (; i <= 20; i++)
+        gUnknown_03001630->dspCode48[i] = *src++;
+    src = a73c;
+    for (i = 0; i <= 55; i++)
+        gUnknown_03001630->dspCode9c[i] = *src++;
+    {
+        s32 words;
+        if (layout->types[1]->data.song->field_1b != 0 || (u16)(p->flags & 0x20)) {
+            gUnknown_03001630->field_42 = 1;
+            words = 76;
+        } else {
+            gUnknown_03001630->field_42 = 0;
+            words = 55;
+        }
+        if (size < words * 4)
+            goto fail;
+        gUnknown_03001630->field_44 = buf;
+        buf += words * 4;
+        size -= words * 4;
+        src = a818;
+        for (i = 0; (s32)i < words; i++)
+            ((u32 *)gUnknown_03001630->field_44)[i] = *src++;
+    }
+    }
+    if ((u16)(p->flags & 4)) {
+        if (size <= 239)
+            goto fail;
+        gUnknown_03001630->dspFn17c = buf;
+        buf += 240;
+        size -= 240;
+        for (i = 0; i <= 59; i++)
+            ((u32 *)gUnknown_03001630->dspFn17c)[i] = gStaticData_0803A67C[i];
+    } else {
+        gUnknown_03001630->dspFn17c = NULL;
+    }
+    gUnknown_03001630->field_180 = 0;
+    if (!sub_8038240(p->layout, p->sfxTypes, p->numSfx, &buf, &size))
+        goto fail;
+    ALIGN4(buf, size);
+    GAX_MIXER()->extraChildren = p->numSfx;
+    GAX_MIXER()->field_10 = gUnknown_03001630->field_1c;
+    GAX_MIXER()->type->init(GAX_MIXER());
+    gUnknown_03001630->workBuf = buf;
+    gUnknown_03001630->workSize = size;
+    sub_80384DC();
+    gUnknown_03001630->state = 1;
+    GAX_INFO()->field_20 = (p->flags >> 3) & 1;
+    GAX_SONG()->field_39 = 0;
+    GAX_SONG()->field_3a = 0;
+    if ((u16)(p->flags & 2) && ((u32 *)GAX_MIXER()->type->data.dsp)[1] != 0)
+        gUnknown_03001630->field_40 = 1;
+    else
+        gUnknown_03001630->field_40 = 0;
+    return 1;
+fail:
+    if (p->showErrors)
+        sub_80392E0(gStaticData_085A61D0, gStaticData_085A61DC);
+    return 0;
+}
+#else /* !NON_MATCHING */
 NAKED u32 sub_8038538(void *gaxState)
 {
     asm(
@@ -681,3 +904,4 @@ NAKED u32 sub_8038538(void *gaxState)
         "L8538_53: .4byte gStaticData_085A61DC\n\t"
     );
 }
+#endif /* NON_MATCHING */

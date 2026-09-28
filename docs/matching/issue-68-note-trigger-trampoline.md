@@ -117,3 +117,7 @@ matched or parked (none left completely raw). Issue #68 stays open,
 though, since 12 of the chunk's 21 functions are NAKED-parked rather
 than matched - see `docs/status/audio.md` for the current matched/
 parked breakdown.
+
+## Later pass: GAX toolchain retry
+
+The trampoline is expressible after all (`GAX_CALL_ARM_R`, `include/audio.h`) and `sub_8039E50` is just its return point. `sub_8039B44` stays NAKED, but a complete draft is now kept under `#if NON_MATCHING`; its remaining gap is register allocation. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).

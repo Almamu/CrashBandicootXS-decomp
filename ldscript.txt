@@ -385,6 +385,7 @@ SECTIONS
         build/crashbandicootxs/src/audio/counter_selector_icons.o(.text);
         build/crashbandicootxs/src/audio/counter_selector_setup.o(.text);
         build/crashbandicootxs/src/util/math_div64_util.o(.text);
+        build/crashbandicootxs/src/audio/gax_zero_fill.o(.text);
         build/crashbandicootxs/src/audio/song_slot_lookup.o(.text);
         build/crashbandicootxs/asm/code_3_2_20c.o(.text);
         build/crashbandicootxs/src/audio/sound_object_init.o(.text);

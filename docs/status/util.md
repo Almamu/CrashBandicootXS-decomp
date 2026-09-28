@@ -27,12 +27,18 @@ helpers.
   handler) - a genuinely trivial no-op stub with no real C logic to
   express. (This file's `sub_803ADB4`/`sub_803AE4C`/`sub_803AF1C` are
   NAKED transcriptions tracked as parked - see below.)
-- `src/util/math_div64_util.c` (new file, GitHub issue #66, ROM
-  `0x08037648`-`0x08037FA0`): `sub_8037F3C` (zero-fill memset helper via
-  the BIOS `CpuFastSet` SWI) - the 64-bit division/multiply family's
-  neighbor in this contiguous ROM slice, not part of the family itself
-  (see below for the other four). See
-  `docs/matching/issue-66-67-math-div64-util.md`.
+- `src/util/math_div64_util.c` (GitHub issue #66, ROM
+  `0x08037648`-`0x08037F3C`): `sub_8037648` (`__divdi3`, UNUSED),
+  `sub_8037A7C` (`__udivdi3`), `sub_8037ECC` (`__muldi3`) - GAX2's
+  bundled libgcc2.c code. This object is built without
+  `-mthumb-interwork` (the Makefile's `NO_INTERWORK_OBJS`): the ROM's
+  combined `pop {r4-r7, pc}` returns are just agbcc's non-interworking
+  epilogue, and with the flag dropped these are libgcc2.c's own source,
+  verbatim (`include/libgcc2_udivmoddi4.h` holds `__udivmoddi4`). See
+  `docs/matching/gax-toolchain-retry.md`. (`sub_8037F3C`, the zero-fill
+  helper that used to share this file, moved to
+  `src/audio/gax_zero_fill.c` - it's GAX2 engine code with a normal
+  interworking return.)
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -53,16 +59,12 @@ embedded as asm instead. They're tracked as parked, not matched.
   agbcc's plain-C codegen can't reproduce. GitHub issue #70, see
   `docs/matching/issue-69-eeprom-timer.md`'s "NAKED transcription pass"
   section.
-- **`sub_8037648`** (`src/util/math_div64_util.c`, signed 64-bit
-  division - UNUSED, no caller anywhere in the ROM), **`sub_8037A7C`**
-  (unsigned 64-bit division), **`sub_8037E54`** (unsigned 32-bit
-  division, quotient only), **`sub_8037ECC`** (64x64->64 truncating
-  multiply, this ROM's compiled `__muldi3`/`__umulsidi3`) - a
-  non-interworking `pop {r4-r7, pc}` / bare `mov pc, lr` return
-  convention this project's `-mthumb-interwork` build can't reproduce
-  from any C phrasing (confirmed by direct isolated-compile experiment,
-  not just precedent). GitHub issue #66, see
-  `docs/matching/issue-66-67-math-div64-util.md`.
+- **`sub_8037E54`** (`src/util/math_div64_util.c`, `__udivsi3`) -
+  lib1funcs.asm's hand-written Thumb routine (per-path `push {r4}` /
+  `push {lr}; bl __div0` shapes, `mov pc, lr` return), not compiler
+  output, so NAKED is its legitimate final state - the same situation
+  as `math_div_util.c`'s trio above. GitHub issue #66, see
+  `docs/matching/gax-toolchain-retry.md`.
 
 ## Other notes
 

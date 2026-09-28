@@ -1,620 +1,307 @@
 #include "core.h"
+#include "audio.h"
 
 extern struct GaxPlayerState *gUnknown_03001630;
+
+/* sub_800014C is this ROM's memcpy (reached from the non-constant
+ * aggregate initializers below); sub_803AD84 is libgcc's
+ * `_call_via_r3` (the function-pointer calls through `ops->play`). */
+asm(".set memcpy, sub_800014C\n"
+    ".set _call_via_r3, sub_803AD84\n");
 
 /* This file's functions (issue #68's remainder past
  * `gax_sound_handler_unknownc.c`) finish out the GAX2_SoundHandler
  * "UnknownC" type's function-pointer table: `sub_803A324` is its
- * `play_fn`. All of them are entangled with a manual return-address
- * trampoline idiom used throughout this GAX2 engine to call an
- * interworked function pointer from Thumb on ARMv4T (which has no
- * `blx reg`): `mov r2, pc; adds r2, #5; mov lr, r2; bx r1` computes a
- * Thumb-tagged return address by hand (PC-relative, not a symbol) and
- * jumps through `r1` (a slot out of `gUnknown_03001630`'s own
- * function-pointer table, sometimes genuine ARM-mode code - see
- * docs/audio.md's raw `gStaticData_0803A630` DSP block right after
- * this file's range) instead of a normal `bl`.
+ * `play_fn`, and the other three hand a small work item to one of the
+ * ARM DSP routines copied into `gUnknown_03001630` (see the raw block at
+ * the end of this file) through `GAX_CALL_ARM` (include/audio.h) - a
+ * hand-computed return address plus `bx`, since ARMv4T Thumb has no
+ * `blx reg`.
  *
- * `sub_803A278` returns to its own next instruction, so it is a
- * self-contained NAKED function. `sub_803A2C8`'s trampoline instead
- * returns to an address that lands *inside* what the ROM's own
- * disassembly labels as a separate function, `sub_803A318` - which is
- * simultaneously nothing but `sub_803A2C8`'s own epilogue (`add sp,
- * #0x3c; pop {r4,r5,r6}; pop {r0}; bx r0`) and is never itself called
- * from anywhere in the ROM (checked every `asm/*.s`/`expected/*.s`/
- * `src/*` file for a `bl sub_803A318` or `.4byte sub_803A318` - none
- * exists). The two are one physical unit; splitting them into two
- * independent compiled C functions would require a compiler-inserted
- * function boundary to land at exactly the byte offset the ROM's
- * automatic per-function alignment happens to produce, which isn't
- * something plain C can direct - so `sub_803A2C8`'s NAKED body below
- * includes `sub_803A318`'s bytes verbatim, with a `.thumb_func`/label
- * pair emitted purely so the address still carries its ROM name for
- * anyone disassembling the object, not as a second callable C
- * function. `sub_803A5A8`/`sub_803A608` are the same idiom (the
- * trampoline call's return address lands inside `sub_803A608`, which
- * itself just `nop`s past an unrelated branch and rejoins
- * `sub_803A5A8`'s own shared epilogue) and are fused the same way.
+ * The ROM disassembly shows two extra labels, `sub_803A318` and
+ * `sub_803A608`, sitting right at `GAX_CALL_ARM`'s return point inside
+ * `sub_803A2C8`/`sub_803A5A8` (the trailing `nop` and the shared
+ * epilogue). Neither is ever called from anywhere in the ROM - they're
+ * disassembler artifacts of the hand-computed return address, not real
+ * functions, and disappear now that both are plain C.
  *
- * All four are NAKED asm, not plain C: beyond the trampoline idiom
- * itself (inexpressible in portable C - no intrinsic for "compute a
- * Thumb return address and `bx` a register" on ARMv4T), `sub_803A324`
- * additionally hits the same many-register gcc-2.9 allocation ceiling
- * documented throughout this ROM region (confirmed via isolated
- * compile of a first-pass real-C reconstruction in an earlier pass -
- * see docs/matching/issue-68-0x08039818-audio.md). Mechanical,
- * byte-verified transcriptions of the ROM's own instructions
- * (translated from the disassembler's unified syntax to this
- * project's established NAKED plain/divided syntax, local labels
- * renumbered per docs/matching/issue-4-sio-settings-sync.md's
- * convention), not inferred control flow. */
+ * All four were NAKED until a later pass found the call idiom is
+ * reproducible as narrow inline asm with a `"m"` operand (see
+ * docs/matching/gax-toolchain-retry.md). */
 
-/* Builds a 5-word work item (two caller-supplied words plus three
- * fields copied out of `gUnknown_03001630`) on the stack and forwards
- * it through `sub_800014C`, then trampolines into
- * `gUnknown_03001630+0x9c`'s function pointer, returning here
- * afterward. */
-NAKED void sub_803A278(void *self, void *info)
+/* Only the parts of the song/channel/handler objects this file touches. */
+struct GaxSongInfo3 {
+    u8 pad_00[0x1b];
+    u8 field_1b;                 /* 0x1b */
+};
+
+struct GaxSongInfo2 {
+    u8 pad_00[0x18];
+    struct GaxSongInfo3 *field_18; /* 0x18 */
+};
+
+struct GaxSongInfo1 {
+    u8 pad_00[8];
+    struct GaxSongInfo2 *field_08; /* 0x08 */
+};
+
+struct GaxSong {
+    u8 pad_00[0xc];
+    u16 flags;                   /* 0x0c */
+    u8 pad_0e[0x30 - 0xe];
+    struct GaxSongInfo1 *field_30; /* 0x30 */
+};
+
+struct GaxVoice {
+    u8 pad_00[0x18];
+    u8 active;                   /* 0x18 */
+};
+
+struct GaxChanInfo {
+    u8 pad_00[0x1f];
+    u8 field_1f;                 /* 0x1f */
+};
+
+struct GaxChannel {
+    u32 field_00;
+    struct GaxChanInfo *info;    /* 0x04 */
+    u32 field_08;
+    struct GaxVoice *voices[1];  /* 0x0c - really hdr->childCount long */
+};
+
+struct UnknownCFormat {
+    u8 pad_00;
+    u8 channels;                 /* 0x01 */
+    u8 pad_02[2];
+    u16 frames;                  /* 0x04 */
+};
+
+struct UnknownCChild;
+
+struct UnknownCChildOps {
+    u32 field_00[2];
+    u8 (*play)(struct UnknownCChild *child, u32 *buf, u32 arg);  /* 0x08 */
+};
+
+struct UnknownCChild {
+    struct UnknownCChildOps *ops;
+    u8 pad_04[9];
+    u8 isFirst;                  /* 0x0d */
+};
+
+struct UnknownCCounts {
+    u32 primary;                 /* 0x00 */
+    u32 field_04;                /* 0x04 */
+};
+
+struct UnknownCHdr {
+    u8 pad_00[8];
+    u8 (*step)(void *self, u32 a, u32 b);  /* 0x08 */
+    u32 childCount;              /* 0x0c */
+    u8 pad_10[8];
+    struct UnknownCCounts *counts; /* 0x18 */
+};
+
+struct UnknownC {
+    struct UnknownCHdr *hdr;       /* 0x00 */
+    struct UnknownCFormat *format; /* 0x04 */
+    struct UnknownCChild **children; /* 0x08 */
+    u32 pos;                       /* 0x0c */
+    u32 field_10;                  /* 0x10 */
+    u32 extraChildren;             /* 0x14 */
+};
+
+struct GaxWorkItem5 {
+    u32 bytes;
+    u32 *buf;
+    u32 field_20;
+    u32 field_28;
+    u32 field_24;
+};
+
+struct GaxWorkItem7 {
+    u32 *buf;
+    u32 bytes;
+    u32 clamp;
+    u32 count;
+    u32 field_20;
+    u32 field_28;
+    u32 field_24;
+};
+
+struct GaxWorkItem4 {
+    u32 field_10;
+    u32 *buf;
+    u32 samples;
+    u32 step;
+};
+
+/* Runs `gUnknown_03001630+0x9c`'s ARM routine over a 5-word work item
+ * built from the buffer size and three player-state fields. */
+void sub_803A278(struct UnknownC *self, u32 *buf)
 {
-    asm(
-        "push {r4, lr}\n\t"
-        "sub sp, sp, #0x2c\n\t"
-        "ldr r0, [r0, #4]\n\t"
-        "ldrh r2, [r0, #4]\n\t"
-        "ldrb r0, [r0, #1]\n\t"
-        "mul r0, r2, r0\n\t"
-        "lsl r0, r0, #1\n\t"
-        "ldr r4, 1f\n\t"
-        "ldr r2, [r4]\n\t"
-        "ldr r3, [r2, #0x20]\n\t"
-        "str r0, [sp, #0x14]\n\t"
-        "str r1, [sp, #0x18]\n\t"
-        "str r3, [sp, #0x1c]\n\t"
-        "ldr r0, [r2, #0x28]\n\t"
-        "str r0, [sp, #0x20]\n\t"
-        "ldr r0, [r2, #0x24]\n\t"
-        "str r0, [sp, #0x24]\n\t"
-        "add r1, sp, #0x14\n\t"
-        "mov r0, sp\n\t"
-        "mov r2, #0x14\n\t"
-        "bl sub_800014C\n\t"
-        "mov r0, sp\n\t"
-        "str r0, [sp, #0x28]\n\t"
-        "ldr r3, [r4]\n\t"
-        "add r3, r3, #0x9c\n\t"
-        "add r1, r3, #0\n\t"
-        "ldr r0, [sp, #0x28]\n\t"
-        "mov r2, pc\n\t"
-        "add r2, r2, #5\n\t"
-        "mov lr, r2\n\t"
-        "bx r1\n\t"
-    "2:\n\t"
-        "nop\n\t"
-        "add sp, sp, #0x2c\n\t"
-        "pop {r4}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n\t"
-    "1: .4byte gUnknown_03001630\n\t"
-    );
+    u32 bytes = self->format->frames * self->format->channels * 2;
+    struct GaxPlayerState *st = gUnknown_03001630;
+    u32 f20 = st->field_20;
+    struct GaxWorkItem5 item = { bytes, buf, f20, st->field_28, st->field_24 };
+    void *arg;
+
+    arg = &item;
+    GAX_CALL_ARM(gUnknown_03001630->dspCode9c, arg);
 }
 
-/* Same shape as `sub_803A278` above (a 7-word work item this time,
- * with an extra `0x55 - arg2` clamp word) trampolining through
- * `gUnknown_03001630+0x17c`'s function pointer - fused with
- * `sub_803A318`'s epilogue-only "function" as explained in this file's
- * header comment. */
-NAKED void sub_803A2C8(void *self, void *info, u32 clampArg, u32 count)
+/* Same shape as `sub_803A278` (a 7-word work item this time, with an
+ * extra `0x55 - clampArg` word) through `gUnknown_03001630+0x17c`'s
+ * optional ARM routine. */
+void sub_803A2C8(struct UnknownC *self, u32 *buf, u32 clampArg, u32 count)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "sub sp, sp, #0x3c\n\t"
-        "ldr r0, [r0, #4]\n\t"
-        "ldrh r4, [r0, #4]\n\t"
-        "ldrb r0, [r0, #1]\n\t"
-        "mul r0, r4, r0\n\t"
-        "lsl r0, r0, #1\n\t"
-        "ldr r6, 1f\n\t"
-        "ldr r4, [r6]\n\t"
-        "ldr r5, [r4, #0x20]\n\t"
-        "str r1, [sp, #0x1c]\n\t"
-        "str r0, [sp, #0x20]\n\t"
-        "mov r0, #0x55\n\t"
-        "sub r0, r0, r2\n\t"
-        "str r0, [sp, #0x24]\n\t"
-        "str r3, [sp, #0x28]\n\t"
-        "str r5, [sp, #0x2c]\n\t"
-        "ldr r0, [r4, #0x28]\n\t"
-        "str r0, [sp, #0x30]\n\t"
-        "ldr r0, [r4, #0x24]\n\t"
-        "str r0, [sp, #0x34]\n\t"
-        "add r1, sp, #0x1c\n\t"
-        "mov r0, sp\n\t"
-        "mov r2, #0x1c\n\t"
-        "bl sub_800014C\n\t"
-        "mov r0, sp\n\t"
-        "str r0, [sp, #0x38]\n\t"
-        "ldr r3, [r6]\n\t"
-        "mov r0, #0xbe\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r3, r3, r0\n\t"
-        "ldr r3, [r3]\n\t"
-        "add r1, r3, #0\n\t"
-        "ldr r0, [sp, #0x38]\n\t"
-        "mov r2, pc\n\t"
-        "add r2, r2, #5\n\t"
-        "mov lr, r2\n\t"
-        "bx r1\n\t"
-        "nop\n\t"
-        ".thumb_func\n\t"
-        ".global sub_803A318\n\t"
-    "sub_803A318:\n\t"
-        "add sp, sp, #0x3c\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-    "1: .4byte gUnknown_03001630\n\t"
-    );
+    u32 bytes = self->format->frames * self->format->channels * 2;
+    struct GaxPlayerState *st = gUnknown_03001630;
+    u32 f20 = st->field_20;
+    struct GaxWorkItem7 item = { buf, bytes, 0x55 - clampArg, count, f20, st->field_28, st->field_24 };
+    void *arg;
+
+    arg = &item;
+    GAX_CALL_ARM(gUnknown_03001630->dspFn17c, arg);
 }
 
-/* UnknownC type's `play_fn`: loops one of two child-array kinds
- * (`self+8`, count from either `self->0->0x18->0->count` or
- * `self->0->0xc + self->0x14` depending on `info+0x41`) dispatching
- * each entry's own function pointer through `sub_803AD84`, ORing the
- * accumulated boolean result into `r6`; separately, when
- * `info+0x40` is set, zero-fills a stack-relative buffer sized from
- * `info->0x30->8->0x18` when needed and, if every entry down the
- * `self+0x14`-counted child list has its own `+0xc->+0x18` flag clear,
- * forwards into `sub_803A278`; then repeats a near-identical
- * OR-accumulate loop a second time and, if the running clamp (capped
- * at `0x55`) and `gUnknown_03001630+0x17c` slot are both non-zero,
- * forwards into `sub_803A2C8`; finally re-runs the `info+0x40` zero/
- * loop block once more before clearing `info+0x41` and returning the
- * accumulated boolean. Object shape not modeled yet (same situation as
- * the rest of this GAX2_SoundHandler cluster) - kept as raw offsets. */
-NAKED u32 sub_803A324(void *self, void *info, u32 arg2)
+/* Zero-fills `format->frames * format->channels` halfwords of `buf`,
+ * a word at a time. */
+#define UNKNOWNC_CLEAR(self, buf)                                          \
+    {                                                                      \
+        s32 len_ = (self)->format->frames * (self)->format->channels * 2; \
+        u32 *p_ = (buf);                                                   \
+        result = 1;                                                        \
+        while (len_ > 0) {                                                 \
+            *p_++ = 0;                                                     \
+            len_ -= 4;                                                     \
+        }                                                                  \
+    }
+
+/* Plays children `[first, end)`, ORing their "produced output" results. */
+#define UNKNOWNC_PLAY_CHILD(self, i, buf, arg2)                                  \
+    {                                                                            \
+        (self)->children[i]->isFirst = (result == 0);                            \
+        result |= (self)->children[i]->ops->play((self)->children[i], buf, arg2); \
+    }
+
+/* UnknownC type's `play_fn`: plays the primary children (unless
+ * `gUnknown_03001630+0x41` is set), then the extra children either
+ * before or after the `sub_803A278`/`sub_803A2C8` DSP passes depending
+ * on `gUnknown_03001630+0x40`, zero-filling `buf` first whenever nothing
+ * has produced output yet. Returns whether anything did. */
+u8 sub_803A324(struct UnknownC *self, u32 *buf, u32 arg2)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sb\n\t"
-        "mov r6, r8\n\t"
-        "push {r6, r7}\n\t"
-        "add r5, r0, #0\n\t"
-        "mov r8, r1\n\t"
-        "mov sb, r2\n\t"
-        "mov r6, #0\n\t"
-        "ldr r0, 1f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r0, r0, #0x41\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 4f\n\t"
-        "mov r4, #0\n\t"
-        "ldr r0, [r5]\n\t"
-        "ldr r0, [r0, #0x18]\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r6, r0\n\t"
-        "bhs 4f\n\t"
-    "10:\n\t"
-        "ldr r0, [r5, #8]\n\t"
-        "lsl r1, r4, #2\n\t"
-        "add r0, r1, r0\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0\n\t"
-        "cmp r6, #0\n\t"
-        "bne 11f\n\t"
-        "mov r2, #1\n\t"
-    "11:\n\t"
-        "strb r2, [r0, #0xd]\n\t"
-        "ldr r0, [r5, #8]\n\t"
-        "add r0, r1, r0\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldr r3, [r1, #8]\n\t"
-        "mov r1, r8\n\t"
-        "mov r2, sb\n\t"
-        "bl sub_803AD84\n\t"
-        "orr r6, r0\n\t"
-        "lsl r0, r6, #0x18\n\t"
-        "lsr r6, r0, #0x18\n\t"
-        "add r4, r4, #1\n\t"
-        "ldr r0, [r5]\n\t"
-        "ldr r0, [r0, #0x18]\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r4, r0\n\t"
-        "blo 10b\n\t"
-    "4:\n\t"
-        "ldr r0, 1f\n\t"
-        "ldr r1, [r0]\n\t"
-        "add r0, r1, #0\n\t"
-        "add r0, r0, #0x40\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 12f\n\t"
-        "ldr r3, [r5]\n\t"
-        "ldr r7, [r5, #0x14]\n\t"
-        "cmp r6, #0\n\t"
-        "bne 13f\n\t"
-        "ldr r1, [r1, #4]\n\t"
-        "ldr r0, [r1, #0x30]\n\t"
-        "ldr r0, [r0, #8]\n\t"
-        "ldr r0, [r0, #0x18]\n\t"
-        "ldrb r0, [r0, #0x1b]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 14f\n\t"
-        "ldrh r1, [r1, #0xc]\n\t"
-        "mov r0, #0x20\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "beq 13f\n\t"
-    "14:\n\t"
-        "ldr r0, [r5, #4]\n\t"
-        "ldrh r1, [r0, #4]\n\t"
-        "ldrb r0, [r0, #1]\n\t"
-        "mul r0, r1, r0\n\t"
-        "lsl r0, r0, #1\n\t"
-        "mov r2, r8\n\t"
-        "mov r6, #1\n\t"
-        "ldr r3, [r5]\n\t"
-        "ldr r7, [r5, #0x14]\n\t"
-        "cmp r0, #0\n\t"
-        "ble 13f\n\t"
-        "mov r1, #0\n\t"
-    "15:\n\t"
-        "stmia r2!, {r1}\n\t"
-        "sub r0, r0, #4\n\t"
-        "cmp r0, #0\n\t"
-        "bgt 15b\n\t"
-    "13:\n\t"
-        "ldr r4, [r3, #0xc]\n\t"
-        "add r0, r4, r7\n\t"
-        "cmp r4, r0\n\t"
-        "bhs 12f\n\t"
-    "16:\n\t"
-        "ldr r0, [r5, #8]\n\t"
-        "lsl r1, r4, #2\n\t"
-        "add r0, r1, r0\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0\n\t"
-        "cmp r6, #0\n\t"
-        "bne 17f\n\t"
-        "mov r2, #1\n\t"
-    "17:\n\t"
-        "strb r2, [r0, #0xd]\n\t"
-        "ldr r0, [r5, #8]\n\t"
-        "add r0, r1, r0\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldr r3, [r1, #8]\n\t"
-        "mov r1, r8\n\t"
-        "mov r2, sb\n\t"
-        "bl sub_803AD84\n\t"
-        "orr r6, r0\n\t"
-        "lsl r0, r6, #0x18\n\t"
-        "lsr r6, r0, #0x18\n\t"
-        "add r4, r4, #1\n\t"
-        "ldr r0, [r5]\n\t"
-        "ldr r0, [r0, #0xc]\n\t"
-        "ldr r1, [r5, #0x14]\n\t"
-        "add r0, r0, r1\n\t"
-        "cmp r4, r0\n\t"
-        "blo 16b\n\t"
-    "12:\n\t"
-        "ldr r0, [r5]\n\t"
-        "ldr r1, [r0, #0x18]\n\t"
-        "ldr r1, [r1, #4]\n\t"
-        "add r3, r0, #0\n\t"
-        "cmp r1, #0\n\t"
-        "beq 18f\n\t"
-        "ldr r4, 1f\n\t"
-        "cmp r6, #0\n\t"
-        "bne 19f\n\t"
-        "ldr r0, [r5, #4]\n\t"
-        "ldrh r1, [r0, #4]\n\t"
-        "ldrb r0, [r0, #1]\n\t"
-        "mul r0, r1, r0\n\t"
-        "lsl r0, r0, #1\n\t"
-        "mov r1, r8\n\t"
-        "mov r6, #1\n\t"
-        "cmp r0, #0\n\t"
-        "ble 19f\n\t"
-        "mov r2, #0\n\t"
-    "20:\n\t"
-        "stmia r1!, {r2}\n\t"
-        "sub r0, r0, #4\n\t"
-        "cmp r0, #0\n\t"
-        "bgt 20b\n\t"
-    "19:\n\t"
-        "mov r7, #1\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldr r1, [r0, #0x10]\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r0, r0, #8\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldr r0, [r1, #4]\n\t"
-        "ldrb r0, [r0, #0x1f]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 21f\n\t"
-        "mov r4, #0\n\t"
-        "ldr r0, [r3, #0xc]\n\t"
-        "cmp r4, r0\n\t"
-        "bhs 21f\n\t"
-        "add r2, r0, #0\n\t"
-    "22:\n\t"
-        "ldr r0, [r1, #0xc]\n\t"
-        "ldrb r0, [r0, #0x18]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 23f\n\t"
-        "mov r7, #0\n\t"
-    "23:\n\t"
-        "add r1, r1, #4\n\t"
-        "add r4, r4, #1\n\t"
-        "cmp r4, r2\n\t"
-        "bhs 21f\n\t"
-        "cmp r7, #0\n\t"
-        "bne 22b\n\t"
-    "21:\n\t"
-        "cmp r7, #0\n\t"
-        "bne 18f\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r1, r8\n\t"
-        "bl sub_803A278\n\t"
-    "18:\n\t"
-        "ldr r0, 1f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r0, r0, #0x41\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 24f\n\t"
-        "ldr r0, [r5]\n\t"
-        "ldr r1, [r0, #0x18]\n\t"
-        "ldr r4, [r1]\n\t"
-        "b 26f\n\t"
-        ".align 2, 0\n\t"
-    "1: .4byte gUnknown_03001630\n\t"
-    "25:\n\t"
-        "ldr r0, [r5, #8]\n\t"
-        "lsl r1, r4, #2\n\t"
-        "add r0, r1, r0\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0\n\t"
-        "cmp r6, #0\n\t"
-        "bne 27f\n\t"
-        "mov r2, #1\n\t"
-    "27:\n\t"
-        "strb r2, [r0, #0xd]\n\t"
-        "ldr r0, [r5, #8]\n\t"
-        "add r0, r1, r0\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldr r3, [r1, #8]\n\t"
-        "mov r1, r8\n\t"
-        "mov r2, sb\n\t"
-        "bl sub_803AD84\n\t"
-        "orr r6, r0\n\t"
-        "lsl r0, r6, #0x18\n\t"
-        "lsr r6, r0, #0x18\n\t"
-        "add r4, r4, #1\n\t"
-        "ldr r0, [r5]\n\t"
-    "26:\n\t"
-        "ldr r0, [r0, #0xc]\n\t"
-        "cmp r4, r0\n\t"
-        "blo 25b\n\t"
-    "24:\n\t"
-        "ldr r0, 2f\n\t"
-        "ldr r1, [r0]\n\t"
-        "mov r2, #0xc0\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r0, r1, r2\n\t"
-        "ldr r2, [r0]\n\t"
-        "cmp r2, #0x55\n\t"
-        "bls 28f\n\t"
-        "mov r2, #0x55\n\t"
-    "28:\n\t"
-        "str r2, [r0]\n\t"
-        "mov r3, #0xbe\n\t"
-        "lsl r3, r3, #1\n\t"
-        "add r0, r1, r3\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 29f\n\t"
-        "cmp r2, #0\n\t"
-        "beq 29f\n\t"
-        "ldr r0, [r5]\n\t"
-        "ldr r3, [r0, #0xc]\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r1, r8\n\t"
-        "bl sub_803A2C8\n\t"
-    "29:\n\t"
-        "ldr r0, 2f\n\t"
-        "ldr r1, [r0]\n\t"
-        "add r0, r1, #0\n\t"
-        "add r0, r0, #0x40\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 30f\n\t"
-        "ldr r3, [r5]\n\t"
-        "ldr r7, [r5, #0x14]\n\t"
-        "cmp r6, #0\n\t"
-        "bne 31f\n\t"
-        "ldr r1, [r1, #4]\n\t"
-        "ldr r0, [r1, #0x30]\n\t"
-        "ldr r0, [r0, #8]\n\t"
-        "ldr r0, [r0, #0x18]\n\t"
-        "ldrb r0, [r0, #0x1b]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 32f\n\t"
-        "ldrh r1, [r1, #0xc]\n\t"
-        "mov r0, #0x20\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "beq 31f\n\t"
-    "32:\n\t"
-        "ldr r0, [r5, #4]\n\t"
-        "ldrh r1, [r0, #4]\n\t"
-        "ldrb r0, [r0, #1]\n\t"
-        "mul r0, r1, r0\n\t"
-        "lsl r0, r0, #1\n\t"
-        "mov r2, r8\n\t"
-        "mov r6, #1\n\t"
-        "ldr r3, [r5]\n\t"
-        "ldr r7, [r5, #0x14]\n\t"
-        "cmp r0, #0\n\t"
-        "ble 31f\n\t"
-        "mov r1, #0\n\t"
-    "33:\n\t"
-        "stmia r2!, {r1}\n\t"
-        "sub r0, r0, #4\n\t"
-        "cmp r0, #0\n\t"
-        "bgt 33b\n\t"
-    "31:\n\t"
-        "ldr r4, [r3, #0xc]\n\t"
-        "add r0, r4, r7\n\t"
-        "cmp r4, r0\n\t"
-        "bhs 30f\n\t"
-    "34:\n\t"
-        "ldr r0, [r5, #8]\n\t"
-        "lsl r1, r4, #2\n\t"
-        "add r0, r1, r0\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0\n\t"
-        "cmp r6, #0\n\t"
-        "bne 35f\n\t"
-        "mov r2, #1\n\t"
-    "35:\n\t"
-        "strb r2, [r0, #0xd]\n\t"
-        "ldr r0, [r5, #8]\n\t"
-        "add r0, r1, r0\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldr r3, [r1, #8]\n\t"
-        "mov r1, r8\n\t"
-        "mov r2, sb\n\t"
-        "bl sub_803AD84\n\t"
-        "orr r6, r0\n\t"
-        "lsl r0, r6, #0x18\n\t"
-        "lsr r6, r0, #0x18\n\t"
-        "add r4, r4, #1\n\t"
-        "ldr r0, [r5]\n\t"
-        "ldr r0, [r0, #0xc]\n\t"
-        "ldr r1, [r5, #0x14]\n\t"
-        "add r0, r0, r1\n\t"
-        "cmp r4, r0\n\t"
-        "blo 34b\n\t"
-    "30:\n\t"
-        "ldr r0, 2f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r0, r0, #0x41\n\t"
-        "mov r1, #0\n\t"
-        "strb r1, [r0]\n\t"
-        "add r0, r6, #0\n\t"
-        "pop {r3, r4}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n\t"
-    "2: .4byte gUnknown_03001630\n\t"
-    );
+    u8 result = 0;
+    u32 i;
+
+    if (gUnknown_03001630->field_41 == 0) {
+        for (i = 0; i < self->hdr->counts->primary; i++)
+            UNKNOWNC_PLAY_CHILD(self, i, buf, arg2);
+    }
+    if (gUnknown_03001630->field_40 != 0) {
+        if (result == 0) {
+            struct GaxSong *song = gUnknown_03001630->songPtr;
+            if (song->field_30->field_08->field_18->field_1b != 0 || (song->flags & 0x20))
+                UNKNOWNC_CLEAR(self, buf);
+        }
+        for (i = self->hdr->childCount; i < self->hdr->childCount + self->extraChildren; i++)
+            UNKNOWNC_PLAY_CHILD(self, i, buf, arg2);
+    }
+    if (self->hdr->counts->field_04 != 0) {
+        u8 allIdle;
+        struct GaxChannel *chan;
+
+        if (result == 0)
+            UNKNOWNC_CLEAR(self, buf);
+        allIdle = 1;
+        chan = gUnknown_03001630->channels[gUnknown_03001630->curChannelIdx];
+        if (chan->info->field_1f != 0) {
+            /* Walks `chan->voices[]` by advancing `chan` itself one
+             * pointer at a time - this is what keeps the ROM's
+             * `ldr rX, [chan, #0xc]` addressing inside the loop. */
+            for (i = 0; i < self->hdr->childCount && allIdle; i++) {
+                if (chan->voices[0]->active != 0)
+                    allIdle = 0;
+                chan = (struct GaxChannel *)((struct GaxVoice **)chan + 1);
+            }
+        }
+        if (allIdle == 0)
+            sub_803A278(self, buf);
+    }
+    if (gUnknown_03001630->field_41 == 0) {
+        for (i = self->hdr->counts->primary; i < self->hdr->childCount; i++)
+            UNKNOWNC_PLAY_CHILD(self, i, buf, arg2);
+    }
+    {
+        u32 clamp = gUnknown_03001630->field_180;
+        if (clamp > 0x55)
+            clamp = 0x55;
+        gUnknown_03001630->field_180 = clamp;
+        if (gUnknown_03001630->dspFn17c != NULL && clamp != 0)
+            sub_803A2C8(self, buf, clamp, self->hdr->childCount);
+    }
+    if (gUnknown_03001630->field_40 == 0) {
+        if (result == 0) {
+            struct GaxSong *song = gUnknown_03001630->songPtr;
+            if (song->field_30->field_08->field_18->field_1b != 0 || (song->flags & 0x20))
+                UNKNOWNC_CLEAR(self, buf);
+        }
+        for (i = self->hdr->childCount; i < self->hdr->childCount + self->extraChildren; i++)
+            UNKNOWNC_PLAY_CHILD(self, i, buf, arg2);
+    }
+    gUnknown_03001630->field_41 = 0;
+    return result;
 }
 
-/* Same trampoline idiom as `sub_803A278` (a 5-word work item,
- * with the count arg replaced by a byte offset computed from the
- * current row) through `gUnknown_03001630+0x48`'s function pointer;
- * fused with `sub_803A608`'s stub the same way `sub_803A2C8` is fused
- * with `sub_803A318` above. On `sub_803AD84`'s return, if it signalled
- * "no bounce" (`r0 == 0` after the `lsls`/`cmp`), zero-fills the
- * `arg1`-supplied buffer for `arg0`'s byte count instead of
- * trampolining. */
-NAKED u32 sub_803A5A8(void *self, void *destBuf)
+/* Advances `self`'s position through `hdr->step`; if that produced a
+ * block, hands a 4-word work item to `gUnknown_03001630+0x48`'s ARM
+ * routine, otherwise zero-fills `buf` for the block's length. */
+void sub_803A5A8(struct UnknownC *self, u32 *buf)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "sub sp, sp, #0x14\n\t"
-        "add r4, r0, #0\n\t"
-        "add r6, r1, #0\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldr r1, [r0, #0xc]\n\t"
-        "ldr r0, [r4, #0x14]\n\t"
-        "add r0, r1, r0\n\t"
-        "cmp r0, #1\n\t"
-        "beq 2f\n\t"
-        "add r0, r0, #8\n\t"
-        "lsl r3, r0, #6\n\t"
-        "b 3f\n\t"
-    "2:\n\t"
-        "mov r3, #0x80\n\t"
-        "lsl r3, r3, #3\n\t"
-    "3:\n\t"
-        "ldr r1, [r4, #0x10]\n\t"
-        "ldr r0, [r4, #4]\n\t"
-        "ldrh r2, [r0, #4]\n\t"
-        "ldrb r0, [r0, #1]\n\t"
-        "add r5, r2, #0\n\t"
-        "mul r5, r0, r5\n\t"
-        "str r1, [sp]\n\t"
-        "str r6, [sp, #4]\n\t"
-        "str r5, [sp, #8]\n\t"
-        "str r3, [sp, #0xc]\n\t"
-        "ldr r3, [r4]\n\t"
-        "ldr r0, [r4, #0xc]\n\t"
-        "add r2, r0, #0\n\t"
-        "add r0, r0, #1\n\t"
-        "str r0, [r4, #0xc]\n\t"
-        "ldr r3, [r3, #8]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_803AD84\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "beq 5f\n\t"
-        "mov r0, sp\n\t"
-        "str r0, [sp, #0x10]\n\t"
-        "ldr r0, 1f\n\t"
-        "ldr r3, [r0]\n\t"
-        "add r3, r3, #0x48\n\t"
-        "add r1, r3, #0\n\t"
-        "ldr r0, [sp, #0x10]\n\t"
-        "mov r2, pc\n\t"
-        "add r2, r2, #5\n\t"
-        "mov lr, r2\n\t"
-        "bx r1\n\t"
-        ".thumb_func\n\t"
-        ".global sub_803A608\n\t"
-    "sub_803A608:\n\t"
-        "nop\n\t"
-        "b 6f\n\t"
-    "1: .4byte gUnknown_03001630\n\t"
-    "5:\n\t"
-        "cmp r5, #0\n\t"
-        "ble 6f\n\t"
-        "mov r0, #0\n\t"
-    "7:\n\t"
-        "stmia r6!, {r0}\n\t"
-        "sub r5, r5, #4\n\t"
-        "cmp r5, #0\n\t"
-        "bgt 7b\n\t"
-    "6:\n\t"
-        "add sp, sp, #0x14\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n\t"
-    );
+    u32 n = self->hdr->childCount + self->extraChildren;
+    u32 step;
+    s32 samples;
+    struct GaxWorkItem4 item;
+
+    if (n != 1)
+        step = (n + 8) << 6;
+    else
+        step = 0x400;
+    {
+        u32 f10 = self->field_10;
+        samples = self->format->frames * self->format->channels;
+        item.field_10 = f10;
+    }
+    item.buf = buf;
+    item.samples = samples;
+    item.step = step;
+    if (self->hdr->step(self, self->field_10, self->pos++)) {
+        void *arg = &item;
+        GAX_CALL_ARM(gUnknown_03001630->dspCode48, arg);
+    } else {
+        while (samples > 0) {
+            *buf++ = 0;
+            samples -= 4;
+        }
+    }
 }
 
 /* Immediately past this file's code (0x0803A628 onward): raw ARM-mode
  * (not Thumb) DSP/mixer routines docs/audio.md documents
  * (`gStaticData_0803A630` onward, preceded by an 8-byte unlabeled
  * lead-in) - not disassembled as real code at all yet, so this is kept
- * as an untouched raw byte transcription (like the rest of this file's
- * NAKED content) rather than guessed-at ARM instructions; folded into
- * this translation unit rather than a separate object purely so this
- * whole issue #68 chunk's report_units.py boundary lands on an address
- * the frozen expected/code_3.s disassembly actually labels (this raw
- * span's own start has no such label). */
+ * as an untouched raw byte transcription rather than guessed-at ARM
+ * instructions (hand-written ARM asm in the original, like the other
+ * GAX2 mixer routines - the "FILT"/"BART" tags between them aren't
+ * compiler output); folded into this translation unit rather than a
+ * separate object purely so this whole issue #68 chunk's
+ * report_units.py boundary lands on an address the frozen
+ * expected/code_3.s disassembly actually labels (this raw span's own
+ * start has no such label). The code copies of these at
+ * `gUnknown_03001630+0x48`/`+0x9c` are what `GAX_CALL_ARM` enters. */
 asm(
+        ".align 2, 0\n\t"
         "_0803A628:\n\t"
         ".byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00\n\t"
         ".global gStaticData_0803A630\n\t"

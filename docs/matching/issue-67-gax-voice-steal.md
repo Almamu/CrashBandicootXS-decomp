@@ -100,3 +100,7 @@ function including two separate scan loops.
 Full clean `rm -rf build && make NON_MATCHING=1 report` followed by
 `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` - `La suma coincide`.
+
+## Later pass: GAX toolchain retry
+
+All three (`sub_8038C88`, `sub_8038DC0`, `sub_8038E74`) now match as real C: re-derive the player/mixer chain at every use, type the handler array as `struct GaxHandler **`, and keep `sub_8038E74`'s `!= 0x0FFFFFFF` test as-is. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).

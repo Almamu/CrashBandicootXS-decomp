@@ -1,143 +1,144 @@
 #include "core.h"
+#include "icon_manager.h"
+
+struct counter_widget {
+    u32 field_0;
+    u8 field_4;
+    u8 pad_5[3];
+    s32 field_8;
+};
+
+extern void *gUnknown_03001300;
+extern void *gUnknown_030012FC;
+extern struct icon_manager *gUnknown_030012DC;
+/* The six digit glyphs the widget draws. */
+extern void *gStaticData_0817E714[6];
+extern void sub_8006A90(void *arg0);
+extern void sub_8006C28(void *arg0);
+extern void sub_8006A48(void *arg0);
+extern s32 sub_8028A30(struct icon_manager *mgr, u8 frame);
+extern s32 sub_8037534(struct counter_widget *self);
+/* `_call_via_r2`: calls `fn(self, arg)` (an icon_manager method). */
+extern s32 sub_803AD80(void *self, void *arg, void *fn);
 
 /* The counter widget's (src/audio/counter_selector.c) per-frame icon
- * draw loop and its tile-cache init helper - both fully understood but
- * transcribed as byte-verified NAKED asm rather than matched as real C.
+ * draw loop: for each of the six digit slots (0-5) it sets the shared
+ * overlay frame (`gUnknown_030012DC`: 1 or 2 from `sub_8037534`'s blink
+ * state on the currently selected slot `field_8`, 0 elsewhere), measures
+ * that slot's glyph with the icon manager's `slots[0]` method, centers
+ * it horizontally, and draws it with `slots[2]` at a Y stepping by 0xa
+ * from 0x32.
  *
- * `sub_80372BC` draws six digit slots (0-5): for each it either shows
- * the shared "selected" overlay (`gUnknown_030012DC`, value 1 or 2 from
- * `sub_8037534` depending on `self->field_0`'s blink bit) when the loop
- * index equals `self->field_8` (the widget's current value), or blanks
- * it (value 0) otherwise; it then always draws that slot's own fixed
- * digit glyph, from a 6-entry `gStaticData_0817E714` array of `struct
- * icon_manager *`, positioned via `sub_803AD80` at a fixed X (derived
- * from the rendered pixel width, same `(240-w)>>1`-style centering
- * `sub_8006600`/`src/graphics/oam_count.c` uses) and a Y that steps by
- * 0xa per slot from a 0x32 base - reading and writing
- * `gUnknown_030012DC`'s own `icon_manager.record->slots[0]/[2]` (see
- * include/icon_manager.h) as its OAM-slot-record pair, the exact same
- * shape `sub_8006600` uses. `sub_8037388` resets several OAM-manager
- * globals, then hand-fills `gUnknown_030012B8`'s (`struct
- * tile_asset_cache`, include/vram_pool.h) `slots[0]`-`slots[3]` with 4
- * fixed 32-byte OBJ tiles copied from `gStaticData_0817E72C`/`_74C`/
- * `_76C`/`_78C`, and finally threads `gUnknown_030012DC`'s/
- * `gUnknown_030012E0`'s `record->slots[6]` trampoline
- * (`sub_803AD7C`)/VRAM-reserve (`sub_8006C58`) pair - copying
- * `field_12c` into the other manager's `field_108` via the ROM's own
- * "subtract 0x24 from the already-loaded 0x12c constant" trick rather
- * than a fresh `0x108` literal.
- *
- * Real C was attempted for both (indexed and pointer-increment forms of
- * the tile-copy loop, address-of-global caching for the repeated
- * `gUnknown_030012DC`/`_030012E0`/`_030012FC` derefs, and the digit-slot
- * loop's centering math), but every attempt fell to the same many-
- * register gcc-2.9 allocation ceiling already documented at length for
- * `sub_8006600` (src/graphics/oam_count.c) and `sub_80062A8`
- * (src/graphics/settings_menu14.c, NAKED, whose tail is this same
- * `sub_803AD7C`/`sub_8006C58`/constant-reuse idiom) - the compiler
- * keeps reaching for `r8`/`sb`/`sl` instead of the ROM's plain r4-r7
- * reuse no matter how the source is rephrased. Byte-verified NAKED
- * transcriptions, per the same policy those two functions already
- * established. */
-NAKED void sub_80372BC(void *self)
+ * Was NAKED ("many-register allocation ceiling"); calling the method
+ * trampoline `sub_803AD80` directly with the glyph assigned inside the
+ * first call's argument list (so it's loaded between `this` and the
+ * method pointer, as the ROM does) matches outright - see
+ * docs/matching/gax-toolchain-retry.md. */
+void sub_80372BC(struct counter_widget *self)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sb\n\t"
-        "mov r6, r8\n\t"
-        "push {r6, r7}\n\t"
-        "add r7, r0, #0\n\t"
-        "ldr r0, 1f\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_8006A90\n\t"
-        "ldr r0, 2f\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_8006C28\n\t"
-        "mov r0, #0x32\n\t"
-        "mov r8, r0\n\t"
-        "mov r5, #0\n\t"
-        "ldr r6, 3f\n\t"
-        "mov r2, #0x98\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov sb, r2\n\t"
-    "_080372E4:\n\t"
-        "ldr r0, [r7, #8]\n\t"
-        "cmp r5, r0\n\t"
-        "bne _0803730C\n\t"
-        "ldr r4, [r6]\n\t"
-        "add r0, r7, #0\n\t"
-        "bl sub_8037534\n\t"
-        "add r1, r0, #0\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "lsr r1, r1, #0x18\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_8028A30\n\t"
-        "b _08037314\n\t"
-        ".align 2, 0\n"
-    "1: .4byte gUnknown_03001300\n"
-    "2: .4byte gUnknown_030012FC\n"
-    "3: .4byte gUnknown_030012DC\n"
-    "_0803730C:\n\t"
-        "ldr r0, [r6]\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_8028A30\n\t"
-    "_08037314:\n\t"
-        "ldr r0, [r6]\n\t"
-        "mov r3, sb\n\t"
-        "add r1, r0, r3\n\t"
-        "ldr r3, [r1]\n\t"
-        "mov r2, #0x10\n\t"
-        "ldrsh r1, [r3, r2]\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r2, 4f\n\t"
-        "lsl r1, r5, #2\n\t"
-        "add r1, r1, r2\n\t"
-        "ldr r4, [r1]\n\t"
-        "ldr r2, [r3, #0x14]\n\t"
-        "add r1, r4, #0\n\t"
-        "bl sub_803AD80\n\t"
-        "mov r2, #0xf0\n\t"
-        "sub r2, r2, r0\n\t"
-        "asr r2, r2, #1\n\t"
-        "ldr r0, [r6]\n\t"
-        "mov r3, #0x88\n\t"
-        "lsl r3, r3, #1\n\t"
-        "add r1, r0, r3\n\t"
-        "str r2, [r1]\n\t"
-        "mov r2, #0x8a\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r1, r0, r2\n\t"
-        "mov r3, r8\n\t"
-        "str r3, [r1]\n\t"
-        "mov r2, sb\n\t"
-        "add r1, r0, r2\n\t"
-        "ldr r2, [r1]\n\t"
-        "mov r3, #0x20\n\t"
-        "ldrsh r1, [r2, r3]\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r2, [r2, #0x24]\n\t"
-        "add r1, r4, #0\n\t"
-        "bl sub_803AD80\n\t"
-        "mov r0, #0xa\n\t"
-        "add r8, r0\n\t"
-        "add r5, #1\n\t"
-        "cmp r5, #5\n\t"
-        "ble _080372E4\n\t"
-        "ldr r0, 5f\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_8006A48\n\t"
-        "pop {r3, r4}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "4: .4byte gStaticData_0817E714\n"
-    "5: .4byte gUnknown_03001300\n"
-    );
+    s32 y;
+    s32 i;
+
+    sub_8006A90(gUnknown_03001300);
+    sub_8006C28(gUnknown_030012FC);
+    y = 0x32;
+    for (i = 0; i <= 5; i++) {
+        void *glyph;
+        s32 x;
+
+        if (i == self->field_8)
+            sub_8028A30(gUnknown_030012DC, sub_8037534(self));
+        else
+            sub_8028A30(gUnknown_030012DC, 0);
+        x = (240 - sub_803AD80((u8 *)gUnknown_030012DC + gUnknown_030012DC->record->slots[0].offset,
+                               glyph = gStaticData_0817E714[i],
+                               gUnknown_030012DC->record->slots[0].ptr)) >> 1;
+        gUnknown_030012DC->posX = x;
+        gUnknown_030012DC->posY = y;
+        sub_803AD80((u8 *)gUnknown_030012DC + gUnknown_030012DC->record->slots[2].offset, glyph,
+                    gUnknown_030012DC->record->slots[2].ptr);
+        y += 10;
+    }
+    sub_8006A48(gUnknown_03001300);
 }
 
+/* Resets several OAM-manager globals, then hand-fills
+ * `gUnknown_030012B8`'s (`struct tile_asset_cache`, include/vram_pool.h)
+ * `slots[0]`-`slots[3]` with 4 fixed 32-byte OBJ tiles copied from
+ * `gStaticData_0817E72C`/`_74C`/`_76C`/`_78C`, and finally runs
+ * `gUnknown_030012DC`'s/`gUnknown_030012E0`'s `record->slots[6]` method
+ * (`sub_803AD7C`) plus a VRAM reserve (`sub_8006C58`) for each, copying
+ * `field_12c` into the other manager's `field_108`.
+ *
+ * Still NAKED. The draft below matches through the tile-copy loop (the
+ * `destA`/`destB` shape from actor_part88.c); the tail doesn't: the ROM
+ * keeps the three manager/cursor global addresses in r4-r6 and a 0 in
+ * r8, rematerializing the 0x108/0x12c/0x130 field-offset constants
+ * after every call (deriving 0x130/0x108 from the previous constant
+ * with `adds #40`/`subs #36`), whereas agbcc/old_agbcc CSE those
+ * constants into callee-saved registers across the calls and push the
+ * addresses to r8-sl. Pinning the addresses to r4-r6 just moves the
+ * constants to r8-sl; do/while wrappers around the method calls don't
+ * split the CSE blocks either. */
+#if NON_MATCHING
+#include "vram_pool.h"
+extern struct tile_asset_cache *gUnknown_030012B8;
+extern struct icon_manager *gUnknown_030012E0;
+extern const u16 gStaticData_0817E72C[16];
+extern const u16 gStaticData_0817E74C[16];
+extern const u16 gStaticData_0817E76C[16];
+extern const u16 gStaticData_0817E78C[16];
+extern void sub_80006A8(void);
+extern void sub_8006AAC(void *arg0);
+extern void sub_8006EA8(struct tile_asset_cache *cache);
+extern s32 sub_8006D50(struct tile_asset_cache *cache, s32 index);
+extern void sub_8006C4C(void *cursor);
+extern s32 sub_8006C58(void *cursor, s32 size);
+extern void sub_8006C30(void *cursor);
+extern void sub_803AD7C(void *self, void *fn);
+
+void sub_8037388(void *unused)
+{
+    s32 i;
+    struct icon_slot *slot;
+
+    sub_8006A90(gUnknown_03001300);
+    sub_8006A48(gUnknown_03001300);
+    sub_80006A8();
+    sub_8006AAC(gUnknown_03001300);
+    sub_8006EA8(gUnknown_030012B8);
+    sub_8006D50(gUnknown_030012B8, 0);
+    sub_8006D50(gUnknown_030012B8, 1);
+    sub_8006D50(gUnknown_030012B8, 2);
+    sub_8006D50(gUnknown_030012B8, 3);
+    {
+        struct tile_asset_cache *cache = gUnknown_030012B8;
+        u16 *destA = (u16 *)cache->slots[0];
+        u16 *destB = (u16 *)cache->slots[2];
+
+        for (i = 0; i < 16; i++) {
+            destA[i] = gStaticData_0817E72C[i];
+            destA[i + 0x10] = gStaticData_0817E74C[i];
+            destB[i] = gStaticData_0817E76C[i];
+            destB[i + 0x10] = gStaticData_0817E78C[i];
+        }
+    }
+    sub_8028A30(gUnknown_030012DC, 0);
+    sub_8028A30(gUnknown_030012E0, 0);
+    ((u32 *)gUnknown_030012FC)[2] = 0;
+    sub_8006C4C(gUnknown_030012FC);
+    sub_8006C4C(gUnknown_030012FC);
+    gUnknown_030012DC->field_108 = 0;
+    slot = &gUnknown_030012DC->record->slots[6];
+    sub_803AD7C((u8 *)gUnknown_030012DC + slot->offset, slot->ptr);
+    sub_8006C58(gUnknown_030012FC, gUnknown_030012DC->field_12c << 5);
+    gUnknown_030012E0->field_108 = gUnknown_030012DC->field_12c;
+    slot = &gUnknown_030012E0->record->slots[6];
+    sub_803AD7C((u8 *)gUnknown_030012E0 + slot->offset, slot->ptr);
+    sub_8006C58(gUnknown_030012FC, gUnknown_030012E0->field_12c << 5);
+    sub_8006C30(gUnknown_030012FC);
+}
+#else
 NAKED void sub_8037388(void *unused)
 {
     asm(
@@ -281,3 +282,4 @@ NAKED void sub_8037388(void *unused)
     "9: .4byte gUnknown_030012FC\n"
     );
 }
+#endif

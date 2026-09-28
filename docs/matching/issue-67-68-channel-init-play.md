@@ -135,3 +135,7 @@ three functions out of `asm/code_3_2_20e_9518.s`/`asm/code_3_2_20e_95a4.s`
 `src/audio/gax_sound_handler_channel_init.o`/
 `src/audio/gax_sound_handler_channel_play.o` to `ldscript.txt` in their
 place.
+
+## Later pass: GAX toolchain retry
+
+`sub_8039518` (via an inline destination-pointer helper), `sub_80395A4` (no pins - the parameter homing comes out right on its own) and `sub_8039658` now match as real C. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).

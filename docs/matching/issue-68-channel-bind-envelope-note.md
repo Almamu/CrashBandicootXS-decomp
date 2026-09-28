@@ -246,3 +246,7 @@ crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
 compare` still passes (`La suma coincide`), unchanged from before this
 investigation; `tools/report_units.py`'s entry for `0x08039F30` stays
 parked (`base_object=None`).
+
+## Later pass: GAX toolchain retry
+
+`sub_80398DC`, `sub_8039AA4` and `sub_8039F30` now match as plain, unpinned C against the channel/instrument/envelope structs in `include/audio.h`. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).
