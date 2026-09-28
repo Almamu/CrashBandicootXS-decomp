@@ -380,6 +380,7 @@ SECTIONS
         build/crashbandicootxs/src/graphics/actor_part131.o(.text);
         build/crashbandicootxs/src/graphics/level_graphics.o(.text);
         build/crashbandicootxs/src/graphics/graphics_loading_35780.o(.text);
+        build/crashbandicootxs/src/graphics/graphics_loading_35d1c.o(.text);
         build/crashbandicootxs/src/audio/counter_selector.o(.text);
         build/crashbandicootxs/src/audio/counter_selector_icons.o(.text);
         build/crashbandicootxs/src/audio/counter_selector_setup.o(.text);
