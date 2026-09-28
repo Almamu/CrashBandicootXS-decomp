@@ -83,7 +83,7 @@ extern s32 gUnknown_03001594;
  * already established by `actor_part28.c` (issue #62) for the ones it
  * also touches; the rest are new (first referenced anywhere in ROM
  * order by this file's functions). */
-extern void *gUnknown_030015AC;
+extern struct actor_self *gUnknown_030015AC;
 extern s32 gUnknown_030015A0;
 extern s32 gUnknown_030015A4;
 extern s32 gUnknown_030015A8;
@@ -98,7 +98,7 @@ extern s32 gUnknown_030015C8;
 extern s32 gUnknown_030015CC;
 extern s32 gUnknown_030015D0;
 extern s32 gUnknown_030015D4;
-extern void *gUnknown_030015D8;
+extern s32 gUnknown_030015D8;
 extern void *gUnknown_030015DC;
 extern s32 gUnknown_030015E0;
 extern s32 gUnknown_030015E4;
@@ -120,9 +120,48 @@ extern u8 gStaticData_087E54AC[];
 extern u16 gStaticData_08169AE8[];
 extern u8 gStaticData_08169CE8[];
 extern u8 gStaticData_0817C4BC[];
+extern const s16 gStaticData_0817C4B0[];
+
+/* One 0x28-byte record of the singleton's per-kind table. */
+struct singleton_kind {
+    s32 unk_00;
+    u8 unk_04[8];
+    s32 unk_0C;
+    s32 unk_10;
+    u8 unk_14[0x14];
+};
+extern struct singleton_kind gStaticData_0817C460[];
+extern s16 gStaticData_0816A820[];
 extern void *gStaticData_0817C4C8[];
 
 ACTOR_CALL_VIA_ALIASES
+
+/* Shared inlines of the singleton system (see sub_80331BC). */
+static inline struct actor_self *AllocActor(u32 size)
+{
+    return (struct actor_self *)mem_alloc(size, 0x80000000);
+}
+
+static inline void InitAnimPart(struct actor_self *self, struct anim_frame_record *anims, u32 *offsets, s32 flag)
+{
+    self->anims = anims;
+    self->frameOffsets = offsets;
+    self->unk_18 = flag;
+    sub_803B0A8(self, 0);
+}
+
+static inline void SingletonSetKind(s32 kind, s32 idx)
+{
+    struct actor_self *self;
+
+    gUnknown_030015B0 = kind;
+    self = gUnknown_030015AC;
+    self->animIndex = idx;
+    self->animTimer = self->anims[idx].duration;
+    self->animDone = 0;
+    if (GetAnimFrameBaseOffset(self) >= self->anims[self->animIndex].loopThreshold)
+        self->animTime = 0;
+}
 
 /* The homing spawn effect advanced by sub_8032718. */
 struct actor_2718 {
@@ -620,558 +659,179 @@ void sub_8032B6C(void)
     sub_803AD78(gStaticData_0817C4C8[gUnknown_030015B0]);
 }
 
-/* NAKED transcription: opens the singleton's own camera-follow/scroll-
- * velocity smoothing computation (`gUnknown_030015B4`-`030015EC`,
- * mirroring `gUnknown_03000884`'s screen position against a trig-table
- * lookup at `gStaticData_0816A820` - the same table already tied to the
- * orbiting-companion object, `sub_8030334`). Genuinely resists a plain-C
- * reconstruction: the ROM keeps four scratch values alive simultaneously
- * across this function's straight-line body (`ip`, `sb`, `r8` in
- * addition to `r4`-`r7`), the same many-high-register allocation gcc-2.9
- * difficulty already documented project-wide for functions like
- * `sub_8031604`/`sub_80372BC`. Mechanical, byte-verified transcription
- * (unified-to-divided Thumb syntax only, no logic changes). */
-NAKED void sub_8032C0C(void)
+/* Opens the singleton's own camera-follow/scroll-velocity smoothing
+ * computation (`gUnknown_030015B4`-`030015EC`) - the twin of the boss
+ * cluster's `sub_8030E08` (actor_part23c.c). Ramps the Z velocity
+ * toward a per-phase target, then by patrol phase: phase 0 steers the
+ * X/Y velocities toward the player (`gUnknown_03000884`) relative to a
+ * camera-offset target box (`gStaticData_0817C4B0`), clamped to +-0x200
+ * and kept inside fixed bounds; phase 1 bounces X at +-0x10000; later
+ * phases orbit on the trig table `gStaticData_0816A820` with a growing
+ * radius. Once close enough (`gUnknown_030015C8 <= 0x27ff`), resets to
+ * kind 3 / phase 0. Plain C - the documented "four live high registers"
+ * blocker was not real; what mattered was keeping the player/camera
+ * reads as separate locals (so `(a - b) - c` isn't reassociated),
+ * updating the velocities with `-=` and taking the orbit's destination
+ * and table pointers before the angle is computed. */
+void sub_8032C0C(void)
 {
-    asm(
-    "push {r4, r5, r6, r7, lr}\n\t"
-    "mov r7, sb\n\t"
-    "mov r6, r8\n\t"
-    "push {r6, r7}\n\t"
-    "ldr r0, c0c__08032C34\n\t"
-    "ldr r3, c0c__08032C38\n\t"
-    "ldr r1, [r0]\n\t"
-    "ldr r2, [r3]\n\t"
-    "add r1, r1, r2\n\t"
-    "str r1, [r0]\n\t"
-    "ldr r0, c0c__08032C3C\n\t"
-    "ldr r1, [r0]\n\t"
-    "add r4, r0, #0\n\t"
-    "cmp r1, #0\n\t"
-    "bne c0c__08032C40\n\t"
-    "cmp r2, #0x98\n\t"
-    "bgt c0c__08032C5E\n\t"
-    "add r0, r2, #1\n\t"
-    "b c0c__08032C60\n\t"
-    ".align 2, 0\n"
-    "c0c__08032C34: .4byte gUnknown_030015BC\n"
-    "c0c__08032C38: .4byte gUnknown_030015D4\n"
-    "c0c__08032C3C: .4byte gUnknown_030015EC\n"
-    "c0c__08032C40:\n\t"
-    "cmp r1, #1\n\t"
-    "bne c0c__08032C52\n\t"
-    "cmp r2, #0x3f\n\t"
-    "bgt c0c__08032C4C\n\t"
-    "add r0, r2, #1\n\t"
-    "b c0c__08032C60\n\t"
-    "c0c__08032C4C:\n\t"
-    "cmp r2, #0x40\n\t"
-    "ble c0c__08032C62\n\t"
-    "b c0c__08032C5E\n\t"
-    "c0c__08032C52:\n\t"
-    "cmp r2, #0x69\n\t"
-    "bgt c0c__08032C5A\n\t"
-    "add r0, r2, #1\n\t"
-    "b c0c__08032C60\n\t"
-    "c0c__08032C5A:\n\t"
-    "cmp r2, #0x6a\n\t"
-    "ble c0c__08032C62\n\t"
-    "c0c__08032C5E:\n\t"
-    "sub r0, r2, #1\n\t"
-    "c0c__08032C60:\n\t"
-    "str r0, [r3]\n\t"
-    "c0c__08032C62:\n\t"
-    "ldr r0, [r4]\n\t"
-    "cmp r0, #0\n\t"
-    "beq c0c__08032C6A\n\t"
-    "b c0c__08032D6C\n\t"
-    "c0c__08032C6A:\n\t"
-    "ldr r1, c0c__08032D38\n\t"
-    "ldr r0, c0c__08032D3C\n\t"
-    "mov ip, r0\n\t"
-    "ldr r0, [r1]\n\t"
-    "mov r2, ip\n\t"
-    "ldr r5, [r2]\n\t"
-    "add r0, r0, r5\n\t"
-    "str r0, [r1]\n\t"
-    "ldr r1, c0c__08032D40\n\t"
-    "ldr r3, c0c__08032D44\n\t"
-    "mov sb, r3\n\t"
-    "ldr r0, [r1]\n\t"
-    "ldr r4, [r3]\n\t"
-    "mov r8, r4\n\t"
-    "add r0, r8\n\t"
-    "str r0, [r1]\n\t"
-    "ldr r0, c0c__08032D48\n\t"
-    "ldr r6, [r0]\n\t"
-    "ldr r2, [r6, #0x1c]\n\t"
-    "ldr r0, c0c__08032D4C\n\t"
-    "ldr r7, [r0]\n\t"
-    "ldr r1, c0c__08032D50\n\t"
-    "add r0, r7, r1\n\t"
-    "sub r2, r2, r0\n\t"
-    "ldr r4, c0c__08032D54\n\t"
-    "mov r0, #0\n\t"
-    "ldrsh r3, [r4, r0]\n\t"
-    "mov r1, #6\n\t"
-    "ldrsh r0, [r4, r1]\n\t"
-    "lsr r1, r0, #0x1f\n\t"
-    "add r0, r0, r1\n\t"
-    "asr r0, r0, #1\n\t"
-    "add r3, r3, r0\n\t"
-    "sub r2, r2, r3\n\t"
-    "asr r2, r2, #0xc\n\t"
-    "sub r5, r5, r2\n\t"
-    "mov r2, ip\n\t"
-    "str r5, [r2]\n\t"
-    "ldr r2, [r6, #0x20]\n\t"
-    "ldr r0, c0c__08032D58\n\t"
-    "ldr r6, [r0]\n\t"
-    "mov r3, #0xc0\n\t"
-    "lsl r3, r3, #5\n\t"
-    "add r0, r6, r3\n\t"
-    "sub r2, r2, r0\n\t"
-    "mov r0, #2\n\t"
-    "ldrsh r3, [r4, r0]\n\t"
-    "mov r1, #8\n\t"
-    "ldrsh r0, [r4, r1]\n\t"
-    "lsr r1, r0, #0x1f\n\t"
-    "add r0, r0, r1\n\t"
-    "asr r0, r0, #1\n\t"
-    "add r3, r3, r0\n\t"
-    "sub r2, r2, r3\n\t"
-    "asr r2, r2, #0xc\n\t"
-    "mov r3, r8\n\t"
-    "sub r0, r3, r2\n\t"
-    "mov r4, sb\n\t"
-    "str r0, [r4]\n\t"
-    "mov r2, #0x80\n\t"
-    "lsl r2, r2, #2\n\t"
-    "cmp r5, r2\n\t"
-    "ble c0c__08032CEA\n\t"
-    "add r5, r2, #0\n\t"
-    "c0c__08032CEA:\n\t"
-    "mov r1, ip\n\t"
-    "str r5, [r1]\n\t"
-    "ldr r1, c0c__08032D5C\n\t"
-    "cmp r5, r1\n\t"
-    "bge c0c__08032CF6\n\t"
-    "add r5, r1, #0\n\t"
-    "c0c__08032CF6:\n\t"
-    "mov r3, ip\n\t"
-    "str r5, [r3]\n\t"
-    "cmp r0, r2\n\t"
-    "ble c0c__08032D00\n\t"
-    "add r0, r2, #0\n\t"
-    "c0c__08032D00:\n\t"
-    "mov r4, sb\n\t"
-    "str r0, [r4]\n\t"
-    "cmp r0, r1\n\t"
-    "bge c0c__08032D0A\n\t"
-    "add r0, r1, #0\n\t"
-    "c0c__08032D0A:\n\t"
-    "mov r3, sb\n\t"
-    "str r0, [r3]\n\t"
-    "cmp r7, #0\n\t"
-    "bgt c0c__08032D16\n\t"
-    "mov r4, ip\n\t"
-    "str r2, [r4]\n\t"
-    "c0c__08032D16:\n\t"
-    "ldr r0, c0c__08032D60\n\t"
-    "cmp r7, r0\n\t"
-    "ble c0c__08032D20\n\t"
-    "mov r0, ip\n\t"
-    "str r1, [r0]\n\t"
-    "c0c__08032D20:\n\t"
-    "ldr r0, c0c__08032D64\n\t"
-    "cmp r6, r0\n\t"
-    "bgt c0c__08032D2A\n\t"
-    "mov r3, sb\n\t"
-    "str r2, [r3]\n\t"
-    "c0c__08032D2A:\n\t"
-    "ldr r0, c0c__08032D68\n\t"
-    "cmp r6, r0\n\t"
-    "ble c0c__08032E04\n\t"
-    "mov r4, sb\n\t"
-    "str r1, [r4]\n\t"
-    "b c0c__08032E04\n\t"
-    ".align 2, 0\n"
-    "c0c__08032D38: .4byte gUnknown_030015B4\n"
-    "c0c__08032D3C: .4byte gUnknown_030015CC\n"
-    "c0c__08032D40: .4byte gUnknown_030015B8\n"
-    "c0c__08032D44: .4byte gUnknown_030015D0\n"
-    "c0c__08032D48: .4byte gUnknown_03000884\n"
-    "c0c__08032D4C: .4byte gUnknown_030015C0\n"
-    "c0c__08032D50: .4byte 0xFFFFEE00\n"
-    "c0c__08032D54: .4byte gStaticData_0817C4B0\n"
-    "c0c__08032D58: .4byte gUnknown_030015C4\n"
-    "c0c__08032D5C: .4byte 0xFFFFFE00\n"
-    "c0c__08032D60: .4byte 0x000063FF\n"
-    "c0c__08032D64: .4byte 0xFFFFC400\n"
-    "c0c__08032D68: .4byte 0x00002BFF\n"
-    "c0c__08032D6C:\n\t"
-    "cmp r0, #1\n\t"
-    "bne c0c__08032DB4\n\t"
-    "ldr r1, c0c__08032D8C\n\t"
-    "ldr r3, c0c__08032D90\n\t"
-    "ldr r0, [r1]\n\t"
-    "ldr r4, [r3]\n\t"
-    "add r0, r0, r4\n\t"
-    "str r0, [r1]\n\t"
-    "ldr r2, c0c__08032D94\n\t"
-    "cmp r0, r2\n\t"
-    "ble c0c__08032D9C\n\t"
-    "cmp r4, #0\n\t"
-    "ble c0c__08032D9C\n\t"
-    "ldr r0, c0c__08032D98\n\t"
-    "b c0c__08032E02\n\t"
-    ".align 2, 0\n"
-    "c0c__08032D8C: .4byte gUnknown_030015B4\n"
-    "c0c__08032D90: .4byte gUnknown_030015CC\n"
-    "c0c__08032D94: .4byte 0x0000FFFF\n"
-    "c0c__08032D98: .4byte 0xFFFFFC00\n"
-    "c0c__08032D9C:\n\t"
-    "ldr r1, [r1]\n\t"
-    "ldr r0, c0c__08032DB0\n\t"
-    "cmp r1, r0\n\t"
-    "bgt c0c__08032E04\n\t"
-    "ldr r0, [r3]\n\t"
-    "cmp r0, #0\n\t"
-    "bge c0c__08032E04\n\t"
-    "mov r0, #0x80\n\t"
-    "lsl r0, r0, #3\n\t"
-    "b c0c__08032E02\n\t"
-    ".align 2, 0\n"
-    "c0c__08032DB0: .4byte 0xFFFF0000\n"
-    "c0c__08032DB4:\n\t"
-    "ldr r5, c0c__08032E68\n\t"
-    "ldr r0, [r5]\n\t"
-    "mov r1, #0xc0\n\t"
-    "lsl r1, r1, #1\n\t"
-    "add r0, r0, r1\n\t"
-    "str r0, [r5]\n\t"
-    "mov r1, #0x80\n\t"
-    "lsl r1, r1, #8\n\t"
-    "cmp r0, r1\n\t"
-    "ble c0c__08032DCA\n\t"
-    "str r1, [r5]\n\t"
-    "c0c__08032DCA:\n\t"
-    "ldr r3, c0c__08032E6C\n\t"
-    "ldr r4, c0c__08032E70\n\t"
-    "ldr r0, c0c__08032E74\n\t"
-    "ldr r0, [r0]\n\t"
-    "lsl r1, r0, #4\n\t"
-    "sub r1, r1, r0\n\t"
-    "lsl r1, r1, #1\n\t"
-    "asr r1, r1, #4\n\t"
-    "mov r2, #0xff\n\t"
-    "and r1, r2\n\t"
-    "add r0, r1, #0\n\t"
-    "add r0, #0x40\n\t"
-    "and r0, r2\n\t"
-    "lsl r0, r0, #1\n\t"
-    "add r0, r0, r4\n\t"
-    "mov r2, #0\n\t"
-    "ldrsh r0, [r0, r2]\n\t"
-    "ldr r2, [r5]\n\t"
-    "mul r0, r2, r0\n\t"
-    "asr r0, r0, #8\n\t"
-    "str r0, [r3]\n\t"
-    "ldr r3, c0c__08032E78\n\t"
-    "lsl r1, r1, #1\n\t"
-    "add r1, r1, r4\n\t"
-    "mov r4, #0\n\t"
-    "ldrsh r0, [r1, r4]\n\t"
-    "mul r0, r2, r0\n\t"
-    "asr r0, r0, #8\n\t"
-    "c0c__08032E02:\n\t"
-    "str r0, [r3]\n\t"
-    "c0c__08032E04:\n\t"
-    "ldr r0, c0c__08032E7C\n\t"
-    "ldr r1, [r0]\n\t"
-    "ldr r0, c0c__08032E80\n\t"
-    "cmp r1, r0\n\t"
-    "bgt c0c__08032E5A\n\t"
-    "ldr r1, c0c__08032E84\n\t"
-    "ldr r0, c0c__08032E88\n\t"
-    "ldr r0, [r0]\n\t"
-    "ldr r0, [r0, #0x10]\n\t"
-    "str r0, [r1]\n\t"
-    "ldr r0, c0c__08032E8C\n\t"
-    "mov r5, #0\n\t"
-    "str r5, [r0]\n\t"
-    "mov r1, #3\n\t"
-    "ldr r0, c0c__08032E90\n\t"
-    "str r1, [r0]\n\t"
-    "ldr r0, c0c__08032E94\n\t"
-    "ldr r4, [r0]\n\t"
-    "str r5, [r4, #0xc]\n\t"
-    "ldr r0, [r4]\n\t"
-    "ldrh r0, [r0]\n\t"
-    "mov r1, #0\n\t"
-    "strh r0, [r4, #0x10]\n\t"
-    "strb r1, [r4, #0x12]\n\t"
-    "add r0, r4, #0\n\t"
-    "bl GetAnimFrameBaseOffset\n\t"
-    "ldr r2, [r4, #0xc]\n\t"
-    "ldr r3, [r4]\n\t"
-    "lsl r1, r2, #1\n\t"
-    "add r1, r1, r2\n\t"
-    "lsl r1, r1, #2\n\t"
-    "add r1, r1, r3\n\t"
-    "mov r2, #4\n\t"
-    "ldrsh r1, [r1, r2]\n\t"
-    "cmp r0, r1\n\t"
-    "blt c0c__08032E50\n\t"
-    "str r5, [r4, #8]\n\t"
-    "c0c__08032E50:\n\t"
-    "ldr r0, c0c__08032E98\n\t"
-    "str r5, [r0]\n\t"
-    "ldr r1, c0c__08032E9C\n\t"
-    "mov r0, #0xae\n\t"
-    "str r0, [r1]\n\t"
-    "c0c__08032E5A:\n\t"
-    "pop {r3, r4}\n\t"
-    "mov r8, r3\n\t"
-    "mov sb, r4\n\t"
-    "pop {r4, r5, r6, r7}\n\t"
-    "pop {r0}\n\t"
-    "bx r0\n\t"
-    ".align 2, 0\n"
-    "c0c__08032E68: .4byte gUnknown_030015F0\n"
-    "c0c__08032E6C: .4byte gUnknown_030015B4\n"
-    "c0c__08032E70: .4byte gStaticData_0816A820\n"
-    "c0c__08032E74: .4byte gUnknown_030015F4\n"
-    "c0c__08032E78: .4byte gUnknown_030015B8\n"
-    "c0c__08032E7C: .4byte gUnknown_030015C8\n"
-    "c0c__08032E80: .4byte 0x000027FF\n"
-    "c0c__08032E84: .4byte gUnknown_030015E4\n"
-    "c0c__08032E88: .4byte gUnknown_030015DC\n"
-    "c0c__08032E8C: .4byte gUnknown_030015E8\n"
-    "c0c__08032E90: .4byte gUnknown_030015B0\n"
-    "c0c__08032E94: .4byte gUnknown_030015AC\n"
-    "c0c__08032E98: .4byte gUnknown_030015EC\n"
-    "c0c__08032E9C: .4byte gUnknown_030015D4\n"
-    );
+    gUnknown_030015BC += gUnknown_030015D4;
+    if (gUnknown_030015EC == 0) {
+        if (gUnknown_030015D4 <= 0x98)
+            gUnknown_030015D4 = gUnknown_030015D4 + 1;
+        else
+            gUnknown_030015D4 = gUnknown_030015D4 - 1;
+    } else if (gUnknown_030015EC == 1) {
+        if (gUnknown_030015D4 <= 0x3f)
+            gUnknown_030015D4 = gUnknown_030015D4 + 1;
+        else if (gUnknown_030015D4 > 0x40)
+            gUnknown_030015D4 = gUnknown_030015D4 - 1;
+    } else {
+        if (gUnknown_030015D4 <= 0x69)
+            gUnknown_030015D4 = gUnknown_030015D4 + 1;
+        else if (gUnknown_030015D4 > 0x6a)
+            gUnknown_030015D4 = gUnknown_030015D4 - 1;
+    }
+
+    if (gUnknown_030015EC == 0) {
+        struct actor_self *pl;
+        s32 vx, vy, px, py, cx, cy;
+
+        gUnknown_030015B4 += gUnknown_030015CC;
+        gUnknown_030015B8 += gUnknown_030015D0;
+        pl = gUnknown_03000884;
+        px = pl->x;
+        cx = gUnknown_030015C0 - 0x1200;
+        gUnknown_030015CC -= (px - cx - (gStaticData_0817C4B0[0] + gStaticData_0817C4B0[3] / 2)) >> 12;
+        vx = gUnknown_030015CC;
+        py = pl->y;
+        cy = gUnknown_030015C4 + 0x1800;
+        vy = gUnknown_030015D0 - ((py - cy - (gStaticData_0817C4B0[1] + gStaticData_0817C4B0[4] / 2)) >> 12);
+        gUnknown_030015D0 = vy;
+
+        if (vx > 0x200)
+            vx = 0x200;
+        gUnknown_030015CC = vx;
+        if (vx < -0x200)
+            vx = -0x200;
+        gUnknown_030015CC = vx;
+        if (vy > 0x200)
+            vy = 0x200;
+        gUnknown_030015D0 = vy;
+        if (vy < -0x200)
+            vy = -0x200;
+        gUnknown_030015D0 = vy;
+
+        if (gUnknown_030015C0 <= 0)
+            gUnknown_030015CC = 0x200;
+        if (gUnknown_030015C0 > 0x63ff)
+            gUnknown_030015CC = -0x200;
+        if (gUnknown_030015C4 <= -0x3c00)
+            gUnknown_030015D0 = 0x200;
+        if (gUnknown_030015C4 > 0x2bff)
+            gUnknown_030015D0 = -0x200;
+    } else if (gUnknown_030015EC == 1) {
+        gUnknown_030015B4 += gUnknown_030015CC;
+        if (gUnknown_030015B4 > 0xffff && gUnknown_030015CC > 0)
+            gUnknown_030015CC = -0x400;
+        else if (gUnknown_030015B4 <= -0x10000 && gUnknown_030015CC < 0)
+            gUnknown_030015CC = 0x400;
+    } else {
+        s32 a;
+
+        if ((gUnknown_030015F0 += 0x180) > 0x8000)
+            gUnknown_030015F0 = 0x8000;
+        {
+            s32 *px = &gUnknown_030015B4;
+            s16 *tbl = gStaticData_0816A820;
+
+            a = ((gUnknown_030015F4 * 30) >> 4) & 0xff;
+            *px = (tbl[(a + 0x40) & 0xff] * gUnknown_030015F0) >> 8;
+            gUnknown_030015B8 = (tbl[a] * gUnknown_030015F0) >> 8;
+        }
+    }
+
+    if (gUnknown_030015C8 <= 0x27ff) {
+        gUnknown_030015E4 = *(s32 *)((u8 *)gUnknown_030015DC + 0x10);
+        gUnknown_030015E8 = 0;
+        SingletonSetKind(3, 0);
+        gUnknown_030015EC = 0;
+        gUnknown_030015D4 = 0xae;
+    }
 }
 
-/* NAKED transcription: `sub_8032C0C`'s sibling half of the same
- * camera-follow/scroll-velocity smoothing computation - same
- * many-high-register (`ip`/`sb`/`r8`) allocation gap. Mechanical,
- * byte-verified transcription. */
-NAKED void sub_8032EA0(void)
+/* `sub_8032C0C`'s sibling half of the same camera-follow/scroll-
+ * velocity smoothing computation: integrates the singleton's position
+ * (`gUnknown_030015B4`/`B8`/`BC`) by its velocities, damps the Y
+ * velocity toward 0, and - while the patrol phase `gUnknown_030015EC`
+ * is still in its first legs (<= 3) - ramps the Z velocity toward
+ * 0xae and bounces the X velocity at +-0x8000, counting legs; later
+ * legs ramp Z toward 0x1d4 and steer X back to 0. Once past leg 3 and
+ * far enough away (`gUnknown_030015C8 > 0x8000`), resets the timers,
+ * reloads `gUnknown_030015E4` from the owner, switches the singleton to
+ * kind 2 and re-arms the next patrol phase from the lifetime counter.
+ * Plain C (the documented "register gap" was never real). */
+void sub_8032EA0(void)
 {
-    asm(
-    "push {r4, r5, r6, r7, lr}\n\t"
-    "mov r7, r8\n\t"
-    "push {r7}\n\t"
-    "ldr r3, ea0__08032ED4\n\t"
-    "ldr r5, ea0__08032ED8\n\t"
-    "ldr r0, [r3]\n\t"
-    "ldr r1, [r5]\n\t"
-    "add r0, r0, r1\n\t"
-    "str r0, [r3]\n\t"
-    "ldr r2, ea0__08032EDC\n\t"
-    "ldr r7, ea0__08032EE0\n\t"
-    "ldr r1, [r2]\n\t"
-    "ldr r0, [r7]\n\t"
-    "add r6, r1, r0\n\t"
-    "str r6, [r2]\n\t"
-    "ldr r2, ea0__08032EE4\n\t"
-    "ldr r4, ea0__08032EE8\n\t"
-    "ldr r0, [r2]\n\t"
-    "ldr r1, [r4]\n\t"
-    "add r0, r0, r1\n\t"
-    "str r0, [r2]\n\t"
-    "cmp r6, #0\n\t"
-    "ble ea0__08032EF0\n\t"
-    "ldr r0, ea0__08032EEC\n\t"
-    "b ea0__08032EFC\n\t"
-    ".align 2, 0\n"
-    "ea0__08032ED4: .4byte gUnknown_030015B4\n"
-    "ea0__08032ED8: .4byte gUnknown_030015CC\n"
-    "ea0__08032EDC: .4byte gUnknown_030015B8\n"
-    "ea0__08032EE0: .4byte gUnknown_030015D0\n"
-    "ea0__08032EE4: .4byte gUnknown_030015BC\n"
-    "ea0__08032EE8: .4byte gUnknown_030015D4\n"
-    "ea0__08032EEC: .4byte 0xFFFFFF00\n"
-    "ea0__08032EF0:\n\t"
-    "cmp r6, #0\n\t"
-    "bge ea0__08032EFA\n\t"
-    "mov r0, #0x80\n\t"
-    "lsl r0, r0, #1\n\t"
-    "b ea0__08032EFC\n\t"
-    "ea0__08032EFA:\n\t"
-    "mov r0, #0\n\t"
-    "ea0__08032EFC:\n\t"
-    "str r0, [r7]\n\t"
-    "ldr r0, ea0__08032F14\n\t"
-    "ldr r1, [r0]\n\t"
-    "add r6, r0, #0\n\t"
-    "cmp r1, #3\n\t"
-    "bgt ea0__08032F5C\n\t"
-    "ldr r0, [r4]\n\t"
-    "cmp r0, #0xad\n\t"
-    "bgt ea0__08032F18\n\t"
-    "add r0, #1\n\t"
-    "b ea0__08032F1E\n\t"
-    ".align 2, 0\n"
-    "ea0__08032F14: .4byte gUnknown_030015EC\n"
-    "ea0__08032F18:\n\t"
-    "cmp r0, #0xae\n\t"
-    "ble ea0__08032F20\n\t"
-    "sub r0, #1\n\t"
-    "ea0__08032F1E:\n\t"
-    "str r0, [r4]\n\t"
-    "ea0__08032F20:\n\t"
-    "ldr r1, [r3]\n\t"
-    "ldr r0, ea0__08032F34\n\t"
-    "cmp r1, r0\n\t"
-    "ble ea0__08032F3C\n\t"
-    "ldr r0, [r5]\n\t"
-    "cmp r0, #0\n\t"
-    "ble ea0__08032F3C\n\t"
-    "ldr r0, ea0__08032F38\n\t"
-    "b ea0__08032F4E\n\t"
-    ".align 2, 0\n"
-    "ea0__08032F34: .4byte 0x00007FFF\n"
-    "ea0__08032F38: .4byte 0xFFFFFE00\n"
-    "ea0__08032F3C:\n\t"
-    "ldr r1, [r3]\n\t"
-    "ldr r0, ea0__08032F58\n\t"
-    "cmp r1, r0\n\t"
-    "bgt ea0__08032F8A\n\t"
-    "ldr r0, [r5]\n\t"
-    "cmp r0, #0\n\t"
-    "bge ea0__08032F8A\n\t"
-    "mov r0, #0x80\n\t"
-    "lsl r0, r0, #2\n\t"
-    "ea0__08032F4E:\n\t"
-    "str r0, [r5]\n\t"
-    "ldr r0, [r6]\n\t"
-    "add r0, #1\n\t"
-    "str r0, [r6]\n\t"
-    "b ea0__08032F8A\n\t"
-    ".align 2, 0\n"
-    "ea0__08032F58: .4byte 0xFFFF8000\n"
-    "ea0__08032F5C:\n\t"
-    "ldr r1, [r4]\n\t"
-    "mov r0, #0xea\n\t"
-    "lsl r0, r0, #1\n\t"
-    "cmp r1, r0\n\t"
-    "bgt ea0__08032F6A\n\t"
-    "add r0, r1, #1\n\t"
-    "b ea0__08032F6C\n\t"
-    "ea0__08032F6A:\n\t"
-    "sub r0, r1, #1\n\t"
-    "ea0__08032F6C:\n\t"
-    "str r0, [r4]\n\t"
-    "ldr r1, [r3]\n\t"
-    "cmp r1, #0\n\t"
-    "ble ea0__08032F7C\n\t"
-    "ldr r0, ea0__08032F78\n\t"
-    "b ea0__08032F88\n\t"
-    ".align 2, 0\n"
-    "ea0__08032F78: .4byte 0xFFFFFE00\n"
-    "ea0__08032F7C:\n\t"
-    "cmp r1, #0\n\t"
-    "bge ea0__08032F86\n\t"
-    "mov r0, #0x80\n\t"
-    "lsl r0, r0, #2\n\t"
-    "b ea0__08032F88\n\t"
-    "ea0__08032F86:\n\t"
-    "mov r0, #0\n\t"
-    "ea0__08032F88:\n\t"
-    "str r0, [r5]\n\t"
-    "ea0__08032F8A:\n\t"
-    "mov r8, r6\n\t"
-    "ldr r0, [r6]\n\t"
-    "cmp r0, #3\n\t"
-    "ble ea0__08033032\n\t"
-    "ldr r0, ea0__08032FFC\n\t"
-    "ldr r1, [r0]\n\t"
-    "mov r0, #0x80\n\t"
-    "lsl r0, r0, #8\n\t"
-    "cmp r1, r0\n\t"
-    "ble ea0__08033032\n\t"
-    "ldr r0, ea0__08033000\n\t"
-    "mov r5, #0\n\t"
-    "str r5, [r0]\n\t"
-    "ldr r0, ea0__08033004\n\t"
-    "str r5, [r0]\n\t"
-    "ldr r1, ea0__08033008\n\t"
-    "ldr r0, ea0__0803300C\n\t"
-    "ldr r0, [r0]\n\t"
-    "ldr r0, [r0, #0x10]\n\t"
-    "str r0, [r1]\n\t"
-    "ldr r0, ea0__08033010\n\t"
-    "str r5, [r0]\n\t"
-    "mov r7, #2\n\t"
-    "ldr r0, ea0__08033014\n\t"
-    "str r7, [r0]\n\t"
-    "ldr r0, ea0__08033018\n\t"
-    "ldr r4, [r0]\n\t"
-    "str r5, [r4, #0xc]\n\t"
-    "ldr r0, [r4]\n\t"
-    "ldrh r0, [r0]\n\t"
-    "mov r1, #0\n\t"
-    "strh r0, [r4, #0x10]\n\t"
-    "strb r1, [r4, #0x12]\n\t"
-    "add r0, r4, #0\n\t"
-    "bl GetAnimFrameBaseOffset\n\t"
-    "ldr r2, [r4, #0xc]\n\t"
-    "ldr r3, [r4]\n\t"
-    "lsl r1, r2, #1\n\t"
-    "add r1, r1, r2\n\t"
-    "lsl r1, r1, #2\n\t"
-    "add r1, r1, r3\n\t"
-    "mov r2, #4\n\t"
-    "ldrsh r1, [r1, r2]\n\t"
-    "cmp r0, r1\n\t"
-    "blt ea0__08032FE8\n\t"
-    "str r5, [r4, #8]\n\t"
-    "ea0__08032FE8:\n\t"
-    "ldr r0, ea0__0803301C\n\t"
-    "ldr r0, [r0]\n\t"
-    "cmp r0, #2\n\t"
-    "ble ea0__08033024\n\t"
-    "mov r0, #1\n\t"
-    "mov r1, r8\n\t"
-    "str r0, [r1]\n\t"
-    "ldr r1, ea0__08033020\n\t"
-    "mov r0, #0x40\n\t"
-    "b ea0__0803302A\n\t"
-    ".align 2, 0\n"
-    "ea0__08032FFC: .4byte gUnknown_030015C8\n"
-    "ea0__08033000: .4byte gUnknown_030015F4\n"
-    "ea0__08033004: .4byte gUnknown_030015F0\n"
-    "ea0__08033008: .4byte gUnknown_030015E4\n"
-    "ea0__0803300C: .4byte gUnknown_030015DC\n"
-    "ea0__08033010: .4byte gUnknown_030015E8\n"
-    "ea0__08033014: .4byte gUnknown_030015B0\n"
-    "ea0__08033018: .4byte gUnknown_030015AC\n"
-    "ea0__0803301C: .4byte gUnknown_030015F8\n"
-    "ea0__08033020: .4byte gUnknown_030015D4\n"
-    "ea0__08033024:\n\t"
-    "str r7, [r6]\n\t"
-    "ldr r1, ea0__0803303C\n\t"
-    "mov r0, #0x6a\n\t"
-    "ea0__0803302A:\n\t"
-    "str r0, [r1]\n\t"
-    "ldr r1, ea0__08033040\n\t"
-    "ldr r0, ea0__08033044\n\t"
-    "str r0, [r1]\n\t"
-    "ea0__08033032:\n\t"
-    "pop {r3}\n\t"
-    "mov r8, r3\n\t"
-    "pop {r4, r5, r6, r7}\n\t"
-    "pop {r0}\n\t"
-    "bx r0\n\t"
-    ".align 2, 0\n"
-    "ea0__0803303C: .4byte gUnknown_030015D4\n"
-    "ea0__08033040: .4byte gUnknown_030015CC\n"
-    "ea0__08033044: .4byte 0xFFFFF600\n"
-    );
+    s32 y;
+
+    gUnknown_030015B4 += gUnknown_030015CC;
+    y = gUnknown_030015B8 += gUnknown_030015D0;
+    gUnknown_030015BC += gUnknown_030015D4;
+
+    if (y > 0)
+        gUnknown_030015D0 = -0x100;
+    else if (y < 0)
+        gUnknown_030015D0 = 0x100;
+    else
+        gUnknown_030015D0 = 0;
+
+    if (gUnknown_030015EC <= 3) {
+        s32 v = gUnknown_030015D4;
+
+        if (v <= 0xad)
+            gUnknown_030015D4 = v + 1;
+        else if (v > 0xae)
+            gUnknown_030015D4 = v - 1;
+
+        if (gUnknown_030015B4 > 0x7fff && gUnknown_030015CC > 0) {
+            gUnknown_030015CC = -0x200;
+            gUnknown_030015EC++;
+        } else if (gUnknown_030015B4 <= -0x8000 && gUnknown_030015CC < 0) {
+            gUnknown_030015CC = 0x200;
+            gUnknown_030015EC++;
+        }
+    } else {
+        s32 v = gUnknown_030015D4;
+
+        if (v <= 0x1d4)
+            gUnknown_030015D4 = v + 1;
+        else
+            gUnknown_030015D4 = v - 1;
+
+        if (gUnknown_030015B4 > 0)
+            gUnknown_030015CC = -0x200;
+        else if (gUnknown_030015B4 < 0)
+            gUnknown_030015CC = 0x200;
+        else
+            gUnknown_030015CC = 0;
+    }
+
+    if (gUnknown_030015EC > 3 && gUnknown_030015C8 > 0x8000) {
+        gUnknown_030015F4 = 0;
+        gUnknown_030015F0 = 0;
+        gUnknown_030015E4 = *(s32 *)((u8 *)gUnknown_030015DC + 0x10);
+        gUnknown_030015E8 = 0;
+        SingletonSetKind(2, 0);
+        if (gUnknown_030015F8 > 2) {
+            gUnknown_030015EC = 1;
+            gUnknown_030015D4 = 0x40;
+        } else {
+            gUnknown_030015EC = 2;
+            gUnknown_030015D4 = 0x6a;
+        }
+        gUnknown_030015CC = -0xa00;
+    }
 }
 
 /* Patrol/oscillation driver, structurally parallel to the boss
@@ -1224,6 +884,27 @@ void sub_8033048(void)
  * `gUnknown_03001520`-family) - the same many-high-register
  * (`sl`/`sb`/`r8`) allocation gap as `sub_8032C0C`/`sub_8032EA0` above.
  * Mechanical, byte-verified transcription. */
+#if NON_MATCHING
+/* Near miss, same shape as its twin `sub_8030D48` (actor_part23b.c):
+ * old_agbcc is 11 halfwords off (the next-row pointer and the hoisted
+ * `&gUnknown_030015A8` copy swap `ip`/`r3`); agbcc is further off. */
+void sub_80330FC(void *tileRow)
+{
+    u16 *src = tileRow;
+    s32 i, j;
+    u8 *row = (u8 *)((gUnknown_03001598 + 0x18) << 11) + (0x06000000 + (0x20 - gUnknown_030015A0) / 4 * 2) + ((0x20 - gUnknown_030015A4) / 2 * 32 + 2);
+
+    for (i = 0; i < gUnknown_030015A4; i++) {
+        for (j = 0; j < gUnknown_030015A0 / 2; j++) {
+            u8 bias = *(u8 *)&gUnknown_030015A8;
+            u16 lo = *src++ + bias;
+            u16 hi = *src++ + bias;
+            ((u16 *)row)[j] = lo | (hi << 8);
+        }
+        row += 0x20;
+    }
+}
+#else
 NAKED void sub_80330FC(void *tileRow)
 {
     asm(
@@ -1327,475 +1008,149 @@ NAKED void sub_80330FC(void *tileRow)
     "f0c__080331B8: .4byte gUnknown_030015A8\n"
     );
 }
+#endif
 
-/* NAKED transcription: the missing constructor for the whole singleton
- * system - see `docs/rom_map.md`'s "`sub_80331BC` closes a long-open
- * question" section. Caches its own incoming argument into
- * `gUnknown_030015D8`, seeds the P2-meter-shaped row/column counts
- * (`gUnknown_030015A0`/`030015A4`) from a per-level table
- * (`gStaticData_08169CE8`, same family shape as the meter-twins' own
- * tables), allocates the singleton object itself (part table
- * `gStaticData_0817C4BC`, "frame offsets" field re-using the
- * row-pointer array `gUnknown_03001600`), selects keyframe 0, stores
- * the new object into `gUnknown_030015AC` - the pointer everything else
- * in this thread reads - resets its state/anim-frame fields, fires the
- * per-frame update driver (`sub_8033604`) once, and finishes by
- * clearing the "apply now" BG2 latch and setting the lifetime counter
- * `gUnknown_030015F8 = 4` (the exact counter `sub_803388C`, issue #62,
- * decrements toward "dead"). A first plain-C attempt kept the freshly
- * allocated pointer and `&gUnknown_030015AC` in the same register
- * (collapsing the ROM's separate `r4`(address)/`r5`(allocation) split)
- * and only used one "zero" register where the ROM keeps two (`r4`
- * reused as a zero literal after the address store, plus a second,
- * independent `r6` zero for the `self+0x12` byte) - four bytes short of
- * the ROM's own build once linked. Transcribed directly instead. */
-NAKED void sub_80331BC(void *arg0)
+/* The missing constructor for the whole singleton system - see
+ * `docs/rom_map.md`'s "`sub_80331BC` closes a long-open question"
+ * section. Caches its own incoming argument into `gUnknown_030015D8`,
+ * seeds the P2-meter-shaped row/column counts (`gUnknown_030015A0`/
+ * `030015A4`) from a per-level table (`gStaticData_08169CE8`), allocates
+ * the singleton object itself (part table `gStaticData_0817C4BC`,
+ * "frame offsets" field re-using the row-pointer array
+ * `gUnknown_03001600`), stores it into `gUnknown_030015AC` - the pointer
+ * everything else in this thread reads - resets its kind/anim-frame
+ * fields, fires the per-frame update driver (`sub_8033604`) once, and
+ * finishes by clearing the "apply now" BG2 latch and setting the
+ * lifetime counter `gUnknown_030015F8 = 4` (the exact counter
+ * `sub_803388C`, issue #62, decrements toward "dead").
+ *
+ * The boss tracker's constructor `sub_8030F88` (actor_part23d.c) is its
+ * twin and matched the same way: an inlined C++ `new` - destination
+ * address taken before the allocation, an `operator new`-style size
+ * wrapper, and an inlined base constructor taking its values as
+ * arguments - followed by an inlined "set kind" helper (the source of
+ * the ROM's two separate zero registers). */
+void sub_80331BC(s32 level)
 {
-    asm(
-    "push {r4, r5, r6, lr}\n\t"
-    "ldr r1, bc__0803323C\n\t"
-    "str r0, [r1]\n\t"
-    "ldr r1, bc__08033240\n\t"
-    "ldr r2, bc__08033244\n\t"
-    "mov r3, #0\n\t"
-    "ldrsh r0, [r2, r3]\n\t"
-    "str r0, [r1]\n\t"
-    "ldr r1, bc__08033248\n\t"
-    "mov r3, #2\n\t"
-    "ldrsh r0, [r2, r3]\n\t"
-    "str r0, [r1]\n\t"
-    "ldr r4, bc__0803324C\n\t"
-    "mov r0, #0x1c\n\t"
-    "mov r1, #0x80\n\t"
-    "lsl r1, r1, #0x18\n\t"
-    "bl mem_alloc\n\t"
-    "add r5, r0, #0\n\t"
-    "ldr r0, bc__08033250\n\t"
-    "ldr r1, bc__08033254\n\t"
-    "mov r2, #1\n\t"
-    "str r0, [r5]\n\t"
-    "str r1, [r5, #4]\n\t"
-    "str r2, [r5, #0x18]\n\t"
-    "add r0, r5, #0\n\t"
-    "mov r1, #0\n\t"
-    "bl sub_803B0A8\n\t"
-    "str r5, [r4]\n\t"
-    "mov r4, #0\n\t"
-    "ldr r0, bc__08033258\n\t"
-    "str r4, [r0]\n\t"
-    "str r4, [r5, #0xc]\n\t"
-    "ldr r0, [r5]\n\t"
-    "ldrh r0, [r0]\n\t"
-    "mov r6, #0\n\t"
-    "strh r0, [r5, #0x10]\n\t"
-    "strb r6, [r5, #0x12]\n\t"
-    "add r0, r5, #0\n\t"
-    "bl GetAnimFrameBaseOffset\n\t"
-    "ldr r2, [r5, #0xc]\n\t"
-    "ldr r3, [r5]\n\t"
-    "lsl r1, r2, #1\n\t"
-    "add r1, r1, r2\n\t"
-    "lsl r1, r1, #2\n\t"
-    "add r1, r1, r3\n\t"
-    "mov r2, #4\n\t"
-    "ldrsh r1, [r1, r2]\n\t"
-    "cmp r0, r1\n\t"
-    "blt bc__08033226\n\t"
-    "str r4, [r5, #8]\n\t"
-    "bc__08033226:\n\t"
-    "bl sub_8033604\n\t"
-    "ldr r0, bc__0803325C\n\t"
-    "strb r6, [r0]\n\t"
-    "ldr r1, bc__08033260\n\t"
-    "mov r0, #4\n\t"
-    "str r0, [r1]\n\t"
-    "pop {r4, r5, r6}\n\t"
-    "pop {r0}\n\t"
-    "bx r0\n\t"
-    ".align 2, 0\n"
-    "bc__0803323C: .4byte gUnknown_030015D8\n"
-    "bc__08033240: .4byte gUnknown_030015A0\n"
-    "bc__08033244: .4byte gStaticData_08169CE8\n"
-    "bc__08033248: .4byte gUnknown_030015A4\n"
-    "bc__0803324C: .4byte gUnknown_030015AC\n"
-    "bc__08033250: .4byte gStaticData_0817C4BC\n"
-    "bc__08033254: .4byte gUnknown_03001600\n"
-    "bc__08033258: .4byte gUnknown_030015B0\n"
-    "bc__0803325C: .4byte gUnknown_0300159C\n"
-    "bc__08033260: .4byte gUnknown_030015F8\n"
-    );
+    struct actor_self *t;
+    struct actor_self **slot;
+
+    gUnknown_030015D8 = level;
+    gUnknown_030015A0 = ((s16 *)gStaticData_08169CE8)[0];
+    gUnknown_030015A4 = ((s16 *)gStaticData_08169CE8)[1];
+    slot = &gUnknown_030015AC;
+    t = AllocActor(0x1c);
+    InitAnimPart(t, (struct anim_frame_record *)gStaticData_0817C4BC, (u32 *)gUnknown_03001600, 1);
+    *slot = t;
+    SingletonSetKind(0, 0);
+    sub_8033604();
+    gUnknown_0300159C = 0;
+    gUnknown_030015F8 = 4;
 }
 
-/* NAKED transcription: the animation-system-wired constructor/init step
- * for the same `gUnknown_030015Bx` object - resets the patrol
- * oscillator (`gUnknown_030015D4 = 0x66`), selects animation "kind" 1,
- * runs the standard anim-frame-reset sequence, seeds position from its
- * arguments, looks up the object's own trampoline record through the
- * third table family (`gStaticData_0817C460`, stride 0x28, indexed by
- * both the singleton pointer and the incoming "kind" argument -
- * `gUnknown_030015DC` caching the result for later accessors, same
- * convention as `sub_8033264`'s siblings), sets DISPCNT's window bit,
- * resets every timing/lifetime field for a fresh spawn, and finishes by
- * spawning two pairs of small effect objects (`sub_802E538` x2,
- * `sub_802E5B0`, `sub_802E57C`) positioned relative to the singleton's
- * own coordinates - the "burst spawn... clustered around the
- * singleton" `docs/rom_map.md` already documents. Not attempted as
- * plain C: six live scratch values simultaneously (`sb`, `sl`, `r8` in
- * addition to `r4`-`r7`), the same many-high-register allocation gap as
- * the rest of this file's heavier functions. Mechanical, byte-verified
- * transcription. */
-NAKED void sub_8033264(void *arg0, s32 arg1, s32 arg2, s32 arg3)
+/* The animation-system-wired spawn/init step for the singleton - the
+ * twin of the boss cluster's `sub_8031040` (actor_part23e.c): resets
+ * the patrol oscillator (`gUnknown_030015D4 = 0x66`), selects animation
+ * "kind" 1 with the standard anim-frame reset, seeds position from its
+ * arguments, looks up the per-kind record (`gStaticData_0817C460`,
+ * stride 0x28, indexed by the incoming kind plus the level index
+ * `gUnknown_030015D8` the constructor cached; `gUnknown_030015DC` keeps
+ * it for later accessors), sets DISPCNT's window bit, resets every
+ * timing/lifetime field for a fresh spawn, recomputes the BG2 zoom, blits
+ * the current tile row, and finishes by spawning two pairs of small
+ * effect objects (`sub_802E538` x2, `sub_802E5B0`, `sub_802E57C`)
+ * around the singleton - the "burst spawn... clustered around the
+ * singleton" `docs/rom_map.md` documents. Plain C: the "six live
+ * scratch values" blocker wasn't real; the zoom divide is an explicit
+ * `sub_803ADB4` call and the record lookup needs the `- -` form below. */
+void sub_8033264(s32 kind, s32 x, s32 y, s32 z)
 {
-    asm(
-    "push {r4, r5, r6, r7, lr}\n\t"
-    "mov r7, sl\n\t"
-    "mov r6, sb\n\t"
-    "mov r5, r8\n\t"
-    "push {r5, r6, r7}\n\t"
-    "mov sb, r0\n\t"
-    "add r5, r1, #0\n\t"
-    "add r6, r2, #0\n\t"
-    "mov r8, r3\n\t"
-    "ldr r1, t264__08033408\n\t"
-    "mov r0, #0x66\n\t"
-    "str r0, [r1]\n\t"
-    "mov r7, #0\n\t"
-    "ldr r0, t264__0803340C\n\t"
-    "mov r1, #1\n\t"
-    "str r1, [r0]\n\t"
-    "ldr r2, t264__08033410\n\t"
-    "ldr r4, [r2]\n\t"
-    "str r7, [r4, #0xc]\n\t"
-    "ldr r0, [r4]\n\t"
-    "ldrh r0, [r0]\n\t"
-    "strh r0, [r4, #0x10]\n\t"
-    "mov r3, #0\n\t"
-    "strb r3, [r4, #0x12]\n\t"
-    "add r0, r4, #0\n\t"
-    "bl GetAnimFrameBaseOffset\n\t"
-    "ldr r2, [r4, #0xc]\n\t"
-    "ldr r3, [r4]\n\t"
-    "lsl r1, r2, #1\n\t"
-    "add r1, r1, r2\n\t"
-    "lsl r1, r1, #2\n\t"
-    "add r1, r1, r3\n\t"
-    "mov r2, #4\n\t"
-    "ldrsh r1, [r1, r2]\n\t"
-    "cmp r0, r1\n\t"
-    "blt t264__080332B0\n\t"
-    "str r7, [r4, #8]\n\t"
-    "t264__080332B0:\n\t"
-    "lsl r0, r5, #2\n\t"
-    "add r0, r0, r5\n\t"
-    "ldr r3, t264__08033414\n\t"
-    "str r0, [r3]\n\t"
-    "ldr r0, t264__08033418\n\t"
-    "mov sl, r0\n\t"
-    "lsl r0, r6, #1\n\t"
-    "add r0, r0, r6\n\t"
-    "mov r1, sl\n\t"
-    "str r0, [r1]\n\t"
-    "ldr r5, t264__0803341C\n\t"
-    "mov r2, r8\n\t"
-    "str r2, [r5]\n\t"
-    "ldr r3, t264__08033420\n\t"
-    "ldr r0, t264__08033424\n\t"
-    "ldr r0, [r0]\n\t"
-    "lsl r1, r0, #2\n\t"
-    "add r1, r1, r0\n\t"
-    "lsl r1, r1, #3\n\t"
-    "mov r2, sb\n\t"
-    "lsl r0, r2, #2\n\t"
-    "add r0, sb\n\t"
-    "lsl r0, r0, #3\n\t"
-    "ldr r2, t264__08033428\n\t"
-    "add r0, r0, r2\n\t"
-    "add r1, r1, r0\n\t"
-    "str r1, [r3]\n\t"
-    "ldr r2, t264__0803342C\n\t"
-    "ldr r0, [r1, #0xc]\n\t"
-    "str r0, [r2]\n\t"
-    "ldr r2, t264__08033430\n\t"
-    "ldr r0, [r1]\n\t"
-    "str r0, [r2]\n\t"
-    "ldr r0, t264__08033434\n\t"
-    "str r7, [r0]\n\t"
-    "mov r2, #0x80\n\t"
-    "lsl r2, r2, #0x13\n\t"
-    "ldrh r0, [r2]\n\t"
-    "mov r3, #0x80\n\t"
-    "lsl r3, r3, #3\n\t"
-    "add r1, r3, #0\n\t"
-    "orr r0, r1\n\t"
-    "strh r0, [r2]\n\t"
-    "ldr r0, t264__08033438\n\t"
-    "mov r1, #1\n\t"
-    "strb r1, [r0]\n\t"
-    "ldr r0, t264__0803343C\n\t"
-    "str r7, [r0]\n\t"
-    "ldr r0, t264__08033440\n\t"
-    "str r7, [r0]\n\t"
-    "ldr r0, t264__08033444\n\t"
-    "str r7, [r0]\n\t"
-    "ldr r0, t264__08033448\n\t"
-    "str r7, [r0]\n\t"
-    "ldr r1, t264__0803344C\n\t"
-    "mov r0, #4\n\t"
-    "str r0, [r1]\n\t"
-    "ldr r0, t264__08033450\n\t"
-    "strh r7, [r0]\n\t"
-    "ldr r0, t264__08033454\n\t"
-    "mov r2, #0\n\t"
-    "strb r2, [r0]\n\t"
-    "ldr r4, t264__08033458\n\t"
-    "bl sub_8029B2C\n\t"
-    "lsl r0, r0, #8\n\t"
-    "ldr r1, [r5]\n\t"
-    "sub r1, r1, r0\n\t"
-    "str r1, [r4]\n\t"
-    "mov r0, #0xe0\n\t"
-    "lsl r0, r0, #0x11\n\t"
-    "bl sub_803ADB4\n\t"
-    "ldr r2, t264__0803345C\n\t"
-    "ldr r3, t264__08033414\n\t"
-    "ldr r1, [r3]\n\t"
-    "mul r1, r0, r1\n\t"
-    "asr r1, r1, #0xc\n\t"
-    "str r1, [r2]\n\t"
-    "ldr r2, t264__08033460\n\t"
-    "mov r3, sl\n\t"
-    "ldr r1, [r3]\n\t"
-    "mul r0, r1, r0\n\t"
-    "asr r0, r0, #0xc\n\t"
-    "str r0, [r2]\n\t"
-    "ldr r0, [r4]\n\t"
-    "bl sub_8029E34\n\t"
-    "ldr r0, t264__08033410\n\t"
-    "ldr r2, [r0]\n\t"
-    "ldr r3, [r2, #8]\n\t"
-    "asr r3, r3, #8\n\t"
-    "ldr r1, [r2, #0xc]\n\t"
-    "ldr r4, [r2]\n\t"
-    "lsl r0, r1, #1\n\t"
-    "add r0, r0, r1\n\t"
-    "lsl r0, r0, #2\n\t"
-    "add r0, r0, r4\n\t"
-    "mov r1, #2\n\t"
-    "ldrsh r0, [r0, r1]\n\t"
-    "add r0, r0, r3\n\t"
-    "ldr r1, [r2, #4]\n\t"
-    "lsl r0, r0, #2\n\t"
-    "add r0, r0, r1\n\t"
-    "ldr r0, [r0]\n\t"
-    "bl sub_80330FC\n\t"
-    "ldr r2, t264__08033414\n\t"
-    "ldr r0, [r2]\n\t"
-    "mov r3, #0x80\n\t"
-    "lsl r3, r3, #6\n\t"
-    "add r0, r0, r3\n\t"
-    "mov r2, sl\n\t"
-    "ldr r1, [r2]\n\t"
-    "mov r3, #0xc0\n\t"
-    "lsl r3, r3, #6\n\t"
-    "add r1, r1, r3\n\t"
-    "ldr r2, [r5]\n\t"
-    "ldr r4, t264__08033464\n\t"
-    "add r2, r2, r4\n\t"
-    "bl sub_802E5B0\n\t"
-    "ldr r1, t264__08033414\n\t"
-    "ldr r0, [r1]\n\t"
-    "mov r2, #0xf0\n\t"
-    "lsl r2, r2, #5\n\t"
-    "add r0, r0, r2\n\t"
-    "mov r3, sl\n\t"
-    "ldr r1, [r3]\n\t"
-    "ldr r2, t264__08033468\n\t"
-    "add r1, r1, r2\n\t"
-    "ldr r2, [r5]\n\t"
-    "add r2, r2, r4\n\t"
-    "bl sub_802E57C\n\t"
-    "ldr r3, t264__08033414\n\t"
-    "ldr r0, [r3]\n\t"
-    "ldr r1, t264__0803346C\n\t"
-    "add r0, r0, r1\n\t"
-    "mov r2, sl\n\t"
-    "ldr r1, [r2]\n\t"
-    "mov r4, #0xa0\n\t"
-    "lsl r4, r4, #4\n\t"
-    "add r1, r1, r4\n\t"
-    "ldr r2, [r5]\n\t"
-    "sub r2, #1\n\t"
-    "mov r3, #1\n\t"
-    "bl sub_802E538\n\t"
-    "ldr r3, t264__08033414\n\t"
-    "ldr r0, [r3]\n\t"
-    "mov r1, #0x84\n\t"
-    "lsl r1, r1, #8\n\t"
-    "add r0, r0, r1\n\t"
-    "mov r2, sl\n\t"
-    "ldr r1, [r2]\n\t"
-    "add r1, r1, r4\n\t"
-    "ldr r2, [r5]\n\t"
-    "sub r2, #1\n\t"
-    "mov r3, #0\n\t"
-    "bl sub_802E538\n\t"
-    "bl sub_802A4F8\n\t"
-    "pop {r3, r4, r5}\n\t"
-    "mov r8, r3\n\t"
-    "mov sb, r4\n\t"
-    "mov sl, r5\n\t"
-    "pop {r4, r5, r6, r7}\n\t"
-    "pop {r0}\n\t"
-    "bx r0\n\t"
-    ".align 2, 0\n"
-    "t264__08033408: .4byte gUnknown_030015D4\n"
-    "t264__0803340C: .4byte gUnknown_030015B0\n"
-    "t264__08033410: .4byte gUnknown_030015AC\n"
-    "t264__08033414: .4byte gUnknown_030015B4\n"
-    "t264__08033418: .4byte gUnknown_030015B8\n"
-    "t264__0803341C: .4byte gUnknown_030015BC\n"
-    "t264__08033420: .4byte gUnknown_030015DC\n"
-    "t264__08033424: .4byte gUnknown_030015D8\n"
-    "t264__08033428: .4byte gStaticData_0817C460\n"
-    "t264__0803342C: .4byte gUnknown_030015E4\n"
-    "t264__08033430: .4byte gUnknown_030015E0\n"
-    "t264__08033434: .4byte gUnknown_030015E8\n"
-    "t264__08033438: .4byte gUnknown_0300159C\n"
-    "t264__0803343C: .4byte gUnknown_03001598\n"
-    "t264__08033440: .4byte gUnknown_030015EC\n"
-    "t264__08033444: .4byte gUnknown_030015F4\n"
-    "t264__08033448: .4byte gUnknown_030015F0\n"
-    "t264__0803344C: .4byte gUnknown_030015F8\n"
-    "t264__08033450: .4byte gUnknown_030015FC\n"
-    "t264__08033454: .4byte gUnknown_030015FE\n"
-    "t264__08033458: .4byte gUnknown_030015C8\n"
-    "t264__0803345C: .4byte gUnknown_030015C0\n"
-    "t264__08033460: .4byte gUnknown_030015C4\n"
-    "t264__08033464: .4byte 0xFFFFFF00\n"
-    "t264__08033468: .4byte 0xFFFFD000\n"
-    "t264__0803346C: .4byte 0xFFFFBF00\n"
-    );
+    s32 scale;
+
+    gUnknown_030015D4 = 0x66;
+    SingletonSetKind(1, 0);
+    gUnknown_030015B4 = x * 5;
+    gUnknown_030015B8 = y * 3;
+    gUnknown_030015BC = z;
+    /* `a - -b` rather than `a + b`: the latter lets fold reassociate the
+     * constant table base out of `&table[kind]`, while the ROM adds the
+     * level offset to the finished record address. */
+    gUnknown_030015DC = (void *)(gUnknown_030015D8 * (s32)sizeof(struct singleton_kind) - -(s32)&gStaticData_0817C460[kind]);
+    gUnknown_030015E4 = ((struct singleton_kind *)gUnknown_030015DC)->unk_0C;
+    gUnknown_030015E0 = ((struct singleton_kind *)gUnknown_030015DC)->unk_00;
+    gUnknown_030015E8 = 0;
+    REG_DISPCNT |= 0x400;
+    gUnknown_0300159C = 1;
+    gUnknown_03001598 = 0;
+    gUnknown_030015EC = 0;
+    gUnknown_030015F4 = 0;
+    gUnknown_030015F0 = 0;
+    gUnknown_030015F8 = 4;
+    gUnknown_030015FC = 0;
+    gUnknown_030015FE = 0;
+    gUnknown_030015C8 = gUnknown_030015BC - (sub_8029B2C() << 8);
+    scale = sub_803ADB4(0x1C00000, gUnknown_030015C8);
+    gUnknown_030015C0 = (gUnknown_030015B4 * scale) >> 12;
+    gUnknown_030015C4 = (scale * gUnknown_030015B8) >> 12;
+    sub_8029E34(gUnknown_030015C8);
+    {
+        struct actor_self *self = gUnknown_030015AC;
+        s32 t = self->animTime >> 8;
+
+        sub_80330FC((void *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
+    }
+    sub_802E5B0(gUnknown_030015B4 + 0x2000, gUnknown_030015B8 + 0x3000, gUnknown_030015BC - 0x100);
+    sub_802E57C(gUnknown_030015B4 + 0x1e00, gUnknown_030015B8 - 0x3000, gUnknown_030015BC - 0x100);
+    sub_802E538(gUnknown_030015B4 - 0x4100, gUnknown_030015B8 + 0xa00, gUnknown_030015BC - 1, 1);
+    sub_802E538(gUnknown_030015B4 + 0x8400, gUnknown_030015B8 + 0xa00, gUnknown_030015BC - 1, 0);
+    sub_802A4F8();
 }
 
-/* NAKED transcription: per-frame animate+project+tile-stream update
- * driver, structurally parallel to the boss cluster's `sub_8031504`
- * (issue #58): runs the P1/P2 speed-toggle dispatcher (`sub_8032B6C`),
- * and while the singleton's animation "kind" (`gUnknown_030015B0`) is
- * active, the usual anim-frame-advance-and-clamp idiom; then
- * recomputes the projection scale (`sub_803ADB4`) and BG2-space offsets
- * (`gUnknown_030015C0`/`030015C4`) from the current position and
- * `gUnknown_030015C8`, calling `sub_8029E34` on the result; finally, if
- * the (Q8.8-truncated) frame index changed this tick, streams the new
- * tile row through `sub_80330FC` and arms the "apply now" BG2 latch
- * (`gUnknown_0300159C`). A first plain-C attempt (mirroring the anim
- * idiom already matched for `sub_8032910` et al.) produced 4 *extra*
- * bytes once linked - undetectable from the isolated compile alone,
- * only surfacing via the map-file address-shift check `docs/workflow.md`
- * describes. Transcribed directly instead. */
-NAKED void sub_8033470(void)
+/* Per-frame animate+project+tile-stream update driver, the singleton's
+ * twin of the boss cluster's `sub_80311C4` (actor_part23f.c) and
+ * matched the same way: runs the P1/P2 speed-toggle dispatcher
+ * (`sub_8032B6C`), and while the singleton's animation "kind"
+ * (`gUnknown_030015B0`) is active, the usual anim-frame-advance-and-
+ * clamp idiom; then recomputes the projection scale and BG2-space
+ * offsets (`gUnknown_030015C0`/`030015C4`) from the current position
+ * and `gUnknown_030015C8`, calling `sub_8029E34` on the result;
+ * finally, if the (Q8.8-truncated) frame index changed this tick,
+ * streams the new tile row through `sub_80330FC` and arms the "apply
+ * now" BG2 latch (`gUnknown_0300159C`). The divide is an explicit call
+ * to `sub_803ADB4` (the ROM reloads `gUnknown_030015C8` after it, which
+ * `/`'s const libcall wouldn't), and the tail reads the singleton
+ * through a fresh local - the "4 extra bytes" of the earlier attempt. */
+void sub_8033470(void)
 {
-    asm(
-    "push {r4, r5, r6, lr}\n\t"
-    "ldr r5, t470__0803352C\n\t"
-    "ldr r0, [r5]\n\t"
-    "ldr r0, [r0, #8]\n\t"
-    "asr r6, r0, #8\n\t"
-    "bl sub_8032B6C\n\t"
-    "ldr r0, t470__08033530\n\t"
-    "ldr r0, [r0]\n\t"
-    "cmp r0, #0\n\t"
-    "beq t470__08033526\n\t"
-    "ldr r4, [r5]\n\t"
-    "mov r0, #0x10\n\t"
-    "ldrsh r1, [r4, r0]\n\t"
-    "ldr r0, [r4, #8]\n\t"
-    "add r0, r0, r1\n\t"
-    "str r0, [r4, #8]\n\t"
-    "mov r0, #0\n\t"
-    "strb r0, [r4, #0x12]\n\t"
-    "add r0, r4, #0\n\t"
-    "bl GetAnimFrameBaseOffset\n\t"
-    "ldr r2, [r4, #0xc]\n\t"
-    "ldr r3, [r4]\n\t"
-    "lsl r1, r2, #1\n\t"
-    "add r1, r1, r2\n\t"
-    "lsl r1, r1, #2\n\t"
-    "add r1, r1, r3\n\t"
-    "mov r3, #4\n\t"
-    "ldrsh r2, [r1, r3]\n\t"
-    "cmp r0, r2\n\t"
-    "blt t470__080334C2\n\t"
-    "mov r3, #6\n\t"
-    "ldrsh r0, [r1, r3]\n\t"
-    "sub r0, r2, r0\n\t"
-    "lsl r0, r0, #8\n\t"
-    "ldr r1, [r4, #8]\n\t"
-    "sub r1, r1, r0\n\t"
-    "str r1, [r4, #8]\n\t"
-    "mov r0, #1\n\t"
-    "strb r0, [r4, #0x12]\n\t"
-    "t470__080334C2:\n\t"
-    "ldr r4, t470__08033534\n\t"
-    "bl sub_8029B2C\n\t"
-    "ldr r1, t470__08033538\n\t"
-    "lsl r0, r0, #8\n\t"
-    "ldr r1, [r1]\n\t"
-    "sub r1, r1, r0\n\t"
-    "str r1, [r4]\n\t"
-    "mov r0, #0xe0\n\t"
-    "lsl r0, r0, #0x11\n\t"
-    "bl sub_803ADB4\n\t"
-    "ldr r2, t470__0803353C\n\t"
-    "ldr r1, t470__08033540\n\t"
-    "ldr r1, [r1]\n\t"
-    "mul r1, r0, r1\n\t"
-    "asr r1, r1, #0xc\n\t"
-    "str r1, [r2]\n\t"
-    "ldr r2, t470__08033544\n\t"
-    "ldr r1, t470__08033548\n\t"
-    "ldr r1, [r1]\n\t"
-    "mul r0, r1, r0\n\t"
-    "asr r0, r0, #0xc\n\t"
-    "str r0, [r2]\n\t"
-    "ldr r0, [r4]\n\t"
-    "bl sub_8029E34\n\t"
-    "ldr r3, [r5]\n\t"
-    "ldr r0, [r3, #8]\n\t"
-    "asr r4, r0, #8\n\t"
-    "cmp r6, r4\n\t"
-    "beq t470__08033526\n\t"
-    "ldr r1, [r3, #0xc]\n\t"
-    "ldr r2, [r3]\n\t"
-    "lsl r0, r1, #1\n\t"
-    "add r0, r0, r1\n\t"
-    "lsl r0, r0, #2\n\t"
-    "add r0, r0, r2\n\t"
-    "mov r1, #2\n\t"
-    "ldrsh r0, [r0, r1]\n\t"
-    "add r0, r0, r4\n\t"
-    "ldr r1, [r3, #4]\n\t"
-    "lsl r0, r0, #2\n\t"
-    "add r0, r0, r1\n\t"
-    "ldr r0, [r0]\n\t"
-    "bl sub_80330FC\n\t"
-    "ldr r1, t470__0803354C\n\t"
-    "mov r0, #1\n\t"
-    "strb r0, [r1]\n\t"
-    "t470__08033526:\n\t"
-    "pop {r4, r5, r6}\n\t"
-    "pop {r0}\n\t"
-    "bx r0\n\t"
-    ".align 2, 0\n"
-    "t470__0803352C: .4byte gUnknown_030015AC\n"
-    "t470__08033530: .4byte gUnknown_030015B0\n"
-    "t470__08033534: .4byte gUnknown_030015C8\n"
-    "t470__08033538: .4byte gUnknown_030015BC\n"
-    "t470__0803353C: .4byte gUnknown_030015C0\n"
-    "t470__08033540: .4byte gUnknown_030015B4\n"
-    "t470__08033544: .4byte gUnknown_030015C4\n"
-    "t470__08033548: .4byte gUnknown_030015B8\n"
-    "t470__0803354C: .4byte gUnknown_0300159C\n"
-    );
+    s32 prev = gUnknown_030015AC->animTime >> 8;
+    struct actor_self *self;
+
+    sub_8032B6C();
+    if (gUnknown_030015B0 != 0) {
+        s32 scale;
+
+        self = gUnknown_030015AC;
+        self->animTime += (s16)self->animTimer;
+        self->animDone = 0;
+        if (GetAnimFrameBaseOffset(self) >= self->anims[self->animIndex].loopThreshold) {
+            self->animTime -= (self->anims[self->animIndex].loopThreshold - self->anims[self->animIndex].loopBase) << 8;
+            self->animDone = 1;
+        }
+        gUnknown_030015C8 = gUnknown_030015BC - (sub_8029B2C() << 8);
+        scale = sub_803ADB4(0x1C00000, gUnknown_030015C8);
+        gUnknown_030015C0 = (gUnknown_030015B4 * scale) >> 12;
+        gUnknown_030015C4 = (scale * gUnknown_030015B8) >> 12;
+        sub_8029E34(gUnknown_030015C8);
+        {
+            struct actor_self *cur = gUnknown_030015AC;
+            s32 t = cur->animTime >> 8;
+
+            if (prev != t) {
+                sub_80330FC((void *)cur->frameOffsets[cur->anims[cur->animIndex].frameIndex + t]);
+                gUnknown_0300159C = 1;
+            }
+        }
+    }
 }
 
 /* The singleton's own BG2 affine-matrix committer, structurally
@@ -1830,114 +1185,47 @@ void sub_8033550(void)
     REG_BG2PD = scale;
 }
 
-/* NAKED transcription: top-level per-frame driver for the whole
- * singleton system - fired once by the constructor (`sub_80331BC`) and,
- * per `docs/rom_map.md`, confirmed as the per-frame step
- * `sub_8033048`/`sub_8033550` connect to. DMA-clears the tile just
- * before BG char block 3 and fills block 3 itself with a blank/
+/* Top-level per-frame driver for the whole singleton system - fired
+ * once by the constructor (`sub_80331BC`) and, per `docs/rom_map.md`,
+ * confirmed as the per-frame step `sub_8033048`/`sub_8033550` connect
+ * to. Copies the palette strip into BG palette bank 1, clears the tile
+ * just before BG char block 3 and fills block 3 itself with a blank/
  * transparent tile (the exact same idiom the boss cluster's
- * `sub_8031504` uses ahead of its own meter-generator call), runs the
- * P2 VRAM fill-level meter (`sub_80336CC`), and - while the singleton's
- * animation "kind" is active - re-arms the "apply now" BG2 latch,
- * streams the current tile row through `sub_80330FC`, sets DISPCNT's
- * window/mosaic bit, and commits the BG2 affine matrix (`sub_8033550`).
- * A first plain-C attempt using the `DmaSet()` macro produced 24 bytes
- * *less* than the ROM's own build (this compiler folds the two DMA
- * setups' shared literal-pool addresses/instruction sequence more
- * aggressively than the ROM's build did) - only caught by the map-file
- * address-shift check, not the isolated compile. Transcribed directly
- * instead. */
-NAKED void sub_8033604(void)
+ * `sub_8031504`, actor_part26b.c, uses ahead of its own meter-generator
+ * call), runs the P2 VRAM fill-level meter (`sub_80336CC`), and - while
+ * the singleton's animation "kind" is active - re-arms the "apply now"
+ * BG2 latch, streams the current tile row through `sub_80330FC`, sets
+ * DISPCNT's window/mosaic bit, and commits the BG2 affine matrix
+ * (`sub_8033550`). Matched with the same pieces as `sub_8031504`: the
+ * standard DMA macros, and the tile clear as a signed-address loop with
+ * its zero hoisted into a local. */
+void sub_8033604(void)
 {
-    asm(
-    "push {r4, lr}\n\t"
-    "sub sp, #4\n\t"
-    "ldr r1, t604__0803369C\n\t"
-    "ldr r0, t604__080336A0\n\t"
-    "str r0, [r1]\n\t"
-    "ldr r0, t604__080336A4\n\t"
-    "str r0, [r1, #4]\n\t"
-    "ldr r0, t604__080336A8\n\t"
-    "str r0, [r1, #8]\n\t"
-    "ldr r0, [r1, #8]\n\t"
-    "ldr r1, t604__080336AC\n\t"
-    "mov r2, #0\n\t"
-    "add r0, r1, #0\n\t"
-    "add r0, #0x3c\n\t"
-    "t604__08033620:\n\t"
-    "str r2, [r0]\n\t"
-    "sub r0, #4\n\t"
-    "cmp r0, r1\n\t"
-    "bge t604__08033620\n\t"
-    "mov r1, sp\n\t"
-    "ldr r2, t604__080336B0\n\t"
-    "add r0, r2, #0\n\t"
-    "strh r0, [r1]\n\t"
-    "ldr r1, t604__0803369C\n\t"
-    "mov r3, sp\n\t"
-    "str r3, [r1]\n\t"
-    "ldr r0, t604__080336B4\n\t"
-    "str r0, [r1, #4]\n\t"
-    "ldr r0, t604__080336B8\n\t"
-    "str r0, [r1, #8]\n\t"
-    "ldr r0, [r1, #8]\n\t"
-    "bl sub_80336CC\n\t"
-    "ldr r0, t604__080336BC\n\t"
-    "ldr r0, [r0]\n\t"
-    "cmp r0, #0\n\t"
-    "beq t604__08033692\n\t"
-    "ldr r1, t604__080336C0\n\t"
-    "mov r0, #1\n\t"
-    "strb r0, [r1]\n\t"
-    "ldr r1, t604__080336C4\n\t"
-    "mov r0, #0\n\t"
-    "str r0, [r1]\n\t"
-    "ldr r0, t604__080336C8\n\t"
-    "ldr r2, [r0]\n\t"
-    "ldr r3, [r2, #8]\n\t"
-    "asr r3, r3, #8\n\t"
-    "ldr r1, [r2, #0xc]\n\t"
-    "ldr r4, [r2]\n\t"
-    "lsl r0, r1, #1\n\t"
-    "add r0, r0, r1\n\t"
-    "lsl r0, r0, #2\n\t"
-    "add r0, r0, r4\n\t"
-    "mov r1, #2\n\t"
-    "ldrsh r0, [r0, r1]\n\t"
-    "add r0, r0, r3\n\t"
-    "ldr r1, [r2, #4]\n\t"
-    "lsl r0, r0, #2\n\t"
-    "add r0, r0, r1\n\t"
-    "ldr r0, [r0]\n\t"
-    "bl sub_80330FC\n\t"
-    "mov r2, #0x80\n\t"
-    "lsl r2, r2, #0x13\n\t"
-    "ldrh r0, [r2]\n\t"
-    "mov r3, #0x80\n\t"
-    "lsl r3, r3, #3\n\t"
-    "add r1, r3, #0\n\t"
-    "orr r0, r1\n\t"
-    "strh r0, [r2]\n\t"
-    "bl sub_8033550\n\t"
-    "t604__08033692:\n\t"
-    "add sp, #4\n\t"
-    "pop {r4}\n\t"
-    "pop {r0}\n\t"
-    "bx r0\n\t"
-    ".align 2, 0\n"
-    "t604__0803369C: .4byte 0x040000D4\n"
-    "t604__080336A0: .4byte gStaticData_08169AE8\n"
-    "t604__080336A4: .4byte 0x05000020\n"
-    "t604__080336A8: .4byte 0x80000010\n"
-    "t604__080336AC: .4byte 0x0600BFC0\n"
-    "t604__080336B0: .4byte 0x0000FFFF\n"
-    "t604__080336B4: .4byte 0x0600C000\n"
-    "t604__080336B8: .4byte 0x81000800\n"
-    "t604__080336BC: .4byte gUnknown_030015B0\n"
-    "t604__080336C0: .4byte gUnknown_0300159C\n"
-    "t604__080336C4: .4byte gUnknown_03001598\n"
-    "t604__080336C8: .4byte gUnknown_030015AC\n"
-    );
+    s32 i;
+    s32 base;
+    u32 zero;
+
+    DmaCopy16(3, gStaticData_08169AE8, (void *)0x05000020, 0x20);
+    base = 0x0600BFC0;
+    zero = 0;
+    for (i = base + 0x3c; i >= base; i -= 4)
+        *(u32 *)i = zero;
+    DmaFill16(3, 0xFFFF, (void *)0x0600C000, 0x1000);
+    sub_80336CC();
+    if (gUnknown_030015B0 != 0) {
+        struct actor_self *self;
+
+        gUnknown_0300159C = 1;
+        gUnknown_03001598 = 0;
+        self = gUnknown_030015AC;
+        {
+            s32 t = self->animTime >> 8;
+
+            sub_80330FC((void *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
+        }
+        REG_DISPCNT |= 0x400;
+        sub_8033550();
+    }
 }
 
 /* NAKED transcription: the P2-side VRAM fill-level meter, a
@@ -1948,6 +1236,61 @@ NAKED void sub_8033604(void)
  * internal branches), applied to this cluster's own per-level table
  * (`gStaticData_08169AE8`) and row-pointer array (`gUnknown_03001600`).
  * Mechanical, byte-verified transcription. */
+#if NON_MATCHING
+/* Draft, the one-row twin of `sub_8031604`'s own draft (actor_part26c.c)
+ * and off the same way: the ROM re-reads the height from the stack after
+ * the row-pointer store and allocates the nibble temporaries
+ * differently. */
+static inline u8 MeterPx(u8 v)
+{
+    u8 r = 0;
+    if (v != 0)
+        r = 0x10 | v;
+    return r;
+}
+
+void sub_80336CC(void)
+{
+    s32 heights[1];
+    u32 stride;
+    s32 sum = 0;
+    s32 off = 0x204;
+    s32 k;
+    u32 *dst;
+    u8 **rows = (u8 **)gUnknown_03001600;
+
+    stride = (u32)(gUnknown_030015A0 * gUnknown_030015A4 + 1) >> 1 << 2;
+    for (k = 0; k < 1; k++) {
+        heights[k] = *(s32 *)(((u8 *)gStaticData_08169AE8) + off);
+        sum += heights[k];
+        off += 4;
+        rows[k] = ((u8 *)gStaticData_08169AE8) + off;
+        off += stride;
+        off += heights[k] << 5;
+    }
+    gUnknown_030015A8 = 0xFF - sum;
+    dst = (u32 *)(((0xFF - sum) << 6) + 0x06008000);
+    for (k = 0; k <= 0; k++) {
+        u8 *src = (u8 *)gUnknown_03001600[k] + stride;
+        s32 n = heights[k];
+        s32 j;
+
+        for (j = 0; j < n << 4; j++) {
+            u32 b, p0, p1, p2, p3;
+
+            b = *src;
+            p0 = MeterPx(b & 0xf);
+            p1 = MeterPx((b >> 4) & 0xf);
+            src++;
+            b = *src;
+            p2 = MeterPx(b & 0xf);
+            p3 = MeterPx((b >> 4) & 0xf);
+            src++;
+            *dst++ = p0 | (p1 << 8) | (p2 << 16) | (p3 << 24);
+        }
+    }
+}
+#else
 NAKED void sub_80336CC(void)
 {
     asm(
@@ -2096,6 +1439,7 @@ NAKED void sub_80336CC(void)
     "t6cc__080337E0: .4byte 0x06008000\n"
     );
 }
+#endif
 
 /* Destructor: frees the singleton object. */
 void sub_80337E4(void)

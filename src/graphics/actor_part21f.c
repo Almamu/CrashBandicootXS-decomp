@@ -1,4 +1,5 @@
 #include "core.h"
+#include "actor_self.h"
 
 /* Same boss-weapon "self"/tracker object family as actor_part20.c/
  * actor_part21c.c/actor_part21d.c/actor_part21e.c - see
@@ -15,24 +16,20 @@
  * five weapon-kind cases (0xa/0x32/0x50/0x6e/0xaa), each clearing one
  * BG palette bank-1 slot then spawning 1-3 sub-projectiles via
  * `sub_8000E1C` (a per-axis jitter/randomizer) and `sub_802E420` (the
- * actual spawn call, `(x, y, z, kindFlags)`); the 0xaa case instead
+ * actual spawn call, `(x, y, z)`); the 0xaa case instead
  * fires the state-5/table-index-1 transition on the tracker object,
  * plays a sound, and - gated by a lock byte
  * (`gUnknown_030012C0+0x8c`) and a spawn-budget counter
  * (`gUnknown_0300157C`) - spawns a homing/seek effect via
  * `sub_802F4AC`/`sub_802E3CC`.
  *
- * Semantics are understood at the level above, but this is transcribed
- * as NAKED asm: the shared base coordinates (`r7`=X, `sb`=Y) and the
- * per-kind Z-offset table pointer/value (`sl`/`r8`) all stay live
- * across the many `sub_8000E1C`/`sub_802E420` calls each case makes,
- * the same many-high-register allocation gcc-2.9 difficulty documented
- * throughout this project (`sub_8006600`/`sub_80372BC`/`sub_8038538`
- * and this file's own `sub_8030834`) - not reproducible register-for-
- * register from plain C, and this function's five largely-duplicated
- * dispatch cases make the risk of a subtly-wrong low-confidence C
- * reconstruction especially high. Mechanical, byte-verified
- * transcription. */
+ * Matching notes: the box table is `const` (so its jitter ranges stay
+ * CSE'd in registers across the spawn calls), the palette base pointer
+ * is assigned right where the ROM materializes it (declared-and-
+ * initialized at the top it gets hoisted into a callee-saved register),
+ * the RNG `sub_8000E1C` is read back as a `u16` here (the ROM zero-
+ * extends its result), and the seek spawn takes `&gUnknown_03000884`
+ * before the last lock check, as the ROM loads that address early. */
 extern s32 gUnknown_03001540;
 extern s32 gUnknown_03001558;
 extern s32 gUnknown_03001544;
@@ -40,358 +37,84 @@ extern s32 gUnknown_0300155C;
 extern s32 gUnknown_03001548;
 extern s32 gUnknown_03001560;
 extern s32 gUnknown_03001578;
-extern u8 gStaticData_0817C3D8[];
+extern const s16 gStaticData_0817C3D8[];
 extern s32 gUnknown_0300153C;
-extern s32 sub_8000E1C(s32 arg0);
-extern s32 sub_802E420(s32 x, s32 y, s32 z, s32 kind);
+extern u16 sub_8000E1C(s32 max);
+extern void sub_802E420(s32 x, s32 y, s32 z);
 extern void sub_802A4EC(void);
 extern s32 gUnknown_03001538;
-extern void *gUnknown_03001534;
+extern struct actor_self *gUnknown_03001534;
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern void *gUnknown_030012BC;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern void *gUnknown_030012C0;
+extern u8 *gUnknown_030012C0;
 extern s32 gUnknown_0300157C;
 extern void *gUnknown_03000884;
-extern s32 gUnknown_03001506;
+extern u8 gUnknown_03001506;
 extern s32 sub_802F4AC(void *arg0);
 extern void sub_802E3CC(void);
 
-NAKED void sub_80309B4(void)
+static inline void BossSetState(s32 st, s32 idx)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sl\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6, r7}\n\t"
-        "ldr r1, 1f\n\t"
-        "ldr r0, 2f\n\t"
-        "ldr r3, [r1]\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r3, r3, r0\n\t"
-        "str r3, [r1]\n\t"
-        "ldr r1, 3f\n\t"
-        "ldr r0, 4f\n\t"
-        "ldr r2, [r1]\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r2, r2, r0\n\t"
-        "str r2, [r1]\n\t"
-        "ldr r0, 5f\n\t"
-        "mov sl, r0\n\t"
-        "ldr r1, 6f\n\t"
-        "mov r8, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [r1]\n\t"
-        "add r0, r0, r1\n\t"
-        "mov r4, sl\n\t"
-        "str r0, [r4]\n\t"
-        "ldr r0, 7f\n\t"
-        "mov r6, #0\n\t"
-        "str r6, [r0]\n\t"
-        "ldr r1, 8f\n\t"
-        "ldr r5, 9f\n\t"
-        "mov r4, #0\n\t"
-        "ldrsh r0, [r5, r4]\n\t"
-        "lsl r0, r0, #8\n\t"
-        "add r7, r3, r0\n\t"
-        "mov r3, #2\n\t"
-        "ldrsh r0, [r5, r3]\n\t"
-        "lsl r0, r0, #8\n\t"
-        "add r2, r2, r0\n\t"
-        "mov sb, r2\n\t"
-        "ldr r4, 10f\n\t"
-        "ldr r0, [r4]\n\t"
-        "cmp r0, #0xa\n\t"
-        "bne 11f\n\t"
-        "strh r6, [r1, #0x1e]\n\t"
-        "mov r4, #6\n\t"
-        "ldrsh r0, [r5, r4]\n\t"
-        "lsl r0, r0, #8\n\t"
-        "bl sub_8000E1C\n\t"
-        "add r4, r0, #0\n\t"
-        "lsl r4, r4, #0x10\n\t"
-        "lsr r4, r4, #0x10\n\t"
-        "add r4, r7, r4\n\t"
-        "mov r1, #8\n\t"
-        "ldrsh r0, [r5, r1]\n\t"
-        "lsl r0, r0, #8\n\t"
-        "bl sub_8000E1C\n\t"
-        "add r1, r0, #0\n\t"
-        "lsl r1, r1, #0x10\n\t"
-        "lsr r1, r1, #0x10\n\t"
-        "add r1, sb\n\t"
-        "mov r3, sl\n\t"
-        "ldr r2, [r3]\n\t"
-        "ldr r0, 12f\n\t"
-        "add r2, r2, r0\n\t"
-        "b 30f\n\t"
-        ".align 2, 0\n"
-    "1: .4byte gUnknown_03001540\n"
-    "2: .4byte gUnknown_03001558\n"
-    "3: .4byte gUnknown_03001544\n"
-    "4: .4byte gUnknown_0300155C\n"
-    "5: .4byte gUnknown_03001548\n"
-    "6: .4byte gUnknown_03001560\n"
-    "7: .4byte gUnknown_03001578\n"
-    "8: .4byte 0x05000020\n"
-    "9: .4byte gStaticData_0817C3D8\n"
-    "10: .4byte gUnknown_0300153C\n"
-    "12: .4byte 0xFFFFFF00\n"
-    "11:\n\t"
-        "cmp r0, #0x32\n\t"
-        "bne 13f\n\t"
-        "strh r6, [r1, #2]\n\t"
-        "mov r1, #6\n\t"
-        "ldrsh r6, [r5, r1]\n\t"
-        "lsl r6, r6, #8\n\t"
-        "add r0, r6, #0\n\t"
-        "bl sub_8000E1C\n\t"
-        "add r4, r0, #0\n\t"
-        "lsl r4, r4, #0x10\n\t"
-        "lsr r4, r4, #0x10\n\t"
-        "add r4, r7, r4\n\t"
-        "mov r2, #8\n\t"
-        "ldrsh r5, [r5, r2]\n\t"
-        "lsl r5, r5, #8\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_8000E1C\n\t"
-        "add r1, r0, #0\n\t"
-        "lsl r1, r1, #0x10\n\t"
-        "lsr r1, r1, #0x10\n\t"
-        "add r1, sb\n\t"
-        "mov r3, sl\n\t"
-        "ldr r2, [r3]\n\t"
-        "ldr r0, 14f\n\t"
-        "mov r8, r0\n\t"
-        "b 25f\n\t"
-        ".align 2, 0\n"
-    "14: .4byte 0xFFFFFF00\n"
-    "13:\n\t"
-        "cmp r0, #0x50\n\t"
-        "bne 20f\n\t"
-        "strh r6, [r1, #8]\n\t"
-        "mov r4, #6\n\t"
-        "ldrsh r6, [r5, r4]\n\t"
-        "lsl r6, r6, #8\n\t"
-        "add r0, r6, #0\n\t"
-        "bl sub_8000E1C\n\t"
-        "add r4, r0, #0\n\t"
-        "lsl r4, r4, #0x10\n\t"
-        "lsr r4, r4, #0x10\n\t"
-        "add r4, r7, r4\n\t"
-        "mov r0, #8\n\t"
-        "ldrsh r5, [r5, r0]\n\t"
-        "lsl r5, r5, #8\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_8000E1C\n\t"
-        "add r1, r0, #0\n\t"
-        "lsl r1, r1, #0x10\n\t"
-        "lsr r1, r1, #0x10\n\t"
-        "add r1, sb\n\t"
-        "mov r3, sl\n\t"
-        "ldr r2, [r3]\n\t"
-        "ldr r0, 21f\n\t"
-        "mov r8, r0\n\t"
-        "add r2, r8\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_802E420\n\t"
-        "add r0, r6, #0\n\t"
-        "bl sub_8000E1C\n\t"
-        "add r4, r0, #0\n\t"
-        "lsl r4, r4, #0x10\n\t"
-        "lsr r4, r4, #0x10\n\t"
-        "add r4, r7, r4\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_8000E1C\n\t"
-        "add r1, r0, #0\n\t"
-        "lsl r1, r1, #0x10\n\t"
-        "lsr r1, r1, #0x10\n\t"
-        "add r1, sb\n\t"
-        "mov r3, sl\n\t"
-        "ldr r2, [r3]\n\t"
-        "add r2, r8\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_802E420\n\t"
-        "add r0, r6, #0\n\t"
-        "bl sub_8000E1C\n\t"
-        "add r4, r0, #0\n\t"
-        "lsl r4, r4, #0x10\n\t"
-        "lsr r4, r4, #0x10\n\t"
-        "add r4, r7, r4\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_8000E1C\n\t"
-        "add r1, r0, #0\n\t"
-        "lsl r1, r1, #0x10\n\t"
-        "lsr r1, r1, #0x10\n\t"
-        "add r1, sb\n\t"
-        "mov r0, sl\n\t"
-        "ldr r2, [r0]\n\t"
-        "b 26f\n\t"
-        ".align 2, 0\n"
-    "21: .4byte 0xFFFFFF00\n"
-    "20:\n\t"
-        "cmp r0, #0x6e\n\t"
-        "bne 27f\n\t"
-        "strh r6, [r1, #0x10]\n\t"
-        "mov r1, #6\n\t"
-        "ldrsh r6, [r5, r1]\n\t"
-        "lsl r6, r6, #8\n\t"
-        "add r0, r6, #0\n\t"
-        "bl sub_8000E1C\n\t"
-        "add r4, r0, #0\n\t"
-        "lsl r4, r4, #0x10\n\t"
-        "lsr r4, r4, #0x10\n\t"
-        "add r4, r7, r4\n\t"
-        "mov r2, #8\n\t"
-        "ldrsh r5, [r5, r2]\n\t"
-        "lsl r5, r5, #8\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_8000E1C\n\t"
-        "add r1, r0, #0\n\t"
-        "lsl r1, r1, #0x10\n\t"
-        "lsr r1, r1, #0x10\n\t"
-        "add r1, sb\n\t"
-        "mov r3, sl\n\t"
-        "ldr r2, [r3]\n\t"
-        "ldr r0, 28f\n\t"
-        "mov r8, r0\n\t"
-        "add r2, r8\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_802E420\n\t"
-        "add r0, r6, #0\n\t"
-        "bl sub_8000E1C\n\t"
-        "add r4, r0, #0\n\t"
-        "lsl r4, r4, #0x10\n\t"
-        "lsr r4, r4, #0x10\n\t"
-        "add r4, r7, r4\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_8000E1C\n\t"
-        "add r1, r0, #0\n\t"
-        "lsl r1, r1, #0x10\n\t"
-        "lsr r1, r1, #0x10\n\t"
-        "add r1, sb\n\t"
-        "mov r3, sl\n\t"
-        "ldr r2, [r3]\n\t"
-        "add r2, r8\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_802E420\n\t"
-        "add r0, r6, #0\n\t"
-        "bl sub_8000E1C\n\t"
-        "add r4, r0, #0\n\t"
-        "lsl r4, r4, #0x10\n\t"
-        "lsr r4, r4, #0x10\n\t"
-        "add r4, r7, r4\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_8000E1C\n\t"
-        "add r1, r0, #0\n\t"
-        "lsl r1, r1, #0x10\n\t"
-        "lsr r1, r1, #0x10\n\t"
-        "add r1, sb\n\t"
-        "mov r0, sl\n\t"
-        "ldr r2, [r0]\n\t"
-    "25:\n\t"
-        "add r2, r8\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_802E420\n\t"
-        "add r0, r6, #0\n\t"
-        "bl sub_8000E1C\n\t"
-        "add r4, r0, #0\n\t"
-        "lsl r4, r4, #0x10\n\t"
-        "lsr r4, r4, #0x10\n\t"
-        "add r4, r7, r4\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_8000E1C\n\t"
-        "add r1, r0, #0\n\t"
-        "lsl r1, r1, #0x10\n\t"
-        "lsr r1, r1, #0x10\n\t"
-        "add r1, sb\n\t"
-        "mov r3, sl\n\t"
-        "ldr r2, [r3]\n\t"
-    "26:\n\t"
-        "add r2, r8\n\t"
-    "30:\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_802E420\n\t"
-        "b 40f\n\t"
-        ".align 2, 0\n"
-    "28: .4byte 0xFFFFFF00\n"
-    "27:\n\t"
-        "cmp r0, #0xaa\n\t"
-        "bne 40f\n\t"
-        "bl sub_802A4EC\n\t"
-        "mov r1, #5\n\t"
-        "mov r2, #1\n\t"
-        "ldr r0, 41f\n\t"
-        "str r1, [r0]\n\t"
-        "str r6, [r4]\n\t"
-        "ldr r0, 42f\n\t"
-        "ldr r4, [r0]\n\t"
-        "str r2, [r4, #0xc]\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldrh r0, [r0, #0xc]\n\t"
-        "mov r1, #0\n\t"
-        "strh r0, [r4, #0x10]\n\t"
-        "strb r1, [r4, #0x12]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl GetAnimFrameBaseOffset\n\t"
-        "ldr r2, [r4, #0xc]\n\t"
-        "ldr r3, [r4]\n\t"
-        "lsl r1, r2, #1\n\t"
-        "add r1, r1, r2\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r1, r1, r3\n\t"
-        "mov r2, #4\n\t"
-        "ldrsh r1, [r1, r2]\n\t"
-        "cmp r0, r1\n\t"
-        "blt 43f\n\t"
-        "str r6, [r4, #8]\n\t"
-    "43:\n\t"
-        "ldr r0, 44f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0x42\n\t"
-        "bl PlaySfx\n\t"
-        "mov r0, #0x9d\n\t"
-        "mov r3, r8\n\t"
-        "str r0, [r3]\n\t"
-        "ldr r0, 45f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r0, #0x8c\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 40f\n\t"
-        "ldr r4, 46f\n\t"
-        "ldr r0, [r4]\n\t"
-        "cmp r0, #1\n\t"
-        "bgt 40f\n\t"
-        "ldr r1, 47f\n\t"
-        "ldr r0, 48f\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 40f\n\t"
-        "ldr r0, [r1]\n\t"
-        "bl sub_802F4AC\n\t"
-        "bl sub_802E3CC\n\t"
-        "ldr r0, [r4]\n\t"
-        "add r0, #1\n\t"
-        "str r0, [r4]\n\t"
-    "40:\n\t"
-        "pop {r3, r4, r5}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov sl, r5\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "41: .4byte gUnknown_03001538\n"
-    "42: .4byte gUnknown_03001534\n"
-    "44: .4byte gUnknown_030012BC\n"
-    "45: .4byte gUnknown_030012C0\n"
-    "46: .4byte gUnknown_0300157C\n"
-    "47: .4byte gUnknown_03000884\n"
-    "48: .4byte gUnknown_03001506\n"
-    );
+    struct actor_self *self;
+    gUnknown_03001538 = st;
+    gUnknown_0300153C = 0;
+    self = gUnknown_03001534;
+    self->animIndex = idx;
+    self->animTimer = self->anims[idx].duration;
+    self->animDone = 0;
+    if (GetAnimFrameBaseOffset(self) >= self->anims[self->animIndex].loopThreshold)
+        self->animTime = 0;
+}
+
+/* One sub-projectile, jittered around (x, y) by the box's own +-range. */
+#define SPAWN(x, y) sub_802E420((x) + sub_8000E1C(gStaticData_0817C3D8[3] << 8),  \
+                                (y) + sub_8000E1C(gStaticData_0817C3D8[4] << 8),  \
+                                gUnknown_03001548 - 0x100)
+
+void sub_80309B4(void)
+{
+    s32 x, y;
+    u16 *pal;
+
+    gUnknown_03001540 += gUnknown_03001558;
+    gUnknown_03001544 += gUnknown_0300155C;
+    gUnknown_03001548 += gUnknown_03001560;
+    gUnknown_03001578 = 0;
+    pal = (u16 *)0x05000020;
+    x = gUnknown_03001540 + (gStaticData_0817C3D8[0] << 8);
+    y = gUnknown_03001544 + (gStaticData_0817C3D8[1] << 8);
+
+    if (gUnknown_0300153C == 0xa) {
+        pal[15] = 0;
+        SPAWN(x, y);
+    } else if (gUnknown_0300153C == 0x32) {
+        pal[1] = 0;
+        SPAWN(x, y);
+        SPAWN(x, y);
+    } else if (gUnknown_0300153C == 0x50) {
+        pal[4] = 0;
+        SPAWN(x, y);
+        SPAWN(x, y);
+        SPAWN(x, y);
+    } else if (gUnknown_0300153C == 0x6e) {
+        pal[8] = 0;
+        SPAWN(x, y);
+        SPAWN(x, y);
+        SPAWN(x, y);
+        SPAWN(x, y);
+    } else if (gUnknown_0300153C == 0xaa) {
+        sub_802A4EC();
+        BossSetState(5, 1);
+        PlaySfx(gUnknown_030012BC, 0x42, 0x100);
+        gUnknown_03001560 = 0x9d;
+        if (gUnknown_030012C0[0x8c] == 0 && gUnknown_0300157C <= 1) {
+            void **pl = &gUnknown_03000884;
+            if (gUnknown_03001506 == 0) {
+                sub_802F4AC(*pl);
+                sub_802E3CC();
+                gUnknown_0300157C++;
+            }
+        }
+    }
 }

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "actor_self.h"
 
 /* Same boss-weapon "self"/tracker object family as actor_part20.c/
  * actor_part23.c - see actor_part20.c's header comment and
@@ -29,11 +30,106 @@ extern s32 gUnknown_03001540;
 extern s32 gUnknown_03001558;
 extern s32 gUnknown_03001544;
 extern s32 gUnknown_0300155C;
-extern void *gUnknown_03000884;
+extern struct actor_self *gUnknown_03000884;
 extern s32 gUnknown_0300154C;
-extern u8 gStaticData_0817C3D8[];
+extern const s16 gStaticData_0817C3D8[];
 extern s32 gUnknown_03001550;
 
+#if NON_MATCHING
+/* Near miss (identical under both compilers): 19 halfwords off, all of
+ * it the `&gUnknown_03001558`/`&gUnknown_0300155C` address copies
+ * landing in `r4`/`r6` swapped - every instruction, branch and literal
+ * is otherwise the ROM's. */
+static inline s32 Abs(s32 x)
+{
+    s32 s = x >> 31;
+
+    return (x ^ s) - s;
+}
+
+static inline s32 CamX(void) { return gUnknown_0300154C - 0x1200; }
+static inline s32 CamY(void) { return gUnknown_03001550 + 0x1800; }
+
+static inline s32 ClampHi(s32 *p, s32 lim)
+{
+    s32 v = *p;
+    if (v > lim)
+        v = lim;
+    *p = v;
+    return v;
+}
+
+void sub_8030E08(void)
+{
+    s32 vx;
+    s32 dx, dy, cx, cy, px, py;
+    struct actor_self *pl;
+
+    gUnknown_03001540 += gUnknown_03001558;
+    gUnknown_03001544 += gUnknown_0300155C;
+
+    pl = gUnknown_03000884;
+    px = pl->x;
+    cx = gUnknown_0300154C - 0x1200;
+    dx = px - cx - (gStaticData_0817C3D8[0] + gStaticData_0817C3D8[3] / 2);
+    py = pl->y;
+    cy = gUnknown_03001550 + 0x1800;
+    dy = py - cy - (gStaticData_0817C3D8[1] + gStaticData_0817C3D8[4] / 2);
+
+    if (Abs(dx) <= 0x2CFF) {
+        s32 s = dx >> 10;
+        vx = gUnknown_03001558;
+        if (s >= 0) {
+            gUnknown_03001558 = vx;
+            if (s != 0)
+                gUnknown_03001558 = vx - 3;
+        } else
+            gUnknown_03001558 = vx + 3;
+    }
+    if (Abs(dy) <= 0x2CFF) {
+        s32 v;
+        if ((dy >> 10) >= 0) {
+            v = gUnknown_0300155C;
+            if ((dy >> 10) == 0)
+                goto skip;
+            v -= 2;
+        } else
+            v = gUnknown_0300155C + 2;
+        gUnknown_0300155C = v;
+    }
+skip:
+
+    if (gUnknown_0300154C <= 0x1400)
+        gUnknown_03001558 += 6;
+    if (gUnknown_0300154C > 0x4FFF)
+        gUnknown_03001558 -= 6;
+    if (gUnknown_03001550 <= -0x2D00)
+        gUnknown_0300155C += 3;
+    if (gUnknown_03001550 > 0x13FF)
+        gUnknown_0300155C -= 3;
+
+    {
+        s32 *p = &gUnknown_03001558;
+        s32 v = *p;
+        if (v > 0x180)
+            v = 0x180;
+        *p = v;
+        if (v < -0x180)
+            v = -0x180;
+        gUnknown_03001558 = v;
+    }
+    {
+        s32 *p = &gUnknown_0300155C;
+        s32 v = *p;
+        if (v > 0x100)
+            v = 0x100;
+        *p = v;
+        if (v < -0x100)
+            v = -0x100;
+        gUnknown_0300155C = v;
+    }
+}
+#else
 NAKED void sub_8030E08(void)
 {
     asm(
@@ -231,3 +327,4 @@ NAKED void sub_8030E08(void)
     "29: .4byte 0xFFFFFF00\n"
     );
 }
+#endif

@@ -31,8 +31,63 @@ extern s32 gUnknown_03001528;
 extern s32 gUnknown_0300152C;
 extern s32 gUnknown_03001530;
 extern u8 gStaticData_08167AD4[];
-extern void *gUnknown_03001580[];
+extern u8 *gUnknown_03001580[];
 
+#if NON_MATCHING
+/* Draft, ~95 halfwords off under both compilers: right shape, but the
+ * ROM re-reads each height from the stack after the row-pointer store
+ * (`ldm r1!`) and allocates the nibble-expansion temporaries
+ * differently. `sub_80336CC` (actor_part130.c) is the one-row twin. */
+static inline u8 MeterPx(u8 v)
+{
+    u8 r = 0;
+    if (v != 0)
+        r = 0x10 | v;
+    return r;
+}
+
+void sub_8031604(void)
+{
+    s32 heights[4];
+    u32 stride;
+    s32 sum = 0;
+    s32 off = 0x204;
+    s32 k;
+    u32 *dst;
+    u8 **rows = gUnknown_03001580;
+
+    stride = (u32)(gUnknown_03001528 * gUnknown_0300152C + 1) >> 1 << 2;
+    for (k = 0; k < 4; k++) {
+        heights[k] = *(s32 *)(gStaticData_08167AD4 + off);
+        sum += heights[k];
+        off += 4;
+        rows[k] = gStaticData_08167AD4 + off;
+        off += stride;
+        off += heights[k] << 5;
+    }
+    gUnknown_03001530 = 0xFF - sum;
+    dst = (u32 *)(((0xFF - sum) << 6) + 0x06008000);
+    for (k = 0; k <= 3; k++) {
+        u8 *src = gUnknown_03001580[k] + stride;
+        s32 n = heights[k];
+        s32 j;
+
+        for (j = 0; j < n << 4; j++) {
+            u32 b, p0, p1, p2, p3;
+
+            b = *src;
+            p0 = MeterPx(b & 0xf);
+            p1 = MeterPx((b >> 4) & 0xf);
+            src++;
+            b = *src;
+            p2 = MeterPx(b & 0xf);
+            p3 = MeterPx((b >> 4) & 0xf);
+            src++;
+            *dst++ = p0 | (p1 << 8) | (p2 << 16) | (p3 << 24);
+        }
+    }
+}
+#else
 NAKED void sub_8031604(void)
 {
     asm(
@@ -181,3 +236,4 @@ NAKED void sub_8031604(void)
     "7: .4byte 0x06008000\n"
     );
 }
+#endif
