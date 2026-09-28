@@ -247,3 +247,9 @@ not the obstacle. The object moved to old_agbcc: `sub_8034CEC`,
 file compiles identically under both compilers.
 `sub_80352AC` is still NAKED with a near-miss draft. See
 [issue-64-65-naked-retry.md](issue-64-65-naked-retry.md).
+
+*Later pass (size2 NAKED retry):* `sub_80352AC` is real C (old_agbcc).
+GCSE's PRE also hoists a non-volatile `asm("" : "+r")` copy, since such
+an asm is an ordinary hashed expression. An `asm volatile` copy of
+`slot` for the palette index is not hoisted, and `slot + 1` keeps its
+ROM hoist. See [size2-naked-retry.md](size2-naked-retry.md).

@@ -33,7 +33,13 @@
  * ROM also keeps `&b` in r4 into the no-collision switch. The draft
  * re-adds sp there, and a `pb = &b` local keeps it live everywhere
  * instead. The reload scratch registers are out of phase as described
- * above. */
+ * above.
+ * Size2 pass (docs/matching/size2-naked-retry.md), nothing kept: the
+ * ROM has self in sb and result in r8, the draft the reverse. Pinning
+ * self to r9 gives the right size (1648) but adds two `self->type`
+ * reloads (464 hw). One sub_800FDC8 call with `c`/`d` argument locals
+ * is worse (702 hw); inline accessors for padY/b.x (the pattern that
+ * gave sub_800FF0C its copies) change nothing. */
 #if NON_MATCHING
 
 /* x + w - o with the three operands evaluated first (see above) */

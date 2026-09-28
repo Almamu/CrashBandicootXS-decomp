@@ -734,29 +734,16 @@ asm(".align 2, 0");
  * (`gUnknown_030012B8+0x2c`) the same way and pinning the freshly-built
  * asset into the shared tile cache (`sub_8006D50`).
  *
- * Written as NAKED asm, not plain C: the innermost tile-index loop
- * holds seven live values simultaneously (`self`'s asset-record pointer
- * in r8, two masks in sl/sb, the palette-tail base in ip, plus r0-r6)
- * across a fully packed register budget, the same "no spare register"
- * wall already NAKED throughout this codebase. Every instruction below,
- * including the mid-function literal-pool placement, is transcribed
- * directly from and checked against the ROM's own disassembly. */
-#if NON_MATCHING
-/* NON_MATCHING draft (old_agbcc, 4 bytes too large, one extra word of
- * frame): everything lines up except that gcc computes the palette
- * slot address `slot << 5` before the tile loops (next to the `slot + 1`
- * and `i + 1` biv increments it also hoists there, which the ROM does
- * too) and spills it to its own stack slot; the ROM computes it at the
- * palette copy. Copy-loop spelling, `u32 slot`, `palSlots` forms and
- * -fno-strength-reduce don't change it (issue #64/#65 NAKED retry).
- * Second retry: the early `slot << 5` is GCSE's PRE, not loop.c
- * (`-dG`: "PRE/HOIST: end of bb 7 ... expression 56"). PRE hoists
- * `slot << 5`, `slot + 1` and `i + 1` to the y loop's pre-test; the ROM
- * has only the last two there. `-fno-gcse` removes it but breaks the
- * rest. Every address spelling, index-form copy loops, and asm copies
- * or "+m" on `slot` still leave it hoisted or add a copy. Late retry 3
- * (docs/matching/late-naked-retry-3.md): a `"+r"` escape on `slot` after
- * the palette load stops the hoist (right size) but also `slot + 1`'s. */
+ * Built with old_agbcc. GCSE's PRE hoists any `slot << 5` (and even a
+ * plain `asm("" : "+r")` copy, since a non-volatile asm with outputs is
+ * an ordinary hashed expression) to the y loop's pre-test, next to the
+ * `slot + 1` and `i + 1` it also hoists there, and spills it; the ROM
+ * computes the palette address at the copy. The palette index is
+ * therefore a copy `ps` passed through `asm volatile` (volatile asms are
+ * never entered in GCSE's table), so `slot` itself and its `slot + 1`
+ * hoist are untouched. `ps` is an r1 register variable (the ROM reloads
+ * `slot` into r1) and gets one extra `asm("" : : "r")` reference after
+ * the shift, so the shift result goes to r0 instead of reusing r1. */
 /* One `gStaticData_0817CF40` record (0x14 bytes): a popup glyph's size
  * in 8-px tiles and its tagged palette/tile assets. */
 struct popup_glyph_src {
@@ -832,8 +819,16 @@ void sub_80352AC(struct map_screen *self)
         LoadTaggedAsset(src->palette, pal);
         {
             u16 *s = pal;
-            u16 *d = (u16 *)palSlots[slot];
+            /* Escaped copy of `slot`: see the note above. */
+            register s32 ps asm("r1") = slot;
+            s32 sh;
+            u16 *d;
             s32 k;
+
+            asm volatile("" : "+r"(ps)); /* new pseudo GCSE can't hoist */
+            sh = ps << 5;
+            asm("" : : "r"(ps)); /* keeps ps live so sh doesn't reuse r1 */
+            d = (u16 *)(sh + (u32)palSlots);
 
             for (k = 15; k >= 0; k--)
                 *d++ = *s++;
@@ -845,222 +840,6 @@ void sub_80352AC(struct map_screen *self)
         slot++;
     }
 }
-#else
-NAKED void sub_80352AC(struct map_screen *selfArg)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sl\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6, r7}\n\t"
-        "sub sp, #0x24\n\t"
-        "str r0, [sp, #4]\n\t"
-        "ldr r0, _0803543C\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r0, #0x2c\n\t"
-        "str r0, [sp, #8]\n\t"
-        "mov r0, #1\n\t"
-        "str r0, [sp, #0xc]\n\t"
-        "mov r5, #0\n"
-    "_080352C8:\n\t"
-        "lsl r0, r5, #2\n\t"
-        "add r0, r0, r5\n\t"
-        "lsl r0, r0, #2\n\t"
-        "ldr r1, _08035440\n\t"
-        "add r7, r0, r1\n\t"
-        "lsl r0, r5, #1\n\t"
-        "add r0, r0, r5\n\t"
-        "lsl r0, r0, #3\n\t"
-        "add r0, #0x1c\n\t"
-        "ldr r1, [sp, #4]\n\t"
-        "add r1, r1, r0\n\t"
-        "mov r8, r1\n\t"
-        "ldr r1, [r7]\n\t"
-        "ldr r2, [r7, #4]\n\t"
-        "lsl r0, r2, #3\n\t"
-        "mov r3, r8\n\t"
-        "str r0, [r3, #8]\n\t"
-        "lsl r0, r1, #3\n\t"
-        "str r0, [r3, #0xc]\n\t"
-        "add r0, r1, #3\n\t"
-        "cmp r0, #0\n\t"
-        "bge _080352F6\n\t"
-        "add r0, r1, #6\n"
-    "_080352F6:\n\t"
-        "asr r0, r0, #2\n\t"
-        "mov r1, r8\n\t"
-        "str r0, [r1]\n\t"
-        "add r0, r2, #3\n\t"
-        "cmp r0, #0\n\t"
-        "bge _08035304\n\t"
-        "add r0, r2, #6\n"
-    "_08035304:\n\t"
-        "asr r0, r0, #2\n\t"
-        "mov r2, r8\n\t"
-        "str r0, [r2, #4]\n\t"
-        "ldr r0, [r7, #0xc]\n\t"
-        "ldr r0, [r0]\n\t"
-        "lsr r0, r0, #8\n\t"
-        "bl sub_8026EC0\n\t"
-        "str r0, [sp, #0x10]\n\t"
-        "ldr r0, [r7, #0xc]\n\t"
-        "ldr r1, [sp, #0x10]\n\t"
-        "bl LoadTaggedAsset\n\t"
-        "mov r3, r8\n\t"
-        "ldr r1, [r3]\n\t"
-        "ldr r0, [r3, #4]\n\t"
-        "add r4, r1, #0\n\t"
-        "mul r4, r0, r4\n\t"
-        "lsl r4, r4, #9\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_8026EC0\n\t"
-        "mov r1, r8\n\t"
-        "str r0, [r1, #0x14]\n\t"
-        "mov r1, #0\n\t"
-        "str r1, [sp]\n\t"
-        "ldr r2, _08035444\n\t"
-        "mov r3, sp\n\t"
-        "str r3, [r2]\n\t"
-        "str r0, [r2, #4]\n\t"
-        "cmp r4, #0\n\t"
-        "bge _08035346\n\t"
-        "add r4, #3\n"
-    "_08035346:\n\t"
-        "asr r0, r4, #2\n\t"
-        "mov r1, #0x85\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "orr r0, r1\n\t"
-        "str r0, [r2, #8]\n\t"
-        "ldr r0, [r2, #8]\n\t"
-        "mov r6, #0\n\t"
-        "ldr r0, [r7, #4]\n\t"
-        "ldr r1, [sp, #0xc]\n\t"
-        "add r1, #1\n\t"
-        "str r1, [sp, #0x18]\n\t"
-        "add r5, #1\n\t"
-        "str r5, [sp, #0x1c]\n\t"
-        "cmp r6, r0\n\t"
-        "bge _080353CC\n"
-    "_08035364:\n\t"
-        "mov r4, #0\n\t"
-        "ldr r3, [r7]\n\t"
-        "add r2, r6, #1\n\t"
-        "str r2, [sp, #0x20]\n\t"
-        "cmp r4, r3\n\t"
-        "bge _080353C4\n\t"
-        "asr r0, r6, #2\n\t"
-        "str r0, [sp, #0x14]\n\t"
-        "mov r1, #3\n\t"
-        "mov sl, r1\n\t"
-        "add r0, r6, #0\n\t"
-        "and r0, r1\n\t"
-        "lsl r0, r0, #2\n\t"
-        "mov sb, r0\n\t"
-        "ldr r5, _08035444\n\t"
-        "mov r2, r8\n\t"
-        "ldr r2, [r2, #0x14]\n\t"
-        "mov ip, r2\n"
-    "_08035388:\n\t"
-        "mov r1, r8\n\t"
-        "ldr r0, [r1]\n\t"
-        "ldr r2, [sp, #0x14]\n\t"
-        "add r1, r2, #0\n\t"
-        "mul r1, r0, r1\n\t"
-        "asr r0, r4, #2\n\t"
-        "add r1, r1, r0\n\t"
-        "add r2, r4, #0\n\t"
-        "mov r0, sl\n\t"
-        "and r2, r0\n\t"
-        "add r2, sb\n\t"
-        "add r0, r6, #0\n\t"
-        "mul r0, r3, r0\n\t"
-        "add r0, r0, r4\n\t"
-        "lsl r0, r0, #5\n\t"
-        "ldr r3, [sp, #0x10]\n\t"
-        "add r0, r3, r0\n\t"
-        "str r0, [r5]\n\t"
-        "lsl r1, r1, #4\n\t"
-        "add r1, r1, r2\n\t"
-        "lsl r1, r1, #5\n\t"
-        "add r1, ip\n\t"
-        "str r1, [r5, #4]\n\t"
-        "ldr r0, _08035448\n\t"
-        "str r0, [r5, #8]\n\t"
-        "ldr r0, [r5, #8]\n\t"
-        "add r4, #1\n\t"
-        "ldr r3, [r7]\n\t"
-        "cmp r4, r3\n\t"
-        "blt _08035388\n"
-    "_080353C4:\n\t"
-        "ldr r6, [sp, #0x20]\n\t"
-        "ldr r0, [r7, #4]\n\t"
-        "cmp r6, r0\n\t"
-        "blt _08035364\n"
-    "_080353CC:\n\t"
-        "ldr r0, [sp, #0x10]\n\t"
-        "cmp r0, #0\n\t"
-        "beq _080353D6\n\t"
-        "bl sub_8026EB4\n"
-    "_080353D6:\n\t"
-        "ldr r0, [r7, #8]\n\t"
-        "ldr r0, [r0]\n\t"
-        "lsr r0, r0, #9\n\t"
-        "lsl r0, r0, #1\n\t"
-        "bl sub_8026EC0\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r0, [r7, #8]\n\t"
-        "add r1, r4, #0\n\t"
-        "bl LoadTaggedAsset\n\t"
-        "add r2, r4, #0\n\t"
-        "ldr r1, [sp, #0xc]\n\t"
-        "lsl r0, r1, #5\n\t"
-        "ldr r3, [sp, #8]\n\t"
-        "add r1, r0, r3\n\t"
-        "mov r3, #0xf\n"
-    "_080353F8:\n\t"
-        "ldrh r0, [r2]\n\t"
-        "strh r0, [r1]\n\t"
-        "add r2, #2\n\t"
-        "add r1, #2\n\t"
-        "sub r3, #1\n\t"
-        "cmp r3, #0\n\t"
-        "bge _080353F8\n\t"
-        "cmp r4, #0\n\t"
-        "beq _08035410\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_8026EB4\n"
-    "_08035410:\n\t"
-        "ldr r0, _0803543C\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [sp, #0xc]\n\t"
-        "bl sub_8006D50\n\t"
-        "ldr r0, [sp, #0xc]\n\t"
-        "mov r1, r8\n\t"
-        "str r0, [r1, #0x10]\n\t"
-        "ldr r2, [sp, #0x18]\n\t"
-        "str r2, [sp, #0xc]\n\t"
-        "ldr r5, [sp, #0x1c]\n\t"
-        "cmp r5, #4\n\t"
-        "bgt _0803542C\n\t"
-        "b _080352C8\n"
-    "_0803542C:\n\t"
-        "add sp, #0x24\n\t"
-        "pop {r3, r4, r5}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov sl, r5\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "_0803543C: .4byte gUnknown_030012B8\n"
-    "_08035440: .4byte gStaticData_0817CF40\n"
-    "_08035444: .4byte 0x040000D4\n"
-    "_08035448: .4byte 0x84000008\n"
-    );
-}
-#endif
 
 asm(".align 2, 0");
 
