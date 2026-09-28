@@ -211,10 +211,44 @@ void sub_80204EC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 /* Text popup, tag 0x17, anim +0x114. Flips the part's flipX bit, points
  * the header at gStaticData_0816BAAC, copies the level record's
  * +8/+4/+0xc words into header+0x30/0x34/0x38 and shows it with style 4.
- * Still NAKED: the plain-C version is 62 halfwords off under old_agbcc,
+ * Still NAKED (draft under NON_MATCHING): the plain-C version is 62 halfwords off under old_agbcc,
  * all register allocation. The ROM keeps arg3 in r4 and
  * &gUnknown_030012B4 in sb, and spills part+0x28 to a single stack slot;
  * the C spills the shared constant 1 and &gUnknown_030012B4 instead. */
+#if NON_MATCHING
+void sub_802062C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+{
+    struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
+    struct popup_hdr *hdr;
+    struct level_record *rec;
+    struct level_record *rec2;
+
+    part->anim = POPUP_ANIM(0x114);
+    part->frameNibble = sub_800815C(part);
+    sub_8026EDC(0x8c);
+    hdr = sub_800CA74();
+    POPUP_ATTACH(hdr, part);
+    hdr->tag = 0x17;
+    part->hdr = hdr;
+    POPUP_ATTACH(hdr, part);
+    SetPartField0A(part, 1);
+    part->base.flags &= 0x7f;
+    rec = LEVEL_RECORD(arg3);
+    part->flipX = (rec->flags >> 1 ^ 1) & 1;
+    part->unk_28_5 = rec->flags >> 2 & 1;
+    sub_8008E94(gUnknown_030012F0, part);
+    SetPopupGfx(hdr, gStaticData_0816B98C);
+    rec2 = LEVEL_RECORD(arg3);
+    {
+        s32 f = part->flipX;
+        part->flipX = f == 0;
+    }
+    SetPartField0A(part, 1);
+    SetPopupGfx(hdr, gStaticData_0816BAAC);
+    SetPopupSpan(hdr, rec2->unk_08, rec2->unk_04, rec2->unk_0C);
+    sub_800C6A8(hdr, 4);
+}
+#else
 NAKED void sub_802062C(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
 {
     asm(
@@ -383,6 +417,7 @@ NAKED void sub_802062C(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
         "6: .4byte gStaticData_0816BAAC\n"
     );
 }
+#endif
 
 /* Text popup, tag 0x16, anim +0x108. After registering the part it shows
  * the header with style 9, passes the level record's +4/+8/+0xc fields

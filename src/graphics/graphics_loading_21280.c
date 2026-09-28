@@ -12,140 +12,78 @@ extern void sub_8023318(void *self, struct popup_hdr *hdr);
 extern struct popup_hdr *sub_80189EC(void);
 extern struct popup_hdr *sub_80197DC(void);
 
+struct level_guard
+{
+    s32 unk_00;
+    s32 guard;
+    u8 unk_08[0x1C];
+};
+
+struct spawn_part
+{
+    u8 unk_00[0xA];
+    u8 field_0A;
+};
+
+extern struct level_guard gStaticData_0816C86C[];
+extern u8 *gUnknown_030012D8;
+extern void *gUnknown_030012E8;
+extern u8 sub_8023290(void *self);
+extern u8 sub_80232B8(void *self);
+extern s32 sub_8023324(void *self);
+extern s32 sub_802332C(void *self);
+extern struct spawn_part *sub_80071E4(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
+extern void sub_80070EC(struct spawn_part *part, s32 w, s32 h);
+extern s32 *sub_801A878(u16 x, u16 y, u16 w, u16 h, s32 id);
+extern void sub_8023500(void *self, s32 *point);
+
 /* Three-way spawner. While the level controller reports nothing pending
  * and the current level's table entry has no guard, spawns a 0x64x0x64
  * sub_80071E4 part tagged 0x12. Otherwise, unless gUnknown_030012D8's
  * +0x88 flag is set, hands sub_8023500 a point just above-left of a
  * sub_801A878 probe; with the flag set it spawns a 0x28x0x28 part.
- * Still NAKED: the plain-C version is 9 halfwords off under old_agbcc.
  * The ROM computes the point's x/y into fresh registers
- * (`subs r2, r1, #2`; `adds r3, r0, #0; subs r3, #30`) where the C
- * reuses their inputs, the same gap as sub_802209C
- * (graphics_loading_21d80.c). */
-NAKED void sub_8021280(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+ * (`subs r2, r1, #2`; `adds r3, r0, #0; subs r3, #30`) where plain C
+ * reuses their inputs (9 halfwords off), the same gap as sub_802209C
+ * (graphics_loading_21d80.c). Pinning the four temporaries plus an empty
+ * `asm("" : "+r" (x))` - which stops combine folding `x` back into its
+ * input before `y` is loaded - reproduces it. */
+void sub_8021280(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sb\n\t"
-        "mov r6, r8\n\t"
-        "push {r6, r7}\n\t"
-        "sub sp, #0xc\n\t"
-        "add r6, r0, #0\n\t"
-        "lsl r1, r1, #0x10\n\t"
-        "lsr r7, r1, #0x10\n\t"
-        "lsl r2, r2, #0x10\n\t"
-        "lsr r2, r2, #0x10\n\t"
-        "mov r8, r2\n\t"
-        "lsl r3, r3, #0x10\n\t"
-        "lsr r3, r3, #0x10\n\t"
-        "mov sb, r3\n\t"
-        "ldr r5, 1f\n\t"
-        "ldr r0, [r5]\n\t"
-        "bl sub_8023290\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "bne 3f\n\t"
-        "ldr r0, [r5]\n\t"
-        "bl sub_80232B8\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "bne 3f\n\t"
-        "ldr r0, [r5]\n\t"
-        "bl sub_8023324\n\t"
-        "cmp r0, #0\n\t"
-        "bne 3f\n\t"
-        "ldr r4, 2f\n\t"
-        "ldr r0, [r5]\n\t"
-        "bl sub_802332C\n\t"
-        "lsl r1, r0, #3\n\t"
-        "add r1, r1, r0\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r4, #4\n\t"
-        "add r1, r1, r4\n\t"
-        "ldr r0, [r1]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 3f\n\t"
-        "lsl r0, r6, #0x10\n\t"
-        "lsr r0, r0, #0x10\n\t"
-        "add r1, r7, #0\n\t"
-        "mov r2, r8\n\t"
-        "mov r3, sb\n\t"
-        "bl sub_80071E4\n\t"
-        "add r4, r0, #0\n\t"
-        "mov r1, #0x64\n\t"
-        "mov r2, #0x64\n\t"
-        "bl sub_80070EC\n\t"
-        "mov r0, #0x12\n\t"
-        "strb r0, [r4, #0xa]\n\t"
-        "ldr r0, 4f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r1, r4, #0\n\t"
-        "bl sub_8008E94\n\t"
-        "b 7f\n\t"
-        ".align 2, 0\n"
-    "1: .4byte gUnknown_030012C0\n"
-    "2: .4byte gStaticData_0816C86C\n"
-    "4: .4byte gUnknown_030012E8\n"
-    "3:\n\t"
-        "ldr r0, 5f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r0, #0x88\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 6f\n\t"
-        "lsl r0, r6, #0x10\n\t"
-        "lsr r0, r0, #0x10\n\t"
-        "mov r1, #4\n\t"
-        "str r1, [sp]\n\t"
-        "add r1, r7, #0\n\t"
-        "mov r2, r8\n\t"
-        "mov r3, sb\n\t"
-        "bl sub_801A878\n\t"
-        "ldr r1, [r0]\n\t"
-        "asr r1, r1, #8\n\t"
-        "sub r2, r1, #2\n\t"
-        "ldr r0, [r0, #4]\n\t"
-        "asr r0, r0, #8\n\t"
-        "add r3, r0, #0\n\t"
-        "sub r3, #0x1e\n\t"
-        "str r2, [sp, #4]\n\t"
-        "str r3, [sp, #8]\n\t"
-        "ldr r0, 8f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r1, sp, #4\n\t"
-        "bl sub_8023500\n\t"
-        "b 7f\n\t"
-        ".align 2, 0\n"
-    "5: .4byte gUnknown_030012D8\n"
-    "8: .4byte gUnknown_030012C0\n"
-    "6:\n\t"
-        "lsl r0, r6, #0x10\n\t"
-        "lsr r0, r0, #0x10\n\t"
-        "add r1, r7, #0\n\t"
-        "mov r2, r8\n\t"
-        "mov r3, sb\n\t"
-        "bl sub_80071E4\n\t"
-        "add r4, r0, #0\n\t"
-        "mov r1, #0x28\n\t"
-        "mov r2, #0x28\n\t"
-        "bl sub_80070EC\n\t"
-        "mov r0, #0x12\n\t"
-        "strb r0, [r4, #0xa]\n\t"
-        "ldr r0, 9f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r1, r4, #0\n\t"
-        "bl sub_8008E94\n\t"
-    "7:\n\t"
-        "add sp, #0xc\n\t"
-        "pop {r3, r4}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "9: .4byte gUnknown_030012E8\n"
-    );
+    if (!sub_8023290(gUnknown_030012C0) && !sub_80232B8(gUnknown_030012C0)
+        && !sub_8023324(gUnknown_030012C0)
+        && gStaticData_0816C86C[sub_802332C(gUnknown_030012C0)].guard == 0)
+    {
+        struct spawn_part *part = sub_80071E4(arg0, arg1, arg2, arg3);
+
+        sub_80070EC(part, 0x64, 0x64);
+        part->field_0A = 0x12;
+        sub_8008E94(gUnknown_030012E8, part);
+    }
+    else if (gUnknown_030012D8[0x88] == 0)
+    {
+        s32 *pos = sub_801A878(arg0, arg1, arg2, arg3, 4);
+        register s32 px asm("r1") = pos[0] >> 8;
+        register s32 x asm("r2") = px - 2;
+        register s32 py asm("r0");
+        register s32 y asm("r3");
+        s32 point[2];
+
+        asm("" : "+r" (x));
+        py = pos[1] >> 8;
+        y = py - 0x1E;
+        point[0] = x;
+        point[1] = y;
+        sub_8023500(gUnknown_030012C0, point);
+    }
+    else
+    {
+        struct spawn_part *part = sub_80071E4(arg0, arg1, arg2, arg3);
+
+        sub_80070EC(part, 0x28, 0x28);
+        part->field_0A = 0x12;
+        sub_8008E94(gUnknown_030012E8, part);
+    }
 }
 
 /* "Two-line text popup" variant with its own header: instead of

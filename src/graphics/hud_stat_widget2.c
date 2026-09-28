@@ -4,122 +4,69 @@
 
 /* Icon-indicator widget (lives display) - see
  * docs/matching/issue-45-hud-stat-widget-dispatcher.md for the full
- * semantic account (positions and clamps the primary icon slot
+ * semantic account: positions and clamps the primary icon slot
  * (parts[22]) unconditionally, then a second icon (parts[23]) only when
- * sub_8023378's count exceeds 1) and the "NAKED-transcription pass"
- * section for why this is written as NAKED asm rather than plain C.
+ * sub_8023378's count exceeds 1.
  *
- * Every plain-C phrasing tried keeps each icon's `anim_index` byte
- * (self+0x5AD/self+0x5ED) in r7 right up to using it as the
- * `records[]` array subscript, and reliably miscompiles that specific
- * use - not a register *choice* mismatch but a wrong *value* read back
- * (a bogus `mov r0, sp` / shift-mask sequence instead of the pinned
- * byte), reproduced identically across `register u8 index asm("r7")`,
- * a plain `records[index]`, and the full manual shift-and-subtract
- * clamp idiom `sub_8027838` needed for its own analogous case. This
- * looks like a second, distinct r7 miscompilation class in this
- * `gcc 2.9` build, on top of the already-documented "explicit r7 pin
- * live across a `bl` drops r7 from the push/pop list" one - confirmed
- * unrelated to that one since there's no call between r7's definition
- * and this use. Transcribed instruction-for-instruction from the ROM's
- * own disassembly instead, following this project's established NAKED
- * escape hatch (`src/system/link_cable.c`'s several NAKED functions,
- * `src/audio/gax_swi.c`'s `sub_80392C4`). */
-NAKED void sub_802757C(struct hud_counter *self)
+ * Built with old_agbcc (the whole file matches under it). The earlier
+ * NAKED note blamed an "r7 wrong-value miscompile" at the clamp sites;
+ * under old_agbcc plain C reproduces the ROM's `ldrb r7; ...; adds rN,
+ * r7, #0` clamp sequence exactly. The position helper takes the part
+ * pointer last so the table symbol is loaded before `self->parts`. */
+
+struct hud_pos
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "add r6, r0, #0\n\t"
-        "ldr r1, 1f\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r5, 2f\n\t"
-        "ldr r2, [r6, #0x64]\n\t"
-        "mov r0, #0xb0\n\t"
-        "lsl r0, r0, #3\n\t"
-        "add r3, r2, r0\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0xb0\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r1, r5, #0\n\t"
-        "add r1, #0xb4\n\t"
-        "ldr r1, [r1]\n\t"
-        "lsl r0, r0, #8\n\t"
-        "str r0, [r3]\n\t"
-        "lsl r1, r1, #8\n\t"
-        "str r1, [r3, #4]\n\t"
-        "mov r4, #0\n\t"
-        "ldr r0, [r3, #0x20]\n\t"
-        "ldr r1, 3f\n\t"
-        "add r2, r2, r1\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldrb r7, [r2]\n\t"
-        "lsl r0, r7, #3\n\t"
-        "add r2, r7, #0\n\t"
-        "sub r0, r0, r2\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrb r0, [r0, #0x16]\n\t"
-        "cmp r4, r0\n\t"
-        "blt 4f\n\t"
-        "sub r4, r0, #1\n\t"
-    "4:\n\t"
-        "str r4, [r3, #0x30]\n\t"
-        "add r0, r3, #0\n\t"
-        "mov r1, #0\n\t"
-        "mov r2, #0\n\t"
-        "bl sub_80270E0\n\t"
-        "ldr r0, 5f\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_8023378\n\t"
-        "add r3, r0, #0\n\t"
-        "cmp r3, #0\n\t"
-        "ble 6f\n\t"
-        "ldr r2, [r6, #0x64]\n\t"
-        "mov r0, #0xb8\n\t"
-        "lsl r0, r0, #3\n\t"
-        "add r4, r2, r0\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0xb8\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r1, r5, #0\n\t"
-        "add r1, #0xbc\n\t"
-        "ldr r1, [r1]\n\t"
-        "lsl r0, r0, #8\n\t"
-        "str r0, [r4]\n\t"
-        "lsl r1, r1, #8\n\t"
-        "str r1, [r4, #4]\n\t"
-        "sub r3, #1\n\t"
-        "ldr r0, [r4, #0x20]\n\t"
-        "ldr r1, 7f\n\t"
-        "add r2, r2, r1\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldrb r5, [r2]\n\t"
-        "lsl r0, r5, #3\n\t"
-        "sub r0, r0, r5\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldrb r0, [r0, #0x16]\n\t"
-        "cmp r3, r0\n\t"
-        "blt 8f\n\t"
-        "sub r3, r0, #1\n\t"
-    "8:\n\t"
-        "str r3, [r4, #0x30]\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "mov r2, #0\n\t"
-        "bl sub_80270E0\n\t"
-    "6:\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "1: .4byte gUnknown_0300086C\n"
-    "2: .4byte gStaticData_08174C6C\n"
-    "3: .4byte 0x000005AD\n"
-    "5: .4byte gUnknown_030012C0\n"
-    "7: .4byte 0x000005ED\n"
-    );
+    s32 x;
+    s32 y;
+};
+
+extern s32 gUnknown_0300086C;
+extern void *gUnknown_030012C0;
+extern struct hud_pos gStaticData_08174C6C[];
+extern void sub_80270E0(struct hud_digit_part *part, s32 x, s32 y);
+extern s32 sub_8023378(void *state);
+extern s32 sub_8023270(void *state);
+extern s32 sub_8023268(void *state);
+extern s32 sub_8023260(void *state);
+extern s32 sub_8037E54(s32 value, s32 divisor);
+extern s32 sub_803AF1C(s32 value, s32 divisor);
+
+static inline void SetPartPos(s32 x, s32 y, struct hud_digit_part *part)
+{
+    part->x = x << 8;
+    part->y = y << 8;
+}
+
+/* Sets the part's desired frame, clamped to its animation's last one. */
+#define CLAMP_FRAME(part, index, frame)                                   \
+    {                                                                     \
+        struct hud_digit_part *_p = (part);                               \
+        s32 _f = (frame);                                                 \
+        s32 _n = _p->anim_data->records[index].frame_count;               \
+        if (_f >= _n)                                                     \
+            _f = _n - 1;                                                  \
+        _p->frame_index = _f;                                             \
+    }
+
+void sub_802757C(struct hud_counter *self)
+{
+    struct hud_digit_part *part;
+    s32 count;
+
+    gUnknown_0300086C = 0;
+    SetPartPos(gStaticData_08174C6C[22].x, gStaticData_08174C6C[22].y, (part = &self->parts[22]));
+    CLAMP_FRAME(part, self->parts[22].anim_index, 0);
+    sub_80270E0(part, 0, 0);
+
+    count = sub_8023378(gUnknown_030012C0);
+    if (count > 0)
+    {
+        struct hud_digit_part *second = &self->parts[23];
+
+        SetPartPos(gStaticData_08174C6C[23].x, gStaticData_08174C6C[23].y, second);
+        CLAMP_FRAME(second, self->parts[23].anim_index, count - 1);
+        sub_80270E0(second, 0, 0);
+    }
 }
 
 /* Three more digit/icon widgets, gated by their own change-detection
@@ -131,249 +78,53 @@ NAKED void sub_802757C(struct hud_counter *self)
  * always gets a fixed desired frame of 0 (a single-frame icon, not a
  * digit). All six slots get redrawn unconditionally afterward via
  * `sub_80270E0` - slot 21 appears twice in that list, matching the ROM
- * exactly. Same r7-pinned-byte-as-array-subscript miscompile as
- * `sub_802757C` above at each of its own six clamp sites (see that
- * function's doc comment) - transcribed as NAKED asm the same way. */
-NAKED void sub_802763C(struct hud_counter *self)
+ * exactly. Old_agbcc, like `sub_802757C`; `CLAMP_FRAME` binds the
+ * part pointer before the frame value, which is the order the ROM
+ * computes them in. */
+void sub_802763C(struct hud_counter *self)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "add r5, r0, #0\n\t"
-        "ldr r1, 1f\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r4, 2f\n\t"
-        "ldr r0, [r4]\n\t"
-        "bl sub_8023270\n\t"
-        "ldr r1, [r5, #0x2c]\n\t"
-        "cmp r1, r0\n\t"
-        "beq 7f\n\t"
-        "ldr r0, [r4]\n\t"
-        "bl sub_8023270\n\t"
-        "str r0, [r5, #0x2c]\n\t"
-        "mov r1, #0xa\n\t"
-        "bl sub_8037E54\n\t"
-        "ldr r4, [r5, #0x64]\n\t"
-        "mov r1, #0xe0\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r6, r4, r1\n\t"
-        "add r3, r0, #0\n\t"
-        "ldr r0, [r6, #0x20]\n\t"
-        "ldr r2, 4f\n\t"
-        "add r1, r4, r2\n\t"
-        "ldr r2, [r0]\n\t"
-        "ldrb r7, [r1]\n\t"
-        "lsl r0, r7, #3\n\t"
-        "add r1, r7, #0\n\t"
-        "sub r0, r0, r1\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r2\n\t"
-        "ldrb r0, [r0, #0x16]\n\t"
-        "cmp r3, r0\n\t"
-        "blt 3f\n\t"
-        "sub r3, r0, #1\n\t"
-    "3:\n\t"
-        "str r3, [r6, #0x30]\n\t"
-        "ldr r0, [r5, #0x2c]\n\t"
-        "mov r1, #0xa\n\t"
-        "bl sub_803AF1C\n\t"
-        "mov r1, #0xf0\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r6, r4, r1\n\t"
-        "add r3, r0, #0\n\t"
-        "ldr r0, [r6, #0x20]\n\t"
-        "ldr r2, 6f\n\t"
-        "add r1, r4, r2\n\t"
-        "ldr r2, [r0]\n\t"
-        "ldrb r4, [r1]\n\t"
-        "lsl r0, r4, #3\n\t"
-        "sub r0, r0, r4\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r2\n\t"
-        "ldrb r1, [r0, #0x16]\n\t"
-        "cmp r3, r1\n\t"
-        "blt 5f\n\t"
-        "sub r3, r1, #1\n\t"
-    "5:\n\t"
-        "str r3, [r6, #0x30]\n\t"
-    "7:\n\t"
-        "ldr r4, 2f\n\t"
-        "ldr r0, [r4]\n\t"
-        "bl sub_8023268\n\t"
-        "ldr r1, [r5, #0x30]\n\t"
-        "cmp r1, r0\n\t"
-        "beq 12f\n\t"
-        "ldr r0, [r4]\n\t"
-        "bl sub_8023268\n\t"
-        "str r0, [r5, #0x30]\n\t"
-        "mov r1, #0xa\n\t"
-        "bl sub_8037E54\n\t"
-        "ldr r4, [r5, #0x64]\n\t"
-        "mov r7, #0x88\n\t"
-        "lsl r7, r7, #3\n\t"
-        "add r6, r4, r7\n\t"
-        "add r3, r0, #0\n\t"
-        "ldr r0, [r6, #0x20]\n\t"
-        "ldr r2, 9f\n\t"
-        "add r1, r4, r2\n\t"
-        "ldr r2, [r0]\n\t"
-        "ldrb r7, [r1]\n\t"
-        "lsl r0, r7, #3\n\t"
-        "add r1, r7, #0\n\t"
-        "sub r0, r0, r1\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r2\n\t"
-        "ldrb r0, [r0, #0x16]\n\t"
-        "cmp r3, r0\n\t"
-        "blt 8f\n\t"
-        "sub r3, r0, #1\n\t"
-    "8:\n\t"
-        "str r3, [r6, #0x30]\n\t"
-        "ldr r0, [r5, #0x30]\n\t"
-        "mov r1, #0xa\n\t"
-        "bl sub_803AF1C\n\t"
-        "mov r1, #0x90\n\t"
-        "lsl r1, r1, #3\n\t"
-        "add r6, r4, r1\n\t"
-        "add r3, r0, #0\n\t"
-        "ldr r0, [r6, #0x20]\n\t"
-        "ldr r2, 11f\n\t"
-        "add r1, r4, r2\n\t"
-        "ldr r2, [r0]\n\t"
-        "ldrb r4, [r1]\n\t"
-        "lsl r0, r4, #3\n\t"
-        "sub r0, r0, r4\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r2\n\t"
-        "ldrb r1, [r0, #0x16]\n\t"
-        "cmp r3, r1\n\t"
-        "blt 10f\n\t"
-        "sub r3, r1, #1\n\t"
-    "10:\n\t"
-        "str r3, [r6, #0x30]\n\t"
-    "12:\n\t"
-        "ldr r4, 2f\n\t"
-        "ldr r0, [r4]\n\t"
-        "bl sub_8023260\n\t"
-        "ldr r1, [r5, #0x34]\n\t"
-        "cmp r1, r0\n\t"
-        "beq 17f\n\t"
-        "ldr r0, [r4]\n\t"
-        "bl sub_8023260\n\t"
-        "str r0, [r5, #0x34]\n\t"
-        "ldr r4, [r5, #0x64]\n\t"
-        "mov r7, #0xa0\n\t"
-        "lsl r7, r7, #3\n\t"
-        "add r6, r4, r7\n\t"
-        "add r3, r0, #0\n\t"
-        "ldr r0, [r6, #0x20]\n\t"
-        "ldr r2, 14f\n\t"
-        "add r1, r4, r2\n\t"
-        "ldr r2, [r0]\n\t"
-        "ldrb r7, [r1]\n\t"
-        "lsl r0, r7, #3\n\t"
-        "add r1, r7, #0\n\t"
-        "sub r0, r0, r1\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r2\n\t"
-        "ldrb r0, [r0, #0x16]\n\t"
-        "cmp r3, r0\n\t"
-        "blt 13f\n\t"
-        "sub r3, r0, #1\n\t"
-    "13:\n\t"
-        "str r3, [r6, #0x30]\n\t"
-        "mov r0, #0xa8\n\t"
-        "lsl r0, r0, #3\n\t"
-        "add r6, r4, r0\n\t"
-        "mov r3, #0\n\t"
-        "ldr r0, [r6, #0x20]\n\t"
-        "ldr r2, 16f\n\t"
-        "add r1, r4, r2\n\t"
-        "ldr r2, [r0]\n\t"
-        "ldrb r4, [r1]\n\t"
-        "lsl r0, r4, #3\n\t"
-        "sub r0, r0, r4\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r2\n\t"
-        "ldrb r1, [r0, #0x16]\n\t"
-        "cmp r3, r1\n\t"
-        "blt 15f\n\t"
-        "sub r3, r1, #1\n\t"
-    "15:\n\t"
-        "str r3, [r6, #0x30]\n\t"
-    "17:\n\t"
-        "ldr r0, [r5, #0x64]\n\t"
-        "mov r7, #0xe0\n\t"
-        "lsl r7, r7, #2\n\t"
-        "add r0, r0, r7\n\t"
-        "mov r1, #0\n\t"
-        "mov r2, #0\n\t"
-        "bl sub_80270E0\n\t"
-        "ldr r0, [r5, #0x64]\n\t"
-        "mov r1, #0xf0\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "mov r1, #0\n\t"
-        "mov r2, #0\n\t"
-        "bl sub_80270E0\n\t"
-        "ldr r0, [r5, #0x64]\n\t"
-        "mov r2, #0x88\n\t"
-        "lsl r2, r2, #3\n\t"
-        "add r0, r0, r2\n\t"
-        "mov r1, #0\n\t"
-        "mov r2, #0\n\t"
-        "bl sub_80270E0\n\t"
-        "ldr r0, [r5, #0x64]\n\t"
-        "mov r4, #0x90\n\t"
-        "lsl r4, r4, #3\n\t"
-        "add r0, r0, r4\n\t"
-        "mov r1, #0\n\t"
-        "mov r2, #0\n\t"
-        "bl sub_80270E0\n\t"
-        "ldr r0, [r5, #0x64]\n\t"
-        "mov r7, #0xa0\n\t"
-        "lsl r7, r7, #3\n\t"
-        "add r0, r0, r7\n\t"
-        "mov r1, #0\n\t"
-        "mov r2, #0\n\t"
-        "bl sub_80270E0\n\t"
-        "ldr r0, [r5, #0x64]\n\t"
-        "add r4, #0xc0\n\t"
-        "add r0, r0, r4\n\t"
-        "mov r1, #0\n\t"
-        "mov r2, #0\n\t"
-        "bl sub_80270E0\n\t"
-        "ldr r0, [r5, #0x64]\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #3\n\t"
-        "add r0, r0, r1\n\t"
-        "mov r1, #0\n\t"
-        "mov r2, #0\n\t"
-        "bl sub_80270E0\n\t"
-        "ldr r0, [r5, #0x64]\n\t"
-        "mov r2, #0x98\n\t"
-        "lsl r2, r2, #3\n\t"
-        "add r0, r0, r2\n\t"
-        "mov r1, #0\n\t"
-        "mov r2, #0\n\t"
-        "bl sub_80270E0\n\t"
-        "ldr r0, [r5, #0x64]\n\t"
-        "add r0, r0, r4\n\t"
-        "mov r1, #0\n\t"
-        "mov r2, #0\n\t"
-        "bl sub_80270E0\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "1: .4byte gUnknown_0300086C\n"
-    "2: .4byte gUnknown_030012C0\n"
-    "4: .4byte 0x000003AD\n"
-    "6: .4byte 0x000003ED\n"
-    "9: .4byte 0x0000046D\n"
-    "11: .4byte 0x000004AD\n"
-    "14: .4byte 0x0000052D\n"
-    "16: .4byte 0x0000056D\n"
-    );
+    struct hud_digit_part *parts;
+
+    gUnknown_0300086C = 0;
+    if (self->sync_value_a != sub_8023270(gUnknown_030012C0))
+    {
+        s32 f;
+
+        self->sync_value_a = sub_8023270(gUnknown_030012C0);
+        f = sub_8037E54(self->sync_value_a, 10);
+        parts = self->parts;
+        CLAMP_FRAME(&parts[14], parts[14].anim_index, f);
+        f = sub_803AF1C(self->sync_value_a, 10);
+        CLAMP_FRAME(&parts[15], parts[15].anim_index, f);
+    }
+    if (self->sync_value_b != sub_8023268(gUnknown_030012C0))
+    {
+        s32 f;
+
+        self->sync_value_b = sub_8023268(gUnknown_030012C0);
+        f = sub_8037E54(self->sync_value_b, 10);
+        parts = self->parts;
+        CLAMP_FRAME(&parts[17], parts[17].anim_index, f);
+        f = sub_803AF1C(self->sync_value_b, 10);
+        CLAMP_FRAME(&parts[18], parts[18].anim_index, f);
+    }
+    if (self->sync_value_c != sub_8023260(gUnknown_030012C0))
+    {
+        s32 f;
+
+        self->sync_value_c = f = sub_8023260(gUnknown_030012C0);
+        parts = self->parts;
+        CLAMP_FRAME(&parts[20], parts[20].anim_index, f);
+        CLAMP_FRAME(&parts[21], parts[21].anim_index, 0);
+    }
+    sub_80270E0(&self->parts[14], 0, 0);
+    sub_80270E0(&self->parts[15], 0, 0);
+    sub_80270E0(&self->parts[17], 0, 0);
+    sub_80270E0(&self->parts[18], 0, 0);
+    sub_80270E0(&self->parts[20], 0, 0);
+    sub_80270E0(&self->parts[21], 0, 0);
+    sub_80270E0(&self->parts[16], 0, 0);
+    sub_80270E0(&self->parts[19], 0, 0);
+    sub_80270E0(&self->parts[21], 0, 0);
 }
 asm(".align 2, 0");

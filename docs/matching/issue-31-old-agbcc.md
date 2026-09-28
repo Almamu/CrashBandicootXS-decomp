@@ -92,3 +92,10 @@ The same "r7 never enters the callee-saved set" gap parked other
 functions nearby, among them `LoadGraphicsPackage`, `sub_801E644` and
 `sub_801E688` (graphics_package_1e578.c and neighbours, issue #30). They
 are good candidates for the same old_agbcc retry.
+
+## Later pass: NAKED retry (mid45)
+
+`sub_8021280` is now C, using four register pins plus one empty `asm`
+nudge for the fresh-register `{x - 2, y - 0x1e}` point. `sub_802062C`
+stays NAKED at 62 halfwords, now with its draft under `#if NON_MATCHING`.
+See [naked-retry-mid45.md](naked-retry-mid45.md).

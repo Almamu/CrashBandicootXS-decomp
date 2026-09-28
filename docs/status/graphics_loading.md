@@ -95,7 +95,7 @@ family. Filed under `src/graphics/` on disk, tracked as its own
 - **`sub_801EF0C`**-**`sub_801FCB4`** (`src/graphics/graphics_loading_1ef0c.c`),
   **`sub_801FDEC`** (`graphics_loading_1fdec.c`), **`sub_801FEEC`**-
   **`sub_8020D4C`** except `sub_802062C` (`graphics_loading_1feec.c`),
-  **`sub_8021388`**-**`sub_802155C`** (`graphics_loading_21280.c`) and
+  **`sub_8021280`**-**`sub_802155C`** (`graphics_loading_21280.c`) and
   **`sub_8021668`**-**`sub_8021BD8`** (`graphics_loading_21668.c`) - the
   "two-line text popup" spawners (issue #31) and the spawner-table
   entries that follow them. All five files are built with old_agbcc and
@@ -103,7 +103,9 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   asm; 22 of them were NAKED under agbcc, parked on the "r7 in the
   callee-saved set" gap, which was really a compiler mismatch.
   `sub_801F170` keeps its agbcc-era pinned C (plain C is 5 halfwords
-  off). See
+  off). `sub_8021280` was NAKED until the NAKED retry pass; it needs four
+  register pins and an empty `asm` nudge (see
+  [naked-retry-mid45.md](../matching/naked-retry-mid45.md)). See
   [issue-31-old-agbcc.md](../matching/issue-31-old-agbcc.md).
 - **`sub_8021D80`**, **`sub_8021DFC`**, **`sub_8021E78`**, **`sub_8021EF4`**,
   **`sub_8021F70`**, **`sub_802200C`**, **`sub_80220C4`**, **`sub_802209C`**,
@@ -196,13 +198,9 @@ plain C didn't converge.
   popup, tag 0x17. Plain C under old_agbcc is 62 halfwords off: the ROM
   spills `part+0x28` to its one stack slot and keeps the constant 1 in
   r8, while the reconstruction spills the constant and
-  `&gUnknown_030012B4` instead. See
-  [issue-31-old-agbcc.md](../matching/issue-31-old-agbcc.md).
-- **`sub_8021280`** (`src/graphics/graphics_loading_21280.c`) - a
-  three-way spawner gated by the `gStaticData_0816C86C` guard. Plain C
-  under old_agbcc is 9 halfwords off: the ROM computes the
-  `{x - 2, y - 0x1e}` point into fresh r2/r3, the reconstruction
-  subtracts in place (the same gap as `sub_802209C`). See
+  `&gUnknown_030012B4` instead. The draft now sits under
+  `#if NON_MATCHING`; register pins on `arg3` and the table address made
+  it worse. See
   [issue-31-old-agbcc.md](../matching/issue-31-old-agbcc.md).
 - **`sub_80358A8`**, **`sub_8035E14`**, **`sub_80360DC`**,
   **`sub_803686C`** (`src/graphics/graphics_loading_35780.c`) - the

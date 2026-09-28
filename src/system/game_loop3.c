@@ -373,7 +373,79 @@ s8 sub_8025228(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut)
  * NAKED: plain C under old_agbcc is 30 halfwords off. The accumulator
  * and the pair loop's induction pointer swap r4 and r5 (allocation
  * priorities 2.4 vs 2.5); the ROM's r7 "shadow pointer" is gcc's own
- * strength-reduced `&dest[written]`, not a C variable. */
+ * strength-reduced `&dest[written]`, not a C variable.
+ *
+ * Later pass (#40 retry): the `#if NON_MATCHING` draft is 33 halfwords
+ * off under old_agbcc (same size). `acc`/`pair` as `s16` reproduce the
+ * ROM's per-use `lsl/asr` sign extensions and a do-while pair loop its
+ * missing entry test; left are the r4/r5 swap above and the ROM
+ * interleaving the `(s8)pair` shift pair around `acc`'s extension. */
+#if NON_MATCHING
+void sub_8025334(struct tile_cache *self, s32 recordId, void *dest)
+{
+    u16 *out = dest;
+    u16 *src = (u16 *)((u32 *)self->decodeBase + ((u16 *)self->decodeBase)[recordId]);
+    s32 budget = 0x7F;
+    s32 written = 0;
+
+    do
+    {
+        u16 token = *src;
+        u16 n = *(u8 *)src;
+
+        src++;
+        if (token & 0x8000)
+        {
+            u16 value = *src++;
+
+            budget -= n;
+            do
+            {
+                out[written] = value;
+                written++;
+                n--;
+            } while (n != 0);
+        }
+        else if (token & 0x4000)
+        {
+            s16 acc;
+
+            budget -= n;
+            acc = *src++;
+            out[written] = acc;
+            n--;
+            written++;
+            do
+            {
+                s16 pair = *src++;
+
+                acc += (s8)pair;
+                out[written++] = acc;
+                acc += pair >> 8;
+                out[written++] = acc;
+                n -= 2;
+            } while (n > 1);
+            if (n != 0)
+            {
+                s16 last = *src++;
+
+                out[written] = acc + (s8)last;
+                written++;
+            }
+        }
+        else
+        {
+            budget -= n;
+            do
+            {
+                out[written] = *src++;
+                written++;
+                n--;
+            } while (n != 0);
+        }
+    } while (budget >= 0);
+}
+#else
 NAKED void sub_8025334(struct tile_cache *self, s32 recordId, void *dest)
 {
     asm(
@@ -521,6 +593,7 @@ NAKED void sub_8025334(struct tile_cache *self, s32 recordId, void *dest)
         "bx r0"
     );
 }
+#endif
 /* Trailing byte count isn't a multiple of 4 in the ROM's own raw block
  * (a bare `.align 2, 0` follows `bx r0` there too) - see the
  * `matching_decomp_alignment_fix` precedent. */

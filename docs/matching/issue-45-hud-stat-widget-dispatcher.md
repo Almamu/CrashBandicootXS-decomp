@@ -604,3 +604,12 @@ in `ldscript.txt`'s link order.
 - `tools/report_units.py` - the `0x08027138` and `0x08027940` entries
   now point at these two new object files instead of `None`.
 - `docs/status/hud.md` - matched list updated with both new files.
+
+## Later pass: NAKED retry (mid45)
+
+`sub_802757C`, `sub_802763C`, `sub_8027940`, `sub_8027D5C`,
+`sub_8027E88` and `sub_802732C` are now plain C, and
+`hud_stat_widget2.c`/`hud_stat_widget3.c` build with old_agbcc. The "r7
+wrong-value miscompile" above was a compiler mismatch. Under old_agbcc
+the ordinary clamp reproduces the ROM's `ldrb r7; ...; adds rN, r7, #0`
+sequence. See [naked-retry-mid45.md](naked-retry-mid45.md).
