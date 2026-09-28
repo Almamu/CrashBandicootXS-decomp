@@ -18,6 +18,11 @@ from "core" graphics.
   (`actor_part110.c`) are real C now; they were NAKED. `actor_part2.o`
   and `actor_part110.o` moved to old_agbcc (whole-file matches).
 
+- **Issues #15/#16/#17 second NAKED retry** ([docs/matching/issue-15-16-17-naked-retry-2.md](../matching/issue-15-16-17-naked-retry-2.md)):
+  the action-table handlers `sub_801434C` (`actor_part18.c`, file moved
+  to old_agbcc), `sub_80145E4` (`actor_part18b.c`, both compilers) and
+  `sub_8012694` (`actor_part84.c`, old_agbcc) - plain C on
+  `include/action_obj.h`'s `struct act`, no pins or barriers.
 - **Issues #48/#49/#52 NAKED retry** ([docs/matching/issue-48-49-52-aabb-naked-retry.md](../matching/issue-48-49-52-aabb-naked-retry.md)):
   the AABB-overlap group `sub_802A018`, `sub_802A110`, `sub_802A3AC`
   (`actor_part103.c`) and `sub_802C7A8` (`actor_part19h.c`) - one shared
@@ -299,10 +304,10 @@ from "core" graphics.
 - `src/graphics/actor_part18.c`/`actor_part18b.c` (new files, non-
   adjacent since `sub_801434C` sits between them - see
   `docs/matching.md`, issue #17): `sub_801426C`, `sub_80142B0`,
-  `sub_80144E0`, `sub_8014524` - four entries of the `gStaticData_0816BF20`
-  42-slot action dispatch table (`sub_801434C`/`sub_80145E4`, also in
-  these files, are NAKED transcriptions - see "Parked - NAKED
-  transcription" below)
+  `sub_801434C`, `sub_80144E0`, `sub_8014524`, `sub_80145E4` - six
+  entries of the `gStaticData_0816BF20` 42-slot action dispatch table
+  (`sub_801434C`/`sub_80145E4` were NAKED until the second issue
+  #15/#16/#17 retry)
 
 - `src/graphics/actor_part19.c`/`actor_part19c.c`/`actor_part19d.c`/
   `actor_part19f.c`/`actor_part19g.c` (new files, non-adjacent since
@@ -953,9 +958,10 @@ plain C didn't converge.
 - **`sub_8014084`** (`src/graphics/actor_part_13c60.c`), **`sub_8014674`**,
   **`sub_8014B54`** (`src/graphics/actor_part_14674.c`), GitHub issue #17 -
   action-table handlers whose old_agbcc C (kept under `NON_MATCHING`)
-  still differs from the ROM. In `sub_8014084`/`sub_8014674` gcc threads
-  away a re-test of the same value (the flip bit, the part's tag) that
-  the ROM keeps. In `sub_8014B54` one reload register is one step off in
+  still differs from the ROM. `sub_8014084` is down to one misplaced
+  instruction (docs/matching/issue-15-16-17-naked-retry-2.md). In
+  `sub_8014674` gcc threads away a re-test of the part's tag that the
+  ROM keeps. In `sub_8014B54` one reload register is one step off in
   gcc's rotation. See `docs/matching/issue-17-0x08012fbc-actor.md`,
   "Third pass".
 - **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/issue-9-naked-retry.md); entry kept for history.** **`sub_8009868`** (`src/graphics/actor_part11d.c`) - another
@@ -1025,14 +1031,6 @@ plain C didn't converge.
   session; not attempted as C, transcribed directly as byte-exact
   NAKED asm instead. See
   [docs/matching/issue-9-10-0x0800aff4-graphics.md](../matching/issue-9-10-0x0800aff4-graphics.md).
-- **`sub_801434C`** (`src/graphics/actor_part18.c`) - the shared
-  handler `sub_80142B0` tail-calls; one of the `gStaticData_0816BF20`
-  action-table entries. See `docs/matching/issue-18-0x08014f8c-actor.md`.
-- **`sub_80145E4`** (`src/graphics/actor_part18b.c`) - same shape as
-  the matched `sub_8014524` (boolean/raw-value bit test, `sub_8015780`
-  reset block) but keeps the raw masked bit value rather than a
-  `!= 0`-normalized boolean. See
-  `docs/matching/issue-18-0x08014f8c-actor.md`.
 - **`sub_8015038`** (`src/graphics/actor_part38.c`) - a three-arm
   mgr-trampoline handler keyed on `self+0x24`/`self+0x22`, picking one
   of three table-index fallbacks. See
@@ -1077,16 +1075,14 @@ plain C didn't converge.
   register-pinning gauntlet already exhausted throughout this section
   for smaller members of the same table. See
   `docs/matching/issue-16-actor-remainder.md`.
-- **`sub_8012420`**, **`sub_8012694`** (`src/graphics/actor_part84.c`,
-  GitHub issue #16) - two more members of the same 42-slot
-  action-dispatch table (`gStaticData_0816BF20`): a `part`-visibility/
-  OAM-priority housekeeping pass (with a gcc 2.x pointer-to-member call
-  through the table and a trailing 22-case jump table), and a
-  proximity-gated child-object-type dispatch that fires a
-  `+0x50`/`+0x54` trampoline pair. Old_agbcc C drafts under
-  `NON_MATCHING`: `sub_8012694` is off only in the tag-test registers;
-  `sub_8012420`'s ROM keeps the PMF method record in an 8-byte stack slot
-  and pushes an unused `r7` (a spilled DImode pair). See
+- **`sub_8012420`** (`src/graphics/actor_part84.c`, GitHub issue #16) -
+  another member of the same 42-slot action-dispatch table
+  (`gStaticData_0816BF20`): a `part`-visibility/OAM-priority
+  housekeeping pass (with a gcc 2.x pointer-to-member call through the
+  table and a trailing 22-case jump table). Old_agbcc C draft under
+  `NON_MATCHING`: the ROM keeps the PMF method record in an 8-byte stack
+  slot and pushes an unused `r7` (a spilled DImode pair). Its sibling
+  `sub_8012694` is matched (see Matched). See
   [issue-15-16-naked-retry.md](../matching/issue-15-16-naked-retry.md).
 - **`sub_8012AF4`** (`src/graphics/actor_part83.c`, GitHub issue #16) -
   an animation pass keyed on a `gStaticData_0816B304` per-action

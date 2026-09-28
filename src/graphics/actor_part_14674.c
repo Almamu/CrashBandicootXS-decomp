@@ -62,47 +62,58 @@ static inline void SetTag(struct act_part *part, s32 tag)
  * otherwise handles the fire/alt/shoulder inputs and, with the D-pad
  * idle, clears the +0x31/+0x2F/+0x27 trio.
  *
- * NAKED: the C below has the ROM's blocks, but the ROM keeps the
- * constant 1 and the contact bit in callee-saved registers across the
- * whole function (r6/r5) and shares the +0x31/+0x2F/+0x27 stores
- * between paths differently - see docs/matching/issue-17-0x08012fbc-actor.md,
- * "Second pass". */
+ * NAKED: the C below (old_agbcc, second retry - see
+ * docs/matching/issue-15-16-17-naked-retry-2.md) has the ROM's layout;
+ * what is left is registers: the tag is copied to r1 for the 0x18
+ * re-test, the state-0xE `& 0x30` test and its else-trio use r1 where
+ * the ROM uses r0/r5, and the `fire` test ANDs `pressed` into a copy
+ * instead of into a fresh 1. */
 #if NON_MATCHING
+static inline void ActTrio28(struct act *self, s32 a, s32 b, s32 c)
+{
+    self->next32 = a;
+    self->flag30 = b;
+    self->next28 = c;
+}
+
+static inline void ActHold27(struct act *self, u8 *slot, s32 next)
+{
+    self->next31 = 0;
+    self->flag2F = next;
+    *slot = next;
+}
+
 void sub_8014674(struct act *self)
 {
-    struct act_part *part = self->part;
-    u8 hit = part->contact & 8;
+    u8 hit = self->part->contact & 8;
 
     if (hit)
     {
         u8 tag;
 
-        ActOrFlags0D(part, 1);
+        ACT_PART_FLAGS0D(self->part) |= 1;
         self->unk_34 = 0;
-        part = self->part;
-        tag = part->tag;
+        tag = self->part->tag;
         if (tag == 0xD || tag == 0x18)
         {
-            if (tag == 0xD)
+            if (self->part->tag == 0xD)
             {
                 if (self->unk_29)
                 {
                     self->frame = 0;
-                    ACT_VCALL2(self, m50, part, 0x18);
+                    ACT_VCALL2(self, m50, self->part, 0x18);
                     ACT_VCALL1(self, m20, 4);
-                    self->next31 = 0;
-                    self->flag2F = 1;
-                    self->next27 = 0x1B;
+                    ActQueue27(self, 0, 0x1B);
                 }
                 else
                 {
                     self->frame = 0;
                     ACT_VCALL1(self, m20, 3);
-                    if (self->next27 != 1)
                     {
-                        self->next31 = 0;
-                        self->flag2F = 1;
-                        self->next27 = 1;
+                        u8 *slot = &self->next27;
+
+                        if (*slot != 1)
+                            ActHold27(self, slot, 1);
                     }
                 }
                 ActSetNext(self, 0);
@@ -114,18 +125,14 @@ void sub_8014674(struct act *self)
                 self->flag30 = 1;
                 self->next28 = 0;
                 self->unk_29 = 1;
-                self->next31 = 0;
-                self->flag2F = 1;
-                self->next27 = 0x1B;
+                ActQueue27(self, 0, 0x1B);
             }
         }
         else if (self->state == 0xE)
         {
             if (gUnknown_030007E0 & 0x30)
             {
-                self->next31 = 0;
-                self->flag2F = 1;
-                self->next27 = 1;
+                ActQueue27(self, 0, 1);
             }
             else
             {
@@ -150,16 +157,18 @@ void sub_8014674(struct act *self)
     }
     {
         u32 in = gUnknown_030007E0;
-        s32 fire = INPUT_PRESSED(in) & 1;
+        s32 fire;
+        s32 one;
 
+        one = 1;
+        fire = 1;
+        fire &= INPUT_PRESSED(in);
         if (fire)
         {
             ACT_VCALL1(self, m20, 5);
             ACT_VCALL2(self, m50, self->part, 0x13);
             self->frame = hit;
-            self->next32 = hit;
-            self->flag30 = 1;
-            self->next28 = 7;
+            ActTrio28(self, hit, one, 7);
         }
         else
         {
@@ -167,34 +176,34 @@ void sub_8014674(struct act *self)
 
             if (alt)
             {
-                ActOrFlags0D(part, 1);
+                ActOrFlags0D(self->part, 1);
                 self->unk_34 = fire;
                 if (gUnknown_030007E0 & 0x30)
                 {
                     self->next31 = fire;
-                    self->flag2F = 1;
-                    self->next27 = 1;
+                    self->flag2F = one;
+                    self->next27 = one;
                 }
                 else
                 {
                     self->next31 = 0;
-                    self->flag2F = 1;
+                    self->flag2F = one;
                     self->next27 = 0;
                 }
-                if ((u32)(self->state - 0xD) <= 1)
-                    ACT_VCALL1(self, m20, 0xD);
-                else
+                if ((u32)(self->state - 0xD) > 1)
                     sub_8015398(self);
+                else
+                    ACT_VCALL1(self, m20, 0xD);
             }
             else if (INPUT_HELD(in) & 0x100)
             {
-                ActOrFlags0D(part, 1);
+                ActOrFlags0D(self->part, 1);
                 self->unk_34 = alt;
                 ACT_VCALL1(self, m20, 0x10);
                 ACT_VCALL2(self, m50, self->part, 3);
                 self->frames = alt;
                 self->next31 = alt;
-                self->flag2F = 1;
+                self->flag2F = one;
                 self->next27 = alt;
             }
         }

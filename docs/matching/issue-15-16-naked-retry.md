@@ -74,3 +74,11 @@ Nothing is committed.
 
 `rm -rf build && make NON_MATCHING=1 report` and a clean `make compare`
 both pass.
+
+## Later pass
+
+The second retry (docs/matching/issue-15-16-17-naked-retry-2.md) closed
+`sub_8012694`: the tag tests read `self->part` each time instead of
+through a local (old_agbcc's GCSE turns those reloads into the ROM's r2
+copy), and `pressed & 1` folds into `pressed`'s assignment. The other
+functions listed as not closed above are still NAKED.

@@ -466,3 +466,12 @@ compilers. `sub_8013994` differs in 35 bytes under the current agbcc.
   `allocate_reload_reg`). Nothing tried in the C (a pinned or named
   constant, `-=`, a pointer to `y`, an inline) moves it. `ACT_CALL`
   doesn't change it either.
+
+## Later pass (issue #15/#16/#17 second NAKED retry)
+
+See docs/matching/issue-15-16-17-naked-retry-2.md. `sub_801434C` and
+`sub_80145E4` (actor_part18.c/actor_part18b.c) are now real C.
+`sub_8014084`'s draft is down to one misplaced instruction: its facing
+block now reads `self->part` for every access (GCSE produces the ROM's
+r2 copy) and spells the two bit tests differently so the second is not
+threaded away. `sub_8014674` and `sub_8014B54` are unchanged.
