@@ -313,3 +313,13 @@ every named label renumbered to GNU local numeric labels, with no
 semantic changes. Full clean `make compare` (`La suma coincide`)
 confirms the transcription byte-exact; `make NON_MATCHING=1 report`
 compiles the new `src/system/game_loop55.c` warning-free.
+
+## Later pass: `sub_80255D4` is real C
+
+The third big NAKED retry closed `sub_80255D4` under old_agbcc
+(`game_loop41.o` is now on `OLD_AGBCC_OBJS`). The second pass's
+peeled, index-based searches came from old_agbcc's loop rotation, which
+takes a `break` inside a search loop as the loop's exit test; with the
+searches leaving through `goto` the ROM's layout comes out. The last
+register swap needed an `r1` pin on one id temporary. See
+[big-naked-retry-3.md](big-naked-retry-3.md).

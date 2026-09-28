@@ -173,7 +173,20 @@ void sub_8011448(struct orbit_part *self, u8 randomize)
  * (mode 1 jumps into the bit-set part, modes 2 and 3 share everything
  * from the `orr`); here their register allocations differ, so the
  * copies stay separate. The mode-3 `++phase > 9` test also uses
- * `ands` with a hoisted 0xff instead of the ROM's `lsl`/`lsr`. */
+ * `ands` with a hoisted 0xff instead of the ROM's `lsl`/`lsr`.
+ *
+ * Second pass (docs/matching/big-naked-retry-3.md): size-exact, 21
+ * halfwords off. The tails now merge: the spawn's byte argument is a
+ * plain `*(volatile u8 *)&argP5 = 1`, so its 1 is a QImode constant
+ * that cse reuses for mode 3's `flags |= 1` but not for the SImode
+ * `1 << bit`; the phase test spells out the zero-extension as shifts
+ * (a QImode 0xff register was otherwise shared across the call); the
+ * timer re-reads go through an `s32` inline so the compare stays the
+ * ROM's signed `ble` after a fresh `ldrh`; the state is re-read for
+ * each test. Left: modes 1/2 load x/y into r0 and the velocity into r1
+ * (the ROM has them the other way round), the spawn's `movs r5, #1`
+ * comes one instruction before `add r3, sp, #4`, and the state-3 tail
+ * stores x before computing y. */
 extern void *gUnknown_030012B4;
 extern void *gUnknown_030012E4;
 extern struct orbit_part *gUnknown_030012D8;
@@ -181,14 +194,19 @@ extern void sub_8023430(void *state);
 extern struct actor *sub_8025CA4(void *unused0, u16 x, u16 y, u8 p3, u8 p4, u8 p5);
 typedef struct actor *(*OrbitSpawn4)(void *pool, s32 x, s32 y, u8 p3);
 
-/* The spawn's byte argument, stored with `strb` as the ROM does. */
-static inline void OrbitArgByte(u8 *p, u8 v)
-{
-    *(volatile u8 *)p = v;
-}
-
 extern void sub_801192C(struct orbit_part *self);
 extern void sub_8008364(struct actor *self);
+
+/* flags |= 1 and, unless the id is 0xffff, the id's bit in the
+ * collision bitmap. The three copies are merged by cross-jumping. */
+#define ORBIT_MARK_GONE(self, one)                                             \
+    if (1)                                                                     \
+    {                                                                          \
+        (self)->base.flags |= (one);                                           \
+        if ((self)->base.field_08 != 0xffff) {                                 \
+            ORBIT_SET_ID_BIT((self)->base.field_08, 1);                        \
+        }                                                                      \
+    } else (void)0
 
 #define ORBIT_SET_ID_BIT(idExpr, one)                                          \
     if (1)                                                                     \
@@ -203,29 +221,32 @@ extern void sub_8008364(struct actor *self);
         *_slot |= (one) << (_id - _word * 32);                                 \
     } else (void)0
 
+/* An `s32` view of the timer: keeps the compare signed after the
+ * ROM's fresh `ldrh`. */
+static inline s32 OrbitTimer(struct orbit_part *self)
+{
+    return self->timer;
+}
+
 void sub_8011548(struct orbit_part *self)
 {
     s32 argP4;
     u32 argP5;
-    u8 state = self->state;
 
-    if (state == 1) {
+    if (self->state == 1) {
         self->base.x += self->velX;
         self->base.y += self->velY;
         if (self->timer != 0) {
             self->timer += 4;
-            if (*(vu16 *)&self->timer > 0x100)
+            if (OrbitTimer(self) > 0x100)
                 self->timer = 0;
         }
         if (self->base.x >> 8 <= 0x10 && self->base.y >> 8 <= 0x10) {
             PlaySfx(gUnknown_030012BC, 0xe, 0x100);
             sub_8023430(gUnknown_030012C0);
-            self->base.flags |= 1;
-            if (self->base.field_08 != 0xffff) {
-                ORBIT_SET_ID_BIT(self->base.field_08, 1);
-            }
+            ORBIT_MARK_GONE(self, 1);
         }
-    } else if (state == 2) {
+    } else if (self->state == 2) {
         s32 fire;
 
         self->base.x += self->velX;
@@ -238,20 +259,14 @@ void sub_8011548(struct orbit_part *self)
             if (t < 0x40)
                 fire = 1;
         } else {
-            s32 t;
-
             self->timer += 0xc;
-            t = self->timer;
-            if (t > 0x1b0)
+            if (OrbitTimer(self) > 0x1b0)
                 fire = 1;
         }
         if (fire) {
-            self->base.flags |= 1;
-            if (self->base.field_08 != 0xffff) {
-                ORBIT_SET_ID_BIT(self->base.field_08, 1);
-            }
+            ORBIT_MARK_GONE(self, 1);
         }
-    } else if (state == 3) {
+    } else if (self->state == 3) {
         if (++self->counter > 10) {
             self->counter = 0;
             {
@@ -259,12 +274,15 @@ void sub_8011548(struct orbit_part *self)
                 s32 sy = self->base.y >> 8;
 
                 ((OrbitSpawn4)sub_8025CA4)(gUnknown_030012E4, sx, sy,
-                    (*(volatile s32 *)&argP4 = 0, OrbitArgByte((u8 *)&argP5, 1), 0));
+                    (*(volatile s32 *)&argP4 = 0,
+                     *(volatile u8 *)&argP5 = 1, 0));
             }
-            if (++self->phase > 9) {
-                self->base.flags |= 1;
-                if (self->base.field_08 != 0xffff) {
-                    ORBIT_SET_ID_BIT(self->base.field_08, 1);
+            {
+                u32 ph = self->phase + 1;
+
+                self->phase = ph;
+                if ((ph << 24) >> 24 > 9) {
+                    ORBIT_MARK_GONE(self, 1);
                 }
             }
         }
