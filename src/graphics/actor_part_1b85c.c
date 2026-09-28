@@ -31,16 +31,16 @@
  * sub_801B85C, sub_801B960, sub_801B980, sub_801BAD0 (reachable only
  * through their method tables, if at all). Matched anyway.
  *
- * sub_801BC28, sub_801C608 and sub_801C96C are NAKED transcriptions of
- * the ROM (their C reconstructions are kept under `#if NON_MATCHING`);
+ * sub_801C608 and sub_801C96C are NAKED transcriptions of the ROM
+ * (their C reconstructions are kept under `#if NON_MATCHING`);
  * everything else is plain C. Details, and the two techniques that
  * closed most of the rest (`Opaque` constants, inline member helpers),
  * are in docs/matching/issue-26-level-select-menu.md.
  *
  * Built with old_agbcc (Makefile OLD_AGBCC_OBJS), the compiler this
  * region was originally built with; see docs/matching/old-agbcc-retry.md.
- * The NON_MATCHING reconstructions were written against the current
- * agbcc and still don't match under old_agbcc. */
+ * Under it the shadow-register blocks are plain bitfield stores; the
+ * `Opaque`/register-pinned forms were current-agbcc workarounds. */
 
 struct method
 {
@@ -155,9 +155,9 @@ struct level_info
 {
     s32 nameText;           // 0x00 - text id (sub_8026F38)
     s32 unk_04;             // 0x04 - passed to sub_801DD80
-    s32 time0;              // 0x08 - time-trial thresholds, centiseconds,
-    s32 time1;              // 0x0C   loosest first
-    s32 time2;              // 0x10
+    u32 time0;              // 0x08 - time-trial thresholds, centiseconds,
+    u32 time1;              // 0x0C   loosest first
+    u32 time2;              // 0x10
     u8 unk_14[0x10];
 };
 
@@ -167,11 +167,11 @@ COMPILE_TIME_ASSERT(sizeof(struct level_info) == 0x24);
  * of the save block itself holds four more flags sub_801C608 tests). */
 struct level_save
 {
-    u32 cleared:1;
-    u32 flag1:1;
-    u32 flag2:1;
-    u32 time:13;        // best time, centiseconds (0 = none)
-    u32 unk_16:16;
+    u16 cleared:1;
+    u16 flag1:1;
+    u16 flag2:1;
+    u16 time:13;        // best time, centiseconds (0 = none)
+    u16 unk_16;
 };
 
 struct xy_pair
@@ -214,6 +214,15 @@ struct bldy
     u32 evy:5;
     u32 unk_5:27;
 };
+
+/* The same register viewed as its low byte, for the fade-in decrement
+ * (a byte-sized test is what makes gcc narrow the `evy != 0` check to
+ * an `and` of the loaded byte). */
+struct bldy_byte
+{
+    u8 evy:5;
+    u8 unk_5:3;
+} __attribute__((packed));
 
 struct dispcnt_bits
 {
@@ -480,7 +489,7 @@ static inline s32 Opaque(s32 v)
 }
 
 /* sub_80087D0, inlined: select animation `idx` and restart it. */
-static inline void SetAnim(struct sprite *s, u8 idx)
+static inline void SetAnim(struct sprite *s, s32 idx)
 {
     s->animIndex = idx;
     sub_80087C0(s);
@@ -520,16 +529,6 @@ static inline void CommitDisplay(struct level_menu *self)
     *(vu32 *)REG_ADDR_BLDCNT = self->blend.raw;
     *(vu16 *)REG_ADDR_BLDY = self->bldy.evy;
     *(vu16 *)REG_ADDR_DISPCNT = self->dispcnt.raw;
-}
-
-/* `gUnknown_030007E0.half.pressed & mask`, with the ROM's register use. */
-static inline s32 PressedBits(s32 mask)
-{
-    register union key_state *k asm("r1") = &gUnknown_030007E0;
-    register s32 m asm("r0") = mask;
-    register u32 v asm("r1") = k->half.pressed;
-
-    return m & v;
 }
 
 /* A virtual call through a sprite's method table (gcc 2.x lowering: take
@@ -834,62 +833,33 @@ u8 sub_801BAF0(s32 *arg)
  * six level entries and ten sprites, then the cursor position and the
  * BG registers.
  *
- * NAKED: the NON_MATCHING reconstruction gets the instruction stream
- * right but not the register allocation of the long straight-line body
- * - the ROM keeps 0/1/2/0x10 and &gUnknown_030012D0 in sb/r8/r3/r5/sl
- * across dozens of calls and picks different scratch registers at
- * almost every store; pinning all of them (r8 included, which this
- * compiler mishandles) was judged not worth it. */
-#if NON_MATCHING
+ * Under old_agbcc the shadow registers are plain bitfield stores (the
+ * compiler chains the ORs itself); the six-entry loop needs its own
+ * counter and the sprite loop's 0x80 a variable set with the counter,
+ * for the ROM's register choice and hoisted constant. */
 struct level_menu *sub_801BC28(struct level_menu *self, s32 arg)
 {
     u8 bg0cnt[0x10];
     s32 i;
     struct sprite *s;
-    s32 zero, one, two, sixteen;
 
-    {
-        /* BLDCNT: alpha blend (effect 3), everything as 1st target. */
-        u8 *p = (u8 *)&self->blend;
-        s32 v;
-
-        zero = 0;
-        self->blend.raw = zero;
-        v = Opaque(0xC0) | *p;
-        v |= 0x20;
-        one = 1;
-        v |= one;
-        two = 2;
-        v |= two;
-        v |= 4;
-        v |= 8;
-        sixteen = 0x10;
-        v |= sixteen;
-        *p = v;
-    }
-    {
-        /* BLDY: evy = 16. */
-        u8 *p = (u8 *)&self->bldy;
-
-        *p = (Opaque(-0x20) & *p) | sixteen;
-        *(vu32 *)REG_ADDR_BLDCNT = self->blend.raw;
-        *(vu16 *)REG_ADDR_BLDY = self->bldy.evy;
-    }
-    {
-        /* DISPCNT: mode 1, 1D OBJ mapping, BG0 + BG1 + OBJ. */
-        u8 *p = (u8 *)&self->dispcnt;
-        s32 v;
-
-        self->dispcnt.raw = zero;
-        v = Opaque(0x40) | *p;
-        v &= -8;
-        v |= one;
-        *p = v;
-        v = one | p[1];
-        v |= two;
-        v |= sixteen;
-        p[1] = v;
-    }
+    self->blend.raw = 0;
+    self->blend.bits.effect = 3;
+    self->blend.bits.bdFirst = 1;
+    self->blend.bits.bg0First = 1;
+    self->blend.bits.bg1First = 1;
+    self->blend.bits.bg2First = 1;
+    self->blend.bits.bg3First = 1;
+    self->blend.bits.objFirst = 1;
+    self->bldy.evy = 16;
+    *(vu32 *)REG_ADDR_BLDCNT = self->blend.raw;
+    *(vu16 *)REG_ADDR_BLDY = self->bldy.evy;
+    self->dispcnt.raw = 0;
+    self->dispcnt.bits.obj1d = 1;
+    self->dispcnt.bits.mode = 1;
+    self->dispcnt.bits.bg0 = 1;
+    self->dispcnt.bits.bg1 = 1;
+    self->dispcnt.bits.obj = 1;
     if (arg <= 0x13)
     {
         self->world = sub_803ADB4(arg, 5);
@@ -909,18 +879,26 @@ struct level_menu *sub_801BC28(struct level_menu *self, s32 arg)
     self->scroll = 0;
     self->panel = sub_801E04C(sub_8026EDC(0x54));
     self->bg2 = sub_801D828(sub_8026EDC(0x8C), 3, 0x1F);
-    for (i = 0; i < 6; i++)
-        self->items[i] = sub_801DFEC(sub_8026EDC(0x14));
+    {
+        s32 j;
+
+        for (j = 0; j < 6; j++)
+            self->items[j] = sub_801DFEC(sub_8026EDC(0x14));
+    }
     sub_801D638(self);
     sub_801D5CC(self);
     sub_801D668(self);
-    for (i = 0; i < 8; i++)
     {
-        s = sub_8008904(sub_8026EDC(0x40));
-        self->sprites[i] = s;
-        sub_80088D8(s, 1);
-        if (i > 1)
-            self->sprites[i]->unk_3C = 0x80;
+        s32 v;
+
+        for (i = 0, v = 0x80; i < 8; i++)
+        {
+            s = sub_8008904(sub_8026EDC(0x40));
+            self->sprites[i] = s;
+            sub_80088D8(s, 1);
+            if (i > 1)
+                self->sprites[i]->unk_3C = v;
+        }
     }
     self->sprites[0]->anim = AnimTable(0x234);
     SetAnim(self->sprites[0], gStaticData_0816C548[self->world]);
@@ -971,485 +949,6 @@ struct level_menu *sub_801BC28(struct level_menu *self, s32 arg)
     *(vu16 *)REG_ADDR_BG2CNT = sub_801DE24(self->bg2);
     return self;
 }
-#else
-NAKED struct level_menu *sub_801BC28(struct level_menu *self, s32 arg)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sl\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6, r7}\n\t"
-        "sub sp, #0x14\n\t"
-        "add r7, r0, #0\n\t"
-        "add r6, r1, #0\n\t"
-        "add r4, r7, #0\n\t"
-        "add r4, #0xa0\n\t"
-        "mov r0, #0\n\t"
-        "mov sb, r0\n\t"
-        "str r0, [r4]\n\t"
-        "mov r0, #0xc0\n\t"
-        "ldrb r1, [r4]\n\t"
-        "orr r0, r1\n\t"
-        "mov r1, #0x20\n\t"
-        "orr r0, r1\n\t"
-        "mov r3, #1\n\t"
-        "orr r0, r3\n\t"
-        "mov r2, #2\n\t"
-        "mov r8, r2\n\t"
-        "mov r1, r8\n\t"
-        "orr r0, r1\n\t"
-        "mov r1, #4\n\t"
-        "orr r0, r1\n\t"
-        "mov r1, #8\n\t"
-        "orr r0, r1\n\t"
-        "mov r5, #0x10\n\t"
-        "orr r0, r5\n\t"
-        "strb r0, [r4]\n\t"
-        "add r2, r7, #0\n\t"
-        "add r2, #0xa4\n\t"
-        "mov r0, #0x20\n\t"
-        "neg r0, r0\n\t"
-        "ldrb r1, [r2]\n\t"
-        "and r0, r1\n\t"
-        "orr r0, r5\n\t"
-        "strb r0, [r2]\n\t"
-        "ldr r1, _0801BCC8\n\t"
-        "ldr r0, [r4]\n\t"
-        "str r0, [r1]\n\t"
-        "add r1, #4\n\t"
-        "ldrb r2, [r2]\n\t"
-        "lsl r0, r2, #0x1b\n\t"
-        "lsr r0, r0, #0x1b\n\t"
-        "strh r0, [r1]\n\t"
-        "add r2, r7, #0\n\t"
-        "add r2, #0xa8\n\t"
-        "mov r0, sb\n\t"
-        "strh r0, [r2]\n\t"
-        "mov r0, #0x40\n\t"
-        "ldrb r1, [r2]\n\t"
-        "orr r0, r1\n\t"
-        "mov r1, #8\n\t"
-        "neg r1, r1\n\t"
-        "and r0, r1\n\t"
-        "orr r0, r3\n\t"
-        "strb r0, [r2]\n\t"
-        "add r0, r7, #0\n\t"
-        "add r0, #0xa9\n\t"
-        "ldrb r2, [r0]\n\t"
-        "orr r3, r2\n\t"
-        "mov r1, r8\n\t"
-        "orr r3, r1\n\t"
-        "orr r3, r5\n\t"
-        "strb r3, [r0]\n\t"
-        "cmp r6, #0x13\n\t"
-        "bgt _0801BCCC\n\t"
-        "add r0, r6, #0\n\t"
-        "mov r1, #5\n\t"
-        "bl sub_803ADB4\n\t"
-        "str r0, [r7, #0xc]\n\t"
-        "add r0, r6, #0\n\t"
-        "mov r1, #5\n\t"
-        "bl sub_803AE4C\n\t"
-        "b _0801BCD4\n\t"
-        ".align 2, 0\n\t"
-        "_0801BCC8:\n\t"
-        ".4byte 0x04000050\n\t"
-        "_0801BCCC:\n\t"
-        "add r0, r6, #0\n\t"
-        "sub r0, #0x14\n\t"
-        "str r0, [r7, #0xc]\n\t"
-        "mov r0, #5\n\t"
-        "_0801BCD4:\n\t"
-        "str r0, [r7, #8]\n\t"
-        "mov r4, #0\n\t"
-        "str r4, [r7, #0x14]\n\t"
-        "ldr r0, _0801BFA4\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_80236EC\n\t"
-        "add r1, r7, #0\n\t"
-        "add r1, #0x9c\n\t"
-        "str r0, [r1]\n\t"
-        "strb r4, [r7]\n\t"
-        "mov r0, #0x28\n\t"
-        "bl sub_8026EDC\n\t"
-        "mov r1, #0\n\t"
-        "mov r2, #0x1d\n\t"
-        "bl sub_801D7F8\n\t"
-        "str r0, [r7, #0x1c]\n\t"
-        "mov r0, #3\n\t"
-        "str r0, [sp]\n\t"
-        "add r0, sp, #4\n\t"
-        "mov r1, #2\n\t"
-        "mov r2, #0x1e\n\t"
-        "mov r3, #2\n\t"
-        "bl sub_801E644\n\t"
-        "ldr r1, _0801BFA8\n\t"
-        "add r0, sp, #4\n\t"
-        "bl LoadGraphicsPackage\n\t"
-        "str r4, [r7, #0x7c]\n\t"
-        "mov r0, #0x54\n\t"
-        "bl sub_8026EDC\n\t"
-        "bl sub_801E04C\n\t"
-        "str r0, [r7, #0x3c]\n\t"
-        "mov r0, #0x8c\n\t"
-        "bl sub_8026EDC\n\t"
-        "mov r1, #3\n\t"
-        "mov r2, #0x1f\n\t"
-        "bl sub_801D828\n\t"
-        "str r0, [r7, #0x20]\n\t"
-        "add r6, r7, #0\n\t"
-        "add r6, #0x40\n\t"
-        "add r5, r7, #0\n\t"
-        "add r5, #0x24\n\t"
-        "mov r4, #5\n\t"
-        "_0801BD3A:\n\t"
-        "mov r0, #0x14\n\t"
-        "bl sub_8026EDC\n\t"
-        "bl sub_801DFEC\n\t"
-        "stmia r5!, {r0}\n\t"
-        "sub r4, #1\n\t"
-        "cmp r4, #0\n\t"
-        "bge _0801BD3A\n\t"
-        "add r0, r7, #0\n\t"
-        "bl sub_801D638\n\t"
-        "add r0, r7, #0\n\t"
-        "bl sub_801D5CC\n\t"
-        "add r0, r7, #0\n\t"
-        "bl sub_801D668\n\t"
-        "mov r5, #0\n\t"
-        "mov r2, #0x80\n\t"
-        "mov r8, r2\n\t"
-        "add r4, r6, #0\n\t"
-        "_0801BD66:\n\t"
-        "mov r0, #0x40\n\t"
-        "bl sub_8026EDC\n\t"
-        "bl sub_8008904\n\t"
-        "str r0, [r4]\n\t"
-        "mov r1, #1\n\t"
-        "bl sub_80088D8\n\t"
-        "cmp r5, #1\n\t"
-        "ble _0801BD82\n\t"
-        "ldr r0, [r4]\n\t"
-        "mov r1, r8\n\t"
-        "strh r1, [r0, #0x3c]\n\t"
-        "_0801BD82:\n\t"
-        "add r4, #4\n\t"
-        "add r5, #1\n\t"
-        "cmp r5, #7\n\t"
-        "ble _0801BD66\n\t"
-        "ldr r2, _0801BFAC\n\t"
-        "mov sl, r2\n\t"
-        "ldr r0, [r2]\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #0x8d\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r4, [r7, #0x40]\n\t"
-        "str r0, [r4, #0x20]\n\t"
-        "ldr r1, _0801BFB0\n\t"
-        "ldr r0, [r7, #0xc]\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x2d\n\t"
-        "mov r2, #0\n\t"
-        "mov sb, r2\n\t"
-        "strb r0, [r1]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087C0\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087B4\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800872C\n\t"
-        "ldr r0, [r7, #0x40]\n\t"
-        "ldr r2, _0801BFB4\n\t"
-        "ldr r1, [r2]\n\t"
-        "ldr r2, [r2, #4]\n\t"
-        "bl sub_800737C\n\t"
-        "mov r1, sl\n\t"
-        "ldr r0, [r1]\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x8d\n\t"
-        "lsl r2, r2, #2\n\t"
-        "add r0, r0, r2\n\t"
-        "ldr r4, [r7, #0x44]\n\t"
-        "str r0, [r4, #0x20]\n\t"
-        "mov r0, #0xa\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x2d\n\t"
-        "strb r0, [r1]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087C0\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087B4\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800872C\n\t"
-        "ldr r0, [r7, #0x44]\n\t"
-        "ldr r2, _0801BFB8\n\t"
-        "ldr r1, [r2]\n\t"
-        "ldr r2, [r2, #4]\n\t"
-        "bl sub_800737C\n\t"
-        "mov r1, sl\n\t"
-        "ldr r0, [r1]\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [r0]\n\t"
-        "mov r2, #0xde\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r1, r1, r2\n\t"
-        "ldr r0, [r7, #0x48]\n\t"
-        "str r1, [r0, #0x20]\n\t"
-        "ldr r2, _0801BFBC\n\t"
-        "ldr r1, [r2]\n\t"
-        "ldr r2, [r2, #4]\n\t"
-        "bl sub_800737C\n\t"
-        "mov r1, sl\n\t"
-        "ldr r0, [r1]\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0xc0\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r0, r0, r2\n\t"
-        "ldr r4, [r7, #0x4c]\n\t"
-        "str r0, [r4, #0x20]\n\t"
-        "mov r0, #1\n\t"
-        "mov r8, r0\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x2d\n\t"
-        "mov r1, r8\n\t"
-        "strb r1, [r0]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087C0\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087B4\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800872C\n\t"
-        "ldr r0, [r7, #0x4c]\n\t"
-        "ldr r5, _0801BFC0\n\t"
-        "ldr r1, [r5]\n\t"
-        "ldr r2, [r5, #4]\n\t"
-        "bl sub_800737C\n\t"
-        "mov r2, sl\n\t"
-        "ldr r0, [r2]\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #0xc0\n\t"
-        "lsl r1, r1, #1\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r4, [r7, #0x50]\n\t"
-        "str r0, [r4, #0x20]\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x2d\n\t"
-        "mov r2, r8\n\t"
-        "strb r2, [r0]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087C0\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087B4\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800872C\n\t"
-        "ldr r0, [r7, #0x50]\n\t"
-        "ldr r1, [r5]\n\t"
-        "ldr r2, [r5, #4]\n\t"
-        "bl sub_800737C\n\t"
-        "mov r1, sl\n\t"
-        "ldr r0, [r1]\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [r0]\n\t"
-        "mov r2, #0xc6\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r1, r1, r2\n\t"
-        "ldr r0, [r7, #0x54]\n\t"
-        "str r1, [r0, #0x20]\n\t"
-        "ldr r4, _0801BFC4\n\t"
-        "ldr r1, [r4]\n\t"
-        "ldr r2, [r4, #4]\n\t"
-        "bl sub_800737C\n\t"
-        "mov r1, sl\n\t"
-        "ldr r0, [r1]\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [r0]\n\t"
-        "mov r2, #0xc6\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r1, r1, r2\n\t"
-        "ldr r0, [r7, #0x58]\n\t"
-        "str r1, [r0, #0x20]\n\t"
-        "ldr r1, [r4]\n\t"
-        "ldr r2, [r4, #4]\n\t"
-        "bl sub_800737C\n\t"
-        "mov r1, sl\n\t"
-        "ldr r0, [r1]\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [r0]\n\t"
-        "mov r2, #0xc6\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r1, r1, r2\n\t"
-        "ldr r0, [r7, #0x5c]\n\t"
-        "str r1, [r0, #0x20]\n\t"
-        "ldr r2, _0801BFC8\n\t"
-        "ldr r1, [r2]\n\t"
-        "ldr r2, [r2, #4]\n\t"
-        "bl sub_800737C\n\t"
-        "mov r0, #0x40\n\t"
-        "bl sub_8026EDC\n\t"
-        "bl sub_8008904\n\t"
-        "str r0, [r7, #0x60]\n\t"
-        "mov r1, #1\n\t"
-        "bl sub_80088D8\n\t"
-        "mov r1, sl\n\t"
-        "ldr r0, [r1]\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x9c\n\t"
-        "lsl r2, r2, #2\n\t"
-        "add r0, r0, r2\n\t"
-        "ldr r4, [r7, #0x60]\n\t"
-        "str r0, [r4, #0x20]\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x2d\n\t"
-        "mov r1, r8\n\t"
-        "strb r1, [r0]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087C0\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087B4\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800872C\n\t"
-        "ldr r0, [r7, #0x60]\n\t"
-        "ldr r2, _0801BFCC\n\t"
-        "ldr r1, [r2]\n\t"
-        "ldr r2, [r2, #4]\n\t"
-        "bl sub_800737C\n\t"
-        "mov r0, #0x40\n\t"
-        "bl sub_8026EDC\n\t"
-        "bl sub_8008904\n\t"
-        "str r0, [r7, #0x64]\n\t"
-        "mov r1, #1\n\t"
-        "bl sub_80088D8\n\t"
-        "mov r2, sl\n\t"
-        "ldr r0, [r2]\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #0x9c\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r4, [r7, #0x64]\n\t"
-        "str r0, [r4, #0x20]\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x2d\n\t"
-        "mov r2, sb\n\t"
-        "strb r2, [r0]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087C0\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087B4\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800872C\n\t"
-        "ldr r0, [r7, #0x64]\n\t"
-        "ldr r2, _0801BFD0\n\t"
-        "ldr r1, [r2]\n\t"
-        "ldr r2, [r2, #4]\n\t"
-        "bl sub_800737C\n\t"
-        "ldr r0, _0801BFD4\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq _0801BFD8\n\t"
-        "add r0, r7, #0\n\t"
-        "bl sub_801D434\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "beq _0801BFD8\n\t"
-        "ldr r0, [r7, #0x3c]\n\t"
-        "bl sub_801E408\n\t"
-        "b _0801BFEC\n\t"
-        ".align 2, 0\n\t"
-        "_0801BFA4:\n\t"
-        ".4byte gUnknown_030012C0\n\t"
-        "_0801BFA8:\n\t"
-        ".4byte gStaticData_0816C484\n\t"
-        "_0801BFAC:\n\t"
-        ".4byte gUnknown_030012D0\n\t"
-        "_0801BFB0:\n\t"
-        ".4byte gStaticData_0816C548\n\t"
-        "_0801BFB4:\n\t"
-        ".4byte gStaticData_0816C498\n\t"
-        "_0801BFB8:\n\t"
-        ".4byte gStaticData_0816C4A0\n\t"
-        "_0801BFBC:\n\t"
-        ".4byte gStaticData_0816C4A8\n\t"
-        "_0801BFC0:\n\t"
-        ".4byte gStaticData_0816C4B0\n\t"
-        "_0801BFC4:\n\t"
-        ".4byte gStaticData_0816C4B8\n\t"
-        "_0801BFC8:\n\t"
-        ".4byte gStaticData_0816C4C0\n\t"
-        "_0801BFCC:\n\t"
-        ".4byte gStaticData_0816C4C8\n\t"
-        "_0801BFD0:\n\t"
-        ".4byte gStaticData_0816C4D0\n\t"
-        "_0801BFD4:\n\t"
-        ".4byte gUnknown_03000824\n\t"
-        "_0801BFD8:\n\t"
-        "ldr r0, [r7, #8]\n\t"
-        "lsl r0, r0, #3\n\t"
-        "ldr r2, [r7, #0x18]\n\t"
-        "add r2, r2, r0\n\t"
-        "ldr r0, [r7, #0x3c]\n\t"
-        "ldr r1, [r2]\n\t"
-        "ldr r2, [r2, #4]\n\t"
-        "sub r2, #0x18\n\t"
-        "bl sub_801E480\n\t"
-        "_0801BFEC:\n\t"
-        "ldr r1, _0801C02C\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r0, [r7, #0x1c]\n\t"
-        "bl sub_801D7D0\n\t"
-        "ldr r1, _0801C030\n\t"
-        "str r0, [r1]\n\t"
-        "add r0, sp, #4\n\t"
-        "bl sub_801E640\n\t"
-        "ldr r1, _0801C034\n\t"
-        "strh r0, [r1]\n\t"
-        "ldr r0, [r7, #0x1c]\n\t"
-        "bl sub_801E640\n\t"
-        "ldr r1, _0801C038\n\t"
-        "strh r0, [r1]\n\t"
-        "ldr r0, [r7, #0x20]\n\t"
-        "bl sub_801DE24\n\t"
-        "ldr r1, _0801C03C\n\t"
-        "strh r0, [r1]\n\t"
-        "add r0, r7, #0\n\t"
-        "add sp, #0x14\n\t"
-        "pop {r3, r4, r5}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov sl, r5\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n\t"
-        "_0801C02C:\n\t"
-        ".4byte 0x04000010\n\t"
-        "_0801C030:\n\t"
-        ".4byte 0x04000014\n\t"
-        "_0801C034:\n\t"
-        ".4byte 0x04000008\n\t"
-        "_0801C038:\n\t"
-        ".4byte 0x0400000A\n\t"
-        "_0801C03C:\n\t"
-        ".4byte 0x0400000C\n\t");
-}
-#endif
 
 /* Destructor: deletes the sprites, panel, BG layers and level entries
  * through their own destructors; frees itself if `flags & 1`. */
@@ -1756,15 +1255,16 @@ draw:
  * of five save predicates that holds, 5 if none), which flag icons to
  * show (y offsets 0 or 0x1C), and the time-trial texts/sprites.
  *
- * NAKED: the NON_MATCHING reconstruction differs only in register
- * choice - which low register reload picks for each `mov rX, r8`/`sl`
- * copy before a store, and the spill slots of the cached field
- * addresses - repeated at nearly every statement. */
+ * NAKED: under old_agbcc (with u16 save bitfields, u32 thresholds and
+ * an int SetAnim index) the C below is identical except that the ROM
+ * also spills `info` to the stack (sp+0, the other two cached field
+ * addresses moving to sp+4/sp+8) and reloads it for the `time0` test;
+ * declaration order/placement of `info` didn't change that. */
 #if NON_MATCHING
 void sub_801C608(struct level_menu *self)
 {
     s32 *rank = &self->rank;
-    u8 *sv;
+    struct level_save *sv;
 
     *rank = 5;
     if (sub_802336C(gUnknown_030012C0, self->levelId))
@@ -1782,15 +1282,15 @@ void sub_801C608(struct level_menu *self)
     self->unk_8C = 0;
     self->unk_90 = 0;
     self->unk_94 = 0;
-    sv = self->save + (self->levelId * 4 + 4);
-    if (Opaque(1) & *sv)
+    sv = (struct level_save *)(self->save + (self->levelId * 4 + 4));
+    if (sv->cleared)
         self->unk_84 = 0x1C;
-    if (Opaque(2) & *sv)
+    if (sv->flag1)
         self->unk_88 = 0x1C;
     switch (*rank)
     {
     case 0:
-        if (Opaque(4) & *sv)
+        if (sv->flag2)
             self->unk_8C = 0x1C;
         break;
     case 1:
@@ -1824,25 +1324,25 @@ void sub_801C608(struct level_menu *self)
             self->unk_8C += 6;
         }
     }
-    if (Opaque(1) & *sv)
+    if (sv->cleared)
     {
         struct level_info *info = &gStaticData_0816C86C[self->levelId];
 
         FormatCentiseconds(info->time0, self->recordText);
-        FormatCentiseconds(((struct level_save *)sv)->time, self->timeText);
+        FormatCentiseconds(sv->time, self->timeText);
         SetAnim(self->sprites[5], 0);
         SetAnim(self->sprites[6], 0);
         SetAnim(self->sprites[7], 0);
-        if (((struct level_save *)sv)->time != 0)
+        if (sv->time != 0)
         {
-            if (((struct level_save *)sv)->time <= info->time2)
+            if (sv->time <= info->time2)
             {
                 self->unk_94 = 0x1C;
                 self->unk_90 = 0x1C;
                 SetAnim(self->sprites[5], 1);
                 SetAnim(self->sprites[6], 1);
             }
-            else if (((struct level_save *)sv)->time <= info->time1)
+            else if (sv->time <= info->time1)
             {
                 FormatCentiseconds(info->time2, self->recordText);
                 self->unk_90 = 0x1C;
@@ -1850,7 +1350,7 @@ void sub_801C608(struct level_menu *self)
                 SetAnim(self->sprites[6], 1);
                 SetAnim(self->sprites[7], 1);
             }
-            else if (((struct level_save *)sv)->time <= info->time0)
+            else if (sv->time <= info->time0)
             {
                 FormatCentiseconds(info->time1, self->recordText);
                 self->unk_90 = 0x1C;
@@ -2283,11 +1783,11 @@ NAKED void sub_801C608(struct level_menu *self)
  * Up/Down page turns (sub_801D548/sub_801D4C4) and Left/Right cursor
  * moves (sub_801CDE0/sub_801CE60); returns the selected entry's level.
  *
- * NAKED: the NON_MATCHING reconstruction is off by register choice in
- * three places - the byte loaded for REG_BLDY in the three inlined
- * display commits (the ROM ties it to the dying address register, this
- * compiler to the shift's output), one copy of the key word, and one
- * r9 copy at the end. */
+ * NAKED: under old_agbcc the C below (plain bitfield stores, byte-view
+ * fade decrement) is identical except for one instruction: before the
+ * 0x80 test the ROM copies the key word (`adds r1, r2, #0`) and tests
+ * 0x20 on that copy; gcc merges the copy. Moving/retyping `k`, inline
+ * helpers and comma forms didn't bring it back. */
 #if NON_MATCHING
 s32 sub_801C96C(struct level_menu *self)
 {
@@ -2300,8 +1800,12 @@ s32 sub_801C96C(struct level_menu *self)
     self->nameText = sub_8026F38(info->nameText);
     while (!sub_801DD18(self->bg2))
     {
-        if (self->bldy.evy != 0)
-            self->bldy.evy--;
+        {
+            struct bldy_byte *f = (struct bldy_byte *)&self->bldy;
+
+            if (f->evy != 0)
+                f->evy--;
+        }
         sub_801C104(self);
         sub_80006A8();
         sub_8006DC8(gUnknown_030012B8);
@@ -2311,44 +1815,13 @@ s32 sub_801C96C(struct level_menu *self)
     }
     PlaySfx(gUnknown_030012BC, 0x51, 0x100);
     self->blend.raw = 0;
-    {
-        /* BLDCNT 2nd target: bg0-bg3 and backdrop. */
-        register u8 *p asm("r2") = (u8 *)&self->blend + 1;
-        register s32 v asm("r0") = 1;
-        register s32 b asm("r4") = *p;
-
-        v |= b;
-        v |= 2;
-        v |= 4;
-        v |= 8;
-        v |= 0x20;
-        *p = v;
-    }
-    {
-        /* BLDALPHA: eva = evb = 0x10. */
-        register u8 *p asm("r4") = (u8 *)&self->blend + 2;
-        register s32 mask asm("r1");
-        register s32 v asm("r0");
-        register s32 b asm("r2");
-        register s32 val asm("r2");
-
-        asm("mov %0, #0x20\n\tneg %0, %0" : "=r"(mask));
-        v = mask;
-        asm("" : "+r"(v));
-        b = *p;
-        v &= b;
-        val = 0x10;
-        v |= val;
-        *p = v;
-        {
-            register u8 *q asm("r0") = (u8 *)&self->blend + 3;
-            register s32 b2 asm("r4") = *q;
-
-            mask &= b2;
-            mask |= val;
-            *q = mask;
-        }
-    }
+    self->blend.bits.bg0Second = 1;
+    self->blend.bits.bg1Second = 1;
+    self->blend.bits.bg2Second = 1;
+    self->blend.bits.bg3Second = 1;
+    self->blend.bits.bdSecond = 1;
+    self->blend.bits.eva = 0x10;
+    self->blend.bits.evb = 0x10;
     if (gUnknown_03000824 && sub_801D434(self))
     {
         self->index = 0;
@@ -2358,7 +1831,7 @@ s32 sub_801C96C(struct level_menu *self)
     goto loop;
 
 check_exit:
-    if (PressedBits(8))
+    if (gUnknown_030007E0.half.pressed & 8)
     {
         sub_801D300(self);
         goto end;
@@ -2392,7 +1865,7 @@ loop:
                 sub_801CE60(self);
         }
     }
-    if (!PressedBits(1))
+    if (!(gUnknown_030007E0.half.pressed & 1))
         goto check_exit;
     if (!sub_801DE28(self->items[self->index]))
         goto check_exit;
@@ -2401,13 +1874,7 @@ loop:
     sub_801D110(self);
 end:
     self->dispcnt.raw = 0;
-    {
-        register s32 v asm("r0") = 0x40;
-        register s32 b asm("r1") = *(u8 *)&self->dispcnt;
-
-        v |= b;
-        *(u8 *)&self->dispcnt = v;
-    }
+    self->dispcnt.bits.obj1d = 1;
     sub_80006A8();
     sub_8006DC8(gUnknown_030012B8);
     sub_8006AAC(gUnknown_03001300);

@@ -170,29 +170,28 @@ and [graphics_loading.md](./graphics_loading.md).
   grow/shrink). `sub_801E3D4`, `sub_801E3E4` and `sub_801E4E4` are
   UNUSED. All real C. See
   [docs/matching/issue-28-29-level-select-parts.md](../matching/issue-28-29-level-select-parts.md).
+- **Issue #24/#26 NAKED retry:** `sub_801A03C` (`actor_part_1967c.c`,
+  floor-part spawner) and `sub_801BC28` (`actor_part_1b85c.c`,
+  level-select constructor) promoted from NAKED to real C, both under
+  old_agbcc. See
+  [docs/matching/issue-24-26-12-naked-retry.md](../matching/issue-24-26-12-naked-retry.md).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
 ## Parked - NAKED asm transcriptions (byte-correct, not decompiled C)
 
-- **`sub_801BC28`**, **`sub_801C608`**, **`sub_801C96C`**
-  (`src/graphics/actor_part_1b85c.c`, issue #26) - the level-select
-  screen's constructor, record loader and main loop. Each has a full C
-  reconstruction under `#if NON_MATCHING`, written against agbcc. The
-  file now builds with old_agbcc, and none of the three matches under it
-  either; `sub_801C96C` gets within one register copy with two small
-  changes. See
-  [issue-26-level-select-menu.md](../matching/issue-26-level-select-menu.md)
-  and [old-agbcc-retry.md](../matching/old-agbcc-retry.md).
-- **`sub_801A03C`**, **`sub_801A114`** (`src/graphics/actor_part_1967c.c`,
-  issue #24) - a floor-part spawner and the `gStaticData_087E490C`
-  controller's per-frame update. Both C reconstructions are complete and kept under
-  `#if NON_MATCHING`; each differs from the ROM only in register
-  allocation (part/controller swapped between r4/r5 in the spawner;
-  `self`/`other`/the player-global address/the box pointer in r7/r9/r10/
-  r8 in the update). See
-  [docs/matching/issue-24-boss-actor.md](../matching/issue-24-boss-actor.md).
+- **`sub_801C608`**, **`sub_801C96C`** (`src/graphics/actor_part_1b85c.c`,
+  issue #26) - the level-select screen's record loader and main loop.
+  Under old_agbcc the C drafts under `#if NON_MATCHING` are each one
+  allocation detail away (`sub_801C608`: the ROM also spills `info`;
+  `sub_801C96C`: one extra key-word register copy). See
+  [issue-24-26-12-naked-retry.md](../matching/issue-24-26-12-naked-retry.md).
+- **`sub_801A114`** (`src/graphics/actor_part_1967c.c`, issue #24) -
+  the `gStaticData_087E490C` controller's per-frame update. C draft under
+  `#if NON_MATCHING`; register allocation differs (`self`/`other`/the
+  player-global address/the box pointer in r7/r9/r10/r8). See
+  [docs/matching/issue-24-26-12-naked-retry.md](../matching/issue-24-26-12-naked-retry.md).
 - **`sub_801AB98`** (`src/graphics/actor_part_1ab98.c`, player-vs-object
   collision resolver) - GitHub issue #25. NAKED; the C reconstruction
   under `#if NON_MATCHING` differs in reload's round-robin

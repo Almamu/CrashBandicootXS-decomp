@@ -31,8 +31,8 @@
  * Thumb pointer anywhere in the ROM: sub_8019718, sub_80197F4. Matched
  * anyway.
  *
- * sub_801A03C and sub_801A114 are NAKED transcriptions (their C is kept
- * under NON_MATCHING); everything else is real C. */
+ * sub_801A114 is a NAKED transcription (its C is kept under
+ * NON_MATCHING); everything else is real C. */
 
 struct vmethod
 {
@@ -338,6 +338,15 @@ typedef u8 (*query_fn)(void *self);
         struct vmethod *_m = &((struct vobj *)(obj))->vt->m;                   \
         ((method2_fn)_m->fn)((u8 *)(obj) + _m->thisOffset, (void *)(a), (s32)(b)); \
     } while (0)
+
+/* VCALL1 as a plain block: `do { } while (0)` is not neutral under
+ * agbcc (its loop notes change allocation), and some call sites only
+ * match without it. */
+#define VCALL1_B(obj, m, a)                                                    \
+    {                                                                          \
+        struct vmethod *_m = &((struct vobj *)(obj))->vt->m;                   \
+        ((method1_fn)_m->fn)((u8 *)(obj) + _m->thisOffset, (s32)(a));          \
+    }
 
 /* VCALL2 split in two, for call sites that share one indirect call:
  * load `this`/function/first argument here, then `goto` the call. */
@@ -894,13 +903,10 @@ void sub_8019EBC(struct boss *self, s32 mode, u16 x, u16 y, struct part *arg)
  * `+0x30` table, `unk_0A` 6) at (x, y), with a gStaticData_087E483C
  * controller, facing `facing`, and registers it with gUnknown_030012F0.
  *
- * NAKED: under old_agbcc the C below is 26 halfwords off, all register
- * allocation. gcc gives the controller r4 and the part r5 (the ROM has them
- * the other way round), and the tag store reuses the r8 constant 1 kept
- * for `facing & 1`, where the ROM loads the tag's 1 separately. Named or
- * late-assigned `one` variables, s32/u8/u32 tag and facing helpers, an
- * inline tag-plus-OAM helper and scoping the controller didn't move it. */
-#if NON_MATCHING
+ * The two virtual calls are written as plain blocks, not VCALL1's
+ * `do { } while (0)` (whose loop notes swap the part/controller
+ * registers), and `facing` goes into the 1-bit field unmasked (an
+ * explicit `& 1` makes the tag store reuse the held constant 1). */
 void sub_801A03C(struct boss *self, u16 x, u16 y, u8 facing)
 {
     struct part *p = sub_8009ED0(0xFFFF, x, y, 0);
@@ -915,114 +921,12 @@ void sub_801A03C(struct boss *self, u16 x, u16 y, u8 facing)
     ctl = sub_801A724(sub_8026EDC(0x8C));
     p->slot = sub_800815C(p);
     p->ctl = ctl;
-    VCALL1(ctl, m18, p);
-    p->f28.facing = facing & 1;
+    VCALL1_B(ctl, m18, p)
+    p->f28.facing = facing;
     p->fl.b.active = 1;
-    VCALL1(ctl, m18, p);
+    VCALL1_B(ctl, m18, p)
     sub_8008E94(gUnknown_030012F0, p);
 }
-#else
-NAKED void sub_801A03C(struct boss *self, u16 x, u16 y, u8 facing)
-{
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "mov r6, r8\n\t"
-        "push {r6}\n\t"
-        "add r6, r3, #0\n\t"
-        "lsl r1, r1, #0x10\n\t"
-        "lsr r1, r1, #0x10\n\t"
-        "lsl r2, r2, #0x10\n\t"
-        "lsr r2, r2, #0x10\n\t"
-        "lsl r6, r6, #0x18\n\t"
-        "lsr r6, r6, #0x18\n\t"
-        "ldr r0, _0801A108\n\t"
-        "mov r3, #0\n\t"
-        "bl sub_8009ED0\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r0, _0801A10C\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r0, #0x30\n\t"
-        "str r0, [r4, #0x20]\n\t"
-        "mov r0, #1\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x2d\n\t"
-        "mov r2, #1\n\t"
-        "mov r8, r2\n\t"
-        "strb r0, [r1]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087C0\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_80087B4\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, #0\n\t"
-        "bl sub_800872C\n\t"
-        "mov r0, #6\n\t"
-        "strb r0, [r4, #0xa]\n\t"
-        "mov r0, #0x8c\n\t"
-        "bl sub_8026EDC\n\t"
-        "bl sub_801A724\n\t"
-        "add r5, r0, #0\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_800815C\n\t"
-        "add r2, r4, #0\n\t"
-        "add r2, #0x29\n\t"
-        "mov r1, #0xf\n\t"
-        "and r0, r1\n\t"
-        "mov r1, #0x10\n\t"
-        "neg r1, r1\n\t"
-        "ldrb r3, [r2]\n\t"
-        "and r1, r3\n\t"
-        "orr r1, r0\n\t"
-        "strb r1, [r2]\n\t"
-        "str r5, [r4, #0x44]\n\t"
-        "ldr r1, [r5, #0xc]\n\t"
-        "mov r2, #0x18\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r2, [r1, #0x1c]\n\t"
-        "add r1, r4, #0\n\t"
-        "bl sub_803AD80\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x28\n\t"
-        "mov r3, r8\n\t"
-        "and r6, r3\n\t"
-        "lsl r6, r6, #4\n\t"
-        "mov r0, #0x11\n\t"
-        "neg r0, r0\n\t"
-        "ldrb r2, [r1]\n\t"
-        "and r0, r2\n\t"
-        "orr r0, r6\n\t"
-        "strb r0, [r1]\n\t"
-        "mov r0, #0x10\n\t"
-        "ldrb r3, [r4, #0xc]\n\t"
-        "orr r0, r3\n\t"
-        "strb r0, [r4, #0xc]\n\t"
-        "ldr r1, [r5, #0xc]\n\t"
-        "mov r2, #0x18\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r5, r5, r0\n\t"
-        "ldr r2, [r1, #0x1c]\n\t"
-        "add r0, r5, #0\n\t"
-        "add r1, r4, #0\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r0, _0801A110\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r1, r4, #0\n\t"
-        "bl sub_8008E94\n\t"
-        "pop {r3}\n\t"
-        "mov r8, r3\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n\t"
-        "_0801A108: .4byte 0x0000FFFF\n\t"
-        "_0801A10C: .4byte gUnknown_030012D0\n\t"
-        "_0801A110: .4byte gUnknown_030012F0\n\t"
-    );
-}
-#endif
 
 /* gStaticData_087E490C's per-frame update (this controller is created
  * by sub_8019EBC mode 0; `other` is the part it drives): while the
@@ -1037,15 +941,20 @@ NAKED void sub_801A03C(struct boss *self, u16 x, u16 y, u8 facing)
  * blinks run out (then state 5).
  *
  * NAKED: under old_agbcc the pin-free C below has the right shape but is
- * 139 halfwords off on allocation. The ROM puts `self` in r7, `other` in
- * r9, &gUnknown_030012D8 in r10 and `&b` in r8, leaving r4-r6 for
- * temporaries; gcc uses r4-r8 for those four. State 0 also builds its
- * BLDCNT/BLDALPHA value with separate `orr`s the compiler constant-folds. */
+ * ~159 halfwords off on allocation. The ROM puts `self` in r7, `other` in
+ * r9, &gUnknown_030012D8 in r10 and `&b` in r8, leaving r4-r6 unused for
+ * long-lived values; gcc uses r4-r8 for those four. The unfolded `orr`
+ * chain in state 0 is reproduced by setting `bld` outside the case block
+ * (CSE can't see its constant there); the ROM then keeps it in r5, gcc
+ * rematerializes it into a scratch register. Plain-block VCALL1 (the fix
+ * for sub_801A03C) and hard-register or empty-asm tricks didn't move the
+ * allocation. */
 #if NON_MATCHING
 void sub_801A114(struct obj_490c *self, struct part *other)
 {
     struct box a;
     struct box b;
+    u32 bld;
 
     {
         struct vmethod *m = &other->vt->m28;
@@ -1072,12 +981,21 @@ void sub_801A114(struct obj_490c *self, struct part *other)
         }
     }
 
+    bld = BLDCNT_TGT1_OBJ;
     switch (self->state)
     {
     case 0:
-        *(vu32 *)REG_ADDR_BLDCNT = BLDCNT_TGT1_OBJ | BLDCNT_TGT2_BG0 | BLDCNT_TGT2_BG1
-            | BLDCNT_TGT2_BG2 | BLDCNT_TGT2_BG3 | BLDCNT_TGT2_OBJ
-            | (BLDALPHA_BLEND(16, 16) << 16);
+        bld |= BLDCNT_TGT2_BG0;
+        bld |= BLDCNT_TGT2_BG1;
+        bld |= BLDCNT_TGT2_BG2;
+        bld |= BLDCNT_TGT2_BG3;
+        {
+            u32 w = bld | BLDCNT_TGT2_OBJ;
+
+            w |= 0x100000;
+            w |= 0x10000000;
+            *(vu32 *)REG_ADDR_BLDCNT = w;
+        }
         VCALL1(self, m20, 5);
         break;
     case 1:
