@@ -73,10 +73,13 @@ category page - see [game_loop.md](./game_loop.md).
   byte-for-byte) - all
   matched, GitHub
   issue #4, see `docs/matching/issue-4-sio-settings-sync.md`. (This
-  file's `sub_8001CB8`/`sub_8001DB4`/`sub_8002114` are NAKED
+  file's `sub_8001DB4`/`sub_8002114` are NAKED
   transcriptions tracked as parked - see below. `sub_8001F50`, the
   link handshake driver, is real C since the second near-miss sweep -
-  see [near-miss-polish-2.md](../matching/near-miss-polish-2.md).)
+  see [near-miss-polish-2.md](../matching/near-miss-polish-2.md) - and
+  `sub_8001CB8`, the per-player CRC-16-style handshake-id hash helper,
+  since the early-ROM NAKED retry 2 - see
+  [early-rom-naked-retry-2.md](../matching/early-rom-naked-retry-2.md).)
 
 GitHub issue #70 (`0x0803ADB4`-`0x0803B060`, right after
 `reg_trampolines.c` above) was categorized `system` by the chunk
@@ -106,12 +109,11 @@ frozen decomp.dev baseline now (`expected/legacy.s`) - see
   DMA3 bit-serial EEPROM read/write pair) - register-allocation/
   loop-rotation gaps a plain-C reconstruction couldn't close. GitHub
   issue #69, see `docs/matching/issue-69-eeprom-timer.md`.
-- **`sub_8001CB8`** (`src/system/link_cable.c`, per-player
-  CRC-16-style handshake-id hash helper), **`sub_8001DB4`**
-  (link-session reset/init), **`sub_8002114`** (1488 B
+- **`sub_8001DB4`** (`src/system/link_cable.c`, link-session
+  reset/init), **`sub_8002114`** (1488 B
   per-frame SIO data-exchange pump, this file's biggest function).
-  (`sub_8001F50`, the link handshake driver, was here too; it is real C
-  since the second near-miss sweep.)
+  (`sub_8001F50`, the link handshake driver, and `sub_8001CB8`, the
+  handshake-id hash helper, were here too; both are real C now.)
   GitHub issue #4, see `docs/matching/issue-4-sio-settings-sync.md`.
   The issue #4 retry left NON_MATCHING drafts for the first three
   (49/136/37 halfwords off under old_agbcc, which the file now builds
@@ -122,3 +124,6 @@ frozen decomp.dev baseline now (`expected/legacy.s`) - see
   The third big NAKED retry added a first `sub_8002114` draft: same
   size as the ROM, 514 halfwords off under old_agbcc (register
   allocation) - see [big-naked-retry-3.md](../matching/big-naked-retry-3.md).
+  The early-ROM NAKED retry 2 closed `sub_8001CB8` and brought the
+  `sub_8002114` draft to 422 halfwords
+  ([early-rom-naked-retry-2.md](../matching/early-rom-naked-retry-2.md)).

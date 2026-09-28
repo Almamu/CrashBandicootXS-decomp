@@ -117,6 +117,9 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
 - `src/graphics/settings_menu15.c` (second near-miss sweep):
   `sub_8004D74`, the composite pause/options screen driver - plain C,
   was NAKED. See [near-miss-polish-2.md](../matching/near-miss-polish-2.md).
+- `src/graphics/settings_menu20.c` (early-ROM NAKED retry 2, old_agbcc):
+  `sub_8005100`, the blocking cursor/confirm/cancel driver - plain C,
+  was NAKED. See [early-rom-naked-retry-2.md](../matching/early-rom-naked-retry-2.md).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -135,19 +138,21 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 - **`sub_800450C`** (`src/graphics/settings_menu.c` draft, real bytes
   still raw in `asm/code_3_1_10_4.s`) - the screen's init routine.
   NON_MATCHING draft 5 halfwords off under old_agbcc (loop pre-header
-  order). Issue #6, see [issue-4-6-8-naked-retry.md](../matching/issue-4-6-8-naked-retry.md).
-- **`sub_8005100`**, **`sub_80053F4`**,
-  **`sub_8005E5C`** - all 3 are
+  order). Issue #6, see [issue-4-6-8-naked-retry.md](../matching/issue-4-6-8-naked-retry.md)
+  and [early-rom-naked-retry-2.md](../matching/early-rom-naked-retry-2.md).
+- **`sub_80053F4`**,
+  **`sub_8005E5C`** - both are
   byte-exact via `NAKED` asm transcription (the whole function body is
   a hand-transcribed copy of the ROM's own disassembly, not real
   decompiled C), so they're tracked here as parked rather than matched
   - see `docs/matching/issue-7-0x08004d74-overlay-ui.md`/
   `docs/matching/issue-8-0x080060ac-overlay-ui.md`'s "Third pass"
-  writeups for the technical detail on each. The first three have
+  writeups for the technical detail on each. Both have
   near-miss C drafts under `NON_MATCHING` from the issue #7 retry
-  (`docs/matching/issue-7-naked-retry.md`). Ten former members of
+  (`docs/matching/issue-7-naked-retry.md`). Eleven former members of
   this list (`sub_8004D74`, `sub_800556C`, `sub_80057E0`, `sub_80058C0`,
   `sub_8005AE8`, `sub_8005B80`, `sub_8005C58`, `sub_8005D44`,
-  `sub_8005EF4`, `sub_8005FBC`) are now real C, and so are issue #8's
+  `sub_8005EF4`, `sub_8005FBC`, and since the early-ROM NAKED retry 2
+  `sub_8005100`) are now real C, and so are issue #8's
   `sub_8006124`, `sub_800619C`, `sub_80061E8`, `sub_80062A8`,
   `sub_8006518` - see Matched.

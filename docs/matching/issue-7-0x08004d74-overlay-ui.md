@@ -354,3 +354,12 @@ field through a `static inline` accessor stops the sharing. Loading the
 two VRAM-reservation operands into locals before `gUnknown_030012FC`,
 and the tile cache base into a local before the `sub_803A94C` source
 address, fixes the last two load-order differences. See [near-miss-polish-2.md](near-miss-polish-2.md).
+
+## Later pass: `sub_8005100` matched
+
+`sub_8005100` is plain C under old_agbcc now, and `settings_menu20.o`
+is on `OLD_AGBCC_OBJS`. The input loop is a plain `for (;;)` with the
+B test at the bottom, which old_agbcc rotates to the ROM's layout.
+`disp` is taken only after the fade-in loop, so GCSE's copy of the fade
+pointer comes first, as in the ROM. See
+[early-rom-naked-retry-2.md](early-rom-naked-retry-2.md).

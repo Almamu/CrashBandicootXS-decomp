@@ -99,40 +99,23 @@ COMPILE_TIME_ASSERT(sizeof(struct link_session) == 0x408);
  * sub-record - reads as generating a deterministic per-slot
  * handshake/session id.
  *
- * Every instruction below is confirmed byte-identical to the ROM (this
- * comment doubles as that derivation), but it's written as NAKED asm
- * rather than plain C: this specific loop hits this project's
- * documented "explicit r7 register-variable pin compiles correct
- * instructions/order but silently drops r7 from the prologue/epilogue
- * push/pop list" gcc-2.9 bug (see docs/matching.md's `sub_8007DBC`-
- * area entries for two other instances) - and the one ordering that
- * *does* get the natural allocator to pick r7 on its own (needed so r7
- * lands back in the push/pop list) reorders the table-address load
- * ahead of the fill loop entirely, which is also wrong. With the
- * per-byte table index computation (`idx = (hash>>8) ^ *p`) *also*
- * requiring hand-pinned registers to avoid a redundant 32-bit
- * truncation dance (see the two inline-asm attempts this replaced, in
- * git history), the plain-C version was fighting the compiler on every
- * remaining instruction anyway - full NAKED transcription, like this
- * project's other hard-compiler-limitation cases
- * (`src/util/math_div_util.c`'s `nullsub_8`, `src/audio/gax_swi.c`'s
- * `sub_80392C4`), is more honest than continuing to chase individual
- * register choices. */
-#if NON_MATCHING
-/* 11 halfwords off under old_agbcc. The fill loop is written over an
- * integer address so the compare is the ROM's signed `cmp; bge` (the
- * ROM got it from strength-reducing `self[i]`, which gcc here declines:
- * "giv not worth while"); `c` ahead of it puts the 0xec load first. The
- * hash loop matches with `tbl[idx] ^ (hash << 8)`, and the tail matches
- * once the high nibble is read before `(hi << 8) | self[6]` is formed.
- * Left: CSE folds `hash >> 8` after the loop into `(x << 16) >> 24` of
- * the loop's zero-extend temporary (the ROM truncates in place and
- * shifts the result by 8), and -16 comes out as `mov #16; neg` instead
- * of the ROM's post-reload `sub r0, #31` from the 15 in r0. */
+ * Once a NAKED transcription; it matches as plain C under old_agbcc
+ * (link_cable.o is on the Makefile's OLD_AGBCC_OBJS) with no pins
+ * (docs/matching/early-rom-naked-retry-2.md). The fill loop is written
+ * over an integer address so the compare is the ROM's signed
+ * `cmp; bge` (the ROM got it from strength-reducing `self[i]`, which
+ * gcc here declines: "giv not worth while"); `c` ahead of it puts the
+ * 0xec load first. `hash` is a u32 truncated with a `(u16)` cast each
+ * step, and read back as `(u16)hash >> 8` into a u32 `hi`: with a u16
+ * `hash`, CSE folds `hash >> 8` into `(x << 16) >> 24` of the loop's
+ * zero-extend temporary. The new low nibble is masked in SImode
+ * (`w`) before the bitfield store, so the 15 is an SImode constant and
+ * reload's move2add derives the -16 from it (`sub r0, #0x1f`); a QImode
+ * 15 gives `mov #16; neg`. */
 void sub_8001CB8(u8 *self)
 {
     u8 *p;
-    u16 hash;
+    u32 hash;
     s32 i;
 
     {
@@ -148,87 +131,22 @@ void sub_8001CB8(u8 *self)
     hash = 0x1234;
     p = self + 1;
     for (i = 4; i != -1; i--) {
-        hash = gStaticData_0816AF10[((hash >> 8) ^ *p) & 0xff] ^ (hash << 8);
+        hash = (u16)(gStaticData_0816AF10[((hash >> 8) ^ *p) & 0xff] ^ (hash << 8));
         p++;
     }
     {
-        u8 hi;
+        u32 hi;
         u32 v, n;
+        s32 w;
 
         self[6] = hash;
-        self[7] = hi = hash >> 8;
+        self[7] = hi = (u16)hash >> 8;
         n = ((struct nibble_pair *)self)->hi;
         v = (hi << 8) | self[6];
-        ((struct nibble_pair *)self)->lo = n + v;
+        w = (n + v) & 0xf;
+        ((struct nibble_pair *)self)->lo = w;
     }
 }
-#else
-NAKED void sub_8001CB8(u8 *self)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "add r3, r0, #0\n\t"
-        "mov r1, #0xec\n\t"
-        "add r0, r3, #7\n\t"
-    "1:\n\t"
-        "strb r1, [r0]\n\t"
-        "sub r0, #1\n\t"
-        "cmp r0, r3\n\t"
-        "bge 1b\n\t"
-        "mov r0, #0xf\n\t"
-        "ldrb r1, [r3]\n\t"
-        "and r0, r1\n\t"
-        "strb r0, [r3]\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r3, #1]\n\t"
-        "ldr r1, 3f\n\t"
-        "add r2, r3, #1\n\t"
-        "mov r4, #4\n\t"
-        "ldr r7, 4f\n\t"
-        "mov ip, r7\n\t"
-        "mov r6, #0xff\n\t"
-        "mov r5, #1\n\t"
-        "neg r5, r5\n\t"
-    "2:\n\t"
-        "lsr r0, r1, #8\n\t"
-        "ldrb r7, [r2]\n\t"
-        "eor r0, r7\n\t"
-        "and r0, r6\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r0, ip\n\t"
-        "lsl r1, r1, #8\n\t"
-        "ldrh r0, [r0]\n\t"
-        "eor r1, r0\n\t"
-        "lsl r1, r1, #0x10\n\t"
-        "lsr r1, r1, #0x10\n\t"
-        "add r2, #1\n\t"
-        "sub r4, #1\n\t"
-        "cmp r4, r5\n\t"
-        "bne 2b\n\t"
-        "strb r1, [r3, #6]\n\t"
-        "lsr r0, r1, #8\n\t"
-        "strb r0, [r3, #7]\n\t"
-        "ldrb r2, [r3]\n\t"
-        "lsr r1, r2, #4\n\t"
-        "lsl r0, r0, #8\n\t"
-        "ldrb r4, [r3, #6]\n\t"
-        "orr r0, r4\n\t"
-        "add r1, r1, r0\n\t"
-        "mov r0, #0xf\n\t"
-        "and r1, r0\n\t"
-        "sub r0, #0x1f\n\t"
-        "and r0, r2\n\t"
-        "orr r0, r1\n\t"
-        "strb r0, [r3]\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "3: .4byte 0x1234\n"
-    "4: .4byte gStaticData_0816AF10\n"
-    );
-}
-#endif
 
 /* "Stop" step of the link session: disables the Serial and Timer3 IRQ
  * lines (each individually IME-guarded), clears their installed
@@ -307,7 +225,14 @@ static inline void ring_reset(struct link_ring *r)
  * id loop *is* reversed and pointer-reduced). The ROM also doesn't hoist
  * `self + 0xd0` out of the outer loop (it builds the inner dst giv as
  * `i * 0xc8 + (self + 0xd0)` each pass) and re-reads `field_400` after
- * storing it. */
+ * storing it. Second pass (docs/matching/early-rom-naked-retry-2.md): an
+ * inner `for` over explicit src/dst pointers with `asm("" : "+r"(j))`
+ * in the body keeps the counter counting up with the ROM's in-loop
+ * `mov #0xff` (a goto loop also counts up, but combine then folds
+ * `w & 0xff` into a second `ldrb`); the outer loop then hoists 0x1234,
+ * 0 and `self + 0x104` where the ROM hoists only 200, `self + 0x100`,
+ * `self + 0xfc`, `self + 0x20` and the id pointer (163 halfwords, so
+ * not adopted). */
 s32 sub_8001DB4(struct link_session *self)
 {
     s32 i, j;
@@ -752,18 +677,22 @@ s32 sub_8001F50(struct link_session *self)
  * genuine C, using this comment as a starting point rather than a
  * finished answer. */
 #if NON_MATCHING
-/* First C draft (docs/matching/big-naked-retry-3.md): same size as the
- * ROM (1488 bytes) under old_agbcc, 514 halfwords off. Control flow and
- * block order match; what is left is register allocation that shifts
- * everything after it:
- * - the ROM keeps the `field_4 = 1` constant in r2 and reuses it for
- *   both SIOCNT bit tests (here the store's QImode 1 is not shared);
- * - the first receive loop walks `data` with two pointers (one for the
- *   word copy, one for the 0xffff test); here the givs are combined;
+/* C draft (docs/matching/big-naked-retry-3.md,
+ * docs/matching/early-rom-naked-retry-2.md): same size as the ROM
+ * (1488 bytes) under old_agbcc, 422 halfwords off (was 514). Control
+ * flow and block order match. Fixed in the second pass: the `field_4 = 1`
+ * constant is a u32 `one` shared with both SIOCNT bit tests, the first
+ * receive loop tests 0xffff through a second pointer `d2`, and
+ * `field_400` is stored through a pointer taken before the `field_20`
+ * load. What is left is register allocation that shifts everything
+ * after it:
  * - the ring pushes/pops recompute the ring field addresses in each
- *   loop's preheader and keep `n` in r7 (here `n` reuses the r8 byte);
- *   the session pop reaches the ring through a pointer in r7 (an inline
- *   `LinkRingPop` gives that but is 12 bytes longer).
+ *   loop's preheader (here CSE reuses the address from the bounds test)
+ *   and keep `n` in r7 (here `n` reuses the r8 byte); the session pop
+ *   reaches the ring through a pointer in r7 (an inline `LinkRingPop`
+ *   gives that but is 12 bytes longer);
+ * - the ROM uses [sp,#0x28] for the id-byte pointer and [sp,#0x24] for
+ *   `i + 1`; here the two slots are swapped.
  * `data` is SIOMULTI0-3 (link_cable2.c passes 0x04000120). */
 /* A received SIOMULTI word, read back from a stack copy. */
 struct link_rx_word {
@@ -807,6 +736,7 @@ void sub_8002114(struct link_session *self, u16 *data)
     s32 changed;
     s32 nib;
     u16 siocnt;
+    u32 one;
 
     self->field_404 = 0;
     if (self->field_4) {
@@ -815,26 +745,32 @@ void sub_8002114(struct link_session *self, u16 *data)
         REG_SIOMLT_SEND = v;
         return;
     }
-    self->field_4 = 1;
+    one = 1;
+    self->field_4 = one;
     siocnt = REG_SIOCNT;
     changed = 0;
     nib = LINK_NIB(&self->id[1]).lo + 1;
     nib &= 0xf;
-    if ((siocnt >> 6) & 1)
+    if ((siocnt >> 6) & one)
         goto send;
     if (!self->field_7) {
         s32 nId, nFree, same;
 
-        if (!((siocnt >> 3) & 1))
+        if (!((siocnt >> 3) & one))
             goto send;
         nId = 0;
         nFree = 0;
-        for (i = 0; i <= 3; i++) {
-            w[i] = *(struct link_rx_word *)&data[i];
-            if (w[i].hi == 0xF0B)
-                nId++;
-            if (data[i] == 0xffff)
-                nFree++;
+        {
+            u16 *d2 = data;
+
+            for (i = 0; i <= 3; i++) {
+                w[i] = *(struct link_rx_word *)&data[i];
+                if (w[i].hi == 0xF0B)
+                    nId++;
+                if (*d2 == 0xffff)
+                    nFree++;
+                d2++;
+            }
         }
         same = 1;
         for (i = 0; i < nId; i++) {
@@ -852,7 +788,11 @@ void sub_8002114(struct link_session *self, u16 *data)
             self->field_3f8 &= ~(1 << self->field_3fc);
         }
         self->field_20.lo = nId;
-        self->field_400 = *(u16 *)&self->field_20;
+        {
+            u16 *dst = &self->field_400;
+
+            *dst = *(u16 *)&self->field_20;
+        }
         goto send;
     }
 

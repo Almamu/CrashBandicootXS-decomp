@@ -379,7 +379,16 @@ asm(".align 2, 0");
  * reduction has emitted the pointer copies. Other nibble spellings,
  * plain/cast `field_3c` stores, dropping `Opaque`, loop shapes and the
  * loop flags (-fmove-all-movables, -freduce-all-givs) don't change the
- * first pass. */
+ * first pass. Second pass (docs/matching/early-rom-naked-retry-2.md):
+ * old_agbcc expands every narrow struct-field store as a read-modify-
+ * write, and CSE leaves the RMW's zero mask behind as a dead movable
+ * constant (`field_3c`'s HImode 0 here). Storing `frameIndex` and
+ * `field_3c` through plain `u8 *`/`u16 *` casts and inserting the nibble
+ * with an SImode `-16` local (one movable, not a QI/SI pair) leaves
+ * three moves before 0x80, and the pre-header then matches the ROM
+ * exactly; but the third icon's `frameIndex = 0` then stores a zero
+ * pseudo (r0) after its address (r1), where the ROM's RMW-folded store
+ * reloads a constant into r1 after the address in r0 (6 halfwords). */
 #if NON_MATCHING
 extern struct oam_shadow_buffer *gUnknown_03001300;
 extern void sub_8006A90(struct oam_shadow_buffer *arg0);
