@@ -53,39 +53,33 @@
  * pose" gate - consistent with `sub_800AAEC`'s own role gating the
  * 42-slot action-dispatch table's action codes `0xB`/`0x10`.
  *
- * NAKED transcription, not real C: this is the same AABB-build
- * primitive `game_loop6.c`'s `sub_800D040` already documents at length
- * (inlined twice there, three times here), which that function's own
- * header comment already records as resistant to C reconstruction -
- * "the ROM keeps exactly two extra callee-saved registers live across
- * both AABB builds (r8 and sb) ... and reuses r7/r8 for the X/Y 'shift'
- * values across *both* the self-block and the player-block - no C
- * reconstruction tried reproduced that with gcc 2.9". This function is
- * a strict superset of that same shape (three AABB builds instead of
- * two, r7/r8/sb kept live across all three plus an extra `sl`-held
- * argument), so it was transcribed directly as byte-exact NAKED asm
- * rather than re-attempting a C reconstruction already known to fail
- * on the simpler two-AABB case - see
- * docs/matching/issue-9-10-0x0800aaec-graphics.md. Every load, store,
- * branch and register choice below is copied instruction-for-
- * instruction from the ROM disassembly (formerly
- * `asm/code_3_2_17.s`'s `sub_800CD00`, now split out into this file -
- * that fragment is trimmed to end right before this function, with the
- * remainder from `sub_800CEAC` onward moved to the new
- * `asm/code_3_2_17_ceac.s`). */
-#if NON_MATCHING
-/* C draft (issue #9-#11 NAKED retry, old_agbcc): 42 halfwords off. The
- * two stack boxes are one frame struct and everything but two spots
- * matches: the ROM rematerializes the player box's address with
- * `add r0, sp, #16` for its first build and only takes it into r6 at the
- * first overlap test, where CSE here keeps it in r6 from the first build
- * on; and the player record's address lands in r0 instead of r1. */
+ * Real C (issue #11 NAKED retry, old_agbcc - so this object is on the
+ * Makefile's OLD_AGBCC_OBJS). The two stack boxes are one frame struct.
+ * The ROM recomputes the player box's address (`add r0, sp, #16`) for
+ * each of its first two builder calls and only holds it in r6 from the
+ * first overlap test on. With plain `&f.b` everywhere, cse and gcse
+ * turn every `&f.b` into one pseudo that lives in r6 from the first
+ * build on. `BOX_ADDR` below passes each of those three addresses
+ * through an empty `asm("" : "+r")`: the asm "modifies" the copy, so cse
+ * drops its equivalence with `sp + 16` and the next `&f.b` gets a new
+ * pseudo. A pseudo used once as a call argument is folded into the
+ * `add r0, sp, #16` right before the `bl`, and `pb` is born at the
+ * overlap test as in the ROM. The first build's x/y are computed before
+ * the call so that the `add r0, sp, #16` comes after them. `rec` is
+ * shared by the first two blocks: a function-scope `rec` is not
+ * block-local, so local-alloc can't tie it to the record base and it
+ * lands in r1 as in the ROM. See docs/matching/sp-box-retry.md. */
 #include "box_part.h"
 
 extern void sub_803AFE4(struct part_aabb *buf, s32 x, s32 y);
 extern void sub_803AFDC(struct part_aabb *buf, s32 w, s32 h);
 extern u8 sub_8001640(struct part_aabb *a, struct part_aabb *b);
 extern struct box_part *gUnknown_030012D8;
+
+/* `a` through a copy that an empty asm claims to modify (emits nothing):
+ * it hides the copy's value from cse, so each use of a stack box address
+ * is its own pseudo instead of one held across calls. */
+#define BOX_ADDR(a) ({ struct part_aabb *_p = (a); asm("" : "+r"(_p)); _p; })
 
 u8 sub_800CD00(struct box_part *self, s32 action)
 {
@@ -95,15 +89,18 @@ u8 sub_800CD00(struct box_part *self, s32 action)
     } f;
     struct part_aabb *pb;
     s32 px, py;
+    u8 *rec;
     u8 state = self->state;
 
     if (state == 5 || state == 0xa)
         return 0;
     {
-        u8 *rec = (u8 *)&(*self->keyframes)[self->frame];
-        struct part_box *q = (struct part_box *)(rec + 4);
+        struct part_box *q;
         s32 offX, offY;
         u8 w, h;
+
+        rec = (u8 *)&(*self->keyframes)[self->frame];
+        q = (struct part_box *)(rec + 4);
 
         px = self->x >> 8;
         py = self->y >> 8;
@@ -120,7 +117,6 @@ u8 sub_800CD00(struct box_part *self, s32 action)
     }
     {
         struct box_part *pl = gUnknown_030012D8;
-        u8 *rec;
         struct part_box *q;
         s32 offX, offY;
         u8 w, h;
@@ -133,14 +129,17 @@ u8 sub_800CD00(struct box_part *self, s32 action)
         offY = q->offY;
         w = q->w;
         h = q->h;
-        sub_803AFE4(&f.b, offX + px, offY + py);
-        sub_803AFDC(&f.b, w, h);
+        {
+            s32 x = offX + px, y = offY + py;
+            sub_803AFE4(BOX_ADDR(&f.b), x, y);
+        }
+        sub_803AFDC(BOX_ADDR(&f.b), w, h);
         if (gUnknown_030012D8->mirrorX)
             f.b.x = px * 2 - (f.b.x + f.b.w);
         if (gUnknown_030012D8->mirrorY)
             f.b.y = py * 2 - (f.b.y + f.b.h);
     }
-    pb = &f.b;
+    pb = BOX_ADDR(&f.b);
     if (sub_8001640(&f.a, pb))
         return 0;
     {
@@ -164,225 +163,6 @@ u8 sub_800CD00(struct box_part *self, s32 action)
         return 0;
     return 1;
 }
-#else
-NAKED u8 sub_800CD00(void *self, s32 x)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sl\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6, r7}\n\t"
-        "sub sp, #0x20\n\t"
-        "add r6, r0, #0\n\t"
-        "mov sl, r1\n\t"
-        "add r0, #0x4e\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #5\n\t"
-        "bne 1f\n\t"
-        "b 10f\n\t"
-    "1:\n\t"
-        "cmp r0, #0xa\n\t"
-        "bne 2f\n\t"
-        "b 10f\n\t"
-    "2:\n\t"
-        "ldr r1, [r6, #0x20]\n\t"
-        "add r2, r6, #0\n\t"
-        "add r2, #0x2d\n\t"
-        "ldrb r3, [r2]\n\t"
-        "lsl r0, r3, #3\n\t"
-        "sub r0, r0, r3\n\t"
-        "lsl r0, r0, #2\n\t"
-        "ldr r1, [r1]\n\t"
-        "add r1, r1, r0\n\t"
-        "add r3, r1, #4\n\t"
-        "ldr r0, [r6]\n\t"
-        "asr r7, r0, #8\n\t"
-        "ldr r0, [r6, #4]\n\t"
-        "asr r0, r0, #8\n\t"
-        "mov r8, r0\n\t"
-        "mov r0, #4\n\t"
-        "ldrsh r1, [r1, r0]\n\t"
-        "mov r0, #2\n\t"
-        "ldrsh r2, [r3, r0]\n\t"
-        "ldrb r4, [r3, #4]\n\t"
-        "ldrb r5, [r3, #5]\n\t"
-        "add r1, r1, r7\n\t"
-        "add r2, r8\n\t"
-        "mov r0, sp\n\t"
-        "bl sub_803AFE4\n\t"
-        "mov r0, sp\n\t"
-        "add r1, r4, #0\n\t"
-        "add r2, r5, #0\n\t"
-        "bl sub_803AFDC\n\t"
-        "add r3, r6, #0\n\t"
-        "add r3, #0x28\n\t"
-        "ldrb r1, [r3]\n\t"
-        "lsl r0, r1, #0x1b\n\t"
-        "cmp r0, #0\n\t"
-        "bge 3f\n\t"
-        "lsl r0, r7, #1\n\t"
-        "ldr r1, [sp]\n\t"
-        "ldr r2, [sp, #8]\n\t"
-        "add r1, r1, r2\n\t"
-        "sub r0, r0, r1\n\t"
-        "str r0, [sp]\n\t"
-    "3:\n\t"
-        "ldrb r3, [r3]\n\t"
-        "lsl r0, r3, #0x1a\n\t"
-        "cmp r0, #0\n\t"
-        "bge 4f\n\t"
-        "mov r2, r8\n\t"
-        "lsl r0, r2, #1\n\t"
-        "ldr r1, [sp, #4]\n\t"
-        "ldr r2, [sp, #0xc]\n\t"
-        "add r1, r1, r2\n\t"
-        "sub r0, r0, r1\n\t"
-        "str r0, [sp, #4]\n\t"
-    "4:\n\t"
-        "ldr r3, 5f\n\t"
-        "mov sb, r3\n\t"
-        "ldr r0, [r3]\n\t"
-        "ldr r1, [r0]\n\t"
-        "asr r7, r1, #8\n\t"
-        "ldr r1, [r0, #4]\n\t"
-        "asr r1, r1, #8\n\t"
-        "mov r8, r1\n\t"
-        "ldr r2, [r0, #0x20]\n\t"
-        "add r0, #0x2d\n\t"
-        "ldrb r3, [r0]\n\t"
-        "lsl r1, r3, #3\n\t"
-        "sub r1, r1, r3\n\t"
-        "lsl r1, r1, #2\n\t"
-        "ldr r0, [r2]\n\t"
-        "add r1, r0, r1\n\t"
-        "add r0, r1, #4\n\t"
-        "mov r2, #4\n\t"
-        "ldrsh r1, [r1, r2]\n\t"
-        "mov r3, #2\n\t"
-        "ldrsh r2, [r0, r3]\n\t"
-        "ldrb r4, [r0, #4]\n\t"
-        "ldrb r5, [r0, #5]\n\t"
-        "add r1, r1, r7\n\t"
-        "add r2, r8\n\t"
-        "add r0, sp, #0x10\n\t"
-        "bl sub_803AFE4\n\t"
-        "add r0, sp, #0x10\n\t"
-        "add r1, r4, #0\n\t"
-        "add r2, r5, #0\n\t"
-        "bl sub_803AFDC\n\t"
-        "mov r1, sb\n\t"
-        "ldr r0, [r1]\n\t"
-        "add r0, #0x28\n\t"
-        "ldrb r0, [r0]\n\t"
-        "lsl r0, r0, #0x1b\n\t"
-        "cmp r0, #0\n\t"
-        "bge 6f\n\t"
-        "lsl r0, r7, #1\n\t"
-        "ldr r1, [sp, #0x10]\n\t"
-        "ldr r2, [sp, #0x18]\n\t"
-        "add r1, r1, r2\n\t"
-        "sub r0, r0, r1\n\t"
-        "str r0, [sp, #0x10]\n\t"
-    "6:\n\t"
-        "mov r2, sb\n\t"
-        "ldr r0, [r2]\n\t"
-        "add r0, #0x28\n\t"
-        "ldrb r0, [r0]\n\t"
-        "lsl r0, r0, #0x1a\n\t"
-        "cmp r0, #0\n\t"
-        "bge 7f\n\t"
-        "mov r3, r8\n\t"
-        "lsl r0, r3, #1\n\t"
-        "ldr r1, [sp, #0x14]\n\t"
-        "ldr r2, [sp, #0x1c]\n\t"
-        "add r1, r1, r2\n\t"
-        "sub r0, r0, r1\n\t"
-        "str r0, [sp, #0x14]\n\t"
-    "7:\n\t"
-        "add r6, sp, #0x10\n\t"
-        "mov r0, sp\n\t"
-        "add r1, r6, #0\n\t"
-        "bl sub_8001640\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "bne 10f\n\t"
-        "mov r1, sb\n\t"
-        "ldr r0, [r1]\n\t"
-        "ldr r0, [r0, #0x20]\n\t"
-        "mov r2, sl\n\t"
-        "lsl r1, r2, #3\n\t"
-        "sub r1, r1, r2\n\t"
-        "lsl r1, r1, #2\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r0, r0, r1\n\t"
-        "add r3, r0, #4\n\t"
-        "mov r2, #4\n\t"
-        "ldrsh r1, [r0, r2]\n\t"
-        "mov r0, #2\n\t"
-        "ldrsh r2, [r3, r0]\n\t"
-        "ldrb r4, [r3, #4]\n\t"
-        "ldrb r5, [r3, #5]\n\t"
-        "add r1, r1, r7\n\t"
-        "add r2, r8\n\t"
-        "add r0, r6, #0\n\t"
-        "bl sub_803AFE4\n\t"
-        "add r0, r6, #0\n\t"
-        "add r1, r4, #0\n\t"
-        "add r2, r5, #0\n\t"
-        "bl sub_803AFDC\n\t"
-        "mov r1, sb\n\t"
-        "ldr r0, [r1]\n\t"
-        "add r0, #0x28\n\t"
-        "ldrb r0, [r0]\n\t"
-        "lsl r0, r0, #0x1b\n\t"
-        "cmp r0, #0\n\t"
-        "bge 8f\n\t"
-        "lsl r0, r7, #1\n\t"
-        "ldr r1, [sp, #0x10]\n\t"
-        "ldr r2, [sp, #0x18]\n\t"
-        "add r1, r1, r2\n\t"
-        "sub r0, r0, r1\n\t"
-        "str r0, [sp, #0x10]\n\t"
-    "8:\n\t"
-        "mov r2, sb\n\t"
-        "ldr r0, [r2]\n\t"
-        "add r0, #0x28\n\t"
-        "ldrb r0, [r0]\n\t"
-        "lsl r0, r0, #0x1a\n\t"
-        "cmp r0, #0\n\t"
-        "bge 9f\n\t"
-        "mov r3, r8\n\t"
-        "lsl r0, r3, #1\n\t"
-        "ldr r1, [sp, #0x14]\n\t"
-        "ldr r2, [sp, #0x1c]\n\t"
-        "add r1, r1, r2\n\t"
-        "sub r0, r0, r1\n\t"
-        "str r0, [sp, #0x14]\n\t"
-    "9:\n\t"
-        "mov r0, sp\n\t"
-        "add r1, r6, #0\n\t"
-        "bl sub_8001640\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "cmp r0, #1\n\t"
-        "bne 10f\n\t"
-        "mov r0, #1\n\t"
-        "b 11f\n\t"
-        ".align 2, 0\n"
-    "5: .4byte gUnknown_030012D8\n"
-    "10:\n\t"
-        "mov r0, #0\n\t"
-    "11:\n\t"
-        "add sp, #0x20\n\t"
-        "pop {r3, r4, r5}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov sl, r5\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n"
-    );
-}
-#endif
+
+/* The object ends word-aligned with zero fill, as the ROM does. */
+asm(".align 2, 0");

@@ -136,3 +136,15 @@ The helpers are in the scratch area `huge/`. They were not committed.
   `game_loop47.c`.
 - `rm -rf build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make compare`:
   `crashbandicootxs.gba: OK`.
+
+## Later pass (stack-box NAKED retry)
+
+The `&f.b` blocker is fixed for the first player box. Its builder calls
+take the address through an empty `asm("" : "+r")` copy (`BOX_ADDR`),
+and a `bb` local holds it (also from `BOX_ADDR`) from `sub_8001688` to
+`sub_800CF70`. That block now matches the ROM, including `r4`, and the
+draft is 938 halfwords off at the exact size. The same fix on the
+rebuilt box matches that block too, and puts the `&gUnknown_030012D8`
+temp in r6 as in the ROM. But other low registers then shift and the
+draft comes out 8 bytes short, so the draft doesn't use it there yet.
+See [sp-box-retry.md](sp-box-retry.md).

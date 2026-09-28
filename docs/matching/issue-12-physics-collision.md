@@ -880,3 +880,13 @@ stays NAKED. The draft fixes the function's structure: the frame layout,
 the three jump tables, the `goto` into a shared `edge = dirX` block,
 and the case bodies in ROM order. What is left is low-register
 allocation. See [huge-naked-retry.md](huge-naked-retry.md).
+
+## Later pass (stack-box NAKED retry)
+
+`sub_800D040` is now real C under old_agbcc (`game_loop6.o` joined
+`OLD_AGBCC_OBJS`). Every use of the player box's address goes through
+an empty `asm("" : "+r")` copy, so cse doesn't hold `sp+16` in a
+callee-saved register across the builder calls, and `px`/`py` are
+shared by both blocks, as in the ROM's r7/r8. `sub_0800D18C` (938
+halfwords off, was 968) and `sub_800E08C` (49) stay NAKED. See
+[sp-box-retry.md](sp-box-retry.md).

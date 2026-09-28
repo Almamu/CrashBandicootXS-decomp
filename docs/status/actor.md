@@ -1029,6 +1029,18 @@ See [docs/matching/big-naked-retry-2.md](../matching/big-naked-retry-2.md).
 
 See [docs/matching/mid-range-naked-retry-4.md](../matching/mid-range-naked-retry-4.md).
 
+### Matched in the stack-box NAKED retry
+
+- `src/graphics/actor_part109.c` - `sub_800CD00` (issue #11, the
+  "would action `x` newly hit `self`" three-box test), old_agbcc
+  (`actor_part109.o` joined `OLD_AGBCC_OBJS`). Each builder call and
+  the first overlap test take the player box's address through an
+  empty `asm("" : "+r")` copy, so cse doesn't keep `sp+16` in a
+  callee-saved register across the calls; `rec` is shared by the first
+  two blocks.
+
+See [docs/matching/sp-box-retry.md](../matching/sp-box-retry.md).
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
@@ -1074,7 +1086,7 @@ plain C didn't converge.
   retry) before giving up. Fully understood; parked on a register-
   reload quirk in the retry loop. See
   `docs/matching/naked-spatial-grid-tail.md`.
-- **`sub_800CD00`** (`src/graphics/actor_part109.c`, GitHub issue
+- **Now matched as real C (stack-box NAKED retry, see Matched and docs/matching/sp-box-retry.md); entry kept for history.** **`sub_800CD00`** (`src/graphics/actor_part109.c`, GitHub issue
   #9/#10) - `sub_800AAEC`'s only callee: builds three AABBs (the
   entry's own current hitbox, the player's current hitbox, and the
   player's hitbox for the caller's target action) via the same

@@ -61,16 +61,20 @@
  * `sub_800E494`/`sub_800E4E4`. */
 #if NON_MATCHING
 /* Structurally complete draft, the ROM's exact size (3840 bytes) under
- * old_agbcc, 968 halfwords off. The control flow, block order, jump
+ * old_agbcc, 938 halfwords off. The control flow, block order, jump
  * tables, stack frame layout (boxes at sp+0x1c/0x2c/0x3c, spill slots in
  * the ROM's order) and the high-register allocation (self sl, obj/q/tgt
- * r8, dy and the GCSE temps sb) match. What's left is low-register
- * allocation: cse keeps `&f.b` in a callee-saved register across the
- * two box-builder calls (the ROM recomputes `add r0, sp, #0x3c` each
- * time), which pushes the rebuilt box's w/h into r5/r6 and the
- * `&gUnknown_030012D8` GCSE temp into sb instead of r6. Under current
- * agbcc the draft is 1629 halfwords off and 8 bytes long. See
- * docs/matching/huge-naked-retry.md. */
+ * r8, dy and the GCSE temps sb) match. The first player box now matches:
+ * `BOX_ADDR` (see below) gives each builder call its own `add r0, sp,
+ * #0x3c` and `bb` holds the box from `sub_8001688` to `sub_800CF70` in
+ * r4, as in the ROM. The same fix on the rebuilt box also matches that
+ * block (and puts the `&gUnknown_030012D8` temp in r6), but other low
+ * registers then shift and the function comes out 8 bytes short, so it
+ * isn't applied there yet. What's left is low-register allocation
+ * elsewhere (constants and temps in r0/r2/r3/r4/r5) and the `kind * 4`
+ * spill slot order. Under current agbcc the draft is 1629 halfwords off
+ * and 8 bytes long. See docs/matching/huge-naked-retry.md and
+ * docs/matching/sp-box-retry.md. */
 #include "phys_obj.h"
 
 /* The player (gUnknown_030012D8) as this function reads it. */
@@ -252,6 +256,11 @@ static inline s32 D18C_TimerOver(void)
     return D18C_P->timer > gUnknown_0300082C;
 }
 
+/* `a` through a copy that an empty asm claims to modify (emits nothing):
+ * it hides the copy's value from cse, so each use of a stack box address
+ * is its own pseudo instead of one held across calls. */
+#define BOX_ADDR(a) ({ struct aabb *_p = (a); asm("" : "+r"(_p)); _p; })
+
 void sub_0800D18C(struct phys_obj *self, s32 idx)
 {
     struct
@@ -283,6 +292,7 @@ void sub_0800D18C(struct phys_obj *self, s32 idx)
     struct d18c_quad *q;
     struct d18c_pos *pp;
     struct d18c_quad *hb;
+    struct aabb *bb;
 
     {
         u8 *rec = (u8 *)&self->anim->records[self->tag];
@@ -340,18 +350,23 @@ void sub_0800D18C(struct phys_obj *self, s32 idx)
         offY = hb->yOff;
         w = hb->w;
         h = hb->h;
-        sub_803AFE4(&f.b, offX + px, offY + py);
-        sub_803AFDC(&f.b, w, h);
+        {
+            s32 x = offX + px, y = offY + py;
+
+            sub_803AFE4(BOX_ADDR(&f.b), x, y);
+        }
+        sub_803AFDC(BOX_ADDR(&f.b), w, h);
         if (D18C_P->flipX)
             f.b.x = px * 2 - (f.b.x + f.b.w);
         if (D18C_P->flipY)
             f.b.y = py * 2 - (f.b.y + f.b.h);
     }
-    if (!sub_8001688(&f.a, &f.b))
+    bb = BOX_ADDR(&f.b);
+    if (!sub_8001688(&f.a, bb))
         goto tail;
     f.found = 0;
     if (kind <= 4)
-        obj = sub_800CF70(self, &f.b, &f.found);
+        obj = sub_800CF70(self, bb, &f.found);
     else
         obj = self;
     code = gStaticData_0816BC98[obj->kind][kind];
@@ -2875,7 +2890,14 @@ NAKED void sub_0800D18C(void *self, u32 arg1)
 /* Near miss under old_agbcc: identical except for the case-3 read of
  * the first flag byte - the ROM reloads it as a byte from its spill
  * slot (`mov r5, sp; ldrb r2, [r5]`), this draft as a word, which
- * shifts the rest of that case by one halfword. */
+ * shifts the rest of that case by one halfword. Thumb only emits `ldrb`
+ * for a zero_extend whose operand is already a MEM when it is expanded,
+ * or for a QImode subreg of a spilled pseudo that reload turns into one.
+ * An addressable `s32` flag read as `*(u8 *)&f20` gives the `ldrb`, but
+ * computes the address early into r0 and changes the other flags'
+ * prologue; an `asm`-hidden `s32` with a `(u8)` cast gives `ldr; lsl;
+ * lsr`; passing the struct or calling through an unprototyped or `u8`
+ * pointer changed nothing (docs/matching/sp-box-retry.md). */
 #include "phys_obj.h"
 extern void PlaySfx(void *ctx, s32 id, s32 volume);
 extern void *gUnknown_030012BC;

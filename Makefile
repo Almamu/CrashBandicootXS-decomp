@@ -135,6 +135,7 @@ $(ELF): $(OBJS) $(LDSCRIPT)
 OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/actor_part101.o \
                   $(C_BUILDDIR)/graphics/actor_part103.o \
+                  $(C_BUILDDIR)/graphics/actor_part109.o \
                   $(C_BUILDDIR)/graphics/actor_part118.o \
                   $(C_BUILDDIR)/graphics/actor_part112.o \
                   $(C_BUILDDIR)/graphics/actor_part110.o \
@@ -231,6 +232,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/system/game_loop54.o \
                   $(C_BUILDDIR)/system/game_loop55.o \
                   $(C_BUILDDIR)/system/game_loop57.o \
+                  $(C_BUILDDIR)/system/game_loop6.o \
                   $(C_BUILDDIR)/system/game_loop7.o \
                   $(C_BUILDDIR)/system/game_loop8.o \
                   $(C_BUILDDIR)/system/link_cable.o
