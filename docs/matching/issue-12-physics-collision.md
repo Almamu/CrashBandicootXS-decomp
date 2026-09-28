@@ -871,3 +871,12 @@ and `sub_0800D18C` is still untouched. See
 steps on a fresh local (`t = (r - 1) << 24; cw &= 0xc7; t >>= 21;
 cw |= t`), which ties each result to the ROM's register. See
 [near-miss-polish-3.md](near-miss-polish-3.md).
+
+## Later pass: first C draft of `sub_0800D18C`
+
+`sub_0800D18C` now has a C draft under `#if NON_MATCHING`. It is the
+ROM's exact size under old_agbcc and 968 halfwords off; the function
+stays NAKED. The draft fixes the function's structure: the frame layout,
+the three jump tables, the `goto` into a shared `edge = dirX` block,
+and the case bodies in ROM order. What is left is low-register
+allocation. See [huge-naked-retry.md](huge-naked-retry.md).
