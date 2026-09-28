@@ -21,7 +21,11 @@ for the full write-up.
 
 - `src/audio/music_player.c`: `sub_80016EC` (per-tick fade-envelope
   update), `sub_80017BC` (start playing a song).
-- `src/audio/sfx_ambient.c`: `sub_800190C` (ambient/looping-sfx-channel
+- `src/audio/sfx_ambient.c`: `PlaySfx` (`sub_8001854`, one-shot sfx
+  play; real C since the near-miss polish pass, its raw
+  `asm/code_3_1_10.s` retired - see
+  [near-miss-polish.md](../matching/near-miss-polish.md)),
+  `sub_800190C` (ambient/looping-sfx-channel
   tick update), `sub_80019A8` (stop-if-playing scan), `sub_80019CC`
   (reset), `sub_80019E8` (force-expire).
 - `src/audio/audio_context.c`: `sub_80019F8` (ambient-sfx play request;
@@ -164,14 +168,6 @@ for the per-function notes.
 - `src/util/math_div64_util.c` - `sub_8037648`/`sub_8037A7C`/
   `sub_8037ECC` (`__divdi3`/`__udivdi3`/`__muldi3`, category `util` -
   see [docs/status/util.md](./util.md))
-
-## Parked
-
-- `PlaySfx` (`sub_8001854`, real bytes in `asm/code_3_1_10.s`,
-  reconstruction in `src/audio/sfx_ambient.c`): a one-instruction
-  prologue register-save-scheduling difference.
-
-See docs/matching.md for `PlaySfx`'s remaining gap.
 
 ## Parked - NAKED asm transcription (byte-correct, not decompiled C)
 

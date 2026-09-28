@@ -67,9 +67,10 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   default-refresh/force-set/mark-selected helpers extending
   `struct settings_sync_record`: `sub_8002B44`, `sub_8002B70`,
   `sub_8002B94`, `sub_8002BA4`, `sub_8002C14`, `sub_8002C40`,
-  `sub_8002C6C`. See `docs/matching/issue-4-sio-settings-sync.md`. (This
-  file's `sub_8002AA4`, checksum validate + DMA-repair, is a NAKED
-  transcription tracked as parked, not matched - see below.)
+  `sub_8002C6C`. See `docs/matching/issue-4-sio-settings-sync.md`. The
+  file's `sub_8002AA4` (checksum validate + DMA-repair) is real C too
+  since the near-miss polish pass - see
+  [near-miss-polish.md](../matching/near-miss-polish.md).
 - `src/graphics/settings_menu9.c` (new file - issue #8,
   0x080060AC-0x08006124): the decimal `itoa` helper and a
   percentage-string formatter built on it: `sub_80060AC`, `sub_80060F8`.
@@ -128,10 +129,6 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   about 100 halfwords off: it keeps the ROM's `n - 1 != -1` loop tests,
   but gcc shares the `playerIndex * 0xc8 + s` the ROM computes twice.
   See [early-rom-naked-retry.md](../matching/early-rom-naked-retry.md).
-- **`sub_8002AA4`** (`src/graphics/settings_menu8e.c`) - checksum
-  validate/repair-via-DMA. GitHub issue #4. NON_MATCHING draft 6
-  halfwords off (`&flags`/`&field_1fb` computed in the other order to
-  get the ROM's r7/r8) - see [early-rom-naked-retry.md](../matching/early-rom-naked-retry.md).
 - **`sub_800450C`** (`src/graphics/settings_menu.c` draft, real bytes
   still raw in `asm/code_3_1_10_4.s`) - the screen's init routine.
   NON_MATCHING draft 5 halfwords off under old_agbcc (loop pre-header

@@ -11,12 +11,7 @@ inference relies on).
 Addresses below come from a clean `make compare` (NON_MATCHING=0) build's
 crashbandicootxs.map - the only reliable source, since NON_MATCHING=1
 addresses drift downstream of any parked function (its imperfect
-reconstruction is a different byte count than the real ROM). One file
-(PlaySfx's) contains a parked function and so has a wider range here
-than its NON_MATCHING=0 object alone shows - the parked function's real
-bytes currently live in the neighboring raw asm/*.s chunk instead, but
-expected/code_3.s already has it labelled at its true address (it was
-never extracted, only parked), so slicing still works unmodified.
+reconstruction is a different byte count than the real ROM).
 
 Still-raw regions with no `base_object` can still carry a `category` -
 docs/rom_map.md's whole-ROM reconnaissance pass split most of the ROM's
@@ -88,7 +83,7 @@ UNITS = [
     (0x08001524, "src/graphics/fade_screen_mode2.o", "graphics"),  # sub_8001524-sub_8001614 (14 fns): DISPCNT-mode low-3-bits setter plus the rest of the fade/screen-mode cluster's DISPCNT-shadow bit accessors and commit; matched. sub_8001524 was previously NAKED - closed via an inline-asm-materialized `-8` mask constant (opaque to the compiler's value-propagation fold that otherwise derives it from an already-loaded `7`) plus register pins/statement reordering to match the ROM's exact instruction sequence - see docs/matching/naked-transcription-parked-functions.md
     (0x08001624, "src/graphics/aabb_util.o", "graphics"),  # sub_8001624-sub_80016DC (5 fns): BLDCNT/BLDALPHA/BLDY shadow commit, plus sub_8001640/sub_8001688 (AABB overlap tests, X-edges inclusive vs exclusive - the latter already referenced by name from actor_part15.c's sub_800B37C) and sub_80016D0/sub_80016DC (mem_free/mem_alloc wrappers); matched. sub_8001624 was previously NAKED - closed by emitting the store-and-pointer-increment pair as one inline-asm block (opaque to the peephole pass that otherwise always fuses it into a single stmia writeback), plus the ROM's own shift-based `(x << 27) >> 27` mask idiom instead of a plain `& 0x1f` - see docs/matching/naked-sub_8001624-matched.md
     (0x080016EC, "src/audio/music_player.o", "audio"),  # sub_80016EC (per-tick music fade-envelope update)/sub_80017BC (start-song) - first matched code in the GAX2 wrapper layer; see docs/status/audio.md and docs/audio.md
-    (0x08001854, None, "audio"),  # PlaySfx (parked - real bytes in asm/code_3_1_10.s, its reconstruction lives in src/audio/sfx_ambient.c); see docs/matching.md for the prologue register-save-scheduling gap
+    (0x08001854, "src/audio/sfx_ambient.o", "audio"),  # PlaySfx - one-shot sfx play; matched as real C in the near-miss polish pass (an empty asm reference to &gUnknown_030007FC settles global-alloc priority), its raw asm/code_3_1_10.s retired - see docs/matching/near-miss-polish.md
     (0x0800190C, "src/audio/sfx_ambient.o", "audio"),  # sub_800190C/sub_80019A8/sub_80019CC/sub_80019E8 - the ambient/looping-sfx-channel tick update, stop-if-playing scan, reset, and force-expire; matched
     (0x080019F8, "src/audio/audio_context.o", "audio"),  # sub_80019F8 (ambient-sfx-channel play-request driver; matched as plain C, was NAKED - early-ROM NAKED retry, see docs/matching/early-rom-naked-retry.md) plus sub_8001AB8-sub_8001C64 (17 fns) - the rest of the AudioContext accessor/state-machine cluster (play/pause/stop, both fade-envelope arm/setter pairs, the constructor); matched
     (0x08001C80, "src/audio/music_irq.o", "audio"),  # sub_8001C80/sub_8001CA4 - installs the music player's VCount-IRQ per-tick update (src/audio/music_player.c's sub_80016EC); matched - issue #4, see docs/matching/issue-4-sio-settings-sync.md
@@ -99,7 +94,7 @@ UNITS = [
     (0x08002868, "src/graphics/settings_menu8d.o", "system"),  # sub_8002868 - EEPROM load block loop for the settings record (built on src/system/timer_util.c's EEPROM primitives); matched as real C - issue #4
     (0x08002938, "src/graphics/settings_menu8d.o", "system"),  # sub_8002938 - EEPROM save block loop, counterpart to sub_8002868 above; matched as real C - issue #4
     (0x08002A08, "src/graphics/settings_menu8d.o", "overlay_ui"),  # sub_8002A08 - EEPROM-load-with-retry + validate, muting the music player across the transfer; matched - issue #4
-    (0x08002AA4, None, "overlay_ui"),  # sub_8002AA4 - checksum validate/repair-via-DMA - NAKED transcription, byte-correct but not real decompiled C, tracked as parked - issue #4, see docs/matching/issue-4-sio-settings-sync.md
+    (0x08002AA4, "src/graphics/settings_menu8e.o", "overlay_ui"),  # sub_8002AA4 - checksum validate/repair-via-DMA; matched as real C in the near-miss polish pass (an empty asm reference to `flags` fixes the r7/r8 ranking) - issue #4, see docs/matching/near-miss-polish.md
     (0x08002B44, "src/graphics/settings_menu8e.o", "overlay_ui"),  # sub_8002B44-sub_8002C6C (7 fns, the settings_sync_record checksum compare/store, versionNibble accessor, EEPROM-save-with-retry, and per-row default/force-set/mark-selected helpers); matched - issue #4
     (0x08002C84, "src/graphics/settings_menu8.o", "overlay_ui"),  # sub_8002C84/sub_8002CE8/sub_8002CF4/sub_8002D0C - the settings-sync record's init, two flag-test accessors and the bitmask-clear accessor; matched - issue #5, see docs/matching/issue-5-overlay-ui-sync.md
     (0x08002D28, "src/graphics/settings_menu8a2.o", "overlay_ui"),  # sub_8002D28 (flag-set accessor); matched - issue #5
@@ -264,7 +259,8 @@ UNITS = [
     (0x0801B85C, "src/graphics/actor_part_1b85c.o", "graphics"),  # sub_801B85C-sub_801BAF0 (GitHub issue #26): the player-follow child sub_8017600 spawns (sub_801B85C-sub_801B980), a 0x78-byte sprite subclass (sub_801B984-sub_801BAD0) and the modal level-select screen sub_801BAF0; matched. Formerly asm/code_3_2_17_188d0_1b85c.s (retired) - see docs/matching/issue-26-level-select-menu.md
     (0x0801BC28, "src/graphics/actor_part_1b85c.o", "graphics"),  # sub_801BC28 (issue #26, level-select screen constructor) - promoted from NAKED to real C under old_agbcc (plain bitfield stores for the shadow registers) - see docs/matching/issue-24-26-12-naked-retry.md
     (0x0801C040, "src/graphics/actor_part_1b85c.o", "graphics"),  # sub_801C040-sub_801C51C (issue #26): level-select destructor, per-frame update, page arrows, record panel and draw step; matched
-    (0x0801C608, None, "graphics"),  # sub_801C608/sub_801C96C (level-select record loader and main loop) - NAKED transcriptions, byte-correct but not real decompiled C (C reconstructions under #if NON_MATCHING), tracked as parked - issue #26, see docs/matching/issue-26-level-select-menu.md. Real bytes linked from actor_part_1b85c.o
+    (0x0801C608, None, "graphics"),  # sub_801C608 (level-select record loader) - NAKED transcription, byte-correct but not real decompiled C (C reconstruction under #if NON_MATCHING), tracked as parked - issue #26, see docs/matching/issue-26-level-select-menu.md. Real bytes linked from actor_part_1b85c.o
+    (0x0801C96C, "src/graphics/actor_part_1b85c.o", "graphics"),  # sub_801C96C (issue #26, level-select main loop); matched as real C under old_agbcc in the near-miss polish pass - see docs/matching/near-miss-polish.md
     (0x0801CCF8, "src/graphics/actor_part_1b85c.o", "graphics"),  # sub_801CCF8-sub_801CE60 (issue #26): level-select settle loop and left/right cursor moves; matched
     (0x0801CEE0, "src/graphics/actor_part_1cee0.o", "graphics"),  # sub_801CEE0-sub_801D828 (GitHub issue #27): the level-select screen's page turns, exit loops, page-entry refresh, BG1 page strip and BG2 icon-layer constructor; all 25 matched (old_agbcc). Formerly asm/code_3_2_17_188d0_1cee0.s (retired) - see docs/matching/issue-27-level-select-pages.md
     (0x0801DA38, "src/graphics/actor_part_1da38.o", "graphics"),  # sub_801DA38-sub_801DF98 (GitHub issue #28): the level-select screen's zooming BG2 picture (`struct zoom_bg`) and the level entry's methods (`struct level_item`); matched (old_agbcc). Formerly asm/code_3_2_17_188d0_1da38.s (retired) - see docs/matching/issue-28-29-level-select-parts.md

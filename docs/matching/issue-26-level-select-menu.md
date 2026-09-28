@@ -194,3 +194,11 @@ set with the counter). `struct level_save` became u16 bitfields,
 `struct level_info`'s thresholds u32, and `SetAnim` takes an int index;
 with these `sub_801C608` and `sub_801C96C` are each one allocation
 detail away. See [issue-24-26-12-naked-retry.md](issue-24-26-12-naked-retry.md).
+
+## Later pass: near-miss polish
+
+`sub_801C96C` is real C under old_agbcc. The ROM copies the key word
+between the 0x80 test's `ands` and `cmp`. A statement expression puts
+the copy (`k = keys` plus an empty `asm("" : "+r"(k.all))`) at that
+point. `sub_801C608` stays parked: no source form tried makes the ROM's
+spill of `info` appear. See [near-miss-polish.md](near-miss-polish.md).
