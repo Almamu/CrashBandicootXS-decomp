@@ -1017,6 +1017,17 @@ See [docs/matching/near-miss-polish-3.md](../matching/near-miss-polish-3.md).
 
 See [docs/matching/big-naked-retry-2.md](../matching/big-naked-retry-2.md).
 
+### Matched in the fourth mid-range NAKED retry
+
+- `src/graphics/actor_part26c.c` - `sub_8031604` (issue #58, VRAM
+  fill-level meter), both compilers. The fixes that closed its one-row
+  twin `sub_80336CC`: the 0xf mask from `asm("" : "=r"(m) : "0"(0xf))`
+  ANDed as `m & b`, a separate local for the second byte, the second
+  loop's own counter and its header written in ROM order, plus the
+  `"+m"` height reload.
+
+See [docs/matching/mid-range-naked-retry-4.md](../matching/mid-range-naked-retry-4.md).
+
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
@@ -1047,8 +1058,9 @@ plain C didn't converge.
   GitHub issue #17 - action-table handlers whose old_agbcc C (kept under
   `NON_MATCHING`) still differs from the ROM (`sub_8014084` from this
   entry is matched since the third near-miss sweep). In
-  `sub_8014674` gcc threads away a re-test of the part's tag that the
-  ROM keeps. In `sub_8014B54` one reload register is one step off in
+  `sub_8014674` (one halfword off since the fourth mid-range retry,
+  `docs/matching/mid-range-naked-retry-4.md`) the ROM's `beq` for tag
+  0xD jumps past the re-test of 0xD; here it lands on it. In `sub_8014B54` one reload register is one step off in
   gcc's rotation. See `docs/matching/issue-17-0x08012fbc-actor.md`,
   "Third pass".
 - **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/issue-9-naked-retry.md); entry kept for history.** **`sub_8009868`** (`src/graphics/actor_part11d.c`) - another
@@ -1132,13 +1144,6 @@ plain C didn't converge.
 - **`sub_80156EC`** (`src/graphics/actor_part38c.c`) -
   `part+0x38`/`sub_80231BC`-gated mgr-trampoline dispatcher. See
   `docs/matching/issue-18-0x08014f8c-actor.md`.
-- **`sub_8031604`** (`src/graphics/actor_part26c.c`) - VRAM fill-level
-  meter nibble-repack loop (docs/rom_map.md). The `#if NON_MATCHING`
-  draft is 56 halfwords off: the first loop now matches (a `"+m"` asm
-  makes gcc re-read the height after the row-pointer store); the nibble
-  temporaries are still permuted (the ROM copies the hoisted 0xf and
-  ANDs the byte into it, gcc copies the byte). See
-  `docs/matching/late-rom-naked-retry.md`.
 - **`sub_80352AC`** (`src/graphics/actor_part131.c`, GitHub issue #64) -
   the map screen's popup-text asset loader. The issue #64/#65 NAKED
   retry left a near-miss C draft under `#if NON_MATCHING` (old_agbcc):
