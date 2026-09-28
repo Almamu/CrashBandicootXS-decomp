@@ -863,3 +863,11 @@ as a bitfield, and writing the switch cases in the ROM's block order.
 `sub_800D040`, `sub_800E08C` and `sub_800F990` now have near-miss drafts
 and `sub_0800D18C` is still untouched. See
 [issue-12-13-25-naked-retry.md](issue-12-13-25-naked-retry.md).
+
+## Later pass: third near-miss sweep
+
+`sub_800F990` is real C under old_agbcc, the last of the twelve in
+`game_loop49.c`. The count update is written as separate in-place
+steps on a fresh local (`t = (r - 1) << 24; cw &= 0xc7; t >>= 21;
+cw |= t`), which ties each result to the ROM's register. See
+[near-miss-polish-3.md](near-miss-polish-3.md).

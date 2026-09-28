@@ -444,6 +444,11 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   step is a `goto` loop, and a `bitmap` pointer local set right before
   the attempt loop gives the ROM's `sb`. See
   [docs/matching/big-naked-retry.md](../matching/big-naked-retry.md).
+- **Third near-miss sweep:** `sub_800F990` (`game_loop49.c`, the
+  position-wrap/edge-scan advance) and `sub_8010F8C` (`game_loop54.c`,
+  the orbiting-hazard state machine) promoted from NAKED to real C, both
+  under old_agbcc (the files' compiler). See
+  [docs/matching/near-miss-polish-3.md](../matching/near-miss-polish-3.md).
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
@@ -531,8 +536,8 @@ plain C didn't converge.
   (`sub_800EDBC`). See
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md)'s
   Phase 2 writeup.
-- **`sub_800F990`** (the only one of the following still NAKED after
-  the NAKED-retry pass; the other eleven are real C, see Matched) - **`sub_800EEF0` through `sub_800F990`** (12 functions:
+- **Now all matched as real C (the last one, `sub_800F990`, in the third
+  near-miss sweep; see Matched); entry kept for history.** **`sub_800EEF0` through `sub_800F990`** (12 functions:
   `sub_800EEF0`, `sub_800F06C`, `sub_800F1B8`, `sub_800F258`,
   `sub_800F2BC`, `sub_800F368`, `sub_800F4F4`, `sub_800F5B8`,
   `sub_800F6B8`, `sub_800F798`, `sub_800F8E0`, `sub_800F990` -
@@ -905,6 +910,7 @@ plain C didn't converge.
   for the full write-up. **This closes the entire `0x08010D54`
   physics/collision-apply chunk (GitHub issue #12/#14).** *Later pass
   (issue #15 NAKED retry):* `sub_8011114` is real C under old_agbcc (the
-  file moved to `OLD_AGBCC_OBJS`); `sub_8010F8C` stays NAKED with a C
-  draft under `NON_MATCHING`. See
+  file moved to `OLD_AGBCC_OBJS`); `sub_8010F8C` stayed NAKED with a C
+  draft under `NON_MATCHING` until the third near-miss sweep made it
+  real C ([docs/matching/near-miss-polish-3.md](../matching/near-miss-polish-3.md)). See
   [docs/matching/issue-15-16-naked-retry.md](../matching/issue-15-16-naked-retry.md).

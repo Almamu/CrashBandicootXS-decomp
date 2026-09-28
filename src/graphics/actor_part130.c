@@ -1120,23 +1120,18 @@ void sub_8033604(void)
     }
 }
 
-/* NAKED transcription: the P2-side VRAM fill-level meter, a
- * near-identical twin of the already-matched `sub_8031604` (issue #58,
- * `actor_part26c.c`) - same many-high-register (`sl`/`sb`/`r8`)
- * allocation gap documented there in full (the inner nibble-packing
- * loop holds four scratch values live simultaneously through its own
- * internal branches), applied to this cluster's own per-level table
- * (`gStaticData_08169AE8`) and row-pointer array (`gUnknown_03001600`).
- * Mechanical, byte-verified transcription. */
-#if NON_MATCHING
-/* Draft, the one-row twin of `sub_8031604`'s own draft (actor_part26c.c),
- * 29 halfwords off under both compilers. The height re-read (`"+m"` asm
- * after the row-pointer store) and the `d` copy of `dst` match the ROM.
- * What's left: the ROM copies the hoisted 0xf and ANDs each byte into it
- * (`adds r4, r6, #0; ands r4, r0`) where gcc copies the byte, which
- * permutes the nibble temporaries; the ROM starts the reversed row
- * counter from `sum`'s zero register (`adds r2, r5, #0`); and it
- * schedules the second loop's header loads slightly differently. */
+/* The P2-side VRAM fill-level meter, a near-identical twin of
+ * `sub_8031604` (issue #58, `actor_part26c.c`), applied to this
+ * cluster's own per-level table (`gStaticData_08169AE8`) and row-pointer
+ * array (`gUnknown_03001600`). */
+/* The one-row twin of `sub_8031604` (actor_part26c.c). The height is
+ * re-read after the row-pointer store (the `"+m"` asm) and the second
+ * loop has its own counter (sharing `k` makes the first loop's reversed
+ * counter start from a constant instead of `sum`'s zero register). The
+ * row header is written out step by step in the ROM's order, `d` being
+ * a copy of `dst`. In the nibble loop the 0xf mask is an opaque value
+ * ANDed with each byte (`m & b`), so gcc copies the mask rather than the
+ * byte, as the ROM does, and the second byte gets its own local. */
 static inline u32 MeterPx(u32 v)
 {
     u32 r = 0;
@@ -1152,8 +1147,10 @@ void sub_80336CC(void)
     s32 sum = 0;
     s32 off = 0x204;
     s32 k;
+    s32 row_i;
     u32 *dst;
     u8 **rows = (u8 **)gUnknown_03001600;
+    u32 m;
 
     stride = (u32)(gUnknown_030015A0 * gUnknown_030015A4 + 1) >> 1 << 2;
     for (k = 0; k < 1; k++) {
@@ -1162,31 +1159,43 @@ void sub_80336CC(void)
         sum += x;
         off += 4;
         rows[k] = ((u8 *)gStaticData_08169AE8) + off;
+        /* forces the height to be re-read (the ROM's `ldm r1!`) */
         asm("" : "+m"(heights[k]));
         off += stride;
         off += heights[k] << 5;
     }
     gUnknown_030015A8 = 0xFF - sum;
     dst = (u32 *)(((0xFF - sum) << 6) + 0x06008000);
-    for (k = 0; k <= 0; k++) {
-        u8 *src = (u8 *)gUnknown_03001600[k] + stride;
-        s32 n = heights[k];
+    for (row_i = 0; row_i <= 0; row_i++) {
+        u8 *src;
+        u8 *row;
+        s32 *hp;
+        s32 n;
         s32 j;
-        u32 *d = dst;
+        u32 *d;
+
+        row = (u8 *)gUnknown_03001600[row_i];
+        hp = &heights[row_i];
+        d = dst;
+        src = row + stride;
+        n = *hp;
 
         for (j = 0; j < n << 4; j++) {
-            u32 b, p0, p1, p2, p3;
+            u32 b, c, p0, p1, p2, p3;
 
+            /* the 0xf mask without a constant-set register: the mask is
+             * the AND's first operand, as in the ROM */
+            asm("" : "=r"(m) : "0"(0xf));
             b = *src;
-            p0 = b & 0xf;
+            p0 = m & b;
             p0 = MeterPx(p0);
-            p1 = (b >> 4) & 0xf;
+            p1 = (b >> 4) & m;
             src++;
             p1 = MeterPx(p1);
-            b = *src;
-            p2 = b & 0xf;
+            c = *src;
+            p2 = m & c;
             p2 = MeterPx(p2);
-            p3 = (b >> 4) & 0xf;
+            p3 = (c >> 4) & m;
             src++;
             p3 = MeterPx(p3);
             *d++ = p0 | (p1 << 8) | (p2 << 16) | (p3 << 24);
@@ -1194,156 +1203,6 @@ void sub_80336CC(void)
         dst = d;
     }
 }
-#else
-NAKED void sub_80336CC(void)
-{
-    asm(
-    "push {r4, r5, r6, r7, lr}\n\t"
-    "mov r7, sl\n\t"
-    "mov r6, sb\n\t"
-    "mov r5, r8\n\t"
-    "push {r5, r6, r7}\n\t"
-    "sub sp, #8\n\t"
-    "mov r5, #0\n\t"
-    "mov r3, #0x81\n\t"
-    "lsl r3, r3, #2\n\t"
-    "ldr r0, t6cc__080337CC\n\t"
-    "ldr r1, t6cc__080337D0\n\t"
-    "ldr r2, [r0]\n\t"
-    "ldr r0, [r1]\n\t"
-    "mul r0, r2, r0\n\t"
-    "add r0, #1\n\t"
-    "lsr r0, r0, #1\n\t"
-    "lsl r0, r0, #2\n\t"
-    "str r0, [sp, #4]\n\t"
-    "ldr r7, t6cc__080337D4\n\t"
-    "ldr r4, t6cc__080337D8\n\t"
-    "mov r1, sp\n\t"
-    "ldr r6, t6cc__080337DC\n\t"
-    "add r2, r5, #0\n\t"
-    "t6cc__080336FA:\n\t"
-    "add r0, r3, r4\n\t"
-    "ldr r0, [r0]\n\t"
-    "str r0, [r1]\n\t"
-    "add r5, r5, r0\n\t"
-    "add r3, #4\n\t"
-    "add r0, r3, r4\n\t"
-    "stm r6!, {r0}\n\t"
-    "ldr r0, [sp, #4]\n\t"
-    "add r3, r3, r0\n\t"
-    "ldm r1!, {r0}\n\t"
-    "lsl r0, r0, #5\n\t"
-    "add r3, r3, r0\n\t"
-    "sub r2, #1\n\t"
-    "cmp r2, #0\n\t"
-    "bge t6cc__080336FA\n\t"
-    "mov r0, #0xff\n\t"
-    "sub r0, r0, r5\n\t"
-    "str r0, [r7]\n\t"
-    "lsl r0, r0, #6\n\t"
-    "ldr r1, t6cc__080337E0\n\t"
-    "add r3, r0, r1\n\t"
-    "mov r2, #0\n\t"
-    "t6cc__08033726:\n\t"
-    "lsl r1, r2, #2\n\t"
-    "ldr r4, t6cc__080337DC\n\t"
-    "add r0, r1, r4\n\t"
-    "ldr r0, [r0]\n\t"
-    "add r1, sp\n\t"
-    "mov sb, r3\n\t"
-    "ldr r3, [sp, #4]\n\t"
-    "add r5, r0, r3\n\t"
-    "ldr r1, [r1]\n\t"
-    "mov r8, r1\n\t"
-    "mov r4, #0\n\t"
-    "mov ip, r4\n\t"
-    "lsl r0, r1, #4\n\t"
-    "add r2, #1\n\t"
-    "mov sl, r2\n\t"
-    "cmp ip, r0\n\t"
-    "bge t6cc__080337B4\n\t"
-    "mov r6, #0xf\n\t"
-    "mov r7, #0x10\n\t"
-    "t6cc__0803374C:\n\t"
-    "ldrb r0, [r5]\n\t"
-    "add r4, r6, #0\n\t"
-    "and r4, r0\n\t"
-    "mov r1, #0\n\t"
-    "cmp r4, #0\n\t"
-    "beq t6cc__0803375C\n\t"
-    "add r1, r7, #0\n\t"
-    "orr r1, r4\n\t"
-    "t6cc__0803375C:\n\t"
-    "add r4, r1, #0\n\t"
-    "lsr r0, r0, #4\n\t"
-    "and r0, r6\n\t"
-    "add r5, #1\n\t"
-    "mov r1, #0\n\t"
-    "cmp r0, #0\n\t"
-    "beq t6cc__0803376E\n\t"
-    "add r1, r7, #0\n\t"
-    "orr r1, r0\n\t"
-    "t6cc__0803376E:\n\t"
-    "add r0, r1, #0\n\t"
-    "ldrb r3, [r5]\n\t"
-    "add r1, r6, #0\n\t"
-    "and r1, r3\n\t"
-    "mov r2, #0\n\t"
-    "cmp r1, #0\n\t"
-    "beq t6cc__08033780\n\t"
-    "add r2, r7, #0\n\t"
-    "orr r2, r1\n\t"
-    "t6cc__08033780:\n\t"
-    "add r1, r2, #0\n\t"
-    "lsr r3, r3, #4\n\t"
-    "and r3, r6\n\t"
-    "add r5, #1\n\t"
-    "mov r2, #0\n\t"
-    "cmp r3, #0\n\t"
-    "beq t6cc__08033792\n\t"
-    "add r2, r7, #0\n\t"
-    "orr r2, r3\n\t"
-    "t6cc__08033792:\n\t"
-    "lsl r0, r0, #8\n\t"
-    "orr r0, r4\n\t"
-    "lsl r1, r1, #0x10\n\t"
-    "orr r1, r0\n\t"
-    "lsl r0, r2, #0x18\n\t"
-    "orr r0, r1\n\t"
-    "mov r1, sb\n\t"
-    "add r1, #4\n\t"
-    "mov sb, r1\n\t"
-    "sub r1, #4\n\t"
-    "stm r1!, {r0}\n\t"
-    "mov r3, #1\n\t"
-    "add ip, r3\n\t"
-    "mov r4, r8\n\t"
-    "lsl r0, r4, #4\n\t"
-    "cmp ip, r0\n\t"
-    "blt t6cc__0803374C\n\t"
-    "t6cc__080337B4:\n\t"
-    "mov r3, sb\n\t"
-    "mov r2, sl\n\t"
-    "cmp r2, #0\n\t"
-    "ble t6cc__08033726\n\t"
-    "add sp, #8\n\t"
-    "pop {r3, r4, r5}\n\t"
-    "mov r8, r3\n\t"
-    "mov sb, r4\n\t"
-    "mov sl, r5\n\t"
-    "pop {r4, r5, r6, r7}\n\t"
-    "pop {r0}\n\t"
-    "bx r0\n\t"
-    ".align 2, 0\n"
-    "t6cc__080337CC: .4byte gUnknown_030015A0\n"
-    "t6cc__080337D0: .4byte gUnknown_030015A4\n"
-    "t6cc__080337D4: .4byte gUnknown_030015A8\n"
-    "t6cc__080337D8: .4byte gStaticData_08169AE8\n"
-    "t6cc__080337DC: .4byte gUnknown_03001600\n"
-    "t6cc__080337E0: .4byte 0x06008000\n"
-    );
-}
-#endif
 
 /* Destructor: frees the singleton object. */
 void sub_80337E4(void)

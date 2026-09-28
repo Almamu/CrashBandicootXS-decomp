@@ -178,18 +178,17 @@ and [graphics_loading.md](./graphics_loading.md).
   level-select constructor) promoted from NAKED to real C, both under
   old_agbcc. See
   [docs/matching/issue-24-26-12-naked-retry.md](../matching/issue-24-26-12-naked-retry.md).
+- **Third near-miss sweep:** `sub_801C608` (`actor_part_1b85c.c`,
+  level-select record loader) promoted from NAKED to real C under
+  old_agbcc: the ROM's stack-spilled second copy of the record pointer
+  is a separate local that `info` copies. See
+  [docs/matching/near-miss-polish-3.md](../matching/near-miss-polish-3.md).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
 ## Parked - NAKED asm transcriptions (byte-correct, not decompiled C)
 
-- **`sub_801C608`** (`src/graphics/actor_part_1b85c.c`, issue #26) - the
-  level-select screen's record loader. Under old_agbcc the C draft under
-  `#if NON_MATCHING` is one allocation detail away (the ROM also spills
-  `info`). See
-  [issue-24-26-12-naked-retry.md](../matching/issue-24-26-12-naked-retry.md)
-  and [near-miss-polish.md](../matching/near-miss-polish.md).
 - **`sub_801A114`** (`src/graphics/actor_part_1967c.c`, issue #24) -
   the `gStaticData_087E490C` controller's per-frame update. C draft under
   `#if NON_MATCHING`; register allocation differs (`self`/`other`/the

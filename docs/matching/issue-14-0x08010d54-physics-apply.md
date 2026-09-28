@@ -829,3 +829,11 @@ by raw offset is `struct orbit_part` in the new `include/orbit_part.h`.
 the first and last under `NON_MATCHING`). Details and techniques in
 [issue-15-16-naked-retry.md](issue-15-16-naked-retry.md).
 
+
+## Later pass: third near-miss sweep
+
+`sub_8010F8C` is real C under old_agbcc. Mode 2 re-reads the timer and
+the id through `self` without `volatile`, which gives the ROM's
+loads-at-the-compare, and two extra references on each velocity local
+settle the r0/r1 choice. See
+[near-miss-polish-3.md](near-miss-polish-3.md).

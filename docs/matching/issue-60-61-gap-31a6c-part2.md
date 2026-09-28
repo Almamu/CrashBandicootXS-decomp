@@ -251,3 +251,11 @@ noted above came from a reused `self` pseudo (`sub_8033470`) and the
 tile-clear loop's form (`sub_8033604`). `sub_80330FC` and `sub_80336CC`
 stay NAKED with `#if NON_MATCHING` drafts. See
 [issue-58-61-naked-retry.md](issue-58-61-naked-retry.md).
+
+## Later pass: third near-miss sweep
+
+`sub_80336CC` is real C (matches under both compilers). The 0xf mask
+is an opaque value (`asm("" : "=r"(m) : "0"(0xf))`) ANDed as `m & b`,
+the second byte of each pair has its own local, the second loop has its
+own counter, and the row header is written step by step in ROM order.
+See [near-miss-polish-3.md](near-miss-polish-3.md).
