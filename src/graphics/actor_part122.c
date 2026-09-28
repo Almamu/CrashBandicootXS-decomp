@@ -30,307 +30,162 @@
  * repeats* those three helpers' own instruction sequences inline
  * (confirmed by the `bl` targets: `sub_800B838`/`sub_800B704`
  * directly, never `sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC`
- * themselves) - so the C reconstruction below mirrors that same
- * inlining rather than calling the wrapper functions, to keep every
- * `bl` target identical to the ROM's own. */
+ * themselves) - so the C below inlines them (SetModeA/SetModeB/SetMode).
+ *
+ * The whole file is built with old_agbcc (issue #10 NAKED retry,
+ * docs/matching/issue-10-naked-retry.md). Under it `sub_800C6A8` is
+ * plain C, and the three bounds setters below match without the
+ * register pins and `asm volatile` barriers the current compiler
+ * needed. In `sub_800C6A8`:
+ *  - The groups the ROM keeps apart ({1,3,17} vs {6,9,10,11}) are
+ *    separate cases; reload picks a different scratch register for the
+ *    trigger's `ldrsh` in each, so cross-jumping can't merge them.
+ *  - That scratch register is picked round-robin in insn order, so the
+ *    {4,14,16} keyframe tail has to be written out in both branches
+ *    (cross-jumping then merges the copies): with a single shared tail
+ *    the else branch's `ldrsh` gets r4 instead of the ROM's r1.
+ *  - State 5's velocity stores go through inline setters, which puts
+ *    the shared 0 in r2 before the first store. */
 
-extern void sub_800B704(void *selfArg, void *arg1, s32 index);
-extern void sub_800B838(void *selfArg, void *arg1, s32 index);
-extern s32 sub_803AD84(void *addr, void *arg1, void *tableEntry, void *fn);
+#include "part_ctrl.h"
 
-/* `self+0x74` is the state selector (1-18 valid, same range-check
- * shape as `sub_800B8DC`'s own 18-state machine - see the doc's "same
- * comparison/field shape... a general-purpose 'stateful widget'
- * convention" note). Every case body's own `bl` targets are
- * `sub_800B838`/`sub_800B704`/`sub_803AD84` directly - never
- * `sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC` themselves - because each
- * case *manually repeats* those three helpers' own instruction
- * sequences inline rather than calling them (confirmed by the `bl`
- * targets seen in the ROM disassembly). Several case groups (states
- * {1,3,17}, {6,9,10,11}) compile the *exact same* inlined
- * `sub_800C8CC`-equivalent sequence at *different*, unmerged
- * addresses - a real, deliberate ROM shape (evidenced by the jump
- * table's own distinct target addresses for each group), not
- * something a real-C switch reconstruction reproduces safely: this
- * project's own `sub_800C18C`/`sub_800C314` investigations (see
- * `docs/matching/issue-9-10-0x0800b8dc-graphics.md`'s Phase 3 leaves
- * section) already document this exact agbcc build's cross-jump/
- * tail-merging pass collapsing textually-identical case bodies like
- * these into one shared block, which would silently produce
- * ROM-incorrect code here. Combined with the same `self`/`owner`
- * multi-field-liveness register-pressure shape this whole ROM
- * neighborhood's other dispatchers (`sub_800B8DC`/`sub_800BD48`/
- * `sub_800C074`/`sub_800C244`/`sub_800C40C`/`sub_800C5D4`) already
- * establish as resistant, this was transcribed directly as NAKED
- * asm rather than attempting real C. */
-NAKED void sub_800C6A8(void *self, s32 state)
+extern void sub_800B704(struct part_ctrl *self, struct ctrl_target *target, s32 mode);
+extern void sub_800B838(struct part_ctrl *self, struct ctrl_target *target, s32 mode);
+extern s32 sub_803AD84(void *self, struct ctrl_target *target, s32 arg, void *fn);
+
+static inline void SetModeA(struct part_ctrl *self, s32 mode)
 {
-    asm(
-        "push {r4, r5, lr}\n\t"
-        "add r5, r0, #0\n\t"
-        "str r1, [r5, #0x74]\n\t"
-        "sub r0, r1, #1\n\t"
-        "cmp r0, #0x11\n\t"
-        "bls 1f\n\t"
-        "b 16f\n\t"
-    "1:\n\t"
-        "lsl r0, r0, #2\n\t"
-        "ldr r1, =2f\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov pc, r0\n\t"
-        ".pool\n\t"
-    "2:\n\t"
-        ".4byte 12f\n\t" /* case 0 (state 1) */
-        ".4byte 7f\n\t"  /* case 1 (state 2) */
-        ".4byte 12f\n\t" /* case 2 (state 3) */
-        ".4byte 9f\n\t"  /* case 3 (state 4) */
-        ".4byte 4f\n\t"  /* case 4 (state 5) */
-        ".4byte 6f\n\t"  /* case 5 (state 6) */
-        ".4byte 15f\n\t" /* case 6 (state 7) */
-        ".4byte 13f\n\t" /* case 7 (state 8) */
-        ".4byte 6f\n\t"  /* case 8 (state 9) */
-        ".4byte 6f\n\t"  /* case 9 (state 10) */
-        ".4byte 6f\n\t"  /* case 10 (state 11) */
-        ".4byte 16f\n\t" /* case 11 (state 12) */
-        ".4byte 8f\n\t"  /* case 12 (state 13) */
-        ".4byte 9f\n\t"  /* case 13 (state 14) */
-        ".4byte 7f\n\t"  /* case 14 (state 15) */
-        ".4byte 9f\n\t"  /* case 15 (state 16) */
-        ".4byte 12f\n\t" /* case 16 (state 17) */
-        ".4byte 8f\n\t"  /* case 17 (state 18) */
-    "4:\n\t"
-        "ldr r1, [r5, #0x70]\n\t"
-        "ldr r0, =0xFFFFFE80\n\t"
-        "mov r2, #0\n\t"
-        "str r0, [r1, #0x60]\n\t"
-        "str r0, [r1, #0x48]\n\t"
-        "str r2, [r1, #0x4c]\n\t"
-        "str r0, [r1, #0x50]\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #3\n\t"
-        "str r0, [r1, #0x64]\n\t"
-        "str r0, [r1, #0x54]\n\t"
-        "str r2, [r1, #0x58]\n\t"
-        "str r0, [r1, #0x5c]\n\t"
-        "mov r0, #0x80\n\t"
-        "ldrb r2, [r1, #0xc]\n\t"
-        "orr r0, r2\n\t"
-        "strb r0, [r1, #0xc]\n\t"
-        "b 16f\n\t"
-        ".pool\n\t"
-    "6:\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [r5, #0x68]\n\t"
-        "ldr r3, [r5, #0xc]\n\t"
-        "add r3, #0x50\n\t"
-        "mov r4, #0\n\t"
-        "ldrsh r0, [r3, r4]\n\t"
-        "b 14f\n\t"
-    "7:\n\t"
-        "mov r0, #1\n\t"
-        "str r0, [r5, #0x78]\n\t"
-        "ldr r1, [r5, #0x70]\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r2, #1\n\t"
-        "bl sub_800B838\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [r5, #0x68]\n\t"
-        "ldr r3, [r5, #0xc]\n\t"
-        "add r3, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r3, r1]\n\t"
-        "b 14f\n\t"
-    "8:\n\t"
-        "mov r0, #1\n\t"
-        "str r0, [r5, #0x78]\n\t"
-        "ldr r1, [r5, #0x70]\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r2, #1\n\t"
-        "bl sub_800B838\n\t"
-    "9:\n\t"
-        "ldr r1, [r5, #0x38]\n\t"
-        "ldr r0, [r5, #0x30]\n\t"
-        "cmp r1, r0\n\t"
-        "blt 10f\n\t"
-        "mov r0, #4\n\t"
-        "str r0, [r5, #0x68]\n\t"
-        "ldr r3, [r5, #0xc]\n\t"
-        "add r3, #0x50\n\t"
-        "mov r2, #0\n\t"
-        "ldrsh r0, [r3, r2]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r1, [r5, #0x70]\n\t"
-        "add r2, r5, #0\n\t"
-        "add r2, #0x84\n\t"
-        "ldr r2, [r2]\n\t"
-        "ldr r2, [r2, #0x10]\n\t"
-        "ldr r3, [r3, #4]\n\t"
-        "bl sub_803AD84\n\t"
-        "b 11f\n\t"
-    "10:\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [r5, #0x68]\n\t"
-        "ldr r3, [r5, #0xc]\n\t"
-        "add r3, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r3, r1]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r1, [r5, #0x70]\n\t"
-        "add r2, r5, #0\n\t"
-        "add r2, #0x84\n\t"
-        "ldr r2, [r2]\n\t"
-        "ldr r2, [r2]\n\t"
-        "ldr r3, [r3, #4]\n\t"
-        "bl sub_803AD84\n\t"
-        "ldr r0, [r5, #0x6c]\n\t"
-        "cmp r0, #0x1b\n\t"
-        "bne 16f\n\t"
-    "11:\n\t"
-        "ldr r1, [r5, #0x70]\n\t"
-        "ldr r0, [r1, #0x20]\n\t"
-        "add r3, r1, #0\n\t"
-        "add r3, #0x2d\n\t"
-        "ldr r2, [r0]\n\t"
-        "ldrb r4, [r3]\n\t"
-        "lsl r0, r4, #3\n\t"
-        "sub r0, r0, r4\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r2\n\t"
-        "ldrb r0, [r0, #0x16]\n\t"
-        "sub r0, #1\n\t"
-        "str r0, [r1, #0x30]\n\t"
-        "b 16f\n\t"
-    "12:\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [r5, #0x68]\n\t"
-        "ldr r3, [r5, #0xc]\n\t"
-        "add r3, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r3, r1]\n\t"
-        "b 14f\n\t"
-    "13:\n\t"
-        "mov r4, #3\n\t"
-        "str r4, [r5, #0x78]\n\t"
-        "ldr r1, [r5, #0x70]\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r2, #3\n\t"
-        "bl sub_800B838\n\t"
-        "str r4, [r5, #0x7c]\n\t"
-        "ldr r1, [r5, #0x70]\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r2, #3\n\t"
-        "bl sub_800B704\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [r5, #0x68]\n\t"
-        "ldr r3, [r5, #0xc]\n\t"
-        "add r3, #0x50\n\t"
-        "mov r2, #0\n\t"
-        "ldrsh r0, [r3, r2]\n\t"
-    "14:\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r1, [r5, #0x70]\n\t"
-        "add r2, r5, #0\n\t"
-        "add r2, #0x84\n\t"
-        "ldr r2, [r2]\n\t"
-        "ldr r2, [r2]\n\t"
-        "ldr r3, [r3, #4]\n\t"
-        "bl sub_803AD84\n\t"
-        "b 16f\n\t"
-    "15:\n\t"
-        "mov r0, #2\n\t"
-        "str r0, [r5, #0x78]\n\t"
-        "ldr r1, [r5, #0x70]\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r2, #2\n\t"
-        "bl sub_800B838\n\t"
-        "mov r4, #0\n\t"
-        "str r4, [r5, #0x68]\n\t"
-        "ldr r3, [r5, #0xc]\n\t"
-        "add r3, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r3, r1]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r1, [r5, #0x70]\n\t"
-        "add r2, r5, #0\n\t"
-        "add r2, #0x84\n\t"
-        "ldr r2, [r2]\n\t"
-        "ldr r2, [r2]\n\t"
-        "ldr r3, [r3, #4]\n\t"
-        "bl sub_803AD84\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x80\n\t"
-        "str r4, [r0]\n\t"
-    "16:\n\t"
-        "ldr r0, [r5, #0x70]\n\t"
-        "ldr r1, [r0]\n\t"
-        "str r1, [r5, #0x60]\n\t"
-        "ldr r0, [r0, #4]\n\t"
-        "str r0, [r5, #0x64]\n\t"
-        "pop {r4, r5}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".pool"
-    );
+    self->modeA = mode;
+    sub_800B704(self, self->target, mode);
 }
 
-/* Sets `self`'s X-axis homing bounds (`self+0x10`/`self+0x14`) to
- * `owner`'s current X position +/- `radius` (Q8.8, `radius << 8`),
- * and caches `p2`/`p3` into `self+0x58`/`self+0x5c`. */
-void sub_800C860(void *selfArg, s32 radius, s32 p2, s32 p3)
+static inline void SetModeB(struct part_ctrl *self, s32 mode)
 {
-    u8 *self = selfArg;
-    u8 *owner = *(u8 **)(self + 0x70);
-    register s32 x asm("r4");
-
-    x = *(s32 *)owner;
-    asm volatile("" : "+r" (x));
-    *(s32 *)(self + 0x10) = x - (radius << 8);
-
-    x = *(s32 *)owner;
-    asm volatile("" : "+r" (x));
-    *(s32 *)(self + 0x14) = x + (radius << 8);
-
-    *(s32 *)(self + 0x5c) = p3;
-    *(s32 *)(self + 0x58) = p2;
+    self->modeB = mode;
+    sub_800B838(self, self->target, mode);
 }
 
-/* Same shape as `sub_800C860`, Y axis: `self+0x18` (high bound) /
- * `self+0x1c` (low bound) from `owner+4`, plus the same
- * `self+0x58`/`self+0x5c` cache. */
-void sub_800C87C(void *selfArg, s32 radius, s32 p2, s32 p3)
+static inline void SetMode(struct part_ctrl *self, s32 mode)
 {
-    u8 *self = selfArg;
-    u8 *owner = *(u8 **)(self + 0x70);
-    register s32 y asm("r4");
+    struct part_method *m;
 
-    y = *(s32 *)(owner + 4);
-    asm volatile("" : "+r" (y));
-    *(s32 *)(self + 0x1c) = y - (radius << 8);
-
-    y = *(s32 *)(owner + 4);
-    asm volatile("" : "+r" (y));
-    *(s32 *)(self + 0x18) = y + (radius << 8);
-
-    *(s32 *)(self + 0x5c) = p3;
-    *(s32 *)(self + 0x58) = p2;
+    self->mode = mode;
+    m = &self->anchor->trigger;
+    sub_803AD84((u8 *)self + m->thisOffset, self->target, self->anims[mode], m->fn);
 }
 
-/* Same X-axis bounds computation as `sub_800C860`'s first half, no
- * `p2`/`p3` cache. */
-void sub_800C898(void *selfArg, s32 radius)
+static inline void SetVelX(struct ctrl_target *t, s32 v, s32 w)
 {
-    u8 *self = selfArg;
-    u8 *owner = *(u8 **)(self + 0x70);
-    register s32 x asm("r2");
-
-    x = *(s32 *)owner;
-    asm volatile("" : "+r" (x));
-    *(s32 *)(self + 0x10) = x - (radius << 8);
-
-    x = *(s32 *)owner;
-    asm volatile("" : "+r" (x));
-    *(s32 *)(self + 0x14) = x + (radius << 8);
+    t->speedX = v;
+    t->velA[0] = v;
+    t->velA[1] = w;
+    t->velA[2] = v;
 }
 
+static inline void SetVelY(struct ctrl_target *t, s32 v, s32 w)
+{
+    t->speedY = v;
+    t->velB[0] = v;
+    t->velB[1] = w;
+    t->velB[2] = v;
+}
+
+/* `self->state` update (1-18 valid, same shape as sub_800B8DC's state
+ * machine), then latches the target's position into baseX/baseY. */
+void sub_800C6A8(struct part_ctrl *self, s32 state)
+{
+    self->state = state;
+    switch (state) {
+    case 5:
+        {
+            struct ctrl_target *target = self->target;
+
+            SetVelX(target, -0x180, 0);
+            SetVelY(target, 0x400, 0);
+            target->flag7 = 1;
+        }
+        break;
+    case 6:
+    case 9:
+    case 10:
+    case 11:
+        SetMode(self, 0);
+        break;
+    case 2:
+    case 15:
+        SetModeB(self, 1);
+        SetMode(self, 0);
+        break;
+    case 13:
+    case 18:
+        SetModeB(self, 1);
+    case 4:
+    case 14:
+    case 16:
+        if (self->unk_38 >= self->unk_30) {
+            SetMode(self, 4);
+            {
+                struct ctrl_target *target = self->target;
+                target->tick = (*target->keyframes)[target->frame].steps - 1;
+            }
+        } else {
+            SetMode(self, 0);
+            if (self->kind == 0x1b) {
+                struct ctrl_target *target = self->target;
+                target->tick = (*target->keyframes)[target->frame].steps - 1;
+            }
+        }
+        break;
+    case 1:
+    case 3:
+    case 17:
+        SetMode(self, 0);
+        break;
+    case 8:
+        SetModeB(self, 3);
+        SetModeA(self, 3);
+        SetMode(self, 0);
+        break;
+    case 7:
+        SetModeB(self, 2);
+        SetMode(self, 0);
+        self->counter = 0;
+        break;
+    case 12:
+        break;
+    }
+    self->baseX = self->target->x;
+    self->baseY = self->target->y;
+}
+/* The ROM zero-pads to the next function. */
+asm(".align 2, 0");
+
+/* Sets the X homing bounds to the target's x +/- `radius` (Q8) and
+ * caches the homing speed pair. */
+void sub_800C860(struct part_ctrl *self, s32 radius, s32 p2, s32 p3)
+{
+    s32 x = self->target->x;
+    self->rangeX[0] = x - (radius << 8);
+    self->rangeX[1] = self->target->x + (radius << 8);
+    self->accel = p3;
+    self->speed = p2;
+}
+
+/* Y-axis version of `sub_800C860`. */
+void sub_800C87C(struct part_ctrl *self, s32 radius, s32 p2, s32 p3)
+{
+    s32 y = self->target->y;
+    self->rangeY[1] = y - (radius << 8);
+    self->rangeY[0] = self->target->y + (radius << 8);
+    self->accel = p3;
+    self->speed = p2;
+}
+
+/* `sub_800C860`'s bounds without the speed pair. */
+void sub_800C898(struct part_ctrl *self, s32 radius)
+{
+    s32 x = self->target->x;
+    self->rangeX[0] = x - (radius << 8);
+    self->rangeX[1] = self->target->x + (radius << 8);
+}
 asm(".align 2, 0");

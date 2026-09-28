@@ -57,6 +57,55 @@
  * report` (no warnings) and `rm -rf build crashbandicootxs.elf
  * crashbandicootxs.gba crashbandicootxs.map && make compare`
  * (`crashbandicootxs.gba: La suma coincide`). */
+#if NON_MATCHING
+/* Near-miss C drafts (issue #10 NAKED retry), same under both
+ * compilers. The phase bias has to go through an inline parameter
+ * (Wave) to keep the ROM's `phase + 0xFFFFFF00` literal instead of a
+ * folded `+ 0x100`. What's left:
+ *  - sub_800C8F8 (13 hw): the ROM multiplies into a fresh register
+ *    (`mov r2, r1; mul r2, r0`) and loads the target into r1; this
+ *    multiplies in place and puts the target in r2.
+ *  - sub_800C940 (10 hw) / sub_800C97C (27 hw, 8 bytes short): the ROM
+ *    saves one callee-saved register it never uses (r5 in C940 via a
+ *    4-register push, r8 in C97C), and swaps the target/table
+ *    registers. Some extra long-lived pseudo that later dies - not found. */
+#include "part_ctrl.h"
+
+extern s16 gStaticData_0816A820[];
+extern u32 gUnknown_0300082C;
+extern s32 sub_8037E54(s32 value, s32 divisor);
+
+static inline s16 Wave(s16 *table, s32 t, s32 phase)
+{
+    return table[(t - phase) & 0xff];
+}
+
+void sub_800C8F8(struct part_ctrl *self)
+{
+    s16 *table = gStaticData_0816A820;
+    s32 t = sub_8037E54(gUnknown_0300082C << 8, self->period);
+    s32 v = Wave(table, t, self->phase - 0x100) * self->amplitude;
+
+    self->target->x = self->baseX + v;
+}
+
+void sub_800C940(struct part_ctrl *self)
+{
+    struct ctrl_target *target = self->target;
+    s16 *table = gStaticData_0816A820;
+
+    target->y = self->baseY + Wave(table, gUnknown_0300082C >> 1, self->phase - 0x100) * self->amplitude;
+}
+
+void sub_800C97C(struct part_ctrl *self)
+{
+    struct ctrl_target *target = self->target;
+    s16 *table = gStaticData_0816A820;
+    s32 t = sub_8037E54(gUnknown_0300082C << 8, self->period);
+
+    target->y = self->baseY + Wave(table, t, self->phase - 0x100) * self->amplitude;
+}
+#else
 NAKED void sub_800C8F8(void *self)
 {
     asm(
@@ -166,6 +215,7 @@ NAKED void sub_800C97C(void *self)
         ".pool"
     );
 }
+#endif
 
 /* `sub_800B8DC` state 18's floating-popup spawner
  * (`sub_800C9C8(0x1D, 0, 0, 0x2B, 0, owner)`, per the Phase 1 doc) -
