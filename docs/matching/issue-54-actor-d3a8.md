@@ -349,3 +349,12 @@ Every function in this issue's original 25-function range
 
 See [docs/status/actor.md](../status/actor.md) for the running
 matched/parked/left-raw list this entry feeds into.
+
+## Later pass: issue #51/#54 NAKED retry
+
+`sub_802D3A8`, `sub_802D9A8`, `sub_802DA68` and `sub_802E058` are now
+real C; `sub_802D7B0`, `sub_802DD9C` and `sub_802DE70` stay NAKED with
+near-miss drafts under `#if NON_MATCHING`. The r7 story above was not
+the blocker for `sub_802D3A8`: with the table offsets in their own
+locals and a `goto` into the shared Y/Z easing it matches with no pins
+at all. See [issue-51-54-naked-retry.md](issue-51-54-naked-retry.md).

@@ -140,10 +140,12 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/actor_part12.o \
                   $(C_BUILDDIR)/graphics/actor_part120.o \
                   $(C_BUILDDIR)/graphics/actor_part122.o \
+                  $(C_BUILDDIR)/graphics/actor_part127.o \
                   $(C_BUILDDIR)/graphics/actor_part128.o \
                   $(C_BUILDDIR)/graphics/actor_part27a.o \
                   $(C_BUILDDIR)/graphics/actor_part3.o \
                   $(C_BUILDDIR)/graphics/actor_part7.o \
+                  $(C_BUILDDIR)/graphics/actor_part74.o \
                   $(C_BUILDDIR)/graphics/actor_part7b.o \
                   $(C_BUILDDIR)/graphics/actor_part81.o \
                   $(C_BUILDDIR)/graphics/actor_part83.o \
@@ -206,6 +208,16 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/system/game_loop8.o
 $(OLD_AGBCC_OBJS): CC1 := $(CC1_OLD)
 $(OLD_AGBCC_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1FLAGS))
+
+# Objects built with -fno-strength-reduce on top of their compiler's -O2.
+# graphics_loading_35780: sub_8036600's first loop keeps its up-counting
+# `i` (with strength reduction on, gcc reverses a loop whose counter only
+# feeds the exit test), and the flag leaves every other real-C function in
+# the file byte-identical. It is NOT a global property: adding it to all
+# old_agbcc objects breaks matched functions in 11 other files. See
+# docs/matching/per-file-flags-investigation.md.
+NO_STRENGTH_REDUCE_OBJS := $(C_BUILDDIR)/graphics/graphics_loading_35780.o
+$(NO_STRENGTH_REDUCE_OBJS): CC1FLAGS += -fno-strength-reduce
 
 # GAX2's bundled libgcc2.c code (__divdi3/__udivdi3/__muldi3) was built
 # without -mthumb-interwork: its functions are the only ones in the ROM

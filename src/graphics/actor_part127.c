@@ -1,4 +1,5 @@
 #include "core.h"
+#include "actor_self.h"
 
 /* Continues the `InitActorPart`/`gUnknown_0300148x`-`gUnknown_030014Bx`
  * cluster already established in `src/graphics/actor_part107.c`
@@ -10,7 +11,13 @@
  * `actor_part107.c`'s own range - the start of this whole 40KB "actor
  * zone" a scoping investigation found still raw, before issue #52's
  * `actor_part19.c`. `docs/rom_map.md` had already read part of this
- * cluster from disassembly alone. */
+ * cluster from disassembly alone.
+ *
+ * Built with old_agbcc: `sub_802BAD0` (the `1` mask materialized before
+ * the `ldrh` it is ANDed with) and `sub_802B5B4`/`sub_802B864` (operand
+ * order of their loads and multiplies) only match under it, and every
+ * other function here matches under both compilers - see
+ * docs/matching/issue-51-54-naked-retry.md. */
 
 extern void *gUnknown_030012C0;
 extern void *gUnknown_030012BC;
@@ -44,514 +51,192 @@ extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
 extern u8 gStaticData_0817A728[];
 extern u8 gStaticData_0817A748[];
 
-/* `docs/rom_map.md`'s "sub_802B364" (740 B, vtable-dispatched at an
- * untraced slot of the already-labeled `gStaticData_087E4E54` record):
- * manages two independent countdown timers (`gUnknown_0300148C`/
- * `gUnknown_0300149C`) - a respawn/reset countdown, resetting fields
- * and doing position math on expiry. Tail-calls `sub_802BC68` (the
- * accumulator-drain/reward-dispenser from `actor_part107.c`) first,
- * then drives a `gStaticData_0817A6B8` stride-8 keyframe-table lookup
- * (the same categorical r7-hazard shape already NAKED-parked
- * elsewhere in this codebase, e.g. `sub_802C208`) feeding into a
- * `sub_803AD84` trampoline dispatch, followed by a `gUnknown_030007E0`
- * input-gated position-easing block. Semantics fully understood;
- * NAKED-transcribed per this project's established escape hatch for
- * this register-pressure family - see
- * `docs/matching/issue-52-issue-53-gap-b364.md`. */
-NAKED void sub_802B364(void *selfArg)
+extern s32 gUnknown_0300148C;
+extern s32 gUnknown_03001498;
+extern u8 gUnknown_030014A1;
+extern struct actor_pmf gStaticData_0817A6B8[];
+extern void (*gUnknown_03000874)(void *dst, u8 *frame);
+extern void *gUnknown_030014B0[2];     // the two VRAM tile buffers
+extern s32 gUnknown_030014A8;          // which buffer holds the current frame
+extern u8 *gUnknown_030014AC;          // the frame last uploaded
+
+/* The camera object `self+0x30` points at. */
+struct cam_ref {
+    u8 unk_00[0x10];
+    s32 depth;      // 0x10 - the depth at which sprites draw unscaled
+};
+
+extern s32 GetAnimFrameBaseOffset(void *self);
+extern u32 GetSpriteShapeSizeBits(u8 *frame);
+extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority);
+extern u8 sub_8029794(void);
+extern s32 sub_8029B2C(void);
+extern void sub_8029D8C(s32 x, s32 y);
+extern s32 sub_8029E98(void);
+extern s32 sub_8029EB4(void);
+extern void *sub_802B1A8(s32 x, s32 y, s32 z, s32 tier);
+extern void sub_802D3A8(void *obj, s32 x, s32 y, s32 z);
+extern s32 sub_802D4EC(void *obj);
+
+ACTOR_CALL_VIA_ALIASES
+asm(".set __divsi3, sub_803ADB4");
+
+static inline s32 Abs(s32 x)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "bl sub_802BC68\n\t"
-        "ldr r1, 2f\n\t"
-        "ldr r0, [r1]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 1f\n\t"
-        "sub r5, r0, #1\n\t"
-        "str r5, [r1]\n\t"
-        "cmp r5, #0\n\t"
-        "bne 1f\n\t"
-        "ldr r1, 3f\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r1]\n\t"
-        "mov r0, #0\n\t"
-        "bl sub_8029BAC\n\t"
-        "mov r0, #0xa\n\t"
-        "str r0, [r4, #0x28]\n\t"
-        "str r5, [r4, #0x44]\n\t"
-        "str r0, [r4, #0xc]\n\t"
-        "ldr r0, [r4]\n\t"
-        "add r0, #0x78\n\t"
-        "ldrh r0, [r0]\n\t"
-        "mov r1, #0\n\t"
-        "strh r0, [r4, #0x10]\n\t"
-        "strb r1, [r4, #0x12]\n\t"
-        "str r5, [r4, #8]\n\t"
-    "1:\n\t"
-        "ldr r2, 4f\n\t"
-        "ldr r0, [r2]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 7f\n\t"
-        "sub r1, r0, #1\n\t"
-        "str r1, [r2]\n\t"
-        "cmp r1, #0\n\t"
-        "beq 7f\n\t"
-        "ldr r0, 5f\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 7f\n\t"
-        "ldr r0, 6f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0, #0x78]\n\t"
-        "cmp r0, #3\n\t"
-        "beq 7f\n\t"
-        "lsr r0, r1, #2\n\t"
-        "mov r1, #1\n\t"
-        "and r0, r1\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x2c\n\t"
-        "b 8f\n\t"
-        ".align 2, 0\n"
-    "2: .4byte gUnknown_0300148C\n"
-    "3: .4byte gUnknown_030014A1\n"
-    "4: .4byte gUnknown_0300149C\n"
-    "5: .4byte gUnknown_030014A0\n"
-    "6: .4byte gUnknown_030012C0\n"
-    "7:\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, #0x2c\n\t"
-        "mov r0, #1\n\t"
-    "8:\n\t"
-        "strb r0, [r1]\n\t"
-        "ldr r0, 10f\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 9f\n\t"
-        "mov r0, #0xbc\n\t"
-        "lsl r0, r0, #6\n\t"
-        "str r0, [r4, #0x34]\n\t"
-        "bl sub_8029B2C\n\t"
-        "lsl r0, r0, #8\n\t"
-        "ldr r1, [r4, #0x34]\n\t"
-        "sub r0, r0, r1\n\t"
-        "str r0, [r4, #0x24]\n\t"
-    "9:\n\t"
-        "ldr r3, [r4, #0x34]\n\t"
-        "asr r3, r3, #1\n\t"
-        "mov r0, #0xff\n\t"
-        "lsl r0, r0, #7\n\t"
-        "and r3, r0\n\t"
-        "ldr r1, [r4, #0x20]\n\t"
-        "asr r0, r1, #0x1f\n\t"
-        "eor r1, r0\n\t"
-        "sub r1, r1, r0\n\t"
-        "ldr r0, [r4, #0x1c]\n\t"
-        "asr r2, r0, #0x1f\n\t"
-        "eor r0, r2\n\t"
-        "sub r0, r0, r2\n\t"
-        "add r1, r1, r0\n\t"
-        "asr r1, r1, #0xb\n\t"
-        "mov r0, #0x7f\n\t"
-        "and r1, r0\n\t"
-        "orr r3, r1\n\t"
-        "str r3, [r4, #0x14]\n\t"
-        "ldr r0, [r4, #0x44]\n\t"
-        "add r0, #1\n\t"
-        "str r0, [r4, #0x44]\n\t"
-        "mov r0, #0x10\n\t"
-        "ldrsh r1, [r4, r0]\n\t"
-        "ldr r0, [r4, #8]\n\t"
-        "add r0, r0, r1\n\t"
-        "str r0, [r4, #8]\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r4, #0x12]\n\t"
-        "add r0, r4, #0\n\t"
-        "bl GetAnimFrameBaseOffset\n\t"
-        "ldr r2, [r4, #0xc]\n\t"
-        "ldr r3, [r4]\n\t"
-        "lsl r1, r2, #1\n\t"
-        "add r1, r1, r2\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r1, r1, r3\n\t"
-        "mov r3, #4\n\t"
-        "ldrsh r2, [r1, r3]\n\t"
-        "cmp r0, r2\n\t"
-        "blt 11f\n\t"
-        "mov r5, #6\n\t"
-        "ldrsh r0, [r1, r5]\n\t"
-        "sub r0, r2, r0\n\t"
-        "lsl r0, r0, #8\n\t"
-        "ldr r1, [r4, #8]\n\t"
-        "sub r1, r1, r0\n\t"
-        "str r1, [r4, #8]\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r4, #0x12]\n\t"
-    "11:\n\t"
-        "ldr r0, [r4, #0x1c]\n\t"
-        "ldr r1, [r4, #0x20]\n\t"
-        "bl sub_8029D8C\n\t"
-        "ldr r3, 12f\n\t"
-        "ldr r0, [r4, #0x28]\n\t"
-        "lsl r1, r0, #3\n\t"
-        "add r0, r1, r3\n\t"
-        "mov r5, #2\n\t"
-        "ldrsh r2, [r0, r5]\n\t"
-        "cmp r2, #0\n\t"
-        "ble 13f\n\t"
-        "mov r1, #4\n\t"
-        "ldrsh r0, [r0, r1]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r0]\n\t"
-        "lsl r0, r2, #3\n\t"
-        "add r0, r0, r1\n\t"
-        "sub r0, #8\n\t"
-        "ldr r6, [r0]\n\t"
-        "ldr r7, [r0, #4]\n\t"
-        "add r3, r7, #0\n\t"
-        "b 14f\n\t"
-        ".align 2, 0\n"
-    "10: .4byte gUnknown_030014A1\n"
-    "12: .4byte gStaticData_0817A6B8\n"
-    "13:\n\t"
-        "add r0, r3, #4\n\t"
-        "add r0, r1, r0\n\t"
-        "ldr r3, [r0]\n\t"
-    "14:\n\t"
-        "ldr r1, 15f\n\t"
-        "ldr r0, [r4, #0x28]\n\t"
-        "lsl r0, r0, #3\n\t"
-        "add r0, r0, r1\n\t"
-        "mov r5, #0\n\t"
-        "ldrsh r1, [r0, r5]\n\t"
-        "cmp r2, #0\n\t"
-        "ble 16f\n\t"
-        "lsl r0, r6, #0x10\n\t"
-        "asr r0, r0, #0x10\n\t"
-        "add r0, r0, r1\n\t"
-        "b 17f\n\t"
-        ".align 2, 0\n"
-    "15: .4byte gStaticData_0817A6B8\n"
-    "16:\n\t"
-        "add r0, r1, #0\n\t"
-    "17:\n\t"
-        "add r0, r4, r0\n\t"
-        "bl sub_803AD84\n\t"
-        "ldr r0, 18f\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 25f\n\t"
-        "ldr r0, 19f\n\t"
-        "ldr r2, [r0]\n\t"
-        "mov r1, #0x20\n\t"
-        "add r0, r2, #0\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "beq 22f\n\t"
-        "ldr r0, 20f\n\t"
-        "ldr r1, [r0]\n\t"
-        "add r2, r1, #0\n\t"
-        "add r1, #1\n\t"
-        "str r1, [r0]\n\t"
-        "cmp r2, #0xc\n\t"
-        "ble 21f\n\t"
-        "ldr r0, [r4, #0x1c]\n\t"
-        "ldr r1, 23f\n\t"
-        "add r0, r0, r1\n\t"
-        "b 24f\n\t"
-        ".align 2, 0\n"
-    "18: .4byte gUnknown_030014A3\n"
-    "19: .4byte gUnknown_030007E0\n"
-    "20: .4byte gUnknown_03001498\n"
-    "23: .4byte 0xFFFFFC80\n"
-    "21:\n\t"
-        "ldr r0, [r4, #0x1c]\n\t"
-        "ldr r3, 26f\n\t"
-        "add r0, r0, r3\n\t"
-    "24:\n\t"
-        "str r0, [r4, #0x1c]\n\t"
-        "ldr r0, [r4, #0x1c]\n\t"
-        "ldr r1, 27f\n\t"
-        "cmp r0, r1\n\t"
-        "bge 25f\n\t"
-        "str r1, [r4, #0x1c]\n\t"
-        "b 25f\n\t"
-        ".align 2, 0\n"
-    "26: .4byte 0xFFFFFD33\n"
-    "27: .4byte 0xFFFFCE00\n"
-    "22:\n\t"
-        "mov r0, #0x10\n\t"
-        "and r2, r0\n\t"
-        "lsl r0, r2, #0x10\n\t"
-        "lsr r1, r0, #0x10\n\t"
-        "cmp r1, #0\n\t"
-        "beq 30f\n\t"
-        "ldr r0, 28f\n\t"
-        "ldr r1, [r0]\n\t"
-        "add r2, r1, #0\n\t"
-        "add r1, #1\n\t"
-        "str r1, [r0]\n\t"
-        "cmp r2, #0xc\n\t"
-        "ble 29f\n\t"
-        "ldr r0, [r4, #0x1c]\n\t"
-        "mov r5, #0xe0\n\t"
-        "lsl r5, r5, #2\n\t"
-        "add r0, r0, r5\n\t"
-        "b 31f\n\t"
-        ".align 2, 0\n"
-    "28: .4byte gUnknown_03001498\n"
-    "29:\n\t"
-        "ldr r0, [r4, #0x1c]\n\t"
-        "ldr r1, 32f\n\t"
-        "add r0, r0, r1\n\t"
-    "31:\n\t"
-        "str r0, [r4, #0x1c]\n\t"
-        "ldr r0, [r4, #0x1c]\n\t"
-        "mov r1, #0xc8\n\t"
-        "lsl r1, r1, #6\n\t"
-        "cmp r0, r1\n\t"
-        "ble 25f\n\t"
-        "str r1, [r4, #0x1c]\n\t"
-        "b 25f\n\t"
-        ".align 2, 0\n"
-    "32: .4byte 0x000002CD\n"
-    "30:\n\t"
-        "ldr r0, 33f\n\t"
-        "str r1, [r0]\n\t"
-    "25:\n\t"
-        "ldr r5, 34f\n\t"
-        "ldr r0, [r5]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 35f\n\t"
-        "ldr r1, [r4, #0x1c]\n\t"
-        "ldr r2, [r4, #0x20]\n\t"
-        "ldr r3, [r4, #0x24]\n\t"
-        "bl sub_802D3A8\n\t"
-        "b 36f\n\t"
-        ".align 2, 0\n"
-    "33: .4byte gUnknown_03001498\n"
-    "34: .4byte gUnknown_03001494\n"
-    "35:\n\t"
-        "ldr r0, 37f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r3, [r0, #0x78]\n\t"
-        "ldr r0, [r4, #0x1c]\n\t"
-        "ldr r1, [r4, #0x20]\n\t"
-        "ldr r2, [r4, #0x24]\n\t"
-        "bl sub_802B1A8\n\t"
-        "str r0, [r5]\n\t"
-        "bl sub_8029794\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "beq 36f\n\t"
-        "ldr r0, [r5]\n\t"
-        "bl sub_802D4EC\n\t"
-    "36:\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "37: .4byte gUnknown_030012C0\n"
-    );
+    s32 s = x >> 31;
+
+    return (x ^ s) - s;
 }
 
-/* `sub_802B5B4` - a sprite-frame OAM queuing function for the same
- * `self` object: computes a keyframe-table-driven position offset
- * (with a per-frame interpolation variant when the animation just
- * transitioned), applies a shape/priority/palette bitmask, arms a
- * `sub_803AD80` trampoline the first time a new part-table instance is
- * seen, and queues the final sprite OAM entry via
- * `QueueSpriteFrameOam`. `r8`/`sb`/`sl` are all simultaneously live
- * across the whole function (holding the per-frame keyframe record's
- * three fields) - the same three-high-register nested-shape family
- * this codebase's other DMA/OAM-adjacent functions are consistently
- * NAKED-parked for (see `docs/matching/issue-56-0x0802f0dc-actor.md`'s
- * `sub_802F7B0`/`sub_802F8E8` entry). NAKED-transcribed per this
- * project's established escape hatch - see
- * `docs/matching/issue-52-issue-53-gap-b364.md`. */
-NAKED void sub_802B5B4(void *selfArg)
+/* The per-frame update (`docs/rom_map.md`'s "sub_802B364", a slot of
+ * the `gStaticData_087E4E54` method table): runs `sub_802BC68`, ticks
+ * the two countdowns (`gUnknown_0300148C` expiring into state 10;
+ * `gUnknown_0300149C` blinking `self+0x2C`), depth, animation, the
+ * current state's handler from `gStaticData_0817A6B8` (a C++
+ * pointer-to-member call), left/right steering while
+ * `gUnknown_030014A3` is set, then drives - or first spawns - the
+ * companion object in `gUnknown_03001494`. Same shape as
+ * `actor_part128.c`'s `sub_802E84C`. */
+void sub_802B364(struct actor_self *self)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sl\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6, r7}\n\t"
-        "sub sp, #0x10\n\t"
-        "add r7, r0, #0\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [sp, #4]\n\t"
-        "ldr r2, [r7, #8]\n\t"
-        "asr r2, r2, #8\n\t"
-        "ldr r1, [r7, #0xc]\n\t"
-        "ldr r3, [r7]\n\t"
-        "lsl r0, r1, #1\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r3\n\t"
-        "mov r1, #2\n\t"
-        "ldrsh r0, [r0, r1]\n\t"
-        "add r0, r0, r2\n\t"
-        "ldr r1, [r7, #4]\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov sl, r0\n\t"
-        "ldrb r0, [r0]\n\t"
-        "str r0, [sp, #8]\n\t"
-        "lsl r0, r0, #2\n\t"
-        "mov sb, r0\n\t"
-        "mov r1, sl\n\t"
-        "ldrb r1, [r1, #1]\n\t"
-        "str r1, [sp, #0xc]\n\t"
-        "lsl r1, r1, #2\n\t"
-        "mov r8, r1\n\t"
-        "ldr r0, [r7, #0x30]\n\t"
-        "ldr r4, [r7, #0x34]\n\t"
-        "ldr r1, [r0, #0x10]\n\t"
-        "cmp r4, r1\n\t"
-        "bne 1f\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #1\n\t"
-        "str r0, [sp]\n\t"
-        "bl sub_8029E98\n\t"
-        "ldr r1, [r7, #0x20]\n\t"
-        "add r1, r1, r0\n\t"
-        "asr r5, r1, #8\n\t"
-        "bl sub_8029EB4\n\t"
-        "ldr r1, [r7, #0x1c]\n\t"
-        "add r1, r1, r0\n\t"
-        "asr r6, r1, #8\n\t"
-        "b 2f\n\t"
-    "1:\n\t"
-        "lsl r0, r4, #8\n\t"
-        "bl sub_803ADB4\n\t"
-        "str r0, [sp]\n\t"
-        "mov r0, #0xbc\n\t"
-        "lsl r0, r0, #0x12\n\t"
-        "add r1, r4, #0\n\t"
-        "bl sub_803ADB4\n\t"
-        "add r4, r0, #0\n\t"
-        "bl sub_8029E98\n\t"
-        "ldr r1, [r7, #0x20]\n\t"
-        "mul r1, r4, r1\n\t"
-        "asr r1, r1, #0xc\n\t"
-        "add r1, r1, r0\n\t"
-        "asr r5, r1, #8\n\t"
-        "bl sub_8029EB4\n\t"
-        "ldr r1, [r7, #0x1c]\n\t"
-        "mul r1, r4, r1\n\t"
-        "asr r1, r1, #0xc\n\t"
-        "add r1, r1, r0\n\t"
-        "asr r6, r1, #8\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #1\n\t"
-        "str r1, [sp, #4]\n\t"
-        "ldr r0, [sp]\n\t"
-        "cmp r0, #0xff\n\t"
-        "bgt 2f\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #2\n\t"
-        "orr r1, r0\n\t"
-        "str r1, [sp, #4]\n\t"
-        "ldr r1, [sp, #8]\n\t"
-        "lsl r1, r1, #3\n\t"
-        "mov sb, r1\n\t"
-        "ldr r0, [sp, #0xc]\n\t"
-        "lsl r0, r0, #3\n\t"
-        "mov r8, r0\n\t"
-    "2:\n\t"
-        "mov r1, sb\n\t"
-        "sub r6, r6, r1\n\t"
-        "mov r0, r8\n\t"
-        "sub r5, r5, r0\n\t"
-        "cmp r5, #0x9f\n\t"
-        "bgt 4f\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r0, r5, r0\n\t"
-        "cmp r0, #0\n\t"
-        "blt 4f\n\t"
-        "cmp r6, #0xef\n\t"
-        "bgt 4f\n\t"
-        "lsl r0, r1, #1\n\t"
-        "add r0, r6, r0\n\t"
-        "cmp r0, #0\n\t"
-        "blt 4f\n\t"
-        "ldr r1, [r7, #0xc]\n\t"
-        "ldr r2, [r7]\n\t"
-        "lsl r0, r1, #1\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r2\n\t"
-        "ldrh r0, [r0, #8]\n\t"
-        "lsl r4, r0, #0x10\n\t"
-        "mov r0, sl\n\t"
-        "bl GetSpriteShapeSizeBits\n\t"
-        "mov r1, #0xff\n\t"
-        "and r5, r1\n\t"
-        "ldr r1, 5f\n\t"
-        "and r6, r1\n\t"
-        "lsl r1, r6, #0x10\n\t"
-        "orr r5, r1\n\t"
-        "orr r5, r4\n\t"
-        "orr r5, r0\n\t"
-        "ldr r1, [sp, #4]\n\t"
-        "orr r1, r5\n\t"
-        "str r1, [sp, #4]\n\t"
-        "ldr r4, 6f\n\t"
-        "ldr r0, [r4]\n\t"
-        "cmp sl, r0\n\t"
-        "beq 3f\n\t"
-        "ldr r2, 7f\n\t"
-        "ldr r0, [r2]\n\t"
-        "mov r1, #1\n\t"
-        "eor r0, r1\n\t"
-        "str r0, [r2]\n\t"
-        "ldr r2, 8f\n\t"
-        "ldr r1, 9f\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r2, [r2]\n\t"
-        "mov r1, sl\n\t"
-        "bl sub_803AD80\n\t"
-        "mov r0, sl\n\t"
-        "str r0, [r4]\n\t"
-    "3:\n\t"
-        "ldr r1, 9f\n\t"
-        "ldr r0, 7f\n\t"
-        "ldr r0, [r0]\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, 10f\n\t"
-        "add r0, r0, r1\n\t"
-        "lsr r0, r0, #5\n\t"
-        "ldr r1, [r7, #0x18]\n\t"
-        "lsl r1, r1, #0xc\n\t"
-        "orr r1, r0\n\t"
-        "lsl r1, r1, #0x10\n\t"
-        "lsr r1, r1, #0x10\n\t"
-        "ldr r0, [sp, #4]\n\t"
-        "ldr r2, [sp]\n\t"
-        "bl QueueSpriteFrameOam\n\t"
-    "4:\n\t"
-        "add sp, #0x10\n\t"
-        "pop {r3, r4, r5}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov sl, r5\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "5: .4byte 0x000001FF\n"
-    "6: .4byte gUnknown_030014AC\n"
-    "7: .4byte gUnknown_030014A8\n"
-    "8: .4byte gUnknown_03000874\n"
-    "9: .4byte gUnknown_030014B0\n"
-    "10: .4byte 0xF9FF0000\n"
-    );
+    sub_802BC68(self);
+    if (gUnknown_0300148C != 0 && --gUnknown_0300148C == 0) {
+        gUnknown_030014A1 = 1;
+        sub_8029BAC(0);
+        ACTOR_SET_STATE(self, 10, 10);
+    }
+    if (gUnknown_0300149C != 0 && --gUnknown_0300149C != 0 && gUnknown_030014A0 == 0
+        && *(s32 *)((u8 *)gUnknown_030012C0 + 0x78) != 3)
+        self->unk_2C[0] = ((u32)gUnknown_0300149C >> 2) & 1;
+    else
+        self->unk_2C[0] = 1;
+    if (gUnknown_030014A1 == 0) {
+        self->depth = 0x2f00;
+        self->z = (sub_8029B2C() << 8) - self->depth;
+    }
+    {
+        s32 d = (self->depth >> 1) & 0x7f80;
+
+        self->visible = d | (((Abs(self->y) + Abs(self->x)) >> 11) & 0x7f);
+    }
+    self->stateTime++;
+    self->animTime += *(s16 *)&self->animTimer;
+    self->animDone = 0;
+    if (GetAnimFrameBaseOffset(self) >= self->anims[self->animIndex].loopThreshold) {
+        self->animTime -= (self->anims[self->animIndex].loopThreshold
+                           - self->anims[self->animIndex].loopBase) << 8;
+        self->animDone = 1;
+    }
+    sub_8029D8C(self->x, self->y);
+    ACTOR_PMF_CALL(self, gStaticData_0817A6B8);
+    if (gUnknown_030014A3 != 0) {
+        struct held_pressed_pair keys = gUnknown_030007E0;
+
+        if (keys.held & 0x20) {
+            if (gUnknown_03001498++ > 12)
+                self->x += -0x380;
+            else
+                self->x += -0x2cd;
+            if (self->x < -0x3200)
+                self->x = -0x3200;
+        } else {
+            u16 right = keys.held & 0x10;
+
+            if (right) {
+                if (gUnknown_03001498++ > 12)
+                    self->x += 0x380;
+                else
+                    self->x += 0x2cd;
+                if (self->x > 0x3200)
+                    self->x = 0x3200;
+            } else {
+                gUnknown_03001498 = right;
+            }
+        }
+    }
+    if (gUnknown_03001494 != NULL) {
+        sub_802D3A8(gUnknown_03001494, self->x, self->y, self->z);
+    } else {
+        s32 tier = *(s32 *)((u8 *)gUnknown_030012C0 + 0x78);
+
+        gUnknown_03001494 = sub_802B1A8(self->x, self->y, self->z, tier);
+        if (sub_8029794())
+            sub_802D4EC(gUnknown_03001494);
+    }
+}
+
+/* The anim_part_instance accessors (actor_anim.c), inlined. */
+static inline s32 CurAttr(struct actor_self *self)
+{
+    s32 idx = self->animIndex;
+    struct anim_frame_record *table = self->anims;
+
+    return (s32)table[idx].attr << 16;
+}
+
+static inline u8 *CurFrame(struct actor_self *self)
+{
+    s32 t = self->animTime >> 8;
+
+    return (u8 *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t];
+}
+
+/* The sprite draw: projects the position by depth (scaled and
+ * double-sized when drawn behind the camera's reference depth), culls
+ * against the screen, uploads the frame's tiles into the other of the
+ * two VRAM buffers when the frame changed, and queues the OAM entry.
+ * The same code as `actor_part128.c`'s `sub_802E9FC` with a different
+ * projection constant. */
+void sub_802B5B4(struct actor_self *self)
+{
+    s32 scale;
+    s32 attr1 = 0;
+    u8 *frame;
+    u32 w, h;
+    s32 halfW, halfH;
+    s32 sx, sy;
+
+    frame = CurFrame(self);
+    w = frame[0];
+    halfW = w * 4;
+    h = frame[1];
+    halfH = h * 4;
+    if (self->depth == (*(struct cam_ref **)&self->unk_2C[4])->depth) {
+        scale = 0x100;
+        sy = (self->y + sub_8029E98()) >> 8;
+        sx = (self->x + sub_8029EB4()) >> 8;
+    } else {
+        s32 depth = self->depth;
+        s32 f;
+
+        scale = (depth << 8) / (*(struct cam_ref **)&self->unk_2C[4])->depth;
+        f = 0x2f00000 / depth;
+        sy = (((self->y * f) >> 12) + sub_8029E98()) >> 8;
+        sx = (((self->x * f) >> 12) + sub_8029EB4()) >> 8;
+        attr1 = 0x100;
+        if (scale <= 0xff) {
+            attr1 |= 0x200;
+            halfW = w * 8;
+            halfH = h * 8;
+        }
+    }
+    sx -= halfW;
+    sy -= halfH;
+    if (sy <= 0x9f && sy + halfH * 2 >= 0 && sx <= 0xef && sx + halfW * 2 >= 0) {
+        u32 attr = CurAttr(self);
+
+        attr1 |= (sy & 0xff) | ((sx & 0x1ff) << 16) | attr | GetSpriteShapeSizeBits(frame);
+        if (frame != gUnknown_030014AC) {
+            gUnknown_030014A8 ^= 1;
+            gUnknown_03000874(gUnknown_030014B0[gUnknown_030014A8], frame);
+            gUnknown_030014AC = frame;
+        }
+        {
+            register u32 tile asm("r0") = GET_TILE_NUM(gUnknown_030014B0[gUnknown_030014A8]);
+
+            QueueSpriteFrameOam(attr1, tile | (self->unk_18 << 12), scale);
+        }
+    }
 }
 
 /* Once-only spawn/reset trigger (proximity-hazard family, established
@@ -710,82 +395,19 @@ end:
  * `self+0xc`, offset by `self+8`'s frame accumulator, into a *second*
  * pointer array at `self+4`) already established for `sub_802F338`
  * (`actor_part43b.c`, `docs/matching/issue-56-0x0802f0dc-actor.md`);
- * arms `gUnknown_030014A8`, clears `gUnknown_030014AC`. Semantics
- * fully understood; NAKED-transcribed like `sub_802F338`'s own
- * eventual match needed heavy `asm volatile` register-order forcing
- * for this exact "materialize the multiply result into one register,
- * copy it to a second, then shift" idiom - here transcribed directly
- * instead of chased at the C level a second time. */
-extern void *gUnknown_030014B0[2];
-extern s32 gUnknown_030014A8;
-extern s32 gUnknown_030014AC;
-
-NAKED s32 sub_802B864(void *selfArg)
+ * arms `gUnknown_030014A8`, clears `gUnknown_030014AC`. The ROM's
+ * "multiply into a copy, copy again, then shift" sequence is simply
+ * old_agbcc's code for `h * w * 32` - no register forcing needed. */
+void sub_802B864(struct actor_self *self)
 {
-    asm(
-        "push {r4, r5, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r2, [r4, #8]\n\t"
-        "asr r2, r2, #8\n\t"
-        "ldr r1, [r4, #0xc]\n\t"
-        "ldr r3, [r4]\n\t"
-        "lsl r0, r1, #1\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r3\n\t"
-        "mov r1, #2\n\t"
-        "ldrsh r0, [r0, r1]\n\t"
-        "add r0, r0, r2\n\t"
-        "ldr r1, [r4, #4]\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldrb r3, [r0]\n\t"
-        "ldrb r1, [r0, #1]\n\t"
-        "add r2, r3, #0\n\t"
-        "mul r2, r1, r2\n\t"
-        "add r0, r2, #0\n\t"
-        "lsl r0, r0, #5\n\t"
-        "bl AllocVramTileBlock\n\t"
-        "ldr r5, 1f\n\t"
-        "str r0, [r5]\n\t"
-        "ldr r2, [r4, #8]\n\t"
-        "asr r2, r2, #8\n\t"
-        "ldr r1, [r4, #0xc]\n\t"
-        "ldr r3, [r4]\n\t"
-        "lsl r0, r1, #1\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r3\n\t"
-        "mov r3, #2\n\t"
-        "ldrsh r0, [r0, r3]\n\t"
-        "add r0, r0, r2\n\t"
-        "ldr r1, [r4, #4]\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldrb r2, [r0]\n\t"
-        "ldrb r3, [r0, #1]\n\t"
-        "add r1, r2, #0\n\t"
-        "mul r1, r3, r1\n\t"
-        "add r0, r1, #0\n\t"
-        "lsl r0, r0, #5\n\t"
-        "bl AllocVramTileBlock\n\t"
-        "str r0, [r5, #4]\n\t"
-        "ldr r1, 2f\n\t"
-        "mov r0, #1\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r1, 3f\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [r1]\n\t"
-        "pop {r4, r5}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "1: .4byte gUnknown_030014B0\n"
-    "2: .4byte gUnknown_030014A8\n"
-    "3: .4byte gUnknown_030014AC\n"
-    );
+    u8 *f;
+
+    f = CurFrame(self);
+    gUnknown_030014B0[0] = AllocVramTileBlock(f[1] * f[0] * 32);
+    f = CurFrame(self);
+    gUnknown_030014B0[1] = AllocVramTileBlock(f[1] * f[0] * 32);
+    gUnknown_030014A8 = 1;
+    gUnknown_030014AC = 0;
 }
 
 /* Spawn-once trigger for a secondary effect object
@@ -796,90 +418,37 @@ NAKED s32 sub_802B864(void *selfArg)
  * `gUnknown_030014A0`, fires the spawned object's own `self+0x50`
  * trampoline (index 3) if still alive, clears `gUnknown_03001490`, and
  * fires `sub_8029BAC(0x19)`. */
-NAKED void sub_802B8E8(void *selfArg)
+void sub_802B8E8(struct actor_self *self)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "sub sp, #4\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r6, 4f\n\t"
-        "ldr r5, [r6]\n\t"
-        "cmp r5, #0\n\t"
-        "bne 1f\n\t"
-        "ldr r1, [r4, #0x1c]\n\t"
-        "mov r2, #0xa0\n\t"
-        "lsl r2, r2, #6\n\t"
-        "ldr r3, [r4, #0x24]\n\t"
-        "str r5, [sp]\n\t"
-        "mov r0, #2\n\t"
-        "bl sub_802AC28\n\t"
-        "str r0, [r6]\n\t"
-        "mov r1, #1\n\t"
-        "str r1, [r0, #0xc]\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldrh r1, [r1, #0xc]\n\t"
-        "mov r2, #0\n\t"
-        "strh r1, [r0, #0x10]\n\t"
-        "strb r2, [r0, #0x12]\n\t"
-        "str r5, [r0, #8]\n\t"
-    "1:\n\t"
-        "ldr r2, 5f\n\t"
-        "ldr r1, [r4, #0x20]\n\t"
-        "ldr r0, [r2]\n\t"
-        "add r1, r1, r0\n\t"
-        "str r1, [r4, #0x20]\n\t"
-        "add r0, #0x2d\n\t"
-        "str r0, [r2]\n\t"
-        "mov r5, #0xa0\n\t"
-        "lsl r5, r5, #6\n\t"
-        "cmp r1, r5\n\t"
-        "ble 3f\n\t"
-        "ldr r0, 6f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0x35\n\t"
-        "bl PlaySfx\n\t"
-        "str r5, [r4, #0x20]\n\t"
-        "mov r0, #9\n\t"
-        "str r0, [r4, #0x28]\n\t"
-        "mov r5, #0\n\t"
-        "str r5, [r4, #0x44]\n\t"
-        "str r0, [r4, #0xc]\n\t"
-        "ldr r0, [r4]\n\t"
-        "add r0, #0x6c\n\t"
-        "ldrh r0, [r0]\n\t"
-        "mov r1, #0\n\t"
-        "strh r0, [r4, #0x10]\n\t"
-        "strb r1, [r4, #0x12]\n\t"
-        "str r5, [r4, #8]\n\t"
-        "ldr r0, 7f\n\t"
-        "strb r1, [r0]\n\t"
-        "ldr r2, [r6]\n\t"
-        "cmp r2, #0\n\t"
-        "beq 2f\n\t"
-        "ldr r1, [r2, #0x50]\n\t"
-        "mov r3, #8\n\t"
-        "ldrsh r0, [r1, r3]\n\t"
-        "add r0, r2, r0\n\t"
-        "ldr r2, [r1, #0xc]\n\t"
-        "mov r1, #3\n\t"
-        "bl sub_803AD80\n\t"
-    "2:\n\t"
-        "str r5, [r6]\n\t"
-        "mov r0, #0x19\n\t"
-        "bl sub_8029BAC\n\t"
-    "3:\n\t"
-        "add sp, #4\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "4: .4byte gUnknown_03001490\n"
-    "5: .4byte gUnknown_030014A4\n"
-    "6: .4byte gUnknown_030012BC\n"
-    "7: .4byte gUnknown_030014A0\n"
-    );
+    struct actor_self **spawnAddr = (struct actor_self **)&gUnknown_03001490;
+    struct actor_self *spawn = *spawnAddr;
+    s32 *budget;
+    s32 y;
+
+    if (spawn == NULL) {
+        struct actor_self *o = sub_802AC28(2, self->x, 0x2800, self->z, 0);
+
+        *spawnAddr = o;
+        o->animIndex = 1;
+        o->animTimer = o->anims[1].duration;
+        o->animDone = 0;
+        o->animTime = 0;
+    }
+    budget = &gUnknown_030014A4;
+    y = self->y + *budget;
+    self->y = y;
+    *budget += 0x2d;
+    if (y > 0x2800) {
+        PlaySfx(gUnknown_030012BC, 0x35, 0x100);
+        self->y = 0x2800;
+        ACTOR_SET_STATE(self, 9, 9);
+        gUnknown_030014A0 = 0;
+        if (*spawnAddr != NULL) {
+            ACTOR_VCALL(*spawnAddr, m08, 3);
+        }
+        *spawnAddr = NULL;
+        sub_8029BAC(0x19);
+    }
 }
 
 /* On the state-0x12 anim-frame edge, plays a "confirm" cue
@@ -1010,68 +579,22 @@ tail:
  * step (clamped to 0x780), applies a stall clamp
  * (`gUnknown_030014A4 = 0xFFFFFC00`) once the frame counter passes a
  * threshold with no input, then resets `self` to state 1/table-index 4
- * once `self+0x20` crosses `0xA000`. */
-NAKED void sub_802BA5C(void *selfArg)
+ * once `self+0x20` crosses `0x2800`. */
+void sub_802BA5C(struct actor_self *self)
 {
-    asm(
-        "push {lr}\n\t"
-        "add r3, r0, #0\n\t"
-        "ldr r2, 4f\n\t"
-        "ldr r0, [r3, #0x20]\n\t"
-        "ldr r1, [r2]\n\t"
-        "add r0, r0, r1\n\t"
-        "str r0, [r3, #0x20]\n\t"
-        "add r1, #0x60\n\t"
-        "str r1, [r2]\n\t"
-        "mov r0, #0xf0\n\t"
-        "lsl r0, r0, #3\n\t"
-        "cmp r1, r0\n\t"
-        "ble 1f\n\t"
-        "str r0, [r2]\n\t"
-    "1:\n\t"
-        "ldr r0, [r3, #0x44]\n\t"
-        "cmp r0, #0xa\n\t"
-        "bgt 2f\n\t"
-        "ldr r0, 5f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r1, #1\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "bne 2f\n\t"
-        "ldr r0, [r2]\n\t"
-        "ldr r1, 6f\n\t"
-        "cmp r0, r1\n\t"
-        "bge 2f\n\t"
-        "str r1, [r2]\n\t"
-    "2:\n\t"
-        "ldr r0, [r3, #0x20]\n\t"
-        "mov r1, #0xa0\n\t"
-        "lsl r1, r1, #6\n\t"
-        "cmp r0, r1\n\t"
-        "ble 3f\n\t"
-        "str r1, [r3, #0x20]\n\t"
-        "mov r0, #1\n\t"
-        "mov r1, #4\n\t"
-        "str r0, [r3, #0x28]\n\t"
-        "mov r2, #0\n\t"
-        "str r2, [r3, #0x44]\n\t"
-        "str r1, [r3, #0xc]\n\t"
-        "ldr r0, [r3]\n\t"
-        "ldrh r0, [r0, #0x30]\n\t"
-        "mov r1, #0\n\t"
-        "strh r0, [r3, #0x10]\n\t"
-        "strb r1, [r3, #0x12]\n\t"
-        "str r2, [r3, #8]\n\t"
-        "mov r0, #0x24\n\t"
-        "bl sub_8029BAC\n\t"
-    "3:\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "4: .4byte gUnknown_030014A4\n"
-    "5: .4byte gUnknown_030007E0\n"
-    "6: .4byte 0xFFFFFC00\n"
-    );
+    s32 *budget = &gUnknown_030014A4;
+
+    self->y += *budget;
+    *budget += 0x60;
+    if (*budget > 0x780)
+        *budget = 0x780;
+    if (self->stateTime <= 10 && !(*(u32 *)&gUnknown_030007E0 & 1) && *budget < (s32)0xFFFFFC00)
+        *budget = 0xFFFFFC00;
+    if (self->y > 0x2800) {
+        self->y = 0x2800;
+        ACTOR_SET_STATE(self, 1, 4);
+        sub_8029BAC(0x24);
+    }
 }
 
 /* Two independent `gUnknown_030007E0` input-gated one-shot
@@ -1079,68 +602,26 @@ NAKED void sub_802BA5C(void *selfArg)
  * anim-frame idle reset, `sub_8029BAC(0x24)`); bit 0 (of the high
  * halfword) transitions to state 4/table-index 3 with a cue and the
  * `gUnknown_030014A4` stall reset - same pair `sub_802B990` fires. */
-NAKED void sub_802BAD0(void *selfArg)
+void sub_802BAD0(struct actor_self *self)
 {
-    asm(
-        "push {r4, r5, lr}\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r5, 3f\n\t"
-        "ldr r0, [r5]\n\t"
-        "mov r1, #2\n\t"
-        "and r0, r1\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r2, r0, #0x10\n\t"
-        "cmp r2, #0\n\t"
-        "bne 1f\n\t"
-        "mov r0, #1\n\t"
-        "str r0, [r4, #0x28]\n\t"
-        "str r2, [r4, #0x44]\n\t"
-        "str r2, [r4, #0xc]\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldrh r0, [r0]\n\t"
-        "mov r1, #0\n\t"
-        "strh r0, [r4, #0x10]\n\t"
-        "strb r1, [r4, #0x12]\n\t"
-        "str r2, [r4, #8]\n\t"
-        "mov r0, #0x24\n\t"
-        "bl sub_8029BAC\n\t"
-    "1:\n\t"
-        "mov r0, #1\n\t"
-        "ldrh r5, [r5, #2]\n\t"
-        "and r0, r5\n\t"
-        "cmp r0, #0\n\t"
-        "beq 2f\n\t"
-        "mov r0, #4\n\t"
-        "mov r1, #3\n\t"
-        "str r0, [r4, #0x28]\n\t"
-        "mov r2, #0\n\t"
-        "str r2, [r4, #0x44]\n\t"
-        "str r1, [r4, #0xc]\n\t"
-        "ldr r0, [r4]\n\t"
-        "ldrh r0, [r0, #0x24]\n\t"
-        "mov r1, #0\n\t"
-        "strh r0, [r4, #0x10]\n\t"
-        "strb r1, [r4, #0x12]\n\t"
-        "str r2, [r4, #8]\n\t"
-        "ldr r0, 4f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0xd\n\t"
-        "bl PlaySfx\n\t"
-        "ldr r1, 5f\n\t"
-        "ldr r0, 6f\n\t"
-        "str r0, [r1]\n\t"
-    "2:\n\t"
-        "pop {r4, r5}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "3: .4byte gUnknown_030007E0\n"
-    "4: .4byte gUnknown_030012BC\n"
-    "5: .4byte gUnknown_030014A4\n"
-    "6: .4byte 0xFFFFF880\n"
-    );
+    struct held_pressed_pair *input = &gUnknown_030007E0;
+    u16 bit = *(u32 *)input & 2;
+
+    if (bit == 0) {
+        self->state = 1;
+        self->stateTime = bit;
+        self->animIndex = bit;
+        self->animTimer = self->anims[0].duration;
+        self->animDone = 0;
+        self->animTime = bit;
+        sub_8029BAC(0x24);
+    }
+
+    if (input->pressed & 1) {
+        ACTOR_SET_STATE(self, 4, 3);
+        PlaySfx(gUnknown_030012BC, 0xd, 0x100);
+        gUnknown_030014A4 = 0xFFFFF880;
+    }
 }
 
 /* Frame-counter threshold DMA driver: past `0x2c` frames, does the
@@ -1192,71 +673,21 @@ void sub_802BB4C(void *selfArg)
  * gated on that same threshold. Resets `self` to state 8/table-index
  * 7, arms `gUnknown_03001480`, and kicks the mode transition the same
  * way as `sub_802B730`/`sub_802BB4C`. */
-NAKED void sub_802BBE4(void *selfArg)
+void sub_802BBE4(struct actor_self *self)
 {
-    asm(
-        "push {r4, lr}\n\t"
-        "sub sp, #4\n\t"
-        "add r4, r0, #0\n\t"
-        "ldrb r0, [r4, #0x12]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 2f\n\t"
-        "ldr r1, 3f\n\t"
-        "ldr r0, 4f\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r1, [r4, #0x20]\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #6\n\t"
-        "cmp r1, r0\n\t"
-        "ble 1f\n\t"
-        "ldr r1, [r4, #0x1c]\n\t"
-        "mov r2, #0xa0\n\t"
-        "lsl r2, r2, #6\n\t"
-        "ldr r3, [r4, #0x24]\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [sp]\n\t"
-        "mov r0, #2\n\t"
-        "bl sub_802AC28\n\t"
-        "ldr r1, 5f\n\t"
-        "str r0, [r1]\n\t"
-    "1:\n\t"
-        "mov r0, #8\n\t"
-        "mov r1, #7\n\t"
-        "str r0, [r4, #0x28]\n\t"
-        "mov r2, #0\n\t"
-        "str r2, [r4, #0x44]\n\t"
-        "str r1, [r4, #0xc]\n\t"
-        "ldr r0, [r4]\n\t"
-        "add r0, #0x54\n\t"
-        "ldrh r0, [r0]\n\t"
-        "mov r1, #0\n\t"
-        "strh r0, [r4, #0x10]\n\t"
-        "strb r1, [r4, #0x12]\n\t"
-        "str r2, [r4, #8]\n\t"
-        "ldr r1, 6f\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r1]\n\t"
-        "ldr r0, 7f\n\t"
-        "ldr r1, [r0]\n\t"
-        "add r0, r1, #0\n\t"
-        "add r0, #0x8c\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 2f\n\t"
-        "add r0, r1, #0\n\t"
-        "bl sub_8023234\n\t"
-    "2:\n\t"
-        "add sp, #4\n\t"
-        "pop {r4}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "3: .4byte gUnknown_030014A4\n"
-    "4: .4byte 0xFFFFF980\n"
-    "5: .4byte gUnknown_03001490\n"
-    "6: .4byte gUnknown_03001480\n"
-    "7: .4byte gUnknown_030012C0\n"
-    );
+    if (self->animDone) {
+        gUnknown_030014A4 = 0xFFFFF980;
+        if (self->y > 0x2000)
+            gUnknown_03001490 = sub_802AC28(2, self->x, 0x2800, self->z, 0);
+        ACTOR_SET_STATE(self, 8, 7);
+        gUnknown_03001480 = 1;
+        {
+            u8 *player = gUnknown_030012C0;
+
+            if (player[0x8c] == 0)
+                sub_8023234(player);
+        }
+    }
 }
 
 asm(".align 2, 0");
