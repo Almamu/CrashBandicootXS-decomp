@@ -152,3 +152,13 @@ issue's original scope is left raw - but since six functions are NAKED
 rather than real decompiled C, the issue itself stays open per this
 project's "NAKED doesn't count toward closing" convention (see
 CONTRIBUTING.md's "Opening the PR").
+
+## Later pass: issue #16 NAKED retry
+
+`sub_8012D24` (actor_part83.c) and `sub_801283C` (actor_part84.c) are
+real C now, under old_agbcc (both files moved to `OLD_AGBCC_OBJS`), on
+the `struct act` player/action object from `include/action_obj.h`.
+`sub_8012AF4`, `sub_8012420` and `sub_8012694` have old_agbcc drafts
+under `NON_MATCHING`; `sub_8011BD4` wasn't attempted. See
+[issue-15-16-naked-retry.md](issue-15-16-naked-retry.md).
+
