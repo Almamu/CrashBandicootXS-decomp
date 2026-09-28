@@ -1,0 +1,57 @@
+# The real ROM check for fork PRs, split out of build.yml so that workflow's
+# jobs are never skipped (GitHub doesn't evaluate a skipped job's name, which
+# left a raw ${{ }} expression in the PR's check list).
+#
+# `pull_request_target` runs this file as it is on main, so a PR can change
+# the code that gets built but not this job's definition.
+on:
+  pull_request_target:
+
+permissions:
+  contents: read
+
+jobs:
+  # The real ROM check for fork PRs. `pull_request` runs from forks get no
+  # secrets, so they only compile and report (see the build job); this job
+  # builds the fork's code *with* the baserom secrets, so it waits in the
+  # `fork-pr-rom` environment until a maintainer approves the run. Before
+  # approving, review the PR's changes to the Makefile, tools/, and any other
+  # script the build runs - that code executes with access to the ROM.
+  fork-rom-check:
+    if: github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-24.04
+    name: Crash Bandicoot XS European (fork PR ROM check, needs approval)
+    environment: fork-pr-rom
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+        persist-credentials: false
+
+    # checksum.sha1 comes from the PR too, so keep main's copy aside and
+    # compare against that - a PR editing the checksum can't pass itself.
+    - name: Take the checksum from main
+      run: curl -fsS -o "$RUNNER_TEMP/checksum.sha1" "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.event.pull_request.base.sha }}/checksum.sha1"
+
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install build-essential binutils-arm-none-eabi gcc-arm-none-eabi libpng-dev zlib1g-dev python3-pil
+
+    - name: Checkout agbcc
+      uses: actions/checkout@v5
+      with:
+        path: agbcc
+        repository: SAT-R/agbcc
+        persist-credentials: false
+
+    - name: Install agbcc
+      working-directory: agbcc
+      run: ./build.sh && ./install.sh ../
+
+    - name: Fetch baserom
+      run: curl -fsS -o baserom.gba -u '${{ secrets.BASEROM_USERNAME }}:${{ secrets.BASEROM_PASSWORD }}' ${{ secrets.BASEROM_URL }}
+
+    - name: Build
+      run: make crashbandicootxs.gba
+
+    - name: Compare against main's checksum
+      run: sha1sum -c "$RUNNER_TEMP/checksum.sha1"
