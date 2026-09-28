@@ -18,7 +18,10 @@
  * NAKED: the NON_MATCHING draft below follows the ROM block for block,
  * but its register allocation and stack frame differ (468 halfwords off;
  * 1032 bytes under agbcc and 1024 under old_agbcc, against the ROM's
- * 1044). The ROM keeps nearly every local in a 0x48-byte frame. */
+ * 1044). The ROM keeps nearly every local in a 0x48-byte frame. A
+ * single frame struct at the ROM's offsets was tried and is worse (481
+ * under old_agbcc): the ROM's per-use reloads are spilled pseudos, not
+ * memory locals (docs/matching/last-four-naked-retry.md). */
 
 #if NON_MATCHING
 struct oam_attr01 {

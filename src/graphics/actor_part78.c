@@ -80,29 +80,18 @@ struct a884_method {
  * Returns the (possibly just-updated) `self+0x68` state byte.
  *
  * Moved here from asm/code_3_2_16_a884.s as NAKED (issue #9 raw-asm
- * pass). The NON_MATCHING draft below replaced an older one built from
- * register pins and asm islands; it is plain C and closer (127 halfwords
- * off under old_agbcc, 180 under agbcc, against the old draft's 137 under
- * both). The `movs #0x40`/`movs #8` before their `ldrb` show this is
- * old_agbcc code. The methods are gcc 2.x virtual calls through
- * `self+0x18` (`_call_via_r1`/`_call_via_r4`), and the offset-table
- * switch is `sub_80084C4` (actor_part6.c) inlined. What's left: the ROM
- * builds the 0x100/0x102/0x103 flag offsets by walking one register
- * (`adds r1, #3`, `subs r2, #3`), while the draft gives each constant its
- * own register or a literal-pool load. That also makes gcc cross-jump
- * the kind-5 case tail into the kind-7/kind-10 one. */
-#if NON_MATCHING
+ * pass); matched in a later pass. Built with old_agbcc (the `movs
+ * #0x40`/`movs #8` before their `ldrb`). The methods are gcc 2.x virtual
+ * calls through `self+0x18` (`_call_via_r1`/`_call_via_r4`), and the
+ * offset-table switch is `sub_80084C4` (actor_part6.c) inlined. The
+ * ROM's "walking" flag offsets (`adds r1, #3`, `subs r2, #3`) are
+ * reload's move2add reusing a reload register; they come from r3 holds
+ * (no code) that keep reload rotating through r0-r2 only. */
 ACTOR_CALL_VIA_ALIASES
 
 #define A884_METHOD(obj, off) ((struct a884_method *)((obj)->vtable + (off)))
 typedef void (*a884_fn0)(void *self);
 typedef void (*a884_fn3)(void *self, s32 a, s32 b, s32 c);
-
-#define CALL_M70(obj)                                                          \
-    if (1) {                                                                   \
-        struct a884_method *_m = A884_METHOD(obj, 0x70);                       \
-        ((a884_fn0)_m->fn)((u8 *)(obj) + _m->thisOffset);                      \
-    } else (void)0
 
 #define CALL_M68(obj, a, b, c)                                                 \
     if (1) {                                                                   \
@@ -110,11 +99,38 @@ typedef void (*a884_fn3)(void *self, s32 a, s32 b, s32 c);
         ((a884_fn3)_m->fn)((u8 *)(obj) + _m->thisOffset, (a), (b), (c));       \
     } else (void)0
 
+/* The same dispatch with r3 held (no code) from before the method
+ * lookup to after the `this` adjustment: reload skips a live hard
+ * register, so the `ldrsh` index reload takes r2 as in the ROM. */
+#define CALL_M70H(obj)                                                         \
+    if (1) {                                                                   \
+        register s32 _h asm("r3");                                             \
+        struct a884_method *_m;                                                \
+        void *_t;                                                              \
+        asm("" : "=r"(_h)); /* r3 hold starts: no code */                      \
+        _m = A884_METHOD(obj, 0x70);                                           \
+        _t = (u8 *)(obj) + _m->thisOffset;                                     \
+        asm("" : : "r"(_h)); /* r3 hold ends: no code */                       \
+        ((a884_fn0)_m->fn)(_t);                                                \
+    } else (void)0
+
+#define CALL_M68H(obj, a, b, c)                                                \
+    if (1) {                                                                   \
+        register s32 _h asm("r3");                                             \
+        struct a884_method *_m;                                                \
+        void *_t;                                                              \
+        asm("" : "=r"(_h)); /* r3 hold starts: no code */                      \
+        _m = A884_METHOD(obj, 0x68);                                           \
+        _t = (u8 *)(obj) + _m->thisOffset;                                     \
+        asm("" : : "r"(_h)); /* r3 hold ends: no code */                       \
+        ((a884_fn3)_m->fn)(_t, (a), (b), (c));                                 \
+    } else (void)0
+
 static inline s16 *A884Offset(void *part)
 {
     void *info = sub_80083B8(part);
     u8 type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
-    s16 *result;
+    register s16 *result asm("r3"); /* the ROM builds it in r3 */
 
     switch (type) {
     case 0:
@@ -148,13 +164,20 @@ u8 sub_800A884(struct a884_part *self)
         s16 *off;
         s32 x, y;
         s32 zero;
+        register s32 hold asm("r3");
+
+        /* Constant-init without live-range doubling (no code). */
         asm("" : "=r"(zero) : "0"(0));
         self->hitAxes = zero;
         self->f105 = zero;
-        CALL_M70(self);
+        CALL_M70H(self);
         self->f105 = 1;
         ((struct a884_game *)gUnknown_03001308)->busy = 1;
         sub_800A0FC(self);
+        /* r3 hold (no code) over the flag resets and the kind switch:
+         * the ROM's reloads rotate through r0-r2 only, so the flag
+         * offsets reuse one register (`adds r1, #3`, `subs r2, #3`). */
+        asm("" : "=r"(hold));
         ((struct a884_game *)gUnknown_03001308)->busy = zero;
         if (self->unk_ac != 0) {
             self->hitAxes |= 8;
@@ -168,9 +191,14 @@ u8 sub_800A884(struct a884_part *self)
             switch (kind) {
             case 1:
                 self->flags |= 0x40;
-                self->unk_8c = 0;
+                {
+                    /* The ROM stores a fresh 0 from r0 (address in r1). */
+                    s32 *_p = &self->unk_8c;
+                    register s32 _z asm("r0") = 0;
+                    *_p = _z;
+                }
                 sub_80231EC(gUnknown_030012C0, 0);
-                CALL_M68(self, 0, 1, 0);
+                CALL_M68H(self, 0, 1, 0);
                 break;
             case 2:
             case 3:
@@ -179,12 +207,26 @@ u8 sub_800A884(struct a884_part *self)
             case 5:
                 self->f102 = 0;
                 self->f103 = 0;
-                self->f100 = 1;
+                {
+                    /* Constant-init (no code): the 1 is set before the
+                     * address, as in the ROM, which keeps the kind-5 tail
+                     * from being cross-jumped. */
+                    s32 _one;
+                    asm("" : "=r"(_one) : "0"(1));
+                    self->f100 = _one;
+                }
                 break;
             case 7:
                 self->f103 = 0;
                 self->f100 = 0;
-                self->f102 = 1;
+                {
+                    /* Constant-init (no code): the 1 is set before the
+                     * address, as in the ROM, which keeps the kind-5 tail
+                     * from being cross-jumped. */
+                    s32 _one;
+                    asm("" : "=r"(_one) : "0"(1));
+                    self->f102 = _one;
+                }
                 break;
             case 6:
             case 8:
@@ -193,16 +235,24 @@ u8 sub_800A884(struct a884_part *self)
             case 10:
                 self->f102 = 0;
                 self->f100 = 0;
-                self->f103 = 1;
+                {
+                    /* Constant-init (no code): the 1 is set before the
+                     * address, as in the ROM, which keeps the kind-5 tail
+                     * from being cross-jumped. */
+                    s32 _one;
+                    asm("" : "=r"(_one) : "0"(1));
+                    self->f103 = _one;
+                }
                 break;
             }
             ((struct a884_game *)gUnknown_03001308)->kind = 0;
         } else if (self->hitAxes == 8) {
-                self->f102 = 0;
-                self->f103 = 0;
-                self->f100 = 0;
+            self->f102 = 0;
+            self->f103 = 0;
+            self->f100 = 0;
         }
 
+        asm("" : : "r"(hold)); /* r3 hold ends: no code */
         off = A884Offset(self);
         x = self->x >> 8;
         y = self->y >> 8;
@@ -225,307 +275,4 @@ u8 sub_800A884(struct a884_part *self)
     }
     return self->hitAxes;
 }
-#else
-NAKED u8 sub_800A884(struct a884_part *self)
-{
-    asm(".syntax unified\n"
-        "\tpush {r4, r5, r6, r7, lr}\n"
-        "\tadds r5, r0, #0\n"
-        "\tldrb r1, [r5, #0xc]\n"
-        "\tlsrs r0, r1, #7\n"
-        "\tcmp r0, #0\n"
-        "\tbne _0800A892\n"
-        "\tb _0800AADC\n"
-        "_0800A892:\n"
-        "\tmovs r4, #0\n"
-        "\tadds r7, r5, #0\n"
-        "\tadds r7, #0x68\n"
-        "\tstrb r4, [r7]\n"
-        "\tldr r2, _0800A90C\n"
-        "\tadds r6, r5, r2\n"
-        "\tstrb r4, [r6]\n"
-        "\tldr r1, [r5, #0x18]\n"
-        "\tadds r1, #0x70\n"
-        "\tmovs r2, #0\n"
-        "\tldrsh r0, [r1, r2]\n"
-        "\tadds r0, r5, r0\n"
-        "\tldr r1, [r1, #4]\n"
-        "\tbl sub_803AD7C\n"
-        "\tmovs r1, #1\n"
-        "\tstrb r1, [r6]\n"
-        "\tldr r6, _0800A910\n"
-        "\tldr r0, [r6]\n"
-        "\tadds r0, #0x2a\n"
-        "\tstrb r1, [r0]\n"
-        "\tadds r0, r5, #0\n"
-        "\tbl sub_800A0FC\n"
-        "\tldr r0, [r6]\n"
-        "\tadds r0, #0x2a\n"
-        "\tstrb r4, [r0]\n"
-        "\tadds r1, r5, #0\n"
-        "\tadds r1, #0xac\n"
-        "\tldr r0, [r1]\n"
-        "\tcmp r0, #0\n"
-        "\tbeq _0800A8F2\n"
-        "\tmovs r0, #8\n"
-        "\tldrb r2, [r7]\n"
-        "\torrs r0, r2\n"
-        "\tstrb r0, [r7]\n"
-        "\tstr r4, [r1]\n"
-        "\tmovs r1, #0x80\n"
-        "\tlsls r1, r1, #1\n"
-        "\tadds r0, r5, r1\n"
-        "\tstrb r4, [r0]\n"
-        "\tmovs r2, #0x81\n"
-        "\tlsls r2, r2, #1\n"
-        "\tadds r0, r5, r2\n"
-        "\tstrb r4, [r0]\n"
-        "\tadds r1, #3\n"
-        "\tadds r0, r5, r1\n"
-        "\tstrb r4, [r0]\n"
-        "_0800A8F2:\n"
-        "\tldr r0, [r6]\n"
-        "\tadds r0, #0x29\n"
-        "\tldrb r1, [r0]\n"
-        "\tcmp r1, #0\n"
-        "\tbeq _0800A9DC\n"
-        "\tsubs r0, r1, #1\n"
-        "\tcmp r0, #9\n"
-        "\tbhi _0800A9CE\n"
-        "\tlsls r0, r0, #2\n"
-        "\tldr r1, _0800A914\n"
-        "\tadds r0, r0, r1\n"
-        "\tldr r0, [r0]\n"
-        "\tmov pc, r0\n"
-        "\t.align 2, 0\n"
-        "_0800A90C: .4byte 0x00000105\n"
-        "_0800A910: .4byte gUnknown_03001308\n"
-        "_0800A914: .4byte _0800A918\n"
-        "_0800A918:\n"
-        "\t.4byte _0800A940\n"
-        "\t.4byte _0800A9CE\n"
-        "\t.4byte _0800A9CE\n"
-        "\t.4byte _0800A9CE\n"
-        "\t.4byte _0800A978\n"
-        "\t.4byte _0800A9CE\n"
-        "\t.4byte _0800A998\n"
-        "\t.4byte _0800A9CE\n"
-        "\t.4byte _0800A9CE\n"
-        "\t.4byte _0800A9B4\n"
-        "_0800A940:\n"
-        "\tmovs r0, #0x40\n"
-        "\tldrb r2, [r5, #0xc]\n"
-        "\torrs r0, r2\n"
-        "\tstrb r0, [r5, #0xc]\n"
-        "\tadds r1, r5, #0\n"
-        "\tadds r1, #0x8c\n"
-        "\tmovs r0, #0\n"
-        "\tstr r0, [r1]\n"
-        "\tldr r0, _0800A974\n"
-        "\tldr r0, [r0]\n"
-        "\tmovs r1, #0\n"
-        "\tbl sub_80231EC\n"
-        "\tldr r1, [r5, #0x18]\n"
-        "\tadds r1, #0x68\n"
-        "\tmovs r2, #0\n"
-        "\tldrsh r0, [r1, r2]\n"
-        "\tadds r0, r5, r0\n"
-        "\tldr r4, [r1, #4]\n"
-        "\tmovs r1, #0\n"
-        "\tmovs r2, #1\n"
-        "\tmovs r3, #0\n"
-        "\tbl sub_803AD88\n"
-        "\tb _0800A9CE\n"
-        "\t.align 2, 0\n"
-        "_0800A974: .4byte gUnknown_030012C0\n"
-        "_0800A978:\n"
-        "\tmovs r0, #0x81\n"
-        "\tlsls r0, r0, #1\n"
-        "\tadds r1, r5, r0\n"
-        "\tmovs r0, #0\n"
-        "\tstrb r0, [r1]\n"
-        "\tldr r2, _0800A994\n"
-        "\tadds r1, r5, r2\n"
-        "\tstrb r0, [r1]\n"
-        "\tmovs r1, #1\n"
-        "\tsubs r2, #3\n"
-        "\tadds r0, r5, r2\n"
-        "\tstrb r1, [r0]\n"
-        "\tb _0800A9CE\n"
-        "\t.align 2, 0\n"
-        "_0800A994: .4byte 0x00000103\n"
-        "_0800A998:\n"
-        "\tldr r0, _0800A9B0\n"
-        "\tadds r1, r5, r0\n"
-        "\tmovs r0, #0\n"
-        "\tstrb r0, [r1]\n"
-        "\tmovs r2, #0x80\n"
-        "\tlsls r2, r2, #1\n"
-        "\tadds r1, r5, r2\n"
-        "\tstrb r0, [r1]\n"
-        "\tmovs r0, #1\n"
-        "\tadds r2, #2\n"
-        "\tb _0800A9CA\n"
-        "\t.align 2, 0\n"
-        "_0800A9B0: .4byte 0x00000103\n"
-        "_0800A9B4:\n"
-        "\tmovs r0, #0x81\n"
-        "\tlsls r0, r0, #1\n"
-        "\tadds r1, r5, r0\n"
-        "\tmovs r0, #0\n"
-        "\tstrb r0, [r1]\n"
-        "\tmovs r2, #0x80\n"
-        "\tlsls r2, r2, #1\n"
-        "\tadds r1, r5, r2\n"
-        "\tstrb r0, [r1]\n"
-        "\tmovs r0, #1\n"
-        "\tadds r2, #3\n"
-        "_0800A9CA:\n"
-        "\tadds r1, r5, r2\n"
-        "\tstrb r0, [r1]\n"
-        "_0800A9CE:\n"
-        "\tldr r0, _0800A9D8\n"
-        "\tldr r0, [r0]\n"
-        "\tadds r0, #0x29\n"
-        "\tmovs r1, #0\n"
-        "\tb _0800A9F4\n"
-        "\t.align 2, 0\n"
-        "_0800A9D8: .4byte gUnknown_03001308\n"
-        "_0800A9DC:\n"
-        "\tldrb r7, [r7]\n"
-        "\tcmp r7, #8\n"
-        "\tbne _0800A9F6\n"
-        "\tmovs r2, #0x81\n"
-        "\tlsls r2, r2, #1\n"
-        "\tadds r0, r5, r2\n"
-        "\tstrb r1, [r0]\n"
-        "\tadds r2, #1\n"
-        "\tadds r0, r5, r2\n"
-        "\tstrb r1, [r0]\n"
-        "\tsubs r2, #3\n"
-        "\tadds r0, r5, r2\n"
-        "_0800A9F4:\n"
-        "\tstrb r1, [r0]\n"
-        "_0800A9F6:\n"
-        "\tadds r0, r5, #0\n"
-        "\tbl sub_80083B8\n"
-        "\tadds r2, r0, #0\n"
-        "\tldr r0, [r2, #4]\n"
-        "\tldrb r0, [r0]\n"
-        "\tlsrs r0, r0, #4\n"
-        "\tcmp r0, #6\n"
-        "\tbhi _0800AA40\n"
-        "\tlsls r0, r0, #2\n"
-        "\tldr r1, _0800AA14\n"
-        "\tadds r0, r0, r1\n"
-        "\tldr r0, [r0]\n"
-        "\tmov pc, r0\n"
-        "\t.align 2, 0\n"
-        "_0800AA14: .4byte _0800AA18\n"
-        "_0800AA18:\n"
-        "\t.4byte _0800AA34\n"
-        "\t.4byte _0800AA40\n"
-        "\t.4byte _0800AA40\n"
-        "\t.4byte _0800AA40\n"
-        "\t.4byte _0800AA40\n"
-        "\t.4byte _0800AA40\n"
-        "\t.4byte _0800AA3A\n"
-        "_0800AA34:\n"
-        "\tadds r3, r2, #0\n"
-        "\tadds r3, #0x24\n"
-        "\tb _0800AA42\n"
-        "_0800AA3A:\n"
-        "\tadds r3, r2, #0\n"
-        "\tadds r3, #0x14\n"
-        "\tb _0800AA42\n"
-        "_0800AA40:\n"
-        "\tldr r3, _0800AA60\n"
-        "_0800AA42:\n"
-        "\tldr r0, [r5]\n"
-        "\tasrs r1, r0, #8\n"
-        "\tldr r0, [r5, #4]\n"
-        "\tasrs r4, r0, #8\n"
-        "\tadds r0, r5, #0\n"
-        "\tadds r0, #0x28\n"
-        "\tldrb r0, [r0]\n"
-        "\tlsls r0, r0, #0x1b\n"
-        "\tcmp r0, #0\n"
-        "\tbge _0800AA64\n"
-        "\tmovs r2, #0\n"
-        "\tldrsh r0, [r3, r2]\n"
-        "\tsubs r1, r1, r0\n"
-        "\tb _0800AA6A\n"
-        "\t.align 2, 0\n"
-        "_0800AA60: .4byte gStaticData_0816B300\n"
-        "_0800AA64:\n"
-        "\tmovs r2, #0\n"
-        "\tldrsh r0, [r3, r2]\n"
-        "\tadds r1, r1, r0\n"
-        "_0800AA6A:\n"
-        "\tmovs r2, #2\n"
-        "\tldrsh r0, [r3, r2]\n"
-        "\tadds r4, r4, r0\n"
-        "\tldr r0, _0800AAB0\n"
-        "\tldr r0, [r0]\n"
-        "\tadds r2, r4, #0\n"
-        "\tbl sub_8026BC0\n"
-        "\tcmp r0, #6\n"
-        "\tbne _0800AABC\n"
-        "\tldr r1, _0800AAB4\n"
-        "\tadds r0, r5, r1\n"
-        "\tldrb r0, [r0]\n"
-        "\tcmp r0, #0\n"
-        "\tbne _0800AADC\n"
-        "\tldr r0, _0800AAB8\n"
-        "\tands r0, r4\n"
-        "\tadds r0, #7\n"
-        "\tsubs r0, r0, r4\n"
-        "\tlsls r0, r0, #8\n"
-        "\tldr r1, [r5, #4]\n"
-        "\tadds r1, r1, r0\n"
-        "\tstr r1, [r5, #4]\n"
-        "\tldr r1, [r5, #0x18]\n"
-        "\tadds r1, #0x68\n"
-        "\tmovs r2, #0\n"
-        "\tldrsh r0, [r1, r2]\n"
-        "\tadds r0, r5, r0\n"
-        "\tldr r4, [r1, #4]\n"
-        "\tmovs r1, #0\n"
-        "\tmovs r2, #0x17\n"
-        "\tmovs r3, #0\n"
-        "\tbl sub_803AD88\n"
-        "\tb _0800AADC\n"
-        "\t.align 2, 0\n"
-        "_0800AAB0: .4byte gUnknown_03001308\n"
-        "_0800AAB4: .4byte 0x00000101\n"
-        "_0800AAB8: .4byte 0x00FFFFF8\n"
-        "_0800AABC:\n"
-        "\tldr r1, _0800AAE8\n"
-        "\tadds r0, r5, r1\n"
-        "\tldrb r0, [r0]\n"
-        "\tcmp r0, #0\n"
-        "\tbeq _0800AADC\n"
-        "\tldr r1, [r5, #0x18]\n"
-        "\tadds r1, #0x68\n"
-        "\tmovs r2, #0\n"
-        "\tldrsh r0, [r1, r2]\n"
-        "\tadds r0, r5, r0\n"
-        "\tldr r4, [r1, #4]\n"
-        "\tmovs r1, #0\n"
-        "\tmovs r2, #0x18\n"
-        "\tmovs r3, #0\n"
-        "\tbl sub_803AD88\n"
-        "_0800AADC:\n"
-        "\tadds r0, r5, #0\n"
-        "\tadds r0, #0x68\n"
-        "\tldrb r0, [r0]\n"
-        "\tpop {r4, r5, r6, r7}\n"
-        "\tpop {r1}\n"
-        "\tbx r1\n"
-        "\t.align 2, 0\n"
-        "_0800AAE8: .4byte 0x00000101\n"
-        ".syntax divided\n");
-}
-
-#endif /* NON_MATCHING */
 asm(".align 2, 0");
