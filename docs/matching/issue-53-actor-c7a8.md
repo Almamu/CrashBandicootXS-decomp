@@ -222,3 +222,12 @@ A later pass closed out `sub_802CC9C` (NAKED-parked - the heavy
 after it, finishing this whole gap up to issue #54's own
 `sub_802D3A8`. See
 [docs/matching/issue-53-issue-54-gap-cc9c.md](./issue-53-issue-54-gap-cc9c.md).
+
+## Later pass: `sub_802C7A8` promoted
+
+`sub_802C7A8` (in GitHub issue #52's range) is now plain C under
+old_agbcc (`actor_part19h.c` moved). It uses the same `ActorsOverlap`
+inline as `actor_part103.c`, with the three boxes in one frame struct.
+gcc then hoists the third box's address into `r7` by itself, with no
+pin. See
+[issue-48-49-52-aabb-naked-retry.md](issue-48-49-52-aabb-naked-retry.md).

@@ -1,4 +1,7 @@
 #include "core.h"
+#include "actor_self.h"
+
+ACTOR_CALL_VIA_ALIASES
 
 /* This cluster (`sub_802A018`, `sub_802A110`, `sub_802A208`, `sub_802A3AC`,
  * ROM 0x0802A018-0x0802A4D4) sits inside the "actor" chunk starting at
@@ -15,289 +18,101 @@
  * issue-58-0x08030574-actor.md). `sub_802A3AC` is the same test wrapped in
  * an outer walk of the whole `gUnknown_03000884`-rooted circular list
  * (`self+0x4c`), gated by a `sub_803AD7C` per-node visibility check first
- * (same shape as `sub_802C7A8`).
+ * (same shape as `sub_802C7A8`, actor_part19h.c).
  *
- * All three hit this project's CONFIRMED CATEGORICAL gcc-2.9 `r7`
- * register-allocation bug: this compiler's unforced allocator never
- * reaches `r7` for the second scratch AABB box's address held live across
- * both `sub_800014C` calls and the whole comparison chain, no matter how
- * the C is phrased (tried: struct-typed locals with sequential field
- * updates matching the ROM's own store order, pointer-cast raw offsets,
- * splitting the translate step into separate statements). A real-C
- * attempt at `sub_802A018` reproduces the exact same logic and
- * instruction *shape* but allocates different low registers throughout
- * and needs the `sub_800014C` self-copy pair, diverging from the ROM's
- * own register choices - see docs/matching/naked-spatial-grid-tail.md
- * and this doc's sibling entries for the general pattern. NAKED per
- * docs/workflow.md's escape hatch; every instruction below is
- * transcribed directly from the ROM disassembly
- * (`asm/code_3_2_20_8b7c.s`) and verified byte-for-byte against
- * `baserom.gba` (dd + objdump -b binary --disassembler-options=force-thumb),
- * not inferred. */
+ * All three share the `ActorsOverlap` inline below. Its three boxes are
+ * members of one frame struct (the actor_part74.c/actor_part81.c
+ * pattern), so every box address is a fresh `add rX, sp, #off`; only
+ * the pointer to the middle box stays live across both `sub_800014C`
+ * calls (that is the ROM's `r4`, or `r7` once `sub_802A3AC`'s loop
+ * hoists it). The first actor's position is read into locals before
+ * that pointer is taken, which puts its `add r4, sp, #0xc` after the
+ * three loads. The old note blamed an unreachable `r7`; the file
+ * simply needs old_agbcc (current agbcc schedules the `asr`s
+ * differently, 24-26 halfwords off). `sub_802A208` is NAKED and
+ * assembles the same under either compiler. */
 
-extern void *gUnknown_03000884;
+extern struct actor_self *gUnknown_03000884;
 extern u8 gUnknown_030014A0;
 extern u8 gUnknown_03001506;
 
 extern void *sub_800014C(void *dst, const void *src, u32 byteCount);
 
-NAKED s32 sub_802A018(void *self)
+/* Method slot 0x28 of the actor method table (`self+0x50`), which
+ * `struct actor_vtable` still lumps into padding. */
+struct actor_methods {
+    u8 unk_00[0x28];
+    struct actor_method m28; // "skip in overlap scans" query
+};
+
+typedef u8 (*actor_query_fn)(void *self);
+
+/* `+0x4c`: next node of the circular actor list rooted at
+ * `gUnknown_03000884`. */
+#define ACTOR_NEXT(a) (*(struct actor_self **)&(a)->unk_48[4])
+
+struct box16 {
+    s16 x, y, z;
+    s16 w, h, d;
+};
+
+static inline void BoxMove(struct box16 *b, s32 x, s32 y, s32 z)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "sub sp, #0x24\n\t"
-        "add r5, r0, #0\n\t"
-        "ldr r2, 1f\n\t"
-        "ldr r0, 2f\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 3f\n\t"
-        "ldr r2, [r2]\n\t"
-        "add r1, sp, #0xc\n\t"
-        "add r0, r2, #0\n\t"
-        "add r0, #0x38\n\t"
-        "ldm r0!, {r3, r4, r6}\n\t"
-        "stm r1!, {r3, r4, r6}\n\t"
-        "ldr r0, [r2, #0x1c]\n\t"
-        "asr r0, r0, #8\n\t"
-        "ldr r3, [r2, #0x20]\n\t"
-        "asr r3, r3, #8\n\t"
-        "ldr r1, [r2, #0x24]\n\t"
-        "asr r1, r1, #8\n\t"
-        "add r4, sp, #0xc\n\t"
-        "ldrh r2, [r4]\n\t"
-        "add r0, r2, r0\n\t"
-        "strh r0, [r4]\n\t"
-        "ldrh r0, [r4, #2]\n\t"
-        "add r0, r0, r3\n\t"
-        "strh r0, [r4, #2]\n\t"
-        "ldrh r3, [r4, #4]\n\t"
-        "add r1, r3, r1\n\t"
-        "strh r1, [r4, #4]\n\t"
-        "mov r1, sp\n\t"
-        "add r0, r4, #0\n\t"
-        "ldm r0!, {r2, r3, r6}\n\t"
-        "stm r1!, {r2, r3, r6}\n\t"
-        "mov r0, sp\n\t"
-        "mov r1, sp\n\t"
-        "mov r2, #0xc\n\t"
-        "bl sub_800014C\n\t"
-        "add r1, sp, #0x18\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x38\n\t"
-        "ldm r0!, {r2, r3, r6}\n\t"
-        "stm r1!, {r2, r3, r6}\n\t"
-        "ldr r0, [r5, #0x1c]\n\t"
-        "asr r0, r0, #8\n\t"
-        "ldr r3, [r5, #0x20]\n\t"
-        "asr r3, r3, #8\n\t"
-        "ldr r2, [r5, #0x24]\n\t"
-        "asr r2, r2, #8\n\t"
-        "add r1, sp, #0x18\n\t"
-        "ldrh r5, [r1]\n\t"
-        "add r0, r5, r0\n\t"
-        "strh r0, [r1]\n\t"
-        "ldrh r0, [r1, #2]\n\t"
-        "add r0, r0, r3\n\t"
-        "strh r0, [r1, #2]\n\t"
-        "ldrh r6, [r1, #4]\n\t"
-        "add r2, r6, r2\n\t"
-        "strh r2, [r1, #4]\n\t"
-        "add r0, r4, #0\n\t"
-        "ldm r1!, {r2, r3, r5}\n\t"
-        "stm r0!, {r2, r3, r5}\n\t"
-        "add r0, r4, #0\n\t"
-        "add r1, r4, #0\n\t"
-        "mov r2, #0xc\n\t"
-        "bl sub_800014C\n\t"
-        "mov r1, sp\n\t"
-        "mov r6, #4\n\t"
-        "ldrsh r2, [r1, r6]\n\t"
-        "mov r0, #4\n\t"
-        "ldrsh r3, [r4, r0]\n\t"
-        "mov r5, #0xa\n\t"
-        "ldrsh r0, [r4, r5]\n\t"
-        "add r0, r3, r0\n\t"
-        "cmp r2, r0\n\t"
-        "bge 3f\n\t"
-        "mov r6, #0xa\n\t"
-        "ldrsh r0, [r1, r6]\n\t"
-        "add r0, r2, r0\n\t"
-        "cmp r0, r3\n\t"
-        "ble 3f\n\t"
-        "mov r0, #2\n\t"
-        "ldrsh r2, [r1, r0]\n\t"
-        "mov r5, #2\n\t"
-        "ldrsh r3, [r4, r5]\n\t"
-        "mov r6, #8\n\t"
-        "ldrsh r0, [r4, r6]\n\t"
-        "add r0, r3, r0\n\t"
-        "cmp r2, r0\n\t"
-        "bge 3f\n\t"
-        "mov r5, #8\n\t"
-        "ldrsh r0, [r1, r5]\n\t"
-        "add r0, r2, r0\n\t"
-        "cmp r0, r3\n\t"
-        "ble 3f\n\t"
-        "mov r6, #0\n\t"
-        "ldrsh r2, [r1, r6]\n\t"
-        "mov r0, #0\n\t"
-        "ldrsh r3, [r4, r0]\n\t"
-        "mov r5, #6\n\t"
-        "ldrsh r0, [r4, r5]\n\t"
-        "add r0, r3, r0\n\t"
-        "cmp r2, r0\n\t"
-        "bge 3f\n\t"
-        "mov r6, #6\n\t"
-        "ldrsh r0, [r1, r6]\n\t"
-        "add r0, r2, r0\n\t"
-        "cmp r0, r3\n\t"
-        "bgt 4f\n\t"
-        "3:\n\t"
-        "mov r0, #0\n\t"
-        "b 5f\n\t"
-        ".align 2, 0\n"
-        "1: .4byte gUnknown_03000884\n"
-        "2: .4byte gUnknown_030014A0\n"
-        "4:\n\t"
-        "mov r0, #1\n\t"
-        "5:\n\t"
-        "add sp, #0x24\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-    );
+    b->x += x;
+    b->y += y;
+    b->z += z;
 }
 
-/* Byte-identical shape to `sub_802A018` above, gated on a different guard
- * byte (`gUnknown_03001506` instead of `gUnknown_030014A0`) - see that
- * function's doc comment for the full rationale. */
-NAKED s32 sub_802A110(void *self)
+static inline u8 BoxOverlap(struct box16 *b, struct box16 *a)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "sub sp, #0x24\n\t"
-        "add r5, r0, #0\n\t"
-        "ldr r2, 1f\n\t"
-        "ldr r0, 2f\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 3f\n\t"
-        "ldr r2, [r2]\n\t"
-        "add r1, sp, #0xc\n\t"
-        "add r0, r2, #0\n\t"
-        "add r0, #0x38\n\t"
-        "ldm r0!, {r3, r4, r6}\n\t"
-        "stm r1!, {r3, r4, r6}\n\t"
-        "ldr r0, [r2, #0x1c]\n\t"
-        "asr r0, r0, #8\n\t"
-        "ldr r3, [r2, #0x20]\n\t"
-        "asr r3, r3, #8\n\t"
-        "ldr r1, [r2, #0x24]\n\t"
-        "asr r1, r1, #8\n\t"
-        "add r4, sp, #0xc\n\t"
-        "ldrh r2, [r4]\n\t"
-        "add r0, r2, r0\n\t"
-        "strh r0, [r4]\n\t"
-        "ldrh r0, [r4, #2]\n\t"
-        "add r0, r0, r3\n\t"
-        "strh r0, [r4, #2]\n\t"
-        "ldrh r3, [r4, #4]\n\t"
-        "add r1, r3, r1\n\t"
-        "strh r1, [r4, #4]\n\t"
-        "mov r1, sp\n\t"
-        "add r0, r4, #0\n\t"
-        "ldm r0!, {r2, r3, r6}\n\t"
-        "stm r1!, {r2, r3, r6}\n\t"
-        "mov r0, sp\n\t"
-        "mov r1, sp\n\t"
-        "mov r2, #0xc\n\t"
-        "bl sub_800014C\n\t"
-        "add r1, sp, #0x18\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x38\n\t"
-        "ldm r0!, {r2, r3, r6}\n\t"
-        "stm r1!, {r2, r3, r6}\n\t"
-        "ldr r0, [r5, #0x1c]\n\t"
-        "asr r0, r0, #8\n\t"
-        "ldr r3, [r5, #0x20]\n\t"
-        "asr r3, r3, #8\n\t"
-        "ldr r2, [r5, #0x24]\n\t"
-        "asr r2, r2, #8\n\t"
-        "add r1, sp, #0x18\n\t"
-        "ldrh r5, [r1]\n\t"
-        "add r0, r5, r0\n\t"
-        "strh r0, [r1]\n\t"
-        "ldrh r0, [r1, #2]\n\t"
-        "add r0, r0, r3\n\t"
-        "strh r0, [r1, #2]\n\t"
-        "ldrh r6, [r1, #4]\n\t"
-        "add r2, r6, r2\n\t"
-        "strh r2, [r1, #4]\n\t"
-        "add r0, r4, #0\n\t"
-        "ldm r1!, {r2, r3, r5}\n\t"
-        "stm r0!, {r2, r3, r5}\n\t"
-        "add r0, r4, #0\n\t"
-        "add r1, r4, #0\n\t"
-        "mov r2, #0xc\n\t"
-        "bl sub_800014C\n\t"
-        "mov r1, sp\n\t"
-        "mov r6, #4\n\t"
-        "ldrsh r2, [r1, r6]\n\t"
-        "mov r0, #4\n\t"
-        "ldrsh r3, [r4, r0]\n\t"
-        "mov r5, #0xa\n\t"
-        "ldrsh r0, [r4, r5]\n\t"
-        "add r0, r3, r0\n\t"
-        "cmp r2, r0\n\t"
-        "bge 3f\n\t"
-        "mov r6, #0xa\n\t"
-        "ldrsh r0, [r1, r6]\n\t"
-        "add r0, r2, r0\n\t"
-        "cmp r0, r3\n\t"
-        "ble 3f\n\t"
-        "mov r0, #2\n\t"
-        "ldrsh r2, [r1, r0]\n\t"
-        "mov r5, #2\n\t"
-        "ldrsh r3, [r4, r5]\n\t"
-        "mov r6, #8\n\t"
-        "ldrsh r0, [r4, r6]\n\t"
-        "add r0, r3, r0\n\t"
-        "cmp r2, r0\n\t"
-        "bge 3f\n\t"
-        "mov r5, #8\n\t"
-        "ldrsh r0, [r1, r5]\n\t"
-        "add r0, r2, r0\n\t"
-        "cmp r0, r3\n\t"
-        "ble 3f\n\t"
-        "mov r6, #0\n\t"
-        "ldrsh r2, [r1, r6]\n\t"
-        "mov r0, #0\n\t"
-        "ldrsh r3, [r4, r0]\n\t"
-        "mov r5, #6\n\t"
-        "ldrsh r0, [r4, r5]\n\t"
-        "add r0, r3, r0\n\t"
-        "cmp r2, r0\n\t"
-        "bge 3f\n\t"
-        "mov r6, #6\n\t"
-        "ldrsh r0, [r1, r6]\n\t"
-        "add r0, r2, r0\n\t"
-        "cmp r0, r3\n\t"
-        "bgt 4f\n\t"
-        "3:\n\t"
-        "mov r0, #0\n\t"
-        "b 5f\n\t"
-        ".align 2, 0\n"
-        "1: .4byte gUnknown_03000884\n"
-        "2: .4byte gUnknown_03001506\n"
-        "4:\n\t"
-        "mov r0, #1\n\t"
-        "5:\n\t"
-        "add sp, #0x24\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-    );
+    if (b->z < a->z + a->d && b->z + b->d > a->z
+        && b->y < a->y + a->h && b->y + b->h > a->y
+        && b->x < a->x + a->w && b->x + b->w > a->x)
+        goto hit;
+    return 0;
+hit:
+    return 1;
+}
+
+static inline u8 ActorsOverlap(struct actor_self *pl, struct actor_self *self)
+{
+    struct {
+        struct box16 a, t, s;
+    } f;
+    struct box16 *t;
+    s32 x, y, z;
+
+    f.t = *(struct box16 *)pl->unk_38;
+    x = pl->x >> 8;
+    y = pl->y >> 8;
+    z = pl->z >> 8;
+    t = &f.t;
+    BoxMove(t, x, y, z);
+    f.a = *t;
+    sub_800014C(&f.a, &f.a, sizeof(f.a));
+    f.s = *(struct box16 *)self->unk_38;
+    BoxMove(&f.s, self->x >> 8, self->y >> 8, self->z >> 8);
+    *t = f.s;
+    sub_800014C(t, t, sizeof(*t));
+    return BoxOverlap(&f.a, t);
+}
+
+s32 sub_802A018(struct actor_self *self)
+{
+    struct actor_self **plAddr = &gUnknown_03000884;
+
+    if (gUnknown_030014A0 != 0)
+        return 0;
+    return ActorsOverlap(*plAddr, self);
+}
+
+s32 sub_802A110(struct actor_self *self)
+{
+    struct actor_self **plAddr = &gUnknown_03000884;
+
+    if (gUnknown_03001506 != 0)
+        return 0;
+    return ActorsOverlap(*plAddr, self);
 }
 
 /* `sub_802A208`: fires a "scroll enter/exit" trampoline pair off
@@ -539,172 +354,25 @@ NAKED s32 sub_802A208(void)
 /* `sub_802A3AC`: walks the whole `gUnknown_03000884`-rooted circular
  * actor list (`self+0x4c`) looking for the first OTHER node
  * (`self`'s own arg0, held live in `r8` for the whole function) that
- * passes a `sub_803AD7C` per-node visibility check and overlaps
- * `self`'s translated 12-byte AABB - the exact same categorical `r7`
- * register-allocation wall as `sub_802A018`/`sub_802A110` above (see
- * their doc comment), just with the AABB test's second scratch box now
- * additionally wrapped in an outer list-walk loop, and `self`'s own
- * pointer pinned in `r8` for the whole function on top of the already-
- * confirmed-unreachable `r7`. NAKED per docs/workflow.md's escape
- * hatch; every instruction below is transcribed directly from the ROM
- * disassembly (`asm/code_3_2_20_8b7c.s`) and verified byte-for-byte
- * against `baserom.gba`, not inferred. */
-NAKED void *sub_802A3AC(void *self)
+ * passes its method-table slot 0x28 query (false = not skipped) and
+ * overlaps `self`'s translated 12-byte AABB, via the same
+ * `ActorsOverlap` inline as `sub_802A018`. Inside the loop gcc hoists
+ * the third box's `sp+0x18` address into `r7` by itself. */
+void *sub_802A3AC(struct actor_self *self)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, r8\n\t"
-        "push {r7}\n\t"
-        "sub sp, #0x24\n\t"
-        "mov r8, r0\n\t"
-        "ldr r0, 8f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r5, [r0, #0x4c]\n\t"
-        "add r7, sp, #0x18\n\t"
-        "1:\n\t"
-        "cmp r5, r8\n\t"
-        "beq 2f\n\t"
-        "ldr r1, [r5, #0x50]\n\t"
-        "mov r2, #0x28\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r1, [r1, #0x2c]\n\t"
-        "bl sub_803AD7C\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "bne 2f\n\t"
-        "add r1, sp, #0xc\n\t"
-        "mov r0, r8\n\t"
-        "add r0, #0x38\n\t"
-        "ldm r0!, {r3, r4, r6}\n\t"
-        "stm r1!, {r3, r4, r6}\n\t"
-        "mov r1, r8\n\t"
-        "ldr r0, [r1, #0x1c]\n\t"
-        "asr r0, r0, #8\n\t"
-        "ldr r2, [r1, #0x20]\n\t"
-        "asr r2, r2, #8\n\t"
-        "ldr r1, [r1, #0x24]\n\t"
-        "asr r1, r1, #8\n\t"
-        "add r4, sp, #0xc\n\t"
-        "ldrh r3, [r4]\n\t"
-        "add r0, r3, r0\n\t"
-        "strh r0, [r4]\n\t"
-        "ldrh r0, [r4, #2]\n\t"
-        "add r0, r0, r2\n\t"
-        "strh r0, [r4, #2]\n\t"
-        "ldrh r6, [r4, #4]\n\t"
-        "add r1, r6, r1\n\t"
-        "strh r1, [r4, #4]\n\t"
-        "mov r1, sp\n\t"
-        "add r0, r4, #0\n\t"
-        "ldm r0!, {r2, r3, r6}\n\t"
-        "stm r1!, {r2, r3, r6}\n\t"
-        "mov r0, sp\n\t"
-        "mov r1, sp\n\t"
-        "mov r2, #0xc\n\t"
-        "bl sub_800014C\n\t"
-        "add r1, sp, #0x18\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x38\n\t"
-        "ldm r0!, {r2, r3, r6}\n\t"
-        "stm r1!, {r2, r3, r6}\n\t"
-        "ldr r0, [r5, #0x1c]\n\t"
-        "asr r0, r0, #8\n\t"
-        "ldr r2, [r5, #0x20]\n\t"
-        "asr r2, r2, #8\n\t"
-        "ldr r1, [r5, #0x24]\n\t"
-        "asr r1, r1, #8\n\t"
-        "ldrh r3, [r7]\n\t"
-        "add r0, r3, r0\n\t"
-        "strh r0, [r7]\n\t"
-        "ldrh r0, [r7, #2]\n\t"
-        "add r0, r0, r2\n\t"
-        "strh r0, [r7, #2]\n\t"
-        "ldrh r6, [r7, #4]\n\t"
-        "add r1, r6, r1\n\t"
-        "strh r1, [r7, #4]\n\t"
-        "add r1, r4, #0\n\t"
-        "add r0, r7, #0\n\t"
-        "ldm r0!, {r2, r3, r6}\n\t"
-        "stm r1!, {r2, r3, r6}\n\t"
-        "add r0, r4, #0\n\t"
-        "add r1, r4, #0\n\t"
-        "mov r2, #0xc\n\t"
-        "bl sub_800014C\n\t"
-        "mov r1, sp\n\t"
-        "mov r0, #4\n\t"
-        "ldrsh r2, [r1, r0]\n\t"
-        "mov r6, #4\n\t"
-        "ldrsh r3, [r4, r6]\n\t"
-        "mov r6, #0xa\n\t"
-        "ldrsh r0, [r4, r6]\n\t"
-        "add r0, r3, r0\n\t"
-        "cmp r2, r0\n\t"
-        "bge 3f\n\t"
-        "mov r6, #0xa\n\t"
-        "ldrsh r0, [r1, r6]\n\t"
-        "add r0, r2, r0\n\t"
-        "cmp r0, r3\n\t"
-        "ble 3f\n\t"
-        "mov r0, #2\n\t"
-        "ldrsh r2, [r1, r0]\n\t"
-        "mov r6, #2\n\t"
-        "ldrsh r3, [r4, r6]\n\t"
-        "mov r6, #8\n\t"
-        "ldrsh r0, [r4, r6]\n\t"
-        "add r0, r3, r0\n\t"
-        "cmp r2, r0\n\t"
-        "bge 3f\n\t"
-        "mov r6, #8\n\t"
-        "ldrsh r0, [r1, r6]\n\t"
-        "add r0, r2, r0\n\t"
-        "cmp r0, r3\n\t"
-        "ble 3f\n\t"
-        "mov r0, #0\n\t"
-        "ldrsh r2, [r1, r0]\n\t"
-        "mov r6, #0\n\t"
-        "ldrsh r3, [r4, r6]\n\t"
-        "mov r0, #6\n\t"
-        "ldrsh r4, [r4, r0]\n\t"
-        "add r0, r3, r4\n\t"
-        "cmp r2, r0\n\t"
-        "bge 3f\n\t"
-        "mov r4, #6\n\t"
-        "ldrsh r0, [r1, r4]\n\t"
-        "add r0, r2, r0\n\t"
-        "cmp r0, r3\n\t"
-        "bgt 4f\n\t"
-        "3:\n\t"
-        "mov r0, #0\n\t"
-        "b 5f\n\t"
-        ".align 2, 0\n"
-        "8: .4byte gUnknown_03000884\n"
-        "4:\n\t"
-        "mov r0, #1\n\t"
-        "5:\n\t"
-        "cmp r0, #0\n\t"
-        "beq 2f\n\t"
-        "add r0, r5, #0\n\t"
-        "b 6f\n\t"
-        "2:\n\t"
-        "ldr r5, [r5, #0x4c]\n\t"
-        "ldr r0, 9f\n\t"
-        "ldr r0, [r0]\n\t"
-        "cmp r5, r0\n\t"
-        "beq 7f\n\t"
-        "b 1b\n\t"
-        "7:\n\t"
-        "mov r0, #0\n\t"
-        "6:\n\t"
-        "add sp, #0x24\n\t"
-        "pop {r3}\n\t"
-        "mov r8, r3\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n"
-        "9: .4byte gUnknown_03000884\n"
-    );
+    struct actor_self *n = ACTOR_NEXT(gUnknown_03000884);
+
+    do {
+        if (n != self) {
+            struct actor_methods *vt = (struct actor_methods *)n->vtable;
+
+            if (((actor_query_fn)vt->m28.fn)((u8 *)n + vt->m28.thisOffset) == 0
+                && ActorsOverlap(self, n))
+                return n;
+        }
+        n = ACTOR_NEXT(n);
+    } while (n != gUnknown_03000884);
+    return 0;
 }
 
 asm(".align 2, 0");

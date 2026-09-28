@@ -21,17 +21,77 @@
  * one more `sub_803AD7C` visibility check if the vtable's own +8 slot
  * is set, before resetting `gUnknown_03001424`'s call counter to 0.
  *
- * Fully understood; a real-C attempt reproduces every instruction but
- * needed one more live register (`r9`) than the ROM's own `sb`/`r8`
- * pair to keep the vtable pointer, the sub_effect_table pointer, and
- * the loop index simultaneously live across the scan's inner branches
- * - the same "more live values than the ROM's own build needed"
- * register-pressure gap this project's docs/matching.md catalogs
- * throughout. NAKED per docs/workflow.md's escape hatch; every
- * instruction below is transcribed directly from the ROM disassembly
- * (`asm/code_3_2_20_8b7c_9ed0.s`, since cut from
- * `asm/code_3_2_20_8b7c.s`) and verified byte-for-byte against
- * `baserom.gba`. */
+ * The ROM passes a 6th argument: `[sp, #0x1c]` is the 5th (handed to
+ * vtable slot 2), `[sp, #0x20]` the 6th (`y`).
+ *
+ * The draft below has the ROM's instruction sequence throughout
+ * (NextThreshold is actor_part94.c's `sub_802A51C` address shape,
+ * returned as a pointer so the load lands after the limit), but
+ * `&gUnknown_03001404` and `base` swap `r7`/`r8` (125 halfwords, 4 bytes
+ * long from the extra `mov`s). In the -dg dump `base` (refs 7, live
+ * 105) outranks the `&gUnknown_03001404` pseudo (refs 4, live 84);
+ * goto/for(;;) loop forms did not change that. Same under both
+ * compilers. */
+#if NON_MATCHING
+#include "memory.h"
+#include "actor_anim.h"
+
+asm(".set _call_via_r1, sub_803AD7C\n"
+    ".set _call_via_r3, sub_803AD84");
+
+extern struct category_vtable *gUnknown_03001418;
+extern u8 gUnknown_03001414;
+extern struct sub_effect_record *gUnknown_03001400;
+extern s32 gUnknown_03001404;
+extern u8 gUnknown_0300141C;
+extern s32 gUnknown_03001420;
+extern u8 *gUnknown_03001408;
+extern s32 gUnknown_03001424;
+extern s32 sub_8029B2C(void);
+
+/* `table[idx + 1].field_00`, with the record-boundary constant added
+ * to the base before the index (same shape as actor_part94.c's
+ * `sub_802A51C`). */
+static inline s32 *NextThreshold(struct sub_effect_record *table, s32 idx)
+{
+    u8 *b = (u8 *)table;
+    s32 off = idx * 0x14;
+
+    b = b + 0x14;
+    return (s32 *)(b + off);
+}
+
+void SelectActorCategory(s32 type, struct sub_effect_record *table, s32 x, u8 variant, s32 arg4, s32 y)
+{
+    struct sub_effect_record *t;
+    u8 **buf;
+    s32 base;
+
+    gUnknown_03001418 = &gStaticData_081756C4[type];
+    gUnknown_03001414 = variant;
+    gUnknown_03001400 = table;
+    gUnknown_03001404 = 0;
+    gUnknown_0300141C = 0;
+    gUnknown_03001420 = 0;
+    ((void (*)(s32, s32))gUnknown_03001418->fn[0])(x, y);
+    base = sub_8029B2C();
+    t = gUnknown_03001400;
+    while (gUnknown_03001404 < t->field_04
+           && *NextThreshold(t, gUnknown_03001404) < (s32)gUnknown_03001418->fn[8] + base)
+        gUnknown_03001404++;
+    buf = &gUnknown_03001408;
+    *buf = mem_alloc(0xc8, 0x80000000);
+    if (gUnknown_03001418->fn[2] != NULL)
+        ((void (*)(s32))gUnknown_03001418->fn[2])(arg4);
+    while (gUnknown_03001404 < gUnknown_03001400->field_04
+           && *NextThreshold(gUnknown_03001400, gUnknown_03001404) <= (s32)gUnknown_03001418->fn[7] + base) {
+        ((void (*)(void *, s32, s32))gUnknown_03001418->fn[1])((u8 *)gUnknown_03001400 + (gUnknown_03001404 * 0x14 + 8),
+                                                               gUnknown_03001414, 0);
+        gUnknown_03001404++;
+    }
+    gUnknown_03001424 = 0;
+}
+#else
 NAKED void SelectActorCategory(s32 type, void *subEffectTable, s32 x, s32 variantByte, s32 y)
 {
     asm(
@@ -192,3 +252,4 @@ NAKED void SelectActorCategory(s32 type, void *subEffectTable, s32 x, s32 varian
         "14: .4byte gUnknown_03001424\n"
     );
 }
+#endif
