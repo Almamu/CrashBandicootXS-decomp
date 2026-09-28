@@ -53,3 +53,7 @@ set hard registers directly) and the global-alloc priorities.
 
 `rm -rf build && make NON_MATCHING=1 report` and a clean `make compare`
 both pass.
+
+## Later pass (issue #9-#11 NAKED retry)
+
+`sub_800C244`, `sub_800C5D4` and `sub_800C8F8` are real C now. `sub_800B8DC`, `sub_800BD48`, `sub_800C940` and `sub_800C97C` are still NAKED. See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).

@@ -48,7 +48,8 @@ struct box_part {
     u8 *vtable;         // 0x18 - method table, see PART_METHOD
     u8 unk_1C[4];
     struct keyframe **keyframes; // 0x20
-    u8 unk_24[4];
+    u8 moveAxes;        // 0x24 - bits 0-1: X probe mode, bits 2-3: Y probe mode
+    u8 unk_25[3];
     u32 unk_28_0:4;     // 0x28
     u32 mirrorX:1;
     u32 mirrorY:1;
@@ -60,8 +61,15 @@ struct box_part {
     s32 tick;           // 0x30 - per-keyframe step counter
     s32 timer;          // 0x34 - ticks spent on the current step
     u8 animDone;        // 0x38
-    u8 unk_39[0x2b];
+    u8 unk_39[0x14];
+    u8 physMode;        // 0x4D - low 7 bits 1: skipped by the physics AABB tests
+    u8 state;           // 0x4E - sub_800CD00 skips 5 and 0xA
+    u8 unk_4F[0x15];
     s32 unk_64;         // 0x64
+    u8 hitAxes;         // 0x68 - collision axes sub_800A178 resolved (bit 3: Y)
+    u8 probeTries;      // 0x69 - sub_8009BE0's retry counter
+    u8 unk_6A[0xa];
+    u32 hitMask;        // 0x74 - probe axes sub_800A178 hit this call
 };
 
 /* A keyframe record's {offX, offY, w, h} collision box, reached through

@@ -673,3 +673,7 @@ exactly where these four functions' real bytes already sat.
 `sub_800A420` now has an old_agbcc C draft under `NON_MATCHING` that is
 15 halfwords off. All of the gap is register choice in the first probe's
 hit path. `sub_800A178` was not retried. See [issue-9-naked-retry.md](./issue-9-naked-retry.md) for details.
+
+## Later pass (issue #9-#11 NAKED retry)
+
+`sub_800A178` and `sub_800A420` (and the formerly pinned `sub_800A0FC`) are plain C under old_agbcc; `actor_part110.o` is in `OLD_AGBCC_OBJS`. See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).

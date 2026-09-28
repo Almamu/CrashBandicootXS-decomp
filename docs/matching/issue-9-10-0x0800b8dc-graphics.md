@@ -1510,3 +1510,7 @@ turned out to be source shape or compiler choice. `sub_800B8DC`,
 are still NAKED. All but `sub_800B8DC` have C drafts under
 `NON_MATCHING`. The `self`/owner layout is now `include/part_ctrl.h`.
 See [issue-10-naked-retry.md](issue-10-naked-retry.md).
+
+## Later pass (issue #9-#11 NAKED retry)
+
+`sub_800C244`, `sub_800C5D4`, `sub_800C8F8` and `sub_800CBF4` are real C now. `sub_800B8DC`, `sub_800BD48`, `sub_800C940` and `sub_800C97C` are still NAKED. See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).

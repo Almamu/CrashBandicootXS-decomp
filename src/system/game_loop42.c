@@ -49,6 +49,20 @@ struct hitbox_quad {
     u8 h;
 };
 
+#include "box_part.h"
+
+/* The player as these two read it: box_part's mirror bits at +0x28 and
+ * a "wide hitbox" byte at +0x90. */
+struct ceac_player {
+    u8 unk_00[0x28];
+    u32 unk_28_0:4;     // 0x28
+    u32 mirrorX:1;
+    u32 mirrorY:1;
+    u32 unk_28_6:2;
+    u8 unk_29[0x67];
+    u8 wide;            // 0x90
+};
+
 /* Called once by `sub_0800D18C` (its only caller), passing the
  * player's (`gUnknown_030012D8`) own hitbox quad (`player's +0x20`
  * table, indexed by the player's own `+0x2d` tag, at the record's
@@ -89,121 +103,43 @@ struct hitbox_quad {
  * the raw disassembly: no further read of r1's original register
  * contents `self` was copied from).
  *
- * NAKED transcription, not real C: the same single-inlined-build AABB
- * shape `sub_8007B98` (src/graphics/actor_part.c) already documents as
- * resistant to gcc 2.9 register allocation even in its simplest form
- * ("about 10 of ~73 instructions... which anonymous scratch register"
- * gaps), compounded here by the extra `player+0x90` branch selecting
- * between two slightly different operand sequences before the shared
- * tail - not re-attempted as C given that established precedent (see
- * `docs/matching/issue-9-10-0x0800aaec-graphics.md`'s own `sub_800CD00`
- * writeup for the same judgment call on a related shape). Verified
- * byte-exact via the isolated `cpp`/`agbcc`/`as` + `objcopy`/`cmp`
- * pipeline against `baserom.gba`'s own bytes at
- * `0x0800CEAC`-`0x0800CF70` (only the two `bl` and two `.word`
- * relocation sites differ, which resolve correctly once linked). */
-NAKED u8 sub_800CEAC(void *self, struct hitbox_quad *quad, struct aabb *box,
-                      s32 xOffset, s32 yOffset)
+ * Real C (issue #9-#11 NAKED retry, matches under both compilers; the
+ * file is built with old_agbcc for `sub_800CF70`): the wide-mode x is
+ * `x += xOffset; x -= 2;` as two statements (the ROM's `adds r1, r1, r7;
+ * subs r1, #2`). */
+u8 sub_800CEAC(void *self, struct hitbox_quad *quad, struct aabb *box,
+               s32 xOffset, s32 yOffset)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, r8\n\t"
-        "push {r7}\n\t"
-        "sub sp, #0x10\n\t"
-        "add r6, r1, #0\n\t"
-        "mov r8, r2\n\t"
-        "add r7, r3, #0\n\t"
-        "ldr r0, 8f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r0, #0x90\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 1f\n\t"
-        "mov r0, #0\n\t"
-        "ldrsh r1, [r6, r0]\n\t"
-        "mov r0, #2\n\t"
-        "ldrsh r2, [r6, r0]\n\t"
-        "ldrb r5, [r6, #5]\n\t"
-        "add r1, r1, r7\n\t"
-        "sub r1, #2\n\t"
-        "ldr r0, [sp, #0x28]\n\t"
-        "add r2, r2, r0\n\t"
-        "ldrb r4, [r6, #4]\n\t"
-        "add r4, #4\n\t"
-        "mov r0, sp\n\t"
-        "bl sub_803AFE4\n\t"
-        "mov r0, sp\n\t"
-        "add r1, r4, #0\n\t"
-        "add r2, r5, #0\n\t"
-        "bl sub_803AFDC\n\t"
-        "b 2f\n\t"
-        ".align 2, 0\n"
-    "8: .4byte gUnknown_030012D8\n"
-    "1:\n\t"
-        "mov r0, #0\n\t"
-        "ldrsh r1, [r6, r0]\n\t"
-        "mov r0, #2\n\t"
-        "ldrsh r2, [r6, r0]\n\t"
-        "ldrb r4, [r6, #4]\n\t"
-        "ldrb r5, [r6, #5]\n\t"
-        "add r1, r1, r7\n\t"
-        "ldr r0, [sp, #0x28]\n\t"
-        "add r2, r2, r0\n\t"
-        "mov r0, sp\n\t"
-        "bl sub_803AFE4\n\t"
-        "mov r0, sp\n\t"
-        "add r1, r4, #0\n\t"
-        "add r2, r5, #0\n\t"
-        "bl sub_803AFDC\n\t"
-    "2:\n\t"
-        "ldr r3, 9f\n\t"
-        "ldr r0, [r3]\n\t"
-        "add r0, #0x28\n\t"
-        "ldrb r0, [r0]\n\t"
-        "lsl r0, r0, #0x1b\n\t"
-        "cmp r0, #0\n\t"
-        "bge 3f\n\t"
-        "lsl r0, r7, #1\n\t"
-        "ldr r1, [sp]\n\t"
-        "ldr r2, [sp, #8]\n\t"
-        "add r1, r1, r2\n\t"
-        "sub r0, r0, r1\n\t"
-        "str r0, [sp]\n\t"
-    "3:\n\t"
-        "ldr r0, [r3]\n\t"
-        "add r0, #0x28\n\t"
-        "ldrb r0, [r0]\n\t"
-        "lsl r0, r0, #0x1a\n\t"
-        "cmp r0, #0\n\t"
-        "bge 4f\n\t"
-        "ldr r1, [sp, #0x28]\n\t"
-        "lsl r0, r1, #1\n\t"
-        "ldr r1, [sp, #4]\n\t"
-        "ldr r2, [sp, #0xc]\n\t"
-        "add r1, r1, r2\n\t"
-        "sub r0, r0, r1\n\t"
-        "str r0, [sp, #4]\n\t"
-    "4:\n\t"
-        "mov r0, r8\n\t"
-        "mov r1, sp\n\t"
-        "bl sub_8001688\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "bne 5f\n\t"
-        "mov r0, #0\n\t"
-        "b 6f\n\t"
-        ".align 2, 0\n"
-    "9: .4byte gUnknown_030012D8\n"
-    "5:\n\t"
-        "mov r0, #1\n\t"
-    "6:\n\t"
-        "add sp, #0x10\n\t"
-        "pop {r3}\n\t"
-        "mov r8, r3\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1"
-    );
+    struct aabb b;
+
+    if (((struct ceac_player *)gUnknown_030012D8)->wide) {
+        s32 x = quad->xOff;
+        s32 y = quad->yOff;
+        u8 h = quad->h;
+        s32 w;
+
+        x += xOffset;
+        x -= 2;
+        y += yOffset;
+        w = quad->w + 4;
+        sub_803AFE4(&b, x, y);
+        sub_803AFDC(&b, w, h);
+    } else {
+        s32 x = quad->xOff;
+        s32 y = quad->yOff;
+        u8 w = quad->w;
+        u8 h = quad->h;
+
+        sub_803AFE4(&b, x + xOffset, y + yOffset);
+        sub_803AFDC(&b, w, h);
+    }
+    if (((struct ceac_player *)gUnknown_030012D8)->mirrorX)
+        b.field_0 = xOffset * 2 - (b.field_0 + b.field_8);
+    if (((struct ceac_player *)gUnknown_030012D8)->mirrorY)
+        b.field_4 = yOffset * 2 - (b.field_4 + b.field_c);
+    if (sub_8001688(box, &b))
+        return 1;
+    return 0;
 }
 
 /* `sub_0800D18C`'s single-step neighbor probe, called while its own
@@ -247,127 +183,43 @@ NAKED u8 sub_800CEAC(void *self, struct hitbox_quad *quad, struct aabb *box,
  * strongest sense: same table convention, same early-out gate, same
  * overlap primitive, same caller.
  *
- * NAKED transcription, not real C: the same established
- * single-inlined-AABB-build shape as `sub_800CEAC` above (see its own
- * header comment) layered on a `sub_801070C`/`sub_8010708`
- * neighbor-list read - `sub_800E494`/`sub_800E4E4`
- * (src/system/game_loop7.c) already document that even the *simpler*
- * neighbor-list-walk shape (no AABB build at all) resists gcc 2.9's
- * exact instruction scheduling for this project's compiler on a
- * `0x7f`-mask-before-load ordering; combined with the AABB-build
- * resistance, re-attempting C here was not a good use of time given
- * both known-resistant shapes are stacked in the same function.
- * Verified byte-exact via the isolated `cpp`/`agbcc`/`as` +
- * `objcopy`/`cmp` pipeline against `baserom.gba`'s own bytes at
- * `0x0800CF70`-`0x0800D040` (only the four `bl` relocation sites
- * differ, resolving correctly once linked). */
-NAKED void *sub_800CF70(void *self, struct aabb *box, u8 *foundFlag)
+ * Real C under old_agbcc (issue #9-#11 NAKED retry; the `0x7f` mask
+ * loaded before the `ldrb` is old_agbcc's tell). `self` goes through a
+ * local copy of the parameter: that is what makes the ROM copy r0 last,
+ * after `box`/`foundFlag`, right before the first call. The mirror bits
+ * read are `self`'s, not `prev`'s. */
+struct box_part *sub_800CF70(struct box_part *selfArg, struct aabb *box, u8 *foundFlag)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sl\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6, r7}\n\t"
-        "sub sp, #0x10\n\t"
-        "mov sl, r1\n\t"
-        "add r5, r2, #0\n\t"
-        "add r7, r0, #0\n\t"
-        "bl sub_801070C\n\t"
-        "add r4, r0, #0\n\t"
-        "add r0, r7, #0\n\t"
-        "bl sub_8010708\n\t"
-        "add r6, r0, #0\n\t"
-        "cmp r4, #0\n\t"
-        "bne 1f\n\t"
-        "cmp r6, #0\n\t"
-        "beq 5f\n\t"
-    "1:\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r5]\n\t"
-        "cmp r6, #0\n\t"
-        "beq 5f\n\t"
-        "add r1, r6, #0\n\t"
-        "add r1, #0x4d\n\t"
-        "mov r0, #0x7f\n\t"
-        "ldrb r1, [r1]\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #1\n\t"
-        "beq 5f\n\t"
-        "ldr r1, [r6, #0x20]\n\t"
-        "add r2, r6, #0\n\t"
-        "add r2, #0x2d\n\t"
-        "ldrb r3, [r2]\n\t"
-        "lsl r0, r3, #3\n\t"
-        "sub r0, r0, r3\n\t"
-        "lsl r0, r0, #2\n\t"
-        "ldr r1, [r1]\n\t"
-        "add r1, r1, r0\n\t"
-        "add r3, r1, #4\n\t"
-        "ldr r0, [r6]\n\t"
-        "asr r0, r0, #8\n\t"
-        "mov r8, r0\n\t"
-        "ldr r0, [r6, #4]\n\t"
-        "asr r0, r0, #8\n\t"
-        "mov sb, r0\n\t"
-        "mov r0, #4\n\t"
-        "ldrsh r1, [r1, r0]\n\t"
-        "mov r0, #2\n\t"
-        "ldrsh r2, [r3, r0]\n\t"
-        "ldrb r4, [r3, #4]\n\t"
-        "ldrb r5, [r3, #5]\n\t"
-        "add r1, r8\n\t"
-        "add r2, sb\n\t"
-        "mov r0, sp\n\t"
-        "bl sub_803AFE4\n\t"
-        "mov r0, sp\n\t"
-        "add r1, r4, #0\n\t"
-        "add r2, r5, #0\n\t"
-        "bl sub_803AFDC\n\t"
-        "add r3, r7, #0\n\t"
-        "add r3, #0x28\n\t"
-        "ldrb r1, [r3]\n\t"
-        "lsl r0, r1, #0x1b\n\t"
-        "cmp r0, #0\n\t"
-        "bge 2f\n\t"
-        "mov r1, r8\n\t"
-        "lsl r0, r1, #1\n\t"
-        "ldr r1, [sp]\n\t"
-        "ldr r2, [sp, #8]\n\t"
-        "add r1, r1, r2\n\t"
-        "sub r0, r0, r1\n\t"
-        "str r0, [sp]\n\t"
-    "2:\n\t"
-        "ldrb r3, [r3]\n\t"
-        "lsl r0, r3, #0x1a\n\t"
-        "cmp r0, #0\n\t"
-        "bge 3f\n\t"
-        "mov r3, sb\n\t"
-        "lsl r0, r3, #1\n\t"
-        "ldr r1, [sp, #4]\n\t"
-        "ldr r2, [sp, #0xc]\n\t"
-        "add r1, r1, r2\n\t"
-        "sub r0, r0, r1\n\t"
-        "str r0, [sp, #4]\n\t"
-    "3:\n\t"
-        "mov r0, sp\n\t"
-        "mov r1, sl\n\t"
-        "bl sub_8001688\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "beq 5f\n\t"
-        "add r7, r6, #0\n\t"
-    "5:\n\t"
-        "add r0, r7, #0\n\t"
-        "add sp, #0x10\n\t"
-        "pop {r3, r4, r5}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov sl, r5\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1"
-    );
+    struct box_part *self = selfArg;
+    struct box_part *next = sub_801070C(self);
+    struct box_part *prev = sub_8010708(self);
+
+    if (next == NULL && prev == NULL)
+        return self;
+    *foundFlag = 1;
+    if (prev == NULL || (prev->physMode & 0x7f) == 1)
+        return self;
+    {
+        u8 *rec = (u8 *)&(*prev->keyframes)[prev->frame];
+        struct hitbox_quad *q = (struct hitbox_quad *)(rec + 4);
+        struct aabb b;
+        s32 px = prev->x >> 8;
+        s32 py = prev->y >> 8;
+        s32 x = q->xOff;
+        s32 y = q->yOff;
+        u8 w = q->w;
+        u8 h = q->h;
+
+        sub_803AFE4(&b, x + px, y + py);
+        sub_803AFDC(&b, w, h);
+        if (self->mirrorX)
+            b.field_0 = px * 2 - (b.field_0 + b.field_8);
+        if (self->mirrorY)
+            b.field_4 = py * 2 - (b.field_4 + b.field_c);
+        if (sub_8001688(&b, box))
+            self = prev;
+    }
+    return self;
 }
 /* Trailing byte count isn't a multiple of 4 - without this, `as` pads
  * with its default NOP fill instead of the ROM's zero fill (see

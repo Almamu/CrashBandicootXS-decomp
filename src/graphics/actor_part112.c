@@ -671,7 +671,10 @@ NAKED void sub_800B8DC(void *self)
  * launch method's offset) - the ROM cycles r3, r3, r3, r4, r6, r2, ...
  * where this picks r6, r4, r4, r6, r2, ... The one real code difference
  * left is in states 1/21/22: the ROM materializes the layer's `1`
- * before the `-4` mask (`movs r2, #1; movs r1, #4; negs ...`). */
+ * before the `-4` mask (`movs r2, #1; movs r1, #4; negs ...`) and
+ * reuses that same r2 as the `gone` OR's operand and destination
+ * (`orrs r2, r4`); a `u32` local for the 1 gets the order right but
+ * costs a register copy (4 bytes over) - issue #9-#11 NAKED retry. */
 struct player_ring {
     u8 unk_00[0x88];
     u8 ringLocked;      // 0x88

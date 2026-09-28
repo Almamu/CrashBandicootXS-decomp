@@ -143,3 +143,7 @@ after this batch, alongside `make NON_MATCHING=1 report`.
 
 `sub_8009868` is now real C under old_agbcc. `sub_8009BE0`,
 `sub_8009008` and `sub_80091D4` are still NAKED. See [issue-9-naked-retry.md](./issue-9-naked-retry.md) for details.
+
+## Later pass (issue #9-#11 NAKED retry)
+
+`sub_8009BE0` is real C now (matches under both compilers). See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).

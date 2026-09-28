@@ -112,6 +112,149 @@
  * once linked). See docs/matching/issue-9-10-0x0800aff4-graphics.md
  * for the full write-up. */
 
+#if NON_MATCHING
+/* C draft (issue #9-#11 NAKED retry, old_agbcc): same shape as the ROM
+ * but not converged (624 bytes vs 636) - the ROM keeps `self` in r7
+ * and needs only one spill slot (`&histIdx` at [sp]); this draft puts
+ * `self` in r6 and spills twice. The child repositioning goes through
+ * an inline whose argument order (x, y, child) gives the ROM's load
+ * order. */
+#include "box_part.h"
+
+struct orbit_pos {
+    s32 x;
+    s32 y;
+};
+
+struct orbit_self {
+    s32 x;                      // 0x00
+    s32 y;                      // 0x04
+    u8 unk_08[4];
+    u8 flags;                   // 0x0C - bit 3 cleared once +0x38 is set
+    u8 unk_0D[0x1b];
+    u32 unk_28_0:4;             // 0x28
+    u32 mirrorX:1;
+    u32 unk_28_5:3;
+    u8 unk_29[0xf];
+    u8 unk_38;                  // 0x38
+    u8 unk_39[0x53];
+    u32 blinkDeadline;          // 0x8C
+    u8 unk_90[0x20];
+    struct box_part *child;     // 0xB0
+    s32 histIdx;                // 0xB4
+    struct orbit_pos hist[8];   // 0xB8
+};
+
+struct orbit_game {
+    u8 unk_00[0x78];
+    s32 mode;                   // 0x78
+};
+
+extern struct orbit_game *gUnknown_030012C0;
+extern u32 gUnknown_0300082C;
+extern s32 gUnknown_03000818;
+extern s32 gUnknown_0300081C;
+extern void *gUnknown_030012CC;
+extern s16 gStaticData_0816A820[];
+extern s32 sub_8000E1C(s32 max);
+extern void sub_80231EC(void *self, s32 arg);
+extern void sub_8007A84(void *self, void *part);
+extern s32 sub_803AD7C(void *addr, void *fn);
+
+static inline s32 BlinkArmed(struct orbit_self *self)
+{
+    s32 armed = 0;
+
+    if (self->blinkDeadline > gUnknown_0300082C)
+        armed = 1;
+    return armed;
+}
+
+static inline void ClampTick(struct box_part *child, s32 v)
+{
+    s32 n = (*child->keyframes)[child->frame].steps;
+
+    if (v >= n)
+        v = n - 1;
+    child->tick = v;
+}
+
+static inline void SetPos(s32 x, s32 y, struct box_part *child, s32 dx, s32 dy)
+{
+    child->x = x + dx;
+    child->y = y + dy;
+}
+
+static inline void SetFrame(struct box_part *child, u8 frame)
+{
+    child->frame = frame;
+}
+
+static inline void RefreshChild(struct box_part *child)
+{
+    struct part_method *m = PART_METHOD(child, 0x20);
+
+    sub_803AD7C((u8 *)child + m->thisOffset, m->fn);
+}
+
+void sub_800AFF4(struct orbit_self *self)
+{
+    if (gUnknown_030012C0->mode == 3) {
+        if (!(gUnknown_0300082C & 7))
+            gUnknown_03000818 = (u16)sub_8000E1C(2) + 2 - self->mirrorX * 2;
+        ClampTick(self->child, gUnknown_03000818);
+        if (self->mirrorX)
+            SetPos(self->x, self->y, self->child, -0x600, -0x1300);
+        else
+            SetPos(self->x, self->y, self->child, 0x600, -0x1300);
+        if (gUnknown_0300082C & 4)
+            SetFrame(self->child, 1);
+        else
+            SetFrame(self->child, 2);
+        RefreshChild(self->child);
+    }
+    if (gUnknown_030012C0->mode == 3 || !BlinkArmed(self) || (gUnknown_0300082C & 4))
+        sub_8007A84(gUnknown_030012CC, self);
+    {
+        struct orbit_game *game = gUnknown_030012C0;
+
+        if (game->mode == 3 && !BlinkArmed(self))
+            sub_80231EC(game, 2);
+    }
+    self->hist[self->histIdx].x = self->x;
+    self->hist[self->histIdx].y = self->y;
+    self->histIdx = (self->histIdx + 1) % 8;
+    {
+        s32 mode = gUnknown_030012C0->mode;
+
+        if ((u32)(mode - 1) <= 1) {
+            if (!(gUnknown_0300082C & 7)) {
+                s32 v = gUnknown_0300081C + (u16)sub_8000E1C(3) - 1;
+
+                if (v > 3)
+                    v = 3;
+                if (v < 0)
+                    v = 0;
+                gUnknown_0300081C = v;
+            }
+            ClampTick(self->child, gUnknown_0300081C);
+            {
+                u32 t = gUnknown_0300082C;
+                s32 a = gStaticData_0816A820[t & 0xff];
+                s32 b = gStaticData_0816A820[(t >> 1) & 0xff];
+                struct box_part *child = self->child;
+
+                child->x = (a << 4) + self->hist[self->histIdx].x;
+                child->y = (b << 3) + self->hist[self->histIdx].y + (s32)0xFFFFE800;
+            }
+            self->child->frame = mode - 1;
+            RefreshChild(self->child);
+        }
+    }
+    if (self->unk_38)
+        self->flags &= ~8;
+}
+#else
 NAKED void sub_800AFF4(void *selfArg)
 {
     asm(
@@ -436,3 +579,4 @@ NAKED void sub_800AFF4(void *selfArg)
     "32: .4byte 0xFFFFE800\n"
     );
 }
+#endif

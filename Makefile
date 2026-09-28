@@ -135,12 +135,14 @@ $(ELF): $(OBJS) $(LDSCRIPT)
 OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/actor_part103.o \
                   $(C_BUILDDIR)/graphics/actor_part118.o \
+                  $(C_BUILDDIR)/graphics/actor_part110.o \
                   $(C_BUILDDIR)/graphics/actor_part11d.o \
                   $(C_BUILDDIR)/graphics/actor_part11e.o \
                   $(C_BUILDDIR)/graphics/actor_part11f.o \
                   $(C_BUILDDIR)/graphics/actor_part12.o \
                   $(C_BUILDDIR)/graphics/actor_part120.o \
                   $(C_BUILDDIR)/graphics/actor_part122.o \
+                  $(C_BUILDDIR)/graphics/actor_part123.o \
                   $(C_BUILDDIR)/graphics/actor_part127.o \
                   $(C_BUILDDIR)/graphics/actor_part128.o \
                   $(C_BUILDDIR)/graphics/actor_part130.o \
@@ -149,6 +151,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/actor_part23b.o \
                   $(C_BUILDDIR)/graphics/actor_part24b.o \
                   $(C_BUILDDIR)/graphics/actor_part27a.o \
+                  $(C_BUILDDIR)/graphics/actor_part2.o \
                   $(C_BUILDDIR)/graphics/actor_part3.o \
                   $(C_BUILDDIR)/graphics/actor_part7.o \
                   $(C_BUILDDIR)/graphics/actor_part74.o \
@@ -206,6 +209,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/system/game_loop37.o \
                   $(C_BUILDDIR)/system/game_loop4.o \
                   $(C_BUILDDIR)/system/game_loop40.o \
+                  $(C_BUILDDIR)/system/game_loop42.o \
                   $(C_BUILDDIR)/system/game_loop46.o \
                   $(C_BUILDDIR)/system/game_loop48.o \
                   $(C_BUILDDIR)/system/game_loop49.o \

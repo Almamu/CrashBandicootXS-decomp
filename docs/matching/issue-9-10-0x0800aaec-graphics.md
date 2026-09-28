@@ -230,3 +230,7 @@ changes closed it. The list walk is a guarded do-while
 (`i = 0; if (i < n) do {...} while (i < list->count)`), which gives the
 per-iteration literal reload. The position is read as one struct copy.
 The record pointer's `+4` is a separate `rec += 4` statement. See [issue-9-naked-retry.md](./issue-9-naked-retry.md) for details.
+
+## Later pass (issue #9-#11 NAKED retry)
+
+`sub_800CD00` now has an old_agbcc C draft under `NON_MATCHING` (42 halfwords off: the player box's address is held in r6 from its first build instead of being rematerialized from sp until the first overlap test). Still NAKED. See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).

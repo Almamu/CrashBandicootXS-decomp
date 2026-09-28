@@ -71,3 +71,7 @@ Under old_agbcc the global lands in r7 by itself, with no pins. A C
 draft (kept under `NON_MATCHING`) is 42 halfwords off in two places:
 where the gone-bit OR gets its constant 1, and the spawned part's mode
 update. See [issue-9-naked-retry.md](./issue-9-naked-retry.md) for details.
+
+## Later pass (issue #9-#11 NAKED retry)
+
+`sub_8007DBC` is real C under old_agbcc now; `actor_part2.o` is in `OLD_AGBCC_OBJS`. The r7 player-global problem was the compiler, not the source. See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).

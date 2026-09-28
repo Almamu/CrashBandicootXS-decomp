@@ -20,8 +20,7 @@ extern void *sub_803AD7C(void *arg0, void *fn);
  * pair at +0x28/+0x2c that `src/system/game_loop8.c`'s `sub_802400C`
  * already reads via an identical `sub_803AD7C` hit-probe call), but
  * is read at +0x38 too - bigger than the 0x1c-byte `struct actor`, so
- * kept as raw offsets rather than that struct, same reasoning
- * `actor_part27c.c` already documents for its own `other`/`part`.
+ * it gets its own `struct cbf4_other` below.
  *
  * Runs the "flag active + bitmap-set" idiom (`other->0xc |= 1`, then,
  * unless `other`'s id sentinel-checks as `0xFFFF`, sets bit
@@ -34,120 +33,61 @@ extern void *sub_803AD7C(void *arg0, void *fn);
  * real C (its own doc comment: "needs several `register asm` pins ...
  * without them this compiler ... folds the ROM's shift-setup pair ...
  * and CSEs away the ROM's second, seemingly redundant reload") - here
- * inlined three times over (the ROM has no `bl` to a shared helper,
- * so the C can't call one either) rather than the one occurrence that
- * already needed that much register-pinning care. NAKED per
- * docs/workflow.md's escape hatch for this documented, already-
- * expensive-once shape; every instruction below is transcribed
- * directly from the ROM disassembly and verified byte-for-byte
- * against `baserom.gba`. */
-NAKED void sub_800CBF4(void *self, void *other)
+ * inlined three times over (the ROM has no `bl` to a shared helper).
+ *
+ * Real C under old_agbcc (issue #9-#11 NAKED retry; the whole file
+ * matches under it, so actor_part123.o is in OLD_AGBCC_OBJS - the
+ * constant-before-`ldrb` flag ORs are old_agbcc's tell). `MarkGone` is
+ * an inline with the do/while(0) `SET_ID_BIT` that
+ * actor_part_16048.c uses (its loop notes give the id reload). The
+ * gone bit is set through a bitfield view of +0x0C and bit 3 is tested
+ * through the byte view: that is what makes the second copy reuse the
+ * tested byte and its `1` for the OR, in the ROM's registers. */
+struct cbf4_other {
+    u8 unk_00[8];
+    u16 id;             // 0x08
+    u8 unk_0A[2];
+    union {
+        u8 flags;       // 0x0C
+        struct {
+            u8 gone:1;
+            u8 unk_1:7;
+        } b;            // (ARM structs are 4-byte sized: the union spans 0x0C-0x0F)
+    } f;
+    u8 unk_10[8];
+    u8 *table;          // 0x18
+    u8 unk_1C[0x1C];
+    u8 unk_38;          // 0x38
+};
+
+#define SET_ID_BIT(idExpr)                                                     \
+    do                                                                         \
+    {                                                                          \
+        s32 _id = (idExpr);                                                    \
+        u8 *_base = gUnknown_030012B4;                                         \
+        s32 _word = _id / 32;                                                  \
+        s32 _off = _word * 4;                                                  \
+        u32 *_slot = (u32 *)(_base + 0x108);                                   \
+                                                                               \
+        _slot = (u32 *)((u8 *)_slot + _off);                                   \
+        *_slot |= 1 << (_id - _word * 32);                                     \
+    } while (0)
+
+static inline void MarkGone(struct cbf4_other *t)
 {
-    asm(
-        "push {r4, r5, lr}\n\t"
-        "add r4, r1, #0\n\t"
-        "ldr r1, [r4, #0x18]\n\t"
-        "mov r2, #0x28\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r4, r0\n\t"
-        "ldr r1, [r1, #0x2c]\n\t"
-        "bl sub_803AD7C\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "bne 1f\n\t"
-        "mov r0, #1\n\t"
-        "ldrb r5, [r4, #0xc]\n\t"
-        "orr r0, r5\n\t"
-        "strb r0, [r4, #0xc]\n\t"
-        "ldr r0, =0x0000FFFF\n\t"
-        "ldrh r1, [r4, #8]\n\t"
-        "cmp r1, r0\n\t"
-        "beq 1f\n\t"
-        "ldrh r3, [r4, #8]\n\t"
-        "ldr r0, =gUnknown_030012B4\n\t"
-        "ldr r2, [r0]\n\t"
-        "add r0, r3, #0\n\t"
-        "asr r0, r0, #5\n\t"
-        "lsl r1, r0, #2\n\t"
-        "mov r5, #0x84\n\t"
-        "lsl r5, r5, #1\n\t"
-        "add r2, r2, r5\n\t"
-        "add r2, r2, r1\n\t"
-        "lsl r0, r0, #5\n\t"
-        "sub r0, r3, r0\n\t"
-        "mov r1, #1\n\t"
-        "lsl r1, r0\n\t"
-        "ldr r0, [r2]\n\t"
-        "orr r0, r1\n\t"
-        "str r0, [r2]\n\t"
-        "1:\n\t"
-        "ldrb r1, [r4, #0xc]\n\t"
-        "lsr r0, r1, #3\n\t"
-        "mov r2, #1\n\t"
-        "and r0, r2\n\t"
-        "cmp r0, #0\n\t"
-        "beq 2f\n\t"
-        "add r0, r1, #0\n\t"
-        "orr r0, r2\n\t"
-        "strb r0, [r4, #0xc]\n\t"
-        "ldr r0, =0x0000FFFF\n\t"
-        "ldrh r1, [r4, #8]\n\t"
-        "cmp r1, r0\n\t"
-        "beq 2f\n\t"
-        "ldrh r3, [r4, #8]\n\t"
-        "ldr r0, =gUnknown_030012B4\n\t"
-        "ldr r2, [r0]\n\t"
-        "add r0, r3, #0\n\t"
-        "asr r0, r0, #5\n\t"
-        "lsl r1, r0, #2\n\t"
-        "mov r5, #0x84\n\t"
-        "lsl r5, r5, #1\n\t"
-        "add r2, r2, r5\n\t"
-        "add r2, r2, r1\n\t"
-        "lsl r0, r0, #5\n\t"
-        "sub r0, r3, r0\n\t"
-        "mov r1, #1\n\t"
-        "lsl r1, r0\n\t"
-        "ldr r0, [r2]\n\t"
-        "orr r0, r1\n\t"
-        "str r0, [r2]\n\t"
-        "2:\n\t"
-        "add r0, r4, #0\n\t"
-        "add r0, #0x38\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq 3f\n\t"
-        "mov r0, #1\n\t"
-        "ldrb r1, [r4, #0xc]\n\t"
-        "orr r0, r1\n\t"
-        "strb r0, [r4, #0xc]\n\t"
-        "ldr r0, =0x0000FFFF\n\t"
-        "ldrh r2, [r4, #8]\n\t"
-        "cmp r2, r0\n\t"
-        "beq 3f\n\t"
-        "ldrh r3, [r4, #8]\n\t"
-        "ldr r0, =gUnknown_030012B4\n\t"
-        "ldr r2, [r0]\n\t"
-        "add r0, r3, #0\n\t"
-        "asr r0, r0, #5\n\t"
-        "lsl r1, r0, #2\n\t"
-        "mov r4, #0x84\n\t"
-        "lsl r4, r4, #1\n\t"
-        "add r2, r2, r4\n\t"
-        "add r2, r2, r1\n\t"
-        "lsl r0, r0, #5\n\t"
-        "sub r0, r3, r0\n\t"
-        "mov r1, #1\n\t"
-        "lsl r1, r0\n\t"
-        "ldr r0, [r2]\n\t"
-        "orr r0, r1\n\t"
-        "str r0, [r2]\n\t"
-        "3:\n\t"
-        "pop {r4, r5}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".pool"
-    );
+    t->f.b.gone = 1;
+    if (t->id != 0xFFFF)
+        SET_ID_BIT(t->id);
+}
+
+void sub_800CBF4(void *self, struct cbf4_other *other)
+{
+    if (!(u8)(s32)sub_803AD7C((u8 *)other + *(s16 *)(other->table + 0x28), *(void **)(other->table + 0x2c)))
+        MarkGone(other);
+    if ((other->f.flags >> 3) & 1)
+        MarkGone(other);
+    if (other->unk_38)
+        MarkGone(other);
 }
 
 /* Genuine empty stubs (`bx lr`). */

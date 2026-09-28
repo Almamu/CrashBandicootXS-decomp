@@ -290,3 +290,7 @@ A first C attempt under old_agbcc got about 170 halfwords off. The
 mode-3 block and the blink/timer block already have the ROM's structure.
 Two things are still wrong: `self` lands in r6 instead of r7, and the
 orbit tail caches addresses differently. No draft is kept. See [issue-9-naked-retry.md](./issue-9-naked-retry.md) for details.
+
+## Later pass (issue #9-#11 NAKED retry)
+
+`sub_800AFF4` now has an old_agbcc C draft under `NON_MATCHING` (not converged: `self` lands in r6 instead of r7 and it spills one slot too many). Still NAKED. See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).

@@ -8,6 +8,13 @@ system from "core" system startup/init code.
 
 ## Matched
 
+- **Issue #9-#11 box/collision NAKED retry** ([docs/matching/issue-9-11-box-naked-retry.md](../matching/issue-9-11-box-naked-retry.md)):
+  `sub_800C244` (`actor_part119.c`), `sub_800C5D4` (`actor_part120.c`),
+  `sub_800C8F8` (`actor_part116.c`), `sub_800CBF4` (`actor_part123.c`)
+  and `sub_800CEAC`/`sub_800CF70` (`game_loop42.c`) are real C now; they
+  were NAKED. `actor_part123.o` and `game_loop42.o` moved to old_agbcc
+  (whole-file matches).
+
 - `src/system/game_loop.c` (GitHub issue #34): `sub_8022BF0`
   (level-start/checkpoint-restore progress-total updater) and
   `sub_8022CA0` (its cached-state/snapshot helper) - see
@@ -519,7 +526,7 @@ plain C didn't converge.
   consumed. See
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md)'s
   Phase 2 appendix for the confirmed per-function roles.
-- **`sub_800CEAC`/`sub_800CF70`** (`src/system/game_loop42.c`, new
+- **Now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/issue-9-11-box-naked-retry.md); entry kept for history.** **`sub_800CEAC`/`sub_800CF70`** (`src/system/game_loop42.c`, new
   file - dedicated deep investigation) - the two functions formerly
   tracked as unexamined raw bytes between `sub_800CD00` (issue #9/#10)
   and `sub_800D040` (issue #12); recategorized `graphics` -> `game_loop`
@@ -578,7 +585,7 @@ plain C didn't converge.
   table the other two use. See
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)'s
   "Phase 2" section for the full writeup.
-- **`sub_800C8F8`/`sub_800C940`/`sub_800C97C`** (still NAKED after the
+- **`sub_800C8F8` now matched as real C (issue #9-#11 NAKED retry, see docs/matching/issue-9-11-box-naked-retry.md); `sub_800C940`/`sub_800C97C` are still NAKED.** **`sub_800C8F8`/`sub_800C940`/`sub_800C97C`** (still NAKED after the
   issue #10 NAKED retry, drafts under `NON_MATCHING`; `sub_800C18C`/
   `sub_800C1E8`/`sub_800C314` are now real C, see Matched) - originally
   **`sub_800C18C`/`sub_800C1E8`/`sub_800C314`/`sub_800C8F8`/
@@ -628,7 +635,7 @@ plain C didn't converge.
   "load owner field, then shift the radius" instruction order. See
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)'s
   "Phase 4" section for the full writeup.
-- **`sub_800CBF4`/`nullsub_15`/`nullsub_3`/`sub_800CCCC`/`sub_800CCE0`**
+- **`sub_800CBF4` now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/issue-9-11-box-naked-retry.md); entry kept for history.** **`sub_800CBF4`/`nullsub_15`/`nullsub_3`/`sub_800CCCC`/`sub_800CCE0`**
   (`src/graphics/actor_part123.c`, new file - GitHub issue #9/#10, the
   final piece of the `0x0800B8DC`-cluster investigation, closing out
   the entire 43-function cluster). `sub_800CBF4` (NAKED) inlines the

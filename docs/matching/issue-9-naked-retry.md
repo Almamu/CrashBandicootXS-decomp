@@ -54,3 +54,7 @@ The shared layout of these objects is in the new `include/box_part.h`:
 | `sub_800AFF4` (actor_part111.c) | first C attempt, ~170 hw: `self` in r6 instead of r7, and the orbit tail's address caching differs. No draft kept. |
 
 `make compare` was run from clean and passes.
+
+## Later pass (issue #9-#11 NAKED retry)
+
+`sub_8007DBC`, `sub_800891C`, `sub_8008F20`, `sub_8009914`, `sub_8009BE0`, `sub_800A178` and `sub_800A420` are real C now. `sub_8009008`, `sub_80091D4` and `sub_800AFF4` are still NAKED (`sub_800AFF4` now has a draft). See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).
