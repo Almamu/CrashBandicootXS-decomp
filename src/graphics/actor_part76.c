@@ -12,56 +12,22 @@
  * in the matched portion of this ROM region (`sub_802DE70` always
  * inlines the loop itself rather than calling this) - kept byte-exact
  * regardless, per this project's standing convention for functions
- * without a confirmed call site.
+ * without a confirmed call site. UNUSED.
  *
- * Written as NAKED asm for the same register-pressure reasons as
- * `sub_802DE70` - mechanical, byte-verified transcription, not an
- * inferred control-flow guess. */
-NAKED void sub_802E058(u8 *dst, u8 seed)
+ * The condition is written as the "fill with 0xff" test so the 0xff
+ * store comes first, as in the ROM. */
+void sub_802E058(u8 *dst, u8 seed)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov ip, r0\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "lsr r5, r1, #0x18\n\t"
-        "mov r4, #0\n\t"
-        "mov r7, #0xff\n\t"
-        "1:\n\t"
-        "mov r3, #0\n\t"
-        "lsl r0, r4, #4\n\t"
-        "add r6, r4, #1\n\t"
-        "mov r1, ip\n\t"
-        "add r2, r0, r1\n\t"
-        "2:\n\t"
-        "sub r0, r3, #3\n\t"
-        "cmp r0, #9\n\t"
-        "bhi 3f\n\t"
-        "cmp r4, #2\n\t"
-        "ble 3f\n\t"
-        "cmp r4, #0xc\n\t"
-        "ble 4f\n\t"
-        "3:\n\t"
-        "strb r7, [r2]\n\t"
-        "b 5f\n\t"
-        "4:\n\t"
-        "add r1, r5, #0\n\t"
-        "add r0, r1, #1\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r5, r0, #0x18\n\t"
-        "strb r1, [r2]\n\t"
-        "5:\n\t"
-        "add r2, #1\n\t"
-        "add r3, #1\n\t"
-        "cmp r3, #0xf\n\t"
-        "ble 2b\n\t"
-        "add r4, r6, #0\n\t"
-        "cmp r4, #0xf\n\t"
-        "ble 1b\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    );
+    s32 y, x;
+
+    for (y = 0; y < 16; y++) {
+        for (x = 0; x < 16; x++) {
+            if ((u32)(x - 3) > 9 || y <= 2 || y > 12)
+                dst[y * 16 + x] = 0xff;
+            else
+                dst[y * 16 + x] = seed++;
+        }
+    }
 }
 
 asm(".align 2, 0");

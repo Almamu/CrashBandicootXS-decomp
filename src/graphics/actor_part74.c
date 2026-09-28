@@ -1,4 +1,5 @@
 #include "core.h"
+#include "actor_self.h"
 
 /* Sits right after actor_part58.c's `sub_802D764` and before
  * actor_part59.c's `sub_802DB2C`/`sub_802DCC0` - the whole contiguous
@@ -9,16 +10,19 @@
  * (the "third RAM-struct family" from docs/rom_map.md). See that issue
  * doc's "Second pass" section for how the 12-byte AABB-record layout
  * used here and by `sub_802DD9C` (actor_part75.c) was finally pinned
- * down. */
+ * down.
+ *
+ * Built with old_agbcc: `sub_802DA68` only matches under it, and
+ * `sub_802D9A8` matches under both. */
 
 extern s32 gUnknown_030014D0;
 extern s32 gUnknown_030014C4;
-extern void *gUnknown_03000884;
-extern void *gUnknown_030014BC;
-extern u16 GetAnimFrameBaseOffset(void *self);
-extern u8 gStaticData_0817A840[];
+extern struct actor_self *gUnknown_03000884;
+extern struct actor_self *gUnknown_030014BC;
+extern s32 GetAnimFrameBaseOffset(void *self);
+extern void (*gStaticData_0817A840[])(void);
 extern void sub_803AD78(void *fn);
-extern void *gUnknown_03000898;
+extern void (*gUnknown_03000898)(void *frame, s32 arg);
 extern void sub_803AD80(void *arg0, s32 arg1, void *fn);
 extern u8 gUnknown_030014C0;
 extern u8 gUnknown_030014C1;
@@ -31,6 +35,13 @@ extern u8 gUnknown_030014A0;
 extern void *sub_800014C(void *dest, void *src, s32 size);
 extern void sub_802C018(void *self);
 extern void sub_8029BAC(s32 arg0);
+extern u16 gStaticData_0817AA6C[];
+extern s32 sub_8029E98(void);
+extern s32 sub_8029EB4(void);
+
+asm(".set __divsi3, sub_803ADB4\n"
+    ".set _call_via_r0, sub_803AD78");
+ACTOR_CALL_VIA_ALIASES
 
 /* One of two confirmed slots (index 3, dispatched via
  * `gStaticData_0817A840[gUnknown_030014D0]`) of the type-0
@@ -85,7 +96,98 @@ extern void sub_8029BAC(s32 arg0);
  * unified syntax to this project's established NAKED plain/divided
  * syntax, `adds`->`add`/`ands`->`and`/etc, local labels renumbered per
  * docs/matching/issue-4-sio-settings-sync.md's convention), not an
- * inferred control-flow guess. */
+ * inferred control-flow guess.
+ *
+ * NON_MATCHING draft (issue #51/#54 retry, see
+ * docs/matching/issue-51-54-naked-retry.md): right size, ~52 halfwords
+ * off under old_agbcc - `&b` (sp+0xc) is computed once into a
+ * callee-saved register before the player box is built instead of
+ * after the copy, which pushes r5/r6 roles around for the rest of the
+ * function. Same wall as actor_part24b.c's `sub_8031378`. */
+#if NON_MATCHING
+struct box16 {
+    s16 x, y, z;
+    s16 w, h, d;
+};
+
+static inline void BoxMove(struct box16 *b, s32 x, s32 y, s32 z)
+{
+    b->x += x;
+    b->y += y;
+    b->z += z;
+}
+
+static inline struct box16 ActorBox(struct actor_self *obj)
+{
+    struct box16 t = *(struct box16 *)obj->unk_38;
+    s32 px = obj->x >> 8;
+    s32 py = obj->y >> 8;
+    s32 pz = obj->z >> 8;
+
+    BoxMove(&t, px, py, pz);
+    return t;
+}
+
+static inline u8 BoxOverlap(struct box16 *b, struct box16 *a)
+{
+    if (b->z < a->z + a->d && b->z + b->d > a->z
+        && b->y < a->y + a->h && b->y + b->h > a->y
+        && b->x < a->x + a->w && b->x + b->w > a->x)
+        goto hit;
+    return 0;
+hit:
+    return 1;
+}
+
+void sub_802D7B0(void)
+{
+    struct box16 a, b;
+    struct actor_self *obj;
+    s32 old, cur;
+
+    if (gUnknown_030014D0 != 3)
+        gUnknown_030014C4 += (((struct actor_self *)gUnknown_03000884)->x - gUnknown_030014C4) / 32;
+    obj = gUnknown_030014BC;
+    old = obj->animTime >> 8;
+    obj->animTime += *(s16 *)&obj->animTimer;
+    obj->animDone = 0;
+    if (GetAnimFrameBaseOffset(obj) >= obj->anims[obj->animIndex].loopThreshold) {
+        obj->animTime -= (obj->anims[obj->animIndex].loopThreshold
+                          - obj->anims[obj->animIndex].loopBase) << 8;
+        obj->animDone = 1;
+    }
+    gStaticData_0817A840[gUnknown_030014D0]();
+    obj = gUnknown_030014BC;
+    cur = obj->animTime >> 8;
+    if (old != cur) {
+        gUnknown_03000898((u8 *)obj->frameOffsets[obj->anims[obj->animIndex].frameIndex + cur] + 4,
+                          gUnknown_030014C0);
+        gUnknown_030014C1 = 1;
+    }
+    sub_8029E34(gUnknown_030014CC);
+    sub_802D9A8();
+    a = *(struct box16 *)gStaticData_0817AA98;
+    BoxMove(&a, gUnknown_030014C4 >> 8, 0, gUnknown_030014C8 >> 8);
+    if ((u32)gUnknown_030014D0 <= 1) {
+        struct actor_self **playerAddr = &gUnknown_03000884;
+
+        if (gUnknown_030014A0 != 0)
+            return;
+        b = ActorBox(*playerAddr);
+        sub_800014C(&b, &b, sizeof(b));
+        if (BoxOverlap(&b, &a)) {
+            gUnknown_030014D0 = 2;
+            obj = gUnknown_030014BC;
+            obj->animIndex = 2;
+            obj->animTimer = obj->anims[2].duration;
+            obj->animDone = 0;
+            obj->animTime = 0;
+            sub_802C018(gUnknown_03000884);
+            sub_8029BAC(0);
+        }
+    }
+}
+#else
 NAKED void sub_802D7B0(void)
 {
     asm(
@@ -330,6 +432,7 @@ NAKED void sub_802D7B0(void)
         "24: .4byte gUnknown_03000884\n"
     );
 }
+#endif
 
 /* Palette-gradient cursor for the `gUnknown_030014BC` "gauge" object.
  * Below `0x5000`, DMAs a fixed 16-color gradient (`gStaticData_0817AA6C`)
@@ -339,219 +442,86 @@ NAKED void sub_802D7B0(void)
  * factor from how far `gUnknown_030014CC` sits into that `[0x5000,
  * 0xBE00]` range, then directly writes 16 colors: for each
  * `gStaticData_0817AA6C` source halfword (a packed BGR555 color), its
- * 5-bit R/G/B channels are each independently scaled by that factor
- * (`>>8` after the multiply) and repacked (`R | (G<<5) | (B<<10)`) into
- * BG palette RAM at `0x050001E0` onward - a manual brightness ramp
- * rather than a second DMA.
+ * 5-bit R and G channels are scaled by that factor (`>>8` after the
+ * multiply) and repacked as `R | (G<<5) | (G<<10)` - the ROM really
+ * reuses the scaled green for blue - into BG palette RAM at
+ * `0x050001E0` onward, a manual brightness ramp rather than a second DMA.
  *
- * Written as NAKED asm for the same register-pressure reasons as
- * `sub_802D7B0` above (`ip` holds a repeated shift mask across the
- * whole 16-entry loop, `r3` the scale factor, `r4`/`r5`/`r6`/`r7`
- * juggling the loop counter and both moving source/dest pointers) -
- * mechanical, byte-verified transcription, not an inferred guess (every
- * operand/order confirmed against `expected/code_3.s` first). */
-NAKED void sub_802D9A8(void)
+ * The two `0x1f` masks are separate locals: the ROM keeps one in `ip`
+ * (set before the pointers) and one in `r7` (set after them). */
+void sub_802D9A8(void)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "sub sp, #4\n\t"
-        "ldr r0, 1f\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldr r0, 2f\n\t"
-        "cmp r1, r0\n\t"
-        "bgt 7f\n\t"
-        "ldr r1, 3f\n\t"
-        "ldr r0, 4f\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r0, 5f\n\t"
-        "str r0, [r1, #4]\n\t"
-        "ldr r0, 6f\n\t"
-        "b 8f\n\t"
-        ".align 2, 0\n"
-        "1: .4byte gUnknown_030014CC\n"
-        "2: .4byte 0x00004FFF\n"
-        "3: .4byte 0x040000D4\n"
-        "4: .4byte gStaticData_0817AA6C\n"
-        "5: .4byte 0x050001E0\n"
-        "6: .4byte 0x80000010\n"
-        "7:\n\t"
-        "ldr r0, 9f\n\t"
-        "cmp r1, r0\n\t"
-        "ble 13f\n\t"
-        "mov r1, sp\n\t"
-        "mov r0, #0\n\t"
-        "strh r0, [r1]\n\t"
-        "ldr r1, 10f\n\t"
-        "mov r0, sp\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r0, 11f\n\t"
-        "str r0, [r1, #4]\n\t"
-        "ldr r0, 12f\n\t"
-        "8:\n\t"
-        "str r0, [r1, #8]\n\t"
-        "ldr r0, [r1, #8]\n\t"
-        "b 15f\n\t"
-        ".align 2, 0\n"
-        "9: .4byte 0x0000BDFF\n"
-        "10: .4byte 0x040000D4\n"
-        "11: .4byte 0x050001E0\n"
-        "12: .4byte 0x81000010\n"
-        "13:\n\t"
-        "mov r0, #0xbe\n\t"
-        "lsl r0, r0, #8\n\t"
-        "sub r0, r0, r1\n\t"
-        "lsl r0, r0, #8\n\t"
-        "mov r1, #0xdc\n\t"
-        "lsl r1, r1, #7\n\t"
-        "bl sub_803ADB4\n\t"
-        "add r3, r0, #0\n\t"
-        "mov r0, #0x1f\n\t"
-        "mov ip, r0\n\t"
-        "ldr r6, 16f\n\t"
-        "ldr r5, 17f\n\t"
-        "mov r7, #0x1f\n\t"
-        "mov r4, #0xf\n\t"
-        "14:\n\t"
-        "ldrh r1, [r5]\n\t"
-        "add r0, r7, #0\n\t"
-        "and r0, r1\n\t"
-        "add r2, r0, #0\n\t"
-        "mul r2, r3, r2\n\t"
-        "asr r2, r2, #8\n\t"
-        "lsr r1, r1, #5\n\t"
-        "mov r0, ip\n\t"
-        "and r1, r0\n\t"
-        "add r0, r1, #0\n\t"
-        "mul r0, r3, r0\n\t"
-        "asr r0, r0, #8\n\t"
-        "lsl r1, r0, #5\n\t"
-        "orr r2, r1\n\t"
-        "lsl r0, r0, #0xa\n\t"
-        "orr r2, r0\n\t"
-        "strh r2, [r6]\n\t"
-        "add r6, #2\n\t"
-        "add r5, #2\n\t"
-        "sub r4, #1\n\t"
-        "cmp r4, #0\n\t"
-        "bge 14b\n\t"
-        "15:\n\t"
-        "add sp, #4\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-        "16: .4byte 0x050001E0\n"
-        "17: .4byte gStaticData_0817AA6C\n"
-    );
+    s32 v = gUnknown_030014CC;
+
+    if (v <= 0x4fff) {
+        DmaCopy16(3, gStaticData_0817AA6C, (void *)0x050001E0, 0x20);
+    } else if (v > 0xbdff) {
+        DmaFill16(3, 0, (void *)0x050001E0, 0x20);
+    } else {
+        s32 f = ((0xbe00 - v) << 8) / 0x6e00;
+        s32 mask = 0x1f;
+        u16 *dst = (u16 *)0x050001E0;
+        u16 *src = gStaticData_0817AA6C;
+        s32 mask2 = 0x1f;
+        s32 i;
+
+        for (i = 15; i >= 0; i--) {
+            u16 c = *src;
+            s32 r = ((mask2 & c) * f) >> 8;
+            s32 g = (((c >> 5) & mask) * f) >> 8;
+
+            *dst = r | (g << 5) | (g << 10);
+            dst++;
+            src++;
+        }
+    }
 }
 
-/* Companion to `sub_802D9A8` above: arms the two hardware sound
- * channels tied to the same gauge (`REG_SOUND1CNT_L`/`0x0400000C` gets
- * one of two fixed sweep/tone words depending on the current
- * `gUnknown_030014C1`/`030014C0` one-shot flags, which then both get
- * cleared/toggled), then derives a shared volume scale from
- * `gUnknown_030014CC` (`sub_803ADB4`-scaled against a `0x5500` divisor)
- * and a `sub_8029EB4()` base, writes `REG_SOUND1CNT_H`/`0x04000028` and
- * `REG_SOUND2CNT_L`/`0x0400002C` each as a fixed ceiling minus that
- * scaled `sub_8029E98()` value, and finally seeds
- * `REG_SOUND1CNT_X`/`REG_SOUND2CNT_H`/`0x04000020` (a 4-halfword run:
- * frequency, 0, 0, frequency again) with the `sub_803ADB4`-scaled
- * frequency computed earlier from `gUnknown_030014C4`.
+/* Companion to `sub_802D9A8` above: the gauge's affine BG2 setup. When
+ * `gUnknown_030014C1` is set, flips `REG_BG2CNT` (`0x0400000C`) between
+ * two screen-base words according to `gUnknown_030014C0`, clears `C1`
+ * and toggles `C0`. Then derives a zoom factor from `gUnknown_030014CC`
+ * (`/0x5500`), writes `REG_BG2X` (`0x04000028`) from
+ * `gUnknown_030014C4` and `sub_8029EB4()`, `REG_BG2Y` (`0x0400002C`)
+ * from `sub_8029E98()`, and the `PA`/`PB`/`PC`/`PD` matrix at
+ * `0x04000020` as `scale, 0, 0, scale`.
  *
- * Written as NAKED asm for the same register-pressure reasons as
- * `sub_802D9A8` above. */
-NAKED void sub_802DA68(void)
+ * Matches under old_agbcc. The flag addresses are copied into their own
+ * locals after the load (the ROM's `ldrb r1, [r0]; adds r3, r0, #0`),
+ * with the loaded flag pinned to r1. */
+void sub_802DA68(void)
 {
-    asm(
-        "push {r4, r5, r6, lr}\n\t"
-        "ldr r0, 1f\n\t"
-        "ldrb r1, [r0]\n\t"
-        "add r3, r0, #0\n\t"
-        "cmp r1, #0\n\t"
-        "beq 7f\n\t"
-        "ldr r0, 2f\n\t"
-        "ldrb r1, [r0]\n\t"
-        "add r2, r0, #0\n\t"
-        "cmp r1, #0\n\t"
-        "beq 5f\n\t"
-        "ldr r1, 3f\n\t"
-        "ldr r4, 4f\n\t"
-        "b 6f\n\t"
-        ".align 2, 0\n"
-        "1: .4byte gUnknown_030014C1\n"
-        "2: .4byte gUnknown_030014C0\n"
-        "3: .4byte 0x0400000C\n"
-        "4: .4byte 0x00001A09\n"
-        "5:\n\t"
-        "ldr r1, 8f\n\t"
-        "ldr r4, 9f\n\t"
-        "6:\n\t"
-        "add r0, r4, #0\n\t"
-        "strh r0, [r1]\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r3]\n\t"
-        "mov r0, #1\n\t"
-        "ldrb r1, [r2]\n\t"
-        "eor r0, r1\n\t"
-        "strb r0, [r2]\n\t"
-        "7:\n\t"
-        "ldr r5, 10f\n\t"
-        "ldr r0, [r5]\n\t"
-        "lsl r0, r0, #8\n\t"
-        "mov r1, #0xaa\n\t"
-        "lsl r1, r1, #7\n\t"
-        "bl sub_803ADB4\n\t"
-        "add r4, r0, #0\n\t"
-        "bl sub_8029EB4\n\t"
-        "add r6, r0, #0\n\t"
-        "ldr r0, 11f\n\t"
-        "ldr r1, [r0]\n\t"
-        "lsl r0, r1, #1\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r0, r0, #4\n\t"
-        "sub r0, r0, r1\n\t"
-        "lsl r0, r0, #8\n\t"
-        "ldr r1, [r5]\n\t"
-        "bl sub_803ADB4\n\t"
-        "add r0, r0, r6\n\t"
-        "ldr r2, 12f\n\t"
-        "add r1, r0, #0\n\t"
-        "mul r1, r4, r1\n\t"
-        "asr r1, r1, #8\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #7\n\t"
-        "sub r0, r0, r1\n\t"
-        "str r0, [r2]\n\t"
-        "bl sub_8029E98\n\t"
-        "ldr r2, 13f\n\t"
-        "add r1, r0, #0\n\t"
-        "mul r1, r4, r1\n\t"
-        "asr r1, r1, #8\n\t"
-        "mov r0, #0x88\n\t"
-        "lsl r0, r0, #7\n\t"
-        "sub r0, r0, r1\n\t"
-        "str r0, [r2]\n\t"
-        "ldr r0, 14f\n\t"
-        "strh r4, [r0]\n\t"
-        "add r0, #2\n\t"
-        "mov r1, #0\n\t"
-        "strh r1, [r0]\n\t"
-        "add r0, #2\n\t"
-        "strh r1, [r0]\n\t"
-        "add r0, #2\n\t"
-        "strh r4, [r0]\n\t"
-        "pop {r4, r5, r6}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-        "8: .4byte 0x0400000C\n"
-        "9: .4byte 0x00001B09\n"
-        "10: .4byte gUnknown_030014CC\n"
-        "11: .4byte gUnknown_030014C4\n"
-        "12: .4byte 0x04000028\n"
-        "13: .4byte 0x0400002C\n"
-        "14: .4byte 0x04000020\n"
-    );
+    s32 scale, base, t;
+    u8 *p = &gUnknown_030014C1;
+    register s32 v asm("r1") = *p;
+    u8 *changed = p;
+
+    if (v != 0) {
+        u8 *alt;
+
+        p = &gUnknown_030014C0;
+        v = *p;
+        alt = p;
+        if (v != 0)
+            *(vu16 *)0x0400000C = 0x1a09;
+        else
+            *(vu16 *)0x0400000C = 0x1b09;
+        *changed = 0;
+        *alt ^= 1;
+    }
+    scale = (gUnknown_030014CC << 8) / 0x5500;
+    base = sub_8029EB4();
+    t = (gUnknown_030014C4 * 47 << 8) / gUnknown_030014CC + base;
+    *(vs32 *)0x04000028 = 0x4000 - ((t * scale) >> 8);
+    *(vs32 *)0x0400002C = 0x4400 - ((sub_8029E98() * scale) >> 8);
+    {
+        vu16 *pa = (vu16 *)0x04000020;
+
+        *pa++ = scale;
+        *pa++ = 0;
+        *pa++ = 0;
+        *pa = scale;
+    }
 }
 
 asm(".align 2, 0");
