@@ -356,3 +356,10 @@ temporary. The new low nibble is masked in SImode before the bitfield
 store. That makes the 15 an SImode constant, so reload's move2add can
 build the ROM's -16 from it (`sub r0, #0x1f`). See
 [early-rom-naked-retry-2.md](early-rom-naked-retry-2.md).
+
+## Later pass (last-four NAKED retry)
+
+`sub_8002114`'s draft went from 422 halfwords off to 16 (same size,
+old_agbcc). What is left is the first receive loop's giv register order
+and one split `lsls`/`lsrs` pair. `sub_8001DB4` stays at 136. Both are
+still NAKED. See [last-four-naked-retry.md](last-four-naked-retry.md).

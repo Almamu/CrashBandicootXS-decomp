@@ -931,6 +931,21 @@ from "core" graphics.
   from NAKED to real C, both matching under either compiler. See
   [near-miss-polish-2.md](../matching/near-miss-polish-2.md).
 
+### Matched in the last-four NAKED retry
+
+- `src/graphics/actor_part78.c` - `sub_800A884` (the per-frame
+  "kind" dispatcher with the camera-probe tail), old_agbcc
+  (`actor_part78.o` joined `OLD_AGBCC_OBJS`; it is the only function in
+  the file). The ROM's walking flag offsets (`adds r1, #3`,
+  `subs r2, #3`) are reload's move2add on a reused reload register.
+  r3 holds (no code) over the `self+0x70` method lookup, the case-1
+  `self+0x68` lookup, and from the busy-flag clear to the end of the
+  kind switch keep reload rotating through r0-r2. The kind-5/7/10
+  `= 1` stores use the constant-init asm so the 1 is set before the
+  address, the case-1 `unk_8c = 0` stores an r0 zero through a pointer,
+  and the offset-table result is an r3 register variable. See
+  [docs/matching/last-four-naked-retry.md](../matching/last-four-naked-retry.md).
+
 ### Matched in the inline-argument-order retry
 
 - `src/graphics/actor_part111.c` - `sub_800AFF4` (the dizzy-stars
@@ -1440,7 +1455,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   the raw `asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s`. See
   `docs/matching/issue-63-0x08033ef4-actor.md`.
 
-- **`sub_800A884`** (`src/graphics/actor_part78.c`, GitHub issue
+- **Now matched as real C (last-four NAKED retry, see Matched and docs/matching/last-four-naked-retry.md); entry kept for history.** **`sub_800A884`** (`src/graphics/actor_part78.c`, GitHub issue
   #9/#10; NAKED in that file since the issue #9 raw-asm pass, which also
   replaced the draft - see `docs/matching/issue-9-raw-asm-pass.md`) - a per-frame
   reentrancy-guard-shaped wrapper dispatching a pending-action "kind"

@@ -232,7 +232,9 @@ static inline void ring_reset(struct link_ring *r)
  * `w & 0xff` into a second `ldrb`); the outer loop then hoists 0x1234,
  * 0 and `self + 0x104` where the ROM hoists only 200, `self + 0x100`,
  * `self + 0xfc`, `self + 0x20` and the id pointer (163 halfwords, so
- * not adopted). */
+ * not adopted). Third pass (docs/matching/last-four-naked-retry.md):
+ * escaped `self`/`players` pointers for the inner dst, a pointer-form
+ * first loop and re-read tails did not beat 136. */
 s32 sub_8001DB4(struct link_session *self)
 {
     s32 i, j;
@@ -678,21 +680,15 @@ s32 sub_8001F50(struct link_session *self)
  * finished answer. */
 #if NON_MATCHING
 /* C draft (docs/matching/big-naked-retry-3.md,
- * docs/matching/early-rom-naked-retry-2.md): same size as the ROM
- * (1488 bytes) under old_agbcc, 422 halfwords off (was 514). Control
- * flow and block order match. Fixed in the second pass: the `field_4 = 1`
- * constant is a u32 `one` shared with both SIOCNT bit tests, the first
- * receive loop tests 0xffff through a second pointer `d2`, and
- * `field_400` is stored through a pointer taken before the `field_20`
- * load. What is left is register allocation that shifts everything
- * after it:
- * - the ring pushes/pops recompute the ring field addresses in each
- *   loop's preheader (here CSE reuses the address from the bounds test)
- *   and keep `n` in r7 (here `n` reuses the r8 byte); the session pop
- *   reaches the ring through a pointer in r7 (an inline `LinkRingPop`
- *   gives that but is 12 bytes longer);
- * - the ROM uses [sp,#0x28] for the id-byte pointer and [sp,#0x24] for
- *   `i + 1`; here the two slots are swapped.
+ * docs/matching/early-rom-naked-retry-2.md,
+ * docs/matching/last-four-naked-retry.md): same size as the ROM
+ * (1488 bytes) under old_agbcc, 16 halfwords off (was 422). Control
+ * flow, block order and the stack frame match. What is left:
+ * - the first receive loop: the ROM's `data[i]` load giv is in r1 and
+ *   the 0xffff test giv in r3 (here swapped), and its spilled counter
+ *   reloads into r0 (here r7);
+ * - the `q[0]` low-nibble test: the ROM splits its `lsls`/`lsrs #28`
+ *   pair around the right-hand sum (here they are adjacent).
  * `data` is SIOMULTI0-3 (link_cable2.c passes 0x04000120). */
 /* A received SIOMULTI word, read back from a stack copy. */
 struct link_rx_word {
@@ -729,6 +725,35 @@ struct link_rx_word {
         }                                                                      \
     }
 
+/* The session ring pop. `rf` is a second copy of the ring pointer for
+ * the fast loop: the ROM builds that loop's field addresses from a copy
+ * made right after the id copy (`adds r4, r7, #0`), and the wrap loop's
+ * from the original. The bounds test goes through `rd`, the caller's
+ * `&ring.field_88`. */
+static inline void LinkRingPop(struct link_ring *r, struct link_ring *rf, u8 *dst, s32 n, s32 *rd)
+{
+    s32 k;
+
+    if (*rd < 0x80 - n) {
+        for (k = n - 1; k != -1; k--) {
+            *dst++ = rf->buf[rf->field_88];
+            rf->field_88++;
+            rf->field_84--;
+        }
+    } else {
+        for (k = n - 1; k != -1; k--) {
+            s32 old = r->field_88;
+            s32 nw = 0;
+
+            if (old != 0x7f)
+                nw = old + 1;
+            r->field_88 = nw;
+            r->field_84--;
+            *dst++ = r->buf[old];
+        }
+    }
+}
+
 void sub_8002114(struct link_session *self, u16 *data)
 {
     struct link_rx_word w[4];
@@ -738,6 +763,9 @@ void sub_8002114(struct link_session *self, u16 *data)
     u16 siocnt;
     u32 one;
 
+    /* Instruction-count padding (no code): shifts gcc's temporary
+     * numbering so two stack slots come out in the ROM's order. */
+    asm("");
     self->field_404 = 0;
     if (self->field_4) {
         u16 v = self->field_400;
@@ -767,9 +795,8 @@ void sub_8002114(struct link_session *self, u16 *data)
                 w[i] = *(struct link_rx_word *)&data[i];
                 if (w[i].hi == 0xF0B)
                     nId++;
-                if (*d2 == 0xffff)
+                if (d2[i] == 0xffff)
                     nFree++;
-                d2++;
             }
         }
         same = 1;
@@ -842,8 +869,15 @@ void sub_8002114(struct link_session *self, u16 *data)
                 if (want != hash)
                     continue;
                 n = p->id[1] >> 4;
+                /* Extra reference (no code): raises `n`'s priority so it
+                 * gets its own register (r7) instead of reusing the
+                 * id-byte one. */
+                asm("" : : "r"(n));
                 src = &p->id[2];
-                if (p->ring.field_8c < 0x80 - n) {
+                /* The bounds test reaches the ring through an escaped copy
+                 * of `p` (no code), so CSE doesn't share its address with
+                 * the loop pre-headers, which recompute it as the ROM does. */
+                if (({ struct link_player *_q = p; asm("" : "+r"(_q)); _q; })->ring.field_8c < 0x80 - n) {
                     for (k = n - 1; k != -1; k--) {
                         p->ring.field_8c++;
                         p->ring.field_84++;
@@ -878,57 +912,91 @@ void sub_8002114(struct link_session *self, u16 *data)
             s32 n, k;
             u8 *dst;
             u16 hash;
+            u8 *id;
+            struct link_ring *ring;
+            s32 *cnt;
+            s32 *rd;
+            struct link_ring *rf;
 
             self->field_3f0 = 0;
-            LINK_COPY_ID(self->field_28, self->id);
-            n = self->ring.field_84;
-            if (n > 4)
-                n = 4;
-            LINK_NIB(&self->id[1]).hi = n;
+            id = self->id;
+            ring = &self->ring;
+            cnt = &self->ring.field_84;
             dst = &self->id[2];
-            if (self->ring.field_88 < 0x80 - n) {
-                for (k = n - 1; k != -1; k--) {
-                    *dst++ = self->ring.buf[self->ring.field_88];
-                    self->ring.field_88++;
-                    self->ring.field_84--;
-                }
-            } else {
-                for (k = n - 1; k != -1; k--) {
-                    s32 old = self->ring.field_88;
+            rd = &self->ring.field_88;
+            {
+                u8 *d = self->field_28;
+                u8 *s = id;
 
-                    self->ring.field_88 = old == 0x7f ? 0 : old + 1;
-                    self->ring.field_84--;
-                    *dst++ = self->ring.buf[old];
+                for (k = 0; k <= 3; k++) {
+                    u32 v = (s[1] << 8) | s[0];
+                    u32 lo = v & 0xff;
+
+                    d[0] = lo;
+                    d[1] = v >> 8;
+                    d += 2;
+                    s += 2;
                 }
             }
+            rf = ring;
+            /* A distinct copy of the ring pointer (no code), taken here
+             * like the ROM's `adds r4, r7, #0`. */
+            asm("" : "+r"(rf));
+            n = *cnt;
+            if (n > 4)
+                n = 4;
+            LINK_NIB(&id[1]).hi = n;
+            LinkRingPop(ring, rf, dst, n, rd);
             self->field_24 += n;
-            LINK_NIB(&self->id[1]).lo = nib;
+            {
+                /* A signed QImode read-modify-write: the ROM's mask is
+                 * -16 and `nib` (already masked) is not masked again. */
+                s8 *b = (s8 *)&self->id[1];
+
+                *b = (*b & ~0xf) | nib;
+            }
             hash = *(u16 *)&self->id[6];
             LINK_HASH(hash, &self->id[1]);
-            *(u16 *)&self->id[6] = hash;
-            self->field_3c = 0;
+            {
+                /* The ROM sets this 0 in r0 before the hash store. */
+                register s32 z asm("r0") = 0;
+
+                *(u16 *)&self->id[6] = hash;
+                self->field_3c = z;
+            }
             changed = 1;
         }
         if (self->field_3f4 == self->field_3f8) {
             self->field_3f4 = 0;
-            LINK_NIB(&self->id[0]).hi++;
+            LINK_NIB(&self->id[0]).hi = (LINK_NIB(&self->id[0]).hi + 1) & 0xf;
             changed = 1;
         }
         if (changed) {
             self->field_38 = 0;
             self->field_18 = 1;
-            LINK_NIB(&self->id[0]).lo = LINK_NIB(&self->id[0]).hi + ((self->id[7] << 8) | self->id[6]);
+            {
+                u8 *id = self->id;
+                u32 n = LINK_NIB(&id[0]).hi;
+                u32 v = (id[7] << 8) | id[6];
+                s32 w = (n + v) & 0xf;
+
+                LINK_NIB(&id[0]).lo = w;
+            }
         }
     }
     {
         u8 *lo, *hi;
 
         if ((self->field_3c & 3) == 3) {
-            lo = &self->field_28[self->field_38 * 2];
-            hi = &self->field_28[self->field_38 * 2 + 1];
+            u8 *b = (u8 *)self + self->field_38 * 2;
+
+            lo = b + 0x28;
+            hi = b + 0x29;
         } else {
-            lo = &self->id[self->field_38 * 2];
-            hi = &self->id[self->field_38 * 2 + 1];
+            u8 *b = (u8 *)self + self->field_38 * 2;
+
+            lo = b + 0x30;
+            hi = b + 0x31;
         }
         self->field_400 = (*hi << 8) | *lo;
     }

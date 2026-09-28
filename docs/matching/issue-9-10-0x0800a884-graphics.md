@@ -426,3 +426,10 @@ body moved from opaque raw bytes to matched, documented C.
 ## Later pass (issue #9/#10 raw-asm pass)
 
 `asm/code_3_2_16_a884.s` is gone. `sub_800A884` is NAKED in `actor_part78.c`, and the pin/asm-island draft was replaced with plain C (127 halfwords off under old_agbcc; the old draft was 137 off). The remaining gap is the one-register offset walk for +0x100/+0x102/+0x103. See [issue-9-raw-asm-pass.md](issue-9-raw-asm-pass.md).
+
+## Later pass (last-four NAKED retry)
+
+Matched as real C under old_agbcc (`actor_part78.o` joined
+`OLD_AGBCC_OBJS`). The walking offsets are reload's move2add reusing a
+reload register; r3 holds keep reload's rotation on r0-r2 as in the
+ROM. See [last-four-naked-retry.md](last-four-naked-retry.md).
