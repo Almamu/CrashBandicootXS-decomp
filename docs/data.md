@@ -213,44 +213,190 @@ game loop), `gStaticData_0816CD80`, and the animation tables inside
 
 ## Resources (grit-style)
 
-The plan for graphics, and other assets built from files, is the same
-layout: the build turns each asset into a generated C file holding it as
-a `const` array, the way grit does, and the linker script places that
-file's `.rodata` like any other `src/data` object. Nothing below is built
-yet.
+Graphics, and other assets built from files, use the same layout as the
+hand-written tables: each asset becomes a `const` array in a `src/data/*.c`
+object, and `ldscript.txt` places that object's `.rodata` at the asset's
+address in the `/* Data */` block. The pixel conversion is done by
+[grit](https://github.com/devkitPro/grit). One asset is built this way so far:
+`gStaticData_085AA170`, the first intro Mode 4 bitmap
+(`src/data/intro_bitmap_5aa170.c`).
 
-- **Where it goes.** A generator (a grit-like tool, or a mode of
-  `tools/gbagfx`) writes `build/crashbandicootxs/graphics/<dir>/<name>.c`
-  and a matching `.h`, from `graphics/<dir>/<name>.png` (plus `.pal`
-  and the conversion options that `graphics.mk` holds today). Compiled
-  like any C file, `build/.../graphics/<dir>/<name>.o(.rodata)` goes into
-  the `/* Data */` block at the asset's address, replacing the asset's
-  current `.incbin` line in `data/data.s` (a new `.section` starts after
-  it, as for a hand-written table). Generated sources live under
-  `build/`; only the PNG and its options are checked in. Neighbouring
-  assets from one directory can share one generated file to keep the
-  linker script short, as long as they are contiguous in the ROM.
-- **Compressed assets.** An LZ77-compressed asset stays one array of the
-  compressed bytes, the equivalent of grit's `-gzl`: `const u32
-  gStaticData_XXXX[] = { ... }` holding the BIOS header word and stream
-  exactly as the ROM has them. The code hands that pointer to
-  `LZ77UnCompVram`/`LoadTaggedAsset` unchanged. Where `data/data.s`
-  currently trims the compressor's output (`.incbin "...lz", 0, 0x1E6`),
-  the generator must emit exactly that many bytes, and anything the ROM
-  keeps after the stream (padding, a stray byte) belongs to the next
-  label, not the array. Typed element arrays (`u32` for tiles, `u16` for
-  palettes) are only possible where the asset's ROM address has that
-  alignment; several current labels sit at odd addresses and need `u8`.
-- **Names.** The symbol stays the current label (`gStaticData_XXXX`)
-  until the code gives the asset a real name, so the generator takes the
-  symbol name from the asset's options rather than from the file name.
-  The header declares `extern const u32 gStaticData_XXXX[];` (or `u16`,
-  `u8`), and `sizeof` can't be relied on across files, so emit a
-  `#define gStaticData_XXXX_Size` next to it if the code needs the
-  length.
-- **The report.** `tools/report_units.py` counts a `src/data` object's
-  tables as built. A generated object under `build/.../graphics/` would
-  need the same treatment: `parse_data()` accepts only `data/data.o` and
-  `src/data/*.o` in the `/* Data */` block today, and it would group a
-  generated file's blobs by its asset directory, like the `.incbin`
-  assets now.
+This section records the grit feasibility study and the pipeline that
+came out of it. The throwaway scripts behind the measurements aren't in
+the repo, but each result below says what was run on what, so it can be
+reproduced.
+
+### Summary
+
+| question | answer |
+|---|---|
+| Can grit be built reproducibly without changing the devshell? | **Yes.** It's vendored as `tools/grit` (v0.10.0) and built by the Makefile like `tools/gbagfx`. A small shim replaces FreeImage with libpng, which is already in the devshell and CI. |
+| Is grit's pixel layout byte-exact? | **Yes, for all 73 PNG assets** (35 4bpp tilesets, 14 8bpp tilesets, 24 Mode 4 bitmaps): tile order and bitmap layout match exactly. The one condition: the PNG must be *indexed*. |
+| Are grit's palettes byte-exact? | **Yes, for 16 and 256 colours** when the palette is in an indexed PNG (`-p -pn16`/`-pn256`). The exception is the `.bin` palettes with a stray bit 15, which grit can't produce. |
+| Are grit's tilemaps byte-exact? | **Yes, when seeded** with the ROM tileset as grit's external tileset (`-fx`). Without `-fx`, grit forces a blank tile 0, so every index comes out one too high. |
+| Is grit's LZ77 (`-gzl`) byte-exact? | **No.** 26 of 141 streams match (only tiny ones). gbagfx matches 141 of 141. |
+| Can grit's C output (`-ftc`) be used as-is? | **No.** Its compressed output uses grit's own LZ77 (see above). It pads the compressed data to 4 bytes with uninitialised memory. It appends `Bitmap`/`Tiles`/`Pal`/`Map` to the symbol name. |
+| Adopted pipeline | grit `-ftb` (layout) -> gbagfx (LZ77) -> `tools/bin2c.py --lz` -> `#include` in a hand-written `src/data/*.c` declaration |
+
+### 1. Building grit
+
+grit isn't in the devshell. **FreeImage, which upstream grit needs, doesn't
+exist in the devshell's pinned nixpkgs at all** (`nix search
+github:NixOS/nixpkgs/4975466d324710c576dc11ad614684e6bd8cad8e '^freeimage$'` finds nothing). So adding `pkgs.freeimage` to the devshell
+isn't an option. Upstream's `cldib/cldib_png.cpp` loader doesn't help either: it
+was written for libpng before 1.5 (it reads `png_info` fields directly) and
+doesn't compile against the devshell's libpng 1.6.
+
+`tools/grit` is therefore vendored source. See `tools/grit/README.md` for
+the exact upstream commit, the file subset, and the license: upstream ships
+GPLv2 `COPYING` plus an MIT `licence-mit.txt` by the author, and both are
+kept. The changes are small and limited to image I/O:
+
+- `extlib/fi.cpp` reimplements grit's two load/save hooks on libpng.
+- `winglue.h` defines the Windows base types it used to get from `<FreeImage.h>`.
+- `grit_main.cpp` no longer calls FreeImage.
+- A plain `Makefile` replaces autotools.
+
+None of grit's conversion or compression code is modified. The build needs
+`g++` (the devshell's stdenv, `build-essential` in CI) and
+`pkg-config libpng`. **No flake change is needed.** A Makefile rule
+that downloads a pinned upstream tarball was rejected. It would make every
+fresh build depend on network access and GitHub, and the FreeImage
+replacement would still have to be applied as a patch on top of it.
+
+### 2. Byte-exactness
+
+**Layout.** Every existing PNG was run through grit with the per-kind flags
+below, and the `-ftb` output was compared with the ROM's decompressed
+payload at the address in the file name. The result is 73 of 73 exact.
+
+The one condition: 36 of the tileset PNGs are the grayscale PNGs gbagfx
+writes when it has no palette, where index = `max - gray`. grit reads a
+grayscale PNG's gray level as the index, so these come out complemented
+(`0xBF` for `0x40`). Re-saved as indexed PNGs with the same indices, they
+all match. Ideally they'd get their real palettes, which a migration would
+do anyway. Every `_bitmap` PNG, every other `_8bpp_tiles` PNG, and every
+framed sprite-sheet frame is already indexed. Tile order is row-major
+8x8, the same as gbagfx. Flips only matter for maps (see below).
+
+**Palettes.** An indexed PNG carrying `intro/24_61badc.pal` (16 colours)
+gives the ROM's bytes with `-g! -p -pn16`. One carrying
+`tileset1/11_63cf98.pal` (256 colours) gives them with `-g! -p -pn256`.
+The `.bin` palettes whose entries have bit 15 set can't be produced by grit
+or by gbagfx's `.pal`. They stay raw `.bin`.
+
+**Tilemaps.** The intro sky background (tileset `36_61c30c`, map
+`48_62fb24`, palette `24_61badc`) was composited into one 256x160 indexed
+PNG, the way an artist would edit it, and put through `-gt -gB4 -m -mRtf
+-mLf`:
+
+- **Tiles:** grit's reduction reproduces the ROM tileset exactly: the same
+  first-appearance order, the same deduplication, and the same h/v-flip
+  choices for the 3 h-flipped and 10 v-flipped entries. The only
+  difference is that `tmap_init_from_dib()` always starts the tileset with
+  a blank tile 0. So grit's tileset is `[blank] + ROM tileset`, and every
+  map index is ROM + 1.
+- **Map:** passing the ROM tileset as grit's external tileset (`-fx
+  tileset.png`, an 8px-wide strip) gives a byte-exact map.
+
+So a tileset and map can be kept as one full-image PNG only for tilesets
+that really start with a blank tile. Otherwise they need `-fx`, or a
+one-line grit option to skip the forced blank tile. `-mLs` pads the map to
+32x32 screenblocks, so it's the wrong layout for these 32x20 maps; use
+`-mLf`.
+
+**LZ77.** Every graphics stream in `data.s` was decompressed and
+recompressed with grit's `lz77gba_compress()` (the `-gzl` code) and with
+gbagfx. gbagfx is byte-exact on all 141. grit is byte-exact on only 26,
+all tiny (palettes, 1-tile graphics, 512-byte maps). On anything real,
+grit's Okumura-tree LZSS picks different (valid) matches and usually a
+slightly bigger stream. No grit option changes its match search, so
+**gbagfx stays the compressor**.
+
+**C output.** `-ftc -gu8` gives `const unsigned char <name>Bitmap[N]
+__attribute__((aligned(4))) __attribute__((visibility("hidden")))`.
+
+- agbcc compiles it once it goes through `cpp`: `visibility` is ignored
+  with a warning, and `aligned(4)` is honoured.
+- `-gu8/-gu16/-gu32` only change the element type and declared length, not
+  the bytes.
+- The symbol is always `<-s name>` + a fixed suffix, not the repo's names.
+- Compressed output is `ALIGN4`-padded, and the pad bytes come from
+  uninitialised memory. The ROM's streams are packed back to back without
+  padding: the bitmap here is 0x3A61 bytes, and the next object starts
+  right after it.
+- The header has a timestamp.
+
+So grit's C writer is only a fit for uncompressed assets with 4-aligned
+sizes, and none of the assets identified so far is uncompressed.
+
+### 3. Adopted pipeline
+
+```
+graphics/<dir>/<name>.png
+  --grit <kind flags> -p! -ftb -fh!-->  build/.../<name>.img.bin     (layout)
+  --gbagfx-->                           build/.../<name>.img.bin.lz  (byte-exact LZ77)
+  --tools/bin2c.py --lz-->              build/.../<name>.img.bin.lz.inc
+src/data/<asset>.c:   const u8 gStaticData_XXXXXXXX[] = {
+                      #include "<dir>/<name>.img.bin.lz.inc"
+                      };
+```
+
+`tools/bin2c.py --lz` trims gbagfx's 4-byte padding back to the stream's
+real length. It fails if the trimmed bytes aren't zero. The declaration
+(symbol name, type, comment) is hand-written in `src/data/*.c`, so names
+follow the repo's conventions, and only the bytes are generated. This
+replaces the earlier plan of generating the whole `.c` file under
+`build/`. Keeping the declaration checked in means the symbol name, the
+element type and the comment live in the repo, and the object sits in
+`src/data/`, where the linker script and the report already handle it.
+The element type is `u8`: the ROM's LZ77 streams have odd lengths and
+are packed back to back. Objects
+under `src/data/` get `-iquote build/crashbandicootxs/graphics`, so the
+`#include` path is just `<dir>/<file>`.
+
+Per asset kind:
+
+| asset | grit flags | then | status |
+|---|---|---|---|
+| Mode 4 bitmap (`*_bitmap.png`, 240x160 8bpp linear) | `-gb -gB8 -p!` | gbagfx LZ77 | used (replaces `tools/linear_gfx.py`) |
+| 8bpp tileset (`*_8bpp_tiles.png`) | `-gt -gB8 -p!` | gbagfx LZ77 | verified, 14/14 |
+| 4bpp tileset (`*_tiles.png`) | `-gt -gB4 -p!` | gbagfx LZ77 | verified 35/35; needs the PNG re-saved as indexed first |
+| 16-colour palette | `-g! -p -pn16` on an indexed PNG carrying it | gbagfx LZ77 | verified |
+| 256-colour palette | `-g! -p -pn256` | gbagfx LZ77 | verified; bit-15 `.bin` palettes stay raw |
+| tilemap (+ tileset) from one full image | `-gt -gB4 -m -mRtf -mLf -fx <tileset.png>` | gbagfx LZ77 | map verified; the tileset itself stays a separate PNG |
+| framed OBJ sheets (`graphics/unknown/0*/`) | not migrated: each frame has a 4-byte header grit doesn't know about | `tools/framed_gfx.py` | - |
+
+**Never** use grit's `-gzl`/`-pzl`/`-mzl` or its `-ftc` for LZ77 assets.
+
+### Placing it and counting it
+
+Placement is the same as for a hand-written table (see "Layout" above).
+`data/data.s` drops the asset's label and `.incbin`, leaves a
+`@ gStaticData_085AA170: src/data/intro_bitmap_5aa170.c` comment, and
+starts `.section .rodata.085ADBD1` for what follows. `ldscript.txt` links
+`src/data/intro_bitmap_5aa170.o(.rodata)` between the previous section
+and that one. agbcc doesn't align a `u8` array, so the next section
+starts right at the array's end, which is what the ROM has for these
+unaligned stream lengths.
+
+The report needs nothing extra. The object is in `src/data/`, so
+`tools/report_units.py` counts it as built data from the `ldscript.txt`
+layout like any other table. `make report` depends on `$(C_OBJS)`, and
+`graphics.mk` makes the object depend on its generated `.inc`, so grit
+and gbagfx run first. The asset was already counted as built data when it
+was an `.incbin` of the gbagfx output, so converting it doesn't change
+`matched_data`. It only moves the bytes from an `.incbin` into a C array.
+
+### Adding the next asset
+
+1. Make sure the PNG is indexed (convert the grayscale ones first) and the
+   grit rule for its kind is in `graphics.mk`.
+2. Add it to `GRIT_C_PNGS` in `graphics.mk`, so it's no longer built for a
+   `data.s` incbin.
+3. Write `src/data/<kind>_<addr>.c` with the hand-written declaration.
+   Add a `$(C_BUILDDIR)/data/<kind>_<addr>.o: <...>.lz.inc` dependency
+   line to `graphics.mk`.
+4. Split `data/data.s` and add the `ldscript.txt` lines, as for any table.
+5. Run a full clean `make` (`make tidy && make`). It must print
+   `crashbandicootxs.gba: OK`.

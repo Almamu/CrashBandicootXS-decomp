@@ -11,6 +11,7 @@ LD       := $(PREFIX)ld
 OBJCOPY  := $(PREFIX)objcopy
 
 GFX := tools/gbagfx/gbagfx
+GRIT := tools/grit/grit
 AIF := tools/aif2pcm/aif2pcm
 MID := $(abspath tools/mid2agb/mid2agb)
 SCANINC := tools/scaninc/scaninc
@@ -64,7 +65,8 @@ OBJS_REL := $(patsubst $(OBJ_DIR)/%,%,$(OBJS))
 
 include graphics.mk
 
-GRAPHICS_PNGS := $(wildcard graphics/*/*.png)
+# PNGs in GRIT_C_PNGS (graphics.mk) become C arrays, not data.s incbins.
+GRAPHICS_PNGS := $(filter-out $(GRIT_C_PNGS),$(wildcard graphics/*/*.png))
 GRAPHICS_PALS := $(wildcard graphics/*/*.pal)
 GRAPHICS_BINS := $(wildcard graphics/*/*.bin)
 
@@ -333,3 +335,6 @@ $(DATA_ASM_BUILDDIR)/%.o: $(DATA_ASM_SUBDIR)/%.s
 
 $(GFX):
 	$(MAKE) -C tools/gbagfx
+
+$(GRIT):
+	$(MAKE) -C tools/grit
