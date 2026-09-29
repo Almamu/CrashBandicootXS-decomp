@@ -255,3 +255,36 @@ exactly the byte delta of the missed instruction reordering, exposing
 it via `arm-none-eabi-nm`'s address table before even diffing bytes.
 This is the same "isolated compile is a diagnostic tool, never proof"
 warning `docs/workflow.md` calls out - it held true again here.
+
+## Later pass: strag2 retry
+
+Three of the four NAKED transcriptions from the third pass are now real
+C: `sub_8015238`, `sub_80152F0` (`actor_part38b.c`) and `sub_80156EC`
+(`actor_part38c.c`). The whole `.text` of `actor_part38.o`/`38b.o`/`38c.o`
+is identical under agbcc and old_agbcc, and this range is confirmed
+old_agbcc territory, so the three objects joined `OLD_AGBCC_OBJS`.
+
+- **`sub_80156EC`**: the extra `push {r5}`/`adds r5, r4, #0` was the
+  `u8 *self = selfArg;` copy. GCSE's copy propagation doesn't reach it
+  in the `else` arm. Taking `u8 *self` as the parameter removes it.
+- **`sub_80152F0`**: the "addressing-mode fold" is not the problem
+  (plain C keeps the `adds r0, #6`). The fix is to put the `0x17`/`0`
+  table indices in `u8` locals so they are loaded before the stores.
+  That also moves `mode` into `r4`, as in the ROM.
+- **`sub_8015238`**: with real `u8 *self, u8 mode` parameters, the entry
+  home-copy order is already right. The `0x200` test is built in `r1`
+  and ANDed through a copy in `r0` into `flags`' own `r2`. This comes
+  from `m = 0x200` and an `asm("" : "=r"(m2) : "0"(m))` copy. After the
+  `and` there is an `asm volatile("" : "+r"(flags) : "r"(m))`. Without
+  it, combine sinks the `and` into the test and regmove retargets it
+  onto `m2`. `self[0x29]`'s `1` is stored through a pointer local, so
+  the `movs r4, #1` comes after the address.
+
+`sub_8015038` is still NAKED. Its C draft under `#if NON_MATCHING` is 2
+halfwords off under both compilers. At the top of the `self+0x24 != 0`
+arm the ROM copies `self+0x22` into `r5` before loading through the
+copy; the draft loads first. The draft needed `zero`/`wait` locals (for
+the ROM's `sb`/`r4` constant pair), `off += 0x50` (to drop an extra
+copy) and three no-code holds for reload/register choices. See
+`docs/matching/strag2-naked-retry.md`.
+

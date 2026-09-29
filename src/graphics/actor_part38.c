@@ -177,6 +177,114 @@ extern s32 sub_803AD84(void *arg0, void *arg1, void *arg2, void *arg3);
  * sub_8015038". Transcribed instruction-for-instruction from the ROM
  * disassembly instead, the same escape hatch used for
  * `sub_8001CB8`/`sub_8001DB4` (src/system/link_cable.c). */
+#if NON_MATCHING
+/* Near-miss draft (2 halfwords off under both agbcc and old_agbcc): at
+ * the top of the `self+0x24 != 0` arm the ROM copies `self+0x22` into
+ * r5 *before* loading through the copy (`adds r5, r0, #0; ldrb r2,
+ * [r5]`), where this draft loads through r0 first and copies after.
+ * Everything else matches: the `zero`/`wait` locals give the ROM's
+ * sb/r4 constant pair across the calls, `off += 0x50` avoids an extra
+ * copy, and the r0/r1/r2 holds (no code) steer three reload/register
+ * choices. */
+void sub_8015038(u8 *self, s32 id, s32 param2)
+{
+    u8 *mgr;
+    u8 *off;
+
+    if (self[0x24] == 0) {
+        s32 idx = 0x17;
+        s32 zero;
+        s32 wait;
+
+        self[0x21] = 0;
+        if (self[0x22] == 1) {
+            idx = 0x28;
+            self[0x21] = 1;
+        } else if (self[0x22] == 2) {
+            idx = 0x27;
+            self[0x21] = 2;
+        }
+        zero = 0;
+        wait = 0x14;
+        mgr = *(u8 **)(self + 0xc);
+        sub_803AD80(self + *(s16 *)(mgr + 0x20), (void *)id, *(void **)(mgr + 0x24));
+        off = *(u8 **)(self + 0xc);
+        off += 0x50;
+        sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)idx,
+                    *(void **)(off + 4));
+        *(s32 *)(self + 0x18) = zero;
+        *(s32 *)(self + 0x1c) = wait;
+        PlaySfx(gUnknown_030012BC, self[0x21] + 0x57, 0x100);
+        if (++self[0x22] >= self[0x20]) {
+            self[0x24] = 1;
+            if (self[0x22] > 1)
+                self[0x22] = 1;
+            else {
+                register s32 hold asm("r0");
+                asm("" : "=r"(hold)); /* keep r0 busy: reload uses r1 */
+                self[0x22] = zero;
+                asm("" : : "r"(hold));
+            }
+        }
+    } else {
+        register s32 hold1 asm("r1");
+        u8 v;
+
+        asm("" : "=r"(hold1)); /* keep r1 busy: v loads into r2 */
+        v = self[0x22];
+        asm("" : : "r"(hold1));
+        if (v > 0xf0) {
+            s32 idx;
+            s32 zero;
+            s32 wait;
+            register s32 hold2 asm("r2");
+
+            asm("" : "=r"(hold2)); /* keep r2 busy: 0x17 goes via r0 */
+            idx = 0x17;
+            asm("" : : "r"(hold2));
+            self[0x21] = 0;
+            if (self[0x22] == 1) {
+                idx = 0x28;
+                self[0x21] = 1;
+            } else if (self[0x22] == 2) {
+                idx = 0x27;
+                self[0x21] = 2;
+            }
+            zero = 0;
+            wait = 0x14;
+            mgr = *(u8 **)(self + 0xc);
+            sub_803AD80(self + *(s16 *)(mgr + 0x20), (void *)id, *(void **)(mgr + 0x24));
+            off = *(u8 **)(self + 0xc);
+            off += 0x50;
+            sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)idx,
+                        *(void **)(off + 4));
+            *(s32 *)(self + 0x18) = zero;
+            *(s32 *)(self + 0x1c) = wait;
+            PlaySfx(gUnknown_030012BC, self[0x21] + 0x57, 0x100);
+        } else {
+            u8 *p21 = self + 0x21;
+            s32 zero = 0;
+            s32 wait;
+
+            *p21 = zero;
+            self[0x20] = zero;
+            wait = 0x18;
+            mgr = *(u8 **)(self + 0xc);
+            sub_803AD80(self + *(s16 *)(mgr + 0x20), (void *)param2, *(void **)(mgr + 0x24));
+            off = *(u8 **)(self + 0xc);
+            off += 0x50;
+            sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)0x10,
+                        *(void **)(off + 4));
+            *(s32 *)(self + 0x18) = zero;
+            *(s32 *)(self + 0x1c) = wait;
+            PlaySfx(gUnknown_030012BC, 0xa, 0x100);
+            self[0x26] = 0x63;
+        }
+        self[0x22]--;
+    }
+    self[0x23] = 0;
+}
+#else
 NAKED void sub_8015038(void *selfArg, s32 id, s32 param2)
 {
     asm(
@@ -383,3 +491,4 @@ NAKED void sub_8015038(void *selfArg, s32 id, s32 param2)
     "22: .4byte gUnknown_030012BC\n"
     );
 }
+#endif

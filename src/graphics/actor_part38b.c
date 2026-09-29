@@ -1,10 +1,7 @@
 #include "core.h"
 
-/* Continuation of actor_part28.c (issue #18's chunk) - covers
- * `sub_80151C8` (matched); `sub_8015238`/`sub_80152F0` are parked
- * (NON_MATCHING) below, real bytes in the new asm/code_3_2_17_15238.s.
- * Non-adjacent to actor_part28.c since the parked `sub_8015038` sits
- * raw between them (asm/code_3_2_17_15038.s). Same "self" object
+/* Continuation of actor_part38.c (issue #18's chunk) - covers
+ * `sub_80151C8`, `sub_8015238` and `sub_80152F0`. Same "self" object
  * family documented at the top of actor_part18.c/actor_part28.c. */
 
 /* One-shot guard (`self+0x23`): the first time through, picks a value
@@ -101,13 +98,9 @@ void sub_80151C8(void *selfArg)
         *p34 = zero;
     }
 }
-/* Trailing byte count isn't a multiple of 4 and this is the last
- * actually-emitted function in the file (the rest is NON_MATCHING-
- * guarded, compiling to nothing in the default build) - without this,
- * `as` pads with its default NOP fill instead of the ROM's zero fill
- * (see docs/matching.md's alignment-padding gotcha). */
+/* Zero-fill alignment before the next function (see docs/matching.md's
+ * alignment-padding gotcha). */
 asm(".align 2, 0");
-
 
 extern void *gUnknown_030012C0;
 extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
@@ -125,109 +118,65 @@ extern s32 sub_80231C4(void *self);
  * both state/counter/table-index trios (`0x31`/`0x2f`/`0x27` and
  * `0x32`/`0x30`/`0x28`).
  *
- * Written as NAKED asm, not plain C: every load/store, branch and call
- * was already confirmed correct and in the right order - the residual
- * gap was purely the two parameter home-copies at function entry
- * (`self` into `r5`, `mode`'s `u8` truncation into `r1`), which gcc 2.9
- * always scheduled in the opposite order from the ROM regardless of
- * source order or register pins - see
- * docs/matching/issue-18-0x08014f8c-actor.md, "Parked, not matched:
- * sub_8015238". Transcribed instruction-for-instruction from the ROM
- * disassembly instead, the same escape hatch used for
- * `sub_8001CB8`/`sub_8001DB4` (src/system/link_cable.c). */
-NAKED void sub_8015238(void *selfArg, u8 mode, s32 flags)
+ * Matched in a later pass (docs/matching/issue-18-0x08014f8c-actor.md,
+ * "Later pass: strag2 retry"): `self`/`mode` as real `u8 *`/`u8` parameters fixed the
+ * entry home-copy order the old draft got backwards; the `flags` test
+ * needs the constant-copy escape below. */
+void sub_8015238(u8 *self, u8 mode, s32 flags)
 {
-    asm(
-        "push {r4, r5, lr}\n\t"
-        "sub sp, #4\n\t"
-        "add r5, r0, #0\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "lsr r1, r1, #0x18\n\t"
-        "add r3, r5, #0\n\t"
-        "add r3, #0x26\n\t"
-        "mov r0, #0xc\n\t"
-        "strb r0, [r3]\n\t"
-        "cmp r1, #4\n\t"
-        "bgt 1f\n\t"
-        "cmp r1, #3\n\t"
-        "blt 1f\n\t"
-        "mov r1, #0x80\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r0, r1, #0\n\t"
-        "and r2, r0\n\t"
-        "cmp r2, #0\n\t"
-        "beq 2f\n\t"
-        "ldr r0, 20f\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_80231C4\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "beq 2f\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x29\n\t"
-        "mov r4, #1\n\t"
-        "strb r4, [r0]\n\t"
-        "ldr r1, [r5, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, #4\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r2, [r5, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r2, r1]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldr r1, [r5, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, #0x18\n\t"
-        "bl sub_803AD84\n\t"
-        "mov r1, #0x1b\n\t"
-        "add r2, r5, #0\n\t"
-        "add r2, #0x31\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r2]\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x2f\n\t"
-        "strb r4, [r0]\n\t"
-        "sub r0, #8\n\t"
-        "strb r1, [r0]\n\t"
-        "b 3f\n\t"
-        ".align 2, 0\n"
-    "20: .4byte gUnknown_030012C0\n"
-    "2:\n\t"
-        "add r0, r5, #0\n\t"
-        "bl sub_8015460\n\t"
-        "b 3f\n\t"
-    "1:\n\t"
-        "mov r4, #0\n\t"
-        "str r4, [sp]\n\t"
-        "add r0, r5, #0\n\t"
-        "mov r1, #0\n\t"
-        "mov r2, #0x12\n\t"
-        "mov r3, #0\n\t"
-        "bl sub_8015780\n\t"
-        "add r0, r5, #0\n\t"
-        "add r0, #0x31\n\t"
-        "strb r4, [r0]\n\t"
-        "sub r0, #2\n\t"
-        "mov r1, #1\n\t"
-        "strb r1, [r0]\n\t"
-        "sub r0, #8\n\t"
-        "strb r4, [r0]\n\t"
-        "add r0, #0xb\n\t"
-        "strb r4, [r0]\n\t"
-        "sub r0, #2\n\t"
-        "strb r1, [r0]\n\t"
-        "sub r0, #8\n\t"
-        "strb r4, [r0]\n\t"
-    "3:\n\t"
-        "add sp, #4\n\t"
-        "pop {r4, r5}\n\t"
-        "pop {r0}\n\t"
-        "bx r0"
-    );
+    self[0x26] = 0xc;
+    switch (mode) {
+    case 3:
+    case 4: {
+        s32 m = 0x200;
+        s32 m2;
+
+        /* The ROM builds 0x200 in r1 and ANDs through a copy in r0, into
+         * flags' own r2: the "=r"/"0" escape keeps the copy (m2) apart
+         * from m, and the volatile use of m and flags right after the
+         * `and` stops combine from sinking it into the test and regmove
+         * from retargeting it onto m2. */
+        asm("" : "=r"(m2) : "0"(m));
+        flags &= m2;
+        asm volatile("" : "+r"(flags) : "r"(m));
+        if (flags != 0 && (u8)sub_80231C4(gUnknown_030012C0)) {
+            u8 *mgr;
+            u8 *off;
+            u8 one;
+            u8 *p = self + 0x29;
+
+            one = 1;
+            *p = one;
+            mgr = *(u8 **)(self + 0xc);
+            sub_803AD80(self + *(s16 *)(mgr + 0x20), (void *)4, *(void **)(mgr + 0x24));
+            off = *(u8 **)(self + 0xc) + 0x50;
+            sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)0x18,
+                        *(void **)(off + 4));
+            {
+                u8 idx = 0x1b;
+
+                self[0x31] = 0;
+                self[0x2f] = one;
+                self[0x27] = idx;
+            }
+        } else {
+            sub_8015460(self);
+        }
+        break;
+    }
+    default: {
+        u8 zero = 0;
+
+        sub_8015780(self, 0, 0x12, 0, zero);
+        self[0x31] = zero;
+        self[0x2f] = 1;
+        self[0x27] = zero;
+        self[0x32] = zero;
+        self[0x30] = 1;
+        self[0x28] = zero;
+        break;
+    }
+    }
 }
 
 extern void sub_80122CC(void *self);
@@ -237,68 +186,33 @@ extern void sub_80122CC(void *self);
  * `0`/`1`/`0x17`. Independently, for `mode <= 2`: resets the same trio
  * to `0`/`1`/`0`. Always tail-calls `sub_80122CC`.
  *
- * Written as NAKED asm, not plain C: every load/store, branch and call
- * was already confirmed correct and in the right order - the residual
- * gap was a single instruction (`self+0x31`'s store folding a `+6`
- * byte offset from the already-computed `self+0x2b` pointer into the
- * `strb`'s own addressing mode, where the ROM keeps the `adds #6` and
- * the `strb` as two separate instructions) - see
- * docs/matching/issue-18-0x08014f8c-actor.md, "Parked, not matched:
- * sub_80152F0". Transcribed instruction-for-instruction from the ROM
- * disassembly instead, the same escape hatch used for
- * `sub_8001CB8`/`sub_8001DB4` (src/system/link_cable.c). */
-NAKED void sub_80152F0(void *selfArg, u8 mode)
+ * Matched in a later pass (docs/matching/issue-18-0x08014f8c-actor.md,
+ * "Later pass: strag2 retry"): the `0x17`/`0` table indices go through `u8` locals
+ * so they're materialized before the stores, which also moves `mode`
+ * into `r4` as in the ROM. */
+void sub_80152F0(u8 *self, u8 mode)
 {
-    asm(
-        "push {r4, lr}\n\t"
-        "add r2, r0, #0\n\t"
-        "lsl r1, r1, #0x18\n\t"
-        "lsr r4, r1, #0x18\n\t"
-        "mov r0, #0x27\n\t"
-        "add r0, r0, r2\n\t"
-        "mov ip, r0\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 4f\n\t"
-        "add r0, r2, #0\n\t"
-        "add r0, #0x2b\n\t"
-        "ldrb r3, [r0]\n\t"
-        "cmp r3, #0\n\t"
-        "bne 4f\n\t"
-        "cmp r4, #4\n\t"
-        "bgt 4f\n\t"
-        "cmp r4, #3\n\t"
-        "blt 4f\n\t"
-        "mov r1, #0x17\n\t"
-        "add r0, #6\n\t"
-        "strb r3, [r0]\n\t"
-        "add r3, r2, #0\n\t"
-        "add r3, #0x2f\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r3]\n\t"
-        "mov r0, ip\n\t"
-        "strb r1, [r0]\n\t"
-    "4:\n\t"
-        "cmp r4, #2\n\t"
-        "bhi 5f\n\t"
-        "mov r1, #0\n\t"
-        "add r0, r2, #0\n\t"
-        "add r0, #0x31\n\t"
-        "strb r1, [r0]\n\t"
-        "add r3, r2, #0\n\t"
-        "add r3, #0x2f\n\t"
-        "mov r0, #1\n\t"
-        "strb r0, [r3]\n\t"
-        "add r0, r2, #0\n\t"
-        "add r0, #0x27\n\t"
-        "strb r1, [r0]\n\t"
-    "5:\n\t"
-        "add r0, r2, #0\n\t"
-        "bl sub_80122CC\n\t"
-        "pop {r4}\n\t"
-        "pop {r0}\n\t"
-        "bx r0"
-    );
+    if (self[0x27] == 0 && self[0x2b] == 0) {
+        switch (mode) {
+        case 3:
+        case 4: {
+            u8 idx = 0x17;
+
+            self[0x31] = 0;
+            self[0x2f] = 1;
+            self[0x27] = idx;
+            break;
+        }
+        }
+    }
+    if (mode <= 2) {
+        u8 idx = 0;
+
+        self[0x31] = idx;
+        self[0x2f] = 1;
+        self[0x27] = idx;
+    }
+    sub_80122CC(self);
 }
 /* Trailing byte count isn't a multiple of 4 - without this, `as` pads
  * with its default NOP fill instead of the ROM's zero fill (see
