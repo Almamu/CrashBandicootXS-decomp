@@ -384,10 +384,23 @@ struct GaxChannelState {
                  : : "m"(arg), "r"(fn) : "r0", "r1", "r2", "lr")
 
 /* The same call with the argument already in a register (`mov r0, rX`
- * instead of a stack reload) - sub_8039B44's form. */
-#define GAX_CALL_ARM_R(fn, arg)                                                  \
-    asm volatile("mov r1, %1\n\tmov r0, %0\n\tmov r2, pc\n\tadd r2, #5\n\t"     \
-                 "mov lr, r2\n\tbx r1\n\tnop"                                   \
-                 : : "r"(arg), "r"(fn) : "r0", "r1", "r2", "lr")
+ * instead of a stack reload) - sub_8039B44's form, taking the player
+ * state whose `field_44` holds the routine. What reproduces the ROM
+ * (docs/matching/gax-naked-retry-3.md):
+ * - the "memory" clobber: the ARM routine writes the work item `arg`
+ *   points at, and without it GCSE carries loads across the call;
+ * - `arg` goes into a register before the routine is loaded (the ROM's
+ *   `mov r4, sp` comes first);
+ * - one variable walks state -> routine, so both loads share a register
+ *   (the ROM's `ldr r3, [r3]; ldr r3, [r3, #0x44]`). */
+#define GAX_CALL_ARM_R(state, arg)                                               \
+    {                                                                            \
+        void *_arg = (void *)(arg);                                              \
+        void *_fn = (state);                                                     \
+        _fn = ((struct GaxPlayerState *)_fn)->field_44;                          \
+        asm volatile("mov r1, %1\n\tmov r0, %0\n\tmov r2, pc\n\tadd r2, #5\n\t" \
+                     "mov lr, r2\n\tbx r1\n\tnop"                               \
+                     : : "r"(_arg), "r"(_fn) : "r0", "r1", "r2", "lr", "memory"); \
+    }
 
 #endif /* __AUDIO_H__ */

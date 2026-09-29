@@ -41,7 +41,13 @@
  * 64-bit `*` through a `__muldi3` alias and the ping-pong test re-reads
  * `self->instrument`/`self->row`; ~202 halfwords off by the
  * alignment-insensitive count (was ~237). Left: `self`/`info`/`flag`
- * still land in r5/r7/r9 instead of r6/r4/r5, which cascades. */
+ * still land in r5/r7/r9 instead of r6/r4/r5, which cascades.
+ * GAX retry 3 (docs/matching/gax-naked-retry-3.md): ~46 off (was ~202).
+ * `self`/`info`/`flag`/`vol` now get r6/r4/r5/r7 and the mixer loop
+ * matches. Left: the tune reads `row` from a copy made at the top of
+ * its block where the ROM copies sb right at the use, the sweep-length
+ * initializer and the backward end (`sweepMin`) reuse registers where the
+ * ROM reloads into r3, and literal-pool placement follows from those. */
 #if NON_MATCHING
 /* sub_800014C is this ROM's memcpy (the work item's initializer) and
  * sub_8037ECC is `__muldi3`: as a libcall the 64-bit multiply does not
@@ -90,10 +96,10 @@ u32 sub_8039B44(struct GaxChannelState *self, struct GaxInfoHandler *info, void 
 
     if (self->instrument == NULL || self->note == (s16)0x8ad0 || self->row > 3)
         return 0;
-    row = self->row;
-    wave = &song->waves[self->instrument->waveIdx[row]];
+    wave = &song->waves[self->instrument->waveIdx[self->row]];
     if (wave->data == NULL)
         return 0;
+    row = self->row;
 
     pitch = self->note + self->field_2e;
     if (self->field_21 == 0) {
@@ -103,12 +109,8 @@ u32 sub_8039B44(struct GaxChannelState *self, struct GaxInfoHandler *info, void 
     }
     inst = self->instrument;
     idx = pitch + inst->rows[row].tune;
-    if (idx > 0xef3)
-        idx = 0xef3;
-    period = gStaticData_085A62DC[idx];
-    vol = 0x100;
-    if (self->envOut != 0xff)
-        vol = self->envOut;
+    period = gStaticData_085A62DC[idx > 0xef3 ? 0xef3 : idx];
+    vol = self->envOut != 0xff ? self->envOut : 0x100;
     if (self->vol17 != 0xff)
         vol = vol * self->vol17 >> 8;
     if (self->vol15 != 0xff)
@@ -119,15 +121,29 @@ u32 sub_8039B44(struct GaxChannelState *self, struct GaxInfoHandler *info, void 
         vol = vol * info->field_1f >> 8;
     if (flag == 0)
         vol = vol * info->type->data.song->volume >> 8;
-    step = ((s64)(s32)period * (s64)gUnknown_03001618) >> 32;
+    {
+        /* one DImode variable for operand and result: it overlaps the
+         * libcall's r0-r3 setup, so it takes r4:r5 (first in global's
+         * order) and keeps `self` out of them, as in the ROM */
+        s64 prod = (s32)period;
+
+        prod = prod * gUnknown_03001618 >> 32;
+        step = prod;
+    }
     len = wave->length;
     pingpong = 0;
-    if (self->instrument->rows[self->row].field_00 == 0
-        && self->instrument->rows[self->row].sweepMin < self->instrument->rows[self->row].sweepMax)
+    if (inst->rows[self->row].field_00 == 0
+        && inst->rows[self->row].sweepMin < inst->rows[self->row].sweepMax)
         pingpong = 1;
     {
-        struct GaxMixItem item = {
-            wave->data, buf, self->samplePos, len << 11, self->format->frames, 0, vol, step, 0,
+        /* the ROM loads these three before the first store to the item */
+        u32 frames = self->format->frames;
+        u8 *data = wave->data;
+        s32 pos = self->samplePos;
+        /* volatile: the ARM routine updates it behind gcc's back, and the
+         * ROM re-reads `item.done` at every use */
+        volatile struct GaxMixItem item = {
+            data, buf, pos, len << 11, frames, 0, vol, step, 0,
             self->sweepOn ? self->instrument->rows[self->row].sweepLen << 11 : 0,
         };
 
@@ -160,7 +176,7 @@ u32 sub_8039B44(struct GaxChannelState *self, struct GaxInfoHandler *info, void 
                     GAX_PATCH_MIXER(gStaticData_0803A8C4, 0xcaff);
                 }
             }
-            GAX_CALL_ARM_R(gUnknown_03001630->field_44, &item);
+            GAX_CALL_ARM_R(gUnknown_03001630, &item);
             if (item.done == self->format->frames)
                 break;
             if (pingpong) {

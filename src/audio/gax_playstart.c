@@ -49,7 +49,11 @@
  * a no-code `maxRate` reference that gives it r8 and `fmt` r9 like the
  * ROM. Left: register choice in the ALIGN4 after `field_1c` (new size in
  * r3), the first tap scan's `layout` copy, the order of the constants
- * hoisted before the ARM-code copy loops, and the tail. */
+ * hoisted before the ARM-code copy loops, and the tail.
+ * GAX retry 3 (docs/matching/gax-naked-retry-3.md): the tail matches with
+ * a nested `flags & 2` test (~100 by brute2's sequence score, was ~123).
+ * The rest is as above; reordering the copy-loop setup statements moves
+ * it by 1-4 at most. */
 #if NON_MATCHING
 asm(".set _call_via_r1, sub_803AD7C\n.set __divsi3, sub_803ADB4\n.set __udivsi3, sub_8037E54\n");
 
@@ -267,9 +271,14 @@ u32 sub_8038538(struct GaxSongHeader *p)
     GAX_INFO()->field_20 = (p->flags >> 3) & 1;
     GAX_SONG()->field_39 = 0;
     GAX_SONG()->field_3a = 0;
-    if ((p->flags & 2) && ((u32 *)GAX_MIXER()->type->data.dsp)[1] != 0)
-        gUnknown_03001630->field_40 = 1;
-    else
+    /* nested, not `&&`: keeps the ROM's u16 test and its two
+     * `field_40 = 0` stores sharing the tested zero */
+    if ((u16)(p->flags & 2)) {
+        if (((u32 *)GAX_MIXER()->type->data.dsp)[1] != 0)
+            gUnknown_03001630->field_40 = 1;
+        else
+            gUnknown_03001630->field_40 = 0;
+    } else
         gUnknown_03001630->field_40 = 0;
     return 1;
 fail:
