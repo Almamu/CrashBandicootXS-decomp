@@ -73,7 +73,7 @@ the appendix.
 | `082B91D0`-`082BF120` | 24,400 | per-room level data, 8 rooms | as block 1 | high | hard (raw until decoded) |
 | `082BF120`-`084A4660` | 1,987,904 | sprite tile pool for the 56 sprite banks | `graphics_7634.c`/`graphics_73dc.c` (`sub_80083A8` + frame offset) | high | **done** (grit) |
 | `084A4660`-`084A5600` | 4,000 | 125 fixed 4bpp tiles | `sub_8004D74` pool, `sub_8006DF8` | high | **done** (grit) |
-| `084A5600`-`084C0006` | 109,062 | sprite-bank table ("master asset table"): header, 56 banks, 2,429 frames | `sub_8004D74`, `sub_8022230`, every `**gUnknown_030012D0` user | high | medium |
+| `084A5600`-`084C0006` | 109,062 | sprite-bank table ("master asset table"): header, 56 banks, 2,429 frames | `sub_8004D74`, `sub_8022230`, every `**gUnknown_030012D0` user | high | **converted** (C) |
 | `084C0006`-`0855BCB4` | 638,126 | second GAX2 data set: 88 instruments, 87 8-bit samples, sample table, FX handler | GAX2 engine (header prefix of the built audio points here) | high (format), medium (role) | medium |
 | `085A4C5C`-`086ECCD2` | 28,979 | 111 labels between the built intro/tileset1 LZ77 blobs: GAX2 tables and strings, libgcc `__clz_tab` x2, EEPROM tables, 23 intro palettes, 67 alignment pads | direct / slide packages | high | easy |
 | `086C127C`-`086D9CAC` | 100,912 | raw level asset (room `0825E7DC`) | `sub_80266BC` -> `sub_80254F8`/`sub_8024CF0` | high | medium |
@@ -94,7 +94,7 @@ By category, as a share of the 8,038,172-byte data total:
 | Rotation strips (3) | 304,348 | 3.79% | hard |
 | Per-room level data | 178,208 | 2.22% | hard |
 | 404 small/mid labels | 127,807 | 1.59% | easy (a few medium) |
-| Sprite-bank table | 109,062 | 1.36% | medium |
+| Sprite-bank table | 109,062 | 1.36% | **converted** |
 | BG1 pictures (3) | 37,096 | 0.46% | medium |
 | `sub_effect_record` tables (7) | 23,224 | 0.29% | easy |
 | Other (125-tile pool, IWRAM image, pads, `u16[16]`) | 6,574 | 0.08% | easy/medium |
@@ -318,18 +318,43 @@ from the matched readers (`sub_8004D74` in `settings_menu15.c`, `sub_80083A8`/
 0x084A5610 bank_record[56] (12 B): { anim_record *anims; frame_desc **frames; u16 unk; u16 nanims; }
     (every "**gUnknown_030012D0 + 0x27C"-style offset in src/ is 12*N: bank N)
 per bank, back to back:
-    anim_record[nanims] (0x1C): u16 *keyframes @0, bbox s16s, u8 tileRecord @0x14 (sub_8006DF8 id),
+    anim_record[nanims] (0x1C): u16 *keyframes @0, two boxes @4/@0xC, u8 tileRecord @0x14 (sub_8006DF8 id),
                                 u8 duration @0x15, u8 frameCount @0x16, u8 flags @0x17 (bit 1 = loop)
     u16 keyframes[]             (frame indices, frameCount per anim)
     frame_desc *frames[nframes]
-    frame_desc[nframes] (0x18): piece_offset *offsets; u8 *ids; u32 count<<24 | tileOffset; ...
+    frame_desc[nframes]: piece_offset *offsets; u8 *ids; u32 count<<24 | tileOffset;
+                         then 0-3 boxes {s16 x, y; u8 w, h; u16 0} and an optional {s16 x, y} anchor
     piece_offset[] (s16 x, s16 y), u8 ids[] (low nibble = OBJ shape/size index into 0816B2E0/0816B2EC)
 ```
 
-A walk of all 56 banks (2,429 frames) covers `0x084A5600`-`0x084C0006`
-with no gap except 385 holes of 1-16 bytes, which are unreferenced
-frame descriptors and alignment. Bank 0 alone is 48 animations, 465
-frames and 250 KB of tiles, probably the player.
+A frame descriptor is **not** a fixed 0x18 bytes, as first noted here:
+its size depends on the high nibble of its first piece byte (the
+"layout type"), the same nibble `sub_8007C30`/`sub_8007CF8`/
+`sub_80084C4`/`sub_8008518`/`sub_8008564`/`sub_80085B8` switch on to
+pick a box or anchor off the frame. Type 1 has nothing after the 12-byte
+header, types 2 and 5 one box, 6 a box and an anchor, 3 two boxes, 4
+three, and 0 three boxes and an anchor (12 to 40 bytes). With those
+sizes, a walk of all 56 banks (330 animations, 2,429 frames) covers
+`0x084A5600`-`0x084C0006` with nothing in between but 57 zero alignment
+pads of 1-3 bytes; the "385 holes" of the first walk were the boxes and
+anchors of a fixed 0x18-byte reading. The only irregularity is three
+frames with no pieces (in banks 0, 42 and 47): 12-byte headers that
+share the next frame's piece arrays and are directly followed by it.
+The anim record's last word (`+0x18`), every box's last `u16` and the
+bank's `unk` are always 0. Bank 0 alone is 48 animations, 465 frames and 250 KB of tiles, probably
+the player.
+
+**Status: converted** to typed C: `src/data/sprite_banks_4a5600.c` (the
+header, the bank table and banks 0-9), `sprite_banks_4b0ae0.c` (10-21),
+`sprite_banks_4b414c.c` (22-38) and `sprite_banks_4b9d7c.c` (39-55),
+with the structs in `include/sprite_bank.h` (`struct sprite_bank_table`,
+`sprite_bank`, `sprite_anim`, `sprite_frame` and its five box/anchor
+variants). Every pointer is a symbol reference; frame tile offsets are
+written relative to the owning bank's range of the tile pool
+(`SPRITE_TILES_BANKnn`). `tools/sprite_banks.py` extracted the C once
+from `baserom.gba`, checking the layout above as it goes. The files are
+cut after banks whose piece bytes end on a word, because each C object
+starts word-aligned. See docs/data.md.
 
 `0x084C0006`-`0x0855BCB4` is **a second GAX2 data set** in the same
 formats docs/audio.md describes for music:
@@ -349,9 +374,7 @@ likely these are the sound effects (docs/audio.md's `PlaySfx` notes
 should be re-checked against it), but which engine call selects it is
 not confirmed.
 
-**Conversion.** The bank table is a typed description (C `const`
-structs or a JSON + generator) with about 4,000 internal pointers:
-medium. The audio set is medium: samples to `.wav` (lossless for 8-bit
+**Conversion.** The bank table is done (see above). The audio set is medium: samples to `.wav` (lossless for 8-bit
 PCM) and instruments/tables through an extension of `tools/gax_audio.py`,
 which already encodes these exact record types for the music bank.
 
@@ -468,7 +491,7 @@ Every one of the 412 labels is listed in the appendix.
    the only data that pins code addresses, so converting them to
    symbolic `.4byte sub_X`/C initialisers is what lets code shift without
    breaking the ROM. Then the typed tables, in consumer-file batches.
-8. **Sprite-bank table** (109 KB) and **category family data**
+8. **Done (the sprite-bank table).** **Sprite-bank table** (109 KB) and **category family data**
    (`08178F80`/`0817AA98`, `sub_effect_record` tables): typed C with
    generators. The layouts are all known.
 9. **Room data** (178 KB) and **rotation strips** (304 KB): last. They
@@ -746,7 +769,7 @@ vtable shapes).
 | `0817E74C` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_8037388` | high | easy |
 | `0817E76C` | 0x20 | table of u16 (`u16` x 16) | `sub_8037388` | high | easy |
 | `0817E78C` | 0x326E74 | composite: level BG tile sets (raw tag-0x00 assets), per-room level data, sprite-bank tile pool | `sub_8037388` | high | medium |
-| `084A5600` | 0xB66B4 | composite: sprite-bank (animation) table + GAX2 sound-effect bank | `sub_8004D74`, `sub_8022230` | high | medium |
+| `084A5600` | 0xB66B4 | composite: sprite-bank (animation) table (**converted**, C) + GAX2 sound-effect bank | `sub_8004D74`, `sub_8022230` | high | medium |
 | `085A4C5C` | 0x14 | pointer table (4 data pointers) | `sub_8037FC0`, `sub_8038538` | high | easy |
 | `085A4C70` | 0x100 | u8[256] count-leading-zeros table (libgcc __clz_tab, used by the 64-bit divide) (`UQItype` x 256) | `sub_8037648` | high | easy |
 | `085A4D70` | 0x100 | u8[256] count-leading-zeros table (second copy, __clz_tab of another libgcc object) (`UQItype` x 256) | `sub_8037A7C` | high | easy |

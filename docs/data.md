@@ -206,6 +206,10 @@ The first batch (all pointer tables, all byte-exact):
 | `level_tilesets_17e78c.c` | `0x0817E78C` | a `u16[16]` (`sub_8037388`), level BG tile sets 1-3 (grit, see "Resources") |
 | `level_tilesets_270f08.c` | `0x08270F08` | level BG tile sets 4-5 (grit) |
 | `sprite_tiles_2bf120.c` | `0x082BF120` | the sprite tile pool (56 banks) and the 125 fixed OBJ tiles (grit) |
+| `sprite_banks_4a5600.c` | `0x084A5600` | the sprite-bank table header, 56 `struct sprite_bank`, banks 0-9 (see "Sprite banks" below) |
+| `sprite_banks_4b0ae0.c` | `0x084B0AE0` | sprite banks 10-21 |
+| `sprite_banks_4b414c.c` | `0x084B414C` | sprite banks 22-38 |
+| `sprite_banks_4b9d7c.c` | `0x084B9D7C` | sprite banks 39-55 |
 | `entity_vtables_7e3bec.c` | `0x087E3BEC` | the 93 entity virtual tables |
 
 The actor-category backgrounds and tables (grit-built, see "Category
@@ -217,6 +221,39 @@ backgrounds" below):
 | `sub_effect_0c0c38.c` | `0x080C0C38` | categories 1 and 2 `sub_effect_table`s |
 | `cell_anim_0ff1b0.c` | `0x080FF1B0` | BG0 cell animation B (38x10, 21 frames), category 3 BG1 picture and `sub_effect_table` |
 | `bg_picture_151ac4.c` | `0x08151AC4` | category 4 and 5/6 BG1 pictures, categories 4-6 `sub_effect_table`s |
+
+### Sprite banks (`gStaticData_084A5600`)
+
+The sprite-bank animation system (`0x084A5600`-`0x084C0006`, 2,429
+frames in 56 banks) is typed C in four files, with the structs in
+`include/sprite_bank.h`. It was extracted once by `tools/sprite_banks.py`,
+which walks the tables the way the matched readers do and asserts the
+layout (every object where agbcc will put it, only zero padding between);
+the C is the source from then on.
+
+- Every table is its own named `const` object in ROM order:
+  `gSpriteBanks`, then per bank `gSpriteBankNNAnims`,
+  `gSpriteBankNNAnimMMSeq`, `gSpriteBankNNFrames`, the frames
+  `gSpriteBankNNFrameKKK` and their `...Pos`/`...Pieces` arrays. The
+  pointers between them are symbol references, and counts that the ROM
+  stores (`animCount`, `frameCount`, a frame's piece count) are
+  `ARRAY_COUNT()`s of the arrays, so adding a piece or a step only means
+  editing the array. The tables are referenced before they are defined,
+  so each bank starts with `extern` declarations that carry the array
+  sizes.
+- A frame is a 12-byte `struct sprite_frame` plus the boxes and anchor
+  its layout type (the high nibble of its first piece byte) calls for,
+  so it is one of six struct types (`sprite_frame`,
+  `sprite_frame_1box`, ..., `sprite_frame_3box_anchor`); the frame
+  pointer array points at each one's `.frame`. Changing a frame's layout
+  type means changing its struct type too.
+- A frame's `tiles` is an offset into the sprite tile pool, not a
+  pointer, so it can't be a symbol reference. It is written as
+  `SPRITE_TILES_BANKnn + offset`, relative to the owning bank's array in
+  `sprite_tiles_2bf120.c`; those bases are in `sprite_bank.h`.
+- The file cuts sit after banks whose piece bytes end on a word: each
+  file starts with a word-aligned struct, and `tools/report_units.py`
+  doesn't accept linker fill between objects.
 
 Still raw and worth doing next: the per-level record table
 `gStaticData_0816C86C` (self-referencing records, used all over the

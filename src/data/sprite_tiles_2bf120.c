@@ -5,15 +5,16 @@
  * tiles. Linked in ROM order between data/data.s sections by ldscript.txt -
  * see docs/data.md and docs/data_map.md ("gStaticData_0817E78C").
  *
- * The sprite-bank table gStaticData_084A5600 (still raw) starts with
- * {banks, tileBase = 0x082BF120, tilePool = 0x084A4660, 56, 125}.
- * sub_80083A8 returns tileBase, and graphics_73dc.c/graphics_7634.c upload
- * a frame's pieces from tileBase + (frame.packed & 0xFFFFFF). The 56 banks
- * own disjoint, back-to-back ranges of that pool in bank order (banks 42
- * and 47 also reuse one frame of bank 0's), so each bank is one array
- * below, labeled with its ROM address. Nothing references these labels:
- * the only pointer into the pool is the header's tileBase, and the frame
- * descriptors hold offsets from it.
+ * The sprite-bank table gStaticData_084A5600 (sprite_banks_4a5600.c) starts
+ * with {banks, tileBase = gStaticData_082BF120, tilePool =
+ * gStaticData_084A4660, 56, 125}. sub_80083A8 returns tileBase, and
+ * graphics_73dc.c/graphics_7634.c upload a frame's pieces from tileBase +
+ * (frame.tiles & 0xFFFFFF). The 56 banks own disjoint, back-to-back ranges
+ * of that pool in bank order (banks 42 and 47 also reuse one frame of bank
+ * 0's), so each bank is one array below, labeled with its ROM address. The
+ * only pointer into the pool is the header's tileBase; the frames hold
+ * offsets from it, written as SPRITE_TILES_BANKnn + offset
+ * (include/sprite_bank.h), so resizing a bank here means updating those.
  *
  * Raw 4bpp (32-byte) OBJ tiles, no header. The bytes come from
  * graphics/sprites/bankNN_<addr>.png via graphics.mk (grit -gt -gB4 -p!,
