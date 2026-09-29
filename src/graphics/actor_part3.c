@@ -11,8 +11,9 @@ extern void *gUnknown_03001308;
  * `{gUnknown_03001308's sub-object's two Q8 fields, 240<<8, 160<<8}`
  * (the GBA's screen width/height) and the same
  * `table+N`/`table+N+4` offset/pointer slot pair convention
- * sub_8006FE4 reads at `table+0x40`, here at `table+0x30`. */
-s32 sub_8007F78(struct actor *part)
+ * sub_8006FE4 reads at `table+0x40`, here at `table+0x30` (the
+ * part's method-table entry, see PART_METHOD). */
+s32 sub_8007F78(struct box_part *part)
 {
     register s32 result asm("r3") = 0;
 
@@ -29,7 +30,7 @@ s32 sub_8007F78(struct actor *part)
         if (!bit2) {
             s32 buf[4];
             register void *subObj asm("r0");
-            void *table;
+            struct part_method *table;
 
             subObj = *(void **)((u8 *)gUnknown_03001308 + 0x10);
             {
@@ -47,27 +48,19 @@ s32 sub_8007F78(struct actor *part)
                 buf[3] = height;
             }
 
-            table = part->table;
-            result = (u8)sub_803AD80((u8 *)part + *(s16 *)((u8 *)table + 0x30), buf, *(void **)((u8 *)table + 0x34));
+            table = PART_METHOD(part, 0x30);
+            result = (u8)sub_803AD80((u8 *)part + table->thisOffset, buf, table->fn);
         }
     }
     return result;
 }
 
-struct aabb {
-    s32 field_0;
-    s32 field_4;
-    s32 field_8;
-    s32 field_c;
-};
-
 extern void sub_8007B00(void *dest, void *part);
 
 /* Same `part+0x25`/`part+0xd` bit-2 fast-path shape as sub_8007F78
  * above, but the real check is an AABB-overlap test: `part`'s own box
- * (via sub_8007B00) against `region`'s `{s32 x, y, w, h}`
- * (kept raw - `region`'s own type isn't established). */
-s32 sub_8007FD8(struct actor *part, void *region)
+ * (via sub_8007B00) against `region`'s `{s32 x, y, w, h}`. */
+s32 sub_8007FD8(struct actor *part, struct part_aabb *region)
 {
     register s32 earlyResult asm("r3") = 0;
 
@@ -87,22 +80,22 @@ s32 sub_8007FD8(struct actor *part, void *region)
     }
 
     {
-        struct aabb box;
+        struct part_aabb box;
         s32 x1, y1, x2, y2;
         s32 result;
 
         sub_8007B00(&box, part);
 
-        x1 = box.field_0 << 8;
-        y1 = box.field_4 << 8;
-        x2 = x1 + (box.field_8 << 8);
-        y2 = y1 + (box.field_c << 8);
+        x1 = box.x << 8;
+        y1 = box.y << 8;
+        x2 = x1 + (box.w << 8);
+        y2 = y1 + (box.h << 8);
 
         result = 0;
-        if (x2 > *(s32 *)region) {
-            if (x1 < *(s32 *)region + *(s32 *)((u8 *)region + 8)) {
-                if (y2 > *(s32 *)((u8 *)region + 4)) {
-                    if (y1 < *(s32 *)((u8 *)region + 4) + *(s32 *)((u8 *)region + 0xc)) {
+        if (x2 > region->x) {
+            if (x1 < region->x + region->w) {
+                if (y2 > region->y) {
+                    if (y1 < region->y + region->h) {
                         result = 1;
                     }
                 }

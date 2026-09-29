@@ -1,7 +1,5 @@
 #include "core.h"
-#include "actor.h"
-
-extern void sub_803AD88(void *arg0, s32 arg1, s32 arg2, s32 arg3);
+#include "gobj_1a794.h"
 
 /* Same `record->table+0x10/0x14`-driven trampoline shape as
  * `sub_8009F1C`/`sub_8009FB0`, but forwarding `arg1`/`arg2`/`arg3`
@@ -11,30 +9,22 @@ extern void sub_803AD88(void *arg0, s32 arg1, s32 arg2, s32 arg3);
  * `sub_803AD88` (a plain 4-argument function, not itself a trampoline)
  * - the same idiom already confirmed and documented for
  * `sub_8007DBC`'s own `sub_803AD88` call in `actor_part2.c`. */
-void sub_8009FD4(struct actor *self, s32 arg1, s32 arg2, s32 arg3)
+void sub_8009FD4(struct gobj *self, s32 arg1, s32 arg2, s32 arg3)
 {
-    void *rec = *(void **)((u8 *)self + 0x44);
+    struct mover *rec = self->mover;
 
     if (rec != 0) {
-        u8 *tbl = *(u8 **)((u8 *)rec + 0xc);
-        void *addr = (u8 *)rec + *(s16 *)(tbl + 0x10);
-        register void *deadRead asm("r4") = *(void *volatile *)(tbl + 0x14);
+        struct mover_vtable *tbl = rec->vtable;
+        void *addr = (u8 *)rec + tbl->m10.thisOffset;
+        register void *deadRead asm("r4") = *(void *volatile *)&tbl->m10.fn;
         (void)deadRead;
 
         sub_803AD88(addr, arg1, arg2, arg3);
     }
 }
 
-struct aabb {
-    s32 field_0;
-    s32 field_4;
-    s32 field_8;
-    s32 field_c;
-};
-
 extern void *sub_8007C30(void *dest, void *pt);
 extern void *sub_8007CF8(void *dest, void *pt);
-extern u8 sub_8001688(void *buf1, void *buf2);
 
 /* Builds `part`'s primary AABB (`sub_8007C30`) and tests it against
  * `region` (`sub_8001688`, the same collision-test function used by
@@ -85,7 +75,6 @@ end:
     return result;
 }
 
-extern void *sub_803AD7C(void *arg0, void *fn);
 
 /* Fires a `self->table+0x70/0x74`-driven trampoline via `sub_803AD7C`
  * (same `table+N`/`table+N+4` convention used throughout this ROM
@@ -93,9 +82,9 @@ extern void *sub_803AD7C(void *arg0, void *fn);
  * + offset` computed before the `fn` load (reusing the adjusted table
  * pointer's own dying register for `fn`), the same accumulator-style
  * fix established for `sub_8009F1C`/`sub_8009FB0` above. */
-s32 sub_800A050(void *self)
+s32 sub_800A050(struct gobj *self)
 {
-    register u8 *tblAdj asm("r1") = *(u8 **)((u8 *)self + 0x18) + 0x70;
+    register u8 *tblAdj asm("r1") = (u8 *)self->vtable + 0x70;
     register s32 offset asm("r2") = *(s16 *)tblAdj;
     register void *addr asm("r0");
     register void *fn asm("r1");
@@ -107,67 +96,67 @@ s32 sub_800A050(void *self)
 }
 
 /* `self+0x74` get/clear/OR-set accessors. */
-s32 sub_800A068(void *self)
+s32 sub_800A068(struct gobj *self)
 {
-    return *(s32 *)((u8 *)self + 0x74);
+    return self->unk_74;
 }
 
 /* `self+0x74 != 0`, via the branchless `(-x | x) >> 31` idiom rather
  * than a plain comparison. */
-s32 sub_800A06C(void *self)
+s32 sub_800A06C(struct gobj *self)
 {
-    s32 val = *(s32 *)((u8 *)self + 0x74);
+    s32 val = self->unk_74;
     return (u32)(-val | val) >> 31;
 }
 
-void sub_800A078(void *self)
+void sub_800A078(struct gobj *self)
 {
-    *(s32 *)((u8 *)self + 0x74) = 0;
+    self->unk_74 = 0;
 }
 
-void sub_800A080(void *self, s32 val)
+void sub_800A080(struct gobj *self, s32 val)
 {
-    *(s32 *)((u8 *)self + 0x74) |= val;
+    self->unk_74 |= val;
 }
 
 /* `self+0x68` byte get/set pair. */
-void sub_800A088(void *self, u8 val)
+void sub_800A088(struct gobj *self, u8 val)
 {
-    *((u8 *)self + 0x68) = val;
+    self->unk_68 = val;
 }
 
-u8 sub_800A090(void *self)
+u8 sub_800A090(struct gobj *self)
 {
-    return *((u8 *)self + 0x68);
+    return self->unk_68;
 }
 
 /* `self+0x64`/`self+0x60` setters. */
-void sub_800A098(void *self, s32 val)
+void sub_800A098(struct gobj *self, s32 val)
 {
-    *(s32 *)((u8 *)self + 0x64) = val;
+    self->speedY = val;
 }
 
-void sub_800A09C(void *self, s32 val)
+void sub_800A09C(struct gobj *self, s32 val)
 {
-    *(s32 *)((u8 *)self + 0x60) = val;
+    self->speedX = val;
 }
 
 /* `self+0x60`/`self+0x64` getters - the setters' siblings above. */
-s32 sub_800A0A0(void *self)
+s32 sub_800A0A0(struct gobj *self)
 {
-    return *(s32 *)((u8 *)self + 0x60);
+    return self->speedX;
 }
 
-s32 sub_800A0A4(void *self)
+s32 sub_800A0A4(struct gobj *self)
 {
-    return *(s32 *)((u8 *)self + 0x64);
+    return self->speedY;
 }
 
 /* `self+0x44` (the keyframe/table record pointer used by
  * `sub_8009F1C`/`sub_8009FB0`/`sub_800A0AC`) getter. */
-void *sub_800A0A8(void *self)
+struct mover *sub_800A0A8(struct gobj *self)
 {
-    return *(void **)((u8 *)self + 0x44);
+    return self->mover;
 }
 
 extern s32 sub_803AD80(void *arg0, void *arg1, void *fn);
@@ -175,63 +164,63 @@ extern s32 sub_803AD80(void *arg0, void *arg1, void *fn);
 /* Sets `self+0x44` to `rec`, then fires `rec->table+0x18/0x1c`'s
  * trampoline via `sub_803AD80` with `self` as the second argument.
  * Same `addr`-before-`fn` fix as `sub_8009F1C`/`sub_8009FB0`. */
-void sub_800A0AC(void *self, void *rec)
+void sub_800A0AC(struct gobj *self, struct mover *rec)
 {
-    *(void **)((u8 *)self + 0x44) = rec;
+    self->mover = rec;
 
     {
-        register u8 *tbl asm("r2") = *(u8 **)((u8 *)rec + 0xc);
-        register s32 offset asm("r1") = *(s16 *)(tbl + 0x18);
+        register struct mover_vtable *tbl asm("r2") = rec->vtable;
+        register s32 offset asm("r1") = tbl->m18.thisOffset;
         register void *addr asm("r0");
         register void *fn asm("r2");
 
         addr = (u8 *)rec + offset;
-        fn = *(void **)(tbl + 0x1c);
+        fn = tbl->m18.fn;
         sub_803AD80(addr, self, fn);
     }
 }
 
 /* `self+0x64`/`self+0x54`/`self+0x58`/`self+0x5c` bulk setter -
  * `self+0x64` and `self+0x54` both get the same first argument. */
-void sub_800A0CC(void *self, s32 a, s32 b, s32 c)
+void sub_800A0CC(struct gobj *self, s32 a, s32 b, s32 c)
 {
-    *(s32 *)((u8 *)self + 0x64) = a;
-    *(s32 *)((u8 *)self + 0x54) = a;
-    *(s32 *)((u8 *)self + 0x58) = b;
-    *(s32 *)((u8 *)self + 0x5c) = c;
+    self->speedY = a;
+    self->velB.x = a;
+    self->velB.y = b;
+    self->velB.z = c;
 }
 
 /* Same shape as `sub_800A0CC` above, without the `self+0x64` write. */
-void sub_800A0D8(void *self, s32 a, s32 b, s32 c)
+void sub_800A0D8(struct gobj *self, s32 a, s32 b, s32 c)
 {
-    *(s32 *)((u8 *)self + 0x54) = a;
-    *(s32 *)((u8 *)self + 0x58) = b;
-    *(s32 *)((u8 *)self + 0x5c) = c;
+    self->velB.x = a;
+    self->velB.y = b;
+    self->velB.z = c;
 }
 
 /* `self+0x60`/`self+0x48`/`self+0x4c`/`self+0x50` bulk setter - the
  * velocity/accel/max-velocity pair `sub_8009DF4` clamps, same
  * "shared first write" shape as `sub_800A0CC`. */
-void sub_800A0E0(void *self, s32 a, s32 b, s32 c)
+void sub_800A0E0(struct gobj *self, s32 a, s32 b, s32 c)
 {
-    *(s32 *)((u8 *)self + 0x60) = a;
-    *(s32 *)((u8 *)self + 0x48) = a;
-    *(s32 *)((u8 *)self + 0x4c) = b;
-    *(s32 *)((u8 *)self + 0x50) = c;
+    self->speedX = a;
+    self->velA.x = a;
+    self->velA.y = b;
+    self->velA.z = c;
 }
 
 /* Same shape as `sub_800A0E0` above, without the `self+0x60` write. */
-void sub_800A0EC(void *self, s32 a, s32 b, s32 c)
+void sub_800A0EC(struct gobj *self, s32 a, s32 b, s32 c)
 {
-    *(s32 *)((u8 *)self + 0x48) = a;
-    *(s32 *)((u8 *)self + 0x4c) = b;
-    *(s32 *)((u8 *)self + 0x50) = c;
+    self->velA.x = a;
+    self->velA.y = b;
+    self->velA.z = c;
 }
 
 /* `self+0x69` (cleared by `sub_8009F50`, set 0 by that same
  * initializer) getter. */
-u8 sub_800A0F4(void *self)
+u8 sub_800A0F4(struct gobj *self)
 {
-    return *((u8 *)self + 0x69);
+    return self->unk_69[0];
 }
 asm(".align 2, 0");

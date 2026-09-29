@@ -73,13 +73,13 @@ void sub_80297C8(void)
     if (gUnknown_030013B8 != 0) {
         u8 *next;
 
-        dst = gUnknown_030013B9 != 0 ? 0x06000000 : 0x06002000;
+        dst = gUnknown_030013B9 != 0 ? VRAM : VRAM + 0x2000;
         next = src + gUnknown_030013A0;
         gUnknown_0300087C(next, gUnknown_030013B9, gUnknown_03001398, gUnknown_0300139C);
     } else if (gUnknown_030013B9 != 0) {
-        dst = 0x06000020;
+        dst = VRAM + 0x20;
     } else {
-        dst = gUnknown_030013A0 + 0x06000020;
+        dst = gUnknown_030013A0 + (VRAM + 0x20);
     }
     DmaSet(3, src, dst, 0x80000000 | (gUnknown_030013A0 / 2));
     gUnknown_030013BA = 1;
@@ -94,8 +94,7 @@ extern void sub_802996C(void);
 extern s32 sub_803ADB4(s32 a, s32 b);
 
 /* (Re)configures the console/text-plane cell geometry from a fresh
- * cell record at `arg1` (a `{..., s16 width @0x200, s16 height @0x202}`
- * layout) - cell pixel area, its DMA-scroll-wrap threshold, and the
+ * cell record at `arg1` (a `struct cell_anim_header`: its `cols`/`rows`) - cell pixel area, its DMA-scroll-wrap threshold, and the
  * initial X/Y scroll accumulators - then rebuilds both VRAM screen
  * blocks via `sub_802996C`.
  *
@@ -112,7 +111,7 @@ extern s32 sub_803ADB4(s32 a, s32 b);
  * taking the address and copying it. Matches under both compilers. */
 void sub_8029890(s32 arg0, s32 arg1, s32 arg2, s32 arg3)
 {
-    u8 *cell = (u8 *)arg1;
+    struct cell_anim_header *cell = (struct cell_anim_header *)arg1;
     s32 area;
     s32 flag;
     s32 size;
@@ -121,8 +120,8 @@ void sub_8029890(s32 arg0, s32 arg1, s32 arg2, s32 arg3)
     flag = (arg0 == 0);
     *pFlag = flag;
     gUnknown_03001394 = cell;
-    gUnknown_03001398 = *(s16 *)(cell + 0x200);
-    gUnknown_0300139C = *(s16 *)(cell + 0x202);
+    gUnknown_03001398 = cell->cols;
+    gUnknown_0300139C = cell->rows;
     gUnknown_030013A0 = (area = gUnknown_03001398 * gUnknown_0300139C) << 5;
     {
         s32 *a4 = &gUnknown_030013A4;
@@ -160,10 +159,10 @@ static inline void FillTileMap(s32 arg0, s32 w, s32 h)
     s32 row, col;
 
     if (arg0 != 0) {
-        base = (u16 *)0x0600F400;
+        base = (u16 *)(VRAM + 0xF400);
         tile = h * w + 1;
     } else {
-        base = (u16 *)0x0600E400;
+        base = (u16 *)(VRAM + 0xE400);
         tile = 1;
     }
     for (row = 0; row < h; row++) {
@@ -187,14 +186,14 @@ void sub_802996C(void)
 {
     REG_DISPCNT = 0x1141;
     REG_BG0CNT = 0x5c02;
-    DmaSet(3, gUnknown_03001394, 0x05000000, 0x80000100);
+    DmaSet(3, gUnknown_03001394, PLTT, 0x80000100);
     if (gUnknown_030013B8 == 0) {
-        u32 *vram = (u32 *)0x06000000;
+        u32 *vram = (u32 *)VRAM;
         s32 i;
 
         for (i = 0; i < 8; i++)
             vram[i] = 0;
-        DmaFill16(3, 0, 0x0600E000, 0x2000);
+        DmaFill16(3, 0, VRAM + 0xE000, 0x2000);
         FillTileMap(0, gUnknown_03001398, gUnknown_0300139C);
         FillTileMap(1, gUnknown_03001398, gUnknown_0300139C);
     }

@@ -94,7 +94,6 @@ extern void nullsub_6(void);
 extern void sub_802A5E4(void);
 
 #define CUR_CATEGORY (gStaticData_08175558[gUnknown_03001380])
-#define OBJ_PLTT_ADDR 0x05000200
 #define PAUSED (gUnknown_030012C0[0x8c])
 
 s32 InitActorCategory(s32 category)
@@ -148,7 +147,7 @@ s32 InitActorCategory(s32 category)
                             *activeCount >= (s32)CUR_CATEGORY.active_count_threshold, variant,
                             gUnknown_03000878);
         dma->src = (u32)CUR_CATEGORY.palette;
-        dma->dst = OBJ_PLTT_ADDR;
+        dma->dst = OBJ_PLTT;
         dma->cnt = 0x80000100;
         dma->cnt;
 
@@ -196,7 +195,7 @@ s32 InitActorCategory(s32 category)
                     open = -sub_802A5AC() < 0;
                 if (open) {
                     buf = mem_alloc(0x200, 0x80000000);
-                    dma->src = OBJ_PLTT_ADDR;
+                    dma->src = OBJ_PLTT;
                     dma->dst = (u32)buf;
                     dma->cnt = 0x80000100;
                     dma->cnt;
@@ -207,7 +206,7 @@ s32 InitActorCategory(s32 category)
                     SetupActorVramPool();
                     sub_800132C(0x80, 1, 1);
                     dma->src = (u32)buf;
-                    dma->dst = OBJ_PLTT_ADDR;
+                    dma->dst = OBJ_PLTT;
                     dma->cnt = 0x80000100;
                     dma->cnt;
                     mem_free(buf);

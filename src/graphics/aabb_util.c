@@ -29,7 +29,7 @@ extern struct unk_03001280 gUnknown_03001280;
  * otherwise encode as a direct AND-immediate instead. */
 void sub_8001624(void)
 {
-    register vu32 *bldReg asm("r2") = (vu32 *)0x04000050;
+    register vu32 *bldReg asm("r2") = (vu32 *)REG_ADDR_BLDCNT;
     register struct unk_03001280 *src asm("r1") = &gUnknown_03001280;
     register u32 word asm("r0") = src->bldcntAlpha;
     register u32 bldy asm("r1");

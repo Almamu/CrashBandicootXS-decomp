@@ -1,4 +1,5 @@
 #include "core.h"
+#include "action_obj.h"
 
 /* Continuation of actor_part38.c (issue #18's chunk) - covers
  * `sub_80151C8`, `sub_8015238` and `sub_80152F0`. Same "self" object
@@ -122,9 +123,9 @@ extern s32 sub_80231C4(void *self);
  * "Later pass: strag2 retry"): `self`/`mode` as real `u8 *`/`u8` parameters fixed the
  * entry home-copy order the old draft got backwards; the `flags` test
  * needs the constant-copy escape below. */
-void sub_8015238(u8 *self, u8 mode, s32 flags)
+void sub_8015238(struct act *self, u8 mode, s32 flags)
 {
-    self[0x26] = 0xc;
+    self->unk_26 = 0xc;
     switch (mode) {
     case 3:
     case 4: {
@@ -140,24 +141,24 @@ void sub_8015238(u8 *self, u8 mode, s32 flags)
         flags &= m2;
         asm volatile("" : "+r"(flags) : "r"(m));
         if (flags != 0 && (u8)sub_80231C4(gUnknown_030012C0)) {
-            u8 *mgr;
-            u8 *off;
+            struct act_vtable *mgr;
+            struct act_method *off;
             u8 one;
-            u8 *p = self + 0x29;
+            u8 *p = &self->unk_29;
 
             one = 1;
             *p = one;
-            mgr = *(u8 **)(self + 0xc);
-            sub_803AD80(self + *(s16 *)(mgr + 0x20), (void *)4, *(void **)(mgr + 0x24));
-            off = *(u8 **)(self + 0xc) + 0x50;
-            sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)0x18,
-                        *(void **)(off + 4));
+            mgr = self->vt;
+            sub_803AD80((u8 *)self + mgr->m20.thisOffset, (void *)4, mgr->m20.fn);
+            off = &self->vt->m50;
+            sub_803AD84((u8 *)self + off->thisOffset, self->part, (void *)0x18,
+                        off->fn);
             {
                 u8 idx = 0x1b;
 
-                self[0x31] = 0;
-                self[0x2f] = one;
-                self[0x27] = idx;
+                self->next31 = 0;
+                self->flag2F = one;
+                self->next27 = idx;
             }
         } else {
             sub_8015460(self);
@@ -168,12 +169,12 @@ void sub_8015238(u8 *self, u8 mode, s32 flags)
         u8 zero = 0;
 
         sub_8015780(self, 0, 0x12, 0, zero);
-        self[0x31] = zero;
-        self[0x2f] = 1;
-        self[0x27] = zero;
-        self[0x32] = zero;
-        self[0x30] = 1;
-        self[0x28] = zero;
+        self->next31 = zero;
+        self->flag2F = 1;
+        self->next27 = zero;
+        self->next32 = zero;
+        self->flag30 = 1;
+        self->next28 = zero;
         break;
     }
     }

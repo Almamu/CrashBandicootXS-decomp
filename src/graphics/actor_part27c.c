@@ -16,7 +16,21 @@
  * actor_part18.c. */
 
 extern u8 gStaticData_087E442C[];
-extern void *gUnknown_03001308;
+/* gUnknown_03001308's view here: only the followed object's `+0x14`
+ * word is read (same `viewport`/`camera` naming as actor_part7.c). */
+struct camera_pos {
+    s32 x;
+    s32 y;
+    u8 unk_08[0xC];
+    s32 unk_14;         // 0x14 - `<< 8` then `+ 0x2000` is the charge target
+};
+
+struct viewport {
+    u8 unk_00[0x10];
+    struct camera_pos *camera; // 0x10
+};
+
+extern struct viewport *gUnknown_03001308;
 extern void *gUnknown_030012B4;
 extern s32 sub_803AD84(void *addr, void *arg1, void *arg2, void *fn);
 extern void sub_800B8A8(void *self, s32 flags);
@@ -68,12 +82,12 @@ void sub_80187FC(void *objArg, void *otherArg)
 case1:
     {
         s32 timer = *(s32 *)(other + 4) + 0x400;
-        u8 *subObj;
+        struct camera_pos *subObj;
         s32 threshold;
 
         *(s32 *)(other + 4) = timer;
-        subObj = *(u8 **)((u8 *)gUnknown_03001308 + 0x10);
-        threshold = (*(s32 *)(subObj + 0x14) << 8) + 0x2000;
+        subObj = gUnknown_03001308->camera;
+        threshold = (subObj->unk_14 << 8) + 0x2000;
         if (timer >= threshold) {
             *(s32 *)(obj + 8) = 2;
         }

@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor.h"
+#include "box_part.h"
 
 extern void *sub_803AD7C(void *arg0, void *fn);
 extern s32 sub_803AD80(void *arg0, void *arg1, void *fn);
@@ -107,18 +108,18 @@ void sub_800944C(void *managerArg)
 
             if (node != 0) {
                 do {
-                    void *part = *(void **)node;
-                    u8 *tbl = *(u8 **)((u8 *)part + 0x18);
-                    s16 offset = *(s16 *)(tbl + 0x30);
+                    struct box_part *part = *(struct box_part **)node;
+                    struct part_method *tbl = PART_METHOD(part, 0x30);
+                    s16 offset = tbl->thisOffset;
                     void *addr = (u8 *)part + offset;
-                    void *fn = *(void **)(tbl + 0x34);
+                    void *fn = tbl->fn;
 
                     if ((u8)sub_803AD80(addr, box, fn)) {
-                        void *part2 = *(void **)node;
-                        u8 *tbl2 = *(u8 **)((u8 *)part2 + 0x18);
-                        s16 offset2 = *(s16 *)(tbl2 + 0x20);
+                        struct box_part *part2 = *(struct box_part **)node;
+                        struct part_method *tbl2 = PART_METHOD(part2, 0x20);
+                        s16 offset2 = tbl2->thisOffset;
                         void *addr2 = (u8 *)part2 + offset2;
-                        void *fn2 = *(void **)(tbl2 + 0x24);
+                        void *fn2 = tbl2->fn;
 
                         sub_803AD7C(addr2, fn2);
                         *((u8 *)node + 0x11) = 1;
@@ -138,18 +139,18 @@ void sub_800944C(void *managerArg)
                 void *node2 = *(void **)((u8 *)node + 0xc);
 
                 if (*((u8 *)node2 + 0x11) == 0) {
-                    void *part = *(void **)node;
-                    u8 *tbl = *(u8 **)((u8 *)part + 0x18);
-                    s16 offset = *(s16 *)(tbl + 0x30);
+                    struct box_part *part = *(struct box_part **)node;
+                    struct part_method *tbl = PART_METHOD(part, 0x30);
+                    s16 offset = tbl->thisOffset;
                     void *addr = (u8 *)part + offset;
-                    void *fn = *(void **)(tbl + 0x34);
+                    void *fn = tbl->fn;
 
                     if ((u8)sub_803AD80(addr, box, fn)) {
-                        void *part2 = *(void **)node;
-                        u8 *tbl2 = *(u8 **)((u8 *)part2 + 0x18);
-                        s16 offset2 = *(s16 *)(tbl2 + 0x20);
+                        struct box_part *part2 = *(struct box_part **)node;
+                        struct part_method *tbl2 = PART_METHOD(part2, 0x20);
+                        s16 offset2 = tbl2->thisOffset;
                         void *addr2 = (u8 *)part2 + offset2;
-                        void *fn2 = *(void **)(tbl2 + 0x24);
+                        void *fn2 = tbl2->fn;
 
                         sub_803AD7C(addr2, fn2);
                     }

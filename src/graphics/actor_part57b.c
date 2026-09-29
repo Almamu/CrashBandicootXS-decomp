@@ -1,4 +1,5 @@
 #include "core.h"
+#include "gobj_1a794.h"
 
 /* GitHub issue #19: continuation of actor_part57.c's chunk
  * (0x08015840-0x08016128), non-adjacent since the left-raw
@@ -16,12 +17,11 @@
  * halfword, not a literal instruction). `sub_8016048` continues in
  * asm/code_3_2_17_16048.s. */
 
-extern void *gUnknown_030012D8;
 
 /* Player-velocity-relative "record" writer: computes a Q14-ish rounded
- * `((player->0x64^2 / 0x4000) + 4) * 3 / 2` timing value, then compares
- * `|player->0x64|` against `|arg2|` to decide whether the current
- * `gUnknown_030012D8` record (`+0x54`/`+0x58`/`+0x5c`) gets the computed
+ * `((player->speedY^2 / 0x4000) + 4) * 3 / 2` timing value, then compares
+ * `|player->speedY|` against `|arg2|` to decide whether the current
+ * `gUnknown_030012D8` record (`velB`, +0x54/+0x58/+0x5c) gets the computed
  * value or a product-sign-selected combination of `arg1`/the computed
  * value. */
 void sub_8015FDC(s32 arg0, s32 arg1arg, s32 arg2arg)
@@ -29,8 +29,8 @@ void sub_8015FDC(s32 arg0, s32 arg1arg, s32 arg2arg)
     register s32 self asm("r6") = arg0;
     register s32 arg1 asm("ip") = arg1arg;
     register s32 arg2 asm("r5") = arg2arg;
-    register u8 *player asm("r3") = gUnknown_030012D8;
-    register s32 vel asm("r4") = *(s32 *)(player + 0x64);
+    register struct gobj *player asm("r3") = gUnknown_030012D8;
+    register s32 vel asm("r4") = player->speedY;
     register s32 sq asm("r1") = vel;
     s32 result;
 
@@ -62,8 +62,8 @@ void sub_8015FDC(s32 arg0, s32 arg1arg, s32 arg2arg)
             absArg2 = (absArg2 ^ signArg2) - signArg2;
 
             if (absVel > absArg2) {
-                *(s32 *)(player + 0x54) = self;
-                *(s32 *)(player + 0x58) = result;
+                player->velB.x = self;
+                player->velB.y = result;
             } else {
                 register s32 prod asm("r0") = vel;
 
@@ -71,16 +71,16 @@ void sub_8015FDC(s32 arg0, s32 arg1arg, s32 arg2arg)
                 if (prod < 0) {
                     s32 sum = result + arg1;
 
-                    *(s32 *)(player + 0x54) = self;
-                    *(s32 *)(player + 0x58) = sum;
+                    player->velB.x = self;
+                    player->velB.y = sum;
                 } else {
-                    *(s32 *)(player + 0x54) = self;
-                    *(s32 *)(player + 0x58) = arg1;
+                    player->velB.x = self;
+                    player->velB.y = arg1;
                 }
             }
         }
     }
 
-    *(s32 *)(player + 0x5c) = arg2;
+    player->velB.z = arg2;
 }
 asm(".align 2, 0");
