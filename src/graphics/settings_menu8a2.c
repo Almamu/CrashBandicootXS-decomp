@@ -101,41 +101,15 @@ void sub_8002D44(struct settings_sync_pump *self)
  * into `self->data` via `self->writePtr`, and marks `field_218` once
  * `totalReceived` reaches a full record's worth.
  *
- * Still NAKED. The draft below keeps the ROM's `n - 1 != -1` loop
- * tests (the old note said C folds them to `n != 0`; it doesn't) but is
- * still about 100 halfwords off under both compilers: the ROM computes
- * `playerIndex * 0xc8 + s` twice (once for the count test, once for
- * the channel pointer, which then carries its own +0x108), and gcc
- * CSEs the second into the first and folds the field offsets. Per-file
- * CSE flags (-fno-cse-follow-jumps/-skip-blocks, -fno-rerun-cse-after-
- * loop) don't split it. The old "r7 can't be pushed" reason was wrong:
- * sub_8002D44 gets its r7/r8/sb prologue from plain C.
- * Mix-6 pass: `"+r"` escapes on the index, the channel pointer, the
- * session pointer or the byte offset don't reproduce the ROM's second
- * `muls` (104-115 hw). The wrap loop also differs: the ROM re-sets
- * `movs r0,#0` before each `cmp #0x7f`, where the draft hoists 0 into
- * sb.
- * Inline-argument-order pass: `&s->rx[i]` inline accessors, byte-offset
- * channel addresses and a re-read global still CSE the product
- * (100-121 hw).
- * Last-six pass (docs/matching/last-six-naked-retry.md): 97 hw, 4 bytes
- * long, both loops now match instruction for instruction. The count
- * test is a byte-offset sum (`s + i * 0xc8 + 0x18c`, the ROM's operand
- * order), the channel pointer uses an `asm volatile` copy of the index
- * (a second `muls`), and the loops go through `rd = &ch->readPos` with
- * `nw = 0; if (old != 0x7f) nw = old + 1;` (the ROM's `movs r0,#0`
- * inside the wrap loop). Left: the second `muls` copies the index
- * instead of multiplying into the 0xc8 register, and the channel
- * base's +0x108 is folded into its field offsets. Pinning s/index/0xc8
- * to r3/r1/r2 reaches 47 hw (not adopted).
- * Last-seven pass (docs/matching/last-seven-naked-retry.md): 14 hw,
- * same size, same instructions under both compilers. Only the 0xc8
- * register is pinned; the second product is `c = c * pi + s` (the
- * ROM's `muls r2, r1`), and `n` gets three extra references. Left: a
- * register permutation. `rd` lands in r7 (ROM r5), and the wrap loop
- * uses r5/r2/r1 for the count pointer, ring pointer and `old` where the
- * ROM uses r1/r7/r2. */
-#if NON_MATCHING
+ * Matched in the last-eight pass (docs/matching/last-eight-naked-retry.md).
+ * The ROM computes `playerIndex * 0xc8 + s` twice, the second time
+ * multiplying straight into the 0xc8 register (`muls r2, r1`), hence
+ * the pinned `c`. The channel pointer comes out of an asm with a plain
+ * `"r"` input, so it has no copy preference for r2; with the old
+ * `"+r"` escape the ring pointer inherited that preference and pushed
+ * the wrap loop's `old` out of r2. The wrap loop's count pointer is
+ * pinned to r1 (the ROM's register), and the loop is an explicit
+ * `if` + `do`/`while` so the pin is set after the zero-trip test. */
 void sub_8002E20(struct settings_sync_pump *self, s32 playerIndex)
 {
     struct sio_session *s = gUnknown_03000804;
@@ -158,18 +132,12 @@ void sub_8002E20(struct settings_sync_pump *self, s32 playerIndex)
             u8 **wp = &self->writePtr;
 
             c = c * pi + (s32)s;
-            ch = (struct sio_channel *)(c + 0x108);
-            /* Escape (no code): keeps the +0x108 out of the field
-             * offsets. */
-            asm volatile("" : "+r"(ch));
+            /* No code: keeps the +0x108 out of the field offsets, and the
+             * plain "r" input gives `ch` no copy preference for r2. */
+            asm volatile("" : "=r"(ch) : "r"(c + 0x108));
             dst = *wp;
         }
         rd = &ch->readPos;
-        /* Extra references (no code): raise `n`'s allocation priority so
-         * it gets r6 as in the ROM. */
-        asm("" : : "r"(n));
-        asm("" : : "r"(n));
-        asm("" : : "r"(n));
         if (*rd < 0x80 - n)
         {
             for (i = n - 1; i != -1; i--)
@@ -181,16 +149,24 @@ void sub_8002E20(struct settings_sync_pump *self, s32 playerIndex)
         }
         else
         {
-            for (i = n - 1; i != -1; i--)
+            i = n - 1;
+            if (i != -1)
             {
-                s32 old = *rd;
-                s32 nw = 0;
+                /* The ROM keeps the count pointer in r1, which leaves r2
+                 * for `old`. */
+                register s32 *cnt asm("r1") = &ch->count;
 
-                if (old != 0x7f)
-                    nw = old + 1;
-                *rd = nw;
-                ch->count--;
-                *dst++ = ch->ring[old];
+                do
+                {
+                    s32 old = *rd;
+                    s32 nw = 0;
+
+                    if (old != 0x7f)
+                        nw = old + 1;
+                    *rd = nw;
+                    (*cnt)--;
+                    *dst++ = ch->ring[old];
+                } while (--i != -1);
             }
         }
         self->writePtr += n;
@@ -201,128 +177,3 @@ void sub_8002E20(struct settings_sync_pump *self, s32 playerIndex)
         self->field_218 = 1;
     }
 }
-#else
-NAKED void sub_8002E20(struct settings_sync_pump *self, s32 playerIndex)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, r8\n\t"
-        "push {r7}\n\t"
-        "mov ip, r0\n\t"
-        "ldr r0, 2f\n\t"
-        "ldr r3, [r0]\n\t"
-        "mov r2, #0xc8\n\t"
-        "add r0, r1, #0\n\t"
-        "mul r0, r2, r0\n\t"
-        "add r0, r0, r3\n\t"
-        "mov r4, #0xc6\n\t"
-        "lsl r4, r4, #1\n\t"
-        "add r0, r0, r4\n\t"
-        "ldr r6, [r0]\n\t"
-        "cmp r6, #0\n\t"
-        "beq 7f\n\t"
-        "mov r0, #0x84\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, ip\n\t"
-        "mul r2, r1, r2\n\t"
-        "add r2, r2, r3\n\t"
-        "mov r1, #0x84\n\t"
-        "lsl r1, r1, #1\n\t"
-        "add r2, r2, r1\n\t"
-        "ldr r4, [r0]\n\t"
-        "add r5, r2, #0\n\t"
-        "add r5, #0x88\n\t"
-        "mov r0, #0x80\n\t"
-        "sub r0, r0, r6\n\t"
-        "ldr r1, [r5]\n\t"
-        "cmp r1, r0\n\t"
-        "bge 3f\n\t"
-        "sub r3, r6, #1\n\t"
-        "mov r0, #1\n\t"
-        "neg r0, r0\n\t"
-        "cmp r3, r0\n\t"
-        "beq 6f\n\t"
-        "add r1, r5, #0\n\t"
-        "add r5, r2, #4\n\t"
-        "add r2, #0x84\n\t"
-        "add r7, r0, #0\n\t"
-    "1:\n\t"
-        "ldr r0, [r1]\n\t"
-        "add r0, r5, r0\n\t"
-        "ldrb r0, [r0]\n\t"
-        "strb r0, [r4]\n\t"
-        "add r4, #1\n\t"
-        "ldr r0, [r1]\n\t"
-        "add r0, #1\n\t"
-        "str r0, [r1]\n\t"
-        "ldr r0, [r2]\n\t"
-        "sub r0, #1\n\t"
-        "str r0, [r2]\n\t"
-        "sub r3, #1\n\t"
-        "cmp r3, r7\n\t"
-        "bne 1b\n\t"
-        "b 6f\n\t"
-        ".align 2, 0\n"
-    "2: .4byte gUnknown_03000804\n"
-    "3:\n\t"
-        "sub r3, r6, #1\n\t"
-        "mov r0, #1\n\t"
-        "neg r0, r0\n\t"
-        "cmp r3, r0\n\t"
-        "beq 6f\n\t"
-        "add r1, r2, #0\n\t"
-        "add r1, #0x84\n\t"
-        "add r7, r2, #4\n\t"
-        "mov r8, r0\n\t"
-    "4:\n\t"
-        "ldr r2, [r5]\n\t"
-        "mov r0, #0\n\t"
-        "cmp r2, #0x7f\n\t"
-        "beq 5f\n\t"
-        "add r0, r2, #1\n\t"
-    "5:\n\t"
-        "str r0, [r5]\n\t"
-        "ldr r0, [r1]\n\t"
-        "sub r0, #1\n\t"
-        "str r0, [r1]\n\t"
-        "add r0, r7, r2\n\t"
-        "ldrb r0, [r0]\n\t"
-        "strb r0, [r4]\n\t"
-        "add r4, #1\n\t"
-        "sub r3, #1\n\t"
-        "cmp r3, r8\n\t"
-        "bne 4b\n\t"
-    "6:\n\t"
-        "mov r0, #0x84\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, ip\n\t"
-        "ldr r1, [r0]\n\t"
-        "add r1, r1, r6\n\t"
-        "str r1, [r0]\n\t"
-        "mov r4, ip\n\t"
-        "ldr r0, [r4, #4]\n\t"
-        "add r0, r0, r6\n\t"
-        "str r0, [r4, #4]\n\t"
-        "b 8f\n\t"
-    "7:\n\t"
-        "mov r0, ip\n\t"
-        "ldr r1, [r0, #4]\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #2\n\t"
-        "cmp r1, r0\n\t"
-        "bne 8f\n\t"
-        "mov r1, #0x86\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r1, ip\n\t"
-        "mov r0, #1\n\t"
-        "str r0, [r1]\n\t"
-    "8:\n\t"
-        "pop {r3}\n\t"
-        "mov r8, r3\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    );
-}
-#endif

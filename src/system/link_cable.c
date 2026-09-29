@@ -234,7 +234,16 @@ static inline void ring_reset(struct link_ring *r)
  * `self + 0xfc`, `self + 0x20` and the id pointer (163 halfwords, so
  * not adopted). Third pass (docs/matching/last-four-naked-retry.md):
  * escaped `self`/`players` pointers for the inner dst, a pointer-form
- * first loop and re-read tails did not beat 136. */
+ * first loop and re-read tails did not beat 136. Last-eight pass
+ * (docs/matching/last-eight-naked-retry.md): writing the inner copy's
+ * destination as `((struct link_player *)((u8 *)self + 8))[i + 1].id`
+ * gives the ROM's `i + 1` precompute and its per-pass `self + 0xd0`
+ * (no stack slot), and a `vu16` read of `field_400` gives the re-read
+ * (122 hw, not adopted: the instruction diff grows). The inner loop is
+ * still reversed: in the second loop pass `j` has no givs left, so
+ * check_dbra_loop's no_use_except_counting holds. A pointer-biv first
+ * loop gets its pointer/0xff order right but loses the `self + 0x30`
+ * register. */
 s32 sub_8001DB4(struct link_session *self)
 {
     s32 i, j;

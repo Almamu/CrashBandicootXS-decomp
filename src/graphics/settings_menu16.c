@@ -37,11 +37,26 @@ extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
  * draws and per-field `"=r"/"0"` offsets didn't do that (56+ hw).
  * Last-six pass: `asm volatile` escapes on the second half's source or
  * destination manager (or both), an escaped 0x110 offset and an
- * escaped `&posX` pair were all 67-75 hw. */
+ * escaped `&posX` pair were all 67-75 hw.
+ * Last-eight pass (docs/matching/last-eight-naked-retry.md): 45 hw, same
+ * size and instruction shape. Each posX offset and the second half's
+ * posY load offset are opaque constants (`OFF`), so CSE keeps them apart
+ * and reload rebuilds the second half's from r7 as in the ROM; the posY
+ * stores use plain constants. Left: the &gUnknown_030012E0 load is
+ * hoisted to the top (it's a local there), the first half's 0x110 lands
+ * in r2 instead of r7, and the second half rebuilds 0x110 instead of
+ * copying it from r7 (`adds r6, r7, #0`). */
 #if NON_MATCHING
-static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
+/* A constant in a register CSE can't see through (the asm emits no
+ * code), so each use site gets its own pseudo. */
+#define OFF(K) ({ s32 _o; asm("" : "=r"(_o) : "0"(K)); _o; })
+/* A u32 field at a register offset, still marked as a struct access so
+ * it doesn't alias the icon-manager pointer globals. */
+#define AT(m, o) (((struct { u32 v; } *)((u8 *)(m) + (o)))->v)
+
+static inline void set_icon_mgr_pos(struct icon_manager *m, s32 ox, u32 x, u32 y)
 {
-    m->posX = x;
+    AT(m, ox) = x;
     m->posY = y;
 }
 
@@ -56,17 +71,33 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
 
 void sub_8005E5C(struct pause_screen_results *self, void *label1, void *label2)
 {
-    u32 x, y;
+    s32 o1;
+    struct icon_manager **pdc = &gUnknown_030012DC;
+    struct icon_manager **pe0 = &gUnknown_030012E0;
 
-    DRAW_ICON_SLOT(gUnknown_030012DC, 2, label1);
-    x = gUnknown_030012DC->posX;
-    y = gUnknown_030012DC->posY;
-    set_icon_mgr_pos(gUnknown_030012E0, x - 2, y);
-    DRAW_ICON_SLOT(gUnknown_030012E0, 4, (void *)0x2f);
-    x = gUnknown_030012E0->posX;
-    y = gUnknown_030012E0->posY;
-    set_icon_mgr_pos(gUnknown_030012DC, x - 5, y + 8);
-    DRAW_ICON_SLOT(gUnknown_030012DC, 2, label2);
+    DRAW_ICON_SLOT(*pdc, 2, label1);
+    {
+        u32 x, y;
+        struct icon_manager *d = *pdc;
+
+        o1 = OFF(0x110);
+        x = AT(d, o1);
+        y = d->posY;
+        set_icon_mgr_pos(*pe0, o1, x - 2, y);
+    }
+    DRAW_ICON_SLOT(*pe0, 4, (void *)0x2f);
+    {
+        u32 x, y;
+        struct icon_manager *e = *pe0;
+        s32 ox = OFF(0x110);
+        s32 oy;
+
+        x = AT(e, ox);
+        oy = OFF(0x114);
+        y = AT(e, oy);
+        set_icon_mgr_pos(*pdc, ox, x - 5, y + 8);
+    }
+    DRAW_ICON_SLOT(*pdc, 2, label2);
 }
 #else
 NAKED void sub_8005E5C(struct pause_screen_results *self, void *label1, void *label2)

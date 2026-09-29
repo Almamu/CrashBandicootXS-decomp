@@ -26,8 +26,7 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   `sub_800306C`, `sub_800312C`, `sub_80031E4`, `sub_80032E8`,
   `sub_80033E8`, `sub_80034BC`, `sub_80035C0`, `sub_8003698`,
   `sub_800376C`, `sub_8003824`, `sub_80038D0`, `sub_800397C`,
-  `sub_8003A60`. (`sub_8002E20` is a NAKED transcription tracked as
-  parked, not matched - see below.)
+  `sub_8003A60`, and `sub_8002E20` (was NAKED, see below).
 - `src/graphics/settings_menu2.c` (new file - the composite pause/
   options screen's BG-load helper and per-row stats gatherer/
   aggregator; see `docs/rom_map.md`'s `overlay_ui` section):
@@ -131,17 +130,14 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 - **`sub_8002D44`** (`src/graphics/settings_menu8a2.c`) - the SIO pump's
   TX fill step (issue #5). Plain C; it was NAKED. The old "r7 can never be
   pushed" note was wrong - plain C gives the r7/r8/sb prologue. See [old-agbcc-round5.md](../matching/old-agbcc-round5.md).
+- **`sub_8002E20`** (`src/graphics/settings_menu8a2.c`) - the SIO pump's
+  RX drain step (issue #5). Plain C; it was NAKED. The channel pointer
+  comes out of an asm with a plain `"r"` input (no copy preference for
+  r2) and the wrap loop's count pointer is pinned to r1. See
+  [last-eight-naked-retry.md](../matching/last-eight-naked-retry.md).
 
 ## Parked - NAKED asm transcriptions (byte-correct, not decompiled C)
 
-- **`sub_8002E20`** (`src/graphics/settings_menu8a2.c`) - the SIO pump's
-  RX drain step (issue #5). A NON_MATCHING draft is now in the file,
-  about 100 halfwords off: it keeps the ROM's `n - 1 != -1` loop tests,
-  but gcc shares the `playerIndex * 0xc8 + s` the ROM computes twice.
-  See [early-rom-naked-retry.md](../matching/early-rom-naked-retry.md).
-  The last-seven NAKED retry brought the draft to 14 halfwords (same
-  size and instructions; a register permutation is left), see
-  [last-seven-naked-retry.md](../matching/last-seven-naked-retry.md).
 - **`sub_8005E5C`** - byte-exact via `NAKED` asm transcription (the
   whole function body is a hand-transcribed copy of the ROM's own
   disassembly, not real decompiled C), so it's tracked here as parked
