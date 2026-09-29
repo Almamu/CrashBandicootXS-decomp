@@ -579,6 +579,55 @@ was an `.incbin` of the gbagfx output, so converting it doesn't change
 5. Run a full clean `make` (`make tidy && make`). It must print
    `crashbandicootxs.gba: OK`.
 
+### Terrain types and UI text
+
+The old `gStaticData_081725C4` was two things. First
+`src/data/terrain_1725a8.c`: 51 terrain types (`struct terrain_type`,
+36 bytes: a value per collision mode, then the height of each of a
+cell's 8 pixel columns per mode). The code reads the height rows of each
+mode as their own 36-byte-stride tables through the labels
+`gStaticData_081725AC`/`B4`/`BC`/`C4`, which point 4, 12, 20 and 28
+bytes into the first record. Those stay as symbols (the code and
+`expected/` use them), defined with `asm(".set ...")` in the C file as
+names for addresses inside the table: they aren't objects, so the
+report doesn't count them.
+
+Then `src/data/ui_text_172cd4.c`: the game's own text (menus, level
+names, popups) in six languages, 70 strings each. `sub_8026F38` looks a
+text id up in `gUnknown_03000850[language]` (`src/iwram/iwram_data.c`),
+which now points at `gUiTextEnglish`...`gUiTextDutch` by name. Each
+language's new strings sit before its array, and strings several
+languages share (mostly the level names) are stored once. Every string
+in the region is referenced, and every pointer lands on a string start.
+Strings are named after the first language and index that use them
+(`gUiTextEnglish00` is "level"). They're plain C strings (Latin-1, octal
+escapes), and agbcc's 4-byte alignment of string arrays gives the ROM's
+zero padding.
+
+### Credits
+
+`gStaticData_0817C5D0` (`src/data/credits_17c5d0.c`) is the credits
+stream `sub_80350A4` draws line by line as floating glyphs. It is text
+with three opcodes, written as macros: `CREDITS_PICTURE_n` (1, n: popup
+glyph picture n, the logos of `popup_glyphs_17cf40.c`), `CREDITS_SMALL`
+(2) and `CREDITS_LARGE` (3), the two HUD fonts. A zero byte ends it, and
+the code starts over there.
+
+### Motion sequences
+
+`gStaticData_0817D0E4` and `gStaticData_0817D7A4` are each a BG2
+picture (`struct bg_package`) followed by the motion scripts of the
+countdown slots of `graphics_loading_35d1c.c`: `struct delta_record`s
+(a hold count, positions, velocities, per-frame deltas), in sequences
+that end with a zero hold. The seed tables (`popup_glyphs_17cf40.c`'s
+`gStaticData_0817CFA4`, `slot_seeds_17d6c0.c`'s `gStaticData_0817D6C0`)
+point at each sequence by name now (`gStaticData_0817D0F8`, ...), not at
+`gStaticData_0817D7A4 + 0x174`-style offsets. The six language names
+after the second set are the strings `digit_glyphs_17e714.c` points at
+(they aren't digit glyphs). The four OBJ sprite packages in front of
+the first set are listed by the IWRAM table `gUnknown_030008BC`, which
+points at them by name too.
+
 ### Category backgrounds
 
 The actor categories (`struct category_descriptor`, `actor_anim.h`) point
@@ -686,52 +735,3 @@ the same way.
 
 `tools/rle_sprites.py extract` writes the three PNGs from `baserom.gba`
 again and checks that every frame re-encodes to the ROM's bytes.
-
-### Terrain types and UI text
-
-The old `gStaticData_081725C4` was two things. First
-`src/data/terrain_1725a8.c`: 51 terrain types (`struct terrain_type`,
-36 bytes: a value per collision mode, then the height of each of a
-cell's 8 pixel columns per mode). The code reads the height rows of each
-mode as their own 36-byte-stride tables through the labels
-`gStaticData_081725AC`/`B4`/`BC`/`C4`, which point 4, 12, 20 and 28
-bytes into the first record. Those stay as symbols (the code and
-`expected/` use them), defined with `asm(".set ...")` in the C file as
-names for addresses inside the table: they aren't objects, so the
-report doesn't count them.
-
-Then `src/data/ui_text_172cd4.c`: the game's own text (menus, level
-names, popups) in six languages, 70 strings each. `sub_8026F38` looks a
-text id up in `gUnknown_03000850[language]` (`src/iwram/iwram_data.c`),
-which now points at `gUiTextEnglish`...`gUiTextDutch` by name. Each
-language's new strings sit before its array, and strings several
-languages share (mostly the level names) are stored once. Every string
-in the region is referenced, and every pointer lands on a string start.
-Strings are named after the first language and index that use them
-(`gUiTextEnglish00` is "level"). They're plain C strings (Latin-1, octal
-escapes), and agbcc's 4-byte alignment of string arrays gives the ROM's
-zero padding.
-
-### Credits
-
-`gStaticData_0817C5D0` (`src/data/credits_17c5d0.c`) is the credits
-stream `sub_80350A4` draws line by line as floating glyphs. It is text
-with three opcodes, written as macros: `CREDITS_PICTURE_n` (1, n: popup
-glyph picture n, the logos of `popup_glyphs_17cf40.c`), `CREDITS_SMALL`
-(2) and `CREDITS_LARGE` (3), the two HUD fonts. A zero byte ends it, and
-the code starts over there.
-
-### Motion sequences
-
-`gStaticData_0817D0E4` and `gStaticData_0817D7A4` are each a BG2
-picture (`struct bg_package`) followed by the motion scripts of the
-countdown slots of `graphics_loading_35d1c.c`: `struct delta_record`s
-(a hold count, positions, velocities, per-frame deltas), in sequences
-that end with a zero hold. The seed tables (`popup_glyphs_17cf40.c`'s
-`gStaticData_0817CFA4`, `slot_seeds_17d6c0.c`'s `gStaticData_0817D6C0`)
-point at each sequence by name now (`gStaticData_0817D0F8`, ...), not at
-`gStaticData_0817D7A4 + 0x174`-style offsets. The six language names
-after the second set are the strings `digit_glyphs_17e714.c` points at
-(they aren't digit glyphs). The four OBJ sprite packages in front of
-the first set are listed by the IWRAM table `gUnknown_030008BC`, which
-points at them by name too.
