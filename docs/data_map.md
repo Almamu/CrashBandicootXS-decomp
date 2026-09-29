@@ -59,11 +59,11 @@ the appendix.
 |---|---:|---|---|---|---|
 | `0803B8B0`-`080B1444` | 482,196 | BG0 cell animation A (palette, 19x13 cells, 60 frames) | `sub_8029890`/`sub_80297C8` via category descriptors 0-2 | high | **converted** |
 | `080B1444`-`080B2120` | 3,292 | category 0 `sub_effect_record` table (164 records) | `SelectActorCategory`, `sub_802A5xx` | high | **converted** |
-| `080C0C36`-`080C2758` | 6,946 | 2 B pad + category 1/2 `sub_effect_record` tables | same | high | **converted** (the pad stays raw) |
+| `080C0C36`-`080C2758` | 6,946 | 2 B pad + category 1/2 `sub_effect_record` tables | same | high | **converted** (the pad is gbagfx's padding) |
 | `080C2758`-`080FF1B0` | 248,408 | compressed OBJ frame sets A and B (the old "rotation strips") | `GetAnimFrameData` via table_B `0817941C`/`0817A880`, unpacked by the `gUnknown_03000874` IWRAM hook | high | **converted** |
 | `080FF1B0`-`0813D934` | 255,876 | BG0 cell animation B (38x10 cells, 21 frames) | `sub_8029890` via category descriptors 3-6 | high | **converted** |
 | `0813D934`-`0814174C` | 15,896 | category 3 BG1 picture + `sub_effect_record` table | `sub_802F7B0`, `SelectActorCategory` | high | **converted** |
-| `08151AC2`-`0815A050` | 34,190 | category 4-6 BG1 pictures + `sub_effect_record` tables | same | high | **converted** (the pad stays raw) |
+| `08151AC2`-`0815A050` | 34,190 | category 4-6 BG1 pictures + `sub_effect_record` tables | same | high | **converted** (the pad is gbagfx's padding) |
 | `0815A050`-`08167AD4` | 55,940 | compressed OBJ frame set C | `GetAnimFrameData` via table_B `0817BA44` | high | **converted** |
 | `08167AD4`-`0817E78C` | 92,180 | 200 small/mid tables: gameplay, menus, HUD, actors, text (the built sfx table sits in between) | direct, see appendix | mostly high | easy (a few medium) |
 | `0817E78C`-`0817E7AC` | 32 | `u16[16]` | `sub_8037388` | high | **done** (C) |
@@ -75,9 +75,9 @@ the appendix.
 | `084A4660`-`084A5600` | 4,000 | 125 fixed 4bpp tiles | `sub_8004D74` pool, `sub_8006DF8` | high | **done** (grit) |
 | `084A5600`-`084C0006` | 109,062 | sprite-bank table ("master asset table"): header, 56 banks, 2,429 frames | `sub_8004D74`, `sub_8022230`, every `**gUnknown_030012D0` user | high | **converted** (C) |
 | `084C0006`-`0855BCB4` | 638,126 | GAX2 sound-effect data set: 88 instruments, 87 8-bit samples, sample table, the SFX voice handler type | `PlaySfx`/`sub_8038E74` voices via `GaxSongHeader.sfxTypes` (`sub_80017BC`) | high | **converted** (`gax_audio.py --sfx`) |
-| `085A4C5C`-`086ECCD2` | 28,979 | 111 labels between the built intro/tileset1 LZ77 blobs: GAX2 tables and strings, libgcc `__clz_tab` x2, EEPROM tables, 23 intro palettes, 67 alignment pads | direct / slide packages | high | easy |
+| `085A4C5C`-`086ECCD2` | 28,979 | 111 labels between the built intro/tileset1 LZ77 blobs: GAX2 tables and strings, libgcc `__clz_tab` x2, EEPROM tables, 23 intro palettes, 67 alignment pads | direct / slide packages | high | easy (the pads and palettes **done**) |
 | `086C127C`-`086D9CAC` | 100,912 | raw level asset (room `0825E7DC`) | `sub_80266BC` -> `sub_80254F8`/`sub_8024CF0` | high | **done** (decoded tilemaps) |
-| `086ECCD2`-`087E3BEC` | 1,011,482 | 2 B pad + 6 raw level assets | same | high | **done** (the pad stays raw) |
+| `086ECCD2`-`087E3BEC` | 1,011,482 | 2 B pad + 6 raw level assets | same | high | **done** (the pad is gbagfx's padding) |
 | `087E3BEC`-`087E55E4` | 6,648 | 93 gcc 2.x vtables | constructors (`sub_8009ED0`, ...) | high | easy |
 | `087E55E4`-`087E5FCC` | 2,536 | IWRAM image (ARM code + data, copied by `crt0`) | `crt0.s` | high | **converted** (`asm/intr_main.s`, `src/iwram/`; the code counts as code, 540 B of data) |
 | `087E5FCC`-`08800000` | 106,548 | `0xFF` fill (not counted as data) | - | high | - |
@@ -173,7 +173,7 @@ animation-table `table_B` array:
 
 | Range | Size | Content | Evidence | Effort |
 |---|---:|---|---|---|
-| `080C0C36` | 2 | zero pad | | easy |
+| `080C0C36` | 2 | zero pad (gbagfx's padding of the `.lz` stream before it) | | done |
 | `080C0C38` | 0xDB8 | category 1 `sub_effect_record[175]` + 0xC | descriptor 1 `+0x14`, count in record 0 | easy |
 | `080C19F0` | 0xD68 | category 2 `sub_effect_record[171]` + 0xC | descriptor 2 `+0x14` | easy |
 | `080C2758` | 0x17A80 | **compressed frame set A**: 152 back-to-back zero-run-compressed frames `{8, 8, 0x30, 0}` + run stream | the 152 absolute pointers of `table_B` `0x0817941C` (anim record 0 of categories 0-2, 148 distinct) all land on a frame header | medium |
@@ -185,8 +185,9 @@ animation-table `table_B` array:
 **Status:** the two tables are converted (`src/data/sub_effect_0c0c38.c`),
 and cell animation B, the category 3 picture and its table too
 (`src/data/cell_anim_0ff1b0.c`), and the two frame sets
-(`src/data/rle_sprites_0c2758.c`, see below). Only the pad at `080C0C36`
-stays a raw `.incbin`.
+(`src/data/rle_sprites_0c2758.c`, see below). The pad at `080C0C36` is
+built too: it is the zero padding gbagfx writes after the `.lz` stream
+(docs/data.md, "LZ77 stream padding").
 
 The **BG1 picture** format, from `sub_802F7B0` (`actor_part45d.c`):
 `u16 palette[256]`, `s16 cols @0x200`, `s16 rows @0x202`,
@@ -241,7 +242,7 @@ above:
 
 | Range | Size | Content | Effort |
 |---|---:|---|---|
-| `08151AC2` | 2 | zero pad | easy |
+| `08151AC2` | 2 | zero pad (gbagfx's padding of the `.lz` stream before it) | done |
 | `08151AC4` | 0x2598 | BG1 picture, category 4 (38x16, 237 tiles) | medium |
 | `0815405C` | 0x1204 | category 4 `sub_effect_record[230]` + 0xC | easy |
 | `08155260` | 0x36B8 | BG1 picture shared by categories 5 and 6 (38x16, 374 tiles) | medium |
@@ -251,7 +252,8 @@ above:
 
 **Status:** the pictures and tables (`08151AC4`-`0815A050`) are converted
 (`src/data/bg_picture_151ac4.c`), and so is frame set C
-(`src/data/rle_sprites_15a050.c`). Only the pad at `08151AC2` stays raw.
+(`src/data/rle_sprites_15a050.c`). The pad at `08151AC2` is gbagfx's
+padding of the `.lz` stream before it, like the one at `080C0C36`.
 
 ### `gStaticData_0817E78C` (3,305,076 B): level tile sets, room data, sprite tile pool
 
@@ -434,7 +436,8 @@ starts with a `u16` offset table (offsets x 4). Each layer reads it at
 | `0878ADA8` | 0x31394 | `0824E104` |
 | `087BC13C` | 0x27AB0 | `0825233C` (ends at the first vtable, `087E3BEC`) |
 
-**Status: converted** (all but the 2-byte pad at `086ECCD2`). The chunk
+**Status: converted** (the 2-byte pad at `086ECCD2` is gbagfx's padding
+of the LZ77 asset before it). The chunk
 streams are decoded into one tilemap per layer (`data/levels/<room>/`),
 and `tools/levels.py` re-encodes them byte for byte, the LZ77 ones
 included: its encoder reproduces the original tool's token choices and
@@ -470,7 +473,7 @@ By kind (from `tools/data_map.json`):
 | function-pointer / pointer-to-member tables | 16 | 1,232 | `0816BF20` (42 `act_pmf`), `0816C6A4` (92 fn ptrs), `081756C4` (3 `category_vtable`), the `actor_pmf` tables in `0817A6B8`-`0817C4F8` |
 | pointer tables | 11 | 272 | e.g. `0816AA20` (19 song pointers into the built audio), `0816C5A0`, `0817E714` |
 | palettes (16- or 256-colour BGR555) | 51 | 63,397 | 23 are the 256-colour palettes of the intro Mode-4 slides (`085ADBD1`...`08619F51`, each after 0-3 B of alignment pad; some entries have bit 15 set, so they can't round-trip through `gbagfx .pal`; **converted** as C `u16` arrays, `cutscene_pictures_5a9f70.c`), plus `08175760` (32 palette-cycle frames x 0x1C0) and many 0x20 menu/HUD palettes |
-| alignment padding | 67 | 133 | 1-3 zero bytes before a 4-aligned LZ77 blob, all between `085A5519` and `086EA0C9`. Emit as `.balign 4, 0` |
+| alignment padding | 67 | 133 | 1-3 zero bytes before a 4-aligned LZ77 blob, all between `085A5519` and `086EA0C9`. **Built**: each one is exactly the zero padding gbagfx appends to the `.lz` stream before it, so `data.s` incbins the whole padded file (docs/data.md, "LZ77 stream padding") |
 | other typed tables | 166 | 56,125 | `s32`/`u16`/struct tables with known consumers; notable ones below |
 
 Notable mid-size tables:
@@ -496,6 +499,8 @@ Notable mid-size tables:
   families: palettes, `table_A` keyframes, `anim_table_record[41]`/`[47]`
   (`081796CC`/`0817B2A4`, already declared), and the `table_B` arrays.
   `graphics/unknown/*/entities.json` already records all of it.
+  **Converted** (`src/data/anim_family_178f80.c`,
+  `src/data/anim_family_17aa6c.c`, docs/data.md "Category families").
 - `08175558`+`08175564`+`08175584`: one `category_descriptor[7]`, split over three labels.
 - `081725C4` (0x261C): terrain shape records (36 B, heights 0-7, `0xFF`
   empty) for the collision streamer, then the game's UI text in six
@@ -504,13 +509,17 @@ Notable mid-size tables:
 - `0817C5D0` (0x96C): popup/credits text opcode stream (`"\x03developed by\n\n\x01..."`).
   **Converted** (`src/data/credits_17c5d0.c`).
 - `0816AF10`: the CRC-16/CCITT table (poly `0x1021`) for link-cable packets.
-- `0816A820`: `s16[256]` sine table.
+  **Converted** (`src/data/link_crc_16af10.c`).
+- `0816A820`: `s16[256]` sine table. **Converted**
+  (`src/data/boss_pictures_167ad4.c`).
 - `085A4C70`/`085A4D70`: two copies of libgcc's `__clz_tab` (`u8[256]`).
-  They could come from `libgcc.a` itself if the link kept its `.rodata`.
+  **Converted** (`src/data/clz_tab_5a4c70.c`).
 - `085A60FF`...`085A62CC`: GAX2 version string (`"GAX Sound Engine 2.01D
   (Sep 28 2001) (c) Shin'en Multimedia. Code: B.Wodok"`) and error strings,
   the `RateEntry` table, and `085A62DC`, the GAX2 `u32` period table
-  (0x3BD0; its `0x08xxxxxx` values are a smooth ramp, not pointers).
+  (0x3BD0; its `0x08xxxxxx` values are a smooth ramp, not pointers). **Converted**, with the vibrato wave
+  and the EEPROM library's data after it (`src/data/gax_tables_5a6100.c`,
+  `src/data/eeprom_5a9eec.c`).
 
 Every one of the 412 labels is listed in the appendix.
 
@@ -623,116 +632,116 @@ vtable shapes).
 | Address | Size | Format | Consumers | Conf. | Effort |
 |---|---:|---|---|---|---|
 | `0803B8B0` | 0x76870 | composite: BG0 streamed cell animation A + category-0 sub-effect table. **Converted** (`src/data/cell_anim_03b8b0.c`) | `sub_8029890`, `sub_80297C8`, `sub_802996C` +2 | high | done |
-| `080C0C36` | 0x80B16 | composite: sub-effect tables, two compressed OBJ frame sets, BG0 cell animation B, BG1 picture. **Converted** except the 2-byte pad (still `gStaticData_080C0C36`) | `SelectActorCategory`, `GetAnimFrameData`, `sub_8029890` +2 | high | easy (pad) |
-| `08151AC2` | 0x16012 | composite: BG1 pictures, sub-effect tables, compressed OBJ frame set C (categories 3-6). **Converted** except the 2-byte pad (still `gStaticData_08151AC2`) | `SelectActorCategory`, `GetAnimFrameData`, `sub_802F7B0` | high | easy (pad) |
-| `08167AD4` | 0x200 | u16[256] fill-meter ramp/palette table (`u16` x 256) | `sub_8031504`, `sub_8031604` | high | easy |
-| `08167CD4` | 0x1E14 | per-level P1 meter grid table: s16 cols, rows, then per-level records (s16) (`s16` x 3850) | `sub_8030F88` | medium | medium |
-| `08169AE8` | 0x200 | u16[256] fill-meter table (P2 twin of 0x08167AD4) (`u16` x 256) | `sub_8032AF8`, `sub_8033604`, `sub_80336CC` | high | easy |
-| `08169CE8` | 0xB28 | per-level P2 singleton grid table (s16 cols, rows, then records) | `sub_80331BC` | medium | medium |
-| `0816A810` | 0x10 | table (element layout: see consumers); 2 word(s) look like ROM pointers | `sub_8000760` | medium | easy |
-| `0816A820` | 0x200 | s16[256] sine/direction table (`s16` x 256) | `sub_800AFF4`, `sub_800C8F8`, `sub_800C940` +16 | high | easy |
+| `080C0C36` | 0x80B16 | composite: sub-effect tables, two compressed OBJ frame sets, BG0 cell animation B, BG1 picture. **Converted**, the 2-byte pad as gbagfx's padding of `00_0b2120.bin.lz` | `SelectActorCategory`, `GetAnimFrameData`, `sub_8029890` +2 | high | done |
+| `08151AC2` | 0x16012 | composite: BG1 pictures, sub-effect tables, compressed OBJ frame set C (categories 3-6). **Converted**, the 2-byte pad as gbagfx's padding of `01_14174c.bin.lz` | `SelectActorCategory`, `GetAnimFrameData`, `sub_802F7B0` | high | done |
+| `08167AD4` | 0x200 | N. Gin's airship: 16-colour palette (+ zero to 0x200). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_8031504`, `sub_8031604` | high | done |
+| `08167CD4` | 0x1E14 | N. Gin's airship picture: {cols 18, rows 12}, 4 frames of {tile count, u16 map, 4bpp tiles} sharing one pool (graphics/boss_pictures/, tools/boss_pictures.py). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_8030F88` | medium | done |
+| `08169AE8` | 0x200 | Cortex's hovercraft: palette (16 colours + 240 x 0x03E0). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_8032AF8`, `sub_8033604`, `sub_80336CC` | high | done |
+| `08169CE8` | 0xB28 | Cortex's hovercraft picture: {cols 16, rows 10}, 1 frame (graphics/boss_pictures/). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_80331BC` | medium | done |
+| `0816A810` | 0x10 | u8[16] d-pad direction lookup. **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_8000760` | medium | done |
+| `0816A820` | 0x200 | s16[256] sine/direction table (`s16` x 256). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_800AFF4`, `sub_800C8F8`, `sub_800C940` +16 | high | done |
 | `0816AA20` | 0x4C | song table: 19 pointers into the music block, `gStaticData_0855BCB4 + GAX_SONG_<NAME>` from the generated `gax_songs.h`. **Converted** (`src/data/song_table_16aa20.c`) | `sub_80017BC` | high | done |
-| `0816AF10` | 0x228 | CRC-16/CCITT lookup table (poly 0x1021, u16[256]) + 0x28 trailing bytes (`u16` x 276) | `sub_8001CB8`, `sub_8002114` | high | easy |
-| `0816B138` | 0x2 | small constant (3e00) | `sub_8003D3C` | medium | easy |
-| `0816B13A` | 0x20 | table of u16; 1 word(s) look like ROM pointers (`u16` x 16) | `sub_800450C` | high | easy |
-| `0816B15A` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_800450C` | high | easy |
-| `0816B17A` | 0x20 | table of u16 (`u16` x 16) | `sub_800450C` | high | easy |
-| `0816B19A` | 0x22 | table of u16 (`u16` x 17) | `sub_800450C` | high | easy |
-| `0816B1BC` | 0x14 | table of s32 (`s32` x 5) | `sub_8003A60` | high | easy |
-| `0816B1D0` | 0x14 | table of void* (`void*` x 5) | `sub_80061E8` | high | easy |
-| `0816B1E4` | 0x8 | table of struct icon_pos | `sub_8005A78`, `sub_800619C` | high | easy |
-| `0816B1EC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_8005AE8` | high | easy |
-| `0816B20C` | 0x10 | table of u32 (`u32` x 4) | `sub_8005AE8` | high | easy |
-| `0816B21C` | 0x28 | table of struct icon_pos | `sub_80057E0`, `sub_8005B80` | high | easy |
-| `0816B244` | 0x14 | table of u32 (`u32` x 5) | `sub_8005B80` | high | easy |
-| `0816B258` | 0x18 | table of struct icon_pos | `sub_80058C0`, `sub_8005C58` | high | easy |
-| `0816B270` | 0xC | table of u32 (`u32` x 3) | `sub_8005C58`, `sub_8005D44` | high | easy |
-| `0816B27C` | 0x8 | table of struct icon_pos | `sub_8005D44`, `sub_8006124` | high | easy |
+| `0816AF10` | 0x228 | CRC-16/CCITT lookup table (poly 0x1021, u16[256]) + the two link-cable pairing names "crash 1 <-> crash 2"/"crash 1 <-> crash 3" (`gStaticData_0816B110`/`0816B124`, which the IWRAM data `gUnknown_03000810`/`0814` points at). **Converted** (`src/data/link_crc_16af10.c`) | `sub_8001CB8`, `sub_8002114` | high | done |
+| `0816B138` | 0x2 | the text ">". **Converted** (`src/data/menu_tables_16b138.c`) | `sub_8003D3C` | medium | done |
+| `0816B13A` | 0x20 | table of u16; 1 word(s) look like ROM pointers (`u16` x 16). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_800450C` | high | done |
+| `0816B15A` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_800450C` | high | done |
+| `0816B17A` | 0x20 | table of u16 (`u16` x 16). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_800450C` | high | done |
+| `0816B19A` | 0x22 | table of u16 (`u16` x 17). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_800450C` | high | done |
+| `0816B1BC` | 0x14 | table of s32 (`s32` x 5). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_8003A60` | high | done |
+| `0816B1D0` | 0x14 | table of void* (`void*` x 5). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_80061E8` | high | done |
+| `0816B1E4` | 0x8 | table of struct icon_pos. **Converted** (`src/data/menu_tables_16b138.c`) | `sub_8005A78`, `sub_800619C` | high | done |
+| `0816B1EC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_8005AE8` | high | done |
+| `0816B20C` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_8005AE8` | high | done |
+| `0816B21C` | 0x28 | table of struct icon_pos. **Converted** (`src/data/menu_tables_16b138.c`) | `sub_80057E0`, `sub_8005B80` | high | done |
+| `0816B244` | 0x14 | table of u32 (`u32` x 5). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_8005B80` | high | done |
+| `0816B258` | 0x18 | table of struct icon_pos. **Converted** (`src/data/menu_tables_16b138.c`) | `sub_80058C0`, `sub_8005C58` | high | done |
+| `0816B270` | 0xC | table of u32 (`u32` x 3). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_8005C58`, `sub_8005D44` | high | done |
+| `0816B27C` | 0x8 | table of struct icon_pos. **Converted** (`src/data/menu_tables_16b138.c`) | `sub_8005D44`, `sub_8006124` | high | done |
 | `0816B284` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `sub_8004EC0` | medium | easy |
-| `0816B298` | 0x28 | table (element layout: see consumers) | `sub_8004EC0` | medium | easy |
-| `0816B2C0` | 0x20 | table (element layout: see consumers) | `sub_8004D74` | medium | easy |
-| `0816B2E0` | 0xC | table (element layout: see consumers) | `sub_80073DC`, `sub_8007634` | medium | easy |
-| `0816B2EC` | 0xC | table (element layout: see consumers) | `sub_80073DC`, `sub_8007634` | medium | easy |
-| `0816B2F8` | 0x8 | all zero (zero-initialised table) | `sub_0800D18C`, `sub_8007C30`, `sub_8007CF8` +3 | high | easy |
-| `0816B300` | 0x4 | all zero (zero-initialised table) | `sub_80084C4`, `sub_800A884`, `sub_8011BD4` +1 | high | easy |
-| `0816B304` | 0x318 | table of struct anim_rec | `sub_800B704`, `sub_800B838`, `sub_8012AF4` | high | easy |
-| `0816B61C` | 0x2A4 | table of struct pctrl_anim | `sub_8016AB0`, `sub_801721C`, `sub_8017240` | high | easy |
-| `0816B8C0` | 0x6C | table (element layout: see consumers) | `sub_8017808` | medium | easy |
+| `0816B298` | 0x28 | table (element layout: see consumers). **Converted** (`src/data/pause_rows_16b298.c`) | `sub_8004EC0` | medium | done |
+| `0816B2C0` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/pause_rows_16b298.c`) | `sub_8004D74` | medium | done |
+| `0816B2E0` | 0xC | table (element layout: see consumers). **Converted** (`src/data/obj_sizes_16b2e0.c`) | `sub_80073DC`, `sub_8007634` | medium | done |
+| `0816B2EC` | 0xC | table (element layout: see consumers). **Converted** (`src/data/obj_sizes_16b2e0.c`) | `sub_80073DC`, `sub_8007634` | medium | done |
+| `0816B2F8` | 0x8 | all zero (zero-initialised table). **Converted** (`src/data/obj_sizes_16b2e0.c`) | `sub_0800D18C`, `sub_8007C30`, `sub_8007CF8` +3 | high | done |
+| `0816B300` | 0x4 | all zero (zero-initialised table). **Converted** (`src/data/obj_sizes_16b2e0.c`) | `sub_80084C4`, `sub_800A884`, `sub_8011BD4` +1 | high | done |
+| `0816B304` | 0x318 | 44 {s32, s32, s32} motion records + 33 {a, b} entry pairs (`gStaticData_0816B514`, gStaticData_0816B92C's entries). **Converted** (`src/data/motion_records_16b304.c`) | `sub_800B704`, `sub_800B838`, `sub_8012AF4` | high | done |
+| `0816B61C` | 0x2A4 | 31 {s32, s32, s32} motion records + 38 {a, b} entry pairs (`gStaticData_0816B790`, gStaticData_0816B934's entries). **Converted** (`src/data/motion_records_16b304.c`) | `sub_8016AB0`, `sub_801721C`, `sub_8017240` | high | done |
+| `0816B8C0` | 0x6C | table (element layout: see consumers). **Converted** (`src/data/motion_records_16b304.c`) | `sub_8017808` | medium | done |
 | `0816B92C` | 0x8 | pointer table (1 data pointers) | `sub_802375C` | high | easy |
 | `0816B934` | 0x8 | pointer table (1 data pointers) | `sub_802375C` | high | easy |
-| `0816B93C` | 0x50 | table (element layout: see consumers); 1 word(s) look like ROM pointers | `sub_802375C` | medium | easy |
-| `0816B98C` | 0x20 | table (element layout: see consumers) | `sub_801EF0C`, `sub_801F050`, `sub_801F170` +22 | medium | easy |
-| `0816B9AC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_801F528` | high | easy |
-| `0816B9CC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_801F8DC` | high | easy |
-| `0816B9EC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_801F3DC` | high | easy |
-| `0816BA0C` | 0x20 | table (element layout: see consumers) | `sub_801F170` | medium | easy |
-| `0816BA2C` | 0x20 | table (element layout: see consumers) | `sub_801F050` | medium | easy |
-| `0816BA4C` | 0x20 | table (element layout: see consumers) | `sub_801FA3C` | medium | easy |
-| `0816BA6C` | 0x20 | table (element layout: see consumers) | `sub_801FDEC` | medium | easy |
-| `0816BA8C` | 0x20 | table (element layout: see consumers) | `sub_801FCB4` | medium | easy |
-| `0816BAAC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_802062C` | high | easy |
-| `0816BACC` | 0x20 | table (element layout: see consumers) | `sub_8020138` | medium | easy |
-| `0816BAEC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_802026C` | high | easy |
-| `0816BB0C` | 0x20 | table (element layout: see consumers) | `sub_80208C4`, `sub_8020B0C` | medium | easy |
-| `0816BB2C` | 0x20 | table (element layout: see consumers) | `sub_80204EC`, `sub_8020D4C` | medium | easy |
-| `0816BB4C` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_80203A8` | high | easy |
-| `0816BB6C` | 0x28 | table (element layout: see consumers); 1 word(s) look like ROM pointers | `sub_800CA48` | medium | easy |
-| `0816BB94` | 0x4 | small constant (281e140a) | `sub_800F990`, `sub_800FF0C` | medium | easy |
-| `0816BB98` | 0x16 | table (element layout: see consumers) | `sub_800E6B0`, `sub_800E888`, `sub_800EEF0` | medium | easy |
-| `0816BBAE` | 0x16 | table (element layout: see consumers) | `sub_800F06C`, `sub_800F6B8`, `sub_8010908` | medium | easy |
-| `0816BBC4` | 0x16 | table (element layout: see consumers) | `sub_800D040`, `sub_800EDBC`, `sub_800F06C` +3 | medium | easy |
-| `0816BBDA` | 0x16 | table (element layout: see consumers) | `sub_0800D18C`, `sub_800E7A8` | medium | easy |
-| `0816BBF0` | 0xA8 | table of s32 (`s32` x 42) | `sub_0800D18C` | high | easy |
-| `0816BC98` | 0x268 | table of s32[7] (`s32[7]` x 22) | `sub_0800D18C`, `sub_800E08C` | high | easy |
-| `0816BF00` | 0x8 | small constant (0000010000000000) | `sub_0800D18C` | medium | easy |
-| `0816BF08` | 0xC | table of s32 (`s32` x 3) | `sub_8011248` | high | easy |
-| `0816BF14` | 0xC | table of struct three_words | `sub_801192C` | high | easy |
+| `0816B93C` | 0x50 | entry set {entries, 0x100} + its 9 {a, b} entries (`gStaticData_0816B944`). **Converted** (`src/data/entry_set_16b93c.c`) | `sub_802375C` | medium | done |
+| `0816B98C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801EF0C`, `sub_801F050`, `sub_801F170` +22 | medium | done |
+| `0816B9AC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801F528` | high | done |
+| `0816B9CC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801F8DC` | high | done |
+| `0816B9EC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801F3DC` | high | done |
+| `0816BA0C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801F170` | medium | done |
+| `0816BA2C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801F050` | medium | done |
+| `0816BA4C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801FA3C` | medium | done |
+| `0816BA6C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801FDEC` | medium | done |
+| `0816BA8C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801FCB4` | medium | done |
+| `0816BAAC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_802062C` | high | done |
+| `0816BACC` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_8020138` | medium | done |
+| `0816BAEC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_802026C` | high | done |
+| `0816BB0C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_80208C4`, `sub_8020B0C` | medium | done |
+| `0816BB2C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_80204EC`, `sub_8020D4C` | medium | done |
+| `0816BB4C` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_80203A8` | high | done |
+| `0816BB6C` | 0x28 | entry set {entries, 0x100} + its 4 {a, b} entries (`gStaticData_0816BB74`). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_800CA48` | medium | done |
+| `0816BB94` | 0x4 | small constant (281e140a). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_800F990`, `sub_800FF0C` | medium | done |
+| `0816BB98` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_800E6B0`, `sub_800E888`, `sub_800EEF0` | medium | done |
+| `0816BBAE` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_800F06C`, `sub_800F6B8`, `sub_8010908` | medium | done |
+| `0816BBC4` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_800D040`, `sub_800EDBC`, `sub_800F06C` +3 | medium | done |
+| `0816BBDA` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_0800D18C`, `sub_800E7A8` | medium | done |
+| `0816BBF0` | 0xA8 | table of s32 (`s32` x 42). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_0800D18C` | high | done |
+| `0816BC98` | 0x268 | table of s32[7] (`s32[7]` x 22). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_0800D18C`, `sub_800E08C` | high | done |
+| `0816BF00` | 0x8 | small constant (0000010000000000). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_0800D18C` | medium | done |
+| `0816BF08` | 0xC | table of s32 (`s32` x 3). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_8011248` | high | done |
+| `0816BF14` | 0xC | table of struct three_words. **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_801192C` | high | done |
 | `0816BF20` | 0x150 | pointer-to-member dispatch table: 42 x {0xFFFF0000, fn} (`struct act_pmf` x 42) | `sub_8012420` | high | easy |
 | `0816C070` | 0x20 | pointer table (8 data pointers) (`struct level_anim*` x 8) | `sub_8016288`, `sub_8016DDC`, `sub_80170EC` +2 | high | easy |
-| `0816C090` | 0x1C0 | table of struct speed_table | `sub_80159F8` | high | easy |
+| `0816C090` | 0x1C0 | `struct speed_table` (8 s32) + `struct level_anim[8][13]` (`gStaticData_0816C0B0`, the rows gStaticData_0816C070 points at). **Converted** (`src/data/speed_table_16c090.c`) | `sub_80159F8` | high | done |
 | `0816C250` | 0x40 | function-pointer / pointer-to-member table (8 code pointers) | `sub_8016288` | high | easy |
 | `0816C290` | 0x40 | table of struct pmf; 4 word(s) look like ROM pointers | `sub_8017650` | high | easy |
 | `0816C2D0` | 0x8 | pointer table (1 data pointers) | `sub_8017FA4` | high | easy |
-| `0816C2D8` | 0x30 | table (element layout: see consumers) | `sub_8017ECC`, `sub_8017F14`, `sub_8017F5C` +1 | medium | easy |
-| `0816C308` | 0x3 | small constant (040100) | `sub_8018008`, `sub_8018400` | medium | easy |
-| `0816C30B` | 0x4D | table (element layout: see consumers) | `sub_801865C` | medium | easy |
-| `0816C358` | 0x4 | small constant (100e0a20) | `sub_80196B8` | medium | easy |
-| `0816C35C` | 0x3 | small constant (181612) | `sub_8018E4C` | medium | easy |
-| `0816C35F` | 0x3 | small constant (040404) | `sub_8018E4C` | medium | easy |
-| `0816C362` | 0x6 | small constant (020202000000) | `sub_8018E4C` | medium | easy |
-| `0816C368` | 0x10 | table of s32 (`s32` x 4) | `sub_80197F8` | high | easy |
-| `0816C378` | 0x18 | table of s32 (`s32` x 6) | `sub_80197F8` | high | easy |
-| `0816C390` | 0x10 | table of s32 (`s32` x 4) | `sub_80197F8` | high | easy |
-| `0816C3A0` | 0x18 | table of s32 (`s32` x 6) | `sub_80197F8` | high | easy |
-| `0816C3B8` | 0x30 | table of s32 (`s32` x 12) | `sub_801A64C`, `sub_801A7AC` | high | easy |
-| `0816C3E8` | 0xC | table (element layout: see consumers) | `sub_801A2A8` | medium | easy |
-| `0816C3F4` | 0x24 | table (element layout: see consumers) | `sub_801A2A8` | medium | easy |
+| `0816C2D8` | 0x30 | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_8017ECC`, `sub_8017F14`, `sub_8017F5C` +1 | medium | done |
+| `0816C308` | 0x3 | small constant (040100). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_8018008`, `sub_8018400` | medium | done |
+| `0816C30B` | 0x4D | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_801865C` | medium | done |
+| `0816C358` | 0x4 | small constant (100e0a20). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_80196B8` | medium | done |
+| `0816C35C` | 0x3 | small constant (181612). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_8018E4C` | medium | done |
+| `0816C35F` | 0x3 | small constant (040404). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_8018E4C` | medium | done |
+| `0816C362` | 0x6 | small constant (020202000000). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_8018E4C` | medium | done |
+| `0816C368` | 0x10 | table of s32 (`s32` x 4). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_80197F8` | high | done |
+| `0816C378` | 0x18 | table of s32 (`s32` x 6). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_80197F8` | high | done |
+| `0816C390` | 0x10 | table of s32 (`s32` x 4). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_80197F8` | high | done |
+| `0816C3A0` | 0x18 | table of s32 (`s32` x 6). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_80197F8` | high | done |
+| `0816C3B8` | 0x30 | table of s32 (`s32` x 12). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_801A64C`, `sub_801A7AC` | high | done |
+| `0816C3E8` | 0xC | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_801A2A8` | medium | done |
+| `0816C3F4` | 0x24 | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_801A2A8` | medium | done |
 | `0816C418` | 0x40 | table of struct vec_pair | `sub_801A7AC` | high | easy |
 | `0816C458` | 0x8 | pointer table (1 data pointers) | `sub_801B7D8` | high | easy |
-| `0816C460` | 0x24 | table of struct vec3 | `sub_801B304`, `sub_801B6EC`, `sub_801B734` +2 | high | easy |
+| `0816C460` | 0x24 | table of struct vec3. **Converted** (`src/data/velocity_16c460.c`) | `sub_801B304`, `sub_801B6EC`, `sub_801B734` +2 | high | done |
 | `0816C484` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `sub_80047F8`, `sub_80063D8`, `sub_801BC28` +1 | medium | easy |
-| `0816C498` | 0x8 | table of struct xy_pair | `sub_801BC28` | high | easy |
-| `0816C4A0` | 0x8 | table of struct xy_pair | `sub_801BC28` | high | easy |
-| `0816C4A8` | 0x8 | table of struct xy_pair | `sub_801BC28` | high | easy |
-| `0816C4B0` | 0x8 | table of struct xy_pair | `sub_801BC28` | high | easy |
-| `0816C4B8` | 0x8 | table of struct xy_pair | `sub_801BC28` | high | easy |
-| `0816C4C0` | 0x8 | table of struct xy_pair | `sub_801BC28`, `sub_801C3E8` | high | easy |
-| `0816C4C8` | 0x8 | table of struct xy_pair | `sub_801BC28` | high | easy |
-| `0816C4D0` | 0x8 | table of struct xy_pair | `sub_801BC28` | high | easy |
-| `0816C4D8` | 0x30 | table of struct xy_pair | `sub_801CEE0`, `sub_801D5CC` | high | easy |
-| `0816C508` | 0x30 | table of struct xy_pair | `sub_801CEE0`, `sub_801D5CC` | high | easy |
-| `0816C538` | 0x10 | table of u32 (`u32` x 4) | `sub_801CEE0`, `sub_801D668` | high | easy |
-| `0816C548` | 0x10 | table of u32 (`u32` x 4) | `sub_801BC28`, `sub_801D470` | high | easy |
-| `0816C558` | 0x14 | table of u32 (`u32` x 5) | `sub_801C608` | high | easy |
-| `0816C56C` | 0x20 | table (element layout: see consumers) | `sub_801BAF0` | medium | easy |
+| `0816C498` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28` | high | done |
+| `0816C4A0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28` | high | done |
+| `0816C4A8` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28` | high | done |
+| `0816C4B0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28` | high | done |
+| `0816C4B8` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28` | high | done |
+| `0816C4C0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28`, `sub_801C3E8` | high | done |
+| `0816C4C8` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28` | high | done |
+| `0816C4D0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28` | high | done |
+| `0816C4D8` | 0x30 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801CEE0`, `sub_801D5CC` | high | done |
+| `0816C508` | 0x30 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801CEE0`, `sub_801D5CC` | high | done |
+| `0816C538` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c498.c`) | `sub_801CEE0`, `sub_801D668` | high | done |
+| `0816C548` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28`, `sub_801D470` | high | done |
+| `0816C558` | 0x14 | table of u32 (`u32` x 5). **Converted** (`src/data/map_tables_16c498.c`) | `sub_801C608` | high | done |
+| `0816C56C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BAF0` | medium | done |
 | `0816C58C` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `sub_801D7F8` | medium | easy |
 | `0816C5A0` | 0x50 | pointer table (20 data pointers) | `sub_801DAD8` | high | easy |
-| `0816C5F0` | 0x20 | table of struct xy_pair | `sub_801D828` | high | easy |
-| `0816C610` | 0x14 | table of u32 (`u32` x 5) | `sub_801DF0C` | high | easy |
-| `0816C624` | 0x10 | table of u32 (`u32` x 4) | `sub_801DEA4` | high | easy |
-| `0816C634` | 0x10 | table of u32 (`u32` x 4) | `sub_801E190` | high | easy |
-| `0816C644` | 0x30 | table of s32 (`s32` x 12) | `sub_801E688`, `sub_801E788` | high | easy |
-| `0816C674` | 0x30 | table of s32 (`s32` x 12) | `sub_801E688`, `sub_801E788` | high | easy |
+| `0816C5F0` | 0x20 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801D828` | high | done |
+| `0816C610` | 0x14 | table of u32 (`u32` x 5). **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801DF0C` | high | done |
+| `0816C624` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801DEA4` | high | done |
+| `0816C634` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801E190` | high | done |
+| `0816C644` | 0x30 | table of s32 (`s32` x 12). **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801E688`, `sub_801E788` | high | done |
+| `0816C674` | 0x30 | table of s32 (`s32` x 12). **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801E688`, `sub_801E788` | high | done |
 | `0816C6A4` | 0x170 | function-pointer table: 92 Thumb function pointers (menu/trigger-effect dispatch) (`void (*)(void)` x 92) | `sub_8022208` | high | easy |
 | `0816C814` | 0xA | `u16[5]` palette-entry list of a level-start colour cycle. **Converted** (`src/data/level_table_16c814.c`) | `sub_8023A1C` | high | done |
 | `0816C81E` | 0x12 | `u16[9]` colour-cycle list. **Converted** (same) | `sub_8023A1C` | high | done |
@@ -757,52 +766,52 @@ vtable shapes).
 | `08175564` | 0x20 | category_descriptor[0] bytes 0x0C-0x2B (part of gStaticData_08175558[7]) | `InitActorCategory` | high | easy |
 | `08175584` | 0x140 | category_descriptor[0] +0x2C .. [6] end (part of gStaticData_08175558[7]) | `InitActorCategory` | high | easy |
 | `081756C4` | 0x9C | category_vtable[3]: 3 x 13 Thumb function pointers (slots 7/8 of type 0 hold junk values) | `SelectActorCategory` | high | easy |
-| `08175760` | 0x3800 | palette-cycle frames: 32 x 0x1C0-byte BGR555 blocks (14 x 16-colour palettes each) | `sub_802AB58` | high | easy |
-| `08178F60` | 0x10 | table of s32 (`s32` x 4) | `sub_802ABC8` | high | easy |
-| `08178F70` | 0x10 | table of s32 (`s32` x 4) | `sub_802ABC8` | high | easy |
-| `08178F80` | 0x1738 | categories 0-2 family data: 16-colour palettes, keyframe tables (table_A), anim table gStaticData_081796CC (41 x 0x28) and table_B arrays (absolute ROM pointers or sheet offsets) | `sub_80361B0` | high | medium |
+| `08175760` | 0x3800 | palette-cycle frames: 32 x 0x1C0-byte BGR555 blocks (BG palettes 0-13). **Converted** (`src/data/palette_cycle_175760.c`) | `sub_802AB58` | high | done |
+| `08178F60` | 0x10 | palette-cycle cursor starts `s32[4]`. **Converted** | `sub_802ABC8` | high | done |
+| `08178F70` | 0x10 | palette-cycle cursor bounds `s32[4]`. **Converted** | `sub_802ABC8` | high | done |
+| `08178F80` | 0x1738 | categories 0-2 family data: OBJ palette, keyframe tables (table_A), anim table gStaticData_081796CC (41 x 0x28) and table_B arrays. **Converted** (`src/data/anim_family_178f80.c`, docs/data.md "Category families") | `sub_80361B0` | high | done |
 | `0817A6B8` | 0x70 | function-pointer / pointer-to-member table (14 code pointers) | `sub_802B364`, `sub_802C208` | high | easy |
-| `0817A728` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_802B730`, `sub_802BB4C` | high | easy |
-| `0817A748` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_802BB4C` | high | easy |
-| `0817A768` | 0xC | table (element layout: see consumers) | `sub_802C6C0` | medium | easy |
-| `0817A774` | 0xC | table (element layout: see consumers) | `sub_802CC9C` | medium | easy |
-| `0817A780` | 0xC | table (element layout: see consumers) | `sub_802CC9C` | medium | easy |
-| `0817A78C` | 0xC | table (element layout: see consumers) | `sub_802CC9C` | medium | easy |
-| `0817A798` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_802D204` | high | easy |
-| `0817A7B8` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_802D2DC` | high | easy |
-| `0817A7D8` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_802D2DC` | high | easy |
-| `0817A7F8` | 0x48 | table (element layout: see consumers) | `sub_802DB2C`, `sub_802DCC0` | medium | easy |
+| `0817A728` | 0x20 | 16-colour palette. **Converted** (`src/data/actor_tables_17a728.c`) | `sub_802B730`, `sub_802BB4C` | high | done |
+| `0817A748` | 0x20 | 16-colour palette. **Converted** | `sub_802BB4C` | high | done |
+| `0817A768` | 0xC | `struct anim_box`. **Converted** | `sub_802C6C0` | medium | done |
+| `0817A774` | 0xC | `struct anim_box`. **Converted** | `sub_802CC9C` | medium | done |
+| `0817A780` | 0xC | `struct anim_box`. **Converted** | `sub_802CC9C` | medium | done |
+| `0817A78C` | 0xC | `struct anim_box`. **Converted** | `sub_802CC9C` | medium | done |
+| `0817A798` | 0x20 | 16-colour palette (gauge tier 1). **Converted** | `sub_802D204` | high | done |
+| `0817A7B8` | 0x20 | 16-colour palette. **Converted** | `sub_802D2DC` | high | done |
+| `0817A7D8` | 0x20 | 16-colour palette. **Converted** | `sub_802D2DC` | high | done |
+| `0817A7F8` | 0x48 | 6 x `{s32 value, s32 threshold, s32 threshold}`. **Converted** | `sub_802DB2C`, `sub_802DCC0` | medium | done |
 | `0817A840` | 0x10 | function-pointer / pointer-to-member table (4 code pointers) (`void (*)(void)` x 4) | `sub_802D7B0` | high | easy |
-| `0817A850` | 0x30 | table (element layout: see consumers) | `sub_802DFDC` | medium | easy |
+| `0817A850` | 0x30 | 4 `struct anim_frame_record` (the sub_802DFDC singleton's keyframes). **Converted** (`src/data/anim_frames_17a850.c`) | `sub_802DFDC` | medium | done |
 | `0817A880` | 0x1EC | table_B: 123 absolute pointers into compressed frame set B (0x080DA1D8..) | `sub_802DFDC` | high | easy |
-| `0817AA6C` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_802D9A8` | high | easy |
-| `0817AA8C` | 0xC | table (element layout: see consumers) | `sub_802DD9C` | medium | easy |
-| `0817AA98` | 0x1728 | categories 3-6 family data: s16 header, palettes, table_A, anim table gStaticData_0817B2A4 (47 x 0x28), table_B arrays | `sub_802D7B0` | high | medium |
+| `0817AA6C` | 0x20 | 16-colour gradient palette. **Converted** (`src/data/anim_family_17aa6c.c`) | `sub_802D9A8` | high | done |
+| `0817AA8C` | 0xC | `struct anim_box`. **Converted** | `sub_802DD9C` | medium | done |
+| `0817AA98` | 0x1728 | categories 3-6 family data: a box, 2 OBJ palettes, table_A, anim table gStaticData_0817B2A4 (47 x 0x28), table_B arrays. **Converted** (`src/data/anim_family_17aa6c.c`) | `sub_802D7B0` | high | done |
 | `0817C1C0` | 0x40 | function-pointer / pointer-to-member table (8 code pointers) | `sub_802E84C`, `sub_802F748` | high | easy |
-| `0817C200` | 0x60 | BGR555 palette(s): 3 x 16 colours (`u16` x 48) | `sub_802F4CC` | high | easy |
+| `0817C200` | 0x60 | 3-frame 16-colour palette strip. **Converted** (`src/data/palette_strip_17c200.c`) | `sub_802F4CC` | high | done |
 | `0817C260` | 0x20 | function-pointer / pointer-to-member table (4 code pointers) | `sub_802FA38`, `sub_802FEA4` | high | easy |
 | `0817C280` | 0x38 | function-pointer / pointer-to-member table (7 code pointers) | `sub_802FFB8`, `sub_8030234` | high | easy |
 | `0817C2B8` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `sub_8030574`, `sub_8030648` | high | easy |
-| `0817C2D0` | 0xA8 | table of struct weapon_kind | `sub_8031040` | high | easy |
-| `0817C378` | 0x60 | BGR555 palette(s): 3 x 16 colours (`u16` x 48) | `sub_8031040`, `sub_8031744` | high | easy |
-| `0817C3D8` | 0xC | table of s16 (`s16` x 6) | `sub_80309B4`, `sub_8030E08`, `sub_8031378` | high | easy |
-| `0817C3E4` | 0x18 | table of struct anim_frame_record | `sub_8030F88` | high | easy |
+| `0817C2D0` | 0xA8 | 6 `struct weapon_kind` (7 words). **Converted** (`src/data/weapon_kind_17c2d0.c`) | `sub_8031040` | high | done |
+| `0817C378` | 0x60 | 3-frame 16-colour palette strip. **Converted** | `sub_8031040`, `sub_8031744` | high | done |
+| `0817C3D8` | 0xC | `struct anim_box`. **Converted** | `sub_80309B4`, `sub_8030E08`, `sub_8031378` | high | done |
+| `0817C3E4` | 0x18 | 2 `struct anim_frame_record`. **Converted** | `sub_8030F88` | high | done |
 | `0817C3FC` | 0x18 | function-pointer / pointer-to-member table (6 code pointers) (`void*` x 6) | `sub_80311C4` | high | easy |
 | `0817C414` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `sub_8031A08` | high | easy |
 | `0817C42C` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `sub_8031A6C`, `sub_80322F4` | high | easy |
-| `0817C444` | 0xC | table (element layout: see consumers) | `sub_8032480` | medium | easy |
+| `0817C444` | 0xC | `struct anim_box`. **Converted** (`src/data/actor_box_17c444.c`) | `sub_8032480` | medium | done |
 | `0817C450` | 0x10 | function-pointer / pointer-to-member table (2 code pointers) | `sub_8032950`, `sub_8032A94` | high | easy |
-| `0817C460` | 0x50 | table of struct singleton_kind | `sub_8033264` | high | easy |
-| `0817C4B0` | 0xC | table of s16 (`s16` x 6) | `sub_8032C0C` | high | easy |
-| `0817C4BC` | 0xC | table (element layout: see consumers) | `sub_80331BC` | medium | easy |
+| `0817C460` | 0x50 | 2 `struct singleton_kind` (10 words). **Converted** (`src/data/singleton_kind_17c460.c`) | `sub_8033264` | high | done |
+| `0817C4B0` | 0xC | `struct anim_box`. **Converted** | `sub_8032C0C` | high | done |
+| `0817C4BC` | 0xC | 1 `struct anim_frame_record`. **Converted** | `sub_80331BC` | medium | done |
 | `0817C4C8` | 0x18 | function-pointer / pointer-to-member table (6 code pointers) (`void*` x 6) | `sub_8032B6C` | high | easy |
 | `0817C4E0` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `sub_8033B44`, `sub_8033C84` | high | easy |
 | `0817C4F8` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `sub_8033E80`, `sub_8033FE4` | high | easy |
-| `0817C510` | 0x2 | small constant (3e00) | `sub_8034AA4` | medium | easy |
-| `0817C512` | 0x20 | table of u16; 1 word(s) look like ROM pointers (`u16` x 16) | `sub_803487C` | high | easy |
-| `0817C532` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_803487C` | high | easy |
-| `0817C552` | 0x20 | table of u16 (`u16` x 16) | `sub_803487C` | high | easy |
-| `0817C572` | 0x22 | table of u16 (`u16` x 17) | `sub_803487C` | high | easy |
+| `0817C510` | 0x2 | the text ">". **Converted** (`src/data/hud_palettes_17c510.c`) | `sub_8034AA4` | medium | done |
+| `0817C512` | 0x20 | 16 palette halfwords. **Converted** | `sub_803487C` | high | done |
+| `0817C532` | 0x20 | 16 palette halfwords. **Converted** | `sub_803487C` | high | done |
+| `0817C552` | 0x20 | 16 halfwords (mostly 0xFFFF). **Converted** | `sub_803487C` | high | done |
+| `0817C572` | 0x22 | 16 halfwords + the 2-byte zero pad. **Converted** | `sub_803487C` | high | done |
 | `0817C594` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `sub_803472C` | medium | easy |
 | `0817C5A8` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `sub_803472C` | medium | easy |
 | `0817C5BC` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `sub_803472C` | medium | easy |
@@ -828,27 +837,27 @@ vtable shapes).
 | `0817E78C` | 0x326E74 | composite: level BG tile sets (raw tag-0x00 assets), per-room level data, sprite-bank tile pool | `sub_8037388` | high | medium |
 | `084A5600` | 0xB66B4 | composite: sprite-bank (animation) table (**converted**, C) + GAX2 sound-effect bank (**converted**, `gax_audio.py --sfx`) | `sub_8004D74`, `sub_8022230` | high | medium |
 | `085A4C5C` | 0x14 | the default song's GAX2_Song struct `{4, unknownc, info, unk_ptr, channel}` (the engine's default handler layout). **Built** by `tools/gax_audio.py` (`gax_default_layout.bin`) | `sub_8037FC0`, `sub_8038538` | high | done |
-| `085A4C70` | 0x100 | u8[256] count-leading-zeros table (libgcc __clz_tab, used by the 64-bit divide) (`UQItype` x 256) | `sub_8037648` | high | easy |
-| `085A4D70` | 0x100 | u8[256] count-leading-zeros table (second copy, __clz_tab of another libgcc object) (`UQItype` x 256) | `sub_8037A7C` | high | easy |
-| `085A5519` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `085A60FF` | 0x4D | 1 B pad + GAX2 version string "GAX Sound Engine 2.01D (Sep 28 2001) (c) Shin'en Multimedia. Code: B.Wodok" + NUL padding | `sub_8038538 (via gStaticData_085A614C)` | high | easy |
-| `085A614C` | 0x4 | pointer table (1 data pointers) (`u8*` x 1) | `sub_8038538` | high | easy |
-| `085A6150` | 0x60 | table of struct RateEntry | `sub_8037FA0`, `sub_8037FC0`, `sub_8038538` | high | easy |
-| `085A61B0` | 0xC | table (element layout: see consumers) | `sub_80381FC` | medium | easy |
-| `085A61BC` | 0x14 | table (element layout: see consumers) | `sub_80381FC` | medium | easy |
-| `085A61D0` | 0xC | GAX2 error/tag string "GAX2_INIT" (NUL-padded to 4) (`char` x 12) | `sub_8038538`, `sub_8038A1C` | high | easy |
-| `085A61DC` | 0x10 | GAX2 error/tag string "OUT OF MEMORY" (NUL-padded to 4) (`char` x 16) | `sub_8038538`, `sub_8038A1C` | high | easy |
-| `085A61EC` | 0xC | GAX2 error/tag string "GAX2_JINGLE" (NUL-padded to 4) (`char` x 12) | `sub_8038A1C` | high | easy |
-| `085A61F8` | 0x1C | GAX2 error/tag string "GAX_NO_JINGLE FLAG IS SET" (NUL-padded to 4) (`char` x 28) | `sub_8038A1C` | high | easy |
-| `085A6214` | 0x8 | GAX2 error/tag string "GAX_IRQ" (NUL-padded to 4) | `sub_8038B68` | high | easy |
-| `085A621C` | 0xAC | GAX2 error string "GAX_PLAY HAS NOT FINISHED BEFORE GAX_IRQ. USE LOWER MIXING RATE ..." (+ padding) | `sub_8038B68` | high | easy |
-| `085A62C8` | 0x4 | pointer table (1 data pointers) (`u8*` x 1) | `sub_80392E0` | high | easy |
-| `085A62CC` | 0x10 | table (element layout: see consumers) | `sub_80392E0` | medium | easy |
-| `085A62DC` | 0x3BD0 | GAX2 u32 note period/frequency table (smooth ramp; embedded 0x08xxxxxx values are coincidence) (`u32` x 3828) | `sub_8039B44` | high | easy |
-| `085A9EAC` | 0x4C | table of s8 (`s8` x 76) | `sub_8039FFC` | high | easy |
-| `085A9EF8` | 0xC | table of struct EepromConfig | `sub_803A968` | high | easy |
-| `085A9F04` | 0xC | table of struct EepromConfig | `sub_803A968` | high | easy |
-| `085A9F10` | 0x260 | EEPROM table (0x60, still raw), then the 256-colour palette of cutscene picture 00 (0x200, `gCutscenePicture00`, **converted**) | `sub_803AC04` | high | easy |
+| `085A4C70` | 0x100 | u8[256] count-leading-zeros table (libgcc `__clz_tab` of `__divdi3`). **Converted** (`src/data/clz_tab_5a4c70.c`) | `sub_8037648` | high | done |
+| `085A4D70` | 0x100 | u8[256] count-leading-zeros table (the second copy, `__udivdi3`'s). **Converted** (`src/data/clz_tab_5a4c70.c`) | `sub_8037A7C` | high | done |
+| `085A5519` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `085A60FF` | 0x4D | 1 B pad (gbagfx's padding of the `.lz` stream before it, now built) + GAX2 version string "GAX Sound Engine 2.01D (Sep 28 2001) (c) Shin'en Multimedia. Code: B.Wodok". **Converted** (`gGaxVersionString`, `src/data/gax_tables_5a6100.c`) | `sub_8038538 (via gStaticData_085A614C)` | high | done |
+| `085A614C` | 0x4 | pointer to the GAX2 version string. **Converted** (`gStaticData_085A614C = gGaxVersionString`) | `sub_8038538` | high | done |
+| `085A6150` | 0x60 | 12 `struct RateEntry` `{rate in Hz, timer reload}`. **Converted** | `sub_8037FA0`, `sub_8037FC0`, `sub_8038538` | high | done |
+| `085A61B0` | 0xC | GAX2 error string "GAX2_NEW". **Converted** | `sub_80381FC` | medium | done |
+| `085A61BC` | 0x14 | GAX2 error string "PARAMS ARG IS NULL". **Converted** | `sub_80381FC` | medium | done |
+| `085A61D0` | 0xC | GAX2 error/tag string "GAX2_INIT". **Converted** | `sub_8038538`, `sub_8038A1C` | high | done |
+| `085A61DC` | 0x10 | GAX2 error/tag string "OUT OF MEMORY". **Converted** | `sub_8038538`, `sub_8038A1C` | high | done |
+| `085A61EC` | 0xC | GAX2 error/tag string "GAX2_JINGLE". **Converted** | `sub_8038A1C` | high | done |
+| `085A61F8` | 0x1C | GAX2 error/tag string "GAX_NO_JINGLE FLAG IS SET". **Converted** | `sub_8038A1C` | high | done |
+| `085A6214` | 0x8 | GAX2 error/tag string "GAX_IRQ". **Converted** | `sub_8038B68` | high | done |
+| `085A621C` | 0xAC | GAX2 error string "GAX_PLAY HAS NOT FINISHED BEFORE GAX_IRQ. ...", then the halt banner "GAX ENGINE V2.01D Sep 28 2001\n\nEXCEPTION. PROGRAM HALT." (`gGaxHaltBanner`, `+0x74`). **Converted** | `sub_8038B68` | high | done |
+| `085A62C8` | 0x4 | pointer to the halt banner. **Converted** (`gStaticData_085A62C8 = gGaxHaltBanner`) | `sub_80392E0` | high | done |
+| `085A62CC` | 0x10 | GAX2 halt-screen string "FUNCTION NAME:". **Converted** | `sub_80392E0` | medium | done |
+| `085A62DC` | 0x3BD0 | GAX2 u32 note period table (`u32` x 3828; its 0x08xxxxxx values are a smooth ramp, not pointers). **Converted** | `sub_8039B44` | high | done |
+| `085A9EAC` | 0x4C | s8[64] vibrato sine wave, then the SDK's "EEPROM_V122" id string (`gEepromLibraryVersion`, `+0x40`). **Converted** (`gax_tables_5a6100.c`, `eeprom_5a9eec.c`) | `sub_8039FFC` | high | done |
+| `085A9EF8` | 0xC | `struct EepromConfig` of the 4 Kbit chip. **Converted** (`src/data/eeprom_5a9eec.c`) | `sub_803A968` | high | done |
+| `085A9F04` | 0xC | `struct EepromConfig` of the 64 Kbit chip. **Converted** | `sub_803A968` | high | done |
+| `085A9F10` | 0x260 | EEPROM write timeout `u16[3]` + pad, then the library's 22 address constants (`gEepromLibraryAddresses`, no reader), then the palette of cutscene picture 00. **Converted** (`eeprom_5a9eec.c`, `cutscene_pictures_5a9f70.c`) | `sub_803AC04` | high | done |
 | `085ADBD1` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 01), bit 15 set in many entries. **Converted** (`gCutscenePicture01`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
 | `085B34E1` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 02), bit 15 set in many entries. **Converted** (`gCutscenePicture02`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
 | `085B82BC` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 03), bit 15 set in many entries. **Converted** (`gCutscenePicture03`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
@@ -872,74 +881,74 @@ vtable shapes).
 | `08611BD9` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 21), bit 15 set in many entries. **Converted** (`gCutscenePicture21`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
 | `08616360` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 22), bit 15 set in many entries. **Converted** (`gCutscenePicture22`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
 | `08619F51` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 23), bit 15 set in many entries. **Converted** (`gCutscenePicture23`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
-| `0861BF2E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0861C182` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0861C309` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0861E5F6` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0862556B` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08628C4F` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0862A957` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0862C2C5` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0862C4AD` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0862CC3B` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0862CE6E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0862D0CB` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0862E3AF` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0862FFF3` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086308EF` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08630E19` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08631155` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08631372` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086313AD` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08631557` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086315BB` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0863183A` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0863199E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086324B3` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0863281E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08632BC2` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086334C1` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08636EF1` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08637603` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086377BD` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08637A6E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086382C6` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08639459` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0863A60A` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0863AD8D` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0863B666` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0863BDD2` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0863CF95` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0863D333` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0863D4BF` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08640EF5` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08644A86` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08649417` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0864D7E5` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0864F82F` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08651CF7` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08655175` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0865BAEB` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0865E05A` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08661F46` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086652B6` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08665935` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0867045E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0867829B` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0867EDF3` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086834F5` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08689F72` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0868D311` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08693B8E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086A8349` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086AF12B` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086BACB3` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
+| `0861BF2E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0861C182` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0861C309` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0861E5F6` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0862556B` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08628C4F` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0862A957` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0862C2C5` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0862C4AD` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0862CC3B` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0862CE6E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0862D0CB` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0862E3AF` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0862FFF3` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086308EF` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08630E19` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08631155` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08631372` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086313AD` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08631557` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086315BB` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0863183A` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0863199E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086324B3` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0863281E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08632BC2` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086334C1` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08636EF1` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08637603` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086377BD` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08637A6E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086382C6` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08639459` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0863A60A` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0863AD8D` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0863B666` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0863BDD2` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0863CF95` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0863D333` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0863D4BF` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08640EF5` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08644A86` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08649417` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0864D7E5` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0864F82F` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08651CF7` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08655175` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0865BAEB` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0865E05A` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08661F46` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086652B6` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08665935` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0867045E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0867829B` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0867EDF3` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086834F5` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08689F72` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0868D311` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08693B8E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086A8349` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086AF12B` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086BACB3` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
 | `086C127C` | 0x18A30 | raw (unpacked) level asset for room 0x0825E7DC: u16 chunk offset table + chunk token streams (custom RLE/delta, sub_8024960/sub_8025334) | `sub_80266BC`, `sub_80254F8`, `sub_8024CF0` +2 | high | **converted** |
-| `086E044B` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086E2212` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086E3541` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086EA0C9` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086ECCD2` | 0xF6F1A | 6 raw (unpacked) level assets, same format as 0x086C127C | `sub_80266BC`, `sub_80254F8`, `sub_8024CF0` +2 | high | **converted** (2 B pad raw) |
+| `086E044B` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086E2212` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086E3541` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086EA0C9` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086ECCD2` | 0xF6F1A | 6 raw (unpacked) level assets, same format as 0x086C127C | `sub_80266BC`, `sub_80254F8`, `sub_8024CF0` +2 | high | **converted** (the 2 B pad is gbagfx's padding) |
 | `087E3BEC` | 0x58 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80071E4`, `sub_800725C`, `sub_80073BC` +2 | high | easy |
 | `087E3C44` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8008434`, `sub_80084A4` | high | easy |
 | `087E3CAC` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80088F0`, `sub_8008904` | high | easy |

@@ -185,15 +185,29 @@ The first batch (all pointer tables, all byte-exact):
 
 | File | ROM | Contents |
 |---|---|---|
+| `boss_pictures_167ad4.c` | `0x08167AD4` | the two boss pictures (palette + frames, see "Boss pictures"), the d-pad direction table, the sine table |
 | `song_table_16aa20.c` | `0x0816AA20` | the 19-song table, offsets into the built GAX2 music block (`gax_songs.h`) |
+| `link_crc_16af10.c` | `0x0816AF10` | the link-cable CRC-16 table, 2 pairing names |
+| `menu_tables_16b138.c` | `0x0816B138` | menu text, palette halves, label ids, icon positions and frames |
 | `bg_package_16b284.c` | `0x0816B284` | 1 `struct bg_package` |
+| `pause_rows_16b298.c` | `0x0816B298` | the pause screen rows, a palette half |
+| `obj_sizes_16b2e0.c` | `0x0816B2E0` | OBJ piece sizes, the empty sprite box and point |
+| `motion_records_16b304.c` | `0x0816B304` | 84 motion records, the entries of the two entry sets |
 | `entry_set_16b92c.c` | `0x0816B92C` | 2 `{entries, 0x100}` sets |
+| `entry_set_16b93c.c` | `0x0816B93C` | 1 entry set and its entries |
+| `popup_tables_16b98c.c` | `0x0816B98C` | 15 text-popup tables |
+| `object_tables_16bb6c.c` | `0x0816BB6C` | 1 entry set, the collision system's kind tables, 2 scale triples |
 | `action_table_16bf20.c` | `0x0816BF20` | 42-slot player action PMF table, per-mode animation row pointers |
+| `speed_table_16c090.c` | `0x0816C090` | the player speed table, the per-mode level animation rows |
 | `player_pmf_16c250.c` | `0x0816C250` | 2 player-controller PMF tables, an entry table and its set |
+| `actor_tables_16c2d8.c` | `0x0816C2D8` | small actor tables (vectors, per-round bytes, thresholds, argument blocks) |
 | `entry_set_16c418.c` | `0x0816C418` | an entry table and its set |
+| `velocity_16c460.c` | `0x0816C460` | 3 velocity vectors |
 | `bg_package_16c484.c` | `0x0816C484` | 1 `struct bg_package` |
+| `map_tables_16c498.c` | `0x0816C498` | level-select positions, animation ids, a palette half |
 | `bg_package_16c58c.c` | `0x0816C58C` | 1 `struct bg_package` |
 | `image_table_16c5a0.c` | `0x0816C5A0` | 10 `{palette, tiles}` asset pairs |
+| `map_tables_16c5f0.c` | `0x0816C5F0` | level-select offsets, animation ids, OBJ sizes |
 | `dispatch_table_16c6a4.c` | `0x0816C6A4` | the unified 92-slot function-pointer dispatch array |
 | `level_table_16c814.c` | `0x0816C814` | the level table (25 `struct level_info`), the levels' room lists and 48 room records, the theme music cues, 5 colour-cycle lists (see "Level data") |
 | `cutscenes_16d1c8.c` | `0x0816D1C8` | the 11 cutscenes: slide lists, 24 slides, the text of 6 languages (see "Cutscenes") |
@@ -201,14 +215,24 @@ The first batch (all pointer tables, all byte-exact):
 | `ui_text_172cd4.c` | `0x08172CD4` | the game's UI text in six languages (see "UI text") |
 | `hud_fonts_174be0.c` | `0x08174BE0` | the HUD digit slots and the two HUD fonts' character lists and glyph metrics |
 | `actor_category_175558.c` | `0x08175558` | 7 `struct category_descriptor`, 3 `struct category_vtable` |
+| `palette_cycle_175760.c` | `0x08175760` | the 32-frame BG palette cycle and its 4 cursor start/bound pairs |
+| `anim_family_178f80.c` | `0x08178F80` | categories 0-2: OBJ palette, animation table `gStaticData_081796CC`, keyframe and frame arrays (see "Category families") |
 | `actor_pmf_17a6b8.c` | `0x0817A6B8` | 1 actor PMF table |
+| `actor_tables_17a728.c` | `0x0817A728` | 5 small palettes, 4 `struct anim_box`, 6 threshold records |
 | `actor_state_fn_17a840.c` | `0x0817A840` | 4 state functions |
+| `anim_frames_17a850.c` | `0x0817A850` | 4 keyframes (`struct anim_frame_record`) |
 | `frame_table_17a880.c` | `0x0817A880` | 123 frame pointers |
+| `anim_family_17aa6c.c` | `0x0817AA6C` | a palette, 2 boxes, then categories 3-6: 2 OBJ palettes, animation table `gStaticData_0817B2A4`, keyframe and frame arrays |
 | `actor_pmf_17c1c0.c` | `0x0817C1C0` | 1 actor PMF table |
+| `palette_strip_17c200.c` | `0x0817C200` | a 3-frame palette strip |
 | `actor_pmf_17c260.c` | `0x0817C260` | 3 actor PMF tables |
+| `weapon_kind_17c2d0.c` | `0x0817C2D0` | 6 weapon-kind records, a 3-frame palette strip, a box, 2 keyframes |
 | `actor_state_17c3fc.c` | `0x0817C3FC` | 1 function table, 2 actor PMF tables |
+| `actor_box_17c444.c` | `0x0817C444` | 1 `struct anim_box` |
 | `actor_pmf_17c450.c` | `0x0817C450` | 1 actor PMF table |
+| `singleton_kind_17c460.c` | `0x0817C460` | 2 singleton-kind records, a box, 1 keyframe |
 | `actor_state_17c4c8.c` | `0x0817C4C8` | 1 function table, 2 actor PMF tables |
+| `hud_palettes_17c510.c` | `0x0817C510` | the ">" icon text, 4 palette halves |
 | `bg_package_17c594.c` | `0x0817C594` | 3 `struct bg_package` |
 | `credits_17c5d0.c` | `0x0817C5D0` | the credits (see "Credits") |
 | `popup_glyphs_17cf40.c` | `0x0817CF40` | 5 glyph packages, 9 slot seeds |
@@ -226,6 +250,9 @@ The first batch (all pointer tables, all byte-exact):
 | `sprite_banks_4b0ae0.c` | `0x084B0AE0` | sprite banks 10-21 |
 | `sprite_banks_4b414c.c` | `0x084B414C` | sprite banks 22-38 |
 | `sprite_banks_4b9d7c.c` | `0x084B9D7C` | sprite banks 39-55 |
+| `clz_tab_5a4c70.c` | `0x085A4C70` | libgcc's `__clz_tab`, twice (see "Library data" below) |
+| `gax_tables_5a6100.c` | `0x085A6100` | the GAX2 engine's strings, mixing-rate table, period table and vibrato wave |
+| `eeprom_5a9eec.c` | `0x085A9EEC` | the SDK EEPROM library's id string, chip configs, timeout and address constants |
 | `cutscene_pictures_5a9f70.c` | `0x085A9F70` | the 24 cutscene pictures: palette (C) + Mode 4 bitmap (grit) each |
 | `entity_vtables_7e3bec.c` | `0x087E3BEC` | the 93 entity virtual tables |
 
@@ -280,9 +307,46 @@ the C is the source from then on.
   file starts with a word-aligned struct, and `tools/report_units.py`
   doesn't accept linker fill between objects.
 
-Still raw and worth doing next: the animation tables inside
-`gStaticData_08178F80`/`gStaticData_0817AA98` (`actor_anim.h`'s
-`gStaticData_081796CC`/`gStaticData_0817B2A4`, not labeled yet).
+The category families' animation tables (`actor_anim.h`'s
+`gStaticData_081796CC`/`gStaticData_0817B2A4`) are C as well now, see
+"Category families" below.
+
+### Category families
+
+The two actor-category families (docs/data_map.md, `08178F80` and
+`0817AA98`) are `src/data/anim_family_178f80.c` (categories 0-2) and
+`src/data/anim_family_17aa6c.c` (categories 3-6). Each is an OBJ palette
+(256 colours, then 0x200 zero bytes nothing reads; the second family has
+two), the animation table (`struct anim_table_record`, `actor_anim.h`,
+41 and 47 records), and the arrays the records point at:
+
+- **table_A**: the clip's keyframes, `struct anim_frame_record`
+  (`actor_self.h`: duration, index into table_B, loop threshold and
+  base, OAM attribute bits). Nothing stores a count.
+- **table_B**: the frames. Record 0's points at compressed frames
+  (`gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_nnn`, set C for the
+  second family), so it's a `const u8 *const []`. Every other record's
+  is `u32` byte offsets into the family's framed sheet
+  (`graphics/unknown/00_0b2120/`, `01_14174c/`, decompressed), written
+  `FRAMED_0B2120_<ENTITY>_<NN>`. `tools/framed_gfx.py header` generates
+  those from the sheet's frame PNGs, in the order the sheet is built
+  (`graphics.mk`), so a resized frame moves the offsets with it. Every
+  offset in the ROM lands on a frame start.
+
+The arrays have no labels in the code (only the records point at them),
+so they're named after their addresses. Each one runs to the next
+array a record points at; several records share arrays, and the
+partition has no leftover bytes (every table_A piece is a whole number
+of 12-byte keyframes). The descriptors in `actor_category_175558.c`
+point at the palettes and tables by symbol now instead of
+`gStaticData_08178F80 + 0x74c`-style offsets.
+
+`struct anim_table_record`'s fields past `table_B` were typed from the
+data: `unknown_10` is a word (0 or 0x260C-0x36D5), `box_14` a `struct
+anim_box` (`{x, y, z, w, h, d}`, the same box the small actor tables
+next to the families hold), and `spawnX`/`spawnY` aren't always 0.
+`actor_anim.h`'s `struct keyframe_entry` is gone: table_A is typed as
+the matched code's `struct anim_frame_record`.
 
 ## Resources (grit-style)
 
@@ -487,6 +551,48 @@ C (see "Level data").
 
 `graphics.mk` adds the PNGs to `GRIT_C_PNGS`.
 
+### Boss pictures
+
+`gStaticData_08167CD4` (N. Gin's airship, 18x12 cells, 4 frames: the
+propellers turn) and `gStaticData_08169CE8` (Cortex's hovercraft, 16x10
+cells, 1 frame) were read as "per-level meter grid tables" before; drawn,
+they are the two bosses that fly on an affine BG. Each is `{s16 cols,
+s16 rows}` and its frames, a frame being a tile count, a `cols * rows`
+map of `u16` tile indices and that many 4bpp tiles. The frames share one
+tile pool: frame 1's indices count on from frame 0's tiles, and so on.
+The game (`sub_8031604`, `sub_80336CC`) converts the tiles to 8bpp tiles
+of BG palette 1, since an affine BG only takes 8bpp, and `sub_8030D48`
+lays them out by the maps. The palette in front of each picture is its
+own label (`gStaticData_08167AD4`, `gStaticData_08169AE8`), and the code
+walks the frames from that label + 0x204, so the two stay back to back
+in `src/data/boss_pictures_167ad4.c`.
+
+The maps are exactly what deduplicating the frames in reading order gives
+(the first identical tile, no flips, one pool across the frames). So the
+sources are the whole frames, `graphics/boss_pictures/<addr>_frameN.png`
+(4bpp, the 16 colours of BG palette 1). grit (`-gt -gB4`) turns each into
+tiles in cell order, and `tools/boss_pictures.py pack` deduplicates them
+into the `.inc` with the frames' initializers and a header with the tile
+counts and the size in cells, which the C struct's array sizes use. So a
+frame can be redrawn freely. `tools/boss_pictures.py extract` writes the
+PNGs from `baserom.gba` again and checks the round trip.
+
+### Small tables around 0x0816B000
+
+The rest of `0x0816AF10`-`0x0816C6A4` is small typed tables written out
+from the ROM: palettes and palette halves (`u16`), text and label ids,
+icon positions (`struct icon_pos`), OBJ sizes, motion records and the
+{a, b} entry pairs of the entry sets (see `entry_set_16b92c.c`),
+collision kind tables, and vectors. Labels the code has no symbol for,
+because it only reaches them through a pointer, are named after their
+address: the pairs in `motion_records_16b304.c` (`gStaticData_0816B514`,
+`gStaticData_0816B790`), which `entry_set_16b92c.c` now points at by
+name, the level animation rows `gStaticData_0816C0B0` that
+`action_table_16bf20.c` points at, and the two link-cable names
+`gStaticData_0816B110`/`0816B124` that the IWRAM data points at (`src/iwram/iwram_data.c`). A few
+byte tables sit at odd addresses (`gStaticData_0816C30B`); brace-list `u8`
+arrays aren't aligned by agbcc, so they stay in place.
+
 ### Level data
 
 The rooms' level data and level assets ([levels.md](./levels.md)) are
@@ -546,6 +652,36 @@ at `+0x200`. The bitmaps are the grit-built `graphics/intro/*_bitmap.png`
 set, which the hardware ignores but a PNG palette can't carry. Each
 palette is `aligned(4)`: the 0-3 zero bytes before it in the ROM are the
 alignment after the previous (odd-length) bitmap stream.
+
+### Library data
+
+The constants of the libraries linked into the game, between the GAX2
+music block and the cutscene pictures, are C in three files:
+
+- `clz_tab_5a4c70.c`: libgcc2.c's `__clz_tab` (bit length of each byte
+  value), twice, because gcc 2.x's libgcc2.c made it `static` in each
+  object. `__divdi3` and `__udivdi3` (`src/util/math_div64_util.c`)
+  each read their own. The values are written the way libgcc2.c writes
+  them.
+- `gax_tables_5a6100.c`: the GAX2 engine's version string (and the
+  pointer to it, which `sub_8038538` checks for "GAX"), the 12 mixing
+  rates (`struct RateEntry`), the error strings `sub_80392E0` prints,
+  its halt banner and the pointer to it, the 3,828-entry period table
+  and the 64-step vibrato wave. The two pointers are symbol references
+  now, so the music block before them can change size.
+- `eeprom_5a9eec.c`: the AGB SDK EEPROM library's "EEPROM_V122" id
+  string (read by flashers and emulators to detect the save type, not
+  by the game), the two `struct EepromConfig`s, the write timeout
+  `u16[3]`, and a list of the library's 22 address constants. That list
+  holds, function by function, the literal-pool words of `sub_803A968`
+  ... `sub_803ACE0` that are symbol addresses (IWRAM variables, the two
+  configs, the timeout, `sub_803A9AC`). Nothing in the ROM points at
+  it, but every word is a symbol, so it is written as symbol references
+  and doesn't pin anything in place.
+
+The one-byte pad before the version string is the zero padding gbagfx
+writes after the `.lz` stream before it (it rounds `.lz` files up to 4
+bytes), so `data.s` incbins that file whole instead of trimming it.
 
 ### Placing it and counting it
 
@@ -679,8 +815,9 @@ The `sub_effect_record` tables in the same regions are hand-written C:
 12-byte `struct sub_effect_table_end` that the one-record-ahead
 accessors read after the last one.
 
-The 2-byte pads after the two LZ77 sheets (`gStaticData_080C0C36`,
-`gStaticData_08151AC2`) stay raw `.incbin`s.
+The 2-byte pads after the two LZ77 sheets (formerly
+`gStaticData_080C0C36`, `gStaticData_08151AC2`) are built: see "LZ77
+stream padding" below.
 
 ### Compressed sprite frames
 
@@ -727,11 +864,30 @@ the literal run, and the frame's leading zeros are always a zero run. It
 rebuilds all 344 frames byte for byte. An edited frame compresses to a
 different length, which moves every later frame, so pointers into a set
 must use the generated offsets: `frame_table_17a880.c` writes
-`gStaticData_080DA1D8 + RLE_SPRITES_0DA1D8_FRAME_nnn`. The other two
-frame tables (`gStaticData_0817941C`, `gStaticData_0817BA44`) are still
-raw bytes inside their category family blobs; when they become C they
-should use `RLE_SPRITES_0C2758_FRAME_nnn` / `RLE_SPRITES_15A050_FRAME_nnn`
-the same way.
+`gStaticData_080DA1D8 + RLE_SPRITES_0DA1D8_FRAME_nnn`, and the other two
+frame tables (`gStaticData_0817941C`, `gStaticData_0817BA44`, in the
+category family files) use `RLE_SPRITES_0C2758_FRAME_nnn` /
+`RLE_SPRITES_15A050_FRAME_nnn` the same way.
 
 `tools/rle_sprites.py extract` writes the three PNGs from `baserom.gba`
 again and checks that every frame re-encodes to the ROM's bytes.
+
+### LZ77 stream padding
+
+The LZ77 streams in `data/data.s` start on a word boundary, and most
+are followed by 1-3 zero bytes that bring the next asset back to one.
+Those bytes used to be 70 raw labels (`gStaticData_080C0C36`,
+`gStaticData_08151AC2`, `gStaticData_085A5519`, 66 between
+`0x0861BF2E` and `0x086EA0C9`, `gStaticData_086ECCD2`). Each one is
+exactly the padding gbagfx writes: it rounds every `.lz` file up to a
+multiple of 4 with zeros. So the stream's `.incbin` takes the whole
+padded file instead of trimming it to the stream length (`, 0, 0x1E6`),
+and the pad label is gone (no code referenced any of them).
+`tools/report_units.py` counts the padding as part of the built blob.
+
+This only holds where the stream starts word-aligned and the ROM pad
+is all zeros, which is true of every one of the 70 (checked against the
+built `.lz` files). An edited asset that compresses to a different
+length gets the right padding for its new length, so the next asset
+stays aligned. Streams that the ROM packs back to back without a pad
+(the cutscene bitmaps, `cutscene_pictures_5a9f70.c`) keep the trimming.

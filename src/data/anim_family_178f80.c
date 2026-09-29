@@ -1,0 +1,842 @@
+#include "core.h"
+#include "actor_self.h"
+#include "actor_anim.h"
+
+/*
+ * ROM 0x08178F80-0x0817A6B8: the data of actor categories 0-2 (the family
+ * whose frames are the gStaticData_080B2120 sheet): their OBJ palette,
+ * the 41-record animation table gStaticData_081796CC
+ * (include/actor_anim.h) and the keyframe (table_A) and frame (table_B)
+ * arrays its records point at. Linked in ROM order between data/data.s
+ * sections by ldscript.txt - see docs/data.md, "Category families".
+ *
+ * Record 0's table_B points at compressed frames of set A
+ * (rle_sprites_0c2758.c), the others' at frames of the framed sheet
+ * graphics/unknown/00_0b2120/ (byte offsets into its decompressed
+ * data). Both kinds are written with the offsets the build generates,
+ * so edited frames move them along. The arrays are cut at the next
+ * array a record points at; nothing but the records references them.
+ */
+
+#include "rle_sprites/0c2758_frames.h"
+#include "unknown/00_0b2120_frames.h"
+
+extern const u8 gStaticData_080C2758[];
+
+extern const struct anim_frame_record gStaticData_08179380[13];
+extern const u8 *const gStaticData_0817941C[156];
+extern const struct anim_frame_record gStaticData_0817968C[2];
+extern const u32 gStaticData_081796A4[10];
+extern const struct anim_frame_record gStaticData_08179D34[1];
+extern const u32 gStaticData_08179D40[14];
+extern const struct anim_frame_record gStaticData_08179D78[2];
+extern const u32 gStaticData_08179D90[20];
+extern const struct anim_frame_record gStaticData_08179DE0[3];
+extern const u32 gStaticData_08179E04[8];
+extern const struct anim_frame_record gStaticData_08179E24[2];
+extern const u32 gStaticData_08179E3C[22];
+extern const struct anim_frame_record gStaticData_08179E94[24];
+extern const u32 gStaticData_08179FB4[12];
+extern const u32 gStaticData_08179FE4[1];
+extern const struct anim_frame_record gStaticData_08179FE8[2];
+extern const u32 gStaticData_0817A000[1];
+extern const struct anim_frame_record gStaticData_0817A004[2];
+extern const u32 gStaticData_0817A01C[9];
+extern const struct anim_frame_record gStaticData_0817A040[1];
+extern const struct anim_frame_record gStaticData_0817A04C[19];
+extern const u32 gStaticData_0817A130[15];
+extern const struct anim_frame_record gStaticData_0817A16C[19];
+extern const u32 gStaticData_0817A250[26];
+extern const struct anim_frame_record gStaticData_0817A2B8[19];
+extern const u32 gStaticData_0817A39C[24];
+extern const u32 gStaticData_0817A3FC[24];
+extern const u32 gStaticData_0817A45C[24];
+extern const u32 gStaticData_0817A4BC[24];
+extern const u32 gStaticData_0817A51C[24];
+extern const u32 gStaticData_0817A57C[24];
+extern const u32 gStaticData_0817A5DC[20];
+extern const struct anim_frame_record gStaticData_0817A62C[4];
+extern const u32 gStaticData_0817A65C[11];
+extern const struct anim_frame_record gStaticData_0817A688[2];
+extern const struct anim_frame_record gStaticData_0817A6A0[1];
+extern const u32 gStaticData_0817A6AC[3];
+
+/* The 256-colour OBJ palette InitActorCategory loads for these
+ * categories. The second 0x200 bytes are zero; nothing reads them. */
+const u16 gStaticData_08178F80[0x200] = {
+    0x03E0, 0x01DD, 0x00DE, 0x0050, 0x00B7, 0x3461, 0x0005, 0x31DB,
+    0x18C8, 0x31B1, 0x294C, 0x52D8, 0x3E32, 0x5F3B, 0x4675, 0x6BBF,
+    0x03E0, 0x5B9C, 0x033C, 0x05F1, 0x1657, 0x3697, 0x1DB3, 0x057A,
+    0x15DE, 0x00B0, 0x0116, 0x08F1, 0x1179, 0x006B, 0x0076, 0x0072,
+    0x03E0, 0x0120, 0x0182, 0x01E4, 0x0246, 0x02CA, 0x032F, 0x0777,
+    0x07DD, 0x0A73, 0x09EE, 0x3BFF, 0x7FFF, 0x1EFB, 0x1A39, 0x0915,
+    0x03E0, 0x5D87, 0x1248, 0x0CC5, 0x5F7C, 0x42FA, 0x3237, 0x057A,
+    0x15DE, 0x2192, 0x1179, 0x04F6, 0x00B0, 0x14EF, 0x0048, 0x4A5E,
+    0x03E0, 0x198B, 0x0FDE, 0x0276, 0x031E, 0x02DA, 0x01D1, 0x00E9,
+    0x0063, 0x00EE, 0x05BD, 0x0072, 0x007C, 0x0010, 0x0017, 0x000B,
+    0x03E0, 0x00AF, 0x00D0, 0x00D0, 0x0111, 0x0132, 0x0133, 0x0076,
+    0x0134, 0x01D1, 0x0116, 0x0179, 0x00ED, 0x05BE, 0x033B, 0x03DF,
+    0x701F, 0x0380, 0x1700, 0x3EC1, 0x35CE, 0x4A52, 0x29E0, 0x2129,
+    0x1920, 0x10C6, 0x10E0, 0x0883, 0x0CA0, 0x0860, 0x0440, 0x0000,
+    0x03E0, 0x1CC6, 0x107F, 0x0D04, 0x0F9F, 0x094C, 0x0864, 0x05D4,
+    0x0ABE, 0x227F, 0x09BE, 0x1D5F, 0x086B, 0x14DF, 0x0C9B, 0x0873,
+    0x7C1F, 0x218A, 0x10C6, 0x25D0, 0x02FF, 0x1D8E, 0x150A, 0x152D,
+    0x08CA, 0x09FF, 0x0464, 0x21F7, 0x1993, 0x0D53, 0x00CF, 0x055A,
+    0x7C1F, 0x0A3E, 0x0488, 0x152E, 0x055A, 0x5AD4, 0x21B1, 0x14E8,
+    0x7F71, 0x4900, 0x6DA0, 0x7E85, 0x7FFD, 0x15FC, 0x02FF, 0x218C,
+    0x6C1F, 0x7F78, 0x7379, 0x7B35, 0x72D4, 0x5ED4, 0x72D0, 0x5E70,
+    0x5271, 0x6A8C, 0x5E2D, 0x4E0E, 0x5628, 0x4DCB, 0x7FDC, 0x49A5,
+    0x03E0, 0x77B9, 0x6356, 0x52D3, 0x001F, 0x001F, 0x001F, 0x001F,
+    0x3E4F, 0x2DEC, 0x198A, 0x2569, 0x1128, 0x08E6, 0x0483, 0x7FFF,
+    0x03E0, 0x3504, 0x3D45, 0x4DA8, 0x4566, 0x1860, 0x20C2, 0x28E4,
+    0x3126, 0x3DA9, 0x3568, 0x2504, 0x3187, 0x462E, 0x3A6C, 0x0C00,
+    0x03E0, 0x023D, 0x0131, 0x05B4, 0x04AB, 0x4E25, 0x1862, 0x24A3,
+    0x2CE4, 0x2679, 0x3F1E, 0x3569, 0x49EE, 0x6B17, 0x5693, 0x77BD,
+    0x35AC, 0x2192, 0x14EF, 0x04F6, 0x1179, 0x023F, 0x03FF, 0x03E9,
+    0x1248, 0x42FA, 0x5D87, 0x7E60, 0x4414, 0x401F, 0x001C, 0x0000,
+    0x53E0, 0x7E60, 0x5C1F, 0x03FF, 0x03E9, 0x25B3, 0x471C, 0x7FFF,
+    0x163F, 0x057A, 0x0116, 0x00B0, 0x000B, 0x0000, 0x1248, 0x045B,
+};
+
+const struct anim_frame_record gStaticData_08179380[13] = {
+    { 128, 0, 20, 0, 0x0, { 0, 0 } },
+    { 128, 20, 39, 0, 0x0, { 0, 0 } },
+    { 128, 59, 20, 0, 0x0, { 0, 0 } },
+    { 64, 79, 9, 8, 0x0, { 0, 0 } },
+    { 128, 88, 9, 8, 0x0, { 0, 0 } },
+    { 64, 97, 16, 0, 0x0, { 0, 0 } },
+    { 64, 113, 8, 7, 0x0, { 0, 0 } },
+    { 64, 121, 11, 0, 0x0, { 0, 0 } },
+    { 128, 132, 1, 0, 0x0, { 0, 0 } },
+    { 128, 133, 23, 22, 0x0, { 0, 0 } },
+    { 64, 117, 4, 3, 0x0, { 0, 0 } },
+    { 64, 60, 2, 0, 0x0, { 0, 0 } },
+    { 64, 0, 1, 0, 0x0, { 0, 0 } },
+};
+
+const u8 *const gStaticData_0817941C[156] = {
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_000,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_001,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_002,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_003,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_004,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_005,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_006,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_007,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_008,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_009,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_010,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_011,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_012,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_013,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_014,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_015,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_016,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_017,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_018,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_019,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_020,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_021,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_022,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_023,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_024,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_025,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_026,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_027,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_028,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_029,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_030,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_031,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_032,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_033,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_034,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_035,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_036,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_037,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_038,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_039,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_040,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_041,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_042,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_043,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_044,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_045,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_046,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_047,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_048,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_049,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_050,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_051,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_052,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_053,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_054,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_055,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_056,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_057,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_058,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_059,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_060,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_061,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_062,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_063,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_064,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_065,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_066,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_067,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_068,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_069,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_070,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_071,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_072,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_073,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_074,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_075,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_076,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_077,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_078,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_079,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_080,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_081,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_082,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_083,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_084,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_085,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_086,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_087,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_088,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_089,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_090,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_091,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_092,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_093,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_094,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_095,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_096,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_136,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_137,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_138,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_139,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_140,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_141,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_142,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_143,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_144,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_145,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_146,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_147,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_148,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_149,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_150,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_151,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_020,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_021,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_022,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_023,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_097,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_098,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_099,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_100,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_101,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_102,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_103,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_104,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_105,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_106,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_107,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_108,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_109,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_110,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_111,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_135,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_112,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_113,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_114,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_115,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_116,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_117,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_118,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_119,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_120,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_121,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_122,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_123,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_124,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_125,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_126,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_127,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_128,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_129,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_130,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_131,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_132,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_133,
+    gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_134,
+};
+
+const struct anim_frame_record gStaticData_0817968C[2] = {
+    { 64, 0, 9, 8, 0x0, { 0, 0 } },
+    { 64, 9, 1, 0, 0x0, { 0, 0 } },
+};
+
+const u32 gStaticData_081796A4[10] = {
+    FRAMED_0B2120_SMALL_CREATURE_00,
+    FRAMED_0B2120_SMALL_CREATURE_01,
+    FRAMED_0B2120_SMALL_CREATURE_02,
+    FRAMED_0B2120_SMALL_CREATURE_03,
+    FRAMED_0B2120_SMALL_CREATURE_04,
+    FRAMED_0B2120_SMALL_CREATURE_05,
+    FRAMED_0B2120_SMALL_CREATURE_06,
+    FRAMED_0B2120_SMALL_CREATURE_07,
+    FRAMED_0B2120_SMALL_CREATURE_08,
+    FRAMED_0B2120_SMALL_CREATURE_09,
+};
+
+const struct anim_table_record gStaticData_081796CC[41] = {
+    { 0, (struct anim_frame_record *)gStaticData_08179380, (u32 *)gStaticData_0817941C, 0, { 0 }, 0x2F00, { -10, -20, -1, 20, 44, 3 }, 0, 0 },
+    { 1, (struct anim_frame_record *)gStaticData_0817A04C, (u32 *)gStaticData_0817A130, 1, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
+    { 2, (struct anim_frame_record *)gStaticData_0817968C, (u32 *)gStaticData_081796A4, 0, { 0 }, 0x2F00, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
+    { 3, (struct anim_frame_record *)gStaticData_0817A62C, (u32 *)gStaticData_0817A5DC, 5, { 0 }, 0x313C, { -12, -20, -2, 24, 30, 5 }, 0, 256 },
+    { 4, (struct anim_frame_record *)gStaticData_0817A16C, (u32 *)gStaticData_0817A250, 2, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
+    { 5, (struct anim_frame_record *)gStaticData_0817A2B8, (u32 *)gStaticData_0817A39C, 4, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
+    { 6, (struct anim_frame_record *)gStaticData_0817A2B8, (u32 *)gStaticData_0817A3FC, 4, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
+    { 7, (struct anim_frame_record *)gStaticData_0817A2B8, (u32 *)gStaticData_0817A45C, 4, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
+    { 8, (struct anim_frame_record *)gStaticData_0817A2B8, (u32 *)gStaticData_0817A51C, 3, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
+    { 9, (struct anim_frame_record *)gStaticData_0817A2B8, (u32 *)gStaticData_0817A57C, 3, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
+    { 10, (struct anim_frame_record *)gStaticData_0817A04C, (u32 *)gStaticData_0817A130, 1, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
+    { 11, (struct anim_frame_record *)gStaticData_08179D34, (u32 *)gStaticData_08179D40, 7, { 0 }, 0x2849, { -12, -12, -1, 24, 24, 3 }, 0, 0 },
+    { 12, (struct anim_frame_record *)gStaticData_08179DE0, (u32 *)gStaticData_08179E04, 6, { 0 }, 0x2849, { -1, 4, -2, 2, 10, 4 }, 0, 0 },
+    { 13, (struct anim_frame_record *)gStaticData_08179FE8, (u32 *)gStaticData_08179FE4, 11, { 0 }, 0x2DE1, { -30, -4, -1, 120, 20, 3 }, -7680, -1024 },
+    { 14, (struct anim_frame_record *)gStaticData_08179FE8, (u32 *)gStaticData_08179FE4, 11, { 0 }, 0x2DE1, { 0, 0, 0, 0, 0, 0 }, 7680, 0 },
+    { 0, (struct anim_frame_record *)gStaticData_08179DE0, (u32 *)gStaticData_08179E04, 6, { 0 }, 0x2849, { -10, 8, -1, 20, 3, 3 }, 0, 0 },
+    { 16, (struct anim_frame_record *)gStaticData_08179E94, (u32 *)gStaticData_08179FB4, 10, { 0 }, 0x2F00, { -8, -20, 0, 16, 36, 1 }, 0, 0 },
+    { 17, (struct anim_frame_record *)gStaticData_08179E94, (u32 *)gStaticData_08179FB4, 10, { 0 }, 0x2F00, { -8, -20, 0, 16, 36, 1 }, 0, 0 },
+    { 18, (struct anim_frame_record *)gStaticData_08179E94, (u32 *)gStaticData_08179FB4, 10, { 0 }, 0x2F00, { -4, -20, 0, 8, 36, 1 }, 0, 0 },
+    { 19, (struct anim_frame_record *)gStaticData_08179E94, (u32 *)gStaticData_08179FB4, 10, { 0 }, 0x2F00, { -4, -20, 0, 8, 36, 1 }, 0, 0 },
+    { 20, (struct anim_frame_record *)gStaticData_08179E94, (u32 *)gStaticData_08179FB4, 10, { 0 }, 0x2F00, { -3, -12, 0, 6, 24, 1 }, 0, -2048 },
+    { 21, (struct anim_frame_record *)gStaticData_08179E94, (u32 *)gStaticData_08179FB4, 10, { 0 }, 0x2F00, { -3, -12, 0, 6, 24, 1 }, 0, -2048 },
+    { 22, (struct anim_frame_record *)gStaticData_08179D78, (u32 *)gStaticData_08179D90, 8, { 0 }, 0x313C, { -9, -1, -1, 18, 4, 2 }, 0, 2048 },
+    { 23, (struct anim_frame_record *)gStaticData_08179E24, (u32 *)gStaticData_08179E3C, 9, { 0 }, 0x260C, { -24, -25, 0, 48, 40, 1 }, 0, -1024 },
+    { 24, (struct anim_frame_record *)gStaticData_0817A040, (u32 *)gStaticData_0817A01C, 13, { 0 }, 0x36D5, { -12, -2, -1, 24, 12, 2 }, 0, 0 },
+    { 25, (struct anim_frame_record *)gStaticData_0817A004, (u32 *)gStaticData_0817A000, 12, { 0 }, 0x2CC3, { -30, -120, -28, 120, 140, 3 }, -7680, 1536 },
+    { 26, (struct anim_frame_record *)gStaticData_0817A004, (u32 *)gStaticData_0817A000, 12, { 0 }, 0x2CC3, { 0, 0, 0, 0, 0, 0 }, 7680, 0 },
+    { 27, (struct anim_frame_record *)gStaticData_0817A688, (u32 *)gStaticData_0817A65C, 14, { 0 }, 0x2F00, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
+    { 28, (struct anim_frame_record *)gStaticData_0817A2B8, (u32 *)gStaticData_0817A4BC, 1, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
+    { 29, (struct anim_frame_record *)gStaticData_0817A2B8, (u32 *)gStaticData_0817A4BC, 1, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
+    { 30, (struct anim_frame_record *)gStaticData_0817A2B8, (u32 *)gStaticData_0817A4BC, 1, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
+    { 31, (struct anim_frame_record *)gStaticData_0817A2B8, (u32 *)gStaticData_0817A4BC, 1, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
+    { 32 }, /* unused */
+    { 33 }, /* unused */
+    { 34 }, /* unused */
+    { 35, (struct anim_frame_record *)gStaticData_0817A2B8, (u32 *)gStaticData_0817A4BC, 1, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
+    { 36, (struct anim_frame_record *)gStaticData_08179DE0, (u32 *)gStaticData_08179E04, 6, { 0 }, 0x2849, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
+    { 37, (struct anim_frame_record *)gStaticData_08179DE0, (u32 *)gStaticData_08179E04, 6, { 0 }, 0x2849, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
+    { 38, (struct anim_frame_record *)gStaticData_08179DE0, (u32 *)gStaticData_08179E04, 6, { 0 }, 0x2849, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
+    { 39, (struct anim_frame_record *)gStaticData_08179DE0, (u32 *)gStaticData_08179E04, 6, { 0 }, 0x2849, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
+    { 40, (struct anim_frame_record *)gStaticData_0817A6A0, (u32 *)gStaticData_0817A6AC, 7, { 0 }, 0x313C, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
+};
+
+const struct anim_frame_record gStaticData_08179D34[1] = {
+    { 85, 0, 14, 0, 0x0, { 0, 0 } },
+};
+
+const u32 gStaticData_08179D40[14] = {
+    FRAMED_0B2120_WUMPA_FRUIT_00,
+    FRAMED_0B2120_WUMPA_FRUIT_01,
+    FRAMED_0B2120_WUMPA_FRUIT_02,
+    FRAMED_0B2120_WUMPA_FRUIT_03,
+    FRAMED_0B2120_WUMPA_FRUIT_04,
+    FRAMED_0B2120_WUMPA_FRUIT_05,
+    FRAMED_0B2120_WUMPA_FRUIT_06,
+    FRAMED_0B2120_WUMPA_FRUIT_07,
+    FRAMED_0B2120_WUMPA_FRUIT_08,
+    FRAMED_0B2120_WUMPA_FRUIT_09,
+    FRAMED_0B2120_WUMPA_FRUIT_10,
+    FRAMED_0B2120_WUMPA_FRUIT_11,
+    FRAMED_0B2120_WUMPA_FRUIT_12,
+    FRAMED_0B2120_WUMPA_FRUIT_13,
+};
+
+const struct anim_frame_record gStaticData_08179D78[2] = {
+    { 64, 0, 10, 0, 0x0, { 0, 0 } },
+    { 64, 10, 10, 0, 0x0, { 0, 0 } },
+};
+
+const u32 gStaticData_08179D90[20] = {
+    FRAMED_0B2120_EMERGING_CREATURE_00,
+    FRAMED_0B2120_EMERGING_CREATURE_01,
+    FRAMED_0B2120_EMERGING_CREATURE_02,
+    FRAMED_0B2120_EMERGING_CREATURE_03,
+    FRAMED_0B2120_EMERGING_CREATURE_04,
+    FRAMED_0B2120_EMERGING_CREATURE_05,
+    FRAMED_0B2120_EMERGING_CREATURE_06,
+    FRAMED_0B2120_EMERGING_CREATURE_07,
+    FRAMED_0B2120_EMERGING_CREATURE_08,
+    FRAMED_0B2120_EMERGING_CREATURE_09,
+    FRAMED_0B2120_EMERGING_CREATURE_10,
+    FRAMED_0B2120_EMERGING_CREATURE_11,
+    FRAMED_0B2120_EMERGING_CREATURE_12,
+    FRAMED_0B2120_EMERGING_CREATURE_13,
+    FRAMED_0B2120_EMERGING_CREATURE_14,
+    FRAMED_0B2120_EMERGING_CREATURE_15,
+    FRAMED_0B2120_EMERGING_CREATURE_16,
+    FRAMED_0B2120_EMERGING_CREATURE_17,
+    FRAMED_0B2120_EMERGING_CREATURE_18,
+    FRAMED_0B2120_EMERGING_CREATURE_19,
+};
+
+const struct anim_frame_record gStaticData_08179DE0[3] = {
+    { 42, 4, 4, 0, 0x1000, { 0, 0 } },
+    { 42, 0, 4, 0, 0x0, { 0, 0 } },
+    { 42, 4, 4, 0, 0x0, { 0, 0 } },
+};
+
+const u32 gStaticData_08179E04[8] = {
+    FRAMED_0B2120_RECORD_SLOT12_00,
+    FRAMED_0B2120_RECORD_SLOT12_01,
+    FRAMED_0B2120_RECORD_SLOT12_02,
+    FRAMED_0B2120_RECORD_SLOT12_03,
+    FRAMED_0B2120_RECORD_SLOT12_04,
+    FRAMED_0B2120_RECORD_SLOT12_05,
+    FRAMED_0B2120_RECORD_SLOT12_06,
+    FRAMED_0B2120_RECORD_SLOT12_07,
+};
+
+const struct anim_frame_record gStaticData_08179E24[2] = {
+    { 64, 0, 8, 0, 0x0, { 0, 0 } },
+    { 64, 8, 14, 13, 0x0, { 0, 0 } },
+};
+
+const u32 gStaticData_08179E3C[22] = {
+    FRAMED_0B2120_GUARD_BARRIER_00,
+    FRAMED_0B2120_GUARD_BARRIER_01,
+    FRAMED_0B2120_GUARD_BARRIER_02,
+    FRAMED_0B2120_GUARD_BARRIER_03,
+    FRAMED_0B2120_GUARD_BARRIER_04,
+    FRAMED_0B2120_GUARD_BARRIER_05,
+    FRAMED_0B2120_GUARD_BARRIER_06,
+    FRAMED_0B2120_GUARD_BARRIER_07,
+    FRAMED_0B2120_EMERGING_CREATURE_40,
+    FRAMED_0B2120_EMERGING_CREATURE_41,
+    FRAMED_0B2120_EMERGING_CREATURE_42,
+    FRAMED_0B2120_EMERGING_CREATURE_43,
+    FRAMED_0B2120_EMERGING_CREATURE_44,
+    FRAMED_0B2120_EMERGING_CREATURE_45,
+    FRAMED_0B2120_EMERGING_CREATURE_46,
+    FRAMED_0B2120_EMERGING_CREATURE_47,
+    FRAMED_0B2120_EMERGING_CREATURE_48,
+    FRAMED_0B2120_EMERGING_CREATURE_49,
+    FRAMED_0B2120_EMERGING_CREATURE_50,
+    FRAMED_0B2120_EMERGING_CREATURE_51,
+    FRAMED_0B2120_EMERGING_CREATURE_52,
+    FRAMED_0B2120_EMERGING_CREATURE_53,
+};
+
+const struct anim_frame_record gStaticData_08179E94[24] = {
+    { 0, 0, 1, 0, 0x0, { 0, 0 } },
+    { 0, 1, 1, 0, 0x0, { 0, 0 } },
+    { 0, 2, 1, 0, 0x0, { 0, 0 } },
+    { 0, 3, 1, 0, 0x0, { 0, 0 } },
+    { 0, 0, 1, 0, 0x1000, { 0, 0 } },
+    { 0, 1, 1, 0, 0x1000, { 0, 0 } },
+    { 0, 2, 1, 0, 0x1000, { 0, 0 } },
+    { 0, 3, 1, 0, 0x1000, { 0, 0 } },
+    { 0, 4, 1, 0, 0x0, { 0, 0 } },
+    { 0, 5, 1, 0, 0x0, { 0, 0 } },
+    { 0, 6, 1, 0, 0x0, { 0, 0 } },
+    { 0, 7, 1, 0, 0x0, { 0, 0 } },
+    { 0, 4, 1, 0, 0x1000, { 0, 0 } },
+    { 0, 5, 1, 0, 0x1000, { 0, 0 } },
+    { 0, 6, 1, 0, 0x1000, { 0, 0 } },
+    { 0, 7, 1, 0, 0x1000, { 0, 0 } },
+    { 0, 8, 1, 0, 0x0, { 0, 0 } },
+    { 0, 9, 1, 0, 0x0, { 0, 0 } },
+    { 0, 10, 1, 0, 0x0, { 0, 0 } },
+    { 0, 11, 1, 0, 0x0, { 0, 0 } },
+    { 0, 8, 1, 0, 0x1000, { 0, 0 } },
+    { 0, 9, 1, 0, 0x1000, { 0, 0 } },
+    { 0, 10, 1, 0, 0x1000, { 0, 0 } },
+    { 0, 11, 1, 0, 0x1000, { 0, 0 } },
+};
+
+const u32 gStaticData_08179FB4[12] = {
+    FRAMED_0B2120_RECORD_SLOT16_00,
+    FRAMED_0B2120_RECORD_SLOT16_01,
+    FRAMED_0B2120_RECORD_SLOT16_02,
+    FRAMED_0B2120_RECORD_SLOT16_03,
+    FRAMED_0B2120_RECORD_SLOT16_04,
+    FRAMED_0B2120_RECORD_SLOT16_05,
+    FRAMED_0B2120_RECORD_SLOT16_06,
+    FRAMED_0B2120_RECORD_SLOT16_07,
+    FRAMED_0B2120_RECORD_SLOT16_08,
+    FRAMED_0B2120_RECORD_SLOT16_09,
+    FRAMED_0B2120_RECORD_SLOT16_10,
+    FRAMED_0B2120_RECORD_SLOT16_11,
+};
+
+const u32 gStaticData_08179FE4[1] = {
+    FRAMED_0B2120_RECORD_SLOT13_00,
+};
+
+const struct anim_frame_record gStaticData_08179FE8[2] = {
+    { 0, 0, 1, 0, 0x0, { 0, 0 } },
+    { 0, 0, 1, 0, 0x1000, { 0, 0 } },
+};
+
+const u32 gStaticData_0817A000[1] = {
+    FRAMED_0B2120_RECORD_SLOT25_00,
+};
+
+const struct anim_frame_record gStaticData_0817A004[2] = {
+    { 0, 0, 1, 0, 0x0, { 0, 0 } },
+    { 0, 0, 1, 0, 0x1000, { 0, 0 } },
+};
+
+const u32 gStaticData_0817A01C[9] = {
+    FRAMED_0B2120_RECORD_SLOT24_00,
+    FRAMED_0B2120_RECORD_SLOT24_01,
+    FRAMED_0B2120_RECORD_SLOT24_02,
+    FRAMED_0B2120_RECORD_SLOT24_03,
+    FRAMED_0B2120_RECORD_SLOT24_04,
+    FRAMED_0B2120_RECORD_SLOT24_05,
+    FRAMED_0B2120_RECORD_SLOT24_06,
+    FRAMED_0B2120_RECORD_SLOT24_07,
+    FRAMED_0B2120_RECORD_SLOT24_08,
+};
+
+const struct anim_frame_record gStaticData_0817A040[1] = {
+    { 64, 0, 9, 0, 0x0, { 0, 0 } },
+};
+
+const struct anim_frame_record gStaticData_0817A04C[19] = {
+    { 0, 0, 1, 0, 0x0, { 0, 0 } },
+    { 0, 1, 1, 0, 0x0, { 0, 0 } },
+    { 0, 2, 1, 0, 0x0, { 0, 0 } },
+    { 0, 2, 1, 0, 0x1000, { 0, 0 } },
+    { 0, 1, 1, 0, 0x1000, { 0, 0 } },
+    { 0, 0, 1, 0, 0x1000, { 0, 0 } },
+    { 0, 3, 1, 0, 0x0, { 0, 0 } },
+    { 0, 4, 1, 0, 0x0, { 0, 0 } },
+    { 0, 5, 1, 0, 0x0, { 0, 0 } },
+    { 0, 5, 1, 0, 0x1000, { 0, 0 } },
+    { 0, 4, 1, 0, 0x1000, { 0, 0 } },
+    { 0, 3, 1, 0, 0x1000, { 0, 0 } },
+    { 0, 6, 1, 0, 0x0, { 0, 0 } },
+    { 0, 7, 1, 0, 0x0, { 0, 0 } },
+    { 0, 8, 1, 0, 0x0, { 0, 0 } },
+    { 0, 8, 1, 0, 0x1000, { 0, 0 } },
+    { 0, 7, 1, 0, 0x1000, { 0, 0 } },
+    { 0, 6, 1, 0, 0x1000, { 0, 0 } },
+    { 51, 9, 6, 5, 0x0, { 0, 0 } },
+};
+
+const u32 gStaticData_0817A130[15] = {
+    FRAMED_0B2120_TNT_CRATE_00,
+    FRAMED_0B2120_TNT_CRATE_01,
+    FRAMED_0B2120_TNT_CRATE_02,
+    FRAMED_0B2120_TNT_CRATE_03,
+    FRAMED_0B2120_TNT_CRATE_04,
+    FRAMED_0B2120_TNT_CRATE_05,
+    FRAMED_0B2120_TNT_CRATE_06,
+    FRAMED_0B2120_TNT_CRATE_07,
+    FRAMED_0B2120_TNT_CRATE_08,
+    FRAMED_0B2120_EMERGING_CREATURE_20,
+    FRAMED_0B2120_EMERGING_CREATURE_21,
+    FRAMED_0B2120_EMERGING_CREATURE_22,
+    FRAMED_0B2120_EMERGING_CREATURE_23,
+    FRAMED_0B2120_EMERGING_CREATURE_24,
+    FRAMED_0B2120_EMERGING_CREATURE_25,
+};
+
+const struct anim_frame_record gStaticData_0817A16C[19] = {
+    { 0, 0, 1, 0, 0x0, { 0, 0 } },
+    { 0, 1, 1, 0, 0x0, { 0, 0 } },
+    { 0, 2, 1, 0, 0x0, { 0, 0 } },
+    { 0, 3, 1, 0, 0x0, { 0, 0 } },
+    { 0, 4, 1, 0, 0x0, { 0, 0 } },
+    { 0, 5, 1, 0, 0x0, { 0, 0 } },
+    { 0, 6, 1, 0, 0x0, { 0, 0 } },
+    { 0, 7, 1, 0, 0x0, { 0, 0 } },
+    { 0, 8, 1, 0, 0x0, { 0, 0 } },
+    { 0, 9, 1, 0, 0x0, { 0, 0 } },
+    { 0, 10, 1, 0, 0x0, { 0, 0 } },
+    { 0, 11, 1, 0, 0x0, { 0, 0 } },
+    { 0, 12, 1, 0, 0x0, { 0, 0 } },
+    { 0, 13, 1, 0, 0x0, { 0, 0 } },
+    { 0, 14, 1, 0, 0x0, { 0, 0 } },
+    { 0, 15, 1, 0, 0x0, { 0, 0 } },
+    { 0, 16, 1, 0, 0x0, { 0, 0 } },
+    { 0, 17, 1, 0, 0x0, { 0, 0 } },
+    { 51, 18, 8, 7, 0x0, { 0, 0 } },
+};
+
+const u32 gStaticData_0817A250[26] = {
+    FRAMED_0B2120_NITRO_CRATE_00,
+    FRAMED_0B2120_NITRO_CRATE_01,
+    FRAMED_0B2120_NITRO_CRATE_02,
+    FRAMED_0B2120_NITRO_CRATE_03,
+    FRAMED_0B2120_NITRO_CRATE_04,
+    FRAMED_0B2120_NITRO_CRATE_05,
+    FRAMED_0B2120_NITRO_CRATE_06,
+    FRAMED_0B2120_NITRO_CRATE_07,
+    FRAMED_0B2120_NITRO_CRATE_08,
+    FRAMED_0B2120_NITRO_CRATE_09,
+    FRAMED_0B2120_NITRO_CRATE_10,
+    FRAMED_0B2120_NITRO_CRATE_11,
+    FRAMED_0B2120_NITRO_CRATE_12,
+    FRAMED_0B2120_NITRO_CRATE_13,
+    FRAMED_0B2120_NITRO_CRATE_14,
+    FRAMED_0B2120_NITRO_CRATE_15,
+    FRAMED_0B2120_NITRO_CRATE_16,
+    FRAMED_0B2120_NITRO_CRATE_17,
+    FRAMED_0B2120_EMERGING_CREATURE_26,
+    FRAMED_0B2120_EMERGING_CREATURE_27,
+    FRAMED_0B2120_EMERGING_CREATURE_28,
+    FRAMED_0B2120_EMERGING_CREATURE_29,
+    FRAMED_0B2120_EMERGING_CREATURE_30,
+    FRAMED_0B2120_EMERGING_CREATURE_31,
+    FRAMED_0B2120_EMERGING_CREATURE_32,
+    FRAMED_0B2120_EMERGING_CREATURE_33,
+};
+
+const struct anim_frame_record gStaticData_0817A2B8[19] = {
+    { 0, 0, 1, 0, 0x0, { 0, 0 } },
+    { 0, 1, 1, 0, 0x0, { 0, 0 } },
+    { 0, 2, 1, 0, 0x0, { 0, 0 } },
+    { 0, 3, 1, 0, 0x0, { 0, 0 } },
+    { 0, 4, 1, 0, 0x0, { 0, 0 } },
+    { 0, 5, 1, 0, 0x0, { 0, 0 } },
+    { 0, 6, 1, 0, 0x0, { 0, 0 } },
+    { 0, 7, 1, 0, 0x0, { 0, 0 } },
+    { 0, 8, 1, 0, 0x0, { 0, 0 } },
+    { 0, 9, 1, 0, 0x0, { 0, 0 } },
+    { 0, 10, 1, 0, 0x0, { 0, 0 } },
+    { 0, 11, 1, 0, 0x0, { 0, 0 } },
+    { 0, 12, 1, 0, 0x0, { 0, 0 } },
+    { 0, 13, 1, 0, 0x0, { 0, 0 } },
+    { 0, 14, 1, 0, 0x0, { 0, 0 } },
+    { 0, 15, 1, 0, 0x0, { 0, 0 } },
+    { 0, 16, 1, 0, 0x0, { 0, 0 } },
+    { 0, 17, 1, 0, 0x0, { 0, 0 } },
+    { 51, 18, 6, 5, 0x0, { 0, 0 } },
+};
+
+const u32 gStaticData_0817A39C[24] = {
+    FRAMED_0B2120_CRATE_VARIANT_A_00,
+    FRAMED_0B2120_CRATE_VARIANT_A_01,
+    FRAMED_0B2120_CRATE_VARIANT_A_02,
+    FRAMED_0B2120_CRATE_VARIANT_A_03,
+    FRAMED_0B2120_CRATE_VARIANT_A_04,
+    FRAMED_0B2120_CRATE_VARIANT_A_05,
+    FRAMED_0B2120_CRATE_VARIANT_A_06,
+    FRAMED_0B2120_CRATE_VARIANT_A_07,
+    FRAMED_0B2120_CRATE_VARIANT_A_08,
+    FRAMED_0B2120_CRATE_VARIANT_A_09,
+    FRAMED_0B2120_CRATE_VARIANT_A_10,
+    FRAMED_0B2120_CRATE_VARIANT_A_11,
+    FRAMED_0B2120_CRATE_VARIANT_A_12,
+    FRAMED_0B2120_CRATE_VARIANT_A_13,
+    FRAMED_0B2120_CRATE_VARIANT_A_14,
+    FRAMED_0B2120_CRATE_VARIANT_A_15,
+    FRAMED_0B2120_CRATE_VARIANT_A_16,
+    FRAMED_0B2120_CRATE_VARIANT_A_17,
+    FRAMED_0B2120_EMERGING_CREATURE_34,
+    FRAMED_0B2120_EMERGING_CREATURE_35,
+    FRAMED_0B2120_EMERGING_CREATURE_36,
+    FRAMED_0B2120_EMERGING_CREATURE_37,
+    FRAMED_0B2120_EMERGING_CREATURE_38,
+    FRAMED_0B2120_EMERGING_CREATURE_39,
+};
+
+const u32 gStaticData_0817A3FC[24] = {
+    FRAMED_0B2120_CRATE_VARIANT_B_00,
+    FRAMED_0B2120_CRATE_VARIANT_B_01,
+    FRAMED_0B2120_CRATE_VARIANT_B_02,
+    FRAMED_0B2120_CRATE_VARIANT_B_03,
+    FRAMED_0B2120_CRATE_VARIANT_B_04,
+    FRAMED_0B2120_CRATE_VARIANT_B_05,
+    FRAMED_0B2120_CRATE_VARIANT_B_06,
+    FRAMED_0B2120_CRATE_VARIANT_B_07,
+    FRAMED_0B2120_CRATE_VARIANT_B_08,
+    FRAMED_0B2120_CRATE_VARIANT_B_09,
+    FRAMED_0B2120_CRATE_VARIANT_B_10,
+    FRAMED_0B2120_CRATE_VARIANT_B_11,
+    FRAMED_0B2120_CRATE_VARIANT_B_12,
+    FRAMED_0B2120_CRATE_VARIANT_B_13,
+    FRAMED_0B2120_CRATE_VARIANT_B_14,
+    FRAMED_0B2120_CRATE_VARIANT_B_15,
+    FRAMED_0B2120_CRATE_VARIANT_B_16,
+    FRAMED_0B2120_CRATE_VARIANT_B_17,
+    FRAMED_0B2120_EMERGING_CREATURE_34,
+    FRAMED_0B2120_EMERGING_CREATURE_35,
+    FRAMED_0B2120_EMERGING_CREATURE_36,
+    FRAMED_0B2120_EMERGING_CREATURE_37,
+    FRAMED_0B2120_EMERGING_CREATURE_38,
+    FRAMED_0B2120_EMERGING_CREATURE_39,
+};
+
+const u32 gStaticData_0817A45C[24] = {
+    FRAMED_0B2120_CRATE_VARIANT_C_00,
+    FRAMED_0B2120_CRATE_VARIANT_C_01,
+    FRAMED_0B2120_CRATE_VARIANT_C_02,
+    FRAMED_0B2120_CRATE_VARIANT_C_03,
+    FRAMED_0B2120_CRATE_VARIANT_C_04,
+    FRAMED_0B2120_CRATE_VARIANT_C_05,
+    FRAMED_0B2120_CRATE_VARIANT_C_06,
+    FRAMED_0B2120_CRATE_VARIANT_C_07,
+    FRAMED_0B2120_CRATE_VARIANT_C_08,
+    FRAMED_0B2120_CRATE_VARIANT_C_09,
+    FRAMED_0B2120_CRATE_VARIANT_C_10,
+    FRAMED_0B2120_CRATE_VARIANT_C_11,
+    FRAMED_0B2120_CRATE_VARIANT_C_12,
+    FRAMED_0B2120_CRATE_VARIANT_C_13,
+    FRAMED_0B2120_CRATE_VARIANT_C_14,
+    FRAMED_0B2120_CRATE_VARIANT_C_15,
+    FRAMED_0B2120_CRATE_VARIANT_C_16,
+    FRAMED_0B2120_CRATE_VARIANT_C_17,
+    FRAMED_0B2120_EMERGING_CREATURE_34,
+    FRAMED_0B2120_EMERGING_CREATURE_35,
+    FRAMED_0B2120_EMERGING_CREATURE_36,
+    FRAMED_0B2120_EMERGING_CREATURE_37,
+    FRAMED_0B2120_EMERGING_CREATURE_38,
+    FRAMED_0B2120_EMERGING_CREATURE_39,
+};
+
+const u32 gStaticData_0817A4BC[24] = {
+    FRAMED_0B2120_RECORD_SLOT28_00,
+    FRAMED_0B2120_RECORD_SLOT28_01,
+    FRAMED_0B2120_RECORD_SLOT28_02,
+    FRAMED_0B2120_RECORD_SLOT28_03,
+    FRAMED_0B2120_RECORD_SLOT28_04,
+    FRAMED_0B2120_RECORD_SLOT28_05,
+    FRAMED_0B2120_RECORD_SLOT28_06,
+    FRAMED_0B2120_RECORD_SLOT28_07,
+    FRAMED_0B2120_RECORD_SLOT28_08,
+    FRAMED_0B2120_RECORD_SLOT28_09,
+    FRAMED_0B2120_RECORD_SLOT28_10,
+    FRAMED_0B2120_RECORD_SLOT28_11,
+    FRAMED_0B2120_RECORD_SLOT28_12,
+    FRAMED_0B2120_RECORD_SLOT28_13,
+    FRAMED_0B2120_RECORD_SLOT28_14,
+    FRAMED_0B2120_RECORD_SLOT28_15,
+    FRAMED_0B2120_RECORD_SLOT28_16,
+    FRAMED_0B2120_RECORD_SLOT28_17,
+    FRAMED_0B2120_EMERGING_CREATURE_20,
+    FRAMED_0B2120_EMERGING_CREATURE_21,
+    FRAMED_0B2120_EMERGING_CREATURE_22,
+    FRAMED_0B2120_EMERGING_CREATURE_23,
+    FRAMED_0B2120_EMERGING_CREATURE_24,
+    FRAMED_0B2120_EMERGING_CREATURE_25,
+};
+
+const u32 gStaticData_0817A51C[24] = {
+    FRAMED_0B2120_CRATE_VARIANT_D_00,
+    FRAMED_0B2120_CRATE_VARIANT_D_01,
+    FRAMED_0B2120_CRATE_VARIANT_D_02,
+    FRAMED_0B2120_CRATE_VARIANT_D_03,
+    FRAMED_0B2120_CRATE_VARIANT_D_04,
+    FRAMED_0B2120_CRATE_VARIANT_D_05,
+    FRAMED_0B2120_CRATE_VARIANT_D_06,
+    FRAMED_0B2120_CRATE_VARIANT_D_07,
+    FRAMED_0B2120_CRATE_VARIANT_D_08,
+    FRAMED_0B2120_CRATE_VARIANT_D_09,
+    FRAMED_0B2120_CRATE_VARIANT_D_10,
+    FRAMED_0B2120_CRATE_VARIANT_D_11,
+    FRAMED_0B2120_CRATE_VARIANT_D_12,
+    FRAMED_0B2120_CRATE_VARIANT_D_13,
+    FRAMED_0B2120_CRATE_VARIANT_D_14,
+    FRAMED_0B2120_CRATE_VARIANT_D_15,
+    FRAMED_0B2120_CRATE_VARIANT_D_16,
+    FRAMED_0B2120_CRATE_VARIANT_D_17,
+    FRAMED_0B2120_EMERGING_CREATURE_20,
+    FRAMED_0B2120_EMERGING_CREATURE_21,
+    FRAMED_0B2120_EMERGING_CREATURE_22,
+    FRAMED_0B2120_EMERGING_CREATURE_23,
+    FRAMED_0B2120_EMERGING_CREATURE_24,
+    FRAMED_0B2120_EMERGING_CREATURE_25,
+};
+
+const u32 gStaticData_0817A57C[24] = {
+    FRAMED_0B2120_CRATE_VARIANT_E_00,
+    FRAMED_0B2120_CRATE_VARIANT_E_01,
+    FRAMED_0B2120_CRATE_VARIANT_E_02,
+    FRAMED_0B2120_CRATE_VARIANT_E_03,
+    FRAMED_0B2120_CRATE_VARIANT_E_04,
+    FRAMED_0B2120_CRATE_VARIANT_E_05,
+    FRAMED_0B2120_CRATE_VARIANT_E_06,
+    FRAMED_0B2120_CRATE_VARIANT_E_07,
+    FRAMED_0B2120_CRATE_VARIANT_E_08,
+    FRAMED_0B2120_CRATE_VARIANT_E_09,
+    FRAMED_0B2120_CRATE_VARIANT_E_10,
+    FRAMED_0B2120_CRATE_VARIANT_E_11,
+    FRAMED_0B2120_CRATE_VARIANT_E_12,
+    FRAMED_0B2120_CRATE_VARIANT_E_13,
+    FRAMED_0B2120_CRATE_VARIANT_E_14,
+    FRAMED_0B2120_CRATE_VARIANT_E_15,
+    FRAMED_0B2120_CRATE_VARIANT_E_16,
+    FRAMED_0B2120_CRATE_VARIANT_E_17,
+    FRAMED_0B2120_EMERGING_CREATURE_20,
+    FRAMED_0B2120_EMERGING_CREATURE_21,
+    FRAMED_0B2120_EMERGING_CREATURE_22,
+    FRAMED_0B2120_EMERGING_CREATURE_23,
+    FRAMED_0B2120_EMERGING_CREATURE_24,
+    FRAMED_0B2120_EMERGING_CREATURE_25,
+};
+
+const u32 gStaticData_0817A5DC[20] = {
+    FRAMED_0B2120_BARREL_00,
+    FRAMED_0B2120_BARREL_01,
+    FRAMED_0B2120_BARREL_02,
+    FRAMED_0B2120_BARREL_03,
+    FRAMED_0B2120_BARREL_04,
+    FRAMED_0B2120_BARREL_05,
+    FRAMED_0B2120_BARREL_06,
+    FRAMED_0B2120_BARREL_07,
+    FRAMED_0B2120_BARREL_08,
+    FRAMED_0B2120_BARREL_09,
+    FRAMED_0B2120_BARREL_10,
+    FRAMED_0B2120_BARREL_11,
+    FRAMED_0B2120_BARREL_12,
+    FRAMED_0B2120_BARREL_13,
+    FRAMED_0B2120_EMERGING_CREATURE_20,
+    FRAMED_0B2120_EMERGING_CREATURE_21,
+    FRAMED_0B2120_EMERGING_CREATURE_22,
+    FRAMED_0B2120_EMERGING_CREATURE_23,
+    FRAMED_0B2120_EMERGING_CREATURE_24,
+    FRAMED_0B2120_EMERGING_CREATURE_25,
+};
+
+const struct anim_frame_record gStaticData_0817A62C[4] = {
+    { 128, 0, 1, 0, 0x0, { 0, 0 } },
+    { 128, 1, 13, 12, 0x0, { 0, 0 } },
+    { 128, 13, 1, 0, 0x0, { 0, 0 } },
+    { 51, 14, 6, 5, 0x0, { 0, 0 } },
+};
+
+const u32 gStaticData_0817A65C[11] = {
+    FRAMED_0B2120_RECORD_SLOT27_00,
+    FRAMED_0B2120_RECORD_SLOT27_01,
+    FRAMED_0B2120_RECORD_SLOT27_01,
+    FRAMED_0B2120_RECORD_SLOT27_01,
+    FRAMED_0B2120_RECORD_SLOT27_01,
+    FRAMED_0B2120_RECORD_SLOT27_01,
+    FRAMED_0B2120_EMERGING_CREATURE_54,
+    FRAMED_0B2120_EMERGING_CREATURE_55,
+    FRAMED_0B2120_EMERGING_CREATURE_56,
+    FRAMED_0B2120_EMERGING_CREATURE_57,
+    FRAMED_0B2120_EMERGING_CREATURE_58,
+};
+
+const struct anim_frame_record gStaticData_0817A688[2] = {
+    { 34, 0, 6, 0, 0x0, { 0, 0 } },
+    { 34, 6, 5, 4, 0x0, { 0, 0 } },
+};
+
+const struct anim_frame_record gStaticData_0817A6A0[1] = {
+    { 8, 0, 3, 0, 0x0, { 0, 0 } },
+};
+
+const u32 gStaticData_0817A6AC[3] = {
+    FRAMED_0B2120_CHECKPOINT_TEXT_00,
+    FRAMED_0B2120_CHECKPOINT_TEXT_00,
+    FRAMED_0B2120_CHECKPOINT_TEXT_00,
+};
