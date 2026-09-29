@@ -199,8 +199,10 @@ this address range." Genuinely untouched regions (nothing in
 
 Some of the ROM was never C: crt0.s's `start`, libgcc's `lib1funcs.asm`
 routines (`__udivsi3`, `__divsi3`, `__modsi3`, `__umodsi3`, `__div0` and
-the `_call_via_rN`/`_call_via_lr` trampolines), and the BIOS SWI wrappers
-(each is just `svc #N; bx lr`). There is nothing to decompile there, so
+the `_call_via_rN`/`_call_via_lr` trampolines), the BIOS SWI wrappers
+(each is just `svc #N; bx lr`) and `IntrMain`, the IWRAM image's
+interrupt dispatcher (`asm/intr_main.s`, first entry of `IWRAM_UNITS`,
+see "The IWRAM image" below). There is nothing to decompile there, so
 counting that code as unmatched (or as "matched", which is what happened
 while a NAKED transcription sat inside a C unit) would misstate progress.
 `tools/report_units.py` marks these ranges with `HANDWRITTEN` and emits no
@@ -209,6 +211,46 @@ crt0 is excluded the same way: its range comes before the first unit. The
 bytes are still verified by `make compare`. Only mark a range
 `HANDWRITTEN` once it's confirmed to be hand-written, not just hard to
 match.
+
+## The IWRAM image
+
+crt0 copies `0x9E8` bytes from ROM `0x087E55E4` to IWRAM `0x03000000` at
+boot. That image is built from source and linked the usual GBA way,
+with a separate run address (VMA) and load address (LMA):
+`ldscript.txt`'s `iwram` output section is placed at `0x03000000` with
+`AT(LOADADDR(ROM) + SIZEOF(ROM))`, so its bytes follow the ROM data and
+every symbol in it has its IWRAM address. `__iwram_lma` (its load
+address) is crt0's copy source, the length is still
+`gUnknown_030009E8 - IntrMain_Buffer`. The `rom_fill` section after it
+fills the rest of the 8 MB with `0xFF`. `sym_iwram.txt` only names the
+uninitialised IWRAM from `0x030009E8` on (its `IWRAM (NOLOAD)` section
+still starts at `0x03000000` and overlaps `iwram`; ld allows that for a
+NOLOAD section). The image holds, in order:
+
+- `asm/intr_main.s`: `IntrMain`, hand-written ARM - `HANDWRITTEN`.
+- `src/iwram/string_arm.c` and `src/iwram/sprite_arm.c`: compiled ARM C,
+  built with `tools/agbcc/bin/agbcc_arm` (the `ARM_OBJS` in the
+  Makefile: `-O2 -fomit-frame-pointer -mthumb-interwork`; agbcc_arm is
+  part of SAT-R/agbcc's install). Their `.text` goes into `iwram`.
+- `src/iwram/iwram_data.c`: the initialised globals from `0x030007CC`,
+  its `.data`.
+
+**Code units.** The report can't slice these from `expected/code_3.s`:
+the image was never disassembled as code there. `expected/iwram.s` is
+its frozen target, generated once from `baserom.gba` (ARM disassembly,
+branch targets and pool words as labels and symbols, IWRAM addresses in
+the `name: @ 0x030000D4` labels `slice_expected.py` looks for) and never
+edited again, like the other two. `tools/report_units.py` has a second
+address table, `IWRAM_UNITS`, in IWRAM addresses, whose targets
+`build_target()` slices from that file. objdiff reads ARM or Thumb from
+the objects' `$a`/`$t` mapping symbols, so ARM units need nothing else.
+The two C files are one unit each (`util` and `graphics`), and their
+functions count toward the code totals like any other.
+
+**Data unit.** `iwram_data.c`'s `.data` is the last data unit
+(`IWRAM_DATA` in the script, at ROM `IWRAM_LMA + 0x7CC`, target bytes
+from the ROM like any `src/data` table). The image's code bytes are not
+data any more, so `total_data` dropped by `0x7CC`.
 
 ## Byte-exact functions must score exactly 100%
 
@@ -256,7 +298,11 @@ where each is handled:
   those `bl`s.
 
 After these fixes, every function in a matched unit scores 100%. Every
-compiled function in the ROM is matched, so code progress reads 100%. A
+compiled Thumb function in the ROM is matched. Code progress is below
+100% only because of four ARM functions in the IWRAM image
+(`strncpy_arm`, `itoa_arm`, `HeapSortActorsByKey`,
+`LookupSpriteFrameCache`), parked because agbcc_arm's output differs
+from the ROM's compiler there (docs/matching/iwram-image.md). Any other
 function below 100% in a future report is either genuinely unmatched or
 a new case of one of the causes above.
 
@@ -333,10 +379,12 @@ that, so matching bytes can't be the test. The source is what decides.
 ROM (`0x08800000`), is linked from the `/* Data */` block of
 `ldscript.txt`: the sections of `data/data.s` (one label per blob and one
 `.incbin` per label) interleaved with the `.rodata` of the `src/data/*.c`
-tables, in ROM order. The last 106,548 bytes, from `0x087E5FCC` on (inside the final
-blob, `gStaticData_087E55E4`), are all `0xFF`: that's empty cartridge space,
-not data. The report ends the data range at `DATA_END = 0x087E5FCC` and
-trims that blob to match, which leaves 8,038,172 bytes of data. The
+tables, in ROM order, then the IWRAM image (`0x087E55E4`-`0x087E5FCC`,
+see "The IWRAM image": only its initialised data, `0x087E5DB0` on, is
+data; the rest is code). The last 106,548 bytes, from `0x087E5FCC` on
+(the linker's `rom_fill` section), are all `0xFF`: that's empty cartridge
+space, not data. The report ends the data range at
+`DATA_END = 0x087E5FCC`, which leaves 8,036,176 bytes of data. The
 constant is hard-coded so the no-ROM path gets the same totals. When
 `baserom.gba` is present, the script checks that the trailing `0xFF` run
 really starts there. Smaller all-`0x00` runs inside still-baserom blobs

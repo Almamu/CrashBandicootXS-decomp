@@ -527,7 +527,7 @@ effect), shown with the page of text at the same index of the current
 language's `struct cutscene_page` array. The six language tables
 (`gStaticData_0816D1C8` is English, then French, German, Spanish,
 Italian and Dutch) are listed by `gUnknown_03000834`, a pointer table in
-the IWRAM image. The text is plain C strings (Latin-1, all lower case),
+the IWRAM image (`src/iwram/iwram_data.c`). The text is plain C strings (Latin-1, all lower case),
 each page's strings in a `const u8 *const []`, and page and slide counts
 are `ARRAY_COUNT()`s.
 
@@ -642,7 +642,8 @@ u16 literals; u16 data[literals];
 u16 zeros;         // ...
 ```
 
-The IWRAM routine `0x03000634` (the `gUnknown_03000874` hook, called by
+The IWRAM routine `0x03000634` (`UnpackRleSpriteFrame` in
+`src/iwram/sprite_arm.c`, the `gUnknown_03000874` hook, called by
 `actor_part127.c`, `actor_part128.c` and `graphics_loading_3686c.c`)
 unpacks a frame into a VRAM tile block. The frame pointer tables
 (`table_B` of animation record 0 of both category families, and

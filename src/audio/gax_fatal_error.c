@@ -13,8 +13,9 @@ extern u8 gStaticData_085A62CC[];
 /* GAX2's fatal-error screen: disables Timer0/1/2/3 direct-sound-output
  * ticking (sub_80391E8, still raw, has the same hardware-register
  * NOP-delay compiler quirk documented for sub_80384DC), zeroes the
- * whole BG VRAM, decompresses a font tileset (gUnknown_030008D0, a
- * fixed IWRAM scratch address - see sym_iwram.txt) via the HuffUnComp
+ * whole BG VRAM, decompresses a font tileset (gUnknown_030008D0, the
+ * Huffman-compressed font in the IWRAM image - src/iwram/iwram_data.c)
+ * via the HuffUnComp
  * SWI wrapper into BG char block 1, blanks its first tile (the "space"
  * glyph), pokes a handful of raw tilemap entries (0x060044B8/
  * 0x060044C8/0x060044FC - not modeled as named screen-block macros

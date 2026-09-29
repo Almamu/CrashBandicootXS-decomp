@@ -79,7 +79,7 @@ the appendix.
 | `086C127C`-`086D9CAC` | 100,912 | raw level asset (room `0825E7DC`) | `sub_80266BC` -> `sub_80254F8`/`sub_8024CF0` | high | **done** (decoded tilemaps) |
 | `086ECCD2`-`087E3BEC` | 1,011,482 | 2 B pad + 6 raw level assets | same | high | **done** (the pad stays raw) |
 | `087E3BEC`-`087E55E4` | 6,648 | 93 gcc 2.x vtables | constructors (`sub_8009ED0`, ...) | high | easy |
-| `087E55E4`-`087E5FCC` | 2,536 | IWRAM image (ARM code + data, copied by `crt0`) | `crt0.s` | high | medium |
+| `087E55E4`-`087E5FCC` | 2,536 | IWRAM image (ARM code + data, copied by `crt0`) | `crt0.s` | high | **converted** (`asm/intr_main.s`, `src/iwram/`; the code counts as code, 540 B of data) |
 | `087E5FCC`-`08800000` | 106,548 | `0xFF` fill (not counted as data) | - | high | - |
 
 By category, as a share of the 8,038,172-byte data total:
@@ -442,15 +442,20 @@ its leftover bytes. `data/data.s` incbins the built assets under new
 labels (`gStaticData_086ECCD4`, `gStaticData_08708158`, ...). The format
 and the encoder are in [levels.md](./levels.md).
 
-### `gStaticData_087E55E4` (109,084 B): IWRAM image + fill
+### The IWRAM image (`087E55E4`-`087E5FCC`) + fill
 
 `crt0.s` DMA-copies `(gUnknown_030009E8 - IntrMain_Buffer) / 4` words
-from here to `0x03000000` at boot. The first `0x9E8` bytes are the IWRAM
-overlay: ARM-mode code (`E3A0C301`... = `mov ip, #0x4000000`, the interrupt
-dispatcher) and IWRAM initialisers. The rest, from `0x087E5FCC`, is
-`0xFF` fill, which the data report already excludes. The overlay is code,
-so it should move to `asm/` (ARM, `.section .iwram` or a load-address
-section) or become C compiled for IWRAM. Medium effort, 2.5 KB.
+from here (`__iwram_lma`) to `0x03000000` at boot. **Converted**: the
+image is now built from source and linked to run at `0x03000000`
+(ldscript.txt's `iwram` section, stored in ROM with `AT(...)`):
+`IntrMain`, the hand-written interrupt dispatcher (`asm/intr_main.s`),
+ten ARM C routines (`src/iwram/string_arm.c`, `src/iwram/sprite_arm.c`,
+built with agbcc_arm) and the initialised IWRAM globals
+(`src/iwram/iwram_data.c`, 540 bytes from `0x030007CC`). The code counts
+toward code progress, the globals toward data. The `0xFF` fill from
+`0x087E5FCC` is the linker's `rom_fill` section, excluded from data as
+before. See docs/decomp_dev.md's "The IWRAM image" and
+docs/matching/iwram-image.md.
 
 ## Small and mid-size blobs
 
@@ -1025,4 +1030,4 @@ vtable shapes).
 | `087E5554` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8034058` | high | easy |
 | `087E558C` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80342D4` | high | easy |
 | `087E55C4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8036E20`, `sub_803716C` | high | easy |
-| `087E55E4` | 0x1AA1C | IWRAM image (ARM code + initialised data, 0x9E8 B) copied to 0x03000000 by crt0, then 0xFF cartridge fill | `_0800012C` | high | medium |
+| `087E55E4` | 0x1AA1C | IWRAM image (ARM code + initialised data, 0x9E8 B) copied to 0x03000000 by crt0, then 0xFF cartridge fill | `_0800012C` | high | **converted** (`asm/intr_main.s`, `src/iwram/`, ldscript `iwram`/`rom_fill`) |

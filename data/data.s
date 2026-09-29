@@ -1930,9 +1930,7 @@ gStaticData_087BC13C:
 
 @ gStaticData_087E3BEC..gStaticData_087E55C4: src/data/entity_vtables_7e3bec.c
 
-.section .rodata.087E55E4
-
-.global gStaticData_087E55E4
-gStaticData_087E55E4:
-	.incbin "baserom.gba", 0x007E55E4, 0x0001AA1C
+@ 0x087E55E4..0x087E5FCC: the IWRAM image (asm/intr_main.s, src/iwram/),
+@ linked to run at 0x03000000 - the `iwram` section in ldscript.txt.
+@ 0x087E5FCC..0x08800000: 0xFF cartridge fill, the `rom_fill` section.
 

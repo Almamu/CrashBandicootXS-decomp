@@ -569,6 +569,20 @@ UNITS = [
     (0x0803B8B0, None, None),  # sentinel end address, not a real unit
 ]
 
+# The IWRAM image's code (ldscript.txt's `iwram` section): linked to run
+# at 0x03000000 and stored in ROM at IWRAM_LMA. Same layout as UNITS, but
+# the addresses are IWRAM (run) addresses and the targets are sliced from
+# expected/iwram.s, the frozen ARM disassembly of the image - see
+# docs/decomp_dev.md's "The IWRAM image". Its initialised data
+# (src/iwram/iwram_data.c) is a data unit, see IWRAM_DATA below.
+IWRAM_CODE = ROOT / "expected" / "iwram.s"
+IWRAM_UNITS = [
+    (0x03000000, HANDWRITTEN, None),  # IntrMain (asm/intr_main.s), the interrupt dispatcher - hand-written ARM, excluded from progress
+    (0x030000D4, "src/iwram/string_arm.o", "util"),  # strlen_arm/strcpy_arm/strcat_arm (real C, ARM, agbcc_arm) plus strncpy_arm/itoa_arm (parked: NON_MATCHING C, NAKED in the matching build) - docs/matching/iwram-image.md
+    (0x0300024C, "src/iwram/sprite_arm.o", "graphics"),  # UnpackNibbleTiles/DrawMirroredTilemap/UnpackRleSpriteFrame (real C, ARM, agbcc_arm) plus HeapSortActorsByKey/LookupSpriteFrameCache (parked) - docs/matching/iwram-image.md
+    (0x030007CC, None, None),  # sentinel: the image's initialised data starts here
+]
+
 # Display names for progress_categories - report_units.py-only categories
 # (game_loop/actor/... don't mirror a src/ directory the way graphics/util/
 # system do, so `category.capitalize()` alone would read oddly).
@@ -609,9 +623,11 @@ def slice_source(source, start, end):
     return subprocess.run(args, capture_output=True, text=True, check=True).stdout
 
 
-def build_target(name, start, end):
+def build_target(name, start, end, source=None):
     """Assembles the frozen-source slice(s) covering [start, end) into
     build/expected/units/<key>_target.o, applying corrections.txt.
+    `source` overrides the frozen file (expected/iwram.s for the IWRAM
+    units); by default it is expected/legacy.s and/or expected/code_3.s.
 
     Filenames are keyed by `name` plus `start` (not `name` alone): several
     UNITS entries intentionally share one base_object (e.g. two matched
@@ -622,7 +638,12 @@ def build_target(name, start, end):
     objdiff-verified. """
     key = f"{name}_{start:08X}"
     out_o = BUILD_DIR / f"{key}_target.o"
-    if start < CODE3_START and (end is None or end <= CODE3_START):
+    if source is not None:
+        text = slice_source(source, start, end)
+        out_s = BUILD_DIR / f"{key}_target.s"
+        out_s.write_text(text)
+        run(AS + ["-o", str(out_o), str(out_s)])
+    elif start < CODE3_START and (end is None or end <= CODE3_START):
         text = slice_source(LEGACY, start, end)
         out_s = BUILD_DIR / f"{key}_target.s"
         out_s.write_text(text)
@@ -676,6 +697,12 @@ DATA_CATEGORY = "data"
 # Start of the ROM's trailing 0xFF cartridge filler (runs to 0x08800000);
 # see trim_rom_filler().
 DATA_END = 0x087E5FCC
+# The IWRAM image (ldscript.txt's `iwram` section) is stored in ROM from
+# IWRAM_LMA, right after the "/* Data */" block. Its code is counted as
+# code (IWRAM_UNITS); its initialised data, src/iwram/iwram_data.c's
+# .data, is the last data unit, at IWRAM_LMA + (its IWRAM offset).
+IWRAM_LMA = 0x087E55E4
+IWRAM_DATA = ("src/iwram/iwram_data.o", ".data", IWRAM_LMA + IWRAM_UNITS[-1][0] - 0x03000000)
 
 
 def data_layout():
@@ -791,6 +818,16 @@ def parse_data():
             blobs.append(blob)
     if sections:
         sys.exit(f"data/data.s sections not linked by ldscript.txt: {', '.join(sections)}")
+    if addr != IWRAM_LMA:
+        sys.exit(f"the data block ends at {addr:#x}, not at the IWRAM image ({IWRAM_LMA:#x})")
+    obj, section, addr = IWRAM_DATA
+    part, align = c_data_blobs(obj, section)
+    if addr % align:
+        sys.exit(f"{obj}({section}) needs {align}-byte alignment but would start at {addr:#x}")
+    for blob in part:
+        blob["addr"] = addr
+        addr += blob["size"]
+        blobs.append(blob)
     return blobs
 
 
@@ -855,9 +892,10 @@ def write_data_object(out_o, blobs, body):
 def trim_rom_filler(blobs, have_rom):
     """Drops the cartridge's trailing 0xFF filler from the data range.
 
-    The last blob in data.s (gStaticData_087E55E4) runs to the end of the
-    8 MB ROM, but everything from DATA_END onwards is 0xFF fill: empty ROM
-    space, not data, so it shouldn't count toward total_data. DATA_END is a
+    Everything from DATA_END (the end of the IWRAM image) to the end of the
+    8 MB ROM is 0xFF fill (ldscript.txt's rom_fill section): empty ROM
+    space, not data, so it shouldn't count toward total_data. No blob
+    reaches it any more; the check stays as a guard. DATA_END is a
     constant so the fork-PR path (no baserom.gba) gets the same totals; when
     the ROM is there, it's checked to really be where the trailing 0xFF run
     starts."""
@@ -945,9 +983,9 @@ def main():
     # 100% matched while correctly not counting as "complete".
     needs_cleanup = {entry["file"] for entry in scan_cleanup_candidates()}
 
-    for i in range(len(UNITS) - 1):
-        start, base_rel, category = UNITS[i]
-        end = UNITS[i + 1][0]
+    code_units = [(UNITS[i], UNITS[i + 1][0], None) for i in range(len(UNITS) - 1)]
+    code_units += [(IWRAM_UNITS[i], IWRAM_UNITS[i + 1][0], IWRAM_CODE) for i in range(len(IWRAM_UNITS) - 1)]
+    for (start, base_rel, category), end, source in code_units:
         if base_rel == HANDWRITTEN:
             continue
         if base_rel is None:
@@ -955,7 +993,7 @@ def main():
         else:
             name = Path(base_rel).stem
 
-        target_o = build_target(name, start, end)
+        target_o = build_target(name, start, end, source)
         unit = {
             "name": name,
             "target_path": str(target_o.relative_to(ROOT)),
