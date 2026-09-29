@@ -72,7 +72,9 @@ correct, and category totals just fall out of aggregating those units.
 For each entry in `tools/report_units.py`'s address table:
 
 - **base**: that file's own compiled object under `build/crashbandicootxs/`
-  (already built by the normal `NON_MATCHING=1` pass - nothing extra to do).
+  (already built by the normal `NON_MATCHING=1` pass), copied to
+  `build/expected/units/` with its function sizes fixed up - see "Byte-exact
+  functions must score exactly 100%" below.
 - **target**: `tools/slice_expected.py` pulls the matching address range's
   *text* out of `expected/code_3.s` or `expected/legacy.s` (whichever one
   covers it - see below) - the same technique `expected/legacy.s` itself
@@ -134,8 +136,11 @@ to either `.s` source. It's run once per unit now (see above), so it's
 built to tolerate corrections that don't apply to a given slice (a rename
 whose old name isn't present, or a split address outside the slice's own
 range) by skipping them silently rather than erroring - the same
-`corrections.txt` is passed to every slice unfiltered. See the comment at
-the top of `expected/corrections.txt` for the exact line format.
+`corrections.txt` is passed to every slice unfiltered. Besides `rename`
+and `split` there are `unlabel`, `code`/`data` and `resolve` entries for
+the less common cases described under "Byte-exact functions must score
+exactly 100%" below. See the comment at the top of
+`expected/corrections.txt` for the exact line format.
 
 **When to add one**: whenever a newly-matched function doesn't show up in a
 locally-generated `report.json` at all, or reports an unexpectedly low match
@@ -205,24 +210,66 @@ bytes are still verified by `make compare`. Only mark a range
 `HANDWRITTEN` once it's confirmed to be hand-written, not just hard to
 match.
 
-## A separate, known limitation: small residual percentages on real matches
+## Byte-exact functions must score exactly 100%
 
-Neither `expected/code_3.s` nor `expected/legacy.s` uses the
-`thumb_func_end` macro (see `asm/macros/function.inc`), so none of their
-~2060 combined symbols carry an explicit ELF `.size` - objdiff infers each
-one's size from the distance to the next label instead. For most functions
-this infers correctly, but a handful show 99-99.9% instead of 100% even
-though a direct byte comparison confirms they're genuinely byte-exact:
-objdiff's inferred size includes a trailing literal-pool constant or padding
-halfword that belongs to neither function cleanly (there's no label marking
-exactly where one function's own literal pool ends and the gap before the
-next function's code begins). This is cosmetic - it doesn't affect whether a
-function is truly matched, only the last fractional percentage point objdiff
-reports for it - and isn't worth chasing down function-by-function;
-`expected/corrections.txt` is for the two real problems above (missing name,
-missing boundary), not this one. (`mem_collect`, in the section below, is
-*not* an example of this - a 64-byte hidden function is not a rounding
-error, which is exactly how that one was told apart from this category.)
+objdiff counts a function toward `matched_code`/`matched_functions` only
+at exactly 100%, so a byte-exact function that objdiff scores at 99.9% is
+not a rounding error: it counts as entirely unmatched. Before this was
+fixed, such near-misses cost the report about 7.7 points (92.3% matched
+code with every compiled function in the ROM byte-exact). The causes, and
+where each is handled:
+
+- **Inferred sizes.** Neither frozen source uses `thumb_func_end`, so no
+  target symbol had an ELF `.size`. objdiff then infers the size from the
+  next symbol and trims trailing zero bytes as padding. That also trims
+  the zero upper half of a final literal-pool word like
+  `.4byte 0x000001FF`: the target loses two bytes, the word decodes as a
+  `.hword`, and the function scores 99.9%. `patch_expected_target.py`
+  now gives every target function an explicit size: up to the next
+  function, minus a trailing zero halfword only when the assembler's
+  mapping symbols show it is alignment padding and not half of a pool
+  word. This was the largest class (about 70 functions).
+- **Base sizes that stop short.** agbcc's `.size` ends before anything
+  the assembler emits after the function, such as the literal pool of an
+  inline-asm `ldr rN, =sym`, and a NAKED function's own labels have no
+  `.size` at all. `report_units.py` points each unit's `base_path` at a
+  copy of the compiled object (`build/expected/units/<unit>_base.o`)
+  whose function sizes are widened (never shrunk) the same way. The
+  build's own objects are never modified.
+- **Disassembly artifacts.** The frozen disassembly sometimes wrote
+  padding as `movs r0, r0` (which decodes as code, while agbcc's padding
+  is data) and in one region wrote real instructions as `.4byte` data
+  (`.4byte 0x1c03b500` for `push {lr}; adds r3, r0, #0`).
+  `slice_expected.py` rewrites both while slicing, without changing any
+  byte: the padding becomes `.align 2, 0`, and a numeric `.4byte` that
+  no `ldr` loads (so it can't be a pool word) becomes two `.inst.n`
+  halfwords.
+- **Stale labels and boundaries.** Handled per function in
+  `expected/corrections.txt`: `split` for functions the disassembly never
+  labelled, `unlabel` for labels it took for function starts that the C
+  doesn't have (the `GAX_CALL_ARM` return points `sub_8039E50`,
+  `sub_803A318`, `sub_803A608`; `sub_802613E`, which starts
+  mid-instruction; the padding stub `sub_8016046`), `code`/`data` for
+  `sub_800039C` and `sub_803A9AC`, which the frozen sources only have as
+  `.byte` blobs, and `resolve` for math_div64_util.c, whose base calls
+  `sub_8037E54` through a local `.set` alias and so has no relocation on
+  those `bl`s.
+
+After these fixes, every function in a matched unit scores 100%. Every
+compiled function in the ROM is matched, so code progress reads 100%. A
+function below 100% in a future report is either genuinely unmatched or
+a new case of one of the causes above.
+
+**When a new function scores below 100%** even though `make compare`
+passes, run `objdiff-cli diff -1 <target.o> -2 <base.o> <symbol>` (both
+paths are in `objdiff.json`; unit names aren't unique) and read the
+mismatching rows. A `.word`/`.hword` against instructions, or rows
+missing at one end, point at sizes or mapping symbols. A function
+missing from one side points at a missing `rename`/`split`/`unlabel`.
+Note that `objdiff-cli diff` can report differences that `report
+generate` ignores (a raw pool constant against a relocation to the same
+address, for example). The report's own `fuzzy_match_percent` is what
+decides "matched".
 
 ## Resolved: `main.c`/`memory.c`/`irq.c`, and a genuine hidden function
 

@@ -1,7 +1,7 @@
 # Corrections applied to build/expected/target.o (the merge of
 # expected/code_3.s and expected/legacy.s - see Makefile's `report`
 # target) after assembling, never to either frozen source itself (see
-# docs/decomp_dev.md and expected/README.md for why). Two kinds of entry,
+# docs/decomp_dev.md and expected/README.md for why). Kinds of entry,
 # one per line:
 #
 #   rename OLD_NAME NEW_NAME
@@ -20,6 +20,27 @@
 #     the real preceding function AND this one report a wrong match
 #     percentage (the preceding one appears too large, and this one
 #     doesn't appear at all).
+#
+#   unlabel NAME
+#     The opposite of `split`: the original disassembly labelled this
+#     address as a function start, but the C source has no such function
+#     (a return point inside a function, or a label that landed mid-
+#     instruction). The symbol becomes a plain local label, and its bytes
+#     count toward the function before it. Without this, that preceding
+#     function looks too small next to its base, and the label shows up
+#     as an extra, never-matched function.
+#
+#   code ADDRESS / data ADDRESS
+#     Adds a `$t` / `$d` ARM mapping symbol at ADDRESS, for code the
+#     frozen source only has as a raw `.byte` blob (objdiff decodes a
+#     data region as `.word`s, not instructions).
+#
+#   resolve NAME
+#     NAME starts right where a unit's range ends, and the base object
+#     calls it with no relocation (through a local alias of a function it
+#     defines itself). A local label for NAME at the end of the target's
+#     slice makes the target's calls resolve the same way (see
+#     tools/slice_expected.py).
 #
 # Add a line here whenever a newly-matched function doesn't show up in
 # the report, or reports an unexpectedly low match percentage - see
@@ -95,3 +116,52 @@ rename sub_8029168 FreeCategorySpriteSheet
 # original disassembly (same pattern as sub_800039C above) - see
 # src/graphics/sprite_frame_queue.c's comment on sub_8028D94.
 split 0x08028D94 sub_8028D94
+
+# src/system/game_loop27.c: sub_8010AF8 follows sub_8010AEC's padding
+# with no label of its own in the original disassembly.
+split 0x08010AF8 sub_8010AF8
+
+# src/system/bg_scroll_layer_25fc8.c: the original disassembly folded
+# sub_802612C (and its padding) into sub_8026108, then labelled its
+# byte-identical twin sub_802613C two bytes late, mid-instruction, as
+# sub_802613E.
+split 0x0802612C sub_802612C
+split 0x0802613C sub_802613C
+unlabel sub_802613E
+
+# Return points of GAX_CALL_ARM/GAX_CALL_ARM_R (the nop or shared
+# epilogue a hand-computed ARM-call return address lands on), which the
+# original disassembly took for function starts. Never called; the C
+# has no such functions - see src/audio/gax_note_trigger.c and
+# src/audio/gax_unknownc_play.c.
+unlabel sub_8039E50
+unlabel sub_803A318
+unlabel sub_803A608
+
+# A padding halfword the original disassembly gave its own
+# non_word_aligned_thumb_func_start; nothing in src/ defines it.
+unlabel sub_8016046
+
+# sub_800039C (see the split above) is a raw .byte blob in expected/legacy.s,
+# so the assembler put all 64 bytes in one data mapping region and objdiff
+# decoded them as .words. These restore its code/pool layout: code,
+# padding + pool word, code, padding + pool word, code, trailing padding.
+code 0x0800039C
+data 0x080003AA
+code 0x080003B0
+data 0x080003CA
+code 0x080003D0
+data 0x080003DA
+
+# src/util/math_div64_util.c calls sub_8037E54 (right after its first
+# range) through a local `.set __udivsi3, sub_8037E54` alias of a function
+# the same object defines, so the base object's bl's carry no relocation.
+resolve sub_8037E54
+
+# src/system/timer_util.c: sub_803A9AC (SDK EepromTimerIntr) is an unlabelled
+# .byte blob right after sub_803A968's pool in expected/code_3.s, with a
+# stray gStaticData_0803A9AD label one byte in. Code, then its two pool words.
+split 0x0803A9AC sub_803A9AC
+unlabel gStaticData_0803A9AD
+code 0x0803A9AC
+data 0x0803A9C8
