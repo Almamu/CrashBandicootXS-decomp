@@ -135,6 +135,7 @@ $(ELF): $(OBJS) $(LDSCRIPT)
 OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/graphics_73dc.o \
                   $(C_BUILDDIR)/graphics/graphics_7634.o \
+                  $(C_BUILDDIR)/graphics/text_layout.o \
                   $(C_BUILDDIR)/graphics/actor_part101.o \
                   $(C_BUILDDIR)/graphics/actor_part103.o \
                   $(C_BUILDDIR)/graphics/actor_part109.o \

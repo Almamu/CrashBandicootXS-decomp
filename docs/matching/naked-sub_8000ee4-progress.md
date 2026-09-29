@@ -346,3 +346,7 @@ The default (NAKED) build: full clean `rm -rf build
 crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
 compare` - `crashbandicootxs.gba: La suma coincide`. Unchanged by this
 session's `#if NON_MATCHING`-only change.
+
+## Later pass (strag3): matched
+
+`sub_8000EE4` is now real C in `src/graphics/text_layout.c`, built with old_agbcc (the object is on `OLD_AGBCC_OBJS`). A plain rewrite replaced the pinned draft above. It uses a `while` loop, a `switch` for the escapes, inline `set_pos`/`pos_x`/`pos_y` helpers, one extra-reference nudge on `len` and one r1 hold. See [strag3-naked-retry.md](strag3-naked-retry.md).
