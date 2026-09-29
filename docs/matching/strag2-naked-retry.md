@@ -40,7 +40,8 @@ None of the parked notes' diagnoses held up:
 
 ## Not closed
 
-- **`sub_8015038`** (`actor_part38.c`, 400 bytes) is still NAKED. It
+- **`sub_8015038`** (`actor_part38.c`, 400 bytes) is still NAKED
+  (matched later in the strag4 retry, see `strag4-naked-retry.md`). It
   now has a C draft under `#if NON_MATCHING`, down from about 163
   halfwords off to 2 under both compilers.
 - **What is left:** at the top of the `self+0x24 != 0` arm, the ROM does

@@ -11,8 +11,7 @@
  * by `sub_8014F8C` here) is a small list object - `+4` a count, `+0xc`
  * a `struct actor **` array - not referenced by any already-matched
  * code yet, so it stays raw-offset rather than a guessed struct. This
- * file covers `sub_8014F8C` (matched) and `sub_8015038` (parked,
- * NON_MATCHING); the chunk continues in actor_part28b.c/c.c/d.c, split
+ * file covers `sub_8014F8C` and `sub_8015038` (both matched); the chunk continues in actor_part28b.c/c.c/d.c, split
  * at each parked function's raw-asm gap - see docs/matching/
  * issue-18-0x08014f8c-actor.md for the full write-up. */
 
@@ -166,26 +165,12 @@ extern s32 sub_803AD84(void *arg0, void *arg1, void *arg2, void *arg3);
  * mgr's `+0x20` trampoline argument instead of `id`) and stamps
  * `self+0x26` with `0x63`.
  *
- * Written as NAKED asm, not plain C: every load/store, branch and call
- * was already confirmed correct - the residual gap was this compiler's
- * register allocation across the three near-identical arms (it wants
- * `ip`/`sb`/`r8` for `id`/`0`/the table-index exactly like the ROM, but
- * also insists on caching computed field addresses (`self+0x21`/
- * `self+0x22`) in different registers than the ROM's own `r7`/`r5`
- * choices once real trampoline calls intervene) - see
- * docs/matching/issue-18-0x08014f8c-actor.md, "Parked, not matched:
- * sub_8015038". Transcribed instruction-for-instruction from the ROM
- * disassembly instead, the same escape hatch used for
- * `sub_8001CB8`/`sub_8001DB4` (src/system/link_cable.c). */
-#if NON_MATCHING
-/* Near-miss draft (2 halfwords off under both agbcc and old_agbcc): at
- * the top of the `self+0x24 != 0` arm the ROM copies `self+0x22` into
- * r5 *before* loading through the copy (`adds r5, r0, #0; ldrb r2,
- * [r5]`), where this draft loads through r0 first and copies after.
- * Everything else matches: the `zero`/`wait` locals give the ROM's
- * sb/r4 constant pair across the calls, `off += 0x50` avoids an extra
- * copy, and the r0/r1/r2 holds (no code) steer three reload/register
- * choices. */
+ * Built with old_agbcc (the file is on OLD_AGBCC_OBJS). The
+ * `self+0x24 != 0` arm tests `self[0x22]` directly rather than through a
+ * `u8` local: the byte load then comes after the point where
+ * old_agbcc's GCSE inserts its copy of `self + 0x22` (end of the block,
+ * before the compare), so the load goes through the copy in r5
+ * (`adds r5, r0, #0; ldrb r2, [r5]`) as in the ROM. */
 void sub_8015038(u8 *self, s32 id, s32 param2)
 {
     u8 *mgr;
@@ -219,29 +204,22 @@ void sub_8015038(u8 *self, s32 id, s32 param2)
             self[0x24] = 1;
             if (self[0x22] > 1)
                 self[0x22] = 1;
-            else {
-                register s32 hold asm("r0");
-                asm("" : "=r"(hold)); /* keep r0 busy: reload uses r1 */
+            else
                 self[0x22] = zero;
-                asm("" : : "r"(hold));
-            }
         }
     } else {
         register s32 hold1 asm("r1");
-        u8 v;
 
-        asm("" : "=r"(hold1)); /* keep r1 busy: v loads into r2 */
-        v = self[0x22];
-        asm("" : : "r"(hold1));
-        if (v > 0xf0) {
+        /* No code: keeps r1 live across the `self[0x22]` test so the
+         * byte loads into r2 and `id` stays in ip, as in the ROM. */
+        asm("" : "=r"(hold1));
+        if (self[0x22] > 0xf0) {
             s32 idx;
             s32 zero;
             s32 wait;
-            register s32 hold2 asm("r2");
 
-            asm("" : "=r"(hold2)); /* keep r2 busy: 0x17 goes via r0 */
+            asm("" : : "r"(hold1)); /* end of the r1 hold (no code) */
             idx = 0x17;
-            asm("" : : "r"(hold2));
             self[0x21] = 0;
             if (self[0x22] == 1) {
                 idx = 0x28;
@@ -284,211 +262,3 @@ void sub_8015038(u8 *self, s32 id, s32 param2)
     }
     self[0x23] = 0;
 }
-#else
-NAKED void sub_8015038(void *selfArg, s32 id, s32 param2)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sb\n\t"
-        "mov r6, r8\n\t"
-        "push {r6, r7}\n\t"
-        "add r6, r0, #0\n\t"
-        "mov ip, r1\n\t"
-        "add r3, r2, #0\n\t"
-        "add r0, #0x24\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 1f\n\t"
-        "mov r1, #0x17\n\t"
-        "mov r8, r1\n\t"
-        "add r1, r6, #0\n\t"
-        "add r1, #0x21\n\t"
-        "strb r0, [r1]\n\t"
-        "add r0, r6, #0\n\t"
-        "add r0, #0x22\n\t"
-        "ldrb r2, [r0]\n\t"
-        "add r7, r1, #0\n\t"
-        "add r5, r0, #0\n\t"
-        "cmp r2, #1\n\t"
-        "bne 2f\n\t"
-        "mov r0, #0x28\n\t"
-        "mov r8, r0\n\t"
-        "b 3f\n\t"
-    "2:\n\t"
-        "cmp r2, #2\n\t"
-        "bne 4f\n\t"
-        "mov r1, #0x27\n\t"
-        "mov r8, r1\n\t"
-    "3:\n\t"
-        "strb r2, [r7]\n\t"
-    "4:\n\t"
-        "mov r2, #0\n\t"
-        "mov sb, r2\n\t"
-        "mov r4, #0x14\n\t"
-        "ldr r1, [r6, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r6, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, ip\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r2, [r6, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r2, r1]\n\t"
-        "add r0, r6, r0\n\t"
-        "ldr r1, [r6, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, r8\n\t"
-        "bl sub_803AD84\n\t"
-        "mov r2, sb\n\t"
-        "str r2, [r6, #0x18]\n\t"
-        "str r4, [r6, #0x1c]\n\t"
-        "ldr r0, 20f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldrb r1, [r7]\n\t"
-        "add r1, #0x57\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "bl PlaySfx\n\t"
-        "ldrb r0, [r5]\n\t"
-        "add r0, #1\n\t"
-        "strb r0, [r5]\n\t"
-        "add r1, r6, #0\n\t"
-        "add r1, #0x20\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r0, r0, #0x18\n\t"
-        "ldrb r1, [r1]\n\t"
-        "cmp r0, r1\n\t"
-        "blo 6f\n\t"
-        "add r0, r6, #0\n\t"
-        "add r0, #0x24\n\t"
-        "mov r1, #1\n\t"
-        "strb r1, [r0]\n\t"
-        "ldrb r0, [r5]\n\t"
-        "cmp r0, #1\n\t"
-        "bls 5f\n\t"
-        "strb r1, [r5]\n\t"
-        "b 6f\n\t"
-        ".align 2, 0\n"
-    "20: .4byte gUnknown_030012BC\n"
-    "5:\n\t"
-        "mov r1, sb\n\t"
-        "strb r1, [r5]\n\t"
-        "b 6f\n\t"
-    "1:\n\t"
-        "add r0, r6, #0\n\t"
-        "add r0, #0x22\n\t"
-        "add r5, r0, #0\n\t"
-        "ldrb r2, [r5]\n\t"
-        "cmp r2, #0xf0\n\t"
-        "bls 10f\n\t"
-        "mov r0, #0x17\n\t"
-        "mov r8, r0\n\t"
-        "add r1, r6, #0\n\t"
-        "add r1, #0x21\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r1]\n\t"
-        "ldrb r0, [r5]\n\t"
-        "add r7, r1, #0\n\t"
-        "cmp r0, #1\n\t"
-        "bne 7f\n\t"
-        "mov r1, #0x28\n\t"
-        "mov r8, r1\n\t"
-        "b 9f\n\t"
-    "7:\n\t"
-        "cmp r0, #2\n\t"
-        "bne 8f\n\t"
-        "mov r2, #0x27\n\t"
-        "mov r8, r2\n\t"
-    "9:\n\t"
-        "strb r0, [r7]\n\t"
-    "8:\n\t"
-        "mov r4, #0\n\t"
-        "mov r0, #0x14\n\t"
-        "mov sb, r0\n\t"
-        "ldr r1, [r6, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r6, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "mov r1, ip\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r2, [r6, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r2, r1]\n\t"
-        "add r0, r6, r0\n\t"
-        "ldr r1, [r6, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, r8\n\t"
-        "bl sub_803AD84\n\t"
-        "str r4, [r6, #0x18]\n\t"
-        "mov r2, sb\n\t"
-        "str r2, [r6, #0x1c]\n\t"
-        "ldr r0, 21f\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldrb r1, [r7]\n\t"
-        "add r1, #0x57\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "bl PlaySfx\n\t"
-        "b 11f\n\t"
-        ".align 2, 0\n"
-    "21: .4byte gUnknown_030012BC\n"
-    "10:\n\t"
-        "add r0, r6, #0\n\t"
-        "add r0, #0x21\n\t"
-        "mov r4, #0\n\t"
-        "strb r4, [r0]\n\t"
-        "sub r0, #1\n\t"
-        "strb r4, [r0]\n\t"
-        "mov r7, #0x18\n\t"
-        "ldr r1, [r6, #0xc]\n\t"
-        "mov r2, #0x20\n\t"
-        "ldrsh r0, [r1, r2]\n\t"
-        "add r0, r6, r0\n\t"
-        "ldr r2, [r1, #0x24]\n\t"
-        "add r1, r3, #0\n\t"
-        "bl sub_803AD80\n\t"
-        "ldr r2, [r6, #0xc]\n\t"
-        "add r2, #0x50\n\t"
-        "mov r1, #0\n\t"
-        "ldrsh r0, [r2, r1]\n\t"
-        "add r0, r6, r0\n\t"
-        "ldr r1, [r6, #0x10]\n\t"
-        "ldr r3, [r2, #4]\n\t"
-        "mov r2, #0x10\n\t"
-        "bl sub_803AD84\n\t"
-        "str r4, [r6, #0x18]\n\t"
-        "str r7, [r6, #0x1c]\n\t"
-        "ldr r0, 22f\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r2, #0x80\n\t"
-        "lsl r2, r2, #1\n\t"
-        "mov r1, #0xa\n\t"
-        "bl PlaySfx\n\t"
-        "add r1, r6, #0\n\t"
-        "add r1, #0x26\n\t"
-        "mov r0, #0x63\n\t"
-        "strb r0, [r1]\n\t"
-    "11:\n\t"
-        "ldrb r0, [r5]\n\t"
-        "sub r0, #1\n\t"
-        "strb r0, [r5]\n\t"
-    "6:\n\t"
-        "add r1, r6, #0\n\t"
-        "add r1, #0x23\n\t"
-        "mov r0, #0\n\t"
-        "strb r0, [r1]\n\t"
-        "pop {r3, r4}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "22: .4byte gUnknown_030012BC\n"
-    );
-}
-#endif
