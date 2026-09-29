@@ -205,6 +205,16 @@ The first batch (all pointer tables, all byte-exact):
 | `digit_glyphs_17e714.c` | `0x0817E714` | 6 glyph pointers |
 | `entity_vtables_7e3bec.c` | `0x087E3BEC` | the 93 entity virtual tables |
 
+The actor-category backgrounds and tables (grit-built, see "Category
+backgrounds" below):
+
+| File | ROM | Contents |
+|---|---|---|
+| `cell_anim_03b8b0.c` | `0x0803B8B0` | BG0 cell animation A (19x13, 60 frames, per-cell banks), category 0 `sub_effect_table` |
+| `sub_effect_0c0c38.c` | `0x080C0C38` | categories 1 and 2 `sub_effect_table`s |
+| `cell_anim_0ff1b0.c` | `0x080FF1B0` | BG0 cell animation B (38x10, 21 frames), category 3 BG1 picture and `sub_effect_table` |
+| `bg_picture_151ac4.c` | `0x08151AC4` | category 4 and 5/6 BG1 pictures, categories 4-6 `sub_effect_table`s |
+
 Still raw and worth doing next: the per-level record table
 `gStaticData_0816C86C` (self-referencing records, used all over the
 game loop), `gStaticData_0816CD80`, and the animation tables inside
@@ -217,9 +227,10 @@ Graphics, and other assets built from files, use the same layout as the
 hand-written tables: each asset becomes a `const` array in a `src/data/*.c`
 object, and `ldscript.txt` places that object's `.rodata` at the asset's
 address in the `/* Data */` block. The pixel conversion is done by
-[grit](https://github.com/devkitPro/grit). One asset is built this way so far:
+[grit](https://github.com/devkitPro/grit). Built this way so far:
 `gStaticData_085AA170`, the first intro Mode 4 bitmap
-(`src/data/intro_bitmap_5aa170.c`).
+(`src/data/intro_bitmap_5aa170.c`), and the actor-category backgrounds
+(see "Category backgrounds" at the end).
 
 This section records the grit feasibility study and the pipeline that
 came out of it. The throwaway scripts behind the measurements aren't in
@@ -400,3 +411,61 @@ was an `.incbin` of the gbagfx output, so converting it doesn't change
 4. Split `data/data.s` and add the `ldscript.txt` lines, as for any table.
 5. Run a full clean `make` (`make tidy && make`). It must print
    `crashbandicootxs.gba: OK`.
+
+### Category backgrounds
+
+The actor categories (`struct category_descriptor`, `actor_anim.h`) point
+at two kinds of uncompressed background, both now built from
+`graphics/category_bg/` PNGs:
+
+- **BG0 cell animations** (`family_shared_04`, played by `sub_8029890`/
+  `sub_80297C8`): `struct cell_anim_header` (256-colour palette, `cols`,
+  `rows`), then per frame `cols * rows` 4bpp tiles in row-major cell
+  order. Type-0 categories (0-2) add one 4-bit palette bank per cell,
+  padded to `(cells + 7) / 8 * 4` bytes, after each frame's tiles.
+  `gStaticData_0803B8B0` (19x13, 60 frames, with banks) and
+  `gStaticData_080FF1B0` (38x10, 21 frames, bank 0).
+- **BG1 pictures** (`conditional_ptr_0C`, loaded by `sub_802F7B0`):
+  `struct bg_picture_header` (palette, `cols`, `rows`, `tileCount`), the
+  `u16` map, the tiles, then one bank nibble per map entry.
+  `gStaticData_0813D934`, `gStaticData_08151AC4`, `gStaticData_08155260`
+  (all 38x16).
+
+The 4bpp data uses all 16 palette banks, so each PNG is 8bpp indexed
+with the asset's full 256-colour palette, and every 8x8 cell is drawn in
+its own bank (index = bank * 16 + pixel). That's how the image looks in
+game, and it's what grit's `-mRtp` map reduction reads the bank bits
+back from. A cell animation is one tall PNG with the frames stacked top
+to bottom (grit's row-major tile order then gives the frames back to
+back). A picture is two PNGs: the picture itself (palette and map) and
+its tile set as an 8px-wide strip, which is grit's external tileset
+(`-fx`) so the map indices come out as the ROM's (none of these tile sets
+starts with a blank tile).
+
+grit does all the conversion (flags in `graphics.mk`):
+
+| output | grit flags | then |
+|---|---|---|
+| palette | `-p -pn256` | `tools/bin2c.py --u16` |
+| tiles | `-gt -gB4 -p!` | `tools/bin2c.py` (picture), `tools/grit_bg.py frames` (animation, split per frame) |
+| picture map + banks | `-gt -gB4 -p! -m -mRtp -mLf -fx <tiles.png>` | `tools/grit_bg.py map` / `banks` split the entries into the index and the bank nibbles |
+| animation banks | `-gt -gB4 -p! -m -mRtp -mLf` | only the bank bits are used; `tools/grit_bg.py frames --banks` packs them after each frame's tiles |
+
+grit takes a tile's bank from its first pixel with a non-zero low
+nibble, so a cell that is entirely colour 0 would lose its bank. None of
+these assets has such a cell; an edit that adds one needs the pixel to
+keep a non-zero colour somewhere. The header fields (`cols`, `rows`,
+`tileCount`) are hand-written in the C files, and each C file checks
+its struct's size with `COMPILE_TIME_ASSERT`.
+
+The `sub_effect_record` tables in the same regions are hand-written C:
+`SUB_EFFECT_TABLE(n)` (`actor_anim.h`) is the `n` records plus the
+12-byte `struct sub_effect_table_end` that the one-record-ahead
+accessors read after the last one.
+
+The three rotation strips next to them (`gStaticData_080C2758`,
+`gStaticData_080DA1D8`, `gStaticData_0815A050`) stay raw: their frame
+windows start at offsets that aren't whole tiles into one shared byte
+stream, so there's no tile grid for a PNG (docs/data_map.md has the
+details). The 2-byte pads after the two LZ77 sheets
+(`gStaticData_080C0C36`, `gStaticData_08151AC2`) stay raw `.incbin`s too.
