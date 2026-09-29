@@ -411,6 +411,8 @@ As of the first `src/data` conversion: 1,650,143 of 8,038,172 bytes
 matched (20.53%). That is the two LZ77 blobs in `graphics/unknown/`, the
 intro and tileset1 graphics, the GAX2 audio data, the sfx table, and
 9,716 bytes of pointer tables in `src/data/` (up from 1,640,427, 20.41%).
+[`docs/data_map.md`](./data_map.md) triages the remaining raw blobs and
+suggests an order for converting them.
 
 ## "Matched" vs "complete": tracking the cleanup pass separately
 
