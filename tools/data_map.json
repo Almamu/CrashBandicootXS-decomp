@@ -3082,7 +3082,8 @@
    "element_count": null,
    "format": "table of struct terrain_type",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/terrain_1725a8.c"
   },
   {
    "address": "0x081725AC",
@@ -3103,7 +3104,8 @@
    ],
    "format": "small constant (ffffffffffffffff)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/terrain_1725a8.c"
   },
   {
    "address": "0x081725B4",
@@ -3123,7 +3125,8 @@
    ],
    "format": "small constant (ffffffffffffffff)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/terrain_1725a8.c"
   },
   {
    "address": "0x081725BC",
@@ -3143,7 +3146,8 @@
    ],
    "format": "small constant (ffffffffffffffff)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/terrain_1725a8.c"
   },
   {
    "address": "0x081725C4",
@@ -3164,7 +3168,8 @@
    "format": "terrain shape table: 36-byte records (per-column heights 0..7, 0xFF = empty) used by the collision streamer",
    "effort": "medium",
    "confidence": "medium",
-   "notes": ""
+   "notes": "",
+   "status": "converted: src/data/terrain_1725a8.c, src/data/ui_text_172cd4.c"
   },
   {
    "address": "0x08174BE0",
@@ -3188,7 +3193,8 @@
    "element_count": 35,
    "format": "table of u32",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/hud_fonts_174be0.c"
   },
   {
    "address": "0x08174C6C",
@@ -3217,7 +3223,8 @@
    "element_count": null,
    "format": "table of struct hud_pos",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/hud_fonts_174be0.c"
   },
   {
    "address": "0x08174D84",
@@ -3237,7 +3244,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/hud_fonts_174be0.c"
   },
   {
    "address": "0x08174DD4",
@@ -3257,7 +3265,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/hud_fonts_174be0.c"
   },
   {
    "address": "0x08175188",
@@ -3277,7 +3286,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/hud_fonts_174be0.c"
   },
   {
    "address": "0x081751D4",
@@ -3297,7 +3307,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/hud_fonts_174be0.c"
   },
   {
    "address": "0x08175558",
@@ -4561,7 +4572,8 @@
    "format": "popup/credits text opcode stream (control bytes 0x01-0x04 + ASCII)",
    "effort": "medium",
    "confidence": "high",
-   "notes": ""
+   "notes": "",
+   "status": "converted: src/data/credits_17c5d0.c"
   },
   {
    "address": "0x0817CF3C",
@@ -4581,7 +4593,8 @@
    ],
    "format": "all zero (zero-initialised table)",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/credits_17c5d0.c"
   },
   {
    "address": "0x0817CF40",
@@ -4648,7 +4661,8 @@
    "confidence": "high",
    "element_type": "u16",
    "element_size": 2,
-   "element_count": 32
+   "element_count": 32,
+   "status": "converted: src/data/level_gfx_17cff4.c"
   },
   {
    "address": "0x0817D034",
@@ -4668,7 +4682,8 @@
    ],
    "format": "table (element layout: see consumers); 1 word(s) look like ROM pointers",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/level_gfx_17cff4.c"
   },
   {
    "address": "0x0817D054",
@@ -4691,7 +4706,8 @@
    "confidence": "high",
    "element_type": "u16",
    "element_size": 2,
-   "element_count": 16
+   "element_count": 16,
+   "status": "converted: src/data/level_gfx_17cff4.c"
   },
   {
    "address": "0x0817D074",
@@ -4711,7 +4727,8 @@
    ],
    "format": "table (element layout: see consumers); 12 word(s) look like ROM pointers",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/level_gfx_17cff4.c"
   },
   {
    "address": "0x0817D0E4",
@@ -4735,7 +4752,8 @@
    "format": "bg_package for LoadBg2Background {w, h, palette*, tiles*, map*, ...} + trailing records",
    "effort": "easy",
    "confidence": "high",
-   "notes": ""
+   "notes": "",
+   "status": "converted: src/data/level_gfx_17cff4.c"
   },
   {
    "address": "0x0817D698",
@@ -4755,7 +4773,8 @@
    ],
    "format": "table (element layout: see consumers); 2 word(s) look like ROM pointers",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/level_gfx_17cff4.c"
   },
   {
    "address": "0x0817D6C0",
@@ -4856,7 +4875,8 @@
    "format": "bg_package (graphics_loading_35780.c) + trailing per-screen records",
    "effort": "medium",
    "confidence": "medium",
-   "notes": ""
+   "notes": "",
+   "status": "converted: src/data/countdown_17d7a4.c"
   },
   {
    "address": "0x0817E714",
@@ -4902,7 +4922,8 @@
    "element_count": 16,
    "format": "table of u16; 1 word(s) look like ROM pointers",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/palettes_17e72c.c"
   },
   {
    "address": "0x0817E74C",
@@ -4925,7 +4946,8 @@
    "element_count": 16,
    "format": "BGR555 palette(s): 1 x 16 colours",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/palettes_17e72c.c"
   },
   {
    "address": "0x0817E76C",
@@ -4948,7 +4970,8 @@
    "element_count": 16,
    "format": "table of u16",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/palettes_17e72c.c"
   },
   {
    "address": "0x0817E78C",

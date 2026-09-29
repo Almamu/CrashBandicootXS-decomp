@@ -88,51 +88,11 @@ gStaticData_0816AA6C:
 
 @ gStaticData_0816D1C8..gStaticData_0816D1F4: src/data/cutscenes_16d1c8.c
 
-.section .rodata.081725A8
+@ gStaticData_081725A8..0x08172CD4 (terrain types): src/data/terrain_1725a8.c
 
-.global gStaticData_081725A8
-gStaticData_081725A8:
-	.incbin "baserom.gba", 0x001725A8, 0x00000004
+@ 0x08172CD4..0x08174BE0 (the UI text of six languages): src/data/ui_text_172cd4.c
 
-.global gStaticData_081725AC
-gStaticData_081725AC:
-	.incbin "baserom.gba", 0x001725AC, 0x00000008
-
-.global gStaticData_081725B4
-gStaticData_081725B4:
-	.incbin "baserom.gba", 0x001725B4, 0x00000008
-
-.global gStaticData_081725BC
-gStaticData_081725BC:
-	.incbin "baserom.gba", 0x001725BC, 0x00000008
-
-.global gStaticData_081725C4
-gStaticData_081725C4:
-	.incbin "baserom.gba", 0x001725C4, 0x0000261C
-
-.global gStaticData_08174BE0
-gStaticData_08174BE0:
-	.incbin "baserom.gba", 0x00174BE0, 0x0000008C
-
-.global gStaticData_08174C6C
-gStaticData_08174C6C:
-	.incbin "baserom.gba", 0x00174C6C, 0x00000118
-
-.global gStaticData_08174D84
-gStaticData_08174D84:
-	.incbin "baserom.gba", 0x00174D84, 0x00000050
-
-.global gStaticData_08174DD4
-gStaticData_08174DD4:
-	.incbin "baserom.gba", 0x00174DD4, 0x000003B4
-
-.global gStaticData_08175188
-gStaticData_08175188:
-	.incbin "baserom.gba", 0x00175188, 0x0000004C
-
-.global gStaticData_081751D4
-gStaticData_081751D4:
-	.incbin "baserom.gba", 0x001751D4, 0x00000384
+@ gStaticData_08174BE0..gStaticData_081751D4: src/data/hud_fonts_174be0.c
 
 @ gStaticData_08175558..gStaticData_081756C4: src/data/actor_category_175558.c
 
@@ -174,67 +134,19 @@ gStaticData_081751D4:
 
 @ gStaticData_0817C594..gStaticData_0817C5BC: src/data/bg_package_17c594.c
 
-.section .rodata.0817C5D0
-
-.global gStaticData_0817C5D0
-gStaticData_0817C5D0:
-	.incbin "baserom.gba", 0x0017C5D0, 0x0000096C
-
-.global gStaticData_0817CF3C
-gStaticData_0817CF3C:
-	.incbin "baserom.gba", 0x0017CF3C, 0x00000004
+@ gStaticData_0817C5D0..gStaticData_0817CF3C: src/data/credits_17c5d0.c
 
 @ gStaticData_0817CF40..gStaticData_0817CFA4: src/data/popup_glyphs_17cf40.c
 
-.section .rodata.0817CFF4
-
-.global gStaticData_0817CFF4
-gStaticData_0817CFF4:
-	.incbin "baserom.gba", 0x0017CFF4, 0x00000040
-
-.global gStaticData_0817D034
-gStaticData_0817D034:
-	.incbin "baserom.gba", 0x0017D034, 0x00000020
-
-.global gStaticData_0817D054
-gStaticData_0817D054:
-	.incbin "baserom.gba", 0x0017D054, 0x00000020
-
-.global gStaticData_0817D074
-gStaticData_0817D074:
-	.incbin "baserom.gba", 0x0017D074, 0x00000070
-
-.global gStaticData_0817D0E4
-gStaticData_0817D0E4:
-	.incbin "baserom.gba", 0x0017D0E4, 0x000005B4
-
-.global gStaticData_0817D698
-gStaticData_0817D698:
-	.incbin "baserom.gba", 0x0017D698, 0x00000028
+@ gStaticData_0817CFF4..gStaticData_0817D698: src/data/level_gfx_17cff4.c
 
 @ gStaticData_0817D6C0..gStaticData_0817D790: src/data/slot_seeds_17d6c0.c
 
-.section .rodata.0817D7A4
-
-.global gStaticData_0817D7A4
-gStaticData_0817D7A4:
-	.incbin "baserom.gba", 0x0017D7A4, 0x00000F70
+@ gStaticData_0817D7A4..0x0817E714: src/data/countdown_17d7a4.c
 
 @ gStaticData_0817E714: src/data/digit_glyphs_17e714.c
 
-.section .rodata.0817E72C
-
-.global gStaticData_0817E72C
-gStaticData_0817E72C:
-	.incbin "baserom.gba", 0x0017E72C, 0x00000020
-
-.global gStaticData_0817E74C
-gStaticData_0817E74C:
-	.incbin "baserom.gba", 0x0017E74C, 0x00000020
-
-.global gStaticData_0817E76C
-gStaticData_0817E76C:
-	.incbin "baserom.gba", 0x0017E76C, 0x00000020
+@ gStaticData_0817E72C..gStaticData_0817E76C: src/data/palettes_17e72c.c
 
 @ gStaticData_0817E78C..gStaticData_08200DF4: src/data/level_tilesets_17e78c.c
 
