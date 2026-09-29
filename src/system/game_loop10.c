@@ -1,25 +1,27 @@
 #include "core.h"
 #include "actor.h"
+#include "level_state.h"
 
 extern void *gUnknown_030012D8;
 extern void *gUnknown_030012B4;
 extern void *gUnknown_030012BC;
 extern void *gUnknown_03001318;
 
-extern s32 sub_8023414(void *self);
-extern void sub_80232EC(void *self);
-extern void sub_80232FC(void *self);
-extern void sub_8023298(void *self);
-extern void sub_8023288(void *self);
-extern u8 sub_8023290(void *self);
-extern u8 sub_80232B8(void *self);
-extern void sub_80231D4(void *self);
+extern s32 sub_8023414(struct level_state *self);
+extern void sub_80232EC(struct level_state *self);
+extern void sub_80232FC(struct level_state *self);
+extern void sub_8023298(struct level_state *self);
+extern void sub_8023288(struct level_state *self);
+extern u8 sub_8023290(struct level_state *self);
+extern u8 sub_80232B8(struct level_state *self);
+extern void sub_80231D4(struct level_state *self);
 extern void *sub_800014C(void *dest, void *src, s32 size);
 extern void sub_803A94C(const void *src, void *dst, u32 cnt);
 extern void sub_8007398(struct actor *self, s32 arg1, s32 arg2);
 extern void sub_8028568(void *state, s32 arg1);
 extern void sub_8022CA0(void *self, u8 arg1);
 extern void sub_8022468(void *self, s32 mode);
+struct AudioContext;
 extern void sub_80019A8(struct AudioContext *self, u32 id);
 extern void *sub_8026EDC(s32 size);
 extern void nullsub_7(void);
@@ -28,21 +30,21 @@ extern void sub_8037154(void *self, u32 flags);
 
 /* Sets `self->0x1bc` (a Q-format camera/position field paired with the
  * `sub_8023500` two-word setter below). */
-void sub_80234E8(void *self, s32 value)
+void sub_80234E8(struct level_state *self, s32 value)
 {
-    *(s32 *)((u8 *)self + 0x1bc) = value;
+    self->unk_1bc = value;
 }
 
 /* Sets `self->0x1b8`, the companion field to `sub_80234E8` above. */
-void sub_80234F4(void *self, s32 value)
+void sub_80234F4(struct level_state *self, s32 value)
 {
-    *(s32 *)((u8 *)self + 0x1b8) = value;
+    self->unk_1b8 = value;
 }
 
 /* Copies a `{x, y}` pair into `self->0x1c0`/`0x1c4`. */
-void sub_8023500(void *self, s32 *point)
+void sub_8023500(struct level_state *self, s32 *point)
 {
-    s32 *dst = (s32 *)((u8 *)self + 0x1c0);
+    s32 *dst = &self->unk_1c0;
     s32 y = point[1];
     s32 x = point[0];
 
@@ -51,18 +53,18 @@ void sub_8023500(void *self, s32 *point)
 }
 
 /* Sets `self->0xa6` to 1 unless `sub_8023290` says it's already set. */
-void sub_8023510(void *self)
+void sub_8023510(struct level_state *self)
 {
     if (!sub_8023290(self)) {
-        *((u8 *)self + 0xa6) = 1;
+        self->unk_a6 = 1;
     }
 }
 
 /* Sets `self->0xa4` to 1 unless `sub_80232B8` says it's already set. */
-void sub_802352C(void *self)
+void sub_802352C(struct level_state *self)
 {
     if (!sub_80232B8(self)) {
-        *((u8 *)self + 0xa4) = 1;
+        self->unk_a4 = 1;
     }
 }
 
@@ -70,14 +72,14 @@ void sub_802352C(void *self)
  * then copies the `0xe4`-`0x14b` snapshot block back over `self`'s own
  * first `0x68` bytes - the inverse direction of `sub_802356C`/
  * `sub_8022CA0`'s "stash a snapshot at +0xe4" below. */
-void sub_8023548(void *self)
+void sub_8023548(struct level_state *self)
 {
     u8 tmp;
 
-    *(s32 *)((u8 *)self + 0x70) = *(s32 *)((u8 *)self + 0xcc);
-    tmp = *((u8 *)self + 0xd0);
-    *((u8 *)self + 0xa9) = tmp;
-    sub_800014C(self, (u8 *)self + 0xe4, 0x68);
+    self->unk_70 = self->unk_cc;
+    tmp = self->unk_d0;
+    self->unk_a9 = tmp;
+    sub_800014C(self, self->snapE4, 0x68);
 }
 
 /* Re-arms a level/checkpoint transition: stores `flag` at `self->0xe0`,
@@ -88,18 +90,18 @@ void sub_8023548(void *self)
  * `0xe4`-byte snapshot block (see `sub_8023548` above). */
 void sub_802356C(void *selfArg, u8 flag, s32 *pairArg)
 {
-    register void *self asm("r5") = selfArg;
+    register struct level_state *self asm("r5") = selfArg;
     register s32 *pair asm("r4") = pairArg;
     u8 tmp;
 
-    *((u8 *)self + 0xe0) = flag;
-    *(s32 *)((u8 *)self + 0xcc) = sub_8023414(self);
-    tmp = *((u8 *)self + 0xa9);
-    *((u8 *)self + 0xd0) = tmp;
+    self->unk_e0 = flag;
+    self->unk_cc = sub_8023414(self);
+    tmp = self->unk_a9;
+    self->unk_d0 = tmp;
     sub_80232FC(self);
     sub_80232EC(self);
     {
-        register s32 *dst asm("r2") = (s32 *)((u8 *)self + 0xd4);
+        register s32 *dst asm("r2") = &self->checkpointX;
         register s32 px asm("r0") = pair[0];
         register s32 py asm("r1") = pair[1];
         dst[0] = px;
@@ -110,17 +112,17 @@ void sub_802356C(void *selfArg, u8 flag, s32 *pairArg)
     {
         void *a = (u8 *)pair + 0x108;
         void *b = (u8 *)pair + 8;
-        register u32 ctrl asm("r2") = 0x04000040;
+        register u32 ctrl asm("r2") = CPU_SET_32BIT | 0x40;
         sub_803A94C(a, b, ctrl);
     }
     {
         void *a = (u8 *)pair + 0x308;
         void *b = (u8 *)pair + 0x208;
-        register u32 ctrl asm("r2") = 0x04000040;
+        register u32 ctrl asm("r2") = CPU_SET_32BIT | 0x40;
         sub_803A94C(a, b, ctrl);
     }
 
-    sub_800014C((u8 *)self + 0xe4, self, 0x68);
+    sub_800014C(self->snapE4, self, 0x68);
 }
 
 /* When `flag` is set, accumulates `self->0xb4` into `self->0x70`,
@@ -128,20 +130,20 @@ void sub_802356C(void *selfArg, u8 flag, s32 *pairArg)
  * (`gUnknown_03001318`) using `self->0xbc`, re-syncs the player's
  * stored position (`gUnknown_030012D8`) from `self->0xd4`/`0xd8`, and
  * re-runs `sub_8022CA0`; otherwise just calls `sub_80231D4`. */
-void sub_80235E4(void *self, u8 flag)
+void sub_80235E4(struct level_state *self, u8 flag)
 {
     if (flag != 0) {
-        *(s32 *)((u8 *)self + 0x70) += *(s32 *)((u8 *)self + 0xb4);
+        self->unk_70 += self->unk_b4;
         sub_8023298(self);
         sub_80232FC(self);
         sub_8023288(self);
-        sub_8028568(gUnknown_03001318, *(s32 *)((u8 *)self + 0xbc));
+        sub_8028568(gUnknown_03001318, self->unk_bc);
         {
             struct actor *player = (struct actor *)gUnknown_030012D8;
-            s32 *p = (s32 *)((u8 *)self + 0xd4);
+            s32 *p = &self->checkpointX;
             sub_8007398(player, p[0], p[1]);
         }
-        sub_8022CA0(self, *((u8 *)self + 0xe0));
+        sub_8022CA0(self, self->unk_e0);
     } else {
         sub_80231D4(self);
     }
@@ -197,9 +199,9 @@ void nullsub_24(void)
  * first refreshes the snapshot itself: copies `src` into `self`'s first
  * `0x68` bytes, then re-copies `self` into the `0x14c`-based snapshot
  * block. */
-void sub_80236AC(void *self, void *src)
+void sub_80236AC(struct level_state *self, void *src)
 {
-    register u8 *snap asm("r5") = (u8 *)self + 0x14c;
+    register u8 *snap asm("r5") = self->snap14C;
     /* Register pins reproduce the ROM's exact "freshly loaded value in
      * one register, shifted result in another" shape for both the byte
      * and halfword extracts below (see docs/workflow.md step 7). */
@@ -212,13 +214,13 @@ void sub_80236AC(void *self, void *src)
 
     raw = *snap;
     val = (u32)(raw << 25) >> 25;
-    *(s32 *)((u8 *)self + 0x74) = val;
+    self->lives = val;
 
-    *(s32 *)((u8 *)self + 0x6c) = *((u8 *)self + 0x14d) >> 1;
+    self->wumpa = self->snap14C[1] >> 1;
 
     packed = *(u16 *)snap;
     val = (u32)(packed << 23) >> 30;
-    *(s32 *)((u8 *)self + 0x78) = val;
+    self->maskLevel = val;
 }
 
 /* Packs `self->0x74`/`0x6c`/`0x78` back into the halfword at
@@ -247,14 +249,14 @@ void sub_80236AC(void *self, void *src)
  *    `pop {r1}; bx r1` without any extra hint. */
 void *sub_80236EC(void *selfArg)
 {
-    register u8 *self asm("r3") = selfArg;
+    register struct level_state *self asm("r3") = selfArg;
     register u8 *snap asm("r0");
     u8 byte0;
     u16 packed;
     register s32 t asm("r2");
 
-    t = *(s32 *)(self + 0x74);
-    snap = self + 0x14c;
+    t = self->lives;
+    snap = self->snap14C;
     t &= 0x7f;
     {
         register s32 mask asm("r1");
@@ -265,8 +267,8 @@ void *sub_80236EC(void *selfArg)
     *snap = byte0;
 
     {
-        s32 field6c = *(s32 *)(self + 0x6c);
-        register u32 off asm("r5") = 0x14D;
+        s32 field6c = self->wumpa;
+        register u32 off asm("r5") = offsetof(struct level_state, snap14C[1]);
         s32 shifted = field6c << 1;
         register s32 one asm("r1") = 1;
         register u32 raw asm("r4");
@@ -277,7 +279,7 @@ void *sub_80236EC(void *selfArg)
     }
 
     {
-        register s32 shifted asm("r2") = (*(s32 *)(self + 0x78) & 3) << 7;
+        register s32 shifted asm("r2") = (self->maskLevel & 3) << 7;
         register s32 mask asm("r1") = 0xFFFFFE7F;
         register u16 loaded asm("r5") = *(u16 *)snap;
         mask &= loaded;

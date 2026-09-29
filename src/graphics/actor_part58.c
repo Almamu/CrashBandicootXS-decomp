@@ -1,5 +1,7 @@
 #include "core.h"
 #include "memory.h"
+#include "level_state.h"
+#include "actor_self.h"
 
 /* Continues the `InitActorPart`/`gUnknown_03000884`-rooted "self" object
  * family documented in actor_part50.c/actor_part19.c: a "part table"
@@ -16,9 +18,9 @@
  * pair, `sub_802D4B0`/`sub_802D4EC`) and a `gUnknown_03001494`-rooted
  * sibling object (`sub_802D490`). See docs/matching/issue-54-actor-d3a8.md. */
 
-extern void *gUnknown_030012C0;
+extern struct level_state *gUnknown_030012C0;
 extern void *gUnknown_030012BC;
-extern s32 sub_80231EC(void *arg0, s32 arg1);
+extern s32 sub_80231EC(struct level_state *arg0, s32 arg1);
 extern void sub_802D204(void *self, s32 arg1);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void *InitActorPart(void *self, void *part, s32 b, s32 c, s32 d);
@@ -28,7 +30,7 @@ extern void *gUnknown_03000884;
 extern void sub_802BFD4(void *arg0);
 extern void sub_802C0BC(void *selfArg, s32 arg1);
 extern u8 sub_802DD9C(void *self);
-extern void sub_8022FEC(void *self);
+extern void sub_8022FEC(struct level_state *self);
 extern s32 sub_8029748(s32 arg0);
 extern void sub_802B12C(s32 arg0, s32 arg1, s32 arg2);
 extern s32 sub_803AD80(void *arg0, s32 arg1, void *fn);
@@ -38,6 +40,16 @@ extern u8 gStaticData_087E5054[];
 extern u8 gStaticData_087E5074[];
 extern u8 gStaticData_087E5094[];
 extern u8 gStaticData_087E50B4[];
+
+/* `actor_self` plus the one-shot byte flag sub_802D600/sub_802D648 use.
+ *
+ * The `*(u8 *)&self->...animDone = zero` stores below are deliberate: as
+ * plain struct-member stores gcc rebuilds the byte zero in r0 instead of
+ * storing the register it was pinned to (same trick as actor_part20.c). */
+struct actor_once {
+    struct actor_self base;
+    u8 once;            // 0x54
+};
 
 /* Passes its argument through to `sub_80231EC(gUnknown_030012C0, 0)`,
  * then `sub_802D204(self, 0)` - a trivial reset pair on a different,
@@ -59,7 +71,7 @@ s32 sub_802D4B0(void *self)
     s32 count;
 
     PlaySfx(gUnknown_030012BC, 0, 0x100);
-    count = *(s32 *)((u8 *)gUnknown_030012C0 + 0x78);
+    count = gUnknown_030012C0->maskLevel;
     if (count != 0) {
         count -= 1;
         sub_80231EC(gUnknown_030012C0, count);
@@ -75,7 +87,7 @@ s32 sub_802D4EC(void *self)
     s32 count;
 
     PlaySfx(gUnknown_030012BC, 1, 0x100);
-    count = *(s32 *)((u8 *)gUnknown_030012C0 + 0x78);
+    count = gUnknown_030012C0->maskLevel;
     if (count != 3) {
         count += 1;
         sub_80231EC(gUnknown_030012C0, count);
@@ -91,10 +103,10 @@ s32 sub_802D4EC(void *self)
  * `gStaticData_087E5054` event table, then pushes the caller's own
  * 6th argument through `sub_80231EC` before resetting state via
  * `sub_802D204(self, 0)`. */
-void *sub_802D528(void *self, void *part, s32 b, s32 c, s32 d, s32 sixth)
+void *sub_802D528(struct actor_self *self, void *part, s32 b, s32 c, s32 d, s32 sixth)
 {
     InitActorPart(self, part, b - 0x1000, c - 0x1E00, d - 0x200);
-    *(u8 **)((u8 *)self + 0x50) = gStaticData_087E5054;
+    self->vtable = (struct actor_vtable *)gStaticData_087E5054;
     sub_80231EC(gUnknown_030012C0, sixth);
     sub_802D204(self, 0);
     return self;
@@ -113,7 +125,7 @@ void sub_802D57C(void *arg0, s32 arg1)
  * `sub_802D4B0`/`sub_802D4EC` above adjust). */
 s32 sub_802D590(void)
 {
-    return *(s32 *)((u8 *)gUnknown_030012C0 + 0x78);
+    return gUnknown_030012C0->maskLevel;
 }
 
 /* Once `self`'s frame counter (`+0x44`) exceeds 5, latches the one-shot
@@ -122,10 +134,10 @@ s32 sub_802D590(void)
  * advances via `sub_802A7B8`. */
 void sub_802D59C(void *selfArg)
 {
-    register u8 *self asm("r4") = selfArg;
+    register struct actor_self *self asm("r4") = selfArg;
 
-    if (*(s32 *)(self + 0x44) > 5) {
-        self[0x2c] = 1;
+    if (self->stateTime > 5) {
+        self->unk_2C[0] = 1;
     }
 
     if (sub_802A6EC(self)) {
@@ -139,11 +151,11 @@ void sub_802D59C(void *selfArg)
  * installing the `gStaticData_087E5074` event table and clearing the
  * one-shot flag at `+0x2c` (rather than setting it, unlike
  * `InitActorPart`'s own default of `1`). */
-void *sub_802D5D4(void *self, void *part, s32 b, s32 c, s32 d)
+void *sub_802D5D4(struct actor_self *self, void *part, s32 b, s32 c, s32 d)
 {
     InitActorPart(self, part, b, c, d);
-    *(u8 **)((u8 *)self + 0x50) = gStaticData_087E5074;
-    ((u8 *)self)[0x2c] = 0;
+    self->vtable = (struct actor_vtable *)gStaticData_087E5074;
+    self->unk_2C[0] = 0;
     return self;
 }
 
@@ -153,12 +165,12 @@ void *sub_802D5D4(void *self, void *part, s32 b, s32 c, s32 d)
  * plays a sound. Always advances via `sub_802A7B8`. */
 void sub_802D600(void *selfArg)
 {
-    register u8 *self asm("r4") = selfArg;
+    register struct actor_once *self asm("r4") = selfArg;
 
     if (sub_802A6EC(self)) {
-        sub_802C0BC(gUnknown_03000884, *(s32 *)(self + 0x1c));
+        sub_802C0BC(gUnknown_03000884, self->base.x);
         {
-            u8 *flag = self + 0x54;
+            u8 *flag = &self->once;
 
             if (*flag == 0) {
                 PlaySfx(gUnknown_030012BC, 0x28, 0x100);
@@ -176,13 +188,13 @@ void sub_802D600(void *selfArg)
  * `<= 0x14`, else 2) that selects which of the part table's three
  * 0xc-stride anim records seeds `self+0x10`/`0x12`, and resets the
  * accumulator (`+8`) and the `+0x54` one-shot flag both to 0. */
-void *sub_802D648(void *self, void *part, s32 posY, s32 c, s32 d)
+void *sub_802D648(struct actor_once *self, void *part, s32 posY, s32 c, s32 d)
 {
     s32 classify = posY;
     s32 idx;
 
     InitActorPart(self, part, posY, c, d);
-    *(u8 **)((u8 *)self + 0x50) = gStaticData_087E5094;
+    self->base.vtable = (struct actor_vtable *)gStaticData_087E5094;
 
     classify >>= 8;
 
@@ -198,17 +210,17 @@ void *sub_802D648(void *self, void *part, s32 posY, s32 c, s32 d)
         }
     }
 
-    *(s32 *)((u8 *)self + 0xc) = idx;
+    self->base.animIndex = idx;
     {
-        u8 *table = *(u8 **)self;
-        u16 anim = *(u16 *)(table + idx * 0xc);
+        struct anim_frame_record *table = self->base.anims;
+        u16 anim = table[idx].duration;
         register u8 zeroShared asm("r2") = 0;
         register s32 zeroAccum asm("r1") = 0;
 
-        *(u16 *)((u8 *)self + 0x10) = anim;
-        ((u8 *)self)[0x12] = zeroShared;
-        *(s32 *)((u8 *)self + 8) = zeroAccum;
-        ((u8 *)self)[0x54] = zeroShared;
+        self->base.animTimer = anim;
+        *(u8 *)&self->base.animDone = zeroShared;
+        self->base.animTime = zeroAccum;
+        self->once = zeroShared;
     }
 
     return self;
@@ -227,53 +239,53 @@ void *sub_802D648(void *self, void *part, s32 posY, s32 c, s32 d)
  * ROM); otherwise advances via `sub_802A7B8`. */
 void sub_802D6A0(void *selfArg)
 {
-    register u8 *self asm("r4") = selfArg;
-    s32 kind = *(s32 *)(self + 0xc);
+    register struct actor_self *self asm("r4") = selfArg;
+    s32 kind = self->animIndex;
 
     if (kind == 0) {
         if (sub_802A6EC(self)) {
-            *(s32 *)(self + 0xc) = 1;
+            self->animIndex = 1;
             {
-                u8 *table = *(u8 **)self;
-                u16 anim = *(u16 *)(table + 0xc);
+                struct anim_frame_record *table = self->anims;
+                u16 anim = table[1].duration;
                 register u8 zero asm("r1") = 0;
 
-                *(u16 *)(self + 0x10) = anim;
-                self[0x12] = zero;
+                self->animTimer = anim;
+                *(u8 *)&self->animDone = zero;
             }
-            *(s32 *)(self + 8) = kind;
+            self->animTime = kind;
 
             PlaySfx(gUnknown_030012BC, 0x17, 0x100);
             sub_8022FEC(gUnknown_030012C0);
-            sub_8029748(*(s32 *)(self + 0x24));
-            sub_802B12C(*(s32 *)(self + 0x1c), *(s32 *)(self + 0x20) - 0xF00, *(s32 *)(self + 0x24));
+            sub_8029748(self->z);
+            sub_802B12C(self->x, self->y - 0xF00, self->z);
         }
 
-        kind = *(s32 *)(self + 0xc);
+        kind = self->animIndex;
         if (kind == 0 && sub_802DD9C(self)) {
-            *(s32 *)(self + 0xc) = 3;
+            self->animIndex = 3;
             {
-                u8 *table = *(u8 **)self;
-                u16 anim = *(u16 *)(table + 0x24);
+                struct anim_frame_record *table = self->anims;
+                u16 anim = table[3].duration;
                 register u8 zero asm("r1") = 0;
 
-                *(u16 *)(self + 0x10) = anim;
-                self[0x12] = zero;
+                self->animTimer = anim;
+                *(u8 *)&self->animDone = zero;
             }
-            *(s32 *)(self + 8) = kind;
-            *(s32 *)(self + 0x18) = 1;
+            self->animTime = kind;
+            self->unk_18 = 1;
 
             PlaySfx(gUnknown_030012BC, 3, 0x100);
             sub_8022FEC(gUnknown_030012C0);
         }
     }
 
-    if (*(s32 *)(self + 0xc) == 3 && self[0x12] != 0) {
+    if (self->animIndex == 3 && self->animDone != 0) {
         if (self != NULL) {
-            u8 *table = *(u8 **)(self + 0x50);
-            s32 offset = *(s16 *)(table + 8);
-            u8 *addr = self + offset;
-            void *fn = *(void **)(table + 0xc);
+            struct actor_vtable *table = self->vtable;
+            s32 offset = table->m08.thisOffset;
+            u8 *addr = (u8 *)self + offset;
+            void *fn = table->m08.fn;
 
             sub_803AD80(addr, 3, fn);
         }
@@ -287,22 +299,22 @@ void sub_802D6A0(void *selfArg)
  * caller's own `d` argument - transitions to kind 2 (anim from the part
  * table's `+0x18` record, accumulator/flag/counter all reset) and plays
  * a sound. */
-void *sub_802D764(void *self, void *part, s32 b, s32 c, s32 d)
+void *sub_802D764(struct actor_self *self, void *part, s32 b, s32 c, s32 d)
 {
     InitActorPart(self, part, b, c, d);
-    *(u8 **)((u8 *)self + 0x50) = gStaticData_087E50B4;
+    self->vtable = (struct actor_vtable *)gStaticData_087E50B4;
 
     if (sub_802973C() == d) {
-        *(s32 *)((u8 *)self + 0xc) = 2;
+        self->animIndex = 2;
         {
-            u8 *table = *(u8 **)self;
-            u16 anim = *(u16 *)(table + 0x18);
+            struct anim_frame_record *table = self->anims;
+            u16 anim = table[2].duration;
             register u8 zero1 asm("r1") = 0;
             register s32 zero2 asm("r2") = 0;
 
-            *(u16 *)((u8 *)self + 0x10) = anim;
-            ((u8 *)self)[0x12] = zero1;
-            *(s32 *)((u8 *)self + 8) = zero2;
+            self->animTimer = anim;
+            *(u8 *)&self->animDone = zero1;
+            self->animTime = zero2;
         }
 
         PlaySfx(gUnknown_030012BC, 0x17, 0x100);

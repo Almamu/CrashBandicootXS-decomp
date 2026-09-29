@@ -35,10 +35,10 @@ extern void sub_803A94C(const void *src, void *dst, u32 cnt);
  * argument order and `byteCount` converted to CpuSet's 32-bit-word
  * count field: masked to the low 23 bits, then divided by 4 (the
  * `<<9`/`>>11` pair nets exactly that), with the 32-bit-transfer flag
- * (`0x04000000`) set. Returns `dst`. */
+ * (`CPU_SET_32BIT`) set. Returns `dst`. */
 void *sub_800014C(void *dst, const void *src, u32 byteCount)
 {
-    sub_803A94C(src, dst, ((byteCount << 9) >> 11) | 0x04000000);
+    sub_803A94C(src, dst, ((byteCount << 9) >> 11) | CPU_SET_32BIT);
     return dst;
 }
 

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "level_state.h"
 
 /* GitHub issue #38: 0x0802425C-0x08024810 (game_loop), continued from
  * game_loop17.c - see that file's header comment and
@@ -32,6 +33,15 @@ struct MedalItemList {
     struct MedalListItem **items;  /* +0x04 */
     struct MedalListItem *extra1;   /* +0x08 */
     struct MedalListItem *extra2;    /* +0x0c */
+};
+
+/* The level-progress record these functions take: `&level_state.level`
+ * (level_state.h), so `item` is the level state's `cat`. */
+struct level_progress {
+    s32 level;                      // 0x00 - index into gStaticData_0816C86C
+    s32 itemIndex;                  // 0x04 - cursor into the entry's item list
+    u8 unk_08[0x10];
+    struct MedalListItem *item;     // 0x18 - the current item (sub_802455C)
 };
 
 extern void *gUnknown_030012B4;
@@ -113,16 +123,15 @@ s32 sub_8024344(s32 idx, s32 flagIdx)
     return result;
 }
 
-/* `self->0x18 == gStaticData_0816C86C[self->0].itemList->extra2` - i.e.
+/* `self->item == gStaticData_0816C86C[self->level].itemList->extra2` - i.e.
  * "does self's cached value (see sub_802455C) match this medal entry's
  * item list's `extra2` slot" - a sibling read of the same field
  * sub_8024524 copies out. */
-s32 sub_80243E0(void *self)
+s32 sub_80243E0(struct level_progress *self)
 {
-    u8 *s = (u8 *)self;
-    struct MedalItemList *list = (struct MedalItemList *)gStaticData_0816C86C[*(s32 *)s].itemList;
+    struct MedalItemList *list = (struct MedalItemList *)gStaticData_0816C86C[self->level].itemList;
     s32 result = 0;
-    s32 cached = *(s32 *)(s + 0x18);
+    s32 cached = (s32)self->item;
 
     if (cached == (s32)list->extra2) {
         result = 1;
@@ -131,12 +140,11 @@ s32 sub_80243E0(void *self)
 }
 
 /* Same as sub_80243E0 but against the item list's `extra1` slot. */
-s32 sub_8024404(void *self)
+s32 sub_8024404(struct level_progress *self)
 {
-    u8 *s = (u8 *)self;
-    struct MedalItemList *list = (struct MedalItemList *)gStaticData_0816C86C[*(s32 *)s].itemList;
+    struct MedalItemList *list = (struct MedalItemList *)gStaticData_0816C86C[self->level].itemList;
     s32 result = 0;
-    s32 cached = *(s32 *)(s + 0x18);
+    s32 cached = (s32)self->item;
 
     if (cached == (s32)list->extra1) {
         result = 1;
@@ -195,7 +203,7 @@ s32 sub_8024464(struct MedalListItem *item)
     return v;
 }
 
-extern void *gUnknown_030012C0;
+extern struct level_state *gUnknown_030012C0;
 extern void *gUnknown_030012BC;
 extern void sub_8001B54(struct AudioContext *self, u32 id);
 extern u8 gStaticData_0816CD80[];
@@ -205,15 +213,15 @@ extern u8 gStaticData_0816CD80[];
  * src/graphics/actor_part7.c) is 3, `6` if `sub_8024404` (the
  * item-list `extra1`-matches-cached-value check) is true, otherwise a
  * byte looked up from the per-level sound-cue-ID table
- * `gStaticData_0816CD80` at `gStaticData_0816C86C[self->0]`'s `+0x04`
+ * `gStaticData_0816CD80` at `gStaticData_0816C86C[self->level]`'s `+0x04`
  * field (a byte offset into that table) - then plays it via
  * `sub_8001B54`. The `sub_8024404` call's result is truncated to `u8`
  * before the nonzero test, matching this codebase's established
  * `(u8)funcCall(...) != 0` idiom for a callee whose real return value
  * is only byte-wide (see e.g. src/graphics/actor_part38c.c). */
-void sub_8024498(void *self)
+void sub_8024498(struct level_progress *self)
 {
-    s32 mode = *(s32 *)((u8 *)gUnknown_030012C0 + 0x78);
+    s32 mode = gUnknown_030012C0->maskLevel;
     u32 id;
 
     if (mode == 3) {
@@ -221,7 +229,7 @@ void sub_8024498(void *self)
     } else if ((u8)sub_8024404(self) != 0) {
         id = 6;
     } else {
-        u32 offset = gStaticData_0816C86C[*(s32 *)self].cueTableOffset;
+        u32 offset = gStaticData_0816C86C[self->level].cueTableOffset;
 
         id = gStaticData_0816CD80[offset];
     }
@@ -229,60 +237,56 @@ void sub_8024498(void *self)
     sub_8001B54(gUnknown_030012BC, id);
 }
 
-/* Advances `self->4` (a cursor into `gStaticData_0816C86C[self->0]`'s
+/* Advances `self->itemIndex` (a cursor into `gStaticData_0816C86C[self->level]`'s
  * item list) by one if it's still below `count - 1`; returns whether
  * it advanced. */
-s32 sub_80244F0(void *self)
+s32 sub_80244F0(struct level_progress *self)
 {
-    u8 *s = (u8 *)self;
     s32 advanced = 0;
-    struct MedalItemList *list = (struct MedalItemList *)gStaticData_0816C86C[*(s32 *)s].itemList;
+    struct MedalItemList *list = (struct MedalItemList *)gStaticData_0816C86C[self->level].itemList;
     s32 threshold = list->count - 1;
-    s32 cur = *(s32 *)(s + 4);
+    s32 cur = self->itemIndex;
 
     if (cur < threshold) {
-        *(s32 *)(s + 4) = cur + 1;
+        self->itemIndex = cur + 1;
         advanced = 1;
     }
     return advanced;
 }
 
-/* Copies `gStaticData_0816C86C[self->0]`'s item list's `extra2` slot
- * into `self->0x18` - the write-side counterpart of sub_80243E0's
+/* Copies `gStaticData_0816C86C[self->level]`'s item list's `extra2` slot
+ * into `self->item` - the write-side counterpart of sub_80243E0's
  * read. */
-void sub_8024524(void *self)
+void sub_8024524(struct level_progress *self)
 {
-    u8 *s = (u8 *)self;
-    struct MedalItemList *list = (struct MedalItemList *)gStaticData_0816C86C[*(s32 *)s].itemList;
+    struct MedalItemList *list = (struct MedalItemList *)gStaticData_0816C86C[self->level].itemList;
 
-    *(s32 *)(s + 0x18) = (s32)list->extra2;
+    self->item = list->extra2;
 }
 
 /* Same as sub_8024524 but for the item list's `extra1` slot. */
-void sub_8024540(void *self)
+void sub_8024540(struct level_progress *self)
 {
-    u8 *s = (u8 *)self;
-    struct MedalItemList *list = (struct MedalItemList *)gStaticData_0816C86C[*(s32 *)s].itemList;
+    struct MedalItemList *list = (struct MedalItemList *)gStaticData_0816C86C[self->level].itemList;
 
-    *(s32 *)(s + 0x18) = (s32)list->extra1;
+    self->item = list->extra1;
 }
 
-/* If `gStaticData_0816C86C[self->0]`'s item list is nonempty, caches
- * `list->items[self->4]` into `self->0x18`. Returns whether the list
+/* If `gStaticData_0816C86C[self->level]`'s item list is nonempty, caches
+ * `list->items[self->itemIndex]` into `self->item`. Returns whether the list
  * was nonempty either way - the trailing `-x|x` bit-trick reproduces
  * the ROM's own idiom for a bare `return expr != 0;` (as opposed to the
  * `if (expr != 0)` earlier in the same function, which compiles as a
  * plain compare-and-branch) - see matching_decomp_register_pinning-
  * style notes in docs/matching.md for other instances of this split. */
-s32 sub_802455C(void *self)
+s32 sub_802455C(struct level_progress *self)
 {
-    u8 *s = (u8 *)self;
-    struct MedalItemList *list = (struct MedalItemList *)gStaticData_0816C86C[*(s32 *)s].itemList;
+    struct MedalItemList *list = (struct MedalItemList *)gStaticData_0816C86C[self->level].itemList;
 
     if (list->count != 0) {
-        s32 cur = *(s32 *)(s + 4);
+        s32 cur = self->itemIndex;
 
-        *(s32 *)(s + 0x18) = (s32)list->items[cur];
+        self->item = list->items[cur];
     }
     {
         s32 v = list->count;
