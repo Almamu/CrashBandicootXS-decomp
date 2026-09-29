@@ -485,7 +485,7 @@ void sub_8034EF0(struct map_screen *self)
             tile = sub_8006C44(gUnknown_030012FC);
             sub_8006C84(gUnknown_030012FC, glyph->tiles, (glyph->rows * glyph->cols) << 9);
             zero = 0;
-            sub_803A94C(&zero, &oam, 0x05000002);
+            sub_803A94C(&zero, &oam, CPU_SET_SRC_FIXED | CPU_SET_32BIT | 2);
             oam.size = 2;
             oam.palette = glyph->palette;
             y = node->y;

@@ -164,7 +164,10 @@ struct GaxInstrumentSeqEntry {
 struct GaxChannelInstrument {
     u8 pad_00;
     u8 waveIdx[4];               /* 0x01 - per-row wave index */
-    u8 pad_05[7];
+    u8 pad_05[4];
+    u8 vibratoDepth;             /* 0x09 - Q8 scale of the vibrato table value, 0 = off (sub_8039FFC) */
+    u8 vibratoSpeed;             /* 0x0a - phase step per tick */
+    u8 pad_0b;
     struct GaxInstrumentRow rows[4]; /* 0x0c */
     struct GaxEnvelope *envelope; /* 0x7c */
     u8 pad_80[5];
@@ -337,7 +340,7 @@ struct GaxChannelState {
     u8 vol15;                    /* 0x15 - 0-0xff, ramped by volStep15 */
     u8 envOut;                   /* 0x16 - sub_8039F30's result */
     u8 vol17;                    /* 0x17 - 0-0xff, ramped by volStep17 */
-    s8 field_18;                 /* 0x18 */
+    s8 field_18;                 /* 0x18 - volume set by sub_8039064/sub_80390F8 (-1 = default) */
     u8 pad_19;
     s16 volStep15;               /* 0x1a */
     s16 volStep17;               /* 0x1c */
@@ -346,20 +349,20 @@ struct GaxChannelState {
     u8 seqLoopCount;             /* 0x20 - sequence loop counter (cmds 5/6) */
     u8 field_21;                 /* 0x21 */
     u8 released;                /* 0x22 - nonzero once the note is released (envelope leaves sustain/loop) */
-    u8 pad_23;
-    u8 field_24;                 /* 0x24 */
+    u8 vibratoDelay;             /* 0x23 - ticks left before the vibrato phase starts advancing */
+    u8 field_24;                 /* 0x24 - muted flag (sub_8038FD0) */
     u8 field_25;                 /* 0x25 */
     s16 pitch;                   /* 0x26 */
     s16 pitchStep;               /* 0x28 */
     s16 note;                    /* 0x2a - 0x8AD0 = no note */
     s16 noteStep;                /* 0x2c */
-    s16 field_2e;                /* 0x2e - added to the note when mixing */
+    s16 field_2e;                /* 0x2e - added to the note when mixing (sub_8039FFC's vibrato offset) */
     s16 slideTarget;             /* 0x30 */
     s16 slideRate;               /* 0x32 - 0 = no portamento */
     s16 retriggerDelay;          /* 0x34 - E-Dx note delay countdown */
     u16 seqPos;                  /* 0x36 - position in instrument->seq */
     u16 envPos;                 /* 0x38 - sub_8039F30's position */
-    u8 pad_3a[2];
+    u16 vibratoPhase;            /* 0x3a - 0-0x3f index into gStaticData_085A9EAC */
     struct GaxChannelInstrument *instrument; /* 0x3c */
     u8 *patternPtr;              /* 0x40 - read position in the packed pattern stream */
     s32 samplePos;               /* 0x44 - Q11 */
