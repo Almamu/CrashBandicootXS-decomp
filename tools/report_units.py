@@ -653,38 +653,58 @@ def build_target(name, start, end):
 
 #### Data units (decomp.dev's separate "data" progress bar) ####
 #
-# Everything from DATA_START to the end of the ROM is data/data.s: one
-# label per blob, each blob a single `.incbin`. A blob is "matched" when it
-# is built from a source in the repo (graphics compressed from a PNG, the
-# GAX2 audio rebuilt from .xm/.wav, the sfx table from JSON, ...) and
+# Everything from DATA_START to the end of the ROM is linked from the
+# "/* Data */" block of ldscript.txt, in ROM order: the sections of
+# data/data.s (one label per blob, each blob a single `.incbin`)
+# interleaved with the `.rodata` of the C data objects under src/data/
+# (see docs/data.md). A blob is "matched" when it is built from a source
+# in the repo (graphics compressed from a PNG, the GAX2 audio rebuilt from
+# .xm/.wav, the sfx table from JSON, a src/data C table, ...) and
 # "unmatched" while it's still `.incbin "baserom.gba"`. Both give identical
 # bytes, so an honest data measure can't come from diffing bytes alone:
 # baserom-copied blobs get a target symbol but no base symbol, exactly like
 # the still-raw code ranges above. See docs/decomp_dev.md's "Data progress".
 
 DATA_S = ROOT / "data" / "data.s"
+LDSCRIPT = ROOT / "ldscript.txt"
+OBJ_ROOT = "build/crashbandicootxs"
 DATA_BUILD_DIR = BUILD_DIR / "data"
 BASEROM = ROOT / "baserom.gba"
 ROM_BASE = 0x08000000
-DATA_START = UNITS[-1][0]  # data.s is linked straight after the last code unit
+DATA_START = UNITS[-1][0]  # the data is linked straight after the last code unit
 DATA_CATEGORY = "data"
 # Start of the ROM's trailing 0xFF cartridge filler (runs to 0x08800000);
 # see trim_rom_filler().
 DATA_END = 0x087E5FCC
 
 
+def data_layout():
+    """(object, section) pairs of ldscript.txt's "/* Data */" block, in
+    link (= ROM) order, e.g. ("data/data.o", ".rodata.0816C090") or
+    ("src/data/action_table_16bf20.o", ".rodata")."""
+    block = LDSCRIPT.read_text().split("/* Data */", 1)[1].split("}", 1)[0]
+    return re.findall(rf"{OBJ_ROOT}/(\S+?\.o)\((\S+?)\);", block)
+
+
 def parse_data_s():
-    """Returns one dict per data.s label, in ROM order: name, addr, size,
-    the incbin's path/offset/length, and `built` (False when the bytes are
-    copied from baserom.gba). Addresses are computed from DATA_START and
-    each blob's size; a baserom blob's own incbin offset must agree, which
-    catches any drift between this parser and the real layout."""
-    blobs = []
-    addr = DATA_START
+    """data.s's blobs, grouped by section: {section: [blob, ...]}. Each
+    blob is a dict with the label name, size, the incbin's path/offset/
+    length, and `built` (False when the bytes are copied from
+    baserom.gba). parse_data() fills in the addresses."""
+    sections = {".rodata": []}
+    blobs = sections[".rodata"]
+    started = set()
     name = None
     for lineno, line in enumerate(DATA_S.read_text().splitlines(), 1):
         s = line.split("@", 1)[0].strip()
-        if not s or s.startswith((".global", ".section")):
+        if not s or s.startswith(".global"):
+            continue
+        if s.startswith(".section"):
+            sec = s.split()[1].rstrip(",")
+            if sec in started:
+                sys.exit(f"{DATA_S}:{lineno}: section {sec} is started twice")
+            started.add(sec)
+            blobs = sections.setdefault(sec, [])
             continue
         m = re.fullmatch(r"(\w+):", s)
         if m:
@@ -701,21 +721,87 @@ def parse_data_s():
             if not src.exists():
                 sys.exit(f"{src} missing - build the data assets first (`make report` does)")
             size = src.stat().st_size
-        built = path != "baserom.gba"
-        if not built and int(off, 0) != addr - ROM_BASE:
-            sys.exit(f"{DATA_S}:{lineno}: {name} is at {addr:#x} but incbins offset {off}")
-        blobs.append({"name": name, "addr": addr, "size": size, "path": path,
-                      "off": off, "len": length, "built": built})
-        addr += size
+        blobs.append({"name": name, "size": size, "path": path, "off": off,
+                      "len": length, "built": path != "baserom.gba", "lineno": lineno})
         name = None  # one incbin per label - a second one would need a symbol
+    return sections
+
+
+def c_data_blobs(obj, section):
+    """One blob per global object symbol in `section` of a src/data C
+    object, in address order, plus the section's alignment. A blob runs
+    to the next symbol (or the section's end), so alignment padding
+    between two tables counts toward the first."""
+    path = ROOT / OBJ_ROOT / obj
+    if not path.exists():
+        sys.exit(f"{path} missing - build it first (`make report` does)")
+    headers = subprocess.run(["arm-none-eabi-objdump", "-h", str(path)],
+                             capture_output=True, text=True, check=True).stdout
+    m = re.search(rf"^\s*\d+\s+{re.escape(section)}\s+([0-9a-f]+)(?:\s+[0-9a-f]+){{3}}\s+2\*\*(\d+)$",
+                  headers, re.M)
+    if not m:
+        sys.exit(f"{obj} has no {section} section")
+    sec_size, align = int(m.group(1), 16), 1 << int(m.group(2))
+    table = subprocess.run(["arm-none-eabi-objdump", "-t", str(path)],
+                           capture_output=True, text=True, check=True).stdout
+    syms = []
+    for line in table.splitlines():
+        # "00000000 g     O .rodata\t00000150 gStaticData_0816BF20"
+        f = re.match(r"([0-9a-f]{8}) (.{7}) (\S+)\t[0-9a-f]+ (\S+)$", line)
+        if f and f.group(3) == section and f.group(2)[0] == "g" and f.group(2)[6] == "O":
+            syms.append((int(f.group(1), 16), f.group(4)))
+    syms.sort()
+    if not syms or syms[0][0] != 0:
+        sys.exit(f"{obj}: {section} must start with a global object symbol")
+    blobs = []
+    for i, (value, name) in enumerate(syms):
+        end = syms[i + 1][0] if i + 1 < len(syms) else sec_size
+        blobs.append({"name": name, "size": end - value, "path": obj[:-2] + ".c",
+                      "off": None, "len": None, "built": True, "c_source": True})
+    return blobs, align
+
+
+def parse_data():
+    """Returns one dict per data blob, in ROM order, with its address:
+    data.s's sections and the src/data C objects' tables, laid out the
+    way ldscript.txt links them. A baserom blob's own incbin offset must
+    agree with the computed address, which catches any drift between
+    this parser and the real layout (a C table of the wrong size
+    included)."""
+    sections = parse_data_s()
+    blobs = []
+    addr = DATA_START
+    for obj, section in data_layout():
+        if obj == "data/data.o":
+            if section not in sections:
+                sys.exit(f"ldscript.txt links data.o({section}), which data/data.s doesn't define")
+            part, align = sections.pop(section), 1
+        elif obj.startswith("src/data/"):
+            part, align = c_data_blobs(obj, section)
+        else:
+            sys.exit(f"ldscript.txt: unexpected object {obj} in the data block")
+        if addr % align:
+            sys.exit(f"{obj}({section}) needs {align}-byte alignment but would start at {addr:#x}")
+        for blob in part:
+            blob["addr"] = addr
+            if not blob["built"] and int(blob["off"], 0) != addr - ROM_BASE:
+                sys.exit(f"{DATA_S}:{blob['lineno']}: {blob['name']} is at {addr:#x} "
+                         f"but incbins offset {blob['off']}")
+            addr += blob["size"]
+            blobs.append(blob)
+    if sections:
+        sys.exit(f"data/data.s sections not linked by ldscript.txt: {', '.join(sections)}")
     return blobs
 
 
 def blob_group(blob):
-    """Asset directory a built blob comes from (e.g. graphics/intro), None
-    for a baserom blob."""
+    """Asset directory a built blob comes from (e.g. graphics/intro), the
+    source file minus `.c` for a src/data table (each C file is its own
+    unit), None for a baserom blob."""
     if not blob["built"]:
         return None
+    if blob.get("c_source"):
+        return blob["path"][:-2]
     return str(Path(blob["path"]).parent.relative_to("build/crashbandicootxs"))
 
 
@@ -738,6 +824,14 @@ def group_data_blobs(blobs):
 
 
 def incbin_line(blob, from_rom):
+    if blob.get("c_source"):
+        # A src/data table's bytes only exist after linking (its pointers
+        # are relocations), and `make report` doesn't link. `make compare`
+        # already proves them equal to the ROM's, so the base reuses the
+        # ROM bytes (zero fill when there's no ROM - the target does too).
+        from_rom = BASEROM.exists()
+        if not from_rom:
+            return f"\t.space {blob['size']:#x}\n"
     if from_rom:
         return f'\t.incbin "baserom.gba", {blob["addr"] - ROM_BASE:#x}, {blob["size"]:#x}\n'
     if blob["len"] is not None:
@@ -785,7 +879,8 @@ def trim_rom_filler(blobs, have_rom):
 
 
 def data_units():
-    """objdiff units for data/data.s (see the comment above DATA_S)."""
+    """objdiff units for the data (data/data.s and src/data - see the
+    comment above DATA_S)."""
     DATA_BUILD_DIR.mkdir(parents=True, exist_ok=True)
     have_rom = BASEROM.exists()
     if not have_rom:
@@ -800,7 +895,7 @@ def data_units():
         return incbin_line(blob, False) if blob["built"] else f"\t.space {blob['size']:#x}\n"
 
     units = []
-    for run_ in group_data_blobs(trim_rom_filler(parse_data_s(), have_rom)):
+    for run_ in group_data_blobs(trim_rom_filler(parse_data(), have_rom)):
         blobs = run_["blobs"]
         start = blobs[0]["addr"]
         tag = run_["group"].replace("/", "_") if run_["group"] else "raw"

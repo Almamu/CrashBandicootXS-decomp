@@ -164,15 +164,15 @@ struct category_vtable {
 }; // 0x34
 COMPILE_TIME_ASSERT(sizeof(struct category_vtable) == 0x34);
 
-/* gStaticData_08175558 is already split out at exactly this size in
- * data/data.s (7*0x34 = 0x16C bytes before gStaticData_081756C4 starts).
- * gStaticData_081756C4 is only labeled for its first 3 entries there,
- * which is also all of it - there is no 4th/5th/6th/7th vtable to find,
+/* Both tables are defined in src/data/actor_category_175558.c (7*0x34 =
+ * 0x16C bytes of descriptors, then gStaticData_081756C4). The latter
+ * has 3 entries, which is also all of it - there is no 4th/5th/6th/7th
+ * vtable to find,
  * see the comment on category_descriptor.type above. Whatever real data
  * follows it at gStaticData_081756C4+0x9C (ROM 0x08175760, currently
  * inside the still-generic gStaticData_08175760 label) is unrelated. */
-extern struct category_descriptor gStaticData_08175558[7];
-extern struct category_vtable gStaticData_081756C4[3];
+extern const struct category_descriptor gStaticData_08175558[7];
+extern const struct category_vtable gStaticData_081756C4[3];
 
 /* Not split out as their own labels in data/data.s yet - the bytes exist
  * at these ROM addresses (currently inside larger unlabeled incbin

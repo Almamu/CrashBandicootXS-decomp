@@ -1,0 +1,75 @@
+#include "core.h"
+#include "graphics_package.h"
+
+/*
+ * ROM 0x0817D6C0-0x0817D7A4. Linked in ROM order between data/data.s
+ * sections by ldscript.txt - see docs/data.md.
+ */
+
+extern const u8 gStaticData_0817D7A4[];
+extern const u8 gStaticData_08631A68[];
+extern const u8 gStaticData_08631A90[];
+extern const u8 gStaticData_08631AB8[];
+extern const u8 gStaticData_08634270[];
+extern const u8 gStaticData_08636EF4[];
+extern const u8 gStaticData_08637604[];
+
+/* graphics_loading_35d1c.c's view of one countdown-slot seed. */
+struct slot_seed
+{
+    const void *record;
+    s32 hold;
+};
+
+/* Twenty {record, hold} seeds read by sub_8036600
+ * (graphics_loading_35d1c.c), records in the still-raw
+ * gStaticData_0817D7A4, then a {NULL, 0} terminator. */
+const struct slot_seed gStaticData_0817D6C0[21] = {
+    { gStaticData_0817D7A4 + 0x14, 0 },
+    { gStaticData_0817D7A4 + 0x174, 0x5a },
+    { gStaticData_0817D7A4 + 0x234, 0x60 },
+    { gStaticData_0817D7A4 + 0x2f4, 0x64 },
+    { gStaticData_0817D7A4 + 0x3b4, 0x68 },
+    { gStaticData_0817D7A4 + 0x474, 0x6e },
+    { gStaticData_0817D7A4 + 0x534, 0x73 },
+    { gStaticData_0817D7A4 + 0x5f4, 0x78 },
+    { gStaticData_0817D7A4 + 0x6b4, 0x7d },
+    { gStaticData_0817D7A4 + 0x774, 0x83 },
+    { gStaticData_0817D7A4 + 0x834, 0x89 },
+    { gStaticData_0817D7A4 + 0x8f4, 0x8a },
+    { gStaticData_0817D7A4 + 0x9b4, 0x8f },
+    { gStaticData_0817D7A4 + 0xa74, 0x93 },
+    { gStaticData_0817D7A4 + 0xaf4, 0x97 },
+    { gStaticData_0817D7A4 + 0xbb4, 0x9b },
+    { gStaticData_0817D7A4 + 0xc74, 0x9f },
+    { gStaticData_0817D7A4 + 0xd34, 0xa3 },
+    { gStaticData_0817D7A4 + 0xdf4, 0xa6 },
+    { gStaticData_0817D7A4 + 0xeb4, 0xb2 },
+    { NULL, 0 },
+};
+
+/* The three BG banks' packages sub_80361B0 (graphics_loading_35d1c.c)
+ * loads as PKG_A/PKG_B/PKG_C: only the tiles and map are set. */
+const struct bg_package gStaticData_0817D768 = {
+    0,
+    0,
+    (void *)gStaticData_08631A68,
+    (void *)gStaticData_08634270,
+    NULL,
+};
+
+const struct bg_package gStaticData_0817D77C = {
+    0,
+    0,
+    (void *)gStaticData_08631A90,
+    (void *)gStaticData_08636EF4,
+    NULL,
+};
+
+const struct bg_package gStaticData_0817D790 = {
+    0,
+    0,
+    (void *)gStaticData_08631AB8,
+    (void *)gStaticData_08637604,
+    NULL,
+};
