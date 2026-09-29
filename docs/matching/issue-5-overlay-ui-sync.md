@@ -353,3 +353,16 @@ make NON_MATCHING=1 report` followed by clean `rm -rf build
 crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
 compare` both passed (`sha1sum`'s "La suma coincide"). Both functions
 are now matched, closing out the r7 limitation for this issue's scope.
+
+## Later pass: `sub_8002E20` matched
+
+The last-eight NAKED retry closed `sub_8002E20` as real C (see
+[last-eight-naked-retry.md](last-eight-naked-retry.md)). The 14-halfword
+register permutation left by the last-seven pass came from the channel
+pointer's copy preference for r2 (it was an `"+r"` escape of `c + 0x108`
+with `c` pinned to r2): the wrap loop's ring pointer inherited that
+preference, which pushed `old` out of r2. Building the channel pointer
+with `asm volatile("" : "=r"(ch) : "r"(c + 0x108))` drops the
+preference, and pinning the wrap loop's count pointer to r1 (set after
+the zero-trip test, with the loop written as `if` + `do`/`while`)
+leaves r2 for `old`. `n` no longer needs extra references.

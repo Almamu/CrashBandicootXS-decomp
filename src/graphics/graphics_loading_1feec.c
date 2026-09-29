@@ -235,14 +235,35 @@ void sub_80204EC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * turn comes. In the draft part+0x28 (6 refs over 49 insns) is
  * allocated before arg3 (3/63), &gUnknown_030012B4 (3/94, then left
  * unallocated and rematerialized) and -0x11 (3/86), so it gets r5. An
- * escaped `&gUnknown_030012B4` local gets sl but is 88 hw. */
+ * escaped `&gUnknown_030012B4` local gets sl but is 88 hw.
+ * Last-eight pass (docs/matching/last-eight-naked-retry.md): 12 hw, same
+ * size. The second flip goes through `q2`, a stack-resident copy of
+ * part+0x28 (an `"m"` asm operand), so the first flip's part+0x28 is
+ * block-local (r3) and arg3/hdr+0x84 get r4/r5. Left: the
+ * `str r3, [sp]` comes one insn before `adds r1, r7, #0` instead of
+ * after it (the ROM's looks like a caller-save), the reload registers
+ * for `q2` (r4/r3 swapped), and &gUnknown_030012B4 / -0x11 in sl/r9
+ * where the ROM has r9/sl. */
 #if NON_MATCHING
+/* The part's +0x28 bitfield byte seen through its own pointer. Padded
+ * past a word so the fields are read with `ldrb` (a 4-byte struct is
+ * read as a whole word). */
+struct popup_bits
+{
+    u32 unk_28_0:4;
+    u32 flipX:1;
+    u32 unk_28_5:1;
+    u32 unk_28_6:2;
+    u8 unk_29[0x1f];
+};
+
 void sub_802062C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
     struct popup_hdr *hdr;
     struct level_record *rec;
     struct level_record *rec2;
+    struct popup_bits *q2;
 
     part->anim = POPUP_ANIM(0x114);
     part->frameNibble = sub_800815C(part);
@@ -257,12 +278,15 @@ void sub_802062C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
-    sub_8008E94(gUnknown_030012F0, part);
+    sub_8008E94(gUnknown_030012F0, (q2 = (struct popup_bits *)((u8 *)part + 0x28), part));
+    /* No code: the "m" operand keeps `q2` in a stack slot, the ROM's
+     * `str r3, [sp]` / `ldr r3, [sp]` pair around the call. */
+    asm("" : : "m"(q2));
     SetPopupGfx(hdr, gStaticData_0816B98C);
     rec2 = LEVEL_RECORD(arg3);
     {
-        s32 f = part->flipX;
-        part->flipX = f == 0;
+        s32 f = q2->flipX;
+        q2->flipX = f == 0;
     }
     SetPartField0A(part, 1);
     SetPopupGfx(hdr, gStaticData_0816BAAC);
