@@ -543,6 +543,36 @@ set, which the hardware ignores but a PNG palette can't carry. Each
 palette is `aligned(4)`: the 0-3 zero bytes before it in the ROM are the
 alignment after the previous (odd-length) bitmap stream.
 
+### Library data
+
+The constants of the libraries linked into the game, between the GAX2
+music block and the cutscene pictures, are C in three files:
+
+- `clz_tab_5a4c70.c`: libgcc2.c's `__clz_tab` (bit length of each byte
+  value), twice, because gcc 2.x's libgcc2.c made it `static` in each
+  object. `__divdi3` and `__udivdi3` (`src/util/math_div64_util.c`)
+  each read their own. The values are written the way libgcc2.c writes
+  them.
+- `gax_tables_5a6100.c`: the GAX2 engine's version string (and the
+  pointer to it, which `sub_8038538` checks for "GAX"), the 12 mixing
+  rates (`struct RateEntry`), the error strings `sub_80392E0` prints,
+  its halt banner and the pointer to it, the 3,828-entry period table
+  and the 64-step vibrato wave. The two pointers are symbol references
+  now, so the music block before them can change size.
+- `eeprom_5a9eec.c`: the AGB SDK EEPROM library's "EEPROM_V122" id
+  string (read by flashers and emulators to detect the save type, not
+  by the game), the two `struct EepromConfig`s, the write timeout
+  `u16[3]`, and a list of the library's 22 address constants. That list
+  holds, function by function, the literal-pool words of `sub_803A968`
+  ... `sub_803ACE0` that are symbol addresses (IWRAM variables, the two
+  configs, the timeout, `sub_803A9AC`). Nothing in the ROM points at
+  it, but every word is a symbol, so it is written as symbol references
+  and doesn't pin anything in place.
+
+The one-byte pad before the version string is the zero padding gbagfx
+writes after the `.lz` stream before it (it rounds `.lz` files up to 4
+bytes), so `data.s` incbins that file whole instead of trimming it.
+
 ### Placing it and counting it
 
 Placement is the same as for a hand-written table (see "Layout" above).
@@ -682,33 +712,3 @@ the same way.
 
 `tools/rle_sprites.py extract` writes the three PNGs from `baserom.gba`
 again and checks that every frame re-encodes to the ROM's bytes.
-
-### Library data
-
-The constants of the libraries linked into the game, between the GAX2
-music block and the cutscene pictures, are C in three files:
-
-- `clz_tab_5a4c70.c`: libgcc2.c's `__clz_tab` (bit length of each byte
-  value), twice, because gcc 2.x's libgcc2.c made it `static` in each
-  object. `__divdi3` and `__udivdi3` (`src/util/math_div64_util.c`)
-  each read their own. The values are written the way libgcc2.c writes
-  them.
-- `gax_tables_5a6100.c`: the GAX2 engine's version string (and the
-  pointer to it, which `sub_8038538` checks for "GAX"), the 12 mixing
-  rates (`struct RateEntry`), the error strings `sub_80392E0` prints,
-  its halt banner and the pointer to it, the 3,828-entry period table
-  and the 64-step vibrato wave. The two pointers are symbol references
-  now, so the music block before them can change size.
-- `eeprom_5a9eec.c`: the AGB SDK EEPROM library's "EEPROM_V122" id
-  string (read by flashers and emulators to detect the save type, not
-  by the game), the two `struct EepromConfig`s, the write timeout
-  `u16[3]`, and a list of the library's 22 address constants. That list
-  holds, function by function, the literal-pool words of `sub_803A968`
-  ... `sub_803ACE0` that are symbol addresses (IWRAM variables, the two
-  configs, the timeout, `sub_803A9AC`). Nothing in the ROM points at
-  it, but every word is a symbol, so it is written as symbol references
-  and doesn't pin anything in place.
-
-The one-byte pad before the version string is the zero padding gbagfx
-writes after the `.lz` stream before it (it rounds `.lz` files up to 4
-bytes), so `data.s` incbins that file whole instead of trimming it.
