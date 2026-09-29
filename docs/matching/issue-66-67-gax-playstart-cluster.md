@@ -191,3 +191,11 @@ What closed it:
 `sub_8038538`'s draft is improved: `maxRate`/`fmt` are now in the ROM's
 r8/r9, and it is ~294 halfwords off by alignment-insensitive count (was
 ~364). It stays NAKED. See [gax-naked-retry-2.md](./gax-naked-retry-2.md).
+
+## Later pass: GAX NAKED retry 5
+
+`sub_8038538` is now real C, under current agbcc with the normal flags.
+The closing changes were indexed copies of the constant ARM-code tables,
+a separate counter for the dspFn17c copy, a block-local `layout` read, and
+three documented no-code nudges. See
+[gax-naked-retry-5.md](./gax-naked-retry-5.md).

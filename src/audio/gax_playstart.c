@@ -15,46 +15,15 @@
  * re-arms the hardware DMA1/SOUNDCNT output path (sub_80384DC, matched
  * above in gax_hw_reset.c) - showing GAX2's fatal-error screen
  * (sub_80392E0) on any sanity-check failure along the way instead of
- * returning normally. Object shape not confidently modeled - kept as raw
- * offsets throughout, same as the other GAX2_SoundHandler functions in
- * this cluster.
+ * returning normally.
  *
- * Written as NAKED asm, not plain C: this function's prologue
- * (`push {r4-r7,lr}; mov r7,sl; mov r6,sb; mov r5,r8; push {r5,r6,r7}`)
- * keeps r8/sb/sl live as genuine scratch across the whole function (a
- * running priority-maximum accumulator in r8, spanning two nested voice-
- * scan loops; sb/sl holding intermediate bank/table pointers across
- * several calls) - the same many-register gcc-2.9 allocation ceiling
- * already documented throughout this ROM region for sub_8006600/
- * sub_80372BC and this cluster's other functions (docs/status/audio.md),
- * which a NAKED function sidesteps entirely since nothing asks gcc's
- * allocator to decide anything. Mechanical, byte-verified transcription of
- * the ROM's own instructions (translated from the disassembler's unified
- * syntax to this project's established NAKED plain/divided syntax, local
- * labels renumbered per docs/matching/issue-4-sio-settings-sync.md's
- * convention), not an inferred control-flow guess. */
-/* Later pass (docs/matching/gax-toolchain-retry.md): the "r8/sb/sl
- * ceiling" note above is not the real obstacle - a plain draft against
- * the structs in include/audio.h (below) reproduces the ROM's control
- * flow, buffer carving, literal pool and most instruction selection
- * (the tap-table scans need a walking `tap` pointer, the ARM-code copies
- * pre-loaded source pointers). What's left is register choice: agbcc
- * gives the format pointer r8 and `maxRate` r9 where the ROM has them
- * the other way round, which cascades through the rest of the function.
- * Still NAKED.
- * GAX NAKED retry 2 (docs/matching/gax-naked-retry-2.md): draft now
- * ~294 halfwords off by alignment-insensitive count (was ~364): `/` for
- * the echo length (sub_8037E54 is `__udivsi3`), the tap/alternative-
- * layout scans in sub_8037FC0's matched shape, an s32 copy counter, and
- * a no-code `maxRate` reference that gives it r8 and `fmt` r9 like the
- * ROM. Left: register choice in the ALIGN4 after `field_1c` (new size in
- * r3), the first tap scan's `layout` copy, the order of the constants
- * hoisted before the ARM-code copy loops, and the tail.
- * GAX retry 3 (docs/matching/gax-naked-retry-3.md): the tail matches with
- * a nested `flags & 2` test (~100 by brute2's sequence score, was ~123).
- * The rest is as above; reordering the copy-loop setup statements moves
- * it by 1-4 at most. */
-#if NON_MATCHING
+ * Matched in GAX retry 5 (docs/matching/gax-naked-retry-5.md) after four
+ * earlier passes (gax-toolchain-retry.md, gax-naked-retry-2/3/4.md). The
+ * last pieces were: indexed copies of the constant ARM-code tables (GCSE
+ * hoists their addresses to the first block in the ROM's order), a
+ * separate counter for the dspFn17c copy, `layout` copied from a
+ * block-local read after the first types[] load, and three no-code
+ * register nudges (commented at each use). */
 asm(".set _call_via_r1, sub_803AD7C\n.set __divsi3, sub_803ADB4\n.set __udivsi3, sub_8037E54\n");
 
 struct RateEntry { u32 rate; u32 timer; };
@@ -94,6 +63,10 @@ u32 sub_8038538(struct GaxSongHeader *p)
     s32 idx;
     s32 k;
     struct GaxHandlerLayout *layout;
+    /* no-code hold: the ROM leaves r3 unused while `layout` is live
+     * between the first tap scan and its `types[2]` test, so `layout`
+     * lands in r4 */
+    register u32 hold asm("r3");
 
     if (size <= 0x18b)
         goto fail;
@@ -141,6 +114,9 @@ u32 sub_8038538(struct GaxSongHeader *p)
     buf += (gUnknown_03001630->format->frames + 4) * 2;
     size -= (gUnknown_03001630->format->frames + 4) * 2;
     ALIGN4(buf, size);
+    /* no code: an extra reference that lifts the aligned size over the
+     * format pointer in global.c's priority order (ROM: r3/r4) */
+    asm("" : : "r"(size));
     gUnknown_03001630->field_2c = 0;
     if (size < gUnknown_03001630->format->frames * 2)
         return 0;
@@ -151,10 +127,17 @@ u32 sub_8038538(struct GaxSongHeader *p)
     ALIGN4(buf, size);
     {
         struct GaxDspTap *tap;
+        struct GaxHandlerLayout *l;
+        struct GaxHandlerType *t0;
 
+        /* `layout` is copied from a block-local read after the first
+         * types[] load, as in the ROM (`adds r4, r0, #0` between them) */
         i = 0;
-        layout = p->layout;
-        tap = layout->types[0]->data.dsp->taps;
+        l = p->layout;
+        t0 = l->types[0];
+        asm("" : "=r"(hold));
+        layout = l;
+        tap = t0->data.dsp->taps;
         for (; i <= 2; i++) {
             if (tap->rate > maxRate)
                 maxRate = tap->rate;
@@ -164,6 +147,7 @@ u32 sub_8038538(struct GaxSongHeader *p)
             tap++;
         }
     }
+    asm("" : : "r"(hold));
     if (!(p->flags & 0x10) && layout->types[2] != NULL) {
         struct GaxLayoutList *subs = (struct GaxLayoutList *)layout->types[2];
 
@@ -212,24 +196,21 @@ u32 sub_8038538(struct GaxSongHeader *p)
         sub_8037F3C(echo, len);
     }
     {
-    struct GaxHandlerLayout *layout;
-    const u32 *a73c;
-    const u32 *a818;
+    /* Indexed copies of the constant tables: GCSE's PRE hoists the
+     * `&gUnknown_03001630`, `p->layout`, 0803A73C and 0803A818 loads to
+     * the end of this first block, in the ROM's order, and loop.c
+     * strength-reduces each index into the `ldmia` pointer. */
     const u32 *src;
 
-    k = 0;
-    layout = p->layout;
-    a73c = gStaticData_0803A73C;
-    a818 = gStaticData_0803A818;
-    src = gStaticData_0803A630;
-    for (; k <= 20; k++)
-        gUnknown_03001630->dspCode48[k] = *src++;
-    src = a73c;
+    for (k = 0; k <= 20; k++)
+        gUnknown_03001630->dspCode48[k] = gStaticData_0803A630[k];
+    src = gStaticData_0803A73C;
     for (k = 0; k <= 55; k++)
-        gUnknown_03001630->dspCode9c[k] = *src++;
+        gUnknown_03001630->dspCode9c[k] = src[k];
+    src = gStaticData_0803A818;
     {
         s32 words;
-        if (layout->types[1]->data.song->field_1b != 0 || (u16)(p->flags & 0x20)) {
+        if (p->layout->types[1]->data.song->field_1b != 0 || (u16)(p->flags & 0x20)) {
             gUnknown_03001630->field_42 = 1;
             words = 76;
         } else {
@@ -241,9 +222,8 @@ u32 sub_8038538(struct GaxSongHeader *p)
         gUnknown_03001630->field_44 = buf;
         buf += words * 4;
         size -= words * 4;
-        src = a818;
         for (k = 0; (s32)k < words; k++)
-            ((u32 *)gUnknown_03001630->field_44)[k] = *src++;
+            ((u32 *)gUnknown_03001630->field_44)[k] = src[k];
     }
     }
     if ((u16)(p->flags & 4)) {
@@ -252,14 +232,28 @@ u32 sub_8038538(struct GaxSongHeader *p)
         gUnknown_03001630->dspFn17c = buf;
         buf += 240;
         size -= 240;
-        for (k = 0; k <= 59; k++)
-            ((u32 *)gUnknown_03001630->dspFn17c)[k] = gStaticData_0803A67C[k];
+        {
+            /* its own counter: sharing `k` makes it conflict with the
+             * 380 offset constant and pushes `k` out of r2 above */
+            s32 m;
+
+            for (m = 0; m <= 59; m++)
+                ((u32 *)gUnknown_03001630->dspFn17c)[m] = gStaticData_0803A67C[m];
+        }
     } else {
         gUnknown_03001630->dspFn17c = NULL;
     }
-    gUnknown_03001630->field_180 = 0;
-    if (!sub_8038240(p->layout, p->sfxTypes, p->numSfx, &buf, &size))
-        goto fail;
+    {
+        struct GaxHandlerLayout *l = p->layout;
+
+        gUnknown_03001630->field_180 = 0;
+        /* no code: an extra reference that puts the (PRE-hoisted)
+         * `p->layout` argument first in global.c's order, so it takes r4
+         * and the other arguments sb/r6 as in the ROM */
+        asm("" : : "r"(l));
+        if (!sub_8038240(l, p->sfxTypes, p->numSfx, &buf, &size))
+            goto fail;
+    }
     ALIGN4(buf, size);
     GAX_MIXER()->extraChildren = p->numSfx;
     GAX_MIXER()->field_10 = gUnknown_03001630->field_1c;
@@ -286,654 +280,3 @@ fail:
         sub_80392E0(gStaticData_085A61D0, gStaticData_085A61DC);
     return 0;
 }
-#else /* !NON_MATCHING */
-NAKED u32 sub_8038538(void *gaxState)
-{
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sl\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6, r7}\n\t"
-        "sub sp, #0xc\n\t"
-        "add r7, r0, #0\n\t"
-        "mov r0, #0\n\t"
-        "mov r8, r0\n\t"
-        "ldr r1, [r7]\n\t"
-        "str r1, [sp, #4]\n\t"
-        "ldr r2, [r7, #4]\n\t"
-        "str r2, [sp, #8]\n\t"
-        "ldr r0, L8538_39\n\t"
-        "cmp r2, r0\n\t"
-        "bhi L8538_0\n\t"
-        "b L8538_36\n\t"
-        "L8538_0:\n\t"
-        "ldr r3, L8538_40\n\t"
-        "mov sl, r3\n\t"
-        "str r1, [r3]\n\t"
-        "mov r4, #0xc6\n\t"
-        "lsl r4, r4, #1\n\t"
-        "add r0, r1, r4\n\t"
-        "str r0, [sp, #4]\n\t"
-        "ldr r1, L8538_41\n\t"
-        "add r0, r2, r1\n\t"
-        "str r0, [sp, #8]\n\t"
-        "ldr r0, [r7, #0x30]\n\t"
-        "cmp r0, #0\n\t"
-        "bne L8538_1\n\t"
-        "ldr r0, L8538_42\n\t"
-        "str r0, [r7, #0x30]\n\t"
-        "L8538_1:\n\t"
-        "ldr r0, [r7, #0x2c]\n\t"
-        "cmp r0, #0\n\t"
-        "bne L8538_2\n\t"
-        "mov r2, r8\n\t"
-        "strh r2, [r7, #0xe]\n\t"
-        "L8538_2:\n\t"
-        "ldrh r0, [r7, #8]\n\t"
-        "ldr r1, L8538_43\n\t"
-        "cmp r0, r1\n\t"
-        "bne L8538_3\n\t"
-        "ldr r0, [r7, #0x30]\n\t"
-        "ldr r0, [r0, #8]\n\t"
-        "ldr r0, [r0, #0x18]\n\t"
-        "ldrh r0, [r0, #0x18]\n\t"
-        "strh r0, [r7, #8]\n\t"
-        "L8538_3:\n\t"
-        "ldrh r0, [r7, #0xe]\n\t"
-        "cmp r0, r1\n\t"
-        "bne L8538_4\n\t"
-        "ldr r0, [r7, #0x30]\n\t"
-        "ldr r0, [r0, #8]\n\t"
-        "ldr r0, [r0, #0x18]\n\t"
-        "ldrb r0, [r0, #0x1a]\n\t"
-        "strh r0, [r7, #0xe]\n\t"
-        "L8538_4:\n\t"
-        "ldrh r0, [r7, #0x10]\n\t"
-        "cmp r0, r1\n\t"
-        "bne L8538_5\n\t"
-        "mov r0, #0xff\n\t"
-        "strh r0, [r7, #0x10]\n\t"
-        "L8538_5:\n\t"
-        "mov r3, sl\n\t"
-        "ldr r0, [r3]\n\t"
-        "ldr r1, L8538_44\n\t"
-        "str r1, [r0]\n\t"
-        "str r7, [r0, #4]\n\t"
-        "mov r4, r8\n\t"
-        "str r4, [r0, #0x30]\n\t"
-        "str r4, [r0, #0x10]\n\t"
-        "str r4, [r0, #0x24]\n\t"
-        "add r0, #0x41\n\t"
-        "strb r4, [r0]\n\t"
-        "ldr r0, [r3]\n\t"
-        "add r0, #0x43\n\t"
-        "mov r5, #1\n\t"
-        "strb r5, [r0]\n\t"
-        "ldr r0, [r7, #0x30]\n\t"
-        "ldr r4, [r0]\n\t"
-        "ldr r0, [r7, #0x2c]\n\t"
-        "cmp r0, #0\n\t"
-        "beq L8538_6\n\t"
-        "ldrh r0, [r7, #0xe]\n\t"
-        "add r4, r4, r0\n\t"
-        "L8538_6:\n\t"
-        "mov r0, sl\n\t"
-        "ldr r3, [r0]\n\t"
-        "ldr r0, [r3, #0x10]\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r1, r3, #0\n\t"
-        "add r1, #8\n\t"
-        "add r1, r1, r0\n\t"
-        "ldr r2, [sp, #4]\n\t"
-        "str r2, [r1]\n\t"
-        "lsl r1, r4, #2\n\t"
-        "ldr r0, [sp, #8]\n\t"
-        "sub r0, r0, r1\n\t"
-        "add r2, r2, r1\n\t"
-        "mov sb, r2\n\t"
-        "mov r1, sb\n\t"
-        "add r1, #8\n\t"
-        "str r1, [sp, #4]\n\t"
-        "sub r0, #8\n\t"
-        "str r0, [sp, #8]\n\t"
-        "mov r1, sb\n\t"
-        "str r1, [r3, #0x14]\n\t"
-        "ldrh r0, [r7, #8]\n\t"
-        "bl sub_8037FA0\n\t"
-        "add r4, r0, #0\n\t"
-        "mov r0, #8\n\t"
-        "mov r2, sb\n\t"
-        "strb r0, [r2]\n\t"
-        "strb r5, [r2, #1]\n\t"
-        "ldr r5, L8538_45\n\t"
-        "lsl r4, r4, #3\n\t"
-        "add r0, r4, r5\n\t"
-        "ldr r0, [r0]\n\t"
-        "mov r6, #0\n\t"
-        "strh r0, [r2, #2]\n\t"
-        "ldrh r1, [r2, #2]\n\t"
-        "lsl r0, r1, #5\n\t"
-        "sub r0, r0, r1\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r0, r0, #3\n\t"
-        "ldr r1, L8538_46\n\t"
-        "bl sub_803ADB4\n\t"
-        "mov r3, sb\n\t"
-        "strh r0, [r3, #4]\n\t"
-        "mov r0, sl\n\t"
-        "ldr r1, [r0]\n\t"
-        "add r5, #4\n\t"
-        "add r4, r4, r5\n\t"
-        "ldr r0, [r4]\n\t"
-        "str r0, [r1, #0x34]\n\t"
-        "add r1, #0x40\n\t"
-        "strb r6, [r1]\n\t"
-        "ldr r0, L8538_47\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldrb r0, [r1, #2]\n\t"
-        "cmp r0, #0x58\n\t"
-        "bne L8538_7\n\t"
-        "ldrb r0, [r1, #1]\n\t"
-        "cmp r0, #0x41\n\t"
-        "bne L8538_7\n\t"
-        "ldrb r0, [r1]\n\t"
-        "cmp r0, #0x47\n\t"
-        "beq L8538_8\n\t"
-        "L8538_7:\n\t"
-        "ldr r2, L8538_40\n\t"
-        "ldr r1, [r2]\n\t"
-        "ldr r0, [r1, #0x34]\n\t"
-        "lsl r0, r0, #1\n\t"
-        "str r0, [r1, #0x34]\n\t"
-        "mov sl, r2\n\t"
-        "L8538_8:\n\t"
-        "mov r2, sl\n\t"
-        "ldr r1, [r2]\n\t"
-        "ldr r3, [r1, #0x14]\n\t"
-        "ldrh r0, [r3, #4]\n\t"
-        "add r0, #4\n\t"
-        "lsl r0, r0, #1\n\t"
-        "ldr r4, [sp, #8]\n\t"
-        "cmp r4, r0\n\t"
-        "bhs L8538_9\n\t"
-        "b L8538_36\n\t"
-        "L8538_9:\n\t"
-        "ldr r2, [sp, #4]\n\t"
-        "str r2, [r1, #0x1c]\n\t"
-        "ldrh r0, [r3, #4]\n\t"
-        "add r0, #4\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r2, r2, r0\n\t"
-        "str r2, [sp, #4]\n\t"
-        "mov r3, sl\n\t"
-        "ldr r0, [r3]\n\t"
-        "ldr r0, [r0, #0x14]\n\t"
-        "ldrh r0, [r0, #4]\n\t"
-        "add r0, #4\n\t"
-        "lsl r0, r0, #1\n\t"
-        "sub r0, r4, r0\n\t"
-        "add r1, r2, #4\n\t"
-        "mov r5, #4\n\t"
-        "neg r5, r5\n\t"
-        "and r1, r5\n\t"
-        "sub r1, r1, r2\n\t"
-        "add r2, r2, r1\n\t"
-        "str r2, [sp, #4]\n\t"
-        "sub r3, r0, r1\n\t"
-        "str r3, [sp, #8]\n\t"
-        "mov r4, sl\n\t"
-        "ldr r1, [r4]\n\t"
-        "mov r0, #0\n\t"
-        "str r0, [r1, #0x2c]\n\t"
-        "ldr r4, [r1, #0x14]\n\t"
-        "ldrh r0, [r4, #4]\n\t"
-        "lsl r0, r0, #1\n\t"
-        "cmp r3, r0\n\t"
-        "bhs L8538_10\n\t"
-        "b L8538_37\n\t"
-        "L8538_10:\n\t"
-        "str r2, [r1, #0x18]\n\t"
-        "ldrh r0, [r4, #4]\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r0, r2, r0\n\t"
-        "str r0, [sp, #4]\n\t"
-        "mov r1, sl\n\t"
-        "ldr r0, [r1]\n\t"
-        "ldr r0, [r0, #0x14]\n\t"
-        "ldrh r0, [r0, #4]\n\t"
-        "lsl r0, r0, #1\n\t"
-        "sub r0, r3, r0\n\t"
-        "str r0, [sp, #8]\n\t"
-        "ldr r1, [r1]\n\t"
-        "ldr r0, [r1, #0x18]\n\t"
-        "ldr r1, [r1, #0x14]\n\t"
-        "ldrh r1, [r1, #4]\n\t"
-        "lsl r1, r1, #1\n\t"
-        "bl sub_8037F3C\n\t"
-        "ldr r1, [sp, #4]\n\t"
-        "add r0, r1, #4\n\t"
-        "and r0, r5\n\t"
-        "sub r1, r0, r1\n\t"
-        "str r0, [sp, #4]\n\t"
-        "ldr r0, [sp, #8]\n\t"
-        "sub r0, r0, r1\n\t"
-        "str r0, [sp, #8]\n\t"
-        "mov r2, #0\n\t"
-        "ldr r0, [r7, #0x30]\n\t"
-        "ldr r1, [r0, #4]\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r1, [r1, #0x18]\n\t"
-        "L8538_11:\n\t"
-        "ldr r0, [r1, #4]\n\t"
-        "cmp r0, r8\n\t"
-        "bls L8538_12\n\t"
-        "mov r8, r0\n\t"
-        "L8538_12:\n\t"
-        "add r1, #8\n\t"
-        "add r2, #1\n\t"
-        "cmp r2, #2\n\t"
-        "bls L8538_11\n\t"
-        "ldrh r1, [r7, #0xc]\n\t"
-        "mov r0, #0x10\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "bne L8538_16\n\t"
-        "ldr r0, [r4, #0xc]\n\t"
-        "cmp r0, #0\n\t"
-        "beq L8538_16\n\t"
-        "add r4, r0, #0\n\t"
-        "mov r1, #0\n\t"
-        "ldr r0, [r4]\n\t"
-        "cmp r1, r0\n\t"
-        "bge L8538_16\n\t"
-        "add r5, r0, #0\n\t"
-        "L8538_13:\n\t"
-        "lsl r0, r1, #2\n\t"
-        "add r0, r0, r4\n\t"
-        "ldr r0, [r0, #4]\n\t"
-        "mov r2, #0\n\t"
-        "add r3, r1, #1\n\t"
-        "ldr r0, [r0, #4]\n\t"
-        "ldr r1, [r0, #0x18]\n\t"
-        "L8538_14:\n\t"
-        "ldr r0, [r1, #4]\n\t"
-        "cmp r0, r8\n\t"
-        "bls L8538_15\n\t"
-        "mov r8, r0\n\t"
-        "L8538_15:\n\t"
-        "add r1, #8\n\t"
-        "add r2, #1\n\t"
-        "cmp r2, #2\n\t"
-        "bls L8538_14\n\t"
-        "add r1, r3, #0\n\t"
-        "cmp r1, r5\n\t"
-        "blt L8538_13\n\t"
-        "L8538_16:\n\t"
-        "mov r2, r8\n\t"
-        "cmp r2, #0\n\t"
-        "beq L8538_19\n\t"
-        "ldr r0, [sp, #4]\n\t"
-        "add r1, r0, #4\n\t"
-        "mov r3, #4\n\t"
-        "neg r3, r3\n\t"
-        "mov sl, r3\n\t"
-        "and r1, r3\n\t"
-        "sub r1, r1, r0\n\t"
-        "add r3, r0, r1\n\t"
-        "str r3, [sp, #4]\n\t"
-        "ldr r0, [sp, #8]\n\t"
-        "sub r2, r0, r1\n\t"
-        "str r2, [sp, #8]\n\t"
-        "cmp r2, #0x17\n\t"
-        "bhi L8538_17\n\t"
-        "b L8538_36\n\t"
-        "L8538_17:\n\t"
-        "ldr r0, L8538_40\n\t"
-        "ldr r5, [r0]\n\t"
-        "str r3, [r5, #0x24]\n\t"
-        "add r6, r3, #0\n\t"
-        "add r6, #0x18\n\t"
-        "str r6, [sp, #4]\n\t"
-        "add r4, r2, #0\n\t"
-        "sub r4, #0x18\n\t"
-        "str r4, [sp, #8]\n\t"
-        "mov r1, sb\n\t"
-        "ldrh r0, [r1, #2]\n\t"
-        "mov r2, r8\n\t"
-        "mul r2, r0, r2\n\t"
-        "add r0, r2, #0\n\t"
-        "mov r1, #0xfa\n\t"
-        "lsl r1, r1, #2\n\t"
-        "bl sub_8037E54\n\t"
-        "lsl r3, r0, #1\n\t"
-        "cmp r4, r3\n\t"
-        "bhs L8538_18\n\t"
-        "b L8538_36\n\t"
-        "L8538_18:\n\t"
-        "str r6, [r5, #0x20]\n\t"
-        "str r3, [r5, #0x28]\n\t"
-        "add r0, r6, r3\n\t"
-        "sub r2, r4, r3\n\t"
-        "add r1, r0, #4\n\t"
-        "mov r4, sl\n\t"
-        "and r1, r4\n\t"
-        "sub r0, r1, r0\n\t"
-        "str r1, [sp, #4]\n\t"
-        "sub r2, r2, r0\n\t"
-        "str r2, [sp, #8]\n\t"
-        "add r0, r6, #0\n\t"
-        "add r1, r3, #0\n\t"
-        "bl sub_8037F3C\n\t"
-        "L8538_19:\n\t"
-        "mov r2, #0\n\t"
-        "ldr r0, L8538_40\n\t"
-        "mov sl, r0\n\t"
-        "ldr r4, [r7, #0x30]\n\t"
-        "ldr r6, L8538_48\n\t"
-        "ldr r1, L8538_49\n\t"
-        "mov r8, r1\n\t"
-        "mov r3, sl\n\t"
-        "ldr r5, L8538_50\n\t"
-        "L8538_20:\n\t"
-        "ldr r0, [r3]\n\t"
-        "lsl r1, r2, #2\n\t"
-        "add r0, #0x48\n\t"
-        "add r0, r0, r1\n\t"
-        "ldm r5!, {r1}\n\t"
-        "str r1, [r0]\n\t"
-        "add r2, #1\n\t"
-        "cmp r2, #0x14\n\t"
-        "ble L8538_20\n\t"
-        "mov r2, #0\n\t"
-        "ldr r3, L8538_40\n\t"
-        "add r5, r6, #0\n\t"
-        "L8538_21:\n\t"
-        "ldr r0, [r3]\n\t"
-        "lsl r1, r2, #2\n\t"
-        "add r0, #0x9c\n\t"
-        "add r0, r0, r1\n\t"
-        "ldm r5!, {r1}\n\t"
-        "str r1, [r0]\n\t"
-        "add r2, #1\n\t"
-        "cmp r2, #0x37\n\t"
-        "ble L8538_21\n\t"
-        "mov r6, r8\n\t"
-        "ldr r0, [r4, #8]\n\t"
-        "ldr r0, [r0, #0x18]\n\t"
-        "ldrb r0, [r0, #0x1b]\n\t"
-        "cmp r0, #0\n\t"
-        "bne L8538_22\n\t"
-        "ldrh r1, [r7, #0xc]\n\t"
-        "mov r0, #0x20\n\t"
-        "and r0, r1\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r1, r0, #0x10\n\t"
-        "cmp r1, #0\n\t"
-        "beq L8538_23\n\t"
-        "L8538_22:\n\t"
-        "mov r2, sl\n\t"
-        "ldr r0, [r2]\n\t"
-        "add r0, #0x42\n\t"
-        "mov r1, #1\n\t"
-        "strb r1, [r0]\n\t"
-        "mov r4, #0x4c\n\t"
-        "b L8538_24\n\t"
-        ".align 2, 0\n\t"
-        "L8538_39: .4byte 0x0000018B\n\t"
-        "L8538_40: .4byte gUnknown_03001630\n\t"
-        "L8538_41: .4byte 0xFFFFFE74\n\t"
-        "L8538_42: .4byte gStaticData_085A4C5C\n\t"
-        "L8538_43: .4byte 0x0000FFFF\n\t"
-        "L8538_44: .4byte 0x47415832\n\t"
-        "L8538_45: .4byte gStaticData_085A6150\n\t"
-        "L8538_46: .4byte 0x0000E94F\n\t"
-        "L8538_47: .4byte gStaticData_085A614C\n\t"
-        "L8538_48: .4byte gStaticData_0803A73C\n\t"
-        "L8538_49: .4byte gStaticData_0803A818\n\t"
-        "L8538_50: .4byte gStaticData_0803A630\n\t"
-        "L8538_23:\n\t"
-        "mov r3, sl\n\t"
-        "ldr r0, [r3]\n\t"
-        "add r0, #0x42\n\t"
-        "strb r1, [r0]\n\t"
-        "mov r4, #0x37\n\t"
-        "L8538_24:\n\t"
-        "lsl r2, r4, #2\n\t"
-        "ldr r3, [sp, #8]\n\t"
-        "cmp r3, r2\n\t"
-        "bhs L8538_25\n\t"
-        "b L8538_36\n\t"
-        "L8538_25:\n\t"
-        "mov r1, sl\n\t"
-        "ldr r0, [r1]\n\t"
-        "ldr r1, [sp, #4]\n\t"
-        "str r1, [r0, #0x44]\n\t"
-        "add r1, r1, r2\n\t"
-        "str r1, [sp, #4]\n\t"
-        "sub r0, r3, r2\n\t"
-        "str r0, [sp, #8]\n\t"
-        "mov r2, #0\n\t"
-        "cmp r2, r4\n\t"
-        "bge L8538_27\n\t"
-        "mov r5, sl\n\t"
-        "add r3, r6, #0\n\t"
-        "L8538_26:\n\t"
-        "ldr r0, [r5]\n\t"
-        "ldr r1, [r0, #0x44]\n\t"
-        "lsl r0, r2, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldm r3!, {r1}\n\t"
-        "str r1, [r0]\n\t"
-        "add r2, #1\n\t"
-        "cmp r2, r4\n\t"
-        "blt L8538_26\n\t"
-        "L8538_27:\n\t"
-        "ldrh r1, [r7, #0xc]\n\t"
-        "mov r0, #4\n\t"
-        "and r0, r1\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r1, r0, #0x10\n\t"
-        "cmp r1, #0\n\t"
-        "beq L8538_30\n\t"
-        "ldr r3, [sp, #8]\n\t"
-        "cmp r3, #0xef\n\t"
-        "bhi L8538_28\n\t"
-        "b L8538_36\n\t"
-        "L8538_28:\n\t"
-        "mov r2, sl\n\t"
-        "ldr r1, [r2]\n\t"
-        "mov r2, #0xbe\n\t"
-        "lsl r2, r2, #1\n\t"
-        "add r1, r1, r2\n\t"
-        "ldr r0, [sp, #4]\n\t"
-        "str r0, [r1]\n\t"
-        "add r0, #0xf0\n\t"
-        "str r0, [sp, #4]\n\t"
-        "add r0, r3, #0\n\t"
-        "sub r0, #0xf0\n\t"
-        "str r0, [sp, #8]\n\t"
-        "mov r3, #0\n\t"
-        "ldr r4, [r7, #0x30]\n\t"
-        "ldr r0, [r7, #0x2c]\n\t"
-        "mov sb, r0\n\t"
-        "add r6, sp, #8\n\t"
-        "mov r8, sl\n\t"
-        "ldr r5, L8538_51\n\t"
-        "L8538_29:\n\t"
-        "mov r1, r8\n\t"
-        "ldr r0, [r1]\n\t"
-        "add r0, r0, r2\n\t"
-        "ldr r1, [r0]\n\t"
-        "lsl r0, r3, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldm r5!, {r1}\n\t"
-        "str r1, [r0]\n\t"
-        "add r3, #1\n\t"
-        "cmp r3, #0x3b\n\t"
-        "ble L8538_29\n\t"
-        "b L8538_31\n\t"
-        ".align 2, 0\n\t"
-        "L8538_51: .4byte gStaticData_0803A67C\n\t"
-        "L8538_30:\n\t"
-        "mov r2, sl\n\t"
-        "ldr r0, [r2]\n\t"
-        "mov r3, #0xbe\n\t"
-        "lsl r3, r3, #1\n\t"
-        "add r0, r0, r3\n\t"
-        "str r1, [r0]\n\t"
-        "ldr r4, [r7, #0x30]\n\t"
-        "ldr r0, [r7, #0x2c]\n\t"
-        "mov sb, r0\n\t"
-        "add r6, sp, #8\n\t"
-        "L8538_31:\n\t"
-        "mov r5, sl\n\t"
-        "ldr r0, [r5]\n\t"
-        "mov r1, #0xc0\n\t"
-        "lsl r1, r1, #1\n\t"
-        "add r0, r0, r1\n\t"
-        "mov r2, #0\n\t"
-        "mov r8, r2\n\t"
-        "str r2, [r0]\n\t"
-        "ldrh r2, [r7, #0xe]\n\t"
-        "str r6, [sp]\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, sb\n\t"
-        "add r3, sp, #4\n\t"
-        "bl sub_8038240\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "cmp r0, #0\n\t"
-        "beq L8538_36\n\t"
-        "ldr r2, [sp, #4]\n\t"
-        "add r0, r2, #4\n\t"
-        "mov r1, #4\n\t"
-        "neg r1, r1\n\t"
-        "and r0, r1\n\t"
-        "sub r2, r0, r2\n\t"
-        "str r0, [sp, #4]\n\t"
-        "ldr r0, [sp, #8]\n\t"
-        "sub r0, r0, r2\n\t"
-        "str r0, [sp, #8]\n\t"
-        "ldr r2, [r5]\n\t"
-        "ldr r0, [r2, #0x10]\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r3, r2, #0\n\t"
-        "add r3, #8\n\t"
-        "add r0, r3, r0\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldrh r0, [r7, #0xe]\n\t"
-        "str r0, [r1, #0x14]\n\t"
-        "ldr r0, [r2, #0x10]\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r0, r3, r0\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldr r0, [r2, #0x1c]\n\t"
-        "str r0, [r1, #0x10]\n\t"
-        "ldr r0, [r2, #0x10]\n\t"
-        "lsl r0, r0, #2\n\t"
-        "add r3, r3, r0\n\t"
-        "ldr r0, [r3]\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldr r1, [r1]\n\t"
-        "bl sub_803AD7C\n\t"
-        "ldr r2, [r5]\n\t"
-        "mov r3, #0xc2\n\t"
-        "lsl r3, r3, #1\n\t"
-        "add r1, r2, r3\n\t"
-        "ldr r0, [sp, #4]\n\t"
-        "str r0, [r1]\n\t"
-        "mov r4, #0xc4\n\t"
-        "lsl r4, r4, #1\n\t"
-        "add r1, r2, r4\n\t"
-        "ldr r0, [sp, #8]\n\t"
-        "str r0, [r1]\n\t"
-        "bl sub_80384DC\n\t"
-        "ldr r0, [r5]\n\t"
-        "mov r3, #1\n\t"
-        "str r3, [r0, #0x30]\n\t"
-        "ldr r1, [r0, #0x10]\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r0, #8\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r1, [r0, #4]\n\t"
-        "ldrh r0, [r7, #0xc]\n\t"
-        "lsr r0, r0, #3\n\t"
-        "and r0, r3\n\t"
-        "add r1, #0x20\n\t"
-        "strb r0, [r1]\n\t"
-        "ldr r0, [r5]\n\t"
-        "ldr r0, [r0, #4]\n\t"
-        "add r0, #0x39\n\t"
-        "mov r1, r8\n\t"
-        "strb r1, [r0]\n\t"
-        "ldr r0, [r5]\n\t"
-        "ldr r0, [r0, #4]\n\t"
-        "add r0, #0x3a\n\t"
-        "strb r1, [r0]\n\t"
-        "ldrh r1, [r7, #0xc]\n\t"
-        "mov r0, #2\n\t"
-        "and r0, r1\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r1, r0, #0x10\n\t"
-        "cmp r1, #0\n\t"
-        "beq L8538_33\n\t"
-        "ldr r2, [r5]\n\t"
-        "ldr r1, [r2, #0x10]\n\t"
-        "lsl r1, r1, #2\n\t"
-        "add r0, r2, #0\n\t"
-        "add r0, #8\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0]\n\t"
-        "ldr r0, [r0, #0x18]\n\t"
-        "ldr r1, [r0, #4]\n\t"
-        "cmp r1, #0\n\t"
-        "beq L8538_32\n\t"
-        "add r0, r2, #0\n\t"
-        "add r0, #0x40\n\t"
-        "strb r3, [r0]\n\t"
-        "b L8538_35\n\t"
-        "L8538_32:\n\t"
-        "add r0, r2, #0\n\t"
-        "b L8538_34\n\t"
-        "L8538_33:\n\t"
-        "mov r2, sl\n\t"
-        "ldr r0, [r2]\n\t"
-        "L8538_34:\n\t"
-        "add r0, #0x40\n\t"
-        "strb r1, [r0]\n\t"
-        "L8538_35:\n\t"
-        "mov r0, #1\n\t"
-        "b L8538_38\n\t"
-        "L8538_36:\n\t"
-        "add r0, r7, #0\n\t"
-        "add r0, #0x38\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "beq L8538_37\n\t"
-        "ldr r0, L8538_52\n\t"
-        "ldr r1, L8538_53\n\t"
-        "bl sub_80392E0\n\t"
-        "L8538_37:\n\t"
-        "mov r0, #0\n\t"
-        "L8538_38:\n\t"
-        "add sp, #0xc\n\t"
-        "pop {r3, r4, r5}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov sl, r5\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n\t"
-        "L8538_52: .4byte gStaticData_085A61D0\n\t"
-        "L8538_53: .4byte gStaticData_085A61DC\n\t"
-    );
-}
-#endif /* NON_MATCHING */
