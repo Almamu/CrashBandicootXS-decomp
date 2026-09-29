@@ -199,6 +199,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_21668.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_35780.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_35d1c.o \
+                  $(C_BUILDDIR)/graphics/graphics_loading_3686c.o \
                   $(C_BUILDDIR)/graphics/graphics_package_1e578.o \
                   $(C_BUILDDIR)/graphics/graphics_package_1e640.o \
                   $(C_BUILDDIR)/graphics/graphics_package_1e688.o \
@@ -258,7 +259,11 @@ $(OLD_AGBCC_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1FLAGS))
 # sub_80358A8 (graphics_loading_35780.o, split off for this reason) needs
 # strength reduction ON: its up-counting inner loop must be reversed. See
 # docs/matching/per-file-flags-investigation.md and
-# docs/matching/issue-64-65-naked-retry-2.md.
+# docs/matching/issue-64-65-naked-retry-2.md. graphics_loading_3686c.o
+# (sub_803686C onward) was split off it for the same reason and is NOT
+# listed: sub_803686C's reversed header loop and reduced row pointer need
+# strength reduction on; the rest of that file also matches with it on
+# (docs/matching/sr65-naked-retry.md).
 NO_STRENGTH_REDUCE_OBJS := $(C_BUILDDIR)/graphics/graphics_loading_35d1c.o
 $(NO_STRENGTH_REDUCE_OBJS): CC1FLAGS += -fno-strength-reduce
 

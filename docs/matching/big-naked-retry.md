@@ -120,3 +120,6 @@ under agbcc (4 bytes short). Findings:
   touched files.
 - `rm -rf build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make compare`:
   `crashbandicootxs.gba: OK`.
+
+*Later pass (#65 strength-reduction retry):* `sub_803686C` is matched; see
+[sr65-naked-retry.md](sr65-naked-retry.md).

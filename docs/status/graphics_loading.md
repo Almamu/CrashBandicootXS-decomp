@@ -193,6 +193,12 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   reversed), so the old file was split at `sub_8035D1C`: the second
   half keeps `-fno-strength-reduce` for `sub_8036600`. See
   [issue-64-65-naked-retry-2.md](../matching/issue-64-65-naked-retry-2.md).
+- **`sub_803686C`** (`src/graphics/graphics_loading_3686c.c`) - the
+  20-slot OAM builder. NAKED until the #65 strength-reduction retry. It
+  needs strength reduction on, so `graphics_loading_35d1c.c` was split
+  at `0x0803686C`; the new file (with `sub_8036CF4`..`sub_8036FBC`) is
+  old_agbcc without `-fno-strength-reduce`. See
+  [sr65-naked-retry.md](../matching/sr65-naked-retry.md).
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
@@ -207,15 +213,7 @@ doesn't advance that even when byte-correct. See
 established convention, and each entry's linked write-up for why
 plain C didn't converge.
 
-- **`sub_803686C`** (`src/graphics/graphics_loading_35d1c.c`) - the
-  20-slot OAM builder, the same shape as `sub_80358A8`. The big NAKED
-  retry left a full C draft under `#if NON_MATCHING` (329 halfwords off
-  under old_agbcc). It needs strength reduction on, so closing it also
-  means splitting the file at `0x0803686C`. The header and slot loops
-  have the ROM's instructions; the row-copy loop and the registers
-  around it do not. See
-  [big-naked-retry.md](../matching/big-naked-retry.md) and
-  [issue-64-65-naked-retry-2.md](../matching/issue-64-65-naked-retry-2.md).
+_(none left in this range)_
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
