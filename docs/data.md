@@ -191,6 +191,7 @@ The first batch (all pointer tables, all byte-exact):
 | `image_table_16c5a0.c` | `0x0816C5A0` | 10 `{palette, tiles}` asset pairs |
 | `dispatch_table_16c6a4.c` | `0x0816C6A4` | the unified 92-slot function-pointer dispatch array |
 | `level_table_16c814.c` | `0x0816C814` | the level table (25 `struct level_info`), the levels' room lists and 48 room records, the theme music cues, 5 colour-cycle lists (see "Level data") |
+| `cutscenes_16d1c8.c` | `0x0816D1C8` | the 11 cutscenes: slide lists, 24 slides, the text of 6 languages (see "Cutscenes") |
 | `actor_category_175558.c` | `0x08175558` | 7 `struct category_descriptor`, 3 `struct category_vtable` |
 | `actor_pmf_17a6b8.c` | `0x0817A6B8` | 1 actor PMF table |
 | `actor_state_fn_17a840.c` | `0x0817A840` | 4 state functions |
@@ -213,6 +214,7 @@ The first batch (all pointer tables, all byte-exact):
 | `sprite_banks_4b0ae0.c` | `0x084B0AE0` | sprite banks 10-21 |
 | `sprite_banks_4b414c.c` | `0x084B414C` | sprite banks 22-38 |
 | `sprite_banks_4b9d7c.c` | `0x084B9D7C` | sprite banks 39-55 |
+| `cutscene_pictures_5a9f70.c` | `0x085A9F70` | the 24 cutscene pictures: palette (C) + Mode 4 bitmap (grit) each |
 | `entity_vtables_7e3bec.c` | `0x087E3BEC` | the 93 entity virtual tables |
 
 The actor-category backgrounds and tables (grit-built, see "Category
@@ -277,8 +279,8 @@ hand-written tables: each asset becomes a `const` array in a `src/data/*.c`
 object, and `ldscript.txt` places that object's `.rodata` at the asset's
 address in the `/* Data */` block. The pixel conversion is done by
 [grit](https://github.com/devkitPro/grit). Built this way so far:
-`gStaticData_085AA170`, the first intro Mode 4 bitmap
-(`src/data/intro_bitmap_5aa170.c`), the actor-category backgrounds
+the 24 cutscene pictures (Mode 4 bitmaps,
+`src/data/cutscene_pictures_5a9f70.c`, see "Cutscenes" below), the actor-category backgrounds
 (see "Category backgrounds" at the end), and the uncompressed tile pools
 of the old `gStaticData_0817E78C` blob (see "Raw tile pools" below).
 
@@ -508,16 +510,41 @@ holds an address into it any more. The code still reads these tables
 through its own local views (`MedalTableEntry`, `threshold_table_entry`,
 `gl_level_entry`, ...); the header comment of each struct lists them.
 
+### Cutscenes
+
+The 11 cutscenes (the intro, the story scenes between worlds, the
+endings) are `src/data/cutscenes_16d1c8.c` (`0x0816D1C8`-`0x081725A8`,
+types in `include/cutscene.h`) and `src/data/cutscene_pictures_5a9f70.c`
+(`0x085A9F70`-`0x0861BADC`). `sub_8022468` plays cutscene `idx`: the
+slides of `gStaticData_0816D1F4[idx]` (`struct cutscene_slides`), each a
+`struct cutscene_slide` (picture, timing, fades, music cue, sound
+effect), shown with the page of text at the same index of the current
+language's `struct cutscene_page` array. The six language tables
+(`gStaticData_0816D1C8` is English, then French, German, Spanish,
+Italian and Dutch) are listed by `gUnknown_03000834`, a pointer table in
+the IWRAM image. The text is plain C strings (Latin-1, all lower case),
+each page's strings in a `const u8 *const []`, and page and slide counts
+are `ARRAY_COUNT()`s.
+
+A picture is a 256-colour palette followed directly by its LZ77 Mode 4
+bitmap: a slide points at the palette and `sub_8024708` reads the bitmap
+at `+0x200`. The bitmaps are the grit-built `graphics/intro/*_bitmap.png`
+(the Mode 4 row of the table above). The palettes are written out in C
+(`gCutscenePictureNN`), because about half of their entries have bit 15
+set, which the hardware ignores but a PNG palette can't carry. Each
+palette is `aligned(4)`: the 0-3 zero bytes before it in the ROM are the
+alignment after the previous (odd-length) bitmap stream.
+
 ### Placing it and counting it
 
 Placement is the same as for a hand-written table (see "Layout" above).
 `data/data.s` drops the asset's label and `.incbin`, leaves a
-`@ gStaticData_085AA170: src/data/intro_bitmap_5aa170.c` comment, and
-starts `.section .rodata.085ADBD1` for what follows. `ldscript.txt` links
-`src/data/intro_bitmap_5aa170.o(.rodata)` between the previous section
-and that one. agbcc doesn't align a `u8` array, so the next section
-starts right at the array's end, which is what the ROM has for these
-unaligned stream lengths.
+`@ ...: src/data/<file>.c` comment, and starts a new `.section` for what
+follows; `ldscript.txt` links the object's `.rodata` in between (the
+first asset done this way was the intro bitmap `gStaticData_085AA170`,
+now part of `cutscene_pictures_5a9f70.c`). agbcc doesn't align a `u8`
+array, so whatever follows starts right at the array's end, which is
+what the ROM has for these unaligned stream lengths.
 
 The report needs nothing extra. The object is in `src/data/`, so
 `tools/report_units.py` counts it as built data from the `ldscript.txt`

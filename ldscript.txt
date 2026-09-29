@@ -454,7 +454,8 @@ SECTIONS
         build/crashbandicootxs/data/data.o(.rodata.0816C5F0);
         build/crashbandicootxs/src/data/dispatch_table_16c6a4.o(.rodata);
         build/crashbandicootxs/src/data/level_table_16c814.o(.rodata);
-        build/crashbandicootxs/data/data.o(.rodata.0816D1C8);
+        build/crashbandicootxs/src/data/cutscenes_16d1c8.o(.rodata);
+        build/crashbandicootxs/data/data.o(.rodata.081725A8);
         build/crashbandicootxs/src/data/actor_category_175558.o(.rodata);
         build/crashbandicootxs/data/data.o(.rodata.08175760);
         build/crashbandicootxs/src/data/actor_pmf_17a6b8.o(.rodata);
@@ -491,8 +492,8 @@ SECTIONS
         build/crashbandicootxs/src/data/sprite_banks_4b414c.o(.rodata);
         build/crashbandicootxs/src/data/sprite_banks_4b9d7c.o(.rodata);
         build/crashbandicootxs/data/data.o(.rodata.084C0006);
-        build/crashbandicootxs/src/data/intro_bitmap_5aa170.o(.rodata);
-        build/crashbandicootxs/data/data.o(.rodata.085ADBD1);
+        build/crashbandicootxs/src/data/cutscene_pictures_5a9f70.o(.rodata);
+        build/crashbandicootxs/data/data.o(.rodata.0861BADC);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata);
         build/crashbandicootxs/data/data.o(.rodata.087E55E4);
 

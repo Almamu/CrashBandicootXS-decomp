@@ -64,9 +64,10 @@ products. `tools/gbagfx` (vendored from the sibling `sa2` decompilation,
 same Dimps-engine lineage) does the PNG<->4bpp/8bpp/gbapal conversion and
 LZ77 compress/decompress.
 
-One asset so far (`gStaticData_085AA170`, the first intro Mode 4 bitmap)
-is built as a C const array (`src/data/intro_bitmap_5aa170.c`) instead of
-a `data.s` incbin. The pipeline is grit (`tools/grit`, pixel layout) ->
+The 24 intro/cutscene Mode 4 bitmaps (`graphics/intro/*_bitmap.png`) are
+built as C const arrays (`src/data/cutscene_pictures_5a9f70.c`, each after
+its palette) instead of `data.s` incbins, like the category backgrounds
+and the raw tile pools. The pipeline is grit (`tools/grit`, pixel layout) ->
 gbagfx (LZ77) -> `tools/bin2c.py --lz`. grit's layout and palettes are
 byte-exact for every PNG asset here, but its own LZ77 isn't. The findings
 and the grit flags for each asset kind are in
