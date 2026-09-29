@@ -243,7 +243,15 @@ void sub_80204EC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * `str r3, [sp]` comes one insn before `adds r1, r7, #0` instead of
  * after it (the ROM's looks like a caller-save), the reload registers
  * for `q2` (r4/r3 swapped), and &gUnknown_030012B4 / -0x11 in sl/r9
- * where the ROM has r9/sl. */
+ * where the ROM has r9/sl.
+ * Last-nine pass (docs/matching/last-nine-naked-retry.md): 4 hw, same
+ * size. An r9 hold over the second flip fixes sl/r9, and extra
+ * references on rec2 and the reloaded q2 fix the r4/r3 swap. Left: the
+ * `str r3, [sp]` placement and `mov r1, sb` (the draft reloads through
+ * r3). Both fit a caller-save of one part+0x28 pseudo in r3 (the save
+ * goes right before the call, the restore right before the next use),
+ * which needs every callee-saved register taken first; a single-pointer
+ * draft with r4 pins and r5 holds was 62-140 hw. */
 #if NON_MATCHING
 /* The part's +0x28 bitfield byte seen through its own pointer. Padded
  * past a word so the fields are read with `ldrb` (a 4-byte struct is
@@ -264,6 +272,7 @@ void sub_802062C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     struct level_record *rec;
     struct level_record *rec2;
     struct popup_bits *q2;
+    register s32 h9 asm("r9");
 
     part->anim = POPUP_ANIM(0x114);
     part->frameNibble = sub_800815C(part);
@@ -284,10 +293,30 @@ void sub_802062C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     asm("" : : "m"(q2));
     SetPopupGfx(hdr, gStaticData_0816B98C);
     rec2 = LEVEL_RECORD(arg3);
+    /* No code: four extra references lift rec2's allocation priority
+     * above the reloaded q2 pointer's, so rec2 keeps r2 and q2 gets r3. */
+    asm("" : : "r"(rec2));
+    asm("" : : "r"(rec2));
+    asm("" : : "r"(rec2));
+    asm("" : : "r"(rec2));
+    /* No code: hold r9 from here through the flip. -0x11 is live over
+     * this range but &gUnknown_030012B4 is not, so -0x11 skips r9 (it
+     * gets sl) and the address, re-allocated after its r5 spill, gets
+     * r9 as in the ROM. */
+    asm("" : "=r"(h9));
     {
-        s32 f = q2->flipX;
-        q2->flipX = f == 0;
+        struct popup_bits *p = q2;
+        s32 f;
+
+        /* No code: one extra reference puts the reloaded q2 pointer
+         * ahead of the flag byte, so the pointer gets r3 and the byte
+         * r4. */
+        asm("" : : "r"(p));
+        f = p->flipX;
+        p->flipX = f == 0;
     }
+    /* No code: end of the r9 hold. */
+    asm("" : : "r"(h9));
     SetPartField0A(part, 1);
     SetPopupGfx(hdr, gStaticData_0816BAAC);
     SetPopupSpan(hdr, rec2->unk_08, rec2->unk_04, rec2->unk_0C);

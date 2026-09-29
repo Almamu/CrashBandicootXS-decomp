@@ -45,7 +45,18 @@ extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
  * stores use plain constants. Left: the &gUnknown_030012E0 load is
  * hoisted to the top (it's a local there), the first half's 0x110 lands
  * in r2 instead of r7, and the second half rebuilds 0x110 instead of
- * copying it from r7 (`adds r6, r7, #0`). */
+ * copying it from r7 (`adds r6, r7, #0`).
+ * Last-nine pass (docs/matching/last-nine-naked-retry.md): 14 hw, same
+ * size. The ROM's r7 is never a pseudo's register (local-alloc can't
+ * use the frame pointer): it is reload's register for the plain 0x110
+ * constant, which it inherits for the posX store and then copies/bumps
+ * in the second half (reload_cse `adds r6, r7, #0`, move2add
+ * `adds r7, #4`). So the first half uses plain field accesses, the
+ * &gUnknown_030012E0 local is assigned where it's first used, and the
+ * second half reads posY through an inline (plain address, rebuilt by
+ * reload in r7). The first half and the prologue now match. Left: the
+ * second half's `ox` gets r2 (the ROM has r6, so r0-r3 must be busy when
+ * it is allocated) and reload uses r6 for 0x114 instead of r7. */
 #if NON_MATCHING
 /* A constant in a register CSE can't see through (the asm emits no
  * code), so each use site gets its own pseudo. */
@@ -60,6 +71,15 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, s32 ox, u32 x, u32 y
     m->posY = y;
 }
 
+/* Read through an inline so the posY offset reaches the load as a plain
+ * (reg + 0x114) address: reload then builds it (in r7, which move2add
+ * turns into `adds r7, #4`), instead of expand forcing it into a pseudo
+ * that CSE shares with the first half's posY load. */
+static inline u32 get_icon_mgr_posy(struct icon_manager *m)
+{
+    return m->posY;
+}
+
 /* Calls the icon manager's `record->slots[slot]` method on `label` (a
  * gcc 2.x virtual call; sub_803AD80 is `_call_via_r2`). */
 #define DRAW_ICON_SLOT(mgrExpr, slot, label)                                          \
@@ -71,31 +91,25 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, s32 ox, u32 x, u32 y
 
 void sub_8005E5C(struct pause_screen_results *self, void *label1, void *label2)
 {
-    s32 o1;
     struct icon_manager **pdc = &gUnknown_030012DC;
-    struct icon_manager **pe0 = &gUnknown_030012E0;
+    struct icon_manager **pe0;
 
     DRAW_ICON_SLOT(*pdc, 2, label1);
     {
         u32 x, y;
         struct icon_manager *d = *pdc;
 
-        o1 = OFF(0x110);
-        x = AT(d, o1);
+        x = d->posX;
         y = d->posY;
-        set_icon_mgr_pos(*pe0, o1, x - 2, y);
+        pe0 = &gUnknown_030012E0;
+        set_icon_mgr_pos(*pe0, 0x110, x - 2, y);
     }
     DRAW_ICON_SLOT(*pe0, 4, (void *)0x2f);
     {
-        u32 x, y;
         struct icon_manager *e = *pe0;
         s32 ox = OFF(0x110);
-        s32 oy;
 
-        x = AT(e, ox);
-        oy = OFF(0x114);
-        y = AT(e, oy);
-        set_icon_mgr_pos(*pdc, ox, x - 5, y + 8);
+        set_icon_mgr_pos(*pdc, ox, AT(e, ox) - 5, get_icon_mgr_posy(e) + 8);
     }
     DRAW_ICON_SLOT(*pdc, 2, label2);
 }
