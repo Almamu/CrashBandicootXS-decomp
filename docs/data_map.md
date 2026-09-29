@@ -631,7 +631,7 @@ vtable shapes).
 | `0816A810` | 0x10 | u8[16] d-pad direction lookup. **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_8000760` | medium | done |
 | `0816A820` | 0x200 | s16[256] sine/direction table (`s16` x 256). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_800AFF4`, `sub_800C8F8`, `sub_800C940` +16 | high | done |
 | `0816AA20` | 0x4C | song table: 19 pointers into the music block, `gStaticData_0855BCB4 + GAX_SONG_<NAME>` from the generated `gax_songs.h`. **Converted** (`src/data/song_table_16aa20.c`) | `sub_80017BC` | high | done |
-| `0816AF10` | 0x228 | CRC-16/CCITT lookup table (poly 0x1021, u16[256]) + the two link-cable pairing names "crash 1 <-> crash 2"/"crash 1 <-> crash 3" (`gStaticData_0816B110`/`0816B124`, read from the IWRAM image). **Converted** (`src/data/link_crc_16af10.c`) | `sub_8001CB8`, `sub_8002114` | high | done |
+| `0816AF10` | 0x228 | CRC-16/CCITT lookup table (poly 0x1021, u16[256]) + the two link-cable pairing names "crash 1 <-> crash 2"/"crash 1 <-> crash 3" (`gStaticData_0816B110`/`0816B124`, which the IWRAM data `gUnknown_03000810`/`0814` points at). **Converted** (`src/data/link_crc_16af10.c`) | `sub_8001CB8`, `sub_8002114` | high | done |
 | `0816B138` | 0x2 | the text ">". **Converted** (`src/data/menu_tables_16b138.c`) | `sub_8003D3C` | medium | done |
 | `0816B13A` | 0x20 | table of u16; 1 word(s) look like ROM pointers (`u16` x 16). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_800450C` | high | done |
 | `0816B15A` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_800450C` | high | done |

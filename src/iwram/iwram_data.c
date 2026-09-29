@@ -17,7 +17,8 @@
  * different local structs, see the comment.
  */
 
-extern const u16 gStaticData_0816AF10[];
+extern const char gStaticData_0816B110[];
+extern const char gStaticData_0816B124[];
 extern const u8 gStaticData_081725C4[];
 extern const u8 gStaticData_0817D074[];
 
@@ -67,10 +68,10 @@ u8 gUnknown_03000800 = 1;
 void *gUnknown_03000804 = NULL;
 u8 gUnknown_03000808 = 1;
 void *gUnknown_0300080C = NULL;
-/* The two link compatibility messages, stored after the CRC table in
- * gStaticData_0816AF10: "crash 1 <-> crash 2", "crash 1 <-> crash 3". */
-const u8 *gUnknown_03000810 = (const u8 *)gStaticData_0816AF10 + 0x200;
-const u8 *gUnknown_03000814 = (const u8 *)gStaticData_0816AF10 + 0x214;
+/* The two link compatibility messages, stored after the CRC table
+ * (src/data/link_crc_16af10.c): "crash 1 <-> crash 2", "crash 1 <-> crash 3". */
+const u8 *gUnknown_03000810 = (const u8 *)gStaticData_0816B110;
+const u8 *gUnknown_03000814 = (const u8 *)gStaticData_0816B124;
 
 s32 gUnknown_03000818 = 0;
 s32 gUnknown_0300081C = 0;

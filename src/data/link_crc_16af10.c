@@ -44,7 +44,7 @@ const u16 gStaticData_0816AF10[256] = {
     0x6E17, 0x7E36, 0x4E55, 0x5E74, 0x2E93, 0x3EB2, 0x0ED1, 0x1EF0,
 };
 
-/* The two link-cable pairing names. The IWRAM image points at them
- * (gStaticData_087E55E4 + 0x810/0x814); nothing in the ROM code does. */
+/* The two link-cable pairing names. The IWRAM data points at them
+ * (gUnknown_03000810/gUnknown_03000814, src/iwram/iwram_data.c). */
 const char gStaticData_0816B110[] = "crash 1 <-> crash 2";
 const char gStaticData_0816B124[] = "crash 1 <-> crash 3";
