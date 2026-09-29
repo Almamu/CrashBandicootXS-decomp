@@ -17,6 +17,13 @@ category page - see [game_loop.md](./game_loop.md).
   `sub_80006EC`, `sub_80006F8`, `sub_8000720`, `sub_8000760`,
   `sub_80007AC`, `sub_80007DC` (Sept 2026, `code_3.s` lineage - `irq.c` is
   a mixed file, see `docs/decomp_dev.md`)
+- The IWRAM image (`0x03000000`, stored at ROM `0x087E55E4`):
+  `asm/intr_main.s` (`IntrMain`, hand-written), `src/iwram/string_arm.c`
+  and `src/iwram/sprite_arm.c` (ARM C, agbcc_arm: six matched, four
+  parked - `strncpy_arm`, `itoa_arm`, `HeapSortActorsByKey`,
+  `LookupSpriteFrameCache`) and `src/iwram/iwram_data.c` (the
+  initialised IWRAM globals) - see
+  [iwram-image.md](../matching/iwram-image.md).
 - `src/system/asset_util.c`: `LoadTaggedAsset`, `LoadBackgroundTileAndPalette`
 - `src/system/input_util.c`: `sub_80010E0` (input-poll-until-button/
   timeout helper) - was previously NAKED, now matched as real C by

@@ -336,6 +336,18 @@ $(O1_OBJS): CC1FLAGS := $(filter-out -O2,$(CC1FLAGS)) -O1
 NO_INTERWORK_OBJS := $(C_BUILDDIR)/util/math_div64_util.o
 $(NO_INTERWORK_OBJS): CC1FLAGS := $(filter-out -mthumb-interwork,$(CC1FLAGS))
 
+# ARM-state code of the IWRAM image (ldscript.txt's `iwram` section),
+# built with agbcc_arm, the ARM-targeting build of the same gcc 2.9.
+# -fomit-frame-pointer: the ROM's ARM functions have no APCS frame (the
+# Thumb agbcc never sets one up, the ARM one does by default). The
+# prologue bugfix and -fhex-asm are Thumb agbcc-only options. See
+# docs/matching/iwram-image.md.
+CC1_ARM  := tools/agbcc/bin/agbcc_arm
+ARM_OBJS := $(C_BUILDDIR)/iwram/string_arm.o \
+            $(C_BUILDDIR)/iwram/sprite_arm.o
+$(ARM_OBJS): CC1 := $(CC1_ARM)
+$(ARM_OBJS): CC1FLAGS := -mthumb-interwork -Wimplicit -Wparentheses -O2 -fomit-frame-pointer
+
 $(C_BUILDDIR)/%.o : $(C_SUBDIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CPP) $(CPPFLAGS) $< | $(CC1) $(CC1FLAGS) -o $(C_BUILDDIR)/$*.s

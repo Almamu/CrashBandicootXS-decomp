@@ -4,9 +4,9 @@ Frozen, never-edited copies of the original hand-disassembled ROM code, kept
 purely so [decomp.dev](https://decomp.dev)'s progress report has a
 byte-exact "target" (ground truth) object to diff the current, in-progress
 source tree's "base" object against - see [`docs/decomp_dev.md`](../docs/decomp_dev.md)
-for the full explanation and how the two sides are built. Two files, two
-different historical eras of this project, together covering the whole
-game's code:
+for the full explanation and how the two sides are built. Three files:
+two from different historical eras of this project, covering the ROM's
+Thumb code, and one for the ARM code of the IWRAM image:
 
 - **`code_3.s`** is `asm/code_3.s` as it existed at commit `710cc9a` (the
   last commit before any function was ever cut out of it for matching, and
@@ -24,7 +24,17 @@ game's code:
   the reference project this repo started from); everything else here is
   still `sub_XXXXXXXX`, renamed via `expected/corrections.txt` instead.
 
-Both verified byte-identical to their source commit's blob via
+- **`iwram.s`** is different in origin: the IWRAM image's ARM code
+  (IWRAM `0x03000000`-`0x030007CC`, stored in ROM at `0x087E55E4`) was
+  never in any disassembly as code - it sat in `data/data.s` as one
+  `.incbin` until it was decompiled (`asm/intr_main.s`, `src/iwram/`). So
+  it was generated once from `baserom.gba` when that happened (ARM
+  `objdump`, branch targets and literal pools as labels, pool words as
+  the symbols they point at, function names as in `src/iwram/`), checked
+  to reassemble to the same 0x7CC bytes, and frozen. Its labels carry
+  IWRAM addresses. See docs/decomp_dev.md's "The IWRAM image".
+
+`code_3.s` and `legacy.s` were both verified byte-identical to their source commit's blob via
 `git hash-object` (for `legacy.s`, of the exact line range extracted -
 diffed directly against `git show 8b090ca:asm/code.s`, not just hashed).
 

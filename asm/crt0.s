@@ -19,7 +19,7 @@ init_vector:
 	svc #0x10000
 	ldr sp, _08000124 @ =iwram_end
 	ldr r2, _08000138 @ =0x040000D4
-	ldr r0, _0800012C @ =gStaticData_087E55E4
+	ldr r0, _0800012C @ =__iwram_lma
 	str r0, [r2]
 	mov r0, #0x3000000
 	str r0, [r2, #4]
@@ -37,7 +37,7 @@ init_vector:
 _08000120: .4byte gUnknown_03007F00
 _08000124: .4byte iwram_end
 _08000128: .4byte gUnknown_03007FA0
-_0800012C: .4byte gStaticData_087E55E4
+_0800012C: .4byte __iwram_lma
 _08000130: .4byte gUnknown_030009E8
 _08000134: .4byte IntrMain_Buffer
 _08000138: .4byte 0x040000D4

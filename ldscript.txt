@@ -497,9 +497,30 @@ SECTIONS
         build/crashbandicootxs/src/data/cutscene_pictures_5a9f70.o(.rodata);
         build/crashbandicootxs/data/data.o(.rodata.0861BADC);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata);
-        build/crashbandicootxs/data/data.o(.rodata.087E55E4);
 
 	} = 0
+
+    /* The IWRAM image: IntrMain, the ARM routines and the initialised
+     * IWRAM globals, linked to run at 0x03000000 (IntrMain_Buffer) and
+     * stored in ROM right after the data above (0x087E55E4). crt0 copies
+     * it from __iwram_lma to 0x03000000 at boot; its length is
+     * gUnknown_030009E8 - IntrMain_Buffer. See docs/decomp_dev.md. */
+    iwram 0x03000000 : AT(LOADADDR(ROM) + SIZEOF(ROM))
+    {
+        build/crashbandicootxs/asm/intr_main.o(.text);
+        build/crashbandicootxs/src/iwram/string_arm.o(.text);
+        build/crashbandicootxs/src/iwram/sprite_arm.o(.text);
+        build/crashbandicootxs/src/iwram/iwram_data.o(.data);
+    }
+    __iwram_lma = LOADADDR(iwram);
+
+    /* Empty cartridge space (0xFF) from the end of the IWRAM image to the
+     * end of the 8 MB ROM. */
+    rom_fill LOADADDR(iwram) + SIZEOF(iwram) : AT(LOADADDR(iwram) + SIZEOF(iwram))
+    {
+        BYTE(0xFF);
+        . = ALIGN(0x800000);
+    } = 0xFF
 
     /* Discard everything not specifically mentioned above. */
     /DISCARD/ :
