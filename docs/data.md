@@ -623,8 +623,9 @@ The `sub_effect_record` tables in the same regions are hand-written C:
 12-byte `struct sub_effect_table_end` that the one-record-ahead
 accessors read after the last one.
 
-The 2-byte pads after the two LZ77 sheets (`gStaticData_080C0C36`,
-`gStaticData_08151AC2`) stay raw `.incbin`s.
+The 2-byte pads after the two LZ77 sheets (formerly
+`gStaticData_080C0C36`, `gStaticData_08151AC2`) are built: see "LZ77
+stream padding" below.
 
 ### Compressed sprite frames
 
@@ -679,3 +680,23 @@ the same way.
 
 `tools/rle_sprites.py extract` writes the three PNGs from `baserom.gba`
 again and checks that every frame re-encodes to the ROM's bytes.
+
+### LZ77 stream padding
+
+The LZ77 streams in `data/data.s` start on a word boundary, and most
+are followed by 1-3 zero bytes that bring the next asset back to one.
+Those bytes used to be 70 raw labels (`gStaticData_080C0C36`,
+`gStaticData_08151AC2`, `gStaticData_085A5519`, 66 between
+`0x0861BF2E` and `0x086EA0C9`, `gStaticData_086ECCD2`). Each one is
+exactly the padding gbagfx writes: it rounds every `.lz` file up to a
+multiple of 4 with zeros. So the stream's `.incbin` takes the whole
+padded file instead of trimming it to the stream length (`, 0, 0x1E6`),
+and the pad label is gone (no code referenced any of them).
+`tools/report_units.py` counts the padding as part of the built blob.
+
+This only holds where the stream starts word-aligned and the ROM pad
+is all zeros, which is true of every one of the 70 (checked against the
+built `.lz` files). An edited asset that compresses to a different
+length gets the right padding for its new length, so the next asset
+stays aligned. Streams that the ROM packs back to back without a pad
+(the cutscene bitmaps, `cutscene_pictures_5a9f70.c`) keep the trimming.

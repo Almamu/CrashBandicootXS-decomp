@@ -69,7 +69,7 @@
      "size": 2,
      "format": "padding (aligns the next table)",
      "effort": "easy",
-     "status": "raw (gStaticData_080C0C36)"
+     "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
     },
     {
      "address": "0x080C0C38",
@@ -131,7 +131,8 @@
      "effort": "easy",
      "status": "converted: src/data/cell_anim_0ff1b0.c"
     }
-   ]
+   ],
+   "status": "converted (every region)"
   },
   {
    "address": "0x08151AC2",
@@ -157,7 +158,7 @@
      "size": 2,
      "format": "padding",
      "effort": "easy",
-     "status": "raw (gStaticData_08151AC2)"
+     "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
     },
     {
      "address": "0x08151AC4",
@@ -211,7 +212,8 @@
      "notes": "the last frame ends exactly at 0x08167AD4",
      "status": "converted: src/data/rle_sprites_15a050.c (graphics/rle_sprites/15a050_frames.png, tools/rle_sprites.py)"
     }
-   ]
+   ],
+   "status": "converted (every region)"
   },
   {
    "address": "0x08167AD4",
@@ -5112,7 +5114,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x085A60FF",
@@ -5951,7 +5953,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0861C182",
@@ -5965,7 +5967,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0861C309",
@@ -5979,7 +5981,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0861E5F6",
@@ -5993,7 +5995,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0862556B",
@@ -6007,7 +6009,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x08628C4F",
@@ -6021,7 +6023,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0862A957",
@@ -6035,7 +6037,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0862C2C5",
@@ -6049,7 +6051,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0862C4AD",
@@ -6063,7 +6065,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0862CC3B",
@@ -6077,7 +6079,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0862CE6E",
@@ -6091,7 +6093,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0862D0CB",
@@ -6105,7 +6107,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0862E3AF",
@@ -6119,7 +6121,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0862FFF3",
@@ -6133,7 +6135,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x086308EF",
@@ -6147,7 +6149,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x08630E19",
@@ -6161,7 +6163,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x08631155",
@@ -6175,7 +6177,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x08631372",
@@ -6189,7 +6191,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x086313AD",
@@ -6203,7 +6205,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x08631557",
@@ -6217,7 +6219,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x086315BB",
@@ -6231,7 +6233,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0863183A",
@@ -6245,7 +6247,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0863199E",
@@ -6259,7 +6261,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x086324B3",
@@ -6273,7 +6275,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0863281E",
@@ -6287,7 +6289,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x08632BC2",
@@ -6301,7 +6303,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x086334C1",
@@ -6315,7 +6317,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x08636EF1",
@@ -6329,7 +6331,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x08637603",
@@ -6343,7 +6345,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x086377BD",
@@ -6357,7 +6359,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x08637A6E",
@@ -6371,7 +6373,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x086382C6",
@@ -6385,7 +6387,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x08639459",
@@ -6399,7 +6401,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0863A60A",
@@ -6413,7 +6415,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0863AD8D",
@@ -6427,7 +6429,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0863B666",
@@ -6441,7 +6443,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0863BDD2",
@@ -6455,7 +6457,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0863CF95",
@@ -6469,7 +6471,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0863D333",
@@ -6483,7 +6485,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0863D4BF",
@@ -6497,7 +6499,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x08640EF5",
@@ -6511,7 +6513,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x08644A86",
@@ -6525,7 +6527,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x08649417",
@@ -6539,7 +6541,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0864D7E5",
@@ -6553,7 +6555,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0864F82F",
@@ -6567,7 +6569,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x08651CF7",
@@ -6581,7 +6583,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x08655175",
@@ -6595,7 +6597,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0865BAEB",
@@ -6609,7 +6611,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0865E05A",
@@ -6623,7 +6625,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x08661F46",
@@ -6637,7 +6639,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x086652B6",
@@ -6651,7 +6653,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x08665935",
@@ -6665,7 +6667,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0867045E",
@@ -6679,7 +6681,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0867829B",
@@ -6693,7 +6695,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0867EDF3",
@@ -6707,7 +6709,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x086834F5",
@@ -6721,7 +6723,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x08689F72",
@@ -6735,7 +6737,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x0868D311",
@@ -6749,7 +6751,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x08693B8E",
@@ -6763,7 +6765,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x086A8349",
@@ -6777,7 +6779,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x086AF12B",
@@ -6791,7 +6793,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x086BACB3",
@@ -6805,7 +6807,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x086C127C",
@@ -6850,7 +6852,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x086E2212",
@@ -6864,7 +6866,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x086E3541",
@@ -6878,7 +6880,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x086EA0C9",
@@ -6892,7 +6894,7 @@
    "format": "padding (zero, aligns the next LZ77 blob to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Replace with an alignment directive (`.balign 4, 0`) once the report counts directive bytes."
+   "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
   },
   {
    "address": "0x086ECCD2",
@@ -6919,7 +6921,8 @@
      "address": "0x086ECCD2",
      "size": 2,
      "format": "padding",
-     "effort": "easy"
+     "effort": "easy",
+     "status": "converted: built, the zero padding gbagfx appends to the preceding .lz stream (data.s incbins the whole padded file; see docs/data.md \"LZ77 stream padding\")"
     },
     {
      "address": "0x086ECCD4",
@@ -6964,7 +6967,7 @@
      "status": "converted: built from data/levels/room33_25233c by tools/levels.py"
     }
    ],
-   "status": "converted except the 2-byte pad: 6 assets built from data/levels/ by tools/levels.py"
+   "status": "converted (every region)"
   },
   {
    "address": "0x087E3BEC",
