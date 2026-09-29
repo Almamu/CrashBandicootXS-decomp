@@ -287,6 +287,43 @@ The category families' animation tables (`actor_anim.h`'s
 `gStaticData_081796CC`/`gStaticData_0817B2A4`) are C as well now, see
 "Category families" below.
 
+### Category families
+
+The two actor-category families (docs/data_map.md, `08178F80` and
+`0817AA98`) are `src/data/anim_family_178f80.c` (categories 0-2) and
+`src/data/anim_family_17aa6c.c` (categories 3-6). Each is an OBJ palette
+(256 colours, then 0x200 zero bytes nothing reads; the second family has
+two), the animation table (`struct anim_table_record`, `actor_anim.h`,
+41 and 47 records), and the arrays the records point at:
+
+- **table_A**: the clip's keyframes, `struct anim_frame_record`
+  (`actor_self.h`: duration, index into table_B, loop threshold and
+  base, OAM attribute bits). Nothing stores a count.
+- **table_B**: the frames. Record 0's points at compressed frames
+  (`gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_nnn`, set C for the
+  second family), so it's a `const u8 *const []`. Every other record's
+  is `u32` byte offsets into the family's framed sheet
+  (`graphics/unknown/00_0b2120/`, `01_14174c/`, decompressed), written
+  `FRAMED_0B2120_<ENTITY>_<NN>`. `tools/framed_gfx.py header` generates
+  those from the sheet's frame PNGs, in the order the sheet is built
+  (`graphics.mk`), so a resized frame moves the offsets with it. Every
+  offset in the ROM lands on a frame start.
+
+The arrays have no labels in the code (only the records point at them),
+so they're named after their addresses. Each one runs to the next
+array a record points at; several records share arrays, and the
+partition has no leftover bytes (every table_A piece is a whole number
+of 12-byte keyframes). The descriptors in `actor_category_175558.c`
+point at the palettes and tables by symbol now instead of
+`gStaticData_08178F80 + 0x74c`-style offsets.
+
+`struct anim_table_record`'s fields past `table_B` were typed from the
+data: `unknown_10` is a word (0 or 0x260C-0x36D5), `box_14` a `struct
+anim_box` (`{x, y, z, w, h, d}`, the same box the small actor tables
+next to the families hold), and `spawnX`/`spawnY` aren't always 0.
+`actor_anim.h`'s `struct keyframe_entry` is gone: table_A is typed as
+the matched code's `struct anim_frame_record`.
+
 ## Resources (grit-style)
 
 Graphics, and other assets built from files, use the same layout as the
@@ -688,40 +725,3 @@ category family files) use `RLE_SPRITES_0C2758_FRAME_nnn` /
 
 `tools/rle_sprites.py extract` writes the three PNGs from `baserom.gba`
 again and checks that every frame re-encodes to the ROM's bytes.
-
-### Category families
-
-The two actor-category families (docs/data_map.md, `08178F80` and
-`0817AA98`) are `src/data/anim_family_178f80.c` (categories 0-2) and
-`src/data/anim_family_17aa6c.c` (categories 3-6). Each is an OBJ palette
-(256 colours, then 0x200 zero bytes nothing reads; the second family has
-two), the animation table (`struct anim_table_record`, `actor_anim.h`,
-41 and 47 records), and the arrays the records point at:
-
-- **table_A**: the clip's keyframes, `struct anim_frame_record`
-  (`actor_self.h`: duration, index into table_B, loop threshold and
-  base, OAM attribute bits). Nothing stores a count.
-- **table_B**: the frames. Record 0's points at compressed frames
-  (`gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_nnn`, set C for the
-  second family), so it's a `const u8 *const []`. Every other record's
-  is `u32` byte offsets into the family's framed sheet
-  (`graphics/unknown/00_0b2120/`, `01_14174c/`, decompressed), written
-  `FRAMED_0B2120_<ENTITY>_<NN>`. `tools/framed_gfx.py header` generates
-  those from the sheet's frame PNGs, in the order the sheet is built
-  (`graphics.mk`), so a resized frame moves the offsets with it. Every
-  offset in the ROM lands on a frame start.
-
-The arrays have no labels in the code (only the records point at them),
-so they're named after their addresses. Each one runs to the next
-array a record points at; several records share arrays, and the
-partition has no leftover bytes (every table_A piece is a whole number
-of 12-byte keyframes). The descriptors in `actor_category_175558.c`
-point at the palettes and tables by symbol now instead of
-`gStaticData_08178F80 + 0x74c`-style offsets.
-
-`struct anim_table_record`'s fields past `table_B` were typed from the
-data: `unknown_10` is a word (0 or 0x260C-0x36D5), `box_14` a `struct
-anim_box` (`{x, y, z, w, h, d}`, the same box the small actor tables
-next to the families hold), and `spawnX`/`spawnY` aren't always 0.
-`actor_anim.h`'s `struct keyframe_entry` is gone: table_A is typed as
-the matched code's `struct anim_frame_record`.
