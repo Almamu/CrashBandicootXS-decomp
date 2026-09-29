@@ -656,6 +656,9 @@ BASEROM = ROOT / "baserom.gba"
 ROM_BASE = 0x08000000
 DATA_START = UNITS[-1][0]  # data.s is linked straight after the last code unit
 DATA_CATEGORY = "data"
+# Start of the ROM's trailing 0xFF cartridge filler (runs to 0x08800000);
+# see trim_rom_filler().
+DATA_END = 0x087E5FCC
 
 
 def parse_data_s():
@@ -743,6 +746,32 @@ def write_data_object(out_o, blobs, body):
     return out_o
 
 
+def trim_rom_filler(blobs, have_rom):
+    """Drops the cartridge's trailing 0xFF filler from the data range.
+
+    The last blob in data.s (gStaticData_087E55E4) runs to the end of the
+    8 MB ROM, but everything from DATA_END onwards is 0xFF fill: empty ROM
+    space, not data, so it shouldn't count toward total_data. DATA_END is a
+    constant so the fork-PR path (no baserom.gba) gets the same totals; when
+    the ROM is there, it's checked to really be where the trailing 0xFF run
+    starts."""
+    if have_rom:
+        rom = BASEROM.read_bytes()
+        end = DATA_END - ROM_BASE
+        if rom[end:].strip(b"\xff") or rom[end - 1] == 0xFF:
+            sys.exit(f"DATA_END {DATA_END:#x} is not the start of baserom.gba's trailing 0xFF filler")
+    out = []
+    for blob in blobs:
+        if blob["addr"] >= DATA_END:
+            continue
+        if blob["addr"] + blob["size"] > DATA_END:
+            if blob["built"]:
+                sys.exit(f"{blob['name']} is built from a source but overlaps the trailing filler")
+            blob = dict(blob, size=DATA_END - blob["addr"])
+        out.append(blob)
+    return out
+
+
 def data_units():
     """objdiff units for data/data.s (see the comment above DATA_S)."""
     DATA_BUILD_DIR.mkdir(parents=True, exist_ok=True)
@@ -759,7 +788,7 @@ def data_units():
         return incbin_line(blob, False) if blob["built"] else f"\t.space {blob['size']:#x}\n"
 
     units = []
-    for run_ in group_data_blobs(parse_data_s()):
+    for run_ in group_data_blobs(trim_rom_filler(parse_data_s(), have_rom)):
         blobs = run_["blobs"]
         start = blobs[0]["addr"]
         tag = run_["group"].replace("/", "_") if run_["group"] else "raw"

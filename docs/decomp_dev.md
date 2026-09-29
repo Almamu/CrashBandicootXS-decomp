@@ -282,8 +282,18 @@ Both kinds come out byte-identical in the ROM, and `make compare` checks
 that, so matching bytes can't be the test. The source is what decides.
 
 **Scope.** Everything after the code, from `0x0803B8B0` to the end of the
-ROM (`0x08800000`, 8,144,720 bytes), is `data/data.s`, one label per blob
-and one `.incbin` per label. No C file puts data in the ROM: agbcc emits
+ROM (`0x08800000`), is `data/data.s`, one label per blob and one `.incbin`
+per label. The last 106,548 bytes, from `0x087E5FCC` on (inside the final
+blob, `gStaticData_087E55E4`), are all `0xFF`: that's empty cartridge space,
+not data. The report ends the data range at `DATA_END = 0x087E5FCC` and
+trims that blob to match, which leaves 8,038,172 bytes of data. The
+constant is hard-coded so the no-ROM path gets the same totals. When
+`baserom.gba` is present, the script checks that the trailing `0xFF` run
+really starts there. Smaller all-`0x00` runs inside still-baserom blobs
+(151 runs of 256+ bytes, 64,716 bytes in total, the largest 2,664 bytes,
+nearly all inside the big `gStaticData_0817E78C`/`gStaticData_084A5600`
+blobs) still count as data: they sit inside real data, and there are no
+other `0xFF` runs. No C file puts data in the ROM: agbcc emits
 no `.rodata`/`.data` for any `src/*.c` file, and `ldscript.txt` only
 places `.text` from C objects anyway, discarding everything else. Jump
 tables and literal pools inside code are counted as code.
@@ -332,7 +342,7 @@ target. That keeps the totals correct but doesn't verify the assets, which
 only matters for fork PRs: `main`'s run has the ROM, and `make compare`
 checks every byte anyway.
 
-As of this change: 1,640,427 of 8,144,720 bytes matched (20.14%). That is
+As of this change: 1,640,427 of 8,038,172 bytes matched (20.41%). That is
 the two LZ77 blobs in `graphics/unknown/`, the intro and tileset1 graphics,
 the GAX2 audio data and the sfx table.
 
