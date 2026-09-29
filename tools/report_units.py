@@ -39,6 +39,7 @@ stay `None`/uncategorized, same as before.
 """
 import json
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -589,8 +590,20 @@ def run(cmd, **kwargs):
     subprocess.run(cmd, check=True, **kwargs)
 
 
+def resolved_callees():
+    """`resolve NAME` entries in expected/corrections.txt - see
+    slice_expected.py for what they do."""
+    names = []
+    for line in CORRECTIONS.read_text().splitlines():
+        parts = line.split("#", 1)[0].split()
+        if len(parts) == 2 and parts[0] == "resolve":
+            names.append(parts[1])
+    return names
+
+
 def slice_source(source, start, end):
-    args = ["python3", str(ROOT / "tools" / "slice_expected.py"), str(source), f"{start:x}"]
+    args = ["python3", str(ROOT / "tools" / "slice_expected.py"),
+            *(f"--resolve={name}" for name in resolved_callees()), str(source), f"{start:x}"]
     if end is not None:
         args.append(f"{end:x}")
     return subprocess.run(args, capture_output=True, text=True, check=True).stdout
@@ -809,6 +822,19 @@ def data_units():
     return units
 
 
+def build_base(name, start, base_rel):
+    """Copies a unit's compiled object to build/expected/units/<key>_base.o
+    and widens any function size that stops short of the next function
+    (an inline-asm `ldr rN, =sym` literal pool, bytes a NAKED function
+    emits after its own `.size`, a NAKED label with no `.size` at all) -
+    see patch_expected_target.py's set_function_sizes(). The build's own
+    object is never touched."""
+    out_o = BUILD_DIR / f"{name}_{start:08X}_base.o"
+    shutil.copyfile(ROOT / "build" / "crashbandicootxs" / base_rel, out_o)
+    run(["python3", str(ROOT / "tools" / "patch_expected_target.py"), "--base-object", str(out_o)])
+    return out_o
+
+
 def main():
     BUILD_DIR.mkdir(parents=True, exist_ok=True)
     categories = {}
@@ -841,7 +867,7 @@ def main():
         }
         metadata = {}
         if base_rel is not None:
-            unit["base_path"] = f"build/crashbandicootxs/{base_rel}"
+            unit["base_path"] = str(build_base(name, start, base_rel).relative_to(ROOT))
             src_path = str(Path(base_rel).with_suffix(".c"))
             metadata["complete"] = src_path not in needs_cleanup
         if category is not None:
