@@ -1,4 +1,5 @@
 #include "core.h"
+#include "actor_anim.h"
 
 /* Same "spawn/pre-attack" singleton family as actor_part39.c - see that
  * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md.
@@ -7,13 +8,13 @@
  * of `rows` rows of `cols` map entries, add the tile base
  * (`sub_8029AC4() - 0x200`) to the entry, OR in a 4-bit palette bank
  * taken alternately from the low and high nibble of the next byte, and
- * store it at `0x0600D000 + row * 0x40` (columns 0x20 and up go to the
- * second screen block, +0x7C0).
+ * store it at `BG_SCREEN_ADDR(26) + row * 0x40` (columns 0x20 and up go
+ * to the second screen block, +0x7C0).
  *
  * - `sub_802F7B0(pic)`: DMA3-copies `pic`'s 0x200-byte palette to
- *   PLTT, reads cols/rows (s16 at +0x200/+0x202) and the tile count
- *   (+0x204), runs the loop over the map at +0x208 with the nibbles
- *   after the tiles, then enables BG1 (DISPCNT |= 0x200, BG1CNT =
+ *   PLTT, reads cols/rows and the tile count (a `struct
+ *   bg_picture_header`), runs the loop over the map at +0x208 with the
+ *   nibbles after the tiles, then enables BG1 (DISPCNT |= 0x200, BG1CNT =
  *   0x5A07) and DMA3-copies the tiles to VRAM + sub_8029AC4() * 32.
  * - `sub_802F8E8(nibbles, map, cols, rows)`: the same loop on explicit
  *   arguments.
@@ -50,7 +51,7 @@ static inline void MapFill(u8 *nib, u16 *map, s32 cols, s32 rows)
     s32 r;
     s32 c;
 
-    dest = (u16 *)0x0600D000;
+    dest = (u16 *)BG_SCREEN_ADDR(26);
     base = sub_8029AC4() - 0x200;
     odd = 0;
     for (r = 0; r < rows; r++) {
@@ -85,8 +86,8 @@ void sub_802F7B0(u8 *pic)
     u8 *tileData;
 
     DmaCopy16(3, pic, (void *)PLTT, 0x200);
-    cols = *(s16 *)(pic + 0x200);
-    rows = *(s16 *)(pic + 0x202);
+    cols = ((struct bg_picture_header *)pic)->cols;
+    rows = ((struct bg_picture_header *)pic)->rows;
     pic += 0x204;
     tiles = *(u32 *)pic;
     pic += 4;
@@ -111,7 +112,7 @@ void sub_802F8E8(u8 *nib, u16 *map, s32 cols, s32 rows)
     s32 r;
     s32 c;
 
-    dest = (u16 *)0x0600D000;
+    dest = (u16 *)BG_SCREEN_ADDR(26);
     base = sub_8029AC4() - 0x200;
     odd = 0;
     for (r = 0; r < rows; r++) {

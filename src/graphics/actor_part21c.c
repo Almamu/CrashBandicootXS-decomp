@@ -1,4 +1,5 @@
 #include "core.h"
+#include "actor_self.h"
 
 /* Same boss-weapon "self"/tracker object family as actor_part20.c/
  * actor_part23.c/actor_part25.c - see actor_part20.c's header comment
@@ -13,7 +14,7 @@ extern s32 gUnknown_03001558;
 extern s32 gUnknown_0300155C;
 extern s32 gUnknown_03001538;
 extern s32 gUnknown_0300153C;
-extern void *gUnknown_03001534;
+extern struct actor_self *gUnknown_03001534;
 
 /* Boss-weapon camera-relative position accumulator: advances
  * `gUnknown_03001548` by its per-frame delta (`gUnknown_03001560`),
@@ -25,13 +26,15 @@ extern void *gUnknown_03001534;
  * `sub_802A4F8`. Same "pin the zero constant so it's loaded before its
  * address" idiom as `sub_8030C98` (actor_part23.c) - the value is
  * reused across four stores that would otherwise get reordered ahead
- * of the address loads that consume them. */
+ * of the address loads that consume them. The `*(T *)&self->...` stores keep
+ * gcc from treating them as struct-member accesses, which would let the
+ * scheduler move the `anims[0]` load below the zero constant. */
 void sub_80306AC(void)
 {
     gUnknown_03001548 += gUnknown_03001560;
 
     if (gUnknown_03001554 <= 0x81FF) {
-        u8 *self;
+        struct actor_self *self;
         s32 *p1558 = &gUnknown_03001558;
         s32 *p155C = &gUnknown_0300155C;
         register s32 zero asm("r5") = 0;
@@ -45,29 +48,29 @@ void sub_80306AC(void)
         gUnknown_0300153C = zero;
 
         self = gUnknown_03001534;
-        *(s32 *)(self + 0xc) = zero;
+        self->animIndex = zero;
         {
-            register u16 anim asm("r0") = *(u16 *)(*(u8 **)self);
+            register u16 anim asm("r0") = self->anims[0].duration;
             register u8 zero1 asm("r1") = 0;
 
-            *(u16 *)(self + 0x10) = anim;
-            self[0x12] = zero1;
+            *(u16 *)&self->animTimer = anim;
+            *(u8 *)&self->animDone = zero1;
         }
 
         {
             s32 frame = GetAnimFrameBaseOffset(self);
-            register s32 idx asm("r2") = *(s32 *)(self + 0xc);
-            register u8 *table asm("r3") = *(u8 **)self;
+            register s32 idx asm("r2") = self->animIndex;
+            register u8 *table asm("r3") = (u8 *)self->anims;
             register u8 *entryPtr asm("r1") = (u8 *)(idx * 0xc);
             register s32 four asm("r2");
             register s32 val asm("r1");
 
             asm("add %0, %0, %1" : "+r" (entryPtr) : "r" (table));
             four = 4;
-            val = *(s16 *)(entryPtr + four);
+            val = *(s16 *)(entryPtr + four); /* anims[idx].loopThreshold */
 
             if (frame >= val) {
-                *(s32 *)(self + 8) = zero;
+                self->animTime = zero;
             }
         }
 

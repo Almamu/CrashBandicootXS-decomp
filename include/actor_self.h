@@ -87,6 +87,15 @@ struct actor_self {
     struct actor_vtable *vtable; // 0x50
 };
 
+/* Words inside the byte arrays above, which other files still index
+ * directly: the `struct anim_table_record` InitActorPart was given
+ * (+0x30, actor_anim.h) and the circular list links it sets up (+0x48
+ * next, +0x4C prev; the list is rooted at the player, gUnknown_03000884). */
+struct anim_table_record;
+#define ACTOR_RECORD(self) (*(struct anim_table_record **)&(self)->unk_2C[4])
+#define ACTOR_LINK_NEXT(self) (((struct actor_self **)(self)->unk_48)[0])
+#define ACTOR_LINK_PREV(self) (((struct actor_self **)(self)->unk_48)[1])
+
 /* The statement macros below are wrapped in `if (1) { ... } else (void)0`
  * rather than the usual `do { ... } while (0)`: agbcc treats the latter
  * as a real loop when weighing register priorities, which was enough to

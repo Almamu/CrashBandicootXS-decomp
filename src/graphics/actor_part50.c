@@ -1,5 +1,7 @@
 #include "core.h"
 #include "memory.h"
+#include "actor_self.h"
+#include "actor_anim.h"
 
 /* Branchless absolute value, matching this ROM's own codegen for `abs()`
  * (`asrs`/`eors`/`subs` on the value's own sign-extended shift, updating
@@ -30,12 +32,13 @@
  * at `self+0x2c`, and a 12-byte little vector block at `self+0x38`
  * (copied from `part+0x14..0x20`) whose first three `s16` slots are a
  * position `UpdateAnimatedActorPart`'s sibling `sub_802AA0C` integrates
- * a per-axis velocity into. None of these objects' full shapes are
- * pinned down yet, so every access stays a raw offset with a doc comment
- * rather than a guessed struct, matching the established convention for
- * this object family. See docs/matching/issue-50-actor-2a69c.md. */
+ * a per-axis velocity into. The object is `struct actor_self`
+ * (actor_self.h: `x`/`y`/`z` are the cached `b`/`c`/`d`, `depth` and
+ * `visible` the threshold pair) and the constructor's `part` a `struct
+ * anim_table_record` (actor_anim.h). See
+ * docs/matching/issue-50-actor-2a69c.md. */
 
-extern void *gUnknown_03000884;
+extern struct actor_self *gUnknown_03000884;
 extern void sub_802F338(void *arg0);
 
 /* Trivial forwarder - ignores its own argument and calls
@@ -104,54 +107,49 @@ extern s32 sub_8029E40(void);
  * (or self-links it if that list is still empty). Returns `self`. */
 void *InitActorPart(void *selfArg, void *partArg, s32 b, s32 c, s32 d)
 {
-    u8 *self = selfArg;
-    register u8 *part asm("r4") = partArg;
+    struct actor_self *self = selfArg;
+    register struct anim_table_record *part asm("r4") = partArg;
     register s32 bReg asm("r5") = b;
     register s32 cReg asm("r6") = c;
 
     {
-        u8 vC = part[0xc];
-        u32 v4 = *(u32 *)(part + 4);
-        u32 v8 = *(u32 *)(part + 8);
+        u8 vC = part->header_byte;
+        struct anim_frame_record *v4 = part->table_A;
+        u32 *v8 = part->table_B;
 
-        *(u32 *)self = v4;
-        *(u32 *)(self + 4) = v8;
-        *(u32 *)(self + 0x18) = vC;
+        self->anims = v4;
+        self->frameOffsets = v8;
+        self->unk_18 = vC;
     }
 
     sub_803B0A8(self, 0);
 
-    *(u8 **)(self + 0x50) = gStaticData_087E4DF4;
-    *(s32 *)(self + 0x1c) = bReg;
-    *(s32 *)(self + 0x20) = cReg;
-    *(s32 *)(self + 0x24) = d;
-    *(u8 **)(self + 0x30) = part;
+    self->vtable = (struct actor_vtable *)gStaticData_087E4DF4;
+    self->x = bReg;
+    self->y = cReg;
+    self->z = d;
+    ACTOR_RECORD(self) = part;
+    *(struct anim_box *)self->unk_38 = part->box_14;
+
+    self->state = 0;
+    self->stateTime = 0;
+    self->unk_2C[0] = 1;
 
     {
-        struct blob0xc { u32 w0, w1, w2; };
-
-        *(struct blob0xc *)(self + 0x38) = *(struct blob0xc *)(part + 0x14);
-    }
-
-    *(s32 *)(self + 0x28) = 0;
-    *(s32 *)(self + 0x44) = 0;
-    self[0x2c] = 1;
-
-    {
-        register s32 value asm("r2") = *(s32 *)(self + 0x24) - (sub_8029B2C() << 8);
+        register s32 value asm("r2") = self->z - (sub_8029B2C() << 8);
         s32 sign;
 
         ABS32(value, sign);
-        *(s32 *)(self + 0x34) = value;
+        self->depth = value;
         value = (value >> 1) & 0x7f80;
 
         {
-            s32 c = *(s32 *)(self + 0x20);
+            s32 c = self->y;
             s32 cSign;
             s32 b, bSign;
 
             ABS32(c, cSign);
-            b = *(s32 *)(self + 0x1c);
+            b = self->x;
             ABS32(b, bSign);
             c = c + b;
             c >>= 0xb;
@@ -159,24 +157,24 @@ void *InitActorPart(void *selfArg, void *partArg, s32 b, s32 c, s32 d)
             value |= c;
         }
 
-        *(s32 *)(self + 0x14) = value;
+        self->visible = value;
 
-        if (*(s32 *)(self + 0x34) > sub_8029E40()) {
-            *(s32 *)(self + 0x14) |= 0x8000;
+        if (self->depth > sub_8029E40()) {
+            self->visible |= 0x8000;
         }
     }
 
     {
-        u8 *head = gUnknown_03000884;
+        struct actor_self *head = gUnknown_03000884;
 
         if (head != NULL) {
-            *(u8 **)(self + 0x4c) = head;
-            *(u8 **)(self + 0x48) = *(u8 **)(head + 0x48);
-            *(u8 **)(head + 0x48) = self;
-            *(u8 **)(*(u8 **)(self + 0x48) + 0x4c) = self;
+            ACTOR_LINK_PREV(self) = head;
+            ACTOR_LINK_NEXT(self) = ACTOR_LINK_NEXT(head);
+            ACTOR_LINK_NEXT(head) = self;
+            ACTOR_LINK_PREV(ACTOR_LINK_NEXT(self)) = self;
         } else {
-            *(u8 **)(self + 0x4c) = self;
-            *(u8 **)(self + 0x48) = self;
+            ACTOR_LINK_PREV(self) = self;
+            ACTOR_LINK_NEXT(self) = self;
         }
     }
 
@@ -200,23 +198,23 @@ extern s32 GetAnimFrameBaseOffset(void *self);
  * `+0x12` "done". */
 void sub_802A7B8(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct actor_self *self = selfArg;
 
     {
-        register s32 value asm("r2") = *(s32 *)(self + 0x24) - (sub_8029B2C() << 8);
+        register s32 value asm("r2") = self->z - (sub_8029B2C() << 8);
         s32 sign;
 
         ABS32(value, sign);
-        *(s32 *)(self + 0x34) = value;
+        self->depth = value;
         value = (value >> 1) & 0x7f80;
 
         {
-            s32 c = *(s32 *)(self + 0x20);
+            s32 c = self->y;
             s32 cSign;
             s32 b, bSign;
 
             ABS32(c, cSign);
-            b = *(s32 *)(self + 0x1c);
+            b = self->x;
             ABS32(b, bSign);
             c = c + b;
             c >>= 0xb;
@@ -224,34 +222,34 @@ void sub_802A7B8(void *selfArg)
             value |= c;
         }
 
-        *(s32 *)(self + 0x14) = value;
+        self->visible = value;
 
-        if (*(s32 *)(self + 0x34) > sub_8029E40()) {
-            *(s32 *)(self + 0x14) |= 0x8000;
+        if (self->depth > sub_8029E40()) {
+            self->visible |= 0x8000;
         }
     }
 
-    if (*(s32 *)(self + 0x34) > gUnknown_030013C4 + 0x200 ||
-        *(s32 *)(self + 0x34) < gUnknown_030013C0 - 0x200) {
+    if (self->depth > gUnknown_030013C4 + 0x200 ||
+        self->depth < gUnknown_030013C0 - 0x200) {
         if (self != NULL) {
-            u8 *table = *(u8 **)(self + 0x50);
-            s32 offset = *(s16 *)(table + 8);
-            u8 *addr = self + offset;
-            void *fn = *(void **)(table + 0xc);
+            struct actor_vtable *table = self->vtable;
+            s32 offset = table->m08.thisOffset;
+            u8 *addr = (u8 *)self + offset;
+            void *fn = table->m08.fn;
 
             sub_803AD80(addr, 3, fn);
         }
         return;
     }
 
-    *(s32 *)(self + 0x44) += 1;
-    *(s32 *)(self + 8) += *(s16 *)(self + 0x10);
-    self[0x12] = 0;
+    self->stateTime += 1;
+    self->animTime += *(s16 *)&self->animTimer;
+    self->animDone = 0;
 
     {
         s32 frame = GetAnimFrameBaseOffset(self);
-        s32 idx = *(s32 *)(self + 0xc);
-        u8 *table = *(u8 **)self;
+        s32 idx = self->animIndex;
+        u8 *table = (u8 *)self->anims;
         s32 recordAddr = idx * 0xc;
         register u8 *record asm("r1");
 
@@ -264,8 +262,8 @@ void sub_802A7B8(void *selfArg)
             if (frame >= v4) {
                 s32 v6 = *(s16 *)(record + 6);
 
-                *(s32 *)(self + 8) -= (v4 - v6) << 8;
-                self[0x12] = 1;
+                self->animTime -= (v4 - v6) << 8;
+                self->animDone = 1;
             }
         }
     }
