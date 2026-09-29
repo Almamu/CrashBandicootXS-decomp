@@ -77,3 +77,12 @@ other three are unchanged.
 and the address reloads rotate as in the ROM. Extra references on the
 temporaries (`0xf0 - w`, the 0x8c and `width`) stop local-alloc tying
 them to x. See [hard-register-hold-retry.md](hard-register-hold-retry.md).
+
+## Later pass: last-ten retry
+
+`sub_8005E5C` is now real C (both compilers). Every posX/posY access
+is a plain field access, so reload builds the 0x110 offset in r7 and
+reuses it (`adds r6, r7, #0`, `adds r7, #4`), as the ROM does. The
+second reposition reads the source position through inline getters and
+passes the sums straight to the setter. See
+[last-ten-naked-retry.md](last-ten-naked-retry.md).

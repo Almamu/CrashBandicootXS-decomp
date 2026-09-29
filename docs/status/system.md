@@ -111,8 +111,11 @@ frozen decomp.dev baseline now (`expected/legacy.s`) - see
   DMA3 bit-serial EEPROM read/write pair) - register-allocation/
   loop-rotation gaps a plain-C reconstruction couldn't close. GitHub
   issue #69, see `docs/matching/issue-69-eeprom-timer.md`.
-- **`sub_8001DB4`** (`src/system/link_cable.c`, link-session
-  reset/init). (`sub_8002114`, the 1488 B per-frame SIO pump, was here
+- **`sub_8001DB4`** (`src/system/link_cable_01db4.c`, link-session
+  reset/init; split out of `link_cable.c` in the last-ten retry, with
+  `sub_8001F50`/`sub_8002114` moved to `link_cable_01f50.c`, so its
+  draft can build with `-fno-rerun-loop-opt`: 51 halfwords, same size -
+  see [last-ten-naked-retry.md](../matching/last-ten-naked-retry.md)). (`sub_8002114`, the 1488 B per-frame SIO pump, was here
   too; it closed in the last-seven NAKED retry, see
   [last-seven-naked-retry.md](../matching/last-seven-naked-retry.md).)
   (`sub_8001F50`, the link handshake driver, and `sub_8001CB8`, the
@@ -130,3 +133,4 @@ frozen decomp.dev baseline now (`expected/legacy.s`) - see
   The early-ROM NAKED retry 2 closed `sub_8001CB8` and brought the
   `sub_8002114` draft to 422 halfwords
   ([early-rom-naked-retry-2.md](../matching/early-rom-naked-retry-2.md)).
+  (The structs now live in `include/link_session.h`.)

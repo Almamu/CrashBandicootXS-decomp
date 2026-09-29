@@ -251,7 +251,13 @@ void sub_80204EC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * r3). Both fit a caller-save of one part+0x28 pseudo in r3 (the save
  * goes right before the call, the restore right before the next use),
  * which needs every callee-saved register taken first; a single-pointer
- * draft with r4 pins and r5 holds was 62-140 hw. */
+ * draft with r4 pins and r5 holds was 62-140 hw.
+ * Last-ten pass (docs/matching/last-ten-naked-retry.md): caller-save
+ * does work under old_agbcc, but in a single-pointer draft it never
+ * sticks: part+0x28's only free LO register is r3, but reload spills
+ * r3 for the first flip's `ldrb` reload and the pointer ends up in r5
+ * (the output is the same with -fno-caller-saves). The ROM uses r5 as
+ * that reload register instead. Draft unchanged (4 hw). */
 #if NON_MATCHING
 /* The part's +0x28 bitfield byte seen through its own pointer. Padded
  * past a word so the fields are read with `ldrb` (a 4-byte struct is
