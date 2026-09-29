@@ -284,6 +284,19 @@ $(NO_STRENGTH_REDUCE_OBJS): CC1FLAGS += -fno-strength-reduce
 NO_RERUN_LOOP_OPT_OBJS := $(C_BUILDDIR)/system/link_cable_01db4.o
 $(NO_RERUN_LOOP_OPT_OBJS): CC1FLAGS += -fno-rerun-loop-opt
 
+# Objects built with -O1 instead of -O2. Nintendo's AgbEeprom SDK library
+# (the ROM's "EEPROM_V122", 0x0803A968-0x0803AD7C) was compiled at -O1:
+# sub_803AAD4 (DMA3Transfer), sub_803AB54 (EEPROMRead), sub_803AC04
+# (EEPROMWrite) and sub_803AA90 (StopEepromTimer) are all byte-identical
+# at -O1 as the SDK's plain C (TMC/pokeemerald source shape, no pins),
+# while at -O2 the same C is 43/79/107/2 halfwords off (-O2 cross-jumps
+# the duplicated DMA-wait test into the loop, among others); old_agbcc
+# -O1 is also off (2/44/35). Both whole files match with the flag. See
+# docs/matching/eeprom-sdk-o1.md.
+O1_OBJS := $(C_BUILDDIR)/system/timer_util_aa90.o \
+           $(C_BUILDDIR)/system/eeprom_util.o
+$(O1_OBJS): CC1FLAGS := $(filter-out -O2,$(CC1FLAGS)) -O1
+
 # GAX2's bundled libgcc2.c code (__divdi3/__udivdi3/__muldi3) was built
 # without -mthumb-interwork: its functions are the only ones in the ROM
 # that return via a combined `pop {r4-r7, pc}`, and with the flag

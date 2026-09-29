@@ -40,12 +40,15 @@ category page - see [game_loop.md](./game_loop.md).
   doc comment) - GitHub issue #69, see
   `docs/matching/issue-69-eeprom-timer.md`.
 - `src/system/timer_util_aa90.c` (own file - its real ROM address,
-  `0x0803AA90`, sits between the matched `sub_803AA08` and the parked
-  `sub_803AAD4`, so it isn't adjacent to `timer_util.c`'s own matched
-  functions):
-  `sub_803AA90` (disarms the timer `sub_803AA08` claims) - GitHub issue
-  #69, see `docs/matching/issue-69-eeprom-timer.md`. (Its `sub_803AAD4`
-  is a NAKED transcription tracked as parked - see below.)
+  `0x0803AA90`, isn't adjacent to `timer_util.c`'s functions; built
+  with -O1): `sub_803AA90` (SDK StopEepromTimer, disarms the timer
+  `sub_803AA08` claims) and `sub_803AAD4` (SDK DMA3Transfer, the DMA3
+  block-transfer helper used by the whole EEPROM cluster) - GitHub issue
+  #69, see `docs/matching/eeprom-sdk-o1.md`.
+- `src/system/eeprom_util.c` (own file, built with -O1):
+  `sub_803AB54`/`sub_803AC04` (SDK EEPROMRead/EEPROMWrite, the DMA3
+  bit-serial EEPROM read/write pair) - GitHub issue #69, see
+  `docs/matching/eeprom-sdk-o1.md`.
 - `src/system/eeprom_verify.c` (own file, same reason - ROM
   `0x0803ACE0`, between `sub_803AC04` and `reg_trampolines.c`'s
   functions): `sub_803ACE0` (reads an EEPROM block back and compares
@@ -103,12 +106,5 @@ frozen decomp.dev baseline now (`expected/legacy.s`) - see
 
 ## Parked - NAKED asm transcription (byte-correct, not decompiled C)
 
-- **`sub_803AAD4`** (`src/system/timer_util_aa90.c`, the DMA3
-  block-transfer helper used by the whole EEPROM cluster) - the
-  busy-wait tail's loop-rotation/literal-pool-placement shape isn't
-  reproducible from plain C. GitHub issue #69, see
-  `docs/matching/issue-69-eeprom-timer.md`.
-- **`sub_803AB54`**/**`sub_803AC04`** (`src/system/eeprom_util.c`, the
-  DMA3 bit-serial EEPROM read/write pair) - register-allocation/
-  loop-rotation gaps a plain-C reconstruction couldn't close. GitHub
-  issue #69, see `docs/matching/issue-69-eeprom-timer.md`.
+(none left - the last three, the EEPROM trio, became real C in the
+EEPROM SDK -O1 pass, see `docs/matching/eeprom-sdk-o1.md`.)
