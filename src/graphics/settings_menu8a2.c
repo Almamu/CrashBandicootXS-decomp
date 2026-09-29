@@ -127,31 +127,49 @@ void sub_8002D44(struct settings_sync_pump *self)
  * inside the wrap loop). Left: the second `muls` copies the index
  * instead of multiplying into the 0xc8 register, and the channel
  * base's +0x108 is folded into its field offsets. Pinning s/index/0xc8
- * to r3/r1/r2 reaches 47 hw (not adopted). */
+ * to r3/r1/r2 reaches 47 hw (not adopted).
+ * Last-seven pass (docs/matching/last-seven-naked-retry.md): 14 hw,
+ * same size, same instructions under both compilers. Only the 0xc8
+ * register is pinned; the second product is `c = c * pi + s` (the
+ * ROM's `muls r2, r1`), and `n` gets three extra references. Left: a
+ * register permutation. `rd` lands in r7 (ROM r5), and the wrap loop
+ * uses r5/r2/r1 for the count pointer, ring pointer and `old` where the
+ * ROM uses r1/r7/r2. */
 #if NON_MATCHING
 void sub_8002E20(struct settings_sync_pump *self, s32 playerIndex)
 {
     struct sio_session *s = gUnknown_03000804;
+    s32 pi = playerIndex;
+    /* One 0xc8 register for both products: the second multiplies
+     * straight into it (`muls r2, r1`), and it then becomes the channel
+     * pointer. */
+    register s32 c asm("r2") = 0xc8;
     s32 n;
 
-    n = *(s32 *)((u8 *)s + playerIndex * 0xc8 + 0x18c);
+    n = *(s32 *)((u8 *)(pi * c + (s32)s) + 0x18c);
     if (n != 0)
     {
-        u8 *dst = self->writePtr;
+        u8 *dst;
         struct sio_channel *ch;
         s32 *rd;
         s32 i;
 
         {
-            s32 j = playerIndex;
+            u8 **wp = &self->writePtr;
 
-            /* A second copy of the index (no code): keeps CSE from
-             * reusing the count test's product, so `j * 0xc8` is
-             * multiplied again as in the ROM. */
-            asm volatile("" : "+r"(j));
-            ch = &s->rx[j];
+            c = c * pi + (s32)s;
+            ch = (struct sio_channel *)(c + 0x108);
+            /* Escape (no code): keeps the +0x108 out of the field
+             * offsets. */
+            asm volatile("" : "+r"(ch));
+            dst = *wp;
         }
         rd = &ch->readPos;
+        /* Extra references (no code): raise `n`'s allocation priority so
+         * it gets r6 as in the ROM. */
+        asm("" : : "r"(n));
+        asm("" : : "r"(n));
+        asm("" : : "r"(n));
         if (*rd < 0x80 - n)
         {
             for (i = n - 1; i != -1; i--)

@@ -73,8 +73,10 @@ category page - see [game_loop.md](./game_loop.md).
   byte-for-byte) - all
   matched, GitHub
   issue #4, see `docs/matching/issue-4-sio-settings-sync.md`. (This
-  file's `sub_8001DB4`/`sub_8002114` are NAKED
-  transcriptions tracked as parked - see below. `sub_8001F50`, the
+  file's `sub_8001DB4` is a NAKED
+  transcription tracked as parked - see below; `sub_8002114`, the
+  per-frame SIO pump, is real C since the last-seven NAKED retry - see
+  [last-seven-naked-retry.md](../matching/last-seven-naked-retry.md). `sub_8001F50`, the
   link handshake driver, is real C since the second near-miss sweep -
   see [near-miss-polish-2.md](../matching/near-miss-polish-2.md) - and
   `sub_8001CB8`, the per-player CRC-16-style handshake-id hash helper,
@@ -110,8 +112,9 @@ frozen decomp.dev baseline now (`expected/legacy.s`) - see
   loop-rotation gaps a plain-C reconstruction couldn't close. GitHub
   issue #69, see `docs/matching/issue-69-eeprom-timer.md`.
 - **`sub_8001DB4`** (`src/system/link_cable.c`, link-session
-  reset/init), **`sub_8002114`** (1488 B
-  per-frame SIO data-exchange pump, this file's biggest function).
+  reset/init). (`sub_8002114`, the 1488 B per-frame SIO pump, was here
+  too; it closed in the last-seven NAKED retry, see
+  [last-seven-naked-retry.md](../matching/last-seven-naked-retry.md).)
   (`sub_8001F50`, the link handshake driver, and `sub_8001CB8`, the
   handshake-id hash helper, were here too; both are real C now.)
   GitHub issue #4, see `docs/matching/issue-4-sio-settings-sync.md`.
