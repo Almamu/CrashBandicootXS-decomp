@@ -9,9 +9,11 @@
  *
  * Built as ARM code with agbcc_arm (Makefile ARM_OBJS). UnpackNibbleTiles,
  * DrawMirroredTilemap and UnpackRleSpriteFrame match as plain C.
- * HeapSortActorsByKey and LookupSpriteFrameCache are parked: the ROM was
- * built by an ARM gcc whose output differs from agbcc_arm's in ways C
- * can't reach - see their comments and docs/matching/iwram-image.md.
+ * HeapSortActorsByKey and LookupSpriteFrameCache are parked. The ROM was
+ * built by an ARM gcc whose output differs from agbcc_arm's. For
+ * LookupSpriteFrameCache that difference is provably out of C's reach;
+ * for HeapSortActorsByKey no C form found so far reaches it. See their
+ * comments and docs/matching/iwram-image.md.
  */
 
 static inline u32 ExpandNibble(u32 nibble)
@@ -136,7 +138,14 @@ static inline void SiftDown(struct sort_entry **a, s32 root, s32 n)
  * folds the flag into the branches (an int result) or keeps it but with
  * immediates (`mov r3, #1; movls r3, #0`, a u8 result, as here); no
  * return type, flag variable or cast tried reproduces the hoisted
- * constants. */
+ * constants. A second pass also tried `one`/`zero` locals, which jump.c
+ * turns into a conditional move with register arms. Only the arm that
+ * stays a register is hoisted; jump.c's if-conversion folds the other
+ * to an immediate. `asm("" : "=r"(one) : "0"(1))` constants (all
+ * three tests materialized as `movls rX, zero; movhi rX, one`, but not
+ * hoisted and in the wrong order) and sweeps of -O1/-O2/-O3 with ~50
+ * single flags also failed. The same compiler built itoa_arm and
+ * LookupSpriteFrameCache, which provably aren't agbcc_arm output. */
 void HeapSortActorsByKey(s32 n, struct sort_entry **a)
 {
     s32 i;
@@ -340,11 +349,15 @@ extern struct sprite_frame_cache_node gUnknown_03001364;
  * (`add #0xF9000000; add #0xFF0000`) and returns with
  * `ldmfd sp!, {lr}; bx lr` three times. agbcc_arm hoists the
  * -0x06010000 into a register before the first loop (with
- * -fno-expensive-optimizations only the second loop stays in place),
- * and its return instructions always pop into ip (`ldmfd sp!, {ip};
- * bx ip`) and are made conditional where they can be. That return
- * sequence is fixed in agbcc_arm's arm.c, so no C form can produce the
- * ROM's. */
+ * -fno-expensive-optimizations only the second loop stays in place).
+ * The returns are out of its reach. Three copies of the exit sequence
+ * mean three `return` insns (the text epilogue is printed once), and
+ * agbcc_arm's output_return_instruction pops an interworking return into
+ * ip: with only lr saved it prints `ldmfd sp!, {ip}; bx ip`
+ * (`ldmeqfd`/`bxeq` when conditional). It never prints
+ * `ldmfd sp!, {lr}; bx lr`. Checked by compiling this draft: with
+ * -fno-expensive-optimizations it saves only lr and prints exactly
+ * that. */
 s32 LookupSpriteFrameCache(u8 *frame)
 {
     struct sprite_frame_cache_node *node;
