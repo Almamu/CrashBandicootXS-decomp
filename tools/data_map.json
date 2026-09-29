@@ -403,10 +403,11 @@
    "element_type": "void*",
    "element_size": 4,
    "element_count": 19,
-   "format": "pointer table: 19 GAX2 song pointers (into the built gax_audio_data.bin)",
+   "format": "song table: 19 pointers to GAX2 song structs in the built music block",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Pointers target built audio, so the table must name symbols exported by the audio build (or stay as .4byte with label+offset)."
+   "notes": "Written as gStaticData_0855BCB4 + GAX_SONG_<NAME>; tools/gax_audio.py generates the offsets (build/crashbandicootxs/sound/gax_songs.h).",
+   "status": "converted: src/data/song_table_16aa20.c"
   },
   {
    "address": "0x0816AF10",
@@ -5037,9 +5038,11 @@
    "element_type": "struct GaxHandlerLayout",
    "element_size": null,
    "element_count": null,
-   "format": "pointer table (4 data pointers)",
+   "format": "GAX2_Song struct of the engine's default (silent, one-channel) song: the default handler layout of sub_8038538/sub_8037FC0",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "notes": "The rest of that song (formerly the verbatim sound/gax_footer.bin) ends the music block; tools/gax_audio.py builds both (manifest default_song).",
+   "status": "converted: built by tools/gax_audio.py (gax_default_layout.bin)"
   },
   {
    "address": "0x085A4C70",
