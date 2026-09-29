@@ -374,3 +374,12 @@ taken first, which leaves the two reduced givs in the ROM's order.
 are set before `p`, so they come before its init as in the ROM. See
 [last-seven-naked-retry.md](last-seven-naked-retry.md).
 
+## Later pass: last-eleven NAKED retry
+
+`sub_8001DB4` is real C now (`src/system/link_cable_01db4.c`, old_agbcc
+plus `-fno-rerun-loop-opt`). The 0x1234 magic moved into a
+function-scope local, so its pseudo lives across the whole loop, gets no
+register and is rematerialized at each store, which is the ROM's
+reload pattern. The nibble address became `self + t` with `t = i *
+0xc8`, and the tail reads `field_400` back through a plain `u16 *`. See
+[last-eleven-naked-retry.md](last-eleven-naked-retry.md).

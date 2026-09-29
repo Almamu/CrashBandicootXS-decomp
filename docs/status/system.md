@@ -72,9 +72,10 @@ category page - see [game_loop.md](./game_loop.md).
   reproduce with the actual field/loop structure; plain C matches
   byte-for-byte) - all
   matched, GitHub
-  issue #4, see `docs/matching/issue-4-sio-settings-sync.md`. (This
-  file's `sub_8001DB4` is a NAKED
-  transcription tracked as parked - see below; `sub_8002114`, the
+  issue #4, see `docs/matching/issue-4-sio-settings-sync.md`. (`sub_8001DB4`,
+  the link-session reset/init, is real C in its own
+  `link_cable_01db4.c` since the last-eleven NAKED retry - see
+  [last-eleven-naked-retry.md](../matching/last-eleven-naked-retry.md); `sub_8002114`, the
   per-frame SIO pump, is real C since the last-seven NAKED retry - see
   [last-seven-naked-retry.md](../matching/last-seven-naked-retry.md). `sub_8001F50`, the
   link handshake driver, is real C since the second near-miss sweep -
@@ -111,26 +112,3 @@ frozen decomp.dev baseline now (`expected/legacy.s`) - see
   DMA3 bit-serial EEPROM read/write pair) - register-allocation/
   loop-rotation gaps a plain-C reconstruction couldn't close. GitHub
   issue #69, see `docs/matching/issue-69-eeprom-timer.md`.
-- **`sub_8001DB4`** (`src/system/link_cable_01db4.c`, link-session
-  reset/init; split out of `link_cable.c` in the last-ten retry, with
-  `sub_8001F50`/`sub_8002114` moved to `link_cable_01f50.c`, so its
-  draft can build with `-fno-rerun-loop-opt`: 51 halfwords, same size -
-  see [last-ten-naked-retry.md](../matching/last-ten-naked-retry.md)). (`sub_8002114`, the 1488 B per-frame SIO pump, was here
-  too; it closed in the last-seven NAKED retry, see
-  [last-seven-naked-retry.md](../matching/last-seven-naked-retry.md).)
-  (`sub_8001F50`, the link handshake driver, and `sub_8001CB8`, the
-  handshake-id hash helper, were here too; both are real C now.)
-  GitHub issue #4, see `docs/matching/issue-4-sio-settings-sync.md`.
-  The issue #4 retry left NON_MATCHING drafts for the first three
-  (49/136/37 halfwords off under old_agbcc, which the file now builds
-  with) and the `struct link_session` layout they establish - see
-  [issue-4-6-8-naked-retry.md](../matching/issue-4-6-8-naked-retry.md).
-  The early-ROM NAKED retry brought the `sub_8001CB8` draft to 11
-  halfwords ([early-rom-naked-retry.md](../matching/early-rom-naked-retry.md)).
-  The third big NAKED retry added a first `sub_8002114` draft: same
-  size as the ROM, 514 halfwords off under old_agbcc (register
-  allocation) - see [big-naked-retry-3.md](../matching/big-naked-retry-3.md).
-  The early-ROM NAKED retry 2 closed `sub_8001CB8` and brought the
-  `sub_8002114` draft to 422 halfwords
-  ([early-rom-naked-retry-2.md](../matching/early-rom-naked-retry-2.md)).
-  (The structs now live in `include/link_session.h`.)

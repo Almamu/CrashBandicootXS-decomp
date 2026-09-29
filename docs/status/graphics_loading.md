@@ -94,7 +94,8 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   [gap-22354-game-context.md](../matching/gap-22354-game-context.md).
 - **`sub_801EF0C`**-**`sub_801FCB4`** (`src/graphics/graphics_loading_1ef0c.c`),
   **`sub_801FDEC`** (`graphics_loading_1fdec.c`), **`sub_801FEEC`**-
-  **`sub_8020D4C`** except `sub_802062C` (`graphics_loading_1feec.c`),
+  **`sub_8020D4C`** (`graphics_loading_1feec.c`; `sub_802062C` closed in
+  [last-eleven-naked-retry.md](../matching/last-eleven-naked-retry.md)),
   **`sub_8021280`**-**`sub_802155C`** (`graphics_loading_21280.c`) and
   **`sub_8021668`**-**`sub_8021BD8`** (`graphics_loading_21668.c`) - the
   "two-line text popup" spawners (issue #31) and the spawner-table
@@ -206,14 +207,6 @@ doesn't advance that even when byte-correct. See
 established convention, and each entry's linked write-up for why
 plain C didn't converge.
 
-- **`sub_802062C`** (`src/graphics/graphics_loading_1feec.c`) - text
-  popup, tag 0x17. Plain C under old_agbcc is 62 halfwords off: the ROM
-  spills `part+0x28` to its one stack slot and keeps the constant 1 in
-  r8, while the reconstruction spills the constant and
-  `&gUnknown_030012B4` instead. The draft now sits under
-  `#if NON_MATCHING`; register pins on `arg3` and the table address made
-  it worse. See
-  [issue-31-old-agbcc.md](../matching/issue-31-old-agbcc.md).
 - **`sub_803686C`** (`src/graphics/graphics_loading_35d1c.c`) - the
   20-slot OAM builder, the same shape as `sub_80358A8`. The big NAKED
   retry left a full C draft under `#if NON_MATCHING` (329 halfwords off
