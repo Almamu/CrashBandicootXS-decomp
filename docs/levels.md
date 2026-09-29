@@ -19,9 +19,14 @@ each part is named in its section.
 
 ## The pointer graph
 
-`gStaticData_0816CD80` (still raw) holds, among other things, 41 room
-records `{u16 (*palette)[256]; struct level_desc *desc; s32 kind; ...}`
-(0x14 bytes). The room record is the widget `sub_8023A1C` hands to
+The level table `gStaticData_0816C86C` (`struct level_info`, one per
+level) gives each level a room list: the rooms played in order and up
+to two extra rooms, each a `struct level_room` record
+`{const u16 *palette; const struct level_desc *desc; s32 kind; ...}`
+(0x14 bytes). All of it is C in `src/data/level_table_16c814.c`, with
+one record per room (`gLevelRoom00`..`gLevelRoom40`) plus seven records
+of kind 3 for the stages played in an actor category, which have no
+room data. The room record is the widget `sub_8023A1C` hands to
 `sub_80266BC` (`level_layers.c`), which loads a room: it unpacks or
 references the asset, feeds each layer its descriptor, feeds the terrain
 cache the collision layer, hands the entity list and links to
@@ -221,8 +226,8 @@ runs from the last column to the first); a room can't change its layers'
 tile sets without the matching palette; `data/data.s`'s incbin lengths of
 the packed assets and the region sizes in `ldscript.txt`'s layout are
 fixed by what follows them in the ROM, so a change of size needs those
-moved too (the room records in the still-raw `gStaticData_0816CD80` point
-at fixed addresses as well).
+moved too. The room records point at each room's palette and descriptor
+by symbol, so they follow the room data wherever it is linked.
 
 ## Numbers
 

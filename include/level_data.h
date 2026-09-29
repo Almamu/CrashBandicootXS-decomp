@@ -88,6 +88,54 @@ struct level_desc
     u8 unk_24[0xC];                           // 0x24 - zero in every room
 };
 
+/*
+ * One room record of the level table (src/data/level_table_16c814.c):
+ * the record sub_8023A1C hands to sub_80266BC (level_layers.c's
+ * `struct level_load_args`, the palette and descriptor), `MedalListItem`
+ * in game_loop17.c/game_loop18.c, `gl_widget_kind` in game_loop56.c.
+ */
+struct level_room
+{
+    const u16 *palette;              // 0x00 - BG palette, 256 colours
+    const struct level_desc *desc;   // 0x04 - NULL for a category stage
+    s32 kind;                        // 0x08 - 0-2: a room; 3: a stage played
+                                     //        in actor category `catIndex`
+    s32 unk_0C;                      // 0x0C - 0 in every record
+    u16 catIndex;                    // 0x10 - kind 3: the actor category
+                                     //        (sub_802968C)
+    u16 unk_12;                      // 0x12
+};
+
+/* A level's rooms: `MedalItemList` in game_loop17.c/game_loop18.c. */
+struct level_room_list
+{
+    s32 count;
+    const struct level_room *const *rooms;  // `count` rooms, in play order
+    const struct level_room *extra1;        // or NULL
+    const struct level_room *extra2;        // or NULL
+};
+
+/*
+ * One level (gStaticData_0816C86C). The code's views: `level_info`
+ * (actor_part_1b85c.c), `threshold_table_entry` (settings_menu6.c,
+ * oam_count.c), `MedalTableEntry` (game_loop17.c, game_loop18.c),
+ * `level_guard` (graphics_loading_21280.c), `gl_level_entry`
+ * (game_loop56.c).
+ */
+struct level_info
+{
+    s32 nameText;       // 0x00 - text id of the level's name (sub_8026F38)
+    u32 theme;          // 0x04 - picks the level-start colour cycle
+                        //        (sub_8023A1C) and indexes the music cues
+                        //        gStaticData_0816CD80 (sub_8024498)
+    u32 times[3];       // 0x08 - time-trial thresholds, centiseconds,
+                        //        loosest first
+    s32 unk_14;         // 0x14 - sub_8023118
+    s32 unk_18;         // 0x18 - sub_8023110
+    u8 unk_1C;          // 0x1C - sub_8023484 runs at level start if 0
+    const struct level_room_list *rooms; // 0x20
+};
+
 /* A link list with room for `n` links. */
 #define LEVEL_LINKS(n) struct { s32 count; struct level_link links[n]; }
 
