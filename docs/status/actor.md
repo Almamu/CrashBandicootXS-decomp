@@ -450,8 +450,8 @@ from "core" graphics.
   parallel PR above independently claimed `actor_part28.c` first):
   `sub_8014F8C` - a `gUnknown_030012F0`-list proximity-
   trigger scan for the same "self" action-table object family as
-  `actor_part18.c` (`sub_8015038`, also in this file, is still a NAKED
-  transcription - see "Parked - NAKED transcription" below); see
+  `actor_part18.c`, and `sub_8015038` (matched in the strag4 retry,
+  see Matched); see
   `docs/matching/issue-18-0x08014f8c-actor.md`.
 - `src/graphics/actor_part38b.c` (new file, GitHub issue #18, ROM
   0x080151C8, non-adjacent to `actor_part38.c` since `sub_8015038`
@@ -931,6 +931,17 @@ from "core" graphics.
   from NAKED to real C, both matching under either compiler. See
   [near-miss-polish-2.md](../matching/near-miss-polish-2.md).
 
+### Matched in the strag4 retry (issue #18's last function)
+
+- `src/graphics/actor_part38.c` - `sub_8015038` (issue #18, formerly
+  NAKED), old_agbcc. The `self+0x24 != 0` arm tests `self[0x22]`
+  directly instead of through a `u8` local, so the byte load lands
+  after old_agbcc GCSE's end-of-block copy of `self + 0x22`, and one
+  no-code `r1` hold spans the test. The strag2 draft's `r0`/`r2` holds
+  are gone.
+
+See [docs/matching/strag4-naked-retry.md](../matching/strag4-naked-retry.md).
+
 ### Matched in the strag2 retry (issue #62 raw pair, issue #18 NAKED)
 
 - `src/graphics/actor_part29.c` - `sub_80339DC`, and
@@ -947,8 +958,8 @@ from "core" graphics.
   test. `actor_part38.o`/`38b.o`/`38c.o` joined `OLD_AGBCC_OBJS`: their
   whole `.text` is identical under both compilers, and the range is
   confirmed old_agbcc territory.
-- Still NAKED: `sub_8015038` (`actor_part38.c`), with a C draft that is
-  2 halfwords off.
+- Still NAKED at the time: `sub_8015038` (`actor_part38.c`), with a C
+  draft that was 2 halfwords off (matched in the strag4 retry).
 
 See [docs/matching/strag2-naked-retry.md](../matching/strag2-naked-retry.md).
 
@@ -1217,7 +1228,7 @@ plain C didn't converge.
   at all, a structurally different solution rather than a near-miss).
   Transcribed directly as byte-exact NAKED asm instead. See
   [docs/matching/issue-9-0x0800a178-graphics.md](../matching/issue-9-0x0800a178-graphics.md).
-- **`sub_8015038`** (`src/graphics/actor_part38.c`) - a three-arm
+- **Now matched as real C (strag4 retry, see Matched); entry kept for history.** **`sub_8015038`** (`src/graphics/actor_part38.c`) - a three-arm
   mgr-trampoline handler keyed on `self+0x24`/`self+0x22`, picking one
   of three table-index fallbacks. The strag2 retry left a C draft under
   `#if NON_MATCHING` that is 2 halfwords off under both compilers (one

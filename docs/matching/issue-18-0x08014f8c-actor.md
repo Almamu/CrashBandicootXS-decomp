@@ -288,3 +288,8 @@ the ROM's `sb`/`r4` constant pair), `off += 0x50` (to drop an extra
 copy) and three no-code holds for reload/register choices. See
 `docs/matching/strag2-naked-retry.md`.
 
+**Later pass (strag4 retry):** `sub_8015038` is matched as real C under
+old_agbcc. The `self+0x24 != 0` arm tests `self[0x22]` directly (no `u8
+v` local); a single no-code `r1` hold spans that test. This was the last
+function of issue #18. See `docs/matching/strag4-naked-retry.md`.
+
