@@ -898,3 +898,12 @@ halfwords off, was 968) and `sub_800E08C` (49) stay NAKED. See
 a one-byte struct, passed to `sub_800E7A8` as that struct (QImode), which
 gives the ROM's `mov r5, sp; ldrb` reload. `sub_0800D18C` stays NAKED;
 see [last5-naked-retry.md](last5-naked-retry.md) for what the pass found.
+
+## Later pass: sub_0800D18C matched (huge NAKED retry 3)
+
+`sub_0800D18C` is now real C under old_agbcc, which closes the last
+function in this issue's range. The second pass had left it size-exact
+and 33 halfwords off; this pass fixed the swapped spill slots, the table
+load order at the first code lookup, the reload round-robin in the second
+slope check, and four branch targets. See
+[huge-naked-retry-3.md](huge-naked-retry-3.md).

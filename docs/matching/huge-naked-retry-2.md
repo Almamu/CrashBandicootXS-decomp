@@ -98,3 +98,8 @@ with the worktree path updated, plus:
   `game_loop47.c`.
 - `rm -rf build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make compare`:
   `crashbandicootxs.gba: OK`.
+
+## Later
+
+The third pass closed the last 33 halfwords; `sub_0800D18C` is real C.
+See [huge-naked-retry-3.md](huge-naked-retry-3.md).
