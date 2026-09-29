@@ -471,6 +471,8 @@ SECTIONS
         build/crashbandicootxs/data/data.o(.rodata.0817D7A4);
         build/crashbandicootxs/src/data/digit_glyphs_17e714.o(.rodata);
         build/crashbandicootxs/data/data.o(.rodata.0817E72C);
+        build/crashbandicootxs/src/data/intro_bitmap_5aa170.o(.rodata);
+        build/crashbandicootxs/data/data.o(.rodata.085ADBD1);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata);
         build/crashbandicootxs/data/data.o(.rodata.087E55E4);
 

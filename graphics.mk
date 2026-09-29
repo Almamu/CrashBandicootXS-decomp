@@ -67,3 +67,21 @@ $(eval $(call FRAMED_SHEET_RULE,01_14174c))
 $(GRAPHICS_BUILDDIR)/%.lz: $(GRAPHICS_BUILDDIR)/% | $(GFX)
 	@mkdir -p $(dir $@)
 	$(GFX) $< $@
+
+# PNG -> C const array (grit), see docs/graphics.md. grit does the pixel
+# layout, gbagfx the byte-exact LZ77 (grit's own -gzl compressor does not
+# reproduce the ROM's streams), tools/bin2c.py the initializer bytes that a
+# src/data/*.c file #includes. GRIT_C_PNGS lists the PNGs converted this
+# way, so the Makefile doesn't also build them through the .s incbin path.
+GRIT_C_PNGS := graphics/intro/00_5aa170_bitmap.png
+
+# Mode 4 bitmaps: linear 8bpp, no palette (it's a separate asset).
+$(GRAPHICS_BUILDDIR)/%_bitmap.img.bin: graphics/%_bitmap.png | $(GRIT)
+	@mkdir -p $(dir $@)
+	$(GRIT) $< -gb -gB8 -p! -ftb -fh! -o $(@:.img.bin=)
+
+$(GRAPHICS_BUILDDIR)/%.lz.inc: $(GRAPHICS_BUILDDIR)/%.lz tools/bin2c.py
+	python3 tools/bin2c.py $< $@ --lz
+
+$(C_BUILDDIR)/data/%.o: CPPFLAGS += -iquote $(GRAPHICS_BUILDDIR)
+$(C_BUILDDIR)/data/intro_bitmap_5aa170.o: $(GRAPHICS_BUILDDIR)/intro/00_5aa170_bitmap.img.bin.lz.inc

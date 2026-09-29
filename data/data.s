@@ -878,10 +878,9 @@ gStaticData_085A9F10:
 	@ header/index table for the graphics below (not yet understood)
 	.incbin "baserom.gba", 0x005A9F10, 0x00000260
 
-.global gStaticData_085AA170
-gStaticData_085AA170:
-	@ Mode 4 bitmap, 240x160 8bpp, LZ77 (38400 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/00_5aa170_bitmap.bin.lz", 0, 0x3A61
+@ gStaticData_085AA170: src/data/intro_bitmap_5aa170.c (graphics/intro/00_5aa170_bitmap.png via grit)
+
+.section .rodata.085ADBD1
 
 gStaticData_085ADBD1:
 	@ padding/unidentified data between assets
