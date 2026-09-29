@@ -54,7 +54,10 @@
  * `self->instrument`. Left: the ROM loads `self->instrument` into r0 for
  * the tune and copies it to r8 only just before the clamp's `cmp` (the
  * draft loads straight into r8), and the backward end still loads
- * `sweepMin` into r0 where the ROM uses r3. */
+ * `sweepMin` into r0 where the ROM uses r3.
+ * GAX retry 5 (docs/matching/gax-naked-retry-5.md): no change; that doc
+ * has a variant with the ROM's exact tune instruction order, which moves
+ * registers elsewhere. */
 #if NON_MATCHING
 /* sub_800014C is this ROM's memcpy (the work item's initializer) and
  * sub_8037ECC is `__muldi3`: as a libcall the 64-bit multiply does not
