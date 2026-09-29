@@ -204,7 +204,9 @@ The first batch (all pointer tables, all byte-exact):
 | `slot_seeds_17d6c0.c` | `0x0817D6C0` | 20 slot seeds, 3 `struct bg_package` |
 | `digit_glyphs_17e714.c` | `0x0817E714` | 6 glyph pointers |
 | `level_tilesets_17e78c.c` | `0x0817E78C` | a `u16[16]` (`sub_8037388`), level BG tile sets 1-3 (grit, see "Resources") |
+| `level_rooms_24b638.c` | `0x0824B638` | the level data of 33 rooms, generated from `data/levels/` (see "Level data") |
 | `level_tilesets_270f08.c` | `0x08270F08` | level BG tile sets 4-5 (grit) |
+| `level_rooms_2b91d0.c` | `0x082B91D0` | the level data of the other 8 rooms (same) |
 | `sprite_tiles_2bf120.c` | `0x082BF120` | the sprite tile pool (56 banks) and the 125 fixed OBJ tiles (grit) |
 | `sprite_banks_4a5600.c` | `0x084A5600` | the sprite-bank table header, 56 `struct sprite_bank`, banks 0-9 (see "Sprite banks" below) |
 | `sprite_banks_4b0ae0.c` | `0x084B0AE0` | sprite banks 10-21 |
@@ -263,7 +265,9 @@ the C is the source from then on.
 
 Still raw and worth doing next: the per-level record table
 `gStaticData_0816C86C` (self-referencing records, used all over the
-game loop), `gStaticData_0816CD80`, and the animation tables inside
+game loop), `gStaticData_0816CD80` (its 41 room records point at the
+palettes and descriptors in `level_rooms_*.c`, so converting it would make
+the level data movable), and the animation tables inside
 `gStaticData_08178F80`/`gStaticData_0817AA98` (`actor_anim.h`'s
 `gStaticData_081796CC`/`gStaticData_0817B2A4`, not labeled yet).
 
@@ -432,16 +436,17 @@ Per asset kind:
 ### Raw tile pools (`gStaticData_0817E78C`)
 
 The 3.3 MB `gStaticData_0817E78C` blob (`0x0817E78C`-`0x084A5600`, see
-docs/data_map.md) is three C objects and two raw room-data slices. None of it
-is compressed, so there is
-no gbagfx step: grit's `-ftb` output goes straight to `tools/bin2c.py`.
+docs/data_map.md) is five C objects: three of tiles and two of room data.
+None of it is compressed, so there is no gbagfx step: grit's `-ftb`
+output goes straight to `tools/bin2c.py`, and the room data is generated
+C (see "Level data").
 
 | object | contents | source |
 |---|---|---|
 | `level_tilesets_17e78c.c` | `gStaticData_0817E78C` (`u16[16]`), tile sets 1-3 | `graphics/level_tilesets/tileset{1,2,3}_*.png` |
-| `data/data.s` `.rodata.0824B638` | room data, 33 rooms | still `.incbin "baserom.gba"` |
+| `level_rooms_24b638.c` | room data, 33 rooms | `data/levels/` via `tools/levels.py` (see "Level data") |
 | `level_tilesets_270f08.c` | tile sets 4-5 | `graphics/level_tilesets/tileset{4,5}_*.png` |
-| `data/data.s` `.rodata.082B91D0` | room data, 8 rooms | still `.incbin "baserom.gba"` |
+| `level_rooms_2b91d0.c` | room data, 8 rooms | same |
 | `sprite_tiles_2bf120.c` | 56 sprite banks, 125 fixed tiles | `graphics/sprites/bankNN_*.png`, `tile_pool_4a4660.png` |
 
 - **Sprite banks.** The pool at `0x082BF120` has no header. Each of the 56
@@ -461,15 +466,34 @@ no gbagfx step: grit's `-ftb` output goes straight to `tools/bin2c.py`.
   asset's real byte count (`TILE_BYTES_<name>`), and `bin2c.py --size`
   trims the padding. It fails if any trimmed byte is non-zero, so drawing
   into the padding is caught.
-- **Room data** stays raw on purpose. An undecoded `.bin` copy doesn't
-  count as converted data. The two blocks become typed C, with symbol
-  references for their many absolute pointers, once the format (the object
-  lists especially) is decoded.
+- **Room data** is decoded typed C now (see "Level data" below): an
+  undecoded `.bin` copy wouldn't have counted as converted data.
 - `tools/tile_pools.py` extracts all of it from `baserom.gba` and prints the
   `TILE_BYTES_*` lines. Its output is deterministic, and all 62 PNGs
   round-trip through grit byte-exact.
 
 `graphics.mk` adds the PNGs to `GRIT_C_PNGS`.
+
+### Level data
+
+The rooms' level data and level assets ([levels.md](./levels.md)) are
+built from `data/levels/` by `tools/levels.py`, from editable sources:
+per room a `room.json` (palette, layer settings, entities, parameter
+records, links, symbol names) and one decoded tilemap per layer
+(`<layer>.map.bin`, `u16` cells, grit's flat map layout). The build
+(`levels.mk`) generates:
+
+| output | from | used by |
+|---|---|---|
+| `build/.../data/levels/<room>/asset.bin` | the room's tilemaps, re-encoded into the ROM's chunk streams | `data/data.s` incbin (7 raw assets) |
+| `build/.../data/levels/<room>/asset.bin.lz` | the same, gbagfx LZ77 | `data/data.s` incbin (34 packed assets, formerly `graphics/tileset1/27`-`60`) |
+| `build/.../data/levels/level_rooms_<addr>.inc` | all rooms of a region | `#include`d by `src/data/level_rooms_<addr>.c` |
+
+Every pointer in the room data is a symbol reference (the room's own
+objects, the tile sets, the assets), and everything the ROM derives
+(chunk grids and sets, asset offsets, entity groups and counts, parameter
+offsets) is computed from the sources again. `include/level_data.h` has
+the types.
 
 ### Placing it and counting it
 

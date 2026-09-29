@@ -1,0 +1,39 @@
+{
+  "name": "room38_2bac1c",
+  "asset": {"symbol": "gStaticData_086652B8", "packed": true},
+  "symbols": {"desc": "gStaticData_082BAC1C", "palette": "gStaticData_082BA962", "entities": "gStaticData_082BAC4C", "groups": "gStaticData_082BACE0", "param_offsets": "gStaticData_082BA904", "params": "gStaticData_082BA8FC", "type_counts": "gStaticData_082BAB62", "layers": "gStaticData_082BAC60", "items": "gStaticData_082BACF0"},
+  "layers": {
+    "bg1": {"map": "bg1.map.bin", "size_chunks": [3, 3], "size_tiles": [37, 21], "tileset": "gStaticData_0864D7E8", "scale": [128, 128], "cnt": 3, "unk_1E": 2, "grid_symbol": "gStaticData_082BA908"},
+    "bg2": {"map": "bg2.map.bin", "size_chunks": [3, 4], "size_tiles": [40, 25], "tileset": "gStaticData_0864D7E8", "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gStaticData_082BA91A"},
+    "bg0": {"map": "bg0.map.bin", "size_chunks": [3, 4], "size_tiles": [40, 25], "tileset": "gStaticData_08200DF4", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gStaticData_082BA932"},
+    "collision": {"map": "collision.map.bin", "size_chunks": [3, 4], "size_tiles": [40, 25], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gStaticData_082BA94A"}
+  },
+  "palette": [
+    "03E0", "7F00", "7EC0", "76A0", "6E80", "7660", "6660", "6A40", "5A20", "6220", "5200", "4DE0", "45C0", "3DA0", "3580", "3180",
+    "03E0", "4AD4", "5255", "3E54", "573E", "360D", "4648", "31AF", "29AB", "35A3", "2DA3", "2149", "2145", "3161", "14C5", "0842",
+    "03E0", "7FFF", "739C", "6B5A", "6318", "5AD6", "5294", "4631", "3DEF", "35AD", "2D6B", "2108", "18C6", "1084", "0842", "0000",
+    "573E", "4B3E", "3FB5", "571D", "52FD", "5738", "4ADE", "32FE", "3F38", "4ADB", "46DA", "5732", "3EDA", "3E5E", "5E98", "525D",
+    "52D5", "469A", "2EBA", "327D", "4678", "4A78", "1A5E", "26D5", "4AD1", "5294", "3E77", "31FC", "5254", "3A74", "3E55", "2E38",
+    "3A35", "1EB0", "7F20", "61D8", "4AAC", "3E71", "3A35", "2272", "3A6F", "2217", "3E6E", "3DD6", "4631", "1A71", "3214", "45B7",
+    "29B9", "35F2", "2E12", "197D", "7EA0", "3E4B", "3A0F", "2DB5", "26A6", "2E0F", "3DD1", "31D2", "4648", "2DD2", "2E0E", "29B1",
+    "1A0F", "160F", "320C", "19B4", "160E", "320B", "39CE", "3572", "2DB1", "2E0B", "20FB", "3DEB", "3155", "31AF", "3A08", "1557",
+    "1D36", "298F", "3154", "31AE", "4951", "2DCB", "1591", "09EC", "25CB", "2DAC", "15AE", "2531", "2DC9", "2515", "25AB", "25C9",
+    "1950", "21AB", "3DC6", "31A9", "256E", "45E3", "256D", "25A9", "0DAB", "01E8", "2D11", "39A6", "2D89", "214E", "3A00", "21A8",
+    "15A9", "314C", "216B", "156C", "098B", "31A5", "0D12", "0D4E", "0131", "2DA5", "14F2", "1187", "2169", "250D", "21A5", "294A",
+    "192C", "1969", "39C0", "2929", "1476", "3166", "2549", "31C0", "0D4B", "20EF", "212B", "2167", "192B", "1967", "2148", "1948",
+    "2129", "2DA0", "1548", "15A2", "3D80", "3145", "05A2", "2D45", "090C", "0948", "2D62", "08CF", "2108", "14AD", "0183", "3160",
+    "001A", "1908", "1508", "2542", "0D08", "18AC", "1906", "20C9", "2D40", "2105", "08E9", "0870", "24C6", "1CE7", "00CB", "08E8",
+    "18C8", "18E6", "0CC9", "14C8", "18C6", "0C8C", "20C6", "2120", "0CE5", "0889", "24E2", "00E5", "14E3", "0C10", "0011", "044B",
+    "1469", "04E2", "080F", "04C2", "1067", "00A5", "14A3", "08E0", "0068", "002B", "0828", "0C63", "679E", "6B9F", "6B7E", "3F3F"
+  ],
+  "params": [
+    [0],
+    [0]
+  ],
+  "links": null,
+  "entities": [
+    {"type": 69, "x": 270, "y": 155, "param": 1},
+    {"type": 91, "x": 99, "y": 139, "param": 0},
+    {"type": 2, "x": 45, "y": 48, "param": 1}
+  ]
+}

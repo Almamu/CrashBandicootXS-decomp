@@ -68,16 +68,16 @@ the appendix.
 | `08167AD4`-`0817E78C` | 92,180 | 200 small/mid tables: gameplay, menus, HUD, actors, text (the built sfx table sits in between) | direct, see appendix | mostly high | easy (a few medium) |
 | `0817E78C`-`0817E7AC` | 32 | `u16[16]` | `sub_8037388` | high | **done** (C) |
 | `0817E7AC`-`0824B638` | 839,308 | level tile sets 1-3 (tag-0x00 raw 8bpp tiles) | `bg_scroll_layer_25fc8.c` via `bg_layer_desc.tileData` | high | **done** (grit) |
-| `0824B638`-`08270F08` | 153,808 | per-room level data, 33 rooms | `level_layers.c`, `game_loop5.c`, `game_loop57.c` | high | hard (raw until decoded) |
+| `0824B638`-`08270F08` | 153,808 | per-room level data, 33 rooms | `level_layers.c`, `game_loop5.c`, `game_loop57.c`, `game_loop41.c` | high | **done** (C, [levels.md](./levels.md)) |
 | `08270F08`-`082B91D0` | 295,624 | level tile sets 4-5 | as tile sets 1-3 | high | **done** (grit) |
-| `082B91D0`-`082BF120` | 24,400 | per-room level data, 8 rooms | as block 1 | high | hard (raw until decoded) |
+| `082B91D0`-`082BF120` | 24,400 | per-room level data, 8 rooms | as block 1 | high | **done** (C) |
 | `082BF120`-`084A4660` | 1,987,904 | sprite tile pool for the 56 sprite banks | `graphics_7634.c`/`graphics_73dc.c` (`sub_80083A8` + frame offset) | high | **done** (grit) |
 | `084A4660`-`084A5600` | 4,000 | 125 fixed 4bpp tiles | `sub_8004D74` pool, `sub_8006DF8` | high | **done** (grit) |
 | `084A5600`-`084C0006` | 109,062 | sprite-bank table ("master asset table"): header, 56 banks, 2,429 frames | `sub_8004D74`, `sub_8022230`, every `**gUnknown_030012D0` user | high | **converted** (C) |
 | `084C0006`-`0855BCB4` | 638,126 | GAX2 sound-effect data set: 88 instruments, 87 8-bit samples, sample table, the SFX voice handler type | `PlaySfx`/`sub_8038E74` voices via `GaxSongHeader.sfxTypes` (`sub_80017BC`) | high | **converted** (`gax_audio.py --sfx`) |
 | `085A4C5C`-`086ECCD2` | 28,979 | 111 labels between the built intro/tileset1 LZ77 blobs: GAX2 tables and strings, libgcc `__clz_tab` x2, EEPROM tables, 23 intro palettes, 67 alignment pads | direct / slide packages | high | easy |
-| `086C127C`-`086D9CAC` | 100,912 | raw level asset (room `0825E7DC`) | `sub_80266BC` -> `sub_80254F8`/`sub_8024CF0` | high | medium |
-| `086ECCD2`-`087E3BEC` | 1,011,482 | 2 B pad + 6 raw level assets | same | high | medium |
+| `086C127C`-`086D9CAC` | 100,912 | raw level asset (room `0825E7DC`) | `sub_80266BC` -> `sub_80254F8`/`sub_8024CF0` | high | **done** (decoded tilemaps) |
+| `086ECCD2`-`087E3BEC` | 1,011,482 | 2 B pad + 6 raw level assets | same | high | **done** (the pad stays raw) |
 | `087E3BEC`-`087E55E4` | 6,648 | 93 gcc 2.x vtables | constructors (`sub_8009ED0`, ...) | high | easy |
 | `087E55E4`-`087E5FCC` | 2,536 | IWRAM image (ARM code + data, copied by `crt0`) | `crt0.s` | high | medium |
 | `087E5FCC`-`08800000` | 106,548 | `0xFF` fill (not counted as data) | - | high | - |
@@ -123,9 +123,12 @@ By category, as a share of the 8,038,172-byte data total:
   `gax_header_prefix.bin`) points into its tail (`0x0855BC98`). That
   prefix is the engine's `sfxTypes` array, so this set is the sound
   effects (confirmed from the matched engine code, see below).
-- **Most of `graphics/tileset1/*.bin` are not graphics.** Files `27`-`60`
-  (all but `21`-`26`) are LZ77-packed **level assets** (per-room chunk
-  streams, `level_desc.asset` with `assetPacked = 1`). Files `23`-`26`
+- **Most of `graphics/tileset1/*.bin` were not graphics.** Files `27`-`60`
+  (all but `21`-`26`) were LZ77-packed **level assets** (per-room chunk
+  streams, `level_desc.asset` with `assetPacked = 1`, the same format as
+  the seven raw ones). They are gone from `graphics/tileset1/` now: the
+  build re-encodes them from the rooms' decoded tilemaps in `data/levels/`
+  and gbagfx packs them again ([levels.md](./levels.md)). Files `23`-`26`
   are BG tile sets used by `bg_layer_desc.tileData`, and could become
   PNGs like `21`/`22`.
 - **`gStaticData_08175558/64/84` are one array.** They are one
@@ -263,19 +266,21 @@ Walking them:
   (`graphics/tileset1/21`-`26`), or one of **five tag-0x00 raw assets in
   this blob**. The pooled layer 0 reads those at `tiles + 4`, 64 bytes
   per tile, i.e. 8bpp (`tile_slot_pool.c`, `sub_8026618`).
-- `asset` is either an LZ77 blob in `graphics/tileset1/27`-`60`
-  (`assetPacked = 1`), or one of **seven raw level assets** in
-  `gStaticData_086C127C`/`gStaticData_086ECCD2` (`assetPacked = 0`).
+- `asset` is either an LZ77 blob between the intro graphics
+  (`assetPacked = 1`, formerly `graphics/tileset1/27`-`60`), or one of
+  **seven raw level assets** in `gStaticData_086C127C`/`gStaticData_086ECCD2`
+  (`assetPacked = 0`).
 
-**Status: converted except the room data.** The blob is now three `src/data` objects
+The full format (the object lists included) is in [levels.md](./levels.md).
+
+**Status: converted.** The blob is now five `src/data` objects
 (docs/data.md, "Raw tile pools"): the sprite banks, the 125 fixed tiles
 and the five tile sets are indexed PNGs built with grit
 (`graphics/sprites/`, `graphics/level_tilesets/`, extracted by
 `tools/tile_pools.py`), and `gStaticData_0817E78C` is a C `u16[16]`. The
-two room-data blocks (`0824B638`, `082B91D0`) stay raw `.incbin` slices in
-`data/data.s`, in their own sections. An undecoded `.bin` copy doesn't
-count as converted data, so they get converted once their format (the
-object lists especially) is decoded into typed C.
+two room-data blocks (`0824B638`, `082B91D0`) are typed C
+(`level_rooms_24b638.c`, `level_rooms_2b91d0.c`) generated by
+`tools/levels.py` from `data/levels/` ([levels.md](./levels.md)).
 
 **2. Sprite banks.** The `gStaticData_084A5600` header's second word is
 `0x082BF120`, and `sub_80083A8` returns it. `graphics_7634.c` and
@@ -287,10 +292,10 @@ object lists especially) is decoded into typed C.
 | `0817E7AC` | 0x67B84 | level tile set 1: header `0x067B8000` (tag 0, 0x67B80 B), 6,638 8bpp tiles | 10 `bg_layer_desc.tileData` refs; ends exactly at the next asset | medium |
 | `081E6330` | 0x1AAC4 | level tile set 2 (0x1AAC0 B) | 10 refs; chains | medium |
 | `08200DF4` | 0x4A844 | level tile set 3 (0x4A840 B) | 5 refs; chains | medium |
-| `0824B638` | 0x258D0 | **room data, 33 rooms**: 256-colour BG palettes, `level_desc`, `bg_layer_desc`, `u16` chunk grids, object spawn lists | the walk above types about 68% of the bytes (grids 82 KB, palettes 17 KB, descriptors 5.7 KB); most of the rest follows the object-list pointers | hard |
+| `0824B638` | 0x258D0 | **room data, 33 rooms**: 256-colour BG palettes, `level_desc`, `bg_layer_desc`, `u16` chunk grids, entity lists, parameter records, per-type counts, links | every byte typed ([levels.md](./levels.md)) | **done** |
 | `08270F08` | 0x28EC4 | level tile set 4 (0x28EC0 B) | 7 refs; chains | medium |
 | `08299DCC` | 0x1F404 | level tile set 5 (0x1F400 B) | 9 refs; ends where room block 2 starts | medium |
-| `082B91D0` | 0x5F50 | **room data, 8 rooms** (same shapes) | | hard |
+| `082B91D0` | 0x5F50 | **room data, 8 rooms** (same shapes) | | **done** |
 | `082BF120` | 0x1E5540 | **sprite tile pool**: raw OBJ tiles, no header | see the next section: the 56 banks use disjoint, back-to-back tile ranges in bank order, and the last one ends at exactly `+0x1E5540` | medium |
 | `084A4660` | 0xFA0 | 125 x 32-byte 4bpp tiles | header `+0x08`/`+0x0E` of `gStaticData_084A5600`; `sub_8004D74` builds the 125-slot tile-asset cache from it | easy |
 
@@ -301,8 +306,8 @@ tiles), and it's viewable with a bank's palette. Banks drawn in 8bpp
 (part flag 28) would look scrambled in a 4bpp view but still round-trip.
 Doing this single step moves **24.7% of the data total**. The five tile
 sets are 8bpp PNG + a generated 4-byte tag header: another 14.1%.
-The room blocks are pointer-dense, and some pieces (the object lists)
-are not typed yet: they are C or JSON work for later.
+The room blocks are pointer-dense typed data: they became generated C,
+see [levels.md](./levels.md).
 
 ### `gStaticData_084A5600` (747,188 B): sprite-bank table + second GAX2 data set
 
@@ -412,12 +417,13 @@ starts with a `u16` offset table (offsets x 4). Each layer reads it at
 | `0878ADA8` | 0x31394 | `0824E104` |
 | `087BC13C` | 0x27AB0 | `0825233C` (ends at the first vtable, `087E3BEC`) |
 
-**Conversion.** The cheap step matches the existing practice for their
-LZ77 siblings: an uncompressed `graphics/level/*.bin` per asset, *medium*
-(13.8% of data). That is still an opaque passthrough, though. A real
-decode (chunk streams to editable tilemaps/collision maps) is hard, and
-should come later as one tool that covers all 41 rooms, the LZ77 ones
-included.
+**Status: converted** (all but the 2-byte pad at `086ECCD2`). The chunk
+streams are decoded into one tilemap per layer (`data/levels/<room>/`),
+and `tools/levels.py` re-encodes them byte for byte, the LZ77 ones
+included: its encoder reproduces the original tool's token choices and
+its leftover bytes. `data/data.s` incbins the built assets under new
+labels (`gStaticData_086ECCD4`, `gStaticData_08708158`, ...). The format
+and the encoder are in [levels.md](./levels.md).
 
 ### `gStaticData_087E55E4` (109,084 B): IWRAM image + fill
 
@@ -497,9 +503,10 @@ Every one of the 412 labels is listed in the appendix.
    consistency.
 4. **BG0 cell animations and BG1 pictures** (775 KB, **+9.6%**). One small
    packer tool for the two formats documented above.
-5. **Raw level assets as `.bin`** (1.11 MB, **+13.8%**). This is the same
-   treatment `graphics/tileset1/27`-`60` already get, so it's cheap. Flag
-   it as a passthrough in the docs, since a real decoder comes later.
+5. **Done, decoded.** **Raw level assets** (1.11 MB, **+13.8%**): decoded
+   into tilemaps and re-encoded by `tools/levels.py` together with the
+   34 LZ77 ones (`graphics/tileset1/27`-`60` before), not as `.bin`
+   passthroughs.
 6. **Done.** **Second GAX2 data set** (638 KB, **+7.9%**): extend `tools/gax_audio.py`.
 7. **Small tables** (128 KB, +1.6%, about 400 labels). Do the vtables and
    function-pointer tables early, even though they are small. They are
@@ -509,8 +516,9 @@ Every one of the 412 labels is listed in the appendix.
 8. **Done (the sprite-bank table).** **Sprite-bank table** (109 KB) and **category family data**
    (`08178F80`/`0817AA98`, `sub_effect_record` tables): typed C with
    generators. The layouts are all known.
-9. **Room data** (178 KB) and **rotation strips** (304 KB): last. They
-   need the object-list types and an overlap-aware frame tool.
+9. **Room data** (178 KB, **done**, +2.2%, generated C from
+   `data/levels/`) and **rotation strips** (304 KB): the strips need an
+   overlap-aware frame tool.
 
 Steps 2-5 alone take data progress from 20.4% to about 83%.
 
@@ -892,12 +900,12 @@ vtable shapes).
 | `086A8349` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
 | `086AF12B` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
 | `086BACB3` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086C127C` | 0x18A30 | raw (unpacked) level asset for room 0x0825E7DC: u16 chunk offset table + chunk token streams (custom RLE/delta, sub_8024960/sub_8025334) | `sub_80266BC`, `sub_80254F8`, `sub_8024CF0` +2 | high | medium |
+| `086C127C` | 0x18A30 | raw (unpacked) level asset for room 0x0825E7DC: u16 chunk offset table + chunk token streams (custom RLE/delta, sub_8024960/sub_8025334) | `sub_80266BC`, `sub_80254F8`, `sub_8024CF0` +2 | high | **converted** |
 | `086E044B` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
 | `086E2212` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
 | `086E3541` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
 | `086EA0C9` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086ECCD2` | 0xF6F1A | 6 raw (unpacked) level assets, same format as 0x086C127C | `sub_80266BC`, `sub_80254F8`, `sub_8024CF0` +2 | high | medium |
+| `086ECCD2` | 0xF6F1A | 6 raw (unpacked) level assets, same format as 0x086C127C | `sub_80266BC`, `sub_80254F8`, `sub_8024CF0` +2 | high | **converted** (2 B pad raw) |
 | `087E3BEC` | 0x58 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80071E4`, `sub_800725C`, `sub_80073BC` +2 | high | easy |
 | `087E3C44` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8008434`, `sub_80084A4` | high | easy |
 | `087E3CAC` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80088F0`, `sub_8008904` | high | easy |

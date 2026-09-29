@@ -787,23 +787,9 @@ gStaticData_0817E76C:
 
 @ gStaticData_0817E78C..gStaticData_08200DF4: src/data/level_tilesets_17e78c.c
 
-.section .rodata.0824B638
-
-.global gStaticData_0824B638
-gStaticData_0824B638:
-	@ Per-room level data, 33 rooms (palettes, level_desc, bg_layer_desc,
-	@ chunk grids, object lists): see docs/data_map.md.
-	.incbin "baserom.gba", 0x0024B638, 0x000258D0
-
+@ 0x0824B638..0x08270F08 (33 rooms' level data): src/data/level_rooms_24b638.c
 @ gStaticData_08270F08..gStaticData_08299DCC: src/data/level_tilesets_270f08.c
-
-.section .rodata.082B91D0
-
-.global gStaticData_082B91D0
-gStaticData_082B91D0:
-	@ Per-room level data, 8 rooms.
-	.incbin "baserom.gba", 0x002B91D0, 0x00005F50
-
+@ 0x082B91D0..0x082BF120 (8 rooms' level data): src/data/level_rooms_2b91d0.c
 @ gStaticData_082BF120..gStaticData_084A4660: src/data/sprite_tiles_2bf120.c
 
 @ gStaticData_084A5600..gSpriteBank55: src/data/sprite_banks_4a5600.c,
@@ -1882,8 +1868,8 @@ gStaticData_0864F82F:
 
 .global gStaticData_0864F830
 gStaticData_0864F830:
-	@ LZ77 compressed data (unidentified) (18884 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/27_64f830.bin.lz", 0, 0x24C7
+	@ LZ77-packed level asset of room00_264730 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room00_264730/asset.bin.lz", 0, 0x24C7
 
 .global gStaticData_08651CF7
 gStaticData_08651CF7:
@@ -1892,8 +1878,8 @@ gStaticData_08651CF7:
 
 .global gStaticData_08651CF8
 gStaticData_08651CF8:
-	@ LZ77 compressed data (unidentified) (29084 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/28_651cf8.bin.lz", 0, 0x347D
+	@ LZ77-packed level asset of room01_263f4c (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room01_263f4c/asset.bin.lz", 0, 0x347D
 
 .global gStaticData_08655175
 gStaticData_08655175:
@@ -1902,13 +1888,13 @@ gStaticData_08655175:
 
 .global gStaticData_08655178
 gStaticData_08655178:
-	@ LZ77 compressed data (15200 bytes decompressed) - not clearly identifiable as pixel graphics
-	.incbin "build/crashbandicootxs/graphics/tileset1/29_655178.bin.lz", 0, 0x1BE8
+	@ LZ77-packed level asset of room02_2636e0 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room02_2636e0/asset.bin.lz", 0, 0x1BE8
 
 .global gStaticData_08656D60
 gStaticData_08656D60:
-	@ LZ77 compressed data (unidentified) (33892 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/30_656d60.bin.lz", 0, 0x4D8B
+	@ LZ77-packed level asset of room04_262e64 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room04_262e64/asset.bin.lz", 0, 0x4D8B
 
 .global gStaticData_0865BAEB
 gStaticData_0865BAEB:
@@ -1917,8 +1903,8 @@ gStaticData_0865BAEB:
 
 .global gStaticData_0865BAEC
 gStaticData_0865BAEC:
-	@ LZ77 compressed data (unidentified) (21660 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/31_65baec.bin.lz", 0, 0x256E
+	@ LZ77-packed level asset of room06_267428 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room06_267428/asset.bin.lz", 0, 0x256E
 
 .global gStaticData_0865E05A
 gStaticData_0865E05A:
@@ -1927,8 +1913,8 @@ gStaticData_0865E05A:
 
 .global gStaticData_0865E05C
 gStaticData_0865E05C:
-	@ LZ77 compressed data (unidentified) (25660 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/32_65e05c.bin.lz", 0, 0x3EEA
+	@ LZ77-packed level asset of room07_264e64 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room07_264e64/asset.bin.lz", 0, 0x3EEA
 
 .global gStaticData_08661F46
 gStaticData_08661F46:
@@ -1937,8 +1923,8 @@ gStaticData_08661F46:
 
 .global gStaticData_08661F48
 gStaticData_08661F48:
-	@ LZ77 compressed data (unidentified) (30164 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/33_661f48.bin.lz", 0, 0x336E
+	@ LZ77-packed level asset of room09_262654 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room09_262654/asset.bin.lz", 0, 0x336E
 
 .global gStaticData_086652B6
 gStaticData_086652B6:
@@ -1947,8 +1933,8 @@ gStaticData_086652B6:
 
 .global gStaticData_086652B8
 gStaticData_086652B8:
-	@ LZ77 compressed data (unidentified) (2576 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/34_6652b8.bin.lz", 0, 0x67D
+	@ LZ77-packed level asset of room38_2bac1c (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room38_2bac1c/asset.bin.lz", 0, 0x67D
 
 .global gStaticData_08665935
 gStaticData_08665935:
@@ -1957,18 +1943,18 @@ gStaticData_08665935:
 
 .global gStaticData_08665938
 gStaticData_08665938:
-	@ LZ77 compressed data (unidentified) (34552 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/35_665938.bin.lz", 0, 0x4300
+	@ LZ77-packed level asset of room13_2bbde0 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room13_2bbde0/asset.bin.lz", 0, 0x4300
 
 .global gStaticData_08669C38
 gStaticData_08669C38:
-	@ LZ77 compressed data (unidentified) (62512 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/36_669c38.bin.lz", 0, 0x4AC0
+	@ LZ77-packed level asset of room14_2bcf40 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room14_2bcf40/asset.bin.lz", 0, 0x4AC0
 
 .global gStaticData_0866E6F8
 gStaticData_0866E6F8:
-	@ LZ77 compressed data (unidentified) (29720 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/37_66e6f8.bin.lz", 0, 0x1D66
+	@ LZ77-packed level asset of room16_2beadc (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room16_2beadc/asset.bin.lz", 0, 0x1D66
 
 .global gStaticData_0867045E
 gStaticData_0867045E:
@@ -1977,8 +1963,8 @@ gStaticData_0867045E:
 
 .global gStaticData_08670460
 gStaticData_08670460:
-	@ LZ77 compressed data (unidentified) (80172 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/38_670460.bin.lz", 0, 0x7E3B
+	@ LZ77-packed level asset of room18_261c40 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room18_261c40/asset.bin.lz", 0, 0x7E3B
 
 .global gStaticData_0867829B
 gStaticData_0867829B:
@@ -1987,13 +1973,13 @@ gStaticData_0867829B:
 
 .global gStaticData_0867829C
 gStaticData_0867829C:
-	@ LZ77 compressed data (unidentified) (26060 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/39_67829c.bin.lz", 0, 0x3508
+	@ LZ77-packed level asset of room20_25f11c (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room20_25f11c/asset.bin.lz", 0, 0x3508
 
 .global gStaticData_0867B7A4
 gStaticData_0867B7A4:
-	@ LZ77 compressed data (unidentified) (28840 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/40_67b7a4.bin.lz", 0, 0x364F
+	@ LZ77-packed level asset of room21_25d81c (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room21_25d81c/asset.bin.lz", 0, 0x364F
 
 .global gStaticData_0867EDF3
 gStaticData_0867EDF3:
@@ -2002,8 +1988,8 @@ gStaticData_0867EDF3:
 
 .global gStaticData_0867EDF4
 gStaticData_0867EDF4:
-	@ LZ77 compressed data (unidentified) (36248 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/41_67edf4.bin.lz", 0, 0x4701
+	@ LZ77-packed level asset of room23_25cf20 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room23_25cf20/asset.bin.lz", 0, 0x4701
 
 .global gStaticData_086834F5
 gStaticData_086834F5:
@@ -2012,13 +1998,13 @@ gStaticData_086834F5:
 
 .global gStaticData_086834F8
 gStaticData_086834F8:
-	@ LZ77 compressed data (unidentified) (24468 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/42_6834f8.bin.lz", 0, 0x2F54
+	@ LZ77-packed level asset of room24_25c640 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room24_25c640/asset.bin.lz", 0, 0x2F54
 
 .global gStaticData_0868644C
 gStaticData_0868644C:
-	@ LZ77 compressed data (unidentified) (32316 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/43_68644c.bin.lz", 0, 0x3B26
+	@ LZ77-packed level asset of room28_254ed0 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room28_254ed0/asset.bin.lz", 0, 0x3B26
 
 .global gStaticData_08689F72
 gStaticData_08689F72:
@@ -2027,8 +2013,8 @@ gStaticData_08689F72:
 
 .global gStaticData_08689F74
 gStaticData_08689F74:
-	@ LZ77 compressed data (unidentified) (28812 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/44_689f74.bin.lz", 0, 0x339D
+	@ LZ77-packed level asset of room29_2544fc (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room29_2544fc/asset.bin.lz", 0, 0x339D
 
 .global gStaticData_0868D311
 gStaticData_0868D311:
@@ -2037,8 +2023,8 @@ gStaticData_0868D311:
 
 .global gStaticData_0868D314
 gStaticData_0868D314:
-	@ LZ77 compressed data (unidentified) (77604 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/45_68d314.bin.lz", 0, 0x687A
+	@ LZ77-packed level asset of room30_26ac10 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room30_26ac10/asset.bin.lz", 0, 0x687A
 
 .global gStaticData_08693B8E
 gStaticData_08693B8E:
@@ -2047,13 +2033,13 @@ gStaticData_08693B8E:
 
 .global gStaticData_08693B90
 gStaticData_08693B90:
-	@ LZ77 compressed data (unidentified) (93284 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/46_693b90.bin.lz", 0, 0x9C74
+	@ LZ77-packed level asset of room31_2539b0 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room31_2539b0/asset.bin.lz", 0, 0x9C74
 
 .global gStaticData_0869D804
 gStaticData_0869D804:
-	@ LZ77 compressed data (unidentified) (92328 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/47_69d804.bin.lz", 0, 0xAB45
+	@ LZ77-packed level asset of room34_24c400 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room34_24c400/asset.bin.lz", 0, 0xAB45
 
 .global gStaticData_086A8349
 gStaticData_086A8349:
@@ -2062,8 +2048,8 @@ gStaticData_086A8349:
 
 .global gStaticData_086A834C
 gStaticData_086A834C:
-	@ LZ77 compressed data (unidentified) (69436 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/48_6a834c.bin.lz", 0, 0x6DDF
+	@ LZ77-packed level asset of room35_26c1bc (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room35_26c1bc/asset.bin.lz", 0, 0x6DDF
 
 .global gStaticData_086AF12B
 gStaticData_086AF12B:
@@ -2072,13 +2058,13 @@ gStaticData_086AF12B:
 
 .global gStaticData_086AF12C
 gStaticData_086AF12C:
-	@ LZ77 compressed data (73120 bytes decompressed) - not clearly identifiable as pixel graphics
-	.incbin "build/crashbandicootxs/graphics/tileset1/49_6af12c.bin.lz", 0, 0x6468
+	@ LZ77-packed level asset of room36_268cf0 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room36_268cf0/asset.bin.lz", 0, 0x6468
 
 .global gStaticData_086B5594
 gStaticData_086B5594:
-	@ LZ77 compressed data (unidentified) (56700 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/50_6b5594.bin.lz", 0, 0x571F
+	@ LZ77-packed level asset of room22_26e760 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room22_26e760/asset.bin.lz", 0, 0x571F
 
 .global gStaticData_086BACB3
 gStaticData_086BACB3:
@@ -2087,18 +2073,18 @@ gStaticData_086BACB3:
 
 .global gStaticData_086BACB4
 gStaticData_086BACB4:
-	@ LZ77 compressed data (unidentified) (70196 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/51_6bacb4.bin.lz", 0, 0x65C8
+	@ LZ77-packed level asset of room25_26d388 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room25_26d388/asset.bin.lz", 0, 0x65C8
 
 .global gStaticData_086C127C
 gStaticData_086C127C:
-	@ padding/unidentified data between assets
-	.incbin "baserom.gba", 0x006C127C, 0x00018A30
+	@ raw level asset of room17_25e7dc (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room17_25e7dc/asset.bin"
 
 .global gStaticData_086D9CAC
 gStaticData_086D9CAC:
-	@ LZ77 compressed data (unidentified) (84396 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/52_6d9cac.bin.lz", 0, 0x679F
+	@ LZ77-packed level asset of room37_2b9ed0 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room37_2b9ed0/asset.bin.lz", 0, 0x679F
 
 .global gStaticData_086E044B
 gStaticData_086E044B:
@@ -2107,13 +2093,13 @@ gStaticData_086E044B:
 
 .global gStaticData_086E044C
 gStaticData_086E044C:
-	@ LZ77 compressed data (unidentified) (3900 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/53_6e044c.bin.lz", 0, 0x988
+	@ LZ77-packed level asset of room40_2bb094 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room40_2bb094/asset.bin.lz", 0, 0x988
 
 .global gStaticData_086E0DD4
 gStaticData_086E0DD4:
-	@ LZ77 compressed data (15904 bytes decompressed) - not clearly identifiable as pixel graphics
-	.incbin "build/crashbandicootxs/graphics/tileset1/54_6e0dd4.bin.lz", 0, 0x143E
+	@ LZ77-packed level asset of room03_270bcc (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room03_270bcc/asset.bin.lz", 0, 0x143E
 
 .global gStaticData_086E2212
 gStaticData_086E2212:
@@ -2122,8 +2108,8 @@ gStaticData_086E2212:
 
 .global gStaticData_086E2214
 gStaticData_086E2214:
-	@ LZ77 compressed data (13952 bytes decompressed) - not clearly identifiable as pixel graphics
-	.incbin "build/crashbandicootxs/graphics/tileset1/55_6e2214.bin.lz", 0, 0x132D
+	@ LZ77-packed level asset of room05_270154 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room05_270154/asset.bin.lz", 0, 0x132D
 
 .global gStaticData_086E3541
 gStaticData_086E3541:
@@ -2132,18 +2118,18 @@ gStaticData_086E3541:
 
 .global gStaticData_086E3544
 gStaticData_086E3544:
-	@ LZ77 compressed data (14048 bytes decompressed) - not clearly identifiable as pixel graphics
-	.incbin "build/crashbandicootxs/graphics/tileset1/56_6e3544.bin.lz", 0, 0x120C
+	@ LZ77-packed level asset of room11_26f5c0 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room11_26f5c0/asset.bin.lz", 0, 0x120C
 
 .global gStaticData_086E4750
 gStaticData_086E4750:
-	@ LZ77 compressed data (33280 bytes decompressed) - not clearly identifiable as pixel graphics
-	.incbin "build/crashbandicootxs/graphics/tileset1/57_6e4750.bin.lz", 0, 0x2908
+	@ LZ77-packed level asset of room08_265804 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room08_265804/asset.bin.lz", 0, 0x2908
 
 .global gStaticData_086E7058
 gStaticData_086E7058:
-	@ LZ77 compressed data (unidentified) (36176 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/58_6e7058.bin.lz", 0, 0x3071
+	@ LZ77-packed level asset of room10_266194 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room10_266194/asset.bin.lz", 0, 0x3071
 
 .global gStaticData_086EA0C9
 gStaticData_086EA0C9:
@@ -2152,18 +2138,48 @@ gStaticData_086EA0C9:
 
 .global gStaticData_086EA0CC
 gStaticData_086EA0CC:
-	@ LZ77 compressed data (unidentified) (31504 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/59_6ea0cc.bin.lz", 0, 0x2570
+	@ LZ77-packed level asset of room12_266b40 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room12_266b40/asset.bin.lz", 0, 0x2570
 
 .global gStaticData_086EC63C
 gStaticData_086EC63C:
-	@ LZ77 compressed data (unidentified) (4184 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/60_6ec63c.bin.lz", 0, 0x696
+	@ LZ77-packed level asset of room39_2ba810 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room39_2ba810/asset.bin.lz", 0, 0x696
 
 .global gStaticData_086ECCD2
 gStaticData_086ECCD2:
-	@ padding/unidentified data
-	.incbin "baserom.gba", 0x006ECCD2, 0x000F6F1A
+	@ padding
+	.incbin "baserom.gba", 0x006ECCD2, 0x00000002
+
+.global gStaticData_086ECCD4
+gStaticData_086ECCD4:
+	@ raw level asset of room15_2bdf98 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room15_2bdf98/asset.bin"
+
+.global gStaticData_08708158
+gStaticData_08708158:
+	@ raw level asset of room19_260768 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room19_260768/asset.bin"
+
+.global gStaticData_087376C0
+gStaticData_087376C0:
+	@ raw level asset of room26_25bcdc (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room26_25bcdc/asset.bin"
+
+.global gStaticData_08752D44
+gStaticData_08752D44:
+	@ raw level asset of room27_25a390 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room27_25a390/asset.bin"
+
+.global gStaticData_0878ADA8
+gStaticData_0878ADA8:
+	@ raw level asset of room32_24e104 (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room32_24e104/asset.bin"
+
+.global gStaticData_087BC13C
+gStaticData_087BC13C:
+	@ raw level asset of room33_25233c (docs/levels.md)
+	.incbin "build/crashbandicootxs/data/levels/room33_25233c/asset.bin"
 
 @ gStaticData_087E3BEC..gStaticData_087E55C4: src/data/entity_vtables_7e3bec.c
 
