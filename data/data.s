@@ -785,9 +785,28 @@ gStaticData_0817E74C:
 gStaticData_0817E76C:
 	.incbin "baserom.gba", 0x0017E76C, 0x00000020
 
-.global gStaticData_0817E78C
-gStaticData_0817E78C:
-	.incbin "baserom.gba", 0x0017E78C, 0x00326E74
+@ gStaticData_0817E78C..gStaticData_08200DF4: src/data/level_tilesets_17e78c.c
+
+.section .rodata.0824B638
+
+.global gStaticData_0824B638
+gStaticData_0824B638:
+	@ Per-room level data, 33 rooms (palettes, level_desc, bg_layer_desc,
+	@ chunk grids, object lists): see docs/data_map.md.
+	.incbin "baserom.gba", 0x0024B638, 0x000258D0
+
+@ gStaticData_08270F08..gStaticData_08299DCC: src/data/level_tilesets_270f08.c
+
+.section .rodata.082B91D0
+
+.global gStaticData_082B91D0
+gStaticData_082B91D0:
+	@ Per-room level data, 8 rooms.
+	.incbin "baserom.gba", 0x002B91D0, 0x00005F50
+
+@ gStaticData_082BF120..gStaticData_084A4660: src/data/sprite_tiles_2bf120.c
+
+.section .rodata.084A5600
 
 .global gStaticData_084A5600
 gStaticData_084A5600:
