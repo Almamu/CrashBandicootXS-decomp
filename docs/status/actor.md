@@ -931,6 +931,19 @@ from "core" graphics.
   from NAKED to real C, both matching under either compiler. See
   [near-miss-polish-2.md](../matching/near-miss-polish-2.md).
 
+### Matched in the sub_8007634 retry
+
+- `src/graphics/graphics_7634.c` - `sub_8007634` (the affine sibling
+  of `sub_80073DC`: one affine OAM entry per visible piece, pulled
+  towards the first piece's centre by the scale), old_agbcc
+  (`graphics_7634.o` joined `OLD_AGBCC_OBJS`; it is the only function in
+  the file). Was 468 halfwords off. Taking the size-table addresses
+  before reading `pos` makes reload spill r7, which sets the ROM's
+  reload-register rotation. The rest: the pull maths interleaved per
+  axis, `k = idx * 4` first, shape/size through inline helpers so the
+  `& 3` masks survive, and one extra reference on the matrix param.
+  See [docs/matching/graphics-7634-retry.md](../matching/graphics-7634-retry.md).
+
 ### Matched in the last-four NAKED retry
 
 - `src/graphics/actor_part78.c` - `sub_800A884` (the per-frame
@@ -1634,11 +1647,11 @@ embedded as asm instead. They're tracked as parked, not matched.
 
 ## Left raw (not attempted, or attempted and set aside)
 
-- **`sub_8007634`** (`src/graphics/graphics_7634.c`, ROM 0x08007634,
-  GitHub issue #9) - real GBA hardware-affine sprite-matrix setup. No
-  longer raw: moved out of `asm/code_3_2.s` as NAKED with a
-  `NON_MATCHING` C draft (468 halfwords off) in the issue #9 raw-asm
-  pass - see `docs/matching/issue-9-raw-asm-pass.md`.
+- ~~**`sub_8007634`**~~ (`src/graphics/graphics_7634.c`, ROM 0x08007634,
+  GitHub issue #9) - real GBA hardware-affine sprite-matrix setup.
+  Moved out of `asm/code_3_2.s` as NAKED in the issue #9 raw-asm pass,
+  now matched as real C under old_agbcc - see "Matched in the
+  sub_8007634 retry" above.
 - ~~**`sub_800AC2C`**~~ (ROM 0x0800AC2C, GitHub issue #9/#10) - matched
   as real C under old_agbcc in `src/graphics/actor_part111.c` (issue #9
   raw-asm pass, `docs/matching/issue-9-raw-asm-pass.md`);
