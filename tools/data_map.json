@@ -52,7 +52,7 @@
    "ptr_words_code": 3,
    "ptr_words_data": 105,
    "incoming_data_ptrs": 1014,
-   "format": "composite: sub-effect tables, two rotation-strip sprite pools, BG0 cell animation B, BG1 picture",
+   "format": "composite: sub-effect tables, two zero-run-compressed OBJ frame sets, BG0 cell animation B, BG1 picture",
    "effort": "medium",
    "confidence": "high",
    "notes": "Every region is reached through gStaticData_08175558 (category descriptors) or an animation-table table_B array.",
@@ -94,18 +94,18 @@
     {
      "address": "0x080C2758",
      "size": 96896,
-     "format": "rotation strip A: overlapping struct sprite_frame windows {w=8,h=8,0x30,0}+2048 B, addressed by the 152 absolute pointers in table_B gStaticData_0817941C (categories 0-2, anim record 0)",
-     "effort": "hard",
-     "notes": "frames overlap byte-for-byte (sliding window); last frame's 0x804 bytes run past 0x080DA1D8 into strip B",
-     "status": "raw (gStaticData_080C2758): no tile grid, see docs/data_map.md"
+     "format": "compressed OBJ frame set A (old 'rotation strip A'): 152 back-to-back frames {w=8,h=8,0x30,0} + u16 zero/literal run stream, decoded by the IWRAM hook gUnknown_03000874 (0x03000634); addressed by the 152 absolute pointers in table_B gStaticData_0817941C (categories 0-2, anim record 0, 148 distinct)",
+     "effort": "medium",
+     "notes": "the frames do not overlap: the old 'sliding window' reading assumed w*h*32 raw bytes per frame",
+     "status": "converted: src/data/rle_sprites_0c2758.c (graphics/rle_sprites/0c2758_frames.png, tools/rle_sprites.py)"
     },
     {
      "address": "0x080DA1D8",
      "size": 151512,
-     "format": "rotation strip B: 10x10-tile frames addressed by the 123 pointers in gStaticData_0817A880 (table_B of the sub_802DFDC singleton)",
-     "effort": "hard",
-     "notes": "last window (0x080FEC2C + 0xC84) overlaps the start of the next region",
-     "status": "raw (gStaticData_080DA1D8): no tile grid, see docs/data_map.md"
+     "format": "compressed OBJ frame set B (old 'rotation strip B'): 112 back-to-back frames {w=10,h=10,0x30,0} + run stream, addressed by the 123 pointers in gStaticData_0817A880 (table_B of the sub_802DFDC singleton)",
+     "effort": "medium",
+     "notes": "the last frame ends exactly at 0x080FF1B0",
+     "status": "converted: src/data/rle_sprites_0c2758.c (graphics/rle_sprites/0da1d8_frames.png, tools/rle_sprites.py)"
     },
     {
      "address": "0x080FF1B0",
@@ -142,7 +142,7 @@
    "ptr_words_code": 5,
    "ptr_words_data": 53,
    "incoming_data_ptrs": 146,
-   "format": "composite: BG1 pictures, sub-effect tables, rotation strip C (categories 3-6)",
+   "format": "composite: BG1 pictures, sub-effect tables, compressed OBJ frame set C (categories 3-6)",
    "effort": "medium",
    "confidence": "high",
    "notes": "Continuation of the category-descriptor data after the second LZ77 sprite sheet.",
@@ -206,10 +206,10 @@
     {
      "address": "0x0815A050",
      "size": 55940,
-     "format": "rotation strip C: 8x8-tile overlapping frames addressed by table_B gStaticData_0817BA44 (categories 3-6, anim record 0, 80 pointers)",
-     "effort": "hard",
-     "notes": "the highest window runs 0x4DC bytes past 0x08167AD4",
-     "status": "raw (gStaticData_0815A050): no tile grid, see docs/data_map.md"
+     "format": "compressed OBJ frame set C (old 'rotation strip C'): 80 back-to-back frames {w=8,h=8,0x30,0} + run stream, addressed by table_B gStaticData_0817BA44 (categories 3-6, anim record 0, 80 pointers)",
+     "effort": "medium",
+     "notes": "the last frame ends exactly at 0x08167AD4",
+     "status": "converted: src/data/rle_sprites_15a050.c (graphics/rle_sprites/15a050_frames.png, tools/rle_sprites.py)"
     }
    ]
   },
@@ -3676,7 +3676,7 @@
    "c_decls": [
     "u8 X[]"
    ],
-   "format": "table_B: 123 absolute pointers into rotation strip B (0x080DA1D8..)",
+   "format": "table_B: 123 absolute pointers into compressed frame set B (0x080DA1D8..)",
    "effort": "easy",
    "confidence": "high",
    "notes": "",

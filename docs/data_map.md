@@ -60,11 +60,11 @@ the appendix.
 | `0803B8B0`-`080B1444` | 482,196 | BG0 cell animation A (palette, 19x13 cells, 60 frames) | `sub_8029890`/`sub_80297C8` via category descriptors 0-2 | high | **converted** |
 | `080B1444`-`080B2120` | 3,292 | category 0 `sub_effect_record` table (164 records) | `SelectActorCategory`, `sub_802A5xx` | high | **converted** |
 | `080C0C36`-`080C2758` | 6,946 | 2 B pad + category 1/2 `sub_effect_record` tables | same | high | **converted** (the pad stays raw) |
-| `080C2758`-`080FF1B0` | 248,408 | rotation strips A and B (overlapping sprite frames) | `GetAnimFrameData` via table_B `0817941C`/`0817A880` | high | hard |
+| `080C2758`-`080FF1B0` | 248,408 | compressed OBJ frame sets A and B (the old "rotation strips") | `GetAnimFrameData` via table_B `0817941C`/`0817A880`, unpacked by the `gUnknown_03000874` IWRAM hook | high | **converted** |
 | `080FF1B0`-`0813D934` | 255,876 | BG0 cell animation B (38x10 cells, 21 frames) | `sub_8029890` via category descriptors 3-6 | high | **converted** |
 | `0813D934`-`0814174C` | 15,896 | category 3 BG1 picture + `sub_effect_record` table | `sub_802F7B0`, `SelectActorCategory` | high | **converted** |
 | `08151AC2`-`0815A050` | 34,190 | category 4-6 BG1 pictures + `sub_effect_record` tables | same | high | **converted** (the pad stays raw) |
-| `0815A050`-`08167AD4` | 55,940 | rotation strip C | `GetAnimFrameData` via table_B `0817BA44` | high | hard |
+| `0815A050`-`08167AD4` | 55,940 | compressed OBJ frame set C | `GetAnimFrameData` via table_B `0817BA44` | high | **converted** |
 | `08167AD4`-`0817E78C` | 92,180 | 200 small/mid tables: gameplay, menus, HUD, actors, text (the built sfx table sits in between) | direct, see appendix | mostly high | easy (a few medium) |
 | `0817E78C`-`0817E7AC` | 32 | `u16[16]` | `sub_8037388` | high | **done** (C) |
 | `0817E7AC`-`0824B638` | 839,308 | level tile sets 1-3 (tag-0x00 raw 8bpp tiles) | `bg_scroll_layer_25fc8.c` via `bg_layer_desc.tileData` | high | **done** (grit) |
@@ -91,7 +91,7 @@ By category, as a share of the 8,038,172-byte data total:
 | Raw level assets (7) | 1,112,392 | 13.84% | medium (opaque `.bin`), hard (real decode) |
 | BG0 cell animations (2) | 738,072 | 9.18% | medium |
 | GAX2 second data set (sound effects) | 638,126 | 7.94% | **converted** |
-| Rotation strips (3) | 304,348 | 3.79% | hard |
+| Compressed OBJ frame sets (3, the old "rotation strips") | 304,348 | 3.79% | **converted** |
 | Per-room level data | 178,208 | 2.22% | hard |
 | 404 small/mid labels | 127,807 | 1.59% | easy (a few medium) |
 | Sprite-bank table | 109,062 | 1.36% | **converted** |
@@ -166,7 +166,7 @@ picture. The animation is one 152x6240 indexed PNG
 each cell drawn in its bank), converted by grit, and the table is a
 `SUB_EFFECT_TABLE(164)` of `struct sub_effect_record`.
 
-### `gStaticData_080C0C36` (527,126 B): sub-effect tables, rotation strips, cell animation B, BG1 picture
+### `gStaticData_080C0C36` (527,126 B): sub-effect tables, compressed frame sets, cell animation B, BG1 picture
 
 Every region is reached through the category descriptors or an
 animation-table `table_B` array:
@@ -176,18 +176,17 @@ animation-table `table_B` array:
 | `080C0C36` | 2 | zero pad | | easy |
 | `080C0C38` | 0xDB8 | category 1 `sub_effect_record[175]` + 0xC | descriptor 1 `+0x14`, count in record 0 | easy |
 | `080C19F0` | 0xD68 | category 2 `sub_effect_record[171]` + 0xC | descriptor 2 `+0x14` | easy |
-| `080C2758` | 0x17A80 | **rotation strip A**: overlapping `struct sprite_frame` windows `{8, 8, 0x30, 0}` + 2 KB | the 152 absolute pointers of `table_B` `0x0817941C` (anim record 0 of categories 0-2) all land here | hard |
-| `080DA1D8` | 0x24FD8 | **rotation strip B**: 10x10-tile windows | the 123 pointers of `gStaticData_0817A880` (the `sub_802DFDC` singleton's `table_B`) | hard |
+| `080C2758` | 0x17A80 | **compressed frame set A**: 152 back-to-back zero-run-compressed frames `{8, 8, 0x30, 0}` + run stream | the 152 absolute pointers of `table_B` `0x0817941C` (anim record 0 of categories 0-2, 148 distinct) all land on a frame header | medium |
+| `080DA1D8` | 0x24FD8 | **compressed frame set B**: 112 frames of 10x10 tiles | the 123 pointers of `gStaticData_0817A880` (the `sub_802DFDC` singleton's `table_B`, 112 distinct) | medium |
 | `080FF1B0` | 0x3E784 | **BG0 cell animation B**: palette[256], cols=38, rows=10, **21 frames x 12,160 B** (no side data, type != 0) | descriptors 3-6 `+0x04`/`+0x08` = `{0x080FF1B0, 0x3E784}`; `0x204 + 21*12160` exact | medium |
 | `0813D934` | 0x3498 | **BG1 picture** (category 3, descriptor `+0x0C`) | `sub_802F7B0` layout below; size exact | medium |
 | `08140DCC` | 0x980 | category 3 `sub_effect_record[121]` + 0xC | descriptor 3 `+0x14`; ends exactly at the `0814174C` LZ77 sheet | easy |
 
 **Status:** the two tables are converted (`src/data/sub_effect_0c0c38.c`),
 and cell animation B, the category 3 picture and its table too
-(`src/data/cell_anim_0ff1b0.c`). The pad at `080C0C36` and the two
-rotation strips stay raw `.incbin`s, now under their own labels
-`gStaticData_080C2758` and `gStaticData_080DA1D8` (see below for why
-the strips stay raw).
+(`src/data/cell_anim_0ff1b0.c`), and the two frame sets
+(`src/data/rle_sprites_0c2758.c`, see below). Only the pad at `080C0C36`
+stays a raw `.incbin`.
 
 The **BG1 picture** format, from `sub_802F7B0` (`actor_part45d.c`):
 `u16 palette[256]`, `s16 cols @0x200`, `s16 rows @0x202`,
@@ -197,27 +196,43 @@ nibbles (one per map entry). All three pictures (`0813D934`, `08151AC4`,
 `08155260`) end exactly at the next known structure. `gbagfx` can handle
 the tiles, and a tiny packer can handle the header, map and nibbles.
 
-The **rotation strips** are the "sliding window" frames described in
-docs/graphics.md: consecutive `table_B` entries point a few hundred bytes
-apart into one byte stream, and each reads a whole frame. The last
-windows run past each strip's nominal end: strip A's last frame reads
-0x5BC bytes into strip B, and strip B's reads 0x700 bytes into cell
-animation B. So no strip can be cut into independent frame files.
-Converting them needs a tool that stores the stream once and emits the
-frames as views of it. That is the reason for the *hard* rating. A
-plain `.bin` split is trivial, but it isn't a real decode.
+The **compressed frame sets** (formerly "rotation strips"). Earlier
+passes read every `table_B` target as a `{w, h, 0x30, 0}` header plus
+`w*h*32` raw tile bytes, the way `LoadSpriteFrameTiles` uploads a plain
+frame. Read that way, consecutive frames overlapped ("sliding windows"
+106-2,818 bytes apart), each header sat inside the previous window's
+pixels, the last windows ran past each region's end, and the tiles came
+out scrambled. The `0x30` byte is the clue: these frames are
+**compressed**, and they are never passed to `LoadSpriteFrameTiles`.
 
-A second look (while converting the rest of these blobs) found no clean
-image form either. Consecutive windows start 106-2,818 bytes apart, at
-offsets that are rarely a multiple of 32, so the stream has no
-fixed tile grid. Each window's 4-byte `{8, 8, 0x30, 0}` / `{10, 10,
-0x30, 0}` header sits inside the previous window's pixel bytes. Drawn
-as plain 8x8 4bpp tiles with the category palette, the windows come out
-as scrambled fragments of the mask, not as rotation frames. So the
-`0x30` frames are probably consumed some other way than plain tiles
-(`LoadSpriteFrameTiles`' `gUnknown_03000870` override hook is the first
-suspect), and no PNG can hold them until that is understood. They stay
-raw.
+The consumers (`actor_part127.c`, `actor_part128.c`,
+`graphics_loading_3686c.c`) call `gUnknown_03000874(vramBlock, frame)`.
+That IWRAM variable is initialised by the `crt0` copy of the IWRAM image
+(`0x087E55E4 + 0x874`) to `0x03000634`, an ARM routine in the same image.
+Disassembled, it fills `w*h*32` bytes of VRAM from a stream of `u16`
+counts after the header: a count of zero halfwords (DMA3 fixed-source
+fill from a zero on the stack), then alternately a literal count
+followed by that many halfwords (DMA3 copy) and a zero count, until the
+frame is full. (Its neighbour `gUnknown_03000870 = 0x030006FC`, the
+`LoadSpriteFrameTiles` hook, only looks the frame up in the VRAM frame
+cache.) The frames are simply stored back to back, and decoding them in
+order covers each region exactly, with no overlap and nothing past the
+end:
+
+| Set | Frames | Frame size | Distinct `table_B` targets | Content (category palette bank 0) |
+|---|---:|---|---:|---|
+| A `080C2758`-`080DA1D8` | 152 | 8x8 tiles | 148 of 152 pointers (4 frames unused) | Crash riding the polar bear |
+| B `080DA1D8`-`080FF1B0` | 112 | 10x10 tiles | 112 of 123 | the yeti |
+| C `0815A050`-`08167AD4` | 80 | 8x8 tiles | 80 of 80 | a boss-sized character (categories 3-6) |
+
+The original encoder's rule is simple: every stretch of at least 7 zero
+halfwords is a zero run, shorter ones stay inside the literal run, and
+the leading zeros are always a zero run. Re-encoding the decoded frames
+with that rule gives all 344 frames byte for byte.
+
+**Status: converted.** Each set is one 4bpp PNG in `graphics/rle_sprites/`
+(frames stacked top to bottom), built with grit and compressed again by
+`tools/rle_sprites.py`, see docs/data.md "Compressed sprite frames".
 
 ### `gStaticData_08151AC2` (90,130 B): categories 4-6
 
@@ -232,11 +247,11 @@ above:
 | `08155260` | 0x36B8 | BG1 picture shared by categories 5 and 6 (38x16, 374 tiles) | medium |
 | `08158918` | 0x1718 | category 5 `sub_effect_record[295]` + 0xC | easy |
 | `0815A030` | 0x20 | category 6 `sub_effect_record[1]` + 0xC | easy |
-| `0815A050` | 0xDA84 | **rotation strip C**, `table_B` `0x0817BA44` (anim record 0 of categories 3-6, 80 pointers). The highest window runs 0x4DC bytes past the blob's end | hard |
+| `0815A050` | 0xDA84 | **compressed frame set C**, `table_B` `0x0817BA44` (anim record 0 of categories 3-6, 80 pointers), 80 frames of 8x8 tiles | medium |
 
 **Status:** the pictures and tables (`08151AC4`-`0815A050`) are converted
-(`src/data/bg_picture_151ac4.c`). The pad at `08151AC2` stays raw, and so
-does rotation strip C, now labeled `gStaticData_0815A050`.
+(`src/data/bg_picture_151ac4.c`), and so is frame set C
+(`src/data/rle_sprites_15a050.c`). Only the pad at `08151AC2` stays raw.
 
 ### `gStaticData_0817E78C` (3,305,076 B): level tile sets, room data, sprite tile pool
 
@@ -517,8 +532,8 @@ Every one of the 412 labels is listed in the appendix.
    (`08178F80`/`0817AA98`, `sub_effect_record` tables): typed C with
    generators. The layouts are all known.
 9. **Room data** (178 KB, **done**, +2.2%, generated C from
-   `data/levels/`) and **rotation strips** (304 KB): the strips need an
-   overlap-aware frame tool.
+   `data/levels/`) and the **compressed frame sets** (304 KB, **done**,
+   +3.8%, the old "rotation strips": `tools/rle_sprites.py`).
 
 Steps 2-5 alone take data progress from 20.4% to about 83%.
 
@@ -589,8 +604,8 @@ vtable shapes).
 | Address | Size | Format | Consumers | Conf. | Effort |
 |---|---:|---|---|---|---|
 | `0803B8B0` | 0x76870 | composite: BG0 streamed cell animation A + category-0 sub-effect table. **Converted** (`src/data/cell_anim_03b8b0.c`) | `sub_8029890`, `sub_80297C8`, `sub_802996C` +2 | high | done |
-| `080C0C36` | 0x80B16 | composite: sub-effect tables, two rotation-strip sprite pools, BG0 cell animation B, BG1 picture. **Converted** except the 2-byte pad (still `gStaticData_080C0C36`) and rotation strips A/B (`gStaticData_080C2758`, `gStaticData_080DA1D8`) | `SelectActorCategory`, `GetAnimFrameData`, `sub_8029890` +2 | high | hard (strips) |
-| `08151AC2` | 0x16012 | composite: BG1 pictures, sub-effect tables, rotation strip C (categories 3-6). **Converted** except the 2-byte pad (still `gStaticData_08151AC2`) and rotation strip C (`gStaticData_0815A050`) | `SelectActorCategory`, `GetAnimFrameData`, `sub_802F7B0` | high | hard (strip) |
+| `080C0C36` | 0x80B16 | composite: sub-effect tables, two compressed OBJ frame sets, BG0 cell animation B, BG1 picture. **Converted** except the 2-byte pad (still `gStaticData_080C0C36`) | `SelectActorCategory`, `GetAnimFrameData`, `sub_8029890` +2 | high | easy (pad) |
+| `08151AC2` | 0x16012 | composite: BG1 pictures, sub-effect tables, compressed OBJ frame set C (categories 3-6). **Converted** except the 2-byte pad (still `gStaticData_08151AC2`) | `SelectActorCategory`, `GetAnimFrameData`, `sub_802F7B0` | high | easy (pad) |
 | `08167AD4` | 0x200 | u16[256] fill-meter ramp/palette table (`u16` x 256) | `sub_8031504`, `sub_8031604` | high | easy |
 | `08167CD4` | 0x1E14 | per-level P1 meter grid table: s16 cols, rows, then per-level records (s16) (`s16` x 3850) | `sub_8030F88` | medium | medium |
 | `08169AE8` | 0x200 | u16[256] fill-meter table (P2 twin of 0x08167AD4) (`u16` x 256) | `sub_8032AF8`, `sub_8033604`, `sub_80336CC` | high | easy |
@@ -740,7 +755,7 @@ vtable shapes).
 | `0817A7F8` | 0x48 | table (element layout: see consumers) | `sub_802DB2C`, `sub_802DCC0` | medium | easy |
 | `0817A840` | 0x10 | function-pointer / pointer-to-member table (4 code pointers) (`void (*)(void)` x 4) | `sub_802D7B0` | high | easy |
 | `0817A850` | 0x30 | table (element layout: see consumers) | `sub_802DFDC` | medium | easy |
-| `0817A880` | 0x1EC | table_B: 123 absolute pointers into rotation strip B (0x080DA1D8..) (`struct sprite_frame *` x 123) | `sub_802DFDC` | high | easy |
+| `0817A880` | 0x1EC | table_B: 123 absolute pointers into compressed frame set B (0x080DA1D8..) | `sub_802DFDC` | high | easy |
 | `0817AA6C` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_802D9A8` | high | easy |
 | `0817AA8C` | 0xC | table (element layout: see consumers) | `sub_802DD9C` | medium | easy |
 | `0817AA98` | 0x1728 | categories 3-6 family data: s16 header, palettes, table_A, anim table gStaticData_0817B2A4 (47 x 0x28), table_B arrays | `sub_802D7B0` | high | medium |

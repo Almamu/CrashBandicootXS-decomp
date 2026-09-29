@@ -12,10 +12,9 @@
  * (family_shared_08 = its size, 0x3E784), played by sub_8029890/
  * sub_80297C8 (actor_part95.c): 38x10 cells, 21 frames. Not a type-0
  * category, so there are no per-cell banks: sub_802996C maps the cells to
- * consecutive tiles in palette bank 0. The highest rotation-strip B window
- * (gStaticData_0817A880) reads 0x700 bytes into this record. Built
- * from graphics/category_bg/0ff1b0_cell_anim.png, all 21 frames stacked
- * top to bottom. */
+ * consecutive tiles in palette bank 0. Built from
+ * graphics/category_bg/0ff1b0_cell_anim.png, all 21 frames stacked top to
+ * bottom. */
 struct cell_anim_0ff1b0 {
     struct cell_anim_header header;
     struct {

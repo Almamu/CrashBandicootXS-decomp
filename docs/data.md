@@ -221,8 +221,10 @@ backgrounds" below):
 |---|---|---|
 | `cell_anim_03b8b0.c` | `0x0803B8B0` | BG0 cell animation A (19x13, 60 frames, per-cell banks), category 0 `sub_effect_table` |
 | `sub_effect_0c0c38.c` | `0x080C0C38` | categories 1 and 2 `sub_effect_table`s |
+| `rle_sprites_0c2758.c` | `0x080C2758` | compressed OBJ frame sets A and B (see "Compressed sprite frames") |
 | `cell_anim_0ff1b0.c` | `0x080FF1B0` | BG0 cell animation B (38x10, 21 frames), category 3 BG1 picture and `sub_effect_table` |
 | `bg_picture_151ac4.c` | `0x08151AC4` | category 4 and 5/6 BG1 pictures, categories 4-6 `sub_effect_table`s |
+| `rle_sprites_15a050.c` | `0x0815A050` | compressed OBJ frame set C |
 
 The GAX2 audio isn't C: `tools/gax_audio.py` builds it from `sound/`
 into two blobs that `data/data.s` incbins from `build/`, the
@@ -578,9 +580,58 @@ The `sub_effect_record` tables in the same regions are hand-written C:
 12-byte `struct sub_effect_table_end` that the one-record-ahead
 accessors read after the last one.
 
-The three rotation strips next to them (`gStaticData_080C2758`,
-`gStaticData_080DA1D8`, `gStaticData_0815A050`) stay raw: their frame
-windows start at offsets that aren't whole tiles into one shared byte
-stream, so there's no tile grid for a PNG (docs/data_map.md has the
-details). The 2-byte pads after the two LZ77 sheets
-(`gStaticData_080C0C36`, `gStaticData_08151AC2`) stay raw `.incbin`s too.
+The 2-byte pads after the two LZ77 sheets (`gStaticData_080C0C36`,
+`gStaticData_08151AC2`) stay raw `.incbin`s.
+
+### Compressed sprite frames
+
+The three blobs next to the category backgrounds that were called
+"rotation strips" (`gStaticData_080C2758`, `gStaticData_080DA1D8`,
+`gStaticData_0815A050`) are sets of **zero-run-compressed OBJ frames**,
+stored back to back (docs/data_map.md has how this was found). A frame
+is:
+
+```
+u8  w, h;          // size in 8x8 tiles
+u8  0x30, 0;
+u16 zeros;         // then, until w*h*16 halfwords are written:
+u16 literals; u16 data[literals];
+u16 zeros;         // ...
+```
+
+The IWRAM routine `0x03000634` (the `gUnknown_03000874` hook, called by
+`actor_part127.c`, `actor_part128.c` and `graphics_loading_3686c.c`)
+unpacks a frame into a VRAM tile block. The frame pointer tables
+(`table_B` of animation record 0 of both category families, and
+`gStaticData_0817A880`) point at the frame headers.
+
+Each set is one PNG in `graphics/rle_sprites/`, `<addr>_frames.png`:
+4bpp indexed, one frame per `w*8` x `h*8` block, the frames stacked top to
+bottom, so grit's row-major tile order is the frames back to back. The
+palette is the category's OBJ palette, bank 0 (the frames aren't tied to
+a palette; OAM picks the bank). The build (`graphics.mk`):
+
+| step | tool | output |
+|---|---|---|
+| tiles | grit `-gt -gB4 -p! -ftb -fh!` | `<addr>_frames.img.bin` |
+| compression | `tools/rle_sprites.py pack --frame WxH` | `<addr>_frames.inc` (the bytes), `<addr>_frames.h` (`RLE_SPRITES_<ADDR>_SIZE`, `_COUNT`, `_FRAME_nnn` byte offsets) |
+
+`src/data/rle_sprites_0c2758.c` (sets A and B) and `rle_sprites_15a050.c`
+(set C) declare `const u8 gStaticData_<addr>[RLE_SPRITES_<ADDR>_SIZE]`
+around the `.inc`. The frame size per set (`RLE_FRAME_<addr>` in
+`graphics.mk`: 8x8, 10x10, 8x8) is the only thing not in the PNG.
+
+The compressor uses the ROM encoder's rule, found by comparing: a stretch
+of at least 7 zero halfwords becomes a zero run, a shorter one stays in
+the literal run, and the frame's leading zeros are always a zero run. It
+rebuilds all 344 frames byte for byte. An edited frame compresses to a
+different length, which moves every later frame, so pointers into a set
+must use the generated offsets: `frame_table_17a880.c` writes
+`gStaticData_080DA1D8 + RLE_SPRITES_0DA1D8_FRAME_nnn`. The other two
+frame tables (`gStaticData_0817941C`, `gStaticData_0817BA44`) are still
+raw bytes inside their category family blobs; when they become C they
+should use `RLE_SPRITES_0C2758_FRAME_nnn` / `RLE_SPRITES_15A050_FRAME_nnn`
+the same way.
+
+`tools/rle_sprites.py extract` writes the three PNGs from `baserom.gba`
+again and checks that every frame re-encodes to the ROM's bytes.
