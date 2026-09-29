@@ -162,3 +162,10 @@ and `sub_8008D80` are now real C under old_agbcc. The box builders
 return the box by value. `sub_8008A40`/`sub_8008AD8`/`sub_8008D80` take
 it by value, which fixes the "stack-layout coincidence". `sub_800891C`
 is still NAKED, with a C draft 18 halfwords off. See [issue-9-naked-retry.md](./issue-9-naked-retry.md) for details.
+
+## Later pass (strag1)
+
+`sub_80073DC` is now real C. It moved out of `graphics.c` into
+`src/graphics/graphics_73dc.c` (old_agbcc, on `OLD_AGBCC_OBJS`), written
+in the same shape as its matched affine sibling `sub_8007634`. See
+[strag1-naked-retry.md](strag1-naked-retry.md).

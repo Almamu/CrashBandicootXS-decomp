@@ -234,3 +234,12 @@ now points there directly.
   permutation gap with.
 - `docs/matching/issue-35-36-0x080231cc-game-loop.md` - the cluster
   immediately preceding this one in ROM order.
+
+## Later pass (strag1)
+
+`sub_8024820` and `sub_8024960` are now real C (old_agbcc), so the whole
+`0x08024810`-`0x08024E68` range is decompiled. `sub_8024820`'s
+`&gUnknown_03001300` reloads come from a function-scope pointer local
+that global-alloc leaves unallocated; `sub_8024960` is `sub_8025334`'s
+matched shape with a 2D cell index. See
+[strag1-naked-retry.md](strag1-naked-retry.md).

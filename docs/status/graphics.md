@@ -225,7 +225,7 @@ derivation of each, and `docs/matching.md`'s original entries ("The
 `0x080014A4`-`0x08001624` fade/screen-mode cluster" and "Parked, not
 matched: `sub_8000EE4`") for the pre-NAKED gap analysis.
 
-- **`sub_8006600`** (`src/graphics/oam_count.c`) and **`sub_80073DC`**
+- **`sub_80073DC` is now matched as real C (split into `src/graphics/graphics_73dc.c`, old_agbcc; see docs/matching/strag1-naked-retry.md); entry kept for history.** **`sub_8006600`** (`src/graphics/oam_count.c`) and **`sub_80073DC`**
   (`src/graphics/graphics.c`) - this project's original reference cases
   for the register-allocation-gap class documented above (several
   `overlay_ui`/`actor` functions elsewhere still hit the same class,

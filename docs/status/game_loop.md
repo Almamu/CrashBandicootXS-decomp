@@ -60,8 +60,8 @@ system from "core" system startup/init code.
   construction/accessors (`sub_8024CF0`/`sub_8024D0C`/`sub_8024D38`/
   `sub_8024D58`/`sub_8024D5C`/`sub_8024D60`/`sub_8024D6C`/`sub_8024D74`/
   `sub_8024DAC`/`sub_8024DCC`/`sub_8024DE0`/`sub_8024DFC`/`sub_8024E24`,
-  all matched as real C). 23 are real C (built with old_agbcc, see
-  [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md)); `sub_8024820` and `sub_8024960` remain `NAKED` transcriptions. `asm/code_3_2_17_24810.s` is now fully retired. See
+  all matched as real C). All 25 are real C (built with old_agbcc, see
+  [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md)); `sub_8024820` and `sub_8024960`, the last two `NAKED` transcriptions, became real C last (see [strag1-naked-retry.md](../matching/strag1-naked-retry.md)). `asm/code_3_2_17_24810.s` is now fully retired. See
   [docs/matching/issue-39-0x08024810-game-loop.md](../matching/issue-39-0x08024810-game-loop.md)
 - `src/system/game_loop3.c` (GitHub issue #40): `sub_8024E68`,
   `sub_8024E90`, `sub_8024EB4` (a viewport/parallax-scroll-layer object)
@@ -770,7 +770,7 @@ plain C didn't converge.
   retired from `ldscript.txt` entirely. See
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)'s
   "`sub_800BFA8`" entry.
-- **`sub_8025B0C`/`sub_8025CA4`** (`src/system/game_loop14.c`, GitHub
+- **Now matched as real C (see docs/matching/strag1-naked-retry.md); entry kept for history.** **`sub_8025B0C`/`sub_8025CA4`** (`src/system/game_loop14.c`, GitHub
   issue #41) - two part-object spawn helpers. Under old_agbcc, plain C
   is 61 and 5 halfwords off (register allocation, and one constant
   load's scheduling); their sibling `sub_8025BAC` is matched. See
