@@ -60,26 +60,22 @@
  * (src/system/link_cable.c) and this issue's own `sub_800D040`/
  * `sub_800E494`/`sub_800E4E4`. */
 #if NON_MATCHING
-/* Structurally complete draft, the ROM's exact size (3840 bytes) under
- * old_agbcc, 938 halfwords off. The control flow, block order, jump
- * tables, stack frame layout (boxes at sp+0x1c/0x2c/0x3c, spill slots in
- * the ROM's order) and the high-register allocation (self sl, obj/q/tgt
- * r8, dy and the GCSE temps sb) match. The first player box now matches:
- * `BOX_ADDR` (see below) gives each builder call its own `add r0, sp,
- * #0x3c` and `bb` holds the box from `sub_8001688` to `sub_800CF70` in
- * r4, as in the ROM. The same fix on the rebuilt box also matches that
- * block (and puts the `&gUnknown_030012D8` temp in r6), but other low
- * registers then shift and the function comes out 8 bytes short, so it
- * isn't applied there yet. What's left is low-register allocation
- * elsewhere (constants and temps in r0/r2/r3/r4/r5) and the `kind * 4`
- * spill slot order. Under current agbcc the draft is 1629 halfwords off
- * and 8 bytes long. See docs/matching/huge-naked-retry.md and
- * docs/matching/sp-box-retry.md.
- * Last-five retry (docs/matching/last5-naked-retry.md): writing the
- * `dy > 2 || (dx <= 3 && sub_800B324())` arm as `goto edge_x` gives the
- * ROM's block order there; with BOX_ADDR on the rebuilt box too, the
- * register-blind diff drops from 98 to 57 instructions, but the function
- * is then 4 bytes long, so neither is applied yet. */
+/* Near-miss draft: the ROM's exact size (3840 bytes) under old_agbcc,
+ * 33 halfwords off (938 before the huge-NAKED second pass, see
+ * docs/matching/huge-naked-retry-2.md). What's left:
+ * - The `&self->state` and `kind * 4` gcse temps take the spill slots
+ *   0x98/0x94 where the ROM has 0x94/0x98. gcse numbers its temps in
+ *   expression-hash order, and `kind * 4` (hash 452) sorts before
+ *   `self + 77` (hash 511); both are below the table size (835), so
+ *   instruction-count padding can't swap them.
+ * - At the first code lookup the ROM loads the table address before
+ *   `&obj->kind`; the draft computes `&obj->kind` first.
+ * - In the second slope check (`ay += q->yOff`) local-alloc gives the
+ *   ldrsh result r0 where the ROM has r1, which shifts the reload
+ *   round-robin for the next ~20 instructions. A hold on r0 there gets r1
+ *   but makes reload spill the value (4 bytes long).
+ * Under current agbcc the draft doesn't match either. See also
+ * docs/matching/huge-naked-retry.md and docs/matching/sp-box-retry.md. */
 #include "phys_obj.h"
 
 /* The player (gUnknown_030012D8) as this function reads it. */
@@ -241,6 +237,30 @@ asm(".set _call_via_r4, sub_803AD88\n");
     else                                                                       \
         (void)0
 
+/* Returns its argument. Writing a position's y through it (instead of a
+ * `pp` pointer local) lets gcse make the ROM's pointer copy: the store goes
+ * through `add r0, sp, #N` and the copy (`adds r2, r0, #0`) is used after. */
+static inline struct d18c_pos *D18C_PosPtr(struct d18c_pos *p)
+{
+    return p;
+}
+
+/* The response code for an object kind. As an inline, `&obj->kind` is
+ * computed before the table address, as in the ROM. */
+static inline s32 D18C_Code(s32 row, s32 k)
+{
+    return gStaticData_0816BC98[row][k];
+}
+
+/* The ring count as an int. The first `!= 0` test then loads it with the
+ * same zero-extending load as the loop test, and cse reuses the value for
+ * the loop's entry test. Written in place, shorten_compare narrows the test
+ * to a QImode load and the loop test reloads it. */
+static inline s32 D18C_RingCount(void)
+{
+    return D18C_P->ringCount;
+}
+
 static inline s32 D18C_Span(s32 a, s32 b, s32 c)
 {
     return a + b - c;
@@ -294,6 +314,7 @@ void sub_0800D18C(struct phys_obj *self, s32 idx)
     s32 dx;
     s32 dy;
     s32 n;
+    s32 r; /* shared by both slope checks, so both get r2 as in the ROM */
     struct d18c_quad *q;
     struct d18c_pos *pp;
     struct d18c_quad *hb;
@@ -374,14 +395,14 @@ void sub_0800D18C(struct phys_obj *self, s32 idx)
         obj = sub_800CF70(self, bb, &f.found);
     else
         obj = self;
-    code = gStaticData_0816BC98[obj->kind][kind];
+    code = D18C_Code(obj->kind, kind);
     {
         s32 bnc = D18C_P->bounce;
 
         if (bnc > 4)
             code = 0;
     }
-    if (f.found != 0 && D18C_P->ringCount != 0)
+    if (f.found != 0 && D18C_RingCount() != 0)
     {
         s32 i;
 
@@ -500,7 +521,13 @@ tail:
         if (self->unk_44 == 0)
             return;
     }
-    f.c = f.a;
+    {
+        /* Through a pointer local: the block copy then takes a copy of it
+         * (`add r2, sp, #0x2c; adds r1, r2, #0`), as in the ROM. */
+        struct aabb *pc = &f.c;
+
+        *pc = f.a;
+    }
     if (kind != 6)
         sub_800E4E4(self, &f.a);
     {
@@ -515,14 +542,19 @@ tail:
         offY = q->yOff;
         w = q->w;
         h = q->h;
-        sub_803AFE4(&f.b, offX + px, offY + py);
-        sub_803AFDC(&f.b, w, h);
+        {
+            s32 x = offX + px, y = offY + py;
+
+            sub_803AFE4(BOX_ADDR(&f.b), x, y);
+        }
+        sub_803AFDC(BOX_ADDR(&f.b), w, h);
         if (D18C_P->flipX)
             f.b.x = px * 2 - (f.b.x + f.b.w);
         if (D18C_P->flipY)
             f.b.y = py * 2 - (f.b.y + f.b.h);
     }
-    if (!sub_8001640(&f.a, &f.b))
+    bb = BOX_ADDR(&f.b);
+    if (!sub_8001640(&f.a, bb))
         return;
     edge = 0;
     f21 = 0;
@@ -534,14 +566,14 @@ tail:
             return;
         if (gStaticData_0816BBDA[self->kind] != 0)
         {
-            /* `side` is dead on this path: flow deletes its sets, jump2
-             * deletes the compare after reload, and the ROM keeps the
-             * reload of px (`ldr r1, [sp, #0x70]`) right after the call. */
+            /* `ax` (and the other path's `side`) is dead here, but the ROM
+             * keeps a reload of px (`ldr r1, [sp, #0x70]`) right after the
+             * call: a leftover of a compare deleted after reload. The empty
+             * asm emits nothing; it only uses ax and px, which gives the
+             * same reload into r1. */
             s32 ax = sub_8009EC4((struct gobj *)D18C_P);
-            s32 side = 2;
 
-            if (px > ax)
-                side = 1;
+            asm("" : : "r"(ax), "r"(px));
             if ((D18C_P->x >> 8) < (self->x >> 8))
             {
                 dirX = 1;
@@ -596,14 +628,16 @@ tail:
             }
             else if (dx <= 6 && dy > 2)
             {
+                s32 y;
+
                 f.p2.x = D18C_P->x;
-                pp = &f.p2;
-                pp->y = D18C_P->y;
+                y = D18C_P->y;
+                D18C_PosPtr(&f.p2)->y = y;
                 if (dirX == 2)
                     f.p2.x = (dx << 8) + f.p2.x;
                 else if (dirX == 1)
                     f.p2.x -= dx << 8;
-                sub_8007398((struct gobj *)D18C_P, f.p2.x, pp->y);
+                sub_8007398((struct gobj *)D18C_P, f.p2.x, D18C_PosPtr(&f.p2)->y);
                 D18C_COMMIT();
                 D18C_CALL68(0, 0xc, dirX);
                 D18C_Hit(D18C_P, dirX);
@@ -611,11 +645,14 @@ tail:
             }
             else
             {
+                s32 y;
+
                 if (D18C_P->ringLocked != 1)
                     return;
                 f.p3.x = D18C_P->x;
-                pp = &f.p3;
-                pp->y = D18C_P->y;
+                y = D18C_P->y;
+                D18C_PosPtr(&f.p3)->y = y;
+                pp = &f.p3; /* shared with the p1 arm, where it gets r2 */
                 if (dirY == 4)
                     pp->y = (dy << 8) + pp->y;
                 else if (dirX == 8)
@@ -629,9 +666,12 @@ tail:
         }
         else
         {
-            struct phys_obj *e = self;
+            struct phys_obj *e;
 
-            while ((e = sub_8010708(e)) != NULL)
+            /* A `for` with the first call on `self`: its copy is
+             * cross-jumped into the loop's call, so the ROM enters with
+             * `mov r0, sl`. */
+            for (e = sub_8010708(self); e != NULL; e = sub_8010708(e))
             {
                 if (gStaticData_0816BBDA[e->kind] != 0 && (e->state & 0x7f) == 0)
                     return;
@@ -651,11 +691,6 @@ tail:
 
         if (px > ax)
             side = 1;
-        /* Emits nothing: one extra reference to `ay` so it outranks the
-         * player hitbox pointer `q` in global allocation (brief item 8).
-         * That gives the ROM's cascade - ay in r7, q in r8, dy in sb,
-         * self in sl and px on the stack. */
-        asm("" : : "r"(ay));
         if ((D18C_P->x >> 8) < (self->x >> 8))
         {
             dirX = 1;
@@ -680,14 +715,22 @@ tail:
         {
             if (ax == px)
             {
-                if (dy > 2)
-                    goto edge_x;
-                edge = 4;
-                if (f21 != 0)
-                    edge = 8;
+                /* `else edge = dirX` after the other arm (not a `goto
+                 * edge_x`): cross-jumping later merges it into edge_x, but
+                 * its reload of dirX (r0) still advances reload's
+                 * round-robin, so the next arm reloads dy into r1 as the
+                 * ROM does. */
+                if (dy <= 2)
+                {
+                    edge = 4;
+                    if (f21 != 0)
+                        edge = 8;
+                }
+                else
+                    edge = dirX;
             }
             else if (dy > 2 || (dx <= 3 && sub_800B324(D18C_P)))
-                edge = dirX;
+                goto edge_x;
             else
             {
                 edge = 4;
@@ -721,23 +764,23 @@ tail:
                     edge = 8;
                 if (edge == 0)
                 {
-                    s32 r;
-                    s32 lim;
-
                     py += q->yOff + q->h;
+                    /* The call is in each arm (cross-jumping merges the
+                     * tails): the stack argument is stored before the join
+                     * and px is passed from the register it was just
+                     * computed in, as in the ROM. */
                     if (dirX == 1)
                     {
                         ax += q->xOff + q->w;
                         px = f.b.x + f.b.w;
-                        lim = f.a.x;
+                        r = sub_800FDC8(ax, ay, px, py, f.a.x);
                     }
                     else
                     {
                         ax += q->xOff;
                         px = f.b.x;
-                        lim = f.a.x + f.a.w;
+                        r = sub_800FDC8(ax, ay, px, py, f.a.x + f.a.w);
                     }
-                    r = sub_800FDC8(ax, ay, px, py, lim);
                     if ((r < 0 && f21 != 0 && dx > 4) || (r > 0 && r <= f.a.y))
                         edge = 8;
                     else
@@ -761,23 +804,19 @@ tail:
                     edge = 4;
                 if (edge == 0)
                 {
-                    s32 r;
-                    s32 lim;
-
                     py += q->yOff;
                     if (dirX == 1)
                     {
                         ax += q->xOff + q->w;
                         px = f.b.x + f.b.w;
-                        lim = f.a.x;
+                        r = sub_800FDC8(ax, ay, px, py, f.a.x);
                     }
                     else
                     {
                         ax += q->xOff;
                         px = f.b.x;
-                        lim = f.a.x + f.a.w;
+                        r = sub_800FDC8(ax, ay, px, py, f.a.x + f.a.w);
                     }
-                    r = sub_800FDC8(ax, ay, px, py, lim);
                     if (D18C_P->ringLocked == 1)
                         r += 2;
                     if ((r < 0 && f21 == 0 && dx > 5) || (r > 0 && r >= f.a.y + f.a.h))
@@ -793,9 +832,13 @@ tail:
     edge_done:
         code = 0;
     }
-    f.pos.x = D18C_P->x;
-    pp = &f.pos;
-    pp->y = D18C_P->y;
+    {
+        s32 y;
+
+        f.pos.x = D18C_P->x;
+        y = D18C_P->y;
+        D18C_PosPtr(&f.pos)->y = y;
+    }
     if (dx < 0)
         dx = 0;
     if (dy < 0)
@@ -821,12 +864,12 @@ tail:
             D18C_CALL68(0, 0xc, 4);
             D18C_Hit(D18C_P, 4);
             if (D18C_P->standMode != 8)
-                pp->y = (dy << 8) + pp->y;
+                D18C_PosPtr(&f.pos)->y = (dy << 8) + D18C_PosPtr(&f.pos)->y;
         }
         break;
     case 8:
         tgt = sub_8010914(self);
-        code = gStaticData_0816BC98[tgt->kind][kind];
+        code = D18C_Code(tgt->kind, kind);
         if (kind == 4 && tgt->kind != 0xa && D18C_P->ringCount != 0)
         {
             D18C_P->speedY = 0;
@@ -837,14 +880,14 @@ tail:
         }
         if (code == 1 || code == 2)
         {
-            pp->y -= (dy - 1) << 8;
-            pp->y &= ~0xff;
-            sub_8007398((struct gobj *)D18C_P, f.pos.x, pp->y);
+            D18C_PosPtr(&f.pos)->y -= (dy - 1) << 8;
+            D18C_PosPtr(&f.pos)->y &= ~0xff;
+            sub_8007398((struct gobj *)D18C_P, f.pos.x, D18C_PosPtr(&f.pos)->y);
             D18C_COMMIT();
         }
         else if (code == 0 || code == 2)
-            pp->y -= dy << 8;
-        pp->y &= ~0xff;
+            D18C_PosPtr(&f.pos)->y -= dy << 8;
+        D18C_PosPtr(&f.pos)->y &= ~0xff;
         break;
     case 1:
     case 2:
@@ -897,7 +940,7 @@ tail:
                 ok = 0;
             if (ok)
             {
-                sub_8007398((struct gobj *)D18C_P, f.pos.x, pp->y);
+                sub_8007398((struct gobj *)D18C_P, f.pos.x, D18C_PosPtr(&f.pos)->y);
                 D18C_COMMIT();
             }
         }

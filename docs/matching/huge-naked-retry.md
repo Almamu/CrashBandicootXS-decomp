@@ -148,3 +148,8 @@ rebuilt box matches that block too, and puts the `&gUnknown_030012D8`
 temp in r6 as in the ROM. But other low registers then shift and the
 draft comes out 8 bytes short, so the draft doesn't use it there yet.
 See [sp-box-retry.md](sp-box-retry.md).
+
+## Later pass (second huge-NAKED retry)
+
+938 to 33 halfwords, still NAKED. See
+[huge-naked-retry-2.md](huge-naked-retry-2.md).
