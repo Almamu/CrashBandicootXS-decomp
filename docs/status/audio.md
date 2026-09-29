@@ -186,12 +186,16 @@ for the per-function notes.
   the format pointer and the max tap rate, which cascades. (GAX NAKED
   retry 2: the r8/r9 swap is fixed in the draft by a no-code reference
   nudge; ~294 halfwords left by alignment-insensitive count - see
-  [docs/matching/gax-naked-retry-2.md](../matching/gax-naked-retry-2.md).)
+  [docs/matching/gax-naked-retry-2.md](../matching/gax-naked-retry-2.md);
+  retry 3 matches the tail, see
+  [gax-naked-retry-3.md](../matching/gax-naked-retry-3.md).)
 - **`sub_8039B44`** (`src/audio/gax_note_trigger.c`, the per-channel
   mixer; `sub_8039E50` is only the ARM call's return point inside it) -
   the call is no longer a blocker (`GAX_CALL_ARM_R`); a complete draft
   is kept under `#if NON_MATCHING`, register allocation differs
-  throughout.
+  throughout. (GAX NAKED retry 3: ~46 left, the parameters and the mixer
+  loop now match - see
+  [docs/matching/gax-naked-retry-3.md](../matching/gax-naked-retry-3.md).)
 
 `sub_8037E54` (`__udivsi3`, `src/util/math_div64_util.c`) also stays
 NAKED - it's lib1funcs.asm's hand-written routine, not compiler output
