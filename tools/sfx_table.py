@@ -4,14 +4,15 @@ This is the GAX2 "sound effect" trigger table (originally at ROM address
 0x0816AA6C): 99 fixed-size entries, one per sound effect ID. sub_8001854 in
 asm/code_3.s (called ~264 times from all over the game's logic - jumping,
 menus, hits, pickups, etc.) looks up the SFX ID in this table and uses it to
-steal a mixing voice and play a note from the *same* GAX2 instrument/sample
-pool that the music uses (see sound/gax_manifest.json) - there is no separate
-sound-effect sample bank in the ROM.
+steal a mixing voice and play a note from the GAX2 sound-effect data set
+(sound/gax_sfx_manifest.json, sound/sfx_samples/ - not the music's pool; see
+docs/audio.md, "Sound effects").
 
 Each entry is 3 little-endian signed 32-bit words:
-  slot_id      - selects which engine voice-priority slot to trigger (also
-                 written into the resulting channel struct at offset 0x25)
-  pitch_offset - signed detune/pitch adjustment applied to the triggered note
+  slot_id      - the sound-effect instrument to play (1-87; written into the
+                 voice at offset 0x25 by sub_8038E74)
+  pitch_offset - really sub_8038E74's priority argument (struct
+                 SfxTableEntry.chanArg), the voice-steal threshold
   volume       - 8.8 fixed-point volume scale (0x100 == 1.0)
 
 Field names describe what's empirically observable from the data and the

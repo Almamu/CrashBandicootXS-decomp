@@ -813,13 +813,19 @@ gStaticData_082B91D0:
 
 .global gStaticData_084C0006
 gStaticData_084C0006:
-	@ The second GAX2 data set (instruments, samples, sample table, handler
-	@ header): see docs/data_map.md.
-	.incbin "baserom.gba", 0x004C0006, 0x0009BCAE
+	@ Shin'en GAX2 sound-effect data set: 2 bytes of alignment, 88
+	@ instruments, 87 8-bit samples, the sample table, and the one handler
+	@ type every sound-effect voice uses (its song data points at the
+	@ instrument and sample tables). PlaySfx's instrument ids index it.
+	@
+	@ Built from sound/gax_sfx_manifest.json and sound/sfx_samples/*.wav by
+	@ tools/gax_audio.py --sfx; see docs/audio.md.
+	.incbin "build/crashbandicootxs/sound/gax_sfx_data.bin"
 
 .global gStaticData_0855BCB4
 gStaticData_0855BCB4:
-	@ Shin'en GAX2 sound engine data: shared instrument/sample pool plus all
+	@ Starts with GaxSongHeader.sfxTypes (sub_80017BC): 9 pointers to the
+	@ sound-effect voice type above. Then the music data: instrument/sample pool plus all
 	@ 19 songs (jungle, underwater, arctic, sewers, future, rocket crash,
 	@ bonus round, dingodile, n gin, tiny, neo cortex, main menu europe,
 	@ main menu japan, cutscenes, cutscenes spooky, intro, warp room,

@@ -74,7 +74,7 @@ the appendix.
 | `082BF120`-`084A4660` | 1,987,904 | sprite tile pool for the 56 sprite banks | `graphics_7634.c`/`graphics_73dc.c` (`sub_80083A8` + frame offset) | high | **done** (grit) |
 | `084A4660`-`084A5600` | 4,000 | 125 fixed 4bpp tiles | `sub_8004D74` pool, `sub_8006DF8` | high | **done** (grit) |
 | `084A5600`-`084C0006` | 109,062 | sprite-bank table ("master asset table"): header, 56 banks, 2,429 frames | `sub_8004D74`, `sub_8022230`, every `**gUnknown_030012D0` user | high | **converted** (C) |
-| `084C0006`-`0855BCB4` | 638,126 | second GAX2 data set: 88 instruments, 87 8-bit samples, sample table, FX handler | GAX2 engine (header prefix of the built audio points here) | high (format), medium (role) | medium |
+| `084C0006`-`0855BCB4` | 638,126 | GAX2 sound-effect data set: 88 instruments, 87 8-bit samples, sample table, the SFX voice handler type | `PlaySfx`/`sub_8038E74` voices via `GaxSongHeader.sfxTypes` (`sub_80017BC`) | high | **converted** (`gax_audio.py --sfx`) |
 | `085A4C5C`-`086ECCD2` | 28,979 | 111 labels between the built intro/tileset1 LZ77 blobs: GAX2 tables and strings, libgcc `__clz_tab` x2, EEPROM tables, 23 intro palettes, 67 alignment pads | direct / slide packages | high | easy |
 | `086C127C`-`086D9CAC` | 100,912 | raw level asset (room `0825E7DC`) | `sub_80266BC` -> `sub_80254F8`/`sub_8024CF0` | high | medium |
 | `086ECCD2`-`087E3BEC` | 1,011,482 | 2 B pad + 6 raw level assets | same | high | medium |
@@ -90,7 +90,7 @@ By category, as a share of the 8,038,172-byte data total:
 | Level tile sets (5 tag-0 assets) | 1,134,932 | 14.12% | medium |
 | Raw level assets (7) | 1,112,392 | 13.84% | medium (opaque `.bin`), hard (real decode) |
 | BG0 cell animations (2) | 738,072 | 9.18% | medium |
-| GAX2 second data set | 638,126 | 7.94% | medium |
+| GAX2 second data set (sound effects) | 638,126 | 7.94% | **converted** |
 | Rotation strips (3) | 304,348 | 3.79% | hard |
 | Per-room level data | 178,208 | 2.22% | hard |
 | 404 small/mid labels | 127,807 | 1.59% | easy (a few medium) |
@@ -117,10 +117,12 @@ By category, as a share of the 8,038,172-byte data total:
   per-bank animation/frame/piece tables (to `0x084C0006`), and then
   638 KB of GAX2 audio.
 - **"There is no separate sound-effect sample bank"** (docs/audio.md)
-  needs rechecking. `0x084C0006`-`0x0855BCB4` has the exact GAX2
+  was wrong. `0x084C0006`-`0x0855BCB4` has the exact GAX2
   instrument and sample-table layouts, with 87 samples and 88
-  instruments, and the 36-byte `gax_header_prefix.bin` of the built
-  audio block points into its tail (`0x0855BC78`/`0x0855BC98`).
+  instruments, and the 36-byte prefix of the built music block (then
+  `gax_header_prefix.bin`) points into its tail (`0x0855BC98`). That
+  prefix is the engine's `sfxTypes` array, so this set is the sound
+  effects (confirmed from the matched engine code, see below).
 - **Most of `graphics/tileset1/*.bin` are not graphics.** Files `27`-`60`
   (all but `21`-`26`) are LZ77-packed **level assets** (per-room chunk
   streams, `level_desc.asset` with `assetPacked = 1`). Files `23`-`26`
@@ -361,22 +363,35 @@ formats docs/audio.md describes for music:
 
 | Range | Size | Content |
 |---|---:|---|
-| `084C0006` | 0x22 | 2 B pad + 0x20 B not yet modelled |
-| `084C0028` | 0x3B00 | 88 instrument records (0xAC stride, the last one shorter) + an 8-byte `{0x101, 0x084C3A94}` header |
+| `084C0006` | 0x2 | zero pad to a word boundary |
+| `084C0008` | 0x3B20 | 88 instruments, each envelope + 12-byte unknown block + rows + 0x8C header (0xAC in all) |
 | `084C3B28` | 0x160 | instrument pointer table (88 entries) |
 | `084C3C88` | 0x97D30 | 87 signed 8-bit PCM samples, byte-aligned (+3 B pad) |
 | `0855B9B8` | 0x2C0 | sample table: 88 x `{u8 *data, u32 length}`, entry 0 empty |
-| `0855BC78` | 0x3C | handler/song header with the GAX2 `init`/`unknown`/`play` code pointers `0x0803A105`/`0x0803A229`/`0x0803A159` |
+| `0855BC78` | 0x3C | song header (0x1C: volume 0x100, the instrument and sample tables), a 1-entry NULL child-type array, and the handler type (`init`/`unknown`/`play` = `sub_803A104`/`sub_803A228`/`sub_803A158`, 0x48-byte instances) |
 
-The built `gax_audio_data.bin` starts with a 36-byte "unmodelled" prefix
-that points at `0x0855BC78`/`0x0855BC98`, i.e. into this set. Most
-likely these are the sound effects (docs/audio.md's `PlaySfx` notes
-should be re-checked against it), but which engine call selects it is
-not confirmed.
+The first reading (the "2 B pad + 0x20 B not yet modelled" and the
+"8-byte header" after the instruments) was off by one record: the 0x20
+bytes are instrument 0's envelope, unknown block and row, and every
+instrument is laid out that way, exactly as in the music block.
 
-**Conversion.** The bank table is done (see above). The audio set is medium: samples to `.wav` (lossless for 8-bit
-PCM) and instruments/tables through an extension of `tools/gax_audio.py`,
-which already encodes these exact record types for the music bank.
+**Role: the sound effects.** The built music block starts with a 36-byte
+prefix that pointed at `0x0855BC98` nine times. It is
+`GaxSongHeader.sfxTypes`: `sub_80017BC` passes `gStaticData_0855BCB4` there
+with `numSfx` = 3, so the engine's sound-effect voices are instances of the
+handler type at `0x0855BC98`, and its play function `sub_803A158` plays
+instruments from this set's tables. `PlaySfx`'s table ids (1-87) are
+instrument numbers in this set. docs/audio.md, "Sound effects", has the
+whole path.
+
+**Status: converted.** The set is built by `tools/gax_audio.py --sfx` from
+`sound/gax_sfx_manifest.json` (the instruments, in the music manifest's
+format) and `sound/sfx_samples/01`-`87.wav`, and the music block's
+prefix is generated from the set's layout instead of the old verbatim
+`gax_header_prefix.bin`. `data/data.s` incbins the built
+`build/crashbandicootxs/sound/gax_sfx_data.bin` as
+`gStaticData_084C0006`. The samples are not deduplicated here (84 and 87
+are the same bytes, stored twice), unlike the music's.
 
 ### `gStaticData_086C127C` (100,912 B) and `gStaticData_086ECCD2` (1,011,482 B): raw level assets
 
@@ -485,7 +500,7 @@ Every one of the 412 labels is listed in the appendix.
 5. **Raw level assets as `.bin`** (1.11 MB, **+13.8%**). This is the same
    treatment `graphics/tileset1/27`-`60` already get, so it's cheap. Flag
    it as a passthrough in the docs, since a real decoder comes later.
-6. **Second GAX2 data set** (638 KB, **+7.9%**): extend `tools/gax_audio.py`.
+6. **Done.** **Second GAX2 data set** (638 KB, **+7.9%**): extend `tools/gax_audio.py`.
 7. **Small tables** (128 KB, +1.6%, about 400 labels). Do the vtables and
    function-pointer tables early, even though they are small. They are
    the only data that pins code addresses, so converting them to
@@ -769,7 +784,7 @@ vtable shapes).
 | `0817E74C` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_8037388` | high | easy |
 | `0817E76C` | 0x20 | table of u16 (`u16` x 16) | `sub_8037388` | high | easy |
 | `0817E78C` | 0x326E74 | composite: level BG tile sets (raw tag-0x00 assets), per-room level data, sprite-bank tile pool | `sub_8037388` | high | medium |
-| `084A5600` | 0xB66B4 | composite: sprite-bank (animation) table (**converted**, C) + GAX2 sound-effect bank | `sub_8004D74`, `sub_8022230` | high | medium |
+| `084A5600` | 0xB66B4 | composite: sprite-bank (animation) table (**converted**, C) + GAX2 sound-effect bank (**converted**, `gax_audio.py --sfx`) | `sub_8004D74`, `sub_8022230` | high | medium |
 | `085A4C5C` | 0x14 | pointer table (4 data pointers) | `sub_8037FC0`, `sub_8038538` | high | easy |
 | `085A4C70` | 0x100 | u8[256] count-leading-zeros table (libgcc __clz_tab, used by the 64-bit divide) (`UQItype` x 256) | `sub_8037648` | high | easy |
 | `085A4D70` | 0x100 | u8[256] count-leading-zeros table (second copy, __clz_tab of another libgcc object) (`UQItype` x 256) | `sub_8037A7C` | high | easy |

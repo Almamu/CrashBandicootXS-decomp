@@ -81,6 +81,7 @@ GRAPHICS_BUILT := \
 
 SOUND_SONGS := $(wildcard sound/songs/*.xm)
 SOUND_SAMPLES := $(wildcard sound/samples/*.wav)
+SOUND_SFX_SOURCES := sound/gax_sfx_manifest.json $(wildcard sound/sfx_samples/*.wav)
 
 #### Main Targets ####
 
@@ -89,10 +90,15 @@ compare: $(ROM)
 
 # Every incbin in data/*.s that pulls from graphics/ or sound/ needs the
 # corresponding built file to exist first.
-$(DATA_ASM_OBJS): $(GRAPHICS_BUILT) $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/sfx_table.bin
+$(DATA_ASM_OBJS): $(GRAPHICS_BUILT) $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_sfx_data.bin $(SOUND_BUILDDIR)/sfx_table.bin
 
-$(SOUND_BUILDDIR)/gax_audio_data.bin: sound/gax_manifest.json sound/gax_header_prefix.bin sound/gax_footer.bin $(SOUND_SONGS) $(SOUND_SAMPLES) tools/gax_audio.py
+# The music block starts with pointers into the sound-effect set, so it
+# depends on the set's sources too.
+$(SOUND_BUILDDIR)/gax_audio_data.bin: sound/gax_manifest.json sound/gax_footer.bin $(SOUND_SONGS) $(SOUND_SAMPLES) $(SOUND_SFX_SOURCES) tools/gax_audio.py
 	python3 tools/gax_audio.py $@
+
+$(SOUND_BUILDDIR)/gax_sfx_data.bin: $(SOUND_SFX_SOURCES) tools/gax_audio.py
+	python3 tools/gax_audio.py --sfx $@
 
 $(SOUND_BUILDDIR)/sfx_table.bin: sound/sfx_table.json tools/sfx_table.py
 	python3 tools/sfx_table.py $@
@@ -118,7 +124,7 @@ tidy:
 # assets it incbins, but not data.o itself (that needs baserom.gba).
 
 .PHONY: report
-report: $(C_OBJS) $(GRAPHICS_BUILT) $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/sfx_table.bin
+report: $(C_OBJS) $(GRAPHICS_BUILT) $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_sfx_data.bin $(SOUND_BUILDDIR)/sfx_table.bin
 	python3 tools/report_units.py
 
 #### Recipes ####

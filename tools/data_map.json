@@ -4930,7 +4930,7 @@
    "format": "composite: sprite-bank (animation) table + GAX2 sound-effect bank",
    "effort": "medium",
    "confidence": "high",
-   "notes": "Part 1 (to 0x084C0006) is the sprite-bank animation system: a 16-byte header, 56 bank records, and per-bank animation/frame/piece records, now typed C (include/sprite_bank.h). Part 2 (from 0x084C0006) is a second GAX2 data set (instruments, 8-bit PCM samples, sample table, FX handler) that the GAX2 build pipeline does not model yet.",
+   "notes": "Part 1 (to 0x084C0006) is the sprite-bank animation system: a 16-byte header, 56 bank records, and per-bank animation/frame/piece records, now typed C (include/sprite_bank.h). Part 2 (from 0x084C0006) is the GAX2 sound-effect data set (instruments, 8-bit PCM samples, sample table, SFX voice handler type), now built by tools/gax_audio.py --sfx.",
    "consumers_indirect": [
     "sub_8004D74",
     "sub_8022230",
@@ -4939,7 +4939,7 @@
     "sub_800815C",
     "sub_8008734",
     "sub_8006DF8",
-    "GAX2 engine (for the audio part; entry point not confirmed)"
+    "GAX2 engine (the audio part: SFX voices created from GaxSongHeader.sfxTypes by sub_8038538, played by sub_803A158)"
    ],
    "regions": [
     {
@@ -4968,43 +4968,49 @@
     },
     {
      "address": "0x084C0006",
-     "size": 34,
-     "format": "2 B pad + 0x20 B of unmodelled FX-bank data before the first instrument",
-     "effort": "medium"
+     "size": 2,
+     "format": "zero pad to a word boundary",
+     "effort": "easy",
+     "status": "converted: tools/gax_audio.py --sfx"
     },
     {
-     "address": "0x084C0028",
-     "size": 15104,
-     "format": "GAX2 FX instruments: 88 records at a 0xAC stride (the last one is shorter), then an 8-byte {0x101, 0x084C3A94} header for the table below",
-     "effort": "medium"
+     "address": "0x084C0008",
+     "size": 15136,
+     "format": "GAX2 SFX instruments: 88 x (envelope + 12-byte unknown block + rows + 0x8C header), 0xAC each",
+     "effort": "medium",
+     "status": "converted: sound/gax_sfx_manifest.json (tools/gax_audio.py --sfx)"
     },
     {
      "address": "0x084C3B28",
      "size": 352,
-     "format": "GAX2 FX instrument pointer table: 88 pointers (0x084C0028 .. 0x084C3A9C)",
+     "format": "GAX2 SFX instrument pointer table: 88 pointers (0x084C0028 .. 0x084C3A9C)",
      "element_size": 4,
      "element_count": 88,
-     "effort": "easy"
+     "effort": "easy",
+     "status": "converted: tools/gax_audio.py --sfx"
     },
     {
      "address": "0x084C3C88",
      "size": 621872,
-     "format": "GAX2 FX samples: 87 signed 8-bit PCM samples (byte-aligned, lengths from the sample table; 3 B zero pad at the end)",
-     "effort": "medium"
+     "format": "GAX2 SFX samples: 87 signed 8-bit PCM samples (byte-aligned, lengths from the sample table, not deduplicated; 3 B zero pad at the end)",
+     "effort": "medium",
+     "status": "converted: sound/sfx_samples/01-87.wav (tools/gax_audio.py --sfx)"
     },
     {
      "address": "0x0855B9B8",
      "size": 704,
-     "format": "GAX2 FX sample table: 88 x {u8 *data, u32 length} (entry 0 is {0, 0}); the FX header at 0x0855BC8C points here",
+     "format": "GAX2 SFX sample table: 88 x {u8 *data, u32 length} (entry 0 is {0, 0}); the song header at 0x0855BC78 points here",
      "element_size": 8,
      "element_count": 88,
-     "effort": "easy"
+     "effort": "easy",
+     "status": "converted: tools/gax_audio.py --sfx"
     },
     {
      "address": "0x0855BC78",
      "size": 60,
-     "format": "GAX2 FX song/SoundHandler header (fn pointers 0x0803A105/0x0803A229/0x0803A159); the built gax_audio_data.bin header prefix points back here",
-     "effort": "easy"
+     "format": "GAX2 SFX song header (0x1C), a 1-entry NULL child-type array, and the SFX voice handler type (sub_803A104/sub_803A228/sub_803A158, 0x48-byte instances); GaxSongHeader.sfxTypes (gStaticData_0855BCB4, the start of the music block) points at the type 9 times",
+     "effort": "easy",
+     "status": "converted: tools/gax_audio.py --sfx"
     }
    ]
   },

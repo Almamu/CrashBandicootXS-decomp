@@ -19,19 +19,24 @@ audio-related just because of where it sits.
 
 ## Data layout
 
-All engine data (shared instrument/sample pool + all 19 songs) is one
-contiguous block at ROM `0x0855BCB4`, exposed as `gStaticData_0855BCB4` in
-`data/data.s`. It is **built from editable sources**, not extracted verbatim
-from `baserom.gba` — see "Build pipeline" below.
+The engine data is two contiguous blocks, both **built from editable
+sources**, not extracted verbatim from `baserom.gba` (see "Build pipeline"
+below):
 
-High level structure (base = `0x0855BCB4`):
+- the **sound-effect set** at `0x084C0006` (`gStaticData_084C0006`, 638,126
+  bytes): its own 88 instruments and 87 samples, and the handler type the
+  sound-effect voices run (see "Sound effects" below);
+- the **music block** at `0x0855BCB4` (`gStaticData_0855BCB4`): the shared
+  instrument/sample pool of the music and all 19 songs.
+
+High level structure of the music block (base = `0x0855BCB4`):
 
 ```
-[header_prefix, 36 bytes, unmodeled]
+[sfxTypes: 9 pointers to the sound-effect voice type, 36 bytes]
 [instrument data: envelope + 12-byte "unknown" block + rows + header, per instrument, index order]
 [instrument pointer table]
 [sample data, index order, content-deduplicated]
-[2-byte zero pad]
+[zero pad to a word boundary, 2 bytes]
 [sample table: {offset, length} x N]
 [4-byte zero pad]
 per song (in ROM address order, NOT alphabetical - see gax_manifest.json "song_order"):
@@ -230,14 +235,61 @@ gameplay code), is the sound-effect trigger:
 `PlaySfx(context, sfx_id, volume_param)`. It looks up `sfx_id` in a
 99-entry table at ROM `0x0816AA6C` (`sound/sfx_table.json`,
 `struct SfxTableEntry` in `include/audio.h`), each entry `{slot_id,
-chan_arg, volume}` (volume as 8.8 fixed point) - the matching pass
-corrected the middle field's guessed name from "pitch_offset" to
-`chan_arg`: `PlaySfx` passes it straight through as `sub_8038E74`'s
-channel-select argument, and the ambient-sfx sibling `sub_80019F8`
-never reads it at all (always passes a hardcoded `0` there instead) -
-and uses it to steal a mixing voice (`sub_8038E74`) and play a note
-from the *same* shared instrument/sample pool music uses — **there is
-no separate sound-effect sample bank**.
+chan_arg, volume}` (volume as 8.8 fixed point; the JSON still calls the
+middle field `pitch_offset`) - the matching pass corrected the middle
+field's guessed name from "pitch_offset" to `chan_arg`: `PlaySfx` passes
+it straight through to `sub_8038E74` (as its priority argument, see
+below), and the ambient-sfx sibling `sub_80019F8` never reads it at all
+(always passes a hardcoded `0` there instead) - and uses it to steal a
+mixing voice (`sub_8038E74`) and play a note.
+
+That note does **not** come from the music's instrument pool: an earlier
+version of this section said there was no separate sound-effect sample
+bank, which is wrong. The sound effects have their own GAX2 data set, the
+block at `0x084C0006` right before the music. The engine path, all in
+matched C:
+
+- `sub_80017BC` (`music_player.c`) fills the `GaxSongHeader` it hands to
+  `sub_8038538`: `numSfx` (`+0x0E`) = 3 sound-effect voices, and
+  `sfxTypes` (`+0x2C`) = `gStaticData_0855BCB4`, the 9-pointer array at
+  the start of the music block. Every pointer is the same handler type,
+  `0x0855BC98`, the last thing in the sound-effect set.
+- `sub_8038538` instantiates `numSfx` voices from `sfxTypes` after the
+  song's own handlers, and the mixer (`GaxMixerHandler.extraChildren`)
+  mixes them after the song's channels.
+- `PlaySfx`/`sub_80019F8` call `sub_8038E74(instrument, voice, priority,
+  -1)`, which queues `instrument` (the table's `slot_id`) on a voice at
+  note 8. `PlaySfx` alternates voices 0 and 1; the ambient channel of
+  `sub_80019F8`/`sub_800190C` uses voice 2. The table's middle field is
+  `sub_8038E74`'s *priority* argument (the voice-steal threshold), not a
+  channel: the channel is the round-robin toggle.
+- The voice type's play function `sub_803A158` starts the queued
+  instrument with `sub_803985C(self, info, instrument,
+  self->type->data.song)`, and that type data is the sound-effect set's
+  song header (`0x0855BC78`), whose instrument and sample tables are the
+  set's own. So `slot_id` N (1-87) is sound-effect instrument N, and
+  instrument N plays sample N.
+
+The set's layout (base `0x084C0006`) is the music block's instrument and
+sample pool with a one-type tail instead of songs:
+
+```
+[2-byte zero pad, to a word boundary]
+[instrument data: envelope + 12-byte "unknown" block + rows + header, per instrument, index order]
+[instrument pointer table, 88 entries]
+[sample data, index order, NOT deduplicated (samples 84 and 87 are identical, stored twice)]
+[zero pad to a word boundary, 3 bytes]
+[sample table: {data, length} x 88, entry 0 empty]
+[song header (GAX_SongInfo, 0x1C): no channels or patterns, volume 0x100, the two tables]
+[the handler type's 1-entry child-type array: NULL]
+[the sound-effect voice handler type: sub_803A104/sub_803A228/sub_803A158, 1 child, 0x48-byte instances, data = the song header]
+```
+
+All 87 instruments (0 is an empty placeholder) have one row with a
+fixed pitch (`dont_use_note_pitch`, note 2) and the same `Pitch` (1511),
+so every sound effect plays its sample at one rate, about 7,994 Hz by
+the formula in "Sample pitch / playback rate" below. That is the rate the
+`.wav` files declare.
 
 ## Build pipeline
 
@@ -250,14 +302,31 @@ Everything is generated from editable sources, never read from
 - `sound/songs/*.xm` — one FastTracker II module per song (patterns/notes),
   editable in any XM tracker.
 - `sound/samples/*.wav` — one sample per instrument sample slot.
-- `sound/gax_header_prefix.bin` / `sound/gax_footer.bin` — two small
-  verbatim blobs of shared structure that aren't modeled (36 and 160 bytes).
+- `sound/gax_footer.bin` — a small verbatim blob of shared structure that
+  isn't modeled (160 bytes; the default handler layout
+  `gStaticData_085A4C5C` points into it).
+- `sound/gax_sfx_manifest.json` — the sound-effect set: its 88 instruments
+  (the same fields as the music's), the voice type's song-header fields,
+  and `voice_types`, the length of the `sfxTypes` array (9).
+- `sound/sfx_samples/*.wav` — the sound-effect set's 87 samples, 01-87
+  (8-bit mono, declared at 7,994 Hz, see "Sound effects").
 - `tools/gax_audio.py` — a from-scratch GAX2 encoder (no external tool or
   `.NET` dependency) that links all of the above back into the original
-  binary layout. With unedited sources, **it reproduces the original ROM's
-  audio block byte-for-byte** (verified both in isolation and via a full
-  clean `make compare`). Editing a `.xm` or `.wav` changes only the bytes
-  that actually need to differ.
+  binary layout: `tools/gax_audio.py OUT` the music block,
+  `tools/gax_audio.py --sfx OUT` the sound-effect set. The music block's
+  leading `sfxTypes` array is generated from the sound-effect set's
+  layout (it was the verbatim 36-byte `gax_header_prefix.bin` before).
+  With unedited sources, **it reproduces the original ROM's audio blocks
+  byte-for-byte** (verified both in isolation and via a full clean
+  `make compare`). Editing a `.xm` or `.wav` changes only the bytes that
+  actually need to differ.
+- Both blocks sit at fixed addresses: raw data still points into the
+  music block (the song table `gStaticData_0816AA20`, the default layout
+  `gStaticData_085A4C5C`), and the sound-effect set ends where the music
+  block starts. So an edit must keep the sound-effect set's total size
+  (the tool stops with an error otherwise) - a sample can be changed but
+  not lengthened, unless another shrinks to match - and a music edit
+  that changes a song's size breaks the song table the same way.
 - `tools/sfx_table.py` — rebuilds the sound-effect trigger table from
   `sound/sfx_table.json`.
 
