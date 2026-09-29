@@ -243,7 +243,11 @@ static inline void ring_reset(struct link_ring *r)
  * still reversed: in the second loop pass `j` has no givs left, so
  * check_dbra_loop's no_use_except_counting holds. A pointer-biv first
  * loop gets its pointer/0xff order right but loses the `self + 0x30`
- * register. */
+ * register. Last-nine pass: `-fno-rerun-loop-opt` keeps the inner loop
+ * counting up, but it also stops the first loop's reversal, combine
+ * folds `w & 0xff` into a second `ldrb` (142 hw, 12 bytes short), and it
+ * changes the already-matching sub_8002114 in this file. A hand-reversed
+ * first loop under that flag was 161-171 hw. */
 s32 sub_8001DB4(struct link_session *self)
 {
     s32 i, j;
