@@ -60,6 +60,11 @@ struct actor_pmf {
     } u;
 };
 
+/* Initializer for a non-virtual `&Class::method` constant, the only kind
+ * the ROM's tables hold: gcc 2.x stores it as thisOffset 0, index -1 and
+ * the (Thumb) code address. Used by the src/data tables (docs/data.md). */
+#define ACTOR_PMF(func) { 0, -1, { .fn = (void *)(func) } }
+
 struct actor_self {
     struct anim_frame_record *anims; // 0x00
     u32 *frameOffsets;          // 0x04

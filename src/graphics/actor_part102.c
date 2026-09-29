@@ -40,7 +40,7 @@
 asm(".set _call_via_r1, sub_803AD7C\n"
     ".set _call_via_r3, sub_803AD84");
 
-extern struct category_vtable *gUnknown_03001418;
+extern const struct category_vtable *gUnknown_03001418;
 extern u8 gUnknown_03001414;
 extern struct sub_effect_record *gUnknown_03001400;
 extern s32 gUnknown_03001404;
