@@ -63,6 +63,16 @@ $(foreach sheet,00_0b2120 01_14174c,\
 $(eval $(call FRAMED_SHEET_RULE,00_0b2120))
 $(eval $(call FRAMED_SHEET_RULE,01_14174c))
 
+# The byte offset of every frame in a sheet (FRAMED_<SHEET>_<ENTITY>_<NN>),
+# for the category families' pool_offset table_B arrays in src/data/.
+define FRAMED_HEADER_RULE
+$(GRAPHICS_BUILDDIR)/unknown/$(1)_frames.h: $(sort $(wildcard graphics/unknown/$(1)/*/*.png)) tools/framed_gfx.py
+	@mkdir -p $$(dir $$@)
+	python3 tools/framed_gfx.py header graphics/unknown/$(1) $$@
+endef
+$(eval $(call FRAMED_HEADER_RULE,00_0b2120))
+$(eval $(call FRAMED_HEADER_RULE,01_14174c))
+
 # Generic LZ77 compression, used for every asset type above.
 $(GRAPHICS_BUILDDIR)/%.lz: $(GRAPHICS_BUILDDIR)/% | $(GFX)
 	@mkdir -p $(dir $@)
@@ -254,3 +264,5 @@ rle_sprite_files = $(foreach s,$(1),$(RLE_SPRITE_DIR)/$(s)_frames.inc $(RLE_SPRI
 $(C_BUILDDIR)/data/rle_sprites_0c2758.o: $(call rle_sprite_files,0c2758 0da1d8)
 $(C_BUILDDIR)/data/rle_sprites_15a050.o: $(call rle_sprite_files,15a050)
 $(C_BUILDDIR)/data/frame_table_17a880.o: $(call rle_sprite_files,0da1d8)
+$(C_BUILDDIR)/data/anim_family_178f80.o: $(call rle_sprite_files,0c2758) $(GRAPHICS_BUILDDIR)/unknown/00_0b2120_frames.h
+$(C_BUILDDIR)/data/anim_family_17aa6c.o: $(call rle_sprite_files,15a050) $(GRAPHICS_BUILDDIR)/unknown/01_14174c_frames.h
