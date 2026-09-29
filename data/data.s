@@ -806,11 +806,16 @@ gStaticData_082B91D0:
 
 @ gStaticData_082BF120..gStaticData_084A4660: src/data/sprite_tiles_2bf120.c
 
-.section .rodata.084A5600
+@ gStaticData_084A5600..gSpriteBank55: src/data/sprite_banks_4a5600.c,
+@ sprite_banks_4b0ae0.c, sprite_banks_4b414c.c, sprite_banks_4b9d7c.c
 
-.global gStaticData_084A5600
-gStaticData_084A5600:
-	.incbin "baserom.gba", 0x004A5600, 0x000B66B4
+.section .rodata.084C0006
+
+.global gStaticData_084C0006
+gStaticData_084C0006:
+	@ The second GAX2 data set (instruments, samples, sample table, handler
+	@ header): see docs/data_map.md.
+	.incbin "baserom.gba", 0x004C0006, 0x0009BCAE
 
 .global gStaticData_0855BCB4
 gStaticData_0855BCB4:
