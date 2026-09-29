@@ -228,6 +228,29 @@ $(GRAPHICS_BUILDDIR)/level_tilesets/%.img.bin.inc: $(GRAPHICS_BUILDDIR)/level_ti
 	python3 tools/bin2c.py $< $@ --size $(TILE_BYTES_$*)
 
 tile_pool_incs = $(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.img.bin.inc,$(1))
+
+# The two boss pictures (graphics/boss_pictures/, see docs/data.md "Boss
+# pictures"): grit turns each frame into 4bpp tiles in cell order, and
+# tools/boss_pictures.py deduplicates them into the ROM's shared tile
+# pool and per-frame maps.
+BOSS_PICTURE_PNGS := $(wildcard graphics/boss_pictures/*.png)
+GRIT_C_PNGS += $(BOSS_PICTURE_PNGS)
+BOSS_PICTURE_DIR := $(GRAPHICS_BUILDDIR)/boss_pictures
+
+$(BOSS_PICTURE_DIR)/%.img.bin: graphics/boss_pictures/%.png | $(GRIT)
+	@mkdir -p $(dir $@)
+	$(GRIT) $< -gt -gB4 -p! -ftb -fh! -o $(@:.img.bin=)
+
+boss_picture_tiles = $(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.img.bin,$(sort $(wildcard graphics/boss_pictures/$(1)_frame*.png)))
+# $(1): the picture's address, $(2): the same in upper case, $(3): its width in cells.
+define BOSS_PICTURE_RULE
+$(BOSS_PICTURE_DIR)/$(1).inc $(BOSS_PICTURE_DIR)/$(1).h &: tools/boss_pictures.py $(call boss_picture_tiles,$(1))
+	python3 tools/boss_pictures.py pack $(BOSS_PICTURE_DIR)/$(1).inc $(BOSS_PICTURE_DIR)/$(1).h --name BOSS_PICTURE_$(2) --cols $(3) $(call boss_picture_tiles,$(1))
+endef
+$(eval $(call BOSS_PICTURE_RULE,167cd4,167CD4,18))
+$(eval $(call BOSS_PICTURE_RULE,169ce8,169CE8,16))
+
+$(C_BUILDDIR)/data/boss_pictures_167ad4.o: $(foreach p,167cd4 169ce8,$(BOSS_PICTURE_DIR)/$(p).inc $(BOSS_PICTURE_DIR)/$(p).h)
 $(C_BUILDDIR)/data/level_tilesets_17e78c.o: $(call tile_pool_incs,$(filter graphics/level_tilesets/tileset1_% graphics/level_tilesets/tileset2_% graphics/level_tilesets/tileset3_%,$(TILE_POOL_8BPP_PNGS)))
 $(C_BUILDDIR)/data/level_tilesets_270f08.o: $(call tile_pool_incs,$(filter graphics/level_tilesets/tileset4_% graphics/level_tilesets/tileset5_%,$(TILE_POOL_8BPP_PNGS)))
 $(C_BUILDDIR)/data/sprite_tiles_2bf120.o: $(call tile_pool_incs,$(TILE_POOL_4BPP_PNGS))

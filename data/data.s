@@ -36,31 +36,7 @@ gStaticData_08151AC2:
 
 @ gStaticData_0815A050: src/data/rle_sprites_15a050.c
 
-.section .rodata.08167AD4
-
-.global gStaticData_08167AD4
-gStaticData_08167AD4:
-	.incbin "baserom.gba", 0x00167AD4, 0x00000200
-
-.global gStaticData_08167CD4
-gStaticData_08167CD4:
-	.incbin "baserom.gba", 0x00167CD4, 0x00001E14
-
-.global gStaticData_08169AE8
-gStaticData_08169AE8:
-	.incbin "baserom.gba", 0x00169AE8, 0x00000200
-
-.global gStaticData_08169CE8
-gStaticData_08169CE8:
-	.incbin "baserom.gba", 0x00169CE8, 0x00000B28
-
-.global gStaticData_0816A810
-gStaticData_0816A810:
-	.incbin "baserom.gba", 0x0016A810, 0x00000010
-
-.global gStaticData_0816A820
-gStaticData_0816A820:
-	.incbin "baserom.gba", 0x0016A820, 0x00000200
+@ gStaticData_08167AD4..gStaticData_0816A820: src/data/boss_pictures_167ad4.c
 
 @ gStaticData_0816AA20: src/data/song_table_16aa20.c
 
@@ -76,385 +52,45 @@ gStaticData_0816AA6C:
 	@ Built from sound/sfx_table.json by tools/sfx_table.py.
 	.incbin "build/crashbandicootxs/sound/sfx_table.bin"
 
-.global gStaticData_0816AF10
-gStaticData_0816AF10:
-	.incbin "baserom.gba", 0x0016AF10, 0x00000228
+@ gStaticData_0816AF10..gStaticData_0816B124: src/data/link_crc_16af10.c
 
-.global gStaticData_0816B138
-gStaticData_0816B138:
-	.incbin "baserom.gba", 0x0016B138, 0x00000002
-
-.global gStaticData_0816B13A
-gStaticData_0816B13A:
-	.incbin "baserom.gba", 0x0016B13A, 0x00000020
-
-.global gStaticData_0816B15A
-gStaticData_0816B15A:
-	.incbin "baserom.gba", 0x0016B15A, 0x00000020
-
-.global gStaticData_0816B17A
-gStaticData_0816B17A:
-	.incbin "baserom.gba", 0x0016B17A, 0x00000020
-
-.global gStaticData_0816B19A
-gStaticData_0816B19A:
-	.incbin "baserom.gba", 0x0016B19A, 0x00000022
-
-.global gStaticData_0816B1BC
-gStaticData_0816B1BC:
-	.incbin "baserom.gba", 0x0016B1BC, 0x00000014
-
-.global gStaticData_0816B1D0
-gStaticData_0816B1D0:
-	.incbin "baserom.gba", 0x0016B1D0, 0x00000014
-
-.global gStaticData_0816B1E4
-gStaticData_0816B1E4:
-	.incbin "baserom.gba", 0x0016B1E4, 0x00000008
-
-.global gStaticData_0816B1EC
-gStaticData_0816B1EC:
-	.incbin "baserom.gba", 0x0016B1EC, 0x00000020
-
-.global gStaticData_0816B20C
-gStaticData_0816B20C:
-	.incbin "baserom.gba", 0x0016B20C, 0x00000010
-
-.global gStaticData_0816B21C
-gStaticData_0816B21C:
-	.incbin "baserom.gba", 0x0016B21C, 0x00000028
-
-.global gStaticData_0816B244
-gStaticData_0816B244:
-	.incbin "baserom.gba", 0x0016B244, 0x00000014
-
-.global gStaticData_0816B258
-gStaticData_0816B258:
-	.incbin "baserom.gba", 0x0016B258, 0x00000018
-
-.global gStaticData_0816B270
-gStaticData_0816B270:
-	.incbin "baserom.gba", 0x0016B270, 0x0000000C
-
-.global gStaticData_0816B27C
-gStaticData_0816B27C:
-	.incbin "baserom.gba", 0x0016B27C, 0x00000008
+@ gStaticData_0816B138..gStaticData_0816B27C: src/data/menu_tables_16b138.c
 
 @ gStaticData_0816B284: src/data/bg_package_16b284.c
 
-.section .rodata.0816B298
+@ gStaticData_0816B298..gStaticData_0816B2C0: src/data/pause_rows_16b298.c
 
-.global gStaticData_0816B298
-gStaticData_0816B298:
-	.incbin "baserom.gba", 0x0016B298, 0x00000028
+@ gStaticData_0816B2E0..gStaticData_0816B300: src/data/obj_sizes_16b2e0.c
 
-.global gStaticData_0816B2C0
-gStaticData_0816B2C0:
-	.incbin "baserom.gba", 0x0016B2C0, 0x00000020
-
-.global gStaticData_0816B2E0
-gStaticData_0816B2E0:
-	.incbin "baserom.gba", 0x0016B2E0, 0x0000000C
-
-.global gStaticData_0816B2EC
-gStaticData_0816B2EC:
-	.incbin "baserom.gba", 0x0016B2EC, 0x0000000C
-
-.global gStaticData_0816B2F8
-gStaticData_0816B2F8:
-	.incbin "baserom.gba", 0x0016B2F8, 0x00000008
-
-.global gStaticData_0816B300
-gStaticData_0816B300:
-	.incbin "baserom.gba", 0x0016B300, 0x00000004
-
-.global gStaticData_0816B304
-gStaticData_0816B304:
-	.incbin "baserom.gba", 0x0016B304, 0x00000318
-
-.global gStaticData_0816B61C
-gStaticData_0816B61C:
-	.incbin "baserom.gba", 0x0016B61C, 0x000002A4
-
-.global gStaticData_0816B8C0
-gStaticData_0816B8C0:
-	.incbin "baserom.gba", 0x0016B8C0, 0x0000006C
+@ gStaticData_0816B304..gStaticData_0816B8C0: src/data/motion_records_16b304.c
 
 @ gStaticData_0816B92C..gStaticData_0816B934: src/data/entry_set_16b92c.c
 
-.section .rodata.0816B93C
+@ gStaticData_0816B93C..gStaticData_0816B944: src/data/entry_set_16b93c.c
 
-.global gStaticData_0816B93C
-gStaticData_0816B93C:
-	.incbin "baserom.gba", 0x0016B93C, 0x00000050
+@ gStaticData_0816B98C..gStaticData_0816BB4C: src/data/popup_tables_16b98c.c
 
-.global gStaticData_0816B98C
-gStaticData_0816B98C:
-	.incbin "baserom.gba", 0x0016B98C, 0x00000020
-
-.global gStaticData_0816B9AC
-gStaticData_0816B9AC:
-	.incbin "baserom.gba", 0x0016B9AC, 0x00000020
-
-.global gStaticData_0816B9CC
-gStaticData_0816B9CC:
-	.incbin "baserom.gba", 0x0016B9CC, 0x00000020
-
-.global gStaticData_0816B9EC
-gStaticData_0816B9EC:
-	.incbin "baserom.gba", 0x0016B9EC, 0x00000020
-
-.global gStaticData_0816BA0C
-gStaticData_0816BA0C:
-	.incbin "baserom.gba", 0x0016BA0C, 0x00000020
-
-.global gStaticData_0816BA2C
-gStaticData_0816BA2C:
-	.incbin "baserom.gba", 0x0016BA2C, 0x00000020
-
-.global gStaticData_0816BA4C
-gStaticData_0816BA4C:
-	.incbin "baserom.gba", 0x0016BA4C, 0x00000020
-
-.global gStaticData_0816BA6C
-gStaticData_0816BA6C:
-	.incbin "baserom.gba", 0x0016BA6C, 0x00000020
-
-.global gStaticData_0816BA8C
-gStaticData_0816BA8C:
-	.incbin "baserom.gba", 0x0016BA8C, 0x00000020
-
-.global gStaticData_0816BAAC
-gStaticData_0816BAAC:
-	.incbin "baserom.gba", 0x0016BAAC, 0x00000020
-
-.global gStaticData_0816BACC
-gStaticData_0816BACC:
-	.incbin "baserom.gba", 0x0016BACC, 0x00000020
-
-.global gStaticData_0816BAEC
-gStaticData_0816BAEC:
-	.incbin "baserom.gba", 0x0016BAEC, 0x00000020
-
-.global gStaticData_0816BB0C
-gStaticData_0816BB0C:
-	.incbin "baserom.gba", 0x0016BB0C, 0x00000020
-
-.global gStaticData_0816BB2C
-gStaticData_0816BB2C:
-	.incbin "baserom.gba", 0x0016BB2C, 0x00000020
-
-.global gStaticData_0816BB4C
-gStaticData_0816BB4C:
-	.incbin "baserom.gba", 0x0016BB4C, 0x00000020
-
-.global gStaticData_0816BB6C
-gStaticData_0816BB6C:
-	.incbin "baserom.gba", 0x0016BB6C, 0x00000028
-
-.global gStaticData_0816BB94
-gStaticData_0816BB94:
-	.incbin "baserom.gba", 0x0016BB94, 0x00000004
-
-.global gStaticData_0816BB98
-gStaticData_0816BB98:
-	.incbin "baserom.gba", 0x0016BB98, 0x00000016
-
-.global gStaticData_0816BBAE
-gStaticData_0816BBAE:
-	.incbin "baserom.gba", 0x0016BBAE, 0x00000016
-
-.global gStaticData_0816BBC4
-gStaticData_0816BBC4:
-	.incbin "baserom.gba", 0x0016BBC4, 0x00000016
-
-.global gStaticData_0816BBDA
-gStaticData_0816BBDA:
-	.incbin "baserom.gba", 0x0016BBDA, 0x00000016
-
-.global gStaticData_0816BBF0
-gStaticData_0816BBF0:
-	.incbin "baserom.gba", 0x0016BBF0, 0x000000A8
-
-.global gStaticData_0816BC98
-gStaticData_0816BC98:
-	.incbin "baserom.gba", 0x0016BC98, 0x00000268
-
-.global gStaticData_0816BF00
-gStaticData_0816BF00:
-	.incbin "baserom.gba", 0x0016BF00, 0x00000008
-
-.global gStaticData_0816BF08
-gStaticData_0816BF08:
-	.incbin "baserom.gba", 0x0016BF08, 0x0000000C
-
-.global gStaticData_0816BF14
-gStaticData_0816BF14:
-	.incbin "baserom.gba", 0x0016BF14, 0x0000000C
+@ gStaticData_0816BB6C..gStaticData_0816BF14: src/data/object_tables_16bb6c.c
 
 @ gStaticData_0816BF20..gStaticData_0816C070: src/data/action_table_16bf20.c
 
-.section .rodata.0816C090
-
-.global gStaticData_0816C090
-gStaticData_0816C090:
-	.incbin "baserom.gba", 0x0016C090, 0x000001C0
+@ gStaticData_0816C090..gStaticData_0816C0B0: src/data/speed_table_16c090.c
 
 @ gStaticData_0816C250..gStaticData_0816C2D0: src/data/player_pmf_16c250.c
 
-.section .rodata.0816C2D8
-
-.global gStaticData_0816C2D8
-gStaticData_0816C2D8:
-	.incbin "baserom.gba", 0x0016C2D8, 0x00000030
-
-.global gStaticData_0816C308
-gStaticData_0816C308:
-	.incbin "baserom.gba", 0x0016C308, 0x00000003
-
-.global gStaticData_0816C30B
-gStaticData_0816C30B:
-	.incbin "baserom.gba", 0x0016C30B, 0x0000004D
-
-.global gStaticData_0816C358
-gStaticData_0816C358:
-	.incbin "baserom.gba", 0x0016C358, 0x00000004
-
-.global gStaticData_0816C35C
-gStaticData_0816C35C:
-	.incbin "baserom.gba", 0x0016C35C, 0x00000003
-
-.global gStaticData_0816C35F
-gStaticData_0816C35F:
-	.incbin "baserom.gba", 0x0016C35F, 0x00000003
-
-.global gStaticData_0816C362
-gStaticData_0816C362:
-	.incbin "baserom.gba", 0x0016C362, 0x00000006
-
-.global gStaticData_0816C368
-gStaticData_0816C368:
-	.incbin "baserom.gba", 0x0016C368, 0x00000010
-
-.global gStaticData_0816C378
-gStaticData_0816C378:
-	.incbin "baserom.gba", 0x0016C378, 0x00000018
-
-.global gStaticData_0816C390
-gStaticData_0816C390:
-	.incbin "baserom.gba", 0x0016C390, 0x00000010
-
-.global gStaticData_0816C3A0
-gStaticData_0816C3A0:
-	.incbin "baserom.gba", 0x0016C3A0, 0x00000018
-
-.global gStaticData_0816C3B8
-gStaticData_0816C3B8:
-	.incbin "baserom.gba", 0x0016C3B8, 0x00000030
-
-.global gStaticData_0816C3E8
-gStaticData_0816C3E8:
-	.incbin "baserom.gba", 0x0016C3E8, 0x0000000C
-
-.global gStaticData_0816C3F4
-gStaticData_0816C3F4:
-	.incbin "baserom.gba", 0x0016C3F4, 0x00000024
+@ gStaticData_0816C2D8..gStaticData_0816C3F4: src/data/actor_tables_16c2d8.c
 
 @ gStaticData_0816C418..gStaticData_0816C458: src/data/entry_set_16c418.c
 
-.section .rodata.0816C460
-
-.global gStaticData_0816C460
-gStaticData_0816C460:
-	.incbin "baserom.gba", 0x0016C460, 0x00000024
+@ gStaticData_0816C460: src/data/velocity_16c460.c
 
 @ gStaticData_0816C484: src/data/bg_package_16c484.c
 
-.section .rodata.0816C498
-
-.global gStaticData_0816C498
-gStaticData_0816C498:
-	.incbin "baserom.gba", 0x0016C498, 0x00000008
-
-.global gStaticData_0816C4A0
-gStaticData_0816C4A0:
-	.incbin "baserom.gba", 0x0016C4A0, 0x00000008
-
-.global gStaticData_0816C4A8
-gStaticData_0816C4A8:
-	.incbin "baserom.gba", 0x0016C4A8, 0x00000008
-
-.global gStaticData_0816C4B0
-gStaticData_0816C4B0:
-	.incbin "baserom.gba", 0x0016C4B0, 0x00000008
-
-.global gStaticData_0816C4B8
-gStaticData_0816C4B8:
-	.incbin "baserom.gba", 0x0016C4B8, 0x00000008
-
-.global gStaticData_0816C4C0
-gStaticData_0816C4C0:
-	.incbin "baserom.gba", 0x0016C4C0, 0x00000008
-
-.global gStaticData_0816C4C8
-gStaticData_0816C4C8:
-	.incbin "baserom.gba", 0x0016C4C8, 0x00000008
-
-.global gStaticData_0816C4D0
-gStaticData_0816C4D0:
-	.incbin "baserom.gba", 0x0016C4D0, 0x00000008
-
-.global gStaticData_0816C4D8
-gStaticData_0816C4D8:
-	.incbin "baserom.gba", 0x0016C4D8, 0x00000030
-
-.global gStaticData_0816C508
-gStaticData_0816C508:
-	.incbin "baserom.gba", 0x0016C508, 0x00000030
-
-.global gStaticData_0816C538
-gStaticData_0816C538:
-	.incbin "baserom.gba", 0x0016C538, 0x00000010
-
-.global gStaticData_0816C548
-gStaticData_0816C548:
-	.incbin "baserom.gba", 0x0016C548, 0x00000010
-
-.global gStaticData_0816C558
-gStaticData_0816C558:
-	.incbin "baserom.gba", 0x0016C558, 0x00000014
-
-.global gStaticData_0816C56C
-gStaticData_0816C56C:
-	.incbin "baserom.gba", 0x0016C56C, 0x00000020
+@ gStaticData_0816C498..gStaticData_0816C56C: src/data/map_tables_16c498.c
 
 @ gStaticData_0816C58C: src/data/bg_package_16c58c.c
 
-.section .rodata.0816C5F0
-
-.global gStaticData_0816C5F0
-gStaticData_0816C5F0:
-	.incbin "baserom.gba", 0x0016C5F0, 0x00000020
-
-.global gStaticData_0816C610
-gStaticData_0816C610:
-	.incbin "baserom.gba", 0x0016C610, 0x00000014
-
-.global gStaticData_0816C624
-gStaticData_0816C624:
-	.incbin "baserom.gba", 0x0016C624, 0x00000010
-
-.global gStaticData_0816C634
-gStaticData_0816C634:
-	.incbin "baserom.gba", 0x0016C634, 0x00000010
-
-.global gStaticData_0816C644
-gStaticData_0816C644:
-	.incbin "baserom.gba", 0x0016C644, 0x00000030
-
-.global gStaticData_0816C674
-gStaticData_0816C674:
-	.incbin "baserom.gba", 0x0016C674, 0x00000030
+@ gStaticData_0816C5F0..gStaticData_0816C674: src/data/map_tables_16c5f0.c
 
 @ gStaticData_0816C6A4: src/data/dispatch_table_16c6a4.c
 

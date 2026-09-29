@@ -501,7 +501,9 @@ Notable mid-size tables:
   empty) for the collision streamer.
 - `0817C5D0` (0x96C): popup/credits text opcode stream (`"\x03developed by\n\n\x01..."`).
 - `0816AF10`: the CRC-16/CCITT table (poly `0x1021`) for link-cable packets.
-- `0816A820`: `s16[256]` sine table.
+  **Converted** (`src/data/link_crc_16af10.c`).
+- `0816A820`: `s16[256]` sine table. **Converted**
+  (`src/data/boss_pictures_167ad4.c`).
 - `085A4C70`/`085A4D70`: two copies of libgcc's `__clz_tab` (`u8[256]`).
   They could come from `libgcc.a` itself if the link kept its `.rodata`.
 - `085A60FF`...`085A62CC`: GAX2 version string (`"GAX Sound Engine 2.01D
@@ -622,114 +624,114 @@ vtable shapes).
 | `0803B8B0` | 0x76870 | composite: BG0 streamed cell animation A + category-0 sub-effect table. **Converted** (`src/data/cell_anim_03b8b0.c`) | `sub_8029890`, `sub_80297C8`, `sub_802996C` +2 | high | done |
 | `080C0C36` | 0x80B16 | composite: sub-effect tables, two compressed OBJ frame sets, BG0 cell animation B, BG1 picture. **Converted** except the 2-byte pad (still `gStaticData_080C0C36`) | `SelectActorCategory`, `GetAnimFrameData`, `sub_8029890` +2 | high | easy (pad) |
 | `08151AC2` | 0x16012 | composite: BG1 pictures, sub-effect tables, compressed OBJ frame set C (categories 3-6). **Converted** except the 2-byte pad (still `gStaticData_08151AC2`) | `SelectActorCategory`, `GetAnimFrameData`, `sub_802F7B0` | high | easy (pad) |
-| `08167AD4` | 0x200 | u16[256] fill-meter ramp/palette table (`u16` x 256) | `sub_8031504`, `sub_8031604` | high | easy |
-| `08167CD4` | 0x1E14 | per-level P1 meter grid table: s16 cols, rows, then per-level records (s16) (`s16` x 3850) | `sub_8030F88` | medium | medium |
-| `08169AE8` | 0x200 | u16[256] fill-meter table (P2 twin of 0x08167AD4) (`u16` x 256) | `sub_8032AF8`, `sub_8033604`, `sub_80336CC` | high | easy |
-| `08169CE8` | 0xB28 | per-level P2 singleton grid table (s16 cols, rows, then records) | `sub_80331BC` | medium | medium |
-| `0816A810` | 0x10 | table (element layout: see consumers); 2 word(s) look like ROM pointers | `sub_8000760` | medium | easy |
-| `0816A820` | 0x200 | s16[256] sine/direction table (`s16` x 256) | `sub_800AFF4`, `sub_800C8F8`, `sub_800C940` +16 | high | easy |
+| `08167AD4` | 0x200 | N. Gin's airship: 16-colour palette (+ zero to 0x200). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_8031504`, `sub_8031604` | high | done |
+| `08167CD4` | 0x1E14 | N. Gin's airship picture: {cols 18, rows 12}, 4 frames of {tile count, u16 map, 4bpp tiles} sharing one pool (graphics/boss_pictures/, tools/boss_pictures.py). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_8030F88` | medium | done |
+| `08169AE8` | 0x200 | Cortex's hovercraft: palette (16 colours + 240 x 0x03E0). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_8032AF8`, `sub_8033604`, `sub_80336CC` | high | done |
+| `08169CE8` | 0xB28 | Cortex's hovercraft picture: {cols 16, rows 10}, 1 frame (graphics/boss_pictures/). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_80331BC` | medium | done |
+| `0816A810` | 0x10 | u8[16] d-pad direction lookup. **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_8000760` | medium | done |
+| `0816A820` | 0x200 | s16[256] sine/direction table (`s16` x 256). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_800AFF4`, `sub_800C8F8`, `sub_800C940` +16 | high | done |
 | `0816AA20` | 0x4C | song table: 19 pointers into the music block, `gStaticData_0855BCB4 + GAX_SONG_<NAME>` from the generated `gax_songs.h`. **Converted** (`src/data/song_table_16aa20.c`) | `sub_80017BC` | high | done |
-| `0816AF10` | 0x228 | CRC-16/CCITT lookup table (poly 0x1021, u16[256]) + 0x28 trailing bytes (`u16` x 276) | `sub_8001CB8`, `sub_8002114` | high | easy |
-| `0816B138` | 0x2 | small constant (3e00) | `sub_8003D3C` | medium | easy |
-| `0816B13A` | 0x20 | table of u16; 1 word(s) look like ROM pointers (`u16` x 16) | `sub_800450C` | high | easy |
-| `0816B15A` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_800450C` | high | easy |
-| `0816B17A` | 0x20 | table of u16 (`u16` x 16) | `sub_800450C` | high | easy |
-| `0816B19A` | 0x22 | table of u16 (`u16` x 17) | `sub_800450C` | high | easy |
-| `0816B1BC` | 0x14 | table of s32 (`s32` x 5) | `sub_8003A60` | high | easy |
-| `0816B1D0` | 0x14 | table of void* (`void*` x 5) | `sub_80061E8` | high | easy |
-| `0816B1E4` | 0x8 | table of struct icon_pos | `sub_8005A78`, `sub_800619C` | high | easy |
-| `0816B1EC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_8005AE8` | high | easy |
-| `0816B20C` | 0x10 | table of u32 (`u32` x 4) | `sub_8005AE8` | high | easy |
-| `0816B21C` | 0x28 | table of struct icon_pos | `sub_80057E0`, `sub_8005B80` | high | easy |
-| `0816B244` | 0x14 | table of u32 (`u32` x 5) | `sub_8005B80` | high | easy |
-| `0816B258` | 0x18 | table of struct icon_pos | `sub_80058C0`, `sub_8005C58` | high | easy |
-| `0816B270` | 0xC | table of u32 (`u32` x 3) | `sub_8005C58`, `sub_8005D44` | high | easy |
-| `0816B27C` | 0x8 | table of struct icon_pos | `sub_8005D44`, `sub_8006124` | high | easy |
+| `0816AF10` | 0x228 | CRC-16/CCITT lookup table (poly 0x1021, u16[256]) + the two link-cable pairing names "crash 1 <-> crash 2"/"crash 1 <-> crash 3" (`gStaticData_0816B110`/`0816B124`, read from the IWRAM image). **Converted** (`src/data/link_crc_16af10.c`) | `sub_8001CB8`, `sub_8002114` | high | done |
+| `0816B138` | 0x2 | the text ">". **Converted** (`src/data/menu_tables_16b138.c`) | `sub_8003D3C` | medium | done |
+| `0816B13A` | 0x20 | table of u16; 1 word(s) look like ROM pointers (`u16` x 16). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_800450C` | high | done |
+| `0816B15A` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_800450C` | high | done |
+| `0816B17A` | 0x20 | table of u16 (`u16` x 16). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_800450C` | high | done |
+| `0816B19A` | 0x22 | table of u16 (`u16` x 17). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_800450C` | high | done |
+| `0816B1BC` | 0x14 | table of s32 (`s32` x 5). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_8003A60` | high | done |
+| `0816B1D0` | 0x14 | table of void* (`void*` x 5). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_80061E8` | high | done |
+| `0816B1E4` | 0x8 | table of struct icon_pos. **Converted** (`src/data/menu_tables_16b138.c`) | `sub_8005A78`, `sub_800619C` | high | done |
+| `0816B1EC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_8005AE8` | high | done |
+| `0816B20C` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_8005AE8` | high | done |
+| `0816B21C` | 0x28 | table of struct icon_pos. **Converted** (`src/data/menu_tables_16b138.c`) | `sub_80057E0`, `sub_8005B80` | high | done |
+| `0816B244` | 0x14 | table of u32 (`u32` x 5). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_8005B80` | high | done |
+| `0816B258` | 0x18 | table of struct icon_pos. **Converted** (`src/data/menu_tables_16b138.c`) | `sub_80058C0`, `sub_8005C58` | high | done |
+| `0816B270` | 0xC | table of u32 (`u32` x 3). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_8005C58`, `sub_8005D44` | high | done |
+| `0816B27C` | 0x8 | table of struct icon_pos. **Converted** (`src/data/menu_tables_16b138.c`) | `sub_8005D44`, `sub_8006124` | high | done |
 | `0816B284` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `sub_8004EC0` | medium | easy |
-| `0816B298` | 0x28 | table (element layout: see consumers) | `sub_8004EC0` | medium | easy |
-| `0816B2C0` | 0x20 | table (element layout: see consumers) | `sub_8004D74` | medium | easy |
-| `0816B2E0` | 0xC | table (element layout: see consumers) | `sub_80073DC`, `sub_8007634` | medium | easy |
-| `0816B2EC` | 0xC | table (element layout: see consumers) | `sub_80073DC`, `sub_8007634` | medium | easy |
-| `0816B2F8` | 0x8 | all zero (zero-initialised table) | `sub_0800D18C`, `sub_8007C30`, `sub_8007CF8` +3 | high | easy |
-| `0816B300` | 0x4 | all zero (zero-initialised table) | `sub_80084C4`, `sub_800A884`, `sub_8011BD4` +1 | high | easy |
-| `0816B304` | 0x318 | table of struct anim_rec | `sub_800B704`, `sub_800B838`, `sub_8012AF4` | high | easy |
-| `0816B61C` | 0x2A4 | table of struct pctrl_anim | `sub_8016AB0`, `sub_801721C`, `sub_8017240` | high | easy |
-| `0816B8C0` | 0x6C | table (element layout: see consumers) | `sub_8017808` | medium | easy |
+| `0816B298` | 0x28 | table (element layout: see consumers). **Converted** (`src/data/pause_rows_16b298.c`) | `sub_8004EC0` | medium | done |
+| `0816B2C0` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/pause_rows_16b298.c`) | `sub_8004D74` | medium | done |
+| `0816B2E0` | 0xC | table (element layout: see consumers). **Converted** (`src/data/obj_sizes_16b2e0.c`) | `sub_80073DC`, `sub_8007634` | medium | done |
+| `0816B2EC` | 0xC | table (element layout: see consumers). **Converted** (`src/data/obj_sizes_16b2e0.c`) | `sub_80073DC`, `sub_8007634` | medium | done |
+| `0816B2F8` | 0x8 | all zero (zero-initialised table). **Converted** (`src/data/obj_sizes_16b2e0.c`) | `sub_0800D18C`, `sub_8007C30`, `sub_8007CF8` +3 | high | done |
+| `0816B300` | 0x4 | all zero (zero-initialised table). **Converted** (`src/data/obj_sizes_16b2e0.c`) | `sub_80084C4`, `sub_800A884`, `sub_8011BD4` +1 | high | done |
+| `0816B304` | 0x318 | 44 {s32, s32, s32} motion records + 33 {a, b} entry pairs (`gStaticData_0816B514`, gStaticData_0816B92C's entries). **Converted** (`src/data/motion_records_16b304.c`) | `sub_800B704`, `sub_800B838`, `sub_8012AF4` | high | done |
+| `0816B61C` | 0x2A4 | 31 {s32, s32, s32} motion records + 38 {a, b} entry pairs (`gStaticData_0816B790`, gStaticData_0816B934's entries). **Converted** (`src/data/motion_records_16b304.c`) | `sub_8016AB0`, `sub_801721C`, `sub_8017240` | high | done |
+| `0816B8C0` | 0x6C | table (element layout: see consumers). **Converted** (`src/data/motion_records_16b304.c`) | `sub_8017808` | medium | done |
 | `0816B92C` | 0x8 | pointer table (1 data pointers) | `sub_802375C` | high | easy |
 | `0816B934` | 0x8 | pointer table (1 data pointers) | `sub_802375C` | high | easy |
-| `0816B93C` | 0x50 | table (element layout: see consumers); 1 word(s) look like ROM pointers | `sub_802375C` | medium | easy |
-| `0816B98C` | 0x20 | table (element layout: see consumers) | `sub_801EF0C`, `sub_801F050`, `sub_801F170` +22 | medium | easy |
-| `0816B9AC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_801F528` | high | easy |
-| `0816B9CC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_801F8DC` | high | easy |
-| `0816B9EC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_801F3DC` | high | easy |
-| `0816BA0C` | 0x20 | table (element layout: see consumers) | `sub_801F170` | medium | easy |
-| `0816BA2C` | 0x20 | table (element layout: see consumers) | `sub_801F050` | medium | easy |
-| `0816BA4C` | 0x20 | table (element layout: see consumers) | `sub_801FA3C` | medium | easy |
-| `0816BA6C` | 0x20 | table (element layout: see consumers) | `sub_801FDEC` | medium | easy |
-| `0816BA8C` | 0x20 | table (element layout: see consumers) | `sub_801FCB4` | medium | easy |
-| `0816BAAC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_802062C` | high | easy |
-| `0816BACC` | 0x20 | table (element layout: see consumers) | `sub_8020138` | medium | easy |
-| `0816BAEC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_802026C` | high | easy |
-| `0816BB0C` | 0x20 | table (element layout: see consumers) | `sub_80208C4`, `sub_8020B0C` | medium | easy |
-| `0816BB2C` | 0x20 | table (element layout: see consumers) | `sub_80204EC`, `sub_8020D4C` | medium | easy |
-| `0816BB4C` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_80203A8` | high | easy |
-| `0816BB6C` | 0x28 | table (element layout: see consumers); 1 word(s) look like ROM pointers | `sub_800CA48` | medium | easy |
-| `0816BB94` | 0x4 | small constant (281e140a) | `sub_800F990`, `sub_800FF0C` | medium | easy |
-| `0816BB98` | 0x16 | table (element layout: see consumers) | `sub_800E6B0`, `sub_800E888`, `sub_800EEF0` | medium | easy |
-| `0816BBAE` | 0x16 | table (element layout: see consumers) | `sub_800F06C`, `sub_800F6B8`, `sub_8010908` | medium | easy |
-| `0816BBC4` | 0x16 | table (element layout: see consumers) | `sub_800D040`, `sub_800EDBC`, `sub_800F06C` +3 | medium | easy |
-| `0816BBDA` | 0x16 | table (element layout: see consumers) | `sub_0800D18C`, `sub_800E7A8` | medium | easy |
-| `0816BBF0` | 0xA8 | table of s32 (`s32` x 42) | `sub_0800D18C` | high | easy |
-| `0816BC98` | 0x268 | table of s32[7] (`s32[7]` x 22) | `sub_0800D18C`, `sub_800E08C` | high | easy |
-| `0816BF00` | 0x8 | small constant (0000010000000000) | `sub_0800D18C` | medium | easy |
-| `0816BF08` | 0xC | table of s32 (`s32` x 3) | `sub_8011248` | high | easy |
-| `0816BF14` | 0xC | table of struct three_words | `sub_801192C` | high | easy |
+| `0816B93C` | 0x50 | entry set {entries, 0x100} + its 9 {a, b} entries (`gStaticData_0816B944`). **Converted** (`src/data/entry_set_16b93c.c`) | `sub_802375C` | medium | done |
+| `0816B98C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801EF0C`, `sub_801F050`, `sub_801F170` +22 | medium | done |
+| `0816B9AC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801F528` | high | done |
+| `0816B9CC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801F8DC` | high | done |
+| `0816B9EC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801F3DC` | high | done |
+| `0816BA0C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801F170` | medium | done |
+| `0816BA2C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801F050` | medium | done |
+| `0816BA4C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801FA3C` | medium | done |
+| `0816BA6C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801FDEC` | medium | done |
+| `0816BA8C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801FCB4` | medium | done |
+| `0816BAAC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_802062C` | high | done |
+| `0816BACC` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_8020138` | medium | done |
+| `0816BAEC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_802026C` | high | done |
+| `0816BB0C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_80208C4`, `sub_8020B0C` | medium | done |
+| `0816BB2C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_80204EC`, `sub_8020D4C` | medium | done |
+| `0816BB4C` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_80203A8` | high | done |
+| `0816BB6C` | 0x28 | entry set {entries, 0x100} + its 4 {a, b} entries (`gStaticData_0816BB74`). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_800CA48` | medium | done |
+| `0816BB94` | 0x4 | small constant (281e140a). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_800F990`, `sub_800FF0C` | medium | done |
+| `0816BB98` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_800E6B0`, `sub_800E888`, `sub_800EEF0` | medium | done |
+| `0816BBAE` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_800F06C`, `sub_800F6B8`, `sub_8010908` | medium | done |
+| `0816BBC4` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_800D040`, `sub_800EDBC`, `sub_800F06C` +3 | medium | done |
+| `0816BBDA` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_0800D18C`, `sub_800E7A8` | medium | done |
+| `0816BBF0` | 0xA8 | table of s32 (`s32` x 42). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_0800D18C` | high | done |
+| `0816BC98` | 0x268 | table of s32[7] (`s32[7]` x 22). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_0800D18C`, `sub_800E08C` | high | done |
+| `0816BF00` | 0x8 | small constant (0000010000000000). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_0800D18C` | medium | done |
+| `0816BF08` | 0xC | table of s32 (`s32` x 3). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_8011248` | high | done |
+| `0816BF14` | 0xC | table of struct three_words. **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_801192C` | high | done |
 | `0816BF20` | 0x150 | pointer-to-member dispatch table: 42 x {0xFFFF0000, fn} (`struct act_pmf` x 42) | `sub_8012420` | high | easy |
 | `0816C070` | 0x20 | pointer table (8 data pointers) (`struct level_anim*` x 8) | `sub_8016288`, `sub_8016DDC`, `sub_80170EC` +2 | high | easy |
-| `0816C090` | 0x1C0 | table of struct speed_table | `sub_80159F8` | high | easy |
+| `0816C090` | 0x1C0 | `struct speed_table` (8 s32) + `struct level_anim[8][13]` (`gStaticData_0816C0B0`, the rows gStaticData_0816C070 points at). **Converted** (`src/data/speed_table_16c090.c`) | `sub_80159F8` | high | done |
 | `0816C250` | 0x40 | function-pointer / pointer-to-member table (8 code pointers) | `sub_8016288` | high | easy |
 | `0816C290` | 0x40 | table of struct pmf; 4 word(s) look like ROM pointers | `sub_8017650` | high | easy |
 | `0816C2D0` | 0x8 | pointer table (1 data pointers) | `sub_8017FA4` | high | easy |
-| `0816C2D8` | 0x30 | table (element layout: see consumers) | `sub_8017ECC`, `sub_8017F14`, `sub_8017F5C` +1 | medium | easy |
-| `0816C308` | 0x3 | small constant (040100) | `sub_8018008`, `sub_8018400` | medium | easy |
-| `0816C30B` | 0x4D | table (element layout: see consumers) | `sub_801865C` | medium | easy |
-| `0816C358` | 0x4 | small constant (100e0a20) | `sub_80196B8` | medium | easy |
-| `0816C35C` | 0x3 | small constant (181612) | `sub_8018E4C` | medium | easy |
-| `0816C35F` | 0x3 | small constant (040404) | `sub_8018E4C` | medium | easy |
-| `0816C362` | 0x6 | small constant (020202000000) | `sub_8018E4C` | medium | easy |
-| `0816C368` | 0x10 | table of s32 (`s32` x 4) | `sub_80197F8` | high | easy |
-| `0816C378` | 0x18 | table of s32 (`s32` x 6) | `sub_80197F8` | high | easy |
-| `0816C390` | 0x10 | table of s32 (`s32` x 4) | `sub_80197F8` | high | easy |
-| `0816C3A0` | 0x18 | table of s32 (`s32` x 6) | `sub_80197F8` | high | easy |
-| `0816C3B8` | 0x30 | table of s32 (`s32` x 12) | `sub_801A64C`, `sub_801A7AC` | high | easy |
-| `0816C3E8` | 0xC | table (element layout: see consumers) | `sub_801A2A8` | medium | easy |
-| `0816C3F4` | 0x24 | table (element layout: see consumers) | `sub_801A2A8` | medium | easy |
+| `0816C2D8` | 0x30 | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_8017ECC`, `sub_8017F14`, `sub_8017F5C` +1 | medium | done |
+| `0816C308` | 0x3 | small constant (040100). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_8018008`, `sub_8018400` | medium | done |
+| `0816C30B` | 0x4D | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_801865C` | medium | done |
+| `0816C358` | 0x4 | small constant (100e0a20). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_80196B8` | medium | done |
+| `0816C35C` | 0x3 | small constant (181612). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_8018E4C` | medium | done |
+| `0816C35F` | 0x3 | small constant (040404). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_8018E4C` | medium | done |
+| `0816C362` | 0x6 | small constant (020202000000). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_8018E4C` | medium | done |
+| `0816C368` | 0x10 | table of s32 (`s32` x 4). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_80197F8` | high | done |
+| `0816C378` | 0x18 | table of s32 (`s32` x 6). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_80197F8` | high | done |
+| `0816C390` | 0x10 | table of s32 (`s32` x 4). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_80197F8` | high | done |
+| `0816C3A0` | 0x18 | table of s32 (`s32` x 6). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_80197F8` | high | done |
+| `0816C3B8` | 0x30 | table of s32 (`s32` x 12). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_801A64C`, `sub_801A7AC` | high | done |
+| `0816C3E8` | 0xC | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_801A2A8` | medium | done |
+| `0816C3F4` | 0x24 | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_801A2A8` | medium | done |
 | `0816C418` | 0x40 | table of struct vec_pair | `sub_801A7AC` | high | easy |
 | `0816C458` | 0x8 | pointer table (1 data pointers) | `sub_801B7D8` | high | easy |
-| `0816C460` | 0x24 | table of struct vec3 | `sub_801B304`, `sub_801B6EC`, `sub_801B734` +2 | high | easy |
+| `0816C460` | 0x24 | table of struct vec3. **Converted** (`src/data/velocity_16c460.c`) | `sub_801B304`, `sub_801B6EC`, `sub_801B734` +2 | high | done |
 | `0816C484` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `sub_80047F8`, `sub_80063D8`, `sub_801BC28` +1 | medium | easy |
-| `0816C498` | 0x8 | table of struct xy_pair | `sub_801BC28` | high | easy |
-| `0816C4A0` | 0x8 | table of struct xy_pair | `sub_801BC28` | high | easy |
-| `0816C4A8` | 0x8 | table of struct xy_pair | `sub_801BC28` | high | easy |
-| `0816C4B0` | 0x8 | table of struct xy_pair | `sub_801BC28` | high | easy |
-| `0816C4B8` | 0x8 | table of struct xy_pair | `sub_801BC28` | high | easy |
-| `0816C4C0` | 0x8 | table of struct xy_pair | `sub_801BC28`, `sub_801C3E8` | high | easy |
-| `0816C4C8` | 0x8 | table of struct xy_pair | `sub_801BC28` | high | easy |
-| `0816C4D0` | 0x8 | table of struct xy_pair | `sub_801BC28` | high | easy |
-| `0816C4D8` | 0x30 | table of struct xy_pair | `sub_801CEE0`, `sub_801D5CC` | high | easy |
-| `0816C508` | 0x30 | table of struct xy_pair | `sub_801CEE0`, `sub_801D5CC` | high | easy |
-| `0816C538` | 0x10 | table of u32 (`u32` x 4) | `sub_801CEE0`, `sub_801D668` | high | easy |
-| `0816C548` | 0x10 | table of u32 (`u32` x 4) | `sub_801BC28`, `sub_801D470` | high | easy |
-| `0816C558` | 0x14 | table of u32 (`u32` x 5) | `sub_801C608` | high | easy |
-| `0816C56C` | 0x20 | table (element layout: see consumers) | `sub_801BAF0` | medium | easy |
+| `0816C498` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28` | high | done |
+| `0816C4A0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28` | high | done |
+| `0816C4A8` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28` | high | done |
+| `0816C4B0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28` | high | done |
+| `0816C4B8` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28` | high | done |
+| `0816C4C0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28`, `sub_801C3E8` | high | done |
+| `0816C4C8` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28` | high | done |
+| `0816C4D0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28` | high | done |
+| `0816C4D8` | 0x30 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801CEE0`, `sub_801D5CC` | high | done |
+| `0816C508` | 0x30 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801CEE0`, `sub_801D5CC` | high | done |
+| `0816C538` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c498.c`) | `sub_801CEE0`, `sub_801D668` | high | done |
+| `0816C548` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28`, `sub_801D470` | high | done |
+| `0816C558` | 0x14 | table of u32 (`u32` x 5). **Converted** (`src/data/map_tables_16c498.c`) | `sub_801C608` | high | done |
+| `0816C56C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BAF0` | medium | done |
 | `0816C58C` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `sub_801D7F8` | medium | easy |
 | `0816C5A0` | 0x50 | pointer table (20 data pointers) | `sub_801DAD8` | high | easy |
-| `0816C5F0` | 0x20 | table of struct xy_pair | `sub_801D828` | high | easy |
-| `0816C610` | 0x14 | table of u32 (`u32` x 5) | `sub_801DF0C` | high | easy |
-| `0816C624` | 0x10 | table of u32 (`u32` x 4) | `sub_801DEA4` | high | easy |
-| `0816C634` | 0x10 | table of u32 (`u32` x 4) | `sub_801E190` | high | easy |
-| `0816C644` | 0x30 | table of s32 (`s32` x 12) | `sub_801E688`, `sub_801E788` | high | easy |
-| `0816C674` | 0x30 | table of s32 (`s32` x 12) | `sub_801E688`, `sub_801E788` | high | easy |
+| `0816C5F0` | 0x20 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801D828` | high | done |
+| `0816C610` | 0x14 | table of u32 (`u32` x 5). **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801DF0C` | high | done |
+| `0816C624` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801DEA4` | high | done |
+| `0816C634` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801E190` | high | done |
+| `0816C644` | 0x30 | table of s32 (`s32` x 12). **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801E688`, `sub_801E788` | high | done |
+| `0816C674` | 0x30 | table of s32 (`s32` x 12). **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801E688`, `sub_801E788` | high | done |
 | `0816C6A4` | 0x170 | function-pointer table: 92 Thumb function pointers (menu/trigger-effect dispatch) (`void (*)(void)` x 92) | `sub_8022208` | high | easy |
 | `0816C814` | 0xA | `u16[5]` palette-entry list of a level-start colour cycle. **Converted** (`src/data/level_table_16c814.c`) | `sub_8023A1C` | high | done |
 | `0816C81E` | 0x12 | `u16[9]` colour-cycle list. **Converted** (same) | `sub_8023A1C` | high | done |

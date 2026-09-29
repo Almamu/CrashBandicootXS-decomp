@@ -185,15 +185,29 @@ The first batch (all pointer tables, all byte-exact):
 
 | File | ROM | Contents |
 |---|---|---|
+| `boss_pictures_167ad4.c` | `0x08167AD4` | the two boss pictures (palette + frames, see "Boss pictures"), the d-pad direction table, the sine table |
 | `song_table_16aa20.c` | `0x0816AA20` | the 19-song table, offsets into the built GAX2 music block (`gax_songs.h`) |
+| `link_crc_16af10.c` | `0x0816AF10` | the link-cable CRC-16 table, 2 pairing names |
+| `menu_tables_16b138.c` | `0x0816B138` | menu text, palette halves, label ids, icon positions and frames |
 | `bg_package_16b284.c` | `0x0816B284` | 1 `struct bg_package` |
+| `pause_rows_16b298.c` | `0x0816B298` | the pause screen rows, a palette half |
+| `obj_sizes_16b2e0.c` | `0x0816B2E0` | OBJ piece sizes, the empty sprite box and point |
+| `motion_records_16b304.c` | `0x0816B304` | 84 motion records, the entries of the two entry sets |
 | `entry_set_16b92c.c` | `0x0816B92C` | 2 `{entries, 0x100}` sets |
+| `entry_set_16b93c.c` | `0x0816B93C` | 1 entry set and its entries |
+| `popup_tables_16b98c.c` | `0x0816B98C` | 15 text-popup tables |
+| `object_tables_16bb6c.c` | `0x0816BB6C` | 1 entry set, the collision system's kind tables, 2 scale triples |
 | `action_table_16bf20.c` | `0x0816BF20` | 42-slot player action PMF table, per-mode animation row pointers |
+| `speed_table_16c090.c` | `0x0816C090` | the player speed table, the per-mode level animation rows |
 | `player_pmf_16c250.c` | `0x0816C250` | 2 player-controller PMF tables, an entry table and its set |
+| `actor_tables_16c2d8.c` | `0x0816C2D8` | small actor tables (vectors, per-round bytes, thresholds, argument blocks) |
 | `entry_set_16c418.c` | `0x0816C418` | an entry table and its set |
+| `velocity_16c460.c` | `0x0816C460` | 3 velocity vectors |
 | `bg_package_16c484.c` | `0x0816C484` | 1 `struct bg_package` |
+| `map_tables_16c498.c` | `0x0816C498` | level-select positions, animation ids, a palette half |
 | `bg_package_16c58c.c` | `0x0816C58C` | 1 `struct bg_package` |
 | `image_table_16c5a0.c` | `0x0816C5A0` | 10 `{palette, tiles}` asset pairs |
+| `map_tables_16c5f0.c` | `0x0816C5F0` | level-select offsets, animation ids, OBJ sizes |
 | `dispatch_table_16c6a4.c` | `0x0816C6A4` | the unified 92-slot function-pointer dispatch array |
 | `level_table_16c814.c` | `0x0816C814` | the level table (25 `struct level_info`), the levels' room lists and 48 room records, the theme music cues, 5 colour-cycle lists (see "Level data") |
 | `cutscenes_16d1c8.c` | `0x0816D1C8` | the 11 cutscenes: slide lists, 24 slides, the text of 6 languages (see "Cutscenes") |
@@ -679,3 +693,45 @@ the same way.
 
 `tools/rle_sprites.py extract` writes the three PNGs from `baserom.gba`
 again and checks that every frame re-encodes to the ROM's bytes.
+
+### Boss pictures
+
+`gStaticData_08167CD4` (N. Gin's airship, 18x12 cells, 4 frames: the
+propellers turn) and `gStaticData_08169CE8` (Cortex's hovercraft, 16x10
+cells, 1 frame) were read as "per-level meter grid tables" before; drawn,
+they are the two bosses that fly on an affine BG. Each is `{s16 cols,
+s16 rows}` and its frames, a frame being a tile count, a `cols * rows`
+map of `u16` tile indices and that many 4bpp tiles. The frames share one
+tile pool: frame 1's indices count on from frame 0's tiles, and so on.
+The game (`sub_8031604`, `sub_80336CC`) converts the tiles to 8bpp tiles
+of BG palette 1, since an affine BG only takes 8bpp, and `sub_8030D48`
+lays them out by the maps. The palette in front of each picture is its
+own label (`gStaticData_08167AD4`, `gStaticData_08169AE8`), and the code
+walks the frames from that label + 0x204, so the two stay back to back
+in `src/data/boss_pictures_167ad4.c`.
+
+The maps are exactly what deduplicating the frames in reading order gives
+(the first identical tile, no flips, one pool across the frames). So the
+sources are the whole frames, `graphics/boss_pictures/<addr>_frameN.png`
+(4bpp, the 16 colours of BG palette 1). grit (`-gt -gB4`) turns each into
+tiles in cell order, and `tools/boss_pictures.py pack` deduplicates them
+into the `.inc` with the frames' initializers and a header with the tile
+counts and the size in cells, which the C struct's array sizes use. So a
+frame can be redrawn freely. `tools/boss_pictures.py extract` writes the
+PNGs from `baserom.gba` again and checks the round trip.
+
+### Small tables around 0x0816B000
+
+The rest of `0x0816AF10`-`0x0816C6A4` is small typed tables written out
+from the ROM: palettes and palette halves (`u16`), text and label ids,
+icon positions (`struct icon_pos`), OBJ sizes, motion records and the
+{a, b} entry pairs of the entry sets (see `entry_set_16b92c.c`),
+collision kind tables, and vectors. Labels the code has no symbol for,
+because it only reaches them through a pointer, are named after their
+address: the pairs in `motion_records_16b304.c` (`gStaticData_0816B514`,
+`gStaticData_0816B790`), which `entry_set_16b92c.c` now points at by
+name, the level animation rows `gStaticData_0816C0B0` that
+`action_table_16bf20.c` points at, and the two link-cable names
+`gStaticData_0816B110`/`0816B124` that the IWRAM image points at. A few
+byte tables sit at odd addresses (`gStaticData_0816C30B`); brace-list `u8`
+arrays aren't aligned by agbcc, so they stay in place.
