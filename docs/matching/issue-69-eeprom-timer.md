@@ -497,3 +497,16 @@ shape they match byte-for-byte under agbcc -O1 with no pins (`O1_OBJS` in
 the Makefile). The "unreproducible" busy-wait tail above is gcc's
 duplicated `while` exit test, which -O2 cross-jumps away. See
 [eeprom-sdk-o1.md](./eeprom-sdk-o1.md).
+
+## Later pass: the rest of the library at -O1
+
+`sub_803A968`, `sub_803A9D0`, `sub_803AA08`, `sub_803ACE0` and
+`sub_803AD38` were rewritten as the SDK's plain C too, and
+`timer_util.o`/`eeprom_verify.o` joined `O1_OBJS`. `sub_803AA08`'s six
+register pins, its `asm volatile` barrier and the `vu16 * volatile`
+declaration of `gUnknown_03001628` described above are all gone: at
+-O1, pokeemerald's `StartFlashTimer` shape (with the IF write before
+the IE write) is byte-identical. The "IRQ handler stub" data blob at
+`0x0803A9AC` is the SDK's compiled timer IRQ handler, now the C
+function `sub_803A9AC`. See
+[eeprom-sdk-o1.md](./eeprom-sdk-o1.md#second-pass-the-rest-of-the-library).

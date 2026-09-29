@@ -32,13 +32,14 @@ category page - see [game_loop.md](./game_loop.md).
   `LZ77UnCompWrapper`, `sub_803A954`, `RLUnCompWrapper`, `sub_803A95C`,
   `sub_0803A960` (eight BIOS SWI wrappers - NAKED but genuinely
   un-improvable trampolines with no real C logic to express, kept
-  matched per `docs/matching.md`'s frozen convention), `sub_803A968`
-  (picks a 12-byte `EepromConfig` table by chip-size code), `sub_803A9D0`
-  (claims a hardware timer, hands back an IRQ-handler-stub address),
-  `sub_803AA08` (arms the claimed timer - real C, not NAKED; register-
-  pinning/statement-ordering techniques documented in the function's own
-  doc comment) - GitHub issue #69, see
-  `docs/matching/issue-69-eeprom-timer.md`.
+  matched per `docs/matching.md`'s frozen convention), then the start of
+  Nintendo's AgbEeprom SDK library ("EEPROM_V122"), built with -O1 as
+  plain C with no pins: `sub_803A968` (SDK EEPROMConfigure, picks the
+  12-byte `EepromConfig` by chip-size code), `sub_803A9AC` (SDK
+  EepromTimerIntr, the timer IRQ handler - formerly a raw `.byte` blob),
+  `sub_803A9D0` (SDK SetEepromTimerIntr, claims a hardware timer and
+  hands back the handler), `sub_803AA08` (SDK StartEepromTimer) -
+  GitHub issue #69, see `docs/matching/eeprom-sdk-o1.md`.
 - `src/system/timer_util_aa90.c` (own file - its real ROM address,
   `0x0803AA90`, isn't adjacent to `timer_util.c`'s functions; built
   with -O1): `sub_803AA90` (SDK StopEepromTimer, disarms the timer
@@ -51,9 +52,10 @@ category page - see [game_loop.md](./game_loop.md).
   `docs/matching/eeprom-sdk-o1.md`.
 - `src/system/eeprom_verify.c` (own file, same reason - ROM
   `0x0803ACE0`, between `sub_803AC04` and `reg_trampolines.c`'s
-  functions): `sub_803ACE0` (reads an EEPROM block back and compares
-  it), `sub_803AD38` (write+verify with a 3-attempt retry) - GitHub
-  issue #69, see `docs/matching/issue-69-eeprom-timer.md`
+  functions; built with -O1): `sub_803ACE0` (SDK EEPROMCompare, reads
+  an EEPROM block back and compares it), `sub_803AD38` (SDK
+  EEPROMWrite1_check, write+verify with a 3-attempt retry) - GitHub
+  issue #69, see `docs/matching/eeprom-sdk-o1.md`.
 - `src/system/reg_trampolines.c`: `sub_803AD78`, `sub_803AD7C`,
   `sub_803AD80`, `sub_803AD84`, `sub_803AD88`, `sub_803AD8C`,
   `sub_803AD90`, `sub_803AD94` (the `bx r0`..`sp` "call through whatever

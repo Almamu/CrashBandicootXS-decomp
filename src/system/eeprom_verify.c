@@ -1,15 +1,13 @@
 #include "core.h"
 
-/* The read-verify and write-retry pair of the DMA3 bit-serial EEPROM
- * cluster split across src/system/eeprom_util.c (the still-parked
- * `sub_803AB54`/`sub_803AC04` read/write primitives, asm/
- * code_3_2_20e_ab54.s) and this file - its own translation unit per
- * docs/workflow.md step 4, since it isn't adjacent to any
- * already-matched file's functions. See docs/matching/issue-69-*.md. */
+/* EEPROMCompare and EEPROMWrite1_check of Nintendo's AgbEeprom SDK
+ * library ("EEPROM_V122", 0x0803A968-0x0803AD7C), after the read/write
+ * primitives in src/system/eeprom_util.c. Built at **-O1** like the rest
+ * of the library (Makefile O1_OBJS): both are the SDK's plain C, the
+ * shape zeldaret/tmc's src/eeprom.c reconstructed for EEPROM_V124, and
+ * byte-identical at -O1. See docs/matching/eeprom-sdk-o1.md. */
 
-/* Same shape as src/system/timer_util.c/eeprom_util.c's own
- * `struct EepromConfig` - redeclared here rather than shared via a
- * header, see eeprom_util.c's copy of this note. */
+/* The SDK's EEPROMConfig; same layout as in src/system/timer_util.c. */
 struct EepromConfig {
     u32 unk0;
     u16 maxCount;
@@ -23,32 +21,26 @@ extern struct EepromConfig *gUnknown_03001634;
 extern s32 sub_803AB54(u16 addr, u16 *dest);
 extern s32 sub_803AC04(u16 addr, u16 *src);
 
-/* Reads `addr` back into a local buffer via `sub_803AB54` and compares
- * it against `expected[0..3]`; returns 0x8000 if any word doesn't
- * match, 0x80FF if `addr` is out of range (its own check, redundant
- * with `sub_803AB54`'s internal one - the ROM never looks at
- * `sub_803AB54`'s own return value at all, so this reconstruction
- * doesn't either), or 0 if all four match. */
-s32 sub_803ACE0(u16 addr, u16 *expected)
+/* SDK EEPROMCompare: reads block `addr` back and compares it with
+ * `data[0..3]`. Returns 0x80FF if `addr` is out of range, 0x8000 on a
+ * mismatch, 0 if equal. The out-of-range case has to be an early
+ * `return` (TMC's if/else puts 0x80FF into `result`'s register, 2
+ * halfwords off). */
+s32 sub_803ACE0(u16 addr, u16 *data)
 {
-    u16 buf[4];
-    s32 result;
-    u16 *p;
+    u16 result;
     u8 i;
+    u16 buffer[4];
+    u16 *ptr;
 
     result = 0;
-    if (addr >= gUnknown_03001634->maxCount) {
+    if (addr >= gUnknown_03001634->maxCount)
         return 0x80FF;
-    }
 
-    sub_803AB54(addr, buf);
-    p = buf;
-    for (i = 0; i <= 3; i++) {
-        u16 a = *expected;
-        u16 b = *p;
-        p++;
-        expected++;
-        if (a != b) {
+    sub_803AB54(addr, buffer);
+    ptr = buffer;
+    for (i = 0; i < 4; i++) {
+        if (*data++ != *ptr++) {
             result = 0x8000;
             break;
         }
@@ -56,28 +48,23 @@ s32 sub_803ACE0(u16 addr, u16 *expected)
     return result;
 }
 
-/* Writes `data` to EEPROM at `addr`, verifies it, and retries the
- * write+verify pair up to 3 times total if either step fails. Returns
- * the last attempt's result code (0 on eventual success). `result` is
- * `u16` (not `s32`, even though the two callees it stores return `s32`)
- * to match the ROM truncating each call's return value to 16 bits
- * before comparing it against 0. */
+/* SDK EEPROMWrite1_check: write + compare, up to 3 attempts; returns
+ * the last attempt's status (0 on success). */
 s32 sub_803AD38(u16 addr, u16 *data)
 {
-    u8 attempt;
+    u8 i;
     u16 result;
 
-    for (attempt = 0; attempt <= 2; attempt++) {
+    for (i = 0; i < 3; i++) {
         result = sub_803AC04(addr, data);
-        if (result != 0) {
-            continue;
+        if (result == 0) {
+            result = sub_803ACE0(addr, data);
+            if (result == 0)
+                break;
         }
-        result = sub_803ACE0(addr, data);
-        if (result != 0) {
-            continue;
-        }
-        break;
     }
     return result;
 }
+/* Pads the object to 4 bytes with zeros: the libgcc `_call_via_r0`
+ * (src/system/reg_trampolines.c) that follows starts at 0x0803AD78. */
 asm(".align 2, 0");

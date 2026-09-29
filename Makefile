@@ -286,16 +286,30 @@ NO_RERUN_LOOP_OPT_OBJS := $(C_BUILDDIR)/system/link_cable_01db4.o
 $(NO_RERUN_LOOP_OPT_OBJS): CC1FLAGS += -fno-rerun-loop-opt
 
 # Objects built with -O1 instead of -O2. Nintendo's AgbEeprom SDK library
-# (the ROM's "EEPROM_V122", 0x0803A968-0x0803AD7C) was compiled at -O1:
-# sub_803AAD4 (DMA3Transfer), sub_803AB54 (EEPROMRead), sub_803AC04
-# (EEPROMWrite) and sub_803AA90 (StopEepromTimer) are all byte-identical
-# at -O1 as the SDK's plain C (TMC/pokeemerald source shape, no pins),
-# while at -O2 the same C is 43/79/107/2 halfwords off (-O2 cross-jumps
-# the duplicated DMA-wait test into the loop, among others); old_agbcc
-# -O1 is also off (2/44/35). Both whole files match with the flag. See
-# docs/matching/eeprom-sdk-o1.md.
-O1_OBJS := $(C_BUILDDIR)/system/timer_util_aa90.o \
-           $(C_BUILDDIR)/system/eeprom_util.o
+# (the ROM's "EEPROM_V122", 0x0803A968-0x0803AD7C) was compiled at -O1,
+# and all nine of its functions are the SDK's plain C (TMC/pokeemerald
+# source shape, no pins or volatile tricks), byte-identical at -O1:
+# - timer_util.o: sub_803A968 (EEPROMConfigure), sub_803A9AC (timer
+#   IRQ handler), sub_803A9D0/sub_803AA08 (SetEepromTimerIntr/
+#   StartEepromTimer). At -O2 the same C is 47 halfwords off in
+#   sub_803AA08; the old -O2 version needed six register pins and a
+#   `vu16 * volatile` global. The object's BIOS SWI wrappers are
+#   hand-written NAKED asm, identical under any flag.
+# - timer_util_aa90.o: sub_803AA90 (StopEepromTimer), sub_803AAD4
+#   (DMA3Transfer) - 2/43 halfwords off at -O2 (-O2 cross-jumps the
+#   duplicated DMA-wait test into the loop).
+# - eeprom_util.o: sub_803AB54/sub_803AC04 (EEPROMRead/EEPROMWrite) -
+#   79/107 halfwords off at -O2.
+# - eeprom_verify.o: sub_803ACE0/sub_803AD38 (EEPROMCompare/
+#   EEPROMWrite1_check).
+# It is current agbcc: old_agbcc -O1 is 2/44/35 off for sub_803AAD4/
+# sub_803AB54/sub_803AC04. Every object matches as a whole with the flag.
+# EEPROM_V122 is the ROM's only SDK version tag, and no other compiled
+# code was found to be SDK C. See docs/matching/eeprom-sdk-o1.md.
+O1_OBJS := $(C_BUILDDIR)/system/timer_util.o \
+           $(C_BUILDDIR)/system/timer_util_aa90.o \
+           $(C_BUILDDIR)/system/eeprom_util.o \
+           $(C_BUILDDIR)/system/eeprom_verify.o
 $(O1_OBJS): CC1FLAGS := $(filter-out -O2,$(CC1FLAGS)) -O1
 
 # GAX2's bundled libgcc2.c code (__divdi3/__udivdi3/__muldi3) was built
