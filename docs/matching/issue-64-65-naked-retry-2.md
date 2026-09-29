@@ -132,3 +132,7 @@ on. Still NAKED; see [big-naked-retry.md](big-naked-retry.md).
 
 *Later pass (size2 NAKED retry):* `sub_80352AC` is matched; see
 [size2-naked-retry.md](size2-naked-retry.md).
+
+*Later pass (#65 strength-reduction retry):* `sub_803686C` is matched and
+lives in the new `graphics_loading_3686c.c`; see
+[sr65-naked-retry.md](sr65-naked-retry.md).
