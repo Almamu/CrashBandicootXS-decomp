@@ -121,3 +121,11 @@ parked breakdown.
 ## Later pass: GAX toolchain retry
 
 The trampoline is expressible after all (`GAX_CALL_ARM_R`, `include/audio.h`) and `sub_8039E50` is just its return point. `sub_8039B44` stays NAKED, but a complete draft is now kept under `#if NON_MATCHING`; its remaining gap is register allocation. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).
+
+## Later pass: GAX retry 6 (matched)
+
+`sub_8039B44` is now real C (plain agbcc). A two-armed tune clamp breaks
+cse1's path so the ping-pong test recomputes `row * 28`, and the
+backward end reuses the `len` variable so its `sweepMin` load gets r3.
+`sub_8039E50` no longer has a label. See
+[gax-naked-retry-6.md](./gax-naked-retry-6.md).

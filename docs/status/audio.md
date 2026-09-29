@@ -180,20 +180,14 @@ for the per-function notes.
 - `src/audio/gax_playstart.c` - `sub_8038538` (the play-start/init
   entry point; was parked NAKED, matched in GAX retry 5 - see
   [docs/matching/gax-naked-retry-5.md](../matching/gax-naked-retry-5.md))
+- `src/audio/gax_note_trigger.c` - `sub_8039B44` (the per-channel mixer;
+  `sub_8039E50` is only the ARM call's return point inside it). Was
+  parked NAKED through five passes, matched in GAX retry 6 - see
+  [docs/matching/gax-naked-retry-6.md](../matching/gax-naked-retry-6.md)
 
 ## Parked - NAKED asm transcription (byte-correct, not decompiled C)
 
-- **`sub_8039B44`** (`src/audio/gax_note_trigger.c`, the per-channel
-  mixer; `sub_8039E50` is only the ARM call's return point inside it) -
-  the call is no longer a blocker (`GAX_CALL_ARM_R`); a complete draft
-  is kept under `#if NON_MATCHING`, register allocation differs
-  throughout. (GAX NAKED retry 3: ~46 left, the parameters and the mixer
-  loop now match - see
-  [docs/matching/gax-naked-retry-3.md](../matching/gax-naked-retry-3.md);
-  retry 4 is down to the tune's `self->instrument` copy and one reload
-  register, see [gax-naked-retry-4.md](../matching/gax-naked-retry-4.md);
-  retry 5 made no further progress, see
-  [gax-naked-retry-5.md](../matching/gax-naked-retry-5.md).)
+No GAX function is parked any more.
 
 `sub_8037E54` (`__udivsi3`, `src/util/math_div64_util.c`) also stays
 NAKED - it's lib1funcs.asm's hand-written routine, not compiler output
