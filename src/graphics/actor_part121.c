@@ -1,4 +1,5 @@
 #include "core.h"
+#include "gobj_1a794.h"
 
 /* GitHub issue #9/#10: `sub_800BFA8`, the last raw function in the
  * `0x0800B8DC`-`0x0800D040` cluster's own `asm/code_3_2_17_bfa8.s`
@@ -54,19 +55,33 @@
 extern void sub_800C8CC(void *self, s32 mode);
 extern s32 sub_803AE4C(s32 a, s32 b);
 extern void *sub_800C9C8(s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
-extern u32 gUnknown_0300082C;
+
+/* The fields of this cluster's controller object (the class of
+ * sub_800B8DC, see actor_part124.c's `struct trigger_ctrl`) read here:
+ * `period`/`phase` make the gate below pass once every `period` frames,
+ * `mode` is the `self+0x68` sub-state and `owner` the controlled
+ * object. */
+struct trigger_ctrl {
+    u8 unk_00[0x48];
+    s32 period;         // 0x48
+    s32 phase;          // 0x4C
+    u8 unk_50[0x18];
+    s32 mode;           // 0x68
+    u8 unk_6c[4];
+    struct gobj *owner; // 0x70
+};
 
 void sub_800BFA8(void *selfArg)
 {
-    register u8 *self asm("r4") = selfArg;
-    u8 *owner;
+    register struct trigger_ctrl *self asm("r4") = selfArg;
+    struct gobj *owner;
     u8 *record;
     s32 base = (s32)gUnknown_0300082C;
-    s32 field48 = *(s32 *)(self + 0x48);
-    s32 divCheck = sub_803AE4C(base + field48 - *(s32 *)(self + 0x4c), field48);
+    s32 period = self->period;
+    s32 divCheck = sub_803AE4C(base + period - self->phase, period);
 
     if (divCheck == 0) {
-        switch (*(s32 *)(self + 0x68)) {
+        switch (self->mode) {
         case 0:
             sub_800C8CC(self, 2);
             break;
@@ -77,9 +92,9 @@ void sub_800BFA8(void *selfArg)
         return;
     }
 
-    owner = *(u8 **)(self + 0x70);
-    if (*(u8 *)(owner + 0x38) != 0) {
-        switch (*(s32 *)(self + 0x68)) {
+    owner = self->owner;
+    if (owner->unk_38 != 0) {
+        switch (self->mode) {
         case 2:
             sub_800C8CC(self, 0);
             break;
@@ -91,13 +106,13 @@ void sub_800BFA8(void *selfArg)
     }
 
     record = NULL;
-    switch (*(s32 *)(self + 0x68)) {
+    switch (self->mode) {
     case 2:
-        if (*(s32 *)(owner + 0x30) == 0xa && *(s32 *)(owner + 0x34) == 0)
+        if (owner->frame == 0xa && owner->unk_34 == 0)
             record = sub_800C9C8(0xc, 6, 0, -0xa, 0x400, owner);
         break;
     case 7:
-        if (*(s32 *)(owner + 0x30) == 8 && *(s32 *)(owner + 0x34) == 0)
+        if (owner->frame == 8 && owner->unk_34 == 0)
             record = sub_800C9C8(0xc, 6, 0, 8, 0x400, owner);
         break;
     }

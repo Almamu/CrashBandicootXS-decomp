@@ -1,5 +1,7 @@
 #include "core.h"
 #include "actor.h"
+#include "gfx_part.h"
+#include "sprite_bank.h"
 
 extern s32 sub_8007114(struct actor *self, void *box);
 
@@ -140,32 +142,32 @@ s32 sub_80083A8(void *part)
  * `actor_part6.c`, and a plain compiled function's own natural
  * alignment produces a `0x46c0` nop-fill instead - the standard
  * `matching_decomp_alignment_fix` gotcha). */
-void *sub_80083B8(struct actor *part)
+void *sub_80083B8(struct gfx_part *part)
 {
-    register void *rec asm("r1") = *(void ***)((u8 *)part + 0x20);
-    register u8 *idxAddr asm("r2") = (u8 *)part + 0x2d;
+    register void *rec asm("r1") = part->bank;
+    register u8 *idxAddr asm("r2") = &part->tag;
     register u8 idx asm("r4") = *idxAddr;
-    s32 offset = idx * 0x1c;
+    s32 offset = idx * sizeof(struct sprite_anim);
 
-    rec = *(void **)rec;
-    rec = (u8 *)rec + offset;
+    rec = (void *)((struct sprite_bank *)rec)->anims;
+    rec = (u8 *)rec + offset; /* &bank->anims[part->tag] */
 
-    if (*((u8 *)part + 0x38) != 0) {
-        register s32 mask asm("r0") = 2;
-        register s32 flags asm("r2") = *((u8 *)rec + 0x17);
+    if (part->animDone != 0) {
+        register s32 mask asm("r0") = SPRITE_ANIM_LOOP;
+        register s32 flags asm("r2") = ((struct sprite_anim *)rec)->flags;
         register s32 test asm("r0");
 
         test = mask & flags;
         if (!test) {
-            *(s32 *)((u8 *)part + 0x30) = *((u8 *)rec + 0x16) - 1;
-            *(s32 *)((u8 *)part + 0x34) = *((u8 *)rec + 0x15);
+            part->frame = ((struct sprite_anim *)rec)->frameCount - 1;
+            part->stepTimer = ((struct sprite_anim *)rec)->duration;
         }
     }
 
     {
-        void **tablePtr2 = *(void ***)((u8 *)part + 0x20);
-        s32 frameIdx = *(s32 *)((u8 *)part + 0x30);
-        register void *recPtr asm("r1") = *(void **)rec;
+        struct sprite_bank *bank = (struct sprite_bank *)part->bank;
+        s32 frameIdx = part->frame;
+        register void *recPtr asm("r1") = (void *)((struct sprite_anim *)rec)->seq;
         register s32 byteOffset asm("r0") = frameIdx * 2;
         register u16 *arr asm("r0");
         register void **ptrArray asm("r1");
@@ -180,7 +182,7 @@ void *sub_80083B8(struct actor *part)
             : "0"(byteOffset), "r"(recPtr)
         );
 
-        ptrArray = *(void ***)((u8 *)tablePtr2 + 4);
+        ptrArray = (void **)bank->frames;
         idx2 = *arr;
         return ptrArray[idx2];
     }

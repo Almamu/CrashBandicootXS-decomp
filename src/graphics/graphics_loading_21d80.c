@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor.h"
+#include "sprite_bank.h"
 
 extern void *gUnknown_030012C0;
 extern void *gUnknown_030012B4;
@@ -419,8 +420,10 @@ void *sub_8022230(void *self)
         asm volatile("bl sub_8006FB4" : "+r" (cache) :: "r1", "r2", "r3", "lr", "cc");
         *addr = cache;
         {
-            register u16 count asm("r1") = *(u16 *)(gStaticData_084A5600 + 0xe);
-            register const u8 *records asm("r2") = *(const u8 **)(gStaticData_084A5600 + 8);
+            register u16 count asm("r1") =
+                ((const struct sprite_bank_table *)gStaticData_084A5600)->tilePoolCount;
+            register const u8 *records asm("r2") =
+                ((const struct sprite_bank_table *)gStaticData_084A5600)->tilePool;
 
             sub_8006EF0(cache, count, records);
         }

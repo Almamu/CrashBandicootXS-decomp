@@ -16,19 +16,18 @@ extern void sub_8015780(void *self, s32 a, s32 b, s32 c, s32 d);
 /* Same shape as `sub_801426C` (actor_part18.c) - resets the same
  * flag/counter/table-index trio via `sub_8015780` while `part+0x38` is
  * set. */
-void sub_80144E0(void *selfArg)
+void sub_80144E0(struct act *self)
 {
-    u8 *self = selfArg;
-    u8 *part = *(u8 **)(self + 0x10);
+    struct act_part *part = self->part;
 
-    if (part[0x38] != 0) {
+    if (part->animDone != 0) {
         sub_8015780(self, 0, 0x12, 0, 0);
-        self[0x31] = 0;
-        self[0x2f] = 1;
-        self[0x27] = 0;
-        self[0x32] = 0;
-        self[0x30] = 1;
-        self[0x28] = 0;
+        self->next31 = 0;
+        self->flag2F = 1;
+        self->next27 = 0;
+        self->next32 = 0;
+        self->flag30 = 1;
+        self->next28 = 0;
     }
 }
 
@@ -37,12 +36,11 @@ void sub_80144E0(void *selfArg)
  * in `[7,8]`. If still clear, resets the same flag/counter/table-index
  * trio as `sub_801426C` via `sub_8015780`; otherwise fires the usual
  * base+offset+fn-pointer trampoline pair. */
-void sub_8014524(void *selfArg)
+void sub_8014524(struct act *self)
 {
-    u8 *self = selfArg;
-    u8 *part = *(u8 **)(self + 0x10);
+    struct act_part *part = self->part;
 
-    if (part[0x38] != 0) {
+    if (part->animDone != 0) {
         void *dummy = gUnknown_03001304;
         u16 m = gUnknown_030007E0 & 0x100;
         u8 v = m != 0;
@@ -58,25 +56,25 @@ void sub_8014524(void *selfArg)
 
         if (v == 0) {
             sub_8015780(self, 0, 0x12, 0, v);
-            self[0x31] = v;
-            self[0x2f] = 1;
-            self[0x27] = v;
-            self[0x32] = v;
-            self[0x30] = 1;
-            self[0x28] = v;
+            self->next31 = v;
+            self->flag2F = 1;
+            self->next27 = v;
+            self->next32 = v;
+            self->flag30 = 1;
+            self->next28 = v;
         } else {
-            u8 *mgr = *(u8 **)(self + 0xc);
-            u8 *off;
-            sub_803AD80(self + *(s16 *)(mgr + 0x20), (void *)0x10,
-                        *(void **)(mgr + 0x24));
-            off = *(u8 **)(self + 0xc) + 0x50;
-            sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10),
-                        (void *)3, *(void **)(off + 4));
+            struct act_vtable *mgr = self->vt;
+            struct act_method *off;
+            sub_803AD80((u8 *)self + mgr->m20.thisOffset, (void *)0x10,
+                        mgr->m20.fn);
+            off = &self->vt->m50;
+            sub_803AD84((u8 *)self + off->thisOffset, self->part,
+                        (void *)3, off->fn);
             {
                 u8 zero = 0;
-                self[0x31] = zero;
-                self[0x2f] = 1;
-                self[0x27] = zero;
+                self->next31 = zero;
+                self->flag2F = 1;
+                self->next27 = zero;
             }
         }
     }

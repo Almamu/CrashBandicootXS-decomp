@@ -76,7 +76,9 @@ struct anim_table
 
 struct gobj_vtable
 {
-    u8 unk_00[0x38];
+    u8 unk_00[0x10];
+    struct method m10; // 0x10 - returns the platform record the object stands on (sub_800A528)
+    u8 unk_18[0x20];
     struct method m38; // 0x38
     u8 unk_40[0x20];
     struct method m60; // 0x60
@@ -95,7 +97,7 @@ struct gobj
     u8 flags2;          // 0x0D
     u8 unk_0E[0xA];
     struct gobj_vtable *vtable; // 0x18
-    u8 unk_1C[4];
+    void *platform;     // 0x1C - the last m10 record (sub_800A528/sub_800A590)
     struct anim_table *anim; // 0x20
     u8 dir;             // 0x24
     u8 unk_25[3];
@@ -106,7 +108,7 @@ struct gobj
     u8 tag;             // 0x2D
     u8 unk_2E[2];
     s32 frame;          // 0x30
-    u8 unk_34[4];
+    s32 unk_34;         // 0x34
     u8 unk_38;          // 0x38
     u8 unk_39[0xB];
     struct mover *mover; // 0x44
@@ -115,11 +117,35 @@ struct gobj
     s32 speedX;         // 0x60
     s32 speedY;         // 0x64
     u8 unk_68;          // 0x68
-    u8 unk_69[0xB];
+    u8 unk_69[3];
+    s32 prevX;          // 0x6C - previous position (Q8), cached by sub_8009DF4
+    s32 prevY;          // 0x70
     s32 unk_74;         // 0x74
     s32 type;           // 0x78
-    u8 unk_7C[0x30];
+    u8 unk_7C[4];
+    u8 unk_80;          // 0x80
+    u8 unk_81[7];
+    u8 unk_88;          // 0x88 - nonzero freezes `list` (sub_800B58C/sub_800B650/sub_800B678)
+    u8 unk_89[3];
+    u32 deadline;       // 0x8C - gUnknown_0300082C frame sub_800B524 tests against
+    u8 unk_90;          // 0x90
+    u8 countdown;       // 0x91
+    u8 unk_92;          // 0x92 - a counter
+    u8 unk_93;
+    u8 listCount;       // 0x94
+    u8 unk_95[3];
+    s32 list[5];        // 0x98 - appended to by sub_800B678
     struct gobj *carried; // 0xAC
+    /* The rest is only reached by the base-class accessors in
+     * actor_part16.c. */
+    u8 unk_B0[0x50];
+    u8 unk_100;         // 0x100 - nonzero stops sub_800B4D0 from setting speedX
+    u8 unk_101;         // 0x101
+    u8 unk_102;         // 0x102
+    u8 unk_103;         // 0x103
+    u8 unk_104;         // 0x104 - a boolean
+    u8 unk_105[3];
+    u8 unk_108[4];      // 0x108 - an embedded object (sub_800B4A4 returns its address)
 };
 
 struct mover_vtable

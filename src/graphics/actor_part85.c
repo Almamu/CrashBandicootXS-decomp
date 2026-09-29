@@ -14,11 +14,11 @@
  * wholesale into the real tile graphics VRAM - the classic "abuse the BG
  * tile grid as a raw indexed bitmap" GBA trick. */
 struct particle_bg {
-    /* Always 0x06000000 - the BG tile *graphics* VRAM this object's whole
+    /* Always `VRAM` - the BG tile *graphics* VRAM this object's whole
      * `tileBuffer` gets DMA'd into every frame. */
     u32 tileVramBase;
-    /* Always 0x0600F800 - BG0's screen/tilemap base (screen base block 31,
-     * see `sub_8034374`'s `REG_BG0CNT` setup below), laid out once at
+    /* Always `BG_SCREEN_ADDR(31)` - BG0's screen/tilemap base (see
+     * `sub_8034374`'s `REG_BG0CNT` setup below), laid out once at
      * construction time as one sequential tile index per 8x8 cell. */
     u32 mapVramBase;
     /* 128-slot particle array (`sub_8026EC0(0x800)`, 16-byte stride - see
@@ -105,21 +105,21 @@ void *sub_8034374(void *selfArg)
 
     bg0cnt &= -0x10000;
     bg0cnt |= 3;                /* priority 3 */
-    bg0cnt |= 0xf8 << 5;        /* screen base block 31 (0x0600F800) */
+    bg0cnt |= 0xf8 << 5;        /* screen base block 31 */
     REG_BG0CNT = bg0cnt;
 
-    self->tileVramBase = 0x06000000;
-    self->mapVramBase = 0x0600F800;
+    self->tileVramBase = VRAM;
+    self->mapVramBase = BG_SCREEN_ADDR(31);
 
     sub_80015D0();
 
     /* Clears BG palette entry 0 (the backdrop color). */
-    *(vu16 *)0x05000000 = zero;
+    *(vu16 *)BG_PLTT = zero;
 
     /* A 3-step white-to-black grayscale gradient into BG palette bank 15's
-     * last 3 entries (0x050001E0 = palette index 240), used by the
+     * last 3 entries (from palette index 240), used by the
      * tilemap-fill loop below's palette-bank-15 tile entries. */
-    gradDst = (u16 *)0x050001E0;
+    gradDst = &((u16 *)BG_PLTT)[240];
     dma2Src = &dmaFillSrc32;
     gradIdx = 0;
     gradCount = 2;

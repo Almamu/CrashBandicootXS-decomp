@@ -1,4 +1,5 @@
 #include "core.h"
+#include "gobj_1a794.h"
 
 /* GitHub issue #9: 0x08007634-0x0800B3F0, game_loop-labeled chunk that
  * turned out to be part of the `actor` category's "part" object family
@@ -8,17 +9,15 @@
  * sub_800A0FC/sub_800A178/sub_800A420) and the already-matched
  * actor_part14.c (sub_800A5F4 onward). */
 
-extern void *sub_803AD7C(void *arg0, void *fn);
 extern void sub_8009FB0(void *self);
 
 /* Looks up `self`'s current "moving platform" record via the
- * `self->table+0x10/0x14`-driven trampoline (the same base+offset+
- * fn-pointer convention as `sub_8008DC0`'s `+0x20/0x24` slot in
- * actor_part11.c, just a different table slot) and, if the record
- * pointer changed since the last call (cached at `self+0x1c`, non-NULL),
- * nudges `self->y` (`self+4`) by the delta between the old and new
+ * virtual method `m10` (the same method-table convention as
+ * `sub_8008DC0`'s `m20` slot in actor_part11.c) and, if the record
+ * pointer changed since the last call (cached in `self->platform`,
+ * non-NULL), nudges `self->y` by the delta between the old and new
  * record's position - interpreted as `record[5] + record[2]` (a Q8
- * byte+halfword sum) when `self+0x68` reads state `8`, or just
+ * byte+halfword sum) when `self->unk_68` reads state `8`, or just
  * `record[2]` (a plain halfword) when it reads state `4`. Reads as a
  * "ride along with a moving platform" hookup: when the platform record
  * moves, carry the rider by the same amount. This function
@@ -51,10 +50,9 @@ extern void sub_8009FB0(void *self);
  * "base function then its +1-call variant" relationship, since the
  * linker places each object's functions in source order and this one
  * must land first. */
-void sub_800A528(void *selfArg)
+void sub_800A528(struct gobj *self)
 {
-    u8 *self = selfArg;
-    void *tbl;
+    struct gobj_vtable *tbl;
     s16 off;
     void *addr;
     void *fn;
@@ -64,17 +62,17 @@ void sub_800A528(void *selfArg)
 
     sub_8009FB0(self);
 
-    tbl = *(void **)(self + 0x18);
-    off = *(s16 *)((u8 *)tbl + 0x10);
-    addr = self + off;
-    fn = *(void **)((u8 *)tbl + 0x14);
-    rec = sub_803AD7C(addr, fn);
-    prev = *(void **)(self + 0x1c);
+    tbl = self->vtable;
+    off = tbl->m10.thisOffset;
+    addr = (u8 *)self + off;
+    fn = tbl->m10.fn;
+    rec = (void *)sub_803AD7C(addr, fn);
+    prev = self->platform;
 
     if (prev == rec) goto skip;
     if (prev == NULL) goto skip;
 
-    if (self[0x68] == 8) {
+    if (self->unk_68 == 8) {
         register s32 prevSum asm("r2");
         register s32 newSum asm("r1");
 
@@ -96,7 +94,7 @@ void sub_800A528(void *selfArg)
         );
         if (prevSum == newSum) goto skip;
         delta = prevSum - newSum;
-    } else if (self[0x68] == 4) {
+    } else if (self->unk_68 == 4) {
         register s32 prevVal asm("r0");
         register s32 newVal asm("r1");
 
@@ -118,30 +116,29 @@ void sub_800A528(void *selfArg)
     }
 
     delta <<= 8;
-    *(s32 *)(self + 4) += delta;
+    self->y += delta;
 
 skip:
-    *(void **)(self + 0x1c) = rec;
+    self->platform = rec;
 }
 
 /* Same shape as `sub_800A528` above, minus its leading unconditional
  * `sub_8009FB0(self)` call. See `sub_800A528`'s doc comment for the
  * shared logic and the closed register-allocation gap. */
-void sub_800A590(void *selfArg)
+void sub_800A590(struct gobj *self)
 {
-    u8 *self = selfArg;
-    void *tbl = *(void **)(self + 0x18);
-    s16 off = *(s16 *)((u8 *)tbl + 0x10);
-    void *addr = self + off;
-    void *fn = *(void **)((u8 *)tbl + 0x14);
-    register void *rec asm("r3") = sub_803AD7C(addr, fn);
-    register void *prev asm("r1") = *(void **)(self + 0x1c);
+    struct gobj_vtable *tbl = self->vtable;
+    s16 off = tbl->m10.thisOffset;
+    void *addr = (u8 *)self + off;
+    void *fn = tbl->m10.fn;
+    register void *rec asm("r3") = (void *)sub_803AD7C(addr, fn);
+    register void *prev asm("r1") = self->platform;
     register s32 delta asm("r1");
 
     if (prev == rec) goto skip;
     if (prev == NULL) goto skip;
 
-    if (self[0x68] == 8) {
+    if (self->unk_68 == 8) {
         register s32 prevSum asm("r2");
         register s32 newSum asm("r1");
 
@@ -160,7 +157,7 @@ void sub_800A590(void *selfArg)
         );
         if (prevSum == newSum) goto skip;
         delta = prevSum - newSum;
-    } else if (self[0x68] == 4) {
+    } else if (self->unk_68 == 4) {
         register s32 prevVal asm("r0");
         register s32 newVal asm("r1");
 
@@ -180,9 +177,9 @@ void sub_800A590(void *selfArg)
     }
 
     delta <<= 8;
-    *(s32 *)(self + 4) += delta;
+    self->y += delta;
 
 skip:
-    *(void **)(self + 0x1c) = rec;
+    self->platform = rec;
 }
 asm(".align 2, 0");
