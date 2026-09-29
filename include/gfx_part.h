@@ -54,11 +54,14 @@ struct gfx_part
     u8 unk_2C;              // 0x2C
     u8 tag;                 // 0x2D
     u8 unk_2E[2];
-    s32 frame;              // 0x30
-    u8 unk_34[4];
+    s32 frame;              // 0x30 - step within the animation
+    s32 stepTimer;          // 0x34 - reset to the animation's `duration` (sub_80083B8)
     u8 animDone;            // 0x38
     u8 unk_39[0xB];
     void *ctrl;             // 0x44
+    u8 unk_48[0x24];
+    s32 prevX;              // 0x6C - previous position (Q8), cached by sub_8009DF4
+    s32 prevY;              // 0x70
 };
 
 /* The whole flags byte at +0x0C, for the spots that update it as one

@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor.h"
+#include "actor_self.h"
 
 /* GitHub issue #9/#10 (0x0800B8DC-0x0800D040 cluster, see
  * docs/matching/issue-9-10-0x0800b8dc-graphics.md): the small gap the
@@ -80,12 +81,52 @@
  * suma coincide`). This fully consumes `asm/code_3_2_17_ca04.s`,
  * retired from `ldscript.txt`. */
 
+/* This cluster's controller object (the class of sub_800B8DC,
+ * actor_part112.c), as far as this file's accessors describe it. The
+ * 0x30/0x34/0x38 triple is only ever set here - its readers (the
+ * "blocking condition" checks in the docs) test the *owner's* fields at
+ * the same offsets, so its own meaning is still unknown. */
+struct trigger_ctrl {
+    u8 unk_00[4];
+    void *manager;          // 0x04 - 8-byte-record array (sub_800B704/sub_800B838)
+    u8 unk_08[4];
+    void *vtable;           // 0x0C
+    u8 unk_10[0x10];
+    s32 boxX;               // 0x20 - trigger box (sub_800C5D4)
+    s32 boxY;               // 0x24
+    s32 boxW;               // 0x28
+    s32 boxH;               // 0x2C
+    s32 unk_30;             // 0x30
+    s32 unk_34;             // 0x34
+    s32 unk_38;             // 0x38
+    s32 oscDivisor;         // 0x3C - sine oscillator (sub_800C8F8/sub_800C940/sub_800C97C)
+    s32 oscPhase;           // 0x40
+    s32 oscAmplitude;       // 0x44
+    s32 period;             // 0x48 - sub_800BFA8's gate passes once every `period` frames...
+    s32 phase;              // 0x4C - ...at this offset
+    u8 unk_50[0x1C];
+    s32 unk_6c;             // 0x6C - state/anim id
+    void *owner;            // 0x70 - the controlled object
+    u8 unk_74[0x10];
+    void *triggerTable;     // 0x84 - mode-indexed (sub_800C8CC/sub_800C6A8)
+    void *popup;            // 0x88 - floating popup child
+};
+
+/* A periodic trigger actor (sub_800CB40 builds one on top of graphics.c's
+ * `struct actor`): fires sub_803AD88 at its own position once every
+ * `period` frames while near the camera (sub_800CACC). */
+struct timed_trigger {
+    struct actor base;      // 0x00 - `base.table` is the method table
+    s32 unk_1c;             // 0x1C - read but unused by sub_800CACC
+    s32 period;             // 0x20
+    s32 phase;              // 0x24
+};
+
 /* `self+0x70` ("owner") setter - the first confirmed writer of this
  * field anywhere in the cluster (every other function only reads it). */
-void sub_800CA04(void *selfArg, void *owner)
+void sub_800CA04(struct trigger_ctrl *self, void *owner)
 {
-    u8 *self = selfArg;
-    *(void **)(self + 0x70) = owner;
+    self->owner = owner;
 }
 
 extern struct actor *gUnknown_030012D8;
@@ -149,13 +190,12 @@ extern u8 gStaticData_0816BB6C[];
  * table - an initializer/reset for this object's own extension
  * fields, called by `sub_800CA74` below as part of its own
  * construction sequence. */
-void sub_800CA48(void *selfArg)
+void sub_800CA48(struct trigger_ctrl *self)
 {
-    u8 *self = selfArg;
-    *(void **)(self + 0x70) = NULL;
-    *(void **)(self + 0x84) = NULL;
-    *(void **)(self + 4) = gStaticData_0816BB6C;
-    *(void **)(self + 0x88) = NULL;
+    self->owner = NULL;
+    self->triggerTable = NULL;
+    self->manager = gStaticData_0816BB6C;
+    self->popup = NULL;
 }
 
 extern u8 gStaticData_087E3EE4[];
@@ -174,10 +214,9 @@ extern void sub_800B8C8(void *self);
  * never survives past the call - the same harmless double-set pattern
  * already established for `sub_8018858`/`sub_8017A78`/`sub_8017FD4`/
  * `sub_800CCCC`. */
-void sub_800CA60(void *selfArg, s32 flags)
+void sub_800CA60(struct trigger_ctrl *self, s32 flags)
 {
-    u8 *self = selfArg;
-    *(void **)(self + 0xc) = gStaticData_087E3EE4;
+    self->vtable = gStaticData_087E3EE4;
     sub_800B8A8(self, flags);
 }
 
@@ -188,11 +227,10 @@ void sub_800CA60(void *selfArg, s32 flags)
  * constructor shape already matched for `sub_801886C`/`sub_8018858`/
  * `sub_800CBD4`/`sub_800CCE0`, with `sub_800CA48` playing the
  * `nullsub_N`-hook role those other constructors give a no-op. */
-void *sub_800CA74(void *selfArg)
+void *sub_800CA74(struct trigger_ctrl *self)
 {
-    u8 *self = selfArg;
     sub_800B8C8(self);
-    *(void **)(self + 0xc) = gStaticData_087E3EE4;
+    self->vtable = gStaticData_087E3EE4;
     sub_800CA48(self);
     return self;
 }
@@ -200,32 +238,29 @@ void *sub_800CA74(void *selfArg)
 /* `self+0x3c`/`0x40`/`0x44` setter - the sine-oscillator parameters
  * (divisor, phase offset, amplitude) `sub_800C8F8`/`sub_800C940`/
  * `sub_800C97C` (`actor_part116.c`) already consume. */
-void sub_800CA94(void *selfArg, s32 a, s32 b, s32 c)
+void sub_800CA94(struct trigger_ctrl *self, s32 a, s32 b, s32 c)
 {
-    u8 *self = selfArg;
-    *(s32 *)(self + 0x3c) = a;
-    *(s32 *)(self + 0x40) = b;
-    *(s32 *)(self + 0x44) = c;
+    self->oscDivisor = a;
+    self->oscPhase = b;
+    self->oscAmplitude = c;
 }
 asm(".align 2, 0");
 
 /* `self+0x48`/`0x4c` setter - the fields `sub_800BFA8`'s
  * (`actor_part121.c`) own `sub_803AE4C` "close enough" gate reads. */
-void sub_800CA9C(void *selfArg, s32 a, s32 b)
+void sub_800CA9C(struct trigger_ctrl *self, s32 a, s32 b)
 {
-    u8 *self = selfArg;
-    *(s32 *)(self + 0x48) = a;
-    *(s32 *)(self + 0x4c) = b;
+    self->period = a;
+    self->phase = b;
 }
 
 /* `self+0x30`/`0x34`/`0x38` setter - the "blocking condition" pair
  * plus "enabled" byte the Phase 1 doc's field table already names. */
-void sub_800CAA4(void *selfArg, s32 a, s32 b, s32 c)
+void sub_800CAA4(struct trigger_ctrl *self, s32 a, s32 b, s32 c)
 {
-    u8 *self = selfArg;
-    *(s32 *)(self + 0x30) = a;
-    *(s32 *)(self + 0x34) = b;
-    *(s32 *)(self + 0x38) = c;
+    self->unk_30 = a;
+    self->unk_34 = b;
+    self->unk_38 = c;
 }
 
 /* `self+0x20`/`0x24`/`0x28`/`0x2c` full 4-corner setter - the
@@ -236,32 +271,29 @@ void sub_800CAA4(void *selfArg, s32 a, s32 b, s32 c)
  * argument arrives on the stack (only 3 fit in `r1`-`r3`); needed the
  * trailing `[[matching_decomp_alignment_fix]]` idiom since its own
  * 18-byte body isn't 4-byte-aligned. */
-void sub_800CAAC(void *selfArg, s32 a, s32 b, s32 c, s32 d)
+void sub_800CAAC(struct trigger_ctrl *self, s32 a, s32 b, s32 c, s32 d)
 {
-    u8 *self = selfArg;
-    *(s32 *)(self + 0x20) = a;
-    *(s32 *)(self + 0x28) = c;
-    *(s32 *)(self + 0x24) = b;
-    *(s32 *)(self + 0x2c) = d;
+    self->boxX = a;
+    self->boxW = c;
+    self->boxY = b;
+    self->boxH = d;
 }
 asm(".align 2, 0");
 
 /* `self+0x84` setter - the per-instance mode-indexed pointer table
  * `sub_800C8CC`/`sub_800C6A8` (`actor_part113.c`/`actor_part122.c`)
  * both trigger through. */
-void sub_800CAC0(void *selfArg, s32 a)
+void sub_800CAC0(struct trigger_ctrl *self, void *a)
 {
-    u8 *self = selfArg;
-    *(s32 *)(self + 0x84) = a;
+    self->triggerTable = a;
 }
 asm(".align 2, 0");
 
 /* `self+0x6c` setter - the "second, larger-range state/anim-id byte"
  * the Phase 1 doc's field table already names. */
-void sub_800CAC8(void *selfArg, s32 a)
+void sub_800CAC8(struct trigger_ctrl *self, s32 a)
 {
-    u8 *self = selfArg;
-    *(s32 *)(self + 0x6c) = a;
+    self->unk_6c = a;
 }
 
 extern u32 gUnknown_0300082C;
@@ -289,24 +321,23 @@ extern void sub_803AD88(void *arg0, s32 arg1, s32 arg2, s32 arg3);
  * `self` itself was already using, and free again by this point) -
  * unpinned, gcc picked a spare `r3` for it instead, a harmless but
  * byte-different register choice from the ROM's own. */
-void sub_800CACC(void *selfArg)
+void sub_800CACC(struct timed_trigger *self)
 {
-    u8 *self = selfArg;
-    s32 selfX = *(s32 *)self >> 8;
+    s32 selfX = self->base.x >> 8;
     s32 cameraX = gUnknown_030012D8->x >> 8;
 
     if ((u32)(selfX - cameraX - 0xa1) <= 0xee) {
         s32 base = (s32)gUnknown_0300082C;
-        s32 field20 = *(s32 *)(self + 0x20);
-        s32 divCheck = sub_803AE4C(base + field20 - *(s32 *)(self + 0x24), field20);
+        s32 period = self->period;
+        s32 divCheck = sub_803AE4C(base + period - self->phase, period);
 
         if (divCheck == 0) {
             void *arg0 = (void *)0xFFFF;
             u32 arg1 = ((u32)selfX << 16) >> 16;
-            u32 arg2 = ((u32)*(s32 *)(self + 4) << 8) >> 16;
+            u32 arg2 = ((u32)self->base.y << 8) >> 16;
             register s32 dead asm("r4");
 
-            dead = *(volatile s32 *)(self + 0x1c);
+            dead = *(volatile s32 *)&self->unk_1c;
             (void)dead;
             sub_803AD88(arg0, arg1, arg2, 0);
         }
@@ -321,10 +352,9 @@ extern void sub_8026ED0(void *self);
  * `gStaticData_087E3BEC` - the same table `graphics.c`'s own
  * constructors already use - then, only if bit 0 of `flags` is set,
  * fires `sub_8026ED0(self)`. */
-void sub_800CB20(void *selfArg, s32 flags)
+void sub_800CB20(struct timed_trigger *self, s32 flags)
 {
-    u8 *self = selfArg;
-    *(void **)(self + 0x18) = gStaticData_087E3BEC;
+    self->base.table = gStaticData_087E3BEC;
     if (flags & 1) {
         sub_8026ED0(self);
     }
@@ -336,21 +366,19 @@ extern u8 gStaticData_087E3F4C[];
 /* Calls `sub_800725C(self)` (already matched, `graphics.c`) - its
  * return value discarded - then sets `self+0x18`'s table pointer to
  * `gStaticData_087E3F4C` and returns `self`. */
-void *sub_800CB40(void *selfArg)
+void *sub_800CB40(struct timed_trigger *self)
 {
-    u8 *self = selfArg;
-    sub_800725C((struct actor *)self);
-    *(void **)(self + 0x18) = gStaticData_087E3F4C;
+    sub_800725C(&self->base);
+    self->base.table = gStaticData_087E3F4C;
     return self;
 }
 
 /* `self+0x20`/`0x24` partial (position-only) setter - the same AABB
  * trigger-box fields `sub_800CAAC` above sets all four corners of. */
-void sub_800CB58(void *selfArg, s32 a, s32 b)
+void sub_800CB58(struct timed_trigger *self, s32 a, s32 b)
 {
-    u8 *self = selfArg;
-    *(s32 *)(self + 0x20) = a;
-    *(s32 *)(self + 0x24) = b;
+    self->period = a;
+    self->phase = b;
 }
 asm(".align 2, 0");
 
@@ -358,10 +386,9 @@ asm(".align 2, 0");
  * `sub_800C898` (`actor_part122.c`) already write, and the field
  * `sub_800CACC` above reads (but never uses) via its own dead
  * `self+0x1c` load. */
-void sub_800CB60(void *selfArg, s32 a)
+void sub_800CB60(struct timed_trigger *self, s32 a)
 {
-    u8 *self = selfArg;
-    *(s32 *)(self + 0x1c) = a;
+    self->unk_1c = a;
 }
 
 extern void *gUnknown_030012B4;
@@ -388,13 +415,18 @@ extern void *sub_803AD7C(void *addr, void *fn);
  * already explains is needed to stop this compiler CSE-ing away the
  * ROM's own seemingly-redundant second `ldrh` and folding the
  * shift-setup pair into a single instruction. */
+struct probe_vtable {
+    u8 unk_00[0x28];
+    struct actor_method m28;    // 0x28 - hit probe
+};
+
 void sub_800CB64(void *selfArg, void *otherArg)
 {
     register u8 *other asm("r4") = otherArg;
-    u8 *table = *(u8 **)(other + 0x18);
-    s16 offset = *(s16 *)(table + 0x28);
+    struct probe_vtable *table = ((struct actor *)other)->table;
+    s16 offset = table->m28.thisOffset;
     void *addr = other + offset;
-    void *fn = *(void **)(table + 0x2c);
+    void *fn = table->m28.fn;
 
     (void)selfArg;
 
@@ -443,9 +475,8 @@ extern u8 gStaticData_087E3FA4[];
  * at - then tail-calls `sub_800B8A8`, which promptly resets `self+0xc`
  * right back to `gStaticData_087E3E7C` regardless (same harmless dead
  * store as `sub_800CA60`). */
-void sub_800CBC0(void *selfArg, s32 flags)
+void sub_800CBC0(struct trigger_ctrl *self, s32 flags)
 {
-    u8 *self = selfArg;
-    *(void **)(self + 0xc) = gStaticData_087E3FA4;
+    self->vtable = gStaticData_087E3FA4;
     sub_800B8A8(self, flags);
 }

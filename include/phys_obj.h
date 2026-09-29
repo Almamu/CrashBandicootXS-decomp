@@ -79,7 +79,7 @@ struct phys_obj
     u8 tag;             // 0x2D
     u8 unk_2E[2];
     s32 frame;          // 0x30
-    u8 unk_34[4];
+    s32 unk_34;         // 0x34
     u8 unk_38;          // 0x38 - nonzero: reset `frame` once the busy bit is seen
     u8 unk_39[7];
     s32 unk_40;         // 0x40

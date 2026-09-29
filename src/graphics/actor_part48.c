@@ -1,4 +1,5 @@
 #include "core.h"
+#include "gobj_1a794.h"
 
 /* GitHub issue #9: 0x08007634-0x0800B3F0, game_loop-labeled chunk that
  * turned out to be part of the `actor` category's "part" object family
@@ -7,10 +8,9 @@
  * (`sub_800A5F4`-`sub_800A730`). */
 
 extern s32 sub_800815C(void *part);
-extern void sub_8015840(s32 arg0);
-extern void sub_80159A4(s32 arg0);
-extern void sub_8017994(s32 arg0);
-extern s32 gUnknown_0300082C;
+extern void sub_8015840(void *arg0);
+extern void sub_80159A4(void *arg0);
+extern void sub_8017994(void *arg0);
 
 /* `part`-object constructor/reset: clears the velocity/accel fields
  * `sub_800A590`/`sub_8009DF4` consume, resets state (`+0x68`) to 8,
@@ -291,19 +291,19 @@ asm(".align 2, 0");
  * copy entirely). See docs/matching/issue-9-0x08007634-actor.md. */
 void sub_800A810(void *selfArg)
 {
-    register u8 *self asm("r3") = selfArg;
+    register struct gobj *self asm("r3") = selfArg;
     s32 state;
 
     {
         register s32 zero asm("r2") = 0;
 
-        *(s32 *)(self + 0x60) = zero;
-        *(s32 *)(self + 0x64) = zero;
+        self->speedX = zero;
+        self->speedY = zero;
         {
-            u8 *p = self + 0x68;
+            u8 *p = &self->unk_68;
             *p = 8;
-            self[0x24] = zero;
-            p -= 0x40;
+            self->dir = zero;
+            p -= 0x40; /* &self->mirror */
             {
                 register s32 mask asm("r0") = -0x21;
                 register u8 byte asm("r4") = *p;
@@ -313,21 +313,21 @@ void sub_800A810(void *selfArg)
                 *p = result;
             }
         }
-        self[0x2d] = zero;
+        self->tag = zero;
     }
     {
         register s32 mask asm("r0") = -9;
-        register s32 byte asm("r1") = self[0xc];
+        register s32 byte asm("r1") = self->flags;
         register s32 result asm("r0");
         register s32 orMask asm("r1");
 
         result = mask & byte;
         orMask = 0x40;
         result = result | orMask;
-        self[0xc] = result;
+        self->flags = result;
     }
 
-    state = self[0x88];
+    state = self->unk_88;
     {
         register s32 state2 asm("r1") = state;
 
@@ -340,13 +340,13 @@ void sub_800A810(void *selfArg)
         if (state2 == 3) goto do3;
         goto endDispatch;
     do0:
-        sub_8015840(*(s32 *)(self + 0x44));
+        sub_8015840(self->mover);
         goto endDispatch;
     do1:
-        sub_80159A4(*(s32 *)(self + 0x44));
+        sub_80159A4(self->mover);
         goto endDispatch;
     do3:
-        sub_8017994(*(s32 *)(self + 0x44));
+        sub_8017994(self->mover);
     endDispatch:
         ;
     }

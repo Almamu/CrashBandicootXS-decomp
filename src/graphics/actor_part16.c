@@ -1,34 +1,36 @@
 #include "core.h"
 #include "actor.h"
+#include "gobj_1a794.h"
 
 /* Continuation of the big unnamed object introduced in
  * actor_part15.c - see that file's header comment. */
 
-extern u32 gUnknown_0300082C;
+/* Base-class accessors of the level object/player (`struct gobj`,
+ * gobj_1a794.h). */
 
-/* `self+0x108` address getter. */
+/* `unk_108` address getter. */
 void *sub_800B4A4(void *selfArg)
 {
-    return (u8 *)selfArg + 0x108;
+    return ((struct gobj *)selfArg)->unk_108;
 }
 
 /* `self+0x104` byte clear/set/get accessors. */
 void sub_800B4AC(void *selfArg)
 {
-    u8 *self = selfArg;
-    self[0x104] = 0;
+    struct gobj *self = selfArg;
+    self->unk_104 = 0;
 }
 
 void sub_800B4B8(void *selfArg)
 {
-    u8 *self = selfArg;
-    self[0x104] = 1;
+    struct gobj *self = selfArg;
+    self->unk_104 = 1;
 }
 
 u8 sub_800B4C4(void *selfArg)
 {
-    u8 *self = selfArg;
-    return self[0x104];
+    struct gobj *self = selfArg;
+    return self->unk_104;
 }
 
 /* Bulk-sets `self+0x48`/`self+0x4c`/`self+0x50`; also sets
@@ -36,54 +38,54 @@ u8 sub_800B4C4(void *selfArg)
  * clear. */
 void sub_800B4D0(void *selfArg, s32 a, s32 b, s32 c)
 {
-    u8 *self = selfArg;
+    struct gobj *self = selfArg;
 
-    if (self[0x100] == 0) {
-        *(s32 *)(self + 0x60) = a;
+    if (self->unk_100 == 0) {
+        self->speedX = a;
     }
-    *(s32 *)(self + 0x48) = a;
-    *(s32 *)(self + 0x4c) = b;
-    *(s32 *)(self + 0x50) = c;
+    self->velA.x = a;
+    self->velA.y = b;
+    self->velA.z = c;
 }
 
 /* Same bulk setter as `sub_800B4D0`, without the conditional
  * `self+0x60` write. */
 void sub_800B4F0(void *selfArg, s32 a, s32 b, s32 c)
 {
-    u8 *self = selfArg;
+    struct gobj *self = selfArg;
 
-    *(s32 *)(self + 0x48) = a;
-    *(s32 *)(self + 0x4c) = b;
-    *(s32 *)(self + 0x50) = c;
+    self->velA.x = a;
+    self->velA.y = b;
+    self->velA.z = c;
 }
 
 /* `self+0x91` countdown byte decrement/clear/increment/get
  * accessors. */
 void sub_800B4F8(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct gobj *self = selfArg;
 
-    if (self[0x91] != 0) {
-        self[0x91] -= 1;
+    if (self->countdown != 0) {
+        self->countdown -= 1;
     }
 }
 
 void sub_800B508(void *selfArg)
 {
-    u8 *self = selfArg;
-    self[0x91] = 0;
+    struct gobj *self = selfArg;
+    self->countdown = 0;
 }
 
 void sub_800B510(void *selfArg)
 {
-    u8 *self = selfArg;
-    self[0x91] += 1;
+    struct gobj *self = selfArg;
+    self->countdown += 1;
 }
 
 u8 sub_800B51C(void *selfArg)
 {
-    u8 *self = selfArg;
-    return self[0x91];
+    struct gobj *self = selfArg;
+    return self->countdown;
 }
 
 /* `self+0x8c` is a snapshot of the `gUnknown_0300082C` frame counter
@@ -92,60 +94,60 @@ u8 sub_800B51C(void *selfArg)
  * signed one here would be a real, previously-caught bug). */
 u8 sub_800B524(void *selfArg)
 {
-    u8 *self = selfArg;
-    return *(u32 *)(self + 0x8c) > gUnknown_0300082C;
+    struct gobj *self = selfArg;
+    return self->deadline > gUnknown_0300082C;
 }
 
 void sub_800B53C(void *selfArg)
 {
-    u8 *self = selfArg;
-    *(s32 *)(self + 0x8c) = 0;
+    struct gobj *self = selfArg;
+    self->deadline = 0;
 }
 
 /* Sets `self+0x8c` to `gUnknown_0300082C + arg1` - arming the
  * "ahead of the counter" check `sub_800B524` performs. */
 void sub_800B544(void *selfArg, s32 arg1)
 {
-    u8 *self = selfArg;
-    *(s32 *)(self + 0x8c) = gUnknown_0300082C + arg1;
+    struct gobj *self = selfArg;
+    self->deadline = gUnknown_0300082C + arg1;
 }
 
 /* `self+0x88` byte set/get accessors. */
 void sub_800B554(void *selfArg, u8 arg1)
 {
-    u8 *self = selfArg;
-    self[0x88] = arg1;
+    struct gobj *self = selfArg;
+    self->unk_88 = arg1;
 }
 
 u8 sub_800B55C(void *selfArg)
 {
-    u8 *self = selfArg;
-    return self[0x88];
+    struct gobj *self = selfArg;
+    return self->unk_88;
 }
 
 /* `self+0xac` pointer/word get/set accessors. */
 s32 sub_800B564(void *selfArg)
 {
-    return *(s32 *)((u8 *)selfArg + 0xac);
+    return (s32)((struct gobj *)selfArg)->carried;
 }
 
 void sub_800B56C(void *selfArg, s32 arg1)
 {
-    u8 *self = selfArg;
-    *(s32 *)(self + 0xac) = arg1;
+    struct gobj *self = selfArg;
+    self->carried = (struct gobj *)arg1;
 }
 
 /* `self+0x80` byte set/get accessors. */
 void sub_800B574(void *selfArg, u8 arg1)
 {
-    u8 *self = selfArg;
-    self[0x80] = arg1;
+    struct gobj *self = selfArg;
+    self->unk_80 = arg1;
 }
 
 u8 sub_800B57C(void *selfArg)
 {
-    u8 *self = selfArg;
-    return self[0x80];
+    struct gobj *self = selfArg;
+    return self->unk_80;
 }
 
 /* `self+0x94` byte clear/increment(gated by `self+0x88`)/get
@@ -154,73 +156,73 @@ u8 sub_800B57C(void *selfArg)
  * as-is rather than deduplicated). */
 void sub_800B584(void *selfArg)
 {
-    u8 *self = selfArg;
-    self[0x94] = 0;
+    struct gobj *self = selfArg;
+    self->listCount = 0;
 }
 
 void sub_800B58C(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct gobj *self = selfArg;
 
-    if (self[0x88] == 0) {
-        self[0x94] += 1;
+    if (self->unk_88 == 0) {
+        self->listCount += 1;
     }
 }
 
 u8 sub_800B5A0(void *selfArg)
 {
-    u8 *self = selfArg;
-    return self[0x94];
+    struct gobj *self = selfArg;
+    return self->listCount;
 }
 
 void sub_800B5A8(void *selfArg)
 {
-    u8 *self = selfArg;
-    self[0x94] = 0;
+    struct gobj *self = selfArg;
+    self->listCount = 0;
 }
 
 void sub_800B5B0(void *selfArg)
 {
-    u8 *self = selfArg;
-    self[0x94] += 1;
+    struct gobj *self = selfArg;
+    self->listCount += 1;
 }
 
 u8 sub_800B5BC(void *selfArg)
 {
-    u8 *self = selfArg;
-    return self[0x94];
+    struct gobj *self = selfArg;
+    return self->listCount;
 }
 
 /* `self+0x92` byte clear/increment/get accessors. */
 void sub_800B5C4(void *selfArg)
 {
-    u8 *self = selfArg;
-    self[0x92] = 0;
+    struct gobj *self = selfArg;
+    self->unk_92 = 0;
 }
 
 void sub_800B5CC(void *selfArg)
 {
-    u8 *self = selfArg;
-    self[0x92] += 1;
+    struct gobj *self = selfArg;
+    self->unk_92 += 1;
 }
 
 u8 sub_800B5D8(void *selfArg)
 {
-    u8 *self = selfArg;
-    return self[0x92];
+    struct gobj *self = selfArg;
+    return self->unk_92;
 }
 
 /* `self+0x90` byte set/get accessors. */
 void sub_800B5E0(void *selfArg, u8 arg1)
 {
-    u8 *self = selfArg;
-    self[0x90] = arg1;
+    struct gobj *self = selfArg;
+    self->unk_90 = arg1;
 }
 
 u8 sub_800B5E8(void *selfArg)
 {
-    u8 *self = selfArg;
-    return self[0x90];
+    struct gobj *self = selfArg;
+    return self->unk_90;
 }
 
 /* `self+0x103`/`self+0x102`/`self+0x101`/`self+0x100` byte get/set
@@ -228,70 +230,70 @@ u8 sub_800B5E8(void *selfArg)
  * per-phase flag bytes given the identical shape and adjacency. */
 u8 sub_800B5F0(void *selfArg)
 {
-    u8 *self = selfArg;
-    return self[0x103];
+    struct gobj *self = selfArg;
+    return self->unk_103;
 }
 
 void sub_800B5FC(void *selfArg, u8 arg1)
 {
-    u8 *self = selfArg;
-    self[0x103] = arg1;
+    struct gobj *self = selfArg;
+    self->unk_103 = arg1;
 }
 
 u8 sub_800B608(void *selfArg)
 {
-    u8 *self = selfArg;
-    return self[0x102];
+    struct gobj *self = selfArg;
+    return self->unk_102;
 }
 
 void sub_800B614(void *selfArg, u8 arg1)
 {
-    u8 *self = selfArg;
-    self[0x102] = arg1;
+    struct gobj *self = selfArg;
+    self->unk_102 = arg1;
 }
 
 u8 sub_800B620(void *selfArg)
 {
-    u8 *self = selfArg;
-    return self[0x101];
+    struct gobj *self = selfArg;
+    return self->unk_101;
 }
 
 void sub_800B62C(void *selfArg, u8 arg1)
 {
-    u8 *self = selfArg;
-    self[0x101] = arg1;
+    struct gobj *self = selfArg;
+    self->unk_101 = arg1;
 }
 
 u8 sub_800B638(void *selfArg)
 {
-    u8 *self = selfArg;
-    return self[0x100];
+    struct gobj *self = selfArg;
+    return self->unk_100;
 }
 
 void sub_800B644(void *selfArg, u8 arg1)
 {
-    u8 *self = selfArg;
-    self[0x100] = arg1;
+    struct gobj *self = selfArg;
+    self->unk_100 = arg1;
 }
 
 /* Indexed getter into the `self+0x98` 5-entry `s32` array, gated by
  * `self+0x88` and (for `idx > 4`) `self+0x94`'s own count. */
 s32 sub_800B650(void *selfArg, s32 idx)
 {
-    u8 *self = selfArg;
+    struct gobj *self = selfArg;
     s32 result;
 
-    if (self[0x88] != 0) {
+    if (self->unk_88 != 0) {
         goto ret0;
     }
     if (idx > 4) {
-        if (idx >= self[0x94]) {
+        if (idx >= self->listCount) {
             goto ret0;
         }
     }
     {
         register s32 offset asm("r0") = idx << 2;
-        register u8 *base asm("r1") = self + 0x98;
+        register u8 *base asm("r1") = (u8 *)self->list;
         register u8 *addr asm("r1");
 
         addr = base + offset;
@@ -308,11 +310,11 @@ end:
  * `self+0x94`, gated by `self+0x88` and the index staying `<= 4`. */
 void sub_800B678(void *selfArg, s32 val)
 {
-    register u8 *self asm("r2") = selfArg;
+    register struct gobj *self asm("r2") = selfArg;
     register s32 val3 asm("r3") = val;
 
-    if (self[0x88] == 0) {
-        register u8 *p94 asm("r0") = self + 0x94;
+    if (self->unk_88 == 0) {
+        register u8 *p94 asm("r0") = &self->listCount;
         register u32 idx asm("r1") = *p94;
 
         if (idx <= 4) {
@@ -320,7 +322,7 @@ void sub_800B678(void *selfArg, s32 val)
             register s32 offset asm("r1");
 
             offset = idx << 2;
-            arr = p94 + 4;
+            arr = p94 + 4; /* &self->list[0] */
             arr = arr + offset;
             *(s32 *)arr = val3;
         }
@@ -351,56 +353,56 @@ void sub_800B69C(void *selfArg, s32 val)
  * X, then Z, then Y last in the negated branch (`v[1]`'s load is what
  * finally overwrites `v`'s own register, so it has to come after `Z`'s
  * load, not before it, even though the source lists them X/Y/Z). */
-void sub_800B6A0(void *unused, void *selfArg, s32 *vec)
+void sub_800B6A0(void *unused, void *selfArg, struct vec3 *vec)
 {
-    register u8 *self asm("r3") = selfArg;
-    register s32 *v asm("r2") = vec;
+    register struct gobj *self asm("r3") = selfArg;
+    register s32 *v asm("r2") = (s32 *)vec;
 
-    if ((s8)(self[0x28] << 2) < 0) {
+    if ((s8)(self->mirror << 2) < 0) {
         register s32 x asm("r0") = -v[0];
         register s32 z asm("r1") = -v[2];
         register s32 y asm("r2") = v[1];
 
-        *(s32 *)(self + 0x54) = x;
-        *(s32 *)(self + 0x58) = y;
-        *(s32 *)(self + 0x5c) = z;
+        self->velB.x = x;
+        self->velB.y = y;
+        self->velB.z = z;
     } else {
         register s32 x asm("r0") = v[0];
         register s32 y asm("r1") = v[1];
         register s32 z asm("r2") = v[2];
 
-        *(s32 *)(self + 0x54) = x;
-        *(s32 *)(self + 0x58) = y;
-        *(s32 *)(self + 0x5c) = z;
+        self->velB.x = x;
+        self->velB.y = y;
+        self->velB.z = z;
     }
 }
 
 /* Same mirror-flag-gated copy as `sub_800B6A0`, also duplicating the
  * (possibly negated) X component into `self+0x64`. Matched the same
  * way. */
-void sub_800B6D0(void *unused, void *selfArg, s32 *vec)
+void sub_800B6D0(void *unused, void *selfArg, struct vec3 *vec)
 {
-    register u8 *self asm("r3") = selfArg;
-    register s32 *v asm("r2") = vec;
+    register struct gobj *self asm("r3") = selfArg;
+    register s32 *v asm("r2") = (s32 *)vec;
 
-    if ((s8)(self[0x28] << 2) < 0) {
+    if ((s8)(self->mirror << 2) < 0) {
         register s32 x asm("r0") = -v[0];
         register s32 z asm("r1") = -v[2];
         register s32 y asm("r2") = v[1];
 
-        *(s32 *)(self + 0x64) = x;
-        *(s32 *)(self + 0x54) = x;
-        *(s32 *)(self + 0x58) = y;
-        *(s32 *)(self + 0x5c) = z;
+        self->speedY = x;
+        self->velB.x = x;
+        self->velB.y = y;
+        self->velB.z = z;
     } else {
         register s32 x asm("r0") = v[0];
         register s32 y asm("r1") = v[1];
         register s32 z asm("r2") = v[2];
 
-        *(s32 *)(self + 0x64) = x;
-        *(s32 *)(self + 0x54) = x;
-        *(s32 *)(self + 0x58) = y;
-        *(s32 *)(self + 0x5c) = z;
+        self->speedY = x;
+        self->velB.x = x;
+        self->velB.y = y;
+        self->velB.z = z;
     }
 }
 asm(".align 2, 0");

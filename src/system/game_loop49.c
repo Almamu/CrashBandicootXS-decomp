@@ -109,7 +109,7 @@ static inline s32 PhysComboMaxed(struct gobj *player)
 {
     s32 maxed = FALSE;
 
-    if (*(u32 *)((u8 *)player + 0x8c) > gUnknown_0300082C)
+    if (player->deadline > gUnknown_0300082C)
         maxed = TRUE;
     return maxed;
 }
@@ -353,9 +353,9 @@ void sub_800F2BC(struct phys_obj *self)
 
         self->state |= 0x80;
         {
-            u8 *player = (u8 *)gUnknown_030012D8;
+            struct gobj *player = gUnknown_030012D8;
             one = 1;
-            player[0x80] = one;
+            player->unk_80 = one;
         }
         PhysSetTag(self, 0x23);
         recs = self->anim->records;
@@ -416,9 +416,9 @@ void sub_800F368(struct phys_obj *self)
     sub_8009150(gUnknown_0300130C, self);
     self->state |= 0x80;
     {
-        u8 *player = (u8 *)gUnknown_030012D8;
+        struct gobj *player = gUnknown_030012D8;
         u8 one = 1;
-        player[0x80] = one;
+        player->unk_80 = one;
     }
     PhysSetTag(self, 0x22);
     {
@@ -675,14 +675,14 @@ static inline struct phys_obj *PhysRingAt(struct phys_player *p, s32 i)
 
 void sub_800F798(struct phys_obj *self)
 {
-    if (gStaticData_0816BBC4[self->kind] && *(s32 *)((u8 *)self + 0x34) == 0) {
+    if (gStaticData_0816BBC4[self->kind] && self->unk_34 == 0) {
         if (self->frame == 3)
             sub_800F06C(self, 0x14);
         else if (self->frame == 6)
             sub_800F06C(self, 0x28);
     }
 
-    if (*((u8 *)self + 0x38)) {
+    if (self->unk_38) {
         struct phys_obj *prev = sub_8010708(self);
         struct phys_obj *next = sub_801070C(self);
         s32 i;

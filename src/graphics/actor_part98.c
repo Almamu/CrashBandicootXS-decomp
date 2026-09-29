@@ -17,7 +17,7 @@ void sub_8029BAC(s32 arg0)
     *dest = sub_803ADB4(arg0 << 8, 0x3c);
 }
 
-/* Fills screen block 0x0600E400 (0x0600F400 when `arg0` is set,
+/* Fills screen block 28 from row 16 on (block 30 when `arg0` is set,
  * numbering on from `w * h + 1`) with consecutive tile numbers for a
  * `w` x `h` cell grid; columns past 31 go to the next screen block
  * (+0x7c0 bytes). actor_part95.c's `sub_802996C` inlines the same body
@@ -30,12 +30,12 @@ void sub_8029BAC(s32 arg0)
  * and `h` follow from that). Matches under both compilers. */
 void sub_8029BC4(s32 arg0, s32 w, s32 h)
 {
-    u16 *base = (u16 *)0x0600E400;
+    u16 *base = (u16 *)(BG_SCREEN_ADDR(28) + 0x400);
     s32 tile;
     s32 row, col;
 
     if (arg0 != 0) {
-        base = (u16 *)0x0600F400;
+        base = (u16 *)(BG_SCREEN_ADDR(30) + 0x400);
         tile = h * w + 1;
     } else {
         tile = 1;
