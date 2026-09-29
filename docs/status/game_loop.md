@@ -581,8 +581,9 @@ plain C didn't converge.
   Phase 1 appendix for the confirmed dispatch maps (the basis for this
   issue's Phase 2 parallel split of the remaining 18 leaf functions).
   `sub_800E08C` is now real C (last-five NAKED retry, see Matched);
-  `sub_0800D18C` stays NAKED with its near-miss draft - see
-  [docs/matching/last5-naked-retry.md](../matching/last5-naked-retry.md).
+  `sub_0800D18C` stays NAKED with its near-miss draft (33 halfwords off
+  under old_agbcc) - see
+  [docs/matching/huge-naked-retry-2.md](../matching/huge-naked-retry-2.md).
 - **Now matched as real C (issue #12/#13/#25 NAKED retry, see Matched); entry kept for history.** **`sub_800E888`** (`src/system/game_loop48.c`; `sub_800EDBC` was
   promoted by the issue #12/#24/#26 retry; the
   rest of this file was promoted to C by the NAKED-retry pass, see
