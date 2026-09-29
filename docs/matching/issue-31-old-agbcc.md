@@ -99,3 +99,12 @@ are good candidates for the same old_agbcc retry.
 nudge for the fresh-register `{x - 2, y - 0x1e}` point. `sub_802062C`
 stays NAKED at 62 halfwords, now with its draft under `#if NON_MATCHING`.
 See [naked-retry-mid45.md](naked-retry-mid45.md).
+
+## Later pass: last-eleven NAKED retry
+
+`sub_802062C` is real C now. On top of the last-nine/last-ten draft, an
+r3 hold over the post-call gfx store and `rec2` lookup moves the
+&gUnknown_030012B4 reload to r1, and a copy of `part` escaped by an
+empty asm inside the argument puts the `q2` store after the
+`adds r1, r7, #0` argument move. The r9 hold is no longer needed. See
+[last-eleven-naked-retry.md](last-eleven-naked-retry.md).
