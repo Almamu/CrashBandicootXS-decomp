@@ -28,7 +28,8 @@
      "size": 482196,
      "format": "BG0 cell animation: u16 palette[256] (0x200), s16 cols=19 @+0x200, s16 rows=13 @+0x202, then 60 frames x 8028 B (19*13 4bpp tiles = 7904 B + 124 B of per-frame side data handed to the gUnknown_0300087C callback, present because type-0 categories set the flag)",
      "effort": "medium",
-     "notes": "size 0x204 + 60*8028 = 0x75B94 exactly, matching descriptor field +0x08"
+     "notes": "size 0x204 + 60*8028 = 0x75B94 exactly, matching descriptor field +0x08",
+     "status": "converted: src/data/cell_anim_03b8b0.c (graphics/category_bg/03b8b0_cell_anim.png)"
     },
     {
      "address": "0x080B1444",
@@ -37,7 +38,8 @@
      "element_type": "struct sub_effect_record",
      "element_size": 20,
      "element_count": 164,
-     "effort": "easy"
+     "effort": "easy",
+     "status": "converted: src/data/cell_anim_03b8b0.c"
     }
    ]
   },
@@ -66,7 +68,8 @@
      "address": "0x080C0C36",
      "size": 2,
      "format": "padding (aligns the next table)",
-     "effort": "easy"
+     "effort": "easy",
+     "status": "raw (gStaticData_080C0C36)"
     },
     {
      "address": "0x080C0C38",
@@ -75,7 +78,8 @@
      "element_type": "struct sub_effect_record",
      "element_size": 20,
      "element_count": 175,
-     "effort": "easy"
+     "effort": "easy",
+     "status": "converted: src/data/sub_effect_0c0c38.c"
     },
     {
      "address": "0x080C19F0",
@@ -84,33 +88,38 @@
      "element_type": "struct sub_effect_record",
      "element_size": 20,
      "element_count": 171,
-     "effort": "easy"
+     "effort": "easy",
+     "status": "converted: src/data/sub_effect_0c0c38.c"
     },
     {
      "address": "0x080C2758",
      "size": 96896,
      "format": "rotation strip A: overlapping struct sprite_frame windows {w=8,h=8,0x30,0}+2048 B, addressed by the 152 absolute pointers in table_B gStaticData_0817941C (categories 0-2, anim record 0)",
      "effort": "hard",
-     "notes": "frames overlap byte-for-byte (sliding window); last frame's 0x804 bytes run past 0x080DA1D8 into strip B"
+     "notes": "frames overlap byte-for-byte (sliding window); last frame's 0x804 bytes run past 0x080DA1D8 into strip B",
+     "status": "raw (gStaticData_080C2758): no tile grid, see docs/data_map.md"
     },
     {
      "address": "0x080DA1D8",
      "size": 151512,
      "format": "rotation strip B: 10x10-tile frames addressed by the 123 pointers in gStaticData_0817A880 (table_B of the sub_802DFDC singleton)",
      "effort": "hard",
-     "notes": "last window (0x080FEC2C + 0xC84) overlaps the start of the next region"
+     "notes": "last window (0x080FEC2C + 0xC84) overlaps the start of the next region",
+     "status": "raw (gStaticData_080DA1D8): no tile grid, see docs/data_map.md"
     },
     {
      "address": "0x080FF1B0",
      "size": 255876,
      "format": "BG0 cell animation B (categories 3-6, descriptor +0x04/+0x08): palette[256], cols=38, rows=10, 21 frames x 12160 B",
-     "effort": "medium"
+     "effort": "medium",
+     "status": "converted: src/data/cell_anim_0ff1b0.c (graphics/category_bg/0ff1b0_cell_anim.png)"
     },
     {
      "address": "0x0813D934",
      "size": 13464,
      "format": "BG1 picture for category 3 (descriptor +0x0C, sub_802F7B0): palette[256], s16 cols=38, rows=16, u32 tiles=357, u16 map[cols*rows], tiles*32 B 4bpp, palette-bank nibbles",
-     "effort": "medium"
+     "effort": "medium",
+     "status": "converted: src/data/cell_anim_0ff1b0.c (graphics/category_bg/13d934_picture*.png)"
     },
     {
      "address": "0x08140DCC",
@@ -119,7 +128,8 @@
      "element_type": "struct sub_effect_record",
      "element_size": 20,
      "element_count": 121,
-     "effort": "easy"
+     "effort": "easy",
+     "status": "converted: src/data/cell_anim_0ff1b0.c"
     }
    ]
   },
@@ -146,13 +156,15 @@
      "address": "0x08151AC2",
      "size": 2,
      "format": "padding",
-     "effort": "easy"
+     "effort": "easy",
+     "status": "raw (gStaticData_08151AC2)"
     },
     {
      "address": "0x08151AC4",
      "size": 9624,
      "format": "BG1 picture for category 4 (38x16, 237 tiles)",
-     "effort": "medium"
+     "effort": "medium",
+     "status": "converted: src/data/bg_picture_151ac4.c (graphics/category_bg/151ac4_picture*.png)"
     },
     {
      "address": "0x0815405C",
@@ -161,13 +173,15 @@
      "element_type": "struct sub_effect_record",
      "element_size": 20,
      "element_count": 230,
-     "effort": "easy"
+     "effort": "easy",
+     "status": "converted: src/data/bg_picture_151ac4.c"
     },
     {
      "address": "0x08155260",
      "size": 14008,
      "format": "BG1 picture shared by categories 5 and 6 (38x16, 374 tiles)",
-     "effort": "medium"
+     "effort": "medium",
+     "status": "converted: src/data/bg_picture_151ac4.c (graphics/category_bg/155260_picture*.png)"
     },
     {
      "address": "0x08158918",
@@ -176,7 +190,8 @@
      "element_type": "struct sub_effect_record",
      "element_size": 20,
      "element_count": 295,
-     "effort": "easy"
+     "effort": "easy",
+     "status": "converted: src/data/bg_picture_151ac4.c"
     },
     {
      "address": "0x0815A030",
@@ -185,14 +200,16 @@
      "element_type": "struct sub_effect_record",
      "element_size": 20,
      "element_count": 1,
-     "effort": "easy"
+     "effort": "easy",
+     "status": "converted: src/data/bg_picture_151ac4.c"
     },
     {
      "address": "0x0815A050",
      "size": 55940,
      "format": "rotation strip C: 8x8-tile overlapping frames addressed by table_B gStaticData_0817BA44 (categories 3-6, anim record 0, 80 pointers)",
      "effort": "hard",
-     "notes": "the highest window runs 0x4DC bytes past 0x08167AD4"
+     "notes": "the highest window runs 0x4DC bytes past 0x08167AD4",
+     "status": "raw (gStaticData_0815A050): no tile grid, see docs/data_map.md"
     }
    ]
   },

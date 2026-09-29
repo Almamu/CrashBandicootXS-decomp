@@ -126,6 +126,48 @@ struct sub_effect_record {
 }; // 0x14
 COMPILE_TIME_ASSERT(sizeof(struct sub_effect_record) == 0x14);
 
+/* The 12 bytes after a table's last record: the first three words of a
+ * record that isn't there, which the one-record-ahead accessors
+ * (`sub_802A51C`/`sub_802A504`) read for the last record. `field_04` is
+ * -1 like every real record's but record 0's. */
+struct sub_effect_table_end {
+    s32 field_00;   // 0x00 - the final threshold
+    s32 field_04;   // 0x04 - always -1
+    u8 variantA;    // 0x08 - no real record's bytes: zero in three of the seven tables, arbitrary in the rest
+    u8 variantB;
+    u8 variantC;
+    u8 pad_0b;
+}; // 0xC
+COMPILE_TIME_ASSERT(sizeof(struct sub_effect_table_end) == 0xC);
+
+/* A whole sub_effect_table as the ROM stores it (src/data/). */
+#define SUB_EFFECT_TABLE(n) struct { struct sub_effect_record records[n]; struct sub_effect_table_end end; }
+
+/* The start of a BG0 cell animation (category_descriptor.family_shared_04,
+ * read by sub_8029890/sub_802996C/sub_80297C8 in actor_part95.c): a
+ * 256-colour palette DMA'd whole to BG palette RAM, the grid size in 8x8
+ * cells, then the frames, each `cols * rows` 4bpp tiles in row-major cell
+ * order (plus, for type-0 categories, one 4-bit palette bank per cell
+ * padded to a multiple of 4 bytes, handed to the gUnknown_0300087C map
+ * callback). family_shared_08 is the whole record's size. */
+struct cell_anim_header {
+    u16 palette[256];   // 0x000
+    s16 cols;           // 0x200
+    s16 rows;           // 0x202
+}; // 0x204, the frames follow
+
+/* The start of a BG1 picture (category_descriptor.conditional_ptr_0C,
+ * read by sub_802F7B0 in actor_part45d.c): a 256-colour palette, the map
+ * size, the tile count, then `u16 map[cols * rows]` (padded to a multiple
+ * of 4 bytes), `tileCount` 4bpp tiles, and one 4-bit palette bank per map
+ * entry, low nibble first. */
+struct bg_picture_header {
+    u16 palette[256];   // 0x000
+    s16 cols;           // 0x200
+    s16 rows;           // 0x202
+    u32 tileCount;      // 0x204
+}; // 0x208, the map follows
+
 struct category_descriptor {
     u32 type;                       // 0x00 - 0 for categories 0-2, 1 for 3-5, 2 for 6 - selects the shared vtable, see above
     void *family_shared_04;         // 0x04 - constant across all categories in one family; pointer-shaped, role unknown

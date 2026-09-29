@@ -428,6 +428,14 @@ SECTIONS
 
         /* Data */
         build/crashbandicootxs/data/data.o(.rodata);
+        build/crashbandicootxs/src/data/cell_anim_03b8b0.o(.rodata);
+        build/crashbandicootxs/data/data.o(.rodata.080B2120);
+        build/crashbandicootxs/src/data/sub_effect_0c0c38.o(.rodata);
+        build/crashbandicootxs/data/data.o(.rodata.080C2758);
+        build/crashbandicootxs/src/data/cell_anim_0ff1b0.o(.rodata);
+        build/crashbandicootxs/data/data.o(.rodata.0814174C);
+        build/crashbandicootxs/src/data/bg_picture_151ac4.o(.rodata);
+        build/crashbandicootxs/data/data.o(.rodata.0815A050);
         build/crashbandicootxs/src/data/bg_package_16b284.o(.rodata);
         build/crashbandicootxs/data/data.o(.rodata.0816B298);
         build/crashbandicootxs/src/data/entry_set_16b92c.o(.rodata);

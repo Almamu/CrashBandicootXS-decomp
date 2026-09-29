@@ -73,7 +73,8 @@ $(GRAPHICS_BUILDDIR)/%.lz: $(GRAPHICS_BUILDDIR)/% | $(GFX)
 # reproduce the ROM's streams), tools/bin2c.py the initializer bytes that a
 # src/data/*.c file #includes. GRIT_C_PNGS lists the PNGs converted this
 # way, so the Makefile doesn't also build them through the .s incbin path.
-GRIT_C_PNGS := graphics/intro/00_5aa170_bitmap.png
+GRIT_C_PNGS := graphics/intro/00_5aa170_bitmap.png \
+	$(wildcard graphics/category_bg/*.png)
 
 # Mode 4 bitmaps: linear 8bpp, no palette (it's a separate asset).
 $(GRAPHICS_BUILDDIR)/%_bitmap.img.bin: graphics/%_bitmap.png | $(GRIT)
@@ -85,3 +86,54 @@ $(GRAPHICS_BUILDDIR)/%.lz.inc: $(GRAPHICS_BUILDDIR)/%.lz tools/bin2c.py
 
 $(C_BUILDDIR)/data/%.o: CPPFLAGS += -iquote $(GRAPHICS_BUILDDIR)
 $(C_BUILDDIR)/data/intro_bitmap_5aa170.o: $(GRAPHICS_BUILDDIR)/intro/00_5aa170_bitmap.img.bin.lz.inc
+
+# Actor-category backgrounds (docs/data.md, "Category backgrounds"): the
+# BG0 cell animations and BG1 pictures of graphics/category_bg/. They are
+# uncompressed, so grit's -ftb output goes straight into C initializers;
+# tools/grit_bg.py only splits/interleaves it into the ROM's record layout.
+# Every PNG is 8bpp indexed with the asset's 256-colour palette, each 8x8
+# cell drawn in one 16-colour bank (index = bank * 16 + 4bpp pixel), which
+# grit's -mRtp map reduction turns back into the bank bits.
+CATBG_DIR := $(GRAPHICS_BUILDDIR)/category_bg
+
+# Cell animation: all frames stacked in one tall PNG (row-major tiles, so
+# the tile stream is the frames back to back), plus the 256-colour palette.
+$(CATBG_DIR)/%_cell_anim.img.bin $(CATBG_DIR)/%_cell_anim.pal.bin: graphics/category_bg/%_cell_anim.png | $(GRIT)
+	@mkdir -p $(dir $@)
+	$(GRIT) $< -gt -gB4 -p -pn256 -ftb -fh! -o $(CATBG_DIR)/$*_cell_anim
+# ... and its per-cell palette banks: only the bank bits of this map are
+# used (its tile indices are a reduced set and are ignored).
+$(CATBG_DIR)/%_cell_anim_banks.map.bin: graphics/category_bg/%_cell_anim.png | $(GRIT)
+	@mkdir -p $(dir $@)
+	$(GRIT) $< -gt -gB4 -p! -m -mRtp -mLf -ftb -fh! -o $(CATBG_DIR)/$*_cell_anim_banks
+$(CATBG_DIR)/03b8b0_cell_anim_frames.inc: $(CATBG_DIR)/03b8b0_cell_anim.img.bin $(CATBG_DIR)/03b8b0_cell_anim_banks.map.bin tools/grit_bg.py
+	python3 tools/grit_bg.py frames $< $@ --cells 247 --banks $(CATBG_DIR)/03b8b0_cell_anim_banks.map.bin
+$(CATBG_DIR)/0ff1b0_cell_anim_frames.inc: $(CATBG_DIR)/0ff1b0_cell_anim.img.bin tools/grit_bg.py
+	python3 tools/grit_bg.py frames $< $@ --cells 380
+
+# BG1 picture: the tile set is its own 8px-wide strip PNG (grit's external
+# tileset, -fx, so the map indices are the ROM's), the picture PNG gives
+# the palette and, reduced against that tile set, the map.
+$(CATBG_DIR)/%_picture.pal.bin: graphics/category_bg/%_picture.png | $(GRIT)
+	@mkdir -p $(dir $@)
+	$(GRIT) $< -g! -p -pn256 -ftb -fh! -o $(CATBG_DIR)/$*_picture
+$(CATBG_DIR)/%_picture_tiles.img.bin: graphics/category_bg/%_picture_tiles.png | $(GRIT)
+	@mkdir -p $(dir $@)
+	$(GRIT) $< -gt -gB4 -p! -ftb -fh! -o $(CATBG_DIR)/$*_picture_tiles
+$(CATBG_DIR)/%_picture_map.map.bin: graphics/category_bg/%_picture.png graphics/category_bg/%_picture_tiles.png | $(GRIT)
+	@mkdir -p $(dir $@)
+	$(GRIT) $< -gt -gB4 -p! -m -mRtp -mLf -fx $(word 2,$^) -ftb -fh! -o $(CATBG_DIR)/$*_picture_map
+$(CATBG_DIR)/%_picture_map.inc: $(CATBG_DIR)/%_picture_map.map.bin tools/grit_bg.py
+	python3 tools/grit_bg.py map $< $@
+$(CATBG_DIR)/%_picture_banks.inc: $(CATBG_DIR)/%_picture_map.map.bin tools/grit_bg.py
+	python3 tools/grit_bg.py banks $< $@
+
+$(CATBG_DIR)/%.pal.inc: $(CATBG_DIR)/%.pal.bin tools/bin2c.py
+	python3 tools/bin2c.py $< $@ --u16
+$(CATBG_DIR)/%.img.inc: $(CATBG_DIR)/%.img.bin tools/bin2c.py
+	python3 tools/bin2c.py $< $@
+
+catbg_picture_incs = $(foreach p,$(1),$(CATBG_DIR)/$(p)_picture.pal.inc $(CATBG_DIR)/$(p)_picture_tiles.img.inc $(CATBG_DIR)/$(p)_picture_map.inc $(CATBG_DIR)/$(p)_picture_banks.inc)
+$(C_BUILDDIR)/data/cell_anim_03b8b0.o: $(CATBG_DIR)/03b8b0_cell_anim.pal.inc $(CATBG_DIR)/03b8b0_cell_anim_frames.inc
+$(C_BUILDDIR)/data/cell_anim_0ff1b0.o: $(CATBG_DIR)/0ff1b0_cell_anim.pal.inc $(CATBG_DIR)/0ff1b0_cell_anim_frames.inc $(call catbg_picture_incs,13d934)
+$(C_BUILDDIR)/data/bg_picture_151ac4.o: $(call catbg_picture_incs,151ac4 155260)

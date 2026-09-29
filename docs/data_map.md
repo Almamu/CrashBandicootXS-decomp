@@ -57,13 +57,13 @@ the appendix.
 
 | Range | Size | Format | Consumers | Conf. | Effort |
 |---|---:|---|---|---|---|
-| `0803B8B0`-`080B1444` | 482,196 | BG0 cell animation A (palette, 19x13 cells, 60 frames) | `sub_8029890`/`sub_80297C8` via category descriptors 0-2 | high | medium |
-| `080B1444`-`080B2120` | 3,292 | category 0 `sub_effect_record` table (164 records) | `SelectActorCategory`, `sub_802A5xx` | high | easy |
-| `080C0C36`-`080C2758` | 6,946 | 2 B pad + category 1/2 `sub_effect_record` tables | same | high | easy |
+| `0803B8B0`-`080B1444` | 482,196 | BG0 cell animation A (palette, 19x13 cells, 60 frames) | `sub_8029890`/`sub_80297C8` via category descriptors 0-2 | high | **converted** |
+| `080B1444`-`080B2120` | 3,292 | category 0 `sub_effect_record` table (164 records) | `SelectActorCategory`, `sub_802A5xx` | high | **converted** |
+| `080C0C36`-`080C2758` | 6,946 | 2 B pad + category 1/2 `sub_effect_record` tables | same | high | **converted** (the pad stays raw) |
 | `080C2758`-`080FF1B0` | 248,408 | rotation strips A and B (overlapping sprite frames) | `GetAnimFrameData` via table_B `0817941C`/`0817A880` | high | hard |
-| `080FF1B0`-`0813D934` | 255,876 | BG0 cell animation B (38x10 cells, 21 frames) | `sub_8029890` via category descriptors 3-6 | high | medium |
-| `0813D934`-`0814174C` | 15,896 | category 3 BG1 picture + `sub_effect_record` table | `sub_802F7B0`, `SelectActorCategory` | high | medium |
-| `08151AC2`-`0815A050` | 34,190 | category 4-6 BG1 pictures + `sub_effect_record` tables | same | high | medium |
+| `080FF1B0`-`0813D934` | 255,876 | BG0 cell animation B (38x10 cells, 21 frames) | `sub_8029890` via category descriptors 3-6 | high | **converted** |
+| `0813D934`-`0814174C` | 15,896 | category 3 BG1 picture + `sub_effect_record` table | `sub_802F7B0`, `SelectActorCategory` | high | **converted** |
+| `08151AC2`-`0815A050` | 34,190 | category 4-6 BG1 pictures + `sub_effect_record` tables | same | high | **converted** (the pad stays raw) |
 | `0815A050`-`08167AD4` | 55,940 | rotation strip C | `GetAnimFrameData` via table_B `0817BA44` | high | hard |
 | `08167AD4`-`0817E78C` | 92,180 | 200 small/mid tables: gameplay, menus, HUD, actors, text (the built sfx table sits in between) | direct, see appendix | mostly high | easy (a few medium) |
 | `0817E78C`-`0817E7AC` | 32 | `u16[16]` | `sub_8037388` | high | easy |
@@ -152,11 +152,14 @@ frameSize`.
 | `0803B8B0` | 0x75B94 | palette[256], cols=19, rows=13, **60 frames x 8,028 B** (7,904 B tiles + 124 B side data). `0x204 + 60*8028 = 0x75B94` exactly | medium |
 | `080B1444` | 0xCDC | category 0 `sub_effect_record[164]` (`0x14` each, count in record 0's `field_04`) + a 12-byte terminator (`{threshold, -1, ...}`) | easy |
 
-**Conversion:** a small tool (`palette.bin` + a header JSON + one 4bpp
-PNG per frame, or one tall strip) rebuilds the animation, since the tile
-bytes are plain 4bpp. The side-data format is unknown, so keep it as
-raw per-frame `.bin` until the callback is understood. The
-`sub_effect_record` table is a plain C array of an existing struct.
+**Status: converted** (`src/data/cell_anim_03b8b0.c`, see
+[data.md](./data.md) "Category backgrounds"). The side data turned out
+to be one 4-bit palette bank per cell (low nibble first, 247 cells
+padded to 124 bytes): drawn with those banks, every frame is a clean
+picture. The animation is one 152x6240 indexed PNG
+(`graphics/category_bg/03b8b0_cell_anim.png`, the 60 frames stacked,
+each cell drawn in its bank), converted by grit, and the table is a
+`SUB_EFFECT_TABLE(164)` of `struct sub_effect_record`.
 
 ### `gStaticData_080C0C36` (527,126 B): sub-effect tables, rotation strips, cell animation B, BG1 picture
 
@@ -173,6 +176,13 @@ animation-table `table_B` array:
 | `080FF1B0` | 0x3E784 | **BG0 cell animation B**: palette[256], cols=38, rows=10, **21 frames x 12,160 B** (no side data, type != 0) | descriptors 3-6 `+0x04`/`+0x08` = `{0x080FF1B0, 0x3E784}`; `0x204 + 21*12160` exact | medium |
 | `0813D934` | 0x3498 | **BG1 picture** (category 3, descriptor `+0x0C`) | `sub_802F7B0` layout below; size exact | medium |
 | `08140DCC` | 0x980 | category 3 `sub_effect_record[121]` + 0xC | descriptor 3 `+0x14`; ends exactly at the `0814174C` LZ77 sheet | easy |
+
+**Status:** the two tables are converted (`src/data/sub_effect_0c0c38.c`),
+and cell animation B, the category 3 picture and its table too
+(`src/data/cell_anim_0ff1b0.c`). The pad at `080C0C36` and the two
+rotation strips stay raw `.incbin`s, now under their own labels
+`gStaticData_080C2758` and `gStaticData_080DA1D8` (see below for why
+the strips stay raw).
 
 The **BG1 picture** format, from `sub_802F7B0` (`actor_part45d.c`):
 `u16 palette[256]`, `s16 cols @0x200`, `s16 rows @0x202`,
@@ -192,6 +202,18 @@ Converting them needs a tool that stores the stream once and emits the
 frames as views of it. That is the reason for the *hard* rating. A
 plain `.bin` split is trivial, but it isn't a real decode.
 
+A second look (while converting the rest of these blobs) found no clean
+image form either. Consecutive windows start 106-2,818 bytes apart, at
+offsets that are rarely a multiple of 32, so the stream has no
+fixed tile grid. Each window's 4-byte `{8, 8, 0x30, 0}` / `{10, 10,
+0x30, 0}` header sits inside the previous window's pixel bytes. Drawn
+as plain 8x8 4bpp tiles with the category palette, the windows come out
+as scrambled fragments of the mask, not as rotation frames. So the
+`0x30` frames are probably consumed some other way than plain tiles
+(`LoadSpriteFrameTiles`' `gUnknown_03000870` override hook is the first
+suspect), and no PNG can hold them until that is understood. They stay
+raw.
+
 ### `gStaticData_08151AC2` (90,130 B): categories 4-6
 
 The category data continued after the second LZ77 sheet, same formats as
@@ -206,6 +228,10 @@ above:
 | `08158918` | 0x1718 | category 5 `sub_effect_record[295]` + 0xC | easy |
 | `0815A030` | 0x20 | category 6 `sub_effect_record[1]` + 0xC | easy |
 | `0815A050` | 0xDA84 | **rotation strip C**, `table_B` `0x0817BA44` (anim record 0 of categories 3-6, 80 pointers). The highest window runs 0x4DC bytes past the blob's end | hard |
+
+**Status:** the pictures and tables (`08151AC4`-`0815A050`) are converted
+(`src/data/bg_picture_151ac4.c`). The pad at `08151AC2` stays raw, and so
+does rotation strip C, now labeled `gStaticData_0815A050`.
 
 ### `gStaticData_0817E78C` (3,305,076 B): level tile sets, room data, sprite tile pool
 
@@ -506,9 +532,9 @@ vtable shapes).
 
 | Address | Size | Format | Consumers | Conf. | Effort |
 |---|---:|---|---|---|---|
-| `0803B8B0` | 0x76870 | composite: BG0 streamed cell animation A + category-0 sub-effect table | `sub_8029890`, `sub_80297C8`, `sub_802996C` +2 | high | medium |
-| `080C0C36` | 0x80B16 | composite: sub-effect tables, two rotation-strip sprite pools, BG0 cell animation B, BG1 picture | `SelectActorCategory`, `GetAnimFrameData`, `sub_8029890` +2 | high | medium |
-| `08151AC2` | 0x16012 | composite: BG1 pictures, sub-effect tables, rotation strip C (categories 3-6) | `SelectActorCategory`, `GetAnimFrameData`, `sub_802F7B0` | high | medium |
+| `0803B8B0` | 0x76870 | composite: BG0 streamed cell animation A + category-0 sub-effect table. **Converted** (`src/data/cell_anim_03b8b0.c`) | `sub_8029890`, `sub_80297C8`, `sub_802996C` +2 | high | done |
+| `080C0C36` | 0x80B16 | composite: sub-effect tables, two rotation-strip sprite pools, BG0 cell animation B, BG1 picture. **Converted** except the 2-byte pad (still `gStaticData_080C0C36`) and rotation strips A/B (`gStaticData_080C2758`, `gStaticData_080DA1D8`) | `SelectActorCategory`, `GetAnimFrameData`, `sub_8029890` +2 | high | hard (strips) |
+| `08151AC2` | 0x16012 | composite: BG1 pictures, sub-effect tables, rotation strip C (categories 3-6). **Converted** except the 2-byte pad (still `gStaticData_08151AC2`) and rotation strip C (`gStaticData_0815A050`) | `SelectActorCategory`, `GetAnimFrameData`, `sub_802F7B0` | high | hard (strip) |
 | `08167AD4` | 0x200 | u16[256] fill-meter ramp/palette table (`u16` x 256) | `sub_8031504`, `sub_8031604` | high | easy |
 | `08167CD4` | 0x1E14 | per-level P1 meter grid table: s16 cols, rows, then per-level records (s16) (`s16` x 3850) | `sub_8030F88` | medium | medium |
 | `08169AE8` | 0x200 | u16[256] fill-meter table (P2 twin of 0x08167AD4) (`u16` x 256) | `sub_8032AF8`, `sub_8033604`, `sub_80336CC` | high | easy |

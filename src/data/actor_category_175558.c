@@ -37,10 +37,19 @@ extern void sub_8033604();
 extern void sub_80337E4();
 
 extern const u8 gStaticData_0803B8B0[];
+extern const u8 gStaticData_080B1444[];
 extern const u8 gStaticData_080B2120[];
-extern const u8 gStaticData_080C0C36[];
+extern const u8 gStaticData_080C0C38[];
+extern const u8 gStaticData_080C19F0[];
+extern const u8 gStaticData_080FF1B0[];
+extern const u8 gStaticData_0813D934[];
+extern const u8 gStaticData_08140DCC[];
 extern const u8 gStaticData_0814174C[];
-extern const u8 gStaticData_08151AC2[];
+extern const u8 gStaticData_08151AC4[];
+extern const u8 gStaticData_0815405C[];
+extern const u8 gStaticData_08155260[];
+extern const u8 gStaticData_08158918[];
+extern const u8 gStaticData_0815A030[];
 extern const u8 gStaticData_08178F80[];
 extern const u8 gStaticData_0817AA98[];
 
@@ -54,7 +63,7 @@ const struct category_descriptor gStaticData_08175558[7] = {
         0x75b94,
         NULL,
         (const u16 *)gStaticData_08178F80,
-        (struct sub_effect_record *)(gStaticData_0803B8B0 + 0x75b94),
+        (struct sub_effect_record *)gStaticData_080B1444,
         (struct anim_table_record *)(gStaticData_08178F80 + 0x74c),
         gStaticData_080B2120,
         4,
@@ -69,7 +78,7 @@ const struct category_descriptor gStaticData_08175558[7] = {
         0x75b94,
         NULL,
         (const u16 *)gStaticData_08178F80,
-        (struct sub_effect_record *)(gStaticData_080C0C36 + 0x2),
+        (struct sub_effect_record *)gStaticData_080C0C38,
         (struct anim_table_record *)(gStaticData_08178F80 + 0x74c),
         gStaticData_080B2120,
         4,
@@ -84,7 +93,7 @@ const struct category_descriptor gStaticData_08175558[7] = {
         0x75b94,
         NULL,
         (const u16 *)gStaticData_08178F80,
-        (struct sub_effect_record *)(gStaticData_080C0C36 + 0xdba),
+        (struct sub_effect_record *)gStaticData_080C19F0,
         (struct anim_table_record *)(gStaticData_08178F80 + 0x74c),
         gStaticData_080B2120,
         4,
@@ -95,11 +104,11 @@ const struct category_descriptor gStaticData_08175558[7] = {
     },
     /* 3 */ {
         1,
-        (void *)(gStaticData_080C0C36 + 0x3e57a),
+        (void *)gStaticData_080FF1B0,
         0x3e784,
-        (void *)(gStaticData_080C0C36 + 0x7ccfe),
+        (void *)gStaticData_0813D934,
         (const u16 *)(gStaticData_0817AA98 + 0xc),
-        (struct sub_effect_record *)(gStaticData_080C0C36 + 0x80196),
+        (struct sub_effect_record *)gStaticData_08140DCC,
         (struct anim_table_record *)(gStaticData_0817AA98 + 0x80c),
         gStaticData_0814174C,
         7,
@@ -110,11 +119,11 @@ const struct category_descriptor gStaticData_08175558[7] = {
     },
     /* 4 */ {
         1,
-        (void *)(gStaticData_080C0C36 + 0x3e57a),
+        (void *)gStaticData_080FF1B0,
         0x3e784,
-        (void *)(gStaticData_08151AC2 + 0x2),
+        (void *)gStaticData_08151AC4,
         (const u16 *)(gStaticData_0817AA98 + 0xc),
-        (struct sub_effect_record *)(gStaticData_08151AC2 + 0x259a),
+        (struct sub_effect_record *)gStaticData_0815405C,
         (struct anim_table_record *)(gStaticData_0817AA98 + 0x80c),
         gStaticData_0814174C,
         7,
@@ -125,11 +134,11 @@ const struct category_descriptor gStaticData_08175558[7] = {
     },
     /* 5 */ {
         1,
-        (void *)(gStaticData_080C0C36 + 0x3e57a),
+        (void *)gStaticData_080FF1B0,
         0x3e784,
-        (void *)(gStaticData_08151AC2 + 0x379e),
+        (void *)gStaticData_08155260,
         (const u16 *)(gStaticData_0817AA98 + 0xc),
-        (struct sub_effect_record *)(gStaticData_08151AC2 + 0x6e56),
+        (struct sub_effect_record *)gStaticData_08158918,
         (struct anim_table_record *)(gStaticData_0817AA98 + 0x80c),
         gStaticData_0814174C,
         7,
@@ -140,11 +149,11 @@ const struct category_descriptor gStaticData_08175558[7] = {
     },
     /* 6 */ {
         2,
-        (void *)(gStaticData_080C0C36 + 0x3e57a),
+        (void *)gStaticData_080FF1B0,
         0x3e784,
-        (void *)(gStaticData_08151AC2 + 0x379e),
+        (void *)gStaticData_08155260,
         (const u16 *)(gStaticData_0817AA98 + 0x40c),
-        (struct sub_effect_record *)(gStaticData_08151AC2 + 0x856e),
+        (struct sub_effect_record *)gStaticData_0815A030,
         (struct anim_table_record *)(gStaticData_0817AA98 + 0x80c),
         gStaticData_0814174C,
         4,
