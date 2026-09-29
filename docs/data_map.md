@@ -464,7 +464,7 @@ By kind (from `tools/data_map.json`):
 | gcc 2.x vtables (`087E3BEC`-`087E55C4`) | 93 | 6,648 | `{0, 0}` then `{s16 delta, s16 0, fn}` slots. Every function is matched C, so these become `.4byte 0, sub_X` or C initialisers and **relocate** |
 | function-pointer / pointer-to-member tables | 16 | 1,232 | `0816BF20` (42 `act_pmf`), `0816C6A4` (92 fn ptrs), `081756C4` (3 `category_vtable`), the `actor_pmf` tables in `0817A6B8`-`0817C4F8` |
 | pointer tables | 11 | 272 | e.g. `0816AA20` (19 song pointers into the built audio), `0816C5A0`, `0817E714` |
-| palettes (16- or 256-colour BGR555) | 51 | 63,397 | 23 are the 256-colour palettes of the intro Mode-4 slides (`085ADBD1`...`08619F51`, each after 0-3 B of alignment pad; some entries have bit 15 set, so keep the raw bytes, don't round-trip through `gbagfx .pal`), plus `08175760` (32 palette-cycle frames x 0x1C0) and many 0x20 menu/HUD palettes |
+| palettes (16- or 256-colour BGR555) | 51 | 63,397 | 23 are the 256-colour palettes of the intro Mode-4 slides (`085ADBD1`...`08619F51`, each after 0-3 B of alignment pad; some entries have bit 15 set, so they can't round-trip through `gbagfx .pal`; **converted** as C `u16` arrays, `cutscene_pictures_5a9f70.c`), plus `08175760` (32 palette-cycle frames x 0x1C0) and many 0x20 menu/HUD palettes |
 | alignment padding | 67 | 133 | 1-3 zero bytes before a 4-aligned LZ77 blob, all between `085A5519` and `086EA0C9`. Emit as `.balign 4, 0` |
 | other typed tables | 166 | 56,125 | `s32`/`u16`/struct tables with known consumers; notable ones below |
 
@@ -482,8 +482,11 @@ Notable mid-size tables:
   stages). It is the root of the level-data graph. **Converted**, except
   its last 0x2C bytes, which are the English cutscene text table
   (`0816D1C8`, see `0816D1F4`).
-- `0816D1F4` (0x53B4): text/menu lists, `{items*, count}` headers, strings,
-  and the intro slide packages (0x1C each) that point at the intro palettes.
+- `0816D1F4` (0x53B4): the cutscenes: slide lists, the text of six
+  languages (tables, pages, strings), and the 24 slides (0x1C each) that
+  point at the intro pictures (palette + bitmap). **Converted**
+  (`src/data/cutscenes_16d1c8.c`, `src/data/cutscene_pictures_5a9f70.c`,
+  docs/data.md "Cutscenes").
 - `08178F80` (0x1738) / `0817AA98` (0x1728): the two actor-category
   families: palettes, `table_A` keyframes, `anim_table_record[41]`/`[47]`
   (`081796CC`/`0817B2A4`, already declared), and the `table_B` arrays.
@@ -730,7 +733,7 @@ vtable shapes).
 | `0816C862` | 0xA | `u16[5]` colour-cycle list. **Converted** (same) | `sub_8023A1C` | high | done |
 | `0816C86C` | 0x514 | level table: 25 x 0x24 `struct level_info`, then 25 x 0x10 room lists `{count, rooms**, extra1, extra2}`. **Converted** (same) | `sub_800599C`, `sub_8005D44`, `sub_80067EC` +17 | high | done |
 | `0816CD80` | 0x474 | `u8[11]` theme music cues, 17 room records (0x14 each), the room lists' pointer arrays, 31 more room records. **Converted** (same); its last 0x2C bytes are the English cutscene table `0816D1C8` | `sub_8024498` | high | done |
-| `0816D1F4` | 0x53B4 | text/menu lists: {items*, count} headers, item pointer arrays, strings, and 23 intro-slide package records (0x1C) pointing at the Mode-4 palettes | `sub_8022468` | high | medium |
+| `0816D1F4` | 0x53B4 | the cutscenes: 11 slide lists `{slides*, count}` (`struct cutscene_slides`), the English pages, 5 more language tables, slide arrays, text strings and pointer arrays of 6 languages, 24 slides (0x1C, `struct cutscene_slide`). **Converted** (`src/data/cutscenes_16d1c8.c`, from `0816D1C8`) | `sub_8022468` | high | done |
 | `081725A8` | 0x4 | table of struct terrain_type | `sub_8025228` | high | easy |
 | `081725AC` | 0x8 | small constant (ffffffffffffffff) | `sub_80250BC`, `sub_8025130` | medium | easy |
 | `081725B4` | 0x8 | small constant (ffffffffffffffff) | `sub_8025130` | medium | easy |
@@ -837,30 +840,30 @@ vtable shapes).
 | `085A9EAC` | 0x4C | table of s8 (`s8` x 76) | `sub_8039FFC` | high | easy |
 | `085A9EF8` | 0xC | table of struct EepromConfig | `sub_803A968` | high | easy |
 | `085A9F04` | 0xC | table of struct EepromConfig | `sub_803A968` | high | easy |
-| `085A9F10` | 0x260 | EEPROM timing/timeout table (u16) (`u16` x 304) | `sub_803AC04` | high | easy |
-| `085ADBD1` | 0x203 | 3 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap | `gStaticData_0816D1F4 (slide packages)` | high | easy |
-| `085B34E1` | 0x203 | 3 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap | `gStaticData_0816D1F4 (slide packages)` | high | easy |
-| `085B82BC` | 0x200 | 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap | `gStaticData_0816D1F4 (slide packages)` | high | easy |
-| `085BC6E8` | 0x200 | 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap | `gStaticData_0816D1F4 (slide packages)` | high | easy |
-| `085C1936` | 0x202 | 2 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap | `gStaticData_0816D1F4 (slide packages)` | high | easy |
-| `085C674D` | 0x203 | 3 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap | `gStaticData_0816D1F4 (slide packages)` | high | easy |
-| `085CB15D` | 0x203 | 3 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap | `gStaticData_0816D1F4 (slide packages)` | high | easy |
-| `085CFECA` | 0x202 | 2 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap | `gStaticData_0816D1F4 (slide packages)` | high | easy |
-| `085D6531` | 0x203 | 3 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap | `gStaticData_0816D1F4 (slide packages)` | high | easy |
-| `085DB765` | 0x203 | 3 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap | `gStaticData_0816D1F4 (slide packages)` | high | easy |
-| `085DFABC` | 0x200 | 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap | `gStaticData_0816D1F4 (slide packages)` | high | easy |
-| `085E550B` | 0x201 | 1 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap | `gStaticData_0816D1F4 (slide packages)` | high | easy |
-| `085EAC44` | 0x200 | 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap | `gStaticData_0816D1F4 (slide packages)` | high | easy |
-| `085F0367` | 0x201 | 1 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap | `gStaticData_0816D1F4 (slide packages)` | high | easy |
-| `085F4CC1` | 0x203 | 3 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap | `gStaticData_0816D1F4 (slide packages)` | high | easy |
-| `085FA1D2` | 0x202 | 2 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap | `gStaticData_0816D1F4 (slide packages)` | high | easy |
-| `085FF779` | 0x203 | 3 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap | `gStaticData_0816D1F4 (slide packages)` | high | easy |
-| `086039B2` | 0x202 | 2 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap | `gStaticData_0816D1F4 (slide packages)` | high | easy |
-| `08608A50` | 0x200 | 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap | `gStaticData_0816D1F4 (slide packages)` | high | easy |
-| `0860D577` | 0x201 | 1 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap | `gStaticData_0816D1F4 (slide packages)` | high | easy |
-| `08611BD9` | 0x203 | 3 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap | `gStaticData_0816D1F4 (slide packages)` | high | easy |
-| `08616360` | 0x200 | 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap | `gStaticData_0816D1F4 (slide packages)` | high | easy |
-| `08619F51` | 0x203 | 3 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap | `gStaticData_0816D1F4 (slide packages)` | high | easy |
+| `085A9F10` | 0x260 | EEPROM table (0x60, still raw), then the 256-colour palette of cutscene picture 00 (0x200, `gCutscenePicture00`, **converted**) | `sub_803AC04` | high | easy |
+| `085ADBD1` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 01), bit 15 set in many entries. **Converted** (`gCutscenePicture01`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
+| `085B34E1` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 02), bit 15 set in many entries. **Converted** (`gCutscenePicture02`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
+| `085B82BC` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 03), bit 15 set in many entries. **Converted** (`gCutscenePicture03`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
+| `085BC6E8` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 04), bit 15 set in many entries. **Converted** (`gCutscenePicture04`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
+| `085C1936` | 0x202 | 2 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 05), bit 15 set in many entries. **Converted** (`gCutscenePicture05`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
+| `085C674D` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 06), bit 15 set in many entries. **Converted** (`gCutscenePicture06`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
+| `085CB15D` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 07), bit 15 set in many entries. **Converted** (`gCutscenePicture07`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
+| `085CFECA` | 0x202 | 2 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 08), bit 15 set in many entries. **Converted** (`gCutscenePicture08`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
+| `085D6531` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 09), bit 15 set in many entries. **Converted** (`gCutscenePicture09`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
+| `085DB765` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 10), bit 15 set in many entries. **Converted** (`gCutscenePicture10`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
+| `085DFABC` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 11), bit 15 set in many entries. **Converted** (`gCutscenePicture11`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
+| `085E550B` | 0x201 | 1 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 12), bit 15 set in many entries. **Converted** (`gCutscenePicture12`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
+| `085EAC44` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 13), bit 15 set in many entries. **Converted** (`gCutscenePicture13`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
+| `085F0367` | 0x201 | 1 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 14), bit 15 set in many entries. **Converted** (`gCutscenePicture14`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
+| `085F4CC1` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 15), bit 15 set in many entries. **Converted** (`gCutscenePicture15`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
+| `085FA1D2` | 0x202 | 2 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 16), bit 15 set in many entries. **Converted** (`gCutscenePicture16`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
+| `085FF779` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 17), bit 15 set in many entries. **Converted** (`gCutscenePicture17`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
+| `086039B2` | 0x202 | 2 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 18), bit 15 set in many entries. **Converted** (`gCutscenePicture18`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
+| `08608A50` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 19), bit 15 set in many entries. **Converted** (`gCutscenePicture19`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
+| `0860D577` | 0x201 | 1 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 20), bit 15 set in many entries. **Converted** (`gCutscenePicture20`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
+| `08611BD9` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 21), bit 15 set in many entries. **Converted** (`gCutscenePicture21`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
+| `08616360` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 22), bit 15 set in many entries. **Converted** (`gCutscenePicture22`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
+| `08619F51` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 23), bit 15 set in many entries. **Converted** (`gCutscenePicture23`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
 | `0861BF2E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
 | `0861C182` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
 | `0861C309` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |

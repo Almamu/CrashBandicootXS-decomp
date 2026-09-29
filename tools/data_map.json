@@ -2955,13 +2955,14 @@
    "c_decls": [
     "struct text_list X[]"
    ],
-   "element_type": "struct text_list",
+   "element_type": "struct cutscene_slides",
    "element_size": null,
-   "element_count": null,
-   "format": "text/menu lists: {items*, count} headers, item pointer arrays, strings, and 23 intro-slide package records (0x1C) pointing at the Mode-4 palettes",
+   "element_count": 11,
+   "format": "cutscenes: struct cutscene_slides[11] (slide lists), then per language (English, French, German, Spanish, Italian, Dutch) struct cutscene_page arrays and 11-entry tables, the slide pointer arrays, 24 struct cutscene_slide records (0x1C) and the Latin-1 text strings with their pointer arrays",
    "effort": "medium",
    "confidence": "high",
-   "notes": ""
+   "notes": "The language tables (English at 0x0816D1C8, then 0x0816D36C, 0x0816D398, 0x0816D3C4, 0x0816D3F0, 0x0816D41C) are referenced from the IWRAM image (gUnknown_03000834).",
+   "status": "converted: src/data/cutscenes_16d1c8.c"
   },
   {
    "address": "0x081725A8",
@@ -5515,10 +5516,11 @@
    "element_type": "u16",
    "element_size": 2,
    "element_count": 304,
-   "format": "EEPROM timing/timeout table (u16)",
+   "format": "EEPROM configuration pointers/table (0x60), then at 0x085A9F70 the 256-colour palette of the first cutscene picture (bitmap gStaticData_085AA170)",
    "effort": "easy",
    "confidence": "high",
-   "notes": ""
+   "notes": "",
+   "status": "partly converted: 0x085A9F70-0x085AA170 (palette) is src/data/cutscene_pictures_5a9f70.c; the first 0x60 bytes stay raw"
   },
   {
    "address": "0x085ADBD1",
@@ -5529,13 +5531,14 @@
    "ptr_words_code": 0,
    "ptr_words_data": 1,
    "incoming_data_ptrs": 1,
-   "format": "3 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap",
+   "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 01)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Referenced from a 0x1C-byte slide package in gStaticData_0816D1F4 (+0x142C onward). Some entries have bit 15 set, so keep the raw bytes (a .pal round-trip through gbagfx would clear it).",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gStaticData_0816D1F4 (slide packages)"
-   ]
+   ],
+   "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture01)"
   },
   {
    "address": "0x085B34E1",
@@ -5546,13 +5549,14 @@
    "ptr_words_code": 0,
    "ptr_words_data": 0,
    "incoming_data_ptrs": 1,
-   "format": "3 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap",
+   "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 02)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Referenced from a 0x1C-byte slide package in gStaticData_0816D1F4 (+0x142C onward). Some entries have bit 15 set, so keep the raw bytes (a .pal round-trip through gbagfx would clear it).",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gStaticData_0816D1F4 (slide packages)"
-   ]
+   ],
+   "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture02)"
   },
   {
    "address": "0x085B82BC",
@@ -5563,13 +5567,14 @@
    "ptr_words_code": 0,
    "ptr_words_data": 0,
    "incoming_data_ptrs": 1,
-   "format": "256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap",
+   "format": "256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 03)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Referenced from a 0x1C-byte slide package in gStaticData_0816D1F4 (+0x142C onward). Some entries have bit 15 set, so keep the raw bytes (a .pal round-trip through gbagfx would clear it).",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gStaticData_0816D1F4 (slide packages)"
-   ]
+   ],
+   "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture03)"
   },
   {
    "address": "0x085BC6E8",
@@ -5580,13 +5585,14 @@
    "ptr_words_code": 0,
    "ptr_words_data": 1,
    "incoming_data_ptrs": 1,
-   "format": "256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap",
+   "format": "256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 04)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Referenced from a 0x1C-byte slide package in gStaticData_0816D1F4 (+0x142C onward). Some entries have bit 15 set, so keep the raw bytes (a .pal round-trip through gbagfx would clear it).",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gStaticData_0816D1F4 (slide packages)"
-   ]
+   ],
+   "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture04)"
   },
   {
    "address": "0x085C1936",
@@ -5597,13 +5603,14 @@
    "ptr_words_code": 0,
    "ptr_words_data": 0,
    "incoming_data_ptrs": 1,
-   "format": "2 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap",
+   "format": "2 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 05)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Referenced from a 0x1C-byte slide package in gStaticData_0816D1F4 (+0x142C onward). Some entries have bit 15 set, so keep the raw bytes (a .pal round-trip through gbagfx would clear it).",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gStaticData_0816D1F4 (slide packages)"
-   ]
+   ],
+   "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture05)"
   },
   {
    "address": "0x085C674D",
@@ -5614,13 +5621,14 @@
    "ptr_words_code": 0,
    "ptr_words_data": 1,
    "incoming_data_ptrs": 1,
-   "format": "3 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap",
+   "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 06)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Referenced from a 0x1C-byte slide package in gStaticData_0816D1F4 (+0x142C onward). Some entries have bit 15 set, so keep the raw bytes (a .pal round-trip through gbagfx would clear it).",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gStaticData_0816D1F4 (slide packages)"
-   ]
+   ],
+   "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture06)"
   },
   {
    "address": "0x085CB15D",
@@ -5631,13 +5639,14 @@
    "ptr_words_code": 0,
    "ptr_words_data": 0,
    "incoming_data_ptrs": 1,
-   "format": "3 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap",
+   "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 07)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Referenced from a 0x1C-byte slide package in gStaticData_0816D1F4 (+0x142C onward). Some entries have bit 15 set, so keep the raw bytes (a .pal round-trip through gbagfx would clear it).",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gStaticData_0816D1F4 (slide packages)"
-   ]
+   ],
+   "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture07)"
   },
   {
    "address": "0x085CFECA",
@@ -5648,13 +5657,14 @@
    "ptr_words_code": 0,
    "ptr_words_data": 0,
    "incoming_data_ptrs": 1,
-   "format": "2 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap",
+   "format": "2 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 08)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Referenced from a 0x1C-byte slide package in gStaticData_0816D1F4 (+0x142C onward). Some entries have bit 15 set, so keep the raw bytes (a .pal round-trip through gbagfx would clear it).",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gStaticData_0816D1F4 (slide packages)"
-   ]
+   ],
+   "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture08)"
   },
   {
    "address": "0x085D6531",
@@ -5665,13 +5675,14 @@
    "ptr_words_code": 0,
    "ptr_words_data": 1,
    "incoming_data_ptrs": 1,
-   "format": "3 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap",
+   "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 09)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Referenced from a 0x1C-byte slide package in gStaticData_0816D1F4 (+0x142C onward). Some entries have bit 15 set, so keep the raw bytes (a .pal round-trip through gbagfx would clear it).",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gStaticData_0816D1F4 (slide packages)"
-   ]
+   ],
+   "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture09)"
   },
   {
    "address": "0x085DB765",
@@ -5682,13 +5693,14 @@
    "ptr_words_code": 0,
    "ptr_words_data": 4,
    "incoming_data_ptrs": 1,
-   "format": "3 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap",
+   "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 10)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Referenced from a 0x1C-byte slide package in gStaticData_0816D1F4 (+0x142C onward). Some entries have bit 15 set, so keep the raw bytes (a .pal round-trip through gbagfx would clear it).",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gStaticData_0816D1F4 (slide packages)"
-   ]
+   ],
+   "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture10)"
   },
   {
    "address": "0x085DFABC",
@@ -5699,13 +5711,14 @@
    "ptr_words_code": 0,
    "ptr_words_data": 0,
    "incoming_data_ptrs": 1,
-   "format": "256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap",
+   "format": "256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 11)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Referenced from a 0x1C-byte slide package in gStaticData_0816D1F4 (+0x142C onward). Some entries have bit 15 set, so keep the raw bytes (a .pal round-trip through gbagfx would clear it).",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gStaticData_0816D1F4 (slide packages)"
-   ]
+   ],
+   "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture11)"
   },
   {
    "address": "0x085E550B",
@@ -5716,13 +5729,14 @@
    "ptr_words_code": 0,
    "ptr_words_data": 0,
    "incoming_data_ptrs": 1,
-   "format": "1 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap",
+   "format": "1 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 12)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Referenced from a 0x1C-byte slide package in gStaticData_0816D1F4 (+0x142C onward). Some entries have bit 15 set, so keep the raw bytes (a .pal round-trip through gbagfx would clear it).",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gStaticData_0816D1F4 (slide packages)"
-   ]
+   ],
+   "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture12)"
   },
   {
    "address": "0x085EAC44",
@@ -5733,13 +5747,14 @@
    "ptr_words_code": 0,
    "ptr_words_data": 0,
    "incoming_data_ptrs": 1,
-   "format": "256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap",
+   "format": "256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 13)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Referenced from a 0x1C-byte slide package in gStaticData_0816D1F4 (+0x142C onward). Some entries have bit 15 set, so keep the raw bytes (a .pal round-trip through gbagfx would clear it).",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gStaticData_0816D1F4 (slide packages)"
-   ]
+   ],
+   "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture13)"
   },
   {
    "address": "0x085F0367",
@@ -5750,13 +5765,14 @@
    "ptr_words_code": 0,
    "ptr_words_data": 2,
    "incoming_data_ptrs": 1,
-   "format": "1 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap",
+   "format": "1 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 14)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Referenced from a 0x1C-byte slide package in gStaticData_0816D1F4 (+0x142C onward). Some entries have bit 15 set, so keep the raw bytes (a .pal round-trip through gbagfx would clear it).",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gStaticData_0816D1F4 (slide packages)"
-   ]
+   ],
+   "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture14)"
   },
   {
    "address": "0x085F4CC1",
@@ -5767,13 +5783,14 @@
    "ptr_words_code": 0,
    "ptr_words_data": 3,
    "incoming_data_ptrs": 1,
-   "format": "3 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap",
+   "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 15)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Referenced from a 0x1C-byte slide package in gStaticData_0816D1F4 (+0x142C onward). Some entries have bit 15 set, so keep the raw bytes (a .pal round-trip through gbagfx would clear it).",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gStaticData_0816D1F4 (slide packages)"
-   ]
+   ],
+   "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture15)"
   },
   {
    "address": "0x085FA1D2",
@@ -5784,13 +5801,14 @@
    "ptr_words_code": 0,
    "ptr_words_data": 0,
    "incoming_data_ptrs": 1,
-   "format": "2 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap",
+   "format": "2 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 16)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Referenced from a 0x1C-byte slide package in gStaticData_0816D1F4 (+0x142C onward). Some entries have bit 15 set, so keep the raw bytes (a .pal round-trip through gbagfx would clear it).",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gStaticData_0816D1F4 (slide packages)"
-   ]
+   ],
+   "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture16)"
   },
   {
    "address": "0x085FF779",
@@ -5801,13 +5819,14 @@
    "ptr_words_code": 1,
    "ptr_words_data": 3,
    "incoming_data_ptrs": 1,
-   "format": "3 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap",
+   "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 17)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Referenced from a 0x1C-byte slide package in gStaticData_0816D1F4 (+0x142C onward). Some entries have bit 15 set, so keep the raw bytes (a .pal round-trip through gbagfx would clear it).",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gStaticData_0816D1F4 (slide packages)"
-   ]
+   ],
+   "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture17)"
   },
   {
    "address": "0x086039B2",
@@ -5818,13 +5837,14 @@
    "ptr_words_code": 0,
    "ptr_words_data": 0,
    "incoming_data_ptrs": 1,
-   "format": "2 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap",
+   "format": "2 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 18)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Referenced from a 0x1C-byte slide package in gStaticData_0816D1F4 (+0x142C onward). Some entries have bit 15 set, so keep the raw bytes (a .pal round-trip through gbagfx would clear it).",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gStaticData_0816D1F4 (slide packages)"
-   ]
+   ],
+   "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture18)"
   },
   {
    "address": "0x08608A50",
@@ -5835,13 +5855,14 @@
    "ptr_words_code": 0,
    "ptr_words_data": 5,
    "incoming_data_ptrs": 1,
-   "format": "256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap",
+   "format": "256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 19)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Referenced from a 0x1C-byte slide package in gStaticData_0816D1F4 (+0x142C onward). Some entries have bit 15 set, so keep the raw bytes (a .pal round-trip through gbagfx would clear it).",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gStaticData_0816D1F4 (slide packages)"
-   ]
+   ],
+   "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture19)"
   },
   {
    "address": "0x0860D577",
@@ -5852,13 +5873,14 @@
    "ptr_words_code": 0,
    "ptr_words_data": 0,
    "incoming_data_ptrs": 1,
-   "format": "1 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap",
+   "format": "1 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 20)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Referenced from a 0x1C-byte slide package in gStaticData_0816D1F4 (+0x142C onward). Some entries have bit 15 set, so keep the raw bytes (a .pal round-trip through gbagfx would clear it).",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gStaticData_0816D1F4 (slide packages)"
-   ]
+   ],
+   "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture20)"
   },
   {
    "address": "0x08611BD9",
@@ -5869,13 +5891,14 @@
    "ptr_words_code": 0,
    "ptr_words_data": 2,
    "incoming_data_ptrs": 1,
-   "format": "3 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap",
+   "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 21)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Referenced from a 0x1C-byte slide package in gStaticData_0816D1F4 (+0x142C onward). Some entries have bit 15 set, so keep the raw bytes (a .pal round-trip through gbagfx would clear it).",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gStaticData_0816D1F4 (slide packages)"
-   ]
+   ],
+   "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture21)"
   },
   {
    "address": "0x08616360",
@@ -5886,13 +5909,14 @@
    "ptr_words_code": 0,
    "ptr_words_data": 1,
    "incoming_data_ptrs": 1,
-   "format": "256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap",
+   "format": "256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 22)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Referenced from a 0x1C-byte slide package in gStaticData_0816D1F4 (+0x142C onward). Some entries have bit 15 set, so keep the raw bytes (a .pal round-trip through gbagfx would clear it).",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gStaticData_0816D1F4 (slide packages)"
-   ]
+   ],
+   "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture22)"
   },
   {
    "address": "0x08619F51",
@@ -5903,13 +5927,14 @@
    "ptr_words_code": 0,
    "ptr_words_data": 1,
    "incoming_data_ptrs": 1,
-   "format": "3 B zero pad + 256-colour BGR555 palette (0x200) for the preceding Mode-4 intro bitmap",
+   "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 23)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Referenced from a 0x1C-byte slide package in gStaticData_0816D1F4 (+0x142C onward). Some entries have bit 15 set, so keep the raw bytes (a .pal round-trip through gbagfx would clear it).",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gStaticData_0816D1F4 (slide packages)"
-   ]
+   ],
+   "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture23)"
   },
   {
    "address": "0x0861BF2E",

@@ -73,7 +73,7 @@ $(GRAPHICS_BUILDDIR)/%.lz: $(GRAPHICS_BUILDDIR)/% | $(GFX)
 # reproduce the ROM's streams), tools/bin2c.py the initializer bytes that a
 # src/data/*.c file #includes. GRIT_C_PNGS lists the PNGs converted this
 # way, so the Makefile doesn't also build them through the .s incbin path.
-GRIT_C_PNGS := graphics/intro/00_5aa170_bitmap.png \
+GRIT_C_PNGS := $(wildcard graphics/intro/*_bitmap.png) \
 	$(wildcard graphics/category_bg/*.png)
 
 # Mode 4 bitmaps: linear 8bpp, no palette (it's a separate asset).
@@ -85,7 +85,8 @@ $(GRAPHICS_BUILDDIR)/%.lz.inc: $(GRAPHICS_BUILDDIR)/%.lz tools/bin2c.py
 	python3 tools/bin2c.py $< $@ --lz
 
 $(C_BUILDDIR)/data/%.o: CPPFLAGS += -iquote $(GRAPHICS_BUILDDIR)
-$(C_BUILDDIR)/data/intro_bitmap_5aa170.o: $(GRAPHICS_BUILDDIR)/intro/00_5aa170_bitmap.img.bin.lz.inc
+# The 24 cutscene pictures (palette + Mode 4 bitmap each).
+$(C_BUILDDIR)/data/cutscene_pictures_5a9f70.o: $(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.img.bin.lz.inc,$(wildcard graphics/intro/*_bitmap.png))
 
 # Actor-category backgrounds (docs/data.md, "Category backgrounds"): the
 # BG0 cell animations and BG1 pictures of graphics/category_bg/. They are
