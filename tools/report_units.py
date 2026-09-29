@@ -38,6 +38,7 @@ Genuinely untouched regions (nothing in rom_map.md, too small to matter)
 stay `None`/uncategorized, same as before.
 """
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -581,6 +582,7 @@ CATEGORY_NAMES = {
     "audio": "Audio (GAX2)",
     "hud": "HUD",
     "overlay_ui": "Overlay UI",
+    "data": "Data",
 }
 
 
@@ -637,6 +639,148 @@ def build_target(name, start, end):
     return out_o
 
 
+#### Data units (decomp.dev's separate "data" progress bar) ####
+#
+# Everything from DATA_START to the end of the ROM is data/data.s: one
+# label per blob, each blob a single `.incbin`. A blob is "matched" when it
+# is built from a source in the repo (graphics compressed from a PNG, the
+# GAX2 audio rebuilt from .xm/.wav, the sfx table from JSON, ...) and
+# "unmatched" while it's still `.incbin "baserom.gba"`. Both give identical
+# bytes, so an honest data measure can't come from diffing bytes alone:
+# baserom-copied blobs get a target symbol but no base symbol, exactly like
+# the still-raw code ranges above. See docs/decomp_dev.md's "Data progress".
+
+DATA_S = ROOT / "data" / "data.s"
+DATA_BUILD_DIR = BUILD_DIR / "data"
+BASEROM = ROOT / "baserom.gba"
+ROM_BASE = 0x08000000
+DATA_START = UNITS[-1][0]  # data.s is linked straight after the last code unit
+DATA_CATEGORY = "data"
+
+
+def parse_data_s():
+    """Returns one dict per data.s label, in ROM order: name, addr, size,
+    the incbin's path/offset/length, and `built` (False when the bytes are
+    copied from baserom.gba). Addresses are computed from DATA_START and
+    each blob's size; a baserom blob's own incbin offset must agree, which
+    catches any drift between this parser and the real layout."""
+    blobs = []
+    addr = DATA_START
+    name = None
+    for lineno, line in enumerate(DATA_S.read_text().splitlines(), 1):
+        s = line.split("@", 1)[0].strip()
+        if not s or s.startswith((".global", ".section")):
+            continue
+        m = re.fullmatch(r"(\w+):", s)
+        if m:
+            name = m.group(1)
+            continue
+        m = re.fullmatch(r'\.incbin\s+"([^"]+)"(?:\s*,\s*(\w+)\s*,\s*(\w+))?', s)
+        if not m or name is None:
+            sys.exit(f"{DATA_S}:{lineno}: unsupported line for the data report: {s!r}")
+        path, off, length = m.group(1), m.group(2), m.group(3)
+        if length is not None:
+            size = int(length, 0)
+        else:
+            src = ROOT / path
+            if not src.exists():
+                sys.exit(f"{src} missing - build the data assets first (`make report` does)")
+            size = src.stat().st_size
+        built = path != "baserom.gba"
+        if not built and int(off, 0) != addr - ROM_BASE:
+            sys.exit(f"{DATA_S}:{lineno}: {name} is at {addr:#x} but incbins offset {off}")
+        blobs.append({"name": name, "addr": addr, "size": size, "path": path,
+                      "off": off, "len": length, "built": built})
+        addr += size
+        name = None  # one incbin per label - a second one would need a symbol
+    return blobs
+
+
+def blob_group(blob):
+    """Asset directory a built blob comes from (e.g. graphics/intro), None
+    for a baserom blob."""
+    if not blob["built"]:
+        return None
+    return str(Path(blob["path"]).parent.relative_to("build/crashbandicootxs"))
+
+
+def group_data_blobs(blobs):
+    """Splits the blobs into units: each maximal run of adjacent blobs
+    built from the same asset directory, and each maximal run of adjacent
+    baserom blobs. Units are never mixed: objdiff's report measures data
+    per section and all or nothing (a section counts as matched only at
+    100%), and it merges `.rodata.*` sections back into one `.rodata` per
+    object, so a baserom blob inside a unit would zero out every built blob
+    next to it. Keeping units pure makes each one simply 0% or 100%."""
+    runs = []
+    for blob in blobs:
+        g = blob_group(blob)
+        if runs and runs[-1]["group"] == g:
+            runs[-1]["blobs"].append(blob)
+        else:
+            runs.append({"group": g, "blobs": [blob]})
+    return runs
+
+
+def incbin_line(blob, from_rom):
+    if from_rom:
+        return f'\t.incbin "baserom.gba", {blob["addr"] - ROM_BASE:#x}, {blob["size"]:#x}\n'
+    if blob["len"] is not None:
+        return f'\t.incbin "{blob["path"]}", {blob["off"]}, {blob["len"]}\n'
+    return f'\t.incbin "{blob["path"]}"\n'
+
+
+def write_data_object(out_o, blobs, body):
+    """Assembles `blobs` back to back as sized, global data objects in
+    .rodata, each one's bytes given by body(blob)."""
+    text = ".section .rodata\n"
+    for blob in blobs:
+        n = blob["name"]
+        text += f"\n.global {n}\n.type {n}, %object\n{n}:\n{body(blob)}.size {n}, {blob['size']:#x}\n"
+    out_s = out_o.with_suffix(".s")
+    out_s.write_text(text)
+    run(AS + ["-o", str(out_o), str(out_s)], cwd=ROOT)
+    return out_o
+
+
+def data_units():
+    """objdiff units for data/data.s (see the comment above DATA_S)."""
+    DATA_BUILD_DIR.mkdir(parents=True, exist_ok=True)
+    have_rom = BASEROM.exists()
+    if not have_rom:
+        # Fork-PR CI has no ROM. Raw targets only need the right size
+        # (they have no base to compare against); built ones fall back to
+        # their own bytes, which main's `make compare` verifies anyway.
+        print("warning: baserom.gba missing - data targets use built bytes/zero fill", file=sys.stderr)
+
+    def target_body(blob):
+        if have_rom:
+            return incbin_line(blob, True)
+        return incbin_line(blob, False) if blob["built"] else f"\t.space {blob['size']:#x}\n"
+
+    units = []
+    for run_ in group_data_blobs(parse_data_s()):
+        blobs = run_["blobs"]
+        start = blobs[0]["addr"]
+        tag = run_["group"].replace("/", "_") if run_["group"] else "raw"
+        name = f"data_{tag}_{start:08X}"
+        unit = {
+            "name": name,
+            "target_path": str(write_data_object(
+                DATA_BUILD_DIR / f"{name}_target.o", blobs, target_body).relative_to(ROOT)),
+        }
+        metadata = {"progress_categories": [DATA_CATEGORY]}
+        if run_["group"] is not None:
+            unit["base_path"] = str(write_data_object(
+                DATA_BUILD_DIR / f"{name}_base.o", blobs,
+                lambda b: incbin_line(b, False)).relative_to(ROOT))
+            # built from an editable source, so nothing left to clean up
+            metadata["complete"] = True
+        unit["metadata"] = metadata
+        units.append(unit)
+    return units
+
+
 def main():
     BUILD_DIR.mkdir(parents=True, exist_ok=True)
     categories = {}
@@ -678,6 +822,10 @@ def main():
         if metadata:
             unit["metadata"] = metadata
         units.append(unit)
+
+    data = data_units()
+    units += data
+    categories[DATA_CATEGORY] = CATEGORY_NAMES[DATA_CATEGORY]
 
     objdiff = {
         "$schema": "https://raw.githubusercontent.com/encounter/objdiff/main/config.schema.json",
