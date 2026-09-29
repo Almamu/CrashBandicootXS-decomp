@@ -47,6 +47,8 @@ SECTIONS
         build/crashbandicootxs/src/audio/audio_context.o(.text);
         build/crashbandicootxs/src/audio/music_irq.o(.text);
         build/crashbandicootxs/src/system/link_cable.o(.text);
+        build/crashbandicootxs/src/system/link_cable_01db4.o(.text);
+        build/crashbandicootxs/src/system/link_cable_01f50.o(.text);
         build/crashbandicootxs/src/system/link_cable2.o(.text);
         build/crashbandicootxs/src/graphics/settings_menu8d.o(.text);
         build/crashbandicootxs/src/graphics/settings_menu8e.o(.text);

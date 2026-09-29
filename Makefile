@@ -243,7 +243,9 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/system/game_loop6.o \
                   $(C_BUILDDIR)/system/game_loop7.o \
                   $(C_BUILDDIR)/system/game_loop8.o \
-                  $(C_BUILDDIR)/system/link_cable.o
+                  $(C_BUILDDIR)/system/link_cable.o \
+                  $(C_BUILDDIR)/system/link_cable_01db4.o \
+                  $(C_BUILDDIR)/system/link_cable_01f50.o
 $(OLD_AGBCC_OBJS): CC1 := $(CC1_OLD)
 $(OLD_AGBCC_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1FLAGS))
 
@@ -259,6 +261,16 @@ $(OLD_AGBCC_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1FLAGS))
 # docs/matching/issue-64-65-naked-retry-2.md.
 NO_STRENGTH_REDUCE_OBJS := $(C_BUILDDIR)/graphics/graphics_loading_35d1c.o
 $(NO_STRENGTH_REDUCE_OBJS): CC1FLAGS += -fno-strength-reduce
+
+# Objects built with -fno-rerun-loop-opt (one loop-optimizer pass).
+# link_cable_01db4 holds only sub_8001DB4, still NAKED: its C draft keeps
+# the ROM's up-counting inner copy loop only with this flag (the rerun
+# pass reverses it), and gets to 51 halfwords with it (136 without). The
+# flag changes the matching sub_8002114, which is why sub_8001DB4 was
+# split out of link_cable.c. The NAKED body is unaffected. See
+# docs/matching/last-ten-naked-retry.md.
+NO_RERUN_LOOP_OPT_OBJS := $(C_BUILDDIR)/system/link_cable_01db4.o
+$(NO_RERUN_LOOP_OPT_OBJS): CC1FLAGS += -fno-rerun-loop-opt
 
 # GAX2's bundled libgcc2.c code (__divdi3/__udivdi3/__muldi3) was built
 # without -mthumb-interwork: its functions are the only ones in the ROM

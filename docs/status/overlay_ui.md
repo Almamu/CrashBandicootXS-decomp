@@ -135,16 +135,16 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   comes out of an asm with a plain `"r"` input (no copy preference for
   r2) and the wrap loop's count pointer is pinned to r1. See
   [last-eight-naked-retry.md](../matching/last-eight-naked-retry.md).
+- **`sub_8005E5C`** (`src/graphics/settings_menu16.c`) - the results
+  icons' "N/M" fraction readout draw (issue #7). Plain C; it was NAKED.
+  Plain posX/posY accesses let reload build the 0x110/0x114 offsets in
+  r7 as the ROM does; the second reposition reads through inline
+  getters. See [last-ten-naked-retry.md](../matching/last-ten-naked-retry.md).
 
 ## Parked - NAKED asm transcriptions (byte-correct, not decompiled C)
 
-- **`sub_8005E5C`** - byte-exact via `NAKED` asm transcription (the
-  whole function body is a hand-transcribed copy of the ROM's own
-  disassembly, not real decompiled C), so it's tracked here as parked
-  rather than matched - see
-  `docs/matching/issue-8-0x080060ac-overlay-ui.md`'s "Third pass"
-  writeup. It has a near-miss C draft under `NON_MATCHING` from the
-  issue #7 retry (`docs/matching/issue-7-naked-retry.md`).
+- No functions are parked here now. `sub_8005E5C` became real C in
+  the last-ten retry - see Matched.
   `sub_80053F4` and the raw `sub_800450C` are now real C (hard-register
   hold pass). Eleven former members of
   this list (`sub_8004D74`, `sub_800556C`, `sub_80057E0`, `sub_80058C0`,
