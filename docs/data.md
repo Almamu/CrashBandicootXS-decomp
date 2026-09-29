@@ -494,6 +494,48 @@ C (see "Level data").
 
 `graphics.mk` adds the PNGs to `GRIT_C_PNGS`.
 
+### Boss pictures
+
+`gStaticData_08167CD4` (N. Gin's airship, 18x12 cells, 4 frames: the
+propellers turn) and `gStaticData_08169CE8` (Cortex's hovercraft, 16x10
+cells, 1 frame) were read as "per-level meter grid tables" before; drawn,
+they are the two bosses that fly on an affine BG. Each is `{s16 cols,
+s16 rows}` and its frames, a frame being a tile count, a `cols * rows`
+map of `u16` tile indices and that many 4bpp tiles. The frames share one
+tile pool: frame 1's indices count on from frame 0's tiles, and so on.
+The game (`sub_8031604`, `sub_80336CC`) converts the tiles to 8bpp tiles
+of BG palette 1, since an affine BG only takes 8bpp, and `sub_8030D48`
+lays them out by the maps. The palette in front of each picture is its
+own label (`gStaticData_08167AD4`, `gStaticData_08169AE8`), and the code
+walks the frames from that label + 0x204, so the two stay back to back
+in `src/data/boss_pictures_167ad4.c`.
+
+The maps are exactly what deduplicating the frames in reading order gives
+(the first identical tile, no flips, one pool across the frames). So the
+sources are the whole frames, `graphics/boss_pictures/<addr>_frameN.png`
+(4bpp, the 16 colours of BG palette 1). grit (`-gt -gB4`) turns each into
+tiles in cell order, and `tools/boss_pictures.py pack` deduplicates them
+into the `.inc` with the frames' initializers and a header with the tile
+counts and the size in cells, which the C struct's array sizes use. So a
+frame can be redrawn freely. `tools/boss_pictures.py extract` writes the
+PNGs from `baserom.gba` again and checks the round trip.
+
+### Small tables around 0x0816B000
+
+The rest of `0x0816AF10`-`0x0816C6A4` is small typed tables written out
+from the ROM: palettes and palette halves (`u16`), text and label ids,
+icon positions (`struct icon_pos`), OBJ sizes, motion records and the
+{a, b} entry pairs of the entry sets (see `entry_set_16b92c.c`),
+collision kind tables, and vectors. Labels the code has no symbol for,
+because it only reaches them through a pointer, are named after their
+address: the pairs in `motion_records_16b304.c` (`gStaticData_0816B514`,
+`gStaticData_0816B790`), which `entry_set_16b92c.c` now points at by
+name, the level animation rows `gStaticData_0816C0B0` that
+`action_table_16bf20.c` points at, and the two link-cable names
+`gStaticData_0816B110`/`0816B124` that the IWRAM data points at (`src/iwram/iwram_data.c`). A few
+byte tables sit at odd addresses (`gStaticData_0816C30B`); brace-list `u8`
+arrays aren't aligned by agbcc, so they stay in place.
+
 ### Level data
 
 The rooms' level data and level assets ([levels.md](./levels.md)) are
@@ -693,45 +735,3 @@ the same way.
 
 `tools/rle_sprites.py extract` writes the three PNGs from `baserom.gba`
 again and checks that every frame re-encodes to the ROM's bytes.
-
-### Boss pictures
-
-`gStaticData_08167CD4` (N. Gin's airship, 18x12 cells, 4 frames: the
-propellers turn) and `gStaticData_08169CE8` (Cortex's hovercraft, 16x10
-cells, 1 frame) were read as "per-level meter grid tables" before; drawn,
-they are the two bosses that fly on an affine BG. Each is `{s16 cols,
-s16 rows}` and its frames, a frame being a tile count, a `cols * rows`
-map of `u16` tile indices and that many 4bpp tiles. The frames share one
-tile pool: frame 1's indices count on from frame 0's tiles, and so on.
-The game (`sub_8031604`, `sub_80336CC`) converts the tiles to 8bpp tiles
-of BG palette 1, since an affine BG only takes 8bpp, and `sub_8030D48`
-lays them out by the maps. The palette in front of each picture is its
-own label (`gStaticData_08167AD4`, `gStaticData_08169AE8`), and the code
-walks the frames from that label + 0x204, so the two stay back to back
-in `src/data/boss_pictures_167ad4.c`.
-
-The maps are exactly what deduplicating the frames in reading order gives
-(the first identical tile, no flips, one pool across the frames). So the
-sources are the whole frames, `graphics/boss_pictures/<addr>_frameN.png`
-(4bpp, the 16 colours of BG palette 1). grit (`-gt -gB4`) turns each into
-tiles in cell order, and `tools/boss_pictures.py pack` deduplicates them
-into the `.inc` with the frames' initializers and a header with the tile
-counts and the size in cells, which the C struct's array sizes use. So a
-frame can be redrawn freely. `tools/boss_pictures.py extract` writes the
-PNGs from `baserom.gba` again and checks the round trip.
-
-### Small tables around 0x0816B000
-
-The rest of `0x0816AF10`-`0x0816C6A4` is small typed tables written out
-from the ROM: palettes and palette halves (`u16`), text and label ids,
-icon positions (`struct icon_pos`), OBJ sizes, motion records and the
-{a, b} entry pairs of the entry sets (see `entry_set_16b92c.c`),
-collision kind tables, and vectors. Labels the code has no symbol for,
-because it only reaches them through a pointer, are named after their
-address: the pairs in `motion_records_16b304.c` (`gStaticData_0816B514`,
-`gStaticData_0816B790`), which `entry_set_16b92c.c` now points at by
-name, the level animation rows `gStaticData_0816C0B0` that
-`action_table_16bf20.c` points at, and the two link-cable names
-`gStaticData_0816B110`/`0816B124` that the IWRAM data points at (`src/iwram/iwram_data.c`). A few
-byte tables sit at odd addresses (`gStaticData_0816C30B`); brace-list `u8`
-arrays aren't aligned by agbcc, so they stay in place.
