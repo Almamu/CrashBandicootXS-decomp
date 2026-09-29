@@ -6,7 +6,15 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-extern const u8 gStaticData_0817D0E4[];
+extern const u8 gStaticData_0817D0F8[];
+extern const u8 gStaticData_0817D178[];
+extern const u8 gStaticData_0817D1F8[];
+extern const u8 gStaticData_0817D2B8[];
+extern const u8 gStaticData_0817D358[];
+extern const u8 gStaticData_0817D3F8[];
+extern const u8 gStaticData_0817D498[];
+extern const u8 gStaticData_0817D538[];
+extern const u8 gStaticData_0817D5D8[];
 extern const u8 gStaticData_086319A0[];
 extern const u8 gStaticData_086319C8[];
 extern const u8 gStaticData_086319F0[];
@@ -37,17 +45,17 @@ const struct bg_package gStaticData_0817CF40[5] = {
 };
 
 /* Nine {record, hold} seeds for the countdown slots of
- * graphics_loading_35d1c.c (sub_8035E14, sub_80360DC): records in
- * the still-raw gStaticData_0817D0E4, NULL-terminated. */
+ * graphics_loading_35d1c.c (sub_8035E14, sub_80360DC): the motion
+ * sequences in level_gfx_17cff4.c, NULL-terminated. */
 const struct slot_seed gStaticData_0817CFA4[10] = {
-    { gStaticData_0817D0E4 + 0x14, 0x54 },
-    { gStaticData_0817D0E4 + 0x94, 0x5f },
-    { gStaticData_0817D0E4 + 0x114, 0x3c },
-    { gStaticData_0817D0E4 + 0x1d4, 0x30 },
-    { gStaticData_0817D0E4 + 0x274, 0x24 },
-    { gStaticData_0817D0E4 + 0x314, 0x18 },
-    { gStaticData_0817D0E4 + 0x3b4, 0xc },
-    { gStaticData_0817D0E4 + 0x454, 0 },
-    { gStaticData_0817D0E4 + 0x4f4, 0x49 },
+    { gStaticData_0817D0F8, 0x54 },
+    { gStaticData_0817D178, 0x5f },
+    { gStaticData_0817D1F8, 0x3c },
+    { gStaticData_0817D2B8, 0x30 },
+    { gStaticData_0817D358, 0x24 },
+    { gStaticData_0817D3F8, 0x18 },
+    { gStaticData_0817D498, 0xc },
+    { gStaticData_0817D538, 0 },
+    { gStaticData_0817D5D8, 0x49 },
     { NULL, 0 },
 };

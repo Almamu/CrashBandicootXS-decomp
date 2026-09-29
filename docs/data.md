@@ -197,6 +197,9 @@ The first batch (all pointer tables, all byte-exact):
 | `dispatch_table_16c6a4.c` | `0x0816C6A4` | the unified 92-slot function-pointer dispatch array |
 | `level_table_16c814.c` | `0x0816C814` | the level table (25 `struct level_info`), the levels' room lists and 48 room records, the theme music cues, 5 colour-cycle lists (see "Level data") |
 | `cutscenes_16d1c8.c` | `0x0816D1C8` | the 11 cutscenes: slide lists, 24 slides, the text of 6 languages (see "Cutscenes") |
+| `terrain_1725a8.c` | `0x081725A8` | the 51 terrain types of the collision maps |
+| `ui_text_172cd4.c` | `0x08172CD4` | the game's UI text in six languages (see "UI text") |
+| `hud_fonts_174be0.c` | `0x08174BE0` | the HUD digit slots and the two HUD fonts' character lists and glyph metrics |
 | `actor_category_175558.c` | `0x08175558` | 7 `struct category_descriptor`, 3 `struct category_vtable` |
 | `actor_pmf_17a6b8.c` | `0x0817A6B8` | 1 actor PMF table |
 | `actor_state_fn_17a840.c` | `0x0817A840` | 4 state functions |
@@ -207,9 +210,13 @@ The first batch (all pointer tables, all byte-exact):
 | `actor_pmf_17c450.c` | `0x0817C450` | 1 actor PMF table |
 | `actor_state_17c4c8.c` | `0x0817C4C8` | 1 function table, 2 actor PMF tables |
 | `bg_package_17c594.c` | `0x0817C594` | 3 `struct bg_package` |
+| `credits_17c5d0.c` | `0x0817C5D0` | the credits (see "Credits") |
 | `popup_glyphs_17cf40.c` | `0x0817CF40` | 5 glyph packages, 9 slot seeds |
+| `level_gfx_17cff4.c` | `0x0817CFF4` | OAM offsets, palettes, 5 `struct bg_package`, 9 motion sequences, 1 animation record |
 | `slot_seeds_17d6c0.c` | `0x0817D6C0` | 20 slot seeds, 3 `struct bg_package` |
-| `digit_glyphs_17e714.c` | `0x0817E714` | 6 glyph pointers |
+| `countdown_17d7a4.c` | `0x0817D7A4` | 1 `struct bg_package`, 20 motion sequences, the 6 language names |
+| `digit_glyphs_17e714.c` | `0x0817E714` | 6 pointers to the language names |
+| `palettes_17e72c.c` | `0x0817E72C` | 3 palette-cache halves |
 | `level_tilesets_17e78c.c` | `0x0817E78C` | a `u16[16]` (`sub_8037388`), level BG tile sets 1-3 (grit, see "Resources") |
 | `level_rooms_24b638.c` | `0x0824B638` | the level data of 33 rooms, generated from `data/levels/` (see "Level data") |
 | `level_tilesets_270f08.c` | `0x08270F08` | level BG tile sets 4-5 (grit) |
@@ -679,3 +686,52 @@ the same way.
 
 `tools/rle_sprites.py extract` writes the three PNGs from `baserom.gba`
 again and checks that every frame re-encodes to the ROM's bytes.
+
+### Terrain types and UI text
+
+The old `gStaticData_081725C4` was two things. First
+`src/data/terrain_1725a8.c`: 51 terrain types (`struct terrain_type`,
+36 bytes: a value per collision mode, then the height of each of a
+cell's 8 pixel columns per mode). The code reads the height rows of each
+mode as their own 36-byte-stride tables through the labels
+`gStaticData_081725AC`/`B4`/`BC`/`C4`, which point 4, 12, 20 and 28
+bytes into the first record. Those stay as symbols (the code and
+`expected/` use them), defined with `asm(".set ...")` in the C file as
+names for addresses inside the table: they aren't objects, so the
+report doesn't count them.
+
+Then `src/data/ui_text_172cd4.c`: the game's own text (menus, level
+names, popups) in six languages, 70 strings each. `sub_8026F38` looks a
+text id up in `gUnknown_03000850[language]` (`src/iwram/iwram_data.c`),
+which now points at `gUiTextEnglish`...`gUiTextDutch` by name. Each
+language's new strings sit before its array, and strings several
+languages share (mostly the level names) are stored once. Every string
+in the region is referenced, and every pointer lands on a string start.
+Strings are named after the first language and index that use them
+(`gUiTextEnglish00` is "level"). They're plain C strings (Latin-1, octal
+escapes), and agbcc's 4-byte alignment of string arrays gives the ROM's
+zero padding.
+
+### Credits
+
+`gStaticData_0817C5D0` (`src/data/credits_17c5d0.c`) is the credits
+stream `sub_80350A4` draws line by line as floating glyphs. It is text
+with three opcodes, written as macros: `CREDITS_PICTURE_n` (1, n: popup
+glyph picture n, the logos of `popup_glyphs_17cf40.c`), `CREDITS_SMALL`
+(2) and `CREDITS_LARGE` (3), the two HUD fonts. A zero byte ends it, and
+the code starts over there.
+
+### Motion sequences
+
+`gStaticData_0817D0E4` and `gStaticData_0817D7A4` are each a BG2
+picture (`struct bg_package`) followed by the motion scripts of the
+countdown slots of `graphics_loading_35d1c.c`: `struct delta_record`s
+(a hold count, positions, velocities, per-frame deltas), in sequences
+that end with a zero hold. The seed tables (`popup_glyphs_17cf40.c`'s
+`gStaticData_0817CFA4`, `slot_seeds_17d6c0.c`'s `gStaticData_0817D6C0`)
+point at each sequence by name now (`gStaticData_0817D0F8`, ...), not at
+`gStaticData_0817D7A4 + 0x174`-style offsets. The six language names
+after the second set are the strings `digit_glyphs_17e714.c` points at
+(they aren't digit glyphs). The four OBJ sprite packages in front of
+the first set are listed by the IWRAM table `gUnknown_030008BC`, which
+points at them by name too.

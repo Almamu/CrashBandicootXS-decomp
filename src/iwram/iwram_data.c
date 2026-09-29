@@ -18,8 +18,16 @@
  */
 
 extern const u16 gStaticData_0816AF10[];
-extern const u8 gStaticData_081725C4[];
-extern const u8 gStaticData_0817D074[];
+extern const u8 *const gUiTextEnglish[70];
+extern const u8 *const gUiTextFrench[70];
+extern const u8 *const gUiTextGerman[70];
+extern const u8 *const gUiTextSpanish[70];
+extern const u8 *const gUiTextItalian[70];
+extern const u8 *const gUiTextDutch[70];
+extern const u8 gStaticData_0817D094[];
+extern const u8 gStaticData_0817D0A8[];
+extern const u8 gStaticData_0817D0BC[];
+extern const u8 gStaticData_0817D0D0[];
 
 /* The ARM routines the Thumb code calls through the pointers below. */
 extern s32 LookupSpriteFrameCache(u8 *frame);
@@ -100,14 +108,14 @@ const struct cutscene_page *const *gUnknown_03000834[6] = {
 void *gUnknown_0300084C = NULL; /* struct level_layers * */
 
 /* Per-language string tables (main_loop.c indexes them by
- * gUnknown_03000868), string pointer arrays inside gStaticData_081725C4. */
+ * gUnknown_03000868), src/data/ui_text_172cd4.c. */
 const u8 *const *gUnknown_03000850[6] = {
-    (const u8 *const *)(gStaticData_081725C4 + 0x0B14),
-    (const u8 *const *)(gStaticData_081725C4 + 0x106C),
-    (const u8 *const *)(gStaticData_081725C4 + 0x15AC),
-    (const u8 *const *)(gStaticData_081725C4 + 0x1B0C),
-    (const u8 *const *)(gStaticData_081725C4 + 0x2068),
-    (const u8 *const *)(gStaticData_081725C4 + 0x2504),
+    gUiTextEnglish,
+    gUiTextFrench,
+    gUiTextGerman,
+    gUiTextSpanish,
+    gUiTextItalian,
+    gUiTextDutch,
 };
 
 /* The language, 0-5 (English, French, German, Spanish, Italian, Dutch);
@@ -133,12 +141,13 @@ s32 gUnknown_0300089C[6] = { 0x1555, 0x1155, 0xD55, 0x955, 0x555, 0x155 };
 void *gUnknown_030008B4 = (void *)(PLTT + 0x20);
 void *gUnknown_030008B8 = (void *)(PLTT + 0x340);
 
-/* level_graphics.c: four of the records in gStaticData_0817D074. */
+/* level_graphics.c: the four OBJ sprite packages of
+ * src/data/level_gfx_17cff4.c. */
 const void *gUnknown_030008BC[4] = {
-    gStaticData_0817D074 + 0x34,
-    gStaticData_0817D074 + 0x5C,
-    gStaticData_0817D074 + 0x48,
-    gStaticData_0817D074 + 0x20,
+    gStaticData_0817D0A8,
+    gStaticData_0817D0D0,
+    gStaticData_0817D0BC,
+    gStaticData_0817D094,
 };
 
 void *gUnknown_030008CC = NULL; /* struct counter_widget * */

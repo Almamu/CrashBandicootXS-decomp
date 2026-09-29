@@ -6,7 +6,26 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-extern const u8 gStaticData_0817D7A4[];
+extern const u8 gStaticData_0817D7B8[];
+extern const u8 gStaticData_0817D918[];
+extern const u8 gStaticData_0817D9D8[];
+extern const u8 gStaticData_0817DA98[];
+extern const u8 gStaticData_0817DB58[];
+extern const u8 gStaticData_0817DC18[];
+extern const u8 gStaticData_0817DCD8[];
+extern const u8 gStaticData_0817DD98[];
+extern const u8 gStaticData_0817DE58[];
+extern const u8 gStaticData_0817DF18[];
+extern const u8 gStaticData_0817DFD8[];
+extern const u8 gStaticData_0817E098[];
+extern const u8 gStaticData_0817E158[];
+extern const u8 gStaticData_0817E218[];
+extern const u8 gStaticData_0817E298[];
+extern const u8 gStaticData_0817E358[];
+extern const u8 gStaticData_0817E418[];
+extern const u8 gStaticData_0817E4D8[];
+extern const u8 gStaticData_0817E598[];
+extern const u8 gStaticData_0817E658[];
 extern const u8 gStaticData_08631A68[];
 extern const u8 gStaticData_08631A90[];
 extern const u8 gStaticData_08631AB8[];
@@ -22,29 +41,29 @@ struct slot_seed
 };
 
 /* Twenty {record, hold} seeds read by sub_8036600
- * (graphics_loading_35d1c.c), records in the still-raw
- * gStaticData_0817D7A4, then a {NULL, 0} terminator. */
+ * (graphics_loading_35d1c.c): the motion sequences in
+ * countdown_17d7a4.c, then a {NULL, 0} terminator. */
 const struct slot_seed gStaticData_0817D6C0[21] = {
-    { gStaticData_0817D7A4 + 0x14, 0 },
-    { gStaticData_0817D7A4 + 0x174, 0x5a },
-    { gStaticData_0817D7A4 + 0x234, 0x60 },
-    { gStaticData_0817D7A4 + 0x2f4, 0x64 },
-    { gStaticData_0817D7A4 + 0x3b4, 0x68 },
-    { gStaticData_0817D7A4 + 0x474, 0x6e },
-    { gStaticData_0817D7A4 + 0x534, 0x73 },
-    { gStaticData_0817D7A4 + 0x5f4, 0x78 },
-    { gStaticData_0817D7A4 + 0x6b4, 0x7d },
-    { gStaticData_0817D7A4 + 0x774, 0x83 },
-    { gStaticData_0817D7A4 + 0x834, 0x89 },
-    { gStaticData_0817D7A4 + 0x8f4, 0x8a },
-    { gStaticData_0817D7A4 + 0x9b4, 0x8f },
-    { gStaticData_0817D7A4 + 0xa74, 0x93 },
-    { gStaticData_0817D7A4 + 0xaf4, 0x97 },
-    { gStaticData_0817D7A4 + 0xbb4, 0x9b },
-    { gStaticData_0817D7A4 + 0xc74, 0x9f },
-    { gStaticData_0817D7A4 + 0xd34, 0xa3 },
-    { gStaticData_0817D7A4 + 0xdf4, 0xa6 },
-    { gStaticData_0817D7A4 + 0xeb4, 0xb2 },
+    { gStaticData_0817D7B8, 0 },
+    { gStaticData_0817D918, 0x5a },
+    { gStaticData_0817D9D8, 0x60 },
+    { gStaticData_0817DA98, 0x64 },
+    { gStaticData_0817DB58, 0x68 },
+    { gStaticData_0817DC18, 0x6e },
+    { gStaticData_0817DCD8, 0x73 },
+    { gStaticData_0817DD98, 0x78 },
+    { gStaticData_0817DE58, 0x7d },
+    { gStaticData_0817DF18, 0x83 },
+    { gStaticData_0817DFD8, 0x89 },
+    { gStaticData_0817E098, 0x8a },
+    { gStaticData_0817E158, 0x8f },
+    { gStaticData_0817E218, 0x93 },
+    { gStaticData_0817E298, 0x97 },
+    { gStaticData_0817E358, 0x9b },
+    { gStaticData_0817E418, 0x9f },
+    { gStaticData_0817E4D8, 0xa3 },
+    { gStaticData_0817E598, 0xa6 },
+    { gStaticData_0817E658, 0xb2 },
     { NULL, 0 },
 };
 

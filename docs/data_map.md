@@ -498,8 +498,11 @@ Notable mid-size tables:
   `graphics/unknown/*/entities.json` already records all of it.
 - `08175558`+`08175564`+`08175584`: one `category_descriptor[7]`, split over three labels.
 - `081725C4` (0x261C): terrain shape records (36 B, heights 0-7, `0xFF`
-  empty) for the collision streamer.
+  empty) for the collision streamer, then the game's UI text in six
+  languages. **Converted** (`src/data/terrain_1725a8.c`,
+  `src/data/ui_text_172cd4.c`).
 - `0817C5D0` (0x96C): popup/credits text opcode stream (`"\x03developed by\n\n\x01..."`).
+  **Converted** (`src/data/credits_17c5d0.c`).
 - `0816AF10`: the CRC-16/CCITT table (poly `0x1021`) for link-cable packets.
 - `0816A820`: `s16[256]` sine table.
 - `085A4C70`/`085A4D70`: two copies of libgcc's `__clz_tab` (`u8[256]`).
@@ -739,17 +742,17 @@ vtable shapes).
 | `0816C86C` | 0x514 | level table: 25 x 0x24 `struct level_info`, then 25 x 0x10 room lists `{count, rooms**, extra1, extra2}`. **Converted** (same) | `sub_800599C`, `sub_8005D44`, `sub_80067EC` +17 | high | done |
 | `0816CD80` | 0x474 | `u8[11]` theme music cues, 17 room records (0x14 each), the room lists' pointer arrays, 31 more room records. **Converted** (same); its last 0x2C bytes are the English cutscene table `0816D1C8` | `sub_8024498` | high | done |
 | `0816D1F4` | 0x53B4 | the cutscenes: 11 slide lists `{slides*, count}` (`struct cutscene_slides`), the English pages, 5 more language tables, slide arrays, text strings and pointer arrays of 6 languages, 24 slides (0x1C, `struct cutscene_slide`). **Converted** (`src/data/cutscenes_16d1c8.c`, from `0816D1C8`) | `sub_8022468` | high | done |
-| `081725A8` | 0x4 | table of struct terrain_type | `sub_8025228` | high | easy |
-| `081725AC` | 0x8 | small constant (ffffffffffffffff) | `sub_80250BC`, `sub_8025130` | medium | easy |
-| `081725B4` | 0x8 | small constant (ffffffffffffffff) | `sub_8025130` | medium | easy |
-| `081725BC` | 0x8 | small constant (ffffffffffffffff) | `sub_8025130` | medium | easy |
-| `081725C4` | 0x261C | terrain shape table: 36-byte records (per-column heights 0..7, 0xFF = empty) used by the collision streamer | `sub_8025130` | medium | medium |
-| `08174BE0` | 0x8C | table of u32 (`u32` x 35) | `sub_8027138`, `sub_802732C` | high | easy |
-| `08174C6C` | 0x118 | table of struct hud_pos | `sub_8027138`, `sub_802732C`, `sub_802757C` +2 | high | easy |
-| `08174D84` | 0x50 | table (element layout: see consumers) | `InitHudIconWidgetA` | medium | easy |
-| `08174DD4` | 0x3B4 | table (element layout: see consumers) | `InitHudIconWidgetA` | medium | easy |
-| `08175188` | 0x4C | table (element layout: see consumers) | `InitHudIconWidgetB` | medium | easy |
-| `081751D4` | 0x384 | table (element layout: see consumers) | `InitHudIconWidgetB` | medium | easy |
+| `081725A8` | 0x4 | 51 `struct terrain_type` {u8 modeValue[4]; u8 heights[4][8]} (the rest of the old blob is the UI text, see `081725C4`). **Converted** (`src/data/terrain_1725a8.c`) | `sub_8025228` | high | done |
+| `081725AC` | 0x8 | name for heights[0] of terrain type 0 (an `asm` `.set` alias into gStaticData_081725A8). **Converted** (`src/data/terrain_1725a8.c`) | `sub_80250BC`, `sub_8025130` | medium | done |
+| `081725B4` | 0x8 | name for heights[1] of terrain type 0 (alias). **Converted** (`src/data/terrain_1725a8.c`) | `sub_8025130` | medium | done |
+| `081725BC` | 0x8 | name for heights[2] of terrain type 0 (alias). **Converted** (`src/data/terrain_1725a8.c`) | `sub_8025130` | medium | done |
+| `081725C4` | 0x261C | heights[3] of terrain type 0 (alias); the old label ran on through the terrain table and then the game's UI text: 367 strings and the six 70-entry language tables `gUiTextEnglish`...`gUiTextDutch` (`src/data/ui_text_172cd4.c`). **Converted** (`src/data/terrain_1725a8.c, src/data/ui_text_172cd4.c`) | `sub_8025130` | medium | done |
+| `08174BE0` | 0x8C | table of u32 (`u32` x 35). **Converted** (`src/data/hud_fonts_174be0.c`) | `sub_8027138`, `sub_802732C` | high | done |
+| `08174C6C` | 0x118 | table of struct hud_pos. **Converted** (`src/data/hud_fonts_174be0.c`) | `sub_8027138`, `sub_802732C`, `sub_802757C` +2 | high | done |
+| `08174D84` | 0x50 | HUD font A's characters in glyph order (a string, Latin-1). **Converted** (`src/data/hud_fonts_174be0.c`) | `InitHudIconWidgetA` | medium | done |
+| `08174DD4` | 0x3B4 | table (element layout: see consumers). **Converted** (`src/data/hud_fonts_174be0.c`) | `InitHudIconWidgetA` | medium | done |
+| `08175188` | 0x4C | HUD font B's characters in glyph order. **Converted** (`src/data/hud_fonts_174be0.c`) | `InitHudIconWidgetB` | medium | done |
+| `081751D4` | 0x384 | table (element layout: see consumers). **Converted** (`src/data/hud_fonts_174be0.c`) | `InitHudIconWidgetB` | medium | done |
 | `08175558` | 0xC | first 0xC bytes of category_descriptor[0] (label splits the struct array) (`struct category_descriptor` x 7) | `InitActorCategory`, `SetupActorVramPool`, `sub_802968C` +1 | high | easy |
 | `08175564` | 0x20 | category_descriptor[0] bytes 0x0C-0x2B (part of gStaticData_08175558[7]) | `InitActorCategory` | high | easy |
 | `08175584` | 0x140 | category_descriptor[0] +0x2C .. [6] end (part of gStaticData_08175558[7]) | `InitActorCategory` | high | easy |
@@ -803,25 +806,25 @@ vtable shapes).
 | `0817C594` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `sub_803472C` | medium | easy |
 | `0817C5A8` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `sub_803472C` | medium | easy |
 | `0817C5BC` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `sub_803472C` | medium | easy |
-| `0817C5D0` | 0x96C | popup/credits text opcode stream (control bytes 0x01-0x04 + ASCII) | `sub_8034CEC` | high | medium |
-| `0817CF3C` | 0x4 | all zero (zero-initialised table) | `sub_80350A4` | high | easy |
+| `0817C5D0` | 0x96C | the credits: text lines with opcodes 1 n (picture n), 2 (small font), 3 (large font), zero-terminated. **Converted** (`src/data/credits_17c5d0.c`) | `sub_8034CEC` | high | done |
+| `0817CF3C` | 0x4 | an empty string (4 bytes). **Converted** (`src/data/credits_17c5d0.c`) | `sub_80350A4` | high | done |
 | `0817CF40` | 0x64 | table of struct popup_glyph_src; 10 word(s) look like ROM pointers | `sub_80352AC` | high | easy |
 | `0817CFA4` | 0x50 | table (element layout: see consumers); 9 word(s) look like ROM pointers | `sub_8035E14`, `sub_80360DC` | medium | easy |
-| `0817CFF4` | 0x40 | BGR555 palette(s): 2 x 16 colours (`u16` x 32) | `sub_80358A8` | high | easy |
-| `0817D034` | 0x20 | table (element layout: see consumers); 1 word(s) look like ROM pointers | `LoadLevelGraphics` | medium | easy |
-| `0817D054` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `LoadLevelGraphics` | high | easy |
-| `0817D074` | 0x70 | table (element layout: see consumers); 12 word(s) look like ROM pointers | `LoadLevelGraphics` | medium | easy |
-| `0817D0E4` | 0x5B4 | bg_package for LoadBg2Background {w, h, palette*, tiles*, map*, ...} + trailing records | `LoadBg2Background` | high | easy |
-| `0817D698` | 0x28 | table (element layout: see consumers); 2 word(s) look like ROM pointers | `sub_80361B0` | medium | easy |
+| `0817CFF4` | 0x40 | 8 {x, y} OAM piece offsets. **Converted** (`src/data/level_gfx_17cff4.c`) | `sub_80358A8` | high | done |
+| `0817D034` | 0x20 | table (element layout: see consumers); 1 word(s) look like ROM pointers. **Converted** (`src/data/level_gfx_17cff4.c`) | `LoadLevelGraphics` | medium | done |
+| `0817D054` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/level_gfx_17cff4.c`) | `LoadLevelGraphics` | high | done |
+| `0817D074` | 0x70 | 16-colour palette + 4 OBJ sprite `struct bg_package`s (`gStaticData_0817D094`/`0A8`/`0BC`/`0D0`, gUnknown_030008BC's). **Converted** (`src/data/level_gfx_17cff4.c`) | `LoadLevelGraphics` | medium | done |
+| `0817D0E4` | 0x5B4 | `struct bg_package` (BG2) + 9 motion sequences of `struct delta_record` (`gStaticData_0817D0F8`...), the seeds' targets. **Converted** (`src/data/level_gfx_17cff4.c`) | `LoadBg2Background` | high | done |
+| `0817D698` | 0x28 | an animation record (actor_anim.h's `struct anim_table_record`, family A record 0's arrays). **Converted** (`src/data/level_gfx_17cff4.c`) | `sub_80361B0` | medium | done |
 | `0817D6C0` | 0xA8 | table (element layout: see consumers); 20 word(s) look like ROM pointers | `sub_8036600` | medium | easy |
 | `0817D768` | 0x14 | table (element layout: see consumers); 2 word(s) look like ROM pointers | `sub_8036528` | medium | easy |
 | `0817D77C` | 0x14 | table (element layout: see consumers); 2 word(s) look like ROM pointers | `sub_8036528` | medium | easy |
 | `0817D790` | 0x14 | table (element layout: see consumers); 2 word(s) look like ROM pointers | `sub_8036528` | medium | easy |
-| `0817D7A4` | 0xF70 | bg_package (graphics_loading_35780.c) + trailing per-screen records | `sub_8036CF4` | medium | medium |
+| `0817D7A4` | 0xF70 | `struct bg_package` (BG2) + 20 motion sequences of `struct delta_record` + the 6 language names (`gStaticData_0817E6D8`...). **Converted** (`src/data/countdown_17d7a4.c`) | `sub_8036CF4` | medium | done |
 | `0817E714` | 0x18 | pointer table (6 data pointers) (`void*` x 6) | `sub_80372BC` | high | easy |
-| `0817E72C` | 0x20 | table of u16; 1 word(s) look like ROM pointers (`u16` x 16) | `sub_8037388` | high | easy |
-| `0817E74C` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_8037388` | high | easy |
-| `0817E76C` | 0x20 | table of u16 (`u16` x 16) | `sub_8037388` | high | easy |
+| `0817E72C` | 0x20 | table of u16; 1 word(s) look like ROM pointers (`u16` x 16). **Converted** (`src/data/palettes_17e72c.c`) | `sub_8037388` | high | done |
+| `0817E74C` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/palettes_17e72c.c`) | `sub_8037388` | high | done |
+| `0817E76C` | 0x20 | table of u16 (`u16` x 16). **Converted** (`src/data/palettes_17e72c.c`) | `sub_8037388` | high | done |
 | `0817E78C` | 0x326E74 | composite: level BG tile sets (raw tag-0x00 assets), per-room level data, sprite-bank tile pool | `sub_8037388` | high | medium |
 | `084A5600` | 0xB66B4 | composite: sprite-bank (animation) table (**converted**, C) + GAX2 sound-effect bank (**converted**, `gax_audio.py --sfx`) | `sub_8004D74`, `sub_8022230` | high | medium |
 | `085A4C5C` | 0x14 | the default song's GAX2_Song struct `{4, unknownc, info, unk_ptr, channel}` (the engine's default handler layout). **Built** by `tools/gax_audio.py` (`gax_default_layout.bin`) | `sub_8037FC0`, `sub_8038538` | high | done |

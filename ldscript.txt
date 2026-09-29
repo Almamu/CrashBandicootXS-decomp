@@ -457,7 +457,9 @@ SECTIONS
         build/crashbandicootxs/src/data/dispatch_table_16c6a4.o(.rodata);
         build/crashbandicootxs/src/data/level_table_16c814.o(.rodata);
         build/crashbandicootxs/src/data/cutscenes_16d1c8.o(.rodata);
-        build/crashbandicootxs/data/data.o(.rodata.081725A8);
+        build/crashbandicootxs/src/data/terrain_1725a8.o(.rodata);
+        build/crashbandicootxs/src/data/ui_text_172cd4.o(.rodata);
+        build/crashbandicootxs/src/data/hud_fonts_174be0.o(.rodata);
         build/crashbandicootxs/src/data/actor_category_175558.o(.rodata);
         build/crashbandicootxs/data/data.o(.rodata.08175760);
         build/crashbandicootxs/src/data/actor_pmf_17a6b8.o(.rodata);
@@ -477,13 +479,13 @@ SECTIONS
         build/crashbandicootxs/src/data/actor_state_17c4c8.o(.rodata);
         build/crashbandicootxs/data/data.o(.rodata.0817C510);
         build/crashbandicootxs/src/data/bg_package_17c594.o(.rodata);
-        build/crashbandicootxs/data/data.o(.rodata.0817C5D0);
+        build/crashbandicootxs/src/data/credits_17c5d0.o(.rodata);
         build/crashbandicootxs/src/data/popup_glyphs_17cf40.o(.rodata);
-        build/crashbandicootxs/data/data.o(.rodata.0817CFF4);
+        build/crashbandicootxs/src/data/level_gfx_17cff4.o(.rodata);
         build/crashbandicootxs/src/data/slot_seeds_17d6c0.o(.rodata);
-        build/crashbandicootxs/data/data.o(.rodata.0817D7A4);
+        build/crashbandicootxs/src/data/countdown_17d7a4.o(.rodata);
         build/crashbandicootxs/src/data/digit_glyphs_17e714.o(.rodata);
-        build/crashbandicootxs/data/data.o(.rodata.0817E72C);
+        build/crashbandicootxs/src/data/palettes_17e72c.o(.rodata);
         build/crashbandicootxs/src/data/level_tilesets_17e78c.o(.rodata);
         build/crashbandicootxs/src/data/level_rooms_24b638.o(.rodata);
         build/crashbandicootxs/src/data/level_tilesets_270f08.o(.rodata);
