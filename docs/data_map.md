@@ -259,9 +259,11 @@ The only direct reference is `sub_8037388` reading the first 0x20 bytes
 as a `u16[16]`, like its three siblings just before it. Everything else
 is reached through two pointer graphs.
 
-**1. Level data.** `gStaticData_0816CD80` holds 41 room records of 0x14
-bytes: `{u16 (*palette)[256]; struct level_desc *desc; s32 kind; ...;
-u16 catIndex @0x10}`. The same record is `struct level_load_args` in
+**1. Level data.** The level table's room lists (after
+`gStaticData_0816C86C`) point at 48 room records of 0x14 bytes, 41 of
+them rooms: `{u16 (*palette)[256]; struct level_desc *desc; s32 kind;
+...; u16 catIndex @0x10}` (now `struct level_room` in
+`src/data/level_table_16c814.c`). The same record is `struct level_load_args` in
 `level_layers.c` (first two fields), `gl_widget_kind` in `game_loop56.c`
 (`kind`), and `MedalListItem` in `game_loop18.c` (`linkedObj` is the
 `desc`, and `linkedObj->0x1C` is the descriptor's object list). A room
@@ -468,12 +470,18 @@ By kind (from `tools/data_map.json`):
 
 Notable mid-size tables:
 
-- `0816C86C` (0x514): the level table, `u32 1` + 24 x 0x24 level records +
-  36 medal item-list headers. It is declared under five different struct
-  names across `src/` (`gl_level_entry`, `level_info`, `level_guard`,
-  `MedalTableEntry`, `threshold_table_entry`). Unify them first.
-- `0816CD80` (0x474): the room records (see `0817E78C`) plus medal
-  items. It is the root of the level-data graph.
+- `0816C86C` (0x514): the level table, 25 x 0x24 level records (the
+  first word, 1, is record 0's name text id, not a header) + 25 room-list
+  headers `{count, rooms**, extra1, extra2}`. It is declared under five
+  different struct names across `src/` (`gl_level_entry`, `level_info`,
+  `level_guard`, `MedalTableEntry`, `threshold_table_entry`).
+  **Converted** with the next one (`src/data/level_table_16c814.c`,
+  `struct level_info` in `level_data.h`).
+- `0816CD80` (0x474): 11 theme music cues, 17 extra-room records, the
+  room-list pointer arrays and 31 more records (24 rooms, 7 category
+  stages). It is the root of the level-data graph. **Converted**, except
+  its last 0x2C bytes, which are the English cutscene text table
+  (`0816D1C8`, see `0816D1F4`).
 - `0816D1F4` (0x53B4): text/menu lists, `{items*, count}` headers, strings,
   and the intro slide packages (0x1C each) that point at the intro palettes.
 - `08178F80` (0x1738) / `0817AA98` (0x1728): the two actor-category
@@ -715,13 +723,13 @@ vtable shapes).
 | `0816C644` | 0x30 | table of s32 (`s32` x 12) | `sub_801E688`, `sub_801E788` | high | easy |
 | `0816C674` | 0x30 | table of s32 (`s32` x 12) | `sub_801E688`, `sub_801E788` | high | easy |
 | `0816C6A4` | 0x170 | function-pointer table: 92 Thumb function pointers (menu/trigger-effect dispatch) (`void (*)(void)` x 92) | `sub_8022208` | high | easy |
-| `0816C814` | 0xA | table of u16 (`u16` x 5) | `sub_8023A1C` | high | easy |
-| `0816C81E` | 0x12 | table of u16 (`u16` x 9) | `sub_8023A1C` | high | easy |
-| `0816C830` | 0x12 | table of u16 (`u16` x 9) | `sub_8023A1C` | high | easy |
-| `0816C842` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_8023A1C` | high | easy |
-| `0816C862` | 0xA | table of u16 (`u16` x 5) | `sub_8023A1C` | high | easy |
-| `0816C86C` | 0x514 | level table: u32 header (1) + 24 x 0x24 level records, followed by 36 x 0x10 medal item-list headers {count, items**, extra1, extra2} (`struct MedalTableEntry` x 36) | `sub_800599C`, `sub_8005D44`, `sub_80067EC` +17 | high | medium |
-| `0816CD80` | 0x474 | room/medal records: sound-cue bytes, 0x14-byte records whose +0x04 pointer is a room record {palette*, level_desc*, kind} in 0x0817E78C, and item pointer arrays | `sub_8024498` | high | medium |
+| `0816C814` | 0xA | `u16[5]` palette-entry list of a level-start colour cycle. **Converted** (`src/data/level_table_16c814.c`) | `sub_8023A1C` | high | done |
+| `0816C81E` | 0x12 | `u16[9]` colour-cycle list. **Converted** (same) | `sub_8023A1C` | high | done |
+| `0816C830` | 0x12 | `u16[9]` colour-cycle list. **Converted** (same) | `sub_8023A1C` | high | done |
+| `0816C842` | 0x20 | `u16[16]` colour-cycle list (palette entries 0x20-0x2F, not a palette). **Converted** (same) | `sub_8023A1C` | high | done |
+| `0816C862` | 0xA | `u16[5]` colour-cycle list. **Converted** (same) | `sub_8023A1C` | high | done |
+| `0816C86C` | 0x514 | level table: 25 x 0x24 `struct level_info`, then 25 x 0x10 room lists `{count, rooms**, extra1, extra2}`. **Converted** (same) | `sub_800599C`, `sub_8005D44`, `sub_80067EC` +17 | high | done |
+| `0816CD80` | 0x474 | `u8[11]` theme music cues, 17 room records (0x14 each), the room lists' pointer arrays, 31 more room records. **Converted** (same); its last 0x2C bytes are the English cutscene table `0816D1C8` | `sub_8024498` | high | done |
 | `0816D1F4` | 0x53B4 | text/menu lists: {items*, count} headers, item pointer arrays, strings, and 23 intro-slide package records (0x1C) pointing at the Mode-4 palettes | `sub_8022468` | high | medium |
 | `081725A8` | 0x4 | table of struct terrain_type | `sub_8025228` | high | easy |
 | `081725AC` | 0x8 | small constant (ffffffffffffffff) | `sub_80250BC`, `sub_8025130` | medium | easy |

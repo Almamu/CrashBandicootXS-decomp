@@ -190,6 +190,7 @@ The first batch (all pointer tables, all byte-exact):
 | `bg_package_16c58c.c` | `0x0816C58C` | 1 `struct bg_package` |
 | `image_table_16c5a0.c` | `0x0816C5A0` | 10 `{palette, tiles}` asset pairs |
 | `dispatch_table_16c6a4.c` | `0x0816C6A4` | the unified 92-slot function-pointer dispatch array |
+| `level_table_16c814.c` | `0x0816C814` | the level table (25 `struct level_info`), the levels' room lists and 48 room records, the theme music cues, 5 colour-cycle lists (see "Level data") |
 | `actor_category_175558.c` | `0x08175558` | 7 `struct category_descriptor`, 3 `struct category_vtable` |
 | `actor_pmf_17a6b8.c` | `0x0817A6B8` | 1 actor PMF table |
 | `actor_state_fn_17a840.c` | `0x0817A840` | 4 state functions |
@@ -265,11 +266,7 @@ the C is the source from then on.
   file starts with a word-aligned struct, and `tools/report_units.py`
   doesn't accept linker fill between objects.
 
-Still raw and worth doing next: the per-level record table
-`gStaticData_0816C86C` (self-referencing records, used all over the
-game loop), `gStaticData_0816CD80` (its 41 room records point at the
-palettes and descriptors in `level_rooms_*.c`, so converting it would make
-the level data movable), and the animation tables inside
+Still raw and worth doing next: the animation tables inside
 `gStaticData_08178F80`/`gStaticData_0817AA98` (`actor_anim.h`'s
 `gStaticData_081796CC`/`gStaticData_0817B2A4`, not labeled yet).
 
@@ -496,6 +493,20 @@ objects, the tile sets, the assets), and everything the ROM derives
 (chunk grids and sets, asset offsets, entity groups and counts, parameter
 offsets) is computed from the sources again. `include/level_data.h` has
 the types.
+
+The records that point at the rooms are hand-written C in
+`src/data/level_table_16c814.c`: the level table `gStaticData_0816C86C`
+(25 `struct level_info`, indexed by level id), one `struct
+level_room_list` per level (the rooms played in order, `gLevelNNRooms`,
+and up to two extra rooms), and the 48 `struct level_room` records
+(`gLevelRoom00`..`gLevelRoom40`, named after the `data/levels/` room
+directories, and 7 `gLevelStageN` records for the stages played in actor
+category N, which have no room data). A room record names the room's
+palette and `struct level_desc` by symbol, so the room data in
+`level_rooms_*.c` can move or change size: nothing outside the C files
+holds an address into it any more. The code still reads these tables
+through its own local views (`MedalTableEntry`, `threshold_table_entry`,
+`gl_level_entry`, ...); the header comment of each struct lists them.
 
 ### Placing it and counting it
 

@@ -453,7 +453,8 @@ SECTIONS
         build/crashbandicootxs/src/data/image_table_16c5a0.o(.rodata);
         build/crashbandicootxs/data/data.o(.rodata.0816C5F0);
         build/crashbandicootxs/src/data/dispatch_table_16c6a4.o(.rodata);
-        build/crashbandicootxs/data/data.o(.rodata.0816C814);
+        build/crashbandicootxs/src/data/level_table_16c814.o(.rodata);
+        build/crashbandicootxs/data/data.o(.rodata.0816D1C8);
         build/crashbandicootxs/src/data/actor_category_175558.o(.rodata);
         build/crashbandicootxs/data/data.o(.rodata.08175760);
         build/crashbandicootxs/src/data/actor_pmf_17a6b8.o(.rodata);

@@ -2760,9 +2760,10 @@
    "element_type": "u16",
    "element_size": 2,
    "element_count": 5,
-   "format": "table of u16",
+   "format": "u16[5] palette-entry list of a level-start colour cycle (sub_8027018 lists argument)",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/level_table_16c814.c"
   },
   {
    "address": "0x0816C81E",
@@ -2783,9 +2784,10 @@
    "element_type": "u16",
    "element_size": 2,
    "element_count": 9,
-   "format": "table of u16",
+   "format": "u16[9] palette-entry list of a level-start colour cycle",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/level_table_16c814.c"
   },
   {
    "address": "0x0816C830",
@@ -2806,9 +2808,10 @@
    "element_type": "u16",
    "element_size": 2,
    "element_count": 9,
-   "format": "table of u16",
+   "format": "u16[9] palette-entry list of a level-start colour cycle",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/level_table_16c814.c"
   },
   {
    "address": "0x0816C842",
@@ -2829,9 +2832,10 @@
    "element_type": "u16",
    "element_size": 2,
    "element_count": 16,
-   "format": "BGR555 palette(s): 1 x 16 colours",
+   "format": "u16[16] palette-entry list of a level-start colour cycle (entries 0x20-0x2F; not a palette)",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/level_table_16c814.c"
   },
   {
    "address": "0x0816C862",
@@ -2852,9 +2856,10 @@
    "element_type": "u16",
    "element_size": 2,
    "element_count": 5,
-   "format": "table of u16",
+   "format": "u16[5] palette-entry list of a level-start colour cycle",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/level_table_16c814.c"
   },
   {
    "address": "0x0816C86C",
@@ -2903,13 +2908,14 @@
     "struct threshold_table_entry X[]",
     "u8 X[]"
    ],
-   "element_type": "struct MedalTableEntry",
+   "element_type": "struct level_info",
    "element_size": 36,
-   "element_count": 36,
-   "format": "level table: u32 header (1) + 24 x 0x24 level records, followed by 36 x 0x10 medal item-list headers {count, items**, extra1, extra2}",
+   "element_count": 25,
+   "format": "level table: 25 x 0x24 struct level_info (name text id, theme, 3 time-trial thresholds, 2 words for sub_8023118/sub_8023110, a flag, room list), then 25 x 0x10 struct level_room_list {count, rooms**, extra1, extra2}",
    "effort": "medium",
    "confidence": "high",
-   "notes": "Declared under five different struct names in src (gl_level_entry, level_info, level_guard, MedalTableEntry, threshold_table_entry) - unify before converting."
+   "notes": "The first word (1) is record 0's name text id, not a header. The five local struct views in src are listed on struct level_info (include/level_data.h).",
+   "status": "converted: src/data/level_table_16c814.c"
   },
   {
    "address": "0x0816CD80",
@@ -2927,10 +2933,11 @@
    "c_decls": [
     "u8 X[]"
    ],
-   "format": "room/medal records: sound-cue bytes, 0x14-byte records whose +0x04 pointer is a room record {palette*, level_desc*, kind} in 0x0817E78C, and item pointer arrays",
+   "format": "u8[11] theme music cues (+1 B pad), 17 extra-room records (struct level_room, 0x14), the per-level room pointer arrays (31 pointers), 31 room records (24 rooms + 7 actor-category stages); the last 0x2C bytes are the English cutscene text table (label gStaticData_0816D1C8)",
    "effort": "medium",
    "confidence": "high",
-   "notes": "Entry point of the whole level-data graph: 41 room records {palette, level_desc, kind, ...}; the level data they point at is built from data/levels/ (docs/levels.md)."
+   "notes": "Room records point at the palettes and level_desc objects of src/data/level_rooms_*.c by symbol.",
+   "status": "converted (0x0816CD80-0x0816D1C8): src/data/level_table_16c814.c"
   },
   {
    "address": "0x0816D1F4",
