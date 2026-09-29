@@ -506,11 +506,13 @@ Notable mid-size tables:
 - `0816AF10`: the CRC-16/CCITT table (poly `0x1021`) for link-cable packets.
 - `0816A820`: `s16[256]` sine table.
 - `085A4C70`/`085A4D70`: two copies of libgcc's `__clz_tab` (`u8[256]`).
-  They could come from `libgcc.a` itself if the link kept its `.rodata`.
+  **Converted** (`src/data/clz_tab_5a4c70.c`).
 - `085A60FF`...`085A62CC`: GAX2 version string (`"GAX Sound Engine 2.01D
   (Sep 28 2001) (c) Shin'en Multimedia. Code: B.Wodok"`) and error strings,
   the `RateEntry` table, and `085A62DC`, the GAX2 `u32` period table
-  (0x3BD0; its `0x08xxxxxx` values are a smooth ramp, not pointers).
+  (0x3BD0; its `0x08xxxxxx` values are a smooth ramp, not pointers). **Converted**, with the vibrato wave
+  and the EEPROM library's data after it (`src/data/gax_tables_5a6100.c`,
+  `src/data/eeprom_5a9eec.c`).
 
 Every one of the 412 labels is listed in the appendix.
 
@@ -828,27 +830,27 @@ vtable shapes).
 | `0817E78C` | 0x326E74 | composite: level BG tile sets (raw tag-0x00 assets), per-room level data, sprite-bank tile pool | `sub_8037388` | high | medium |
 | `084A5600` | 0xB66B4 | composite: sprite-bank (animation) table (**converted**, C) + GAX2 sound-effect bank (**converted**, `gax_audio.py --sfx`) | `sub_8004D74`, `sub_8022230` | high | medium |
 | `085A4C5C` | 0x14 | the default song's GAX2_Song struct `{4, unknownc, info, unk_ptr, channel}` (the engine's default handler layout). **Built** by `tools/gax_audio.py` (`gax_default_layout.bin`) | `sub_8037FC0`, `sub_8038538` | high | done |
-| `085A4C70` | 0x100 | u8[256] count-leading-zeros table (libgcc __clz_tab, used by the 64-bit divide) (`UQItype` x 256) | `sub_8037648` | high | easy |
-| `085A4D70` | 0x100 | u8[256] count-leading-zeros table (second copy, __clz_tab of another libgcc object) (`UQItype` x 256) | `sub_8037A7C` | high | easy |
+| `085A4C70` | 0x100 | u8[256] count-leading-zeros table (libgcc `__clz_tab` of `__divdi3`). **Converted** (`src/data/clz_tab_5a4c70.c`) | `sub_8037648` | high | done |
+| `085A4D70` | 0x100 | u8[256] count-leading-zeros table (the second copy, `__udivdi3`'s). **Converted** (`src/data/clz_tab_5a4c70.c`) | `sub_8037A7C` | high | done |
 | `085A5519` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
-| `085A60FF` | 0x4D | 1 B pad + GAX2 version string "GAX Sound Engine 2.01D (Sep 28 2001) (c) Shin'en Multimedia. Code: B.Wodok" + NUL padding | `sub_8038538 (via gStaticData_085A614C)` | high | easy |
-| `085A614C` | 0x4 | pointer table (1 data pointers) (`u8*` x 1) | `sub_8038538` | high | easy |
-| `085A6150` | 0x60 | table of struct RateEntry | `sub_8037FA0`, `sub_8037FC0`, `sub_8038538` | high | easy |
-| `085A61B0` | 0xC | table (element layout: see consumers) | `sub_80381FC` | medium | easy |
-| `085A61BC` | 0x14 | table (element layout: see consumers) | `sub_80381FC` | medium | easy |
-| `085A61D0` | 0xC | GAX2 error/tag string "GAX2_INIT" (NUL-padded to 4) (`char` x 12) | `sub_8038538`, `sub_8038A1C` | high | easy |
-| `085A61DC` | 0x10 | GAX2 error/tag string "OUT OF MEMORY" (NUL-padded to 4) (`char` x 16) | `sub_8038538`, `sub_8038A1C` | high | easy |
-| `085A61EC` | 0xC | GAX2 error/tag string "GAX2_JINGLE" (NUL-padded to 4) (`char` x 12) | `sub_8038A1C` | high | easy |
-| `085A61F8` | 0x1C | GAX2 error/tag string "GAX_NO_JINGLE FLAG IS SET" (NUL-padded to 4) (`char` x 28) | `sub_8038A1C` | high | easy |
-| `085A6214` | 0x8 | GAX2 error/tag string "GAX_IRQ" (NUL-padded to 4) | `sub_8038B68` | high | easy |
-| `085A621C` | 0xAC | GAX2 error string "GAX_PLAY HAS NOT FINISHED BEFORE GAX_IRQ. USE LOWER MIXING RATE ..." (+ padding) | `sub_8038B68` | high | easy |
-| `085A62C8` | 0x4 | pointer table (1 data pointers) (`u8*` x 1) | `sub_80392E0` | high | easy |
-| `085A62CC` | 0x10 | table (element layout: see consumers) | `sub_80392E0` | medium | easy |
-| `085A62DC` | 0x3BD0 | GAX2 u32 note period/frequency table (smooth ramp; embedded 0x08xxxxxx values are coincidence) (`u32` x 3828) | `sub_8039B44` | high | easy |
-| `085A9EAC` | 0x4C | table of s8 (`s8` x 76) | `sub_8039FFC` | high | easy |
-| `085A9EF8` | 0xC | table of struct EepromConfig | `sub_803A968` | high | easy |
-| `085A9F04` | 0xC | table of struct EepromConfig | `sub_803A968` | high | easy |
-| `085A9F10` | 0x260 | EEPROM table (0x60, still raw), then the 256-colour palette of cutscene picture 00 (0x200, `gCutscenePicture00`, **converted**) | `sub_803AC04` | high | easy |
+| `085A60FF` | 0x4D | 1 B pad (gbagfx's padding of the `.lz` stream before it, now built) + GAX2 version string "GAX Sound Engine 2.01D (Sep 28 2001) (c) Shin'en Multimedia. Code: B.Wodok". **Converted** (`gGaxVersionString`, `src/data/gax_tables_5a6100.c`) | `sub_8038538 (via gStaticData_085A614C)` | high | done |
+| `085A614C` | 0x4 | pointer to the GAX2 version string. **Converted** (`gStaticData_085A614C = gGaxVersionString`) | `sub_8038538` | high | done |
+| `085A6150` | 0x60 | 12 `struct RateEntry` `{rate in Hz, timer reload}`. **Converted** | `sub_8037FA0`, `sub_8037FC0`, `sub_8038538` | high | done |
+| `085A61B0` | 0xC | GAX2 error string "GAX2_NEW". **Converted** | `sub_80381FC` | medium | done |
+| `085A61BC` | 0x14 | GAX2 error string "PARAMS ARG IS NULL". **Converted** | `sub_80381FC` | medium | done |
+| `085A61D0` | 0xC | GAX2 error/tag string "GAX2_INIT". **Converted** | `sub_8038538`, `sub_8038A1C` | high | done |
+| `085A61DC` | 0x10 | GAX2 error/tag string "OUT OF MEMORY". **Converted** | `sub_8038538`, `sub_8038A1C` | high | done |
+| `085A61EC` | 0xC | GAX2 error/tag string "GAX2_JINGLE". **Converted** | `sub_8038A1C` | high | done |
+| `085A61F8` | 0x1C | GAX2 error/tag string "GAX_NO_JINGLE FLAG IS SET". **Converted** | `sub_8038A1C` | high | done |
+| `085A6214` | 0x8 | GAX2 error/tag string "GAX_IRQ". **Converted** | `sub_8038B68` | high | done |
+| `085A621C` | 0xAC | GAX2 error string "GAX_PLAY HAS NOT FINISHED BEFORE GAX_IRQ. ...", then the halt banner "GAX ENGINE V2.01D Sep 28 2001\n\nEXCEPTION. PROGRAM HALT." (`gGaxHaltBanner`, `+0x74`). **Converted** | `sub_8038B68` | high | done |
+| `085A62C8` | 0x4 | pointer to the halt banner. **Converted** (`gStaticData_085A62C8 = gGaxHaltBanner`) | `sub_80392E0` | high | done |
+| `085A62CC` | 0x10 | GAX2 halt-screen string "FUNCTION NAME:". **Converted** | `sub_80392E0` | medium | done |
+| `085A62DC` | 0x3BD0 | GAX2 u32 note period table (`u32` x 3828; its 0x08xxxxxx values are a smooth ramp, not pointers). **Converted** | `sub_8039B44` | high | done |
+| `085A9EAC` | 0x4C | s8[64] vibrato sine wave, then the SDK's "EEPROM_V122" id string (`gEepromLibraryVersion`, `+0x40`). **Converted** (`gax_tables_5a6100.c`, `eeprom_5a9eec.c`) | `sub_8039FFC` | high | done |
+| `085A9EF8` | 0xC | `struct EepromConfig` of the 4 Kbit chip. **Converted** (`src/data/eeprom_5a9eec.c`) | `sub_803A968` | high | done |
+| `085A9F04` | 0xC | `struct EepromConfig` of the 64 Kbit chip. **Converted** | `sub_803A968` | high | done |
+| `085A9F10` | 0x260 | EEPROM write timeout `u16[3]` + pad, then the library's 22 address constants (`gEepromLibraryAddresses`, no reader), then the palette of cutscene picture 00. **Converted** (`eeprom_5a9eec.c`, `cutscene_pictures_5a9f70.c`) | `sub_803AC04` | high | done |
 | `085ADBD1` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 01), bit 15 set in many entries. **Converted** (`gCutscenePicture01`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
 | `085B34E1` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 02), bit 15 set in many entries. **Converted** (`gCutscenePicture02`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
 | `085B82BC` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 03), bit 15 set in many entries. **Converted** (`gCutscenePicture03`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
