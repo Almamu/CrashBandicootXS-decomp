@@ -1,9 +1,10 @@
 #include "core.h"
+#include "action_obj.h"
 
 /* Part of GitHub issue #16's remainder (0x08011BD4-0x08012D24) - see
  * actor_part79.c's top-of-file comment for the shared field-offset
  * conventions (`self+0xc`/`self+0x10`/`+0x27`..`+0x32`) this "child
- * object" family uses. Not ROM-adjacent to actor_part79.c's functions
+ * object" family uses (include/action_obj.h's `struct act`). Not ROM-adjacent to actor_part79.c's functions
  * (raw `sub_8012420`/`sub_8012694`/`sub_801283C` sit in between, see
  * asm/code_3_2_17_12420.s), hence its own file. */
 
@@ -19,30 +20,30 @@ extern s32 sub_803AD84(void *arg0, void *arg1, void *arg2, void *arg3);
  * returns 1. */
 u8 sub_8012A7C(void *selfArg)
 {
-    u8 *self = selfArg;
-    u8 *part = *(u8 **)(self + 0x10);
+    struct act *self = selfArg;
+    u8 *part = (u8 *)self->part;
     register u8 *p asm("r1") = part + 0x68;
     register s32 mask asm("r0") = 8;
 
     mask &= *p;
     if (mask == 0) {
         if (part[0x69] > 2) {
-            u8 *mgr = *(u8 **)(self + 0xc);
-            sub_803AD80(self + *(s16 *)(mgr + 0x20), (void *)0x1a, *(void **)(mgr + 0x24));
+            struct act_vtable *mgr = self->vt;
+            sub_803AD80((u8 *)self + mgr->m20.thisOffset, (void *)0x1a, mgr->m20.fn);
             {
-                u8 *off = *(u8 **)(self + 0xc) + 0x50;
-                sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)0x1b, *(void **)(off + 4));
+                struct act_method *off = &self->vt->m50;
+                sub_803AD84((u8 *)self + off->thisOffset, self->part, (void *)0x1b, off->fn);
             }
         } else {
-            u8 *mgr = *(u8 **)(self + 0xc);
-            sub_803AD80(self + *(s16 *)(mgr + 0x20), (void *)0x1c, *(void **)(mgr + 0x24));
+            struct act_vtable *mgr = self->vt;
+            sub_803AD80((u8 *)self + mgr->m20.thisOffset, (void *)0x1c, mgr->m20.fn);
         }
 
         {
             register s32 four asm("r2") = 4;
-            self[0x32] = 0;
-            self[0x30] = 1;
-            self[0x28] = four;
+            self->next32 = 0;
+            self->flag30 = 1;
+            self->next28 = four;
         }
         return 1;
     }

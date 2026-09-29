@@ -1,53 +1,53 @@
 #include "core.h"
 #include "actor.h"
+#include "gobj_1a794.h"
 
-/* This file's `self` is a bigger, still-unnamed object (at least
- * 0x108 bytes) distinct from `struct actor` - most of these
- * functions are pure single-field get/set/increment/clear accessors
- * for it, so raw offset casts are used throughout rather than a named
- * struct, since most individual fields' real meaning isn't confirmed
- * beyond "a byte/word at this offset". */
+/* This file's `self` is a bigger object (at least 0x108 bytes)
+ * distinct from `struct actor` - the level-object layout `struct gobj`
+ * (gobj_1a794.h) describes, which the player object shares. Most of
+ * these functions are pure single-field get/set/increment/clear
+ * accessors for it; fields `struct gobj` doesn't cover yet stay as
+ * byte offsets. */
 
 extern s32 sub_800A528(void *self);
 extern void *sub_8007CF8(void *dest, void *pt);
-extern u8 sub_8001688(void *buf1, void *buf2);
 extern u8 gStaticData_087E3E04[];
 extern s32 sub_803AD80(void *arg0, void *arg1, void *fn);
 extern void sub_8010E14(void *arg0, s32 arg1);
 extern void sub_800A650(void *self, u32 unusedArg);
 
-/* `self+0x5c` boolean getter (nonzero -> 1). */
+/* `velB.z` (+0x5c) boolean getter (nonzero -> 1). */
 u8 sub_800B324(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct gobj *self = selfArg;
 
-    if (*(s32 *)(self + 0x5c) != 0) {
+    if (self->velB.z != 0) {
         return 1;
     } else {
         return 0;
     }
 }
 
-/* `self+0x64` clear. */
+/* `speedY` (+0x64) clear. */
 void sub_800B334(void *selfArg)
 {
-    u8 *self = selfArg;
-    *(s32 *)(self + 0x64) = 0;
+    struct gobj *self = selfArg;
+    self->speedY = 0;
 }
 
-/* Clamps `self+0x64`/`self+0x54`/`self+0x58` to `<= 0`. */
+/* Clamps `speedY`/`velB.x`/`velB.y` (+0x64/+0x54/+0x58) to `<= 0`. */
 void sub_800B33C(void *selfArg)
 {
-    register u8 *self asm("r1") = selfArg;
+    register struct gobj *self asm("r1") = selfArg;
 
-    if (*(s32 *)(self + 0x64) > 0) {
-        *(s32 *)(self + 0x64) = 0;
+    if (self->speedY > 0) {
+        self->speedY = 0;
     }
-    if (*(s32 *)(self + 0x54) > 0) {
-        *(s32 *)(self + 0x54) = 0;
+    if (self->velB.x > 0) {
+        self->velB.x = 0;
     }
-    if (*(s32 *)(self + 0x58) > 0) {
-        *(s32 *)(self + 0x58) = 0;
+    if (self->velB.y > 0) {
+        self->velB.y = 0;
     }
 }
 
@@ -78,7 +78,7 @@ u8 sub_800B37C(void *selfArg, void *buf)
 
     sub_8007CF8(tmp, selfArg);
     if (tmp[2] > 0) {
-        result = sub_8001688(tmp, buf);
+        result = sub_8001688((struct aabb *)tmp, buf);
     }
     return result;
 }

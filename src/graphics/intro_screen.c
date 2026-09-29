@@ -84,9 +84,9 @@ void sub_80007EC(void *asset, void *palette)
 
     dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
     dma->src = (u32)palette;
-    dma->dst = 0x05000000;
+    dma->dst = PLTT;
     dma->cnt = 0x80000100;
     val = dma->cnt;
 
-    LoadTaggedAsset(asset, (void *)0x06000000);
+    LoadTaggedAsset(asset, (void *)VRAM);
 }

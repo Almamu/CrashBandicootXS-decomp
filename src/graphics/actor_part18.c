@@ -59,22 +59,22 @@ void sub_801426C(void *selfArg)
  * `sub_801434C` (below). */
 void sub_80142B0(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct act *self = selfArg;
     u32 snap = *(u32 *)&gUnknown_030007E0;
 
     if ((*(u16 *)((u8 *)&snap + 2) & 1) != 0
-        && sub_800AAEC(*(void **)(self + 0x10), 0xb) == 1) {
+        && sub_800AAEC(self->part, 0xb) == 1) {
         PlaySfx(gUnknown_030012BC, 0xc, 0x100);
 
         {
-            register u8 *part asm("r1") = *(u8 **)(self + 0x10);
+            register u8 *part asm("r1") = (u8 *)self->part;
             register s32 mask asm("r0") = 2;
             mask = -mask;
             mask &= part[0xd];
             part[0xd] = mask;
         }
         {
-            register u8 *part asm("r1") = *(u8 **)(self + 0x10);
+            register u8 *part asm("r1") = (u8 *)self->part;
             register s32 mask asm("r0") = 3;
             mask = -mask;
             mask &= part[0xd];
@@ -85,14 +85,14 @@ void sub_80142B0(void *selfArg)
         return;
     }
 
-    if ((*(u8 **)(self + 0x10))[0x38] != 0) {
-        u8 *mgr = *(u8 **)(self + 0xc);
-        sub_803AD80(self + *(s16 *)(mgr + 0x20), (void *)0x14,
-                    *(void **)(mgr + 0x24));
+    if (self->part->animDone != 0) {
+        struct act_vtable *mgr = self->vt;
+        sub_803AD80((u8 *)self + mgr->m20.thisOffset, (void *)0x14,
+                    mgr->m20.fn);
         {
-            u8 *off = *(u8 **)(self + 0xc) + 0x50;
-            sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10),
-                        (void *)0, *(void **)(off + 4));
+            struct act_method *off = &self->vt->m50;
+            sub_803AD84((u8 *)self + off->thisOffset, self->part,
+                        (void *)0, off->fn);
         }
         sub_801434C(self);
     }

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "action_obj.h"
 
 /* Continuation of actor_part28c.c (issue #18's chunk, the last one) -
  * covers `nullsub_17` through `sub_80157C4` (all matched); non-adjacent
@@ -39,23 +40,23 @@ void sub_8015774(void *selfArg)
 }
 
 /* Fires the mgr trampoline pair with `a`/`b` as the two action
- * arguments, then conditionally latches `self+0x18`/`self+0x1c` from
+ * arguments, then conditionally latches `frame`/`frames` from
  * `c`/`d` unless either is the `0x7FFFFFFF` sentinel. */
 void sub_8015780(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 {
-    u8 *self = selfArg;
-    u8 *mgr = *(u8 **)(self + 0xc);
-    u8 *off;
+    struct act *self = selfArg;
+    struct act_vtable *mgr = self->vt;
+    struct act_method *off;
 
-    sub_803AD80(self + *(s16 *)(mgr + 0x20), (void *)a, *(void **)(mgr + 0x24));
-    off = *(u8 **)(self + 0xc) + 0x50;
-    sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)b, *(void **)(off + 4));
+    sub_803AD80((u8 *)self + mgr->m20.thisOffset, (void *)a, mgr->m20.fn);
+    off = &self->vt->m50;
+    sub_803AD84((u8 *)self + off->thisOffset, self->part, (void *)b, off->fn);
 
     if (c != 0x7FFFFFFF) {
-        *(s32 *)(self + 0x18) = c;
+        self->frame = c;
     }
     if (d != 0x7FFFFFFF) {
-        *(s32 *)(self + 0x1c) = d;
+        self->frames = d;
     }
 }
 
@@ -99,9 +100,9 @@ extern u8 sub_800B86C(void *unused, void *partArg, s32 newVal);
  * 99.8%-matching pass). */
 s32 sub_80157C4(void *arg0, void *other, s32 mode)
 {
-    void *player = gUnknown_030012D8;
+    struct act_part *player = gUnknown_030012D8;
 
-    if (*(u8 *)((u8 *)player + 0x100) == 0) {
+    if (player->unk_100 == 0) {
         goto tail;
     }
     if (mode == 0x12) {
@@ -122,7 +123,7 @@ checkC18:
     goto rearm;
 
 case12:
-    if (*(s32 *)((u8 *)player + 0x60) == 0) {
+    if (player->unk_60 == 0) {
         goto tail;
     }
     mode = 0x25;
