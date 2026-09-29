@@ -219,6 +219,9 @@ The first batch (all pointer tables, all byte-exact):
 | `sprite_banks_4b0ae0.c` | `0x084B0AE0` | sprite banks 10-21 |
 | `sprite_banks_4b414c.c` | `0x084B414C` | sprite banks 22-38 |
 | `sprite_banks_4b9d7c.c` | `0x084B9D7C` | sprite banks 39-55 |
+| `clz_tab_5a4c70.c` | `0x085A4C70` | libgcc's `__clz_tab`, twice (see "Library data" below) |
+| `gax_tables_5a6100.c` | `0x085A6100` | the GAX2 engine's strings, mixing-rate table, period table and vibrato wave |
+| `eeprom_5a9eec.c` | `0x085A9EEC` | the SDK EEPROM library's id string, chip configs, timeout and address constants |
 | `cutscene_pictures_5a9f70.c` | `0x085A9F70` | the 24 cutscene pictures: palette (C) + Mode 4 bitmap (grit) each |
 | `entity_vtables_7e3bec.c` | `0x087E3BEC` | the 93 entity virtual tables |
 
@@ -679,3 +682,33 @@ the same way.
 
 `tools/rle_sprites.py extract` writes the three PNGs from `baserom.gba`
 again and checks that every frame re-encodes to the ROM's bytes.
+
+### Library data
+
+The constants of the libraries linked into the game, between the GAX2
+music block and the cutscene pictures, are C in three files:
+
+- `clz_tab_5a4c70.c`: libgcc2.c's `__clz_tab` (bit length of each byte
+  value), twice, because gcc 2.x's libgcc2.c made it `static` in each
+  object. `__divdi3` and `__udivdi3` (`src/util/math_div64_util.c`)
+  each read their own. The values are written the way libgcc2.c writes
+  them.
+- `gax_tables_5a6100.c`: the GAX2 engine's version string (and the
+  pointer to it, which `sub_8038538` checks for "GAX"), the 12 mixing
+  rates (`struct RateEntry`), the error strings `sub_80392E0` prints,
+  its halt banner and the pointer to it, the 3,828-entry period table
+  and the 64-step vibrato wave. The two pointers are symbol references
+  now, so the music block before them can change size.
+- `eeprom_5a9eec.c`: the AGB SDK EEPROM library's "EEPROM_V122" id
+  string (read by flashers and emulators to detect the save type, not
+  by the game), the two `struct EepromConfig`s, the write timeout
+  `u16[3]`, and a list of the library's 22 address constants. That list
+  holds, function by function, the literal-pool words of `sub_803A968`
+  ... `sub_803ACE0` that are symbol addresses (IWRAM variables, the two
+  configs, the timeout, `sub_803A9AC`). Nothing in the ROM points at
+  it, but every word is a symbol, so it is written as symbol references
+  and doesn't pin anything in place.
+
+The one-byte pad before the version string is the zero padding gbagfx
+writes after the `.lz` stream before it (it rounds `.lz` files up to 4
+bytes), so `data.s` incbins that file whole instead of trimming it.

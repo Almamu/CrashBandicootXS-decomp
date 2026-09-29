@@ -786,13 +786,9 @@ gStaticData_085A4C5C:
 	@ `default_song`); see docs/audio.md.
 	.incbin "build/crashbandicootxs/sound/gax_default_layout.bin"
 
-.global gStaticData_085A4C70
-gStaticData_085A4C70:
-	.incbin "baserom.gba", 0x005A4C70, 0x00000100
+@ gStaticData_085A4C70..gStaticData_085A4D70: src/data/clz_tab_5a4c70.c
 
-.global gStaticData_085A4D70
-gStaticData_085A4D70:
-	.incbin "baserom.gba", 0x005A4D70, 0x00000100
+.section .rodata.085A4E70
 
 .global gStaticData_085A4E70
 gStaticData_085A4E70:
@@ -807,80 +803,11 @@ gStaticData_085A5519:
 .global gStaticData_085A551C
 gStaticData_085A551C:
 	@ LZ77 tile graphics (4bpp) (9600 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/00_5a551c_tiles.4bpp.lz", 0, 0xBE3
+	.incbin "build/crashbandicootxs/graphics/intro/00_5a551c_tiles.4bpp.lz"
 
-.global gStaticData_085A60FF
-gStaticData_085A60FF:
-	@ padding/unidentified data
-	.incbin "baserom.gba", 0x005A60FF, 0x0000004D
+@ 0x085A6100..gStaticData_085A9EAC (GAX2 strings and tables): src/data/gax_tables_5a6100.c
 
-.global gStaticData_085A614C
-gStaticData_085A614C:
-	.incbin "baserom.gba", 0x005A614C, 0x00000004
-
-.global gStaticData_085A6150
-gStaticData_085A6150:
-	.incbin "baserom.gba", 0x005A6150, 0x00000060
-
-.global gStaticData_085A61B0
-gStaticData_085A61B0:
-	.incbin "baserom.gba", 0x005A61B0, 0x0000000C
-
-.global gStaticData_085A61BC
-gStaticData_085A61BC:
-	.incbin "baserom.gba", 0x005A61BC, 0x00000014
-
-.global gStaticData_085A61D0
-gStaticData_085A61D0:
-	.incbin "baserom.gba", 0x005A61D0, 0x0000000C
-
-.global gStaticData_085A61DC
-gStaticData_085A61DC:
-	.incbin "baserom.gba", 0x005A61DC, 0x00000010
-
-.global gStaticData_085A61EC
-gStaticData_085A61EC:
-	.incbin "baserom.gba", 0x005A61EC, 0x0000000C
-
-.global gStaticData_085A61F8
-gStaticData_085A61F8:
-	.incbin "baserom.gba", 0x005A61F8, 0x0000001C
-
-.global gStaticData_085A6214
-gStaticData_085A6214:
-	.incbin "baserom.gba", 0x005A6214, 0x00000008
-
-.global gStaticData_085A621C
-gStaticData_085A621C:
-	.incbin "baserom.gba", 0x005A621C, 0x000000AC
-
-.global gStaticData_085A62C8
-gStaticData_085A62C8:
-	.incbin "baserom.gba", 0x005A62C8, 0x00000004
-
-.global gStaticData_085A62CC
-gStaticData_085A62CC:
-	.incbin "baserom.gba", 0x005A62CC, 0x00000010
-
-.global gStaticData_085A62DC
-gStaticData_085A62DC:
-	.incbin "baserom.gba", 0x005A62DC, 0x00003BD0
-
-.global gStaticData_085A9EAC
-gStaticData_085A9EAC:
-	.incbin "baserom.gba", 0x005A9EAC, 0x0000004C
-
-.global gStaticData_085A9EF8
-gStaticData_085A9EF8:
-	.incbin "baserom.gba", 0x005A9EF8, 0x0000000C
-
-.global gStaticData_085A9F04
-gStaticData_085A9F04:
-	.incbin "baserom.gba", 0x005A9F04, 0x0000000C
-
-.global gStaticData_085A9F10
-gStaticData_085A9F10:
-	.incbin "baserom.gba", 0x005A9F10, 0x00000060
+@ 0x085A9EEC..0x085A9F70 (EEPROM library data): src/data/eeprom_5a9eec.c
 
 @ 0x085A9F70..0x0861BADC (the 24 cutscene pictures): src/data/cutscene_pictures_5a9f70.c
 

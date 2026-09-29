@@ -494,6 +494,10 @@ SECTIONS
         build/crashbandicootxs/src/data/sprite_banks_4b414c.o(.rodata);
         build/crashbandicootxs/src/data/sprite_banks_4b9d7c.o(.rodata);
         build/crashbandicootxs/data/data.o(.rodata.084C0006);
+        build/crashbandicootxs/src/data/clz_tab_5a4c70.o(.rodata);
+        build/crashbandicootxs/data/data.o(.rodata.085A4E70);
+        build/crashbandicootxs/src/data/gax_tables_5a6100.o(.rodata);
+        build/crashbandicootxs/src/data/eeprom_5a9eec.o(.rodata);
         build/crashbandicootxs/src/data/cutscene_pictures_5a9f70.o(.rodata);
         build/crashbandicootxs/data/data.o(.rodata.0861BADC);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata);

@@ -5074,7 +5074,8 @@
    "format": "u8[256] count-leading-zeros table (libgcc __clz_tab, used by the 64-bit divide)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Byte-identical to libgcc's __clz_tab: the link could take it from tools/agbcc/lib/libgcc.a instead of data.s."
+   "notes": "Byte-identical to libgcc's __clz_tab: the link could take it from tools/agbcc/lib/libgcc.a instead of data.s.",
+   "status": "converted: src/data/clz_tab_5a4c70.c"
   },
   {
    "address": "0x085A4D70",
@@ -5098,7 +5099,8 @@
    "format": "u8[256] count-leading-zeros table (second copy, __clz_tab of another libgcc object)",
    "effort": "easy",
    "confidence": "high",
-   "notes": ""
+   "notes": "",
+   "status": "converted: src/data/clz_tab_5a4c70.c"
   },
   {
    "address": "0x085A5519",
@@ -5129,7 +5131,8 @@
    "notes": "Pointed to by gStaticData_085A614C (read by sub_8038538).",
    "consumers_indirect": [
     "sub_8038538 (via gStaticData_085A614C)"
-   ]
+   ],
+   "status": "converted: src/data/gax_tables_5a6100.c (gGaxVersionString; the 1-byte pad is gbagfx padding of the .lz before it)"
   },
   {
    "address": "0x085A614C",
@@ -5152,7 +5155,8 @@
    "element_count": 1,
    "format": "pointer table (1 data pointers)",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/gax_tables_5a6100.c"
   },
   {
    "address": "0x085A6150",
@@ -5180,7 +5184,8 @@
    "element_count": null,
    "format": "table of struct RateEntry",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/gax_tables_5a6100.c"
   },
   {
    "address": "0x085A61B0",
@@ -5200,7 +5205,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/gax_tables_5a6100.c"
   },
   {
    "address": "0x085A61BC",
@@ -5220,7 +5226,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/gax_tables_5a6100.c"
   },
   {
    "address": "0x085A61D0",
@@ -5246,7 +5253,8 @@
    "format": "GAX2 error/tag string \"GAX2_INIT\" (NUL-padded to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": ""
+   "notes": "",
+   "status": "converted: src/data/gax_tables_5a6100.c"
   },
   {
    "address": "0x085A61DC",
@@ -5272,7 +5280,8 @@
    "format": "GAX2 error/tag string \"OUT OF MEMORY\" (NUL-padded to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": ""
+   "notes": "",
+   "status": "converted: src/data/gax_tables_5a6100.c"
   },
   {
    "address": "0x085A61EC",
@@ -5296,7 +5305,8 @@
    "format": "GAX2 error/tag string \"GAX2_JINGLE\" (NUL-padded to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": ""
+   "notes": "",
+   "status": "converted: src/data/gax_tables_5a6100.c"
   },
   {
    "address": "0x085A61F8",
@@ -5320,7 +5330,8 @@
    "format": "GAX2 error/tag string \"GAX_NO_JINGLE FLAG IS SET\" (NUL-padded to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": ""
+   "notes": "",
+   "status": "converted: src/data/gax_tables_5a6100.c"
   },
   {
    "address": "0x085A6214",
@@ -5341,7 +5352,8 @@
    "format": "GAX2 error/tag string \"GAX_IRQ\" (NUL-padded to 4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": ""
+   "notes": "",
+   "status": "converted: src/data/gax_tables_5a6100.c"
   },
   {
    "address": "0x085A621C",
@@ -5362,7 +5374,8 @@
    "format": "GAX2 error string \"GAX_PLAY HAS NOT FINISHED BEFORE GAX_IRQ. USE LOWER MIXING RATE ...\" (+ padding)",
    "effort": "easy",
    "confidence": "high",
-   "notes": ""
+   "notes": "",
+   "status": "converted: src/data/gax_tables_5a6100.c"
   },
   {
    "address": "0x085A62C8",
@@ -5385,7 +5398,8 @@
    "element_count": 1,
    "format": "pointer table (1 data pointers)",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/gax_tables_5a6100.c"
   },
   {
    "address": "0x085A62CC",
@@ -5405,7 +5419,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/gax_tables_5a6100.c"
   },
   {
    "address": "0x085A62DC",
@@ -5429,7 +5444,8 @@
    "format": "GAX2 u32 note period/frequency table (smooth ramp; embedded 0x08xxxxxx values are coincidence)",
    "effort": "easy",
    "confidence": "high",
-   "notes": ""
+   "notes": "",
+   "status": "converted: src/data/gax_tables_5a6100.c"
   },
   {
    "address": "0x085A9EAC",
@@ -5452,7 +5468,8 @@
    "element_count": 76,
    "format": "table of s8",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/gax_tables_5a6100.c (s8[64]) and src/data/eeprom_5a9eec.c (gEepromLibraryVersion at +0x40)"
   },
   {
    "address": "0x085A9EF8",
@@ -5475,7 +5492,8 @@
    "element_count": null,
    "format": "table of struct EepromConfig",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/eeprom_5a9eec.c"
   },
   {
    "address": "0x085A9F04",
@@ -5498,7 +5516,8 @@
    "element_count": null,
    "format": "table of struct EepromConfig",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/eeprom_5a9eec.c"
   },
   {
    "address": "0x085A9F10",
@@ -5523,7 +5542,7 @@
    "effort": "easy",
    "confidence": "high",
    "notes": "",
-   "status": "partly converted: 0x085A9F70-0x085AA170 (palette) is src/data/cutscene_pictures_5a9f70.c; the first 0x60 bytes stay raw"
+   "status": "converted: src/data/eeprom_5a9eec.c (u16[3] timeout + gEepromLibraryAddresses) and src/data/cutscene_pictures_5a9f70.c (palette)"
   },
   {
    "address": "0x085ADBD1",
