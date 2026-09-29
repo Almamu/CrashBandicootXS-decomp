@@ -43,6 +43,9 @@ produce false mismatches for anything containing a function call), git
 history already had the right frozen sources sitting in it, for both
 regions.
 
+The ROM's data (everything after the code) is reported too, as a
+separate data measure: see "Data progress" further down.
+
 ## One unit per matched file, not one merged blob
 
 `make report` (via `tools/report_units.py`) builds **one objdiff unit per
@@ -258,10 +261,90 @@ since both patterns will likely recur:
   giving the frozen target a matching `split` entry. Same bytes, same
   `make compare` result, just inspectable instead of opaque.
 
-Graphics/audio/data extraction is out of scope for this report entirely -
-`objdiff`/decomp.dev's progress model is about code, and this project's
-asset extraction progress is tracked separately in
+Asset extraction also shows up in the report now, as its own data measure;
+see "Data progress" below. The per-asset details are still tracked in
 [`docs/graphics.md`](./graphics.md) and [`docs/audio.md`](./audio.md).
+
+## Data progress (decomp.dev's separate data bar)
+
+decomp.dev draws a second progress bar next to the code one from objdiff's
+data measures (`total_data`/`matched_data`/`matched_data_percent`). Those
+count bytes in data sections (`.rodata`) instead of code bytes, so they
+never change any code measure.
+
+**What counts as matched data.** This is the usual definition for GBA
+decomps. A byte of ROM data is *matched* when the build produces it from a
+source in the repo: a PNG/`.pal`/`.bin` under `graphics/` compressed by
+gbagfx, the GAX2 audio rebuilt from `sound/` by `tools/gax_audio.py`, the
+sfx table built from `sound/sfx_table.json`, and so on. It is *unmatched*
+while `data/data.s` still copies it with `.incbin "baserom.gba", ...`.
+Both kinds come out byte-identical in the ROM, and `make compare` checks
+that, so matching bytes can't be the test. The source is what decides.
+
+**Scope.** Everything after the code, from `0x0803B8B0` to the end of the
+ROM (`0x08800000`), is `data/data.s`, one label per blob and one `.incbin`
+per label. The last 106,548 bytes, from `0x087E5FCC` on (inside the final
+blob, `gStaticData_087E55E4`), are all `0xFF`: that's empty cartridge space,
+not data. The report ends the data range at `DATA_END = 0x087E5FCC` and
+trims that blob to match, which leaves 8,038,172 bytes of data. The
+constant is hard-coded so the no-ROM path gets the same totals. When
+`baserom.gba` is present, the script checks that the trailing `0xFF` run
+really starts there. Smaller all-`0x00` runs inside still-baserom blobs
+(151 runs of 256+ bytes, 64,716 bytes in total, the largest 2,664 bytes,
+nearly all inside the big `gStaticData_0817E78C`/`gStaticData_084A5600`
+blobs) still count as data: they sit inside real data, and there are no
+other `0xFF` runs. No C file puts data in the ROM: agbcc emits
+no `.rodata`/`.data` for any `src/*.c` file, and `ldscript.txt` only
+places `.text` from C objects anyway, discarding everything else. Jump
+tables and literal pools inside code are counted as code.
+
+**How `tools/report_units.py` builds the units** (`data_units()`):
+
+1. It parses `data/data.s` into blobs (label, address, size, source).
+   Addresses are computed by adding blob sizes from `0x0803B8B0`, the
+   code table's end sentinel, so no map file is needed. A blob's size is
+   the incbin's length argument, or the built file's size when there is
+   none. Each baserom blob's own incbin offset has to agree with the
+   computed address, or the script stops.
+2. It groups adjacent blobs into units: each run of blobs built from the
+   same asset directory (`data_graphics_intro_XXXXXXXX`,
+   `data_sound_XXXXXXXX`, ...) and each run of baserom blobs
+   (`data_raw_XXXXXXXX`). That currently comes to 195 units.
+3. For every unit it assembles a **target** object with each blob as a
+   global, `.type %object`, `.size`d symbol in `.rodata`, its bytes taken
+   from `baserom.gba`. A built unit also gets a **base** object with the
+   same symbols, whose bytes come from the same `.incbin` of the built file
+   that `data/data.s` uses. A baserom unit gets **no base**, like the
+   still-raw code ranges, so it counts toward `total_data` and never toward
+   `matched_data`.
+4. Every data unit is tagged with the `data` progress category. Built units
+   are also marked `complete`, since there's nothing left to clean up in a
+   blob that comes from an editable source.
+
+**Why units never mix built and baserom blobs.** objdiff's report measures
+data per section, all or nothing: a section counts toward `matched_data`
+only if it matches 100%. It also merges `.rodata.*` sections back into one
+`.rodata` per object. One baserom blob inside a built unit would therefore
+make that whole unit count as unmatched. With units kept pure, each one is
+simply 0% or 100%, and the total is exactly the byte count of the built
+blobs. A built unit whose bytes really differ from the ROM (a broken asset
+in a PR) drops to 0%. objdiff compares the actual bytes, so that shows up.
+
+**Moving a blob from baserom to built** needs nothing in the report
+script. Replace its `.incbin "baserom.gba", ...` in `data/data.s` with the
+built file, keeping the label, and the next `make report` counts it.
+
+**Build requirements.** `make report` depends on the built graphics and
+sound files, though not on `data.o`, which would need `baserom.gba`. Target
+objects need `baserom.gba`. Without it (fork-PR CI), baserom units are
+zero-filled to the right size and built units use their own bytes as the
+target. That keeps the totals correct but doesn't verify the assets, which
+only matters for fork PRs: `main`'s run has the ROM, and `make compare`
+checks every byte anyway.
+
+As of this change: 1,640,427 of 8,038,172 bytes matched (20.41%). That is
+the two LZ77 blobs in `graphics/unknown/`, the intro and tileset1 graphics,
+the GAX2 audio data and the sfx table.
 
 ## "Matched" vs "complete": tracking the cleanup pass separately
 

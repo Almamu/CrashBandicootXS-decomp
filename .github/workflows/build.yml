@@ -41,9 +41,10 @@ jobs:
       if: env.HAS_ROM == 'true'
       run: make compare
 
-    # Progress report for decomp.dev (see docs/decomp_dev.md) - doesn't need
-    # baserom.gba at all, since expected/code_3.s (checked into the repo) is
-    # the ground truth it diffs against, not the ROM directly.
+    # Progress report for decomp.dev (see docs/decomp_dev.md). Code needs no
+    # baserom.gba, since expected/code_3.s (checked into the repo) is the
+    # ground truth it diffs against. The data units take their target bytes
+    # from baserom.gba when it's there, and fall back to sizes only when not.
     - name: Build progress report objects
       run: |
         rm -f crashbandicootxs.gba crashbandicootxs.elf crashbandicootxs.map

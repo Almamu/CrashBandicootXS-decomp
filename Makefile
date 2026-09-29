@@ -112,10 +112,11 @@ tidy:
 # anything else) and applies expected/corrections.txt per slice. Run
 # under `NON_MATCHING=1` so parked functions are included as their
 # (possibly imperfect) C reconstruction rather than omitted or silently
-# swapped for raw asm.
+# swapped for raw asm. The data units (data/data.s) need the repo-built
+# assets it incbins, but not data.o itself (that needs baserom.gba).
 
 .PHONY: report
-report: $(C_OBJS)
+report: $(C_OBJS) $(GRAPHICS_BUILT) $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/sfx_table.bin
 	python3 tools/report_units.py
 
 #### Recipes ####
