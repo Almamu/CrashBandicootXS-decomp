@@ -430,8 +430,8 @@ from "core" graphics.
 - `src/graphics/actor_part28.c`/`actor_part30.c`/`actor_part32.c`/
   `actor_part34.c`/`actor_part36.c` (new files, GitHub issue #62, ROM
   0x08033804-0x08033EF4 - the `gUnknown_030015AC` singleton system's
-  accessor/state-machine cluster, non-adjacent since 2 parked functions
-  (`sub_80339DC`/`sub_8033CF8`) and the (now matched)
+  accessor/state-machine cluster, non-adjacent since the (now matched)
+  `sub_80339DC`/`sub_8033CF8` (`actor_part29.c`/`actor_part35.c`) and the (now matched)
   `sub_8033B44`/`sub_8033C84`/`sub_8033E80` (see below) sit interleaved
   between them; see
   [docs/matching/issue-62-0x08033804-actor.md](../matching/issue-62-0x08033804-actor.md)):
@@ -450,13 +450,13 @@ from "core" graphics.
   parallel PR above independently claimed `actor_part28.c` first):
   `sub_8014F8C` - a `gUnknown_030012F0`-list proximity-
   trigger scan for the same "self" action-table object family as
-  `actor_part18.c` (`sub_8015038`, also in this file, is a NAKED
+  `actor_part18.c` (`sub_8015038`, also in this file, is still a NAKED
   transcription - see "Parked - NAKED transcription" below); see
   `docs/matching/issue-18-0x08014f8c-actor.md`.
 - `src/graphics/actor_part38b.c` (new file, GitHub issue #18, ROM
   0x080151C8, non-adjacent to `actor_part38.c` since `sub_8015038`
-  sits between them): `sub_80151C8` (`sub_8015238`/`sub_80152F0`, also
-  in this file, are NAKED transcriptions); see
+  sits between them): `sub_80151C8`, `sub_8015238`, `sub_80152F0`
+  (the last two matched in the strag2 retry); see
   `docs/matching/issue-18-0x08014f8c-actor.md`.
 - `src/graphics/actor_part38c.c` (new file, GitHub issue #18, ROM
   0x08015350-0x080156B4, non-adjacent to `actor_part38b.c` since
@@ -467,7 +467,7 @@ from "core" graphics.
   `sub_80156B4` - more of the same self+0xc/self+0x10 trampoline-pair
   family, including two near-identical self+0x29-keyed mgr-trampoline
   arms (`sub_8015460`) and several part+0x38-gated trampoline firers
-  (`sub_80156EC`, also in this file, is a NAKED transcription); see
+  and `sub_80156EC` (matched in the strag2 retry); see
   `docs/matching/issue-18-0x08014f8c-actor.md`.
 - `src/graphics/actor_part38d.c` (new file, GitHub issue #18, ROM
   0x0801574C-0x08015840, non-adjacent to `actor_part38c.c` since
@@ -931,6 +931,27 @@ from "core" graphics.
   from NAKED to real C, both matching under either compiler. See
   [near-miss-polish-2.md](../matching/near-miss-polish-2.md).
 
+### Matched in the strag2 retry (issue #62 raw pair, issue #18 NAKED)
+
+- `src/graphics/actor_part29.c` - `sub_80339DC`, and
+  `src/graphics/actor_part35.c` - `sub_8033CF8` (issue #62's proximity
+  detector pair, formerly raw asm behind `.if NON_MATCHING == 0`; the
+  `.s` files and their `ldscript.txt` lines are gone). No pins: both
+  divisions are plain `/` through the ROM's `__divsi3`, the new cooldown
+  is stored at one shared label, and `u8` zero locals via `"=r"`/`"0"`
+  escapes. Both compilers produce the same code; the objects stay on agbcc.
+- `src/graphics/actor_part38b.c` - `sub_8015238`, `sub_80152F0`, and
+  `src/graphics/actor_part38c.c` - `sub_80156EC` (issue #18, formerly
+  NAKED). The fixes were real `u8 *`/`u8` parameters, `u8` locals for the
+  table indices, and a constant-copy escape for `sub_8015238`'s `0x200`
+  test. `actor_part38.o`/`38b.o`/`38c.o` joined `OLD_AGBCC_OBJS`: their
+  whole `.text` is identical under both compilers, and the range is
+  confirmed old_agbcc territory.
+- Still NAKED: `sub_8015038` (`actor_part38.c`), with a C draft that is
+  2 halfwords off.
+
+See [docs/matching/strag2-naked-retry.md](../matching/strag2-naked-retry.md).
+
 ### Matched in the sub_8007634 retry
 
 - `src/graphics/graphics_7634.c` - `sub_8007634` (the affine sibling
@@ -1198,16 +1219,18 @@ plain C didn't converge.
   [docs/matching/issue-9-0x0800a178-graphics.md](../matching/issue-9-0x0800a178-graphics.md).
 - **`sub_8015038`** (`src/graphics/actor_part38.c`) - a three-arm
   mgr-trampoline handler keyed on `self+0x24`/`self+0x22`, picking one
-  of three table-index fallbacks. See
-  `docs/matching/issue-18-0x08014f8c-actor.md`.
-- **`sub_8015238`** (`src/graphics/actor_part38b.c`) -
+  of three table-index fallbacks. The strag2 retry left a C draft under
+  `#if NON_MATCHING` that is 2 halfwords off under both compilers (one
+  pointer copy and load swapped). See
+  `docs/matching/strag2-naked-retry.md`.
+- **Now matched as real C (strag2 retry, see Matched); entry kept for history.** **`sub_8015238`** (`src/graphics/actor_part38b.c`) -
   `self+0x26`/`mode`/`flags`-gated mgr-trampoline dispatcher. See
   `docs/matching/issue-18-0x08014f8c-actor.md`.
-- **`sub_80152F0`** (`src/graphics/actor_part38b.c`) -
+- **Now matched as real C (strag2 retry, see Matched); entry kept for history.** **`sub_80152F0`** (`src/graphics/actor_part38b.c`) -
   `self+0x27`/`self+0x2b`/`mode`-gated state/counter/table-index trio
   reset, tail-calling `sub_80122CC`. See
   `docs/matching/issue-18-0x08014f8c-actor.md`.
-- **`sub_80156EC`** (`src/graphics/actor_part38c.c`) -
+- **Now matched as real C (strag2 retry, see Matched); entry kept for history.** **`sub_80156EC`** (`src/graphics/actor_part38c.c`) -
   `part+0x38`/`sub_80231BC`-gated mgr-trampoline dispatcher. See
   `docs/matching/issue-18-0x08014f8c-actor.md`.
 - **Now matched as real C (size2 NAKED retry, see Matched and docs/matching/size2-naked-retry.md); entry kept for history.** **`sub_80352AC`** (`src/graphics/actor_part131.c`, GitHub issue #64) -
@@ -1625,7 +1648,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   not matched: `sub_80099F0`". `sub_8008D80` itself
   (`src/graphics/actor_part7b.c`) is unaffected by this change and
   remains its own separate `NAKED` function.
-- **`sub_80339DC`** (`asm/code_3_2_20_28568_c99c_31784_339dc.s`, C in
+- **Now matched as real C (strag2 retry, see Matched); entry kept for history.** **`sub_80339DC`** (`asm/code_3_2_20_28568_c99c_31784_339dc.s`, C in
   `src/graphics/actor_part29.c`) - a proximity-triggered effect/hazard
   detector measuring `self`'s distance to the player after syncing to
   the singleton's position. Every load/store, branch and call
@@ -1634,7 +1657,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   ROM's chosen scratch register without breaking the surrounding
   `ip`/`r8`/`r9` pins - see
   `docs/matching/issue-62-0x08033804-actor.md`, issue #62.
-- **`sub_8033CF8`** (`asm/code_3_2_20_28568_c99c_31784_33cf8.s`, C in
+- **Now matched as real C (strag2 retry, see Matched); entry kept for history.** **`sub_8033CF8`** (`asm/code_3_2_20_28568_c99c_31784_33cf8.s`, C in
   `src/graphics/actor_part35.c`) - `sub_80339DC`'s sibling proximity/
   spawn detector. Every branch and call confirmed correct; parked
   because this agbcc build never emits a callee-save push/pop for a
