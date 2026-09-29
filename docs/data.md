@@ -222,6 +222,12 @@ backgrounds" below):
 | `cell_anim_0ff1b0.c` | `0x080FF1B0` | BG0 cell animation B (38x10, 21 frames), category 3 BG1 picture and `sub_effect_table` |
 | `bg_picture_151ac4.c` | `0x08151AC4` | category 4 and 5/6 BG1 pictures, categories 4-6 `sub_effect_table`s |
 
+The GAX2 audio isn't C: `tools/gax_audio.py` builds it from `sound/`
+into two blobs that `data/data.s` incbins from `build/`, the
+sound-effect set (`gStaticData_084C0006`, `--sfx`: 88 instruments and 87
+samples, `sound/gax_sfx_manifest.json` + `sound/sfx_samples/*.wav`) and
+the music block (`gStaticData_0855BCB4`). See docs/audio.md.
+
 ### Sprite banks (`gStaticData_084A5600`)
 
 The sprite-bank animation system (`0x084A5600`-`0x084C0006`, 2,429

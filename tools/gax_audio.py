@@ -16,13 +16,23 @@ sources:
                               (shared across songs) - this is what a modder
                               edits to change a sound.
 
-NOTE on sound/gax_header_prefix.bin (36 bytes) and sound/gax_footer.bin (160
-bytes): these bracket the block and belong to a small pre-existing
-GAX2_SoundHandler chain that isn't part of any of these 19 songs (it appears
-to be a shared "empty channel" placeholder used elsewhere in the sound
-engine's data, referencing addresses outside this block entirely). Since
-nothing in these 19 songs depends on it, it's preserved verbatim rather than
-modeled.
+It also builds the GAX2 sound-effect set that sits right before the music
+block (`--sfx`, 0x084C0006-0x0855BCB4, see docs/audio.md) from
+
+  sound/gax_sfx_manifest.json - its 88 instruments (the same record types as
+                              the music's), the handler type's song fields
+                              and how many voice-type pointers to emit.
+  sound/sfx_samples/*.wav     - its 87 samples (8-bit mono PCM).
+
+The music block starts with the 36-byte GaxSongHeader.sfxTypes array
+(sub_80017BC passes gStaticData_0855BCB4 there): nine pointers to the
+sound-effect set's one handler type, generated from that set's layout.
+
+NOTE on sound/gax_footer.bin (160 bytes): this ends the block and belongs to
+a small pre-existing GAX2_SoundHandler chain that isn't part of any of these
+19 songs (the default handler layout, gStaticData_085A4C5C, points into it).
+Since nothing in these 19 songs depends on it, it's preserved verbatim rather
+than modeled.
 
 This tool does not need baserom.gba - the manifest captured everything
 required when it was generated (a one-time step; see the project history for
@@ -53,7 +63,13 @@ HANDLER_FUNCS = {
     'info': (0x080393FD, 0x08039439, 0x0803943D),
     'unknownc': (0x0803A22D, 0x0803A275, 0x0803A325),
     'channel': (0x08039519, 0x080395A1, 0x080395A5),
+    # the sound-effect voices (sub_803A104/sub_803A228/sub_803A158)
+    'sfx': (0x0803A105, 0x0803A229, 0x0803A159),
 }
+
+# The sound-effect data set sits right before the music block and must end
+# exactly at BASE_ADDR (see build_sfx()).
+SFX_BASE_ADDR = 0x084C0006
 
 
 # ---------------------------------------------------------------------------
@@ -573,9 +589,14 @@ class Song:
         self.pattern_group_bytes = {}  # gid -> original raw packed bytes
 
 
-def link(instruments_by_index, songs, samples_by_index, base_addr, header_prefix, footer):
-    alloc = Allocator(base_addr, header_prefix)
-
+def link_instruments(alloc, instruments_by_index, samples_by_index, dedup_samples=True):
+    """The instrument and sample pool both data sets start with: per
+    instrument its envelope, 12-byte unknown block, rows and header; the
+    instrument pointer table; the samples; zero padding up to a word; the
+    sample table. The music set stores identical samples once, the
+    sound-effect set doesn't (its samples 84 and 87 are the same bytes,
+    stored twice). Returns (instrument table address, sample table
+    address)."""
     n_instr = max(instruments_by_index.keys()) + 1
     instr_addrs = {}
     for idx in range(n_instr):
@@ -596,14 +617,23 @@ def link(instruments_by_index, songs, samples_by_index, base_addr, header_prefix
     sample_addrs = {}
     for idx in range(n_samples):
         s = samples_by_index.get(idx)
-        sample_addrs[idx] = alloc.alloc(s, dedup=True) if s else 0
+        sample_addrs[idx] = alloc.alloc(s, dedup=dedup_samples or None) if s else 0
 
-    alloc.alloc(b"\x00\x00")  # 2 bytes of fixed padding before the sample table
+    # zero padding before the sample table, up to a word boundary (2 bytes
+    # in the music set, 3 in the sound-effect set)
+    alloc.alloc(bytes(-alloc.addr_here() % 4))
 
     sample_table_addr = alloc.addr_here()
     for idx in range(n_samples):
         s = samples_by_index.get(idx)
         alloc.buf += struct.pack('<II', sample_addrs[idx], len(s) if s else 0)
+    return instrument_set_addr, sample_table_addr
+
+
+def link(instruments_by_index, songs, samples_by_index, base_addr, header_prefix, footer):
+    alloc = Allocator(base_addr, header_prefix)
+
+    instrument_set_addr, sample_table_addr = link_instruments(alloc, instruments_by_index, samples_by_index)
 
     sample_table_end = alloc.addr_here()
     alloc.alloc(b"\x00\x00\x00\x00")  # 4 bytes of fixed padding before the first song
@@ -729,6 +759,24 @@ def link(instruments_by_index, songs, samples_by_index, base_addr, header_prefix
     return bytes(alloc.buf)
 
 
+def link_sfx(instruments_by_index, samples_by_index, song_info, base_addr):
+    """The sound-effect set: the same instrument/sample pool as the music,
+    then the one handler type every sound-effect voice uses. Its type data
+    is a song header without patterns (only the volume and the two tables
+    matter), and its one child type is NULL. Returns (bytes, address of the
+    handler type)."""
+    alloc = Allocator(base_addr)
+    alloc.alloc(bytes(-base_addr % 4))  # the set starts word-aligned
+    song_info.instrument_set_ptr, song_info.sample_set_ptr = link_instruments(
+        alloc, instruments_by_index, samples_by_index, dedup_samples=False)
+    info_addr = alloc.alloc(song_info.pack())
+    children_addr = alloc.alloc(struct.pack('<I', 0))
+    handler = SoundHandler(*HANDLER_FUNCS['sfx'], num_children=1, children_ptr=children_addr,
+                           type_flags=0x48, data_ptr=info_addr)
+    handler_addr = alloc.alloc(handler.pack())
+    return bytes(alloc.buf), handler_addr
+
+
 # ---------------------------------------------------------------------------
 # Top-level build
 # ---------------------------------------------------------------------------
@@ -740,17 +788,42 @@ def load_sample_wav(path):
     return bytes(((b - 128) & 0xFF) for b in frames)
 
 
-def build(manifest_path, songs_dir, samples_dir, out_path):
-    manifest = json.load(open(manifest_path))
-
+def load_pool(manifest, samples_dir):
     instruments = {int(k): Instrument(v) for k, v in manifest['instruments'].items()}
-
     samples = {}
     for k in manifest['samples']:
         idx = int(k)
         wav_path = os.path.join(samples_dir, f"{idx:02d}.wav")
         if os.path.exists(wav_path):
             samples[idx] = load_sample_wav(wav_path)
+    return instruments, samples
+
+
+def build_sfx(manifest_path, samples_dir):
+    """The sound-effect set (sound/gax_sfx_manifest.json, sound/sfx_samples/)
+    and the handler-type array the music block starts with.
+
+    Returns (set bytes, sfxTypes bytes). The music block (and the raw data
+    after it) sits at fixed addresses, so the set must keep its size:
+    editing a sample's bytes or an instrument's fields is fine, changing a
+    sample's length is not until the tables that point past it stop being
+    raw (see docs/audio.md)."""
+    manifest = json.load(open(manifest_path))
+    instruments, samples = load_pool(manifest, samples_dir)
+    blob, handler_addr = link_sfx(instruments, samples, SongInfo(manifest['song_info']), SFX_BASE_ADDR)
+    if SFX_BASE_ADDR + len(blob) != BASE_ADDR:
+        sys.exit(f"{manifest_path}: the sound-effect set ends at {SFX_BASE_ADDR + len(blob):#x}, "
+                 f"but the music block is fixed at {BASE_ADDR:#x}")
+    # GaxSongHeader.sfxTypes (sub_80017BC): the handler type of each
+    # sound-effect voice, all the same one
+    sfx_types = struct.pack('<I', handler_addr) * manifest['voice_types']
+    return blob, sfx_types
+
+
+def build(manifest_path, songs_dir, samples_dir, out_path):
+    manifest = json.load(open(manifest_path))
+
+    instruments, samples = load_pool(manifest, samples_dir)
 
     songs = []
     for key in manifest['song_order']:
@@ -784,7 +857,7 @@ def build(manifest_path, songs_dir, samples_dir, out_path):
 
         songs.append(song)
 
-    header_prefix = open(os.path.join(SOUND_DIR, 'gax_header_prefix.bin'), 'rb').read()
+    _, header_prefix = build_sfx(SFX_MANIFEST, SFX_SAMPLES_DIR)
     footer = open(os.path.join(SOUND_DIR, 'gax_footer.bin'), 'rb').read()
 
     blob = link(instruments, songs, samples, BASE_ADDR, header_prefix, footer)
@@ -793,9 +866,19 @@ def build(manifest_path, songs_dir, samples_dir, out_path):
     print(f"wrote {out_path}: {len(blob)} bytes")
 
 
+SFX_MANIFEST = os.path.join(SOUND_DIR, 'gax_sfx_manifest.json')
+SFX_SAMPLES_DIR = os.path.join(SOUND_DIR, 'sfx_samples')
+
 if __name__ == '__main__':
+    if len(sys.argv) == 3 and sys.argv[1] == '--sfx':
+        blob, _ = build_sfx(SFX_MANIFEST, SFX_SAMPLES_DIR)
+        with open(sys.argv[2], 'wb') as f:
+            f.write(blob)
+        print(f"wrote {sys.argv[2]}: {len(blob)} bytes")
+        sys.exit(0)
     if len(sys.argv) != 2:
-        print(f"Usage: {sys.argv[0]} OUTPUT.bin")
+        print(f"Usage: {sys.argv[0]} OUTPUT.bin         (music block)")
+        print(f"       {sys.argv[0]} --sfx OUTPUT.bin   (sound-effect set)")
         sys.exit(1)
     build(
         os.path.join(SOUND_DIR, 'gax_manifest.json'),

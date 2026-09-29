@@ -71,8 +71,8 @@ COMPILE_TIME_ASSERT(sizeof(struct AudioContext) == 0x58);
  * `0x0816AA6C` (`sound/sfx_table.json`) - see docs/audio.md's "Sound
  * effects" section. Indexed by the id `PlaySfx`/`sub_80019F8` take. */
 struct SfxTableEntry {
-    u32 slotId;      /* GAX2 instrument/sample handle - 0 = unused slot */
-    u32 chanArg;       /* passed through to sub_8038E74's channel-select arg (only PlaySfx reads this; sub_80019F8 hardcodes 0) */
+    u32 slotId;      /* instrument index into the sound-effect data set (gStaticData_084C0006, docs/audio.md) - 0 = unused slot */
+    u32 chanArg;       /* passed through as sub_8038E74's priority arg (only PlaySfx reads this; sub_80019F8 hardcodes 0) */
     u32 baseVolume;      /* multiplied by the caller's volume param and AudioContext.sfxVolume, then >>16 */
 };
 
