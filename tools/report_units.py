@@ -60,6 +60,15 @@ LD = ["arm-none-eabi-ld", "-r"]
 # NON_MATCHING=1 report build (see Makefile's `report` target) - that's
 # the object already compiled with parked functions included as C.
 # Sorted by address; each entry's range runs to the next entry's start.
+#
+# HANDWRITTEN as the base object marks a range of confirmed hand-written
+# assembly (libgcc's lib1funcs.asm routines, the BIOS SWI wrappers): code
+# that was never C, so there is nothing to decompile. No unit is emitted
+# for it, which leaves it out of decomp.dev's progress totals entirely.
+# It counts neither as matched nor as unmatched. crt0.s (0x08000000 up to
+# the first entry below) is excluded the same way, by never having a unit.
+# The ROM bytes are still byte-verified by `make compare`.
+HANDWRITTEN = "handwritten"
 UNITS = [
     (0x08000170, "src/system/main.o", "system"),
     (0x080001CC, "src/system/memory.o", "system"),
@@ -506,7 +515,7 @@ UNITS = [
     (0x080372BC, "src/audio/counter_selector_icons.o", "audio"),  # sub_80372BC/sub_8037388 - the counter widget's per-frame digit-icon draw loop and its tile-cache/icon-manager init; both matched (real C: sub_80372BC with the icon-method trampoline called directly - docs/matching/gax-toolchain-retry.md; sub_8037388 promoted from NAKED with inline icon-manager helpers and a shared `zero` local - docs/matching/late-rom-naked-retry.md), issue #66
     (0x080374D0, "src/audio/counter_selector_setup.o", "audio"),  # sub_80374D0/sub_8037534/sub_8037548/sub_8037578/sub_80375A0/sub_80375EC/sub_8037620 - the widget's graphics/BG setup, draw-flush, and init/teardown pair; matched
     (0x08037648, "src/util/math_div64_util.o", "util"),  # sub_8037648 (__divdi3, UNUSED)/sub_8037A7C (__udivdi3) - GAX2's bundled libgcc2.c code, built without -mthumb-interwork (Makefile NO_INTERWORK_OBJS); matched as libgcc2.c's own source, issue #66, see docs/matching/gax-toolchain-retry.md
-    (0x08037E54, None, "util"),  # sub_8037E54 (__udivsi3) - lib1funcs.asm's hand-written Thumb routine, not compiler output; stays a byte-verified NAKED transcription (a legitimate final state), issue #66
+    (0x08037E54, HANDWRITTEN, None),  # sub_8037E54 (__udivsi3) - lib1funcs.asm's hand-written Thumb routine, not compiler output; stays a byte-verified NAKED transcription (a legitimate final state), issue #66
     (0x08037ECC, "src/util/math_div64_util.o", "util"),  # sub_8037ECC (__muldi3) - libgcc2.c's own source, no -mthumb-interwork; matched, issue #66
     (0x08037F3C, "src/audio/gax_zero_fill.o", "audio"),  # sub_8037F3C (zero-fill memset helper via CpuFastSet, GAX2 engine code - split out of math_div64_util.c because it uses the normal interworking return) - matched, real C, issue #66
     (0x08037FA0, "src/audio/song_slot_lookup.o", "audio"),  # sub_8037FA0 - a 12-entry threshold-table lookup; table contents not understood; matched
@@ -541,15 +550,16 @@ UNITS = [
     (0x0803A158, "src/audio/gax_channel_note_cut_driver.o", "audio"),  # sub_803A158 - play routine for directly-triggered (SFX) channels; matched (real C), issue #68, see docs/matching/gax-toolchain-retry.md
     (0x0803A228, "src/audio/gax_sound_handler_unknownc.o", "audio"),  # nullsub_41 (unused stub), sub_803A22C (GAX2_SoundHandler "UnknownC" type's init_fn), nullsub_42 (its unknown_fn) - matched, issue #68
     (0x0803A278, "src/audio/gax_unknownc_play.o", "audio"),  # sub_803A278/sub_803A2C8/sub_803A324/sub_803A5A8 - the mixer ("UnknownC") handler's play_fn and its three ARM DSP-routine callers; matched (real C - the Thumb->ARM call is GAX2's own inline-asm idiom, GAX_CALL_ARM in include/audio.h). sub_803A318/sub_803A608 in expected/code_3.s are only the ARM calls' return points, not functions. This unit also carries the raw ARM-mode DSP/mixer code block (gStaticData_0803A630 onward, plus an 8-byte lead-in from 0x0803A628) as an untouched byte transcription - hand-written ARM asm in the original - issue #68, see docs/matching/gax-toolchain-retry.md
-    (0x0803A944, "src/system/timer_util.o", "system"),  # BIOS svc wrapper stubs (sub_803A944-sub_803A95C/sub_0803A960) + LZ77UnCompWrapper/RLUnCompWrapper (confirmed non-audio via matched asset_util.c callers) - NAKED but genuinely un-improvable trampolines with no real C logic to express, kept matched per docs/matching.md's frozen convention - plus sub_803A968 (picks a 12-byte EepromConfig table by chip-size code - see the struct's header comment), sub_803A9D0 (claims a hardware timer, hands back an IRQ-handler-stub address), and sub_803AA08 (arms the claimed timer - now real C, not NAKED: the register-pinning/statement-ordering techniques that closed it are documented in the function's own doc comment and docs/matching/issue-69-eeprom-timer.md); matched, issue #69
+    (0x0803A944, HANDWRITTEN, None),  # BIOS SWI wrappers sub_803A944-sub_803A95C/sub_0803A960 + LZ77UnCompWrapper/RLUnCompWrapper (each `svc #N; bx lr`, libagbsyscall-style hand-written asm) - excluded from progress, see HANDWRITTEN above
+    (0x0803A968, "src/system/timer_util.o", "system"),  # sub_803A968 (picks a 12-byte EepromConfig table by chip-size code - see the struct's header comment), sub_803A9D0 (claims a hardware timer, hands back an IRQ-handler-stub address), and sub_803AA08 (arms the claimed timer - now real C, not NAKED: the register-pinning/statement-ordering techniques that closed it are documented in the function's own doc comment and docs/matching/issue-69-eeprom-timer.md); matched, issue #69
     (0x0803AA90, "src/system/timer_util_aa90.o", "system"),  # sub_803AA90 - the exact inverse of sub_803AA08: stops the claimed timer, disables its IRQ, restores IME; matched, issue #69
     (0x0803AAD4, None, "system"),  # sub_803AAD4 - the DMA3-driven block-transfer helper used by eeprom_util.c - NAKED transcription, byte-correct but not real decompiled C, tracked as parked (the busy-wait tail's loop-rotation/literal-pool-placement shape) - see docs/matching/issue-69-eeprom-timer.md, issue #69
     (0x0803AB54, None, "system"),  # sub_803AB54 (read)/sub_803AC04 (write+watchdog) - the DMA3 bit-serial EEPROM read/write pair - NAKED transcription, byte-correct but not real decompiled C, tracked as parked (register-allocation/loop-rotation gaps a plain-C reconstruction couldn't close) - see docs/matching/issue-69-eeprom-timer.md, issue #69
     (0x0803ACE0, "src/system/eeprom_verify.o", "system"),  # sub_803ACE0 (read-verify)/sub_803AD38 (write+verify 3-attempt retry wrapper) - the rest of the EEPROM cluster; matched, issue #69
-    (0x0803AD78, "src/system/reg_trampolines.o", "system"),  # sub_803AD78-sub_803AD94 (bx-r0..sp trampolines, called with the target function pointer already sitting in that register) and nullsub_43 (bonus, just past issue #69's listed range); matched
-    (0x0803ADB4, None, "util"),  # sub_803ADB4 - signed division - NAKED transcription, byte-correct but not real decompiled C, tracked as parked (the ROM's per-path prologue/epilogue shrink-wrapping isn't reproducible from plain C) - see docs/matching/issue-69-eeprom-timer.md, issue #70
-    (0x0803AE48, "src/util/math_div_util.o", "util"),  # nullsub_8 - shared divide-by-zero handler, a genuinely trivial no-op stub with no real C logic to express; matched, issue #70
-    (0x0803AE4C, None, "util"),  # sub_803AE4C (signed modulo)/sub_803AF1C (unsigned modulo) - NAKED transcription, byte-correct but not real decompiled C, tracked as parked (`ror` codegen not reproducible from plain C) - see docs/matching/issue-69-eeprom-timer.md, issue #70
+    (0x0803AD78, HANDWRITTEN, None),  # libgcc lib1funcs.asm _call_via_rN (hand-written) - excluded from progress - sub_803AD78-sub_803AD94 (bx-r0..sp trampolines, called with the target function pointer already sitting in that register) and nullsub_43 (bonus, just past issue #69's listed range); matched
+    (0x0803ADB4, HANDWRITTEN, None),  # libgcc lib1funcs.asm __divsi3 (hand-written) - excluded from progress - sub_803ADB4 - signed division - NAKED transcription, byte-correct but not real decompiled C, tracked as parked (the ROM's per-path prologue/epilogue shrink-wrapping isn't reproducible from plain C) - see docs/matching/issue-69-eeprom-timer.md, issue #70
+    (0x0803AE48, HANDWRITTEN, None),  # libgcc lib1funcs.asm __div0 (`mov pc, lr`, hand-written) - excluded from progress - nullsub_8 - shared divide-by-zero handler, a genuinely trivial no-op stub with no real C logic to express; matched, issue #70
+    (0x0803AE4C, HANDWRITTEN, None),  # libgcc lib1funcs.asm __modsi3/__umodsi3 (hand-written) - excluded from progress - sub_803AE4C (signed modulo)/sub_803AF1C (unsigned modulo) - NAKED transcription, byte-correct but not real decompiled C, tracked as parked (`ror` codegen not reproducible from plain C) - see docs/matching/issue-69-eeprom-timer.md, issue #70
     (0x0803AFDC, "src/graphics/actor_aabb_setup.o", "graphics"),  # sub_803AFDC/sub_803AFE4 (shared AABB set-size/set-position primitives), sub_803AFEC (raw-offset getter), sub_803AFF0/sub_803B024 (per-type descriptor table constructors, gStaticData_087E3BEC family); matched, issue #70
     (0x0803B058, "src/graphics/actor_anim.o", "graphics"),
     (0x0803B060, "src/graphics/actor_anim.o", "actor"),  # sub_803B060/GetAnimFrameData/sub_803B0A8/sub_803B0F0 + 20 near-identical gStaticData_087E4DF4 "kind" teardown handlers (sub_803B0C4-sub_803B440); matched, issue #71
@@ -645,6 +655,8 @@ def main():
     for i in range(len(UNITS) - 1):
         start, base_rel, category = UNITS[i]
         end = UNITS[i + 1][0]
+        if base_rel == HANDWRITTEN:
+            continue
         if base_rel is None:
             name = f"raw_{start:08X}"
         else:
