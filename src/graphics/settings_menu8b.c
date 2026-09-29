@@ -1,6 +1,7 @@
 #include "core.h"
 #include "settings_sync.h"
 #include "pause_options_screen.h"
+#include "box_part.h"
 
 extern void sub_8002C14(void *handle, s32 rowIndex, void *buf);
 extern void sub_8002C40(void *handle, s32 rowIndex, void *buf);
@@ -179,7 +180,7 @@ void sub_800312C(struct pause_options_screen *self, u32 flags)
     n = 4;
     do {
         void *obj;
-        register u8 *p asm("r1");
+        register struct part_method *p asm("r1");
 
         /* rowObjA/B/C[i]'s icon descriptor at +0x18 holds a {s16 offset,
          * u8 pad[2], void *fn} record at +0x50 - the same (offset, fn)
@@ -188,18 +189,18 @@ void sub_800312C(struct pause_options_screen *self, u32 flags)
          * container type. */
         obj = *a;
         if (obj != NULL) {
-            p = *(u8 **)((u8 *)obj + 0x18) + 0x50;
-            sub_803AD80((u8 *)obj + *(s16 *)p, (void *)3, *(void **)(p + 4));
+            p = PART_METHOD((struct box_part *)obj, 0x50);
+            sub_803AD80((u8 *)obj + p->thisOffset, (void *)3, p->fn);
         }
         obj = *b;
         if (obj != NULL) {
-            p = *(u8 **)((u8 *)obj + 0x18) + 0x50;
-            sub_803AD80((u8 *)obj + *(s16 *)p, (void *)3, *(void **)(p + 4));
+            p = PART_METHOD((struct box_part *)obj, 0x50);
+            sub_803AD80((u8 *)obj + p->thisOffset, (void *)3, p->fn);
         }
         obj = *c;
         if (obj != NULL) {
-            p = *(u8 **)((u8 *)obj + 0x18) + 0x50;
-            sub_803AD80((u8 *)obj + *(s16 *)p, (void *)3, *(void **)(p + 4));
+            p = PART_METHOD((struct box_part *)obj, 0x50);
+            sub_803AD80((u8 *)obj + p->thisOffset, (void *)3, p->fn);
         }
         c++;
         b++;
@@ -234,20 +235,20 @@ void sub_80031E4(struct pause_options_screen *self, u32 keys)
     s32 i;
 
     for (i = 0; i <= 4; i++) {
-        void **p;
+        struct part_method *p;
         s16 off;
 
-        p = *(void ***)((u8 *)self->rowObjA[i] + 0x18);
-        off = *(s16 *)((u8 *)p + 0x18);
-        sub_803AD7C((u8 *)self->rowObjA[i] + off, *(void **)((u8 *)p + 0x1c));
+        p = PART_METHOD((struct box_part *)self->rowObjA[i], 0x18);
+        off = p->thisOffset;
+        sub_803AD7C((u8 *)self->rowObjA[i] + off, p->fn);
 
-        p = *(void ***)((u8 *)self->rowObjB[i] + 0x18);
-        off = *(s16 *)((u8 *)p + 0x18);
-        sub_803AD7C((u8 *)self->rowObjB[i] + off, *(void **)((u8 *)p + 0x1c));
+        p = PART_METHOD((struct box_part *)self->rowObjB[i], 0x18);
+        off = p->thisOffset;
+        sub_803AD7C((u8 *)self->rowObjB[i] + off, p->fn);
 
-        p = *(void ***)((u8 *)self->rowObjC[i] + 0x18);
-        off = *(s16 *)((u8 *)p + 0x18);
-        sub_803AD7C((u8 *)self->rowObjC[i] + off, *(void **)((u8 *)p + 0x1c));
+        p = PART_METHOD((struct box_part *)self->rowObjC[i], 0x18);
+        off = p->thisOffset;
+        sub_803AD7C((u8 *)self->rowObjC[i] + off, p->fn);
     }
 
     if ((u32)self->state <= 0xa) {

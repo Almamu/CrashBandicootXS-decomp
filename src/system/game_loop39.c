@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor.h"
+#include "level_data.h"
 
 extern void sub_8022208(void);
 extern void sub_8024198(void);
@@ -39,6 +40,35 @@ extern u8 gStaticData_0816B92C[];
 extern u8 gStaticData_0816B934[];
 extern u8 gStaticData_0816B93C[];
 
+/* sub_802375C's argument (game_loop55.c passes `&self->level`; the same
+ * record game_loop56.c's sub_8023A1C reads as `struct gl_self`). */
+struct level_start_args {
+    s32 level;                      // 0x00
+    u8 unk_04[0xC];
+    s32 spawnX;                     // 0x10 - the player's start position
+    s32 spawnY;                     // 0x14
+    const struct level_room *room;  // 0x18
+    u8 flags;                       // 0x1C - bit 0: start X-mirrored
+};
+
+/* The HUD widget's method table: a gcc 2.x {this-adjust, fn} record at
+ * +0x18, called with the player as its argument. */
+struct widget_method {
+    s16 thisOffset;
+    u8 unk_02[2];
+    void *fn;
+};
+
+struct widget_vtable {
+    u8 unk_00[0x18];
+    struct widget_method attach;    // 0x18
+};
+
+struct widget {
+    u8 unk_00[0xC];
+    struct widget_vtable *vtable;   // 0x0C
+};
+
 /* Level-start dispatcher, called once from `UpdateGameFrame` when the
  * level object's own `+0xdc->+8` state field is `2` (see
  * `asm/code_3_2_17_225a0.s`). Allocates the whole per-level widget set
@@ -61,7 +91,7 @@ s32 sub_802375C(void *selfArg)
      * `mov` through a low register before every field access - each
      * such access below is its own small register-pinned block for
      * that reason. */
-    register u8 *self asm("r8") = selfArg;
+    register struct level_start_args *self asm("r8") = selfArg;
     void **d8;
     s32 mode;
     s32 result;
@@ -103,8 +133,8 @@ s32 sub_802375C(void *selfArg)
     d8 = &gUnknown_030012D8;
     *d8 = sub_800B3F0(sub_8026EDC(0x350), 0xffff, 0, 0, 0);
     {
-        u8 *p = self;
-        sub_8007398((struct actor *)*d8, *(s32 *)(p + 0x10), *(s32 *)(p + 0x14));
+        struct level_start_args *p = self;
+        sub_8007398((struct actor *)*d8, p->spawnX, p->spawnY);
     }
 
     /* Register-pinned (rather than a plain `*p |= 0x10`) so the mask
@@ -121,8 +151,8 @@ s32 sub_802375C(void *selfArg)
     {
         register u8 *p asm("r2") = (u8 *)*d8 + 0x28;
         register u32 one asm("r1") = 1;
-        register u8 *sp asm("r4") = self;
-        register u8 rawbit asm("r4") = sp[0x1c];
+        register struct level_start_args *sp asm("r4") = self;
+        register u8 rawbit asm("r4") = sp->flags;
         register u32 bit asm("r1") = (one & rawbit) << 4;
         /* Register-pinned negative-constant mask (`-0x11`, not `~0x10`)
          * so this compiler emits the ROM's own `movs r0, #0x11 / rsbs
@@ -144,8 +174,8 @@ s32 sub_802375C(void *selfArg)
      * instruction count matching. */
     asm volatile("" ::: "r4");
     {
-        register u8 *p asm("r4") = self;
-        mode = *(s32 *)(*(u8 **)(p + 0x18) + 8);
+        register struct level_start_args *p asm("r4") = self;
+        mode = p->room->kind;
     }
 
     switch (mode) {
@@ -158,16 +188,16 @@ s32 sub_802375C(void *selfArg)
         {
             void *val = **gUnknown_030012D0;
             u8 *pl = *d8;
-            u8 *w1c;
+            struct widget_vtable *w1c;
             s32 off;
 
             *(void **)(pl + 0x20) = val;
             *(void **)(pl + 0x44) = widget;
 
-            w1c = *(u8 **)(widget + 0xc);
-            off = *(s16 *)(w1c + 0x18);
+            w1c = ((struct widget *)widget)->vtable;
+            off = w1c->attach.thisOffset;
             widget += off;
-            sub_803AD80(widget, pl, *(void **)(w1c + 0x1c));
+            sub_803AD80(widget, pl, w1c->attach.fn);
         }
         break;
     }
@@ -195,15 +225,15 @@ s32 sub_802375C(void *selfArg)
         }
         {
             u8 *pl = *d8;
-            u8 *w1c;
+            struct widget_vtable *w1c;
             s32 off;
 
             w = gUnknown_03001310;
             *(void **)(pl + 0x44) = w;
-            w1c = *(u8 **)((u8 *)w + 0xc);
-            off = *(s16 *)(w1c + 0x18);
+            w1c = ((struct widget *)w)->vtable;
+            off = w1c->attach.thisOffset;
             w = (u8 *)w + off;
-            sub_803AD80(w, pl, *(void **)(w1c + 0x1c));
+            sub_803AD80(w, pl, w1c->attach.fn);
         }
         break;
     }
@@ -220,16 +250,16 @@ s32 sub_802375C(void *selfArg)
         {
             void *val = (u8 *)**gUnknown_030012D0 + 0x18;
             u8 *pl = *d8;
-            u8 *w1c;
+            struct widget_vtable *w1c;
             s32 off;
 
             *(void **)(pl + 0x20) = val;
             *(void **)(pl + 0x44) = widget;
 
-            w1c = *(u8 **)(widget + 0xc);
-            off = *(s16 *)(w1c + 0x18);
+            w1c = ((struct widget *)widget)->vtable;
+            off = w1c->attach.thisOffset;
             widget += off;
-            sub_803AD80(widget, pl, *(void **)(w1c + 0x1c));
+            sub_803AD80(widget, pl, w1c->attach.fn);
         }
         break;
     }

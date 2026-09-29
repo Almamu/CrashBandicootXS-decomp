@@ -160,4 +160,9 @@ typedef uint16_t winreg_t;
 
 #define SYSTEM_CLOCK           (16 * 1024 * 1024)   // System Clock
 
+// CpuSet (BIOS swi 0x0B) control-word bits; the low 21 bits are the unit count
+#define CPU_SET_SRC_FIXED 0x01000000
+#define CPU_SET_16BIT     0x00000000
+#define CPU_SET_32BIT     0x04000000
+
 #endif // GUARD_GBA_DEFINES

@@ -1,8 +1,8 @@
 #include "core.h"
 #include "actor.h"
+#include "text_popup.h"
 
 extern void *gUnknown_030012C0;
-extern void *gUnknown_030012B4;
 
 extern u8 sub_80232C8(void *self);
 extern void *sub_800FF0C(u16 arg0, u16 arg1, u16 arg2, u16 arg3, u8 type);
@@ -70,7 +70,7 @@ void sub_8021CE0(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void sub_8021D04(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     register void *obj asm("r5");
-    register u8 *rec asm("r1");
+    register struct level_record_table *rec asm("r1");
     register u16 *arrayBase asm("r0");
     register s32 loaded asm("r4");
     register u8 *tmp asm("r0");
@@ -78,11 +78,11 @@ void sub_8021D04(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
     obj = sub_800FF0C(arg0, arg1, arg2, arg3, 0);
 
-    rec = *(u8 **)gUnknown_030012B4;
-    arrayBase = *(u16 **)(rec + 8);
+    rec = *gUnknown_030012B4;
+    arrayBase = rec->offsets;
     loaded = (arg3 << 1) + (s32)arrayBase;
     {
-        s32 base = *(s32 *)(rec + 0xc);
+        s32 base = (s32)rec->bytes;
         loaded = *(u16 *)loaded;
         tmp = (u8 *)(loaded + base);
     }
