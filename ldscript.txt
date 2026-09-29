@@ -479,6 +479,12 @@ SECTIONS
         build/crashbandicootxs/data/data.o(.rodata.0817D7A4);
         build/crashbandicootxs/src/data/digit_glyphs_17e714.o(.rodata);
         build/crashbandicootxs/data/data.o(.rodata.0817E72C);
+        build/crashbandicootxs/src/data/level_tilesets_17e78c.o(.rodata);
+        build/crashbandicootxs/data/data.o(.rodata.0824B638);
+        build/crashbandicootxs/src/data/level_tilesets_270f08.o(.rodata);
+        build/crashbandicootxs/data/data.o(.rodata.082B91D0);
+        build/crashbandicootxs/src/data/sprite_tiles_2bf120.o(.rodata);
+        build/crashbandicootxs/data/data.o(.rodata.084A5600);
         build/crashbandicootxs/src/data/intro_bitmap_5aa170.o(.rodata);
         build/crashbandicootxs/data/data.o(.rodata.085ADBD1);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata);

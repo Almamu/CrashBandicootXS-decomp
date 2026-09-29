@@ -203,6 +203,9 @@ The first batch (all pointer tables, all byte-exact):
 | `popup_glyphs_17cf40.c` | `0x0817CF40` | 5 glyph packages, 9 slot seeds |
 | `slot_seeds_17d6c0.c` | `0x0817D6C0` | 20 slot seeds, 3 `struct bg_package` |
 | `digit_glyphs_17e714.c` | `0x0817E714` | 6 glyph pointers |
+| `level_tilesets_17e78c.c` | `0x0817E78C` | a `u16[16]` (`sub_8037388`), level BG tile sets 1-3 (grit, see "Resources") |
+| `level_tilesets_270f08.c` | `0x08270F08` | level BG tile sets 4-5 (grit) |
+| `sprite_tiles_2bf120.c` | `0x082BF120` | the sprite tile pool (56 banks) and the 125 fixed OBJ tiles (grit) |
 | `entity_vtables_7e3bec.c` | `0x087E3BEC` | the 93 entity virtual tables |
 
 The actor-category backgrounds and tables (grit-built, see "Category
@@ -229,8 +232,9 @@ object, and `ldscript.txt` places that object's `.rodata` at the asset's
 address in the `/* Data */` block. The pixel conversion is done by
 [grit](https://github.com/devkitPro/grit). Built this way so far:
 `gStaticData_085AA170`, the first intro Mode 4 bitmap
-(`src/data/intro_bitmap_5aa170.c`), and the actor-category backgrounds
-(see "Category backgrounds" at the end).
+(`src/data/intro_bitmap_5aa170.c`), the actor-category backgrounds
+(see "Category backgrounds" at the end), and the uncompressed tile pools
+of the old `gStaticData_0817E78C` blob (see "Raw tile pools" below).
 
 This section records the grit feasibility study and the pipeline that
 came out of it. The throwaway scripts behind the measurements aren't in
@@ -377,8 +381,52 @@ Per asset kind:
 | 256-colour palette | `-g! -p -pn256` | gbagfx LZ77 | verified; bit-15 `.bin` palettes stay raw |
 | tilemap (+ tileset) from one full image | `-gt -gB4 -m -mRtf -mLf -fx <tileset.png>` | gbagfx LZ77 | map verified; the tileset itself stays a separate PNG |
 | framed OBJ sheets (`graphics/unknown/0*/`) | not migrated: each frame has a 4-byte header grit doesn't know about | `tools/framed_gfx.py` | - |
+| raw 4bpp tile pool (`graphics/sprites/`) | `-gt -gB4 -p!` | `tools/bin2c.py --size` | used, 57 PNGs |
+| raw 8bpp tag-0x00 tile set (`graphics/level_tilesets/`) | `-gt -gB8 -p!` | `tools/bin2c.py --size`, header in C | used, 5 PNGs |
 
 **Never** use grit's `-gzl`/`-pzl`/`-mzl` or its `-ftc` for LZ77 assets.
+
+### Raw tile pools (`gStaticData_0817E78C`)
+
+The 3.3 MB `gStaticData_0817E78C` blob (`0x0817E78C`-`0x084A5600`, see
+docs/data_map.md) is three C objects and two raw room-data slices. None of it
+is compressed, so there is
+no gbagfx step: grit's `-ftb` output goes straight to `tools/bin2c.py`.
+
+| object | contents | source |
+|---|---|---|
+| `level_tilesets_17e78c.c` | `gStaticData_0817E78C` (`u16[16]`), tile sets 1-3 | `graphics/level_tilesets/tileset{1,2,3}_*.png` |
+| `data/data.s` `.rodata.0824B638` | room data, 33 rooms | still `.incbin "baserom.gba"` |
+| `level_tilesets_270f08.c` | tile sets 4-5 | `graphics/level_tilesets/tileset{4,5}_*.png` |
+| `data/data.s` `.rodata.082B91D0` | room data, 8 rooms | still `.incbin "baserom.gba"` |
+| `sprite_tiles_2bf120.c` | 56 sprite banks, 125 fixed tiles | `graphics/sprites/bankNN_*.png`, `tile_pool_4a4660.png` |
+
+- **Sprite banks.** The pool at `0x082BF120` has no header. Each of the 56
+  banks of `gStaticData_084A5600` owns one back-to-back range of it, in
+  bank order. Each range becomes one `const u8 gStaticData_<addr>[]` and one
+  4bpp PNG, `bankNN_<addr>.png`. The PNG is as wide as the bank's most
+  common OBJ piece (at least 4 tiles), so with 1D OBJ mapping those pieces
+  read as sprites. The palette is a grayscale placeholder. Nothing ties a
+  bank to a palette: OAM picks one per actor at run time.
+- **Level tile sets.** These are tag-0x00 raw tagged assets: a
+  `{size << 8}` word, then 8bpp tiles. `include/tagged_asset.h` gives each
+  one a sized struct (`TAGGED_RAW_ASSET(n)`, `TAGGED_RAW_HEADER(n)`) whose
+  `data` member `#include`s the grit output. Each PNG is 16 tiles wide and
+  carries the 256-colour BG palette of the first room that uses it.
+- **Padding.** Tile counts are rarely a multiple of the PNG width, so the
+  PNGs are padded to whole rows with blank tiles. `graphics.mk` lists each
+  asset's real byte count (`TILE_BYTES_<name>`), and `bin2c.py --size`
+  trims the padding. It fails if any trimmed byte is non-zero, so drawing
+  into the padding is caught.
+- **Room data** stays raw on purpose. An undecoded `.bin` copy doesn't
+  count as converted data. The two blocks become typed C, with symbol
+  references for their many absolute pointers, once the format (the object
+  lists especially) is decoded.
+- `tools/tile_pools.py` extracts all of it from `baserom.gba` and prints the
+  `TILE_BYTES_*` lines. Its output is deterministic, and all 62 PNGs
+  round-trip through grit byte-exact.
+
+`graphics.mk` adds the PNGs to `GRIT_C_PNGS`.
 
 ### Placing it and counting it
 

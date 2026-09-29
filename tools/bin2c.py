@@ -4,7 +4,7 @@ separated hex bytes), for a src/data/*.c file to `#include` inside its own
 `const u8 gFoo[] = { ... };`. The declaration (name, type, comment) stays in
 the hand-written .c file; only the bytes are generated.
 
-    tools/bin2c.py IN OUT [--lz] [--u16]
+    tools/bin2c.py IN OUT [--lz | --size N] [--u16]
 
 --lz: IN is a GBA LZ77 stream (tag 0x10). gbagfx pads its output to a
 multiple of 4 bytes, but the ROM's streams are packed back to back with no
@@ -12,8 +12,12 @@ such padding, so the array is trimmed to the stream's real length (the
 bytes the BIOS decompressor actually reads). Only zero padding may be
 trimmed; anything else is an error.
 
+--size N: keep the first N bytes (N in any Python int syntax, e.g. 0x3cfe0).
+For tile PNGs padded to whole rows with blank tiles (tools/tile_pools.py):
+the padding is trimmed again, and it too must be all zero.
+
 --u16: write little-endian halfwords instead of bytes, for a `u16` array
-(a grit `-p -ftb` palette, say).
+(a grit `-p -ftb` palette, say). Applies after --lz/--size trimming.
 """
 import sys
 
@@ -46,9 +50,22 @@ def main():
     lz = "--lz" in args
     u16 = "--u16" in args
     args = [a for a in args if a not in ("--lz", "--u16")]
+    size = None
+    if "--size" in args:
+        i = args.index("--size")
+        if lz or i + 1 >= len(args):
+            sys.exit(__doc__)
+        size = int(args[i + 1], 0)
+        del args[i:i + 2]
     if len(args) != 2:
         sys.exit(__doc__)
     data = open(args[0], "rb").read()
+    if size is not None:
+        if size > len(data):
+            sys.exit(f"bin2c: {args[0]}: {len(data)} bytes, shorter than --size {size:#x}")
+        if any(data[size:]):
+            sys.exit(f"bin2c: {args[0]}: non-zero bytes past --size {size:#x}")
+        data = data[:size]
     if lz:
         end = lz77_stream_length(data)
         if any(data[end:]):
