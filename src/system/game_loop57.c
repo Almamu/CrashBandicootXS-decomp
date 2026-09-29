@@ -106,152 +106,103 @@ void *sub_8024810(void *self)
  * text-paging walk through a second per-item record array at `+0x10`.
  * See this file's header comment for the full shape.
  *
- * NAKED: plain C under old_agbcc is 77 halfwords off. The ROM reloads
- * `&gUnknown_03001300` from the literal pool at each of the three OAM
- * flushes, leaving r4 free for `self`; old_agbcc CSEs the address into
- * r4 instead (its loop pass declines the hoist), shifting every other
- * value one register. */
-NAKED void sub_8024820(void *self, void *box)
+ * Matched (old_agbcc). The ROM reloads `&gUnknown_03001300` from the
+ * literal pool at each of the three OAM flushes (rotating r1/r2/r3):
+ * that is a function-scope local `oamp` set to the address before the
+ * loop, which global-alloc leaves without a register, so reload
+ * rematerializes it at each use and r4 stays free for `self`. The
+ * prologue reads the box word and `target` into locals before the
+ * store, and the page loop is a plain `for` with `j++`. */
+struct pager_item
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sl\n\t"
-        "mov r6, sb\n\t"
-        "mov r5, r8\n\t"
-        "push {r5, r6, r7}\n\t"
-        "sub sp, #8\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r1, [r4, #0x18]\n\t"
-        "ldr r2, [r4, #0x14]\n\t"
-        "mov r3, #0x8c\n\t"
-        "lsl r3, r3, #1\n\t"
-        "add r0, r2, r3\n\t"
-        "str r1, [r0]\n\t"
-        "ldr r0, [r4, #0x24]\n\t"
-        "add r3, r3, #4\n\t"
-        "add r1, r2, r3\n\t"
-        "ldr r1, [r1]\n\t"
-        "bl sub_8037E54\n\t"
-        "str r0, [sp, #4]\n\t"
-        "mov r0, #0\n\t"
-        "mov r8, r0\n\t"
-        "b 9f\n\t"
-    "1:\n\t"
-        "mov r7, #1\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, r8\n\t"
-        "bl sub_8024708\n\t"
-        "ldr r1, 2f\n\t"
-        "ldr r0, [r1]\n\t"
-        "bl sub_8006A90\n\t"
-        "ldr r2, 2f\n\t"
-        "ldr r0, [r2]\n\t"
-        "bl sub_8006A48\n\t"
-        "bl sub_80006A8\n\t"
-        "ldr r3, 2f\n\t"
-        "ldr r0, [r3]\n\t"
-        "bl sub_8006AAC\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, r8\n\t"
-        "bl sub_8024590\n\t"
-        "ldr r0, [r4, #0x10]\n\t"
-        "mov r2, r8\n\t"
-        "lsl r1, r2, #3\n\t"
-        "add r0, r1, r0\n\t"
-        "ldr r0, [r0, #4]\n\t"
-        "mov sb, r1\n\t"
-        "cmp r0, #0\n\t"
-        "bne 3f\n\t"
-        "ldr r1, [r4]\n\t"
-        "lsl r0, r2, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldr r0, [r1, #4]\n\t"
-        "ldrb r1, [r1, #0x10]\n\t"
-        "mov r2, #9\n\t"
-        "bl sub_80010E0\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r7, r0, #0x18\n\t"
-        "b 8f\n\t"
-        ".align 2, 0\n"
-    "2: .4byte gUnknown_03001300\n"
-    "3:\n\t"
-        "mov r2, #0\n\t"
-        "cmp r2, r0\n\t"
-        "bge 8f\n\t"
-    "4:\n\t"
-        "ldr r0, [r4, #0x10]\n\t"
-        "add r0, sb\n\t"
-        "ldr r1, [r0]\n\t"
-        "lsl r0, r2, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r5, [r0]\n\t"
-        "mov r6, #0\n\t"
-        "ldrb r0, [r5]\n\t"
-        "add r2, r2, #1\n\t"
-        "mov sl, r2\n\t"
-        "b 6f\n\t"
-    "5:\n\t"
-        "add r0, r5, r6\n\t"
-        "ldr r1, [r4, #0x14]\n\t"
-        "mov r2, #1\n\t"
-        "str r2, [sp]\n\t"
-        "add r2, r4, #0\n\t"
-        "add r2, r2, #0x18\n\t"
-        "ldr r3, [sp, #4]\n\t"
-        "bl sub_8000EE4\n\t"
-        "add r6, r6, r0\n\t"
-        "ldr r1, [r4]\n\t"
-        "mov r3, r8\n\t"
-        "lsl r0, r3, #2\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r1, [r0]\n\t"
-        "ldr r0, [r1, #4]\n\t"
-        "ldrb r1, [r1, #0x10]\n\t"
-        "mov r2, #9\n\t"
-        "bl sub_80010E0\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsr r7, r0, #0x18\n\t"
-        "add r0, r5, r6\n\t"
-        "ldrb r0, [r0]\n\t"
-    "6:\n\t"
-        "cmp r0, #0\n\t"
-        "beq 7f\n\t"
-        "cmp r7, #1\n\t"
-        "beq 5b\n\t"
-    "7:\n\t"
-        "mov r2, sl\n\t"
-        "ldr r0, [r4, #0x10]\n\t"
-        "add r0, sb\n\t"
-        "ldr r0, [r0, #4]\n\t"
-        "cmp r2, r0\n\t"
-        "bge 8f\n\t"
-        "cmp r7, #1\n\t"
-        "beq 4b\n\t"
-    "8:\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, r8\n\t"
-        "bl sub_8024790\n\t"
-        "add r0, r4, #0\n\t"
-        "mov r1, r8\n\t"
-        "add r2, r7, #0\n\t"
-        "bl sub_80246D8\n\t"
-        "mov r8, r0\n\t"
-        "mov r0, #1\n\t"
-        "add r8, r0\n\t"
-    "9:\n\t"
-        "ldr r0, [r4, #4]\n\t"
-        "cmp r8, r0\n\t"
-        "blt 1b\n\t"
-        "add sp, #8\n\t"
-        "pop {r3, r4, r5}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "mov sl, r5\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0"
-    );
+    u8 unk_00[4];
+    s32 count;                  // 0x04 - sub_80010E0's count
+    u8 unk_08[8];
+    u8 buttons;                 // 0x10 - sub_80010E0's checkButtons
+};
+
+struct pager_text
+{
+    u8 **strings;
+    s32 count;
+};
+
+struct pager_target
+{
+    u8 unk_000[0x118];
+    s32 box0;                   // 0x118
+    s32 divisor;                // 0x11C
+};
+
+struct pager
+{
+    struct pager_item **items;  // 0x00
+    s32 count;                  // 0x04
+    u8 unk_08[8];
+    struct pager_text *texts;   // 0x10
+    struct pager_target *target; // 0x14
+    s32 box[4];                 // 0x18 - text rect {x, y, w, h}
+};
+
+extern void *gUnknown_03001300;
+extern s32 sub_8037E54(s32 value, s32 divisor);
+extern void sub_8024708(struct pager *self, s32 idx);
+extern void sub_8024590(struct pager *self, s32 idx);
+extern void sub_8024790(struct pager *self, s32 idx);
+extern s32 sub_80246D8(struct pager *self, s32 startIdx, u8 condFlag);
+extern void sub_8006A90(void *oam);
+extern void sub_8006A48(void *oam);
+extern void sub_8006AAC(void *oam);
+extern void sub_80006A8(void);
+extern s32 sub_80010E0(s32 count, u8 checkButtons, s32 mask);
+extern s32 sub_8000EE4(u8 *text, void *target, s32 *box, s32 limit, s32 mode);
+
+void sub_8024820(struct pager *self)
+{
+    void **oamp = &gUnknown_03001300;
+    s32 limit;
+    s32 i;
+
+    {
+        s32 b = self->box[0];
+        struct pager_target *t = self->target;
+
+        t->box0 = b;
+        limit = sub_8037E54(self->box[3], t->divisor);
+    }
+    for (i = 0; i < self->count; i++)
+    {
+        u8 res = 1;
+
+        sub_8024708(self, i);
+        sub_8006A90(*oamp);
+        sub_8006A48(*oamp);
+        sub_80006A8();
+        sub_8006AAC(*oamp);
+        sub_8024590(self, i);
+        if (self->texts[i].count == 0)
+        {
+            res = sub_80010E0(self->items[i]->count, self->items[i]->buttons, 9);
+        }
+        else
+        {
+            s32 j;
+
+            for (j = 0; j < self->texts[i].count && res == 1; j++)
+            {
+                u8 *str = self->texts[i].strings[j];
+                s32 pos = 0;
+
+                while (str[pos] != 0 && res == 1)
+                {
+                    pos += sub_8000EE4(str + pos, self->target, self->box, limit, 1);
+                    res = sub_80010E0(self->items[i]->count, self->items[i]->buttons, 9);
+                }
+            }
+        }
+        sub_8024790(self, i);
+        i = sub_80246D8(self, i, res);
+    }
 }
 /* Trailing byte count isn't a multiple of 4 in the ROM's own raw block
  * (a bare `.align 2, 0` follows `bx r0` there too) - see the
@@ -288,182 +239,100 @@ void *sub_8024948(void *self0)
  * cache's `sub_8025334` (game_loop3.c) - just writing into a 2D buffer
  * (row = idx>>4, 64-halfword row stride) instead of a flat one.
  *
- * NAKED: plain C under old_agbcc is 13 halfwords off. Registers and
- * control flow match; the ROM computes the accumulator's sign extension
- * between the two shifts that sign-extend the delta byte (3 places), and
- * builds the copy loop's cell index in the other order. */
-NAKED void sub_8024960(struct bg_streamer *self, s32 recordId, void *dest)
+ * Matched (old_agbcc) by porting `sub_8025334`'s matched shape: `src`
+ * starts as the record table itself, and the delta run's sign extensions
+ * are explicit `<< 24` shifts into `s32` locals with `acc` copied to an
+ * `s32` first. Two local changes: the odd trailing delta is stored back
+ * into `acc` before the cell store, and the copy loop builds its cell
+ * index in a local `k` (row first), which gives the ROM's
+ * `asr; lsl` order there. */
+#define RING_CELL(out, i) (out)[((i) >> 4) * 64 + ((i) & 0xf)]
+
+void sub_8024960(struct bg_streamer *self, s32 recordId, void *dest)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sb\n\t"
-        "mov r6, r8\n\t"
-        "push {r6, r7}\n\t"
-        "add r7, r2, #0\n\t"
-        "ldr r4, [r0, #4]\n\t"
-        "lsl r1, r1, #1\n\t"
-        "add r1, r1, r4\n\t"
-        "ldrh r1, [r1]\n\t"
-        "lsl r0, r1, #2\n\t"
-        "add r4, r4, r0\n\t"
-        "mov r0, #0x7f\n\t"
-        "mov r8, r0\n\t"
-        "mov r6, #0\n\t"
-    "1:\n\t"
-        "ldrh r1, [r4]\n\t"
-        "ldrb r3, [r4]\n\t"
-        "add r4, r4, #2\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #8\n\t"
-        "and r0, r1\n\t"
-        "cmp r0, #0\n\t"
-        "beq 2f\n\t"
-        "ldrh r2, [r4]\n\t"
-        "add r4, r4, #2\n\t"
-        "mov r0, r8\n\t"
-        "sub r0, r0, r3\n\t"
-        "mov r8, r0\n\t"
-        "mov r5, #0xf\n\t"
-    "3:\n\t"
-        "asr r0, r6, #4\n\t"
-        "add r1, r6, #0\n\t"
-        "and r1, r5\n\t"
-        "lsl r0, r0, #6\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r0, r0, r7\n\t"
-        "strh r2, [r0]\n\t"
-        "add r6, r6, #1\n\t"
-        "sub r0, r3, #1\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r3, r0, #0x10\n\t"
-        "cmp r3, #0\n\t"
-        "bne 3b\n\t"
-        "b 4f\n\t"
-    "2:\n\t"
-        "mov r0, #0x80\n\t"
-        "lsl r0, r0, #7\n\t"
-        "and r1, r0\n\t"
-        "cmp r1, #0\n\t"
-        "beq 6f\n\t"
-        "mov r2, r8\n\t"
-        "sub r2, r2, r3\n\t"
-        "mov r8, r2\n\t"
-        "ldrh r5, [r4]\n\t"
-        "add r4, r4, #2\n\t"
-        "asr r0, r6, #4\n\t"
-        "mov r1, #0xf\n\t"
-        "and r1, r6\n\t"
-        "lsl r0, r0, #6\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r0, r0, r7\n\t"
-        "strh r5, [r0]\n\t"
-        "sub r0, r3, #1\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r3, r0, #0x10\n\t"
-        "add r6, r6, #1\n\t"
-        "mov r0, #0xf\n\t"
-        "mov ip, r0\n\t"
-    "5:\n\t"
-        "ldrh r2, [r4]\n\t"
-        "add r4, r4, #2\n\t"
-        "lsl r1, r2, #0x18\n\t"
-        "lsl r0, r5, #0x10\n\t"
-        "asr r0, r0, #0x10\n\t"
-        "asr r1, r1, #0x18\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r5, r0, #0x10\n\t"
-        "asr r0, r6, #4\n\t"
-        "mov sb, r0\n\t"
-        "add r1, r6, #0\n\t"
-        "mov r0, ip\n\t"
-        "and r1, r0\n\t"
-        "mov r0, sb\n\t"
-        "lsl r0, r0, #6\n\t"
-        "mov sb, r0\n\t"
-        "add r1, sb\n\t"
-        "lsl r0, r1, #1\n\t"
-        "add r0, r0, r7\n\t"
-        "strh r5, [r0]\n\t"
-        "add r6, r6, #1\n\t"
-        "lsl r2, r2, #0x10\n\t"
-        "lsl r0, r5, #0x10\n\t"
-        "asr r0, r0, #0x10\n\t"
-        "asr r2, r2, #0x18\n\t"
-        "add r0, r0, r2\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r5, r0, #0x10\n\t"
-        "asr r0, r6, #4\n\t"
-        "add r1, r6, #0\n\t"
-        "mov r2, ip\n\t"
-        "and r1, r2\n\t"
-        "lsl r0, r0, #6\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r0, r0, r7\n\t"
-        "strh r5, [r0]\n\t"
-        "add r6, r6, #1\n\t"
-        "sub r0, r3, #2\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r3, r0, #0x10\n\t"
-        "cmp r3, #1\n\t"
-        "bhi 5b\n\t"
-        "cmp r3, #0\n\t"
-        "beq 4f\n\t"
-        "ldrh r0, [r4]\n\t"
-        "add r4, r4, #2\n\t"
-        "lsl r0, r0, #0x18\n\t"
-        "lsl r2, r5, #0x10\n\t"
-        "asr r2, r2, #0x10\n\t"
-        "asr r0, r0, #0x18\n\t"
-        "add r2, r2, r0\n\t"
-        "asr r0, r6, #4\n\t"
-        "mov r1, #0xf\n\t"
-        "and r1, r6\n\t"
-        "lsl r0, r0, #6\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r0, r0, r7\n\t"
-        "strh r2, [r0]\n\t"
-        "add r6, r6, #1\n\t"
-        "b 4f\n\t"
-    "6:\n\t"
-        "mov r0, r8\n\t"
-        "sub r0, r0, r3\n\t"
-        "mov r8, r0\n\t"
-        "mov r2, #0xf\n\t"
-    "7:\n\t"
-        "asr r0, r6, #4\n\t"
-        "lsl r1, r0, #6\n\t"
-        "add r0, r6, #0\n\t"
-        "and r0, r2\n\t"
-        "add r0, r1, r0\n\t"
-        "lsl r0, r0, #1\n\t"
-        "add r0, r0, r7\n\t"
-        "ldrh r1, [r4]\n\t"
-        "strh r1, [r0]\n\t"
-        "add r4, r4, #2\n\t"
-        "add r6, r6, #1\n\t"
-        "sub r0, r3, #1\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r3, r0, #0x10\n\t"
-        "cmp r3, #0\n\t"
-        "bne 7b\n\t"
-    "4:\n\t"
-        "mov r2, r8\n\t"
-        "cmp r2, #0\n\t"
-        "blt 8f\n\t"
-        "b 1b\n\t"
-    "8:\n\t"
-        "pop {r3, r4}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0"
-    );
+    u16 *out = dest;
+    u16 *src = self->records;
+    s32 budget;
+    s32 written;
+
+    src = (u16 *)((u32 *)src + src[recordId]);
+    budget = 0x7F;
+    written = 0;
+
+    do
+    {
+        u16 token = *src;
+        u16 n = *(u8 *)src;
+
+        src++;
+        if (token & 0x8000)
+        {
+            u16 value = *src++;
+
+            budget -= n;
+            do
+            {
+                RING_CELL(out, written) = value;
+                written++;
+                n--;
+            } while (n != 0);
+        }
+        else if (token & 0x4000)
+        {
+            s16 acc;
+
+            budget -= n;
+            acc = *src++;
+            RING_CELL(out, written) = acc;
+            n--;
+            written++;
+            do
+            {
+                u16 pair = *src++;
+
+                {
+                    s32 lo = pair << 24;
+                    s32 a = acc;
+
+                    acc = a + (lo >> 24);
+                }
+                RING_CELL(out, written) = acc;
+                written++;
+                {
+                    s32 hi = pair << 16;
+                    s32 a = acc;
+
+                    acc = a + (hi >> 24);
+                }
+                RING_CELL(out, written) = acc;
+                written++;
+                n -= 2;
+            } while (n > 1);
+            if (n != 0)
+            {
+                u16 last = *src++;
+                s32 lo = last << 24;
+                s32 a = acc;
+
+                acc = a + (lo >> 24);
+                RING_CELL(out, written) = acc;
+                written++;
+            }
+        }
+        else
+        {
+            budget -= n;
+            do
+            {
+                s32 k = written >> 4;
+
+                k = k * 64 + (written & 0xf);
+                out[k] = *src++;
+                written++;
+                n--;
+            } while (n != 0);
+        }
+    } while (budget >= 0);
 }
 
 extern void sub_8024C08(struct bg_streamer *self, s32 col);

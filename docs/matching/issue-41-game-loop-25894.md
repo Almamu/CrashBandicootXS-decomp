@@ -392,3 +392,8 @@ NAKED-transcribed functions from the earlier pass (`sub_8025A64`,
 `sub_8025B0C`/`sub_8025BAC`/`sub_8025CA4`, `sub_8025E98`/`sub_8025F3C`)
 still owe a real C match; `sub_80259D4` and `sub_8025D74` have already
 been closed (see their own linked write-ups above).
+
+## Later pass (strag1)
+
+`sub_8025B0C` and `sub_8025CA4` (`src/system/game_loop14.c`) are now real
+C (old_agbcc). See [strag1-naked-retry.md](strag1-naked-retry.md).

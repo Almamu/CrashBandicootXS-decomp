@@ -81,6 +81,7 @@ SECTIONS
         build/crashbandicootxs/src/graphics/settings_menu10.o(.text);
         build/crashbandicootxs/src/graphics/oam_count.o(.text);
         build/crashbandicootxs/src/graphics/graphics.o(.text);
+        build/crashbandicootxs/src/graphics/graphics_73dc.o(.text);
         build/crashbandicootxs/src/graphics/graphics_7634.o(.text);
         build/crashbandicootxs/src/graphics/actor_part.o(.text);
         build/crashbandicootxs/src/graphics/actor_part2.o(.text);

@@ -86,3 +86,9 @@ without them).
 nibble-insert copies survive when the two inner stores go through a
 `SetPal` inline, and the slot tests are `switch`es. See
 [naked-retry-mid45.md](naked-retry-mid45.md).
+
+## Later pass (strag1)
+
+`sub_8025CA4`, `sub_8025B0C`, `sub_8024960` and `sub_8024820` from the
+"still NAKED" table above are now real C, all under old_agbcc with no
+register pins. See [strag1-naked-retry.md](strag1-naked-retry.md).

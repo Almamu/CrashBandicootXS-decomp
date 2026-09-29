@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor.h"
+#include "orbit_part.h"
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
@@ -44,6 +45,18 @@ struct fx_part
     u8 tag;                     // 0x2D
     u8 unk_2E[0x16];
     struct manager *mgr;        // 0x44
+    s32 unk_48;                 // 0x48 - velocity fields seeded by sub_8025B0C
+    s32 unk_4C;                 // 0x4C
+    s32 unk_50;                 // 0x50
+    u8 unk_54[0xC];
+    s32 unk_60;                 // 0x60
+};
+
+struct fx_box
+{
+    s32 x, y;
+    s32 w;                      // 0x08
+    s32 h;
 };
 
 struct actor_flag_bits
@@ -76,94 +89,61 @@ extern void sub_8008E94(void *manager, void *value);
  * velocity fields (`+0x60`/`+0x48`/`+0x4c`/`+0x50`) from `speed`,
  * negated when `src` is mirrored.
  *
- * NAKED: plain C under old_agbcc is 61 halfwords off. gcc keeps the
- * address of the `src` box in a callee-saved register across the second
- * `sub_8007B98` call, which pushes `speed` out to the stack; the ROM has
- * the first width in r4, `speed` in r7 and `margin` in r8. */
-NAKED struct actor *sub_8025B0C(void *pool, s32 arg1, s32 kind, s32 margin, s32 z, s32 speed, void *src)
+ * Matched (old_agbcc) with three source-shape changes, no pins:
+ * - the two AABBs live in one frame struct `f`, so the ROM re-adds
+ *   `sp,#N` for the second box instead of holding its address in a
+ *   callee-saved register (which had pushed `speed` out to the stack);
+ * - the spawn arguments go through locals `x0`/`y0`/`m`, which computes
+ *   all three before either stack store, as the ROM does;
+ * - the velocity seed goes through the `SetVel` inline, whose arguments
+ *   (`-speed`, 0x40) are expanded before the stores, and the X offset is
+ *   a `?:` so the flip byte is tested before `ox + dist`. */
+struct fx_part *sub_8025BAC(void *unused0, s32 anim, s32 tag, s32 x, s32 y, s32 mirror);
+extern void sub_8007B98(struct fx_box *dest, void *obj);
+
+static inline void SetVel(struct fx_part *p, s32 v, s32 k)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, r8\n\t"
-        "push {r7}\n\t"
-        "sub sp, #0x28\n\t"
-        "mov r8, r3\n\t"
-        "ldr r7, [sp, #0x44]\n\t"
-        "ldr r6, [sp, #0x48]\n\t"
-        "ldr r3, [r6]\n\t"
-        "asr r3, r3, #8\n\t"
-        "ldr r5, [r6, #4]\n\t"
-        "asr r5, r5, #8\n\t"
-        "add r4, r6, #0\n\t"
-        "add r4, r4, #0x28\n\t"
-        "ldrb r4, [r4]\n\t"
-        "lsl r4, r4, #0x1b\n\t"
-        "lsr r4, r4, #0x1f\n\t"
-        "str r5, [sp]\n\t"
-        "str r4, [sp, #4]\n\t"
-        "bl sub_8025BAC\n\t"
-        "add r5, r0, #0\n\t"
-        "add r0, sp, #8\n\t"
-        "add r1, r5, #0\n\t"
-        "bl sub_8007B98\n\t"
-        "ldr r4, [sp, #0x10]\n\t"
-        "add r0, sp, #0x18\n\t"
-        "add r1, r6, #0\n\t"
-        "bl sub_8007B98\n\t"
-        "ldr r0, [sp, #0x20]\n\t"
-        "lsr r1, r4, #0x1f\n\t"
-        "add r4, r4, r1\n\t"
-        "asr r4, r4, #1\n\t"
-        "lsr r1, r0, #0x1f\n\t"
-        "add r0, r0, r1\n\t"
-        "asr r0, r0, #1\n\t"
-        "add r4, r4, r0\n\t"
-        "add r4, r8\n\t"
-        "ldr r0, [r5]\n\t"
-        "asr r1, r0, #8\n\t"
-        "add r3, r5, #0\n\t"
-        "add r3, r3, #0x28\n\t"
-        "ldrb r2, [r3]\n\t"
-        "lsl r0, r2, #0x1b\n\t"
-        "add r2, r1, r4\n\t"
-        "cmp r0, #0\n\t"
-        "bge 1f\n\t"
-        "sub r2, r1, r4\n\t"
-    "1:\n\t"
-        "ldr r0, [r5, #4]\n\t"
-        "asr r0, r0, #8\n\t"
-        "ldr r1, [sp, #0x40]\n\t"
-        "add r0, r0, r1\n\t"
-        "lsl r1, r2, #8\n\t"
-        "str r1, [r5]\n\t"
-        "lsl r0, r0, #8\n\t"
-        "str r0, [r5, #4]\n\t"
-        "ldrb r3, [r3]\n\t"
-        "lsl r0, r3, #0x1b\n\t"
-        "cmp r0, #0\n\t"
-        "bge 2f\n\t"
-        "neg r0, r7\n\t"
-        "mov r1, #0x40\n\t"
-        "str r0, [r5, #0x60]\n\t"
-        "str r0, [r5, #0x48]\n\t"
-        "str r1, [r5, #0x4c]\n\t"
-        "str r0, [r5, #0x50]\n\t"
-        "b 3f\n\t"
-    "2:\n\t"
-        "mov r0, #0x40\n\t"
-        "str r7, [r5, #0x60]\n\t"
-        "str r7, [r5, #0x48]\n\t"
-        "str r0, [r5, #0x4c]\n\t"
-        "str r7, [r5, #0x50]\n\t"
-    "3:\n\t"
-        "add r0, r5, #0\n\t"
-        "add sp, #0x28\n\t"
-        "pop {r3}\n\t"
-        "mov r8, r3\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-    );
+    p->unk_60 = v;
+    p->unk_48 = v;
+    p->unk_4C = k;
+    p->unk_50 = v;
+}
+
+struct fx_part *sub_8025B0C(void *pool, s32 arg1, s32 kind, s32 margin, s32 z, s32 speed, struct fx_part *src)
+{
+    struct fx_part *part;
+    s32 w1, w2, dist, x;
+
+    {
+        s32 x0 = src->base.x >> 8;
+        s32 y0 = src->base.y >> 8;
+        s32 m = src->flipX;
+
+        part = sub_8025BAC(pool, arg1, kind, x0, y0, m);
+    }
+    {
+        struct { struct fx_box a, b; } f;
+
+        sub_8007B98(&f.a, part);
+        w1 = f.a.w;
+        sub_8007B98(&f.b, src);
+        w2 = f.b.w;
+    }
+    dist = w1 / 2 + w2 / 2 + margin;
+    {
+        s32 ox = part->base.x >> 8;
+        s32 y;
+
+        x = part->flipX ? ox - dist : ox + dist;
+        y = (part->base.y >> 8) + z;
+        part->base.x = x << 8;
+        part->base.y = y << 8;
+    }
+    if (part->flipX)
+        SetVel(part, -speed, 0x40);
+    else
+        SetVel(part, speed, 0x40);
+    return part;
 }
 
 /* Spawns a sub_8009ED0 effect part at (x, y) clamped into the current
@@ -210,80 +190,47 @@ struct fx_part *sub_8025BAC(void *unused0, s32 anim, s32 tag, s32 x, s32 y, s32 
  * `0` otherwise) and fires `sub_801191C`/`sub_8011870` instead of
  * `sub_80111B8`.
  *
- * NAKED: plain C under old_agbcc is 5 halfwords off - only the
- * `movs r0, #0` for the `+0x4b` store is scheduled differently (the ROM
- * loads it right after the `+0x49` address). */
-NAKED struct actor *sub_8025CA4(void *unused0, u16 x, u16 y, u8 p3, u8 p4, u8 p5)
+ * `p5` is read as the low byte of its stack word (the ROM's ldrb), and
+ * `p4` as the full word (its `cmp r5,#0xff` has no truncation).
+ *
+ * Matched (old_agbcc): the three tag bytes are written through a pointer
+ * `t`, and the +0x4B zero is an opaque `zero`, so the `movs r0,#0` lands
+ * after the +0x49 address instead of being hoisted above it. */
+extern struct level_state14 { u8 unk_00[0x8C]; u8 unk_8C; } *gUnknown_030012C0;
+extern struct orbit_part *sub_801173C(u16 id, u16 x, u16 y, u16 special);
+extern void sub_801191C(struct orbit_part *self);
+extern void sub_8011870(struct orbit_part *self);
+
+struct orbit_part *sub_8025CA4(void *unused0, u32 x, u32 y, u32 p3, u32 p4, u32 flag5)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "add r7, r3, #0\n\t"
-        "ldr r5, [sp, #0x14]\n\t"
-        "add r0, sp, #0x18\n\t"
-        "ldrb r6, [r0]\n\t"
-        "mov r4, #0\n\t"
-        "ldr r0, 5f\n\t"
-        "ldr r0, [r0]\n\t"
-        "add r0, r0, #0x8c\n\t"
-        "ldrb r0, [r0]\n\t"
-        "cmp r0, #0\n\t"
-        "bne 4f\n\t"
-        "cmp r6, #0\n\t"
-        "bne 1f\n\t"
-        "cmp r5, #0xff\n\t"
-        "bne 2f\n\t"
-    "1:\n\t"
-        "ldr r3, 6f\n\t"
-        "lsl r1, r1, #0x10\n\t"
-        "lsr r1, r1, #0x10\n\t"
-        "lsl r2, r2, #0x10\n\t"
-        "lsr r2, r2, #0x10\n\t"
-        "add r0, r3, #0\n\t"
-        "b 3f\n\t"
-        ".align 2, 0\n"
-    "5: .4byte gUnknown_030012C0\n"
-    "6: .4byte 0x0000ffff\n"
-    "2:\n\t"
-        "ldr r0, 11f\n\t"
-        "lsl r1, r1, #0x10\n\t"
-        "lsr r1, r1, #0x10\n\t"
-        "lsl r2, r2, #0x10\n\t"
-        "lsr r2, r2, #0x10\n\t"
-        "mov r3, #0\n\t"
-    "3:\n\t"
-        "bl sub_801173C\n\t"
-        "add r4, r0, #0\n\t"
-        "mov r0, #0x10\n\t"
-        "ldrb r1, [r4, #0xc]\n\t"
-        "orr r0, r1\n\t"
-        "strb r0, [r4, #0xc]\n\t"
-        "add r1, r4, #0\n\t"
-        "add r1, r1, #0x49\n\t"
-        "mov r0, #0\n\t"
-        "strb r7, [r1]\n\t"
-        "add r1, r1, #1\n\t"
-        "strb r5, [r1]\n\t"
-        "add r1, r1, #1\n\t"
-        "strb r0, [r1]\n\t"
-        "cmp r5, #0xff\n\t"
-        "bne 9f\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_801191C\n\t"
-    "9:\n\t"
-        "cmp r6, #0\n\t"
-        "beq 4f\n\t"
-        "add r0, r4, #0\n\t"
-        "bl sub_8011870\n\t"
-    "4:\n\t"
-        "add r0, r4, #0\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r1}\n\t"
-        "bx r1\n\t"
-        ".align 2, 0\n"
-    "11: .4byte 0x0000ffff\n"
-    );
+    u8 p5 = *(u8 *)&flag5;
+    struct orbit_part *part = NULL;
+
+    if (gUnknown_030012C0->unk_8C == 0)
+    {
+        if (p5 || p4 == 0xff)
+            part = sub_801173C(0xffff, x, y, 0xffff);
+        else
+            part = sub_801173C(0xffff, x, y, 0);
+        part->base.flags |= 0x10;
+        {
+            u8 *t = &part->counter;
+            u8 zero = 0;
+
+            /* opaque 0: keeps the +0x4B `movs r0,#0` after the +0x49
+             * address rather than scheduled ahead of it */
+            asm("" : "+r"(zero));
+            *t++ = p3;
+            *t++ = p4;
+            *t = zero;
+        }
+        if (p4 == 0xff)
+            sub_801191C(part);
+        if (p5)
+            sub_8011870(part);
+    }
+    return part;
 }
-asm(".align 2, 0");
 
 /* Loads a `{tableIdx:u16, p1:u16, p2:u16, p3:u16}` record from `rec`,
  * indexes `*table` by `tableIdx` (4-byte stride) to get a function
