@@ -363,3 +363,14 @@ build the ROM's -16 from it (`sub r0, #0x1f`). See
 old_agbcc). What is left is the first receive loop's giv register order
 and one split `lsls`/`lsrs` pair. `sub_8001DB4` stays at 136. Both are
 still NAKED. See [last-four-naked-retry.md](last-four-naked-retry.md).
+
+## Later pass: `sub_8002114` matched (last-seven NAKED retry)
+
+`sub_8002114` is real C under old_agbcc now. The last 6 halfwords were
+the first receive loop. The load goes through a pointer biv `p`, which
+loop.c doesn't strength-reduce, and the test address `t = &d2[i]` is
+taken first, which leaves the two reduced givs in the ROM's order.
+`&self->field_20` and the two compare constants (constant-init form)
+are set before `p`, so they come before its init as in the ROM. See
+[last-seven-naked-retry.md](last-seven-naked-retry.md).
+

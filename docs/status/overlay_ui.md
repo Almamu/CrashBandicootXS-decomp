@@ -139,6 +139,9 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   about 100 halfwords off: it keeps the ROM's `n - 1 != -1` loop tests,
   but gcc shares the `playerIndex * 0xc8 + s` the ROM computes twice.
   See [early-rom-naked-retry.md](../matching/early-rom-naked-retry.md).
+  The last-seven NAKED retry brought the draft to 14 halfwords (same
+  size and instructions; a register permutation is left), see
+  [last-seven-naked-retry.md](../matching/last-seven-naked-retry.md).
 - **`sub_8005E5C`** - byte-exact via `NAKED` asm transcription (the
   whole function body is a hand-transcribed copy of the ROM's own
   disassembly, not real decompiled C), so it's tracked here as parked
