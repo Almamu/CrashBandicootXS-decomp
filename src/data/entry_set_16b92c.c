@@ -15,16 +15,16 @@ struct entry_set
     u32 unk_04;
 };
 
-/* Entries inside the still-raw gStaticData_0816B304/gStaticData_0816B61C. */
-extern const u8 gStaticData_0816B304[];
-extern const u8 gStaticData_0816B61C[];
+/* Their entries, in motion_records_16b304.c. */
+extern const u32 gStaticData_0816B514[][2];
+extern const u32 gStaticData_0816B790[][2];
 
 /* The sets sub_802375C (game_loop39.c) gives the two HUD widgets it
  * builds, through sub_800B69C (which stores them at +0x04). */
 const struct entry_set gStaticData_0816B92C = {
-    gStaticData_0816B304 + 0x210, 0x100,
+    gStaticData_0816B514, 0x100,
 };
 
 const struct entry_set gStaticData_0816B934 = {
-    gStaticData_0816B61C + 0x174, 0x100,
+    gStaticData_0816B790, 0x100,
 };

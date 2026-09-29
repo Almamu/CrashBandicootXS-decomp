@@ -240,7 +240,8 @@
    "format": "u16[256] fill-meter ramp/palette table",
    "effort": "easy",
    "confidence": "high",
-   "notes": ""
+   "notes": "",
+   "status": "converted: src/data/boss_pictures_167ad4.c"
   },
   {
    "address": "0x08167CD4",
@@ -264,7 +265,8 @@
    "format": "per-level P1 meter grid table: s16 cols, rows, then per-level records (s16)",
    "effort": "medium",
    "confidence": "medium",
-   "notes": ""
+   "notes": "",
+   "status": "converted: src/data/boss_pictures_167ad4.c"
   },
   {
    "address": "0x08169AE8",
@@ -290,7 +292,8 @@
    "format": "u16[256] fill-meter table (P2 twin of 0x08167AD4)",
    "effort": "easy",
    "confidence": "high",
-   "notes": ""
+   "notes": "",
+   "status": "converted: src/data/boss_pictures_167ad4.c"
   },
   {
    "address": "0x08169CE8",
@@ -311,7 +314,8 @@
    "format": "per-level P2 singleton grid table (s16 cols, rows, then records)",
    "effort": "medium",
    "confidence": "medium",
-   "notes": ""
+   "notes": "",
+   "status": "converted: src/data/boss_pictures_167ad4.c"
   },
   {
    "address": "0x0816A810",
@@ -331,7 +335,8 @@
    ],
    "format": "table (element layout: see consumers); 2 word(s) look like ROM pointers",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/boss_pictures_167ad4.c"
   },
   {
    "address": "0x0816A820",
@@ -384,7 +389,8 @@
    "format": "s16[256] sine/direction table",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Generated-looking; could even be produced by a script, but a literal C array is simplest."
+   "notes": "Generated-looking; could even be produced by a script, but a literal C array is simplest.",
+   "status": "converted: src/data/boss_pictures_167ad4.c"
   },
   {
    "address": "0x0816AA20",
@@ -435,7 +441,8 @@
    "format": "CRC-16/CCITT lookup table (poly 0x1021, u16[256]) + 0x28 trailing bytes",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Link-cable packet checksum (sub_8001CB8, seed 0x1234)."
+   "notes": "Link-cable packet checksum (sub_8001CB8, seed 0x1234).",
+   "status": "converted: src/data/link_crc_16af10.c"
   },
   {
    "address": "0x0816B138",
@@ -455,7 +462,8 @@
    ],
    "format": "small constant (3e00)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/menu_tables_16b138.c"
   },
   {
    "address": "0x0816B13A",
@@ -478,7 +486,8 @@
    "element_count": 16,
    "format": "table of u16; 1 word(s) look like ROM pointers",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/menu_tables_16b138.c"
   },
   {
    "address": "0x0816B15A",
@@ -501,7 +510,8 @@
    "element_count": 16,
    "format": "BGR555 palette(s): 1 x 16 colours",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/menu_tables_16b138.c"
   },
   {
    "address": "0x0816B17A",
@@ -524,7 +534,8 @@
    "element_count": 16,
    "format": "table of u16",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/menu_tables_16b138.c"
   },
   {
    "address": "0x0816B19A",
@@ -547,7 +558,8 @@
    "element_count": 17,
    "format": "table of u16",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/menu_tables_16b138.c"
   },
   {
    "address": "0x0816B1BC",
@@ -570,7 +582,8 @@
    "element_count": 5,
    "format": "table of s32",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/menu_tables_16b138.c"
   },
   {
    "address": "0x0816B1D0",
@@ -593,7 +606,8 @@
    "element_count": 5,
    "format": "table of void*",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/menu_tables_16b138.c"
   },
   {
    "address": "0x0816B1E4",
@@ -618,7 +632,8 @@
    "element_count": null,
    "format": "table of struct icon_pos",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/menu_tables_16b138.c"
   },
   {
    "address": "0x0816B1EC",
@@ -641,7 +656,8 @@
    "element_count": 16,
    "format": "BGR555 palette(s): 1 x 16 colours",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/menu_tables_16b138.c"
   },
   {
    "address": "0x0816B20C",
@@ -664,7 +680,8 @@
    "element_count": 4,
    "format": "table of u32",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/menu_tables_16b138.c"
   },
   {
    "address": "0x0816B21C",
@@ -689,7 +706,8 @@
    "element_count": null,
    "format": "table of struct icon_pos",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/menu_tables_16b138.c"
   },
   {
    "address": "0x0816B244",
@@ -712,7 +730,8 @@
    "element_count": 5,
    "format": "table of u32",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/menu_tables_16b138.c"
   },
   {
    "address": "0x0816B258",
@@ -737,7 +756,8 @@
    "element_count": null,
    "format": "table of struct icon_pos",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/menu_tables_16b138.c"
   },
   {
    "address": "0x0816B270",
@@ -761,7 +781,8 @@
    "element_count": 3,
    "format": "table of u32",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/menu_tables_16b138.c"
   },
   {
    "address": "0x0816B27C",
@@ -786,7 +807,8 @@
    "element_count": null,
    "format": "table of struct icon_pos",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/menu_tables_16b138.c"
   },
   {
    "address": "0x0816B284",
@@ -826,7 +848,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/pause_rows_16b298.c"
   },
   {
    "address": "0x0816B2C0",
@@ -846,7 +869,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/pause_rows_16b298.c"
   },
   {
    "address": "0x0816B2E0",
@@ -868,7 +892,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/obj_sizes_16b2e0.c"
   },
   {
    "address": "0x0816B2EC",
@@ -890,7 +915,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/obj_sizes_16b2e0.c"
   },
   {
    "address": "0x0816B2F8",
@@ -917,7 +943,8 @@
    ],
    "format": "all zero (zero-initialised table)",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/obj_sizes_16b2e0.c"
   },
   {
    "address": "0x0816B300",
@@ -943,7 +970,8 @@
    ],
    "format": "all zero (zero-initialised table)",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/obj_sizes_16b2e0.c"
   },
   {
    "address": "0x0816B304",
@@ -970,7 +998,8 @@
    "element_count": null,
    "format": "table of struct anim_rec",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/motion_records_16b304.c"
   },
   {
    "address": "0x0816B61C",
@@ -995,7 +1024,8 @@
    "element_count": null,
    "format": "table of struct pctrl_anim",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/motion_records_16b304.c"
   },
   {
    "address": "0x0816B8C0",
@@ -1015,7 +1045,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/motion_records_16b304.c"
   },
   {
    "address": "0x0816B92C",
@@ -1075,7 +1106,8 @@
    ],
    "format": "table (element layout: see consumers); 1 word(s) look like ROM pointers",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/entry_set_16b93c.c"
   },
   {
    "address": "0x0816B98C",
@@ -1120,7 +1152,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/popup_tables_16b98c.c"
   },
   {
    "address": "0x0816B9AC",
@@ -1143,7 +1176,8 @@
    "confidence": "high",
    "element_type": "u16",
    "element_size": 2,
-   "element_count": 16
+   "element_count": 16,
+   "status": "converted: src/data/popup_tables_16b98c.c"
   },
   {
    "address": "0x0816B9CC",
@@ -1166,7 +1200,8 @@
    "confidence": "high",
    "element_type": "u16",
    "element_size": 2,
-   "element_count": 16
+   "element_count": 16,
+   "status": "converted: src/data/popup_tables_16b98c.c"
   },
   {
    "address": "0x0816B9EC",
@@ -1189,7 +1224,8 @@
    "confidence": "high",
    "element_type": "u16",
    "element_size": 2,
-   "element_count": 16
+   "element_count": 16,
+   "status": "converted: src/data/popup_tables_16b98c.c"
   },
   {
    "address": "0x0816BA0C",
@@ -1209,7 +1245,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/popup_tables_16b98c.c"
   },
   {
    "address": "0x0816BA2C",
@@ -1229,7 +1266,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/popup_tables_16b98c.c"
   },
   {
    "address": "0x0816BA4C",
@@ -1249,7 +1287,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/popup_tables_16b98c.c"
   },
   {
    "address": "0x0816BA6C",
@@ -1269,7 +1308,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/popup_tables_16b98c.c"
   },
   {
    "address": "0x0816BA8C",
@@ -1289,7 +1329,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/popup_tables_16b98c.c"
   },
   {
    "address": "0x0816BAAC",
@@ -1312,7 +1353,8 @@
    "confidence": "high",
    "element_type": "u16",
    "element_size": 2,
-   "element_count": 16
+   "element_count": 16,
+   "status": "converted: src/data/popup_tables_16b98c.c"
   },
   {
    "address": "0x0816BACC",
@@ -1332,7 +1374,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/popup_tables_16b98c.c"
   },
   {
    "address": "0x0816BAEC",
@@ -1355,7 +1398,8 @@
    "confidence": "high",
    "element_type": "u16",
    "element_size": 2,
-   "element_count": 16
+   "element_count": 16,
+   "status": "converted: src/data/popup_tables_16b98c.c"
   },
   {
    "address": "0x0816BB0C",
@@ -1376,7 +1420,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/popup_tables_16b98c.c"
   },
   {
    "address": "0x0816BB2C",
@@ -1397,7 +1442,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/popup_tables_16b98c.c"
   },
   {
    "address": "0x0816BB4C",
@@ -1420,7 +1466,8 @@
    "confidence": "high",
    "element_type": "u16",
    "element_size": 2,
-   "element_count": 16
+   "element_count": 16,
+   "status": "converted: src/data/popup_tables_16b98c.c"
   },
   {
    "address": "0x0816BB6C",
@@ -1440,7 +1487,8 @@
    ],
    "format": "table (element layout: see consumers); 1 word(s) look like ROM pointers",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/object_tables_16bb6c.c"
   },
   {
    "address": "0x0816BB94",
@@ -1462,7 +1510,8 @@
    ],
    "format": "small constant (281e140a)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/object_tables_16bb6c.c"
   },
   {
    "address": "0x0816BB98",
@@ -1485,7 +1534,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/object_tables_16bb6c.c"
   },
   {
    "address": "0x0816BBAE",
@@ -1508,7 +1558,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/object_tables_16bb6c.c"
   },
   {
    "address": "0x0816BBC4",
@@ -1536,7 +1587,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/object_tables_16bb6c.c"
   },
   {
    "address": "0x0816BBDA",
@@ -1558,7 +1610,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/object_tables_16bb6c.c"
   },
   {
    "address": "0x0816BBF0",
@@ -1581,7 +1634,8 @@
    "element_count": 42,
    "format": "table of s32",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/object_tables_16bb6c.c"
   },
   {
    "address": "0x0816BC98",
@@ -1605,7 +1659,8 @@
    "element_count": 22,
    "format": "table of s32[7]",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/object_tables_16bb6c.c"
   },
   {
    "address": "0x0816BF00",
@@ -1625,7 +1680,8 @@
    ],
    "format": "small constant (0000010000000000)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/object_tables_16bb6c.c"
   },
   {
    "address": "0x0816BF08",
@@ -1648,7 +1704,8 @@
    "element_count": 3,
    "format": "table of s32",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/object_tables_16bb6c.c"
   },
   {
    "address": "0x0816BF14",
@@ -1671,7 +1728,8 @@
    "element_count": null,
    "format": "table of struct three_words",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/object_tables_16bb6c.c"
   },
   {
    "address": "0x0816BF20",
@@ -1745,7 +1803,8 @@
    "element_count": null,
    "format": "table of struct speed_table",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/speed_table_16c090.c"
   },
   {
    "address": "0x0816C250",
@@ -1835,7 +1894,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/actor_tables_16c2d8.c"
   },
   {
    "address": "0x0816C308",
@@ -1856,7 +1916,8 @@
    ],
    "format": "small constant (040100)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/actor_tables_16c2d8.c"
   },
   {
    "address": "0x0816C30B",
@@ -1876,7 +1937,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/actor_tables_16c2d8.c"
   },
   {
    "address": "0x0816C358",
@@ -1896,7 +1958,8 @@
    ],
    "format": "small constant (100e0a20)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/actor_tables_16c2d8.c"
   },
   {
    "address": "0x0816C35C",
@@ -1916,7 +1979,8 @@
    ],
    "format": "small constant (181612)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/actor_tables_16c2d8.c"
   },
   {
    "address": "0x0816C35F",
@@ -1936,7 +2000,8 @@
    ],
    "format": "small constant (040404)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/actor_tables_16c2d8.c"
   },
   {
    "address": "0x0816C362",
@@ -1956,7 +2021,8 @@
    ],
    "format": "small constant (020202000000)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/actor_tables_16c2d8.c"
   },
   {
    "address": "0x0816C368",
@@ -1979,7 +2045,8 @@
    "element_count": 4,
    "format": "table of s32",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/actor_tables_16c2d8.c"
   },
   {
    "address": "0x0816C378",
@@ -2002,7 +2069,8 @@
    "element_count": 6,
    "format": "table of s32",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/actor_tables_16c2d8.c"
   },
   {
    "address": "0x0816C390",
@@ -2025,7 +2093,8 @@
    "element_count": 4,
    "format": "table of s32",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/actor_tables_16c2d8.c"
   },
   {
    "address": "0x0816C3A0",
@@ -2048,7 +2117,8 @@
    "element_count": 6,
    "format": "table of s32",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/actor_tables_16c2d8.c"
   },
   {
    "address": "0x0816C3B8",
@@ -2074,7 +2144,8 @@
    "element_count": 12,
    "format": "table of s32",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/actor_tables_16c2d8.c"
   },
   {
    "address": "0x0816C3E8",
@@ -2094,7 +2165,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/actor_tables_16c2d8.c"
   },
   {
    "address": "0x0816C3F4",
@@ -2114,7 +2186,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/actor_tables_16c2d8.c"
   },
   {
    "address": "0x0816C418",
@@ -2184,7 +2257,8 @@
    "element_count": null,
    "format": "table of struct vec3",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/velocity_16c460.c"
   },
   {
    "address": "0x0816C484",
@@ -2233,7 +2307,8 @@
    "element_count": null,
    "format": "table of struct xy_pair",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/map_tables_16c498.c"
   },
   {
    "address": "0x0816C4A0",
@@ -2256,7 +2331,8 @@
    "element_count": null,
    "format": "table of struct xy_pair",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/map_tables_16c498.c"
   },
   {
    "address": "0x0816C4A8",
@@ -2279,7 +2355,8 @@
    "element_count": null,
    "format": "table of struct xy_pair",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/map_tables_16c498.c"
   },
   {
    "address": "0x0816C4B0",
@@ -2302,7 +2379,8 @@
    "element_count": null,
    "format": "table of struct xy_pair",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/map_tables_16c498.c"
   },
   {
    "address": "0x0816C4B8",
@@ -2325,7 +2403,8 @@
    "element_count": null,
    "format": "table of struct xy_pair",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/map_tables_16c498.c"
   },
   {
    "address": "0x0816C4C0",
@@ -2349,7 +2428,8 @@
    "element_count": null,
    "format": "table of struct xy_pair",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/map_tables_16c498.c"
   },
   {
    "address": "0x0816C4C8",
@@ -2372,7 +2452,8 @@
    "element_count": null,
    "format": "table of struct xy_pair",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/map_tables_16c498.c"
   },
   {
    "address": "0x0816C4D0",
@@ -2395,7 +2476,8 @@
    "element_count": null,
    "format": "table of struct xy_pair",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/map_tables_16c498.c"
   },
   {
    "address": "0x0816C4D8",
@@ -2419,7 +2501,8 @@
    "element_count": null,
    "format": "table of struct xy_pair",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/map_tables_16c498.c"
   },
   {
    "address": "0x0816C508",
@@ -2443,7 +2526,8 @@
    "element_count": null,
    "format": "table of struct xy_pair",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/map_tables_16c498.c"
   },
   {
    "address": "0x0816C538",
@@ -2467,7 +2551,8 @@
    "element_count": 4,
    "format": "table of u32",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/map_tables_16c498.c"
   },
   {
    "address": "0x0816C548",
@@ -2492,7 +2577,8 @@
    "element_count": 4,
    "format": "table of u32",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/map_tables_16c498.c"
   },
   {
    "address": "0x0816C558",
@@ -2515,7 +2601,8 @@
    "element_count": 5,
    "format": "table of u32",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/map_tables_16c498.c"
   },
   {
    "address": "0x0816C56C",
@@ -2535,7 +2622,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/map_tables_16c498.c"
   },
   {
    "address": "0x0816C58C",
@@ -2601,7 +2689,8 @@
    "element_count": null,
    "format": "table of struct xy_pair",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/map_tables_16c5f0.c"
   },
   {
    "address": "0x0816C610",
@@ -2624,7 +2713,8 @@
    "element_count": 5,
    "format": "table of u32",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/map_tables_16c5f0.c"
   },
   {
    "address": "0x0816C624",
@@ -2647,7 +2737,8 @@
    "element_count": 4,
    "format": "table of u32",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/map_tables_16c5f0.c"
   },
   {
    "address": "0x0816C634",
@@ -2670,7 +2761,8 @@
    "element_count": 4,
    "format": "table of u32",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/map_tables_16c5f0.c"
   },
   {
    "address": "0x0816C644",
@@ -2694,7 +2786,8 @@
    "element_count": 12,
    "format": "table of s32",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/map_tables_16c5f0.c"
   },
   {
    "address": "0x0816C674",
@@ -2718,7 +2811,8 @@
    "element_count": 12,
    "format": "table of s32",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/map_tables_16c5f0.c"
   },
   {
    "address": "0x0816C6A4",

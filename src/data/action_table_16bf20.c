@@ -95,18 +95,18 @@ const struct actor_pmf gStaticData_0816BF20[42] = {
     ACTOR_PMF(sub_80149BC),
 };
 
-/* The 13-level animation rows (4-byte `struct level_anim` records in
- * the still-raw gStaticData_0816C090, 0x34 bytes per row), one pointer
- * per mode: actor_part_16048.c reads `gStaticData_0816C070[mode][level]`. */
-extern const u8 gStaticData_0816C090[];
+/* The 13-level animation rows (4-byte `struct level_anim` records,
+ * gStaticData_0816C0B0 in speed_table_16c090.c), one pointer per mode:
+ * actor_part_16048.c reads `gStaticData_0816C070[mode][level]`. */
+extern const u8 gStaticData_0816C0B0[8][13][4];
 
 const u8 *const gStaticData_0816C070[8] = {
-    gStaticData_0816C090 + 0x20,
-    gStaticData_0816C090 + 0x54,
-    gStaticData_0816C090 + 0x88,
-    gStaticData_0816C090 + 0xbc,
-    gStaticData_0816C090 + 0xf0,
-    gStaticData_0816C090 + 0x124,
-    gStaticData_0816C090 + 0x158,
-    gStaticData_0816C090 + 0x18c,
+    gStaticData_0816C0B0[0][0],
+    gStaticData_0816C0B0[1][0],
+    gStaticData_0816C0B0[2][0],
+    gStaticData_0816C0B0[3][0],
+    gStaticData_0816C0B0[4][0],
+    gStaticData_0816C0B0[5][0],
+    gStaticData_0816C0B0[6][0],
+    gStaticData_0816C0B0[7][0],
 };
