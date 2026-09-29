@@ -1,4 +1,5 @@
 #include "core.h"
+#include "actor_self.h"
 
 /* Same large per-instance "self" object family as actor_part17.c/
  * actor_part18.c/actor_part19.c/actor_part20.c (state at `self+0x28`,
@@ -30,13 +31,18 @@ extern s32 gUnknown_030014F0;
 extern s32 gUnknown_030014F8;
 extern s32 gUnknown_030014FC;
 
+struct actor_hp {
+    struct actor_self base;
+    s32 hp;             // 0x54 - refilled by sub_802F164, capped at gUnknown_030014E4
+};
+
 /* Constructor/reset: while the singleton flag (`gUnknown_03001506`) is
  * off, resets `self` to state 5/table-index 4 (idle-ish), plays a cue,
  * and - only if the current game-mode flag at `gUnknown_030012C0+0x8c`
  * is set - fires an extra one-shot effect via `sub_8022EA8`. */
 void sub_802F0DC(void *selfArg)
 {
-    register u8 *self asm("r4") = selfArg;
+    register struct actor_self *self asm("r4") = selfArg;
     register s32 zero asm("r5") = gUnknown_03001506;
 
     if (zero == 0) {
@@ -50,18 +56,18 @@ void sub_802F0DC(void *selfArg)
             register s32 five asm("r0") = 5;
             register s32 four asm("r1") = 4;
 
-            *(s32 *)(self + 0x28) = five;
-            *(s32 *)(self + 0x44) = zero;
-            *(s32 *)(self + 0xc) = four;
+            self->state = five;
+            self->stateTime = zero;
+            self->animIndex = four;
         }
         {
-            register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0x30);
+            register u16 anim asm("r0") = self->anims[4].duration;
             register u8 zero2 asm("r1") = 0;
 
-            *(u16 *)(self + 0x10) = anim;
-            self[0x12] = zero2;
+            *(u16 *)&self->animTimer = anim;
+            *(u8 *)&self->animDone = zero2;
         }
-        *(s32 *)(self + 8) = zero;
+        self->animTime = zero;
         PlaySfx(gUnknown_030012BC, 0x3b, 0x100);
         if (*((u8 *)gUnknown_030012C0 + 0x8c) != 0) {
             sub_8022EA8(gUnknown_030012C0, 0x2710);
@@ -86,36 +92,36 @@ void sub_802F0DC(void *selfArg)
  * frame timer and advances the round-robin index. */
 void sub_802F164(void *selfArg, s32 xArg, s32 yArg)
 {
-    register u8 *self asm("r5") = selfArg;
+    register struct actor_hp *self asm("r5") = selfArg;
     register s32 x asm("r3") = xArg;
     register s32 y asm("r4") = yArg;
-    s32 state = *(s32 *)(self + 0x28);
+    s32 state = self->base.state;
     u8 paused;
 
     if (state != 1 && state != 6 && state != 2 && state != 3) {
         return;
     }
 
-    if (*(s32 *)(self + 0xc) != 5) {
-        *(s32 *)(self + 0xc) = 5;
+    if (self->base.animIndex != 5) {
+        self->base.animIndex = 5;
         {
-            register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0x3c);
+            register u16 anim asm("r0") = self->base.anims[5].duration;
             register u8 zero1 asm("r1") = 0;
             register s32 zero2 asm("r2") = 0;
 
-            *(u16 *)(self + 0x10) = anim;
-            self[0x12] = zero1;
-            *(s32 *)(self + 8) = zero2;
+            *(u16 *)&self->base.animTimer = anim;
+            *(u8 *)&self->base.animDone = zero1;
+            self->base.animTime = zero2;
         }
     }
 
-    *(s32 *)(self + 0x1c) = x;
-    *(s32 *)(self + 0x20) = y;
+    self->base.x = x;
+    self->base.y = y;
 
-    if (*(s32 *)(self + 0x28) != 6) {
+    if (self->base.state != 6) {
         sub_8029BAC(0x50);
     }
-    *(s32 *)(self + 0x28) = 6;
+    self->base.state = 6;
 
     {
         register s32 *p1508 asm("r2") = &gUnknown_03001508;
@@ -124,7 +130,7 @@ void sub_802F164(void *selfArg, s32 xArg, s32 yArg)
 
         *p150c = zero;
         *p1508 = zero;
-        *(s32 *)(self + 0x44) = zero;
+        self->base.stateTime = zero;
     }
 
     paused = *((u8 *)gUnknown_030012C0 + 0x8c);
@@ -170,14 +176,14 @@ void sub_802F164(void *selfArg, s32 xArg, s32 yArg)
             register s32 *maxPtr asm("r4") = &gUnknown_030014E4;
             register s32 max asm("r1") = *maxPtr;
             register s32 mul asm("r0") = 0x14;
-            s32 v = *(s32 *)(self + 0x54) + sub_803ADB4(max * mul, 0x64);
+            s32 v = self->hp + sub_803ADB4(max * mul, 0x64);
 
-            *(s32 *)(self + 0x54) = v;
+            self->hp = v;
             {
                 register s32 cap asm("r4") = *maxPtr;
 
                 if (v > cap) {
-                    *(s32 *)(self + 0x54) = cap;
+                    self->hp = cap;
                 }
             }
         }

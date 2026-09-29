@@ -48,12 +48,12 @@ extern void sub_80312C4(void);
 void sub_8031504(void)
 {
     s32 i;
-    s32 base = 0x0600BFC0;
+    s32 base = VRAM + 0xBFC0;
     u32 zero = 0;
 
     for (i = base + 0x3c; i >= base; i -= 4)
         *(u32 *)i = zero;
-    DmaFill16(3, 0xFFFF, (void *)0x0600C000, 0x1000);
+    DmaFill16(3, 0xFFFF, (void *)(VRAM + 0xC000), 0x1000);
     sub_8031604();
     if (gUnknown_03001538 != 0) {
         struct actor_self *self;
@@ -68,7 +68,7 @@ void sub_8031504(void)
         }
         REG_DISPCNT |= 0x400;
         sub_80312C4();
-        pal = (vu16 *)0x05000020;
+        pal = (vu16 *)(PLTT + 0x20);
         DmaCopy16(3, gStaticData_08167AD4, pal, 0x20);
         if (gUnknown_03001538 == 5) {
             pal[15] = pal[1] = pal[4] = pal[8] = 0;

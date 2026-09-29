@@ -1,4 +1,5 @@
 #include "core.h"
+#include "actor_self.h"
 
 /* Same boss-weapon subsystem as actor_part20.c - see that file's header
  * comment and docs/matching/issue-58-0x08030334-actor.md.
@@ -32,7 +33,7 @@ void sub_803146C(s32 delta)
     gUnknown_03001578 = 0x12;
 
     if (remaining <= 0) {
-        u8 *self;
+        struct actor_self *self;
 
         gUnknown_0300156C = 0;
         gUnknown_03001558 = 0;
@@ -46,20 +47,20 @@ void sub_803146C(s32 delta)
             gUnknown_0300153C = 0;
 
             self = gUnknown_03001534;
-            *(s32 *)(self + 0xc) = one;
+            self->animIndex = one;
         }
         {
-            register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0xc);
+            register u16 anim asm("r0") = self->anims[1].duration;
             register u8 zero1 asm("r1") = 0;
 
-            *(u16 *)(self + 0x10) = anim;
-            self[0x12] = zero1;
+            *(u16 *)&self->animTimer = anim;
+            *(u8 *)&self->animDone = zero1;
         }
 
         {
             s32 frame = GetAnimFrameBaseOffset(self);
-            register s32 idx asm("r2") = *(s32 *)(self + 0xc);
-            register u8 *table asm("r3") = *(u8 **)self;
+            register s32 idx asm("r2") = self->animIndex;
+            register u8 *table asm("r3") = (u8 *)self->anims;
             register u8 *entryPtr asm("r1") = (u8 *)(idx * 0xc);
             register s32 four asm("r2");
             register s32 val asm("r1");
@@ -69,7 +70,7 @@ void sub_803146C(s32 delta)
             val = *(s16 *)(entryPtr + four);
 
             if (frame >= val) {
-                *(s32 *)(self + 8) = 0;
+                self->animTime = 0;
             }
         }
     } else {

@@ -497,7 +497,7 @@ asm(".align 2, 0");
  * set (mirroring `sub_803B0A8`'s use of the same halfword/byte pair). */
 void sub_803B4EC(void *selfArg)
 {
-    /* A single raw-offset `self`, not also a `struct anim_part_instance *`
+    /* A single `self` pointer, not also a `struct anim_part_instance *`
      * local - keeping both alive at once costs this compiler an extra
      * register and a spurious `mov` the ROM doesn't have (the struct type
      * is only needed transiently, for the GetAnimFrameBaseOffset() call
@@ -507,14 +507,14 @@ void sub_803B4EC(void *selfArg)
      * home) but still needs r4 for the other branch (used again after
      * the GetAnimFrameBaseOffset() call) - the ROM picks r4 for both
      * branches uniformly instead of branch-locally optimizing. */
-    register u8 *self asm("r4") = selfArg;
+    register struct actor_self *self asm("r4") = selfArg;
 
-    *(s32 *)(self + 0x14) = 1;
+    self->visible = 1;
 
-    if (self[0x12] != 0) {
+    if (self->animDone != 0) {
         if (self != NULL) {
-            u8 *mgr = *(u8 **)(self + 0x50);
-            sub_803AD80(self + *(s16 *)(mgr + 8), (void *)3, *(void **)(mgr + 0xc));
+            struct actor_vtable *mgr = self->vtable;
+            sub_803AD80((u8 *)self + mgr->m08.thisOffset, (void *)3, mgr->m08.fn);
         }
     } else {
         s32 base;
@@ -524,21 +524,21 @@ void sub_803B4EC(void *selfArg)
 
         register s32 delta asm("r1");
         asm("mov r3, #0x10\n\tldrsh r1, [r4, r3]" : "=r"(delta) : : "r3");
-        *(s32 *)(self + 0x08) += delta;
-        self[0x12] = 0;
+        self->animTime += delta;
+        self->animDone = 0;
         base = GetAnimFrameBaseOffset((struct anim_part_instance *)self);
         {
             s32 off;
 
-            idx = *(s32 *)(self + 0x0c);
-            table = *(struct anim_frame_record **)self;
+            idx = self->animIndex;
+            table = self->anims;
             off = idx * (s32)sizeof(struct anim_frame_record);
             off += (s32)table;
             rec = (struct anim_frame_record *)off;
         }
         if (base >= rec->loopThreshold) {
-            *(s32 *)(self + 0x08) -= (rec->loopThreshold - rec->loopBase) << 8;
-            self[0x12] = 1;
+            self->animTime -= (rec->loopThreshold - rec->loopBase) << 8;
+            self->animDone = 1;
         }
     }
 }
@@ -629,12 +629,18 @@ void sub_803B5B0(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
+/* `actor_self` plus the first derived-class word at +0x54. */
+struct actor_self_54 {
+    struct actor_self base;
+    s32 unk_54;         // 0x54
+};
+
 /* A fourth hidden function with no thumb_func_start of its own (see
  * sub_803B54C above, including its "no direct reference found" caveat)
- * - a plain self->field_54 getter. */
-s32 sub_803B5DC(void *self)
+ * - a plain self->unk_54 getter. */
+s32 sub_803B5DC(struct actor_self_54 *self)
 {
-    return *(s32 *)((u8 *)self + 0x54);
+    return self->unk_54;
 }
 
 asm(".align 2, 0");

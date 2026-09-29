@@ -193,13 +193,13 @@ void sub_802D9A8(void)
     s32 v = gUnknown_030014CC;
 
     if (v <= 0x4fff) {
-        DmaCopy16(3, gStaticData_0817AA6C, (void *)0x050001E0, 0x20);
+        DmaCopy16(3, gStaticData_0817AA6C, (void *)(PLTT + 0x1E0), 0x20);
     } else if (v > 0xbdff) {
-        DmaFill16(3, 0, (void *)0x050001E0, 0x20);
+        DmaFill16(3, 0, (void *)(PLTT + 0x1E0), 0x20);
     } else {
         s32 f = ((0xbe00 - v) << 8) / 0x6e00;
         s32 mask = 0x1f;
-        u16 *dst = (u16 *)0x050001E0;
+        u16 *dst = (u16 *)(PLTT + 0x1E0);
         u16 *src = gStaticData_0817AA6C;
         s32 mask2 = 0x1f;
         s32 i;
@@ -242,19 +242,19 @@ void sub_802DA68(void)
         v = *p;
         alt = p;
         if (v != 0)
-            *(vu16 *)0x0400000C = 0x1a09;
+            REG_BG2CNT = 0x1a09;
         else
-            *(vu16 *)0x0400000C = 0x1b09;
+            REG_BG2CNT = 0x1b09;
         *changed = 0;
         *alt ^= 1;
     }
     scale = (gUnknown_030014CC << 8) / 0x5500;
     base = sub_8029EB4();
     t = (gUnknown_030014C4 * 47 << 8) / gUnknown_030014CC + base;
-    *(vs32 *)0x04000028 = 0x4000 - ((t * scale) >> 8);
-    *(vs32 *)0x0400002C = 0x4400 - ((sub_8029E98() * scale) >> 8);
+    *(vs32 *)REG_ADDR_BG2X = 0x4000 - ((t * scale) >> 8);
+    *(vs32 *)REG_ADDR_BG2Y = 0x4400 - ((sub_8029E98() * scale) >> 8);
     {
-        vu16 *pa = (vu16 *)0x04000020;
+        vu16 *pa = (vu16 *)REG_ADDR_BG2PA;
 
         *pa++ = scale;
         *pa++ = 0;
