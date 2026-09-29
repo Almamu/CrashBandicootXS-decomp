@@ -128,13 +128,13 @@ void sub_802DE70(void)
 {
     u8 buf[0x100];
 
-    *(vu16 *)0x04000000 |= 0x400;
+    REG_DISPCNT |= 0x400;
     FillDotPattern(buf, 0);
-    DmaCopy16(3, buf, (void *)0x0600D000, 0x100);
+    DmaCopy16(3, buf, (void *)(VRAM + 0xD000), 0x100);
     FillDotPattern(buf, 0x80);
-    DmaCopy16(3, buf, (void *)0x0600D800, 0x100);
+    DmaCopy16(3, buf, (void *)(VRAM + 0xD800), 0x100);
     {
-        s32 base = 0x0600BFC0;
+        s32 base = VRAM + 0xBFC0;
         u32 zero = 0;
         s32 p;
 

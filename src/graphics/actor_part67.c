@@ -1,4 +1,5 @@
 #include "core.h"
+#include "actor_self.h"
 
 /* Same `InitActorPart`-rooted per-instance "self" object family
  * documented in actor_part57.c/actor_part28.c/actor_part32.c: a "part
@@ -20,6 +21,28 @@ extern void sub_803388C(void);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void *gUnknown_030012BC;
 
+/* The second object kind (vtable gStaticData_087E5554). */
+struct actor_orbiter {
+    struct actor_self base; // base.unk_2C[0]: the one-shot flag
+    s32 hp;             // 0x54
+    u8 dead;            // 0x58
+    u8 gate;            // 0x59 - the constructor's cached gate byte
+    u8 unk_5A[2];
+    s32 offX;           // 0x5C - added to the singleton's position
+    s32 offY;           // 0x60
+    s32 offZ;           // 0x64
+    s32 orbitTimer;     // 0x68 - frames until the next effect spawn
+    s32 lap;            // 0x6C
+};
+
+/* The singleton table sub_80338C4 returns. */
+struct orbit_table {
+    s32 unk_00;
+    s32 period;         // 0x04 - orbitTimer reload within a lap cycle
+    s32 laps;           // 0x08 - lap count that ends a cycle
+    s32 cyclePeriod;    // 0x0C - orbitTimer reload once a cycle ends
+};
+
 /* Applies `dmg` damage to `self+0x54` and once it drops to zero (or
  * below): marks `self` dead (`+0x58=1`), sets the one-shot flag
  * (`+0x2c=1`), fires the singleton's own death transition
@@ -29,19 +52,19 @@ extern void *gUnknown_030012BC;
  * a hit sound. Same shape as `sub_8033AE0` (actor_part30.c). */
 void sub_8034110(void *selfArg, s32 dmg)
 {
-    u8 *self = selfArg;
+    struct actor_orbiter *self = selfArg;
 
     sub_8033804();
-    *(s32 *)(self + 0x54) -= dmg;
+    self->hp -= dmg;
 
-    if (*(s32 *)(self + 0x54) <= 0) {
+    if (self->hp <= 0) {
         u8 *flag;
         register s32 zero asm("r3");
         register s32 one asm("r1");
         s32 idx;
 
         sub_803388C();
-        flag = self + 0x58;
+        flag = &self->dead;
         zero = 0;
         one = 1;
         *flag = one;
@@ -55,17 +78,17 @@ void sub_8034110(void *selfArg, s32 dmg)
                 idx = 0;
             }
         }
-        *(s32 *)(self + 0x28) = one;
-        *(s32 *)(self + 0x44) = zero;
-        *(s32 *)(self + 0xc) = idx;
+        self->base.state = one;
+        self->base.stateTime = zero;
+        self->base.animIndex = idx;
         {
-            register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + idx * 12);
+            register u16 anim asm("r0") = self->base.anims[idx].duration;
             register u8 zero2 asm("r1") = 0;
 
-            *(u16 *)(self + 0x10) = anim;
-            self[0x12] = zero2;
+            *(u16 *)&self->base.animTimer = anim;
+            *(u8 *)&self->base.animDone = zero2;
         }
-        *(s32 *)(self + 8) = zero;
+        self->base.animTime = zero;
         PlaySfx(gUnknown_030012BC, 4, 0x100);
     } else {
         PlaySfx(gUnknown_030012BC, 0x45, 0x100);
@@ -77,7 +100,7 @@ extern s32 sub_8033900(void);
 extern s32 sub_80338F4(void);
 extern s32 sub_80338E8(void);
 extern void sub_802E5E4(s32 x, s32 y);
-extern void *sub_80338C4(void);
+extern struct orbit_table *sub_80338C4(void);
 
 /* Per-frame position sync (`+0x1c`/`+0x20`/`+0x24` from the singleton's
  * position plus `self`'s own `+0x5c`/`+0x60`/`+0x64` offsets), calling
@@ -90,40 +113,40 @@ extern void *sub_80338C4(void);
  * entry; otherwise just decrements the orbit counter. */
 void sub_8034188(void *selfArg)
 {
-    register u8 *self asm("r5") = selfArg;
+    register struct actor_orbiter *self asm("r5") = selfArg;
 
     sub_802A7B8(self);
-    *(s32 *)(self + 0x1c) = sub_8033900() + *(s32 *)(self + 0x5c);
-    *(s32 *)(self + 0x20) = sub_80338F4() + *(s32 *)(self + 0x60);
+    self->base.x = sub_8033900() + self->offX;
+    self->base.y = sub_80338F4() + self->offY;
     {
         s32 base = sub_80338E8();
-        register s32 field asm("r1") = *(s32 *)(self + 0x64);
+        register s32 field asm("r1") = self->offZ;
         register s32 z asm("r2") = base + field;
-        *(s32 *)(self + 0x24) = z;
+        self->base.z = z;
     }
 
-    if (*(s32 *)(self + 0x28) == 0 && *(s32 *)(self + 0x34) > 0x2800) {
-        register s32 origCounter asm("r6") = *(s32 *)(self + 0x68);
+    if (self->base.state == 0 && self->base.depth > 0x2800) {
+        register s32 origCounter asm("r6") = self->orbitTimer;
         register s32 result asm("r0");
 
         if (origCounter == 0) {
             register s32 lap asm("r4");
 
-            sub_802E5E4(*(s32 *)(self + 0x1c), *(s32 *)(self + 0x20));
-            lap = *(s32 *)(self + 0x6c) + 1;
-            *(s32 *)(self + 0x6c) = lap;
+            sub_802E5E4(self->base.x, self->base.y);
+            lap = self->lap + 1;
+            self->lap = lap;
 
-            if (lap == *(s32 *)((u8 *)sub_80338C4() + 8)) {
-                *(s32 *)(self + 0x6c) = origCounter;
-                result = *(s32 *)((u8 *)sub_80338C4() + 0xc);
+            if (lap == sub_80338C4()->laps) {
+                self->lap = origCounter;
+                result = sub_80338C4()->cyclePeriod;
             } else {
-                result = *(s32 *)((u8 *)sub_80338C4() + 4);
+                result = sub_80338C4()->period;
             }
         } else {
             result = origCounter - 1;
         }
 
-        *(s32 *)(self + 0x68) = result;
+        self->orbitTimer = result;
     }
 }
 
@@ -132,39 +155,39 @@ void sub_8034188(void *selfArg)
  * per-frame update is driven elsewhere. */
 void sub_80341F8(void *selfArg)
 {
-    register u8 *self asm("r5") = selfArg;
+    register struct actor_orbiter *self asm("r5") = selfArg;
 
-    *(s32 *)(self + 0x1c) = sub_8033900() + *(s32 *)(self + 0x5c);
-    *(s32 *)(self + 0x20) = sub_80338F4() + *(s32 *)(self + 0x60);
+    self->base.x = sub_8033900() + self->offX;
+    self->base.y = sub_80338F4() + self->offY;
     {
         s32 base = sub_80338E8();
-        register s32 field asm("r1") = *(s32 *)(self + 0x64);
+        register s32 field asm("r1") = self->offZ;
         register s32 z asm("r2") = base + field;
-        *(s32 *)(self + 0x24) = z;
+        self->base.z = z;
     }
 
-    if (*(s32 *)(self + 0x28) == 0 && *(s32 *)(self + 0x34) > 0x2800) {
-        register s32 origCounter asm("r6") = *(s32 *)(self + 0x68);
+    if (self->base.state == 0 && self->base.depth > 0x2800) {
+        register s32 origCounter asm("r6") = self->orbitTimer;
         register s32 result asm("r0");
 
         if (origCounter == 0) {
             register s32 lap asm("r4");
 
-            sub_802E5E4(*(s32 *)(self + 0x1c), *(s32 *)(self + 0x20));
-            lap = *(s32 *)(self + 0x6c) + 1;
-            *(s32 *)(self + 0x6c) = lap;
+            sub_802E5E4(self->base.x, self->base.y);
+            lap = self->lap + 1;
+            self->lap = lap;
 
-            if (lap == *(s32 *)((u8 *)sub_80338C4() + 8)) {
-                *(s32 *)(self + 0x6c) = origCounter;
-                result = *(s32 *)((u8 *)sub_80338C4() + 0xc);
+            if (lap == sub_80338C4()->laps) {
+                self->lap = origCounter;
+                result = sub_80338C4()->cyclePeriod;
             } else {
-                result = *(s32 *)((u8 *)sub_80338C4() + 4);
+                result = sub_80338C4()->period;
             }
         } else {
             result = origCounter - 1;
         }
 
-        *(s32 *)(self + 0x68) = result;
+        self->orbitTimer = result;
     }
 }
 
@@ -172,9 +195,9 @@ void sub_80341F8(void *selfArg)
  * object kind. */
 u8 sub_8034264(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct actor_orbiter *self = selfArg;
 
-    return self[0x58];
+    return self->dead;
 }
 
 /* No-op stub. */

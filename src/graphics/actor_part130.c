@@ -15,10 +15,9 @@
  *    state at `self+0x28`, table-index/"kind" at `self+0xc`, an
  *    anim-frame halfword/byte pair at `self+0x10`/`self+0x12`, an
  *    accumulator at `self+8`, a "part table" pointer at `self+0`, and
- *    an event/trampoline table pointer at `self+0x50` - none of these
- *    objects' full shapes are pinned down yet project-wide, so accesses
- *    stay raw offsets with doc comments, matching every neighboring
- *    `actor_part*.c` file's own convention.
+ *    an event/trampoline table pointer at `self+0x50` - the common
+ *    `struct actor_self` prefix, with each class's own fields from
+ *    +0x54 on in a small per-class struct here.
  *
  * 2. The `gUnknown_030015AC` singleton system first constructed by
  *    `sub_80331BC` (this file) and already partially characterized by
@@ -169,6 +168,28 @@ struct actor_2718 {
     s32 hp;             // 0x54
     s32 velX;           // 0x58
     s32 velY;           // 0x5C
+};
+
+/* The seek effect built by sub_8032890 (method table
+ * gStaticData_087E5474; sub_803283C is its destructor). */
+struct actor_2890 {
+    struct actor_self base;
+    s32 hp;             // 0x54
+    s32 velX;           // 0x58
+    s32 velY;           // 0x5C
+    s32 reward;         // 0x60 - the spawn parameter, see sub_803283C
+};
+
+/* The patrol object built by sub_80329D4 (method table
+ * gStaticData_087E54AC). */
+struct actor_29d4 {
+    struct actor_self base;
+    s32 hp;             // 0x54
+    s32 unk_58;         // 0x58 - the constructor's `b`
+    s32 unk_5C;         // 0x5C - the constructor's `c`
+    s32 speed;          // 0x60 - Z step, decays by 5 down to 0x14
+    s32 unk_64;         // 0x64
+    u8 unk_68;          // 0x68 - set by sub_8032A1C
 };
 
 /* An `InitActorPart`-based constructor: forwards its 4 real arguments
@@ -327,29 +348,29 @@ void sub_803283C(struct actor_283c *self, u32 flags)
  * there), and stashes `spawnParam` at `self+0x60` rather than `0x5c`. */
 void *sub_8032890(void *selfArg, s32 a, s32 b, s32 c, s32 spawnParam)
 {
-    u8 *self = selfArg;
+    struct actor_2890 *self = selfArg;
     register s32 dy asm("r3");
     s32 sum;
     s32 q;
 
     InitActorPart(self, a, b, c, 1);
-    *(s32 *)(self + 0x54) = 1;
-    *(void **)(self + 0x50) = gStaticData_087E5474;
-    *(s32 *)(self + 0x60) = spawnParam;
+    self->hp = 1;
+    self->base.vtable = (struct actor_vtable *)gStaticData_087E5474;
+    self->reward = spawnParam;
 
-    *(s32 *)(self + 0x20) += sub_8029E98();
+    self->base.y += sub_8029E98();
 
     {
         register s32 ebResult asm("r0") = sub_8029EB4();
-        register s32 old asm("r1") = *(s32 *)(self + 0x1c);
+        register s32 old asm("r1") = self->base.x;
         dy = old + ebResult;
     }
-    *(s32 *)(self + 0x1c) = dy;
+    self->base.x = dy;
 
     {
         s32 a1 = dy - 0x1000;
         s32 a2 = (a1 ^ (a1 >> 31)) - (a1 >> 31);
-        s32 dx = *(s32 *)(self + 0x20);
+        s32 dx = self->base.y;
         s32 b1 = dx - 0x1000;
         s32 b2 = (b1 ^ (b1 >> 31)) - (b1 >> 31);
 
@@ -359,8 +380,8 @@ void *sub_8032890(void *selfArg, s32 a, s32 b, s32 c, s32 spawnParam)
         }
         q = sum >> 0xb;
 
-        *(s32 *)(self + 0x58) = sub_803ADB4(0x1000 - dy, q);
-        *(s32 *)(self + 0x5c) = sub_803ADB4(0x1000 - dx, q);
+        self->velX = sub_803ADB4(0x1000 - dy, q);
+        self->velY = sub_803ADB4(0x1000 - dx, q);
     }
 
     return self;
@@ -380,33 +401,33 @@ s32 sub_803290C(void *self)
  * #62, `actor_part30.c`). */
 void sub_8032910(void *selfArg, s32 delta)
 {
-    u8 *self = selfArg;
-    s32 health = *(s32 *)(self + 0x54) - delta;
+    struct actor_2890 *self = selfArg;
+    s32 health = self->hp - delta;
 
-    *(s32 *)(self + 0x54) = health;
+    self->hp = health;
     if (health > 0) {
         return;
     }
 
-    *(s32 *)(self + 0x18) = 4;
+    self->base.unk_18 = 4;
     PlaySfx(gUnknown_030012BC, 4, 0x100);
     {
         register s32 one asm("r0") = 1;
 
-        *(s32 *)(self + 0x28) = one;
+        self->base.state = one;
         {
             register s32 zero asm("r2") = 0;
 
-            *(s32 *)(self + 0x44) = zero;
-            *(s32 *)(self + 0xc) = one;
+            self->base.stateTime = zero;
+            self->base.animIndex = one;
             {
-                u16 anim = *(u16 *)(*(u8 **)self + 0xc);
+                u16 anim = self->base.anims[1].duration;
                 register u8 zero2 asm("r1") = 0;
 
-                *(u16 *)(self + 0x10) = anim;
-                self[0x12] = zero2;
+                *(u16 *)&self->base.animTimer = anim;
+                *(u8 *)&self->base.animDone = zero2;
             }
-            *(s32 *)(self + 8) = zero;
+            self->base.animTime = zero;
         }
     }
 }
@@ -442,20 +463,20 @@ void sub_8032950(void *selfArg)
  * matched verbatim for `sub_80305F8` (issue #58, `actor_part20d.c`). */
 void *sub_80329D4(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 {
-    u8 *self = selfArg;
+    struct actor_29d4 *self = selfArg;
     register s32 bReg asm("r6") = b;
     register s32 cReg asm("r8") = c;
     register s32 dReg asm("r0") = d;
     register s32 health asm("r5") = 2;
 
     InitActorPart(self, a, b, c, dReg);
-    *(s32 *)(self + 0x54) = health;
-    *(void **)(self + 0x50) = gStaticData_087E54AC;
-    *(s32 *)(self + 0x58) = bReg;
-    *(s32 *)(self + 0x5c) = cReg;
-    *(s32 *)(self + 0x64) = 0;
-    *(s32 *)(self + 0x60) = 0x95;
-    self[0x68] = 0;
+    self->hp = health;
+    self->base.vtable = (struct actor_vtable *)gStaticData_087E54AC;
+    self->unk_58 = bReg;
+    self->unk_5C = cReg;
+    self->unk_64 = 0;
+    self->speed = 0x95;
+    self->unk_68 = 0;
 
     return self;
 }
@@ -463,8 +484,8 @@ void *sub_80329D4(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 /* Trivial `self+0x68` byte setter. */
 void sub_8032A1C(void *selfArg)
 {
-    u8 *self = selfArg;
-    self[0x68] = 1;
+    struct actor_29d4 *self = selfArg;
+    self->unk_68 = 1;
 }
 
 /* Patrol-speed decay plus a death transition: advances `self+0x24` by
@@ -477,43 +498,43 @@ void sub_8032A1C(void *selfArg)
  * `sub_8032910` above. */
 void sub_8032A24(void *selfArg)
 {
-    register u8 *self asm("r4") = selfArg;
-    s32 sum = *(s32 *)(self + 0x24);
-    s32 delta = *(s32 *)(self + 0x60);
+    register struct actor_29d4 *self asm("r4") = selfArg;
+    s32 sum = self->base.z;
+    s32 delta = self->speed;
 
     sum += delta;
-    *(s32 *)(self + 0x24) = sum;
+    self->base.z = sum;
     delta -= 5;
-    *(s32 *)(self + 0x60) = delta;
+    self->speed = delta;
     if (delta <= 0x13) {
-        *(s32 *)(self + 0x60) = 0x14;
+        self->speed = 0x14;
     }
 
     if (sub_802A6EC(self)) {
-        u8 *player = gUnknown_03000884;
-        u8 *table = *(u8 **)(player + 0x50);
+        struct actor_self *player = gUnknown_03000884;
+        struct actor_vtable *table = player->vtable;
 
-        sub_803AD80(player + *(s16 *)(table + 0x20), 6, *(void **)(table + 0x24));
+        sub_803AD80((u8 *)player + table->m20.thisOffset, 6, table->m20.fn);
 
-        *(s32 *)(self + 0x18) = 4;
+        self->base.unk_18 = 4;
         PlaySfx(gUnknown_030012BC, 4, 0x100);
         {
             register s32 one asm("r0") = 1;
 
-            *(s32 *)(self + 0x28) = one;
+            self->base.state = one;
             {
                 register s32 zero asm("r2") = 0;
 
-                *(s32 *)(self + 0x44) = zero;
-                *(s32 *)(self + 0xc) = one;
+                self->base.stateTime = zero;
+                self->base.animIndex = one;
                 {
-                    u16 anim = *(u16 *)(*(u8 **)self + 0xc);
+                    u16 anim = self->base.anims[1].duration;
                     register u8 zero2 asm("r1") = 0;
 
-                    *(u16 *)(self + 0x10) = anim;
-                    self[0x12] = zero2;
+                    *(u16 *)&self->base.animTimer = anim;
+                    *(u8 *)&self->base.animDone = zero2;
                 }
-                *(s32 *)(self + 8) = zero;
+                self->base.animTime = zero;
             }
         }
     }
@@ -575,7 +596,7 @@ void sub_8032AF8(void)
         register u8 *flagAddr asm("r5") = &gUnknown_030015FE;
         register u16 white asm("r4") = 0x7fff;
         u16 *src = gStaticData_08169AE8;
-        vu16 *dst = (vu16 *)0x05000020;
+        vu16 *dst = (vu16 *)(PLTT + 0x20);
         vu16 *end = (vu16 *)((u8 *)dst + 0x1e);
 
         do {
@@ -626,7 +647,7 @@ void sub_8032B6C(void)
     {
         if (gUnknown_03001594 == 0)
         {
-            gUnknown_03001590 = *(u16 *)((u8 *)gUnknown_030008B4 + 0x1e);
+            gUnknown_03001590 = ((u16 *)gUnknown_030008B4)[15];
             gUnknown_03001594 = 1;
         }
         {
@@ -642,7 +663,7 @@ void sub_8032B6C(void)
     {
         if (gUnknown_03001594 == 0)
         {
-            gUnknown_03001590 = *(u16 *)((u8 *)gUnknown_030008B4 + 0x1e);
+            gUnknown_03001590 = ((u16 *)gUnknown_030008B4)[15];
             gUnknown_03001594 = 1;
         }
         {
@@ -752,7 +773,7 @@ void sub_8032C0C(void)
     }
 
     if (gUnknown_030015C8 <= 0x27ff) {
-        gUnknown_030015E4 = *(s32 *)((u8 *)gUnknown_030015DC + 0x10);
+        gUnknown_030015E4 = ((struct singleton_kind *)gUnknown_030015DC)->unk_10;
         gUnknown_030015E8 = 0;
         SingletonSetKind(3, 0);
         gUnknown_030015EC = 0;
@@ -820,7 +841,7 @@ void sub_8032EA0(void)
     if (gUnknown_030015EC > 3 && gUnknown_030015C8 > 0x8000) {
         gUnknown_030015F4 = 0;
         gUnknown_030015F0 = 0;
-        gUnknown_030015E4 = *(s32 *)((u8 *)gUnknown_030015DC + 0x10);
+        gUnknown_030015E4 = ((struct singleton_kind *)gUnknown_030015DC)->unk_10;
         gUnknown_030015E8 = 0;
         SingletonSetKind(2, 0);
         if (gUnknown_030015F8 > 2) {
@@ -888,7 +909,7 @@ void sub_8033048(void)
 void sub_80330FC(void *tileRow)
 {
     u16 *src = tileRow;
-    u8 *row = (u8 *)((gUnknown_03001598 + 0x18) << 11) + (0x06000000 + (0x20 - gUnknown_030015A0) / 4 * 2) + ((0x20 - gUnknown_030015A4) / 2 * 32 + 2);
+    u8 *row = (u8 *)((gUnknown_03001598 + 0x18) << 11) + (VRAM + (0x20 - gUnknown_030015A0) / 4 * 2) + ((0x20 - gUnknown_030015A4) / 2 * 32 + 2);
     s32 i, j;
 
     for (i = 0; i < gUnknown_030015A4; i++) {
@@ -1097,12 +1118,12 @@ void sub_8033604(void)
     s32 base;
     u32 zero;
 
-    DmaCopy16(3, gStaticData_08169AE8, (void *)0x05000020, 0x20);
-    base = 0x0600BFC0;
+    DmaCopy16(3, gStaticData_08169AE8, (void *)(PLTT + 0x20), 0x20);
+    base = VRAM + 0xBFC0;
     zero = 0;
     for (i = base + 0x3c; i >= base; i -= 4)
         *(u32 *)i = zero;
-    DmaFill16(3, 0xFFFF, (void *)0x0600C000, 0x1000);
+    DmaFill16(3, 0xFFFF, (void *)(VRAM + 0xC000), 0x1000);
     sub_80336CC();
     if (gUnknown_030015B0 != 0) {
         struct actor_self *self;
@@ -1165,7 +1186,7 @@ void sub_80336CC(void)
         off += heights[k] << 5;
     }
     gUnknown_030015A8 = 0xFF - sum;
-    dst = (u32 *)(((0xFF - sum) << 6) + 0x06008000);
+    dst = (u32 *)(((0xFF - sum) << 6) + (VRAM + 0x8000));
     for (row_i = 0; row_i <= 0; row_i++) {
         u8 *src;
         u8 *row;

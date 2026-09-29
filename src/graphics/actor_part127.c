@@ -19,7 +19,15 @@
  * other function here matches under both compilers - see
  * docs/matching/issue-51-54-naked-retry.md. */
 
-extern void *gUnknown_030012C0;
+/* The gUnknown_030012C0 fields read here. */
+struct game_state {
+    u8 unk_00[0x78];
+    s32 mode;           // 0x78 - the current hazard tier (0-3)
+    u8 unk_7C[0x10];
+    u8 paused;          // 0x8C
+};
+
+extern struct game_state *gUnknown_030012C0;
 extern void *gUnknown_030012BC;
 extern void *gUnknown_03001490;
 extern void *gUnknown_03001494;
@@ -106,7 +114,7 @@ void sub_802B364(struct actor_self *self)
         ACTOR_SET_STATE(self, 10, 10);
     }
     if (gUnknown_0300149C != 0 && --gUnknown_0300149C != 0 && gUnknown_030014A0 == 0
-        && *(s32 *)((u8 *)gUnknown_030012C0 + 0x78) != 3)
+        && gUnknown_030012C0->mode != 3)
         self->unk_2C[0] = ((u32)gUnknown_0300149C >> 2) & 1;
     else
         self->unk_2C[0] = 1;
@@ -157,7 +165,7 @@ void sub_802B364(struct actor_self *self)
     if (gUnknown_03001494 != NULL) {
         sub_802D3A8(gUnknown_03001494, self->x, self->y, self->z);
     } else {
-        s32 tier = *(s32 *)((u8 *)gUnknown_030012C0 + 0x78);
+        s32 tier = gUnknown_030012C0->mode;
 
         gUnknown_03001494 = sub_802B1A8(self->x, self->y, self->z, tier);
         if (sub_8029794())
@@ -267,7 +275,7 @@ void sub_802B5B4(struct actor_self *self)
  * are no longer needed (`one`, sharing r4 with the now-dead `self`). */
 s32 sub_802B730(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct actor_self *self = selfArg;
     register s32 result asm("r0");
     register s32 *usedTimer asm("r1") = &gUnknown_0300149C;
 
@@ -279,25 +287,25 @@ s32 sub_802B730(void *selfArg)
     {
         register void **effectAddr asm("r2") = &gUnknown_03001494;
         void **playerAddr = (void **)&gUnknown_030012C0;
-        s32 tier = *(s32 *)((u8 *)(*playerAddr) + 0x78);
+        s32 tier = ((struct game_state *)*playerAddr)->mode;
 
         if (tier == 0) {
             PlaySfx(gUnknown_030012BC, 0x1b, 0x100);
-            QueueVramDmaTransfer(gStaticData_0817A728, (void *)0x05000200, 0x20, 0x10);
+            QueueVramDmaTransfer(gStaticData_0817A728, (void *)OBJ_PLTT, 0x20, 0x10);
             {
                 register s32 state asm("r0") = 6;
                 register s32 idx asm("r1") = 5;
 
-                *(s32 *)(self + 0x28) = state;
-                *(s32 *)(self + 0x44) = tier;
-                *(s32 *)(self + 0xc) = idx;
+                self->state = state;
+                self->stateTime = tier;
+                self->animIndex = idx;
                 {
-                    register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0x3c);
+                    register u16 anim asm("r0") = self->anims[5].duration;
                     register u8 zero asm("r6") = 0;
 
-                    *(u16 *)(self + 0x10) = anim;
-                    self[0x12] = zero;
-                    *(s32 *)(self + 8) = tier;
+                    *(u16 *)&self->animTimer = anim;
+                    *(u8 *)&self->animDone = zero;
+                    self->animTime = tier;
 
                     {
                         u8 *reg1480 = &gUnknown_03001480;
@@ -305,9 +313,9 @@ s32 sub_802B730(void *selfArg)
 
                         *reg1480 = one;
                         {
-                            u8 *player = *playerAddr;
+                            struct game_state *player = *playerAddr;
 
-                            if (player[0x8c] == 0) {
+                            if (player->paused == 0) {
                                 sub_8023234(player);
                             }
                         }
@@ -343,7 +351,7 @@ end:
  * function would ever take the tier-clear branch). */
 s32 sub_802B7E0(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct actor_self *self = selfArg;
     register s32 result asm("r0");
     register s32 *usedTimer asm("r1") = &gUnknown_0300149C;
 
@@ -355,22 +363,22 @@ s32 sub_802B7E0(void *selfArg)
     {
         register void **effectAddr asm("r4") = &gUnknown_03001494;
         void **playerAddr = (void **)&gUnknown_030012C0;
-        s32 tier = *(s32 *)((u8 *)(*playerAddr) + 0x78);
+        s32 tier = ((struct game_state *)*playerAddr)->mode;
 
         if (tier == 0) {
             register s32 state asm("r0") = 0xc;
             register s32 idx asm("r1") = 0xb;
 
-            *(s32 *)(self + 0x28) = state;
-            *(s32 *)(self + 0x44) = tier;
-            *(s32 *)(self + 0xc) = idx;
+            self->state = state;
+            self->stateTime = tier;
+            self->animIndex = idx;
             {
-                register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0x84);
+                register u16 anim asm("r0") = self->anims[11].duration;
                 register u8 zero asm("r4") = 0;
 
-                *(u16 *)(self + 0x10) = anim;
-                self[0x12] = zero;
-                *(s32 *)(self + 8) = tier;
+                *(u16 *)&self->animTimer = anim;
+                *(u8 *)&self->animDone = zero;
+                self->animTime = tier;
 
                 PlaySfx(gUnknown_030012BC, 0x33, 0x100);
                 gUnknown_030014A3 = zero;
@@ -474,30 +482,30 @@ void sub_802B8E8(struct actor_self *self)
  * `docs/matching/issue-52-gap-b364.md`. */
 void sub_802B990(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct actor_self *self = selfArg;
     register s32 index asm("r5");
     register u16 anim asm("r0");
 
-    if (self[0x12] == 0)
+    if (self->animDone == 0)
         goto tail;
 
     sub_8029BAC(0x24);
-    index = *(s32 *)(self + 0xc);
+    index = self->animIndex;
     if (index == 0)
         goto gated;
 
     {
         register s32 zero asm("r2") = 0;
 
-        *(s32 *)(self + 0xc) = zero;
+        self->animIndex = zero;
         {
-            register u16 a asm("r0") = *(u16 *)(*(u8 **)self + 0);
+            register u16 a asm("r0") = self->anims[0].duration;
             register u8 zero1 asm("r1") = 0;
 
-            *(u16 *)(self + 0x10) = a;
-            self[0x12] = zero1;
+            *(u16 *)&self->animTimer = a;
+            *(u8 *)&self->animDone = zero1;
         }
-        *(s32 *)(self + 8) = zero;
+        self->animTime = zero;
     }
     goto tail;
 
@@ -505,22 +513,22 @@ gated:
     if ((u16)sub_8000E1C(3) != 0)
         goto restore;
 
-    *(s32 *)(self + 0xc) = 1;
-    anim = *(u16 *)(*(u8 **)self + 0xc);
+    self->animIndex = 1;
+    anim = self->anims[1].duration;
     goto join;
 
 restore:
-    *(s32 *)(self + 0xc) = index;
-    anim = *(u16 *)(*(u8 **)self + 0);
+    self->animIndex = index;
+    anim = self->anims[0].duration;
 
 join:
     {
         register u8 zero1 asm("r1") = 0;
 
-        *(u16 *)(self + 0x10) = anim;
-        self[0x12] = zero1;
+        *(u16 *)&self->animTimer = anim;
+        *(u8 *)&self->animDone = zero1;
     }
-    *(s32 *)(self + 8) = index;
+    self->animTime = index;
 
 tail:
     if (gUnknown_030014A3 != 0) {
@@ -533,20 +541,20 @@ tail:
             register s32 state asm("r0") = 4;
             register s32 idx asm("r1") = 3;
 
-            *(s32 *)(self + 0x28) = state;
+            self->state = state;
             {
                 register s32 zero asm("r2") = 0;
 
-                *(s32 *)(self + 0x44) = zero;
-                *(s32 *)(self + 0xc) = idx;
+                self->stateTime = zero;
+                self->animIndex = idx;
                 {
-                    register u16 a asm("r0") = *(u16 *)(*(u8 **)self + 0x24);
+                    register u16 a asm("r0") = self->anims[3].duration;
                     register u8 zero1 asm("r1") = 0;
 
-                    *(u16 *)(self + 0x10) = a;
-                    self[0x12] = zero1;
+                    *(u16 *)&self->animTimer = a;
+                    *(u8 *)&self->animDone = zero1;
                 }
-                *(s32 *)(self + 8) = zero;
+                self->animTime = zero;
             }
             PlaySfx(gUnknown_030012BC, 0xd, 0x100);
             gUnknown_030014A4 = 0xFFFFF880;
@@ -554,20 +562,20 @@ tail:
         if ((*(u32 *)addr & 2) != 0) {
             register s32 state asm("r0") = 2;
 
-            *(s32 *)(self + 0x28) = state;
+            self->state = state;
             {
                 register s32 zero asm("r2") = 0;
 
-                *(s32 *)(self + 0x44) = zero;
-                *(s32 *)(self + 0xc) = state;
+                self->stateTime = zero;
+                self->animIndex = state;
                 {
-                    register u16 a asm("r0") = *(u16 *)(*(u8 **)self + 0x18);
+                    register u16 a asm("r0") = self->anims[2].duration;
                     register u8 zero1 asm("r1") = 0;
 
-                    *(u16 *)(self + 0x10) = a;
-                    self[0x12] = zero1;
+                    *(u16 *)&self->animTimer = a;
+                    *(u8 *)&self->animDone = zero1;
                 }
-                *(s32 *)(self + 8) = zero;
+                self->animTime = zero;
             }
             sub_8029BAC(0x38);
         }
@@ -631,39 +639,39 @@ void sub_802BAD0(struct actor_self *self)
  * every 4th frame without touching any state. */
 void sub_802BB4C(void *selfArg)
 {
-    u8 *self = selfArg;
-    s32 counter = *(s32 *)(self + 0x44);
+    struct actor_self *self = selfArg;
+    s32 counter = self->stateTime;
 
     if (counter > 0x2c) {
-        QueueVramDmaTransfer(gStaticData_0817A728, (void *)0x05000200, 0x20, 0x10);
+        QueueVramDmaTransfer(gStaticData_0817A728, (void *)OBJ_PLTT, 0x20, 0x10);
         gUnknown_03001480 = 1;
         {
             register s32 state asm("r0") = 6;
             register s32 idx asm("r1") = 5;
 
-            *(s32 *)(self + 0x28) = state;
+            self->state = state;
             {
                 register s32 zero asm("r2") = 0;
 
-                *(s32 *)(self + 0x44) = zero;
-                *(s32 *)(self + 0xc) = idx;
+                self->stateTime = zero;
+                self->animIndex = idx;
                 {
-                    register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0x3c);
+                    register u16 anim asm("r0") = self->anims[5].duration;
                     register u8 zero1 asm("r1") = 0;
 
-                    *(u16 *)(self + 0x10) = anim;
-                    self[0x12] = zero1;
+                    *(u16 *)&self->animTimer = anim;
+                    *(u8 *)&self->animDone = zero1;
                 }
-                *(s32 *)(self + 8) = zero;
+                self->animTime = zero;
             }
         }
-        if (*(u8 *)((u8 *)gUnknown_030012C0 + 0x8c) == 0) {
+        if (gUnknown_030012C0->paused == 0) {
             sub_8023234(gUnknown_030012C0);
         }
     } else if (counter & 4) {
-        QueueVramDmaTransfer(gStaticData_0817A728, (void *)0x05000200, 0x20, 0x10);
+        QueueVramDmaTransfer(gStaticData_0817A728, (void *)OBJ_PLTT, 0x20, 0x10);
     } else {
-        QueueVramDmaTransfer(gStaticData_0817A748, (void *)0x05000200, 0x20, 0x10);
+        QueueVramDmaTransfer(gStaticData_0817A748, (void *)OBJ_PLTT, 0x20, 0x10);
     }
 }
 
@@ -682,9 +690,9 @@ void sub_802BBE4(struct actor_self *self)
         ACTOR_SET_STATE(self, 8, 7);
         gUnknown_03001480 = 1;
         {
-            u8 *player = gUnknown_030012C0;
+            struct game_state *player = gUnknown_030012C0;
 
-            if (player[0x8c] == 0)
+            if (player->paused == 0)
                 sub_8023234(player);
         }
     }

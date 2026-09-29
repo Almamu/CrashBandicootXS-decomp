@@ -16,7 +16,6 @@
 
 extern void *gUnknown_03000884;
 extern void *gUnknown_030012BC;
-extern void *gUnknown_030012C0;
 extern s32 gUnknown_030014B8;
 extern s32 gUnknown_0300088C[];
 
@@ -51,6 +50,30 @@ extern u8 gStaticData_087E4FD4[];
 extern u8 gStaticData_087E4FF4[];
 extern u8 gStaticData_087E5014[];
 extern u8 gStaticData_087E5034[];
+
+/* The gUnknown_030012C0 fields read here. */
+struct game_state {
+    u8 unk_00[0x78];
+    s32 mode;           // 0x78 - the current hazard tier (0-3)
+};
+
+extern struct game_state *gUnknown_030012C0;
+
+/* The homing projectile (method table gStaticData_087E5014). */
+struct actor_homing {
+    struct actor_self base;
+    s32 velX;           // 0x54
+    s32 velY;           // 0x58
+    s32 velZ;           // 0x5C
+    s32 countdown;      // 0x60 - frames until the next retarget
+    s32 targetZ;        // 0x64 - passed back to sub_802D044 on retarget
+};
+
+/* sub_802D0C8's spawn argument. */
+struct spawn_arg {
+    u8 unk_00[0x10];
+    s32 target;         // 0x10 - sub_802D044's homing target index
+};
 
 /* A 12-byte AABB record (the same shape actor_part19g.c copies as
  * `struct vec3_words`). */
@@ -151,11 +174,11 @@ void sub_802CC9C(void *selfArg)
  * `self+0x2c` one-shot flag. */
 void *sub_802CDE4(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 {
-    u8 *self = selfArg;
+    struct actor_self *self = selfArg;
 
     InitActorPart(self, a, b, c, d);
-    *(u8 **)(self + 0x50) = gStaticData_087E4FB4;
-    self[0x2c] = 0;
+    self->vtable = (struct actor_vtable *)gStaticData_087E4FB4;
+    self->unk_2C[0] = 0;
     return self;
 }
 
@@ -176,10 +199,10 @@ void sub_802CE10(void *selfArg)
  * the `self+0x2c` clear, `self+0x50 = gStaticData_087E4FD4`. */
 void *sub_802CE38(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 {
-    u8 *self = selfArg;
+    struct actor_self *self = selfArg;
 
     InitActorPart(self, a, b, c, d);
-    *(u8 **)(self + 0x50) = gStaticData_087E4FD4;
+    self->vtable = (struct actor_vtable *)gStaticData_087E4FD4;
     return self;
 }
 
@@ -195,8 +218,8 @@ extern void sub_802C14C(void *selfArg);
 
 void sub_802CE5C(void *selfArg)
 {
-    u8 *self = selfArg;
-    register s32 state asm("r5") = *(s32 *)(self + 0x28);
+    struct actor_self *self = selfArg;
+    register s32 state asm("r5") = self->state;
 
     if (state == 0) {
         goto case0;
@@ -213,41 +236,41 @@ case0:
         if (fired) {
             sub_802C14C(gUnknown_03000884);
             PlaySfx(gUnknown_030012BC, 4, 0x100);
-            *(s32 *)(self + 0x28) = 1;
-            *(s32 *)(self + 0x44) = state;
-            *(s32 *)(self + 0xc) = 1;
+            self->state = 1;
+            self->stateTime = state;
+            self->animIndex = 1;
             {
-                register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0xc);
+                register u16 anim asm("r0") = self->anims[1].duration;
                 register u8 zero1 asm("r1") = 0;
 
-                *(u16 *)(self + 0x10) = anim;
-                self[0x12] = zero1;
+                *(u16 *)&self->animTimer = anim;
+                *(u8 *)&self->animDone = zero1;
             }
-            *(s32 *)(self + 8) = state;
+            self->animTime = state;
             goto done;
         }
         if (sub_802DD9C(self)) {
             PlaySfx(gUnknown_030012BC, 4, 0x100);
-            *(s32 *)(self + 0x28) = 1;
-            *(s32 *)(self + 0x44) = fired;
-            *(s32 *)(self + 0xc) = 1;
+            self->state = 1;
+            self->stateTime = fired;
+            self->animIndex = 1;
             {
-                register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0xc);
+                register u16 anim asm("r0") = self->anims[1].duration;
                 register u8 zero1 asm("r1") = 0;
 
-                *(u16 *)(self + 0x10) = anim;
-                self[0x12] = zero1;
+                *(u16 *)&self->animTimer = anim;
+                *(u8 *)&self->animDone = zero1;
             }
-            *(s32 *)(self + 8) = fired;
+            self->animTime = fired;
         }
     }
     goto done;
 
 case1:
-    if (self[0x12] != 0) {
+    if (self->animDone != 0) {
         if (self != 0) {
-            u8 *table = *(u8 **)(self + 0x50);
-            sub_803AD80(self + *(s16 *)(table + 8), 3, *(void **)(table + 0xc));
+            struct actor_vtable *table = self->vtable;
+            sub_803AD80((u8 *)self + table->m08.thisOffset, 3, table->m08.fn);
         }
         return;
     }
@@ -260,10 +283,10 @@ done:
  * `self+0x50 = gStaticData_087E4FF4`. */
 void *sub_802CF0C(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 {
-    u8 *self = selfArg;
+    struct actor_self *self = selfArg;
 
     InitActorPart(self, a, b, c, d);
-    *(u8 **)(self + 0x50) = gStaticData_087E4FF4;
+    self->vtable = (struct actor_vtable *)gStaticData_087E4FF4;
     return self;
 }
 
@@ -281,19 +304,19 @@ extern void sub_802D044(void *selfArg, s32 arg1);
 
 void sub_802CF30(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct actor_homing *self = selfArg;
     register s32 state asm("r6");
 
-    *(s32 *)(self + 0x1c) += *(s32 *)(self + 0x54);
-    *(s32 *)(self + 0x20) += *(s32 *)(self + 0x58);
-    *(s32 *)(self + 0x24) += *(s32 *)(self + 0x5c);
+    self->base.x += self->velX;
+    self->base.y += self->velY;
+    self->base.z += self->velZ;
 
-    state = *(s32 *)(self + 0x28);
+    state = self->base.state;
     if (state == 0) {
-        s32 remain = *(s32 *)(self + 0x60) - 1;
-        *(s32 *)(self + 0x60) = remain;
+        s32 remain = self->countdown - 1;
+        self->countdown = remain;
         if (remain <= 0) {
-            sub_802D044(self, *(s32 *)(self + 0x64));
+            sub_802D044(self, self->targetZ);
         }
 
         {
@@ -301,42 +324,42 @@ void sub_802CF30(void *selfArg)
 
             if (fired) {
                 if (sub_802B730(gUnknown_03000884)) {
-                    s32 velX = (*(s32 *)(self + 0x1c) > 0) ? 0x600 : 0xFFFFFA00;
+                    s32 velX = (self->base.x > 0) ? 0x600 : 0xFFFFFA00;
 
-                    *(s32 *)(self + 0x54) = velX;
-                    *(s32 *)(self + 0x58) = -(s32)(u16)sub_8000E1C(0x300);
-                    *(s32 *)(self + 0x5c) += 0x200;
+                    self->velX = velX;
+                    self->velY = -(s32)(u16)sub_8000E1C(0x300);
+                    self->velZ += 0x200;
                     PlaySfx(gUnknown_030012BC, 5, 0x100);
-                    *(s32 *)(self + 0x28) = 1;
-                    *(s32 *)(self + 0x44) = state;
-                    *(s32 *)(self + 0xc) = state;
+                    self->base.state = 1;
+                    self->base.stateTime = state;
+                    self->base.animIndex = state;
                     {
-                        register u16 anim asm("r0") = *(u16 *)(*(u8 **)self);
+                        register u16 anim asm("r0") = self->base.anims[0].duration;
                         register u8 zero1 asm("r1") = 0;
 
-                        *(u16 *)(self + 0x10) = anim;
-                        self[0x12] = zero1;
+                        *(u16 *)&self->base.animTimer = anim;
+                        *(u8 *)&self->base.animDone = zero1;
                     }
-                    *(s32 *)(self + 8) = state;
+                    self->base.animTime = state;
                 }
             } else if (sub_802DD9C(self)) {
-                s32 velX = (*(s32 *)(self + 0x1c) > 0) ? 0x600 : 0xFFFFFA00;
+                s32 velX = (self->base.x > 0) ? 0x600 : 0xFFFFFA00;
 
-                *(s32 *)(self + 0x54) = velX;
-                *(s32 *)(self + 0x58) = -(s32)(u16)sub_8000E1C(0x300);
-                *(s32 *)(self + 0x5c) += 0x200;
+                self->velX = velX;
+                self->velY = -(s32)(u16)sub_8000E1C(0x300);
+                self->velZ += 0x200;
                 PlaySfx(gUnknown_030012BC, 5, 0x100);
-                *(s32 *)(self + 0x28) = 1;
-                *(s32 *)(self + 0x44) = fired;
-                *(s32 *)(self + 0xc) = fired;
+                self->base.state = 1;
+                self->base.stateTime = fired;
+                self->base.animIndex = fired;
                 {
-                    register u16 anim asm("r0") = *(u16 *)(*(u8 **)self);
+                    register u16 anim asm("r0") = self->base.anims[0].duration;
                     register u8 zero1 asm("r1") = 0;
 
-                    *(u16 *)(self + 0x10) = anim;
-                    self[0x12] = zero1;
+                    *(u16 *)&self->base.animTimer = anim;
+                    *(u8 *)&self->base.animDone = zero1;
                 }
-                *(s32 *)(self + 8) = fired;
+                self->base.animTime = fired;
             }
         }
     }
@@ -355,35 +378,35 @@ void sub_802CF30(void *selfArg)
  * `target`'s own Z record in `self+0x64`. */
 void sub_802D044(void *selfArg, s32 target)
 {
-    u8 *self = selfArg;
+    struct actor_homing *self = selfArg;
 
     if (target < 0) {
-        *(s32 *)(self + 0x58) = 0;
-        *(s32 *)(self + 0x54) = 0;
-        *(s32 *)(self + 0x5c) = 0x62;
-        *(s32 *)(self + 0x60) = 0x40000000;
+        self->velY = 0;
+        self->velX = 0;
+        self->velZ = 0x62;
+        self->countdown = 0x40000000;
     } else {
         s32 idx = sub_802A570(target);
         s32 speed = gUnknown_0300088C[idx];
         s32 factor;
         s32 countdown;
 
-        *(s32 *)(self + 0x5c) = speed;
-        countdown = sub_803ADB4(sub_802A51C(target) - *(s32 *)(self + 0x24), *(s32 *)(self + 0x5c));
-        *(s32 *)(self + 0x60) = countdown;
+        self->velZ = speed;
+        countdown = sub_803ADB4(sub_802A51C(target) - self->base.z, self->velZ);
+        self->countdown = countdown;
         if (countdown == 0) {
-            *(s32 *)(self + 0x60) = 1;
+            self->countdown = 1;
         }
 
         {
-            register s32 countdown2 asm("r1") = *(s32 *)(self + 0x60);
+            register s32 countdown2 asm("r1") = self->countdown;
             register s32 lit asm("r0") = 0x1000;
 
             factor = sub_803ADB4(lit, countdown2);
         }
-        *(s32 *)(self + 0x54) = factor * (sub_802A558(target) - *(s32 *)(self + 0x1c)) >> 0xc;
-        *(s32 *)(self + 0x58) = factor * (sub_802A540(target) - *(s32 *)(self + 0x20)) >> 0xc;
-        *(s32 *)(self + 0x64) = sub_802A504(target);
+        self->velX = factor * (sub_802A558(target) - self->base.x) >> 0xc;
+        self->velY = factor * (sub_802A540(target) - self->base.y) >> 0xc;
+        self->targetZ = sub_802A504(target);
     }
 }
 
@@ -392,13 +415,13 @@ void sub_802D044(void *selfArg, s32 target)
  * field feeds `sub_802D044`'s homing target): installs
  * `self+0x50 = gStaticData_087E5014`, then calls
  * `sub_802D044(self, e->0x10)`. */
-void *sub_802D0C8(void *selfArg, s32 a, s32 b, s32 c, s32 d, void *e)
+void *sub_802D0C8(void *selfArg, s32 a, s32 b, s32 c, s32 d, struct spawn_arg *e)
 {
-    u8 *self = selfArg;
+    struct actor_self *self = selfArg;
 
     InitActorPart(self, a, b, c, d);
-    *(u8 **)(self + 0x50) = gStaticData_087E5014;
-    sub_802D044(self, *(s32 *)((u8 *)e + 0x10));
+    self->vtable = (struct actor_vtable *)gStaticData_087E5014;
+    sub_802D044(self, e->target);
     return self;
 }
 
@@ -411,7 +434,7 @@ void *sub_802D0C8(void *selfArg, s32 a, s32 b, s32 c, s32 d, void *e)
  * the pre-increment tier value instead) and bumps `self+0x28`. */
 void sub_802D0F4(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct actor_self *self = selfArg;
     register s32 threshold1 asm("r0");
     register s32 depth asm("r1");
 
@@ -420,55 +443,55 @@ void sub_802D0F4(void *selfArg)
     }
 
     threshold1 = 0x6400;
-    depth = *(s32 *)(self + 0x34);
+    depth = self->depth;
 
-    if ((depth > threshold1 && *(s32 *)(self + 0x28) == 2)
-        || (depth > 0x5A00 && *(s32 *)(self + 0x28) == 1)) {
+    if ((depth > threshold1 && self->state == 2)
+        || (depth > 0x5A00 && self->state == 1)) {
         s32 frame;
-        register s32 idx asm("r1") = *(s32 *)(self + 0xc) + 1;
+        register s32 idx asm("r1") = self->animIndex + 1;
 
-        *(s32 *)(self + 0xc) = idx;
+        self->animIndex = idx;
         {
-            register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + idx * 0xc);
+            register u16 anim asm("r0") = self->anims[idx].duration;
             register u8 zero1 asm("r1") = 0;
 
-            *(u16 *)(self + 0x10) = anim;
-            self[0x12] = zero1;
+            *(u16 *)&self->animTimer = anim;
+            *(u8 *)&self->animDone = zero1;
         }
         frame = GetAnimFrameBaseOffset(self);
         {
-            register s32 idx2 asm("r2") = *(s32 *)(self + 0xc);
-            register u8 *table2 asm("r3") = *(u8 **)self;
+            register s32 idx2 asm("r2") = self->animIndex;
+            register u8 *table2 asm("r3") = (u8 *)self->anims;
             register s32 threshold asm("r1") = *(s16 *)(table2 + idx2 * 0xc + 4);
 
             if (frame >= threshold) {
-                *(s32 *)(self + 8) = 0;
+                self->animTime = 0;
             }
         }
         goto increment;
     } else if (depth > 0x5000) {
-        register s32 zero asm("r5") = *(s32 *)(self + 0x28);
+        register s32 zero asm("r5") = self->state;
 
         if (zero == 0) {
             s32 frame;
-            register s32 idx asm("r1") = *(s32 *)(self + 0xc) + 1;
+            register s32 idx asm("r1") = self->animIndex + 1;
 
-            *(s32 *)(self + 0xc) = idx;
+            self->animIndex = idx;
             {
-                register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + idx * 0xc);
+                register u16 anim asm("r0") = self->anims[idx].duration;
                 register u8 zero1 asm("r1") = 0;
 
-                *(u16 *)(self + 0x10) = anim;
-                self[0x12] = zero1;
+                *(u16 *)&self->animTimer = anim;
+                *(u8 *)&self->animDone = zero1;
             }
             frame = GetAnimFrameBaseOffset(self);
             {
-                register s32 idx2 asm("r2") = *(s32 *)(self + 0xc);
-                register u8 *table2 asm("r3") = *(u8 **)self;
+                register s32 idx2 asm("r2") = self->animIndex;
+                register u8 *table2 asm("r3") = (u8 *)self->anims;
                 register s32 threshold asm("r1") = *(s16 *)(table2 + idx2 * 0xc + 4);
 
                 if (frame >= threshold) {
-                    *(s32 *)(self + 8) = zero;
+                    self->animTime = zero;
                 }
             }
             goto increment;
@@ -478,7 +501,7 @@ void sub_802D0F4(void *selfArg)
     goto tail;
 
 increment:
-    *(s32 *)(self + 0x28) = *(s32 *)(self + 0x28) + 1;
+    self->state = self->state + 1;
 
 tail:
     sub_802A7B8(self);
@@ -493,26 +516,26 @@ tail:
  * part table. */
 void *sub_802D1B8(void *selfArg, u8 *b, s32 c, s32 d, s32 e)
 {
-    u8 *self = selfArg;
+    struct actor_self *self = selfArg;
     register s32 kind asm("r1");
 
     InitActorPart(self, (s32)b, c, d, e);
-    *(u8 **)(self + 0x50) = gStaticData_087E5034;
+    self->vtable = (struct actor_vtable *)gStaticData_087E5034;
 
     kind = *b;
     if (c > 0) {
         kind += 1;
     }
     kind = kind * 4 - 0x40;
-    *(s32 *)(self + 0xc) = kind;
+    self->animIndex = kind;
     {
-        register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + kind * 3 * 4);
+        register u16 anim asm("r0") = self->anims[kind].duration;
         register u8 zero1 asm("r1") = 0;
         register s32 zero2 asm("r2") = 0;
 
-        *(u16 *)(self + 0x10) = anim;
-        self[0x12] = zero1;
-        *(s32 *)(self + 8) = zero2;
+        *(u16 *)&self->animTimer = anim;
+        *(u8 *)&self->animDone = zero1;
+        self->animTime = zero2;
     }
     return self;
 }
@@ -529,37 +552,37 @@ void *sub_802D1B8(void *selfArg, u8 *b, s32 c, s32 d, s32 e)
  * `self` back to state 0/table-index 0. */
 void sub_802D204(void *selfArg, s32 retriggerParam)
 {
-    u8 *self = selfArg;
+    struct actor_self *self = selfArg;
     u8 retrigger = (u8)retriggerParam;
-    register s32 tier asm("r5") = *(s32 *)((u8 *)gUnknown_030012C0 + 0x78);
+    register s32 tier asm("r5") = gUnknown_030012C0->mode;
 
     if (tier == 0 && retrigger == 0) {
-        self[0x2c] = tier;
+        self->unk_2C[0] = tier;
     } else {
         register s32 zero asm("r6");
 
-        QueueVramDmaTransfer(gStaticData_0817A798 + (tier - 1) * 0x20, (void *)0x050003C0, 0x20, 0x10);
+        QueueVramDmaTransfer(gStaticData_0817A798 + (tier - 1) * 0x20, (void *)(PLTT + 0x3C0), 0x20, 0x10);
         {
-            u8 *addr = self + 0x2c;
+            u8 *addr = &self->unk_2C[0];
 
             zero = 0;
             *addr = 1;
         }
-        *(s32 *)(self + 0xc) = zero;
+        self->animIndex = zero;
         {
-            register u16 anim asm("r0") = *(u16 *)(*(u8 **)self);
+            register u16 anim asm("r0") = self->anims[0].duration;
             register u8 zero1 asm("r1") = 0;
 
-            *(u16 *)(self + 0x10) = anim;
-            self[0x12] = zero1;
+            *(u16 *)&self->animTimer = anim;
+            *(u8 *)&self->animDone = zero1;
         }
         {
             s32 frame = GetAnimFrameBaseOffset(self);
-            s32 idx = *(s32 *)(self + 0xc);
-            u8 *table = *(u8 **)self;
+            s32 idx = self->animIndex;
+            u8 *table = (u8 *)self->anims;
 
             if (frame >= *(s16 *)(table + idx * 0xc + 4)) {
-                *(s32 *)(self + 8) = zero;
+                self->animTime = zero;
             }
         }
     }
@@ -575,17 +598,17 @@ void sub_802D204(void *selfArg, s32 retriggerParam)
             register s32 state asm("r0") = 1;
             register s32 zero asm("r2") = 0;
 
-            *(s32 *)(self + 0x28) = state;
-            *(s32 *)(self + 0x44) = zero;
-            *(s32 *)(self + 0xc) = zero;
+            self->state = state;
+            self->stateTime = zero;
+            self->animIndex = zero;
             {
-                register u16 anim asm("r0") = *(u16 *)(*(u8 **)self);
+                register u16 anim asm("r0") = self->anims[0].duration;
                 register u8 zero1 asm("r1") = 0;
 
-                *(u16 *)(self + 0x10) = anim;
-                self[0x12] = zero1;
+                *(u16 *)&self->animTimer = anim;
+                *(u8 *)&self->animDone = zero1;
             }
-            *(s32 *)(self + 8) = zero;
+            self->animTime = zero;
         }
         return;
     } else if (tier == 0 && retrigger != 0) {
@@ -595,38 +618,38 @@ void sub_802D204(void *selfArg, s32 retriggerParam)
         gUnknown_030014B8 = tier;
         two = 2;
         one = 1;
-        *(s32 *)(self + 0x28) = two;
-        *(s32 *)(self + 0x44) = tier;
-        *(s32 *)(self + 0xc) = one;
+        self->state = two;
+        self->stateTime = tier;
+        self->animIndex = one;
         {
-            register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0xc);
+            register u16 anim asm("r0") = self->anims[1].duration;
             register u8 zero1 asm("r1") = 0;
 
-            *(u16 *)(self + 0x10) = anim;
-            self[0x12] = zero1;
+            *(u16 *)&self->animTimer = anim;
+            *(u8 *)&self->animDone = zero1;
         }
-        *(s32 *)(self + 8) = tier;
+        self->animTime = tier;
         return;
     } else {
         register s32 *addr asm("r0") = &gUnknown_030014B8;
         register s32 zero asm("r2") = 0;
 
         *addr = zero;
-        if (*(s32 *)(self + 0x28) == 0) {
+        if (self->state == 0) {
             return;
         }
-        *(s32 *)(self + 0x28) = zero;
+        self->state = zero;
 
-        *(s32 *)(self + 0x44) = zero;
-        *(s32 *)(self + 0xc) = zero;
+        self->stateTime = zero;
+        self->animIndex = zero;
         {
-            register u16 anim asm("r0") = *(u16 *)(*(u8 **)self);
+            register u16 anim asm("r0") = self->anims[0].duration;
             register u8 zero1 asm("r1") = 0;
 
-            *(u16 *)(self + 0x10) = anim;
-            self[0x12] = zero1;
+            *(u16 *)&self->animTimer = anim;
+            *(u8 *)&self->animDone = zero1;
         }
-        *(s32 *)(self + 8) = zero;
+        self->animTime = zero;
     }
 }
 
@@ -640,13 +663,13 @@ void sub_802D204(void *selfArg, s32 retriggerParam)
  * wrap-around `GetAnimFrameBaseOffset` check). */
 void sub_802D2DC(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct actor_self *self = selfArg;
 
     if (gUnknown_030014B8 != 0) {
         if (gUnknown_030014B8 & 4) {
-            QueueVramDmaTransfer(gStaticData_0817A7D8, (void *)0x050003C0, 0x20, 0x10);
+            QueueVramDmaTransfer(gStaticData_0817A7D8, (void *)(PLTT + 0x3C0), 0x20, 0x10);
         } else {
-            QueueVramDmaTransfer(gStaticData_0817A7B8, (void *)0x050003C0, 0x20, 0x10);
+            QueueVramDmaTransfer(gStaticData_0817A7B8, (void *)(PLTT + 0x3C0), 0x20, 0x10);
         }
 
         gUnknown_030014B8 -= 1;
@@ -656,19 +679,19 @@ void sub_802D2DC(void *selfArg)
         }
     }
 
-    if (*(s32 *)(self + 0x28) == 2 && self[0x12] != 0) {
+    if (self->state == 2 && self->animDone != 0) {
         sub_802D204(self, 0);
     }
 
     sub_802A980(self);
-    *(s32 *)(self + 0x44) += 1;
-    *(s32 *)(self + 8) += *(s16 *)(self + 0x10);
-    self[0x12] = 0;
+    self->stateTime += 1;
+    self->animTime += *(s16 *)&self->animTimer;
+    *(u8 *)&self->animDone = 0;
 
     {
         s32 frame = GetAnimFrameBaseOffset(self);
-        register s32 idx2 asm("r2") = *(s32 *)(self + 0xc);
-        register u8 *table2 asm("r3") = *(u8 **)self;
+        register s32 idx2 asm("r2") = self->animIndex;
+        register u8 *table2 asm("r3") = (u8 *)self->anims;
         register u8 *record asm("r1") = (u8 *)(idx2 * 0xc);
 
         asm("add %0, %0, %1" : "+r" (record) : "r" (table2));
@@ -678,8 +701,8 @@ void sub_802D2DC(void *selfArg)
             if (frame >= threshold) {
                 register s32 diff asm("r0") = (threshold - *(s16 *)(record + 6)) << 8;
 
-                *(s32 *)(self + 8) -= diff;
-                self[0x12] = 1;
+                self->animTime -= diff;
+                *(u8 *)&self->animDone = 1;
             }
         }
     }

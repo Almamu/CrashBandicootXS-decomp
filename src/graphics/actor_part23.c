@@ -1,4 +1,5 @@
 #include "core.h"
+#include "actor_self.h"
 
 /* Same boss-weapon "self" object family as actor_part20.c - see that
  * file's header comment and docs/matching/issue-58-0x08030334-actor.md.
@@ -43,26 +44,26 @@ void sub_8030C98(void)
     }
 
     if (total > 0xbb80) {
-        u8 *self;
+        struct actor_self *self;
         register s32 zero asm("r5") = 0;
 
         gUnknown_03001538 = zero;
         gUnknown_0300153C = zero;
 
         self = gUnknown_03001534;
-        *(s32 *)(self + 0xc) = zero;
+        self->animIndex = zero;
         {
-            register u16 anim asm("r0") = *(u16 *)(*(u8 **)self);
+            register u16 anim asm("r0") = self->anims[0].duration;
             register u8 zero1 asm("r1") = 0;
 
-            *(u16 *)(self + 0x10) = anim;
-            self[0x12] = zero1;
+            *(u16 *)&self->animTimer = anim;
+            *(u8 *)&self->animDone = zero1;
         }
 
         {
             s32 frame = GetAnimFrameBaseOffset(self);
-            register s32 idx asm("r2") = *(s32 *)(self + 0xc);
-            register u8 *table asm("r3") = *(u8 **)self;
+            register s32 idx asm("r2") = self->animIndex;
+            register u8 *table asm("r3") = (u8 *)self->anims;
             register u8 *entryPtr asm("r1") = (u8 *)(idx * 0xc);
             register s32 four asm("r2");
             register s32 val asm("r1");
@@ -72,7 +73,7 @@ void sub_8030C98(void)
             val = *(s16 *)(entryPtr + four);
 
             if (frame >= val) {
-                *(s32 *)(self + 8) = zero;
+                self->animTime = zero;
             }
         }
 

@@ -166,23 +166,23 @@ static inline s32 Abs(s32 x)
         (v) = (v) < 0 ? -0x240 : ((v) != 0 ? 0x240 : 0);                      \
     else (void)0
 
-/* On the state-3 anim-frame edge, resets `self` (`gUnknown_030014BC`)
- * back to state 3/table-index 0 with a fresh anim frame from `self`'s
- * own part table at `+0x24`. */
+/* Once the current animation has played through, switches `self`
+ * (`gUnknown_030014BC`) to animation sequence 3 (unless it's already
+ * on it), restarting its timer from that sequence's first frame. */
 void sub_802E0A4(void)
 {
-    u8 *self = gUnknown_030014BC;
+    struct actor_self *self = gUnknown_030014BC;
 
-    if (*(s32 *)(self + 0xc) != 3 && self[0x12] != 0) {
-        *(s32 *)(self + 0xc) = 3;
+    if (self->animIndex != 3 && self->animDone != 0) {
+        self->animIndex = 3;
         {
-            register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0x24);
+            register u16 anim asm("r0") = self->anims[3].duration;
             register u8 zero1 asm("r1") = 0;
             register s32 zero2 asm("r2") = 0;
 
-            *(u16 *)(self + 0x10) = anim;
-            self[0x12] = zero1;
-            *(s32 *)(self + 8) = zero2;
+            *(u16 *)&self->animTimer = anim;
+            *(u8 *)&self->animDone = zero1;
+            self->animTime = zero2;
         }
     }
 }
