@@ -160,10 +160,14 @@ Checked by compiling test tables and by the conversions themselves:
 - **Pointers into a built blob.** A table pointing into data that is
   itself built from an editable source (the GAX2 audio, a sprite sheet)
   must not hard-code an offset into it, since editing the source moves
-  things. `gStaticData_0816AA20`, the 19-entry song table, points into
-  the rebuilt GAX2 blob, and stays raw until `tools/gax_audio.py` exports
-  per-song symbols. Offsets into still-raw blobs are fine: the raw bytes
-  can't move.
+  things. Have the build export the offsets instead:
+  `gStaticData_0816AA20`, the 19-entry song table
+  (`song_table_16aa20.c`), is `gStaticData_0855BCB4 + GAX_SONG_<NAME>`,
+  with the offsets from the `gax_songs.h` that `tools/gax_audio.py`
+  writes next to the blob (`-iquote build/crashbandicootxs/sound` for
+  that object), and the RLE sprite tables use `rle_sprites.py`'s frame
+  headers the same way. Offsets into still-raw blobs are fine: the raw
+  bytes can't move.
 
 ### Fallback: typed directives in `.s`
 
@@ -181,6 +185,7 @@ The first batch (all pointer tables, all byte-exact):
 
 | File | ROM | Contents |
 |---|---|---|
+| `song_table_16aa20.c` | `0x0816AA20` | the 19-song table, offsets into the built GAX2 music block (`gax_songs.h`) |
 | `bg_package_16b284.c` | `0x0816B284` | 1 `struct bg_package` |
 | `entry_set_16b92c.c` | `0x0816B92C` | 2 `{entries, 0x100}` sets |
 | `action_table_16bf20.c` | `0x0816BF20` | 42-slot player action PMF table, per-mode animation row pointers |

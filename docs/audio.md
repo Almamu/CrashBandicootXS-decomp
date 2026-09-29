@@ -53,8 +53,16 @@ per song (in ROM address order, NOT alphabetical - see gax_manifest.json "song_o
     [unknownc_data_bytes, 28 bytes]
     [UnknownC SoundHandler]
     [GAX2_Song struct]
-[footer, 160 bytes, unmodeled - self-referential, purpose not understood]
+the default song (manifest "default_song"), laid out the same way: one empty
+    pattern, 7 title bytes, one pattern header, SongInfo (no instrument set,
+    its sample-set pointer = its own sequence data), the handlers, and its
+    GAX2_Song struct, which is gStaticData_085A4C5C (built as a separate file)
 ```
+
+The default song is the engine's default handler layout: `sub_8038538`
+and `sub_8037FC0` use `gStaticData_085A4C5C` when no layout is given. It
+was the verbatim 160-byte `gax_footer.bin` before; its 20-byte song
+struct sat right after it as a raw label.
 
 ### GAX2_Song / SoundHandler / SongInfo
 
@@ -153,9 +161,10 @@ picture):
   embedded within it - confirmed exactly: `gax_audio_data.bin` (the
   built block) is `0x48FA8` bytes, and `0x0855BCB4 + 0x48FA8 =
   0x085A4C5C` precisely. Decodes as `{count=4, ptr, ptr, ptr, ptr}` -
-  four pointers, all pointing back into the tail of the audio block -
-  plausibly a small default-instrument-set selector table
-  `sub_8038538`'s play-start logic falls back to.
+  four pointers, all pointing back into the tail of the audio block.
+  It turned out to be the song struct of a silent default song whose
+  other objects end the block (see "Data layout" above); it is now built
+  with the block.
 - **`sub_8038E74`** (one of `PlaySfx`'s two direct callees) is the
   **voice-stealing mixer allocator**: loops the current song's active
   channel handlers via `gUnknown_03001630`'s child-pointer chain, and
@@ -302,9 +311,6 @@ Everything is generated from editable sources, never read from
 - `sound/songs/*.xm` — one FastTracker II module per song (patterns/notes),
   editable in any XM tracker.
 - `sound/samples/*.wav` — one sample per instrument sample slot.
-- `sound/gax_footer.bin` — a small verbatim blob of shared structure that
-  isn't modeled (160 bytes; the default handler layout
-  `gStaticData_085A4C5C` points into it).
 - `sound/gax_sfx_manifest.json` — the sound-effect set: its 88 instruments
   (the same fields as the music's), the voice type's song-header fields,
   and `voice_types`, the length of the `sfxTypes` array (9).
@@ -312,7 +318,9 @@ Everything is generated from editable sources, never read from
   (8-bit mono, declared at 7,994 Hz, see "Sound effects").
 - `tools/gax_audio.py` — a from-scratch GAX2 encoder (no external tool or
   `.NET` dependency) that links all of the above back into the original
-  binary layout: `tools/gax_audio.py OUT` the music block,
+  binary layout: `tools/gax_audio.py OUT LAYOUT SONGS.h` the music block,
+  the default song's layout struct (`gStaticData_085A4C5C`) and a header
+  of each song's offset in the block (`GAX_SONG_<NAME>`),
   `tools/gax_audio.py --sfx OUT` the sound-effect set. The music block's
   leading `sfxTypes` array is generated from the sound-effect set's
   layout (it was the verbatim 36-byte `gax_header_prefix.bin` before).
@@ -320,13 +328,15 @@ Everything is generated from editable sources, never read from
   byte-for-byte** (verified both in isolation and via a full clean
   `make compare`). Editing a `.xm` or `.wav` changes only the bytes that
   actually need to differ.
-- Both blocks sit at fixed addresses: raw data still points into the
-  music block (the song table `gStaticData_0816AA20`, the default layout
-  `gStaticData_085A4C5C`), and the sound-effect set ends where the music
-  block starts. So an edit must keep the sound-effect set's total size
-  (the tool stops with an error otherwise) - a sample can be changed but
-  not lengthened, unless another shrinks to match - and a music edit
-  that changes a song's size breaks the song table the same way.
+- Nothing outside the audio build points into the music block by a fixed
+  address any more: the song table `gStaticData_0816AA20`
+  (`src/data/song_table_16aa20.c`) is written as `gStaticData_0855BCB4 +
+  GAX_SONG_<NAME>` from the generated `gax_songs.h`, and the default layout
+  is built with the block. So a song can change size. The block itself is
+  linked at the fixed `BASE_ADDR` (its pointers are absolute), which is
+  where the sound-effect set ends, so the sound-effect set must keep its
+  total size (the tool stops with an error otherwise): a sample can be
+  changed but not lengthened, unless another shrinks to match.
 - `tools/sfx_table.py` — rebuilds the sound-effect trigger table from
   `sound/sfx_table.json`.
 

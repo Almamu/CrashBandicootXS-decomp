@@ -623,7 +623,7 @@ vtable shapes).
 | `08169CE8` | 0xB28 | per-level P2 singleton grid table (s16 cols, rows, then records) | `sub_80331BC` | medium | medium |
 | `0816A810` | 0x10 | table (element layout: see consumers); 2 word(s) look like ROM pointers | `sub_8000760` | medium | easy |
 | `0816A820` | 0x200 | s16[256] sine/direction table (`s16` x 256) | `sub_800AFF4`, `sub_800C8F8`, `sub_800C940` +16 | high | easy |
-| `0816AA20` | 0x4C | pointer table: 19 GAX2 song pointers (into the built gax_audio_data.bin) (`void*` x 19) | `sub_80017BC` | high | easy |
+| `0816AA20` | 0x4C | song table: 19 pointers into the music block, `gStaticData_0855BCB4 + GAX_SONG_<NAME>` from the generated `gax_songs.h`. **Converted** (`src/data/song_table_16aa20.c`) | `sub_80017BC` | high | done |
 | `0816AF10` | 0x228 | CRC-16/CCITT lookup table (poly 0x1021, u16[256]) + 0x28 trailing bytes (`u16` x 276) | `sub_8001CB8`, `sub_8002114` | high | easy |
 | `0816B138` | 0x2 | small constant (3e00) | `sub_8003D3C` | medium | easy |
 | `0816B13A` | 0x20 | table of u16; 1 word(s) look like ROM pointers (`u16` x 16) | `sub_800450C` | high | easy |
@@ -819,7 +819,7 @@ vtable shapes).
 | `0817E76C` | 0x20 | table of u16 (`u16` x 16) | `sub_8037388` | high | easy |
 | `0817E78C` | 0x326E74 | composite: level BG tile sets (raw tag-0x00 assets), per-room level data, sprite-bank tile pool | `sub_8037388` | high | medium |
 | `084A5600` | 0xB66B4 | composite: sprite-bank (animation) table (**converted**, C) + GAX2 sound-effect bank (**converted**, `gax_audio.py --sfx`) | `sub_8004D74`, `sub_8022230` | high | medium |
-| `085A4C5C` | 0x14 | pointer table (4 data pointers) | `sub_8037FC0`, `sub_8038538` | high | easy |
+| `085A4C5C` | 0x14 | the default song's GAX2_Song struct `{4, unknownc, info, unk_ptr, channel}` (the engine's default handler layout). **Built** by `tools/gax_audio.py` (`gax_default_layout.bin`) | `sub_8037FC0`, `sub_8038538` | high | done |
 | `085A4C70` | 0x100 | u8[256] count-leading-zeros table (libgcc __clz_tab, used by the 64-bit divide) (`UQItype` x 256) | `sub_8037648` | high | easy |
 | `085A4D70` | 0x100 | u8[256] count-leading-zeros table (second copy, __clz_tab of another libgcc object) (`UQItype` x 256) | `sub_8037A7C` | high | easy |
 | `085A5519` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |

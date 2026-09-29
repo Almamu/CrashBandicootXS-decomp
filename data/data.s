@@ -62,9 +62,9 @@ gStaticData_0816A810:
 gStaticData_0816A820:
 	.incbin "baserom.gba", 0x0016A820, 0x00000200
 
-.global gStaticData_0816AA20
-gStaticData_0816AA20:
-	.incbin "baserom.gba", 0x0016AA20, 0x0000004C
+@ gStaticData_0816AA20: src/data/song_table_16aa20.c
+
+.section .rodata.0816AA6C
 
 .global gStaticData_0816AA6C
 gStaticData_0816AA6C:
@@ -780,7 +780,11 @@ gStaticData_0855BCB4:
 
 .global gStaticData_085A4C5C
 gStaticData_085A4C5C:
-	.incbin "baserom.gba", 0x005A4C5C, 0x00000014
+	@ The engine's default handler layout (sub_8038538, sub_8037FC0): the
+	@ song struct of a silent one-channel song whose other objects end the
+	@ music block. Built with it by tools/gax_audio.py (manifest
+	@ `default_song`); see docs/audio.md.
+	.incbin "build/crashbandicootxs/sound/gax_default_layout.bin"
 
 .global gStaticData_085A4C70
 gStaticData_085A4C70:
