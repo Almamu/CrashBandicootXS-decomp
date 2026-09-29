@@ -510,6 +510,15 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   `sub_800E7A8` as that struct, so it goes in QImode and its spill slot
   is reloaded with `mov r5, sp; ldrb`. See
   [docs/matching/last5-naked-retry.md](../matching/last5-naked-retry.md).
+- **Huge NAKED retry 3:** `sub_0800D18C` (`game_loop47.c`, issue #12,
+  the 3840-byte collision-response commit) promoted from NAKED to real
+  C under old_agbcc, from the 33-halfword draft the second pass left.
+  A `u8 *st = &self->state` local declared last fixes the swapped spill
+  slots, the first code lookup passes the table as an inline argument,
+  the first slope check ends in `else edge = dirX` (its dead reload moves
+  reload's round-robin for the second check), and two small tweaks fix
+  the last four branch targets. See
+  [docs/matching/huge-naked-retry-3.md](../matching/huge-naked-retry-3.md).
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
@@ -581,9 +590,8 @@ plain C didn't converge.
   Phase 1 appendix for the confirmed dispatch maps (the basis for this
   issue's Phase 2 parallel split of the remaining 18 leaf functions).
   `sub_800E08C` is now real C (last-five NAKED retry, see Matched);
-  `sub_0800D18C` stays NAKED with its near-miss draft (33 halfwords off
-  under old_agbcc) - see
-  [docs/matching/huge-naked-retry-2.md](../matching/huge-naked-retry-2.md).
+  `sub_0800D18C` is now real C too (huge NAKED retry 3, see Matched);
+  entry kept for history.
 - **Now matched as real C (issue #12/#13/#25 NAKED retry, see Matched); entry kept for history.** **`sub_800E888`** (`src/system/game_loop48.c`; `sub_800EDBC` was
   promoted by the issue #12/#24/#26 retry; the
   rest of this file was promoted to C by the NAKED-retry pass, see
