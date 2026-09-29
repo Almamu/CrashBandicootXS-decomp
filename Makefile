@@ -64,6 +64,7 @@ OBJS := $(C_OBJS) $(ASM_OBJS) $(DATA_ASM_OBJS)
 OBJS_REL := $(patsubst $(OBJ_DIR)/%,%,$(OBJS))
 
 include graphics.mk
+include levels.mk
 
 # PNGs in GRIT_C_PNGS (graphics.mk) become C arrays, not data.s incbins.
 GRAPHICS_PNGS := $(filter-out $(GRIT_C_PNGS),$(wildcard graphics/*/*.png))
@@ -90,7 +91,7 @@ compare: $(ROM)
 
 # Every incbin in data/*.s that pulls from graphics/ or sound/ needs the
 # corresponding built file to exist first.
-$(DATA_ASM_OBJS): $(GRAPHICS_BUILT) $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_sfx_data.bin $(SOUND_BUILDDIR)/sfx_table.bin
+$(DATA_ASM_OBJS): $(GRAPHICS_BUILT) $(LEVELS_BUILT) $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_sfx_data.bin $(SOUND_BUILDDIR)/sfx_table.bin
 
 # The music block starts with pointers into the sound-effect set, so it
 # depends on the set's sources too.
@@ -124,7 +125,7 @@ tidy:
 # assets it incbins, but not data.o itself (that needs baserom.gba).
 
 .PHONY: report
-report: $(C_OBJS) $(GRAPHICS_BUILT) $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_sfx_data.bin $(SOUND_BUILDDIR)/sfx_table.bin
+report: $(C_OBJS) $(GRAPHICS_BUILT) $(LEVELS_BUILT) $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_sfx_data.bin $(SOUND_BUILDDIR)/sfx_table.bin
 	python3 tools/report_units.py
 
 #### Recipes ####

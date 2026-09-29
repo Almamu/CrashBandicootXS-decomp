@@ -495,7 +495,10 @@ candidates; rendered all 25 as a contact sheet to review at once. Result:
 - The remaining 2 candidates (`tileset1/55_6e2214`, `tileset1/57_6e4750`)
   were tried at several widths, both grayscale and with the real palette
   above - neither produced anything resembling a coherent image. Left
-  unchanged; genuinely still unidentified.
+  unchanged; genuinely still unidentified. **Update:** they aren't
+  graphics: `tileset1/27`-`60` are the LZ77-packed level assets of 34
+  rooms (per-layer chunk streams), and are now built from the decoded
+  tilemaps in `data/levels/` - see [levels.md](./levels.md).
 
 The other 47 raw blocks don't divide evenly by 64 at all, so they can't be
 straightforward 8bpp tile data - not swept further here.

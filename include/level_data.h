@@ -1,0 +1,97 @@
+#ifndef GUARD_LEVEL_DATA_H
+#define GUARD_LEVEL_DATA_H
+
+#include "gba/types.h"
+
+/*
+ * The rooms' level data (docs/levels.md), as src/data/level_rooms_*.c
+ * define it. tools/levels.py generates those definitions from the
+ * editable sources in data/levels/. The code reads the same records
+ * through its own local views, named on each struct below.
+ */
+
+/* One layer (BG0-3 or the collision layer): `struct bg_layer_desc` in
+ * bg_scroll_layer_25fc8.c, `struct stream_source` in game_loop57.c, and
+ * the raw `source` of the terrain cache (game_loop3.c/game_loop5.c). */
+struct level_layer_desc
+{
+    const u16 *chunkGrid;   // 0x00 - gridWidth x gridHeight chunk ids, row-major
+    u32 assetOffset;        // 0x04 - this layer's section in the level asset
+    const void *tileData;   // 0x08 - BG tile set (NULL for the collision layer)
+    s32 scaleX;             // 0x0C - Q8 parallax factor
+    s32 scaleY;             // 0x10
+    u16 cnt;                // 0x14 - BGnCNT bits (the priority is used)
+    u16 gridWidth;          // 0x16 - in 16x8-cell chunks
+    u16 gridHeight;         // 0x18
+    u16 widthTiles;         // 0x1A
+    u16 heightTiles;        // 0x1C
+    u16 unk_1E;             // 0x1E - 2 in every room
+};
+
+/* One entity spawn record: `type` indexes the spawn-function table
+ * (gUnknown_030012E4, dispatched by sub_8025D28), which gets the entity's
+ * id, x, y and param; `param` indexes the room's parameter records
+ * (`struct level_entity_list.paramOffsets`). */
+struct level_entity
+{
+    u16 type;
+    u16 x;                  // pixels
+    u16 y;
+    u16 param;
+};
+
+/* The entities of one 256-px column (x >> 8). */
+struct level_entity_group
+{
+    u16 first;              // entities in the columns before this one
+    u16 count;
+    const struct level_entity *entities;
+};
+
+/* `struct lk_list` in game_loop41.c, `struct collect_info` in
+ * actor_part_1967c.c, the level header of sub_801A878. */
+struct level_entity_list
+{
+    u16 count;              // 0x00 - all entities
+    u16 groupCount;         // 0x02
+    const struct level_entity_group *groups; // 0x04
+    const u16 *paramOffsets;  // 0x08 - byte offset of each parameter record
+    const u32 *params;      // 0x0C - the records: a flags word, then per-type words
+    const u16 *typeCounts;  // 0x10 - entities per type
+};
+
+/* `struct lk_link` in game_loop41.c: chains entity `from` to entity
+ * `to` (entity ids = spawn order). */
+struct level_link
+{
+    s32 from;
+    s32 to;
+};
+
+struct level_link_list
+{
+    s32 count;
+    struct level_link links[1]; // `count` of them
+};
+
+/* One room: `struct level_desc` in level_layers.c. */
+struct level_desc
+{
+    const struct level_layer_desc *layers[3]; // 0x00 - BG1-3
+    const struct level_layer_desc *layer0;    // 0x0C - BG0 (tile-slot pooled)
+    const struct level_layer_desc *collision; // 0x10 - the terrain cache's
+    const void *asset;                        // 0x14 - chunk streams
+    u8 assetPacked;                           // 0x18 - asset is LZ77
+    u8 unk_19[3];
+    const struct level_entity_list *entities; // 0x1C
+    const struct level_link_list *links;      // 0x20 - or NULL
+    u8 unk_24[0xC];                           // 0x24 - zero in every room
+};
+
+/* A link list with room for `n` links. */
+#define LEVEL_LINKS(n) struct { s32 count; struct level_link links[n]; }
+
+/* Byte offset of a parameter record in a room's parameter struct. */
+#define LEVEL_PARAM_OFFSET(type, member) ((u16)(u32)&((type *)0)->member)
+
+#endif // GUARD_LEVEL_DATA_H
