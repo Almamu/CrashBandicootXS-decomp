@@ -195,7 +195,9 @@ for the per-function notes.
   is kept under `#if NON_MATCHING`, register allocation differs
   throughout. (GAX NAKED retry 3: ~46 left, the parameters and the mixer
   loop now match - see
-  [docs/matching/gax-naked-retry-3.md](../matching/gax-naked-retry-3.md).)
+  [docs/matching/gax-naked-retry-3.md](../matching/gax-naked-retry-3.md);
+  retry 4 is down to the tune's `self->instrument` copy and one reload
+  register, see [gax-naked-retry-4.md](../matching/gax-naked-retry-4.md).)
 
 `sub_8037E54` (`__udivsi3`, `src/util/math_div64_util.c`) also stays
 NAKED - it's lib1funcs.asm's hand-written routine, not compiler output

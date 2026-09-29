@@ -47,7 +47,14 @@
  * matches. Left: the tune reads `row` from a copy made at the top of
  * its block where the ROM copies sb right at the use, the sweep-length
  * initializer and the backward end (`sweepMin`) reuse registers where the
- * ROM reloads into r3, and literal-pool placement follows from those. */
+ * ROM reloads into r3, and literal-pool placement follows from those.
+ * GAX retry 4 (docs/matching/gax-naked-retry-4.md): ~43 (was ~46; the
+ * rest of that score is relocation noise in the literal pools). The row
+ * copy now sits at the tune and the sweep-length initializer reloads
+ * `self->instrument`. Left: the ROM loads `self->instrument` into r0 for
+ * the tune and copies it to r8 only just before the clamp's `cmp` (the
+ * draft loads straight into r8), and the backward end still loads
+ * `sweepMin` into r0 where the ROM uses r3. */
 #if NON_MATCHING
 /* sub_800014C is this ROM's memcpy (the work item's initializer) and
  * sub_8037ECC is `__muldi3`: as a libcall the 64-bit multiply does not
@@ -99,7 +106,6 @@ u32 sub_8039B44(struct GaxChannelState *self, struct GaxInfoHandler *info, void 
     wave = &song->waves[self->instrument->waveIdx[self->row]];
     if (wave->data == NULL)
         return 0;
-    row = self->row;
 
     pitch = self->note + self->field_2e;
     if (self->field_21 == 0) {
@@ -108,6 +114,11 @@ u32 sub_8039B44(struct GaxChannelState *self, struct GaxInfoHandler *info, void 
             pitch += self->type->data.orders[info->orderPos].transpose << 5;
     }
     inst = self->instrument;
+    row = self->row;
+    /* The ROM copies GCSE's row register (sb) right here, and computes
+     * `row * 28` again for the ping-pong test below. The volatile escape
+     * keeps CSE/GCSE from reusing this product there. */
+    asm volatile("" : "+r"(row));
     idx = pitch + inst->rows[row].tune;
     period = gStaticData_085A62DC[idx > 0xef3 ? 0xef3 : idx];
     vol = self->envOut != 0xff ? self->envOut : 0x100;
@@ -141,10 +152,14 @@ u32 sub_8039B44(struct GaxChannelState *self, struct GaxInfoHandler *info, void 
         u8 *data = wave->data;
         s32 pos = self->samplePos;
         /* volatile: the ARM routine updates it behind gcc's back, and the
-         * ROM re-reads `item.done` at every use */
+         * ROM re-reads `item.done` at every use. The sweep length re-reads
+         * `self->instrument` (volatile read) where GCSE would reuse `inst`. */
         volatile struct GaxMixItem item = {
             data, buf, pos, len << 11, frames, 0, vol, step, 0,
-            self->sweepOn ? self->instrument->rows[self->row].sweepLen << 11 : 0,
+            self->sweepOn
+                ? (*(struct GaxChannelInstrument *volatile *)&self->instrument)
+                          ->rows[self->row].sweepLen << 11
+                : 0,
         };
 
         while (item.done < self->format->frames) {
