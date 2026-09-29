@@ -212,14 +212,24 @@ The first batch (all pointer tables, all byte-exact):
 | `level_table_16c814.c` | `0x0816C814` | the level table (25 `struct level_info`), the levels' room lists and 48 room records, the theme music cues, 5 colour-cycle lists (see "Level data") |
 | `cutscenes_16d1c8.c` | `0x0816D1C8` | the 11 cutscenes: slide lists, 24 slides, the text of 6 languages (see "Cutscenes") |
 | `actor_category_175558.c` | `0x08175558` | 7 `struct category_descriptor`, 3 `struct category_vtable` |
+| `palette_cycle_175760.c` | `0x08175760` | the 32-frame BG palette cycle and its 4 cursor start/bound pairs |
+| `anim_family_178f80.c` | `0x08178F80` | categories 0-2: OBJ palette, animation table `gStaticData_081796CC`, keyframe and frame arrays (see "Category families") |
 | `actor_pmf_17a6b8.c` | `0x0817A6B8` | 1 actor PMF table |
+| `actor_tables_17a728.c` | `0x0817A728` | 5 small palettes, 4 `struct anim_box`, 6 threshold records |
 | `actor_state_fn_17a840.c` | `0x0817A840` | 4 state functions |
+| `anim_frames_17a850.c` | `0x0817A850` | 4 keyframes (`struct anim_frame_record`) |
 | `frame_table_17a880.c` | `0x0817A880` | 123 frame pointers |
+| `anim_family_17aa6c.c` | `0x0817AA6C` | a palette, 2 boxes, then categories 3-6: 2 OBJ palettes, animation table `gStaticData_0817B2A4`, keyframe and frame arrays |
 | `actor_pmf_17c1c0.c` | `0x0817C1C0` | 1 actor PMF table |
+| `palette_strip_17c200.c` | `0x0817C200` | a 3-frame palette strip |
 | `actor_pmf_17c260.c` | `0x0817C260` | 3 actor PMF tables |
+| `weapon_kind_17c2d0.c` | `0x0817C2D0` | 6 weapon-kind records, a 3-frame palette strip, a box, 2 keyframes |
 | `actor_state_17c3fc.c` | `0x0817C3FC` | 1 function table, 2 actor PMF tables |
+| `actor_box_17c444.c` | `0x0817C444` | 1 `struct anim_box` |
 | `actor_pmf_17c450.c` | `0x0817C450` | 1 actor PMF table |
+| `singleton_kind_17c460.c` | `0x0817C460` | 2 singleton-kind records, a box, 1 keyframe |
 | `actor_state_17c4c8.c` | `0x0817C4C8` | 1 function table, 2 actor PMF tables |
+| `hud_palettes_17c510.c` | `0x0817C510` | the ">" icon text, 4 palette halves |
 | `bg_package_17c594.c` | `0x0817C594` | 3 `struct bg_package` |
 | `popup_glyphs_17cf40.c` | `0x0817CF40` | 5 glyph packages, 9 slot seeds |
 | `slot_seeds_17d6c0.c` | `0x0817D6C0` | 20 slot seeds, 3 `struct bg_package` |
@@ -233,6 +243,9 @@ The first batch (all pointer tables, all byte-exact):
 | `sprite_banks_4b0ae0.c` | `0x084B0AE0` | sprite banks 10-21 |
 | `sprite_banks_4b414c.c` | `0x084B414C` | sprite banks 22-38 |
 | `sprite_banks_4b9d7c.c` | `0x084B9D7C` | sprite banks 39-55 |
+| `clz_tab_5a4c70.c` | `0x085A4C70` | libgcc's `__clz_tab`, twice (see "Library data" below) |
+| `gax_tables_5a6100.c` | `0x085A6100` | the GAX2 engine's strings, mixing-rate table, period table and vibrato wave |
+| `eeprom_5a9eec.c` | `0x085A9EEC` | the SDK EEPROM library's id string, chip configs, timeout and address constants |
 | `cutscene_pictures_5a9f70.c` | `0x085A9F70` | the 24 cutscene pictures: palette (C) + Mode 4 bitmap (grit) each |
 | `entity_vtables_7e3bec.c` | `0x087E3BEC` | the 93 entity virtual tables |
 
@@ -287,9 +300,46 @@ the C is the source from then on.
   file starts with a word-aligned struct, and `tools/report_units.py`
   doesn't accept linker fill between objects.
 
-Still raw and worth doing next: the animation tables inside
-`gStaticData_08178F80`/`gStaticData_0817AA98` (`actor_anim.h`'s
-`gStaticData_081796CC`/`gStaticData_0817B2A4`, not labeled yet).
+The category families' animation tables (`actor_anim.h`'s
+`gStaticData_081796CC`/`gStaticData_0817B2A4`) are C as well now, see
+"Category families" below.
+
+### Category families
+
+The two actor-category families (docs/data_map.md, `08178F80` and
+`0817AA98`) are `src/data/anim_family_178f80.c` (categories 0-2) and
+`src/data/anim_family_17aa6c.c` (categories 3-6). Each is an OBJ palette
+(256 colours, then 0x200 zero bytes nothing reads; the second family has
+two), the animation table (`struct anim_table_record`, `actor_anim.h`,
+41 and 47 records), and the arrays the records point at:
+
+- **table_A**: the clip's keyframes, `struct anim_frame_record`
+  (`actor_self.h`: duration, index into table_B, loop threshold and
+  base, OAM attribute bits). Nothing stores a count.
+- **table_B**: the frames. Record 0's points at compressed frames
+  (`gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_nnn`, set C for the
+  second family), so it's a `const u8 *const []`. Every other record's
+  is `u32` byte offsets into the family's framed sheet
+  (`graphics/unknown/00_0b2120/`, `01_14174c/`, decompressed), written
+  `FRAMED_0B2120_<ENTITY>_<NN>`. `tools/framed_gfx.py header` generates
+  those from the sheet's frame PNGs, in the order the sheet is built
+  (`graphics.mk`), so a resized frame moves the offsets with it. Every
+  offset in the ROM lands on a frame start.
+
+The arrays have no labels in the code (only the records point at them),
+so they're named after their addresses. Each one runs to the next
+array a record points at; several records share arrays, and the
+partition has no leftover bytes (every table_A piece is a whole number
+of 12-byte keyframes). The descriptors in `actor_category_175558.c`
+point at the palettes and tables by symbol now instead of
+`gStaticData_08178F80 + 0x74c`-style offsets.
+
+`struct anim_table_record`'s fields past `table_B` were typed from the
+data: `unknown_10` is a word (0 or 0x260C-0x36D5), `box_14` a `struct
+anim_box` (`{x, y, z, w, h, d}`, the same box the small actor tables
+next to the families hold), and `spawnX`/`spawnY` aren't always 0.
+`actor_anim.h`'s `struct keyframe_entry` is gone: table_A is typed as
+the matched code's `struct anim_frame_record`.
 
 ## Resources (grit-style)
 
@@ -596,6 +646,36 @@ set, which the hardware ignores but a PNG palette can't carry. Each
 palette is `aligned(4)`: the 0-3 zero bytes before it in the ROM are the
 alignment after the previous (odd-length) bitmap stream.
 
+### Library data
+
+The constants of the libraries linked into the game, between the GAX2
+music block and the cutscene pictures, are C in three files:
+
+- `clz_tab_5a4c70.c`: libgcc2.c's `__clz_tab` (bit length of each byte
+  value), twice, because gcc 2.x's libgcc2.c made it `static` in each
+  object. `__divdi3` and `__udivdi3` (`src/util/math_div64_util.c`)
+  each read their own. The values are written the way libgcc2.c writes
+  them.
+- `gax_tables_5a6100.c`: the GAX2 engine's version string (and the
+  pointer to it, which `sub_8038538` checks for "GAX"), the 12 mixing
+  rates (`struct RateEntry`), the error strings `sub_80392E0` prints,
+  its halt banner and the pointer to it, the 3,828-entry period table
+  and the 64-step vibrato wave. The two pointers are symbol references
+  now, so the music block before them can change size.
+- `eeprom_5a9eec.c`: the AGB SDK EEPROM library's "EEPROM_V122" id
+  string (read by flashers and emulators to detect the save type, not
+  by the game), the two `struct EepromConfig`s, the write timeout
+  `u16[3]`, and a list of the library's 22 address constants. That list
+  holds, function by function, the literal-pool words of `sub_803A968`
+  ... `sub_803ACE0` that are symbol addresses (IWRAM variables, the two
+  configs, the timeout, `sub_803A9AC`). Nothing in the ROM points at
+  it, but every word is a symbol, so it is written as symbol references
+  and doesn't pin anything in place.
+
+The one-byte pad before the version string is the zero padding gbagfx
+writes after the `.lz` stream before it (it rounds `.lz` files up to 4
+bytes), so `data.s` incbins that file whole instead of trimming it.
+
 ### Placing it and counting it
 
 Placement is the same as for a hand-written table (see "Layout" above).
@@ -679,8 +759,9 @@ The `sub_effect_record` tables in the same regions are hand-written C:
 12-byte `struct sub_effect_table_end` that the one-record-ahead
 accessors read after the last one.
 
-The 2-byte pads after the two LZ77 sheets (`gStaticData_080C0C36`,
-`gStaticData_08151AC2`) stay raw `.incbin`s.
+The 2-byte pads after the two LZ77 sheets (formerly
+`gStaticData_080C0C36`, `gStaticData_08151AC2`) are built: see "LZ77
+stream padding" below.
 
 ### Compressed sprite frames
 
@@ -727,11 +808,30 @@ the literal run, and the frame's leading zeros are always a zero run. It
 rebuilds all 344 frames byte for byte. An edited frame compresses to a
 different length, which moves every later frame, so pointers into a set
 must use the generated offsets: `frame_table_17a880.c` writes
-`gStaticData_080DA1D8 + RLE_SPRITES_0DA1D8_FRAME_nnn`. The other two
-frame tables (`gStaticData_0817941C`, `gStaticData_0817BA44`) are still
-raw bytes inside their category family blobs; when they become C they
-should use `RLE_SPRITES_0C2758_FRAME_nnn` / `RLE_SPRITES_15A050_FRAME_nnn`
-the same way.
+`gStaticData_080DA1D8 + RLE_SPRITES_0DA1D8_FRAME_nnn`, and the other two
+frame tables (`gStaticData_0817941C`, `gStaticData_0817BA44`, in the
+category family files) use `RLE_SPRITES_0C2758_FRAME_nnn` /
+`RLE_SPRITES_15A050_FRAME_nnn` the same way.
 
 `tools/rle_sprites.py extract` writes the three PNGs from `baserom.gba`
 again and checks that every frame re-encodes to the ROM's bytes.
+
+### LZ77 stream padding
+
+The LZ77 streams in `data/data.s` start on a word boundary, and most
+are followed by 1-3 zero bytes that bring the next asset back to one.
+Those bytes used to be 70 raw labels (`gStaticData_080C0C36`,
+`gStaticData_08151AC2`, `gStaticData_085A5519`, 66 between
+`0x0861BF2E` and `0x086EA0C9`, `gStaticData_086ECCD2`). Each one is
+exactly the padding gbagfx writes: it rounds every `.lz` file up to a
+multiple of 4 with zeros. So the stream's `.incbin` takes the whole
+padded file instead of trimming it to the stream length (`, 0, 0x1E6`),
+and the pad label is gone (no code referenced any of them).
+`tools/report_units.py` counts the padding as part of the built blob.
+
+This only holds where the stream starts word-aligned and the ROM pad
+is all zeros, which is true of every one of the 70 (checked against the
+built `.lz` files). An edited asset that compresses to a different
+length gets the right padding for its new length, so the next asset
+stays aligned. Streams that the ROM packs back to back without a pad
+(the cutscene bitmaps, `cutscene_pictures_5a9f70.c`) keep the trimming.

@@ -59,11 +59,11 @@ the appendix.
 |---|---:|---|---|---|---|
 | `0803B8B0`-`080B1444` | 482,196 | BG0 cell animation A (palette, 19x13 cells, 60 frames) | `sub_8029890`/`sub_80297C8` via category descriptors 0-2 | high | **converted** |
 | `080B1444`-`080B2120` | 3,292 | category 0 `sub_effect_record` table (164 records) | `SelectActorCategory`, `sub_802A5xx` | high | **converted** |
-| `080C0C36`-`080C2758` | 6,946 | 2 B pad + category 1/2 `sub_effect_record` tables | same | high | **converted** (the pad stays raw) |
+| `080C0C36`-`080C2758` | 6,946 | 2 B pad + category 1/2 `sub_effect_record` tables | same | high | **converted** (the pad is gbagfx's padding) |
 | `080C2758`-`080FF1B0` | 248,408 | compressed OBJ frame sets A and B (the old "rotation strips") | `GetAnimFrameData` via table_B `0817941C`/`0817A880`, unpacked by the `gUnknown_03000874` IWRAM hook | high | **converted** |
 | `080FF1B0`-`0813D934` | 255,876 | BG0 cell animation B (38x10 cells, 21 frames) | `sub_8029890` via category descriptors 3-6 | high | **converted** |
 | `0813D934`-`0814174C` | 15,896 | category 3 BG1 picture + `sub_effect_record` table | `sub_802F7B0`, `SelectActorCategory` | high | **converted** |
-| `08151AC2`-`0815A050` | 34,190 | category 4-6 BG1 pictures + `sub_effect_record` tables | same | high | **converted** (the pad stays raw) |
+| `08151AC2`-`0815A050` | 34,190 | category 4-6 BG1 pictures + `sub_effect_record` tables | same | high | **converted** (the pad is gbagfx's padding) |
 | `0815A050`-`08167AD4` | 55,940 | compressed OBJ frame set C | `GetAnimFrameData` via table_B `0817BA44` | high | **converted** |
 | `08167AD4`-`0817E78C` | 92,180 | 200 small/mid tables: gameplay, menus, HUD, actors, text (the built sfx table sits in between) | direct, see appendix | mostly high | easy (a few medium) |
 | `0817E78C`-`0817E7AC` | 32 | `u16[16]` | `sub_8037388` | high | **done** (C) |
@@ -75,9 +75,9 @@ the appendix.
 | `084A4660`-`084A5600` | 4,000 | 125 fixed 4bpp tiles | `sub_8004D74` pool, `sub_8006DF8` | high | **done** (grit) |
 | `084A5600`-`084C0006` | 109,062 | sprite-bank table ("master asset table"): header, 56 banks, 2,429 frames | `sub_8004D74`, `sub_8022230`, every `**gUnknown_030012D0` user | high | **converted** (C) |
 | `084C0006`-`0855BCB4` | 638,126 | GAX2 sound-effect data set: 88 instruments, 87 8-bit samples, sample table, the SFX voice handler type | `PlaySfx`/`sub_8038E74` voices via `GaxSongHeader.sfxTypes` (`sub_80017BC`) | high | **converted** (`gax_audio.py --sfx`) |
-| `085A4C5C`-`086ECCD2` | 28,979 | 111 labels between the built intro/tileset1 LZ77 blobs: GAX2 tables and strings, libgcc `__clz_tab` x2, EEPROM tables, 23 intro palettes, 67 alignment pads | direct / slide packages | high | easy |
+| `085A4C5C`-`086ECCD2` | 28,979 | 111 labels between the built intro/tileset1 LZ77 blobs: GAX2 tables and strings, libgcc `__clz_tab` x2, EEPROM tables, 23 intro palettes, 67 alignment pads | direct / slide packages | high | easy (the pads and palettes **done**) |
 | `086C127C`-`086D9CAC` | 100,912 | raw level asset (room `0825E7DC`) | `sub_80266BC` -> `sub_80254F8`/`sub_8024CF0` | high | **done** (decoded tilemaps) |
-| `086ECCD2`-`087E3BEC` | 1,011,482 | 2 B pad + 6 raw level assets | same | high | **done** (the pad stays raw) |
+| `086ECCD2`-`087E3BEC` | 1,011,482 | 2 B pad + 6 raw level assets | same | high | **done** (the pad is gbagfx's padding) |
 | `087E3BEC`-`087E55E4` | 6,648 | 93 gcc 2.x vtables | constructors (`sub_8009ED0`, ...) | high | easy |
 | `087E55E4`-`087E5FCC` | 2,536 | IWRAM image (ARM code + data, copied by `crt0`) | `crt0.s` | high | **converted** (`asm/intr_main.s`, `src/iwram/`; the code counts as code, 540 B of data) |
 | `087E5FCC`-`08800000` | 106,548 | `0xFF` fill (not counted as data) | - | high | - |
@@ -173,7 +173,7 @@ animation-table `table_B` array:
 
 | Range | Size | Content | Evidence | Effort |
 |---|---:|---|---|---|
-| `080C0C36` | 2 | zero pad | | easy |
+| `080C0C36` | 2 | zero pad (gbagfx's padding of the `.lz` stream before it) | | done |
 | `080C0C38` | 0xDB8 | category 1 `sub_effect_record[175]` + 0xC | descriptor 1 `+0x14`, count in record 0 | easy |
 | `080C19F0` | 0xD68 | category 2 `sub_effect_record[171]` + 0xC | descriptor 2 `+0x14` | easy |
 | `080C2758` | 0x17A80 | **compressed frame set A**: 152 back-to-back zero-run-compressed frames `{8, 8, 0x30, 0}` + run stream | the 152 absolute pointers of `table_B` `0x0817941C` (anim record 0 of categories 0-2, 148 distinct) all land on a frame header | medium |
@@ -185,8 +185,9 @@ animation-table `table_B` array:
 **Status:** the two tables are converted (`src/data/sub_effect_0c0c38.c`),
 and cell animation B, the category 3 picture and its table too
 (`src/data/cell_anim_0ff1b0.c`), and the two frame sets
-(`src/data/rle_sprites_0c2758.c`, see below). Only the pad at `080C0C36`
-stays a raw `.incbin`.
+(`src/data/rle_sprites_0c2758.c`, see below). The pad at `080C0C36` is
+built too: it is the zero padding gbagfx writes after the `.lz` stream
+(docs/data.md, "LZ77 stream padding").
 
 The **BG1 picture** format, from `sub_802F7B0` (`actor_part45d.c`):
 `u16 palette[256]`, `s16 cols @0x200`, `s16 rows @0x202`,
@@ -241,7 +242,7 @@ above:
 
 | Range | Size | Content | Effort |
 |---|---:|---|---|
-| `08151AC2` | 2 | zero pad | easy |
+| `08151AC2` | 2 | zero pad (gbagfx's padding of the `.lz` stream before it) | done |
 | `08151AC4` | 0x2598 | BG1 picture, category 4 (38x16, 237 tiles) | medium |
 | `0815405C` | 0x1204 | category 4 `sub_effect_record[230]` + 0xC | easy |
 | `08155260` | 0x36B8 | BG1 picture shared by categories 5 and 6 (38x16, 374 tiles) | medium |
@@ -251,7 +252,8 @@ above:
 
 **Status:** the pictures and tables (`08151AC4`-`0815A050`) are converted
 (`src/data/bg_picture_151ac4.c`), and so is frame set C
-(`src/data/rle_sprites_15a050.c`). Only the pad at `08151AC2` stays raw.
+(`src/data/rle_sprites_15a050.c`). The pad at `08151AC2` is gbagfx's
+padding of the `.lz` stream before it, like the one at `080C0C36`.
 
 ### `gStaticData_0817E78C` (3,305,076 B): level tile sets, room data, sprite tile pool
 
@@ -434,7 +436,8 @@ starts with a `u16` offset table (offsets x 4). Each layer reads it at
 | `0878ADA8` | 0x31394 | `0824E104` |
 | `087BC13C` | 0x27AB0 | `0825233C` (ends at the first vtable, `087E3BEC`) |
 
-**Status: converted** (all but the 2-byte pad at `086ECCD2`). The chunk
+**Status: converted** (the 2-byte pad at `086ECCD2` is gbagfx's padding
+of the LZ77 asset before it). The chunk
 streams are decoded into one tilemap per layer (`data/levels/<room>/`),
 and `tools/levels.py` re-encodes them byte for byte, the LZ77 ones
 included: its encoder reproduces the original tool's token choices and
@@ -470,7 +473,7 @@ By kind (from `tools/data_map.json`):
 | function-pointer / pointer-to-member tables | 16 | 1,232 | `0816BF20` (42 `act_pmf`), `0816C6A4` (92 fn ptrs), `081756C4` (3 `category_vtable`), the `actor_pmf` tables in `0817A6B8`-`0817C4F8` |
 | pointer tables | 11 | 272 | e.g. `0816AA20` (19 song pointers into the built audio), `0816C5A0`, `0817E714` |
 | palettes (16- or 256-colour BGR555) | 51 | 63,397 | 23 are the 256-colour palettes of the intro Mode-4 slides (`085ADBD1`...`08619F51`, each after 0-3 B of alignment pad; some entries have bit 15 set, so they can't round-trip through `gbagfx .pal`; **converted** as C `u16` arrays, `cutscene_pictures_5a9f70.c`), plus `08175760` (32 palette-cycle frames x 0x1C0) and many 0x20 menu/HUD palettes |
-| alignment padding | 67 | 133 | 1-3 zero bytes before a 4-aligned LZ77 blob, all between `085A5519` and `086EA0C9`. Emit as `.balign 4, 0` |
+| alignment padding | 67 | 133 | 1-3 zero bytes before a 4-aligned LZ77 blob, all between `085A5519` and `086EA0C9`. **Built**: each one is exactly the zero padding gbagfx appends to the `.lz` stream before it, so `data.s` incbins the whole padded file (docs/data.md, "LZ77 stream padding") |
 | other typed tables | 166 | 56,125 | `s32`/`u16`/struct tables with known consumers; notable ones below |
 
 Notable mid-size tables:
@@ -496,6 +499,8 @@ Notable mid-size tables:
   families: palettes, `table_A` keyframes, `anim_table_record[41]`/`[47]`
   (`081796CC`/`0817B2A4`, already declared), and the `table_B` arrays.
   `graphics/unknown/*/entities.json` already records all of it.
+  **Converted** (`src/data/anim_family_178f80.c`,
+  `src/data/anim_family_17aa6c.c`, docs/data.md "Category families").
 - `08175558`+`08175564`+`08175584`: one `category_descriptor[7]`, split over three labels.
 - `081725C4` (0x261C): terrain shape records (36 B, heights 0-7, `0xFF`
   empty) for the collision streamer.
@@ -505,11 +510,13 @@ Notable mid-size tables:
 - `0816A820`: `s16[256]` sine table. **Converted**
   (`src/data/boss_pictures_167ad4.c`).
 - `085A4C70`/`085A4D70`: two copies of libgcc's `__clz_tab` (`u8[256]`).
-  They could come from `libgcc.a` itself if the link kept its `.rodata`.
+  **Converted** (`src/data/clz_tab_5a4c70.c`).
 - `085A60FF`...`085A62CC`: GAX2 version string (`"GAX Sound Engine 2.01D
   (Sep 28 2001) (c) Shin'en Multimedia. Code: B.Wodok"`) and error strings,
   the `RateEntry` table, and `085A62DC`, the GAX2 `u32` period table
-  (0x3BD0; its `0x08xxxxxx` values are a smooth ramp, not pointers).
+  (0x3BD0; its `0x08xxxxxx` values are a smooth ramp, not pointers). **Converted**, with the vibrato wave
+  and the EEPROM library's data after it (`src/data/gax_tables_5a6100.c`,
+  `src/data/eeprom_5a9eec.c`).
 
 Every one of the 412 labels is listed in the appendix.
 
@@ -622,8 +629,8 @@ vtable shapes).
 | Address | Size | Format | Consumers | Conf. | Effort |
 |---|---:|---|---|---|---|
 | `0803B8B0` | 0x76870 | composite: BG0 streamed cell animation A + category-0 sub-effect table. **Converted** (`src/data/cell_anim_03b8b0.c`) | `sub_8029890`, `sub_80297C8`, `sub_802996C` +2 | high | done |
-| `080C0C36` | 0x80B16 | composite: sub-effect tables, two compressed OBJ frame sets, BG0 cell animation B, BG1 picture. **Converted** except the 2-byte pad (still `gStaticData_080C0C36`) | `SelectActorCategory`, `GetAnimFrameData`, `sub_8029890` +2 | high | easy (pad) |
-| `08151AC2` | 0x16012 | composite: BG1 pictures, sub-effect tables, compressed OBJ frame set C (categories 3-6). **Converted** except the 2-byte pad (still `gStaticData_08151AC2`) | `SelectActorCategory`, `GetAnimFrameData`, `sub_802F7B0` | high | easy (pad) |
+| `080C0C36` | 0x80B16 | composite: sub-effect tables, two compressed OBJ frame sets, BG0 cell animation B, BG1 picture. **Converted**, the 2-byte pad as gbagfx's padding of `00_0b2120.bin.lz` | `SelectActorCategory`, `GetAnimFrameData`, `sub_8029890` +2 | high | done |
+| `08151AC2` | 0x16012 | composite: BG1 pictures, sub-effect tables, compressed OBJ frame set C (categories 3-6). **Converted**, the 2-byte pad as gbagfx's padding of `01_14174c.bin.lz` | `SelectActorCategory`, `GetAnimFrameData`, `sub_802F7B0` | high | done |
 | `08167AD4` | 0x200 | N. Gin's airship: 16-colour palette (+ zero to 0x200). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_8031504`, `sub_8031604` | high | done |
 | `08167CD4` | 0x1E14 | N. Gin's airship picture: {cols 18, rows 12}, 4 frames of {tile count, u16 map, 4bpp tiles} sharing one pool (graphics/boss_pictures/, tools/boss_pictures.py). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_8030F88` | medium | done |
 | `08169AE8` | 0x200 | Cortex's hovercraft: palette (16 colours + 240 x 0x03E0). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_8032AF8`, `sub_8033604`, `sub_80336CC` | high | done |
@@ -756,52 +763,52 @@ vtable shapes).
 | `08175564` | 0x20 | category_descriptor[0] bytes 0x0C-0x2B (part of gStaticData_08175558[7]) | `InitActorCategory` | high | easy |
 | `08175584` | 0x140 | category_descriptor[0] +0x2C .. [6] end (part of gStaticData_08175558[7]) | `InitActorCategory` | high | easy |
 | `081756C4` | 0x9C | category_vtable[3]: 3 x 13 Thumb function pointers (slots 7/8 of type 0 hold junk values) | `SelectActorCategory` | high | easy |
-| `08175760` | 0x3800 | palette-cycle frames: 32 x 0x1C0-byte BGR555 blocks (14 x 16-colour palettes each) | `sub_802AB58` | high | easy |
-| `08178F60` | 0x10 | table of s32 (`s32` x 4) | `sub_802ABC8` | high | easy |
-| `08178F70` | 0x10 | table of s32 (`s32` x 4) | `sub_802ABC8` | high | easy |
-| `08178F80` | 0x1738 | categories 0-2 family data: 16-colour palettes, keyframe tables (table_A), anim table gStaticData_081796CC (41 x 0x28) and table_B arrays (absolute ROM pointers or sheet offsets) | `sub_80361B0` | high | medium |
+| `08175760` | 0x3800 | palette-cycle frames: 32 x 0x1C0-byte BGR555 blocks (BG palettes 0-13). **Converted** (`src/data/palette_cycle_175760.c`) | `sub_802AB58` | high | done |
+| `08178F60` | 0x10 | palette-cycle cursor starts `s32[4]`. **Converted** | `sub_802ABC8` | high | done |
+| `08178F70` | 0x10 | palette-cycle cursor bounds `s32[4]`. **Converted** | `sub_802ABC8` | high | done |
+| `08178F80` | 0x1738 | categories 0-2 family data: OBJ palette, keyframe tables (table_A), anim table gStaticData_081796CC (41 x 0x28) and table_B arrays. **Converted** (`src/data/anim_family_178f80.c`, docs/data.md "Category families") | `sub_80361B0` | high | done |
 | `0817A6B8` | 0x70 | function-pointer / pointer-to-member table (14 code pointers) | `sub_802B364`, `sub_802C208` | high | easy |
-| `0817A728` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_802B730`, `sub_802BB4C` | high | easy |
-| `0817A748` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_802BB4C` | high | easy |
-| `0817A768` | 0xC | table (element layout: see consumers) | `sub_802C6C0` | medium | easy |
-| `0817A774` | 0xC | table (element layout: see consumers) | `sub_802CC9C` | medium | easy |
-| `0817A780` | 0xC | table (element layout: see consumers) | `sub_802CC9C` | medium | easy |
-| `0817A78C` | 0xC | table (element layout: see consumers) | `sub_802CC9C` | medium | easy |
-| `0817A798` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_802D204` | high | easy |
-| `0817A7B8` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_802D2DC` | high | easy |
-| `0817A7D8` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_802D2DC` | high | easy |
-| `0817A7F8` | 0x48 | table (element layout: see consumers) | `sub_802DB2C`, `sub_802DCC0` | medium | easy |
+| `0817A728` | 0x20 | 16-colour palette. **Converted** (`src/data/actor_tables_17a728.c`) | `sub_802B730`, `sub_802BB4C` | high | done |
+| `0817A748` | 0x20 | 16-colour palette. **Converted** | `sub_802BB4C` | high | done |
+| `0817A768` | 0xC | `struct anim_box`. **Converted** | `sub_802C6C0` | medium | done |
+| `0817A774` | 0xC | `struct anim_box`. **Converted** | `sub_802CC9C` | medium | done |
+| `0817A780` | 0xC | `struct anim_box`. **Converted** | `sub_802CC9C` | medium | done |
+| `0817A78C` | 0xC | `struct anim_box`. **Converted** | `sub_802CC9C` | medium | done |
+| `0817A798` | 0x20 | 16-colour palette (gauge tier 1). **Converted** | `sub_802D204` | high | done |
+| `0817A7B8` | 0x20 | 16-colour palette. **Converted** | `sub_802D2DC` | high | done |
+| `0817A7D8` | 0x20 | 16-colour palette. **Converted** | `sub_802D2DC` | high | done |
+| `0817A7F8` | 0x48 | 6 x `{s32 value, s32 threshold, s32 threshold}`. **Converted** | `sub_802DB2C`, `sub_802DCC0` | medium | done |
 | `0817A840` | 0x10 | function-pointer / pointer-to-member table (4 code pointers) (`void (*)(void)` x 4) | `sub_802D7B0` | high | easy |
-| `0817A850` | 0x30 | table (element layout: see consumers) | `sub_802DFDC` | medium | easy |
+| `0817A850` | 0x30 | 4 `struct anim_frame_record` (the sub_802DFDC singleton's keyframes). **Converted** (`src/data/anim_frames_17a850.c`) | `sub_802DFDC` | medium | done |
 | `0817A880` | 0x1EC | table_B: 123 absolute pointers into compressed frame set B (0x080DA1D8..) | `sub_802DFDC` | high | easy |
-| `0817AA6C` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_802D9A8` | high | easy |
-| `0817AA8C` | 0xC | table (element layout: see consumers) | `sub_802DD9C` | medium | easy |
-| `0817AA98` | 0x1728 | categories 3-6 family data: s16 header, palettes, table_A, anim table gStaticData_0817B2A4 (47 x 0x28), table_B arrays | `sub_802D7B0` | high | medium |
+| `0817AA6C` | 0x20 | 16-colour gradient palette. **Converted** (`src/data/anim_family_17aa6c.c`) | `sub_802D9A8` | high | done |
+| `0817AA8C` | 0xC | `struct anim_box`. **Converted** | `sub_802DD9C` | medium | done |
+| `0817AA98` | 0x1728 | categories 3-6 family data: a box, 2 OBJ palettes, table_A, anim table gStaticData_0817B2A4 (47 x 0x28), table_B arrays. **Converted** (`src/data/anim_family_17aa6c.c`) | `sub_802D7B0` | high | done |
 | `0817C1C0` | 0x40 | function-pointer / pointer-to-member table (8 code pointers) | `sub_802E84C`, `sub_802F748` | high | easy |
-| `0817C200` | 0x60 | BGR555 palette(s): 3 x 16 colours (`u16` x 48) | `sub_802F4CC` | high | easy |
+| `0817C200` | 0x60 | 3-frame 16-colour palette strip. **Converted** (`src/data/palette_strip_17c200.c`) | `sub_802F4CC` | high | done |
 | `0817C260` | 0x20 | function-pointer / pointer-to-member table (4 code pointers) | `sub_802FA38`, `sub_802FEA4` | high | easy |
 | `0817C280` | 0x38 | function-pointer / pointer-to-member table (7 code pointers) | `sub_802FFB8`, `sub_8030234` | high | easy |
 | `0817C2B8` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `sub_8030574`, `sub_8030648` | high | easy |
-| `0817C2D0` | 0xA8 | table of struct weapon_kind | `sub_8031040` | high | easy |
-| `0817C378` | 0x60 | BGR555 palette(s): 3 x 16 colours (`u16` x 48) | `sub_8031040`, `sub_8031744` | high | easy |
-| `0817C3D8` | 0xC | table of s16 (`s16` x 6) | `sub_80309B4`, `sub_8030E08`, `sub_8031378` | high | easy |
-| `0817C3E4` | 0x18 | table of struct anim_frame_record | `sub_8030F88` | high | easy |
+| `0817C2D0` | 0xA8 | 6 `struct weapon_kind` (7 words). **Converted** (`src/data/weapon_kind_17c2d0.c`) | `sub_8031040` | high | done |
+| `0817C378` | 0x60 | 3-frame 16-colour palette strip. **Converted** | `sub_8031040`, `sub_8031744` | high | done |
+| `0817C3D8` | 0xC | `struct anim_box`. **Converted** | `sub_80309B4`, `sub_8030E08`, `sub_8031378` | high | done |
+| `0817C3E4` | 0x18 | 2 `struct anim_frame_record`. **Converted** | `sub_8030F88` | high | done |
 | `0817C3FC` | 0x18 | function-pointer / pointer-to-member table (6 code pointers) (`void*` x 6) | `sub_80311C4` | high | easy |
 | `0817C414` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `sub_8031A08` | high | easy |
 | `0817C42C` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `sub_8031A6C`, `sub_80322F4` | high | easy |
-| `0817C444` | 0xC | table (element layout: see consumers) | `sub_8032480` | medium | easy |
+| `0817C444` | 0xC | `struct anim_box`. **Converted** (`src/data/actor_box_17c444.c`) | `sub_8032480` | medium | done |
 | `0817C450` | 0x10 | function-pointer / pointer-to-member table (2 code pointers) | `sub_8032950`, `sub_8032A94` | high | easy |
-| `0817C460` | 0x50 | table of struct singleton_kind | `sub_8033264` | high | easy |
-| `0817C4B0` | 0xC | table of s16 (`s16` x 6) | `sub_8032C0C` | high | easy |
-| `0817C4BC` | 0xC | table (element layout: see consumers) | `sub_80331BC` | medium | easy |
+| `0817C460` | 0x50 | 2 `struct singleton_kind` (10 words). **Converted** (`src/data/singleton_kind_17c460.c`) | `sub_8033264` | high | done |
+| `0817C4B0` | 0xC | `struct anim_box`. **Converted** | `sub_8032C0C` | high | done |
+| `0817C4BC` | 0xC | 1 `struct anim_frame_record`. **Converted** | `sub_80331BC` | medium | done |
 | `0817C4C8` | 0x18 | function-pointer / pointer-to-member table (6 code pointers) (`void*` x 6) | `sub_8032B6C` | high | easy |
 | `0817C4E0` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `sub_8033B44`, `sub_8033C84` | high | easy |
 | `0817C4F8` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `sub_8033E80`, `sub_8033FE4` | high | easy |
-| `0817C510` | 0x2 | small constant (3e00) | `sub_8034AA4` | medium | easy |
-| `0817C512` | 0x20 | table of u16; 1 word(s) look like ROM pointers (`u16` x 16) | `sub_803487C` | high | easy |
-| `0817C532` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_803487C` | high | easy |
-| `0817C552` | 0x20 | table of u16 (`u16` x 16) | `sub_803487C` | high | easy |
-| `0817C572` | 0x22 | table of u16 (`u16` x 17) | `sub_803487C` | high | easy |
+| `0817C510` | 0x2 | the text ">". **Converted** (`src/data/hud_palettes_17c510.c`) | `sub_8034AA4` | medium | done |
+| `0817C512` | 0x20 | 16 palette halfwords. **Converted** | `sub_803487C` | high | done |
+| `0817C532` | 0x20 | 16 palette halfwords. **Converted** | `sub_803487C` | high | done |
+| `0817C552` | 0x20 | 16 halfwords (mostly 0xFFFF). **Converted** | `sub_803487C` | high | done |
+| `0817C572` | 0x22 | 16 halfwords + the 2-byte zero pad. **Converted** | `sub_803487C` | high | done |
 | `0817C594` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `sub_803472C` | medium | easy |
 | `0817C5A8` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `sub_803472C` | medium | easy |
 | `0817C5BC` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `sub_803472C` | medium | easy |
@@ -827,27 +834,27 @@ vtable shapes).
 | `0817E78C` | 0x326E74 | composite: level BG tile sets (raw tag-0x00 assets), per-room level data, sprite-bank tile pool | `sub_8037388` | high | medium |
 | `084A5600` | 0xB66B4 | composite: sprite-bank (animation) table (**converted**, C) + GAX2 sound-effect bank (**converted**, `gax_audio.py --sfx`) | `sub_8004D74`, `sub_8022230` | high | medium |
 | `085A4C5C` | 0x14 | the default song's GAX2_Song struct `{4, unknownc, info, unk_ptr, channel}` (the engine's default handler layout). **Built** by `tools/gax_audio.py` (`gax_default_layout.bin`) | `sub_8037FC0`, `sub_8038538` | high | done |
-| `085A4C70` | 0x100 | u8[256] count-leading-zeros table (libgcc __clz_tab, used by the 64-bit divide) (`UQItype` x 256) | `sub_8037648` | high | easy |
-| `085A4D70` | 0x100 | u8[256] count-leading-zeros table (second copy, __clz_tab of another libgcc object) (`UQItype` x 256) | `sub_8037A7C` | high | easy |
-| `085A5519` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `085A60FF` | 0x4D | 1 B pad + GAX2 version string "GAX Sound Engine 2.01D (Sep 28 2001) (c) Shin'en Multimedia. Code: B.Wodok" + NUL padding | `sub_8038538 (via gStaticData_085A614C)` | high | easy |
-| `085A614C` | 0x4 | pointer table (1 data pointers) (`u8*` x 1) | `sub_8038538` | high | easy |
-| `085A6150` | 0x60 | table of struct RateEntry | `sub_8037FA0`, `sub_8037FC0`, `sub_8038538` | high | easy |
-| `085A61B0` | 0xC | table (element layout: see consumers) | `sub_80381FC` | medium | easy |
-| `085A61BC` | 0x14 | table (element layout: see consumers) | `sub_80381FC` | medium | easy |
-| `085A61D0` | 0xC | GAX2 error/tag string "GAX2_INIT" (NUL-padded to 4) (`char` x 12) | `sub_8038538`, `sub_8038A1C` | high | easy |
-| `085A61DC` | 0x10 | GAX2 error/tag string "OUT OF MEMORY" (NUL-padded to 4) (`char` x 16) | `sub_8038538`, `sub_8038A1C` | high | easy |
-| `085A61EC` | 0xC | GAX2 error/tag string "GAX2_JINGLE" (NUL-padded to 4) (`char` x 12) | `sub_8038A1C` | high | easy |
-| `085A61F8` | 0x1C | GAX2 error/tag string "GAX_NO_JINGLE FLAG IS SET" (NUL-padded to 4) (`char` x 28) | `sub_8038A1C` | high | easy |
-| `085A6214` | 0x8 | GAX2 error/tag string "GAX_IRQ" (NUL-padded to 4) | `sub_8038B68` | high | easy |
-| `085A621C` | 0xAC | GAX2 error string "GAX_PLAY HAS NOT FINISHED BEFORE GAX_IRQ. USE LOWER MIXING RATE ..." (+ padding) | `sub_8038B68` | high | easy |
-| `085A62C8` | 0x4 | pointer table (1 data pointers) (`u8*` x 1) | `sub_80392E0` | high | easy |
-| `085A62CC` | 0x10 | table (element layout: see consumers) | `sub_80392E0` | medium | easy |
-| `085A62DC` | 0x3BD0 | GAX2 u32 note period/frequency table (smooth ramp; embedded 0x08xxxxxx values are coincidence) (`u32` x 3828) | `sub_8039B44` | high | easy |
-| `085A9EAC` | 0x4C | table of s8 (`s8` x 76) | `sub_8039FFC` | high | easy |
-| `085A9EF8` | 0xC | table of struct EepromConfig | `sub_803A968` | high | easy |
-| `085A9F04` | 0xC | table of struct EepromConfig | `sub_803A968` | high | easy |
-| `085A9F10` | 0x260 | EEPROM table (0x60, still raw), then the 256-colour palette of cutscene picture 00 (0x200, `gCutscenePicture00`, **converted**) | `sub_803AC04` | high | easy |
+| `085A4C70` | 0x100 | u8[256] count-leading-zeros table (libgcc `__clz_tab` of `__divdi3`). **Converted** (`src/data/clz_tab_5a4c70.c`) | `sub_8037648` | high | done |
+| `085A4D70` | 0x100 | u8[256] count-leading-zeros table (the second copy, `__udivdi3`'s). **Converted** (`src/data/clz_tab_5a4c70.c`) | `sub_8037A7C` | high | done |
+| `085A5519` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `085A60FF` | 0x4D | 1 B pad (gbagfx's padding of the `.lz` stream before it, now built) + GAX2 version string "GAX Sound Engine 2.01D (Sep 28 2001) (c) Shin'en Multimedia. Code: B.Wodok". **Converted** (`gGaxVersionString`, `src/data/gax_tables_5a6100.c`) | `sub_8038538 (via gStaticData_085A614C)` | high | done |
+| `085A614C` | 0x4 | pointer to the GAX2 version string. **Converted** (`gStaticData_085A614C = gGaxVersionString`) | `sub_8038538` | high | done |
+| `085A6150` | 0x60 | 12 `struct RateEntry` `{rate in Hz, timer reload}`. **Converted** | `sub_8037FA0`, `sub_8037FC0`, `sub_8038538` | high | done |
+| `085A61B0` | 0xC | GAX2 error string "GAX2_NEW". **Converted** | `sub_80381FC` | medium | done |
+| `085A61BC` | 0x14 | GAX2 error string "PARAMS ARG IS NULL". **Converted** | `sub_80381FC` | medium | done |
+| `085A61D0` | 0xC | GAX2 error/tag string "GAX2_INIT". **Converted** | `sub_8038538`, `sub_8038A1C` | high | done |
+| `085A61DC` | 0x10 | GAX2 error/tag string "OUT OF MEMORY". **Converted** | `sub_8038538`, `sub_8038A1C` | high | done |
+| `085A61EC` | 0xC | GAX2 error/tag string "GAX2_JINGLE". **Converted** | `sub_8038A1C` | high | done |
+| `085A61F8` | 0x1C | GAX2 error/tag string "GAX_NO_JINGLE FLAG IS SET". **Converted** | `sub_8038A1C` | high | done |
+| `085A6214` | 0x8 | GAX2 error/tag string "GAX_IRQ". **Converted** | `sub_8038B68` | high | done |
+| `085A621C` | 0xAC | GAX2 error string "GAX_PLAY HAS NOT FINISHED BEFORE GAX_IRQ. ...", then the halt banner "GAX ENGINE V2.01D Sep 28 2001\n\nEXCEPTION. PROGRAM HALT." (`gGaxHaltBanner`, `+0x74`). **Converted** | `sub_8038B68` | high | done |
+| `085A62C8` | 0x4 | pointer to the halt banner. **Converted** (`gStaticData_085A62C8 = gGaxHaltBanner`) | `sub_80392E0` | high | done |
+| `085A62CC` | 0x10 | GAX2 halt-screen string "FUNCTION NAME:". **Converted** | `sub_80392E0` | medium | done |
+| `085A62DC` | 0x3BD0 | GAX2 u32 note period table (`u32` x 3828; its 0x08xxxxxx values are a smooth ramp, not pointers). **Converted** | `sub_8039B44` | high | done |
+| `085A9EAC` | 0x4C | s8[64] vibrato sine wave, then the SDK's "EEPROM_V122" id string (`gEepromLibraryVersion`, `+0x40`). **Converted** (`gax_tables_5a6100.c`, `eeprom_5a9eec.c`) | `sub_8039FFC` | high | done |
+| `085A9EF8` | 0xC | `struct EepromConfig` of the 4 Kbit chip. **Converted** (`src/data/eeprom_5a9eec.c`) | `sub_803A968` | high | done |
+| `085A9F04` | 0xC | `struct EepromConfig` of the 64 Kbit chip. **Converted** | `sub_803A968` | high | done |
+| `085A9F10` | 0x260 | EEPROM write timeout `u16[3]` + pad, then the library's 22 address constants (`gEepromLibraryAddresses`, no reader), then the palette of cutscene picture 00. **Converted** (`eeprom_5a9eec.c`, `cutscene_pictures_5a9f70.c`) | `sub_803AC04` | high | done |
 | `085ADBD1` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 01), bit 15 set in many entries. **Converted** (`gCutscenePicture01`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
 | `085B34E1` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 02), bit 15 set in many entries. **Converted** (`gCutscenePicture02`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
 | `085B82BC` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 03), bit 15 set in many entries. **Converted** (`gCutscenePicture03`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
@@ -871,74 +878,74 @@ vtable shapes).
 | `08611BD9` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 21), bit 15 set in many entries. **Converted** (`gCutscenePicture21`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
 | `08616360` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 22), bit 15 set in many entries. **Converted** (`gCutscenePicture22`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
 | `08619F51` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 23), bit 15 set in many entries. **Converted** (`gCutscenePicture23`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
-| `0861BF2E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0861C182` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0861C309` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0861E5F6` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0862556B` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08628C4F` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0862A957` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0862C2C5` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0862C4AD` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0862CC3B` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0862CE6E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0862D0CB` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0862E3AF` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0862FFF3` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086308EF` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08630E19` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08631155` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08631372` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086313AD` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08631557` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086315BB` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0863183A` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0863199E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086324B3` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0863281E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08632BC2` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086334C1` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08636EF1` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08637603` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086377BD` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08637A6E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086382C6` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08639459` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0863A60A` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0863AD8D` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0863B666` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0863BDD2` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0863CF95` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0863D333` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0863D4BF` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08640EF5` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08644A86` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08649417` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0864D7E5` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0864F82F` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08651CF7` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08655175` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0865BAEB` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0865E05A` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08661F46` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086652B6` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08665935` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0867045E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0867829B` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0867EDF3` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086834F5` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08689F72` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `0868D311` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `08693B8E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086A8349` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086AF12B` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086BACB3` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
+| `0861BF2E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0861C182` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0861C309` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0861E5F6` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0862556B` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08628C4F` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0862A957` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0862C2C5` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0862C4AD` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0862CC3B` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0862CE6E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0862D0CB` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0862E3AF` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0862FFF3` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086308EF` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08630E19` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08631155` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08631372` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086313AD` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08631557` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086315BB` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0863183A` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0863199E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086324B3` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0863281E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08632BC2` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086334C1` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08636EF1` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08637603` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086377BD` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08637A6E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086382C6` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08639459` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0863A60A` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0863AD8D` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0863B666` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0863BDD2` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0863CF95` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0863D333` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0863D4BF` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08640EF5` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08644A86` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08649417` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0864D7E5` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0864F82F` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08651CF7` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08655175` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0865BAEB` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0865E05A` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08661F46` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086652B6` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08665935` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0867045E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0867829B` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0867EDF3` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086834F5` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08689F72` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `0868D311` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `08693B8E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086A8349` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086AF12B` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086BACB3` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
 | `086C127C` | 0x18A30 | raw (unpacked) level asset for room 0x0825E7DC: u16 chunk offset table + chunk token streams (custom RLE/delta, sub_8024960/sub_8025334) | `sub_80266BC`, `sub_80254F8`, `sub_8024CF0` +2 | high | **converted** |
-| `086E044B` | 0x1 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086E2212` | 0x2 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086E3541` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086EA0C9` | 0x3 | padding (zero, aligns the next LZ77 blob to 4) | - | high | easy |
-| `086ECCD2` | 0xF6F1A | 6 raw (unpacked) level assets, same format as 0x086C127C | `sub_80266BC`, `sub_80254F8`, `sub_8024CF0` +2 | high | **converted** (2 B pad raw) |
+| `086E044B` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086E2212` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086E3541` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086EA0C9` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
+| `086ECCD2` | 0xF6F1A | 6 raw (unpacked) level assets, same format as 0x086C127C | `sub_80266BC`, `sub_80254F8`, `sub_8024CF0` +2 | high | **converted** (the 2 B pad is gbagfx's padding) |
 | `087E3BEC` | 0x58 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80071E4`, `sub_800725C`, `sub_80073BC` +2 | high | easy |
 | `087E3C44` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8008434`, `sub_80084A4` | high | easy |
 | `087E3CAC` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80088F0`, `sub_8008904` | high | easy |

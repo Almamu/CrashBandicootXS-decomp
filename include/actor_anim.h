@@ -17,38 +17,42 @@
  * ahead of that so the two can be matched up directly once it is.
  */
 
+/* A box in the actors' 16-bit world units: position then size. The code
+ * reads it through several local views (actor_part74.c's `struct box16`,
+ * actor_part24b.c's `struct box3`, actor_part126.c's `struct box12`,
+ * ...). The anim_table_record's box_14 and several small src/data tables
+ * are this. */
+struct anim_box {
+    s16 x, y, z;
+    s16 w, h, d;
+}; // 0xC
+COMPILE_TIME_ASSERT(sizeof(struct anim_box) == 0xC);
+
+struct anim_frame_record; /* actor_self.h */
+
 /* gStaticData_081796CC (categories 0-2, 41 slots) and gStaticData_0817B2A4
- * (categories 3-6, 47 slots) - one record per animation clip. Several
- * slots in each table are exact duplicates of an earlier slot's
- * table_A/table_B pair (see "duplicate_of_slot" in entities.json) -
- * still real, valid slots, just aliasing another one's data rather than
- * a copy. */
+ * (categories 3-6, 47 slots) - one record per animation clip, defined in
+ * src/data/anim_family_178f80.c / anim_family_17aa6c.c. Several slots
+ * share another slot's table_A/table_B arrays (see "duplicate_of_slot"
+ * in entities.json), and slots 32-34 of the first table are all zero. */
 struct anim_table_record {
     u32 index;                 // 0x00 - equals the record's own slot number in every valid record observed
-    struct keyframe_entry *table_A; // 0x04 - keyframe/timing sequence, see below
+    struct anim_frame_record *table_A; // 0x04 - the clip's keyframes (struct anim_frame_record, actor_self.h), no count stored
     u32 *table_B;               // 0x08 - frame address/offset array, see the comment above struct sprite_frame
     u8 header_byte;              // 0x0C - copied into the runtime per-part instance at offset +0x18 by InitActorPart; role beyond that not traced
     u8 pad_0D[3];
-    u8 unknown_10[4];            // 0x10 - always 0 in every record observed
-    u8 vector_14[0xC];           // 0x14 - copied into the runtime per-part instance at +0x38 by InitActorPart; always 0 in every record observed
-    s32 spawnX;                  // 0x20 - added to the spawn X by sub_802AC28 (the per-kind actor factory); always 0 in every record observed
-    s32 spawnY;                  // 0x24 - added to the spawn Y by sub_802AC28; always 0 in every record observed
+    u32 unknown_10;              // 0x10 - 0 or 0x260C-0x36D5; role not traced
+    struct anim_box box_14;      // 0x14 - copied into the runtime per-part instance at +0x38 by InitActorPart; zero in some records
+    s32 spawnX;                  // 0x20 - added to the spawn X by sub_802AC28 (the per-kind actor factory)
+    s32 spawnY;                  // 0x24 - added to the spawn Y by sub_802AC28
 }; // 0x28
 COMPILE_TIME_ASSERT(sizeof(struct anim_table_record) == 0x28);
 
-/* table_A: one entry per keyframe in an animation clip, terminated
- * implicitly (there's no end marker - a record's real keyframe count is
- * however many entries have a table_B_index that's actually in-bounds
- * for that record's own table_B array before the data stops looking
- * like a valid entry; see table_b_real_length() in tools/dump_entities.py). */
-struct keyframe_entry {
-    u8 unknown_00;    // 0x00 - alternates between two values (seen 0x80/0x40) across entries in every record sampled; role unclear
-    u8 unknown_01;    // 0x01 - 0 in every entry sampled
-    s16 table_B_index; // 0x02 - signed index into this record's table_B array - the one confirmed field, both by code (GetAnimFrameData) and by exhaustive empirical resolution against every record's real frame data
-    u32 unknown_04;    // 0x04 - a small integer, or two packed 16-bit sub-values a fixed distance apart; role unclear
-    u32 unknown_08;    // 0x08 - 0 in every entry sampled
-}; // 0xC
-COMPILE_TIME_ASSERT(sizeof(struct keyframe_entry) == 0xC);
+/* table_A is an array of struct anim_frame_record (actor_self.h): one
+ * entry per keyframe, {duration, frameIndex (into table_B), loop
+ * threshold, loop base, OAM attribute bits, 2 unknown bytes}. There's no
+ * end marker or count; the actor's state code knows how many keyframes
+ * each clip has. */
 
 /*
  * table_B (see struct anim_table_record above) is an array of raw u32
@@ -211,17 +215,14 @@ COMPILE_TIME_ASSERT(sizeof(struct category_vtable) == 0x34);
  * 0x16C bytes of descriptors, then gStaticData_081756C4). The latter
  * has 3 entries, which is also all of it - there is no 4th/5th/6th/7th
  * vtable to find,
- * see the comment on category_descriptor.type above. Whatever real data
- * follows it at gStaticData_081756C4+0x9C (ROM 0x08175760, currently
- * inside the still-generic gStaticData_08175760 label) is unrelated. */
+ * see the comment on category_descriptor.type above. What follows it at
+ * gStaticData_081756C4+0x9C (ROM 0x08175760) is unrelated: the BG
+ * palette-cycle frames of src/data/palette_cycle_175760.c. */
 extern const struct category_descriptor gStaticData_08175558[7];
 extern const struct category_vtable gStaticData_081756C4[3];
 
-/* Not split out as their own labels in data/data.s yet - the bytes exist
- * at these ROM addresses (currently inside larger unlabeled incbin
- * blocks), so these are the correct extern declarations for whenever
- * that's done, not yet linkable today. */
-extern struct anim_table_record gStaticData_081796CC[41]; // 0x081796CC, categories 0-2
-extern struct anim_table_record gStaticData_0817B2A4[47]; // 0x0817B2A4, categories 3-6
+/* Defined in src/data/anim_family_178f80.c and anim_family_17aa6c.c. */
+extern const struct anim_table_record gStaticData_081796CC[41]; // 0x081796CC, categories 0-2
+extern const struct anim_table_record gStaticData_0817B2A4[47]; // 0x0817B2A4, categories 3-6
 
 #endif /* !__ACTOR_ANIM_H__ */
