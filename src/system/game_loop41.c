@@ -167,8 +167,8 @@ void sub_80255D4(struct lk_self *self, struct lk_list *list, struct lk_links *li
         DmaFill32(3, zero, self->bits0, 64);
         DmaFill32(3, zero, self->bits1, 64);
     }
-    sub_803A94C(self->bits0, self->bits0Copy, 0x04000040);
-    sub_803A94C(self->bits1, self->bits1Copy, 0x04000040);
+    sub_803A94C(self->bits0, self->bits0Copy, CPU_SET_32BIT | 0x40);
+    sub_803A94C(self->bits1, self->bits1Copy, CPU_SET_32BIT | 0x40);
     self->pos = posArg >> 8;
 
     counter = 0;

@@ -4,6 +4,7 @@
 #include "actor_self.h"
 #include "gba/dma_macros.h"
 #include "graphics_package.h"
+#include "obj_slot_system.h"
 
 /* Middle part of GitHub issue #65's chunk (0x08035D1C-0x0803686C), split
  * off `graphics_loading_35780.c` at `sub_8035D1C` in the issues #64/#65
@@ -278,9 +279,16 @@ static inline s32 *DeltaBAt(u32 *self, s32 stride)
 /* Closed in the issue #64/#65 NAKED retry: copying the whole
  * held/pressed pair into a local struct first is what makes the ROM
  * build the 0x100 mask in r4 and copy it to r1. */
+/* The per-level scratch object's cheat-code hash word (see
+ * graphics_loading_35780.c for the rest of that raw `u32 *` object). */
+struct level_scratch {
+    u8 unk_000[0x210];
+    u32 cheatHash;      // 0x210
+};
+
 static inline void HashInput(u32 *self, u32 val)
 {
-    u32 *slot = (u32 *)((u8 *)self + 0x210);
+    u32 *slot = &((struct level_scratch *)self)->cheatHash;
     register u32 v asm("r0") = *slot ^ val;
     register u32 hi asm("r1");
     register u32 lo asm("r0");
@@ -303,7 +311,7 @@ u32 sub_8035D1C(u32 *self, u32 pressed)
 
     if (!(input.held & 0x100))
     {
-        *(u32 *)((u8 *)self + 0x210) = 0;
+        ((struct level_scratch *)self)->cheatHash = 0;
         return pressed;
     }
     if (pressed & 0x20)
@@ -320,10 +328,10 @@ u32 sub_8035D1C(u32 *self, u32 pressed)
         HashInput(self, 0x71839406);
     else if (pressed & 8)
         HashInput(self, 0x828A048B);
-    if (*(u32 *)((u8 *)self + 0x210) == 0x3034AF3B)
+    if (((struct level_scratch *)self)->cheatHash == 0x3034AF3B)
     {
         sub_8001B54(gUnknown_030012BC, 0xc);
-        *(u32 *)((u8 *)self + 0x210) = 0;
+        ((struct level_scratch *)self)->cheatHash = 0;
     }
     return 0;
 }
@@ -648,7 +656,7 @@ void sub_8036154(u32 *self, u32 flag)
     *(u16 *)gUnknown_03001288 = 0;
     sub_8001614();
     zero = 0;
-    pal = (u16 *)0x05000000;
+    pal = (u16 *)PLTT;
     for (i = 0xff; i >= 0; i--)
         *pal++ = zero;
     REG_BLDCNT = 0xff;
@@ -671,11 +679,15 @@ struct part_vtable
 };
 
 void sub_8036CF4(u32 *self);
+
+/* This subsystem's `self` (a raw `u32 *` throughout, as the matched
+ * code indexes it) is a `struct obj_slot_system`. */
+#define SLOT_SYSTEM(self) ((struct obj_slot_system *)(self))
 struct actor_self *sub_8036E20(struct actor_self *self, void *a);
 void sub_8036528(u32 *self);
 void sub_8036600(u32 *self);
 void sub_8036668(u32 *self);
-void sub_803686C(u32 *self);
+void sub_803686C(struct obj_slot_system *self);
 
 /* `operator new`: an inline wrapper puts the size constant after the
  * heap flag, as the ROM loads them. */
@@ -707,14 +719,14 @@ void sub_80361B0(u32 *self)
     s32 i;
     s32 scale;
 
-    InitObjTileFreeList((void *)0x06010000);
+    InitObjTileFreeList(OBJ_VRAM0);
     InitSpriteFrameOamQueue();
     InitSpriteFrameCache();
     part = sub_8036E20(New(0x54), gStaticData_0817D698);
     {
         struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
         dma->src = (u32)gStaticData_08178F80;
-        dma->dst = 0x05000200;
+        dma->dst = OBJ_PLTT;
         dma->cnt = 0x80000100;
         dma->cnt;
     }
@@ -738,7 +750,7 @@ void sub_80361B0(u32 *self)
     }
     PlaySfx(gUnknown_030012BC, 0x4b, 0x100);
     scale = 0x2000;
-    *(s32 *)((u8 *)self + 0x444) = -1;
+    SLOT_SYSTEM(self)->fade = -1;
     do
     {
         s32 *fade;
@@ -748,12 +760,12 @@ void sub_80361B0(u32 *self)
         sub_80007AC(gUnknown_03001304);
         if (gUnknown_030007E0.pressed & 9)
         {
-            if (*(s32 *)((u8 *)self + 0x444) > 0x40)
-                *(s32 *)((u8 *)self + 0x444) = 0x40;
+            if (SLOT_SYSTEM(self)->fade > 0x40)
+                SLOT_SYSTEM(self)->fade = 0x40;
         }
         sub_80006A8();
         sub_8001614();
-        fade = (s32 *)((u8 *)self + 0x444);
+        fade = &SLOT_SYSTEM(self)->fade;
         if (*fade != -1)
         {
             if (*fade == 0x40)
@@ -772,8 +784,8 @@ void sub_80361B0(u32 *self)
             if (scale > 0xffff || (scale += 0x600) > 0xffff)
             {
                 scale = 0x10000;
-                if (*(s32 *)((u8 *)self + 0x444) == -1)
-                    *(s32 *)((u8 *)self + 0x444) = 0xf4;
+                if (SLOT_SYSTEM(self)->fade == -1)
+                    SLOT_SYSTEM(self)->fade = 0xf4;
             }
         }
         else if (*fade <= 0x40)
@@ -792,15 +804,15 @@ void sub_80361B0(u32 *self)
         REG_BG2PB = 0;
         REG_BG2PC = 0;
         sub_8034688((s32)bgObj);
-    } while (*(s32 *)((u8 *)self + 0x444) != 0);
+    } while (SLOT_SYSTEM(self)->fade != 0);
     ((struct dispcnt_bits *)gUnknown_03001288)->bg2 = 0;
     ((struct dispcnt_bits *)gUnknown_03001288)->obj = 1;
     ((struct dispcnt_bits *)gUnknown_03001288)->objMap1D = 1;
     sub_8001614();
     *(vu32 *)REG_ADDR_BLDCNT = 0;
-    *(s32 *)((u8 *)self + 0x444) = -1;
-    *(s32 *)((u8 *)self + 0x448) = -1;
-    while (*(s32 *)((u8 *)self + 0x444) != 0)
+    SLOT_SYSTEM(self)->fade = -1;
+    SLOT_SYSTEM(self)->timer = -1;
+    while (SLOT_SYSTEM(self)->fade != 0)
     {
         s32 *fade;
         register s32 v asm("r1");
@@ -808,8 +820,8 @@ void sub_80361B0(u32 *self)
         sub_80007AC(gUnknown_03001304);
         if (gUnknown_030007E0.pressed & 9)
         {
-            if (*(s32 *)((u8 *)self + 0x448) > 0)
-                *(s32 *)((u8 *)self + 0x448) = 1;
+            if (SLOT_SYSTEM(self)->timer > 0)
+                SLOT_SYSTEM(self)->timer = 1;
         }
         {
             struct part_vtable *vt = (struct part_vtable *)part->vtable;
@@ -822,10 +834,10 @@ void sub_80361B0(u32 *self)
         sub_8006A78(gUnknown_03001300);
         FlushSpriteFrameOamQueue();
         sub_8036668(self);
-        sub_803686C(self);
+        sub_803686C(SLOT_SYSTEM(self));
         sub_8034688((s32)bgObj);
         sub_80006A8();
-        fade = (s32 *)((u8 *)self + 0x444);
+        fade = &SLOT_SYSTEM(self)->fade;
         v = *fade;
         if (v > 0x10)
         {
@@ -860,10 +872,10 @@ void sub_80361B0(u32 *self)
     }
     if (bgObj != NULL)
         sub_80346FC(bgObj, 3);
-    if (*(void **)((u8 *)self + 0x434) != NULL)
-        sub_8026EB4(*(void **)((u8 *)self + 0x434));
-    if (*(void **)((u8 *)self + 0x430) != NULL)
-        sub_8026EB4(*(void **)((u8 *)self + 0x430));
+    if (SLOT_SYSTEM(self)->scratch != NULL)
+        sub_8026EB4(SLOT_SYSTEM(self)->scratch);
+    if (SLOT_SYSTEM(self)->frames != NULL)
+        sub_8026EB4(SLOT_SYSTEM(self)->frames);
     FreeSpriteFrameCache();
     FreeSpriteFrameOamQueue();
     FreeObjTileFreeList();
@@ -885,25 +897,25 @@ void sub_80361B0(u32 *self)
 
 void sub_8036528(u32 *self)
 {
-    self[0x109] = (u32)AllocVramTileBlock(0x1200);
-    self[0x10a] = (u32)AllocVramTileBlock(0x400);
-    self[0x10b] = (u32)AllocVramTileBlock(0x1000);
-    sub_8037110(self, PKG_A->paletteAsset, (void *)0x050003E0);
-    sub_8037110(self, PKG_B->paletteAsset, (void *)0x050003C0);
-    sub_8037110(self, PKG_C->paletteAsset, (void *)0x050003A0);
-    sub_8037110(self, PKG_B->tileAsset, (void *)self[0x109]);
-    sub_8037110(self, PKG_C->tileAsset, (void *)self[0x10a]);
+    SLOT_SYSTEM(self)->tilesA = (u32)AllocVramTileBlock(0x1200);
+    SLOT_SYSTEM(self)->tilesB = (u32)AllocVramTileBlock(0x400);
+    SLOT_SYSTEM(self)->tilesC = (u32)AllocVramTileBlock(0x1000);
+    sub_8037110(self, PKG_A->paletteAsset, (void *)(PLTT + 0x3E0));
+    sub_8037110(self, PKG_B->paletteAsset, (void *)(PLTT + 0x3C0));
+    sub_8037110(self, PKG_C->paletteAsset, (void *)(PLTT + 0x3A0));
+    sub_8037110(self, PKG_B->tileAsset, (void *)SLOT_SYSTEM(self)->tilesA);
+    sub_8037110(self, PKG_C->tileAsset, (void *)SLOT_SYSTEM(self)->tilesB);
     {
         u32 size = *(u32 *)PKG_A->tileAsset >> 8;
-        u32 *dst = &self[0x10c];
+        u8 **dst = &SLOT_SYSTEM(self)->frames;
         void *buf;
 
-        *dst = (u32)(buf = sub_8026EC0(size));
+        *dst = buf = sub_8026EC0(size);
         LoadTaggedAsset(PKG_A->tileAsset, buf);
     }
     {
-        u32 *dst = &self[0x10d];
-        *dst = (u32)sub_8026EC0(0x1000);
+        u8 **dst = &SLOT_SYSTEM(self)->scratch;
+        *dst = sub_8026EC0(0x1000);
     }
 }
 
@@ -950,14 +962,14 @@ void sub_8036600(u32 *self)
     {
         u8 one = 1;
         s32 j = 0x11;
-        u8 *flags = (u8 *)self + 0x421;
+        u8 *flags = &SLOT_SYSTEM(self)->sfxPending[0x11];
 
         for (; j >= 0; j--)
             *flags-- = one;
     }
-    *(s32 *)((u8 *)self + 0x438) = 0;
-    *(s32 *)((u8 *)self + 0x43c) = 0;
-    *(s32 *)((u8 *)self + 0x440) = 0;
+    SLOT_SYSTEM(self)->frame = 0;
+    SLOT_SYSTEM(self)->loops = 0;
+    SLOT_SYSTEM(self)->frameTick = 0;
 }
 
 /* `sub_8036528`'s per-frame slot-array updater, only while the header
@@ -997,7 +1009,7 @@ void sub_8036668(u32 *self)
     s32 i;
     s32 *timer;
 
-    if (*(s32 *)((u8 *)self + 0x448) == -1)
+    if (SLOT_SYSTEM(self)->timer == -1)
     {
         for (i = 0; i <= 0x13; i++)
         {
@@ -1046,18 +1058,18 @@ void sub_8036668(u32 *self)
             }
             else
             {
-                *(s32 *)((u8 *)self + 0x448) = -2;
+                SLOT_SYSTEM(self)->timer = -2;
             }
         }
         {
-            s32 *stage = (s32 *)((u8 *)self + 0x43c);
+            s32 *stage = &SLOT_SYSTEM(self)->loops;
             if (*stage <= 1)
             {
-                s32 *sub = (s32 *)((u8 *)self + 0x440);
+                s32 *sub = &SLOT_SYSTEM(self)->frameTick;
                 if (++*sub > 3)
                 {
                     *sub = 0;
-                    sub = (s32 *)((u8 *)self + 0x438);
+                    sub = &SLOT_SYSTEM(self)->frame;
                     if (++*sub > 9)
                     {
                         *sub = 0;
@@ -1067,7 +1079,7 @@ void sub_8036668(u32 *self)
             }
         }
     }
-    timer = (s32 *)((u8 *)self + 0x448);
+    timer = &SLOT_SYSTEM(self)->timer;
     if (*timer == -2)
         *timer = 0xf0;
     if (*timer > 0)
@@ -1100,8 +1112,8 @@ void sub_8036668(u32 *self)
         } while ((s32)slot <= (s32)end);
         if (allDone)
         {
-            *(s32 *)((u8 *)self + 0x444) = 0x10;
-            *(s32 *)((u8 *)self + 0x448) = -3;
+            SLOT_SYSTEM(self)->fade = 0x10;
+            SLOT_SYSTEM(self)->timer = -3;
         }
     }
 }

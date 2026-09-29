@@ -4,6 +4,7 @@
 #include "actor_self.h"
 #include "gba/dma_macros.h"
 #include "graphics_package.h"
+#include "obj_slot_system.h"
 
 /* Tail of GitHub issue #65's chunk (0x0803686C-0x08037110), split off
  * `graphics_loading_35d1c.c` at `sub_803686C`. Like both earlier halves
@@ -182,25 +183,6 @@ struct oam_buf
     struct oam_entry entries[128];
 };
 
-/* One 0x34-byte slot of the 20-slot array `sub_8036600` seeds. */
-struct obj_slot
-{
-    u8 active;          // 0x00
-    u8 pad_01[3];
-    s32 countdown;      // 0x04
-    union {
-        s32 q;          // 0x08 - Q16.16 x
-        struct { u16 frac; s16 i; } h;
-    } posA;
-    union {
-        s32 q;          // 0x0c - Q16.16 y
-        struct { u16 frac; s16 i; } h;
-    } posB;
-    s32 posC;           // 0x10
-    s32 velA;           // 0x14 - x scale
-    s32 velB;           // 0x18 - y scale
-    u8 pad_1c[0x18];
-};
 
 static inline void SetAffine(struct oam_buf *buf, s32 m, u16 pa, u16 pb, u16 pc, u16 pd)
 {
@@ -242,7 +224,7 @@ static inline void SetAffineZ(struct oam_buf *buf, s32 m, u16 pa, u16 pd)
 /* Matched in the #65 strength-reduction retry
  * (docs/matching/sr65-naked-retry.md). It needs strength reduction ON,
  * which is why this file was split off `graphics_loading_35d1c.c`. */
-void sub_803686C(u32 *self)
+void sub_803686C(struct obj_slot_system *self)
 {
     vu16 zero;
     vu32 zero32;
@@ -261,7 +243,7 @@ void sub_803686C(u32 *self)
             s32 j;
 
             ClearOam(&oamA);
-            tiles = *(u32 *)((u8 *)self + 0x428);
+            tiles = self->tilesB;
             oamA.palette = 0xd;
             oamA.size = 2;
             oamA.shape = 1;
@@ -278,7 +260,7 @@ void sub_803686C(u32 *self)
     }
     {
         struct obj_slot *slot = SLOT_AT(self, 1);
-        u32 tile = (*(u32 *)((u8 *)self + 0x424) - 0x06010000) >> 5;
+        u32 tile = (self->tilesA - (u32)OBJ_VRAM0) >> 5;
 
         for (i = 0; i <= 0x11; i++)
         {
@@ -292,7 +274,7 @@ void sub_803686C(u32 *self)
                 affine = (pa != 0x100 || pd != pa);
                 if (affine)
                 {
-                    u8 *flags = (u8 *)self + 0x410;
+                    u8 *flags = self->sfxPending;
                     u8 *flag = flags + i;
 
                     if (*flag)
@@ -328,7 +310,7 @@ void sub_803686C(u32 *self)
     }
     if (SLOT_AT(self, 0)->active)
     {
-        u8 *flag = (u8 *)self + 0x410;
+        u8 *flag = self->sfxPending;
         struct obj_slot *slot;
         u32 tile;
         u8 *buf;
@@ -347,15 +329,15 @@ void sub_803686C(u32 *self)
             *flag = 0;
         }
         slot = SLOT_AT(self, 0);
-        tile = (*(u32 *)((u8 *)slot + 0x42c) - 0x06010000) >> 5;
+        tile = (self->tilesC - (u32)OBJ_VRAM0) >> 5;
         zero32 = 0;
         dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
         dma->src = (u32)&zero32;
-        buf = *(u8 **)((u8 *)slot + 0x434);
+        buf = self->scratch;
         dma->dst = (u32)buf;
         dma->cnt = 0x85000400;
         dma->cnt;
-        src = *(u8 **)((u8 *)slot + 0x430) + *(s32 *)((u8 *)slot + 0x438) * 0xa00;
+        src = self->frames + self->frame * 0xa00;
         /* `base + row * 0x100 + 0x60` is a giv of the row counter, which
          * check_dbra_loop reverses, so loop.c must reduce it into its own
          * pointer (the ROM's r3). `buf + 0x800` stays unreduced: `buf`
@@ -383,7 +365,7 @@ void sub_803686C(u32 *self)
             asm("");
             asm("");
         }
-        QueueVramDmaTransfer(*(void **)((u8 *)self + 0x434), *(void **)((u8 *)self + 0x42c), 0x1000, 0x10);
+        QueueVramDmaTransfer(self->scratch, (void *)self->tilesC, 0x1000, 0x10);
         ClearOam(&oamC);
         pa = 0x1000000 / slot->velA;
         pd = 0x1000000 / slot->velB;
@@ -458,16 +440,16 @@ void sub_8036CF4(u32 *self)
     {
         struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
         dma->src = (u32)(palBuf + 1);
-        dma->dst = 0x05000002;
+        dma->dst = PLTT + 2;
         dma->cnt = 0x80000040;
         dma->cnt;
     }
     if (palBuf != NULL)
         sub_8026EB4(palBuf);
-    LoadTaggedAsset(pkg->tileAsset, (void *)0x06008000);
+    LoadTaggedAsset(pkg->tileAsset, (void *)(VRAM + 0x8000));
     mapBuf = sub_8026EC0((s32)pkg->height * (s32)pkg->width * 2);
     LoadTaggedAsset(pkg->mapAsset, mapBuf);
-    dest = (u16 *)0x0600F000;
+    dest = (u16 *)(VRAM + 0xF000);
     for (y = 0; y <= 0x1f; y++)
     {
         for (x = 0; x <= 0x1f; x += 2)

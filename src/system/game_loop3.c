@@ -1,4 +1,6 @@
 #include "core.h"
+#include "bg_scroll_layer.h"
+#include "level_data.h"
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
@@ -9,23 +11,19 @@ extern void sub_8024E24(void *self, void *vec2);
 extern void sub_8024C64(void *self, void *source);
 extern void sub_8024CF0(void *self, void *source);
 
-/* A viewport/parallax-scroll-layer object (docs/rom_map.md's "Visual
- * scrolling background streamer" family is the sibling system built on
- * the same source-descriptor shape - see `sub_8024AA0` there). Its full
- * field layout isn't given a named struct here: several of its fields
- * are only ever written/read by neighboring functions
- * (`sub_8024DFC`/`sub_8024E24`/`sub_8024C64`/`sub_8024CF0`) that sit
- * just before this chunk in ROM order and are still raw asm (out of
- * scope for this issue), so committing a struct now risks getting a
- * field wrong that only shows up once those are matched. */
+/* A viewport/parallax-scroll-layer object: `struct bg_scroll_layer`
+ * (include/bg_scroll_layer.h; docs/rom_map.md's "Visual scrolling
+ * background streamer" family is the sibling system built on the same
+ * source-descriptor shape - see `sub_8024AA0` there), initialized from a
+ * `struct level_layer_desc`. */
 
 /* Applies the layer's scale-then-clamp step to `vec2` and accumulates
  * the (Q8, floor-divided) result into the layer's own position. */
-void sub_8024E68(void *self, void *vec2)
+void sub_8024E68(struct bg_scroll_layer *self, s32 *vec2)
 {
     s32 scaled[2];
-    s32 x = ((s32 *)vec2)[0];
-    s32 y = ((s32 *)vec2)[1];
+    s32 x = vec2[0];
+    s32 y = vec2[1];
 
     scaled[0] = x;
     scaled[1] = y;
@@ -35,94 +33,94 @@ void sub_8024E68(void *self, void *vec2)
 
 /* Same shape as `sub_8024E68`, but seeds the scale step directly from
  * `vec2` in place (no separate stack copy) and finishes by re-deriving
- * the layer's cached-tile buffers from `self->0x2c` instead of
+ * the layer's cached-tile buffers from its `streamer` instead of
  * accumulating a position. */
-void sub_8024E90(void *self, void *vec2)
+void sub_8024E90(struct bg_scroll_layer *self, s32 *vec2)
 {
-    s32 x = ((s32 *)vec2)[0];
-    s32 y = ((s32 *)vec2)[1];
+    s32 x = vec2[0];
+    s32 y = vec2[1];
 
-    ((s32 *)self)[0] = x;
-    ((s32 *)self)[1] = y;
+    self->x = x;
+    self->y = y;
     sub_8024DFC(self, self);
-    sub_8024C64(*(void **)((u8 *)self + 0x2c), self);
+    sub_8024C64(self->streamer, self);
 }
 
-/* (Re)initializes the layer from `source` (a level/room descriptor -
- * see the comment above): caches its pixel dimensions/scroll bounds,
- * resets the accumulated position to the origin, and re-populates the
- * `self->0x2c` tile-cache sub-object from the same descriptor. Does
- * nothing (besides clearing the ready flag) when `source` is NULL. */
-void sub_8024EB4(void *self, void *source)
+/* (Re)initializes the layer from `source`: caches its pixel
+ * dimensions/scroll bounds, resets the accumulated position to the
+ * origin, and re-populates the `streamer` tile-cache sub-object from
+ * the same descriptor. Does nothing (besides clearing the ready flag)
+ * when `source` is NULL. */
+void sub_8024EB4(struct bg_scroll_layer *self, const struct level_layer_desc *source)
 {
     u8 *readyFlag;
     s32 zero;
 
-    readyFlag = (u8 *)self + 0x28;
+    readyFlag = &self->enabled;
     zero = 0;
     *readyFlag = zero;
 
     if (source != NULL) {
         s32 w, h;
 
-        w = *(u16 *)((u8 *)source + 0x1a);
-        *(s32 *)((u8 *)self + 0x18) = w;
-        h = *(u16 *)((u8 *)source + 0x1c);
-        *(s32 *)((u8 *)self + 0x1c) = h;
+        w = source->widthTiles;
+        self->widthTiles = w;
+        h = source->heightTiles;
+        self->heightTiles = h;
 
         w <<= 3;
-        *(s32 *)((u8 *)self + 0x10) = w;
+        self->widthPx = w;
         h <<= 3;
-        *(s32 *)((u8 *)self + 0x14) = h;
+        self->heightPx = h;
         w -= 0xf0;
-        *(s32 *)((u8 *)self + 8) = w;
+        self->maxX = w;
         h -= 0xa0;
-        *(s32 *)((u8 *)self + 0xc) = h;
-        *(s32 *)((u8 *)self + 0x20) = *(s32 *)((u8 *)source + 0xc);
-        *(s32 *)((u8 *)self + 0x24) = *(s32 *)((u8 *)source + 0x10);
-        *(s32 *)self = zero;
-        *(s32 *)((u8 *)self + 4) = zero;
+        self->maxY = h;
+        self->scaleX = source->scaleX;
+        self->scaleY = source->scaleY;
+        self->x = zero;
+        self->y = zero;
 
-        sub_8024CF0(*(void **)((u8 *)self + 0x2c), source);
-        sub_8024C64(*(void **)((u8 *)self + 0x2c), self);
+        sub_8024CF0(self->streamer, (void *)source);
+        sub_8024C64(self->streamer, self);
 
         *readyFlag = 1;
     }
 }
 
-u8 sub_8024F04(void *self)
+u8 sub_8024F04(struct bg_scroll_layer *self)
 {
-    return *((u8 *)self + 0x28);
+    return self->enabled;
 }
 
-s32 sub_8024F0C(void *self)
+s32 sub_8024F0C(struct bg_scroll_layer *self)
 {
-    return *(s32 *)((u8 *)self + 4);
+    return self->y;
 }
 
-s32 sub_8024F10(void *self)
+s32 sub_8024F10(struct bg_scroll_layer *self)
 {
-    return *(s32 *)self;
+    return self->x;
 }
 
-s32 sub_8024F14(void *self)
+s32 sub_8024F14(struct bg_scroll_layer *self)
 {
-    return *(s32 *)((u8 *)self + 0x1c);
+    return self->heightTiles;
 }
 
-s32 sub_8024F18(void *self)
+s32 sub_8024F18(struct bg_scroll_layer *self)
 {
-    return *(s32 *)((u8 *)self + 0x18);
+    return self->widthTiles;
 }
 
-s32 sub_8024F1C(void *self)
+s32 sub_8024F1C(struct bg_scroll_layer *self)
 {
-    return *(s32 *)((u8 *)self + 0x14);
+    return self->heightPx;
 }
 
-s32 sub_8024F20(void *self)
+s32 sub_8024F20(struct bg_scroll_layer *self)
 {
-    return *(s32 *)((u8 *)self + 0x10);
+    return self->widthPx;
 }
 
 /* The 16-slot decode/LRU tile-record cache used throughout this cluster

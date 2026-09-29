@@ -42,6 +42,6 @@ struct icon_manager *sub_8028A78(struct icon_manager *selfArg)
         : "r0", "r1", "r2", "memory"
     );
 
-    sub_803A94C(&zero, self, 0x05000002);
+    sub_803A94C(&zero, self, CPU_SET_SRC_FIXED | CPU_SET_32BIT | 2);
     return self;
 }

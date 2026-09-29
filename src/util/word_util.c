@@ -1,4 +1,5 @@
 #include "core.h"
+#include "icon_manager.h"
 
 /* Sits right after LoadBackgroundTileAndPalette (ROM 0x080011C0, in src/system/asset_util.c)
  * and before whatever's still raw in asm/code_3_1_7.s. */
@@ -37,7 +38,7 @@ done:
 }
 
 extern s32 sub_8037E54(s32 value, s32 divisor);
-extern s32 sub_8000EE4(u8 *text, void *self, void *box, s32 limit, s32 mode);
+extern s32 sub_8000EE4(u8 *text, struct icon_manager *self, void *box, s32 limit, s32 mode);
 
 struct sub_8001214_params {
     s32 field_0;
@@ -53,14 +54,14 @@ struct sub_8001214_params {
  * still-parked `sub_8006600`, but the ROM does actually propagate it -
  * confirmed by the epilogue needing r1, not r0, to restore the return
  * address, since r0 holds the forwarded value at that point). */
-s32 sub_8001214(u8 *text, void *self, struct sub_8001214_params *params, s32 mode)
+s32 sub_8001214(u8 *text, struct icon_manager *self, struct sub_8001214_params *params, s32 mode)
 {
     s32 limit;
 
     {
         s32 v = params->field_0;
-        *(s32 *)((u8 *)self + 0x118) = v;
+        self->field_118 = v;
     }
-    limit = sub_8037E54(params->field_c, *(s32 *)((u8 *)self + 0x11c));
+    limit = sub_8037E54(params->field_c, self->field_11c);
     return sub_8000EE4(text, self, params, limit, mode);
 }

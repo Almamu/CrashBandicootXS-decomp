@@ -1,4 +1,5 @@
 #include "core.h"
+#include "bg_scroll_layer.h"
 
 /* GitHub issue #39: 0x08024810-0x08024E68 (game_loop) - the remainder of
  * the UpdateGameFrame-MainLoop cluster between the sound-channel-handle
@@ -63,17 +64,28 @@
  *   (`sub_8024DFC`/`sub_8024E24`) game_loop3.c's `sub_8024E68`/
  *   `sub_8024E90` already call into.
  *
- * The streamer functions use `struct bg_streamer` below; the rest still
- * take raw pointers. Built with old_agbcc - see
+ * The streamer functions use `struct bg_streamer` below, the layer
+ * functions `struct bg_scroll_layer` (include/bg_scroll_layer.h). Built
+ * with old_agbcc - see
  * docs/matching/game-loop-old-agbcc.md. */
 
 /* The room descriptor the streamer reads its tile map from. */
 struct stream_source
 {
     u16 *map;                   // 0x00 - width x height tile ids
-    u8 unk_04[0x12];
+    s32 assetOffset;            // 0x04 - this layer's section in the level asset
+    u8 unk_08[0xE];
     u16 width;                  // 0x16 - in tiles
     u16 height;                 // 0x18
+    u16 widthTiles;             // 0x1A - 8px tiles, cached by sub_8024CF0
+    u16 heightTiles;            // 0x1C
+};
+
+/* The streamer's method table (gStaticData_087E4BDC). */
+struct streamer_vtable
+{
+    u8 unk_00[8];
+    struct bg_layer_method destroy; // 0x08 - called with 3 by sub_8024D74
 };
 
 /* The ring-buffer background streamer (see this file's header comment). */
@@ -86,6 +98,10 @@ struct bg_streamer
     s32 tileY;                  // 0x10
     u8 subX;                    // 0x14 - mod-4 block of the left edge
     u8 subY;                    // 0x15 - mod-4 block of the top edge
+    u8 pad_16[2];
+    s32 widthTiles;             // 0x18 - the source's widthTiles
+    s32 heightTiles;            // 0x1C
+    struct streamer_vtable *vtable; // 0x20
 };
 
 extern void sub_8024804(void *self);
@@ -349,30 +365,30 @@ extern void sub_8024BAC(struct bg_streamer *self, s32 row);
  * `sub_8024B18`/`sub_8024B48`/`sub_8024B78`'s wrapped addressing. */
 void sub_8024AA0(void *self0, void *worldpos0)
 {
-    u8 *self = (u8 *)self0;
+    struct bg_streamer *self = self0;
     s32 *worldpos = (s32 *)worldpos0;
     s32 tileX = worldpos[0] >> 7;
     s32 tileY = worldpos[1] >> 6;
-    s32 oldX = *(s32 *)(self + 0xc);
-    s32 oldY = *(s32 *)(self + 0x10);
+    s32 oldX = self->tileX;
+    s32 oldY = self->tileY;
 
     if (tileX > oldX) {
-        sub_8024C08((struct bg_streamer *)self, oldX + 4);
-        self[0x14] = (self[0x14] + 1) & 3;
+        sub_8024C08(self, oldX + 4);
+        self->subX = (self->subX + 1) & 3;
     } else if (tileX < oldX) {
-        self[0x14] = (self[0x14] - 1) & 3;
-        sub_8024C08((struct bg_streamer *)self, oldX - 1);
+        self->subX = (self->subX - 1) & 3;
+        sub_8024C08(self, oldX - 1);
     }
-    *(s32 *)(self + 0xc) = tileX;
+    self->tileX = tileX;
 
     if (tileY > oldY) {
-        sub_8024BAC((struct bg_streamer *)self, oldY + 4);
-        self[0x15] = (self[0x15] + 1) & 3;
+        sub_8024BAC(self, oldY + 4);
+        self->subY = (self->subY + 1) & 3;
     } else if (tileY < oldY) {
-        self[0x15] = (self[0x15] - 1) & 3;
-        sub_8024BAC((struct bg_streamer *)self, oldY - 1);
+        self->subY = (self->subY - 1) & 3;
+        sub_8024BAC(self, oldY - 1);
     }
-    *(s32 *)(self + 0x10) = tileY;
+    self->tileY = tileY;
 }
 
 /* Converts a world pixel `(x, y)` into the background streamer's
@@ -384,24 +400,24 @@ void sub_8024AA0(void *self0, void *worldpos0)
  * through `rowOut`. */
 void *sub_8024B18(void *self0, s32 x, s32 y, s32 *rowOut)
 {
-    u8 *self = (u8 *)self0;
-    s32 col = x - *(s32 *)(self + 0xc) * 16;
-    s32 row = y - *(s32 *)(self + 0x10) * 8;
+    struct bg_streamer *self = self0;
+    s32 col = x - self->tileX * 16;
+    s32 row = y - self->tileY * 8;
     u8 subX;
     u8 subY;
     s32 shifted;
     u8 *base;
     void *ret;
 
-    subX = self[0x14];
+    subX = self->subX;
     shifted = subX * 16;
     col += shifted;
-    subY = self[0x15];
+    subY = self->subY;
     shifted = subY * 8;
     row += shifted;
     col &= 0x3f;
     row &= 0x1f;
-    base = *(u8 **)(self + 8);
+    base = self->ring;
     col <<= 1;
     ret = base + col;
     *rowOut = row;
@@ -414,24 +430,24 @@ void *sub_8024B18(void *self0, s32 x, s32 y, s32 *rowOut)
  * column out through `colOut` instead. */
 void *sub_8024B48(void *self0, s32 x, s32 y, s32 *colOut)
 {
-    u8 *self = (u8 *)self0;
-    s32 col = x - *(s32 *)(self + 0xc) * 16;
-    s32 row = y - *(s32 *)(self + 0x10) * 8;
+    struct bg_streamer *self = self0;
+    s32 col = x - self->tileX * 16;
+    s32 row = y - self->tileY * 8;
     u8 subX;
     u8 subY;
     s32 shifted;
     u8 *base;
     void *ret;
 
-    subX = self[0x14];
+    subX = self->subX;
     shifted = subX * 16;
     col += shifted;
-    subY = self[0x15];
+    subY = self->subY;
     shifted = subY * 8;
     row += shifted;
     col &= 0x3f;
     row &= 0x1f;
-    base = *(u8 **)(self + 8);
+    base = self->ring;
     row <<= 7;
     ret = base + row;
     *colOut = col;
@@ -442,24 +458,24 @@ void *sub_8024B48(void *self0, s32 x, s32 y, s32 *colOut)
  * returns the decoded halfword value directly, with no out-param. */
 u16 sub_8024B78(void *self0, s32 x, s32 y)
 {
-    u8 *self = (u8 *)self0;
-    s32 col = x - *(s32 *)(self + 0xc) * 16;
-    s32 row = y - *(s32 *)(self + 0x10) * 8;
+    struct bg_streamer *self = self0;
+    s32 col = x - self->tileX * 16;
+    s32 row = y - self->tileY * 8;
     u8 subX;
     u8 subY;
     s32 shifted;
     u8 *base;
     s32 idx;
 
-    subX = self[0x14];
+    subX = self->subX;
     shifted = subX * 16;
     col += shifted;
-    subY = self[0x15];
+    subY = self->subY;
     shifted = subY * 8;
     row += shifted;
     col &= 0x3f;
     row &= 0x1f;
-    base = *(u8 **)(self + 8);
+    base = self->ring;
     idx = row << 6;
     idx += col;
     idx <<= 1;
@@ -570,24 +586,24 @@ asm(".align 2, 0");
 extern void *gUnknown_03001308;
 
 /* Stores `source` (the room/level descriptor - see this file's header
- * comment) into `self+0`, caches its `+0x1a`/`+0x1c` pixel dimensions at
+ * comment) into `self+0`, caches its `+0x1a`/`+0x1c` 8px-tile dimensions at
  * `self+0x18`/`self+0x1c`, and derives `self+4` from
  * `gUnknown_03001308`'s own `+0x24` field plus `source+4` - the same
  * "camera offset + source field" shape as the terrain-tile cache's
  * `decodeBase` (game_loop3.c's `struct tile_cache`). */
 void sub_8024CF0(void *self0, void *source0)
 {
-    u8 *self = (u8 *)self0;
-    u8 *source = (u8 *)source0;
+    struct bg_streamer *self = self0;
+    struct stream_source *source = source0;
     s32 w;
     s32 h;
 
-    *(void **)self = source;
-    w = *(u16 *)(source + 0x1a);
-    h = *(u16 *)(source + 0x1c);
-    *(s32 *)(self + 0x18) = w;
-    *(s32 *)(self + 0x1c) = h;
-    *(u8 **)(self + 4) = *(u8 **)((u8 *)gUnknown_03001308 + 0x24) + *(s32 *)(source + 4);
+    self->source = source;
+    w = source->widthTiles;
+    h = source->heightTiles;
+    self->widthTiles = w;
+    self->heightTiles = h;
+    self->records = (u16 *)(*(u8 **)((u8 *)gUnknown_03001308 + 0x24) + source->assetOffset);
 }
 
 extern void sub_8026EB4(void *ptr);
@@ -606,11 +622,11 @@ extern u8 gStaticData_087E4BEC[];
  * sees a lot of (e.g. `sub_80247EC`, game_loop20.c). */
 void sub_8024D0C(void *self0, s32 flags)
 {
-    u8 *self = (u8 *)self0;
+    struct bg_streamer *self = self0;
 
-    *(u8 **)(self + 0x20) = gStaticData_087E4BDC;
-    if (*(void **)(self + 8) != NULL) {
-        sub_8026EB4(*(void **)(self + 8));
+    self->vtable = (struct streamer_vtable *)gStaticData_087E4BDC;
+    if (self->ring != NULL) {
+        sub_8026EB4(self->ring);
     }
     if (flags & 1) {
         sub_8026ED0(self);
@@ -623,35 +639,35 @@ void sub_8024D0C(void *self0, s32 flags)
  * comment), and returns `self`. */
 void *sub_8024D38(void *self0)
 {
-    u8 *self = (u8 *)self0;
+    struct bg_streamer *self = self0;
 
-    *(u8 **)(self + 0x20) = gStaticData_087E4BDC;
-    *(void **)(self + 8) = sub_8026EC0(0x1000);
+    self->vtable = (struct streamer_vtable *)gStaticData_087E4BDC;
+    self->ring = sub_8026EC0(0x1000);
     return self;
 }
 
 /* Plain accessor: returns `self+0x1c`. */
 s32 sub_8024D58(void *self0)
 {
-    return *(s32 *)((u8 *)self0 + 0x1c);
+    return ((struct bg_streamer *)self0)->heightTiles;
 }
 
 /* Plain accessor: returns `self+0x18`. */
 s32 sub_8024D5C(void *self0)
 {
-    return *(s32 *)((u8 *)self0 + 0x18);
+    return ((struct bg_streamer *)self0)->widthTiles;
 }
 
 /* Plain setter: copies `vec[0]/vec[1]` into `self+0x18`/`self+0x1c`. */
 void sub_8024D60(void *self0, void *vec0)
 {
-    u8 *self = (u8 *)self0;
+    struct bg_streamer *self = self0;
     s32 *vec = (s32 *)vec0;
     s32 y = vec[1];
     s32 x = vec[0];
 
-    *(s32 *)(self + 0x18) = x;
-    *(s32 *)(self + 0x1c) = y;
+    self->widthTiles = x;
+    self->heightTiles = y;
 }
 
 /* Plain setter: stores `x`/`y` into `self+0x18`/`self+0x1c` directly
@@ -659,10 +675,10 @@ void sub_8024D60(void *self0, void *vec0)
  * of a vector). */
 void sub_8024D6C(void *self0, s32 x, s32 y)
 {
-    u8 *self = (u8 *)self0;
+    struct bg_streamer *self = self0;
 
-    *(s32 *)(self + 0x18) = x;
-    *(s32 *)(self + 0x1c) = y;
+    self->widthTiles = x;
+    self->heightTiles = y;
 }
 
 /* Wires up `self+0x30`'s second `sub_803AD80`-style trampoline table
@@ -673,16 +689,16 @@ void sub_8024D6C(void *self0, s32 x, s32 y)
  * conditional `sub_8026ED0` teardown notify `sub_8024D0C` has. */
 void sub_8024D74(void *self0, s32 flags)
 {
-    u8 *self = (u8 *)self0;
-    u8 *child;
+    struct bg_scroll_layer *self = self0;
+    struct bg_streamer *child;
 
-    *(u8 **)(self + 0x30) = gStaticData_087E4BEC;
-    child = *(u8 **)(self + 0x2c);
+    self->vtable = (struct bg_layer_vtable *)gStaticData_087E4BEC;
+    child = self->streamer;
 
     if (child != NULL) {
-        u8 *mgr = *(u8 **)(child + 0x20);
+        struct streamer_vtable *mgr = child->vtable;
 
-        sub_803AD80(child + *(s16 *)(mgr + 8), (void *)3, *(void **)(mgr + 0xc));
+        sub_803AD80((u8 *)child + mgr->destroy.thisOffset, (void *)3, mgr->destroy.fn);
     }
 
     if (flags & 1) {
@@ -697,10 +713,10 @@ void sub_8024D74(void *self0, s32 flags)
  * `self+0x2c`. */
 void *sub_8024DAC(void *self0)
 {
-    u8 *self = (u8 *)self0;
+    struct bg_scroll_layer *self = self0;
 
-    *(u8 **)(self + 0x30) = gStaticData_087E4BEC;
-    *(void **)(self + 0x2c) = sub_8024D38(sub_8026EDC(0x24));
+    self->vtable = (struct bg_layer_vtable *)gStaticData_087E4BEC;
+    self->streamer = sub_8024D38(sub_8026EDC(0x24));
     return self;
 }
 
@@ -721,8 +737,8 @@ s32 sub_8024DCC(void *self0, s32 value)
  * pair), writing the smaller of each back into `out`. */
 void sub_8024DE0(void *self0, s32 *out)
 {
-    u8 *self = (u8 *)self0;
-    s32 a = *(s32 *)(self + 8);
+    struct bg_scroll_layer *self = self0;
+    s32 a = self->maxX;
 
     if (a > out[0]) {
         a = out[0];
@@ -730,7 +746,7 @@ void sub_8024DE0(void *self0, s32 *out)
     out[0] = a;
 
     {
-        s32 b = *(s32 *)(self + 0xc);
+        s32 b = self->maxY;
 
         if (b > out[1]) {
             b = out[1];
@@ -747,11 +763,11 @@ void sub_8024DE0(void *self0, s32 *out)
  * `sub_8024E90`. */
 void sub_8024DFC(void *self0, void *vec20)
 {
-    u8 *self = (u8 *)self0;
+    struct bg_scroll_layer *self = self0;
     s32 *vec2 = (s32 *)vec20;
     s32 v;
 
-    v = vec2[0] * *(s32 *)(self + 0x20);
+    v = vec2[0] * self->scaleX;
     if (v >= 0) {
         v = v >> 8;
     } else {
@@ -759,7 +775,7 @@ void sub_8024DFC(void *self0, void *vec20)
     }
     vec2[0] = v;
 
-    v = vec2[1] * *(s32 *)(self + 0x24);
+    v = vec2[1] * self->scaleY;
     if (v >= 0) {
         v = v >> 8;
     } else {
@@ -777,23 +793,23 @@ void sub_8024DFC(void *self0, void *vec20)
  * position. */
 void sub_8024E24(void *self0, void *delta0)
 {
-    u8 *self = (u8 *)self0;
+    struct bg_scroll_layer *self = self0;
     s32 *delta = (s32 *)delta0;
-    u8 *mgr;
+    struct bg_layer_vtable *mgr;
     s32 dx, dy;
 
-    mgr = *(u8 **)(self + 0x30);
-    dx = sub_803AD80(self + *(s16 *)(mgr + 0x20),
-                      (void *)(delta[0] - *(s32 *)self),
-                      *(void **)(mgr + 0x24));
+    mgr = self->vtable;
+    dx = sub_803AD80((u8 *)self + mgr->method_20.thisOffset,
+                      (void *)(delta[0] - self->x),
+                      mgr->method_20.fn);
 
-    mgr = *(u8 **)(self + 0x30);
-    dy = sub_803AD80(self + *(s16 *)(mgr + 0x20),
-                      (void *)(delta[1] - *(s32 *)(self + 4)),
-                      *(void **)(mgr + 0x24));
+    mgr = self->vtable;
+    dy = sub_803AD80((u8 *)self + mgr->method_20.thisOffset,
+                      (void *)(delta[1] - self->y),
+                      mgr->method_20.fn);
 
-    *(s32 *)self += dx;
-    *(s32 *)(self + 4) += dy;
+    self->x += dx;
+    self->y += dy;
 }
 /* Trailing byte count isn't a multiple of 4 in the ROM's own raw block
  * (a bare `.align 2, 0` follows `bx r0` there too) - see the

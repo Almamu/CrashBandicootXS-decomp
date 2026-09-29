@@ -43,7 +43,15 @@ struct bg_scroll_layer
 {
     s32 x;                          // 0x00 - pixels
     s32 y;                          // 0x04
-    u8 unk_08[0x20];                // 0x08 - see sub_8024EB4 (game_loop3.c)
+    /* 0x08-0x24: set from the level layer by sub_8024EB4 (game_loop3.c) */
+    s32 maxX;                       // 0x08 - widthPx - 240, the scroll limit
+    s32 maxY;                       // 0x0C - heightPx - 160
+    s32 widthPx;                    // 0x10
+    s32 heightPx;                   // 0x14
+    s32 widthTiles;                 // 0x18
+    s32 heightTiles;                // 0x1C
+    s32 scaleX;                     // 0x20 - Q8 parallax factor
+    s32 scaleY;                     // 0x24
     u8 enabled;                     // 0x28
     u8 unk_29[3];                   // 0x29
     void *streamer;                 // 0x2C - tile-map ring-buffer streamer
