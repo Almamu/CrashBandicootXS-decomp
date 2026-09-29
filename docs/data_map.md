@@ -499,6 +499,8 @@ Notable mid-size tables:
   families: palettes, `table_A` keyframes, `anim_table_record[41]`/`[47]`
   (`081796CC`/`0817B2A4`, already declared), and the `table_B` arrays.
   `graphics/unknown/*/entities.json` already records all of it.
+  **Converted** (`src/data/anim_family_178f80.c`,
+  `src/data/anim_family_17aa6c.c`, docs/data.md "Category families").
 - `08175558`+`08175564`+`08175584`: one `category_descriptor[7]`, split over three labels.
 - `081725C4` (0x261C): terrain shape records (36 B, heights 0-7, `0xFF`
   empty) for the collision streamer.
@@ -759,52 +761,52 @@ vtable shapes).
 | `08175564` | 0x20 | category_descriptor[0] bytes 0x0C-0x2B (part of gStaticData_08175558[7]) | `InitActorCategory` | high | easy |
 | `08175584` | 0x140 | category_descriptor[0] +0x2C .. [6] end (part of gStaticData_08175558[7]) | `InitActorCategory` | high | easy |
 | `081756C4` | 0x9C | category_vtable[3]: 3 x 13 Thumb function pointers (slots 7/8 of type 0 hold junk values) | `SelectActorCategory` | high | easy |
-| `08175760` | 0x3800 | palette-cycle frames: 32 x 0x1C0-byte BGR555 blocks (14 x 16-colour palettes each) | `sub_802AB58` | high | easy |
-| `08178F60` | 0x10 | table of s32 (`s32` x 4) | `sub_802ABC8` | high | easy |
-| `08178F70` | 0x10 | table of s32 (`s32` x 4) | `sub_802ABC8` | high | easy |
-| `08178F80` | 0x1738 | categories 0-2 family data: 16-colour palettes, keyframe tables (table_A), anim table gStaticData_081796CC (41 x 0x28) and table_B arrays (absolute ROM pointers or sheet offsets) | `sub_80361B0` | high | medium |
+| `08175760` | 0x3800 | palette-cycle frames: 32 x 0x1C0-byte BGR555 blocks (BG palettes 0-13). **Converted** (`src/data/palette_cycle_175760.c`) | `sub_802AB58` | high | done |
+| `08178F60` | 0x10 | palette-cycle cursor starts `s32[4]`. **Converted** | `sub_802ABC8` | high | done |
+| `08178F70` | 0x10 | palette-cycle cursor bounds `s32[4]`. **Converted** | `sub_802ABC8` | high | done |
+| `08178F80` | 0x1738 | categories 0-2 family data: OBJ palette, keyframe tables (table_A), anim table gStaticData_081796CC (41 x 0x28) and table_B arrays. **Converted** (`src/data/anim_family_178f80.c`, docs/data.md "Category families") | `sub_80361B0` | high | done |
 | `0817A6B8` | 0x70 | function-pointer / pointer-to-member table (14 code pointers) | `sub_802B364`, `sub_802C208` | high | easy |
-| `0817A728` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_802B730`, `sub_802BB4C` | high | easy |
-| `0817A748` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_802BB4C` | high | easy |
-| `0817A768` | 0xC | table (element layout: see consumers) | `sub_802C6C0` | medium | easy |
-| `0817A774` | 0xC | table (element layout: see consumers) | `sub_802CC9C` | medium | easy |
-| `0817A780` | 0xC | table (element layout: see consumers) | `sub_802CC9C` | medium | easy |
-| `0817A78C` | 0xC | table (element layout: see consumers) | `sub_802CC9C` | medium | easy |
-| `0817A798` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_802D204` | high | easy |
-| `0817A7B8` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_802D2DC` | high | easy |
-| `0817A7D8` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_802D2DC` | high | easy |
-| `0817A7F8` | 0x48 | table (element layout: see consumers) | `sub_802DB2C`, `sub_802DCC0` | medium | easy |
+| `0817A728` | 0x20 | 16-colour palette. **Converted** (`src/data/actor_tables_17a728.c`) | `sub_802B730`, `sub_802BB4C` | high | done |
+| `0817A748` | 0x20 | 16-colour palette. **Converted** | `sub_802BB4C` | high | done |
+| `0817A768` | 0xC | `struct anim_box`. **Converted** | `sub_802C6C0` | medium | done |
+| `0817A774` | 0xC | `struct anim_box`. **Converted** | `sub_802CC9C` | medium | done |
+| `0817A780` | 0xC | `struct anim_box`. **Converted** | `sub_802CC9C` | medium | done |
+| `0817A78C` | 0xC | `struct anim_box`. **Converted** | `sub_802CC9C` | medium | done |
+| `0817A798` | 0x20 | 16-colour palette (gauge tier 1). **Converted** | `sub_802D204` | high | done |
+| `0817A7B8` | 0x20 | 16-colour palette. **Converted** | `sub_802D2DC` | high | done |
+| `0817A7D8` | 0x20 | 16-colour palette. **Converted** | `sub_802D2DC` | high | done |
+| `0817A7F8` | 0x48 | 6 x `{s32 value, s32 threshold, s32 threshold}`. **Converted** | `sub_802DB2C`, `sub_802DCC0` | medium | done |
 | `0817A840` | 0x10 | function-pointer / pointer-to-member table (4 code pointers) (`void (*)(void)` x 4) | `sub_802D7B0` | high | easy |
-| `0817A850` | 0x30 | table (element layout: see consumers) | `sub_802DFDC` | medium | easy |
+| `0817A850` | 0x30 | 4 `struct anim_frame_record` (the sub_802DFDC singleton's keyframes). **Converted** (`src/data/anim_frames_17a850.c`) | `sub_802DFDC` | medium | done |
 | `0817A880` | 0x1EC | table_B: 123 absolute pointers into compressed frame set B (0x080DA1D8..) | `sub_802DFDC` | high | easy |
-| `0817AA6C` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_802D9A8` | high | easy |
-| `0817AA8C` | 0xC | table (element layout: see consumers) | `sub_802DD9C` | medium | easy |
-| `0817AA98` | 0x1728 | categories 3-6 family data: s16 header, palettes, table_A, anim table gStaticData_0817B2A4 (47 x 0x28), table_B arrays | `sub_802D7B0` | high | medium |
+| `0817AA6C` | 0x20 | 16-colour gradient palette. **Converted** (`src/data/anim_family_17aa6c.c`) | `sub_802D9A8` | high | done |
+| `0817AA8C` | 0xC | `struct anim_box`. **Converted** | `sub_802DD9C` | medium | done |
+| `0817AA98` | 0x1728 | categories 3-6 family data: a box, 2 OBJ palettes, table_A, anim table gStaticData_0817B2A4 (47 x 0x28), table_B arrays. **Converted** (`src/data/anim_family_17aa6c.c`) | `sub_802D7B0` | high | done |
 | `0817C1C0` | 0x40 | function-pointer / pointer-to-member table (8 code pointers) | `sub_802E84C`, `sub_802F748` | high | easy |
-| `0817C200` | 0x60 | BGR555 palette(s): 3 x 16 colours (`u16` x 48) | `sub_802F4CC` | high | easy |
+| `0817C200` | 0x60 | 3-frame 16-colour palette strip. **Converted** (`src/data/palette_strip_17c200.c`) | `sub_802F4CC` | high | done |
 | `0817C260` | 0x20 | function-pointer / pointer-to-member table (4 code pointers) | `sub_802FA38`, `sub_802FEA4` | high | easy |
 | `0817C280` | 0x38 | function-pointer / pointer-to-member table (7 code pointers) | `sub_802FFB8`, `sub_8030234` | high | easy |
 | `0817C2B8` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `sub_8030574`, `sub_8030648` | high | easy |
-| `0817C2D0` | 0xA8 | table of struct weapon_kind | `sub_8031040` | high | easy |
-| `0817C378` | 0x60 | BGR555 palette(s): 3 x 16 colours (`u16` x 48) | `sub_8031040`, `sub_8031744` | high | easy |
-| `0817C3D8` | 0xC | table of s16 (`s16` x 6) | `sub_80309B4`, `sub_8030E08`, `sub_8031378` | high | easy |
-| `0817C3E4` | 0x18 | table of struct anim_frame_record | `sub_8030F88` | high | easy |
+| `0817C2D0` | 0xA8 | 6 `struct weapon_kind` (7 words). **Converted** (`src/data/weapon_kind_17c2d0.c`) | `sub_8031040` | high | done |
+| `0817C378` | 0x60 | 3-frame 16-colour palette strip. **Converted** | `sub_8031040`, `sub_8031744` | high | done |
+| `0817C3D8` | 0xC | `struct anim_box`. **Converted** | `sub_80309B4`, `sub_8030E08`, `sub_8031378` | high | done |
+| `0817C3E4` | 0x18 | 2 `struct anim_frame_record`. **Converted** | `sub_8030F88` | high | done |
 | `0817C3FC` | 0x18 | function-pointer / pointer-to-member table (6 code pointers) (`void*` x 6) | `sub_80311C4` | high | easy |
 | `0817C414` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `sub_8031A08` | high | easy |
 | `0817C42C` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `sub_8031A6C`, `sub_80322F4` | high | easy |
-| `0817C444` | 0xC | table (element layout: see consumers) | `sub_8032480` | medium | easy |
+| `0817C444` | 0xC | `struct anim_box`. **Converted** (`src/data/actor_box_17c444.c`) | `sub_8032480` | medium | done |
 | `0817C450` | 0x10 | function-pointer / pointer-to-member table (2 code pointers) | `sub_8032950`, `sub_8032A94` | high | easy |
-| `0817C460` | 0x50 | table of struct singleton_kind | `sub_8033264` | high | easy |
-| `0817C4B0` | 0xC | table of s16 (`s16` x 6) | `sub_8032C0C` | high | easy |
-| `0817C4BC` | 0xC | table (element layout: see consumers) | `sub_80331BC` | medium | easy |
+| `0817C460` | 0x50 | 2 `struct singleton_kind` (10 words). **Converted** (`src/data/singleton_kind_17c460.c`) | `sub_8033264` | high | done |
+| `0817C4B0` | 0xC | `struct anim_box`. **Converted** | `sub_8032C0C` | high | done |
+| `0817C4BC` | 0xC | 1 `struct anim_frame_record`. **Converted** | `sub_80331BC` | medium | done |
 | `0817C4C8` | 0x18 | function-pointer / pointer-to-member table (6 code pointers) (`void*` x 6) | `sub_8032B6C` | high | easy |
 | `0817C4E0` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `sub_8033B44`, `sub_8033C84` | high | easy |
 | `0817C4F8` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `sub_8033E80`, `sub_8033FE4` | high | easy |
-| `0817C510` | 0x2 | small constant (3e00) | `sub_8034AA4` | medium | easy |
-| `0817C512` | 0x20 | table of u16; 1 word(s) look like ROM pointers (`u16` x 16) | `sub_803487C` | high | easy |
-| `0817C532` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16) | `sub_803487C` | high | easy |
-| `0817C552` | 0x20 | table of u16 (`u16` x 16) | `sub_803487C` | high | easy |
-| `0817C572` | 0x22 | table of u16 (`u16` x 17) | `sub_803487C` | high | easy |
+| `0817C510` | 0x2 | the text ">". **Converted** (`src/data/hud_palettes_17c510.c`) | `sub_8034AA4` | medium | done |
+| `0817C512` | 0x20 | 16 palette halfwords. **Converted** | `sub_803487C` | high | done |
+| `0817C532` | 0x20 | 16 palette halfwords. **Converted** | `sub_803487C` | high | done |
+| `0817C552` | 0x20 | 16 halfwords (mostly 0xFFFF). **Converted** | `sub_803487C` | high | done |
+| `0817C572` | 0x22 | 16 halfwords + the 2-byte zero pad. **Converted** | `sub_803487C` | high | done |
 | `0817C594` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `sub_803472C` | medium | easy |
 | `0817C5A8` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `sub_803472C` | medium | easy |
 | `0817C5BC` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `sub_803472C` | medium | easy |

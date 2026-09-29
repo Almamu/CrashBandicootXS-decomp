@@ -3314,7 +3314,8 @@
    "format": "palette-cycle frames: 32 x 0x1C0-byte BGR555 blocks (14 x 16-colour palettes each)",
    "effort": "easy",
    "confidence": "high",
-   "notes": ""
+   "notes": "",
+   "status": "converted: src/data/palette_cycle_175760.c"
   },
   {
    "address": "0x08178F60",
@@ -3337,7 +3338,8 @@
    "element_count": 4,
    "format": "table of s32",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/palette_cycle_175760.c"
   },
   {
    "address": "0x08178F70",
@@ -3360,7 +3362,8 @@
    "element_count": 4,
    "format": "table of s32",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/palette_cycle_175760.c"
   },
   {
    "address": "0x08178F80",
@@ -3381,7 +3384,8 @@
    "format": "categories 0-2 family data: 16-colour palettes, keyframe tables (table_A), anim table gStaticData_081796CC (41 x 0x28) and table_B arrays (absolute ROM pointers or sheet offsets)",
    "effort": "medium",
    "confidence": "high",
-   "notes": "Layout already documented in include/actor_anim.h and graphics/unknown/00_0b2120/entities.json; split into typed tables."
+   "notes": "Layout already documented in include/actor_anim.h and graphics/unknown/00_0b2120/entities.json; split into typed tables.",
+   "status": "converted: src/data/anim_family_178f80.c"
   },
   {
    "address": "0x0817A6B8",
@@ -3432,7 +3436,8 @@
    "confidence": "high",
    "element_type": "u16",
    "element_size": 2,
-   "element_count": 16
+   "element_count": 16,
+   "status": "converted: src/data/actor_tables_17a728.c"
   },
   {
    "address": "0x0817A748",
@@ -3455,7 +3460,8 @@
    "confidence": "high",
    "element_type": "u16",
    "element_size": 2,
-   "element_count": 16
+   "element_count": 16,
+   "status": "converted: src/data/actor_tables_17a728.c"
   },
   {
    "address": "0x0817A768",
@@ -3475,7 +3481,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/actor_tables_17a728.c"
   },
   {
    "address": "0x0817A774",
@@ -3495,7 +3502,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/actor_tables_17a728.c"
   },
   {
    "address": "0x0817A780",
@@ -3515,7 +3523,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/actor_tables_17a728.c"
   },
   {
    "address": "0x0817A78C",
@@ -3535,7 +3544,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/actor_tables_17a728.c"
   },
   {
    "address": "0x0817A798",
@@ -3558,7 +3568,8 @@
    "confidence": "high",
    "element_type": "u16",
    "element_size": 2,
-   "element_count": 16
+   "element_count": 16,
+   "status": "converted: src/data/actor_tables_17a728.c"
   },
   {
    "address": "0x0817A7B8",
@@ -3581,7 +3592,8 @@
    "confidence": "high",
    "element_type": "u16",
    "element_size": 2,
-   "element_count": 16
+   "element_count": 16,
+   "status": "converted: src/data/actor_tables_17a728.c"
   },
   {
    "address": "0x0817A7D8",
@@ -3604,7 +3616,8 @@
    "confidence": "high",
    "element_type": "u16",
    "element_size": 2,
-   "element_count": 16
+   "element_count": 16,
+   "status": "converted: src/data/actor_tables_17a728.c"
   },
   {
    "address": "0x0817A7F8",
@@ -3625,7 +3638,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/actor_tables_17a728.c"
   },
   {
    "address": "0x0817A840",
@@ -3669,7 +3683,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/anim_frames_17a850.c"
   },
   {
    "address": "0x0817A880",
@@ -3716,7 +3731,8 @@
    "element_count": 16,
    "format": "BGR555 palette(s): 1 x 16 colours",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/anim_family_17aa6c.c"
   },
   {
    "address": "0x0817AA8C",
@@ -3736,7 +3752,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/anim_family_17aa6c.c"
   },
   {
    "address": "0x0817AA98",
@@ -3757,7 +3774,8 @@
    "format": "categories 3-6 family data: s16 header, palettes, table_A, anim table gStaticData_0817B2A4 (47 x 0x28), table_B arrays",
    "effort": "medium",
    "confidence": "high",
-   "notes": ""
+   "notes": "",
+   "status": "converted: src/data/anim_family_17aa6c.c"
   },
   {
    "address": "0x0817C1C0",
@@ -3806,7 +3824,8 @@
    "confidence": "high",
    "element_type": "u16",
    "element_size": 2,
-   "element_count": 48
+   "element_count": 48,
+   "status": "converted: src/data/palette_strip_17c200.c"
   },
   {
    "address": "0x0817C260",
@@ -3906,7 +3925,8 @@
    "element_count": null,
    "format": "table of struct weapon_kind",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/weapon_kind_17c2d0.c"
   },
   {
    "address": "0x0817C378",
@@ -3931,7 +3951,8 @@
    "confidence": "high",
    "element_type": "u16",
    "element_size": 2,
-   "element_count": 48
+   "element_count": 48,
+   "status": "converted: src/data/weapon_kind_17c2d0.c"
   },
   {
    "address": "0x0817C3D8",
@@ -3959,7 +3980,8 @@
    "element_count": 6,
    "format": "table of s16",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/weapon_kind_17c2d0.c"
   },
   {
    "address": "0x0817C3E4",
@@ -3982,7 +4004,8 @@
    "element_count": null,
    "format": "table of struct anim_frame_record",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/weapon_kind_17c2d0.c"
   },
   {
    "address": "0x0817C3FC",
@@ -4075,7 +4098,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/actor_box_17c444.c"
   },
   {
    "address": "0x0817C450",
@@ -4123,7 +4147,8 @@
    "element_count": null,
    "format": "table of struct singleton_kind",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/singleton_kind_17c460.c"
   },
   {
    "address": "0x0817C4B0",
@@ -4146,7 +4171,8 @@
    "element_count": 6,
    "format": "table of s16",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/singleton_kind_17c460.c"
   },
   {
    "address": "0x0817C4BC",
@@ -4166,7 +4192,8 @@
    ],
    "format": "table (element layout: see consumers)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/singleton_kind_17c460.c"
   },
   {
    "address": "0x0817C4C8",
@@ -4262,7 +4289,8 @@
    ],
    "format": "small constant (3e00)",
    "effort": "easy",
-   "confidence": "medium"
+   "confidence": "medium",
+   "status": "converted: src/data/hud_palettes_17c510.c"
   },
   {
    "address": "0x0817C512",
@@ -4285,7 +4313,8 @@
    "element_count": 16,
    "format": "table of u16; 1 word(s) look like ROM pointers",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/hud_palettes_17c510.c"
   },
   {
    "address": "0x0817C532",
@@ -4308,7 +4337,8 @@
    "element_count": 16,
    "format": "BGR555 palette(s): 1 x 16 colours",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/hud_palettes_17c510.c"
   },
   {
    "address": "0x0817C552",
@@ -4331,7 +4361,8 @@
    "element_count": 16,
    "format": "table of u16",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/hud_palettes_17c510.c"
   },
   {
    "address": "0x0817C572",
@@ -4354,7 +4385,8 @@
    "element_count": 17,
    "format": "table of u16",
    "effort": "easy",
-   "confidence": "high"
+   "confidence": "high",
+   "status": "converted: src/data/hud_palettes_17c510.c"
   },
   {
    "address": "0x0817C594",

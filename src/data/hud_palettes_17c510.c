@@ -1,0 +1,36 @@
+#include "core.h"
+
+/*
+ * ROM 0x0817C510-0x0817C594. Linked in ROM order between data/data.s
+ * sections by ldscript.txt - see docs/data.md.
+ */
+
+/* The text sub_8034AA4 (actor_part131.c) prints in an icon's text
+ * slot. */
+const u8 gStaticData_0817C510[] = ">";
+
+/* sub_803487C (actor_part88.c) fills palette-cache slot 0 from the
+ * first two arrays and slot 2 from the last two, 16 halfwords of each
+ * (slot 2's are mostly 0xFFFF, which isn't a colour). The last
+ * halfword of gStaticData_0817C572 is the zero padding before the next
+ * word-aligned table; nothing reads it. */
+const u16 gStaticData_0817C512[16] = {
+    0x83E0, 0x9CC6, 0x107F, 0x0D04, 0x0F9F, 0x894C, 0x0864, 0x05D4,
+    0x0ABE, 0xA27F, 0x09BE, 0x1D5F, 0x886B, 0x94DF, 0x0C9B, 0x0873,
+};
+
+const u16 gStaticData_0817C532[16] = {
+    0x03E0, 0x1CC6, 0x359E, 0x0D04, 0x4FDE, 0x094C, 0x0864, 0x05D4,
+    0x3AFE, 0x36BE, 0x223E, 0x35FE, 0x086B, 0x35DE, 0x35DB, 0x0873,
+};
+
+const u16 gStaticData_0817C552[16] = {
+    0x0000, 0x9CC6, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0x0000, 0xFFFF,
+    0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
+};
+
+const u16 gStaticData_0817C572[17] = {
+    0x0000, 0x001F, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0x0000, 0xFFFF,
+    0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
+    0x0000,
+};
