@@ -187,6 +187,21 @@ this address range." Genuinely untouched regions (nothing in
 `rom_map.md`, or too small to matter - like the ~200 B gap right after
 `irq.c`) stay uncategorized, same as before this pass.
 
+## Hand-written assembly is excluded from the totals
+
+Some of the ROM was never C: crt0.s's `start`, libgcc's `lib1funcs.asm`
+routines (`__udivsi3`, `__divsi3`, `__modsi3`, `__umodsi3`, `__div0` and
+the `_call_via_rN`/`_call_via_lr` trampolines), and the BIOS SWI wrappers
+(each is just `svc #N; bx lr`). There is nothing to decompile there, so
+counting that code as unmatched (or as "matched", which is what happened
+while a NAKED transcription sat inside a C unit) would misstate progress.
+`tools/report_units.py` marks these ranges with `HANDWRITTEN` and emits no
+unit for them, so they drop out of both the matched and the total counts.
+crt0 is excluded the same way: its range comes before the first unit. The
+bytes are still verified by `make compare`. Only mark a range
+`HANDWRITTEN` once it's confirmed to be hand-written, not just hard to
+match.
+
 ## A separate, known limitation: small residual percentages on real matches
 
 Neither `expected/code_3.s` nor `expected/legacy.s` uses the
