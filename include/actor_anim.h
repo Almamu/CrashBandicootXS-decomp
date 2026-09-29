@@ -56,11 +56,12 @@ COMPILE_TIME_ASSERT(sizeof(struct keyframe_entry) == 0xC);
  * mixed within one record:
  *
  *   - "absolute_rom": each entry is a real ROM pointer straight to a
- *     struct sprite_frame. Used only by the "mask"-style records (index
- *     0 of both animation tables) - these frames deliberately overlap
- *     byte-for-byte with their neighbors (a rotation-strip compression
- *     trick, see docs/graphics.md) rather than living in the category's
- *     sprite sheet at all, so there's no extracted PNG for them.
+ *     zero-run-compressed frame ({w, h, 0x30, 0} + u16 run stream,
+ *     unpacked by the gUnknown_03000874 IWRAM hook). Used only by record
+ *     0 of both animation tables (and the sub_802DFDC singleton's table):
+ *     the frame sets are rle_sprites_0c2758.c / rle_sprites_15a050.c,
+ *     built from graphics/rle_sprites/ (docs/data.md, "Compressed sprite
+ *     frames").
  *
  *   - "pool_offset": each entry is a byte offset from the start of the
  *     category family's decompressed sprite sheet

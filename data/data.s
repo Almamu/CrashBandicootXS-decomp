@@ -16,23 +16,7 @@ gStaticData_080C0C36:
 
 @ gStaticData_080C0C38..gStaticData_080C19F0: src/data/sub_effect_0c0c38.c
 
-.section .rodata.080C2758
-
-@ Rotation strips A and B (docs/data_map.md): overlapping sprite-frame
-@ windows, reached through table_B gStaticData_0817941C (strip A) and
-@ gStaticData_0817A880 (strip B). Each window is a {w, h, 0x30, 0} header
-@ plus w*h 4bpp tiles, but consecutive windows start a few hundred bytes
-@ apart at offsets that aren't multiples of a tile, so every header sits
-@ inside the previous window's pixels and the stream has no tile grid a
-@ PNG could hold. The last window of A reads 0x5BC bytes into B, and B's
-@ reads 0x700 bytes into cell animation B. Kept raw.
-.global gStaticData_080C2758
-gStaticData_080C2758:
-	.incbin "baserom.gba", 0x000C2758, 0x00017A80
-
-.global gStaticData_080DA1D8
-gStaticData_080DA1D8:
-	.incbin "baserom.gba", 0x000DA1D8, 0x00024FD8
+@ gStaticData_080C2758..gStaticData_080DA1D8: src/data/rle_sprites_0c2758.c
 
 @ gStaticData_080FF1B0..gStaticData_08140DCC: src/data/cell_anim_0ff1b0.c
 
@@ -50,14 +34,9 @@ gStaticData_08151AC2:
 
 @ gStaticData_08151AC4..gStaticData_0815A030: src/data/bg_picture_151ac4.c
 
-.section .rodata.0815A050
+@ gStaticData_0815A050: src/data/rle_sprites_15a050.c
 
-@ Rotation strip C, table_B gStaticData_0817BA44 (anim record 0 of
-@ categories 3-6): the same overlapping windows as strips A and B (see
-@ above); the highest one reads 0x4DC bytes past the end. Kept raw.
-.global gStaticData_0815A050
-gStaticData_0815A050:
-	.incbin "baserom.gba", 0x0015A050, 0x0000DA84
+.section .rodata.08167AD4
 
 .global gStaticData_08167AD4
 gStaticData_08167AD4:

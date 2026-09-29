@@ -688,6 +688,12 @@ byte stream per rotating object and lets different keyframe indices just
 pick different windows (or literally the same window, when a pose
 repeats) into it, instead of storing N independent full frames.
 
+**Correction (later):** there is no sliding window. The `0x30` byte
+marks a zero-run-compressed frame, unpacked by the IWRAM routine behind
+`gUnknown_03000874`; the frames are stored back to back and don't
+overlap at all. Decoded, record 0 of categories 0-2 is Crash riding the
+polar bear, not a mask. See docs/data.md, "Compressed sprite frames".
+
 Rendering frames evenly spaced across one confirmed contiguous run (e.g.
 indices 0, 12, 24, ... 95 of the categories 0-2 pool) shows a *stable*
 overall composition frame to frame - green (transparent) background, a

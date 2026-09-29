@@ -230,3 +230,26 @@ tile_pool_incs = $(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.img.bin.inc,$(
 $(C_BUILDDIR)/data/level_tilesets_17e78c.o: $(call tile_pool_incs,$(filter graphics/level_tilesets/tileset1_% graphics/level_tilesets/tileset2_% graphics/level_tilesets/tileset3_%,$(TILE_POOL_8BPP_PNGS)))
 $(C_BUILDDIR)/data/level_tilesets_270f08.o: $(call tile_pool_incs,$(filter graphics/level_tilesets/tileset4_% graphics/level_tilesets/tileset5_%,$(TILE_POOL_8BPP_PNGS)))
 $(C_BUILDDIR)/data/sprite_tiles_2bf120.o: $(call tile_pool_incs,$(TILE_POOL_4BPP_PNGS))
+
+# Zero-run-compressed OBJ frame sets (the old "rotation strips", see
+# docs/data.md "Compressed sprite frames"): one PNG per set, the frames
+# stacked top to bottom. grit does the 4bpp layout, tools/rle_sprites.py
+# compresses each frame the way the ROM's encoder did and writes the bytes
+# plus a header of frame offsets (for the frame pointer tables).
+RLE_SPRITE_PNGS := $(wildcard graphics/rle_sprites/*.png)
+GRIT_C_PNGS += $(RLE_SPRITE_PNGS)
+RLE_SPRITE_DIR := $(GRAPHICS_BUILDDIR)/rle_sprites
+RLE_FRAME_0c2758 := 8x8
+RLE_FRAME_0da1d8 := 10x10
+RLE_FRAME_15a050 := 8x8
+
+$(RLE_SPRITE_DIR)/%_frames.img.bin: graphics/rle_sprites/%_frames.png | $(GRIT)
+	@mkdir -p $(dir $@)
+	$(GRIT) $< -gt -gB4 -p! -ftb -fh! -o $(@:.img.bin=)
+$(RLE_SPRITE_DIR)/%_frames.inc $(RLE_SPRITE_DIR)/%_frames.h: $(RLE_SPRITE_DIR)/%_frames.img.bin tools/rle_sprites.py
+	python3 tools/rle_sprites.py pack $< $(RLE_SPRITE_DIR)/$*_frames.inc $(RLE_SPRITE_DIR)/$*_frames.h --frame $(RLE_FRAME_$*) --name RLE_SPRITES_$(shell echo $* | tr a-f A-F)
+
+rle_sprite_files = $(foreach s,$(1),$(RLE_SPRITE_DIR)/$(s)_frames.inc $(RLE_SPRITE_DIR)/$(s)_frames.h)
+$(C_BUILDDIR)/data/rle_sprites_0c2758.o: $(call rle_sprite_files,0c2758 0da1d8)
+$(C_BUILDDIR)/data/rle_sprites_15a050.o: $(call rle_sprite_files,15a050)
+$(C_BUILDDIR)/data/frame_table_17a880.o: $(call rle_sprite_files,0da1d8)
