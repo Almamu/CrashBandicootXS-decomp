@@ -487,3 +487,13 @@ not a gap this pass's new techniques had any real leverage on.
   same matched object).
 - `docs/status/system.md` - `sub_803AA08` moved from the "Parked -
   NAKED asm transcription" list into the matched `timer_util.c` entry.
+
+## Later pass: EEPROM SDK at -O1
+
+`sub_803AAD4`, `sub_803AB54` and `sub_803AC04` are real C now, and
+`sub_803AA90` lost its pins. They are Nintendo AgbEeprom (`EEPROM_V122`)
+library C compiled at **-O1**. With zeldaret/tmc's `src/eeprom.c` source
+shape they match byte-for-byte under agbcc -O1 with no pins (`O1_OBJS` in
+the Makefile). The "unreproducible" busy-wait tail above is gcc's
+duplicated `while` exit test, which -O2 cross-jumps away. See
+[eeprom-sdk-o1.md](./eeprom-sdk-o1.md).
