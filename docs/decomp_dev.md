@@ -391,7 +391,8 @@ checks every byte anyway.
 
 As of this change: 1,640,427 of 8,038,172 bytes matched (20.41%). That is
 the two LZ77 blobs in `graphics/unknown/`, the intro and tileset1 graphics,
-the GAX2 audio data and the sfx table.
+the GAX2 audio data and the sfx table. [`docs/data_map.md`](./data_map.md)
+triages the remaining raw blobs and suggests an order for converting them.
 
 ## "Matched" vs "complete": tracking the cleanup pass separately
 
