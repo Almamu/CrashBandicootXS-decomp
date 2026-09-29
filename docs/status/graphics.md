@@ -54,9 +54,10 @@ and [graphics_loading.md](./graphics_loading.md).
   register roles plus inline-asm-materialized DMA-field writes for the
   fields the ROM recomputes fresh every loop iteration - see
   [naked-sub_80014a4-matched.md](../matching/naked-sub_80014a4-matched.md).
-- `src/graphics/text_layout.c` sits at this ROM range but its only
-  function, `sub_8000EE4`, is a NAKED transcription, not decompiled C -
-  see "Parked" below.
+- `src/graphics/text_layout.c`: `sub_8000EE4` (word-wrap text
+  renderer) - was NAKED, now matched as real C under old_agbcc (the
+  object joined `OLD_AGBCC_OBJS`); see
+  [strag3-naked-retry.md](../matching/strag3-naked-retry.md).
 
 - `src/graphics/aabb_util.c` (new file): `sub_8001624` (BLDCNT/
   BLDALPHA/BLDY shadow commit - was previously NAKED, now matched as
@@ -205,7 +206,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 
 ## Parked - NAKED asm transcriptions (byte-correct, not decompiled C)
 
-- **`sub_8000EE4`** (`src/graphics/text_layout.c`) - word-wrap text
+- **`sub_8000EE4` is now matched as real C (old_agbcc; see docs/matching/strag3-naked-retry.md); entry kept for history.** **`sub_8000EE4`** (`src/graphics/text_layout.c`) - word-wrap text
   renderer. A full C reconstruction matched the ROM instruction-for-
   instruction except ~8 bytes from two small codegen details
   (incoming-argument spill ordering, and two loop-bound comparisons
@@ -225,7 +226,7 @@ derivation of each, and `docs/matching.md`'s original entries ("The
 `0x080014A4`-`0x08001624` fade/screen-mode cluster" and "Parked, not
 matched: `sub_8000EE4`") for the pre-NAKED gap analysis.
 
-- **`sub_80073DC` is now matched as real C (split into `src/graphics/graphics_73dc.c`, old_agbcc; see docs/matching/strag1-naked-retry.md); entry kept for history.** **`sub_8006600`** (`src/graphics/oam_count.c`) and **`sub_80073DC`**
+- **`sub_80073DC` is now matched as real C (split into `src/graphics/graphics_73dc.c`, old_agbcc; see docs/matching/strag1-naked-retry.md); `sub_8006600` is now matched as real C too (see docs/matching/strag3-naked-retry.md); entry kept for history.** **`sub_8006600`** (`src/graphics/oam_count.c`) and **`sub_80073DC`**
   (`src/graphics/graphics.c`) - this project's original reference cases
   for the register-allocation-gap class documented above (several
   `overlay_ui`/`actor` functions elsewhere still hit the same class,

@@ -62,136 +62,52 @@ extern struct vram_upload_cursor *gUnknown_030012FC;
 extern struct icon_manager *gUnknown_030012E0;
 extern struct icon_manager *gUnknown_030012DC;
 
+/* Sets an icon manager's draw position. Both coordinates are inline
+ * arguments, so gcc evaluates them (and re-reads the manager global)
+ * before either store - the ROM's order. */
+static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
+{
+    m->posX = x;
+    m->posY = y;
+}
+
 /* Positions two OAM icons flanking a number (drawn via sub_8001214 in
  * between) - centers each icon horizontally from its rendered pixel
- * width (`sub_803AD80`'s return value), at fixed Y coordinates. Written
- * as NAKED asm, not plain C: the last remaining register-letter gap (see
- * docs/matching.md, "Parked, not matched: sub_8006600") was one scratch
- * register (r7) used only to reload a value with no cross-call lifetime
- * - exactly the "plain-C-visible temp, no intervening call" shape that
- * `matching_decomp_register_pinning` memory's technique 10 already
- * confirmed a `register T x asm("r7")` pin never gets included in this
- * toolchain's compiled output for. A transcription of the ROM's own
- * confirmed-correct instructions (this project's other hard-
- * compiler-limitation cases use the same technique - see
- * src/system/link_cable.c/src/audio/gax_swi.c). */
-NAKED void sub_8006600(struct sub_8006700_actor *arg0)
+ * width (the manager's `record->slots[0]` method, a gcc 2.x virtual call
+ * through `sub_803AD80` = `_call_via_r2`), at fixed Y coordinates, then
+ * draws it with `slots[2]`. Parked as NAKED for a long time over a
+ * register-letter gap; closed by computing the centered X into its own
+ * local before passing it to the inline setter (passing the expression
+ * straight in swapped the X/Y and 0x130/240 registers) - see
+ * docs/matching/strag3-naked-retry.md. */
+void sub_8006600(struct sub_8006700_actor *arg0)
 {
-    asm(
-        "push {r4, r5, r6, r7, lr}\n\t"
-        "mov r7, sb\n\t"
-        "mov r6, r8\n\t"
-        "push {r6, r7}\n\t"
-        "sub sp, #0x10\n\t"
-        "add r4, r0, #0\n\t"
-        "ldr r0, 1f\n\t"
-        "mov sb, r0\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_8006A90\n\t"
-        "ldr r0, 2f\n\t"
-        "ldr r0, [r0]\n\t"
-        "bl sub_8006C28\n\t"
-        "ldr r0, [r4, #0x18]\n\t"
-        "mov r1, #0\n\t"
-        "mov r2, #0\n\t"
-        "bl sub_8008890\n\t"
-        "ldr r1, 3f\n\t"
-        "mov r8, r1\n\t"
-        "ldr r0, [r1]\n\t"
-        "mov r5, #0x98\n\t"
-        "lsl r5, r5, #1\n\t"
-        "add r1, r0, r5\n\t"
-        "ldr r2, [r1]\n\t"
-        "mov r3, #0x10\n\t"
-        "ldrsh r1, [r2, r3]\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r1, [r4, #0x10]\n\t"
-        "ldr r2, [r2, #0x14]\n\t"
-        "bl sub_803AD80\n\t"
-        "mov r6, #0xf0\n\t"
-        "sub r0, r6, r0\n\t"
-        "lsr r3, r0, #1\n\t"
-        "mov r7, r8\n\t"
-        "ldr r0, [r7]\n\t"
-        "mov r2, #0x2d\n\t"
-        "mov r7, #0x88\n\t"
-        "lsl r7, r7, #1\n\t"
-        "add r1, r0, r7\n\t"
-        "str r3, [r1]\n\t"
-        "mov r3, #0x8a\n\t"
-        "lsl r3, r3, #1\n\t"
-        "add r1, r0, r3\n\t"
-        "str r2, [r1]\n\t"
-        "add r1, r0, r5\n\t"
-        "ldr r2, [r1]\n\t"
-        "mov r7, #0x20\n\t"
-        "ldrsh r1, [r2, r7]\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r1, [r4, #0x10]\n\t"
-        "ldr r2, [r2, #0x24]\n\t"
-        "bl sub_803AD80\n\t"
-        "mov r0, sp\n\t"
-        "mov r1, #0x10\n\t"
-        "mov r2, #0x6a\n\t"
-        "bl sub_803AFE4\n\t"
-        "mov r0, sp\n\t"
-        "mov r1, #0xd0\n\t"
-        "mov r2, #0x35\n\t"
-        "bl sub_803AFDC\n\t"
-        "ldr r0, [r4, #0x14]\n\t"
-        "ldr r4, 4f\n\t"
-        "ldr r1, [r4]\n\t"
-        "mov r2, sp\n\t"
-        "mov r3, #0\n\t"
-        "bl sub_8001214\n\t"
-        "mov r0, #0x2e\n\t"
-        "bl sub_8026F38\n\t"
-        "mov r8, r0\n\t"
-        "ldr r0, [r4]\n\t"
-        "add r1, r0, r5\n\t"
-        "ldr r2, [r1]\n\t"
-        "mov r3, #0x10\n\t"
-        "ldrsh r1, [r2, r3]\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r2, [r2, #0x14]\n\t"
-        "mov r1, r8\n\t"
-        "bl sub_803AD80\n\t"
-        "sub r6, r6, r0\n\t"
-        "lsr r3, r6, #1\n\t"
-        "ldr r0, [r4]\n\t"
-        "mov r2, #0x90\n\t"
-        "mov r4, #0x88\n\t"
-        "lsl r4, r4, #1\n\t"
-        "add r1, r0, r4\n\t"
-        "str r3, [r1]\n\t"
-        "mov r7, #0x8a\n\t"
-        "lsl r7, r7, #1\n\t"
-        "add r1, r0, r7\n\t"
-        "str r2, [r1]\n\t"
-        "add r5, r0, r5\n\t"
-        "ldr r2, [r5]\n\t"
-        "mov r3, #0x20\n\t"
-        "ldrsh r1, [r2, r3]\n\t"
-        "add r0, r0, r1\n\t"
-        "ldr r2, [r2, #0x24]\n\t"
-        "mov r1, r8\n\t"
-        "bl sub_803AD80\n\t"
-        "mov r4, sb\n\t"
-        "ldr r0, [r4]\n\t"
-        "bl sub_8006A48\n\t"
-        "add sp, #0x10\n\t"
-        "pop {r3, r4}\n\t"
-        "mov r8, r3\n\t"
-        "mov sb, r4\n\t"
-        "pop {r4, r5, r6, r7}\n\t"
-        "pop {r0}\n\t"
-        "bx r0\n\t"
-        ".align 2, 0\n"
-    "1: .4byte gUnknown_03001300\n"
-    "2: .4byte gUnknown_030012FC\n"
-    "3: .4byte gUnknown_030012E0\n"
-    "4: .4byte gUnknown_030012DC\n"
-    );
+    u8 buf[16];
+    s32 w;
+    s32 n;
+    u32 x;
+    struct icon_record *r;
+
+    sub_8006A90(gUnknown_03001300);
+    sub_8006C28(gUnknown_030012FC);
+    sub_8008890(arg0->field_18, 0, 0);
+    r = gUnknown_030012E0->record;
+    w = sub_803AD80((u8 *)gUnknown_030012E0 + r->slots[0].offset, arg0->field_10, r->slots[0].ptr);
+    x = (u32)(240 - w) >> 1;
+    set_icon_mgr_pos(gUnknown_030012E0, x, 0x2d);
+    r = gUnknown_030012E0->record;
+    sub_803AD80((u8 *)gUnknown_030012E0 + r->slots[2].offset, arg0->field_10, r->slots[2].ptr);
+    sub_803AFE4(buf, 0x10, 0x6a);
+    sub_803AFDC(buf, 0xd0, 0x35);
+    sub_8001214(arg0->field_14, gUnknown_030012DC, buf, 0);
+    n = sub_8026F38(0x2e);
+    r = gUnknown_030012DC->record;
+    w = sub_803AD80((u8 *)gUnknown_030012DC + r->slots[0].offset, n, r->slots[0].ptr);
+    x = (u32)(240 - w) >> 1;
+    set_icon_mgr_pos(gUnknown_030012DC, x, 0x90);
+    r = gUnknown_030012DC->record;
+    sub_803AD80((u8 *)gUnknown_030012DC + r->slots[2].offset, n, r->slots[2].ptr);
+    sub_8006A48(gUnknown_03001300);
 }
 
 extern void sub_80006A8(void *arg0);

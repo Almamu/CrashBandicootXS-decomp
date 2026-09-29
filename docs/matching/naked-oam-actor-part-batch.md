@@ -169,3 +169,7 @@ is still NAKED, with a C draft 18 halfwords off. See [issue-9-naked-retry.md](./
 `src/graphics/graphics_73dc.c` (old_agbcc, on `OLD_AGBCC_OBJS`), written
 in the same shape as its matched affine sibling `sub_8007634`. See
 [strag1-naked-retry.md](strag1-naked-retry.md).
+
+## Later pass (strag3): sub_8006600 matched
+
+`sub_8006600` is now real C in `src/graphics/oam_count.c` (agbcc). It uses an inline position setter, with the centered X computed into a local first. See [strag3-naked-retry.md](strag3-naked-retry.md).
