@@ -1,0 +1,19 @@
+{
+  "$schema": "https://recomp.fyi/schema/v1.json",
+  "game": "Crash Bandicoot XS",
+  "system": "GBA",
+  "type": "decomp",
+  "original": {
+    "region": "Europe"
+  },
+  "project": "CrashBandicootXS-decomp",
+  "status": "in-progress",
+  "approach": "Matching decompilation of the original GBA game, with byte-exact rebuild verification.",
+  "links": [
+    {
+      "label": "Repository",
+      "url": "https://github.com/Almamu/CrashBandicootXS-decomp"
+    }
+  ],
+  "notes": "Work in progress. Most of the code and data is reversed."
+}
