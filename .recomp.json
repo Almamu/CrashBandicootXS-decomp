@@ -4,11 +4,18 @@
   "system": "GBA",
   "type": "decomp",
   "original": {
-    "region": "Europe"
+    "region": "Europe",
+    "sha1": "bdd061e1b5187c0528928ec0ddb6886b1de16970"
   },
   "project": "CrashBandicootXS-decomp",
   "status": "in-progress",
   "approach": "Matching decompilation of the original GBA game, with byte-exact rebuild verification.",
+  "maintainers": [
+    {
+      "name": "Almamu",
+      "link": "https://github.com/Almamu/"
+    }
+  ],
   "links": [
     {
       "label": "Repository",
