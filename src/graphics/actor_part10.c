@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor.h"
+#include "vtable.h"
 
 /* This file's `manager` is the same `dual_array_manager` struct
  * defined and used in `actor_part11.c` (capacity/count1/count2/
@@ -56,13 +57,13 @@ void sub_8008C80(void *manager)
         part = *slot;
 
         {
-            register u8 *tbl asm("r1") = *(u8 **)((u8 *)part + 0x18);
-            register s32 offset asm("r0") = *(s16 *)(tbl + 0x30);
+            register struct vtable_slot *tbl asm("r1") = ((struct actor *)part)->table;
+            register s32 offset asm("r0") = tbl[6].delta;
             register void *addr asm("r0");
             register void *fn asm("r2");
 
             addr = (u8 *)part + offset;
-            fn = *(void **)(tbl + 0x34);
+            fn = tbl[6].fn;
 
             if ((u8)sub_803AD80(addr, box, fn)) {
                 s32 outCount = *(s32 *)((u8 *)manager + 8);

@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor.h"
+#include "level_state.h"
 
 struct aabb {
     s32 field_0;
@@ -8,7 +9,15 @@ struct aabb {
     s32 field_c;
 };
 
-extern void *gUnknown_030012C0;
+/* The one player-object field (gUnknown_030012D8, a `struct gobj`)
+ * this file reads. */
+struct player_view
+{
+    u8 unk_00[0x8c];
+    u32 unk_8C;                     // 0x8c - a gUnknown_0300082C deadline
+};
+
+extern struct level_state *gUnknown_030012C0;
 extern void *gUnknown_030012D8;
 extern u32 gUnknown_0300082C;
 extern void *sub_8007C30(void *dest, void *pt);
@@ -21,8 +30,8 @@ extern void sub_8009D5C(void *partArg);
  * (`gUnknown_030012D8`), gated by a mix of flag bits and a periodic
  * "fast path" check against `gUnknown_0300082C` (the same ~128-frame
  * counter documented in docs/rom_map.md): if `part->flags` bit 2 is
- * set and the player's `+0x8c` field is ahead of the frame counter
- * and `gUnknown_030012C0`'s mode (`+0x78`) is 3, or independently if
+ * set and the player's `unk_8C` field is ahead of the frame counter
+ * and `gUnknown_030012C0`'s mode (`maskLevel`) is 3, or independently if
  * `part`'s `+0xd` byte bit 3 is set and the mode is 3, builds `part`'s
  * primary AABB via `sub_8007C30` and tests it against the player via
  * `sub_800B37C`; on a hit, calls `sub_8009D5C` and returns. If the
@@ -40,14 +49,14 @@ void sub_8009CA0(void *partArg)
     flagsBit = flagsShifted & mask;
     if (flagsBit) {
         s32 fast;
-        void *player = gUnknown_030012D8;
+        struct player_view *player = gUnknown_030012D8;
 
         fast = 0;
-        if (*(u32 *)((u8 *)player + 0x8c) > gUnknown_0300082C) {
+        if (player->unk_8C > gUnknown_0300082C) {
             fast = 1;
         }
         if (fast != 0) {
-            if (*(s32 *)((u8 *)gUnknown_030012C0 + 0x78) != 3) {
+            if (gUnknown_030012C0->maskLevel != 3) {
                 goto gate2;
             }
         }
@@ -74,7 +83,7 @@ gate2:
             return;
         }
     }
-    if (*(s32 *)((u8 *)gUnknown_030012C0 + 0x78) != 3) {
+    if (gUnknown_030012C0->maskLevel != 3) {
         return;
     }
 doCheck:
@@ -148,7 +157,7 @@ void sub_8009D5C(void *partArg)
         newFlags = flagBit | curFlags;
         part->flags = newFlags;
     }
-    mode = *(s32 *)((u8 *)gUnknown_030012C0 + 0x78);
+    mode = gUnknown_030012C0->maskLevel;
 
     switch (mode) {
     case 0:

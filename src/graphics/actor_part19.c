@@ -1,5 +1,6 @@
 #include "core.h"
 #include "memory.h"
+#include "actor_self.h"
 
 /* Continues the same player/action-object action-table family already
  * documented in actor_part17.c/actor_part18.c/actor_part18b.c - `self`
@@ -8,17 +9,16 @@
  * pair at `+0x10`/`+0x12`, a counter at `+0x44`, an accumulator at `+8`
  * that doubles as `struct anim_part_instance.field_08` for
  * `GetAnimFrameBaseOffset`, and a "part table" pointer at `+0`, the
- * same convention actor_part18.c documents at `self+0x10` for its own
+ * same convention actor_part18.c documents at `animTimer` for its own
  * object), plus a `+0x50`-rooted `{s16 offset; void *fn}` trampoline
  * record fed through `sub_803AD80`/`sub_803AD84` (the same convention
  * already named in actor_part10.c/actor_part11.c for a sibling "part"
  * object, just at a different fixed offset here) and a `+0x48`/`+0x4c`
  * circular doubly-linked-list pair (confirmed by `sub_802C19C`'s own
  * unlink sequence below) rooted at the player-pointer global
- * `gUnknown_03000884`. As with the other actor_part1[78].c files, none
- * of these objects' full shapes are pinned down yet, so every access
- * stays a raw offset with a doc comment rather than a guessed struct -
- * see docs/rom_map.md's "gUnknown_030014xx tier-threshold actor
+ * `gUnknown_03000884`. `self` is `struct actor_self` (actor_self.h);
+ * the functions not yet converted still use raw offsets into it - see
+ * docs/rom_map.md's "gUnknown_030014xx tier-threshold actor
  * family" and "type-byte event dispatch" sections for the semantics
  * behind the individual functions below. */
 
@@ -72,25 +72,25 @@ extern void sub_8029720(void);
 extern void *sub_802AC28(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern void sub_802C7A8(void *self);
 
-/* Accumulates `gUnknown_030014A4` into `self+0x20`, then drains
+/* Accumulates `gUnknown_030014A4` into `y`, then drains
  * `gUnknown_030014A4` toward a fixed ceiling (`0x780`) - the same
  * "lazy-singleton accumulator" shape documented in docs/rom_map.md for
- * `sub_802B8E8`. Once `self+0x20` crosses a threshold (`0x2800`),
+ * `sub_802B8E8`. Once `y` crosses a threshold (`0x2800`),
  * clamps it and fires the state-1/table-index-4 transition (anim frame
  * taken from `self`'s own part-table pointer at `+0x30`). */
 void sub_802BED8(void *selfArg)
 {
-    u8 *self = selfArg;
-    s32 total = *(s32 *)(self + 0x20) + gUnknown_030014A4;
+    struct actor_self *self = selfArg;
+    s32 total = self->y + gUnknown_030014A4;
 
-    *(s32 *)(self + 0x20) = total;
+    self->y = total;
     gUnknown_030014A4 += 0x60;
     if (gUnknown_030014A4 > 0x780) {
         gUnknown_030014A4 = 0x780;
     }
 
     if (total > 0x2800) {
-        *(s32 *)(self + 0x20) = 0x2800;
+        self->y = 0x2800;
         {
             register u8 *addr asm("r1") = &gUnknown_030014A3;
             register u8 val asm("r0") = 1;
@@ -100,60 +100,64 @@ void sub_802BED8(void *selfArg)
         {
             register s32 stateVal asm("r0") = 1;
             register s32 idxVal asm("r1") = 4;
-            *(s32 *)(self + 0x28) = stateVal;
+            self->state = stateVal;
             {
                 register s32 zero asm("r2") = 0;
-                *(s32 *)(self + 0x44) = zero;
-                *(s32 *)(self + 0xc) = idxVal;
+                self->stateTime = zero;
+                self->animIndex = idxVal;
                 {
-                    register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0x30);
+                    /* Stored through `*(T *)&field` casts: plain member
+                     * stores let gcc move the zero load (docs/workflow.md
+                     * step 7). */
+                    register u16 anim asm("r0") = *(u16 *)&self->anims[4].duration;
                     register u8 zero2 asm("r1") = 0;
 
-                    *(u16 *)(self + 0x10) = anim;
-                    self[0x12] = zero2;
+                    *(u16 *)&self->animTimer = anim;
+                    *(u8 *)&self->animDone = zero2;
                 }
-                *(s32 *)(self + 8) = zero;
+                self->animTime = zero;
             }
         }
     }
 }
 
-/* On the "confirm" input edge (`self+0x12` set), plays a sound, resets
+/* On the "confirm" input edge (`animDone` set), plays a sound, resets
  * `gUnknown_030014A4` to a large negative "cooldown" value, and fires
  * the state-11/table-index-7 transition (anim frame from `self`'s
- * part-table pointer at `+0x54`). While `self+0x20` (the accumulator
+ * part-table pointer at `+0x54`). While `y` (the accumulator
  * `sub_802BED8` above drives) exceeds a threshold, additionally spawns
  * an effect object via `sub_802AC28` and stashes it into
  * `gUnknown_03001490`. */
 void sub_802BF30(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct actor_self *self = selfArg;
 
-    if (self[0x12] != 0) {
+    if (self->animDone != 0) {
         PlaySfx(gUnknown_030012BC, 0x3c, 0x100);
         gUnknown_030014A4 = 0xFFFFF980;
         {
             register s32 stateVal asm("r0") = 0xb;
             register s32 idxVal asm("r1") = 7;
 
-            *(s32 *)(self + 0x28) = stateVal;
+            self->state = stateVal;
             {
                 register s32 zero asm("r5") = 0;
 
-                *(s32 *)(self + 0x44) = zero;
-                *(s32 *)(self + 0xc) = idxVal;
+                self->stateTime = zero;
+                self->animIndex = idxVal;
                 {
-                    register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0x54);
+                    /* Casts as in sub_802BED8. */
+                    register u16 anim asm("r0") = *(u16 *)&self->anims[7].duration;
                     register u8 zero2 asm("r1") = 0;
 
-                    *(u16 *)(self + 0x10) = anim;
-                    self[0x12] = zero2;
+                    *(u16 *)&self->animTimer = anim;
+                    *(u8 *)&self->animDone = zero2;
                 }
-                *(s32 *)(self + 8) = zero;
+                self->animTime = zero;
 
-                if (*(s32 *)(self + 0x20) > 0x2000) {
-                    gUnknown_03001490 = sub_802AC28(2, *(s32 *)(self + 0x1c), 0x2800,
-                                                     *(s32 *)(self + 0x24), zero);
+                if (self->y > 0x2000) {
+                    gUnknown_03001490 = sub_802AC28(2, self->x, 0x2800,
+                                                     self->z, zero);
                 }
             }
         }
@@ -167,9 +171,9 @@ void sub_802BF30(void *selfArg)
  * accumulator threshold. */
 void sub_802BFA0(void *selfArg)
 {
-    register u8 *self asm("r3") = selfArg;
+    register struct actor_self *self asm("r3") = selfArg;
 
-    if (self[0x12] != 0) {
+    if (self->animDone != 0) {
         {
             register u8 *addr asm("r1") = &gUnknown_030014A3;
             register u8 val asm("r0") = 1;
@@ -179,17 +183,17 @@ void sub_802BFA0(void *selfArg)
             register s32 stateVal asm("r0") = 1;
             register s32 zero asm("r2") = 0;
 
-            *(s32 *)(self + 0x28) = stateVal;
-            *(s32 *)(self + 0x44) = zero;
-            *(s32 *)(self + 0xc) = zero;
+            self->state = stateVal;
+            self->stateTime = zero;
+            self->animIndex = zero;
             {
-                register u16 anim asm("r0") = *(u16 *)(*(u8 **)self);
+                register u16 anim asm("r0") = *(u16 *)&self->anims[0].duration;
                 register u8 zero2 asm("r1") = 0;
 
-                *(u16 *)(self + 0x10) = anim;
-                self[0x12] = zero2;
+                *(u16 *)&self->animTimer = anim;
+                *(u8 *)&self->animDone = zero2;
             }
-            *(s32 *)(self + 8) = zero;
+            self->animTime = zero;
         }
         sub_8029BAC(0x24);
     }
@@ -219,7 +223,7 @@ void sub_802BFD4(void)
  * `+0x48`) plus a sound cue. */
 void sub_802C018(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct actor_self *self = selfArg;
 
     gUnknown_030014A3 = 0;
     gUnknown_030014A1 = 1;
@@ -230,20 +234,20 @@ void sub_802C018(void *selfArg)
         register s32 stateVal asm("r0") = 7;
         register s32 idxVal asm("r1") = 6;
 
-        *(s32 *)(self + 0x28) = stateVal;
+        self->state = stateVal;
         {
             register s32 zero asm("r2") = 0;
 
-            *(s32 *)(self + 0x44) = zero;
-            *(s32 *)(self + 0xc) = idxVal;
+            self->stateTime = zero;
+            self->animIndex = idxVal;
             {
-                register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0x48);
+                register u16 anim asm("r0") = *(u16 *)&self->anims[6].duration;
                 register u8 zero2 asm("r1") = 0;
 
-                *(u16 *)(self + 0x10) = anim;
-                self[0x12] = zero2;
+                *(u16 *)&self->animTimer = anim;
+                *(u8 *)&self->animDone = zero2;
             }
-            *(s32 *)(self + 8) = zero;
+            self->animTime = zero;
         }
     }
 
@@ -274,34 +278,35 @@ void sub_802C0A8(void *arg0)
     sub_8023464(gUnknown_030012C0);
 }
 
-/* Only runs while `self+0x28` (state) is 1-3: sets table-index 2, anim
+/* Only runs while `state` is 1-3: sets table-index 2, anim
  * frame from `self`'s part-table pointer at `+0x18`, and - once the
  * frame counter reaches the entry's threshold (the same `+4`-halfword-
  * of-a-0xc-stride-table shape as `sub_802C270` below) - resets the
- * `+8` accumulator. Stashes `arg1` into `self+0x1c`, plays a
+ * `+8` accumulator. Stashes `arg1` into `x`, plays a
  * state-keyed sound cue (0x5a for state 2, 0x55 for state 1), and
  * transitions to state 3. */
 void sub_802C0BC(void *selfArg, s32 arg1param)
 {
-    register u8 *self asm("r4") = selfArg;
+    register struct actor_self *self asm("r4") = selfArg;
     register s32 arg1 asm("r5") = arg1param;
 
-    if ((u32)(*(s32 *)(self + 0x28) - 1) <= 2) {
+    if ((u32)(self->state - 1) <= 2) {
         s32 frame;
 
-        *(s32 *)(self + 0xc) = 2;
+        self->animIndex = 2;
         {
-            register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0x18);
+            /* Casts as in sub_802BED8. */
+            register u16 anim asm("r0") = *(u16 *)&self->anims[2].duration;
             register u8 zero1 asm("r1") = 0;
 
-            *(u16 *)(self + 0x10) = anim;
-            self[0x12] = zero1;
+            *(u16 *)&self->animTimer = anim;
+            *(u8 *)&self->animDone = zero1;
         }
 
         frame = GetAnimFrameBaseOffset(self);
         {
-            register s32 idx asm("r2") = *(s32 *)(self + 0xc);
-            register u8 *table asm("r3") = *(u8 **)self;
+            register s32 idx asm("r2") = self->animIndex;
+            register u8 *table asm("r3") = (u8 *)self->anims;
             register u8 *entryPtr asm("r1") = (u8 *)(idx * 0xc);
             register s32 four asm("r2");
             register s32 val asm("r1");
@@ -311,14 +316,14 @@ void sub_802C0BC(void *selfArg, s32 arg1param)
             val = *(s16 *)(entryPtr + four);
 
             if (frame >= val) {
-                *(s32 *)(self + 8) = 0;
+                self->animTime = 0;
             }
         }
 
-        *(s32 *)(self + 0x1c) = arg1;
+        self->x = arg1;
 
         {
-            s32 switchState = *(s32 *)(self + 0x28);
+            s32 switchState = self->state;
 
             if (switchState == 2) {
                 sub_8029BAC(0x5a);
@@ -327,8 +332,8 @@ void sub_802C0BC(void *selfArg, s32 arg1param)
             }
         }
 
-        *(s32 *)(self + 0x28) = 3;
-        *(s32 *)(self + 0x44) = 0;
+        self->state = 3;
+        self->stateTime = 0;
         gUnknown_030014A3 = 0;
     }
 }
@@ -343,16 +348,16 @@ void sub_802C128(void *arg0)
     }
 }
 
-/* While `self+0x28` (state) is 1-3 and `gUnknown_0300149C` (the same
+/* While `state` is 1-3 and `gUnknown_0300149C` (the same
  * lock/active flag `sub_802B7E0` gates on, per docs/rom_map.md) is
  * clear: transitions to state 5/table-index 3 (anim frame from
  * `self`'s part-table pointer at `+0x24`), resets
  * `gUnknown_030014A4` to `-0x780`, and fires `sub_8029BAC(0x1c)`. */
 void sub_802C14C(void *selfArg)
 {
-    register u8 *self asm("r2") = selfArg;
+    register struct actor_self *self asm("r2") = selfArg;
 
-    if ((u32)(*(s32 *)(self + 0x28) - 1) <= 2) {
+    if ((u32)(self->state - 1) <= 2) {
         register s32 flag asm("r3") = gUnknown_0300149C;
 
         if (flag == 0) {
@@ -361,17 +366,18 @@ void sub_802C14C(void *selfArg)
                 register s32 stateVal asm("r0") = 5;
                 register s32 idxVal asm("r1") = 3;
 
-                *(s32 *)(self + 0x28) = stateVal;
-                *(s32 *)(self + 0x44) = flag;
-                *(s32 *)(self + 0xc) = idxVal;
+                self->state = stateVal;
+                self->stateTime = flag;
+                self->animIndex = idxVal;
                 {
-                    register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0x24);
+                    /* Casts as in sub_802BED8. */
+                    register u16 anim asm("r0") = *(u16 *)&self->anims[3].duration;
                     register u8 zero2 asm("r1") = 0;
 
-                    *(u16 *)(self + 0x10) = anim;
-                    self[0x12] = zero2;
+                    *(u16 *)&self->animTimer = anim;
+                    *(u8 *)&self->animDone = zero2;
                 }
-                *(s32 *)(self + 8) = flag;
+                self->animTime = flag;
             }
             gUnknown_030014A4 = 0xFFFFF880;
             sub_8029BAC(0x1c);
@@ -379,11 +385,11 @@ void sub_802C14C(void *selfArg)
     }
 }
 
-/* Teardown, gated by `arg1` bit 0: temporarily swaps `self+0x50`'s
+/* Teardown, gated by `arg1` bit 0: temporarily swaps `vtable`'s
  * vtable to `gStaticData_087E4E54` to run `gUnknown_03001488` drain
  * calls into `sub_8023430(gUnknown_030012C0)`, runs two
  * `FreeVramTileBlock` cleanup calls on `gUnknown_030014B0[0]`/`[1]`, sets
- * `self+0x50` to the "dead" vtable `gStaticData_087E4DF4`, unlinks
+ * `vtable` to the "dead" vtable `gStaticData_087E4DF4`, unlinks
  * `self` from the circular `+0x48`(next)/`+0x4c`(prev) list, and frees
  * `self` when `arg1 & 1`. */
 void sub_802C19C(void *selfArg, u32 arg1param)

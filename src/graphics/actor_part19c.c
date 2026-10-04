@@ -1,9 +1,18 @@
 #include "core.h"
 #include "memory.h"
+#include "actor_self.h"
 
 /* Continuation of actor_part19.c's player/action-object family, right
  * after the parked `sub_802C2FC` (see actor_part19b.c) - same `self`
  * object and conventions documented there. */
+
+/* The derived-class field `sub_802C394` reads: how many fruit the
+ * object hands out (one `sub_8023430` call each). */
+struct fruit_actor {
+    struct actor_self base;
+    u8 unk_54[8];
+    s32 fruit;                  // 0x5c
+};
 
 extern void *gUnknown_030012C0;
 
@@ -12,7 +21,7 @@ extern u8 gStaticData_087E4E74[];
 
 extern void sub_8023430(void *self);
 
-/* Same "iterate `self+0x5c` times draining `gUnknown_030012C0`,
+/* Same "award `fruit` fruit via `sub_8023430(gUnknown_030012C0)`,
  * retarget the vtable to the 'dead' state, unlink from the circular
  * `+0x48`/`+0x4c` list, free on `arg1 & 1`" teardown shape as
  * `sub_802C19C` above, but with a plain iteration count instead of a
@@ -25,7 +34,7 @@ void sub_802C394(void *selfArg, u32 arg1)
 
     *(u8 **)(self + 0x50) = gStaticData_087E4E74;
 
-    for (i = 0; i < *(s32 *)(self + 0x5c); i++) {
+    for (i = 0; i < ((struct fruit_actor *)self)->fruit; i++) {
         sub_8023430(gUnknown_030012C0);
     }
 

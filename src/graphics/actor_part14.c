@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor.h"
+#include "gfx_part.h"
 
 extern s32 sub_8008350(void *arg0);
 extern void *sub_8026EDC(s32 size);
@@ -219,10 +220,10 @@ u8 sub_800A724(void *selfArg)
     return (self[0xc] >> 5) & 1;
 }
 
-/* `self+0x44` getter (the same "record" field `sub_8009F1C`/
- * `sub_8009FB0` fire their trampolines through). */
+/* `ctrl` getter (the same "record" field `sub_8009F1C`/`sub_8009FB0`
+ * fire their trampolines through). */
 s32 sub_800A730(void *selfArg)
 {
-    return *(s32 *)((u8 *)selfArg + 0x44);
+    return (s32)((struct gfx_part *)selfArg)->ctrl;
 }
 asm(".align 2, 0");

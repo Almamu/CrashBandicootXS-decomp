@@ -7,10 +7,10 @@
  * `asm/code_3_2_20_28568_c99c_31784_31a6c.s`, `sub_8031A6C` through
  * `sub_8032688` inclusive. Same shared "self" object family documented
  * for the boss-weapon cluster (issues #58/#62) and confirmed again on
- * first read here: state at `self+0x28`, table-index/"kind" at
- * `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
- * `self+0x12`, an accumulator at `self+8`, a "part table" pointer at
- * `self+0`, and an event/trampoline table pointer at `self+0x50`.
+ * first read here: `struct actor_self` (actor_self.h) - `state`, the
+ * table-index/"kind" `animIndex`, the `animTimer`/`animDone` pair, the
+ * `animTime` accumulator, the `anims` part table and the `vtable`
+ * event/trampoline table.
  *
  * `sub_8031B0C`/`sub_8031C0C`/`sub_8031D04`/`sub_8031D7C`/`sub_8031E80`
  * are the "type-byte event dispatch" family already characterized by
@@ -26,7 +26,7 @@
  * `sub_8032480` is the already-flagged orbital-motion consumer of the
  * shared trig table `gStaticData_0816A820`; `sub_8032290` turned out to
  * be a second, closely-related consumer of the same table feeding the
- * same `self+0x1c`/`self+0x20` position pair.
+ * same `x`/`y` position pair.
  *
  * `sub_8031A6C`/`sub_80322F4` are the per-state member-pointer
  * dispatches through `gStaticData_0817C42C` (`ACTOR_PMF_CALL`,
@@ -75,6 +75,54 @@ struct vec3_words {
     s32 a, b, c;
 };
 
+/* The derived classes in this file, each the common `actor_self` prefix
+ * plus its own fields. The animation-reset blocks store through
+ * `*(T *)&self->field` casts: plain member stores let gcc move the
+ * zero loads (docs/workflow.md step 7). */
+
+/* `sub_8031B0C`-`sub_8032350`: orbits `center` and carries a child
+ * object (`sub_802E4B8`, released with `sub_80318B4`). */
+struct orbit_actor {
+    struct actor_self base;
+    s32 health;                 // 0x54
+    void *child;                // 0x58
+    u8 done;                    // 0x5c
+    u8 unk_5d[3];
+    s32 centerX;                // 0x60
+    s32 centerY;                // 0x64
+    s32 phase;                  // 0x68 - random, added to stateTime
+    s32 fallSpeed;              // 0x6c - sub_8032274, capped at 0x4c0
+    void *unk_70;               // 0x70 - handed to sub_802AAB4
+};
+
+/* `sub_8032358`-`sub_8032478`: climbs until it reaches `limitY`. */
+struct rising_actor {
+    struct actor_self base;
+    s32 health;                 // 0x54
+    u8 dead;                    // 0x58
+    u8 unk_59[3];
+    s32 limitY;                 // 0x5c
+};
+
+/* `sub_8032480`-`sub_8032680`: swings around `originX` while moving
+ * down by `stepY` until `limitY`. */
+struct swing_actor {
+    struct actor_self base;
+    s32 health;                 // 0x54
+    s32 originX;                // 0x58
+    s32 limitY;                 // 0x5c
+    s32 stepY;                  // 0x60
+    u8 triggered;               // 0x64 - set by the sub_803256C transition
+    u8 hit;                     // 0x65
+};
+
+/* `sub_8032688`: plays its cue once. */
+struct trigger_actor {
+    struct actor_self base;
+    u8 unk_54[4];
+    u8 cued;                    // 0x58
+};
+
 void sub_803256C(void *selfArg);
 
 ACTOR_CALL_VIA_ALIASES
@@ -111,27 +159,27 @@ void sub_8031A6C(void *selfArg)
  * `self+0x58`, marks `self+0x5c`, and tail-calls `sub_8031A6C`. */
 void sub_8031B0C(void *selfArg)
 {
-    u8 *self = selfArg;
-    s32 kind = *(s32 *)(self + 0xc);
+    struct orbit_actor *self = selfArg;
+    s32 kind = self->base.animIndex;
 
     if (kind == 0 && sub_802A6EC(self)) {
         register s32 state asm("r0") = 2;
         register s32 one asm("r1") = 1;
         s32 typeByte;
 
-        *(s32 *)(self + 0x28) = state;
-        *(s32 *)(self + 0x44) = kind;
-        *(s32 *)(self + 0xc) = one;
+        self->base.state = state;
+        self->base.stateTime = kind;
+        self->base.animIndex = one;
         {
-            register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0xc);
+            register u16 anim asm("r0") = *(u16 *)&self->base.anims[1].duration;
             register u8 zero1 asm("r1") = 0;
 
-            *(u16 *)(self + 0x10) = anim;
-            self[0x12] = zero1;
+            *(u16 *)&self->base.animTimer = anim;
+            *(u8 *)&self->base.animDone = zero1;
         }
-        *(s32 *)(self + 8) = kind;
+        self->base.animTime = kind;
 
-        typeByte = *(u8 *)(*(u8 **)(self + 0x30));
+        typeByte = *(u8 *)(*(u8 **)((u8 *)self + 0x30));
 
         if (typeByte == 0x15) {
             goto case_15;
@@ -170,16 +218,16 @@ void sub_8031B0C(void *selfArg)
 
     case_17:
         PlaySfx(gUnknown_030012BC, 7, 0x100);
-        sub_802AAB4(*(void **)(self + 0x70));
+        sub_802AAB4(self->unk_70);
         sub_8023464(gUnknown_030012C0);
 
     after_dispatch:
-        if (*(s32 *)(self + 0x58) != 0) {
+        if (self->child != NULL) {
             sub_8022FEC(gUnknown_030012C0);
-            sub_80318B4(*(void **)(self + 0x58));
-            *(s32 *)(self + 0x58) = 0;
+            sub_80318B4(self->child);
+            self->child = NULL;
         }
-        self[0x5c] = 1;
+        self->done = 1;
     }
 
     sub_8031A6C(self);
@@ -190,11 +238,11 @@ void sub_8031B0C(void *selfArg)
  * (the caller drives whatever comes after directly). */
 void sub_8031C0C(void *selfArg, s32 delta)
 {
-    u8 *self = selfArg;
-    s32 health = *(s32 *)(self + 0x54) - delta;
+    struct orbit_actor *self = selfArg;
+    s32 health = self->health - delta;
     s32 typeByte;
 
-    *(s32 *)(self + 0x54) = health;
+    self->health = health;
     if (health > 0) {
         return;
     }
@@ -203,24 +251,24 @@ void sub_8031C0C(void *selfArg, s32 delta)
         register s32 state asm("r0") = 2;
         register s32 one asm("r1") = 1;
 
-        *(s32 *)(self + 0x28) = state;
+        self->base.state = state;
         {
             register s32 zero2 asm("r2") = 0;
 
-            *(s32 *)(self + 0x44) = zero2;
-            *(s32 *)(self + 0xc) = one;
+            self->base.stateTime = zero2;
+            self->base.animIndex = one;
             {
-                register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0xc);
+                register u16 anim asm("r0") = *(u16 *)&self->base.anims[1].duration;
                 register u8 zero1 asm("r1") = 0;
 
-                *(u16 *)(self + 0x10) = anim;
-                self[0x12] = zero1;
+                *(u16 *)&self->base.animTimer = anim;
+                *(u8 *)&self->base.animDone = zero1;
             }
-            *(s32 *)(self + 8) = zero2;
+            *(s32 *)&self->base.animTime = zero2;
         }
     }
 
-    typeByte = *(u8 *)(*(u8 **)(self + 0x30));
+    typeByte = *(u8 *)(*(u8 **)((u8 *)self + 0x30));
 
     if (typeByte == 0x15) {
         goto case_15;
@@ -259,16 +307,16 @@ case_16:
 
 case_17:
     PlaySfx(gUnknown_030012BC, 7, 0x100);
-    sub_802AAB4(*(void **)(self + 0x70));
+    sub_802AAB4(self->unk_70);
     sub_8023464(gUnknown_030012C0);
 
 after_dispatch:
-    if (*(s32 *)(self + 0x58) != 0) {
+    if (self->child != NULL) {
         sub_8022FEC(gUnknown_030012C0);
-        sub_80318B4(*(void **)(self + 0x58));
-        *(s32 *)(self + 0x58) = 0;
+        sub_80318B4(self->child);
+        self->child = NULL;
     }
-    self[0x5c] = 1;
+    self->done = 1;
 }
 
 /* Proximity-triggered transition with a single fixed downstream call
@@ -276,34 +324,34 @@ after_dispatch:
  * flushes `self+0x58` and tail-calls `sub_8031A6C`. */
 void sub_8031D04(void *selfArg)
 {
-    u8 *self = selfArg;
-    s32 kind = *(s32 *)(self + 0xc);
+    struct orbit_actor *self = selfArg;
+    s32 kind = self->base.animIndex;
 
     if (kind == 0 && sub_802A6EC(self)) {
         register s32 state asm("r0") = 2;
         register s32 one asm("r6") = 1;
 
-        *(s32 *)(self + 0x28) = state;
-        *(s32 *)(self + 0x44) = kind;
-        *(s32 *)(self + 0xc) = one;
+        self->base.state = state;
+        self->base.stateTime = kind;
+        self->base.animIndex = one;
         {
-            register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0xc);
+            register u16 anim asm("r0") = *(u16 *)&self->base.anims[1].duration;
             register u8 zero1 asm("r1") = 0;
 
-            *(u16 *)(self + 0x10) = anim;
-            self[0x12] = zero1;
+            *(u16 *)&self->base.animTimer = anim;
+            *(u8 *)&self->base.animDone = zero1;
         }
-        *(s32 *)(self + 8) = kind;
+        self->base.animTime = kind;
 
         sub_802F50C(gUnknown_03000884, 0x14);
         PlaySfx(gUnknown_030012BC, 3, 0x100);
 
-        if (*(s32 *)(self + 0x58) != 0) {
+        if (self->child != NULL) {
             sub_8022FEC(gUnknown_030012C0);
-            sub_80318B4(*(void **)(self + 0x58));
-            *(s32 *)(self + 0x58) = kind;
+            sub_80318B4(self->child);
+            self->child = (void *)kind;
         }
-        self[0x5c] = one;
+        self->done = one;
     }
 
     sub_8031A6C(self);
@@ -317,27 +365,27 @@ void sub_8031D04(void *selfArg)
  * `sub_8031A6C`. */
 void sub_8031D7C(void *selfArg)
 {
-    u8 *self = selfArg;
-    s32 kind = *(s32 *)(self + 0xc);
+    struct orbit_actor *self = selfArg;
+    s32 kind = self->base.animIndex;
 
     if (kind == 0 && sub_802A6EC(self)) {
         register s32 state asm("r0") = 2;
         register s32 one asm("r1") = 1;
         s32 typeByte;
 
-        *(s32 *)(self + 0x28) = state;
-        *(s32 *)(self + 0x44) = kind;
-        *(s32 *)(self + 0xc) = one;
+        self->base.state = state;
+        self->base.stateTime = kind;
+        self->base.animIndex = one;
         {
-            register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0xc);
+            register u16 anim asm("r0") = *(u16 *)&self->base.anims[1].duration;
             register u8 zero1 asm("r1") = 0;
 
-            *(u16 *)(self + 0x10) = anim;
-            self[0x12] = zero1;
+            *(u16 *)&self->base.animTimer = anim;
+            *(u8 *)&self->base.animDone = zero1;
         }
-        *(s32 *)(self + 8) = kind;
+        self->base.animTime = kind;
 
-        typeByte = *(u8 *)(*(u8 **)(self + 0x30));
+        typeByte = *(u8 *)(*(u8 **)((u8 *)self + 0x30));
 
         if (typeByte == 0x19) {
             goto case_19;
@@ -379,14 +427,14 @@ void sub_8031D7C(void *selfArg)
         sub_8022D50(gUnknown_030012C0);
 
     after_dispatch:
-        if (*(s32 *)(self + 0x58) != 0) {
-            if (*(u8 *)(*(u8 **)(self + 0x30)) != 0x1d) {
+        if (self->child != NULL) {
+            if (*(u8 *)(*(u8 **)((u8 *)self + 0x30)) != 0x1d) {
                 sub_8022FEC(gUnknown_030012C0);
             }
-            sub_80318B4(*(void **)(self + 0x58));
-            *(s32 *)(self + 0x58) = 0;
+            sub_80318B4(self->child);
+            self->child = NULL;
         }
-        self[0x5c] = 1;
+        self->done = 1;
     }
 
     sub_8031A6C(self);
@@ -396,11 +444,11 @@ void sub_8031D7C(void *selfArg)
  * of proximity, same `sub_8022EA8` dispatch, no tail call. */
 void sub_8031E80(void *selfArg, s32 delta)
 {
-    u8 *self = selfArg;
-    s32 health = *(s32 *)(self + 0x54) - delta;
+    struct orbit_actor *self = selfArg;
+    s32 health = self->health - delta;
     s32 typeByte;
 
-    *(s32 *)(self + 0x54) = health;
+    self->health = health;
     if (health > 0) {
         return;
     }
@@ -409,24 +457,24 @@ void sub_8031E80(void *selfArg, s32 delta)
         register s32 state asm("r0") = 2;
         register s32 one asm("r1") = 1;
 
-        *(s32 *)(self + 0x28) = state;
+        self->base.state = state;
         {
             register s32 zero2 asm("r2") = 0;
 
-            *(s32 *)(self + 0x44) = zero2;
-            *(s32 *)(self + 0xc) = one;
+            self->base.stateTime = zero2;
+            self->base.animIndex = one;
             {
-                register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0xc);
+                register u16 anim asm("r0") = *(u16 *)&self->base.anims[1].duration;
                 register u8 zero1 asm("r1") = 0;
 
-                *(u16 *)(self + 0x10) = anim;
-                self[0x12] = zero1;
+                *(u16 *)&self->base.animTimer = anim;
+                *(u8 *)&self->base.animDone = zero1;
             }
-            *(s32 *)(self + 8) = zero2;
+            *(s32 *)&self->base.animTime = zero2;
         }
     }
 
-    typeByte = *(u8 *)(*(u8 **)(self + 0x30));
+    typeByte = *(u8 *)(*(u8 **)((u8 *)self + 0x30));
 
     if (typeByte == 0x19) {
         goto case_19;
@@ -468,14 +516,14 @@ case_1d:
     sub_8022D50(gUnknown_030012C0);
 
 after_dispatch:
-    if (*(s32 *)(self + 0x58) != 0) {
-        if (*(u8 *)(*(u8 **)(self + 0x30)) != 0x1d) {
+    if (self->child != NULL) {
+        if (*(u8 *)(*(u8 **)((u8 *)self + 0x30)) != 0x1d) {
             sub_8022FEC(gUnknown_030012C0);
         }
-        sub_80318B4(*(void **)(self + 0x58));
-        *(s32 *)(self + 0x58) = 0;
+        sub_80318B4(self->child);
+        self->child = NULL;
     }
-    self[0x5c] = 1;
+    self->done = 1;
 }
 
 /* `InitActorPart`-based constructor: forwards `a`/`b`/`c`/`d` straight
@@ -485,19 +533,19 @@ after_dispatch:
  * type N" family's own per-kind constructors (docs/rom_map.md). */
 void *sub_8031F78(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 {
-    u8 *self = selfArg;
+    struct orbit_actor *self = selfArg;
     register s32 health asm("r8") = 2;
 
     InitActorPart(self, a, b, c, d);
-    *(s32 *)(self + 0x54) = health;
-    *(void **)(self + 0x50) = gStaticData_087E538C;
-    self[0x5c] = 0;
-    *(s32 *)(self + 0x60) = b;
-    *(s32 *)(self + 0x64) = c;
-    *(s32 *)(self + 0x68) = (u16)sub_8000E1C(0xff);
+    self->health = health;
+    self->base.vtable = (struct actor_vtable *)gStaticData_087E538C;
+    self->done = 0;
+    self->centerX = b;
+    self->centerY = c;
+    self->phase = (u16)sub_8000E1C(0xff);
 
-    *(s32 *)(self + 0x58) = sub_802E4B8(0x28, b, c + (s32)0xFFFFC24A, d, self);
-    *(void **)(self + 0x50) = gStaticData_087E530C;
+    self->child = (void *)sub_802E4B8(0x28, b, c + (s32)0xFFFFC24A, d, self);
+    self->base.vtable = (struct actor_vtable *)gStaticData_087E530C;
 
     return self;
 }
@@ -507,10 +555,10 @@ void *sub_8031F78(void *selfArg, s32 a, s32 b, s32 c, s32 d)
  * `sub_8031FE8` below except gated by `self+0x54`, see there). */
 void sub_8031FE8(void *selfArg, s32 delta)
 {
-    u8 *self = selfArg;
-    s32 health = *(s32 *)(self + 0x54) - delta;
+    struct orbit_actor *self = selfArg;
+    s32 health = self->health - delta;
 
-    *(s32 *)(self + 0x54) = health;
+    self->health = health;
     if (health > 0) {
         return;
     }
@@ -519,30 +567,30 @@ void sub_8031FE8(void *selfArg, s32 delta)
         register s32 state asm("r0") = 2;
         register s32 one asm("r6") = 1;
 
-        *(s32 *)(self + 0x28) = state;
+        self->base.state = state;
         {
             register s32 zero2 asm("r5") = 0;
 
-            *(s32 *)(self + 0x44) = zero2;
-            *(s32 *)(self + 0xc) = one;
+            self->base.stateTime = zero2;
+            self->base.animIndex = one;
             {
-                register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0xc);
+                register u16 anim asm("r0") = *(u16 *)&self->base.anims[1].duration;
                 register u8 zero1 asm("r1") = 0;
 
-                *(u16 *)(self + 0x10) = anim;
-                self[0x12] = zero1;
+                *(u16 *)&self->base.animTimer = anim;
+                *(u8 *)&self->base.animDone = zero1;
             }
-            *(s32 *)(self + 8) = zero2;
+            *(s32 *)&self->base.animTime = zero2;
 
             sub_802F50C(gUnknown_03000884, 0x14);
             PlaySfx(gUnknown_030012BC, 3, 0x100);
 
-            if (*(s32 *)(self + 0x58) != 0) {
+            if (self->child != NULL) {
                 sub_8022FEC(gUnknown_030012C0);
-                sub_80318B4(*(void **)(self + 0x58));
-                *(s32 *)(self + 0x58) = zero2;
+                sub_80318B4(self->child);
+                self->child = (void *)zero2;
             }
-            self[0x5c] = one;
+            self->done = one;
         }
     }
 }
@@ -551,19 +599,19 @@ void sub_8031FE8(void *selfArg, s32 delta)
  * `0x2a`, final event table `gStaticData_087E52CC`. */
 void *sub_8032054(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 {
-    u8 *self = selfArg;
+    struct orbit_actor *self = selfArg;
     register s32 health asm("r8") = 2;
 
     InitActorPart(self, a, b, c, d);
-    *(s32 *)(self + 0x54) = health;
-    *(void **)(self + 0x50) = gStaticData_087E538C;
-    self[0x5c] = 0;
-    *(s32 *)(self + 0x60) = b;
-    *(s32 *)(self + 0x64) = c;
-    *(s32 *)(self + 0x68) = (u16)sub_8000E1C(0xff);
+    self->health = health;
+    self->base.vtable = (struct actor_vtable *)gStaticData_087E538C;
+    self->done = 0;
+    self->centerX = b;
+    self->centerY = c;
+    self->phase = (u16)sub_8000E1C(0xff);
 
-    *(s32 *)(self + 0x58) = sub_802E4B8(0x2a, b, c + (s32)0xFFFFC24A, d, self);
-    *(void **)(self + 0x50) = gStaticData_087E52CC;
+    self->child = (void *)sub_802E4B8(0x2a, b, c + (s32)0xFFFFC24A, d, self);
+    self->base.vtable = (struct actor_vtable *)gStaticData_087E52CC;
 
     return self;
 }
@@ -573,20 +621,20 @@ void *sub_8032054(void *selfArg, s32 a, s32 b, s32 c, s32 d)
  * verbatim into `self+0x70`. */
 void *sub_80320C4(void *selfArg, s32 a, s32 b, s32 c, s32 d, s32 e)
 {
-    u8 *self = selfArg;
+    struct orbit_actor *self = selfArg;
     register s32 health asm("r8") = 2;
 
     InitActorPart(self, a, b, c, d);
-    *(s32 *)(self + 0x54) = health;
-    *(void **)(self + 0x50) = gStaticData_087E538C;
-    self[0x5c] = 0;
-    *(s32 *)(self + 0x60) = b;
-    *(s32 *)(self + 0x64) = c;
-    *(s32 *)(self + 0x68) = (u16)sub_8000E1C(0xff);
+    self->health = health;
+    self->base.vtable = (struct actor_vtable *)gStaticData_087E538C;
+    self->done = 0;
+    self->centerX = b;
+    self->centerY = c;
+    self->phase = (u16)sub_8000E1C(0xff);
 
-    *(s32 *)(self + 0x58) = sub_802E4B8(0x29, b, c + (s32)0xFFFFC24A, d, self);
-    *(void **)(self + 0x50) = gStaticData_087E534C;
-    *(s32 *)(self + 0x70) = e;
+    self->child = (void *)sub_802E4B8(0x29, b, c + (s32)0xFFFFC24A, d, self);
+    self->base.vtable = (struct actor_vtable *)gStaticData_087E534C;
+    self->unk_70 = (void *)e;
 
     return self;
 }
@@ -594,8 +642,8 @@ void *sub_80320C4(void *selfArg, s32 a, s32 b, s32 c, s32 d, s32 e)
 /* Trivial `self+0x58` clearing setter. */
 void sub_8032138(void *selfArg)
 {
-    u8 *self = selfArg;
-    *(s32 *)(self + 0x58) = 0;
+    struct orbit_actor *self = selfArg;
+    self->child = NULL;
 }
 
 /* Full reset idiom variant: `self+0x6c`/`0x44`/`0xc`/`8` cleared, state
@@ -604,23 +652,23 @@ void sub_8032138(void *selfArg)
  * tie (`sub_8022FEC`), `self+0x58` cleared. */
 void sub_8032140(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct orbit_actor *self = selfArg;
     register s32 zero asm("r5") = 0;
 
-    *(s32 *)(self + 0x6c) = zero;
-    *(s32 *)(self + 0x28) = 1;
-    *(s32 *)(self + 0x44) = zero;
-    *(s32 *)(self + 0xc) = zero;
+    self->fallSpeed = zero;
+    self->base.state = 1;
+    self->base.stateTime = zero;
+    self->base.animIndex = zero;
     {
-        register u16 anim asm("r0") = *(u16 *)(*(u8 **)self);
+        register u16 anim asm("r0") = *(u16 *)&self->base.anims[0].duration;
         register u8 zero1 asm("r1") = 0;
 
-        *(u16 *)(self + 0x10) = anim;
-        self[0x12] = zero1;
+        *(u16 *)&self->base.animTimer = anim;
+        *(u8 *)&self->base.animDone = zero1;
     }
-    *(s32 *)(self + 8) = zero;
+    self->base.animTime = zero;
     sub_8022FEC(gUnknown_030012C0);
-    *(s32 *)(self + 0x58) = zero;
+    self->child = (void *)zero;
 }
 
 /* Countdown-gated state-2 transition with a `self+0x58` trampoline
@@ -628,10 +676,10 @@ void sub_8032140(void *selfArg)
  * pending object to flush), no type-byte dispatch. */
 void sub_8032170(void *selfArg, s32 delta)
 {
-    u8 *self = selfArg;
-    s32 health = *(s32 *)(self + 0x54) - delta;
+    struct orbit_actor *self = selfArg;
+    s32 health = self->health - delta;
 
-    *(s32 *)(self + 0x54) = health;
+    self->health = health;
     if (health > 0) {
         return;
     }
@@ -640,54 +688,54 @@ void sub_8032170(void *selfArg, s32 delta)
         register s32 state asm("r0") = 2;
         register s32 one asm("r6") = 1;
 
-        *(s32 *)(self + 0x28) = state;
+        self->base.state = state;
         {
             register s32 zero2 asm("r5") = 0;
 
-            *(s32 *)(self + 0x44) = zero2;
-            *(s32 *)(self + 0xc) = one;
+            self->base.stateTime = zero2;
+            self->base.animIndex = one;
             {
-                register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0xc);
+                register u16 anim asm("r0") = *(u16 *)&self->base.anims[1].duration;
                 register u8 zero1 asm("r1") = 0;
 
-                *(u16 *)(self + 0x10) = anim;
-                self[0x12] = zero1;
+                *(u16 *)&self->base.animTimer = anim;
+                *(u8 *)&self->base.animDone = zero1;
             }
-            *(s32 *)(self + 8) = zero2;
+            *(s32 *)&self->base.animTime = zero2;
 
-            if (*(s32 *)(self + 0x58) != 0) {
+            if (self->child != NULL) {
                 PlaySfx(gUnknown_030012BC, 3, 0x100);
                 sub_8022FEC(gUnknown_030012C0);
-                sub_80318B4(*(void **)(self + 0x58));
-                *(s32 *)(self + 0x58) = zero2;
+                sub_80318B4(self->child);
+                self->child = (void *)zero2;
             }
-            self[0x5c] = one;
+            self->done = one;
         }
     }
 }
 
 /* Doubly-linked-list unlink (`self+0x48`=prev, `self+0x4c`=next, cross-
- * links `next->prev`/`prev->next` around `self`), resets `self+0x50`'s
+ * links `next->prev`/`prev->next` around `self`), resets `vtable`'s
  * event table to `gStaticData_087E4DF4`, then conditionally `mem_free`s
  * `self` if the caller's flag bit 0 is set - a destructor/detach helper
  * for this object family. */
 void sub_80321D0(void *selfArg, s32 flags)
 {
-    u8 *self = selfArg;
+    struct orbit_actor *self = selfArg;
     u8 *next;
     u8 *prev;
 
-    *(void **)(self + 0x50) = gStaticData_087E4DF4;
+    self->base.vtable = (struct actor_vtable *)gStaticData_087E4DF4;
 
     {
-        register u8 *nextReg asm("r2") = *(u8 **)(self + 0x4c);
-        register u8 *prevReg asm("r0") = *(u8 **)(self + 0x48);
+        register u8 *nextReg asm("r2") = *(u8 **)((u8 *)self + 0x4c);
+        register u8 *prevReg asm("r0") = *(u8 **)((u8 *)self + 0x48);
 
         *(u8 **)(nextReg + 0x48) = prevReg;
     }
 
-    prev = *(u8 **)(self + 0x48);
-    next = *(u8 **)(self + 0x4c);
+    prev = *(u8 **)((u8 *)self + 0x48);
+    next = *(u8 **)((u8 *)self + 0x4c);
     *(u8 **)(prev + 0x4c) = next;
 
     if ((flags & 1) != 0) {
@@ -698,7 +746,7 @@ void sub_80321D0(void *selfArg, s32 flags)
 /* Same `sub_802E4B8`-based constructor shape as `sub_8031F78`, but
  * fully parameterized: the "kind" (`0x28`/`0x29`/`0x2a`/etc there) is a
  * 6th caller-supplied byte argument here rather than a fixed literal,
- * and this one doesn't reassign `self+0x50`'s event table afterward.
+ * and this one doesn't reassign `vtable`'s event table afterward.
  *
  * Once parked NAKED over three claimed gaps (`c` re-materialized from
  * r6, a late `kind` truncation and a b/c/d parameter-save order the
@@ -708,18 +756,18 @@ void sub_80321D0(void *selfArg, s32 flags)
  * docs/matching/issue-59-60-m-operand-scheduling.md). */
 void *sub_80321FC(void *selfArg, s32 a, s32 b, s32 c, s32 d, u8 kind)
 {
-    u8 *self = selfArg;
+    struct orbit_actor *self = selfArg;
     s32 health = 2;
 
     InitActorPart(self, a, b, c, d);
-    *(s32 *)(self + 0x54) = health;
-    *(void **)(self + 0x50) = gStaticData_087E538C;
-    self[0x5c] = 0;
-    *(s32 *)(self + 0x60) = b;
-    *(s32 *)(self + 0x64) = c;
-    *(s32 *)(self + 0x68) = (u16)sub_8000E1C(0xff);
+    self->health = health;
+    self->base.vtable = (struct actor_vtable *)gStaticData_087E538C;
+    self->done = 0;
+    self->centerX = b;
+    self->centerY = c;
+    self->phase = (u16)sub_8000E1C(0xff);
 
-    *(s32 *)(self + 0x58) = sub_802E4B8(kind, b, c + (s32)0xFFFFC24A, d, self);
+    self->child = (void *)sub_802E4B8(kind, b, c + (s32)0xFFFFC24A, d, self);
 
     return self;
 }
@@ -728,52 +776,52 @@ void nullsub_33(void *selfArg)
 {
 }
 
-/* Trivial accumulator: `self+0x20` advances by `self+0x6c`'s current
+/* Trivial accumulator: `y` advances by `self+0x6c`'s current
  * step, then the step itself advances by `0x12`/frame, clamped to
  * `0x4c0`. */
 void sub_8032274(void *selfArg)
 {
-    u8 *self = selfArg;
-    s32 pos = *(s32 *)(self + 0x20);
-    s32 delta = *(s32 *)(self + 0x6c);
+    struct orbit_actor *self = selfArg;
+    s32 pos = self->base.y;
+    s32 delta = self->fallSpeed;
 
-    *(s32 *)(self + 0x20) = pos + delta;
+    self->base.y = pos + delta;
     delta += 0x12;
-    *(s32 *)(self + 0x6c) = delta;
+    self->fallSpeed = delta;
     if (delta <= 0x4c0) {
         return;
     }
-    *(s32 *)(self + 0x6c) = 0x4c0;
+    self->fallSpeed = 0x4c0;
 }
 
 /* A second, independent consumer of the shared trig table
  * `gStaticData_0816A820` (the orbital-motion convention already
- * documented for `sub_8032480`): computes an `self+0x1c`/`self+0x20`
+ * documented for `sub_8032480`): computes an `x`/`y`
  * position pair from two phase-shifted table lookups around
  * `self+0x68 + self+0x44`, then - while `self+0x58` holds another
  * object - forwards the result into that object's own anim-frame-
  * advance-and-clamp step (`sub_80318D0`). */
 void sub_8032290(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct orbit_actor *self = selfArg;
     s16 *trig = (s16 *)gStaticData_0816A820;
-    s32 phase = *(s32 *)(self + 0x68) + *(s32 *)(self + 0x44);
+    s32 phase = self->phase + self->base.stateTime;
     s32 idx1 = ((phase * 5) >> 4) & 0xff;
     s32 v1 = trig[idx1];
-    s32 x = *(s32 *)(self + 0x60) + v1 * 17;
+    s32 x = self->centerX + v1 * 17;
     s32 idx2;
     s32 v2;
     s32 y;
 
-    *(s32 *)(self + 0x1c) = x;
+    self->base.x = x;
 
     idx2 = ((phase * 8) >> 4) & 0xff;
     v2 = trig[idx2];
-    y = *(s32 *)(self + 0x64) + v2 * 30;
-    *(s32 *)(self + 0x20) = y;
+    y = self->centerY + v2 * 30;
+    self->base.y = y;
 
-    if (*(s32 *)(self + 0x58) != 0) {
-        sub_80318D0(*(void **)(self + 0x58), x, y + (s32)0xFFFFC24A, *(s32 *)(self + 0x24));
+    if (self->child != NULL) {
+        sub_80318D0(self->child, x, y + (s32)0xFFFFC24A, self->base.z);
     }
 }
 
@@ -789,52 +837,52 @@ void sub_80322F4(void *selfArg)
 /* Trivial `self+0x5c` byte getter. */
 u8 sub_8032350(void *selfArg)
 {
-    u8 *self = selfArg;
-    return self[0x5c];
+    struct orbit_actor *self = selfArg;
+    return self->done;
 }
 
 /* State-1 trampoline flush, or (otherwise) a proximity-triggered
  * transition that fires an event-table call on the *player* object
  * (`gUnknown_03000884`) before its own state-1/table-index-1
- * transition; either way clamps `self+0x20` forward by `0x140` once it
+ * transition; either way clamps `y` forward by `0x140` once it
  * falls behind `self+0x5c`, then tail-calls `sub_802A7B8`. */
 void sub_8032358(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct rising_actor *self = selfArg;
 
-    if (*(s32 *)(self + 0xc) == 1) {
-        if (self[0x12] == 0) {
+    if (self->base.animIndex == 1) {
+        if (self->base.animDone == 0) {
             goto tail;
         }
         if (self != 0) {
-            u8 *table = *(u8 **)(self + 0x50);
-            sub_803AD80(self + *(s16 *)(table + 8), 3, *(void **)(table + 0xc));
+            struct actor_vtable *table = self->base.vtable;
+            sub_803AD80((u8 *)self + table->m08.thisOffset, 3, table->m08.fn);
         }
         return;
     }
 
     if (sub_802A6EC(self)) {
-        u8 *player = gUnknown_03000884;
-        u8 *ptable = *(u8 **)(player + 0x50);
+        struct actor_self *player = gUnknown_03000884;
+        struct actor_vtable *ptable = player->vtable;
 
-        sub_803AD80(player + *(s16 *)(ptable + 0x20), 0x14, *(void **)(ptable + 0x24));
+        sub_803AD80((u8 *)player + ptable->m20.thisOffset, 0x14, ptable->m20.fn);
         sub_8022FEC(gUnknown_030012C0);
         PlaySfx(gUnknown_030012BC, 4, 0x100);
-        *(s32 *)(self + 0xc) = 1;
+        self->base.animIndex = 1;
         {
-            register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0xc);
+            register u16 anim asm("r0") = *(u16 *)&self->base.anims[1].duration;
             register u8 zero1 asm("r1") = 0;
             register s32 zero2 asm("r2") = 0;
 
-            *(u16 *)(self + 0x10) = anim;
-            self[0x12] = zero1;
-            *(s32 *)(self + 8) = zero2;
+            *(u16 *)&self->base.animTimer = anim;
+            *(u8 *)&self->base.animDone = zero1;
+            *(s32 *)&self->base.animTime = zero2;
         }
-        self[0x58] = 1;
+        self->dead = 1;
     }
 
-    if (*(s32 *)(self + 0x20) < *(s32 *)(self + 0x5c)) {
-        *(s32 *)(self + 0x20) += 0x140;
+    if (self->base.y < self->limitY) {
+        self->base.y += 0x140;
     }
 
 tail:
@@ -845,30 +893,30 @@ tail:
  * from `self`'s own part table at `+0xc`), then ties the lap counter. */
 void sub_80323F4(void *selfArg, s32 delta)
 {
-    register u8 *self asm("r6") = selfArg;
-    s32 health = *(s32 *)(self + 0x54) - delta;
+    register struct rising_actor *self asm("r6") = selfArg;
+    s32 health = self->health - delta;
 
-    *(s32 *)(self + 0x54) = health;
+    self->health = health;
     if (health > 0) {
         return;
     }
 
     {
-        u8 *deathPtr = self + 0x58;
+        u8 *deathPtr = &self->dead;
         register s32 zero2 asm("r5") = 0;
         register s32 one asm("r4") = 1;
 
         *deathPtr = one;
         PlaySfx(gUnknown_030012BC, 4, 0x100);
-        *(s32 *)(self + 0xc) = one;
+        self->base.animIndex = one;
         {
-            register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0xc);
+            register u16 anim asm("r0") = *(u16 *)&self->base.anims[1].duration;
             register u8 zero1 asm("r1") = 0;
 
-            *(u16 *)(self + 0x10) = anim;
-            self[0x12] = zero1;
+            *(u16 *)&self->base.animTimer = anim;
+            *(u8 *)&self->base.animDone = zero1;
         }
-        *(s32 *)(self + 8) = zero2;
+        *(s32 *)&self->base.animTime = zero2;
         sub_8022FEC(gUnknown_030012C0);
     }
 }
@@ -900,7 +948,7 @@ void sub_80323F4(void *selfArg, s32 delta)
  * literals. */
 void *sub_8032440(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 {
-    u8 *self = selfArg;
+    struct rising_actor *self = selfArg;
     register s32 aReg asm("r1") = a;
     register s32 bReg asm("r2") = b;
     register s32 dReg asm("r0") = d;
@@ -931,10 +979,10 @@ void *sub_8032440(void *selfArg, s32 a, s32 b, s32 c, s32 d)
         : "r"(dReg), "l"(self), "r"(aReg), "r"(bReg)
         : "r0", "r3", "r12", "lr", "memory", "cc");
 
-    *(s32 *)(self + 0x54) = health;
+    self->health = health;
     asm("ldr r0, 2f\n\tstr r0, [%0, #0x50]" : : "l"(self) : "r0", "memory");
-    *(s32 *)(self + 0x5c) = c;
-    self[0x58] = 0;
+    self->limitY = c;
+    self->dead = 0;
 
     return self;
 }
@@ -943,60 +991,60 @@ asm(".align 2, 0\n1: .4byte 0xFFFF0600\n2: .4byte gStaticData_087E53CC\n");
 /* Trivial `self+0x58` byte getter. */
 u8 sub_8032478(void *selfArg)
 {
-    u8 *self = selfArg;
-    return self[0x58];
+    struct rising_actor *self = selfArg;
+    return self->dead;
 }
 
 /* The already-flagged orbital-motion consumer of the shared trig table
  * `gStaticData_0816A820` (docs/rom_map.md): while idle (state 0),
  * checks proximity to fire an event-table call on the player plus a
  * state transition through `sub_803256C`, then drives the orbit itself
- * (`self+0x1c`) and either lets `self+0x20` coast forward by
+ * (`x`) and either lets `y` coast forward by
  * `self+0x60` or, once it catches up to `self+0x5c`, re-seeds
  * `self+0x38`'s 3-word block from `gStaticData_0817C444` and re-fires
  * `sub_803256C`. Once no longer idle, either flushes a pending
- * `self+0x50` trampoline call (state-1/table-index-1 shape) or repeats
+ * `vtable` trampoline call (state-1/table-index-1 shape) or repeats
  * the same player-proximity event once (latched via `self+0x65`).
  * Falls back to `sub_802A7B8` in both non-idle paths. */
 void sub_8032480(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct swing_actor *self = selfArg;
 
-    if (*(s32 *)(self + 0xc) != 0) {
+    if (self->base.animIndex != 0) {
         goto state_nonzero;
     }
 
     if (sub_802A6EC(self)) {
-        u8 *player = gUnknown_03000884;
-        u8 *ptable = *(u8 **)(player + 0x50);
+        struct actor_self *player = gUnknown_03000884;
+        struct actor_vtable *ptable = player->vtable;
 
-        sub_803AD80(player + *(s16 *)(ptable + 0x20), 0xe, *(void **)(ptable + 0x24));
-        self[0x65] = 1;
+        sub_803AD80((u8 *)player + ptable->m20.thisOffset, 0xe, ptable->m20.fn);
+        self->hit = 1;
         sub_803256C(self);
     }
 
     /* `sub_803256C` may have just transitioned the state away from 0 -
      * the ROM re-checks and, if so, joins the state-nonzero handling
      * below instead of running the orbital-motion step on stale state. */
-    if (*(s32 *)(self + 0xc) != 0) {
+    if (self->base.animIndex != 0) {
         goto state_nonzero;
     }
 
     {
         s16 *trig = (s16 *)gStaticData_0816A820;
-        s32 idx = (*(s32 *)(self + 0x44)) << 6;
+        s32 idx = (self->base.stateTime) << 6;
         s32 v;
 
         idx = ((idx >> 4) & 0xff) + 0x40;
         idx &= 0xff;
         v = trig[idx];
 
-        *(s32 *)(self + 0x1c) = *(s32 *)(self + 0x58) + v * 16;
+        self->base.x = self->originX + v * 16;
 
-        if (*(s32 *)(self + 0x20) > *(s32 *)(self + 0x5c)) {
-            *(s32 *)(self + 0x20) += *(s32 *)(self + 0x60);
+        if (self->base.y > self->limitY) {
+            self->base.y += self->stepY;
         } else {
-            *(struct vec3_words *)(self + 0x38) = *(struct vec3_words *)gStaticData_0817C444;
+            *(struct vec3_words *)((u8 *)self + 0x38) = *(struct vec3_words *)gStaticData_0817C444;
             sub_803256C(self);
         }
     }
@@ -1004,20 +1052,20 @@ void sub_8032480(void *selfArg)
     goto tail;
 
 state_nonzero:
-    if (self[0x12] != 0) {
+    if (self->base.animDone != 0) {
         if (self != 0) {
-            u8 *table = *(u8 **)(self + 0x50);
-            sub_803AD80(self + *(s16 *)(table + 8), 3, *(void **)(table + 0xc));
+            struct actor_vtable *table = self->base.vtable;
+            sub_803AD80((u8 *)self + table->m08.thisOffset, 3, table->m08.fn);
         }
         return;
     }
 
-    if (self[0x65] == 0 && sub_802A6EC(self)) {
-        u8 *player = gUnknown_03000884;
-        u8 *ptable = *(u8 **)(player + 0x50);
+    if (self->hit == 0 && sub_802A6EC(self)) {
+        struct actor_self *player = gUnknown_03000884;
+        struct actor_vtable *ptable = player->vtable;
 
-        sub_803AD80(player + *(s16 *)(ptable + 0x20), 0xe, *(void **)(ptable + 0x24));
-        self[0x65] = 1;
+        sub_803AD80((u8 *)player + ptable->m20.thisOffset, 0xe, ptable->m20.fn);
+        self->hit = 1;
     }
 
 tail:
@@ -1029,23 +1077,23 @@ tail:
  * `self`'s own part table at `+0xc`). */
 void sub_803256C(void *selfArg)
 {
-    u8 *self = selfArg;
-    u8 *statePtr = self + 0x64;
+    struct swing_actor *self = selfArg;
+    u8 *statePtr = &self->triggered;
     register s32 zero asm("r6") = 0;
     register s32 one asm("r5") = 1;
 
     *statePtr = one;
     PlaySfx(gUnknown_030012BC, 4, 0x100);
-    *(s32 *)(self + 0x18) = 7;
-    *(s32 *)(self + 0xc) = one;
+    self->base.unk_18 = 7;
+    self->base.animIndex = one;
     {
-        register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0xc);
+        register u16 anim asm("r0") = *(u16 *)&self->base.anims[1].duration;
         register u8 zero1 asm("r1") = 0;
 
-        *(u16 *)(self + 0x10) = anim;
-        self[0x12] = zero1;
+        *(u16 *)&self->base.animTimer = anim;
+        *(u8 *)&self->base.animDone = zero1;
     }
-    *(s32 *)(self + 8) = zero;
+    self->base.animTime = zero;
 }
 
 /* Countdown-gated double-byte state transition (`self+0x64`/`0x65`),
@@ -1053,16 +1101,16 @@ void sub_803256C(void *selfArg)
  * (not the usual `+0xc`). */
 void sub_80325A4(void *selfArg, s32 delta)
 {
-    register u8 *self asm("r5") = selfArg;
-    s32 health = *(s32 *)(self + 0x54) - delta;
+    register struct swing_actor *self asm("r5") = selfArg;
+    s32 health = self->health - delta;
 
-    *(s32 *)(self + 0x54) = health;
+    self->health = health;
     if (health > 0) {
         return;
     }
 
     {
-        register u8 *statePtr asm("r1") = self + 0x64;
+        register u8 *statePtr asm("r1") = &self->triggered;
         register s32 zero asm("r4") = 0;
         register s32 one asm("r0") = 1;
 
@@ -1070,16 +1118,16 @@ void sub_80325A4(void *selfArg, s32 delta)
         asm volatile("add %0, %0, #1" : "+r"(statePtr));
         *statePtr = one;
         PlaySfx(gUnknown_030012BC, 4, 0x100);
-        *(s32 *)(self + 0x18) = 4;
-        *(s32 *)(self + 0xc) = 2;
+        self->base.unk_18 = 4;
+        self->base.animIndex = 2;
         {
-            register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + 0x18);
+            register u16 anim asm("r0") = *(u16 *)&self->base.anims[2].duration;
             register u8 zero1 asm("r1") = 0;
 
-            *(u16 *)(self + 0x10) = anim;
-            self[0x12] = zero1;
+            *(u16 *)&self->base.animTimer = anim;
+            *(u8 *)&self->base.animDone = zero1;
         }
-        *(s32 *)(self + 8) = zero;
+        self->base.animTime = zero;
     }
 }
 
@@ -1097,31 +1145,31 @@ static inline void InitActorPartInline(void *self, s32 a, s32 b, s32 c, s32 d)
 
 /* `InitActorPart`-based constructor (kind `1`, `InitActorPart`'s own 4th
  * argument replaced with a fixed `0xfa00` bias); clamps the caller's
- * `c` into `self+0x5c` (+-0x3f00), mirrors a clamped `self+0x1c` into
+ * `c` into `self+0x5c` (+-0x3f00), mirrors a clamped `x` into
  * `self+0x58` (+-0x8000), and derives `self+0x60` from
  * `sub_803ADB4(self+0x5c - 0xfa00, 0xc6)`. Once parked NAKED over the
  * `0xfa00` load's position (see InitActorPartInline above). */
 void *sub_80325EC(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 {
-    u8 *self = selfArg;
+    struct swing_actor *self = selfArg;
     s32 health = 1;
 
     InitActorPartInline(self, a, b, 0xfa00, d);
-    *(s32 *)(self + 0x54) = health;
-    *(void **)(self + 0x50) = gStaticData_087E5404;
+    self->health = health;
+    self->base.vtable = (struct actor_vtable *)gStaticData_087E5404;
     if (c > 0x3f00)
         c = 0x3f00;
     if (c < -0x3f00)
         c = -0x3f00;
-    *(s32 *)(self + 0x5c) = c;
-    if (*(s32 *)(self + 0x1c) > 0x8000)
-        *(s32 *)(self + 0x1c) = 0x8000;
-    if (*(s32 *)(self + 0x1c) < -0x8000)
-        *(s32 *)(self + 0x1c) = -0x8000;
-    *(s32 *)(self + 0x58) = *(s32 *)(self + 0x1c);
-    *(s32 *)(self + 0x60) = sub_803ADB4(*(s32 *)(self + 0x5c) - 0xfa00, 0xc6);
-    self[0x65] = 0;
-    self[0x64] = 0;
+    self->limitY = c;
+    if (self->base.x > 0x8000)
+        self->base.x = 0x8000;
+    if (self->base.x < -0x8000)
+        self->base.x = -0x8000;
+    self->originX = self->base.x;
+    self->stepY = sub_803ADB4(self->limitY - 0xfa00, 0xc6);
+    self->hit = 0;
+    self->triggered = 0;
     PlaySfx(gUnknown_030012BC, 0x2d, 0x100);
 
     return self;
@@ -1130,29 +1178,29 @@ void *sub_80325EC(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 /* Trivial `self+0x64` byte getter. */
 u8 sub_8032680(void *selfArg)
 {
-    u8 *self = selfArg;
-    return self[0x64];
+    struct swing_actor *self = selfArg;
+    return self->triggered;
 }
 
 /* Type-byte-gated (`self+0x30`'s type byte `== 0x1f`) proximity check:
- * on trigger, feeds the offset between `self+0x1c` and the type-byte
- * table's own `+0x20` field, plus `self+0x20`, into `sub_802F164`, then
+ * on trigger, feeds the offset between `x` and the type-byte
+ * table's own `+0x20` field, plus `y`, into `sub_802F164`, then
  * latches a one-shot cue via `self+0x58`. Tail-calls `sub_802A7B8`
  * unconditionally. */
 void sub_8032688(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct trigger_actor *self = selfArg;
 
-    if (*(u8 *)(*(u8 **)(self + 0x30)) == 0x1f && sub_802A6EC(self)) {
-        u8 *player = gUnknown_03000884;
-        u8 *ptable = *(u8 **)(self + 0x30);
-        s32 x = *(s32 *)(self + 0x1c) - *(s32 *)(ptable + 0x20);
-        s32 y = *(s32 *)(self + 0x20);
+    if (*(u8 *)(*(u8 **)((u8 *)self + 0x30)) == 0x1f && sub_802A6EC(self)) {
+        struct actor_self *player = gUnknown_03000884;
+        s32 *params = *(s32 **)((u8 *)self + 0x30);
+        s32 x = self->base.x - params[8];
+        s32 y = self->base.y;
 
         sub_802F164(player, x, y);
 
-        if (self[0x58] == 0) {
-            self[0x58] = 1;
+        if (self->cued == 0) {
+            self->cued = 1;
             PlaySfx(gUnknown_030012BC, 0x3e, 0x100);
         }
     }

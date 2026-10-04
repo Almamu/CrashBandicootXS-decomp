@@ -1,8 +1,17 @@
 #include "core.h"
+#include "actor_self.h"
 
 /* Continuation of actor_part19.c's player/action-object family, right
  * after `sub_802C208` (matched C, see actor_part19e.c) - same `self`
  * object and conventions documented there. */
+
+/* `self` with the velocity pair this class adds after the common
+ * prefix. */
+struct moving_actor {
+    struct actor_self base;
+    s32 velX;                   // 0x54
+    s32 velY;                   // 0x58
+};
 
 extern u8 gUnknown_030014A0;
 extern void *gUnknown_030012BC;
@@ -17,25 +26,24 @@ u8 sub_802C264(void)
     return gUnknown_030014A0;
 }
 
-/* Sets `self+0x14`, advances `self+0x1c`/`self+0x20` by `self+0x54`/
- * `self+0x58` (a velocity pair), and once both exceed `0x1000`: reads
- * ahead by `self+0x10`'s current anim value into the `+8` accumulator
- * and, once the frame counter reaches the same `+4`-halfword-of-a-0xc
- * table-entry threshold `sub_802C0BC` uses, backs the accumulator off
- * by the entry's `+4`/`+6` halfword delta and marks `self+0x12`.
- * Otherwise (the common per-frame case) just plays a sound cue and
- * fires the `self+0x50` trampoline. */
+/* Sets `visible`, advances `x`/`y` by the velocity pair, and once both
+ * exceed `0x1000`: adds the (signed) `animTimer` into the `animTime`
+ * accumulator and, once the frame counter reaches the current anim
+ * record's `loopThreshold` (the same test `sub_802C0BC` uses), backs
+ * the accumulator off by `loopThreshold - loopBase` and marks
+ * `animDone`. Otherwise (the common per-frame case) just plays a sound
+ * cue and fires the vtable's `m08` method with 3. */
 void sub_802C270(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct moving_actor *self = selfArg;
     s32 x, y;
 
-    *(s32 *)(self + 0x14) = 1;
+    self->base.visible = 1;
 
-    x = *(s32 *)(self + 0x1c) + *(s32 *)(self + 0x54);
-    *(s32 *)(self + 0x1c) = x;
-    y = *(s32 *)(self + 0x20) + *(s32 *)(self + 0x58);
-    *(s32 *)(self + 0x20) = y;
+    x = self->base.x + self->velX;
+    self->base.x = x;
+    y = self->base.y + self->velY;
+    self->base.y = y;
 
     if (x > 0x1000 && y > 0x1000) {
         goto frameBlock;
@@ -43,23 +51,25 @@ void sub_802C270(void *selfArg)
 
     PlaySfx(gUnknown_030012BC, 0xe, 0x100);
     if (self != 0) {
-        u8 *table = *(u8 **)(self + 0x50);
-        sub_803AD80(self + *(s16 *)(table + 8), (void *)3, *(void **)(table + 0xc));
+        struct actor_vtable *table = self->base.vtable;
+        sub_803AD80((u8 *)self + table->m08.thisOffset, (void *)3, table->m08.fn);
     }
     return;
 
 frameBlock:
     {
+        /* `animTimer` read as an s16 through a register offset, as the
+         * ROM does. */
         register s32 sixteenConst asm("r3") = 0x10;
-        register s32 delta asm("r1") = *(s16 *)(self + sixteenConst);
+        register s32 delta asm("r1") = *(s16 *)((u8 *)self + sixteenConst);
 
-        *(s32 *)(self + 8) += delta;
-        self[0x12] = 0;
+        self->base.animTime += delta;
+        self->base.animDone = 0;
     }
     {
         s32 frame = GetAnimFrameBaseOffset(self);
-        register s32 idx asm("r2") = *(s32 *)(self + 0xc);
-        register u8 *table asm("r3") = *(u8 **)self;
+        register s32 idx asm("r2") = self->base.animIndex;
+        register u8 *table asm("r3") = (u8 *)self->base.anims;
         register u8 *entryPtr asm("r1") = (u8 *)(idx * 0xc);
         register s32 four asm("r3");
         register s32 e4 asm("r2");
@@ -74,8 +84,8 @@ frameBlock:
             register s32 diff asm("r1") = e4 - e6;
 
             diff <<= 8;
-            *(s32 *)(self + 8) -= diff;
-            self[0x12] = 1;
+            self->base.animTime -= diff;
+            self->base.animDone = 1;
         }
     }
 }
