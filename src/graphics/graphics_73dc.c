@@ -1,14 +1,14 @@
 #include "core.h"
 
-/* sub_80073DC (0x080073DC-0x08007634), the plain (non-affine) sibling of
- * `sub_8007634` (graphics_7634.c). Split out of graphics.c: it is the
+/* DrawSpritePieces (0x080073DC-0x08007634), the plain (non-affine) sibling of
+ * `DrawAffineSpritePieces` (graphics_7634.c). Split out of graphics.c: it is the
  * last function there, and it needs old_agbcc (Makefile OLD_AGBCC_OBJS)
  * while the rest of graphics.c is built with agbcc - the ROM loads the
  * piece id's `0xf` mask before the `ldrb` it is combined with.
  *
  * Queues one OAM entry per visible sub-piece of an animated `part`
  * (mirrored per the part's flag bits) and sends the part's whole tile
- * total to `sub_8006C84` once after the loop. */
+ * total to `UploadObjVram` once after the loop. */
 
 struct oam_attr01 {
     u32 y:8;
@@ -79,14 +79,14 @@ struct oam_part {
 
 extern struct piece_info *GetSpriteFrame(void *part);
 extern s32 GetSpriteTileBase(void *part);
-extern s32 sub_8006C44(void *cursor);
-extern s32 sub_8006C84(void *cursor, s32 src, s32 size);
-extern void sub_8006AC8(void *buffer, void *record);
+extern s32 GetObjVramTile(void *cursor);
+extern s32 UploadObjVram(void *cursor, s32 src, s32 size);
+extern void AddOamEntry(void *buffer, void *record);
 extern s32 _call_via_r1(void *self, void *fn);
-extern void *gUnknown_030012FC;
-extern void *gUnknown_03001300;
-extern u8 gStaticData_0816B2E0[];
-extern u8 gStaticData_0816B2EC[];
+extern void *gObjVramCursor;
+extern void *gOamBuffer;
+extern u8 gObjPieceWidths[];
+extern u8 gObjPieceHeights[];
 
 static inline s32 PieceSize73DC(s32 id)
 {
@@ -98,12 +98,12 @@ static inline s32 PieceShape73DC(s32 id)
     return (id >> 2) & 3;
 }
 
-void sub_80073DC(void *unused, struct oam_part *part, s32 *pos)
+void DrawSpritePieces(void *unused, struct oam_part *part, s32 *pos)
 {
     struct oam_pair oam;
     s32 total = 0;
     struct piece_info *info = GetSpriteFrame(part);
-    s32 tile = sub_8006C44(gUnknown_030012FC);
+    s32 tile = GetObjVramTile(gObjVramCursor);
     s32 i;
 
     oam.a.objMode = 0;
@@ -127,8 +127,8 @@ void sub_80073DC(void *unused, struct oam_part *part, s32 *pos)
 
     for (i = 0; i != info->u.b.count; i++) {
         s32 id = info->ids[i] & 0xf;
-        s32 w = gStaticData_0816B2E0[id];
-        s32 h = gStaticData_0816B2EC[id];
+        s32 w = gObjPieceWidths[id];
+        s32 h = gObjPieceHeights[id];
         s32 x, y;
         s32 tiles;
 
@@ -147,7 +147,7 @@ void sub_80073DC(void *unused, struct oam_part *part, s32 *pos)
                 oam.a.x = x;
                 oam.a.size = PieceSize73DC(id);
                 oam.b.tile = tile;
-                sub_8006AC8(gUnknown_03001300, &oam);
+                AddOamEntry(gOamBuffer, &oam);
             }
         }
         tiles = (w >> 3) * (h >> 3);
@@ -156,5 +156,5 @@ void sub_80073DC(void *unused, struct oam_part *part, s32 *pos)
         tile += tiles;
         total += tiles << 5;
     }
-    sub_8006C84(gUnknown_030012FC, GetSpriteTileBase(part) + (info->u.packed & 0xffffff), total);
+    UploadObjVram(gObjVramCursor, GetSpriteTileBase(part) + (info->u.packed & 0xffffff), total);
 }

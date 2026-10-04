@@ -23,7 +23,7 @@ struct method
 struct anim_record
 {
     u8 unk_00[0x14];
-    u8 tileRecord;          // 0x14 - sub_8006DF8/sub_8006D84 record id
+    u8 tileRecord;          // 0x14 - GetPaletteSlot/LockPalette record id
     u8 unk_15;
     u8 frameCount;          // 0x16
     u8 unk_17[5];
@@ -170,10 +170,10 @@ struct item
 };
 
 /* BG1, the page strip (sub_801D7F8). The first 0x10 bytes are the
- * sub_801E644 background descriptor (BGxCNT at +0x0C, sub_801E640). */
+ * InitBgSetup background descriptor (BGxCNT at +0x0C, GetBgSetupControl). */
 struct page_bg
 {
-    u8 desc[0x10];      // 0x00 - sub_801E644
+    u8 desc[0x10];      // 0x00 - InitBgSetup
     s32 scroll;         // 0x10 - current page scroll, Q8 (0x100 = a page)
     s32 target;         // 0x14 - scroll `scroll` eases toward
     u8 unk_18[0x0C];
@@ -183,14 +183,14 @@ struct page_bg
 
 COMPILE_TIME_ASSERT(sizeof(struct page_bg) == 0x28);
 
-/* A sprite slot of the icon layer, handed to sub_801DDB4. */
+/* A sprite slot of the icon layer, handed to RandomizeZoomBgTwinkle. */
 struct icon_slot
 {
     u8 unk_00[8];
     struct sprite *sprite;      // 0x08
 };
 
-/* BG2, the icon layer (sub_801D828, BG2CNT through sub_801DE24). */
+/* BG2, the icon layer (InitZoomBg, BG2CNT through GetZoomBgControl). */
 struct icon_bg
 {
     u8 unk_00[0x0C];
@@ -243,7 +243,7 @@ struct level_menu
     s32 nameText;               // 0x14 - the level name's text
     struct xy_pair *positions;  // 0x18 - cursor position per index
     struct page_bg *bg1;        // 0x1C - sub_801D7F8, BG1
-    struct icon_bg *bg2;        // 0x20 - sub_801D828, BG2 (icon layer)
+    struct icon_bg *bg2;        // 0x20 - InitZoomBg, BG2 (icon layer)
     struct item *items[6];      // 0x24
     void *panel;                // 0x3C - sub_801E04C, the cursor panel
     struct sprite *sprites[10]; // 0x40

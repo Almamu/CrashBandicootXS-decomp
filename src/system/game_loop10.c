@@ -25,8 +25,8 @@ struct AudioContext;
 extern void StopSfx(struct AudioContext *self, u32 id);
 extern void *sub_8026EDC(s32 size);
 extern void nullsub_7(void);
-extern s32 sub_80361B0(void);
-extern void sub_8037154(void *self, u32 flags);
+extern s32 RunCompanyLogos(void);
+extern void DestroyCompanyLogos(void *self, u32 flags);
 
 /* Sets `self->0x1bc` (a Q-format camera/position field paired with the
  * `SetCrateGemPos` two-word setter below). */
@@ -161,7 +161,7 @@ void sub_8023658(void *self)
 }
 
 /* Allocates a `0x44c`-byte block, fires an (empty) `nullsub_7` hook and
- * `sub_80361B0`, then hands the block to `sub_8037154` with flags `3`
+ * `RunCompanyLogos`, then hands the block to `DestroyCompanyLogos` with flags `3`
  * if the allocation succeeded. */
 void sub_8023674(void)
 {
@@ -179,9 +179,9 @@ void sub_8023674(void)
 
     asm volatile("bl nullsub_7" : "+r"(tmp) :: "r1", "r2", "r3", "lr", "cc");
     block = tmp;
-    sub_80361B0();
+    RunCompanyLogos();
     if (block != NULL) {
-        sub_8037154(block, 3);
+        DestroyCompanyLogos(block, 3);
     }
 }
 

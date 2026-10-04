@@ -122,7 +122,7 @@ Materialized as one opaque `asm volatile` block per call site,
 matching the ROM's own address-then-mask-then-load order and reusing
 its exact register roles (r1 for the address/byte, r0 for the mask and
 final result) - the same "opaque to the optimizer" technique used on
-`sub_8001524`/`sub_8001624`/`FindSubstring`/`sub_80014A4`:
+`SetDispcntMode`/`CommitBlendRegs`/`FindSubstring`/`FadePaletteToBlack`:
 
 ```c
 asm volatile(

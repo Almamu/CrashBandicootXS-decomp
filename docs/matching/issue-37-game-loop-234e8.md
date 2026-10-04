@@ -26,7 +26,7 @@ bitfield accessor pair at `self+0x14c`/`0x14d`, the `PlayCutscene`
 mode-trampoline family, a DMA3/VRAM refresh pass gating on
 `self+0x0 <= 0x1000` ("near start of level"), a `REG_BLDCNT`/
 `REG_BLDALPHA` shadow-word rebuild (see `src/graphics/aabb_util.c`'s
-`sub_8001624`, which commits that same shadow to hardware), and the
+`CommitBlendRegs`, which commits that same shadow to hardware), and the
 level-end teardown/VRAM-flush tail. Sandwiched in the middle of all
 that: two large functions (`PlayRoom`, ~300 instructions;
 `RunRoom`, ~650 instructions, its own internal jump-table state
@@ -47,7 +47,7 @@ via the `CpuSet` wrapper), `EndGemPath` (progress-accumulate-or-reset
 dispatcher), `sub_802364C`/`sub_8023658`/`sub_802369C` (the
 `PlayCutscene` mode-trampoline family, one of them also playing a fixed
 SFX), `sub_8023674` (allocates a `0x44c`-byte block and hands it to
-`sub_8037154`), `nullsub_24` (empty stub), `UnpackSaveData` (bitfield
+`DestroyCompanyLogos`), `nullsub_24` (empty stub), `UnpackSaveData` (bitfield
 unpacker, refreshing its own snapshot first), `PackSaveData` (its
 packer inverse - see the update below, added after this doc's original
 pass).
@@ -116,7 +116,7 @@ vram-upload-cursor/OAM-shadow flush tail both `UpdateRoomFrame` and
   "+r"(tmp) :: "r1", "r2", "r3", "lr", "cc")`) that tells the compiler
   the pointer register survives, which is true here and lets the
   delayed move happen exactly where the ROM has it - the *next* call
-  (`sub_80361B0`, a real, unrelated function) still forces the normal
+  (`RunCompanyLogos`, a real, unrelated function) still forces the normal
   conservative move beforehand, so this isn't a general "keep values in
   r0 forever" trick, just an accurate description of this one no-op
   call's real effect.
@@ -270,7 +270,7 @@ one function's raw bytes) is deleted; its `ldscript.txt` line is
 removed.
 
 The dense byte-level bitfield packing (~40 AND/OR/shift/mask
-instructions rebuilding the `gUnknown_03001280` `REG_BLDCNT`/
+instructions rebuilding the `gBlendRegs` `REG_BLDCNT`/
 `REG_BLDALPHA` shadow word) stayed exactly as impractical to hand-pin
 register-by-register as the original parked note described. What
 closed it was the same "one continuous opaque `asm volatile` island"
@@ -312,7 +312,7 @@ suffix"), but `neg` assembles to the identical encoding. Every other
 suffixed ROM mnemonic (`movs`/`ands`/`orrs`/`lsls`) translated to its
 suffix-less form (`mov`/`and`/`orr`/`lsl`) with no issue. A `.pool`
 right after the `if`-branch's trailing `b 3f` forces the
-`gUnknown_03001280`/`gLevelLayers` literals (loaded via the
+`gBlendRegs`/`gLevelLayers` literals (loaded via the
 assembler's own `=symbol` syntax) to group in the same ROM-matching
 mid-function gap the ROM's own `.align 2, 0` + two `.4byte` entries
 occupy, right before the `else`-branch, instead of at the function's

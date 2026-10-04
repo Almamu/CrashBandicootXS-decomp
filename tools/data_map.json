@@ -5,7 +5,7 @@
   {
    "address": "0x0803B8B0",
    "size": 485488,
-   "name": "gStaticData_0803B8B0",
+   "name": "gCategoryFamily0CellAnim",
    "consumers": [],
    "consumer_files": [],
    "ptr_words_code": 0,
@@ -14,11 +14,11 @@
    "format": "composite: BG0 streamed cell animation A + category-0 sub-effect table",
    "effort": "medium",
    "confidence": "high",
-   "notes": "Reached only through gActorCategories (category descriptors 0-2, fields +0x04/+0x08 = {0x0803B8B0, 0x75B94}) and +0x14 (0x080B1444). sub_8029890/sub_80297C8/sub_802996C (actor_part95.c) stream it to BG0.",
+   "notes": "Reached only through gActorCategories (category descriptors 0-2, fields +0x04/+0x08 = {0x0803B8B0, 0x75B94}) and +0x14 (0x080B1444). InitCellAnim/UploadCellAnimFrame/ResetCellAnimBg (actor_part95.c) stream it to BG0.",
    "consumers_indirect": [
-    "sub_8029890",
-    "sub_80297C8",
-    "sub_802996C",
+    "InitCellAnim",
+    "UploadCellAnimFrame",
+    "ResetCellAnimBg",
     "InitActorCategory",
     "SelectActorCategory"
    ],
@@ -59,8 +59,8 @@
    "consumers_indirect": [
     "SelectActorCategory",
     "GetAnimFrameData",
-    "sub_8029890",
-    "sub_802F7B0",
+    "InitCellAnim",
+    "LoadBgPicture",
     "sub_802DFDC"
    ],
    "regions": [
@@ -117,7 +117,7 @@
     {
      "address": "0x0813D934",
      "size": 13464,
-     "format": "BG1 picture for category 3 (descriptor +0x0C, sub_802F7B0): palette[256], s16 cols=38, rows=16, u32 tiles=357, u16 map[cols*rows], tiles*32 B 4bpp, palette-bank nibbles",
+     "format": "BG1 picture for category 3 (descriptor +0x0C, LoadBgPicture): palette[256], s16 cols=38, rows=16, u32 tiles=357, u16 map[cols*rows], tiles*32 B 4bpp, palette-bank nibbles",
      "effort": "medium",
      "status": "converted: src/data/cell_anim_0ff1b0.c (graphics/category_bg/13d934_picture*.png)"
     },
@@ -150,7 +150,7 @@
    "consumers_indirect": [
     "SelectActorCategory",
     "GetAnimFrameData",
-    "sub_802F7B0"
+    "LoadBgPicture"
    ],
    "regions": [
     {
@@ -341,7 +341,7 @@
   {
    "address": "0x0816A820",
    "size": 512,
-   "name": "gStaticData_0816A820",
+   "name": "gSineTable",
    "consumers": [
     "DrawPlayer",
     "sub_800C8F8",
@@ -351,7 +351,7 @@
     "sub_8011248",
     "sub_8011548",
     "sub_801192C",
-    "sub_801DAD8",
+    "UpdateZoomBg",
     "sub_802D3A8",
     "sub_80300E0",
     "sub_803013C",
@@ -875,10 +875,10 @@
   {
    "address": "0x0816B2E0",
    "size": 12,
-   "name": "gStaticData_0816B2E0",
+   "name": "gObjPieceWidths",
    "consumers": [
-    "sub_80073DC",
-    "sub_8007634"
+    "DrawSpritePieces",
+    "DrawAffineSpritePieces"
    ],
    "consumer_files": [
     "graphics/graphics_73dc.c",
@@ -898,10 +898,10 @@
   {
    "address": "0x0816B2EC",
    "size": 12,
-   "name": "gStaticData_0816B2EC",
+   "name": "gObjPieceHeights",
    "consumers": [
-    "sub_80073DC",
-    "sub_8007634"
+    "DrawSpritePieces",
+    "DrawAffineSpritePieces"
    ],
    "consumer_files": [
     "graphics/graphics_73dc.c",
@@ -2648,9 +2648,9 @@
   {
    "address": "0x0816C5A0",
    "size": 80,
-   "name": "gStaticData_0816C5A0",
+   "name": "gLevelSelectPictures",
    "consumers": [
-    "sub_801DAD8"
+    "UpdateZoomBg"
    ],
    "consumer_files": [
     "graphics/actor_part_1da38.c"
@@ -2673,7 +2673,7 @@
    "size": 32,
    "name": "gStaticData_0816C5F0",
    "consumers": [
-    "sub_801D828"
+    "InitZoomBg"
    ],
    "consumer_files": [
     "graphics/actor_part_1cee0.c"
@@ -2767,10 +2767,10 @@
   {
    "address": "0x0816C644",
    "size": 48,
-   "name": "gStaticData_0816C644",
+   "name": "gObjSizeWidths",
    "consumers": [
-    "sub_801E688",
-    "sub_801E788"
+    "FitScaledSprite",
+    "DrawScaledSprite"
    ],
    "consumer_files": [
     "graphics/graphics_package_1e688.c"
@@ -2792,10 +2792,10 @@
   {
    "address": "0x0816C674",
    "size": 48,
-   "name": "gStaticData_0816C674",
+   "name": "gObjSizeHeights",
    "consumers": [
-    "sub_801E688",
-    "sub_801E788"
+    "FitScaledSprite",
+    "DrawScaledSprite"
    ],
    "consumer_files": [
     "graphics/graphics_package_1e688.c"
@@ -3475,7 +3475,7 @@
    "size": 5944,
    "name": "gStaticData_08178F80",
    "consumers": [
-    "sub_80361B0"
+    "RunCompanyLogos"
    ],
    "consumer_files": [
     "graphics/graphics_loading_35d1c.c"
@@ -4622,10 +4622,10 @@
   {
    "address": "0x0817CFA4",
    "size": 80,
-   "name": "gStaticData_0817CFA4",
+   "name": "gTitleLogoPieceSeeds",
    "consumers": [
-    "sub_8035E14",
-    "sub_80360DC"
+    "RunTitleScreen",
+    "ResetTitleLogoPieces"
    ],
    "consumer_files": [
     "graphics/graphics_loading_35d1c.c"
@@ -4643,9 +4643,9 @@
   {
    "address": "0x0817CFF4",
    "size": 64,
-   "name": "gStaticData_0817CFF4",
+   "name": "gTitleArrowPieceOffsets",
    "consumers": [
-    "sub_80358A8"
+    "DrawTitleLogoPieces"
    ],
    "consumer_files": [
     "graphics/graphics_loading_35780.c"
@@ -4667,9 +4667,9 @@
   {
    "address": "0x0817D034",
    "size": 32,
-   "name": "gStaticData_0817D034",
+   "name": "gTitleMenuPalette",
    "consumers": [
-    "LoadLevelGraphics"
+    "InitTitleScreen"
    ],
    "consumer_files": [
     "graphics/level_graphics.c"
@@ -4688,9 +4688,9 @@
   {
    "address": "0x0817D054",
    "size": 32,
-   "name": "gStaticData_0817D054",
+   "name": "gTitleMenuSelectedPalette",
    "consumers": [
-    "LoadLevelGraphics"
+    "InitTitleScreen"
    ],
    "consumer_files": [
     "graphics/level_graphics.c"
@@ -4712,9 +4712,9 @@
   {
    "address": "0x0817D074",
    "size": 112,
-   "name": "gStaticData_0817D074",
+   "name": "gTitleMenuBlinkPalette",
    "consumers": [
-    "LoadLevelGraphics"
+    "InitTitleScreen"
    ],
    "consumer_files": [
     "graphics/level_graphics.c"
@@ -4733,9 +4733,9 @@
   {
    "address": "0x0817D0E4",
    "size": 1460,
-   "name": "gStaticData_0817D0E4",
+   "name": "gTitleScreenBg",
    "consumers": [
-    "LoadBg2Background"
+    "LoadTitleScreenBg"
    ],
    "consumer_files": [
     "graphics/level_graphics.c"
@@ -4749,7 +4749,7 @@
    "element_type": "struct bg_package",
    "element_size": null,
    "element_count": null,
-   "format": "bg_package for LoadBg2Background {w, h, palette*, tiles*, map*, ...} + trailing records",
+   "format": "bg_package for LoadTitleScreenBg {w, h, palette*, tiles*, map*, ...} + trailing records",
    "effort": "easy",
    "confidence": "high",
    "notes": "",
@@ -4758,9 +4758,9 @@
   {
    "address": "0x0817D698",
    "size": 40,
-   "name": "gStaticData_0817D698",
+   "name": "gLogoActorAnim",
    "consumers": [
-    "sub_80361B0"
+    "RunCompanyLogos"
    ],
    "consumer_files": [
     "graphics/graphics_loading_35d1c.c"
@@ -4779,9 +4779,9 @@
   {
    "address": "0x0817D6C0",
    "size": 168,
-   "name": "gStaticData_0817D6C0",
+   "name": "gVvLogoPieceSeeds",
    "consumers": [
-    "sub_8036600"
+    "InitVvLogoPieces"
    ],
    "consumer_files": [
     "graphics/graphics_loading_35d1c.c"
@@ -4801,7 +4801,7 @@
    "size": 20,
    "name": "gStaticData_0817D768",
    "consumers": [
-    "sub_8036528"
+    "LoadVvLogoGraphics"
    ],
    "consumer_files": [
     "graphics/graphics_loading_35d1c.c"
@@ -4821,7 +4821,7 @@
    "size": 20,
    "name": "gStaticData_0817D77C",
    "consumers": [
-    "sub_8036528"
+    "LoadVvLogoGraphics"
    ],
    "consumer_files": [
     "graphics/graphics_loading_35d1c.c"
@@ -4841,7 +4841,7 @@
    "size": 20,
    "name": "gStaticData_0817D790",
    "consumers": [
-    "sub_8036528"
+    "LoadVvLogoGraphics"
    ],
    "consumer_files": [
     "graphics/graphics_loading_35d1c.c"
@@ -4859,9 +4859,9 @@
   {
    "address": "0x0817D7A4",
    "size": 3952,
-   "name": "gStaticData_0817D7A4",
+   "name": "gUniversalLogoBg",
    "consumers": [
-    "sub_8036CF4"
+    "LoadUniversalLogoBg"
    ],
    "consumer_files": [
     "graphics/graphics_loading_3686c.c"
@@ -5002,7 +5002,7 @@
     "LoadTaggedAsset",
     "SetTileSlotPoolSource",
     "GetSpriteTileBase",
-    "sub_8006C84"
+    "UploadObjVram"
    ],
    "regions": [
     {
@@ -5066,7 +5066,7 @@
     {
      "address": "0x084A4660",
      "size": 4000,
-     "format": "125 x 32-byte 4bpp tiles (header +0x08/+0x0E of gSpriteBankTable; the tile-asset cache sub_8006EF0/sub_8006DF8 serves them)",
+     "format": "125 x 32-byte 4bpp tiles (header +0x08/+0x0E of gSpriteBankTable; the tile-asset cache SetPaletteCacheSource/GetPaletteSlot serves them)",
      "effort": "easy"
     }
    ]
@@ -5100,7 +5100,7 @@
     "GetSpriteFrame",
     "sub_800815C",
     "sub_8008734",
-    "sub_8006DF8",
+    "GetPaletteSlot",
     "GAX2 engine (the audio part: SFX voices created from GaxSongHeader.sfxTypes by GAX2_init, played by GaxFxChannelPlay)"
    ],
    "regions": [
@@ -8358,7 +8358,7 @@
     "sub_802F6DC",
     "sub_80321D0",
     "sub_803283C",
-    "sub_803716C",
+    "DestroyLogoActor",
     "sub_803B0C4",
     "sub_803B128",
     "sub_803B154",
@@ -9506,10 +9506,10 @@
   {
    "address": "0x087E55C4",
    "size": 32,
-   "name": "gStaticData_087E55C4",
+   "name": "gLogoActorVtable",
    "consumers": [
-    "sub_8036E20",
-    "sub_803716C"
+    "InitLogoActor",
+    "DestroyLogoActor"
    ],
    "consumer_files": [
     "audio/counter_selector.c",

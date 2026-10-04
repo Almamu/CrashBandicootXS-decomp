@@ -26,13 +26,13 @@ extern struct threshold_table_entry gLevelTable[];
 extern void ShowPowerDialog(s32 arg0, s32 arg1, s32 arg2);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern void sub_8026ED0(void *arg0);
-extern void sub_8006DC8(struct tile_asset_cache *arg0);
-extern void sub_8006AAC(void *arg0);
-extern void sub_8006A90(void *arg0);
-extern void sub_8006A48(void *arg0);
+extern void UploadPaletteCache(struct palette_cache *arg0);
+extern void CommitOamBuffer(void *arg0);
+extern void ResetOamBuffer(void *arg0);
+extern void HideUnusedOamEntries(void *arg0);
 extern void FlushVramDmaQueue(void);
-extern struct tile_asset_cache *gUnknown_030012B8;
-extern void *gUnknown_03001300;
+extern struct palette_cache *gPaletteCache;
+extern void *gOamBuffer;
 
 extern void sub_8008044(void *arg0);
 
@@ -51,13 +51,13 @@ struct sub_8006700_actor {
     u16 field_28;
 };
 
-extern void sub_8006C28(struct vram_upload_cursor *arg0);
+extern void RewindObjVram(struct vram_upload_cursor *arg0);
 extern void sub_8008890(void *arg0, s32 arg1, s32 arg2);
 extern void SetAabbPos(void *buf, s32 arg1, s32 arg2);
 extern void SetAabbSize(void *buf, s32 arg1, s32 arg2);
 extern s32 sub_8001214(void *arg0, void *arg1, void *buf, s32 arg3);
 extern s32 GetUiText(s32 arg0);
-extern struct vram_upload_cursor *gUnknown_030012FC;
+extern struct vram_upload_cursor *gObjVramCursor;
 
 extern struct icon_manager *gLargeFont;
 extern struct icon_manager *gSmallFont;
@@ -88,8 +88,8 @@ void DrawPowerDialog(struct sub_8006700_actor *arg0)
     u32 x;
     struct icon_record *r;
 
-    sub_8006A90(gUnknown_03001300);
-    sub_8006C28(gUnknown_030012FC);
+    ResetOamBuffer(gOamBuffer);
+    RewindObjVram(gObjVramCursor);
     sub_8008890(arg0->field_18, 0, 0);
     r = gLargeFont->record;
     w = _call_via_r2((u8 *)gLargeFont + r->slots[0].offset, arg0->field_10, r->slots[0].ptr);
@@ -107,7 +107,7 @@ void DrawPowerDialog(struct sub_8006700_actor *arg0)
     set_icon_mgr_pos(gSmallFont, x, 0x90);
     r = gSmallFont->record;
     _call_via_r2((u8 *)gSmallFont + r->slots[2].offset, n, r->slots[2].ptr);
-    sub_8006A48(gUnknown_03001300);
+    HideUnusedOamEntries(gOamBuffer);
 }
 
 extern void WaitForVBlank(void *arg0);
@@ -121,8 +121,8 @@ void AnimatePowerDialog(struct sub_8006700_actor *arg0)
 void CommitPowerDialogFrame(struct sub_8006700_actor *arg0)
 {
     WaitForVBlank(arg0);
-    sub_8006DC8(gUnknown_030012B8);
-    sub_8006AAC(gUnknown_03001300);
+    UploadPaletteCache(gPaletteCache);
+    CommitOamBuffer(gOamBuffer);
     FlushVramDmaQueue();
     *(vu16 *)REG_ADDR_BG0HOFS = arg0->field_1c >> 3;
     *(vu16 *)PLTT = 0;

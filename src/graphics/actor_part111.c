@@ -56,7 +56,7 @@
  *   own `+0x18`-table `+0x20`/`+0x24` trampoline (the `_call_via_r1`
  *   refresh/notify convention). Also (regardless of the mode-3 gate,
  *   using `self`'s own blink deadline at `self+0x8c`) draws `self`
- *   itself via `sub_8007A84(gUnknown_030012CC, self)` (matched,
+ *   itself via `DrawSprite(gSpriteRenderer, self)` (matched,
  *   `actor_part.c` - queues `self`'s own OAM using its own Q8
  *   position) either unconditionally (mode == 3, or the deadline has
  *   expired) or, while the deadline is still armed, only on the same
@@ -79,8 +79,8 @@
  *   history ring buffer (the slot about to be overwritten next frame -
  *   effectively `self`'s own position from up to 8 frames ago, a
  *   fixed trailing delay) and adds a rotating offset built from the
- *   shared 256-entry sine-ish table `gStaticData_0816A820` (already
- *   confirmed `extern s16 gStaticData_0816A820[];`,
+ *   shared 256-entry sine-ish table `gSineTable` (already
+ *   confirmed `extern s16 gSineTable[];`,
  *   `actor_part72.c`): `child.x = oldX + (table[frame & 0xff] << 4)`,
  *   `child.y = oldY + (table[(frame >> 1) & 0xff] << 3) - 0x1800`
  *   (Q8 `-24.0`) - two different angular speeds (full-speed X,
@@ -394,10 +394,10 @@ struct orbit_self {
 
 extern s32 gUnknown_03000818;
 extern s32 gUnknown_0300081C;
-extern void *gUnknown_030012CC;
-extern s16 gStaticData_0816A820[];
+extern void *gSpriteRenderer;
+extern s16 gSineTable[];
 extern s32 RandRange(s32 max);
-extern void sub_8007A84(void *self, void *part);
+extern void DrawSprite(void *self, void *part);
 extern s32 _call_via_r1(void *addr, void *fn);
 
 static inline s32 BlinkArmed(struct orbit_self *self)
@@ -483,7 +483,7 @@ void DrawPlayer(struct orbit_self *self)
      * call keeps `self` out of r6, so it gets r7 as in the ROM. */
     asm("" : "=r"(hold));
     if (gLevelState->maskLevel == 3 || !BlinkArmed(self) || (gRoomFrameCount & 4))
-        sub_8007A84(gUnknown_030012CC, self);
+        DrawSprite(gSpriteRenderer, self);
     /* End of the hold above (emits no code). */
     asm("" : : "r"(hold));
     {
@@ -523,8 +523,8 @@ void DrawPlayer(struct orbit_self *self)
                 s32 idx = self->maskTrailIdx;
 
                 SetChildPos(self->child,
-                            self->maskTrail[idx].x + gStaticData_0816A820[gRoomFrameCount & 0xff] * 16,
-                            self->maskTrail[idx].y + gStaticData_0816A820[(gRoomFrameCount >> 1) & 0xff] * 8 - 0x1800);
+                            self->maskTrail[idx].x + gSineTable[gRoomFrameCount & 0xff] * 16,
+                            self->maskTrail[idx].y + gSineTable[(gRoomFrameCount >> 1) & 0xff] * 8 - 0x1800);
             }
             /* Hard-register hold (emits no code): r6 live here keeps
              * `&self->child` out of r6 (it goes to ip), which leaves r6

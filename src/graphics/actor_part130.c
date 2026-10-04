@@ -26,7 +26,7 @@
  *    structurally parallel to the boss's own patrol/BG2-affine/tile
  *    machinery (issue #58) but on a completely separate global family
  *    (`gUnknown_030015A0`-`030015FF`, plus the P1/P2-mirror pair
- *    `gUnknown_030008B4`/`030008B8` and the row-pointer array
+ *    `gFlashBgPalette`/`030008B8` and the row-pointer array
  *    `gUnknown_03001600`). Every global in that family already has a
  *    real name from `actor_part28.c`'s own extern block where this
  *    file's functions are the ones that *first* reference it in ROM
@@ -73,8 +73,8 @@ extern void sub_802E5B0(s32 a, s32 b, s32 c);
 extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gActorList;
-extern void *gUnknown_030008B4;
-extern void *gUnknown_030008B8;
+extern void *gFlashBgPalette;
+extern void *gFlashObjPalette;
 extern u16 gUnknown_03001590;
 extern s32 gUnknown_03001594;
 
@@ -130,7 +130,7 @@ struct singleton_kind {
     u8 unk_14[0x14];
 };
 extern struct singleton_kind gStaticData_0817C460[];
-extern s16 gStaticData_0816A820[];
+extern s16 gSineTable[];
 extern void *gStaticData_0817C4C8[];
 
 /* Shared inlines of the singleton system (see sub_80331BC). */
@@ -617,7 +617,7 @@ void sub_8032AF8(void)
  * the ROM exactly (the ROM's own build never emits a `bl sub_8033828`
  * here, so the original source duplicated the logic rather than
  * sharing it). `sub_8033828`'s own body confirms the same "reload
- * `gUnknown_030008B4`'s pointer value through a register-pinned `p`,
+ * `gFlashBgPalette`'s pointer value through a register-pinned `p`,
  * assign the register-pinned `val` in its own statement" idiom closes
  * the exact register split this compiler otherwise collapses (loading
  * a >255 constant like `0x7FFF` straight into a pre-existing
@@ -633,7 +633,7 @@ void sub_8032AF8(void)
 static inline void CommitSpeed(u8 *p, u16 val)
 {
     *(u16 *)(p + 0x1e) = val;
-    *(u16 *)((u8 *)gUnknown_030008B8 + 0x1e) = val;
+    *(u16 *)((u8 *)gFlashObjPalette + 0x1e) = val;
 }
 
 void sub_8032B6C(void)
@@ -645,11 +645,11 @@ void sub_8032B6C(void)
     {
         if (gUnknown_03001594 == 0)
         {
-            gUnknown_03001590 = ((u16 *)gUnknown_030008B4)[15];
+            gUnknown_03001590 = ((u16 *)gFlashBgPalette)[15];
             gUnknown_03001594 = 1;
         }
         {
-            register u8 *p asm("r0") = gUnknown_030008B4;
+            register u8 *p asm("r0") = gFlashBgPalette;
             register u16 val asm("r1");
 
             asm("" : "+r"(p));
@@ -661,11 +661,11 @@ void sub_8032B6C(void)
     {
         if (gUnknown_03001594 == 0)
         {
-            gUnknown_03001590 = ((u16 *)gUnknown_030008B4)[15];
+            gUnknown_03001590 = ((u16 *)gFlashBgPalette)[15];
             gUnknown_03001594 = 1;
         }
         {
-            register u8 *p asm("r0") = gUnknown_030008B4;
+            register u8 *p asm("r0") = gFlashBgPalette;
             register u16 val asm("r1");
 
             asm("" : "+r"(p));
@@ -685,7 +685,7 @@ void sub_8032B6C(void)
  * X/Y velocities toward the player (`gActorList`) relative to a
  * camera-offset target box (`gStaticData_0817C4B0`), clamped to +-0x200
  * and kept inside fixed bounds; phase 1 bounces X at +-0x10000; later
- * phases orbit on the trig table `gStaticData_0816A820` with a growing
+ * phases orbit on the trig table `gSineTable` with a growing
  * radius. Once close enough (`gUnknown_030015C8 <= 0x27ff`), resets to
  * kind 3 / phase 0. Plain C - the documented "four live high registers"
  * blocker was not real; what mattered was keeping the player/camera
@@ -762,7 +762,7 @@ void sub_8032C0C(void)
             gUnknown_030015F0 = 0x8000;
         {
             s32 *px = &gUnknown_030015B4;
-            s16 *tbl = gStaticData_0816A820;
+            s16 *tbl = gSineTable;
 
             a = ((gUnknown_030015F4 * 30) >> 4) & 0xff;
             *px = (tbl[(a + 0x40) & 0xff] * gUnknown_030015F0) >> 8;

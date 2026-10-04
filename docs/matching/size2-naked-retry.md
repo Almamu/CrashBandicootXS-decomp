@@ -60,7 +60,7 @@ In order:
 3. **Case 15.**
    - `self->u48.n &= 0x3f; self->u48.n &= 0xf8;` keeps both ands.
    - The anim record goes through a `struct anim_rec *ar` local, so its
-     address is computed before `gUnknown_030012B8` is loaded.
+     address is computed before `gPaletteCache` is loaded.
    - The table index is a `u32 idx` local, so the index is computed
      before the table address is loaded.
 4. **Case 11.** Tag 0 comes from the constant-init asm

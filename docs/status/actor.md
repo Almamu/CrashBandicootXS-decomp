@@ -27,9 +27,9 @@ from "core" graphics.
   the AABB-overlap group `sub_802A018`, `sub_802A110`, `sub_802A3AC`
   (`actor_part103.c`) and `sub_802C7A8` (`actor_part19h.c`) - one shared
   inline with the three boxes in one frame struct, both files moved to
-  old_agbcc; the tile-map fill `sub_8029BC4` (`actor_part98.c`) and its
-  inlined twin in `sub_802996C` (`actor_part95.c`) - `tile++` in each
-  branch; `sub_80297C8` (`actor_part95.c`); and the trampolines
+  old_agbcc; the tile-map fill `FillCellAnimTilemap` (`actor_part98.c`) and its
+  inlined twin in `ResetCellAnimBg` (`actor_part95.c`) - `tile++` in each
+  branch; `UploadCellAnimFrame` (`actor_part95.c`); and the trampolines
   `sub_802A674`/`sub_802A688` (`actor_part94.c`), which return the
   callee's result.
 
@@ -82,10 +82,10 @@ from "core" graphics.
   box by value - and `sub_800AAEC` (`actor_part108.c`, either compiler,
   guarded do-while list walk). Previously parked as NAKED below.
 
-- `src/graphics/actor_part.c` (new file - `sub_8007A48`'s real ROM
+- `src/graphics/actor_part.c` (new file - `DrawSpriteAt`'s real ROM
   address isn't adjacent to `graphics.c`'s matched functions, since
-  `sub_8007634` sits unclaimed between them; see
-  `docs/matching.md`): `sub_8007A48`, `sub_8007A84`, `sub_8007A98`,
+  `DrawAffineSpritePieces` sits unclaimed between them; see
+  `docs/matching.md`): `DrawSpriteAt`, `DrawSprite`, `DestroySpriteRenderer`,
   `nullsub_2`, `sub_8007AB4`
 - `src/graphics/actor_part2.c` (new file - `sub_8007C30`'s real ROM
   address isn't adjacent to `actor_part.c`'s matched functions either,
@@ -488,7 +488,7 @@ from "core" graphics.
   `GetAnimFrameBaseOffset`, which itself ends exactly at `0x0803B060`):
   `GetAnimFrameAttr` (reads the current keyframe's `attr` halfword pre-shifted
   into the high 16 bits), `GetAnimFrameData` (resolves the current
-  keyframe's tile-graphics pointer via `frameOffsets`/`gUnknown_0300137C`),
+  keyframe's tile-graphics pointer via `frameOffsets`/`gCategorySpriteSheet`),
   `SetActorAnim` (selects a new keyframe, resetting the playback
   accumulator), `sub_803B0F0` (advances a Q8 fall/scroll accumulator,
   then either fires the `self+0x50` trampoline or tail-calls
@@ -541,8 +541,8 @@ from "core" graphics.
   0x0802F0DC-0x0802FBF0 - a second boss-weapon "spawn/pre-attack"
   singleton and its `self` object, non-adjacent since the parked
   `sub_802F338`/`sub_802FA04`, `sub_802F748`
-  (`actor_part44b.c`, now matched - see below), `sub_802F7B0`/
-  `sub_802F8E8` (`actor_part45d.c`: 8E8 matched, 7B0 still NAKED - see
+  (`actor_part44b.c`, now matched - see below), `LoadBgPicture`/
+  `FillBgPictureMap` (`actor_part45d.c`: 8E8 matched, 7B0 still NAKED - see
   below) and `sub_802FA38`
   (`actor_part46b.c`, now matched - see below) sit interleaved between them; see
   [docs/matching/issue-56-0x0802f0dc-actor.md](../matching/issue-56-0x0802f0dc-actor.md)):
@@ -621,7 +621,7 @@ from "core" graphics.
   twin of `actor_part44.c`'s `sub_802F3BC`), a trivial byte getter, two
   frame-counter-threshold state-reset functions sharing the state/
   table-index/anim-frame reset idiom, and a three-axis hazard-threshold
-  driver family (screen-flash trigger via `sub_800132C`, hazard-
+  driver family (screen-flash trigger via `FadeBrightness`, hazard-
   direction arming via `sub_802A668`) on the same `gUnknown_0300148x`/
   `gUnknown_030014Ax` global cluster `actor_part19.c`/`actor_part44.c`
   already established; matched.
@@ -831,7 +831,7 @@ from "core" graphics.
   doubly-linked-list unlink/`mem_free` destructor (`sub_80321D0`), a
   no-op stub (`nullsub_33`), a trivial accumulator (`sub_8032274`), a
   second independent orbital-motion consumer of the shared trig table
-  `gStaticData_0816A820` (`sub_8032290`, alongside the already-flagged
+  `gSineTable` (`sub_8032290`, alongside the already-flagged
   `sub_8032480`), a state-1 trampoline-flush/proximity transition
   (`sub_8032358`), more countdown transitions (`sub_80323F4`/
   `sub_80325A4`), `sub_8032480` itself (the orbital-motion consumer,
@@ -926,7 +926,7 @@ from "core" graphics.
   level spawn record into a factory call) and the player constructor.
   All 7 real C, current agbcc (both compilers match). See
   [docs/matching/issue-51-actor-2ac28.md](../matching/issue-51-actor-2ac28.md).
-- **Second near-miss sweep:** `sub_8029890` (`actor_part95.c`, console
+- **Second near-miss sweep:** `InitCellAnim` (`actor_part95.c`, console
   geometry setup) and `SelectActorCategory` (`actor_part102.c`) promoted
   from NAKED to real C, both matching under either compiler. See
   [near-miss-polish-2.md](../matching/near-miss-polish-2.md).
@@ -963,10 +963,10 @@ See [docs/matching/strag4-naked-retry.md](../matching/strag4-naked-retry.md).
 
 See [docs/matching/strag2-naked-retry.md](../matching/strag2-naked-retry.md).
 
-### Matched in the sub_8007634 retry
+### Matched in the DrawAffineSpritePieces retry
 
-- `src/graphics/graphics_7634.c` - `sub_8007634` (the affine sibling
-  of `sub_80073DC`: one affine OAM entry per visible piece, pulled
+- `src/graphics/graphics_7634.c` - `DrawAffineSpritePieces` (the affine sibling
+  of `DrawSpritePieces`: one affine OAM entry per visible piece, pulled
   towards the first piece's centre by the scale), old_agbcc
   (`graphics_7634.o` joined `OLD_AGBCC_OBJS`; it is the only function in
   the file). Was 468 halfwords off. Taking the size-table addresses
@@ -1026,7 +1026,7 @@ See [docs/matching/strag2-naked-retry.md](../matching/strag2-naked-retry.md).
 
 ### Matched in the late-ROM NAKED retry
 
-- `src/graphics/actor_part45d.c` - `sub_802F7B0` and `sub_802F8E8`
+- `src/graphics/actor_part45d.c` - `LoadBgPicture` and `FillBgPictureMap`
   (the BG1 picture loader and its map repack loop, issue #56), old_agbcc
   (the object is on `OLD_AGBCC_OBJS`). 7B0 inlines a `static inline`
   copy of the loop (the ROM's 7B0 has the inlined loop's two store
@@ -1440,7 +1440,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   GitHub issue #63, see `docs/matching/issue-63-0x08033ef4-actor.md`.
 - **`SpawnStar`/`PlotStarfieldPixel`** (`src/graphics/actor_part72.c`) - a
   128-slot particle-slot spawner (rolls two `RandRange` random values
-  against the 256-entry `gStaticData_0816A820` direction table to seed a
+  against the 256-entry `gSineTable` direction table to seed a
   position/velocity record) and a 4-bit-per-cell tilemap nibble writer;
   now fully matched as real C. `SpawnStar`'s previously-parked
   register-allocation gap for the final multiply/shift turned out not to
@@ -1681,11 +1681,11 @@ embedded as asm instead. They're tracked as parked, not matched.
 
 ## Left raw (not attempted, or attempted and set aside)
 
-- ~~**`sub_8007634`**~~ (`src/graphics/graphics_7634.c`, ROM 0x08007634,
+- ~~**`DrawAffineSpritePieces`**~~ (`src/graphics/graphics_7634.c`, ROM 0x08007634,
   GitHub issue #9) - real GBA hardware-affine sprite-matrix setup.
   Moved out of `asm/code_3_2.s` as NAKED in the issue #9 raw-asm pass,
   now matched as real C under old_agbcc - see "Matched in the
-  sub_8007634 retry" above.
+  DrawAffineSpritePieces retry" above.
 - ~~**`PlayerHandleEvent`**~~ (ROM 0x0800AC2C, GitHub issue #9/#10) - matched
   as real C under old_agbcc in `src/graphics/actor_part111.c` (issue #9
   raw-asm pass, `docs/matching/issue-9-raw-asm-pass.md`);

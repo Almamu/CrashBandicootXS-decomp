@@ -24,7 +24,7 @@
  * `switch`'s uniform codegen.
  *
  * `sub_8032480` is the already-flagged orbital-motion consumer of the
- * shared trig table `gStaticData_0816A820`; `sub_8032290` turned out to
+ * shared trig table `gSineTable`; `sub_8032290` turned out to
  * be a second, closely-related consumer of the same table feeding the
  * same `x`/`y` position pair.
  *
@@ -57,7 +57,7 @@ extern s32 __divsi3(s32 a, s32 b);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern void mem_free(void *ptr);
 
-extern u8 gStaticData_0816A820[];
+extern u8 gSineTable[];
 extern struct actor_pmf gStaticData_0817C42C[];
 extern u8 gStaticData_0817C444[];
 extern u8 gActorVtable[];
@@ -793,7 +793,7 @@ void sub_8032274(void *selfArg)
 }
 
 /* A second, independent consumer of the shared trig table
- * `gStaticData_0816A820` (the orbital-motion convention already
+ * `gSineTable` (the orbital-motion convention already
  * documented for `sub_8032480`): computes an `x`/`y`
  * position pair from two phase-shifted table lookups around
  * `self+0x68 + self+0x44`, then - while `self+0x58` holds another
@@ -802,7 +802,7 @@ void sub_8032274(void *selfArg)
 void sub_8032290(void *selfArg)
 {
     struct orbit_actor *self = selfArg;
-    s16 *trig = (s16 *)gStaticData_0816A820;
+    s16 *trig = (s16 *)gSineTable;
     s32 phase = self->phase + self->base.stateTime;
     s32 idx1 = ((phase * 5) >> 4) & 0xff;
     s32 v1 = trig[idx1];
@@ -994,7 +994,7 @@ u8 sub_8032478(void *selfArg)
 }
 
 /* The already-flagged orbital-motion consumer of the shared trig table
- * `gStaticData_0816A820` (docs/rom_map.md): while idle (state 0),
+ * `gSineTable` (docs/rom_map.md): while idle (state 0),
  * checks proximity to fire an event-table call on the player plus a
  * state transition through `sub_803256C`, then drives the orbit itself
  * (`x`) and either lets `y` coast forward by
@@ -1029,7 +1029,7 @@ void sub_8032480(void *selfArg)
     }
 
     {
-        s16 *trig = (s16 *)gStaticData_0816A820;
+        s16 *trig = (s16 *)gSineTable;
         s32 idx = (self->base.stateTime) << 6;
         s32 v;
 

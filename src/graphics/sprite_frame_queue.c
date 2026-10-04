@@ -1,7 +1,7 @@
 #include "core.h"
 #include "memory.h"
 
-extern void *gUnknown_0300137C; /* decompressed category sprite sheet buffer */
+extern void *gCategorySpriteSheet; /* decompressed category sprite sheet buffer */
 extern void LoadTaggedAsset(void *asset, void *dest);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 
@@ -21,11 +21,11 @@ struct vram_tile_block {
 #define VRAM_TILE_BLOCK_FREE 0
 #define VRAM_TILE_BLOCK_USED 2
 
-extern struct vram_tile_block *gUnknown_03001320;
-extern struct vram_tile_block gUnknown_03001328;
-extern struct vram_tile_block *gUnknown_03001338;
-extern struct vram_tile_block *gUnknown_0300133C;
-extern u8 *gUnknown_03001340;
+extern struct vram_tile_block *gVramTileBlockPool;
+extern struct vram_tile_block gVramTileBlockList;
+extern struct vram_tile_block *gVramTileBlockRover;
+extern struct vram_tile_block *gVramTileBlockSpares;
+extern u8 *gVramTileBlockIndex;
 
 extern void *AllocVramTileBlock(s32 requestedSize);
 extern void FreeVramTileBlock(void *addr);
@@ -33,7 +33,7 @@ extern void FreeVramTileBlock(void *addr);
 #define DMA3 (*(struct dma_regs *)REG_ADDR_DMA3SAD)
 
 /* ROM 0x08028CD4 - next-fit search (starting from and updating the
- * `gUnknown_03001338` rover, the same strategy `mem_alloc` uses over
+ * `gVramTileBlockRover` rover, the same strategy `mem_alloc` uses over
  * its own free list) for a free block at least `requestedSize` bytes,
  * splitting the remainder off into a spare record when there's enough
  * left over to bother (unlike `mem_alloc`'s in-place split, this one
@@ -41,7 +41,7 @@ extern void FreeVramTileBlock(void *addr);
  * spare stack is empty, the allocation fails even though a big enough
  * block exists, rather than allocate without being able to track the
  * leftover). Records the winning block's own pool-record index into
- * the `gUnknown_03001340` tile lookup table so FreeVramTileBlock can
+ * the `gVramTileBlockIndex` tile lookup table so FreeVramTileBlock can
  * find it again from a bare VRAM address.
  *
  * Matched via one continuous `asm volatile` island covering the search
@@ -76,13 +76,13 @@ extern void FreeVramTileBlock(void *addr);
  * separate `result = cur->addr;` statement so the marker can land
  * exactly between them, and `.pool` right after
  * `.Lalloc_vram_notfound`'s `b .Lalloc_vram_epilogue` forces the
- * `gUnknown_03001338` literal (loaded via the assembler's own
+ * `gVramTileBlockRover` literal (loaded via the assembler's own
  * `=symbol` syntax, opaque to this compiler's own pool bookkeeping -
  * see actor_part53.c's own comment for why only that route respects an
  * explicit pool split) to group with the compiler's own
- * `gUnknown_0300133C` literal in that same ROM-matching mid-function
+ * `gVramTileBlockSpares` literal in that same ROM-matching mid-function
  * gap instead of at the function's end. The free-list-split logic
- * itself (from `gUnknown_0300133C = spare->next;` on) is ROM-identical
+ * itself (from `gVramTileBlockSpares = spare->next;` on) is ROM-identical
  * arithmetic, but two more of this compiler's own CSE choices needed
  * the same asm treatment to land byte-exact: past the split, ROM
  * reloads `cur->next` from memory for `*roverSlot = cur->next;` (its
@@ -105,7 +105,7 @@ void *AllocVramTileBlock(s32 requestedSizeArg)
     void *result;
 
     asm volatile(
-        "ldr r0, =gUnknown_03001338\n"
+        "ldr r0, =gVramTileBlockRover\n"
         "ldr r1, [r0]\n"
         "ldr r2, [r1, #0xc]\n"
         "add r3, r1, #0\n"
@@ -131,7 +131,7 @@ void *AllocVramTileBlock(s32 requestedSizeArg)
         "sub r5, r0, r4\n"
         "cmp r5, #0\n"
         "beq .Lalloc_vram_remzero\n"
-        "ldr r1, =gUnknown_0300133C\n"
+        "ldr r1, =gVramTileBlockSpares\n"
         "ldr r2, [r1]\n"
         "cmp r2, #0\n"
         "bne .Lalloc_vram_sparefound\n"
@@ -162,7 +162,7 @@ void *AllocVramTileBlock(s32 requestedSizeArg)
 
     cur->status = VRAM_TILE_BLOCK_USED;
     *roverSlot = cur->next;
-    gUnknown_03001340[GET_TILE_NUM(cur->addr)] = (u8)(cur - gUnknown_03001320);
+    gVramTileBlockIndex[GET_TILE_NUM(cur->addr)] = (u8)(cur - gVramTileBlockPool);
     result = cur->addr;
     asm volatile(".Lalloc_vram_epilogue:");
     return result;
@@ -171,8 +171,8 @@ void *AllocVramTileBlock(s32 requestedSizeArg)
 /* ROM 0x08028D6C - dead code, no caller anywhere in the ROM (checked
  * every asm file, expected disassembly and src tree for this address
  * and for a `bl sub_8028D6C`/`.4byte sub_8028D6C` reference). Walks the
- * `gUnknown_0300133C` spare-node stack to its end, then the
- * `gUnknown_03001328` free-block list all the way around, discarding
+ * `gVramTileBlockSpares` spare-node stack to its end, then the
+ * `gVramTileBlockList` free-block list all the way around, discarding
  * both results - the same "list-walk with the result never stored"
  * optimizer-leftover shape already documented for `sub_800039C` in
  * src/system/memory.c (see that function's comment). */
@@ -181,10 +181,10 @@ void sub_8028D6C(void)
     struct vram_tile_block *p;
     struct vram_tile_block *q;
 
-    for (p = gUnknown_0300133C; p != NULL; p = p->next) {
+    for (p = gVramTileBlockSpares; p != NULL; p = p->next) {
     }
 
-    for (q = gUnknown_03001328.next; q != &gUnknown_03001328; q = q->next) {
+    for (q = gVramTileBlockList.next; q != &gVramTileBlockList; q = q->next) {
     }
 }
 
@@ -192,16 +192,16 @@ void sub_8028D6C(void)
  * own function label; it's a separate function from `sub_8028D6C`
  * above (see `expected/corrections.txt`'s `split` entry), also with no
  * caller anywhere in the ROM. Sums the `size` of every FREE block
- * currently in the `gUnknown_03001328` list - a "how many free VRAM
+ * currently in the `gVramTileBlockList` list - a "how many free VRAM
  * tile bytes are left" query the rest of this cluster never calls. */
-s32 sub_8028D94(void)
+s32 GetFreeVramTileBytes(void)
 {
     struct vram_tile_block *node;
     s32 total;
 
     total = 0;
-    node = gUnknown_03001328.next;
-    if (node != &gUnknown_03001328) {
+    node = gVramTileBlockList.next;
+    if (node != &gVramTileBlockList) {
         do {
             if (node->status == VRAM_TILE_BLOCK_FREE) {
                 {
@@ -210,7 +210,7 @@ s32 sub_8028D94(void)
                 }
             }
             node = node->next;
-        } while (node != &gUnknown_03001328);
+        } while (node != &gVramTileBlockList);
     }
     return total;
 }
@@ -219,8 +219,8 @@ s32 sub_8028D94(void)
  * EWRAM buffers it allocated. */
 void FreeObjTileFreeList(void)
 {
-    mem_free((u8 *)gUnknown_03001340);
-    mem_free((u8 *)gUnknown_03001320);
+    mem_free((u8 *)gVramTileBlockIndex);
+    mem_free((u8 *)gVramTileBlockPool);
 }
 
 /* One queued OAM entry the overflow arrays below buffer up during a
@@ -236,18 +236,18 @@ struct queued_oam_entry {
     u8 pad_06[2];
 };
 
-extern struct queued_oam_entry *gUnknown_03001344; /* queued OAM entries, OAM_ENTRY_COUNT max */
-extern s32 *gUnknown_03001348;                     /* queued affine (x,y) pairs, packed one s16 each into a u32, deduped */
-extern s32 gUnknown_0300134C;                      /* gUnknown_03001344 count */
-extern s32 gUnknown_03001350;                      /* gUnknown_03001348 count */
+extern struct queued_oam_entry *gSpriteOamQueue; /* queued OAM entries, OAM_ENTRY_COUNT max */
+extern s32 *gSpriteAffineQueue;                     /* queued affine (x,y) pairs, packed one s16 each into a u32, deduped */
+extern s32 gSpriteOamQueueCount;                      /* gSpriteOamQueue count */
+extern s32 gSpriteAffineQueueCount;                      /* gSpriteAffineQueue count */
 
 /* ROM 0x08028DD8 - appends one OAM entry (`attr01`/`attr2`, hardware
- * ATTR0|ATTR1<<16 and ATTR2) to the `gUnknown_03001344` overflow queue
+ * ATTR0|ATTR1<<16 and ATTR2) to the `gSpriteOamQueue` overflow queue
  * `FlushSpriteFrameOamQueue` later commits. When ATTR0 bit 8 (the
  * hardware "affine" flag) is set, first resolves an affine-parameter
  * group: computes a (x,y) scale pair from `priority` (negated per
  * ATTR1 bits 9/10, already packed into `attr01`'s bits 28/29 by the
- * caller), reuses the previous `gUnknown_03001348` entry if it's
+ * caller), reuses the previous `gSpriteAffineQueue` entry if it's
  * identical (a cheap run-length dedup - adjacent sprites sharing a
  * scale are extremely common), otherwise appends a new one, then
  * writes that entry's index into `attr01` bits 25-29 (ATTR1's real
@@ -284,11 +284,11 @@ void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority)
         combined = (combined & 0x0000FFFF) | y;
         attr01 &= 0xCFFFFFFF;
 
-        if (gUnknown_03001350 == 0 || combined != gUnknown_03001348[gUnknown_03001350 - 1]) {
-            gUnknown_03001348[gUnknown_03001350] = combined;
-            gUnknown_03001350++;
+        if (gSpriteAffineQueueCount == 0 || combined != gSpriteAffineQueue[gSpriteAffineQueueCount - 1]) {
+            gSpriteAffineQueue[gSpriteAffineQueueCount] = combined;
+            gSpriteAffineQueueCount++;
         }
-        attr01 |= (gUnknown_03001350 - 1) << 25;
+        attr01 |= (gSpriteAffineQueueCount - 1) << 25;
     }
 
     {
@@ -296,15 +296,15 @@ void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority)
         register struct queued_oam_entry *base asm("r2");
         register s32 offset asm("r0");
 
-        count = gUnknown_0300134C;
-        base = gUnknown_03001344;
+        count = gSpriteOamQueueCount;
+        base = gSpriteOamQueue;
         offset = count << 3;
         asm volatile("add %0, %0, %1" : "+r"(offset) : "r"(base));
 
         entry = (struct queued_oam_entry *)offset;
         entry->attr01 = attr01;
         entry->attr2 = attr2;
-        gUnknown_0300134C = count + 1;
+        gSpriteOamQueueCount = count + 1;
     }
 }
 
@@ -312,8 +312,8 @@ void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority)
  * allocated. */
 void FreeSpriteFrameOamQueue(void)
 {
-    mem_free((u8 *)gUnknown_03001348);
-    mem_free((u8 *)gUnknown_03001344);
+    mem_free((u8 *)gSpriteAffineQueue);
+    mem_free((u8 *)gSpriteOamQueue);
 }
 
 /* Same 0x40C-byte OAM shadow buffer src/graphics/graphics.c already
@@ -321,30 +321,30 @@ void FreeSpriteFrameOamQueue(void)
  * project's minimal-local-type convention - see docs/naming.md). */
 struct oam_shadow_buffer {
     s32 count;
-    s32 field_04;
-    s32 field_08;
+    s32 base;
+    s32 matrixCount;
     u8 table[0x400];
 };
 
-extern struct oam_shadow_buffer *gUnknown_03001300;
-extern void sub_8006A14(struct oam_shadow_buffer *arg0, void *arg1, s32 arg2);
-extern void sub_8006A48(struct oam_shadow_buffer *arg0);
-extern void sub_80069E8(void *arg0, u16 *arg1, s32 arg2);
+extern struct oam_shadow_buffer *gOamBuffer;
+extern void AppendOamEntries(struct oam_shadow_buffer *arg0, void *arg1, s32 arg2);
+extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
+extern void SetOamAffineScales(void *arg0, u16 *arg1, s32 arg2);
 
 /* ROM 0x08028EA8 - commits this frame's overflow OAM queue into the
  * real hardware-shaped OAM shadow buffer: appends the queued entries
- * (`sub_8006A14`), hides whatever hardware slots are still unused
- * (`sub_8006A48`), pads the affine-parameter table out with the last
- * entry repeated (`sub_80069E8`, the same "hide unused affine groups"
+ * (`AppendOamEntries`), hides whatever hardware slots are still unused
+ * (`HideUnusedOamEntries`), pads the affine-parameter table out with the last
+ * entry repeated (`SetOamAffineScales`, the same "hide unused affine groups"
  * idiom `struct oam_shadow_buffer`'s own comment describes), then
  * resets both overflow counts for the next frame. */
 void FlushSpriteFrameOamQueue(void)
 {
-    sub_8006A14(gUnknown_03001300, gUnknown_03001344, gUnknown_0300134C);
-    sub_8006A48(gUnknown_03001300);
-    sub_80069E8(gUnknown_03001300, (u16 *)gUnknown_03001348, gUnknown_03001350);
-    gUnknown_0300134C = 0;
-    gUnknown_03001350 = 0;
+    AppendOamEntries(gOamBuffer, gSpriteOamQueue, gSpriteOamQueueCount);
+    HideUnusedOamEntries(gOamBuffer);
+    SetOamAffineScales(gOamBuffer, (u16 *)gSpriteAffineQueue, gSpriteAffineQueueCount);
+    gSpriteOamQueueCount = 0;
+    gSpriteAffineQueueCount = 0;
 }
 
 /* ROM 0x08028EF0 - allocates the two overflow buffers above and DMA3-
@@ -356,10 +356,10 @@ void InitSpriteFrameOamQueue(void)
 {
     u16 hideValue;
 
-    gUnknown_03001344 = (struct queued_oam_entry *)mem_alloc(OAM_ENTRY_COUNT * 8, MEM_HEAP_EWRAM);
-    gUnknown_03001348 = (s32 *)mem_alloc(32 * 4, MEM_HEAP_EWRAM);
-    gUnknown_0300134C = 0;
-    gUnknown_03001350 = 0;
+    gSpriteOamQueue = (struct queued_oam_entry *)mem_alloc(OAM_ENTRY_COUNT * 8, MEM_HEAP_EWRAM);
+    gSpriteAffineQueue = (s32 *)mem_alloc(32 * 4, MEM_HEAP_EWRAM);
+    gSpriteOamQueueCount = 0;
+    gSpriteAffineQueueCount = 0;
 
     {
         register u16 *addr asm("r1");
@@ -381,9 +381,9 @@ void InitSpriteFrameOamQueue(void)
  * frame record (see docs/graphics.md's `table_B` description) currently
  * resident in VRAM, and `vramAddr` is the `AllocVramTileBlock` result
  * its pixel data was DMA'd into. Nodes live in a fixed pool
- * (`gUnknown_03001374`, seeded by InitSpriteFrameCache) and move
- * between two ring lists as they age: `gUnknown_03001354` (this
- * frame's in-use entries, newest at the head) and `gUnknown_03001364`
+ * (`gSpriteFrameCacheSpares`, seeded by InitSpriteFrameCache) and move
+ * between two ring lists as they age: `gSpriteFrameCacheCurrent` (this
+ * frame's in-use entries, newest at the head) and `gSpriteFrameCachePrevious`
  * (last frame's entries, oldest at the tail) - see
  * AgeSpriteFrameCache/LoadSpriteFrameTiles. */
 struct sprite_frame_cache_node {
@@ -395,10 +395,10 @@ struct sprite_frame_cache_node {
 
 #define SPRITE_FRAME_CACHE_POOL_COUNT 128
 
-extern struct sprite_frame_cache_node gUnknown_03001354; /* "this frame" MRU list sentinel */
-extern struct sprite_frame_cache_node gUnknown_03001364; /* "last frame" eviction list sentinel */
-extern struct sprite_frame_cache_node *gUnknown_03001374; /* spare-record stack head */
-extern struct sprite_frame_cache_node *gUnknown_03001378; /* pool base */
+extern struct sprite_frame_cache_node gSpriteFrameCacheCurrent; /* "this frame" MRU list sentinel */
+extern struct sprite_frame_cache_node gSpriteFrameCachePrevious; /* "last frame" eviction list sentinel */
+extern struct sprite_frame_cache_node *gSpriteFrameCacheSpares; /* spare-record stack head */
+extern struct sprite_frame_cache_node *gSpriteFrameCachePool; /* pool base */
 
 extern void *gLookupSpriteFrameCacheFunc; /* optional frame-source override hook (called via _call_via_r1) */
 extern void *_call_via_r1(void *arg0, void *fn);
@@ -410,9 +410,9 @@ extern void *_call_via_r1(void *arg0, void *fn);
  * convention - see src/system/reg_trampolines.c); if that returns
  * anything other than -1, that's used directly. Otherwise inserts a
  * fresh cache node at the head of the "this frame" MRU list
- * (`gUnknown_03001354`) and tries to `AllocVramTileBlock` the frame's
+ * (`gSpriteFrameCacheCurrent`) and tries to `AllocVramTileBlock` the frame's
  * `w*h*32`-byte payload, evicting the least-recently-used entry from
- * the "last frame" list (`gUnknown_03001364`, freeing its VRAM block
+ * the "last frame" list (`gSpriteFrameCachePrevious`, freeing its VRAM block
  * and recycling its node back onto the spare stack) and retrying until
  * an allocation succeeds. The frame's pixel data (skipping its 4-byte
  * `{w,h,0x30,0x00}` header) is then DMA-queued into the allocated
@@ -430,14 +430,14 @@ s32 LoadSpriteFrameTiles(u8 *frame)
         return result;
     }
 
-    node = gUnknown_03001374;
-    gUnknown_03001374 = node->next;
+    node = gSpriteFrameCacheSpares;
+    gSpriteFrameCacheSpares = node->next;
     node->frame = frame;
-    node->prev = &gUnknown_03001354;
-    oldFirst = gUnknown_03001354.next;
+    node->prev = &gSpriteFrameCacheCurrent;
+    oldFirst = gSpriteFrameCacheCurrent.next;
     node->next = oldFirst;
-    gUnknown_03001354.next->prev = node;
-    gUnknown_03001354.next = node;
+    gSpriteFrameCacheCurrent.next->prev = node;
+    gSpriteFrameCacheCurrent.next = node;
 
     {
         register u32 w asm("r1");
@@ -451,7 +451,7 @@ s32 LoadSpriteFrameTiles(u8 *frame)
         byteCount = product << 5;
     }
 
-    spareSlot = &gUnknown_03001374;
+    spareSlot = &gSpriteFrameCacheSpares;
 
     {
         register void *vramAddr asm("r1");
@@ -459,7 +459,7 @@ s32 LoadSpriteFrameTiles(u8 *frame)
         vramAddr = AllocVramTileBlock(byteCount);
         node->vramAddr = vramAddr;
         while (vramAddr == NULL) {
-            struct sprite_frame_cache_node *victim = gUnknown_03001364.prev;
+            struct sprite_frame_cache_node *victim = gSpriteFrameCachePrevious.prev;
 
             FreeVramTileBlock(victim->vramAddr);
             victim->prev->next = victim->next;
@@ -538,54 +538,54 @@ void SetupSpriteFrameOam(u8 *frame, u32 attr01, u32 arg2, s32 priority)
 /* ROM 0x0802907C - frees the pool `InitSpriteFrameCache` allocated. */
 void FreeSpriteFrameCache(void)
 {
-    mem_free((u8 *)gUnknown_03001378);
+    mem_free((u8 *)gSpriteFrameCachePool);
 }
 
 /* ROM 0x08029090 - ages the frame cache one generation: splices every
- * node currently in `gUnknown_03001354` (this frame's entries, MRU-
- * first) onto the *front* of `gUnknown_03001364` (last frame's
+ * node currently in `gSpriteFrameCacheCurrent` (this frame's entries, MRU-
+ * first) onto the *front* of `gSpriteFrameCachePrevious` (last frame's
  * entries) as one block, preserving relative order, then empties
- * `gUnknown_03001354`. The freshest entries from the finished
+ * `gSpriteFrameCacheCurrent`. The freshest entries from the finished
  * generation become the least-likely-to-be-evicted end of the
  * eviction list (LoadSpriteFrameTiles evicts from its tail), while
- * anything already in `gUnknown_03001364` before this call gets pushed
+ * anything already in `gSpriteFrameCachePrevious` before this call gets pushed
  * closer to eviction - a simple two-generation clock cache. */
 void AgeSpriteFrameCache(void)
 {
     struct sprite_frame_cache_node *head;
 
-    head = gUnknown_03001354.next;
-    if (head == &gUnknown_03001354) {
+    head = gSpriteFrameCacheCurrent.next;
+    if (head == &gSpriteFrameCacheCurrent) {
         return;
     }
 
-    head->prev = &gUnknown_03001364;
-    gUnknown_03001354.prev->next = gUnknown_03001364.next;
-    gUnknown_03001364.next->prev = gUnknown_03001354.prev;
-    gUnknown_03001364.next = gUnknown_03001354.next;
+    head->prev = &gSpriteFrameCachePrevious;
+    gSpriteFrameCacheCurrent.prev->next = gSpriteFrameCachePrevious.next;
+    gSpriteFrameCachePrevious.next->prev = gSpriteFrameCacheCurrent.prev;
+    gSpriteFrameCachePrevious.next = gSpriteFrameCacheCurrent.next;
 
-    gUnknown_03001354.prev = &gUnknown_03001354;
-    gUnknown_03001354.next = &gUnknown_03001354;
+    gSpriteFrameCacheCurrent.prev = &gSpriteFrameCacheCurrent;
+    gSpriteFrameCacheCurrent.next = &gSpriteFrameCacheCurrent;
 }
 
 /* ROM 0x080290BC - allocates the 128-record node pool and seeds
- * `gUnknown_03001374` with a singly-linked (via `next`) LIFO stack of
+ * `gSpriteFrameCacheSpares` with a singly-linked (via `next`) LIFO stack of
  * all 128 of them, resetting both ring-list sentinels to empty. */
 void InitSpriteFrameCache(void)
 {
     struct sprite_frame_cache_node *node;
     s32 i;
 
-    gUnknown_03001378 = (struct sprite_frame_cache_node *)mem_alloc(
+    gSpriteFrameCachePool = (struct sprite_frame_cache_node *)mem_alloc(
         sizeof(struct sprite_frame_cache_node) * SPRITE_FRAME_CACHE_POOL_COUNT, MEM_HEAP_IWRAM);
 
-    gUnknown_03001354.prev = &gUnknown_03001354;
-    gUnknown_03001354.next = &gUnknown_03001354;
-    gUnknown_03001364.prev = &gUnknown_03001364;
-    gUnknown_03001364.next = &gUnknown_03001364;
+    gSpriteFrameCacheCurrent.prev = &gSpriteFrameCacheCurrent;
+    gSpriteFrameCacheCurrent.next = &gSpriteFrameCacheCurrent;
+    gSpriteFrameCachePrevious.prev = &gSpriteFrameCachePrevious;
+    gSpriteFrameCachePrevious.next = &gSpriteFrameCachePrevious;
 
-    gUnknown_03001374 = gUnknown_03001378;
-    node = gUnknown_03001378;
+    gSpriteFrameCacheSpares = gSpriteFrameCachePool;
+    node = gSpriteFrameCachePool;
     i = SPRITE_FRAME_CACHE_POOL_COUNT - 2;
     do {
         struct sprite_frame_cache_node *next = node + 1;
@@ -655,7 +655,7 @@ asm(".align 2, 0");
  * allocated. */
 void FreeCategorySpriteSheet(void)
 {
-    mem_free((u8 *)gUnknown_0300137C);
+    mem_free((u8 *)gCategorySpriteSheet);
 }
 
 /* ROM 0x0802917C - `InitActorCategory`'s reader for a category
@@ -663,7 +663,7 @@ void FreeCategorySpriteSheet(void)
  * the two giant LZ77 sheets"): allocates a buffer for the declared
  * decompressed size (the tag+size header's top 24 bits) and
  * decompresses into it via the shared `LoadTaggedAsset` dispatcher,
- * stashing the result in `gUnknown_0300137C` - the same global
+ * stashing the result in `gCategorySpriteSheet` - the same global
  * `GetAnimFrameData` adds to a raw `table_B` pointer for the
  * "decompressed sheet, relative addressing" animation records. */
 void DecompressCategorySpriteSheet(void *sheet)
@@ -671,6 +671,6 @@ void DecompressCategorySpriteSheet(void *sheet)
     u32 size = *(u32 *)sheet >> 8;
     void *buf = mem_alloc(size, MEM_HEAP_EWRAM);
 
-    gUnknown_0300137C = buf;
+    gCategorySpriteSheet = buf;
     LoadTaggedAsset(sheet, buf);
 }

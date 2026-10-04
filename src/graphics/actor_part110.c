@@ -14,7 +14,7 @@
  * `docs/rom_map.md` (line ~2624) had already partially flagged
  * `sub_800A178`: "mid-function, unconditionally zeroes `self+0x74` -
  * the same field `UpdateGameFrame`'s level-load branch sets once from
- * `sub_8035E14`'s return value ... consistent with 'total for this
+ * `RunTitleScreen`'s return value ... consistent with 'total for this
  * level' being cleared and presumably recomputed under some condition,
  * not fully traced here." Reading the real bytes confirms the zeroing
  * itself exactly (unconditional once both leading gate checks pass -

@@ -237,7 +237,7 @@ widget-construction switch on) that - if `1` - re-stamps the player's
 (`sub_80087C0`/`sub_80087B4`/`sub_800872C`), then unconditionally
 recomputes the player's `+0x29` low nibble from `sub_800815C(player)`
 (the established negative-constant bit-clear idiom) and fires
-`sub_8006D08` against the tile-asset cache using a `player+0x20`-table
+`LoadPaletteSlot` against the tile-asset cache using a `player+0x20`-table
 lookup indexed by `player+0x2d * 7` (0x1c-byte stride), then flushes
 `gCamera` (`SnapCamera`) and the text-box singleton
 (`ResetLevelLayers`).
@@ -248,12 +248,12 @@ on success, clears the player's busy bit 7, re-stamps `+0x2d` to
 `0x29`, refreshes the OAM entry again, plays a sound effect
 (`gAudioContext` as sample id, priority `0x2c`, via `PlaySfx`),
 fires the `player+0x44`-table's `_call_via_r2` trampoline (mode
-`0x29`), repeats the same `sub_8006D08` tile-cache call, and pings
+`0x29`), repeats the same `LoadPaletteSlot` tile-cache call, and pings
 `gHud` (`ShowHudCounters`).
 
 Either way: flushes the four HUD ring-buffer managers (`sub_8008C80`
 on `030012F4`/`EC`/`F0`/`F8`), a `UpdateRoomFrame(self)` refresh, and the
-fade-cluster `sub_8001524(0)`/`sub_80015E0`/`sub_8001614`/`sub_8001624`
+fade-cluster `SetDispcntMode(0)`/`ShowObj`/`CommitDispcnt`/`CommitBlendRegs`
 reset quartet, landing at the **wait loop** (confirming and completing
 `docs/rom_map.md`'s earlier trace): poll `IsRoomExitRequested` each iteration;
 while not ready and the player's `+0xc` bit 0 is clear, run one more
@@ -265,7 +265,7 @@ on three ring-buffer managers, two `_call_via_r1` trampoline probes
 against the player's own `+0x18`/`+0x38`/`+0x18` tables, `sub_80091D4`
 on `gCrateList`, `UpdateHudSlides`, and a `gLevelState+0x8c`-
 gated `TickLevelClock` call) before looping back. Once ready: fires the
-fade (`sub_80014A4`).
+fade (`FadePaletteToBlack`).
 
 **Post-fade** (converging at `_08023F92`): sets the return value to
 `0`, tries two `SetCheckpoint` "spawn" dispatches gated by
@@ -281,8 +281,8 @@ then calls `sub_8023140(gLevelState, count)`.
 **Final tail** (every path converges here): flushes all five hot IWRAM
 widget-manager globals (`sub_8008CEC` on `030012E8`/`EC`/`F0`/`F8`/`F4`,
 `sub_8009914` on `0300130C`), resets the fade cluster's own bitfield
-accessors (`sub_8001578`/`sub_8001564`/`sub_8001550`/`sub_800153C`/
-`sub_800158C`/`WaitForVBlank`/`sub_8001614`), and returns `sl` - `1` by
+accessors (`HideBg0`/`HideBg1`/`HideBg2`/`HideBg3`/
+`HideObj`/`WaitForVBlank`/`CommitDispcnt`), and returns `sl` - `1` by
 default, `2` from the wait-loop's `RunPauseMenu`-driven early exit, or
 `0` once the post-fade branch was reached. `PlayRoom` itself stashes
 and returns this value unmodified.

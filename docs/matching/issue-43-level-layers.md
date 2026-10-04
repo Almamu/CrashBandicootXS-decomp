@@ -37,8 +37,8 @@ already reach its terrain tile cache at `+0x20`.
   the asset at `+0x14` is unpacked (`LoadTaggedAsset`) into an EWRAM
   buffer sized from its header word `>> 8`; otherwise it's referenced in
   place. Layer 0, the tile cache and BG1-3 each get their data pointer
-  from the descriptor (`LoadBgLayer`, `SetCollisionSource`); `sub_80015D0` is
-  called after layer 0, and `sub_80015C0`/`B0`/`A0` after each of BG1-3
+  from the descriptor (`LoadBgLayer`, `SetCollisionSource`); `ShowBg0` is
+  called after layer 0, and `ShowBg1`/`B0`/`A0` after each of BG1-3
   that's enabled. Then
   `SpawnRoomEntities(gEntityFlags, ...)` and a DMA3 copy of 0x100 halfwords
   to BG palette RAM, clearing color 0.
@@ -79,7 +79,7 @@ reference-counted VRAM tile slots: VRAM base and source base, `u16
 refCount[0x200]`, `u16 slotForTile[0x2000]` (0x200 = not resident), a
 `u16` free-slot stack and its top index. `ResetTileSlotPool` resets it,
 `AcquireTileSlot` acquires (on a miss: pop a slot, record it, queue a
-64-byte 8bpp tile DMA via `sub_80265FC`; then bump the count and return
+64-byte 8bpp tile DMA via `UploadTileSlot`; then bump the count and return
 a BG map entry with the input's top two bits moved into bits 10-11, the
 flip bits), `ReleaseTileSlot` releases, and `SetTileSlotPoolSource` points the pool at
 character base block `n` and a source.

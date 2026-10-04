@@ -85,17 +85,17 @@ void DrawSaveMenuLoad(struct pause_options_screen *self)
     sub_8003C90(self, self->field_10 == 4);
 }
 
-extern void sub_8006A90(void *arg0);
-extern void sub_8006A48(void *arg0);
-extern void sub_8006C28(void *arg0);
+extern void ResetOamBuffer(void *arg0);
+extern void HideUnusedOamEntries(void *arg0);
+extern void RewindObjVram(void *arg0);
 extern void DrawSaveMenuMain(struct pause_options_screen *self);
-extern void *gUnknown_03001300;
-extern void *gUnknown_030012FC;
+extern void *gOamBuffer;
+extern void *gObjVramCursor;
 
 void DrawSaveMenu(struct pause_options_screen *self)
 {
-    sub_8006A90(gUnknown_03001300);
-    sub_8006C28(gUnknown_030012FC);
+    ResetOamBuffer(gOamBuffer);
+    RewindObjVram(gObjVramCursor);
     if ((u32)self->state <= 0xa) {
         switch (self->state) {
         case 0:
@@ -131,7 +131,7 @@ void DrawSaveMenu(struct pause_options_screen *self)
             break;
         }
     }
-    sub_8006A48(gUnknown_03001300);
+    HideUnusedOamEntries(gOamBuffer);
 }
 
 extern void ReadSaveSlot(void *handle, s32 rowIndex, void *buf);

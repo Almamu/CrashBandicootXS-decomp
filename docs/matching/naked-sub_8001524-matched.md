@@ -1,6 +1,6 @@
-# `sub_8001524` converted from NAKED transcription to real matched C
+# `SetDispcntMode` converted from NAKED transcription to real matched C
 
-`sub_8001524` (`src/graphics/fade_screen_mode2.c`) had been parked as a
+`SetDispcntMode` (`src/graphics/fade_screen_mode2.c`) had been parked as a
 byte-correct NAKED asm transcription since an early pass - see
 [naked-transcription-parked-functions.md](./naked-transcription-parked-functions.md)
 for the original parking rationale. It's now genuinely matched as real
@@ -8,7 +8,7 @@ decompiled C.
 
 ## The original gap
 
-The function does `gUnknown_03001288[0] = (gUnknown_03001288[0] & ~7) |
+The function does `gDispcnt[0] = (gDispcnt[0] & ~7) |
 (val & 7)`. The ROM materializes the `~7` mask (`-8`) via a fresh
 two-instruction sequence:
 
@@ -58,9 +58,9 @@ instruction order and register choices:
 Final C:
 
 ```c
-void sub_8001524(s32 val)
+void SetDispcntMode(s32 val)
 {
-    register u8 *addr asm("r2") = gUnknown_03001288;
+    register u8 *addr asm("r2") = gDispcnt;
     register s32 lowBits asm("r0") = val & 7;
     s32 mask;
 
@@ -78,7 +78,7 @@ The original NAKED conversion predates this project's later
 inline-asm-anchor techniques (forcing a specific instruction sequence
 opaque to the optimizer, established more thoroughly in later matching
 passes across the codebase - e.g. `settings_menu13.c`'s
-forced-same-register-move idiom). At the time `sub_8001524` was parked,
+forced-same-register-move idiom). At the time `SetDispcntMode` was parked,
 only C-level respelling of the constant (`-8` vs `~7`) had been tried,
 which can't defeat a compiler-level value-propagation pass since the
 constant is still visible to the optimizer either way. Materializing
@@ -90,7 +90,7 @@ entirely.
 Full clean `rm -rf build && make NON_MATCHING=1 report`, then full
 clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` - `crashbandicootxs.gba: La suma
-coincide`. `sub_8001524` is now folded into the same
+coincide`. `SetDispcntMode` is now folded into the same
 `src/graphics/fade_screen_mode2.o` unit as the already-matched
-`sub_800153C`-`sub_8001614` functions in `tools/report_units.py`,
+`HideBg3`-`CommitDispcnt` functions in `tools/report_units.py`,
 since it's the same object file.

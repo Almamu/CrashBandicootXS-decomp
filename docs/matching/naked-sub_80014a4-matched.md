@@ -1,6 +1,6 @@
-# `sub_80014A4` converted from NAKED transcription to real matched C
+# `FadePaletteToBlack` converted from NAKED transcription to real matched C
 
-`sub_80014A4` (`src/graphics/fade_screen_mode.c`, the fade-to-black
+`FadePaletteToBlack` (`src/graphics/fade_screen_mode.c`, the fade-to-black
 palette DMA loop) had been parked as a byte-correct NAKED asm
 transcription since an early pass - see
 [naked-transcription-parked-functions.md](./naked-transcription-parked-functions.md)
@@ -9,13 +9,13 @@ decompiled C.
 
 ## The original gap
 
-The function backs up the real palette into `gUnknown_03000A80`, then
+The function backs up the real palette into `gPaletteBackup`, then
 for each blend factor 0/2/.../16 blends it toward black into
-`gUnknown_03000E80` and DMAs that into the real palette. The ROM's
+`gPaletteFadeBuffer` and DMAs that into the real palette. The ROM's
 per-iteration DMA setup:
 
 ```
-str r6, [r4]           ; src = gUnknown_03000E80 (cached across the loop)
+str r6, [r4]           ; src = gPaletteFadeBuffer (cached across the loop)
 mov r3, #0xa0
 lsl r3, r3, #0x13
 str r3, [r4, #4]          ; dst = 0x05000000 (recomputed fresh every iteration)
@@ -24,7 +24,7 @@ str r2, [r4, #8]             ; cnt = 0x80000200 (reloaded fresh from the pool ev
 ldr r0, [r4, #8]
 ```
 
-caches the blended-buffer address (`gUnknown_03000E80`) in a register
+caches the blended-buffer address (`gPaletteFadeBuffer`) in a register
 across the whole loop, while recomputing the other two DMA fields
 (`0x05000000`, `0x80000200`) fresh every iteration, plus does an extra
 "rename" copy of the DMA register pointer (`add r4, r1, #0`) right
@@ -54,14 +54,14 @@ ldr r0, [r0, #8]
 Combines register-pinned locals matching the ROM's own register roles
 (including the "rename" copy) with inline-asm-materialized DMA-field
 writes for the two fields the ROM keeps fresh - the same "opaque to
-the optimizer" technique used on `sub_8001524`/`sub_8001624`/
+the optimizer" technique used on `SetDispcntMode`/`CommitBlendRegs`/
 `FindSubstring` - but threading the asm's own computed values back out as
 real C operands (`dstVal`/`cntVal`, pinned to r3/r2 matching the ROM)
 so the post-loop block can reuse them as genuine inputs instead of
 recomputing:
 
 ```c
-void sub_80014A4(void)
+void FadePaletteToBlack(void)
 {
     register struct dma_regs *dma asm("r1");
     register struct dma_regs *dma2 asm("r4");
@@ -73,16 +73,16 @@ void sub_80014A4(void)
 
     dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
     dma->src = 0x05000000;
-    dma->dst = (u32)gUnknown_03000A80;
+    dma->dst = (u32)gPaletteBackup;
     dma->cnt = 0x80000200;
     val = dma->cnt;
 
     factor = 0;
     dma2 = dma;
-    bufAddr = (u32 *)gUnknown_03000E80;
+    bufAddr = (u32 *)gPaletteFadeBuffer;
 
     do {
-        sub_80013FC(factor);
+        DarkenPalette(factor);
         WaitForVBlank();
         dma2->src = (u32)bufAddr;
         asm volatile(
@@ -134,7 +134,7 @@ Several details, each load-bearing:
   *second*, duplicate literal and cost 4 extra bytes) keeps the byte
   count and pool layout identical to the ROM's single shared entry.
   This only works because the plain-C reads of these constants
-  (`REG_ADDR_DMA3SAD`, `gUnknown_03000A80`, `REG_BLDCNT`'s address at
+  (`REG_ADDR_DMA3SAD`, `gPaletteBackup`, `REG_BLDCNT`'s address at
   `.L8+0x10`) are still present in the source - removing any of them
   would remove that literal from the pool and break the offset.
 - **`REG_BLDCNT`/`REG_BLDY` stay plain C, deliberately not folded into
@@ -152,9 +152,9 @@ Several details, each load-bearing:
 
 Full clean `rm -rf build && make NON_MATCHING=1 report`, `objdiff-cli
 diff` against `build/expected/units/fade_screen_mode_target.o` for
-`sub_80014A4`: 100% match. Full clean `rm -rf build
+`FadePaletteToBlack`: 100% match. Full clean `rm -rf build
 crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
-compare` - `crashbandicootxs.gba: La suma coincide`. `sub_80014A4` is
+compare` - `crashbandicootxs.gba: La suma coincide`. `FadePaletteToBlack` is
 folded into the same `src/graphics/fade_screen_mode.o` unit as the
-already-matched `sub_8001510` in `tools/report_units.py`, since it's
+already-matched `IsBrightnessFadeActive` in `tools/report_units.py`, since it's
 the same object file.

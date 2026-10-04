@@ -87,7 +87,7 @@ established "cut at the boundary" convention.
   than assigned to a second `next` variable, so the compiler reuses the
   same register the ROM does instead of allocating a second one.
 - **`sub_8032290`** - a *second*, independent consumer of the shared
-  orbital-motion trig table `gStaticData_0816A820` (alongside the
+  orbital-motion trig table `gSineTable` (alongside the
   already-flagged `sub_8032480`): computes an `self+0x1c`/`self+0x20`
   position pair from two phase-shifted table lookups, then forwards
   the result into another object's (`self+0x58`) anim-frame-advance
@@ -120,7 +120,7 @@ established "cut at the boundary" convention.
   array-indexed store, which this compiler otherwise folds back into a
   single offset-addressed instruction.
 - **`sub_8032480`** - the already-flagged orbital-motion consumer of
-  `gStaticData_0816A820`. The real gap here was a control-flow one, not
+  `gSineTable`. The real gap here was a control-flow one, not
   a register one: the ROM re-checks `self+0xc`'s state *after* the
   initial proximity-triggered `sub_803256C` call fires (since that call
   can itself transition the state away from 0) and, if so, joins the

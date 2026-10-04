@@ -53,7 +53,7 @@ some byte offsets by coincidence, per that header's own comment.
 ## Matched (5 of 12)
 
 - **`InitPauseMenu`** - the composite screen's per-instance constructor:
-  `sub_801E644` init, a local BLDCNT/BLDY/DISPCNT setup
+  `InitBgSetup` init, a local BLDCNT/BLDY/DISPCNT setup
   (`field_c8`/`field_cc`/`field_d0`, the same fields `CommitPauseMenuFrame`
   applies), `LoadGraphicsPackage`, a row-stats handle from
   `gLevelState`, hands off to `InitPauseMenuInfo` to build the results
@@ -163,7 +163,7 @@ reconstructions live alongside the matched functions in
 
 - **`RunPauseMenu`** (`asm/code_3_1_10_7.s`) - the composite screen's
   top-level orchestrator: frees pending heap bytes, resets the audio
-  channel, swaps `gUnknown_030012B8` for a fresh tile cache sized for
+  channel, swaps `gPaletteCache` for a fresh tile cache sized for
   this screen, re-inits both icon managers, builds the screen object
   (`InitPauseMenu`) and hands it to the blocking driver (`PauseMenuLoop`),
   tears it down, and restores the original cache. By far the longest
@@ -349,9 +349,9 @@ Issue #7 therefore still has NAKED functions.
 
 `RunPauseMenu` is real C. The draft was 54 halfwords off because CSE
 shared the 0x12c offset between the `field_12c` reads, and holding it
-used up the register the ROM gives &gUnknown_030012FC. Reading the
+used up the register the ROM gives &gObjVramCursor. Reading the
 field through a `static inline` accessor stops the sharing. Loading the
-two VRAM-reservation operands into locals before `gUnknown_030012FC`,
+two VRAM-reservation operands into locals before `gObjVramCursor`,
 and the tile cache base into a local before the `CpuSet` source
 address, fixes the last two load-order differences. See [near-miss-polish-2.md](near-miss-polish-2.md).
 

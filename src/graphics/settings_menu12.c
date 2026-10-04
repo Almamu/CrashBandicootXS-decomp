@@ -13,11 +13,11 @@
  * offsets. */
 
 extern void WaitForVBlank(void *arg0);
-extern void sub_8006DC8(void *arg0);
-extern void sub_8006AAC(void *arg0);
+extern void UploadPaletteCache(void *arg0);
+extern void CommitOamBuffer(void *arg0);
 extern void FlushVramDmaQueue(void);
-extern void *gUnknown_030012B8;
-extern void *gUnknown_03001300;
+extern void *gPaletteCache;
+extern void *gOamBuffer;
 
 /* `self->field_d0`'s read+store is deliberately routed through an
  * inline-asm-computed address pinned to `r0` rather than a plain
@@ -31,8 +31,8 @@ extern void *gUnknown_03001300;
 void CommitPauseMenuFrame(struct pause_screen_results *self)
 {
     WaitForVBlank(self);
-    sub_8006DC8(gUnknown_030012B8);
-    sub_8006AAC(gUnknown_03001300);
+    UploadPaletteCache(gPaletteCache);
+    CommitOamBuffer(gOamBuffer);
     FlushVramDmaQueue();
     *(vu16 *)PLTT = 0;
     *(vu32 *)REG_ADDR_BLDCNT = self->field_c8;

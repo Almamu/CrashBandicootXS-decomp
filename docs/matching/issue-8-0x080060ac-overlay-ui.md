@@ -130,7 +130,7 @@ of it.
   large pair of functions (the second taking 5 register arguments via
   `sb`/`sl`/`r8`) that allocate/construct another icon widget and wire
   it into the composite screen via `LoadGraphicsPackage`/
-  `sub_801E644`/`sub_8026EDC`. The overall shape is visible (another
+  `InitBgSetup`/`sub_8026EDC`. The overall shape is visible (another
   `settings_icon_actor`-style construction plus a
   `mem_free_bytes(MEM_HEAP_BOTH)` pair bracketing the whole thing,
   mirroring `ShowPowerDialog`'s own bracket), but several field offsets and

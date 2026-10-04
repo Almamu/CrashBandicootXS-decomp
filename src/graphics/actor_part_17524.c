@@ -158,7 +158,7 @@ struct pmf
 
 extern void *gAudioContext;
 extern void *gLevelState;
-extern void *gUnknown_030012B8;
+extern void *gPaletteCache;
 extern void *gEntityFlags;
 extern void *gUnknown_030012F0;
 extern u32 gKeys; /* low half: held keys */
@@ -171,7 +171,7 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 _call_via_r2(void *self, s32 arg, void *fn);
 extern s32 _call_via_r3(void *self, void *arg1, void *arg2, void *fn);
 extern void LoseLife(void *arg0);
-extern void sub_8006D08(void *self, s32 slot, s32 recordId);
+extern void LoadPaletteSlot(void *self, s32 slot, s32 recordId);
 extern void *sub_8026EDC(u32 size);
 extern struct ctrl_child *sub_801B940(void *mem);
 extern void sub_801B864(struct ctrl_child *child);
@@ -283,10 +283,10 @@ void InputCtrlKillPlayer(struct input_ctrl *self, void *arg)
     self->target->dead = 1;
     LoseLife(gLevelState);
     {
-        void *cache = gUnknown_030012B8;
+        void *cache = gPaletteCache;
         struct ctrl_target *t = self->target;
 
-        sub_8006D08(cache, t->slot, t->table->records[t->tag * 28 + 0x14]);
+        LoadPaletteSlot(cache, t->slot, t->table->records[t->tag * 28 + 0x14]);
     }
 }
 

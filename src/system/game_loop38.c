@@ -31,7 +31,7 @@ struct SoundChannelList {
 
 extern struct AudioContext *gAudioContext;
 extern void FadeOutMusic(struct AudioContext *self, u32 value);
-extern void sub_800132C(u8 flags, s32 frameDelay, u8 sync);
+extern void FadeBrightness(u8 flags, s32 frameDelay, u8 sync);
 extern void StopSfx(struct AudioContext *self, u32 id);
 
 /* Tail half of RunSlideshow's per-item body (game_loop37.c) - duck-out
@@ -52,7 +52,7 @@ void EndSlide(struct SoundChannelList *self0, s32 idx)
         s32 v = self->items[idx]->field_0c;
 
         if (v != -1) {
-            sub_800132C((u8)v, 1, 0);
+            FadeBrightness((u8)v, 1, 0);
         }
     }
 

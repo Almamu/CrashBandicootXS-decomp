@@ -7,10 +7,10 @@
  * resets palette color 0 and `REG_DISPCNT`, re-initializes the popup-
  * text system's `gSmallFont`/`030012E0` icon managers (the same
  * `FontResetPalette` init call the between-level map screen's `InitCredits`
- * uses), resets the shared VRAM upload cursor `gUnknown_030012FC`,
+ * uses), resets the shared VRAM upload cursor `gObjVramCursor`,
  * fires each icon manager's `record->slots[6]` trampoline via
  * `_call_via_r1` and reserves its `tileCount<<5` bytes of VRAM via
- * `sub_8006C58` (copying `gSmallFont`'s `tileCount` into
+ * `ReserveObjVram` (copying `gSmallFont`'s `tileCount` into
  * `gLargeFont`'s `tileBase` in between - meaning not otherwise
  * established), then allocates the dialog object (`sub_8026EDC(0x2c)`,
  * exactly `src/graphics/settings_menu13.c`'s `struct
@@ -48,18 +48,18 @@ extern void *sub_8026EDC(s32 size);
 extern s32 GetUiText(s32 arg0);
 extern void WaitForVBlank(void);
 extern s32 mem_free_bytes(s32 flags);
-extern void sub_8006EA8(struct tile_asset_cache *self);
+extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
 extern void FontResetPalette(struct icon_manager *self);
-extern void sub_8006C4C(struct vram_upload_cursor *self);
-extern s32 sub_8006C58(struct vram_upload_cursor *self, s32 size);
-extern void sub_8006C30(struct vram_upload_cursor *self);
+extern void ResetObjVram(struct vram_upload_cursor *self);
+extern s32 ReserveObjVram(struct vram_upload_cursor *self, s32 size);
+extern void MarkObjVram(struct vram_upload_cursor *self);
 extern void _call_via_r1(void *addr, void *fn);
 extern void DestroyPowerDialog(struct sub_8006700_actor *self, u32 flags);
 extern void PowerDialogLoop(struct sub_8006700_actor *self);
 extern struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *self, s32 label1, s32 label2, s32 type);
 
-extern struct tile_asset_cache *gUnknown_030012B8;
-extern struct vram_upload_cursor *gUnknown_030012FC;
+extern struct palette_cache *gPaletteCache;
+extern struct vram_upload_cursor *gObjVramCursor;
 extern struct icon_manager *gSmallFont;
 extern struct icon_manager *gLargeFont;
 
@@ -74,9 +74,9 @@ static inline void IconSetup(struct icon_manager *m, u32 v)
 
 static inline void IconReserve(struct icon_manager **m)
 {
-    struct vram_upload_cursor *c = gUnknown_030012FC;
+    struct vram_upload_cursor *c = gObjVramCursor;
 
-    sub_8006C58(c, (*m)->tileCount << 5);
+    ReserveObjVram(c, (*m)->tileCount << 5);
 }
 
 void ShowPowerDialog(s32 label1, s32 label2, s32 type)
@@ -87,12 +87,12 @@ void ShowPowerDialog(s32 label1, s32 label2, s32 type)
     WaitForVBlank();
     *(vu16 *)PLTT = 0;
     *(vu16 *)REG_ADDR_DISPCNT = 0;
-    sub_8006EA8(gUnknown_030012B8);
+    FreeUnlockedPaletteSlots(gPaletteCache);
     FontResetPalette(gSmallFont);
     FontResetPalette(gLargeFont);
-    gUnknown_030012FC->field_08 = 0;
-    sub_8006C4C(gUnknown_030012FC);
-    sub_8006C4C(gUnknown_030012FC);
+    gObjVramCursor->baseTile = 0;
+    ResetObjVram(gObjVramCursor);
+    ResetObjVram(gObjVramCursor);
     IconSetup(gSmallFont, 0);
     IconReserve(&gSmallFont);
     {
@@ -101,11 +101,11 @@ void ShowPowerDialog(s32 label1, s32 label2, s32 type)
         IconSetup(gLargeFont, v);
     }
     IconReserve(&gLargeFont);
-    sub_8006C30(gUnknown_030012FC);
+    MarkObjVram(gObjVramCursor);
     dialog = InitPowerDialog(sub_8026EDC(0x2c), GetUiText(label1), GetUiText(label2), type);
     PowerDialogLoop(dialog);
     if (dialog != NULL)
         DestroyPowerDialog(dialog, 3);
-    sub_8006EA8(gUnknown_030012B8);
+    FreeUnlockedPaletteSlots(gPaletteCache);
     mem_free_bytes(0xC0000000);
 }

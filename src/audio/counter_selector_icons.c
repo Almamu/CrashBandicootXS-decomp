@@ -8,14 +8,14 @@ struct counter_widget {
     s32 language;
 };
 
-extern void *gUnknown_03001300;
-extern void *gUnknown_030012FC;
+extern void *gOamBuffer;
+extern void *gObjVramCursor;
 extern struct icon_manager *gSmallFont;
 /* The six language names. */
 extern void *gLanguageNames[6];
-extern void sub_8006A90(void *arg0);
-extern void sub_8006C28(void *arg0);
-extern void sub_8006A48(void *arg0);
+extern void ResetOamBuffer(void *arg0);
+extern void RewindObjVram(void *arg0);
+extern void HideUnusedOamEntries(void *arg0);
 extern s32 FontSetPalette(struct icon_manager *mgr, u8 frame);
 extern s32 LanguageSelectBlink(struct counter_widget *self);
 /* `_call_via_r2`: calls `fn(self, arg)` (an icon_manager method). */
@@ -39,8 +39,8 @@ void DrawLanguageSelect(struct counter_widget *self)
     s32 y;
     s32 i;
 
-    sub_8006A90(gUnknown_03001300);
-    sub_8006C28(gUnknown_030012FC);
+    ResetOamBuffer(gOamBuffer);
+    RewindObjVram(gObjVramCursor);
     y = 0x32;
     for (i = 0; i <= 5; i++) {
         void *glyph;
@@ -59,15 +59,15 @@ void DrawLanguageSelect(struct counter_widget *self)
                     gSmallFont->record->slots[2].ptr);
         y += 10;
     }
-    sub_8006A48(gUnknown_03001300);
+    HideUnusedOamEntries(gOamBuffer);
 }
 
 /* Resets several OAM-manager globals, then hand-fills
- * `gUnknown_030012B8`'s (`struct tile_asset_cache`, include/vram_pool.h)
+ * `gPaletteCache`'s (`struct palette_cache`, include/vram_pool.h)
  * `slots[0]`-`slots[3]` with 4 fixed 32-byte OBJ tiles copied from
  * `gStaticData_0817E72C`/`_74C`/`_76C`/`_78C`, and finally runs
  * `gSmallFont`'s/`gLargeFont`'s `record->slots[6]` method
- * (`_call_via_r1`) plus a VRAM reserve (`sub_8006C58`) for each, copying
+ * (`_call_via_r1`) plus a VRAM reserve (`ReserveObjVram`) for each, copying
  * `tileCount` into the other manager's `tileBase`.
  *
  * Was NAKED: the ROM rematerializes the 0x108/0x12c/0x130 field-offset
@@ -79,19 +79,19 @@ void DrawLanguageSelect(struct counter_widget *self)
  * `zero` local shared by the `field_8`/`tileBase` stores - the 0 the
  * ROM keeps in r8. Matches under both compilers. */
 #include "vram_pool.h"
-extern struct tile_asset_cache *gUnknown_030012B8;
+extern struct palette_cache *gPaletteCache;
 extern struct icon_manager *gLargeFont;
 extern const u16 gStaticData_0817E72C[16];
 extern const u16 gStaticData_0817E74C[16];
 extern const u16 gStaticData_0817E76C[16];
 extern const u16 gStaticData_0817E78C[16];
 extern void WaitForVBlank(void);
-extern void sub_8006AAC(void *arg0);
-extern void sub_8006EA8(struct tile_asset_cache *cache);
-extern s32 sub_8006D50(struct tile_asset_cache *cache, s32 index);
-extern void sub_8006C4C(void *cursor);
-extern s32 sub_8006C58(void *cursor, s32 size);
-extern void sub_8006C30(void *cursor);
+extern void CommitOamBuffer(void *arg0);
+extern void FreeUnlockedPaletteSlots(struct palette_cache *cache);
+extern s32 ClaimPaletteSlot(struct palette_cache *cache, s32 index);
+extern void ResetObjVram(void *cursor);
+extern s32 ReserveObjVram(void *cursor, s32 size);
+extern void MarkObjVram(void *cursor);
 extern void _call_via_r1(void *self, void *fn);
 
 static inline void IconSetBase(struct icon_manager *m, u32 base)
@@ -105,24 +105,24 @@ static inline void IconSetBase(struct icon_manager *m, u32 base)
 
 static inline void IconReserveVram(void *c, struct icon_manager *m)
 {
-    sub_8006C58(c, m->tileCount << 5);
+    ReserveObjVram(c, m->tileCount << 5);
 }
 
 void InitLanguageSelectGraphics(void *unused)
 {
     s32 i;
 
-    sub_8006A90(gUnknown_03001300);
-    sub_8006A48(gUnknown_03001300);
+    ResetOamBuffer(gOamBuffer);
+    HideUnusedOamEntries(gOamBuffer);
     WaitForVBlank();
-    sub_8006AAC(gUnknown_03001300);
-    sub_8006EA8(gUnknown_030012B8);
-    sub_8006D50(gUnknown_030012B8, 0);
-    sub_8006D50(gUnknown_030012B8, 1);
-    sub_8006D50(gUnknown_030012B8, 2);
-    sub_8006D50(gUnknown_030012B8, 3);
+    CommitOamBuffer(gOamBuffer);
+    FreeUnlockedPaletteSlots(gPaletteCache);
+    ClaimPaletteSlot(gPaletteCache, 0);
+    ClaimPaletteSlot(gPaletteCache, 1);
+    ClaimPaletteSlot(gPaletteCache, 2);
+    ClaimPaletteSlot(gPaletteCache, 3);
     {
-        struct tile_asset_cache *cache = gUnknown_030012B8;
+        struct palette_cache *cache = gPaletteCache;
         u16 *destA = (u16 *)cache->slots[0];
         u16 *destB = (u16 *)cache->slots[2];
 
@@ -138,17 +138,17 @@ void InitLanguageSelectGraphics(void *unused)
 
         FontSetPalette(gSmallFont, 0);
         FontSetPalette(gLargeFont, 0);
-        ((u32 *)gUnknown_030012FC)[2] = zero;
-        sub_8006C4C(gUnknown_030012FC);
-        sub_8006C4C(gUnknown_030012FC);
+        ((u32 *)gObjVramCursor)[2] = zero;
+        ResetObjVram(gObjVramCursor);
+        ResetObjVram(gObjVramCursor);
         IconSetBase(gSmallFont, zero);
-        IconReserveVram(gUnknown_030012FC, gSmallFont);
+        IconReserveVram(gObjVramCursor, gSmallFont);
         {
             u32 base = gSmallFont->tileCount;
 
             IconSetBase(gLargeFont, base);
         }
-        IconReserveVram(gUnknown_030012FC, gLargeFont);
+        IconReserveVram(gObjVramCursor, gLargeFont);
     }
-    sub_8006C30(gUnknown_030012FC);
+    MarkObjVram(gObjVramCursor);
 }

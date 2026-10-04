@@ -153,7 +153,7 @@ second pass against those five.
   `self+0x4d`-gated reset of `self+0x30`/`self+0x38` via the
   `self+0x20`-pointer-to-manager/`self+0x2d`-tag/0x1c-stride hitbox-
   record convention `sub_800D040` also uses, then a tail call to
-  `sub_8007A84`; `sub_8010674`: an AABB-overlap test between `self`'s
+  `DrawSprite`; `sub_8010674`: an AABB-overlap test between `self`'s
   own table-driven half-width/half-height box and a caller-supplied
   box, short-circuiting true when `self+0xc` bit 4 is set or
   `self+0x44` is 0) - but this compiler's own register allocation for
@@ -206,7 +206,7 @@ removed in favor of a matched-list entry.
 time this pass picked it up, every callee it flagged as a "still-raw
 sibling" (`sub_800F8E0`/`sub_800F990`/`sub_800F4F4`/`sub_800F798`,
 `sub_800FC70`, `sub_80087C0`/`sub_80087B4`/`sub_800872C`,
-`sub_8006DF8`, `sub_8008044`, `_call_via_r1`) had already been matched
+`GetPaletteSlot`, `sub_8008044`, `_call_via_r1`) had already been matched
 by earlier passes in this same session (issue #12's cluster and this
 issue's own `sub_800FC70`/`game_loop32.c`), which is what made this
 function tractable at all - it's a pure dispatcher/glue function over
@@ -234,7 +234,7 @@ clears the "recently touched" object's (`gPlayer`) own
 state 7, tags `self+0x2d = 0x20`, runs the
 `sub_80087C0`/`sub_80087B4`/`sub_800872C` triplet (the same one
 `sub_800F8E0`'s own settle paths use), then folds the low nibble of a
-`sub_8006DF8` tile-cache lookup (keyed by the freshly-retagged hitbox
+`GetPaletteSlot` tile-cache lookup (keyed by the freshly-retagged hitbox
 record's own `+0x14`) into `self+0x29`; state 3 just tags `0x20` and
 runs the same triplet. If bit 7 was clear instead, `self+0x4d`'s low 7
 bits == 1 triggers `sub_800F798`. Finally, unconditionally, calls

@@ -20,7 +20,7 @@ All in `src/graphics/actor_anim.c`, in ROM order:
 - **`GetAnimFrameData`** - resolves the current keyframe's tile-
   graphics pointer: `frameTable[frameIndex].frameIndex +
   GetAnimFrameBaseOffset(self)` indexes `frameOffsets` (an array of
-  byte offsets), added to the `gUnknown_0300137C` tile-graphics base
+  byte offsets), added to the `gCategorySpriteSheet` tile-graphics base
   pointer.
 - **`SetActorAnim`** - selects a new keyframe: sets `frameIndex`, copies
   that record's `duration` field into `self+0x10`, and resets the
@@ -36,7 +36,7 @@ All in `src/graphics/actor_anim.c`, in ROM order:
   `gActorVtable` symbol, and the surrounding unlink/free
   sequence is otherwise identical). Same doubly-linked-list unlink
   convention already named in `src/audio/counter_selector.c`'s
-  `sub_803716C` (a local `struct linked_node` with `+0x48`=prev,
+  `DestroyLogoActor` (a local `struct linked_node` with `+0x48`=prev,
   `+0x4c`=next, `+0x50`=state/vtable pointer): set `self+0x50` to the
   shared "dead" table `gActorVtable`, unlink `self` from its
   circular list, and free `self` when `flags & 1`. Almost certainly one

@@ -52,7 +52,7 @@ Full clean `make compare` confirms byte-exact.
 Starts/re-selects a sound cue via `PlaySong`, then either plays its
 secondary sfx immediately (if the channel already reports the requested
 id) or busy-polls `GetCurrentSong` until it does, and either way ORs bit 7
-into `field_08`'s low byte for a `sub_800132C` fade-start call.
+into `field_08`'s low byte for a `FadeBrightness` fade-start call.
 
 Re-diffing the whole function against the ROM (not just the one branch
 the first pass's write-up focused on) found three distinct gaps, not

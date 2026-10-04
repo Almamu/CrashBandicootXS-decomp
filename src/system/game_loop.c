@@ -6,7 +6,7 @@
 extern void *gPlayer;
 extern void *gEntityFlags;
 extern void *gHud;
-extern struct tile_asset_cache *gUnknown_030012B8;
+extern struct palette_cache *gPaletteCache;
 
 extern s32 GetCrateCount(void *self);
 extern void ResetDeaths(void *self);

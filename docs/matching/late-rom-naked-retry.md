@@ -9,7 +9,7 @@ function was tried under both agbcc and old_agbcc.
 | Function | File | Compiler | What it took |
 |---|---|---|---|
 | `InitLanguageSelectGraphics` | `src/audio/counter_selector_icons.c` | both | The icon-manager steps as `static inline` helpers taking the manager (`IconSetBase`/`IconReserveVram`, the idiom from `InitCredits` in actor_part131.c), plus one `u32 zero` local shared by the `field_8` and `field_108` stores. |
-| `sub_802F8E8` | `src/graphics/actor_part45d.c` | old_agbcc (object joined `OLD_AGBCC_OBJS`) | Map entry read as `v = *map; v += base;`, high nibble masked as `(*nib >> 4) & 0xf`, and the function declared `inline` ahead of `sub_802F7B0`. |
+| `FillBgPictureMap` | `src/graphics/actor_part45d.c` | old_agbcc (object joined `OLD_AGBCC_OBJS`) | Map entry read as `v = *map; v += base;`, high nibble masked as `(*nib >> 4) & 0xf`, and the function declared `inline` ahead of `LoadBgPicture`. |
 
 ### `InitLanguageSelectGraphics`
 
@@ -21,9 +21,9 @@ ROM keeps a 0 in r8 and uses it for both the cursor's `field_8 = 0` and
 `IconSetBase(DC, 0)`. A `u32 zero = 0;` local passed to both reproduces
 it.
 
-### `sub_802F8E8` (and why 7B0 inlines it)
+### `FillBgPictureMap` (and why 7B0 inlines it)
 
-`sub_802F7B0`'s loop has two separately strength-reduced store pointers
+`LoadBgPicture`'s loop has two separately strength-reduced store pointers
 (`dest[c]` and `dest[c + 0x3e0]`, stepped side by side). Written
 standalone, gcc combines them into one pointer plus `0x7c0`, which
 matches 8E8 but not 7B0. An inlined copy of the same loop keeps them
@@ -46,7 +46,7 @@ down to spelling:
 
 ## Not closed
 
-- **`sub_802F7B0`** (actor_part45d.c, #56). The draft now inlines 8E8
+- **`LoadBgPicture`** (actor_part45d.c, #56). The draft now inlines 8E8
   and has the ROM's exact instruction stream, but two priority ties go
   the other way (32 halfwords): the nibble pointer (13 refs over 56
   insns) narrowly outranks `dest` (9 over 40) for r5, and `cols`/row+1
@@ -118,7 +118,7 @@ A brute-force variant runner found both matches.
 | Function | File | Compiler | What it took |
 |---|---|---|---|
 | `ContinuePromptLoop` | `actor_part89.c` (object joined `OLD_AGBCC_OBJS`) | old_agbcc | `asm("" : "+r"(k))` on the input copy between the `& 1` and `& 8` tests, and one extra reference to `audio` at the top of the loop in place of the r8 pin. |
-| `sub_802F7B0` | `actor_part45d.c` | old_agbcc | The DMA width fixed, one extra reference to `dest` after the loop, two to `cols` before the call, and 7B0 inlining its own `static inline` copy of the loop. |
+| `LoadBgPicture` | `actor_part45d.c` | old_agbcc | The DMA width fixed, one extra reference to `dest` after the loop, two to `cols` before the call, and 7B0 inlining its own `static inline` copy of the loop. |
 
 ### `ContinuePromptLoop`
 
@@ -131,7 +131,7 @@ counter took r7 from `audio`. One extra reference to `audio` at the top
 of the loop restores the ROM's order (`audio` r7, counter r8). The same
 reference before the loop does nothing.
 
-### `sub_802F7B0`
+### `LoadBgPicture`
 
 - The draft copied the palette with `DmaCopy32(3, pic, PLTT, 0x400)`,
   which gives control word 0x84000100. The ROM's is 0x80000100,
@@ -143,7 +143,7 @@ reference before the loop does nothing.
   nibble pointer (r5/r6). A reference at the top of the row loop also
   works. The call argument is spelled `tileData + tiles * 32`, which
   gives the ROM's `adds r6, r1, r5` operand order.
-- Any `dest` reference in the shared body breaks `sub_802F8E8`, and no
+- Any `dest` reference in the shared body breaks `FillBgPictureMap`, and no
   placement satisfies both. So 7B0 inlines a `static inline MapFill`
   copy that has the reference, and 8E8 is the plain loop written out
   after 7B0. A wrapper 8E8 that inlines `MapFill` doesn't work: the

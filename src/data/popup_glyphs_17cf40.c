@@ -45,9 +45,9 @@ const struct bg_package gCreditsLogos[5] = {
 };
 
 /* Nine {record, hold} seeds for the countdown slots of
- * graphics_loading_35d1c.c (sub_8035E14, sub_80360DC): the motion
+ * graphics_loading_35d1c.c (RunTitleScreen, ResetTitleLogoPieces): the motion
  * sequences in level_gfx_17cff4.c, NULL-terminated. */
-const struct slot_seed gStaticData_0817CFA4[10] = {
+const struct slot_seed gTitleLogoPieceSeeds[10] = {
     { gStaticData_0817D0F8, 0x54 },
     { gStaticData_0817D178, 0x5f },
     { gStaticData_0817D1F8, 0x3c },

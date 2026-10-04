@@ -184,7 +184,7 @@ void sub_800E560(struct phys_obj *self)
  * subsystem uses), registers it with the object-pool grid
  * (`sub_8009150`), re-derives a low-nibble sub-animation value from
  * the freshly selected hitbox record's `+0x14` byte via
- * `sub_8006DF8`'s tile-asset-cache lookup, plays SFX `0x11`, and
+ * `GetPaletteSlot`'s tile-asset-cache lookup, plays SFX `0x11`, and
  * arms a `+0x4f` countdown of `0x3c` (60) frames. */
 void sub_800E620(void *selfArg)
 {
@@ -254,7 +254,7 @@ void sub_800E620(void *selfArg)
             entry = entry2;
         }
     }
-    lo = sub_8006DF8(gUnknown_030012B8, entry[0x14]);
+    lo = GetPaletteSlot(gPaletteCache, entry[0x14]);
     /* Empty compiler barrier: forces the u8->u32 zero-extend implied by
      * `lo`'s use below to happen as its own step (matching the ROM's
      * `lsls r0,r0,0x18; lsrs r0,r0,0x18`), rather than letting the
@@ -422,7 +422,7 @@ other:
  * resets its `+0x4d` state byte to `0x81` and clears
  * `gPlayer+0x80`, switches `self` into hitbox tag `0x1d`
  * and rebuilds its hitbox record, re-derives its `+0x29` low-nibble
- * sub-animation value (same `sub_8006DF8` tile-asset-cache lookup
+ * sub-animation value (same `GetPaletteSlot` tile-asset-cache lookup
  * `sub_800E620` uses) and clamps `self+0x30`'s index to the newly
  * selected hitbox record's own `+0x16` count, conditionally
  * reactivates the viewport (`AddBrokenCrate`, gated on
@@ -468,7 +468,7 @@ void BreakCrate(struct phys_obj *self, u32 arg1)
         struct anim_rec *recs = self->anim->records;
         struct anim_rec *rec = &recs[self->tag];
 
-        self->slot = sub_8006DF8(gUnknown_030012B8, rec->unk_14);
+        self->slot = GetPaletteSlot(gPaletteCache, rec->unk_14);
     }
     PhysSetFrame(self, 3);
     if (gCrateKindCounted[self->kind])

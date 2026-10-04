@@ -74,7 +74,7 @@
  *   as `NAKED` in game_loop49.c, issue #12) - a direct, concrete tie
  *   between this constructor family and that subsystem.
  * - `type == 0xf` (case `_0801028E`): the largest single case - looks
- *   up a tile/graphics asset via `sub_8006DF8`, masks `self+0x48`,
+ *   up a tile/graphics asset via `GetPaletteSlot`, masks `self+0x48`,
  *   tags `self+0x2d = 7`, looks up `gStaticData_0816BB94[(self->0x48 &
  *   0x38) >> 3]` for `self+0x4f`, and folds three placement-record
  *   `+1` flag bits (`0x2`/`0x4`/`0x8`) into `self+0x50`.
@@ -106,7 +106,7 @@
  *   through the plain `PLACEMENT(slot)` macro everywhere else.
  * - Case 15 masks `u48` with two `&=` statements (the ROM keeps both
  *   ands), passes the anim record through a pointer local (the ROM
- *   computes its address before loading gUnknown_030012B8) and indexes
+ *   computes its address before loading gPaletteCache) and indexes
  *   gStaticData_0816BB94 through an `idx` local (index before table).
  * - Case 11 builds its tag 0 with the constant-init asm so the `movs`
  *   comes before the tag address, as in the ROM.
@@ -303,7 +303,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
             {
                 struct anim_rec *ar = &self->anim->records[8];
 
-                sub_8006DF8(gUnknown_030012B8, ar->unk_14);
+                GetPaletteSlot(gPaletteCache, ar->unk_14);
             }
             self->u48.n &= 0x3f;
             self->u48.n &= 0xf8;

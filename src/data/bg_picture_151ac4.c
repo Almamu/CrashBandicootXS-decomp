@@ -7,8 +7,8 @@
  * ldscript.txt - see docs/data.md ("Category backgrounds").
  */
 
-/* Category 4's BG1 picture (gActorCategories[4].conditional_ptr_0C,
- * loaded by sub_802F7B0 in actor_part45d.c): 38x16 map, 237 tiles. Built from
+/* Category 4's BG1 picture (gActorCategories[4].bgPicture,
+ * loaded by LoadBgPicture in actor_part45d.c): 38x16 map, 237 tiles. Built from
  * graphics/category_bg/151ac4_picture.png (palette and map) and
  * 151ac4_picture_tiles.png (the tile set, grit's -fx external tileset). */
 struct bg_picture_151ac4 {
@@ -19,7 +19,7 @@ struct bg_picture_151ac4 {
 };
 COMPILE_TIME_ASSERT(sizeof(struct bg_picture_151ac4) == 0x208 + 608 * 2 + 237 * 32 + 608 / 2);
 
-const struct bg_picture_151ac4 gStaticData_08151AC4 = {
+const struct bg_picture_151ac4 gCategory4BgPicture = {
     {
         {
 #include "category_bg/151ac4_picture.pal.inc"
@@ -276,7 +276,7 @@ const SUB_EFFECT_TABLE(230) gCategory4SpawnTable = {
 };
 
 /* The BG1 picture shared by categories 5 and 6
- * (gActorCategories[5..6].conditional_ptr_0C, loaded by sub_802F7B0
+ * (gActorCategories[5..6].bgPicture, loaded by LoadBgPicture
  * in actor_part45d.c): 38x16 map, 374 tiles. Built from
  * graphics/category_bg/155260_picture.png (palette and map) and
  * 155260_picture_tiles.png (the tile set, grit's -fx external tileset). */
@@ -288,7 +288,7 @@ struct bg_picture_155260 {
 };
 COMPILE_TIME_ASSERT(sizeof(struct bg_picture_155260) == 0x208 + 608 * 2 + 374 * 32 + 608 / 2);
 
-const struct bg_picture_155260 gStaticData_08155260 = {
+const struct bg_picture_155260 gCategory5BgPicture = {
     {
         {
 #include "category_bg/155260_picture.pal.inc"

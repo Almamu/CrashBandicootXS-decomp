@@ -2,7 +2,7 @@
 #include "line_util.h"
 
 /* Sits right after sub_8001214 (ROM 0x08001214, in src/util/word_util.c)
- * and before sub_80012AC (still raw in asm/code_3_1_7.s). Not adjacent
+ * and before StepBrightnessFade (still raw in asm/code_3_1_7.s). Not adjacent
  * to InitBresenhamLine (src/util/line_util.c) in ROM address order - kept in its
  * own file purely because that file's object already links much
  * earlier; both share the struct definition from include/line_util.h. */

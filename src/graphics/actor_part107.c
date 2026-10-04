@@ -30,7 +30,7 @@ extern void *gAudioContext;
 extern s32 CollectWumpa(void *self);
 extern void sub_802B174(s32 a, s32 b, s32 c);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern void sub_8029BAC(s32 arg0);
+extern void SetCellAnimSpeed(s32 arg0);
 
 /* Accumulator-drain/reward-dispenser for the `gUnknown_03001488`
  * accumulator (filled by `sub_802C078`, still raw): while the "locked"
@@ -98,7 +98,7 @@ extern u8 gUnknown_030014A3;
  * (`gUnknown_030014A0`), and resets `self` to state 1/table-index 0 -
  * the same state/table-index/anim-frame reset idiom already documented
  * for the boss cluster's `sub_8030530`/`sub_8030C98` and this family's
- * own `sub_802C14C` (actor_part19.c) - then fires `sub_8029BAC(0x24)`. */
+ * own `sub_802C14C` (actor_part19.c) - then fires `SetCellAnimSpeed(0x24)`. */
 void sub_802BD24(void *selfArg)
 {
     register struct actor_self *self asm("r3") = selfArg;
@@ -122,14 +122,14 @@ void sub_802BD24(void *selfArg)
             }
             self->animTime = zero;
         }
-        sub_8029BAC(0x24);
+        SetCellAnimSpeed(0x24);
     }
 }
 
 extern s32 gUnknown_030014A4;
 extern u8 gUnknown_030014A2;
 extern s32 sub_8029B2C(void);
-extern void sub_800132C(u8 flags, s32 frameDelay, u8 sync);
+extern void FadeBrightness(u8 flags, s32 frameDelay, u8 sync);
 extern void sub_802A668(s32 arg0);
 
 /* Per-axis hazard-threshold driver: drains a shared "camera catch-up"
@@ -137,7 +137,7 @@ extern void sub_802A668(s32 arg0);
  * by a fixed step, and derives a camera-relative depth
  * (`depth`, via `sub_8029B2C`) - the same shape as `sub_802F5E4`/
  * `sub_802F640` (actor_part44.c). Once that depth drops to/below the
- * far threshold, triggers a screen-flash (`sub_800132C`) once (latched
+ * far threshold, triggers a screen-flash (`FadeBrightness`) once (latched
  * via `gUnknown_030014A2`) and also latches `gUnknown_03001480` (this
  * axis's own one-shot flag, see `sub_802BD18`); once it drops to/below
  * the near threshold, arms hazard direction 1 via `sub_802A668`. */
@@ -151,7 +151,7 @@ void sub_802BD64(void *selfArg)
     self->depth = (sub_8029B2C() << 8) - self->z;
 
     if (gUnknown_030014A2 == 0 && self->depth <= 0x16FF) {
-        sub_800132C(0, 2, 1);
+        FadeBrightness(0, 2, 1);
         gUnknown_03001480 = 1;
         gUnknown_030014A2 = 1;
     }
@@ -174,7 +174,7 @@ void sub_802BDD0(void *selfArg)
     self->depth = (sub_8029B2C() << 8) - self->z;
 
     if (gUnknown_030014A2 == 0 && self->depth <= 0x16FF) {
-        sub_800132C(0, 2, 1);
+        FadeBrightness(0, 2, 1);
         gUnknown_030014A2 = 1;
     }
 
@@ -194,7 +194,7 @@ void sub_802BE34(void *selfArg)
     self->y += -0x100;
 
     if (gUnknown_030014A2 == 0 && self->y < (s32)0xFFFFC000) {
-        sub_800132C(0, 2, 1);
+        FadeBrightness(0, 2, 1);
         gUnknown_030014A2 = 1;
     }
 
@@ -209,8 +209,8 @@ extern u32 gKeys;
  * `sub_802BD24` above: once `stateTime` reaches 0x1e, latches
  * `gUnknown_030014A3`, then either (if input bit 1 of
  * `gKeys` is clear) resets `self` to state 1/table-index 0
- * via the same reset idiom and fires `sub_8029BAC(0x24)`, or (bit set)
- * transitions to state 2 and fires `sub_8029BAC(0x38)` instead. */
+ * via the same reset idiom and fires `SetCellAnimSpeed(0x24)`, or (bit set)
+ * transitions to state 2 and fires `SetCellAnimSpeed(0x38)` instead. */
 void sub_802BE80(void *selfArg)
 {
     register struct actor_self *self asm("r2") = selfArg;
@@ -235,13 +235,13 @@ void sub_802BE80(void *selfArg)
                     *(u8 *)&self->animDone = zero2;
                 }
                 self->animTime = bit;
-                sub_8029BAC(0x24);
+                SetCellAnimSpeed(0x24);
             } else {
                 register s32 state asm("r0") = 2;
 
                 self->state = state;
                 self->stateTime = 0;
-                sub_8029BAC(0x38);
+                SetCellAnimSpeed(0x38);
             }
         }
     }

@@ -1,7 +1,7 @@
 #include "core.h"
 #include "gba/io_reg.h"
 
-extern s32 gUnknown_030013B4;
+extern s32 gCellAnimSpeed;
 
 extern s32 __divsi3(s32 a, s32 b);
 
@@ -10,9 +10,9 @@ extern s32 __divsi3(s32 a, s32 b);
  * destination's address ahead of the call so it survives across it in
  * a register `bl` doesn't clobber, rather than recomputing it from the
  * return value's position afterward (see docs/workflow.md step 3). */
-void sub_8029BAC(s32 arg0)
+void SetCellAnimSpeed(s32 arg0)
 {
-    register s32 *dest asm("r4") = &gUnknown_030013B4;
+    register s32 *dest asm("r4") = &gCellAnimSpeed;
 
     *dest = __divsi3(arg0 << 8, 0x3c);
 }
@@ -20,7 +20,7 @@ void sub_8029BAC(s32 arg0)
 /* Fills screen block 28 from row 16 on (block 30 when `arg0` is set,
  * numbering on from `w * h + 1`) with consecutive tile numbers for a
  * `w` x `h` cell grid; columns past 31 go to the next screen block
- * (+0x7c0 bytes). actor_part95.c's `sub_802996C` inlines the same body
+ * (+0x7c0 bytes). actor_part95.c's `ResetCellAnimBg` inlines the same body
  * twice.
  *
  * The old NAKED note blamed an unreachable register permutation. The
@@ -28,7 +28,9 @@ void sub_8029BAC(s32 arg0)
  * increment after the `if`, `tile` has fewer references than `base`
  * and the two swap registers (the `r8`/`ip` roles of the 0x7c0 offset
  * and `h` follow from that). Matches under both compilers. */
-void sub_8029BC4(s32 arg0, s32 w, s32 h)
+/* UNUSED - no caller anywhere in the ROM (no Thumb `bl` to it and no
+ * pointer to it in baserom.gba, nor any reference in asm/ or src/). */
+void FillCellAnimTilemap(s32 arg0, s32 w, s32 h)
 {
     u16 *base = (u16 *)(BG_SCREEN_ADDR(28) + 0x400);
     s32 tile;

@@ -3,7 +3,7 @@
 
 /* Same "self" object family as actor_part61.c/actor_part66.c/actor_part72.c/
  * actor_part73.c - see docs/matching/issue-63-0x08033ef4-actor.md. This is
- * the 0x14-byte constructor (`InitStarfield`, called by `LoadLevelGraphics` as
+ * the 0x14-byte constructor (`InitStarfield`, called by `InitTitleScreen` as
  * `InitStarfield(sub_8026EDC(0x14))`, see `src/graphics/level_graphics.c`) and
  * its companion per-frame updater (`DrawStarfield`, called by
  * `UpdateStarfield`/actor_part73.c) for a BG0 "raw bitmap" particle-trail
@@ -47,11 +47,11 @@ struct particle_slot {
 };
 
 extern void *sub_8026EC0(u32 size);
-extern void sub_8001524(s32 val);
-extern void sub_80015D0(void);
-extern void sub_8001614(void);
+extern void SetDispcntMode(s32 val);
+extern void ShowBg0(void);
+extern void CommitDispcnt(void);
 extern void SpawnStar(void *mgrArg, s32 idx);
-extern u8 gUnknown_03001288[2];
+extern u8 gDispcnt[2];
 
 /* Constructs the particle-trail BG0 object. Fully matched as real C.
  *
@@ -82,7 +82,7 @@ void *InitStarfield(void *selfArg)
      * with an `ands r5, =0xFFFF0000` against whatever was already in the
      * register, then fills in every bit the halfword write actually reads
      * via the ORs below (negative-constant bit-clear idiom, see
-     * LoadBg2Background's `bg2cnt`, src/graphics/level_graphics.c). */
+     * LoadTitleScreenBg's `bg2cnt`, src/graphics/level_graphics.c). */
     u32 bg0cnt;
     s32 gradIdx;
     s32 gradCount;
@@ -100,11 +100,11 @@ void *InitStarfield(void *selfArg)
     self->particles = sub_8026EC0(0x800);
 
     {
-        u16 *dispcntShadow = (u16 *)gUnknown_03001288;
+        u16 *dispcntShadow = (u16 *)gDispcnt;
         zero = 0;
         *dispcntShadow = 0x40;
     }
-    sub_8001524(0);
+    SetDispcntMode(0);
 
     /* Clears BG0HOFS/BG0VOFS together via one word store. */
     *(vu32 *)REG_ADDR_BG0HOFS = zero;
@@ -117,7 +117,7 @@ void *InitStarfield(void *selfArg)
     self->tileVramBase = VRAM;
     self->mapVramBase = BG_SCREEN_ADDR(31);
 
-    sub_80015D0();
+    ShowBg0();
 
     /* Clears BG palette entry 0 (the backdrop color). */
     *(vu16 *)BG_PLTT = zero;
@@ -182,7 +182,7 @@ void *InitStarfield(void *selfArg)
     dma->cnt;
 
     REG_BLDCNT = 0;
-    sub_8001614();
+    CommitDispcnt();
 
     self->count = 0;
 

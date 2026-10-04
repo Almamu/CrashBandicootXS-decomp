@@ -7,7 +7,7 @@
  * also (rounded down to a multiple of 0x10) packed into the low 4 bits
  * of the "self" scratch buffer's byte +0x15 (alongside its own +0x1c
  * 32-bit field, set verbatim to `arg1`) - the same graphics-package
- * scratch buffer `sub_801E640`/`sub_801E644` write, extended here with
+ * scratch buffer `GetBgSetupControl`/`InitBgSetup` write, extended here with
  * two more fields. */
 void sub_801E8F8(u8 *selfArg, s32 arg1)
 {

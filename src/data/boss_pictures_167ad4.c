@@ -104,7 +104,7 @@ const u8 gDpadDirectionTable[16] = {
 /* The sine table: 256 steps of a full turn, scaled by 0x100. Read by
  * about twenty actor and game-loop functions (include/orbit_part.h's
  * `phase` indexes it). */
-const s16 gStaticData_0816A820[256] = {
+const s16 gSineTable[256] = {
     0, 6, 12, 18, 25, 31, 37, 43, 49, 56, 62, 68, 74, 80, 86, 92,
     97, 103, 109, 115, 120, 126, 131, 136, 142, 147, 152, 157, 162, 167, 171, 176,
     181, 185, 189, 193, 197, 201, 205, 209, 212, 216, 219, 222, 225, 228, 231, 234,

@@ -87,7 +87,7 @@ branch condition and call argument is confirmed correct against the ROM.
   `PlaySong`, then either plays a secondary sfx immediately (if the
   channel already reports the requested id) or busy-polls `GetCurrentSong`
   until it does, and either way ORs bit 7 into `field_08`'s low byte for
-  a `sub_800132C` fade-start call. The residual gap: the ROM materializes
+  a `FadeBrightness` fade-start call. The residual gap: the ROM materializes
   the `-0x80` OR-mask into one register then copies it to a second
   register before the OR (`movs r2,#0x80; rsbs r2,r2,#0; adds r1,r2,#0;
   orrs r0,r1` - four instructions), while every C phrasing tried here

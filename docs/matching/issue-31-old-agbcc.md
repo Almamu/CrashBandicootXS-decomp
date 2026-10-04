@@ -89,8 +89,8 @@ setters.
 ## Other agbcc-era gaps worth retrying
 
 The same "r7 never enters the callee-saved set" gap parked other
-functions nearby, among them `LoadGraphicsPackage`, `sub_801E644` and
-`sub_801E688` (graphics_package_1e578.c and neighbours, issue #30). They
+functions nearby, among them `LoadGraphicsPackage`, `InitBgSetup` and
+`FitScaledSprite` (graphics_package_1e578.c and neighbours, issue #30). They
 are good candidates for the same old_agbcc retry.
 
 ## Later pass: NAKED retry (mid45)

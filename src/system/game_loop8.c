@@ -5,14 +5,14 @@
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
-struct tile_asset_cache;
+struct palette_cache;
 struct dual_array_manager;
 struct oam_shadow_buffer;
 
 extern void *gPlayer;
 extern void *gCamera;
 extern void *gPaletteCycles;
-extern void *gUnknown_03001300;
+extern void *gOamBuffer;
 extern u8 *gLevelLayers;
 extern void *gHud;
 extern void *gUnknown_030012F0;
@@ -20,10 +20,10 @@ extern void *gUnknown_030012F4;
 extern void *gUnknown_030012F8;
 extern void *gUnknown_030012EC;
 extern void *gCrateList;
-extern union blend gUnknown_03001280;
-extern struct tile_asset_cache *gUnknown_030012B8;
+extern union blend gBlendRegs;
+extern struct palette_cache *gPaletteCache;
 
-extern void sub_8006DC8(struct tile_asset_cache *self);
+extern void UploadPaletteCache(struct palette_cache *self);
 extern void UpdateCamera(void *self);
 extern void ScrollLevelLayers(void *self);
 extern void TickPaletteCycles(void *self);
@@ -31,19 +31,19 @@ extern void UpdateHud(void *self);
 extern void sub_8008DC0(struct dual_array_manager *manager);
 extern void *_call_via_r1(void *arg0, void *arg1);
 extern void sub_800944C(void *managerArg);
-extern void sub_8006A48(struct oam_shadow_buffer *arg0);
+extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
 extern void WaitForVBlank(void);
-extern void sub_8006AAC(struct oam_shadow_buffer *arg0);
+extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
 extern void CommitLevelScroll(void *self);
 extern void FlushVramDmaQueue(void);
 
-/* Runs the DMA3/`sub_8006DC8`+`ResetLevelLayers` refresh pass over every
+/* Runs the DMA3/`UploadPaletteCache`+`ResetLevelLayers` refresh pass over every
  * currently-active dual-array manager, then flushes the VRAM DMA
  * queue - only while `self->0x0` is still within the "near start of
  * level" range (`<= 0x1000`), otherwise this is a no-op. */
 void UpdateRoomFrame(void *self)
 {
-    sub_8006DC8(gUnknown_030012B8);
+    UploadPaletteCache(gPaletteCache);
     UpdateCamera(gCamera);
     ScrollLevelLayers(gLevelLayers);
     TickPaletteCycles(gPaletteCycles);
@@ -67,9 +67,9 @@ void UpdateRoomFrame(void *self)
         sub_800944C(gCrateList);
         sub_8008DC0(gUnknown_030012F8);
 
-        sub_8006A48(gUnknown_03001300);
+        HideUnusedOamEntries(gOamBuffer);
         WaitForVBlank();
-        sub_8006AAC(gUnknown_03001300);
+        CommitOamBuffer(gOamBuffer);
         CommitLevelScroll(gLevelLayers);
         FlushVramDmaQueue();
     }
@@ -92,12 +92,12 @@ struct level_ctx
     struct level_blend *blend; // 0x18
 };
 
-/* Rebuilds the gUnknown_03001280 BLDCNT/BLDALPHA shadow from the level's
+/* Rebuilds the gBlendRegs BLDCNT/BLDALPHA shadow from the level's
  * blend settings and sets gLevelLayers's +0x2b flag in mode 1. With
  * no blend effect, the shadow gets a fixed 16/16 alpha pattern. */
 void SetupRoomBlend(struct level_ctx *self)
 {
-    union blend *b = &gUnknown_03001280;
+    union blend *b = &gBlendRegs;
 
     b->raw = 0;
     gLevelLayers[0x2b] = 0;

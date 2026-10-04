@@ -97,7 +97,7 @@ struct follow_owner
 struct anim_record
 {
     u8 unk_00[0x14];
-    u8 tileRecord;          // 0x14 - sub_8006DF8 record id
+    u8 tileRecord;          // 0x14 - GetPaletteSlot record id
     u8 unk_15;
     u8 frameCount;          // 0x16
     u8 unk_17[5];
@@ -152,7 +152,7 @@ struct hit_box
 struct level_info
 {
     s32 nameText;           // 0x00 - text id (GetUiText)
-    s32 unk_04;             // 0x04 - passed to sub_801DD80
+    s32 unk_04;             // 0x04 - passed to SetZoomBgPicture
     u32 time0;              // 0x08 - time-trial thresholds, centiseconds,
     u32 time1;              // 0x0C   loosest first
     u32 time2;              // 0x10
@@ -275,7 +275,7 @@ struct level_menu
     s32 nameText;               // 0x14 - the level name's text
     struct xy_pair *positions;  // 0x18 - cursor position per index
     void *bg1;                  // 0x1C - sub_801D7F8, BG1
-    void *bg2;                  // 0x20 - sub_801D828, BG2 (icon layer)
+    void *bg2;                  // 0x20 - InitZoomBg, BG2 (icon layer)
     struct item *items[6];      // 0x24
     void *panel;                // 0x3C - sub_801E04C, the cursor panel
     struct sprite *sprites[10]; // 0x40
@@ -301,10 +301,10 @@ COMPILE_TIME_ASSERT(sizeof(struct level_menu) == 0xAC);
 struct vram_cursor
 {
     u8 unk_00[8];
-    u32 unk_08;
+    u32 baseTile;
 };
 
-/* gUnknown_030012B8, only the field used here. */
+/* gPaletteCache, only the field used here. */
 struct tile_cache
 {
     u8 unk_000[0x20C];
@@ -328,13 +328,13 @@ extern struct player *gPlayer;
 extern struct follow_owner *gCamera;
 extern void ***gUnknown_030012D0;
 extern void *gUnknown_030012F0;
-extern struct tile_cache *gUnknown_030012B8;
+extern struct tile_cache *gPaletteCache;
 extern void *gAudioContext;
 extern void *gLevelState;
 extern struct icon_manager *gSmallFont;
 extern struct icon_manager *gLargeFont;
-extern struct vram_cursor *gUnknown_030012FC;
-extern void *gUnknown_03001300;
+extern struct vram_cursor *gObjVramCursor;
+extern void *gOamBuffer;
 extern void *gUnknown_03001304;
 extern struct level_menu *gLevelSelect;
 extern u8 gNewWorldOpened;
@@ -383,26 +383,26 @@ extern s32 sub_800815C(void *part);
 extern void sub_8008044(void *p);
 /* Really returns a u8 (src/graphics/graphics.c), but the call site
  * re-zero-extends the result, as it would through a wider return type. */
-extern s32 sub_8006DF8(void *cache, u8 recordId);
+extern s32 GetPaletteSlot(void *cache, u8 recordId);
 extern void sub_8007B98(struct hit_box *dest, void *part);
 extern u8 sub_800B37C(void *actor, struct hit_box *box);
 
 /* Display, VRAM and sound. */
 extern void WaitForVBlank(void);
 extern void UpdateKeys(void *p);
-extern void sub_8006EA8(void *cache);
-extern void sub_8006D50(void *cache, s32 arg);
-extern void sub_8006DC8(void *p);
-extern void sub_8006AAC(void *p);
-extern void sub_8006A90(void *p);
-extern void sub_8006A48(void *p);
+extern void FreeUnlockedPaletteSlots(void *cache);
+extern void ClaimPaletteSlot(void *cache, s32 arg);
+extern void UploadPaletteCache(void *p);
+extern void CommitOamBuffer(void *p);
+extern void ResetOamBuffer(void *p);
+extern void HideUnusedOamEntries(void *p);
 extern void CpuSet(void *src, void *dst, s32 size);
-extern void sub_8006C4C(struct vram_cursor *self);
-extern s32 sub_8006C58(struct vram_cursor *self, s32 size);
-extern void sub_8006C30(struct vram_cursor *self);
-extern void sub_8006C28(struct vram_cursor *p);
+extern void ResetObjVram(struct vram_cursor *self);
+extern s32 ReserveObjVram(struct vram_cursor *self, s32 size);
+extern void MarkObjVram(struct vram_cursor *self);
+extern void RewindObjVram(struct vram_cursor *p);
 extern void FlushVramDmaQueue(void);
-extern void sub_801E644(void *dst, s32 a, s32 b, s32 c, s32 d);
+extern void InitBgSetup(void *dst, s32 a, s32 b, s32 c, s32 d);
 extern void LoadGraphicsPackage(void *dst, void *pkg);
 extern void PlaySong(void *arg0, s32 arg1);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
@@ -421,7 +421,7 @@ extern u8 sub_802333C(void *p, s32 id);
 
 /* The level-select screen's sub-objects and siblings (0x0801CEE0 on). */
 extern void *sub_801D7F8(void *mem, s32 a, s32 b);
-extern void *sub_801D828(void *mem, s32 a, s32 b);
+extern void *InitZoomBg(void *mem, s32 a, s32 b);
 extern void *sub_801E04C(void *mem);
 extern struct item *sub_801DFEC(void *mem);
 extern void sub_801D638(struct level_menu *self);
@@ -441,17 +441,17 @@ extern u32 sub_801D7D0(void *p);
 extern void sub_801D7E0(void *p, s32 flags);
 extern s32 sub_801D77C(void *p);
 extern u8 sub_801D780(void *p);
-extern void sub_801DA38(void *p, s32 flags);
-extern void sub_801DAD8(void *p);
-extern void sub_801DC28(void *p);
-extern void sub_801DCBC(void *p);
-extern u8 sub_801DCF8(void *p);
-extern u8 sub_801DD18(void *p);
-extern u8 sub_801DD28(void *p);
-extern u8 sub_801DD38(void *p);
-extern void sub_801DD5C(void *p);
-extern void sub_801DD80(void *p, s32 arg);
-extern u16 sub_801DE24(void *p);
+extern void DestroyZoomBg(void *p, s32 flags);
+extern void UpdateZoomBg(void *p);
+extern void DrawZoomBg(void *p);
+extern void CommitZoomBg(void *p);
+extern u8 IsZoomBgExiting(void *p);
+extern u8 IsZoomBgShown(void *p);
+extern u8 IsZoomBgWaiting(void *p);
+extern u8 IsZoomBgZoomingOut(void *p);
+extern void ClearZoomBgPicture(void *p);
+extern void SetZoomBgPicture(void *p, s32 arg);
+extern u16 GetZoomBgControl(void *p);
 extern u8 sub_801DE28(struct item *p);
 extern s32 sub_801DE2C(struct item *it);
 extern void sub_801DEA0(struct item *it, s32 arg);
@@ -462,7 +462,7 @@ extern void sub_801E408(void *p);
 extern s32 sub_801E464(void *p);
 extern void sub_801E480(void *p, s32 x, s32 y);
 extern void sub_801E524(void *p, s32 flags);
-extern u16 sub_801E640(void *p);
+extern u16 GetBgSetupControl(void *p);
 
 void sub_801BAC4(struct sprite *self);
 struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg);
@@ -517,12 +517,12 @@ static inline struct item *ItemAt(struct item **items, s32 index)
 static inline void CommitDisplay(struct level_menu *self)
 {
     FlushVramDmaQueue();
-    sub_801DCBC(self->bg2);
+    CommitZoomBg(self->bg2);
     self->scroll++;
     *(vu16 *)REG_ADDR_BG0HOFS = self->scroll >> 3;
     *(vu32 *)REG_ADDR_BG1HOFS = sub_801D7D0(self->bg1);
-    *(vu16 *)REG_ADDR_BG1CNT = sub_801E640(self->bg1);
-    *(vu16 *)REG_ADDR_BG2CNT = sub_801DE24(self->bg2);
+    *(vu16 *)REG_ADDR_BG1CNT = GetBgSetupControl(self->bg1);
+    *(vu16 *)REG_ADDR_BG2CNT = GetZoomBgControl(self->bg2);
     *(vu16 *)PLTT = 0;
     *(vu32 *)REG_ADDR_BLDCNT = self->blend.raw;
     *(vu16 *)REG_ADDR_BLDY = self->bldy.evy;
@@ -695,7 +695,7 @@ struct sprite *sub_801B984(u16 id, u16 x, u16 y)
         struct anim_record *recs = obj->anim->records;
         u32 idx = obj->animIndex;
         struct anim_record *rec = &recs[idx];
-        s32 pal = (u8)sub_8006DF8(gUnknown_030012B8, rec->tileRecord);
+        s32 pal = (u8)GetPaletteSlot(gPaletteCache, rec->tileRecord);
         s32 m;
         u8 *p = (u8 *)obj + 0x29;
         u8 b;
@@ -773,9 +773,9 @@ static inline void IconSetup(struct icon_manager *m, u32 v)
 
 static inline void IconReserve(struct icon_manager **m)
 {
-    struct vram_cursor *c = gUnknown_030012FC;
+    struct vram_cursor *c = gObjVramCursor;
 
-    sub_8006C58(c, (*m)->tileCount << 5);
+    ReserveObjVram(c, (*m)->tileCount << 5);
 }
 
 static inline void LoadMenuPalette(struct tile_cache *cache)
@@ -793,12 +793,12 @@ u8 RunLevelSelect(s32 *arg)
     WaitForVBlank();
     *(vu16 *)PLTT = 0;
     *(vu16 *)REG_ADDR_DISPCNT = 0;
-    sub_8006EA8(gUnknown_030012B8);
-    sub_8006D50(gUnknown_030012B8, 0xF);
-    LoadMenuPalette(gUnknown_030012B8);
-    gUnknown_030012FC->unk_08 = 0;
-    sub_8006C4C(gUnknown_030012FC);
-    sub_8006C4C(gUnknown_030012FC);
+    FreeUnlockedPaletteSlots(gPaletteCache);
+    ClaimPaletteSlot(gPaletteCache, 0xF);
+    LoadMenuPalette(gPaletteCache);
+    gObjVramCursor->baseTile = 0;
+    ResetObjVram(gObjVramCursor);
+    ResetObjVram(gObjVramCursor);
     IconSetup(gSmallFont, 0);
     IconReserve(&gSmallFont);
     {
@@ -807,7 +807,7 @@ u8 RunLevelSelect(s32 *arg)
         IconSetup(gLargeFont, v);
     }
     IconReserve(&gLargeFont);
-    sub_8006C30(gUnknown_030012FC);
+    MarkObjVram(gObjVramCursor);
     PlaySong(gAudioContext, 0x10);
     {
         struct level_menu **menuAddr = &gLevelSelect;
@@ -820,7 +820,7 @@ u8 RunLevelSelect(s32 *arg)
             DestroyLevelSelect(menu, 3);
         *menuAddr = NULL;
     }
-    sub_8006EA8(gUnknown_030012B8);
+    FreeUnlockedPaletteSlots(gPaletteCache);
     mem_free_bytes(heaps);
     return result;
 }
@@ -872,11 +872,11 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
     self->save = PackSaveData(gLevelState);
     self->result = 0;
     self->bg1 = sub_801D7F8(sub_8026EDC(0x28), 0, 0x1D);
-    sub_801E644(bg0cnt, 2, 0x1E, 2, 3);
+    InitBgSetup(bg0cnt, 2, 0x1E, 2, 3);
     LoadGraphicsPackage(bg0cnt, gStaticData_0816C484);
     self->scroll = 0;
     self->panel = sub_801E04C(sub_8026EDC(0x54));
-    self->bg2 = sub_801D828(sub_8026EDC(0x8C), 3, 0x1F);
+    self->bg2 = InitZoomBg(sub_8026EDC(0x8C), 3, 0x1F);
     {
         s32 j;
 
@@ -942,9 +942,9 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
     }
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
     *(vu32 *)REG_ADDR_BG1HOFS = sub_801D7D0(self->bg1);
-    *(vu16 *)REG_ADDR_BG0CNT = sub_801E640(bg0cnt);
-    *(vu16 *)REG_ADDR_BG1CNT = sub_801E640(self->bg1);
-    *(vu16 *)REG_ADDR_BG2CNT = sub_801DE24(self->bg2);
+    *(vu16 *)REG_ADDR_BG0CNT = GetBgSetupControl(bg0cnt);
+    *(vu16 *)REG_ADDR_BG1CNT = GetBgSetupControl(self->bg1);
+    *(vu16 *)REG_ADDR_BG2CNT = GetZoomBgControl(self->bg2);
     return self;
 }
 
@@ -967,7 +967,7 @@ void DestroyLevelSelect(struct level_menu *self, s32 flags)
     if (self->panel != NULL)
         sub_801E524(self->panel, 3);
     if (self->bg2 != NULL)
-        sub_801DA38(self->bg2, 3);
+        DestroyZoomBg(self->bg2, 3);
     for (i = 0; i < 6; i++)
     {
         struct item *it = self->items[i];
@@ -985,15 +985,15 @@ void DestroyLevelSelect(struct level_menu *self, s32 flags)
  * (gLargeFont) and its record panel, updates every entry, and once
  * the BG1 page has settled draws text 0x2F centred at y=0x96 (the first
  * time only, with the page arrows) and steps BG2; BG2's DISPCNT enable
- * bit follows sub_801DD28. */
+ * bit follows IsZoomBgWaiting. */
 void UpdateLevelSelect(struct level_menu *self)
 {
     s32 i;
 
-    sub_8006A90(gUnknown_03001300);
-    sub_8006C28(gUnknown_030012FC);
+    ResetOamBuffer(gOamBuffer);
+    RewindObjVram(gObjVramCursor);
     sub_801E2BC(self->panel);
-    if (sub_801DD18(self->bg2) && sub_801DE28(self->items[self->index]))
+    if (IsZoomBgShown(self->bg2) && sub_801DE28(self->items[self->index]))
     {
         struct icon_slot *slot = &gLargeFont->record->slots[0];
         u32 x = (u32)(0xF0 - _call_via_r2((u8 *)gLargeFont + slot->offset, self->nameText, slot->ptr)) >> 1;
@@ -1014,7 +1014,7 @@ void UpdateLevelSelect(struct level_menu *self)
     }
     if (sub_801D780(self->bg1))
     {
-        if (!sub_801DCF8(self->bg2))
+        if (!IsZoomBgExiting(self->bg2))
         {
             s32 text = GetUiText(0x2F);
             struct icon_slot *slot = &gSmallFont->record->slots[0];
@@ -1026,9 +1026,9 @@ void UpdateLevelSelect(struct level_menu *self)
             _call_via_r2((u8 *)gSmallFont + slot->offset, text, slot->ptr);
             sub_801C2B0(self);
         }
-        sub_801DC28(self->bg2);
+        DrawZoomBg(self->bg2);
     }
-    if (sub_801DD28(self->bg2))
+    if (IsZoomBgWaiting(self->bg2))
     {
         u8 *q = (u8 *)&self->dispcnt + 1;
         s32 m = -5;
@@ -1044,7 +1044,7 @@ void UpdateLevelSelect(struct level_menu *self)
         m |= *q;
         *q = m;
     }
-    sub_8006A48(gUnknown_03001300);
+    HideUnusedOamEntries(gOamBuffer);
 }
 
 /* Updates the two page-arrow sprites (8/9): palettes from sub_800815C,
@@ -1212,20 +1212,20 @@ void sub_801C51C(struct level_menu *self)
             struct item *it = ItemAt(items, self->index);
 
             sub_801DEA0(it, 1);
-            if (!sub_801DD18(self->bg2))
+            if (!IsZoomBgShown(self->bg2))
             {
                 struct level_info *info;
 
                 self->levelId = sub_801DE2C(it);
                 info = &gLevelTable[self->levelId];
-                sub_801DD80(self->bg2, info->unk_04);
+                SetZoomBgPicture(self->bg2, info->unk_04);
                 self->nameText = GetUiText(info->nameText);
             }
             self->unk_80 = 0;
             if (self->index <= 4)
             {
                 sub_801C608(self);
-                sub_8006EA8(gUnknown_030012B8);
+                FreeUnlockedPaletteSlots(gPaletteCache);
                 sub_801D730(self);
             }
             FontResetPalette(gLargeFont);
@@ -1240,7 +1240,7 @@ draw:
 
         _call_via_r1((u8 *)it + vt->m20.thisOffset, vt->m20.fn);
     }
-    sub_801DAD8(self->bg2);
+    UpdateZoomBg(self->bg2);
     {
         struct sprite **p = sprites + 2;
 
@@ -1375,9 +1375,9 @@ s32 LevelSelectLoop(struct level_menu *self)
     self->result = 0;
     self->levelId = sub_801DE2C(self->items[self->index]);
     info = &gLevelTable[self->levelId];
-    sub_801DD80(self->bg2, info->unk_04);
+    SetZoomBgPicture(self->bg2, info->unk_04);
     self->nameText = GetUiText(info->nameText);
-    while (!sub_801DD18(self->bg2))
+    while (!IsZoomBgShown(self->bg2))
     {
         {
             struct bldy_byte *f = (struct bldy_byte *)&self->bldy;
@@ -1387,10 +1387,10 @@ s32 LevelSelectLoop(struct level_menu *self)
         }
         UpdateLevelSelect(self);
         WaitForVBlank();
-        sub_8006DC8(gUnknown_030012B8);
-        sub_8006AAC(gUnknown_03001300);
+        UploadPaletteCache(gPaletteCache);
+        CommitOamBuffer(gOamBuffer);
         CommitDisplay(self);
-        sub_801DAD8(self->bg2);
+        UpdateZoomBg(self->bg2);
     }
     PlaySfx(gAudioContext, 0x51, 0x100);
     self->blend.raw = 0;
@@ -1418,8 +1418,8 @@ check_exit:
 loop:
     UpdateLevelSelect(self);
     WaitForVBlank();
-    sub_8006DC8(gUnknown_030012B8);
-    sub_8006AAC(gUnknown_03001300);
+    UploadPaletteCache(gPaletteCache);
+    CommitOamBuffer(gOamBuffer);
     CommitDisplay(self);
     sub_801C51C(self);
     if (!sub_801D780(self->bg1))
@@ -1456,15 +1456,15 @@ loop:
         goto check_exit;
     if (!sub_801DE28(self->items[self->index]))
         goto check_exit;
-    if (!sub_801DD18(self->bg2))
+    if (!IsZoomBgShown(self->bg2))
         goto check_exit;
     LevelSelectConfirm(self);
 end:
     self->dispcnt.raw = 0;
     self->dispcnt.bits.obj1d = 1;
     WaitForVBlank();
-    sub_8006DC8(gUnknown_030012B8);
-    sub_8006AAC(gUnknown_03001300);
+    UploadPaletteCache(gPaletteCache);
+    CommitOamBuffer(gOamBuffer);
     CommitDisplay(self);
     return sub_801DE2C(self->items[self->index]);
 }
@@ -1474,19 +1474,19 @@ end:
 void sub_801CCF8(struct level_menu *self)
 {
     sub_801DEA0(self->items[self->index], 0);
-    sub_801DD5C(self->bg2);
+    ClearZoomBgPicture(self->bg2);
     sub_801E408(self->panel);
-    while (sub_801DD38(self->bg2) || !(u8)sub_801E464(self->panel))
+    while (IsZoomBgZoomingOut(self->bg2) || !(u8)sub_801E464(self->panel))
     {
         UpdateLevelSelect(self);
         WaitForVBlank();
-        sub_8006DC8(gUnknown_030012B8);
-        sub_8006AAC(gUnknown_03001300);
+        UploadPaletteCache(gPaletteCache);
+        CommitOamBuffer(gOamBuffer);
         CommitDisplay(self);
         sub_801E190(self->panel);
-        sub_801DAD8(self->bg2);
+        UpdateZoomBg(self->bg2);
     }
-    sub_8006EA8(gUnknown_030012B8);
+    FreeUnlockedPaletteSlots(gPaletteCache);
 }
 
 /* Moves the cursor left, repeating while Left is held; sound 0x48 at the
@@ -1499,7 +1499,7 @@ void LevelSelectCursorLeft(struct level_menu *self)
         return;
     }
     sub_801DEA0(self->items[self->index], 0);
-    sub_801DD5C(self->bg2);
+    ClearZoomBgPicture(self->bg2);
     while (self->index != 0)
     {
         struct xy_pair *pos;
@@ -1524,7 +1524,7 @@ void LevelSelectCursorRight(struct level_menu *self)
         return;
     }
     sub_801DEA0(self->items[self->index], 0);
-    sub_801DD5C(self->bg2);
+    ClearZoomBgPicture(self->bg2);
     while (self->index < self->lastIndex)
     {
         struct xy_pair *pos;

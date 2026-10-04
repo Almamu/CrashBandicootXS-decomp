@@ -44,7 +44,7 @@ struct orbit_part
     u8 state;                   // 0x48 - 0 idle/orbiting, 1/2 flying off, 3 parked
     u8 counter;                 // 0x49
     u8 mode;                    // 0x4A - orbit mode (1: x - offset, 2: x + offset)
-    u8 phase;                   // 0x4B - index into gStaticData_0816A820
+    u8 phase;                   // 0x4B - index into gSineTable
     struct orbit_vec anchor;    // 0x4C - orbit centre / home position (Q8)
 };
 

@@ -114,10 +114,10 @@ extern void sub_8026ED0(void *ptr);
 extern void LoadTaggedAsset(void *asset, void *dest);
 extern void LoadBgLayer(struct layer *layer, void *data);
 extern void SetCollisionSource(struct tile_cache *self, void *source);
-extern void sub_80015D0(void);
-extern void sub_80015C0(void);
-extern void sub_80015B0(void);
-extern void sub_80015A0(void);
+extern void ShowBg0(void);
+extern void ShowBg1(void);
+extern void ShowBg2(void);
+extern void ShowBg3(void);
 extern void SpawnRoomEntities(void *self, void *arg1, void *arg2, s32 arg3, s32 arg4);
 extern struct layer *InitPooledBgLayer(void *mem, s32 arg1);
 extern struct tile_cache *nullsub_4(void *mem);
@@ -148,17 +148,17 @@ void LoadRoom(struct level_layers *self, struct level_load_args *args)
     SetCollisionSource(self->tiles, args->desc->tileData);
     self->maxScrollX = self->layer0->width - DISPLAY_WIDTH;
     self->maxScrollY = self->layer0->height - DISPLAY_HEIGHT;
-    sub_80015D0();
+    ShowBg0();
 
     LoadBgLayer(self->layers[0], args->desc->layerData[0]);
     if (self->layers[0]->enabled)
-        sub_80015C0();
+        ShowBg1();
     LoadBgLayer(self->layers[1], args->desc->layerData[1]);
     if (self->layers[1]->enabled)
-        sub_80015B0();
+        ShowBg2();
     LoadBgLayer(self->layers[2], args->desc->layerData[2]);
     if (self->layers[2]->enabled)
-        sub_80015A0();
+        ShowBg3();
 
     SpawnRoomEntities(gEntityFlags, args->desc->unk_1C, args->desc->unk_20, 0, 0);
 

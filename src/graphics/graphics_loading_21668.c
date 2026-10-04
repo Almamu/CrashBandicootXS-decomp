@@ -4,14 +4,14 @@
 /* Spawner table entries next to the text popups (ROM 0x08021668-0x08021BFC).
  * Built with old_agbcc; see include/text_popup.h. */
 
-extern void *gUnknown_030012B8;
+extern void *gPaletteCache;
 extern u8 *gLevelState;
 extern void *gUnknown_030012E8;
 extern void *gUnknown_030012F8;
 
 extern struct popup_part *sub_8008434(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
 extern struct popup_hdr *sub_8017FE8(void *mem);
-extern u8 sub_8006DF8(void *cache, s32 recordId);
+extern u8 GetPaletteSlot(void *cache, s32 recordId);
 extern u8 IsBonusRoundDone(void *self);
 extern s32 sub_801A878(u16 x, u16 y, u16 w, u16 h, s32 id);
 extern void SetBonusPlatform(void *self, s32 value);
@@ -56,7 +56,7 @@ struct timed_callback
 
 extern struct timed_callback *sub_800CB40(void *mem);
 
-/* Inline so old_agbcc re-truncates sub_8006DF8's u8 result before the
+/* Inline so old_agbcc re-truncates GetPaletteSlot's u8 result before the
  * nibble insert, as the ROM does. */
 static inline void SetFrameNibble(struct popup_part *part, s32 frame)
 {
@@ -80,7 +80,7 @@ void sub_8021668(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     sub_80087C0(part);
     sub_80087B4(part);
     sub_800872C(part, 0);
-    SetFrameNibble(part, sub_8006DF8(gUnknown_030012B8,
+    SetFrameNibble(part, GetPaletteSlot(gPaletteCache,
         ((struct anim_table_21668 *)part->anim)->records->tileRecord));
     part->flipX = 0;
     part->unk_28_5 = 0;

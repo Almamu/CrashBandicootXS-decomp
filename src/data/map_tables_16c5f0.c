@@ -10,7 +10,7 @@ struct xy_pair {
     s32 y;
 };
 
-/* sub_801D828 (actor_part_1cee0.c): the four slots' offsets. */
+/* InitZoomBg (actor_part_1cee0.c): the four slots' offsets. */
 const struct xy_pair gStaticData_0816C5F0[4] = {
     { 4, -4 },
     { -4, -4 },
@@ -31,12 +31,12 @@ const u32 gStaticData_0816C634[4] = {
 };
 
 /* The OBJ shape/size index as width and height in pixels, as s32s:
- * sub_801E688 and sub_801E788 (graphics_package_1e688.c). The same
- * sizes as gStaticData_0816B2E0/0816B2EC in another order (the shape
+ * FitScaledSprite and DrawScaledSprite (graphics_package_1e688.c). The same
+ * sizes as gObjPieceWidths/0816B2EC in another order (the shape
  * bits first). */
-const s32 gStaticData_0816C644[12] = {
+const s32 gObjSizeWidths[12] = {
     8, 16, 32, 64, 16, 32, 32, 64, 8, 8, 16, 32,
 };
-const s32 gStaticData_0816C674[12] = {
+const s32 gObjSizeHeights[12] = {
     8, 16, 32, 64, 8, 8, 16, 32, 16, 32, 32, 64,
 };

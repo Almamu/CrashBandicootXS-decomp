@@ -22,7 +22,7 @@ matches - every function that was previously parked under
 `#if NON_MATCHING` across `src/graphics/oam_count.c`, `graphics.c`,
 `actor_part.c`, `actor_part3.c`, `actor_part4.c`, `actor_part5.c`,
 `actor_part6.c`, and `actor_part7.c`/the new `actor_part7b.c`:
-`DrawPowerDialog`, `sub_80073DC`, `sub_8007B00`, `sub_8007B98`,
+`DrawPowerDialog`, `DrawSpritePieces`, `sub_8007B00`, `sub_8007B98`,
 `sub_8008044`, `sub_8008188`, `sub_8008200`, `sub_8008278`,
 `GetSpriteFrame`, `sub_8008770`, `sub_800891C`, `sub_8008A40`,
 `sub_8008AD8`, and `sub_8008D80`. Every one of these had already been
@@ -40,7 +40,7 @@ compiler never reorders no matter the C source shape (`sub_8008188`,
 `sub_8008200`, `sub_8008278`, `GetSpriteFrame`), a redundant
 byte-truncation the compiler always optimizes away once it can prove
 an `AND`'s range (`sub_8008770`), a genuine stack-frame/local-variable
-shape this reconstruction couldn't reverse-engineer (`sub_80073DC`,
+shape this reconstruction couldn't reverse-engineer (`DrawSpritePieces`,
 `sub_8008044`), and (`sub_8008AD8`/`sub_8008D80`) a C-level
 inexpressibility - leaving one incoming scalar argument untouched in
 its own stack slot while still building a struct pointer that includes
@@ -109,10 +109,10 @@ This batch retires six now-empty raw-assembly splits entirely -
 (`sub_8008770`), `asm/code_3_2_8.s` (`sub_800891C`/`sub_8008A40`/
 `sub_8008AD8`), and `asm/code_3_2_12.s` (`sub_8008D80`) - each deleted
 and its `ldscript.txt` line dropped, the same "retire an emptied
-split" convention as `asm/code_3_1.s`/`sub_80007EC` and
+split" convention as `asm/code_3_1.s`/`ShowBitmapScreen` and
 `asm/code_3_2_3.s`/`sub_8007DBC` before it (see `docs/matching.md` and
 `naked-sub_8007dbc.md`). `graphics.c`'s `asm/code_3_2.s` split stays
-(other raw functions remain in it after `sub_80073DC`'s removal).
+(other raw functions remain in it after `DrawSpritePieces`'s removal).
 
 Full clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` confirms `La suma coincide`
@@ -165,9 +165,9 @@ is still NAKED, with a C draft 18 halfwords off. See [issue-9-naked-retry.md](./
 
 ## Later pass (strag1)
 
-`sub_80073DC` is now real C. It moved out of `graphics.c` into
+`DrawSpritePieces` is now real C. It moved out of `graphics.c` into
 `src/graphics/graphics_73dc.c` (old_agbcc, on `OLD_AGBCC_OBJS`), written
-in the same shape as its matched affine sibling `sub_8007634`. See
+in the same shape as its matched affine sibling `DrawAffineSpritePieces`. See
 [strag1-naked-retry.md](strag1-naked-retry.md).
 
 ## Later pass (strag3): DrawPowerDialog matched

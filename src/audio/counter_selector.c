@@ -42,7 +42,7 @@ void LanguageSelectInput(struct counter_widget *self, u32 flags);
 /* Loads a "tagged" asset (see LoadTaggedAsset, src/system/asset_util.c)
  * into a freshly allocated buffer, then queues a DMA3 transfer from that
  * buffer out to `dest` - `unused` (r0) is never read. */
-void sub_8037110(void *unused, void *asset, void *dest)
+void LoadTaggedAssetBuffered(void *unused, void *asset, void *dest)
 {
     u32 val = *(u32 *)asset;
     struct dma_regs *dma;
@@ -67,22 +67,22 @@ void nullsub_7(void)
 {
 }
 
-void sub_8037154(void *self, u32 flags)
+void DestroyCompanyLogos(void *self, u32 flags)
 {
     if (flags & 1) {
         sub_8026ED0(self);
     }
 }
 
-/* UNUSED - no caller anywhere in the ROM (checked every asm/, expected/,
- * and src/ source file for a `bl sub_803716C` or a raw `0x0803716D`
- * reference). Unlinks `self` from a doubly-linked list
- * (`next->prev = prev; prev->next = next;`) after flipping a
- * state/vtable-looking pointer at +0x50 between two constants and
- * running two commit-style calls in between - a much larger, unrelated
- * object than the 0x14-byte `counter_widget` every neighboring function
- * in this file operates on, so it gets its own minimal, locally-scoped
- * struct instead of being folded into that one. */
+/* The company-logo actor's destructor (RunCompanyLogos, graphics_loading_
+ * 35d1c.c): slot 1 of gLogoActorVtable, so no `bl` reaches it - it is
+ * called through the vtable with the deleting flags 3. It frees the two
+ * VRAM tile blocks InitLogoActor allocated, drops back to the base
+ * gActorVtable, unlinks the actor from the actor ring and frees it on
+ * flags bit 0 - the same shape as DestroyActor. Its object is a much
+ * larger one than the 0x14-byte `counter_widget` every neighboring
+ * function in this file operates on, so it gets its own minimal,
+ * locally-scoped struct. */
 struct linked_node {
     u8 unused_00[0x48];
     struct linked_node *prev;
@@ -91,15 +91,15 @@ struct linked_node {
 };
 
 extern void FreeVramTileBlock(void *arg0);
-extern void *gUnknown_0300160C[2];
-extern u8 gStaticData_087E55C4[];
+extern void *gLogoActorTiles[2];
+extern u8 gLogoActorVtable[];
 extern u8 gActorVtable[];
 
-void sub_803716C(struct linked_node *self, u32 flags)
+void DestroyLogoActor(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E55C4;
-    FreeVramTileBlock(gUnknown_0300160C[0]);
-    FreeVramTileBlock(gUnknown_0300160C[1]);
+    self->field_50 = gLogoActorVtable;
+    FreeVramTileBlock(gLogoActorTiles[0]);
+    FreeVramTileBlock(gLogoActorTiles[1]);
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;

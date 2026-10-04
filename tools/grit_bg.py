@@ -11,7 +11,7 @@ splits and interleaves its output into the ROM's record layout.
 
     tools/grit_bg.py banks MAP OUT
         The palette-bank half of the same map: one 4-bit bank per entry,
-        two per byte, low nibble first (what sub_802F7B0 ORs back into
+        two per byte, low nibble first (what LoadBgPicture ORs back into
         bits 12-15). An odd count is padded with a zero nibble.
 
     tools/grit_bg.py frames TILES OUT --cells N [--banks MAP]
@@ -19,7 +19,7 @@ splits and interleaves its output into the ROM's record layout.
         of animation frames, N tiles each. Writes one `{ { tiles }, },`
         initializer per frame. With --banks, each frame also gets its
         cells' palette banks, packed as for `banks` and padded to
-        (N+7)/8*4 bytes, the side-data size sub_8029890 steps over:
+        (N+7)/8*4 bytes, the side-data size InitCellAnim steps over:
         `{ { tiles }, { banks } },`.
 """
 import argparse

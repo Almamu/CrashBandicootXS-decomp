@@ -279,9 +279,9 @@ extern void sub_8034188();
 extern void sub_8034264();
 extern void sub_8034270();
 extern void sub_803436C();
-extern void sub_8036EC4();
-extern void sub_8036FBC();
-extern void sub_803716C();
+extern void UpdateLogoActor();
+extern void DrawLogoActor();
+extern void DestroyLogoActor();
 extern void DestroyLargeFont();
 extern void DestroySmallFont();
 extern void sub_803B0C4();
@@ -1113,7 +1113,7 @@ const struct vtable_slot gFontVtable[9] = {
  * InitActorPart installs it, and every derived destructor puts it back
  * before unlinking the actor.
  *
- * Used by counter_selector.c (sub_803716C), actor_anim.c (sub_803B0C4,
+ * Used by counter_selector.c (DestroyLogoActor), actor_anim.c (sub_803B0C4,
  * sub_803B128, sub_803B154, sub_803B180, sub_803B1AC, sub_803B1D8,
  * sub_803B204, sub_803B230, sub_803B25C, sub_803B288, sub_803B2B4,
  * sub_803B2E0, sub_803B30C, sub_803B338, sub_803B364, sub_803B390,
@@ -1553,11 +1553,11 @@ const struct vtable_slot gStaticData_087E558C[7] = {
     VTABLE_SLOT(sub_803B5DC),
 };
 
-/* Used by counter_selector.c (sub_803716C), graphics_loading_35780.c,
- * graphics_loading_35d1c.c, graphics_loading_3686c.c (sub_8036CF4). */
-const struct vtable_slot gStaticData_087E55C4[4] = {
+/* Used by counter_selector.c (DestroyLogoActor), graphics_loading_35780.c,
+ * graphics_loading_35d1c.c, graphics_loading_3686c.c (LoadUniversalLogoBg). */
+const struct vtable_slot gLogoActorVtable[4] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803716C),
-    VTABLE_SLOT(sub_8036EC4),
-    VTABLE_SLOT(sub_8036FBC),
+    VTABLE_SLOT(DestroyLogoActor),
+    VTABLE_SLOT(UpdateLogoActor),
+    VTABLE_SLOT(DrawLogoActor),
 };

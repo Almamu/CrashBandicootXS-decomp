@@ -129,7 +129,7 @@ overrides described below).
 
 `type == 0xf`'s case (`_0801028E` in the original disassembly, the
 largest of the 19) also: looks up a tile/graphics asset via
-`sub_8006DF8(*gUnknown_030012B8, byte)`, masks `self+0x48` down to its
+`GetPaletteSlot(*gPaletteCache, byte)`, masks `self+0x48` down to its
 `0x38` bits, looks up `gStaticData_0816BB94[(self->0x48 & 0x38) >> 3]`
 for `self+0x4f`, writes `self+0x51` from the placement record's `[6]`
 byte, and folds three placement-record `+1` flag bits

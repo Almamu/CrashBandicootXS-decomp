@@ -1,14 +1,14 @@
-#ifndef GUARD_OBJ_SLOT_SYSTEM_H
-#define GUARD_OBJ_SLOT_SYSTEM_H
+#ifndef GUARD_LOGO_SCREEN_H
+#define GUARD_LOGO_SCREEN_H
 
 /* The 0x44c-byte block sub_8023674 (game_loop10.c) allocates for the
- * 20-slot object subsystem sub_80361B0 drives
+ * 20-slot object subsystem RunCompanyLogos drives
  * (src/graphics/graphics_loading_35d1c.c / graphics_loading_3686c.c):
- * 20 `struct obj_slot` records, then a small header. Only the fields
+ * 20 `struct logo_piece` records, then a small header. Only the fields
  * matched code reads are named. */
 
-/* One 0x34-byte slot of the 20-slot array `sub_8036600` seeds. */
-struct obj_slot
+/* One 0x34-byte slot of the 20-slot array `InitVvLogoPieces` seeds. */
+struct logo_piece
 {
     u8 active;          // 0x00
     u8 pad_01[3];
@@ -27,9 +27,9 @@ struct obj_slot
     u8 pad_1c[0x18];
 };
 
-struct obj_slot_system
+struct logo_screen
 {
-    struct obj_slot slots[20];  // 0x000
+    struct logo_piece slots[20];  // 0x000
     u8 sfxPending[0x12];        // 0x410 - per-slot "play the cue once" flags
     u8 pad_422[2];
     u32 tilesA;                 // 0x424 - OBJ VRAM tile block (0x1200 bytes)
@@ -45,7 +45,7 @@ struct obj_slot_system
                                 //         the outro countdown
 };
 
-COMPILE_TIME_ASSERT(sizeof(struct obj_slot) == 0x34);
-COMPILE_TIME_ASSERT(sizeof(struct obj_slot_system) == 0x44c);
+COMPILE_TIME_ASSERT(sizeof(struct logo_piece) == 0x34);
+COMPILE_TIME_ASSERT(sizeof(struct logo_screen) == 0x44c);
 
-#endif // GUARD_OBJ_SLOT_SYSTEM_H
+#endif // GUARD_LOGO_SCREEN_H

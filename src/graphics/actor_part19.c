@@ -43,7 +43,7 @@ extern u8 gStaticData_087E4E74[];
 extern u8 gStaticData_0817A6B8[];
 extern u8 gStaticData_0817A768[];
 
-extern void sub_8029BAC(s32 arg0);
+extern void SetCellAnimSpeed(s32 arg0);
 extern void sub_802DFBC(void);
 extern void sub_802D490(void *arg0);
 extern s32 sub_802D4EC(void *arg0);
@@ -96,7 +96,7 @@ void sub_802BED8(void *selfArg)
             register u8 val asm("r0") = 1;
             *addr = val;
         }
-        sub_8029BAC(0x24);
+        SetCellAnimSpeed(0x24);
         {
             register s32 stateVal asm("r0") = 1;
             register s32 idxVal asm("r1") = 4;
@@ -166,7 +166,7 @@ void sub_802BF30(void *selfArg)
 
 /* On the "confirm" input edge, sets `gUnknown_030014A3`/state-1/
  * table-index-0 (anim frame from `self`'s own part-table pointer at
- * `+0`) and fires `sub_8029BAC(0x24)` - the state-transition counterpart
+ * `+0`) and fires `SetCellAnimSpeed(0x24)` - the state-transition counterpart
  * to `sub_802BED8`, entered directly rather than through the
  * accumulator threshold. */
 void sub_802BFA0(void *selfArg)
@@ -195,19 +195,19 @@ void sub_802BFA0(void *selfArg)
             }
             self->animTime = zero;
         }
-        sub_8029BAC(0x24);
+        SetCellAnimSpeed(0x24);
     }
 }
 
 /* Once-only latch (`gUnknown_030014A0`): arms a countdown
- * (`gUnknown_0300148C = 0x16`), runs `sub_8029BAC(0x24)`, clamps
+ * (`gUnknown_0300148C = 0x16`), runs `SetCellAnimSpeed(0x24)`, clamps
  * `gUnknown_030014A4` to non-negative, then calls `sub_802DFBC` and
  * marks both `gUnknown_030014A0` and `gUnknown_030014A3`. */
 void sub_802BFD4(void)
 {
     if (gUnknown_030014A0 == 0) {
         gUnknown_0300148C = 0x16;
-        sub_8029BAC(0x24);
+        SetCellAnimSpeed(0x24);
         if (gUnknown_030014A4 < 0) {
             gUnknown_030014A4 = 0;
         }
@@ -326,9 +326,9 @@ void sub_802C0BC(void *selfArg, s32 arg1param)
             s32 switchState = self->state;
 
             if (switchState == 2) {
-                sub_8029BAC(0x5a);
+                SetCellAnimSpeed(0x5a);
             } else if (switchState == 1) {
-                sub_8029BAC(0x55);
+                SetCellAnimSpeed(0x55);
             }
         }
 
@@ -352,7 +352,7 @@ void sub_802C128(void *arg0)
  * lock/active flag `sub_802B7E0` gates on, per docs/rom_map.md) is
  * clear: transitions to state 5/table-index 3 (anim frame from
  * `self`'s part-table pointer at `+0x24`), resets
- * `gUnknown_030014A4` to `-0x780`, and fires `sub_8029BAC(0x1c)`. */
+ * `gUnknown_030014A4` to `-0x780`, and fires `SetCellAnimSpeed(0x1c)`. */
 void sub_802C14C(void *selfArg)
 {
     register struct actor_self *self asm("r2") = selfArg;
@@ -380,7 +380,7 @@ void sub_802C14C(void *selfArg)
                 self->animTime = flag;
             }
             gUnknown_030014A4 = 0xFFFFF880;
-            sub_8029BAC(0x1c);
+            SetCellAnimSpeed(0x1c);
         }
     }
 }

@@ -1,4 +1,4 @@
-# Issue #65: 0x080354E0-0x08037110 - `LoadLevelGraphics`/`LoadBg2Background`/`LoadObjSpriteTiles`
+# Issue #65: 0x080354E0-0x08037110 - `InitTitleScreen`/`LoadTitleScreenBg`/`LoadTitleScreenObjTiles`
 
 GitHub issue #65 (`decomp-chunk`, category `graphics_loading`) listed 22
 raw functions in `asm/code_3_2_20_28568_c99c_31784_33ef4.s`, sitting
@@ -13,18 +13,18 @@ list.
 ## What this pass covered
 
 `docs/rom_map.md`'s table already named the first three functions with
-high confidence (`0x080354E0`-`0x08035780`ish: `LoadLevelGraphics`,
-`LoadBg2Background`, `LoadObjSpriteTiles`) - level-start asset loading,
+high confidence (`0x080354E0`-`0x08035780`ish: `InitTitleScreen`,
+`LoadTitleScreenBg`, `LoadTitleScreenObjTiles`) - level-start asset loading,
 not actor code, despite sitting immediately after 40 KB of actor
 behavior. This pass worked those three:
 
-- **`LoadLevelGraphics`**: the per-level setup entry point (`UpdateGameFrame`,
+- **`InitTitleScreen`**: the per-level setup entry point (`UpdateGameFrame`,
   `asm/code_3_2_17_225a0.s`, calls it with a freshly-allocated 0x220-byte
   scratch object). Stashes `gSmallFont` (the `struct icon_manager *`
   already established by GitHub issue #46's chunk, `include/icon_manager.h`)
   into the scratch object's `+0xc` field; resets the OAM shadow buffer
-  (`gUnknown_03001300`, `struct oam_shadow_buffer *`) via
-  `sub_8006A90`/`sub_8006A48`/`WaitForVBlank`/`sub_8006AAC`; clears
+  (`gOamBuffer`, `struct oam_shadow_buffer *`) via
+  `ResetOamBuffer`/`HideUnusedOamEntries`/`WaitForVBlank`/`CommitOamBuffer`; clears
   `REG_BLDCNT`/`REG_BLDALPHA` (one 32-bit store), sets `REG_BLDY` to
   `0x10`, and clears `REG_DISPCNT`; calls `FontSetPalette` (the icon-manager
   accessor from issue #46, `src/graphics/hud_icon_widget4.c`) with `0xe`;
@@ -32,14 +32,14 @@ behavior. This pass worked those three:
   `record->slots[6]` trampoline via `_call_via_r1` (the same
   `(u8 *)obj + slot->offset, slot->ptr` pattern already established
   throughout `src/graphics/actor_part*.c`); DMA3-copies three 0x20-byte
-  palette banks (`gStaticData_0817D034`/`_054`/`_074`) into palette RAM
-  at `0x050003A0`/`_C0`/`_E0`; calls `LoadBg2Background`/
-  `LoadObjSpriteTiles`; allocates and constructs a 0x14-byte object via
+  palette banks (`gTitleMenuPalette`/`_054`/`_074`) into palette RAM
+  at `0x050003A0`/`_C0`/`_E0`; calls `LoadTitleScreenBg`/
+  `LoadTitleScreenObjTiles`; allocates and constructs a 0x14-byte object via
   `InitStarfield(sub_8026EDC(0x14))` (the exact same allocate-then-construct
   pairing already confirmed in `src/audio/counter_selector_setup.c`'s
   `self->field_10 = InitStarfield(sub_8026EDC(0x14))`) into the scratch
   object's `+0x208` field; runs a fixed fade/audio-reset sequence
-  (`sub_8001604`/`sub_80015E0`/`sub_8001524(1)`/`sub_8001614` - the same
+  (`SetObjMapping1D`/`ShowObj`/`SetDispcntMode(1)`/`CommitDispcnt` - the same
   quartet already matched in `src/graphics/fade_screen_mode2.c`); zeroes
   the scratch object's first two words; and starts song `0xb` via
   `StartSong(gAudioContext, 0xb)` (`gAudioContext` is the
@@ -48,9 +48,9 @@ behavior. This pass worked those three:
 
   The 0x220-byte scratch object stays a raw `u32 *` rather than a named
   struct here - most of its fields are read/written only by this chunk's
-  still-raw neighbors (`sub_8035780`, `sub_8035E14`, `sub_8036154`, all
+  still-raw neighbors (`UpdateTitleLogoPieces`, `RunTitleScreen`, `DestroyTitleScreen`, all
   called on the same object from `UpdateGameFrame` right around
-  `LoadLevelGraphics`), so naming it properly belongs with whichever pass
+  `InitTitleScreen`), so naming it properly belongs with whichever pass
   works through those, not this one (see `matching_decomp_prefer_structs`:
   a fully-opaque scratch buffer with only a few fields understood stays
   raw-offset with a comment, same precedent as
@@ -82,16 +82,16 @@ behavior. This pass worked those three:
 
 ## Matched (1 function, full clean `make compare` passing - "La suma coincide")
 
-- **`LoadLevelGraphics`** (`src/graphics/level_graphics.c`)
+- **`InitTitleScreen`** (`src/graphics/level_graphics.c`)
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
-- **`LoadBg2Background`** (`src/graphics/level_graphics.c`, real bytes in
+- **`LoadTitleScreenBg`** (`src/graphics/level_graphics.c`, real bytes in
   `asm/code_3_2_20_28568_c99c_31784_33ef4_355e0.s`) - loads BG2's
-  palette/tileset/tilemap from the 5-field `gStaticData_0817D0E4`
+  palette/tileset/tilemap from the 5-field `gTitleScreenBg`
   package (`struct bg_package`: `width`/`height`/`paletteAsset`/
-  `tileAsset`/`mapAsset` - the same field layout `LoadObjSpriteTiles`'s
-  `gUnknown_030008BC` array uses, confirmed by identical offsets),
+  `tileAsset`/`mapAsset` - the same field layout `LoadTitleScreenObjTiles`'s
+  `gTitleObjPackages` array uses, confirmed by identical offsets),
   remapping the tilemap's per-tile palette-select nibble into VRAM at
   `0x0600F000`, then sets `REG_BG2CNT`. Every operation and, after
   register-pinning `mapBuf`/`dest`/`count`/`mask` to `r8`/`r6`/`ip`/`r4`
@@ -109,7 +109,7 @@ behavior. This pass worked those three:
   registers (by pinning `mapBuf`) at the cost of the shuttle register
   collapsing to `r6` and `r7` dropping out of the push list entirely.
   This is the same category of gcc-2.9-allocator artifact already
-  documented for `sub_801E644`
+  documented for `InitBgSetup`
   (`docs/matching/issue-30-graphics-loading.md`) - a live range the
   register allocator's first (pressure-counting) pass reserves that ends
   up unused by the time its second (assignment) pass actually runs.
@@ -119,15 +119,15 @@ behavior. This pass worked those three:
   behavior, not a permuter shortcut (see the negative-constant
   bit-clear idiom in `docs/matching.md`), reproduced faithfully rather
   than "cleaned up" into an initialized local.
-- **`LoadObjSpriteTiles`** (`src/graphics/level_graphics.c`, real bytes
+- **`LoadTitleScreenObjTiles`** (`src/graphics/level_graphics.c`, real bytes
   in the same new asm file) - uploads the 4 `struct bg_package` entries
-  in `gUnknown_030008BC` into OBJ VRAM (`0x06010000` on) and OBJ palette
+  in `gTitleObjPackages` into OBJ VRAM (`0x06010000` on) and OBJ palette
   RAM (`0x05000200` on, one 16-color bank per package), remapping each
   package's tilemap into a straight tile copy the same way
-  `LoadBg2Background` remaps BG2's. The overall shape (4-pass loop,
+  `LoadTitleScreenBg` remaps BG2's. The overall shape (4-pass loop,
   palette DMA then tile-buffer DMA then per-tile remap DMA) is confirmed
   against the ROM and this reconstruction is semantically faithful, but
-  it hasn't had the same per-register tuning pass `LoadBg2Background`
+  it hasn't had the same per-register tuning pass `LoadTitleScreenBg`
   got - isolated compiles put several locals (the `struct bg_package **`
   array-walk pointer, the per-pass palette/tile-VRAM cursors) in
   different registers than the ROM's own `sl`/`sb`/`r8` allocation.
@@ -135,11 +135,11 @@ behavior. This pass worked those three:
 
 ## Left raw (19 functions)
 
-`sub_8035780` through `sub_8036FBC` (the remainder of the chunk, real
+`UpdateTitleLogoPieces` through `DrawLogoActor` (the remainder of the chunk, real
 bytes unconditionally following the two parked functions' guarded block
 in the same new `asm/code_3_2_20_28568_c99c_31784_33ef4_355e0.s`) were
-not examined this pass - the first of them (`sub_8035780`) appears to
-operate on the same 0x220-byte scratch object `LoadLevelGraphics`
+not examined this pass - the first of them (`UpdateTitleLogoPieces`) appears to
+operate on the same 0x220-byte scratch object `InitTitleScreen`
 returns (stride-0x34 array of records with position/velocity-shaped
 fields), suggesting the rest of the chunk is level-state/animation
 bookkeeping tied to that object rather than more asset loading, but this
@@ -148,10 +148,10 @@ wasn't confirmed function-by-function. Left for a follow-up pass.
 ## File structure
 
 `asm/code_3_2_20_28568_c99c_31784_33ef4.s` truncated to end right before
-`LoadLevelGraphics` (still holds the actor-region functions before this
+`InitTitleScreen` (still holds the actor-region functions before this
 chunk's range, out of scope here). New `src/graphics/level_graphics.c`
-holds `LoadLevelGraphics` (matched, unconditional) plus
-`LoadBg2Background`/`LoadObjSpriteTiles` (guarded `#if NON_MATCHING`).
+holds `InitTitleScreen` (matched, unconditional) plus
+`LoadTitleScreenBg`/`LoadTitleScreenObjTiles` (guarded `#if NON_MATCHING`).
 New `asm/code_3_2_20_28568_c99c_31784_33ef4_355e0.s` holds those same two
 functions' real bytes (guarded `.if NON_MATCHING == 0`) followed
 unconditionally by the chunk's remaining 19 raw functions. `ldscript.txt`
@@ -162,9 +162,9 @@ via a full clean `make compare` (`La suma coincide`) and
 See [docs/status/graphics_loading.md](../status/graphics_loading.md) for
 the running matched/parked list.
 
-## Second pass: `LoadBg2Background` matched via NAKED transcription
+## Second pass: `LoadTitleScreenBg` matched via NAKED transcription
 
-Picked up `LoadBg2Background`, the one function of this pair flagged
+Picked up `LoadTitleScreenBg`, the one function of this pair flagged
 above as "every operation and every register in the body already
 matches the ROM exactly". Re-confirmed that with a fresh isolated
 compile of the exact `#if NON_MATCHING` body (register-pinning `mapBuf`
@@ -180,7 +180,7 @@ is pinned to `r8` (the shuttle register collapses to `r6` and doubles as
 `dest` instead, `r7` never entering the push/pop list).
 
 Tried the same "force a live register variable" technique already ruled
-out for `sub_801E688`'s identical-shaped gap, adapted for this function's
+out for `FitScaledSprite`'s identical-shaped gap, adapted for this function's
 different flavor (a genuinely *unused* r7, not a used-but-dropped one, as
 the task description flagged as worth re-checking): an explicit
 `register u32 r7dummy asm("r7")` local, kept live across the whole
@@ -189,7 +189,7 @@ right after its declaration. Compiled cleanly, but made no difference -
 `r7` still never entered either the push or pop list (confirmed by
 grepping the isolated `.s` output for `push`/`pop`: still
 `push {r4, r5, r6, lr}` / `pop {r4, r5, r6}`, no `r7`). This reconfirms
-the conclusion already reached for `sub_801E688`
+the conclusion already reached for `FitScaledSprite`
 (issue-30-graphics-loading.md's "Seventh pass") and `SetupRoomBlend`
 (`src/system/game_loop8.c`): this compiler's callee-save prologue list is
 built from a first (pressure-counting) allocator pass that can reserve a
@@ -206,39 +206,39 @@ plain-C body already compiled to, just with a hand-written
 byte-identical via a direct `arm-none-eabi-objcopy --only-section=.text`
 + byte comparison against `baserom.gba` at `0x080355E0` before
 integrating (every byte matched except the four `bl` call-site offsets
-and the `gStaticData_0817D0E4` literal-pool word, both inherent
+and the `gTitleScreenBg` literal-pool word, both inherent
 relocation artifacts of comparing an unlinked, standalone isolated
-object rather than a real correctness gap). Cut `LoadBg2Background`'s
+object rather than a real correctness gap). Cut `LoadTitleScreenBg`'s
 guarded block out of
 `asm/code_3_2_20_28568_c99c_31784_33ef4_355e0.s` (it sat at the very
-start of the file, so - like the precedent cuts for `sub_801E644`/
-`sub_801E688` - no mid-file split was needed, just dropping the leading
+start of the file, so - like the precedent cuts for `InitBgSetup`/
+`FitScaledSprite` - no mid-file split was needed, just dropping the leading
 block and re-opening the `.if NON_MATCHING == 0` guard right before
-`LoadObjSpriteTiles`, which is now the file's only guarded function).
+`LoadTitleScreenObjTiles`, which is now the file's only guarded function).
 
 `tools/report_units.py`'s single combined entry for this pair's address
 range was split into three: `(0x080354E0, "src/graphics/level_graphics.o", ...)`
-for `LoadLevelGraphics` (unchanged), `(0x080355E0, None, ...)` for
-`LoadBg2Background` (matching the `sub_801E644`/`sub_801E688` precedent -
+for `InitTitleScreen` (unchanged), `(0x080355E0, None, ...)` for
+`LoadTitleScreenBg` (matching the `InitBgSetup`/`FitScaledSprite` precedent -
 a NAKED transcription doesn't count as "matched" for this project's
 per-file tracking, even though it's byte-correct), and
 `(0x08035684, "src/graphics/level_graphics.o", ...)` for
-`LoadObjSpriteTiles` (unchanged treatment, still pointing at the `.c`
+`LoadTitleScreenObjTiles` (unchanged treatment, still pointing at the `.c`
 file's `#if NON_MATCHING` reconstruction for its NON_MATCHING=1 diffable
 percentage).
 
 Verified via a full clean `rm -rf build && make NON_MATCHING=1 report`
 (clean compile, no warnings for the file) + `objdiff-cli report generate`
-(`LoadBg2Background` correctly excluded from the diffable-percentage
-report as a `raw_080355E0` unit with no target, same as `sub_801E644`/
-`sub_801E688`; `LoadLevelGraphics` still 100%, `LoadObjSpriteTiles`
+(`LoadTitleScreenBg` correctly excluded from the diffable-percentage
+report as a `raw_080355E0` unit with no target, same as `InitBgSetup`/
+`FitScaledSprite`; `InitTitleScreen` still 100%, `LoadTitleScreenObjTiles`
 still its pre-existing fuzzy percentage) and a full clean `rm -rf build
 crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
 compare` (`La suma coincide`).
 
-## Third pass: `LoadObjSpriteTiles` matched via register-pinning + opaque asm islands
+## Third pass: `LoadTitleScreenObjTiles` matched via register-pinning + opaque asm islands
 
-Picked up `LoadObjSpriteTiles`, the last function this chunk's earlier
+Picked up `LoadTitleScreenObjTiles`, the last function this chunk's earlier
 passes left parked. Its semantics were already confirmed (4-pass loop:
 palette DMA, tile-buffer DMA, per-tile remap DMA); this pass was purely
 about reproducing the ROM's exact register allocation, worked out by
@@ -328,28 +328,28 @@ Three techniques closed the gaps a plain, unpinned reconstruction left:
 byte-diff against `baserom.gba` was (correctly) treated as authoritative
 for the function's *own* bytes, but the offset used for that diff was
 computed from a stale `@ 0x08035684` label comment left over in the
-raw `asm/*.s` file from before `LoadBg2Background` was converted to a
-`NAKED` transcription earlier the same day. Converting `LoadBg2Background`
+raw `asm/*.s` file from before `LoadTitleScreenBg` was converted to a
+`NAKED` transcription earlier the same day. Converting `LoadTitleScreenBg`
 to hand-written `asm(...)` text without an explicit `.pool` directive
-left its 5-word literal pool (`gStaticData_0817D0E4`/`0x06008000`/
+left its 5-word literal pool (`gTitleScreenBg`/`0x06008000`/
 `0x0600F000`/`0xFFFF0000`/`0x0400000C`) un-pooled at the end of the
 `asm()` block, so the assembler deferred emitting those 20 bytes to
 later in the translation unit instead of immediately after the
 function body - which the *isolated, single-function* compile of
-`LoadObjSpriteTiles` alone could never reveal, since it doesn't include
-`LoadBg2Background` at all. Only the full clean `make compare` (step 6,
+`LoadTitleScreenObjTiles` alone could never reveal, since it doesn't include
+`LoadTitleScreenBg` at all. Only the full clean `make compare` (step 6,
 run after integrating) caught the resulting 20-byte address shift,
 manifesting as a total checksum mismatch traced via the exact method
 `docs/workflow.md` prescribes: reading `crashbandicootxs.map` for the
 actual linked address of the functions on either side of the change
-(`LoadBg2Background` at `0x080355E0`, `LoadObjSpriteTiles` linking 20
+(`LoadTitleScreenBg` at `0x080355E0`, `LoadTitleScreenObjTiles` linking 20
 bytes earlier than the stale comment implied, at `0x08035670` instead
 of `0x08035684`), rather than guessing. Fixed by adding an explicit
-`.pool` directive at the end of `LoadBg2Background`'s `asm(...)` text,
+`.pool` directive at the end of `LoadTitleScreenBg`'s `asm(...)` text,
 forcing its literal pool to emit immediately - a one-line fix, but a
-concrete reminder that `LoadBg2Background`'s own doc-comment/status
+concrete reminder that `LoadTitleScreenBg`'s own doc-comment/status
 label addresses are downstream of this fix too, not just
-`LoadObjSpriteTiles`'s. A second, narrower bug of the same flavor (an
+`LoadTitleScreenObjTiles`'s. A second, narrower bug of the same flavor (an
 isolated-compile-only "match" that wasn't) also surfaced during this
 pass's own before-integration verification: the `count = pkg->width *
 pkg->height` multiplication's operand order matters for which of
@@ -366,15 +366,15 @@ instruction-list comparison even when the latter looks thorough.
 
 Matched, confirmed via a full clean `rm -rf build && make NON_MATCHING=1
 report` (clean compile, no warnings; `objdiff-cli report generate`
-shows `LoadObjSpriteTiles` at 100% fuzzy-match) and a full clean
+shows `LoadTitleScreenObjTiles` at 100% fuzzy-match) and a full clean
 `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` (`La suma coincide`).
-`tools/report_units.py`'s entry for `LoadObjSpriteTiles` updated to
+`tools/report_units.py`'s entry for `LoadTitleScreenObjTiles` updated to
 describe it as matched rather than parked.
 
-## Fourth pass: `LoadBg2Background`'s r7 gap narrowed further, still not closed
+## Fourth pass: `LoadTitleScreenBg`'s r7 gap narrowed further, still not closed
 
-Revisited the still-`NAKED` `LoadBg2Background`, specifically trying the
+Revisited the still-`NAKED` `LoadTitleScreenBg`, specifically trying the
 "raise register pressure via genuinely separate, *unpinned* plain C
 locals" technique documented for `DrawPowerDialog`'s prologue fix (rather
 than an explicit dummy-register pin, already ruled out for this
@@ -401,7 +401,7 @@ results came out of this:
    legitimately needs a register at that point in the loop and the
    compiler's own unforced allocator reaches for `r7` on its own, both
    the loop instruction *and* the prologue/epilogue push/pop should
-   follow, per the `DrawPowerDialog`/`sub_800132C` precedent.
+   follow, per the `DrawPowerDialog`/`FadeBrightness` precedent.
 2. **This does happen, but not for the same variable the ROM uses.**
    Restructuring the remap loop into the ROM's actual instruction shape
    (a `mask` copy into a fresh scratch *before* each raw halfword load,
@@ -427,7 +427,7 @@ results came out of this:
 Extensive follow-up on that 3-cycle, none of which closed it:
 
 - **Declaration order has zero effect here**, contradicting the
-  `LoadObjSpriteTiles`/`DrawPowerDialog` precedent that textual declaration
+  `LoadTitleScreenObjTiles`/`DrawPowerDialog` precedent that textual declaration
   order controls otherwise-untied locals' register order. Moving the
   `REG_BG2CNT` scratch's declaration earlier or later in the function,
   or reversing the four loop-local declarations' textual order, produced
@@ -455,7 +455,7 @@ Extensive follow-up on that 3-cycle, none of which closed it:
   also treat `r1` as needing preservation around those *earlier* calls,
   cascading into unrelated register reassignment elsewhere.
 - **An opaque `asm volatile` island for the loop body** (the technique
-  that closed three similar gaps in `LoadObjSpriteTiles`, third pass
+  that closed three similar gaps in `LoadTitleScreenObjTiles`, third pass
   above), hand-transcribing the ROM's exact
   `add`/`ldrh`/`and`/`add`/`ldrh`/`and`/`lsl`/`orr`/`strh` sequence with
   bare `r0`/`r1`/`r7` register names in the asm text, **does** reproduce
@@ -506,7 +506,7 @@ blind spot) that aren't fully understood. This is the same flavor of
 stubborn, non-monotonic register-letter permutation already documented
 as unresolved for `DrawPowerDialog`'s second half and `DMA3Transfer`
 (`docs/matching/issue-69-eeprom-timer.md`) - manual C-level
-restructuring hit a wall in the same way. **Left as-is**: `LoadBg2Background`
+restructuring hit a wall in the same way. **Left as-is**: `LoadTitleScreenBg`
 remains the `NAKED` transcription from the second pass (byte-correct,
 tracked as parked in `tools/report_units.py`, `base_object = None`); no
 tree changes from this pass, since nothing closed. If revisited, the
@@ -519,7 +519,7 @@ now each independently failed to reconcile the two sides.
 
 ## Later pass: matched under old_agbcc
 
-`LoadBg2Background` is now real C. `level_graphics.c` is old_agbcc code
+`LoadTitleScreenBg` is now real C. `level_graphics.c` is old_agbcc code
 (the Makefile's `OLD_AGBCC_OBJS`), and under that compiler plain C with
 indexed `mapBuf[i]`/`mapBuf[i + 1]` reads matches with no pins. The
 "dead r7" gap the second and fourth passes chased was the wrong

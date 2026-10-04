@@ -7,8 +7,8 @@
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
 extern void CpuSet(void *src, void *dst, s32 control);
-extern void sub_8006AC8(void *arg0, void *arg1);
-extern struct oam_shadow_buffer *gUnknown_03001300;
+extern void AddOamEntry(void *arg0, void *arg1);
+extern struct oam_shadow_buffer *gOamBuffer;
 extern u8 gSmallFontChars[];
 extern u8 gSmallFontGlyphs[];
 extern u8 gFontVtable[];
@@ -20,7 +20,7 @@ extern u8 gLargeFontChars[];
 extern u8 gLargeFontGlyphs[];
 
 /* `icon_manager.oam_scratch` viewed as the OAM-shaped draw request
- * sub_8006AC8 consumes: attr0's Y byte and 2-bit shape, attr1's 9-bit X
+ * AddOamEntry consumes: attr0's Y byte and 2-bit shape, attr1's 9-bit X
  * and 2-bit size, attr2's 10-bit tile number. */
 struct glyph_oam
 {
@@ -43,7 +43,7 @@ static inline void SetGlyphX(struct glyph_oam *oam, s32 x)
 
 /* Builds one glyph's draw request in `self->oam_scratch` from
  * `glyphRecords[charLookup[charByte]]` and the cursor, draws it with
- * sub_8006AC8, then advances `posX` by the glyph's width. */
+ * AddOamEntry, then advances `posX` by the glyph's width. */
 void FontDrawGlyph(struct icon_manager *self, u8 charByte)
 {
     struct glyph_oam *oam = (struct glyph_oam *)self->oam_scratch;
@@ -57,7 +57,7 @@ void FontDrawGlyph(struct icon_manager *self, u8 charByte)
     }
     oam->shape = self->glyphRecords[glyph].shape;
     oam->tile = self->tileBase + glyph * self->glyphTileStride;
-    sub_8006AC8(gUnknown_03001300, self);
+    AddOamEntry(gOamBuffer, self);
     self->posX += self->glyphRecords[glyph].width;
 }
 

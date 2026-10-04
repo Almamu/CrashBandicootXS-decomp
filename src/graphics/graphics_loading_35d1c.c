@@ -4,68 +4,68 @@
 #include "actor_self.h"
 #include "gba/dma_macros.h"
 #include "graphics_package.h"
-#include "obj_slot_system.h"
+#include "logo_screen.h"
 
 /* Middle part of GitHub issue #65's chunk (0x08035D1C-0x0803686C), split
- * off `graphics_loading_35780.c` at `sub_8035D1C` in the issues #64/#65
+ * off `graphics_loading_35780.c` at `TitleScreenCheatInput` in the issues #64/#65
  * second NAKED retry. Both halves are old_agbcc code (see the Makefile's
  * OLD_AGBCC_OBJS), but only this one is built with -fno-strength-reduce
- * (NO_STRENGTH_REDUCE_OBJS): `sub_8036600` keeps its up-counting loop
- * only without strength reduction, while `sub_80358A8` (in the first
+ * (NO_STRENGTH_REDUCE_OBJS): `InitVvLogoPieces` keeps its up-counting loop
+ * only without strength reduction, while `DrawTitleLogoPieces` (in the first
  * half) only matches with it (its inner loop is written up-counting and
  * strength reduction reverses it). The shared declarations below are
- * copied from the first half. Everything from `sub_803686C` on lives in
+ * copied from the first half. Everything from `DrawVvLogoPieces` on lives in
  * `graphics_loading_3686c.c`, which needs strength reduction on. See
  * docs/matching/issue-64-65-naked-retry-2.md and
  * docs/matching/sr65-naked-retry.md. */
 
-extern struct oam_shadow_buffer *gUnknown_03001300;
+extern struct oam_shadow_buffer *gOamBuffer;
 extern struct AudioContext *gAudioContext;
-extern u8 gUnknown_03001288[2];
+extern u8 gDispcnt[2];
 extern void *gUnknown_03001304;
-extern void *gUnknown_0300160C[2];
-extern s32 gUnknown_03001604;
-extern void *gUnknown_03001608;
+extern void *gLogoActorTiles[2];
+extern s32 gLogoActorTileBuffer;
+extern void *gLogoActorLastFrame;
 extern void (*gUnpackRleSpriteFrameFunc)(void *dst, u8 *frame);
 extern struct held_pressed_pair {
     u16 held;
     u16 pressed;
 } gKeys;
 
-extern u8 gStaticData_0817CFA4[];
-extern u8 gStaticData_0817CFF4[];
-extern u8 gStaticData_0817D698[];
+extern u8 gTitleLogoPieceSeeds[];
+extern u8 gTitleArrowPieceOffsets[];
+extern u8 gLogoActorAnim[];
 extern u8 gStaticData_08178F80[];
 extern u8 gStaticData_0817D768[];
 extern u8 gStaticData_0817D77C[];
 extern u8 gStaticData_0817D790[];
-extern u8 gStaticData_0817D6C0[];
-extern u8 gStaticData_0817D7A4[];
-extern u8 gStaticData_087E55C4[];
+extern u8 gVvLogoPieceSeeds[];
+extern u8 gUniversalLogoBg[];
+extern u8 gLogoActorVtable[];
 
-extern void sub_8006A90(struct oam_shadow_buffer *arg0);
-extern void sub_8006A48(struct oam_shadow_buffer *arg0);
+extern void ResetOamBuffer(struct oam_shadow_buffer *arg0);
+extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
 extern void WaitForVBlank(void);
-extern void sub_8006AAC(struct oam_shadow_buffer *arg0);
-extern void sub_8006AC8(struct oam_shadow_buffer *self, void *record);
-extern void sub_8006A78(struct oam_shadow_buffer *arg0);
+extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
+extern void AddOamEntry(struct oam_shadow_buffer *self, void *record);
+extern void RewindOamBuffer(struct oam_shadow_buffer *arg0);
 extern s32 __divsi3(s32 arg0, s32 arg1);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern void sub_8001614(void);
+extern void CommitDispcnt(void);
 extern void PlaySong(struct AudioContext *self, u32 id);
 extern void FontSetPalette(struct icon_manager *self, u8 val);
 extern s32 GetUiText(s32 arg0);
 extern void UpdateStarfield(s32 arg0);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern void sub_80015B0(void);
+extern void ShowBg2(void);
 extern s32 RandRange(s32 arg0);
 extern void *sub_8026EC0(u32 size);
 extern void sub_8026EB4(void *ptr);
 extern void *sub_8026EDC(s32 size);
 extern void *InitStarfield(void *arg0);
 extern void LoadTaggedAsset(void *asset, void *dest);
-extern void sub_8037110(void *self, void *asset, void *dest);
+extern void LoadTaggedAssetBuffered(void *self, void *asset, void *dest);
 extern void *AllocVramTileBlock(u32 size);
 extern void *mem_alloc(u32 size, u32 flags);
 extern void InitObjTileFreeList(void *arg0);
@@ -95,7 +95,7 @@ struct cam_ref {
     s32 depth;      // 0x10 - the depth at which sprites draw unscaled
 };
 
-/* `gUnknown_03001288`, the REG_DISPCNT shadow `sub_8001614` commits,
+/* `gDispcnt`, the REG_DISPCNT shadow `CommitDispcnt` commits,
  * viewed as its bitfields (field stores give the ROM's byte-wide
  * and/or sequences). */
 struct dispcnt_bits
@@ -134,7 +134,7 @@ union bgcnt
 };
 
 /* One entry of the 8-byte {delta-record pointer, initial hold} seed
- * tables (`gStaticData_0817CFA4`/`gStaticData_0817D6C0`) the slot arrays
+ * tables (`gTitleLogoPieceSeeds`/`gVvLogoPieceSeeds`) the slot arrays
  * are initialized from. */
 struct slot_seed
 {
@@ -142,10 +142,10 @@ struct slot_seed
     s32 hold;
 };
 
-void sub_8035780(u32 *self);
-void sub_80358A8(u32 *self);
-void sub_8036068(u32 *self);
-void sub_8035F9C(u32 *self);
+void UpdateTitleLogoPieces(u32 *self);
+void DrawTitleLogoPieces(u32 *self);
+void DrawTitleScreen(u32 *self);
+void CommitTitleScreenFrame(u32 *self);
 
 /* Per-frame updater for the scratch object's 9-slot (`i` = 0..8,
  * stride 0x34, base `self+4`) record array: while a slot's countdown
@@ -264,14 +264,14 @@ static inline s32 *DeltaBAt(u32 *self, s32 stride)
  * presses). If held, folds one of 7 fixed "signature" constants
  * (selected by a bit of `pressed`: Left/Right/Up/Down/B/A/Start) into
  * `self+0x210` via the same rotate-then-multiply-by-521 hash
- * `sub_80360C0` implements standalone, then always checks whether that
+ * `HashTitleCheatInput` implements standalone, then always checks whether that
  * slot now equals the fixed target `0x3034AF3B` - if so, plays song
  * `0xc` and resets the slot, consuming the input (returns 0) either
  * way once the gate was held. */
 /* Closed in the issue #64/#65 NAKED retry: copying the whole
  * held/pressed pair into a local struct first is what makes the ROM
  * build the 0x100 mask in r4 and copy it to r1. */
-/* The per-level scratch object's cheat-code hash word (see
+/* The title-screen object's cheat-code hash word (see
  * graphics_loading_35780.c for the rest of that raw `u32 *` object). */
 struct level_scratch {
     u8 unk_000[0x210];
@@ -297,7 +297,7 @@ static inline void HashInput(u32 *self, u32 val)
     *slot = out;
 }
 
-u32 sub_8035D1C(u32 *self, u32 pressed)
+u32 TitleScreenCheatInput(u32 *self, u32 pressed)
 {
     struct held_pressed_pair input = gKeys;
 
@@ -330,19 +330,19 @@ u32 sub_8035D1C(u32 *self, u32 pressed)
 
 /* Drives what looks like a level-intro/tally sequence on the scratch
  * object: seeds all 9 slots' `self+0x40+i*0x34` delta-record pointers
- * and `self+0x14+i*0x34` countdowns from `gStaticData_0817CFA4`
- * (mirroring `sub_80360DC`'s init shape), then loops `sub_8035780`
- * (slot decay) + `sub_8036068` (per-frame OAM/icon flush) +
- * `UpdateStarfield` + `WaitForVBlank` + `sub_8035F9C` (BG2 affine flush)
+ * and `self+0x14+i*0x34` countdowns from `gTitleLogoPieceSeeds`
+ * (mirroring `ResetTitleLogoPieces`'s init shape), then loops `UpdateTitleLogoPieces`
+ * (slot decay) + `DrawTitleScreen` (per-frame OAM/icon flush) +
+ * `UpdateStarfield` + `WaitForVBlank` + `CommitTitleScreenFrame` (BG2 affine flush)
  * until `self+0x14` (the header's own hold record) drains to 0. Then
- * runs a second phase gated by `sub_8035D1C`'s cheat-detector return
+ * runs a second phase gated by `TitleScreenCheatInput`'s cheat-detector return
  * value (bits 9/0x40/0x80 firing `PlaySfx` 0x49/0x46/0x46 and
  * nudging `self[0]`), followed by a fixed-length (17-frame) BG2
  * fade-out tail. Returns `self[0]`, a small state/counter field several
  * of this cluster's other functions also read. */
 /* Closed in the issues #64/#65 second NAKED retry. Three loop shapes:
  * - The seed loop is a `goto` loop (nothing hoisted), as in
- *   `sub_80360DC`. Two extra `i` references (empty asms) give `i` the
+ *   `ResetTitleLogoPieces`. Two extra `i` references (empty asms) give `i` the
  *   first free low register (r3) ahead of `slot`/`stride`. Both
  *   address sums compute the scaled index first (`off`), and the
  *   `-1` store adds it second (`base + off`).
@@ -355,7 +355,7 @@ u32 sub_8035D1C(u32 *self, u32 pressed)
  * `pressed` is loaded into its own variable first (the ROM's
  * `ldrh r5` / `add r1, r5, #0`). The `0x210` zero is a local, so it is
  * materialized before the `1`. */
-s32 sub_8035E14(u32 *self)
+s32 RunTitleScreen(u32 *self)
 {
     s32 i;
     struct slot_seed *seedBase;
@@ -367,7 +367,7 @@ s32 sub_8035E14(u32 *self)
     s32 fade;
 
     i = 0;
-    seedBase = (struct slot_seed *)gStaticData_0817CFA4;
+    seedBase = (struct slot_seed *)gTitleLogoPieceSeeds;
     seed = seedBase;
     slot = (u8 *)self;
     stride = 0;
@@ -401,12 +401,12 @@ seedLoop:
     ((u8 *)self)[8] = zero;
     while (self[5] != 0)
     {
-        sub_8035780(self);
-        sub_8036068(self);
+        UpdateTitleLogoPieces(self);
+        DrawTitleScreen(self);
         UpdateStarfield(self[0x82]);
         WaitForVBlank();
         *(vu32 *)REG_ADDR_BLDCNT = 0;
-        sub_8035F9C(self);
+        CommitTitleScreenFrame(self);
     }
     {
         u32 z = 0;
@@ -415,11 +415,11 @@ seedLoop:
     }
     for (;;)
     {
-        sub_8036068(self);
+        DrawTitleScreen(self);
         UpdateStarfield(self[0x82]);
         UpdateKeys(gUnknown_03001304);
         pressed = gKeys.pressed;
-        pressed = sub_8035D1C(self, pressed);
+        pressed = TitleScreenCheatInput(self, pressed);
         if (pressed & 9)
         {
             PlaySfx(gAudioContext, 0x49, 0x100);
@@ -441,15 +441,15 @@ seedLoop:
             self[0] = (s32)self[0] % 3;
         }
         WaitForVBlank();
-        sub_8035F9C(self);
+        CommitTitleScreenFrame(self);
     }
 fadeLoop:
-    sub_8036068(self);
+    DrawTitleScreen(self);
     UpdateStarfield(self[0x82]);
     WaitForVBlank();
     REG_BLDY = fade;
     REG_BLDCNT = 0xff;
-    sub_8035F9C(self);
+    CommitTitleScreenFrame(self);
     fade++;
     if (fade <= 0x10)
         goto fadeLoop;
@@ -466,11 +466,11 @@ static inline void SetIconPos(struct icon_manager *m, u32 x, u32 y)
  * (`self+0x214`/`self+0x218` position, `self+0x21c` scale) to
  * `REG_BG2X`/`REG_BG2Y`/`REG_BG2PA`/`REG_BG2PD` (identity-shaped:
  * `PB`/`PC` cleared, `PA` == `PD`), then flushes the pending shadow-OAM
- * buffer (`sub_8001614` + `sub_8006AAC`). The ROM derives
+ * buffer (`CommitDispcnt` + `CommitOamBuffer`). The ROM derives
  * `REG_BG2PA`'s address from `REG_BG2Y`'s (`-0xc`); that falls out of
  * writing the PA store as a chained assignment (`REG_BG2PA = scale =
  * ...`), which makes the address get computed before the load. */
-void sub_8035F9C(u32 *self)
+void CommitTitleScreenFrame(u32 *self)
 {
     s32 scale;
 
@@ -480,14 +480,14 @@ void sub_8035F9C(u32 *self)
     REG_BG2PB = 0;
     REG_BG2PC = 0;
     REG_BG2PD = scale;
-    sub_8001614();
-    sub_8006AAC(gUnknown_03001300);
+    CommitDispcnt();
+    CommitOamBuffer(gOamBuffer);
 }
 
 /* Icon-manager position helper: for `variant == 0`, bumps a play
  * counter at `self+4` and alternates `FontSetPalette`'s icon-slot id
  * between 0xe/0xf every other call; for `variant != 0` (only ever
- * called with 1/2 by `sub_8036068`), always uses id 0xd. Either way,
+ * called with 1/2 by `DrawTitleScreen`), always uses id 0xd. Either way,
  * feeds the resulting icon-manager slot's own position fields (looked
  * up at `self+0xc` + a fixed table offset) through `_call_via_r2` twice
  * (once for the icon at its own position, once for a second icon
@@ -496,7 +496,7 @@ void sub_8035F9C(u32 *self)
  * virtual calls through the icon manager's `record->slots[0]`/`[2]`
  * entries (same shape as `actor_part_1b85c.c`). */
 
-void sub_8035FEC(u32 *self, s32 text, s32 variant)
+void DrawTitleMenuItem(u32 *self, s32 text, s32 variant)
 {
     struct icon_manager *im;
     struct icon_slot *slot;
@@ -521,26 +521,26 @@ void sub_8035FEC(u32 *self, s32 text, s32 variant)
 }
 
 /* Per-frame flush helper: resets the shadow-OAM buffer
- * (`sub_8006A90`), runs `sub_80358A8` (the header/slot OAM builder),
+ * (`ResetOamBuffer`), runs `DrawTitleLogoPieces` (the header/slot OAM builder),
  * and - only while the scratch object's `self+8` hold flag is set -
  * positions three icon-manager slots (ids 0x1a/0x1b/0x3b, one call
- * each via `sub_8035FEC`) before releasing the shadow-OAM buffer
- * (`sub_8006A48`). */
-void sub_8036068(u32 *self)
+ * each via `DrawTitleMenuItem`) before releasing the shadow-OAM buffer
+ * (`HideUnusedOamEntries`). */
+void DrawTitleScreen(u32 *self)
 {
-    sub_8006A90(gUnknown_03001300);
-    sub_80358A8(self);
+    ResetOamBuffer(gOamBuffer);
+    DrawTitleLogoPieces(self);
     if (((u8 *)self)[8] != 0)
     {
-        sub_8035FEC(self, GetUiText(0x1a), 0);
-        sub_8035FEC(self, GetUiText(0x1b), 1);
-        sub_8035FEC(self, GetUiText(0x3b), 2);
+        DrawTitleMenuItem(self, GetUiText(0x1a), 0);
+        DrawTitleMenuItem(self, GetUiText(0x1b), 1);
+        DrawTitleMenuItem(self, GetUiText(0x3b), 2);
     }
-    sub_8006A48(gUnknown_03001300);
+    HideUnusedOamEntries(gOamBuffer);
 }
 
 /* Standalone one-shot rolling-hash update: XORs `val` into the same
- * `self+0x210` "cheat code" slot `sub_8035D1C` inlines, rotates the
+ * `self+0x210` "cheat code" slot `TitleScreenCheatInput` inlines, rotates the
  * result left by 1 bit, then multiplies by 521 (`(x<<6)+x`, `<<3`,
  * `+x` - `x*65*8+x`) and stores it back. Matched as real C: the
  * rotate has to be split into an explicit shift-left/shift-right pair
@@ -550,7 +550,9 @@ void sub_8036068(u32 *self)
  * into a single Thumb `ROR` instruction the ROM's own compiled output
  * never emits (it always expands the rotate into the explicit
  * shift-shift-or sequence, at least in this ROM's own build). */
-void sub_80360C0(u32 *selfArg, u32 val)
+/* UNUSED - no caller anywhere in the ROM (no Thumb `bl` to it and no
+ * pointer to it in baserom.gba, nor any reference in asm/ or src/). */
+void HashTitleCheatInput(u32 *selfArg, u32 val)
 {
     u8 *self = (u8 *)selfArg;
     u32 *slot = (u32 *)(self + 0x210);
@@ -569,12 +571,12 @@ void sub_80360C0(u32 *selfArg, u32 val)
     *slot = out;
 }
 
-/* `sub_8035780`'s init-time twin: seeds all 9 slots' countdown words
- * (`self+0x14+i*0x34`, from `gStaticData_0817CFA4`'s own `+4+i*8`
+/* `UpdateTitleLogoPieces`'s init-time twin: seeds all 9 slots' countdown words
+ * (`self+0x14+i*0x34`, from `gTitleLogoPieceSeeds`'s own `+4+i*8`
  * table, `+1`) and delta-record pointers (`self+0x40+i*0x34`, from the
  * same table's `+i*8` head) in one pass, and unconditionally stores
  * -1 into each slot's `self+0xf2*2+i*4` play-counter word (matching
- * `sub_8035780`'s own countdown-reset shape, just via `stm` instead of
+ * `UpdateTitleLogoPieces`'s own countdown-reset shape, just via `stm` instead of
  * a plain store - the same operation, a different ROM-side register
  * allocation). Clears the header hold flag (`self+0x20c`). */
 /* Closed in the issues #64/#65 second NAKED retry. The loop is a
@@ -588,7 +590,9 @@ void sub_80360C0(u32 *selfArg, u32 val)
  *   ROM's r3/r8/ip.
  * - `off = i << 3` computed before `holdBase` (as an integer) gives the
  *   ROM's `lsl` first, `add r0, r0, r1` order. */
-void sub_80360DC(u32 *self)
+/* UNUSED - no caller anywhere in the ROM (no Thumb `bl` to it and no
+ * pointer to it in baserom.gba, nor any reference in asm/ or src/). */
+void ResetTitleLogoPieces(u32 *self)
 {
     s32 i;
     struct slot_seed *seedBase;
@@ -599,7 +603,7 @@ void sub_80360DC(u32 *self)
     s32 zero;
 
     i = 0;
-    seedBase = (struct slot_seed *)gStaticData_0817CFA4;
+    seedBase = (struct slot_seed *)gTitleLogoPieceSeeds;
     counter = (s32 *)((u8 *)self + 0x1e4);
     seed = seedBase;
     slot = (u8 *)self;
@@ -631,13 +635,13 @@ loop:
 
 /* Teardown/reset helper: if the object at `self+0x208` exists, destroys
  * it (`DestroyStarfield(obj, 3)`); clears the DISPCNT shadow
- * (`gUnknown_03001288`) and commits it (`sub_8001614`), zeroes all 256
+ * (`gDispcnt`) and commits it (`CommitDispcnt`), zeroes all 256
  * BG palette entries (`0x05000000`), sets REG_BLDCNT/REG_BLDY to a full
  * fade (0xff/0x10), and - only if `flag`'s bit 0 is set - frees the
  * scratch object via `sub_8026ED0`. The palette clear needs its zero
  * in a local assigned before the pointer (the ROM materializes it
  * first). */
-void sub_8036154(u32 *self, u32 flag)
+void DestroyTitleScreen(u32 *self, u32 flag)
 {
     s32 i;
     u16 *pal;
@@ -645,8 +649,8 @@ void sub_8036154(u32 *self, u32 flag)
 
     if (self[0x82] != 0)
         DestroyStarfield((void *)self[0x82], 3);
-    *(u16 *)gUnknown_03001288 = 0;
-    sub_8001614();
+    *(u16 *)gDispcnt = 0;
+    CommitDispcnt();
     zero = 0;
     pal = (u16 *)PLTT;
     for (i = 0xff; i >= 0; i--)
@@ -657,7 +661,7 @@ void sub_8036154(u32 *self, u32 flag)
         sub_8026ED0(self);
 }
 
-/* The part's method table as `sub_80361B0` uses it (gcc 2.x C++
+/* The part's method table as `RunCompanyLogos` uses it (gcc 2.x C++
  * {this-adjust, fn} records). */
 struct part_vtable
 {
@@ -667,16 +671,16 @@ struct part_vtable
     struct actor_method m18;    // 0x18
 };
 
-void sub_8036CF4(u32 *self);
+void LoadUniversalLogoBg(u32 *self);
 
 /* This subsystem's `self` (a raw `u32 *` throughout, as the matched
- * code indexes it) is a `struct obj_slot_system`. */
-#define SLOT_SYSTEM(self) ((struct obj_slot_system *)(self))
-struct actor_self *sub_8036E20(struct actor_self *self, void *a);
-void sub_8036528(u32 *self);
-void sub_8036600(u32 *self);
-void sub_8036668(u32 *self);
-void sub_803686C(struct obj_slot_system *self);
+ * code indexes it) is a `struct logo_screen`. */
+#define SLOT_SYSTEM(self) ((struct logo_screen *)(self))
+struct actor_self *InitLogoActor(struct actor_self *self, void *a);
+void LoadVvLogoGraphics(u32 *self);
+void InitVvLogoPieces(u32 *self);
+void UpdateVvLogoPieces(u32 *self);
+void DrawVvLogoPieces(struct logo_screen *self);
 
 /* `operator new`: an inline wrapper puts the size constant after the
  * heap flag, as the ROM loads them. */
@@ -687,10 +691,10 @@ static inline void *New(u32 size)
 
 /* The level-object subsystem's own init/run/teardown driver: sets up
  * the OBJ-tile free list, sprite-frame OAM queue and sprite-frame
- * cache, constructs the actor part (`sub_8036E20` on a 0x54-byte
+ * cache, constructs the actor part (`InitLogoActor` on a 0x54-byte
  * `mem_alloc` block), DMAs the OBJ palette, loads BG2's tilesets and
- * the slot array (`sub_8036528`/`sub_8036600`), builds the particle
- * background (`InitStarfield`) and BG2's tilemap (`sub_8036CF4`). Then
+ * the slot array (`LoadVvLogoGraphics`/`InitVvLogoPieces`), builds the particle
+ * background (`InitStarfield`) and BG2's tilemap (`LoadUniversalLogoBg`). Then
  * a 60-frame fade-in, a zoom-in phase (BG2 affine scale driven by the
  * `self+0x444` counter, A/Start skips ahead), and the main phase
  * (the part's two per-frame methods, the slot-array update and OAM
@@ -701,7 +705,7 @@ static inline void *New(u32 size)
  * the affine X/Y values are computed before either register store, and
  * the fade-out value is pinned to r1 (the ROM's choice; without the pin
  * it lands in r2 and costs a copy). */
-void sub_80361B0(u32 *self)
+void RunCompanyLogos(u32 *self)
 {
     struct actor_self *part;
     void *bgObj;
@@ -711,7 +715,7 @@ void sub_80361B0(u32 *self)
     InitObjTileFreeList(OBJ_VRAM0);
     InitSpriteFrameOamQueue();
     InitSpriteFrameCache();
-    part = sub_8036E20(New(0x54), gStaticData_0817D698);
+    part = InitLogoActor(New(0x54), gLogoActorAnim);
     {
         struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
         dma->src = (u32)gStaticData_08178F80;
@@ -719,10 +723,10 @@ void sub_80361B0(u32 *self)
         dma->cnt = 0x80000100;
         dma->cnt;
     }
-    sub_8036528(self);
-    sub_8036600(self);
+    LoadVvLogoGraphics(self);
+    InitVvLogoPieces(self);
     bgObj = InitStarfield(sub_8026EDC(0x14));
-    sub_8036CF4(self);
+    LoadUniversalLogoBg(self);
     for (i = 0; i <= 0x3b; i++)
     {
         if (i <= 0x10)
@@ -753,7 +757,7 @@ void sub_80361B0(u32 *self)
                 SLOT_SYSTEM(self)->fade = 0x40;
         }
         WaitForVBlank();
-        sub_8001614();
+        CommitDispcnt();
         fade = &SLOT_SYSTEM(self)->fade;
         if (*fade != -1)
         {
@@ -794,10 +798,10 @@ void sub_80361B0(u32 *self)
         REG_BG2PC = 0;
         UpdateStarfield((s32)bgObj);
     } while (SLOT_SYSTEM(self)->fade != 0);
-    ((struct dispcnt_bits *)gUnknown_03001288)->bg2 = 0;
-    ((struct dispcnt_bits *)gUnknown_03001288)->obj = 1;
-    ((struct dispcnt_bits *)gUnknown_03001288)->objMap1D = 1;
-    sub_8001614();
+    ((struct dispcnt_bits *)gDispcnt)->bg2 = 0;
+    ((struct dispcnt_bits *)gDispcnt)->obj = 1;
+    ((struct dispcnt_bits *)gDispcnt)->objMap1D = 1;
+    CommitDispcnt();
     *(vu32 *)REG_ADDR_BLDCNT = 0;
     SLOT_SYSTEM(self)->fade = -1;
     SLOT_SYSTEM(self)->timer = -1;
@@ -820,10 +824,10 @@ void sub_80361B0(u32 *self)
             struct part_vtable *vt = (struct part_vtable *)part->vtable;
             ((void (*)(void *))vt->m18.fn)((u8 *)part + vt->m18.thisOffset);
         }
-        sub_8006A78(gUnknown_03001300);
+        RewindOamBuffer(gOamBuffer);
         FlushSpriteFrameOamQueue();
-        sub_8036668(self);
-        sub_803686C(SLOT_SYSTEM(self));
+        UpdateVvLogoPieces(self);
+        DrawVvLogoPieces(SLOT_SYSTEM(self));
         UpdateStarfield((s32)bgObj);
         WaitForVBlank();
         fade = &SLOT_SYSTEM(self)->fade;
@@ -850,7 +854,7 @@ void sub_80361B0(u32 *self)
             REG_BLDY = 0x10 - v;
             REG_BLDCNT = 0xff;
         }
-        sub_8006AAC(gUnknown_03001300);
+        CommitOamBuffer(gOamBuffer);
         FlushVramDmaQueue();
         AgeSpriteFrameCache();
     }
@@ -874,7 +878,7 @@ void sub_80361B0(u32 *self)
 /* BG2's own tileset/palette loader for this subsystem: allocates 3
  * VRAM tile blocks (`self+0x424`/`0x428`/`0x42c`), loads 3 palette
  * banks (`gStaticData_0817D768`/`_77c`/`_790`'s packages) to
- * `0x050003E0`/`_C0`/`_A0` and two packages' tile data (`sub_8037110`)
+ * `0x050003E0`/`_C0`/`_A0` and two packages' tile data (`LoadTaggedAssetBuffered`)
  * into the first two blocks, then allocates a buffer sized from the
  * first package's tile-asset header (`self+0x430`) and unpacks into it,
  * plus a 0x1000-byte scratch buffer (`self+0x434`). The last two
@@ -884,16 +888,16 @@ void sub_80361B0(u32 *self)
 #define PKG_B ((struct bg_package *)gStaticData_0817D77C)
 #define PKG_C ((struct bg_package *)gStaticData_0817D790)
 
-void sub_8036528(u32 *self)
+void LoadVvLogoGraphics(u32 *self)
 {
     SLOT_SYSTEM(self)->tilesA = (u32)AllocVramTileBlock(0x1200);
     SLOT_SYSTEM(self)->tilesB = (u32)AllocVramTileBlock(0x400);
     SLOT_SYSTEM(self)->tilesC = (u32)AllocVramTileBlock(0x1000);
-    sub_8037110(self, PKG_A->paletteAsset, (void *)(PLTT + 0x3E0));
-    sub_8037110(self, PKG_B->paletteAsset, (void *)(PLTT + 0x3C0));
-    sub_8037110(self, PKG_C->paletteAsset, (void *)(PLTT + 0x3A0));
-    sub_8037110(self, PKG_B->tileAsset, (void *)SLOT_SYSTEM(self)->tilesA);
-    sub_8037110(self, PKG_C->tileAsset, (void *)SLOT_SYSTEM(self)->tilesB);
+    LoadTaggedAssetBuffered(self, PKG_A->paletteAsset, (void *)(PLTT + 0x3E0));
+    LoadTaggedAssetBuffered(self, PKG_B->paletteAsset, (void *)(PLTT + 0x3C0));
+    LoadTaggedAssetBuffered(self, PKG_C->paletteAsset, (void *)(PLTT + 0x3A0));
+    LoadTaggedAssetBuffered(self, PKG_B->tileAsset, (void *)SLOT_SYSTEM(self)->tilesA);
+    LoadTaggedAssetBuffered(self, PKG_C->tileAsset, (void *)SLOT_SYSTEM(self)->tilesB);
     {
         u32 size = *(u32 *)PKG_A->tileAsset >> 8;
         u8 **dst = &SLOT_SYSTEM(self)->frames;
@@ -910,7 +914,7 @@ void sub_8036528(u32 *self)
 
 /* Slot-array field initializer: for all 20 (`0x13`+1) slots, clears
  * the active-flag byte (`self+i*0x34`), sets the play-counter word
- * (`self+4+i*0x34`) from `gStaticData_0817D6C0`'s own `+4+i*8` field
+ * (`self+4+i*0x34`) from `gVvLogoPieceSeeds`'s own `+4+i*8` field
  * `+1`, and the delta-record pointer (`self+0x2c+i*0x34`) from that
  * same table's `+i*8` head. Also clears 3 header fields
  * (`self+0x438`/`self+0x43c`/`self+0x440`). */
@@ -923,7 +927,7 @@ void sub_8036528(u32 *self)
  * strength reduction off nothing would have produced them. The second
  * loop's `1` lives in a local assigned before its counter and pointer
  * (the ROM materializes it first). */
-void sub_8036600(u32 *self)
+void InitVvLogoPieces(u32 *self)
 {
     s32 i;
     u8 zero;
@@ -934,7 +938,7 @@ void sub_8036600(u32 *self)
 
     i = 0;
     zero = 0;
-    seed = (struct slot_seed *)gStaticData_0817D6C0;
+    seed = (struct slot_seed *)gVvLogoPieceSeeds;
     active = (u8 *)self;
     hold = &seed->hold;
     countdown = (s32 *)((u8 *)self + 4);
@@ -961,9 +965,9 @@ void sub_8036600(u32 *self)
     SLOT_SYSTEM(self)->frameTick = 0;
 }
 
-/* `sub_8036528`'s per-frame slot-array updater, only while the header
+/* `LoadVvLogoGraphics`'s per-frame slot-array updater, only while the header
  * hold-word (`self+0x448`) equals -1: for each of 20 slots, mirrors
- * `sub_8035780`'s own countdown/reload/accumulate shape (offsets `+0`
+ * `UpdateTitleLogoPieces`'s own countdown/reload/accumulate shape (offsets `+0`
  * through `+0x38` this time, no `+0x14` base shift), then, once the
  * whole pass completes, drains a 2-stage decay counter
  * (`self+0x440`/`self+0x438`) that eventually bumps
@@ -993,7 +997,7 @@ SLOT20_ACCESSOR(DeltaA20At, s32, 0x1c)
 SLOT20_ACCESSOR(PosB20At, s32, 0x0c)
 SLOT20_ACCESSOR(DeltaB20At, s32, 0x20)
 
-void sub_8036668(u32 *self)
+void UpdateVvLogoPieces(u32 *self)
 {
     s32 i;
     s32 *timer;

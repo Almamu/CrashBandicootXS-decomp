@@ -36,18 +36,18 @@ extern void sub_8033550();
 extern void sub_8033604();
 extern void sub_80337E4();
 
-extern const u8 gStaticData_0803B8B0[];
+extern const u8 gCategoryFamily0CellAnim[];
 extern const u8 gCategory0SpawnTable[];
 extern const u8 gStaticData_080B2120[];
 extern const u8 gCategory1SpawnTable[];
 extern const u8 gCategory2SpawnTable[];
-extern const u8 gStaticData_080FF1B0[];
-extern const u8 gStaticData_0813D934[];
+extern const u8 gCategoryFamily1CellAnim[];
+extern const u8 gCategory3BgPicture[];
 extern const u8 gCategory3SpawnTable[];
 extern const u8 gStaticData_0814174C[];
-extern const u8 gStaticData_08151AC4[];
+extern const u8 gCategory4BgPicture[];
 extern const u8 gCategory4SpawnTable[];
-extern const u8 gStaticData_08155260[];
+extern const u8 gCategory5BgPicture[];
 extern const u8 gCategory5SpawnTable[];
 extern const u8 gCategory6SpawnTable[];
 extern const u16 gStaticData_08178F80[];
@@ -60,7 +60,7 @@ extern const u16 gStaticData_0817AEA4[];
 const struct category_descriptor gActorCategories[7] = {
     /* 0 */ {
         0,
-        (void *)gStaticData_0803B8B0,
+        (void *)gCategoryFamily0CellAnim,
         0x75b94,
         NULL,
         gStaticData_08178F80,
@@ -75,7 +75,7 @@ const struct category_descriptor gActorCategories[7] = {
     },
     /* 1 */ {
         0,
-        (void *)gStaticData_0803B8B0,
+        (void *)gCategoryFamily0CellAnim,
         0x75b94,
         NULL,
         gStaticData_08178F80,
@@ -90,7 +90,7 @@ const struct category_descriptor gActorCategories[7] = {
     },
     /* 2 */ {
         0,
-        (void *)gStaticData_0803B8B0,
+        (void *)gCategoryFamily0CellAnim,
         0x75b94,
         NULL,
         gStaticData_08178F80,
@@ -105,9 +105,9 @@ const struct category_descriptor gActorCategories[7] = {
     },
     /* 3 */ {
         1,
-        (void *)gStaticData_080FF1B0,
+        (void *)gCategoryFamily1CellAnim,
         0x3e784,
-        (void *)gStaticData_0813D934,
+        (void *)gCategory3BgPicture,
         gStaticData_0817AAA4,
         (struct sub_effect_record *)gCategory3SpawnTable,
         (struct anim_table_record *)gCategoryFamily1AnimTable,
@@ -120,9 +120,9 @@ const struct category_descriptor gActorCategories[7] = {
     },
     /* 4 */ {
         1,
-        (void *)gStaticData_080FF1B0,
+        (void *)gCategoryFamily1CellAnim,
         0x3e784,
-        (void *)gStaticData_08151AC4,
+        (void *)gCategory4BgPicture,
         gStaticData_0817AAA4,
         (struct sub_effect_record *)gCategory4SpawnTable,
         (struct anim_table_record *)gCategoryFamily1AnimTable,
@@ -135,9 +135,9 @@ const struct category_descriptor gActorCategories[7] = {
     },
     /* 5 */ {
         1,
-        (void *)gStaticData_080FF1B0,
+        (void *)gCategoryFamily1CellAnim,
         0x3e784,
-        (void *)gStaticData_08155260,
+        (void *)gCategory5BgPicture,
         gStaticData_0817AAA4,
         (struct sub_effect_record *)gCategory5SpawnTable,
         (struct anim_table_record *)gCategoryFamily1AnimTable,
@@ -150,9 +150,9 @@ const struct category_descriptor gActorCategories[7] = {
     },
     /* 6 */ {
         2,
-        (void *)gStaticData_080FF1B0,
+        (void *)gCategoryFamily1CellAnim,
         0x3e784,
-        (void *)gStaticData_08155260,
+        (void *)gCategory5BgPicture,
         gStaticData_0817AEA4,
         (struct sub_effect_record *)gCategory6SpawnTable,
         (struct anim_table_record *)gCategoryFamily1AnimTable,

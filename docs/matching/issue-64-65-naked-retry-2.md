@@ -6,35 +6,35 @@ now real C, all under old_agbcc. Two are still NAKED.
 
 | Function | File | Result |
 |---|---|---|
-| `sub_80360DC` | graphics_loading_35d1c.c | matched |
-| `sub_8035E14` | graphics_loading_35d1c.c | matched |
-| `sub_80358A8` | graphics_loading_35780.c | matched (needs strength reduction on) |
+| `ResetTitleLogoPieces` | graphics_loading_35d1c.c | matched |
+| `RunTitleScreen` | graphics_loading_35d1c.c | matched |
+| `DrawTitleLogoPieces` | graphics_loading_35780.c | matched (needs strength reduction on) |
 | `LoadCreditsLogos` | actor_part131.c | still NAKED, draft note updated |
-| `sub_803686C` | graphics_loading_35d1c.c | not attempted |
+| `DrawVvLogoPieces` | graphics_loading_35d1c.c | not attempted |
 
 ## File split
 
-`sub_80358A8` only matches with strength reduction **on**, and
-`sub_8036600` only matches with it off. The old
+`DrawTitleLogoPieces` only matches with strength reduction **on**, and
+`InitVvLogoPieces` only matches with it off. The old
 `graphics_loading_35780.c` was therefore split at the 4-byte-aligned
 boundary `0x08035D1C`:
 
-- `graphics_loading_35780.c` has `sub_8035780` and `sub_80358A8`. It is
-  old_agbcc with the default flags. `sub_8035780` matches either way.
-- `graphics_loading_35d1c.c` has everything from `sub_8035D1C` on. It is
+- `graphics_loading_35780.c` has `UpdateTitleLogoPieces` and `DrawTitleLogoPieces`. It is
+  old_agbcc with the default flags. `UpdateTitleLogoPieces` matches either way.
+- `graphics_loading_35d1c.c` has everything from `TitleScreenCheatInput` on. It is
   old_agbcc and keeps `-fno-strength-reduce` (`NO_STRENGTH_REDUCE_OBJS`).
   A whole-file compile of the old file with strength reduction on
-  differed only in `sub_8036600` (16 halfwords).
+  differed only in `InitVvLogoPieces` (16 halfwords).
 
 The shared declarations and helpers are copied into both files.
 `ldscript.txt` lists the new object right after the old one.
 
-Trying to make `sub_8036600` match with strength reduction on did not
+Trying to make `InitVvLogoPieces` match with strength reduction on did not
 work. It either got reversed (check_dbra_loop runs again in the loop-rerun
 pass after the first pass has reduced the givs) or, as a `goto` loop, came
 out with permuted registers.
 
-## `sub_80360DC` (18 -> 0)
+## `ResetTitleLogoPieces` (18 -> 0)
 
 The `goto` loop shape from the first retry was already right. What was
 left was global-alloc priority:
@@ -50,7 +50,7 @@ left was global-alloc priority:
   `lsl` first, `add r0, r0, r1` order. Pointer arithmetic
   canonicalizes the operands the other way round.
 
-## `sub_8035E14` (100 -> 0)
+## `RunTitleScreen` (100 -> 0)
 
 - The seed loop is the same `goto` loop. Here a plain `stride = 0` is
   right, and two `i` references let `i` take r3 before `slot`/`stride`.
@@ -66,7 +66,7 @@ left was global-alloc priority:
   is loaded before the `1`.
 - The `register ... asm("r4")` pin on `self` turned out unnecessary.
 
-## `sub_80358A8` (409 -> 0)
+## `DrawTitleLogoPieces` (409 -> 0)
 
 Brute-forced piece by piece with the variant runner:
 
@@ -101,12 +101,12 @@ loops, and an asm-opaque copy or `"+m"` on `slot`. Something must stop
 PRE from treating `slot << 5` as anticipated at that point without
 blocking `slot + 1`. The draft note says this.
 
-## `sub_803686C`
+## `DrawVvLogoPieces`
 
 Not attempted for lack of time. Its slot pointer walks while `i`
-counts up, like `sub_80358A8`'s strength-reduced loops. So it may also
+counts up, like `DrawTitleLogoPieces`'s strength-reduced loops. So it may also
 need strength reduction on, which would mean another split, or moving
-it next to `sub_80358A8`'s object if the boundaries allow.
+it next to `DrawTitleLogoPieces`'s object if the boundaries allow.
 
 *Later pass (big NAKED retry):* a full C draft is now under
 `#if NON_MATCHING`, 329 halfwords off. It does need strength reduction
@@ -133,6 +133,6 @@ on. Still NAKED; see [big-naked-retry.md](big-naked-retry.md).
 *Later pass (size2 NAKED retry):* `LoadCreditsLogos` is matched; see
 [size2-naked-retry.md](size2-naked-retry.md).
 
-*Later pass (#65 strength-reduction retry):* `sub_803686C` is matched and
+*Later pass (#65 strength-reduction retry):* `DrawVvLogoPieces` is matched and
 lives in the new `graphics_loading_3686c.c`; see
 [sr65-naked-retry.md](sr65-naked-retry.md).

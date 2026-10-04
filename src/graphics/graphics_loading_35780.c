@@ -6,75 +6,75 @@
 #include "graphics_package.h"
 
 /* GitHub issue #65's chunk (0x080354E0-0x08037110): the remaining 19
- * functions after `LoadLevelGraphics`/`LoadBg2Background`/
- * `LoadObjSpriteTiles` (src/graphics/level_graphics.c - see
+ * functions after `InitTitleScreen`/`LoadTitleScreenBg`/
+ * `LoadTitleScreenObjTiles` (src/graphics/level_graphics.c - see
  * docs/matching/issue-65-graphics-loading.md). Most of them operate on
- * the per-level scratch object `LoadLevelGraphics` allocates (still a
+ * the title-screen object `InitTitleScreen` builds (still a
  * raw `u32 *` here - stride-0x34 slot records at `self+0x10` holding
  * Q16.16 position / velocity fields fed by a per-slot "delta record"
  * pointer, a BG2 affine-scroll block at `self+0x214..0x21c` and a
  * rolling-hash "cheat code" detector at `self+0x210`), or on the
- * 20-slot variant `sub_80361B0`'s subsystem uses; `sub_8036E20`/
- * `sub_8036EC4`/`sub_8036FBC` operate on a `struct actor_self` actor
+ * 20-slot variant `RunCompanyLogos`'s subsystem uses; `InitLogoActor`/
+ * `UpdateLogoActor`/`DrawLogoActor` operate on a `struct actor_self` actor
  * part.
  *
  * This translation unit is old_agbcc code (see the Makefile's
  * OLD_AGBCC_OBJS) with the default -O2 strength reduction. It holds only
- * `sub_8035780` and `sub_80358A8`; the rest of the chunk (from
- * `sub_8035D1C`) was split into graphics_loading_35d1c.c in the issues
+ * `UpdateTitleLogoPieces` and `DrawTitleLogoPieces`; the rest of the chunk (from
+ * `TitleScreenCheatInput`) was split into graphics_loading_35d1c.c in the issues
  * #64/#65 second NAKED retry, because that half needs
- * -fno-strength-reduce for `sub_8036600` while `sub_80358A8` needs
+ * -fno-strength-reduce for `InitVvLogoPieces` while `DrawTitleLogoPieces` needs
  * strength reduction on. See docs/matching/issue-64-65-naked-retry-2.md,
  * docs/matching/issue-65-0x08035780-graphics-loading.md and
  * docs/matching/per-file-flags-investigation.md. */
 
-extern struct oam_shadow_buffer *gUnknown_03001300;
+extern struct oam_shadow_buffer *gOamBuffer;
 extern struct AudioContext *gAudioContext;
-extern u8 gUnknown_03001288[2];
+extern u8 gDispcnt[2];
 extern void *gUnknown_03001304;
-extern void *gUnknown_0300160C[2];
-extern s32 gUnknown_03001604;
-extern void *gUnknown_03001608;
+extern void *gLogoActorTiles[2];
+extern s32 gLogoActorTileBuffer;
+extern void *gLogoActorLastFrame;
 extern void (*gUnpackRleSpriteFrameFunc)(void *dst, u8 *frame);
 extern struct held_pressed_pair {
     u16 held;
     u16 pressed;
 } gKeys;
 
-extern u8 gStaticData_0817CFA4[];
-extern u8 gStaticData_0817CFF4[];
-extern u8 gStaticData_0817D698[];
+extern u8 gTitleLogoPieceSeeds[];
+extern u8 gTitleArrowPieceOffsets[];
+extern u8 gLogoActorAnim[];
 extern u8 gStaticData_08178F80[];
 extern u8 gStaticData_0817D768[];
 extern u8 gStaticData_0817D77C[];
 extern u8 gStaticData_0817D790[];
-extern u8 gStaticData_0817D6C0[];
-extern u8 gStaticData_0817D7A4[];
-extern u8 gStaticData_087E55C4[];
+extern u8 gVvLogoPieceSeeds[];
+extern u8 gUniversalLogoBg[];
+extern u8 gLogoActorVtable[];
 
-extern void sub_8006A90(struct oam_shadow_buffer *arg0);
-extern void sub_8006A48(struct oam_shadow_buffer *arg0);
+extern void ResetOamBuffer(struct oam_shadow_buffer *arg0);
+extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
 extern void WaitForVBlank(void);
-extern void sub_8006AAC(struct oam_shadow_buffer *arg0);
-extern void sub_8006AC8(struct oam_shadow_buffer *self, void *record);
-extern void sub_8006A78(struct oam_shadow_buffer *arg0);
+extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
+extern void AddOamEntry(struct oam_shadow_buffer *self, void *record);
+extern void RewindOamBuffer(struct oam_shadow_buffer *arg0);
 extern s32 __divsi3(s32 arg0, s32 arg1);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern void sub_8001614(void);
+extern void CommitDispcnt(void);
 extern void PlaySong(struct AudioContext *self, u32 id);
 extern void FontSetPalette(struct icon_manager *self, u8 val);
 extern s32 GetUiText(s32 arg0);
 extern void UpdateStarfield(s32 arg0);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern void sub_80015B0(void);
+extern void ShowBg2(void);
 extern s32 RandRange(s32 arg0);
 extern void *sub_8026EC0(u32 size);
 extern void sub_8026EB4(void *ptr);
 extern void *sub_8026EDC(s32 size);
 extern void *InitStarfield(void *arg0);
 extern void LoadTaggedAsset(void *asset, void *dest);
-extern void sub_8037110(void *self, void *asset, void *dest);
+extern void LoadTaggedAssetBuffered(void *self, void *asset, void *dest);
 extern void *AllocVramTileBlock(u32 size);
 extern void *mem_alloc(u32 size, u32 flags);
 extern void InitObjTileFreeList(void *arg0);
@@ -104,7 +104,7 @@ struct cam_ref {
     s32 depth;      // 0x10 - the depth at which sprites draw unscaled
 };
 
-/* `gUnknown_03001288`, the REG_DISPCNT shadow `sub_8001614` commits,
+/* `gDispcnt`, the REG_DISPCNT shadow `CommitDispcnt` commits,
  * viewed as its bitfields (field stores give the ROM's byte-wide
  * and/or sequences). */
 struct dispcnt_bits
@@ -143,7 +143,7 @@ union bgcnt
 };
 
 /* One entry of the 8-byte {delta-record pointer, initial hold} seed
- * tables (`gStaticData_0817CFA4`/`gStaticData_0817D6C0`) the slot arrays
+ * tables (`gTitleLogoPieceSeeds`/`gVvLogoPieceSeeds`) the slot arrays
  * are initialized from. */
 struct slot_seed
 {
@@ -151,9 +151,9 @@ struct slot_seed
     s32 hold;
 };
 
-void sub_80358A8(u32 *self);
-void sub_8036068(u32 *self);
-void sub_8035F9C(u32 *self);
+void DrawTitleLogoPieces(u32 *self);
+void DrawTitleScreen(u32 *self);
+void CommitTitleScreenFrame(u32 *self);
 
 /* Per-frame updater for the scratch object's 9-slot (`i` = 0..8,
  * stride 0x34, base `self+4`) record array: while a slot's countdown
@@ -265,7 +265,7 @@ static inline s32 *DeltaBAt(u32 *self, s32 stride)
     return (s32 *)(base + stride);
 }
 
-void sub_8035780(u32 *self_arg)
+void UpdateTitleLogoPieces(u32 *self_arg)
 {
     register u32 *self asm("ip") = self_arg;
     s32 i;
@@ -379,11 +379,11 @@ void sub_8035780(u32 *self_arg)
 }
 
 /* Builds an OAM affine-sprite entry (via `__divsi3`'s Q8 sine/cosine
- * lookup and `sub_8006AC8`'s shadow-OAM insert) for the scratch
+ * lookup and `AddOamEntry`'s shadow-OAM insert) for the scratch
  * object's header record (`self+0x1b0`), then walks the same 9-slot
- * array `sub_8035780` updates: for each active slot (`self+0x14+i*0x34`
+ * array `UpdateTitleLogoPieces` updates: for each active slot (`self+0x14+i*0x34`
  * / `self+0x40+i*0x34` fields, decrementing a per-slot countdown at
- * `gStaticData_0817CFA4`-seeded offsets `self+0xf2*2+i*4`, firing
+ * `gTitleLogoPieceSeeds`-seeded offsets `self+0xf2*2+i*4`, firing
  * `PlaySfx` ids 0x4a/0x3d at zero), and for slots 0-3, builds one more
  * OAM entry per active slot from the shared per-frame DMA-scratch
  * buffer, accumulating a shadow-OAM group index (`sb`) across up to 4
@@ -421,12 +421,12 @@ struct oam_entry
 struct oam_buf
 {
     s32 count;
-    s32 field_04;
-    s32 field_08;
+    s32 base;
+    s32 matrixCount;
     struct oam_entry entries[128];
 };
 
-struct obj_slot
+struct logo_piece
 {
     u8 active;          // 0x00
     u8 pad_01[3];
@@ -454,9 +454,9 @@ static inline void SetAffine(struct oam_buf *buf, s32 m, u16 pa, u16 pb, u16 pc,
     buf->entries[idx + 2].affineParam = pc;
 }
 
-#define SLOT_AT(self, i) (&((struct obj_slot *)((u8 *)(self) + 0x10))[i])
+#define SLOT_AT(self, i) (&((struct logo_piece *)((u8 *)(self) + 0x10))[i])
 
-#define OAMBUF ((struct oam_buf *)gUnknown_03001300)
+#define OAMBUF ((struct oam_buf *)gOamBuffer)
 
 #define ClearOam(oam)                                           \
 {                                                               \
@@ -484,7 +484,7 @@ static inline void SetAffine(struct oam_buf *buf, s32 m, u16 pa, u16 pb, u16 pc,
  *   call.
  * - The second loop has its own counter `k`, and `matrixLo = matrix`
  *   lets the bitfield store do the `& 7`. */
-void sub_80358A8(u32 *self)
+void DrawTitleLogoPieces(u32 *self)
 {
     u16 zero;
     s32 matrix = 0;
@@ -495,7 +495,7 @@ void sub_80358A8(u32 *self)
     struct oam_attrs oamC;
 
     {
-        struct obj_slot *slot = (struct obj_slot *)((u8 *)self + 0x1b0);
+        struct logo_piece *slot = (struct logo_piece *)((u8 *)self + 0x1b0);
 
         if (slot->active)
         {
@@ -510,10 +510,10 @@ void sub_80358A8(u32 *self)
             oamA.y = (slot->posB.q >> 16) - 16;
             oamA.tileNum = 0x1c0;
             oamA.x = (slot->posA.q >> 16) - 0x20 - ((slot->velA << 5) >> 16);
-            sub_8006AC8(gUnknown_03001300, &oamA);
+            AddOamEntry(gOamBuffer, &oamA);
             oamA.tileNum += 8;
             oamA.x = (slot->posA.q >> 16) - 0x20;
-            sub_8006AC8(gUnknown_03001300, &oamA);
+            AddOamEntry(gOamBuffer, &oamA);
             oamA.tileNum += 8;
             {
                 s32 px = slot->posA.q >> 16;
@@ -521,13 +521,13 @@ void sub_80358A8(u32 *self)
 
                 oamA.x = px + dx;
             }
-            sub_8006AC8(gUnknown_03001300, &oamA);
+            AddOamEntry(gOamBuffer, &oamA);
             matrix = 2;
         }
     }
     for (i = 0; i <= 4; i++)
     {
-        struct obj_slot *slot = SLOT_AT(self, 7) - i;
+        struct logo_piece *slot = SLOT_AT(self, 7) - i;
 
         if (slot->active)
         {
@@ -574,18 +574,18 @@ void sub_80358A8(u32 *self)
                 oamB.x = px + dx;
             }
             oamB.y = (slot->posB.q >> 16) - 32 + off;
-            sub_8006AC8(gUnknown_03001300, &oamB);
+            AddOamEntry(gOamBuffer, &oamB);
         }
     }
     {
-        s32 *tbl = (s32 *)gStaticData_0817CFF4;
+        s32 *tbl = (s32 *)gTitleArrowPieceOffsets;
         struct dma_regs *dma2;
 
         k = 0;
         dma2 = (struct dma_regs *)REG_ADDR_DMA3SAD;
         for (; k <= 1; k++)
         {
-            struct obj_slot *slot = SLOT_AT(self, k);
+            struct logo_piece *slot = SLOT_AT(self, k);
             s32 j;
 
             if (slot->active)
@@ -629,14 +629,14 @@ void sub_80358A8(u32 *self)
                     oamC.x = x;
                     oamC.y = y;
                     if (slot->active)
-                        sub_8006AC8(gUnknown_03001300, &oamC);
+                        AddOamEntry(gOamBuffer, &oamC);
                 }
                 oamC.tileNum += 0x10;
             }
         }
     }
     {
-        struct obj_slot *rec = SLOT_AT(self, 2);
+        struct logo_piece *rec = SLOT_AT(self, 2);
 
         if (rec->active)
         {
@@ -644,7 +644,7 @@ void sub_80358A8(u32 *self)
             s32 *shake;
             s32 *q;
 
-            sub_80015B0();
+            ShowBg2();
             a = rec->posA.q;
             b = rec->posB.q;
             shake = (s32 *)((u8 *)self + 0x20c);

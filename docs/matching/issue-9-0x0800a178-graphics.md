@@ -15,7 +15,7 @@ still-raw span (`base_object=None`): `sub_800A178` (ROM `0x0800A178`,
 `docs/rom_map.md` (line ~2624) had already partially flagged
 `sub_800A178`: "mid-function, unconditionally zeroes `self+0x74` - the
 same field `UpdateGameFrame`'s level-load branch sets once from
-`sub_8035E14`'s return value ... consistent with 'total for this level'
+`RunTitleScreen`'s return value ... consistent with 'total for this level'
 being cleared and presumably recomputed under some condition, not fully
 traced here." `docs/matching/issue-9-0x08007634-actor.md` (line ~206)
 had also already flagged both functions as built on `sub_8008200`/

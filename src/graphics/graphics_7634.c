@@ -1,18 +1,18 @@
 #include "core.h"
 
-/* GitHub issue #9: sub_8007634 (0x08007634-0x08007A48), the affine
- * (rotation/scaling) sibling of `sub_80073DC` (graphics.c) - see
+/* GitHub issue #9: DrawAffineSpritePieces (0x08007634-0x08007A48), the affine
+ * (rotation/scaling) sibling of `DrawSpritePieces` (graphics.c) - see
  * docs/matching/issue-9-0x08007634-actor.md. Moved here from
  * asm/code_3_2.s in the issue #9 raw-asm pass.
  *
  * Queues one affine OAM entry per visible sub-piece of an animated
  * `part`, scaled by `part+0x3c` (Q8, at least 0x40). It allocates an
- * affine matrix slot from `gUnknown_03001300->count` (written as a plain
+ * affine matrix slot from `gOamBuffer->matrixCount` (written as a plain
  * scale into the slot's pa/pd, via `FixedInverse16`), selects OBJ mode 1
  * (affine) or 3 (double size, scale > 0x100), and pulls every piece
  * towards the first piece's centre by the scale factor. To find that
  * centre it probes keyframe 0 through `GetSpriteFrame` with `part->tick`
- * temporarily clamped to 0. The tile total goes to `sub_8006C84` once
+ * temporarily clamped to 0. The tile total goes to `UploadObjVram` once
  * after the loop.
  *
  * Built with old_agbcc (Makefile OLD_AGBCC_OBJS): the ROM loads the 0xf
@@ -56,7 +56,7 @@ struct affine_oam {
 
 struct oam_buffer {
     u8 unk_00[8];
-    s32 count;                  // 0x08 - next free affine matrix
+    s32 matrixCount;            // 0x08 - next free affine matrix
     struct affine_oam oam[128]; // 0x0C - param of entry n at +0x12 + 8n
 };
 
@@ -117,15 +117,15 @@ struct affine_part {
 
 extern struct piece_info *GetSpriteFrame(void *part);
 extern s32 GetSpriteTileBase(void *part);
-extern s32 sub_8006C44(void *cursor);
-extern s32 sub_8006C84(void *cursor, s32 src, s32 size);
-extern void sub_8006AC8(void *buffer, void *record);
+extern s32 GetObjVramTile(void *cursor);
+extern s32 UploadObjVram(void *cursor, s32 src, s32 size);
+extern void AddOamEntry(void *buffer, void *record);
 extern s32 FixedInverse16(s32 scale);
 extern s32 _call_via_r1(void *self, void *fn);
-extern void *gUnknown_030012FC;
-extern struct oam_buffer *gUnknown_03001300;
-extern u8 gStaticData_0816B2E0[];
-extern u8 gStaticData_0816B2EC[];
+extern void *gObjVramCursor;
+extern struct oam_buffer *gOamBuffer;
+extern u8 gObjPieceWidths[];
+extern u8 gObjPieceHeights[];
 
 /* Shape/size index -> OBJ shape and size. As inline helpers the `& 3`
  * masks survive tree folding and share one `movs #3`, which is what
@@ -149,12 +149,12 @@ static inline void ClampTick7634(struct affine_part *part, s32 t)
     part->tick = t;
 }
 
-void sub_8007634(void *unused, struct affine_part *part, s32 *pos)
+void DrawAffineSpritePieces(void *unused, struct affine_part *part, s32 *pos)
 {
     struct oam_pair oam;
     s32 total = 0;
     struct piece_info *info = GetSpriteFrame(part);
-    s32 tile = sub_8006C44(gUnknown_030012FC);
+    s32 tile = GetObjVramTile(gObjVramCursor);
     s32 scale = part->scale;
     u16 pa;
     u16 pd;
@@ -172,8 +172,8 @@ void sub_8007634(void *unused, struct affine_part *part, s32 *pos)
         oam.a.objMode = 1;
     else
         oam.a.objMode = 3;
-    buf = gUnknown_03001300;
-    idx = buf->count++;
+    buf = gOamBuffer;
+    idx = buf->matrixCount++;
     oam.a.matrix = idx;
     oam.a.matrixHi = idx >> 3;
     oam.a.matrixTop = idx >> 4;
@@ -204,8 +204,8 @@ void sub_8007634(void *unused, struct affine_part *part, s32 *pos)
     pullY = 0;
     for (i = 0; i != info->u.b.count; i++) {
         s32 id = info->ids[i] & 0xf;
-        s32 w = gStaticData_0816B2E0[id];
-        s32 h = gStaticData_0816B2EC[id];
+        s32 w = gObjPieceWidths[id];
+        s32 h = gObjPieceHeights[id];
         s32 ox = info->offsets[i].x;
         s32 oy = info->offsets[i].y;
         s32 tiles = (w >> 3) * (h >> 3);
@@ -240,15 +240,15 @@ void sub_8007634(void *unused, struct affine_part *part, s32 *pos)
                 cx = first->offsets[0].x;
                 cy = first->offsets[0].y;
                 id0 = *first->ids & 0xf;
-                pw = &gStaticData_0816B2E0[id0];
-                ph = &gStaticData_0816B2EC[id0];
+                pw = &gObjPieceWidths[id0];
+                ph = &gObjPieceHeights[id0];
                 cx += pos[0];
                 cy += pos[1];
                 cx += *pw >> 1;
                 cy += *ph >> 1;
                 if (i == 0) {
-                    pullX = x + (gStaticData_0816B2E0[id] >> 1);
-                    pullY = y + (gStaticData_0816B2EC[id] >> 1);
+                    pullX = x + (gObjPieceWidths[id] >> 1);
+                    pullY = y + (gObjPieceHeights[id] >> 1);
                     pullX -= cx;
                     pullY -= cy;
                     pullX = ((pullX << 8) * scale) >> 16;
@@ -282,7 +282,7 @@ void sub_8007634(void *unused, struct affine_part *part, s32 *pos)
                 oam.a.x = x;
                 oam.a.size = PieceSize7634(id);
                 oam.b.tile = tile;
-                sub_8006AC8(gUnknown_03001300, &oam);
+                AddOamEntry(gOamBuffer, &oam);
             }
         }
         if (PART_FLAG_SET(part, 28)) // 8bpp: twice the tiles
@@ -290,5 +290,5 @@ void sub_8007634(void *unused, struct affine_part *part, s32 *pos)
         tile += tiles;
         total += tiles << 5;
     }
-    sub_8006C84(gUnknown_030012FC, GetSpriteTileBase(part) + (info->u.packed & 0xffffff), total);
+    UploadObjVram(gObjVramCursor, GetSpriteTileBase(part) + (info->u.packed & 0xffffff), total);
 }

@@ -43,7 +43,7 @@ truncate is a no-op (since `x` is already a clean byte and the range
 check keeps `x + 0x20` in range too) and folds it away, leaving only
 `add rX, rX, #0x20` on the taken path with nothing on the untaken one -
 the same "value-propagation defeats a redundant instruction" class of
-gap as [`sub_8001524`](./naked-sub_8001524-matched.md). Fixed the same
+gap as [`SetDispcntMode`](./naked-SetDispcntMode-matched.md). Fixed the same
 way: each fold is emitted as one opaque `asm volatile` block the
 optimizer can't see into, so it can't prove the truncate redundant.
 

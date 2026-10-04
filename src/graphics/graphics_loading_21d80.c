@@ -344,24 +344,24 @@ extern void EnableMusicVCountIrq(void);
 extern void SetSfxVolume(void *arg0, u16 arg1);
 extern void SetMusicVolume(void *arg0, u16 arg1);
 extern void *gAudioContext;
-extern void *gUnknown_030012CC;
+extern void *gSpriteRenderer;
 extern void *gPaletteCycles;
-extern struct tile_asset_cache *gUnknown_030012B8;
-extern void sub_8006EF0(struct tile_asset_cache *self, u16 count, const u8 *records);
+extern struct palette_cache *gPaletteCache;
+extern void SetPaletteCacheSource(struct palette_cache *self, u16 count, const u8 *records);
 extern struct icon_manager *gSmallFont;
 extern struct icon_manager *gLargeFont;
 extern struct icon_manager *InitSmallFont(struct icon_manager *self);
 extern struct icon_manager *InitLargeFont(struct icon_manager *self);
 extern s32 AllocVramDmaQueue(void);
-extern struct oam_shadow_buffer *gUnknown_03001300;
-extern struct oam_shadow_buffer *sub_8006B0C(struct oam_shadow_buffer *arg0);
-extern struct vram_upload_cursor *gUnknown_030012FC;
-extern struct vram_upload_cursor *sub_8006CE8(struct vram_upload_cursor *self, s32 count);
+extern struct oam_shadow_buffer *gOamBuffer;
+extern struct oam_shadow_buffer *InitOamBuffer(struct oam_shadow_buffer *arg0);
+extern struct vram_upload_cursor *gObjVramCursor;
+extern struct vram_upload_cursor *InitObjVramCursor(struct vram_upload_cursor *self, s32 count);
 extern void *gUnknown_03001304;
 extern struct hud_fx_queue *InitPaletteCycles(struct hud_fx_queue *self);
-extern u8 gUnknown_03001288[2];
-extern void sub_8001604(void);
-extern void sub_8001614(void);
+extern u8 gDispcnt[2];
+extern void SetObjMapping1D(void);
+extern void CommitDispcnt(void);
 extern u8 gSpriteBankTable[];
 
 /* `InitLevelState` (docs/rom_map.md, "Found the origin point"): the
@@ -369,14 +369,14 @@ extern u8 gSpriteBankTable[];
  * construct essentially every hot IWRAM global this whole ROM region
  * references - `gAudioContext` (an 8340-byte `AudioContext`
  * allocation), `030012CC`/`D0`/`B8`/`DC`/`E0`/`03001300`/`FC`/
- * `03001304`/`030012B4`/`C8`, clears `gUnknown_03001288`'s mode byte,
+ * `03001304`/`030012B4`/`C8`, clears `gDispcnt`'s mode byte,
  * and zeroes `self+0xc0` before returning `self` unchanged. `gUnknown_
  * 030012D0` gets pointed at a freshly-allocated 4-byte pointer cell
  * which itself is set to `&gSpriteBankTable` (the 729 KB master
  * asset index, resolved separately in docs/rom_map.md).
  *
  * Several of these constructions call a *void*-returning helper
- * (`nullsub_2`, `nullsub_1`, `sub_8006FB4`, `ClearKeys`,
+ * (`nullsub_2`, `nullsub_1`, `InitPaletteCache`, `ClearKeys`,
  * `sub_8025A5C`) immediately after allocating the block, then store
  * *that same allocation* without reloading it - relying on the real
  * ROM function leaving the allocated pointer in `r0` untouched (true
@@ -399,7 +399,7 @@ void *InitLevelState(void *self)
     SetMusicVolume(gAudioContext, 0xc0);
 
     {
-        void **addr = (void **)&gUnknown_030012CC;
+        void **addr = (void **)&gSpriteRenderer;
         register void *tmp asm("r0") = sub_8026EDC(4);
 
         asm volatile("bl nullsub_2" : "+r" (tmp) :: "r1", "r2", "r3", "lr", "cc");
@@ -414,10 +414,10 @@ void *InitLevelState(void *self)
         *(u8 **)tmp = gSpriteBankTable;
     }
     {
-        struct tile_asset_cache **addr = &gUnknown_030012B8;
-        register struct tile_asset_cache *cache asm("r0") = sub_8026EDC(0x8c << 2);
+        struct palette_cache **addr = &gPaletteCache;
+        register struct palette_cache *cache asm("r0") = sub_8026EDC(0x8c << 2);
 
-        asm volatile("bl sub_8006FB4" : "+r" (cache) :: "r1", "r2", "r3", "lr", "cc");
+        asm volatile("bl InitPaletteCache" : "+r" (cache) :: "r1", "r2", "r3", "lr", "cc");
         *addr = cache;
         {
             register u16 count asm("r1") =
@@ -425,7 +425,7 @@ void *InitLevelState(void *self)
             register const u8 *records asm("r2") =
                 ((const struct sprite_bank_table *)gSpriteBankTable)->tilePool;
 
-            sub_8006EF0(cache, count, records);
+            SetPaletteCacheSource(cache, count, records);
         }
     }
     {
@@ -438,14 +438,14 @@ void *InitLevelState(void *self)
     }
     AllocVramDmaQueue();
     {
-        struct oam_shadow_buffer **addr = &gUnknown_03001300;
+        struct oam_shadow_buffer **addr = &gOamBuffer;
 
-        *addr = sub_8006B0C(sub_8026EDC(0x40c));
+        *addr = InitOamBuffer(sub_8026EDC(0x40c));
     }
     {
-        struct vram_upload_cursor **addr = &gUnknown_030012FC;
+        struct vram_upload_cursor **addr = &gObjVramCursor;
 
-        *addr = sub_8006CE8(sub_8026EDC(0xc), 0);
+        *addr = InitObjVramCursor(sub_8026EDC(0xc), 0);
     }
     {
         void **addr = (void **)&gUnknown_03001304;
@@ -467,12 +467,12 @@ void *InitLevelState(void *self)
         *addr = InitPaletteCycles(sub_8026EDC(0x48));
     }
     {
-        register u8 *addr asm("r0") = gUnknown_03001288;
+        register u8 *addr asm("r0") = gDispcnt;
         register u16 zero asm("r4") = 0;
 
         *(u16 *)addr = zero;
-        sub_8001604();
-        sub_8001614();
+        SetObjMapping1D();
+        CommitDispcnt();
         {
             register u8 *addr2 asm("r0") = (u8 *)self + 0xc0;
 

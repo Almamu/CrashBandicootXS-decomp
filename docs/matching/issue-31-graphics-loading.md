@@ -248,8 +248,8 @@ Same `sub_8009ED0` constructor and `+0x20` table-pointer setup as
 `graphics_loading_21d80.c`'s family, not the twin family's lookup-table
 pack), looks up a frame-nibble value through a *double* dereference of
 its own just-stored `+0x20` table pointer (`*(*(part->0x20)) + 0x14`,
-not `sub_800815C`) plus `gUnknown_030012B8`'s tile-asset cache via
-`sub_8006DF8`, unconditionally clears bits 4/5 of `part->0x28` (no OR -
+not `sub_800815C`) plus `gPaletteCache`'s tile-asset cache via
+`GetPaletteSlot`, unconditionally clears bits 4/5 of `part->0x28` (no OR -
 simpler than the twin family's lookup-table pack), fires a single
 `_call_via_r2` trampoline (not twice), and finishes with a three-step
 flags mask (`(((flags & 0x7f) & -5) & -0x41) | 0x10`). Two real bugs

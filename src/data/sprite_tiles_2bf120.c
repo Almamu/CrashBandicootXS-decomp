@@ -307,7 +307,7 @@ const u8 gSpriteBank55Tiles[0x394c0] = {
 };
 
 /* The 125 fixed 4bpp tiles, the header's tilePool/npool: RunPauseMenu
- * builds the 125-slot tile-asset cache (sub_8006EF0/sub_8006DF8) from them. */
+ * builds the 125-slot tile-asset cache (SetPaletteCacheSource/GetPaletteSlot) from them. */
 const u8 gFixedObjTiles[0xfa0] = {
 #include "sprites/tile_pool_4a4660.img.bin.inc"
 };

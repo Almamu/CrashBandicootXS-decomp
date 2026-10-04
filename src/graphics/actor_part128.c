@@ -75,7 +75,7 @@ extern u8 IsCrystalSaved(void *self);
 extern void LoseLife(void *self);
 extern u8 sub_8029794(void);
 extern s32 sub_8029B2C(void);
-extern void sub_8029BAC(s32 a);
+extern void SetCellAnimSpeed(s32 a);
 extern void sub_8029D8C(s32 x, s32 y);
 extern s32 sub_8029E98(void);
 extern s32 sub_8029EB4(void);
@@ -381,9 +381,9 @@ struct actor_hp *sub_802E740(struct actor_hp *self, struct kind_entry *rec, s32 
     if (self->base.z != 0) {
         gUnknown_03001508 = 0;
         ACTOR_SET_STATE(&self->base, 7, 0);
-        sub_8029BAC(0x28);
+        SetCellAnimSpeed(0x28);
     } else {
-        sub_8029BAC(0x1e);
+        SetCellAnimSpeed(0x1e);
         gUnknown_03001508 = 0x180;
     }
     gUnknown_03001507 = 0;
@@ -560,7 +560,7 @@ void sub_802EB78(struct actor_hp *self, s32 dmg)
         gUnknown_03001507 = 0;
         gUnknown_030014E8 = 1;
         gUnknown_03001506 = 1;
-        sub_8029BAC(0x1e);
+        SetCellAnimSpeed(0x1e);
         gUnknown_03001508 = 0;
         CLAMP_SPEED(gUnknown_0300150C);
         gUnknown_0300150C /= 2;

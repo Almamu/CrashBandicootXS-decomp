@@ -207,7 +207,7 @@ struct spawn_rec
 
 extern struct gobj *gPlayer;
 extern void *gLevelState;
-extern void *gUnknown_030012B8;
+extern void *gPaletteCache;
 extern void *gUnknown_030012EC;
 extern u8 *gEntityFlags;
 extern u8 ***gUnknown_030012D0;
@@ -240,7 +240,7 @@ extern void sub_8008E94(void *manager, void *value);
 extern void sub_80087C0(void *self);
 extern void sub_80087B4(void *self);
 extern void sub_800872C(void *self, s32 a);
-extern u8 sub_8006DF8(void *cache, u8 id);
+extern u8 GetPaletteSlot(void *cache, u8 id);
 extern void sub_8007B98(struct aabb *dest, struct gobj *obj);
 extern u8 sub_8001688(struct aabb *a, struct aabb *b);
 extern s32 sub_8009EBC(struct gobj *obj);

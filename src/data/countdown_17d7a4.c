@@ -30,12 +30,12 @@ struct delta_record
 extern const u8 gStaticData_0861C1FC[];
 extern const u8 gStaticData_0862D0CC[];
 extern const u8 gStaticData_086315BC[];
-/* The BG2 picture sub_8036CF4 (graphics_loading_3686c.c) loads. */
-const struct bg_package gStaticData_0817D7A4 = { 30, 20, (void *)gStaticData_0861C1FC, (void *)gStaticData_0862D0CC, (void *)gStaticData_086315BC };
+/* The BG2 picture LoadUniversalLogoBg (graphics_loading_3686c.c) loads. */
+const struct bg_package gUniversalLogoBg = { 30, 20, (void *)gStaticData_0861C1FC, (void *)gStaticData_0862D0CC, (void *)gStaticData_086315BC };
 
-/* The motion sequences of the twenty countdown slots of sub_8036600
+/* The motion sequences of the twenty countdown slots of InitVvLogoPieces
  * (graphics_loading_35d1c.c), which slot_seeds_17d6c0.c's
- * gStaticData_0817D6C0 seeds: each ends with a zero hold. */
+ * gVvLogoPieceSeeds seeds: each ends with a zero hold. */
 const struct delta_record gStaticData_0817D7B8[11] = {
     { 79, 120, 80, 0, 76, 76, 0, 0, 0, 580, 580 },
     { 4, 120, 80, 0, 256, 256, 0, -819, 0, 3276, 3276 },

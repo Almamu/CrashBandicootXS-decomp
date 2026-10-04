@@ -106,7 +106,7 @@ void sub_8010D54(struct collision_queue *self, void *neighbor, s32 kind,
 }
 
 /* Already matched/documented elsewhere in the codebase (graphics.c's
- * `sub_8006AF4`, `src/graphics/graphics.c`) as the exact same
+ * `DestroyOamBuffer`, `src/graphics/graphics.c`) as the exact same
  * one-line "conditional call on bit 0" shape: `sub_8026ED0` (VRAM
  * upload manager, matched in graphics.c) only fires when `arg1`'s low
  * bit is set. `src/graphics/actor_part15.c` already externs this

@@ -45,7 +45,7 @@ extern struct held_pressed_pair gKeys;
 
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
-extern void sub_8029BAC(s32 arg0);
+extern void SetCellAnimSpeed(s32 arg0);
 extern void LoseLife(void *arg0);
 extern void sub_802DFBC(void);
 extern s32 sub_802D4B0(void *self);
@@ -107,7 +107,7 @@ void sub_802B364(struct actor_self *self)
     sub_802BC68(self);
     if (gUnknown_0300148C != 0 && --gUnknown_0300148C == 0) {
         gUnknown_030014A1 = 1;
-        sub_8029BAC(0);
+        SetCellAnimSpeed(0);
         ACTOR_SET_STATE(self, 10, 10);
     }
     if (gUnknown_0300149C != 0 && --gUnknown_0300149C != 0 && gUnknown_030014A0 == 0
@@ -253,7 +253,7 @@ void sub_802B5B4(struct actor_self *self)
  * arms `gUnknown_03001480`, kicks the game-mode transition
  * (`LoseLife`) if not already paused, clears
  * `gUnknown_030014A3`/arms `gUnknown_030014A0`, and fires
- * `sub_8029BAC(0)`/`sub_802DFBC()` - or, while a tier is already
+ * `SetCellAnimSpeed(0)`/`sub_802DFBC()` - or, while a tier is already
  * active, arms a fixed `gUnknown_0300149C` countdown and forwards to
  * `sub_802D4B0` (the "remove a mask" helper, `actor_part58.c`)
  * instead. Either way reports "not yet used" (0).
@@ -321,7 +321,7 @@ s32 sub_802B730(void *selfArg)
                     }
                 }
             }
-            sub_8029BAC(0);
+            SetCellAnimSpeed(0);
             sub_802DFBC();
         } else {
             *usedTimer = 0x4b;
@@ -381,7 +381,7 @@ s32 sub_802B7E0(void *selfArg)
                 gUnknown_030014A3 = zero;
             }
             gUnknown_030014A0 = 1;
-            sub_8029BAC(0);
+            SetCellAnimSpeed(0);
             sub_802DFBC();
         } else {
             *usedTimer = 0x4b;
@@ -422,7 +422,7 @@ void sub_802B864(struct actor_self *self)
  * `self+0x20`, resets `self` to state 9/table-index 9, clears
  * `gUnknown_030014A0`, fires the spawned object's own `self+0x50`
  * trampoline (index 3) if still alive, clears `gUnknown_03001490`, and
- * fires `sub_8029BAC(0x19)`. */
+ * fires `SetCellAnimSpeed(0x19)`. */
 void sub_802B8E8(struct actor_self *self)
 {
     struct actor_self **spawnAddr = (struct actor_self **)&gUnknown_03001490;
@@ -452,12 +452,12 @@ void sub_802B8E8(struct actor_self *self)
             ACTOR_VCALL(*spawnAddr, destroy, 3);
         }
         *spawnAddr = NULL;
-        sub_8029BAC(0x19);
+        SetCellAnimSpeed(0x19);
     }
 }
 
 /* On the state-0x12 anim-frame edge, plays a "confirm" cue
- * (`sub_8029BAC(0x24)`) then either resets `self` to the idle
+ * (`SetCellAnimSpeed(0x24)`) then either resets `self` to the idle
  * table-index 0 (`self+0xc == 0` case) or, gated on
  * `RandRange(3)`'s own result, either restores `self+0xc` or
  * transitions it to 1 - both cases refreshing the anim frame from the
@@ -465,7 +465,7 @@ void sub_802B8E8(struct actor_self *self)
  * `gUnknown_030014A3` edge, fires up to two more `gKeys`
  * input-gated one-shot transitions (state 4/table-index 3 with a cue
  * and a `gUnknown_030014A4` reset, and state 2/table-index 0 with
- * `sub_8029BAC(0x38)`).
+ * `SetCellAnimSpeed(0x38)`).
  *
  * The ROM keeps the "self+0xc == 0" reset case and the
  * `RandRange`-gated case's two outcomes sharing one physical tail
@@ -486,7 +486,7 @@ void sub_802B990(void *selfArg)
     if (self->animDone == 0)
         goto tail;
 
-    sub_8029BAC(0x24);
+    SetCellAnimSpeed(0x24);
     index = self->animIndex;
     if (index == 0)
         goto gated;
@@ -574,7 +574,7 @@ tail:
                 }
                 self->animTime = zero;
             }
-            sub_8029BAC(0x38);
+            SetCellAnimSpeed(0x38);
         }
     }
 }
@@ -598,13 +598,13 @@ void sub_802BA5C(struct actor_self *self)
     if (self->y > 0x2800) {
         self->y = 0x2800;
         ACTOR_SET_STATE(self, 1, 4);
-        sub_8029BAC(0x24);
+        SetCellAnimSpeed(0x24);
     }
 }
 
 /* Two independent `gKeys` input-gated one-shot
  * transitions on `self`: bit 1 resets to state 1/table-index 0 (plain
- * anim-frame idle reset, `sub_8029BAC(0x24)`); bit 0 (of the high
+ * anim-frame idle reset, `SetCellAnimSpeed(0x24)`); bit 0 (of the high
  * halfword) transitions to state 4/table-index 3 with a cue and the
  * `gUnknown_030014A4` stall reset - same pair `sub_802B990` fires. */
 void sub_802BAD0(struct actor_self *self)
@@ -619,7 +619,7 @@ void sub_802BAD0(struct actor_self *self)
         self->animTimer = self->anims[0].duration;
         self->animDone = 0;
         self->animTime = bit;
-        sub_8029BAC(0x24);
+        SetCellAnimSpeed(0x24);
     }
 
     if (input->pressed & 1) {

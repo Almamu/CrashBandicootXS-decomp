@@ -52,14 +52,14 @@ s32 sub_800834C(void)
     return 1;
 }
 
-extern void sub_8007A84(void *self, void *part);
-extern void *gUnknown_030012CC;
+extern void DrawSprite(void *self, void *part);
+extern void *gSpriteRenderer;
 
-/* Tail-calls `sub_8007A84` (already matched in `actor_part.c`) with
- * the global `gUnknown_030012CC` as `self`. */
+/* Tail-calls `DrawSprite` (already matched in `actor_part.c`) with
+ * the global `gSpriteRenderer` as `self`. */
 void sub_8008350(void *part)
 {
-    sub_8007A84(gUnknown_030012CC, part);
+    DrawSprite(gSpriteRenderer, part);
 }
 
 extern void sub_8008044(struct actor *part);
@@ -108,7 +108,7 @@ extern void *gUnknown_030012D0;
 
 /* Ignores its `part` argument entirely (the ROM never reads r0 before
  * overwriting it) - already declared with this signature at its
- * `sub_80073DC` call site in graphics.c. Returns
+ * `DrawSpritePieces` call site in graphics.c. Returns
  * `(*(void **)gUnknown_030012D0)+4`'s value. */
 s32 GetSpriteTileBase(void *part)
 {

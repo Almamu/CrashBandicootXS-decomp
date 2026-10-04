@@ -37,7 +37,7 @@ struct hud_pos
 
 extern void ***gUnknown_030012D0;
 extern void *gLevelState;
-extern u8 *gUnknown_030012B8;
+extern u8 *gPaletteCache;
 extern u32 gHudPartAnims[];
 extern struct hud_pos gHudPartPositions[];
 
@@ -49,7 +49,7 @@ extern void sub_80087C0(struct hud_slot *slot);
 extern void sub_80087B4(struct hud_slot *slot);
 extern void sub_800872C(struct hud_slot *slot, s32 arg);
 extern void sub_800737C(struct hud_slot *slot, s32 x, s32 y);
-extern u8 sub_8006DF8(u8 *cache, s32 recordId);
+extern u8 GetPaletteSlot(u8 *cache, s32 recordId);
 extern void sub_802732C(struct hud_counter *self, u8 iconFlag);
 extern s32 sub_800815C(struct hud_slot *slot);
 
@@ -148,7 +148,7 @@ struct hud_counter *InitHud(struct hud_counter *self)
     {
         struct hud_record *records = (struct hud_record *)SLOTS(self)[13].anim_data->records;
         struct hud_record *rec = &records[SLOTS(self)[13].anim_index];
-        s32 palette = sub_8006DF8(gUnknown_030012B8, rec->tile_record);
+        s32 palette = GetPaletteSlot(gPaletteCache, rec->tile_record);
 
         SLOTS(self)[13].palette = palette;
     }

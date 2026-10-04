@@ -52,13 +52,13 @@ struct oam_entry
 };
 
 /* Same 0x40C-byte OAM shadow buffer src/graphics/graphics.c names
- * `struct oam_shadow_buffer`; `field_08` counts the affine matrices
+ * `struct oam_shadow_buffer`; `matrixCount` counts the affine matrices
  * handed out this frame. */
 struct oam_shadow_buffer
 {
     s32 count;
-    s32 field_04;
-    s32 field_08;
+    s32 base;
+    s32 matrixCount;
     struct oam_entry entries[128];
 };
 
@@ -88,11 +88,11 @@ struct xy
     s32 y;
 };
 
-extern struct oam_shadow_buffer *gUnknown_03001300;
+extern struct oam_shadow_buffer *gOamBuffer;
 extern u32 gStaticData_0816C634[];
 extern u8 gStaticData_086377C0[];
 
-extern void sub_8006AC8(struct oam_shadow_buffer *buf, struct oam_attrs *oam);
+extern void AddOamEntry(struct oam_shadow_buffer *buf, struct oam_attrs *oam);
 extern void ObjAffineSet(void *src, void *dst, s32 count, s32 stride);
 
 void sub_801E190(struct cursor_panel *self);
@@ -140,7 +140,7 @@ struct cursor_panel *sub_801E04C(struct cursor_panel *self)
     p->anim = AnimTable(0x240);
     SetAnim(p, 0);
     self->part->palette = sub_800815C(self->part);
-    sub_8006D84(gUnknown_030012B8, PART_RECORD(self->part).tileRecord);
+    LockPalette(gPaletteCache, PART_RECORD(self->part).tileRecord);
     sub_801E4F4(self, 0x78, 0x35);
     self->oam.y = self->line.y0 - 0x20;
     self->oam.affineMode = 1;
@@ -244,16 +244,16 @@ void sub_801E2BC(struct cursor_panel *self)
 
             self->oam.x = self->line.x0 - 0x20;
             self->oam.y = self->line.y0 - 0x20;
-            idx = gUnknown_03001300->field_08++;
+            idx = gOamBuffer->matrixCount++;
             self->oam.matrixLo = idx;
             self->oam.matrixBit3 = (idx >> 3) & 1;
             self->oam.matrixBit4 = (idx >> 4) & 1;
             sub_801E3A4(self);
-            SetAffineParam(gUnknown_03001300, idx * 4 + 0, self->matrix[0]);
-            SetAffineParam(gUnknown_03001300, idx * 4 + 1, self->matrix[1]);
-            SetAffineParam(gUnknown_03001300, idx * 4 + 2, self->matrix[2]);
-            SetAffineParam(gUnknown_03001300, idx * 4 + 3, self->matrix[3]);
-            sub_8006AC8(gUnknown_03001300, &self->oam);
+            SetAffineParam(gOamBuffer, idx * 4 + 0, self->matrix[0]);
+            SetAffineParam(gOamBuffer, idx * 4 + 1, self->matrix[1]);
+            SetAffineParam(gOamBuffer, idx * 4 + 2, self->matrix[2]);
+            SetAffineParam(gOamBuffer, idx * 4 + 3, self->matrix[3]);
+            AddOamEntry(gOamBuffer, &self->oam);
         }
         break;
     default:
@@ -374,7 +374,7 @@ void sub_801E504(struct cursor_panel *self)
 /* Destructor (`level_menu.panel`, called from DestroyLevelSelect). */
 void sub_801E524(struct cursor_panel *self, s32 flags)
 {
-    sub_8006D68(gUnknown_030012B8, PART_RECORD(self->part).tileRecord);
+    UnlockPalette(gPaletteCache, PART_RECORD(self->part).tileRecord);
     DELETE_PART(self->part);
     if (flags & 1)
         sub_8026ED0(self);

@@ -14,16 +14,16 @@ Nine closed as plain C, with no register pins:
 | `sub_802A110` | `actor_part103.c` | old_agbcc | same inline as `sub_802A018` |
 | `sub_802A3AC` | `actor_part103.c` | old_agbcc | same inline, inside a list walk |
 | `sub_802C7A8` | `actor_part19h.c` | old_agbcc (file moved) | same inline, inside a list walk |
-| `sub_8029BC4` | `actor_part98.c` | both | `tile++` in each branch |
-| `sub_802996C` | `actor_part95.c` | both | `sub_8029BC4` inlined twice, upward clear loop |
-| `sub_80297C8` | `actor_part95.c` | both | expression order and locals |
+| `FillCellAnimTilemap` | `actor_part98.c` | both | `tile++` in each branch |
+| `ResetCellAnimBg` | `actor_part95.c` | both | `FillCellAnimTilemap` inlined twice, upward clear loop |
+| `UploadCellAnimFrame` | `actor_part95.c` | both | expression order and locals |
 | `sub_802A674` | `actor_part94.c` | both | returns the callee's result |
 | `sub_802A688` | `actor_part94.c` | both | returns the callee's result |
 
 `sub_802A688` was not on the list, but it is `sub_802A674`'s twin in the
 same file and parked for the same reason.
 
-Still NAKED: `InitActorCategory`, `sub_8029890`, `SelectActorCategory`,
+Still NAKED: `InitActorCategory`, `InitCellAnim`, `SelectActorCategory`,
 `RunActorCategoryFrame`.
 
 ## The AABB group: one inline, one frame struct
@@ -80,7 +80,7 @@ the same under either compiler. `actor_part19h.c` holds only
 
 ## The tile-map fill: `tile++` in each branch
 
-`sub_8029BC4` fills a screen block with consecutive tile numbers.
+`FillCellAnimTilemap` fills a screen block with consecutive tile numbers.
 Columns past 31 go to the next screen block:
 
 ```c
@@ -101,7 +101,7 @@ the `0x7c0` offset and `h` that the old note described. The two
 increments give `tile` more references before cross-jumping merges them.
 It then outranks `base` in global allocation.
 
-`sub_802996C` inlines the same body twice, once with `arg0 == 0` and
+`ResetCellAnimBg` inlines the same body twice, once with `arg0 == 0` and
 once with `arg0 == 1`. The inlined copy needs both branches to assign
 `base`. The standalone version's default-initializer form is 5
 halfwords off once inlined with a constant. Its 8-word clear loop is
@@ -110,15 +110,15 @@ Loop reversal and biv elimination turn that into the ROM's signed
 pointer loop, with `vram` in `r1`. A downward `i`, a constant base, or a
 hand-written pointer loop each give a different shape.
 
-## `sub_80297C8`
+## `UploadCellAnimFrame`
 
 `gDrawMirroredTilemapFunc` is a function pointer, called through
 `_call_via_r4`. Three changes each fixed one piece of the instruction
 order:
 
-- `base + ((gUnknown_030013B0 >> 8) * gUnknown_030013A4 + 0x204)`,
+- `base + ((gCellAnimTime >> 8) * gCellAnimFrameSize + 0x204)`,
   with the parentheses.
-- `dst = gUnknown_030013B9 != 0 ? 0x06000000 : 0x06002000;`
+- `dst = gCellAnimPage != 0 ? 0x06000000 : 0x06002000;`
 - The callback's first argument goes into its own local.
 
 ## `sub_802A674` / `sub_802A688`
@@ -130,8 +130,8 @@ TU-wide allocator quirk.
 
 ## Not closed
 
-- **`sub_8029890`** (37 halfwords, both compilers). All of it is in the
-  `gUnknown_030013A4` block. The ROM stores `A4` once, after the
+- **`InitCellAnim`** (37 halfwords, both compilers). All of it is in the
+  `gCellAnimFrameSize` block. The ROM stores `A4` once, after the
   `if (flag)`, and then reloads it for the division through a copy of
   its address (`adds r1, r4, #0` ... `ldr r1, [r1]`). The draft
   (`A4 = A0 = area << 5; if (B8) A4 += ...`) stores twice. Storing a

@@ -14,13 +14,13 @@ struct counter_widget {
     void *starfield;
 };
 
-extern struct oam_shadow_buffer *gUnknown_03001300;
-extern struct tile_asset_cache *gUnknown_030012B8;
+extern struct oam_shadow_buffer *gOamBuffer;
+extern struct palette_cache *gPaletteCache;
 
 extern void WaitForVBlank(void);
-extern void sub_8006EA8(struct tile_asset_cache *self);
-extern void sub_8006AAC(struct oam_shadow_buffer *arg0);
-extern void sub_8006DC8(struct tile_asset_cache *arg0);
+extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
+extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
+extern void UploadPaletteCache(struct palette_cache *arg0);
 extern void FlushVramDmaQueue(void);
 
 extern u8 gStaticData_0816C484[];
@@ -30,17 +30,17 @@ extern void DestroyStarfield(void *self, s32 arg1);
 extern void sub_8026ED0(void *self);
 extern void *InitStarfield(void *arg0);
 extern void LoadGraphicsPackage(void *buf, void *asset);
-extern void *sub_801E644(void *buf, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
-extern s32 sub_801E640(void *buf);
-extern void sub_800132C(u8 flags, s32 frameDelay, u8 sync);
-extern void sub_8001604(void);
-extern void sub_80015E0(void);
-extern void sub_8001524(s32 val);
-extern void sub_8001614(void);
+extern void *InitBgSetup(void *buf, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
+extern s32 GetBgSetupControl(void *buf);
+extern void FadeBrightness(u8 flags, s32 frameDelay, u8 sync);
+extern void SetObjMapping1D(void);
+extern void ShowObj(void);
+extern void SetDispcntMode(s32 val);
+extern void CommitDispcnt(void);
 extern struct counter_widget *gLanguageSelect;
 
 /* Left raw (asm/code_3_2_20a.s, alongside DrawLanguageSelect) rather than
- * matched here - it fully decodes (initializes gUnknown_030012B8's tile
+ * matched here - it fully decodes (initializes gPaletteCache's tile
  * cache with 4 fixed OBJ tiles, then copies a few icon_manager fields
  * from gSmallFont's instance into gLargeFont's), but hits
  * the same class of gcc-2.9 register-allocation difficulty already
@@ -76,9 +76,9 @@ void LoadLanguageSelectBg(struct counter_widget *self)
     b |= 0x10;
     self->field_d = b;
 
-    sub_801E644(buf, 2, 0x1e, 1, 3);
+    InitBgSetup(buf, 2, 0x1e, 1, 3);
     LoadGraphicsPackage(buf, gStaticData_0816C484);
-    REG_BG0CNT = sub_801E640(buf);
+    REG_BG0CNT = GetBgSetupControl(buf);
     *(vu32 *)REG_ADDR_BG0HOFS = zero;
 }
 
@@ -94,8 +94,8 @@ void CommitLanguageSelectFrame(struct counter_widget *self)
 {
     REG_DISPCNT = *(u16 *)&self->field_c;
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
-    sub_8006DC8(gUnknown_030012B8);
-    sub_8006AAC(gUnknown_03001300);
+    UploadPaletteCache(gPaletteCache);
+    CommitOamBuffer(gOamBuffer);
     FlushVramDmaQueue();
 }
 
@@ -115,30 +115,30 @@ void DestroyLanguageSelect(void *self, u32 flags)
  * request, and kicks off the fade/screen machinery. Returns `self`. */
 void *InitLanguageSelect(struct counter_widget *self)
 {
-    sub_8006EA8(gUnknown_030012B8);
+    FreeUnlockedPaletteSlots(gPaletteCache);
     InitLanguageSelectGraphics(self);
     LoadLanguageSelectBg(self);
     self->starfield = InitStarfield(sub_8026EDC(0x14));
-    sub_800132C(0x80, 1, 0);
-    sub_8001604();
-    sub_80015E0();
-    sub_8001524(1);
-    sub_8001614();
+    FadeBrightness(0x80, 1, 0);
+    SetObjMapping1D();
+    ShowObj();
+    SetDispcntMode(1);
+    CommitDispcnt();
     return self;
 }
 
 void CloseLanguageSelect(void)
 {
-    sub_800132C(0, 1, 0);
+    FadeBrightness(0, 1, 0);
     if (gLanguageSelect != NULL) {
         DestroyLanguageSelect(gLanguageSelect, 3);
     }
     gLanguageSelect = NULL;
-    sub_8006EA8(gUnknown_030012B8);
+    FreeUnlockedPaletteSlots(gPaletteCache);
 }
 
 void OpenLanguageSelect(void)
 {
-    sub_8006EA8(gUnknown_030012B8);
+    FreeUnlockedPaletteSlots(gPaletteCache);
     gLanguageSelect = InitLanguageSelect(sub_8026EDC(0x14));
 }

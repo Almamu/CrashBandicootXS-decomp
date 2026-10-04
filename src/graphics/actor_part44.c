@@ -24,10 +24,10 @@ extern s32 CollectWumpa(void *arg0);
 extern void sub_802E484(s32 x, s32 y, s32 amount);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 __divsi3(s32 arg0, s32 arg1);
-extern void sub_8029BAC(s32 arg0);
+extern void SetCellAnimSpeed(s32 arg0);
 extern s32 sub_8029748(s32 arg0);
 extern s32 QueueVramDmaTransfer(void *arg0, void *arg1, u16 arg2, u16 arg3);
-extern s32 sub_800132C(s32 a, s32 b, s32 c);
+extern s32 FadeBrightness(s32 a, s32 b, s32 c);
 extern s32 sub_802A668(s32 arg0);
 extern s32 sub_8029B2C(void);
 extern void FreeVramTileBlock(void *arg0);
@@ -209,7 +209,7 @@ void sub_802F570(void *selfArg)
             *(u16 *)&self->base.animTimer = anim;
             *(u8 *)&self->base.animDone = zero2;
             self->base.animTime = zero;
-            sub_8029BAC(0x28);
+            SetCellAnimSpeed(0x28);
             gUnknown_03001507 = state;
             gUnknown_03001506 = zero2;
         }
@@ -241,7 +241,7 @@ void sub_802F5AC(void *selfArg)
     if (self->base.stateTime == 0x32) {
         self->base.state = 1;
         self->base.stateTime = 0;
-        sub_8029BAC(0x28);
+        SetCellAnimSpeed(0x28);
     }
 }
 
@@ -264,7 +264,7 @@ void sub_802F5E4(void *selfArg)
     }
 
     if (gUnknown_03001505 == 0 && self->base.y > 0x7080) {
-        sub_800132C(0, 2, 1);
+        FadeBrightness(0, 2, 1);
         gUnknown_03001505 = 1;
     }
 
@@ -288,7 +288,7 @@ void sub_802F640(void *selfArg)
     self->base.depth = v;
 
     if (gUnknown_03001505 == 0 && v > 0x8200) {
-        sub_800132C(0, 2, 1);
+        FadeBrightness(0, 2, 1);
         gUnknown_03001505 = 1;
         gUnknown_030014E8 = 1;
     }
@@ -318,7 +318,7 @@ void sub_802F69C(void *selfArg)
             *(u16 *)&self->base.animTimer = anim;
             *(u8 *)&self->base.animDone = zero2;
             self->base.animTime = zero;
-            sub_8029BAC(0x28);
+            SetCellAnimSpeed(0x28);
             gUnknown_03001507 = state;
             gUnknown_03001506 = zero2;
         }

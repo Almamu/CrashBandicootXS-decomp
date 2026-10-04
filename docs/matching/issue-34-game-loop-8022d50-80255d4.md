@@ -20,7 +20,7 @@ slots at `self+0x1b8`/`0x1bc` are torn down (`sub_80087C0`/
 `PlayRoom`, game_loop39.c, already uses) when non-null. `self+0x1bc`'s
 actor additionally feeds its own `+0x20`-table/`+0x2d`-tag hitbox record
 (the same convention `DrawCrate`, game_loop35.c, and `sub_8010674`,
-game_loop23.c, already document) into `sub_8006D08` (the tile-asset-cache
+game_loop23.c, already document) into `LoadPaletteSlot` (the tile-asset-cache
 slot loader) - `self+0x29`'s low nibble is the cache slot, and the
 record's own `+0x14` byte is the asset id. Finally `gUnknown_030012EC`
 (a `dual_array_manager`, per `actor_part11.c`'s canonical definition) is
@@ -226,10 +226,10 @@ fires when the gate says "no longer in this state."
 **Level-load loop** (function entry, before the state dispatch):
 allocates a `0x220`-byte scratch buffer (`sub_8026EDC`, matches
 `src/graphics/level_graphics.c`'s own doc comment for this exact
-allocation) and hands it straight to `LoadLevelGraphics`, then polls
-`sub_8035E14`; while it returns `2` ("still loading") the loop calls
+allocation) and hands it straight to `InitTitleScreen`, then polls
+`RunTitleScreen`; while it returns `2` ("still loading") the loop calls
 `RunCredits` (map/progress-screen trigger) and repeats. Once
-`sub_8035E14` returns something else: `0` triggers
+`RunTitleScreen` returns something else: `0` triggers
 `PlayCutscene(*gLevelState, 2)`, anything nonzero triggers a
 `OpenSaveMenu`/`RunSaveMenu(1,0)`/`CloseSaveMenu` input-poll bracket
 (purpose not chased further, out of scope for this pass).

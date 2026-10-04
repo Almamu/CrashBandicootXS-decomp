@@ -46,9 +46,9 @@ for the full write-up.
 `docs/matching.md`'s "`0x08037110`-`0x08038538`" entry for the full
 write-up):
 
-- `src/audio/counter_selector.c` - `sub_8037110`, `nullsub_7`,
-  `sub_8037154`, `sub_803716C` (UNUSED - no caller anywhere in the
-  ROM), `RunLanguageSelect`, `LanguageSelectInput`
+- `src/audio/counter_selector.c` - `LoadTaggedAssetBuffered`, `nullsub_7`,
+  `DestroyCompanyLogos`, `DestroyLogoActor` (reached only through
+  gLogoActorVtable's slot 1), `RunLanguageSelect`, `LanguageSelectInput`
 - `src/audio/counter_selector_setup.c` - `LoadLanguageSelectBg`, `LanguageSelectBlink`,
   `CommitLanguageSelectFrame`, `DestroyLanguageSelect`, `InitLanguageSelect`, `CloseLanguageSelect`,
   `OpenLanguageSelect`

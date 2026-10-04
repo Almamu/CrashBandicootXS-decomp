@@ -36,8 +36,8 @@ static inline void SetChildPos(struct box_part *child, s32 x, s32 y)
 }
 ...
 SetChildPos(self->child,
-            self->hist[idx].x + gStaticData_0816A820[gRoomFrameCount & 0xff] * 16,
-            self->hist[idx].y + gStaticData_0816A820[(gRoomFrameCount >> 1) & 0xff] * 8 - 0x1800);
+            self->hist[idx].x + gSineTable[gRoomFrameCount & 0xff] * 16,
+            self->hist[idx].y + gSineTable[(gRoomFrameCount >> 1) & 0xff] * 8 - 0x1800);
 ```
 
 The spelling matters:

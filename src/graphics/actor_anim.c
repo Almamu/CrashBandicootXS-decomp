@@ -38,12 +38,12 @@ s32 GetAnimFrameAttr(struct anim_part_instance *self)
 
 asm(".align 2, 0");
 
-extern void *gUnknown_0300137C;
+extern void *gCategorySpriteSheet;
 
 /* Resolves the current keyframe's tile-graphics pointer: looks up
  * `frameTable[frameIndex].frameIndex`, adds `GetAnimFrameBaseOffset()`'s
  * result, and uses that as an index into `frameOffsets` (an array of
- * byte offsets) to get a pointer relative to the `gUnknown_0300137C`
+ * byte offsets) to get a pointer relative to the `gCategorySpriteSheet`
  * tile-graphics base. */
 u8 *GetAnimFrameData(struct anim_part_instance *self)
 {
@@ -55,7 +55,7 @@ u8 *GetAnimFrameData(struct anim_part_instance *self)
     u32 *offsets;
 
     base = GetAnimFrameBaseOffset(self);
-    g = &gUnknown_0300137C;
+    g = &gCategorySpriteSheet;
     idx = self->frameIndex;
     table = self->frameTable;
     val = table[idx].frameIndex;
@@ -90,7 +90,7 @@ asm(".align 2, 0");
 
 /* Shared shape for the 20 near-identical teardown functions below: same
  * doubly-linked-list unlink convention already named in
- * src/audio/counter_selector.c's `sub_803716C` (`+0x48`=prev,
+ * src/audio/counter_selector.c's `DestroyLogoActor` (`+0x48`=prev,
  * `+0x4c`=next, `+0x50`=state/vtable pointer) - duplicated here rather
  * than shared, matching this project's existing per-file convention for
  * small locally-scoped structs (see `struct aabb`). */

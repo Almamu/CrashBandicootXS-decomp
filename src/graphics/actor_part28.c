@@ -37,8 +37,8 @@ extern u8 gUnknown_030015FE;
 extern u8 gUnknown_030015FF;
 extern u16 gUnknown_03001590;
 extern s32 gUnknown_03001594;
-extern void *gUnknown_030008B4;
-extern void *gUnknown_030008B8;
+extern void *gFlashBgPalette;
+extern void *gFlashObjPalette;
 extern void *gAudioContext;
 
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
@@ -54,7 +54,7 @@ void sub_8033804(void)
     }
 }
 
-/* Palette flash toggle: `gUnknown_030008B4`/`gUnknown_030008B8` point
+/* Palette flash toggle: `gFlashBgPalette`/`gFlashObjPalette` point
  * into palette RAM (BG palette 1 and OBJ palette 10, iwram_data.c), and
  * this sets color 15 of both. The first call caches the original color
  * into `gUnknown_03001590`; from then on, `flag` picks between white
@@ -64,23 +64,23 @@ void sub_8033828(u8 flag)
     register u16 val asm("r1");
 
     if (gUnknown_03001594 == 0) {
-        gUnknown_03001590 = ((u16 *)gUnknown_030008B4)[15];
+        gUnknown_03001590 = ((u16 *)gFlashBgPalette)[15];
         gUnknown_03001594 = 1;
     }
 
     if (flag != 0) {
-        register u16 *p asm("r0") = gUnknown_030008B4;
+        register u16 *p asm("r0") = gFlashBgPalette;
 
         val = RGB_WHITE;
         p[15] = val;
     } else {
-        register u16 *p asm("r2") = gUnknown_030008B4;
+        register u16 *p asm("r2") = gFlashBgPalette;
 
         val = gUnknown_03001590;
         p[15] = val;
     }
 
-    ((u16 *)gUnknown_030008B8)[15] = val;
+    ((u16 *)gFlashObjPalette)[15] = val;
 }
 
 /* Constant getter - returns the singleton's lifetime counter

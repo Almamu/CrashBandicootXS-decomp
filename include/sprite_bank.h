@@ -10,7 +10,7 @@
  * animation index into its `anims`, +0x30 the step within that animation.
  *
  * Readers: GetSpriteTileBase (tileBase), GetSpriteFrame (anim -> seq -> frame),
- * sub_8007634/sub_80073DC (the pieces), sub_8007C30/sub_8007CF8 and
+ * DrawAffineSpritePieces/DrawSpritePieces (the pieces), sub_8007C30/sub_8007CF8 and
  * sub_80084C4-sub_80085B8 (the frame's boxes and anchor, picked by the
  * layout type), RunPauseMenu (the fixed tile pool). Older files read the
  * same records through local views with only the fields they use
@@ -49,7 +49,7 @@ struct sprite_point {
 
 /*
  * A piece byte: the low nibble indexes the OBJ shape/size tables
- * gStaticData_0816B2E0 (width) / gStaticData_0816B2EC (height); the high
+ * gObjPieceWidths (width) / gObjPieceHeights (height); the high
  * nibble of a frame's *first* piece is the frame's layout type, which says
  * which of the records below follow the 12-byte header (the readers switch
  * on it):
@@ -177,7 +177,7 @@ struct sprite_frame_3box_anchor {
 struct sprite_anim {
     const u16 *seq;                     /* 0x00 - [frameCount] frame indices */
     struct sprite_box box[2];           /* 0x04, 0x0C */
-    u8 tileRecord;                      /* 0x14 - sub_8006DF8/sub_8006D84 record id */
+    u8 tileRecord;                      /* 0x14 - GetPaletteSlot/LockPalette record id */
     u8 duration;                        /* 0x15 - ticks per step */
     u8 frameCount;                      /* 0x16 - steps in `seq` */
     u8 flags;                           /* 0x17 - SPRITE_ANIM_LOOP */

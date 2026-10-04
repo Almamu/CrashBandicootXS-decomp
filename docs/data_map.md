@@ -57,12 +57,12 @@ the appendix.
 
 | Range | Size | Format | Consumers | Conf. | Effort |
 |---|---:|---|---|---|---|
-| `0803B8B0`-`080B1444` | 482,196 | BG0 cell animation A (palette, 19x13 cells, 60 frames) | `sub_8029890`/`sub_80297C8` via category descriptors 0-2 | high | **converted** |
+| `0803B8B0`-`080B1444` | 482,196 | BG0 cell animation A (palette, 19x13 cells, 60 frames) | `InitCellAnim`/`UploadCellAnimFrame` via category descriptors 0-2 | high | **converted** |
 | `080B1444`-`080B2120` | 3,292 | category 0 `sub_effect_record` table (164 records) | `SelectActorCategory`, `sub_802A5xx` | high | **converted** |
 | `080C0C36`-`080C2758` | 6,946 | 2 B pad + category 1/2 `sub_effect_record` tables | same | high | **converted** (the pad is gbagfx's padding) |
 | `080C2758`-`080FF1B0` | 248,408 | compressed OBJ frame sets A and B (the old "rotation strips") | `GetAnimFrameData` via table_B `0817941C`/`0817A880`, unpacked by the `gUnpackRleSpriteFrameFunc` IWRAM hook | high | **converted** |
-| `080FF1B0`-`0813D934` | 255,876 | BG0 cell animation B (38x10 cells, 21 frames) | `sub_8029890` via category descriptors 3-6 | high | **converted** |
-| `0813D934`-`0814174C` | 15,896 | category 3 BG1 picture + `sub_effect_record` table | `sub_802F7B0`, `SelectActorCategory` | high | **converted** |
+| `080FF1B0`-`0813D934` | 255,876 | BG0 cell animation B (38x10 cells, 21 frames) | `InitCellAnim` via category descriptors 3-6 | high | **converted** |
+| `0813D934`-`0814174C` | 15,896 | category 3 BG1 picture + `sub_effect_record` table | `LoadBgPicture`, `SelectActorCategory` | high | **converted** |
 | `08151AC2`-`0815A050` | 34,190 | category 4-6 BG1 pictures + `sub_effect_record` tables | same | high | **converted** (the pad is gbagfx's padding) |
 | `0815A050`-`08167AD4` | 55,940 | compressed OBJ frame set C | `GetAnimFrameData` via table_B `0817BA44` | high | **converted** |
 | `08167AD4`-`0817E78C` | 92,180 | 200 small/mid tables: gameplay, menus, HUD, actors, text (the built sfx table sits in between) | direct, see appendix | mostly high | easy (a few medium) |
@@ -72,7 +72,7 @@ the appendix.
 | `08270F08`-`082B91D0` | 295,624 | level tile sets 4-5 | as tile sets 1-3 | high | **done** (grit) |
 | `082B91D0`-`082BF120` | 24,400 | per-room level data, 8 rooms | as block 1 | high | **done** (C) |
 | `082BF120`-`084A4660` | 1,987,904 | sprite tile pool for the 56 sprite banks | `graphics_7634.c`/`graphics_73dc.c` (`GetSpriteTileBase` + frame offset) | high | **done** (grit) |
-| `084A4660`-`084A5600` | 4,000 | 125 fixed 4bpp tiles | `RunPauseMenu` pool, `sub_8006DF8` | high | **done** (grit) |
+| `084A4660`-`084A5600` | 4,000 | 125 fixed 4bpp tiles | `RunPauseMenu` pool, `GetPaletteSlot` | high | **done** (grit) |
 | `084A5600`-`084C0006` | 109,062 | sprite-bank table ("master asset table"): header, 56 banks, 2,429 frames | `RunPauseMenu`, `InitLevelState`, every `**gUnknown_030012D0` user | high | **converted** (C) |
 | `084C0006`-`0855BCB4` | 638,126 | GAX2 sound-effect data set: 88 instruments, 87 8-bit samples, sample table, the SFX voice handler type | `PlaySfx`/`GAX_fx_ex` voices via `GaxSongHeader.sfxTypes` (`StartSong`) | high | **converted** (`gax_audio.py --sfx`) |
 | `085A4C5C`-`086ECCD2` | 28,979 | 111 labels between the built intro/tileset1 LZ77 blobs: GAX2 tables and strings, libgcc `__clz_tab` x2, EEPROM tables, 23 intro palettes, 67 alignment pads | direct / slide packages | high | easy (the pads and palettes **done**) |
@@ -137,18 +137,18 @@ By category, as a share of the 8,038,172-byte data total:
 
 ## The huge blobs, in ROM order
 
-### `gStaticData_0803B8B0` (485,488 B): BG0 cell animation A + category-0 table
+### `gCategoryFamily0CellAnim` (485,488 B): BG0 cell animation A + category-0 table
 
 Nothing references this label directly. It is reached through the
 category descriptors `gActorCategories[0..2]` (`include/actor_anim.h`):
-`family_shared_04 = 0x0803B8B0`, `family_shared_08 = 0x75B94`, and
+`cellAnim = 0x0803B8B0`, `cellAnimSize = 0x75B94`, and
 `sub_effect_table = 0x080B1444` for category 0. `InitActorCategory`
-passes the first two to `sub_8029890` (`src/graphics/actor_part95.c`).
+passes the first two to `InitCellAnim` (`src/graphics/actor_part95.c`).
 That function reads a "cell record": a 256-colour palette (DMA'd whole to
-`0x05000000` by `sub_802996C`), `s16` cols and rows at `+0x200`/`+0x202`,
+`0x05000000` by `ResetCellAnimBg`), `s16` cols and rows at `+0x200`/`+0x202`,
 then frames of `cols*rows*32` bytes of 4bpp tiles. When the category type
 is 0, each frame also carries `((cols*rows)+7)/8*4` bytes of side data.
-`sub_80297C8` DMAs one frame per tick to BG0 and hands the side data to
+`UploadCellAnimFrame` DMAs one frame per tick to BG0 and hands the side data to
 the `gDrawMirroredTilemapFunc` callback. The frame count is `(size - 0x204) /
 frameSize`.
 
@@ -179,7 +179,7 @@ animation-table `table_B` array:
 | `080C2758` | 0x17A80 | **compressed frame set A**: 152 back-to-back zero-run-compressed frames `{8, 8, 0x30, 0}` + run stream | the 152 absolute pointers of `table_B` `0x0817941C` (anim record 0 of categories 0-2, 148 distinct) all land on a frame header | medium |
 | `080DA1D8` | 0x24FD8 | **compressed frame set B**: 112 frames of 10x10 tiles | the 123 pointers of `gStaticData_0817A880` (the `sub_802DFDC` singleton's `table_B`, 112 distinct) | medium |
 | `080FF1B0` | 0x3E784 | **BG0 cell animation B**: palette[256], cols=38, rows=10, **21 frames x 12,160 B** (no side data, type != 0) | descriptors 3-6 `+0x04`/`+0x08` = `{0x080FF1B0, 0x3E784}`; `0x204 + 21*12160` exact | medium |
-| `0813D934` | 0x3498 | **BG1 picture** (category 3, descriptor `+0x0C`) | `sub_802F7B0` layout below; size exact | medium |
+| `0813D934` | 0x3498 | **BG1 picture** (category 3, descriptor `+0x0C`) | `LoadBgPicture` layout below; size exact | medium |
 | `08140DCC` | 0x980 | category 3 `sub_effect_record[121]` + 0xC | descriptor 3 `+0x14`; ends exactly at the `0814174C` LZ77 sheet | easy |
 
 **Status:** the two tables are converted (`src/data/sub_effect_0c0c38.c`),
@@ -189,7 +189,7 @@ and cell animation B, the category 3 picture and its table too
 built too: it is the zero padding gbagfx writes after the `.lz` stream
 (docs/data.md, "LZ77 stream padding").
 
-The **BG1 picture** format, from `sub_802F7B0` (`actor_part45d.c`):
+The **BG1 picture** format, from `LoadBgPicture` (`actor_part45d.c`):
 `u16 palette[256]`, `s16 cols @0x200`, `s16 rows @0x202`,
 `u32 tiles @0x204`, `u16 map[cols*rows]` padded to 4 bytes (`((n+1)/2)*4`),
 `tiles*32` bytes of 4bpp tiles, then `(n+1)/2` bytes of palette-bank
@@ -344,7 +344,7 @@ from the matched readers (`RunPauseMenu` in `settings_menu15.c`, `GetSpriteTileB
 0x084A5610 bank_record[56] (12 B): { anim_record *anims; frame_desc **frames; u16 unk; u16 nanims; }
     (every "**gUnknown_030012D0 + 0x27C"-style offset in src/ is 12*N: bank N)
 per bank, back to back:
-    anim_record[nanims] (0x1C): u16 *keyframes @0, two boxes @4/@0xC, u8 tileRecord @0x14 (sub_8006DF8 id),
+    anim_record[nanims] (0x1C): u16 *keyframes @0, two boxes @4/@0xC, u8 tileRecord @0x14 (GetPaletteSlot id),
                                 u8 duration @0x15, u8 frameCount @0x16, u8 flags @0x17 (bit 1 = loop)
     u16 keyframes[]             (frame indices, frameCount per anim)
     frame_desc *frames[nframes]
@@ -575,7 +575,7 @@ consumers share one definition, and function pointers are just the
 function names.
 
 The experiment (done in the worktree, then reverted, so no ROM-producing
-file is changed): `gStaticData_0816B2E0`/`0816B2EC` (the OBJ piece
+file is changed): `gObjPieceWidths`/`0816B2EC` (the OBJ piece
 width/height tables, `u8[12]` each) moved into `src/data/obj_piece_sizes.c`
 as `const u8` arrays. `data/data.s` got a second section
 (`.section .rodata.after_0816B2F8, "a"`) from the next label on.
@@ -631,9 +631,9 @@ vtable shapes).
 
 | Address | Size | Format | Consumers | Conf. | Effort |
 |---|---:|---|---|---|---|
-| `0803B8B0` | 0x76870 | composite: BG0 streamed cell animation A + category-0 sub-effect table. **Converted** (`src/data/cell_anim_03b8b0.c`) | `sub_8029890`, `sub_80297C8`, `sub_802996C` +2 | high | done |
-| `080C0C36` | 0x80B16 | composite: sub-effect tables, two compressed OBJ frame sets, BG0 cell animation B, BG1 picture. **Converted**, the 2-byte pad as gbagfx's padding of `00_0b2120.bin.lz` | `SelectActorCategory`, `GetAnimFrameData`, `sub_8029890` +2 | high | done |
-| `08151AC2` | 0x16012 | composite: BG1 pictures, sub-effect tables, compressed OBJ frame set C (categories 3-6). **Converted**, the 2-byte pad as gbagfx's padding of `01_14174c.bin.lz` | `SelectActorCategory`, `GetAnimFrameData`, `sub_802F7B0` | high | done |
+| `0803B8B0` | 0x76870 | composite: BG0 streamed cell animation A + category-0 sub-effect table. **Converted** (`src/data/cell_anim_03b8b0.c`) | `InitCellAnim`, `UploadCellAnimFrame`, `ResetCellAnimBg` +2 | high | done |
+| `080C0C36` | 0x80B16 | composite: sub-effect tables, two compressed OBJ frame sets, BG0 cell animation B, BG1 picture. **Converted**, the 2-byte pad as gbagfx's padding of `00_0b2120.bin.lz` | `SelectActorCategory`, `GetAnimFrameData`, `InitCellAnim` +2 | high | done |
+| `08151AC2` | 0x16012 | composite: BG1 pictures, sub-effect tables, compressed OBJ frame set C (categories 3-6). **Converted**, the 2-byte pad as gbagfx's padding of `01_14174c.bin.lz` | `SelectActorCategory`, `GetAnimFrameData`, `LoadBgPicture` | high | done |
 | `08167AD4` | 0x200 | N. Gin's airship: 16-colour palette (+ zero to 0x200). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_8031504`, `sub_8031604` | high | done |
 | `08167CD4` | 0x1E14 | N. Gin's airship picture: {cols 18, rows 12}, 4 frames of {tile count, u16 map, 4bpp tiles} sharing one pool (graphics/boss_pictures/, tools/boss_pictures.py). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_8030F88` | medium | done |
 | `08169AE8` | 0x200 | Cortex's hovercraft: palette (16 colours + 240 x 0x03E0). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_8032AF8`, `sub_8033604`, `sub_80336CC` | high | done |
@@ -660,8 +660,8 @@ vtable shapes).
 | `0816B284` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `InitPauseMenu` | medium | easy |
 | `0816B298` | 0x28 | table (element layout: see consumers). **Converted** (`src/data/pause_rows_16b298.c`) | `InitPauseMenu` | medium | done |
 | `0816B2C0` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/pause_rows_16b298.c`) | `RunPauseMenu` | medium | done |
-| `0816B2E0` | 0xC | table (element layout: see consumers). **Converted** (`src/data/obj_sizes_16b2e0.c`) | `sub_80073DC`, `sub_8007634` | medium | done |
-| `0816B2EC` | 0xC | table (element layout: see consumers). **Converted** (`src/data/obj_sizes_16b2e0.c`) | `sub_80073DC`, `sub_8007634` | medium | done |
+| `0816B2E0` | 0xC | table (element layout: see consumers). **Converted** (`src/data/obj_sizes_16b2e0.c`) | `DrawSpritePieces`, `DrawAffineSpritePieces` | medium | done |
+| `0816B2EC` | 0xC | table (element layout: see consumers). **Converted** (`src/data/obj_sizes_16b2e0.c`) | `DrawSpritePieces`, `DrawAffineSpritePieces` | medium | done |
 | `0816B2F8` | 0x8 | all zero (zero-initialised table). **Converted** (`src/data/obj_sizes_16b2e0.c`) | `sub_0800D18C`, `sub_8007C30`, `sub_8007CF8` +3 | high | done |
 | `0816B300` | 0x4 | all zero (zero-initialised table). **Converted** (`src/data/obj_sizes_16b2e0.c`) | `sub_80084C4`, `sub_800A884`, `sub_8011BD4` +1 | high | done |
 | `0816B304` | 0x318 | 44 {s32, s32, s32} motion records + 33 {a, b} entry pairs (`gStaticData_0816B514`, gStaticData_0816B92C's entries). **Converted** (`src/data/motion_records_16b304.c`) | `sub_800B704`, `sub_800B838`, `sub_8012AF4` | high | done |
@@ -735,13 +735,13 @@ vtable shapes).
 | `0816C558` | 0x14 | table of u32 (`u32` x 5). **Converted** (`src/data/map_tables_16c498.c`) | `sub_801C608` | high | done |
 | `0816C56C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/map_tables_16c498.c`) | `RunLevelSelect` | medium | done |
 | `0816C58C` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `sub_801D7F8` | medium | easy |
-| `0816C5A0` | 0x50 | pointer table (20 data pointers) | `sub_801DAD8` | high | easy |
-| `0816C5F0` | 0x20 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801D828` | high | done |
+| `0816C5A0` | 0x50 | pointer table (20 data pointers) | `UpdateZoomBg` | high | easy |
+| `0816C5F0` | 0x20 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c5f0.c`) | `InitZoomBg` | high | done |
 | `0816C610` | 0x14 | table of u32 (`u32` x 5). **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801DF0C` | high | done |
 | `0816C624` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801DEA4` | high | done |
 | `0816C634` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801E190` | high | done |
-| `0816C644` | 0x30 | table of s32 (`s32` x 12). **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801E688`, `sub_801E788` | high | done |
-| `0816C674` | 0x30 | table of s32 (`s32` x 12). **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801E688`, `sub_801E788` | high | done |
+| `0816C644` | 0x30 | table of s32 (`s32` x 12). **Converted** (`src/data/map_tables_16c5f0.c`) | `FitScaledSprite`, `DrawScaledSprite` | high | done |
+| `0816C674` | 0x30 | table of s32 (`s32` x 12). **Converted** (`src/data/map_tables_16c5f0.c`) | `FitScaledSprite`, `DrawScaledSprite` | high | done |
 | `0816C6A4` (`gEntitySpawnFuncs`) | 0x170 | function-pointer table: 92 Thumb function pointers (menu/trigger-effect dispatch) (`void (*)(void)` x 92) | `CreateEntitySpawner` | high | easy |
 | `0816C814` (`gThemePaletteCycle2`) | 0xA | `u16[5]` palette-entry list of a level-start colour cycle. **Converted** (`src/data/level_table_16c814.c`) | `RunRoom` | high | done |
 | `0816C81E` (`gThemePaletteCycle1A`) | 0x12 | `u16[9]` colour-cycle list. **Converted** (same) | `RunRoom` | high | done |
@@ -769,7 +769,7 @@ vtable shapes).
 | `08175760` | 0x3800 | palette-cycle frames: 32 x 0x1C0-byte BGR555 blocks (BG palettes 0-13). **Converted** (`src/data/palette_cycle_175760.c`) | `sub_802AB58` | high | done |
 | `08178F60` | 0x10 | palette-cycle cursor starts `s32[4]`. **Converted** | `sub_802ABC8` | high | done |
 | `08178F70` | 0x10 | palette-cycle cursor bounds `s32[4]`. **Converted** | `sub_802ABC8` | high | done |
-| `08178F80` | 0x1738 | categories 0-2 family data: OBJ palette, keyframe tables (table_A), anim table gCategoryFamily0AnimTable (41 x 0x28) and table_B arrays. **Converted** (`src/data/anim_family_178f80.c`, docs/data.md "Category families") | `sub_80361B0` | high | done |
+| `08178F80` | 0x1738 | categories 0-2 family data: OBJ palette, keyframe tables (table_A), anim table gCategoryFamily0AnimTable (41 x 0x28) and table_B arrays. **Converted** (`src/data/anim_family_178f80.c`, docs/data.md "Category families") | `RunCompanyLogos` | high | done |
 | `0817A6B8` | 0x70 | function-pointer / pointer-to-member table (14 code pointers) | `sub_802B364`, `sub_802C208` | high | easy |
 | `0817A728` | 0x20 | 16-colour palette. **Converted** (`src/data/actor_tables_17a728.c`) | `sub_802B730`, `sub_802BB4C` | high | done |
 | `0817A748` | 0x20 | 16-colour palette. **Converted** | `sub_802BB4C` | high | done |
@@ -818,18 +818,18 @@ vtable shapes).
 | `0817C5D0` | 0x96C | the credits: text lines with opcodes 1 n (picture n), 2 (small font), 3 (large font), zero-terminated. **Converted** (`src/data/credits_17c5d0.c`) | `InitCredits` | high | done |
 | `0817CF3C` | 0x4 | an empty string (4 bytes). **Converted** (`src/data/credits_17c5d0.c`) | `UpdateCreditsText` | high | done |
 | `0817CF40` | 0x64 | table of struct popup_glyph_src; 10 word(s) look like ROM pointers | `LoadCreditsLogos` | high | easy |
-| `0817CFA4` | 0x50 | table (element layout: see consumers); 9 word(s) look like ROM pointers | `sub_8035E14`, `sub_80360DC` | medium | easy |
-| `0817CFF4` | 0x40 | 8 {x, y} OAM piece offsets. **Converted** (`src/data/level_gfx_17cff4.c`) | `sub_80358A8` | high | done |
-| `0817D034` | 0x20 | table (element layout: see consumers); 1 word(s) look like ROM pointers. **Converted** (`src/data/level_gfx_17cff4.c`) | `LoadLevelGraphics` | medium | done |
-| `0817D054` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/level_gfx_17cff4.c`) | `LoadLevelGraphics` | high | done |
-| `0817D074` | 0x70 | 16-colour palette + 4 OBJ sprite `struct bg_package`s (`gStaticData_0817D094`/`0A8`/`0BC`/`0D0`, gUnknown_030008BC's). **Converted** (`src/data/level_gfx_17cff4.c`) | `LoadLevelGraphics` | medium | done |
-| `0817D0E4` | 0x5B4 | `struct bg_package` (BG2) + 9 motion sequences of `struct delta_record` (`gStaticData_0817D0F8`...), the seeds' targets. **Converted** (`src/data/level_gfx_17cff4.c`) | `LoadBg2Background` | high | done |
-| `0817D698` | 0x28 | an animation record (actor_anim.h's `struct anim_table_record`, family A record 0's arrays). **Converted** (`src/data/level_gfx_17cff4.c`) | `sub_80361B0` | medium | done |
-| `0817D6C0` | 0xA8 | table (element layout: see consumers); 20 word(s) look like ROM pointers | `sub_8036600` | medium | easy |
-| `0817D768` | 0x14 | table (element layout: see consumers); 2 word(s) look like ROM pointers | `sub_8036528` | medium | easy |
-| `0817D77C` | 0x14 | table (element layout: see consumers); 2 word(s) look like ROM pointers | `sub_8036528` | medium | easy |
-| `0817D790` | 0x14 | table (element layout: see consumers); 2 word(s) look like ROM pointers | `sub_8036528` | medium | easy |
-| `0817D7A4` | 0xF70 | `struct bg_package` (BG2) + 20 motion sequences of `struct delta_record` + the 6 language names (`gLanguageNameEnglish`...). **Converted** (`src/data/countdown_17d7a4.c`) | `sub_8036CF4` | medium | done |
+| `0817CFA4` | 0x50 | table (element layout: see consumers); 9 word(s) look like ROM pointers | `RunTitleScreen`, `ResetTitleLogoPieces` | medium | easy |
+| `0817CFF4` | 0x40 | 8 {x, y} OAM piece offsets. **Converted** (`src/data/level_gfx_17cff4.c`) | `DrawTitleLogoPieces` | high | done |
+| `0817D034` | 0x20 | table (element layout: see consumers); 1 word(s) look like ROM pointers. **Converted** (`src/data/level_gfx_17cff4.c`) | `InitTitleScreen` | medium | done |
+| `0817D054` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/level_gfx_17cff4.c`) | `InitTitleScreen` | high | done |
+| `0817D074` | 0x70 | 16-colour palette + 4 OBJ sprite `struct bg_package`s (`gTitleBandicootObj`/`0A8`/`0BC`/`0D0`, gTitleObjPackages's). **Converted** (`src/data/level_gfx_17cff4.c`) | `InitTitleScreen` | medium | done |
+| `0817D0E4` | 0x5B4 | `struct bg_package` (BG2) + 9 motion sequences of `struct delta_record` (`gStaticData_0817D0F8`...), the seeds' targets. **Converted** (`src/data/level_gfx_17cff4.c`) | `LoadTitleScreenBg` | high | done |
+| `0817D698` | 0x28 | an animation record (actor_anim.h's `struct anim_table_record`, family A record 0's arrays). **Converted** (`src/data/level_gfx_17cff4.c`) | `RunCompanyLogos` | medium | done |
+| `0817D6C0` | 0xA8 | table (element layout: see consumers); 20 word(s) look like ROM pointers | `InitVvLogoPieces` | medium | easy |
+| `0817D768` | 0x14 | table (element layout: see consumers); 2 word(s) look like ROM pointers | `LoadVvLogoGraphics` | medium | easy |
+| `0817D77C` | 0x14 | table (element layout: see consumers); 2 word(s) look like ROM pointers | `LoadVvLogoGraphics` | medium | easy |
+| `0817D790` | 0x14 | table (element layout: see consumers); 2 word(s) look like ROM pointers | `LoadVvLogoGraphics` | medium | easy |
+| `0817D7A4` | 0xF70 | `struct bg_package` (BG2) + 20 motion sequences of `struct delta_record` + the 6 language names (`gLanguageNameEnglish`...). **Converted** (`src/data/countdown_17d7a4.c`) | `LoadUniversalLogoBg` | medium | done |
 | `0817E714` | 0x18 | pointer table (6 data pointers) (`void*` x 6) | `DrawLanguageSelect` | high | easy |
 | `0817E72C` | 0x20 | table of u16; 1 word(s) look like ROM pointers (`u16` x 16). **Converted** (`src/data/palettes_17e72c.c`) | `InitLanguageSelectGraphics` | high | done |
 | `0817E74C` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/palettes_17e72c.c`) | `InitLanguageSelectGraphics` | high | done |
@@ -1041,5 +1041,5 @@ vtable shapes).
 | `087E551C` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8033EF4` | high | easy |
 | `087E5554` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8034058` | high | easy |
 | `087E558C` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80342D4` | high | easy |
-| `087E55C4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8036E20`, `sub_803716C` | high | easy |
+| `087E55C4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `InitLogoActor`, `DestroyLogoActor` | high | easy |
 | `087E55E4` | 0x1AA1C | IWRAM image (ARM code + initialised data, 0x9E8 B) copied to 0x03000000 by crt0, then 0xFF cartridge fill | `_0800012C` | high | **converted** (`asm/intr_main.s`, `src/iwram/`, ldscript `iwram`/`rom_fill`) |

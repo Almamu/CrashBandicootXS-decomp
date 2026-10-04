@@ -79,7 +79,7 @@ the older notes said.
 | `sub_800C940` / `sub_800C97C` (actor_part116.c) | drafts unchanged (10 / 27 hw). The ROM saves a callee-saved register it never uses (r5, and r8 with r7 skipped). |
 | `sub_800CD00` (actor_part109.c) | new old_agbcc draft under `NON_MATCHING`, 42 hw: the player box's address is held in r6 from its first build (CSE, including through `-fno-cse-follow-jumps`/`-fno-cse-skip-blocks`) where the ROM rematerializes it from sp until the first overlap test. |
 
-The raw-asm functions `sub_8007634`, `sub_800A884` and `PlayerHandleEvent`
+The raw-asm functions `DrawAffineSpritePieces`, `sub_800A884` and `PlayerHandleEvent`
 (still in `asm/*.s`) were not attempted.
 
 ## Tools

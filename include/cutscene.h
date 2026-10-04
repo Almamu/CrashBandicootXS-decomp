@@ -19,9 +19,9 @@ struct cutscene_slide
                             //        LZ77 Mode 4 bitmap (ShowSlidePicture reads
                             //        it at +0x200)
     s32 wait;               // 0x04 - WaitForKeyPress's frame count
-    s32 fade;               // 0x08 - sub_800132C flags (| 0x80) as the
+    s32 fade;               // 0x08 - FadeBrightness flags (| 0x80) as the
                             //        slide starts
-    s32 fadeAfter;          // 0x0C - sub_800132C flags after it, -1 = none
+    s32 fadeAfter;          // 0x0C - FadeBrightness flags after it, -1 = none
     u8 buttons;             // 0x10 - WaitForKeyPress's checkButtons; 1 = the
                             //        slide is skipped past (SkipSlides)
     u8 duckMusic;           // 0x11 - FadeOutMusic after the slide

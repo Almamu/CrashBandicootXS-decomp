@@ -190,7 +190,7 @@ progress on two of them without reaching a byte-exact match on either
   runtime `movs`+`rsbs` negation) plus a minor register-permutation
   knock-on (the two bitfield addresses land in `r2`/`r4` here instead
   of the ROM's `r2`/`r3`). The mask-folding half matches the exact
-  unfixable value-propagation already documented on `sub_8001524`
+  unfixable value-propagation already documented on `SetDispcntMode`
   elsewhere in `docs/matching.md` - the established negative-literal
   register-pin idiom (`ClearPowers`/`LoadLanguageSelectBg`) was tried again here
   and still gets folded via a cheaper `subs`/`adds` off the

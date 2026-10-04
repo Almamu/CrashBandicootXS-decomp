@@ -16,21 +16,21 @@ struct fade_overlay {
     struct icon_manager *icons; /* 0x18 */
 };
 
-extern struct vram_upload_cursor *gUnknown_030012FC;
-extern void sub_8006C4C(struct vram_upload_cursor *self);
+extern struct vram_upload_cursor *gObjVramCursor;
+extern void ResetObjVram(struct vram_upload_cursor *self);
 extern struct icon_manager *gSmallFont;
 extern void *_call_via_r1(void *arg0, void *arg1);
-extern s32 sub_8006C58(struct vram_upload_cursor *self, s32 size);
-extern void sub_8006C30(struct vram_upload_cursor *self);
-extern struct tile_asset_cache *gUnknown_030012B8;
-extern void sub_8006EA8(struct tile_asset_cache *self);
-extern s32 sub_8006D50(struct tile_asset_cache *self, s32 index);
-extern void sub_8006DC8(struct tile_asset_cache *self);
-extern struct oam_shadow_buffer *gUnknown_03001300;
-extern void sub_8006A90(struct oam_shadow_buffer *arg0);
-extern void sub_8006A48(struct oam_shadow_buffer *arg0);
+extern s32 ReserveObjVram(struct vram_upload_cursor *self, s32 size);
+extern void MarkObjVram(struct vram_upload_cursor *self);
+extern struct palette_cache *gPaletteCache;
+extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
+extern s32 ClaimPaletteSlot(struct palette_cache *self, s32 index);
+extern void UploadPaletteCache(struct palette_cache *self);
+extern struct oam_shadow_buffer *gOamBuffer;
+extern void ResetOamBuffer(struct oam_shadow_buffer *arg0);
+extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
 extern void WaitForVBlank(void);
-extern void sub_8006AAC(struct oam_shadow_buffer *arg0);
+extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
 extern u16 gStaticData_0817C512[];
 extern u16 gStaticData_0817C532[];
 extern u16 gStaticData_0817C552[];
@@ -54,12 +54,12 @@ extern u16 gStaticData_0817C572[];
 void sub_803487C(struct fade_overlay *self)
 {
     struct icon_manager *icons;
-    struct tile_asset_cache *cache;
+    struct palette_cache *cache;
     s32 i;
 
-    gUnknown_030012FC->field_08 = 0;
-    sub_8006C4C(gUnknown_030012FC);
-    sub_8006C4C(gUnknown_030012FC);
+    gObjVramCursor->baseTile = 0;
+    ResetObjVram(gObjVramCursor);
+    ResetObjVram(gObjVramCursor);
 
     icons = gSmallFont;
     self->icons = icons;
@@ -69,16 +69,16 @@ void sub_803487C(struct fade_overlay *self)
         _call_via_r1((u8 *)icons + *(s16 *)rec, *(void **)(rec + 4));
     }
     self->icons->marginX = 0;
-    sub_8006C58(gUnknown_030012FC, self->icons->tileCount << 5);
-    sub_8006C30(gUnknown_030012FC);
+    ReserveObjVram(gObjVramCursor, self->icons->tileCount << 5);
+    MarkObjVram(gObjVramCursor);
 
-    sub_8006EA8(gUnknown_030012B8);
-    sub_8006D50(gUnknown_030012B8, 0);
-    sub_8006D50(gUnknown_030012B8, 1);
-    sub_8006D50(gUnknown_030012B8, 2);
-    sub_8006D50(gUnknown_030012B8, 3);
+    FreeUnlockedPaletteSlots(gPaletteCache);
+    ClaimPaletteSlot(gPaletteCache, 0);
+    ClaimPaletteSlot(gPaletteCache, 1);
+    ClaimPaletteSlot(gPaletteCache, 2);
+    ClaimPaletteSlot(gPaletteCache, 3);
 
-    cache = gUnknown_030012B8;
+    cache = gPaletteCache;
     {
         u16 *destA = (u16 *)cache->slots[0];
         u16 *destB = (u16 *)cache->slots[2];
@@ -90,12 +90,12 @@ void sub_803487C(struct fade_overlay *self)
             destB[i + 0x10] = gStaticData_0817C572[i];
         }
     }
-    sub_8006DC8(gUnknown_030012B8);
+    UploadPaletteCache(gPaletteCache);
 
     ((u8 *)&self->dispcnt)[1] |= 0x10;
 
-    sub_8006A90(gUnknown_03001300);
-    sub_8006A48(gUnknown_03001300);
+    ResetOamBuffer(gOamBuffer);
+    HideUnusedOamEntries(gOamBuffer);
     WaitForVBlank();
-    sub_8006AAC(gUnknown_03001300);
+    CommitOamBuffer(gOamBuffer);
 }

@@ -27,9 +27,9 @@ extern const u8 gStaticData_0863D3B8[];
 extern const u8 gStaticData_0863D43C[];
 
 /* Ten {palette, tiles} tagged-asset pairs, indexed by image number:
- * sub_801DAD8 (actor_part_1da38.c, `struct image_pair`) loads both
+ * UpdateZoomBg (actor_part_1da38.c, `struct image_pair`) loads both
  * through LoadTaggedAsset. */
-const u8 *const gStaticData_0816C5A0[10][2] = {
+const u8 *const gLevelSelectPictures[10][2] = {
     { gStaticData_0863CF98, gStaticData_08637A70 },
     { gStaticData_0863D01C, gStaticData_086382C8 },
     { gStaticData_0863D124, gStaticData_0863945C },

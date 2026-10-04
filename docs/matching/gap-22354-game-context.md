@@ -14,13 +14,13 @@ This is the destructor that pairs with `InitLevelState`. It calls
 `FreeVramDmaQueue`, then destroys every singleton the constructor built,
 each with flags 3 when it is non-NULL:
 
-- `gUnknown_03001300` (`sub_8006AF4`)
-- `gUnknown_030012FC` (`sub_8006CD0`)
+- `gOamBuffer` (`DestroyOamBuffer`)
+- `gObjVramCursor` (`DestroyObjVramCursor`)
 - `gUnknown_03001304` (freed directly)
 - the audio context `gAudioContext` (`DisableMusicVCountIrq`, then `DestroyAudioContext`)
 - the two icon managers `gLargeFont`/`gSmallFont`, through
   their method table
-- `gUnknown_030012CC`/`D0`/`B8`/`B4`/`C8`
+- `gSpriteRenderer`/`D0`/`B8`/`B4`/`C8`
 
 It then clears the context pointer `gLevelStateSingleton` and frees `self`
 on bit 0 of `flags`, gcc 2.x's deleting-destructor convention. Nothing
@@ -42,10 +42,10 @@ passes it.
 
 `docs/rom_map.md` already read this one ("Into `graphics_loading`'s
 remainder: a BG2-affine screen-effect setup"). It sets the DISPCNT
-shadow `gUnknown_03001288` to 0x40 and calls the
-`sub_8001524`/`sub_80015B0`/`sub_80015E0` mode setters. It then zero-fills
+shadow `gDispcnt` to 0x40 and calls the
+`SetDispcntMode`/`ShowBg2`/`ShowObj` mode setters. It then zero-fills
 the 0x200-byte BG palette with DMA3 and resets the BG2 affine registers
-to identity. Next it reloads the tile cache (`sub_8006EA8`) and resets
+to identity. Next it reloads the tile cache (`FreeUnlockedPaletteSlots`) and resets
 the font icon manager `gSmallFont` (tile base 0x200, then its
 slot-6 method). Finally it runs a stack-allocated `InitCutscenePlayer` text
 pager (`game_loop57.c`) over list `gCutscenes[idx]`, with the
@@ -72,7 +72,7 @@ against the alternatives:
   initializer is copied out of `.rodata` instead. Field-by-field
   assignment of a local makes it live at entry (a partial set), and
   global allocation puts it in r2:r3.
-- **`dispcnt = &gUnknown_03001288` as a local, assigned first**, so the
+- **`dispcnt = &gDispcnt` as a local, assigned first**, so the
   address is loaded (into r8) before `zero`/`mode` are set, as in the
   ROM. **`zero` and `mode` are variables too**: both constants live in
   callee-saved registers (r4 and sb) across the mode-setter calls.

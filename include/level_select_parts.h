@@ -26,7 +26,7 @@ struct sprite_vtable
 struct anim_record
 {
     u8 unk_00[0x14];
-    u8 tileRecord; // 0x14 - sub_8006D68/sub_8006D84 tile-cache record
+    u8 tileRecord; // 0x14 - UnlockPalette/LockPalette tile-cache record
     u8 unk_15;
     u8 frameCount; // 0x16
     u8 unk_17[5];
@@ -75,7 +75,7 @@ struct level_item
 };
 
 extern void ***gUnknown_030012D0;
-extern void *gUnknown_030012B8;
+extern void *gPaletteCache;
 extern u8 gStaticData_087E4BAC[];
 
 extern void *sub_8026EDC(u32 size);
@@ -89,8 +89,8 @@ extern s32 sub_800815C(struct sprite *part);
 extern void sub_800737C(struct sprite *part, s32 x, s32 y);
 extern void sub_8008890(struct sprite *part, s32 dx, s32 dy);
 extern void sub_8008044(struct sprite *part);
-extern void sub_8006D68(void *cache, u8 record);
-extern void sub_8006D84(void *cache, u8 record);
+extern void UnlockPalette(void *cache, u8 record);
+extern void LockPalette(void *cache, u8 record);
 extern s32 RandRange(s32 max);
 extern void LoadTaggedAsset(void *asset, void *dest);
 

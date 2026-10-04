@@ -46,7 +46,9 @@ extern void LoadTaggedAsset(void *asset, void *dest);
  * first defers the pointer-advance between consecutive register
  * writes until after the mask/shift is computed, whereas ROM advances
  * the pointer immediately after each store. */
-void sub_80007EC(void *asset, void *palette)
+/* UNUSED - no caller anywhere in the ROM (no Thumb `bl` to it and no
+ * pointer to it in baserom.gba, nor any reference in asm/ or src/). */
+void ShowBitmapScreen(void *asset, void *palette)
 {
     u16 rawA;
     s32 zero;

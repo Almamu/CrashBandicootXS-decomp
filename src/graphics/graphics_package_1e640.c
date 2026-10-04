@@ -4,8 +4,8 @@
 /* GitHub issue #30. Both built with old_agbcc - see
  * docs/matching/issue-30-old-agbcc.md. */
 
-/* The BG control value sub_801E644 built, for REG_BGnCNT. */
-u16 sub_801E640(struct bg_setup *self)
+/* The BG control value InitBgSetup built, for REG_BGnCNT. */
+u16 GetBgSetupControl(struct bg_setup *self)
 {
     return self->ctrl.raw;
 }
@@ -13,7 +13,7 @@ u16 sub_801E640(struct bg_setup *self)
 /* Fills the BG setup buffer: char block, screen block and palette bank
  * verbatim, and a control value with priority `priority`, char base
  * `charBlock`, screen base `screenBlock` and size 0. */
-struct bg_setup *sub_801E644(struct bg_setup *self, u32 charBlock, u32 screenBlock, u32 paletteBank, u32 priority)
+struct bg_setup *InitBgSetup(struct bg_setup *self, u32 charBlock, u32 screenBlock, u32 paletteBank, u32 priority)
 {
     self->ctrl.raw = 0;
     self->ctrl.bits.priority = priority;

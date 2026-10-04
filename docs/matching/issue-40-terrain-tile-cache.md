@@ -76,8 +76,8 @@ issue is where they got turned into (attempted) byte-exact C.
   as a base pointer at all and fell back to `sp`-relative addressing
   mid-function, growing the function past its real size again). Closed
   instead by going fully `NAKED` - the same escape hatch already used
-  this session for `sub_801E688`/`LoadGraphicsPackage`/
-  `LoadBg2Background` for the identical symptom - hand-transcribing
+  this session for `FitScaledSprite`/`LoadGraphicsPackage`/
+  `LoadTitleScreenBg` for the identical symptom - hand-transcribing
   the ROM disassembly instruction-for-instruction (including the
   `.pool` literal-pool splits at each of the ROM's own mid-function
   flush points). Verified byte-identical via isolated

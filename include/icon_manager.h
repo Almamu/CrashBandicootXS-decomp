@@ -67,7 +67,7 @@ COMPILE_TIME_ASSERT(sizeof(struct icon_glyph_metrics) == 0xC);
 struct icon_manager {
     /* A 6-byte OAM-shaped draw-request scratch buffer, rebuilt fresh by
      * `FontDrawGlyph` for every glyph drawn (byte 0/1, halfword at 2,
-     * halfword at 4) then handed to `sub_8006AC8`; zeroed 8 bytes at a
+     * halfword at 4) then handed to `AddOamEntry`; zeroed 8 bytes at a
      * time (a fixed-source `CpuSet` fill) by the widget
      * constructors. Bytes 6-7 are never written by anything in this
      * chunk. */

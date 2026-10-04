@@ -1,22 +1,22 @@
-# #65 strength-reduction retry: `sub_803686C`
+# #65 strength-reduction retry: `DrawVvLogoPieces`
 
-`sub_803686C` (the 20-slot OAM builder, the last NAKED function in
+`DrawVvLogoPieces` (the 20-slot OAM builder, the last NAKED function in
 #65) is now real C under old_agbcc. The draft was 329 halfwords off.
 
 | Function | File | Compiler | Result |
 |---|---|---|---|
-| `sub_803686C` | `src/graphics/graphics_loading_3686c.c` (new) | old_agbcc, strength reduction on | matched |
+| `DrawVvLogoPieces` | `src/graphics/graphics_loading_3686c.c` (new) | old_agbcc, strength reduction on | matched |
 
 ## File split
 
 The function needs strength reduction on. Its header loop is
 check_dbra_loop's reversed counter placed after the hoisted `&oamA`, and
-its row pointer is a reduced giv. `sub_8036600` needs it off.
+its row pointer is a reduced giv. `InitVvLogoPieces` needs it off.
 `graphics_loading_35d1c.c` was split at `0x0803686C`:
 
-- `graphics_loading_35d1c.c` keeps `sub_8035D1C`..`sub_8036668`, still on
+- `graphics_loading_35d1c.c` keeps `TitleScreenCheatInput`..`UpdateVvLogoPieces`, still on
   `NO_STRENGTH_REDUCE_OBJS`.
-- `graphics_loading_3686c.c` has `sub_803686C`..`sub_8036FBC`. It is on
+- `graphics_loading_3686c.c` has `DrawVvLogoPieces`..`DrawLogoActor`. It is on
   `OLD_AGBCC_OBJS` only. The shared declarations are copied.
 
 The split was first checked with the old NAKED body: `make compare`

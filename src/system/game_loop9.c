@@ -1,22 +1,22 @@
 #include "core.h"
 
-extern void *gUnknown_030012FC;
-extern void *gUnknown_03001300;
+extern void *gObjVramCursor;
+extern void *gOamBuffer;
 extern void *gCamera;
 extern void *gLevelLayers;
-extern struct tile_asset_cache *gUnknown_030012B8;
+extern struct palette_cache *gPaletteCache;
 extern u8 gRoomExitRequested;
 
-extern void sub_8006DC8(struct tile_asset_cache *self);
-extern void sub_8006C4C(struct vram_upload_cursor *self);
-extern void sub_8006A90(struct oam_shadow_buffer *arg0);
+extern void UploadPaletteCache(struct palette_cache *self);
+extern void ResetObjVram(struct vram_upload_cursor *self);
+extern void ResetOamBuffer(struct oam_shadow_buffer *arg0);
 extern void SnapCamera(void *self);
 extern void ResetLevelLayers(void *self);
 extern void UpdateRoomFrame(void *self);
-extern void sub_8001524(s32 val);
-extern void sub_80015E0(void);
-extern void sub_8001614(void);
-extern void sub_8001624(void);
+extern void SetDispcntMode(s32 val);
+extern void ShowObj(void);
+extern void CommitDispcnt(void);
+extern void CommitBlendRegs(void);
 
 void ClearRoomExit(void)
 {
@@ -42,7 +42,7 @@ void ResumeRoomAfterPause(void *self)
     struct dma_regs *dma;
     u32 pltt;
 
-    sub_8006DC8(gUnknown_030012B8);
+    UploadPaletteCache(gPaletteCache);
 
     dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
     dma->src = *(u32 *)(*(void **)((u8 *)self + 0x18));
@@ -52,23 +52,23 @@ void ResumeRoomAfterPause(void *self)
     (void)dma->cnt;
     *(vu16 *)pltt = 0;
 
-    sub_8006C4C(gUnknown_030012FC);
-    sub_8006A90(gUnknown_03001300);
+    ResetObjVram(gObjVramCursor);
+    ResetOamBuffer(gOamBuffer);
     SnapCamera(gCamera);
     ResetLevelLayers(gLevelLayers);
     UpdateRoomFrame(self);
-    sub_8001524(0);
-    sub_80015E0();
-    sub_8001614();
-    sub_8001624();
+    SetDispcntMode(0);
+    ShowObj();
+    CommitDispcnt();
+    CommitBlendRegs();
 }
 
-/* Flushes the vram upload cursor (`gUnknown_030012FC`) and OAM shadow
- * buffer (`gUnknown_03001300`) - the tail end shared by both
+/* Flushes the vram upload cursor (`gObjVramCursor`) and OAM shadow
+ * buffer (`gOamBuffer`) - the tail end shared by both
  * `UpdateRoomFrame`'s "near start of level" path and `ResumeRoomAfterPause`'s
  * level-end teardown. */
 void sub_802423C(void)
 {
-    sub_8006C4C(gUnknown_030012FC);
-    sub_8006A90(gUnknown_03001300);
+    ResetObjVram(gObjVramCursor);
+    ResetOamBuffer(gOamBuffer);
 }

@@ -4,65 +4,65 @@
 #include "actor_self.h"
 #include "gba/dma_macros.h"
 #include "graphics_package.h"
-#include "obj_slot_system.h"
+#include "logo_screen.h"
 
 /* Tail of GitHub issue #65's chunk (0x0803686C-0x08037110), split off
- * `graphics_loading_35d1c.c` at `sub_803686C`. Like both earlier halves
+ * `graphics_loading_35d1c.c` at `DrawVvLogoPieces`. Like both earlier halves
  * this is old_agbcc code (OLD_AGBCC_OBJS), but it is built WITH strength
- * reduction (it is not on NO_STRENGTH_REDUCE_OBJS): `sub_803686C`'s
+ * reduction (it is not on NO_STRENGTH_REDUCE_OBJS): `DrawVvLogoPieces`'s
  * header loop is check_dbra_loop's reversed counter after the hoisted
- * `&oamA`, which only strength reduction emits, while `sub_8036600`
+ * `&oamA`, which only strength reduction emits, while `InitVvLogoPieces`
  * (still in `graphics_loading_35d1c.c`) needs it off. The shared
  * declarations below are copied from the first file. See
  * docs/matching/sr65-naked-retry.md. */
 
-extern struct oam_shadow_buffer *gUnknown_03001300;
+extern struct oam_shadow_buffer *gOamBuffer;
 extern struct AudioContext *gAudioContext;
-extern u8 gUnknown_03001288[2];
+extern u8 gDispcnt[2];
 extern void *gUnknown_03001304;
-extern void *gUnknown_0300160C[2];
-extern s32 gUnknown_03001604;
-extern void *gUnknown_03001608;
+extern void *gLogoActorTiles[2];
+extern s32 gLogoActorTileBuffer;
+extern void *gLogoActorLastFrame;
 extern void (*gUnpackRleSpriteFrameFunc)(void *dst, u8 *frame);
 extern struct held_pressed_pair {
     u16 held;
     u16 pressed;
 } gKeys;
 
-extern u8 gStaticData_0817CFA4[];
-extern u8 gStaticData_0817CFF4[];
-extern u8 gStaticData_0817D698[];
+extern u8 gTitleLogoPieceSeeds[];
+extern u8 gTitleArrowPieceOffsets[];
+extern u8 gLogoActorAnim[];
 extern u8 gStaticData_08178F80[];
 extern u8 gStaticData_0817D768[];
 extern u8 gStaticData_0817D77C[];
 extern u8 gStaticData_0817D790[];
-extern u8 gStaticData_0817D6C0[];
-extern u8 gStaticData_0817D7A4[];
-extern u8 gStaticData_087E55C4[];
+extern u8 gVvLogoPieceSeeds[];
+extern u8 gUniversalLogoBg[];
+extern u8 gLogoActorVtable[];
 
-extern void sub_8006A90(struct oam_shadow_buffer *arg0);
-extern void sub_8006A48(struct oam_shadow_buffer *arg0);
+extern void ResetOamBuffer(struct oam_shadow_buffer *arg0);
+extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
 extern void WaitForVBlank(void);
-extern void sub_8006AAC(struct oam_shadow_buffer *arg0);
-extern void sub_8006AC8(struct oam_shadow_buffer *self, void *record);
-extern void sub_8006A78(struct oam_shadow_buffer *arg0);
+extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
+extern void AddOamEntry(struct oam_shadow_buffer *self, void *record);
+extern void RewindOamBuffer(struct oam_shadow_buffer *arg0);
 extern s32 __divsi3(s32 arg0, s32 arg1);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern void sub_8001614(void);
+extern void CommitDispcnt(void);
 extern void PlaySong(struct AudioContext *self, u32 id);
 extern void FontSetPalette(struct icon_manager *self, u8 val);
 extern s32 GetUiText(s32 arg0);
 extern void UpdateStarfield(s32 arg0);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern void sub_80015B0(void);
+extern void ShowBg2(void);
 extern s32 RandRange(s32 arg0);
 extern void *sub_8026EC0(u32 size);
 extern void sub_8026EB4(void *ptr);
 extern void *sub_8026EDC(s32 size);
 extern void *InitStarfield(void *arg0);
 extern void LoadTaggedAsset(void *asset, void *dest);
-extern void sub_8037110(void *self, void *asset, void *dest);
+extern void LoadTaggedAssetBuffered(void *self, void *asset, void *dest);
 extern void *AllocVramTileBlock(u32 size);
 extern void *mem_alloc(u32 size, u32 flags);
 extern void InitObjTileFreeList(void *arg0);
@@ -92,7 +92,7 @@ struct cam_ref {
     s32 depth;      // 0x10 - the depth at which sprites draw unscaled
 };
 
-/* `gUnknown_03001288`, the REG_DISPCNT shadow `sub_8001614` commits,
+/* `gDispcnt`, the REG_DISPCNT shadow `CommitDispcnt` commits,
  * viewed as its bitfields (field stores give the ROM's byte-wide
  * and/or sequences). */
 struct dispcnt_bits
@@ -131,17 +131,17 @@ union bgcnt
 };
 
 
-/* The other half of `sub_8036668`'s per-frame slot-array update: if
+/* The other half of `UpdateVvLogoPieces`'s per-frame slot-array update: if
  * the header's own `self+0x3dc` byte is set, positions the header's own
- * OAM-attribute build (via `sub_8006AC8`, looped 4x for a 4-frame
+ * OAM-attribute build (via `AddOamEntry`, looped 4x for a 4-frame
  * animation strip) from `self+0x224`'s int16 fields; then, for each of
- * 18 slots, builds and queues (`sub_8006AC8`) an OAM entry from that
+ * 18 slots, builds and queues (`AddOamEntry`) an OAM entry from that
  * slot's own position fields whenever its `__divsi3`-derived on/off-
  * screen test passes, using the header's own play-index accumulator
  * (`sp+0x20`) to place it into consecutive shadow-OAM group slots. Tail
  * repeats the whole shape once more, unconditionally, for a 19th
  * "extra" slot pair fed from `self+0x424`/`self+0x42c`/`self+0x434`
- * (the same header fields `sub_8036528` populates), queuing a
+ * (the same header fields `LoadVvLogoGraphics` populates), queuing a
  * `QueueVramDmaTransfer` for its tile data first. */
 struct oam_attrs
 {
@@ -173,8 +173,8 @@ struct oam_entry
 struct oam_buf
 {
     s32 count;
-    s32 field_04;
-    s32 field_08;
+    s32 base;
+    s32 matrixCount;
     struct oam_entry entries[128];
 };
 
@@ -202,8 +202,8 @@ static inline void SetAffineZ(struct oam_buf *buf, s32 m, u16 pa, u16 pd)
     buf->entries[idx + 2].affineParam = 0;
 }
 
-#define SLOT_AT(self, i) (&((struct obj_slot *)(self))[i])
-#define OAMBUF ((struct oam_buf *)gUnknown_03001300)
+#define SLOT_AT(self, i) (&((struct logo_piece *)(self))[i])
+#define OAMBUF ((struct oam_buf *)gOamBuffer)
 
 #define ClearOam(oam)                                           \
 {                                                               \
@@ -219,7 +219,7 @@ static inline void SetAffineZ(struct oam_buf *buf, s32 m, u16 pa, u16 pd)
 /* Matched in the #65 strength-reduction retry
  * (docs/matching/sr65-naked-retry.md). It needs strength reduction ON,
  * which is why this file was split off `graphics_loading_35d1c.c`. */
-void sub_803686C(struct obj_slot_system *self)
+void DrawVvLogoPieces(struct logo_screen *self)
 {
     vu16 zero;
     vu32 zero32;
@@ -230,7 +230,7 @@ void sub_803686C(struct obj_slot_system *self)
     s32 i;
 
     {
-        struct obj_slot *hdr = SLOT_AT(self, 19);
+        struct logo_piece *hdr = SLOT_AT(self, 19);
 
         if (hdr->active)
         {
@@ -247,14 +247,14 @@ void sub_803686C(struct obj_slot_system *self)
             oamA.tileNum = tiles >> 5;
             for (j = 0; j < 4; j++)
             {
-                sub_8006AC8(gUnknown_03001300, &oamA);
+                AddOamEntry(gOamBuffer, &oamA);
                 oamA.tileNum += 8;
                 oamA.x += 0x20;
             }
         }
     }
     {
-        struct obj_slot *slot = SLOT_AT(self, 1);
+        struct logo_piece *slot = SLOT_AT(self, 1);
         u32 tile = (self->tilesA - (u32)OBJ_VRAM0) >> 5;
 
         for (i = 0; i <= 0x11; i++)
@@ -293,7 +293,7 @@ void sub_803686C(struct obj_slot_system *self)
                 oamB.y = (slot->posB.q >> 16) - 0x10;
                 oamB.x = slot->posA.h.i - 8;
                 oamB.tileNum = tile;
-                sub_8006AC8(gUnknown_03001300, &oamB);
+                AddOamEntry(gOamBuffer, &oamB);
             }
             /* Extra-reference nudge (#468): one more use of `tile` raises
              * its allocation priority above `self`'s, so `tile` takes r8
@@ -306,7 +306,7 @@ void sub_803686C(struct obj_slot_system *self)
     if (SLOT_AT(self, 0)->active)
     {
         u8 *flag = self->sfxPending;
-        struct obj_slot *slot;
+        struct logo_piece *slot;
         u32 tile;
         u8 *buf;
         u8 *base;
@@ -389,7 +389,7 @@ void sub_803686C(struct obj_slot_system *self)
             oamC.x = slot->posA.h.i - 0x40;
         }
         oamC.tileNum = tile;
-        sub_8006AC8(gUnknown_03001300, &oamC);
+        AddOamEntry(gOamBuffer, &oamC);
         if (affine)
         {
             /* Read first, as the ROM loads posA before velA. */
@@ -400,29 +400,29 @@ void sub_803686C(struct obj_slot_system *self)
         else
             oamC.x = slot->posA.h.i;
         oamC.tileNum = tile + 0x40;
-        sub_8006AC8(gUnknown_03001300, &oamC);
+        AddOamEntry(gOamBuffer, &oamC);
     }
 }
 
 /* BG2's tilemap remap loader (the same "remap the tilemap's per-tile
  * palette-select nibble while copying it to VRAM" shape
- * `LoadBg2Background`/`LoadObjSpriteTiles` already established), here
- * for `gStaticData_0817D7A4`'s own package: loads its palette (DMA'd to
+ * `LoadTitleScreenBg`/`LoadTitleScreenObjTiles` already established), here
+ * for `gUniversalLogoBg`'s own package: loads its palette (DMA'd to
  * `0x05000002`), tileset (`0x06008000`), and tilemap (into a freshly
  * `sub_8026EC0`-allocated scratch buffer), remaps every tile's palette
  * nibble into `0x0600F000`, then sets `REG_BG2CNT` (256-color, 8x8
  * screen, priority/base built from the same bit pattern
- * `LoadBg2Background` uses) and marks the icon-manager/HUD blend flags
- * (`gUnknown_03001288`) active. Takes no arguments - this package's
+ * `LoadTitleScreenBg` uses) and marks the icon-manager/HUD blend flags
+ * (`gDispcnt`) active. Takes no arguments - this package's
  * pointer lives entirely in the static table, not the scratch
  * object. */
 /* Closed in the issue #64/#65 NAKED retry: each branch stores through
  * `dest++` itself (cross-jumping merges the two stores back into the
  * ROM's single shared `strh`), which doubles `dest`'s reference count
  * and gives it r4 ahead of `y`/`bg2cnt`. */
-void sub_8036CF4(u32 *self)
+void LoadUniversalLogoBg(u32 *self)
 {
-    struct bg_package *pkg = (struct bg_package *)gStaticData_0817D7A4;
+    struct bg_package *pkg = (struct bg_package *)gUniversalLogoBg;
     u16 *palBuf;
     u16 *mapBuf;
     u16 *dest;
@@ -467,8 +467,8 @@ void sub_8036CF4(u32 *self)
     bg2cnt.bits.priority = 1;
     bg2cnt.bits.size = 1;
     REG_BG2CNT = bg2cnt.raw;
-    ((struct dispcnt_bits *)gUnknown_03001288)->bg2 = 1;
-    ((struct dispcnt_bits *)gUnknown_03001288)->mode = 1;
+    ((struct dispcnt_bits *)gDispcnt)->bg2 = 1;
+    ((struct dispcnt_bits *)gDispcnt)->mode = 1;
     if (mapBuf != NULL)
         sub_8026EB4(mapBuf);
 }
@@ -477,13 +477,13 @@ void sub_8036CF4(u32 *self)
  * 0x100)` (the "a" parameter is passed straight through from this
  * function's own, unused-by-name second argument - the ROM leaves it
  * as whatever the caller's own `r1` held, here always
- * `gStaticData_0817D698`'s address per `sub_80361B0`'s call site) then
- * sets its vtable pointer (`self+0x50`) to `gStaticData_087E55C4` and
+ * `gLogoActorAnim`'s address per `RunCompanyLogos`'s call site) then
+ * sets its vtable pointer (`self+0x50`) to `gLogoActorVtable` and
  * allocates two VRAM tile blocks sized from the part's own current
  * animation frame's tile dimensions (`GetAnimFrameData`-shaped lookup,
- * inlined twice), stashing both into `gUnknown_0300160C[0]`/`[1]` and
- * resetting the `gUnknown_03001604`/`gUnknown_03001608`
- * frame-tile-cache bookkeeping pair `sub_8036FBC` reads back. Returns
+ * inlined twice), stashing both into `gLogoActorTiles[0]`/`[1]` and
+ * resetting the `gLogoActorTileBuffer`/`gLogoActorLastFrame`
+ * frame-tile-cache bookkeeping pair `DrawLogoActor` reads back. Returns
  * `self`. */
 static inline u8 *CurFrame(struct actor_self *self)
 {
@@ -496,18 +496,18 @@ static inline u8 *CurFrame(struct actor_self *self)
     return (u8 *)self->frameOffsets[val];
 }
 
-struct actor_self *sub_8036E20(struct actor_self *self, void *a)
+struct actor_self *InitLogoActor(struct actor_self *self, void *a)
 {
     u8 *frame;
 
     InitActorPart(self, (s32)a, 0, 0, 0x100);
-    self->vtable = (struct actor_vtable *)gStaticData_087E55C4;
+    self->vtable = (struct actor_vtable *)gLogoActorVtable;
     frame = CurFrame(self);
-    gUnknown_0300160C[0] = AllocVramTileBlock(frame[1] * frame[0] * 32);
+    gLogoActorTiles[0] = AllocVramTileBlock(frame[1] * frame[0] * 32);
     frame = CurFrame(self);
-    gUnknown_0300160C[1] = AllocVramTileBlock(frame[1] * frame[0] * 32);
-    gUnknown_03001604 = 1;
-    gUnknown_03001608 = 0;
+    gLogoActorTiles[1] = AllocVramTileBlock(frame[1] * frame[0] * 32);
+    gLogoActorTileBuffer = 1;
+    gLogoActorLastFrame = 0;
     return self;
 }
 
@@ -520,13 +520,13 @@ struct actor_self *sub_8036E20(struct actor_self *self, void *a)
  * different frame, plays SFX 0x4f); state 2 waits for frame id 7 then
  * jumps to state 3 (plays SFX 0x1b); state 3 decays a position field
  * (`self+0x24`/`self+0x20`) for 16 frames then jumps to state 4 (a
- * terminal/idle state, tested by `sub_8036FBC`). Every state's tail
+ * terminal/idle state, tested by `DrawLogoActor`). Every state's tail
  * advances the frame accumulator by the current frame's duration
  * (`self+0x10`) and rolls over to the next keyframe via
  * `GetAnimFrameBaseOffset` once it crosses the current keyframe's own
  * threshold (`+4`), wrapping the accumulator back by `(threshold -
  * loopBase) << 8` per `struct anim_frame_record`. */
-void sub_8036EC4(struct actor_self *self)
+void UpdateLogoActor(struct actor_self *self)
 {
     s32 time = ++self->stateTime;
 
@@ -572,18 +572,18 @@ void sub_8036EC4(struct actor_self *self)
 }
 
 /* The actor-part's own OAM builder, a no-op once its state machine
- * (`sub_8036EC4`) reaches state 4 (`self+0x28 == 4`). Resolves the
+ * (`UpdateLogoActor`) reaches state 4 (`self+0x28 == 4`). Resolves the
  * part's current keyframe's tile-graphics pointer (the same
- * `GetAnimFrameData`-shaped lookup `sub_8036E20` inlines), computes its
+ * `GetAnimFrameData`-shaped lookup `InitLogoActor` inlines), computes its
  * screen position via two `__divsi3` sine/cosine projections against
  * the part's own position/scale fields (`self+0x1c`/`self+0x20`,
  * `self+0x30`'s trampoline record), clips it against the screen bounds,
  * and - only if the resolved tile pointer differs from the last frame's
- * cached one (`gUnknown_03001608`) - re-uploads it to whichever of the
- * two VRAM tile blocks `sub_8036E20` allocated isn't currently displayed
- * (`gUnknown_03001604` toggles which), before queuing the OAM entry
+ * cached one (`gLogoActorLastFrame`) - re-uploads it to whichever of the
+ * two VRAM tile blocks `InitLogoActor` allocated isn't currently displayed
+ * (`gLogoActorTileBuffer` toggles which), before queuing the OAM entry
  * itself via `QueueSpriteFrameOam`. */
-void sub_8036FBC(struct actor_self *self)
+void DrawLogoActor(struct actor_self *self)
 {
     s32 scale;
     s32 attr1;
@@ -635,15 +635,15 @@ void sub_8036FBC(struct actor_self *self)
             u32 attr = (s32)rec->attr << 16;
 
             attr1 |= (sy & 0xff) | ((sx & 0x1ff) << 16) | attr | GetSpriteShapeSizeBits(frame);
-            if (frame != gUnknown_03001608)
+            if (frame != gLogoActorLastFrame)
             {
-                gUnknown_03001604 ^= 1;
-                gUnpackRleSpriteFrameFunc(gUnknown_0300160C[gUnknown_03001604], frame);
-                gUnknown_03001608 = frame;
+                gLogoActorTileBuffer ^= 1;
+                gUnpackRleSpriteFrameFunc(gLogoActorTiles[gLogoActorTileBuffer], frame);
+                gLogoActorLastFrame = frame;
             }
             {
                 /* the ROM computes the tile number in r0 */
-                register u32 tile asm("r0") = GET_TILE_NUM(gUnknown_0300160C[gUnknown_03001604]);
+                register u32 tile asm("r0") = GET_TILE_NUM(gLogoActorTiles[gLogoActorTileBuffer]);
 
                 QueueSpriteFrameOam(attr1, tile | (self->palette << 12), scale);
             }

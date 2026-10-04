@@ -67,7 +67,7 @@ extern struct keys gKeys;
 extern u32 gRoomFrameCount;
 extern void *gAudioContext;
 extern void *gLevelState;
-extern void *gUnknown_030012B8;
+extern void *gPaletteCache;
 extern u8 *gEntityFlags;
 extern struct pctrl_target *gPlayer;
 extern struct pmf gStaticData_0816C250[];
@@ -84,7 +84,7 @@ extern u8 gPlayerCtrlVtable[];
 extern u8 GetDpadDirection(void *arg);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void LoseLife(void *arg0);
-extern void sub_8006D08(void *cache, s32 slot, s32 recordId);
+extern void LoadPaletteSlot(void *cache, s32 slot, s32 recordId);
 extern void sub_80087C0(struct pctrl_target *t);
 extern void sub_80087B4(struct pctrl_target *t);
 extern void sub_800872C(struct pctrl_target *t, s32 a);
@@ -262,7 +262,7 @@ void PlayerCtrlKillPlayer(struct player_ctrl *self, s32 anim)
     self->target->flag6 = 0;
     self->target->dead = 1;
     LoseLife(gLevelState);
-    sub_8006D08(gUnknown_030012B8, self->target->slot,
+    LoadPaletteSlot(gPaletteCache, self->target->slot,
                 self->target->anim->records[self->target->tag].unk_14);
 }
 

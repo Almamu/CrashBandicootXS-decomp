@@ -440,7 +440,7 @@ functions, no more, no fewer, in this half.
   every hitbox-rebuild call in this subsystem uses), registers it with
   the object-pool grid (`sub_8009150`), re-derives a low-nibble
   sub-animation value from the freshly selected hitbox record's `+0x14`
-  byte via `sub_8006DF8`'s tile-asset-cache lookup, plays SFX `0x11`,
+  byte via `GetPaletteSlot`'s tile-asset-cache lookup, plays SFX `0x11`,
   arms a `+0x4f = 0x3c` (60-frame) countdown.
 - **`sub_800E6B0`** - dispatch-id-5's own sibling case (both
   dispatchers' case 5, same table slot `sub_800E560` covers on the
@@ -690,7 +690,7 @@ check is the full clean `make compare`, which passed outright.
   `sub_800F2BC` as a "flush leftovers from last frame" first step.
 - **`sub_800F2BC(self)`** - per-edge dispatch id-row-`6` target (shared
   by `sub_0800D18C`'s/`sub_800E08C`'s case 0/1). Tags `self+0x2d=0x23`,
-  runs the tag/refresh triplet plus a `sub_8006DF8`-driven `self+0x29`
+  runs the tag/refresh triplet plus a `GetPaletteSlot`-driven `self+0x29`
   nibble update, flushes via `sub_800F258`, bumps a combo counter
   (`sub_8028474`), plays sound id 4, arms `self+0x48=1`.
 - **`sub_800F368(self)`** - per-edge dispatch id-row-`3` target (sibling

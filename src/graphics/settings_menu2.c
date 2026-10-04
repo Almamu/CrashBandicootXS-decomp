@@ -13,9 +13,9 @@ struct bg_widget {
     u8 field_1d;
 };
 
-extern void *sub_801E644(void *buf, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
+extern void *InitBgSetup(void *buf, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern void LoadGraphicsPackage(void *buf, void *asset);
-extern s32 sub_801E640(void *buf);
+extern s32 GetBgSetupControl(void *buf);
 extern u8 gStaticData_0816C484[];
 
 /* Same shape as LoadLanguageSelectBg (src/audio/counter_selector_setup.c) - reset
@@ -41,10 +41,10 @@ void sub_80047F8(struct bg_widget *self)
     b |= 0x10;
     self->field_1d = b;
 
-    sub_801E644(buf, 2, 0x1e, 1, 3);
+    InitBgSetup(buf, 2, 0x1e, 1, 3);
     LoadGraphicsPackage(buf, gStaticData_0816C484);
     self->field_0 = 0;
-    REG_BG0CNT = sub_801E640(buf);
+    REG_BG0CNT = GetBgSetupControl(buf);
     *(vu32 *)REG_ADDR_BG0HOFS = zero;
 }
 

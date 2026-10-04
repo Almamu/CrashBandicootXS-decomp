@@ -62,7 +62,7 @@ held only `sub_8007DBC`, immediately followed by `sub_8007F78`
 (already matched in `actor_part3.c`), so moving `sub_8007DBC` into
 `actor_part2.c` closes the gap completely - `asm/code_3_2_3.s` was
 deleted and its `ldscript.txt` line removed, the same "retire an
-emptied split" convention as `asm/code_3_1.s`/`sub_80007EC` and
+emptied split" convention as `asm/code_3_1.s`/`ShowBitmapScreen` and
 `asm/code_3_1_697c.o`/`GetCompletionPercent` before it (see `docs/matching.md`).
 
 ## Later pass (issue #9 NAKED retry)

@@ -36,10 +36,10 @@ Both `docs/matching.md` (the frozen historical log) and
 name, from earlier sessions working the surrounding `actor_part11.c`-
 `actor_part17.c` clusters:
 
-- `sub_8007634`: previously read at a high level and left entirely
+- `DrawAffineSpritePieces`: previously read at a high level and left entirely
   untouched - real GBA hardware affine (rotation/scaling) sprite-matrix
   setup, judged too large and unexamined to reconstruct with confidence
-  in a single pass (`docs/matching.md`'s `sub_8007634` entry).
+  in a single pass (`docs/matching.md`'s `DrawAffineSpritePieces` entry).
 - `sub_8009008`/`sub_80091D4`/`sub_8009868`/`sub_8009BE0`: each
   previously read and explicitly left raw - "complex spatial-hash-grid
   removal logic ... higher-level why isn't recoverable without more
@@ -173,7 +173,7 @@ this file's original writing - see the update note on the entry below.
   parked rather than force it.
 ## Left untouched (raw) - 12 functions
 
-- **`sub_8007634`** (`asm/code_3_2.s`, ROM `0x08007634`, ~1044 B) -
+- **`DrawAffineSpritePieces`** (`asm/code_3_2.s`, ROM `0x08007634`, ~1044 B) -
   real GBA hardware-affine (rotation/scaling) sprite-matrix setup: reads
   a Q8 "scale" factor from `part+0x3c`, allocates a rotation-group index,
   selects OBJ mode 1/3 based on scale, and blends a cached "previous"
@@ -229,11 +229,11 @@ this file's original writing - see the update note on the entry below.
   hitbox-record lookup/commit logic referencing the `+0x20`/`+0x2d`
   convention from `docs/rom_map.md`'s physics/collision write-up, but
   with several branches gated on state values and callees
-  (`gStaticData_0816A820`) not independently confirmed.
+  (`gSineTable`) not independently confirmed.
 
 None of these were force-matched or guessed at; each is either blocked
 on an unmatched/unexamined callee whose real behavior isn't pinned
-down, or (for `sub_8007634`/`PlayerHandleEvent`) large enough that a
+down, or (for `DrawAffineSpritePieces`/`PlayerHandleEvent`) large enough that a
 low-confidence single-pass reconstruction risks leaving wrong
 documentation behind.
 
@@ -293,8 +293,8 @@ This pass closed 11 of this range's 21 NAKED functions. See [issue-9-naked-retry
 
 ## Later pass (issue #9/#10 raw-asm pass)
 
-`sub_8007634` is no longer raw. It moved out of `asm/code_3_2.s` into `src/graphics/graphics_7634.c` as NAKED, with a NON_MATCHING C draft 468 halfwords off. See [issue-9-raw-asm-pass.md](issue-9-raw-asm-pass.md).
+`DrawAffineSpritePieces` is no longer raw. It moved out of `asm/code_3_2.s` into `src/graphics/graphics_7634.c` as NAKED, with a NON_MATCHING C draft 468 halfwords off. See [issue-9-raw-asm-pass.md](issue-9-raw-asm-pass.md).
 
-## Later pass (sub_8007634 retry)
+## Later pass (DrawAffineSpritePieces retry)
 
-`sub_8007634` is matched as real C under old_agbcc (`graphics_7634.o` joined `OLD_AGBCC_OBJS`). The key was reload's register rotation, not the frame: taking the size-table addresses before reading `pos` makes reload spill r7, as in the ROM. See [graphics-7634-retry.md](graphics-7634-retry.md).
+`DrawAffineSpritePieces` is matched as real C under old_agbcc (`graphics_7634.o` joined `OLD_AGBCC_OBJS`). The key was reload's register rotation, not the frame: taking the size-table addresses before reading `pos` makes reload spill r7, as in the ROM. See [graphics-7634-retry.md](graphics-7634-retry.md).

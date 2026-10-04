@@ -123,8 +123,8 @@ same approach this project has used for other large NAKED batches.
   `QueueSpriteFrameOam`. `r8`/`sb`/`sl` are all simultaneously live
   across the whole function - the same three-high-register shape this
   codebase's other DMA/OAM functions are consistently NAKED-parked for
-  (`docs/matching/issue-56-0x0802f0dc-actor.md`'s `sub_802F7B0`/
-  `sub_802F8E8` entry).
+  (`docs/matching/issue-56-0x0802f0dc-actor.md`'s `LoadBgPicture`/
+  `FillBgPictureMap` entry).
 - **`sub_802B864`** - allocates a pair of VRAM tile blocks
   (`gUnknown_030014B0[0]`/`[1]`), each sized from the same keyframe-
   table byte-pair lookup (`self`'s part table, indexed by `self+0xc`,
@@ -140,7 +140,7 @@ same approach this project has used for other large NAKED batches.
   point it plays a cue, clamps `self+0x20`, resets `self` to state 9/
   table-index 9, clears `gUnknown_030014A0`, fires the spawned object's
   own trampoline if still alive, clears `gUnknown_03001490`, and fires
-  `sub_8029BAC(0x19)`. The spawned-object pointer needed to stay live in
+  `SetCellAnimSpeed(0x19)`. The spawned-object pointer needed to stay live in
   its own ROM-chosen register (`r0`) across several stores rather than
   being copied to a fresh one, which this compiler did unprompted.
 - **`sub_802BA5C`**/**`sub_802BAD0`** - camera catch-up accumulate/

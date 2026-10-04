@@ -29,7 +29,7 @@
  *                       `sub_8011378`, tested by `sub_8011248`'s output
  *                       branch and `sub_8011390`'s activity gate
  * - `self+0x4b` (u8)  - orbit phase/angle index into the shared sine
- *                       table `gStaticData_0816A820`, reset to 0 by
+ *                       table `gSineTable`, reset to 0 by
  *                       `sub_8011378`, advanced elsewhere (not in this
  *                       group), read by `sub_8011248`/`sub_8011390`
  * - `self+0x4c` (s32) - orbit anchor x (Q8)
@@ -50,7 +50,7 @@
  * `sub_8011330` fires a `self->table`-driven hit trampoline once the
  * object is "spawned" (`self+0x48 == 0`) and the player has a specific
  * flag set, `sub_80112C4` re-derives visibility from a
- * `sub_8007A84`/`self+0x38` gate and clears flags bit 3 when gated off,
+ * `DrawSprite`/`self+0x38` gate and clears flags bit 3 when gated off,
  * `sub_80112F4`/`sub_8011310`/`sub_8011308` are a small
  * init/reset/table-repoint trio (same `sub_80084A4`/table-swap shape
  * documented throughout `actor_part8.c`), and `sub_8011390` is the
@@ -64,11 +64,11 @@
  * a hit SFX. */
 
 extern void *gPlayer;
-extern void *gUnknown_030012CC;
+extern void *gSpriteRenderer;
 extern void *gAudioContext;
 
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern void sub_8007A84(void *self, void *part);
+extern void DrawSprite(void *self, void *part);
 extern void *sub_8007B98(void *dest, void *pt);
 extern void *sub_8007C30(void *dest, void *pt);
 extern u8 sub_8001688(void *buf1, void *buf2);
@@ -76,7 +76,7 @@ extern void *_call_via_r1(void *arg0, void *fn);
 extern struct actor *sub_80084A4(struct actor *self);
 extern void sub_8008484(struct actor *self, u32 arg1);
 extern s32 FixedMul(s32 a, s32 b);
-extern s16 gStaticData_0816A820[];
+extern s16 gSineTable[];
 extern s32 gStaticData_0816BF08[3];
 extern u8 gStaticData_087E40DC[];
 
@@ -118,10 +118,10 @@ void sub_8011248(struct orbit_part *self)
     s32 dy;
     s32 sn;
 
-    sn = gStaticData_0816A820[self->phase * 4];
+    sn = gSineTable[self->phase * 4];
     dy = FixedMul(sn, 0x800);
     self->base.y = self->anchor.y - dy;
-    sn = gStaticData_0816A820[self->phase * 2];
+    sn = gSineTable[self->phase * 2];
     sn = FixedMul(sn, scales.a[self->mode - 1]);
     if (self->mode == 1)
         self->base.x = self->anchor.x - sn;
@@ -131,7 +131,7 @@ void sub_8011248(struct orbit_part *self)
         self->base.x = self->anchor.x;
 }
 
-/* Re-derives visibility via `sub_8007A84(gUnknown_030012CC, self)`
+/* Re-derives visibility via `DrawSprite(gSpriteRenderer, self)`
  * (already matched, `actor_part.c`), then clears flags bit 3
  * (`self+0xc`) when `self+0x38` is nonzero - the same "consumed/hit"
  * flag bit `sub_8011390` below sets. */
@@ -139,7 +139,7 @@ void sub_80112C4(void *selfArg)
 {
     u8 *self = selfArg;
 
-    sub_8007A84(gUnknown_030012CC, self);
+    DrawSprite(gSpriteRenderer, self);
     if (self[0x38] != 0) {
         register s32 mask asm("r0") = 9;
         mask = -mask;

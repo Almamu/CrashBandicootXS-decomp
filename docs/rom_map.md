@@ -71,7 +71,7 @@ the 40.4 KB zone directly confirmed by that zone's reachability pass;
 the zone's remaining ~12 KB is folded in on the "net read" call from
 that investigation, not independently verified.
 
-No more `unknown` bucket: the 6.2 KB gap between `LoadObjSpriteTiles`
+No more `unknown` bucket: the 6.2 KB gap between `LoadTitleScreenObjTiles`
 and the (now-narrowed) start of GAX2 turned out, on the same
 matched-function cross-reference check used throughout this document, to
 call `LoadTaggedAsset`/`FlushVramDmaQueue`/`QueueVramDmaTransfer`/
@@ -138,7 +138,7 @@ component, so only 39 are net-new) pushes zone coverage from 427 to
 
 Same technique, one more pass: tallied every data symbol referenced by
 the zone's still-unreached functions, and one family stood out -
-`gStaticData_0816B2E0` through `gStaticData_0816C...`, **91 distinct
+`gObjPieceWidths` through `gStaticData_0816C...`, **91 distinct
 entries**, the same family `LevelSelectLoop` itself indexes into
 (`gLevelTable`) right before its main loop. 80 zone functions
 reference this family; 67 were already part of the confirmed set (it's
@@ -326,7 +326,7 @@ Searched for direct `str`/`strh` writes to `+0x70`/`+0x74`/`+0xC4` inside
 functions that also reference `gLevelState`, rather than only
 following getters. Found `+0x74` written in exactly one place:
 **`UpdateGameFrame` itself**, in its level-(re)load branch - right after
-a `bl LoadLevelGraphics` call, `bl sub_8035E14`'s return value goes into
+a `bl InitTitleScreen` call, `bl RunTitleScreen`'s return value goes into
 `r5`, which then gets stored to three fields at once: `+0x1B8`, `+0x1BC`,
 and, a little further down (past a `IsInBonusRound`-gated block that first
 *caches the old* `+0x6C`/`+0x74`/`+0x70` values into `+0xB0`/`+0xB8`/
@@ -334,8 +334,8 @@ and, a little further down (past a `IsInBonusRound`-gated block that first
 change-detection logic reads), `+0x74` again.
 
 Two things follow from this. First, **`+0x74` is set once when a level
-loads**, from a level-parsing function (`sub_8035E14`, itself just past
-`LoadLevelGraphics` in ROM - inside the `graphics_loading` gap this
+loads**, from a level-parsing function (`RunTitleScreen`, itself just past
+`InitTitleScreen` in ROM - inside the `graphics_loading` gap this
 document already folded in) - not incremented every frame the way a
 running score or elapsed-time counter would be. That points away from
 "score" and toward something more like a **per-level fixed total** (a
@@ -376,8 +376,8 @@ cluster rather than from each other. Reading two of the larger ones
 (all in the 300-370 B range, and there are dozens) found two clearly
 different systems, not one:
 
-- **`sub_801E788`** (368 B): indexes `gStaticData_0816C644`/
-  `gStaticData_0816C674` - the *same* 91-entry per-level parameter table
+- **`DrawScaledSprite`** (368 B): indexes `gObjSizeWidths`/
+  `gObjSizeHeights` - the *same* 91-entry per-level parameter table
   family already tied to `game_loop` - by a self-held level index, and
   computes a centering offset (`(a-b)/2`-style arithmetic) between a
   stored coordinate and the table's per-level reference point, packing
@@ -414,8 +414,8 @@ dispatch table**, not a guess.
 
 The table sits **inside the exact same `0x0816Bxxx`-`0x0816Dxxx` region**
 this document already tied to `game_loop` (`gLevelTable`) and
-to `sub_801E788`'s background-centering math
-(`gStaticData_0816C644`/`gStaticData_0816C674`) - and in `data/data.s`,
+to `DrawScaledSprite`'s background-centering math
+(`gObjSizeWidths`/`gObjSizeHeights`) - and in `data/data.s`,
 it currently sits inside a still-unlabeled stretch between
 `gEntitySpawnFuncs` and `gThemePaletteCycle2` (0x170 bytes, only
 partially covered by the confirmed 0x94-byte pointer run - the rest is
@@ -432,7 +432,7 @@ text/dialog display function** - one shared structure feeding
 `game_loop`, `graphics_loading`'s positioning math, and now `menu_ui`,
 not three unrelated systems that happen to reference nearby addresses.
 `graphics_loading` shrinks to `LoadGraphicsPackage` itself plus whatever
-of the remaining ~6.9 KB (including `sub_801E788`'s positioning family)
+of the remaining ~6.9 KB (including `DrawScaledSprite`'s positioning family)
 is genuinely graphics-flavored - not individually re-verified beyond the
 one sample read.
 
@@ -445,7 +445,7 @@ one sample read.
 | `0x08006700`-`0x08006C00` | ~1.3 KB | `graphics` | **matched** | `oam_count.c`/`graphics.c` |
 | `0x0801E578`-`0x08029ED0`ish | ~27 KB | graphics loading + HUD + actor init | high | `LoadGraphicsPackage`, `InitSmallFont/B`, `FontMeasureText`, `FontUploadTiles`, `DestroyFont`, `InitObjTileFreeList`, `LoadSpriteFrameTiles`, `SetupSpriteFrameOam`, `DecompressCategorySpriteSheet`, `SetupActorVramPool`, `InitActorCategory` all fall in this stretch, tightly packed |
 | `0x08029ED0`-`0x0802B348`ish | ~5.6 KB | actor system | high | `SelectActorCategory`, `InitActorPart`, `DrawActor`, `ConstructAnimTableState`, `ConstructActorPart` - the vtable/animation system documented in `docs/graphics.md` |
-| `0x080354E0`-`0x08035780`ish | ~0.7 KB | graphics loading | high | `LoadLevelGraphics`, `LoadBg2Background`, `LoadObjSpriteTiles` |
+| `0x080354E0`-`0x08035780`ish | ~0.7 KB | graphics loading | high | `InitTitleScreen`, `LoadTitleScreenBg`, `LoadTitleScreenObjTiles` |
 | `0x08037110`-~`0x0803A950` | ~14 KB | audio (GAX2) | medium, **narrowed this pass** | see "Narrowing the GAX2 boundary" below |
 | `0x0803A950`-`0x0803B058` | ~1.5 KB | `system` (asset loading) | high | `LZ77UnCompVram`/`RLUnCompVram`, confirmed called from the already-matched `src/system/asset_util.c` |
 | `0x0803B058`-`0x0803B060` | 8 B | `graphics` | **matched** | `src/graphics/actor_anim.c` |
@@ -570,7 +570,7 @@ or input handling itself.
 
 **Addendum found later, while reading further into `game_loop`'s core**:
 the loop has a fifth exit path this section's original read missed -
-gated by two further conditions (`sub_801DE28` then `sub_801DD18`, both
+gated by two further conditions (`sub_801DE28` then `IsZoomBgShown`, both
 must pass) it calls **`LevelSelectConfirm`** (680 B), which opens with a direct
 `PlaySfx` (sound id `0x52`, different from every other id seen so far in
 this document) plus several more `sub_801Dxx` setup calls, then falls
@@ -648,9 +648,9 @@ them directly:
   Not confirmed which, but a genuinely new, specific behavioral clue
   this pass didn't have before.
 - **A concrete link back to the 94 KB zone's own finding**: one of the
-  IWRAM globals in that zone's hot cluster, `gUnknown_03001300`, is
-  passed as the `struct oam_shadow_buffer *` argument to `sub_8006A48`
-  (matched, `src/graphics/graphics.c`) - and `sub_8006A48` shows up
+  IWRAM globals in that zone's hot cluster, `gOamBuffer`, is
+  passed as the `struct oam_shadow_buffer *` argument to `HideUnusedOamEntries`
+  (matched, `src/graphics/graphics.c`) - and `HideUnusedOamEntries` shows up
   repeatedly as an outgoing call from these leftover actor runs too, as
   does `WaitForVBlank` (matched, `src/system/irq.c`'s region). So the same
   OAM-shadow-buffer singleton and the same low-level sync helper get
@@ -658,7 +658,7 @@ them directly:
   function, and these actor-behavior functions alike - one shared piece
   of infrastructure underneath several "systems" this document has been
   treating as separate.
-- **The ~7.1 KB tail bordering `LoadLevelGraphics`** (`0x080336CC`-
+- **The ~7.1 KB tail bordering `InitTitleScreen`** (`0x080336CC`-
   `0x08035...`) shows this same actor-flavored signature rather than
   anything resembling level-loading code - weakens (doesn't rule out)
   last pass's guess that it might belong to level loading instead.
@@ -711,7 +711,7 @@ not the same one found twice.
 
 A third function, `DrawCreditsText` (436 B, not vtable-dispatched), turned
 out to be just another instance of the already-catalogued
-"refresh OAM + center text" pattern (`sub_8006A90`/`sub_8006C28`,
+"refresh OAM + center text" pattern (`ResetOamBuffer`/`RewindObjVram`,
 matching `DrawPowerDialog`/`UpdateLevelSelect`) - confirms the overall "mostly
 the known toolkit" reading for this zone's tail, even as the
 `gUnknown_030015xx`/`gStaticData_0817C4xx` pair shows there's still at
@@ -863,7 +863,7 @@ new mechanisms not previously catalogued in this zone:
   `gStaticData_0817CF3C` (stride 8, 3 entries/state). `LoadCreditsLogos`
   (416 B) is its asset loader: iterates a 5-entry table
   `gCreditsLogos` (stride `0x14`) and DMA3-transfers custom
-  glyph tile data via `LoadTaggedAsset` into `gUnknown_030012B8+0x2c`.
+  glyph tile data via `LoadTaggedAsset` into `gPaletteCache+0x2c`.
 - **A twin icon+cached-text-label renderer.** `sub_802E9FC` and
   `sub_802B5B4` are byte-for-byte identical logic operating on two
   different global sets (`gUnknown_03001510`/`14`/`18` vs.
@@ -904,11 +904,11 @@ register hardware family as `EndBonusRound`/`SetCheckpointAtPlayer` from the
 `game_loop` core), and frees the popup-text list. The top-level entry,
 **`RunCredits`**, is called from exactly **two sites, both inside
 `UpdateGameFrame` itself** (not from any actor code) - the first
-gated on `sub_8035E14`'s return value `== 2` inside a level-load state
-loop right after `LoadLevelGraphics`. Reads as a **level-transition
+gated on `RunTitleScreen`'s return value `== 2` inside a level-load state
+loop right after `InitTitleScreen`. Reads as a **level-transition
 map/progress screen shown between levels**, implemented in the same
 ROM region as actor code but logically part of `game_loop`'s level-
-load state machine, not an actor per-type behavior. `sub_8035E14`
+load state machine, not an actor per-type behavior. `RunTitleScreen`
 (the level-load-stage selector gating the whole feature) and
 `InitStarfield` (the minimap object's own constructor) remain unread and
 would be the natural next step for anyone continuing this thread.
@@ -935,7 +935,7 @@ one in the `0x0817Cxxx` mixed-convention third table family).
 
 **`InitContinuePrompt` reuses the `overlay_ui` screen-constructor toolkit,
 inside the actor zone**: allocates 3 sprite-layer objects, calls
-`sub_801E644` three times at priorities `0x1F`/`0x1E`/`0x1D` - the
+`InitBgSetup` three times at priorities `0x1F`/`0x1E`/`0x1D` - the
 same init function `overlay_ui`'s screen constructors use - loads
 three graphics packages via `LoadGraphicsPackage`, and resets palette
 color 0. Its only caller, `RunContinuePrompt`, sits immediately adjacent to
@@ -995,7 +995,7 @@ trigger, not part of the map-screen's level-load state machine** as
 the address-adjacency guess suggested. Its only caller sits directly
 inside `UpdateGameFrame`'s main per-frame body, right next to the
 documented `EndBonusRound`/`SetCheckpointAtPlayer` hardware-window-register
-functions - not inside the `sub_8035E14`-driven level-load loop the
+functions - not inside the `RunTitleScreen`-driven level-load loop the
 map screen uses. Gated on `GetLives(self)`'s return value being
 negative (a distinct, per-frame condition, function unread). Reads as
 a separate one-shot/special-case overlay that happens to reuse the
@@ -1056,7 +1056,7 @@ this session but never traced to its constructor before - sets
 `self+0x50 = &gStaticData_087E5144` (a new confirmed 93-entry-family
 address, at a new `+0x50` field-pointer convention), initializes ~15
 struct fields, branching into two different init paths (via
-`sub_8029BAC`). **`sub_802EDBC`/`sub_802EED0`/`sub_802EFD8` are three
+`SetCellAnimSpeed`). **`sub_802EDBC`/`sub_802EED0`/`sub_802EFD8` are three
 consecutive `gStaticData_0817Cxxx` mixed-convention vtable slots**
 forming a coherent input-driven state machine on the object
 `sub_802E740` constructs: mirror-image left/right accumulators
@@ -1081,9 +1081,9 @@ lookup, allocates two sprite-frame-sized tile buffers, and registers
 them into `gUnknown_03001518`/`+4` - the same P1/P2-pair global set
 already tagged by the icon+cached-label renderer - ties `sub_802E740`'s
 object directly into that renderer's infrastructure, not a one-off.
-**Correction**: `sub_8029BAC` isn't a "sound-id-gated init path
+**Correction**: `SetCellAnimSpeed` isn't a "sound-id-gated init path
 selector" as first guessed - it's a trivial one-liner,
-`gUnknown_030013B4 = __divsi3(x<<8, 0x3c)` (a confirmed real Q8.8
+`gCellAnimSpeed = __divsi3(x<<8, 0x3c)` (a confirmed real Q8.8
 division, not a trampoline) - a generic ratio/scale computation
 (plausibly frames-to-seconds at 60 fps) with no sound-ID logic in its
 own body; whatever sound-ID branching happens must live in
@@ -1109,14 +1109,14 @@ meter-twin systems rather than being a plain crate/platform.
 **A third generic allocator found: `sub_8028CD4`** (`sub_802F338`'s
 callee), distinct from the already-documented `sub_8026EDC` and
 `sub_8009ED0`. A first-fit free-list pool allocator: walks a doubly-
-linked free-list rooted at `gUnknown_03001338` (size/used-flag/prev/
+linked free-list rooted at `gVramTileBlockRover` (size/used-flag/prev/
 next fields), finds the first block that fits, splits it if there's
 remainder, marks the block used, and - notably - writes a byte into a
-side table `gUnknown_03001340` indexed by size-class - an allocation-
+side table `gVramTileBlockIndex` indexed by size-class - an allocation-
 tracking table not seen in either of the other two allocators. A real,
 distinct heap-management subsystem, worth flagging for whoever maps
 allocator conventions further; confirmed backing globals:
-`gUnknown_03001320`/`3328`/`3338`/`3340`.
+`gVramTileBlockPool`/`3328`/`3338`/`3340`.
 
 ### A new mechanism: an orbiting-companion object using a trig lookup table
 
@@ -1127,7 +1127,7 @@ that circles the player: integrates position toward the player
 already documented for the camera-follow filter
 (`SnapCamera`/`sub_8026D8C`, `>>5` damping), maintains a growing
 radius accumulator and an angle index, and looks up
-**`gStaticData_0816A820`** at the angle index and at `angle+0x40` (a
+**`gSineTable`** at the angle index and at `angle+0x40` (a
 90-degree-phase-shifted pair) - a sine/cosine table read. **This is
 the same table already tied to the minimap's rotating-dot placement**
 (`SpawnStar`) - now cross-confirmed as a genuine trig lookup table,
@@ -1160,7 +1160,7 @@ active flag (returns immediately if already active), branches on
 path writes a batch of OAM/anim-part fields into its **parameter
 object** (its only caller passes `gActorList`, the documented
 player-pointer global, explicitly), plays a sound cue, and calls the
-confirmed `sub_8029BAC` Q8.8-division helper. `gUnknown_0300149C`/
+confirmed `SetCellAnimSpeed` Q8.8-division helper. `gUnknown_0300149C`/
 `030014A0`-`A3` sit inside the `gUnknown_030014xx` tier-threshold-
 sound-cue family's address range - ties this into that family as a
 state-transition/lock step. Its only caller (`sub_802CC9C`) checks
@@ -1245,7 +1245,7 @@ A further pass read 10 more actor-zone functions. **`sub_8033470`
 confirms a new `category_vtable` slot**: type 2, slot index 3
 (`gActorCategoryVtables+0x74`) - not yet read for behavior beyond
 confirming the dispatch slot. **The shared trig table
-`gStaticData_0816A820` keeps gaining independent consumers**:
+`gSineTable` keeps gaining independent consumers**:
 `sub_8032480` and `sub_802D3A8` are two more actors reading it for
 orbital/circular motion (phase-shifted pairs, lerped toward the
 result) - now **3 confirmed actor consumers** (`sub_8030334`,
@@ -1297,7 +1297,7 @@ Confidence: high on mechanics (all functions read in full); medium on
 **Three more finished reads add a spiral-orbit variant, a palette-swap
 mode transition, and a fourth type-byte-dispatch instance.**
 **`sub_803044C`** is a **5th confirmed actor-side consumer** of the
-shared trig table `gStaticData_0816A820` - same orbiting-companion
+shared trig table `gSineTable` - same orbiting-companion
 shape as `sub_8030334`, but with a *shrinking* radius (decremented
 `0x100`/frame, floored at 0) - a spiral-inward variant not seen in the
 other consumers. **`sub_802D204`** is a mode-driven palette/state
@@ -1482,7 +1482,7 @@ running accumulator with its own threshold-triggered payoff (a text
 popup + sound cue at `0x2800`/10240), not just a sentinel.
 **`sub_8032B6C`** is the singleton's periodic sync/animation-select
 step, syncing a value across two mirrored globals
-(`gUnknown_030008B4`/`B8`) - a **genuinely new global family**
+(`gFlashBgPalette`/`B8`) - a **genuinely new global family**
 (`gUnknown_0300088x`, a P1/P2-mirror-shaped pair) not previously
 catalogued, role not further characterized. `sub_8031A6C`/
 `sub_8032358` fit the `0x0817Cxxx` table family and the proximity-
@@ -1771,7 +1771,7 @@ subsection's claim by hand:
 Plus several of the core's largest individual functions read end-to-end
 regardless of which bucket they fell in (`sub_801AB98`, `sub_800B8DC`,
 `sub_80134B8`, `sub_0800D18C`, `sub_8016288`, `sub_8011BD4`,
-`CreateCrate`, `sub_8017AB0`, `InitLevelSelect`, `sub_8007634`,
+`CreateCrate`, `sub_8017AB0`, `InitLevelSelect`, `DrawAffineSpritePieces`,
 `sub_800E08C`, `sub_801C608`, `sub_801B304`, and - this round -
 `BreakCrate`, `sub_800F990`, `DrawPlayer`, `sub_8012420`,
 `sub_801A2A8`, `sub_800A884`, `sub_80159F8`, `sub_8016DDC`; see
@@ -1813,7 +1813,7 @@ allocates via `sub_8026EDC(100)`, sets `self+0x18 = &gCrateVtable`,
 a real address inside the documented 93-entry `gStaticData_087Exxx`
 family, but at a new `+0x18` convention rather than the previously-seen
 `+0xC`); **`sub_8017AB0`** (1052 B, 3-state dispatch gated by
-`gPlayer[0x104]` and a bit test); **`sub_8007634`** (1044 B,
+`gPlayer[0x104]` and a bit test); **`DrawAffineSpritePieces`** (1044 B,
 clamps a halfword at `self+0x3c`, min `0x40` - likely velocity/timer);
 **`sub_800E08C`** (1032 B, takes 3 stack-passed byte args, extends
 `gPlayer`'s known layout with new `+0x88`/`+0x24` fields);
@@ -1899,20 +1899,20 @@ distinct from the earlier-documented map-screen popup-text system
 (different globals, different tables); shares helpers `sub_8019094`
 and `sub_8019214` with it (the latter the same function already
 documented as a `gSpriteBankTable` consumer/pickup-object spawner
-- consistent, not a naming collision). **`sub_80073DC`** (590 B)
+- consistent, not a naming collision). **`DrawSpritePieces`** (590 B)
 builds and submits a packed OAM word from the per-level
-`gStaticData_0816B2E0`/`2EC` tables, screen-culled against GBA-shaped
+`gObjPieceWidths`/`2EC` tables, screen-culled against GBA-shaped
 bounds (`0x9f`/`0xef`) - a new concrete consumer of that per-level
-table family. **`sub_801D828`** (528 B, partially read) uses DMA3 to
+table family. **`InitZoomBg`** (528 B, partially read) uses DMA3 to
 *generate* a 128-halfword arithmetic-gradient buffer rather than copy
 static data - a palette/gradient generator distinct from the
 documented fade-to-black effect; not fully characterized.
 
 This leaves roughly **~7.6 KB genuinely unexplained** in the core.
 Next candidates: `sub_8019094`, `sub_8018978`, and the unread
-remainder of `sub_801D828`.
+remainder of `InitZoomBg`.
 
-**Follow-up closed out these three.** **`sub_801D828`** turned out
+**Follow-up closed out these three.** **`InitZoomBg`** turned out
 *not* to be a runtime palette/gradient generator as first guessed - a
 full read shows it's a **one-time constructor that procedurally
 writes a gradient directly into VRAM** (DMA3 destination `=
@@ -1981,9 +1981,9 @@ blend/window-register code path in this ROM, alongside
 `overlay_ui`'s local-copy convention.
 
 Only **`SetupRoomBlend`** (180 B, now fully read) is genuine new core
-coverage: a bitfield packer that zeroes `gUnknown_03001280` and
+coverage: a bitfield packer that zeroes `gBlendRegs` and
 `gLevelLayers+0x2b` (a flag on the text-box singleton), then
-packs bits from a child object's fields into `gUnknown_03001280` -
+packs bits from a child object's fields into `gBlendRegs` -
 shape resembles `InitLevelSelect`'s blend-setter but targets a different
 global, likely window/color config feeding the `gLevelLayers`
 text/dialog system. Net effect: the core's unexplained total barely
@@ -2014,17 +2014,17 @@ exactly - simply never named.
 zone, not the `UpdateGameFrame`-`MainLoop` cluster). Runs the same
 OAM-commit sequence seen elsewhere, then writes several BG-scroll/
 window-shaped hardware registers via three unread helpers
-(`sub_801D7D0`/`sub_801E640`/`sub_801DE24`), zeroes VRAM at
+(`sub_801D7D0`/`GetBgSetupControl`/`GetZoomBgControl`), zeroes VRAM at
 `0x0600A000`, then loops drawing 6 text items via `_call_via_r3` -
 reads as a second-screen/overlay commit function (debug overlay,
 second BG-layer content, or similar), not yet folded into any
 documented bucket.
 
 **Follow-up fully resolved it: a smooth left/right page-scroll
-transition, not a debug overlay.** `sub_801D7D0`/`sub_801E640`/
-`sub_801DE24` are trivial one-line field getters reading pre-baked
+transition, not a debug overlay.** `sub_801D7D0`/`GetBgSetupControl`/
+`GetZoomBgControl` are trivial one-line field getters reading pre-baked
 register values off two sub-objects (`self+0x1c`/`+0x20`), both
-initialized via the shared `sub_801E644` constructor `overlay_ui`'s
+initialized via the shared `InitBgSetup` constructor `overlay_ui`'s
 screens and `InitContinuePrompt` already use - `LevelSelectTurnPage` is a per-frame
 draw step for a standard **3-BG-layer screen** (writes `BG0HOFS` from
 an auto-scroll counter, `BG1HOFS`/`VOFS` packed, `BG1CNT`/`BG2CNT`),
@@ -2047,41 +2047,41 @@ The other genuinely-unread outside-any-bucket
 function sampled, `sub_8017348`, fits already-known conventions
 closely (the type-`0x1d`/28-byte-record family).
 
-**Follow-up resolved `sub_8010F8C`/`sub_801DAD8`, and found the "mostly
+**Follow-up resolved `sub_8010F8C`/`UpdateZoomBg`, and found the "mostly
 already-bucketed" framing above was too optimistic for this specific
 slice: a full re-scan found 65 functions over 150 B genuinely absent
 from this document's prose, outside the physics/collision subsystem's
 address range** - a real, if modest, remaining gap. `sub_8010F8C`
 (378 B) is a bounds-checked, mode-selected object state machine that
 self-destructs off-screen, and its default mode reads
-**`gStaticData_0816A820`** (the shared trig table already tied to the
+**`gSineTable`** (the shared trig table already tied to the
 minimap and the orbiting-companion actor) - a **fourth confirmed
 consumer**, computing a rotating offset - reads as a rotating/orbiting
-projectile or hazard. **`sub_801DAD8`** (336 B) is the one concrete
+projectile or hazard. **`UpdateZoomBg`** (336 B) is the one concrete
 new lead: a 5-case jump-table state machine where case 2 loads assets
-via `LoadTaggedAsset` twice from a new table `gStaticData_0816C5A0`
+via `LoadTaggedAsset` twice from a new table `gLevelSelectPictures`
 (8-byte stride, `{asset_tag, dma_dest}`-shaped) and unconditionally
-drives 4 sub-objects via `sub_801DE04`, while case 3 is another
-`gStaticData_0816A820` rotation-math consumer - reads as a type-
+drives 4 sub-objects via `TickZoomBgTwinkle`, while case 3 is another
+`gSineTable` rotation-math consumer - reads as a type-
 selected asset-loading/animation state machine for a multi-part
 object, plausibly a boss or major object's loader, distinct from
-anything else documented. `sub_801DE04`, `gStaticData_0816C5A0`'s full
-record layout, and `sub_801DAD8`'s own caller remain unread and would
+anything else documented. `TickZoomBgTwinkle`, `gLevelSelectPictures`'s full
+record layout, and `UpdateZoomBg`'s own caller remain unread and would
 be the natural next step. Most of the other sampled functions
 (`sub_8014BCC`, `sub_8019324`) extend already-known conventions
 (the player-input-control family, position/collision checkers) rather
 than introducing anything new.
 
-**Follow-up resolved `sub_801DAD8` fully, correcting the "boss loader"
+**Follow-up resolved `UpdateZoomBg` fully, correcting the "boss loader"
 speculation: it's not tied to the actor-zone boss cluster at all -
 it's the already-documented page-scroll menu system's BG2-layer
-content driver.** `sub_801DE04(self, countdown_struct)` decrements a
+content driver.** `TickZoomBgTwinkle(self, countdown_struct)` decrements a
 two-word countdown pair per call; on expiry it calls
-**`sub_801DDB4`**, which reads through the documented 28-byte-record
+**`RandomizeZoomBgTwinkle`**, which reads through the documented 28-byte-record
 dereference chain (the same `+0x16` offset `DrawPlayer` found),
 clamps a value into a stat field, and re-randomizes its own timer -
-each of `sub_801DAD8`'s 4 sub-objects independently counts down and
-refreshes on expiry. **`gStaticData_0816C5A0`** is a real labeled
+each of `UpdateZoomBg`'s 4 sub-objects independently counts down and
+refreshes on expiry. **`gLevelSelectPictures`** is a real labeled
 0x50-byte block = exactly **10 records of 8 bytes**, each a
 **`{palette_data, tile_data}` pair** (not `{asset_tag, dma_dest}` as
 first guessed) - `self+0x10` (checked against sentinel `0xb`=11,
@@ -2091,9 +2091,9 @@ then DMA'd to Palette RAM, the other into VRAM. Case 3's rotation math
 and cases 0/1's fade counters round out a state machine that fades in,
 loads a selectable palette+sprite skin, and rotates. **Callers confirm
 the tie directly**: `LevelSelectConfirm`'s call site calls
-`sub_801E640`/`sub_801DE24` on the exact same sub-object accessor
+`GetBgSetupControl`/`GetZoomBgControl` on the exact same sub-object accessor
 pair `LevelSelectTurnPage`'s hardware-register-write sequence uses, then calls
-`sub_801DAD8` on that same BG2-layer sub-object - this is the swappable-
+`UpdateZoomBg` on that same BG2-layer sub-object - this is the swappable-
 appearance icon/portrait (10 skins, fade, rotation) for the page-scroll
 menu system (`LevelSelectTurnPage`/`LevelSelectPrevWorld`/`LevelSelectNextWorld`/`LevelSelectConfirm`/
 `LevelSelectLoop`/`sub_801CCF8`, all clustered at `0x0801Cxxx`-`0x0801Dxxx`
@@ -2150,7 +2150,7 @@ at this grain.
 tail" framing above. Read 8 of the 14, all fitting already-documented
 conventions: **`sub_801C51C`** is a page-scroll-menu orchestration
 point, directly indexing the 36-slot medal table and calling the
-documented BG2 icon driver (`sub_801DAD8`) - ties the medal table into
+documented BG2 icon driver (`UpdateZoomBg`) - ties the medal table into
 that menu system. **`KillPlayer`** calls `sub_8012AF4`, already tied
 to `overlay_ui` elsewhere - a caller-side confirmation of that link.
 **`sub_8018BDC`**/**`sub_801A03C`** extend the master-table spawner
@@ -2283,8 +2283,8 @@ palette ramps, or some other 16-bit-per-sample data).
 Also read in the same pass: **`RunCutscenePlayer`** (~284 B), a per-frame
 display loop that iterates `[self+4]` items and, per item, drives the
 already-documented OAM-shadow-buffer cluster in sequence
-(`sub_8006A90` reset, `sub_8006A48` hide-unused, `WaitForVBlank` VBlank
-poll, `sub_8006AAC` flush) - the same "HUD-icon-plus-number renderer"
+(`ResetOamBuffer` reset, `HideUnusedOamEntries` hide-unused, `WaitForVBlank` VBlank
+poll, `CommitOamBuffer` flush) - the same "HUD-icon-plus-number renderer"
 OAM pacing pattern already noted in `docs/matching.md`. Confirms known
 infra (render-one-item-per-VBlank list display) rather than adding
 anything new. None of `RunCutscenePlayer`/`DecodeLayerChunk`/`DecodeCollisionChunk`/
@@ -2328,12 +2328,12 @@ A further fork read three more functions. **`UpdateRoomFrame`** (216 B)
 reads as one of `UpdateGameFrame`'s end-of-frame "flush everything"
 steps (**correction below**: a later pass found it's actually called
 *from inside* `ResumeRoomAfterPause`, not the top-level hub itself): in
-sequence it touches `gUnknown_030012B8`, `gCamera`,
+sequence it touches `gPaletteCache`, `gCamera`,
 `gLevelLayers`, `gPaletteCycles`, conditionally
 `gHud`, four separate hot-IWRAM-global calls
 (`gUnknown_030012F4`/`F0`/`EC`/`F8`), `gCrateList`, and finally
-the full OAM-shadow commit trio (`sub_8006A48`→`WaitForVBlank`→
-`sub_8006AAC` on `gUnknown_03001300`) plus `FlushVramDmaQueue` - nearly
+the full OAM-shadow commit trio (`HideUnusedOamEntries`→`WaitForVBlank`→
+`CommitOamBuffer` on `gOamBuffer`) plus `FlushVramDmaQueue` - nearly
 every hot IWRAM global this document has separately traced, in one
 place. **`sub_8025228(self, x, y, mode)`** (268 B) re-derives the same
 tile-grid lookup the terrain streamer uses (`x>>4`, `y>>3`, through the
@@ -2344,10 +2344,10 @@ almost certainly the same table's true base address, with `...AC`
 being its `+4` field) - reads as the actual **`CheckTerrainFlag(x, y,
 propertyIndex)`**-style API the whole streaming/collision system
 serves. **`SetupRoomBlend`** (180 B, partial) packs a bitfield into a new
-global `gUnknown_03001280`, shaped like the `InitLevelSelect` blend-effect
+global `gBlendRegs`, shaped like the `InitLevelSelect` blend-effect
 setter but targeting a different hardware register set - a lead
-(**resolved below**: `gUnknown_03001280` is committed to `BLDCNT`/
-`BLDALPHA` by `sub_8001624`, confirming `SetupRoomBlend` is genuinely a
+(**resolved below**: `gBlendRegs` is committed to `BLDCNT`/
+`BLDALPHA` by `CommitBlendRegs`, confirming `SetupRoomBlend` is genuinely a
 blend-effect setter).
 
 **A follow-up fork found the concrete collision-response consumer.**
@@ -2522,13 +2522,13 @@ background streaming, not just consuming it.
 ### Closed out `ResumeRoomAfterPause`'s remaining callees: BLDCNT/DISPCNT commits, and a camera-follow candidate
 
 A further pass resolved `ResumeRoomAfterPause`'s (the real frame-end hub)
-remaining unread callees, plus more of the cluster. **`sub_8001524`
-through `sub_80015B0`** turn out to be a family of trivial bit-set/
-clear helpers on `gUnknown_03001288` (a 2-byte flags struct), living
+remaining unread callees, plus more of the cluster. **`SetDispcntMode`
+through `ShowBg2`** turn out to be a family of trivial bit-set/
+clear helpers on `gDispcnt` (a 2-byte flags struct), living
 in `asm/code_3_1_7.s`'s fade-to-black cluster, not this cluster
-itself. **`sub_8001614`** commits that flags struct to **`DISPCNT`**
+itself. **`CommitDispcnt`** commits that flags struct to **`DISPCNT`**
 (`0x04000000`, display-control BG/OBJ/window toggles) once per frame.
-**`sub_8001624`** commits **`gUnknown_03001280`** (the `SetupRoomBlend`
+**`CommitBlendRegs`** commits **`gBlendRegs`** (the `SetupRoomBlend`
 bitfield output) to **`BLDCNT`/`BLDALPHA`** (`0x04000050`/`0x54`) -
 closing out that earlier "lead, not resolved" item: `SetupRoomBlend` is
 confirmed a genuine blend-effect setter.
@@ -2571,7 +2571,7 @@ tiny (8-28 B) one-line accessors, almost certainly more of the
 largest, all closing loops on already-documented systems rather than
 opening new ones: **`ShowSlidePicture`** is a flag-toggled dual-asset
 streamer plus a *new* `DISPCNT` writer (alongside the already-
-documented `sub_8001614`/`gUnknown_03001288` one). **`EndGemPath`**
+documented `CommitDispcnt`/`gDispcnt` one). **`EndGemPath`**
 is a fifth entry point into the hardware-window-register/lap-counter
 system, confirmed calling `SetCheckpointAtPlayer` directly. **`DrawBgLayerRow`**
 fills in `GetBgStreamerRow`'s role (the background streamer's "get source
@@ -2649,7 +2649,7 @@ above. Two smaller but real threads, neither a full resolution:
   partitions back into a single account of `game_loop`.
 - **`sub_800A178`** (680 B): mid-function, unconditionally zeroes
   `self+0x74` - the same field `UpdateGameFrame`'s level-load branch
-  sets once from `sub_8035E14`'s return value (see "Following `+0x74`'s
+  sets once from `RunTitleScreen`'s return value (see "Following `+0x74`'s
   writes" above). A second confirmed write site for that field, this
   time a reset rather than an initial assignment - consistent with
   "total for this level" being cleared and presumably recomputed under
@@ -2674,7 +2674,7 @@ table, then switch on one of its fields" shape `LevelSelectLoop` uses,
 suggesting these are sibling per-level-phase drivers rather than one
 being subordinate to the other.
 
-The concrete payoff: found the exact call site of `sub_80014A4` (the
+The concrete payoff: found the exact call site of `FadePaletteToBlack` (the
 fade). It sits inside a **wait loop** (`bl IsRoomExitRequested` checked
 repeatedly, combined with a flag bit on `gPlayer`) - the code
 calls `sub_80091D4` and three more `sub_800891C` calls (on
@@ -2721,7 +2721,7 @@ objects are currently in state `0xA`"**, plausibly a
 remaining-enemies/collectibles check feeding into level-completion
 logic, unconfirmed. Immediately after, calls `sub_8008CEC` on five hot
 IWRAM globals (`030012E8`/`EC`/`F0`/`F4`/`F8`), then calls
-**`sub_8001578`/`sub_8001564`/`sub_800153C`** - three of the fade
+**`HideBg0`/`HideBg1`/`HideBg3`** - three of the fade
 cluster's own bitfield-accessor functions - resetting screen-mode flags
 now that the transition is done. A clean bookend: the same small
 utility cluster that starts the fade also cleans up after it.
@@ -3304,14 +3304,14 @@ driver) already uses - and another case transition calls
 caller, **`RunSaveMenu(self, mode)`**, is a VBlank-paced wait loop with
 exactly two call sites, both **inside `UpdateGameFrame`** - one sits in
 the *same level-load state machine* as the between-level map screen
-(`RunCredits`, on a sibling branch of `sub_8035E14`'s return value:
+(`RunCredits`, on a sibling branch of `RunTitleScreen`'s return value:
 map screen fires on `==2`, this fires on the "not 0" branch) - very
 likely a **second between-level screen** (a confirm/prompt dialog)
 alternating with the map screen depending on level-load state; the
 second call site is gated on an unrelated condition, so it's reused
 generically as a modal dialog rather than tied to one trigger. Neither
 `SaveMenuInput` nor `RunSaveMenu` are entity-vtable-dispatched.
-`sub_8035E14` (the shared level-load-stage selector) remains unread
+`RunTitleScreen` (the shared level-load-stage selector) remains unread
 and would pin down exactly which states map to which screen.
 
 ### Correction: `overlay_ui` is a small family of screens, not one settings menu
@@ -3344,7 +3344,7 @@ pause-menu screens sharing one constructor toolkit**:
   comment right after it - a useful cross-reference for whoever
   continues this thread.)
 - **`InitPauseMenu`, `InitPowerDialog`, `InitPauseTimeTrialPage` are all instances of
-  one recurring screen-constructor shape**: `sub_801E644` init → a
+  one recurring screen-constructor shape**: `InitBgSetup` init → a
   *local* blend-register setup at `0x04000050` (same field-offset
   convention as `InitLevelSelect`/`sub_801CCF8`, but per-screen rather
   than shared) → `LoadGraphicsPackage` with a per-screen package
@@ -3407,10 +3407,10 @@ screen plus a separate one-shot achievement-notification sequence.**
   sequence**, up to four distinct one-shot dialogs cycling through
   before the state machine proceeds to case 4 (state `0x18`), which
   calls `RunCredits` (the between-level map screen) again.
-- **`sub_8035E14` is not a simple state selector - it's an active
+- **`RunTitleScreen` is not a simple state selector - it's an active
   per-frame driver with its own state**, correcting the earlier
   framing. It initializes a 9-entry sub-table rooted at
-  `gStaticData_0817CFA4` and, when a condition holds, calls
+  `gTitleLogoPieceSeeds` and, when a condition holds, calls
   `UpdateStarfield` (the minimap-reveal driver) and `WaitForVBlank` directly
   inside its own loop - it's actively driving the map-screen
   transition, not just reporting a code. Its return value still gates
@@ -3430,24 +3430,24 @@ all built on the same dialog-lifecycle/popup-text toolkit.
 The ~0.4 KB of tiny leaf singletons left unlabeled by the split above
 (the smallest functions in the whole file, `0x080014A4`-`0x080015E0`,
 13 functions/332 B) turns out to be genuinely identifiable, not just
-noise. **`sub_80014A4`**, the very first function in the entire file,
-loops calling **`sub_80013FC`** at increasing factors (`0, 2, 4, ...,
-0x10`) - and `sub_80013FC` is not raw asm at all, it's **already matched**
+noise. **`FadePaletteToBlack`**, the very first function in the entire file,
+loops calling **`DarkenPalette`** at increasing factors (`0, 2, 4, ...,
+0x10`) - and `DarkenPalette` is not raw asm at all, it's **already matched**
 (`src/graphics/palette_blend.c`), documented there as blending the whole
 512-entry palette toward black by `factor/16` per channel. Between each
-step, `sub_80014A4` calls `WaitForVBlank` (matched, `src/system/irq.c`'s
+step, `FadePaletteToBlack` calls `WaitForVBlank` (matched, `src/system/irq.c`'s
 region - a VBlank-wait/commit helper used throughout this document) and
 DMAs the result out - the textbook shape of a **fade-to-black effect**,
 one step per frame. `palette_blend.c`'s own header comment already
-anticipated this: *"Sits right after `sub_800132C`
+anticipated this: *"Sits right after `FadeBrightness`
 (`src/graphics/fade_util.c`) and before whatever's still raw in
 `asm/code_3_1_7.s`"* - this is that continuation, finally identified.
 
 The other 12 functions in the cluster (16-24 B each) are get/set
-bitfield accessors for **`gUnknown_03001288`**, a packed mode/flags
+bitfield accessors for **`gDispcnt`**, a packed mode/flags
 byte - the same one `PlayCutscene` (the `graphics_loading` BG2-affine
 function from the section below) writes directly, and whose setters
-(`sub_8001524`/`sub_80015B0`/`sub_80015E0`) that same function calls by
+(`SetDispcntMode`/`ShowBg2`/`ShowObj`) that same function calls by
 address. A real, concrete link between two categories this document has
 treated as unrelated: a small fade/screen-mode utility library, shared
 between the mislabeled "audio" file and the `graphics_loading`
@@ -3640,9 +3640,9 @@ different bit of `gLevelState+2`, sound `0xB` this time,
 fallback `0xC`) - at least 4 of the 15 slots are now individually
 confirmed.
 
-**A second finding refines `sub_801E788`'s own table from earlier**:
-`sub_801E688` (368 B) reads the same `gStaticData_0816C644`/
-`gStaticData_0816C674` pair (12 entries each) completely differently -
+**A second finding refines `DrawScaledSprite`'s own table from earlier**:
+`FitScaledSprite` (368 B) reads the same `gObjSizeWidths`/
+`gObjSizeHeights` pair (12 entries each) completely differently -
 it iterates all 12 looking for the **smallest-area candidate that still
 fits** a given width/height, tracking the best index, then computes
 fixed-point scale factors via `__divsi3` (confirmed real division
@@ -3650,8 +3650,8 @@ function, not a trampoline call this time) for both axes. So this
 table pair isn't purely "per-level centering reference points" as
 first characterized - it reads more like a **shared table of available
 box/tile-size presets**, used both for best-fit *selection*
-(`sub_801E688`) and for *centering within* whichever box got selected
-(`sub_801E788`). Same data, two different consumers.
+(`FitScaledSprite`) and for *centering within* whichever box got selected
+(`DrawScaledSprite`). Same data, two different consumers.
 
 **Follow-up fully mapped all 15 slots of the trigger-effect dispatch
 table** (`gStaticData_0816C7D8`-`0816C814`, confirmed by direct dump -
@@ -3729,7 +3729,7 @@ bytes" figure was mis-scoped: the range `0x0816C400`-`0x0816C6A4`
 scanned alongside it is **not part of this table at all** - it's a run
 of already-labeled, unrelated small per-level tables (thresholds, a
 velocity-shift table, palette-adjacent tables, the documented
-`gStaticData_0816C644`/`674` centering-preset pair); zero pointer-
+`gObjSizeWidths`/`674` centering-preset pair); zero pointer-
 shaped hits there when dumped directly.
 
 **All 92 words inside `gEntitySpawnFuncs` are valid ROM code
@@ -3870,10 +3870,10 @@ entire document has been referencing all session** -
 `PlaySfx`'s own channel-state object, since that's the exact global
 `PlaySfx` takes as its first argument everywhere), `030012B4`/`B8`/
 `C8`/`CC`/`D0`/`DC` (via the *already-named, real* `InitSmallFont`)/
-`E0` (via `InitLargeFont`)/`FC`, `03001300` (via `sub_8006B0C` -
-the OAM shadow buffer, matching `sub_8006A48`'s `struct
+`E0` (via `InitLargeFont`)/`FC`, `03001300` (via `InitOamBuffer` -
+the OAM shadow buffer, matching `HideUnusedOamEntries`'s `struct
 oam_shadow_buffer*` parameter found back in the `hud` investigation),
-`03001304`, and clears `gUnknown_03001288` (the fade cluster's own mode
+`03001304`, and clears `gDispcnt` (the fade cluster's own mode
 byte). One field, `gUnknown_030012D0`, gets pointed at a **brand-new
 symbol never seen anywhere else in this document**:
 `gSpriteBankTable` (the `0x084Axxxx` region - entirely outside every
@@ -3929,17 +3929,17 @@ and inside a separate function, `RunPauseMenu`, in
 `InitLevelState` allocates 4 fresh bytes, stores *that* address in
 `gUnknown_030012D0`, then stores `&gSpriteBankTable` into those 4
 bytes - so `*gUnknown_030012D0 == &gSpriteBankTable`, matching the
-`**gUnknown_030012D0+4` read found earlier. **`sub_8006EF0`/
-`sub_8006FB4` turned out to be unrelated to this table's content** -
+`**gUnknown_030012D0+4` read found earlier. **`SetPaletteCacheSource`/
+`InitPaletteCache` turned out to be unrelated to this table's content** -
 generic pool-allocator constructors (a 16-slot free-list setup, and a
 plain struct-zeroer) reused all over the codebase for unrelated pools;
 they just happened to sit next to this table's reference in
 `InitLevelState`'s init sequence.
 
 **The real consumer is `RunPauseMenu`**: allocates a buffer for
-`gUnknown_030012B8`, then reads `gSpriteBankTable+8` (a pointer)
+`gPaletteCache`, then reads `gSpriteBankTable+8` (a pointer)
 and `+0xE` (a `u16` count) to configure a pool object via
-`sub_8006EF0`. Direct ROM dump confirms a **fixed 16-byte header, read
+`SetPaletteCacheSource`. Direct ROM dump confirms a **fixed 16-byte header, read
 at hardcoded offsets - not a runtime-indexed array**: `+0x0` is a
 self-relative pointer 16 bytes past its own base (plausibly "first real
 record"), `+0x4` points into unrelated earlier ROM territory, `+0x8`
@@ -3948,7 +3948,7 @@ points into the preceding graphics blob (the one actually used, count
 index - both just read the same fixed header fields. Whether the
 remaining ~729 KB past this header is itself a repeating-record array
 is still open - not established either way. One live lead left
-unexplored: `RunPauseMenu` calls `CpuSet`/`sub_8006D50`
+unexplored: `RunPauseMenu` calls `CpuSet`/`ClaimPaletteSlot`
 immediately after, with `gStaticData_0816B2C0` (an already-documented
 per-level symbol) - a real, concrete tie between this table and the
 per-level data region, worth following if anyone continues this

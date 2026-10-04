@@ -7,7 +7,7 @@
  * 4-bit-per-cell tilemap at `self+0x10`. */
 
 extern s32 RandRange(s32 max);
-extern s16 gStaticData_0816A820[];
+extern s16 gSineTable[];
 
 struct particle_slot {
     s32 x;
@@ -18,7 +18,7 @@ struct particle_slot {
 
 /* Seeds particle slot `idx` at a fixed starting position, then rolls two
  * random values (`RandRange`) to pick a direction out of the 256-entry
- * `gStaticData_0816A820` sin-ish table and a speed, and applies the
+ * `gSineTable` sin-ish table and a speed, and applies the
  * resulting `dx`/`dy` to the slot's position (including the `idx > 0x7f`
  * infinite-loop trap the ROM itself has). Closed the previous
  * register-allocation gap - this compiler chose the opposite multiply
@@ -50,8 +50,8 @@ void SpawnStar(void *mgrArg, s32 idx)
     rng1 = (u16)RandRange(0x100);
     speed = (u16)RandRange(0x200) + 0x100;
 
-    slot->dx = (gStaticData_0816A820[(rng1 + 0x40) & 0xff] * speed) >> 8;
-    slot->dy = (gStaticData_0816A820[rng1 & 0xff] * speed) >> 8;
+    slot->dx = (gSineTable[(rng1 + 0x40) & 0xff] * speed) >> 8;
+    slot->dy = (gSineTable[rng1 & 0xff] * speed) >> 8;
 
     slot->x += slot->dx * 5;
     slot->y += slot->dy * 5;
