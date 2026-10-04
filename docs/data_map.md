@@ -287,7 +287,7 @@ Walking them:
   per tile, i.e. 8bpp (`tile_slot_pool.c`, `sub_8026618`).
 - `asset` is either an LZ77 blob between the intro graphics
   (`assetPacked = 1`, formerly `graphics/tileset1/27`-`60`), or one of
-  **seven raw level assets** in `gStaticData_086C127C`/`gStaticData_086ECCD2`
+  **seven raw level assets** in `gRoom17Asset`/`gStaticData_086ECCD2`
   (`assetPacked = 0`).
 
 The full format (the object lists included) is in [levels.md](./levels.md).
@@ -417,7 +417,7 @@ prefix is generated from the set's layout instead of the old verbatim
 `gGaxSfxData`. The samples are not deduplicated here (84 and 87
 are the same bytes, stored twice), unlike the music's.
 
-### `gStaticData_086C127C` (100,912 B) and `gStaticData_086ECCD2` (1,011,482 B): raw level assets
+### `gRoom17Asset` (100,912 B) and `gStaticData_086ECCD2` (1,011,482 B): raw level assets
 
 Each is a `level_desc.asset` with `assetPacked = 0`: the uncompressed form
 of what `graphics/tileset1/27`-`60` hold LZ77-packed. The asset is the
@@ -428,13 +428,13 @@ starts with a `u16` offset table (offsets x 4). Each layer reads it at
 
 | Asset | Size | Room (`level_desc`) |
 |---|---:|---|
-| `086C127C` | 0x18A30 | `0825E7DC` |
+| `086C127C` (`gRoom17Asset`) | 0x18A30 | `0825E7DC` |
 | `086ECCD4` (after 2 B pad) | 0x1B484 | `082BDF98` |
-| `08708158` | 0x2F568 | `08260768` |
-| `087376C0` | 0x1B684 | `0825BCDC` |
-| `08752D44` | 0x38064 | `0825A390` |
-| `0878ADA8` | 0x31394 | `0824E104` |
-| `087BC13C` | 0x27AB0 | `0825233C` (ends at the first vtable, `087E3BEC`) |
+| `08708158` (`gRoom19Asset`) | 0x2F568 | `08260768` |
+| `087376C0` (`gRoom26Asset`) | 0x1B684 | `0825BCDC` |
+| `08752D44` (`gRoom27Asset`) | 0x38064 | `0825A390` |
+| `0878ADA8` (`gRoom32Asset`) | 0x31394 | `0824E104` |
+| `087BC13C` (`gRoom33Asset`) | 0x27AB0 | `0825233C` (ends at the first vtable, `087E3BEC`) |
 
 **Status: converted** (the 2-byte pad at `086ECCD2` is gbagfx's padding
 of the LZ77 asset before it). The chunk
@@ -442,7 +442,7 @@ streams are decoded into one tilemap per layer (`data/levels/<room>/`),
 and `tools/levels.py` re-encodes them byte for byte, the LZ77 ones
 included: its encoder reproduces the original tool's token choices and
 its leftover bytes. `data/data.s` incbins the built assets under new
-labels (`gStaticData_086ECCD4`, `gStaticData_08708158`, ...). The format
+labels (`gRoom15Asset`, `gRoom19Asset`, ...). The format
 and the encoder are in [levels.md](./levels.md).
 
 ### The IWRAM image (`087E55E4`-`087E5FCC`) + fill

@@ -1,11 +1,11 @@
 {
   "name": "room00_264730",
-  "asset": {"symbol": "gStaticData_0864F830", "packed": true},
-  "symbols": {"desc": "gStaticData_08264730", "palette": "gStaticData_0826443A", "entities": "gStaticData_08264760", "groups": "gStaticData_082647D4", "param_offsets": "gStaticData_08264290", "params": "gStaticData_08264260", "type_counts": "gStaticData_0826463A", "layers": "gStaticData_08264774", "items": "gStaticData_08264814", "links": "gStaticData_082646F4"},
+  "asset": {"symbol": "gRoom00Asset", "packed": true},
+  "symbols": {"desc": "gRoom00Desc", "palette": "gRoom00Palette", "entities": "gRoom00EntityList", "groups": "gRoom00EntityGroups", "param_offsets": "gRoom00ParamOffsets", "params": "gRoom00Params", "type_counts": "gRoom00TypeCounts", "layers": "gRoom00Layers", "items": "gRoom00Entities", "links": "gRoom00Links"},
   "layers": {
-    "bg1": {"map": "bg1.map.bin", "size_chunks": [12, 4], "size_tiles": [187, 30], "tileset": "gStaticData_08644A88", "scale": [128, 128], "cnt": 3, "unk_1E": 2, "grid_symbol": "gStaticData_0826429A"},
-    "bg0": {"map": "bg0.map.bin", "size_chunks": [16, 5], "size_tiles": [250, 40], "tileset": "gStaticData_0817E7AC", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gStaticData_082642FA"},
-    "collision": {"map": "collision.map.bin", "size_chunks": [16, 5], "size_tiles": [250, 40], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gStaticData_0826439A"}
+    "bg1": {"map": "bg1.map.bin", "size_chunks": [12, 4], "size_tiles": [187, 30], "tileset": "gStaticData_08644A88", "scale": [128, 128], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom00Bg1Grid"},
+    "bg0": {"map": "bg0.map.bin", "size_chunks": [16, 5], "size_tiles": [250, 40], "tileset": "gStaticData_0817E7AC", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom00Bg0Grid"},
+    "collision": {"map": "collision.map.bin", "size_chunks": [16, 5], "size_tiles": [250, 40], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom00CollisionGrid"}
   },
   "palette": [
     "7C1F", "0122", "5647", "49E5", "24E1", "3144", "1080", "0000", "1549", "4317", "3EB3", "3250", "25AC", "10A5", "0441", "0000",

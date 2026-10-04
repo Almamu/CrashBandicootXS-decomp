@@ -8,11 +8,11 @@ its tile graphics is built from [`data/levels/`](../data/levels) by
   (`0x0824B638`-`0x08270F08`, 33 rooms, and `0x082B91D0`-`0x082BF120`,
   8 rooms): descriptors, chunk grids, palettes and entity lists, as typed
   C in `src/data/level_rooms_24b638.c` and `src/data/level_rooms_2b91d0.c`;
-- the 41 level assets (the per-layer tilemaps, compressed): 7 raw ones in
-  `gStaticData_086C127C` and `gStaticData_086ECCD4`..`gStaticData_087BC13C`
-  (1,112,392 bytes), and 34 LZ77-packed ones between the intro graphics
-  (`gStaticData_0864F830`..`gStaticData_086EC63C`, formerly the "unidentified"
-  `graphics/tileset1/27`-`60` `.bin` files).
+- the 41 level assets (the per-layer tilemaps, compressed), `gRoomNNAsset`
+  in `data/data.s`: 7 raw ones at `0x086C127C` and
+  `0x086ECCD4`-`0x087BC13C` (1,112,392 bytes), and 34 LZ77-packed ones
+  between the intro graphics (`0x0864F830`-`0x086EC63C`, formerly the
+  "unidentified" `graphics/tileset1/27`-`60` `.bin` files).
 
 The format below comes from the matched C that reads it. The consumer of
 each part is named in its section.
@@ -195,8 +195,9 @@ each region in ROM order.
   whether it is packed, per layer its tile set, scale, `cnt`, size in
   chunks and tiles and map file, the parameter records (lists of words),
   the links and the entities (in id order), and the symbol names of the
-  room's objects (`gStaticData_<ROM address>`, the repo's data label
-  convention).
+  room's objects: `gRoomNN` and what the object is (`gRoom17Desc`,
+  `gRoom17Palette`, `gRoom17Bg1Grid`, `gRoom17Asset`, ...; the tile sets
+  keep their own names).
 - `roomNN_xxxxxx/<layer>.map.bin`: the layer's decoded tilemap,
   `gridWidth * 16` by `gridHeight * 8` little-endian `u16` cells,
   row-major (grit's flat `-mLf` map layout). These are the cells above,

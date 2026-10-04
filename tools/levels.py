@@ -613,6 +613,10 @@ def sym(a):
     return "gStaticData_%08X" % a
 
 
+# The room objects' symbol names: gRoomNN + what the object is.
+LAYER_SYMBOLS = {"bg0": "Bg0", "bg1": "Bg1", "bg2": "Bg2", "bg3": "Bg3", "collision": "Collision"}
+
+
 def find_rooms(rom):
     """Room records of gStaticData_0816CD80, in table order: [(pal, desc)]."""
     out = []
@@ -631,6 +635,7 @@ def extract(rom_path):
     names = []
     for idx, (pal, desc) in enumerate(rooms):
         name = "room%02d_%06x" % (idx, desc - ROM_BASE)
+        pre = "gRoom%02d" % idx
         names.append(name)
         room_dir = LEVELS_DIR / name
         room_dir.mkdir(exist_ok=True)
@@ -647,15 +652,15 @@ def extract(rom_path):
         room = {
             "name": name,
             "palette": ["%04X" % rom.h(pal + 2 * i) for i in range(256)],
-            "asset": {"symbol": sym(asset_addr), "packed": bool(packed)},
+            "asset": {"symbol": pre + "Asset", "packed": bool(packed)},
             "layers": {},
             "entities": [],
             "params": [],
             "links": None,
             "symbols": {
-                "desc": sym(desc), "palette": sym(pal), "entities": sym(ent_list),
-                "groups": sym(rom.w(ent_list + 4)), "param_offsets": sym(rom.w(ent_list + 8)),
-                "params": sym(rom.w(ent_list + 12)), "type_counts": sym(rom.w(ent_list + 16)),
+                "desc": pre + "Desc", "palette": pre + "Palette", "entities": pre + "EntityList",
+                "groups": pre + "EntityGroups", "param_offsets": pre + "ParamOffsets",
+                "params": pre + "Params", "type_counts": pre + "TypeCounts",
             },
         }
         pieces.append((desc, name))
@@ -701,10 +706,10 @@ def extract(rom_path):
                           struct.unpack_from("<i", rom.data, p + 0x10 - ROM_BASE)[0]],
                 "cnt": rom.h(p + 0x14),
                 "unk_1E": rom.h(p + 0x1E),
-                "grid_symbol": sym(grid_addr),
+                "grid_symbol": pre + LAYER_SYMBOLS[lname] + "Grid",
             }
             room["layers"][lname] = layer
-        room["symbols"]["layers"] = sym(first_ld)
+        room["symbols"]["layers"] = pre + "Layers"
         assert sec_starts == sorted(sec_starts) and sec_starts[0] == 0
         # the pad bytes the encoder model can't predict (encoder heap garbage)
         for i, (lname, layer) in enumerate(room_layers(room)):
@@ -732,7 +737,7 @@ def extract(rom_path):
             for m in range(count):
                 t, x, y, prm = struct.unpack_from("<4H", rom.data, items + 8 * m - ROM_BASE)
                 room["entities"].append({"type": t, "x": x, "y": y, "param": prm})
-        room["symbols"]["items"] = sym(min(rom.w(groups + 8 * g + 4) for g in range(ngroups)))
+        room["symbols"]["items"] = pre + "Entities"
         # parameter records
         params, offs_addr = rom.w(ent_list + 12), rom.w(ent_list + 8)
         size = offs_addr - params
@@ -748,7 +753,7 @@ def extract(rom_path):
         if L[8]:
             n = rom.w(L[8])
             room["links"] = [[rom.w(L[8] + 4 + 8 * k), rom.w(L[8] + 8 + 8 * k)] for k in range(n)]
-            room["symbols"]["links"] = sym(L[8])
+            room["symbols"]["links"] = pre + "Links"
         write_room_json(room_dir / "room.json", room)
         pieces.append((params, name))
     # regions, rooms in ROM order
