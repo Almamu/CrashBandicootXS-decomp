@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor.h"
+#include "gfx_part.h"
 
 extern s32 gUnknown_03001298;
 
@@ -150,31 +151,31 @@ skipY:
     }
 }
 
-/* `self+0x6c`/`self+0x70` (previous position, cached by `sub_8009DF4`
- * above) get/set accessors. */
-void sub_8009EA8(void *self, s32 x, s32 y)
+/* `prevX`/`prevY` (previous position, cached by `sub_8009DF4` above)
+ * get/set accessors. */
+void sub_8009EA8(struct gfx_part *self, s32 x, s32 y)
 {
-    *(s32 *)((u8 *)self + 0x6c) = x;
-    *(s32 *)((u8 *)self + 0x70) = y;
+    self->prevX = x;
+    self->prevY = y;
 }
 
-void sub_8009EB0(void *dest, void *self)
+void sub_8009EB0(struct gfx_vec *dest, struct gfx_part *self)
 {
-    s32 y = *(s32 *)((u8 *)self + 0x70);
-    s32 x = *(s32 *)((u8 *)self + 0x6c);
-    *(s32 *)dest = x;
-    *(s32 *)((u8 *)dest + 4) = y;
+    s32 y = self->prevY;
+    s32 x = self->prevX;
+    dest->x = x;
+    dest->y = y;
 }
 
 /* Q8-to-integer converters for the same previous-position fields. */
-s32 sub_8009EBC(void *self)
+s32 sub_8009EBC(struct gfx_part *self)
 {
-    return *(s32 *)((u8 *)self + 0x70) >> 8;
+    return self->prevY >> 8;
 }
 
-s32 sub_8009EC4(void *self)
+s32 sub_8009EC4(struct gfx_part *self)
 {
-    return *(s32 *)((u8 *)self + 0x6c) >> 8;
+    return self->prevX >> 8;
 }
 
 /* Constant-5 stub. */

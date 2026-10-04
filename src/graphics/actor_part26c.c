@@ -64,7 +64,7 @@ void sub_8031604(void)
         off += heights[k] << 5;
     }
     gUnknown_03001530 = 0xFF - sum;
-    dst = (u32 *)(((0xFF - sum) << 6) + 0x06008000);
+    dst = (u32 *)(((0xFF - sum) << 6) + BG_CHAR_ADDR(2));
     for (row_i = 0; row_i <= 3; row_i++) {
         u8 *src;
         u8 *row;

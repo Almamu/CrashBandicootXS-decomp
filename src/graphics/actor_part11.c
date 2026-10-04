@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor.h"
+#include "actor_self.h"
 
 extern void *sub_803AD7C(void *arg0, void *fn);
 extern void sub_803A94C(void *src, void *dst, s32 control);
@@ -23,18 +24,32 @@ struct dual_array_manager {
     void **array2;             // +0x10
 };
 
-/* Fires a `part->table+0x20/0x24`-driven trampoline via `sub_803AD7C`
- * for every entry in `manager->array2` (bounded by `count2`). */
+/* What the managers' lists hold: level objects with a gcc 2.x method
+ * table at +0x18 (the same prefix as gobj_1a794.h's `struct gobj`, whose
+ * header can't be included here - its externs clash with this file's
+ * definitions). */
+struct listed_obj_vtable {
+    u8 unk_00[0x20];
+    struct actor_method m20;    // 0x20 - per-frame update
+};
+
+struct listed_obj {
+    u8 unk_00[0x18];
+    struct listed_obj_vtable *vtable; // 0x18
+};
+
+/* Calls the `m20` virtual method (via the `sub_803AD7C` call thunk) of
+ * every object in `manager->array2` (bounded by `count2`). */
 void sub_8008DC0(struct dual_array_manager *manager)
 {
     s32 i;
 
     for (i = 0; i < manager->count2; i++) {
-        void *part = manager->array2[i];
-        u8 *tbl = *(u8 **)((u8 *)part + 0x18);
-        s16 offset = *(s16 *)(tbl + 0x20);
+        struct listed_obj *part = manager->array2[i];
+        struct listed_obj_vtable *tbl = part->vtable;
+        s16 offset = tbl->m20.thisOffset;
         void *addr = (u8 *)part + offset;
-        void *fn = *(void **)(tbl + 0x24);
+        void *fn = tbl->m20.fn;
 
         sub_803AD7C(addr, fn);
     }
