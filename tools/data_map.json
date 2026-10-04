@@ -6980,7 +6980,7 @@
   {
    "address": "0x086C127C",
    "size": 100912,
-   "name": "gStaticData_086C127C",
+   "name": "gRoom17Asset",
    "consumers": [],
    "consumer_files": [],
    "ptr_words_code": 33,

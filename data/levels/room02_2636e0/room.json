@@ -1,11 +1,11 @@
 {
   "name": "room02_2636e0",
-  "asset": {"symbol": "gStaticData_08655178", "packed": true},
-  "symbols": {"desc": "gStaticData_082636E0", "palette": "gStaticData_08263410", "entities": "gStaticData_08263710", "groups": "gStaticData_08263784", "param_offsets": "gStaticData_08263278", "params": "gStaticData_08263228", "type_counts": "gStaticData_08263610", "layers": "gStaticData_08263724", "items": "gStaticData_082637C4", "links": "gStaticData_082636CC"},
+  "asset": {"symbol": "gRoom02Asset", "packed": true},
+  "symbols": {"desc": "gRoom02Desc", "palette": "gRoom02Palette", "entities": "gRoom02EntityList", "groups": "gRoom02EntityGroups", "param_offsets": "gRoom02ParamOffsets", "params": "gRoom02Params", "type_counts": "gRoom02TypeCounts", "layers": "gRoom02Layers", "items": "gRoom02Entities", "links": "gRoom02Links"},
   "layers": {
-    "bg1": {"map": "bg1.map.bin", "size_chunks": [9, 4], "size_tiles": [132, 28], "tileset": "gStaticData_0863D4C0", "scale": [128, 128], "cnt": 3, "unk_1E": 2, "grid_symbol": "gStaticData_08263288"},
-    "bg0": {"map": "bg0.map.bin", "size_chunks": [16, 5], "size_tiles": [250, 40], "tileset": "gStaticData_081E6330", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gStaticData_082632D0"},
-    "collision": {"map": "collision.map.bin", "size_chunks": [16, 5], "size_tiles": [250, 40], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gStaticData_08263370"}
+    "bg1": {"map": "bg1.map.bin", "size_chunks": [9, 4], "size_tiles": [132, 28], "tileset": "gStaticData_0863D4C0", "scale": [128, 128], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom02Bg1Grid"},
+    "bg0": {"map": "bg0.map.bin", "size_chunks": [16, 5], "size_tiles": [250, 40], "tileset": "gStaticData_081E6330", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom02Bg0Grid"},
+    "collision": {"map": "collision.map.bin", "size_chunks": [16, 5], "size_tiles": [250, 40], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom02CollisionGrid"}
   },
   "palette": [
     "0BE2", "7F0E", "72AB", "6249", "55E8", "4986", "3D25", "3103", "30A3", "24A3", "0CA2", "20A2", "1862", "1862", "0C42", "0C42",

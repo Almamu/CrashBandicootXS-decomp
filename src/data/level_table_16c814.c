@@ -25,88 +25,88 @@ COMPILE_TIME_ASSERT(sizeof(struct level_room_list) == 0x10);
 COMPILE_TIME_ASSERT(sizeof(struct level_room) == 0x14);
 
 /* The rooms' palettes and descriptors (src/data/level_rooms_*.c). */
-extern const u16 gStaticData_0826443A[];
-extern const struct level_desc gStaticData_08264730;
-extern const u16 gStaticData_08263C14[];
-extern const struct level_desc gStaticData_08263F4C;
-extern const u16 gStaticData_08263410[];
-extern const struct level_desc gStaticData_082636E0;
-extern const u16 gStaticData_0827086E[];
-extern const struct level_desc gStaticData_08270BCC;
-extern const u16 gStaticData_08262B54[];
-extern const struct level_desc gStaticData_08262E64;
-extern const u16 gStaticData_0826FDFC[];
-extern const struct level_desc gStaticData_08270154;
-extern const u16 gStaticData_0826716E[];
-extern const struct level_desc gStaticData_08267428;
-extern const u16 gStaticData_08264B64[];
-extern const struct level_desc gStaticData_08264E64;
-extern const u16 gStaticData_08265484[];
-extern const struct level_desc gStaticData_08265804;
-extern const u16 gStaticData_0826235E[];
-extern const struct level_desc gStaticData_08262654;
-extern const u16 gStaticData_08265E66[];
-extern const struct level_desc gStaticData_08266194;
-extern const u16 gStaticData_0826F23A[];
-extern const struct level_desc gStaticData_0826F5C0;
-extern const u16 gStaticData_0826681A[];
-extern const struct level_desc gStaticData_08266B40;
-extern const u16 gStaticData_082BBB26[];
-extern const struct level_desc gStaticData_082BBDE0;
-extern const u16 gStaticData_082BCC84[];
-extern const struct level_desc gStaticData_082BCF40;
-extern const u16 gStaticData_082BDCDC[];
-extern const struct level_desc gStaticData_082BDF98;
-extern const u16 gStaticData_082BE822[];
-extern const struct level_desc gStaticData_082BEADC;
-extern const u16 gStaticData_0825E4EE[];
-extern const struct level_desc gStaticData_0825E7DC;
-extern const u16 gStaticData_082618C2[];
-extern const struct level_desc gStaticData_08261C40;
-extern const u16 gStaticData_08260458[];
-extern const struct level_desc gStaticData_08260768;
-extern const u16 gStaticData_0825EE4E[];
-extern const struct level_desc gStaticData_0825F11C;
-extern const u16 gStaticData_0825D544[];
-extern const struct level_desc gStaticData_0825D81C;
-extern const u16 gStaticData_0826E3F8[];
-extern const struct level_desc gStaticData_0826E760;
-extern const u16 gStaticData_0825CC4A[];
-extern const struct level_desc gStaticData_0825CF20;
-extern const u16 gStaticData_0825C35A[];
-extern const struct level_desc gStaticData_0825C640;
-extern const u16 gStaticData_0826D050[];
-extern const struct level_desc gStaticData_0826D388;
-extern const u16 gStaticData_0825B9B6[];
-extern const struct level_desc gStaticData_0825BCDC;
-extern const u16 gStaticData_08259FAA[];
-extern const struct level_desc gStaticData_0825A390;
-extern const u16 gStaticData_08254BEA[];
-extern const struct level_desc gStaticData_08254ED0;
-extern const u16 gStaticData_08254204[];
-extern const struct level_desc gStaticData_082544FC;
-extern const u16 gStaticData_0826A882[];
-extern const struct level_desc gStaticData_0826AC10;
-extern const u16 gStaticData_08253642[];
-extern const struct level_desc gStaticData_082539B0;
-extern const u16 gStaticData_0824DD8C[];
-extern const struct level_desc gStaticData_0824E104;
-extern const u16 gStaticData_08251FA6[];
-extern const struct level_desc gStaticData_0825233C;
-extern const u16 gStaticData_0824C0D2[];
-extern const struct level_desc gStaticData_0824C400;
-extern const u16 gStaticData_0826BE4E[];
-extern const struct level_desc gStaticData_0826C1BC;
-extern const u16 gStaticData_0826899A[];
-extern const struct level_desc gStaticData_08268CF0;
-extern const u16 gStaticData_082B9B58[];
-extern const struct level_desc gStaticData_082B9ED0;
-extern const u16 gStaticData_082BA962[];
-extern const struct level_desc gStaticData_082BAC1C;
-extern const u16 gStaticData_082BA554[];
-extern const struct level_desc gStaticData_082BA810;
-extern const u16 gStaticData_082BADDA[];
-extern const struct level_desc gStaticData_082BB094;
+extern const u16 gRoom00Palette[];
+extern const struct level_desc gRoom00Desc;
+extern const u16 gRoom01Palette[];
+extern const struct level_desc gRoom01Desc;
+extern const u16 gRoom02Palette[];
+extern const struct level_desc gRoom02Desc;
+extern const u16 gRoom03Palette[];
+extern const struct level_desc gRoom03Desc;
+extern const u16 gRoom04Palette[];
+extern const struct level_desc gRoom04Desc;
+extern const u16 gRoom05Palette[];
+extern const struct level_desc gRoom05Desc;
+extern const u16 gRoom06Palette[];
+extern const struct level_desc gRoom06Desc;
+extern const u16 gRoom07Palette[];
+extern const struct level_desc gRoom07Desc;
+extern const u16 gRoom08Palette[];
+extern const struct level_desc gRoom08Desc;
+extern const u16 gRoom09Palette[];
+extern const struct level_desc gRoom09Desc;
+extern const u16 gRoom10Palette[];
+extern const struct level_desc gRoom10Desc;
+extern const u16 gRoom11Palette[];
+extern const struct level_desc gRoom11Desc;
+extern const u16 gRoom12Palette[];
+extern const struct level_desc gRoom12Desc;
+extern const u16 gRoom13Palette[];
+extern const struct level_desc gRoom13Desc;
+extern const u16 gRoom14Palette[];
+extern const struct level_desc gRoom14Desc;
+extern const u16 gRoom15Palette[];
+extern const struct level_desc gRoom15Desc;
+extern const u16 gRoom16Palette[];
+extern const struct level_desc gRoom16Desc;
+extern const u16 gRoom17Palette[];
+extern const struct level_desc gRoom17Desc;
+extern const u16 gRoom18Palette[];
+extern const struct level_desc gRoom18Desc;
+extern const u16 gRoom19Palette[];
+extern const struct level_desc gRoom19Desc;
+extern const u16 gRoom20Palette[];
+extern const struct level_desc gRoom20Desc;
+extern const u16 gRoom21Palette[];
+extern const struct level_desc gRoom21Desc;
+extern const u16 gRoom22Palette[];
+extern const struct level_desc gRoom22Desc;
+extern const u16 gRoom23Palette[];
+extern const struct level_desc gRoom23Desc;
+extern const u16 gRoom24Palette[];
+extern const struct level_desc gRoom24Desc;
+extern const u16 gRoom25Palette[];
+extern const struct level_desc gRoom25Desc;
+extern const u16 gRoom26Palette[];
+extern const struct level_desc gRoom26Desc;
+extern const u16 gRoom27Palette[];
+extern const struct level_desc gRoom27Desc;
+extern const u16 gRoom28Palette[];
+extern const struct level_desc gRoom28Desc;
+extern const u16 gRoom29Palette[];
+extern const struct level_desc gRoom29Desc;
+extern const u16 gRoom30Palette[];
+extern const struct level_desc gRoom30Desc;
+extern const u16 gRoom31Palette[];
+extern const struct level_desc gRoom31Desc;
+extern const u16 gRoom32Palette[];
+extern const struct level_desc gRoom32Desc;
+extern const u16 gRoom33Palette[];
+extern const struct level_desc gRoom33Desc;
+extern const u16 gRoom34Palette[];
+extern const struct level_desc gRoom34Desc;
+extern const u16 gRoom35Palette[];
+extern const struct level_desc gRoom35Desc;
+extern const u16 gRoom36Palette[];
+extern const struct level_desc gRoom36Desc;
+extern const u16 gRoom37Palette[];
+extern const struct level_desc gRoom37Desc;
+extern const u16 gRoom38Palette[];
+extern const struct level_desc gRoom38Desc;
+extern const u16 gRoom39Palette[];
+extern const struct level_desc gRoom39Desc;
+extern const u16 gRoom40Palette[];
+extern const struct level_desc gRoom40Desc;
 
 extern const struct level_room_list gLevelRoomLists[25];
 extern const struct level_room *const gLevel00Rooms[1];
@@ -269,23 +269,23 @@ const struct level_room_list gLevelRoomLists[25] = {
 const u8 gThemeMusicCues[11] = { 2, 0, 3, 1, 5, 4, 7, 8, 9, 10, 10 };
 
 /* The extra rooms of the room lists (rooms 00-16). */
-const struct level_room gLevelRoom00 = { gStaticData_0826443A, &gStaticData_08264730, 0, 0, 0, 0 }; /* data/levels/room00_264730 */
-const struct level_room gLevelRoom01 = { gStaticData_08263C14, &gStaticData_08263F4C, 0, 0, 0, 0 }; /* data/levels/room01_263f4c */
-const struct level_room gLevelRoom02 = { gStaticData_08263410, &gStaticData_082636E0, 0, 0, 0, 0 }; /* data/levels/room02_2636e0 */
-const struct level_room gLevelRoom03 = { gStaticData_0827086E, &gStaticData_08270BCC, 0, 0, 0, 0 }; /* data/levels/room03_270bcc */
-const struct level_room gLevelRoom04 = { gStaticData_08262B54, &gStaticData_08262E64, 0, 0, 0, 0 }; /* data/levels/room04_262e64 */
-const struct level_room gLevelRoom05 = { gStaticData_0826FDFC, &gStaticData_08270154, 0, 0, 0, 0 }; /* data/levels/room05_270154 */
-const struct level_room gLevelRoom06 = { gStaticData_0826716E, &gStaticData_08267428, 0, 0, 0, 0 }; /* data/levels/room06_267428 */
-const struct level_room gLevelRoom07 = { gStaticData_08264B64, &gStaticData_08264E64, 0, 0, 0, 0 }; /* data/levels/room07_264e64 */
-const struct level_room gLevelRoom08 = { gStaticData_08265484, &gStaticData_08265804, 0, 0, 0, 0 }; /* data/levels/room08_265804 */
-const struct level_room gLevelRoom09 = { gStaticData_0826235E, &gStaticData_08262654, 0, 0, 0, 0 }; /* data/levels/room09_262654 */
-const struct level_room gLevelRoom10 = { gStaticData_08265E66, &gStaticData_08266194, 0, 0, 0, 0 }; /* data/levels/room10_266194 */
-const struct level_room gLevelRoom11 = { gStaticData_0826F23A, &gStaticData_0826F5C0, 0, 0, 0, 0 }; /* data/levels/room11_26f5c0 */
-const struct level_room gLevelRoom12 = { gStaticData_0826681A, &gStaticData_08266B40, 0, 0, 0, 0 }; /* data/levels/room12_266b40 */
-const struct level_room gLevelRoom13 = { gStaticData_082BBB26, &gStaticData_082BBDE0, 0, 0, 0, 0 }; /* data/levels/room13_2bbde0 */
-const struct level_room gLevelRoom14 = { gStaticData_082BCC84, &gStaticData_082BCF40, 0, 0, 0, 0 }; /* data/levels/room14_2bcf40 */
-const struct level_room gLevelRoom15 = { gStaticData_082BDCDC, &gStaticData_082BDF98, 0, 0, 0, 0 }; /* data/levels/room15_2bdf98 */
-const struct level_room gLevelRoom16 = { gStaticData_082BE822, &gStaticData_082BEADC, 2, 0, 0, 0 }; /* data/levels/room16_2beadc */
+const struct level_room gLevelRoom00 = { gRoom00Palette, &gRoom00Desc, 0, 0, 0, 0 }; /* data/levels/room00_264730 */
+const struct level_room gLevelRoom01 = { gRoom01Palette, &gRoom01Desc, 0, 0, 0, 0 }; /* data/levels/room01_263f4c */
+const struct level_room gLevelRoom02 = { gRoom02Palette, &gRoom02Desc, 0, 0, 0, 0 }; /* data/levels/room02_2636e0 */
+const struct level_room gLevelRoom03 = { gRoom03Palette, &gRoom03Desc, 0, 0, 0, 0 }; /* data/levels/room03_270bcc */
+const struct level_room gLevelRoom04 = { gRoom04Palette, &gRoom04Desc, 0, 0, 0, 0 }; /* data/levels/room04_262e64 */
+const struct level_room gLevelRoom05 = { gRoom05Palette, &gRoom05Desc, 0, 0, 0, 0 }; /* data/levels/room05_270154 */
+const struct level_room gLevelRoom06 = { gRoom06Palette, &gRoom06Desc, 0, 0, 0, 0 }; /* data/levels/room06_267428 */
+const struct level_room gLevelRoom07 = { gRoom07Palette, &gRoom07Desc, 0, 0, 0, 0 }; /* data/levels/room07_264e64 */
+const struct level_room gLevelRoom08 = { gRoom08Palette, &gRoom08Desc, 0, 0, 0, 0 }; /* data/levels/room08_265804 */
+const struct level_room gLevelRoom09 = { gRoom09Palette, &gRoom09Desc, 0, 0, 0, 0 }; /* data/levels/room09_262654 */
+const struct level_room gLevelRoom10 = { gRoom10Palette, &gRoom10Desc, 0, 0, 0, 0 }; /* data/levels/room10_266194 */
+const struct level_room gLevelRoom11 = { gRoom11Palette, &gRoom11Desc, 0, 0, 0, 0 }; /* data/levels/room11_26f5c0 */
+const struct level_room gLevelRoom12 = { gRoom12Palette, &gRoom12Desc, 0, 0, 0, 0 }; /* data/levels/room12_266b40 */
+const struct level_room gLevelRoom13 = { gRoom13Palette, &gRoom13Desc, 0, 0, 0, 0 }; /* data/levels/room13_2bbde0 */
+const struct level_room gLevelRoom14 = { gRoom14Palette, &gRoom14Desc, 0, 0, 0, 0 }; /* data/levels/room14_2bcf40 */
+const struct level_room gLevelRoom15 = { gRoom15Palette, &gRoom15Desc, 0, 0, 0, 0 }; /* data/levels/room15_2bdf98 */
+const struct level_room gLevelRoom16 = { gRoom16Palette, &gRoom16Desc, 2, 0, 0, 0 }; /* data/levels/room16_2beadc */
 
 /* The rooms of each level, in play order. */
 const struct level_room *const gLevel00Rooms[1] = { &gLevelRoom17 };
@@ -315,34 +315,34 @@ const struct level_room *const gLevel23Rooms[1] = { &gLevelRoom40 };
 const struct level_room *const gLevel21Rooms[1] = { &gLevelStage6 };
 
 /* The rooms of the lists above (rooms 17-40 and the category stages). */
-const struct level_room gLevelRoom17 = { gStaticData_0825E4EE, &gStaticData_0825E7DC, 0, 0, 0, 0 }; /* data/levels/room17_25e7dc */
-const struct level_room gLevelRoom18 = { gStaticData_082618C2, &gStaticData_08261C40, 1, 0, 1, 0x1004 }; /* data/levels/room18_261c40 */
-const struct level_room gLevelRoom19 = { gStaticData_08260458, &gStaticData_08260768, 0, 0, 0, 0 }; /* data/levels/room19_260768 */
-const struct level_room gLevelRoom20 = { gStaticData_0825EE4E, &gStaticData_0825F11C, 0, 0, 0, 0 }; /* data/levels/room20_25f11c */
+const struct level_room gLevelRoom17 = { gRoom17Palette, &gRoom17Desc, 0, 0, 0, 0 }; /* data/levels/room17_25e7dc */
+const struct level_room gLevelRoom18 = { gRoom18Palette, &gRoom18Desc, 1, 0, 1, 0x1004 }; /* data/levels/room18_261c40 */
+const struct level_room gLevelRoom19 = { gRoom19Palette, &gRoom19Desc, 0, 0, 0, 0 }; /* data/levels/room19_260768 */
+const struct level_room gLevelRoom20 = { gRoom20Palette, &gRoom20Desc, 0, 0, 0, 0 }; /* data/levels/room20_25f11c */
 const struct level_room gLevelStage0 = { NULL, NULL, 3, 0, 0, 0 }; /* actor category 0 */
-const struct level_room gLevelRoom21 = { gStaticData_0825D544, &gStaticData_0825D81C, 0, 0, 0, 0 }; /* data/levels/room21_25d81c */
-const struct level_room gLevelRoom22 = { gStaticData_0826E3F8, &gStaticData_0826E760, 0, 0, 1, 0x1004 }; /* data/levels/room22_26e760 */
-const struct level_room gLevelRoom23 = { gStaticData_0825CC4A, &gStaticData_0825CF20, 0, 0, 0, 0 }; /* data/levels/room23_25cf20 */
+const struct level_room gLevelRoom21 = { gRoom21Palette, &gRoom21Desc, 0, 0, 0, 0 }; /* data/levels/room21_25d81c */
+const struct level_room gLevelRoom22 = { gRoom22Palette, &gRoom22Desc, 0, 0, 1, 0x1004 }; /* data/levels/room22_26e760 */
+const struct level_room gLevelRoom23 = { gRoom23Palette, &gRoom23Desc, 0, 0, 0, 0 }; /* data/levels/room23_25cf20 */
 const struct level_room gLevelStage1 = { NULL, NULL, 3, 0, 1, 0 }; /* actor category 1 */
-const struct level_room gLevelRoom24 = { gStaticData_0825C35A, &gStaticData_0825C640, 0, 0, 0, 0 }; /* data/levels/room24_25c640 */
+const struct level_room gLevelRoom24 = { gRoom24Palette, &gRoom24Desc, 0, 0, 0, 0 }; /* data/levels/room24_25c640 */
 const struct level_room gLevelStage3 = { NULL, NULL, 3, 0, 3, 0 }; /* actor category 3 */
-const struct level_room gLevelRoom25 = { gStaticData_0826D050, &gStaticData_0826D388, 0, 0, 1, 0x1004 }; /* data/levels/room25_26d388 */
-const struct level_room gLevelRoom26 = { gStaticData_0825B9B6, &gStaticData_0825BCDC, 1, 0, 1, 0x1004 }; /* data/levels/room26_25bcdc */
-const struct level_room gLevelRoom27 = { gStaticData_08259FAA, &gStaticData_0825A390, 0, 0, 0, 0 }; /* data/levels/room27_25a390 */
-const struct level_room gLevelRoom28 = { gStaticData_08254BEA, &gStaticData_08254ED0, 0, 0, 0, 0 }; /* data/levels/room28_254ed0 */
+const struct level_room gLevelRoom25 = { gRoom25Palette, &gRoom25Desc, 0, 0, 1, 0x1004 }; /* data/levels/room25_26d388 */
+const struct level_room gLevelRoom26 = { gRoom26Palette, &gRoom26Desc, 1, 0, 1, 0x1004 }; /* data/levels/room26_25bcdc */
+const struct level_room gLevelRoom27 = { gRoom27Palette, &gRoom27Desc, 0, 0, 0, 0 }; /* data/levels/room27_25a390 */
+const struct level_room gLevelRoom28 = { gRoom28Palette, &gRoom28Desc, 0, 0, 0, 0 }; /* data/levels/room28_254ed0 */
 const struct level_room gLevelStage2 = { NULL, NULL, 3, 0, 2, 0 }; /* actor category 2 */
-const struct level_room gLevelRoom29 = { gStaticData_08254204, &gStaticData_082544FC, 0, 0, 0, 0 }; /* data/levels/room29_2544fc */
-const struct level_room gLevelRoom30 = { gStaticData_0826A882, &gStaticData_0826AC10, 0, 0, 0, 0 }; /* data/levels/room30_26ac10 */
-const struct level_room gLevelRoom31 = { gStaticData_08253642, &gStaticData_082539B0, 1, 0, 1, 0x1004 }; /* data/levels/room31_2539b0 */
-const struct level_room gLevelRoom32 = { gStaticData_0824DD8C, &gStaticData_0824E104, 0, 0, 0, 0 }; /* data/levels/room32_24e104 */
+const struct level_room gLevelRoom29 = { gRoom29Palette, &gRoom29Desc, 0, 0, 0, 0 }; /* data/levels/room29_2544fc */
+const struct level_room gLevelRoom30 = { gRoom30Palette, &gRoom30Desc, 0, 0, 0, 0 }; /* data/levels/room30_26ac10 */
+const struct level_room gLevelRoom31 = { gRoom31Palette, &gRoom31Desc, 1, 0, 1, 0x1004 }; /* data/levels/room31_2539b0 */
+const struct level_room gLevelRoom32 = { gRoom32Palette, &gRoom32Desc, 0, 0, 0, 0 }; /* data/levels/room32_24e104 */
 const struct level_room gLevelStage4 = { NULL, NULL, 3, 0, 4, 0 }; /* actor category 4 */
-const struct level_room gLevelRoom33 = { gStaticData_08251FA6, &gStaticData_0825233C, 0, 0, 0, 0 }; /* data/levels/room33_25233c */
-const struct level_room gLevelRoom34 = { gStaticData_0824C0D2, &gStaticData_0824C400, 1, 0, 1, 0x1004 }; /* data/levels/room34_24c400 */
+const struct level_room gLevelRoom33 = { gRoom33Palette, &gRoom33Desc, 0, 0, 0, 0 }; /* data/levels/room33_25233c */
+const struct level_room gLevelRoom34 = { gRoom34Palette, &gRoom34Desc, 1, 0, 1, 0x1004 }; /* data/levels/room34_24c400 */
 const struct level_room gLevelStage5 = { NULL, NULL, 3, 0, 5, 0 }; /* actor category 5 */
-const struct level_room gLevelRoom35 = { gStaticData_0826BE4E, &gStaticData_0826C1BC, 0, 0, 1, 0x1004 }; /* data/levels/room35_26c1bc */
-const struct level_room gLevelRoom36 = { gStaticData_0826899A, &gStaticData_08268CF0, 0, 0, 0, 0 }; /* data/levels/room36_268cf0 */
-const struct level_room gLevelRoom37 = { gStaticData_082B9B58, &gStaticData_082B9ED0, 0, 0, 0, 0 }; /* data/levels/room37_2b9ed0 */
-const struct level_room gLevelRoom38 = { gStaticData_082BA962, &gStaticData_082BAC1C, 1, 0, 0, 0 }; /* data/levels/room38_2bac1c */
-const struct level_room gLevelRoom39 = { gStaticData_082BA554, &gStaticData_082BA810, 0, 0, 0, 0 }; /* data/levels/room39_2ba810 */
-const struct level_room gLevelRoom40 = { gStaticData_082BADDA, &gStaticData_082BB094, 0, 0, 0, 0 }; /* data/levels/room40_2bb094 */
+const struct level_room gLevelRoom35 = { gRoom35Palette, &gRoom35Desc, 0, 0, 1, 0x1004 }; /* data/levels/room35_26c1bc */
+const struct level_room gLevelRoom36 = { gRoom36Palette, &gRoom36Desc, 0, 0, 0, 0 }; /* data/levels/room36_268cf0 */
+const struct level_room gLevelRoom37 = { gRoom37Palette, &gRoom37Desc, 0, 0, 0, 0 }; /* data/levels/room37_2b9ed0 */
+const struct level_room gLevelRoom38 = { gRoom38Palette, &gRoom38Desc, 1, 0, 0, 0 }; /* data/levels/room38_2bac1c */
+const struct level_room gLevelRoom39 = { gRoom39Palette, &gRoom39Desc, 0, 0, 0, 0 }; /* data/levels/room39_2ba810 */
+const struct level_room gLevelRoom40 = { gRoom40Palette, &gRoom40Desc, 0, 0, 0, 0 }; /* data/levels/room40_2bb094 */
 const struct level_room gLevelStage6 = { NULL, NULL, 3, 0, 6, 0 }; /* actor category 6 */

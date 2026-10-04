@@ -1,11 +1,11 @@
 {
   "name": "room07_264e64",
-  "asset": {"symbol": "gStaticData_0865E05C", "packed": true},
-  "symbols": {"desc": "gStaticData_08264E64", "palette": "gStaticData_08264B64", "entities": "gStaticData_08264E94", "groups": "gStaticData_08264F08", "param_offsets": "gStaticData_08264984", "params": "gStaticData_08264944", "type_counts": "gStaticData_08264D64", "layers": "gStaticData_08264EA8", "items": "gStaticData_08264F18", "links": "gStaticData_08264E20"},
+  "asset": {"symbol": "gRoom07Asset", "packed": true},
+  "symbols": {"desc": "gRoom07Desc", "palette": "gRoom07Palette", "entities": "gRoom07EntityList", "groups": "gRoom07EntityGroups", "param_offsets": "gRoom07ParamOffsets", "params": "gRoom07Params", "type_counts": "gRoom07TypeCounts", "layers": "gRoom07Layers", "items": "gRoom07Entities", "links": "gRoom07Links"},
   "layers": {
-    "bg1": {"map": "bg1.map.bin", "size_chunks": [3, 11], "size_tiles": [38, 84], "tileset": "gStaticData_0863D4C0", "scale": [89, 89], "cnt": 3, "unk_1E": 2, "grid_symbol": "gStaticData_08264992"},
-    "bg0": {"map": "bg0.map.bin", "size_chunks": [4, 25], "size_tiles": [60, 194], "tileset": "gStaticData_081E6330", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gStaticData_082649D4"},
-    "collision": {"map": "collision.map.bin", "size_chunks": [4, 25], "size_tiles": [60, 194], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gStaticData_08264A9C"}
+    "bg1": {"map": "bg1.map.bin", "size_chunks": [3, 11], "size_tiles": [38, 84], "tileset": "gStaticData_0863D4C0", "scale": [89, 89], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom07Bg1Grid"},
+    "bg0": {"map": "bg0.map.bin", "size_chunks": [4, 25], "size_tiles": [60, 194], "tileset": "gStaticData_081E6330", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom07Bg0Grid"},
+    "collision": {"map": "collision.map.bin", "size_chunks": [4, 25], "size_tiles": [60, 194], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom07CollisionGrid"}
   },
   "palette": [
     "0BE2", "7F0E", "72AB", "6249", "55E8", "4986", "3D25", "3103", "30A3", "24A3", "0CA2", "20A2", "1862", "1862", "0C42", "0C42",

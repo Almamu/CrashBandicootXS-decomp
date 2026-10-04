@@ -1,11 +1,11 @@
 {
   "name": "room04_262e64",
-  "asset": {"symbol": "gStaticData_08656D60", "packed": true},
-  "symbols": {"desc": "gStaticData_08262E64", "palette": "gStaticData_08262B54", "entities": "gStaticData_08262E94", "groups": "gStaticData_08262F08", "param_offsets": "gStaticData_08262908", "params": "gStaticData_082628D8", "type_counts": "gStaticData_08262D54", "layers": "gStaticData_08262EA8", "items": "gStaticData_08262F18", "links": "gStaticData_08262E10"},
+  "asset": {"symbol": "gRoom04Asset", "packed": true},
+  "symbols": {"desc": "gRoom04Desc", "palette": "gRoom04Palette", "entities": "gRoom04EntityList", "groups": "gRoom04EntityGroups", "param_offsets": "gRoom04ParamOffsets", "params": "gRoom04Params", "type_counts": "gRoom04TypeCounts", "layers": "gRoom04Layers", "items": "gRoom04Entities", "links": "gRoom04Links"},
   "layers": {
-    "bg1": {"map": "bg1.map.bin", "size_chunks": [3, 11], "size_tiles": [38, 84], "tileset": "gStaticData_0863D4C0", "scale": [179, 76], "cnt": 3, "unk_1E": 2, "grid_symbol": "gStaticData_08262912"},
-    "bg0": {"map": "bg0.map.bin", "size_chunks": [4, 32], "size_tiles": [60, 250], "tileset": "gStaticData_081E6330", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gStaticData_08262954"},
-    "collision": {"map": "collision.map.bin", "size_chunks": [4, 32], "size_tiles": [60, 250], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gStaticData_08262A54"}
+    "bg1": {"map": "bg1.map.bin", "size_chunks": [3, 11], "size_tiles": [38, 84], "tileset": "gStaticData_0863D4C0", "scale": [179, 76], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom04Bg1Grid"},
+    "bg0": {"map": "bg0.map.bin", "size_chunks": [4, 32], "size_tiles": [60, 250], "tileset": "gStaticData_081E6330", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom04Bg0Grid"},
+    "collision": {"map": "collision.map.bin", "size_chunks": [4, 32], "size_tiles": [60, 250], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom04CollisionGrid"}
   },
   "palette": [
     "0BE2", "7F0E", "72AB", "6249", "55E8", "4986", "3D25", "3103", "30A3", "24A3", "0CA2", "20A2", "1862", "1862", "0C42", "0C42",

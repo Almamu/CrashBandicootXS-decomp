@@ -1,13 +1,13 @@
 {
   "name": "room33_25233c",
-  "asset": {"symbol": "gStaticData_087BC13C", "packed": false},
-  "symbols": {"desc": "gStaticData_0825233C", "palette": "gStaticData_08251FA6", "entities": "gStaticData_0825236C", "groups": "gStaticData_08252420", "param_offsets": "gStaticData_0824EA34", "params": "gStaticData_0824E928", "type_counts": "gStaticData_082521A6", "layers": "gStaticData_08252380", "items": "gStaticData_08252560", "links": "gStaticData_08252260"},
+  "asset": {"symbol": "gRoom33Asset", "packed": false},
+  "symbols": {"desc": "gRoom33Desc", "palette": "gRoom33Palette", "entities": "gRoom33EntityList", "groups": "gRoom33EntityGroups", "param_offsets": "gRoom33ParamOffsets", "params": "gRoom33Params", "type_counts": "gRoom33TypeCounts", "layers": "gRoom33Layers", "items": "gRoom33Entities", "links": "gRoom33Links"},
   "layers": {
-    "bg1": {"map": "bg1.map.bin", "size_chunks": [21, 9], "size_tiles": [333, 65], "tileset": "gStaticData_0864BB5C", "scale": [12, 25], "cnt": 3, "unk_1E": 2, "grid_symbol": "gStaticData_0824EA60"},
-    "bg2": {"map": "bg2.map.bin", "size_chunks": [42, 15], "size_tiles": [657, 120], "tileset": "gStaticData_0864BB5C", "scale": [128, 102], "cnt": 2, "unk_1E": 2, "grid_symbol": "gStaticData_0824EBDA"},
-    "bg3": {"map": "bg3.map.bin", "size_chunks": [80, 25], "size_tiles": [1275, 200], "tileset": "gStaticData_0864BB5C", "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gStaticData_0824F0C6"},
-    "bg0": {"map": "bg0.map.bin", "size_chunks": [80, 25], "size_tiles": [1275, 200], "tileset": "gStaticData_08299DCC", "scale": [256, 256], "cnt": 1, "unk_1E": 2, "grid_symbol": "gStaticData_08250066"},
-    "collision": {"map": "collision.map.bin", "size_chunks": [80, 25], "size_tiles": [1275, 200], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gStaticData_08251006"}
+    "bg1": {"map": "bg1.map.bin", "size_chunks": [21, 9], "size_tiles": [333, 65], "tileset": "gStaticData_0864BB5C", "scale": [12, 25], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom33Bg1Grid"},
+    "bg2": {"map": "bg2.map.bin", "size_chunks": [42, 15], "size_tiles": [657, 120], "tileset": "gStaticData_0864BB5C", "scale": [128, 102], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom33Bg2Grid"},
+    "bg3": {"map": "bg3.map.bin", "size_chunks": [80, 25], "size_tiles": [1275, 200], "tileset": "gStaticData_0864BB5C", "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom33Bg3Grid"},
+    "bg0": {"map": "bg0.map.bin", "size_chunks": [80, 25], "size_tiles": [1275, 200], "tileset": "gStaticData_08299DCC", "scale": [256, 256], "cnt": 1, "unk_1E": 2, "grid_symbol": "gRoom33Bg0Grid"},
+    "collision": {"map": "collision.map.bin", "size_chunks": [80, 25], "size_tiles": [1275, 200], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom33CollisionGrid"}
   },
   "palette": [
     "7C1F", "7FFF", "73DF", "6BDE", "67BE", "77BD", "679C", "6B5A", "7717", "5EF7", "7A92", "5694", "45EF", "356B", "28E7", "0003",

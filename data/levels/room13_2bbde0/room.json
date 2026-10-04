@@ -1,11 +1,11 @@
 {
   "name": "room13_2bbde0",
-  "asset": {"symbol": "gStaticData_08665938", "packed": true},
-  "symbols": {"desc": "gStaticData_082BBDE0", "palette": "gStaticData_082BBB26", "entities": "gStaticData_082BBE10", "groups": "gStaticData_082BBE84", "param_offsets": "gStaticData_082BB244", "params": "gStaticData_082BB1C8", "type_counts": "gStaticData_082BBD26", "layers": "gStaticData_082BBE24", "items": "gStaticData_082BBF44"},
+  "asset": {"symbol": "gRoom13Asset", "packed": true},
+  "symbols": {"desc": "gRoom13Desc", "palette": "gRoom13Palette", "entities": "gRoom13EntityList", "groups": "gRoom13EntityGroups", "param_offsets": "gRoom13ParamOffsets", "params": "gRoom13Params", "type_counts": "gRoom13TypeCounts", "layers": "gRoom13Layers", "items": "gRoom13Entities"},
   "layers": {
-    "bg1": {"map": "bg1.map.bin", "size_chunks": [47, 8], "size_tiles": [752, 60], "tileset": "gStaticData_0863D4C0", "scale": [128, 128], "cnt": 3, "unk_1E": 2, "grid_symbol": "gStaticData_082BB256", "pad_overrides": {"14": {"crc": "f5538bc6", "pad": "3100"}}},
-    "bg0": {"map": "bg0.map.bin", "size_chunks": [47, 8], "size_tiles": [752, 60], "tileset": "gStaticData_081E6330", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gStaticData_082BB546"},
-    "collision": {"map": "collision.map.bin", "size_chunks": [47, 8], "size_tiles": [752, 60], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gStaticData_082BB836"}
+    "bg1": {"map": "bg1.map.bin", "size_chunks": [47, 8], "size_tiles": [752, 60], "tileset": "gStaticData_0863D4C0", "scale": [128, 128], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom13Bg1Grid", "pad_overrides": {"14": {"crc": "f5538bc6", "pad": "3100"}}},
+    "bg0": {"map": "bg0.map.bin", "size_chunks": [47, 8], "size_tiles": [752, 60], "tileset": "gStaticData_081E6330", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom13Bg0Grid"},
+    "collision": {"map": "collision.map.bin", "size_chunks": [47, 8], "size_tiles": [752, 60], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom13CollisionGrid"}
   },
   "palette": [
     "0BE2", "7F0E", "72AB", "6249", "55E8", "4986", "3D25", "3103", "30A3", "24A3", "0CA2", "20A2", "1862", "1862", "0C42", "0C42",

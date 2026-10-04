@@ -752,208 +752,208 @@ gStaticData_0864D7E8:
 	@ LZ77 compressed data (14240 bytes decompressed) - not clearly identifiable as pixel graphics
 	.incbin "build/crashbandicootxs/graphics/tileset1/26_64d7e8.bin.lz"
 
-.global gStaticData_0864F830
-gStaticData_0864F830:
+.global gRoom00Asset
+gRoom00Asset:
 	@ LZ77-packed level asset of room00_264730 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room00_264730/asset.bin.lz"
 
-.global gStaticData_08651CF8
-gStaticData_08651CF8:
+.global gRoom01Asset
+gRoom01Asset:
 	@ LZ77-packed level asset of room01_263f4c (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room01_263f4c/asset.bin.lz"
 
-.global gStaticData_08655178
-gStaticData_08655178:
+.global gRoom02Asset
+gRoom02Asset:
 	@ LZ77-packed level asset of room02_2636e0 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room02_2636e0/asset.bin.lz", 0, 0x1BE8
 
-.global gStaticData_08656D60
-gStaticData_08656D60:
+.global gRoom04Asset
+gRoom04Asset:
 	@ LZ77-packed level asset of room04_262e64 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room04_262e64/asset.bin.lz"
 
-.global gStaticData_0865BAEC
-gStaticData_0865BAEC:
+.global gRoom06Asset
+gRoom06Asset:
 	@ LZ77-packed level asset of room06_267428 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room06_267428/asset.bin.lz"
 
-.global gStaticData_0865E05C
-gStaticData_0865E05C:
+.global gRoom07Asset
+gRoom07Asset:
 	@ LZ77-packed level asset of room07_264e64 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room07_264e64/asset.bin.lz"
 
-.global gStaticData_08661F48
-gStaticData_08661F48:
+.global gRoom09Asset
+gRoom09Asset:
 	@ LZ77-packed level asset of room09_262654 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room09_262654/asset.bin.lz"
 
-.global gStaticData_086652B8
-gStaticData_086652B8:
+.global gRoom38Asset
+gRoom38Asset:
 	@ LZ77-packed level asset of room38_2bac1c (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room38_2bac1c/asset.bin.lz"
 
-.global gStaticData_08665938
-gStaticData_08665938:
+.global gRoom13Asset
+gRoom13Asset:
 	@ LZ77-packed level asset of room13_2bbde0 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room13_2bbde0/asset.bin.lz", 0, 0x4300
 
-.global gStaticData_08669C38
-gStaticData_08669C38:
+.global gRoom14Asset
+gRoom14Asset:
 	@ LZ77-packed level asset of room14_2bcf40 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room14_2bcf40/asset.bin.lz", 0, 0x4AC0
 
-.global gStaticData_0866E6F8
-gStaticData_0866E6F8:
+.global gRoom16Asset
+gRoom16Asset:
 	@ LZ77-packed level asset of room16_2beadc (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room16_2beadc/asset.bin.lz"
 
-.global gStaticData_08670460
-gStaticData_08670460:
+.global gRoom18Asset
+gRoom18Asset:
 	@ LZ77-packed level asset of room18_261c40 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room18_261c40/asset.bin.lz"
 
-.global gStaticData_0867829C
-gStaticData_0867829C:
+.global gRoom20Asset
+gRoom20Asset:
 	@ LZ77-packed level asset of room20_25f11c (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room20_25f11c/asset.bin.lz", 0, 0x3508
 
-.global gStaticData_0867B7A4
-gStaticData_0867B7A4:
+.global gRoom21Asset
+gRoom21Asset:
 	@ LZ77-packed level asset of room21_25d81c (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room21_25d81c/asset.bin.lz"
 
-.global gStaticData_0867EDF4
-gStaticData_0867EDF4:
+.global gRoom23Asset
+gRoom23Asset:
 	@ LZ77-packed level asset of room23_25cf20 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room23_25cf20/asset.bin.lz"
 
-.global gStaticData_086834F8
-gStaticData_086834F8:
+.global gRoom24Asset
+gRoom24Asset:
 	@ LZ77-packed level asset of room24_25c640 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room24_25c640/asset.bin.lz", 0, 0x2F54
 
-.global gStaticData_0868644C
-gStaticData_0868644C:
+.global gRoom28Asset
+gRoom28Asset:
 	@ LZ77-packed level asset of room28_254ed0 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room28_254ed0/asset.bin.lz"
 
-.global gStaticData_08689F74
-gStaticData_08689F74:
+.global gRoom29Asset
+gRoom29Asset:
 	@ LZ77-packed level asset of room29_2544fc (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room29_2544fc/asset.bin.lz"
 
-.global gStaticData_0868D314
-gStaticData_0868D314:
+.global gRoom30Asset
+gRoom30Asset:
 	@ LZ77-packed level asset of room30_26ac10 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room30_26ac10/asset.bin.lz"
 
-.global gStaticData_08693B90
-gStaticData_08693B90:
+.global gRoom31Asset
+gRoom31Asset:
 	@ LZ77-packed level asset of room31_2539b0 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room31_2539b0/asset.bin.lz", 0, 0x9C74
 
-.global gStaticData_0869D804
-gStaticData_0869D804:
+.global gRoom34Asset
+gRoom34Asset:
 	@ LZ77-packed level asset of room34_24c400 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room34_24c400/asset.bin.lz"
 
-.global gStaticData_086A834C
-gStaticData_086A834C:
+.global gRoom35Asset
+gRoom35Asset:
 	@ LZ77-packed level asset of room35_26c1bc (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room35_26c1bc/asset.bin.lz"
 
-.global gStaticData_086AF12C
-gStaticData_086AF12C:
+.global gRoom36Asset
+gRoom36Asset:
 	@ LZ77-packed level asset of room36_268cf0 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room36_268cf0/asset.bin.lz", 0, 0x6468
 
-.global gStaticData_086B5594
-gStaticData_086B5594:
+.global gRoom22Asset
+gRoom22Asset:
 	@ LZ77-packed level asset of room22_26e760 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room22_26e760/asset.bin.lz"
 
-.global gStaticData_086BACB4
-gStaticData_086BACB4:
+.global gRoom25Asset
+gRoom25Asset:
 	@ LZ77-packed level asset of room25_26d388 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room25_26d388/asset.bin.lz", 0, 0x65C8
 
-.global gStaticData_086C127C
-gStaticData_086C127C:
+.global gRoom17Asset
+gRoom17Asset:
 	@ raw level asset of room17_25e7dc (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room17_25e7dc/asset.bin"
 
-.global gStaticData_086D9CAC
-gStaticData_086D9CAC:
+.global gRoom37Asset
+gRoom37Asset:
 	@ LZ77-packed level asset of room37_2b9ed0 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room37_2b9ed0/asset.bin.lz"
 
-.global gStaticData_086E044C
-gStaticData_086E044C:
+.global gRoom40Asset
+gRoom40Asset:
 	@ LZ77-packed level asset of room40_2bb094 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room40_2bb094/asset.bin.lz", 0, 0x988
 
-.global gStaticData_086E0DD4
-gStaticData_086E0DD4:
+.global gRoom03Asset
+gRoom03Asset:
 	@ LZ77-packed level asset of room03_270bcc (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room03_270bcc/asset.bin.lz"
 
-.global gStaticData_086E2214
-gStaticData_086E2214:
+.global gRoom05Asset
+gRoom05Asset:
 	@ LZ77-packed level asset of room05_270154 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room05_270154/asset.bin.lz"
 
-.global gStaticData_086E3544
-gStaticData_086E3544:
+.global gRoom11Asset
+gRoom11Asset:
 	@ LZ77-packed level asset of room11_26f5c0 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room11_26f5c0/asset.bin.lz", 0, 0x120C
 
-.global gStaticData_086E4750
-gStaticData_086E4750:
+.global gRoom08Asset
+gRoom08Asset:
 	@ LZ77-packed level asset of room08_265804 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room08_265804/asset.bin.lz", 0, 0x2908
 
-.global gStaticData_086E7058
-gStaticData_086E7058:
+.global gRoom10Asset
+gRoom10Asset:
 	@ LZ77-packed level asset of room10_266194 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room10_266194/asset.bin.lz"
 
-.global gStaticData_086EA0CC
-gStaticData_086EA0CC:
+.global gRoom12Asset
+gRoom12Asset:
 	@ LZ77-packed level asset of room12_266b40 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room12_266b40/asset.bin.lz", 0, 0x2570
 
-.global gStaticData_086EC63C
-gStaticData_086EC63C:
+.global gRoom39Asset
+gRoom39Asset:
 	@ LZ77-packed level asset of room39_2ba810 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room39_2ba810/asset.bin.lz"
 
-.global gStaticData_086ECCD4
-gStaticData_086ECCD4:
+.global gRoom15Asset
+gRoom15Asset:
 	@ raw level asset of room15_2bdf98 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room15_2bdf98/asset.bin"
 
-.global gStaticData_08708158
-gStaticData_08708158:
+.global gRoom19Asset
+gRoom19Asset:
 	@ raw level asset of room19_260768 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room19_260768/asset.bin"
 
-.global gStaticData_087376C0
-gStaticData_087376C0:
+.global gRoom26Asset
+gRoom26Asset:
 	@ raw level asset of room26_25bcdc (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room26_25bcdc/asset.bin"
 
-.global gStaticData_08752D44
-gStaticData_08752D44:
+.global gRoom27Asset
+gRoom27Asset:
 	@ raw level asset of room27_25a390 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room27_25a390/asset.bin"
 
-.global gStaticData_0878ADA8
-gStaticData_0878ADA8:
+.global gRoom32Asset
+gRoom32Asset:
 	@ raw level asset of room32_24e104 (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room32_24e104/asset.bin"
 
-.global gStaticData_087BC13C
-gStaticData_087BC13C:
+.global gRoom33Asset
+gRoom33Asset:
 	@ raw level asset of room33_25233c (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room33_25233c/asset.bin"
 

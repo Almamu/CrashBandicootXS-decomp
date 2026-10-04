@@ -1,11 +1,11 @@
 {
   "name": "room15_2bdf98",
-  "asset": {"symbol": "gStaticData_086ECCD4", "packed": false},
-  "symbols": {"desc": "gStaticData_082BDF98", "palette": "gStaticData_082BDCDC", "entities": "gStaticData_082BDFC8", "groups": "gStaticData_082BE03C", "param_offsets": "gStaticData_082BD4CC", "params": "gStaticData_082BD334", "type_counts": "gStaticData_082BDEDC", "layers": "gStaticData_082BDFDC", "items": "gStaticData_082BE08C"},
+  "asset": {"symbol": "gRoom15Asset", "packed": false},
+  "symbols": {"desc": "gRoom15Desc", "palette": "gRoom15Palette", "entities": "gRoom15EntityList", "groups": "gRoom15EntityGroups", "param_offsets": "gRoom15ParamOffsets", "params": "gRoom15Params", "type_counts": "gRoom15TypeCounts", "layers": "gRoom15Layers", "items": "gRoom15Entities"},
   "layers": {
-    "bg2": {"map": "bg2.map.bin", "size_chunks": [24, 12], "size_tiles": [375, 92], "tileset": "gStaticData_08644A88", "scale": [128, 128], "cnt": 3, "unk_1E": 2, "grid_symbol": "gStaticData_082BD4FC"},
-    "bg0": {"map": "bg0.map.bin", "size_chunks": [20, 18], "size_tiles": [312, 138], "tileset": "gStaticData_0817E7AC", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gStaticData_082BD73C"},
-    "collision": {"map": "collision.map.bin", "size_chunks": [20, 18], "size_tiles": [312, 138], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gStaticData_082BDA0C"}
+    "bg2": {"map": "bg2.map.bin", "size_chunks": [24, 12], "size_tiles": [375, 92], "tileset": "gStaticData_08644A88", "scale": [128, 128], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom15Bg2Grid"},
+    "bg0": {"map": "bg0.map.bin", "size_chunks": [20, 18], "size_tiles": [312, 138], "tileset": "gStaticData_0817E7AC", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom15Bg0Grid"},
+    "collision": {"map": "collision.map.bin", "size_chunks": [20, 18], "size_tiles": [312, 138], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom15CollisionGrid"}
   },
   "palette": [
     "7C1F", "0122", "5647", "49E5", "24E1", "3144", "1080", "0000", "1549", "4317", "3EB3", "3250", "25AC", "10A5", "0441", "0000",
