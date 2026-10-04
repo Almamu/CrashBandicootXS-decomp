@@ -1,4 +1,5 @@
 #include "core.h"
+#include "actor_self.h"
 
 /* Same "spawn/pre-attack" singleton family as actor_part39.c - see that
  * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md.
@@ -31,15 +32,15 @@ extern s32 gUnknown_03001514;
 
 void sub_802F338(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct actor_self *self = selfArg;
 
     {
-        s32 accum = *(s32 *)(self + 8) >> 8;
-        s32 idx = *(s32 *)(self + 0xc);
-        u8 *table = *(u8 **)self;
+        s32 accum = self->animTime >> 8;
+        s32 idx = self->animIndex;
+        u8 *table = (u8 *)self->anims;
         s16 off = *(s16 *)(table + idx * 3 * 4 + 2);
         s32 pos = off + accum;
-        u8 **table2 = *(u8 ***)(self + 4);
+        u8 **table2 = (u8 **)self->frameOffsets;
         u8 *rec = table2[pos];
         register s32 b0 asm("r3") = rec[0];
         register s32 b1 asm("r1") = rec[1];
@@ -56,9 +57,9 @@ void sub_802F338(void *selfArg)
         gUnknown_03001518[0] = AllocVramTileBlock(size);
     }
     {
-        s32 accum = *(s32 *)(self + 8) >> 8;
-        s32 idx = *(s32 *)(self + 0xc);
-        register u8 *table asm("r3") = *(u8 **)self;
+        s32 accum = self->animTime >> 8;
+        s32 idx = self->animIndex;
+        register u8 *table asm("r3") = (u8 *)self->anims;
         register s32 shiftResult asm("r0") = idx * 3 * 4;
         register u8 *addr2 asm("r0");
         register s32 twoIdx asm("r3");
@@ -71,7 +72,7 @@ void sub_802F338(void *selfArg)
         addr2 = (u8 *)shiftResult;
         asm volatile("mov %0, #2\n\tldrsh %1, [%2, %0]" : "=r"(twoIdx), "=r"(off) : "r"(addr2));
         pos = off + accum;
-        table2 = *(u8 ***)(self + 4);
+        table2 = (u8 **)self->frameOffsets;
         rec = table2[pos];
         {
             register s32 b0 asm("r2") = rec[0];

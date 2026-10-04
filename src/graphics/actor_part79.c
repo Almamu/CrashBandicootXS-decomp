@@ -1,4 +1,6 @@
 #include "core.h"
+#include "vtable.h"
+#include "action_obj.h"
 
 /* Part of GitHub issue #16's remainder (0x08011BD4-0x08012D24) - the
  * "child object" family docs/rom_map.md's "Undifferentiated core"
@@ -65,8 +67,8 @@ void sub_8012160(void *selfArg, void *arg1)
         sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), arg1, *(void **)(off + 4));
     }
     {
-        u8 *mgr = *(u8 **)(self + 0xc);
-        sub_803AD80(self + *(s16 *)(mgr + 0x20), (void *)0x1d, *(void **)(mgr + 0x24));
+        struct vtable_slot *mgr = *(struct vtable_slot **)(self + 0xc);
+        sub_803AD80(self + mgr[4].delta, (void *)0x1d, mgr[4].fn);
     }
 
     {
@@ -138,8 +140,8 @@ void sub_8012160(void *selfArg, void *arg1)
     }
 }
 
-/* If the player (`gUnknown_030012D8`)'s `+0x100` "active" flag is set:
- * on type `0x12` (only if `+0x60` is nonzero) or type `0xd`/`0x18`,
+/* If the player (`gUnknown_030012D8`)'s `unk_100` "active" flag is set:
+ * on tag `0x12` (only if `unk_60` is nonzero) or tag `0xd`/`0x18`,
  * re-tags the player as `0x25` (type `0x12`) or `0x26` (the other two,
  * re-reading the global fresh first) and fires the standard
  * `sub_80087C0`/`sub_80087B4`/`sub_800872C(..., 0)` teardown trio.
@@ -148,14 +150,14 @@ void sub_8012160(void *selfArg, void *arg1)
 void sub_8012238(void *selfArg)
 {
     u8 *self = selfArg;
-    u8 *player = gUnknown_030012D8;
-    register s32 flag asm("r5") = player[0x100];
+    struct act_part *player = gUnknown_030012D8;
+    register s32 flag asm("r5") = player->unk_100;
 
     if (flag == 0)
         goto flag_zero;
 
     {
-        register u8 *typeAddr asm("r3") = player + 0x2d;
+        register u8 *typeAddr asm("r3") = &player->tag;
         s32 type = *typeAddr;
         register s32 type2 asm("r2") = type;
 
@@ -172,7 +174,7 @@ void sub_8012238(void *selfArg)
         goto end;
 
     case_12:
-        if (*(s32 *)(player + 0x60) == 0)
+        if (player->unk_60 == 0)
             goto end;
         *typeAddr = 0x25;
         goto common;
@@ -182,7 +184,7 @@ case_set_26: {
     player = gUnknown_030012D8;
     {
         register s32 v asm("r0") = 0x26;
-        player[0x2d] = v;
+        player->tag = v;
     }
 }
 
@@ -194,7 +196,7 @@ common:
 
 flag_zero:
     {
-        s32 type2 = (player + 0x2d)[0];
+        s32 type2 = player->tag;
         if (type2 == 0x25)
             goto do_call;
         if (type2 != 0x26)

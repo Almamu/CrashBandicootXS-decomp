@@ -98,16 +98,16 @@ u8 sub_800880C(void *part)
     return *((u8 *)part + 0x24);
 }
 
-/* `part+0x30` (frame index) getter. */
-s32 sub_8008814(void *part)
+/* `tick` (per-keyframe step counter) getter. */
+s32 sub_8008814(struct box_part *part)
 {
-    return *(s32 *)((u8 *)part + 0x30);
+    return part->tick;
 }
 
-/* `part+0x34` (sub-counter) getter. */
-s32 sub_8008818(void *part)
+/* `timer` (ticks on the current step) getter. */
+s32 sub_8008818(struct box_part *part)
 {
-    return *(s32 *)((u8 *)part + 0x34);
+    return part->timer;
 }
 
 /* `part+0x2d` (frame index within the keyframe table) getter. */
@@ -195,15 +195,15 @@ s32 sub_800887C(void *part)
     return (byte << 0x1c) >> 0x1f;
 }
 
-/* `part+0x3c` (u16) get/set pair. */
-u16 sub_8008888(void *part)
+/* `unk_3C` get/set pair. */
+u16 sub_8008888(struct box_part *part)
 {
-    return *(u16 *)((u8 *)part + 0x3c);
+    return part->unk_3C;
 }
 
-void sub_800888C(void *part, u16 val)
+void sub_800888C(struct box_part *part, u16 val)
 {
-    *(u16 *)((u8 *)part + 0x3c) = val;
+    part->unk_3C = val;
 }
 
 extern void *gUnknown_030012CC;
@@ -213,7 +213,7 @@ extern void sub_80073DC(void *unused, void *part, s32 *posPtr);
 /* Resolves `part`'s Q8 position plus a caller-supplied offset into a
  * stack `{x, y}` pair, then dispatches to `sub_8007634` or
  * `sub_80073DC` (both already matched/parked elsewhere in this ROM
- * region) depending on whether `part+0x3c` is set. */
+ * region) depending on whether `unk_3C` is set. */
 void sub_8008890(struct actor *part, s32 arg1, s32 arg2)
 {
     s32 pos[2];
@@ -221,7 +221,7 @@ void sub_8008890(struct actor *part, s32 arg1, s32 arg2)
     pos[0] = (part->x >> 8) + arg1;
     pos[1] = (part->y >> 8) + arg2;
 
-    if (*(u16 *)((u8 *)part + 0x3c) != 0) {
+    if (((struct box_part *)part)->unk_3C != 0) {
         sub_8007634(gUnknown_030012CC, part, pos);
     } else {
         sub_80073DC(gUnknown_030012CC, part, pos);

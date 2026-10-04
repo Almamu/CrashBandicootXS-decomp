@@ -1,4 +1,5 @@
 #include "core.h"
+#include "actor_self.h"
 
 /* Same "self" object family as actor_part39.c/actor_part41.c - see
  * actor_part39.c's header comment and
@@ -26,8 +27,8 @@ void *sub_802AA0C(void *outArg, void *selfArg)
 {
     struct blob0xc { u32 w0, w1, w2; };
 
-    u8 *self = selfArg;
-    struct blob0xc buf = *(struct blob0xc *)(self + 0x38);
+    struct actor_self *self = selfArg;
+    struct blob0xc buf = *(struct blob0xc *)self->unk_38;
     register s32 d0 asm("r3");
     register s32 d1 asm("r5");
     register s32 d2 asm("r4");
