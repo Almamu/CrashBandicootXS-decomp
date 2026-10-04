@@ -3,14 +3,14 @@
 #include "pause_screen_results.h"
 
 /* Built with old_agbcc (Makefile OLD_AGBCC_OBJS): the four icon-group
- * constructors below only match under it, and sub_8005A78 compiles
+ * constructors below only match under it, and InitPauseCrystalsPage compiles
  * identically under both compilers. */
 
 extern void *sub_8026EDC(s32 size);
 extern struct actor *sub_8008904(struct actor *part);
 extern void sub_800737C(struct actor *self, s32 arg1, s32 arg2);
-extern s32 sub_800695C(void *arg0);
-extern s32 sub_80060AC(s32 value, void *dest);
+extern s32 CountCrystals(void *arg0);
+extern s32 FormatDecimal(s32 value, void *dest);
 extern void ***gUnknown_030012D0;
 extern struct icon_pos gStaticData_0816B1E4;
 
@@ -20,7 +20,7 @@ extern struct icon_pos gStaticData_0816B1E4;
  * offset `0xde<<1`), and formats two small numbers - a row-stats
  * derived count into `buf2c` and the constant `0x14` into `buf46` -
  * as decimal strings. */
-void sub_8005A78(struct pause_screen_results *self)
+void InitPauseCrystalsPage(struct pause_screen_results *self)
 {
     struct settings_icon_actor **dest = &self->field_88;
 
@@ -29,8 +29,8 @@ void sub_8005A78(struct pause_screen_results *self)
     sub_800737C(&(*dest)->base, gStaticData_0816B1E4.x, gStaticData_0816B1E4.y);
     UPDATE_ICON_FRAME_NIBBLE(*dest);
 
-    sub_80060AC(sub_800695C(self->field_10), self->buf2c);
-    sub_80060AC(0x14, (u8 *)self + 0x46);
+    FormatDecimal(CountCrystals(self->field_10), self->buf2c);
+    FormatDecimal(0x14, (u8 *)self + 0x46);
 }
 
 extern void sub_80087C0(struct actor *part);
@@ -68,9 +68,9 @@ extern struct icon_pos gStaticData_0816B1EC[];
 
 /* Builds the 4-icon array at `icons8c`: one per `gStaticData_0816B1EC`
  * position entry, keyframe-table base `0xe4<<1` off the same shared
- * table `sub_8005A78` uses, frame index from `gStaticData_0816B20C`,
+ * table `InitPauseCrystalsPage` uses, frame index from `gStaticData_0816B20C`,
  * then the standard sub-counter/frame-counter/"done"-flag reset trio. */
-void sub_8005AE8(struct pause_screen_results *self)
+void InitPausePowersPage(struct pause_screen_results *self)
 {
     s32 i;
 
@@ -88,18 +88,18 @@ void sub_8005AE8(struct pause_screen_results *self)
     }
 }
 
-extern s32 sub_8006920(void *arg0);
-extern s32 sub_80068CC(void *arg0);
+extern s32 CountClearGems(void *arg0);
+extern s32 CountGems(void *arg0);
 extern u32 gStaticData_0816B244[];
 extern struct icon_pos gStaticData_0816B21C[];
 
-/* Same shape as sub_8005AE8 above for the 5-icon array at `icons9c`
+/* Same shape as InitPausePowersPage above for the 5-icon array at `icons9c`
  * (keyframe-table base `0xc0<<1`, positions/frame indices from
  * `gStaticData_0816B21C`/`gStaticData_0816B244`), plus each icon's
  * `field_3c = 0x80`. After the loop, formats two more row-stats
- * derived numbers (`sub_8006920`/`sub_80068CC` on `field_10`) into
+ * derived numbers (`CountClearGems`/`CountGems` on `field_10`) into
  * `buf2f`/`buf32`, and the constant `0x1c` into `buf49`. */
-void sub_8005B80(struct pause_screen_results *self)
+void InitPauseGemsPage(struct pause_screen_results *self)
 {
     s32 i;
     s32 a, b;
@@ -118,29 +118,29 @@ void sub_8005B80(struct pause_screen_results *self)
         self->icons9c[i]->field_3c = 0x80;
     }
 
-    a = sub_8006920(self->field_10);
-    b = sub_80068CC(self->field_10);
-    sub_80060AC(a, self->buf2f);
-    sub_80060AC(b, self->buf32);
-    sub_80060AC(0x1c, self->buf49);
+    a = CountClearGems(self->field_10);
+    b = CountGems(self->field_10);
+    FormatDecimal(a, self->buf2f);
+    FormatDecimal(b, self->buf32);
+    FormatDecimal(0x1c, self->buf49);
 }
 
-extern s32 sub_8006864(void *arg0);
-extern s32 sub_8006820(void *arg0);
-extern s32 sub_80067EC(void *arg0);
-extern s32 sub_80068A8(void *arg0);
+extern s32 CountSapphireRelics(void *arg0);
+extern s32 CountGoldRelics(void *arg0);
+extern s32 CountPlatinumRelics(void *arg0);
+extern s32 CountRelics(void *arg0);
 extern u32 gStaticData_0816B270[];
 extern struct icon_pos gStaticData_0816B258[];
 
-/* Same shape as sub_8005AE8/B80 above for the 3-icon array at
+/* Same shape as InitPausePowersPage/InitPauseGemsPage above for the 3-icon array at
  * `iconsB0` (keyframe-table base `0xc6<<1`, positions/frame indices
  * from `gStaticData_0816B258`/`gStaticData_0816B270`), each icon's
  * `field_3c = 0x80`. After the loop, formats four category counts
- * (`sub_8006864`/`sub_8006820`/`sub_80067EC`/`sub_80068A8` on
+ * (`CountSapphireRelics`/`CountGoldRelics`/`CountPlatinumRelics`/`CountRelics` on
  * `field_10` - the same four functions src/graphics/oam_count.c
  * documents) into `buf38`/`buf3b`/`buf3e`/`buf35`, and the constant
  * `0x14` into `buf4c`. */
-void sub_8005C58(struct pause_screen_results *self)
+void InitPauseRelicsPage(struct pause_screen_results *self)
 {
     s32 i;
 
@@ -158,11 +158,11 @@ void sub_8005C58(struct pause_screen_results *self)
         self->iconsB0[i]->field_3c = 0x80;
     }
 
-    sub_80060AC(sub_8006864(self->field_10), self->buf38);
-    sub_80060AC(sub_8006820(self->field_10), self->buf3b);
-    sub_80060AC(sub_80067EC(self->field_10), self->buf3e);
-    sub_80060AC(sub_80068A8(self->field_10), self->buf35);
-    sub_80060AC(0x14, self->buf4c);
+    FormatDecimal(CountSapphireRelics(self->field_10), self->buf38);
+    FormatDecimal(CountGoldRelics(self->field_10), self->buf3b);
+    FormatDecimal(CountPlatinumRelics(self->field_10), self->buf3e);
+    FormatDecimal(CountRelics(self->field_10), self->buf35);
+    FormatDecimal(0x14, self->buf4c);
 }
 
 extern void *gLevelState;
@@ -204,9 +204,9 @@ static inline void set_icon_frame(struct settings_icon_actor *icon, u32 frame)
  * `time:13`), formats it via FormatCentiseconds, then compares it
  * against `gLevelTable[levelIdx]`'s bronze/silver/gold
  * thresholds and constructs the icon at `field_bc`, tagged with each
- * medal (from `gStaticData_0816B270`, the same table sub_8005C58 uses)
+ * medal (from `gStaticData_0816B270`, the same table InitPauseRelicsPage uses)
  * whose threshold was met. `field_6c` is an "earned" flag. */
-void sub_8005D44(struct pause_screen_results *self)
+void InitPauseTimeTrialPage(struct pause_screen_results *self)
 {
     s32 levelIdx;
     u32 time;

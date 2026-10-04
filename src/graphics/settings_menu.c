@@ -5,11 +5,11 @@
 #include "pause_screen_results.h"
 #include "vram_pool.h"
 
-extern s32 sub_8028A30(void *mgr, s32 arg1);
+extern s32 FontSetPalette(void *mgr, s32 arg1);
 extern s32 GetUiText(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern struct icon_manager *gUnknown_030012E0;
-extern struct icon_manager *gUnknown_030012DC;
+extern struct icon_manager *gLargeFont;
+extern struct icon_manager *gSmallFont;
 
 static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
 {
@@ -98,7 +98,7 @@ s32 sub_8003B40(struct pause_options_screen *self)
 }
 
 /* Draws `label1` (if non-zero) centered at Y=0x87, then `label2` (if
- * non-zero) centered at Y=0x91, both into gUnknown_030012DC.
+ * non-zero) centered at Y=0x91, both into gSmallFont.
  *
  * Once a NAKED transcription; it matches as plain C under both
  * compilers once the centre X gets its own local (`x = (0xf0 - w) >> 1`),
@@ -107,23 +107,23 @@ void sub_8003BDC(struct pause_options_screen *self, s32 label1, s32 label2)
 {
     s32 w, x;
 
-    sub_8028A30(gUnknown_030012DC, 0);
+    FontSetPalette(gSmallFont, 0);
     if (label1) {
-        w = ICON_TEXT_CALL(gUnknown_030012DC, 0, label1);
+        w = ICON_TEXT_CALL(gSmallFont, 0, label1);
         x = (0xf0 - w) >> 1;
-        set_icon_mgr_pos(gUnknown_030012DC, x, 0x87);
-        ICON_TEXT_CALL(gUnknown_030012DC, 2, label1);
+        set_icon_mgr_pos(gSmallFont, x, 0x87);
+        ICON_TEXT_CALL(gSmallFont, 2, label1);
     }
     if (label2) {
-        w = ICON_TEXT_CALL(gUnknown_030012DC, 0, label2);
+        w = ICON_TEXT_CALL(gSmallFont, 0, label2);
         x = (0xf0 - w) >> 1;
-        set_icon_mgr_pos(gUnknown_030012DC, x, 0x91);
-        ICON_TEXT_CALL(gUnknown_030012DC, 2, label2);
+        set_icon_mgr_pos(gSmallFont, x, 0x91);
+        ICON_TEXT_CALL(gSmallFont, 2, label2);
     }
 }
 
 /* Same centered-label shape as sub_80049CC (src/graphics/settings_menu20.c),
- * but always label 0x23, drawn into gUnknown_030012DC (not E0) at
+ * but always label 0x23, drawn into gSmallFont (not E0) at
  * fixed Y=0x87, and with a highlight-dependent initial visibility call.
  *
  * Once a NAKED transcription; it matches as plain C under both
@@ -133,12 +133,12 @@ void sub_8003C90(struct pause_options_screen *self, u8 highlight)
     s32 w;
 
     if (highlight)
-        sub_8028A30(gUnknown_030012DC, ((self->flags >> 2) & 1) ? 1 : 2);
+        FontSetPalette(gSmallFont, ((self->flags >> 2) & 1) ? 1 : 2);
     else
-        sub_8028A30(gUnknown_030012DC, 0);
-    w = ICON_TEXT_CALL(gUnknown_030012DC, 0, GetUiText(0x23));
-    set_icon_mgr_pos(gUnknown_030012DC, (0xf0 - w) >> 1, 0x87);
-    ICON_TEXT_CALL(gUnknown_030012DC, 2, GetUiText(0x23));
+        FontSetPalette(gSmallFont, 0);
+    w = ICON_TEXT_CALL(gSmallFont, 0, GetUiText(0x23));
+    set_icon_mgr_pos(gSmallFont, (0xf0 - w) >> 1, 0x87);
+    ICON_TEXT_CALL(gSmallFont, 2, GetUiText(0x23));
 }
 
 extern u8 gStaticData_0816B138[];
@@ -162,38 +162,38 @@ void sub_8003D3C(struct pause_options_screen *self, s32 value)
     s32 w;
     register s32 y asm("r9");
 
-    sub_8028A30(gUnknown_030012DC, 0);
-    w = ICON_TEXT_CALL(gUnknown_030012DC, 0, GetUiText(value));
+    FontSetPalette(gSmallFont, 0);
+    w = ICON_TEXT_CALL(gSmallFont, 0, GetUiText(value));
     {
         s32 x = 0xa0 - w;
-        struct icon_manager *m = gUnknown_030012DC;
+        struct icon_manager *m = gSmallFont;
         y = 0x87;
         set_icon_mgr_pos(m, x, y);
     }
-    ICON_TEXT_CALL(gUnknown_030012DC, 2, GetUiText(value));
-    sub_8028A30(gUnknown_030012DC, ((self->flags >> 2) & 1) ? 1 : 2);
+    ICON_TEXT_CALL(gSmallFont, 2, GetUiText(value));
+    FontSetPalette(gSmallFont, ((self->flags >> 2) & 1) ? 1 : 2);
     if (!self->field_10) {
-        set_icon_mgr_pos(gUnknown_030012DC, 0xa8, y);
-        ICON_TEXT_CALL(gUnknown_030012DC, 2, gStaticData_0816B138);
-        set_icon_mgr_pos(gUnknown_030012DC, 0xb0, y);
-        ICON_TEXT_CALL(gUnknown_030012DC, 2, GetUiText(0x29));
+        set_icon_mgr_pos(gSmallFont, 0xa8, y);
+        ICON_TEXT_CALL(gSmallFont, 2, gStaticData_0816B138);
+        set_icon_mgr_pos(gSmallFont, 0xb0, y);
+        ICON_TEXT_CALL(gSmallFont, 2, GetUiText(0x29));
     } else {
-        set_icon_mgr_pos(gUnknown_030012DC, 0xa8, 0x91);
-        ICON_TEXT_CALL(gUnknown_030012DC, 2, gStaticData_0816B138);
-        set_icon_mgr_pos(gUnknown_030012DC, 0xb0, 0x91);
-        ICON_TEXT_CALL(gUnknown_030012DC, 2, GetUiText(0x2a));
+        set_icon_mgr_pos(gSmallFont, 0xa8, 0x91);
+        ICON_TEXT_CALL(gSmallFont, 2, gStaticData_0816B138);
+        set_icon_mgr_pos(gSmallFont, 0xb0, 0x91);
+        ICON_TEXT_CALL(gSmallFont, 2, GetUiText(0x2a));
     }
-    sub_8028A30(gUnknown_030012DC, 0);
+    FontSetPalette(gSmallFont, 0);
     if (!self->field_10) {
-        set_icon_mgr_pos(gUnknown_030012DC, 0xb0, 0x91);
-        ICON_TEXT_CALL(gUnknown_030012DC, 2, GetUiText(0x2a));
+        set_icon_mgr_pos(gSmallFont, 0xb0, 0x91);
+        ICON_TEXT_CALL(gSmallFont, 2, GetUiText(0x2a));
     } else {
-        set_icon_mgr_pos(gUnknown_030012DC, 0xb0, 0x87);
-        ICON_TEXT_CALL(gUnknown_030012DC, 2, GetUiText(0x29));
+        set_icon_mgr_pos(gSmallFont, 0xb0, 0x87);
+        ICON_TEXT_CALL(gSmallFont, 2, GetUiText(0x29));
     }
 }
 
-extern u8 sub_8002CE8(void *handle, s32 rowIndex);
+extern u8 IsSaveSlotEmpty(void *handle, s32 rowIndex);
 extern void sub_8008890(void *arg0, s32 arg1, s32 arg2);
 extern s32 itoa(s32 value, u8 *buffer, s32 base);
 
@@ -226,27 +226,27 @@ static inline void place_row_obj(void *p, s32 x, s32 y)
  * palette `self->flags` bit 2 picks (1 or 2), others in palette 0. */
 #define SET_HIGHLIGHT(mgrExpr, flag)                                            \
     if (flag)                                                                   \
-        sub_8028A30((mgrExpr), ((self->flags >> 2) & 1) ? 1 : 2);               \
+        FontSetPalette((mgrExpr), ((self->flags >> 2) & 1) ? 1 : 2);               \
     else                                                                        \
-        sub_8028A30((mgrExpr), 0)
+        FontSetPalette((mgrExpr), 0)
 
 /* Draws this settings row's three numeric stat values -
- * `statPtr->field_4`/`field_10`/`field_8` of the row's own `struct
+ * `statPtr->gems`/`field_10`/`field_8` of the row's own `struct
  * settings_row_stats` (`statPtr` is `(&self->currentStats)[rowIdx]`,
  * i.e. `currentStats` and `rowStats[0..3]` read as one contiguous
- * 5-element array - `sub_8004860`/`sub_80048E0`,
+ * 5-element array - `RefreshSaveSlotSummaries`/`SummarizeProgress`,
  * `src/graphics/settings_menu2.c`, already establish `rowStats` as
  * this same array shape) - as plain decimal strings into
  * `self->rowObjA[rowIdx]`/`rowObjC[rowIdx]`/`rowObjB[rowIdx]`
- * respectively (each drawn via `gUnknown_030012DC`'s `record->slots[2]`
+ * respectively (each drawn via `gSmallFont`'s `record->slots[2]`
  * trampoline, and each preceded by the same highlight/dim
- * `sub_8028A30` call this chunk's other row-label functions already
+ * `FontSetPalette` call this chunk's other row-label functions already
  * establish - `sub_80041BC`'s own `flag` parameter selects which row
  * is "selected", matching that shared idiom). A fourth value
- * (`statPtr->field_0`) is formatted as `"NN%"` by `itoa`-ing then
+ * (`statPtr->percent`) is formatted as `"NN%"` by `itoa`-ing then
  * manually scanning for the NUL terminator and overwriting it with a
  * literal `%` byte (re-terminating one byte later) - measured once via
- * `gUnknown_030012E0`'s `slots[0]` trampoline to get its pixel width,
+ * `gLargeFont`'s `slots[0]` trampoline to get its pixel width,
  * then drawn a second time via that same manager's `slots[2]`
  * trampoline, right-aligned against `label1` using the measured
  * width (`posX = label1 - width + 0x1f`) - the standard
@@ -271,32 +271,32 @@ void sub_8003F30(struct pause_options_screen *self, s32 label1, s32 label2, s32 
     place_row_obj(self->rowObjA[rowIdx], x, y);
     x += 0xd;
     y = label2;
-    itoa(stats->field_4, buf, 10);
-    SET_HIGHLIGHT(gUnknown_030012DC, flag);
-    set_icon_mgr_pos(gUnknown_030012DC, x, y);
-    ICON_TEXT_CALL(gUnknown_030012DC, 2, buf);
+    itoa(stats->gems, buf, 10);
+    SET_HIGHLIGHT(gSmallFont, flag);
+    set_icon_mgr_pos(gSmallFont, x, y);
+    ICON_TEXT_CALL(gSmallFont, 2, buf);
 
     x = label1 + 7;
     y = label2 + 0x1e;
     place_row_obj(self->rowObjC[rowIdx], x, y);
     x += 9;
     y -= 7;
-    itoa(stats->field_10, buf, 10);
-    SET_HIGHLIGHT(gUnknown_030012DC, flag);
-    set_icon_mgr_pos(gUnknown_030012DC, x, y);
-    ICON_TEXT_CALL(gUnknown_030012DC, 2, buf);
+    itoa(stats->crystals, buf, 10);
+    SET_HIGHLIGHT(gSmallFont, flag);
+    set_icon_mgr_pos(gSmallFont, x, y);
+    ICON_TEXT_CALL(gSmallFont, 2, buf);
 
     x = label1 + 0x2b;
     y = label2 + 0x1e;
     place_row_obj(self->rowObjB[rowIdx], x, y);
     x += 0xd;
     y -= 7;
-    itoa(stats->field_8, buf, 10);
-    SET_HIGHLIGHT(gUnknown_030012DC, flag);
-    set_icon_mgr_pos(gUnknown_030012DC, x, y);
-    ICON_TEXT_CALL(gUnknown_030012DC, 2, buf);
+    itoa(stats->relics, buf, 10);
+    SET_HIGHLIGHT(gSmallFont, flag);
+    set_icon_mgr_pos(gSmallFont, x, y);
+    ICON_TEXT_CALL(gSmallFont, 2, buf);
 
-    itoa(stats->field_0, buf, 10);
+    itoa(stats->percent, buf, 10);
     i = 0;
     y = label2 - 2;
     for (; i < 7; i++) {
@@ -306,10 +306,10 @@ void sub_8003F30(struct pause_options_screen *self, s32 label1, s32 label2, s32 
             break;
         }
     }
-    w = ICON_TEXT_CALL(gUnknown_030012E0, 0, buf);
-    SET_HIGHLIGHT(gUnknown_030012E0, flag);
-    set_icon_mgr_pos(gUnknown_030012E0, label1 - w + 0x1f, y);
-    ICON_TEXT_CALL(gUnknown_030012E0, 2, buf);
+    w = ICON_TEXT_CALL(gLargeFont, 0, buf);
+    SET_HIGHLIGHT(gLargeFont, flag);
+    set_icon_mgr_pos(gLargeFont, label1 - w + 0x1f, y);
+    ICON_TEXT_CALL(gLargeFont, 2, buf);
 }
 
 /* An inlined copy of sub_8004914 (src/graphics/settings_menu23.c): the
@@ -321,16 +321,16 @@ static inline void draw_row_mark(struct pause_options_screen *self, s32 arg1, s3
     s32 w;
 
     if (arg3)
-        sub_8028A30(gUnknown_030012DC, ((self->flags >> 2) & 1) ? 1 : 2);
+        FontSetPalette(gSmallFont, ((self->flags >> 2) & 1) ? 1 : 2);
     else
-        sub_8028A30(gUnknown_030012DC, 0);
-    w = ICON_TEXT_CALL(gUnknown_030012DC, 0, GetUiText(0x25));
-    set_icon_mgr_pos(gUnknown_030012DC, x - w / 2, y);
-    ICON_TEXT_CALL(gUnknown_030012DC, 2, GetUiText(0x25));
+        FontSetPalette(gSmallFont, 0);
+    w = ICON_TEXT_CALL(gSmallFont, 0, GetUiText(0x25));
+    set_icon_mgr_pos(gSmallFont, x - w / 2, y);
+    ICON_TEXT_CALL(gSmallFont, 2, GetUiText(0x25));
 }
 
 #define DRAW_ROW(i, labelX, labelY)                                             \
-    if (sub_8002CE8(handle, (i))) {                                             \
+    if (IsSaveSlotEmpty(handle, (i))) {                                             \
         draw_row_mark(self, (labelX), (labelY), selectedIndex == (i));          \
     } else {                                                                    \
         struct byte_arg sel;                                                    \
@@ -340,8 +340,8 @@ static inline void draw_row_mark(struct pause_options_screen *self, s32 arg1, s3
 
 /* Per docs/rom_map.md's "narrowed down which screen overlay_ui is"
  * section: one of 4 settings rows, `handle`/`selectedIndex` from the
- * 6-wrapper-caller family (sub_8004AA4 etc.,
- * src/graphics/settings_menu3.c). When `sub_8002CE8(handle, i)`
+ * 6-wrapper-caller family (DrawSaveMenuConfirmDelete etc.,
+ * src/graphics/settings_menu3.c). When `IsSaveSlotEmpty(handle, i)`
  * reports row `i` selected, draws a highlighted numeric glyph
  * (label 0x25) centered at the row's fixed position; otherwise draws
  * the row's normal label pair via sub_8003F30 (above in this file),
@@ -396,7 +396,7 @@ static inline void IconSetup(struct icon_manager *m, u32 v)
 {
     struct icon_slot *slot;
 
-    m->field_108 = v;
+    m->tileBase = v;
     slot = &m->record->slots[6];
     _call_via_r1((u8 *)m + slot->offset, slot->ptr);
 }
@@ -405,7 +405,7 @@ static inline void IconReserve(struct icon_manager **m)
 {
     struct vram_upload_cursor *c = gUnknown_030012FC;
 
-    sub_8006C58(c, (*m)->field_12c << 5);
+    sub_8006C58(c, (*m)->tileCount << 5);
 }
 
 #define SET_ROW_OBJ_POS(objExpr, px, py)                                        \
@@ -465,7 +465,7 @@ static inline void new_row_icon(struct settings_icon_actor **slot, u32 tblOff, u
 /* sub_800450C, the screen's init routine: resets the OAM shadow buffer
  * and the tile cache, loads four 16-colour palettes into cache slots
  * 0-3, re-initialises both icon managers (the same IconSetup/
- * IconReserve sequence as sub_80062A8), builds the three 5-entry icon
+ * IconReserve sequence as ShowPowerDialog), builds the three 5-entry icon
  * arrays `rowObjA/B/C` (keyframe-table bases 0x180/0x18c/0x1bc, frames
  * 1/2/0, `field_3c` = 0x80) and places five of them.
  *
@@ -503,19 +503,19 @@ void sub_800450C(struct pause_options_screen *self)
         pal[2][i] = gStaticData_0816B17A[i];
         pal[3][i] = gStaticData_0816B19A[i];
     }
-    sub_8028A30(gUnknown_030012DC, 0);
-    sub_8028A30(gUnknown_030012E0, 0);
+    FontSetPalette(gSmallFont, 0);
+    FontSetPalette(gLargeFont, 0);
     gUnknown_030012FC->field_08 = 0;
     sub_8006C4C(gUnknown_030012FC);
     sub_8006C4C(gUnknown_030012FC);
-    IconSetup(gUnknown_030012DC, 0);
-    IconReserve(&gUnknown_030012DC);
+    IconSetup(gSmallFont, 0);
+    IconReserve(&gSmallFont);
     {
-        u32 v = gUnknown_030012DC->field_12c;
+        u32 v = gSmallFont->tileCount;
 
-        IconSetup(gUnknown_030012E0, v);
+        IconSetup(gLargeFont, v);
     }
-    IconReserve(&gUnknown_030012E0);
+    IconReserve(&gLargeFont);
     sub_8006C30(gUnknown_030012FC);
 
     a = (struct settings_icon_actor **)self->rowObjA;

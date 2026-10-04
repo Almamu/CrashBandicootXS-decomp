@@ -192,7 +192,7 @@ progress on two of them without reaching a byte-exact match on either
   of the ROM's `r2`/`r3`). The mask-folding half matches the exact
   unfixable value-propagation already documented on `sub_8001524`
   elsewhere in `docs/matching.md` - the established negative-literal
-  register-pin idiom (`sub_8023168`/`sub_80374D0`) was tried again here
+  register-pin idiom (`sub_8023168`/`LoadLanguageSelectBg`) was tried again here
   and still gets folded via a cheaper `subs`/`adds` off the
   previously-loaded constant.
 
@@ -231,7 +231,7 @@ C has no way to work around on this toolchain:
   `src/graphics/oam_count.c`/`src/graphics/actor_part.c` and elsewhere
   project-wide); separately, the trailing `(*bf & -0x10) | (result &
   0xf)` bitfield combine - even with the established negative-literal
-  register-pin idiom (`sub_8023168`/`sub_80374D0`) - gets
+  register-pin idiom (`sub_8023168`/`LoadLanguageSelectBg`) - gets
   constant-folded into a cheaper derived `sub`, one instruction shorter
   than the ROM's genuine two-instruction `movs`/`rsbs` pair. Now
   `NAKED`.

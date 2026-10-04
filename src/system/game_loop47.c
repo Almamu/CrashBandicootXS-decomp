@@ -995,7 +995,7 @@ tail:
  * argument order, as in the ROM. */
 #include "phys_obj.h"
 extern void PlaySfx(void *ctx, s32 id, s32 volume);
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern s32 gStaticData_0816BC98[][7];
 extern void sub_800F2BC(struct phys_obj *self);
 extern void sub_800F368(struct phys_obj *self);
@@ -1056,7 +1056,7 @@ void sub_800E08C(struct phys_obj *self, s32 kind, s32 code, s32 edge, s32 depth,
                 {
                     if (k == 4 || k == 8)
                     {
-                        PlaySfx(gUnknown_030012BC, 2, 0x100);
+                        PlaySfx(gAudioContext, 2, 0x100);
                         E08C_CALL68(0xe, 8);
                     }
                     else
@@ -1068,7 +1068,7 @@ void sub_800E08C(struct phys_obj *self, s32 kind, s32 code, s32 edge, s32 depth,
                 }
                 else if ((u32)(kind - 5) <= 1 && k == 8)
                 {
-                    PlaySfx(gUnknown_030012BC, 2, 0x100);
+                    PlaySfx(gAudioContext, 2, 0x100);
                     E08C_CALL68(0xe, 8);
                     PHYS_PLAYER->speedY = 0;
                     PHYS_PLAYER->velX = 0;

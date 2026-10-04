@@ -48,7 +48,7 @@ gSfxTable:
 
 @ gStaticData_0816B284: src/data/bg_package_16b284.c
 
-@ gStaticData_0816B298..gStaticData_0816B2C0: src/data/pause_rows_16b298.c
+@ gPauseMenuRows..gStaticData_0816B2C0: src/data/pause_rows_16b298.c
 
 @ gStaticData_0816B2E0..gStaticData_0816B300: src/data/obj_sizes_16b2e0.c
 
@@ -92,7 +92,7 @@ gSfxTable:
 
 @ 0x08172CD4..0x08174BE0 (the UI text of six languages): src/data/ui_text_172cd4.c
 
-@ gStaticData_08174BE0..gStaticData_081751D4: src/data/hud_fonts_174be0.c
+@ gHudPartAnims..gLargeFontGlyphs: src/data/hud_fonts_174be0.c
 
 @ gStaticData_08175558..gStaticData_081756C4: src/data/actor_category_175558.c
 
@@ -134,9 +134,9 @@ gSfxTable:
 
 @ gStaticData_0817C594..gStaticData_0817C5BC: src/data/bg_package_17c594.c
 
-@ gStaticData_0817C5D0..gStaticData_0817CF3C: src/data/credits_17c5d0.c
+@ gCreditsText..gStaticData_0817CF3C: src/data/credits_17c5d0.c
 
-@ gStaticData_0817CF40..gStaticData_0817CFA4: src/data/popup_glyphs_17cf40.c
+@ gCreditsLogos..gStaticData_0817CFA4: src/data/popup_glyphs_17cf40.c
 
 @ gStaticData_0817CFF4..gStaticData_0817D698: src/data/level_gfx_17cff4.c
 
@@ -144,7 +144,7 @@ gSfxTable:
 
 @ gStaticData_0817D7A4..0x0817E714: src/data/countdown_17d7a4.c
 
-@ gStaticData_0817E714: src/data/digit_glyphs_17e714.c
+@ gLanguageNames: src/data/digit_glyphs_17e714.c
 
 @ gStaticData_0817E72C..gStaticData_0817E76C: src/data/palettes_17e72c.c
 
@@ -173,7 +173,7 @@ gGaxSfxData:
 
 .global gGaxMusicData
 gGaxMusicData:
-	@ Starts with GaxSongHeader.sfxTypes (sub_80017BC): 9 pointers to the
+	@ Starts with GaxSongHeader.sfxTypes (StartSong): 9 pointers to the
 	@ sound-effect voice type above. Then the music data: instrument/sample pool plus all
 	@ 19 songs (jungle, underwater, arctic, sewers, future, rocket crash,
 	@ bonus round, dingodile, n gin, tiny, neo cortex, main menu europe,
@@ -202,13 +202,13 @@ gGaxDefaultSong:
 
 .section .rodata.085A4E70
 
-.global gStaticData_085A4E70
-gStaticData_085A4E70:
+.global gSmallFontTiles
+gSmallFontTiles:
 	@ LZ77 tile graphics (4bpp) (5056 bytes decompressed)
 	.incbin "build/crashbandicootxs/graphics/intro/00_5a4e70_tiles.4bpp.lz"
 
-.global gStaticData_085A551C
-gStaticData_085A551C:
+.global gLargeFontTiles
+gLargeFontTiles:
 	@ LZ77 tile graphics (4bpp) (9600 bytes decompressed)
 	.incbin "build/crashbandicootxs/graphics/intro/00_5a551c_tiles.4bpp.lz"
 

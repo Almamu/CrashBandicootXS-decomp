@@ -19,8 +19,8 @@ for the full write-up.
 
 ## Matched
 
-- `src/audio/music_player.c`: `sub_80016EC` (per-tick fade-envelope
-  update), `sub_80017BC` (start playing a song).
+- `src/audio/music_player.c`: `UpdateAudio` (per-tick fade-envelope
+  update), `StartSong` (start playing a song).
 - `src/audio/sfx_ambient.c`: `PlaySfx` (`sub_8001854`, one-shot sfx
   play; real C since the near-miss polish pass, its raw
   `asm/code_3_1_10.s` retired - see
@@ -30,15 +30,15 @@ for the full write-up.
   (reset), `StopAmbientSfx` (force-expire).
 - `src/audio/audio_context.c`: `PlayAmbientSfx` (ambient-sfx play request;
   plain C since the early-ROM NAKED retry, see
-  [early-rom-naked-retry.md](../matching/early-rom-naked-retry.md)), `sub_8001AB8`,
-  `sub_8001ABC`, `sub_8001AC0`, `sub_8001AC4`, `sub_8001AD8`,
-  `sub_8001AEC`, `sub_8001B00`, `sub_8001B14`, `sub_8001B30`,
-  `sub_8001B50`, `sub_8001B54`, `sub_8001B88`, `sub_8001BAC`,
-  `sub_8001BD4`, `sub_8001C04`, `sub_8001C2C` (constructor),
-  `sub_8001C64`.
-- `src/audio/music_irq.c` (new file - `sub_8001C80`/`sub_8001CA4`,
+  [early-rom-naked-retry.md](../matching/early-rom-naked-retry.md)), `GetCurrentSong`,
+  `GetSfxVolume`, `GetMusicVolume`, `FadeOutMusic`, `FadeInMusic`,
+  `sub_8001AEC`, `sub_8001B00`, `sub_8001B14`, `SetMusicVolume`,
+  `SetSfxVolume`, `PlaySong`, `ResumeSong`, `PauseSong`,
+  `StopSong`, `DestroyAudioContext`, `InitAudioContext` (constructor),
+  `DisableMusicVCountIrq`.
+- `src/audio/music_irq.c` (new file - `EnableMusicVCountIrq`/`MusicVCountIrqHandler`,
   0x08001C80): installs the VCount-IRQ handler that forwards into
-  `sub_80016EC`'s per-tick fade update above - `music_player.c`'s
+  `UpdateAudio`'s per-tick fade update above - `music_player.c`'s
   header comment already anticipated this pair. Matched - GitHub
   issue #4, see `docs/matching/issue-4-sio-settings-sync.md`.
 
@@ -48,18 +48,17 @@ write-up):
 
 - `src/audio/counter_selector.c` - `sub_8037110`, `nullsub_7`,
   `sub_8037154`, `sub_803716C` (UNUSED - no caller anywhere in the
-  ROM), `sub_80371B4`, `sub_8037224`
-- `src/audio/counter_selector_setup.c` - `sub_80374D0`, `sub_8037534`,
-  `sub_8037548`, `sub_8037578`, `sub_80375A0`, `sub_80375EC`,
-  `sub_8037620`
+  ROM), `RunLanguageSelect`, `LanguageSelectInput`
+- `src/audio/counter_selector_setup.c` - `LoadLanguageSelectBg`, `LanguageSelectBlink`,
+  `CommitLanguageSelectFrame`, `DestroyLanguageSelect`, `InitLanguageSelect`, `CloseLanguageSelect`,
+  `OpenLanguageSelect`
 - `src/audio/song_slot_lookup.c` - `GaxFindMixRate`
 - `src/audio/sound_object_init.c` - `GAX2_new`
 
 These six-through-one-function groups read like game/HUD-side code that
 merely *calls into* audio (`PlaySfx`) or is a SoundHandler-shaped object
-constructor, not confirmed GAX2 mixer internals - see the matching.md
-entry for what's still just an educated guess (a jukebox/sound-test
-track selector) versus confirmed.
+constructor, not confirmed GAX2 mixer internals - the counter_selector*.c group is the boot
+language menu (`RunLanguageSelect`).
 
 `src/audio/` (further in, at `0x08038538`-`0x08039658` - see
 `docs/matching.md`'s "`0x08038538`-`0x08039658`" entry (PR #198, first
@@ -147,8 +146,8 @@ drafts. Written plainly against the handler/channel structs now in
 [`docs/matching/gax-toolchain-retry.md`](../matching/gax-toolchain-retry.md)
 for the per-function notes.
 
-- `src/audio/counter_selector_icons.c` - `sub_80372BC` (counter widget
-  digit-icon draw loop); `sub_8037388` (the widget's tile-cache/
+- `src/audio/counter_selector_icons.c` - `DrawLanguageSelect` (counter widget
+  digit-icon draw loop); `InitLanguageSelectGraphics` (the widget's tile-cache/
   icon-manager init) followed in the late-ROM NAKED retry - the two
   icon-manager steps as `static inline` helpers plus a shared `zero`
   local, see
@@ -255,7 +254,7 @@ matched `GaxFatalError`) is now matched, real C - see
 [docs/matching/issue-67-word-wrap-text-renderer.md](../matching/issue-67-word-wrap-text-renderer.md)
 and the "Matched" section above.
 
-`sub_80372BC`/`sub_8037388` (icon-manager draw loop / tile-cache init for
+`DrawLanguageSelect`/`InitLanguageSelectGraphics` (icon-manager draw loop / tile-cache init for
 the counter widget, from the `0x08037110`-`0x08038538` pass) were
 parked as byte-verified NAKED transcriptions (both since matched - see
 "Matched in the GAX toolchain retry") - see

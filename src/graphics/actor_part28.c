@@ -39,7 +39,7 @@ extern u16 gUnknown_03001590;
 extern s32 gUnknown_03001594;
 extern void *gUnknown_030008B4;
 extern void *gUnknown_030008B8;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 GetAnimFrameBaseOffset(void *self);
@@ -98,7 +98,7 @@ extern void sub_803390C(s32 a0, s32 a1);
  * table-index-0 transition via `sub_803390C`. */
 void sub_803388C(void)
 {
-    PlaySfx(gUnknown_030012BC, 4, 0x100);
+    PlaySfx(gAudioContext, 4, 0x100);
 
     gUnknown_030015F8 -= 1;
     if (gUnknown_030015F8 == 0) {

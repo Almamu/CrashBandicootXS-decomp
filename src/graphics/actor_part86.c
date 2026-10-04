@@ -26,7 +26,7 @@ struct speed_table
 };
 
 extern u32 gUnknown_0300082C;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gUnknown_03001304;
 extern const struct speed_table gStaticData_0816C090;
 
@@ -151,7 +151,7 @@ void sub_8015C6C(struct player_ctrl *self)
 
     speed = 960;
     flag = 0;
-    PlaySfx(gUnknown_030012BC, 9, 256);
+    PlaySfx(gAudioContext, 9, 256);
     if ((self->target->unk_68 & 3) && GetDpadDirection(gUnknown_03001304) <= 2)
         flag = 1;
 

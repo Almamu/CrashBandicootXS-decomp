@@ -1,12 +1,15 @@
 #ifndef __HUD_H__
 #define __HUD_H__
 
-/* Shared shapes for the HUD stat-widget/icon-slot family documented in
- * docs/rom_map.md's "hud" investigation (the dispatcher at sub_80274EC
- * and its digit/icon-counter callees): `sub_8027838`
- * (src/graphics/hud_counter.c), the icon-slot constructor family in
- * src/graphics/hud_icon_slot.c, the dispatcher (hud_stat_widget.c) and
- * its callees (hud_stat_widget2.c, hud_stat_widget3.c). */
+/* Shared shapes for the in-game HUD (`gHud`, built by `InitHud`):
+ * docs/rom_map.md's "hud" investigation. `UpdateHud` (hud_stat_widget.c)
+ * is the per-frame dispatcher; its widgets are `UpdateHudLives`
+ * (hud_counter.c), `UpdateHudClock`/`UpdateHudWumpa` and the still
+ * unnamed counters (hud_stat_widget2.c, hud_stat_widget3.c). The lives,
+ * wumpa and third counters each slide in from the top of the screen
+ * (`ShowHudLives`/`ShowHudWumpa`/`UpdateHudSlides`, hud_blink.c): a
+ * counter's slide state is 0 hidden, 1 sliding in, 2 held, 3 sliding
+ * out, and while it slides `gHudSlideOffset = slideTimer * 2 - 40`. */
 
 struct hud_anim_record {
     u8 unknown_00[0x16];
@@ -20,7 +23,7 @@ struct hud_anim_data {
 
 /* A single HUD digit/icon slot. Its first 0x18 bytes plus the `table`
  * field at +0x18 match `struct actor` (include/actor.h) byte for byte -
- * sub_802710C/sub_8027120 (src/graphics/hud_icon_slot.c) construct each
+ * sub_802710C/InitHudPart (src/graphics/hud_icon_slot.c) construct each
  * slot by calling the same generic `struct actor`-based table-swap
  * helpers (sub_80088F0/sub_8008904) already used by the actor/part
  * system, treating this object as one. The rest of the fields
@@ -40,25 +43,25 @@ struct hud_digit_part {
 };
 
 struct hud_counter {
-    s32 mode;
-    s32 layout_value;
-    s32 field_08;           /* +0x08 - read by sub_80274EC (gated with
-                              * field_00 against 0 to decide whether to
-                              * call sub_802763C); meaning not established. */
+    s32 livesSlide;          /* +0x00 - the lives counter's slide state */
+    s32 livesSlideTimer;     /* +0x04 */
+    s32 wumpaSlide;          /* +0x08 - the wumpa counter's slide state;
+                              * UpdateHud only draws the time-trial clock
+                              * while neither counter is shown. */
     u8 unknown_0c[0xC];      /* +0x0c */
-    u8 icon_flag;            /* +0x18 - sub_80274EC's dispatcher gate for
+    u8 icon_flag;            /* +0x18 - UpdateHud's dispatcher gate for
                                * sub_8027E88 (percentage counter); also set
                                * from sub_802732C's second argument while
                                * the OAM slot array is being built. */
     u8 unknown_19[3];        /* +0x19 */
-    s32 value;               /* +0x1c */
+    s32 lives;               /* +0x1c */
     u8 unknown_20[0xC];      /* +0x20 */
-    s32 sync_value_a;        /* +0x2c - sub_802763C's change-detection
+    s32 shownMinutes;        /* +0x2c - UpdateHudClock's change-detection
                                * cache for `GetClockMinutes`'s value. */
-    s32 sync_value_b;        /* +0x30 - same, for `GetClockSeconds`. */
-    s32 sync_value_c;        /* +0x34 - same, for `GetClockTenths`. */
+    s32 shownSeconds;        /* +0x30 - same, for `GetClockSeconds`. */
+    s32 shownTenths;        /* +0x34 - same, for `GetClockTenths`. */
     u8 unknown_38[8];        /* +0x38 */
-    s32 previous_value;      /* +0x40 */
+    s32 shownLives;      /* +0x40 */
     u8 unknown_44[0x20];     /* +0x44 */
     struct hud_digit_part *parts; /* +0x64 */
 };

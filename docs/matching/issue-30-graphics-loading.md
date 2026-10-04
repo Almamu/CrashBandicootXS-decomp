@@ -18,7 +18,7 @@ palette/tiles/tilemap loader) and two of the cluster's other members
 constructor), without carrying either through to C. This pass instead
 went after the small, self-contained functions immediately after
 `LoadGraphicsPackage` - all six turned out to be accessors on the same
-0x10-byte scratch buffer `sub_80374D0` (`counter_selector_setup.c`)
+0x10-byte scratch buffer `LoadLanguageSelectBg` (`counter_selector_setup.c`)
 already shows a caller building up field-by-field before passing it to
 `LoadGraphicsPackage`/`sub_801E640`:
 
@@ -355,7 +355,7 @@ With every operand pinned down, the function's full semantics are:
    elsewhere in this cluster.
 2. Unless the player's `+0x8c` "paused" flag is set: fires the
    player's `table+0x68` trampoline (`_call_via_r4`, action `0x1a`) and
-   plays SFX `0x100` through `gUnknown_030012BC`, gated by a
+   plays SFX `0x100` through `gAudioContext`, gated by a
    budget/reentrancy check - either the player's spawn counter
    (`+0x7c`) has room against its cap (`+0x84`), or, when it doesn't,
    `sub_803AFEC` (`+0x74`), `sub_80232B8` (`+0xa4`) and the player's

@@ -3,23 +3,23 @@
 #include "audio.h"
 
 extern void IrqSetHandler(s32 interruptIndex, irq_handler_t *fn);
-extern struct AudioContext *gUnknown_030012BC;
-extern void sub_80016EC(struct AudioContext *self);
+extern struct AudioContext *gAudioContext;
+extern void UpdateAudio(struct AudioContext *self);
 
-void sub_8001CA4(void);
+void MusicVCountIrqHandler(void);
 
-/* Installs `sub_8001CA4` as the VCount-IRQ handler and arms VCount IRQs
+/* Installs `MusicVCountIrqHandler` as the VCount-IRQ handler and arms VCount IRQs
  * with a fixed trigger line (`0x35`) - the music player's per-tick fade
- * update (`sub_80016EC`, `src/audio/music_player.c`) runs off this
+ * update (`UpdateAudio`, `src/audio/music_player.c`) runs off this
  * VCount interrupt rather than VBlank. See that file's header comment,
  * which already anticipated this function. */
-void sub_8001C80(void)
+void EnableMusicVCountIrq(void)
 {
     register vu8 *p asm("r1");
     register u8 v asm("r0");
     register u8 loaded asm("r2");
 
-    IrqSetHandler(INTR_INDEX_VCOUNT, sub_8001CA4);
+    IrqSetHandler(INTR_INDEX_VCOUNT, MusicVCountIrqHandler);
     p = (vu8 *)REG_ADDR_DISPSTAT;
     p[1] = 0x35;
     v = DISPSTAT_VCOUNT_INTR;
@@ -28,9 +28,9 @@ void sub_8001C80(void)
     *p = v;
 }
 
-/* The VCount-IRQ handler installed by `sub_8001C80` above: just forwards
+/* The VCount-IRQ handler installed by `EnableMusicVCountIrq` above: just forwards
  * into the music player's per-tick fade update. */
-void sub_8001CA4(void)
+void MusicVCountIrqHandler(void)
 {
-    sub_80016EC(gUnknown_030012BC);
+    UpdateAudio(gAudioContext);
 }

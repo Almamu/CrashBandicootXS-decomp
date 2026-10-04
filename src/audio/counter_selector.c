@@ -2,24 +2,24 @@
 #include "gba/dma_macros.h"
 #include "memory.h"
 
-/* A small on-screen widget: cycles a 0-5 value with input (drawn via two
- * flanking icons through gUnknown_030012DC/gUnknown_030012E0, see
- * icon_manager.h) and confirms/cancels with a PlaySfx cue. Sits at the
- * very start of the address range docs/audio.md calls the GAX2 engine,
- * but reads like game/HUD-side code that merely *uses* PlaySfx rather
- * than GAX2 engine internals - not confidently identified as any one
- * specific screen (a jukebox/sound-test track selector is the leading
- * guess, given the SFX ids and the 0-5 range, but not confirmed), so
- * kept as sub_XXXXXXXX per docs/naming.md rather than guessing a name. */
+/* The language menu shown at boot (OpenLanguageSelect/RunLanguageSelect/
+ * CloseLanguageSelect, called from MainLoop): up/down cycles `language`
+ * through the six entries of gLanguageNames ("english", "français",
+ * "deutsch", "español", "italiano", "nederlands", drawn with gSmallFont
+ * over a starfield), A or START confirms, and MainLoop stores the
+ * result in gLanguage, which picks the gUiText<Lang>/cutscene tables.
+ * Sits at the very start of the address range docs/audio.md calls the
+ * GAX2 engine, but is game-side code that merely uses PlaySfx.
+ * `struct counter_widget` keeps its historical name. */
 struct counter_widget {
-    u32 field_0;
-    u8 field_4;
+    u32 frame;
+    u8 done;
     u8 pad_5[3];
-    s32 field_8;
+    s32 language;
     u8 field_c;
     u8 field_d;
     u8 pad_e[2];
-    void *field_10;
+    void *starfield;
 };
 
 extern void *sub_8026EC0(u32 size);
@@ -28,16 +28,16 @@ extern void sub_8026ED0(void *self);
 extern void WaitForVBlank(void);
 extern void *gUnknown_03001304;
 extern u16 gKeys;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern s32 UpdateKeys(void *arg0);
-extern void sub_8037548(struct counter_widget *self);
-extern void sub_80372BC(struct counter_widget *self);
-extern void sub_8034688(void *arg0);
-extern struct counter_widget *gUnknown_030008CC;
+extern void CommitLanguageSelectFrame(struct counter_widget *self);
+extern void DrawLanguageSelect(struct counter_widget *self);
+extern void UpdateStarfield(void *arg0);
+extern struct counter_widget *gLanguageSelect;
 extern void LoadTaggedAsset(void *asset, void *dest);
 
-void sub_8037224(struct counter_widget *self, u32 flags);
+void LanguageSelectInput(struct counter_widget *self, u32 flags);
 
 /* Loads a "tagged" asset (see LoadTaggedAsset, src/system/asset_util.c)
  * into a freshly allocated buffer, then queues a DMA3 transfer from that
@@ -109,32 +109,32 @@ void sub_803716C(struct linked_node *self, u32 flags)
 }
 
 /* Runs the widget: resets it, draws/flushes once, then polls input each
- * frame (dispatching newly-pressed keys to sub_8037224) until it signals
+ * frame (dispatching newly-pressed keys to LanguageSelectInput) until it signals
  * done via `field_4`, returning the final selected value in `field_8`. */
-s32 sub_80371B4(void)
+s32 RunLanguageSelect(void)
 {
-    gUnknown_030008CC->field_8 = 0;
-    gUnknown_030008CC->field_0 = 0;
-    gUnknown_030008CC->field_4 = 0;
-    sub_80372BC(gUnknown_030008CC);
+    gLanguageSelect->language = 0;
+    gLanguageSelect->frame = 0;
+    gLanguageSelect->done = 0;
+    DrawLanguageSelect(gLanguageSelect);
     WaitForVBlank();
-    sub_8037548(gUnknown_030008CC);
+    CommitLanguageSelectFrame(gLanguageSelect);
 
-    while (gUnknown_030008CC->field_4 == 0) {
+    while (gLanguageSelect->done == 0) {
         u16 keys;
         u16 *addr;
 
         UpdateKeys(gUnknown_03001304);
         addr = &gKeys;
         keys = *(u16 *)((u8 *)addr + 2);
-        sub_8037224(gUnknown_030008CC, keys);
-        sub_80372BC(gUnknown_030008CC);
+        LanguageSelectInput(gLanguageSelect, keys);
+        DrawLanguageSelect(gLanguageSelect);
         WaitForVBlank();
-        sub_8037548(gUnknown_030008CC);
-        sub_8034688(gUnknown_030008CC->field_10);
+        CommitLanguageSelectFrame(gLanguageSelect);
+        UpdateStarfield(gLanguageSelect->starfield);
     }
 
-    return gUnknown_030008CC->field_8;
+    return gLanguageSelect->language;
 }
 
 /* Dispatches one frame's newly-pressed `flags` for the widget above:
@@ -142,27 +142,27 @@ s32 sub_80371B4(void)
  * 0x49); bit 6/bit 7 decrement/increment the 0-5 `field_8` value
  * (wrapping around, sfx 0x46). `field_0` is a free-running frame
  * counter, incremented every call regardless. */
-void sub_8037224(struct counter_widget *self, u32 flags)
+void LanguageSelectInput(struct counter_widget *self, u32 flags)
 {
     if (flags & 8) {
-        self->field_4 = 1;
+        self->done = 1;
         goto confirm;
     } else if (flags & 1) {
-        self->field_4 = 1;
+        self->done = 1;
     confirm:
-        PlaySfx(gUnknown_030012BC, 0x49, 0x100);
+        PlaySfx(gAudioContext, 0x49, 0x100);
     } else if (flags & 0x40) {
-        self->field_8--;
-        if (self->field_8 < 0) {
-            self->field_8 = 5;
+        self->language--;
+        if (self->language < 0) {
+            self->language = 5;
         }
-        PlaySfx(gUnknown_030012BC, 0x46, 0x100);
+        PlaySfx(gAudioContext, 0x46, 0x100);
     } else if (flags & 0x80) {
-        self->field_8++;
-        if (self->field_8 > 5) {
-            self->field_8 = 0;
+        self->language++;
+        if (self->language > 5) {
+            self->language = 0;
         }
-        PlaySfx(gUnknown_030012BC, 0x46, 0x100);
+        PlaySfx(gAudioContext, 0x46, 0x100);
     }
-    self->field_0 = (self->field_0 + 1) & 0xff;
+    self->frame = (self->frame + 1) & 0xff;
 }

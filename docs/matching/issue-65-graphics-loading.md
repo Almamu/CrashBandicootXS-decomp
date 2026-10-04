@@ -20,13 +20,13 @@ behavior. This pass worked those three:
 
 - **`LoadLevelGraphics`**: the per-level setup entry point (`UpdateGameFrame`,
   `asm/code_3_2_17_225a0.s`, calls it with a freshly-allocated 0x220-byte
-  scratch object). Stashes `gUnknown_030012DC` (the `struct icon_manager *`
+  scratch object). Stashes `gSmallFont` (the `struct icon_manager *`
   already established by GitHub issue #46's chunk, `include/icon_manager.h`)
   into the scratch object's `+0xc` field; resets the OAM shadow buffer
   (`gUnknown_03001300`, `struct oam_shadow_buffer *`) via
   `sub_8006A90`/`sub_8006A48`/`WaitForVBlank`/`sub_8006AAC`; clears
   `REG_BLDCNT`/`REG_BLDALPHA` (one 32-bit store), sets `REG_BLDY` to
-  `0x10`, and clears `REG_DISPCNT`; calls `sub_8028A30` (the icon-manager
+  `0x10`, and clears `REG_DISPCNT`; calls `FontSetPalette` (the icon-manager
   accessor from issue #46, `src/graphics/hud_icon_widget4.c`) with `0xe`;
   sets the icon manager's `field_108` to `0x200` and fires its
   `record->slots[6]` trampoline via `_call_via_r1` (the same
@@ -35,14 +35,14 @@ behavior. This pass worked those three:
   palette banks (`gStaticData_0817D034`/`_054`/`_074`) into palette RAM
   at `0x050003A0`/`_C0`/`_E0`; calls `LoadBg2Background`/
   `LoadObjSpriteTiles`; allocates and constructs a 0x14-byte object via
-  `sub_8034374(sub_8026EDC(0x14))` (the exact same allocate-then-construct
+  `InitStarfield(sub_8026EDC(0x14))` (the exact same allocate-then-construct
   pairing already confirmed in `src/audio/counter_selector_setup.c`'s
-  `self->field_10 = sub_8034374(sub_8026EDC(0x14))`) into the scratch
+  `self->field_10 = InitStarfield(sub_8026EDC(0x14))`) into the scratch
   object's `+0x208` field; runs a fixed fade/audio-reset sequence
   (`sub_8001604`/`sub_80015E0`/`sub_8001524(1)`/`sub_8001614` - the same
   quartet already matched in `src/graphics/fade_screen_mode2.c`); zeroes
   the scratch object's first two words; and starts song `0xb` via
-  `sub_80017BC(gUnknown_030012BC, 0xb)` (`gUnknown_030012BC` is the
+  `StartSong(gAudioContext, 0xb)` (`gAudioContext` is the
   `struct AudioContext *` from `include/audio.h`/`src/audio/music_player.c`).
   Returns the same scratch object pointer it was given.
 
@@ -62,12 +62,12 @@ behavior. This pass worked those three:
   - `iconManager->field_108 = 0x200;` has to be split into a named
     `fieldValue = 0x200;` local assigned *before* `iconManager` is
     re-read from `self[3]` (the ROM re-loads `self[3]` fresh here rather
-    than reusing the register from the earlier `sub_8028A30` call) -
+    than reusing the register from the earlier `FontSetPalette` call) -
     otherwise the compiler computes the field's address first and
     derives `0x200` from the address offset via a cheap `ADD` instead of
     materializing it independently, producing a different (if
     value-equivalent) instruction sequence than the ROM's.
-  - `self[0x82] = (u32)sub_8034374(sub_8026EDC(0x14));` has to be split
+  - `self[0x82] = (u32)InitStarfield(sub_8026EDC(0x14));` has to be split
     into a named `u32 *dest = &self[0x82];` computed *before* the two
     calls, then `*dest = ...;` after - the ROM computes this destination
     address first and holds it live across both calls (`r4`), while the
@@ -376,7 +376,7 @@ describe it as matched rather than parked.
 
 Revisited the still-`NAKED` `LoadBg2Background`, specifically trying the
 "raise register pressure via genuinely separate, *unpinned* plain C
-locals" technique documented for `sub_8006600`'s prologue fix (rather
+locals" technique documented for `DrawPowerDialog`'s prologue fix (rather
 than an explicit dummy-register pin, already ruled out for this
 function in the second pass above) and the "explicit pin gets silently
 dropped, but the natural allocator's own choice survives" pattern from
@@ -401,7 +401,7 @@ results came out of this:
    legitimately needs a register at that point in the loop and the
    compiler's own unforced allocator reaches for `r7` on its own, both
    the loop instruction *and* the prologue/epilogue push/pop should
-   follow, per the `sub_8006600`/`sub_800132C` precedent.
+   follow, per the `DrawPowerDialog`/`sub_800132C` precedent.
 2. **This does happen, but not for the same variable the ROM uses.**
    Restructuring the remap loop into the ROM's actual instruction shape
    (a `mask` copy into a fresh scratch *before* each raw halfword load,
@@ -427,7 +427,7 @@ results came out of this:
 Extensive follow-up on that 3-cycle, none of which closed it:
 
 - **Declaration order has zero effect here**, contradicting the
-  `LoadObjSpriteTiles`/`sub_8006600` precedent that textual declaration
+  `LoadObjSpriteTiles`/`DrawPowerDialog` precedent that textual declaration
   order controls otherwise-untied locals' register order. Moving the
   `REG_BG2CNT` scratch's declaration earlier or later in the function,
   or reversing the four loop-local declarations' textual order, produced
@@ -504,13 +504,13 @@ at once - each fix for one side consistently regressed the other, via
 mechanisms (the `r9`-promotion pathology, the asm-clobber/push-pop
 blind spot) that aren't fully understood. This is the same flavor of
 stubborn, non-monotonic register-letter permutation already documented
-as unresolved for `sub_8006600`'s second half and `DMA3Transfer`
+as unresolved for `DrawPowerDialog`'s second half and `DMA3Transfer`
 (`docs/matching/issue-69-eeprom-timer.md`) - manual C-level
 restructuring hit a wall in the same way. **Left as-is**: `LoadBg2Background`
 remains the `NAKED` transcription from the second pass (byte-correct,
 tracked as parked in `tools/report_units.py`, `base_object = None`); no
 tree changes from this pass, since nothing closed. If revisited, the
-most promising untried angle (per the `sub_8006600` write-up's own
+most promising untried angle (per the `DrawPowerDialog` write-up's own
 suggestion for its analogous unresolved half) is a permuter search
 scoped narrowly to just the loop-body-register-letters vs.
 prologue-shuttle-register tradeoff, rather than further manual

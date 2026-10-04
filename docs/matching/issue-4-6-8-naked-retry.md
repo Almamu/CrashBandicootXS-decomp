@@ -10,11 +10,11 @@ closed 12 of the 19.
 |---|---|---|
 | #8 | 5 of 5 | none |
 | #6 | 7 of 9 | `sub_8003D3C` (NAKED), `sub_800450C` (raw) |
-| #4 | 0 of 5 | `sub_8001CB8`, `sub_8001DB4`, `sub_8001F50`, `sub_8002114`, `sub_8002AA4` |
+| #4 | 0 of 5 | `sub_8001CB8`, `sub_8001DB4`, `sub_8001F50`, `sub_8002114`, `ValidateSaveData` |
 
 **Compilers:**
 
-- `settings_menu10.c` (`sub_8006518`) only matches under old_agbcc and
+- `settings_menu10.c` (`PowerDialogLoop`) only matches under old_agbcc and
   is now on `OLD_AGBCC_OBJS`.
 - `settings_menu.c` is also on `OLD_AGBCC_OBJS`. Its five matched
   functions compile the same under both compilers, but the
@@ -42,16 +42,16 @@ NON_MATCHING build, where the C draft replaces them.
   `_m`/`_s` locals, so `this` is computed before the label argument.
   The ROM does the same, even when the label is itself a
   `GetUiText(...)` call. `set_icon_mgr_pos(m, u32 x, u32 y)` is a
-  plain inline setter. This closed `sub_8006124`, `sub_800619C`,
-  `sub_80061E8`, `sub_8003C90`, `sub_8004914` and `sub_80049CC` on the
+  plain inline setter. This closed `DrawPauseTimeTrialPage`, `DrawPauseCrystalsPage`,
+  `DrawPauseMenuPageTitle`, `sub_8003C90`, `sub_8004914` and `sub_80049CC` on the
   first compile. Their old notes described a "last mile" register gap
   that doesn't exist once the calls are written this way.
-- **`sub_80062A8`** uses the `IconSetup`/`IconReserve` inline helpers
+- **`ShowPowerDialog`** uses the `IconSetup`/`IconReserve` inline helpers
   from `sub_801BAF0` (`src/graphics/actor_part_1b85c.c`), which has the
   same display/icon-manager setup sequence. It needed one more fix:
-  `sub_8028A40` takes one argument. The old two-argument declaration
+  `FontResetPalette` takes one argument. The old two-argument declaration
   added a `movs r1, #0` before each call.
-- **`sub_8006518`** (old_agbcc): `field_24` is a
+- **`PowerDialogLoop`** (old_agbcc): `field_24` is a
   `struct { u8 level:5; u8 rest:3; } __attribute__((packed))`. Without
   `packed`, agbcc pads it to 4 bytes and moves `field_28`. `field_28`
   is a `u16`/`{u8, u8}` union, because it is cleared as a halfword and
@@ -107,12 +107,12 @@ NON_MATCHING build, where the C draft replaces them.
   it as a parameter, `field_3c` typed `s16`/`u32`, reordering the
   array-pointer locals, and per-file flags (`-fno-rerun-loop-opt`,
   `-frerun-cse-after-loop`).
-- **`sub_8002AA4`** (`settings_menu8e.c`, NAKED): 18 halfwords off.
-  The checksum is an inlined copy of `sub_8002B44` with its result
+- **`ValidateSaveData`** (`settings_menu8e.c`, NAKED): 18 halfwords off.
+  The checksum is an inlined copy of `CheckSaveChecksum` with its result
   pinned to r1, as there, and that part and the `DmaFill16` match.
   The ROM computes the four marker-byte addresses before the row loop
   and keeps them in r6/sb/r7/r8, as if they had been hoisted out of a
-  loop. `sub_8002C84`, the same sequence without the checksum, computes
+  loop. `ResetSaveData`, the same sequence without the checksum, computes
   them after the loop, and so do plain stores here. Local pointers get
   them computed early but in other registers, and 0x1fb comes out as
   0x1f8 + 3 instead of from its own literal.
@@ -174,5 +174,5 @@ The early-ROM NAKED retry
 `sub_8003D3C`. `y` is pinned to r9 and set after the manager pointer is
 loaded. Global-alloc was ranking the 0x87 constant just above the 0x130
 offset (0.0714 vs 0.070), which is why they swapped. The
-`sub_8002AA4`, `sub_8001CB8` and `sub_800450C` drafts are closer (6, 11
+`ValidateSaveData`, `sub_8001CB8` and `sub_800450C` drafts are closer (6, 11
 and 5 halfwords). The same doc says what is left in each.

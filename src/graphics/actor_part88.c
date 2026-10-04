@@ -2,7 +2,7 @@
 #include "icon_manager.h"
 #include "vram_pool.h"
 
-/* Same "fade overlay" self object as `actor_part87.c` (`sub_803472C`) -
+/* Same continue prompt ("fade overlay") self object as `actor_part87.c` (`InitContinuePrompt`) -
  * redeclared locally here per this project's minimal-local-type
  * convention for a type already anchored in another translation unit
  * (see e.g. settings_menu10.c's own `struct sub_8006700_actor`
@@ -18,7 +18,7 @@ struct fade_overlay {
 
 extern struct vram_upload_cursor *gUnknown_030012FC;
 extern void sub_8006C4C(struct vram_upload_cursor *self);
-extern struct icon_manager *gUnknown_030012DC;
+extern struct icon_manager *gSmallFont;
 extern void *_call_via_r1(void *arg0, void *arg1);
 extern s32 sub_8006C58(struct vram_upload_cursor *self, s32 size);
 extern void sub_8006C30(struct vram_upload_cursor *self);
@@ -36,11 +36,11 @@ extern u16 gStaticData_0817C532[];
 extern u16 gStaticData_0817C552[];
 extern u16 gStaticData_0817C572[];
 
-/* The other half of the fade overlay's setup, called from
- * `sub_803472C` (actor_part87.c): flushes the shared VRAM upload cursor
+/* The other half of the continue prompt's setup, called from
+ * `InitContinuePrompt` (actor_part87.c): flushes the shared VRAM upload cursor
  * twice, hooks `self->icons` up to the global text icon manager
- * (`gUnknown_030012DC`), fires its 7th OAM trampoline slot, clears its
- * `field_118` and re-derives the cursor's limit from `field_12c`, resets
+ * (`gSmallFont`), fires its 7th OAM trampoline slot, clears its
+ * `marginX` and re-derives the cursor's limit from `tileCount`, resets
  * the shared tile cache and pins its first four slots, seeds those four
  * slots with fixed 32-byte tile patterns from ROM data, flushes the
  * cache, sets the overlay's DISPCNT "OBJ enable" bit, and flushes the
@@ -61,15 +61,15 @@ void sub_803487C(struct fade_overlay *self)
     sub_8006C4C(gUnknown_030012FC);
     sub_8006C4C(gUnknown_030012FC);
 
-    icons = gUnknown_030012DC;
+    icons = gSmallFont;
     self->icons = icons;
-    icons->field_108 = 0;
+    icons->tileBase = 0;
     {
         u8 *rec = (u8 *)icons->record + 0x40;
         _call_via_r1((u8 *)icons + *(s16 *)rec, *(void **)(rec + 4));
     }
-    self->icons->field_118 = 0;
-    sub_8006C58(gUnknown_030012FC, self->icons->field_12c << 5);
+    self->icons->marginX = 0;
+    sub_8006C58(gUnknown_030012FC, self->icons->tileCount << 5);
     sub_8006C30(gUnknown_030012FC);
 
     sub_8006EA8(gUnknown_030012B8);

@@ -19,7 +19,7 @@
 extern void sub_8033804(void);
 extern void sub_803388C(void);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 
 /* The second object kind (vtable gStaticData_087E5554). */
 struct actor_orbiter {
@@ -89,9 +89,9 @@ void sub_8034110(void *selfArg, s32 dmg)
             *(u8 *)&self->base.animDone = zero2;
         }
         self->base.animTime = zero;
-        PlaySfx(gUnknown_030012BC, 4, 0x100);
+        PlaySfx(gAudioContext, 4, 0x100);
     } else {
-        PlaySfx(gUnknown_030012BC, 0x45, 0x100);
+        PlaySfx(gAudioContext, 0x45, 0x100);
     }
 }
 

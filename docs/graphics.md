@@ -112,7 +112,7 @@ zero low nibble). **If sprite tiles are stored with tag `0x0` (raw), no
 signature scan will ever find them** - this is the leading theory for why
 the two large regions above didn't turn up anything.
 
-`UploadHudTile` calls this dispatcher with a destination computed as
+`FontUploadTiles` calls this dispatcher with a destination computed as
 `0x06010000 + tile_index * 32` - i.e. a real GBA OBJ tile VRAM address
 (`0x06010000` is the OBJ character base in tile modes 0-2, 32 bytes per
 4bpp tile). This confirms the dispatcher is genuinely used for sprite tile
@@ -140,13 +140,13 @@ slots. **Pair index 0 is `{0, 0}` in every single record seen** (an
 always-unimplemented slot 0); real behavior starts at pair index 1. These
 are a per-actor-type message/behavior dispatch table, not graphics data:
 
-- Only **3 of the 93 records** (`gStaticData_087E4D1C`, `_087E4D64`,
-  `_087E4DAC`) use `UploadHudTile` (the VRAM-tile-upload function above) -
+- Only **3 of the 93 records** (`gLargeFontVtable`, `_087E4D64`,
+  `_087E4DAC`) use `FontUploadTiles` (the VRAM-tile-upload function above) -
   confirmed by searching the whole ROM for that function's address as a raw
   pointer, so this is exhaustive, not a sample. All three share every pair
   *except* pair 1 (their constructor, see below) - i.e. they're the same
   "renderable sprite" base chassis with different construction. Of the
-  three, `_087E4DAC`'s constructor (`InitHudTextWidget`) is confirmed to belong to
+  three, `_087E4DAC`'s constructor (`DestroyFont`) is confirmed to belong to
   a **text-rendering actor** (see next section) - the other two
   (`_087E4D1C`, `_087E4D64`) are still unidentified and are the most
   promising remaining candidates for "an actual sprite", including
@@ -174,25 +174,25 @@ are a per-actor-type message/behavior dispatch table, not graphics data:
 
 ### The render-vtable family is a HUD text/counter system, not player sprites
 
-All 3 records that use `UploadHudTile` are now identified, and **none of them
+All 3 records that use `FontUploadTiles` are now identified, and **none of them
 is a game-world sprite** - they're all part of an on-screen text/counter
 HUD widget:
 
-- `_087E4DAC`'s constructor (`InitHudTextWidget`) leads to a pure text-measurement
-  routine (`MeasureText`): walks a null-terminated string byte by byte,
+- `_087E4DAC`'s constructor (`DestroyFont`) leads to a pure text-measurement
+  routine (`FontMeasureText`): walks a null-terminated string byte by byte,
   special-casing `'\n'`/`' '`, looking up per-character width from tables
   hung off the actor - classic text layout, no icon/number.
 - `_087E4D64` and `_087E4D1C` are set up by two near-identical functions
-  (`InitHudIconWidgetA`, `InitHudIconWidgetB`) that **both** start by measuring a string
+  (`InitSmallFont`, `InitLargeFont`) that **both** start by measuring a string
   via the same low-level routine (`CpuSet`, called with a
   `0x05000002` constant - `0x05000000` is GBA Palette RAM, so this looks
   like a palette-aware text draw), then overwrite the actor's vtable to
   `_087E4D64`/`_087E4D1C` and set a graphics-package pointer at a struct
   offset that varies by variant:
-  - `InitHudIconWidgetA` -> `_087E4D64`: sets `self+0x128 = gStaticData_085A4E70`
+  - `InitSmallFont` -> `_087E4D64`: sets `self+0x128 = gSmallFontTiles`
     (an *already-extracted* graphics block, `graphics/intro/00_5a4e70_tiles.png`
     - 5056 bytes decompressed, only 16px wide).
-  - `InitHudIconWidgetB` -> `_087E4D1C`: sets `self+0x110 = gStaticData_085A551C`
+  - `InitLargeFont` -> `_087E4D1C`: sets `self+0x110 = gLargeFontTiles`
     (also already extracted, `graphics/intro/00_5a551c_tiles.png` - 9600
     bytes decompressed) and flips a bit in a `+3` flags byte
     (`& 0x3F | 0x40`), which is presumably what tells the shared rendering
@@ -202,17 +202,17 @@ HUD widget:
     layout across all render-capable actors.
 
 Put together: this whole family (all 3 records, the only ones that ever
-touch `UploadHudTile`) is a HUD element that measures a string then renders
+touch `FontUploadTiles`) is a HUD element that measures a string then renders
 an icon/number combo (think a lives-or-fruit counter: icon + digits) or
 plain text next to it. Both graphics pointers found this way point at
 small, already-extracted icon-sized assets from the very first extraction
 pass, not anything sprite-sheet sized.
 
-**This rules out the vtable/`UploadHudTile` path as the mechanism for
+**This rules out the vtable/`FontUploadTiles` path as the mechanism for
 regular game-world sprites (player, enemies, objects).** Whatever renders
-those must go through a different function entirely - `UploadHudTile`'s
+those must go through a different function entirely - `FontUploadTiles`'s
 callers are exhaustively these 3 HUD records and nothing else (confirmed
-via full-ROM pointer scan for `UploadHudTile`'s address).
+via full-ROM pointer scan for `FontUploadTiles`'s address).
 
 The single most shared function across all 93 records, for reference, is
 `UpdateAnimatedActorPart` (used by 40 of the 93) - but it contains no
@@ -255,7 +255,7 @@ own hardcoded vtable-record pointer into the new actor instance's `+0x50`
 or `+0x130` field and, if a flag bit is set, calls **`mem_free(self)`** -
 i.e. a constructor/reset path that also conditionally frees a previously-
 allocated per-instance override, not anything graphics-related. One
-constructor (`sub_803AFF0`) oddly writes two *different* record pointers
+constructor (`DestroyLargeFont`) oddly writes two *different* record pointers
 to the same field back-to-back (the second overwrites the first) - reads
 as a dead store; not yet understood why the compiled code has it. The
 remaining handful are small standalone helpers (an on-screen/bounds-check-
@@ -311,7 +311,7 @@ place that even reads it. Likely explanations, in rough order of
 likelihood: it's filled in from a still-undisassembled code pocket (see
 the two we already found - there may be more `.byte`-dumped fragments
 among the ~179 remaining); it's filled from level data read earlier in
-`UpdateGameFrame`'s loop (the `sub_80354BC`/`sub_8035E14`/`sub_8036154`
+`UpdateGameFrame`'s loop (the `RunCredits`/`sub_8035E14`/`sub_8036154`
 "stream reader" functions glimpsed there haven't been traced yet); or it's
 written through a raw computed address rather than the symbol textually
 (harder to grep for).
@@ -329,7 +329,7 @@ analysis allows, and the write site still can't be found.
   main loop) - it's player input/collision/SFX handling (calls
   `PlaySfx`, the confirmed `PlaySfx` function, with real SFX IDs like
   `0x49`/`0x46` gated on input bitflags), not graphics setup.
-- Traced `sub_80354BC`/`sub_8034CEC`/`sub_8034E2C` (the other branch of the
+- Traced `RunCredits`/`InitCredits`/`CreditsLoop` (the other branch of the
   main loop's state machine) - these turned out to be level-transition
   fade effects and a level-title-card display, not sprite-package setup
   either.
@@ -1132,17 +1132,17 @@ looked at this specific folder yet".
 ### Open questions / next steps
 
 - The `0x087E3BEC`-onward vtable system, its constructors, and
-  `UploadHudTile` are now a dead end for finding player/enemy sprites - fully
+  `FontUploadTiles` are now a dead end for finding player/enemy sprites - fully
   traced and conclusively shown to be a HUD text/counter system instead.
   Don't re-investigate this path without new evidence.
 - There is no simple "type ID -> descriptor" lookup table anywhere in the
   ROM for this vtable system (checked exhaustively) - actor construction
-  embeds a record's address directly in code (as seen in `InitHudIconWidgetA`/
-  `InitHudIconWidgetB`) rather than going through a numeric index. Whatever the
+  embeds a record's address directly in code (as seen in `InitSmallFont`/
+  `InitLargeFont`) rather than going through a numeric index. Whatever the
   equivalent mechanism is for game-world sprites hasn't been located.
 - **The per-frame rendering loop has been found** (see the new section
   above) - it's the category-descriptor -> vtable -> animation-table ->
-  `table_A`/`table_B` chain, not `UploadHudTile`. What's still open there:
+  `table_A`/`table_B` chain, not `FontUploadTiles`. What's still open there:
   identifying which game object(s) categories 0-2 and 3-6 actually are
   (working theory: a spinning Aku Aku mask for 0-2, unconfirmed), and the
   still-undecoded descriptor/record fields listed at the end of that

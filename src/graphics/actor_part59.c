@@ -19,7 +19,7 @@ extern s32 sub_8029B2C(void);
 extern s32 gUnknown_030014CC;
 extern s32 gUnknown_030014C8;
 extern void *gUnknown_030014BC;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern s32 PlayAmbientSfx(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern void sub_8029E28(s32 arg0);
 extern s32 gUnknown_030014D4;
@@ -62,7 +62,7 @@ void sub_802DB2C(void)
 
         if (gUnknown_030014CC <= 0x4FFF) {
             if (tier == 0xc) {
-                void *a0 = gUnknown_030012BC;
+                void *a0 = gAudioContext;
                 s32 a2 = 0x3E8;
                 s32 a3 = 0x100;
                 register u8 *stackPtr asm("r4") = &dummyStack;
@@ -72,7 +72,7 @@ void sub_802DB2C(void)
                 PlayAmbientSfx(a0, 0x3f, a2, a3);
                 sub_8029E28(0x200);
             } else if (tier == 0x1c) {
-                void *a0 = gUnknown_030012BC;
+                void *a0 = gAudioContext;
                 s32 a2 = 0x3E8;
                 s32 a3 = 0x100;
                 register u8 *stackPtr asm("r4") = &dummyStack;
@@ -138,7 +138,7 @@ void sub_802DB2C(void)
             }
 
             if (gUnknown_030014CC <= 0x7800) {
-                PlaySfx(gUnknown_030012BC, 0x20, 0x100);
+                PlaySfx(gAudioContext, 0x20, 0x100);
             }
         end_transition:
             ;
@@ -174,11 +174,11 @@ void sub_802DCC0(void)
 
         if (gUnknown_030014CC <= 0x4FFF) {
             if (tier == 0xb) {
-                PlaySfx(gUnknown_030012BC, 0x3f, 0x100);
+                PlaySfx(gAudioContext, 0x3f, 0x100);
                 asm volatile("" ::: "memory");
                 sub_8029E28(0x200);
             } else if (tier == 0x1b) {
-                PlaySfx(gUnknown_030012BC, 0x40, 0x100);
+                PlaySfx(gAudioContext, 0x40, 0x100);
                 sub_8029E28(0x200);
             } else if (tier == 0xc || tier == 0x1c) {
                 sub_8029E28(0x100);

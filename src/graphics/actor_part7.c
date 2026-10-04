@@ -437,7 +437,7 @@ struct game_state {
 };
 
 extern struct game_state *gLevelState;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern s32 sub_8009FF4(struct box_part *part, struct part_aabb *box);
 extern struct part_aabb sub_8007B98(struct box_part *part);
 extern struct part_aabb sub_8007CF8(struct box_part *part);
@@ -508,7 +508,7 @@ void sub_8008AD8(struct part_list *list, struct part_aabb box, struct box_part *
                 if (gUnknown_030012D8->unk_64 > 0) {
                     CALL_HIT(part, 1, 1, 0);
                     CALL_HIT(gUnknown_030012D8, 0, 0xd, 0);
-                    PlaySfx(gUnknown_030012BC, 0x21, 0x100);
+                    PlaySfx(gAudioContext, 0x21, 0x100);
                 }
             } else {
                 CALL_HIT(part, 1, kind, 0);

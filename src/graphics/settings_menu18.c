@@ -6,15 +6,15 @@
 extern void sub_8008890(void *arg0, s32 arg1, s32 arg2);
 extern s32 GetUiText(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern struct icon_manager *gUnknown_030012DC;
+extern struct icon_manager *gSmallFont;
 
 /* Shows (`sub_8008890(icon, 0, 0)`) whichever of `icons8c[0..3]` has a
  * matching bit set in `self->field_10`'s byte at offset 2 (a flag byte
- * on the row-stats handle sub_8004860/sub_80048E0 - src/graphics/
+ * on the row-stats handle RefreshSaveSlotSummaries/SummarizeProgress - src/graphics/
  * settings_menu2.c - already fill; bits 0x20/0x80/0x40/0x10, one per
  * slot). If *none* of the four bits were set, draws a fallback
  * centered label (text id 0x3a) at a fixed position instead. */
-void sub_800570C(struct pause_screen_results *self)
+void DrawPausePowersPage(struct pause_screen_results *self)
 {
     s32 none = 1;
 
@@ -65,16 +65,16 @@ void sub_800570C(struct pause_screen_results *self)
 
     if (none) {
         s32 label = GetUiText(0x3a);
-        struct icon_record *rec = gUnknown_030012DC->record;
-        u32 width = _call_via_r2((u8 *)gUnknown_030012DC + rec->slots[0].offset, (void *)label, rec->slots[0].ptr);
+        struct icon_record *rec = gSmallFont->record;
+        u32 width = _call_via_r2((u8 *)gSmallFont + rec->slots[0].offset, (void *)label, rec->slots[0].ptr);
         s32 halfX = 0xc2 - (width >> 1);
-        struct icon_manager *mgr = gUnknown_030012DC;
+        struct icon_manager *mgr = gSmallFont;
         s32 y = 0x64;
 
         mgr->posX = halfX;
         mgr->posY = y;
 
-        rec = gUnknown_030012DC->record;
-        _call_via_r2((u8 *)gUnknown_030012DC + rec->slots[2].offset, (void *)label, rec->slots[2].ptr);
+        rec = gSmallFont->record;
+        _call_via_r2((u8 *)gSmallFont + rec->slots[2].offset, (void *)label, rec->slots[2].ptr);
     }
 }

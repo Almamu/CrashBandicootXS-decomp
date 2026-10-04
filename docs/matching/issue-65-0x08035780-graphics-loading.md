@@ -45,7 +45,7 @@ Two distinct object shapes turned out to be involved, not one:
     entry and drives the same 9-slot array's per-frame OAM queueing.
   - `sub_8035E14` is the sequencer: seeds the 9-slot array (via
     `sub_80360DC`'s shape inline), loops `sub_8035780` + `sub_8036068` +
-    `sub_8034688` + `sub_8035F9C` until the header's hold record drains,
+    `UpdateStarfield` + `sub_8035F9C` until the header's hold record drains,
     then runs a `sub_8035D1C`-gated SFX/nudge phase followed by a
     17-frame BG2 fade-out.
   - `sub_8036068` is the per-frame flush helper (`sub_80358A8` plus

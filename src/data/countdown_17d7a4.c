@@ -217,14 +217,14 @@ const struct delta_record gStaticData_0817E658[4] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-/* The language names the counter selector draws (sub_80372BC,
+/* The language names the language menu draws (DrawLanguageSelect,
  * counter_selector_icons.c, through digit_glyphs_17e714.c's
- * gStaticData_0817E714), in the order of the language setting. */
-const u8 gStaticData_0817E6D8[] = "english";
-const u8 gStaticData_0817E6E0[] = "fran\347ais";
-const u8 gStaticData_0817E6EC[] = "deutsch";
-const u8 gStaticData_0817E6F4[] = "espa\361ol";
-const u8 gStaticData_0817E6FC[] = "italiano";
-const u8 gStaticData_0817E708[12] = "nederlands";
+ * gLanguageNames), in the order of the language setting. */
+const u8 gLanguageNameEnglish[] = "english";
+const u8 gLanguageNameFrench[] = "fran\347ais";
+const u8 gLanguageNameGerman[] = "deutsch";
+const u8 gLanguageNameSpanish[] = "espa\361ol";
+const u8 gLanguageNameItalian[] = "italiano";
+const u8 gLanguageNameDutch[12] = "nederlands";
 /* (The last one is sized to 12 bytes: the two zero bytes after it are the
  * padding to the word-aligned table that follows.) */

@@ -6,7 +6,7 @@
 extern struct level_state *gLevelState;
 extern void *gEntityFlags;
 extern struct actor *gUnknown_030012D8;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 
 extern u8 sub_80232F4(void *self);
 extern s32 sub_80232E0(void *self);
@@ -33,7 +33,7 @@ extern void PlaySfx(void *bank, s32 arg1, s32 sfxId);
  *
  * 2. Unless the level state's `timeTrial` flag is set: fires the
  *    player's `table+0x68` trampoline (via `_call_via_r4`, action
- *    `0x1a`) and plays SFX `0x100` through `gUnknown_030012BC`,
+ *    `0x1a`) and plays SFX `0x100` through `gAudioContext`,
  *    unless a budget/reentrancy guard trips first - either the
  *    player's spawn counter (`sub_80232E0`, `+0x7c`) has room against
  *    its cap (`sub_8023130`, `+0x84`), or (when it doesn't) all three
@@ -133,7 +133,7 @@ fire:
         dead = *(u32 volatile *)(entry + 4);
         (void)dead;
         _call_via_r4(fn, 0, 0x1a, 0);
-        PlaySfx(gUnknown_030012BC, 1, 0x100);
+        PlaySfx(gAudioContext, 1, 0x100);
     }
 end:;
 }

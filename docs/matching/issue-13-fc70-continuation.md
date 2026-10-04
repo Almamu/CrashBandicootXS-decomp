@@ -33,7 +33,7 @@ second pass against those five.
     (`add r3, sp, #4`) then a genuine `strb`, while this compiler
     always emits a direct word-sized `str` for a stack-passed byte
     argument regardless of the parameter's declared width - the same
-    gap already closed for `sub_8003A60`'s own `sub_8003F30` call in
+    gap already closed for `DrawSaveMenuMain`'s own `sub_8003F30` call in
     `settings_menu8c.c` (see
     [docs/matching/issue-5-overlay-ui-sync.md](issue-5-overlay-ui-sync.md)).
     A dummy 2-word local's address is passed as an unused input operand

@@ -183,7 +183,7 @@ struct gfx_level
 };
 
 extern void *gEntityFlags;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gLevelState;
 extern u8 ***gUnknown_030012D0;
 extern struct gfx_player *gUnknown_030012D8;
@@ -760,7 +760,7 @@ void sub_8018E4C(struct gfx_mover *self, struct gfx_part *partArg)
         }
         if (self->timer == gStaticData_0816C35F[self->cfg->index])
         {
-            PlaySfx(gUnknown_030012BC, 0x5C, 0x100);
+            PlaySfx(gAudioContext, 0x5C, 0x100);
             part->unk_2C = left;
             CALL3(self, method_50, part, 0x10);
             *blinking = 1;
@@ -955,9 +955,9 @@ void sub_8019214(struct gfx_mover *self, struct gfx_part *partArg, s32 kindArg)
     }
     sub_8008E94(gUnknown_030012F4, c);
     if (kind == 1)
-        PlaySfx(gUnknown_030012BC, 0x31, 0x100);
+        PlaySfx(gAudioContext, 0x31, 0x100);
     else
-        PlaySfx(gUnknown_030012BC, 0x32, 0x100);
+        PlaySfx(gAudioContext, 0x32, 0x100);
 }
 
 void sub_8019324(struct gfx_hit_ctrl *self, struct gfx_part *partArg)

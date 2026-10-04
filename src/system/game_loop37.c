@@ -20,12 +20,12 @@ struct SoundChannelItem {
     u8 field_10;            /* +0x10: WaitForKeyPress's checkButtons arg;
                               * also SkipSlides's scan target (==1) */
     u8 field_11;              /* +0x11: nonzero triggers a duck-out via
-                                * sub_8001AC4 */
+                                * FadeOutMusic */
     u8 field_12;                /* +0x12: nonzero (and field_18 != 0x63)
                                   * triggers a re-arm via StopSfx */
     u8 unused_13;
-    u32 field_14;                  /* +0x14: sound cue id, sub_8001B54/
-                                     * sub_8001AB8 */
+    u32 field_14;                  /* +0x14: sound cue id, PlaySong/
+                                     * GetCurrentSong */
     u32 field_18;                    /* +0x18: secondary sfx id passed to
                                        * PlaySfx; sentinel 0x63 (99) means
                                        * "no sfx" */
@@ -39,10 +39,10 @@ struct SoundChannelList {
                                            * toggle, alternates each call */
 };
 
-extern struct AudioContext *gUnknown_030012BC;
-extern u32 sub_8001AB8(struct AudioContext *self);
-extern void sub_8001B54(struct AudioContext *self, u32 id);
-extern void sub_8001AC4(struct AudioContext *self, u32 value);
+extern struct AudioContext *gAudioContext;
+extern u32 GetCurrentSong(struct AudioContext *self);
+extern void PlaySong(struct AudioContext *self, u32 id);
+extern void FadeOutMusic(struct AudioContext *self, u32 value);
 extern void StopSfx(struct AudioContext *self, u32 id);
 extern void sub_800132C(u8 flags, s32 frameDelay, u8 sync);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
@@ -67,11 +67,11 @@ void BeginSlide(struct SoundChannelList *self, s32 idx)
 {
     struct SoundChannelItem *item;
 
-    sub_8001B54(gUnknown_030012BC, self->items[idx]->field_14);
-    if (sub_8001AB8(gUnknown_030012BC) == (item = self->items[idx])->field_14)
+    PlaySong(gAudioContext, self->items[idx]->field_14);
+    if (GetCurrentSong(gAudioContext) == (item = self->items[idx])->field_14)
     {
         if (item->field_18 != 0x63)
-            PlaySfx(gUnknown_030012BC, item->field_18, 0x100);
+            PlaySfx(gAudioContext, item->field_18, 0x100);
         sub_800132C(self->items[idx]->field_08 | -0x80, 1, 0);
     }
     else
@@ -79,9 +79,9 @@ void BeginSlide(struct SoundChannelList *self, s32 idx)
         sub_800132C(item->field_08 | -0x80, 1, 0);
         if (self->items[idx]->field_18 != 0x63)
         {
-            while (sub_8001AB8(gUnknown_030012BC) != self->items[idx]->field_14)
+            while (GetCurrentSong(gAudioContext) != self->items[idx]->field_14)
                 ;
-            PlaySfx(gUnknown_030012BC, self->items[idx]->field_18, 0x100);
+            PlaySfx(gAudioContext, self->items[idx]->field_18, 0x100);
         }
     }
 }
@@ -114,7 +114,7 @@ void RunSlideshow(struct SoundChannelList *self0)
         checkButtons = (u8)WaitForKeyPress(item->field_04, item->field_10, 8);
 
         if (self->items[i]->field_11 != 0) {
-            sub_8001AC4(gUnknown_030012BC, 0);
+            FadeOutMusic(gAudioContext, 0);
         }
 
         {
@@ -129,7 +129,7 @@ void RunSlideshow(struct SoundChannelList *self0)
             struct SoundChannelItem *item2 = self->items[i];
 
             if (item2->field_12 != 0 && item2->field_18 != 0x63) {
-                StopSfx(gUnknown_030012BC, item2->field_18);
+                StopSfx(gAudioContext, item2->field_18);
             }
         }
 

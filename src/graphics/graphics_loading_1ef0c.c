@@ -14,7 +14,7 @@ extern u8 gStaticData_0816BA0C[];
 extern u8 gStaticData_0816BA2C[];
 extern u8 gStaticData_0816BA4C[];
 extern u8 gStaticData_0816BA8C[];
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 
 extern struct popup_part *sub_800A604(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
 extern void PlaySfx(void *bank, s32 sfxId, s32 volume);
@@ -419,7 +419,7 @@ void sub_801F680(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     sub_8008E94(gUnknown_030012F0, part);
     SetPopupGfx(hdr, gStaticData_0816B98C);
     sub_800C6A8(hdr, 5);
-    PlaySfx(gUnknown_030012BC, 0x27, 0x100);
+    PlaySfx(gAudioContext, 0x27, 0x100);
 }
 
 /* Popup spawner, tag 0x10. After registering the part it switches

@@ -15,7 +15,7 @@
  * state machine ... not attempted this pass". */
 
 extern void *gUnknown_03000884;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern s32 gUnknown_030014B8;
 extern s32 gUnknown_0300088C[];
 
@@ -117,7 +117,7 @@ struct hazard {
 #define HAZARD_HIT(self)                                                       \
     if (1)                                                                     \
     {                                                                          \
-        PlaySfx(gUnknown_030012BC, 4, 0x100);                                  \
+        PlaySfx(gAudioContext, 4, 0x100);                                  \
         (self)->animIndex = 1;                                                 \
         (self)->animTimer = (self)->anims[1].duration;                         \
         (self)->animDone = 0;                                                  \
@@ -233,7 +233,7 @@ case0:
 
         if (fired) {
             sub_802C14C(gUnknown_03000884);
-            PlaySfx(gUnknown_030012BC, 4, 0x100);
+            PlaySfx(gAudioContext, 4, 0x100);
             self->state = 1;
             self->stateTime = state;
             self->animIndex = 1;
@@ -248,7 +248,7 @@ case0:
             goto done;
         }
         if (sub_802DD9C(self)) {
-            PlaySfx(gUnknown_030012BC, 4, 0x100);
+            PlaySfx(gAudioContext, 4, 0x100);
             self->state = 1;
             self->stateTime = fired;
             self->animIndex = 1;
@@ -327,7 +327,7 @@ void sub_802CF30(void *selfArg)
                     self->velX = velX;
                     self->velY = -(s32)(u16)RandRange(0x300);
                     self->velZ += 0x200;
-                    PlaySfx(gUnknown_030012BC, 5, 0x100);
+                    PlaySfx(gAudioContext, 5, 0x100);
                     self->base.state = 1;
                     self->base.stateTime = state;
                     self->base.animIndex = state;
@@ -346,7 +346,7 @@ void sub_802CF30(void *selfArg)
                 self->velX = velX;
                 self->velY = -(s32)(u16)RandRange(0x300);
                 self->velZ += 0x200;
-                PlaySfx(gUnknown_030012BC, 5, 0x100);
+                PlaySfx(gAudioContext, 5, 0x100);
                 self->base.state = 1;
                 self->base.stateTime = fired;
                 self->base.animIndex = fired;

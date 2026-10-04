@@ -19,7 +19,7 @@
  * than a guessed struct. */
 
 extern u32 gKeys;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
@@ -61,7 +61,7 @@ void sub_80142B0(void *selfArg)
 
     if ((*(u16 *)((u8 *)&snap + 2) & 1) != 0
         && sub_800AAEC(self->part, 0xb) == 1) {
-        PlaySfx(gUnknown_030012BC, 0xc, 0x100);
+        PlaySfx(gAudioContext, 0xc, 0x100);
 
         {
             register u8 *part asm("r1") = (u8 *)self->part;
@@ -136,7 +136,7 @@ void sub_801434C(void *selfArg)
 
     if ((INPUT_PRESSED(in) & 1) && sub_800AAEC(self->part, 0xB) == 1)
     {
-        PlaySfx(gUnknown_030012BC, 0xC, 0x100);
+        PlaySfx(gAudioContext, 0xC, 0x100);
         ActAndFlags0D(self->part, -2);
         ActAndFlags0D(self->part, -3);
         sub_8015508(self);

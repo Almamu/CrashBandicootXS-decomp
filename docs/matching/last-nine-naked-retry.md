@@ -8,7 +8,7 @@ drafts under `#if NON_MATCHING`.
 | Function | File | Before | Now | Status |
 |---|---|---|---|---|
 | `sub_802062C` (#31) | `src/graphics/graphics_loading_1feec.c` | 12 | 4 (same size, old_agbcc) | Draft updated |
-| `sub_8005E5C` (#7) | `src/graphics/settings_menu16.c` | 45 | 14 (same size, both compilers) | Draft updated |
+| `DrawPauseFraction` (#7) | `src/graphics/settings_menu16.c` | 45 | 14 (same size, both compilers) | Draft updated |
 | `sub_8001DB4` (#4) | `src/system/link_cable.c` | 136 | 136 | Note added |
 
 ## `sub_802062C`: 12 to 4
@@ -58,7 +58,7 @@ taken when that pseudo's turn comes (6 refs over ~50 insns, so it's
 allocated early). A single-pointer draft with an `r4` pin on `arg3`
 and a zero-length r5 hold after the call was 62-140 hw.
 
-## `sub_8005E5C`: 45 to 14
+## `DrawPauseFraction`: 45 to 14
 
 **r7 is never a pseudo's register here.** The function is one basic
 block, so local-alloc allocates everything, and local-alloc never uses
@@ -79,7 +79,7 @@ The draft follows that:
   `0x110` passed to `set_icon_mgr_pos`. The earlier `OFF` pseudo was
   what put 0x110 in r2.
 - **`pe0` assigned where it's first used**, not at the top. This fixes
-  the hoisted `&gUnknown_030012E0` load. It also puts `pe0` in r6 and
+  the hoisted `&gLargeFont` load. It also puts `pe0` in r6 and
   frees r6 for the `#32` reload in the first draw, as in the ROM.
 - **Second-half posY through an inline** (`get_icon_mgr_posy`). A direct
   `e->posY` read has its 0x114 forced into a pseudo at expand, and CSE
@@ -132,7 +132,7 @@ These are in the scratchpad's `last9/`, pointed at this worktree:
   lreg dump);
 - `fcheck.sh` (a whole file with and without a flag);
 - the variant specs `a1`-`a5` (`sub_802062C`), `m1`-`m9`/`n1`-`n6`
-  (`sub_8005E5C`) and `l1` (`sub_8001DB4`).
+  (`DrawPauseFraction`) and `l1` (`sub_8001DB4`).
 
 ## Verification
 

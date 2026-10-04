@@ -11,7 +11,7 @@
  * constructor family already matched throughout this ROM region). */
 
 extern void *gUnknown_03000884;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gLevelState;
 extern u8 sub_802A6EC(void *self);
 extern void sub_8022FEC(void *self);
@@ -45,7 +45,7 @@ void sub_802C99C(void *selfArg)
     if (self->animIndex != 0x12 && sub_802A6EC(self)) {
         s32 typeByte;
 
-        PlaySfx(gUnknown_030012BC, 3, 0x100);
+        PlaySfx(gAudioContext, 3, 0x100);
         sub_8022FEC(gLevelState);
 
         typeByte = **(u8 **)((u8 *)self + 0x30);
@@ -86,7 +86,7 @@ void sub_802CA28(void *selfArg)
     struct actor_self *self = selfArg;
 
     if (self->animIndex != 0x12) {
-        PlaySfx(gUnknown_030012BC, 4, 0x100);
+        PlaySfx(gAudioContext, 4, 0x100);
         sub_8022FEC(gLevelState);
         {
             register s32 zero2 asm("r2") = 0;
@@ -114,7 +114,7 @@ void sub_802CA6C(void *selfArg)
     struct actor_self *self = selfArg;
 
     if (self->animIndex != 0x12 && sub_802A6EC(self)) {
-        PlaySfx(gUnknown_030012BC, 3, 0x100);
+        PlaySfx(gAudioContext, 3, 0x100);
         sub_8022FEC(gLevelState);
         sub_802C078(gUnknown_03000884, 4);
         self->animIndex = 0x12;
@@ -139,7 +139,7 @@ void sub_802CAD0(void *selfArg)
     struct actor_self *self = selfArg;
 
     if (self->animIndex != 0x12 && sub_802A6EC(self)) {
-        PlaySfx(gUnknown_030012BC, 3, 0x100);
+        PlaySfx(gAudioContext, 3, 0x100);
         sub_8022FEC(gLevelState);
         sub_802C078(gUnknown_03000884, 1);
         self->animIndex = 0x12;

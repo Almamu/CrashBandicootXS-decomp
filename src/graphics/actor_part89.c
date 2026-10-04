@@ -1,10 +1,10 @@
 #include "core.h"
 
-/* The fade overlay's (`sub_803472C`/`sub_803487C`, actor_part87.c/
+/* The continue prompt's (`InitContinuePrompt`/`sub_803487C`, actor_part87.c/
  * actor_part88.c) per-frame driver, called once per frame while the
  * effect is running (caller not yet identified in this pass - out of
  * scope, see docs/matching/issue-63-0x08033ef4-actor.md). Busy-loops
- * (yielding via `sub_8034AA4`/`sub_8034C5C` each iteration - graphics-
+ * (yielding via `DrawContinuePrompt`/`CommitContinuePromptFrame` each iteration - graphics-
  * loading/particle-update helpers just past this file's own raw-asm
  * boundary, `asm/..._34aa4.s`) polling input twice per outer iteration:
  * a confirm press (bit 0) or D-pad-down-with-L (bit 3) of
@@ -14,7 +14,7 @@
  * "step" cue (0x46) and flips that flag. Every two inner iterations, a
  * 0-15 counter (`self+0x12`'s low 5 bits) ping-pongs a screen-space
  * blend-alpha value up/down by re-applying `self->blend` (already built
- * by `sub_803472C`) to REG_BLDCNT/BLDALPHA, driving the overlay's
+ * by `InitContinuePrompt`) to REG_BLDCNT/BLDALPHA, driving the overlay's
  * flicker/pulse animation. Returns 1 if `self+0x20`'s flag is still
  * clear when the loop exits via the confirm branch, else 0.
  *
@@ -52,17 +52,17 @@ extern void UpdateKeys(void *arg0);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void *gUnknown_03001304;
 extern u32 gKeys;
-extern void *gUnknown_030012BC;
-extern void sub_8034AA4(struct fade_overlay89 *self);
-extern void sub_8034C5C(struct fade_overlay89 *self);
+extern void *gAudioContext;
+extern void DrawContinuePrompt(struct fade_overlay89 *self);
+extern void CommitContinuePromptFrame(struct fade_overlay89 *self);
 
-s32 sub_8034994(struct fade_overlay89 *self)
+s32 ContinuePromptLoop(struct fade_overlay89 *self)
 {
     s32 dir = 1;
     s32 i = 0;
     s32 level = self->eva;
     struct keys89 *input = (struct keys89 *)&gKeys;
-    void **audio = &gUnknown_030012BC;
+    void **audio = &gAudioContext;
 
     while (dir >= 0) {
         asm("" : : "r"(audio)); /* extra reference: audio outranks i for r7 */
@@ -85,8 +85,8 @@ s32 sub_8034994(struct fade_overlay89 *self)
             PlaySfx(*audio, 0x46, 0x100);
             self->flag_20 = 1;
         }
-        sub_8034AA4(self);
-        sub_8034C5C(self);
+        DrawContinuePrompt(self);
+        CommitContinuePromptFrame(self);
         if (++i > 1) {
             i = 0;
             if (dir) {

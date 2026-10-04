@@ -2,22 +2,22 @@
 
 ## Issue #46: the last five HUD functions (old_agbcc)
 
-`sub_80285C4`, `InitHudIconWidgetA`, `InitHudIconWidgetB` (hud_icon_widget_85c4.c),
-`sub_8028900` (hud_icon_widget_8890.c) and `MeasureText` (hud_icon_widget_8994.c)
+`FontDrawGlyph`, `InitSmallFont`, `InitLargeFont` (hud_icon_widget_85c4.c),
+`FontMeasureChars` (hud_icon_widget_8890.c) and `FontMeasureText` (hud_icon_widget_8994.c)
 are plain C. Four of the five only match under `old_agbcc` (agbcc is 2-80
 halfwords off), and every function in the three files matches under it, so
 all three move into `OLD_AGBCC_OBJS`. This is the same region as
 `hud_digit_array.c` (docs/matching/game-loop-old-agbcc.md). What mattered:
 
-- **`sub_80285C4`:**
+- **`FontDrawGlyph`:**
   - The glyph's OAM scratch is a local `struct glyph_oam` with y, shape, x, size and tile bitfields.
   - X goes through a `SetGlyphX(oam, s32)` inline, so the `0x1ff` mask comes from the literal pool.
   - The y byte is read through a block-local pointer.
-- **`InitHudIconWidgetA`/`B`:** the shared preamble is a `static inline InitIconManager`. Written in place, the ROM's recomputation of `&self->record` after the CpuSet fill is lost.
-- **`sub_8028900`/`MeasureText`:**
+- **`InitSmallFont`/`B`:** the shared preamble is a `static inline InitIconManager`. Written in place, the ROM's recomputation of `&self->record` after the CpuSet fill is lost.
+- **`FontMeasureChars`/`FontMeasureText`:**
   - Both use `switch (c)` with `case ' '` first, which gives the ROM's test and block order.
-  - `sub_8028900` needs `u32 c`.
-  - `MeasureText` returns `cur < maxWidth ? maxWidth : cur`.
+  - `FontMeasureChars` needs `u32 c`.
+  - `FontMeasureText` returns `cur < maxWidth ? maxWidth : cur`.
 
 ## Issue #5: `sub_8002D44`
 
@@ -36,7 +36,7 @@ gone.
 - **Struct fix:** `struct fade_overlay`'s `icons` field is at +0x18, not +0x1C.
 - **Seeding loop:** it indexes the four `gStaticData_0817C5xx` arrays directly with an up-counting `i`. With explicit pointer increments, old_agbcc's loop pass reverses `i` into a down-counter; that reversal, not an r7 bug, is what parked it.
 
-`sub_8034994` stays NAKED.
+`ContinuePromptLoop` stays NAKED.
 
 ## Comment-only updates
 

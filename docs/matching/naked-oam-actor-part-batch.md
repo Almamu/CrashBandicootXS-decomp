@@ -1,4 +1,4 @@
-# `sub_8006600` and thirteen more: NAKED asm transcription (byte-exact, tracked as parked)
+# `DrawPowerDialog` and thirteen more: NAKED asm transcription (byte-exact, tracked as parked)
 
 **Tracking note**: a NAKED transcription of a substantial function
 (one with real loops/branches/struct access, standing in for a
@@ -22,7 +22,7 @@ matches - every function that was previously parked under
 `#if NON_MATCHING` across `src/graphics/oam_count.c`, `graphics.c`,
 `actor_part.c`, `actor_part3.c`, `actor_part4.c`, `actor_part5.c`,
 `actor_part6.c`, and `actor_part7.c`/the new `actor_part7b.c`:
-`sub_8006600`, `sub_80073DC`, `sub_8007B00`, `sub_8007B98`,
+`DrawPowerDialog`, `sub_80073DC`, `sub_8007B00`, `sub_8007B98`,
 `sub_8008044`, `sub_8008188`, `sub_8008200`, `sub_8008278`,
 `sub_80083B8`, `sub_8008770`, `sub_800891C`, `sub_8008A40`,
 `sub_8008AD8`, and `sub_8008D80`. Every one of these had already been
@@ -31,7 +31,7 @@ in git history alongside the plain-C reconstructions they replace, and
 `docs/matching.md`'s corresponding "Parked, not matched" entries) -
 the only remaining gap was register-letter/codegen-shape mismatches
 that resisted every C-level technique tried across one or more prior
-sessions: the categorical `r7`-pin hazard (`sub_8006600`,
+sessions: the categorical `r7`-pin hazard (`DrawPowerDialog`,
 `sub_8007B00`, `sub_800891C`, `sub_8008A40` - see
 `matching_decomp_register_pinning` memory point 10 and
 `naked-sub_8007dbc.md`'s account of the same wall), a register-register
@@ -102,7 +102,7 @@ real ROM address isn't contiguous with that file's other functions
   exactly where the old `asm/code_3_2_12.o` used to sit.
 
 This batch retires six now-empty raw-assembly splits entirely -
-`asm/code_3_1_10_11.s` (`sub_8006600`), `asm/code_3_2_2.s`
+`asm/code_3_1_10_11.s` (`DrawPowerDialog`), `asm/code_3_2_2.s`
 (`sub_8007B00`/`sub_8007B98`), `asm/code_3_2_4.s` (`sub_8008044`),
 `asm/code_3_2_5.s` (`sub_8008188`/`sub_8008200`/`sub_8008278`),
 `asm/code_3_2_6.s` (`sub_80083B8`), `asm/code_3_2_7.s`
@@ -170,6 +170,6 @@ is still NAKED, with a C draft 18 halfwords off. See [issue-9-naked-retry.md](./
 in the same shape as its matched affine sibling `sub_8007634`. See
 [strag1-naked-retry.md](strag1-naked-retry.md).
 
-## Later pass (strag3): sub_8006600 matched
+## Later pass (strag3): DrawPowerDialog matched
 
-`sub_8006600` is now real C in `src/graphics/oam_count.c` (agbcc). It uses an inline position setter, with the centered X computed into a local first. See [strag3-naked-retry.md](strag3-naked-retry.md).
+`DrawPowerDialog` is now real C in `src/graphics/oam_count.c` (agbcc). It uses an inline position setter, with the centered X computed into a local first. See [strag3-naked-retry.md](strag3-naked-retry.md).

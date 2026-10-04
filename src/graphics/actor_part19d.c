@@ -5,7 +5,7 @@
  * after the still-raw `sub_802C7A8` (see docs/matching.md) - same
  * `self` object and conventions documented there. */
 
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gUnknown_03000884;
 
@@ -47,7 +47,7 @@ void sub_802C904(struct actor_self *self)
     }
 
     if (self->animIndex != 0x12 && sub_802DD9C(self)) {
-        PlaySfx(gUnknown_030012BC, 3, 0x100);
+        PlaySfx(gAudioContext, 3, 0x100);
         sub_8022FEC(gLevelState);
         self->animIndex = 0x12;
         {

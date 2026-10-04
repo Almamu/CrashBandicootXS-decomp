@@ -306,7 +306,7 @@ const u8 gStaticData_0846B1A0[0x394c0] = {
 #include "sprites/bank55_46b1a0.img.bin.inc"
 };
 
-/* The 125 fixed 4bpp tiles, the header's tilePool/npool: sub_8004D74
+/* The 125 fixed 4bpp tiles, the header's tilePool/npool: RunPauseMenu
  * builds the 125-slot tile-asset cache (sub_8006EF0/sub_8006DF8) from them. */
 const u8 gStaticData_084A4660[0xfa0] = {
 #include "sprites/tile_pool_4a4660.img.bin.inc"

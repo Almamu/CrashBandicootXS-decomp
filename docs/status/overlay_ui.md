@@ -20,87 +20,87 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   dispatcher, all 13 of its per-state handlers, the shared "commit or
   refresh row" step, and the state-select label list draw; matched. See
   `docs/matching/issue-5-overlay-ui-sync.md` for the full write-up:
-  `sub_8002C84`, `sub_8002CE8`, `sub_8002CF4`, `sub_8002D0C`,
-  `sub_8002D28`, `sub_8002EFC`,
-  `sub_8002FCC`, `sub_8002FD4`, `sub_8002FD8`, `sub_800300C`,
-  `sub_800306C`, `sub_800312C`, `sub_80031E4`, `sub_80032E8`,
-  `sub_80033E8`, `sub_80034BC`, `sub_80035C0`, `sub_8003698`,
-  `sub_800376C`, `sub_8003824`, `sub_80038D0`, `sub_800397C`,
-  `sub_8003A60`, and `sub_8002E20` (was NAKED, see below).
+  `ResetSaveData`, `IsSaveSlotEmpty`, `TestSaveFlags`, `ClearSaveFlags`,
+  `SetSaveFlags`, `sub_8002EFC`,
+  `sub_8002FCC`, `sub_8002FD4`, `sub_8002FD8`, `RunSaveMenu`,
+  `InitSaveMenu`, `DestroySaveMenu`, `SaveMenuInput`, `SaveMenuMainInput`,
+  `SaveMenuMoveCursor`, `SaveMenuLoadInput`, `SaveMenuLinkInput`, `SaveGameToSlot`,
+  `SaveMenuOverwriteInput`, `SaveMenuSaveInput`, `SaveMenuDeleteInput`, `SaveMenuConfirmDeleteInput`,
+  `DrawSaveMenuMain`, and `sub_8002E20` (was NAKED, see below).
 - `src/graphics/settings_menu2.c` (new file - the composite pause/
   options screen's BG-load helper and per-row stats gatherer/
   aggregator; see `docs/rom_map.md`'s `overlay_ui` section):
-  `sub_80047F8`, `sub_8004860`, `sub_80048BC`, `sub_80048E0`
+  `sub_80047F8`, `RefreshSaveSlotSummaries`, `LoadSaveMenuData`, `SummarizeProgress`
 - `src/graphics/settings_menu3.c` (new file - the same screen's flag
   test, link-cancel-flag pair, six near-identical per-item wrappers,
   state jump-table dispatcher, and a final list-refresh trio):
-  `sub_8004A50`, `sub_8004A64`, `sub_8004A80`, `sub_8004AA4`,
-  `sub_8004ACC`, `sub_8004AFC`, `sub_8004B24`, `sub_8004B54`,
-  `sub_8004B70`, `sub_8004BA0`, `sub_8004BD0`, `sub_8004C7C`
+  `sub_8004A50`, `sub_8004A64`, `sub_8004A80`, `DrawSaveMenuConfirmDelete`,
+  `DrawSaveMenuDelete`, `DrawSaveMenuOverwrite`, `DrawSaveMenuSave`, `DrawSaveMenuMessage`,
+  `DrawSaveMenuLoadLink`, `DrawSaveMenuLoad`, `DrawSaveMenu`, `DeleteSaveSlot`
 - `src/graphics/settings_menu4.c` (new file - confirm/cancel handler,
   BG0HOFS/DISPCNT save-restore, and the SIO-spinner teardown/construct
-  pair): `sub_8004CB4`, `sub_8004CE8`, `sub_8004D20`, `sub_8004D4C`
+  pair): `SaveMenuMessageInput`, `CommitSaveMenuFrame`, `CloseSaveMenu`, `OpenSaveMenu`
 - `src/graphics/settings_menu5.c` (new file - a wrap-increment/decrement
-  counter pair on a settings-row sub-widget): `sub_8006084`,
-  `sub_800609C`
+  counter pair on a settings-row sub-widget): `PauseMenuCursorDown`,
+  `PauseMenuCursorUp`
 - `src/graphics/settings_menu6.c` (new file - first of the composite
-  screen's settings-row icon-widget constructors): `sub_8005A78`, plus
-  (issue #7 retry, old_agbcc) `sub_8005AE8`, `sub_8005B80`,
-  `sub_8005C58`, `sub_8005D44`. See
+  screen's settings-row icon-widget constructors): `InitPauseCrystalsPage`, plus
+  (issue #7 retry, old_agbcc) `InitPausePowersPage`, `InitPauseGemsPage`,
+  `InitPauseRelicsPage`, `InitPauseTimeTrialPage`. See
   `docs/matching/issue-7-0x08004d74-overlay-ui.md` and
   `docs/matching/issue-7-naked-retry.md`.
 - `src/graphics/settings_menu7.c` (issue #7 retry): the per-row
-  percentage dec/inc pair `sub_8005EF4`, `sub_8005FBC`.
+  percentage dec/inc pair `PauseMenuVolumeDown`, `PauseMenuVolumeUp`.
 - `src/graphics/settings_menu21.c` (issue #7 retry): the per-row list
-  renderer `sub_800556C`, and (hard-register hold pass) the per-frame
-  row draw step `sub_80053F4` - plain C, was NAKED. See
+  renderer `DrawPauseMenuRows`, and (hard-register hold pass) the per-frame
+  row draw step `DrawPauseMenu` - plain C, was NAKED. See
   [hard-register-hold-retry.md](../matching/hard-register-hold-retry.md).
 - `src/graphics/settings_menu22.c` (issue #7 retry, old_agbcc): the
-  icon-row fraction readouts `sub_80057E0`, `sub_80058C0`.
+  icon-row fraction readouts `DrawPauseGemsPage`, `DrawPauseRelicsPage`.
 - `src/graphics/settings_menu8d.c` (new file - issue #4,
   0x08002A08-0x08002AA4): the settings-sync record's EEPROM-load-with-
   retry orchestrator, muting the music player across the transfer:
-  `sub_8002A08`. See `docs/matching/issue-4-sio-settings-sync.md`.
+  `LoadSaveData`. See `docs/matching/issue-4-sio-settings-sync.md`.
 - `src/graphics/settings_menu8e.c` (new file - issue #4,
   0x08002B44-0x08002C84): checksum compare/store, the `versionNibble`
   accessor, the EEPROM-save-with-retry orchestrator, and three per-row
   default-refresh/force-set/mark-selected helpers extending
-  `struct settings_sync_record`: `sub_8002B44`, `sub_8002B70`,
-  `sub_8002B94`, `sub_8002BA4`, `sub_8002C14`, `sub_8002C40`,
-  `sub_8002C6C`. See `docs/matching/issue-4-sio-settings-sync.md`. The
-  file's `sub_8002AA4` (checksum validate + DMA-repair) is real C too
+  `struct settings_sync_record`: `CheckSaveChecksum`, `UpdateSaveChecksum`,
+  `sub_8002B94`, `StoreSaveData`, `ReadSaveSlot`, `WriteSaveSlot`,
+  `EraseSaveSlot`. See `docs/matching/issue-4-sio-settings-sync.md`. The
+  file's `ValidateSaveData` (checksum validate + DMA-repair) is real C too
   since the near-miss polish pass - see
   [near-miss-polish.md](../matching/near-miss-polish.md).
 - `src/graphics/settings_menu9.c` (new file - issue #8,
   0x080060AC-0x08006124): the decimal `itoa` helper and a
-  percentage-string formatter built on it: `sub_80060AC`, `sub_80060F8`.
+  percentage-string formatter built on it: `FormatDecimal`, `FormatVolumePercent`.
 - `src/graphics/settings_menu12.c` (new file - issue #8,
   0x08006250-0x080062A8): the composite screen's own top-level object's
-  "apply BLDCNT/BLDY/DISPCNT" step: `sub_8006250`. See
+  "apply BLDCNT/BLDY/DISPCNT" step: `CommitPauseMenuFrame`. See
   `docs/matching/issue-8-0x080060ac-overlay-ui.md`.
 - `src/graphics/settings_menu13.c` (new file - issue #8,
   0x080063D8-0x08006518): the two-string dialog/message-box object
-  constructor called by `sub_80062A8`: `sub_80063D8`. Matched only
+  constructor called by `ShowPowerDialog`: `InitPowerDialog`. Matched only
   after heavy register pinning - see
   `docs/matching/issue-8-0x080060ac-overlay-ui.md`'s "Second pass"
   section for the full gotcha list, including a case where an isolated
   compile looked byte-identical but a full clean `make compare` still
   failed (the compiled function was 4 bytes short).
 - `src/graphics/settings_menu15.c` (issue #7, 0x08004EC0-0x08005004):
-  the composite screen's per-instance constructor (`sub_8004EC0`) and
-  icon-field refresh/teardown step (`sub_8005004`); matched. See
+  the composite screen's per-instance constructor (`InitPauseMenu`) and
+  icon-field refresh/teardown step (`DestroyPauseMenu`); matched. See
   `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
 - `src/graphics/settings_menu17.c` (new file - issue #7,
   0x08005304-0x080053F4): the icon-group reveal/cycle animation plus
-  the row-cursor icon's blink countdown: `sub_8005304`. See
+  the row-cursor icon's blink countdown: `AnimatePauseMenu`. See
   `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
 - `src/graphics/settings_menu18.c` (new file - issue #7,
   0x0800570C-0x080057E0): shows whichever `icons8c` row changed, or a
-  fallback label if none did: `sub_800570C`. See
+  fallback label if none did: `DrawPausePowersPage`. See
   `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
 - `src/graphics/settings_menu19.c` (new file - issue #7,
   0x0800599C-0x08005A78): the results sub-region constructor:
-  `sub_800599C`. See `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
+  `InitPauseMenuInfo`. See `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
 - `src/graphics/settings_menu.c` (issue #6 retry, old_agbcc): the
   "connecting..." spinner dialog `sub_8003B40`, the centered-label draws
   `sub_8003BDC`/`sub_8003C90`, the per-row stat renderer `sub_8003F30`
@@ -114,14 +114,14 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
 - `src/graphics/settings_menu23.c` (issue #6 retry): `sub_8004914`,
   `sub_80049CC` - plain C, were NAKED.
 - `src/graphics/settings_menu10.c` (issue #8 retry, old_agbcc):
-  `sub_8006518`; `settings_menu11.c`: `sub_8006124`, `sub_800619C`,
-  `sub_80061E8`; `settings_menu14.c`: `sub_80062A8` - plain C, were
+  `PowerDialogLoop`; `settings_menu11.c`: `DrawPauseTimeTrialPage`, `DrawPauseCrystalsPage`,
+  `DrawPauseMenuPageTitle`; `settings_menu14.c`: `ShowPowerDialog` - plain C, were
   NAKED.
 - `src/graphics/settings_menu15.c` (second near-miss sweep):
-  `sub_8004D74`, the composite pause/options screen driver - plain C,
+  `RunPauseMenu`, the composite pause/options screen driver - plain C,
   was NAKED. See [near-miss-polish-2.md](../matching/near-miss-polish-2.md).
 - `src/graphics/settings_menu20.c` (early-ROM NAKED retry 2, old_agbcc):
-  `sub_8005100`, the blocking cursor/confirm/cancel driver - plain C,
+  `PauseMenuLoop`, the blocking cursor/confirm/cancel driver - plain C,
   was NAKED. See [early-rom-naked-retry-2.md](../matching/early-rom-naked-retry-2.md).
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
@@ -135,7 +135,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   comes out of an asm with a plain `"r"` input (no copy preference for
   r2) and the wrap loop's count pointer is pinned to r1. See
   [last-eight-naked-retry.md](../matching/last-eight-naked-retry.md).
-- **`sub_8005E5C`** (`src/graphics/settings_menu16.c`) - the results
+- **`DrawPauseFraction`** (`src/graphics/settings_menu16.c`) - the results
   icons' "N/M" fraction readout draw (issue #7). Plain C; it was NAKED.
   Plain posX/posY accesses let reload build the 0x110/0x114 offsets in
   r7 as the ROM does; the second reposition reads through inline
@@ -143,13 +143,13 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 
 ## Parked - NAKED asm transcriptions (byte-correct, not decompiled C)
 
-- No functions are parked here now. `sub_8005E5C` became real C in
+- No functions are parked here now. `DrawPauseFraction` became real C in
   the last-ten retry - see Matched.
-  `sub_80053F4` and the raw `sub_800450C` are now real C (hard-register
+  `DrawPauseMenu` and the raw `sub_800450C` are now real C (hard-register
   hold pass). Eleven former members of
-  this list (`sub_8004D74`, `sub_800556C`, `sub_80057E0`, `sub_80058C0`,
-  `sub_8005AE8`, `sub_8005B80`, `sub_8005C58`, `sub_8005D44`,
-  `sub_8005EF4`, `sub_8005FBC`, and since the early-ROM NAKED retry 2
-  `sub_8005100`) are now real C, and so are issue #8's
-  `sub_8006124`, `sub_800619C`, `sub_80061E8`, `sub_80062A8`,
-  `sub_8006518` - see Matched.
+  this list (`RunPauseMenu`, `DrawPauseMenuRows`, `DrawPauseGemsPage`, `DrawPauseRelicsPage`,
+  `InitPausePowersPage`, `InitPauseGemsPage`, `InitPauseRelicsPage`, `InitPauseTimeTrialPage`,
+  `PauseMenuVolumeDown`, `PauseMenuVolumeUp`, and since the early-ROM NAKED retry 2
+  `PauseMenuLoop`) are now real C, and so are issue #8's
+  `DrawPauseTimeTrialPage`, `DrawPauseCrystalsPage`, `DrawPauseMenuPageTitle`, `ShowPowerDialog`,
+  `PowerDialogLoop` - see Matched.

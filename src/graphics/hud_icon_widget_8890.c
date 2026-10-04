@@ -2,14 +2,14 @@
 #include "icon_manager.h"
 
 /* GitHub issue #46: whole-string draw and fixed-count measure for the HUD
- * icon/text widget. Built with old_agbcc, which sub_8028900 needs. */
+ * icon/text widget. Built with old_agbcc, which FontMeasureChars needs. */
 
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
-/* Same per-character logic as sub_8028808 (asm/code_3_2_20_85c4.s),
+/* Same per-character logic as FontPutChar (asm/code_3_2_20_85c4.s),
  * inlined into a loop over a NUL-terminated string instead of
  * dispatching through the trampoline for each character - this widget
- * family's "draw this whole string" entry point. Unlike sub_8028808,
+ * family's "draw this whole string" entry point. Unlike FontPutChar,
  * `&posX`/`&posY` are cached once outside the loop (`r6`/`r7` in the
  * ROM) rather than recomputed per character, and there's no shared
  * "dest += offset" tail - each arm does its own complete
@@ -20,8 +20,8 @@ extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
  * if/else-if/else to reproduce the ROM's exact block order (newline
  * tested first with a forward `beq`, space inline as the fallthrough,
  * dispatch last) - the same techniques already established for
- * sub_8028808's identical-shaped dispatcher. */
-void sub_8028890(struct icon_manager *selfArg, u8 *strArg)
+ * FontPutChar's identical-shaped dispatcher. */
+void FontDrawText(struct icon_manager *selfArg, u8 *strArg)
 {
     register struct icon_manager *self asm("r4") = selfArg;
     register u8 *str asm("r5") = strArg;
@@ -49,8 +49,8 @@ void sub_8028890(struct icon_manager *selfArg, u8 *strArg)
         *posXAddr += self->spaceWidth;
         goto tail;
     newline:
-        *posXAddr = self->field_118;
-        *posYAddr += self->field_11c;
+        *posXAddr = self->marginX;
+        *posYAddr += self->lineHeight;
         goto tail;
     dispatch:
         {
@@ -72,10 +72,10 @@ void sub_8028890(struct icon_manager *selfArg, u8 *strArg)
 asm(".align 2, 0");
 
 /* Sums the advance width of `count` characters starting at `str`
- * (`MeasureText`'s fixed-count sibling): newline contributes nothing,
+ * (`FontMeasureText`'s fixed-count sibling): newline contributes nothing,
  * space contributes `spaceWidth`, everything else contributes
  * `glyphRecords[charLookup[c]].width`. */
-s32 sub_8028900(struct icon_manager *self, u8 *str, s32 count)
+s32 FontMeasureChars(struct icon_manager *self, u8 *str, s32 count)
 {
     s32 total = 0;
     s32 i;

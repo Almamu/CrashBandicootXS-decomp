@@ -361,7 +361,7 @@
     "sub_8032290",
     "sub_8032480",
     "sub_8032C0C",
-    "sub_80345B0"
+    "SpawnStar"
    ],
    "consumer_files": [
     "graphics/actor_part111.c",
@@ -397,7 +397,7 @@
    "size": 76,
    "name": "gSongTable",
    "consumers": [
-    "sub_80017BC"
+    "StartSong"
    ],
    "consumer_files": [
     "audio/music_player.c"
@@ -564,9 +564,9 @@
   {
    "address": "0x0816B1BC",
    "size": 20,
-   "name": "gStaticData_0816B1BC",
+   "name": "gSaveMenuOptions",
    "consumers": [
-    "sub_8003A60"
+    "DrawSaveMenuMain"
    ],
    "consumer_files": [
     "graphics/settings_menu8c.c"
@@ -588,9 +588,9 @@
   {
    "address": "0x0816B1D0",
    "size": 20,
-   "name": "gStaticData_0816B1D0",
+   "name": "gPauseMenuPageTitles",
    "consumers": [
-    "sub_80061E8"
+    "DrawPauseMenuPageTitle"
    ],
    "consumer_files": [
     "graphics/settings_menu11.c"
@@ -614,8 +614,8 @@
    "size": 8,
    "name": "gStaticData_0816B1E4",
    "consumers": [
-    "sub_8005A78",
-    "sub_800619C"
+    "InitPauseCrystalsPage",
+    "DrawPauseCrystalsPage"
    ],
    "consumer_files": [
     "graphics/settings_menu11.c",
@@ -640,7 +640,7 @@
    "size": 32,
    "name": "gStaticData_0816B1EC",
    "consumers": [
-    "sub_8005AE8"
+    "InitPausePowersPage"
    ],
    "consumer_files": [
     "graphics/settings_menu6.c"
@@ -664,7 +664,7 @@
    "size": 16,
    "name": "gStaticData_0816B20C",
    "consumers": [
-    "sub_8005AE8"
+    "InitPausePowersPage"
    ],
    "consumer_files": [
     "graphics/settings_menu6.c"
@@ -688,8 +688,8 @@
    "size": 40,
    "name": "gStaticData_0816B21C",
    "consumers": [
-    "sub_80057E0",
-    "sub_8005B80"
+    "DrawPauseGemsPage",
+    "InitPauseGemsPage"
    ],
    "consumer_files": [
     "graphics/settings_menu22.c",
@@ -714,7 +714,7 @@
    "size": 20,
    "name": "gStaticData_0816B244",
    "consumers": [
-    "sub_8005B80"
+    "InitPauseGemsPage"
    ],
    "consumer_files": [
     "graphics/settings_menu6.c"
@@ -738,8 +738,8 @@
    "size": 24,
    "name": "gStaticData_0816B258",
    "consumers": [
-    "sub_80058C0",
-    "sub_8005C58"
+    "DrawPauseRelicsPage",
+    "InitPauseRelicsPage"
    ],
    "consumer_files": [
     "graphics/settings_menu22.c",
@@ -764,8 +764,8 @@
    "size": 12,
    "name": "gStaticData_0816B270",
    "consumers": [
-    "sub_8005C58",
-    "sub_8005D44"
+    "InitPauseRelicsPage",
+    "InitPauseTimeTrialPage"
    ],
    "consumer_files": [
     "graphics/settings_menu6.c"
@@ -789,8 +789,8 @@
    "size": 8,
    "name": "gStaticData_0816B27C",
    "consumers": [
-    "sub_8005D44",
-    "sub_8006124"
+    "InitPauseTimeTrialPage",
+    "DrawPauseTimeTrialPage"
    ],
    "consumer_files": [
     "graphics/settings_menu11.c",
@@ -815,7 +815,7 @@
    "size": 20,
    "name": "gStaticData_0816B284",
    "consumers": [
-    "sub_8004EC0"
+    "InitPauseMenu"
    ],
    "consumer_files": [
     "graphics/settings_menu15.c"
@@ -833,9 +833,9 @@
   {
    "address": "0x0816B298",
    "size": 40,
-   "name": "gStaticData_0816B298",
+   "name": "gPauseMenuRows",
    "consumers": [
-    "sub_8004EC0"
+    "InitPauseMenu"
    ],
    "consumer_files": [
     "graphics/settings_menu15.c"
@@ -856,7 +856,7 @@
    "size": 32,
    "name": "gStaticData_0816B2C0",
    "consumers": [
-    "sub_8004D74"
+    "RunPauseMenu"
    ],
    "consumer_files": [
     "graphics/settings_menu15.c"
@@ -2266,9 +2266,9 @@
    "name": "gStaticData_0816C484",
    "consumers": [
     "sub_80047F8",
-    "sub_80063D8",
+    "InitPowerDialog",
     "sub_801BC28",
-    "sub_80374D0"
+    "LoadLanguageSelectBg"
    ],
    "consumer_files": [
     "audio/counter_selector_setup.c",
@@ -2857,7 +2857,7 @@
    "element_type": "u16",
    "element_size": 2,
    "element_count": 5,
-   "format": "u16[5] palette-entry list of a level-start colour cycle (sub_8027018 lists argument)",
+   "format": "u16[5] palette-entry list of a level-start colour cycle (AddPaletteCycle lists argument)",
    "effort": "easy",
    "confidence": "high",
    "status": "converted: src/data/level_table_16c814.c"
@@ -2963,11 +2963,11 @@
    "size": 1300,
    "name": "gLevelTable",
    "consumers": [
-    "sub_800599C",
-    "sub_8005D44",
-    "sub_80067EC",
-    "sub_8006820",
-    "sub_8006864",
+    "InitPauseMenuInfo",
+    "InitPauseTimeTrialPage",
+    "CountPlatinumRelics",
+    "CountGoldRelics",
+    "CountSapphireRelics",
     "sub_801C3E8",
     "sub_801C51C",
     "sub_801C608",
@@ -3174,9 +3174,9 @@
   {
    "address": "0x08174BE0",
    "size": 140,
-   "name": "gStaticData_08174BE0",
+   "name": "gHudPartAnims",
    "consumers": [
-    "sub_8027138",
+    "InitHud",
     "sub_802732C"
    ],
    "consumer_files": [
@@ -3199,9 +3199,9 @@
   {
    "address": "0x08174C6C",
    "size": 280,
-   "name": "gStaticData_08174C6C",
+   "name": "gHudPartPositions",
    "consumers": [
-    "sub_8027138",
+    "InitHud",
     "sub_802732C",
     "sub_802757C",
     "sub_8027940",
@@ -3229,9 +3229,9 @@
   {
    "address": "0x08174D84",
    "size": 80,
-   "name": "gStaticData_08174D84",
+   "name": "gSmallFontChars",
    "consumers": [
-    "InitHudIconWidgetA"
+    "InitSmallFont"
    ],
    "consumer_files": [
     "graphics/hud_icon_widget_85c4.c"
@@ -3250,9 +3250,9 @@
   {
    "address": "0x08174DD4",
    "size": 948,
-   "name": "gStaticData_08174DD4",
+   "name": "gSmallFontGlyphs",
    "consumers": [
-    "InitHudIconWidgetA"
+    "InitSmallFont"
    ],
    "consumer_files": [
     "graphics/hud_icon_widget_85c4.c"
@@ -3271,9 +3271,9 @@
   {
    "address": "0x08175188",
    "size": 76,
-   "name": "gStaticData_08175188",
+   "name": "gLargeFontChars",
    "consumers": [
-    "InitHudIconWidgetB"
+    "InitLargeFont"
    ],
    "consumer_files": [
     "graphics/hud_icon_widget_85c4.c"
@@ -3292,9 +3292,9 @@
   {
    "address": "0x081751D4",
    "size": 900,
-   "name": "gStaticData_081751D4",
+   "name": "gLargeFontGlyphs",
    "consumers": [
-    "InitHudIconWidgetB"
+    "InitLargeFont"
    ],
    "consumer_files": [
     "graphics/hud_icon_widget_85c4.c"
@@ -4381,7 +4381,7 @@
    "size": 2,
    "name": "gStaticData_0817C510",
    "consumers": [
-    "sub_8034AA4"
+    "DrawContinuePrompt"
    ],
    "consumer_files": [
     "graphics/actor_part131.c"
@@ -4498,7 +4498,7 @@
    "size": 20,
    "name": "gStaticData_0817C594",
    "consumers": [
-    "sub_803472C"
+    "InitContinuePrompt"
    ],
    "consumer_files": [
     "graphics/actor_part87.c"
@@ -4518,7 +4518,7 @@
    "size": 20,
    "name": "gStaticData_0817C5A8",
    "consumers": [
-    "sub_803472C"
+    "InitContinuePrompt"
    ],
    "consumer_files": [
     "graphics/actor_part87.c"
@@ -4538,7 +4538,7 @@
    "size": 20,
    "name": "gStaticData_0817C5BC",
    "consumers": [
-    "sub_803472C"
+    "InitContinuePrompt"
    ],
    "consumer_files": [
     "graphics/actor_part87.c"
@@ -4556,9 +4556,9 @@
   {
    "address": "0x0817C5D0",
    "size": 2412,
-   "name": "gStaticData_0817C5D0",
+   "name": "gCreditsText",
    "consumers": [
-    "sub_8034CEC"
+    "InitCredits"
    ],
    "consumer_files": [
     "graphics/actor_part131.c"
@@ -4580,7 +4580,7 @@
    "size": 4,
    "name": "gStaticData_0817CF3C",
    "consumers": [
-    "sub_80350A4"
+    "UpdateCreditsText"
    ],
    "consumer_files": [
     "graphics/actor_part131.c"
@@ -4599,9 +4599,9 @@
   {
    "address": "0x0817CF40",
    "size": 100,
-   "name": "gStaticData_0817CF40",
+   "name": "gCreditsLogos",
    "consumers": [
-    "sub_80352AC"
+    "LoadCreditsLogos"
    ],
    "consumer_files": [
     "graphics/actor_part131.c"
@@ -4881,9 +4881,9 @@
   {
    "address": "0x0817E714",
    "size": 24,
-   "name": "gStaticData_0817E714",
+   "name": "gLanguageNames",
    "consumers": [
-    "sub_80372BC"
+    "DrawLanguageSelect"
    ],
    "consumer_files": [
     "audio/counter_selector_icons.c"
@@ -4906,7 +4906,7 @@
    "size": 32,
    "name": "gStaticData_0817E72C",
    "consumers": [
-    "sub_8037388"
+    "InitLanguageSelectGraphics"
    ],
    "consumer_files": [
     "audio/counter_selector_icons.c"
@@ -4930,7 +4930,7 @@
    "size": 32,
    "name": "gStaticData_0817E74C",
    "consumers": [
-    "sub_8037388"
+    "InitLanguageSelectGraphics"
    ],
    "consumer_files": [
     "audio/counter_selector_icons.c"
@@ -4954,7 +4954,7 @@
    "size": 32,
    "name": "gStaticData_0817E76C",
    "consumers": [
-    "sub_8037388"
+    "InitLanguageSelectGraphics"
    ],
    "consumer_files": [
     "audio/counter_selector_icons.c"
@@ -4978,7 +4978,7 @@
    "size": 3305076,
    "name": "gStaticData_0817E78C",
    "consumers": [
-    "sub_8037388"
+    "InitLanguageSelectGraphics"
    ],
    "consumer_files": [
     "audio/counter_selector_icons.c"
@@ -4994,7 +4994,7 @@
    "confidence": "high",
    "notes": "Tag-0x00 raw assets confirmed: the three pairs of consecutive assets chain exactly (each ends where the next begins). Room data is reached through 41 room records {palette, level_desc*, kind} after gThemeMusicCues (0x0816CD80).",
    "consumers_indirect": [
-    "sub_8037388",
+    "InitLanguageSelectGraphics",
     "LoadRoom",
     "LoadBgLayer",
     "SetCollisionSource",
@@ -5008,7 +5008,7 @@
     {
      "address": "0x0817E78C",
      "size": 32,
-     "format": "u16[16] (sub_8037388, same shape as gStaticData_0817E72C/74C/76C)",
+     "format": "u16[16] (InitLanguageSelectGraphics, same shape as gStaticData_0817E72C/74C/76C)",
      "effort": "easy"
     },
     {
@@ -5076,7 +5076,7 @@
    "size": 747188,
    "name": "gStaticData_084A5600",
    "consumers": [
-    "sub_8004D74",
+    "RunPauseMenu",
     "sub_8022230"
    ],
    "consumer_files": [
@@ -5094,7 +5094,7 @@
    "confidence": "high",
    "notes": "Part 1 (to 0x084C0006) is the sprite-bank animation system: a 16-byte header, 56 bank records, and per-bank animation/frame/piece records, now typed C (include/sprite_bank.h). Part 2 (from 0x084C0006) is the GAX2 sound-effect data set (instruments, 8-bit PCM samples, sample table, SFX voice handler type), now built by tools/gax_audio.py --sfx.",
    "consumers_indirect": [
-    "sub_8004D74",
+    "RunPauseMenu",
     "sub_8022230",
     "sub_80083A8",
     "sub_80083B8",
@@ -8243,7 +8243,7 @@
    "name": "gStaticData_087E4CB4",
    "consumers": [
     "sub_802710C",
-    "sub_8027120"
+    "InitHudPart"
    ],
    "consumer_files": [
     "graphics/hud_icon_slot.c"
@@ -8265,10 +8265,10 @@
   {
    "address": "0x087E4D1C",
    "size": 72,
-   "name": "gStaticData_087E4D1C",
+   "name": "gLargeFontVtable",
    "consumers": [
-    "InitHudIconWidgetB",
-    "sub_803AFF0"
+    "InitLargeFont",
+    "DestroyLargeFont"
    ],
    "consumer_files": [
     "graphics/actor_aabb_setup.c",
@@ -8291,10 +8291,10 @@
   {
    "address": "0x087E4D64",
    "size": 72,
-   "name": "gStaticData_087E4D64",
+   "name": "gSmallFontVtable",
    "consumers": [
-    "InitHudIconWidgetA",
-    "sub_803B024"
+    "InitSmallFont",
+    "DestroySmallFont"
    ],
    "consumer_files": [
     "graphics/actor_aabb_setup.c",
@@ -8317,14 +8317,14 @@
   {
    "address": "0x087E4DAC",
    "size": 72,
-   "name": "gStaticData_087E4DAC",
+   "name": "gFontVtable",
    "consumers": [
-    "InitHudIconWidgetA",
-    "InitHudIconWidgetB",
-    "InitHudTextWidget",
-    "sub_8028A78",
-    "sub_803AFF0",
-    "sub_803B024"
+    "InitSmallFont",
+    "InitLargeFont",
+    "DestroyFont",
+    "InitFont",
+    "DestroyLargeFont",
+    "DestroySmallFont"
    ],
    "consumer_files": [
     "graphics/actor_aabb_setup.c",

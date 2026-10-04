@@ -2,19 +2,19 @@
 #include "gba/io_reg.h"
 #include "pause_options_screen.h"
 
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 
 /* Confirm/cancel handler for the composite pause/options screen: on
  * either flags bit 0 or bit 3, plays the standard "confirm" cue and
  * resets `state`/`field_10` back to their initial values. */
-void sub_8004CB4(struct pause_options_screen *self, u32 flags)
+void SaveMenuMessageInput(struct pause_options_screen *self, u32 flags)
 {
     if (flags & 1) {
         goto confirm;
     } else if (flags & 8) {
     confirm:
-        PlaySfx(gUnknown_030012BC, 0x49, 0x100);
+        PlaySfx(gAudioContext, 0x49, 0x100);
         self->state = 0;
         self->field_10 = 1;
     }
@@ -30,7 +30,7 @@ extern void FlushVramDmaQueue(void);
  * comments in pause_options_screen.h) and flushes the VRAM/OAM commit
  * queues - the counterpart "leaving the screen" step to whatever saved
  * those two fields (still raw, outside this chunk). */
-void sub_8004CE8(struct pause_options_screen *self)
+void CommitSaveMenuFrame(struct pause_options_screen *self)
 {
     REG_DISPCNT = self->field_1c;
     REG_BG0HOFS = self->field_0 >> 3;
@@ -39,34 +39,34 @@ void sub_8004CE8(struct pause_options_screen *self)
     FlushVramDmaQueue();
 }
 
-extern void *gUnknown_0300080C;
-extern void sub_800312C(void *self, u32 flags);
+extern void *gSaveMenu;
+extern void DestroySaveMenu(void *self, u32 flags);
 extern void sub_8006EA8(struct tile_asset_cache *self);
 
 /* Tears down the "connecting..." SIO-handshake spinner object (see
  * sub_8003B40, src/graphics/settings_menu3.c, for the object this
  * pointer comes from) if one is active, then re-requests the tile
- * cache flush sub_8004CE8 above pairs with. */
-void sub_8004D20(void)
+ * cache flush CommitSaveMenuFrame above pairs with. */
+void CloseSaveMenu(void)
 {
-    if (gUnknown_0300080C != NULL) {
-        sub_800312C(gUnknown_0300080C, 3);
+    if (gSaveMenu != NULL) {
+        DestroySaveMenu(gSaveMenu, 3);
     }
-    gUnknown_0300080C = NULL;
+    gSaveMenu = NULL;
     sub_8006EA8(gUnknown_030012B8);
 }
 
 extern void *sub_8026EDC(s32 size);
-extern void *sub_800306C(void *arg0);
+extern void *InitSaveMenu(void *arg0);
 
 /* Allocates and constructs a fresh SIO-handshake spinner object (the
- * counterpart to sub_8004D20's teardown above), stashing it in the same
- * gUnknown_0300080C global sub_8004D20 tears down. */
-void sub_8004D4C(void)
+ * counterpart to CloseSaveMenu's teardown above), stashing it in the same
+ * gSaveMenu global CloseSaveMenu tears down. */
+void OpenSaveMenu(void)
 {
     void **dest;
 
     sub_8006EA8(gUnknown_030012B8);
-    dest = &gUnknown_0300080C;
-    *dest = sub_800306C(sub_8026EDC(0xe4));
+    dest = &gSaveMenu;
+    *dest = InitSaveMenu(sub_8026EDC(0xe4));
 }

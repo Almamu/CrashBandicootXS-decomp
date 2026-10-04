@@ -8,8 +8,8 @@
 /* include/icon_manager.h's `struct icon_glyph_metrics`. */
 struct icon_glyph_metrics {
     s32 width;
-    s32 field_4;
-    u8 field_8;
+    s32 shape;
+    u8 yOffset;
     u8 unused_9[3];
 };
 
@@ -22,13 +22,13 @@ struct hud_pos
 
 /* The HUD digit array's 35 slots (hud_digit_array.c, hud_stat_widget2.c,
  * hud_stat_widget3.c): an animation index and a position per slot. */
-const u32 gStaticData_08174BE0[35] = {
+const u32 gHudPartAnims[35] = {
     0, 0, 10, 0, 0, 0, 1, 1, 1, 2, 3, 0,
     0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 6, 5,
     10, 0, 0, 0, 0, 12, 0, 0, 0, 0, 11,
 };
 
-const struct hud_pos gStaticData_08174C6C[35] = {
+const struct hud_pos gHudPartPositions[35] = {
     { 212, 16 },
     { 227, 16 },
     { 190, 16 },
@@ -66,13 +66,13 @@ const struct hud_pos gStaticData_08174C6C[35] = {
     { 120, 140 },
 };
 
-/* The two HUD fonts built by InitHudIconWidgetA and InitHudIconWidgetB
+/* The two HUD fonts built by InitSmallFont and InitLargeFont
  * (hud_icon_widget_85c4.c): the characters each font has, in glyph
  * order (the widget's charLookup maps a character to its position
  * here), then each glyph's metrics. Latin-1. */
-const u8 gStaticData_08174D84[] = "abcdefghijklmnopqrstuvwxyz0123456789-+!:,?.'%<>\344\340\341\342\353\350\351\352\357\354\355\356\366\362\363\364\374\371\372\373\361\337\347\277\241\264?\234ABLR";
+const u8 gSmallFontChars[] = "abcdefghijklmnopqrstuvwxyz0123456789-+!:,?.'%<>\344\340\341\342\353\350\351\352\357\354\355\356\366\362\363\364\374\371\372\373\361\337\347\277\241\264?\234ABLR";
 
-const struct icon_glyph_metrics gStaticData_08174DD4[79] = {
+const struct icon_glyph_metrics gSmallFontGlyphs[79] = {
     { 7, 2, 248, { 255, 255, 255 } },
     { 7, 2, 248, { 255, 255, 255 } },
     { 7, 2, 248, { 255, 255, 255 } },
@@ -154,9 +154,9 @@ const struct icon_glyph_metrics gStaticData_08174DD4[79] = {
     { 15, 1, 0, { 0, 0, 0 } },
 };
 
-const u8 gStaticData_08175188[] = "abcdefghijklmnopqrstuvwxyz0123456789+-:_,.'!?%\344\340\341\342\353\350\351\352\357\354\355\356\366\362\363\364\374\371\372\373\361\234\277\241\337\264?/\347";
+const u8 gLargeFontChars[] = "abcdefghijklmnopqrstuvwxyz0123456789+-:_,.'!?%\344\340\341\342\353\350\351\352\357\354\355\356\366\362\363\364\374\371\372\373\361\234\277\241\337\264?/\347";
 
-const struct icon_glyph_metrics gStaticData_081751D4[75] = {
+const struct icon_glyph_metrics gLargeFontGlyphs[75] = {
     { 13, 0, 0, { 0, 0, 0 } },
     { 12, 0, 0, { 0, 0, 0 } },
     { 9, 0, 0, { 0, 0, 0 } },

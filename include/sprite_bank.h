@@ -12,7 +12,7 @@
  * Readers: sub_80083A8 (tileBase), sub_80083B8 (anim -> seq -> frame),
  * sub_8007634/sub_80073DC (the pieces), sub_8007C30/sub_8007CF8 and
  * sub_80084C4-sub_80085B8 (the frame's boxes and anchor, picked by the
- * layout type), sub_8004D74 (the fixed tile pool). Older files read the
+ * layout type), RunPauseMenu (the fixed tile pool). Older files read the
  * same records through local views with only the fields they use
  * (struct anim_record in gfx_part.h/level_menu.h/level_select_parts.h,
  * struct act_anim_record in action_obj.h, struct anim_rec in
@@ -196,7 +196,7 @@ struct sprite_bank {
 struct sprite_bank_table {
     const struct sprite_bank *banks;    /* 0x00 - [bankCount] */
     const u8 *tileBase;                 /* 0x04 - sprite tile pool, sub_80083A8 */
-    const u8 *tilePool;                 /* 0x08 - the fixed 4bpp tiles, sub_8004D74 */
+    const u8 *tilePool;                 /* 0x08 - the fixed 4bpp tiles, RunPauseMenu */
     u16 bankCount;                      /* 0x0C */
     u16 tilePoolCount;                  /* 0x0E - in tiles */
 };

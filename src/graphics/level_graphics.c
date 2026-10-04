@@ -10,23 +10,23 @@
  * already high-confidence `graphics_loading` per docs/rom_map.md's own
  * table before this chunk (`0x080354E0`-`0x08035780`ish). */
 
-extern struct icon_manager *gUnknown_030012DC;
+extern struct icon_manager *gSmallFont;
 extern struct oam_shadow_buffer *gUnknown_03001300;
-extern struct AudioContext *gUnknown_030012BC;
+extern struct AudioContext *gAudioContext;
 
 extern void sub_8006A90(struct oam_shadow_buffer *arg0);
 extern void sub_8006A48(struct oam_shadow_buffer *arg0);
 extern void WaitForVBlank(void);
 extern void sub_8006AAC(struct oam_shadow_buffer *arg0);
-extern void sub_8028A30(struct icon_manager *self, u8 val);
+extern void FontSetPalette(struct icon_manager *self, u8 val);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern void *sub_8026EDC(s32 size);
-extern void *sub_8034374(void *arg0);
+extern void *InitStarfield(void *arg0);
 extern void sub_8001604(void);
 extern void sub_80015E0(void);
 extern void sub_8001524(s32 val);
 extern void sub_8001614(void);
-extern void sub_80017BC(struct AudioContext *self, u32 songIndex);
+extern void StartSong(struct AudioContext *self, u32 songIndex);
 
 extern u8 gStaticData_0817D034[0x20];
 extern u8 gStaticData_0817D054[0x20];
@@ -61,7 +61,7 @@ void *LoadLevelGraphics(u32 *self)
     struct icon_slot *slot;
     u32 fieldValue;
 
-    self[3] = (u32)gUnknown_030012DC;
+    self[3] = (u32)gSmallFont;
     sub_8006A90(gUnknown_03001300);
     sub_8006A48(gUnknown_03001300);
     WaitForVBlank();
@@ -71,11 +71,11 @@ void *LoadLevelGraphics(u32 *self)
     REG_BLDY = 0x10;
     REG_DISPCNT = 0;
 
-    sub_8028A30((struct icon_manager *)self[3], 0xe);
+    FontSetPalette((struct icon_manager *)self[3], 0xe);
 
     iconManager = (struct icon_manager *)self[3];
     fieldValue = 0x200;
-    iconManager->field_108 = fieldValue;
+    iconManager->tileBase = fieldValue;
     slot = &iconManager->record->slots[6];
     _call_via_r1((u8 *)iconManager + slot->offset, slot->ptr);
 
@@ -98,7 +98,7 @@ void *LoadLevelGraphics(u32 *self)
 
     {
         u32 *dest = &self[0x82];
-        *dest = (u32)sub_8034374(sub_8026EDC(0x14));
+        *dest = (u32)InitStarfield(sub_8026EDC(0x14));
     }
 
     sub_8001604();
@@ -109,7 +109,7 @@ void *LoadLevelGraphics(u32 *self)
     self[0] = 0;
     self[1] = 0;
 
-    sub_80017BC(gUnknown_030012BC, 0xb);
+    StartSong(gAudioContext, 0xb);
 
     return self;
 }

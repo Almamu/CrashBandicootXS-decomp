@@ -29,8 +29,8 @@ struct SoundChannelList {
     struct SoundChannelItem **items; /* +0x00 */
 };
 
-extern struct AudioContext *gUnknown_030012BC;
-extern void sub_8001AC4(struct AudioContext *self, u32 value);
+extern struct AudioContext *gAudioContext;
+extern void FadeOutMusic(struct AudioContext *self, u32 value);
 extern void sub_800132C(u8 flags, s32 frameDelay, u8 sync);
 extern void StopSfx(struct AudioContext *self, u32 id);
 
@@ -45,7 +45,7 @@ void EndSlide(struct SoundChannelList *self0, s32 idx)
     register struct SoundChannelList *self asm("r5") = self0;
 
     if (self->items[idx]->field_11 != 0) {
-        sub_8001AC4(gUnknown_030012BC, 0);
+        FadeOutMusic(gAudioContext, 0);
     }
 
     {
@@ -60,7 +60,7 @@ void EndSlide(struct SoundChannelList *self0, s32 idx)
         struct SoundChannelItem *item = self->items[idx];
 
         if (item->field_12 != 0 && item->field_18 != 0x63) {
-            StopSfx(gUnknown_030012BC, item->field_18);
+            StopSfx(gAudioContext, item->field_18);
         }
     }
 }

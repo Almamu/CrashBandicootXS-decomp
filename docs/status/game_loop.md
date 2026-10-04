@@ -492,7 +492,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 - **Hard-register hold pass:** `sub_8023A1C` (`game_loop56.c`, issue
   #37, the level-lifecycle state machine) promoted from NAKED to real C
   under old_agbcc (`game_loop56.o` joined `OLD_AGBCC_OBJS`). The
-  one-byte `direction` stack argument of `sub_8027018` is a struct with
+  one-byte `direction` stack argument of `AddPaletteCycle` is a struct with
   a zero-length array member, which makes it BLKmode, so the compound
   literal is stored straight into the outgoing slot (address first, as
   in the ROM). An r0/r1 hard-register hold puts the post-fade
@@ -526,7 +526,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   issue #37, ROM `0x08023A1C`-`0x0802400C`) - the ~650-instruction
   level-lifecycle state machine `sub_802375C` unconditionally hands off
   to (`game_loop39.c`). Its 6-case jump table (state `1`/`6` share one
-  code block) fires `sub_8027018` "fx queue" calls - a palette
+  code block) fires `AddPaletteCycle` "fx queue" calls - a palette
   color-cycle animation (`(u16 *)0x05000000`, GBA palette RAM, passed
   as the queue's own `targets` argument) rather than the HUD-digit
   rotation that function's other call sites drive - against
@@ -545,7 +545,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   rather than real C: beyond the sheer instruction count, the state
   `1`/`6` and state `5` jump-table targets converge on one shared
   physical tail block *mid-case-body* (after state 1/6's second
-  `sub_8027018` call has already begun loading its own arguments) -
+  `AddPaletteCycle` call has already begun loading its own arguments) -
   compiler-internal cross-jump-table-target block sharing this
   project's `goto`-restructuring toolbox targets *within* one `switch`,
   not across two separate jump-table entries. See
@@ -788,13 +788,13 @@ plain C didn't converge.
   ROM `0x080225A0`-`0x08022BF0`) - the main per-frame game-loop driver,
   called once a frame from `MainLoop` with `self` =
   `gLevelState`. Traced branch-by-branch: a level-load loop
-  (`LoadLevelGraphics`/`sub_8035E14`/`sub_80354BC`) that spins until the
+  (`LoadLevelGraphics`/`sub_8035E14`/`RunCredits`) that spins until the
   level finishes loading; a confirmed 5-case jump table on
   `self->0xc4` (doubling as both the literal player-state enum value
   *and* the retry-loop's `sub_801BAF0` seed) - gates
   `sub_80231BC`/`sub_80231CC`/`sub_80231B4`/`sub_80231C4` transition to
   `sub_8023190`/`sub_80231A8`/`sub_8023184`/`sub_802319C` respectively
-  (case 3's own gate additionally free-runs a `sub_800697C` timeout
+  (case 3's own gate additionally free-runs a `GetCompletionPercent` timeout
   that increments `self->0xc4` past 0x63 frames), case 4 has no gate/
   transition and is unconditional; states past this table's range
   (`self->0xc4 - 0x14 > 4`) instead OR-set a flag byte on
@@ -809,7 +809,7 @@ plain C didn't converge.
   `sub_8026EDC(0x408)`, and refreshes the HUD icon (`sub_8028568`) each
   pass. The whole per-category loop, and even the outer state-dispatch
   block above it, can run several times within one call (loops back via
-  `sub_803AFEC`/`sub_8034CB0` gating) before the function actually
+  `sub_803AFEC`/`RunContinuePrompt` gating) before the function actually
   returns to `MainLoop`. At ~730 instructions with three persistent
   cross-call registers (`r7` = `&self->0xc4`, `sl` = `&self->0xc8`,
   `r8`/`sb`) plus six SP-relative field-address slots (`&self->0xe0`,

@@ -5,7 +5,7 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* The text sub_8034AA4 (actor_part131.c) prints in an icon's text
+/* The text DrawContinuePrompt (actor_part131.c) prints in an icon's text
  * slot. */
 const u8 gStaticData_0817C510[] = ">";
 

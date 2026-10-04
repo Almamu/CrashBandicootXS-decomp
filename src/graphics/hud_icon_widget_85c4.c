@@ -2,22 +2,22 @@
 #include "icon_manager.h"
 
 /* GitHub issue #46: the HUD icon/text widget's glyph drawer and its two
- * constructors. Built with old_agbcc: under agbcc, sub_80285C4 derives
+ * constructors. Built with old_agbcc: under agbcc, FontDrawGlyph derives
  * its bitfield masks differently. */
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
 extern void CpuSet(void *src, void *dst, s32 control);
 extern void sub_8006AC8(void *arg0, void *arg1);
 extern struct oam_shadow_buffer *gUnknown_03001300;
-extern u8 gStaticData_08174D84[];
-extern u8 gStaticData_08174DD4[];
-extern u8 gStaticData_087E4DAC[];
-extern u8 gStaticData_087E4D64[];
-extern u8 gStaticData_087E4D1C[];
-extern u8 gStaticData_085A4E70[];
-extern u8 gStaticData_085A551C[];
-extern u8 gStaticData_08175188[];
-extern u8 gStaticData_081751D4[];
+extern u8 gSmallFontChars[];
+extern u8 gSmallFontGlyphs[];
+extern u8 gFontVtable[];
+extern u8 gSmallFontVtable[];
+extern u8 gLargeFontVtable[];
+extern u8 gSmallFontTiles[];
+extern u8 gLargeFontTiles[];
+extern u8 gLargeFontChars[];
+extern u8 gLargeFontGlyphs[];
 
 /* `icon_manager.oam_scratch` viewed as the OAM-shaped draw request
  * sub_8006AC8 consumes: attr0's Y byte and 2-bit shape, attr1's 9-bit X
@@ -44,7 +44,7 @@ static inline void SetGlyphX(struct glyph_oam *oam, s32 x)
 /* Builds one glyph's draw request in `self->oam_scratch` from
  * `glyphRecords[charLookup[charByte]]` and the cursor, draws it with
  * sub_8006AC8, then advances `posX` by the glyph's width. */
-void sub_80285C4(struct icon_manager *self, u8 charByte)
+void FontDrawGlyph(struct icon_manager *self, u8 charByte)
 {
     struct glyph_oam *oam = (struct glyph_oam *)self->oam_scratch;
     u8 glyph = self->charLookup[charByte];
@@ -53,51 +53,51 @@ void sub_80285C4(struct icon_manager *self, u8 charByte)
     {
         u8 *posY = (u8 *)&self->posY;
 
-        oam->y = self->glyphRecords[glyph].field_8 + *posY;
+        oam->y = self->glyphRecords[glyph].yOffset + *posY;
     }
-    oam->shape = self->glyphRecords[glyph].field_4;
-    oam->tile = self->field_108 + glyph * self->field_124;
+    oam->shape = self->glyphRecords[glyph].shape;
+    oam->tile = self->tileBase + glyph * self->glyphTileStride;
     sub_8006AC8(gUnknown_03001300, self);
     self->posX += self->glyphRecords[glyph].width;
 }
 
 /* The part both widget constructors share: resets the cursor, left
- * margin and field_12c, zeroes the OAM scratch buffer, and points
- * `record` at gStaticData_087E4DAC (which the constructors then
+ * margin and tileCount, zeroes the OAM scratch buffer, and points
+ * `record` at gFontVtable (which the constructors then
  * overwrite). */
 static inline void InitIconManager(struct icon_manager *self)
 {
     u32 zero;
 
-    self->record = (struct icon_record *)gStaticData_087E4DAC;
+    self->record = (struct icon_record *)gFontVtable;
     self->posX = self->posY = 0;
-    self->field_118 = 0;
-    self->field_12c = 0;
+    self->marginX = 0;
+    self->tileCount = 0;
     zero = 0;
     CpuSet(&zero, self, CPU_SET_32BIT | CPU_SET_SRC_FIXED | 2);
 }
 
 /* Constructs the "A" widget: 9-pixel lines, 4-pixel spaces, glyph
- * stride 2, and a charLookup built from the gStaticData_08174D84 font
+ * stride 2, and a charLookup built from the gSmallFontChars font
  * order table (see include/icon_manager.h). */
-struct icon_manager *InitHudIconWidgetA(struct icon_manager *self)
+struct icon_manager *InitSmallFont(struct icon_manager *self)
 {
     u32 i;
     u32 j;
 
     InitIconManager(self);
-    self->record = (struct icon_record *)gStaticData_087E4D64;
-    self->field_11c = 9;
+    self->record = (struct icon_record *)gSmallFontVtable;
+    self->lineHeight = 9;
     self->spaceWidth = 4;
-    self->field_128 = gStaticData_085A4E70;
-    self->field_124 = 2;
-    self->glyphRecords = (struct icon_glyph_metrics *)gStaticData_08174DD4;
+    self->tiles = gSmallFontTiles;
+    self->glyphTileStride = 2;
+    self->glyphRecords = (struct icon_glyph_metrics *)gSmallFontGlyphs;
     for (i = 0; i <= 0xff; i++)
     {
         self->charLookup[i] = 0;
         for (j = 0; j <= 0x4f; j++)
         {
-            if (gStaticData_08174D84[j] == i)
+            if (gSmallFontChars[j] == i)
             {
                 self->charLookup[i] = j;
                 break;
@@ -109,26 +109,26 @@ struct icon_manager *InitHudIconWidgetA(struct icon_manager *self)
 
 /* Constructs the "B" widget: 16-pixel lines, 6-pixel spaces, glyph
  * stride 4, OBJ size 1, and a charLookup built from the
- * gStaticData_08175188 font order table. */
-struct icon_manager *InitHudIconWidgetB(struct icon_manager *self)
+ * gLargeFontChars font order table. */
+struct icon_manager *InitLargeFont(struct icon_manager *self)
 {
     u32 i;
     u32 j;
 
     InitIconManager(self);
-    self->record = (struct icon_record *)gStaticData_087E4D1C;
-    self->field_11c = 0x10;
+    self->record = (struct icon_record *)gLargeFontVtable;
+    self->lineHeight = 0x10;
     self->spaceWidth = 6;
-    self->field_124 = 4;
-    self->glyphRecords = (struct icon_glyph_metrics *)gStaticData_081751D4;
-    self->field_128 = gStaticData_085A551C;
+    self->glyphTileStride = 4;
+    self->glyphRecords = (struct icon_glyph_metrics *)gLargeFontGlyphs;
+    self->tiles = gLargeFontTiles;
     ((struct glyph_oam *)self->oam_scratch)->size = 1;
     for (i = 0; i <= 0xff; i++)
     {
         self->charLookup[i] = 0;
         for (j = 0; j <= 0x4b; j++)
         {
-            if (gStaticData_08175188[j] == i)
+            if (gLargeFontChars[j] == i)
             {
                 self->charLookup[i] = j;
                 break;
@@ -138,13 +138,13 @@ struct icon_manager *InitHudIconWidgetB(struct icon_manager *self)
     return self;
 }
 
-/* sub_8028808 is matched, byte-exact.
+/* FontPutChar is matched, byte-exact.
  *
  * Per-character dispatcher used while drawing/measuring one glyph at a
  * time: newline resets `posX` to the left margin and advances `posY` by
  * one line height; space just advances `posX` by `spaceWidth`; anything
  * else is forwarded to `record`'s slot-4 trampoline (the glyph-draw
- * callee, `sub_80285C4` per the widget's own vtable) via `_call_via_r2`.
+ * callee, `FontDrawGlyph` per the widget's own vtable) via `_call_via_r2`.
  *
  * The 3-way `if`/`else if`/`else` is written as explicit `goto`s so the
  * *middle* arm (the space case) ends up inline and the other two become
@@ -164,7 +164,7 @@ struct icon_manager *InitHudIconWidgetB(struct icon_manager *self)
  * as one asm block - self-copy first, then the in-place `lsl`/`lsr`
  * widen matching the ROM's own register reuse (`lsl r1,r1,#0x18` in
  * place, not into a fresh register) - fixed it. */
-void sub_8028808(struct icon_manager *self, u32 charByte)
+void FontPutChar(struct icon_manager *self, u32 charByte)
 {
     register u32 raw asm("r1") = charByte;
     register struct icon_manager *s asm("r3");
@@ -187,7 +187,7 @@ void sub_8028808(struct icon_manager *self, u32 charByte)
     offset = (u8 *)&s->spaceWidth - (u8 *)s;
     goto tail;
 newline:
-    /* Chained address anchor: the ROM computes `&field_118` as
+    /* Chained address anchor: the ROM computes `&marginX` as
      * `&posX + 8` (sharing the `0x88<<1` offset register), not as two
      * independent field-offset computations. */
     {

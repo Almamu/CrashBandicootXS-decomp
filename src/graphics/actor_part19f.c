@@ -14,7 +14,7 @@ struct moving_actor {
 };
 
 extern u8 gUnknown_030014A0;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
@@ -49,7 +49,7 @@ void sub_802C270(void *selfArg)
         goto frameBlock;
     }
 
-    PlaySfx(gUnknown_030012BC, 0xe, 0x100);
+    PlaySfx(gAudioContext, 0xe, 0x100);
     if (self != 0) {
         struct actor_vtable *table = self->base.vtable;
         _call_via_r2((u8 *)self + table->m08.thisOffset, (void *)3, table->m08.fn);

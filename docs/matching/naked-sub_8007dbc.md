@@ -63,7 +63,7 @@ held only `sub_8007DBC`, immediately followed by `sub_8007F78`
 `actor_part2.c` closes the gap completely - `asm/code_3_2_3.s` was
 deleted and its `ldscript.txt` line removed, the same "retire an
 emptied split" convention as `asm/code_3_1.s`/`sub_80007EC` and
-`asm/code_3_1_697c.o`/`sub_800697C` before it (see `docs/matching.md`).
+`asm/code_3_1_697c.o`/`GetCompletionPercent` before it (see `docs/matching.md`).
 
 ## Later pass (issue #9 NAKED retry)
 

@@ -39,7 +39,7 @@ extern void sub_802A7B8(void *self);
 extern s32 sub_802F46C(void *player);
 
 extern s32 gUnknown_0300089C[];
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern struct actor_self *gUnknown_03000884;
 extern s16 gStaticData_0816A820[];
 extern struct actor_pmf gStaticData_0817C260[];
@@ -164,7 +164,7 @@ void sub_802FD1C(struct actor_51b4 *self, s32 damage)
         idx = 4;
     }
     ACTOR_SET_STATE(&self->base, 2, idx);
-    PlaySfx(gUnknown_030012BC, 0x25, 0x100);
+    PlaySfx(gAudioContext, 0x25, 0x100);
 }
 
 /* Constructor: 4 hit points; a spawn whose first target needs a fast
@@ -310,7 +310,7 @@ void sub_802FFB8(struct actor_51ec *self)
         if (self->base.state != 6 && sub_802A6EC(self)) {
             ACTOR_VCALL(gUnknown_03000884, m20, 10);
             self->base.unk_18 = 4;
-            PlaySfx(gUnknown_030012BC, 4, 0x100);
+            PlaySfx(gAudioContext, 4, 0x100);
             ACTOR_SET_STATE(&self->base, 6, 1);
         }
     }
@@ -398,7 +398,7 @@ void sub_80301EC(struct actor_51ec *self, s32 damage)
 {
     if (self->base.state != 6 && (self->hp -= damage) <= 0) {
         self->base.unk_18 = 4;
-        PlaySfx(gUnknown_030012BC, 4, 0x100);
+        PlaySfx(gAudioContext, 4, 0x100);
         ACTOR_SET_STATE(&self->base, 6, 1);
     }
 }
@@ -509,7 +509,7 @@ void sub_8030334(struct actor_orbit *self)
     if (sub_802A6EC(self)) {
         ACTOR_VCALL(gUnknown_03000884, m20, 6);
         self->base.unk_18 = 4;
-        PlaySfx(gUnknown_030012BC, 4, 0x100);
+        PlaySfx(gAudioContext, 4, 0x100);
         ACTOR_SET_STATE(&self->base, 2, 1);
     }
 }
@@ -553,7 +553,7 @@ void sub_803044C(struct actor_orbit *self)
     if (sub_802A6EC(self)) {
         ACTOR_VCALL(gUnknown_03000884, m20, 6);
         self->base.unk_18 = 4;
-        PlaySfx(gUnknown_030012BC, 4, 0x100);
+        PlaySfx(gAudioContext, 4, 0x100);
         ACTOR_SET_STATE(&self->base, 2, 1);
     }
 }

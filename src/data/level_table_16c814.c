@@ -186,7 +186,7 @@ extern const struct level_room gLevelStage6;
 /*
  * Palette entries cycled by the level-start colour animations of
  * sub_8023A1C (game_loop56.c), one list per theme case: each is the
- * `lists` argument of a sub_8027018 call on BG palette RAM.
+ * `lists` argument of a AddPaletteCycle call on BG palette RAM.
  */
 const u16 gThemePaletteCycle2[5] = { 0xb1, 0xb2, 0xb3, 0xb4, 0xb5 };
 const u16 gThemePaletteCycle1A[9] = { 0x39, 0x3a, 0x3d, 0x3e, 0x75, 0x82, 0xbc, 0xea, 0xfc };

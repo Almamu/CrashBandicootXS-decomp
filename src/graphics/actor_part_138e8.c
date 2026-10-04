@@ -7,7 +7,7 @@
  * (include/action_obj.h). Built with old_agbcc. */
 
 extern u32 gKeys;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gUnknown_03001304;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
@@ -94,7 +94,7 @@ void sub_8013994(struct act *self)
         {
             if (sub_800AAEC(part, 0xB) == 1)
             {
-                PlaySfx(gUnknown_030012BC, 0xC, 0x100);
+                PlaySfx(gAudioContext, 0xC, 0x100);
                 ActAndFlags0D(self->part, -2);
                 ActAndFlags0D(self->part, -3);
                 sub_8015508(self);

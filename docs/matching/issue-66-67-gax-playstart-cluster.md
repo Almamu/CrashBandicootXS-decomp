@@ -93,7 +93,7 @@ reloaded) versus the *dereferenced* pointer value (reloaded fresh via
 
 All three share the same many-register (`r8`/`sb`/`sl`) gcc-2.9
 allocation ceiling already established for this exact ROM region across
-three prior passes (`sub_8006600`/`sub_80372BC`, and this cluster's own
+three prior passes (`DrawPowerDialog`/`DrawLanguageSelect`, and this cluster's own
 `GaxChannelPlay`/`GaxChannelDecodeRow` - see `docs/status/audio.md`) - `GaxCreateHandlers`
 and `GAX2_init` both use all three of `r8`/`sb`/`sl` as genuine scratch
 throughout deeply nested loops (a running priority-maximum accumulator

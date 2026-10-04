@@ -5,7 +5,7 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* 16-halfword palette-cache slot contents sub_8037388
+/* 16-halfword palette-cache slot contents InitLanguageSelectGraphics
  * (counter_selector_icons.c) copies, before level_tilesets_17e78c.c's
  * gStaticData_0817E78C. */
 const u16 gStaticData_0817E72C[16] = {

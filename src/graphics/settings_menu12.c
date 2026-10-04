@@ -9,7 +9,7 @@
  * field_cc/field_d0). Distinct from - and much larger than -
  * `struct sub_8006700_actor` (src/graphics/oam_count.c/settings_menu10.c),
  * which is the smaller per-widget object `src/graphics/oam_count.c`'s
- * already-matched `sub_8006714` uses for the same job at different
+ * already-matched `CommitPowerDialogFrame` uses for the same job at different
  * offsets. */
 
 extern void WaitForVBlank(void *arg0);
@@ -28,7 +28,7 @@ extern void *gUnknown_03001300;
  * never performs this particular reuse here (though it does for the
  * `field_c8`/`field_cc` accesses just above, which this reconstruction
  * gets for free from plain field access). */
-void sub_8006250(struct pause_screen_results *self)
+void CommitPauseMenuFrame(struct pause_screen_results *self)
 {
     WaitForVBlank(self);
     sub_8006DC8(gUnknown_030012B8);

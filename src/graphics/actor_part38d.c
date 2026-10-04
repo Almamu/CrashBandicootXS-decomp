@@ -61,7 +61,7 @@ void sub_8015780(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 }
 
 
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gUnknown_030012D8;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern void StopSfx(void *self, u32 id);
@@ -132,12 +132,12 @@ case12:
 setC26:
     mode = 0x26;
 playCue:
-    StopSfx(gUnknown_030012BC, 0x36);
-    PlaySfx(gUnknown_030012BC, 0x36, 0x100);
+    StopSfx(gAudioContext, 0x36);
+    PlaySfx(gAudioContext, 0x36, 0x100);
     goto tail;
 
 rearm:
-    StopSfx(gUnknown_030012BC, 0x36);
+    StopSfx(gAudioContext, 0x36);
 
 tail:
     return ((s32 (*)(void *, void *, s32))sub_800B86C)(arg0, other, mode);

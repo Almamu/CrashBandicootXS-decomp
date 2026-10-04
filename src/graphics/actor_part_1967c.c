@@ -258,7 +258,7 @@ extern struct part_list *gUnknown_030012F0;
 extern struct part *gUnknown_030012D8;
 extern void ***gUnknown_030012D0;
 extern struct level_state *gEntityFlags;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gLevelState;
 extern struct { u8 unk_00[0x10]; struct level_layer *layer; } *gLevelLayers;
 extern u8 gStaticData_0816C358[];
@@ -829,7 +829,7 @@ void sub_8019CE4(struct boss *self, struct part *other, s32 next)
         self->timer = 0x64;
         if (self->hits > 2)
             self->timer = 1;
-        PlaySfx(gUnknown_030012BC, 0x15, 0x100);
+        PlaySfx(gAudioContext, 0x15, 0x100);
         other->fl.b.shown = 0;
         sub_801A7AC(self, other, 2);
         VCALL2(self, m50, other, 1);
@@ -863,7 +863,7 @@ void sub_8019EBC(struct boss *self, s32 mode, u16 x, u16 y, struct part *arg)
         self->part = p;
         break;
     case 1:
-        PlaySfx(gUnknown_030012BC, 0x29, 0x100);
+        PlaySfx(gAudioContext, 0x29, 0x100);
         SetTag(p, 7);
         sub_80087C0(p);
         sub_80087B4(p);
@@ -1045,7 +1045,7 @@ void sub_801A2A8(struct obj_48a4 *self, struct part *other)
                     VCALL1(self->target->ctl, m20, 7);
                     VCALL1(self, m20, 6);
                     VCALL2(self, m50, other, 8);
-                    PlaySfx(gUnknown_030012BC, 0x39, 0x100);
+                    PlaySfx(gAudioContext, 0x39, 0x100);
                 }
             }
         }
@@ -1068,7 +1068,7 @@ void sub_801A2A8(struct obj_48a4 *self, struct part *other)
                 {
                     VCALL1(self, m20, 6);
                     VCALL2(self, m50, other, 8);
-                    PlaySfx(gUnknown_030012BC, 0x39, 0x100);
+                    PlaySfx(gAudioContext, 0x39, 0x100);
                 }
             }
         }
@@ -1107,7 +1107,7 @@ void sub_801A2A8(struct obj_48a4 *self, struct part *other)
         {
             VCALL1(self, m20, 6);
             VCALL2(self, m50, other, 8);
-            PlaySfx(gUnknown_030012BC, 0x39, 0x100);
+            PlaySfx(gAudioContext, 0x39, 0x100);
         }
         break;
     }

@@ -8,10 +8,10 @@ function was tried under both agbcc and old_agbcc.
 
 | Function | File | Compiler | What it took |
 |---|---|---|---|
-| `sub_8037388` | `src/audio/counter_selector_icons.c` | both | The icon-manager steps as `static inline` helpers taking the manager (`IconSetBase`/`IconReserveVram`, the idiom from `sub_8034CEC` in actor_part131.c), plus one `u32 zero` local shared by the `field_8` and `field_108` stores. |
+| `InitLanguageSelectGraphics` | `src/audio/counter_selector_icons.c` | both | The icon-manager steps as `static inline` helpers taking the manager (`IconSetBase`/`IconReserveVram`, the idiom from `InitCredits` in actor_part131.c), plus one `u32 zero` local shared by the `field_8` and `field_108` stores. |
 | `sub_802F8E8` | `src/graphics/actor_part45d.c` | old_agbcc (object joined `OLD_AGBCC_OBJS`) | Map entry read as `v = *map; v += base;`, high nibble masked as `(*nib >> 4) & 0xf`, and the function declared `inline` ahead of `sub_802F7B0`. |
 
-### `sub_8037388`
+### `InitLanguageSelectGraphics`
 
 The old note said the ROM rematerializes the `0x108`/`0x12c`/`0x130`
 field offsets after every call while the compiler CSEs them into
@@ -54,7 +54,7 @@ down to spelling:
   declarations and types, argument spellings, pseudo-number shifts,
   or nine nibble-read spellings in the inline body (all of which keep
   8E8 matching).
-- **`sub_8034994`** (actor_part89.c, #63). The new draft is 2 halfwords
+- **`ContinuePromptLoop`** (actor_part89.c, #63). The new draft is 2 halfwords
   off under old_agbcc. It needed:
   - the input word read as a struct copy, so each test does a word load
     and `lsrs #16`, and the 0x80 test does a fresh `ldrh` after the
@@ -117,10 +117,10 @@ A brute-force variant runner found both matches.
 
 | Function | File | Compiler | What it took |
 |---|---|---|---|
-| `sub_8034994` | `actor_part89.c` (object joined `OLD_AGBCC_OBJS`) | old_agbcc | `asm("" : "+r"(k))` on the input copy between the `& 1` and `& 8` tests, and one extra reference to `audio` at the top of the loop in place of the r8 pin. |
+| `ContinuePromptLoop` | `actor_part89.c` (object joined `OLD_AGBCC_OBJS`) | old_agbcc | `asm("" : "+r"(k))` on the input copy between the `& 1` and `& 8` tests, and one extra reference to `audio` at the top of the loop in place of the r8 pin. |
 | `sub_802F7B0` | `actor_part45d.c` | old_agbcc | The DMA width fixed, one extra reference to `dest` after the loop, two to `cols` before the call, and 7B0 inlining its own `static inline` copy of the loop. |
 
-### `sub_8034994`
+### `ContinuePromptLoop`
 
 The first test's r0/r1 swap came from the separate `u16 p` local that
 stopped CSE sharing the shift with the `& 8` test. Testing

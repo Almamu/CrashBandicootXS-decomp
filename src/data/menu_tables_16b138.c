@@ -37,19 +37,19 @@ const u16 gStaticData_0816B19A[16] = {
     0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
 };
 
-/* The text ids of the five labels sub_8003A60 (settings_menu8c.c) draws. */
-const s32 gStaticData_0816B1BC[5] = {
+/* The text ids of the five labels DrawSaveMenuMain (settings_menu8c.c) draws. */
+const s32 gSaveMenuOptions[5] = {
     0x1B, 0x1C, 0x1E, 0x1D, 0x20,
 };
 
-/* The label text ids sub_80061E8 (settings_menu11.c) picks from. */
-const s32 gStaticData_0816B1D0[5] = {
+/* The label text ids DrawPauseMenuPageTitle (settings_menu11.c) picks from. */
+const s32 gPauseMenuPageTitles[5] = {
     0x36, 0x35, 0x37, 0x38, 0x39,
 };
 
 /* Icon positions and frame indices of the menu screens in
- * settings_menu6.c (sub_8005A78, sub_8005AE8, sub_8005B80, sub_8005C58,
- * sub_8005D44), settings_menu11.c and settings_menu22.c. */
+ * settings_menu6.c (InitPauseCrystalsPage, InitPausePowersPage, InitPauseGemsPage, InitPauseRelicsPage,
+ * InitPauseTimeTrialPage), settings_menu11.c and settings_menu22.c. */
 const struct icon_pos gStaticData_0816B1E4 = { 212, 112 };
 const struct icon_pos gStaticData_0816B1EC[4] = {
     { 180, 96 },

@@ -34,7 +34,7 @@ extern void FreeVramTileBlock(void *arg0);
 extern void mem_free(void *ptr);
 
 extern struct level_state *gLevelState;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern u8 gUnknown_03001505;
 extern u8 gUnknown_03001506;
 extern u8 gUnknown_03001507;
@@ -95,7 +95,7 @@ void sub_802F3BC(void *selfArg)
         gUnknown_030014FC -= 8;
     }
 
-    PlaySfx(gUnknown_030012BC, 8, 0x100);
+    PlaySfx(gAudioContext, 8, 0x100);
 }
 
 /* Trivial pre-increment counter accessor. */

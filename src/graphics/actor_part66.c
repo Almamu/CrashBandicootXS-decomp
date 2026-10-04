@@ -22,7 +22,7 @@
  *   with two shifts, where the ROM computes the stack slot's address
  *   (`add r0, sp, #0x24`) and does a genuine `ldrb` - the same
  *   pattern already closed for other stack-passed byte arguments (see
- *   `docs/matching/issue-5-overlay-ui-sync.md`'s `sub_8003A60` entry
+ *   `docs/matching/issue-5-overlay-ui-sync.md`'s `DrawSaveMenuMain` entry
  *   and `issue-45-hud-stat-widget-dispatcher.md`'s "6th-argument"
  *   entry). Materialized via a two-instruction `asm volatile` anchor
  *   into an `"=l"`-constrained (lo-register) temp, then copied into

@@ -4,7 +4,7 @@
 > the raw asm file below is gone - see [old-agbcc-round5.md](old-agbcc-round5.md).
 
 This closes out the last three raw functions from issue #63's original
-25-function chunk (`sub_803472C`/`sub_803487C`/`sub_8034994`, previously
+25-function chunk (`InitContinuePrompt`/`sub_803487C`/`ContinuePromptLoop`, previously
 left raw as "out of scope for this pass" - see
 [issue-63-0x08033ef4-actor.md](issue-63-0x08033ef4-actor.md)'s "Left
 raw" section). All three are now understood and parked/matched, leaving
@@ -40,9 +40,9 @@ It's a full-screen alpha-blend overlay controller: three small BG
 scratch buffers feeding `LoadGraphicsPackage`, a combined
 BLDCNT/BLDALPHA mirror re-applied every frame to drive a flicker/pulse
 effect, and a hookup to the shared text icon manager
-(`gUnknown_030012DC`) and tile cache (`gUnknown_030012B8`).
+(`gSmallFont`) and tile cache (`gUnknown_030012B8`).
 
-## `sub_803472C` (`src/graphics/actor_part87.c`) - matched, real C
+## `InitContinuePrompt` (`src/graphics/actor_part87.c`) - matched, real C
 
 The constructor half: allocates and initializes the three BG scratch
 buffers (`sub_8026EDC`/`sub_801E644`), loads their graphics packages,
@@ -50,7 +50,7 @@ clears palette entry 0, builds the DISPCNT value (mode 0, 1D OBJ
 mapping, BG0/BG1/BG2 enabled), calls `sub_803487C` for the other setup
 half, then builds the BLDCNT/BLDALPHA alpha-blend value (BG2 -> BG0,
 mode 1, EVA=8/16 EVB=16/16), applies every register, zeroes two more
-fields, and ducks the audio context out via `sub_8001AC4`.
+fields, and ducks the audio context out via `FadeOutMusic`.
 
 This one came *extremely* close to a real match on the first pass -
 every field, struct offset, and the overwhelming majority of individual
@@ -119,10 +119,10 @@ supplies the real bytes at that link position on its own).
 
 ## `sub_803487C` (`src/graphics/actor_part88.c`) - parked, NON_MATCHING
 
-The other setup half, called from `sub_803472C`: flushes/double-flushes
+The other setup half, called from `InitContinuePrompt`: flushes/double-flushes
 the shared VRAM upload cursor (`gUnknown_030012FC`, `struct
 vram_upload_cursor`), hooks `self->icons` up to the global text icon
-manager (`gUnknown_030012DC`, `struct icon_manager` - already fully
+manager (`gSmallFont`, `struct icon_manager` - already fully
 described in `include/icon_manager.h`), fires its 7th (index 6) OAM
 trampoline slot via `_call_via_r1` (the same `icon_slot` shape
 `sub_8011A1C`/`actor_part39.c` already established), clears
@@ -147,7 +147,7 @@ this codebase but were freshly re-confirmed here:
   *cursor = gUnknown_030012FC;` local compiles noticeably shorter/wrong
   here.
 - `self->icons` is likewise re-read from `self` (not kept in a
-  register, and not re-fetched from `gUnknown_030012DC` again) after the
+  register, and not re-fetched from `gSmallFont` again) after the
   `_call_via_r1` call, even though the exact same pointer was already
   live in a register right before that call.
 
@@ -171,21 +171,21 @@ otherwise. Parked (`NON_MATCHING`); raw bytes live in
 `asm/code_3_2_20_28568_c99c_31784_33ef4_3487c.s` under the same
 `.if NON_MATCHING == 0` guard pattern.
 
-## `sub_8034994` (`src/graphics/actor_part89.c`) - NAKED, parked
+## `ContinuePromptLoop` (`src/graphics/actor_part89.c`) - NAKED, parked
 
 The fade overlay's per-frame driver (caller not yet identified in this
 pass - a per-frame "run this overlay" hook somewhere in `game_loop`,
-out of scope here). Busy-loops, yielding via `sub_8034AA4`/
-`sub_8034C5C` each iteration (both still-raw functions just past this
+out of scope here). Busy-loops, yielding via `DrawContinuePrompt`/
+`CommitContinuePromptFrame` each iteration (both still-raw functions just past this
 file's own raw-asm boundary, `asm/..._34aa4.s`), polling input twice per
 outer iteration: a confirm press (bit 0) or D-pad-down-with-L (bit 3) of
 `gKeys.pressed` immediately exits with a "confirm" SFX cue
-(`PlaySfx(gUnknown_030012BC, 0x49, 0x100)`); otherwise L alone (bit 6,
+(`PlaySfx(gAudioContext, 0x49, 0x100)`); otherwise L alone (bit 6,
 gated on `self+0x20`'s one-shot flag already being set) or R alone (bit
 7, gated on it being clear) plays a "step" cue
 (`PlaySfx(..., 0x46, 0x100)`) and flips that flag - the same
 `gKeys`/`PlaySfx` input-dispatch shape already established
-in `src/audio/counter_selector.c`'s `sub_8037224`. Every two inner
+in `src/audio/counter_selector.c`'s `LanguageSelectInput`. Every two inner
 iterations, a 0-15 ping-pong counter (the low 5 bits of `self+0x12`,
 which is the same byte as `self->blend.b.bldalphaLo`'s partner within
 the `dispcnt`/`blend` layout above) gets folded back into `self+0x10`'s
@@ -212,12 +212,12 @@ plain C.
 
 Issue #63's original 25-function chunk, plus these 3:
 
-- **Real C, matched:** 15 (14 from before this pass + `sub_803472C`,
+- **Real C, matched:** 15 (14 from before this pass + `InitContinuePrompt`,
   matched in a later follow-up pass - see above)
 - **Parked, NON_MATCHING (real C, not byte-exact):** 8 (7 from before +
   `sub_803487C`)
 - **NAKED (byte-exact, not real C):** 2 (`sub_8033FE4` from before +
-  `sub_8034994`)
+  `ContinuePromptLoop`)
 - **Left raw:** 0
 
 Issue #63 stays open - only 15/28 functions in its now-expanded scope
@@ -230,7 +230,7 @@ matched/parked list this entry feeds into.
 
 ## Later pass: late-ROM NAKED retry
 
-`sub_8034994` got a C draft under `#if NON_MATCHING` that is 2 halfwords
+`ContinuePromptLoop` got a C draft under `#if NON_MATCHING` that is 2 halfwords
 off under old_agbcc (a single r0/r1 swap in the first input test); it
 stays NAKED. See [late-rom-naked-retry.md](./late-rom-naked-retry.md).
 

@@ -16,18 +16,18 @@ record that these two were reviewed but not attempted.
   (`field_4`/`field_10`/`field_8` - `statPtr` is
   `(&self->currentStats)[rowIdx]`, i.e. `currentStats` and `rowStats
   [0..3]` read as one contiguous 5-element array, the same shape
-  `sub_8004860`/`sub_80048E0` in `src/graphics/settings_menu2.c`
+  `RefreshSaveSlotSummaries`/`SummarizeProgress` in `src/graphics/settings_menu2.c`
   already establish for `rowStats`) as plain decimal strings via
   `itoa`, one each into `self->rowObjA[rowIdx]`/`rowObjC[rowIdx]`/
   `rowObjB[rowIdx]` (small position objects `sub_800450C` below
-  allocates), each drawn through `gUnknown_030012DC`'s `record->
+  allocates), each drawn through `gSmallFont`'s `record->
   slots[2]` trampoline and preceded by the same highlight/dim
-  `sub_8028A30` call `sub_80041BC` (this file, already parked) uses for
+  `FontSetPalette` call `sub_80041BC` (this file, already parked) uses for
   its own selected-row highlight. A fourth value (`statPtr->field_0`)
   is formatted as `"NN%"` by `itoa`-ing then manually scanning for the
   NUL terminator and overwriting it with a literal `%` byte
   (re-terminating one byte later) - measured once via
-  `gUnknown_030012E0`'s `slots[0]` trampoline to get its pixel width,
+  `gLargeFont`'s `slots[0]` trampoline to get its pixel width,
   then drawn a second time via that same manager's `slots[2]`
   trampoline, right-aligned against the caller-supplied `label1`
   x-coordinate using the measured width (`posX = label1 - width +
@@ -49,7 +49,7 @@ record that these two were reviewed but not attempted.
   the row object pointers) that would need the same kind of
   `SUB_8006600_*`/`UPDATE_ICON_FRAME_NIBBLE`-style per-call-site
   register-pin macro work `src/graphics/settings_menu13.c`'s
-  `sub_80063D8` needed (see that file's header comment for the concrete
+  `InitPowerDialog` needed (see that file's header comment for the concrete
   gotchas that technique runs into) - not attempted here given the size
   of the function and the number of near-identical blocks it would need
   repeating across.
@@ -69,11 +69,11 @@ record that these two were reviewed but not attempted.
   reconciled against `struct pause_options_screen`'s existing
   `rowStats`/`currentStats` layout, which only covers up to offset
   `0x8c`), then runs the **exact same 9-statement two-icon-manager init
-  block** `src/graphics/settings_menu14.c`'s parked `sub_80062A8`
-  already transcribes byte-for-byte identically (zero `gUnknown_030012DC`/
+  block** `src/graphics/settings_menu14.c`'s parked `ShowPowerDialog`
+  already transcribes byte-for-byte identically (zero `gSmallFont`/
   `030012E0`'s posX/posY, fire each one's `record->slots[6]` trampoline,
   reserve `field_12c<<5` bytes of VRAM via `sub_8006C58`, copying
-  `gUnknown_030012DC`'s `field_12c` into `gUnknown_030012E0`'s
+  `gSmallFont`'s `field_12c` into `gLargeFont`'s
   `field_108` in between), and finally allocates 15 objects (5 each
   across `rowObjA`/`rowObjB`/`rowObjC`, the exact arrays `sub_8003F30`
   above reads) in a `sl`/`sb`/`r8`-heavy loop, each one built via the
@@ -110,7 +110,7 @@ record that these two were reviewed but not attempted.
      function already at risk from point 1.
 
   Since `sub_800450C` already contains the exact same two-icon-manager
-  block `sub_80062A8` does (confirmed byte-for-byte identical in the
+  block `ShowPowerDialog` does (confirmed byte-for-byte identical in the
   raw disassembly), it would very likely hit that block's own
   demonstrated register-allocation resistance too (see
   `docs/matching/issue-8-0x080060ac-overlay-ui.md`'s "Second pass"
@@ -129,7 +129,7 @@ crashbandicootxs.map && make compare` (`La suma coincide`) after
 
 The "several near-identical unrolled blocks, each wanting the
 loop-carried registers in slightly different places" gap described
-above never had a plain-C fix - same class as `sub_8006600`
+above never had a plain-C fix - same class as `DrawPowerDialog`
 (`docs/status/graphics.md`). Since the semantics were already fully
 confirmed (this document's own derivation above), `sub_8003F30` was
 converted to a byte-verified NAKED asm transcription instead, the same

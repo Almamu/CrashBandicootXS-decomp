@@ -322,7 +322,7 @@ preheader instructions (materializing `0`, or copying `arg0` into the
 loop pointer) came first - fixed by writing the `zero = 0;` assignment as
 its own earlier statement, ahead of the entry-pointer setup.
 
-Fifteenth matched function: `sub_800695C` (ROM `0x0800695C`) - and the
+Fifteenth matched function: `CountCrystals` (ROM `0x0800695C`) - and the
 **first one requiring a new mid-file split**, in `src/graphics/oam_count.c`.
 Counts how many of 20 fixed-stride (4-byte) records have bit 0 of the
 byte at `+4` set - almost certainly counting how many of a fixed set of
@@ -336,18 +336,18 @@ push/pop that a natural, unpinned compile skips entirely since it fits
 in caller-saved registers) - a good example of pinning changing not just
 *which* register but *whether the prologue needs one at all*.
 
-**The split, and a mistake caught before committing:** `sub_800695C` is
-immediately followed in ROM by `sub_800697C` (still unmatched - calls
+**The split, and a mistake caught before committing:** `CountCrystals` is
+immediately followed in ROM by `GetCompletionPercent` (still unmatched - calls
 five other unidentified functions, out of scope here), which is what
 `src/graphics.o` used to sit directly behind. Initially added
-`sub_800695C` straight into `graphics.c` above `sub_80069E8` - `make
+`CountCrystals` straight into `graphics.c` above `sub_80069E8` - `make
 compare` failed the full-ROM checksum, and the reason was exactly the
 "one .o's `.text` is one contiguous block" rule from the very first
-matched functions: pulling `sub_800695C` into `graphics.c` while
-`sub_800697C` stayed asm would have collapsed the 108-byte gap between
+matched functions: pulling `CountCrystals` into `graphics.c` while
+`GetCompletionPercent` stayed asm would have collapsed the 108-byte gap between
 them, shifting everything after downstream. Fixed by giving
-`sub_800695C` **its own file** (`src/graphics/oam_count.c`) and splitting
-`sub_800697C` out into its own asm file (`asm/code_3_1_697c.o`, needs the
+`CountCrystals` **its own file** (`src/graphics/oam_count.c`) and splitting
+`GetCompletionPercent` out into its own asm file (`asm/code_3_1_697c.o`, needs the
 usual `.include "asm/macros.inc"` / `.syntax unified` / `.arm` header a
 plain `sed`-extracted fragment doesn't have), landing them in the
 ldscript in ROM order: `code_3_1.o`, `oam_count.o`, `code_3_1_697c.o`,
@@ -355,13 +355,13 @@ ldscript in ROM order: `code_3_1.o`, `oam_count.o`, `code_3_1_697c.o`,
 *every* neighboring function - including ones several matches back -
 before assuming a new match can just join an existing file.
 
-Sixteenth matched function: `sub_800697C` (ROM `0x0800697C`) - the
+Sixteenth matched function: `GetCompletionPercent` (ROM `0x0800697C`) - the
 function flagged as "bigger scope" last time, calling five other
 unidentified functions. Sums several subsystems' per-`arg0` contributions
-into one total - `sub_800695C` (the active-slot counter matched above),
-`sub_80068CC`, `sub_8006864` (halved, rounded toward zero -
+into one total - `CountCrystals` (the active-slot counter matched above),
+`CountGems`, `CountSapphireRelics` (halved, rounded toward zero -
 `(x + (unsigned)x>>31) >> 1`, the standard signed-divide-by-2 idiom),
-`sub_8006820`, `sub_80067EC`, plus four individual bits (7, 5, 6, 4, in
+`CountGoldRelics`, `CountPlatinumRelics`, plus four individual bits (7, 5, 6, 4, in
 that order) of a flags byte at `arg0+2` - then multiplies the total by
 100 and passes it (with a constant `72`) into `__divsi3`, almost
 certainly a "draw number as text" call (`72` reads like a screen Y
@@ -384,7 +384,7 @@ remaining piece, after pinning: the epilogue's final "pop a register,
 branch to it" step used `r0` in every attempt, but the ROM uses `r1` -
 turned out to depend on whether the function's return value is
 considered live at that point. `__divsi3`'s result was being discarded
-(`void`-returning call as the last statement); declaring `sub_800697C`
+(`void`-returning call as the last statement); declaring `GetCompletionPercent`
 itself to `return __divsi3(...)` instead (making the call result a
 genuine, live return value in `r0`) freed `r0` from being reused as the
 epilogue's scratch register, forcing gcc onto `r1` and completing the
@@ -392,16 +392,16 @@ match - a good reminder that a function's own return type/value can
 shape its *own* epilogue register choice, not just its body.
 
 Matching this function also **retired** the `asm/code_3_1_697c.o` split
-from the previous entry: since `sub_800697C` occupied that entire split
+from the previous entry: since `GetCompletionPercent` occupied that entire split
 file and is immediately followed by `sub_80069E8` (already in
 `graphics.c`), moving it to `graphics.c` too closed the gap completely -
 deleted the split file and removed its `ldscript.txt` line. `oam_count.c`
-(holding `sub_800695C`) is still needed as its own file, since it's
-followed by `sub_800697C`'s ROM address, not `graphics.c`'s.
+(holding `CountCrystals`) is still needed as its own file, since it's
+followed by `GetCompletionPercent`'s ROM address, not `graphics.c`'s.
 
-Seventeenth matched function: `sub_8006920` (ROM `0x08006920`,
-immediately before `sub_800695C` - joined `src/graphics/oam_count.c` above it, no
-new split). A near-twin of `sub_800695C`: same 20-record, 4-byte-stride
+Seventeenth matched function: `CountClearGems` (ROM `0x08006920`,
+immediately before `CountCrystals` - joined `src/graphics/oam_count.c` above it, no
+new split). A near-twin of `CountCrystals`: same 20-record, 4-byte-stride
 loop shape, but sums **bits 1 and 2** (not bit 0) of the byte at each
 record's `+4`, plus the same two bits from one more byte at `arg0+0x64`
 (a fixed field past the array, not part of the loop) - almost certainly
@@ -411,14 +411,14 @@ the second try - no register pins needed at all this time, just
 reordering two preheader statements (`total = 0;` before `p = arg0;`,
 matching the ROM's `movs r4,#0` before `adds r2,r5,#0`).
 
-Eighteenth matched function: `sub_80068CC` (ROM `0x080068CC`,
-immediately before `sub_8006920` - joined `src/graphics/oam_count.c` above it, no
-new split, and it's one of the five callees `sub_800697C` left
+Eighteenth matched function: `CountGems` (ROM `0x080068CC`,
+immediately before `CountClearGems` - joined `src/graphics/oam_count.c` above it, no
+new split, and it's one of the five callees `GetCompletionPercent` left
 unidentified). Combines everything the previous two entries found: the
-same 20-record-plus-one-extra bit-summing shape as `sub_8006920`
-(**bits 1 and 2** again, not bit 0 or the 7/5/6/4 set `sub_800697C`
+same 20-record-plus-one-extra bit-summing shape as `CountClearGems`
+(**bits 1 and 2** again, not bit 0 or the 7/5/6/4 set `GetCompletionPercent`
 reads), *plus* four more bits (0, 2, 3, 1, in that order) from the same
-flags byte at `arg0+2` that `sub_800697C` reads directly. Confirms
+flags byte at `arg0+2` that `GetCompletionPercent` reads directly. Confirms
 `arg0+2` is a genuinely multi-purpose bitfield byte queried by at least
 three of this cluster's functions, each reading a different subset of
 its bits.
@@ -437,18 +437,18 @@ this point in the session, splitting a single logical accumulator into
 move whenever the ROM's own accumulator changes registers partway
 through a chain of additions with no persisting need for the old one.
 
-Nineteenth matched function: `sub_80068A8` (ROM `0x080068A8`, immediately
-before `sub_80068CC` - joined `src/graphics/oam_count.c` above it, no new split).
-The simplest of this whole cluster: sums three of `sub_800697C`'s five
-callees directly - `sub_8006864 + sub_8006820 + sub_80067EC` - no bit
+Nineteenth matched function: `CountRelics` (ROM `0x080068A8`, immediately
+before `CountGems` - joined `src/graphics/oam_count.c` above it, no new split).
+The simplest of this whole cluster: sums three of `GetCompletionPercent`'s five
+callees directly - `CountSapphireRelics + CountGoldRelics + CountPlatinumRelics` - no bit
 tests, no halving. Matched byte-exact on the first try, no register pins
-needed. Two of the five callees (`sub_8006864`, `sub_8006820`) are now
-each called by *two* different matched functions (`sub_800697C` and
-`sub_80068A8`), and `sub_80067EC` by both of those too - worth matching
+needed. Two of the five callees (`CountSapphireRelics`, `CountGoldRelics`) are now
+each called by *two* different matched functions (`GetCompletionPercent` and
+`CountRelics`), and `CountPlatinumRelics` by both of those too - worth matching
 next, since it would immediately pay off three call sites at once.
 
-Twentieth matched function: `sub_8006864` (ROM `0x08006864`, immediately
-before `sub_80068A8` - joined `src/graphics/oam_count.c` above it, no new split).
+Twentieth matched function: `CountSapphireRelics` (ROM `0x08006864`, immediately
+before `CountRelics` - joined `src/graphics/oam_count.c` above it, no new split).
 Another 20-record loop, this time a genuine **range check** rather than
 a bit test: for each record, take the halfword at `+4`, shift right by
 3, and - if nonzero - count it only if it falls in `(gLevelTable[i].min, gLevelTable[i].max]`,
@@ -479,13 +479,13 @@ from the shifted result's register (`raw`→`r0`, `val`→`r1`), matching a
 now-familiar pattern from earlier entries where the ROM keeps a
 freshly-loaded value and its transformed result in different registers.
 
-Twenty-first and twenty-second matched functions: `sub_8006820` and
-`sub_80067EC` (ROM `0x08006820` and `0x080067EC`, immediately before
-`sub_8006864` - joined `src/graphics/oam_count.c` above it, no new split). Two
+Twenty-first and twenty-second matched functions: `CountGoldRelics` and
+`CountPlatinumRelics` (ROM `0x08006820` and `0x080067EC`, immediately before
+`CountSapphireRelics` - joined `src/graphics/oam_count.c` above it, no new split). Two
 more members of the same `gLevelTable` range-check family:
-`sub_8006820` is `sub_8006864` with different field offsets (`+0xC`/
+`CountGoldRelics` is `CountSapphireRelics` with different field offsets (`+0xC`/
 `+0x10` instead of `+8`/`+0xC` - same anti-CSE inline-asm technique
-reused verbatim, just changing the two constants), while `sub_80067EC`
+reused verbatim, just changing the two constants), while `CountPlatinumRelics`
 is a **simpler single-bound variant**: only checks `val <= table[i].field_at_0x10`
 (no lower bound), and - unlike the other two - the ROM computes the
 bound as a **persistent, pre-biased pointer** (`gLevelTable + 0x10`,
@@ -503,23 +503,23 @@ anchor from the two entries above, worth trying first when the ROM
 "wastes" instructions re-deriving a value gcc would rather fold at
 compile/link time.
 
-Twenty-third through twenty-seventh matched functions: `sub_80067A4`,
-`sub_80067B4`, `sub_80067C4`, `sub_80067D4`, `sub_80067E4` (ROM
-`0x080067A4`-`0x080067EC`, immediately before `sub_80067EC` - joined
+Twenty-third through twenty-seventh matched functions: `ShowTurboRunDialog`,
+`ShowTornadoSpinDialog`, `ShowDoubleJumpDialog`, `ShowSuperBodySlamDialog`, `GetProgressLives` (ROM
+`0x080067A4`-`0x080067EC`, immediately before `CountPlatinumRelics` - joined
 `src/graphics/oam_count.c` above it, no new split). A family of four trivial
-wrappers, each just `sub_80062A8(constA, constB, constC)` with different
+wrappers, each just `ShowPowerDialog(constA, constB, constC)` with different
 constants (likely per-difficulty or per-mode config calls into whatever
-`sub_80062A8` sets up), plus one unrelated one-liner extracting the low 7
+`ShowPowerDialog` sets up), plus one unrelated one-liner extracting the low 7
 bits of a byte. All five matched byte-exact - the four wrappers on the
 first try, no tricks; the bit-mask one needed the shift-trick phrasing
 (`(u32)(byte << 25) >> 25`) instead of `byte & 0x7F`, since gcc's `&`
 with an immediate materializes the mask into a register and ANDs
 (2 instructions, valid but different bytes) rather than reproducing the
 ROM's shift-based extraction (also 2 instructions) - the same idiom
-identified back at `sub_800695C`.
+identified back at `CountCrystals`.
 
-Twenty-eighth matched function: `sub_8006770` (ROM `0x08006770`,
-immediately before `sub_80067A4` - joined `src/graphics/oam_count.c` above it, no
+Twenty-eighth matched function: `DestroyPowerDialog` (ROM `0x08006770`,
+immediately before `ShowTurboRunDialog` - joined `src/graphics/oam_count.c` above it, no
 new split). Two unrelated pieces in one function: if `arg0->+0x18` is
 non-NULL, reads a signed 16-bit offset and a pointer out of a nested
 struct (`arg0->+0x18->+0x18`, offset `+0x50`/`+0x54`) and calls
@@ -533,8 +533,8 @@ named locals, which changed the evaluation order to match the ROM's
 (read the signed halfword, compute the base+offset sum, *then* read the
 trailing pointer field - not both reads up front).
 
-Twenty-ninth matched function: `sub_8006714` (ROM `0x08006714`,
-immediately before `sub_8006770` - joined `src/graphics/oam_count.c` above it, no
+Twenty-ninth matched function: `CommitPowerDialogFrame` (ROM `0x08006714`,
+immediately before `DestroyPowerDialog` - joined `src/graphics/oam_count.c` above it, no
 new split). A scene/frame setup routine: calls `WaitForVBlank(arg0)`, then
 `sub_8006DC8`/`sub_8006AAC` on two globals (`gUnknown_030012B8`,
 `gUnknown_03001300` - the second call is our own already-matched
@@ -552,16 +552,16 @@ between `0x04000010`, a freshly-materialized `0x05000000`, then
 naturally from gcc just evaluating a sequence of plain absolute-address
 volatile pointer dereferences in program order.
 
-Thirtieth matched function: `sub_8006700` (ROM `0x08006700`, immediately
-before `sub_8006714` - joined `src/graphics/oam_count.c` above it, no new split).
+Thirtieth matched function: `AnimatePowerDialog` (ROM `0x08006700`, immediately
+before `CommitPowerDialogFrame` - joined `src/graphics/oam_count.c` above it, no new split).
 Trivial: increments `arg0->field_1c`, then calls `sub_8008044(arg0->field_18)`
-- the same `field_18`/`field_1c` field names as `sub_8006770`, reinforcing
+- the same `field_18`/`field_1c` field names as `DestroyPowerDialog`, reinforcing
 that these functions likely all operate on the same "actor" or "entity"
 struct (not unified into one shared type here, consistent with this
 file's existing per-function-struct style). Matched byte-exact on the
 first try.
 
-**Parked, not matched: `sub_8006600`** (ROM `0x08006600`, immediately before `sub_8006714`). A
+**Parked, not matched: `DrawPowerDialog`** (ROM `0x08006600`, immediately before `CommitPowerDialogFrame`). A
 HUD-icon-plus-number renderer: resets one OAM manager (`sub_8006A90`),
 calls `sub_8006C28` on another global, calls `sub_8008890`, positions a
 left icon by computing its centered X (`(240 - width) >> 1`, width from
@@ -574,14 +574,14 @@ slots. None of `sub_8006C28`, `sub_8008890`, `_call_via_r2`,
 even confidently typed beyond the argument shapes this call site
 implies. Uses `struct icon_record`/`struct icon_manager` for the two
 OAM-slot-record pairs it reads, and extends the existing `struct
-sub_8006700_actor` (shared with `sub_8006700`/`sub_8006714`/
-`sub_8006770`) with `field_10`/`field_14` for `self`'s shape rather than
+sub_8006700_actor` (shared with `AnimatePowerDialog`/`CommitPowerDialogFrame`/
+`DestroyPowerDialog`) with `field_10`/`field_14` for `self`'s shape rather than
 defining a second struct for the same object.
 
 **Build toggle**: this function's C definition in `src/graphics/oam_count.c` is
 wrapped in `#if NON_MATCHING`, and the corresponding raw bytes in
 `asm/code_3_1.s` are wrapped in `.if NON_MATCHING == 0` / `.endif`, so
-exactly one definition of `sub_8006600` is ever assembled. Default builds
+exactly one definition of `DrawPowerDialog` is ever assembled. Default builds
 (`make`/`make compare`) get `NON_MATCHING=0` from the Makefile and use
 the checked-in matching assembly, so `make compare` still passes.
 `make NON_MATCHING=1 crashbandicootxs.gba` (or any other target) instead
@@ -600,7 +600,7 @@ Confirmed via `asmdiff.sh` that the reconstruction matches the ROM's
 **total byte count exactly** (every address past this function lines up
 again), and this session found one genuinely new, safe fix: caching
 `&gUnknown_03001300` in a second high register (`r9`, alongside
-`mgrAddrCache`'s existing `r8` for `&gUnknown_030012E0`) and reloading
+`mgrAddrCache`'s existing `r8` for `&gLargeFont`) and reloading
 through it for the final `sub_8006A48` call reproduces the ROM's exact
 `mov r4, r9` / `ldr r0, [r4]` instructions byte-for-byte - a whole region
 that didn't match in earlier sessions' attempts. High registers keep
@@ -613,11 +613,11 @@ A follow-up pass narrowed this further by reusing registers that are
 already alive rather than introducing new pins - each verified safe and
 applied to the checked-in `#if NON_MATCHING` version:
 
-- **`addr` (the temp holding `&gUnknown_030012E0`) pinned to `r1`**: a
+- **`addr` (the temp holding `&gLargeFont`) pinned to `r1`**: a
   plain scratch local with no cross-call lifetime of its own, so pinning
   it to whatever register the ROM happens to use has no save/restore
   implications at all (`r1` is caller-saved, never part of this
-  question). Reproduces the ROM's `ldr r1, =gUnknown_030012E0; mov r8,
+  question). Reproduces the ROM's `ldr r1, =gLargeFont; mov r8,
   r1; ldr r0, [r1]` exactly, where the unconstrained version had gcc
   pick `r0` instead.
 - **`SUB_8006600_STORE_TWO_FIELDS_REUSE_SELF`**: at the *second* of the
@@ -806,7 +806,7 @@ unrelated and emit a non-matching second literal-pool load/store pair),
 updates `gKeys`, then returns `1` if the low 4 bits (A/B/
 Select/Start) are all held - a "soft reset" combo check. Needed two
 techniques, both entirely on plain caller-saved scratch registers
-(`r0`-`r3`, none of which carry the r4-r7 hazard from the `sub_8006600`
+(`r0`-`r3`, none of which carry the r4-r7 hazard from the `DrawPowerDialog`
 saga): pinning `keysR1`/`mask` to `r1`/`r0` for the closing mask-and-
 compare, since gcc's own unpinned allocator puts the AND's result in a
 fresh register instead of reusing `r1` in place and compares against a
@@ -874,7 +874,7 @@ Six more matched in the same file right after, all first-try:
 - `FixedInverse16`/`FixedDiv16`/`FixedMul16` - three small wrappers/helpers
   around `__divsi3`, sign-extending 16-bit operands in and the result
   back out. `__divsi3` itself looks like an atan2-style angle lookup
-  (see its use in `sub_800697C` as `__divsi3(total * 100, 0x48)` in
+  (see its use in `GetCompletionPercent` as `__divsi3(total * 100, 0x48)` in
   `src/graphics/graphics.c`), which fits `sub_80007EC` calling `FixedInverse16` twice
   to get two BG2 affine scale/rotation parameters from an angle.
 
@@ -895,7 +895,7 @@ points):
   unpinned - gcc's own (unpinned) allocator then puts `len` in r7 on its
   own, which is what actually keeps r7 safe here: a *pinned* r7 never
   gets included in the prologue's push/pop (confirmed again this
-  session, see `sub_8006600`'s notes above), but gcc's own unforced
+  session, see `DrawPowerDialog`'s notes above), but gcc's own unforced
   choice always does. Every other local in this function landing on
   r4-r7 is either never pinned there directly (`len`) or has a lifetime
   that genuinely survives a call within the function (`v`/`buf`/
@@ -1071,7 +1071,7 @@ without disturbing anything else already correct here; not yet found.
 **Build toggle**: this function's C definition in `src/util/printf_util.c` is
 wrapped in `#if NON_MATCHING`, and the corresponding raw bytes in
 `asm/code_3_1_2.s` are wrapped in `.if NON_MATCHING == 0` / `.endif`
-(same pattern as `sub_8006600`, see above), so exactly one definition is
+(same pattern as `DrawPowerDialog`, see above), so exactly one definition is
 ever assembled. Default builds (`make`/`make compare`) get
 `NON_MATCHING=0` and use the checked-in matching assembly (verified via
 a clean `make compare`); `make NON_MATCHING=1 crashbandicootxs.gba`
@@ -1210,7 +1210,7 @@ Struct `sub_8000EE4_box` (the 3rd parameter) has only `field_0`/
 per-line pixel-width budget) named by use; the render-target object
 itself (2nd parameter) isn't given a named struct at all - just raw
 `u8 *self + offset` arithmetic throughout, matching the style already
-established in `sub_8006770` (`src/graphics/oam_count.c`) for the exact same
+established in `DestroyPowerDialog` (`src/graphics/oam_count.c`) for the exact same
 "record is an array of 8-byte `{s16, pad, void *}` entries, 0x10 bytes
 apart" shape - `self->0x130` holds a pointer to that array, and the
 function reads 3 different entries from it (`+0x18`/`+0x28`/`+0x38`)
@@ -1227,7 +1227,7 @@ once and reloaded via pointer variables (`xAddr`/`yAddr`) rather than
 recomputed from `self` each time. The record-array base address
 (`&self->0x130`) is similarly cached once per branch into a plain local
 (`fieldAddr`), reloaded through it on each subsequent access - matching
-`sub_8006600`'s established address-caching pattern (see its notes
+`DrawPowerDialog`'s established address-caching pattern (see its notes
 above) rather than letting `self->0x130` be recomputed fresh, which
 would use more instructions than the ROM's single cached-address reuse.
 
@@ -1275,7 +1275,7 @@ there instead, so it's left out pending a real fix.
 **Build toggle**: this function's C definition in `src/graphics/text_layout.c`
 is wrapped in `#if NON_MATCHING`, and the corresponding raw bytes in
 `asm/code_3_1_3.s` are wrapped in `.if NON_MATCHING == 0` / `.endif`
-(same pattern as `sub_8006600`/`FindSubstring`, see above), so exactly
+(same pattern as `DrawPowerDialog`/`FindSubstring`, see above), so exactly
 one definition is ever assembled. Default builds (`make`/`make compare`)
 get `NON_MATCHING=0` and use the checked-in matching assembly (verified
 via a clean `make compare`); `make NON_MATCHING=1 crashbandicootxs.gba`
@@ -1422,7 +1422,7 @@ struct into the render-target object's own `field_118`, computes a
 line-count limit (`params->field_c / self->field_11c`), then forwards
 to `sub_8000EE4` with that limit and **returns its result** - genuinely
 `s32`, not `void`, even though the one call site matched so far
-(`sub_8006600` in `src/graphics/oam_count.c`, still parked) ignores it. Caught
+(`DrawPowerDialog` in `src/graphics/oam_count.c`, still parked) ignores it. Caught
 via the epilogue: an initial `void`-returning version compiled the
 final "restore LR and branch" step through `r0` (`pop {r0}; bx r0`),
 one register off from the ROM's `pop {r1}; bx r1` - changing the return
@@ -1549,7 +1549,7 @@ edit below):
   anything new, per the point above about `struct oam_shadow_buffer`):
   - `struct sub_8006700_struct` and `struct sub_8006714_struct`
     (`oam_count.c`) turned out to be the same object at compatible
-    offsets - `sub_8006770` independently confirmed `field_18` at the
+    offsets - `DestroyPowerDialog` independently confirmed `field_18` at the
     same address via raw pointer arithmetic. Folded into one
     `struct sub_8006700_actor` used by all three functions.
   - The standalone `struct sub_8006A78_struct` (`graphics.c`) is exactly
@@ -1561,10 +1561,10 @@ edit below):
     type everywhere in the cluster, including the ones that still need
     raw pointer casts internally for volatile/register-pinning reasons.
   - A new `struct threshold_table_entry` documents `gLevelTable`'s
-    layout for `sub_8006820`/`sub_8006864`/`sub_80067EC`. `sub_80067EC`
+    layout for `CountGoldRelics`/`CountSapphireRelics`/`CountPlatinumRelics`. `CountPlatinumRelics`
     now indexes through it with a typed pointer instead of a bare `u8 *`
     (confirmed this doesn't change codegen - the pre-biased-pointer
-    pattern it needs survives the cast). `sub_8006820`/`sub_8006864`
+    pattern it needs survives the cast). `CountGoldRelics`/`CountSapphireRelics`
     keep their inline-asm address computation as-is (switching those to
     plain `entry->threshold_0C`-style field access reintroduces the
     exact CSE problem documented above for them), but now have a comment
@@ -1609,7 +1609,7 @@ previous cleanup, again re-checking both `make compare` and
     u8 unused[2]; void *ptr; } slots[6]` - an 8-byte-stride array,
     confirmed by `sub_8000EE4` (`src/graphics/text_layout.c`, still parked)
     independently needing three *more* slots (`slots[1]`/`[3]`/`[5]`,
-    at the offsets right in between the two `sub_8006600` already used)
+    at the offsets right in between the two `DrawPowerDialog` already used)
     for its own per-glyph and newline-marker OAM draws. `text_layout.c`
     now takes a real `struct icon_manager *`/`struct icon_record *`
     instead of raw `u8 *self + <offset>` arithmetic throughout.
@@ -1897,7 +1897,7 @@ shape had shown up often enough (position, a flags byte, a
 width/height pair stored two ways, a per-category table pointer) to
 be worth a real struct instead of another round of "raw offsets,
 matching the many similar actor-zone functions" comments - and
-`oam_count.c`'s `sub_8006770` (already-matched, `struct
+`oam_count.c`'s `DestroyPowerDialog` (already-matched, `struct
 sub_8006700_actor.field_18`) turned out to be a pointer to exactly
 the same object, confirming it independently. New `struct actor` in
 `include/actor.h`, sized `0x1c` bytes (confirmed by `sub_80071E4`'s
@@ -2122,7 +2122,7 @@ storage location to match) didn't converge on the exact original
 local-variable shape needed to reproduce the rest of the stack layout.
 Compiled only under `NON_MATCHING`, with the checked-in matching
 assembly (`asm/code_3_2.s`, guarded by `.if NON_MATCHING == 0`) used
-otherwise - same pattern as `sub_8006600`/`sub_8000EE4` above.
+otherwise - same pattern as `DrawPowerDialog`/`sub_8000EE4` above.
 
 **`sub_8007634`**: left entirely untouched (still raw asm, no
 reconstruction attempted at all - a genuinely different situation from
@@ -2236,7 +2236,7 @@ byte load and the following `lsl` land in the same register here,
 where the ROM uses two) - the same gap documented at length in
 `sub_8007B98`'s entry below, just two instances of it instead of ten.
 Parked as `NON_MATCHING` rather than continue chasing individual
-register choices - same call as `sub_8006600`/`sub_8000EE4`/
+register choices - same call as `DrawPowerDialog`/`sub_8000EE4`/
 `sub_80073DC` above.
 
 **Follow-up session, extremely close now**: applying `sub_8007B98`'s
@@ -2553,7 +2553,7 @@ into `asm/code_3_2_3.s` (now just the parked `sub_8007DBC`) and a new
 `src/graphics/actor_part3.c` (holding just `sub_8007F78`) inserted
 between them in `ldscript.txt`.
 
-**`sub_8027838`** (ROM `0x08027838`, 262 bytes, contributed via PR #1 by
+**`UpdateHudLives`** (ROM `0x08027838`, 262 bytes, contributed via PR #1 by
 @MiryamSanchez26, new
 `src/graphics/hud_counter.c`): updates a cached two-digit HUD counter
 from the central state object's `+0x74` value. Negative source values
@@ -2564,7 +2564,7 @@ When the value changes, values above 9 are split with `__divsi3` and
 frame `-1`. Every visible frame is clamped against the selected
 0x1c-byte animation record's frame count, matching the pattern already
 established by `sub_8008618`. The function then refreshes the two digit
-parts and their adjacent icon part through `sub_80270E0`, and updates
+parts and their adjacent icon part through `DrawHudPart`, and updates
 its change-detection cache.
 
 Plain struct-based C reproduced the behavior but emitted 252 bytes and
@@ -3437,7 +3437,7 @@ rather than risk a silent miscompile for a cosmetically closer
 register match.
 
 **Follow-up session**: the register-pressure technique that closed
-`sub_8006600`'s first half (raise pressure via genuinely separate,
+`DrawPowerDialog`'s first half (raise pressure via genuinely separate,
 unpinned plain locals until gcc's own *natural* allocator reaches for
 `r7`) had never been tried here - this session tried it and it worked,
 closing the actual documented blocker. Pinning the `self` parameter to
@@ -3481,7 +3481,7 @@ Given the size of the remaining gap (roughly 15-20 residual
 instructions across the box-setup section and the loop body's address-
 chain reuse, versus ~135 total), a scoped permuter search over just
 those regions - the same untried angle already suggested for
-`sub_8006600`'s own residual - is probably the most promising next
+`DrawPowerDialog`'s own residual - is probably the most promising next
 step, rather than further manual C rephrasing.
 
 ## Diving into the AI/collision cluster: `sub_8008A40`
@@ -3603,7 +3603,7 @@ Otherwise: tests `part` against the box again via `sub_8009FF4`.
 Result 1: sets the player's `flags` bit 3; if the player's `+0xa` byte
 is exactly 1 and its `+0x64` counter is positive, fires two
 trampolines (`part`'s own, then the player's) and plays SFX `0x21` via
-`gUnknown_030012BC`; otherwise (byte != 1) fires a single `part`-table
+`gAudioContext`; otherwise (byte != 1) fires a single `part`-table
 trampoline with the player's `+0xa` byte as the third argument (the
 same shared tail the mode-3 branch above also reaches). Result 2:
 sets `part->flags` bit 3; if the mode field is nonzero, fires a
@@ -4886,21 +4886,21 @@ convention and isn't tracked as a function to match. `asm/code_3_1.s`
 
 Matched 23 of the 25 functions in this chunk (issue #2 in the
 `decomp-chunk` generation), all operating on one shared `AudioContext`
-object (`*gUnknown_030012BC` in the ROM - an 8340-byte allocation from
+object (`*gAudioContext` in the ROM - an 8340-byte allocation from
 `sub_8022230`, see docs/rom_map.md's "Found the origin point" section)
 - new struct in `include/audio.h`, modeling the leading `0x58` bytes
 this cluster actually touches (fields for state/current-and-pending
 song, two independent fade-envelope pairs, an ambient-sfx `id`/
 `deadline`/`volume` record pair, and the round-robin `PlaySfx`
-history). `sub_80017BC`'s embedded GAX2 runtime player-state object at
+history). `StartSong`'s embedded GAX2 runtime player-state object at
 `self+0x58` stays raw offset casts - genuinely nested engine-internal
 state (`GAX2_new`/`GAX2_init` own it), not independently
 reverse-engineered. This is the **first matched code anywhere in the
 GAX2 wrapper/engine address family** - `docs/status/audio.md` no
 longer says "not started."
 
-New files: `src/audio/music_player.c` (`sub_80016EC` per-tick fade
-update, `sub_80017BC` start-song), `src/audio/sfx_ambient.c`
+New files: `src/audio/music_player.c` (`UpdateAudio` per-tick fade
+update, `StartSong` start-song), `src/audio/sfx_ambient.c`
 (`TickAmbientSfx`/`StopSfx`/`ResetAmbientSfx`/`StopAmbientSfx`, the
 ambient/looping-sfx-channel tick/stop/reset/force-expire cluster), and
 `src/audio/audio_context.c` (the remaining 17-function accessor/
@@ -4920,24 +4920,24 @@ movs rX,#1; skip: cmp rX,#0; beq/bne ...`. Writing the natural
 branch instead - one instruction pair short. Every function in this
 chunk that checks `state` against 0/1/2 needed the explicit two-step
 `s32 flag = 0; if (cond) flag = 1; if (flag) {...}` form to reproduce
-this. `sub_8001BD4` additionally needed the materialized flag and the
+this. `StopSong` additionally needed the materialized flag and the
 "reused as the zero constant for later stores" value pinned to two
 *different* registers (`register s32 isStopped asm("r2")` for the
 materialization, `register s32 zero asm("r4")` for the copy that
 survives across the `GAX_stop()` call) - a plain single local
 collapses the two into one register and drops an instruction, since
 gcc's own CSE proves they're redundant when nothing forces them apart.
-`sub_80017BC` needed the identical `r1`/`r4` split for its own
+`StartSong` needed the identical `r1`/`r4` split for its own
 first-time-init guard.
 
-**Two-sided branches don't get this idiom automatically**: `sub_8001B54`
+**Two-sided branches don't get this idiom automatically**: `PlaySong`
 has a genuine `if (!isPlaying) { call; return; } ...more code...`
 shape, which on its own compiles to a direct `beq`, not the ROM's
 materialized form - it needed the explicit `s32 isPlaying = 0; if
 (state == 1) isPlaying = 1;` written out by hand despite the "guard
 plus continuation" shape reading like it wouldn't need it.
 
-**Signedness matters for fade-envelope comparisons**: `sub_80016EC`'s
+**Signedness matters for fade-envelope comparisons**: `UpdateAudio`'s
 `musicVolCurrent`/`Target` and `duckVolCurrent`/`Target` fields must be
 `s32`, not `u32` - the ROM compares them with `blt`/`bgt` (signed),
 and a `u32` field produces `bcc`/`bhi` (unsigned) instead, an otherwise
@@ -4945,7 +4945,7 @@ invisible mismatch until diffed instruction-by-instruction. Getting the
 `if`/`else` body order backwards was a second, related trap: the ROM's
 branch instruction always tests the *negation* of the `else`-arm's
 condition (the "then" arm compiles inline/falls-through, the `else`
-arm is branched-to) - `sub_80016EC`'s four fade blocks all needed
+arm is branched-to) - `UpdateAudio`'s four fade blocks all needed
 `if (cur >= target) { clamp } else { ramp }`, not the more natural-
 reading `if (cur < target) { ramp } else { clamp }`, to get `blt`
 (not `bge`) as the actual encoded branch.
@@ -5028,7 +5028,7 @@ respectively) under `#if NON_MATCHING` - same convention as
 `sub_8001624`/`aabb_util.c` earlier in this same address range. This
 split the original `asm/code_3_1_10.s` into three pieces
 (`code_3_1_10.s`/`_2.s`/`_3.s`, the last holding everything from
-`sub_8001C80` onward, entirely unchanged) since the two parked
+`EnableMusicVCountIrq` onward, entirely unchanged) since the two parked
 functions sit physically between the three new matched `.c` files.
 
 Verified via both an isolated per-function compile *and* a full clean
@@ -5047,7 +5047,7 @@ between resist matching or aren't understood well enough yet, per the
 project's "one `.c` file per contiguous ROM region" rule):
 
 - **`src/audio/counter_selector.c`** (`sub_8037110`, `nullsub_7`,
-  `sub_8037154`, `sub_803716C`, `sub_80371B4`, `sub_8037224`) - reads
+  `sub_8037154`, `sub_803716C`, `RunLanguageSelect`, `LanguageSelectInput`) - reads
   like game/HUD-side code that merely *calls into* audio (`PlaySfx`)
   rather than GAX2 engine internals: a small on-screen 0-5 "counter"
   widget (`counter_widget`, 0x14 bytes: a frame counter, a "done" flag,
@@ -5078,7 +5078,7 @@ project's "one `.c` file per contiguous ROM region" rule):
     constants (with two `sub_8028C48` "commit" calls in between), then
     unlinks itself from a doubly-linked list (`next->prev = prev;
     prev->next = next;`) and optionally `mem_free`s itself.
-  - `sub_80371B4` is a genuine `while` loop (test at the bottom, jumped
+  - `RunLanguageSelect` is a genuine `while` loop (test at the bottom, jumped
     to unconditionally past the loop body first, then branching back)
     - not a `do-while` - even though the loop body always runs at least
     once in practice (the just-zeroed exit flag guarantees the first
@@ -5090,16 +5090,16 @@ project's "one `.c` file per contiguous ROM region" rule):
     idiom from `WaitForKeyPress` (`src/system/input_util.c`) - folding the
     `+2` into the literal constant itself compiles to `ldrh r1,[r0]`
     with no offset, not the ROM's `ldrh r1,[r0,#2]`.
-  - `sub_8037224`'s bit-3/bit-0 "confirm" cases share their `PlaySfx`
+  - `LanguageSelectInput`'s bit-3/bit-0 "confirm" cases share their `PlaySfx`
     call via a `goto`, matching the ROM's own tail-sharing rather than
     duplicating the call in an `if`/`else if`.
 
-- **`src/audio/counter_selector_setup.c`** (`sub_80374D0`,
-  `sub_8037534`, `sub_8037548`, `sub_8037578`, `sub_80375A0`,
-  `sub_80375EC`, `sub_8037620`) - the widget's graphics/BG setup,
+- **`src/audio/counter_selector_setup.c`** (`LoadLanguageSelectBg`,
+  `LanguageSelectBlink`, `CommitLanguageSelectFrame`, `DestroyLanguageSelect`, `InitLanguageSelect`,
+  `CloseLanguageSelect`, `OpenLanguageSelect`) - the widget's graphics/BG setup,
   draw-flush, and init/teardown pair. Non-adjacent to the file above
-  since `sub_80372BC`/`sub_8037388` sit raw between them (see below).
-  - `sub_80374D0`'s two-byte-field bit-twiddle (`field_c`/`field_d`,
+  since `DrawLanguageSelect`/`InitLanguageSelectGraphics` sit raw between them (see below).
+  - `LoadLanguageSelectBg`'s two-byte-field bit-twiddle (`field_c`/`field_d`,
     read via `ldrb`/written via `strb`, but *zeroed* together via one
     `strh`) needed the "negative-constant bit-clear idiom"
     (`& -8`/`& -3`, not `& ~8`/`& ~3` - a different mask entirely, and
@@ -5109,27 +5109,27 @@ project's "one `.c` file per contiguous ROM region" rule):
     temp/mask pair - without the pin, gcc reused the first field's
     already-computed `1` immediate for the second field's `-3` mask via
     a one-instruction `sub` instead of the ROM's fresh `mov`+`rsb` pair.
-  - `sub_8037548`/`sub_80374D0`'s `REG_DISPCNT`/`REG_BG0HOFS` writes
+  - `CommitLanguageSelectFrame`/`LoadLanguageSelectBg`'s `REG_DISPCNT`/`REG_BG0HOFS` writes
     needed the *combined* width the ROM actually uses - `REG_DISPCNT`
     is fed both `field_c` and `field_d` at once via `*(u16 *)&self->
     field_c` (a real `ldrh`, not two separate byte accesses), and
     `REG_BG0HOFS` is written as a 32-bit `*(vu32 *)` (covering
     BG0HOFS+BG0VOFS together as one `str`), not the plain 16-bit
     `REG_BG0HOFS = 0` macro.
-  - `sub_8037578` reads `self->field_10` once for its null check and
-    **reuses that same loaded pointer value** as `sub_80346FC`'s first
+  - `DestroyLanguageSelect` reads `self->field_10` once for its null check and
+    **reuses that same loaded pointer value** as `DestroyStarfield`'s first
     argument - it is not `self` itself. This was the one bug the full
     rebuild caught here (the isolated per-file compile looked fine): a
     stray extra `adds r0,r4,#0` shifted every following byte in the ROM
     by 2, corrupting the compare on a totally unrelated distant offset
     until traced back via `cmp`+`objdump` to this exact spot.
-  - `sub_80375A0`/`sub_8037620` chain three unmatched-looking nested
-    allocator calls (`sub_8034374(sub_8026EDC(0x14))`, and
-    `gUnknown_030008CC = sub_80375A0(sub_8026EDC(0x14))`) - the ROM
+  - `InitLanguageSelect`/`OpenLanguageSelect` chain three unmatched-looking nested
+    allocator calls (`InitStarfield(sub_8026EDC(0x14))`, and
+    `gLanguageSelect = InitLanguageSelect(sub_8026EDC(0x14))`) - the ROM
     genuinely never re-loads `r0` between the two `bl`s, so the
     "argument is literally the previous call's return value" reading is
     correct, not a missed dereference.
-  - `sub_8037388` itself is declared `extern` here (takes an ignored
+  - `InitLanguageSelectGraphics` itself is declared `extern` here (takes an ignored
     `self` argument - confirmed by the caller's `adds r0,r4,#0` before
     the `bl`) but left un-matched; see below.
 
@@ -5156,10 +5156,10 @@ project's "one `.c` file per contiguous ROM region" rule):
 
 **Left raw, not attempted this pass** (all fully described in
 `tools/report_units.py`'s `UNITS` table and `docs/status/audio.md`):
-`sub_80372BC`/`sub_8037388` (fully understood - an icon-manager draw
+`DrawLanguageSelect`/`InitLanguageSelectGraphics` (fully understood - an icon-manager draw
 loop and its supporting tile-cache-init/field-copy helper - but they
 hit the exact same many-register (`r8`/`r9`/`sl`) gcc-2.9 allocation
-difficulty already documented for `sub_8006600` in
+difficulty already documented for `DrawPowerDialog` in
 `src/graphics/oam_count.c`, no matter how the source was rephrased);
 `__divdi3`/`__udivdi3`/`__udivsi3`/`__muldi3`/`GaxZeroFill`
 (generic 64-bit software division/multiply helpers interleaved in the
@@ -5308,7 +5308,7 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
 - **`UpdateGameFrame`** itself (`asm/code_3_2_17_225a0.s`, ROM
   `0x080225A0`-`0x08022BF0`, ~730 instructions) - the main per-frame
   driver: a level-load state loop (calling `LoadLevelGraphics`,
-  `sub_8035E14`, the map/progress-screen trigger `sub_80354BC`), a
+  `sub_8035E14`, the map/progress-screen trigger `RunCredits`), a
   5-case jump table dispatching on the player's current state
   (`sub_80231BC`/`80231A8`/`80231B4`/`80231C4`/`80231CC` gating,
   `sub_8023190`/`8184`/`819C`/`80231A8` transitioning), and an
@@ -5348,7 +5348,7 @@ Verified via a full clean `make compare` (`La suma coincide`) and
 ## `0x08026EEC`-`0x08028568` (GitHub issue #45, `hud` chunk): 14 of 24 matched
 
 Picked up the 25-function `hud` chunk generated for issue #45
-(`0x08026EEC`-`0x08028568`); `sub_8027838` had already landed on `main`
+(`0x08026EEC`-`0x08028568`); `UpdateHudLives` had already landed on `main`
 independently (PR #1, see its own entry above) so the real remaining
 count was 24. Matched 14, left 10 untouched in the raw `.s` files (with
 reasons below) rather than force low-confidence reconstructions of the
@@ -5361,7 +5361,7 @@ chunk's biggest, least-understood cluster in one pass.
   per-level state object (`gLevelState`, via `GetLevelState`/
   `sub_802369C`/`sub_8023674`/`sub_8023658` - none of those four are
   understood beyond "state setup", left as opaque `extern` calls), the
-  on-screen counter widget (`sub_8037620`/`sub_80371B4`/`sub_80375EC`,
+  on-screen counter widget (`OpenLanguageSelect`/`RunLanguageSelect`/`CloseLanguageSelect`,
   already-matched in `src/audio/counter_selector*.c`), then loops
   `UpdateGameFrame` forever, freeing scratch memory (`MEM_HEAP_BOTH`)
   before and after each frame. Never actually returns - the `s32`
@@ -5371,48 +5371,48 @@ chunk's biggest, least-understood cluster in one pass.
 - **`GetUiText`**: a plain two-level table lookup,
   `gUiTextTables[gLanguage][index]` - `gUiTextTables`
   is an array of per-language string tables (`gLanguage` is
-  the language `MainLoop` just set from `sub_80371B4`'s return); the
+  the language `MainLoop` just set from `RunLanguageSelect`'s return); the
   tables' own contents aren't characterized.
 
 Both compiled byte-identical to the ROM on the first try - no register
 pins or reordering needed.
 
 **Matched, new `src/graphics/hud_icon_slot.c`** (non-adjacent to
-`hud_counter.o` - `sub_8027138`-`sub_802763C` sit raw between them):
+`hud_counter.o` - `InitHud`-`UpdateHudClock` sit raw between them):
 
-- **`sub_8027088`**/**`sub_80270C0`**: reset/construct a fixed 3-entry
+- **`ClearPaletteCycles`**/**`InitPaletteCycles`**: reset/construct a fixed 3-entry
   particle/effect queue object (new local `struct hud_fx_queue`,
   0x48 bytes - `active` flag, two touched 3-element parallel arrays at
-  `+0x10`/`+0x1c`, `count` at `+0x40`) - the consumer (`sub_8026F54`)
-  and producer (`sub_8027018`) that actually use the other two parallel
+  `+0x10`/`+0x1c`, `count` at `+0x40`) - the consumer (`TickPaletteCycles`)
+  and producer (`AddPaletteCycle`) that actually use the other two parallel
   arrays (`+0x28`/`+0x34`) and the `active`/`count` fields are both
   left raw (see "Left untouched" below), so the struct only names the
-  fields this pair touches. `sub_80270C0` is the constructor (called
-  right after `sub_8026EDC(0x48)`, returns `self`); `sub_8027088` is a
-  mid-life reset (called right before `sub_8027018` queues a fresh
+  fields this pair touches. `InitPaletteCycles` is the constructor (called
+  right after `sub_8026EDC(0x48)`, returns `self`); `ClearPaletteCycles` is a
+  mid-life reset (called right before `AddPaletteCycle` queues a fresh
   entry, return value unused). Confirmed same object via call-site
   cross-reference in the still-raw `asm/code_3_2_17_231cc.s` (both
-  `sub_8027088` and `sub_8027018` are called back-to-back on
-  `gUnknown_030012C8`, and `sub_80270C0` constructs that exact global
+  `ClearPaletteCycles` and `AddPaletteCycle` are called back-to-back on
+  `gPaletteCycles`, and `InitPaletteCycles` constructs that exact global
   right after its `0x48`-byte allocation).
-- **`sub_80270A8`**: teardown counterpart to `sub_80270C0` - frees
+- **`DestroyPaletteCycles`**: teardown counterpart to `InitPaletteCycles` - frees
   `self` via `sub_8026ED0` when bit 0 of `flags` is set.
-- **`sub_80270E0`**: draws one HUD digit/icon slot's current frame
+- **`DrawHudPart`**: draws one HUD digit/icon slot's current frame
   (`sub_8008890`) unless it's hidden (`frame_index == -1`, the
-  single-digit case `sub_8027838` sets on the second digit), offsetting
-  Y by the shared HUD layout value (`gUnknown_0300086C`). Already
+  single-digit case `UpdateHudLives` sets on the second digit), offsetting
+  Y by the shared HUD layout value (`gHudSlideOffset`). Already
   referenced as an `extern` from `hud_counter.c`; this is its real
   definition.
 - **`sub_802710C`** (UNUSED - no caller anywhere in the ROM, checked
-  `asm/*.s`, `expected/*.s`, every `src/*.c` file) and **`sub_8027120`**:
+  `asm/*.s`, `expected/*.s`, every `src/*.c` file) and **`InitHudPart`**:
   two `struct actor`-table-swap constructors for one HUD digit/icon
   slot, confirming `struct hud_digit_part`'s first 0x18 bytes plus
   `table` at `+0x18` are byte-identical to `struct actor`
   (`include/actor.h`) - both call the same generic `sub_80088F0`/
   `sub_8008904` table-swap helpers already matched for the actor/part
   system (`actor_part7.c`), just with this widget family's own
-  `gStaticData_087E4CB4` table. `sub_8027120` is called 35 times in a
-  loop by the still-raw `sub_8027138` (stride `0x40` = `sizeof(struct
+  `gStaticData_087E4CB4` table. `InitHudPart` is called 35 times in a
+  loop by the still-raw `InitHud` (stride `0x40` = `sizeof(struct
   hud_digit_part)`, confirming the struct size independently).
 
 Moved `struct hud_anim_record`/`hud_anim_data`/`hud_digit_part`/
@@ -5423,10 +5423,10 @@ first" convention) - `hud_digit_part.table` is the one new field this
 pass added, splitting it out of what was previously an opaque
 `unknown_00[0x20]` blob.
 
-**Matched, new `src/graphics/hud_blink.c`** (`sub_8028400`-
-`sub_8028520`, contiguous):
+**Matched, new `src/graphics/hud_blink.c`** (`UpdateHudSlides`-
+`StepHudSlide`, contiguous):
 
-A 3-slot icon "blink" animation timer on the `gUnknown_03001318`
+A 3-slot icon "blink" animation timer on the `gHud`
 object (already referenced as `void *` from `src/system/game_loop.c`/
 `game_loop2.c` - kept the same untyped convention here rather than
 naming a struct, since the object extends past this file's own fields,
@@ -5435,27 +5435,27 @@ to at least `+0x28` per `sub_8028568`). Each slot is a `{state, timer}`
 counting down 0x14 frames then -> 3, 3 counting down its own timer
 then back to 0.
 
-- **`sub_8028400`**: per-frame tick, gated on the central state
+- **`UpdateHudSlides`**: per-frame tick, gated on the central state
   object's `+0x8c` flag - force-advances slots 0 and 1 out of a stuck
-  1/2 state, then runs the generic advance (`sub_8028520`) on all three
+  1/2 state, then runs the generic advance (`StepHudSlide`) on all three
   slots unconditionally.
-- **`sub_8028474`**/**`sub_80284A4`**/**`sub_80284D4`**: per-slot
+- **`sub_8028474`**/**`ShowHudLives`**/**`ShowHudWumpa`**: per-slot
   triggers (slots 2/0/1 respectively) - start a fresh blink from idle
   or finished, or refresh the timer if already in the "on" phase; only
   runs while `+0x8c` is clear (opposite gating from the tick above).
-- **`sub_8028504`**: fires all three triggers at once.
-- **`sub_8028520`**: the generic single-slot advance shared by the
+- **`ShowHudCounters`**: fires all three triggers at once.
+- **`StepHudSlide`**: the generic single-slot advance shared by the
   tick function above.
 
 Two register/codegen gaps hit while matching this file, both explained
 in the source's own comments (`docs/workflow.md` step 7 convention):
 
-1. `sub_8028400`'s four field-address expressions (`state`+`0`/`4`/`8`/
+1. `UpdateHudSlides`'s four field-address expressions (`state`+`0`/`4`/`8`/
    `0xc`) must stay inline at each use site rather than cached into
    local pointer variables - caching them pulls four extra values into
    callee-saved registers (`r5`-`r8`, needing an extra push/pop pair)
    that the ROM's version doesn't have.
-2. `sub_8028520`'s `switch` needs an explicit, never-taken `case 0:`
+2. `StepHudSlide`'s `switch` needs an explicit, never-taken `case 0:`
    arm to compile as the ROM's plain ascending compare chain (`1`, then
    an early-out for `<= 1`, then `2`, then `3`) - without it, this
    compiler lowers a 3-case (`1`/`2`/`3`) switch as a balanced
@@ -5464,35 +5464,35 @@ in the source's own comments (`docs/workflow.md` step 7 convention):
 
 **Left untouched (raw `.s`, no C attempted):**
 
-- **`sub_8026F54`/`sub_8027018`** (new `asm/code_3_2_17_26f54.s`) - the
+- **`TickPaletteCycles`/`AddPaletteCycle`** (new `asm/code_3_2_17_26f54.s`) - the
   fixed-3-entry queue's consumer and producer (see
   `struct hud_fx_queue` above); `docs/rom_map.md`'s "fx" investigation
   read these in detail (an angle field via `__divsi3`, suggesting a
   particle/projectile trajectory queue) but didn't reach byte-precision
   confidence.
-- **`sub_8027138`/`sub_802732C`** (new `asm/code_3_2_17_27138.s`, first
-  half) - a 34/35-slot OAM array setup pair (calls `sub_8027120` in a
-  loop, per above), heavy on interleaved `gStaticData_08174BE0`/
-  `gStaticData_08174C6C` table indexing not chased down this pass.
-- **`sub_80274EC`/`sub_802757C`/`sub_802763C`** (same file, second
+- **`InitHud`/`sub_802732C`** (new `asm/code_3_2_17_27138.s`, first
+  half) - a 34/35-slot OAM array setup pair (calls `InitHudPart` in a
+  loop, per above), heavy on interleaved `gHudPartAnims`/
+  `gHudPartPositions` table indexing not chased down this pass.
+- **`UpdateHud`/`sub_802757C`/`UpdateHudClock`** (same file, second
   half) - the HUD stat-widget dispatcher and its icon-indicator/digit-
   counter callees documented in `docs/rom_map.md`'s "full HUD
   stat-widget family" section; genuinely understood at the semantic
   level already, but matching them to the same register-pin precision
-  `sub_8027838` needed (see its own PR #1 entry above) is a bigger job
+  `UpdateHudLives` needed (see its own PR #1 entry above) is a bigger job
   than fit in this pass.
-- **`sub_8027940`/`sub_8027D5C`/`sub_8027E88`** (`asm/code_3_2_20.s`,
+- **`sub_8027940`/`UpdateHudWumpa`/`sub_8027E88`** (`asm/code_3_2_20.s`,
   now truncated to just these three) - the rest of that same digit-
   counter family (score counter, a third cached counter, and the
   percentage counter) - same reason as above.
 
 **File structure:** `asm/code_3_2_17_231cc.s` is now truncated right
 before `MainLoop`; followed by `main_loop.o`, the new raw
-`code_3_2_17_26f54.s` (`sub_8026F54`/`sub_8027018`), `hud_icon_slot.o`,
-the new raw `code_3_2_17_27138.s` (`sub_8027138` through
-`sub_802763C` - the original file's unchanged remainder), then the
+`code_3_2_17_26f54.s` (`TickPaletteCycles`/`AddPaletteCycle`), `hud_icon_slot.o`,
+the new raw `code_3_2_17_27138.s` (`InitHud` through
+`UpdateHudClock` - the original file's unchanged remainder), then the
 existing `hud_counter.o`. `asm/code_3_2_20.s` is now truncated to just
-`sub_8027940`/`sub_8027D5C`/`sub_8027E88`; followed by `hud_blink.o`,
+`sub_8027940`/`UpdateHudWumpa`/`sub_8027E88`; followed by `hud_blink.o`,
 then the new raw `code_3_2_20_28568.s` (`sub_8028568` onward - the
 original file's unchanged remainder). See `ldscript.txt` and
 `tools/report_units.py`'s `hud` category entries, both updated to
@@ -5821,7 +5821,7 @@ enough yet):
 point and its DMA1/Timer0 direct-sound follow-ups - genuinely understood
 at the prose level per docs/audio.md, but hits the same many-register
 `r8`/`sb`/`sl` gcc-2.9 allocation difficulty already documented for
-`sub_8006600`/`sub_80372BC`); `GAX_play`/`GAX_fx`/`GAX_fx_ex`
+`DrawPowerDialog`/`DrawLanguageSelect`); `GAX_play`/`GAX_fx`/`GAX_fx_ex`
 (more mixer-tick/voice-stealing internals); `GAX_stop_fx`/`GAX_set_music_volume`/
 `GAX_set_fx_volume` (a per-channel mute/volume-set family - confirmed via
 isolated compile that the ROM's own codegen for this exact loop shape
@@ -5860,29 +5860,29 @@ This is the chunk `docs/rom_map.md`'s "narrowed down which screen
 `overlay_ui` is" section already characterized in detail: a settings
 screen with (per that section) four numeric-slider rows drawn via a
 shared icon-manager centered-label toolkit (the same
-`gUnknown_030012DC`/`gUnknown_030012E0` structs and `_call_via_r2`/
-`GetUiText` calls `sub_8006600`, already parked in
+`gSmallFont`/`gLargeFont` structs and `_call_via_r2`/
+`GetUiText` calls `DrawPowerDialog`, already parked in
 `src/graphics/oam_count.c`, uses for its flanking-icon draw). 16 of the
 25 functions matched; the rest hit that exact same class of gcc-2.9
-register-allocation difficulty `sub_8006600` already hit, or (two of
+register-allocation difficulty `DrawPowerDialog` already hit, or (two of
 them) weren't understood confidently enough to force a reconstruction.
 
 **Matched** (`src/graphics/settings_menu2.c`, `src/graphics/settings_menu3.c`):
 `sub_80047F8` (BG-load helper - literally the same shape as
-`sub_80374D0` in `src/audio/counter_selector_setup.c`, just at
+`LoadLanguageSelectBg` in `src/audio/counter_selector_setup.c`, just at
 different field offsets and with an extra `field_0 = 0`),
-`sub_8004860`/`sub_80048E0` (per-row stats gatherer/aggregator, sharing
-a five-function battery: `sub_8006920`/`sub_80068A8`/`sub_80067E4`/
-`sub_800695C`/`sub_800697C`), `sub_80048BC`, `sub_8004A50` (the
+`RefreshSaveSlotSummaries`/`SummarizeProgress` (per-row stats gatherer/aggregator, sharing
+a five-function battery: `CountClearGems`/`CountRelics`/`GetProgressLives`/
+`CountCrystals`/`GetCompletionPercent`), `LoadSaveMenuData`, `sub_8004A50` (the
 `(flags>>2)&1` bit test repeated throughout this whole chunk - note it
 shifts *arithmetically*, so the field is `s32` not `u32`), `sub_8004A64`/
 `sub_8004A80` (link-cancel-flag pair - the second doesn't cache the
 global's *value* across its call the way the first does, it re-reads
 the global fresh both times, a genuine ROM difference between two
 near-identical-looking functions), the six near-identical per-item
-wrappers `sub_8004AA4`/`sub_8004ACC`/`sub_8004AFC`/`sub_8004B24`/
-`sub_8004B54`/`sub_8004B70`/`sub_8004BA0` `docs/rom_map.md` already
-found call `sub_80041BC`, `sub_8004BD0` (the state jump-table
+wrappers `DrawSaveMenuConfirmDelete`/`DrawSaveMenuDelete`/`DrawSaveMenuOverwrite`/`DrawSaveMenuSave`/
+`DrawSaveMenuMessage`/`DrawSaveMenuLoadLink`/`DrawSaveMenuLoad` `docs/rom_map.md` already
+found call `sub_80041BC`, `DrawSaveMenu` (the state jump-table
 dispatcher - needed explicit `case 8:`/`case 10:` labels, even though
 both are empty, to keep gcc emitting an 11-entry jump table matching
 the ROM instead of collapsing to a 10-entry one with an extra bounds
@@ -5890,7 +5890,7 @@ check; also needed case `9`'s body written *before* case `7`'s in the
 switch statement to get gcc to lay the two call blocks out in the ROM's
 address order - the jump table's *data* was already correct either
 way, only the two bodies' relative position in `.text` was wrong),
-`sub_8004C7C` (needed a trailing `asm(".align 2, 0")` per the
+`DeleteSaveSlot` (needed a trailing `asm(".align 2, 0")` per the
 established alignment-padding gotcha - gcc's own padding NOP encodes as
 `mov r8, r8` here where the ROM has `movs r0, r0`).
 
@@ -5901,8 +5901,8 @@ reconstructions in `src/graphics/settings_menu.c`) - `sub_8003B40`,
 `sub_8004914`, `sub_80049CC`:
 
 - **`sub_80049CC`** is the cleanest case and the template for the rest:
-  a centered-label draw into `gUnknown_030012E0`'s icon pair, matching
-  `sub_8006600`'s shape. With `label`/`slot0`/`mgrAddr`/`mgr`/`recOff`
+  a centered-label draw into `gLargeFont`'s icon pair, matching
+  `DrawPowerDialog`'s shape. With `label`/`slot0`/`mgrAddr`/`mgr`/`recOff`
   pinned to `r9`/`r8`/`r6`/`r4`/`r5` (mirroring the ROM's own register
   choices exactly) and the destination-address computation
   (`mgr = mgr + slot->offset`) reordered *before* the `GetUiText`
@@ -5916,9 +5916,9 @@ reconstructions in `src/graphics/settings_menu.c`) - `sub_8003B40`,
   gap without introducing a worse one (the inline-asm route adds a
   spurious sign-extension pair gcc can't see through its own `ldrsh`
   already did). This is the same class of "last mile" gcc-2.9
-  scratch-register nondeterminism `sub_8006600` documents at length.
+  scratch-register nondeterminism `DrawPowerDialog` documents at length.
 - **`sub_8003C90`** is `sub_80049CC`'s sibling (fixed label `0x23`,
-  `gUnknown_030012DC` not `E0`, plus a highlight/plain visibility
+  `gSmallFont` not `E0`, plus a highlight/plain visibility
   branch) and came within one register-letter choice of matching after
   reordering the `half = (0xf0-width)>>1` computation ahead of the
   `mgr` reload it precedes in the ROM - the remaining gap is which
@@ -5964,13 +5964,13 @@ reconstructions in `src/graphics/settings_menu.c`) - `sub_8003B40`,
 **File structure:** `sub_8003C90` (parked) sits between `sub_8003BDC`
 and `sub_8003D3C`, appended to the end of `asm/code_3_1_10_3.s` (kept
 in its original ROM position rather than moved, exactly like
-`sub_8006600`) rather than getting cut out - since every function in
+`DrawPowerDialog`) rather than getting cut out - since every function in
 `src/graphics/settings_menu.c` is `#if NON_MATCHING`-guarded, that file
 compiles to nothing in a default build and its ldscript slot is simply
 empty. `asm/code_3_1_10_4.s` (new: `sub_8003D3C` through `sub_800450C`)
 and `asm/code_3_1_10_5.s` (new: `sub_8004914`/`sub_80049CC`) hold the
 other two parked/raw runs, and `asm/code_3_1_10_6.s` is the original
-file's unchanged remainder from `sub_8004CB4` (outside this chunk) on.
+file's unchanged remainder from `SaveMenuMessageInput` (outside this chunk) on.
 `include/pause_options_screen.h` holds the shared `struct
 pause_options_screen`/`struct settings_row_stats` types used across all
 three new `.c` files. See `ldscript.txt` and `tools/report_units.py`'s
@@ -6167,15 +6167,15 @@ raw.
   `src/graphics/actor_aabb_setup.c`) - the shared AABB set-size
   (`field_8`/`field_c`)/set-position (`field_0`/`field_4`) primitive
   pair, already referenced by name (not yet matched) from
-  `actor_part.c`/`actor_part2.c`/`oam_count.c`'s `sub_8006600` entry.
+  `actor_part.c`/`actor_part2.c`/`oam_count.c`'s `DrawPowerDialog` entry.
   Two one-line leaf functions, matched first-try (each needed the usual
   trailing `asm(".align 2, 0")` for its 6-byte, non-4-aligned body).
 - **`sub_803AFEC`** (same file) - a trivial `self+0x74` getter; kept as
   a raw offset (no named struct) since this single call site doesn't
   give enough context to know the owning object's shape.
-- **`sub_803AFF0`/`sub_803B024`** (same file) - two more members of the
+- **`DestroyLargeFont`/`DestroySmallFont`** (same file) - two more members of the
   `gStaticData_087E3BEC`-family per-type descriptor table documented at
-  length in `docs/rom_map.md` (`gStaticData_087E4D1C`/`_4D64`/`_4DAC`,
+  length in `docs/rom_map.md` (`gLargeFontVtable`/`_4D64`/`_4DAC`,
   each 0x48 bytes): "set a field of a passed-in struct to a ROM data
   pointer, then conditionally call `sub_8026ED0` based on a bit in the
   second argument," the same shape as `sub_8006AF4`'s conditional-call
@@ -6188,7 +6188,7 @@ raw.
   CSEs the repeated address computation into one register, reused for
   both stores - neither matches the ROM, which recomputes the address
   fresh for each store). Fixed with the same inline-asm address-anchor
-  technique `oam_count.c`'s `sub_8006864`/`sub_8006820` already
+  technique `oam_count.c`'s `CountSapphireRelics`/`CountGoldRelics` already
   established for defeating exactly this CSE (see that entry above) -
   `asm volatile("mov r0, #0x98\n\tlsl r0, r0, #1\n\tadd %0, %1, r0")`
   computes `self + 0x130` fresh into a fresh register for each store,
@@ -6265,7 +6265,7 @@ parked functions under `#if NON_MATCHING` - only `__div0` actually
 contributes bytes in a matching build), the new
 `asm/code_3_2_20e_3ae4c.s` (parked `__modsi3`/`__umodsi3`,
 guarded), and the new `src/graphics/actor_aabb_setup.o`
-(`sub_803AFDC`-`sub_803B024`, all matched) - see `ldscript.txt` and
+(`sub_803AFDC`-`DestroySmallFont`, all matched) - see `ldscript.txt` and
 `tools/report_units.py`'s `util`/`graphics` categories, both updated to
 match. Verified via a full clean `make compare` (`La suma coincide`)
 and `make NON_MATCHING=1 report`.
@@ -6296,7 +6296,7 @@ low nibble, sets `field_0A` to the (always-zero on this branch) tested
 bit, registers it into `gUnknown_030012EC`'s `dual_array_manager` via
 `sub_8008E94`, and clears `flags` bit 2 (`& -5`, the negative-constant
 bit-clear idiom - not `& ~5`, a different mask entirely, same
-distinction `sub_80374D0` in `counter_selector_setup.c` already
+distinction `LoadLanguageSelectBg` in `counter_selector_setup.c` already
 documents).
 
 **Real fixes found along the way**, all kept in the parked C since
@@ -6314,7 +6314,7 @@ they're genuinely correct, not guesses:
   `pop {reg}; bx reg` trick, which then avoids `r0` and uses `r1` -
   the ROM's epilogue uses `r0`, meaning the original source discards
   that return value (an untyped/void call as the last statement),
-  exactly like `sub_800697C`'s documented case elsewhere in this file,
+  exactly like `GetCompletionPercent`'s documented case elsewhere in this file,
   just the opposite direction (there, returning the value freed `r0`;
   here, *not* returning it does).
 - The `+0x29` bitfield update needs the call to `sub_800815C` first,
@@ -6329,7 +6329,7 @@ they're genuinely correct, not guesses:
   directly lets this compiler fold the negative constant down to its
   low-byte positive equivalent (`0xf0`/`0xfb`) as a single `mov`
   immediate, instead of reproducing the ROM's fresh `movs`+`neg`
-  (`rsbs`) pair. Same idiom as `sub_80374D0`'s `a`/`mask` locals in
+  (`rsbs`) pair. Same idiom as `LoadLanguageSelectBg`'s `a`/`mask` locals in
   `counter_selector_setup.c` - a plain `s32` local, not the narrower
   field type, is what makes the idiom reproduce.
 
@@ -6388,7 +6388,7 @@ parked, 12 left untouched - see below for the split.
 
 **Matched (7):**
 
-- **`sub_8004CB4`** (`src/graphics/settings_menu4.c`) - the composite
+- **`SaveMenuMessageInput`** (`src/graphics/settings_menu4.c`) - the composite
   screen's confirm/cancel handler: on flags bit 0 or bit 3, plays the
   standard confirm SFX cue and resets `state`/`field_10`. Needed the
   ROM's exact two-branch `if (flags&1) goto confirm; else if
@@ -6396,21 +6396,21 @@ parked, 12 left untouched - see below for the split.
   condition lets gcc fold the mask into one `and #9` test, which
   doesn't keep the constant `1` live in a register the way the ROM's
   two-step `ands`/`ands` does for the later `str` of `field_10`.
-- **`sub_8004CE8`** (`src/graphics/settings_menu4.c`) - restores
+- **`CommitSaveMenuFrame`** (`src/graphics/settings_menu4.c`) - restores
   `REG_DISPCNT`/`REG_BG0HOFS` from two newly-named `pause_options_screen`
   fields (`field_1c`/`field_0`) and re-flushes the VRAM/OAM commit
   queues. Extended `pause_options_screen.h`'s `unused_00`/`unused_1c`
   padding into named fields for these two, per docs/workflow.md step 7.
-- **`sub_8004D20`/`sub_8004D4C`** (`src/graphics/settings_menu4.c`) - a
+- **`CloseSaveMenu`/`OpenSaveMenu`** (`src/graphics/settings_menu4.c`) - a
   teardown/construct pair for the "connecting..." SIO-handshake spinner
-  object (`gUnknown_0300080C`) sub_8003B40 (settings_menu3.c) already
-  documents allocating from. `sub_8004D4C` needed its destination
+  object (`gSaveMenu`) sub_8003B40 (settings_menu3.c) already
+  documents allocating from. `OpenSaveMenu` needed its destination
   pointer's address-of computed in a separate statement, positioned
-  between the two calls (matching the ROM's `ldr r4,=gUnknown_0300080C`
+  between the two calls (matching the ROM's `ldr r4,=gSaveMenu`
   sitting between the `sub_8006EA8` and `sub_8026EDC` calls) rather than
   let via a single chained expression, which put gcc's address
   computation after both calls instead.
-- **`sub_8005A78`** (`src/graphics/settings_menu6.c`) - the first of five
+- **`InitPauseCrystalsPage`** (`src/graphics/settings_menu6.c`) - the first of five
   settings-row icon-widget constructors on the composite screen's
   "results" sub-region (new locally-scoped `struct pause_screen_results`/
   `struct settings_icon_actor` - see their header comments for why they
@@ -6426,7 +6426,7 @@ parked, 12 left untouched - see below for the split.
   propagation otherwise collapses the ROM's `movs r1,#0x10`/`rsbs
   r1,r1,#0` into a single `sub` relative to the just-used `0xf` mask,
   which the ROM never does.
-- **`sub_8006084`/`sub_800609C`** (`src/graphics/settings_menu5.c`) - a
+- **`PauseMenuCursorDown`/`PauseMenuCursorUp`** (`src/graphics/settings_menu5.c`) - a
   small wrap-increment/decrement counter pair on a settings-row
   sub-widget (new minimal `struct row_counter_widget`, deliberately not
   asserted identical to `pause_screen_results` despite the call graph
@@ -6435,7 +6435,7 @@ parked, 12 left untouched - see below for the split.
 
 **Parked (`NON_MATCHING`, 6):**
 
-- **`sub_8005AE8`/`sub_8005B80`/`sub_8005C58`/`sub_8005D44`**
+- **`InitPausePowersPage`/`InitPauseGemsPage`/`InitPauseRelicsPage`/`InitPauseTimeTrialPage`**
   (`src/graphics/settings_menu6.c`) - the remaining four icon-widget
   constructors (4/5/3-element arrays plus the medal/rank-award single
   icon). Semantics fully understood and cross-checked against
@@ -6443,12 +6443,12 @@ parked, 12 left untouched - see below for the split.
   matches byte-for-byte via `UPDATE_ICON_FRAME_NIBBLE`, but the
   surrounding per-iteration address computation never lands the
   loop/self pointer in `r8`/`sb` the way the ROM's does, the same
-  gcc-2.9 difficulty already documented for `sub_8006600`
-  (`oam_count.c`) and `sub_8037388` (`counter_selector_setup.c`) -
+  gcc-2.9 difficulty already documented for `DrawPowerDialog`
+  (`oam_count.c`) and `InitLanguageSelectGraphics` (`counter_selector_setup.c`) -
   closing it would need the same heavy per-call-site
   `SUB_8006600_*`-style macros across four near-identical functions,
   more than this pass had budget for.
-- **`sub_8005EF4`/`sub_8005FBC`** (`src/graphics/settings_menu7.c`, a
+- **`PauseMenuVolumeDown`/`PauseMenuVolumeUp`** (`src/graphics/settings_menu7.c`, a
   second minimal `struct pause_screen_row_counts` view of the same
   object) - a matched inc/dec pair for a per-row percentage counter,
   formatting a `" <NN%>"`-shaped scratch string and pushing it through
@@ -6456,43 +6456,43 @@ parked, 12 left untouched - see below for the split.
   register-letter choices in the digit-formatting tail, the same
   unresolved class `sub_80049CC` (`settings_menu.c`) documents.
 
-**Left untouched (12, not attempted this pass):** `sub_8004D74`,
-`sub_8004EC0`, `sub_8005004`, `sub_8005100`, `sub_8005304`,
-`sub_80053F4`, `sub_800556C`, `sub_800570C`, `sub_80057E0`,
-`sub_80058C0`, `sub_800599C`, `sub_8005E5C` - the composite screen's own
+**Left untouched (12, not attempted this pass):** `RunPauseMenu`,
+`InitPauseMenu`, `DestroyPauseMenu`, `PauseMenuLoop`, `AnimatePauseMenu`,
+`DrawPauseMenu`, `DrawPauseMenuRows`, `DrawPausePowersPage`, `DrawPauseGemsPage`,
+`DrawPauseRelicsPage`, `InitPauseMenuInfo`, `DrawPauseFraction` - the composite screen's own
 constructor pair, its settings-row cursor/confirm/cancel driver, and
-their `gUnknown_030012DC`/`E0` icon-manager-heavy sub-widgets.
+their `gSmallFont`/`E0` icon-manager-heavy sub-widgets.
 docs/rom_map.md's "Correction: `overlay_ui` is a small family of
 screens" already gives high-confidence semantics for several of these
-(`sub_8004D74` is the real header consumer/composite-screen allocator,
-`sub_8004EC0` its top-level constructor, `sub_8005004` a child-label
-refresh/self-teardown utility, `sub_8005100` the settings-row cursor
-driver, `sub_800599C` the widget-building orchestrator that calls every
+(`RunPauseMenu` is the real header consumer/composite-screen allocator,
+`InitPauseMenu` its top-level constructor, `DestroyPauseMenu` a child-label
+refresh/self-teardown utility, `PauseMenuLoop` the settings-row cursor
+driver, `InitPauseMenuInfo` the widget-building orchestrator that calls every
 icon constructor above) - genuinely not "not understood," just out of
 scope for this pass: every one of them shares the same
 icon-manager-positioning-math shape (`_call_via_r2`/`gStaticData_0816B21C`-
-style tables) that made `sub_8006600` a multi-pass parking effort on its
+style tables) that made `DrawPowerDialog` a multi-pass parking effort on its
 own, and writing+verifying eleven-plus functions of that shape was more
 than this session's budget covered. Left for a follow-up pass; issue #7
 stays open.
 
 **File structure:** `asm/code_3_1_10_6.s` split into
-`src/graphics/settings_menu4.c` (`sub_8004CB4`-`sub_8004D4C`, matched),
-the new raw `asm/code_3_1_10_7.s` (`sub_8004D74`-`sub_800599C`, left
-untouched), `src/graphics/settings_menu6.c` (`sub_8005A78` matched,
-`sub_8005AE8`-`sub_8005D44` parked), the new raw `asm/code_3_1_10_8.s`
+`src/graphics/settings_menu4.c` (`SaveMenuMessageInput`-`OpenSaveMenu`, matched),
+the new raw `asm/code_3_1_10_7.s` (`RunPauseMenu`-`InitPauseMenuInfo`, left
+untouched), `src/graphics/settings_menu6.c` (`InitPauseCrystalsPage` matched,
+`InitPausePowersPage`-`InitPauseTimeTrialPage` parked), the new raw `asm/code_3_1_10_8.s`
 (those same four functions' real bytes, each wrapped
 `.if NON_MATCHING == 0`), the new raw `asm/code_3_1_10_9.s`
-(`sub_8005E5C`, left untouched), `src/graphics/settings_menu7.c`
-(`sub_8005EF4`/`sub_8005FBC`, parked), the new raw
+(`DrawPauseFraction`, left untouched), `src/graphics/settings_menu7.c`
+(`PauseMenuVolumeDown`/`PauseMenuVolumeUp`, parked), the new raw
 `asm/code_3_1_10_10.s` (their real bytes, wrapped), `src/graphics/settings_menu5.c`
-(`sub_8006084`/`sub_800609C`, matched), and finally the new raw
+(`PauseMenuCursorDown`/`PauseMenuCursorUp`, matched), and finally the new raw
 `asm/code_3_1_10_11.s` (the original file's unchanged remainder, from
-`sub_80060AC` on, including its pre-existing parked `sub_8006600` guard)
+`FormatDecimal` on, including its pre-existing parked `DrawPowerDialog` guard)
 - see `ldscript.txt` and `tools/report_units.py`'s `overlay_ui` entries,
 both updated to match. `include/pause_options_screen.h` gained two named
 fields (`field_0`/`field_1c`, both previously padding) for
-`sub_8004CE8`'s use. Verified via a full clean `make compare`
+`CommitSaveMenuFrame`'s use. Verified via a full clean `make compare`
 (`La suma coincide`) and `make NON_MATCHING=1 report`.
 
 ---

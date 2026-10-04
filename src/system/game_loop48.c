@@ -16,7 +16,7 @@
 extern void sub_8009150(struct phys_obj_list *list, struct phys_obj *obj);
 extern struct phys_obj_list *gUnknown_0300130C;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gEntitySpawner;
 extern u8 gStaticData_0816BB98[];
 extern u8 gStaticData_0816BBDA[];
@@ -293,7 +293,7 @@ void sub_800E620(void *selfArg)
         );
     }
 
-    PlaySfx(gUnknown_030012BC, 0x11, 0x100);
+    PlaySfx(gAudioContext, 0x11, 0x100);
     self[0x4f] = 0x3c;
 }
 
@@ -333,7 +333,7 @@ void sub_800E6B0(struct phys_obj *self)
     puff->flipX = 0;
     PuffSetMotion(puff, -0x180, 8, -0x10);
     PhysSetTag(self, 0x1b);
-    PlaySfx(gUnknown_030012BC, 0x17, 0x100);
+    PlaySfx(gAudioContext, 0x17, 0x100);
     {
         u16 id = self->id;
 
@@ -507,7 +507,7 @@ void sub_800E888(struct phys_obj *self, u32 arg1)
     case 4:
     case 12:
     case 13:
-        PlaySfx(gUnknown_030012BC, 3, 0x100);
+        PlaySfx(gAudioContext, 3, 0x100);
         break;
     case 10:
     case 14:
@@ -532,7 +532,7 @@ void sub_800E888(struct phys_obj *self, u32 arg1)
     case 0:
         PHYS_SPAWN(self->x >> 8, (self->y >> 8) + 3, 0, 3, chained);
         if (flag == 0)
-            PlaySfx(gUnknown_030012BC, 3, 0x100);
+            PlaySfx(gAudioContext, 3, 0x100);
         break;
     case 22:
         break;
@@ -561,7 +561,7 @@ void sub_800E888(struct phys_obj *self, u32 arg1)
  * volume, as in the ROM. */
 static inline void PhysSfx(s32 id)
 {
-    PlaySfx(gUnknown_030012BC, id, 0x100);
+    PlaySfx(gAudioContext, id, 0x100);
 }
 
 void sub_800EAFC(struct phys_obj *self, u32 arg1)
@@ -570,7 +570,7 @@ void sub_800EAFC(struct phys_obj *self, u32 arg1)
     u32 argP5;
     u8 flag = arg1;
 
-    PlaySfx(gUnknown_030012BC, 3, 0x100);
+    PlaySfx(gAudioContext, 3, 0x100);
     if (self->unk_51 == 9) {
         u8 r = (u16)rand() >> 8;
 
@@ -661,12 +661,12 @@ void sub_800ED08(struct phys_obj *self, u32 arg1)
     u32 argP5;
     u8 flag = arg1;
 
-    PlaySfx(gUnknown_030012BC, 3, 0x100);
+    PlaySfx(gAudioContext, 3, 0x100);
     switch (self->u48.n & 7) {
     case 0:
         break;
     case 1:
-        PlaySfx(gUnknown_030012BC, 3, 0x100);
+        PlaySfx(gAudioContext, 3, 0x100);
         {
             u16 id = self->id;
 

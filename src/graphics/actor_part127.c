@@ -28,7 +28,7 @@ struct game_state {
 };
 
 extern struct game_state *gLevelState;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gUnknown_03001490;
 extern void *gUnknown_03001494;
 extern s32 gUnknown_0300149C;
@@ -287,7 +287,7 @@ s32 sub_802B730(void *selfArg)
         s32 tier = ((struct game_state *)*playerAddr)->mode;
 
         if (tier == 0) {
-            PlaySfx(gUnknown_030012BC, 0x1b, 0x100);
+            PlaySfx(gAudioContext, 0x1b, 0x100);
             QueueVramDmaTransfer(gStaticData_0817A728, (void *)OBJ_PLTT, 0x20, 0x10);
             {
                 register s32 state asm("r0") = 6;
@@ -377,7 +377,7 @@ s32 sub_802B7E0(void *selfArg)
                 *(u8 *)&self->animDone = zero;
                 self->animTime = tier;
 
-                PlaySfx(gUnknown_030012BC, 0x33, 0x100);
+                PlaySfx(gAudioContext, 0x33, 0x100);
                 gUnknown_030014A3 = zero;
             }
             gUnknown_030014A0 = 1;
@@ -444,7 +444,7 @@ void sub_802B8E8(struct actor_self *self)
     self->y = y;
     *budget += 0x2d;
     if (y > 0x2800) {
-        PlaySfx(gUnknown_030012BC, 0x35, 0x100);
+        PlaySfx(gAudioContext, 0x35, 0x100);
         self->y = 0x2800;
         ACTOR_SET_STATE(self, 9, 9);
         gUnknown_030014A0 = 0;
@@ -553,7 +553,7 @@ tail:
                 }
                 self->animTime = zero;
             }
-            PlaySfx(gUnknown_030012BC, 0xd, 0x100);
+            PlaySfx(gAudioContext, 0xd, 0x100);
             gUnknown_030014A4 = 0xFFFFF880;
         }
         if ((*(u32 *)addr & 2) != 0) {
@@ -624,7 +624,7 @@ void sub_802BAD0(struct actor_self *self)
 
     if (input->pressed & 1) {
         ACTOR_SET_STATE(self, 4, 3);
-        PlaySfx(gUnknown_030012BC, 0xd, 0x100);
+        PlaySfx(gAudioContext, 0xd, 0x100);
         gUnknown_030014A4 = 0xFFFFF880;
     }
 }

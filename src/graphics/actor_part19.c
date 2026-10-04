@@ -28,7 +28,7 @@ extern u8 gUnknown_030014A0;
 extern u8 gUnknown_030014A1;
 extern s32 gUnknown_0300148C;
 extern void *gUnknown_03001494;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gUnknown_03000884;
 extern s32 gUnknown_03001488;
@@ -133,7 +133,7 @@ void sub_802BF30(void *selfArg)
     struct actor_self *self = selfArg;
 
     if (self->animDone != 0) {
-        PlaySfx(gUnknown_030012BC, 0x3c, 0x100);
+        PlaySfx(gAudioContext, 0x3c, 0x100);
         gUnknown_030014A4 = 0xFFFFF980;
         {
             register s32 stateVal asm("r0") = 0xb;
@@ -251,7 +251,7 @@ void sub_802C018(void *selfArg)
         }
     }
 
-    PlaySfx(gUnknown_030012BC, 0x41, 0x100);
+    PlaySfx(gAudioContext, 0x41, 0x100);
 }
 
 /* Accumulator: while `gLevelState+0x8c` is clear, arms

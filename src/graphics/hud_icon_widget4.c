@@ -1,9 +1,9 @@
 #include "core.h"
 #include "icon_manager.h"
 
-/* Sits between MeasureText (src/graphics/hud_icon_widget_8994.c) and
- * sub_8028A78 (src/graphics/hud_icon_widget_8a78.c) - UploadHudTile/
- * sub_8028A30/sub_8028A40, GitHub issue #46. Same `struct icon_manager`
+/* Sits between FontMeasureText (src/graphics/hud_icon_widget_8994.c) and
+ * InitFont (src/graphics/hud_icon_widget_8a78.c) - FontUploadTiles/
+ * FontSetPalette/FontResetPalette, GitHub issue #46. Same `struct icon_manager`
  * as hud_icon_widget.c/hud_icon_widget2.c/hud_icon_widget3.c/
  * hud_icon_widget5.c. */
 
@@ -12,20 +12,20 @@ extern u8 *gUnknown_030012B8;
 extern void ***gUnknown_030012D0;
 extern s32 sub_8006DF8(u8 *cache, s32 recordId);
 
-/* Uploads `field_128`'s referenced tile data to the OBJ VRAM slot
- * selected by `field_108`, recording the resulting tile-count-derived
- * shift (`>>13` of the asset's own header word) into `field_12c`. */
-void UploadHudTile(struct icon_manager *self)
+/* Uploads `tiles`'s referenced tile data to the OBJ VRAM slot
+ * selected by `tileBase`, recording the resulting tile-count-derived
+ * shift (`>>13` of the asset's own header word) into `tileCount`. */
+void FontUploadTiles(struct icon_manager *self)
 {
-    void *asset = self->field_128;
+    void *asset = self->tiles;
 
-    self->field_12c = *(u32 *)asset >> 13;
-    LoadTaggedAsset(asset, (void *)(0x06010000 + (self->field_108 << 5)));
+    self->tileCount = *(u32 *)asset >> 13;
+    LoadTaggedAsset(asset, (void *)(0x06010000 + (self->tileBase << 5)));
 }
 
 /* Sets the low nibble of `oam_scratch[5]` from `val`'s low byte - a
  * priority/attribute nibble selector, exact meaning not established. */
-void sub_8028A30(struct icon_manager *self, u8 val)
+void FontSetPalette(struct icon_manager *self, u8 val)
 {
     u32 shifted;
     register u8 mask asm("r2");
@@ -44,8 +44,8 @@ void sub_8028A30(struct icon_manager *self, u8 val)
  * `(**gUnknown_030012D0)[0x1A4]`'s own `+0x14` field (see
  * docs/rom_map.md's `gStaticData_084A5600` investigation) via
  * `sub_8006DF8`, and folds the result into the same `oam_scratch[5]`
- * nibble sub_8028A30 sets above. */
-void sub_8028A40(struct icon_manager *self, u32 unused)
+ * nibble FontSetPalette sets above. */
+void FontResetPalette(struct icon_manager *self, u32 unused)
 {
     u8 *cache = gUnknown_030012B8;
     void *rec = *(void **)((u8 *)(**gUnknown_030012D0) + (0xD2 << 1));

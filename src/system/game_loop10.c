@@ -4,8 +4,8 @@
 
 extern void *gUnknown_030012D8;
 extern void *gEntityFlags;
-extern void *gUnknown_030012BC;
-extern void *gUnknown_03001318;
+extern void *gAudioContext;
+extern void *gHud;
 
 extern s32 sub_8023414(struct level_state *self);
 extern void sub_80232EC(struct level_state *self);
@@ -127,7 +127,7 @@ void SetCheckpoint(void *selfArg, u8 flag, s32 *pairArg)
 
 /* When `flag` is set, accumulates `self->0xb4` into `self->0x70`,
  * refreshes the animation-state pair, flushes the tile record cache
- * (`gUnknown_03001318`) using `self->0xbc`, re-syncs the player's
+ * (`gHud`) using `self->0xbc`, re-syncs the player's
  * stored position (`gUnknown_030012D8`) from `self->0xd4`/`0xd8`, and
  * re-runs `sub_8022CA0`; otherwise just calls `sub_80231D4`. */
 void sub_80235E4(struct level_state *self, u8 flag)
@@ -137,7 +137,7 @@ void sub_80235E4(struct level_state *self, u8 flag)
         sub_8023298(self);
         sub_80232FC(self);
         sub_8023288(self);
-        sub_8028568(gUnknown_03001318, self->unk_bc);
+        sub_8028568(gHud, self->unk_bc);
         {
             struct actor *player = (struct actor *)gUnknown_030012D8;
             s32 *p = &self->checkpointX;
@@ -157,7 +157,7 @@ void sub_802364C(void *self)
 void sub_8023658(void *self)
 {
     PlayCutscene(self, 1);
-    StopSfx(gUnknown_030012BC, 0x5d);
+    StopSfx(gAudioContext, 0x5d);
 }
 
 /* Allocates a `0x44c`-byte block, fires an (empty) `nullsub_7` hook and

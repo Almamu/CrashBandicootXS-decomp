@@ -168,7 +168,7 @@ typedef void (*hop_fn3)(void *self, s32 a, s32 b, s32 c);
         ((hop_fn3)_m->fn)((u8 *)(obj) + _m->thisOffset, (a), (b), (c));        \
     } while (0)
 
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gLevelState;
 extern u8 ***gUnknown_030012D0;
 extern struct hop_player *gUnknown_030012D8;
@@ -251,7 +251,7 @@ void sub_8018008(struct hopper *self, struct hop_part *part)
         anchor->ctrl = ctrl;
         VCALL1P(ctrl, m18, anchor);
         self->stomped = -1;
-        PlaySfx(gUnknown_030012BC, 0x39, 0x100);
+        PlaySfx(gAudioContext, 0x39, 0x100);
     }
 
     if (self->state == 8)
@@ -311,7 +311,7 @@ void sub_8018008(struct hopper *self, struct hop_part *part)
         part->y = y;
         if (steps != 0)
             break;
-        PlaySfx(gUnknown_030012BC, 0x2A, 0x100);
+        PlaySfx(gAudioContext, 0x2A, 0x100);
         if (self->state == 15)
         {
             if (sub_80231B4(gLevelState))
@@ -331,7 +331,7 @@ void sub_8018008(struct hopper *self, struct hop_part *part)
         }
         else
         {
-            PlaySfx(gUnknown_030012BC, 0x3D, 0x100);
+            PlaySfx(gAudioContext, 0x3D, 0x100);
             sub_8018400(self, part, 8);
         }
         break;
@@ -427,7 +427,7 @@ void sub_8018008(struct hopper *self, struct hop_part *part)
         if (part->animDone)
         {
             sub_8018400(self, part, 10);
-            PlaySfx(gUnknown_030012BC, 0xD, 0x100);
+            PlaySfx(gAudioContext, 0xD, 0x100);
         }
         break;
     }
@@ -507,7 +507,7 @@ void sub_8018400(struct hopper *self, struct hop_part *part, s32 next)
         self->timer = 0xB4;
         break;
     case 9:
-        PlaySfx(gUnknown_030012BC, 0x15, 0x100);
+        PlaySfx(gAudioContext, 0x15, 0x100);
         if (++self->round > 2)
         {
             s32 x = part->x;
@@ -638,5 +638,5 @@ void sub_80186F0(struct hopper *self, struct hop_part *part, s32 n)
         m &= -0x41;
         p->flags = m;
     }
-    PlaySfx(gUnknown_030012BC, 0x13, 0x100);
+    PlaySfx(gAudioContext, 0x13, 0x100);
 }

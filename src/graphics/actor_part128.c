@@ -107,7 +107,7 @@ extern void sub_802FA04(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c, 
 extern struct actor_self *gUnknown_03000884;
 extern void (*gUnpackRleSpriteFrameFunc)(void *dst, u8 *frame);
 extern struct keys_pair gKeys;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern u8 *gLevelState;
 extern void *gUnknown_030014BC;
 extern struct kind_entry *gUnknown_030014D8;
@@ -268,7 +268,7 @@ void sub_802E3CC(void)
 {
     struct actor_hp *obj;
 
-    PlaySfx(gUnknown_030012BC, 0x17, 0x100);
+    PlaySfx(gAudioContext, 0x17, 0x100);
     obj = AllocActor(0x58);
     InitHpActor(obj, &gUnknown_030014D8[46], 0, 0, 0, 1);
     obj->base.vtable = (struct actor_vtable *)gStaticData_087E50D4;
@@ -279,7 +279,7 @@ void sub_802E420(s32 x, s32 y, s32 z)
 {
     struct actor_hp *obj;
 
-    PlaySfx(gUnknown_030012BC, 4, 0x100);
+    PlaySfx(gAudioContext, 4, 0x100);
     obj = AllocActor(0x58);
     InitHpActor(obj, &gUnknown_030014D8[45], x, y, z, 1);
     obj->base.vtable = (struct actor_vtable *)gStaticData_087E510C;
@@ -327,21 +327,21 @@ void sub_802E5B0(s32 a, s32 b, s32 c)
 /* Plays sfx 0x38 and spawns a kind-39 object. */
 void sub_802E5E4(s32 x, s32 y, s32 z)
 {
-    PlaySfx(gUnknown_030012BC, 0x38, 0x100);
+    PlaySfx(gAudioContext, 0x38, 0x100);
     sub_80329D4(AllocActor(0x6c), &gUnknown_030014D8[39], x, y, z);
 }
 
 /* Plays sfx 0x38 and spawns a kind-38 object. */
 void sub_802E62C(s32 x, s32 y, s32 z)
 {
-    PlaySfx(gUnknown_030012BC, 0x38, 0x100);
+    PlaySfx(gAudioContext, 0x38, 0x100);
     sub_80305F8(AllocActor(0x6c), &gUnknown_030014D8[38], x, y, z);
 }
 
 /* Plays sfx 0x30 and spawns a kind-3 object. */
 void sub_802E674(s32 a, s32 b, s32 c, s32 d, s32 e)
 {
-    PlaySfx(gUnknown_030012BC, 0x30, 0x100);
+    PlaySfx(gAudioContext, 0x30, 0x100);
     sub_8030300(AllocActor(0x60), &gUnknown_030014D8[3], a, b, c, d, e);
 }
 
@@ -421,7 +421,7 @@ void sub_802E84C(struct actor_hp *self)
             vol = gUnknown_030014E0 * 48;
             if (vol > 0x100)
                 vol = 0x100;
-            PlaySfx(gUnknown_030012BC, 0x37, vol);
+            PlaySfx(gAudioContext, 0x37, vol);
         }
         gUnknown_030014E0 = 0;
     }
@@ -553,7 +553,7 @@ void sub_802EB78(struct actor_hp *self, s32 dmg)
     gUnknown_030014F4 = 0x12;
     if (self->hp <= 0) {
         self->hp = 0;
-        PlaySfx(gUnknown_030012BC, 0x3a, 0x100);
+        PlaySfx(gAudioContext, 0x3a, 0x100);
         ACTOR_SET_STATE(&self->base, 4, 3);
         if (gLevelState[0x8c] == 0)
             LoseLife(gLevelState);
@@ -565,7 +565,7 @@ void sub_802EB78(struct actor_hp *self, s32 dmg)
         CLAMP_SPEED(gUnknown_0300150C);
         gUnknown_0300150C /= 2;
     } else {
-        PlaySfx(gUnknown_030012BC, 0x42, 0x100);
+        PlaySfx(gAudioContext, 0x42, 0x100);
     }
 }
 
@@ -633,11 +633,11 @@ void sub_802EDBC(struct actor_hp *self)
 
         if (keys.held & 0x200) {
             gUnknown_030014F4 = 0x12;
-            PlaySfx(gUnknown_030012BC, 0xa, 0x100);
+            PlaySfx(gAudioContext, 0xa, 0x100);
             ACTOR_SET_STATE(&self->base, 2, 1);
         } else if (keys.held & 0x100) {
             gUnknown_030014F4 = 0x12;
-            PlaySfx(gUnknown_030012BC, 0xa, 0x100);
+            PlaySfx(gAudioContext, 0xa, 0x100);
             ACTOR_SET_STATE(&self->base, 3, 2);
         } else if (gUnknown_03001500 == 0 && (keys.held & 1)) {
             struct byte_arg one;
@@ -645,7 +645,7 @@ void sub_802EDBC(struct actor_hp *self)
 
             gUnknown_03001500 = 0x12;
             one.v = 1;
-            PlayAmbientSfx(gUnknown_030012BC, 0x24, 1000, 0xa0, one);
+            PlayAmbientSfx(gAudioContext, 0x24, 1000, 0xa0, one);
             x = self->base.x + 0x1200;
             y = self->base.y - 0x1800;
             sub_802E6CC(x, y, self->base.z + 10, (x * 0x199) >> 12, (y * 0x199) >> 12);
@@ -675,11 +675,11 @@ void sub_802EED0(struct actor_hp *self)
         keys = gKeys;
         if (keys.held & 0x200) {
             gUnknown_030014F4 = 0x12;
-            PlaySfx(gUnknown_030012BC, 0xa, 0x100);
+            PlaySfx(gAudioContext, 0xa, 0x100);
             ACTOR_SET_STATE(&self->base, 2, 1);
         } else if (keys.held & 0x100) {
             gUnknown_030014F4 = 0x12;
-            PlaySfx(gUnknown_030012BC, 0xa, 0x100);
+            PlaySfx(gAudioContext, 0xa, 0x100);
             ACTOR_SET_STATE(&self->base, 3, 2);
         }
     }
@@ -708,11 +708,11 @@ void sub_802EFD8(struct actor_hp *self)
         keys = gKeys;
         if (keys.held & 0x200) {
             gUnknown_030014F4 = 0x12;
-            PlaySfx(gUnknown_030012BC, 0xa, 0x100);
+            PlaySfx(gAudioContext, 0xa, 0x100);
             ACTOR_SET_STATE(&self->base, 2, 1);
         } else if (keys.held & 0x100) {
             gUnknown_030014F4 = 0x12;
-            PlaySfx(gUnknown_030012BC, 0xa, 0x100);
+            PlaySfx(gAudioContext, 0xa, 0x100);
             ACTOR_SET_STATE(&self->base, 3, 2);
         }
     }

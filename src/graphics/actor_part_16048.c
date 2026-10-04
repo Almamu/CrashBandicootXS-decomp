@@ -65,7 +65,7 @@ struct pmf
 extern void *gUnknown_03001304;
 extern struct keys gKeys;
 extern u32 gUnknown_0300082C;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gUnknown_030012B8;
 extern u8 *gEntityFlags;
@@ -255,7 +255,7 @@ void sub_8016128(struct player_ctrl *self, s32 unused, s32 msg, s32 arg)
 
 void sub_80161EC(struct player_ctrl *self, s32 anim)
 {
-    PlaySfx(gUnknown_030012BC, 0x1B, 0x100);
+    PlaySfx(gAudioContext, 0x1B, 0x100);
     SET_MODE(self, 7);
     SET_ANIM(self, self->target, anim);
     self->target->flag7 = 0;

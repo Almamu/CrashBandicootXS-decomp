@@ -29,7 +29,7 @@
  * docs/matching/per-file-flags-investigation.md. */
 
 extern struct oam_shadow_buffer *gUnknown_03001300;
-extern struct AudioContext *gUnknown_030012BC;
+extern struct AudioContext *gAudioContext;
 extern u8 gUnknown_03001288[2];
 extern void *gUnknown_03001304;
 extern void *gUnknown_0300160C[2];
@@ -61,10 +61,10 @@ extern void sub_8006A78(struct oam_shadow_buffer *arg0);
 extern s32 __divsi3(s32 arg0, s32 arg1);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void sub_8001614(void);
-extern void sub_8001B54(struct AudioContext *self, u32 id);
-extern void sub_8028A30(struct icon_manager *self, u8 val);
+extern void PlaySong(struct AudioContext *self, u32 id);
+extern void FontSetPalette(struct icon_manager *self, u8 val);
 extern s32 GetUiText(s32 arg0);
-extern void sub_8034688(s32 arg0);
+extern void UpdateStarfield(s32 arg0);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void sub_80015B0(void);
@@ -72,7 +72,7 @@ extern s32 RandRange(s32 arg0);
 extern void *sub_8026EC0(u32 size);
 extern void sub_8026EB4(void *ptr);
 extern void *sub_8026EDC(s32 size);
-extern void *sub_8034374(void *arg0);
+extern void *InitStarfield(void *arg0);
 extern void LoadTaggedAsset(void *asset, void *dest);
 extern void sub_8037110(void *self, void *asset, void *dest);
 extern void *AllocVramTileBlock(u32 size);
@@ -91,7 +91,7 @@ extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 extern void UpdateKeys(void *arg0);
 extern void sub_8026ED0(void *self);
 extern s32 __modsi3(void *self, s32 arg1);
-extern void sub_80346FC(void *self, s32 arg1);
+extern void DestroyStarfield(void *self, s32 arg1);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern s32 GetSpriteShapeSizeBits(void *self);
@@ -546,7 +546,7 @@ void sub_80358A8(u32 *self)
                 if (*cnt == -1)
                     *cnt = 10;
                 if (--*cnt == 0)
-                    PlaySfx(gUnknown_030012BC, 0x4a, 0x100);
+                    PlaySfx(gAudioContext, 0x4a, 0x100);
             }
             d = 0x1000000 / slot->velA;
             scale = d;
@@ -602,7 +602,7 @@ void sub_80358A8(u32 *self)
                     if (*cnt == -1)
                     {
                         *cnt = 8;
-                        PlaySfx(gUnknown_030012BC, 0x3d, 0x100);
+                        PlaySfx(gAudioContext, 0x3d, 0x100);
                     }
                     else if (--*cnt == 0)
                     {

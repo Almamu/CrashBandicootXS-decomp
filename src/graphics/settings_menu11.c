@@ -10,11 +10,11 @@
 
 /* Same "results" sub-region self object `settings_menu6.c`'s
  * `struct pause_screen_results` documents (`field_6c`/`field_bc`/
- * `timeBuf` all line up) - the medal-icon-widget's (`sub_8005D44`)
+ * `timeBuf` all line up) - the medal-icon-widget's (`InitPauseTimeTrialPage`)
  * companion label draw: formats `self->timeBuf` (already filled in by
- * sub_8005D44) centered on the medal icon via the shared
- * `gUnknown_030012DC` icon manager, using the same fixed
- * `gStaticData_0816B27C` position pair sub_8005D44 itself positions
+ * InitPauseTimeTrialPage) centered on the medal icon via the shared
+ * `gSmallFont` icon manager, using the same fixed
+ * `gStaticData_0816B27C` position pair InitPauseTimeTrialPage itself positions
  * the icon with. */
 struct pause_screen_results {
     u8 unused_00[0x2c];
@@ -30,7 +30,7 @@ struct pause_screen_results {
 
 extern void sub_8008890(void *arg0, s32 arg1, s32 arg2);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
-extern struct icon_manager *gUnknown_030012DC;
+extern struct icon_manager *gSmallFont;
 
 static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
 {
@@ -65,40 +65,40 @@ struct icon_pos {
 };
 extern struct icon_pos gStaticData_0816B27C;
 
-void sub_8006124(struct pause_screen_results *self)
+void DrawPauseTimeTrialPage(struct pause_screen_results *self)
 {
     u32 w;
 
     if (self->field_6c)
         sub_8008890(self->field_bc, 0, 0);
-    w = MEASURE_ICON_TEXT(gUnknown_030012DC, self->timeBuf);
-    set_icon_mgr_pos(gUnknown_030012DC, gStaticData_0816B27C.x - (w >> 1) - 2, gStaticData_0816B27C.y - 0x23);
-    DRAW_ICON_TEXT(gUnknown_030012DC, self->timeBuf);
+    w = MEASURE_ICON_TEXT(gSmallFont, self->timeBuf);
+    set_icon_mgr_pos(gSmallFont, gStaticData_0816B27C.x - (w >> 1) - 2, gStaticData_0816B27C.y - 0x23);
+    DRAW_ICON_TEXT(gSmallFont, self->timeBuf);
 }
 
-/* Same self object, `sub_8005A78`'s (the `field_88` icon widget)
+/* Same self object, `InitPauseCrystalsPage`'s (the `field_88` icon widget)
  * companion label draw - the "results count" pair (`buf2c`/`buf46`,
- * already formatted by `sub_8005A78` itself) centered on that icon at
- * the fixed `gStaticData_0816B1E4` position, via `sub_8005E5C`
+ * already formatted by `InitPauseCrystalsPage` itself) centered on that icon at
+ * the fixed `gStaticData_0816B1E4` position, via `DrawPauseFraction`
  * (src/graphics/settings_menu16.c) that actually draws the two small
  * strings. */
 extern struct icon_pos gStaticData_0816B1E4;
-extern void sub_8005E5C(struct pause_screen_results *self, void *buf1, void *buf2);
+extern void DrawPauseFraction(struct pause_screen_results *self, void *buf1, void *buf2);
 
-void sub_800619C(struct pause_screen_results *self)
+void DrawPauseCrystalsPage(struct pause_screen_results *self)
 {
     sub_8008890(self->field_88, 0, 0);
-    set_icon_mgr_pos(gUnknown_030012DC, gStaticData_0816B1E4.x - 0x2c, gStaticData_0816B1E4.y - 8);
-    sub_8005E5C(self, self->buf2c, self->buf46);
+    set_icon_mgr_pos(gSmallFont, gStaticData_0816B1E4.x - 0x2c, gStaticData_0816B1E4.y - 8);
+    DrawPauseFraction(self, self->buf2c, self->buf46);
 }
 
 /* A different, still-unreconciled self object (only `field_24`, a
  * plain `s32` category index, is touched here) - draws a fixed-position
  * category/header label at (0xc2, 0x2c) via the same icon manager,
  * picking its source character from a lookup table
- * (`gStaticData_0816B1D0[self->field_24]`) fed through `GetUiText`
+ * (`gPauseMenuPageTitles[self->field_24]`) fed through `GetUiText`
  * (the same "char code -> something _call_via_r2 can draw" conversion
- * `sub_8006600`/`sub_8005A78` already use for fixed digits like
+ * `DrawPowerDialog`/`InitPauseCrystalsPage` already use for fixed digits like
  * `0x2e`/`0x14`). */
 struct pause_screen_category_state {
     u8 unused_00[0x24];
@@ -106,13 +106,13 @@ struct pause_screen_category_state {
 };
 
 extern s32 GetUiText(s32 arg0);
-extern void *gStaticData_0816B1D0[];
+extern void *gPauseMenuPageTitles[];
 
-void sub_80061E8(struct pause_screen_category_state *self)
+void DrawPauseMenuPageTitle(struct pause_screen_category_state *self)
 {
-    s32 label = GetUiText((s32)gStaticData_0816B1D0[self->field_24]);
-    u32 w = MEASURE_ICON_TEXT(gUnknown_030012DC, label);
+    s32 label = GetUiText((s32)gPauseMenuPageTitles[self->field_24]);
+    u32 w = MEASURE_ICON_TEXT(gSmallFont, label);
 
-    set_icon_mgr_pos(gUnknown_030012DC, 0xc2 - (w >> 1), 0x2c);
-    DRAW_ICON_TEXT(gUnknown_030012DC, label);
+    set_icon_mgr_pos(gSmallFont, 0xc2 - (w >> 1), 0x2c);
+    DRAW_ICON_TEXT(gSmallFont, label);
 }

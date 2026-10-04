@@ -295,7 +295,7 @@ bank, which is wrong. The sound effects have their own GAX2 data set, the
 block at `0x084C0006` right before the music. The engine path, all in
 matched C:
 
-- `sub_80017BC` (`music_player.c`) fills the `GaxSongHeader` it hands to
+- `StartSong` (`music_player.c`) fills the `GaxSongHeader` it hands to
   `GAX2_init`: `numSfx` (`+0x0E`) = 3 sound-effect voices, and
   `sfxTypes` (`+0x2C`) = `gGaxMusicData`, the 9-pointer array at
   the start of the music block. Every pointer is the same handler type,

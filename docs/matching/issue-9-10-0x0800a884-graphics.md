@@ -272,7 +272,7 @@ family already covered at length by
   state-transition functions (`GetCurrentLevelFlags`, `sub_8022D50`,
   `sub_8025BAC`, `SetMaskLevel`, `sub_80232E4`, `RaiseMaskLevel`,
   `FreezeLevelClock`, `sub_80241A4`, `sub_802352C`, `sub_8023510`,
-  `sub_8028504`, and others). Left raw per this project's established
+  `ShowHudCounters`, and others). Left raw per this project's established
   policy for this exact dispatcher shape.
 - **`sub_800AFF4`** (`asm/code_3_2_16.s`, ROM `0x0800AFF4`, ~636 B) -
   high register-pressure (`sb`/`sl`/`r8`/`ip` all live simultaneously)

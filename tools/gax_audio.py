@@ -25,7 +25,7 @@ block (`--sfx`, 0x084C0006-0x0855BCB4, see docs/audio.md) from
   sound/sfx_samples/*.wav     - its 87 samples (8-bit mono PCM).
 
 The music block starts with the 36-byte GaxSongHeader.sfxTypes array
-(sub_80017BC passes gGaxMusicData there): nine pointers to the
+(StartSong passes gGaxMusicData there): nine pointers to the
 sound-effect set's one handler type, generated from that set's layout.
 
 The block ends with a 20th, silent song: the engine's default handler
@@ -814,7 +814,7 @@ def build_sfx(manifest_path, samples_dir):
     if SFX_BASE_ADDR + len(blob) != BASE_ADDR:
         sys.exit(f"{manifest_path}: the sound-effect set ends at {SFX_BASE_ADDR + len(blob):#x}, "
                  f"but the music block is fixed at {BASE_ADDR:#x}")
-    # GaxSongHeader.sfxTypes (sub_80017BC): the handler type of each
+    # GaxSongHeader.sfxTypes (StartSong): the handler type of each
     # sound-effect voice, all the same one
     sfx_types = struct.pack('<I', handler_addr) * manifest['voice_types']
     return blob, sfx_types

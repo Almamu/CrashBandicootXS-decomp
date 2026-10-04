@@ -90,7 +90,7 @@ when `pitchOffset != -1`, `(pitchOffset >> 5) + 2`; `+0x25` gets
 
 NAKED for the same many-register (`r8`/`ip`) gcc-2.9 allocation
 ceiling already documented throughout this ROM region
-(`sub_8006600`/`sub_80372BC`/`GaxCreateHandlers`/`GAX2_init`/
+(`DrawPowerDialog`/`DrawLanguageSelect`/`GaxCreateHandlers`/`GAX2_init`/
 `GAX2_jingle`) - `self` lives in `r8` and the saved
 `&gGaxPlayerState` copy in `ip`, both held live across the whole
 function including two separate scan loops.

@@ -3,7 +3,7 @@
 
 /* A small 3-slot icon "blink" animation timer, shared with `sub_8028568`/
  * `sub_802856C` (src/system/game_loop.c, still raw asm here) via the
- * `gUnknown_03001318` instance - each slot is a `{state, timer}` s32
+ * `gHud` instance - each slot is a `{state, timer}` s32
  * pair: state 0 idle, 1 counting up to a threshold then -> 2, 2 counting
  * down 0x14 frames then -> 3, 3 counting down its own timer then back to
  * 0. Slot 0 blinks with the lives counter and slot 1 with the wumpa
@@ -25,15 +25,15 @@ struct hud_blink
 
 extern struct level_state *gLevelState;
 
-extern void sub_8028520(void *self, s32 *state, s32 *timer, s32 threshold);
+extern void StepHudSlide(void *self, s32 *state, s32 *timer, s32 threshold);
 
 /* Per-frame tick, gated on the level state's `timeTrial` flag:
  * force-advances slots 0 and 1 out of a stuck 1/2 state (state 1 -> 3
  * directly; state 2 -> 3, refreshing its timer to 0x14 first), then
- * runs the generic `sub_8028520` advance on all three slots
+ * runs the generic `StepHudSlide` advance on all three slots
  * unconditionally. Slot 2 doesn't get the manual force-advance the
  * other two do - reproduced as-is. */
-void sub_8028400(struct hud_blink *state)
+void UpdateHudSlides(struct hud_blink *state)
 {
     /* Pointer arithmetic is kept inline (not cached into locals) at each
      * use site, matching the ROM's own redundant recomputation - a
@@ -41,7 +41,7 @@ void sub_8028400(struct hud_blink *state)
      * extra callee-saved registers up front (see docs/workflow.md
      * step 7). Each of the two "force out of state 1/2" checks below
      * also needs the same explicit `goto`-forced extra `<=`
-     * range-check branch as `sub_8028520`'s dispatch (see its own
+     * range-check branch as `StepHudSlide`'s dispatch (see its own
      * comment) to reproduce the ROM's exact compare chain - a plain
      * `if (v==1) {...} else if (v==2) {...}` collapses that redundant
      * middle branch away. */
@@ -80,9 +80,9 @@ void sub_8028400(struct hud_blink *state)
         ;
     }
 
-    sub_8028520(state, &state->slots[2].state, &state->slots[2].timer, 0x78);
-    sub_8028520(state, &state->slots[0].state, &state->slots[0].timer, 0x78);
-    sub_8028520(state, &state->slots[1].state, &state->slots[1].timer, 0x78);
+    StepHudSlide(state, &state->slots[2].state, &state->slots[2].timer, 0x78);
+    StepHudSlide(state, &state->slots[0].state, &state->slots[0].timer, 0x78);
+    StepHudSlide(state, &state->slots[1].state, &state->slots[1].timer, 0x78);
 }
 
 /* Trigger for slot 2: only runs while the level state's `timeTrial`
@@ -106,7 +106,7 @@ void sub_8028474(struct hud_blink *state)
 }
 
 /* Same trigger as `sub_8028474`, for slot 0. */
-void sub_80284A4(struct hud_blink *state)
+void ShowHudLives(struct hud_blink *state)
 {
     s32 slotState;
 
@@ -122,7 +122,7 @@ void sub_80284A4(struct hud_blink *state)
 }
 
 /* Same trigger as `sub_8028474`, for slot 1. */
-void sub_80284D4(struct hud_blink *state)
+void ShowHudWumpa(struct hud_blink *state)
 {
     s32 slotState;
 
@@ -138,15 +138,15 @@ void sub_80284D4(struct hud_blink *state)
 }
 
 /* Fires all three slots' triggers at once. */
-void sub_8028504(struct hud_blink *state)
+void ShowHudCounters(struct hud_blink *state)
 {
     sub_8028474(state);
-    sub_80284A4(state);
-    sub_80284D4(state);
+    ShowHudLives(state);
+    ShowHudWumpa(state);
 }
 
 /* Generic single-slot blink advance, called once per slot by
- * `sub_8028400` above. `self` is unused - forwarded through purely for
+ * `UpdateHudSlides` above. `self` is unused - forwarded through purely for
  * calling-convention parity with the trigger functions above.
  *
  * The explicit (never-reached, since callers only ever pass 0-3 and
@@ -155,7 +155,7 @@ void sub_8028504(struct hud_blink *state)
  * comparison tree pivoting on the middle case value (2) instead of the
  * ROM's plain ascending compare chain (1, then an early-out for
  * anything <= 1, then 2, then 3) - see docs/workflow.md step 7. */
-void sub_8028520(void *self, s32 *state, s32 *timer, s32 threshold)
+void StepHudSlide(void *self, s32 *state, s32 *timer, s32 threshold)
 {
     switch (*state) {
     case 1:

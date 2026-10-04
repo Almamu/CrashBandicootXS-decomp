@@ -4,14 +4,14 @@
 #include "memory.h"
 
 struct counter_widget {
-    u32 field_0;
-    u8 field_4;
+    u32 frame;
+    u8 done;
     u8 pad_5[3];
-    s32 field_8;
+    s32 language;
     u8 field_c;
     u8 field_d;
     u8 pad_e[2];
-    void *field_10;
+    void *starfield;
 };
 
 extern struct oam_shadow_buffer *gUnknown_03001300;
@@ -26,9 +26,9 @@ extern void FlushVramDmaQueue(void);
 extern u8 gStaticData_0816C484[];
 
 extern void *sub_8026EDC(s32 size);
-extern void sub_80346FC(void *self, s32 arg1);
+extern void DestroyStarfield(void *self, s32 arg1);
 extern void sub_8026ED0(void *self);
-extern void *sub_8034374(void *arg0);
+extern void *InitStarfield(void *arg0);
 extern void LoadGraphicsPackage(void *buf, void *asset);
 extern void *sub_801E644(void *buf, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern s32 sub_801E640(void *buf);
@@ -37,25 +37,25 @@ extern void sub_8001604(void);
 extern void sub_80015E0(void);
 extern void sub_8001524(s32 val);
 extern void sub_8001614(void);
-extern struct counter_widget *gUnknown_030008CC;
+extern struct counter_widget *gLanguageSelect;
 
-/* Left raw (asm/code_3_2_20a.s, alongside sub_80372BC) rather than
+/* Left raw (asm/code_3_2_20a.s, alongside DrawLanguageSelect) rather than
  * matched here - it fully decodes (initializes gUnknown_030012B8's tile
  * cache with 4 fixed OBJ tiles, then copies a few icon_manager fields
- * from gUnknown_030012DC's instance into gUnknown_030012E0's), but hits
+ * from gSmallFont's instance into gLargeFont's), but hits
  * the same class of gcc-2.9 register-allocation difficulty already
- * documented for sub_8006600 (src/graphics/oam_count.c) - the compiler
+ * documented for DrawPowerDialog (src/graphics/oam_count.c) - the compiler
  * keeps reaching for r8/r9/sl instead of the ROM's plain r4-r7 reuse no
  * matter how the source is rephrased (indexed vs pointer-increment copy
  * loop, address-of-global caching, ...). Parking it properly (the
  * SUB_8006600-style register-pin macros) would need more of that same
  * heavy, per-call-site engineering than this pass has budget for. */
-extern void sub_8037388(void *unused);
+extern void InitLanguageSelectGraphics(void *unused);
 
 /* Resets `self`'s two byte flags, requests a BG tile/map graphics
  * package, and sets BG0's control register from it - a shared "load my
  * background" helper for the widget above. */
-void sub_80374D0(struct counter_widget *self)
+void LoadLanguageSelectBg(struct counter_widget *self)
 {
     u8 buf[0x10];
     u32 zero = 0;
@@ -82,7 +82,7 @@ void sub_80374D0(struct counter_widget *self)
     *(vu32 *)REG_ADDR_BG0HOFS = zero;
 }
 
-s32 sub_8037534(s32 *arg0)
+s32 LanguageSelectBlink(s32 *arg0)
 {
     if ((*arg0 >> 2) & 1) {
         return 1;
@@ -90,7 +90,7 @@ s32 sub_8037534(s32 *arg0)
     return 2;
 }
 
-void sub_8037548(struct counter_widget *self)
+void CommitLanguageSelectFrame(struct counter_widget *self)
 {
     REG_DISPCNT = *(u16 *)&self->field_c;
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
@@ -99,12 +99,12 @@ void sub_8037548(struct counter_widget *self)
     FlushVramDmaQueue();
 }
 
-void sub_8037578(void *self, u32 flags)
+void DestroyLanguageSelect(void *self, u32 flags)
 {
     void *field10 = *(void **)((u8 *)self + 0x10);
 
     if (field10 != NULL) {
-        sub_80346FC(field10, 3);
+        DestroyStarfield(field10, 3);
     }
     if (flags & 1) {
         sub_8026ED0(self);
@@ -113,12 +113,12 @@ void sub_8037578(void *self, u32 flags)
 
 /* Loads the widget's graphics, sets up its (16-tile) map/palette upload
  * request, and kicks off the fade/screen machinery. Returns `self`. */
-void *sub_80375A0(struct counter_widget *self)
+void *InitLanguageSelect(struct counter_widget *self)
 {
     sub_8006EA8(gUnknown_030012B8);
-    sub_8037388(self);
-    sub_80374D0(self);
-    self->field_10 = sub_8034374(sub_8026EDC(0x14));
+    InitLanguageSelectGraphics(self);
+    LoadLanguageSelectBg(self);
+    self->starfield = InitStarfield(sub_8026EDC(0x14));
     sub_800132C(0x80, 1, 0);
     sub_8001604();
     sub_80015E0();
@@ -127,18 +127,18 @@ void *sub_80375A0(struct counter_widget *self)
     return self;
 }
 
-void sub_80375EC(void)
+void CloseLanguageSelect(void)
 {
     sub_800132C(0, 1, 0);
-    if (gUnknown_030008CC != NULL) {
-        sub_8037578(gUnknown_030008CC, 3);
+    if (gLanguageSelect != NULL) {
+        DestroyLanguageSelect(gLanguageSelect, 3);
     }
-    gUnknown_030008CC = NULL;
+    gLanguageSelect = NULL;
     sub_8006EA8(gUnknown_030012B8);
 }
 
-void sub_8037620(void)
+void OpenLanguageSelect(void)
 {
     sub_8006EA8(gUnknown_030012B8);
-    gUnknown_030008CC = sub_80375A0(sub_8026EDC(0x14));
+    gLanguageSelect = InitLanguageSelect(sub_8026EDC(0x14));
 }

@@ -329,10 +329,10 @@ extern struct follow_owner *gUnknown_030012D4;
 extern void ***gUnknown_030012D0;
 extern void *gUnknown_030012F0;
 extern struct tile_cache *gUnknown_030012B8;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gLevelState;
-extern struct icon_manager *gUnknown_030012DC;
-extern struct icon_manager *gUnknown_030012E0;
+extern struct icon_manager *gSmallFont;
+extern struct icon_manager *gLargeFont;
 extern struct vram_cursor *gUnknown_030012FC;
 extern void *gUnknown_03001300;
 extern void *gUnknown_03001304;
@@ -404,11 +404,11 @@ extern void sub_8006C28(struct vram_cursor *p);
 extern void FlushVramDmaQueue(void);
 extern void sub_801E644(void *dst, s32 a, s32 b, s32 c, s32 d);
 extern void LoadGraphicsPackage(void *dst, void *pkg);
-extern void sub_8001B54(void *arg0, s32 arg1);
+extern void PlaySong(void *arg0, s32 arg1);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 GetUiText(s32 id);
-extern void sub_8028A30(struct icon_manager *m, u8 v);
-extern void sub_8028A40(struct icon_manager *m);
+extern void FontSetPalette(struct icon_manager *m, u8 v);
+extern void FontResetPalette(struct icon_manager *m);
 extern void FormatCentiseconds(s32 value, char *buf);
 
 /* Save data. */
@@ -757,7 +757,7 @@ struct sprite *sub_801BAD0(struct sprite *self)
 
 /* The level-select screen, modal (called from game_loop55.c): resets the
  * display, palette, VRAM cursor and both text-icon managers (the same
- * setup as sub_80062A8), builds the menu for level `*arg`, runs it, stores
+ * setup as ShowPowerDialog), builds the menu for level `*arg`, runs it, stores
  * the chosen level back through `arg`, tears the menu down and returns
  * its `result` byte. The icon-manager steps are inline helpers: the ROM
  * recomputes every field address after each call instead of keeping the
@@ -766,7 +766,7 @@ static inline void IconSetup(struct icon_manager *m, u32 v)
 {
     struct icon_slot *slot;
 
-    m->field_108 = v;
+    m->tileBase = v;
     slot = &m->record->slots[6];
     _call_via_r1((u8 *)m + slot->offset, slot->ptr);
 }
@@ -775,7 +775,7 @@ static inline void IconReserve(struct icon_manager **m)
 {
     struct vram_cursor *c = gUnknown_030012FC;
 
-    sub_8006C58(c, (*m)->field_12c << 5);
+    sub_8006C58(c, (*m)->tileCount << 5);
 }
 
 static inline void LoadMenuPalette(struct tile_cache *cache)
@@ -799,16 +799,16 @@ u8 sub_801BAF0(s32 *arg)
     gUnknown_030012FC->unk_08 = 0;
     sub_8006C4C(gUnknown_030012FC);
     sub_8006C4C(gUnknown_030012FC);
-    IconSetup(gUnknown_030012DC, 0);
-    IconReserve(&gUnknown_030012DC);
+    IconSetup(gSmallFont, 0);
+    IconReserve(&gSmallFont);
     {
-        u32 v = gUnknown_030012DC->field_12c;
+        u32 v = gSmallFont->tileCount;
 
-        IconSetup(gUnknown_030012E0, v);
+        IconSetup(gLargeFont, v);
     }
-    IconReserve(&gUnknown_030012E0);
+    IconReserve(&gLargeFont);
     sub_8006C30(gUnknown_030012FC);
-    sub_8001B54(gUnknown_030012BC, 0x10);
+    PlaySong(gAudioContext, 0x10);
     {
         struct level_menu **menuAddr = &gUnknown_03000820;
 
@@ -982,7 +982,7 @@ void sub_801C040(struct level_menu *self, s32 flags)
 }
 
 /* Per-frame update: draws the selected level's name centred at the top
- * (gUnknown_030012E0) and its record panel, updates every entry, and once
+ * (gLargeFont) and its record panel, updates every entry, and once
  * the BG1 page has settled draws text 0x2F centred at y=0x96 (the first
  * time only, with the page arrows) and steps BG2; BG2's DISPCNT enable
  * bit follows sub_801DD28. */
@@ -995,12 +995,12 @@ void sub_801C104(struct level_menu *self)
     sub_801E2BC(self->panel);
     if (sub_801DD18(self->bg2) && sub_801DE28(self->items[self->index]))
     {
-        struct icon_slot *slot = &gUnknown_030012E0->record->slots[0];
-        u32 x = (u32)(0xF0 - _call_via_r2((u8 *)gUnknown_030012E0 + slot->offset, self->nameText, slot->ptr)) >> 1;
+        struct icon_slot *slot = &gLargeFont->record->slots[0];
+        u32 x = (u32)(0xF0 - _call_via_r2((u8 *)gLargeFont + slot->offset, self->nameText, slot->ptr)) >> 1;
 
-        SetIconPos(gUnknown_030012E0, x, -self->unk_80 + 2);
-        slot = &gUnknown_030012E0->record->slots[2];
-        _call_via_r2((u8 *)gUnknown_030012E0 + slot->offset, self->nameText, slot->ptr);
+        SetIconPos(gLargeFont, x, -self->unk_80 + 2);
+        slot = &gLargeFont->record->slots[2];
+        _call_via_r2((u8 *)gLargeFont + slot->offset, self->nameText, slot->ptr);
         if (self->index <= 4)
             sub_801C364(self);
     }
@@ -1017,13 +1017,13 @@ void sub_801C104(struct level_menu *self)
         if (!sub_801DCF8(self->bg2))
         {
             s32 text = GetUiText(0x2F);
-            struct icon_slot *slot = &gUnknown_030012DC->record->slots[0];
-            u32 x = (u32)(0xF0 - _call_via_r2((u8 *)gUnknown_030012DC + slot->offset, text, slot->ptr)) >> 1;
+            struct icon_slot *slot = &gSmallFont->record->slots[0];
+            u32 x = (u32)(0xF0 - _call_via_r2((u8 *)gSmallFont + slot->offset, text, slot->ptr)) >> 1;
 
-            SetIconPos(gUnknown_030012DC, x, 0x96);
-            sub_8028A30(gUnknown_030012DC, 0xF);
-            slot = &gUnknown_030012DC->record->slots[2];
-            _call_via_r2((u8 *)gUnknown_030012DC + slot->offset, text, slot->ptr);
+            SetIconPos(gSmallFont, x, 0x96);
+            FontSetPalette(gSmallFont, 0xF);
+            slot = &gSmallFont->record->slots[2];
+            _call_via_r2((u8 *)gSmallFont + slot->offset, text, slot->ptr);
             sub_801C2B0(self);
         }
         sub_801DC28(self->bg2);
@@ -1166,23 +1166,23 @@ void sub_801C3E8(struct level_menu *self, u32 time)
     {
         struct icon_slot *slot;
 
-        SetIconPos(gUnknown_030012E0, self->unk_80 + gStaticData_0816C4C0.x + 10, gStaticData_0816C4C0.y - 8);
-        slot = &gUnknown_030012E0->record->slots[2];
-        _call_via_r2((u8 *)gUnknown_030012E0 + slot->offset, (s32)self->timeText, slot->ptr);
+        SetIconPos(gLargeFont, self->unk_80 + gStaticData_0816C4C0.x + 10, gStaticData_0816C4C0.y - 8);
+        slot = &gLargeFont->record->slots[2];
+        _call_via_r2((u8 *)gLargeFont + slot->offset, (s32)self->timeText, slot->ptr);
     }
     else
     {
         struct icon_slot *slot;
 
         sub_8008890(self->sprites[7], self->unk_80, 0);
-        sub_8028A30(gUnknown_030012E0, self->sprites[7]->palette);
-        SetIconPos(gUnknown_030012E0, self->unk_80 + gStaticData_0816C4C0.x + 10, gStaticData_0816C4C0.y - 8);
-        slot = &gUnknown_030012E0->record->slots[2];
-        _call_via_r2((u8 *)gUnknown_030012E0 + slot->offset, (s32)self->recordText, slot->ptr);
-        sub_8028A40(gUnknown_030012E0);
-        SetIconPos(gUnknown_030012E0, self->unk_80 + gStaticData_0816C4C0.x + 10, gStaticData_0816C4C0.y + 8);
-        slot = &gUnknown_030012E0->record->slots[2];
-        _call_via_r2((u8 *)gUnknown_030012E0 + slot->offset, (s32)self->timeText, slot->ptr);
+        FontSetPalette(gLargeFont, self->sprites[7]->palette);
+        SetIconPos(gLargeFont, self->unk_80 + gStaticData_0816C4C0.x + 10, gStaticData_0816C4C0.y - 8);
+        slot = &gLargeFont->record->slots[2];
+        _call_via_r2((u8 *)gLargeFont + slot->offset, (s32)self->recordText, slot->ptr);
+        FontResetPalette(gLargeFont);
+        SetIconPos(gLargeFont, self->unk_80 + gStaticData_0816C4C0.x + 10, gStaticData_0816C4C0.y + 8);
+        slot = &gLargeFont->record->slots[2];
+        _call_via_r2((u8 *)gLargeFont + slot->offset, (s32)self->timeText, slot->ptr);
     }
 }
 
@@ -1228,7 +1228,7 @@ void sub_801C51C(struct level_menu *self)
                 sub_8006EA8(gUnknown_030012B8);
                 sub_801D730(self);
             }
-            sub_8028A40(gUnknown_030012E0);
+            FontResetPalette(gLargeFont);
         }
     }
 draw:
@@ -1392,7 +1392,7 @@ s32 sub_801C96C(struct level_menu *self)
         CommitDisplay(self);
         sub_801DAD8(self->bg2);
     }
-    PlaySfx(gUnknown_030012BC, 0x51, 0x100);
+    PlaySfx(gAudioContext, 0x51, 0x100);
     self->blend.raw = 0;
     self->blend.bits.bg0Second = 1;
     self->blend.bits.bg1Second = 1;
@@ -1495,7 +1495,7 @@ void sub_801CDE0(struct level_menu *self)
 {
     if (self->index == 0)
     {
-        PlaySfx(gUnknown_030012BC, 0x48, 0x100);
+        PlaySfx(gAudioContext, 0x48, 0x100);
         return;
     }
     sub_801DEA0(self->items[self->index], 0);
@@ -1520,7 +1520,7 @@ void sub_801CE60(struct level_menu *self)
 {
     if (self->index == self->lastIndex)
     {
-        PlaySfx(gUnknown_030012BC, 0x48, 0x100);
+        PlaySfx(gAudioContext, 0x48, 0x100);
         return;
     }
     sub_801DEA0(self->items[self->index], 0);

@@ -5,10 +5,10 @@ retries, each with an open parked-function issue. Both are now real C.
 
 | Function | File | Size | Before | Compiler | Result |
 |---|---|---|---|---|---|
-| `sub_8006600` | `src/graphics/oam_count.c` | 240 B | no draft in tree | agbcc (either) | **Closed** (#101) |
+| `DrawPowerDialog` | `src/graphics/oam_count.c` | 240 B | no draft in tree | agbcc (either) | **Closed** (#101) |
 | `sub_8000EE4` | `src/graphics/text_layout.c` | 384 B | heavily pinned draft, "2 residuals" | old_agbcc | **Closed** (#102) |
 
-## sub_8006600
+## DrawPowerDialog
 
 This is a HUD icon + number renderer. It measures a label with the icon
 manager's `record->slots[0]` method, centers it at `(240 - w) >> 1`,

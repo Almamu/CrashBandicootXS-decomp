@@ -241,7 +241,7 @@ The first batch (all pointer tables, all byte-exact):
 | `countdown_17d7a4.c` | `0x0817D7A4` | 1 `struct bg_package`, 20 motion sequences, the 6 language names |
 | `digit_glyphs_17e714.c` | `0x0817E714` | 6 pointers to the language names |
 | `palettes_17e72c.c` | `0x0817E72C` | 3 palette-cache halves |
-| `level_tilesets_17e78c.c` | `0x0817E78C` | a `u16[16]` (`sub_8037388`), level BG tile sets 1-3 (grit, see "Resources") |
+| `level_tilesets_17e78c.c` | `0x0817E78C` | a `u16[16]` (`InitLanguageSelectGraphics`), level BG tile sets 1-3 (grit, see "Resources") |
 | `level_rooms_24b638.c` | `0x0824B638` | the level data of 33 rooms, generated from `data/levels/` (see "Level data") |
 | `level_tilesets_270f08.c` | `0x08270F08` | level BG tile sets 4-5 (grit) |
 | `level_rooms_2b91d0.c` | `0x082B91D0` | the level data of the other 8 rooms (same) |
@@ -742,8 +742,8 @@ zero padding.
 
 ### Credits
 
-`gStaticData_0817C5D0` (`src/data/credits_17c5d0.c`) is the credits
-stream `sub_80350A4` draws line by line as floating glyphs. It is text
+`gCreditsText` (`src/data/credits_17c5d0.c`) is the credits
+stream `UpdateCreditsText` draws line by line as floating glyphs. It is text
 with three opcodes, written as macros: `CREDITS_PICTURE_n` (1, n: popup
 glyph picture n, the logos of `popup_glyphs_17cf40.c`), `CREDITS_SMALL`
 (2) and `CREDITS_LARGE` (3), the two HUD fonts. A zero byte ends it, and

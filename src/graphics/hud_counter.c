@@ -2,21 +2,21 @@
 #include "hud.h"
 
 extern void *gLevelState;
-extern s32 gUnknown_0300086C;
+extern s32 gHudSlideOffset;
 
-extern void sub_80270E0(struct hud_digit_part *part, s32 x, s32 y);
+extern void DrawHudPart(struct hud_digit_part *part, s32 x, s32 y);
 extern s32 __divsi3(s32 dividend, s32 divisor);
 extern s32 __modsi3(s32 dividend, s32 divisor);
 extern s32 sub_803AFEC(void *state);
 
-void sub_8027838(struct hud_counter *counter)
+void UpdateHudLives(struct hud_counter *counter)
 {
     /* Register pins preserve the ROM allocation after plain struct C
      * reordered the clamp loads; see docs/workflow.md step 7. */
     register struct hud_counter *self asm("r5") = counter;
     register struct hud_digit_part *parts asm("r4");
 
-    if (self->mode == 0) {
+    if (self->livesSlide == 0) {
         return;
     }
 
@@ -29,22 +29,22 @@ void sub_8027838(struct hud_counter *counter)
         } else {
             value = 0;
         }
-        self->value = value;
+        self->lives = value;
     }
 
     {
-        register s32 mode asm("r0") = self->mode;
+        register s32 mode asm("r0") = self->livesSlide;
 
         if (mode == 1 || mode == 3) {
-            gUnknown_0300086C = self->layout_value * 2 - 0x28;
+            gHudSlideOffset = self->livesSlideTimer * 2 - 0x28;
         } else {
-            gUnknown_0300086C = 0;
+            gHudSlideOffset = 0;
         }
     }
 
     {
-        register s32 current asm("r1") = self->value;
-        register s32 previous asm("r0") = self->previous_value;
+        register s32 current asm("r1") = self->lives;
+        register s32 previous asm("r0") = self->shownLives;
         parts = self->parts;
 
         if (current != previous) {
@@ -75,7 +75,7 @@ void sub_8027838(struct hud_counter *counter)
                 }
 
                 {
-                    register s32 result asm("r0") = __modsi3(self->value, 10);
+                    register s32 result asm("r0") = __modsi3(self->lives, 10);
                     register struct hud_digit_part *part asm("r6") = &parts[1];
                     register s32 frame asm("r3") = result;
                     register struct hud_anim_data *anim_data asm("r0");
@@ -147,10 +147,10 @@ void sub_8027838(struct hud_counter *counter)
         }
     }
 
-    sub_80270E0(&parts[2], 0, 0);
-    sub_80270E0(&self->parts[0], 0, 0);
-    sub_80270E0(&self->parts[1], 0, 0);
-    self->previous_value = self->value;
+    DrawHudPart(&parts[2], 0, 0);
+    DrawHudPart(&self->parts[0], 0, 0);
+    DrawHudPart(&self->parts[1], 0, 0);
+    self->shownLives = self->lives;
 }
 
 /* Match the ROM's zero halfword padding rather than Thumb NOP padding. */

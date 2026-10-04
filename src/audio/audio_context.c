@@ -78,29 +78,29 @@ extern void GAX_pause(void);
 extern void WaitForVBlank(void);
 extern void sub_80016D0(u8 *address);
 extern void IrqRestoreHandler(s32 interruptIndex);
-extern void sub_80017BC(struct AudioContext *self, u32 songIndex);
+extern void StartSong(struct AudioContext *self, u32 songIndex);
 
 /* currentSong getter. */
-u32 sub_8001AB8(struct AudioContext *self)
+u32 GetCurrentSong(struct AudioContext *self)
 {
     return self->currentSong;
 }
 
 /* sfxVolume getter. */
-u32 sub_8001ABC(struct AudioContext *self)
+u32 GetSfxVolume(struct AudioContext *self)
 {
     return self->sfxVolume;
 }
 
 /* duckVolDefault getter. */
-u32 sub_8001AC0(struct AudioContext *self)
+u32 GetMusicVolume(struct AudioContext *self)
 {
     return self->duckVolDefault;
 }
 
 /* Arms a duck-out: sets the ducking fade target and the "fade down"
  * direction flag. */
-void sub_8001AC4(struct AudioContext *self, u32 value)
+void FadeOutMusic(struct AudioContext *self, u32 value)
 {
     self->duckVolTarget = value;
     self->duckVolFadeUpArmed = 0;
@@ -108,8 +108,8 @@ void sub_8001AC4(struct AudioContext *self, u32 value)
 }
 
 /* Arms a duck-in back to `duckVolDefault` (the last value explicitly
- * set via `sub_8001B30`). */
-void sub_8001AD8(struct AudioContext *self)
+ * set via `SetMusicVolume`). */
+void FadeInMusic(struct AudioContext *self)
 {
     self->duckVolTarget = self->duckVolDefault;
     self->duckVolFadeUpArmed = 1;
@@ -150,8 +150,8 @@ void sub_8001B14(struct AudioContext *self, u32 value)
 }
 
 /* Immediate (non-fading) music-volume setter - also becomes the new
- * `duckVolDefault` a later `sub_8001AD8` duck-in restores to. */
-void sub_8001B30(struct AudioContext *self, u32 value)
+ * `duckVolDefault` a later `FadeInMusic` duck-in restores to. */
+void SetMusicVolume(struct AudioContext *self, u32 value)
 {
     s32 isPlaying;
 
@@ -167,17 +167,17 @@ void sub_8001B30(struct AudioContext *self, u32 value)
 }
 
 /* sfxVolume setter. */
-void sub_8001B50(struct AudioContext *self, u32 value)
+void SetSfxVolume(struct AudioContext *self, u32 value)
 {
     self->sfxVolume = value;
 }
 
 /* Requests song `id` to play: if nothing is playing yet, starts it
- * immediately (`sub_80017BC`); otherwise, if it's not already the
+ * immediately (`StartSong`); otherwise, if it's not already the
  * current or already-queued song, queues it as `pendingSong` and arms
- * a duck-out (`sub_8001AC4`) - `sub_80016EC`'s per-tick update starts
+ * a duck-out (`FadeOutMusic`) - `UpdateAudio`'s per-tick update starts
  * the queued song once the duck-out fade completes. */
-void sub_8001B54(struct AudioContext *self, u32 id)
+void PlaySong(struct AudioContext *self, u32 id)
 {
     s32 isPlaying = 0;
 
@@ -185,7 +185,7 @@ void sub_8001B54(struct AudioContext *self, u32 id)
         isPlaying = 1;
     }
     if (!isPlaying) {
-        sub_80017BC(self, id);
+        StartSong(self, id);
         return;
     }
     if (id == self->currentSong) {
@@ -195,11 +195,11 @@ void sub_8001B54(struct AudioContext *self, u32 id)
         return;
     }
     self->pendingSong = id;
-    sub_8001AC4(self, 0);
+    FadeOutMusic(self, 0);
 }
 
 /* Resumes a paused song. */
-void sub_8001B88(struct AudioContext *self)
+void ResumeSong(struct AudioContext *self)
 {
     s32 isPaused;
 
@@ -215,7 +215,7 @@ void sub_8001B88(struct AudioContext *self)
 }
 
 /* Pauses a playing song. */
-void sub_8001BAC(struct AudioContext *self)
+void PauseSong(struct AudioContext *self)
 {
     s32 isPlaying;
 
@@ -233,7 +233,7 @@ void sub_8001BAC(struct AudioContext *self)
 
 /* Stops the currently playing/paused song (a no-op if already
  * stopped) and disarms the per-tick GAX2 IRQ update. */
-void sub_8001BD4(struct AudioContext *self)
+void StopSong(struct AudioContext *self)
 {
     register s32 isStopped asm("r2");
     register s32 zero asm("r4");
@@ -253,9 +253,9 @@ void sub_8001BD4(struct AudioContext *self)
 }
 
 /* Stops the song, and if `flags` bit 0 is set, also frees `self`. */
-void sub_8001C04(struct AudioContext *self, u32 flags)
+void DestroyAudioContext(struct AudioContext *self, u32 flags)
 {
-    sub_8001BD4(self);
+    StopSong(self);
     gGaxIrqEnabled = 0;
     if (flags & 1) {
         sub_80016D0((u8 *)self);
@@ -265,7 +265,7 @@ void sub_8001C04(struct AudioContext *self, u32 flags)
 /* Constructor: resets every field to its idle default (both volume
  * pairs to `0x100` = 1.0 in Q8.8, both song slots to the `0x13` "none"
  * sentinel, every fade-direction flag cleared) and returns `self`. */
-struct AudioContext *sub_8001C2C(struct AudioContext *self)
+struct AudioContext *InitAudioContext(struct AudioContext *self)
 {
     self->state = 0;
     self->pendingSong = 0x13;
@@ -287,7 +287,7 @@ struct AudioContext *sub_8001C2C(struct AudioContext *self)
 
 /* Disables the GBA's V-Count interrupt - a counterpart to
  * `DisableVBlankHandler` (VBlank) in src/system/irq.c. */
-void sub_8001C64(void)
+void DisableMusicVCountIrq(void)
 {
     register vu8 *dispstat asm("r1") = (vu8 *)REG_ADDR_DISPSTAT;
     u8 tmp = DISPSTAT_VCOUNT_INTR;

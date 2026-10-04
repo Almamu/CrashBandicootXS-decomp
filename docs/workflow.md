@@ -134,7 +134,7 @@ incomplete pass and should be finished before moving on.
      behavior-preserving no-op can still silently change codegen (the
      classic culprit: a struct-typed access lets gcc merge/reorder an
      address computation that the raw-pointer version kept separate,
-     exactly like `sub_8006864`/`sub_8006820`'s inline-asm-guarded reads,
+     exactly like `CountSapphireRelics`/`CountGoldRelics`'s inline-asm-guarded reads,
      documented in matching.md) - any such regression gets reverted
      immediately, not left in on the theory that it's "close enough."
 8. Write up the function in a new file under `docs/matching/` (a short

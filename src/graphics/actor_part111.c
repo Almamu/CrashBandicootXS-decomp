@@ -174,15 +174,15 @@ struct ac2c_player {
 typedef void (*ac2c_fn3)(void *self, s32 a, s32 b, s32 c);
 
 extern struct orbit_game *gLevelState;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern struct ac2c_player *gUnknown_030012D8;
 extern void *gEntitySpawner;
-extern void *gUnknown_03001318;
+extern void *gHud;
 extern u32 gUnknown_0300082C;
 extern u8 *GetCurrentLevelFlags(void *game);
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void sub_80241A4(void);
-extern void sub_8028504(void *arg0);
+extern void ShowHudCounters(void *arg0);
 extern void FreezeLevelClock(void *game, s32 n);
 extern void sub_802352C(void *game);
 extern void sub_8023510(void *game);
@@ -227,11 +227,11 @@ void sub_800AC2C(struct ac2c_self *self, s32 a, s32 code, s32 c)
     switch (code) {
     case 27:
         *GetCurrentLevelFlags(gLevelState) |= 1;
-        PlaySfx(gUnknown_030012BC, 0x1c, 0x100);
+        PlaySfx(gAudioContext, 0x1c, 0x100);
         break;
     case 18:
         sub_80241A4();
-        sub_8028504(gUnknown_03001318);
+        ShowHudCounters(gHud);
         break;
     case 17:
         {
@@ -241,7 +241,7 @@ void sub_800AC2C(struct ac2c_self *self, s32 a, s32 code, s32 c)
                 FreezeLevelClock(game, 100);
         }
         NOTIFY(self, a, code, c);
-        sub_8028504(gUnknown_03001318);
+        ShowHudCounters(gHud);
         break;
     case 15:
         sub_802352C(gLevelState);
@@ -254,31 +254,31 @@ void sub_800AC2C(struct ac2c_self *self, s32 a, s32 code, s32 c)
     case 28:
         if (gLevelState->mode == 3)
             self->deadline = 0;
-        PlaySfx(gUnknown_030012BC, 0x18, 0x100);
+        PlaySfx(gAudioContext, 0x18, 0x100);
         sub_8022D50(gLevelState);
         break;
     case 29:
-        PlaySfx(gUnknown_030012BC, 0x1f, 0x100);
+        PlaySfx(gAudioContext, 0x1f, 0x100);
         *GetCurrentLevelFlags(gLevelState) |= 2;
         break;
     case 30:
-        PlaySfx(gUnknown_030012BC, 0x1f, 0x100);
+        PlaySfx(gAudioContext, 0x1f, 0x100);
         *GetCurrentLevelFlags(gLevelState) |= 4;
         break;
     case 34:
-        PlaySfx(gUnknown_030012BC, 0x1f, 0x100);
+        PlaySfx(gAudioContext, 0x1f, 0x100);
         gLevelState->flags2 |= 2;
         break;
     case 32:
-        PlaySfx(gUnknown_030012BC, 0x1f, 0x100);
+        PlaySfx(gAudioContext, 0x1f, 0x100);
         gLevelState->flags2 |= 4;
         break;
     case 31:
-        PlaySfx(gUnknown_030012BC, 0x1f, 0x100);
+        PlaySfx(gAudioContext, 0x1f, 0x100);
         gLevelState->flags2 |= 1;
         break;
     case 33:
-        PlaySfx(gUnknown_030012BC, 0x1f, 0x100);
+        PlaySfx(gAudioContext, 0x1f, 0x100);
         gLevelState->flags2 |= 8;
         break;
     case 35:
@@ -325,8 +325,8 @@ void sub_800AC2C(struct ac2c_self *self, s32 a, s32 code, s32 c)
 
                         self->deadline = gUnknown_0300082C + 90;
                         SetMaskLevel(game, game->mode - 1);
-                        PlaySfx(gUnknown_030012BC, 0, 0x100);
-                        PlaySfx(gUnknown_030012BC, 0x1b, 0x100);
+                        PlaySfx(gAudioContext, 0, 0x100);
+                        PlaySfx(gAudioContext, 0x1b, 0x100);
                         NOTIFY(self, a, 0xb, c);
                         /* The ROM reloads the mode here and never uses it. */
                         (void)*(volatile s32 *)&gLevelState->mode;

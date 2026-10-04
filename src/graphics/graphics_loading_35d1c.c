@@ -20,7 +20,7 @@
  * docs/matching/sr65-naked-retry.md. */
 
 extern struct oam_shadow_buffer *gUnknown_03001300;
-extern struct AudioContext *gUnknown_030012BC;
+extern struct AudioContext *gAudioContext;
 extern u8 gUnknown_03001288[2];
 extern void *gUnknown_03001304;
 extern void *gUnknown_0300160C[2];
@@ -52,10 +52,10 @@ extern void sub_8006A78(struct oam_shadow_buffer *arg0);
 extern s32 __divsi3(s32 arg0, s32 arg1);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void sub_8001614(void);
-extern void sub_8001B54(struct AudioContext *self, u32 id);
-extern void sub_8028A30(struct icon_manager *self, u8 val);
+extern void PlaySong(struct AudioContext *self, u32 id);
+extern void FontSetPalette(struct icon_manager *self, u8 val);
 extern s32 GetUiText(s32 arg0);
-extern void sub_8034688(s32 arg0);
+extern void UpdateStarfield(s32 arg0);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void sub_80015B0(void);
@@ -63,7 +63,7 @@ extern s32 RandRange(s32 arg0);
 extern void *sub_8026EC0(u32 size);
 extern void sub_8026EB4(void *ptr);
 extern void *sub_8026EDC(s32 size);
-extern void *sub_8034374(void *arg0);
+extern void *InitStarfield(void *arg0);
 extern void LoadTaggedAsset(void *asset, void *dest);
 extern void sub_8037110(void *self, void *asset, void *dest);
 extern void *AllocVramTileBlock(u32 size);
@@ -82,7 +82,7 @@ extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 extern void UpdateKeys(void *arg0);
 extern void sub_8026ED0(void *self);
 extern s32 __modsi3(void *self, s32 arg1);
-extern void sub_80346FC(void *self, s32 arg1);
+extern void DestroyStarfield(void *self, s32 arg1);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern s32 GetSpriteShapeSizeBits(void *self);
@@ -322,7 +322,7 @@ u32 sub_8035D1C(u32 *self, u32 pressed)
         HashInput(self, 0x828A048B);
     if (((struct level_scratch *)self)->cheatHash == 0x3034AF3B)
     {
-        sub_8001B54(gUnknown_030012BC, 0xc);
+        PlaySong(gAudioContext, 0xc);
         ((struct level_scratch *)self)->cheatHash = 0;
     }
     return 0;
@@ -333,7 +333,7 @@ u32 sub_8035D1C(u32 *self, u32 pressed)
  * and `self+0x14+i*0x34` countdowns from `gStaticData_0817CFA4`
  * (mirroring `sub_80360DC`'s init shape), then loops `sub_8035780`
  * (slot decay) + `sub_8036068` (per-frame OAM/icon flush) +
- * `sub_8034688` + `WaitForVBlank` + `sub_8035F9C` (BG2 affine flush)
+ * `UpdateStarfield` + `WaitForVBlank` + `sub_8035F9C` (BG2 affine flush)
  * until `self+0x14` (the header's own hold record) drains to 0. Then
  * runs a second phase gated by `sub_8035D1C`'s cheat-detector return
  * value (bits 9/0x40/0x80 firing `PlaySfx` 0x49/0x46/0x46 and
@@ -346,7 +346,7 @@ u32 sub_8035D1C(u32 *self, u32 pressed)
  *   first free low register (r3) ahead of `slot`/`stride`. Both
  *   address sums compute the scaled index first (`off`), and the
  *   `-1` store adds it second (`base + off`).
- * - The menu loop is a real `for (;;)`, so `&gUnknown_030012BC` is
+ * - The menu loop is a real `for (;;)`, so `&gAudioContext` is
  *   hoisted into r6. Leaving it with `goto fadeLoop` instead of `break`
  *   keeps jump.c from rotating it around the `pressed & 9` exit.
  * - The fade loop is a `goto` loop again (its register addresses are
@@ -403,7 +403,7 @@ seedLoop:
     {
         sub_8035780(self);
         sub_8036068(self);
-        sub_8034688(self[0x82]);
+        UpdateStarfield(self[0x82]);
         WaitForVBlank();
         *(vu32 *)REG_ADDR_BLDCNT = 0;
         sub_8035F9C(self);
@@ -416,19 +416,19 @@ seedLoop:
     for (;;)
     {
         sub_8036068(self);
-        sub_8034688(self[0x82]);
+        UpdateStarfield(self[0x82]);
         UpdateKeys(gUnknown_03001304);
         pressed = gKeys.pressed;
         pressed = sub_8035D1C(self, pressed);
         if (pressed & 9)
         {
-            PlaySfx(gUnknown_030012BC, 0x49, 0x100);
+            PlaySfx(gAudioContext, 0x49, 0x100);
             fade = 0;
             goto fadeLoop;
         }
         if (pressed & 0x40)
         {
-            PlaySfx(gUnknown_030012BC, 0x46, 0x100);
+            PlaySfx(gAudioContext, 0x46, 0x100);
             if (self[0] != 0)
                 self[0]--;
             else
@@ -436,7 +436,7 @@ seedLoop:
         }
         if (pressed & 0x80)
         {
-            PlaySfx(gUnknown_030012BC, 0x46, 0x100);
+            PlaySfx(gAudioContext, 0x46, 0x100);
             self[0]++;
             self[0] = (s32)self[0] % 3;
         }
@@ -445,7 +445,7 @@ seedLoop:
     }
 fadeLoop:
     sub_8036068(self);
-    sub_8034688(self[0x82]);
+    UpdateStarfield(self[0x82]);
     WaitForVBlank();
     REG_BLDY = fade;
     REG_BLDCNT = 0xff;
@@ -485,7 +485,7 @@ void sub_8035F9C(u32 *self)
 }
 
 /* Icon-manager position helper: for `variant == 0`, bumps a play
- * counter at `self+4` and alternates `sub_8028A30`'s icon-slot id
+ * counter at `self+4` and alternates `FontSetPalette`'s icon-slot id
  * between 0xe/0xf every other call; for `variant != 0` (only ever
  * called with 1/2 by `sub_8036068`), always uses id 0xd. Either way,
  * feeds the resulting icon-manager slot's own position fields (looked
@@ -506,11 +506,11 @@ void sub_8035FEC(u32 *self, s32 text, s32 variant)
     {
         s32 count = self[1] + 1;
         self[1] = count;
-        sub_8028A30((struct icon_manager *)self[3], ((count >> 2) & 1) + 0xe);
+        FontSetPalette((struct icon_manager *)self[3], ((count >> 2) & 1) + 0xe);
     }
     else
     {
-        sub_8028A30((struct icon_manager *)self[3], 0xd);
+        FontSetPalette((struct icon_manager *)self[3], 0xd);
     }
     slot = &((struct icon_manager *)self[3])->record->slots[0];
     x = (0xf0 - _call_via_r2((u8 *)self[3] + slot->offset, (void *)text, slot->ptr)) >> 1;
@@ -630,7 +630,7 @@ loop:
 }
 
 /* Teardown/reset helper: if the object at `self+0x208` exists, destroys
- * it (`sub_80346FC(obj, 3)`); clears the DISPCNT shadow
+ * it (`DestroyStarfield(obj, 3)`); clears the DISPCNT shadow
  * (`gUnknown_03001288`) and commits it (`sub_8001614`), zeroes all 256
  * BG palette entries (`0x05000000`), sets REG_BLDCNT/REG_BLDY to a full
  * fade (0xff/0x10), and - only if `flag`'s bit 0 is set - frees the
@@ -644,7 +644,7 @@ void sub_8036154(u32 *self, u32 flag)
     s32 zero;
 
     if (self[0x82] != 0)
-        sub_80346FC((void *)self[0x82], 3);
+        DestroyStarfield((void *)self[0x82], 3);
     *(u16 *)gUnknown_03001288 = 0;
     sub_8001614();
     zero = 0;
@@ -690,7 +690,7 @@ static inline void *New(u32 size)
  * cache, constructs the actor part (`sub_8036E20` on a 0x54-byte
  * `mem_alloc` block), DMAs the OBJ palette, loads BG2's tilesets and
  * the slot array (`sub_8036528`/`sub_8036600`), builds the particle
- * background (`sub_8034374`) and BG2's tilemap (`sub_8036CF4`). Then
+ * background (`InitStarfield`) and BG2's tilemap (`sub_8036CF4`). Then
  * a 60-frame fade-in, a zoom-in phase (BG2 affine scale driven by the
  * `self+0x444` counter, A/Start skips ahead), and the main phase
  * (the part's two per-frame methods, the slot-array update and OAM
@@ -721,7 +721,7 @@ void sub_80361B0(u32 *self)
     }
     sub_8036528(self);
     sub_8036600(self);
-    bgObj = sub_8034374(sub_8026EDC(0x14));
+    bgObj = InitStarfield(sub_8026EDC(0x14));
     sub_8036CF4(self);
     for (i = 0; i <= 0x3b; i++)
     {
@@ -735,9 +735,9 @@ void sub_80361B0(u32 *self)
             *(vu32 *)REG_ADDR_BLDCNT = 0;
         }
         WaitForVBlank();
-        sub_8034688((s32)bgObj);
+        UpdateStarfield((s32)bgObj);
     }
-    PlaySfx(gUnknown_030012BC, 0x4b, 0x100);
+    PlaySfx(gAudioContext, 0x4b, 0x100);
     scale = 0x2000;
     SLOT_SYSTEM(self)->fade = -1;
     do
@@ -758,7 +758,7 @@ void sub_80361B0(u32 *self)
         if (*fade != -1)
         {
             if (*fade == 0x40)
-                PlaySfx(gUnknown_030012BC, 0x4c, 0x100);
+                PlaySfx(gAudioContext, 0x4c, 0x100);
             v = *fade;
             if (v <= 0x40)
             {
@@ -792,7 +792,7 @@ void sub_80361B0(u32 *self)
         REG_BG2PD = q;
         REG_BG2PB = 0;
         REG_BG2PC = 0;
-        sub_8034688((s32)bgObj);
+        UpdateStarfield((s32)bgObj);
     } while (SLOT_SYSTEM(self)->fade != 0);
     ((struct dispcnt_bits *)gUnknown_03001288)->bg2 = 0;
     ((struct dispcnt_bits *)gUnknown_03001288)->obj = 1;
@@ -824,7 +824,7 @@ void sub_80361B0(u32 *self)
         FlushSpriteFrameOamQueue();
         sub_8036668(self);
         sub_803686C(SLOT_SYSTEM(self));
-        sub_8034688((s32)bgObj);
+        UpdateStarfield((s32)bgObj);
         WaitForVBlank();
         fade = &SLOT_SYSTEM(self)->fade;
         v = *fade;
@@ -860,7 +860,7 @@ void sub_80361B0(u32 *self)
         ((void (*)(void *, s32))vt->m08.fn)((u8 *)part + vt->m08.thisOffset, 3);
     }
     if (bgObj != NULL)
-        sub_80346FC(bgObj, 3);
+        DestroyStarfield(bgObj, 3);
     if (SLOT_SYSTEM(self)->scratch != NULL)
         sub_8026EB4(SLOT_SYSTEM(self)->scratch);
     if (SLOT_SYSTEM(self)->frames != NULL)
@@ -1075,7 +1075,7 @@ void sub_8036668(u32 *self)
     {
         if (--*timer != 0)
             return;
-        PlaySfx(gUnknown_030012BC, 0x50, 0x100);
+        PlaySfx(gAudioContext, 0x50, 0x100);
     }
     if (*timer == 0)
     {

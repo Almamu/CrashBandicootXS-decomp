@@ -19,7 +19,7 @@ struct spawned
 };
 
 extern u32 gKeys;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gLevelState;
 extern u8 *gUnknown_030012D8;
 extern void *gEntitySpawner;
@@ -119,7 +119,7 @@ void sub_8012FBC(struct act *self)
         return;
     if (INPUT_PRESSED(in) & 1)
     {
-        PlaySfx(gUnknown_030012BC, 0xD, 0x100);
+        PlaySfx(gAudioContext, 0xD, 0x100);
         ACT_CALL1(self, m20, 5);
         ACT_CALL2(self, m50, self->part, 0x13);
         self->frame = busy;
@@ -139,7 +139,7 @@ void sub_8012FBC(struct act *self)
             s32 frames;
             struct spawned *obj;
 
-            PlaySfx(gUnknown_030012BC, 0x1A, 0x100);
+            PlaySfx(gAudioContext, 0x1A, 0x100);
             frames = 0x10;
             ACT_CALL1(self, m20, 0xC);
             ACT_CALL2(self, m50, self->part, 0xF);
@@ -249,7 +249,7 @@ void sub_8013228(struct act *self)
         {
             s32 frames;
 
-            PlaySfx(gUnknown_030012BC, 0xA, 0x100);
+            PlaySfx(gAudioContext, 0xA, 0x100);
             frames = 0x18;
             ACT_VCALL1(self, m20, 0xE);
             ACT_VCALL2(self, m50, self->part, 0x10);

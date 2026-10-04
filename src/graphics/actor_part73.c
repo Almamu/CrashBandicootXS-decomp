@@ -12,18 +12,18 @@ struct particle_bg {
     void *tileBuffer;
 };
 
-extern void sub_8034480(void *mgr);
-extern void sub_80345B0(void *mgr, s32 idx);
+extern void DrawStarfield(void *mgr);
+extern void SpawnStar(void *mgr, s32 idx);
 
-/* Calls `sub_8034480(mgr)` (the OAM/tile-scan update this object's part
+/* Calls `DrawStarfield(mgr)` (the OAM/tile-scan update this object's part
  * table drives), then - while the particle `count` is still under
- * 0x80 - spawns up to 8 more particles via `sub_80345B0`, incrementing
+ * 0x80 - spawns up to 8 more particles via `SpawnStar`, incrementing
  * `count` for each one spawned. */
-void sub_8034688(void *mgrArg)
+void UpdateStarfield(void *mgrArg)
 {
     struct particle_bg *mgr = mgrArg;
 
-    sub_8034480(mgr);
+    DrawStarfield(mgr);
 
     if (mgr->count <= 0x7f) {
         s32 count = 0x80 - mgr->count;
@@ -41,7 +41,7 @@ void sub_8034688(void *mgrArg)
                 register s32 idx asm("r1") = idxR0;
 
                 mgr->count = idxR0 + 1;
-                sub_80345B0(mgr, idx);
+                SpawnStar(mgr, idx);
                 count -= 1;
             } while (count != end);
         }
@@ -53,10 +53,10 @@ extern void *gUnknown_03001304;
 extern void UpdateKeys(void *arg);
 extern u16 gKeys[];
 
-/* Busy-waits (yielding a frame via `WaitForVBlank`/`sub_8034688` each
+/* Busy-waits (yielding a frame via `WaitForVBlank`/`UpdateStarfield` each
  * time) until the input-poll result from `UpdateKeys(gUnknown_03001304)`
  * has either of bits 0/3 set in `gKeys`'s `+2` halfword. */
-void sub_80346C8(void *mgrArg)
+void StarfieldWaitForButton(void *mgrArg)
 {
     u8 *mgr = mgrArg;
     s32 result;
@@ -64,7 +64,7 @@ void sub_80346C8(void *mgrArg)
     goto check;
 body:
     WaitForVBlank();
-    sub_8034688(mgr);
+    UpdateStarfield(mgr);
 check:
     UpdateKeys(gUnknown_03001304);
     {
@@ -88,7 +88,7 @@ extern void sub_8026ED0(void *self);
 /* Releases `self+0x10`/`self+8`'s dynamically-allocated buffers (each,
  * if non-NULL, via `sub_8026EB4`) and, if bit 0 of `flags` is set, also
  * releases `self` itself via `sub_8026ED0`. */
-void sub_80346FC(void *selfArg, s32 flags)
+void DestroyStarfield(void *selfArg, s32 flags)
 {
     u8 *self = selfArg;
 

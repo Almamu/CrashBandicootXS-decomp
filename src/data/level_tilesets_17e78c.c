@@ -7,7 +7,7 @@
  * and docs/data_map.md ("gStaticData_0817E78C").
  */
 
-/* 16 BGR555 colours: sub_8037388 (counter_selector_icons.c) copies them
+/* 16 BGR555 colours: InitLanguageSelectGraphics (counter_selector_icons.c) copies them
  * into tile-asset cache slot 2 (+0x20), after its three siblings
  * gStaticData_0817E72C/0817E74C/0817E76C (still in data/data.s). */
 const u16 gStaticData_0817E78C[16] = {

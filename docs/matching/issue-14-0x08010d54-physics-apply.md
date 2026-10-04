@@ -411,11 +411,11 @@ coincide").
 
 - **`sub_8011448`** (256B) - a randomized-position spawn/despawn picker,
   called `sub_8011448(entry, 1)`/`(other, 1)` from `game_loop40.c`/
-  `game_loop49.c` for despawn. `PlaySfx(gUnknown_030012BC, 8, 0x100)`,
+  `game_loop49.c` for despawn. `PlaySfx(gAudioContext, 8, 0x100)`,
   then either derives a randomized `(dx,dy)` offset from `rand()`
   (`arg1` nonzero - `self->0x48 = 2`, `self->0x49` tags which of three
   `rand()`-driven bands was picked) or uses a fixed `(0x1000,0x1000)`
-  offset and fires `sub_80284D4(gUnknown_03001318)` (`self->0x48 = 1`).
+  offset and fires `ShowHudWumpa(gHud)` (`self->0x48 = 1`).
   Either way: `self->0x3c = 0xa0`, `self->0x30` clamped from a
   `self->0x20` table lookup at `self->0x2d*0x1c+0x16`, `self->0x25 = 1`,
   `self->0xc |= 0x10`, then calls `sub_8007174` and re-derives
@@ -429,7 +429,7 @@ coincide").
   `self->0x3c` (a timer/animation-phase field) by different
   thresholds/directions; on arrival (`|x|<=0x10 && |y|<=0x10` in mode 1,
   or the mode-2 wrap threshold) both fire
-  `PlaySfx(gUnknown_030012BC,0xe,0x100)`, call
+  `PlaySfx(gAudioContext,0xe,0x100)`, call
   `CollectWumpa(gLevelState)` (a scoring/counter candidate per
   `docs/rom_map.md`), set `self->0xc` bit 0, and - unless `self->8 ==
   0xffff` - set `self->8`'s bit in the `gEntityFlags+0x108`
@@ -479,12 +479,12 @@ coincide").
 - **`sub_8011870`** (172B) - the alternative to `sub_80111B8`
   (`game_loop29.c`), called from `game_loop14.c` "instead of
   `sub_80111B8`" per that file's own doc comment. Same tail shape as
-  `sub_8011448`/`sub_80111B8`: `PlaySfx(gUnknown_030012BC, 8, 0x100)`,
+  `sub_8011448`/`sub_80111B8`: `PlaySfx(gAudioContext, 8, 0x100)`,
   `self->0x48 = 1`, `self->x -= self->0x4a<<8`, `self->0x3c = 0xa0`,
   `self->0x30` clamped via the same table-lookup idiom, `self->0x25 =
   1`, re-derives `self->x`/`self->y` plus `self->0x40`/`self->0x44` with
   a fixed `-0x1000` offset on both axes, then
-  `sub_80284D4(gUnknown_03001318)` (not `sub_80284A4`, unlike
+  `ShowHudWumpa(gHud)` (not `ShowHudLives`, unlike
   `sub_80111B8`).
 - **`sub_801191C`** (16B) - a trivial leaf: `self->0x48 = 3`,
   `self->0x49 = 0xa`. Already extern-declared as `void
@@ -577,7 +577,7 @@ assembler error instead of a silent miscompile.
 **A genuine transcription bug caught by the isolated-verification step
 before it reached `make compare`:** `sub_8011548`'s first
 `self->0xc`-bit/collision-bitmap tail block's literal-pool
-(`gUnknown_030012BC`/`gLevelState`/`0x0000FFFF`) was initially
+(`gAudioContext`/`gLevelState`/`0x0000FFFF`) was initially
 placed **before** the `_080115BA: b _08011664`-equivalent label instead
 of **after** it (an easy off-by-one when splitting a raw disassembly's
 own `.align 2, 0` + `.4byte` block away from the label it actually
@@ -664,7 +664,7 @@ position).
   `rand()` (`randomize` nonzero - three `rand()`-driven bands select the
   x-offset, `self->0x49` tags which one, `self->0x48 = 2`) or uses a
   fixed `(0xb400, 0xc00)` offset and fires
-  `sub_80284A4(gUnknown_03001318)` (`self->0x48 = 1`); either way,
+  `ShowHudLives(gHud)` (`self->0x48 = 1`); either way,
   `self->0xc |= 0x10`, `self->0x25 = 1`, `sub_8007174(...)`, then
   `self->0x40`/`self->0x44` become `-FixedDiv(newPos<<8 - offset,
   0x1400)`.
@@ -706,7 +706,7 @@ position).
   clamp setup at all, just `self->0x48 = 1`, `self->x -=
   self->0x4a<<8`, `self->0x25 = 1`, `sub_8007174(...)`, the same
   distance-pair derivation with fixed `(0xb400, 0xc00)` offsets, then
-  `sub_80284A4(gUnknown_03001318)` (not `sub_80284D4`, unlike
+  `ShowHudLives(gHud)` (not `ShowHudWumpa`, unlike
   `sub_8011870`).
 
 ### Matching result: 3 of 5 real C, 2 NAKED

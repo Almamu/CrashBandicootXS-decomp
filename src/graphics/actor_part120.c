@@ -70,7 +70,7 @@ extern u8 sub_800B37C(struct ctrl_target *obj, struct part_aabb *box);
 extern void sub_803AFE4(struct part_aabb *box, s32 x, s32 y);
 extern void sub_803AFDC(struct part_aabb *box, s32 w, s32 h);
 extern u32 gUnknown_0300082C;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gEntitySpawner;
 extern struct ctrl_target *gUnknown_030012D8;
 
@@ -116,14 +116,14 @@ void sub_800C40C(struct part_ctrl *self)
             sub_800C8CC(self, 4);
             if (self->kind == 0x12 || self->kind == 0x1a) {
                 self->target->solid = 1;
-                PlaySfx(gUnknown_030012BC, 0x26, 0x100);
+                PlaySfx(gAudioContext, 0x26, 0x100);
             } else if (self->kind == 0xf) {
-                PlaySfx(gUnknown_030012BC, 9, 0x100);
+                PlaySfx(gAudioContext, 9, 0x100);
             }
         }
         if (self->kind == 0x17 && self->target->tick == 9 && self->target->timer == 0) {
             SpawnPart(0x17, 4, -0x2d, 2, 0, self->target)->kind = 2;
-            PlaySfx(gUnknown_030012BC, 0x1e, 0x100);
+            PlaySfx(gAudioContext, 0x1e, 0x100);
         }
         break;
     case 5:
@@ -134,7 +134,7 @@ void sub_800C40C(struct part_ctrl *self)
             sub_800C8BC(self, 1);
         }
         if (self->kind == 0xf && self->target->tick == 8 && self->target->timer == 0)
-            PlaySfx(gUnknown_030012BC, 0x23, 0x100);
+            PlaySfx(gAudioContext, 0x23, 0x100);
         break;
     }
 }

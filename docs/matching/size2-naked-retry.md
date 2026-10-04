@@ -1,15 +1,15 @@
 # NAKED retry (size2): 2 of 3 closed
 
 This pass took three drafts whose size was nearly right:
-`sub_801AB98` (#25), `sub_800FF0C` (#13) and `sub_80352AC` (#64).
+`sub_801AB98` (#25), `sub_800FF0C` (#13) and `LoadCreditsLogos` (#64).
 
 | Function | File | Start | Result |
 |---|---|---|---|
-| `sub_80352AC` (#64) | `src/graphics/actor_part131.c` (already old_agbcc) | 114 hw, 420 vs 416 B | **Closed**, real C, old_agbcc |
+| `LoadCreditsLogos` (#64) | `src/graphics/actor_part131.c` (already old_agbcc) | 114 hw, 420 vs 416 B | **Closed**, real C, old_agbcc |
 | `sub_800FF0C` (#13) | `src/system/game_loop36.c` | 471 hw, 1388 vs 1396 B | **Closed**, real C, old_agbcc (`game_loop36.o` joined `OLD_AGBCC_OBJS`; it is the only function in the file) |
 | `sub_801AB98` (#25) | `src/graphics/actor_part_1ab98.c` | 565 hw, 1640 vs 1648 B | Not closed, draft unchanged, note updated |
 
-## sub_80352AC: GCSE hashes non-volatile asm
+## LoadCreditsLogos: GCSE hashes non-volatile asm
 
 GCSE's PRE moved `slot << 5` up to the y loop's pre-test and spilled
 it. The ROM computes it at the palette copy. The `-dG` dump of the

@@ -10,7 +10,7 @@ rebuilds with grit (see docs/data.md, "Resources (grit-style)"):
   in bank order (banks 42 and 47 also reuse one frame of bank 0's). A bank's
   range runs from its lowest own frame offset to its highest frame end.
 - graphics/sprites/tile_pool_4a4660.png: the 125 fixed 4bpp tiles
-  (header +0x08, the sub_8004D74 tile-asset cache).
+  (header +0x08, the RunPauseMenu tile-asset cache).
 - graphics/level_tilesets/tilesetN_<addr>.png: the five tag-0x00 raw level
   BG tile sets (8bpp); the 4-byte {size << 8} header is written by the C.
 

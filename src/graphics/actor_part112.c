@@ -38,7 +38,7 @@ struct byte_arg {
 
 extern void *gUnknown_030012D8;
 extern void *gEntityFlags;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gEntitySpawner;
 extern struct viewport *gLevelLayers;
 extern s32 gUnknown_030012A0;
@@ -190,7 +190,7 @@ void sub_800B8DC(struct part_ctrl *self)
             struct ctrl_target *t = self->target;
 
             if (t->tick == 0 && t->timer == 0 && AnimQuery(t))
-                PlaySfx(gUnknown_030012BC, 0x13, 0x100);
+                PlaySfx(gAudioContext, 0x13, 0x100);
         }
         break;
     case 5:
@@ -232,14 +232,14 @@ void sub_800B8DC(struct part_ctrl *self)
             if (d > 0xa0)
                 d = 0xa0;
             vol = 0x100 - (d - 0x20) * 2;
-            PlayAmbientSfx(gUnknown_030012BC, 0x2b, 8, vol, zero);
+            PlayAmbientSfx(gAudioContext, 0x2b, 8, vol, zero);
         }
         if (self->target->animDone && self->mode == 3) {
             struct ctrl_target *pop = sub_800C9C8(0x1d, 0, 0, 0x2b, 0, self->target);
 
             self->popup = pop;
             pop->kind = 3;
-            PlaySfx(gUnknown_030012BC, 0x12, 0x100);
+            PlaySfx(gAudioContext, 0x12, 0x100);
         } else if (*(vu8 *)&self->target->animDone && self->mode == 5) {
             MarkGone(self->popup);
             self->popup = 0;
@@ -326,7 +326,7 @@ void sub_800B8DC(struct part_ctrl *self)
             struct part_method *m = &self->anchor->bounce;
 
             ((ctrl_bounce_fn)m->fn)((u8 *)self + m->thisOffset, 0, 1, 0);
-            PlaySfx(gUnknown_030012BC, 4, 0x100);
+            PlaySfx(gAudioContext, 4, 0x100);
         }
         break;
     case 15:
@@ -444,7 +444,7 @@ void sub_800BD48(struct part_ctrl *self, s32 unused, s32 state)
     if (((struct player_ring *)gUnknown_030012D8)->ringLocked == 1) {
         MarkGoneHeld(self->target);
         SpawnAt(0x28, self->target->x >> 8, self->target->y >> 8);
-        PlaySfx(gUnknown_030012BC, 0x5a, 0x80);
+        PlaySfx(gAudioContext, 0x5a, 0x80);
         return;
     }
     if (self->popup)
@@ -470,7 +470,7 @@ void sub_800BD48(struct part_ctrl *self, s32 unused, s32 state)
             v = ((u16)RandRange(3) << 9) - 0x200;
             SetVelY(self->target, v, 0, v);
             self->target->visible = 0;
-            PlaySfx(gUnknown_030012BC, 5, 0x80);
+            PlaySfx(gAudioContext, 5, 0x80);
             if (self) {
                 struct part_method *m2 = &self->anchor->launch;
                 ((bd48_method_i_fn)m2->fn)((u8 *)self + m2->thisOffset, 3);

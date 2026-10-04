@@ -1,9 +1,20 @@
 #ifndef __ICON_MANAGER_H__
 #define __ICON_MANAGER_H__
 
+/* `struct icon_manager` is the game's bitmap-font text renderer (the
+ * name is historical). There are two fonts, gSmallFont (InitSmallFont)
+ * and gLargeFont (InitLargeFont), both built in sub_8022230; menus,
+ * the credits and the dialogs draw all their text with them. Calls go
+ * through the font's vtable (`record`, gFontVtable/gSmallFontVtable/
+ * gLargeFontVtable): `record->slots[n]` is vtable slot n + 2, so
+ * slots[0] FontMeasureText, [1] FontMeasureChars, [2] FontDrawText,
+ * [3] FontDrawChars, [4] FontDrawGlyph, [5] FontPutChar and
+ * [6] FontUploadTiles; `destroy` is slot 1 (DestroyFont/
+ * DestroySmallFont/DestroyLargeFont). */
+
 /* One (OAM-slot-offset, pointer) pair, as used by _call_via_r2/
  * _call_via_r3 to draw a single OAM entry. `struct icon_record` is an
- * array of these, 8 bytes apart, starting at offset 0x10 - sub_8006600
+ * array of these, 8 bytes apart, starting at offset 0x10 - DrawPowerDialog
  * (src/graphics/oam_count.c, parked) uses slots 0 and 2 (a wide icon spanning
  * two OAM entries); sub_8000EE4 (src/graphics/text_layout.c, parked) uses slots
  * 1, 3, and 5 (per-glyph and newline-marker OAM entries). */
@@ -19,24 +30,24 @@ struct icon_record {
      * record): sub_8022354 tears both icon managers down by calling it
      * with the "delete" flags 3. */
     struct icon_slot destroy;
-    /* A 7th slot (index 6, offset 0x40) is read by sub_8037388 - extends
-     * the 6-slot record sub_8006600/sub_8000EE4 already established. */
+    /* A 7th slot (index 6, offset 0x40) is read by InitLanguageSelectGraphics - extends
+     * the 6-slot record DrawPowerDialog/sub_8000EE4 already established. */
     struct icon_slot slots[7];
 };
 
 /* A single glyph's draw metrics - `icon_manager.glyphRecords` is an
  * array of these, 12 bytes apart, indexed by `icon_manager.charLookup`.
- * Established by GitHub issue #46's chunk (`sub_80285C4`/`sub_8028900`/
- * `MeasureText`, src/graphics/hud_icon_widget.c): `width` is the glyph's
+ * Established by GitHub issue #46's chunk (`FontDrawGlyph`/`FontMeasureChars`/
+ * `FontMeasureText`, src/graphics/hud_icon_widget.c): `width` is the glyph's
  * horizontal advance (added to `posX` after each draw, and what
- * `MeasureText`/`sub_8028900` sum to measure a run of text); `field_4`
+ * `FontMeasureText`/`FontMeasureChars` sum to measure a run of text); `shape`
  * feeds a small (2-bit, `<<6` into a byte) shape/size selector;
- * `field_8` is a tile-row contribution combined with `posY`'s low byte
- * into the OAM-scratch draw request `sub_80285C4` builds. */
+ * `yOffset` is a tile-row contribution combined with `posY`'s low byte
+ * into the OAM-scratch draw request `FontDrawGlyph` builds. */
 struct icon_glyph_metrics {
     s32 width;
-    s32 field_4;
-    u8 field_8;
+    s32 shape;
+    u8 yOffset;
     u8 unused_9[3];
 };
 
@@ -44,9 +55,9 @@ COMPILE_TIME_ASSERT(sizeof(struct icon_glyph_metrics) == 0xC);
 
 /* An OAM "icon" positioner: screen X/Y for the icon, then a pointer to
  * a small record describing which OAM slot(s) to draw it into.
- * gUnknown_030012E0/gUnknown_030012DC (src/graphics/oam_count.c) are two
+ * gLargeFont/gSmallFont (src/graphics/oam_count.c) are two
  * instances of this, used for a left/right icon pair flanking a number
- * in sub_8006600; sub_8000EE4 takes one as its render-target object.
+ * in DrawPowerDialog; sub_8000EE4 takes one as its render-target object.
  *
  * The leading `unused_00`/`unused_10c` regions and part of `unused_118`
  * were opaque when this struct was first written (oam_count.c/
@@ -55,49 +66,49 @@ COMPILE_TIME_ASSERT(sizeof(struct icon_glyph_metrics) == 0xC);
  * fills in the real shape below. */
 struct icon_manager {
     /* A 6-byte OAM-shaped draw-request scratch buffer, rebuilt fresh by
-     * `sub_80285C4` for every glyph drawn (byte 0/1, halfword at 2,
+     * `FontDrawGlyph` for every glyph drawn (byte 0/1, halfword at 2,
      * halfword at 4) then handed to `sub_8006AC8`; zeroed 8 bytes at a
      * time (a fixed-source `CpuSet` fill) by the widget
      * constructors. Bytes 6-7 are never written by anything in this
      * chunk. */
     u8 oam_scratch[8];
     /* Reverse char-byte -> glyph-index lookup table, built once by the
-     * widget constructors (`InitHudIconWidgetA`/`InitHudIconWidgetB`)
+     * widget constructors (`InitSmallFont`/`InitLargeFont`)
      * from a small font-glyph-order table: `charLookup[c]` is the index
      * `i` (1-0x4F) such that the font table's `i`th byte equals `c`, or
      * 0 if `c` isn't in the font (or equals the font table's own
      * leading count byte). */
     u8 charLookup[0x100];
-    /* Base value combined with `glyphIndex * field_124` (masked to 10
+    /* Base value combined with `glyphIndex * glyphTileStride` (masked to 10
      * bits) into the OAM-scratch draw request's halfword at +4 -
      * plausibly a base tile/palette selector for the glyph sheet. */
-    u32 field_108;
+    u32 tileBase;
     /* `struct icon_glyph_metrics` array, 12 bytes/entry, indexed by
      * `charLookup[c]`. */
     struct icon_glyph_metrics *glyphRecords;
     u32 posX;
     u32 posY;
     /* Left-margin X: `posX` is reset to this on a newline character. */
-    u32 field_118;
+    u32 marginX;
     /* Line height: added to `posY` on a newline character; also used
      * as a plain divisor by `sub_8028AC4`/`sub_8001214`
      * (src/util/word_util.c). */
-    s32 field_11c;
+    s32 lineHeight;
     /* Advance width contributed by a literal space character, in place
      * of a `glyphRecords` lookup. */
     s32 spaceWidth;
-    /* Per-glyph stride multiplier feeding `field_108`'s combine (see
-     * above) - `field_108 + glyphIndex * field_124`. */
-    s32 field_124;
-    /* Pointer to a small per-widget data table (`gStaticData_085A4E70`-
-     * family) `UploadHudTile` reads its first word from and shifts
-     * right 13 into `field_12c`, then hands straight to `LoadTaggedAsset`
+    /* Per-glyph stride multiplier feeding `tileBase`'s combine (see
+     * above) - `tileBase + glyphIndex * glyphTileStride`. */
+    s32 glyphTileStride;
+    /* Pointer to a small per-widget data table (`gSmallFontTiles`-
+     * family) `FontUploadTiles` reads its first word from and shifts
+     * right 13 into `tileCount`, then hands straight to `LoadTaggedAsset`
      * as the asset to upload. */
-    void *field_128;
-    /* Copied byte-for-byte from gUnknown_030012DC's copy into
-     * gUnknown_030012E0's copy by sub_8037388 - meaning not understood
+    void *tiles;
+    /* Copied byte-for-byte from gSmallFont's copy into
+     * gLargeFont's copy by InitLanguageSelectGraphics - meaning not understood
      * yet. */
-    u32 field_12c;
+    u32 tileCount;
     struct icon_record *record;
 };
 

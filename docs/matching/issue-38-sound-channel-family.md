@@ -84,8 +84,8 @@ branch condition and call argument is confirmed correct against the ROM.
 
 - **`BeginSlide`** (`src/system/game_loop37.c`; real bytes in
   `asm/code_3_2_17_24590.s`) - starts/re-selects a sound cue via
-  `sub_8001B54`, then either plays a secondary sfx immediately (if the
-  channel already reports the requested id) or busy-polls `sub_8001AB8`
+  `PlaySong`, then either plays a secondary sfx immediately (if the
+  channel already reports the requested id) or busy-polls `GetCurrentSong`
   until it does, and either way ORs bit 7 into `field_08`'s low byte for
   a `sub_800132C` fade-start call. The residual gap: the ROM materializes
   the `-0x80` OR-mask into one register then copies it to a second

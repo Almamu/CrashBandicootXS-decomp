@@ -18,29 +18,29 @@
  * `state==0` or `state>6` - taking the `default` path below):
  *
  * - **state 1 or 6** (cases 0 and 5 share one code block): resets the
- *   `gUnknown_030012C8` "fx queue" (`sub_8027088`, the `hud_fx_queue`
+ *   `gPaletteCycles` "fx queue" (`ClearPaletteCycles`, the `hud_fx_queue`
  *   struct `hud_icon_slot.c` documents) then fires it **twice** via
- *   `sub_8027018(queue, (u16 *)0x05000000, gThemePaletteCycle1A, 0x10,
- *   9, 0)` and `sub_8027018(queue, (u16 *)0x05000000, gStaticData_
+ *   `AddPaletteCycle(queue, (u16 *)0x05000000, gThemePaletteCycle1A, 0x10,
+ *   9, 0)` and `AddPaletteCycle(queue, (u16 *)0x05000000, gStaticData_
  *   0816C830, 0x14, 9, 0)` - `(u16 *)0x05000000` is GBA palette RAM
  *   itself passed as the queue's `targets` argument, so this is a
- *   **palette color-cycle animation**, not the HUD-digit rotation
- *   `sub_8026F54`/`sub_8027018`'s other call sites drive. The second
- *   call's setup (`angle=0x14`, `direction=0`) is byte-identical to
+ *   **palette color-cycle animation** (the only caller of
+ *   `AddPaletteCycle`; `TickPaletteCycles` runs it). The second
+ *   call's setup (`rate=0x14`, `direction=0`) is byte-identical to
  *   state 5's own call below and the two share its tail (`_08023BA6`)
  *   in the ROM itself - not a coincidence this transcription
  *   reproduces, see the NAKED note below.
- * - **state 2**: single call, `sub_8027018(queue, (u16 *)0x05000000,
+ * - **state 2**: single call, `AddPaletteCycle(queue, (u16 *)0x05000000,
  *   gThemePaletteCycle2, 6, 5, 1)` (`direction=1`, the only case that
  *   sets it).
- * - **state 3**: single call, `sub_8027018(queue, (u16 *)0x05000000,
+ * - **state 3**: single call, `AddPaletteCycle(queue, (u16 *)0x05000000,
  *   gThemePaletteCycle3, 0xa, 0x10, 0)`.
- * - **state 5**: single call, `sub_8027018(queue, (u16 *)0x05000000,
- *   gThemePaletteCycle5, 0x14, 5, 0)` - shares its `angle=0x14; bl
- *   sub_8027018` tail instruction-for-instruction with state 1/6's
+ * - **state 5**: single call, `AddPaletteCycle(queue, (u16 *)0x05000000,
+ *   gThemePaletteCycle5, 0x14, 5, 0)` - shares its `rate=0x14; bl
+ *   AddPaletteCycle` tail instruction-for-instruction with state 1/6's
  *   second call, per the note above.
  * - **default** (state 0, state 4, or anything `>6`): skips the reset
- *   and the `sub_8027018` call entirely, just clears the queue's own
+ *   and the `AddPaletteCycle` call entirely, just clears the queue's own
  *   `active` byte directly.
  *
  * All five non-default cases fall into one shared tail. **This closes
@@ -49,7 +49,7 @@
  * a fifth table the same neighborhood the jump-table trace hadn't
  * previously reached) are not per-level records with their own shape -
  * they're plain, tightly-packed `u16[]` "permutation index list"
- * arguments straight to `sub_8027018`'s own `lists` parameter, each
+ * arguments straight to `AddPaletteCycle`'s own `lists` parameter, each
  * one exactly `list_count * 2` bytes long and back-to-back with the
  * next table in ROM (`0816C814`: 5 entries/0xA bytes -> `0816C81E`;
  * `0816C81E`: 9/0x12 -> `0816C830`; `0816C830`: 9/0x12 -> `0816C842`;
@@ -75,10 +75,10 @@
  * `sub_8023290`/`sub_80243E0` (level-object and self-based readiness
  * checks); on success, clears the player's busy bit 7 (`+0xc &=
  * 0x7f`), re-stamps `+0x2d` to `0x29`, refreshes the OAM entry again,
- * plays a sound effect (`gUnknown_030012BC` as the sample id, priority
+ * plays a sound effect (`gAudioContext` as the sample id, priority
  * `0x2c`) via `PlaySfx`, fires the `player+0x44`-table's trampoline
  * (`_call_via_r2`, mode `0x29`), repeats the same `sub_8006D08` tile-
- * cache call, and pings `gUnknown_03001318` (`sub_8028504`).
+ * cache call, and pings `gHud` (`ShowHudCounters`).
  *
  * Either way, this converges on flushing the four HUD ring-buffer
  * managers (`sub_8008C80` on `030012F4`/`EC`/`F0`/`F8`), a
@@ -89,13 +89,13 @@
  * poll `sub_80241B0` (the `gUnknown_03000830` readiness flag,
  * `game_loop9.c`) each iteration; while not ready and the player's
  * `+0xc` bit 0 is clear, run one more "outstanding work" pass
- * (`sub_802423C`/`sub_802400C`, a `sub_8004D74` input-driven mini-
+ * (`sub_802423C`/`sub_802400C`, a `RunPauseMenu` input-driven mini-
  * dispatch that can early-exit this whole function with return value
  * `1` or `2` via `sub_80241BC`'s level-end teardown, a `gUnknown_
- * 030007E0` input-flag-gated `sub_8028504` ping, `sub_800891C` on
+ * 030007E0` input-flag-gated `ShowHudCounters` ping, `sub_800891C` on
  * three ring-buffer managers, `_call_via_r1` trampoline probes against
  * the player's own `+0x18`/`+0x38`-`/+0x18` tables, `sub_80091D4` on
- * `gUnknown_0300130C`, `sub_8028400`, and a `gLevelState+0x8c`-
+ * `gUnknown_0300130C`, `UpdateHudSlides`, and a `gLevelState+0x8c`-
  * gated `TickLevelClock` call) before looping back. Once ready, fires the
  * fade (`sub_80014A4`) - the concrete trigger `rom_map.md` originally
  * traced this function down to find.
@@ -116,7 +116,7 @@
  * (`sub_8001578`/`sub_8001564`/`sub_8001550`/`sub_800153C`/
  * `sub_800158C`/`WaitForVBlank`/`sub_8001614`), and returns whatever
  * `sl` was left holding (`1` by default, `2` from the wait-loop's
- * `sub_8004D74`-driven early exit, or `0` once the post-fade branch
+ * `RunPauseMenu`-driven early exit, or `0` once the post-fade branch
  * was reached) - the value `sub_802375C` itself stashes and returns.
  *
  * Was a NAKED transcription (from `asm/code_3_2_17_23a1c.s`); matches
@@ -256,10 +256,10 @@ extern struct gl_player *gUnknown_030012D8;
 extern struct gl_scratch *gUnknown_030012D4;
 extern void *gLevelLayers;
 extern struct gl_level *gLevelState;
-extern u8 *gUnknown_030012C8;
+extern u8 *gPaletteCycles;
 extern void *gUnknown_030012B8;
-extern void *gUnknown_030012BC;
-extern void *gUnknown_03001318;
+extern void *gAudioContext;
+extern void *gHud;
 extern void *gUnknown_030012F4;
 extern void *gUnknown_030012EC;
 extern void *gUnknown_030012F0;
@@ -283,7 +283,7 @@ extern u8 sub_80232C8(void *level);
 extern void sub_800F1B8(void);
 extern void sub_8023118(void *level, s32 value);
 extern void sub_8023110(void *level, s32 value);
-extern void sub_8027088(void *queue);
+extern void ClearPaletteCycles(void *queue);
 /* The direction flag travels as a one-byte struct by value - the ROM
  * stores it into its stack slot with `strb`. The zero-length `pad`
  * makes the struct BLKmode, so the compound literal is stored straight
@@ -296,10 +296,10 @@ struct fx_direction
     u8 pad[0];
 } __attribute__((packed));
 
-extern void sub_8027018(void *queue, u16 *targets, u16 *lists, s32 angle, s32 count, struct fx_direction direction);
+extern void AddPaletteCycle(void *queue, u16 *targets, u16 *lists, s32 rate, s32 count, struct fx_direction direction);
 
-#define FX_CYCLE(lists, angle, count, dir) \
-    sub_8027018(gUnknown_030012C8, PAL_RAM, (lists), (angle), (count), \
+#define FX_CYCLE(lists, rate, count, dir) \
+    AddPaletteCycle(gPaletteCycles, PAL_RAM, (lists), (rate), (count), \
                 (struct fx_direction){ (dir) })
 extern void sub_80240E4(struct gl_self *self);
 extern void sub_802423C(void);
@@ -317,7 +317,7 @@ extern u8 sub_80243E0(struct gl_self *self);
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern s32 _call_via_r2(void *self, s32 arg, void *fn);
 extern s32 _call_via_r1(void *self, void *fn);
-extern void sub_8028504(void *arg);
+extern void ShowHudCounters(void *arg);
 extern void sub_8008C80(void *mgr);
 extern void sub_802400C(struct gl_self *self);
 extern void sub_8001524(s32 arg);
@@ -326,11 +326,11 @@ extern void sub_80015E0(void);
 extern void sub_8001614(void);
 extern void sub_8001624(void);
 extern void UpdateKeys(void *arg);
-extern s32 sub_8004D74(void);
+extern s32 RunPauseMenu(void);
 extern void sub_80241BC(struct gl_self *self);
 extern void sub_800891C(void *mgr);
 extern void sub_80091D4(void *list);
-extern void sub_8028400(void *arg);
+extern void UpdateHudSlides(void *arg);
 extern void TickLevelClock(struct gl_level *level);
 extern u8 sub_80241B0(void);
 extern void sub_80014A4(void);
@@ -408,25 +408,25 @@ s32 sub_8023A1C(struct gl_self *self)
     switch (gLevelTable[self->level].state)
     {
     case 2:
-        sub_8027088(gUnknown_030012C8);
+        ClearPaletteCycles(gPaletteCycles);
         FX_CYCLE(gThemePaletteCycle2, 6, 5, 1);
         break;
     case 1:
     case 6:
-        sub_8027088(gUnknown_030012C8);
+        ClearPaletteCycles(gPaletteCycles);
         FX_CYCLE(gThemePaletteCycle1A, 0x10, 9, 0);
         FX_CYCLE(gThemePaletteCycle1B, 0x14, 9, 0);
         break;
     case 3:
-        sub_8027088(gUnknown_030012C8);
+        ClearPaletteCycles(gPaletteCycles);
         FX_CYCLE(gThemePaletteCycle3, 0xA, 0x10, 0);
         break;
     case 5:
-        sub_8027088(gUnknown_030012C8);
+        ClearPaletteCycles(gPaletteCycles);
         FX_CYCLE(gThemePaletteCycle5, 0x14, 5, 0);
         break;
     default:
-        *gUnknown_030012C8 = 0;
+        *gPaletteCycles = 0;
         break;
     }
 
@@ -451,11 +451,11 @@ s32 sub_8023A1C(struct gl_self *self)
 
             gUnknown_030012D8->flags &= 0x7F;
             RestartPlayerAnim(gUnknown_030012D8, 0x29);
-            PlaySfx(gUnknown_030012BC, 0x2C, 0x100);
+            PlaySfx(gAudioContext, 0x2C, 0x100);
             a = gUnknown_030012D8->attach;
             _call_via_r2((u8 *)a + a->vtable->attach.delta, 0x29, a->vtable->attach.fn);
             RefreshPlayerTiles();
-            sub_8028504(gUnknown_03001318);
+            ShowHudCounters(gHud);
         }
     }
     sub_8008C80(gUnknown_030012F4);
@@ -478,7 +478,7 @@ s32 sub_8023A1C(struct gl_self *self)
         UpdateKeys(gUnknown_03001304);
         if (!gUnknown_030012D8->inputLock && (gKeys.half.hi & 8))
         {
-            s32 r = sub_8004D74();
+            s32 r = RunPauseMenu();
 
             if (r == 0)
             {
@@ -497,7 +497,7 @@ s32 sub_8023A1C(struct gl_self *self)
             }
         }
         if (gKeys.held & 4)
-            sub_8028504(gUnknown_03001318);
+            ShowHudCounters(gHud);
         sub_800891C(gUnknown_030012F4);
         sub_800891C(gUnknown_030012E8);
         if ((u8)PMF_CALL(gUnknown_030012D8, m38))
@@ -506,7 +506,7 @@ s32 sub_8023A1C(struct gl_self *self)
         sub_800891C(gUnknown_030012EC);
         sub_800891C(gUnknown_030012F0);
         sub_800891C(gUnknown_030012F8);
-        sub_8028400(gUnknown_03001318);
+        UpdateHudSlides(gHud);
         if (gLevelState->busy)
             TickLevelClock(gLevelState);
         gUnknown_0300082C++;

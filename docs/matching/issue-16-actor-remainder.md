@@ -39,7 +39,7 @@ already-matched `actor_part79.c`, `actor_part84.c` between
   fallback), then reset the state/flag/table-index trio via
   `sub_8015780`; case 24 plays sound(s) gated on `gKeys`
   bits and either resets three `self+0x22..0x24` bytes plus calls
-  `sub_8012AF4`, or chains through `sub_8001AC4`/a
+  `sub_8012AF4`, or chains through `FadeOutMusic`/a
   `sub_8006D08`-fed 28-byte-record lookup; case 11 resets a child
   object and pool-releases it via one of two dereference-chain-computed
   slots depending on the player's D-pad remap state; cases 9/10 gate

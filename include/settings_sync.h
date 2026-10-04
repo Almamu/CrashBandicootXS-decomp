@@ -1,24 +1,30 @@
 #ifndef __SETTINGS_SYNC_H__
 #define __SETTINGS_SYNC_H__
 
-/* The composite pause/options screen's checksummed 0x200-byte settings
- * record - `self->field_8c`/`field_90`'s pointee (see
- * pause_options_screen.h). Per-row "selected" flags, a couple of fixed
- * marker bytes, a bitmask, and a running additive checksum
- * (sub_8002B70/sub_8002B44, both still raw, outside this chunk) over
- * the first 0x1f8 bytes. See docs/matching/issue-5-overlay-ui-sync.md.
+/* The 0x200-byte save data, as stored in the cartridge EEPROM
+ * (ReadSaveData/WriteSaveData, and LoadSaveData/StoreSaveData with
+ * retries and validation): four 0x70-byte save slots
+ * (ReadSaveSlot/WriteSaveSlot/EraseSaveSlot; each holds the 0x68-byte
+ * progress block of the level state, the level, and the sound and
+ * music volumes - see SaveGameToSlot), a per-slot "empty" flag, two
+ * marker bytes ('C' and 0x12), a flag byte and an additive word-sum
+ * checksum over the first 0x1fc bytes (UpdateSaveChecksum/
+ * CheckSaveChecksum). The save menu (gSaveMenu, pause_options_screen.h)
+ * holds two copies: the cartridge's (`field_8c`) and the one received
+ * over the link cable (`field_90`). The struct keeps its historical
+ * name. See docs/matching/issue-5-overlay-ui-sync.md.
  * Shared (via this header) between src/graphics/settings_menu8.c and
  * settings_menu8b.c/settings_menu8c.c, split apart so the two parked
  * functions between them (sub_8002D44/sub_8002E20/sub_8002EFC,
- * sub_8003698) can stay raw asm without breaking ROM link order. */
+ * SaveGameToSlot) can stay raw asm without breaking ROM link order. */
 struct settings_sync_record {
     u8 unused_000[0x1f4];
-    u8 rowSelected[4]; /* 0x1f4 - sub_8002CE8 here; sub_8002C6C (still raw) sets it */
-    u8 field_1f8;       /* 0x1f8 - init'd to 'C' (0x43) by sub_8002C84 */
+    u8 slotEmpty[4]; /* 0x1f4 - IsSaveSlotEmpty here; EraseSaveSlot (still raw) sets it */
+    u8 magic;       /* 0x1f8 - init'd to 'C' (0x43) by ResetSaveData */
     u8 versionNibble;     /* 0x1f9 - init'd to 0x12; high nibble read by sub_8002B94 (still raw) */
-    u8 flags;               /* 0x1fa - bitmask, sub_8002CF4/sub_8002D0C/sub_8002D28 */
-    u8 field_1fb;             /* 0x1fb - zeroed by sub_8002C84, otherwise untouched in this chunk */
-    u32 checksum;               /* 0x1fc - sub_8002B70/sub_8002B44 (still raw) */
+    u8 flags;               /* 0x1fa - bitmask, TestSaveFlags/ClearSaveFlags/SetSaveFlags */
+    u8 field_1fb;             /* 0x1fb - zeroed by ResetSaveData, otherwise untouched in this chunk */
+    u32 checksum;               /* 0x1fc - UpdateSaveChecksum/CheckSaveChecksum (still raw) */
 };
 COMPILE_TIME_ASSERT(sizeof(struct settings_sync_record) == 0x200);
 

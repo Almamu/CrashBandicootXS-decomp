@@ -100,7 +100,7 @@ Recurring details that mattered:
   taking the destination pointer first
   (`SetMixRateReciprocal(&gGaxMixRateReciprocal, self)`) - that's what
   loads the address into a callee-saved register before the call.
-- `sub_80372BC`: call the icon method trampoline `_call_via_r2` directly
+- `DrawLanguageSelect`: call the icon method trampoline `_call_via_r2` directly
   with the glyph assigned inside the first call's argument list.
 - `GaxHuffUnComp` (HuffUnComp wrapper): the ROM saves r8 but not r7 even
   though it clobbers r7 - agbcc's r7-pin bug. Here the bug *is* the
@@ -114,8 +114,8 @@ Recurring details that mattered:
 
 | Function | File | Result |
 |---|---|---|
-| `sub_80372BC` | counter_selector_icons.c | **C** (direct trampoline call) |
-| `sub_8037388` | counter_selector_icons.c | NAKED, draft (later: **C**, [late-rom-naked-retry.md](./late-rom-naked-retry.md)) |
+| `DrawLanguageSelect` | counter_selector_icons.c | **C** (direct trampoline call) |
+| `InitLanguageSelectGraphics` | counter_selector_icons.c | NAKED, draft (later: **C**, [late-rom-naked-retry.md](./late-rom-naked-retry.md)) |
 | `__divdi3` | math_div64_util.c | **C** (libgcc2 `__divdi3`, no-interwork) |
 | `__udivdi3` | math_div64_util.c | **C** (libgcc2 `__udivdi3`, no-interwork) |
 | `__udivsi3` | math_div64_util.c | NAKED - hand-written asm (final) |
@@ -162,7 +162,7 @@ All current agbcc, normal flags, except the three libgcc2 functions
   ROM's shape; the first loop's spill-slot/register assignment differs
   (the ROM spills the handler pointer and keeps the layout count in an
   extra stack slot).
-- **`sub_8037388`** (counter widget init). Draft matches through the
+- **`InitLanguageSelectGraphics`** (counter widget init). Draft matches through the
   tile-copy loop; the tail's `0x108`/`0x12c`/`0x130` field offsets get
   CSE'd into callee-saved registers across the calls where the ROM
   rematerializes them after each call. Pinning the manager addresses to

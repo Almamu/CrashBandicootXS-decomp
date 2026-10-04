@@ -47,7 +47,7 @@ extern u8 *gLevelState;
 extern void *gUnknown_03001300;
 extern void *gUnknown_03001304;
 extern void *gUnknown_030012FC;
-extern void *gUnknown_03001318;
+extern void *gHud;
 extern u32 gKeys;
 
 extern void sub_8022CA0(void *arg0);
@@ -69,8 +69,8 @@ extern s32 sub_802A208(void);
 extern void TickLevelClock(void *arg0);
 extern void sub_8006C4C(void *self);
 extern void sub_8006A78(void *arg0);
-extern void sub_8028400(void *state);
-extern void sub_80274EC(void *self);
+extern void UpdateHudSlides(void *state);
+extern void UpdateHud(void *self);
 extern void FlushSpriteFrameOamQueue(void);
 extern void WaitForVBlank(void);
 extern void sub_8029E50(void);
@@ -84,10 +84,10 @@ extern u8 sub_802A5AC(void);
 extern void FreeSpriteFrameCache(void);
 extern void FreeSpriteFrameOamQueue(void);
 extern void FreeObjTileFreeList(void);
-extern s32 sub_8004D74(void);
+extern s32 RunPauseMenu(void);
 extern void sub_802996C(void);
 extern void sub_802A5C4(void);
-extern void sub_8028504(void *arg0);
+extern void ShowHudCounters(void *arg0);
 extern void FreeCategorySpriteSheet(void);
 extern void nullsub_5(void);
 extern void nullsub_6(void);
@@ -160,8 +160,8 @@ s32 InitActorCategory(s32 category)
                 TickLevelClock(*state);
             sub_8006C4C(gUnknown_030012FC);
             sub_8006A78(gUnknown_03001300);
-            sub_8028400(gUnknown_03001318);
-            sub_80274EC(gUnknown_03001318);
+            UpdateHudSlides(gHud);
+            UpdateHud(gHud);
             FlushSpriteFrameOamQueue();
             WaitForVBlank();
             sub_8029E50();
@@ -202,7 +202,7 @@ s32 InitActorCategory(s32 category)
                     FreeSpriteFrameCache();
                     FreeSpriteFrameOamQueue();
                     FreeObjTileFreeList();
-                    result = sub_8004D74();
+                    result = RunPauseMenu();
                     SetupActorVramPool();
                     sub_800132C(0x80, 1, 1);
                     dma->src = (u32)buf;
@@ -228,7 +228,7 @@ s32 InitActorCategory(s32 category)
                     }
                 }
                 if (gKeys & 4)
-                    sub_8028504(gUnknown_03001318);
+                    ShowHudCounters(gHud);
                 continue;
             }
             break;

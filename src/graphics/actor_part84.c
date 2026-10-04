@@ -41,7 +41,7 @@ struct cam
 typedef void (*act_fn3)(void *self, s32 a, s32 b, s32 c);
 
 extern u32 gKeys;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gLevelState;
 extern struct act_part *gUnknown_030012D8;
 extern void *gUnknown_03001304;
@@ -332,7 +332,7 @@ u8 sub_8012694(struct act *self)
                 ACT_CALL2(self, m50, self->part, 6);
                 ActTrio27(self, frame, one, 0xD);
                 ActTrio28(self, frame, one, 0xD);
-                PlaySfx(gUnknown_030012BC, 0xC, 0x100);
+                PlaySfx(gAudioContext, 0xC, 0x100);
                 return 1;
             } else if (self->part->tag == 0xB && self->part->frame >= 0) {
                 self->frame++;
@@ -340,7 +340,7 @@ u8 sub_8012694(struct act *self)
                 ACT_CALL2(self, m50, self->part, 0xA);
                 ActSet27(self, 0xE);
                 ActSet28(self, 0xE);
-                PlaySfx(gUnknown_030012BC, 0xC, 0x100);
+                PlaySfx(gAudioContext, 0xC, 0x100);
                 return 1;
             } else if (self->part->tag == 0xC) {
                 self->frame++;
@@ -348,7 +348,7 @@ u8 sub_8012694(struct act *self)
                 ACT_CALL2(self, m50, self->part, 0xA);
                 ActSet27(self, 0xC);
                 ActSet28(self, 0xC);
-                PlaySfx(gUnknown_030012BC, 0xC, 0x100);
+                PlaySfx(gAudioContext, 0xC, 0x100);
                 return 1;
             }
         }

@@ -70,7 +70,7 @@ extern void sub_802E538(s32 a, s32 b, s32 c, s32 d);
 extern void sub_802E57C(s32 a, s32 b, s32 c);
 extern void sub_802E5B0(s32 a, s32 b, s32 c);
 
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gUnknown_03000884;
 extern void *gUnknown_030008B4;
@@ -233,7 +233,7 @@ void sub_8032718(void *selfArg)
     x = self->base.x += self->velX;
     y = self->base.y += self->velY;
     if (x <= 0x1000 || y <= 0x1000) {
-        PlaySfx(gUnknown_030012BC, 0xE, 0x100);
+        PlaySfx(gAudioContext, 0xE, 0x100);
         if (self != NULL) {
             ACTOR_VCALL(&self->base, m08, 3);
         }
@@ -408,7 +408,7 @@ void sub_8032910(void *selfArg, s32 delta)
     }
 
     self->base.unk_18 = 4;
-    PlaySfx(gUnknown_030012BC, 4, 0x100);
+    PlaySfx(gAudioContext, 4, 0x100);
     {
         register s32 one asm("r0") = 1;
 
@@ -515,7 +515,7 @@ void sub_8032A24(void *selfArg)
         _call_via_r2((u8 *)player + table->m20.thisOffset, 6, table->m20.fn);
 
         self->base.unk_18 = 4;
-        PlaySfx(gUnknown_030012BC, 4, 0x100);
+        PlaySfx(gAudioContext, 4, 0x100);
         {
             register s32 one asm("r0") = 1;
 

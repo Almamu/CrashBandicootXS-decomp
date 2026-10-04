@@ -2,9 +2,9 @@
 #include "hud.h"
 
 /* Sits right after hud_blink.c's blink-timer trio (ROM 0x08028568) and
- * before sub_80285C4/InitHudIconWidgetA/InitHudIconWidgetB/sub_8028808
+ * before FontDrawGlyph/InitSmallFont/InitLargeFont/FontPutChar
  * (src/graphics/hud_icon_widget_85c4.c) - see GitHub issue #46. Just
- * `sub_8028574` here: a `struct hud_counter`-parts destructor, unrelated
+ * `DestroyHud` here: a `struct hud_counter`-parts destructor, unrelated
  * to the `struct icon_manager` text/icon-glyph renderer the rest of this
  * chunk's functions operate on (see include/icon_manager.h and the other
  * hud_icon_widget*.c files). */
@@ -31,11 +31,11 @@ struct icon_slot {
  * `[-4]` read below - see the same convention in src/graphics/
  * hud_icon_slot.c/actor files), then optionally frees `self` when
  * `flags` bit 0 is set (same "free-self" convention as
- * sub_80270A8/sub_8037578 elsewhere in this codebase). The per-type
+ * DestroyPaletteCycles/DestroyLanguageSelect elsewhere in this codebase). The per-type
  * descriptor's own shape past its first 0x18 bytes (the `struct actor`-
  * shared prefix) isn't established, so `table+0x50/+0x54` stay raw
  * offsets rather than a named slot index. */
-void sub_8028574(struct hud_counter *self, s32 flags)
+void DestroyHud(struct hud_counter *self, s32 flags)
 {
     struct hud_digit_part *parts;
     struct hud_digit_part *end;

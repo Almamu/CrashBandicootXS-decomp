@@ -21,8 +21,8 @@ extern struct phys_obj_list *gUnknown_0300130C;
 extern u8 gUnknown_030012B0;
 extern void sub_800EEF0(struct phys_obj *self, u8 arg1);
 extern void sub_8009AA0(struct phys_obj_list *list, s32 index);
-extern void *gUnknown_030012BC;
-extern void *gUnknown_03001318;
+extern void *gAudioContext;
+extern void *gHud;
 extern void PlaySfx(void *ctx, s32 id, s32 volume);
 extern void sub_8028474(void *arg);
 extern void sub_802306C(void *arg);
@@ -85,7 +85,7 @@ extern u8 gStaticData_0816BB94[];
  * `gEntityFlags`'s 32x32 collision-cell bitmap from `self+8`'s
  * position (`>>5` row, `&0x1f` column - the same cell-grid convention
  * `sub_0800D18C` itself uses for `gUnknown_030012D8`'s own state), then
- * plays a fixed sound (`gUnknown_030012BC`, id 4). Calls
+ * plays a fixed sound (`gAudioContext`, id 4). Calls
  * `sub_800EDBC(self)` (already matched elsewhere in this cluster - a
  * sibling's territory).
  *
@@ -133,7 +133,7 @@ void sub_800EEF0(struct phys_obj *self, u8 near)
     if (gStaticData_0816BB98[self->kind])
         sub_8022FEC(gLevelState);
     PHYS_SET_ID_BIT(self->id);
-    PlaySfx(gUnknown_030012BC, 4, 0x100);
+    PlaySfx(gAudioContext, 4, 0x100);
     sub_800EDBC(self);
 
     if ((gUnknown_030012D8->flags >> 6) & 1 && !PhysComboMaxed(gUnknown_030012D8)) {
@@ -333,9 +333,9 @@ void sub_800F258(void)
  * byte to compute a direction/animation nibble, folded into `self+0x29`
  * (low nibble replaced, high nibble kept - `(x & 0xf) | (old & ~0xf)`).
  * Calls `sub_800F258` (flush any pending case-0xa commits), then
- * `sub_8028474(gUnknown_03001318)` (external, unread - likely a score
+ * `sub_8028474(gHud)` (external, unread - likely a score
  * or combo-counter bump) and plays a fixed sound
- * (`gUnknown_030012BC`, id 4). Sets `self+0x48 = 1` (arms the sub-state
+ * (`gAudioContext`, id 4). Sets `self+0x48 = 1` (arms the sub-state
  * timer `sub_800F06C` later drains back to `-1`) and calls
  * `sub_802306C(gLevelState)` (external, unread). */
 
@@ -357,8 +357,8 @@ void sub_800F2BC(struct phys_obj *self)
         rec = &recs[self->tag];
         self->slot = sub_8006DF8(gUnknown_030012B8, rec->unk_14);
         sub_800F258();
-        sub_8028474(gUnknown_03001318);
-        PlaySfx(gUnknown_030012BC, 4, 0x100);
+        sub_8028474(gHud);
+        PlaySfx(gAudioContext, 4, 0x100);
         self->u48.n = one;
         sub_802306C(gLevelState);
     }
@@ -472,7 +472,7 @@ void sub_800F368(struct phys_obj *self)
  * self`'s own cached `+0x4c` throttle byte, calling `sub_800F5B8`
  * (below) on each - recursively settling every other object in the
  * same triggered group - and plays a single shared sound
- * (`gUnknown_030012BC`, id 0xf) the first time any member is actually
+ * (`gAudioContext`, id 0xf) the first time any member is actually
  * settled this call (a `once`-flag local keeps it from repeating per
  * member). */
 
@@ -509,7 +509,7 @@ void sub_800F4F4(struct phys_obj *self)
                 if (o->kind == 5 && self->unk_50 >= o->unk_51) {
                     sub_800F5B8(o);
                     if (!played) {
-                        PlaySfx(gUnknown_030012BC, 0xf, 0x100);
+                        PlaySfx(gAudioContext, 0xf, 0x100);
                         played = TRUE;
                     }
                 }
@@ -721,7 +721,7 @@ void sub_800F798(struct phys_obj *self)
  *
  * - `0x14`: tags `self+0x2d = 0x12`, runs the
  *   `sub_80087C0`/`sub_80087B4`/`sub_800872C` triplet, plays a sound
- *   (`gUnknown_030012BC`, id 0x11), then falls into the shared tail
+ *   (`gAudioContext`, id 0x11), then falls into the shared tail
  *   with `self+0x4e = 0x13`, `self+0x4f = 0x3c` (a ~1-second cooldown
  *   at 60 fps).
  * - `> 0x14` (only `0x15` reaches here, `bgt` from the `0x14` compare):
@@ -744,13 +744,13 @@ void sub_800F8E0(struct phys_obj *self)
     switch (kind) {
     case 0x15:
         PhysSetTag(self, 0x13);
-        PlaySfx(gUnknown_030012BC, 0x11, 0x100);
+        PlaySfx(gAudioContext, 0x11, 0x100);
         self->kind = 0x14;
         self->timer = 0x3c;
         break;
     case 0x14:
         PhysSetTag(self, 0x12);
-        PlaySfx(gUnknown_030012BC, 0x11, 0x100);
+        PlaySfx(gAudioContext, 0x11, 0x100);
         self->kind = 0x13;
         self->timer = 0x3c;
         break;
@@ -965,6 +965,6 @@ void sub_800F990(struct phys_obj *self)
             self->slot = sub_8006DF8(gUnknown_030012B8, rec->unk_14);
         }
         if (self->u48.n & 0xc0)
-            PlaySfx(gUnknown_030012BC, 0x10, 0x100);
+            PlaySfx(gAudioContext, 0x10, 0x100);
     }
 }

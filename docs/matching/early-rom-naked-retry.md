@@ -13,7 +13,7 @@ function that had no draft now has one.
 | `sub_8003D3C` | `src/graphics/settings_menu.c` (old_agbcc object) | both | The r8/sb swap is a global-alloc priority tie. The 0x87 constant ranks 8/112 = 0.0714 and the 0x130 offset ranks 14/200 = 0.070, so the constant gets r8 first. `y` is now pinned to r9. It is set inside a block, after `x = 0xa0 - w` and after the manager pointer is loaded into a local, which keeps the ROM's `ldr r4, [r7]` ahead of `mov sb, r2`. The unpinned allocator then gives 0x130 r8. |
 
 A pre-existing `initialization makes pointer from integer` warning in
-`sub_8001C64` (same file as `PlayAmbientSfx`) is fixed with a `(vu8 *)`
+`DisableMusicVCountIrq` (same file as `PlayAmbientSfx`) is fixed with a `(vu8 *)`
 cast. The code is unchanged.
 
 ## Not closed (12)
@@ -25,18 +25,18 @@ cast. The code is unchanged.
 | `sub_8001DB4` | 136 | 136 | Not re-attempted beyond triage. |
 | `sub_8001F50` | 37 | 37 | The ROM holds two separate constant-1 registers: sb for the test, `field_8` and IME, and r1 for the arm3 `eor`/`and`. One `one` local gives `bic`. Not converged. |
 | `sub_8002114` | - | - | Not attempted (1488 B). |
-| `sub_8002AA4` | 18 | 6 | Pointing the marker pointer at r6 (pinned) and using a `u8 z = 0` local makes every store and every register match. Left: the ROM computes `&flags` before `&field_1fb` but still gives `flags` r7. Computing them in that order here makes `field_1fb` live one insn shorter (14 vs 15), so it wins r7. Pinning `field_1fb` to r8 or `version` to r9 makes it worse. |
+| `ValidateSaveData` | 18 | 6 | Pointing the marker pointer at r6 (pinned) and using a `u8 z = 0` local makes every store and every register match. Left: the ROM computes `&flags` before `&field_1fb` but still gives `flags` r7. Computing them in that order here makes `field_1fb` live one insn shorter (14 vs 15), so it wins r7. Pinning `field_1fb` to r8 or `version` to r9 makes it worse. |
 | `sub_8002E20` | no draft | about 100 | There is now a C draft. It keeps the ROM's `n - 1 != -1` loop tests (the old note said C folds them). Left: the ROM computes `playerIndex * 0xc8 + s` twice (count test, then channel pointer plus 0x108); gcc CSEs the second. `-fno-cse-follow-jumps`/`-skip-blocks`/`-rerun-cse-after-loop` don't split it. |
 | `sub_800450C` (raw) | 5 | 5 | A loop dump explains the pre-header order. loop.c's first pass moves four invariants: the `gUnknown_030012D0` address, 15, and the QI and SI -16 of the nibble insert. Each move lowers the threshold by 3, so the 0x80 (84 insns of 117) is "not desirable" until the rerun, after strength reduction has emitted the pointer copies. The ROM moved it in pass 1. Nibble spellings, `field_3c` store forms, dropping `Opaque`, loop shapes, `-fmove-all-movables` and `-freduce-all-givs` don't fix it. |
-| `sub_8004D74` | 54 | 54 | The 0x12c offset (4 refs / 36 insns) outranks the icon-manager address pseudos, so it takes a low register. The ROM leaves it without a register and rematerializes it. Pinning the three global addresses to r6/r4/r5 then gives 0x12c r8 (80 halfwords). |
-| `sub_8005100` | 14 (old) | 5 (old) | `pressed` pinned to r1 keeps the word load plus `lsr #16`; unpinned, combine turns it into `ldrh [keys+2]`. `key` pinned to r3, with the pressed test spelled using the literal, gives the ROM's two `mov #K`. Left: the ROM computes the fade pointer (self+0xcc) before `disp`. A `fade` local changes the fade loops. |
-| `sub_80053F4` | 20 | 20 | The two computed-x positions: the ROM puts x in r3 and y in r2. None of an x local, setter argument orders, blocks, direct stores, pins, or the settings_menu.c macro shape changed it. |
-| `sub_8005E5C` | 73 | 73 | Not re-attempted beyond triage. The ROM derives 0x114 as `r7 + 4` in the last reposition only. |
+| `RunPauseMenu` | 54 | 54 | The 0x12c offset (4 refs / 36 insns) outranks the icon-manager address pseudos, so it takes a low register. The ROM leaves it without a register and rematerializes it. Pinning the three global addresses to r6/r4/r5 then gives 0x12c r8 (80 halfwords). |
+| `PauseMenuLoop` | 14 (old) | 5 (old) | `pressed` pinned to r1 keeps the word load plus `lsr #16`; unpinned, combine turns it into `ldrh [keys+2]`. `key` pinned to r3, with the pressed test spelled using the literal, gives the ROM's two `mov #K`. Left: the ROM computes the fade pointer (self+0xcc) before `disp`. A `fade` local changes the fade loops. |
+| `DrawPauseMenu` | 20 | 20 | The two computed-x positions: the ROM puts x in r3 and y in r2. None of an x local, setter argument orders, blocks, direct stores, pins, or the settings_menu.c macro shape changed it. |
+| `DrawPauseFraction` | 73 | 73 | Not re-attempted beyond triage. The ROM derives 0x114 as `r7 + 4` in the last reposition only. |
 
 ## Techniques worth keeping
 
 - **Read the global-alloc dump (`-dg`) before trying variants.** In both
-  `sub_8003D3C` and `sub_8002AA4` the "swap" was a priority tie
+  `sub_8003D3C` and `ValidateSaveData` the "swap" was a priority tie
   (`floor_log2(refs) * refs / live_length`), close enough to compute by
   hand. That tells you which pseudo to pin, or which live range has to
   change.

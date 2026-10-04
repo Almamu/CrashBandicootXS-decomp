@@ -354,7 +354,7 @@ from "core" graphics.
   entry): `sub_803AFDC`/`sub_803AFE4` (the shared AABB set-size/
   set-position primitive already referenced by name from
   `actor_part.c`/`actor_part2.c`/`oam_count.c`), `sub_803AFEC` (a
-  trivial raw-offset getter), `sub_803AFF0`/`sub_803B024` (two more
+  trivial raw-offset getter), `DestroyLargeFont`/`DestroySmallFont` (two more
   `gStaticData_087E3BEC`-family per-type descriptor table constructors)
 
 - `src/graphics/actor_part20.c`/`actor_part20d.c`/`actor_part21.c`/
@@ -708,7 +708,7 @@ from "core" graphics.
   `InitActorPart`-rooted "self" object kinds immediately following
   issue #62's cluster, non-adjacent since 2 remain parked
   (`sub_8034270`/`sub_8034314`, in `actor_part68.c`/`actor_part70.c` -
-  `sub_8034058`/`sub_8034374`/`sub_8034480`/`sub_80345B0`/`sub_8034634`
+  `sub_8034058`/`InitStarfield`/`DrawStarfield`/`SpawnStar`/`PlotStarfieldPixel`
   are now matched too, closing `actor_part85.c` entirely, see below),
   `sub_8033FE4`
   (`actor_part64.c`, now matched - see below), and 3 left-raw functions sit
@@ -718,8 +718,8 @@ from "core" graphics.
   [docs/matching/issue-63-0x08033ef4-actor.md](../matching/issue-63-0x08033ef4-actor.md)):
   `sub_8033EF4`, `sub_8033F48`, `sub_8033F74`, `sub_8034050`,
   `sub_8034110`, `sub_8034188`, `sub_80341F8`, `sub_8034264`,
-  `nullsub_38`, `sub_80342D4`, `sub_803436C`, `sub_80345B0`,
-  `sub_8034634`, `sub_8034688`, `sub_80346C8`, `sub_80346FC` - two
+  `nullsub_38`, `sub_80342D4`, `sub_803436C`, `SpawnStar`,
+  `PlotStarfieldPixel`, `UpdateStarfield`, `StarfieldWaitForButton`, `DestroyStarfield` - two
   constructors, a trampoline-fire helper, a position-sync/state-transition
   helper, a damage/death handler, a position-sync/orbit-effect updater and
   its non-identical near-twin, two trivial getters, a no-op stub, a
@@ -732,7 +732,7 @@ from "core" graphics.
   compute-then-copy tail - see that file's doc comments for the full
   account), a particle-spawn-budget driver, an input-poll busy-wait, and a
   buffer-release/teardown helper.
-- **`sub_803472C`** (`src/graphics/actor_part87.c`, GitHub issue #63) - a
+- **`InitContinuePrompt`** (`src/graphics/actor_part87.c`, GitHub issue #63) - a
   standalone `struct fade_overlay` object's constructor half: allocates
   and loads its three BG scratch buffers, builds DISPCNT, hands off to
   `sub_803487C`, then builds the BLDCNT/BLDALPHA alpha-blend value.
@@ -877,23 +877,23 @@ from "core" graphics.
   [issue-59-60-static-inline-cse-promotion.md](../matching/issue-59-60-static-inline-cse-promotion.md).
 - `src/graphics/actor_part131.c` (new file, ROM 0x08034AA4-0x080354E0,
   GitHub issue #64): `sub_8034C40` (the fade overlay's Yes/No-dialog
-  blink/toggle helper), `sub_8034C5C` (fade overlay per-frame "yield"
-  helper), `sub_8034C84` (fade overlay teardown), `sub_8034CB0` (the
-  "Are you sure?" confirmation-dialog trigger), `sub_8034E2C` (the
+  blink/toggle helper), `CommitContinuePromptFrame` (fade overlay per-frame "yield"
+  helper), `DestroyContinuePrompt` (fade overlay teardown), `RunContinuePrompt` (the
+  "Are you sure?" confirmation-dialog trigger), `CreditsLoop` (the
   between-level map/progress screen's per-frame driver - needed a
   register-pinned `mask &= p->pressed` accumulate-into-existing-register
   rewrite of a plain `&` boolean test, plus a `void *unused` parameter
-  kept on `sub_803544C` since the ROM's own call site passes `self` into
-  it even though the callee never reads it), `sub_803544C` (map screen
-  end-of-frame commit), `sub_803547C` (map screen teardown), and
-  `sub_80354BC` (the map screen's top-level entry point) all matched as
-  real C; `sub_8034AA4`, `sub_8034CEC`, `sub_8034EF0` and `sub_80350A4`
+  kept on `CommitCreditsFrame` since the ROM's own call site passes `self` into
+  it even though the callee never reads it), `CommitCreditsFrame` (map screen
+  end-of-frame commit), `DestroyCredits` (map screen teardown), and
+  `RunCredits` (the map screen's top-level entry point) all matched as
+  real C; `DrawContinuePrompt`, `InitCredits`, `DrawCreditsText` and `UpdateCreditsText`
   (first transcribed as NAKED) were promoted to real C in the issue
   #64/#65 NAKED retry, which also moved the object to old_agbcc (the
-  whole file matches under it; `sub_8034CEC`, `sub_8034EF0` and
-  `sub_80350A4` need it) - see
+  whole file matches under it; `InitCredits`, `DrawCreditsText` and
+  `UpdateCreditsText` need it) - see
   [docs/matching/issue-64-65-naked-retry.md](../matching/issue-64-65-naked-retry.md);
-  `sub_80352AC` was the last NAKED function there and is real C since
+  `LoadCreditsLogos` was the last NAKED function there and is real C since
   the size2 NAKED retry
   ([docs/matching/size2-naked-retry.md](../matching/size2-naked-retry.md)) - see
   [docs/matching/issue-64-0x08034aa4-actor.md](../matching/issue-64-0x08034aa4-actor.md).
@@ -1034,7 +1034,7 @@ See [docs/matching/strag2-naked-retry.md](../matching/strag2-naked-retry.md).
   in two statements and the high nibble masked; 7B0 also needs three
   empty `asm("" : : "r"(x))` extra references (`dest` after the loop,
   `cols` twice before the call) to settle two register-priority ties.
-- `src/graphics/actor_part89.c` - `sub_8034994` (the fade overlay's
+- `src/graphics/actor_part89.c` - `ContinuePromptLoop` (the fade overlay's
   per-frame input driver, issue #63), old_agbcc (object added to
   `OLD_AGBCC_OBJS`). An extra reference to `audio` at the top of the
   loop replaces the old r8 pin on the pair counter, and a `"+r"` asm on
@@ -1138,7 +1138,7 @@ See [docs/matching/sp-box-retry.md](../matching/sp-box-retry.md).
 
 ### Matched in the size2 NAKED retry
 
-- `src/graphics/actor_part131.c` - `sub_80352AC` (issue #64, the map
+- `src/graphics/actor_part131.c` - `LoadCreditsLogos` (issue #64, the map
   screen's popup-text asset loader), old_agbcc. A non-volatile asm with
   outputs is an ordinary expression to GCSE, so PRE hoisted even a
   `"+r"` copy of `slot`. The palette index is a copy passed through
@@ -1244,7 +1244,7 @@ plain C didn't converge.
 - **Now matched as real C (strag2 retry, see Matched); entry kept for history.** **`sub_80156EC`** (`src/graphics/actor_part38c.c`) -
   `part+0x38`/`sub_80231BC`-gated mgr-trampoline dispatcher. See
   `docs/matching/issue-18-0x08014f8c-actor.md`.
-- **Now matched as real C (size2 NAKED retry, see Matched and docs/matching/size2-naked-retry.md); entry kept for history.** **`sub_80352AC`** (`src/graphics/actor_part131.c`, GitHub issue #64) -
+- **Now matched as real C (size2 NAKED retry, see Matched and docs/matching/size2-naked-retry.md); entry kept for history.** **`LoadCreditsLogos`** (`src/graphics/actor_part131.c`, GitHub issue #64) -
   the map screen's popup-text asset loader. The issue #64/#65 NAKED
   retry left a near-miss C draft under `#if NON_MATCHING` (old_agbcc):
   the "seven live values" allocation is right; what is left is that gcc
@@ -1394,7 +1394,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   address-in-`r0`/value-in-`r2` register choice directly. Retires the
   old raw `asm/code_3_2_9.s`. See
   [docs/matching/issue-97-sub_8009DF4.md](../matching/issue-97-sub_8009DF4.md).
-- **`sub_8034374`** (`src/graphics/actor_part85.c`) - constructs the
+- **`InitStarfield`** (`src/graphics/actor_part85.c`) - constructs the
   particle-trail BG0 object; now fully matched as real C. The ROM
   builds a 4-bit-palette-bank tile-index mask (0xFFFFF000) by loading
   the literal into `r1` first and copying it into `r5` (`ldr
@@ -1412,21 +1412,21 @@ embedded as asm instead. They're tracked as parked, not matched.
   literal source position). Retired the multi-function raw
   `asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s`, split at the time
   into `asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s` (real bytes for
-  the twin `sub_8034480`) - that fragment is now retired too (see
+  the twin `DrawStarfield`) - that fragment is now retired too (see
   below), closing `actor_part85.c` entirely. GitHub issue #63, see
   `docs/matching/issue-63-0x08033ef4-actor.md`.
-- **`sub_8034480`** (`src/graphics/actor_part85.c`) - `sub_8034374`'s
+- **`DrawStarfield`** (`src/graphics/actor_part85.c`) - `InitStarfield`'s
   companion per-frame updater; now fully matched as real C, closing the
   file. Commits last frame's `tileBuffer` to tile VRAM, clears it back
   to zero, then for each active particle inlines the same nibble-
-  address formula as `sub_8034634` (`actor_part72.c`) *twice* (nibble
+  address formula as `PlotStarfieldPixel` (`actor_part72.c`) *twice* (nibble
   `1` pre-move, nibble `2` post-move), applying `dx`/`dy` and
-  respawning via `sub_80345B0` in between. Needed a mix of
-  `sub_8034634`'s own three fixes (unsigned casts for the `x`/`newX`
+  respawning via `SpawnStar` in between. Needed a mix of
+  `PlotStarfieldPixel`'s own three fixes (unsigned casts for the `x`/`newX`
   bounds checks alongside plain signed `>> 11` block-index shifts,
   `addr`'s two halves split into separate statements, and one opaque
   `asm volatile` for the `bic`/`orr`/`strh` tail - simpler here than
-  `sub_8034634`'s own tail since this function's ROM build never needs
+  `PlotStarfieldPixel`'s own tail since this function's ROM build never needs
   an extra materialize-then-copy-back step) plus two more scheduling-
   order fixes this larger, twice-inlined function surfaces on its own:
   `x`'s raw value and its `>>8` pixel value must be computed
@@ -1438,11 +1438,11 @@ embedded as asm instead. They're tracked as parked, not matched.
   reload rather than as its `register` declaration's own initializer.
   Retires `asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s` entirely.
   GitHub issue #63, see `docs/matching/issue-63-0x08033ef4-actor.md`.
-- **`sub_80345B0`/`sub_8034634`** (`src/graphics/actor_part72.c`) - a
+- **`SpawnStar`/`PlotStarfieldPixel`** (`src/graphics/actor_part72.c`) - a
   128-slot particle-slot spawner (rolls two `RandRange` random values
   against the 256-entry `gStaticData_0816A820` direction table to seed a
   position/velocity record) and a 4-bit-per-cell tilemap nibble writer;
-  now fully matched as real C. `sub_80345B0`'s previously-parked
+  now fully matched as real C. `SpawnStar`'s previously-parked
   register-allocation gap for the final multiply/shift turned out not to
   need any register pins or opaque asm at all: this compiler's codegen
   for `dest = a * b` always materializes/copies the *left* operand into
@@ -1450,7 +1450,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   happens to write the table lookup as the left operand
   (`table[...] * speed`) rather than the speed value - simply writing the
   C multiplication in that same order matched immediately.
-  `sub_8034634`'s residual `addr`/`blockY` register-role gap turned out
+  `PlotStarfieldPixel`'s residual `addr`/`blockY` register-role gap turned out
   to be three separate, independently-found issues: `x`'s bounds check
   wants an unsigned compare but `x >> 3` wants a *signed* arithmetic
   shift (modeled with an explicit `(s32)x >> 3` cast), `addr`'s two
@@ -1477,7 +1477,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   matched as real C. Two gaps, both closed with `asm volatile`
   anchors: the 6th argument needs the same stack-slot-address-then-
   `ldrb` anchor already established for other trailing byte arguments
-  (see `sub_8003A60` in `issue-5-overlay-ui-sync.md`), materialized
+  (see `DrawSaveMenuMain` in `issue-5-overlay-ui-sync.md`), materialized
   into a `register u32 asm("r9")` pin mirroring the ROM's own `sb`
   cache; and the `self+0x5c` spawn-record ternary needs the ROM's
   genuine two-way branch diamond (a forward `beq`/`ldr`/`b` skipping a

@@ -78,7 +78,7 @@ u32 gSfxVoiceToggle = 0;
 u8 gUnknown_03000800 = 1;
 void *gLinkSession = NULL;
 u8 gEepromNeedsInit = 1;
-void *gUnknown_0300080C = NULL;
+void *gSaveMenu = NULL;
 /* The two link compatibility messages, stored after the CRC table
  * (src/data/link_crc_16af10.c): "crash 1 <-> crash 2", "crash 1 <-> crash 3". */
 const u8 *gUnknown_03000810 = (const u8 *)gStaticData_0816B110;
@@ -125,7 +125,7 @@ const u8 *const *gUiTextTables[6] = {
 /* The language, 0-5 (English, French, German, Spanish, Italian, Dutch);
  * main_loop.c sets it at boot. */
 s32 gLanguage = 3;
-s32 gUnknown_0300086C = 0;
+s32 gHudSlideOffset = 0;
 
 /* Hooks into the ARM code (see sprite_arm.c). */
 s32 (*gLookupSpriteFrameCacheFunc)(u8 *frame) = LookupSpriteFrameCache;
@@ -154,7 +154,7 @@ const void *gUnknown_030008BC[4] = {
     gStaticData_0817D094,
 };
 
-void *gUnknown_030008CC = NULL; /* struct counter_widget * */
+void *gLanguageSelect = NULL; /* struct counter_widget * */
 
 /* GAX2's fatal-error screen font (gax_fatal_error.c), Huffman-compressed
  * for the BIOS HuffUnComp: 8-bit symbols, 0x4A0 bytes (37 4bpp tiles)

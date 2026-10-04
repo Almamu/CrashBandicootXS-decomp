@@ -3,22 +3,28 @@
 
 /* Same "self" object family as actor_part61.c/actor_part66.c/actor_part72.c/
  * actor_part73.c - see docs/matching/issue-63-0x08033ef4-actor.md. This is
- * the 0x14-byte constructor (`sub_8034374`, called by `LoadLevelGraphics` as
- * `sub_8034374(sub_8026EDC(0x14))`, see `src/graphics/level_graphics.c`) and
- * its companion per-frame updater (`sub_8034480`, called by
- * `sub_8034688`/actor_part73.c) for a BG0 "raw bitmap" particle-trail
+ * the 0x14-byte constructor (`InitStarfield`, called by `LoadLevelGraphics` as
+ * `InitStarfield(sub_8026EDC(0x14))`, see `src/graphics/level_graphics.c`) and
+ * its companion per-frame updater (`DrawStarfield`, called by
+ * `UpdateStarfield`/actor_part73.c) for a BG0 "raw bitmap" particle-trail
  * effect: the whole 240x160 screen is set up as one contiguous run of 8x8
  * tiles on BG0 (tile index == screen position, palette bank 15), and a
  * shadow 4-bit-per-pixel buffer (`tileBuffer`, exactly 240*160/2 = 0x4B00
  * bytes) is drawn into with plain nibble writes each frame, then DMA'd
  * wholesale into the real tile graphics VRAM - the classic "abuse the BG
- * tile grid as a raw indexed bitmap" GBA trick. */
+ * tile grid as a raw indexed bitmap" GBA trick.
+ *
+ * The effect is a starfield: SpawnStar (actor_part72.c) starts each of
+ * up to 128 stars at the screen centre with a random direction and
+ * speed, and DrawStarfield moves them outwards, plotting a short trail.
+ * The language menu, the credits and the level-loading screens run it
+ * behind their text. */
 struct particle_bg {
     /* Always `VRAM` - the BG tile *graphics* VRAM this object's whole
      * `tileBuffer` gets DMA'd into every frame. */
     u32 tileVramBase;
     /* Always `BG_SCREEN_ADDR(31)` - BG0's screen/tilemap base (see
-     * `sub_8034374`'s `REG_BG0CNT` setup below), laid out once at
+     * `InitStarfield`'s `REG_BG0CNT` setup below), laid out once at
      * construction time as one sequential tile index per 8x8 cell. */
     u32 mapVramBase;
     /* 128-slot particle array (`sub_8026EC0(0x800)`, 16-byte stride - see
@@ -27,7 +33,7 @@ struct particle_bg {
     /* Active particle count (0-0x80). */
     s32 count;
     /* 240x160, 4-bit-per-pixel shadow tile-graphics buffer
-     * (`sub_8026EC0(0x4B00)`) - `sub_8034480` draws each active particle's
+     * (`sub_8026EC0(0x4B00)`) - `DrawStarfield` draws each active particle's
      * trail into this every frame, then DMAs it wholesale into
      * `tileVramBase`. */
     void *tileBuffer;
@@ -44,7 +50,7 @@ extern void *sub_8026EC0(u32 size);
 extern void sub_8001524(s32 val);
 extern void sub_80015D0(void);
 extern void sub_8001614(void);
-extern void sub_80345B0(void *mgrArg, s32 idx);
+extern void SpawnStar(void *mgrArg, s32 idx);
 extern u8 gUnknown_03001288[2];
 
 /* Constructs the particle-trail BG0 object. Fully matched as real C.
@@ -68,7 +74,7 @@ extern u8 gUnknown_03001288[2];
  * unlike the ROM's own ordering, since the source's original textual
  * placement determines scheduling once a hard asm barrier is
  * introduced nearby). See docs/matching/issue-63-0x08033ef4-actor.md. */
-void *sub_8034374(void *selfArg)
+void *InitStarfield(void *selfArg)
 {
     struct particle_bg *self = selfArg;
     struct dma_regs *dma;
@@ -198,14 +204,14 @@ void *sub_8034374(void *selfArg)
  * (DMA3 fill), then for each active particle draws a 2-value trail (nibble
  * `1` at the pre-movement position, nibble `2` at the post-movement
  * position - the same `(x>>3)<<6 + ((y>>3)*15)<<7 + (x&7) + (y&7)<<3`
- * nibble-address formula as the matched general-purpose `sub_8034634`,
+ * nibble-address formula as the matched general-purpose `PlotStarfieldPixel`,
  * actor_part72.c, just inlined twice instead of called), applies the
- * particle's `dx`/`dy` in between, and respawns it via `sub_80345B0` if it
+ * particle's `dx`/`dy` in between, and respawns it via `SpawnStar` if it
  * drifted outside the `[0, 0xEFFF]`x`[0, 0x9FFF]` (24.8 fixed-point,
  * 240x160 pixel) box.
  *
  * Closing the residual register-allocation gap here turned out to be a
- * mix of `sub_8034634`'s own three fixes plus two more ordering fixes
+ * mix of `PlotStarfieldPixel`'s own three fixes plus two more ordering fixes
  * specific to this larger, twice-inlined function:
  *   1. Both `x` bounds checks (`x <= 0xef` and, for the post-move copy,
  *      `newX > 0xEFFF`) want an unsigned comparison (the ROM's `bhi`),
@@ -214,10 +220,10 @@ void *sub_8034374(void *selfArg)
  *      arithmetic shift on the already-`s32` raw value.
  *   2. `addr`'s two halves need computing as separate statements
  *      (`addr = blockX << 6; addr += ...;`), not folded into one `a + b`
- *      expression, same as `sub_8034634`.
+ *      expression, same as `PlotStarfieldPixel`.
  *   3. The final opaque `asm volatile` reproduces the ROM's own tail
  *      sequence for `cell &= ~mask; cell |= val << shift; *entry = cell;`
- *      - simpler than `sub_8034634`'s own tail since this function's ROM
+ *      - simpler than `PlotStarfieldPixel`'s own tail since this function's ROM
  *      build never needs the `r4`-materialize-then-copy-back step, just
  *      `mask` (`r0`) computed, `cell` loaded straight into `r2` and
  *      `bic`'d in place, then `r0` reused to shift `val` in before the
@@ -237,7 +243,7 @@ void *sub_8034374(void *selfArg)
  *      declaration's own initializer - an initializer schedules the
  *      `movs #2`/`mov ip` pair too early (before the position reload),
  *      unlike the ROM's own ordering. */
-void sub_8034480(void *selfArg)
+void DrawStarfield(void *selfArg)
 {
     struct particle_bg *self = selfArg;
     struct dma_regs *dma;
@@ -317,7 +323,7 @@ void sub_8034480(void *selfArg)
                 slot->y = newY;
 
                 if ((u32)newX > 0xEFFF || newY < 0 || newY > 0x9FFF) {
-                    sub_80345B0(self, i);
+                    SpawnStar(self, i);
                 }
             }
 
