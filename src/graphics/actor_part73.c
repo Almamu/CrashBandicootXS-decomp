@@ -3,21 +3,30 @@
 /* Same "self" object family as actor_part61.c/actor_part66.c - see
  * docs/matching/issue-63-0x08033ef4-actor.md. */
 
+/* The particle-trail BG0 object (actor_part85.c's `struct particle_bg`). */
+struct particle_bg {
+    u32 tileVramBase;
+    u32 mapVramBase;
+    void *particles;
+    s32 count;                  // 0x0c - active particles, 0-0x80
+    void *tileBuffer;
+};
+
 extern void sub_8034480(void *mgr);
 extern void sub_80345B0(void *mgr, s32 idx);
 
 /* Calls `sub_8034480(mgr)` (the OAM/tile-scan update this object's part
- * table drives), then - while the particle slot count (`mgr+0xc`) is
- * still under 0x80 - spawns up to 8 more particles via `sub_80345B0`,
- * incrementing `mgr+0xc` for each one spawned. */
+ * table drives), then - while the particle `count` is still under
+ * 0x80 - spawns up to 8 more particles via `sub_80345B0`, incrementing
+ * `count` for each one spawned. */
 void sub_8034688(void *mgrArg)
 {
-    u8 *mgr = mgrArg;
+    struct particle_bg *mgr = mgrArg;
 
     sub_8034480(mgr);
 
-    if (*(s32 *)(mgr + 0xc) <= 0x7f) {
-        s32 count = 0x80 - *(s32 *)(mgr + 0xc);
+    if (mgr->count <= 0x7f) {
+        s32 count = 0x80 - mgr->count;
 
         if (count > 8) {
             count = 8;
@@ -28,10 +37,10 @@ void sub_8034688(void *mgrArg)
             s32 end = -1;
 
             do {
-                register s32 idxR0 asm("r0") = *(s32 *)(mgr + 0xc);
+                register s32 idxR0 asm("r0") = mgr->count;
                 register s32 idx asm("r1") = idxR0;
 
-                *(s32 *)(mgr + 0xc) = idxR0 + 1;
+                mgr->count = idxR0 + 1;
                 sub_80345B0(mgr, idx);
                 count -= 1;
             } while (count != end);

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "vtable.h"
 
 /* GitHub issue #22, ROM 0x08017ECC-0x08017FE8 - non-adjacent to
  * actor_part20.c since `sub_8017AB0` (NAKED-parked, see
@@ -157,13 +158,12 @@ void sub_8017F80(void *selfArg, void *partArg, s32 index)
 void sub_8017FA4(void *selfArg)
 {
     u8 *self = selfArg;
-    u8 *table = *(u8 **)(self + 0xc);
+    struct vtable_slot *table = *(struct vtable_slot **)(self + 0xc);
 
     register s32 zero asm("r0");
     u8 *p;
 
-    sub_803AD80(self + *(s16 *)(table + 0x20), (void *)1,
-                *(void **)(table + 0x24));
+    sub_803AD80(self + table[4].delta, (void *)1, table[4].fn);
     p = self + 0x20;
     zero = 0;
     *p = zero;

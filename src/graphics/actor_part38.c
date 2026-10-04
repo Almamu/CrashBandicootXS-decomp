@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor.h"
+#include "vtable.h"
 
 /* GitHub issue #18's chunk, ROM 0x08014F8C-0x080157C0 - continues the
  * same "self" action-table object family documented at the top of
@@ -173,7 +174,7 @@ extern s32 sub_803AD84(void *arg0, void *arg1, void *arg2, void *arg3);
  * (`adds r5, r0, #0; ldrb r2, [r5]`) as in the ROM. */
 void sub_8015038(u8 *self, s32 id, s32 param2)
 {
-    u8 *mgr;
+    struct vtable_slot *mgr;
     u8 *off;
 
     if (self[0x24] == 0) {
@@ -191,8 +192,8 @@ void sub_8015038(u8 *self, s32 id, s32 param2)
         }
         zero = 0;
         wait = 0x14;
-        mgr = *(u8 **)(self + 0xc);
-        sub_803AD80(self + *(s16 *)(mgr + 0x20), (void *)id, *(void **)(mgr + 0x24));
+        mgr = *(struct vtable_slot **)(self + 0xc);
+        sub_803AD80(self + mgr[4].delta, (void *)id, mgr[4].fn);
         off = *(u8 **)(self + 0xc);
         off += 0x50;
         sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)idx,
@@ -230,8 +231,8 @@ void sub_8015038(u8 *self, s32 id, s32 param2)
             }
             zero = 0;
             wait = 0x14;
-            mgr = *(u8 **)(self + 0xc);
-            sub_803AD80(self + *(s16 *)(mgr + 0x20), (void *)id, *(void **)(mgr + 0x24));
+            mgr = *(struct vtable_slot **)(self + 0xc);
+            sub_803AD80(self + mgr[4].delta, (void *)id, mgr[4].fn);
             off = *(u8 **)(self + 0xc);
             off += 0x50;
             sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)idx,
@@ -247,8 +248,8 @@ void sub_8015038(u8 *self, s32 id, s32 param2)
             *p21 = zero;
             self[0x20] = zero;
             wait = 0x18;
-            mgr = *(u8 **)(self + 0xc);
-            sub_803AD80(self + *(s16 *)(mgr + 0x20), (void *)param2, *(void **)(mgr + 0x24));
+            mgr = *(struct vtable_slot **)(self + 0xc);
+            sub_803AD80(self + mgr[4].delta, (void *)param2, mgr[4].fn);
             off = *(u8 **)(self + 0xc);
             off += 0x50;
             sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)0x10,

@@ -1,10 +1,24 @@
 #include "core.h"
+#include "actor_self.h"
+#include "level_state.h"
 
 /* Same "spawn/pre-attack" singleton family as actor_part39.c - see that
  * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md.
  * This file covers the whole contiguous run of accessors/accumulator-
  * drivers/state-transition helpers for the singleton and its `self`
- * object between the parked `sub_802F338` and `sub_802F748`. */
+ * object between the parked `sub_802F338` and `sub_802F748`.
+ *
+ * The animation-reset blocks (`anim`/`zero1`/`zero2` register groups)
+ * store through `*(T *)&self->field` casts: plain member stores let
+ * gcc move the zero loads (docs/workflow.md step 7). */
+
+/* `self`: the common actor prefix plus a meter that fills up to
+ * `gUnknown_030014E4` (`sub_802F50C`) and reads back as a percentage
+ * of 120 (`sub_802F47C`). */
+struct meter_actor {
+    struct actor_self base;
+    s32 meter;                  // 0x54
+};
 
 extern s32 sub_8023430(void *arg0);
 extern void sub_802E484(s32 x, s32 y, s32 amount);
@@ -19,7 +33,7 @@ extern s32 sub_8029B2C(void);
 extern void FreeVramTileBlock(void *arg0);
 extern void mem_free(void *ptr);
 
-extern void *gUnknown_030012C0;
+extern struct level_state *gUnknown_030012C0;
 extern void *gUnknown_030012BC;
 extern u8 gUnknown_03001505;
 extern u8 gUnknown_03001506;
@@ -45,7 +59,7 @@ extern u8 gStaticData_087E4DF4[];
  * plays a cue. */
 void sub_802F3BC(void *selfArg)
 {
-    register u8 *self asm("r1") = selfArg;
+    register struct meter_actor *self asm("r1") = selfArg;
     s32 acc = gUnknown_030014FC;
 
     if (acc == 0) {
@@ -68,16 +82,16 @@ void sub_802F3BC(void *selfArg)
     gUnknown_030014F8 = 0xf;
 
     if (acc <= 9) {
-        sub_802E484(*(s32 *)(self + 0x1c), *(s32 *)(self + 0x20), 1);
+        sub_802E484(self->base.x, self->base.y, 1);
         gUnknown_030014FC -= 1;
     } else if (acc <= 0x13) {
-        sub_802E484(*(s32 *)(self + 0x1c), *(s32 *)(self + 0x20), 2);
+        sub_802E484(self->base.x, self->base.y, 2);
         gUnknown_030014FC -= 2;
     } else if (acc <= 0x27) {
-        sub_802E484(*(s32 *)(self + 0x1c), *(s32 *)(self + 0x20), 4);
+        sub_802E484(self->base.x, self->base.y, 4);
         gUnknown_030014FC -= 4;
     } else {
-        sub_802E484(*(s32 *)(self + 0x1c), *(s32 *)(self + 0x20), 8);
+        sub_802E484(self->base.x, self->base.y, 8);
         gUnknown_030014FC -= 8;
     }
 
@@ -90,19 +104,19 @@ s32 sub_802F46C(void)
     return ++gUnknown_030014E0;
 }
 
-/* Threshold check on `self+0x54`'s accumulator against
+/* Threshold check on the `meter` accumulator against
  * `gUnknown_030014E4`'s cap, used as a gate elsewhere in this cluster. */
 s32 sub_802F47C(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct meter_actor *self = selfArg;
     s32 v;
     s32 r;
 
     if (gUnknown_030014E4 == 0x64) {
-        return *(s32 *)(self + 0x54);
+        return self->meter;
     }
 
-    v = *(s32 *)(self + 0x54);
+    v = self->meter;
     r = sub_803ADB4(v * 0x64, 0x78);
     if (r == 0 && v > 0) {
         r = 1;
@@ -110,13 +124,13 @@ s32 sub_802F47C(void *selfArg)
     return r;
 }
 
-/* Forwards `self+0x24` (z position) plus a fixed offset to
+/* Forwards `z` plus a fixed offset to
  * `sub_8029748`, discarding the result. */
 void sub_802F4AC(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct meter_actor *self = selfArg;
 
-    sub_8029748(*(s32 *)(self + 0x24) + 0x7800);
+    sub_8029748(self->base.z + 0x7800);
 }
 
 /* Trivial byte getter for `gUnknown_030014E8`. */
@@ -138,36 +152,35 @@ void sub_802F4CC(void)
         if (frame > 2) {
             frame = 5 - frame;
         }
-        QueueVramDmaTransfer(gStaticData_0817C200 + (frame << 5), (void *)0x05000200, 0x20, 0x10);
+        QueueVramDmaTransfer(gStaticData_0817C200 + (frame << 5), (void *)OBJ_PLTT, 0x20, 0x10);
     }
 }
 
-/* Advances `self+0x54`'s accumulator by a scaled `delta`, clamped to
+/* Advances the `meter` accumulator by a scaled `delta`, clamped to
  * `gUnknown_030014E4`'s cap, while the singleton flag is clear. */
 void sub_802F50C(void *selfArg, s32 delta)
 {
-    u8 *self = selfArg;
+    struct meter_actor *self = selfArg;
 
     if (gUnknown_03001506 == 0) {
         s32 max = gUnknown_030014E4;
         s32 add = sub_803ADB4(delta * max, 0x64);
-        s32 v = *(s32 *)(self + 0x54) + add;
+        s32 v = self->meter + add;
 
-        *(s32 *)(self + 0x54) = v;
+        self->meter = v;
         if (v > max) {
-            *(s32 *)(self + 0x54) = max;
+            self->meter = max;
         }
     }
 }
 
 /* Feeds `delta` into the `gUnknown_030014FC` reward accumulator (the
  * one `sub_802F3BC` drains), arming its `gUnknown_030014F8` cooldown
- * the first time it goes from zero - gated on the current game-mode
- * flag at `gUnknown_030012C0+0x8c`. Its own first parameter (`self`)
- * is unused. */
+ * the first time it goes from zero - gated on the level state's
+ * `timeTrial` flag. Its own first parameter (`self`) is unused. */
 void sub_802F540(void *selfArg, s32 delta)
 {
-    if (*((u8 *)gUnknown_030012C0 + 0x8c) == 0) {
+    if (gUnknown_030012C0->timeTrial == 0) {
         if (gUnknown_030014FC == 0) {
             gUnknown_030014F8 = 0xf;
         }
@@ -175,27 +188,27 @@ void sub_802F540(void *selfArg, s32 delta)
     }
 }
 
-/* If `self+0x12`'s flag is set, resets `self` to state 1/table-index 0
+/* If `animDone` is set, resets `self` to state 1/table-index 0
  * (an idle transition) and arms the singleton's `gUnknown_03001507`/
  * clears `gUnknown_03001506` flags, playing a cue. */
 void sub_802F570(void *selfArg)
 {
-    register u8 *self asm("r2") = selfArg;
+    register struct meter_actor *self asm("r2") = selfArg;
 
-    if (self[0x12] != 0) {
+    if (self->base.animDone != 0) {
         register s32 state asm("r5") = 1;
         register s32 zero asm("r1") = 0;
 
-        *(s32 *)(self + 0x28) = state;
-        *(s32 *)(self + 0x44) = zero;
-        *(s32 *)(self + 0xc) = zero;
+        self->base.state = state;
+        self->base.stateTime = zero;
+        self->base.animIndex = zero;
         {
-            register u16 anim asm("r0") = *(u16 *)(*(u8 **)self);
+            register u16 anim asm("r0") = *(u16 *)&self->base.anims[0].duration;
             register u8 zero2 asm("r4") = 0;
 
-            *(u16 *)(self + 0x10) = anim;
-            self[0x12] = zero2;
-            *(s32 *)(self + 8) = zero;
+            *(u16 *)&self->base.animTimer = anim;
+            *(u8 *)&self->base.animDone = zero2;
+            self->base.animTime = zero;
             sub_8029BAC(0x28);
             gUnknown_03001507 = state;
             gUnknown_03001506 = zero2;
@@ -204,41 +217,41 @@ void sub_802F570(void *selfArg)
 }
 
 /* Two independent one-shot transitions on `self`: if it's mid-table-
- * index-5 with the `self+0x12` flag set, resets its table index/anim
- * state; separately, once `self+0x44`'s counter hits `0x32`, marks
- * `self+0x28` state 1 and plays a cue. */
+ * index-5 with the `animDone` flag set, resets its table index/anim
+ * state; separately, once `stateTime` hits `0x32`, sets `state` to 1
+ * and plays a cue. */
 void sub_802F5AC(void *selfArg)
 {
-    register u8 *self asm("r3") = selfArg;
+    register struct meter_actor *self asm("r3") = selfArg;
 
-    if (*(s32 *)(self + 0xc) == 5 && self[0x12] != 0) {
+    if (self->base.animIndex == 5 && self->base.animDone != 0) {
         register s32 zero asm("r2") = 0;
 
-        *(s32 *)(self + 0xc) = zero;
+        self->base.animIndex = zero;
         {
-            register u16 anim asm("r0") = *(u16 *)(*(u8 **)self);
+            register u16 anim asm("r0") = *(u16 *)&self->base.anims[0].duration;
             register u8 zero1 asm("r1") = 0;
 
-            *(u16 *)(self + 0x10) = anim;
-            self[0x12] = zero1;
+            *(u16 *)&self->base.animTimer = anim;
+            *(u8 *)&self->base.animDone = zero1;
         }
-        *(s32 *)(self + 8) = zero;
+        self->base.animTime = zero;
     }
 
-    if (*(s32 *)(self + 0x44) == 0x32) {
-        *(s32 *)(self + 0x28) = 1;
-        *(s32 *)(self + 0x44) = 0;
+    if (self->base.stateTime == 0x32) {
+        self->base.state = 1;
+        self->base.stateTime = 0;
         sub_8029BAC(0x28);
     }
 }
 
 /* Advances `gUnknown_03001508`'s bounded oscillator by 9 (clamped to
  * +0x140 by absolute value), then fires two one-shot threshold
- * effects on `self+0x20` (screamed sfx cue + a `sub_802A668` hazard
+ * effects on `y` (screamed sfx cue + a `sub_802A668` hazard
  * call). */
 void sub_802F5E4(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct meter_actor *self = selfArg;
     s32 v = gUnknown_03001508 + 9;
     s32 sign;
 
@@ -250,29 +263,29 @@ void sub_802F5E4(void *selfArg)
         gUnknown_03001508 = 0x140;
     }
 
-    if (gUnknown_03001505 == 0 && *(s32 *)(self + 0x20) > 0x7080) {
+    if (gUnknown_03001505 == 0 && self->base.y > 0x7080) {
         sub_800132C(0, 2, 1);
         gUnknown_03001505 = 1;
     }
 
-    if (*(s32 *)(self + 0x20) > 0xE100) {
+    if (self->base.y > 0xE100) {
         sub_802A668(3);
     }
 }
 
-/* Advances `self+0x24` (z position) by a fixed step, derives
- * `self+0x34` (a camera-relative depth) via `sub_8029B2C`, and fires
+/* Advances `z` by a fixed step, derives `depth` (a camera-relative
+ * depth) via `sub_8029B2C`, and fires
  * the same one-shot threshold pair as `sub_802F5E4` off that derived
  * value instead, additionally latching `gUnknown_030014E8`. */
 void sub_802F640(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct meter_actor *self = selfArg;
     s32 v;
 
-    *(s32 *)(self + 0x24) += 0x200;
+    self->base.z += 0x200;
 
-    v = *(s32 *)(self + 0x24) - (sub_8029B2C() << 8);
-    *(s32 *)(self + 0x34) = v;
+    v = self->base.z - (sub_8029B2C() << 8);
+    self->base.depth = v;
 
     if (gUnknown_03001505 == 0 && v > 0x8200) {
         sub_800132C(0, 2, 1);
@@ -280,31 +293,31 @@ void sub_802F640(void *selfArg)
         gUnknown_030014E8 = 1;
     }
 
-    if (*(s32 *)(self + 0x34) > 0xA000) {
+    if (self->base.depth > 0xA000) {
         sub_802A668(1);
     }
 }
 
-/* `self+0x20`-threshold-gated twin of `sub_802F570`/`sub_802F69C`'s own
+/* `y`-threshold-gated twin of `sub_802F570`/`sub_802F69C`'s own
  * idle-reset idiom. */
 void sub_802F69C(void *selfArg)
 {
-    register u8 *self asm("r2") = selfArg;
+    register struct meter_actor *self asm("r2") = selfArg;
 
-    if (*(s32 *)(self + 0x20) > 0x1E00) {
+    if (self->base.y > 0x1E00) {
         register s32 state asm("r5") = 1;
         register s32 zero asm("r1") = 0;
 
-        *(s32 *)(self + 0x28) = state;
-        *(s32 *)(self + 0x44) = zero;
-        *(s32 *)(self + 0xc) = zero;
+        self->base.state = state;
+        self->base.stateTime = zero;
+        self->base.animIndex = zero;
         {
-            register u16 anim asm("r0") = *(u16 *)(*(u8 **)self);
+            register u16 anim asm("r0") = *(u16 *)&self->base.anims[0].duration;
             register u8 zero2 asm("r4") = 0;
 
-            *(u16 *)(self + 0x10) = anim;
-            self[0x12] = zero2;
-            *(s32 *)(self + 8) = zero;
+            *(u16 *)&self->base.animTimer = anim;
+            *(u8 *)&self->base.animDone = zero2;
+            self->base.animTime = zero;
             sub_8029BAC(0x28);
             gUnknown_03001507 = state;
             gUnknown_03001506 = zero2;
