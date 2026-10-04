@@ -41,7 +41,7 @@ COMPILE_TIME_ASSERT(sizeof(struct collision_candidate) == 0x24);
 
 /* The player's own small append-only queue of pending collision
  * candidates, embedded inside the same per-entity collision-state
- * record at `gUnknown_030012D8 + 0x108` that `sub_8010A0C`-`sub_8010B68`
+ * record at `gPlayer + 0x108` that `sub_8010A0C`-`sub_8010B68`
  * (game_loop27.c) and `sub_8010B6C` (game_loop28.c) already operate on
  * - confirmed by this function's own caller
  * (`sub_0800D18C`/game_loop47.c) passing exactly that address as `self`.

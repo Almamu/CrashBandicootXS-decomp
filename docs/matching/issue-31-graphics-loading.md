@@ -224,7 +224,7 @@ tail shape, a small `gSpriteBankTable`-record spawner family
 (registering into a manager global `sub_8021D80`'s family in
 `graphics_loading_21d80.c` doesn't use), a run of plain
 `sub_801A878`/`sub_801B984` trampolines, one `sub_800CB40`-based
-constructor, and - closing out the file - 12 more plain `sub_800FF0C`
+constructor, and - closing out the file - 12 more plain `CreateCrate`
 entity-constructor trampolines (types `0x12` down to `7`) continuing
 the family `graphics_loading_21bfc.c` already covers for types `1`-`7`
 at a different address. Every one of these 24 functions from
@@ -311,7 +311,7 @@ instance of.
 patterns: 5 plain `sub_801A878(arg0, arg1, arg2, arg3, id)` calls (ids
 `8`/`6`/`2`/`1`/`0` - same callee the twin family in `trigger_effect.c`
 uses), one plain `sub_801B984(arg0, arg1, arg2, arg3)` tail call, and
-12 plain `sub_800FF0C(arg0, arg1, arg2, arg3, type)` calls (types `0x12`
+12 plain `CreateCrate(arg0, arg1, arg2, arg3, type)` calls (types `0x12`
 down to `7`) continuing the entity-constructor trampoline family
 `graphics_loading_21bfc.c` already covers for types `1`-`7`. Every one
 of these matched from the very first isolated compile - the 5-argument
@@ -346,12 +346,12 @@ fixes were needed over the first plain-C draft:
 
 ### `sub_802190C` - parked as NAKED
 
-A gated `sub_801A878`/`sub_80234F4` dispatcher: picks id `7` if
-`sub_80232A0(gLevelState)` is true or `gLevelState+0x8c` is
+A gated `sub_801A878`/`SetBonusPlatform` dispatcher: picks id `7` if
+`IsBonusRoundDone(gLevelState)` is true or `gLevelState+0x8c` is
 nonzero, else id `5` - the same OR-gated shape the twin family in
 `trigger_effect.c` uses for its own sound-id choice, just feeding
-`sub_80234F4` (`self->0x1b8` setter, `src/system/game_loop10.c`)
-instead of `sub_80234E8`. Semantics are fully understood and every
+`SetBonusPlatform` (`self->0x1b8` setter, `src/system/game_loop10.c`)
+instead of `SetGemPlatform`. Semantics are fully understood and every
 instruction's operation matches the ROM, but the `arg0`-`arg3`
 parameter-home registers (`r5`-`r8`, a mix of immediate and deferred
 truncation) and the `id` register's exact scheduling relative to the
@@ -381,12 +381,12 @@ popup" family - checked this pass, correcting an assumption the second
 pass's writeup carried forward:
 
 - **`sub_8021280`** is a *different* function entirely - not part of
-  the popup family. It dispatches on `sub_8023290`/`sub_80232B8`/
+  the popup family. It dispatches on `IsInGemPath`/`IsInBonusRound`/
   `sub_8023324`/`GetCurrentLevel` (a `gLevelTable`-indexed guard
   check) into one of three arms: two calls to `sub_80071E4` +
   `sub_80070EC` (a differently-sized spawn, tag `0x12`, registering into
   `gUnknown_030012E8`), or a `sub_801A878` position-probe feeding
-  `sub_8023500` with an offset `{x, y}` pair. Not attempted this pass -
+  `SetCrateGemPos` with an offset `{x, y}` pair. Not attempted this pass -
   semantics read far enough to know it's not a popup-family sibling, but
   not worked through to a full C reconstruction.
 - **`sub_8021388`**, **`sub_8021480`**, **`sub_802155C`** genuinely
@@ -520,16 +520,16 @@ that responds to more C-level effort. Transcribed instruction-for-instruction
 from the ROM disassembly instead:
 
 - **`sub_8021280`** - a three-way dispatcher (not part of the "two-line
-  text popup" family): if `sub_8023290`/`sub_80232B8`/`sub_8023324`
+  text popup" family): if `IsInGemPath`/`IsInBonusRound`/`sub_8023324`
   (`gLevelState`) all say "no" and the current level's
   `gLevelTable`-indexed threshold-table entry's guard field
   (offset `+4`, meaning not otherwise understood) is zero, spawns a
   `sub_80071E4`-built part sized `0x64`x`0x64` tagged `0x12`, registering
   into `gUnknown_030012E8`. Otherwise, if the byte at
-  `gUnknown_030012D8 + 0x88` is zero, probes a position via
+  `gPlayer + 0x88` is zero, probes a position via
   `sub_801A878(..., id=4)` (returning a pointer whose first two Q8.8
   fields line up with `struct actor`'s own `x`/`y`) and feeds
-  `sub_8023500` an `{x - 2, y - 0x1e}` offset pair; otherwise falls
+  `SetCrateGemPos` an `{x - 2, y - 0x1e}` offset pair; otherwise falls
   through to the same `sub_80071E4` spawn as the first arm, sized
   `0x28`x`0x28` instead. Every `sub_80071E4`/`sub_801A878` call still
   marshals `arg3` into `r3` even though neither function's real body

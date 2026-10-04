@@ -37,7 +37,7 @@ as of
   `sub_8010E2C` clears elsewhere in this object family, just written
   directly here) and fires three teardown/notification calls:
   `sub_8009868` (NAKED-parked, `actor_part11d.c`) against
-  `gUnknown_0300130C`'s manager with selector `3`, `sub_8008D30`
+  `gCrateList`'s manager with selector `3`, `sub_8008D30`
   (`actor_part10.c`) against `gUnknown_030012EC`'s manager with
   selector `4`, and `sub_80106DC` (`game_loop23.c`) with no arguments.
   `sub_8009868` was previously declared with only one parameter
@@ -158,8 +158,8 @@ as of
 
   Real bytes stay in the new `asm/code_3_2_16_ab9c.s`. `asm/
   code_3_2_16.s` now ends right after `sub_800AAEC` (trimmed from its
-  previous end at `sub_800AFF4`), and the remainder -
-  `sub_800AC2C`/`sub_800AFF4` - moved to the new
+  previous end at `DrawPlayer`), and the remainder -
+  `PlayerHandleEvent`/`DrawPlayer` - moved to the new
   `asm/code_3_2_16_ac2c.s`, keeping the same three-way "before /
   parked function / after" split this ROM region's earlier passes
   (`sub_800A884`, `sub_800B270`) already established.
@@ -167,18 +167,18 @@ as of
 ## Left raw (deeper, still-unexamined dependencies) - 3 functions + 1 large block
 
 - **`sub_800AAEC`** (`asm/code_3_2_16.s`, ROM `0x0800AAEC`) - unchanged
-  from the prior session's write-up: iterates `gUnknown_0300130C`
+  from the prior session's write-up: iterates `gCrateList`
   (a count-prefixed pointer array), testing each entry via
   `_call_via_r1` (matched) and, on a hit (return code 3), calling
   `sub_800CD00` (still fully unexamined) with the entry and this
   function's own second argument. Mechanically clear, but
   `sub_800CD00` itself wasn't examined this session either.
-- **`sub_800AC2C`** (`asm/code_3_2_16_ac2c.s`, ROM `0x0800AC2C`,
+- **`PlayerHandleEvent`** (`asm/code_3_2_16_ac2c.s`, ROM `0x0800AC2C`,
   ~950 B) - unchanged: a 38-case jump-table player action-state
   dispatcher, calling a dozen still-unexamined state-transition
   functions. Left raw per this project's established policy for this
   exact dispatcher shape (same as `sub_8018008`, issue #22).
-- **`sub_800AFF4`** (`asm/code_3_2_16_ac2c.s`, ROM `0x0800AFF4`,
+- **`DrawPlayer`** (`asm/code_3_2_16_ac2c.s`, ROM `0x0800AFF4`,
   ~636 B) - unchanged: high register-pressure (`sb`/`sl`/`r8`/`ip` all
   live simultaneously) hitbox-record lookup/commit logic gated on
   `gLevelState+0x78` state values and an unconfirmed per-state
@@ -199,9 +199,9 @@ as of
 
 - `docs/status/actor.md` - `sub_800AB9C`'s `NON_MATCHING` entry added
   next to `sub_800A884`'s own; the stale combined "`sub_800A884`/
-  `sub_800AAEC`/`sub_800AB9C`/`sub_800AC2C`/`sub_800AFF4`" left-raw
+  `sub_800AAEC`/`sub_800AB9C`/`PlayerHandleEvent`/`DrawPlayer`" left-raw
   bullet split into `sub_800AAEC` (its own bullet) and
-  `sub_800AC2C`/`sub_800AFF4` (still combined, both blocked on the
+  `PlayerHandleEvent`/`DrawPlayer` (still combined, both blocked on the
   same class of unexamined state-transition callees).
 - `tools/report_units.py` - `0x0800AAEC` narrowed to just
   `sub_800AAEC`; new `0x0800AB9C` entry pointing at
@@ -257,4 +257,4 @@ function had to be rechecked.
 
 ## Later pass (issue #9/#10 raw-asm pass)
 
-`sub_800AC2C` now matches as real C under old_agbcc in `actor_part111.c` (on `OLD_AGBCC_OBJS`), and `asm/code_3_2_16_ac2c.s` is gone. See [issue-9-raw-asm-pass.md](issue-9-raw-asm-pass.md).
+`PlayerHandleEvent` now matches as real C under old_agbcc in `actor_part111.c` (on `OLD_AGBCC_OBJS`), and `asm/code_3_2_16_ac2c.s` is gone. See [issue-9-raw-asm-pass.md](issue-9-raw-asm-pass.md).

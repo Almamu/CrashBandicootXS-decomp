@@ -39,9 +39,9 @@ extern void *gActorList;
 
 extern u8 sub_802A6EC(void *self);
 extern void UpdateActor(void *self);
-extern void sub_8022FEC(void *self);
+extern void AddBrokenCrate(void *self);
 extern void FreezeLevelClock(void *arg0, s32 arg1);
-extern void sub_8022D50(void *arg0);
+extern void StartTimeTrial(void *arg0);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void sub_802F50C(void *selfArg, s32 delta);
 extern void sub_802F540(void *selfArg, s32 delta);
@@ -221,7 +221,7 @@ void sub_8031B0C(void *selfArg)
 
     after_dispatch:
         if (self->child != NULL) {
-            sub_8022FEC(gLevelState);
+            AddBrokenCrate(gLevelState);
             sub_80318B4(self->child);
             self->child = NULL;
         }
@@ -310,7 +310,7 @@ case_17:
 
 after_dispatch:
     if (self->child != NULL) {
-        sub_8022FEC(gLevelState);
+        AddBrokenCrate(gLevelState);
         sub_80318B4(self->child);
         self->child = NULL;
     }
@@ -345,7 +345,7 @@ void sub_8031D04(void *selfArg)
         PlaySfx(gAudioContext, 3, 0x100);
 
         if (self->child != NULL) {
-            sub_8022FEC(gLevelState);
+            AddBrokenCrate(gLevelState);
             sub_80318B4(self->child);
             self->child = (void *)kind;
         }
@@ -357,9 +357,9 @@ void sub_8031D04(void *selfArg)
 
 /* Proximity-triggered member of the `FreezeLevelClock` half of the type-byte
  * dispatch family (values `0x18`/`0x19`/`0x1a`/`0x1d`); the `0x1d` case
- * plays a different cue and calls `sub_8022D50` instead, and the
+ * plays a different cue and calls `StartTimeTrial` instead, and the
  * trailing flush re-reads the type byte fresh to skip the lap-counter
- * tie (`sub_8022FEC`) specifically for that case. Tail-calls
+ * tie (`AddBrokenCrate`) specifically for that case. Tail-calls
  * `sub_8031A6C`. */
 void sub_8031D7C(void *selfArg)
 {
@@ -422,12 +422,12 @@ void sub_8031D7C(void *selfArg)
 
     case_1d:
         PlaySfx(gAudioContext, 0x18, 0x100);
-        sub_8022D50(gLevelState);
+        StartTimeTrial(gLevelState);
 
     after_dispatch:
         if (self->child != NULL) {
             if (*(u8 *)(*(u8 **)((u8 *)self + 0x30)) != 0x1d) {
-                sub_8022FEC(gLevelState);
+                AddBrokenCrate(gLevelState);
             }
             sub_80318B4(self->child);
             self->child = NULL;
@@ -511,12 +511,12 @@ case_1a:
 
 case_1d:
     PlaySfx(gAudioContext, 0x18, 0x100);
-    sub_8022D50(gLevelState);
+    StartTimeTrial(gLevelState);
 
 after_dispatch:
     if (self->child != NULL) {
         if (*(u8 *)(*(u8 **)((u8 *)self + 0x30)) != 0x1d) {
-            sub_8022FEC(gLevelState);
+            AddBrokenCrate(gLevelState);
         }
         sub_80318B4(self->child);
         self->child = NULL;
@@ -584,7 +584,7 @@ void sub_8031FE8(void *selfArg, s32 delta)
             PlaySfx(gAudioContext, 3, 0x100);
 
             if (self->child != NULL) {
-                sub_8022FEC(gLevelState);
+                AddBrokenCrate(gLevelState);
                 sub_80318B4(self->child);
                 self->child = (void *)zero2;
             }
@@ -647,7 +647,7 @@ void sub_8032138(void *selfArg)
 /* Full reset idiom variant: `self+0x6c`/`0x44`/`0xc`/`8` cleared, state
  * set to 1, anim frame re-synced from `self`'s own part table at `+0`
  * (not `+0xc`, unlike the boss cluster's usual reset block), lap-counter
- * tie (`sub_8022FEC`), `self+0x58` cleared. */
+ * tie (`AddBrokenCrate`), `self+0x58` cleared. */
 void sub_8032140(void *selfArg)
 {
     struct orbit_actor *self = selfArg;
@@ -665,7 +665,7 @@ void sub_8032140(void *selfArg)
         *(u8 *)&self->base.animDone = zero1;
     }
     self->base.animTime = zero;
-    sub_8022FEC(gLevelState);
+    AddBrokenCrate(gLevelState);
     self->child = (void *)zero;
 }
 
@@ -703,7 +703,7 @@ void sub_8032170(void *selfArg, s32 delta)
 
             if (self->child != NULL) {
                 PlaySfx(gAudioContext, 3, 0x100);
-                sub_8022FEC(gLevelState);
+                AddBrokenCrate(gLevelState);
                 sub_80318B4(self->child);
                 self->child = (void *)zero2;
             }
@@ -864,7 +864,7 @@ void sub_8032358(void *selfArg)
         struct actor_vtable *ptable = player->vtable;
 
         _call_via_r2((u8 *)player + ptable->m20.thisOffset, 0x14, ptable->m20.fn);
-        sub_8022FEC(gLevelState);
+        AddBrokenCrate(gLevelState);
         PlaySfx(gAudioContext, 4, 0x100);
         self->base.animIndex = 1;
         {
@@ -915,7 +915,7 @@ void sub_80323F4(void *selfArg, s32 delta)
             *(u8 *)&self->base.animDone = zero1;
         }
         *(s32 *)&self->base.animTime = zero2;
-        sub_8022FEC(gLevelState);
+        AddBrokenCrate(gLevelState);
     }
 }
 

@@ -14,14 +14,14 @@ struct pool_manager {
     struct grid_node *gridHead[256];
 };
 
-struct camera_pos {
+struct bg_scroll_layer {
     s32 x;
     s32 y;
 };
 
-struct viewport {
+struct level_layers {
     u8 unk_00[0x10];
-    struct camera_pos *camera; // 0x10
+    struct bg_scroll_layer *layer0; // 0x10
 };
 
 struct ctrl {
@@ -42,14 +42,14 @@ struct player {
 
 extern void sub_800D040(void *part);
 extern void sub_80109A4(void *part, s32 mode, s32 playerX, s32 playerY);
-extern struct viewport *gLevelLayers;
-extern struct player *gUnknown_030012D8;
+extern struct level_layers *gLevelLayers;
+extern struct player *gPlayer;
 
 /* Another per-frame spatial-hash-grid pass over `manager`, scoped to
  * the same 3-bucket window `[baseIdx, baseIdx+2]` (`baseIdx` computed
  * the same way as `sub_80091D4`'s: `max(gLevelLayers`'s
  * sub-object's own `x >> 8`, `0)`), reading the player
- * (`gUnknown_030012D8`) rather than writing to the grid.
+ * (`gPlayer`) rather than writing to the grid.
  *
  * If the player's `+0x88` byte is `3`: for every windowed node, calls
  * `sub_800D040(part)`.
@@ -66,7 +66,7 @@ extern struct player *gUnknown_030012D8;
  * before the `>> 8`. */
 void sub_8009868(struct pool_manager *m)
 {
-    s32 lo = gLevelLayers->camera->x;
+    s32 lo = gLevelLayers->layer0->x;
     s32 i;
     struct player *p;
     u8 state;
@@ -75,7 +75,7 @@ void sub_8009868(struct pool_manager *m)
     if (lo < 0)
         lo = 0;
     i = lo + 2;
-    p = gUnknown_030012D8;
+    p = gPlayer;
     state = p->state;
     if (state == 3) {
         do {

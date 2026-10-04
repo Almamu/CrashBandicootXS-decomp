@@ -52,7 +52,7 @@ controller `+0x44`.
   from the second's height, mirrors both towards it and derives both
   frames from the horizontal distance (`5 - min(5, |dx|*12 / width)`),
   state 2 waits three ticks, state 3 sinks everything until it passes
-  the level bottom and then signals `sub_80241A4`.
+  the level bottom and then signals `RequestRoomExit`.
 - The "mover" (`sub_8018D70` spawner, `sub_8018E4C` per-frame update,
   `sub_8019094` state setter, `sub_8019214` hit-effect spawner):
   `sub_80196B8` (issue #24's range) stores a target and step count,

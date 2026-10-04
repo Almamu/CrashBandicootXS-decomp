@@ -141,15 +141,15 @@ second pass against those five.
 
 ## Still left raw - 4 functions
 
-- **`sub_800FF0C`** (`asm/code_3_2_17_e560_ff0c.s`) - a large
+- **`CreateCrate`** (`asm/code_3_2_17_e560_ff0c.s`) - a large
   (~660-instruction) projectile/hazard-spawn dispatcher with two big
   jump tables and packed bitfield arguments; still out of scope for a
   single pass.
 - **`sub_80104E4`** (`asm/code_3_2_17_e560_ff0c.s`) - a large
   (~195-instruction) state dispatcher calling several still-raw
   siblings; not attempted.
-- **`sub_8010480`/`sub_8010674`** (`asm/code_3_2_17_e560_ff0c.s`) -
-  both read and their semantics are understood (`sub_8010480`: a
+- **`DrawCrate`/`sub_8010674`** (`asm/code_3_2_17_e560_ff0c.s`) -
+  both read and their semantics are understood (`DrawCrate`: a
   `self+0x4d`-gated reset of `self+0x30`/`self+0x38` via the
   `self+0x20`-pointer-to-manager/`self+0x2d`-tag/0x1c-stride hitbox-
   record convention `sub_800D040` also uses, then a tail call to
@@ -227,9 +227,9 @@ re-triggers `sub_800F990` when `self+0x4d`'s low 7 bits are already 0;
 `sub_800FC70` (the position-wrap advance, `game_loop32.c`). Then, if
 `self+0x4d`'s bit 7 is set and `self+0x38` is nonzero, re-derives
 `self+0x30`'s index via the exact same `self+0x20`-pointer-to-manager/
-`self+0x2d`-tag/0x1c-stride hitbox-record clamp `sub_8010480`
+`self+0x2d`-tag/0x1c-stride hitbox-record clamp `DrawCrate`
 (`game_loop35.c`) uses, clears `self+0x38` and `self+0x4d`'s bit 7, and
-clears the "recently touched" object's (`gUnknown_030012D8`) own
+clears the "recently touched" object's (`gPlayer`) own
 `+0x80` byte - then, depending on `self+0x4e`: state 6 settles to
 state 7, tags `self+0x2d = 0x20`, runs the
 `sub_80087C0`/`sub_80087B4`/`sub_800872C` triplet (the same one
@@ -247,7 +247,7 @@ actor`'s own `0x1c` bytes (consistent with every sibling in this file
 family: offsets kept raw, no named struct).
 
 **Why NAKED, not plain C**: an initial plain-C attempt, following
-`sub_8010480`'s own successful register-pin-per-nested-scope technique
+`DrawCrate`'s own successful register-pin-per-nested-scope technique
 for its near-identical hitbox-record clamp block, matched the function's
 first ~10 instructions exactly (`self+0x4f`'s address computed once
 into r1 and reused for both its nonzero check and decrement store;
@@ -283,7 +283,7 @@ against the ROM's raw bytes, confirmed via a full clean
 `src/system/game_loop50.c` (the next free `game_loopNN` slot in this
 file family; it sits between the still-differently-addressed
 `game_loop35.o` and `game_loop23.o` in ROM order, so - like
-`sub_8010480` before it - it needs its own file rather than joining
+`DrawCrate` before it - it needs its own file rather than joining
 either neighbor).
 
 ## Later pass: issue #12/#13/#25 NAKED retry

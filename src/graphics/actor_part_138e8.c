@@ -13,8 +13,8 @@ extern void *gUnknown_03001304;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern u8 GetDpadDirection(void *pad);
 extern u8 sub_800AAEC(struct act_part *part, s32 action);
-extern u8 sub_80231BC(void *self);
-extern u8 sub_80231C4(void *self);
+extern u8 HasSuperBodySlam(void *self);
+extern u8 HasTurboRun(void *self);
 extern void sub_8015508(struct act *self);
 extern void sub_8015398(struct act *self);
 extern void sub_801434C(struct act *self);
@@ -39,7 +39,7 @@ static inline void ActTrio27(struct act *self, s32 cur, s32 flag, s32 next)
 
 /* Picks the part animation from its state: with tag 6, animation 9 on
  * frame 3 or 8 past it (or once finished); otherwise, once finished, 0x19
- * plus part animation 7 if sub_80231BC allows it, else 0x18. */
+ * plus part animation 7 if HasSuperBodySlam allows it, else 0x18. */
 void sub_80138E8(struct act *self)
 {
     struct act_part *part = self->part;
@@ -55,7 +55,7 @@ void sub_80138E8(struct act *self)
     }
     else if (part->animDone)
     {
-        if (sub_80231BC(gLevelState))
+        if (HasSuperBodySlam(gLevelState))
         {
             ACT_VCALL1(self, m20, 0x19);
             ACT_VCALL2(self, m50, self->part, 7);
@@ -163,7 +163,7 @@ void sub_8013994(struct act *self)
                 switch (dir)
                 {
                 case 3 ... 4:
-                    if ((INPUT_HELD(in) & 0x200) && sub_80231C4(gLevelState))
+                    if ((INPUT_HELD(in) & 0x200) && HasTurboRun(gLevelState))
                     {
                         self->unk_29 = 1;
                         ACT_VCALL1(self, m20, 4);

@@ -30,7 +30,7 @@ was needed.
 | Function | What it took |
 |---|---|
 | `sub_802E170` | A plain `switch` matched on the first try. It uses case 23's `if` plus a fallthrough into cases 20-22 (the ROM's shared tail) and returns each constructor's result. The first pass's worry that the jump table would be hard to reproduce was unfounded. |
-| `sub_802E0CC` | Straight C. The only fix needed was declaring `sub_8023418` as returning `u8`. |
+| `sub_802E0CC` | Straight C. The only fix needed was declaring `IsCrystalSaved` as returning `u8`. |
 | `sub_802E4B8`, `sub_802E5E4`, `sub_802E62C`, `sub_802E674`, `sub_802E6CC` | The `static inline AllocActor(size)` wrapper from `actor_part_2ac28.c`, which gets the ROM's size-before-flags order for `mem_alloc`. The "r8/sb pressure" noted in the first pass was not a real problem. |
 | `sub_802E3CC`, `sub_802E420`, `sub_802E740` | The ROM loads the hit-point constant (1 / 100) into a callee-saved register *before* the `InitActorPart` call. An inline base constructor `InitHpActor(obj, rec, x, y, z, hp)` that takes the value as an argument reproduces this. |
 | `sub_802E538` | The ROM stores the last argument into its stack slot with `add rN, sp, #4; strb`, which is a one-byte struct passed by value. `struct byte_arg { u8 v; } __attribute__((packed))` reproduces it. A promoted `u8` stores with `str`, and an unpacked struct is 4 bytes. |

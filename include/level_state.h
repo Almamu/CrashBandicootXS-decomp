@@ -4,11 +4,11 @@
 /*
  * The level/session state object `gLevelState` points at (0x1CC
  * bytes). Its accessor family is src/system/game_loop2.c
- * (FreezeLevelClock through sub_8023484); game_loop55.c's level loop still carries
+ * (FreezeLevelClock through CheckAllCratesBroken); game_loop55.c's level loop still carries
  * its own copy of the same layout (`struct level_state` there).
  *
  * The first 0x68 bytes are the per-attempt block the frame loop
- * snapshots into `snapE4`/`snap14C` and restores from (game_loop55.c).
+ * snapshots into `checkpointData`/`saveData` and restores from (game_loop55.c).
  */
 
 /* The level's category record (level_state.cat) - one of the medal
@@ -25,56 +25,56 @@ struct level_state_1c8;
 
 struct level_state
 {
-    u8 unk_00[2];                   // 0x000 - packed lives (bits 0-6), wumpa (9-15) and maskLevel (7-8) (sub_80236AC/sub_80236EC)
-    u8 flags;                       // 0x002 - bits 4-7: sub_8023168..sub_80231CC
+    u8 unk_00[2];                   // 0x000 - packed lives (bits 0-6), wumpa (9-15) and maskLevel (7-8) (UnpackSaveData/PackSaveData)
+    u8 flags;                       // 0x002 - bits 0-3: colored gems (CountGems); bits 4-7: powers (HasTurboRun, HasSuperBodySlam, HasTornadoSpin, HasDoubleJump)
     u8 unk_03;
-    u32 levelFlags[0x19];           // 0x004 - one word per level, indexed by `level` (GetLevelFlags)
+    u32 levelFlags[0x19];           // 0x004 - one word per level, indexed by `level` (GetLevelFlags); bit 0 crystal, bits 1-2 clear gems
     s32 unk_68;                     // 0x068
     s32 wumpa;                      // 0x06C - at 100 it wraps and adds a life (CollectWumpa)
-    s32 unk_70;                     // 0x070 - counter; reaching `unk_bc` sets the level's bit 1 (sub_8022FEC)
+    s32 crateCount;                 // 0x070 - crates broken (AddBrokenCrate); reaching `crateTotal` awards the crate gem (levelFlags bit 1)
     s32 lives;                      // 0x074 - 5 at the start (ResetLives), capped at 99
     s32 maskLevel;                  // 0x078 - 0-3; 3 plays the invincibility jingle (SetMaskLevel)
-    s32 unk_7c;                     // 0x07C - free-running counter (sub_80232E0/sub_80232E4)
+    s32 deaths;                     // 0x07C - maskless hits since the last checkpoint (AddDeath, ResetDeaths)
     s32 unk_80;                     // 0x080
-    s32 unk_84;                     // 0x084 - the cap unk_7c is checked against (graphics_loading_1e990.c)
+    s32 maskAssistDeaths;           // 0x084 - deaths after which the start marker hands out a mask (graphics_loading_1e990.c)
     s32 unk_88;                     // 0x088
-    u8 timeTrial;                   // 0x08C - nonzero: no lives lost, the clock runs
+    u8 timeTrial;                   // 0x08C - nonzero: no lives lost, the clock runs (StartTimeTrial)
     u8 unk_8d[3];
     s32 minutes;                    // 0x090 - the time-trial clock (TickLevelClock), capped at 99
     s32 seconds;                    // 0x094
     s32 tenths;                     // 0x098
     s32 frames;                     // 0x09C - 0-5, one tenth every 6 frames
     s32 countdown;                  // 0x0A0 - frames the clock stays frozen (FreezeLevelClock adds seconds * 60)
-    u8 unk_a4;                      // 0x0A4 - status flags, get/clear (and some set) accessors each
-    u8 unk_a5;                      // 0x0A5
-    u8 unk_a6;                      // 0x0A6
-    u8 unk_a7;                      // 0x0A7
-    u8 unk_a8;                      // 0x0A8
-    u8 unk_a9;                      // 0x0A9
+    u8 inBonusRound;                // 0x0A4 - RequestBonusRound (player event 15) .. EndBonusRound
+    u8 bonusRoundDone;              // 0x0A5 - the bonus platform stays inactive
+    u8 inGemPath;                   // 0x0A6 - RequestGemPath (player event 16) .. EndGemPath
+    u8 gemPathDone;                 // 0x0A7 - the gem-path platform stays inactive
+    u8 spawnAtStart;                // 0x0A8 - the player is placed on the room's start marker (ArmStartSpawn)
+    u8 switchPressed;               // 0x0A9 - the switch crate was hit (PressSwitchCrate)
     u8 unk_aa[2];
-    s32 unk_ac;                     // 0x0AC - amount sub_802306C adds to unk_70
-    s32 unk_b0;                     // 0x0B0
-    s32 unk_b4;                     // 0x0B4 - takes unk_ac instead while unk_a4 is set
-    s32 unk_b8;                     // 0x0B8
-    s32 unk_bc;                     // 0x0BC - unk_70's target
+    s32 unk_ac;                     // 0x0AC - amount PressSwitchCrate adds to crateCount
+    s32 savedWumpa;                 // 0x0B0 - saved on bonus-round entry (UpdateGameFrame), restored or added to by EndBonusRound
+    s32 savedCrateCount;            // 0x0B4 - same, also for the gem path; PressSwitchCrate credits it while inBonusRound
+    s32 savedLives;                 // 0x0B8 - same
+    s32 crateTotal;                 // 0x0BC - the level's crate count (CountLevelCrates), crateCount's target
     s32 unk_c0;                     // 0x0C0 - bit mask (sub_802314C/sub_8023158)
     s32 level;                      // 0x0C4 - also the head of the progress record (game_loop18.c's struct level_progress)
     s32 unk_c8;                     // 0x0C8
-    s32 unk_cc;                     // 0x0CC - checkpoint copy of unk_70 (SetCheckpoint/RestoreCheckpoint)
-    u8 unk_d0;                      // 0x0D0 - checkpoint copy of unk_a9
+    s32 checkpointCrateCount;       // 0x0CC - checkpoint copy of crateCount (SetCheckpoint/RestoreCheckpoint)
+    u8 checkpointSwitchPressed;     // 0x0D0 - checkpoint copy of switchPressed
     u8 unk_d1[3];
     s32 checkpointX;                // 0x0D4 - the player's position at the checkpoint
     s32 checkpointY;                // 0x0D8
     struct level_category *cat;     // 0x0DC - level_progress.item
     u8 unk_e0;                      // 0x0E0 - checkpoint flag (SetCheckpoint)
     u8 unk_e1[3];
-    u8 snapE4[0x68];                // 0x0E4 - copies of the first 0x68 bytes
-    u8 snap14C[0x68];               // 0x14C
+    u8 checkpointData[0x68];        // 0x0E4 - the first 0x68 bytes at the last checkpoint (SetCheckpoint/RestoreCheckpoint)
+    u8 saveData[0x68];              // 0x14C - the committed progress: restored before each level, updated when one is won, packed for the save menus (PackSaveData)
     void *savedBitmap;              // 0x1B4
-    s32 unk_1b8;                    // 0x1B8
-    s32 unk_1bc;                    // 0x1BC
-    s32 unk_1c0;                    // 0x1C0 - a point (sub_8023500); its low halves go to sub_801EB04 when unk_70 hits unk_bc
-    s32 unk_1c4;                    // 0x1C4
+    s32 bonusPlatform;              // 0x1B8 - the bonus-round platform object (SetBonusPlatform)
+    s32 gemPlatform;                // 0x1BC - the gem-path platform object (SetGemPlatform)
+    s32 crateGemX;                  // 0x1C0 - where the crate gem appears (SetCrateGemPos); low halves go to sub_801EB04
+    s32 crateGemY;                  // 0x1C4
     struct level_state_1c8 *unk_1c8; // 0x1C8 - sub_8023318
 };
 

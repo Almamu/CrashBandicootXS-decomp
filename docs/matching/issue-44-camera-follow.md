@@ -7,9 +7,9 @@ this pass. The remaining eight functions - the whole of the former
 
 ## What the block is
 
-`gUnknown_030012D4` (the "generic 0x18-byte block"
+`gCamera` (the "generic 0x18-byte block"
 `docs/matching/issue-37-game-loop-2375c.md` saw flushed via
-`sub_8026DFC`) is a camera follower:
+`SnapCamera`) is a camera follower:
 
 | offset | field | meaning |
 |---|---|---|
@@ -37,12 +37,12 @@ level bounds.
   depending on `target+0x28` bit 4 (the mirror flag several actor-side
   write-ups already document at that offset), `vy` is fixed at -0x1000,
   same quarter-step easing.
-- **`sub_8026DFC`** - snap: copies the target position, seeds the mode-1
+- **`SnapCamera`** - snap: copies the target position, seeds the mode-1
   look-ahead at its limit (zero for any other mode), adds it, publishes.
-  Callers: `sub_80241BC` (`game_loop9.c`) and `sub_802375C`'s tail
+  Callers: `ResumeRoomAfterPause` (`game_loop9.c`) and `PlayRoom`'s tail
   (`game_loop56.c`).
-- **`sub_8026E6C`** - the per-frame update: dispatch on `mode`, then
-  publish. Caller: `sub_802400C` (`game_loop8.c`).
+- **`UpdateCamera`** - the per-frame update: dispatch on `mode`, then
+  publish. Caller: `UpdateRoomFrame` (`game_loop8.c`).
 - **`sub_8026EB4`/`sub_8026ED0`** - `mem_free(ptr)` wrappers;
   **`sub_8026EC0`/`sub_8026EDC`** - `mem_alloc(size, MEM_HEAP_EWRAM)`
   wrappers. Two byte-identical pairs, each with its own set of callers.
@@ -73,7 +73,7 @@ and the functions aren't.
   which reused r4 as the destination, or `(tx - cur) / 4 + cur`, which
   swapped the operands) gives the ROM's `adds r0, r4, r0`.
   `sub_8026D8C`'s tail matches as plain `+=` without this.
-- **`sub_8026E6C`'s switch** - the ROM tests `== 2`, then `> 2`, then
+- **`UpdateCamera`'s switch** - the ROM tests `== 2`, then `> 2`, then
   `!= 1`: gcc's balanced decision tree for three or more cases. A plain
   `case 1`/`case 2` switch (in either order), `default:`, a `case 0`, or
   an if-chain all give different shapes; adding an empty `case 3: break;`

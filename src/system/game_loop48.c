@@ -14,16 +14,16 @@
  * NAKED-retry section. */
 
 extern void sub_8009150(struct phys_obj_list *list, struct phys_obj *obj);
-extern struct phys_obj_list *gUnknown_0300130C;
+extern struct phys_obj_list *gCrateList;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void *gAudioContext;
 extern void *gEntitySpawner;
-extern u8 gStaticData_0816BB98[];
+extern u8 gCrateKindCounted[];
 extern u8 gStaticData_0816BBDA[];
 extern u8 gStaticData_0816BBC4[];
 extern u16 rand(void);
-extern void sub_8022FEC(void *self);
-extern void sub_8022CA0(void *self, u8 arg1);
+extern void AddBrokenCrate(void *self);
+extern void SetCheckpointAtPlayer(void *self, u8 arg1);
 extern void FreezeLevelClock(void *arg, s32 n);
 extern void sub_80259D4(void *self, s32 n);
 extern s32 sub_802599C(void *self, s32 n);
@@ -32,7 +32,7 @@ extern struct phys_obj *sub_801070C(struct phys_obj *obj);
 extern void sub_801085C(struct phys_obj *self);
 extern void sub_801089C(struct phys_obj *self, u32 arg1);
 extern void sub_800E7A8(struct phys_obj *self, u32 arg1, u32 arg2, u32 arg3);
-extern void sub_800E888(struct phys_obj *self, u32 arg1);
+extern void BreakCrate(struct phys_obj *self, u32 arg1);
 extern void sub_800EAFC(struct phys_obj *self, u32 arg1);
 extern void sub_800ED08(struct phys_obj *self, u32 arg1);
 extern void sub_800EDBC(struct phys_obj *self);
@@ -111,7 +111,7 @@ static inline void PhysArgByte(u8 *p, u8 v)
  * each call; once it passes 4, calls `sub_800E7A8(self, 0, 0, 0)`
  * (the "give up, hand off" case). Otherwise (still under the retry
  * cap), sets `self+0x4d` bit `0x80`, marks
- * `gUnknown_030012D8+0x80 = 1`, arms a fresh `+0x4f = 6` sub-timer,
+ * `gPlayer+0x80 = 1`, arms a fresh `+0x4f = 6` sub-timer,
  * and spawns a pair of particle effects (`sub_8025CA4`, effect kind
  * `0xe`) at `self`'s position, offset `-6`/`+3` pixels on Y/X. Once
  * the `+0x48` countdown itself expires (`<= 0`), calls
@@ -234,7 +234,7 @@ void sub_800E620(void *selfArg)
                 : "r1", "cc", "memory"
             );
         }
-        sub_8009150(gUnknown_0300130C, (struct phys_obj *)self);
+        sub_8009150(gCrateList, (struct phys_obj *)self);
 
         {
             register u8 **p2 asm("r0") = *(u8 ***)(self + 0x20);
@@ -267,7 +267,7 @@ void sub_800E620(void *selfArg)
      * regardless of source statement order), and materializes the
      * `~0xf` clear-mask at runtime (`movs r1,#0x10; rsbs r1,r1,#0`,
      * the negative-constant register-pinned mask idiom - see
-     * matching_decomp_register_pinning and sub_8010480's own use of
+     * matching_decomp_register_pinning and DrawCrate's own use of
      * it, game_loop35.c) rather than folding it into an 8-bit AND
      * immediate, ORing into the mask register (not the freshly-
      * extracted low-nibble register) before storing - transcribed as
@@ -307,8 +307,8 @@ void sub_800E620(void *selfArg)
  * `+0x2d = 0x1b`, rebuilds its own hitbox record, plays SFX `0x17`,
  * notifies `sub_80259D4` unless `self`'s `+8` id field is the
  * sentinel `0xffff`, conditionally reactivates the viewport
- * (`sub_8022FEC`, gated on `gStaticData_0816BB98[self+0x4e]`), and
- * ends by telling `sub_8022CA0` whether `self`'s `+0x50` byte is
+ * (`AddBrokenCrate`, gated on `gCrateKindCounted[self+0x4e]`), and
+ * ends by telling `SetCheckpointAtPlayer` whether `self`'s `+0x50` byte is
  * nonzero before resetting `self`'s own `+0x4d` state byte to `1`. */
 static inline void PuffSetMotion(struct phys_puff *puff, s32 vel, s32 ax, s32 ay)
 {
@@ -340,9 +340,9 @@ void sub_800E6B0(struct phys_obj *self)
         if (id != 0xffff)
             sub_80259D4(gEntityFlags, id);
     }
-    if (gStaticData_0816BB98[self->kind])
-        sub_8022FEC(gLevelState);
-    sub_8022CA0(gLevelState, self->unk_50 != 0);
+    if (gCrateKindCounted[self->kind])
+        AddBrokenCrate(gLevelState);
+    SetCheckpointAtPlayer(gLevelState, self->unk_50 != 0);
     self->state &= 0x7f;
     PHYS_PLAYER->busy = 0;
     one = 1;
@@ -351,7 +351,7 @@ void sub_800E6B0(struct phys_obj *self)
 
 /* Case-3 handler both `sub_0800D18C`'s and `sub_800E08C`'s per-edge
  * jump tables select (see docs/matching/issue-12-physics-collision.md's
- * dispatch map): counts `self` into `gUnknown_030012D8+0x91`'s
+ * dispatch map): counts `self` into `gPlayer+0x91`'s
  * "objects handled this frame" tally (saturating at a nonzero value -
  * only the very first caller of the frame actually increments it,
  * gated on `arg2`), then walks `self`'s "get prev" (`arg3 == 4`) or
@@ -360,7 +360,7 @@ void sub_800E6B0(struct phys_obj *self)
  * that isn't (or the last reachable node if the whole chain is state
  * `1`). Neither `arg3` value falls back to `self` itself as the
  * target. Finally, unless `gStaticData_0816BBDA[target+0x4e]` is
- * nonzero, dispatches to `sub_800E888(target, arg1)` - the shared
+ * nonzero, dispatches to `BreakCrate(target, arg1)` - the shared
  * tail every one of this handler's paths converges on.
  *
  * The walk is written as the ROM's goto loops: the natural `for`
@@ -407,10 +407,10 @@ next:
     goto next;
 found:
     if (gStaticData_0816BBDA[q->kind] == 0)
-        sub_800E888(q, flag);
+        BreakCrate(q, flag);
     return;
 other:
-    sub_800E888(self, flag);
+    BreakCrate(self, flag);
 }
 
 /* `sub_800E7A8`'s (and, transitively, both of the subsystem's
@@ -420,13 +420,13 @@ other:
  * outs when `self+0x4d & 0x7f == 1` (already fully handled this
  * frame). Otherwise: registers `self` with the object-pool grid,
  * resets its `+0x4d` state byte to `0x81` and clears
- * `gUnknown_030012D8+0x80`, switches `self` into hitbox tag `0x1d`
+ * `gPlayer+0x80`, switches `self` into hitbox tag `0x1d`
  * and rebuilds its hitbox record, re-derives its `+0x29` low-nibble
  * sub-animation value (same `sub_8006DF8` tile-asset-cache lookup
  * `sub_800E620` uses) and clamps `self+0x30`'s index to the newly
  * selected hitbox record's own `+0x16` count, conditionally
- * reactivates the viewport (`sub_8022FEC`, gated on
- * `gStaticData_0816BB98[self+0x4e]`), flips one bit of
+ * reactivates the viewport (`AddBrokenCrate`, gated on
+ * `gCrateKindCounted[self+0x4e]`), flips one bit of
  * `gEntityFlags`'s bit-grid keyed by `self+8`, calls
  * `sub_800EDBC` (neighbor "impact spread" propagation), then
  * dispatches a 23-case jump table on `self`'s freshly-cached
@@ -444,7 +444,7 @@ other:
  * with the `busy` store), the constant 1 of the state store is a local
  * `one` that the bitmap shift reuses (the ROM's r8), and the switch
  * cases are in the ROM's block order with an explicit empty case 22. */
-void sub_800E888(struct phys_obj *self, u32 arg1)
+void BreakCrate(struct phys_obj *self, u32 arg1)
 {
     s32 argP4;
     u32 argP5;
@@ -458,7 +458,7 @@ void sub_800E888(struct phys_obj *self, u32 arg1)
     if (sub_801070C(self) != NULL && flag == 0)
         chained = 1;
     PHYS_FLAG4(self) = 1;
-    sub_8009150(gUnknown_0300130C, self);
+    sub_8009150(gCrateList, self);
     self->state &= 0x7f;
     PHYS_PLAYER->busy = 0;
     one = 1;
@@ -471,8 +471,8 @@ void sub_800E888(struct phys_obj *self, u32 arg1)
         self->slot = sub_8006DF8(gUnknown_030012B8, rec->unk_14);
     }
     PhysSetFrame(self, 3);
-    if (gStaticData_0816BB98[self->kind])
-        sub_8022FEC(gLevelState);
+    if (gCrateKindCounted[self->kind])
+        AddBrokenCrate(gLevelState);
     {
         s32 id = self->id;
         u8 *base = gEntityFlags;
@@ -539,7 +539,7 @@ void sub_800E888(struct phys_obj *self, u32 arg1)
     }
 }
 
-/* Case-11 handler of `sub_800E888`'s own 23-case jump table (dispatch
+/* Case-11 handler of `BreakCrate`'s own 23-case jump table (dispatch
  * id `0xb`) - see docs/matching/issue-12-physics-collision.md's
  * dispatch map. Plays SFX 3, then (the first time `self`'s `+0x51`
  * retry counter is exactly `9`) rolls a random "escalation level"
@@ -611,7 +611,7 @@ void sub_800EAFC(struct phys_obj *self, u32 arg1)
         break;
     case 7:
         {
-            struct gobj *p = gUnknown_030012D8;
+            struct gobj *p = gPlayer;
 
             if (p->flags >> 7) {
                 PhysCall3(p, &p->vtable->m68, 0, 0x1a, 0);
@@ -636,7 +636,7 @@ void sub_800EAFC(struct phys_obj *self, u32 arg1)
     }
 }
 
-/* Case-15 handler of `sub_800E888`'s own 23-case jump table (dispatch
+/* Case-15 handler of `BreakCrate`'s own 23-case jump table (dispatch
  * id `0xf`) - see docs/matching/issue-12-physics-collision.md's
  * dispatch map. Plays SFX 3, then switches on `self+0x48 & 7`: `1`
  * plays SFX 3 again, notifies `sub_80259D4` unless `self`'s `+8` id
@@ -688,7 +688,7 @@ void sub_800ED08(struct phys_obj *self, u32 arg1)
 }
 
 /* Neighbor "impact spread" propagation, called once from
- * `sub_800E888`'s own body (not through either jump table) - see
+ * `BreakCrate`'s own body (not through either jump table) - see
  * docs/matching/issue-12-physics-collision.md's dispatch map. Derives
  * a base spread budget from `self`'s hitbox record's own `+9` byte
  * (`+1`, scaled by 256), then walks `self`'s "get next" neighbor
@@ -758,7 +758,7 @@ void sub_800EDBC(struct phys_obj *self)
             n->unk_4C = t + d;
         }
         n->flags |= 0x10;
-        sub_8009150(gUnknown_0300130C, n);
+        sub_8009150(gCrateList, n);
         if (tbl[n->kind] && self->u48.n == 0 && n->unk_44 > 0x1600)
         {
             struct phys_obj *next = sub_801070C(n);

@@ -25,7 +25,7 @@ const u32 gStaticData_0816BB74[4][2] = {
     { 37, 38 },
 };
 
-/* Timer values per direction, sub_800FF0C (game_loop36.c) and
+/* Timer values per direction, CreateCrate (game_loop36.c) and
  * sub_800F990 (game_loop49.c). */
 const u8 gStaticData_0816BB94[4] = {
     40, 30, 20, 10,
@@ -33,7 +33,7 @@ const u8 gStaticData_0816BB94[4] = {
 
 /* Per-object-kind flags of the collision system (22 kinds), read by
  * game_loop6.c, game_loop25.c, game_loop32.c and game_loop47-49.c. */
-const u8 gStaticData_0816BB98[22] = {
+const u8 gCrateKindCounted[22] = {
     1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 };
 const u8 gStaticData_0816BBAE[22] = {

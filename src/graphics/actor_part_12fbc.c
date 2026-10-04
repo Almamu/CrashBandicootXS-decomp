@@ -21,7 +21,7 @@ struct spawned
 extern u32 gKeys;
 extern void *gAudioContext;
 extern void *gLevelState;
-extern u8 *gUnknown_030012D8;
+extern u8 *gPlayer;
 extern void *gEntitySpawner;
 extern void *gUnknown_03001304;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
@@ -32,7 +32,7 @@ extern void sub_800B334(struct act_part *part);
 extern void sub_8015398(struct act *self);
 extern void sub_8015460(struct act *self);
 extern void sub_8015780(struct act *self, s32 a, s32 b, s32 c, s32 d);
-extern u8 sub_80231C4(void *self);
+extern u8 HasTurboRun(void *self);
 extern struct spawned *sub_8025B0C(void *pool, s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
 
 /* Stores to the two "next action" trios. As inline parameters, old_agbcc
@@ -101,7 +101,7 @@ static inline void ActSetContact(struct act_part *p, s32 v)
  * bit 8 plays animations 0xC/0xF, queues 0x1E, clears the player's +0x94
  * and spawns a 0x29 object from gEntitySpawner. Then the D-pad: 0 goes
  * through sub_8015780 and queues 0x1D by hand, 2/7/8 play animations
- * 0x10/3 and queue 0x1D. Held bit 9 in state 3 (and sub_80231C4) plays
+ * 0x10/3 and queue 0x1D. Held bit 9 in state 3 (and HasTurboRun) plays
  * 4/0x18 and queues 0x1B; without it, state 4 hands off to sub_8015460.
  *
  * The method calls use ACT_CALL (include/action_obj.h): with the
@@ -146,9 +146,9 @@ void sub_8012FBC(struct act *self)
             self->frame = alt;
             self->frames = frames;
             ActQueue27(self, alt, 0x1E);
-            gUnknown_030012D8[0x94] = alt;
-            gUnknown_030012D8[0x94] = alt;
-            obj = sub_8025B0C(gEntitySpawner, 0x29, 1, 0, 0xA, alt, gUnknown_030012D8);
+            gPlayer[0x94] = alt;
+            gPlayer[0x94] = alt;
+            obj = sub_8025B0C(gEntitySpawner, 0x29, 1, 0, 0xA, alt, gPlayer);
             obj->unk_0C_2 = 0;
             obj->unk_28_0 = 1;
         }
@@ -183,7 +183,7 @@ void sub_8012FBC(struct act *self)
 
         if (held)
         {
-            if (self->state == 3 && sub_80231C4(gLevelState))
+            if (self->state == 3 && HasTurboRun(gLevelState))
             {
                 s32 zero;
 
@@ -260,7 +260,7 @@ void sub_8013228(struct act *self)
             self->unk_22 = busy;
             self->unk_23 = busy;
             self->unk_24[0] = busy;
-            gUnknown_030012D8[0x92] = busy;
+            gPlayer[0x92] = busy;
             return;
         }
     }
@@ -313,7 +313,7 @@ void sub_8013228(struct act *self)
     }
     if (GetDpadDirection(gUnknown_03001304) <= 2)
     {
-        if (gUnknown_030012D8[0x100] == 0)
+        if (gPlayer[0x100] == 0)
         {
             self->next31 = 0;
             self->flag2F = 1;
@@ -333,7 +333,7 @@ void sub_8013228(struct act *self)
             if (*slot != 0xD)
                 ActSetNext27P(self, slot, 0xD);
         }
-        else if (gUnknown_030012D8[0x100] == 0)
+        else if (gPlayer[0x100] == 0)
         {
             ActSetNext27P(self, slot, 7);
         }

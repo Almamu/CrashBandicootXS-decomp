@@ -16,7 +16,7 @@ extern void *gAudioContext;
 extern void *gLevelState;
 extern void *MemCopy32(void *dst, const void *src, u32 byteCount);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern void sub_8022FEC(void *self);
+extern void AddBrokenCrate(void *self);
 
 /* The actor_part103.c AABB helpers: the three scratch boxes live in
  * one frame struct so each box address is rematerialized from `sp`
@@ -85,7 +85,7 @@ static inline u8 ActorsOverlap(struct actor_self *pl, struct actor_self *self)
  * `+0x20`/`+0x24` `>>8` position, exactly like `sub_802D7B0`/
  * `sub_802DD9C`'s player-overlap test) - a proximity "chain pickup"
  * that fires the shared used-state transition (sound cue `PlaySfx(...,
- * 4, 0x100)`, lap-counter tie `sub_8022FEC`, `+0x44`/`+0x12`/`+8`
+ * 4, 0x100)`, lap-counter tie `AddBrokenCrate`, `+0x44`/`+0x12`/`+8`
  * cleared, `+0xc = 0x12`, anim base reloaded from the node's own part
  * table `+0xd8`) on every type-4 node found overlapping, skipping
  * `self` itself and any node already in the used state. Every box's
@@ -105,7 +105,7 @@ void sub_802C7A8(struct actor_self *self)
         if (ACTOR_TYPE(n) == 4 && n != self && ActorsOverlap(self, n)
             && n->animIndex != 0x12) {
             PlaySfx(gAudioContext, 4, 0x100);
-            sub_8022FEC(gLevelState);
+            AddBrokenCrate(gLevelState);
             n->stateTime = 0;
             n->animIndex = 0x12;
             n->animTimer = n->anims[0x12].duration;

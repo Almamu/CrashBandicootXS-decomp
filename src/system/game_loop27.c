@@ -7,8 +7,8 @@
  * this function is already matched in game_loop26.c; everything here
  * operates on the same `self` type `sub_8010A00`/`sub_800FEB0` do - the
  * viewport's own "collision box" sub-record embedded at
- * `gUnknown_030012D8+0x108` (confirmed by `sub_80106DC` in
- * game_loop23.c, which already calls `sub_8010B6C(gUnknown_030012D8 +
+ * `gPlayer+0x108` (confirmed by `sub_80106DC` in
+ * game_loop23.c, which already calls `sub_8010B6C(gPlayer +
  * 0x108)`). Its fields are `struct phys_obj`'s (include/phys_obj.h). */
 
 
@@ -168,7 +168,7 @@ u32 sub_8010AF8(void *selfArg)
 }
 
 /* Sets `self+0x4d` bit 7 and the global "hit" latch
- * `gUnknown_030012D8+0x80`. */
+ * `gPlayer+0x80`. */
 void sub_8010B0C(void *selfArg)
 {
     u8 *p = &((struct phys_obj *)selfArg)->state;
@@ -177,14 +177,14 @@ void sub_8010B0C(void *selfArg)
     u8 *g;
     u32 one;
     *p = v;
-    g = (u8 *)gUnknown_030012D8;
+    g = (u8 *)gPlayer;
     one = 1;
     g = g + 0x80;
     *g = one;
 }
 
 /* Clears `self+0x4d` bit 7 and the global "hit" latch
- * `gUnknown_030012D8+0x80`. */
+ * `gPlayer+0x80`. */
 void sub_8010B28(void *selfArg)
 {
     u8 *p = &((struct phys_obj *)selfArg)->state;
@@ -192,7 +192,7 @@ void sub_8010B28(void *selfArg)
     u8 v = mask & *p;
     u32 zero = 0;
     *p = v;
-    *((u8 *)gUnknown_030012D8 + 0x80) = zero;
+    *((u8 *)gPlayer + 0x80) = zero;
 }
 
 void sub_8010B44(void *selfArg, u8 val)

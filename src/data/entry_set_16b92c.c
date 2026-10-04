@@ -19,7 +19,7 @@ struct entry_set
 extern const u32 gStaticData_0816B514[][2];
 extern const u32 gStaticData_0816B790[][2];
 
-/* The sets sub_802375C (game_loop39.c) gives the two HUD widgets it
+/* The sets PlayRoom (game_loop39.c) gives the two HUD widgets it
  * builds, through sub_800B69C (which stores them at +0x04). */
 const struct entry_set gStaticData_0816B92C = {
     gStaticData_0816B514, 0x100,

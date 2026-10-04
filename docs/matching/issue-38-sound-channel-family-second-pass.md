@@ -85,7 +85,7 @@ one:
    `register T x asm("r7")` never adds an inline-asm-clobbered - or even
    a genuinely written-and-read - r7 to the function's own push/pop list.
    This is the same confirmed, extensively-precedented toolchain gap
-   documented at length for `sub_8022D50` (`src/system/game_loop40.c`)
+   documented at length for `StartTimeTrial` (`src/system/game_loop40.c`)
    and `LoadGraphicsPackage` (`src/graphics/graphics_package_1e578.c`,
    itself still `NON_MATCHING` for exactly this reason despite a fully
    pinned `register u16 *src asm("r7")` used throughout the function) -
@@ -113,7 +113,7 @@ that used to flank the matched middle (`asm/code_3_2_17_24590.s`,
 `tools/report_units.py` updated to match - the same "widen the unit,
 delete the orphaned raw `.s`" pattern this project already uses whenever
 a flanking parked function gets fully matched or NAKED-transcribed (see
-e.g. the `sub_8024344` entry, issue-38-sound-channel-family.md).
+e.g. the `LevelHasEntityType` entry, issue-38-sound-channel-family.md).
 
 See [docs/status/game_loop.md](../status/game_loop.md) for the running
 matched/parked/raw lists this updates.

@@ -102,7 +102,7 @@ union level_record
     struct level_save_b b;
 };
 
-/* The save block sub_80236EC returns, as far as the menu reads it. */
+/* The save block PackSaveData returns, as far as the menu reads it. */
 struct menu_save
 {
     u8 unk_00[2];
@@ -231,10 +231,10 @@ struct icon_bg
 
 COMPILE_TIME_ASSERT(sizeof(struct icon_bg) == 0x8C);
 
-/* The level-select screen object (0xAC bytes, sub_801BC28). */
+/* The level-select screen object (0xAC bytes, InitLevelSelect). */
 struct level_menu
 {
-    u8 result;                  // 0x00 - returned by sub_801BAF0
+    u8 result;                  // 0x00 - returned by RunLevelSelect
     u8 unk_01[3];
     s32 lastIndex;              // 0x04 - last valid `index` on this page
     s32 index;                  // 0x08 - cursor, 0-5
@@ -258,7 +258,7 @@ struct level_menu
     s32 unk_90;                 // 0x90
     s32 unk_94;                 // 0x94
     s32 rank;                   // 0x98
-    struct menu_save *save;     // 0x9C - sub_80236EC's save block
+    struct menu_save *save;     // 0x9C - PackSaveData's save block
     union blend blend;          // 0xA0 - REG_BLDCNT + REG_BLDALPHA
     struct bldy bldy;           // 0xA4 - REG_BLDY
     union dispcnt dispcnt;      // 0xA8 - REG_DISPCNT

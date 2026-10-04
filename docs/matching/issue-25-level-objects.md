@@ -49,7 +49,7 @@ r1/r2/r3/r4" thunks), like issue #21's `input_ctrl`.
   `sub_80233B4(gLevelState) == 1`). Callers: `trigger_effect.c`,
   `graphics_loading_21280.c`, `graphics_loading_21668.c`.
   - `sub_801AB34` (+0x0C) gates `sub_801AB98` on the player
-    (`gUnknown_030012D8`) being active and within 0x7FFF on both axes.
+    (`gPlayer`) being active and within 0x7FFF on both axes.
   - `sub_801AB98` resolves player-vs-object contact: two AABBs from
     `sub_8007B98`, overlap via `sub_8001688`, then a classification into
     push-left/right (1/2), land-on-top (8) or hit-from-below (4) using the
@@ -58,7 +58,7 @@ r1/r2/r3/r4" thunks), like issue #21's `input_ctrl`.
     sets `carried` (+0xAC) / `+0x68 = 8` when landing, and fires the
     player's method +0x68 (`_call_via_r4`) with event 0x0C/0x0F/0x10/0x11
     depending on the object type (the 3/4 variants gated on
-    `sub_80232A0`/`sub_8023278` and `gLevelState+0x8C`). Without
+    `IsBonusRoundDone`/`IsGemPathDone` and `gLevelState+0x8C`). Without
     overlap it only refreshes `carried` or clears the mover's `active`.
   - `sub_801B208` (+0x1C) steps or destroys the object and forwards to its
     mover; `sub_801B29C`/`sub_801B2A8` read/write bit 4 of +0x0D

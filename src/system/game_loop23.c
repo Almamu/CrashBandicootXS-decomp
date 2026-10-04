@@ -164,20 +164,20 @@ u32 sub_8010674(void *selfArg, struct aabb *boxArg)
  * docs/matching.md's alignment-padding gotcha). */
 asm(".align 2, 0");
 
-extern void *gUnknown_030012D8;
+extern void *gPlayer;
 extern void sub_8010B6C(void *arg);
 
 /* Refreshes the viewport's own collision box (`sub_8010B6C` on
- * `gUnknown_030012D8+0x108`), then increments its `+0x92` counter by
+ * `gPlayer+0x108`), then increments its `+0x92` counter by
  * one as long as it isn't already zero (a saturating-at-zero
  * "recently hit" style counter, never incremented back up from 0). */
 void sub_80106DC(void)
 {
-    u8 *p = (u8 *)gUnknown_030012D8;
+    u8 *p = (u8 *)gPlayer;
     u8 *p2;
 
     sub_8010B6C(p + 0x108);
-    p2 = (u8 *)gUnknown_030012D8 + 0x92;
+    p2 = (u8 *)gPlayer + 0x92;
     if (*p2 != 0) {
         *p2 = *p2 + 1;
     }

@@ -10,10 +10,10 @@
  * `sub_800C5D4` already key off (docs/rom_map.md's "generic state-
  * machine selector" family, now 8+ confirmed sites).
  *
- * Prelude: `__modsi3(gUnknown_0300082C + self->0x48 - self->0x4c,
+ * Prelude: `__modsi3(gRoomFrameCount + self->0x48 - self->0x4c,
  * self->0x48)` - the same "close enough" scalar-check primitive used
  * throughout this cluster, here against the still-unexplained global
- * `gUnknown_0300082C` read as a plain word (not the table-base-pointer
+ * `gRoomFrameCount` read as a plain word (not the table-base-pointer
  * role `sub_800C40C` uses it in - `docs/rom_map.md` already flags this
  * global as multi-shaped across its 3 confirmed sites). When the check
  * passes (result `0`), `self->0x68 == 0`/`4` trigger
@@ -39,13 +39,13 @@
  * docs/matching.md): pinning `self` to `asm("r4")` (gcc's unforced
  * allocator otherwise duplicates `self` into a spare `r5` purely to
  * re-read `self->0x68` a second time, pushing/popping a register the
- * ROM never touches), and hoisting the `gUnknown_0300082C` read into
+ * ROM never touches), and hoisting the `gRoomFrameCount` read into
  * its own statement ahead of `self->0x48`'s (two independent loads
  * gcc's scheduler otherwise reorders relative to the ROM). Confirmed
  * byte-identical to `baserom.gba`'s own raw bytes at
  * `0x0800BFA8`-`0x0800C074` via the isolated cpp/agbcc/as +
  * objcopy/cmp pipeline (only `bl` relocation sites and the
- * `gUnknown_0300082C` literal-pool word differ, both of which resolve
+ * `gRoomFrameCount` literal-pool word differ, both of which resolve
  * correctly once linked) plus a full clean `rm -rf build && make
  * NON_MATCHING=1 report` (no warnings) and `rm -rf build
  * crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map &&
@@ -76,7 +76,7 @@ void sub_800BFA8(void *selfArg)
     register struct trigger_ctrl *self asm("r4") = selfArg;
     struct gobj *owner;
     u8 *record;
-    s32 base = (s32)gUnknown_0300082C;
+    s32 base = (s32)gRoomFrameCount;
     s32 period = self->period;
     s32 divCheck = __modsi3(base + period - self->phase, period);
 

@@ -91,7 +91,7 @@ original `asm/code_3_2_17_14674.s` is truncated to end right before
   `self+0x2c`/`0x2b`; if the new value isn't 0xd/0xe, also clears
   `part+0x90` and the player's `+0x92`/`+0x94` (written twice - the ROM
   really does re-derive the player pointer and store the same byte a
-  second time, via `*(u8 * volatile *)&gUnknown_030012D8` at each of
+  second time, via `*(u8 * volatile *)&gPlayer` at each of
   the three sites to stop the redundant derefs being merged). Needed
   the `self[0x33] = 0;` store moved *before* the `self+8` read (source
   order alone wasn't followed by the compiler's own statement-order
@@ -140,7 +140,7 @@ original `asm/code_3_2_17_14674.s` is truncated to end right before
   materializes (opposite of the natural declaration order) to match
   the ROM's `adds r1,r5,#0x26` / `movs r4,#0` / `strb` sequence.
 - **`sub_8015690`**: `part+0x38`-gated; sets the player's `+0xc` bit
-  0x80 and tail-calls `sub_80241A4`. Needed
+  0x80 and tail-calls `RequestRoomExit`. Needed
   `register u8 *player asm("r1")`/`register s32 bit asm("r0")`/
   `register u8 old asm("r2")` pins for the `orrs`/`strb` pair, same
   reason as `sub_80151C8`'s trailing `part[0xd] |= 1`.

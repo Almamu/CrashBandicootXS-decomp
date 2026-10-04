@@ -3,7 +3,7 @@
 /* GitHub issue #9: 0x08007634-0x0800B3F0, game_loop-labeled chunk that
  * turned out to be part of the `actor` category's "part" object family
  * (see docs/matching/issue-9-0x08007634-actor.md). `sub_800B270` sits
- * right after the still-raw `sub_800AFF4`, at the end of that raw span. */
+ * right after the still-raw `DrawPlayer`, at the end of that raw span. */
 
 /* Per-frame velocity integrator: moves `self+0x60`/`self+0x64` (current
  * X/Y velocity) toward `self+0x50`/`self+0x5c` (target X/Y velocity) by

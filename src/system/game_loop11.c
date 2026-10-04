@@ -1,21 +1,21 @@
 #include "core.h"
 
 extern void *sub_8026EDC(s32 size);
-extern void *sub_8022230(void *arg0);
+extern void *InitLevelState(void *arg0);
 
-/* Lazily allocates `gUnknown_03000828` (0x1cc bytes) through
- * `sub_8022230` the first time it's needed, then returns it. Its own
- * file: ROM-adjacent to `sub_802375C` (now matched, `game_loop39.c`)
- * and the still-raw `sub_8023A1C` on both sides
- * (asm/code_3_2_17_236ec.s before it, `sub_802375C`/
+/* Lazily allocates `gLevelStateSingleton` (0x1cc bytes) through
+ * `InitLevelState` the first time it's needed, then returns it. Its own
+ * file: ROM-adjacent to `PlayRoom` (now matched, `game_loop39.c`)
+ * and the still-raw `RunRoom` on both sides
+ * (asm/code_3_2_17_236ec.s before it, `PlayRoom`/
  * asm/code_3_2_17_23a1c.s after), so it can't share an object file
  * with either matched neighbor without splitting the ROM-contiguous
  * layout. */
-extern void *gUnknown_03000828;
+extern void *gLevelStateSingleton;
 void *GetLevelState(void)
 {
-    if (gUnknown_03000828 == NULL) {
-        gUnknown_03000828 = sub_8022230(sub_8026EDC(0x1cc));
+    if (gLevelStateSingleton == NULL) {
+        gLevelStateSingleton = InitLevelState(sub_8026EDC(0x1cc));
     }
-    return gUnknown_03000828;
+    return gLevelStateSingleton;
 }

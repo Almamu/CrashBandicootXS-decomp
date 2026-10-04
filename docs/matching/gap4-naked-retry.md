@@ -7,7 +7,7 @@ This pass took the four drafts that the mix-6 pass
 |---|---|---|---|
 | sub_801173C (#15) | `src/system/game_loop53.c` | 95 hw, 312 vs 308 B | **Closed**, real C, old_agbcc (the file already builds with it). |
 | sub_801AB98 (#25) | `src/graphics/actor_part_1ab98.c` | 644 hw, 1608 vs 1648 B | Not closed. The draft is now 1640 B. What's left is register copies and reload phase. |
-| sub_800FF0C (#13) | `src/system/game_loop36.c` | 508 hw, 1416 vs 1396 B | Not closed. The type/slot*2 swap is fixed and the draft is 1388 B. Placement-record pointer copies are still missing. |
+| CreateCrate (#13) | `src/system/game_loop36.c` | 508 hw, 1416 vs 1396 B | Not closed. The type/slot*2 swap is fixed and the draft is 1388 B. Placement-record pointer copies are still missing. |
 | sub_801A114 (#24) | `src/graphics/actor_part_1967c.c` | 159 hw, 392 vs 404 B | Not closed. Only the note changed. |
 
 ## sub_801173C
@@ -58,7 +58,7 @@ arguments. The ROM also keeps `&b` in r4 into the no-collision switch.
 A `pb = &b` local keeps it live through the whole function and is much
 worse.
 
-## sub_800FF0C (1416 to 1388 bytes)
+## CreateCrate (1416 to 1388 bytes)
 
 - **type/slot*2 swap.** Three `asm("" : : "r"(type))` references fix
   it: type goes to r7 and slot*2 to r8. One or two references are not

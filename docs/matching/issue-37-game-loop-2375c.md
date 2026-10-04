@@ -1,25 +1,25 @@
-# Issue #37 follow-up: `sub_802375C` matched, `sub_8023A1C` still raw
+# Issue #37 follow-up: `PlayRoom` matched, `RunRoom` still raw
 
 [docs/matching/issue-37-game-loop-234e8.md](issue-37-game-loop-234e8.md)
 left this pair (`asm/code_3_2_17_2375c.s`, ROM `0x0802375C`-`0x08024007`)
 completely untouched as "not yet confidently understood branch-by-branch."
 This pass picks the smaller of the two back up.
 
-## `sub_802375C` - matched (`src/system/game_loop39.c`)
+## `PlayRoom` - matched (`src/system/game_loop39.c`)
 
 A level-start dispatcher, called once from `UpdateGameFrame` when the
 level object's own `+0xdc->+8` state field is `2`
 (`asm/code_3_2_17_225a0.s`). It:
 
-1. Fires two no-argument setup calls (`CreateEntitySpawner`, `sub_8024198`).
+1. Fires two no-argument setup calls (`CreateEntitySpawner`, `ClearRoomExit`).
 2. Allocates the whole per-level widget set: five `dual_array_manager`s
    (`gUnknown_030012E8`/`EC`/`F0`/`F8`/`F4`, the same struct
    `actor_part11.c`'s `sub_8008EE4` already returns) and one
-   `pool_manager` (`gUnknown_0300130C`, `sub_8008F20`'s own type from
-   `actor_part12.c`), a generic 0x18-byte block (`gUnknown_030012D4`),
+   `pool_manager` (`gCrateList`, `sub_8008F20`'s own type from
+   `actor_part12.c`), a generic 0x18-byte block (`gCamera`),
    the text-box singleton (`gLevelLayers`, lazily built by the
    still-raw `GetLevelLayers`), and the player actor itself
-   (`gUnknown_030012D8`, a 0x350-byte block handed to `sub_800B3F0`
+   (`gPlayer`, a 0x350-byte block handed to `InitPlayer`
    - the same constructor `actor_part77.c` already matched, called here
    with a genuine 5th stack argument the matched 4-parameter signature
    there simply never touches).
@@ -36,14 +36,14 @@ level object's own `+0xdc->+8` state field is `2`
    the standard `sub_80087C0`/`sub_80087B4`/`sub_800872C` trio. All
    three cases finish by pointing `player+0x20`/`0x44` at the freshly
    built table/widget and firing `_call_via_r2` on it.
-5. Unconditionally calls `sub_8023A1C` (see below) and stashes its
+5. Unconditionally calls `RunRoom` (see below) and stashes its
    return value.
 6. Tears the per-frame update queues back down: `DestroyLevelLayers` on the
    text-box singleton if non-NULL, `sub_8026ED0` on the 0x18-byte
    block, a `_call_via_r2` call on the player object if non-NULL, then
    `sub_8008EB4`/`sub_8009B9C` on each of the six widget-manager
    globals if non-NULL, and finally `DestroyEntitySpawner`.
-7. Returns `sub_8023A1C`'s result.
+7. Returns `RunRoom`'s result.
 
 ### Gotchas worth recording
 
@@ -59,23 +59,23 @@ level object's own `+0xdc->+8` state field is `2`
   the ROM computes address-after-value for (only one call in the way,
   so no register needs to survive it) - the plain, un-idiomed form
   reproduces that one directly.
-- **`gUnknown_030012D8`'s own address stays live in `r7` across the
+- **`gPlayer`'s own address stays live in `r7` across the
   entire construction-and-dispatch section** (from its own allocation
   through all three switch cases), reused via repeated *fresh*
   `ldr r1/r2/r4, [r7]` reloads rather than ever being cached in a
-  second local - by the time the function reaches the post-`sub_8023A1C`
+  second local - by the time the function reaches the post-`RunRoom`
   teardown section, the ROM re-derives the address from scratch again
   (a fresh PC-relative literal, no `r7` left alive). Reproduced with one
-  `void **d8 = &gUnknown_030012D8;` local declared once near the top and
+  `void **d8 = &gPlayer;` local declared once near the top and
   referenced as `*d8` throughout construction/dispatch, while the
-  teardown section refers to `gUnknown_030012D8` by name again instead.
+  teardown section refers to `gPlayer` by name again instead.
 - **Every "fresh reload, do two field stores, then use the same pointer
   as a trailing call argument" case-block shape needs its *source
   value* computed before its *destination pointer*.** All three switch
   cases (and the `player+0xc`/`+0x28` bit-manipulation pair right before
   them) write to `player+0x20` and `player+0x44` (or similar) back to
   back; the ROM computes whatever's being stored (`**gUnknown_030012D0`,
-  a table pointer, etc.) *first*, then reloads `gUnknown_030012D8`'s
+  a table pointer, etc.) *first*, then reloads `gPlayer`'s
   value into a register, then does both stores through it. A plain
   `u8 *pl = *d8; *(void**)(pl+0x20) = value;` computes `pl` first
   instead. Fixed by hoisting the value into its own local declared
@@ -127,25 +127,25 @@ level object's own `+0xdc->+8` state field is `2`
   plain `switch (mode) { case 0: ...; case 1: ...; case 2: ...; }` and
   letting this compiler's own switch lowering pick that shape, rather
   than hand-writing the comparison order.
-- **`sub_800B3F0`'s 5th argument**: the matched 4-parameter signature in
+- **`InitPlayer`'s 5th argument**: the matched 4-parameter signature in
   `actor_part77.c` never reads a 5th argument, but this call site (and,
   per that file's own doc comment, `sub_8008434` elsewhere in the same
   neighborhood) passes one anyway - a real stack argument (`str r2,
   [sp]` sitting *before* the register arguments are even fully loaded,
   reusing whichever register already held `0`). Declared here with an
-  unprototyped `extern void *sub_800B3F0();` so the call `sub_800B3F0(ptr,
+  unprototyped `extern void *InitPlayer();` so the call `InitPlayer(ptr,
   0xffff, 0, 0, 0)` can pass the extra trailing `0` the ROM's own
   (differently-prototyped, in this translation unit) declaration
   allowed.
 
-## `sub_8023A1C` - still raw
+## `RunRoom` - still raw
 
 The ~650-instruction jump-table-driven continuation this function calls.
 Its real bytes now live in `asm/code_3_2_17_23a1c.s` (renamed from
 `asm/code_3_2_17_2375c.s`, since that file no longer starts at
 `0x0802375C`). Left untouched for this pass - see
 `docs/rom_map.md`'s "Traced the fade-to-black's trigger" and "Resolved:
-`sub_80241B0`'s gate" sections for what's already understood about its
+`IsRoomExitRequested`'s gate" sections for what's already understood about its
 6-case jump table, the `gLevelTable` per-level table it indexes,
 and its wait-loop/fade/post-fade structure. `AddPaletteCycle`'s exact
 6-argument call shape (self, targets, lists, angle, list_count,
@@ -158,7 +158,7 @@ their record shape not derived. A good next target for a dedicated pass.
 See [docs/status/game_loop.md](../status/game_loop.md) for the updated
 matched/parked/raw lists.
 
-## `sub_8023A1C` - closed, parked `NAKED` (dedicated follow-up pass)
+## `RunRoom` - closed, parked `NAKED` (dedicated follow-up pass)
 
 Full branch-by-branch trace, confirming and extending everything the
 previous pass above left open.
@@ -168,9 +168,9 @@ previous pass above left open.
 Opening: index `gLevelTable` by `self+0` (the confirmed
 36-slot, 0x24-byte-stride per-level master table - `settings_menu19.c`/
 `oam_count.c`/`game_loop17.c` all have their own struct view of it).
-Read its `+0x1c` "initialized" guard byte (calls `sub_8023484` once if
+Read its `+0x1c` "initialized" guard byte (calls `CheckAllCratesBroken` once if
 still clear), feed its `+0x14`/`+0x18` fields straight through to
-`sub_8023118`/`sub_8023110`, then dispatch on its `+4` field
+`SetMaskAssistDeaths`/`sub_8023110`, then dispatch on its `+4` field
 (`state - 1`, clamped `[0,5]`; `state == 0` or `state > 6` takes the
 `default` path):
 
@@ -230,8 +230,8 @@ targets exactly the latter.
 ### Shared tail, wait loop, and post-fade
 
 The 5 non-default cases (plus the default's direct clear) converge on
-one tail: `sub_80240E4(self)`/`sub_802423C()`, then a widget-kind check
-(`self->0x18->+8`, the same field `sub_802375C` dispatched its own
+one tail: `SetupRoomBlend(self)`/`sub_802423C()`, then a widget-kind check
+(`self->0x18->+8`, the same field `PlayRoom` dispatched its own
 widget-construction switch on) that - if `1` - re-stamps the player's
 `+0x2d` byte to `0x1f` and refreshes its OAM entry
 (`sub_80087C0`/`sub_80087B4`/`sub_800872C`), then unconditionally
@@ -239,11 +239,11 @@ recomputes the player's `+0x29` low nibble from `sub_800815C(player)`
 (the established negative-constant bit-clear idiom) and fires
 `sub_8006D08` against the tile-asset cache using a `player+0x20`-table
 lookup indexed by `player+0x2d * 7` (0x1c-byte stride), then flushes
-`gUnknown_030012D4` (`sub_8026DFC`) and the text-box singleton
+`gCamera` (`SnapCamera`) and the text-box singleton
 (`ResetLevelLayers`).
 
-If the widget kind is `0`: probes `sub_80232B8`/`sub_8024404` or
-`sub_8023290`/`sub_80243E0` (level-object and self readiness checks);
+If the widget kind is `0`: probes `IsInBonusRound`/`IsInBonusRoom` or
+`IsInGemPath`/`IsInGemPathRoom` (level-object and self readiness checks);
 on success, clears the player's busy bit 7, re-stamps `+0x2d` to
 `0x29`, refreshes the OAM entry again, plays a sound effect
 (`gAudioContext` as sample id, priority `0x2c`, via `PlaySfx`),
@@ -252,26 +252,26 @@ fires the `player+0x44`-table's `_call_via_r2` trampoline (mode
 `gHud` (`ShowHudCounters`).
 
 Either way: flushes the four HUD ring-buffer managers (`sub_8008C80`
-on `030012F4`/`EC`/`F0`/`F8`), a `sub_802400C(self)` refresh, and the
+on `030012F4`/`EC`/`F0`/`F8`), a `UpdateRoomFrame(self)` refresh, and the
 fade-cluster `sub_8001524(0)`/`sub_80015E0`/`sub_8001614`/`sub_8001624`
 reset quartet, landing at the **wait loop** (confirming and completing
-`docs/rom_map.md`'s earlier trace): poll `sub_80241B0` each iteration;
+`docs/rom_map.md`'s earlier trace): poll `IsRoomExitRequested` each iteration;
 while not ready and the player's `+0xc` bit 0 is clear, run one more
-pass (`sub_802423C`/`sub_802400C`, a `RunPauseMenu` input-driven mini-
+pass (`sub_802423C`/`UpdateRoomFrame`, a `RunPauseMenu` input-driven mini-
 dispatch that can early-exit the whole function with return value `1`
-or `2` after firing `sub_80241BC`'s level-end teardown, a
+or `2` after firing `ResumeRoomAfterPause`'s level-end teardown, a
 `gKeys` input-flag-gated `ShowHudCounters` ping, `sub_800891C`
 on three ring-buffer managers, two `_call_via_r1` trampoline probes
 against the player's own `+0x18`/`+0x38`/`+0x18` tables, `sub_80091D4`
-on `gUnknown_0300130C`, `UpdateHudSlides`, and a `gLevelState+0x8c`-
+on `gCrateList`, `UpdateHudSlides`, and a `gLevelState+0x8c`-
 gated `TickLevelClock` call) before looping back. Once ready: fires the
 fade (`sub_80014A4`).
 
 **Post-fade** (converging at `_08023F92`): sets the return value to
 `0`, tries two `SetCheckpoint` "spawn" dispatches gated by
-`sub_8024404`/`sub_80232B8`/`sub_8023104` or
-`sub_80243E0`/`sub_8023290` (both skip straight to the flush tail on
-failure); falling through both, loops `gUnknown_0300130C` counting
+`IsInBonusRoom`/`IsInBonusRound`/`GetBonusPlatform` or
+`IsInGemPathRoom`/`IsInGemPath` (both skip straight to the flush tail on
+failure); falling through both, loops `gCrateList` counting
 entries whose `_call_via_r1` trampoline probe returns `3` *and* whose
 own `+0x4e` tag is `0xa` (the physics-subsystem state tag
 `gStaticData_0816BC98` indexes,
@@ -284,7 +284,7 @@ widget-manager globals (`sub_8008CEC` on `030012E8`/`EC`/`F0`/`F8`/`F4`,
 accessors (`sub_8001578`/`sub_8001564`/`sub_8001550`/`sub_800153C`/
 `sub_800158C`/`WaitForVBlank`/`sub_8001614`), and returns `sl` - `1` by
 default, `2` from the wait-loop's `RunPauseMenu`-driven early exit, or
-`0` once the post-fade branch was reached. `sub_802375C` itself stashes
+`0` once the post-fade branch was reached. `PlayRoom` itself stashes
 and returns this value unmodified.
 
 ### Matching result: parked `NAKED`
@@ -311,7 +311,7 @@ clean `make compare` (`crashbandicootxs.gba: La suma coincide`).
 
 ## Later pass: hard-register hold
 
-`sub_8023A1C` is now real C under old_agbcc; `game_loop56.o` joined
+`RunRoom` is now real C under old_agbcc; `game_loop56.o` joined
 `OLD_AGBCC_OBJS` (it is the file's only function). `struct fx_direction`
 gained a zero-length array member, which makes it BLKmode: the compound
 literal is then stored straight into the outgoing stack slot, address

@@ -5,7 +5,7 @@
  * collision subsystem (see game_loop17.c's header comment and
  * docs/matching/issue-13-graphics-fc70.md). */
 
-extern u8 gStaticData_087E4074[];
+extern u8 gCrateVtable[];
 extern void sub_8026EB4(void *ptr);
 extern void sub_8008484(struct actor *self, u32 arg1);
 
@@ -16,7 +16,7 @@ extern void sub_8008484(struct actor *self, u32 arg1);
  * tail-call shape as `sub_80119D8` (`actor_part39.c`). */
 void sub_801071C(struct actor *self, u32 arg1)
 {
-    self->table = gStaticData_087E4074;
+    self->table = gCrateVtable;
 
     if (*((u8 *)self + 0x4e) == 3) {
         void *p = *(void **)((u8 *)self + 0x48);
@@ -41,7 +41,7 @@ extern void sub_800FEB0(void *selfArg);
 struct actor *sub_801075C(struct actor *self)
 {
     sub_80084A4(self);
-    self->table = gStaticData_087E4074;
+    self->table = gCrateVtable;
     *((u8 *)self + 0x59) = 0;
     sub_800FEB0(self);
     return self;

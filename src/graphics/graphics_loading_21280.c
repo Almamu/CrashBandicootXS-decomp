@@ -26,21 +26,21 @@ struct spawn_part
 };
 
 extern struct level_guard gLevelTable[];
-extern u8 *gUnknown_030012D8;
+extern u8 *gPlayer;
 extern void *gUnknown_030012E8;
-extern u8 sub_8023290(void *self);
-extern u8 sub_80232B8(void *self);
+extern u8 IsInGemPath(void *self);
+extern u8 IsInBonusRound(void *self);
 extern s32 sub_8023324(void *self);
 extern s32 GetCurrentLevel(void *self);
 extern struct spawn_part *sub_80071E4(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
 extern void sub_80070EC(struct spawn_part *part, s32 w, s32 h);
 extern s32 *sub_801A878(u16 x, u16 y, u16 w, u16 h, s32 id);
-extern void sub_8023500(void *self, s32 *point);
+extern void SetCrateGemPos(void *self, s32 *point);
 
 /* Three-way spawner. While the level controller reports nothing pending
  * and the current level's table entry has no guard, spawns a 0x64x0x64
- * sub_80071E4 part tagged 0x12. Otherwise, unless gUnknown_030012D8's
- * +0x88 flag is set, hands sub_8023500 a point just above-left of a
+ * sub_80071E4 part tagged 0x12. Otherwise, unless gPlayer's
+ * +0x88 flag is set, hands SetCrateGemPos a point just above-left of a
  * sub_801A878 probe; with the flag set it spawns a 0x28x0x28 part.
  * The ROM computes the point's x/y into fresh registers
  * (`subs r2, r1, #2`; `adds r3, r0, #0; subs r3, #30`) where plain C
@@ -50,7 +50,7 @@ extern void sub_8023500(void *self, s32 *point);
  * input before `y` is loaded - reproduces it. */
 void sub_8021280(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    if (!sub_8023290(gLevelState) && !sub_80232B8(gLevelState)
+    if (!IsInGemPath(gLevelState) && !IsInBonusRound(gLevelState)
         && !sub_8023324(gLevelState)
         && gLevelTable[GetCurrentLevel(gLevelState)].guard == 0)
     {
@@ -60,7 +60,7 @@ void sub_8021280(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         part->field_0A = 0x12;
         sub_8008E94(gUnknown_030012E8, part);
     }
-    else if (gUnknown_030012D8[0x88] == 0)
+    else if (gPlayer[0x88] == 0)
     {
         s32 *pos = sub_801A878(arg0, arg1, arg2, arg3, 4);
         register s32 px asm("r1") = pos[0] >> 8;
@@ -74,7 +74,7 @@ void sub_8021280(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         y = py - 0x1E;
         point[0] = x;
         point[1] = y;
-        sub_8023500(gLevelState, point);
+        SetCrateGemPos(gLevelState, point);
     }
     else
     {

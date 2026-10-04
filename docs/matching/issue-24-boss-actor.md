@@ -110,7 +110,7 @@ The `087E4974` object (`struct boss`) is a boss-like state machine.
 tables `gStaticData_0816C368/78` (facing) and `0816C390/A0`, turns it
 round at either level edge, spawns projectiles (`sub_8019EBC` mode 1)
 on animation frame 0x14, and finally, once the part falls below the
-level, signals `sub_80241A4` (the "entity ready" barrier in
+level, signals `RequestRoomExit` (the "entity ready" barrier in
 `docs/rom_map.md`). `sub_8019CE4` is its "enter state N" routine: it
 calls the object's slot +0x20 method and then runs the state's
 animation, spawns and sounds. `sub_8019EBC`, `sub_801A03C` and
@@ -184,7 +184,7 @@ callee-saved-register bug), so it is not an option.
 
 ### `sub_801A114` (`087E490C` controller's per-frame update)
 
-The ROM keeps `other` in r9, `&gUnknown_030012D8` in r10, the player-box
+The ROM keeps `other` in r9, `&gPlayer` in r10, the player-box
 pointer in r8 and `self` in r7, which leaves r4-r6 for temporaries. gcc
 spreads the same four values over r4-r7/r8. State 0's `BLDCNT|BLDALPHA`
 word is also built by eight separate `orr`s in two accumulators (r5,

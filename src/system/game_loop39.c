@@ -3,12 +3,12 @@
 #include "level_data.h"
 
 extern void CreateEntitySpawner(void);
-extern void sub_8024198(void);
+extern void ClearRoomExit(void);
 extern void *sub_8026EDC(s32 size);
 extern struct dual_array_manager *sub_8008EE4(struct dual_array_manager *manager, s32 count);
 extern struct pool_manager *sub_8008F20(struct pool_manager *manager, s32 count);
 extern void *GetLevelLayers(void);
-extern void *sub_800B3F0();
+extern void *InitPlayer();
 extern void sub_8007398(struct actor *self, s32 arg1, s32 arg2);
 extern void sub_8026ED0(void *self);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
@@ -19,7 +19,7 @@ extern void *sub_8017A00(void *arg0);
 extern void sub_80087C0(void *part);
 extern void sub_80087B4(void *part);
 extern void sub_800872C(void *part, u8 val);
-extern s32 sub_8023A1C(void *self);
+extern s32 RunRoom(void *self);
 extern void DestroyLevelLayers(void *self, s32 flag);
 extern void sub_8008EB4(struct dual_array_manager *manager, s32 flags);
 extern void sub_8009B9C(struct pool_manager *manager, s32 flags);
@@ -27,21 +27,21 @@ extern void DestroyEntitySpawner(void);
 
 extern struct dual_array_manager *gUnknown_030012E8;
 extern struct dual_array_manager *gUnknown_030012EC;
-extern struct pool_manager *gUnknown_0300130C;
+extern struct pool_manager *gCrateList;
 extern struct dual_array_manager *gUnknown_030012F0;
 extern struct dual_array_manager *gUnknown_030012F8;
 extern struct dual_array_manager *gUnknown_030012F4;
-extern void *gUnknown_030012D4;
+extern void *gCamera;
 extern void *gLevelLayers;
-extern void *gUnknown_030012D8;
-extern void *gUnknown_03001310;
+extern void *gPlayer;
+extern void *gPlayerCtrl;
 extern void ***gUnknown_030012D0;
 extern u8 gStaticData_0816B92C[];
 extern u8 gStaticData_0816B934[];
 extern u8 gStaticData_0816B93C[];
 
-/* sub_802375C's argument (game_loop55.c passes `&self->level`; the same
- * record game_loop56.c's sub_8023A1C reads as `struct gl_self`). */
+/* PlayRoom's argument (game_loop55.c passes `&self->level`; the same
+ * record game_loop56.c's RunRoom reads as `struct gl_self`). */
 struct level_start_args {
     s32 level;                      // 0x00
     u8 unk_04[0xC];
@@ -74,16 +74,16 @@ struct widget {
  * `asm/code_3_2_17_225a0.s`). Allocates the whole per-level widget set
  * (ring-buffer/pool object families already matched in
  * `actor_part11.c`/`actor_part12.c`: `gUnknown_030012E8/EC/F0/F8/F4` are
- * `dual_array_manager`s, `gUnknown_0300130C` a `pool_manager`), the
- * player actor itself (`gUnknown_030012D8`, `sub_800B3F0`), and the
+ * `dual_array_manager`s, `gCrateList` a `pool_manager`), the
+ * player actor itself (`gPlayer`, `InitPlayer`), and the
  * text-box singleton (`gLevelLayers`, `GetLevelLayers`). Dispatches on
  * the level-state record's (`self->0x18`) own `+8` "widget kind" field
  * to construct one of three HUD counter/ring-buffer widgets
  * (`gStaticData_0816B92C`/`0816B934`/`0816B93C`, still-uncharacterized
  * per-widget action tables), then unconditionally hands off to
- * `sub_8023A1C` and tears the per-frame update queues back down before
+ * `RunRoom` and tears the per-frame update queues back down before
  * returning its status code. */
-s32 sub_802375C(void *selfArg)
+s32 PlayRoom(void *selfArg)
 {
     /* `self` is pinned to r8 for the whole function, matching the ROM:
      * it has to survive dozens of `bl`s while r4-r7 are already busy
@@ -97,7 +97,7 @@ s32 sub_802375C(void *selfArg)
     s32 result;
 
     CreateEntitySpawner();
-    sub_8024198();
+    ClearRoomExit();
 
     {
         struct dual_array_manager **slot = &gUnknown_030012E8;
@@ -108,7 +108,7 @@ s32 sub_802375C(void *selfArg)
         *slot = sub_8008EE4(sub_8026EDC(0x14), 0xc0);
     }
     {
-        struct pool_manager **slot = &gUnknown_0300130C;
+        struct pool_manager **slot = &gCrateList;
         *slot = sub_8008F20(sub_8026EDC(0x818), 0xc0);
     }
     {
@@ -124,14 +124,14 @@ s32 sub_802375C(void *selfArg)
         *slot = sub_8008EE4(sub_8026EDC(0x14), 0x40);
     }
     {
-        void **slot = &gUnknown_030012D4;
+        void **slot = &gCamera;
         *slot = sub_8026EDC(0x18);
     }
 
     gLevelLayers = GetLevelLayers();
 
-    d8 = &gUnknown_030012D8;
-    *d8 = sub_800B3F0(sub_8026EDC(0x350), 0xffff, 0, 0, 0);
+    d8 = &gPlayer;
+    *d8 = InitPlayer(sub_8026EDC(0x350), 0xffff, 0, 0, 0);
     {
         struct level_start_args *p = self;
         sub_8007398((struct actor *)*d8, p->spawnX, p->spawnY);
@@ -205,10 +205,10 @@ s32 sub_802375C(void *selfArg)
         void *w;
 
         {
-            void **slot = &gUnknown_03001310;
+            void **slot = &gPlayerCtrl;
             *slot = sub_80174EC(sub_8026EDC(0x30));
         }
-        sub_800B69C(gUnknown_03001310, (s32)gStaticData_0816B934);
+        sub_800B69C(gPlayerCtrl, (s32)gStaticData_0816B934);
 
         *((u8 *)*d8 + 0x88) = mode;
         {
@@ -228,7 +228,7 @@ s32 sub_802375C(void *selfArg)
             struct widget_vtable *w1c;
             s32 off;
 
-            w = gUnknown_03001310;
+            w = gPlayerCtrl;
             *(void **)(pl + 0x44) = w;
             w1c = ((struct widget *)w)->vtable;
             off = w1c->attach.thisOffset;
@@ -265,18 +265,18 @@ s32 sub_802375C(void *selfArg)
     }
     }
 
-    result = sub_8023A1C(self);
+    result = RunRoom(self);
 
     if (gLevelLayers != NULL) {
         DestroyLevelLayers(gLevelLayers, 3);
     }
-    sub_8026ED0(gUnknown_030012D4);
+    sub_8026ED0(gCamera);
 
-    if (gUnknown_030012D8 != NULL) {
-        u8 *p = *(u8 **)((u8 *)gUnknown_030012D8 + 0x18) + 0x50;
+    if (gPlayer != NULL) {
+        u8 *p = *(u8 **)((u8 *)gPlayer + 0x18) + 0x50;
         s32 off = *(s16 *)p;
 
-        _call_via_r2((u8 *)gUnknown_030012D8 + off, (void *)3, *(void **)(p + 4));
+        _call_via_r2((u8 *)gPlayer + off, (void *)3, *(void **)(p + 4));
     }
 
     if (gUnknown_030012F4 != NULL) {
@@ -288,8 +288,8 @@ s32 sub_802375C(void *selfArg)
     if (gUnknown_030012F0 != NULL) {
         sub_8008EB4(gUnknown_030012F0, 3);
     }
-    if (gUnknown_0300130C != NULL) {
-        sub_8009B9C(gUnknown_0300130C, 3);
+    if (gCrateList != NULL) {
+        sub_8009B9C(gCrateList, 3);
     }
     if (gUnknown_030012EC != NULL) {
         sub_8008EB4(gUnknown_030012EC, 3);

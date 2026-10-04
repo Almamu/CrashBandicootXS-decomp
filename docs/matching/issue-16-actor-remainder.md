@@ -32,7 +32,7 @@ already-matched `actor_part79.c`, `actor_part84.c` between
   `self+8 == 0x1d` (the same type gate `sub_8016288`, still raw,
   checks). Otherwise dispatches its third argument (`arg2 - 1`, range
   `0..0x18`) through a 25-case jump table: several cases are thin
-  `sub_8012160` wrappers with a fixed id; case 22 and case 23 each run
+  `KillPlayer` wrappers with a fixed id; case 22 and case 23 each run
   a shared 7-case inner dispatch on `GetSpriteFrame(part)`'s nibble result
   to compute a Q8 position delta from a `gStaticData_0816B300` record
   (or the object's own `+0x24`/`+0x14` fields as a nibble-1-5
@@ -43,7 +43,7 @@ already-matched `actor_part79.c`, `actor_part84.c` between
   `sub_8006D08`-fed 28-byte-record lookup; case 11 resets a child
   object and pool-releases it via one of two dereference-chain-computed
   slots depending on the player's D-pad remap state; cases 9/10 gate
-  `sub_8015558` behind `gUnknown_030012D8+0x68`/`sub_800AAEC` checks.
+  `sub_8015558` behind `gPlayer+0x68`/`sub_800AAEC` checks.
 - **`sub_8012420`** (628 B, `actor_part84.c`) - a `part`-visibility/OAM-
   priority housekeeping pass: re-runs `sub_8012238` on an activity-flag
   change, resets velocity/target fields past two `gLevelLayers`-
@@ -54,7 +54,7 @@ already-matched `actor_part79.c`, `actor_part84.c` between
   a second, 22-case jump table on the same type.
 - **`sub_8012694`** (424 B, `actor_part84.c`) - a helper of
   `sub_801283C`: gated on the D-pad snapshot's bit 1, `self+0x18`'s
-  counter being 0, `gLevelState` passing `sub_80231CC`, and a
+  counter being 0, `gLevelState` passing `HasDoubleJump`, and a
   sub-object type of `6`/`0xb`/`0xc` (each with its own `+0x30 >= 0`
   distance-style gate), bumps `self+0x18`, fires the `+0x50`/`+0x54`
   and `+0x20`/`+0x24` trampoline pairs with type-keyed ids, resets the
@@ -89,7 +89,7 @@ already-matched `actor_part79.c`, `actor_part84.c` between
   calls once the counter crosses one of two thresholds; bails early if
   `sub_8012A7C(self)` reports busy; otherwise dispatches the input
   snapshot's low bits (sound + two trampoline pairs, or a
-  `sub_8015398` tail-call, or a `sub_80231C4`-gated trampoline call) -
+  `sub_8015398` tail-call, or a `HasTurboRun`-gated trampoline call) -
   every path converging on `sub_80122CC`.
 
 ## Why NAKED, not real C
@@ -146,7 +146,7 @@ All six of this remainder's functions are now byte-exact, but as NAKED
 transcriptions - parked, not matched, per project policy. Every
 function GitHub issue #16 originally scoped (this remainder plus the
 four matched in `issue-16-actor-12160.md` and the earlier
-`sub_8012160`/`sub_8012238`/`sub_80122CC`/`sub_8012A7C` matches) is now
+`KillPlayer`/`sub_8012238`/`sub_80122CC`/`sub_8012A7C` matches) is now
 either real C or a verified NAKED transcription - nothing from this
 issue's original scope is left raw - but since six functions are NAKED
 rather than real decompiled C, the issue itself stays open per this

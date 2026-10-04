@@ -12,11 +12,11 @@
  * behavior. `sub_800FC70`/`sub_800FDC8` immediately before this
  * function are left untouched raw - see the write-up doc. */
 
-extern void *gUnknown_030012D8;
+extern void *gPlayer;
 
 /* Resets `self`'s collision-response bookkeeping: sets flags `+0xc`
  * bits 2/6, clears the low 7 bits of `+0x4d` (state byte) while also
- * clearing the global `gUnknown_030012D8+0x80` "hit" latch, then
+ * clearing the global `gPlayer+0x80` "hit" latch, then
  * zeroes the timer/list-link block `+0x44`-`+0x51`/`+0x58` and the two
  * neighbor-list pointers `+0x5c`/`+0x60`, and sets the `+0x54`
  * countdown to -1 (disabled). Matches the "get next"/"get prev" field
@@ -55,7 +55,7 @@ void sub_800FEB0(void *selfArg)
         zero = 0;
         *addr = result;
     }
-    *((u8 *)gUnknown_030012D8 + 0x80) = zero;
+    *((u8 *)gPlayer + 0x80) = zero;
 
     asm volatile(
         "mov r0, #0x80\n"

@@ -7,8 +7,8 @@ extern void *gAudioContext;
 extern void *gUnknown_030012D0;
 extern struct tile_asset_cache *gUnknown_030012B8;
 
-extern u8 sub_80232B8(struct level_state *self);
-extern u8 sub_8023290(struct level_state *self);
+extern u8 IsInBonusRound(struct level_state *self);
+extern u8 IsInGemPath(struct level_state *self);
 extern u8 *GetCurrentLevelFlags(struct level_state *self);
 extern void sub_801EB04(s32 a, u16 b, u16 c, u16 d);
 extern void sub_8028474(void *state);
@@ -192,12 +192,12 @@ void TickLevelClock(struct level_state *self)
     }
 }
 
-void sub_8022FEC(struct level_state *self)
+void AddBrokenCrate(struct level_state *self)
 {
-    self->unk_70 += 1;
+    self->crateCount += 1;
 
-    if (self->unk_70 == self->unk_bc) {
-        if (!sub_80232B8(self) && !sub_8023290(self)) {
+    if (self->crateCount == self->crateTotal) {
+        if (!IsInBonusRound(self) && !IsInGemPath(self)) {
             struct level_category *level = self->cat;
 
             if (level->kind == 3) {
@@ -211,8 +211,8 @@ void sub_8022FEC(struct level_state *self)
                 mask |= value;
                 *flags = mask;
             } else {
-                u16 b = *(u16 *)&self->unk_1c0;
-                u16 c = *(u16 *)&self->unk_1c4;
+                u16 b = *(u16 *)&self->crateGemX;
+                u16 c = *(u16 *)&self->crateGemY;
                 sub_801EB04(0xffff, b, c, 0);
             }
         }
@@ -223,22 +223,22 @@ void sub_8022FEC(struct level_state *self)
     }
 }
 
-void sub_802306C(struct level_state *self)
+void PressSwitchCrate(struct level_state *self)
 {
-    self->unk_a9 = 1;
+    self->switchPressed = 1;
 
-    if (sub_80232B8(self)) {
-        self->unk_b4 += self->unk_ac;
+    if (IsInBonusRound(self)) {
+        self->savedCrateCount += self->unk_ac;
         return;
     }
 
-    self->unk_70 += self->unk_ac;
+    self->crateCount += self->unk_ac;
 
-    if (self->unk_70 != self->unk_bc) {
+    if (self->crateCount != self->crateTotal) {
         return;
     }
 
-    if (!sub_80232B8(self) && !sub_8023290(self)) {
+    if (!IsInBonusRound(self) && !IsInGemPath(self)) {
         struct level_category *level = self->cat;
 
         if (level->kind == 3) {
@@ -248,16 +248,16 @@ void sub_802306C(struct level_state *self)
             mask |= value;
             *flags = mask;
         } else {
-            u16 b = *(u16 *)&self->unk_1c0;
-            u16 c = *(u16 *)&self->unk_1c4;
+            u16 b = *(u16 *)&self->crateGemX;
+            u16 c = *(u16 *)&self->crateGemY;
             sub_801EB04(0xffff, b, c, 0);
         }
     }
 }
 
-void *sub_8023104(struct level_state *self)
+void *GetBonusPlatform(struct level_state *self)
 {
-    return (void *)self->unk_1b8;
+    return (void *)self->bonusPlatform;
 }
 
 void sub_8023110(struct level_state *self, s32 value)
@@ -265,9 +265,9 @@ void sub_8023110(struct level_state *self, s32 value)
     self->unk_88 = value;
 }
 
-void sub_8023118(struct level_state *self, s32 value)
+void SetMaskAssistDeaths(struct level_state *self, s32 value)
 {
-    self->unk_84 = value;
+    self->maskAssistDeaths = value;
 }
 
 void sub_8023120(struct level_state *self, s32 value)
@@ -280,9 +280,9 @@ s32 sub_8023128(struct level_state *self)
     return self->unk_88;
 }
 
-s32 sub_8023130(struct level_state *self)
+s32 GetMaskAssistDeaths(struct level_state *self)
 {
-    return self->unk_84;
+    return self->maskAssistDeaths;
 }
 
 s32 sub_8023138(struct level_state *self)
@@ -306,7 +306,11 @@ s32 sub_8023158(struct level_state *self, s32 mask)
     return (u32)(-x | x) >> 31;
 }
 
-void sub_8023168(struct level_state *self)
+/* UNUSED - no caller anywhere in the ROM (checked src/, asm/ and the
+ * data tables for ClearPowers). Clears all four power bits (`flags`
+ * bits 4-7) that GiveTurboRun/GiveSuperBodySlam/GiveTornadoSpin/
+ * GiveDoubleJump set. */
+void ClearPowers(struct level_state *self)
 {
     /* Register pins reproduce the ROM's exact accumulator/mask split -
      * see docs/workflow.md step 7 - a plain local otherwise lets gcc
@@ -328,9 +332,9 @@ void sub_8023168(struct level_state *self)
  * byte into `r2` (the ROM's `movs r1,#N; ldrb r2,[r0,#2]` order) - a
  * plain `*flags |= N;` loads the byte first regardless of statement
  * order, so the mask/value roles are pinned explicitly (see
- * docs/workflow.md step 7, and the identical fix on `sub_8022FEC`/
- * `sub_802306C`'s `*flags |= 2;` above). */
-void sub_8023184(struct level_state *self)
+ * docs/workflow.md step 7, and the identical fix on `AddBrokenCrate`/
+ * `PressSwitchCrate`'s `*flags |= 2;` above). */
+void GiveTornadoSpin(struct level_state *self)
 {
     register s32 mask asm("r1") = 0x40;
     register s32 value asm("r2") = self->flags;
@@ -338,7 +342,7 @@ void sub_8023184(struct level_state *self)
     self->flags = mask;
 }
 
-void sub_8023190(struct level_state *self)
+void GiveSuperBodySlam(struct level_state *self)
 {
     register s32 mask asm("r1") = 0x20;
     register s32 value asm("r2") = self->flags;
@@ -346,7 +350,7 @@ void sub_8023190(struct level_state *self)
     self->flags = mask;
 }
 
-void sub_802319C(struct level_state *self)
+void GiveTurboRun(struct level_state *self)
 {
     register s32 mask asm("r1") = 0x10;
     register s32 value asm("r2") = self->flags;
@@ -354,7 +358,7 @@ void sub_802319C(struct level_state *self)
     self->flags = mask;
 }
 
-void sub_80231A8(struct level_state *self)
+void GiveDoubleJump(struct level_state *self)
 {
     register s32 mask asm("r1") = 0x80;
     register s32 value asm("r2") = self->flags;
@@ -368,17 +372,17 @@ void sub_80231A8(struct level_state *self)
  * shifting it up into the sign bit and shifting back down unsigned,
  * the same branchless idiom already used for `sub_8023158`'s
  * `!= 0` test (see docs/workflow.md step 7 / matching.md). */
-s32 sub_80231B4(struct level_state *self)
+s32 HasTornadoSpin(struct level_state *self)
 {
     return (u32)(self->flags << 25) >> 31;
 }
 
-s32 sub_80231BC(struct level_state *self)
+s32 HasSuperBodySlam(struct level_state *self)
 {
     return (u32)(self->flags << 26) >> 31;
 }
 
-s32 sub_80231C4(struct level_state *self)
+s32 HasTurboRun(struct level_state *self)
 {
     return (u32)(self->flags << 27) >> 31;
 }
@@ -390,16 +394,16 @@ s32 sub_80231C4(struct level_state *self)
  * still the same object file). See docs/matching/issue-35-36-0x080231cc-game-loop.md
  * for the full write-up. Bit-7 getter for the `self+2` flags byte this
  * file's own family already covers bits 4-6 of. */
-s32 sub_80231CC(struct level_state *self)
+s32 HasDoubleJump(struct level_state *self)
 {
     return self->flags >> 7;
 }
 
-/* self+0x70/self+0xbc form a counter/threshold pair (`sub_8022FEC`/
- * `sub_802306C` above, `sub_8023484` below); this resets the counter. */
-void sub_80231D4(struct level_state *self)
+/* self+0x70/self+0xbc form a counter/threshold pair (`AddBrokenCrate`/
+ * `PressSwitchCrate` above, `CheckAllCratesBroken` below); this resets the counter. */
+void ResetCrateCount(struct level_state *self)
 {
-    self->unk_70 = 0;
+    self->crateCount = 0;
 }
 
 void ResetWumpa(struct level_state *self)
@@ -414,12 +418,12 @@ void ResetLives(struct level_state *self)
 
 struct AudioContext;
 extern void StartSong(struct AudioContext *self, u32 songIndex);
-extern void sub_8024498(void *self);
+extern void PlayRoomMusic(void *self);
 
 /* Sets the Aku Aku mask level (`maskLevel`, +0x78, 0-3): level `3` (the
  * invincibility mask) always fires a jingle (`StartSong(
  * gAudioContext, 0x12)`) and skips the rest; leaving level 3 re-fires
- * `sub_8024498(&self->level)` once. Either way `maskLevel` ends up
+ * `PlayRoomMusic(&self->level)` once. Either way `maskLevel` ends up
  * holding `state`. */
 void SetMaskLevel(void *selfArg, s32 stateArg)
 {
@@ -434,7 +438,7 @@ void SetMaskLevel(void *selfArg, s32 stateArg)
         StartSong(gAudioContext, 0x12);
     } else if (self->maskLevel == 3) {
         self->maskLevel = state;
-        sub_8024498(&self->level);
+        PlayRoomMusic(&self->level);
     }
     self->maskLevel = state;
 }
@@ -495,68 +499,67 @@ s32 GetClockMinutes(struct level_state *self)
     return self->minutes;
 }
 
-/* `self+0xa4`-`self+0xa9`: a bank of six busy/status-flag bytes, each
- * with a getter and a clear (some also a set-to-1) - same shape as the
- * `self+2` bitfield family above, just laid out as whole bytes instead
- * of packed bits. */
-u8 sub_8023278(struct level_state *self)
+/* `self+0xa4`-`self+0xa9`: six flag bytes (bonus round, gem path,
+ * spawn at the start marker, switch crate), each with a getter and a
+ * clear (some also a set-to-1). */
+u8 IsGemPathDone(struct level_state *self)
 {
-    return self->unk_a7;
+    return self->gemPathDone;
 }
 
-void sub_8023280(struct level_state *self)
+void ClearGemPathDone(struct level_state *self)
 {
-    self->unk_a7 = 0;
+    self->gemPathDone = 0;
 }
 
-void sub_8023288(struct level_state *self)
+void SetGemPathDone(struct level_state *self)
 {
-    self->unk_a7 = 1;
+    self->gemPathDone = 1;
 }
 
-u8 sub_8023290(struct level_state *self)
+u8 IsInGemPath(struct level_state *self)
 {
-    return self->unk_a6;
+    return self->inGemPath;
 }
 
-void sub_8023298(struct level_state *self)
+void ClearInGemPath(struct level_state *self)
 {
-    self->unk_a6 = 0;
+    self->inGemPath = 0;
 }
 
-u8 sub_80232A0(struct level_state *self)
+u8 IsBonusRoundDone(struct level_state *self)
 {
-    return self->unk_a5;
+    return self->bonusRoundDone;
 }
 
-void sub_80232A8(struct level_state *self)
+void ClearBonusRoundDone(struct level_state *self)
 {
-    self->unk_a5 = 0;
+    self->bonusRoundDone = 0;
 }
 
-void sub_80232B0(struct level_state *self)
+void SetBonusRoundDone(struct level_state *self)
 {
-    self->unk_a5 = 1;
+    self->bonusRoundDone = 1;
 }
 
-u8 sub_80232B8(struct level_state *self)
+u8 IsInBonusRound(struct level_state *self)
 {
-    return self->unk_a4;
+    return self->inBonusRound;
 }
 
-void sub_80232C0(struct level_state *self)
+void ClearInBonusRound(struct level_state *self)
 {
-    self->unk_a4 = 0;
+    self->inBonusRound = 0;
 }
 
-u8 sub_80232C8(struct level_state *self)
+u8 IsSwitchPressed(struct level_state *self)
 {
-    return self->unk_a9;
+    return self->switchPressed;
 }
 
-void sub_80232D0(struct level_state *self)
+void ClearSwitchPressed(struct level_state *self)
 {
-    self->unk_a9 = 0;
+    self->switchPressed = 0;
 }
 
 void ClearTimeTrial(struct level_state *self)
@@ -564,42 +567,43 @@ void ClearTimeTrial(struct level_state *self)
     self->timeTrial = 0;
 }
 
-/* `self+0x7c`: a plain free-running counter, get/increment/reset trio. */
-s32 sub_80232E0(struct level_state *self)
+/* `deaths` (+0x7c): maskless hits since the last checkpoint
+ * (AddDeath is only called from PlayerHandleEvent). */
+s32 GetDeaths(struct level_state *self)
 {
-    return self->unk_7c;
+    return self->deaths;
 }
 
-void sub_80232E4(struct level_state *self)
+void AddDeath(struct level_state *self)
 {
-    self->unk_7c = self->unk_7c + 1;
+    self->deaths = self->deaths + 1;
 }
 
-void sub_80232EC(struct level_state *self)
+void ResetDeaths(struct level_state *self)
 {
-    self->unk_7c = 0;
+    self->deaths = 0;
 }
 
-u8 sub_80232F4(struct level_state *self)
+u8 GetSpawnAtStart(struct level_state *self)
 {
-    return self->unk_a8;
+    return self->spawnAtStart;
 }
 
-void sub_80232FC(struct level_state *self)
+void ClearSpawnAtStart(struct level_state *self)
 {
-    self->unk_a8 = 0;
+    self->spawnAtStart = 0;
 }
 
-/* "Start" helper: resets `self+0x7c`'s counter then sets `self+0xa8`'s
- * flag. */
-void sub_8023304(struct level_state *self)
+/* Resets `deaths` and arms `spawnAtStart`, so the player is placed on
+ * the room's start marker. */
+void ArmStartSpawn(struct level_state *self)
 {
-    sub_80232EC(self);
-    self->unk_a8 = 1;
+    ResetDeaths(self);
+    self->spawnAtStart = 1;
 }
 
 /* Plain setter for a fourth word-sized field at `self+0x1c8`, right
- * after the `self+0x1c0`/`0x1c4` pair `sub_8023484` below reads. */
+ * after the `self+0x1c0`/`0x1c4` pair `CheckAllCratesBroken` below reads. */
 void sub_8023318(struct level_state *self, struct level_state_1c8 *value)
 {
     self->unk_1c8 = value;
@@ -607,7 +611,7 @@ void sub_8023318(struct level_state *self, struct level_state_1c8 *value)
 
 /* Plain getter/getter/setter trio for `self+0xc8`/`self+0xc4` - the
  * latter is the "current index" field `sub_8023378`/`sub_80233B4`/
- * `GetCurrentLevelFlags`/`sub_8023418` below all read. */
+ * `GetCurrentLevelFlags`/`IsCrystalSaved` below all read. */
 s32 sub_8023324(struct level_state *self)
 {
     return self->unk_c8;
@@ -729,28 +733,28 @@ u8 *GetLevelFlags(struct level_state *self, s32 idx)
 }
 
 /* Resolves the "current index" field (`self+0xc4`) into its own slot
- * address via `GetLevelFlags` - the address this file's `sub_8022FEC`/
- * `sub_802306C`/`sub_8023484` all call "flags" and OR a bit into. */
+ * address via `GetLevelFlags` - the address this file's `AddBrokenCrate`/
+ * `PressSwitchCrate`/`CheckAllCratesBroken` all call "flags" and OR a bit into. */
 u8 *GetCurrentLevelFlags(struct level_state *self)
 {
     s32 idx = self->level;
     return GetLevelFlags(self, idx);
 }
 
-/* Getter for `self+0x70`, the counter `sub_80231D4` resets. */
-s32 sub_8023414(struct level_state *self)
+/* Getter for `self+0x70`, the counter `ResetCrateCount` resets. */
+s32 GetCrateCount(struct level_state *self)
 {
-    return self->unk_70;
+    return self->crateCount;
 }
 
 /* Bit-0 getter on the current level's `levelFlags` word in the
- * `snap14C` copy of the attempt block (`idx` from `level`). Spelled as
+ * `saveData` copy of the attempt block (`idx` from `level`). Spelled as
  * `self + idx * 4 + offset`: taking `&...levelFlags[idx]` inside the
  * snapshot adds the constant first, which the ROM doesn't. */
-s32 sub_8023418(struct level_state *self)
+s32 IsCrystalSaved(struct level_state *self)
 {
     s32 idx = self->level;
-    u8 *addr = (u8 *)self + idx * 4 + offsetof(struct level_state, snap14C[4]);
+    u8 *addr = (u8 *)self + idx * 4 + offsetof(struct level_state, saveData[4]);
 
     return (u32)(*addr << 31) >> 31;
 }
@@ -790,19 +794,19 @@ void AddLife(struct level_state *self)
  * counter-notification chain (`docs/rom_map.md`'s "Coverage check and
  * eight more small reads" section) - the consumer/trigger side of the
  * 15-slot table's `sub_802209C` writer, forwarding into `sub_801EB04`
- * alongside `sub_802306C`/`sub_8022FEC`'s own threshold-cross paths
+ * alongside `PressSwitchCrate`/`AddBrokenCrate`'s own threshold-cross paths
  * above (identical shape: gated by the same `self+0x70 == self+0xbc`
- * counter/threshold pair, `sub_80232B8`/`sub_8023290` readiness checks,
+ * counter/threshold pair, `IsInBonusRound`/`IsInGemPath` readiness checks,
  * then either OR a bit into `GetCurrentLevelFlags`'s slot or forward
  * `self+0x1c0`/`0x1c4` to `sub_801EB04`). Only caller is
- * `sub_8023A1C`'s dispatch opener (`game_loop56.c`), which passes
+ * `RunRoom`'s dispatch opener (`game_loop56.c`), which passes
  * `*gLevelState` as `self`. */
-void sub_8023484(void *selfArg)
+void CheckAllCratesBroken(void *selfArg)
 {
     register struct level_state *self asm("r4") = selfArg;
 
-    if (self->unk_70 == self->unk_bc
-        && !sub_80232B8(self) && !sub_8023290(self)) {
+    if (self->crateCount == self->crateTotal
+        && !IsInBonusRound(self) && !IsInGemPath(self)) {
         struct level_category *level = self->cat;
 
         if (level->kind == 3) {
@@ -821,14 +825,14 @@ void sub_8023484(void *selfArg)
              * memory. */
             register s32 magic asm("r0") = 0xffff;
             register s32 off asm("r3") = 0xe0 << 1;
-            register u16 *addr1 asm("r1") = (u16 *)((u8 *)self + off); /* &self->unk_1c0 */
+            register u16 *addr1 asm("r1") = (u16 *)((u8 *)self + off); /* &self->crateGemX */
             u16 b = *addr1;
             register u16 *addr2 asm("r2");
             u16 c;
             asm volatile("" : "+r"(b));
             off += 4;
             asm volatile("" : "+r"(off));
-            addr2 = (u16 *)((u8 *)self + off); /* &self->unk_1c4 */
+            addr2 = (u16 *)((u8 *)self + off); /* &self->crateGemY */
             c = *addr2;
             sub_801EB04(magic, b, c, 0);
         }

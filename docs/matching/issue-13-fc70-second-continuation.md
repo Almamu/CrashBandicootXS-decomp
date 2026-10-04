@@ -1,4 +1,4 @@
-# Issue #13, third pass: `sub_8010480`/`sub_8010674`
+# Issue #13, third pass: `DrawCrate`/`sub_8010674`
 
 GitHub issue #13 (`0x0800FC70-0x08010A0C`, physics/collision subsystem,
 `game_loop` category - see
@@ -6,9 +6,9 @@ GitHub issue #13 (`0x0800FC70-0x08010A0C`, physics/collision subsystem,
 the first pass and
 [docs/matching/issue-13-fc70-continuation.md](issue-13-fc70-continuation.md)
 for the second) had one raw cluster left:
-`sub_800FF0C`/`sub_8010480`/`sub_80104E4`/`sub_8010674`
+`CreateCrate`/`DrawCrate`/`sub_80104E4`/`sub_8010674`
 (`asm/code_3_2_17_e560_ff0c.s`, `0x0800FF0C`-`0x080106DC`). The second
-pass's write-up already notes `sub_8010480`/`sub_8010674` were read and
+pass's write-up already notes `DrawCrate`/`sub_8010674` were read and
 understood, but a plain-C attempt spread more live values across r0-r7
 than the ROM's own tighter allocation used, so both stayed raw. This
 third pass picks that back up with more targeted register pinning and
@@ -16,8 +16,8 @@ matches both.
 
 ## Matched (2 of 4 remaining functions)
 
-- **`sub_8010480`** (`src/system/game_loop35.c`, new file - it sits
-  between the still-raw `sub_800FF0C` and `sub_80104E4`, so it can't
+- **`DrawCrate`** (`src/system/game_loop35.c`, new file - it sits
+  between the still-raw `CreateCrate` and `sub_80104E4`, so it can't
   join either neighbor's file) - unless `self`'s own `+0x4d` state byte
   has bit 7 set or its low 7 bits are already nonzero, resets
   `self+0x38` to 0 and clamps `self+0x30`'s index to the
@@ -99,7 +99,7 @@ matches both.
 
 ## Still left raw - 2 functions
 
-- **`sub_800FF0C`** (`asm/code_3_2_17_e560_ff0c.s`, now trimmed to just
+- **`CreateCrate`** (`asm/code_3_2_17_e560_ff0c.s`, now trimmed to just
   this one function) - a large (~660-instruction) projectile/
   hazard-spawn dispatcher with two big jump tables and packed bitfield
   arguments; still out of scope for a single pass.
@@ -111,7 +111,7 @@ matches both.
 
 - `docs/status/game_loop.md` - matched list updated for this pass.
 - `tools/report_units.py` - the old single `0x0800FF0C` unit (covering
-  the whole `sub_800FF0C`-`sub_8010674` span as raw) split into four:
+  the whole `CreateCrate`-`sub_8010674` span as raw) split into four:
   `0x0800FF0C` (still raw, trimmed `asm/code_3_2_17_e560_ff0c.o`),
   `0x08010480` (new `src/system/game_loop35.o`), `0x080104E4` (still
   raw, new `asm/code_3_2_17_e560_104e4.o`), and `0x08010674` (now the

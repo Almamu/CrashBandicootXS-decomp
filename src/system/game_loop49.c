@@ -17,7 +17,7 @@
  * are real C (see docs/matching/issue-12-physics-collision.md's
  * NAKED-retry sections). */
 
-extern struct phys_obj_list *gUnknown_0300130C;
+extern struct phys_obj_list *gCrateList;
 extern u8 gUnknown_030012B0;
 extern void sub_800EEF0(struct phys_obj *self, u8 arg1);
 extern void sub_8009AA0(struct phys_obj_list *list, s32 index);
@@ -25,7 +25,7 @@ extern void *gAudioContext;
 extern void *gHud;
 extern void PlaySfx(void *ctx, s32 id, s32 volume);
 extern void sub_8028474(void *arg);
-extern void sub_802306C(void *arg);
+extern void PressSwitchCrate(void *arg);
 extern void sub_800F258(void);
 extern void sub_800F5B8(struct phys_obj *self);
 extern s32 sub_800815C(void *self);
@@ -44,8 +44,8 @@ extern void *sub_801070C(void *obj);
 extern void sub_8010710(void *obj, void *prev);
 extern void sub_8010714(void *obj, void *next);
 extern void sub_800F06C(struct phys_obj *self, s32 dist);
-extern u8 gStaticData_0816BB98[];
-extern void sub_8022FEC(void *arg);
+extern u8 gCrateKindCounted[];
+extern void AddBrokenCrate(void *arg);
 extern void sub_800EDBC(struct phys_obj *self);
 extern void sub_800E7A8(void *self, u32 arg1, u32 arg2, u32 arg3);
 extern u32 sub_8010A50(struct phys_obj *self);
@@ -62,9 +62,9 @@ extern u8 gStaticData_0816BB94[];
  *
  * Early-outs when `self+0x4d & 0x7f == 1` (already committed). Clears
  * `self+0x4f`, clears `self+0x4d`'s low 7 bits, resets
- * `gUnknown_030012D8+0x80`, sets `self+0xc` bit `0x10` (a "collision
+ * `gPlayer+0x80`, sets `self+0xc` bit `0x10` (a "collision
  * response active" render/update flag matched elsewhere in this
- * subsystem), and calls `sub_8009150(gUnknown_0300130C, self)` (adds
+ * subsystem), and calls `sub_8009150(gCrateList, self)` (adds
  * `self` back onto the shared active-object list). Sets `self+0x4d`'s
  * `0x80` bit unconditionally, then ORs in `arg1` on top of that -
  * `arg1` ends up as the low bit of `self+0x4d`.
@@ -79,21 +79,21 @@ extern u8 gStaticData_0816BB94[];
  * `sub_800F2BC`/`sub_800F368`/`sub_800F5B8`/`sub_800F8E0` below for the
  * same three-call pattern).
  *
- * Looks up `gStaticData_0816BB98[self+0x4e]` and, if nonzero, calls
- * `sub_8022FEC(gLevelState)` (an external subsystem, unread -
+ * Looks up `gCrateKindCounted[self+0x4e]` and, if nonzero, calls
+ * `AddBrokenCrate(gLevelState)` (an external subsystem, unread -
  * likely a screen-shake/particle trigger). Sets a bit in
  * `gEntityFlags`'s 32x32 collision-cell bitmap from `self+8`'s
  * position (`>>5` row, `&0x1f` column - the same cell-grid convention
- * `sub_0800D18C` itself uses for `gUnknown_030012D8`'s own state), then
+ * `sub_0800D18C` itself uses for `gPlayer`'s own state), then
  * plays a fixed sound (`gAudioContext`, id 4). Calls
  * `sub_800EDBC(self)` (already matched elsewhere in this cluster - a
  * sibling's territory).
  *
- * Tail: reads `gUnknown_0300082C`'s `+0xc` byte bit `0x40` (a "combo
+ * Tail: reads `gRoomFrameCount`'s `+0xc` byte bit `0x40` (a "combo
  * scoring active" flag elsewhere in the ROM); if set, and
- * `gUnknown_030012D8+0x8c` (a running counter) hasn't exceeded
- * `gUnknown_0300082C`'s threshold, and `self`'s position is within 0x1d
- * px of `gUnknown_030012D8`'s (the player) on both axes (or `arg1`
+ * `gPlayer+0x8c` (a running counter) hasn't exceeded
+ * `gRoomFrameCount`'s threshold, and `self`'s position is within 0x1d
+ * px of `gPlayer`'s (the player) on both axes (or `arg1`
  * itself is 0), calls `_call_via_r4` (the `bx r4` sound/particle
  * trampoline from `self+0x18+0x68`) with args `(0, 4, 0)`. Finally, if
  * `self+0x4e != 0xa`, forces `self+0x4e = 0x13` (a shared "settle"
@@ -104,7 +104,7 @@ static inline s32 PhysComboMaxed(struct gobj *player)
 {
     s32 maxed = FALSE;
 
-    if (player->deadline > gUnknown_0300082C)
+    if (player->deadline > gRoomFrameCount)
         maxed = TRUE;
     return maxed;
 }
@@ -120,7 +120,7 @@ void sub_800EEF0(struct phys_obj *self, u8 near)
     self->state &= 0x7f;
     PHYS_PLAYER->busy = 0;
     self->flags |= 0x10;
-    sub_8009150(gUnknown_0300130C, self);
+    sub_8009150(gCrateList, self);
     one = 1;
     self->state = (self->state & 0x80) | one;
     if (self->kind == 0xa) {
@@ -130,19 +130,19 @@ void sub_800EEF0(struct phys_obj *self, u8 near)
         sub_800872C(self, 0);
     } else
         PhysSetTag(self, 0x21);
-    if (gStaticData_0816BB98[self->kind])
-        sub_8022FEC(gLevelState);
+    if (gCrateKindCounted[self->kind])
+        AddBrokenCrate(gLevelState);
     PHYS_SET_ID_BIT(self->id);
     PlaySfx(gAudioContext, 4, 0x100);
     sub_800EDBC(self);
 
-    if ((gUnknown_030012D8->flags >> 6) & 1 && !PhysComboMaxed(gUnknown_030012D8)) {
+    if ((gPlayer->flags >> 6) & 1 && !PhysComboMaxed(gPlayer)) {
         struct gobj *p;
-        s32 t1 = (gUnknown_030012D8->x >> 8) - (self->x >> 8);
+        s32 t1 = (gPlayer->x >> 8) - (self->x >> 8);
         s32 dx = (t1 ^ (t1 >> 31)) - (t1 >> 31);
 
         if (dx <= 0x1d) {
-            s32 t2 = (gUnknown_030012D8->y >> 8) - (self->y >> 8);
+            s32 t2 = (gPlayer->y >> 8) - (self->y >> 8);
             s32 dy = (t2 ^ (t2 >> 31)) - (t2 >> 31);
 
             if (dy <= 0x1d)
@@ -150,7 +150,7 @@ void sub_800EEF0(struct phys_obj *self, u8 near)
         }
         if (near) {
         call:
-            p = gUnknown_030012D8;
+            p = gPlayer;
             PhysCall3(p, &p->vtable->m68, 0, 4, 0);
         }
     }
@@ -161,7 +161,7 @@ void sub_800EEF0(struct phys_obj *self, u8 near)
 /* Called from `sub_800F798` (`sub_800F06C(self, 0x14)` /
  * `sub_800F06C(self, 0x28)`, gated on `self+0x30 == 3` / `== 6`) with
  * `arg1` a small proximity-radius constant (0x14 or 0x28 px). Walks
- * `gUnknown_0300130C`'s whole object list twice:
+ * `gCrateList`'s whole object list twice:
  *
  * - First pass: for every other object whose `_call_via_r1`
  *   overlap-classification against `self` returns `3` (a "close enough
@@ -190,11 +190,11 @@ void sub_800F06C(struct phys_obj *self, s32 dist)
 {
     s32 i = 0;
 
-    if (i < gUnknown_0300130C->count) {
+    if (i < gCrateList->count) {
         u32 commit = (u32)gStaticData_0816BBC4;
 
         do {
-            struct phys_obj *o = gUnknown_0300130C->items[i];
+            struct phys_obj *o = gCrateList->items[i];
 
             if (PHYS_CALL(o, m48) == 3) {
                 s32 t1 = (o->x >> 8) - (self->x >> 8);
@@ -217,7 +217,7 @@ void sub_800F06C(struct phys_obj *self, s32 dist)
                 }
             }
             i++;
-        } while (i < gUnknown_0300130C->count);
+        } while (i < gCrateList->count);
     }
 
     i = 0;
@@ -244,11 +244,11 @@ void sub_800F06C(struct phys_obj *self, s32 dist)
     self->u48.n = 0xff;
 }
 
-/* Takes no arguments - a pure `gUnknown_0300130C` list-scan helper,
- * called from the still-raw `sub_80232C8`/`0x08023A1C` caller elsewhere
+/* Takes no arguments - a pure `gCrateList` list-scan helper,
+ * called from the still-raw `IsSwitchPressed`/`0x08023A1C` caller elsewhere
  * (outside this issue's scope). First calls `sub_800F258` (below) to
  * settle any pending case-`0xa` collisions, then loops
- * `gUnknown_0300130C` up to twice (an outer `do { ... } while
+ * `gCrateList` up to twice (an outer `do { ... } while
  * (gUnknown_030012B0)` driven by a one-shot re-scan flag stored at
  * `gUnknown_030012B0`): for every object whose `_call_via_r1`
  * classification against `self` is `3` and whose `+0xc` bit `1` is set,
@@ -269,12 +269,12 @@ void sub_800F1B8(void)
     sub_800F258();
     do {
         gUnknown_030012B0 = 0;
-        for (i = 0; i < gUnknown_0300130C->count; i++) {
-            struct phys_obj *o = gUnknown_0300130C->items[i];
+        for (i = 0; i < gCrateList->count; i++) {
+            struct phys_obj *o = gCrateList->items[i];
 
             if (PHYS_CALL(o, m48) == 3) {
                 if (o->flags & 1) {
-                    sub_8009AA0(gUnknown_0300130C, i);
+                    sub_8009AA0(gCrateList, i);
                     if (o != NULL)
                         PHYS_CALL1(o, m50, 3);
                     i--;
@@ -286,7 +286,7 @@ void sub_800F1B8(void)
     } while (gUnknown_030012B0);
 }
 
-/* Takes no arguments. A short `gUnknown_0300130C` list-scan: for every
+/* Takes no arguments. A short `gCrateList` list-scan: for every
  * object whose `_call_via_r1` overlap-classification against `self` is
  * `3`, whose `+0x4e` state is `0xa`, and whose `+0x4d & 0x7f` is clear,
  * calls `sub_800EEF0(other, 0)` - i.e. settles any object still parked
@@ -300,8 +300,8 @@ void sub_800F258(void)
 {
     s32 i = 0;
 
-    if (i < gUnknown_0300130C->count) {
-        struct phys_obj_list **list = &gUnknown_0300130C;
+    if (i < gCrateList->count) {
+        struct phys_obj_list **list = &gCrateList;
 
         do {
             struct phys_obj *o = (*list)->items[i];
@@ -321,7 +321,7 @@ void sub_800F258(void)
  * is already nonzero (a pending sub-state timer, same field
  * `sub_800F06C` resets to `-1`).
  *
- * Sets `self+0x4d` bit `0x80`, `gUnknown_030012D8+0x80 = 1`, tags
+ * Sets `self+0x4d` bit `0x80`, `gPlayer+0x80 = 1`, tags
  * `self+0x2d = 0x23` (a "bounced/deflected" state constant, matching
  * this cluster's numbering - `sub_800F368` below uses `0x22` for a
  * closely related case), then runs the
@@ -337,7 +337,7 @@ void sub_800F258(void)
  * or combo-counter bump) and plays a fixed sound
  * (`gAudioContext`, id 4). Sets `self+0x48 = 1` (arms the sub-state
  * timer `sub_800F06C` later drains back to `-1`) and calls
- * `sub_802306C(gLevelState)` (external, unread). */
+ * `PressSwitchCrate(gLevelState)` (external, unread). */
 
 void sub_800F2BC(struct phys_obj *self)
 {
@@ -348,7 +348,7 @@ void sub_800F2BC(struct phys_obj *self)
 
         self->state |= 0x80;
         {
-            struct gobj *player = gUnknown_030012D8;
+            struct gobj *player = gPlayer;
             one = 1;
             player->unk_80 = one;
         }
@@ -360,7 +360,7 @@ void sub_800F2BC(struct phys_obj *self)
         sub_8028474(gHud);
         PlaySfx(gAudioContext, 4, 0x100);
         self->u48.n = one;
-        sub_802306C(gLevelState);
+        PressSwitchCrate(gLevelState);
     }
 }
 
@@ -372,9 +372,9 @@ void sub_800F2BC(struct phys_obj *self)
  * proceeds while it's some other in-progress value) - the inverse
  * early-out shape from `sub_800F2BC`'s simple "nonzero" check.
  *
- * Sets `self+0xc` bit `0x10`, calls `sub_8009150(gUnknown_0300130C,
+ * Sets `self+0xc` bit `0x10`, calls `sub_8009150(gCrateList,
  * self)` (re-adds `self` to the active list, same call `sub_800EEF0`
- * makes), sets `self+0x4d` bit `0x80` and `gUnknown_030012D8+0x80 = 1`,
+ * makes), sets `self+0x4d` bit `0x80` and `gPlayer+0x80 = 1`,
  * tags `self+0x2d = 0x22` (this case's own state constant), and runs
  * the same `sub_80087C0`/`sub_80087B4`/`sub_800872C` triplet plus the
  * `sub_8006DF8`-driven `self+0x29` nibble update `sub_800F2BC` uses.
@@ -382,7 +382,7 @@ void sub_800F2BC(struct phys_obj *self)
  * position in the same 32x32 collision-cell bitmap `sub_800EEF0`
  * touches).
  *
- * Then walks `gUnknown_0300130C`'s whole list a *second* time (distinct
+ * Then walks `gCrateList`'s whole list a *second* time (distinct
  * from the `_call_via_r1`-classification passes above): collects up to
  * 0x20 other objects whose `_call_via_r1` result is `3`, `+0x4d & 0x7f
  * == 0`, `+0x4e == 5`, and `+0x50` matches `self+0x50`, into a local
@@ -408,10 +408,10 @@ void sub_800F368(struct phys_obj *self)
         return;
 
     self->flags |= 0x10;
-    sub_8009150(gUnknown_0300130C, self);
+    sub_8009150(gCrateList, self);
     self->state |= 0x80;
     {
-        struct gobj *player = gUnknown_030012D8;
+        struct gobj *player = gPlayer;
         u8 one = 1;
         player->unk_80 = one;
     }
@@ -425,9 +425,9 @@ void sub_800F368(struct phys_obj *self)
     sub_8025A0C(gEntityFlags, self->id);
 
     i = 0;
-    if (i < gUnknown_0300130C->count) {
+    if (i < gCrateList->count) {
         do {
-            struct phys_obj *o = gUnknown_0300130C->items[i];
+            struct phys_obj *o = gCrateList->items[i];
 
             if (PHYS_CALL(o, m48) == 3 && (o->state & 0x7f) == 0) {
                 if (o->kind == 5 && o->unk_50 == self->unk_50) {
@@ -438,7 +438,7 @@ void sub_800F368(struct phys_obj *self)
                 }
             }
             i++;
-        } while (i < gUnknown_0300130C->count);
+        } while (i < gCrateList->count);
     }
 
     if (n != 0) {
@@ -594,7 +594,7 @@ void sub_800F5B8(struct phys_obj *self)
  * `src/graphics/actor_part38.c`'s existing extern: called as
  * `sub_800F6B8(part->x >> 8, part->y >> 8, 0x40, 0x12)`, a fixed
  * 0x40x0x12 probe box around an actor-part's own position). Walks
- * `gUnknown_0300130C`'s whole list: for every object whose
+ * `gCrateList`'s whole list: for every object whose
  * `_call_via_r1` classification against the probe box is `3`, whose
  * Chebyshev distance is within `(arg2, arg3)` on X/Y respectively, and
  * whose `+0x4d & 0x7f == 0`, looks up
@@ -610,11 +610,11 @@ void sub_800F6B8(s32 x, s32 y, s32 dist, s32 height)
 {
     s32 i = 0;
 
-    if (i < gUnknown_0300130C->count) {
+    if (i < gCrateList->count) {
         u8 *commit = gStaticData_0816BBC4;
 
         do {
-            struct phys_obj *o = gUnknown_0300130C->items[i];
+            struct phys_obj *o = gCrateList->items[i];
 
             if (PHYS_CALL(o, m48) == 3) {
                 s32 t1 = (o->x >> 8) - x;
@@ -634,7 +634,7 @@ void sub_800F6B8(s32 x, s32 y, s32 dist, s32 height)
                 }
             }
             i++;
-        } while (i < gUnknown_0300130C->count);
+        } while (i < gCrateList->count);
     }
 }
 
@@ -653,7 +653,7 @@ void sub_800F6B8(s32 x, s32 y, s32 dist, s32 height)
  * marks `self` "visited this frame" in `gUnknown_030012B0`'s per-cell
  * bitmap (the same 32x32-grid convention `sub_800EEF0`/`sub_800F368`
  * use, here against `gEntityFlags`) and walks
- * `gUnknown_030012D8+0x94`'s "recently touched" ring buffer
+ * `gPlayer+0x94`'s "recently touched" ring buffer
  * (`sub_0800D18C`'s own 5-slot buffer, per game_loop47.c's doc comment)
  * clearing each slot's `+0x94` re-visit flag once it matches `self`.
  *
@@ -699,7 +699,7 @@ void sub_800F798(struct phys_obj *self)
             PHYS_SET_ID_BIT(self->id);
         i = 0;
         if (i < PHYS_PLAYER->ringCount) {
-            struct phys_player **pp = (struct phys_player **)&gUnknown_030012D8;
+            struct phys_player **pp = (struct phys_player **)&gPlayer;
 
             do {
                 if (PhysRingAt(*pp, i) == self)
@@ -771,7 +771,7 @@ void sub_800F8E0(struct phys_obj *self)
  *
  * First, unless `self+0x48` already has its `0xc0` high bits set,
  * clamps `self`'s position to within 0x4f/0x3f px of
- * `gUnknown_030012D8` (the player) on X/Y respectively, folding the
+ * `gPlayer` (the player) on X/Y respectively, folding the
  * result into `self+0x48`'s packed byte (`(x & 0x3f) | 0x40`, masked
  * against `0xc7`, then `| 0x10`) - a "snap into range" step. Early-outs
  * entirely (jumps to the tail) once `self+0x4f` is nonzero.
@@ -809,7 +809,7 @@ void sub_800F990(struct phys_obj *self)
     w = self->u48.n;
     if (!(w & 0xc0))
     {
-        struct gobj *pl = gUnknown_030012D8;
+        struct gobj *pl = gPlayer;
         s32 d;
 
         d = pl->x >> 8;

@@ -53,9 +53,9 @@ name, from earlier sessions working the surrounding `actor_part11.c`-
   span" in the same pass.
 
 This session re-read all 18 with the additional context accumulated
-since (the `+0x8c`/`gUnknown_0300082C` frame-counter convention, the
+since (the `+0x8c`/`gRoomFrameCount` frame-counter convention, the
 `+0x88`/`+0xac`/`+0xb0` field family cross-referenced across
-`sub_800A734`/`sub_800A810`/`sub_800AFF4`/`sub_800A884`, and the
+`sub_800A734`/`sub_800A810`/`DrawPlayer`/`sub_800A884`, and the
 established register-pin/goto idioms this file family needs) and found
 6 of the 18 tractable enough to fully understand and reconstruct in C.
 The other 12 remain genuinely hard for the reasons the prior sessions
@@ -213,18 +213,18 @@ this file's original writing - see the update note on the entry below.
   reentrancy-guard-shaped wrapper around `sub_800A0FC` with a two-level
   jump-table dispatch; calls the unexamined `sub_8026BC0`.
 - **`sub_800AAEC`** (`asm/code_3_2_16.s`, ROM `0x0800AAEC`) - iterates
-  a global list (`gUnknown_0300130C`) calling the unexamined
+  a global list (`gCrateList`) calling the unexamined
   `sub_8026628`/`sub_800CD00`.
 - **`sub_800AB9C`** (`asm/code_3_2_16.s`, ROM `0x0800AB9C`) - calls the
   raw `sub_8009868` and the unexamined `sub_80106DC`.
-- **`sub_800AC2C`** (`asm/code_3_2_16.s`, ROM `0x0800AC2C`, ~950 B) - a
+- **`PlayerHandleEvent`** (`asm/code_3_2_16.s`, ROM `0x0800AC2C`, ~950 B) - a
   38-case jump-table player action-state dispatcher (the same shape
   `docs/status/actor.md` already flags as "left raw, out of scope" for
   `sub_8018008` in GitHub issue #22); calls a dozen still-unexamined
-  state-transition functions (`GetCurrentLevelFlags`, `sub_8022D50`,
-  `sub_8025BAC`, `SetMaskLevel`, `sub_80232E4`, `RaiseMaskLevel`, and
+  state-transition functions (`GetCurrentLevelFlags`, `StartTimeTrial`,
+  `sub_8025BAC`, `SetMaskLevel`, `AddDeath`, `RaiseMaskLevel`, and
   others).
-- **`sub_800AFF4`** (`asm/code_3_2_16.s`, ROM `0x0800AFF4`, ~636 B) -
+- **`DrawPlayer`** (`asm/code_3_2_16.s`, ROM `0x0800AFF4`, ~636 B) -
   high register-pressure (`sb`/`sl`/`r8` all live simultaneously)
   hitbox-record lookup/commit logic referencing the `+0x20`/`+0x2d`
   convention from `docs/rom_map.md`'s physics/collision write-up, but
@@ -233,7 +233,7 @@ this file's original writing - see the update note on the entry below.
 
 None of these were force-matched or guessed at; each is either blocked
 on an unmatched/unexamined callee whose real behavior isn't pinned
-down, or (for `sub_8007634`/`sub_800AC2C`) large enough that a
+down, or (for `sub_8007634`/`PlayerHandleEvent`) large enough that a
 low-confidence single-pass reconstruction risks leaving wrong
 documentation behind.
 
@@ -284,7 +284,7 @@ documentation behind.
   above for the specific entries.
 - `docs/matching/issue-12-physics-collision.md` - the neighboring
   physics/collision subsystem several of this issue's left-raw
-  functions (`sub_8009868` via `sub_80109A4`, `sub_800AFF4`) eventually
+  functions (`sub_8009868` via `sub_80109A4`, `DrawPlayer`) eventually
   lead into.
 
 ## Later pass (issue #9 NAKED retry)

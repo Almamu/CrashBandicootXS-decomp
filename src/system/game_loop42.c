@@ -25,7 +25,7 @@
 extern void SetAabbPos(void *buf, s32 arg1, s32 arg2);
 extern void SetAabbSize(void *buf, s32 arg1, s32 arg2);
 extern u8 sub_8001688(void *buf1, void *buf2);
-extern void *gUnknown_030012D8;
+extern void *gPlayer;
 extern void *sub_801070C(void *obj); /* "get next" */
 extern void *sub_8010708(void *obj); /* "get prev" */
 
@@ -64,7 +64,7 @@ struct ceac_player {
 };
 
 /* Called once by `sub_0800D18C` (its only caller), passing the
- * player's (`gUnknown_030012D8`) own hitbox quad (`player's +0x20`
+ * player's (`gPlayer`) own hitbox quad (`player's +0x20`
  * table, indexed by the player's own `+0x2d` tag, at the record's
  * `+4` quad) together with `self`'s own cached `x>>8`/`y>>8` shift
  * values and `self`'s own already-built AABB (`box`, built by the
@@ -74,7 +74,7 @@ struct ceac_player {
  * Builds a *hybrid* AABB - the player's hitbox dimensions, positioned
  * at `self`'s location (`quad->xOff + xOffset`, `quad->yOff +
  * yOffset`) - i.e. "if a player-shaped box were standing where `self`
- * currently is". When `gUnknown_030012D8+0x90` (an unconfirmed player
+ * currently is". When `gPlayer+0x90` (an unconfirmed player
  * state/mode byte, not documented elsewhere under this exact offset -
  * `+0x92`/`+0x94` are separately documented state bytes right next to
  * it, see `docs/matching/issue-18-0x08014f8c-actor.md`) is nonzero,
@@ -112,7 +112,7 @@ u8 sub_800CEAC(void *self, struct hitbox_quad *quad, struct aabb *box,
 {
     struct aabb b;
 
-    if (((struct ceac_player *)gUnknown_030012D8)->wide) {
+    if (((struct ceac_player *)gPlayer)->wide) {
         s32 x = quad->xOff;
         s32 y = quad->yOff;
         u8 h = quad->h;
@@ -133,9 +133,9 @@ u8 sub_800CEAC(void *self, struct hitbox_quad *quad, struct aabb *box,
         SetAabbPos(&b, x + xOffset, y + yOffset);
         SetAabbSize(&b, w, h);
     }
-    if (((struct ceac_player *)gUnknown_030012D8)->mirrorX)
+    if (((struct ceac_player *)gPlayer)->mirrorX)
         b.field_0 = xOffset * 2 - (b.field_0 + b.field_8);
-    if (((struct ceac_player *)gUnknown_030012D8)->mirrorY)
+    if (((struct ceac_player *)gPlayer)->mirrorY)
         b.field_4 = yOffset * 2 - (b.field_4 + b.field_c);
     if (sub_8001688(box, &b))
         return 1;
@@ -143,7 +143,7 @@ u8 sub_800CEAC(void *self, struct hitbox_quad *quad, struct aabb *box,
 }
 
 /* `sub_0800D18C`'s single-step neighbor probe, called while its own
- * 5-slot "recently touched" ring-buffer counter (`gUnknown_030012D8
+ * 5-slot "recently touched" ring-buffer counter (`gPlayer
  * +0x94`-adjacent counter at the caller's own stack cache) is `<= 4`
  * (confirmed at the call site: `cmp r3,#4; bgt` skips the call
  * entirely and uses `self` directly instead).

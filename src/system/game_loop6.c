@@ -14,14 +14,14 @@
 extern void SetAabbPos(void *buf, s32 arg1, s32 arg2);
 extern void SetAabbSize(void *buf, s32 arg1, s32 arg2);
 extern u8 sub_8001688(void *buf1, void *buf2);
-extern void *gUnknown_030012D8;
-#define gPlayerPart (*(struct box_part **)&gUnknown_030012D8)
+extern void *gPlayer;
+#define gPlayerPart (*(struct box_part **)&gPlayer)
 extern u8 gStaticData_0816BBC4[];
 extern void sub_800EEF0(void *self, u8 arg1);
 extern void sub_800E7A8(void *self, u8 arg1, u8 arg2, u8 arg3);
 
 /* Builds two AABBs - one for `self`, one for the player
- * (`gUnknown_030012D8`) - from the shared "keyframe/hitbox record"
+ * (`gPlayer`) - from the shared "keyframe/hitbox record"
  * table convention already established by `sub_8007B00`/`sub_8007B98`
  * in actor_part.c (`self+0x20` -> a pointer-to-table, indexed by
  * `self+0x2d` at 0x1c/28-byte stride; here the {s16 xOff, s16 yOff, u8
@@ -42,7 +42,7 @@ extern void sub_800E7A8(void *self, u8 arg1, u8 arg2, u8 arg3);
  * both). The ROM recomputes the player box's address (`add r0/r1, sp,
  * #16`) at each of its three uses; with plain `&f.b`, cse and gcse turn
  * them into one pseudo held in a callee-saved register across both
- * builder calls, which shifts px/py/&gUnknown_030012D8 up a register.
+ * builder calls, which shifts px/py/&gPlayer up a register.
  * `BOX_ADDR` passes each use through an empty `asm("" : "+r")`, which
  * hides the value from cse, so each is its own single-use pseudo that
  * combine folds into the `add` right before the call. The first build's

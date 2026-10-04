@@ -12,7 +12,7 @@
  * function (~3840 B, not the ~1960 B this issue's write-up originally
  * estimated - see docs/matching/issue-12-physics-collision.md's
  * "Phase 1" appendix for the correction). Builds `self`'s and the
- * player's (`gUnknown_030012D8`) AABBs via the shared
+ * player's (`gPlayer`) AABBs via the shared
  * `self+0x20`-table/`self+0x2d`-tag/28-byte-stride hitbox-record
  * convention (`sub_800D040`'s own "AABB1" shape), then:
  *
@@ -29,7 +29,7 @@
  *   (see this issue doc's dispatch-map appendix for the exact
  *   case-to-target mapping).
  * - Walks `self`'s neighbor list both directions
- *   (`sub_8010708`/`sub_801070C`) maintaining `gUnknown_030012D8`'s
+ *   (`sub_8010708`/`sub_801070C`) maintaining `gPlayer`'s
  *   5-slot "recently touched" object ring buffer (`+0x94` counter,
  *   `+0x98`+ array).
  * - Runs a second, larger 9-case jump table (case ids 0-8, most cases
@@ -56,7 +56,7 @@
  * for what each step fixed. */
 #include "phys_obj.h"
 
-/* The player (gUnknown_030012D8) as this function reads it. */
+/* The player (gPlayer) as this function reads it. */
 struct d18c_player
 {
     s32 x;              // 0x00
@@ -99,7 +99,7 @@ struct d18c_player
     struct phys_obj *ring[5]; // 0x98
 };
 
-#define D18C_P ((struct d18c_player *)gUnknown_030012D8)
+#define D18C_P ((struct d18c_player *)gPlayer)
 /* sub_8010D54's queue, at player+0x108 (+4: "position committed"). */
 #define D18C_QUEUE(p) ((u8 *)(p) + 0x108)
 #define D18C_COMMIT()                                                          \
@@ -271,7 +271,7 @@ static inline void D18C_SetBusy(struct d18c_player *p, u8 v)
 
 static inline s32 D18C_TimerOver(void)
 {
-    return D18C_P->timer > gUnknown_0300082C;
+    return D18C_P->timer > gRoomFrameCount;
 }
 
 /* `a` through a copy that an empty asm claims to modify (emits nothing):
@@ -976,7 +976,7 @@ tail:
  * dispatch's cases 1/2/4). Takes `self` plus a dispatch id (`arg1`),
  * an edge/side value (`arg2`), a third register arg (`arg3`), and 3
  * more stack-passed byte args (per docs/rom_map.md's existing read).
- * Reads/writes several `gUnknown_030012D8+0x24`/`+0x88`/`+0x92`/`+0x94`
+ * Reads/writes several `gPlayer+0x24`/`+0x88`/`+0x92`/`+0x94`
  * fields not otherwise touched outside this subsystem, and its own
  * 6-case jump table (case ids 0-5) dispatches to the exact same
  * handler family `sub_0800D18C` itself uses -
@@ -1169,7 +1169,7 @@ void sub_800E08C(struct phys_obj *self, s32 kind, s32 code, s32 edge, s32 depth,
             sub_800E7A8_flag(self, 0, f20.s, edge);
         else
         {
-            struct phys_player **pp = (struct phys_player **)&gUnknown_030012D8;
+            struct phys_player **pp = (struct phys_player **)&gPlayer;
 
             if ((*pp)->ringCount != 0 && forced == 0)
                 return;

@@ -4,7 +4,7 @@
 `part`-vs-player collision handler documented at length in
 `docs/matching.md`'s "Parked, not matched: `sub_8007DBC`" entry: two
 `part->flags` bit tests gate an AABB collision test against the player
-global `gUnknown_030012D8` (via the already-matched `sub_8007B98`/
+global `gPlayer` (via the already-matched `sub_8007B98`/
 `sub_8001688`), a hit plays a sound (the `sub_8007048`-style
 `table+0x68` offset/`table+4` dead-read idiom keyed off
 `part->field_0A`), marks itself in the `gEntityFlags` bitmap at
@@ -15,7 +15,7 @@ to spawn an object at `part`'s position.
 
 The plain-C reconstruction (still readable in git history) got every
 operation, operand, and instruction order right except one systematic
-register letter: the cached `&gUnknown_030012D8` address landed in
+register letter: the cached `&gPlayer` address landed in
 `r6` instead of the ROM's `r7`. Since that value is read from
 repeatedly across several basic blocks (both `sub_8007B98` calls, the
 `_call_via_r4` sound-position lookup), the single-register mismatch
@@ -42,7 +42,7 @@ several functions in `src/system/link_cable.c` and
   order the ROM's own branch targets and literal-pool entries appear,
   rather than named labels, since the whole function is one `asm()`
   string.
-- Reproduces the ROM's hand-placed literal pools (`gUnknown_030012D8`,
+- Reproduces the ROM's hand-placed literal pools (`gPlayer`,
   the `0xFFFF` sentinel, `gEntityFlags`, and four separate
   `gEntitySpawner` pool copies feeding the six-case spawn switch's
   jump table) at their exact original positions, including the

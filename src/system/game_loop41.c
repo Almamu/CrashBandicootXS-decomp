@@ -3,7 +3,7 @@
 /* GitHub issue #34/#40/#41, `UpdateGameFrame`-`MainLoop` cluster: the
  * second of the two raw functions `docs/matching/issue-34-game-loop-
  * 8022d50-80255d4.md` left for a follow-up pass (the first,
- * `sub_8022D50`, is `game_loop40.c`, now plain C).
+ * `StartTimeTrial`, is `game_loop40.c`, now plain C).
  *
  * `self` is `*gEntityFlags` (the same collision-bitmap base
  * `sub_8025944`/`sub_8025968`/`sub_802599C`, game_loop12.c, and
@@ -17,7 +17,7 @@
  * expanding to the exact same `REG_DMA3`-field-by-field store sequence
  * seen here); either way `self+8`->`self+0x108` and
  * `self+0x208`->`self+0x308` get unconditionally `CpuSet`-copied via
- * `CpuSet(src, dst, 0x04000040)` (the same idiom `sub_8022CA0`,
+ * `CpuSet(src, dst, 0x04000040)` (the same idiom `SetCheckpointAtPlayer`,
  * game_loop.c, already documents in the opposite direction), and
  * `self+4` is set from `posArg >> 8` (a Q8-to-int truncation). `list`
  * is then walked as a `{count:u16 @2, groups:ptr @4}` header over
@@ -30,7 +30,7 @@
  * `gEntitySpawner`'s table.
  *
  * Second half (skipped when `links` is NULL): each actor in
- * `gUnknown_0300130C` whose id is a link's `from` is chained
+ * `gCrateList` whose id is a link's `from` is chained
  * (`sub_8010714`/`sub_8010710`) to the actor with the link's `to` id,
  * following further links while `to` isn't spawned. Then each link whose
  * `from` actor doesn't exist resolves its `to` chain to a spawned actor
@@ -142,7 +142,7 @@ struct lk_actor_list
 };
 
 extern void *gEntitySpawner;
-extern struct lk_actor_list *gUnknown_0300130C;
+extern struct lk_actor_list *gCrateList;
 extern void CpuSet(void *src, void *dst, s32 control);
 extern u8 sub_8025968(struct lk_self *self, s32 n);
 extern void SpawnEntity(void *table, s32 n, struct lk_item *item);
@@ -191,9 +191,9 @@ void SpawnRoomEntities(struct lk_self *self, struct lk_list *list, struct lk_lin
     lk = links->links;
 
     {
-        for (i = gUnknown_0300130C->count - 1; i >= 0; i--)
+        for (i = gCrateList->count - 1; i >= 0; i--)
         {
-            struct lk_actor *actor = gUnknown_0300130C->items[i];
+            struct lk_actor *actor = gCrateList->items[i];
             u16 id = actor->id;
             s32 j;
 
@@ -210,9 +210,9 @@ void SpawnRoomEntities(struct lk_self *self, struct lk_list *list, struct lk_lin
                         s32 missing;
                         s32 m;
 
-                        for (k = gUnknown_0300130C->count - 1; k >= 0; k--)
+                        for (k = gCrateList->count - 1; k >= 0; k--)
                         {
-                            struct lk_actor *other = gUnknown_0300130C->items[k];
+                            struct lk_actor *other = gCrateList->items[k];
 
                             if (to == other->id)
                             {
@@ -261,9 +261,9 @@ void SpawnRoomEntities(struct lk_self *self, struct lk_list *list, struct lk_lin
             s32 got;
             s32 m;
 
-            for (k = 0; k < gUnknown_0300130C->count; k++)
+            for (k = 0; k < gCrateList->count; k++)
             {
-                if (gUnknown_0300130C->items[k]->id == from)
+                if (gCrateList->items[k]->id == from)
                 {
                     found = 1;
                     goto chk;
@@ -288,14 +288,14 @@ void SpawnRoomEntities(struct lk_self *self, struct lk_list *list, struct lk_lin
                     {
                         missing = 0;
                         next = (u16)lk[m].to;
-                        for (k2 = 0; k2 < gUnknown_0300130C->count; k2++)
+                        for (k2 = 0; k2 < gCrateList->count; k2++)
                         {
                             /* Pinned: the ROM keeps the item pointer in
                              * r0 and the id in r1. As a local temporary
                              * the id is allocated first and takes r0. */
                             register u16 aid asm("r1");
 
-                            actor = gUnknown_0300130C->items[k2];
+                            actor = gCrateList->items[k2];
                             aid = actor->id;
                             if (aid == to)
                             {
@@ -311,9 +311,9 @@ void SpawnRoomEntities(struct lk_self *self, struct lk_list *list, struct lk_lin
                     goto move;
                 if (missing)
                 {
-                    for (k3 = 0; k3 < gUnknown_0300130C->count; k3++)
+                    for (k3 = 0; k3 < gCrateList->count; k3++)
                     {
-                        struct lk_actor *a = gUnknown_0300130C->items[k3];
+                        struct lk_actor *a = gCrateList->items[k3];
 
                         if (a->id == to)
                         {

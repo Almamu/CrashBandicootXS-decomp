@@ -23,8 +23,8 @@
 . = 0x000012C8; gPaletteCycles = .;
 . = 0x000012CC; gUnknown_030012CC = .;
 . = 0x000012D0; gUnknown_030012D0 = .;
-. = 0x000012D4; gUnknown_030012D4 = .;
-. = 0x000012D8; gUnknown_030012D8 = .;
+. = 0x000012D4; gCamera = .;
+. = 0x000012D8; gPlayer = .;
 . = 0x000012DC; gSmallFont = .;
 . = 0x000012E0; gLargeFont = .;
 . = 0x000012E4; gEntitySpawner = .;
@@ -37,8 +37,8 @@
 . = 0x00001300; gUnknown_03001300 = .;
 . = 0x00001304; gUnknown_03001304 = .;
 . = 0x00001308; gLevelLayers = .;
-. = 0x0000130C; gUnknown_0300130C = .;
-. = 0x00001310; gUnknown_03001310 = .;
+. = 0x0000130C; gCrateList = .;
+. = 0x00001310; gPlayerCtrl = .;
 . = 0x00001314; gUnknown_03001314 = .;
 . = 0x00001318; gHud = .;
 . = 0x00001320; gUnknown_03001320 = .;

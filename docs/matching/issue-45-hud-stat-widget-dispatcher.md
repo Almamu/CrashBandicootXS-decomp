@@ -39,7 +39,7 @@ void UpdateHud(struct hud_counter *self)
         sub_802757C(self);
         return;                       /* early return - the rest is skipped */
     }
-    if (sub_80232B8(gLevelState)) {
+    if (IsInBonusRound(gLevelState)) {
         gHudSlideOffset = 0;
         sub_8008044(&self->parts[34]);        /* recomputed fresh both times, not cached */
         DrawHudPart(&self->parts[34], 0, 0);
@@ -174,7 +174,7 @@ in either function reads it back).
 
 - **`TickPaletteCycles`** (consumer, called with just `self`): for each of
   `self->count` active slots, checks
-  `__umodsi3(gUnknown_0300082C, periods[i]) == 0` (a "how many frames
+  `__umodsi3(gRoomFrameCount, periods[i]) == 0` (a "how many frames
   since this slot's period elapsed" test) and, when it fires, rotates
   `targets[i]` by one position along the permutation order
   `lists[i]` gives - forwards (`direction` set) or backwards
@@ -230,12 +230,12 @@ documented for this same function family:
   their C source order by this compiler - swapping the two changed
   which one came first in the generated code, matching the ROM's
   `movs r4, #0` preceding its `ldr r0, [r7, #0x40]`.
-- **Deferred global dereference**: `__umodsi3(gUnknown_0300082C, *p)`
-  written as a plain `u32 global_val = gUnknown_0300082C;` local
+- **Deferred global dereference**: `__umodsi3(gRoomFrameCount, *p)`
+  written as a plain `u32 global_val = gRoomFrameCount;` local
   dereferences the global immediately after taking its address. The
   ROM takes the address first, does unrelated work (the offset/pointer
   build for the second argument), and only dereferences it right before
-  the call. Fix: `u32 *global_addr = &gUnknown_0300082C;` (address
+  the call. Fix: `u32 *global_addr = &gRoomFrameCount;` (address
   only) followed by `*global_addr` used directly in the call expression,
   which this compiler schedules where the value is actually needed.
 - **Index-read vs. shifted-address in different registers**: the ROM's
@@ -389,7 +389,7 @@ time already spent on the six functions above:
 - **`UpdateHudWumpa`**/**`sub_8027E88`**: not read in this pass beyond
   their entry (mode-dispatch header identical in shape to
   `sub_8027940`'s own `self+8`/`self+0xc` check) - `UpdateHudWumpa` calls
-  `GetWumpa` where `sub_8027940` called `sub_8023414`, suggesting the
+  `GetWumpa` where `sub_8027940` called `GetCrateCount`, suggesting the
   same digit-counter shape against a different value source;
   `sub_8027E88`, per the rom_map.md "fx" investigation, is the
   percentage-counter widget with a `cmp r1, #0x64` special case.

@@ -14,7 +14,7 @@ extern void sub_8017994(void *arg0);
 
 /* `part`-object constructor/reset: clears the velocity/accel fields
  * `sub_800A590`/`sub_8009DF4` consume, resets state (`+0x68`) to 8,
- * snapshots the current frame counter (`gUnknown_0300082C`) into
+ * snapshots the current frame counter (`gRoomFrameCount`) into
  * `+0x8c` (the same "periodic check" field documented elsewhere in
  * this ROM), zeroes the `+0x100`-`+0x105` per-phase flag bytes
  * `actor_part15.c`'s doc comment already describes, and hooks up a
@@ -145,7 +145,7 @@ void sub_800A734(void *selfArg)
          * update followed by an offset-0 store. */
         register u8 *pinnedP1 asm("r1") = p1;
         asm volatile("add %0, %0, #0x24" : "+l"(pinnedP1)); /* self+0x8c */
-        *(s32 *)pinnedP1 = gUnknown_0300082C;
+        *(s32 *)pinnedP1 = gRoomFrameCount;
         p1 = pinnedP1;
     }
 

@@ -56,7 +56,7 @@ transition idiom seen throughout this ROM region
 (`sub_802C4C8`/`sub_802C540`/`sub_802C614` in `actor_part19g.c`): a
 sound cue (`PlaySfx(gAudioContext, 4, 0x100)` - the same sound id 4
 `sub_802C6C0`'s own proximity-pickup branch uses), the lap-counter tie
-`sub_8022FEC(gLevelState)`, `node+0x44`/`node+0x12`/`node+8`
+`AddBrokenCrate(gLevelState)`, `node+0x44`/`node+0x12`/`node+8`
 cleared, `node+0xc = 0x12`, and the node's own anim-frame base reloaded
 from its part table's `+0xd8` halfword into `node+0x10`. In short: once
 one pickup has been "used" for 0x14 frames, it triggers a proximity
@@ -86,7 +86,7 @@ A real C attempt got remarkably close before hitting this: pinning
 roles for those three) reproduced the correct 0x24-byte stack frame,
 the correct `gActorList` double-reload (once at entry, once
 again at the loop-end condition check - not cached across the
-intervening `PlaySfx`/`sub_8022FEC` calls, since referencing the global
+intervening `PlaySfx`/`AddBrokenCrate` calls, since referencing the global
 directly at both C-level use sites rather than caching it in a local
 lets the compiler's own conservative cross-call reload behavior do the
 work), and the correct zero-register reuse for the `+0x44`/`+0x12`/`+8`
@@ -159,7 +159,7 @@ compile except two register-order gotchas worth recording:
    later `register s32 zero2 asm("r2") = 0;` used for the shared
    anim-reset block's `self+8` store. The ROM reuses a *single* `r2`
    zero for both stores (materialized once, after the `PlaySfx`/
-   `sub_8022FEC` calls, then carried through the intervening `self+0xc`/
+   `AddBrokenCrate` calls, then carried through the intervening `self+0xc`/
    anim/`+0x12` writes to the final `self+8` store) - two independent
    zero materializations cost 2 extra bytes, which cascaded into a
    4-byte function-boundary shift once the trailing `.align 2, 0`

@@ -14,7 +14,7 @@ extern void *gActorList;
 extern void *gAudioContext;
 extern void *gLevelState;
 extern u8 sub_802A6EC(void *self);
-extern void sub_8022FEC(void *self);
+extern void AddBrokenCrate(void *self);
 extern void FreezeLevelClock(void *arg0, s32 arg1);
 extern void sub_802C078(void *arg0, s32 delta);
 extern void sub_802C4C8(void *selfArg);
@@ -46,7 +46,7 @@ void sub_802C99C(void *selfArg)
         s32 typeByte;
 
         PlaySfx(gAudioContext, 3, 0x100);
-        sub_8022FEC(gLevelState);
+        AddBrokenCrate(gLevelState);
 
         typeByte = **(u8 **)((u8 *)self + 0x30);
 
@@ -87,7 +87,7 @@ void sub_802CA28(void *selfArg)
 
     if (self->animIndex != 0x12) {
         PlaySfx(gAudioContext, 4, 0x100);
-        sub_8022FEC(gLevelState);
+        AddBrokenCrate(gLevelState);
         {
             register s32 zero2 asm("r2") = 0;
 
@@ -115,7 +115,7 @@ void sub_802CA6C(void *selfArg)
 
     if (self->animIndex != 0x12 && sub_802A6EC(self)) {
         PlaySfx(gAudioContext, 3, 0x100);
-        sub_8022FEC(gLevelState);
+        AddBrokenCrate(gLevelState);
         sub_802C078(gActorList, 4);
         self->animIndex = 0x12;
         {
@@ -140,7 +140,7 @@ void sub_802CAD0(void *selfArg)
 
     if (self->animIndex != 0x12 && sub_802A6EC(self)) {
         PlaySfx(gAudioContext, 3, 0x100);
-        sub_8022FEC(gLevelState);
+        AddBrokenCrate(gLevelState);
         sub_802C078(gActorList, 1);
         self->animIndex = 0x12;
         {

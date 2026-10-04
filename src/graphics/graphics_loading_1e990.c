@@ -5,14 +5,14 @@
 
 extern struct level_state *gLevelState;
 extern void *gEntityFlags;
-extern struct actor *gUnknown_030012D8;
+extern struct actor *gPlayer;
 extern void *gAudioContext;
 
-extern u8 sub_80232F4(void *self);
-extern s32 sub_80232E0(void *self);
-extern s32 sub_8023130(void *self);
+extern u8 GetSpawnAtStart(void *self);
+extern s32 GetDeaths(void *self);
+extern s32 GetMaskAssistDeaths(void *self);
 extern s32 GetLives(void *self);
-extern u8 sub_80232B8(void *self);
+extern u8 IsInBonusRound(void *self);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern void PlaySfx(void *bank, s32 arg1, s32 sfxId);
 
@@ -20,7 +20,7 @@ extern void PlaySfx(void *bank, s32 arg1, s32 sfxId);
  * `LoadGraphicsPackage` cluster's scratch-buffer-style helper family
  * (issue #30). Two independent, unrelated halves:
  *
- * 1. If `sub_80232F4(gLevelState)` (the player's `+0xa8` flag)
+ * 1. If `GetSpawnAtStart(gLevelState)` (the player's `+0xa8` flag)
  *    is set: looks up a per-`z` flags byte via the same
  *    `gEntityFlags -> *rec` entity parameter table
  *    (`paramOffsets[]`/`params`, the room's `struct level_entity_list`)
@@ -35,9 +35,9 @@ extern void PlaySfx(void *bank, s32 arg1, s32 sfxId);
  *    player's `table+0x68` trampoline (via `_call_via_r4`, action
  *    `0x1a`) and plays SFX `0x100` through `gAudioContext`,
  *    unless a budget/reentrancy guard trips first - either the
- *    player's spawn counter (`sub_80232E0`, `+0x7c`) has room against
- *    its cap (`sub_8023130`, `+0x84`), or (when it doesn't) all three
- *    of `GetLives` (`+0x74`), `sub_80232B8` (`+0xa4`) and the
+ *    player's spawn counter (`GetDeaths`, `+0x7c`) has room against
+ *    its cap (`GetMaskAssistDeaths`, `+0x84`), or (when it doesn't) all three
+ *    of `GetLives` (`+0x74`), `IsInBonusRound` (`+0xa4`) and the
  *    level state's `maskLevel` field agree it's still safe to fire.
  *
  * Was a NAKED asm transcription for a long time - see
@@ -45,7 +45,7 @@ extern void PlaySfx(void *bank, s32 arg1, s32 sfxId);
  * history, including the register-choice gap that blocked a real match
  * (the `+0x28` write's address/value register split) and how it closed:
  * the r3-pinned local had to model the *address of the global*
- * (`&gUnknown_030012D8`, a `struct actor **`) with `+0x28` computed as
+ * (`&gPlayer`, a `struct actor **`) with `+0x28` computed as
  * a single dereference-and-add into r1, rather than modeling the
  * *dereferenced value* itself and copying it into r1 afterward - the
  * latter is semantically equivalent but makes gcc materialize the
@@ -53,7 +53,7 @@ extern void PlaySfx(void *bank, s32 arg1, s32 sfxId);
  * the ROM doesn't have. */
 void sub_801E990(u32 arg0, u16 x, u16 y, u16 z)
 {
-    if (sub_80232F4(gLevelState)) {
+    if (GetSpawnAtStart(gLevelState)) {
         register struct level_entity_list *rec asm("r2");
         register u16 *arrayBase asm("r0");
         register s32 addr asm("r1");
@@ -79,7 +79,7 @@ void sub_801E990(u32 arg0, u16 x, u16 y, u16 z)
 
             shiftedByte = byte >> 1;
             one = 1;
-            d8ptr = &gUnknown_030012D8;
+            d8ptr = &gPlayer;
             addr28 = (u8 *)*d8ptr + 0x28;
             shiftedByte &= one;
             shiftedByte <<= 4;
@@ -102,15 +102,15 @@ void sub_801E990(u32 arg0, u16 x, u16 y, u16 z)
         goto end;
     }
     {
-        s32 spawnCount = sub_80232E0(gLevelState);
-        s32 cap = sub_8023130(gLevelState);
+        s32 spawnCount = GetDeaths(gLevelState);
+        s32 cap = GetMaskAssistDeaths(gLevelState);
         if (spawnCount >= cap) {
             goto fire;
         }
         if (GetLives(gLevelState) != 0) {
             goto end;
         }
-        if (sub_80232B8(gLevelState) != 0) {
+        if (IsInBonusRound(gLevelState) != 0) {
             goto end;
         }
         if (gLevelState->maskLevel != 0) {
@@ -125,7 +125,7 @@ fire:
         register void *fn asm("r0");
         register u32 dead asm("r4");
 
-        d8obj = (u8 *)gUnknown_030012D8;
+        d8obj = (u8 *)gPlayer;
         entry = *(u8 **)(d8obj + 0x18);
         entry = entry + 0x68;
         asm volatile("mov r3, #0\n\tldrsh %0, [%1, r3]" : "=r"(fnOffset) : "r"(entry) : "r3");

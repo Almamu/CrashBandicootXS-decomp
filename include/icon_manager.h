@@ -3,7 +3,7 @@
 
 /* `struct icon_manager` is the game's bitmap-font text renderer (the
  * name is historical). There are two fonts, gSmallFont (InitSmallFont)
- * and gLargeFont (InitLargeFont), both built in sub_8022230; menus,
+ * and gLargeFont (InitLargeFont), both built in InitLevelState; menus,
  * the credits and the dialogs draw all their text with them. Calls go
  * through the font's vtable (`record`, gFontVtable/gSmallFontVtable/
  * gLargeFontVtable): `record->slots[n]` is vtable slot n + 2, so

@@ -19,7 +19,7 @@ struct spawned
 };
 
 extern void *gUnknown_03001304;
-extern u32 gUnknown_0300082C;
+extern u32 gRoomFrameCount;
 extern void *gEntitySpawner;
 extern u8 GetDpadDirection(void *arg);
 extern s32 RandRange(s32 max);
@@ -61,7 +61,7 @@ void sub_8015DF8(struct player_ctrl *self)
     }
 
     dir = GetDpadDirection(gUnknown_03001304);
-    if ((gUnknown_0300082C & 0x7F) == 0 && (u16)RandRange(2) == 0)
+    if ((gRoomFrameCount & 0x7F) == 0 && (u16)RandRange(2) == 0)
     {
         struct pctrl_target *t = self->target;
         s32 x = t->x >> 8;

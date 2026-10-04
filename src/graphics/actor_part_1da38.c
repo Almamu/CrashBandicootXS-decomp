@@ -112,7 +112,7 @@ static inline void SetPosQ8(struct sprite *p, s32 x, s32 y)
     p->y = y << 8;
 }
 
-/* Destructor (`level_menu.bg2`, called from sub_801C040). */
+/* Destructor (`level_menu.bg2`, called from DestroyLevelSelect). */
 void sub_801DA38(struct zoom_bg *self, s32 flags)
 {
     sub_8006D68(gUnknown_030012B8, PART_RECORD(self->twinkles[0].part).tileRecord);

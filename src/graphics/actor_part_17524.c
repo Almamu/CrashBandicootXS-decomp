@@ -8,7 +8,7 @@
  * `+0x24`/`+0x25`).
  *
  * The other 19 are one self-contained actor-part subclass,
- * `struct input_ctrl`, whose method table is `gStaticData_087E42F4`
+ * `struct input_ctrl`, whose method table is `gInputCtrlVtable`
  * (constructor `sub_8017A00` - called from game_loop39.c - destructor
  * `sub_80179EC`; every other slot it calls through is a base-class
  * `sub_800B6xx`/`sub_800B8xx` function). Each frame (`sub_8017650`, table
@@ -19,7 +19,7 @@
  * value at the child object's `+0x78` (`+0x1C`, spawned on demand by
  * `sub_8017600`). Once the target passes the level's right edge
  * (`gLevelLayers`'s layer 0 width, less 0xA00) the child is marked
- * gone and `sub_80241A4` is signalled. It then dispatches the current
+ * gone and `RequestRoomExit` is signalled. It then dispatches the current
  * `state` through `gStaticData_0816C290`, a table of gcc 2.x
  * pointer-to-member-functions: state 0 `sub_8017600`, 1 `sub_801796C`,
  * 2 `sub_801793C`, 3 `sub_80178EC`. That call sequence - and the
@@ -96,7 +96,7 @@ struct ctrl_target
     u8 unk_2E[0xA];
     u8 unk_38;        // 0x38
     u8 unk_39[0xCB];
-    u8 unk_104;       // 0x104
+    u8 dead;           // 0x104
 };
 
 struct ctrl_child
@@ -165,7 +165,7 @@ extern u32 gKeys; /* low half: held keys */
 extern struct { u8 unk_00[0x10]; struct { u8 unk_00[0x10]; s32 width; } *layer0; } *gLevelLayers;
 extern struct pmf gStaticData_0816C290[];
 extern u8 gStaticData_0816B8C0[];
-extern u8 gStaticData_087E42F4[];
+extern u8 gInputCtrlVtable[];
 
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 _call_via_r2(void *self, s32 arg, void *fn);
@@ -176,7 +176,7 @@ extern void *sub_8026EDC(u32 size);
 extern struct ctrl_child *sub_801B940(void *mem);
 extern void sub_801B864(struct ctrl_child *child);
 extern void sub_8008E94(void *manager, void *value);
-extern void sub_80241A4(void);
+extern void RequestRoomExit(void);
 extern void sub_800B8A8(void *self, s32 flags);
 extern void sub_800B8C8(void *self);
 
@@ -273,14 +273,14 @@ void sub_8017554(struct flag_pair_owner *self, u8 value)
 }
 
 
-void sub_8017564(struct input_ctrl *self, void *arg)
+void InputCtrlKillPlayer(struct input_ctrl *self, void *arg)
 {
     PlaySfx(gAudioContext, 0x1B, 0x100);
     CTRL_CALL2(self, method_20, 3);
     CTRL_CALL3(self, method_50, self->target, arg);
     self->target->flag7 = 0;
     self->target->flag6 = 0;
-    self->target->unk_104 = 1;
+    self->target->dead = 1;
     LoseLife(gLevelState);
     {
         void *cache = gUnknown_030012B8;
@@ -322,7 +322,7 @@ void sub_8017650(struct input_ctrl *self)
                 MARK_GONE(c);
             }
             self->child = NULL;
-            sub_80241A4();
+            RequestRoomExit();
         }
 
         keys = gKeys;
@@ -486,7 +486,7 @@ void sub_80179D4(struct input_ctrl *self, s32 arg1, s32 arg2)
     s32 lo = 1;
 
     if (arg2 >= lo && arg2 <= 4)
-        sub_8017564(self, (void *)1);
+        InputCtrlKillPlayer(self, (void *)1);
 }
 
 void sub_80179E8(struct input_ctrl *self, struct ctrl_target *target)
@@ -496,14 +496,14 @@ void sub_80179E8(struct input_ctrl *self, struct ctrl_target *target)
 
 void sub_80179EC(struct input_ctrl *self, s32 flags)
 {
-    self->vtable = (struct ctrl_vtable *)gStaticData_087E42F4;
+    self->vtable = (struct ctrl_vtable *)gInputCtrlVtable;
     sub_800B8A8(self, flags);
 }
 
 struct input_ctrl *sub_8017A00(struct input_ctrl *self)
 {
     sub_800B8C8(self);
-    self->vtable = (struct ctrl_vtable *)gStaticData_087E42F4;
+    self->vtable = (struct ctrl_vtable *)gInputCtrlVtable;
     sub_80179BC(self);
     return self;
 }

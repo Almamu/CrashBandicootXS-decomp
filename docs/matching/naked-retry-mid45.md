@@ -20,7 +20,7 @@ listed in the table below.
 
 ## Not closed
 
-- **`sub_8023A1C`** (`game_loop56.c`, #37): the draft is 15 halfwords
+- **`RunRoom`** (`game_loop56.c`, #37): the draft is 15 halfwords
   off under old_agbcc (agbcc is worse) and the same size. The "shared
   tail across two jump-table targets" in the NAKED note is ordinary
   cross-jumping, and it appears without any help. Three things got it

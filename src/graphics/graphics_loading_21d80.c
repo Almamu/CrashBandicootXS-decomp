@@ -118,18 +118,18 @@ void sub_8021EF4(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     sub_8008E94(gUnknown_030012EC, part);
 }
 
-extern u8 sub_8023418(void *self);
+extern u8 IsCrystalSaved(void *self);
 extern struct actor *sub_8011B0C(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
 
 /* Gated spawn (see `sub_802200C` below for the sibling shape), but
  * built via `sub_8011B0C` instead of `sub_8008434`, gated by
- * `sub_8023418(gLevelState)` being true instead of a flag-bit
+ * `IsCrystalSaved(gLevelState)` being true instead of a flag-bit
  * test, table offset `table_base + 0x1b0`, tag `0`, `+0xa = 0x1c`, and
  * an extra `flags |= 0x10` on the constructed object before
  * registering it. */
 void sub_8021F70(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    if (sub_8023418(gLevelState)) {
+    if (IsCrystalSaved(gLevelState)) {
         register struct actor *part asm("r4") = sub_8011B0C(arg0, arg1, arg2, arg3);
 
         *(void **)((u8 *)part + 0x20) = (u8 *)(**gUnknown_030012D0) + 0x1b0;
@@ -186,12 +186,12 @@ void sub_802200C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     sub_8008E94(gUnknown_030012EC, part);
 }
 
-extern void sub_8023500(void *self, s32 *point);
+extern void SetCrateGemPos(void *self, s32 *point);
 
 /* New shape (docs/rom_map.md's 15-slot dispatch table, slot 12): a
  * plain state-write, no sound/spawn - never reads `arg0`/`arg3` at all
  * (matches the ROM, which never touches r0/r3), packs `arg1`/`arg2`
- * into a stack `{x, y}` pair and calls `sub_8023500` (already matched
+ * into a stack `{x, y}` pair and calls `SetCrateGemPos` (already matched
  * in game_loop10.c), which just stores them into
  * `gLevelState->0x1c0`/`->0x1c4`. The ROM truncates both u16
  * args in one batch (`lsl r1,r1 / lsl r2,r2` then `lsr r3,r1 / lsr
@@ -219,7 +219,7 @@ void sub_802209C(u32 arg0, u32 arg1, u32 arg2, u16 arg3)
         : "=r" (x), "=r" (y), "+r" (rx), "+r" (ry));
     point[0] = x;
     point[1] = y;
-    sub_8023500(gLevelState, point);
+    SetCrateGemPos(gLevelState, point);
 }
 
 /* Same overall spawn shape as `sub_8021D80`'s family above, but with
@@ -264,7 +264,7 @@ void nullsub_22(void)
 }
 
 extern void *sub_801E990(u32 arg0, u16 arg1, u16 arg2, u16 arg3);
-extern struct actor *gUnknown_030012D8;
+extern struct actor *gPlayer;
 
 /* Plain tail-call trampoline to `sub_801E990` - still raw in this same
  * file (top of asm/code_3_2_17_1e990.s, out of this chunk's scope), a
@@ -275,14 +275,14 @@ void sub_802218C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     sub_801E990(arg0, arg1, arg2, arg3);
 }
 
-/* Writes a Q8.8 `{x, y}` position straight into `gUnknown_030012D8`
+/* Writes a Q8.8 `{x, y}` position straight into `gPlayer`
  * (the hot camera/viewport struct's own `x`/`y` fields) - ignores
  * `arg0`/`arg3` entirely, matching the ROM (a leaf function, no
  * `push`/`pop` at all). */
 void sub_80221A4(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    gUnknown_030012D8->x = (s32)arg1 << 8;
-    gUnknown_030012D8->y = (s32)arg2 << 8;
+    gPlayer->x = (s32)arg1 << 8;
+    gPlayer->y = (s32)arg2 << 8;
 }
 
 /* Same trampoline as `sub_802218C` above. */
@@ -294,8 +294,8 @@ void sub_80221BC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 /* Same shape as `sub_80221A4` above. */
 void sub_80221D4(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    gUnknown_030012D8->x = (s32)arg1 << 8;
-    gUnknown_030012D8->y = (s32)arg2 << 8;
+    gPlayer->x = (s32)arg1 << 8;
+    gPlayer->y = (s32)arg2 << 8;
 }
 
 /* Empty stub. */
@@ -325,7 +325,7 @@ extern u8 gEntitySpawnFuncs[];
  * at the unified 92-slot dispatch array this whole chunk lives
  * inside. Ignores all its own parameters (matches the ROM, a
  * `push {r4, lr}` prologue with no truncation at all). Like
- * `sub_8022230`'s `nullsub_2`/`nullsub_1` calls, `sub_8025D6C` is
+ * `InitLevelState`'s `nullsub_2`/`nullsub_1` calls, `sub_8025D6C` is
  * void and the ROM leaves the freshly-allocated pointer in `r0`
  * across the call rather than saving it - same inline-asm technique. */
 void CreateEntitySpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
@@ -364,7 +364,7 @@ extern void sub_8001604(void);
 extern void sub_8001614(void);
 extern u8 gSpriteBankTable[];
 
-/* `sub_8022230` (docs/rom_map.md, "Found the origin point"): the
+/* `InitLevelState` (docs/rom_map.md, "Found the origin point"): the
  * function `GetLevelState` calls once at the top of the game loop to
  * construct essentially every hot IWRAM global this whole ROM region
  * references - `gAudioContext` (an 8340-byte `AudioContext`
@@ -385,7 +385,7 @@ extern u8 gSpriteBankTable[];
  * r0-r3), so each is spelled with the pointer pinned to r0 across an
  * inline-asm `bl`, the same technique used for `sub_8023674`'s
  * `nullsub_7` call (docs/matching/issue-37-game-loop-234e8.md). */
-void *sub_8022230(void *self)
+void *InitLevelState(void *self)
 {
     {
         void **addr = (void **)&gAudioContext;

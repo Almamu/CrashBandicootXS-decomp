@@ -6,11 +6,11 @@ typedef void (*part_method3_fn)(void *self, s32 a, s32 b, s32 c);
 
 struct game_state {
     u8 unk_00[0x78];
-    s32 mode;           // 0x78
+    s32 maskLevel;      // 0x78 - the Aku Aku mask level (0-3)
 };
 
 extern struct game_state *gLevelState;
-extern struct box_part *gUnknown_030012D8;
+extern struct box_part *gPlayer;
 extern void *gAudioContext;
 extern s32 sub_8009FF4(struct box_part *part, struct part_aabb *box);
 extern struct part_aabb sub_8007B98(struct box_part *part);
@@ -39,25 +39,25 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
  * in ROM order. */
 void sub_80096C0(struct part_list *list, struct part_aabb box, struct box_part *part)
 {
-    if (gLevelState->mode == 3) {
+    if (gLevelState->maskLevel == 3) {
         if (!sub_8009FF4(part, &box))
             return;
-        CALL_HIT(part, 1, gUnknown_030012D8->kind, 0);
+        CALL_HIT(part, 1, gPlayer->kind, 0);
     } else if ((part->flags2 >> 3) & 1) {
         struct part_aabb a, b;
         s32 px;
 
-        a = sub_8007B98(gUnknown_030012D8);
+        a = sub_8007B98(gPlayer);
         b = sub_8007CF8(part);
         if (!sub_8001688(&a, &b))
             return;
         px = part->x;
-        if (px < gUnknown_030012D8->x) {
-            gUnknown_030012D8->x = px + ((b.w + a.w) << 7);
-            CALL_HIT(gUnknown_030012D8, 0, 0xc, 2);
+        if (px < gPlayer->x) {
+            gPlayer->x = px + ((b.w + a.w) << 7);
+            CALL_HIT(gPlayer, 0, 0xc, 2);
         } else {
-            gUnknown_030012D8->x = px - ((b.w + a.w) << 7);
-            CALL_HIT(gUnknown_030012D8, 0, 0xc, 1);
+            gPlayer->x = px - ((b.w + a.w) << 7);
+            CALL_HIT(gPlayer, 0, 0xc, 1);
         }
     } else {
         u8 kind;
@@ -67,14 +67,14 @@ void sub_80096C0(struct part_list *list, struct part_aabb box, struct box_part *
             break;
         case 1:
         {
-            u8 *flags = &gUnknown_030012D8->flags;
+            u8 *flags = &gPlayer->flags;
             *flags |= 8;
         }
-            kind = gUnknown_030012D8->kind;
+            kind = gPlayer->kind;
             if (kind == 1) {
-                if (gUnknown_030012D8->unk_64 > 0) {
+                if (gPlayer->unk_64 > 0) {
                     CALL_HIT(part, 1, 1, 0);
-                    CALL_HIT(gUnknown_030012D8, 0, 0xd, 0);
+                    CALL_HIT(gPlayer, 0, 0xd, 0);
                     PlaySfx(gAudioContext, 0x21, 0x100);
                 }
             } else {
@@ -83,10 +83,10 @@ void sub_80096C0(struct part_list *list, struct part_aabb box, struct box_part *
             break;
         case 2:
             part->flags |= 8;
-            if (gLevelState->mode) {
+            if (gLevelState->maskLevel) {
                 CALL_HIT(part, 1, 1, 0);
             }
-            CALL_HIT(gUnknown_030012D8, 1, part->kind, 0);
+            CALL_HIT(gPlayer, 1, part->kind, 0);
             break;
         }
     }

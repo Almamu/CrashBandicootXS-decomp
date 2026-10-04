@@ -1,16 +1,16 @@
 #include "core.h"
 #include "memory.h"
 
-/* GitHub issue #44: the `gUnknown_030012D4` camera-follow block (the
+/* GitHub issue #44: the `gCamera` camera-follow block (the
  * "generic 0x18-byte block" docs/matching/issue-37-game-loop-2375c.md
- * saw `sub_802375C`'s tail flush via `sub_8026DFC`), plus two identical
+ * saw `PlayRoom`'s tail flush via `SnapCamera`), plus two identical
  * EWRAM `mem_free`/`mem_alloc` wrapper pairs that follow it in ROM.
  *
  * `struct camera` holds a Q8 position (`x`/`y`), a Q8 look-ahead offset
  * (`vx`/`vy`), the followed object (`target`) and a `mode`. Every
  * per-frame update eases the position a quarter of the way toward
  * `target + look-ahead` (`x += (goal - x) / 4`), and both publishers
- * (`sub_8026DFC`/`sub_8026E6C`) hand `(x - (120 << 8), y - (80 << 8))`
+ * (`SnapCamera`/`UpdateCamera`) hand `(x - (120 << 8), y - (80 << 8))`
  * - the position offset by half the 240x160 screen - to the still-raw
  * `SetLevelScroll` on `gLevelLayers`, which clamps it to `>= 0`,
  * converts Q8 to whole pixels, caps it at that object's own `+0x0`/`+0x4`
@@ -27,12 +27,12 @@
  *   or +0x1276 depending on `target+0x28` bit 4 (the mirror flag several
  *   actor-side functions already document at that offset), vertical
  *   look-ahead fixed at -0x1000.
- * - `sub_8026DFC`: snaps straight to the target (no easing), seeding the
+ * - `SnapCamera`: snaps straight to the target (no easing), seeding the
  *   mode-1 look-ahead at its limit (or zero for any other mode), then
- *   publishes. Called from `sub_80241BC`'s teardown/refresh pass
- *   (`game_loop9.c`) and `sub_802375C`'s shared tail (`game_loop56.c`).
- * - `sub_8026E6C`: the per-frame update, dispatching on `mode`, then
- *   publishing. Called from `sub_802400C` (`game_loop8.c`).
+ *   publishes. Called from `ResumeRoomAfterPause`'s teardown/refresh pass
+ *   (`game_loop9.c`) and `PlayRoom`'s shared tail (`game_loop56.c`).
+ * - `UpdateCamera`: the per-frame update, dispatching on `mode`, then
+ *   publishing. Called from `UpdateRoomFrame` (`game_loop8.c`).
  *
  * Matching notes: `tx`/`ty` are pinned to r2/r3 in both easing
  * functions - left to itself this compiler gives them r3/r4 (or r4/r5)
@@ -40,7 +40,7 @@
  * pinning `cam` to r4 instead breaks the shared +-0x100 tail. The
  * easing tail in `sub_8026C90` also needs an r4-pinned `cur` temp and a
  * separate `n` result so the add lands as `adds r0, r4, r0`. The empty
- * `case 3` in `sub_8026E6C` has no behavior; it reproduces the ROM's
+ * `case 3` in `UpdateCamera` has no behavior; it reproduces the ROM's
  * switch decision tree (`cmp #2 / beq`, `bgt`, `cmp #1 / bne`), which
  * a two-case switch compiles to a flat compare chain instead. See
  * docs/matching/issue-44-camera-follow.md.
@@ -143,7 +143,7 @@ void sub_8026D8C(struct camera *cam)
     cam->y += (ty - cam->y) / 4;
 }
 
-void sub_8026DFC(struct camera *cam)
+void SnapCamera(struct camera *cam)
 {
     struct camera_target *target = cam->target;
 
@@ -169,7 +169,7 @@ void sub_8026DFC(struct camera *cam)
     SetLevelScroll(gLevelLayers, cam->x - (120 << 8), cam->y - (80 << 8));
 }
 
-void sub_8026E6C(struct camera *cam)
+void UpdateCamera(struct camera *cam)
 {
     switch (cam->mode)
     {

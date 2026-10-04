@@ -108,10 +108,10 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 extern void sub_8015460(void *selfArg);
 extern void sub_8015780(void *selfArg, s32 a, s32 b, s32 c, s32 d);
-extern s32 sub_80231C4(void *self);
+extern s32 HasTurboRun(void *self);
 
 /* Always sets `self+0x26 = 0xc`. For `mode` `3`/`4`: if `flags` bit
- * `0x200` is set and `sub_80231C4(gLevelState)` is true, latches
+ * `0x200` is set and `HasTurboRun(gLevelState)` is true, latches
  * `self+0x29`, fires the mgr trampoline pair with actions `4`/`0x18`,
  * and sets the state/counter/table-index trio (`0x31`/`0x2f`/`0x27`) to
  * `0`/`1`/`0x1b` - otherwise falls back to `sub_8015460`. For every
@@ -140,7 +140,7 @@ void sub_8015238(struct act *self, u8 mode, s32 flags)
         asm("" : "=r"(m2) : "0"(m));
         flags &= m2;
         asm volatile("" : "+r"(flags) : "r"(m));
-        if (flags != 0 && (u8)sub_80231C4(gLevelState)) {
+        if (flags != 0 && (u8)HasTurboRun(gLevelState)) {
             struct act_vtable *mgr;
             struct act_method *off;
             u8 one;

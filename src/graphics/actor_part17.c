@@ -16,7 +16,7 @@ extern u8 gStaticData_087E3E7C[];
  * into the 12-byte-stride `gStaticData_0816B304` table, and calls
  * slot 6 of the vtable at `self+0xc` with that table entry - the same
  * base+offset+fn-pointer convention already seen in
- * `sub_800B3AC`/`sub_8009D5C`. */
+ * `DestroyPlayer`/`sub_8009D5C`. */
 void sub_800B704(void *selfArg, void *arg1, s32 index)
 {
     u8 *self = selfArg;

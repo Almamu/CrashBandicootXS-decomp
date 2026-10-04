@@ -12,9 +12,9 @@ issue #9.
 Every function in this chunk operates on the same `self` type
 `sub_8010A00` (game_loop26.c, matched under GitHub issue #13) and
 `sub_800FEB0` (game_loop22.c, issue #13) already do - a "collision box"
-record embedded inside the player at `gUnknown_030012D8+0x108`,
+record embedded inside the player at `gPlayer+0x108`,
 confirmed directly: `sub_80106DC` (game_loop23.c) already calls
-`sub_8010B6C(gUnknown_030012D8 + 0x108)`. `tools/report_units.py`'s
+`sub_8010B6C(gPlayer + 0x108)`. `tools/report_units.py`'s
 `0x08010A0C` entry only ever carried `graphics` as a pre-existing
 placeholder pending examination (its own comment said so). Now that
 it's examined, this chunk is recategorized to `game_loop`, matching
@@ -53,7 +53,7 @@ covering:
   that mechanism renames an *existing* label, and this function never
   had a wrong one to correct - it simply had none.
 - `sub_8010B0C`/`sub_8010B28` - set/clear `self+0x4d` bit 7 together
-  with the global "hit" latch `gUnknown_030012D8+0x80` `game_loop22.c`
+  with the global "hit" latch `gPlayer+0x80` `game_loop22.c`
   already established.
 
 ## Follow-up: `sub_8010B6C` - now matched (NAKED transcription)
@@ -71,7 +71,7 @@ compared against `4`, three more fields at `+0x10`/`+0x14`/`+0x18`/
 `+0x1c`, and two flag bytes at `+0x20`/`+0x21`) - where `records[0]`
 is a previous/seed candidate and `records[1..count-1]` are new
 candidates queued this frame. For each candidate, computes its
-Y-distance to the player (`gUnknown_030012D8`); any whose Y-distance
+Y-distance to the player (`gPlayer`); any whose Y-distance
 jumps more than 8 past the running-best Y-distance, or whose own
 `kind` is `4`, gets resolved immediately via `sub_800E08C()` (an
 11-argument call - the 9th-11th land in this function's own stack
@@ -105,7 +105,7 @@ a plain-C register allocation: the ROM's own Thumb instructions,
 transcribed one-to-one (suffix-less mnemonics - `add`/`mov`/`lsl`/
 `ldr`/`str`, not `adds`/`movs`/`lsls`/suffixed forms - which this
 project's assembler invocation accepts identically), with the single
-`gUnknown_030012D8` literal pool kept at the ROM's own mid-function
+`gPlayer` literal pool kept at the ROM's own mid-function
 split point (right after the loop's first `sub_800E08C` call site's
 `b` past it) and a trailing `asm(".align 2, 0")` for the 2-byte
 zero-fill gap before `sub_8010D54` (the assembler's default `nop`

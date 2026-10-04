@@ -265,10 +265,10 @@ from "core" graphics.
   [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
 
 - `src/graphics/actor_part15.c`/`src/graphics/actor_part16.c` (new
-  files, split around the raw untouched `sub_800B3F0` - see
+  files, split around the raw untouched `InitPlayer` - see
   `docs/matching.md`): a new not-yet-named big object's accessors -
   `sub_800B324`, `sub_800B334`, `sub_800B33C`, `sub_800B360`,
-  `sub_800B37C`, `sub_800B3AC`, `sub_800B4A4`, `sub_800B4AC`,
+  `sub_800B37C`, `DestroyPlayer`, `sub_800B4A4`, `sub_800B4AC`,
   `sub_800B4B8`, `sub_800B4C4`, `sub_800B4D0`, `sub_800B4F0`,
   `sub_800B4F8`, `sub_800B508`, `sub_800B510`, `sub_800B51C`,
   `sub_800B524`, `sub_800B53C`, `sub_800B544`, `sub_800B554`,
@@ -288,7 +288,7 @@ from "core" graphics.
 - `src/graphics/actor_part77.c` (new file, GitHub issue #9/#10, ROM
   `0x0800B3F0`, non-adjacent to `actor_part48.c` since the matched
   `actor_part15.c`/`sub_800B270`/`actor_part16.c` sit between
-  them): `sub_800B3F0` - a part-object constructor re-initializing
+  them): `InitPlayer` - a part-object constructor re-initializing
   `self` via `sub_800A6A4`, allocating a child `struct actor` via
   `sub_8008434`, hooking it up at `self+0xb0` via the standard
   `sub_80087C0`/`sub_80087B4`/`sub_800872C` OAM trio, then calling
@@ -520,7 +520,7 @@ from "core" graphics.
   functions. See
   [docs/matching/issue-16-actor-11b0c.md](../matching/issue-16-actor-11b0c.md).
 - `src/graphics/actor_part79.c` (new file, GitHub issue #16, ROM
-  0x08012160-0x08012420): `sub_8012160`, `sub_8012238`, `sub_80122CC` -
+  0x08012160-0x08012420): `KillPlayer`, `sub_8012238`, `sub_80122CC` -
   three more members of the 42-slot action-dispatch-table family
   (`gStaticData_0816BF20`), operating on the same still-unnamed "child
   object" struct (`self+0xc`/`self+0x10` sub-record pointers, the
@@ -993,7 +993,7 @@ See [docs/matching/strag2-naked-retry.md](../matching/strag2-naked-retry.md).
 
 ### Matched in the inline-argument-order retry
 
-- `src/graphics/actor_part111.c` - `sub_800AFF4` (the dizzy-stars
+- `src/graphics/actor_part111.c` - `DrawPlayer` (the dizzy-stars
   orbit update), old_agbcc (the object was already on
   `OLD_AGBCC_OBJS`). The last 40 halfwords were the orbit tail. It now
   passes its two sums straight to an inline setter
@@ -1242,7 +1242,7 @@ plain C didn't converge.
   reset, tail-calling `sub_80122CC`. See
   `docs/matching/issue-18-0x08014f8c-actor.md`.
 - **Now matched as real C (strag2 retry, see Matched); entry kept for history.** **`sub_80156EC`** (`src/graphics/actor_part38c.c`) -
-  `part+0x38`/`sub_80231BC`-gated mgr-trampoline dispatcher. See
+  `part+0x38`/`HasSuperBodySlam`-gated mgr-trampoline dispatcher. See
   `docs/matching/issue-18-0x08014f8c-actor.md`.
 - **Now matched as real C (size2 NAKED retry, see Matched and docs/matching/size2-naked-retry.md); entry kept for history.** **`LoadCreditsLogos`** (`src/graphics/actor_part131.c`, GitHub issue #64) -
   the map screen's popup-text asset loader. The issue #64/#65 NAKED
@@ -1533,12 +1533,12 @@ embedded as asm instead. They're tracked as parked, not matched.
   #9/#10) - the input-action-check function the 42-slot
   `gStaticData_0816BF20` action-dispatch table's entries call: gates a
   `sub_8026628` proximity probe against the player, then walks
-  `gUnknown_0300130C`'s object list, testing each entry via
+  `gCrateList`'s object list, testing each entry via
   `_call_via_r1` and calling `sub_800CD00` (now examined and closed,
   `actor_part109.c`) on a hit. Every instruction matches except one
-  5-instruction pair (the `gUnknown_0300130C` list-walk's loop-
+  5-instruction pair (the `gCrateList` list-walk's loop-
   condition-check/loop-entry register roles - the ROM re-loads
-  `&gUnknown_0300130C` from the literal pool fresh every iteration,
+  `&gCrateList` from the literal pool fresh every iteration,
   landing it in `r0` and reusing that register as the dereferenced
   value in place; no C phrasing tried reproduced that exact
   per-iteration reload shape without either losing the reload
@@ -1686,7 +1686,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   Moved out of `asm/code_3_2.s` as NAKED in the issue #9 raw-asm pass,
   now matched as real C under old_agbcc - see "Matched in the
   sub_8007634 retry" above.
-- ~~**`sub_800AC2C`**~~ (ROM 0x0800AC2C, GitHub issue #9/#10) - matched
+- ~~**`PlayerHandleEvent`**~~ (ROM 0x0800AC2C, GitHub issue #9/#10) - matched
   as real C under old_agbcc in `src/graphics/actor_part111.c` (issue #9
   raw-asm pass, `docs/matching/issue-9-raw-asm-pass.md`);
   `asm/code_3_2_16_ac2c.s` is gone.

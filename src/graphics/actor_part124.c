@@ -129,11 +129,11 @@ void sub_800CA04(struct trigger_ctrl *self, void *owner)
     self->owner = owner;
 }
 
-extern struct actor *gUnknown_030012D8;
+extern struct actor *gPlayer;
 
 /* The exact "distance-scaled ambient sound volume" calculation
  * `sub_800B8DC` state 18 (`actor_part112.c`) already documents inline
- * - `max(|x - cameraX|, |y - cameraY|)` against `gUnknown_030012D8`
+ * - `max(|x - cameraX|, |y - cameraY|)` against `gPlayer`
  * (the player/camera object), clamped to `[0x20, 0xa0]`, converted to
  * `0x100 - (clamped - 0x20) * 2`. Whether this is the literal function
  * that inline block was compiled from, or an independently-written
@@ -156,7 +156,7 @@ s32 sub_800CA08(s32 x, s32 y)
 {
     register s32 dx asm("r0") = x;
     register s32 dy asm("r1") = y;
-    register struct actor *obj asm("r3") = gUnknown_030012D8;
+    register struct actor *obj asm("r3") = gPlayer;
     register s32 mask asm("r2");
     register s32 d asm("r1");
 
@@ -296,13 +296,13 @@ void sub_800CAC8(struct trigger_ctrl *self, s32 a)
     self->unk_6c = a;
 }
 
-extern u32 gUnknown_0300082C;
+extern u32 gRoomFrameCount;
 extern s32 __modsi3(s32 a, s32 b);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 
 /* If `self`'s own X position (`self+0`, Q8.8) is within `[0xa1, 0x18f]`
- * tiles of `gUnknown_030012D8`'s (the player/camera object) own X
- * position, runs the same `__modsi3(gUnknown_0300082C + a - b, a)`
+ * tiles of `gPlayer`'s (the player/camera object) own X
+ * position, runs the same `__modsi3(gRoomFrameCount + a - b, a)`
  * "close enough" gate `sub_800BFA8` (`actor_part121.c`) already uses
  * (here against `self+0x20`/`self+0x24`, the AABB corner fields
  * `sub_800CAAC` above sets), and on a pass fires
@@ -324,10 +324,10 @@ extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 void sub_800CACC(struct timed_trigger *self)
 {
     s32 selfX = self->base.x >> 8;
-    s32 cameraX = gUnknown_030012D8->x >> 8;
+    s32 cameraX = gPlayer->x >> 8;
 
     if ((u32)(selfX - cameraX - 0xa1) <= 0xee) {
-        s32 base = (s32)gUnknown_0300082C;
+        s32 base = (s32)gRoomFrameCount;
         s32 period = self->period;
         s32 divCheck = __modsi3(base + period - self->phase, period);
 
@@ -398,7 +398,7 @@ extern void *_call_via_r1(void *addr, void *fn);
  * Reads `other+0x18`'s own struct-actor-shaped table pointer, fires a
  * `_call_via_r1` hit-probe against its `+0x28`/`+0x2c` `{s16 offset,
  * void *fn}` pair (the exact same convention `src/system/game_loop8.c`'s
- * `sub_802400C` and `actor_part123.c`'s `sub_800CBF4` both already
+ * `UpdateRoomFrame` and `actor_part123.c`'s `sub_800CBF4` both already
  * read from their own `table+0x28`/`+0x2c`), and - only when that
  * probe reports *no* hit - runs the "flag active + bitmap-set" idiom
  * on `other` (`other+0xc` |= bit 0; unless `other+8`'s id sentinel-

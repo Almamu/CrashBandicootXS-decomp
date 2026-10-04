@@ -6,7 +6,7 @@
  * pair the Phase 1 doc's own priority list flagged as the cluster's
  * next likely-real-C win. Both take only `self` and write into
  * `self+0x70` ("owner"): given `owner`'s position on the relevant
- * axis relative to `gUnknown_030012D8`'s own object (the player/
+ * axis relative to `gPlayer`'s own object (the player/
  * camera), and `self`'s own `0x10`/`0x14` (X) or `0x18`/`0x1c` (Y)
  * bounds, picks one of four `{vx, vy}` pairs and writes them into
  * `owner+0x48`/`0x4c`/`0x50` (X) or `owner+0x54`/`0x58`/`0x5c` (Y) -
@@ -30,7 +30,7 @@
  * compilers. */
 #include "part_ctrl.h"
 
-extern struct ctrl_target *gUnknown_030012D8;
+extern struct ctrl_target *gPlayer;
 
 #define SET_VEL(v, a_, b_) \
     {                      \
@@ -45,7 +45,7 @@ void sub_800C18C(struct part_ctrl *self)
 {
     struct ctrl_target *target = self->target;
     s32 x = target->x;
-    s32 d = x - gUnknown_030012D8->x;
+    s32 d = x - gPlayer->x;
 
     if (d > 20) {
         if (x < self->rangeX[0])
@@ -68,7 +68,7 @@ void sub_800C1E8(struct part_ctrl *self)
 {
     struct ctrl_target *target = self->target;
     s32 y = target->y;
-    s32 d = y - gUnknown_030012D8->y;
+    s32 d = y - gPlayer->y;
 
     if (d > 20) {
         if (y < self->rangeY[1])

@@ -60,11 +60,11 @@ extern void sub_800A600();
 extern void sub_800A650();
 extern void sub_800A884();
 extern void sub_800AB9C();
-extern void sub_800AC2C();
-extern void sub_800AFF4();
+extern void PlayerHandleEvent();
+extern void DrawPlayer();
 extern void sub_800B270();
 extern void sub_800B360();
-extern void sub_800B3AC();
+extern void DestroyPlayer();
 extern void sub_800B698();
 extern void sub_800B6A0();
 extern void sub_800B6D0();
@@ -85,7 +85,7 @@ extern void sub_800CB64();
 extern void sub_800CBC0();
 extern void sub_800CBF4();
 extern void sub_800CCCC();
-extern void sub_8010480();
+extern void DrawCrate();
 extern void sub_80104E4();
 extern void sub_8010674();
 extern void sub_8010718();
@@ -423,21 +423,21 @@ const struct vtable_slot gStaticData_087E3D8C[15] = {
 };
 
 /* Used by actor_part15.c, actor_part77.c. */
-const struct vtable_slot gStaticData_087E3E04[15] = {
+const struct vtable_slot gPlayerVtable[15] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_800A884),
     VTABLE_SLOT(sub_8008394),
     VTABLE_SLOT(sub_800B360),
-    VTABLE_SLOT(sub_800AFF4),
+    VTABLE_SLOT(DrawPlayer),
     VTABLE_SLOT(sub_8007F78),
     VTABLE_SLOT(sub_8007FD8),
     VTABLE_SLOT(sub_8008328),
     VTABLE_SLOT(sub_8008304),
     VTABLE_SLOT(sub_800A600),
-    VTABLE_SLOT(sub_800B3AC),
+    VTABLE_SLOT(DestroyPlayer),
     VTABLE_SLOT(sub_8008408),
     VTABLE_SLOT(sub_800B270),
-    VTABLE_SLOT(sub_800AC2C),
+    VTABLE_SLOT(PlayerHandleEvent),
     VTABLE_SLOT(sub_800AB9C),
 };
 
@@ -524,13 +524,13 @@ const struct vtable_slot gStaticData_087E400C[13] = {
     VTABLE_SLOT(sub_800B704),
 };
 
-/* Used by game_loop31.c (sub_801071C), game_loop36.c (sub_800FF0C). */
-const struct vtable_slot gStaticData_087E4074[13] = {
+/* Used by game_loop31.c (sub_801071C), game_loop36.c (CreateCrate). */
+const struct vtable_slot gCrateVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_8007DBC),
     VTABLE_SLOT(sub_8008394),
     VTABLE_SLOT(sub_80104E4),
-    VTABLE_SLOT(sub_8010480),
+    VTABLE_SLOT(DrawCrate),
     VTABLE_SLOT(sub_8007F78),
     VTABLE_SLOT(sub_8007FD8),
     VTABLE_SLOT(sub_8008328),
@@ -613,7 +613,7 @@ const struct vtable_slot gStaticData_087E4224[13] = {
 };
 
 /* Used by actor_part_16048.c (sub_80174D8), player_ctrl.h. */
-const struct vtable_slot gStaticData_087E428C[13] = {
+const struct vtable_slot gPlayerCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_8016288),
     VTABLE_SLOT(sub_8016128),
@@ -630,7 +630,7 @@ const struct vtable_slot gStaticData_087E428C[13] = {
 };
 
 /* Used by actor_part_17524.c (sub_80179EC). */
-const struct vtable_slot gStaticData_087E42F4[13] = {
+const struct vtable_slot gInputCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_8017650),
     VTABLE_SLOT(sub_80179D4),

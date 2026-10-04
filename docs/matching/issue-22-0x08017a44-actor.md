@@ -126,7 +126,7 @@ these, exactly as `docs/workflow.md` step 2/3 warns.
 - **`sub_8017AB0`** (`asm/code_3_2_17_17ab0.s`, ROM 0x08017AB0-
   0x08017ECC) - a ~500-instruction player-vs-camera-viewport state
   dispatcher (branches on `self+8`'s 0-2 state, does AABB/screen-bound
-  checks against `gUnknown_030012D8`, and fires the usual table
+  checks against `gPlayer`, and fires the usual table
   trampolines). Semantics are broadly graspable but a byte-exact
   reconstruction of a function this size was out of scope for this
   pass; left completely untouched.

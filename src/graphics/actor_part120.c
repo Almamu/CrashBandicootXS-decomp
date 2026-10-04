@@ -11,7 +11,7 @@
  * `sub_800C40C`: a 6-case dispatcher (modes 0, 3, 4, 5; anything else,
  * including 1/2, is a no-op). Modes 0 and 4 share an "impact
  * distance" gate - `__modsi3` division/remainder-style scalar check
- * against a `gUnknown_0300082C`-relative table lookup indexed by
+ * against a `gRoomFrameCount`-relative table lookup indexed by
  * `self->0x30`/`self->0x34`/`self->0x38` (the same "close enough"
  * primitive `docs/rom_map.md` already ties to hud_counter.c/
  * hud_stat_widget3.c) - only proceeding when the check passes, then
@@ -42,7 +42,7 @@
  * `self->0x2c-0x24` (via `SetAabbPos`/`SetAabbSize`, the same
  * `struct aabb` shape `actor_part4.c`/`actor_part15.c` already use),
  * mirrors it per `owner->0x28` bit 4, then tests it against the player
- * (`gUnknown_030012D8`) via `sub_800B37C` - on overlap, triggers
+ * (`gPlayer`) via `sub_800B37C` - on overlap, triggers
  * `sub_800C8CC(self,2)` and, if `self->0x6c==0xb`, seeds `owner`'s
  * `0x48`-`0x64` velocity-target fields with fixed constants (a
  * "knockback impulse" shape, same family as `sub_800B8DC` state 17's
@@ -69,10 +69,10 @@ extern struct ctrl_target *sub_8025B0C(void *pool, s32 kind, s32 b, s32 margin, 
 extern u8 sub_800B37C(struct ctrl_target *obj, struct part_aabb *box);
 extern void SetAabbPos(struct part_aabb *box, s32 x, s32 y);
 extern void SetAabbSize(struct part_aabb *box, s32 w, s32 h);
-extern u32 gUnknown_0300082C;
+extern u32 gRoomFrameCount;
 extern void *gAudioContext;
 extern void *gEntitySpawner;
-extern struct ctrl_target *gUnknown_030012D8;
+extern struct ctrl_target *gPlayer;
 
 /* `sub_800C9C8` (actor_part116.c), inlined. */
 static inline struct ctrl_target *SpawnPart(s32 a, s32 b, s32 c, s32 d, s32 e, struct ctrl_target *f)
@@ -88,7 +88,7 @@ void sub_800C40C(struct part_ctrl *self)
     switch (self->mode) {
     case 0:
         if (self->unk_34 > 0
-            && __modsi3(gUnknown_0300082C + (self->unk_30 + self->unk_34) * 2 - self->unk_38 - self->unk_30,
+            && __modsi3(gRoomFrameCount + (self->unk_30 + self->unk_34) * 2 - self->unk_38 - self->unk_30,
                            self->unk_30 + self->unk_34) == 0) {
             if (self->anims[3] != 8)
                 sub_800C8CC(self, 3);
@@ -103,7 +103,7 @@ void sub_800C40C(struct part_ctrl *self)
         break;
     case 4:
         if (self->unk_30 > 0
-            && __modsi3(gUnknown_0300082C + self->unk_30 + self->unk_34 - self->unk_38,
+            && __modsi3(gRoomFrameCount + self->unk_30 + self->unk_34 - self->unk_38,
                            self->unk_30 + self->unk_34) == 0) {
             if (self->anims[5] != 8)
                 sub_800C8CC(self, 5);
@@ -163,7 +163,7 @@ void sub_800C5D4(struct part_ctrl *self)
         SetAabbSize(&box, w, h);
         if (self->target->mirror.u.x)
             box.x = (self->target->x >> 8) * 2 - (box.x + box.w);
-        if (sub_800B37C(gUnknown_030012D8, &box)) {
+        if (sub_800B37C(gPlayer, &box)) {
             sub_800C8CC(self, 2);
             if (self->kind == 0xb) {
                 struct ctrl_target *target = self->target;

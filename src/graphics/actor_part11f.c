@@ -14,18 +14,18 @@ struct pool_manager {
     struct grid_node *gridHead[256];
 };
 
-struct camera_pos {
+struct bg_scroll_layer {
     s32 x;
     s32 y;
 };
 
-struct viewport {
+struct level_layers {
     u8 unk_00[0x10];
-    struct camera_pos *camera; // 0x10
+    struct bg_scroll_layer *layer0; // 0x10
 };
 
-extern struct viewport *gLevelLayers;
-extern struct box_part *gUnknown_030012D8;
+extern struct level_layers *gLevelLayers;
+extern struct box_part *gPlayer;
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 extern s32 _call_via_r1(void *self, void *fn);
 extern void *MemCopy32(void *dst, const void *src, s32 size);
@@ -42,7 +42,7 @@ extern void sub_80099F0(struct pool_manager *m, struct part_aabb box, struct box
  * caller's original `{boxX, boxY, boxW, boxH}` box (via
  * `MemCopy32`, the same "unavoidable extra `boxH` load" idiom
  * established for `sub_8008A40`) and dispatches to `sub_80096C0`
- * (when `compareViewport` is the player, `gUnknown_030012D8`) or
+ * (when `compareViewport` is the player, `gPlayer`) or
  * `sub_80099F0` (otherwise) - the exact same dispatch `sub_8008A40`
  * makes to `sub_8008AD8`/`sub_8008D80`. See `sub_8008A40`'s own
  * writeup (`actor_part7.c`) for the full branch-by-branch semantics,
@@ -67,7 +67,7 @@ static inline void CheckPart(struct pool_manager *m, struct box_part *part, stru
         struct part_method *m2 = PART_METHOD(part, 0x48);
 
         if (_call_via_r1((u8 *)part + m2->thisOffset, m2->fn) > 4) {
-            if (other == gUnknown_030012D8) {
+            if (other == gPlayer) {
                 MemCopy32(tmp, box, sizeof(*tmp));
                 sub_80096C0(m, *tmp, part);
             } else {
@@ -82,14 +82,14 @@ void sub_8009528(struct pool_manager *m, struct part_aabb box, s32 unused, struc
 {
     struct part_aabb screen;
     struct part_aabb tmp;
-    struct camera_pos *cam;
+    struct bg_scroll_layer *cam;
     s32 lo;
     s32 i;
     struct grid_node *node;
     struct grid_node **last;
     struct grid_node **heads;
 
-    cam = gLevelLayers->camera;
+    cam = gLevelLayers->layer0;
     {
         s32 x = cam->x << 8;
         s32 y = cam->y << 8;

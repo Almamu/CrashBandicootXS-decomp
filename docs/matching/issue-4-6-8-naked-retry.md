@@ -47,7 +47,7 @@ NON_MATCHING build, where the C draft replaces them.
   first compile. Their old notes described a "last mile" register gap
   that doesn't exist once the calls are written this way.
 - **`ShowPowerDialog`** uses the `IconSetup`/`IconReserve` inline helpers
-  from `sub_801BAF0` (`src/graphics/actor_part_1b85c.c`), which has the
+  from `RunLevelSelect` (`src/graphics/actor_part_1b85c.c`), which has the
   same display/icon-manager setup sequence. It needed one more fix:
   `FontResetPalette` takes one argument. The old two-argument declaration
   added a `movs r1, #0` before each call.

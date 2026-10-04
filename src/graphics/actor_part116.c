@@ -6,17 +6,17 @@
  * oscillator" writers sharing the same 256-entry sine-ish table
  * `gStaticData_0816A820` (already established elsewhere in this ROM,
  * `src/graphics/actor_part72.c`/`actor_part111.c`) and the global
- * frame counter `gUnknown_0300082C`. All three read `owner`
+ * frame counter `gRoomFrameCount`. All three read `owner`
  * (`self+0x70`) and write a single Q8.8 coordinate on it, derived as
  * `base + table[idx & 0xff] * self->0x44` (`self->0x44` acting as an
  * oscillation amplitude) - only the axis written, the phase-index
  * derivation, and the base field differ:
  *
  * - `sub_800C8F8`: X axis (`owner+0`), base `self->0x60`, phase index
- *   via `__udivsi3(gUnknown_0300082C << 8, self->0x3c) -
+ *   via `__udivsi3(gRoomFrameCount << 8, self->0x3c) -
  *   (self->0x40 - 0x100)`.
  * - `sub_800C940`: Y axis (`owner+4`), base `self->0x64`, phase index
- *   via `(gUnknown_0300082C >> 1) - (self->0x40 - 0x100)` - *no*
+ *   via `(gRoomFrameCount >> 1) - (self->0x40 - 0x100)` - *no*
  *   `__udivsi3` call, a plain half-rate frame-counter phase
  *   instead.
  * - `sub_800C97C`: Y axis (`owner+4`), base `self->0x64`, same
@@ -66,7 +66,7 @@
 #include "part_ctrl.h"
 
 extern s16 gStaticData_0816A820[];
-extern u32 gUnknown_0300082C;
+extern u32 gRoomFrameCount;
 extern s32 __udivsi3(s32 value, s32 divisor);
 
 static inline s16 Wave(s16 *table, s32 t, s32 phase)
@@ -77,7 +77,7 @@ static inline s16 Wave(s16 *table, s32 t, s32 phase)
 void sub_800C8F8(struct part_ctrl *self)
 {
     s16 *table = gStaticData_0816A820;
-    s32 t = __udivsi3(gUnknown_0300082C << 8, self->period);
+    s32 t = __udivsi3(gRoomFrameCount << 8, self->period);
     register s32 v asm("r2");
     s32 w;
     struct ctrl_target *target;
@@ -108,7 +108,7 @@ void sub_800C940(struct part_ctrl *self)
 
     /* Empty: marks r5 as used so the prologue saves it, as in the ROM. */
     asm("" : : : "r5");
-    t = gUnknown_0300082C >> 1;
+    t = gRoomFrameCount >> 1;
     ph = self->phase;
     /* Emits only the `ldr r6, =0xFFFFFF00`; see above. */
     asm("" : "=r"(k) : "0"(-0x100));
@@ -119,7 +119,7 @@ void sub_800C97C(struct part_ctrl *self)
 {
     struct ctrl_target *target = self->target;
     register s16 *table asm("r6") = gStaticData_0816A820;
-    s32 t = __udivsi3(gUnknown_0300082C << 8, self->period);
+    s32 t = __udivsi3(gRoomFrameCount << 8, self->period);
 
     /* Empty: marks r8 as used so the prologue saves it, as in the ROM. */
     asm("" : : : "r8");

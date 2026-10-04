@@ -12,12 +12,12 @@ extern void *gUnknown_030012F8;
 extern struct popup_part *sub_8008434(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
 extern struct popup_hdr *sub_8017FE8(void *mem);
 extern u8 sub_8006DF8(void *cache, s32 recordId);
-extern u8 sub_80232A0(void *self);
+extern u8 IsBonusRoundDone(void *self);
 extern s32 sub_801A878(u16 x, u16 y, u16 w, u16 h, s32 id);
-extern void sub_80234F4(void *self, s32 value);
+extern void SetBonusPlatform(void *self, s32 value);
 extern s32 sub_801B984(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
 extern void sub_801F680(void);
-extern void *sub_800FF0C(u16 arg0, u16 arg1, u16 arg2, u16 arg3, u8 type);
+extern void *CreateCrate(u16 arg0, u16 arg1, u16 arg2, u16 arg3, u8 type);
 
 /* Same shape as level_select_parts.h's anim_table/anim_record. */
 struct anim_record_21668
@@ -159,18 +159,18 @@ void sub_80218E8(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     sub_801A878(arg0, arg1, arg2, arg3, 6);
 }
 
-/* Spawns a sub_801A878 part with id 7 if sub_80232A0(gLevelState)
+/* Spawns a sub_801A878 part with id 7 if IsBonusRoundDone(gLevelState)
  * is set or gLevelState+0x8C is nonzero, else id 5, and hands the
- * result to sub_80234F4. */
+ * result to SetBonusPlatform. */
 void sub_802190C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     s32 result;
 
-    if (sub_80232A0(gLevelState) || gLevelState[0x8c])
+    if (IsBonusRoundDone(gLevelState) || gLevelState[0x8c])
         result = sub_801A878(arg0, arg1, arg2, arg3, 7);
     else
         result = sub_801A878(arg0, arg1, arg2, arg3, 5);
-    sub_80234F4(gLevelState, result);
+    SetBonusPlatform(gLevelState, result);
 }
 
 /* Plain `sub_801A878` trampoline, id `2`. */
@@ -221,79 +221,79 @@ void sub_8021A00(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     sub_8008E94(gUnknown_030012E8, obj);
 }
 
-/* Plain `sub_800FF0C` entity-constructor trampoline (docs/rom_map.md;
+/* Plain `CreateCrate` entity-constructor trampoline (docs/rom_map.md;
  * same dispatch family as src/graphics/graphics_loading_21bfc.c's
  * types 1-7), type `0x12`. */
 void sub_8021A4C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    sub_800FF0C(arg0, arg1, arg2, arg3, 0x12);
+    CreateCrate(arg0, arg1, arg2, arg3, 0x12);
 }
 
-/* Plain `sub_800FF0C` trampoline, type `0x11`. */
+/* Plain `CreateCrate` trampoline, type `0x11`. */
 void sub_8021A70(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    sub_800FF0C(arg0, arg1, arg2, arg3, 0x11);
+    CreateCrate(arg0, arg1, arg2, arg3, 0x11);
 }
 
-/* Plain `sub_800FF0C` trampoline, type `0x10`. */
+/* Plain `CreateCrate` trampoline, type `0x10`. */
 void sub_8021A94(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    sub_800FF0C(arg0, arg1, arg2, arg3, 0x10);
+    CreateCrate(arg0, arg1, arg2, arg3, 0x10);
 }
 
-/* Plain `sub_800FF0C` trampoline, type `0xf`. */
+/* Plain `CreateCrate` trampoline, type `0xf`. */
 void sub_8021AB8(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    sub_800FF0C(arg0, arg1, arg2, arg3, 0xf);
+    CreateCrate(arg0, arg1, arg2, arg3, 0xf);
 }
 
-/* Plain `sub_800FF0C` trampoline, type `0xe`. */
+/* Plain `CreateCrate` trampoline, type `0xe`. */
 void sub_8021ADC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    sub_800FF0C(arg0, arg1, arg2, arg3, 0xe);
+    CreateCrate(arg0, arg1, arg2, arg3, 0xe);
 }
 
-/* Plain `sub_800FF0C` trampoline, type `0xd`. */
+/* Plain `CreateCrate` trampoline, type `0xd`. */
 void sub_8021B00(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    sub_800FF0C(arg0, arg1, arg2, arg3, 0xd);
+    CreateCrate(arg0, arg1, arg2, arg3, 0xd);
 }
 
-/* Plain `sub_800FF0C` trampoline, type `0xc`. */
+/* Plain `CreateCrate` trampoline, type `0xc`. */
 void sub_8021B24(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    sub_800FF0C(arg0, arg1, arg2, arg3, 0xc);
+    CreateCrate(arg0, arg1, arg2, arg3, 0xc);
 }
 
-/* Plain `sub_800FF0C` trampoline, type `0xb`. */
+/* Plain `CreateCrate` trampoline, type `0xb`. */
 void sub_8021B48(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    sub_800FF0C(arg0, arg1, arg2, arg3, 0xb);
+    CreateCrate(arg0, arg1, arg2, arg3, 0xb);
 }
 
-/* Plain `sub_800FF0C` trampoline, type `0xa`. */
+/* Plain `CreateCrate` trampoline, type `0xa`. */
 void sub_8021B6C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    sub_800FF0C(arg0, arg1, arg2, arg3, 0xa);
+    CreateCrate(arg0, arg1, arg2, arg3, 0xa);
 }
 
-/* Plain `sub_800FF0C` trampoline, type `9`. */
+/* Plain `CreateCrate` trampoline, type `9`. */
 void sub_8021B90(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    sub_800FF0C(arg0, arg1, arg2, arg3, 9);
+    CreateCrate(arg0, arg1, arg2, arg3, 9);
 }
 
-/* Plain `sub_800FF0C` trampoline, type `8`. */
+/* Plain `CreateCrate` trampoline, type `8`. */
 void sub_8021BB4(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    sub_800FF0C(arg0, arg1, arg2, arg3, 8);
+    CreateCrate(arg0, arg1, arg2, arg3, 8);
 }
 
-/* Plain `sub_800FF0C` trampoline, type `7`. Last function in this ROM
+/* Plain `CreateCrate` trampoline, type `7`. Last function in this ROM
  * region - `asm/code_3_2_17_21280.s` (still-raw text past this point
  * used to continue here) now ends right before this file's span, at
  * `sub_802155C`'s literal pool. */
 void sub_8021BD8(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    sub_800FF0C(arg0, arg1, arg2, arg3, 7);
+    CreateCrate(arg0, arg1, arg2, arg3, 7);
 }

@@ -16,7 +16,7 @@
  * `sub_8010D54` and the already-matched `src/graphics/actor_part39.c`
  * (`sub_80119A8`) is now matched. */
 
-extern void *gUnknown_030012D8;
+extern void *gPlayer;
 extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gEntityFlags;
@@ -63,7 +63,7 @@ void sub_8010EAC(void *selfArg, u8 randomize);
  * family's own bounds-check gate). No existing cross-reference
  * elsewhere in the codebase. Gated: does nothing unless the orbit is
  * active (`self+0x4a != 0`) and either its phase hasn't wrapped past
- * `0x16` yet or the player (`gUnknown_030012D8`) is in state
+ * `0x16` yet or the player (`gPlayer`) is in state
  * `+0x88 == 3` - the exact same opening gate `sub_8011390`
  * (`game_loop52.c`) already uses. Once past that gate, proceeds only
  * when flags bit 3 is clear and flags bit 2 is set (same bit-test idiom
@@ -80,7 +80,7 @@ void sub_8010E34(void *selfArg)
     u8 *player;
 
     if (self[0x4a] != 0 && self[0x4b] <= 0x16) {
-        if (((u8 *)gUnknown_030012D8)[0x88] != 3) {
+        if (((u8 *)gPlayer)[0x88] != 3) {
             return;
         }
     }
@@ -98,7 +98,7 @@ void sub_8010E34(void *selfArg)
     }
 
     sub_8007B98(selfBox, self);
-    player = gUnknown_030012D8;
+    player = gPlayer;
     sub_8007B98(playerBox, player);
 
     if (sub_8001688(playerBox, selfBox)) {

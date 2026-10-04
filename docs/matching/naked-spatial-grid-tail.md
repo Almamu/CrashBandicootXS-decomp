@@ -53,7 +53,7 @@ issue's still-open scope.
   `table+0x18/0x1c` trampoline and marks the node so the bucket-255
   pass doesn't double-process it.
 - **`sub_8009868`** - another 3-bucket-window pass, reading the player
-  (`gUnknown_030012D8`) instead of writing to the grid: if the
+  (`gPlayer`) instead of writing to the grid: if the
   player's `+0x88` byte is `3`, calls `sub_800D040(part)` for every
   windowed object; otherwise computes a dispatch value from the
   player's state and calls `sub_80109A4(part, dispatchValue,

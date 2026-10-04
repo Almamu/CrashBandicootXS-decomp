@@ -27,7 +27,7 @@ too, continuing issue #12's precedent.
 - **`sub_800FEB0`** (`src/system/game_loop22.c`) - resets `self`'s
   collision-response state: sets flags `+0xc` bits 2/6, clears the low
   7 bits of `+0x4d` while also clearing the global
-  `gUnknown_030012D8+0x80` "hit" latch, zeroes the timer/list-link
+  `gPlayer+0x80` "hit" latch, zeroes the timer/list-link
   block `+0x44`-`+0x51`/`+0x58` and the two neighbor-list pointers
   `+0x5c`/`+0x60`, and sets the `+0x54` countdown to -1 (disabled).
   Needed an inline-asm anchor for both `mask & self[0x4d]`-and-store
@@ -48,22 +48,22 @@ too, continuing issue #12's precedent.
 - **`sub_80106DC`**/**`sub_8010708`**/**`sub_801070C`**/
   **`sub_8010710`**/**`sub_8010714`**/**`sub_8010718`**
   (`src/system/game_loop23.c`) - the viewport collision-box refresh
-  (`sub_8010B6C` on `gUnknown_030012D8+0x108`, then a saturating-at-
+  (`sub_8010B6C` on `gPlayer+0x108`, then a saturating-at-
   zero `+0x92` hit counter), and the neighbor-list "get prev"/"get
   next"/"set prev"/"set next" accessor quartet (`self+0x60`/`+0x5c`)
   `docs/rom_map.md` already ties to `sub_0800D18C`'s linked-list walk.
   `sub_8010718` is a trivial `return 3;` constant accessor with no
   caller anywhere in the ROM (checked every `asm/*.s`, `expected/*.s`
   and `src/*.c` file) - tagged `UNUSED`. All six matched with no
-  gotchas beyond `sub_80106DC` needing its second `gUnknown_030012D8`
+  gotchas beyond `sub_80106DC` needing its second `gPlayer`
   dereference kept as a separate local (not reusing the first) to get
   the post-call reload the ROM does.
 - **`sub_8010804`**/**`sub_801085C`** (`src/system/game_loop24.c`) -
-  a state-3-countdown-expiry sweep over the `gUnknown_0300130C` object
+  a state-3-countdown-expiry sweep over the `gCrateList` object
   list (same list/table layout `sub_800F1B8`/`sub_800F258` elsewhere in
   this still-raw region read), and a viewport `+0x18`-table trampoline-
   pair/cue-1 firer gated on `+0xc` bit 7. `sub_8010804` needed the
-  `&gUnknown_0300130C` address cached into its own local declared
+  `&gCrateList` address cached into its own local declared
   *inside* the `if` guard (not before it) to match the ROM's own
   "check with one register, cache into a second only once past the
   check" shape. `sub_801085C` needed the same inline-asm-anchor
@@ -88,11 +88,11 @@ too, continuing issue #12's precedent.
   a position-wrap advance function with heavy `r8`/`sb` register
   pressure, and a Bresenham-line-style step algorithm. Readable at a
   high level but not attempted this pass.
-- **`sub_800FF0C`** (`asm/code_3_2_17_e560_ff0c.s`) - a large
+- **`CreateCrate`** (`asm/code_3_2_17_e560_ff0c.s`) - a large
   (~660-instruction) projectile/hazard-spawn dispatcher with two big
   jump tables (19 and 23 cases) and packed bitfield arguments - out of
   scope for a single pass, would need its own dedicated chunk.
-- **`sub_8010480`**/**`sub_80104E4`**/**`sub_8010674`**
+- **`DrawCrate`**/**`sub_80104E4`**/**`sub_8010674`**
   (`asm/code_3_2_17_e560_ff0c.s`) - a moderate flag-dispatch function, a
   large (~195-instruction) state dispatcher calling several still-raw
   siblings, and an AABB-overlap check. Not attempted this pass.

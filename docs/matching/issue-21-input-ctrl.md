@@ -19,7 +19,7 @@ end); the pins and barriers described under "Matching notes" are gone.
 |---|---|
 | 0x04 | animation set: pointer to an array of `{u32 a, u32 b}` record indices |
 | 0x08 | state (0-3; 3 skips the input handling) |
-| 0x0C | method table (`gStaticData_087E42F4`) |
+| 0x0C | method table (`gInputCtrlVtable`) |
 | 0x10 | target actor |
 | 0x14/0x15 | current animation pair per channel (`animA`/`animB`) |
 | 0x16 | up/down latch (0 none, 1 up, 2 down) |
@@ -40,7 +40,7 @@ A's (7 with speed 0x3200 while the left-hold flag lasts - it expires after
 30 frames held, then re-arms once a 10-frame countdown has run out with
 left released - 8 with speed 0xA00, else 1 with speed 0x1E00). Once the target's x passes the level's right edge
 (`gLevelLayers`'s layer 0 width, less 0xA00) the child is marked gone
-and `sub_80241A4` is signalled. `sub_8017808` then applies any dirty
+and `RequestRoomExit` is signalled. `sub_8017808` then applies any dirty
 channel through the method table using `gStaticData_0816B8C0`'s 12-byte
 records.
 
@@ -91,7 +91,7 @@ Thumb pointer scan): the six byte accessors and `sub_8017A20`-
 - **`sub_8017808`** needs pins on the animation-set base (r1), the index
   (r2, behind an empty `asm("" : "+r")`), and the entry pointer (r0,
   computed as `(idx << 3) + base` for the ROM's operand order).
-- **`sub_8017564`** loads `gUnknown_030012B8` and computes the tag byte's
+- **`InputCtrlKillPlayer`** loads `gUnknown_030012B8` and computes the tag byte's
   address before loading the record table - done with explicit
   statements; `+0x29`'s slot is a 4-bit bitfield (`lsl #28/lsr #28`).
 - **`sub_8017650`'s PMF dispatch** re-indexes `gStaticData_0816C290[state]`
@@ -103,11 +103,11 @@ Thumb pointer scan): the six byte accessors and `sub_8017A20`-
 ## Later pass: old_agbcc
 
 `actor_part_17524.o` is on the Makefile's `OLD_AGBCC_OBJS` now, like
-`actor_part_16048.o` before it (issue #20 showed `sub_8017564` stripped
+`actor_part_16048.o` before it (issue #20 showed `InputCtrlKillPlayer` stripped
 of its pins matches under old_agbcc and is 30 bytes off under agbcc).
 All 25 functions still match. What became unnecessary:
 
-- **`sub_8017564`**: all four pinned blocks. The two flag clears are
+- **`InputCtrlKillPlayer`**: all four pinned blocks. The two flag clears are
   bitfield stores (`target->flag7 = 0; target->flag6 = 0;`, new 1-bit
   fields at `+0x0C`), `+0x104` is a plain `unk_104 = 1`, and the
   `sub_8006D08` call reads `t->table->records[t->tag * 28 + 0x14]`

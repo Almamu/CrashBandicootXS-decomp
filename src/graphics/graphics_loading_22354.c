@@ -5,13 +5,13 @@
 
 /* 0x08022354-0x080225A0, formerly asm/code_3_2_17_22354.s: the two
  * functions between issue #33's chunk (graphics_loading_21d80.c, which
- * ends with the game-context constructor sub_8022230) and
+ * ends with the game-context constructor InitLevelState) and
  * UpdateGameFrame (game_loop55.c). See
  * docs/matching/gap-22354-game-context.md.
  *
- * - sub_8022354 (UNUSED): the destructor matching sub_8022230 - frees every
+ * - sub_8022354 (UNUSED): the destructor matching InitLevelState - frees every
  *   subsystem singleton that constructor built and clears the context
- *   pointer gUnknown_03000828.
+ *   pointer gLevelStateSingleton.
  * - PlayCutscene: plays cutscene `idx` (include/cutscene.h): blanks the
  *   palette, resets the BG2 affine transform, then runs a stack-allocated
  *   cutscene player (InitCutscenePlayer/RunCutscenePlayer) over the
@@ -21,7 +21,7 @@
  * Both match under either compiler; built with the current agbcc like
  * their neighbours. */
 
-extern void *gUnknown_03000828;
+extern void *gLevelStateSingleton;
 extern u16 gUnknown_03001288;
 extern void *gUnknown_03001300;
 extern void *gUnknown_030012FC;
@@ -77,7 +77,7 @@ typedef void (*destroy_fn)(void *self, s32 flags);
  * and every word in baserom.gba for 0x08022355). Matched anyway.
  *
  * The game context's destructor: tears down every subsystem singleton
- * sub_8022230 (graphics_loading_21d80.c) constructed, each with the
+ * InitLevelState (graphics_loading_21d80.c) constructed, each with the
  * "delete" flags 3, clears the context pointer and - on bit 0 of
  * `flags`, gcc 2.x's deleting-destructor flag - frees `self`. The game
  * never leaves MainLoop, so it never runs. */
@@ -107,7 +107,7 @@ void sub_8022354(void *self, s32 flags)
         sub_8025A44(gEntityFlags, 3);
     if (gPaletteCycles != NULL)
         DestroyPaletteCycles(gPaletteCycles, 3);
-    gUnknown_03000828 = NULL;
+    gLevelStateSingleton = NULL;
     if (flags & 1)
         sub_8026ED0(self);
 }

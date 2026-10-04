@@ -78,7 +78,7 @@ and [graphics_loading.md](./graphics_loading.md).
 - `src/graphics/actor_part_16048.c` (new file - GitHub issue #20, plus
   issue #19's last raw function `sub_8016048`): `sub_8016048`-
   `sub_801751C` (26 functions), all real C - the player-input controller
-  class (method table `gStaticData_087E428C`, struct in
+  class (method table `gPlayerCtrlVtable`, struct in
   `include/player_ctrl.h`): per-frame update `sub_8016288` (D-pad
   auto-repeat level stepping, animation re-apply, pointer-to-member state
   dispatch through `gStaticData_0816C250` to the eight state handlers
@@ -93,7 +93,7 @@ and [graphics_loading.md](./graphics_loading.md).
 
 - `src/graphics/actor_part_17524.c` (new file - GitHub issue #21):
   `sub_8017524`-`sub_8017A40` (25 functions) - six byte accessors, then a
-  D-pad-driven actor-part subclass (method table `gStaticData_087E42F4`):
+  D-pad-driven actor-part subclass (method table `gInputCtrlVtable`):
   per-frame animation/speed selection from the held keys, a gcc 2.x
   pointer-to-member state dispatch (`gStaticData_0816C290`), and the
   inlined "mark actor gone" bitmap sequence matched without inline asm.
@@ -118,19 +118,19 @@ and [graphics_loading.md](./graphics_loading.md).
 - `src/graphics/actor_part_1b85c.c` (new file - GitHub issue #26):
   `sub_801B85C`-`sub_801B980` (the player-follow child `sub_8017600`
   spawns), `sub_801B984`-`sub_801BAD0` (a 0x78-byte sprite subclass),
-  `sub_801BAF0` (the modal level-select screen), `sub_801C040`,
-  `sub_801C104`, `sub_801C2B0`, `sub_801C364`, `sub_801C3E8`,
-  `sub_801C51C`, `sub_801CCF8`, `sub_801CDE0`, `sub_801CE60` (its
+  `RunLevelSelect` (the modal level-select screen), `DestroyLevelSelect`,
+  `UpdateLevelSelect`, `sub_801C2B0`, `sub_801C364`, `sub_801C3E8`,
+  `sub_801C51C`, `sub_801CCF8`, `LevelSelectCursorLeft`, `LevelSelectCursorRight` (its
   destructor, per-frame update/draw, record panel and cursor moves) -
   22 of the chunk's 25 functions as plain C; the other three are parked
   below. Built with `tools/agbcc/bin/old_agbcc`. See
   [docs/matching/issue-26-level-select-menu.md](../matching/issue-26-level-select-menu.md).
 - `src/graphics/actor_part_1cee0.c` (new file - GitHub issue #27, shared
   structs in `include/level_menu.h`): all 25 functions of
-  `sub_801CEE0`-`sub_801D828` as plain C - the rest of the level-select
-  screen: the page-turn animation `sub_801CEE0` and its Down/Up handlers
-  `sub_801D4C4`/`sub_801D548`, the A/Start exit loops `sub_801D110`/
-  `sub_801D300`, the page-entry refresh (`sub_801D5CC`/`sub_801D638`/
+  `LevelSelectTurnPage`-`sub_801D828` as plain C - the rest of the level-select
+  screen: the page-turn animation `LevelSelectTurnPage` and its Down/Up handlers
+  `LevelSelectPrevWorld`/`LevelSelectNextWorld`, the A/Start exit loops `LevelSelectConfirm`/
+  `LevelSelectExit`, the page-entry refresh (`sub_801D5CC`/`sub_801D638`/
   `sub_801D668`), the BG1 page strip (`sub_801D77C`-`sub_801D7F8`) and
   the BG2 icon layer's constructor `sub_801D828`. `sub_801D698` is
   UNUSED. Compiled with `old_agbcc`. See
@@ -172,11 +172,11 @@ and [graphics_loading.md](./graphics_loading.md).
   grow/shrink). `sub_801E3D4`, `sub_801E3E4` and `sub_801E4E4` are
   UNUSED. All real C. See
   [docs/matching/issue-28-29-level-select-parts.md](../matching/issue-28-29-level-select-parts.md).
-- **Near-miss polish pass:** `sub_801C96C` (`actor_part_1b85c.c`,
+- **Near-miss polish pass:** `LevelSelectLoop` (`actor_part_1b85c.c`,
   level-select main loop) promoted from NAKED to real C under old_agbcc.
   See [near-miss-polish.md](../matching/near-miss-polish.md).
 - **Issue #24/#26 NAKED retry:** `sub_801A03C` (`actor_part_1967c.c`,
-  floor-part spawner) and `sub_801BC28` (`actor_part_1b85c.c`,
+  floor-part spawner) and `InitLevelSelect` (`actor_part_1b85c.c`,
   level-select constructor) promoted from NAKED to real C, both under
   old_agbcc. See
   [docs/matching/issue-24-26-12-naked-retry.md](../matching/issue-24-26-12-naked-retry.md).

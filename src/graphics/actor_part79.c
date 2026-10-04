@@ -38,7 +38,7 @@ extern u8 GetDpadDirection(void *dummy);
 extern struct AudioContext *gAudioContext;
 extern void *gLevelState;
 extern struct tile_asset_cache *gUnknown_030012B8;
-extern void *gUnknown_030012D8;
+extern void *gPlayer;
 extern void *gUnknown_03001304;
 
 /* Plays a sound, fires the `+0x50`/`+0x54` trampoline pair with `arg1`
@@ -51,7 +51,7 @@ extern void *gUnknown_03001304;
  * per-tag 28-byte-record table (`part+0x20 -> *ptr + tag*0x1C`, the
  * same dereference chain docs/rom_map.md's "eight more core reads"
  * documented from three other call sites) to feed `sub_8006D08`. */
-void sub_8012160(void *selfArg, void *arg1)
+void KillPlayer(void *selfArg, void *arg1)
 {
     u8 *self = selfArg;
 
@@ -140,7 +140,7 @@ void sub_8012160(void *selfArg, void *arg1)
     }
 }
 
-/* If the player (`gUnknown_030012D8`)'s `unk_100` "active" flag is set:
+/* If the player (`gPlayer`)'s `unk_100` "active" flag is set:
  * on tag `0x12` (only if `unk_60` is nonzero) or tag `0xd`/`0x18`,
  * re-tags the player as `0x25` (type `0x12`) or `0x26` (the other two,
  * re-reading the global fresh first) and fires the standard
@@ -150,7 +150,7 @@ void sub_8012160(void *selfArg, void *arg1)
 void sub_8012238(void *selfArg)
 {
     u8 *self = selfArg;
-    struct act_part *player = gUnknown_030012D8;
+    struct act_part *player = gPlayer;
     register s32 flag asm("r5") = player->unk_100;
 
     if (flag == 0)
@@ -181,7 +181,7 @@ void sub_8012238(void *selfArg)
     }
 
 case_set_26: {
-    player = gUnknown_030012D8;
+    player = gPlayer;
     {
         register s32 v asm("r0") = 0x26;
         player->tag = v;

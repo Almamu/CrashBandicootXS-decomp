@@ -18,7 +18,7 @@ extern void *_call_via_r1(void *arg0, void *fn);
 /* `other` (the second argument - `self`, the first, is never read)
  * shares `struct actor`'s leading header layout (id @8, flags @0xc,
  * table @0x18, same `other->table`-relative `{s16 offset, void *fn}`
- * pair at +0x28/+0x2c that `src/system/game_loop8.c`'s `sub_802400C`
+ * pair at +0x28/+0x2c that `src/system/game_loop8.c`'s `UpdateRoomFrame`
  * already reads via an identical `_call_via_r1` hit-probe call), but
  * is read at +0x38 too - bigger than the 0x1c-byte `struct actor`, so
  * it gets its own `struct cbf4_other` below.

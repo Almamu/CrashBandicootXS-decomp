@@ -62,7 +62,7 @@ extern s32 _call_via_r3(void *addr, void *arg1, void *tableEntry, void *fn);
 extern u8 sub_802A6EC(void *self);
 extern void UpdateActor(void *self);
 extern u8 sub_802DD9C(void *self);
-extern void sub_8022FEC(void *self);
+extern void AddBrokenCrate(void *self);
 extern s32 AddLife(void *self);
 extern void CollectWumpa(void *self);
 extern void FreeVramTileBlock(void *arg0);

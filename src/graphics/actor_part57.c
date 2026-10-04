@@ -17,7 +17,7 @@ extern void sub_800B8A8(void *selfArg, s32 flags);
 extern void sub_800B8C8(void *selfArg);
 extern void sub_8011B90(void *selfArg);
 extern u8 gStaticData_087E4224[];
-extern void *gUnknown_030012D8;
+extern void *gPlayer;
 extern void sub_8017264(void *selfArg, s32 a, s32 b, s32 c, s32 d);
 
 /* Fires the mgr trampoline pair (actions `0`/`0x12`), then resets the
@@ -203,7 +203,7 @@ void sub_8015958(void *selfArg)
     }
     *(s32 *)(self + 0x18) = zero;
     *(s32 *)(self + 0x1c) = zero;
-    ((u8 *)gUnknown_030012D8)[0x92] = zero;
+    ((u8 *)gPlayer)[0x92] = zero;
 }
 
 /* Fires the mgr trampoline pair via `sub_8017264(self, 0, 0, 0, 0)`,
@@ -220,7 +220,7 @@ void sub_80159A4(void *selfArg)
     self[0x20] = 0;
     self[0x21] = 6;
     self[0x22] = 0;
-    ((u8 *)gUnknown_030012D8)[0x92] = 0;
+    ((u8 *)gPlayer)[0x92] = 0;
     self[0x2c] = 1;
     self[0x24] = 0;
     self[0x2d] = 1;

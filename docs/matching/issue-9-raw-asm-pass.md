@@ -9,13 +9,13 @@ two NAKED holdouts from #9. It removes `asm/code_3_2.s`,
 
 | Function | File | Compiler | Technique |
 |---|---|---|---|
-| `sub_800AC2C` | `src/graphics/actor_part111.c` | old_agbcc | New plain-`switch` C, see below |
+| `PlayerHandleEvent` | `src/graphics/actor_part111.c` | old_agbcc | New plain-`switch` C, see below |
 | `sub_800C940` | `src/graphics/actor_part116.c` | either | Empty asm clobber of r5, plus pins |
 | `sub_800C97C` | `src/graphics/actor_part116.c` | either | Empty asm clobber of r8, one pin |
 
-### sub_800AC2C (formerly raw)
+### PlayerHandleEvent (formerly raw)
 
-This is the 38-case event dispatcher before `sub_800AFF4`. It had been
+This is the 38-case event dispatcher before `DrawPlayer`. It had been
 left raw under the old "big dispatcher" policy. Written as a plain
 `switch` with the cases in the ROM's block order, it was 122 halfwords off
 under old_agbcc on the first compile, and three changes closed it:
@@ -32,7 +32,7 @@ under old_agbcc on the first compile, and three changes closed it:
 
 It matches only under old_agbcc (agbcc is 218 halfwords off), so
 `actor_part111.o` is now on `OLD_AGBCC_OBJS`. The file's other function,
-`sub_800AFF4`, is NAKED, so the switch does not affect it. Before the
+`DrawPlayer`, is NAKED, so the switch does not affect it. Before the
 switch, `movs #1; ldrb; orrs` in the ROM (constant before the byte) had
 already pointed to old_agbcc.
 
@@ -81,7 +81,7 @@ Each empty asm has a comment in the source.
 
 ## Tried, not converged (left as they were)
 
-- **`sub_800AFF4`**: the draft is now built under old_agbcc along with its
+- **`DrawPlayer`**: the draft is now built under old_agbcc along with its
   file. It is 256 halfwords off (624 bytes against 636); `self` is in r6
   and the frame is 8 bytes where the ROM uses 4. It was not pursued past
   the triage.
@@ -94,7 +94,7 @@ Each empty asm has a comment in the source.
 
 ## Later pass: the four holdouts again (nothing closed)
 
-A second pass retried `sub_80091D4`, `sub_800AFF4`, `sub_800A884` and
+A second pass retried `sub_80091D4`, `DrawPlayer`, `sub_800A884` and
 `sub_8007634`. None closed. Two drafts got closer and were updated in
 place; the NAKED bodies are unchanged.
 
@@ -128,7 +128,7 @@ place; the NAKED bodies are unchanged.
   being built as `adds r0, r0, r2` rather than `adds r0, r2, r0`. A
   `(s32)gridHeadBase + (i << 2)` cast fixes that one, but it isn't in
   the draft.
-- **`sub_800AFF4`: 256 → 246.** The first ~40 instructions now match:
+- **`DrawPlayer`: 256 → 246.** The first ~40 instructions now match:
   - The mirror jitter is one assignment whose right-hand side is a
     statement expression. The store address then loads before the call,
     and `+ 2` isn't folded into the mirror term.
@@ -159,7 +159,7 @@ place; the NAKED bodies are unchanged.
   tried. Matching by spilling means reproducing global-alloc's choices
   across the whole function, which didn't fit the budget.
 
-## Hold pass: `sub_80091D4` closed, `sub_800AFF4` 246 → 40
+## Hold pass: `sub_80091D4` closed, `DrawPlayer` 246 → 40
 
 This pass applied the hard-register hold from #489
 (`register s32 hold asm("rN"); asm("" : "=r"(hold)); ...
@@ -183,7 +183,7 @@ asm("" : : "r"(hold));`) to the two drafts above.
   - Holding r2 or r3 across the `capacity` load, or anywhere from the
     load to the found-test, either did nothing or also changed the
     second loop, as the earlier nudges did.
-- **`sub_800AFF4`: 246 → 40 halfwords, same size** (636 bytes). Not
+- **`DrawPlayer`: 246 → 40 halfwords, same size** (636 bytes). Not
   closed; the draft under `#if NON_MATCHING` was updated.
   - An r6 hold across the `sub_8007A84` blink call puts `self` in r7.
     With `self` in r6, r7 had been the reload register.
@@ -200,7 +200,7 @@ asm("" : : "r"(hold));`) to the two drafts above.
     r8, which is the ROM's layout. The r6 reloads in the ROM are
     consistent with this.
   - What's left:
-    - `&gUnknown_0300082C` and `&gUnknown_0300081C` are in r5/r4 where
+    - `&gRoomFrameCount` and `&gUnknown_0300081C` are in r5/r4 where
       the ROM has r4/r5. Every r4/r5 hold window in the mode block adds
       spills.
     - The orbit tail builds `idx * 8` and the x/y history addresses
@@ -209,15 +209,15 @@ asm("" : : "r"(hold));`) to the two drafts above.
       (pointer locals, byte offsets, a `struct orbit_pos *`, `SetPos`
       argument orders) reproduced that.
 
-## Later pass: `sub_800AFF4` closed
+## Later pass: `DrawPlayer` closed
 
-`sub_800AFF4` is real C now (old_agbcc, same 636 bytes). The orbit tail
+`DrawPlayer` is real C now (old_agbcc, same 636 bytes). The orbit tail
 passes its two sums straight in as arguments to a small inline setter:
 
 ```c
 SetChildPos(self->child,
-            self->hist[idx].x + gStaticData_0816A820[gUnknown_0300082C & 0xff] * 16,
-            self->hist[idx].y + gStaticData_0816A820[(gUnknown_0300082C >> 1) & 0xff] * 8 - 0x1800);
+            self->hist[idx].x + gStaticData_0816A820[gRoomFrameCount & 0xff] * 16,
+            self->hist[idx].y + gStaticData_0816A820[(gRoomFrameCount >> 1) & 0xff] * 8 - 0x1800);
 ```
 
 gcc 2.x expands all of an inline call's arguments before it copies them

@@ -39,7 +39,7 @@ struct phys_flag_bits
 {
     u8 gone:1;          // removed (see sub_80072D8)
     u8 unk_1:3;
-    u8 bit4:1;          // set by sub_800E888 (also `flags |= 0x10` elsewhere)
+    u8 bit4:1;          // set by BreakCrate (also `flags |= 0x10` elsewhere)
     u8 unk_5:3;
 };
 
@@ -101,7 +101,7 @@ struct phys_obj
     u8 unk_59;          // 0x59
 };
 
-/* The fields of the player object (gUnknown_030012D8, a `struct gobj`)
+/* The fields of the player object (gPlayer, a `struct gobj`)
  * this cluster uses: a 5-slot ring of recently touched boxes. */
 struct phys_player
 {
@@ -136,9 +136,9 @@ struct phys_player
     u8 unk_10C;         // 0x10C - nonzero: sub_800E08C leaves the position alone
 };
 
-#define PHYS_PLAYER ((struct phys_player *)gUnknown_030012D8)
+#define PHYS_PLAYER ((struct phys_player *)gPlayer)
 
-/* gUnknown_0300130C: the active-object list these functions scan. */
+/* gCrateList: the active-object list these functions scan. */
 struct phys_obj_list
 {
     s32 count;
@@ -192,7 +192,7 @@ static inline void PhysSetTag(struct phys_obj *self, u8 tag)
 /* Sets `frame` to `idx`, clamped to the current tag's frame count. `idx`
  * being a parameter matters: the inlined copy keeps the constant
  * argument in its own register, which the callers' later zero/constant
- * stores reuse (sub_800E888, sub_80104E4). */
+ * stores reuse (BreakCrate, sub_80104E4). */
 static inline void PhysSetFrame(struct phys_obj *obj, s32 idx)
 {
     u8 n = obj->anim->records[obj->tag].frames;

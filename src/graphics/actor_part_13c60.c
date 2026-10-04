@@ -20,7 +20,7 @@ extern void *gLevelState;
 extern void *gUnknown_03001304;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern u8 GetDpadDirection(void *pad);
-extern u8 sub_80231B4(void *self);
+extern u8 HasTornadoSpin(void *self);
 extern u8 sub_800AAEC(struct act_part *part, s32 action);
 extern u8 sub_8012A7C(struct act *self);
 extern void sub_80152F0(struct act *self, u8 dir);
@@ -80,7 +80,7 @@ void sub_8013C60(struct act *self)
         self->part->contact = 0;
         return;
     }
-    if (sub_80231B4(gLevelState) && (INPUT_PRESSED(in) & 2) && self->unk_26 == 0)
+    if (HasTornadoSpin(gLevelState) && (INPUT_PRESSED(in) & 2) && self->unk_26 == 0)
     {
         if (++self->charge > 3)
             self->charge = 3;
@@ -114,7 +114,7 @@ void sub_8013D94(struct act *self)
         sub_8013C60(self);
         return;
     }
-    if (sub_80231B4(gLevelState) && (INPUT_PRESSED(in) & 2) && self->unk_26 == 0)
+    if (HasTornadoSpin(gLevelState) && (INPUT_PRESSED(in) & 2) && self->unk_26 == 0)
     {
         if (++self->charge > 3)
             self->charge = 3;
@@ -181,7 +181,7 @@ void sub_8013EAC(struct act *self)
         self->part->contact = 0;
         return;
     }
-    if (sub_80231B4(gLevelState) && (INPUT_PRESSED(in) & 2) && self->unk_26 == 0)
+    if (HasTornadoSpin(gLevelState) && (INPUT_PRESSED(in) & 2) && self->unk_26 == 0)
     {
         if (++self->charge > 3)
             self->charge = 3;

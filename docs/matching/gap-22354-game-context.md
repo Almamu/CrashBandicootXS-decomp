@@ -2,7 +2,7 @@
 
 These are the two functions between issue #33's chunk
 (`graphics_loading_21d80.c`, which ends with the game-context
-constructor `sub_8022230`) and `UpdateGameFrame` (`game_loop55.c`). No
+constructor `InitLevelState`) and `UpdateGameFrame` (`game_loop55.c`). No
 issue covered them. Both are now real C in
 `src/graphics/graphics_loading_22354.c`, and `asm/code_3_2_17_22354.s` is
 retired. Both match under either compiler. The file is built with the
@@ -10,7 +10,7 @@ current agbcc like its neighbours.
 
 ## `sub_8022354` - UNUSED
 
-This is the destructor that pairs with `sub_8022230`. It calls
+This is the destructor that pairs with `InitLevelState`. It calls
 `FreeVramDmaQueue`, then destroys every singleton the constructor built,
 each with flags 3 when it is non-NULL:
 
@@ -22,7 +22,7 @@ each with flags 3 when it is non-NULL:
   their method table
 - `gUnknown_030012CC`/`D0`/`B8`/`B4`/`C8`
 
-It then clears the context pointer `gUnknown_03000828` and frees `self`
+It then clears the context pointer `gLevelStateSingleton` and frees `self`
 on bit 0 of `flags`, gcc 2.x's deleting-destructor convention. Nothing
 in the ROM calls it. There is no `bl` to it, no word `0x08022355`, and no
 symbol reference in `asm/`/`src/`. That fits: the game never returns from

@@ -3,14 +3,14 @@
 This pass retried four drafts left by the hard-register hold passes
 ([hard-register-hold-retry.md](hard-register-hold-retry.md),
 [issue-9-raw-asm-pass.md](issue-9-raw-asm-pass.md) "Hold pass"):
-`sub_800AFF4` (#9), `sub_802062C` (#31), `DrawPauseFraction` (#7) and
+`DrawPlayer` (#9), `sub_802062C` (#31), `DrawPauseFraction` (#7) and
 `sub_8002E20` (#5). One closed.
 
 ## Closed (1)
 
 | Function | File | Compiler | What it took |
 |---|---|---|---|
-| `sub_800AFF4` | `src/graphics/actor_part111.c` (already old_agbcc) | old_agbcc | Was 40 halfwords off. The orbit tail now passes its two position sums straight in as arguments to a small inline setter (see below). That gives the ROM's order in the tail, and the `&82C`/`&81C` r4/r5 swap went away with it. The two r6 holds from the hold pass stay. |
+| `DrawPlayer` | `src/graphics/actor_part111.c` (already old_agbcc) | old_agbcc | Was 40 halfwords off. The orbit tail now passes its two position sums straight in as arguments to a small inline setter (see below). That gives the ROM's order in the tail, and the `&82C`/`&81C` r4/r5 swap went away with it. The two r6 holds from the hold pass stay. |
 
 ## New technique: sums passed to an inline are expanded late
 
@@ -26,7 +26,7 @@ its parameter, one argument after another, after the earlier arguments
 So when the ROM computes addresses early but loads from them late, or a
 `lsl` sits far from the `ldrsh` it applies to, try passing the whole
 expression to an inline instead of computing it in locals. In
-`sub_800AFF4`:
+`DrawPlayer`:
 
 ```c
 static inline void SetChildPos(struct box_part *child, s32 x, s32 y)
@@ -36,8 +36,8 @@ static inline void SetChildPos(struct box_part *child, s32 x, s32 y)
 }
 ...
 SetChildPos(self->child,
-            self->hist[idx].x + gStaticData_0816A820[gUnknown_0300082C & 0xff] * 16,
-            self->hist[idx].y + gStaticData_0816A820[(gUnknown_0300082C >> 1) & 0xff] * 8 - 0x1800);
+            self->hist[idx].x + gStaticData_0816A820[gRoomFrameCount & 0xff] * 16,
+            self->hist[idx].y + gStaticData_0816A820[(gRoomFrameCount >> 1) & 0xff] * 8 - 0x1800);
 ```
 
 The spelling matters:

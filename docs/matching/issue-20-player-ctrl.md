@@ -12,8 +12,8 @@ pins are in `sub_8016AB0`. The file is built with
 
 Every function was compiled with both compilers from the same C source.
 Under old_agbcc all 26 match. Under the current agbcc 9 of them do not.
-The clearest case is `sub_80161EC`. It is the same method as issue #21's
-`sub_8017564`, which needed four register-pinned blocks under agbcc. As
+The clearest case is `PlayerCtrlKillPlayer`. It is the same method as issue #21's
+`InputCtrlKillPlayer`, which needed four register-pinned blocks under agbcc. As
 plain C with bitfield clears, old_agbcc gives the ROM's
 `movs r0, #0x7f; ldrb r2, [r1, #0xc]; ands r0, r2` (constant before the
 byte). agbcc loads the byte first.
@@ -28,7 +28,7 @@ apart. `actor_part57.c` and `actor_part38d.c` also build identically under
 both.
 
 **Issue #21 (`actor_part_17524.c`) looks like old_agbcc code.** Its
-`sub_8017564`, rewritten without any pins (bitfield clears for the two
+`InputCtrlKillPlayer`, rewritten without any pins (bitfield clears for the two
 flag bits, a plain `records[tag * 28 + 0x14]` read), matches under
 old_agbcc and is 30 bytes off under agbcc. The file itself was not
 changed. Moving it to `OLD_AGBCC_OBJS` would probably let most of its pins
@@ -46,7 +46,7 @@ tell the compilers apart.
 ## What the code is
 
 `include/player_ctrl.h` has the layouts. `struct player_ctrl` is a C++
-class with method table `gStaticData_087E428C`:
+class with method table `gPlayerCtrlVtable`:
 
 | slot | function |
 |---|---|

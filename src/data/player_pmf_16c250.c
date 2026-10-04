@@ -21,7 +21,7 @@ extern void sub_80178EC();
 extern void sub_801793C();
 extern void sub_801796C();
 
-/* Per-state handlers dispatched by sub_80161EC (actor_part_16048.c,
+/* Per-state handlers dispatched by PlayerCtrlKillPlayer (actor_part_16048.c,
  * its `struct pmf` view). */
 const struct actor_pmf gStaticData_0816C250[8] = {
     ACTOR_PMF(sub_8016B1C),

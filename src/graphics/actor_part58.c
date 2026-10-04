@@ -30,7 +30,7 @@ extern void *gActorList;
 extern void sub_802BFD4(void *arg0);
 extern void sub_802C0BC(void *selfArg, s32 arg1);
 extern u8 sub_802DD9C(void *self);
-extern void sub_8022FEC(struct level_state *self);
+extern void AddBrokenCrate(struct level_state *self);
 extern s32 sub_8029748(s32 arg0);
 extern void sub_802B12C(s32 arg0, s32 arg1, s32 arg2);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *fn);
@@ -229,7 +229,7 @@ void *sub_802D648(struct actor_once *self, void *part, s32 posY, s32 c, s32 d)
 /* State machine: while `self+0xc` ("kind") is still 0, first checks
  * `sub_802A6EC`'s trampoline-fire edge (transitions to kind 1, seeds
  * anim from the part table's `+0xc` record, plays a sound, refreshes
- * the player via `sub_8022FEC`, and fires `sub_8029748`/`sub_802B12C`
+ * the player via `AddBrokenCrate`, and fires `sub_8029748`/`sub_802B12C`
  * position-tied calls), then - only if still kind 0 - checks
  * `sub_802DD9C`'s AABB-overlap test (transitions to kind 3, seeds anim
  * from the `+0x24` record, arms `self+0x18`, plays a different sound,
@@ -256,7 +256,7 @@ void sub_802D6A0(void *selfArg)
             self->animTime = kind;
 
             PlaySfx(gAudioContext, 0x17, 0x100);
-            sub_8022FEC(gLevelState);
+            AddBrokenCrate(gLevelState);
             sub_8029748(self->z);
             sub_802B12C(self->x, self->y - 0xF00, self->z);
         }
@@ -276,7 +276,7 @@ void sub_802D6A0(void *selfArg)
             self->palette = 1;
 
             PlaySfx(gAudioContext, 3, 0x100);
-            sub_8022FEC(gLevelState);
+            AddBrokenCrate(gLevelState);
         }
     }
 

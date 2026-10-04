@@ -25,7 +25,7 @@ struct speed_table
     s32 v[8];
 };
 
-extern u32 gUnknown_0300082C;
+extern u32 gRoomFrameCount;
 extern void *gAudioContext;
 extern void *gUnknown_03001304;
 extern const struct speed_table gStaticData_0816C090;
@@ -47,7 +47,7 @@ void sub_80159F8(struct player_ctrl *self)
 {
     struct pctrl_target *t;
 
-    self->unk_28 = gUnknown_0300082C + 16;
+    self->unk_28 = gRoomFrameCount + 16;
     if (self->state == 4)
     {
         struct speed_table tbl = gStaticData_0816C090;

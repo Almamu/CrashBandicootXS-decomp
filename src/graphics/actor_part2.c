@@ -161,12 +161,12 @@ extern void *sub_8007B98(void *dest, void *part);
 extern u8 sub_8001688(void *buf1, void *buf2);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern void *sub_8025BAC(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
-extern struct actor *gUnknown_030012D8;
+extern struct actor *gPlayer;
 extern void *gEntitySpawner;
 extern void *gEntityFlags;
 
 /* `part` (a `struct actor`, same layout used throughout this ROM
- * region) collides with the player (`gUnknown_030012D8`, tested via
+ * region) collides with the player (`gPlayer`, tested via
  * two `sub_8007B98` AABBs and `sub_8001688`) and, if so, plays a sound
  * at the player's position (the `table+0x68` offset/dead-read idiom
  * matches sub_8007048's `_call_via_r4` call exactly, just keyed off
@@ -229,11 +229,11 @@ s32 sub_8007DBC(struct collect_part *part)
 
     if (!((flags >> 27) & (one = 1)) && ((flags >> 26) & one)) {
         sub_8007B98(&a, part);
-        if (COLLECT_FLAGS(gUnknown_030012D8) >> 7) {
-            sub_8007B98(&b, gUnknown_030012D8);
+        if (COLLECT_FLAGS(gPlayer) >> 7) {
+            sub_8007B98(&b, gPlayer);
             if (sub_8001688(&b, &a)) {
                 COLLECT_FLAGS(part) |= 8;
-                player = (struct collect_part *)gUnknown_030012D8;
+                player = (struct collect_part *)gPlayer;
                 {
                     struct collect_method *m = (struct collect_method *)(player->vtable + 0x68);
                     m->fn((u8 *)player + m->thisOffset, 0, part->kind, 0);

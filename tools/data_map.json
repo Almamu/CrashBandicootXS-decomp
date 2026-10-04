@@ -343,7 +343,7 @@
    "size": 512,
    "name": "gStaticData_0816A820",
    "consumers": [
-    "sub_800AFF4",
+    "DrawPlayer",
     "sub_800C8F8",
     "sub_800C940",
     "sub_800C97C",
@@ -1053,7 +1053,7 @@
    "size": 8,
    "name": "gStaticData_0816B92C",
    "consumers": [
-    "sub_802375C"
+    "PlayRoom"
    ],
    "consumer_files": [
     "system/game_loop39.c"
@@ -1073,7 +1073,7 @@
    "size": 8,
    "name": "gStaticData_0816B934",
    "consumers": [
-    "sub_802375C"
+    "PlayRoom"
    ],
    "consumer_files": [
     "system/game_loop39.c"
@@ -1093,7 +1093,7 @@
    "size": 80,
    "name": "gStaticData_0816B93C",
    "consumers": [
-    "sub_802375C"
+    "PlayRoom"
    ],
    "consumer_files": [
     "system/game_loop39.c"
@@ -1496,7 +1496,7 @@
    "name": "gStaticData_0816BB94",
    "consumers": [
     "sub_800F990",
-    "sub_800FF0C"
+    "CreateCrate"
    ],
    "consumer_files": [
     "system/game_loop36.c",
@@ -1516,10 +1516,10 @@
   {
    "address": "0x0816BB98",
    "size": 22,
-   "name": "gStaticData_0816BB98",
+   "name": "gCrateKindCounted",
    "consumers": [
     "sub_800E6B0",
-    "sub_800E888",
+    "BreakCrate",
     "sub_800EEF0"
    ],
    "consumer_files": [
@@ -2267,7 +2267,7 @@
    "consumers": [
     "sub_80047F8",
     "InitPowerDialog",
-    "sub_801BC28",
+    "InitLevelSelect",
     "LoadLanguageSelectBg"
    ],
    "consumer_files": [
@@ -2291,7 +2291,7 @@
    "size": 8,
    "name": "gStaticData_0816C498",
    "consumers": [
-    "sub_801BC28"
+    "InitLevelSelect"
    ],
    "consumer_files": [
     "graphics/actor_part_1b85c.c"
@@ -2315,7 +2315,7 @@
    "size": 8,
    "name": "gStaticData_0816C4A0",
    "consumers": [
-    "sub_801BC28"
+    "InitLevelSelect"
    ],
    "consumer_files": [
     "graphics/actor_part_1b85c.c"
@@ -2339,7 +2339,7 @@
    "size": 8,
    "name": "gStaticData_0816C4A8",
    "consumers": [
-    "sub_801BC28"
+    "InitLevelSelect"
    ],
    "consumer_files": [
     "graphics/actor_part_1b85c.c"
@@ -2363,7 +2363,7 @@
    "size": 8,
    "name": "gStaticData_0816C4B0",
    "consumers": [
-    "sub_801BC28"
+    "InitLevelSelect"
    ],
    "consumer_files": [
     "graphics/actor_part_1b85c.c"
@@ -2387,7 +2387,7 @@
    "size": 8,
    "name": "gStaticData_0816C4B8",
    "consumers": [
-    "sub_801BC28"
+    "InitLevelSelect"
    ],
    "consumer_files": [
     "graphics/actor_part_1b85c.c"
@@ -2411,7 +2411,7 @@
    "size": 8,
    "name": "gStaticData_0816C4C0",
    "consumers": [
-    "sub_801BC28",
+    "InitLevelSelect",
     "sub_801C3E8"
    ],
    "consumer_files": [
@@ -2436,7 +2436,7 @@
    "size": 8,
    "name": "gStaticData_0816C4C8",
    "consumers": [
-    "sub_801BC28"
+    "InitLevelSelect"
    ],
    "consumer_files": [
     "graphics/actor_part_1b85c.c"
@@ -2460,7 +2460,7 @@
    "size": 8,
    "name": "gStaticData_0816C4D0",
    "consumers": [
-    "sub_801BC28"
+    "InitLevelSelect"
    ],
    "consumer_files": [
     "graphics/actor_part_1b85c.c"
@@ -2484,7 +2484,7 @@
    "size": 48,
    "name": "gStaticData_0816C4D8",
    "consumers": [
-    "sub_801CEE0",
+    "LevelSelectTurnPage",
     "sub_801D5CC"
    ],
    "consumer_files": [
@@ -2509,7 +2509,7 @@
    "size": 48,
    "name": "gStaticData_0816C508",
    "consumers": [
-    "sub_801CEE0",
+    "LevelSelectTurnPage",
     "sub_801D5CC"
    ],
    "consumer_files": [
@@ -2534,7 +2534,7 @@
    "size": 16,
    "name": "gStaticData_0816C538",
    "consumers": [
-    "sub_801CEE0",
+    "LevelSelectTurnPage",
     "sub_801D668"
    ],
    "consumer_files": [
@@ -2559,7 +2559,7 @@
    "size": 16,
    "name": "gStaticData_0816C548",
    "consumers": [
-    "sub_801BC28",
+    "InitLevelSelect",
     "sub_801D470"
    ],
    "consumer_files": [
@@ -2609,7 +2609,7 @@
    "size": 32,
    "name": "gStaticData_0816C56C",
    "consumers": [
-    "sub_801BAF0"
+    "RunLevelSelect"
    ],
    "consumer_files": [
     "graphics/actor_part_1b85c.c"
@@ -2843,7 +2843,7 @@
    "size": 10,
    "name": "gThemePaletteCycle2",
    "consumers": [
-    "sub_8023A1C"
+    "RunRoom"
    ],
    "consumer_files": [
     "system/game_loop56.c"
@@ -2867,7 +2867,7 @@
    "size": 18,
    "name": "gThemePaletteCycle1A",
    "consumers": [
-    "sub_8023A1C"
+    "RunRoom"
    ],
    "consumer_files": [
     "system/game_loop56.c"
@@ -2891,7 +2891,7 @@
    "size": 18,
    "name": "gThemePaletteCycle1B",
    "consumers": [
-    "sub_8023A1C"
+    "RunRoom"
    ],
    "consumer_files": [
     "system/game_loop56.c"
@@ -2915,7 +2915,7 @@
    "size": 32,
    "name": "gThemePaletteCycle3",
    "consumers": [
-    "sub_8023A1C"
+    "RunRoom"
    ],
    "consumer_files": [
     "system/game_loop56.c"
@@ -2939,7 +2939,7 @@
    "size": 10,
    "name": "gThemePaletteCycle5",
    "consumers": [
-    "sub_8023A1C"
+    "RunRoom"
    ],
    "consumer_files": [
     "system/game_loop56.c"
@@ -2971,18 +2971,18 @@
     "sub_801C3E8",
     "sub_801C51C",
     "sub_801C608",
-    "sub_801C96C",
+    "LevelSelectLoop",
     "sub_8021280",
-    "sub_8023A1C",
-    "sub_8024278",
-    "sub_8024344",
-    "sub_80243E0",
-    "sub_8024404",
-    "sub_8024498",
-    "sub_80244F0",
-    "sub_8024524",
-    "sub_8024540",
-    "sub_802455C"
+    "RunRoom",
+    "CountLevelCrates",
+    "LevelHasEntityType",
+    "IsInGemPathRoom",
+    "IsInBonusRoom",
+    "PlayRoomMusic",
+    "NextRoom",
+    "EnterGemPathRoom",
+    "EnterBonusRoom",
+    "SelectRoom"
    ],
    "consumer_files": [
     "graphics/actor_part_1b85c.c",
@@ -3008,7 +3008,7 @@
    "element_type": "struct level_info",
    "element_size": 36,
    "element_count": 25,
-   "format": "level table: 25 x 0x24 struct level_info (name text id, theme, 3 time-trial thresholds, 2 words for sub_8023118/sub_8023110, a flag, room list), then 25 x 0x10 struct level_room_list {count, rooms**, extra1, extra2}",
+   "format": "level table: 25 x 0x24 struct level_info (name text id, theme, 3 time-trial thresholds, 2 words for SetMaskAssistDeaths/sub_8023110, a flag, room list), then 25 x 0x10 struct level_room_list {count, rooms**, extra1, extra2}",
    "effort": "medium",
    "confidence": "high",
    "notes": "The first word (1) is record 0's name text id, not a header. The five local struct views in src are listed on struct level_info (include/level_data.h).",
@@ -3019,7 +3019,7 @@
    "size": 1140,
    "name": "gThemeMusicCues",
    "consumers": [
-    "sub_8024498"
+    "PlayRoomMusic"
    ],
    "consumer_files": [
     "system/game_loop18.c"
@@ -5077,7 +5077,7 @@
    "name": "gSpriteBankTable",
    "consumers": [
     "RunPauseMenu",
-    "sub_8022230"
+    "InitLevelState"
    ],
    "consumer_files": [
     "graphics/graphics_loading_21d80.c",
@@ -5095,7 +5095,7 @@
    "notes": "Part 1 (to 0x084C0006) is the sprite-bank animation system: a 16-byte header, 56 bank records, and per-bank animation/frame/piece records, now typed C (include/sprite_bank.h). Part 2 (from 0x084C0006) is the GAX2 sound-effect data set (instruments, 8-bit PCM samples, sample table, SFX voice handler type), now built by tools/gax_audio.py --sfx.",
    "consumers_indirect": [
     "RunPauseMenu",
-    "sub_8022230",
+    "InitLevelState",
     "GetSpriteTileBase",
     "GetSpriteFrame",
     "sub_800815C",
@@ -7272,10 +7272,10 @@
   {
    "address": "0x087E3E04",
    "size": 120,
-   "name": "gStaticData_087E3E04",
+   "name": "gPlayerVtable",
    "consumers": [
-    "sub_800B3AC",
-    "sub_800B3F0"
+    "DestroyPlayer",
+    "InitPlayer"
    ],
    "consumer_files": [
     "graphics/actor_part15.c",
@@ -7423,9 +7423,9 @@
   {
    "address": "0x087E4074",
    "size": 104,
-   "name": "gStaticData_087E4074",
+   "name": "gCrateVtable",
    "consumers": [
-    "sub_800FF0C",
+    "CreateCrate",
     "sub_801071C",
     "sub_801075C"
    ],
@@ -7556,7 +7556,7 @@
   {
    "address": "0x087E428C",
    "size": 104,
-   "name": "gStaticData_087E428C",
+   "name": "gPlayerCtrlVtable",
    "consumers": [
     "sub_80174D8",
     "sub_80174EC"
@@ -7581,7 +7581,7 @@
   {
    "address": "0x087E42F4",
    "size": 104,
-   "name": "gStaticData_087E42F4",
+   "name": "gInputCtrlVtable",
    "consumers": [
     "sub_80179EC",
     "sub_8017A00"

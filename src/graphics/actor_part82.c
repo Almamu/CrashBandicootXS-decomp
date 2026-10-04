@@ -27,15 +27,15 @@ struct follow_state {
 extern u32 gKeys;
 extern void *gUnknown_030012B8;
 extern void *gAudioContext;
-extern struct follow_state *gUnknown_030012D4;
-extern struct act_part *gUnknown_030012D8;
+extern struct follow_state *gCamera;
+extern struct act_part *gPlayer;
 extern u8 gStaticData_0816B300[];
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void FadeOutMusic(void *ctx, u32 value);
 extern void sub_8006D08(void *cache, s32 slot, s32 kind);
 extern void *GetSpriteFrame(struct act_part *part);
 extern u8 sub_800AAEC(struct act_part *part, s32 action);
-extern void sub_8012160(struct act *self, s32 id);
+extern void KillPlayer(struct act *self, s32 id);
 extern void sub_8012AF4(struct act *self);
 extern void sub_8015558(struct act *self);
 extern void sub_8015780(struct act *self, s32 a, s32 b, s32 c, s32 d);
@@ -111,9 +111,9 @@ static inline void PartSetVelY(struct act_part *p, s32 a, s32 b, s32 c)
  * further 7-case sub-dispatch on a nibble of a child object's `+4`
  * byte": the companion of `sub_8016288`. Does nothing for an object in
  * state 0x1D; otherwise dispatches on `arg2` (1-25):
- * - 2/3/7/8/9/10 call `sub_8012160` with a fixed id; 1/4/6 do the same
+ * - 2/3/7/8/9/10 call `KillPlayer` with a fixed id; 1/4/6 do the same
  *   with 0x1C and also reset the part's velocities and
- *   `gUnknown_030012D4->unk_14`;
+ *   `gCamera->unk_14`;
  * - 11 calls `sub_8015558` once the player is in contact and
  *   `sub_800AAEC(part, 0xB)` reports 1;
  * - 12 applies the contact bits `arg3` (and, for `arg3 & 3` == 1/2,
@@ -182,13 +182,13 @@ void sub_8011BD4(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             s32 m = arg3 & 3;
 
             if (m == 2) {
-                if (self->next27 != 0 && (s8)(gUnknown_030012D8->flags28 << 3) < 0) {
+                if (self->next27 != 0 && (s8)(gPlayer->flags28 << 3) < 0) {
                     self->unk_2A[2] = self->next27;
                     ActSetNext27(self, 0);
                     self->part->unk_60 = 0;
                 }
             } else if (m == 1) {
-                if (self->next27 != 0 && !((u32)(gUnknown_030012D8->flags28 << 27) >> 31)) {
+                if (self->next27 != 0 && !((u32)(gPlayer->flags28 << 27) >> 31)) {
                     self->unk_2A[2] = self->next27;
                     self->next31 = 0;
                     self->flag2F = m;
@@ -204,8 +204,8 @@ void sub_8011BD4(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             PartSet90(self->part, 1);
         }
     check_c:
-        if (self->state == 0xc && gUnknown_030012D8->frame != 0) {
-            struct act_part *pl = gUnknown_030012D8;
+        if (self->state == 0xc && gPlayer->frame != 0) {
+            struct act_part *pl = gPlayer;
 
             self->frame = self->frames;
             self->unk_2A[1] = 0;
@@ -301,7 +301,7 @@ void sub_8011BD4(struct act *self, s32 arg1, s32 arg2, s32 arg3)
     case 17:
         PlaySfx(gAudioContext, 0x2c, 0x100);
         {
-            u8 *f = &gUnknown_030012D8->flags0C;
+            u8 *f = &gPlayer->flags0C;
 
             *f &= 0x7f;
         }
@@ -312,19 +312,19 @@ void sub_8011BD4(struct act *self, s32 arg1, s32 arg2, s32 arg3)
         ActSetNext(self, 0);
         break;
     case 2:
-        sub_8012160(self, 0x2e);
+        KillPlayer(self, 0x2e);
         break;
     case 3:
-        sub_8012160(self, 0x2c);
+        KillPlayer(self, 0x2c);
         break;
     case 7:
-        sub_8012160(self, 0x2b);
+        KillPlayer(self, 0x2b);
         break;
     case 8:
-        sub_8012160(self, 0x2f);
+        KillPlayer(self, 0x2f);
         break;
     case 9:
-        sub_8012160(self, 0x2d);
+        KillPlayer(self, 0x2d);
         break;
     case 1:
     case 4:
@@ -333,7 +333,7 @@ void sub_8011BD4(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             struct act_part *p;
             s32 z;
 
-            sub_8012160(self, 0x1c);
+            KillPlayer(self, 0x1c);
             p = self->part;
             z = 0;
             if (p->unk_100 == 0)
@@ -342,14 +342,14 @@ void sub_8011BD4(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             p->unk_4C = z;
             p->unk_50 = z;
             PartSetVelY(self->part, -0x100, 0, -0x100);
-            gUnknown_030012D4->unk_14 = 3;
+            gCamera->unk_14 = 3;
         }
         break;
     case 10:
-        sub_8012160(self, 0x2a);
+        KillPlayer(self, 0x2a);
         break;
     case 11:
-        if ((gUnknown_030012D8->contact & 8) && sub_800AAEC(self->part, 0xb) == 1) {
+        if ((gPlayer->contact & 8) && sub_800AAEC(self->part, 0xb) == 1) {
             ActAndFlags0D(self->part, -2);
             ActAndFlags0D(self->part, -3);
             sub_8015558(self);

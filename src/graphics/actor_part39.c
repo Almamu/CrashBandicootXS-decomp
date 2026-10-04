@@ -72,16 +72,16 @@ struct actor *sub_80119FC(struct actor *self)
 }
 
 extern void *_call_via_r1(void *arg0, void *arg1);
-extern void *gUnknown_030012D8;
+extern void *gPlayer;
 
-/* If `self+0x48` is zero and the player (`gUnknown_030012D8`)'s top
+/* If `self+0x48` is zero and the player (`gPlayer`)'s top
  * flag bit is set, fires a `self->table+0x68`-driven trampoline (the
  * same idiom documented in `actor_part12.c`/`actor_part13.c`) on
  * `self` itself. Always returns 0. */
 s32 sub_8011A1C(struct actor *self)
 {
     if (*((u8 *)self + 0x48) == 0) {
-        struct actor *player = gUnknown_030012D8;
+        struct actor *player = gPlayer;
 
         if (player->flags >> 7) {
             u8 *rec = (u8 *)self->table + 0x68;
@@ -136,7 +136,7 @@ void sub_8011A84(struct actor *self, u8 value)
 extern void sub_8008364(struct actor *part);
 extern void *gEntityFlags;
 
-/* Distance-gate: if the player (`gUnknown_030012D8`) is within 0x180
+/* Distance-gate: if the player (`gPlayer`) is within 0x180
  * (384 px) of `self` on both axes, calls `sub_8008364` (already
  * matched in `actor_part5.c`) on `self`. Otherwise sets `self->flags`
  * bit 0 and, unless `self->field_08 == 0xFFFF`, marks its bit in the
@@ -146,7 +146,7 @@ extern void *gEntityFlags;
  * doesn't reproduce the ROM's exact instruction here). */
 void sub_8011A8C(struct actor *self)
 {
-    struct actor *player = gUnknown_030012D8;
+    struct actor *player = gPlayer;
     register s32 rawX asm("r0") = player->x;
     register s32 dxPart asm("r1");
     s32 dx;

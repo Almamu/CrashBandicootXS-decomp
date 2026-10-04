@@ -20,14 +20,14 @@
 
 #include "part_ctrl.h"
 
-struct camera_edge {
+struct bg_scroll_layer {
     u8 unk_00[0x14];
-    s32 bottom;         // 0x14 - in pixels
+    s32 heightPx;       // 0x14 - the level's height, in pixels
 };
 
-struct viewport {
+struct level_layers {
     u8 unk_00[0x10];
-    struct camera_edge *camera; // 0x10
+    struct bg_scroll_layer *layer0; // 0x10
 };
 
 /* A one-byte by-value argument: the ROM stores it into its stack slot
@@ -36,11 +36,11 @@ struct byte_arg {
     u8 v;
 } __attribute__((packed));
 
-extern void *gUnknown_030012D8;
+extern void *gPlayer;
 extern void *gEntityFlags;
 extern void *gAudioContext;
 extern void *gEntitySpawner;
-extern struct viewport *gLevelLayers;
+extern struct level_layers *gLevelLayers;
 extern s32 gUnknown_030012A0;
 extern s32 gUnknown_030012A4;
 extern s32 gUnknown_030012A8;
@@ -198,13 +198,13 @@ void sub_800B8DC(struct part_ctrl *self)
             struct ctrl_target *t = self->target;
             s32 y = t->y;
 
-            if (y > (gLevelLayers->camera->bottom << 8) - 0x1E00) {
+            if (y > (gLevelLayers->layer0->heightPx << 8) - 0x1E00) {
                 t->flag7 = 0;
                 {
                     struct ctrl_target *t2 = self->target;
 
                     y = t2->y;
-                    if (y > (gLevelLayers->camera->bottom << 8) + 0x1E00)
+                    if (y > (gLevelLayers->layer0->heightPx << 8) + 0x1E00)
                         MarkGone(t2);
                 }
             } else if (t->unk_68 == 8) {
@@ -219,7 +219,7 @@ void sub_800B8DC(struct part_ctrl *self)
             struct ctrl_target *t = self->target;
             s32 x = t->x >> 8;
             s32 y = t->y >> 8;
-            struct ctrl_target *p = gUnknown_030012D8;
+            struct ctrl_target *p = gPlayer;
             s32 dx = Abs(x - (p->x >> 8));
             s32 d = Abs(y - (p->y >> 8));
             struct byte_arg zero;
@@ -344,7 +344,7 @@ void sub_800B8DC(struct part_ctrl *self)
 
 /* `sub_800BD48`'s own state selector (`arg2`, values 1-22) dispatches
  * through a *second*, independent jump table after a shared prelude
- * (a `gUnknown_030012D8+0x88` state-object bit-flip + bitmap-set, or
+ * (a `gPlayer+0x88` state-object bit-flip + bitmap-set, or
  * the same on `self+0x88` if that global gate is off). Case values
  * 1-17 and 20-21 collapse to the same shared "camera-anchored ambient
  * sound + bitmap-flag" tail (case 0's own code, reused); only 18/19
@@ -353,7 +353,7 @@ void sub_800B8DC(struct part_ctrl *self)
  * pure no-ops sharing one target, the same "mostly-empty dense switch"
  * shape `sub_800B8DC` itself has for states 1/12.
  *
- * `gUnknown_030012D8+0x88`'s object (when non-null and `state==1`) or
+ * `gPlayer+0x88`'s object (when non-null and `state==1`) or
  * `self+0x88`'s own object get the same "flip `+0xc` bit0, bitmap-set
  * `+8`'s halfword id into `gEntityFlags`" treatment already
  * documented in `sub_800B8DC`'s doc comment above and in several
@@ -441,7 +441,7 @@ static inline void MarkGoneFreshBit(struct ctrl_target *t)
 
 void sub_800BD48(struct part_ctrl *self, s32 unused, s32 state)
 {
-    if (((struct player_ring *)gUnknown_030012D8)->ringLocked == 1) {
+    if (((struct player_ring *)gPlayer)->ringLocked == 1) {
         MarkGoneHeld(self->target);
         SpawnAt(0x28, self->target->x >> 8, self->target->y >> 8);
         PlaySfx(gAudioContext, 0x5a, 0x80);
@@ -463,7 +463,7 @@ void sub_800BD48(struct part_ctrl *self, s32 unused, s32 state)
             ((bd48_method_fn)m->fn)((u8 *)obj + m->thisOffset, self->target);
             self->target->flag7 = 0;
             t = self->target;
-            if ((a = t->x) > ((struct ctrl_target *)gUnknown_030012D8)->x)
+            if ((a = t->x) > ((struct ctrl_target *)gPlayer)->x)
                 SetVelX(t, 0x1000, 0, 0x1800);
             else
                 SetVelX(t, -0x1000, 0, -0x1800);

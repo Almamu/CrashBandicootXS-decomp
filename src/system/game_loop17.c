@@ -5,7 +5,7 @@
  * completion-time cascade, and a medal-table tally chain") - see
  * docs/matching/issue-38-medal-results-tally.md for the full write-up
  * of this chunk (this file covers the front slice, up to but not
- * including sub_8024344, which lives in game_loop18.c instead - it's
+ * including LevelHasEntityType, which lives in game_loop18.c instead - it's
  * contiguous with both files in ROM, and ended up grouped with the
  * wrapper functions that call it).
  *
@@ -13,7 +13,7 @@
  * `struct threshold_table_entry` in src/graphics/oam_count.c and
  * src/graphics/settings_menu6.c) - this file's functions resolve one
  * more of that struct's `unused` bytes: `+0x20` (a pointer to a small
- * `{count, items[], extra1, extra2}` list header, see sub_8024278
+ * `{count, items[], extra1, extra2}` list header, see CountLevelCrates
  * below). Kept as this file's own local copy of the struct rather than
  * editing the other two files' already-matched copies (this project's
  * established per-translation-unit convention for this particular
@@ -21,20 +21,20 @@
  * settings_menu6.c). */
 struct MedalTableEntry {
     u8 unused_00[0x20];
-    void *itemList; /* +0x20: -> struct MedalItemList, see sub_8024278 */
+    void *itemList; /* +0x20: -> struct MedalItemList, see CountLevelCrates */
 };
 COMPILE_TIME_ASSERT(sizeof(struct MedalTableEntry) == 0x24);
 
 extern struct MedalTableEntry gLevelTable[];
 
 /* One entry of a `MedalTableEntry.itemList`. `linkedObj`'s own `+0x1c`
- * field is a pointer to a further nested structure (see sub_8025894's
+ * field is a pointer to a further nested structure (see CountCrateEntities's
  * `list` parameter in game_loop12.c) - not itself named here, since
  * only this one offset into it is read anywhere in this file. */
 struct MedalListItem {
     u8 unused_00[4];
     void *linkedObj;  /* +0x04 */
-    s32 type;           /* +0x08: dispatch selector - see sub_8024278 */
+    s32 type;           /* +0x08: dispatch selector - see CountLevelCrates */
     u8 unused_0c[4];
     u16 catIndex;          /* +0x10: category index passed to sub_802968C */
 };
@@ -47,7 +47,7 @@ struct MedalItemList {
 };
 
 extern void *gEntityFlags;
-extern s32 sub_8025894(void *self, void *list);
+extern s32 CountCrateEntities(void *self, void *list);
 extern s32 sub_802968C(u16 catIndex);
 extern void sub_8026ED0(void *self);
 
@@ -67,18 +67,18 @@ void nullsub_25(void)
 
 /* Per-level medal tally: sums, across `gLevelTable[idx]`'s
  * item list (`items[]`, plus the two extra single-item slots), a
- * per-item value - `sub_8025894(gEntityFlags, item->linkedObj's
+ * per-item value - `CountCrateEntities(gEntityFlags, item->linkedObj's
  * +0x1c list)` for `type` 0-2, `sub_802968C(item->catIndex)` for
  * `type == 3`, 0 otherwise (including `type < 0`). The same 4-branch
  * dispatch is inlined three times in the ROM (once per source: the
  * `items[]` array, `extra1`, `extra2`) rather than calling a shared
- * helper - `sub_8024464` (game_loop18.c) is a separate, standalone
+ * helper - `CountRoomCrates` (game_loop18.c) is a separate, standalone
  * instance of the same dispatch body, not something this function
  * reaches through. Each dispatch compiles as a genuine `switch` here
  * (rather than an if/else-if chain) - only that shape reproduces the
  * ROM's exact "test all three conditions inline, jump out to
  * out-of-line handler blocks" layout for this compiler. */
-s32 sub_8024278(s32 idx)
+s32 CountLevelCrates(s32 idx)
 {
     s32 total = 0;
     struct MedalItemList *list = (struct MedalItemList *)gLevelTable[idx].itemList;
@@ -93,7 +93,7 @@ s32 sub_8024278(s32 idx)
             case 0:
             case 1:
             case 2:
-                v = sub_8025894(gEntityFlags, *(void **)((u8 *)item->linkedObj + 0x1c));
+                v = CountCrateEntities(gEntityFlags, *(void **)((u8 *)item->linkedObj + 0x1c));
                 break;
             case 3:
                 v = sub_802968C(item->catIndex);
@@ -111,7 +111,7 @@ s32 sub_8024278(s32 idx)
             case 0:
             case 1:
             case 2:
-                v = sub_8025894(gEntityFlags, *(void **)((u8 *)item->linkedObj + 0x1c));
+                v = CountCrateEntities(gEntityFlags, *(void **)((u8 *)item->linkedObj + 0x1c));
                 break;
             case 3:
                 v = sub_802968C(item->catIndex);
@@ -129,7 +129,7 @@ s32 sub_8024278(s32 idx)
             case 0:
             case 1:
             case 2:
-                v = sub_8025894(gEntityFlags, *(void **)((u8 *)item->linkedObj + 0x1c));
+                v = CountCrateEntities(gEntityFlags, *(void **)((u8 *)item->linkedObj + 0x1c));
                 break;
             case 3:
                 v = sub_802968C(item->catIndex);

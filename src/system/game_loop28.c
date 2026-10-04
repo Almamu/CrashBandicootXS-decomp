@@ -4,7 +4,7 @@
  * collision subsystem (game_loop17.c-game_loop27.c). `sub_8010B6C` is
  * this chunk's final and by far largest function - the collision-
  * candidate scan/resolve helper `sub_80106DC` (game_loop23.c) already
- * calls once a frame as `sub_8010B6C(gUnknown_030012D8 + 0x108)`. */
+ * calls once a frame as `sub_8010B6C(gPlayer + 0x108)`. */
 
 /* A byte passed on the stack as a genuine byte (`strb`); a plain `u8`
  * parameter is widened to a word `str`. */
@@ -42,7 +42,7 @@ struct candidate_list
     struct candidate records[1]; // 0x08
 };
 
-extern struct vec2 *gUnknown_030012D8;
+extern struct vec2 *gPlayer;
 extern void sub_800E08C(void *neighbor, s32 kind, s32 field10, s32 field14,
                         s32 field18, struct vec2 pos, s32 field1c,
                         struct flag8 field20, struct flag8 field21,
@@ -67,8 +67,8 @@ void sub_8010B6C(struct candidate_list *self)
         s32 bestDy;
         u8 forced;
 
-        px = gUnknown_030012D8->x;
-        py = gUnknown_030012D8->y;
+        px = gPlayer->x;
+        py = gPlayer->y;
         best = 0;
         bestDx = self->records[0].neighbor->x;
         bestDy = self->records[0].neighbor->y;

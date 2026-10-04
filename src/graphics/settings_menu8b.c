@@ -97,7 +97,7 @@ extern void sub_80047F8(struct pause_options_screen *self);
 extern void PlaySong(void *arg0, s32 arg1);
 extern void LoadSaveMenuData(struct pause_options_screen *self);
 extern void *gLevelState;
-extern void *sub_80236EC(void *arg0);
+extern void *PackSaveData(void *arg0);
 extern void SummarizeProgress(void *self, struct settings_row_stats *dest, void *src);
 extern void RefreshSaveSlotSummaries(struct pause_options_screen *self, void *handle);
 extern void *sub_80016DC(s32 size);
@@ -137,7 +137,7 @@ struct pause_options_screen *InitSaveMenu(struct pause_options_screen *arg0)
     sub_80047F8(self);
     PlaySong(gAudioContext, 0x10);
     LoadSaveMenuData(self);
-    SummarizeProgress(self, &self->currentStats, sub_80236EC(gLevelState));
+    SummarizeProgress(self, &self->currentStats, PackSaveData(gLevelState));
     RefreshSaveSlotSummaries(self, *field8cAddr);
 
     {
@@ -402,7 +402,7 @@ void SaveMenuMoveCursor(struct pause_options_screen *self, u32 flags)
     }
 }
 
-extern void sub_80236AC(void *cache, void *buf);
+extern void UnpackSaveData(void *cache, void *buf);
 extern void SetCurrentLevel(void *cache, u8 arg1);
 extern void SetSfxVolume(void *arg0, u16 arg1);
 extern void SetMusicVolume(void *arg0, u16 arg1);
@@ -435,11 +435,11 @@ void SaveMenuLoadInput(struct pause_options_screen *self, u32 flags, void *handl
         }
         PlaySfx(gAudioContext, 0x49, 0x100);
         ReadSaveSlot(handle, self->field_10, buf);
-        sub_80236AC(gLevelState, buf);
+        UnpackSaveData(gLevelState, buf);
         SetCurrentLevel(gLevelState, buf[0x68]);
         SetSfxVolume(gAudioContext, *(u16 *)&buf[0x6a]);
         SetMusicVolume(gAudioContext, *(u16 *)&buf[0x6c]);
-        SummarizeProgress(self, &self->currentStats, sub_80236EC(gLevelState));
+        SummarizeProgress(self, &self->currentStats, PackSaveData(gLevelState));
         self->field_20 = 1;
         self->field_8 = 1;
         return;
@@ -551,12 +551,12 @@ void SaveGameToSlot(struct pause_options_screen *self, s32 rowIndex)
 
     c0Addr = &gLevelState;
     {
-        /* The ROM evaluates sub_80236EC()'s result before computing
+        /* The ROM evaluates PackSaveData()'s result before computing
          * `buf + 0x70` (the ROM's own callee-arg setup order for
          * MemCopy32, not the other way around) - a plain nested call
          * expression here lets this compiler compute the pointer
          * argument first instead. */
-        void *result = sub_80236EC(*c0Addr);
+        void *result = PackSaveData(*c0Addr);
         MemCopy32(buf + 0x70, result, 0x68);
     }
     *(u8 *)(buf + 0xd8) = (u8)GetCurrentLevel(*c0Addr);
@@ -580,7 +580,7 @@ void SaveGameToSlot(struct pause_options_screen *self, s32 rowIndex)
             WriteSaveSlot(*handleAddr2, rowIndex, buf);
         }
     } else {
-        SummarizeProgress(self, &self->rowStats[rowIndex], sub_80236EC(*c0Addr));
+        SummarizeProgress(self, &self->rowStats[rowIndex], PackSaveData(*c0Addr));
     }
 }
 /* Trailing byte-padding mismatch fix: GAS's default Thumb code

@@ -1,4 +1,4 @@
-# Issue #13, fourth pass: `sub_800FF0C`
+# Issue #13, fourth pass: `CreateCrate`
 
 GitHub issue #13 (`0x0800FC70-0x08010A0C`, physics/collision subsystem,
 `game_loop` category - see
@@ -7,32 +7,32 @@ the first pass,
 [docs/matching/issue-13-fc70-continuation.md](issue-13-fc70-continuation.md)
 for the second, and
 [docs/matching/issue-13-fc70-second-continuation.md](issue-13-fc70-second-continuation.md)
-for the third) had one function left: **`sub_800FF0C`**
+for the third) had one function left: **`CreateCrate`**
 (`asm/code_3_2_17_e560_ff0c.s`, ROM `0x0800FF0C`, 1396 B / ~660
 instructions), the last still-raw entry in this issue's original span.
 This pass closes it.
 
 ## The trampoline family, read first
 
-Two entire files exist purely to call `sub_800FF0C` with a fixed
+Two entire files exist purely to call `CreateCrate` with a fixed
 constant `type` (the 5th, stack-passed argument) and nothing else:
 
 - `src/graphics/graphics_loading_21bfc.c` (GitHub issue #33) - `type`
   `0` through `7`. `type == 0`'s caller (`sub_8021D04`) does extra
   post-processing: it re-derives the same `gEntityFlags -> *P ->
-  {+8 array, +0xc base}` placement-record lookup `sub_800FF0C` itself
+  {+8 array, +0xc base}` placement-record lookup `CreateCrate` itself
   uses internally (indexed by `arg3<<1`), and folds two of the
   record's own flags-byte bits (`0x2`/`0x4`) into the constructed
-  object's `+0x28` bitfield *after* `sub_800FF0C` returns - overriding
-  the bits `sub_800FF0C`'s own common tail had just cleared.
+  object's `+0x28` bitfield *after* `CreateCrate` returns - overriding
+  the bits `CreateCrate`'s own common tail had just cleared.
   `sub_8021BFC` picks `type` `7` or `6` depending on
-  `sub_80232C8(gLevelState)`.
+  `IsSwitchPressed(gLevelState)`.
 - `src/graphics/graphics_loading_21668.c` (GitHub issue #31) - `type`
   `0x12` down to `7` (overlapping `graphics_loading_21bfc.c` at `7`
   through a second, independent trampoline `sub_8021BD8`).
 
 Together every `type` from `0` to `0x12` (18) - all 19 values - is
-externally confirmed by a real caller. This matches `sub_800FF0C`'s own
+externally confirmed by a real caller. This matches `CreateCrate`'s own
 internal **second** jump table exactly (19 cases, case IDs `0`-`0x12`),
 which is the strongest single piece of evidence that the second table
 is indexed directly by this same `type` value (after the possible
@@ -40,13 +40,13 @@ overrides described below).
 
 ## Function overview
 
-`void *sub_800FF0C(u16 arg0, u16 arg1, u16 arg2, u16 arg3, u8 type)`
+`void *CreateCrate(u16 arg0, u16 arg1, u16 arg2, u16 arg3, u8 type)`
 
 1. Allocates a `0x64` (100)-byte object via `sub_8026EDC(0x64)`
    (`self`), zero-initializes `self+0x59`, then calls
    `sub_800FEB0(self)` (already matched, game_loop22.c - clears the
    collision-response state/countdown/neighbor-list-pointer block).
-   Sets `self+0x18 = &gStaticData_087E4074` - a real address inside the
+   Sets `self+0x18 = &gCrateVtable` - a real address inside the
    documented 93-entry `gStaticData_087Exxx` vtable family, but at a
    **`+0x18` offset** rather than the `+0xC` convention every other
    constructor this project has matched uses for the same table-pointer
@@ -60,7 +60,7 @@ overrides described below).
    record slot occupied/confirmed" check used throughout) is true,
    `type` is forced to `0`.
 3. **Resource-pressure demotion**: unless `gLevelState+0x8c` is
-   set, or `sub_80232E0(gLevelState) >= sub_8023128(gLevelState)`
+   set, or `GetDeaths(gLevelState) >= sub_8023128(gLevelState)`
    (both take the same argument - read as "how many of this entity
    kind currently exist" vs. some capacity/threshold, i.e. the pool is
    already at or over capacity), `type == 0xb` or `type == 0xf` gets
@@ -71,7 +71,7 @@ overrides described below).
 4. Sets `self+0x20 = ***gUnknown_030012D0 + 0x174` - the
    `self+0x20`-pointer-to-manager/`self+0x2d`-tag/0x1c-stride
    hitbox-record table every sibling in this subsystem
-   (`sub_0800D18C`, `sub_8010480`, etc.) already establishes.
+   (`sub_0800D18C`, `DrawCrate`, etc.) already establishes.
 5. **First jump table** (index `type - 1`, valid for `type` `1`-`15`;
    any other `type` skips straight to step 6): marks a "treat this
    placement record as pre-flagged" local flag (`special`) for `type`
@@ -100,7 +100,7 @@ overrides described below).
    into `self+0x4d` bit 0 (keeping bit 7). Writes `self+0x4e = type`
    unconditionally. If `type == 5` and the placement record confirms
    presence, calls `sub_800F5B8(self)` - see below. Finally registers
-   `self` via `sub_8009B70(*gUnknown_0300130C, self)` and returns
+   `self` via `sub_8009B70(*gCrateList, self)` and returns
    `self`.
 
 ## Type-code table
@@ -190,7 +190,7 @@ Verified byte-exact via a full clean `make compare`
 ## Cross-references
 
 - `docs/status/game_loop.md` - matched list updated for this pass;
-  `sub_800FF0C` moved out of "Still raw, category-mapped".
+  `CreateCrate` moved out of "Still raw, category-mapped".
 - `tools/report_units.py` - the `0x0800FF0C` unit now points at the new
   `src/system/game_loop36.o` instead of `None`.
 - `ldscript.txt` - `game_loop36.o` replaces the deleted
@@ -198,7 +198,7 @@ Verified byte-exact via a full clean `make compare`
   `game_loop35.o`).
 - `asm/code_3_2_17_e560_ff0c.s` - deleted, fully consumed.
 
-*Later pass (size2 NAKED retry):* `sub_800FF0C` is real C under
+*Later pass (size2 NAKED retry):* `CreateCrate` is real C under
 old_agbcc (`game_loop36.o` joined `OLD_AGBCC_OBJS`; under agbcc the C is
 8 bytes long). The three placement-record pointer copies come from an
 inline `Placement(slot)` whose return value is copied; the other reads

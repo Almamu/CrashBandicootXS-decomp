@@ -8,17 +8,17 @@ work done against that list.
 
 Two loosely related families sharing the same ROM neighborhood:
 
-1. **The medal-results tally chain** (`sub_8024278`-`sub_802455C`,
-   `sub_8024464`), extending the `gLevelTable`/`sub_8025894`
+1. **The medal-results tally chain** (`CountLevelCrates`-`SelectRoom`,
+   `CountRoomCrates`), extending the `gLevelTable`/`CountCrateEntities`
    chain docs/rom_map.md already documents ("A per-level completion-time
    cascade, and a medal-table tally chain"). `gLevelTable`'s
    confirmed 36-slot medal table gets two more of its `unused` bytes
    resolved here: `+0x04` (a byte offset into the per-level sound-cue-ID
-   table `gThemeMusicCues`, `sub_8024498`) and `+0x20` (a pointer
+   table `gThemeMusicCues`, `PlayRoomMusic`) and `+0x20` (a pointer
    to a small `struct MedalItemList { count; items[]; extra1; extra2; }`
-   header, `sub_8024278`). Each `items[]`/`extra1`/`extra2` entry is
+   header, `CountLevelCrates`). Each `items[]`/`extra1`/`extra2` entry is
    itself a `struct MedalListItem` with a `type` selector (0-2 dispatch
-   to `sub_8025894`, 3 to `sub_802968C`, matching sub_8024278's own
+   to `CountCrateEntities`, 3 to `sub_802968C`, matching CountLevelCrates's own
    earlier-documented dispatch) and a nested `linkedObj->0x1c` pointer
    feeding both of those.
 2. **A sound-channel-handle helper family** (`BeginSlide`-
@@ -31,19 +31,19 @@ Two loosely related families sharing the same ROM neighborhood:
 
 ## Matched (19 functions, full clean `make compare` passing)
 
-`src/system/game_loop17.c` (`sub_802425C`-`sub_8024278`, 3 fns):
+`src/system/game_loop17.c` (`sub_802425C`-`CountLevelCrates`, 3 fns):
 `sub_802425C` (bit-tested `sub_8026ED0` teardown wrapper), `nullsub_25`
-(empty stub), `sub_8024278` (the medal-table per-level tally).
+(empty stub), `CountLevelCrates` (the medal-table per-level tally).
 
-`src/system/game_loop18.c` (`sub_80243E0`-`sub_802455C`, 13 fns):
-`sub_80243E0`/`sub_8024404` (medal item-list `extra2`/`extra1`-matches-
+`src/system/game_loop18.c` (`IsInGemPathRoom`-`SelectRoom`, 13 fns):
+`IsInGemPathRoom`/`IsInBonusRoom` (medal item-list `extra2`/`extra1`-matches-
 cached-value checks), `sub_8024428`/`sub_8024434`/`sub_8024440`/
-`sub_802444C`/`sub_8024458` (thin wrappers over `sub_8024344` with a
-baked-in flag-index constant - `sub_8024344` itself is left raw, see
-below), `sub_8024464` (standalone instance of `sub_8024278`'s per-item
-dispatch body), `sub_8024498` (medal-results sound-cue resolver),
-`sub_80244F0` (item-list cursor advance), `sub_8024524`/`sub_8024540`
-(item-list `extra2`/`extra1` field-copy accessors), `sub_802455C`
+`sub_802444C`/`sub_8024458` (thin wrappers over `LevelHasEntityType` with a
+baked-in flag-index constant - `LevelHasEntityType` itself is left raw, see
+below), `CountRoomCrates` (standalone instance of `CountLevelCrates`'s per-item
+dispatch body), `PlayRoomMusic` (medal-results sound-cue resolver),
+`NextRoom` (item-list cursor advance), `EnterGemPathRoom`/`EnterBonusRoom`
+(item-list `extra2`/`extra1` field-copy accessors), `SelectRoom`
 (item-list nonempty check + cursor-indexed cache).
 
 `src/system/game_loop19.c`: `sub_8024784` (trivial `gUnknown_03001314`
@@ -55,8 +55,8 @@ teardown wrapper), `ResetSlideshow` (trivial constructor).
 ### Gotchas worth recording
 
 - **Dispatch-on-range compiles as a genuine `switch`, not if/else-if.**
-  `sub_8024278`'s per-item `type` dispatch (`type<0`: skip; `type<=2`:
-  call `sub_8025894`; `type==3`: call `sub_802968C`) looked like a
+  `CountLevelCrates`'s per-item `type` dispatch (`type<0`: skip; `type<=2`:
+  call `CountCrateEntities`; `type==3`: call `sub_802968C`) looked like a
   natural if/else-if chain, but that shape compiles with the *wrong*
   branch polarity (`bgt`/skip-forward instead of the ROM's `ble`/jump-
   into-handler). Writing it as an actual C `switch (type) { case 0:
@@ -66,9 +66,9 @@ teardown wrapper), `ResetSlideshow` (trivial constructor).
   lowering for a tiny, mostly-contiguous case set apparently doesn't
   use a jump table, but the linear-compare form it does use has a
   different shape than a hand-written if-chain. Confirmed on both
-  `sub_8024278` (3 copies, since the ROM inlines the same dispatch body
+  `CountLevelCrates` (3 copies, since the ROM inlines the same dispatch body
   three times rather than calling a shared helper) and the standalone
-  `sub_8024464`.
+  `CountRoomCrates`.
 - **Struct-field access order matters when a value first has to be
   loaded from memory.** Every function keying off `gLevelTable
   [self->0]` byte-matched only once the array index was written inline
@@ -77,12 +77,12 @@ teardown wrapper), `ResetSlideshow` (trivial constructor).
   the compiler load `idx` before the table's own base address, the
   former (matching the ROM) loads the table's pool address first, the
   index second. The *reverse* ordering issue showed up in
-  `sub_8024278`/`sub_8024344`: their own accumulator (`total`/`result`)
+  `CountLevelCrates`/`LevelHasEntityType`: their own accumulator (`total`/`result`)
   had to be initialized to `0` *before* the list-header computation, not
   after, to match the ROM's instruction order (both are legal, only one
   matches).
 - **`x != 0` compiles differently as a condition vs. as a stored/
-  returned value.** `sub_802455C` returns `list->count != 0` - which is
+  returned value.** `SelectRoom` returns `list->count != 0` - which is
   also the `if` condition governing its cache-write body. The `if`
   compiles as a plain `cmp`/`beq`; the `return`, when written as
   `return list->count != 0;`, initially compiled the *same* way, not
@@ -92,8 +92,8 @@ teardown wrapper), `ResetSlideshow` (trivial constructor).
   needed a *second*, independent reload of `list->count` (not reusing
   the `if` condition's already-loaded value) to match a register the
   ROM frees up in between.
-- **A truncated callee-return idiom.** `sub_8024498` calls
-  `sub_8024404` and tests its result; the ROM applies `lsls r0,r0,#24`
+- **A truncated callee-return idiom.** `PlayRoomMusic` calls
+  `IsInBonusRoom` and tests its result; the ROM applies `lsls r0,r0,#24`
   before the `cmp #0`, discarding whatever garbage might be in the
   upper 24 bits rather than trusting a clean 0/1 return. Matches this
   codebase's established `(u8)funcCall(...) != 0` idiom (see e.g.
@@ -120,8 +120,8 @@ each was attempted and understood well enough to describe precisely,
 but not confidently enough to commit an admittedly-imperfect version -
 left as a clear target for a future pass instead.
 
-- **`sub_8024344`** (`asm/code_3_2_17_24344.s`) - scans a medal item
-  list (same `MedalItemList`/`MedalListItem` shape `sub_8024278` uses)
+- **`LevelHasEntityType`** (`asm/code_3_2_17_24344.s`) - scans a medal item
+  list (same `MedalItemList`/`MedalListItem` shape `CountLevelCrates` uses)
   for any non-type-3 item whose `linkedObj->0x1c->0x10` table has a
   nonzero `u16` at halfword index `flagIdx` (the parameter
   `sub_8024428`/`34`/`40`/`4C`/`58` bake a constant into). Every field,
@@ -170,7 +170,7 @@ elsewhere in the ROM and out of scope for this chunk.
 See [docs/status/game_loop.md](../status/game_loop.md) for the running
 matched/parked/raw lists this updates.
 
-**Update:** a follow-up pass matched `sub_8024344` and two of the six
+**Update:** a follow-up pass matched `LevelHasEntityType` and two of the six
 functions this doc's "Left raw" section lists as-is
 (`RunSlideshow`/`SkipSlides`/`EndSlide`, all now real C), and produced
 NON_MATCHING C reconstructions for the remaining two

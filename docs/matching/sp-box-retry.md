@@ -89,7 +89,7 @@ exactly 3840 bytes.
 
 The same fix on the rebuilt box (builder calls plus
 `bb = BOX_ADDR(&f.b)` for its `sub_8001640`) also makes that block
-match. It puts the `&gUnknown_030012D8` temp in r6, as in the ROM, but
+match. It puts the `&gPlayer` temp in r6, as in the ROM, but
 other low registers shift elsewhere and the draft comes out 8 bytes
 short: a copy gets coalesced and the dead `ldr r1, [sp, #0x70]` is
 dropped. The draft therefore uses it only on the first box. What's left

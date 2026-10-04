@@ -26,7 +26,7 @@
  *
  * Once a NAKED transcription. It matches as plain C under both
  * compilers: the icon-manager set-up is the same `IconSetup`/
- * `IconReserve` inline-helper sequence `sub_801BAF0`
+ * `IconReserve` inline-helper sequence `RunLevelSelect`
  * (src/graphics/actor_part_1b85c.c) uses, and `FontResetPalette` takes one
  * argument. See docs/matching/issue-4-6-8-naked-retry.md. */
 

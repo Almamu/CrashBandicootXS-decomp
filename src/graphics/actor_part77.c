@@ -14,12 +14,12 @@ extern void sub_80087C0(void *part);
 extern void sub_80087B4(void *part);
 extern void sub_800872C(void *part, u8 val);
 extern void sub_800A734(void *selfArg);
-extern u8 gStaticData_087E3E04[];
+extern u8 gPlayerVtable[];
 extern void ***gUnknown_030012D0;
 
 /* Re-initializes `self` (via `sub_800A6A4`, already matched in
  * `actor_part14.c`), then overwrites its table with
- * `gStaticData_087E3E04` and clears its trailing `+0x108`/`+0x10c`
+ * `gPlayerVtable` and clears its trailing `+0x108`/`+0x10c`
  * fields via `sub_8010E2C` (still raw - a two-field, 4-byte-plus-byte
  * clear). Allocates a fresh `struct actor`-shaped child object
  * (`sub_8008434(0, 0, 0, 0)`, the same allocator `actor_part6.c`'s
@@ -37,13 +37,13 @@ extern void ***gUnknown_030012D0;
  * the Q8 `x`/`y` position from the three `u16` arguments - the same
  * tail `sub_800A604` (`actor_part14.c`) uses for its own, smaller
  * `struct actor` - and returns `self`. */
-void *sub_800B3F0(void *selfArg, u16 arg1, u16 arg2, u16 arg3)
+void *InitPlayer(void *selfArg, u16 arg1, u16 arg2, u16 arg3)
 {
     u8 *self = selfArg;
     struct actor *child;
 
     sub_800A6A4((struct actor *)self);
-    *(u8 **)(self + 0x18) = gStaticData_087E3E04;
+    *(u8 **)(self + 0x18) = gPlayerVtable;
     sub_8010E2C(self + 0x108);
 
     child = sub_8008434(0, 0, 0, 0);

@@ -23,7 +23,7 @@ void sub_801B208(struct gobj *self)
         OBJ_CALL1(self, m60);
         if (self->type == 6 && self->frame > 0x12)
         {
-            struct gobj **c = &gUnknown_030012D8->carried;
+            struct gobj **c = &gPlayer->carried;
 
             if (*c == self)
                 *c = NULL;
@@ -280,14 +280,14 @@ void sub_801B304(struct mover *self, struct gobj *objArg)
     }
 
     kind = self->kind;
-    if (kind == 5 && self->timer > 0 && gUnknown_0300082C - self->timer == 60)
+    if (kind == 5 && self->timer > 0 && gRoomFrameCount - self->timer == 60)
     {
         MOVER_CALL3(self, m60, obj, 3);
         self->timer = -1;
     }
     else if (kind == 5 && self->timer > 0)
     {
-        u32 now = gUnknown_0300082C;
+        u32 now = gRoomFrameCount;
 
         if (__umodsi3(now - self->timer, 30) <= 4)
         {
@@ -309,7 +309,7 @@ void sub_801B304(struct mover *self, struct gobj *objArg)
     {
     check_rest:
         if ((kind == 7 && obj->frame <= 1 && !self->active)
-         || (kind == 6 && obj->frame <= 1 && gUnknown_0300082C < self->time))
+         || (kind == 6 && obj->frame <= 1 && gRoomFrameCount < self->time))
             goto clamp;
         if (kind == 7 && obj->unk_38)
         {
@@ -339,7 +339,7 @@ void sub_801B304(struct mover *self, struct gobj *objArg)
         }
         else if (kind == 6 && obj->unk_38)
         {
-            self->time = gUnknown_0300082C + 120;
+            self->time = gRoomFrameCount + 120;
         clamp:
             {
                 register s32 f asm("r3") = 0;
@@ -369,7 +369,7 @@ void sub_801B624(struct mover *self, struct gobj *obj)
 {
     if (self->active && self->kind != 6)
     {
-        struct gobj **pp = &gUnknown_030012D8;
+        struct gobj **pp = &gPlayer;
         struct gobj *p = *pp;
         register u32 f asm("r1") = p->flags;
         register u32 top asm("r0") = f >> 7;
@@ -411,9 +411,9 @@ void sub_801B624(struct mover *self, struct gobj *obj)
                 dir |= 8;
             else if (obj->speedY < 0)
                 dir |= 4;
-            gUnknown_030012D8->dir = dir;
+            gPlayer->dir = dir;
             if (self->kind == 5 && self->timer == 0)
-                self->timer = gUnknown_0300082C;
+                self->timer = gRoomFrameCount;
         }
     }
 }
@@ -519,7 +519,7 @@ struct mover *sub_801B7D8(struct mover *self, s32 distX, s32 distY, u32 dirXArg,
     self->rangeY = distY * 2;
     self->dirX = dirX;
     self->dirY = dy;
-    self->time = gUnknown_0300082C + 0x78;
+    self->time = gRoomFrameCount + 0x78;
     return self;
 }
 

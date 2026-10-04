@@ -3,7 +3,7 @@
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see game_loop17.c's header comment and
  * docs/matching/issue-13-graphics-fc70.md). This function sits
- * between the still-raw `sub_800FF0C` (real bytes in
+ * between the still-raw `CreateCrate` (real bytes in
  * asm/code_3_2_17_e560_ff0c.s) and `sub_80104E4` (real bytes in the
  * new asm/code_3_2_17_e560_104e4.s), so it needs its own file rather
  * than joining an existing one - see docs/workflow.md's "one file per
@@ -26,7 +26,7 @@ extern void sub_8007A84(void *self, void *part);
  * establishes). Always tail-fires `sub_8007A84(gUnknown_030012CC,
  * self)`, then - only if `self+0x38` ended up nonzero - clears
  * `self+0xc` bit 3. */
-void sub_8010480(void *selfArg)
+void DrawCrate(void *selfArg)
 {
     /* Pinned to r4: the ROM keeps `self` in r4 for the whole function
      * (matching every sibling in this file family). */

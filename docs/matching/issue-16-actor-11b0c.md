@@ -63,7 +63,7 @@ updated to place all three pieces (`code_3_2_17_e560.o`,
 - **`sub_80119FC`**: re-inits `self` via `sub_80084A4`, overwrites
   `table` with `gStaticData_087E414C`, runs `sub_80119EC` on it.
 - **`sub_8011A1C`**: if `self+0x48` is zero and the player
-  (`gUnknown_030012D8`)'s flags top bit is set, fires a
+  (`gPlayer`)'s flags top bit is set, fires a
   `self->table+0x68`-driven trampoline (same idiom documented in
   `actor_part12.c`/`actor_part13.c`) on `self` via `_call_via_r1`.
   Matched directly, no register-pinning needed - the natural ABI
@@ -133,7 +133,7 @@ updated to place all three pieces (`code_3_2_17_e560.o`,
 
 ## Left raw (10/25) - `sub_8011BD4` onward
 
-`sub_8011BD4`, `sub_8012160`, `sub_8012238`, `sub_80122CC`,
+`sub_8011BD4`, `KillPlayer`, `sub_8012238`, `sub_80122CC`,
 `sub_8012420`, `sub_8012694`, `sub_801283C`, `sub_8012A7C`,
 `sub_8012AF4`, `sub_8012D24` (ROM 0x08011BD4-0x08012FBC, now
 `asm/code_3_2_17_11bd4.s`) were left completely untouched. All ten
@@ -154,7 +154,7 @@ functions in detail and reached the same conclusion:
   members of the 42-slot action-dispatch table family
   (`gStaticData_0816BF20`) - real, cross-referenced coverage, but not
   matched to byte-exact precision by that investigation either.
-- The remaining functions (`sub_8012160`, `sub_8012238`, `sub_80122CC`,
+- The remaining functions (`KillPlayer`, `sub_8012238`, `sub_80122CC`,
   `sub_8012A7C`, `sub_8012AF4`, `sub_8012D24`) are direct siblings/
   callees of the above, sharing the same struct and calling
   conventions.

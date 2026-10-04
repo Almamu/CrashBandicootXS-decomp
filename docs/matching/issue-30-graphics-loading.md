@@ -309,11 +309,11 @@ unchanged).
 
 `sub_801E990` (the sound-trigger dispatcher docs/rom_map.md already
 partially read - 3 Q8.8-shifted x/y/z args, a `gLevelState`-gated
-position/flag write into `gUnknown_030012D8+0x28`, then a conditional
+position/flag write into `gPlayer+0x28`, then a conditional
 `PlaySfx`) was read in full this pass too, but not attempted: its second
 half calls into several still-unread helpers
-(`sub_80232E0`/`sub_8023130`/`GetLives`/`sub_80232B8`/`_call_via_r4`)
-whose own signatures and the `gUnknown_030012D8+0x18+0x68`-rooted
+(`GetDeaths`/`GetMaskAssistDeaths`/`GetLives`/`IsInBonusRound`/`_call_via_r4`)
+whose own signatures and the `gPlayer+0x18+0x68`-rooted
 sub-struct they read from aren't pinned down yet - a confident
 reconstruction would mean chasing all of those first, which this pass's
 remaining time didn't cover. Left raw, along with the rest of this
@@ -327,10 +327,10 @@ Picked up `sub_801E990` (the sound-trigger dispatcher the third pass
 flagged its unresolved helper calls for). All five previously-unread
 helpers turned out to already be matched elsewhere in the tree as
 plain one-line field accessors on the same `gLevelState`-rooted
-player struct: `sub_80232F4`/`sub_80232E0`/`sub_8023130`/`GetLives`
+player struct: `GetSpawnAtStart`/`GetDeaths`/`GetMaskAssistDeaths`/`GetLives`
 (`+0xa8`/`+0x7c`/`+0x84`/`+0x74` respectively - the first three in
 `asm/code_3_2_17_231cc.s`'s still-raw accessor cluster, the fourth
-already matched in `actor_aabb_setup.c`) and `sub_80232B8` (`+0xa4`,
+already matched in `actor_aabb_setup.c`) and `IsInBonusRound` (`+0xa4`,
 matched in `game_loop10.c`/`game_loop2.c`). `_call_via_r4` itself is not
 a normal function at all - it's the `bx r4` register-trampoline from
 `reg_trampolines.c` (`src/system/reg_trampolines.c`'s
@@ -343,7 +343,7 @@ before an ordinary-looking `_call_via_r4(addr, arg1, arg2, arg3)` call.
 
 With every operand pinned down, the function's full semantics are:
 
-1. If the player's `+0xa8` flag (`sub_80232F4`) is set: looks up a
+1. If the player's `+0xa8` flag (`GetSpawnAtStart`) is set: looks up a
    per-`z` flags byte via the `gEntityFlags -> *rec -> {+8
    offsets[], +0xc base}` table - the exact same table
    `sub_8021D04` (`graphics_loading_21bfc.c`, issue #33) already reads,
@@ -358,7 +358,7 @@ With every operand pinned down, the function's full semantics are:
    plays SFX `0x100` through `gAudioContext`, gated by a
    budget/reentrancy check - either the player's spawn counter
    (`+0x7c`) has room against its cap (`+0x84`), or, when it doesn't,
-   `GetLives` (`+0x74`), `sub_80232B8` (`+0xa4`) and the player's
+   `GetLives` (`+0x74`), `IsInBonusRound` (`+0xa4`) and the player's
    `+0x78` mode field all agree it's still safe to fire.
 
 A plain-C reconstruction with this exact meaning compiles cleanly and
@@ -393,7 +393,7 @@ the now-trimmed raw file (which starts at `sub_801EA5C` instead).
 remaining register-choice gap closed - see
 [naked-sub_801e990-matched.md](./naked-sub_801e990-matched.md) for the
 fix (modeling the r3-pinned local as the *address of*
-`gUnknown_030012D8` rather than its dereferenced value). `sub_801E990`
+`gPlayer` rather than its dereferenced value). `sub_801E990`
 is now real, fully matched C; the `NAKED` wrapper and `#if
 NON_MATCHING` toggle described above have been removed from
 `graphics_loading_1e990.c`.
@@ -546,7 +546,7 @@ though the function body still writes and later reads it through the
 whole outer loop. This is the exact same "compiler drops a genuinely
 live register from its own auto-generated prologue/epilogue list under
 register pressure" limitation already closed this session for
-`sub_80240E4` (`src/system/game_loop8.c`, PR #334) and `sub_801E688`
+`SetupRoomBlend` (`src/system/game_loop8.c`, PR #334) and `sub_801E688`
 (`src/graphics/graphics_package_1e688.c`, PR #336, "Seventh pass"
 above), and documented as still-open for `LoadBg2Background`
 (`src/graphics/level_graphics.c`, issue #65) - given the extensive

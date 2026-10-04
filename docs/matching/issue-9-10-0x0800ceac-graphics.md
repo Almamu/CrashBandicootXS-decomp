@@ -40,7 +40,7 @@ Called once, from `sub_0800D18C`, with:
   into a callee-saved register by the prologue but **never read again**
   after that; confirmed genuinely unused against the raw disassembly,
   not a transcription slip.
-- `quad` = the player's (`gUnknown_030012D8`) own hitbox quad: `player's
+- `quad` = the player's (`gPlayer`) own hitbox quad: `player's
   own +0x20 table[player's own +0x2d tag] + 4` - i.e. a pointer straight
   to the `{s16 xOff, s16 yOff, u8 w, u8 h}` quad, not the 28-byte
   record's own base (the caller has already added the `+4`).
@@ -51,7 +51,7 @@ Called once, from `sub_0800D18C`, with:
   early on and reused across many of its own AABB builds.
 
 Body:
-1. Tests `gUnknown_030012D8`-the-player's own `+0x90` byte (dereferences
+1. Tests `gPlayer`-the-player's own `+0x90` byte (dereferences
    the global pointer, then reads `+0x90`). This offset isn't documented
    anywhere else under this project's naming - the closest confirmed
    neighbors are `+0x92`/`+0x94`, a state-byte pair `sub_8015350`
@@ -173,7 +173,7 @@ Verified byte-exact via the isolated `cpp`/`agbcc`/`as` +
 `objcopy`/`cmp` pipeline against `baserom.gba`'s own bytes at
 `0x0800CEAC`-`0x0800D040`: the only differing bytes fell into exactly 12
 four-byte clusters, matching the expected relocation-site count exactly
-(7 for `sub_800CEAC` - 5 `bl` calls + 2 `.word gUnknown_030012D8`
+(7 for `sub_800CEAC` - 5 `bl` calls + 2 `.word gPlayer`
 literals; 5 for `sub_800CF70` - 5 `bl` calls, no literal pool needed
 since it never touches the player global). These resolve correctly once
 linked, the same pattern every prior NAKED closure in this neighborhood

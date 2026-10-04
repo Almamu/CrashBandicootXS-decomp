@@ -36,7 +36,7 @@ their action codes `0xB`/`0x10` (`docs/rom_map.md` line 1713).
    `actor_part12b.c`/`game_loop6.c`... actually `actor_part12b.c`'s
    `sub_8009BE0`). If the low byte of the result is nonzero, returns
    `0` immediately.
-2. **Loop**: otherwise walks `gUnknown_0300130C` (a `struct actor_list
+2. **Loop**: otherwise walks `gCrateList` (a `struct actor_list
    { s32 count; s32 unused_4; void **items; }`, the exact layout
    `src/system/game_loop24.c`'s `sub_8010804` already established) -
    for each `entry = items[i]`, tests `entry`'s own `+0x18`-table
@@ -70,7 +70,7 @@ object's own `+0x28` bits 4/5 are set (same mirror-flag convention):
 
 - **AABB1**: from `self`'s own `+0x20`-table, indexed by `self`'s own
   `+0x2d` tag - `self`'s current hitbox.
-- **AABB2**: from the player's (`gUnknown_030012D8`) own `+0x20`-
+- **AABB2**: from the player's (`gPlayer`) own `+0x20`-
   table, indexed by the PLAYER's own `+0x2d` tag - the player's
   current hitbox.
 - **AABB3** (reuses AABB2's stack slot): from the player's `+0x20`-
@@ -98,9 +98,9 @@ correcting.
 ### `sub_800AAEC` - PARKED (`NON_MATCHING`), not yet byte-exact
 
 The `#if NON_MATCHING` branch gets every instruction byte-exact except
-one 5-instruction pair: the `gUnknown_0300130C` list-walk's loop-
+one 5-instruction pair: the `gCrateList` list-walk's loop-
 condition-check/loop-entry transition. The ROM re-loads
-`&gUnknown_0300130C` from the literal pool fresh on *every* iteration
+`&gCrateList` from the literal pool fresh on *every* iteration
 (a conservative reload, since the intervening `_call_via_r1`/
 `sub_800CD00` calls alias-escape the global) and lands it in `r0`,
 then the loop body's own first instruction (`ldr r0, [r0]`) turns that
@@ -108,16 +108,16 @@ same register from "address" into "value" in place, reusing it rather
 than a second register. No C-level phrasing reproduced that exact
 per-iteration re-materialize-into-r0-then-alias-in-place shape:
 
-- A plain `for (i = 0; i < gUnknown_0300130C->count; i++)` matches
+- A plain `for (i = 0; i < gCrateList->count; i++)` matches
   register roles for every OTHER value in the function (getting the
   whole function down to the ROM's exact 3 callee-saved registers,
-  `r4`/`r5`/`r6`) but lets gcc correctly recognize `&gUnknown_0300130C`
+  `r4`/`r5`/`r6`) but lets gcc correctly recognize `&gCrateList`
   as loop-invariant and hoist it - landing the address in `r1` and the
   freshly-dereferenced value/`->count` in `r0` (the ROM's opposite
   choice).
 - The `sub_8010804`-style "cache `&var` in a local declared inside an
   `if` guard, then `do`/`while`" idiom (`game_loop24.c`'s own proven
-  pattern for the identical `gUnknown_0300130C` list shape) re-adds a
+  pattern for the identical `gCrateList` list shape) re-adds a
   4th callee-saved register (`r6` for the cached address, on top of
   `r4`/`r5`/`r7`) here - it doesn't reproduce the ROM's shape either,
   just trades one mismatch for a worse one.

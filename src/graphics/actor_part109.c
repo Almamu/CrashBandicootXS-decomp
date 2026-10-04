@@ -2,7 +2,7 @@
 
 /* GitHub issue #9/#10: 0x0800CD00, `sub_800AAEC`'s (`actor_part108.c`)
  * only caller/callee companion - `sub_800AAEC` calls this once per
- * `gUnknown_0300130C` list entry whose own `+0x18`-table `+0x48`
+ * `gCrateList` list entry whose own `+0x18`-table `+0x48`
  * trampoline (`_call_via_r1`) reports state `3`, passing that entry as
  * `self` and its own `x` (the target "action" index) straight through.
  *
@@ -21,7 +21,7 @@
  * "matching `gStaticData_0816BC98`'s stride exactly, but clearly a
  * different table instance" - reinforcing the project's established
  * "shared convention, not shared struct" reading, since `self` here is
- * a plain `gUnknown_0300130C` list entry, not the physics subsystem's
+ * a plain `gCrateList` list entry, not the physics subsystem's
  * own object type), with the record's own `{s16 offX, s16 offY, u8 w,
  * u8 h}` quad at `+4`/`+6`/`+8`/`+9` this time (yet another layout
  * variant of the same convention, alongside `actor_part.c`'s
@@ -34,7 +34,7 @@
  *
  *   - AABB1: from `self`'s own `+0x20`-table, indexed by `self`'s own
  *     `+0x2d` tag - `self`'s current hitbox.
- *   - AABB2: from the player's (`gUnknown_030012D8`) own `+0x20`-table,
+ *   - AABB2: from the player's (`gPlayer`) own `+0x20`-table,
  *     indexed by the PLAYER's own `+0x2d` tag - the player's current
  *     hitbox.
  *   - AABB3 (reuses AABB2's stack slot): from the player's `+0x20`-
@@ -74,7 +74,7 @@
 extern void SetAabbPos(struct part_aabb *buf, s32 x, s32 y);
 extern void SetAabbSize(struct part_aabb *buf, s32 w, s32 h);
 extern u8 sub_8001640(struct part_aabb *a, struct part_aabb *b);
-extern struct box_part *gUnknown_030012D8;
+extern struct box_part *gPlayer;
 
 /* `a` through a copy that an empty asm claims to modify (emits nothing):
  * it hides the copy's value from cse, so each use of a stack box address
@@ -116,7 +116,7 @@ u8 sub_800CD00(struct box_part *self, s32 action)
             f.a.y = py * 2 - (f.a.y + f.a.h);
     }
     {
-        struct box_part *pl = gUnknown_030012D8;
+        struct box_part *pl = gPlayer;
         struct part_box *q;
         s32 offX, offY;
         u8 w, h;
@@ -134,16 +134,16 @@ u8 sub_800CD00(struct box_part *self, s32 action)
             SetAabbPos(BOX_ADDR(&f.b), x, y);
         }
         SetAabbSize(BOX_ADDR(&f.b), w, h);
-        if (gUnknown_030012D8->mirrorX)
+        if (gPlayer->mirrorX)
             f.b.x = px * 2 - (f.b.x + f.b.w);
-        if (gUnknown_030012D8->mirrorY)
+        if (gPlayer->mirrorY)
             f.b.y = py * 2 - (f.b.y + f.b.h);
     }
     pb = BOX_ADDR(&f.b);
     if (sub_8001640(&f.a, pb))
         return 0;
     {
-        u8 *rec = (u8 *)&(*gUnknown_030012D8->keyframes)[action];
+        u8 *rec = (u8 *)&(*gPlayer->keyframes)[action];
         struct part_box *q = (struct part_box *)(rec + 4);
         s32 offX, offY;
         u8 w, h;
@@ -154,9 +154,9 @@ u8 sub_800CD00(struct box_part *self, s32 action)
         h = q->h;
         SetAabbPos(pb, offX + px, offY + py);
         SetAabbSize(pb, w, h);
-        if (gUnknown_030012D8->mirrorX)
+        if (gPlayer->mirrorX)
             f.b.x = px * 2 - (f.b.x + f.b.w);
-        if (gUnknown_030012D8->mirrorY)
+        if (gPlayer->mirrorY)
             f.b.y = py * 2 - (f.b.y + f.b.h);
     }
     if (sub_8001640(&f.a, pb) != 1)

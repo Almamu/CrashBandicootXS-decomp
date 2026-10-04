@@ -190,7 +190,7 @@ right after its declaration. Compiled cleanly, but made no difference -
 grepping the isolated `.s` output for `push`/`pop`: still
 `push {r4, r5, r6, lr}` / `pop {r4, r5, r6}`, no `r7`). This reconfirms
 the conclusion already reached for `sub_801E688`
-(issue-30-graphics-loading.md's "Seventh pass") and `sub_80240E4`
+(issue-30-graphics-loading.md's "Seventh pass") and `SetupRoomBlend`
 (`src/system/game_loop8.c`): this compiler's callee-save prologue list is
 built from a first (pressure-counting) allocator pass that can reserve a
 register slot never used by the time the second (assignment) pass

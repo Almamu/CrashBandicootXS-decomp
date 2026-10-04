@@ -38,7 +38,7 @@ picks up the other three next.
 
 ## What got fixed this pass (new techniques, not tried in the third pass)
 
-- **The `gLevelState` address survives across the `sub_8023278`
+- **The `gLevelState` address survives across the `IsGemPathDone`
   call for free once pinned to `r9` via a *plain C* `register void
   *self asm("r0") = (void *)&gLevelState;` initializer** - letting
   the compiler's own address-of codegen manage the literal-pool
@@ -65,7 +65,7 @@ picks up the other three next.
   testing the `u8`-typed pinned result directly triggers an unwanted
   zero/sign-extension widening (`lsl r2,r2,#24` before the `cmp`) that
   the ROM's own `if` test doesn't have.
-- **The `sub_8023278(...) || ...+0x8c` branch needs explicit `goto`s,
+- **The `IsGemPathDone(...) || ...+0x8c` branch needs explicit `goto`s,
   not a plain `||` expression.** A plain `||` compiles both operands as
   independent "if true, branch to the shared target" tests; the ROM's
   second operand (`gLevelState+0x8c` test) is inverted and
@@ -80,7 +80,7 @@ picks up the other three next.
   plus `arg1`/`arg2`/`a3` register moves) on its own once the source is
   shaped this way, matching the ROM's single `bl sub_801A878` call site
   exactly (not two separate calls).
-- **The `+0x8c` re-check after the `sub_8023278` call re-derefs
+- **The `+0x8c` re-check after the `IsGemPathDone` call re-derefs
   `gLevelState` through the `r9`-pinned address**, not by reusing
   `self` (whose own register, `r0`, was clobbered by the call) - a
   fresh `register void **tmp asm("r3") = pAddr; register u8 val
@@ -267,7 +267,7 @@ alone reaches r7 for `a3` without spilling:
   unpinned** (the version actually committed): natural allocation puts
   `a3` in r7 *for the spawn branch* (matches ROM, `add r3, r7, #0`
   before `bl sub_8008434`), but for the `if`-branch's `do_call` path
-  (which crosses the `sub_8023278` call), the allocator doesn't trust
+  (which crosses the `IsGemPathDone` call), the allocator doesn't trust
   r7 survives the call on its own and spills `a3` to a stack slot
   instead (`sub sp, #8` instead of the ROM's `sub sp, #4`, plus a `str
   r7, [sp, #4]` right after the truncation and a `ldr r3, [sp, #4]`
@@ -359,7 +359,7 @@ Only one thing needed care. The sound arm is two separate `sub_801A878`
 calls, one per sound id:
 
 ```c
-if (sub_8023278(gLevelState) || gLevelState->unk_8C)
+if (IsGemPathDone(gLevelState) || gLevelState->unk_8C)
     snd = sub_801A878(a0, a1, a2, a3, 0xC);
 else
     snd = sub_801A878(a0, a1, a2, a3, 0xB);
@@ -370,7 +370,7 @@ both arms and then shares the rest of the call. That is gcc cross-jumping
 two identical call tails. It merges backwards from the end of each call
 and stops at the differing `mov r1, #id`. A single call with an `id`
 variable only truncates `a0` once, after the join. That version also
-loads `gLevelState` for the `sub_80234E8` call early and pushes
+loads `gLevelState` for the `SetGemPlatform` call early and pushes
 `sl`, so it misses by 89 halfwords.
 
 The "`self` in r1 vs r0" and "mask in `sl`" register differences between

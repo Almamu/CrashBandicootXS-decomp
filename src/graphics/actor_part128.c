@@ -71,7 +71,7 @@ extern s32 GetAnimFrameBaseOffset(void *self);
 extern u32 GetSpriteShapeSizeBits(u8 *frame);
 extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority);
 extern void PlayAmbientSfx(void *ctx, s32 id, s32 frame, s32 vol, struct byte_arg force);
-extern u8 sub_8023418(void *self);
+extern u8 IsCrystalSaved(void *self);
 extern void LoseLife(void *self);
 extern u8 sub_8029794(void);
 extern s32 sub_8029B2C(void);
@@ -189,7 +189,7 @@ s32 sub_802E170(u8 kind, s32 x, s32 y, s32 z, void *spawn);
 /* Spawns the object a level spawn record describes: its kind comes from
  * byte 0, byte 1 in the alternate game mode (kind 0x17 there becomes
  * 0x14) or byte 2 when `alt` is set. Kind 0x1d only spawns while
- * `sub_8023418` allows it; kinds 0, 0x3e and 0x20-0x25 never do. */
+ * `IsCrystalSaved` allows it; kinds 0, 0x3e and 0x20-0x25 never do. */
 s32 sub_802E0CC(struct spawn_rec *rec, u8 alt, s32 dz)
 {
     u8 kind = rec->kind[0];
@@ -202,7 +202,7 @@ s32 sub_802E0CC(struct spawn_rec *rec, u8 alt, s32 dz)
     } else if (alt != 0) {
         kind = rec->kind[2];
     }
-    if (kind == 0x1d && !sub_8023418(gLevelState))
+    if (kind == 0x1d && !IsCrystalSaved(gLevelState))
         return 0;
     if (kind == 0 || kind == 0x3e || (u8)(kind - 0x20) <= 5)
         return 0;

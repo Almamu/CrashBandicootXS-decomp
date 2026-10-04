@@ -8,7 +8,7 @@ Issues #34, #37, #38, #39, #40, #41 and #45 left 26 functions in
 Like the neighbouring regions (docs/matching/old-agbcc-retry.md,
 issue-42-bg-scroll-layer.md), this part of the ROM was built with
 `tools/agbcc/bin/old_agbcc`. Several of these functions only match under
-it (for example `sub_80240E4`, `sub_8022D50`, `InitHud`, and four of
+it (for example `SetupRoomBlend`, `StartTimeTrial`, `InitHud`, and four of
 the terrain tile cache's lookups), and every other function in the
 touched files matches under it unchanged.
 
@@ -18,8 +18,8 @@ No register pins, no asm in a function body and no NAKED.
 
 | function | file |
 |---|---|
-| `sub_8022D50` | `game_loop40.c` |
-| `sub_80240E4` | `game_loop8.c` |
+| `StartTimeTrial` | `game_loop40.c` |
+| `SetupRoomBlend` | `game_loop8.c` |
 | `BeginSlide` | `game_loop37.c` |
 | `StreamBgRow`, `StreamBgColumn`, `FillBgStreamer` | `game_loop57.c` |
 | `GetCollisionChunk`, `GetTerrainHeights`, `GetSolidTerrainHeights`, `sub_8025228` | `game_loop3.c` |
@@ -43,7 +43,7 @@ Still NAKED, with the remaining gap under old_agbcc:
 | `sub_8025B0C` | 61 halfwords: `&srcBox` held in a callee-saved register across a call |
 | `RunCutscenePlayer` | 77 halfwords: the ROM reloads `&gUnknown_03001300` at each OAM flush |
 | `SpawnRoomEntities` | 153 halfwords: the second pass's list searches are peeled and index-based |
-| `sub_8023A1C` | not attempted |
+| `RunRoom` | not attempted |
 
 ## What mattered
 
@@ -53,7 +53,7 @@ Still NAKED, with the remaining gap under old_agbcc:
   kept live across the call. `DecodeCollisionChunk`'s r7 "shadow pointer" is
   gcc's strength-reduced `&dest[written]`.
 - **Inline-helper parameters.** Stores whose value comes before the
-  address (`part->tag` in `sub_8025A64` and `sub_8022D50`) go through an
+  address (`part->tag` in `sub_8025A64` and `StartTimeTrial`) go through an
   `s32` setter; `DrawBgLayerColumn` uses `bg_scroll_layer_25fc8.c`'s `Mod32`.
 - **The tile cache's `GetCell`.** A shared inline returning `u16` gives
   the ROM's extra `lsl`/`lsr 16`, with the index written as
@@ -64,7 +64,7 @@ Still NAKED, with the remaining gap under old_agbcc:
   and block height in `s32` locals so they stay in `sl`/`sb`.
 - **Parameter widths.** `sub_8025A64` takes its arguments as words and
   reads the sixth as the stack slot's low byte, as the ROM does.
-- **Existing types.** `sub_80240E4` uses `level_menu.h`'s
+- **Existing types.** `SetupRoomBlend` uses `level_menu.h`'s
   `union blend`; `ScrollBgLayer`/`DrawBgLayerColumn` use `bg_scroll_layer.h`.
 
 `sub_8025B0C` takes seven arguments (`pool, arg1, kind, margin, z,
@@ -76,7 +76,7 @@ call, not the "stack-reuse coincidence" its old comment described.
 Under old_agbcc, five already-matched functions in these files match
 with all of their register pins removed, so the pins are gone:
 `RunSlideshow` (game_loop37.c), `GetBgStreamerColumn`, `GetBgStreamerRow`,
-`GetBgStreamerCell` (game_loop57.c) and `sub_802400C` (game_loop8.c).
+`GetBgStreamerCell` (game_loop57.c) and `UpdateRoomFrame` (game_loop8.c).
 `SpawnEntity` and `ShowSlidePicture` still need theirs (5 and 3 halfwords off
 without them).
 
