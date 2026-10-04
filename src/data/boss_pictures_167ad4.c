@@ -18,23 +18,23 @@
  * tools/boss_pictures.py. The game converts the 4bpp tiles to 8bpp VRAM
  * tiles of BG palette 1 (the picture is drawn on an affine BG, which
  * only takes 8bpp tiles), and lays them out by the maps with
- * sub_8030D48. */
+ * DrawAirshipMap. */
 #define BOSS_FRAME(ncells, ntiles) struct { s32 tileCount; u16 map[ncells]; u8 tiles[(ntiles) * 32]; }
 
 #include "boss_pictures/167cd4.h"
 #include "boss_pictures/169ce8.h"
 
-/* N. Gin's airship: its palette, 16 colours that sub_8031504
+/* N. Gin's airship: its palette, 16 colours that LoadAirshipGraphics
  * (actor_part26b.c) DMAs to BG palette 1 (the rest is zero). */
-const u16 gStaticData_08167AD4[256] = {
+const u16 gAirshipPalette[256] = {
     0x03E0, 0x30E7, 0x3549, 0x41AC, 0x46C5, 0x3222, 0x1DA0, 0x033F,
     0x02BF, 0x3AB9, 0x05F7, 0x0194, 0x5B3B, 0x29B0, 0x14BF, 0x7FFF,
 };
 
 #define AIRSHIP_CELLS (BOSS_PICTURE_167CD4_COLS * BOSS_PICTURE_167CD4_ROWS)
 
-/* The airship, 4 frames (the propellers turn). sub_8030F88
- * (actor_part23d.c) reads cols and rows, sub_8031604 (actor_part26c.c)
+/* The airship, 4 frames (the propellers turn). CreateAirship
+ * (actor_part23d.c) reads cols and rows, ConvertAirshipTiles (actor_part26c.c)
  * uploads the tiles. */
 const struct {
     s16 cols, rows;
@@ -42,15 +42,15 @@ const struct {
     BOSS_FRAME(AIRSHIP_CELLS, BOSS_PICTURE_167CD4_FRAME1_TILES) frame1;
     BOSS_FRAME(AIRSHIP_CELLS, BOSS_PICTURE_167CD4_FRAME2_TILES) frame2;
     BOSS_FRAME(AIRSHIP_CELLS, BOSS_PICTURE_167CD4_FRAME3_TILES) frame3;
-} gStaticData_08167CD4 = {
+} gAirshipPicture = {
     BOSS_PICTURE_167CD4_COLS, BOSS_PICTURE_167CD4_ROWS,
 #include "boss_pictures/167cd4.inc"
 };
 
-/* Cortex's hovercraft: its palette. sub_8033604 (actor_part130.c) DMAs
+/* Cortex's hovercraft: its palette. LoadHovercraftGraphics (actor_part130.c) DMAs
  * the first 16 colours to BG palette 1 and sub_8032AF8 restores them
  * from here; the other 240 entries are the 0x03E0 filler colour. */
-const u16 gStaticData_08169AE8[256] = {
+const u16 gHovercraftPalette[256] = {
     0x03E0, 0x66F5, 0x5250, 0x41EF, 0x25AF, 0x7FFF, 0x1CE9, 0x2D04,
     0x3988, 0x0C45, 0x35DE, 0x003C, 0x14B5, 0x0936, 0x15F5, 0x16FF,
     0x03E0, 0x03E0, 0x03E0, 0x03E0, 0x03E0, 0x03E0, 0x03E0, 0x03E0,
@@ -85,12 +85,12 @@ const u16 gStaticData_08169AE8[256] = {
     0x03E0, 0x03E0, 0x03E0, 0x03E0, 0x03E0, 0x03E0, 0x03E0, 0x03E0,
 };
 
-/* The hovercraft, 1 frame. sub_80331BC (actor_part130.c) reads cols and
- * rows, sub_80336CC uploads the tiles. */
+/* The hovercraft, 1 frame. CreateHovercraft (actor_part130.c) reads cols and
+ * rows, ConvertHovercraftTiles uploads the tiles. */
 const struct {
     s16 cols, rows;
     BOSS_FRAME(BOSS_PICTURE_169CE8_COLS * BOSS_PICTURE_169CE8_ROWS, BOSS_PICTURE_169CE8_FRAME0_TILES) frame0;
-} gStaticData_08169CE8 = {
+} gHovercraftPicture = {
     BOSS_PICTURE_169CE8_COLS, BOSS_PICTURE_169CE8_ROWS,
 #include "boss_pictures/169ce8.inc"
 };

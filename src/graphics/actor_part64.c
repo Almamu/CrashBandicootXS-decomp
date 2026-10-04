@@ -2,7 +2,7 @@
 #include "actor_self.h"
 
 /* Same "self" object family as actor_part57.c (constructed by
- * `sub_8033EF4`) - see docs/matching/issue-63-0x08033ef4-actor.md. */
+ * `CreateHovercraftLauncher`) - see docs/matching/issue-63-0x08033ef4-actor.md. */
 
 extern struct actor_pmf gStaticData_0817C4F8[];
 

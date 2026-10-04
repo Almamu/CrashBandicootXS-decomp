@@ -4,7 +4,7 @@
 
 /*
  * ROM 0x0817AA6C-0x0817C1C0: a palette and two boxes of the
- * sub_802D7B0 actor, then the data of actor categories 3-6 (the family
+ * UpdateYeti actor, then the data of actor categories 3-6 (the family
  * whose frames are the gStaticData_0814174C sheet): their two OBJ
  * palettes, the 47-record animation table gCategoryFamily1AnimTable
  * (include/actor_anim.h) and its keyframe (table_A) and frame (table_B)
@@ -67,9 +67,9 @@ extern const u32 gStaticData_0817C180[10];
 extern const struct anim_frame_record gStaticData_0817C1A8[1];
 extern const u32 gStaticData_0817C1B4[3];
 
-/* The 16-colour gradient sub_802D9A8 (actor_part74.c) DMAs to OBJ
+/* The 16-colour gradient UpdateYetiPalette (actor_part74.c) DMAs to OBJ
  * palette 15, or fades towards. */
-const u16 gStaticData_0817AA6C[16] = {
+const u16 gYetiPalette[16] = {
     0x03E0, 0x3547, 0x24E5, 0x3DA9, 0x49EC, 0x1083, 0x0421, 0x522E,
     0x5A70, 0x62B2, 0x66D3, 0x6F15, 0x7757, 0x7FB9, 0x7FFC, 0x0000,
 };
@@ -77,7 +77,7 @@ const u16 gStaticData_0817AA6C[16] = {
 /* sub_802DD9C's (actor_part75.c) hit box. */
 const struct anim_box gStaticData_0817AA8C = { -28, -24, -2, 56, 90, 4 };
 
-/* sub_802D7B0's (actor_part74.c) hit box. */
+/* UpdateYeti's (actor_part74.c) hit box. */
 const struct anim_box gStaticData_0817AA98 = { -80, -40, -14, 160, 110, 16 };
 
 /* The 256-colour OBJ palette InitActorCategory loads for these

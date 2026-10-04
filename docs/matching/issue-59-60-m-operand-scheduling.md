@@ -13,10 +13,10 @@ snippet, everything else stays plain C" - against the two remaining
 `InitActorPart`-family NAKED functions in
 `src/graphics/actor_part129.c` flagged as candidates in
 [issue-59-60-gap-31a6c-part1.md](issue-59-60-gap-31a6c-part1.md):
-`sub_8032440` (closed) and `sub_80321FC` (still NAKED, but with two of
+`CreateJetpackParachuteNitro` (closed) and `InitJetpackBalloonCrate` (still NAKED, but with two of
 its three real gaps closed and the third now precisely characterized).
 
-## `sub_8032440` - matched
+## `CreateJetpackParachuteNitro` - matched
 
 `InitActorPart`-based constructor forcing a fixed `0xFFFF0600` bias for
 its own 4th argument, forwarding `d` untouched and stashing the
@@ -47,7 +47,7 @@ outgoing-stack store, `self`-into-r0, the constant, and the `bl` itself)
 with one narrow, ordered inline-asm block:
 
 ```c
-void *sub_8032440(void *selfArg, s32 a, s32 b, s32 c, s32 d)
+void *CreateJetpackParachuteNitro(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 {
     u8 *self = selfArg;
     register s32 aReg asm("r1") = a;
@@ -72,7 +72,7 @@ void *sub_8032440(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 
     return self;
 }
-asm(".align 2, 0\n1: .4byte 0xFFFF0600\n2: .4byte gStaticData_087E53CC\n");
+asm(".align 2, 0\n1: .4byte 0xFFFF0600\n2: .4byte gJetpackParachuteNitroVtable\n");
 ```
 
 (see the real, commented version in `src/graphics/actor_part129.c` for
@@ -94,7 +94,7 @@ needed independently:
   `-fhex-asm` literals. The fix was a hand-written local-label pair
   (`1:`/`2:`) with a **trailing file-scope `asm(...)` right after the
   function's closing brace** holding both this function's own
-  `0xFFFF0600` literal *and* a hand-written `gStaticData_087E53CC` load
+  `0xFFFF0600` literal *and* a hand-written `gJetpackParachuteNitroVtable` load
   (replacing that store's own plain C, so both literals land in the
   right relative order) - a plain C statement placed after `return
   self;` *inside* the function gets pruned by `-O2`'s dead-code
@@ -107,11 +107,11 @@ NON_MATCHING=1 report` (no new warnings), then `rm -rf build
 crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
 compare` → `crashbandicootxs.gba: OK`.
 
-## `sub_80321FC` - still NAKED, but narrowed to one precise gap
+## `InitJetpackBalloonCrate` - still NAKED, but narrowed to one precise gap
 
-Parameterized `sub_802E4B8`-based constructor (the "kind" is a 6th
-caller-supplied byte argument, unlike `sub_8031F78`/`sub_8032054`/
-`sub_80320C4`'s fixed literals). Originally documented with two gaps;
+Parameterized `SpawnJetpackBalloon`-based constructor (the "kind" is a 6th
+caller-supplied byte argument, unlike `CreateJetpackTimeCrate`/`CreateJetpackHealthCrate`/
+`CreateJetpackQuestionCrate`'s fixed literals). Originally documented with two gaps;
 both are now individually closeable:
 
 - **`c`-register re-materialization**: a dual register pin -
@@ -130,7 +130,7 @@ both are now individually closeable:
   a physical mask instruction - this compiler's abstract model treats
   the register as "logically already narrow" and only emits the
   `lsl`/`lsr` at the point the value gets *widened* for use (i.e. right
-  before the `sub_802E4B8` call, matching the originally-documented
+  before the `SpawnJetpackBalloon` call, matching the originally-documented
   "defers to point of use" behavior). Forcing a **real, explicit
   `lsl`/`lsr` by 24 via a narrow inline-asm snippet** on an otherwise
   plain `s32` (not relying on the C `u8` type's implicit conversion at
@@ -151,7 +151,7 @@ was tested extensively:
   assigning-later all failed to change `b`'s relative position - it's
   not a source-order effect, it's this compiler's own internal
   register-save ordering (confirmed independent of source order, same
-  as `sub_8032440`'s constant-hoisting gap above).
+  as `CreateJetpackParachuteNitro`'s constant-hoisting gap above).
 - Bundling `b`+`c`'s saves into one ordered inline-asm block **does**
   fix their relative order against each other (`mov r9, %4` /
   `add r6, %5, #0` in one atomic block, matching the ROM's `b`-then-`c`
@@ -159,7 +159,7 @@ was tested extensively:
   that block (deliberately - see below), still always floats to
   *before* the whole block, never after, regardless of where the plain
   `dVal = d;` statement is written in the C source. This matches this
-  session's broader finding (see `sub_8032440` above) that independent
+  session's broader finding (see `CreateJetpackParachuteNitro` above) that independent
   stack loads with no blocking dependency get scheduled as early as
   possible.
 - Forcing an artificial dependency to delay `d`'s load (an inline-asm
@@ -191,7 +191,7 @@ was tested extensively:
 **The two mechanisms are mutually exclusive for this specific function**:
 fixing the b/c/d order costs the correct register for `d`, and getting
 the correct register for `d` costs the order. This is a genuinely
-different class of gap from the pure-scheduling one `sub_8032440`
+different class of gap from the pure-scheduling one `CreateJetpackParachuteNitro`
 closed - it's entangled with a *register-allocation*-level compiler bug
 (the categorical r7 pin bug) that this project's tooling has no known
 workaround for, per `docs/matching.md`. Every combination tried (fake
@@ -213,18 +213,18 @@ build && make NON_MATCHING=1 report` (no new warnings), then `rm -rf
 build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map &&
 make compare` → `crashbandicootxs.gba: OK`.
 
-## Later pass: `sub_80321FC` and `sub_80325EC` matched as plain C
+## Later pass: `InitJetpackBalloonCrate` and `CreateJetpackRocket` matched as plain C
 
 Both are real C now (in `src/graphics/actor_part129.c`, still built with
 the current agbcc; both also match under old_agbcc).
 
-- **`sub_80321FC`**: none of the three gaps above exists. The plain
+- **`InitJetpackBalloonCrate`**: none of the three gaps above exists. The plain
   version - `kind` declared as a `u8` parameter, `health` an ordinary
-  `s32` local, the same body as `sub_8031F78` - compiles to the ROM's
+  `s32` local, the same body as `CreateJetpackTimeCrate` - compiles to the ROM's
   exact bytes, including the `b`, `c`, `d` save order and the eager
   `kind` truncation. The pins and inline asm tried above were what
-  produced the wrong orders, as PR #431 found for `sub_803283C`.
-- **`sub_80325EC`**: plain C got everything except the position of the
+  produced the wrong orders, as PR #431 found for `DestroyJetpackCollectedWumpa`.
+- **`CreateJetpackRocket`**: plain C got everything except the position of the
   `0xfa00` load, which came before the outgoing `d` store instead of
   after `self`'s copy into r0. The cause is in gcc's `expand_call`: an
   argument that is a costly constant (more than one instruction to
@@ -237,7 +237,7 @@ the current agbcc; both also match under old_agbcc).
   `self` copy. The inliner then substitutes the constant into that move
   in place. In the C++ original this was probably an inlined
   base-class constructor. The same wrapper should also be able to
-  replace `sub_8032440`'s inline-asm call sequence above (not tried in
+  replace `CreateJetpackParachuteNitro`'s inline-asm call sequence above (not tried in
   this pass).
 
 See [issue-59-60-gap-31a6c-part1.md](issue-59-60-gap-31a6c-part1.md) for

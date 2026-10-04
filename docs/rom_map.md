@@ -592,7 +592,7 @@ against this zone's bounds:
   (`0x0802B1E8`) for type 0 - confirming the existing doc note - but to a
   *different*, still-unnamed function (`sub_802E710`, `0x0802E710`) for
   types 1 **and** 2, which share it. Same story for slot 1
-  (`sub_802E0CC`, also shared by types 1/2, vs. type 0's own neighbor at
+  (`SpawnJetpackActor`, also shared by types 1/2, vs. type 0's own neighbor at
   `0x0802B218`). Sensible split: constructor logic differs by *sprite
   sheet family* (type 0 = family 1, types 1/2 = family 2, per
   `docs/graphics.md`) rather than by type individually - types 1 and 2
@@ -697,7 +697,7 @@ family**, distinct from both the 93-entry entity vtables and the
 category-descriptor but much smaller and never previously noticed.
 
 `sub_8032C0C` itself opens up a **second RAM-struct family entirely**:
-`gUnknown_030015B4` through `gUnknown_030015EC` (9 fields, ~56 bytes) -
+`gHovercraftX` through `gUnknown_030015EC` (9 fields, ~56 bytes) -
 completely separate from the `gUnknown_030012xx` struct this whole
 session has tracked. The function accumulates and clamps fixed-point
 values (range checks against constants like `0x98`/`0x3F`/`0x69`, then
@@ -745,7 +745,7 @@ byte-by-byte computing width via a new symbol,
 text-centering globals (`gSmallFont`/`gLargeFont`) used
 elsewhere. Reads as a **queued/expiring text-message manager** -
 plausibly the thing underneath `game_loop`'s "message type N" dispatcher
-(`sub_8019CE4`) and the bonus-popup text found earlier. **`LoadCreditsLogos`**
+(`SetDingodileState`) and the bonus-popup text found earlier. **`LoadCreditsLogos`**
 (416 B) is its setup/init counterpart: indexes a new 5-record table
 (**`gCreditsLogos`**, stride 20) and converts raw values into
 runtime units via rounded division into a per-object array. Neither is
@@ -765,13 +765,13 @@ stored-value match to compute screen-space output. Reads as
 the zone.
 
 **`sub_802DB2C`** is dispatched through a **fourth, previously-
-uncatalogued table** - `gStaticData_0817A840`, a plain 4-entry array of
+uncatalogued table** - `gYetiStateFuncs`, a plain 4-entry array of
 raw function pointers (matching the `menu_ui`/trigger-effect
 convention, not the `{0,ptr}` pairing), with neighboring scalar-only
 records (`gStaticData_0817A850`, `gStaticData_0817A7F8` - the latter
 reading as a lookup table of `{const, varying, tier}` triples). The
 function itself opens a **third RAM-struct family**:
-`gUnknown_030014BC`/`030014C8`/`030014CC` - distinct from both the
+`gYeti`/`030014C8`/`030014CC` - distinct from both the
 `gUnknown_030012xx` struct tracked all session and the
 `gUnknown_030015xx` family found in `actor` earlier this round. It
 accumulates a clamped position delta, then dispatches on threshold
@@ -786,7 +786,7 @@ the by-now-familiar "refresh OAM + center text" pattern - more
 confirmation that most of this zone really is the known toolkit,
 punctuated by occasional genuinely new leads like the ones above.
 
-### `gStaticData_0817A840` fully read: one position-tracking object, not four behaviors
+### `gYetiStateFuncs` fully read: one position-tracking object, not four behaviors
 
 A follow-up fork read the table's other three entries. **All four
 slots turn out to operate on the same `gUnknown_030014xx` object** -
@@ -801,15 +801,15 @@ neighbors (`gStaticData_0817A7F8`, `0817A850`) are the same
 mixed-scalar/pointer descriptor-cluster shape as `gStaticData_0817C4xx`
 - a separate instance of that pattern, not literally connected to it.
 
-**`sub_80309B4`** (740 B, the next-biggest unreached function) is
+**`AirshipStateExplode`** (740 B, the next-biggest unreached function) is
 **vtable-dispatched 8 bytes before the documented `gStaticData_0817C414`
 start** - extends that table's known range slightly earlier than
 previously catalogued. It opens by accumulating two pairs of globals
-(`gUnknown_03001540 += gUnknown_03001558`,
-`gUnknown_03001544 += gUnknown_0300155C`) - a **third position-
+(`gAirshipX += gUnknown_03001558`,
+`gAirshipY += gUnknown_0300155C`) - a **third position-
 accumulation instance** this session, after `sub_8008AD8`/`sub_80096C0`
 in `game_loop` and `sub_8032C0C` in `actor`. These addresses sit only
-~0xAC bytes before the `gUnknown_030015B4`-`030015EC` family
+~0xAC bytes before the `gHovercraftX`-`030015EC` family
 `sub_8032C0C` uses - very plausibly the **same larger struct at
 different field offsets**, not a fourth separate RAM family as the
 address alone might suggest. Also calls `RandRange`, the same input-
@@ -824,20 +824,20 @@ not multiplying. **`sub_802B364`** (740 B, vtable-dispatched at an
 untraced slot of the already-labeled `gStaticData_087E4E54` record)
 manages two independent countdown timers (`gUnknown_0300148C`/
 `0300149C`, new symbols sitting only ~0x1C-0x2C bytes from the
-`gUnknown_030014BC`-family cluster `sub_802DB2C` used - very plausibly
+`gYeti`-family cluster `sub_802DB2C` used - very plausibly
 the *same* larger struct again) - a respawn/reset countdown, resetting
-fields and doing position math on expiry. **`sub_802E170`** (not
+fields and doing position math on expiry. **`CreateJetpackActor`** (not
 vtable-dispatched) is a 31-case jump table paired with a **new
-stride-40 RAM table**, `gUnknown_030014D8`, fetching a position-offset
+stride-40 RAM table**, `gJetpackAnimTable`, fetching a position-offset
 pair per case - structurally close to the actor animation-frame system,
 but backed by a RAM table rather than a `gStaticData_` ROM one.
 
-**`sub_8033264`** is the clearest of the three: writes directly into
-`gUnknown_030015B4`/`B8`/`BC` - the exact family `sub_8032C0C` used two
+**`SpawnHovercraft`** is the clearest of the three: writes directly into
+`gHovercraftX`/`B8`/`BC` - the exact family `sub_8032C0C` used two
 rounds ago - and calls **`GetAnimFrameBaseOffset`** (already matched,
 `src/graphics/actor_anim.c`). This is **hard confirmation that
 `gUnknown_030015xx` is a real, animation-system-wired object**, not
-just a coincidentally-similar camera computation - `sub_8033264` reads
+just a coincidentally-similar camera computation - `SpawnHovercraft` reads
 as its constructor/init step (packs scaled position args into the
 struct, reads an anim-part-instance, checks a frame-index bound before
 resetting a counter).
@@ -846,11 +846,11 @@ resetting a counter).
 
 A further fork read ten more of the zone's unread functions. Most
 reinforce known structures (a third `gUnknown_030014xx` tier-threshold
-sound-cue actor; direct confirmation that `sub_8030834`/`sub_8030E08`
-are the real consumers of the `gUnknown_03001540`/`03001544`
+sound-cue actor; direct confirmation that `AirshipStateCannon`/`sub_8030E08`
+are the real consumers of the `gAirshipX`/`03001544`
 accumulator pair flagged as a guess last round, clamping toward a
 camera-relative target via a new table `gStaticData_0817C3D8`; a new
-detail that `sub_802E170`'s effect variant depends on current input
+detail that `CreateJetpackActor`'s effect variant depends on current input
 state via `RandRange`, not just proximity) - but three are genuinely
 new mechanisms not previously catalogued in this zone:
 
@@ -917,16 +917,16 @@ would be the natural next step for anyone continuing this thread.
 
 A further pass read 11 more actor-zone functions. **Two new confirmed
 slots in the type-0 `category_vtable`** (`gActorCategoryVtables[0]`,
-`include/actor_anim.h`): `sub_802D7B0` and `sub_802DE70` both appear as
+`include/actor_anim.h`): `UpdateYeti` and `LoadYetiGraphics` both appear as
 raw pointers at `0x081756D0`/`0x081756DC` - slot indices 3 and 6 of
 the 13-entry `fn[13]` array, previously unreversed. Both operate on
-the `gUnknown_030014BC`-rooted animation-linked family (call
-`GetAnimFrameBaseOffset`, index the documented `gStaticData_0817A840`,
-draw text). `sub_802D7B0` additionally runs a full 3-axis AABB overlap
+the `gYeti`-rooted animation-linked family (call
+`GetAnimFrameBaseOffset`, index the documented `gYetiStateFuncs`,
+draw text). `UpdateYeti` additionally runs a full 3-axis AABB overlap
 test against `gActorList` (a player-shaped struct) before
 calling **`MemCopy32`** - one of `UpdateGameFrame`'s own direct
 top-level callees, the same cross-tie already noted for
-`SetCheckpointAtPlayer`. **`sub_802C7A8`** (not vtable-dispatched) is a
+`SetCheckpointAtPlayer`. **`DetonateNearbyPolarNitros`** (not vtable-dispatched) is a
 *second*, independent actor function calling `MemCopy32` directly -
 confirming this actor->game_loop-dispatch tie as a real, repeated
 pattern, not a one-off. Three more vtable hits land in already-
@@ -944,10 +944,10 @@ the documented map-screen cluster (`InitCredits`/`CreditsLoop`/
 3-layer setup, not confirmed further.
 
 Other reads extend known families without introducing new ones:
-`sub_8031040` extends the `gUnknown_03001540`/`1544` accumulator pair
+`SpawnAirship` extends the `gAirshipX`/`1544` accumulator pair
 into a much larger 18-field consecutive run
-(`gUnknown_03001534`-`0300157C`); `sub_802F164` extends the
-`gUnknown_030014xx` family with a new `E4`-`FC` sub-cluster; `sub_802FBF0`
+(`gAirship`-`0300157C`); `sub_802F164` extends the
+`gUnknown_030014xx` family with a new `E4`-`FC` sub-cluster; `AimJetpackPlane`
 references a run of 5 unread sibling functions
 (`sub_802A504`/`51C`/`540`/`558`/`570`); `sub_803487C` is an asset/
 screen refresh function touching known hot globals plus a new table
@@ -1034,17 +1034,17 @@ read in full); medium on the exact semantic label.
 ### A new mechanism: a procedurally-generated VRAM fill-level meter, plus a movable-object state machine
 
 A further pass read 9 more actor-zone functions. **New mechanism:
-`sub_80336CC`/`sub_8031604` are near-identical twins that
+`ConvertHovercraftTiles`/`ConvertAirshipTiles` are near-identical twins that
 procedurally generate a vertical meter/fill-level tile graphic** -
-each indexes a per-level table (`gStaticData_08169AE8`/
-`gStaticData_08167AD4`, real labeled ROM symbols) via
+each indexes a per-level table (`gHovercraftPalette`/
+`gAirshipPalette`, real labeled ROM symbols) via
 `gUnknown_030015A0`-family fields, sums heights, computes `0xFF - sum`,
 scales it, and DMAs the result as packed 4-bit nibbles into VRAM tile
 data (`0x06008000`) - a health-bar/water-level-style meter built per-
 frame from per-level source data. Two parallel field sets
 (`gUnknown_030015A0`-family vs. `gUnknown_03001528`-family) suggest a
 P1/P2 pair, consistent with this session's other two-player findings.
-**`sub_8031604` is called from `sub_8031504`, a new confirmed
+**`ConvertAirshipTiles` is called from `LoadAirshipGraphics`, a new confirmed
 `category_vtable` slot** (`include/actor_anim.h`) - lands at
 `gActorCategoryVtables`, **type 1, slot 6** - a real behavioral tie:
 this meter system is invoked as part of type-1's per-frame vtable
@@ -1066,7 +1066,7 @@ rotation/angle counter), and a button-press handler
 resetting animation-part fields - reads as a player-controllable
 movable object (crate, platform, or similar) layered on the
 tier-threshold sound-cue base. `sub_8033CF8`'s already-known
-`sub_802E170` case-code finding (from an earlier round, never
+`CreateJetpackActor` case-code finding (from an earlier round, never
 written into this document) is folded in here too. Nothing this pass
 broke the "actor per-type behavior" reading - all extend or connect
 already-known families; the VRAM-meter twins are the one genuinely
@@ -1087,7 +1087,7 @@ selector" as first guessed - it's a trivial one-liner,
 division, not a trampoline) - a generic ratio/scale computation
 (plausibly frames-to-seconds at 60 fps) with no sound-ID logic in its
 own body; whatever sound-ID branching happens must live in
-`sub_802E740` itself. **`sub_8030D48`** (`sub_8031504`'s conditional
+`sub_802E740` itself. **`DrawAirshipMap`** (`LoadAirshipGraphics`'s conditional
 callee) reads through to completion in a follow-up: a **rectangular
 BG-tilemap blit routine**, mechanically distinct from the meter twins
 - streams 16-bit values two at a time, adds a constant per-call bias
@@ -1138,11 +1138,11 @@ candidate for a real-world name once sprite data is chased (Aku Aku-
 style mask, spinning fruit, or similar).
 
 Three more reads confirm and extend already-known conventions rather
-than introducing new ones: `sub_802FA38`/`sub_802E84C` add two new
+than introducing new ones: `UpdateJetpackPlane`/`sub_802E84C` add two new
 table addresses (`gStaticData_0817C260`/`0817C1C0`) to the already-
-documented "mixed-convention third table family," and `sub_802CC9C`
+documented "mixed-convention third table family," and `UpdatePolarElectricFence`
 is a 4-state animation-frame-swap actor (three new tables near the
-documented `gStaticData_0817A840` four-slot object) using a second,
+documented `gYetiStateFuncs` four-slot object) using a second,
 previously-unseen proximity-check variant, **`sub_802B7E0`** (left
 unread - a natural next target).
 
@@ -1163,7 +1163,7 @@ player-pointer global, explicitly), plays a sound cue, and calls the
 confirmed `SetCellAnimSpeed` Q8.8-division helper. `gUnknown_0300149C`/
 `030014A0`-`A3` sit inside the `gUnknown_030014xx` tier-threshold-
 sound-cue family's address range - ties this into that family as a
-state-transition/lock step. Its only caller (`sub_802CC9C`) checks
+state-transition/lock step. Its only caller (`UpdatePolarElectricFence`) checks
 `sub_802A6EC` first, then calls `sub_802B7E0(gActorList)` and
 checks its return - a two-stage gate (dynamic check, then lock/mode
 check), not a duplicate proximity check with different thresholds.
@@ -1172,8 +1172,8 @@ check), not a duplicate proximity check with different thresholds.
 
 A further pass read 9 more functions. **New pattern: a shared
 "type-byte event dispatch" convention** feeding two different
-downstream families. `sub_8031D7C`/`sub_8031B0C`/`sub_8031E80`/
-`sub_8031C0C` are near-identical: on trigger (proximity via
+downstream families. `UpdateJetpackTimeCrate`/`UpdateJetpackQuestionCrate`/`DamageJetpackTimeCrate`/
+`DamageJetpackQuestionCrate` are near-identical: on trigger (proximity via
 `sub_802A6EC`, or a countdown timer), they read a type byte from
 `self+0x30`, always play `PlaySfx(3, 0x100)` first, then split by
 value range into two downstream calls - values `0x18`/`0x19`/`0x1a`
@@ -1182,52 +1182,52 @@ already-documented achievement/unlock-icon spawner setter (tied to
 `gSpriteBankTable` record 47) - a concrete new confirmation of
 what triggers it; values `0x14`-`0x17` call
 **`sub_802F540(gActorList, N)`**, unread, a sibling event
-family worth a follow-up. `sub_802CF30` is a homing/chase mechanic:
+family worth a follow-up. `UpdatePolarPenguin` is a homing/chase mechanic:
 integrates velocity into position, and on proximity plus a
 `sub_802B730(gActorList)` check, sets a large fixed velocity
 toward the player - reads as a bonus/enemy object that homes in on
-the player once triggered. `sub_802FFB8` indexes a new table
+the player once triggered. `UpdateJetpackBomber` indexes a new table
 **`gStaticData_0817C280`** (stride 8) by its own state field.
 
 **Evidence of one large, complex actor object - likely a boss or
 major environmental feature, not several unrelated small actors.**
-`sub_80311C4`/`sub_8030734`/`sub_8031378` all touch the dense
+`UpdateAirship`/`AirshipStateFireballs`/`IsTouchingAirship` all touch the dense
 `gUnknown_030015xx` field cluster together with
 `gStaticData_0817C3D8` (the same target table the camera-edge-follower
 `sub_8030E08` already uses) and `GetAnimFrameBaseOffset`;
-`sub_8031378` specifically does 3D stack-buffer position math
-combining `gUnknown_03001540`/`1544`/`1548` accumulators with
+`IsTouchingAirship` specifically does 3D stack-buffer position math
+combining `gAirshipX`/`1544`/`1548` accumulators with
 `self+0x38`-rooted fields - camera-relative projection/culling math.
-Combined with the already-documented `sub_8031504`/`sub_8031604`
-(VRAM meter) and `sub_8030D48` (tilemap blit) sitting in this same
+Combined with the already-documented `LoadAirshipGraphics`/`ConvertAirshipTiles`
+(VRAM meter) and `DrawAirshipMap` (tilemap blit) sitting in this same
 address neighborhood, this reads as one unusually large, complex
 actor with its own camera tracking, VRAM meter display, and 3D
 positioning. Not fully resolved - a dedicated pass on this cluster
-(`sub_8030734`, `sub_80311C4`, `sub_8031378`, `sub_802F540`,
+(`AirshipStateFireballs`, `UpdateAirship`, `IsTouchingAirship`, `sub_802F540`,
 `sub_802B730`) would likely resolve it fully.
 
-**Follow-up confirms the boss hypothesis strongly.** `sub_8030734`
+**Follow-up confirms the boss hypothesis strongly.** `AirshipStateFireballs`
 bounces a value between 0-`0x98`, accumulating it into a position
 field - an oscillation/patrol drive - runs a circular hit/proximity
 test against the player, cycles through a small waypoint table, calls
 the documented camera-edge-follower `sub_8030E08`, and resets its
 animation state once a threshold counter crosses `0x31FF` - a classic
-patrol-and-attack cycle with periodic reset. `sub_80311C4` advances
+patrol-and-attack cycle with periodic reset. `UpdateAirship` advances
 animation via `GetAnimFrameBaseOffset`, computes a scaled/projected
 position, and - when the projected tile position changes - **calls
-`sub_8030D48`** (the documented BG-tilemap blit primitive) - directly
+`DrawAirshipMap`** (the documented BG-tilemap blit primitive) - directly
 confirming that function is this object's own on-demand tile
-renderer, not a separate system. `sub_8031378` (gated on the object's
+renderer, not a separate system. `IsTouchingAirship` (gated on the object's
 own state field being 2 or 3) loads a 3D vector from
 `gStaticData_0817C3D8` and calls **`MemCopy32`** - a **fifth+
 confirmed site** of the actor->`UpdateGameFrame` dispatch tie already
-noted for `SetCheckpointAtPlayer`/`sub_802D7B0`/`sub_802C7A8`/`SetCheckpoint`.
+noted for `SetCheckpointAtPlayer`/`UpdateYeti`/`DetonateNearbyPolarNitros`/`SetCheckpoint`.
 `sub_802F540` is a running-total accumulator/tally, not a check.
 **Correction: `sub_802B730` is not a passive "player-struct check"**
 as first framed - it's a sibling of the documented `sub_802B7E0`
 (identical field-write shape), but loads a flash/effect asset and a
 different sound cue instead of raw anim-frame copies; since its
-caller (the homing/chase mechanic `sub_802CF30`) passes it the
+caller (the homing/chase mechanic `UpdatePolarPenguin`) passes it the
 player-pointer global as `self`, **it writes state directly into the
 player object** - reads as the "player got hit" reaction when the
 homing enemy catches the player, not a check. Net picture: this
@@ -1241,52 +1241,52 @@ sprite/level data.
 
 ### A new type-2 vtable slot, and a growing pattern of shared orbital-motion consumers
 
-A further pass read 10 more actor-zone functions. **`sub_8033470`
+A further pass read 10 more actor-zone functions. **`UpdateHovercraft`
 confirms a new `category_vtable` slot**: type 2, slot index 3
 (`gActorCategoryVtables+0x74`) - not yet read for behavior beyond
 confirming the dispatch slot. **The shared trig table
 `gSineTable` keeps gaining independent consumers**:
-`sub_8032480` and `sub_802D3A8` are two more actors reading it for
+`UpdateJetpackRocket` and `MovePolarAkuAku` are two more actors reading it for
 orbital/circular motion (phase-shifted pairs, lerped toward the
 result) - now **3 confirmed actor consumers** (`sub_8030334`,
-`sub_8032480`, `sub_802D3A8`) plus the minimap and the
+`UpdateJetpackRocket`, `MovePolarAkuAku`) plus the minimap and the
 `UpdateExtraLife` projectile/hazard found in the parallel `game_loop`
 pass - a genuinely general-purpose circular/orbital-motion convention
-used throughout the ROM, not unique to one actor. `sub_802C6C0` ties
+used throughout the ROM, not unique to one actor. `UpdatePolarNitroCrate` ties
 an actor behavior directly to the wraparound-lap-counter system
 (calls `AddBrokenCrate`, one of its documented entry points) alongside
 the homing-chase helper `sub_802B730` - a concrete new cross-system
 link. `sub_802DD9C` is another instance of the 3-axis AABB overlap-
-test shape already documented for `sub_802D7B0`. The rest
+test shape already documented for `UpdateYeti`. The rest
 (`sub_80339DC` and its private helper cluster, `sub_802EB78`) extend
 already-known families (proximity triggers, the `gUnknown_030014xx`
 tier-threshold family) without introducing anything new. Nothing this
 pass broke the established "actor per-type behavior" reading.
 
-**Follow-up reads `sub_80339DC`'s helper cluster and `sub_8033470`
+**Follow-up reads `sub_80339DC`'s helper cluster and `UpdateHovercraft`
 (the new type-2 vtable slot), and finds evidence of a second unique/
 singleton object - closely-parallel machinery to the boss cluster,
 not the same object.** Most of the private helpers
 (`sub_8033900`/`80338F4`/`80338E8`/`80338D0`/`80338DC`/`8033880`/
 `80338C4`) are trivial one-line getters for a **singleton** referenced
-via a global pointer, `gUnknown_030015AC` (not a per-instance `self`)
-- and its fields (`gUnknown_030015B4`/`B8`/`BC`) are exactly the same
+via a global pointer, `gHovercraft` (not a per-instance `self`)
+- and its fields (`gHovercraftX`/`B8`/`BC`) are exactly the same
 family already documented elsewhere as the "animation-system-wired
-object" (`sub_8033264`'s finding). `sub_803390C`/`sub_803395C` are
+object" (`SpawnHovercraft`'s finding). `sub_803390C`/`sub_803395C` are
 state-transition setters running the same animation-frame-reset
 sequence as the boss cluster's functions. `sub_803388C` is a death/
 reset transition (lifetime counter to zero). `sub_802E504` confirms
 membership in a small family of "spawn effect type N" functions
-indexed into the documented stride-40 `gUnknown_030014D8` table
+indexed into the documented stride-40 `gJetpackAnimTable` table
 (siblings `sub_802E538`/`sub_802E57C` visible nearby, not read).
-**`sub_8033470`** operates on this same `gUnknown_030015AC` singleton:
+**`UpdateHovercraft`** operates on this same `gHovercraft` singleton:
 advances animation, computes a projected/scaled position via
 **`sub_8029E34`** (the same screen-projection helper already seen in
-the boss cluster's `sub_80311C4`), and streams tile data via
-**`sub_80330FC`** (a different tile-consumer than the boss's
-`sub_8030D48`) when the projected position changes. Reads as this
+the boss cluster's `UpdateAirship`), and streams tile data via
+**`DrawHovercraftMap`** (a different tile-consumer than the boss's
+`DrawAirshipMap`) when the projected position changes. Reads as this
 singleton's own per-frame animate+project+tile-stream update function
-- structurally the type-2 analog of the boss cluster's `sub_80311C4`,
+- structurally the type-2 analog of the boss cluster's `UpdateAirship`,
 but for a **singleton object**, not a per-instance struct - either the
 same object family or closely-parallel machinery for a second unique
 feature. `sub_80339DC` itself reads as a proximity-triggered effect/
@@ -1307,10 +1307,10 @@ table `gStaticData_0817A798` into Palette RAM, and touches a newly-
 seen field in the `gUnknown_030014xx` tier-threshold family
 (`gUnknown_030014B8`, tied to a ~500-frame timer) - reads as a
 palette-swap-driven mode/phase change (a power-up or similar).
-**`sub_802C540`** extends the shared "type-byte event dispatch"
-family (`sub_8031D7C`/etc.) to a new value range (`0x1c`-`0x1f`),
+**`UpdatePolarQuestionCrate`** extends the shared "type-byte event dispatch"
+family (`UpdateJetpackTimeCrate`/etc.) to a new value range (`0x1c`-`0x1f`),
 ties into the wraparound-lap-counter system via `AddBrokenCrate`
-(alongside `sub_802C6C0`'s already-noted tie), and calls two
+(alongside `UpdatePolarNitroCrate`'s already-noted tie), and calls two
 functions (`sub_802C078`/`sub_802C128`) taking the player-pointer
 global as their first argument.
 
@@ -1325,60 +1325,60 @@ lock/active flag `sub_802B7E0` gates on) under a condition. Both share
 `sub_802B7E0`/`sub_802B730`'s calling convention (player-pointer as
 first arg) without using that argument - unrelated accumulator/lock-
 timer functions, not more instances of the field-write "player
-reaction" family. Separately, **`sub_80330FC`** (the singleton
-object's tile-consumer, called by `sub_8033470`) confirms the same
+reaction" family. Separately, **`DrawHovercraftMap`** (the singleton
+object's tile-consumer, called by `UpdateHovercraft`) confirms the same
 BG-tilemap-blit-primitive mechanics as the boss cluster's
-`sub_8030D48`, but on an entirely separate global cluster
+`DrawAirshipMap`, but on an entirely separate global cluster
 (`gUnknown_030015xx`, not `gUnknown_03001520`-family) - the singleton
 has its own independent instance of the same primitive, not shared
 state with the boss.
 
 **The "spawn effect type N" family has at least 9 members - N flavors
 of small effect/debris object, not a hidden dispatch table.**
-`sub_802E504` through `sub_802E6CC` are ≥9 near-identical siblings,
+`sub_802E504` through `SpawnJetpackShot` are ≥9 near-identical siblings,
 each a thin `mem_alloc`+`InitActorPart`+table-offset wrapper around a
 distinct per-type constructor - called individually by name from
 scattered sites, no function-pointer array. **One call site spawns
 four of these back-to-back**, each positioned relative to
-`gUnknown_030015B4` (the singleton's own position field) - a burst
+`gHovercraftX` (the singleton's own position field) - a burst
 spawn of multiple small effect objects clustered around the
 singleton, likely particle/debris. **`sub_8034058`** ties directly
 into the singleton system: calls two of its already-documented
 getters to pick between bound constants and configure the spawned
 object's velocity/scale - a concrete new tie confirming the family
-isn't just reading `gUnknown_030014D8`, at least one member reads the
+isn't just reading `gJetpackAnimTable`, at least one member reads the
 singleton's live state directly.
 
-**`sub_8030F88` closes a real open question from earlier rounds: it's
+**`CreateAirship` closes a real open question from earlier rounds: it's
 the missing P2-side constructor for the VRAM fill-level meter.** Sets
 `gUnknown_03001564 = self`, sets `gUnknown_03001528`/`152C` from
-`gStaticData_08167CD4` - the exact per-level table `sub_8031604` (the
+`gAirshipPicture` - the exact per-level table `ConvertAirshipTiles` (the
 P2 meter twin) already reads - and finishes by calling the confirmed
-`category_vtable` type-1 slot 6 dispatcher (`sub_8031504`). This ties
+`category_vtable` type-1 slot 6 dispatcher (`LoadAirshipGraphics`). This ties
 the whole meter-twin/P1-P2 finding together with a real constructor.
 Nine more functions extend already-documented families without
 introducing anything new: a second confirmed evidence trail that
-`sub_80330FC`/`sub_8033550` are real per-frame steps of the
-singleton's update cycle (`sub_8033604`); a third construction site
-tying into the `gUnknown_030015AC` singleton
+`DrawHovercraftMap`/`UpdateHovercraftBg2` are real per-frame steps of the
+singleton's update cycle (`LoadHovercraftGraphics`); a third construction site
+tying into the `gHovercraft` singleton
 (`sub_8034058`/`sub_80338DC`); two more independent "player reaction"
-trigger paths (`sub_802D0F4`, extending `sub_802B730`'s call sites);
+trigger paths (`UpdatePolarIcicle`, extending `sub_802B730`'s call sites);
 a real confirmed caller for the palette-transition function
-`sub_802D204` (`sub_802D2DC`, decrementing the `gUnknown_030014B8`
+`sub_802D204` (`UpdatePolarAkuAku`, decrementing the `gUnknown_030014B8`
 timer); a second, distinct fade/flash palette mechanism
-(`sub_802D9A8`, DMA'd brightness-scaled recoloring keyed to a
-different countdown, `gUnknown_030014CC`); and a camera/window-
-position committer (`sub_802DA68`) using the documented screen-
-projection helpers. **`sub_802D6A0`** (from the same round) is a
+(`UpdateYetiPalette`, DMA'd brightness-scaled recoloring keyed to a
+different countdown, `gYetiDistance`); and a camera/window-
+position committer (`UpdateYetiBg2`) using the documented screen-
+projection helpers. **`UpdatePolarCheckpointCrate`** (from the same round) is a
 two-stage proximity/AABB state machine whose first-stage helpers,
-**`sub_8029748`** and **`sub_802B12C`**, were read in a follow-up:
+**`sub_8029748`** and **`CreatePolarCheckpointText`**, were read in a follow-up:
 `sub_8029748` extends the actor-category active-count system
 (`gUnknown_03001384`, the counter `include/actor_anim.h`'s
 `category_descriptor.active_count_threshold` comment describes) and
 also pokes the documented lap-counter function `SetCheckpointAtPlayer` - shared
 reset/teardown infrastructure, confirmed by a second, unrelated
-caller (`sub_802F4AC`), not specific to `sub_802D6A0`'s object.
-`sub_802B12C` is an unremarkable `InitActorPart`-based entity
+caller (`sub_802F4AC`), not specific to `UpdatePolarCheckpointCrate`'s object.
+`CreatePolarCheckpointText` is an unremarkable `InitActorPart`-based entity
 constructor, fitting the established `+0x50` field-pointer convention
 exactly. No new mechanism in either.
 
@@ -1386,18 +1386,18 @@ exactly. No new mechanism in either.
 
 A further pass read 10 more functions, filling in real gaps in the
 boss/singleton rendering pictures rather than opening new ones.
-**`sub_80312C4`** reads as the **boss cluster's own BG2 affine-matrix
+**`UpdateAirshipBg2`** reads as the **boss cluster's own BG2 affine-matrix
 (rotate/scale) committer** - alternates a `BG2CNT` control word on a
 toggle, computes a projection via the same screen-projection helpers
-`sub_80311C4` uses combined with the boss's own position fields, and
+`UpdateAirship` uses combined with the boss's own position fields, and
 writes `BG2PA`/`PB`/`PC`/`PD`/`BG2X` - the boss's spin/zoom visual
-effect. **`sub_8030C98`** confirms `sub_8030834`/`sub_8030E08`'s
-accumulator pair and `sub_8030734`'s oscillation drive **share one
+effect. **`AirshipStateFall`** confirms `AirshipStateCannon`/`sub_8030E08`'s
+accumulator pair and `AirshipStateFireballs`'s oscillation drive **share one
 physical update cascade** - a third consumer of the same fields, with
 its own distinct threshold and a `DISPCNT`-bit clear on cross. In
 parallel, **`sub_8033048`** is the **singleton's own patrol/
 oscillation driver**, structurally parallel to the boss's
-`sub_8030734` - same bounded-oscillator shape, its own "dead"-flag
+`AirshipStateFireballs` - same bounded-oscillator shape, its own "dead"-flag
 set on a separate threshold.
 
 **`sub_802EC64`/`sub_802ED10`** are a new up/down accumulator pair,
@@ -1409,14 +1409,14 @@ a matched pair of **accumulator-drain/reward-dispenser functions**:
 one drains the `sub_802C078` accumulator, the other the `sub_802F540`
 accumulator, each into tiered calls by threshold magnitude - confirms
 both accumulators have dedicated consumers, not just producers.
-**`sub_802C614`** extends the lap-counter/proximity-dispatch family
-and confirms **`sub_802C4C8`** as a shared cleanup/tail step across
+**`UpdatePolarLifeCrate`** extends the lap-counter/proximity-dispatch family
+and confirms **`UpdatePolarCrate`** as a shared cleanup/tail step across
 this actor family (same unconditional tail-call already seen from
-`sub_802C540`); its own two player-pointer callees
+`UpdatePolarQuestionCrate`); its own two player-pointer callees
 (`sub_802C0A8`/`sub_802AAB4`) were left unread rather than assumed to
 be more "player reaction" instances, per this session's established
 correction that a player-pointer argument alone doesn't imply that.
-The rest (`sub_802CE5C`, `sub_802FF08`) fit already-documented shapes
+The rest (`sub_802CE5C`, `CreateJetpackBomber`) fit already-documented shapes
 exactly.
 
 ### A concrete reward trigger ties the singleton's patrol driver to a big score bonus
@@ -1428,7 +1428,7 @@ per-function rather than assumed to imply a "player reaction."
 pointer-shaped arguments (`sub_802AAB4` is a bounded unique-item
 dedup-set utility; `sub_802C0A8` just forwards to
 `AddLife(gLevelState)`, discarding its own parameter
-entirely). `sub_802B174`/`sub_802E484` both fit the "spawn effect type
+entirely). `SpawnPolarCollectedWumpa`/`SpawnJetpackCollectedWumpa` both fit the "spawn effect type
 N" family exactly - `sub_802BC68`/`sub_802F3BC`'s tiered reward-
 magnitude targets. **`sub_802F0DC` is a genuine player-reaction
 function and a concrete new tie**: called by the singleton's patrol
@@ -1441,32 +1441,32 @@ value **`0x2710` (10000)**, a large score-shaped constant. Reads as a
 animation paired with a big score/achievement notification - the
 concrete payoff tying the singleton system to a reward event.
 
-**Two small follow-ups round out the picture further.** `sub_802C3E8`/
-`sub_8032890` (the last two unread spawn-effect-family per-type
+**Two small follow-ups round out the picture further.** `CreatePolarCollectedWumpa`/
+`CreateJetpackCollectedWumpa` (the last two unread spawn-effect-family per-type
 constructors) turn out to be byte-for-byte twins: both compute a
 velocity vector aiming toward a fixed offset point via the
 screen-projection helpers plus `__divsi3` division - a homing/
-seek-toward-point effect, parameterized per spawn type. **`sub_8033550`**
+seek-toward-point effect, parameterized per spawn type. **`UpdateHovercraftBg2`**
 is the **singleton's own BG2 affine-matrix committer**, structurally
-parallel to the boss cluster's `sub_80312C4` - but pure scale (no
+parallel to the boss cluster's `UpdateAirshipBg2` - but pure scale (no
 rotation, `PB`/`PC=0`), unlike the boss's full rotate+scale - direct
 confirmation the singleton has its own independent BG2 zoom-style
 rendering counterpart to the boss's spin/zoom effect, reinforcing the
 "closely-parallel machinery" pattern already noted between the two
 object clusters.
 
-### `sub_80331BC` closes a long-open question: the missing singleton constructor
+### `CreateHovercraft` closes a long-open question: the missing singleton constructor
 
-A further pass read 8 more functions. **The standout: `sub_80331BC`
+A further pass read 8 more functions. **The standout: `CreateHovercraft`
 is the missing constructor for the singleton object system
-(`gUnknown_030015AC`)** - it sets a new pointer global
+(`gHovercraft`)** - it sets a new pointer global
 `gUnknown_030015D8 = self`, initializes fields from a per-level table
-(`gStaticData_08169CE8`, same family shape as the meter-twins' tables
+(`gHovercraftPicture`, same family shape as the meter-twins' tables
 but a distinct address), allocates and stores the object into
-**`gUnknown_030015AC`** itself - the singleton pointer everything in
+**`gHovercraft`** itself - the singleton pointer everything in
 this session's "second singleton object" thread reads - validates the
 initial animation index, calls the already-documented per-frame
-update driver `sub_8033604` once, and finishes by setting
+update driver `LoadHovercraftGraphics` once, and finishes by setting
 **`gUnknown_030015F8=4`** - the exact lifetime counter `sub_803388C`
 decrements toward the "dead" flag. This ties the whole singleton
 thread together with a real constructor, closing a question open
@@ -1484,9 +1484,9 @@ popup + sound cue at `0x2800`/10240), not just a sentinel.
 step, syncing a value across two mirrored globals
 (`gFlashBgPalette`/`B8`) - a **genuinely new global family**
 (`gUnknown_0300088x`, a P1/P2-mirror-shaped pair) not previously
-catalogued, role not further characterized. `sub_8031A6C`/
-`sub_8032358` fit the `0x0817Cxxx` table family and the proximity-
-trigger family exactly. `sub_802C3E8`/`sub_8032890` (the spawn-effect
+catalogued, role not further characterized. `UpdateJetpackBalloonCrate`/
+`UpdateJetpackParachuteNitro` fit the `0x0817Cxxx` table family and the proximity-
+trigger family exactly. `CreatePolarCollectedWumpa`/`CreateJetpackCollectedWumpa` (the spawn-effect
 twins, independently re-confirmed this round) compute a Manhattan-
 distance-based directional velocity split for their spawned objects -
 consistent with the earlier "homing/seek-toward-point" reading.
@@ -1499,7 +1499,7 @@ Two things worth recording here rather than only in that writeup:
 
 - **This pass's "second RAM-struct family" guess above turned out not
   to need a struct at all.** `sub_8032C0C`/`sub_8032EA0` are the first
-  functions in ROM order to touch most of `gUnknown_030015B4`-
+  functions in ROM order to touch most of `gHovercraftX`-
   `030015EC`, but the *later* issue #62 pass (`actor_part28.c`-
   `actor_part37.c`, already merged) had already established these as
   flat, independently-linked `extern` globals - not fields of a struct
@@ -1888,7 +1888,7 @@ write - a real synthesis point tying together the window-register
 bitset, the directional-target field convention, the shared
 `RandRange` input-check, and floating-text feedback in one function.
 
-Genuine new coverage (~1.75 KB): **`sub_8018400`** (636 B) and
+Genuine new coverage (~1.75 KB): **`SetTinyState`** (636 B) and
 `sub_8018E4C` are a linked pair driving large jump tables (15/11
 cases) that draw text at varying priorities and reference a new
 global-record-array `gUnknown_030012EC` plus a new table family
@@ -2703,8 +2703,8 @@ boolean byte, with a confirmed accessor triple: `ClearRoomExit` clears it,
 confirming the entry point precisely: `UpdateGameFrame` →
 `PlayRoom` → `RunRoom`. The **setter is called from six
 different places**, all in the actor/entity address range
-(`PlayerHandleEvent`, `sub_8015690`, `sub_8017650`, `sub_8018008`,
-`sub_8018A30`, `sub_80197F8`). Reads as a **readiness/synchronization
+(`PlayerHandleEvent`, `sub_8015690`, `sub_8017650`, `UpdateTiny`,
+`sub_8018A30`, `UpdateDingodile`). Reads as a **readiness/synchronization
 flag**: clear it before the wait loop, let one of several entity
 behaviors set it back once they've finished whatever they're doing,
 then proceed to the fade - not a fixed timer, a genuine "wait for
@@ -2766,7 +2766,7 @@ tables:
   `sub_8025BAC(gEntitySpawner, 28, 4, ...)`. Reads as a periodic,
   input-gated trigger - every ~128 frames, only while a specific button
   state holds.
-- **`sub_8019CE4`** (472 B): calls the `_call_via_r2` trampoline once,
+- **`SetDingodileState`** (472 B): calls the `_call_via_r2` trampoline once,
   then **dispatches through a 16-case jump table** on its own third
   parameter (clamped `1`-`16`) - a message/hint-ID selector. Case 15
   checks `gLevelState` state before calling

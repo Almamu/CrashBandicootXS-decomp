@@ -24,7 +24,7 @@ const u8 gStaticData_080C2758[RLE_SPRITES_0C2758_SIZE] = {
 #include "rle_sprites/0c2758_frames.inc"
 };
 
-/* The sub_802DFDC singleton's frames (table_B gStaticData_0817A880,
+/* The CreateYeti singleton's frames (table_B gStaticData_0817A880,
  * frame_table_17a880.c): 112 frames of 10x10 tiles (80x80), the yeti.
  * Built from graphics/rle_sprites/0da1d8_frames.png. */
 const u8 gStaticData_080DA1D8[RLE_SPRITES_0DA1D8_SIZE] = {

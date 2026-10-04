@@ -9,8 +9,8 @@
 
 extern const u8 gStaticData_080DA1D8[];
 
-/* The gUnknown_030014BC object's frame table (its actor_self
- * `frameOffsets`, set up by sub_802DFDC in actor_part60.c next to the
+/* The gYeti object's frame table (its actor_self
+ * `frameOffsets`, set up by CreateYeti in actor_part60.c next to the
  * gStaticData_0817A850 animation records): 123 pointers to compressed
  * frames of gStaticData_080DA1D8 (rle_sprites_0c2758.c). The offsets come
  * from the header tools/rle_sprites.py generates, so they follow edits to

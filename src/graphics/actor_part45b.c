@@ -9,7 +9,7 @@
  * gravity-like offset on Y) and a fixed Z step, then reacts to a
  * `sub_802A3AC` collision probe - firing a trampoline on the hit
  * object if any (then falling into the same "own trampoline" tail as
- * below), else checking `sub_8031378` (an AABB overlap test) and a
+ * below), else checking `IsTouchingAirship` (an AABB overlap test) and a
  * `depth` threshold before firing `self`'s own method-table
  * `destroy` ("hit/destroy") trampoline ( no `self` NULL-guard on this
  * specific call - unlike the other paths here) or, once past the
@@ -40,12 +40,12 @@
  * initialized, from the parameter) as needing a more conservative,
  * stack-like allocation across this function's several `goto`s than
  * the parameter register itself gets. Nothing else in this project
- * calls `sub_802F97C` by name (only indirectly via a `void *`-typed
+ * calls `UpdateJetpackShot` by name (only indirectly via a `void *`-typed
  * function-pointer table entry), so the parameter's own type here
  * doesn't need to match the usual `void *` convention. */
 extern void *sub_802A3AC(void *selfArg);
-extern u8 sub_8031378(void *selfArg);
-extern void sub_803146C(s32 delta);
+extern u8 IsTouchingAirship(void *selfArg);
+extern void DamageAirship(s32 delta);
 extern s32 _call_via_r2(void *pos, s32 arg1, void *table);
 extern void UpdateActor(void *selfArg);
 
@@ -56,7 +56,7 @@ struct actor_falling {
     s32 velY;           // 0x5C
 };
 
-void sub_802F97C(struct actor_falling *self)
+void UpdateJetpackShot(struct actor_falling *self)
 {
     struct actor_vtable *table;
     s32 off;
@@ -73,8 +73,8 @@ void sub_802F97C(struct actor_falling *self)
 
             _call_via_r2((u8 *)hit + hitTable->m20.thisOffset, 2, hitTable->m20.fn);
             goto merge;
-        } else if (sub_8031378(self)) {
-            sub_803146C(2);
+        } else if (IsTouchingAirship(self)) {
+            DamageAirship(2);
             if (self == 0) {
                 return;
             }

@@ -397,8 +397,8 @@ pass's writeup carried forward:
   `sub_8021480`/`sub_802155C` skip the flags-mask step `sub_8021388`
   has and use a plain `flags |= 0x10` instead, and `sub_802155C` adds
   the OAM trio like `sub_8021668`). All three additionally call a
-  header-construction helper (`sub_801A838(block, arg1, arg2)` for
-  `sub_8021388`, `sub_80189EC()` for `sub_8021480`, `sub_80197DC()` for
+  header-construction helper (`CreateDingodile(block, arg1, arg2)` for
+  `sub_8021388`, `CreateTiny()` for `sub_8021480`, `sub_80197DC()` for
   `sub_802155C`) and a closing `sub_8023318(gLevelState, hdr)`
   neither `SpawnSquid` nor `sub_8021668` have. `sub_8021388` got the
   furthest this pass: every instruction's *operation* matches the ROM
@@ -537,7 +537,7 @@ from the ROM disassembly instead:
   rest" convention this whole ROM region's `sub_8009ED0` callers
   establish.
 - **`sub_8021480`** - one more "two-line text popup" sibling (a bare
-  `sub_80189EC()` header call, no OAM trio, `flags |= 0x10` at the very
+  `CreateTiny()` header call, no OAM trio, `flags |= 0x10` at the very
   end instead of right after the `+0x29` nibble update).
 
 ### Verification

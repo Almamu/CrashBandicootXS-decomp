@@ -16,8 +16,8 @@
  * plain `s32 doAnim`. An empty `asm volatile("" : "+r"(doAnim))`
  * right before the check makes the value opaque to the compiler,
  * forcing the recheck to materialize - the same class of gap already
- * closed for `sub_802C2FC` (issue #52) and the `| 0`-with-a-zero-
- * valued-term case in `sub_803B46C` (issue #71). */
+ * closed for `DrawPolarCollectedWumpa` (issue #52) and the `| 0`-with-a-zero-
+ * valued-term case in `DrawJetpackCheckpointText` (issue #71). */
 extern s32 sub_80338E8(void);
 extern s32 sub_8033900(void);
 extern s32 sub_80338F4(void);

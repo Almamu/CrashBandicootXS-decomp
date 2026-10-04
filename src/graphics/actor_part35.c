@@ -10,7 +10,7 @@ extern s32 sub_80338E8(void);
 extern struct spawn_timing_table *sub_80338C4(void);
 extern s32 sub_80338D0(void);
 extern s32 RandRange(s32 arg0);
-extern void sub_802E170(s32 kind, s32 x, s32 y, s32 z, s32 arg4);
+extern void CreateJetpackActor(s32 kind, s32 x, s32 y, s32 z, s32 arg4);
 extern struct actor_self *gActorList;
 
 /* The singleton's per-spawner timing table (`sub_80338C4`): after each
@@ -35,7 +35,7 @@ struct spawn_timing_table {
 struct spawner {
     struct actor_self base;
     s32 hp;             // 0x54
-    s32 spawnX;         // 0x58 - the constructor's `b`/`c` (sub_8033EF4)
+    s32 spawnX;         // 0x58 - the constructor's `b`/`c` (CreateHovercraftLauncher)
     s32 spawnY;         // 0x5C
     u8 unk_60[4];
     s32 cooldown;       // 0x64
@@ -47,7 +47,7 @@ struct spawner {
  * from the singleton's own position plus a different fixed offset,
  * and - while `cooldown` is zero - measures `self`'s
  * distance to the player the same way; in range, it picks one of three
- * spawn "kinds" (5/6/8, via `RandRange(3)`) and calls `sub_802E170`
+ * spawn "kinds" (5/6/8, via `RandRange(3)`) and calls `CreateJetpackActor`
  * at `self`'s position, then cycles `count` against a threshold
  * from `sub_80338C4`'s table. Once `base.depth` passes `0x4B00` and the
  * singleton's own "kind" (`sub_80338D0`) is 3, resets `self` back to
@@ -88,11 +88,11 @@ void sub_8033CF8(struct spawner *self)
                 s32 count;
 
                 if (kind == 0) {
-                    sub_802E170(5, self->base.x, self->base.y, self->base.z, slot);
+                    CreateJetpackActor(5, self->base.x, self->base.y, self->base.z, slot);
                 } else if (kind == 1) {
-                    sub_802E170(6, self->base.x, self->base.y, self->base.z, slot);
+                    CreateJetpackActor(6, self->base.x, self->base.y, self->base.z, slot);
                 } else {
-                    sub_802E170(8, self->base.x, self->base.y, self->base.z, slot);
+                    CreateJetpackActor(8, self->base.x, self->base.y, self->base.z, slot);
                 }
 
                 count = self->count + 1;

@@ -217,7 +217,7 @@ extern struct vec3 gStaticData_0816C3B8[];
 extern struct vec3 gStaticData_0816C460[];
 extern u8 gStaticData_0816C458[];
 extern u8 gStaticData_087E490C[];
-extern u8 gStaticData_087E4974[];
+extern u8 gDingodileVtable[];
 extern u8 gPlatformVtable[];
 extern u8 gPlatformMoverVtable[];
 

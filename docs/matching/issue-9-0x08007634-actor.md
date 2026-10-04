@@ -220,7 +220,7 @@ this file's original writing - see the update note on the entry below.
 - **`PlayerHandleEvent`** (`asm/code_3_2_16.s`, ROM `0x0800AC2C`, ~950 B) - a
   38-case jump-table player action-state dispatcher (the same shape
   `docs/status/actor.md` already flags as "left raw, out of scope" for
-  `sub_8018008` in GitHub issue #22); calls a dozen still-unexamined
+  `UpdateTiny` in GitHub issue #22); calls a dozen still-unexamined
   state-transition functions (`GetCurrentLevelFlags`, `StartTimeTrial`,
   `sub_8025BAC`, `SetMaskLevel`, `AddDeath`, `RaiseMaskLevel`, and
   others).

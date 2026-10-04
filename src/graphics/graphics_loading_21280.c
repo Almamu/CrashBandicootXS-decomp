@@ -7,9 +7,9 @@
 extern void *gLevelState;
 extern void *gUnknown_030012F4;
 
-extern struct enemy_ctrl *sub_801A838(void *block, u16 arg1, u16 arg2);
+extern struct enemy_ctrl *CreateDingodile(void *block, u16 arg1, u16 arg2);
 extern void sub_8023318(void *self, struct enemy_ctrl *hdr);
-extern struct enemy_ctrl *sub_80189EC(void);
+extern struct enemy_ctrl *CreateTiny(void);
 extern struct enemy_ctrl *sub_80197DC(void);
 
 struct level_guard
@@ -87,7 +87,7 @@ void sub_8021280(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 }
 
 /* "Two-line text popup" variant with its own header: instead of
- * CreateEnemyCtrl it builds one with sub_801A838 in a fresh 0x30-byte block
+ * CreateEnemyCtrl it builds one with CreateDingodile in a fresh 0x30-byte block
  * (from arg1/arg2), attaches the part to it once, and registers the
  * header with the level controller via sub_8023318. */
 void sub_8021388(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
@@ -104,13 +104,13 @@ void sub_8021388(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
     sub_8008E94(gUnknown_030012F0, part);
-    hdr = sub_801A838(sub_8026EDC(0x30), arg1, arg2);
+    hdr = CreateDingodile(sub_8026EDC(0x30), arg1, arg2);
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     sub_8023318(gLevelState, hdr);
 }
 
-/* "Two-line text popup" variant whose header comes from sub_80189EC
+/* "Two-line text popup" variant whose header comes from CreateTiny
  * (after a 0x4c-byte sub_8026EDC reservation). Attaches the part once,
  * packs the collected bits, sets flag bit 4, and registers the part and
  * the header with the manager and the level controller. */
@@ -123,7 +123,7 @@ void sub_8021480(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->anim = POPUP_ANIM(0x294);
     part->frameNibble = sub_800815C(part);
     sub_8026EDC(0x4c);
-    hdr = sub_80189EC();
+    hdr = CreateTiny();
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     rec = LEVEL_RECORD(arg3);

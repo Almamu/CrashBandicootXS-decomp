@@ -24,7 +24,7 @@
 struct anim_frame_record {
     u16 duration;       // 0x00 - copied into the owning self's `animTimer` on a sequence reset
     s16 frameIndex;     // 0x02 - added to GetAnimFrameBaseOffset()'s result, indexes frameOffsets
-    s16 loopThreshold;  // 0x04 - sub_803B4EC wraps self->animTime back once the frame base
+    s16 loopThreshold;  // 0x04 - UpdateJetpackCheckpointText wraps self->animTime back once the frame base
                         // offset reaches this value
     s16 loopBase;       // 0x06 - subtracted from loopThreshold (then <<8) as the wrap amount
     u16 attr;           // 0x08 - packed into the high halfword of GetAnimFrameAttr's return value
@@ -44,7 +44,7 @@ struct actor_vtable {
     u8 unk_10[0x10];
     struct actor_method m20;   // 0x20 - "damage" (called on the player with a strength)
     u8 unk_28[0x10];
-    struct actor_method m38;   // 0x38 - "release" (no argument; sub_8031858)
+    struct actor_method m38;   // 0x38 - "release" (no argument; DamageJetpackBalloon)
 };
 
 /* A gcc 2.x pointer-to-member-function record, as stored in the

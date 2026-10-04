@@ -8,7 +8,7 @@ extern s32 sub_8033900(void);
 extern s32 sub_80338F4(void);
 extern s32 sub_80338E8(void);
 extern struct spawn_timing_table *sub_80338C4(void);
-extern void sub_802E674(s32 x, s32 y, s32 z, s32 dx, s32 dy);
+extern void SpawnJetpackCannonball(s32 x, s32 y, s32 z, s32 dx, s32 dy);
 extern void sub_802E504(s32 x, s32 y, s32 z);
 extern struct actor_self *gActorList;
 
@@ -34,7 +34,7 @@ struct spawn_timing_table {
 struct spawner {
     struct actor_self base;
     s32 hp;             // 0x54
-    s32 spawnX;         // 0x58 - the constructor's `b`/`c` (sub_8033EF4)
+    s32 spawnX;         // 0x58 - the constructor's `b`/`c` (CreateHovercraftLauncher)
     s32 spawnY;         // 0x5C
     u8 unk_60[4];
     s32 cooldown;       // 0x64
@@ -85,7 +85,7 @@ void sub_80339DC(struct spawner *self)
                 struct spawn_timing_table *table;
                 s32 count;
 
-                sub_802E674(self->base.x, self->base.y, self->base.z, dx, dy);
+                SpawnJetpackCannonball(self->base.x, self->base.y, self->base.z, dx, dy);
                 sub_802E504(self->base.x, self->base.y, self->base.z);
 
                 count = self->count + 1;

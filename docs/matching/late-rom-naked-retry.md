@@ -70,7 +70,7 @@ down to spelling:
   `pressed`'s. Variants of the mask, pins, locals, inline accessors,
   unions/bitfields, and separate or `do {} while (0)`-wrapped tests
   either keep this tie or let CSE merge the shifts.
-- **`sub_8031604`** (actor_part26c.c, #58) and **`sub_80336CC`**
+- **`ConvertAirshipTiles`** (actor_part26c.c, #58) and **`ConvertHovercraftTiles`**
   (actor_part130.c, #61), the fill-level meter twins, are still about 95
   and 105 halfwords off. The first loop in the ROM spills each height
   and reloads it (`ldm r1!`) after the row-pointer store, because all 8
@@ -149,7 +149,7 @@ reference before the loop does nothing.
   after 7B0. A wrapper 8E8 that inlines `MapFill` doesn't work: the
   inlined copy has 7B0's two separate store pointers.
 
-### Not closed: `sub_8031604` / `sub_80336CC` (#58/#61)
+### Not closed: `ConvertAirshipTiles` / `ConvertHovercraftTiles` (#58/#61)
 
 Both drafts improved (95 to 56, and 105 to 29 halfwords):
 

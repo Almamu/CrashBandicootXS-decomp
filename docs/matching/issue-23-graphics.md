@@ -37,7 +37,7 @@ controller `+0x44`.
   `sub_80195EC`/`sub_80195D8` (`gStaticData_087E45CC`),
   `sub_801961C`/`sub_8019608` (`gStaticData_087E4634`),
   `sub_8019660`/`sub_801964C` (`gStaticData_087E469C`),
-  `sub_80189EC`/`sub_80189C4` (`gStaticData_087E4564`, frees/allocates a
+  `CreateTiny`/`DestroyTiny` (`gTinyVtable`, frees/allocates a
   257-entry `i*i >> 8` squares table at `+0x48`): constructor/destructor
   pairs. `sub_8018948` has no caller anywhere (no `bl`, no Thumb pointer in
   the ROM) - **UNUSED**, matched anyway.
@@ -123,7 +123,7 @@ Fixes, all plain C plus pins/barriers unless noted:
 - Smaller ones: `x += 0x2000; y -= 0x4000` as separate statements
   (`sub_8018CB0`); `c->pos = part->pos` struct copy for the ldr/ldr/str/str
   order; `self->squares[i]` indexing instead of a walking pointer
-  (`sub_80189EC`); an explicit empty `case 10` to keep `sub_8018E4C`'s
+  (`CreateTiny`); an explicit empty `case 10` to keep `sub_8018E4C`'s
   11-entry jump table; `if (stepsLeft) break; goto next;` for its
   branch-trampoline shape; the `_call_via_r4` call's function pointer
   loaded into r4 through a volatile read (the `actor_part78.c` idiom);

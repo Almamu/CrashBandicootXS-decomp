@@ -5,7 +5,7 @@
  * (asm/code_3_2_20_8b7c_ac28.s, ROM 0x0802AC28-0x0802BED8): the giant
  * `CreateActor` kind-dispatch constructor and the run of "actor part
  * factory"/animation-table-state functions between it and here
- * (`sub_802B12C`-`sub_802BBE4`) are still raw - this file only covers
+ * (`CreatePolarCheckpointText`-`sub_802BBE4`) are still raw - this file only covers
  * the literal tail of that raw `.s` file, a self-contained run of
  * accumulator-drain/hazard-threshold helpers on the same `self` object
  * family documented in actor_part19.c/actor_part44.c, operating on the
@@ -15,7 +15,7 @@
  * docs/rom_map.md's "boss's BG2 spin/zoom effect..." section, which
  * already reads `sub_802BC68` as one of a matched pair of accumulator-
  * drain/reward-dispenser functions (the other being `sub_802F3BC` in
- * actor_part44.c) and `sub_802B174` as a "spawn effect type N" family
+ * actor_part44.c) and `SpawnPolarCollectedWumpa` as a "spawn effect type N" family
  * member - both confirmed here by this function's own body.
  *
  * `self` is `struct actor_self`; the animation-reset blocks store
@@ -28,7 +28,7 @@ extern void *gLevelState;
 extern void *gAudioContext;
 
 extern s32 CollectWumpa(void *self);
-extern void sub_802B174(s32 a, s32 b, s32 c);
+extern void SpawnPolarCollectedWumpa(s32 a, s32 b, s32 c);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void SetCellAnimSpeed(s32 arg0);
 
@@ -37,7 +37,7 @@ extern void SetCellAnimSpeed(s32 arg0);
  * flag `gUnknown_030014A0` is set, fully drains it via repeated
  * `CollectWumpa` calls without spawning anything; otherwise, once the
  * `gUnknown_03001484` cooldown elapses, dispenses one of four tiers of
- * reward (via `sub_802B174` at `self`'s position) sized by the
+ * reward (via `SpawnPolarCollectedWumpa` at `self`'s position) sized by the
  * accumulator's own magnitude, and plays a cue. Exact structural twin
  * of `sub_802F3BC` (actor_part44.c) on a different accumulator/cooldown
  * pair - see docs/rom_map.md. */
@@ -66,16 +66,16 @@ void sub_802BC68(void *selfArg)
     gUnknown_03001484 = 0xf;
 
     if (acc <= 9) {
-        sub_802B174(self->x, self->y, 1);
+        SpawnPolarCollectedWumpa(self->x, self->y, 1);
         gUnknown_03001488 -= 1;
     } else if (acc <= 0x13) {
-        sub_802B174(self->x, self->y, 2);
+        SpawnPolarCollectedWumpa(self->x, self->y, 2);
         gUnknown_03001488 -= 2;
     } else if (acc <= 0x27) {
-        sub_802B174(self->x, self->y, 4);
+        SpawnPolarCollectedWumpa(self->x, self->y, 4);
         gUnknown_03001488 -= 4;
     } else {
-        sub_802B174(self->x, self->y, 8);
+        SpawnPolarCollectedWumpa(self->x, self->y, 8);
         gUnknown_03001488 -= 8;
     }
 
@@ -97,7 +97,7 @@ extern u8 gUnknown_030014A3;
  * exceeds 0x13, latches `gUnknown_030014A3`, clears the hazard lock
  * (`gUnknown_030014A0`), and resets `self` to state 1/table-index 0 -
  * the same state/table-index/anim-frame reset idiom already documented
- * for the boss cluster's `sub_8030530`/`sub_8030C98` and this family's
+ * for the boss cluster's `sub_8030530`/`AirshipStateFall` and this family's
  * own `sub_802C14C` (actor_part19.c) - then fires `SetCellAnimSpeed(0x24)`. */
 void sub_802BD24(void *selfArg)
 {

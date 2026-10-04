@@ -106,7 +106,7 @@ and [graphics_loading.md](./graphics_loading.md).
   method-table ("vtable" at `self+0xc`) constructor/destructor pairs
   (`sub_8018948` is UNUSED; `sub_801961C` base-constructs through
   `CreatePlatformMover`), a part-gone bitmap setter, the squares-table
-  constructor `sub_80189EC`, the two-part effect (state machine
+  constructor `CreateTiny`, the two-part effect (state machine
   `sub_8018A30`, child spawners `sub_8018BDC`/`sub_8018CB0`), the "mover"
   object (`sub_8018D70` spawner, `sub_8018E4C` per-frame update,
   `sub_8019094` state setter, `sub_8019214` hit-effect spawner), the part
@@ -140,8 +140,8 @@ and [graphics_loading.md](./graphics_loading.md).
   functions) - six small C++ actor-part controller classes (method
   tables `gStaticData_087E4704`/`476C`/`47D4`/`483C`/`48A4`/`490C`:
   constructors, destructors and per-frame updates), plus the
-  `087E4974` boss-like state machine `sub_80197F8`, its state-entry
-  dispatcher `sub_8019CE4` and the part spawners `sub_8019EBC`/
+  `087E4974` boss-like state machine `UpdateDingodile`, its state-entry
+  dispatcher `SetDingodileState` and the part spawners `sub_8019EBC`/
   `sub_801A584`. First file compiled with `tools/agbcc/bin/old_agbcc`.
   `sub_8019718` and `sub_80197F4` are UNUSED (no caller or pointer
   anywhere in the ROM). See

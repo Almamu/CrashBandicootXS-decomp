@@ -8,7 +8,7 @@
  */
 
 /* actor_part130.c's `struct singleton_kind` (0x28 bytes, fields not
- * named yet), written as ten words. sub_8033264 picks one by
+ * named yet), written as ten words. SpawnHovercraft picks one by
  * gUnknown_030015D8. */
 struct singleton_kind {
     s32 words[10];
@@ -23,7 +23,7 @@ const struct singleton_kind gStaticData_0817C460[2] = {
  * (actor_part130.c) steers by. */
 const struct anim_box gStaticData_0817C4B0 = { -102, -12, -2, 51, 68, 4 };
 
-/* The one keyframe sub_80331BC (actor_part130.c) gives the singleton. */
+/* The one keyframe CreateHovercraft (actor_part130.c) gives the singleton. */
 const struct anim_frame_record gStaticData_0817C4BC[1] = {
     { 64, 0, 1, 0, 0x0, { 0, 0 } },
 };

@@ -153,8 +153,8 @@ normalized) finds changed code in matched real-C functions in 11
 old_agbcc files:
 
 - `actor_part88.c` (`sub_803487C`)
-- `actor_part_18008.c` (`sub_801865C`)
-- `actor_part_188d0.c` (`sub_80189EC`)
+- `actor_part_18008.c` (`PickTinyHopTarget`)
+- `actor_part_188d0.c` (`CreateTiny`)
 - `actor_part_1b85c.c` (`DestroyLevelSelect`)
 - `actor_part_1cee0.c` (`LevelSelectTurnPage`, `sub_801D5CC`, `InitZoomBg`)
 - `graphics_package_1e578.c` (`LoadGraphicsPackage`)

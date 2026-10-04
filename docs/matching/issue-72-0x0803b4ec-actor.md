@@ -30,17 +30,17 @@ function, exactly the `sub_800039C`/`strlen` pattern documented in
 `expected/corrections.txt` so `report_units.py`/decomp.dev stop crediting
 their bytes to the preceding labelled function:
 
-- **`sub_803B54C`** (0x0803B54C, 4 bytes) - between `sub_803B4EC`'s real
-  return and `sub_803B550` below. `movs r0,#1; bx lr` - a trivial
+- **`sub_803B54C`** (0x0803B54C, 4 bytes) - between `UpdateJetpackCheckpointText`'s real
+  return and `DestroyJetpackCheckpointText` below. `movs r0,#1; bx lr` - a trivial
   "return true" stub.
-- **`sub_803B550`** (0x0803B550) - the standard `struct linked_node`
+- **`DestroyJetpackCheckpointText`** (0x0803B550) - the standard `struct linked_node`
   teardown handler shape (see below), between `sub_803B54C` and
-  `sub_803B57C`.
-- **`sub_803B57C`** (0x0803B57C) - `sub_803B0F0`'s near-twin (see
-  below), between `sub_803B550` and `sub_803B5AC`.
+  `UpdateJetpackExplosion`.
+- **`UpdateJetpackExplosion`** (0x0803B57C) - `UpdatePolarCheckpointText`'s near-twin (see
+  below), between `DestroyJetpackCheckpointText` and `sub_803B5AC`.
 - **`sub_803B5AC`** (0x0803B5AC, 4 bytes) - byte-identical to
-  `sub_803B54C`, between `sub_803B57C` and `sub_803B5B0`.
-- **`sub_803B5DC`** (0x0803B5DC, 4 bytes) - between `sub_803B5B0`'s real
+  `sub_803B54C`, between `UpdateJetpackExplosion` and `DestroyJetpackExplosion`.
+- **`GetActorHp`** (0x0803B5DC, 4 bytes) - between `DestroyJetpackExplosion`'s real
   return and `nullsub_44` below. `ldr r0,[r0,#0x54]; bx lr` - a plain
   `self->field_54` getter.
 - **`nullsub_44`** (0x0803B5E0, 2 bytes, 2-byte aligned pad after) -
@@ -48,7 +48,7 @@ their bytes to the preceding labelled function:
   `src/graphics/actor_part39.c`) - next available `nullsub_N`, since
   `_call_via_lr` was already taken.
 - **`sub_803B5E4`** (0x0803B5E4, 4 bytes) - between `nullsub_44`'s
-  padding and `sub_803B5E8`. `movs r0,#0; bx lr` - a trivial "return
+  padding and `DestroyJetpackShot`. `movs r0,#0; bx lr` - a trivial "return
   false"/"return 0" stub.
 
 None of these seven have a direct `bl`/`.4byte` reference anywhere in
@@ -64,7 +64,7 @@ dead, just unconfirmed-live.
 
 All in `src/graphics/actor_anim.c`, in ROM order:
 
-- **`sub_803B4EC`** - advances the animation frame accumulator, or
+- **`UpdateJetpackCheckpointText`** - advances the animation frame accumulator, or
   fires the `+0x50` trampoline record instead when the "held" flag
   (`+0x12`) is set. The unconditional `+0x14` word write at the top
   looks like a per-call "ticked this frame" marker with no reader
@@ -75,30 +75,30 @@ All in `src/graphics/actor_anim.c`, in ROM order:
   the frame base offset reaches `loopThreshold`, `field_08` steps back
   by `(loopThreshold - loopBase) << 8` and the `+0x12` flag gets set -
   a loop-back/wrap mechanism for the animation's playback position.
-- **`sub_803B550`**/`sub_803B5B0`/`sub_803B5E8`/`sub_803B614`/
-  `sub_803B640`/`sub_803B66C`/`sub_803B698`/`sub_803B6C4`/
-  `sub_803B750`/`sub_803B77C`/`sub_803B7A8`/`sub_803B7D4`/
-  `sub_803B800`/`sub_803B82C`/`sub_803B858`/`sub_803B884` - 16 more
+- **`DestroyJetpackCheckpointText`**/`DestroyJetpackExplosion`/`DestroyJetpackShot`/`DestroyJetpackPlane`/
+  `DestroyJetpackBomber`/`DestroyJetpackCannonball`/`sub_803B698`/`DestroyJetpackBalloon`/
+  `DestroyJetpackParachuteNitro`/`DestroyJetpackRocket`/`DestroyJetpackRing`/`sub_803B7D4`/
+  `DestroyHovercraftCannon`/`DestroyHovercraftLauncher`/`sub_803B858`/`sub_803B884` - 16 more
   byte-identical `struct linked_node` teardown handlers, the exact same
   shape as issue #71's 20: set `self->field_50` to
   `gActorVtable`, unlink `self` from its `+0x48`/`+0x4c`
   circular list, free `self` when `flags & 1`.
-- **`sub_803B57C`** - `sub_803B0F0`'s near-twin: advances `self+0x24`
+- **`UpdateJetpackExplosion`** - `UpdatePolarCheckpointText`'s near-twin: advances `self+0x24`
   (a Q8 fixed-point accumulator, `+170`/256 per call instead of
-  `sub_803B0F0`'s `-0x180`/256) and either fires the `+0x50` trampoline
+  `UpdatePolarCheckpointText`'s `-0x180`/256) and either fires the `+0x50` trampoline
   record if `self+0x12` is set, or tail-calls `UpdateActor(self)`
   otherwise.
-- **`sub_803B6F0`/`sub_803B710`/`sub_803B730`** - a third teardown
-  shape: tear down via `sub_80321D0(self, 0)` (itself still unmatched)
+- **`DestroyJetpackHealthCrate`/`DestroyJetpackTimeCrate`/`DestroyJetpackQuestionCrate`** - a third teardown
+  shape: tear down via `DestroyJetpackBalloonCrate(self, 0)` (itself still unmatched)
   instead of the inline list-unlink, then free `self` when `flags & 1`
   - same as every other handler here.
-- **`sub_803B5DC`**/`nullsub_44`/`sub_803B5E4` - see "Seven more hidden
+- **`GetActorHp`**/`nullsub_44`/`sub_803B5E4` - see "Seven more hidden
   functions" above.
 
 ### Compiler-codegen notes
 
 - **The same `ptr + int` add-operand-order canonicalization as issue
-  #71's `GetAnimFrameData`**, hit again in `sub_803B4EC`'s
+  #71's `GetAnimFrameData`**, hit again in `UpdateJetpackCheckpointText`'s
   `rec = &table[idx]`: this compiler always canonicalizes pointer
   arithmetic so the pointer operand ends up as the final `ADD`'s first
   source, encoding `add r3,r3,r1` (table's register stays destination)
@@ -115,7 +115,7 @@ All in `src/graphics/actor_anim.c`, in ROM order:
   note didn't carry over as an obvious search hit while writing this
   chunk from scratch.
 - **A scratch-register choice for a small immediate, fixed with an
-  inline-asm anchor.** `sub_803B4EC`'s `self->field_08 +=
+  inline-asm anchor.** `UpdateJetpackCheckpointText`'s `self->field_08 +=
   *(s16*)(self+0x10)` needs a register to hold the immediate `16`
   offset for `ldrsh` (no immediate encoding exists for that op); every
   plain-C phrasing tried (compound assignment, a separate `s16 delta`
@@ -147,12 +147,12 @@ All in `src/graphics/actor_anim.c`, in ROM order:
 
 ### A real bug caught by the full clean rebuild
 
-`sub_803B57C`'s `self+0x12` "held"-flag check was first transcribed as
+`UpdateJetpackExplosion`'s `self+0x12` "held"-flag check was first transcribed as
 `self[0x18]` - a plain misread of the raw disassembly's `ldrb
 r0,[r2,#18]` (decimal `18` = hex `0x12`, not `0x18`; this file's
 disassembler only adds a `@ 0x..` hex comment for offsets roughly
 `>= 0x40`, so the smaller ones are easy to misread as already being
-hex). An isolated per-function compile of `sub_803B57C` alone still
+hex). An isolated per-function compile of `UpdateJetpackExplosion` alone still
 "matched" against a naively-reread expected snippet, since both sides
 of that comparison shared the same misreading - only step 6's full
 clean `make compare` against the real `baserom.gba`-derived checksum

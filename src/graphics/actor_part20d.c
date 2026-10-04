@@ -13,8 +13,8 @@ extern u8 gStaticData_087E525C[];
  * `gStaticData_087E525C`, and stashes its own `b`/`c` arguments a
  * second time into `self+0x58`/`self+0x5c`, `self+0x64 = 0`,
  * `self+0x60 = 0x95`, `self+0x68 (byte) = 0`. Returns `self` - the same
- * shape as the already-matched `sub_8033BB8` (actor_part32.c) and the
- * still-parked `sub_802FA04` (actor_part45c.c), except this one's `d`
+ * shape as the already-matched `CreateHovercraftCannon` (actor_part32.c) and the
+ * still-parked `CreateJetpackShot` (actor_part45c.c), except this one's `d`
  * argument is itself stack-passed (a 5th real argument total) rather
  * than the 4th register argument. Pinning `d` to `r0` *after* the other
  * register pins (rather than alongside them) is what gets this

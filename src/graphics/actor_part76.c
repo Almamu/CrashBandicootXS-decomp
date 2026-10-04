@@ -1,15 +1,15 @@
 #include "core.h"
 
-/* Sits right after actor_part60.c's `sub_802DFDC` and before
+/* Sits right after actor_part60.c's `CreateYeti` and before
  * actor_part61.c's `nullsub_27` - the whole contiguous range that used
  * to be `asm/code_3_2_20_28568_c99c_e058.s`. */
 
-/* A parameterized twin of `sub_802DE70`'s (actor_part75.c) 16x16
+/* A parameterized twin of `LoadYetiGraphics`'s (actor_part75.c) 16x16
  * triangular-fill dot-pattern loop, taking the destination buffer
  * (`dst`) and seed byte (`seed`) as real parameters instead of the
- * fixed stack buffer/`0`-or-`0x80` seed constants `sub_802DE70` uses for
+ * fixed stack buffer/`0`-or-`0x80` seed constants `LoadYetiGraphics` uses for
  * its own two inline copies of this same loop. No known caller anywhere
- * in the matched portion of this ROM region (`sub_802DE70` always
+ * in the matched portion of this ROM region (`LoadYetiGraphics` always
  * inlines the loop itself rather than calling this) - kept byte-exact
  * regardless, per this project's standing convention for functions
  * without a confirmed call site. UNUSED.

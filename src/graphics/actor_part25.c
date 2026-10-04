@@ -3,39 +3,39 @@
 
 /* Same boss-weapon subsystem as actor_part20.c - see that file's header
  * comment and docs/matching/issue-58-0x08030334-actor.md.
- * `gUnknown_03001534` is the same small tracker object actor_part23.c
+ * `gAirship` is the same small tracker object actor_part23.c
  * documents. */
 
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void *gAudioContext;
-extern s32 gUnknown_0300156C;
+extern s32 gAirshipHp;
 extern s32 gUnknown_03001578;
 extern s32 gUnknown_03001558;
 extern s32 gUnknown_0300155C;
 extern s32 gUnknown_03001560;
-extern s32 gUnknown_03001538;
+extern s32 gAirshipState;
 extern s32 gUnknown_0300153C;
-extern void *gUnknown_03001534;
+extern void *gAirship;
 
-/* Countdown timer (`gUnknown_0300156C -= delta`) driving the boss-
+/* Countdown timer (`gAirshipHp -= delta`) driving the boss-
  * weapon's "charge" bar: while it's still running, just plays a tick
  * sound and re-arms `gUnknown_03001578`'s DMA-refresh counter; once it
  * expires, resets the whole accumulator/velocity group
  * (`gUnknown_03001558`/`gUnknown_0300155C`/`gUnknown_03001560`) and
  * fires the state-4/table-index-1 transition on the small tracker
- * object at `gUnknown_03001534`. */
-void sub_803146C(s32 delta)
+ * object at `gAirship`. */
+void DamageAirship(s32 delta)
 {
-    s32 remaining = gUnknown_0300156C - delta;
+    s32 remaining = gAirshipHp - delta;
 
-    gUnknown_0300156C = remaining;
+    gAirshipHp = remaining;
     gUnknown_03001578 = 0x12;
 
     if (remaining <= 0) {
         struct actor_self *self;
 
-        gUnknown_0300156C = 0;
+        gAirshipHp = 0;
         gUnknown_03001558 = 0;
         gUnknown_0300155C = 0;
         gUnknown_03001560 = 0xaa;
@@ -43,10 +43,10 @@ void sub_803146C(s32 delta)
             register s32 four asm("r1") = 4;
             register s32 one asm("r2") = 1;
 
-            gUnknown_03001538 = four;
+            gAirshipState = four;
             gUnknown_0300153C = 0;
 
-            self = gUnknown_03001534;
+            self = gAirship;
             self->animIndex = one;
         }
         {

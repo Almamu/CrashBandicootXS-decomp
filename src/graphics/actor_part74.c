@@ -1,10 +1,10 @@
 #include "core.h"
 #include "actor_self.h"
 
-/* Sits right after actor_part58.c's `sub_802D764` and before
+/* Sits right after actor_part58.c's `CreatePolarCheckpointCrate` and before
  * actor_part59.c's `sub_802DB2C`/`sub_802DCC0` - the whole contiguous
  * range that used to be `asm/code_3_2_20_28568_c99c_d7b0.s`. All three
- * functions here operate on the `gUnknown_030014BC`-rooted "position-
+ * functions here operate on the `gYeti`-rooted "position-
  * tracking object with tier-threshold sound cues" documented in
  * actor_part59.c's header comment and docs/matching/issue-54-actor-d3a8.md
  * (the "third RAM-struct family" from docs/rom_map.md). See that issue
@@ -12,57 +12,57 @@
  * used here and by `sub_802DD9C` (actor_part75.c) was finally pinned
  * down.
  *
- * Built with old_agbcc: `sub_802DA68` only matches under it, and
- * `sub_802D9A8` matches under both. */
+ * Built with old_agbcc: `UpdateYetiBg2` only matches under it, and
+ * `UpdateYetiPalette` matches under both. */
 
-extern s32 gUnknown_030014D0;
-extern s32 gUnknown_030014C4;
+extern s32 gYetiState;
+extern s32 gYetiX;
 extern struct actor_self *gActorList;
-extern struct actor_self *gUnknown_030014BC;
+extern struct actor_self *gYeti;
 extern s32 GetAnimFrameBaseOffset(void *self);
-extern void (*gStaticData_0817A840[])(void);
+extern void (*gYetiStateFuncs[])(void);
 extern void _call_via_r0(void *fn);
 extern void (*gUnpackNibbleTilesFunc)(void *frame, s32 arg);
 extern void _call_via_r2(void *arg0, s32 arg1, void *fn);
 extern u8 gUnknown_030014C0;
 extern u8 gUnknown_030014C1;
-extern s32 gUnknown_030014CC;
+extern s32 gYetiDistance;
 extern void sub_8029E34(s32 arg0);
-extern void sub_802D9A8(void);
+extern void UpdateYetiPalette(void);
 extern u8 gStaticData_0817AA98[];
 extern s32 gUnknown_030014C8;
 extern u8 gUnknown_030014A0;
 extern void *MemCopy32(void *dest, void *src, s32 size);
 extern void sub_802C018(void *self);
 extern void SetCellAnimSpeed(s32 arg0);
-extern u16 gStaticData_0817AA6C[];
+extern u16 gYetiPalette[];
 extern s32 sub_8029E98(void);
 extern s32 sub_8029EB4(void);
 
 /* One of two confirmed slots (index 3, dispatched via
- * `gStaticData_0817A840[gUnknown_030014D0]`) of the type-0
+ * `gYetiStateFuncs[gYetiState]`) of the type-0
  * `category_vtable` (`gActorCategoryVtables[0]`, `include/actor_anim.h`)
  * - `UpdateGameFrame`'s own direct top-level callee for this object, per
  * docs/rom_map.md's "Two new type-0 vtable slots confirmed" section.
  *
- * Unless `gUnknown_030014D0 == 3`, first eases `gUnknown_030014C4`
+ * Unless `gYetiState == 3`, first eases `gYetiX`
  * toward the player's cached X position (`gActorList->+0x1c`,
  * divisor 32 - the same rsb/lsr/add/asr round-toward-zero idiom as
- * `sub_802D3A8`/`sub_80070EC`). Then advances the object's own anim
+ * `MovePolarAkuAku`/`sub_80070EC`). Then advances the object's own anim
  * frame (`+8` accumulator by the `+0x10` per-frame increment,
  * `GetAnimFrameBaseOffset` against the current part-table record's
  * `+4`/`+6` timing fields, latching the `+0x12` done flag and correcting
  * the accumulator on overrun), fires the current
- * `gStaticData_0817A840[gUnknown_030014D0]` vtable slot via
+ * `gYetiStateFuncs[gYetiState]` vtable slot via
  * `_call_via_r0`, and - only when the accumulator's `>>8` value actually
  * changed this frame - fires a `_call_via_r2` trampoline from the part
  * table's own `+2`-offset record (latching `gUnknown_030014C1`).
  *
- * Finally, while `gUnknown_030014D0 <= 1`, runs a 3-axis AABB overlap
+ * Finally, while `gYetiState <= 1`, runs a 3-axis AABB overlap
  * test between two 12-byte `{s16 x, y, z, sizeX, sizeY, sizeZ}` records
  * (axes compared Z, then Y, then X - matching the ROM's own instruction
  * order, not storage order) built the same way both times: a
- * `gStaticData_0817AA98`-rooted static record with `gUnknown_030014C4`/
+ * `gStaticData_0817AA98`-rooted static record with `gYetiX`/
  * `030014C8` (both `>>8`) added into its `x`/`z` fields only (this
  * object tracks no Y), against the player's own `+0x38` 12-byte vector
  * with the player's `+0x1c`/`0x20`/`0x24` position (all `>>8`) added
@@ -73,7 +73,7 @@ extern s32 sub_8029EB4(void);
  * kept byte-faithful since a shared "copy src into a working buffer,
  * then test" helper is being called here with a buffer that already
  * *is* its own source, not a disassembly artifact. On overlap, arms
- * `gUnknown_030014D0 = 2`, resets the object's kind/anim state to the
+ * `gYetiState = 2`, resets the object's kind/anim state to the
  * part table's `+0x18` record, and refreshes the player via
  * `sub_802C018`/`SetCellAnimSpeed(0)`; skipped once `gUnknown_030014A0` (an
  * already-consumed one-shot flag elsewhere in this ROM region) is set.
@@ -110,7 +110,7 @@ hit:
     return 1;
 }
 
-void sub_802D7B0(void)
+void UpdateYeti(void)
 {
     struct {
         struct box16 a, b, t;
@@ -118,9 +118,9 @@ void sub_802D7B0(void)
     struct actor_self *obj;
     s32 old, cur;
 
-    if (gUnknown_030014D0 != 3)
-        gUnknown_030014C4 += (((struct actor_self *)gActorList)->x - gUnknown_030014C4) / 32;
-    obj = gUnknown_030014BC;
+    if (gYetiState != 3)
+        gYetiX += (((struct actor_self *)gActorList)->x - gYetiX) / 32;
+    obj = gYeti;
     old = obj->animTime >> 8;
     obj->animTime += *(s16 *)&obj->animTimer;
     obj->animDone = 0;
@@ -129,19 +129,19 @@ void sub_802D7B0(void)
                           - obj->anims[obj->animIndex].loopBase) << 8;
         obj->animDone = 1;
     }
-    gStaticData_0817A840[gUnknown_030014D0]();
-    obj = gUnknown_030014BC;
+    gYetiStateFuncs[gYetiState]();
+    obj = gYeti;
     cur = obj->animTime >> 8;
     if (old != cur) {
         gUnpackNibbleTilesFunc((u8 *)obj->frameOffsets[obj->anims[obj->animIndex].frameIndex + cur] + 4,
                           gUnknown_030014C0);
         gUnknown_030014C1 = 1;
     }
-    sub_8029E34(gUnknown_030014CC);
-    sub_802D9A8();
+    sub_8029E34(gYetiDistance);
+    UpdateYetiPalette();
     f.a = *(struct box16 *)gStaticData_0817AA98;
-    BoxMove(&f.a, gUnknown_030014C4 >> 8, 0, gUnknown_030014C8 >> 8);
-    if ((u32)gUnknown_030014D0 <= 1) {
+    BoxMove(&f.a, gYetiX >> 8, 0, gUnknown_030014C8 >> 8);
+    if ((u32)gYetiState <= 1) {
         struct actor_self **playerAddr = &gActorList;
         struct actor_self *pl;
         struct box16 *b;
@@ -157,8 +157,8 @@ void sub_802D7B0(void)
         if (BoxOverlap(b, &f.a)) {
             struct actor_self *g;
 
-            gUnknown_030014D0 = 2;
-            g = gUnknown_030014BC;
+            gYetiState = 2;
+            g = gYeti;
             g->animIndex = 2;
             g->animTimer = g->anims[2].duration;
             g->animDone = 0;
@@ -169,14 +169,14 @@ void sub_802D7B0(void)
     }
 }
 
-/* Palette-gradient cursor for the `gUnknown_030014BC` "gauge" object.
- * Below `0x5000`, DMAs a fixed 16-color gradient (`gStaticData_0817AA6C`)
+/* Palette-gradient cursor for the `gYeti` "gauge" object.
+ * Below `0x5000`, DMAs a fixed 16-color gradient (`gYetiPalette`)
  * straight into BG palette RAM at `0x050001E0` (`REG_DMA3` at
  * `0x040000D4`). Above `0xBE00`, DMAs a single zeroed halfword instead
  * (blanking the gradient). In between, computes a `__divsi3`-scaled
- * factor from how far `gUnknown_030014CC` sits into that `[0x5000,
+ * factor from how far `gYetiDistance` sits into that `[0x5000,
  * 0xBE00]` range, then directly writes 16 colors: for each
- * `gStaticData_0817AA6C` source halfword (a packed BGR555 color), its
+ * `gYetiPalette` source halfword (a packed BGR555 color), its
  * 5-bit R and G channels are scaled by that factor (`>>8` after the
  * multiply) and repacked as `R | (G<<5) | (G<<10)` - the ROM really
  * reuses the scaled green for blue - into BG palette RAM at
@@ -184,19 +184,19 @@ void sub_802D7B0(void)
  *
  * The two `0x1f` masks are separate locals: the ROM keeps one in `ip`
  * (set before the pointers) and one in `r7` (set after them). */
-void sub_802D9A8(void)
+void UpdateYetiPalette(void)
 {
-    s32 v = gUnknown_030014CC;
+    s32 v = gYetiDistance;
 
     if (v <= 0x4fff) {
-        DmaCopy16(3, gStaticData_0817AA6C, (void *)(PLTT + 0x1E0), 0x20);
+        DmaCopy16(3, gYetiPalette, (void *)(PLTT + 0x1E0), 0x20);
     } else if (v > 0xbdff) {
         DmaFill16(3, 0, (void *)(PLTT + 0x1E0), 0x20);
     } else {
         s32 f = ((0xbe00 - v) << 8) / 0x6e00;
         s32 mask = 0x1f;
         u16 *dst = (u16 *)(PLTT + 0x1E0);
-        u16 *src = gStaticData_0817AA6C;
+        u16 *src = gYetiPalette;
         s32 mask2 = 0x1f;
         s32 i;
 
@@ -212,19 +212,19 @@ void sub_802D9A8(void)
     }
 }
 
-/* Companion to `sub_802D9A8` above: the gauge's affine BG2 setup. When
+/* Companion to `UpdateYetiPalette` above: the gauge's affine BG2 setup. When
  * `gUnknown_030014C1` is set, flips `REG_BG2CNT` (`0x0400000C`) between
  * two screen-base words according to `gUnknown_030014C0`, clears `C1`
- * and toggles `C0`. Then derives a zoom factor from `gUnknown_030014CC`
+ * and toggles `C0`. Then derives a zoom factor from `gYetiDistance`
  * (`/0x5500`), writes `REG_BG2X` (`0x04000028`) from
- * `gUnknown_030014C4` and `sub_8029EB4()`, `REG_BG2Y` (`0x0400002C`)
+ * `gYetiX` and `sub_8029EB4()`, `REG_BG2Y` (`0x0400002C`)
  * from `sub_8029E98()`, and the `PA`/`PB`/`PC`/`PD` matrix at
  * `0x04000020` as `scale, 0, 0, scale`.
  *
  * Matches under old_agbcc. The flag addresses are copied into their own
  * locals after the load (the ROM's `ldrb r1, [r0]; adds r3, r0, #0`),
  * with the loaded flag pinned to r1. */
-void sub_802DA68(void)
+void UpdateYetiBg2(void)
 {
     s32 scale, base, t;
     u8 *p = &gUnknown_030014C1;
@@ -244,9 +244,9 @@ void sub_802DA68(void)
         *changed = 0;
         *alt ^= 1;
     }
-    scale = (gUnknown_030014CC << 8) / 0x5500;
+    scale = (gYetiDistance << 8) / 0x5500;
     base = sub_8029EB4();
-    t = (gUnknown_030014C4 * 47 << 8) / gUnknown_030014CC + base;
+    t = (gYetiX * 47 << 8) / gYetiDistance + base;
     *(vs32 *)REG_ADDR_BG2X = 0x4000 - ((t * scale) >> 8);
     *(vs32 *)REG_ADDR_BG2Y = 0x4400 - ((sub_8029E98() * scale) >> 8);
     {

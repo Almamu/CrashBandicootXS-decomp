@@ -5,7 +5,7 @@
  * file's header comment, docs/matching/issue-56-0x0802f0dc-actor.md and
  * docs/matching/pmf-dispatch-retry.md. */
 
-extern void sub_802E674(s32 x, s32 y, s32 z, s32 dx, s32 dy);
+extern void SpawnJetpackCannonball(s32 x, s32 y, s32 z, s32 dx, s32 dy);
 extern u8 sub_802A6EC(void *self);
 extern void UpdateActor(void *self);
 extern struct actor_pmf gStaticData_0817C260[];
@@ -27,11 +27,11 @@ struct actor_fa38 {
  * integrates its velocity (Q4), runs the per-state member-pointer
  * dispatch `(this->*gStaticData_0817C260[this->state])()`, and while
  * animation 3 plays and the cooldown has run out, pushes the player
- * away (sub_802E674) when it is close in front - every third hit takes
+ * away (SpawnJetpackCannonball) when it is close in front - every third hit takes
  * a long cooldown. Then the usual player-contact damage exchange, and
  * finally "destroy" once state 3 rises past a height, else the
  * standard UpdateActor step. */
-void sub_802FA38(struct actor_fa38 *self)
+void UpdateJetpackPlane(struct actor_fa38 *self)
 {
     if (self->base.depth > 0x1B00) {
         self->base.unk_2C[0] = 1;
@@ -63,7 +63,7 @@ void sub_802FA38(struct actor_fa38 *self)
                 s32 absDy = (dy ^ signDy) - signDy;
 
                 if (absDx + absDy <= 0x5FF) {
-                    sub_802E674(self->base.x, self->base.y, self->base.z - 10, dx, dy);
+                    SpawnJetpackCannonball(self->base.x, self->base.y, self->base.z - 10, dx, dy);
                     if (++self->hits == 3) {
                         self->hits = cooldown;
                         self->cooldown = 0x3C;

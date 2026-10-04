@@ -20,7 +20,7 @@ extern s32 gUnknown_03001550;
  * `__divsi3`, offset by the screen-projection helpers
  * `sub_8029EB4`/`sub_8029E98`) so the effect stays centered while
  * zooming. */
-void sub_80312C4(void)
+void UpdateAirshipBg2(void)
 {
     if (gUnknown_03001524 != 0) {
         if (gUnknown_03001520 == 0) {

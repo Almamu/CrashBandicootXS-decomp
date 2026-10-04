@@ -5,9 +5,9 @@
  * actor_part23.c - see actor_part20.c's header comment and
  * docs/matching/issue-58-0x08030334-actor.md.
  *
- * Position-easing helper, called from `sub_8030734`/`sub_8030834`
+ * Position-easing helper, called from `AirshipStateFireballs`/`AirshipStateCannon`
  * (actor_part21d.c/actor_part21e.c): advances the position
- * accumulators (`gUnknown_03001540`/`gUnknown_03001544`) by their
+ * accumulators (`gAirshipX`/`gAirshipY`) by their
  * per-frame deltas (`gUnknown_03001558`/`gUnknown_0300155C`), then
  * computes the player's (`gActorList`) signed distance from a
  * fixed keyframe-table-relative target point on each axis
@@ -20,9 +20,9 @@
  * set of fixed ranges/bias points (`0xa000`/`0x4FFF`, `0xFFFFD300`/
  * `0x13FF`) and a final `0x180`/`-0x180`, `0x100`/`-0x100` hard clamp.
  */
-extern s32 gUnknown_03001540;
+extern s32 gAirshipX;
 extern s32 gUnknown_03001558;
-extern s32 gUnknown_03001544;
+extern s32 gAirshipY;
 extern s32 gUnknown_0300155C;
 extern struct actor_self *gActorList;
 extern s32 gUnknown_0300154C;
@@ -48,8 +48,8 @@ void sub_8030E08(void)
     s32 dx, dy, cx, cy, px, py;
     struct actor_self *pl;
 
-    gUnknown_03001540 += gUnknown_03001558;
-    gUnknown_03001544 += gUnknown_0300155C;
+    gAirshipX += gUnknown_03001558;
+    gAirshipY += gUnknown_0300155C;
 
     pl = gActorList;
     px = pl->x;

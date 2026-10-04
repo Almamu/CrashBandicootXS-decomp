@@ -10,13 +10,13 @@
  * sub_8019730), 087E47D4 (sub_80197DC/sub_80197C8), 087E483C
  * (sub_801A724/sub_801A73C, update sub_801A64C), 087E48A4
  * (sub_801A768/sub_801A750, update sub_801A2A8), 087E490C (destructor
- * sub_801A780, update sub_801A114) and 087E4974 (update sub_80197F8).
+ * sub_801A780, update sub_801A114) and 087E4974 (update UpdateDingodile).
  *
- * The 087E4974 object is a boss-like state machine: sub_80197F8 steers
+ * The 087E4974 object is a boss-like state machine: UpdateDingodile steers
  * its part along the level (approach tables gStaticData_0816C368/78/90/
  * A0, turning round at either level edge), counts hits the player lands
  * on it, and spawns helper parts through sub_8019EBC/sub_801A03C;
- * sub_8019CE4 is its "enter state N" transition (animation + follow-up
+ * SetDingodileState is its "enter state N" transition (animation + follow-up
  * spawns/sounds). The last state signals RequestRoomExit (the "entity ready"
  * barrier, see docs/rom_map.md) once the part falls off the bottom.
  *
@@ -175,9 +175,9 @@ struct obj_476c
     struct part *part; // 0x20
 };
 
-/* gStaticData_087E4974's class (per-frame update sub_80197F8, destructor
- * sub_801A824 in the next asm file). */
-struct boss
+/* gDingodileVtable's class (per-frame update UpdateDingodile, destructor
+ * DestroyDingodile in the next asm file). */
+struct dingodile_boss
 {
     u8 unk_00[8];
     s32 state;         // 0x08
@@ -301,11 +301,11 @@ extern void sub_800872C(struct part *p, s32 arg1);
 extern void *sub_8026EDC(u32 size);
 extern s32 sub_800815C(struct part *p);
 extern void sub_8008E94(struct part_list *list, struct part *p);
-extern void sub_801A7AC(struct boss *self, struct part *other, s32 arg2);
+extern void sub_801A7AC(struct dingodile_boss *self, struct part *other, s32 arg2);
 
-void sub_8019CE4(struct boss *self, struct part *other, s32 next);
-void sub_8019EBC(struct boss *self, s32 mode, u16 x, u16 y, struct part *arg);
-void sub_801A03C(struct boss *self, u16 x, u16 y, u8 facing);
+void SetDingodileState(struct dingodile_boss *self, struct part *other, s32 next);
+void sub_8019EBC(struct dingodile_boss *self, s32 mode, u16 x, u16 y, struct part *arg);
+void sub_801A03C(struct dingodile_boss *self, u16 x, u16 y, u8 facing);
 void sub_801A584(struct obj_48a4 *self, u16 x, u16 y);
 struct obj_490c *sub_801A794(void *mem);
 struct vobj *sub_801A724(void *mem);
@@ -376,10 +376,10 @@ static inline s32 AtLevelEdge(struct part_f28 *f, s32 x)
 }
 
 /* Close enough to the player (on the side it is facing) to react. */
-static inline void Approach(struct boss *self, struct part *other, s32 d)
+static inline void Approach(struct dingodile_boss *self, struct part *other, s32 d)
 {
     if (d <= 0x1FFF)
-        sub_8019CE4(self, other, 5);
+        SetDingodileState(self, other, 5);
 }
 
 static inline void SetTag(struct part *p, u8 tag)
@@ -499,12 +499,12 @@ struct vobj *sub_80197DC(struct vobj *self)
 }
 
 /* UNUSED - no caller or pointer anywhere in the ROM. */
-s32 sub_80197F4(struct boss *self)
+s32 sub_80197F4(struct dingodile_boss *self)
 {
     return self->hits;
 }
 
-void sub_80197F8(struct boss *self, struct part *other)
+void UpdateDingodile(struct dingodile_boss *self, struct part *other)
 {
     struct box hurt;
     struct box box;
@@ -535,7 +535,7 @@ void sub_80197F8(struct boss *self, struct part *other)
         if (BOX_VALID(box) && sub_8001688(&box, &hurt))
         {
             self->hits++;
-            sub_8019CE4(self, other, 11);
+            SetDingodileState(self, other, 11);
         }
     }
 
@@ -543,7 +543,7 @@ void sub_80197F8(struct boss *self, struct part *other)
     switch (state)
     {
     case 0:
-        sub_8019CE4(self, other, 1);
+        SetDingodileState(self, other, 1);
         self->step = 0;
         self->passes = 0;
         other->unk_0A = 0;
@@ -592,7 +592,7 @@ void sub_80197F8(struct boss *self, struct part *other)
                 lim = 2;
             if (++self->passes >= lim)
             {
-                sub_8019CE4(self, other, 6);
+                SetDingodileState(self, other, 6);
                 break;
             }
         }
@@ -605,7 +605,7 @@ void sub_80197F8(struct boss *self, struct part *other)
             u32 prev = state;
             s32 n;
 
-            sub_8019CE4(self, other, 1);
+            SetDingodileState(self, other, 1);
             if (other->f28.facing)
             {
                 s32 x = other->x >> 8;
@@ -642,19 +642,19 @@ void sub_80197F8(struct boss *self, struct part *other)
                         self->nextState = 15;
                     else
                         self->nextState = 1;
-                    sub_8019CE4(self, other, 2);
+                    SetDingodileState(self, other, 2);
                 }
                 else
                 {
                     self->timer = 0x64;
                     self->nextState = 1;
-                    sub_8019CE4(self, other, 2);
+                    SetDingodileState(self, other, 2);
                 }
                 self->step = 0;
             }
             else
             {
-                sub_8019CE4(self, other, 14);
+                SetDingodileState(self, other, 14);
             }
         }
         break;
@@ -683,10 +683,10 @@ void sub_80197F8(struct boss *self, struct part *other)
         {
             other->fl.b.hit = 1;
         turn:
-            sub_8019CE4(self, other, 3);
+            SetDingodileState(self, other, 3);
             break;
         }
-        sub_8019CE4(self, other, 1);
+        SetDingodileState(self, other, 1);
         {
             s32 n = 8;
             if (n >= other->table->recs[other->tag].frameCount)
@@ -696,16 +696,16 @@ void sub_80197F8(struct boss *self, struct part *other)
         break;
     case 2:
         if (--self->timer == 0)
-            sub_8019CE4(self, other, self->nextState);
+            SetDingodileState(self, other, self->nextState);
         break;
     case 7:
         sub_801A7AC(self, other, 0);
         VCALL2(self, m50, other, 5);
-        sub_8019CE4(self, other, 8);
+        SetDingodileState(self, other, 8);
         break;
     case 8:
         if (--self->timer == 0)
-            sub_8019CE4(self, other, 9);
+            SetDingodileState(self, other, 9);
         break;
     case 9:
     case 10:
@@ -714,10 +714,10 @@ void sub_80197F8(struct boss *self, struct part *other)
         if (state == 9)
         {
         idle:
-            sub_8019CE4(self, other, 1);
+            SetDingodileState(self, other, 1);
             break;
         }
-        sub_8019CE4(self, other, 12);
+        SetDingodileState(self, other, 12);
         break;
     case 11:
         if (self->timer != 0)
@@ -726,9 +726,9 @@ void sub_80197F8(struct boss *self, struct part *other)
             break;
         }
         if (self->hits > 2)
-            sub_8019CE4(self, other, 16);
+            SetDingodileState(self, other, 16);
         if (other->animDone)
-            sub_8019CE4(self, other, 10);
+            SetDingodileState(self, other, 10);
         break;
     case 12:
     {
@@ -747,7 +747,7 @@ void sub_80197F8(struct boss *self, struct part *other)
             if (x < LevelRight() - lim)
                 break;
         }
-        sub_8019CE4(self, other, 13);
+        SetDingodileState(self, other, 13);
         break;
     }
     case 16:
@@ -759,7 +759,7 @@ void sub_80197F8(struct boss *self, struct part *other)
             sub_801A7AC(self, other, 0);
             if (HasSuperBodySlam(gLevelState))
                 RequestRoomExit();
-            sub_8019CE4(self, other, 17);
+            SetDingodileState(self, other, 17);
         }
         break;
     }
@@ -773,7 +773,7 @@ void sub_80197F8(struct boss *self, struct part *other)
  * slot +0x50 animation id share one indirect call, as in the ROM - the
  * call's argument registers are pinned so each case loads them itself
  * before jumping to it. */
-void sub_8019CE4(struct boss *self, struct part *other, s32 next)
+void SetDingodileState(struct dingodile_boss *self, struct part *other, s32 next)
 {
     register void *t asm("r0");
     register void *a asm("r1");
@@ -837,7 +837,7 @@ void sub_8019CE4(struct boss *self, struct part *other, s32 next)
     }
 }
 
-void sub_8019EBC(struct boss *self, s32 mode, u16 x, u16 y, struct part *arg)
+void sub_8019EBC(struct dingodile_boss *self, s32 mode, u16 x, u16 y, struct part *arg)
 {
     struct part *p = sub_8009ED0(0xFFFF, x, y, 0);
     struct vobj *ctl;
@@ -897,7 +897,7 @@ void sub_8019EBC(struct boss *self, s32 mode, u16 x, u16 y, struct part *arg)
  * `do { } while (0)` (whose loop notes swap the part/controller
  * registers), and `facing` goes into the 1-bit field unmasked (an
  * explicit `& 1` makes the tag store reuse the held constant 1). */
-void sub_801A03C(struct boss *self, u16 x, u16 y, u8 facing)
+void sub_801A03C(struct dingodile_boss *self, u16 x, u16 y, u8 facing)
 {
     struct part *p = sub_8009ED0(0xFFFF, x, y, 0);
     struct vobj *ctl;

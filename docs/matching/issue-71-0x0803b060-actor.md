@@ -15,7 +15,7 @@ All in `src/graphics/actor_anim.c`, in ROM order:
 
 - **`GetAnimFrameAttr`** - reads the current keyframe record's `attr`
   halfword (`frameTable[frameIndex].attr`) and returns it pre-shifted
-  into the high 16 bits; `sub_803B46C` ORs this straight into an OAM
+  into the high 16 bits; `DrawJetpackCheckpointText` ORs this straight into an OAM
   attribute word.
 - **`GetAnimFrameData`** - resolves the current keyframe's tile-
   graphics pointer: `frameTable[frameIndex].frameIndex +
@@ -26,11 +26,11 @@ All in `src/graphics/actor_anim.c`, in ROM order:
   that record's `duration` field into `self+0x10`, and resets the
   `+0x12` flag byte and the `field_08` playback accumulator to 0.
 - **20 byte-identical "kind" teardown handlers** (`sub_803B0C4`,
-  `sub_803B128`, `sub_803B154`, `sub_803B180`, `sub_803B1AC`,
-  `sub_803B1D8`, `sub_803B204`, `sub_803B230`, `sub_803B25C`,
-  `sub_803B288`, `sub_803B2B4`, `sub_803B2E0`, `sub_803B30C`,
-  `sub_803B338`, `sub_803B364`, `sub_803B390`, `sub_803B3BC`,
-  `sub_803B3E8`, `sub_803B414`, `sub_803B440`) - every one of these
+  `DestroyPolarCheckpointText`, `DestroyPolarWumpa`, `DestroyPolarTimeCrate`, `DestroyPolarQuestionCrate`,
+  `DestroyPolarAkuAkuCrate`, `DestroyPolarNitroCrate`, `DestroyPolarLifeCrate`, `sub_803B25C`,
+  `DestroyPolarBasicCrate`, `DestroyPolarCrate`, `DestroyPolarElectricFence`, `sub_803B30C`,
+  `sub_803B338`, `DestroyPolarPenguin`, `DestroyPolarIcicle`, `DestroyPolarAkuAku`,
+  `sub_803B3E8`, `sub_803B414`, `DestroyPolarCheckpointCrate`) - every one of these
   compiles to byte-identical bytes in the ROM (confirmed: each
   function's embedded literal pointer resolves to the same
   `gActorVtable` symbol, and the surrounding unlink/free
@@ -43,7 +43,7 @@ All in `src/graphics/actor_anim.c`, in ROM order:
   shared per-"kind" destructor template the original build never
   deduplicated - the same per-"kind"/per-slot pattern seen elsewhere in
   this ROM (`gStaticData_0816BF20`'s 42-slot table, etc.).
-- **`sub_803B0F0`** - advances `self+0x20` (a Q8 fixed-point
+- **`UpdatePolarCheckpointText`** - advances `self+0x20` (a Q8 fixed-point
   accumulator, likely a fall/scroll speed) by a fixed `-0x180`/256 per
   call, then either fires the `self+0x50` trampoline record (arg `3`)
   if `self+0x12` is set, or tail-calls `UpdateActor(self)` otherwise -
@@ -89,12 +89,12 @@ All in `src/graphics/actor_anim.c`, in ROM order:
 
 ## Parked (1/25)
 
-- **`sub_803B46C`** - fixed-position (120, 106) OAM setup for one
+- **`DrawJetpackCheckpointText`** - fixed-position (120, 106) OAM setup for one
   sprite frame: screen-space visibility cull against the frame's
   width/height, then builds the OAM attribute words (masked position,
   `GetAnimFrameAttr`'s attr flag, and a priority/palette nibble from
   `self+0x18`/`self+0x14`) and calls `SetupSpriteFrameOam`. This is the
-  near-identical twin of the already-parked `sub_802C2FC`
+  near-identical twin of the already-parked `DrawPolarCollectedWumpa`
   (`src/graphics/actor_part19b.c`, self-relative position instead of a
   fixed one) - and hits the exact same two gaps documented there:
   - A `| 0`-with-a-zero-valued term (`packed = ... | attr | flag` where
@@ -116,15 +116,15 @@ All in `src/graphics/actor_anim.c`, in ROM order:
 
   Semantics are fully understood and every load/store, branch and call
   is confirmed correct; the checked-in raw assembly lives in
-  `asm/code_3_3_b46c.s`, gated the same way as `sub_802C2FC`'s
+  `asm/code_3_3_b46c.s`, gated the same way as `DrawPolarCollectedWumpa`'s
   `asm/code_3_2_20_28568_c2fc.s` (`.if NON_MATCHING == 0` in the `.s`
   file, `#if NON_MATCHING` around the C reconstruction).
 
 ## Build layout
 
-- `asm/code_3_3.s` now starts at `sub_803B4EC` (0x0803B4EC) - everything
-  from `0x0803B060` through `sub_803B46C`'s end was cut out.
-- `asm/code_3_3_b46c.s` (new) holds `sub_803B46C`'s raw bytes, gated
+- `asm/code_3_3.s` now starts at `UpdateJetpackCheckpointText` (0x0803B4EC) - everything
+  from `0x0803B060` through `DrawJetpackCheckpointText`'s end was cut out.
+- `asm/code_3_3_b46c.s` (new) holds `DrawJetpackCheckpointText`'s raw bytes, gated
   `.if NON_MATCHING == 0`, linked between `actor_anim.o` and
   `code_3_3.o` in `ldscript.txt`.
 - No renames were needed - every function in this chunk keeps its
@@ -136,7 +136,7 @@ See [docs/status/actor.md](../status/actor.md) for the running matched/
 parked list, and [docs/workflow.md](../workflow.md) for the per-function
 loop.
 
-## Update: `sub_803B46C` matched via NAKED transcription
+## Update: `DrawJetpackCheckpointText` matched via NAKED transcription
 
 The one function left parked above is now matched: converted to
 `NAKED` and the ROM's own disassembly transcribed instruction-for-
@@ -144,7 +144,7 @@ instruction (see `docs/matching/issue-69-eeprom-timer.md`'s "NAKED
 transcription pass" section for the full account, including a trailing-
 padding gotcha found along the way - the disassembly's final
 `movs r0, r0` before the function's alignment padding turned out to be
-the padding itself, not a real instruction). `sub_802C2FC`, this
+the padding itself, not a real instruction). `DrawPolarCollectedWumpa`, this
 function's twin, is unaffected and stays parked - it hits a different
 pair of gaps (a genuinely-eliminated `| 0` dead store and a register-
 budget spill) that this pass didn't attempt. 25/25 functions in this

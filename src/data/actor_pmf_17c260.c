@@ -22,7 +22,7 @@ extern void sub_8030334();
 extern void sub_803044C();
 extern void sub_8030640();
 
-/* Dispatched by sub_802FA38 (actor_part46b.c) and sub_802FEA4
+/* Dispatched by UpdateJetpackPlane (actor_part46b.c) and sub_802FEA4
  * (actor_part_2fbf0.c). */
 const struct actor_pmf gStaticData_0817C260[4] = {
     ACTOR_PMF(sub_802FE78),
@@ -31,7 +31,7 @@ const struct actor_pmf gStaticData_0817C260[4] = {
     ACTOR_PMF(sub_802FE04),
 };
 
-/* Dispatched by sub_802FFB8 and sub_8030234 (actor_part_2fbf0.c). */
+/* Dispatched by UpdateJetpackBomber and sub_8030234 (actor_part_2fbf0.c). */
 const struct actor_pmf gStaticData_0817C280[7] = {
     ACTOR_PMF(nullsub_29),
     ACTOR_PMF(sub_80301CC),

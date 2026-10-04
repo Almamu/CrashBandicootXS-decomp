@@ -16,7 +16,7 @@
  * collapses a plain `(rec[1] * rec[0]) << 5` into a shorter
  * compute-and-shift-in-place sequence, so the extra copy is
  * materialized via an opaque `asm volatile` matching the ROM's exact
- * register roles (same class of gap as `sub_802C2FC`/`sub_803B46C`,
+ * register roles (same class of gap as `DrawPolarCollectedWumpa`/`DrawJetpackCheckpointText`,
  * issue #52/#71). The two blocks' index/address computation
  * (`table + idx*3*4 + 2`) also needed its own register roles pinned to
  * match: `table` loaded early into r3, the `+2` index constant

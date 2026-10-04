@@ -2,11 +2,11 @@
 
 A scoping investigation of the actor zone found this whole 1804-byte
 gap - the remainder of `asm/code_3_2_20_28568_c99c_cc9c.s`, right after
-issue #53's own matched batch (`sub_802CC78`, `src/graphics/
-actor_part19i.c`) and right before issue #54's chunk (`sub_802D3A8`,
+issue #53's own matched batch (`CreatePolarBasicCrate`, `src/graphics/
+actor_part19i.c`) and right before issue #54's chunk (`MovePolarAkuAku`,
 `src/graphics/actor_part62.c`) - still completely raw.
 `docs/matching/issue-53-actor-c7a8.md`'s "What's left" section had
-already flagged `sub_802CC9C` onward as "a larger,
+already flagged `UpdatePolarElectricFence` onward as "a larger,
 `sub_802DD9C`/`sub_802A6EC`/`sub_802B7E0`-calling state machine ... not
 attempted this pass".
 
@@ -21,7 +21,7 @@ trampoline table).
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
-- **`sub_802CC9C`** (`src/graphics/actor_part126.c`) - a per-frame
+- **`UpdatePolarElectricFence`** (`src/graphics/actor_part126.c`) - a per-frame
   hazard/proximity state machine: latches `self+0x2c` once `self+0x34`
   (a cached depth) exceeds `0x15FF`. If not already "used" (`self+0xc
   == 0`), snapshots the owning part table's own `+0x14` 12-byte record
@@ -34,10 +34,10 @@ trampoline table).
   already "used" (`self+0xc != 0`), skips all of that and just fires the
   `self+0x50` trampoline (index 3) while `self+0x12` is set, or falls
   back to `UpdateActor` - the exact same "trampoline-or-`UpdateActor`"
-  tail idiom `sub_802C4C8` (`actor_part19g.c`) uses for the sibling
+  tail idiom `UpdatePolarCrate` (`actor_part19g.c`) uses for the sibling
   object family, just inlined here directly instead of shared via a
   helper call (this object's own "already used" sentinel is a plain `1`,
-  not the `0x12` value `sub_802C4C8`'s family uses, so the two can't
+  not the `0x12` value `UpdatePolarCrate`'s family uses, so the two can't
   literally share code).
 
   Every one of the three 12-byte record snapshots reuses the same
@@ -46,8 +46,8 @@ trampoline table).
   also switching roles (old state, then a "confirmed zero" reused for
   every reset block's `self+0x44`/`self+8` clear) mid-function - the
   exact heavy register-reuse family this project has already NAKED-
-  parked for `sub_802D7B0`/`sub_802DD9C`
-  (`docs/matching/issue-54-actor-d3a8.md`) and `sub_802C7A8`
+  parked for `UpdateYeti`/`sub_802DD9C`
+  (`docs/matching/issue-54-actor-d3a8.md`) and `DetonateNearbyPolarNitros`
   (`docs/matching/issue-53-actor-c7a8.md`). Semantics are fully
   understood; transcribed instruction-for-instruction from the ROM
   disassembly rather than chased further at the C level, per this
@@ -62,9 +62,9 @@ trampoline table).
 
 All in `src/graphics/actor_part126.c`.
 
-- **`sub_802CDE4`** - `InitActorPart`-based constructor: forwards
+- **`CreatePolarElectricFence`** - `InitActorPart`-based constructor: forwards
   `a`/`b`/`c`/`d` straight through, installs `self+0x50 =
-  gStaticData_087E4FB4`, and clears the `self+0x2c` one-shot flag.
+  gPolarElectricFenceVtable`, and clears the `self+0x2c` one-shot flag.
 - **`sub_802CE10`** - on the `sub_802A6EC` trampoline-fire edge,
   forwards to `sub_802B730(gActorList)` (the player object),
   discarding its result; always tail-calls `UpdateActor`. Needed
@@ -72,9 +72,9 @@ All in `src/graphics/actor_part126.c`.
   though the result is discarded here - the ROM's own boolean check
   at this call site (`lsls r0,r0,0x18; cmp r0,#0`, no accompanying
   `lsrs`) only appears when the callee's return type itself is
-  byte-sized, matching `sub_802CF30`'s identical call site below.
+  byte-sized, matching `UpdatePolarPenguin`'s identical call site below.
 - **`sub_802CE38`** - same `InitActorPart`-based constructor shape as
-  `sub_802CDE4`, minus the `self+0x2c` clear, `self+0x50 =
+  `CreatePolarElectricFence`, minus the `self+0x2c` clear, `self+0x50 =
   gStaticData_087E4FD4`.
 - **`sub_802CE5C`** - 3-way `self+0x28` state dispatch, written with
   explicit `goto`s to a `case0`/`case1`/`done` label set matching the
@@ -96,10 +96,10 @@ All in `src/graphics/actor_part126.c`.
   sequence twice, once per branch, each with its own register).
 - **`sub_802CF0C`** - same `InitActorPart`-based constructor shape as
   `sub_802CE38`, `self+0x50 = gStaticData_087E4FF4`.
-- **`sub_802CF30`** - applies `self`'s own velocity
+- **`UpdatePolarPenguin`** - applies `self`'s own velocity
   (`self+0x54`/`0x58`/`0x5c`) to its position; while idle (`self+0x28 ==
   0`), counts down `self+0x60`, re-deriving a fresh velocity/homing
-  target via `sub_802D044` once it expires, then probes
+  target via `AimPolarPenguin` once it expires, then probes
   `sub_802A6EC`+`sub_802B730` or `sub_802DD9C` - either hit re-arms a
   fixed outward X velocity (biased by `self+0x1c`'s sign), a random
   negative Y kick, bumps `self+0x5c`, plays a cue, and transitions to
@@ -111,7 +111,7 @@ All in `src/graphics/actor_part126.c`.
   before negation) to reproduce the ROM's `lsls #0x10; lsrs #0x10;
   negs` triple - a plain `-RandRange(0x300)` silently drops the
   zero-extend since `RandRange` already returns `s32`.
-- **`sub_802D044`** - homing-velocity (re)initializer: with a negative
+- **`AimPolarPenguin`** - homing-velocity (re)initializer: with a negative
   `target` index, arms a fixed slow downward drift (constants into
   `self+0x54/0x58/0x5c/0x60`); otherwise derives a per-frame speed
   factor (`__divsi3` of `target`'s own "speed" record,
@@ -127,11 +127,11 @@ All in `src/graphics/actor_part126.c`.
   than reusing the `speed` local already holding the same value - the
   ROM redundantly reloads it from memory instead of reusing the
   cached register.
-- **`sub_802D0C8`** - `InitActorPart`-based constructor forwarding
+- **`CreatePolarPenguin`** - `InitActorPart`-based constructor forwarding
   `a`/`b`/`c`/`d` plus a 6th argument `e` (a pointer): installs
-  `self+0x50 = gStaticData_087E5014`, then calls `sub_802D044(self,
+  `self+0x50 = gPolarPenguinVtable`, then calls `AimPolarPenguin(self,
   e->0x10)`.
-- **`sub_802D0F4`** - on the trampoline-fire edge, forwards to
+- **`UpdatePolarIcicle`** - on the trampoline-fire edge, forwards to
   `sub_802B730` on the player object; then, gated on `self+0x34`'s
   cached depth crossing one of two thresholds paired with `self+0x28`'s
   current tier, advances `self+0xc`'s table index and, once
@@ -151,7 +151,7 @@ All in `src/graphics/actor_part126.c`.
   pinned to `r2`/`r3` (distinct from the first use's `r1`-pinned
   `idx`), matching the ROM's own register split between the two
   otherwise-identical address computations.
-- **`sub_802D1B8`** - `InitActorPart`-based constructor: forwards
+- **`CreatePolarIcicle`** - `InitActorPart`-based constructor: forwards
   `self`/`c`/`d`/`e` straight through plus `b` (a `u8 *`, passed to
   `InitActorPart` as a bare `s32` via cast - the same generic-argument
   overload already established for other constructors in this family);
@@ -188,7 +188,7 @@ All in `src/graphics/actor_part126.c`.
   and a two-constant "state store" needing both registers materialized
   before either store) needed matching one at a time against the ROM
   disassembly.
-- **`sub_802D2DC`** - drives `gUnknown_030014B8`'s countdown, DMAing one
+- **`UpdatePolarAkuAku`** - drives `gUnknown_030014B8`'s countdown, DMAing one
   of two gauge strips per frame and, once it expires, resetting the
   hazard tier via `SetMaskLevel(gLevelState, 2)` then
   `sub_802D204(self, 0)`; independently re-fires `sub_802D204` once

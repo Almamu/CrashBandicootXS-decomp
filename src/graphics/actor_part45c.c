@@ -4,12 +4,12 @@
  * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md. */
 
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
-extern u8 gStaticData_087E517C[];
+extern u8 gJetpackShotVtable[];
 
 /* An `InitActorPart`-based constructor for this cluster's `self` object:
  * forwards its first three real arguments plus one stack argument
  * straight to `InitActorPart`, then marks `self+0x54` = 1, sets
- * `self+0x50`'s event/trampoline table to `gStaticData_087E517C`, and
+ * `self+0x50`'s event/trampoline table to `gJetpackShotVtable`, and
  * stashes its remaining two stack arguments into `self+0x58`/`self+0x5c`.
  * The same 7-argument `InitActorPart`-wrapper shape already left raw as
  * `sub_80305F8` (docs/matching/issue-58-0x08030334-actor.md). The ROM
@@ -30,7 +30,7 @@ extern u8 gStaticData_087E517C[];
  * - and, in this exact declaration order (`self`, then `one`, then
  * `eReg`, then `fReg`), schedules the loads in the ROM's own
  * self/d/e/f/one order. */
-void *sub_802FA04(void *selfArg, s32 a, s32 b, s32 c, s32 d, s32 e, s32 f)
+void *CreateJetpackShot(void *selfArg, s32 a, s32 b, s32 c, s32 d, s32 e, s32 f)
 {
     u8 *self = selfArg;
     register s32 one asm("r5") = 1;
@@ -39,7 +39,7 @@ void *sub_802FA04(void *selfArg, s32 a, s32 b, s32 c, s32 d, s32 e, s32 f)
 
     InitActorPart(self, a, b, c, d);
     *(s32 *)(self + 0x54) = one;
-    *(void **)(self + 0x50) = gStaticData_087E517C;
+    *(void **)(self + 0x50) = gJetpackShotVtable;
     *(s32 *)(self + 0x58) = eReg;
     *(s32 *)(self + 0x5c) = fReg;
 

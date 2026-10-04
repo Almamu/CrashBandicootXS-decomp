@@ -6,6 +6,6 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* The box sub_8032480 (actor_part129.c) copies into a part's +0x38
+/* The box UpdateJetpackRocket (actor_part129.c) copies into a part's +0x38
  * box. */
 const struct anim_box gStaticData_0817C444 = { -21, -21, -2, 42, 42, 4 };

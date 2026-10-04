@@ -8,13 +8,13 @@
  * accumulator at `self+8`, state at `self+0x28`, a frame counter at
  * `self+0x44`, and a `+0x50`-rooted event/trampoline table fed through
  * `_call_via_r2`. This particular object kind (constructed here by
- * `sub_8033EF4`, vtable `gStaticData_087E551C`) additionally caches its
+ * `CreateHovercraftLauncher`, vtable `gHovercraftLauncherVtable`) additionally caches its
  * own constructor `b`/`c` arguments at `self+0x58`/`self+0x5c` and has a
  * death/"dead" byte flag at `self+0x6c` - see
  * docs/matching/issue-63-0x08033ef4-actor.md. */
 
 extern void *InitActorPart(void *selfArg, void *part, s32 b, s32 c, s32 d);
-extern u8 gStaticData_087E551C[];
+extern u8 gHovercraftLauncherVtable[];
 
 /* A spawner object of the singleton system (actor_part28.c):
  * `actor_self` plus a hit-point word, its spawn cooldown/count and a
@@ -26,7 +26,7 @@ extern u8 gStaticData_087E551C[];
 struct spawner {
     struct actor_self base;
     s32 hp;             // 0x54
-    s32 spawnX;         // 0x58 - the constructor's `b`/`c` (sub_8033EF4)
+    s32 spawnX;         // 0x58 - the constructor's `b`/`c` (CreateHovercraftLauncher)
     s32 spawnY;         // 0x5C
     u8 unk_60[4];
     s32 cooldown;       // 0x64
@@ -36,12 +36,12 @@ struct spawner {
 
 /* Constructor: forwards straight through to `InitActorPart`, then sets
  * `self`'s health (`+0x54=0x19`), event/trampoline table
- * (`+0x50=&gStaticData_087E551C`), caches its own `b`/`c` constructor
+ * (`+0x50=&gHovercraftLauncherVtable`), caches its own `b`/`c` constructor
  * args at `+0x58`/`+0x5c`, and resets state/frame-counter/table-index
  * (`+0x28`/`+0x44`/`+0xc=0`), the anim-frame pair from the part table's
  * first entry, the accumulator (`+8=0`) and the death flag
  * (`+0x6c=0`). Returns `self`. */
-void *sub_8033EF4(void *selfArg, void *part, s32 b, s32 cParam, s32 d)
+void *CreateHovercraftLauncher(void *selfArg, void *part, s32 b, s32 cParam, s32 d)
 {
     struct spawner *self = selfArg;
     register s32 bReg asm("r6") = b;
@@ -51,7 +51,7 @@ void *sub_8033EF4(void *selfArg, void *part, s32 b, s32 cParam, s32 d)
 
     InitActorPart(self, part, b, cParam, dReg);
     self->hp = health;
-    self->base.vtable = (struct actor_vtable *)gStaticData_087E551C;
+    self->base.vtable = (struct actor_vtable *)gHovercraftLauncherVtable;
     self->spawnX = bReg;
     self->spawnY = c;
     {
@@ -111,7 +111,7 @@ extern s32 sub_8033880(void);
 extern s32 sub_80338D0(void);
 
 /* Syncs `self`'s position fields (`+0x1c`/`+0x20`/`+0x24`) from the
- * `gUnknown_030015AC` singleton's own position plus a fixed offset, and
+ * `gHovercraft` singleton's own position plus a fixed offset, and
  * - while the singleton's lifetime counter (`sub_8033880`) is still
  * under 3, and the singleton's own animation "kind" (`sub_80338D0`) is
  * either 2, or 3 with `self+0x34` still under its `0x4AFF` threshold -

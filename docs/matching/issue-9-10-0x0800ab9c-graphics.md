@@ -177,7 +177,7 @@ as of
   ~950 B) - unchanged: a 38-case jump-table player action-state
   dispatcher, calling a dozen still-unexamined state-transition
   functions. Left raw per this project's established policy for this
-  exact dispatcher shape (same as `sub_8018008`, issue #22).
+  exact dispatcher shape (same as `UpdateTiny`, issue #22).
 - **`DrawPlayer`** (`asm/code_3_2_16_ac2c.s`, ROM `0x0800AFF4`,
   ~636 B) - unchanged: high register-pressure (`sb`/`sl`/`r8`/`ip` all
   live simultaneously) hitbox-record lookup/commit logic gated on

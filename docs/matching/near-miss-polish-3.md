@@ -19,7 +19,7 @@ Five now match as real C:
 | `sub_8014084` | `src/graphics/actor_part_13c60.c` | old_agbcc | 1 insn | scoped `volatile u8 *` for the facing block's second read-modify-write |
 | `sub_801C608` | `src/graphics/actor_part_1b85c.c` | old_agbcc | spill | a second local for the record pointer (the ROM's spilled copy) |
 | `UpdateExtraLife` | `src/system/game_loop54.c` | old_agbcc | 22 | plain re-reads instead of `volatile` ones; two extra references per velocity |
-| `sub_80336CC` | `src/graphics/actor_part130.c` | both | 29 | opaque 0xf mask (`asm("" : "=r"(m) : "0"(0xf))`) ANDed as `m & b`; own counter for the second loop; row header in ROM order |
+| `ConvertHovercraftTiles` | `src/graphics/actor_part130.c` | both | 29 | opaque 0xf mask (`asm("" : "=r"(m) : "0"(0xf))`) ANDed as `m & b`; own counter for the second loop; row header in ROM order |
 
 All four files were already on their compiler (`actor_part130.c` matches
 under both), so no Makefile change. Every empty `asm` has a comment at
@@ -63,7 +63,7 @@ from 22 to 8 halfwords. What was left was an r0/r1 swap in the position
 updates. Two `asm("" : : "r"(v))` on each velocity local give the
 velocity r0 and the position/sum r1. One reference isn't enough.
 
-**The constant trick for an AND's operand order (`sub_80336CC`).** In
+**The constant trick for an AND's operand order (`ConvertHovercraftTiles`).** In
 the nibble loop the ROM copies the hoisted 0xf and ANDs the byte into
 the copy (`adds r4, r6, #0; ands r4, r0`); gcc copies the byte. For
 `b & 0xf`, gcc keeps the constant second, and after loop hoisting the
@@ -82,7 +82,7 @@ registers. Two more gaps in the loop headers:
   written as its own statement in the ROM's order: row pointer, height
   address, `d = dst`, `src = row + stride`, `n = *hp`.
 
-The twin `sub_8031604` (`actor_part26c.c`, 56 halfwords off) wasn't in
+The twin `ConvertAirshipTiles` (`actor_part26c.c`, 56 halfwords off) wasn't in
 this pass's scope. Its draft has the same nibble loop and would probably
 take the same changes.
 
@@ -102,7 +102,7 @@ take the same changes.
 - When a draft computes the right instructions but ties a result to the
   wrong input, try writing each operation as its own statement on a
   fresh local before reaching for `asm`. It worked for `sub_800F990`,
-  and the header order in `sub_80336CC`.
+  and the header order in `ConvertHovercraftTiles`.
 - A load after a constant (`movs; ldrh; cmp`) with no local in the ROM
   is a pseudo set once and used once. Reproduce it with a plain re-read,
   not a `volatile` one.

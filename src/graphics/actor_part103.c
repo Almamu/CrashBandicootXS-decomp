@@ -12,12 +12,12 @@
  * `memcpy(dst,dst,0xc)` self-copy - see src/graphics/actor_part74.c's own
  * definition/doc comment), then run the same 3-axis (Z,Y,X order) overlap
  * test already established throughout this ROM
- * (sub_802D7B0/sub_802DD9C/sub_802C7A8/sub_8031378 etc - see
+ * (UpdateYeti/sub_802DD9C/DetonateNearbyPolarNitros/IsTouchingAirship etc - see
  * docs/matching/issue-53-actor-c7a8.md, issue-54-actor-d3a8.md,
  * issue-58-0x08030574-actor.md). `sub_802A3AC` is the same test wrapped in
  * an outer walk of the whole `gActorList`-rooted circular list
  * (`self+0x4c`), gated by a `_call_via_r1` per-node visibility check first
- * (same shape as `sub_802C7A8`, actor_part19h.c).
+ * (same shape as `DetonateNearbyPolarNitros`, actor_part19h.c).
  *
  * All three share the `ActorsOverlap` inline below. Its three boxes are
  * members of one frame struct (the actor_part74.c/actor_part81.c

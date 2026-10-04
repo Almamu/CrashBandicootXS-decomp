@@ -19,7 +19,7 @@ struct health_actor {
     u8 dead;                    // 0x6c
 };
 
-extern u8 gStaticData_087E54E4[];
+extern u8 gHovercraftCannonVtable[];
 
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern void sub_8029E28(s32 arg0);
@@ -30,11 +30,11 @@ extern s32 sub_80338E8(void);
 extern void *sub_80338C4(void);
 
 /* Constructor: forwards to `InitActorPart`, then sets `self`'s health
- * (`+0x54=15`), event/trampoline table (`+0x50=&gStaticData_087E54E4`),
+ * (`+0x54=15`), event/trampoline table (`+0x50=&gHovercraftCannonVtable`),
  * and caches its own `b`/`c` constructor args at `+0x58`/`+0x5c`;
  * finally resets state (`+0x28=0`) and the death flag (`+0x6c=0`).
  * Returns `self`. */
-void *sub_8033BB8(void *selfArg, s32 a, s32 b, s32 cParam, s32 d)
+void *CreateHovercraftCannon(void *selfArg, s32 a, s32 b, s32 cParam, s32 d)
 {
     struct health_actor *self = selfArg;
     register s32 bReg asm("r6") = b;
@@ -44,7 +44,7 @@ void *sub_8033BB8(void *selfArg, s32 a, s32 b, s32 cParam, s32 d)
 
     InitActorPart(self, a, b, cParam, dReg);
     self->health = health;
-    self->base.vtable = (struct actor_vtable *)gStaticData_087E54E4;
+    self->base.vtable = (struct actor_vtable *)gHovercraftCannonVtable;
     self->unk_58 = bReg;
     self->unk_5c = c;
     self->base.state = 0;

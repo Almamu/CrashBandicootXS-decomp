@@ -9,7 +9,7 @@ five-file family was renumbered together (not just the one that
 literally collided) to keep it visually contiguous.
 
 25-function `decomp-chunk` covering `asm/code_3_2_20_28568_c99c.s`'s
-`sub_802D3A8`-`sub_802E058`/`nullsub_27` range. Two distinct object
+`MovePolarAkuAku`-`sub_802E058`/`nullsub_27` range. Two distinct object
 families live in this chunk:
 
 - The `InitActorPart`/`gActorList`-rooted "self" object family
@@ -20,18 +20,18 @@ families live in this chunk:
   `self+8`, state at `self+0x28`, a frame counter at `self+0x44`, the
   movement-threshold-cached position triple at `self+0x1c`/`self+0x20`/
   `self+0x24`, and a `+0x50`-rooted event/trampoline table fed through
-  `_call_via_r2`. Most of `sub_802D490`-`sub_802D6A0` are constructor
+  `_call_via_r2`. Most of `sub_802D490`-`UpdatePolarCheckpointCrate` are constructor
   variants and small state-machine steps on this object.
-- `docs/rom_map.md`'s documented `gUnknown_030014BC`-rooted "position-
+- `docs/rom_map.md`'s documented `gYeti`-rooted "position-
   tracking object with tier-threshold sound cues" (see "A fourth
   vtable table, a third RAM-struct family" onward): an accumulate-then-
   clamp-at-`0xA000` pair on `gUnknown_030014C8`/`030014CC`, driven from
   `gStaticData_0817A7F8` (a `{s32,s32,s32}` table, stride `0xc`, indexed
   by `gUnknown_030014D4`), branching to tier-keyed `PlaySfx`/
   `PlayAmbientSfx` sound cues, and a VRAM gauge-tile bitmap generator/DMA
-  setup (`sub_802DE70`/`sub_802E058`) plus a palette-gradient cursor
-  (`sub_802D9A8`/`sub_802DA68`). `sub_802DB2C`/`sub_802DCC0` are two of
-  `gStaticData_0817A840`'s four vtable slots operating on this object
+  setup (`LoadYetiGraphics`/`sub_802E058`) plus a palette-gradient cursor
+  (`UpdateYetiPalette`/`UpdateYetiBg2`). `sub_802DB2C`/`sub_802DCC0` are two of
+  `gYetiStateFuncs`'s four vtable slots operating on this object
   (the other two, `sub_802AB08`-family, were already matched in issue
   #50 under a different chunk).
 
@@ -45,31 +45,31 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
 ## Matched (18 of 25 functions)
 
 - **`sub_802D490`** (`src/graphics/actor_part58.c`) - resets a
-  different, `gUnknown_03001494`-rooted sibling object via
+  different, `gPolarAkuAku`-rooted sibling object via
   `SetMaskLevel(gLevelState, 0)` then `sub_802D204(self, 0)`.
-- **`sub_802D4B0`/`sub_802D4EC`** (`src/graphics/actor_part58.c`) - an
+- **`RemovePolarAkuAkuMask`/`AddPolarAkuAkuMask`** (`src/graphics/actor_part58.c`) - an
   Aku-Aku-mask-style add/remove pair on `gLevelState`'s `+0x78`
   counter (floored at 0 / capped at 3), each playing a sound and
   calling `sub_802D204`.
-- **`sub_802D528`/`sub_802D5D4`/`sub_802D648`/`sub_802D764`**
+- **`CreatePolarAkuAku`/`sub_802D5D4`/`sub_802D648`/`CreatePolarCheckpointCrate`**
   (`src/graphics/actor_part58.c`) - `InitActorPart`-based constructor
   variants, each installing a different `self+0x50` event table
-  (`gStaticData_087E5054`/`5074`/`5094`/`50B4`) before a small amount of
-  table-specific setup: `sub_802D528` offsets its position args by
+  (`gPolarAkuAkuVtable`/`5074`/`5094`/`50B4`) before a small amount of
+  table-specific setup: `CreatePolarAkuAku` offsets its position args by
   fixed deltas and pushes a 6th argument through `SetMaskLevel`;
   `sub_802D5D4` is a plain passthrough clearing the `+0x2c` one-shot
   flag; `sub_802D648` classifies `posY>>8` into a 3-way "kind" selecting
-  which anim record seeds `self+0x10`/`0x12`; `sub_802D764` only
+  which anim record seeds `self+0x10`/`0x12`; `CreatePolarCheckpointCrate` only
   transitions to kind 2 when `sub_802973C()` matches its own `d`
   argument.
 - **`sub_802D57C`/`sub_802D590`** (`src/graphics/actor_part58.c`) -
   trivial: a pass-through-second-argument forwarder to `SetMaskLevel`,
   and a getter for `gLevelState`'s `+0x78` counter.
-- **`sub_802D59C`/`sub_802D600`/`sub_802D6A0`**
+- **`sub_802D59C`/`sub_802D600`/`UpdatePolarCheckpointCrate`**
   (`src/graphics/actor_part58.c`) - small state-machine steps gated on
   `sub_802A6EC`'s trampoline-fire edge and/or `sub_802DD9C`'s AABB
   overlap test, each ending in `UpdateActor`'s frame-advance.
-  `sub_802D6A0` needed a fresh, separately-pinned zero register
+  `UpdatePolarCheckpointCrate` needed a fresh, separately-pinned zero register
   (`register u8 zero asm("r1") = 0;`) for its `self[0x12] = 0` stores -
   writing a plain `0` literal let this compiler reuse the already-zero
   "kind" local instead of reproducing the ROM's own extra `movs r1,#0`,
@@ -77,7 +77,7 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
   by the full-link `make compare`, see "A note on isolated-compile
   confidence" below).
 - **`sub_802DB2C`/`sub_802DCC0`** (`src/graphics/actor_part59.c`) - the
-  `gUnknown_030014BC` object's accumulate/clamp/tier-cue/transition
+  `gYeti` object's accumulate/clamp/tier-cue/transition
   pair (see the chunk header above). Both needed the `dummyStack`/
   `stackPtr`-style local (a real `u8` whose address is taken and pinned
   to `r4`, matching a genuine `sub sp,#4` stack reservation) so the
@@ -97,12 +97,12 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
   r1,r1,r3` order) rather than folding the whole expression into one
   pointer arithmetic statement, which this compiler instead compiles
   into a single pre-added literal-pool constant.
-- **`sub_802DFBC`/`sub_802DFC8`/`sub_802DFDC`**
-  (`src/graphics/actor_part60.c`) - the `gUnknown_030014BC` object's
+- **`StopYeti`/`DestroyYeti`/`CreateYeti`**
+  (`src/graphics/actor_part60.c`) - the `gYeti` object's
   state-flag setter, destructor (`mem_free`), and constructor
   (`mem_alloc` + part-table wiring + position-tracking reset +
-  `sub_802DE70`). `sub_802DFDC` needed the incoming-argument-register
-  copies (`gUnknown_030014D4 = arg0`, then `&gUnknown_030014BC` into
+  `LoadYetiGraphics`). `CreateYeti` needed the incoming-argument-register
+  copies (`gUnknown_030014D4 = arg0`, then `&gYeti` into
   `r5`) and the `mem_alloc` argument setup (`size` into `r0`, `flags`
   into `r1`) each written as a single combined `asm volatile` block per
   group to force this compiler's argument-register-copy order to match
@@ -117,7 +117,7 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
 
 ## Parked (1 of 25 functions, `NON_MATCHING`)
 
-- **`sub_802D3A8`** (`asm/code_3_2_20_28568_c99c_d3a8.s`, C in
+- **`MovePolarAkuAku`** (`asm/code_3_2_20_28568_c99c_d3a8.s`, C in
   `src/graphics/actor_part62.c`) - eases `self`'s cached position
   (`self+0x1c`/`0x20`/`0x24`) toward a per-state target: state 0 eases
   toward a per-frame-counter table-scatter offset, state 1 snaps
@@ -134,7 +134,7 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
      `r7` copy first regardless of C statement order, pin declaration
      order, or param declaration order. A single combined
      `asm volatile` block with the four copies spelled out in the ROM's
-     literal order *does* fix this (see `sub_802DFDC`'s use of the same
+     literal order *does* fix this (see `CreateYeti`'s use of the same
      technique above, which worked) -
   2. - but doing so re-pins `posZ` to `r7` for the whole function body,
      and any explicit `r7` pin gets silently clobbered by unrelated
@@ -152,7 +152,7 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
 
 ## Left untouched (6 of 25 functions)
 
-- **`sub_802D7B0`** (`asm/code_3_2_20_28568_c99c_d7b0.s`) - one of two
+- **`UpdateYeti`** (`asm/code_3_2_20_28568_c99c_d7b0.s`) - one of two
   confirmed slots (index 3) of the type-0 `category_vtable`
   (`gActorCategoryVtables[0]`, `include/actor_anim.h`); also runs a full
   3-axis AABB overlap test against the player (`gActorList`)
@@ -164,24 +164,24 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
   shapes are read: a `gStaticData_0817AA98`-rooted static record and
   `self+0x38`'s own vector, combined via a `MemCopy32`-copied self-
   overlap check whose purpose isn't fully clear) - left raw.
-- **`sub_802D9A8`/`sub_802DA68`** (`asm/code_3_2_20_28568_c99c_d7b0.s`)
-  - a palette-gradient cursor pair for the `gUnknown_030014BC` object:
-  `sub_802D9A8` computes a scale factor via `__divsi3` from
-  `gUnknown_030014CC` against two threshold constants (`0x4FFF`/
+- **`UpdateYetiPalette`/`UpdateYetiBg2`** (`asm/code_3_2_20_28568_c99c_d7b0.s`)
+  - a palette-gradient cursor pair for the `gYeti` object:
+  `UpdateYetiPalette` computes a scale factor via `__divsi3` from
+  `gYetiDistance` against two threshold constants (`0x4FFF`/
   `0xBDFF`) and DMAs (or directly writes, in the third branch) a 16-
-  color gradient derived from `gStaticData_0817AA6C` into BG palette RAM
-  (`0x050001E0`); `sub_802DA68` seeds/arms companion hardware sound
+  color gradient derived from `gYetiPalette` into BG palette RAM
+  (`0x050001E0`); `UpdateYetiBg2` seeds/arms companion hardware sound
   registers (`0x0400000C`/`0x04000020`/`0x04000028`/`0x0400002C`) keyed
   off `gUnknown_030014C1`/`030014C0`. Semantics are legible but the
   exact palette-index-packing bit math isn't confidently understood -
   left raw.
-- **`sub_802D7B0`'s the same shared AABB-overlap-test tail, factored
+- **`UpdateYeti`'s the same shared AABB-overlap-test tail, factored
   out as its own function, `sub_802DD9C`** (`asm/code_3_2_20_28568_c99c_dd9c.s`)
-  - a self-vs-player 3-axis overlap test used by `sub_802D6A0`
+  - a self-vs-player 3-axis overlap test used by `UpdatePolarCheckpointCrate`
   (matched, above) among others. Left raw for the same reason as
-  `sub_802D7B0` - the two differently-shaped 12-byte record layouts
+  `UpdateYeti` - the two differently-shaped 12-byte record layouts
   involved aren't confidently pinned down yet.
-- **`sub_802DE70`** (`asm/code_3_2_20_28568_c99c_dd9c.s`) - a
+- **`LoadYetiGraphics`** (`asm/code_3_2_20_28568_c99c_dd9c.s`) - a
   ~160-instruction VRAM gauge-tile bitmap generator: sets the DISPCNT
   OBJ-window-enable bit, then runs two nested 16x16 loops (heavy
   `r8`/`sb`/`sl` register pressure) building a triangular-fill dot
@@ -193,14 +193,14 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
   the full function's register pressure and DMA-timing interplay wasn't
   attempted for a byte-exact reconstruction here - left raw.
 - **`sub_802E058`** (`asm/code_3_2_20_28568_c99c_e058.s`) - a
-  parameterized twin of `sub_802DE70`'s triangular-fill loop, taking
+  parameterized twin of `LoadYetiGraphics`'s triangular-fill loop, taking
   the destination buffer (`arg0`) and seed value (`arg1`) as real
   parameters instead of the fixed stack buffer/globals - left raw for
-  the same reason as `sub_802DE70`.
+  the same reason as `LoadYetiGraphics`.
 
 ## A note on isolated-compile confidence
 
-`sub_802D6A0`'s missing `movs r1,#0` (see above) is another confirmed
+`UpdatePolarCheckpointCrate`'s missing `movs r1,#0` (see above) is another confirmed
 instance of this project's recurring isolated-compile pitfall: the
 function's own isolated compile looked byte-identical to the ROM at
 every instruction *position*, but reusing an already-zero local instead
@@ -213,12 +213,12 @@ symbol-address method `docs/workflow.md` describes (a data-segment
 pointer literal 8 bytes off pointed at the total code-size shrink
 before it; bisecting each matched function's linked address against its
 expected ROM address in the map file isolated the two exact functions,
-`sub_802D6A0` and `sub_802DB2C`/`sub_802DCC0`'s threshold-address
+`UpdatePolarCheckpointCrate` and `sub_802DB2C`/`sub_802DCC0`'s threshold-address
 folding, that had actually drifted).
 
 ## NAKED-transcription pass
 
-`sub_802D3A8` (parked above) is now matched, closing the last of this
+`MovePolarAkuAku` (parked above) is now matched, closing the last of this
 issue's 19 attempted functions (the other 6 remain left untouched, out
 of scope for this pass). The parked writeup's semantics understanding
 and register-role analysis (self→r5, posX→r6, posY→ip, posZ→r7) were
@@ -251,15 +251,15 @@ confirmed by a full clean `make compare` ("La suma coincide").
 ## Second pass
 
 Closed out the 6 functions the first two passes left completely
-untouched (`sub_802D7B0`, `sub_802D9A8`, `sub_802DA68`, `sub_802DD9C`,
-`sub_802DE70`, `sub_802E058`) - all now byte-exact matched, confirmed by
+untouched (`UpdateYeti`, `UpdateYetiPalette`, `UpdateYetiBg2`, `sub_802DD9C`,
+`LoadYetiGraphics`, `sub_802E058`) - all now byte-exact matched, confirmed by
 a full clean `make compare` ("La suma coincide"). All 25 functions in
 this issue's original range are now matched; see "Closing this issue"
 below.
 
 ### Pinning down the 12-byte AABB-record layout
 
-The blocker both earlier passes cited for `sub_802D7B0`/`sub_802DD9C`
+The blocker both earlier passes cited for `UpdateYeti`/`sub_802DD9C`
 was not being confident about the two differently-shaped 12-byte AABB
 records involved. Reading both functions' disassembly side by side
 resolved it: both use the exact same 6-halfword layout,
@@ -267,17 +267,17 @@ resolved it: both use the exact same 6-halfword layout,
 order (matching the ROM's own instruction order, not storage order) -
 the same shape as `struct aabb` (`src/graphics/aabb_util.c`) generalized
 from 2 axes to 3, just never previously named because it hadn't been
-read carefully enough end to end. `sub_802D7B0`'s "static" box A is
+read carefully enough end to end. `UpdateYeti`'s "static" box A is
 `gStaticData_0817AA98`, and `sub_802DD9C`'s is `gStaticData_0817AA8C` -
 confirmed to be the same table, 0xC bytes apart (the record immediately
 before it), by their literal-pool addresses alone. Box A gets
-`gUnknown_030014C4`/`030014C8` (the gauge object's own tracked X/Z
+`gYetiX`/`030014C8` (the gauge object's own tracked X/Z
 position, both `>>8`) added into its `x`/`z` fields only - this object
 never moves in Y. Box B is either the player's own `+0x38` vector
-(`sub_802D7B0`, offset by the player's `+0x1c`/`0x20`/`0x24` position)
+(`UpdateYeti`, offset by the player's `+0x1c`/`0x20`/`0x24` position)
 or `self`'s own `+0x38` vector (`sub_802DD9C`, offset by `self`'s own
 position at the same field offsets) - `self` being whatever
-`sub_802D6A0` (actor_part58.c) passes when it calls `sub_802DD9C`.
+`UpdatePolarCheckpointCrate` (actor_part58.c) passes when it calls `sub_802DD9C`.
 
 Both functions then run box B through `MemCopy32` before comparing -
 which turned out to be a real, confirmed `memcpy` (`MemCopy32`'s own
@@ -296,13 +296,13 @@ one's doc comment in `src/graphics/actor_part74.c`/`75.c`/`76.c` walks
 the whole thing), but all 6 share a family of problems this project has
 hit many times before and already has an established answer for
 (`docs/matching/issue-4-sio-settings-sync.md`'s "general strategy",
-itself citing the original `sub_8007DBC`/`sub_802D3A8` cases): heavy,
-overlapping stack-buffer use (`sub_802D7B0`/`sub_802DD9C` each build two
+itself citing the original `sub_8007DBC`/`MovePolarAkuAku` cases): heavy,
+overlapping stack-buffer use (`UpdateYeti`/`sub_802DD9C` each build two
 12-byte scratch AABB records inside one larger frame via raw `ldm`/`stm`
 block copies), registers reused for genuinely unrelated values across
-one function body (`sub_802D7B0`'s `r5` holds the `gUnknown_030014BC`
+one function body (`UpdateYeti`'s `r5` holds the `gYeti`
 pointer early on, then an unrelated accumulator delta later; its `r7`
-similarly switches roles mid-function), and - for `sub_802DE70` above
+similarly switches roles mid-function), and - for `LoadYetiGraphics` above
 all - `r8`/`sb`/`sl` all live simultaneously across a large stack frame
 and a doubled 16x16 nested loop. None of this is a semantic-confidence
 problem (the risk `docs/workflow.md` warns a low-confidence C guess
@@ -327,9 +327,9 @@ batch was then confirmed together with the required full clean
 
 ### New files, three more contiguous ROM regions
 
-`sub_802D7B0`/`sub_802D9A8`/`sub_802DA68` (ROM 0x0802D7B0-0x0802DA84,
+`UpdateYeti`/`UpdateYetiPalette`/`UpdateYetiBg2` (ROM 0x0802D7B0-0x0802DA84,
 between `actor_part58.c` and `actor_part59.c`), `sub_802DD9C`/
-`sub_802DE70` (ROM 0x0802DD9C-0x0802E058, between `actor_part59.c` and
+`LoadYetiGraphics` (ROM 0x0802DD9C-0x0802E058, between `actor_part59.c` and
 `actor_part60.c`), and `sub_802E058` (ROM 0x0802E058, between
 `actor_part60.c` and `actor_part61.c`) each got their own new file -
 `src/graphics/actor_part74.c`/`75.c`/`76.c` - per `docs/workflow.md`
@@ -352,9 +352,9 @@ matched/parked/left-raw list this entry feeds into.
 
 ## Later pass: issue #51/#54 NAKED retry
 
-`sub_802D3A8`, `sub_802D9A8`, `sub_802DA68` and `sub_802E058` are now
-real C; `sub_802D7B0`, `sub_802DD9C` and `sub_802DE70` stay NAKED with
+`MovePolarAkuAku`, `UpdateYetiPalette`, `UpdateYetiBg2` and `sub_802E058` are now
+real C; `UpdateYeti`, `sub_802DD9C` and `LoadYetiGraphics` stay NAKED with
 near-miss drafts under `#if NON_MATCHING`. The r7 story above was not
-the blocker for `sub_802D3A8`: with the table offsets in their own
+the blocker for `MovePolarAkuAku`: with the table offsets in their own
 locals and a `goto` into the shared Y/Z easing it matches with no pins
 at all. See [issue-51-54-naked-retry.md](issue-51-54-naked-retry.md).
