@@ -1,10 +1,11 @@
 #include "core.h"
+#include "actor_self.h"
 
 /* Screen-space visibility test and OAM setup for one sprite frame:
- * derives the top-left corner from `self+0x1c`/`self+0x20` minus half
+ * derives the top-left corner from `self->x`/`self->y` minus half
  * the frame's tile size, culls if fully off-screen, then builds the
  * OAM attribute words (position, `sub_803B060`'s flag byte, and a
- * priority/palette nibble from `self+0x18`/`self+0x14`) and calls
+ * priority/palette nibble from `self->unk_18`/`self->visible`) and calls
  * `SetupSpriteFrameOam`.
  *
  * The dead `flag = 0` initializer (materialized by the ROM as `movs
@@ -24,9 +25,9 @@ extern s32 sub_803B060(void *self);
 
 void sub_802C2FC(void *selfArg)
 {
-    register u8 *self asm("r6") = selfArg;
-    register s32 rawX asm("r0") = *(s32 *)(self + 0x1c);
-    register s32 rawY asm("r1") = *(s32 *)(self + 0x20);
+    register struct actor_self *self asm("r6") = selfArg;
+    register s32 rawX asm("r0") = self->x;
+    register s32 rawY asm("r1") = self->y;
     register s32 x asm("r4") = rawX >> 8;
     register s32 y asm("r5") = rawY >> 8;
     u8 *frame;
@@ -82,9 +83,9 @@ void sub_802C2FC(void *selfArg)
     }
 
     {
-        register s32 field24 asm("r4") = *(s32 *)(self + 0x18);
+        register s32 field24 asm("r4") = self->unk_18;
         s32 a2 = field24 << 12;
-        s32 field20 = *(s32 *)(self + 0x14);
+        s32 field20 = self->visible;
         register u32 attr2 asm("r2");
 
         if (field20 & 0x8000) {

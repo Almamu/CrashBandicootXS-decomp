@@ -1,4 +1,5 @@
 #include "core.h"
+#include "actor_self.h"
 
 /* Same "self" object family as actor_part28.c - see that file's header
  * comment and docs/matching/issue-62-0x08033804-actor.md. */
@@ -6,20 +7,50 @@
 extern s32 sub_8033900(void);
 extern s32 sub_80338F4(void);
 extern s32 sub_80338E8(void);
-extern void *sub_80338C4(void);
+extern struct spawn_timing_table *sub_80338C4(void);
 extern s32 sub_80338D0(void);
 asm(".set __divsi3, sub_803ADB4");
 extern s32 sub_8000E1C(s32 arg0);
 extern void sub_802E170(s32 kind, s32 x, s32 y, s32 z, s32 arg4);
-extern void *gUnknown_03000884;
+extern struct actor_self *gUnknown_03000884;
+
+/* The singleton's per-spawner timing table (`sub_80338C4`): after each
+ * spawn a spawner waits `delay` frames, except every `burst`-th spawn,
+ * which resets its count and waits `burstDelay` instead. One record per
+ * spawner kind (actor_part67.c reads [0], actor_part29.c [1],
+ * actor_part35.c [2]). */
+struct spawn_timing {
+    s32 delay;
+    s32 burst;
+    s32 burstDelay;
+};
+
+struct spawn_timing_table {
+    s32 unk_00;
+    struct spawn_timing timing[3];  // 0x04
+};
+
+/* A spawner object of the singleton system (actor_part28.c):
+ * `actor_self` plus a hit-point word, its spawn cooldown/count and a
+ * "dead" flag. */
+struct spawner {
+    struct actor_self base;
+    s32 hp;             // 0x54
+    s32 spawnX;         // 0x58 - the constructor's `b`/`c` (sub_8033EF4)
+    s32 spawnY;         // 0x5C
+    u8 unk_60[4];
+    s32 cooldown;       // 0x64
+    s32 count;          // 0x68
+    u8 dead;            // 0x6C
+};
 
 /* sub_8033CF8: `sub_80339DC`'s sibling. Sets `self`'s position fields
  * from the singleton's own position plus a different fixed offset,
- * and - while `self+0x64` (a cooldown slot) is zero - measures `self`'s
+ * and - while `cooldown` is zero - measures `self`'s
  * distance to the player the same way; in range, it picks one of three
  * spawn "kinds" (5/6/8, via `sub_8000E1C(3)`) and calls `sub_802E170`
- * at `self`'s position, then cycles `self+0x68` against a threshold
- * from `sub_80338C4`'s table. Once `self+0x34` passes `0x4B00` and the
+ * at `self`'s position, then cycles `count` against a threshold
+ * from `sub_80338C4`'s table. Once `base.depth` passes `0x4B00` and the
  * singleton's own "kind" (`sub_80338D0`) is 3, resets `self` back to
  * its idle animation state.
  *
@@ -27,26 +58,25 @@ extern void *gUnknown_03000884;
  * docs/matching/issue-62-0x08033804-actor.md, "Later pass: strag2 retry"): no
  * register pins at all - the old `r7` blocker came from a wrong
  * source shape, not from a register the allocator couldn't reach. */
-void sub_8033CF8(void *selfArg)
+void sub_8033CF8(struct spawner *self)
 {
-    u8 *self = selfArg;
     s32 slot;
     s32 next;
 
-    *(s32 *)(self + 0x1c) = sub_8033900() + 0x1E00;
-    *(s32 *)(self + 0x20) = sub_80338F4() - 0x3000;
-    *(s32 *)(self + 0x24) = sub_80338E8() - 0x100;
+    self->base.x = sub_8033900() + 0x1E00;
+    self->base.y = sub_80338F4() - 0x3000;
+    self->base.z = sub_80338E8() - 0x100;
 
-    slot = *(s32 *)(self + 0x64);
+    slot = self->cooldown;
     if (slot == 0) {
-        u8 *player = gUnknown_03000884;
-        s32 angle = (*(s32 *)(player + 0x24) - *(s32 *)(self + 0x24)) / -0x1AA;
+        struct actor_self *player = gUnknown_03000884;
+        s32 angle = (player->z - self->base.z) / -0x1AA;
 
         if (angle > 0) {
             s32 scale = 0x1000 / angle;
-            s32 rawDx = (*(s32 *)(player + 0x1c) - *(s32 *)(self + 0x1c)) * scale;
+            s32 rawDx = (player->x - self->base.x) * scale;
             s32 dx = rawDx >> 12;
-            s32 rawDy = (*(s32 *)(player + 0x20) - *(s32 *)(self + 0x20)) * scale;
+            s32 rawDy = (player->y - self->base.y) * scale;
             s32 dy = rawDy >> 12;
             s32 signDx = rawDx >> 31;
             s32 absDx = (dx ^ signDx) - signDx;
@@ -55,27 +85,27 @@ void sub_8033CF8(void *selfArg)
 
             if (absDx + absDy <= 0xFFF) {
                 s32 kind = (u16)sub_8000E1C(3);
-                u8 *table;
+                struct spawn_timing_table *table;
                 s32 count;
 
                 if (kind == 0) {
-                    sub_802E170(5, *(s32 *)(self + 0x1c), *(s32 *)(self + 0x20), *(s32 *)(self + 0x24), slot);
+                    sub_802E170(5, self->base.x, self->base.y, self->base.z, slot);
                 } else if (kind == 1) {
-                    sub_802E170(6, *(s32 *)(self + 0x1c), *(s32 *)(self + 0x20), *(s32 *)(self + 0x24), slot);
+                    sub_802E170(6, self->base.x, self->base.y, self->base.z, slot);
                 } else {
-                    sub_802E170(8, *(s32 *)(self + 0x1c), *(s32 *)(self + 0x20), *(s32 *)(self + 0x24), slot);
+                    sub_802E170(8, self->base.x, self->base.y, self->base.z, slot);
                 }
 
-                count = *(s32 *)(self + 0x68) + 1;
-                *(s32 *)(self + 0x68) = count;
+                count = self->count + 1;
+                self->count = count;
                 table = sub_80338C4();
-                if (count == *(s32 *)(table + 0x20)) {
-                    *(s32 *)(self + 0x68) = 0;
+                if (count == table->timing[2].burst) {
+                    self->count = 0;
                     table = sub_80338C4();
-                    next = *(s32 *)(table + 0x24);
+                    next = table->timing[2].burstDelay;
                 } else {
                     table = sub_80338C4();
-                    next = *(s32 *)(table + 0x1c);
+                    next = table->timing[2].delay;
                 }
                 goto store;
             }
@@ -83,10 +113,10 @@ void sub_8033CF8(void *selfArg)
     } else {
         next = slot - 1;
     store:
-        *(s32 *)(self + 0x64) = next;
+        self->cooldown = next;
     }
 
-    if (*(s32 *)(self + 0x34) > 0x4B00 && sub_80338D0() == 3) {
+    if (self->base.depth > 0x4B00 && sub_80338D0() == 3) {
         s32 zero32;
         s32 state;
 
@@ -96,19 +126,19 @@ void sub_8033CF8(void *selfArg)
          * sunk to its store. */
         asm("" : "=r"(zero32) : "0"(0));
         asm volatile("" : "=r"(state) : "0"(2));
-        *(s32 *)(self + 0x28) = zero32;
-        *(s32 *)(self + 0x44) = zero32;
-        *(s32 *)(self + 0xc) = state;
+        self->base.state = zero32;
+        self->base.stateTime = zero32;
+        self->base.animIndex = state;
         {
-            u16 anim = *(u16 *)(*(u8 **)self + 0x18);
+            u16 anim = self->base.anims[2].duration;
             u8 zero;
 
             /* separate byte zero: the ROM materializes its own movs for it */
             asm("" : "=r"(zero) : "0"(0));
-            *(u16 *)(self + 0x10) = anim;
-            self[0x12] = zero;
+            self->base.animTimer = anim;
+            self->base.animDone = zero;
         }
-        *(s32 *)(self + 8) = zero32;
+        self->base.animTime = zero32;
     }
 }
 

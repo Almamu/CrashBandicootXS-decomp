@@ -29,6 +29,10 @@ struct sub_effect_record {
 };
 COMPILE_TIME_ASSERT(sizeof(struct sub_effect_record) == 0x14);
 
+/* Not at the top: COMPILE_TIME_ASSERT names its typedef after __LINE__,
+ * and moving the assert above to line 31 clashes with memory.h's. */
+#include "actor_self.h"
+
 extern struct sub_effect_record *gUnknown_03001400;
 extern s32 gUnknown_03001420;
 extern s32 gUnknown_03001424;
@@ -51,7 +55,7 @@ extern void *gUnknown_03001418;
 extern void **gUnknown_03001408;
 
 extern s32 sub_803AD78(void *arg);
-extern void sub_803AD80(s32 x, s32 mode, s32 color);
+extern void sub_803AD80(s32 self, s32 arg, s32 fn);
 extern s32 sub_802F4C0(void *arg);
 extern s32 sub_802BD18(void *arg);
 
@@ -162,11 +166,12 @@ void sub_802A5C4(void)
     sub_803AD78(*(void **)((u8 *)gUnknown_03001418 + 0x2c));
 }
 
-/* Draws every actor's marker via its shared self+0x50 record's `+8`
- * (s16 x-offset)/`+0xc` (color) fields through sub_803AD80, walking the
- * gUnknown_03000884 circular list starting at head->next and handling
- * the head itself last, then releases the temporary pointer array this
- * category's loading loop built (gUnknown_03001408).
+/* Calls every actor's `m08` virtual method with 3 (the "destroy" call,
+ * through the sub_803AD80 call-via-r2 thunk), walking the
+ * gUnknown_03000884 circular list along its +0x4C links starting after
+ * the head and handling the head itself last, then releases the
+ * temporary pointer array this category's loading loop built
+ * (gUnknown_03001408).
  *
  * The address of gUnknown_03000884 is cached across the whole function
  * (survives the loop) while its *value* is deliberately re-read fresh
@@ -183,8 +188,8 @@ void sub_802A5E4(void)
 {
     register void **headAddr asm("r5");
     register void *head asm("r1");
-    void *cur;
-    void *next;
+    struct actor_self *cur;
+    struct actor_self *next;
 
     if (*(void **)((u8 *)gUnknown_03001418 + 0x14) != NULL) {
         sub_803AD78(*(void **)((u8 *)gUnknown_03001418 + 0x14));
@@ -209,7 +214,7 @@ void sub_802A5E4(void)
             : "r"(addr)
         );
 
-        cur = *(void **)((u8 *)head + 0x4c);
+        cur = ACTOR_LINK_PREV((struct actor_self *)head);
         asm volatile(
             "add %0, %1, #0\n\t"
             : "=r"(headAddr)
@@ -218,12 +223,12 @@ void sub_802A5E4(void)
     }
     if (cur != head) {
         do {
-            next = *(void **)((u8 *)cur + 0x4c);
+            next = ACTOR_LINK_PREV(cur);
             if (cur != NULL) {
-                void *rec = *(void **)((u8 *)cur + 0x50);
-                s32 x = (s32)cur + *(s16 *)((u8 *)rec + 8);
-                s32 color = *(s32 *)((u8 *)rec + 0xc);
-                sub_803AD80(x, 3, color);
+                struct actor_vtable *rec = cur->vtable;
+                s32 x = (s32)cur + rec->m08.thisOffset;
+                s32 fn = (s32)rec->m08.fn;
+                sub_803AD80(x, 3, fn);
             }
             cur = next;
         } while (cur != gUnknown_03000884);
@@ -231,10 +236,10 @@ void sub_802A5E4(void)
 
     cur = *headAddr;
     if (cur != NULL) {
-        void *rec = *(void **)((u8 *)cur + 0x50);
-        s32 x = (s32)cur + *(s16 *)((u8 *)rec + 8);
-        s32 color = *(s32 *)((u8 *)rec + 0xc);
-        sub_803AD80(x, 3, color);
+        struct actor_vtable *rec = cur->vtable;
+        s32 x = (s32)cur + rec->m08.thisOffset;
+        s32 fn = (s32)rec->m08.fn;
+        sub_803AD80(x, 3, fn);
     }
 
     mem_free((u8 *)gUnknown_03001408);

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "actor_self.h"
 
 /* A second per-instance "self" object family sharing the exact same
  * layout convention already documented for the boss-weapon cluster
@@ -19,7 +20,7 @@
  * `sub_8030530`/`sub_8030C98`/`sub_803146C`. See
  * docs/matching/issue-62-0x08033804-actor.md. */
 
-extern void *gUnknown_030015AC;
+extern struct actor_self *gUnknown_030015AC;
 extern s32 gUnknown_030015B0;
 extern s32 gUnknown_030015B4;
 extern s32 gUnknown_030015B8;
@@ -53,34 +54,33 @@ void sub_8033804(void)
     }
 }
 
-/* Speed-override toggle for a P1/P2-mirrored object pair
- * (`gUnknown_030008B4`/`gUnknown_030008B8`, each a pointer to an object
- * with a speed-like `u16` at `+0x1e`). The first call caches the
- * current speed into `gUnknown_03001590`; from then on, `flag` picks
- * between a fixed max speed (`0x7FFF`) and the cached value, applying
- * it to both objects. */
+/* Palette flash toggle: `gUnknown_030008B4`/`gUnknown_030008B8` point
+ * into palette RAM (BG palette 1 and OBJ palette 10, iwram_data.c), and
+ * this sets color 15 of both. The first call caches the original color
+ * into `gUnknown_03001590`; from then on, `flag` picks between white
+ * (`0x7FFF`) and the cached color. */
 void sub_8033828(u8 flag)
 {
     register u16 val asm("r1");
 
     if (gUnknown_03001594 == 0) {
-        gUnknown_03001590 = *(u16 *)((u8 *)gUnknown_030008B4 + 0x1e);
+        gUnknown_03001590 = ((u16 *)gUnknown_030008B4)[15];
         gUnknown_03001594 = 1;
     }
 
     if (flag != 0) {
-        register u8 *p asm("r0") = gUnknown_030008B4;
+        register u16 *p asm("r0") = gUnknown_030008B4;
 
-        val = 0x7FFF;
-        *(u16 *)(p + 0x1e) = val;
+        val = RGB_WHITE;
+        p[15] = val;
     } else {
-        register u8 *p asm("r2") = gUnknown_030008B4;
+        register u16 *p asm("r2") = gUnknown_030008B4;
 
         val = gUnknown_03001590;
-        *(u16 *)(p + 0x1e) = val;
+        p[15] = val;
     }
 
-    *(u16 *)((u8 *)gUnknown_030008B8 + 0x1e) = val;
+    ((u16 *)gUnknown_030008B8)[15] = val;
 }
 
 /* Constant getter - returns the singleton's lifetime counter
@@ -154,37 +154,40 @@ s32 sub_8033900(void)
  * the anim-frame halfword/byte pair from the new table entry's first
  * field, and - once the current animation frame reaches the new
  * entry's duration (its `+4` halfword) - clears the accumulator at
- * `+8`. Same idiom as the boss cluster's `sub_8030530`/`sub_8030C98`. */
+ * `+8`. Same idiom as the boss cluster's `sub_8030530`/`sub_8030C98`.
+ * The `*(T *)&self->...` stores (here and in sub_803395C) keep gcc from
+ * treating them as struct-member accesses, which would let the scheduler
+ * move the `anims[]` load below the zero constant. */
 void sub_803390C(s32 a0, s32 a1)
 {
-    u8 *self;
+    struct actor_self *self;
 
     gUnknown_030015B0 = a0;
     self = gUnknown_030015AC;
-    *(s32 *)(self + 0xc) = a1;
+    self->animIndex = a1;
 
     {
-        register u16 anim asm("r0") = *(u16 *)(*(u8 **)self + a1 * 12);
+        register u16 anim asm("r0") = self->anims[a1].duration;
         register u8 zero asm("r1") = 0;
 
-        *(u16 *)(self + 0x10) = anim;
-        self[0x12] = zero;
+        *(u16 *)&self->animTimer = anim;
+        *(u8 *)&self->animDone = zero;
     }
 
     {
         s32 frame = GetAnimFrameBaseOffset(self);
-        register s32 idx asm("r2") = *(s32 *)(self + 0xc);
-        register u8 *table asm("r3") = *(u8 **)self;
+        register s32 idx asm("r2") = self->animIndex;
+        register u8 *table asm("r3") = (u8 *)self->anims;
         register u8 *entryPtr asm("r1") = (u8 *)(idx * 0xc);
         register s32 four asm("r2");
         register s32 val asm("r1");
 
         asm("add %0, %0, %1" : "+r" (entryPtr) : "r" (table));
         four = 4;
-        val = *(s16 *)(entryPtr + four);
+        val = *(s16 *)(entryPtr + four); /* anims[idx].loopThreshold */
 
         if (frame >= val) {
-            *(s32 *)(self + 8) = 0;
+            self->animTime = 0;
         }
     }
 }
@@ -202,7 +205,7 @@ void nullsub_36(void)
  * sequence as `sub_803390C`. */
 void sub_803395C(void)
 {
-    u8 *self;
+    struct actor_self *self;
 
     gUnknown_030015BC += gUnknown_030015D4;
 
@@ -221,30 +224,30 @@ void sub_803395C(void)
         }
 
         self = gUnknown_030015AC;
-        *(s32 *)(self + 0xc) = zeroD0;
+        self->animIndex = zeroD0;
 
         {
-            register u16 anim asm("r0") = *(u16 *)(*(u8 **)self);
+            register u16 anim asm("r0") = self->anims[0].duration;
             register u8 zero asm("r1") = 0;
 
-            *(u16 *)(self + 0x10) = anim;
-            self[0x12] = zero;
+            *(u16 *)&self->animTimer = anim;
+            *(u8 *)&self->animDone = zero;
         }
 
         {
             s32 frame = GetAnimFrameBaseOffset(self);
-            register s32 idx asm("r2") = *(s32 *)(self + 0xc);
-            register u8 *table asm("r3") = *(u8 **)self;
+            register s32 idx asm("r2") = self->animIndex;
+            register u8 *table asm("r3") = (u8 *)self->anims;
             register u8 *entryPtr asm("r1") = (u8 *)(idx * 0xc);
             register s32 four asm("r2");
             register s32 val asm("r1");
 
             asm("add %0, %0, %1" : "+r" (entryPtr) : "r" (table));
             four = 4;
-            val = *(s16 *)(entryPtr + four);
+            val = *(s16 *)(entryPtr + four); /* anims[idx].loopThreshold */
 
             if (frame >= val) {
-                *(s32 *)(self + 8) = zeroD0;
+                self->animTime = zeroD0;
             }
         }
     }

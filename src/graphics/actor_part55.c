@@ -1,4 +1,6 @@
 #include "core.h"
+#include "actor_self.h"
+#include "actor_anim.h"
 
 /* Same "self" object family as actor_part39.c - see that file's header
  * comment and docs/matching/issue-50-actor-2a69c.md. */
@@ -11,16 +13,16 @@ extern u8 *GetAnimFrameData(void *self);
 extern s32 sub_803B060(void *self);
 extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
 
-/* Computes an OBJ scale factor from `self`'s `+0x34` distance metric and
- * `self`'s part-table's `+0x10` field (via `sub_803ADB4`), then a second
+/* Computes an OBJ scale factor from `self->depth` and its animation
+ * record's `baseDepth` (via `sub_803ADB4`), then a second
  * scale from `gUnknown_030013C8` (via the same helper) used to project
- * `self`'s `+0x1c`/`+0x20` position through `sub_8029E98`/`sub_8029EB4`'s
+ * `self`'s x/y position through `sub_8029E98`/`sub_8029EB4`'s
  * screen-space offsets into on-screen X/Y. Fetches the current anim
  * frame (`GetAnimFrameData`), centers it (frame's own width/height
  * bytes, doubled if the first scale factor exceeds `0xff`), culls if
  * fully off-screen, and - if visible - builds the OAM attribute word
  * (position, `sub_803B060`'s flag byte, an oversize-scale bit, and a
- * priority/palette nibble from `self+0x18`/`self+0x14`) and calls
+ * priority/palette nibble from `self->unk_18`/`self->visible`) and calls
  * `SetupSpriteFrameOam` with the first scale factor as its OBJ-affine
  * "priority" argument. See docs/matching/issue-50-actor-2a69c.md for
  * the two register-pinning gaps this needed to close (the `frame[1]`
@@ -30,9 +32,9 @@ extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
  * pinned to a caller-saved register). */
 void UpdateAnimatedActorPart(void *selfArg)
 {
-    register u8 *self asm("r6") = selfArg;
+    register struct actor_self *self asm("r6") = selfArg;
     register s32 scale asm("r8");
-    s32 dist = *(s32 *)(self + 0x34);
+    s32 dist = self->depth;
     register s32 scaleY asm("r5");
     s32 posX;
     s32 posY;
@@ -51,12 +53,12 @@ void UpdateAnimatedActorPart(void *selfArg)
     register s32 delta0 asm("r1");
     s32 delta1;
 
-    scale = sub_803ADB4(dist << 8, *(s32 *)(*(u8 **)(self + 0x30) + 0x10));
+    scale = sub_803ADB4(dist << 8, ACTOR_RECORD(self)->baseDepth);
     scaleY = sub_803ADB4(gUnknown_030013C8 << 0xc, dist);
 
     {
         s32 off = sub_8029E98();
-        register s32 tmp asm("r1") = *(s32 *)(self + 0x20);
+        register s32 tmp asm("r1") = self->y;
 
         posX = tmp * scaleY;
         posX >>= 0xc;
@@ -66,7 +68,7 @@ void UpdateAnimatedActorPart(void *selfArg)
 
     {
         s32 off = sub_8029EB4();
-        register s32 tmp asm("r1") = *(s32 *)(self + 0x1c);
+        register s32 tmp asm("r1") = self->x;
 
         tmp = tmp * scaleY;
         tmp >>= 0xc;
@@ -155,10 +157,10 @@ void UpdateAnimatedActorPart(void *selfArg)
             asm volatile("ldr %0, %1" : "=r" (flag) : "m" (flagStack[0]));
             packed |= flag;
 
-            v = *(u32 *)(self + 0x18);
+            v = self->unk_18;
             pre = v << 0xc;
 
-            if (*(s32 *)(self + 0x14) & 0x8000) {
+            if (self->visible & 0x8000) {
                 shifted = (pre | 0x800) << 0x10;
             } else {
                 shifted = v << 0x1c;
