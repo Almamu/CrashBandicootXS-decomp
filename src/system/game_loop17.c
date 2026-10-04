@@ -9,7 +9,7 @@
  * contiguous with both files in ROM, and ended up grouped with the
  * wrapper functions that call it).
  *
- * `gStaticData_0816C86C` is the confirmed 36-slot medal table (see
+ * `gLevelTable` is the confirmed 36-slot medal table (see
  * `struct threshold_table_entry` in src/graphics/oam_count.c and
  * src/graphics/settings_menu6.c) - this file's functions resolve one
  * more of that struct's `unused` bytes: `+0x20` (a pointer to a small
@@ -25,7 +25,7 @@ struct MedalTableEntry {
 };
 COMPILE_TIME_ASSERT(sizeof(struct MedalTableEntry) == 0x24);
 
-extern struct MedalTableEntry gStaticData_0816C86C[];
+extern struct MedalTableEntry gLevelTable[];
 
 /* One entry of a `MedalTableEntry.itemList`. `linkedObj`'s own `+0x1c`
  * field is a pointer to a further nested structure (see sub_8025894's
@@ -46,7 +46,7 @@ struct MedalItemList {
     struct MedalListItem *extra2;    /* +0x0c: single extra item, may be NULL */
 };
 
-extern void *gUnknown_030012B4;
+extern void *gEntityFlags;
 extern s32 sub_8025894(void *self, void *list);
 extern s32 sub_802968C(u16 catIndex);
 extern void sub_8026ED0(void *self);
@@ -65,9 +65,9 @@ void nullsub_25(void)
 {
 }
 
-/* Per-level medal tally: sums, across `gStaticData_0816C86C[idx]`'s
+/* Per-level medal tally: sums, across `gLevelTable[idx]`'s
  * item list (`items[]`, plus the two extra single-item slots), a
- * per-item value - `sub_8025894(gUnknown_030012B4, item->linkedObj's
+ * per-item value - `sub_8025894(gEntityFlags, item->linkedObj's
  * +0x1c list)` for `type` 0-2, `sub_802968C(item->catIndex)` for
  * `type == 3`, 0 otherwise (including `type < 0`). The same 4-branch
  * dispatch is inlined three times in the ROM (once per source: the
@@ -81,7 +81,7 @@ void nullsub_25(void)
 s32 sub_8024278(s32 idx)
 {
     s32 total = 0;
-    struct MedalItemList *list = (struct MedalItemList *)gStaticData_0816C86C[idx].itemList;
+    struct MedalItemList *list = (struct MedalItemList *)gLevelTable[idx].itemList;
     s32 i;
 
     for (i = 0; i < list->count; i++) {
@@ -93,7 +93,7 @@ s32 sub_8024278(s32 idx)
             case 0:
             case 1:
             case 2:
-                v = sub_8025894(gUnknown_030012B4, *(void **)((u8 *)item->linkedObj + 0x1c));
+                v = sub_8025894(gEntityFlags, *(void **)((u8 *)item->linkedObj + 0x1c));
                 break;
             case 3:
                 v = sub_802968C(item->catIndex);
@@ -111,7 +111,7 @@ s32 sub_8024278(s32 idx)
             case 0:
             case 1:
             case 2:
-                v = sub_8025894(gUnknown_030012B4, *(void **)((u8 *)item->linkedObj + 0x1c));
+                v = sub_8025894(gEntityFlags, *(void **)((u8 *)item->linkedObj + 0x1c));
                 break;
             case 3:
                 v = sub_802968C(item->catIndex);
@@ -129,7 +129,7 @@ s32 sub_8024278(s32 idx)
             case 0:
             case 1:
             case 2:
-                v = sub_8025894(gUnknown_030012B4, *(void **)((u8 *)item->linkedObj + 0x1c));
+                v = sub_8025894(gEntityFlags, *(void **)((u8 *)item->linkedObj + 0x1c));
                 break;
             case 3:
                 v = sub_802968C(item->catIndex);

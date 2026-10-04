@@ -4,7 +4,7 @@ results scan and the sound-channel-handle family
 This is a follow-up pass over three functions
 [docs/matching/issue-38-medal-results-tally.md](./issue-38-medal-results-tally.md)
 left raw: `sub_8024344` (the medal item-list per-flag nonzero scan), and
-the `sub_8024590`-`sub_8024790` sound-channel-handle helper family.
+the `BeginSlide`-`EndSlide` sound-channel-handle helper family.
 
 ## Matched (real C, full clean `make compare` passing)
 
@@ -29,25 +29,25 @@ the `sub_8024590`-`sub_8024790` sound-channel-handle helper family.
   `register u16 v asm("r3")` pin (matching the `result` variable's own
   register) to avoid an extra register hop between the `ldrh` and the
   `-x|x` nonzero-test bit-trick.
-- **`sub_8024640`** (`src/system/game_loop37.c`) - the per-item driver
+- **`RunSlideshow`** (`src/system/game_loop37.c`) - the per-item driver
   loop: streams each item's VRAM bank and sound-channel handle
-  (`sub_8024708`/`sub_8024590`), polls input, applies duck-out/fade-start
+  (`ShowSlidePicture`/`BeginSlide`), polls input, applies duck-out/fade-start
   side effects, re-arms the cue if needed, then advances via
-  `sub_80246D8`. Matched on the first real attempt once `self` was pinned
+  `SkipSlides`. Matched on the first real attempt once `self` was pinned
   to `r4` (`register struct SoundChannelList *self asm("r4")`) - every
   other register (the loop counter, the cached `i*4` byte offset, the
   polled button result) fell into place on its own.
-- **`sub_80246D8`** (`src/system/game_loop37.c`) - the "find the next
-  `field_10 != 1` item" index scanner sub_8024640 calls to advance.
+- **`SkipSlides`** (`src/system/game_loop37.c`) - the "find the next
+  `field_10 != 1` item" index scanner RunSlideshow calls to advance.
   Matched with no special techniques at all - a straight transcription of
   the traced control flow (including writing the array access as
   `items[cur + 1]` rather than introducing a separate `next` index
   variable, to keep the "+1" folded into the load's own immediate offset
   the way the ROM does) compiled byte-identical immediately.
-- **`sub_8024790`** (`src/system/game_loop38.c`) - the tail half of
-  `sub_8024640`'s per-item body (duck-out/fade-start/re-arm), reused
+- **`EndSlide`** (`src/system/game_loop38.c`) - the tail half of
+  `RunSlideshow`'s per-item body (duck-out/fade-start/re-arm), reused
   standalone against a caller-supplied index. Matched with only a `self`
-  register pin (`r5`) - same technique as `sub_8024590`/`sub_8024708`
+  register pin (`r5`) - same technique as `BeginSlide`/`ShowSlidePicture`
   below, but without either of their residual gaps.
 
 ### The `table`/pointer-canonicalization gotcha, worked example
@@ -82,7 +82,7 @@ functions on both sides could be extracted into `game_loop37.c` - see
 ranges). Both were attempted extensively; every field, struct offset,
 branch condition and call argument is confirmed correct against the ROM.
 
-- **`sub_8024590`** (`src/system/game_loop37.c`; real bytes in
+- **`BeginSlide`** (`src/system/game_loop37.c`; real bytes in
   `asm/code_3_2_17_24590.s`) - starts/re-selects a sound cue via
   `sub_8001B54`, then either plays a secondary sfx immediately (if the
   channel already reports the requested id) or busy-polls `sub_8001AB8`
@@ -103,11 +103,11 @@ branch condition and call argument is confirmed correct against the ROM.
   variables). Two instructions short (4 bytes) in each of two call sites
   (the `playing == field_14` and `playing != field_14` branches both
   need it).
-- **`sub_8024708`** (`src/system/game_loop37.c`; real bytes in
+- **`ShowSlidePicture`** (`src/system/game_loop37.c`; real bytes in
   `asm/code_3_2_17_24708.s`) - toggles `self`'s VRAM-bank flip-flop and
   streams `self->items[idx]`'s tile asset to whichever bank the new state
   selects, rebuilds `gUnknown_03001314`'s bit 4 (the same `& ~0x10 | bit`
-  shadow-byte idiom `sub_8024708`'s cousin in game_loop18.c uses for a
+  shadow-byte idiom `ShowSlidePicture`'s cousin in game_loop18.c uses for a
   *different* global - see that file's own write-up), DMA3-copies the
   asset's first half into `BG_PLTT`, and commits `gUnknown_03001314`'s
   low halfword to `REG_DISPCNT`. Confirmed byte-identical everywhere

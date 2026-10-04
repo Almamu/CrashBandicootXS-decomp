@@ -15,7 +15,7 @@ drafts under `#if NON_MATCHING`.
 
 The greg dump explains the sl/r9 swap:
 
-- `&gUnknown_030012B4` is local to block 0, so local-alloc gives it r5.
+- `&gEntityFlags` is local to block 0, so local-alloc gives it r5.
 - Reload then spills r5, and `retry_global_alloc` places the address
   again.
 - By then global.c has already given -0x11 (a global pseudo, live into
@@ -48,7 +48,7 @@ Left (4 halfwords):
 
 - `str r3, [sp]` comes before `adds r1, r7, #0`, where the ROM has it
   after.
-- The second `&gUnknown_030012B4` reload goes through r3, where the ROM
+- The second `&gEntityFlags` reload goes through r3, where the ROM
   uses r1.
 
 The ROM's shape is a caller-save of one part+0x28 pseudo in r3: reload

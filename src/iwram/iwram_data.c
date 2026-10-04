@@ -91,14 +91,14 @@ u8 gUnknown_03000830 = 0;
 
 /* The cutscene text of each language, indexed by gUnknown_03000868
  * (src/data/cutscenes_16d1c8.c, graphics_loading_22354.c). */
-extern const struct cutscene_page *const gStaticData_0816D1C8[11];
+extern const struct cutscene_page *const gCutsceneTextEnglish[11];
 extern const struct cutscene_page *const gCutsceneTextFrench[11];
 extern const struct cutscene_page *const gCutsceneTextGerman[11];
 extern const struct cutscene_page *const gCutsceneTextSpanish[11];
 extern const struct cutscene_page *const gCutsceneTextItalian[11];
 extern const struct cutscene_page *const gCutsceneTextDutch[11];
-const struct cutscene_page *const *gUnknown_03000834[6] = {
-    gStaticData_0816D1C8,
+const struct cutscene_page *const *gCutsceneTexts[6] = {
+    gCutsceneTextEnglish,
     gCutsceneTextFrench,
     gCutsceneTextGerman,
     gCutsceneTextSpanish,
@@ -106,7 +106,7 @@ const struct cutscene_page *const *gUnknown_03000834[6] = {
     gCutsceneTextDutch,
 };
 
-void *gUnknown_0300084C = NULL; /* struct level_layers * */
+void *gLevelLayersSingleton = NULL; /* struct level_layers * */
 
 /* Per-language string tables (main_loop.c indexes them by
  * gUnknown_03000868), src/data/ui_text_172cd4.c. */

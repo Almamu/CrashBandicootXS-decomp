@@ -8,7 +8,7 @@ extern void sub_8026EB4(void *ptr);
 extern void sub_8026ED0(void *manager);
 extern void *sub_8026EC0(u32 size);
 extern s32 sub_803AD80(void *arg0, void *arg1, void *fn);
-extern void *gUnknown_03001308;
+extern void *gLevelLayers;
 
 /* The "filter into a second array" manager struct also used by
  * `sub_8008C80`/`sub_8008CEC`/`sub_8008D30` in `actor_part10.c` -

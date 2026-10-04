@@ -71,7 +71,7 @@
  *   3. If the `sub_800A420` out-flag came back `1`: builds an int
  *      position at the *bottom* of the quad (mirrored the same way),
  *      probes it via `sub_8026C3C(player, pos, &origY)` (see below,
- *      `player` = `gUnknown_03001308` dereferenced) - on a hit, snaps
+ *      `player` = `gLevelLayers` dereferenced) - on a hit, snaps
  *      `self->y` to the probed value and nudges `self->x` by ±1 pixel
  *      depending on `self+0x24 & 3`; on a miss, nudges `self->y` down
  *      one pixel instead. Either way calls `sub_800A420` again
@@ -113,17 +113,17 @@
  * probe_pos *pos, s32 *outValue)`:
  *
  * - **`sub_8026BF8`**: `player->0x20`'s terrain-data pointer, `pos->x
- *   >> 3`/`pos->y >> 3` tile coords, looked up via `sub_80250BC`
+ *   >> 3`/`pos->y >> 3` tile coords, looked up via `GetTerrainHeights`
  *   ("the raw terrain streamer" - returns a row pointer or `NULL`).
  *   On a hit, reads a **signed byte** height sample at
  *   `row[pos->x & 7]`, computes `((pos->y >> 3) << 3) + heightByte -
  *   pos->y`, shifts to Q8, and accumulates it into `*outValue`.
- *   Returns `1` on a row hit, `0` if `sub_80250BC` returned `NULL`.
+ *   Returns `1` on a row hit, `0` if `GetTerrainHeights` returned `NULL`.
  * - **`sub_8026C3C`**: the exact same shape, but the height byte comes
  *   from `sub_8025228(terrainPtr, tileX, tileY, 0, &scratch)` instead
  *   of a direct row-pointer byte read - the "CheckTerrainFlag"-style
  *   API `sub_8026A18`/`sub_8026AE8` already use via their own
- *   `sub_8025130` calls (same argument shape: base pointer, tile
+ *   `GetSolidTerrainHeights` calls (same argument shape: base pointer, tile
  *   coords, a submode, an out-parameter). Returns `0` if the returned
  *   signed byte is negative, `1` otherwise, with the same
  *   `(tileY<<3)+byte-pos->y` delta accumulation.
@@ -241,7 +241,7 @@ extern s32 sub_8008278(void *dest, s32 kind, void *rec);
 extern s32 sub_8026628(void *player, s32 mode, void *pos, s32 span, void *outValue);
 extern s32 sub_8026C3C(void *player, void *pos, void *outValue);
 extern s32 sub_8026BF8(void *player, void *pos, void *outValue);
-extern void *gUnknown_03001308;
+extern void *gLevelLayers;
 
 struct probe_pos {
     s32 x;
@@ -311,7 +311,7 @@ s32 sub_800A178(struct box_part *self)
             pos.x -= quad->w >> 1;
         else
             pos.x += quad->w >> 1;
-        c = sub_8026C3C(gUnknown_03001308, &pos, &origY);
+        c = sub_8026C3C(gLevelLayers, &pos, &origY);
         unused = 0;
         if (c) {
             self->y = origY & 0xFFFFFF00;
@@ -341,7 +341,7 @@ s32 sub_800A178(struct box_part *self)
         sub_8008278(&pos, mode, quad);
         pos.x >>= 8;
         pos.y = (pos.y >> 8) + 8;
-        if ((u8)sub_8026628(gUnknown_03001308, mode, &pos, span, &origX)) {
+        if ((u8)sub_8026628(gLevelLayers, mode, &pos, span, &origX)) {
             self->hitMask |= mode;
             result |= mode;
             self->x = origX;
@@ -359,7 +359,7 @@ y_probe:
         sub_8008278(&pos, mode, quad);
         pos.x >>= 8;
         pos.y >>= 8;
-        if ((u8)sub_8026628(gUnknown_03001308, mode, &pos, span, &origY)) {
+        if ((u8)sub_8026628(gLevelLayers, mode, &pos, span, &origY)) {
             result |= mode;
             self->hitMask |= mode;
             self->y = origY;
@@ -375,7 +375,7 @@ y_probe:
         sub_8008278(&pos, mode, quad);
         pos.x >>= 8;
         pos.y >>= 8;
-        if ((u8)sub_8026628(gUnknown_03001308, mode, &pos, span, &origX)) {
+        if ((u8)sub_8026628(gLevelLayers, mode, &pos, span, &origX)) {
             self->hitMask |= mode;
             result |= mode;
             self->x = origX;
@@ -416,7 +416,7 @@ u8 sub_800A420(struct box_part *self, struct part_box *quad, u8 *outFlag)
         pos.x -= quad->w >> 1;
     else
         pos.x += quad->w >> 1;
-    hit = sub_8026BF8(gUnknown_03001308, &pos, &origY);
+    hit = sub_8026BF8(gLevelLayers, &pos, &origY);
     if (hit) {
         s32 y;
         register u8 f asm("r2");
@@ -434,7 +434,7 @@ u8 sub_800A420(struct box_part *self, struct part_box *quad, u8 *outFlag)
         u8 f = self->flags2;
         if (!((f >> 1) & 1)) {
             pos.y++;
-            hit = sub_8026BF8(gUnknown_03001308, &pos, &origY);
+            hit = sub_8026BF8(gLevelLayers, &pos, &origY);
             if (hit) {
                 self->y = origY & 0xFFFFFF00;
                 val = 2 | self->flags2;

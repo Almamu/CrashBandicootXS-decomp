@@ -38,14 +38,14 @@ listed in the table below.
   literal, local, union cast, inline wrapper, a struct holding
   count+direction, and a plain `u8` parameter. Also left is one register
   in the player-position struct copy.
-- **`sub_8025334`** (`game_loop3.c`, #40): the draft is 33 halfwords off
+- **`DecodeCollisionChunk`** (`game_loop3.c`, #40): the draft is 33 halfwords off
   under old_agbcc and the same size. `acc`/`pair` as `s16` reproduce the
   ROM's per-use `lsl/asr` sign extensions. A do-while pair loop
   reproduces the missing entry test. Still left: the old r4/r5
   accumulator/pointer swap, and the ROM's `lsl` of `(s8)pair` coming
   before `acc`'s sign extension. Six spellings of the add all compile
   alike.
-- **`sub_80255D4`** (`game_loop41.c`, #40): the draft is now the ROM's
+- **`SpawnRoomEntities`** (`game_loop41.c`, #40): the draft is now the ROM's
   exact size (704 bytes, where the old note had 732) but about 219
   halfwords off. The first half and the link pass's inner scans line up.
   The ROM places the link-chasing do-while's actor search before its
@@ -53,7 +53,7 @@ listed in the table below.
   `for (;;)` and hand-written `goto` loops made no difference.
 - **`sub_802062C`** (`graphics_loading_1feec.c`, #31): the draft is 62
   halfwords off, unchanged. The ROM keeps `arg3` in r4 and
-  `&gUnknown_030012B4` in sb. Pinning either one, or holding the table
+  `&gEntityFlags` in sb. Pinning either one, or holding the table
   address in a local, made it worse (120+).
 - **`UpdateGameFrame`** (`game_loop55.c`, #34): not attempted. At about
   730 instructions it was out of this pass's time budget.

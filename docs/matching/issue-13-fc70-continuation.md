@@ -11,7 +11,7 @@ second pass against those five.
 
 - **`sub_801089C`** (`src/system/game_loop34.c`, new file) - plays
   cue-3 SFX, then - unless `self->field_08` is the sentinel `0xffff` -
-  consumes a slot from the per-record bit-grid (`gUnknown_030012B4`,
+  consumes a slot from the per-record bit-grid (`gEntityFlags`,
   the same `sub_802599C`/`sub_80259D4` accessor pair game_loop12.c/
   game_loop13.c already establish) keyed by `self->field_08`, setting
   the bit only if it wasn't already set. Finally spawns a part object

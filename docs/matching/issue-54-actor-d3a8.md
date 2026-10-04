@@ -46,9 +46,9 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
 
 - **`sub_802D490`** (`src/graphics/actor_part58.c`) - resets a
   different, `gUnknown_03001494`-rooted sibling object via
-  `sub_80231EC(gUnknown_030012C0, 0)` then `sub_802D204(self, 0)`.
+  `SetMaskLevel(gLevelState, 0)` then `sub_802D204(self, 0)`.
 - **`sub_802D4B0`/`sub_802D4EC`** (`src/graphics/actor_part58.c`) - an
-  Aku-Aku-mask-style add/remove pair on `gUnknown_030012C0`'s `+0x78`
+  Aku-Aku-mask-style add/remove pair on `gLevelState`'s `+0x78`
   counter (floored at 0 / capped at 3), each playing a sound and
   calling `sub_802D204`.
 - **`sub_802D528`/`sub_802D5D4`/`sub_802D648`/`sub_802D764`**
@@ -56,15 +56,15 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
   variants, each installing a different `self+0x50` event table
   (`gStaticData_087E5054`/`5074`/`5094`/`50B4`) before a small amount of
   table-specific setup: `sub_802D528` offsets its position args by
-  fixed deltas and pushes a 6th argument through `sub_80231EC`;
+  fixed deltas and pushes a 6th argument through `SetMaskLevel`;
   `sub_802D5D4` is a plain passthrough clearing the `+0x2c` one-shot
   flag; `sub_802D648` classifies `posY>>8` into a 3-way "kind" selecting
   which anim record seeds `self+0x10`/`0x12`; `sub_802D764` only
   transitions to kind 2 when `sub_802973C()` matches its own `d`
   argument.
 - **`sub_802D57C`/`sub_802D590`** (`src/graphics/actor_part58.c`) -
-  trivial: a pass-through-second-argument forwarder to `sub_80231EC`,
-  and a getter for `gUnknown_030012C0`'s `+0x78` counter.
+  trivial: a pass-through-second-argument forwarder to `SetMaskLevel`,
+  and a getter for `gLevelState`'s `+0x78` counter.
 - **`sub_802D59C`/`sub_802D600`/`sub_802D6A0`**
   (`src/graphics/actor_part58.c`) - small state-machine steps gated on
   `sub_802A6EC`'s trampoline-fire edge and/or `sub_802DD9C`'s AABB

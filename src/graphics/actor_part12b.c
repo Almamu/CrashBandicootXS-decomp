@@ -8,7 +8,7 @@ struct probe_pos {
 
 extern s32 sub_8008278(void *posQ8, s32 kind, void *rec);
 extern u8 sub_8026628(void *player, s32 mode, void *posInt, s32 span, void *outY);
-extern void *gUnknown_03001308;
+extern void *gLevelLayers;
 
 /* A physics/collision "step probe": makes a working copy of `self`'s
  * position (`self->x`/`self->y`), runs it through `sub_8008278`
@@ -16,19 +16,19 @@ extern void *gUnknown_03001308;
  * position pointer and `arg1` alongside it), converts the result from
  * Q8 fixed-point to plain integers, resets `self+0x69` (an attempt
  * counter) to 0, then probes the position via `sub_8026628` (also
- * still unexamined - takes `gUnknown_03001308`, `arg1`, the working
+ * still unexamined - takes `gLevelLayers`, `arg1`, the working
  * integer position, `arg2` - `*(u8 *)(arg2+4)` - and a pointer to
  * `self`'s original Q8 `y`).
  *
  * If the first probe succeeds: restores `self->y` to its original
  * value (undoing whatever `sub_8008278` mutated) and returns `1`.
  *
- * Otherwise: clears `gUnknown_03001308`'s `+0x2a` flag byte (saving
+ * Otherwise: clears `gLevelLayers`'s `+0x2a` flag byte (saving
  * its old value) and retries the probe up to 3 more times, nudging the
  * working Y position down by `8` (Q8, i.e. `1/32` of a pixel-ish unit)
  * each attempt and incrementing `self+0x69`'s attempt counter; whether
  * a retry succeeds or all 4 attempts are exhausted, restores
- * `gUnknown_03001308`'s `+0x2a` byte to its saved value and returns
+ * `gLevelLayers`'s `+0x2a` byte to its saved value and returns
  * `0` either way - only the very first, un-nudged probe returning
  * success is distinguished by this function's return value.
  *
@@ -41,7 +41,7 @@ extern void *gUnknown_03001308;
  * `u8` result is kept in a local (its 0 is what the ROM stores into
  * `+0x2a`), position and `origY` are one frame struct, and a hit inside
  * the loop restores the flag and returns on its own - that copy reloads
- * `gUnknown_03001308` from the literal pool, the loop-exit copy uses
+ * `gLevelLayers` from the literal pool, the loop-exit copy uses
  * the cached address, and cross-jumping shares their `strb`. */
 #include "box_part.h"
 
@@ -68,28 +68,28 @@ s32 sub_8009BE0(struct box_part *self, s32 mode, struct part_box *quad)
     f.y >>= 8;
     tries = &self->probeTries;
     *tries = 0;
-    hit = sub_8026628(gUnknown_03001308, mode, &f, span, &f.origY);
+    hit = sub_8026628(gLevelLayers, mode, &f, span, &f.origY);
     if (hit) {
         self->y = f.origY;
         return 1;
     }
     {
-        u8 saved = ((struct probe_world *)gUnknown_03001308)->probeFlag;
+        u8 saved = ((struct probe_world *)gLevelLayers)->probeFlag;
         u8 *t2;
         struct probe_pos *pp;
 
-        ((struct probe_world *)gUnknown_03001308)->probeFlag = 0;
+        ((struct probe_world *)gLevelLayers)->probeFlag = 0;
         t2 = tries;
         pp = (struct probe_pos *)&f;
         do {
             (*t2)++;
             pp->y += 8;
-            if (sub_8026628(gUnknown_03001308, mode, &f, span, &f.origY)) {
-                ((struct probe_world *)gUnknown_03001308)->probeFlag = saved;
+            if (sub_8026628(gLevelLayers, mode, &f, span, &f.origY)) {
+                ((struct probe_world *)gLevelLayers)->probeFlag = saved;
                 return 0;
             }
         } while (*tries <= 2);
-        ((struct probe_world *)gUnknown_03001308)->probeFlag = saved;
+        ((struct probe_world *)gLevelLayers)->probeFlag = saved;
     }
     return 0;
 }

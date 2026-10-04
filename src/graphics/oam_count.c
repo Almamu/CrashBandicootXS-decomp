@@ -22,7 +22,7 @@ struct threshold_table_entry {
 };
 COMPILE_TIME_ASSERT(sizeof(struct threshold_table_entry) == 0x24);
 
-extern struct threshold_table_entry gStaticData_0816C86C[];
+extern struct threshold_table_entry gLevelTable[];
 extern void sub_80062A8(s32 arg0, s32 arg1, s32 arg2);
 extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
 extern void sub_8026ED0(void *arg0);
@@ -185,8 +185,8 @@ s32 sub_80067EC(void *arg0)
     s32 val;
 
     count = 0;
-    base = (u8 *)gStaticData_0816C86C;
-    bound = base + 0x10; /* &gStaticData_0816C86C[0].threshold_10 */
+    base = (u8 *)gLevelTable;
+    bound = base + 0x10; /* &gLevelTable[0].threshold_10 */
     p = (u8 *)arg0;
     i = 0x13;
     do {
@@ -205,7 +205,7 @@ s32 sub_80067EC(void *arg0)
 }
 
 /* Counts records whose derived value falls in (threshold_10, threshold_0C]
- * of the matching gStaticData_0816C86C entry - see the comment on
+ * of the matching gLevelTable entry - see the comment on
  * struct threshold_table_entry above for why this reads through inline
  * asm instead of entry->threshold_0C/entry->threshold_10. */
 s32 sub_8006820(void *arg0)
@@ -226,9 +226,9 @@ s32 sub_8006820(void *arg0)
         raw = *(u16 *)(p + 4);
         val = raw >> 3;
         if (val != 0) {
-            asm volatile("add %0, %1, #0\n\tadd %0, %0, #0xc\n\tadd %0, %2, %0" : "=r"(addr) : "r"(gStaticData_0816C86C), "r"(offset));
+            asm volatile("add %0, %1, #0\n\tadd %0, %0, #0xc\n\tadd %0, %2, %0" : "=r"(addr) : "r"(gLevelTable), "r"(offset));
             if (val <= *(u32 *)addr) {
-                asm volatile("add %0, %1, #0\n\tadd %0, %0, #0x10\n\tadd %0, %2, %0" : "=r"(addr) : "r"(gStaticData_0816C86C), "r"(offset));
+                asm volatile("add %0, %1, #0\n\tadd %0, %0, #0x10\n\tadd %0, %2, %0" : "=r"(addr) : "r"(gLevelTable), "r"(offset));
                 if (val > *(u32 *)addr) {
                     count++;
                 }
@@ -261,9 +261,9 @@ s32 sub_8006864(void *arg0)
         raw = *(u16 *)(p + 4);
         val = raw >> 3;
         if (val != 0) {
-            asm volatile("add %0, %1, #0\n\tadd %0, %0, #8\n\tadd %0, %2, %0" : "=r"(addr) : "r"(gStaticData_0816C86C), "r"(offset));
+            asm volatile("add %0, %1, #0\n\tadd %0, %0, #8\n\tadd %0, %2, %0" : "=r"(addr) : "r"(gLevelTable), "r"(offset));
             if (val <= *(u32 *)addr) {
-                asm volatile("add %0, %1, #0\n\tadd %0, %0, #0xc\n\tadd %0, %2, %0" : "=r"(addr) : "r"(gStaticData_0816C86C), "r"(offset));
+                asm volatile("add %0, %1, #0\n\tadd %0, %0, #0xc\n\tadd %0, %2, %0" : "=r"(addr) : "r"(gLevelTable), "r"(offset));
                 if (val > *(u32 *)addr) {
                     count++;
                 }

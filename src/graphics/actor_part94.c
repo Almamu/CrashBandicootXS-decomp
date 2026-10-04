@@ -39,7 +39,7 @@ extern s32 gUnknown_03001424;
 extern s32 gUnknown_03001410;
 extern u8 gUnknown_0300141C;
 extern u8 gUnknown_03001414;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern void *gUnknown_03000884;
 /* The category vtable object (include/actor_anim.h's 13-fn-pointer
  * `struct category_vtable`) only has slots 0-6 confirmed as real
@@ -126,7 +126,7 @@ s32 sub_802A558(s32 idx)
 }
 
 /* Mode-selects one of the record's three variant bytes (normal /
- * "paused" via gUnknown_030012C0+0x8c / gUnknown_03001414), then
+ * "paused" via gLevelState+0x8c / gUnknown_03001414), then
  * subtracts 0x20 - see docs/rom_map.md's "sub_802A5xx siblings" entry.
  * This one *is* record[idx] itself (not idx+1) and its fields all fold
  * straight into the load/ldrb offsets, matching the ROM exactly. */
@@ -138,7 +138,7 @@ s32 sub_802A570(s32 idx)
     u8 v;
 
     v = record->variantA;
-    if (*((u8 *)gUnknown_030012C0 + 0x8c) != 0) {
+    if (*((u8 *)gLevelState + 0x8c) != 0) {
         v = record->variantB;
     } else if (gUnknown_03001414 != 0) {
         v = record->variantC;

@@ -1,15 +1,15 @@
 #ifndef __BG_SCROLL_LAYER_H__
 #define __BG_SCROLL_LAYER_H__
 
-/* The BG-scroll layer (0x5C bytes, constructor `sub_8025D74` in
- * game_loop15.c, base method table `gStaticData_087E4C14`), and its
+/* The BG-scroll layer (0x5C bytes, constructor `InitBgLayer` in
+ * game_loop15.c, base method table `gBgLayerVtable`), and its
  * tile-slot-pooled subclass used for BG layer 0 (0x60 bytes, constructor
- * `sub_8026448` in tile_slot_pool.c, method table `gStaticData_087E4C64`).
+ * `InitPooledBgLayer` in tile_slot_pool.c, method table `gPooledBgLayerVtable`).
  * The level-layers singleton (level_layers.c) owns one of each kind per
  * hardware BG. See docs/matching/issue-42-bg-scroll-layer.md.
  *
  * The layer keeps a 32x32-entry window of the level's tile map (a
- * `sub_8024960`-family ring-buffer streamer at `+0x2C`, game_loop57.c)
+ * `DecodeLayerChunk`-family ring-buffer streamer at `+0x2C`, game_loop57.c)
  * resident in its BG screen block: `+0x3C..+0x40` is the resident tile
  * row range and `+0x44..+0x48` the column range. Methods draw/release
  * one row or column at a time as the window moves. */
@@ -28,22 +28,22 @@ struct bg_layer_method
 struct bg_layer_vtable
 {
     u8 unk_00[8];                     // 0x00
-    struct bg_layer_method destroy;   // 0x08 - sub_80261B8 / sub_8026418
-    struct bg_layer_method reset;     // 0x10 - sub_802608C / sub_80263DC
-    struct bg_layer_method method_18; // 0x18 - sub_8025E98
+    struct bg_layer_method destroy;   // 0x08 - DestroyBgLayer / DestroyPooledBgLayer
+    struct bg_layer_method reset;     // 0x10 - ResetBgLayer / ResetPooledBgLayer
+    struct bg_layer_method method_18; // 0x18 - ScrollBgLayer
     struct bg_layer_method method_20; // 0x20 - sub_8024DCC / sub_8026250
-    struct bg_layer_method loadTiles; // 0x28 - sub_80260B4 / sub_80263F8
-    struct bg_layer_method drawRow;   // 0x30 - sub_8025FC8 / sub_8026368
-    struct bg_layer_method drawCol;   // 0x38 - sub_8025F3C / sub_80261CC
-    struct bg_layer_method clipCols;  // 0x40 - sub_8025E70 / sub_80262E8
-    struct bg_layer_method clipRows;  // 0x48 - sub_8025E84 / sub_8026328
+    struct bg_layer_method loadTiles; // 0x28 - LoadBgLayerTiles / LoadPooledBgLayerTiles
+    struct bg_layer_method drawRow;   // 0x30 - DrawBgLayerRow / DrawPooledBgLayerRow
+    struct bg_layer_method drawCol;   // 0x38 - DrawBgLayerColumn / DrawPooledBgLayerColumn
+    struct bg_layer_method clipCols;  // 0x40 - ClipBgLayerColumns / ClipPooledBgLayerColumns
+    struct bg_layer_method clipRows;  // 0x48 - ClipBgLayerRows / ClipPooledBgLayerRows
 };
 
 struct bg_scroll_layer
 {
     s32 x;                          // 0x00 - pixels
     s32 y;                          // 0x04
-    /* 0x08-0x24: set from the level layer by sub_8024EB4 (game_loop3.c) */
+    /* 0x08-0x24: set from the level layer by SetBgLayerSource (game_loop3.c) */
     s32 maxX;                       // 0x08 - widthPx - 240, the scroll limit
     s32 maxY;                       // 0x0C - heightPx - 160
     s32 widthPx;                    // 0x10

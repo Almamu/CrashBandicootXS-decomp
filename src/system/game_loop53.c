@@ -23,7 +23,7 @@
 
 extern void *gUnknown_030012BC;
 extern void *gUnknown_03001318;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void sub_8007174(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4);
 extern s32 sub_80008F0(s32 arg0, s32 arg1);
@@ -121,9 +121,9 @@ void sub_8011448(struct orbit_part *self, u8 randomize)
  *    wraps self->0x3c by +/-4 (mode-gated by self->0x49) each frame in
  *    [0,0x140], and once self->x>>8/self->y>>8 both fall within a small
  *    box (|x|<=0x10, |y|<=0x10) fires PlaySfx(gUnknown_030012BC,0xe,
- *    0x100), calls sub_8023430(gUnknown_030012C0) (a scoring/counter
+ *    0x100), calls CollectWumpa(gLevelState) (a scoring/counter
  *    candidate per docs/rom_map.md), sets self->0xc bit 0, and - unless
- *    self->8 == 0xffff - sets self->8's bit in the gUnknown_030012B4+
+ *    self->8 == 0xffff - sets self->8's bit in the gEntityFlags+
  *    0x108 collision bitmap (the same inline idiom sub_80072D8/
  *    sub_8025A64 use on a struct actor).
  *  - mode 2: same integrate step, then wraps self->0x3c similarly but
@@ -131,7 +131,7 @@ void sub_8011448(struct orbit_part *self, u8 randomize)
  *    into the same "set self->0xc bit 0 + collision-bitmap" tail as
  *    mode 1.
  *  - mode 3: increments self->0x49 each frame; every 11th frame resets
- *    it and calls sub_8025CA4(gUnknown_030012E4, self->x>>8, self->y>>8,
+ *    it and calls sub_8025CA4(gEntitySpawner, self->x>>8, self->y>>8,
  *    0, 1, 0) (a NAKED part-object spawner already matched in
  *    game_loop14.c) - then increments self->0x4b every frame too; every
  *    10th frame falls into the same collision-bitmap tail as modes 1/2.
@@ -162,10 +162,10 @@ void sub_8011448(struct orbit_part *self, u8 randomize)
  * signed `ble`; the state is re-read for each test. The integrate step
  * (ORBIT_STEP), the spawn argument's address and the state-3 tail's
  * locals settle the last register and order differences. */
-extern void *gUnknown_030012B4;
-extern void *gUnknown_030012E4;
+extern void *gEntityFlags;
+extern void *gEntitySpawner;
 extern struct orbit_part *gUnknown_030012D8;
-extern void sub_8023430(void *state);
+extern void CollectWumpa(void *state);
 extern struct actor *sub_8025CA4(void *unused0, u16 x, u16 y, u8 p3, u8 p4, u8 p5);
 typedef struct actor *(*OrbitSpawn4)(void *pool, s32 x, s32 y, u8 p3);
 
@@ -187,7 +187,7 @@ extern void sub_8008364(struct actor *self);
     if (1)                                                                     \
     {                                                                          \
         s32 _id = (idExpr);                                                    \
-        u8 *_base = gUnknown_030012B4;                                         \
+        u8 *_base = gEntityFlags;                                         \
         s32 _word = _id / 32;                                                  \
         s32 _off = _word * 4;                                                  \
         u32 *_slot = (u32 *)(_base + 0x108);                                   \
@@ -231,7 +231,7 @@ void sub_8011548(struct orbit_part *self)
         }
         if (self->base.x >> 8 <= 0x10 && self->base.y >> 8 <= 0x10) {
             PlaySfx(gUnknown_030012BC, 0xe, 0x100);
-            sub_8023430(gUnknown_030012C0);
+            CollectWumpa(gLevelState);
             ORBIT_MARK_GONE(self, 1);
         }
     } else if (self->state == 2) {
@@ -266,7 +266,7 @@ void sub_8011548(struct orbit_part *self)
                 /* The empty asm takes `&argP5` into a register as its own
                  * insn, so its `add r3, sp, #4` comes before the `movs r5,
                  * #1` (as an address reload of the store, it came after). */
-                ((OrbitSpawn4)sub_8025CA4)(gUnknown_030012E4, sx, sy,
+                ((OrbitSpawn4)sub_8025CA4)(gEntitySpawner, sx, sy,
                     (*(volatile s32 *)&argP4 = 0,
                      ({ asm("" : "=r"(q) : "0"(&argP5)); 0; }),
                      *q = 1, 0));

@@ -7,10 +7,10 @@
  * see docs/data.md and docs/levels.md.
  *
  * - five palette-entry lists for the level-start colour cycles;
- * - gStaticData_0816C86C, one `struct level_info` per level;
+ * - gLevelTable, one `struct level_info` per level;
  * - per level, its room list: the rooms played in order, and up to two
  *   extra rooms;
- * - gStaticData_0816CD80, the music cue of each level theme;
+ * - gThemeMusicCues, the music cue of each level theme;
  * - the room records: a room's palette and `struct level_desc` (both
  *   defined in src/data/level_rooms_*.c, from data/levels/), or the
  *   actor category of a stage that has no room data.
@@ -188,14 +188,14 @@ extern const struct level_room gLevelStage6;
  * sub_8023A1C (game_loop56.c), one list per theme case: each is the
  * `lists` argument of a sub_8027018 call on BG palette RAM.
  */
-const u16 gStaticData_0816C814[5] = { 0xb1, 0xb2, 0xb3, 0xb4, 0xb5 };
-const u16 gStaticData_0816C81E[9] = { 0x39, 0x3a, 0x3d, 0x3e, 0x75, 0x82, 0xbc, 0xea, 0xfc };
-const u16 gStaticData_0816C830[9] = { 0x51, 0x52, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0xf1 };
-const u16 gStaticData_0816C842[16] = {
+const u16 gThemePaletteCycle2[5] = { 0xb1, 0xb2, 0xb3, 0xb4, 0xb5 };
+const u16 gThemePaletteCycle1A[9] = { 0x39, 0x3a, 0x3d, 0x3e, 0x75, 0x82, 0xbc, 0xea, 0xfc };
+const u16 gThemePaletteCycle1B[9] = { 0x51, 0x52, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0xf1 };
+const u16 gThemePaletteCycle3[16] = {
     0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27,
     0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f,
 };
-const u16 gStaticData_0816C862[5] = { 0x97, 0xb4, 0xf7, 0xf8, 0xff };
+const u16 gThemePaletteCycle5[5] = { 0x97, 0xb4, 0xf7, 0xf8, 0xff };
 
 /*
  * The levels, indexed by level id (the game's level numbering; `nameText`
@@ -205,7 +205,7 @@ const u16 gStaticData_0816C862[5] = { 0x97, 0xb4, 0xf7, 0xf8, 0xff };
  * `MedalTableEntry` (game_loop17.c, game_loop18.c), `level_guard`
  * (graphics_loading_21280.c) and `gl_level_entry` (game_loop56.c).
  */
-const struct level_info gStaticData_0816C86C[25] = {
+const struct level_info gLevelTable[25] = {
     { 1, 1, { 355, 275, 233 }, 4, 4, 0, &gLevelRoomLists[0] },
     { 2, 3, { 777, 677, 544 }, 4, 1, 0, &gLevelRoomLists[1] },
     { 3, 1, { 627, 557, 490 }, 4, 4, 0, &gLevelRoomLists[2] },
@@ -266,7 +266,7 @@ const struct level_room_list gLevelRoomLists[25] = {
  * The music cue of each level theme (`struct level_info.theme`), read by
  * sub_8024498 (game_loop18.c).
  */
-const u8 gStaticData_0816CD80[11] = { 2, 0, 3, 1, 5, 4, 7, 8, 9, 10, 10 };
+const u8 gThemeMusicCues[11] = { 2, 0, 3, 1, 5, 4, 7, 8, 9, 10, 10 };
 
 /* The extra rooms of the room lists (rooms 00-16). */
 const struct level_room gLevelRoom00 = { gStaticData_0826443A, &gStaticData_08264730, 0, 0, 0, 0 }; /* data/levels/room00_264730 */

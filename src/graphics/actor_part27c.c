@@ -16,7 +16,7 @@
  * actor_part18.c. */
 
 extern u8 gStaticData_087E442C[];
-/* gUnknown_03001308's view here: only the followed object's `+0x14`
+/* gLevelLayers's view here: only the followed object's `+0x14`
  * word is read (same `viewport`/`camera` naming as actor_part7.c). */
 struct camera_pos {
     s32 x;
@@ -30,8 +30,8 @@ struct viewport {
     struct camera_pos *camera; // 0x10
 };
 
-extern struct viewport *gUnknown_03001308;
-extern void *gUnknown_030012B4;
+extern struct viewport *gLevelLayers;
+extern void *gEntityFlags;
 extern s32 sub_803AD84(void *addr, void *arg1, void *arg2, void *fn);
 extern void sub_800B8A8(void *self, s32 flags);
 extern void sub_800B8C8(void *self);
@@ -39,7 +39,7 @@ extern void sub_800B8C8(void *self);
 /* A two-state (`obj+8`: 0 then 1 then 2) "charge" handler. State 0
  * fires the usual table-trampoline pair (action 8) and advances to
  * state 1. State 1 accumulates `+0x400` per call into `other+4` until
- * it reaches `(gUnknown_03001308's sub-object's +0x14 word << 8) +
+ * it reaches `(gLevelLayers's sub-object's +0x14 word << 8) +
  * 0x2000`, then advances to state 2 (a "fully charged" terminal
  * state this function no longer touches).
  *
@@ -86,7 +86,7 @@ case1:
         s32 threshold;
 
         *(s32 *)(other + 4) = timer;
-        subObj = gUnknown_03001308->camera;
+        subObj = gLevelLayers->camera;
         threshold = (subObj->unk_14 << 8) + 0x2000;
         if (timer >= threshold) {
             *(s32 *)(obj + 8) = 2;
@@ -120,7 +120,7 @@ void *sub_801886C(void *selfArg)
 
 /* While `other+0x38` is set: ORs bit 0 into `other+0xc`'s flags, then
  * (unless `other+8`'s id is the sentinel `0xFFFF`) sets bit
- * `other+8 & 0x1f` in the `gUnknown_030012B4+0x108` word-indexed
+ * `other+8 & 0x1f` in the `gEntityFlags+0x108` word-indexed
  * bitmap - the same bitmap-set idiom `sub_8007DBC` uses via
  * `part->field_08`. The first argument is taken but never read
  * anywhere in this function's ROM body.
@@ -153,7 +153,7 @@ void sub_8018884(void *unusedArg, void *otherArg)
 
             if (val != sentinel) {
                 register u16 val2 asm("r3") = *(u16 volatile *)(other + 8);
-                register u8 *base asm("r2") = gUnknown_030012B4;
+                register u8 *base asm("r2") = gEntityFlags;
                 register s32 idx asm("r0");
                 s32 idxOffset;
                 s32 *bitmap;

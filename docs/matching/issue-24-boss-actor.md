@@ -115,7 +115,7 @@ level, signals `sub_80241A4` (the "entity ready" barrier in
 calls the object's slot +0x20 method and then runs the state's
 animation, spawns and sounds. `sub_8019EBC`, `sub_801A03C` and
 `sub_801A584` spawn parts through `sub_8009ED0`. `sub_8019EBC` reads the
-level's "collected" bits (`gUnknown_030012B4->info`) into the new part's
+level's "collected" bits (`gEntityFlags->info`) into the new part's
 `+0x28` flags.
 
 `struct part` gained a few named fields: `+0x0C` flags (bit 0 gone,

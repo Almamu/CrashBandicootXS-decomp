@@ -24,7 +24,7 @@ struct viewport {
     struct camera_pos *camera; // 0x10
 };
 
-extern struct viewport *gUnknown_03001308;
+extern struct viewport *gLevelLayers;
 extern struct box_part *gUnknown_030012D8;
 extern s32 sub_803AD80(void *self, void *arg, void *fn);
 extern s32 sub_803AD7C(void *self, void *fn);
@@ -89,7 +89,7 @@ void sub_8009528(struct pool_manager *m, struct part_aabb box, s32 unused, struc
     struct grid_node **last;
     struct grid_node **heads;
 
-    cam = gUnknown_03001308->camera;
+    cam = gLevelLayers->camera;
     {
         s32 x = cam->x << 8;
         s32 y = cam->y << 8;

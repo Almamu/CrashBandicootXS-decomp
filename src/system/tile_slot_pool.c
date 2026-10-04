@@ -3,27 +3,27 @@
 /* GitHub issue #43: BG layer 0 of the level-layers singleton
  * (`level_layers.c`) and the VRAM tile-slot pool it owns.
  *
- * Layer 0 is a BG-scroll layer (`sub_8025D74`) extended with a
- * `struct tile_slot_pool` at `+0x5C`: `sub_8026448` constructs it
- * (base constructor, own method table `gStaticData_087E4C64`, sets
- * `+0x34` bit 7 and clears bits 2-3, allocates the pool), `sub_8026418`
+ * Layer 0 is a BG-scroll layer (`InitBgLayer`) extended with a
+ * `struct tile_slot_pool` at `+0x5C`: `InitPooledBgLayer` constructs it
+ * (base constructor, own method table `gPooledBgLayerVtable`, sets
+ * `+0x34` bit 7 and clears bits 2-3, allocates the pool), `DestroyPooledBgLayer`
  * destroys it (frees the pool, restores the base table
- * `gStaticData_087E4C14`, chains to the base destructor `sub_8024D74`).
+ * `gBgLayerVtable`, chains to the base destructor `DestroyBgLayerBase`).
  * `sub_8026480` reads `+0x34` bits 0-1.
  *
  * The pool maps up to 0x2000 source tiles onto 0x200 reference-counted
  * VRAM tile slots:
- * - `sub_802648C` - reset: every slot free, every source tile
+ * - `ResetTileSlotPool` - reset: every slot free, every source tile
  *   non-resident, all counts zero.
- * - `sub_80264F8(pool, tile)` - acquire: if source tile `tile & 0x3FFF`
+ * - `AcquireTileSlot(pool, tile)` - acquire: if source tile `tile & 0x3FFF`
  *   isn't resident, pops a free slot and queues a 64-byte (8bpp tile)
  *   VRAM DMA of it via `sub_80265FC`; bumps the slot's count and returns
  *   a BG map entry: the slot number with `tile`'s top two bits moved to
  *   bits 10-11 (the map entry's flip bits). Upper bits of the returned
  *   entry are never set.
- * - `sub_80265A0(pool, tile)` - release: drops the count and returns the
+ * - `ReleaseTileSlot(pool, tile)` - release: drops the count and returns the
  *   slot to the free stack when it reaches zero.
- * - `sub_8026618(pool, charBase, src)` - sets the VRAM destination to
+ * - `SetTileSlotPoolSource(pool, charBase, src)` - sets the VRAM destination to
  *   character base block `charBase` and the source tile data.
  *
  * Matching notes: the free-stack push and the slot-table accessors are
@@ -33,9 +33,9 @@
  * returned map entry are 4-byte unions of a `u16` and a `u32` bitfield
  * struct, reproducing the ROM's register-held `& 0xFFFF0000 | tile`
  * and `lsl #18/lsr #18`, `lsl #16/lsr #30` field extraction. The
- * refcount updates use an r1-pinned temp, `sub_8026448`'s `+0x34`
- * update is a narrow inline-asm block (same case as `sub_8025D74`), and
- * `sub_80264F8` needs two more (constant-before-load for the residency
+ * refcount updates use an r1-pinned temp, `InitPooledBgLayer`'s `+0x34`
+ * update is a narrow inline-asm block (same case as `InitBgLayer`), and
+ * `AcquireTileSlot` needs two more (constant-before-load for the residency
  * test, and its refcount update) - see the comments there. See
  * docs/matching/issue-43-level-layers.md.
  *
@@ -77,7 +77,7 @@ union bg_entry
 
 struct pooled_layer
 {
-    u8 unk_00[0x30];              // 0x00 - BG-scroll-layer base (sub_8025D74)
+    u8 unk_00[0x30];              // 0x00 - BG-scroll-layer base (InitBgLayer)
     void *vtable;                 // 0x30
     u8 bits0_1:2;                 // 0x34
     u8 bits2_3:2;
@@ -87,13 +87,13 @@ struct pooled_layer
     struct tile_slot_pool *pool;  // 0x5C
 };
 
-extern void *sub_8025D74(void *self, s32 bgIndex);
-extern void sub_8024D74(void *self, u32 flags);
+extern void *InitBgLayer(void *self, s32 bgIndex);
+extern void DestroyBgLayerBase(void *self, u32 flags);
 extern void *sub_8026EDC(u32 size);
 extern void sub_8026ED0(void *ptr);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
-extern u8 gStaticData_087E4C64[];
-extern u8 gStaticData_087E4C14[];
+extern u8 gPooledBgLayerVtable[];
+extern u8 gBgLayerVtable[];
 
 void sub_80265FC(struct tile_slot_pool *pool, s32 tileId, s32 slot);
 
@@ -122,24 +122,24 @@ static inline u16 GetTileSlot(struct tile_slot_pool *pool, s32 id)
     return pool->slotForTile[id];
 }
 
-void sub_8026418(struct pooled_layer *self, u32 flags)
+void DestroyPooledBgLayer(struct pooled_layer *self, u32 flags)
 {
-    self->vtable = gStaticData_087E4C64;
+    self->vtable = gPooledBgLayerVtable;
     if (self->pool != NULL)
         sub_8026ED0(self->pool);
-    self->vtable = gStaticData_087E4C14;
-    sub_8024D74(self, flags);
+    self->vtable = gBgLayerVtable;
+    DestroyBgLayerBase(self, flags);
 }
 
-struct pooled_layer *sub_8026448(struct pooled_layer *self, s32 bgIndex)
+struct pooled_layer *InitPooledBgLayer(struct pooled_layer *self, s32 bgIndex)
 {
-    sub_8025D74(self, bgIndex);
-    self->vtable = gStaticData_087E4C64;
+    InitBgLayer(self, bgIndex);
+    self->vtable = gPooledBgLayerVtable;
     {
         /* bit7 = 1, bits2_3 = 0. This compiler folds both masks to
          * immediates; the ROM keeps the `& 0x7f` and derives `-0xd` from
          * the `0x80` register (`subs #0x8d`) - same class as
-         * sub_8025D74's +0x34/+0x35 updates (game_loop15.c). */
+         * InitBgLayer's +0x34/+0x35 updates (game_loop15.c). */
         register u8 *bits asm("r2") = (u8 *)self + 0x34;
         asm volatile(
             "mov r1, #0x80\n\t"
@@ -161,7 +161,7 @@ u32 sub_8026480(struct pooled_layer *self)
     return self->bits0_1;
 }
 
-void sub_802648C(struct tile_slot_pool *pool)
+void ResetTileSlotPool(struct tile_slot_pool *pool)
 {
     s32 i;
 
@@ -174,7 +174,7 @@ void sub_802648C(struct tile_slot_pool *pool)
         pool->refCount[i] = 0;
 }
 
-u16 sub_80264F8(struct tile_slot_pool *pool, u16 tile)
+u16 AcquireTileSlot(struct tile_slot_pool *pool, u16 tile)
 {
     union tile_ref ref;
     union bg_entry out;
@@ -215,7 +215,7 @@ u16 sub_80264F8(struct tile_slot_pool *pool, u16 tile)
     return out.raw;
 }
 
-void sub_80265A0(struct tile_slot_pool *pool, u32 tile)
+void ReleaseTileSlot(struct tile_slot_pool *pool, u32 tile)
 {
     s32 id = tile & 0x3FFF;
     u16 slot = pool->slotForTile[id];
@@ -235,7 +235,7 @@ void sub_80265FC(struct tile_slot_pool *pool, s32 tileId, s32 slot)
     QueueVramDmaTransfer((void *)(pool->srcBase + tileId * 64), (void *)(pool->vramBase + slot * 64), 0x40, 0x10);
 }
 
-void sub_8026618(struct tile_slot_pool *pool, s32 charBase, u32 src)
+void SetTileSlotPoolSource(struct tile_slot_pool *pool, s32 charBase, u32 src)
 {
     pool->vramBase = VRAM + (charBase << 14);
     pool->srcBase = src;

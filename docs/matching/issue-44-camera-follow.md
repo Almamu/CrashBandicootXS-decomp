@@ -19,7 +19,7 @@ this pass. The remaining eight functions - the whole of the former
 | 0x14 | `mode` | 1 = `sub_8026D8C`, 2 = `sub_8026C90`, anything else = hold |
 
 Both publishers pass `(x - (120 << 8), y - (80 << 8))` - half the
-240x160 screen - to `sub_80268D0(gUnknown_03001308, ...)`. That function
+240x160 screen - to `SetLevelScroll(gLevelLayers, ...)`. That function
 is still raw (`asm/code_3_2_17_266bc.s`), but it's short enough to read
 directly: it clamps both coordinates to `>= 0`, shifts Q8 down to pixels,
 caps each at the object's own `+0x0`/`+0x4`, and stores them at

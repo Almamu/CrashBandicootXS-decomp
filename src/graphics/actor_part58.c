@@ -13,14 +13,14 @@
  * `InitActorPart`-calling constructor variants (each installing a
  * different `self+0x50` event/trampoline table before doing a small
  * amount of table-specific setup) plus a couple of small self-standing
- * helpers operating on the unrelated `gUnknown_030012C0`-rooted "player"
+ * helpers operating on the unrelated `gLevelState`-rooted "player"
  * object's `+0x78` counter field (an Aku-Aku-mask-style add/remove
  * pair, `sub_802D4B0`/`sub_802D4EC`) and a `gUnknown_03001494`-rooted
  * sibling object (`sub_802D490`). See docs/matching/issue-54-actor-d3a8.md. */
 
-extern struct level_state *gUnknown_030012C0;
+extern struct level_state *gLevelState;
 extern void *gUnknown_030012BC;
-extern s32 sub_80231EC(struct level_state *arg0, s32 arg1);
+extern s32 SetMaskLevel(struct level_state *arg0, s32 arg1);
 extern void sub_802D204(void *self, s32 arg1);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void *InitActorPart(void *self, void *part, s32 b, s32 c, s32 d);
@@ -51,30 +51,30 @@ struct actor_once {
     u8 once;            // 0x54
 };
 
-/* Passes its argument through to `sub_80231EC(gUnknown_030012C0, 0)`,
+/* Passes its argument through to `SetMaskLevel(gLevelState, 0)`,
  * then `sub_802D204(self, 0)` - a trivial reset pair on a different,
  * `gUnknown_03001494`-rooted object family, unrelated to this file's
  * `self` (see `actor_part19.c`'s `sub_802C018`, which calls this with
  * `gUnknown_03001494`). */
 void sub_802D490(void *self)
 {
-    sub_80231EC(gUnknown_030012C0, 0);
+    SetMaskLevel(gLevelState, 0);
     sub_802D204(self, 0);
 }
 
-/* "Remove a mask": plays a sound, decrements `gUnknown_030012C0`'s
+/* "Remove a mask": plays a sound, decrements `gLevelState`'s
  * `+0x78` counter (floored at 0), pushes the new count via
- * `sub_80231EC`, and always calls `sub_802D204(self, 1)`. Returns the
+ * `SetMaskLevel`, and always calls `sub_802D204(self, 1)`. Returns the
  * (possibly unchanged) counter. */
 s32 sub_802D4B0(void *self)
 {
     s32 count;
 
     PlaySfx(gUnknown_030012BC, 0, 0x100);
-    count = gUnknown_030012C0->maskLevel;
+    count = gLevelState->maskLevel;
     if (count != 0) {
         count -= 1;
-        sub_80231EC(gUnknown_030012C0, count);
+        SetMaskLevel(gLevelState, count);
     }
     sub_802D204(self, 1);
     return count;
@@ -87,10 +87,10 @@ s32 sub_802D4EC(void *self)
     s32 count;
 
     PlaySfx(gUnknown_030012BC, 1, 0x100);
-    count = gUnknown_030012C0->maskLevel;
+    count = gLevelState->maskLevel;
     if (count != 3) {
         count += 1;
-        sub_80231EC(gUnknown_030012C0, count);
+        SetMaskLevel(gLevelState, count);
     }
     sub_802D204(self, 0);
     return count;
@@ -101,31 +101,31 @@ s32 sub_802D4EC(void *self)
  * `sub_802D3A8` uses for its own state-0 scatter targets - plausibly a
  * "spawn at scatter offset" helper feeding that function), installs the
  * `gStaticData_087E5054` event table, then pushes the caller's own
- * 6th argument through `sub_80231EC` before resetting state via
+ * 6th argument through `SetMaskLevel` before resetting state via
  * `sub_802D204(self, 0)`. */
 void *sub_802D528(struct actor_self *self, void *part, s32 b, s32 c, s32 d, s32 sixth)
 {
     InitActorPart(self, part, b - 0x1000, c - 0x1E00, d - 0x200);
     self->vtable = (struct actor_vtable *)gStaticData_087E5054;
-    sub_80231EC(gUnknown_030012C0, sixth);
+    SetMaskLevel(gLevelState, sixth);
     sub_802D204(self, 0);
     return self;
 }
 
-/* Trivial forwarder: `sub_80231EC(gUnknown_030012C0, arg1)`, where
+/* Trivial forwarder: `SetMaskLevel(gLevelState, arg1)`, where
  * `arg1` is this function's own second parameter, passed straight
  * through in `r1` (the same "ignore my own first argument, forward my
  * second" shape as `sub_802BFD4` in actor_part50.c). */
 void sub_802D57C(void *arg0, s32 arg1)
 {
-    sub_80231EC(gUnknown_030012C0, arg1);
+    SetMaskLevel(gLevelState, arg1);
 }
 
-/* Trivial getter: `gUnknown_030012C0`'s `+0x78` counter (the same field
+/* Trivial getter: `gLevelState`'s `+0x78` counter (the same field
  * `sub_802D4B0`/`sub_802D4EC` above adjust). */
 s32 sub_802D590(void)
 {
-    return gUnknown_030012C0->maskLevel;
+    return gLevelState->maskLevel;
 }
 
 /* Once `self`'s frame counter (`+0x44`) exceeds 5, latches the one-shot
@@ -256,7 +256,7 @@ void sub_802D6A0(void *selfArg)
             self->animTime = kind;
 
             PlaySfx(gUnknown_030012BC, 0x17, 0x100);
-            sub_8022FEC(gUnknown_030012C0);
+            sub_8022FEC(gLevelState);
             sub_8029748(self->z);
             sub_802B12C(self->x, self->y - 0xF00, self->z);
         }
@@ -276,7 +276,7 @@ void sub_802D6A0(void *selfArg)
             self->unk_18 = 1;
 
             PlaySfx(gUnknown_030012BC, 3, 0x100);
-            sub_8022FEC(gUnknown_030012C0);
+            sub_8022FEC(gLevelState);
         }
     }
 

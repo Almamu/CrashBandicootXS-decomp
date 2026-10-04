@@ -19,14 +19,14 @@ extern void sub_8009150(struct phys_obj_list *list, struct phys_obj *obj);
 extern struct phys_obj_list *gUnknown_0300130C;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void *gUnknown_030012BC;
-extern void *gUnknown_030012E4;
+extern void *gEntitySpawner;
 extern u8 gStaticData_0816BB98[];
 extern u8 gStaticData_0816BBDA[];
 extern u8 gStaticData_0816BBC4[];
 extern u16 rand(void);
 extern void sub_8022FEC(void *self);
 extern void sub_8022CA0(void *self, u8 arg1);
-extern void sub_8022EA8(void *arg, s32 n);
+extern void FreezeLevelClock(void *arg, s32 n);
 extern void sub_80259D4(void *self, s32 n);
 extern s32 sub_802599C(void *self, s32 n);
 extern struct phys_obj *sub_8010708(struct phys_obj *obj);
@@ -80,13 +80,13 @@ static inline void PhysArgByte(u8 *p, u8 v)
     *(volatile u8 *)p = v;
 }
 
-/* sub_8025CA4(gUnknown_030012E4, x, y, p3, p4, p5), x/y evaluated
+/* sub_8025CA4(gEntitySpawner, x, y, p3, p4, p5), x/y evaluated
  * before the pool pointer as in the ROM. */
 #define PHYS_SPAWN(x, y, p3, p4, p5)                                           \
     {                                                                          \
         s32 _x = (x);                                                          \
         s32 _y = (y);                                                          \
-        SPAWN_CALL(gUnknown_030012E4, _x, _y,                                  \
+        SPAWN_CALL(gEntitySpawner, _x, _y,                                  \
                    (*(volatile s32 *)&argP4 = (p4),                            \
                     PhysArgByte((u8 *)&argP5, (p5)), (p3)));                   \
     }
@@ -96,7 +96,7 @@ static inline void PhysArgByte(u8 *p, u8 v)
     {                                                                          \
         s32 _x = (x);                                                          \
         s32 _y = (y);                                                          \
-        BONUS_CALL(gUnknown_030012E4, _x, _y,                                  \
+        BONUS_CALL(gEntitySpawner, _x, _y,                                  \
                    (*(volatile s32 *)&argP4 = (p4),                            \
                     PhysArgByte((u8 *)&argP5, (p5)), (p3)));                   \
     }
@@ -154,7 +154,7 @@ void sub_800E560(struct phys_obj *self)
                     s32 x = self->x >> 8;
                     s32 y = (self->y >> 8) - 6;
 
-                    SPAWN_CALL(gUnknown_030012E4, x, y, (*(volatile s32 *)&argP4 = 0xe, ({
+                    SPAWN_CALL(gEntitySpawner, x, y, (*(volatile s32 *)&argP4 = 0xe, ({
                         p5 = (u8 *)&argP5;
                         one = 1;
                         *p5 = one;
@@ -165,7 +165,7 @@ void sub_800E560(struct phys_obj *self)
                     s32 x = (self->x >> 8) + 3;
                     s32 y = self->y >> 8;
 
-                    SPAWN_CALL(gUnknown_030012E4, x, y, (*(volatile s32 *)&argP4 = 0, ({
+                    SPAWN_CALL(gEntitySpawner, x, y, (*(volatile s32 *)&argP4 = 0, ({
                         *p5 = one;
                         0;
                     }), 0));
@@ -329,7 +329,7 @@ void sub_800E6B0(struct phys_obj *self)
         s32 x = (self->x >> 8) - 10;
         s32 y = self->y >> 8;
 
-        puff = sub_8025BAC(gUnknown_030012E4, 0x2a, 0, x, y, 0);
+        puff = sub_8025BAC(gEntitySpawner, 0x2a, 0, x, y, 0);
     }
     puff->hidden = 0;
     puff->flipX = 0;
@@ -340,11 +340,11 @@ void sub_800E6B0(struct phys_obj *self)
         u16 id = self->id;
 
         if (id != 0xffff)
-            sub_80259D4(gUnknown_030012B4, id);
+            sub_80259D4(gEntityFlags, id);
     }
     if (gStaticData_0816BB98[self->kind])
-        sub_8022FEC(gUnknown_030012C0);
-    sub_8022CA0(gUnknown_030012C0, self->unk_50 != 0);
+        sub_8022FEC(gLevelState);
+    sub_8022CA0(gLevelState, self->unk_50 != 0);
     self->state &= 0x7f;
     PHYS_PLAYER->busy = 0;
     one = 1;
@@ -429,12 +429,12 @@ other:
  * selected hitbox record's own `+0x16` count, conditionally
  * reactivates the viewport (`sub_8022FEC`, gated on
  * `gStaticData_0816BB98[self+0x4e]`), flips one bit of
- * `gUnknown_030012B4`'s bit-grid keyed by `self+8`, calls
+ * `gEntityFlags`'s bit-grid keyed by `self+8`, calls
  * `sub_800EDBC` (neighbor "impact spread" propagation), then
  * dispatches a 23-case jump table on `self`'s freshly-cached
  * `+0x4e` state id to one of this subsystem's other per-state leaf
  * handlers (`sub_801085C`/`sub_801089C`/`sub_800F368`/`sub_800F2BC`/
- * `sub_800EAFC`/`sub_800ED08`/`sub_800EEF0`/`sub_8022EA8`, or a
+ * `sub_800EAFC`/`sub_800ED08`/`sub_800EEF0`/`FreezeLevelClock`, or a
  * SFX-3-plus-particle-spawn fallback) before converging on a shared
  * epilogue.
  *
@@ -474,10 +474,10 @@ void sub_800E888(struct phys_obj *self, u32 arg1)
     }
     PhysSetFrame(self, 3);
     if (gStaticData_0816BB98[self->kind])
-        sub_8022FEC(gUnknown_030012C0);
+        sub_8022FEC(gLevelState);
     {
         s32 id = self->id;
-        u8 *base = gUnknown_030012B4;
+        u8 *base = gEntityFlags;
         s32 word = id / 32;
         s32 off = word * 4;
         u32 *slot = (u32 *)(base + 0x108);
@@ -523,13 +523,13 @@ void sub_800E888(struct phys_obj *self, u32 arg1)
             sub_800ED08(self, chained);
         break;
     case 16:
-        sub_8022EA8(gUnknown_030012C0, 1);
+        FreezeLevelClock(gLevelState, 1);
         break;
     case 17:
-        sub_8022EA8(gUnknown_030012C0, 2);
+        FreezeLevelClock(gLevelState, 2);
         break;
     case 18:
-        sub_8022EA8(gUnknown_030012C0, 3);
+        FreezeLevelClock(gLevelState, 3);
         break;
     case 0:
         PHYS_SPAWN(self->x >> 8, (self->y >> 8) + 3, 0, 3, chained);
@@ -591,7 +591,7 @@ void sub_800EAFC(struct phys_obj *self, u32 arg1)
             s32 x = self->x >> 8;
             s32 y = self->y >> 8;
 
-            SPAWN_CALL(gUnknown_030012E4, x, y, (*(volatile s32 *)&argP4 = 0xff, ({
+            SPAWN_CALL(gEntitySpawner, x, y, (*(volatile s32 *)&argP4 = 0xff, ({
                 register u8 *p asm("r4") = (u8 *)&argP5;
                 register u8 v asm("r3") = 0;
                 *p = v;
@@ -605,8 +605,8 @@ void sub_800EAFC(struct phys_obj *self, u32 arg1)
             u16 id = self->id;
 
             if (id != 0xffff) {
-                if ((u8)sub_802599C(gUnknown_030012B4, id) == 0)
-                    sub_80259D4(gUnknown_030012B4, self->id);
+                if ((u8)sub_802599C(gEntityFlags, id) == 0)
+                    sub_80259D4(gEntityFlags, self->id);
             }
         }
         PHYS_BONUS(self->x >> 8, (self->y >> 8) + 3, 0, 3, flag);
@@ -653,7 +653,7 @@ void sub_800EAFC(struct phys_obj *self, u32 arg1)
  * order. */
 static inline void PhysBonus(s32 *p4, u8 *p5, s32 x, s32 y, u8 flag)
 {
-    BONUS_CALL(gUnknown_030012E4, x, y,
+    BONUS_CALL(gEntitySpawner, x, y,
                (*(volatile s32 *)p4 = 3, *(volatile u8 *)p5 = flag, 0));
 }
 
@@ -673,8 +673,8 @@ void sub_800ED08(struct phys_obj *self, u32 arg1)
             u16 id = self->id;
 
             if (id != 0xffff) {
-                if ((u8)sub_802599C(gUnknown_030012B4, id) == 0)
-                    sub_80259D4(gUnknown_030012B4, self->id);
+                if ((u8)sub_802599C(gEntityFlags, id) == 0)
+                    sub_80259D4(gEntityFlags, self->id);
             }
         }
         PhysBonus(&argP4, (u8 *)&argP5, self->x >> 8, (self->y >> 8) + 3, flag);

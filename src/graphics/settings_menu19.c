@@ -5,9 +5,9 @@
 #include "pause_screen_results.h"
 
 extern s32 sub_8026F38(s32 arg0);
-extern s32 sub_802332C(void *arg0);
-extern void *gUnknown_030012C0;
-extern u8 gStaticData_0816C86C[];
+extern s32 GetCurrentLevel(void *arg0);
+extern void *gLevelState;
+extern u8 gLevelTable[];
 extern s32 sub_800697C(void *arg0);
 extern s32 sub_80060AC(s32 value, void *dest);
 extern void sub_80060F8(s32 arg0, s32 arg1, u8 *out);
@@ -32,8 +32,8 @@ extern void sub_8005D44(struct pause_screen_results *self);
  * parked - src/graphics/settings_menu6.c). */
 void sub_800599C(struct pause_screen_results *self)
 {
-    s32 levelIdx = sub_802332C(gUnknown_030012C0);
-    u32 labelId = *(u32 *)(gStaticData_0816C86C + levelIdx * 0x24);
+    s32 levelIdx = GetCurrentLevel(gLevelState);
+    u32 labelId = *(u32 *)(gLevelTable + levelIdx * 0x24);
 
     self->field_70 = (void *)sub_8026F38(labelId);
 

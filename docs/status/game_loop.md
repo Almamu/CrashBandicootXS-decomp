@@ -36,7 +36,7 @@ system from "core" system startup/init code.
   plus the two frame-counter/limit tick functions), and (GitHub issues
   #35/#36) `sub_80231CC` through `sub_8023484` (49 more functions,
   formerly `asm/code_3_2_17_231cc.s`, now retired - a direct, fully
-  contiguous continuation of the same `gUnknown_030012C0`-pointed
+  contiguous continuation of the same `gLevelState`-pointed
   "level" object: more `self+2` flag bits, the `self+0x6c`/`0x70`/
   `0x74`/`0x78`/`0xbc` counter/threshold-pair family, the `self+0xa4`-
   `0xa9` busy-flag bank, `self+0x7c`/`0x8c`/`0x90`/`0x94`/`0x98`/`0xc4`/
@@ -46,36 +46,36 @@ system from "core" system startup/init code.
   lazily initialize this object - GitHub issue #37's last standing
   gap) - all matched as real C, no `NAKED` fallbacks needed. See
   [docs/matching/issue-35-36-0x080231cc-game-loop.md](../matching/issue-35-36-0x080231cc-game-loop.md)
-- `src/system/game_loop57.c` (new file, GitHub issue #39): `sub_8024810`-
+- `src/system/game_loop57.c` (new file, GitHub issue #39): `InitSlideshow`-
   `sub_8024E24` (25 functions) - extends `struct SoundChannelList`
   (game_loop37.c/38.c) with more fields, plus the "visual scrolling
   background streamer" family (docs/rom_map.md): a circular 4x4-block
   ring-buffer tilemap fed by the same custom RLE/delta token-stream
-  decoder as the terrain-tile cache's `sub_8025334` (`sub_8024960`), its
-  per-frame axis-crossing driver (`sub_8024AA0`, matched as real C on
+  decoder as the terrain-tile cache's `DecodeCollisionChunk` (`DecodeLayerChunk`), its
+  per-frame axis-crossing driver (`ScrollBgStreamer`, matched as real C on
   the first attempt), its row/column incremental streamers
-  (`sub_8024BAC`/`sub_8024C08`) and full "level load" seeder
-  (`sub_8024C64`), three wrapped-address helpers (`sub_8024B18`/
-  `sub_8024B48`/`sub_8024B78`, matched as real C), and the object's
-  construction/accessors (`sub_8024CF0`/`sub_8024D0C`/`sub_8024D38`/
-  `sub_8024D58`/`sub_8024D5C`/`sub_8024D60`/`sub_8024D6C`/`sub_8024D74`/
-  `sub_8024DAC`/`sub_8024DCC`/`sub_8024DE0`/`sub_8024DFC`/`sub_8024E24`,
+  (`StreamBgRow`/`StreamBgColumn`) and full "level load" seeder
+  (`FillBgStreamer`), three wrapped-address helpers (`GetBgStreamerColumn`/
+  `GetBgStreamerRow`/`GetBgStreamerCell`, matched as real C), and the object's
+  construction/accessors (`SetBgStreamerSource`/`DestroyBgStreamer`/`InitBgStreamer`/
+  `sub_8024D58`/`sub_8024D5C`/`sub_8024D60`/`sub_8024D6C`/`DestroyBgLayerBase`/
+  `InitBgLayerBase`/`sub_8024DCC`/`sub_8024DE0`/`ScaleBgLayerScroll`/`sub_8024E24`,
   all matched as real C). All 25 are real C (built with old_agbcc, see
-  [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md)); `sub_8024820` and `sub_8024960`, the last two `NAKED` transcriptions, became real C last (see [strag1-naked-retry.md](../matching/strag1-naked-retry.md)). `asm/code_3_2_17_24810.s` is now fully retired. See
+  [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md)); `RunCutscenePlayer` and `DecodeLayerChunk`, the last two `NAKED` transcriptions, became real C last (see [strag1-naked-retry.md](../matching/strag1-naked-retry.md)). `asm/code_3_2_17_24810.s` is now fully retired. See
   [docs/matching/issue-39-0x08024810-game-loop.md](../matching/issue-39-0x08024810-game-loop.md)
-- `src/system/game_loop3.c` (GitHub issue #40): `sub_8024E68`,
-  `sub_8024E90`, `sub_8024EB4` (a viewport/parallax-scroll-layer object)
-  and `sub_8024F04`/`sub_8024F0C`/`sub_8024F10`/`sub_8024F14`/
-  `sub_8024F18`/`sub_8024F1C`/`sub_8024F20` (its field accessors), and
-  the terrain tile cache's `sub_8024F24`/`sub_80250BC`/`sub_8025130`/
+- `src/system/game_loop3.c` (GitHub issue #40): `ScrollBgLayerBase`,
+  `ResetBgLayerBase`, `SetBgLayerSource` (a viewport/parallax-scroll-layer object)
+  and `IsBgLayerEnabled`/`GetBgLayerY`/`GetBgLayerX`/`GetBgLayerHeightTiles`/
+  `GetBgLayerWidthTiles`/`GetBgLayerHeight`/`GetBgLayerWidth` (its field accessors), and
+  the terrain tile cache's `GetCollisionChunk`/`GetTerrainHeights`/`GetSolidTerrainHeights`/
   `sub_8025228` (plain C, built with old_agbcc - see [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md)),
-  and `sub_8025334`, the RLE/delta decoder (real C since the second
+  and `DecodeCollisionChunk`, the RLE/delta decoder (real C since the second
   near-miss sweep - see [near-miss-polish-2.md](../matching/near-miss-polish-2.md))
 - `src/system/game_loop4.c` (GitHub issue #40): `sub_8025444`,
-  `nullsub_4`, `sub_8025460` (plain C, built with old_agbcc - see
+  `nullsub_4`, `GetTerrainType` (plain C, built with old_agbcc - see
   [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md))
-- `src/system/game_loop5.c` (GitHub issue #40): `sub_80254C0`,
-  `sub_80254F8`, `sub_8025554`, `sub_8025588`, `sub_80255A8`,
+- `src/system/game_loop5.c` (GitHub issue #40): `GetCollisionCell`,
+  `SetCollisionSource`, `sub_8025554`, `sub_8025588`, `sub_80255A8`,
   `sub_80255C4` - the terrain tile-record decode cache's constructor,
   a raw-cell-lookup variant, a floor-div-by-32 bitmap set/clear pair,
   and a `CpuSet`-based palette-bank zero-fill wrapper pair
@@ -83,12 +83,12 @@ system from "core" system startup/init code.
   than `6` since issue #12's parallel PR independently claimed
   `game_loop6.c`/`game_loop7.c` first): `sub_80234E8`,
   `sub_80234F4`, `sub_8023500`, `sub_8023510`, `sub_802352C`,
-  `sub_8023548`, `sub_802356C`, `sub_80235E4`, `sub_802364C`,
+  `RestoreCheckpoint`, `SetCheckpoint`, `sub_80235E4`, `sub_802364C`,
   `sub_8023658`, `sub_8023674`, `sub_802369C`, `nullsub_24`,
   `sub_80236AC`, `sub_80236EC` - camera-position setters,
-  checkpoint/level-transition snapshot helpers, the `sub_8022468`
+  checkpoint/level-transition snapshot helpers, the `PlayCutscene`
   mode-trampoline family, and a packed-bitfield unpacker/repacker pair
-- `src/system/game_loop11.c` (GitHub issue #37): `sub_8023738` - lazily
+- `src/system/game_loop11.c` (GitHub issue #37): `GetLevelState` - lazily
   allocates and returns `gUnknown_03000828`
 - `src/system/game_loop8.c` (GitHub issue #37): `sub_802400C` - the
   DMA3/VRAM refresh pass gated on `self+0x0 <= 0x1000` - and
@@ -132,23 +132,23 @@ system from "core" system startup/init code.
   (third bit-grid setter), `sub_8025A3C` (Q8-to-int store),
   `sub_8025A44` (conditional `sub_8026ED0` forward), `sub_8025A5C`
   (zero two Q8 words)
-- `src/system/game_loop14.c` (GitHub issue #41): `sub_8025D28`
+- `src/system/game_loop14.c` (GitHub issue #41): `SpawnEntity`
   (table-indexed function-pointer dispatch via the interworking
   trampoline convention), `sub_8025D4C` (store two Q8 words),
   `sub_8025D54` (conditional `sub_8026ED0` forward, dup of
   `sub_8025A44`), `sub_8025D6C` (zero two Q8 words, dup of
   `sub_8025A5C`)
-- `src/system/game_loop15.c` (GitHub issue #41): `sub_8025D74`
+- `src/system/game_loop15.c` (GitHub issue #41): `InitBgLayer`
   (BG-scroll-layer hardware-register/bitfield initializer - previously
   NAKED, now matched as real C via opaque inline-asm-materialized mask
   folds plus one function-owned literal pool for its three pointer-sized
   constants - see
   [naked-sub_8025d74-matched.md](../matching/naked-sub_8025d74-matched.md)),
-  `sub_8025DE8`,
-  `sub_8025E2C` (streamed-tile-range growers firing a `self->0x30`-
-  table trampoline per step), `sub_8025E70`, `sub_8025E84` (their
+  `GrowBgLayerRows`,
+  `GrowBgLayerColumns` (streamed-tile-range growers firing a `self->0x30`-
+  table trampoline per step), `ClipBgLayerColumns`, `ClipBgLayerRows` (their
   plain clamp-only counterparts)
-- `src/system/game_loop16.c` (GitHub issue #41): `sub_8025F24` -
+- `src/system/game_loop16.c` (GitHub issue #41): `CommitBgLayerScroll` -
   truncates the Q8 position to a tile-scroll halfword pair and writes
   it through the `self+0x58` hardware-register pointer
 - `src/system/game_loop17.c` (GitHub issue #38): `sub_802425C`,
@@ -163,8 +163,8 @@ system from "core" system startup/init code.
   raw, see below)
 - `src/system/game_loop19.c` (GitHub issue #38): `sub_8024784` -
   trivial `gUnknown_03001314` setter
-- `src/system/game_loop20.c` (GitHub issue #38): `sub_80247EC`,
-  `sub_8024804` - the `sub_802425C`-shaped teardown wrapper and a
+- `src/system/game_loop20.c` (GitHub issue #38): `DestroySlideshow`,
+  `ResetSlideshow` - the `sub_802425C`-shaped teardown wrapper and a
   trivial constructor
 - `src/system/game_loop22.c` (GitHub issue #13 - numbered `22` rather
   than `17` since issue #38's PR above independently claimed
@@ -189,7 +189,7 @@ system from "core" system startup/init code.
 - `src/system/game_loop26.c` (GitHub issue #13): `sub_8010A00` -
   `self+0x48` bits 6-7 sub-state extractor
 - `src/system/game_loop29.c` (GitHub issue #13, second pass): `sub_801089C`
-  - cue-3 SFX plus a `gUnknown_030012B4` bit-grid consume-if-clear and a
+  - cue-3 SFX plus a `gEntityFlags` bit-grid consume-if-clear and a
   `sub_8025A64` part-object spawn. See
   [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
 - `src/system/game_loop30.c` (GitHub issue #13, second pass):
@@ -257,15 +257,15 @@ system from "core" system startup/init code.
   for the `ip`/r12 pin plus the pointer-arithmetic-canonicalization
   gotcha that closed this out.
 - `src/system/game_loop37.c` (GitHub issue #38, follow-up pass):
-  `sub_8024640` (per-item sound-channel driver loop), `sub_80246D8`
+  `RunSlideshow` (per-item sound-channel driver loop), `SkipSlides`
   (its "find next active item" index scanner), and - as of a second
-  follow-up pass - `sub_8024708` (VRAM-bank tile-asset streamer) too.
-  `sub_8024590` (plain C once built with old_agbcc - see [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md)) closes
+  follow-up pass - `ShowSlidePicture` (VRAM-bank tile-asset streamer) too.
+  `BeginSlide` (plain C once built with old_agbcc - see [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md)) closes
   the file. See
   [docs/matching/issue-38-sound-channel-family.md](../matching/issue-38-sound-channel-family.md)
   and its second-pass addendum.
 - `src/system/game_loop38.c` (GitHub issue #38, follow-up pass):
-  `sub_8024790` - the tail half of `sub_8024640`'s per-item body, reused
+  `EndSlide` - the tail half of `RunSlideshow`'s per-item body, reused
   standalone. See
   [docs/matching/issue-38-sound-channel-family.md](../matching/issue-38-sound-channel-family.md).
 - `src/system/game_loop27.c` (GitHub issue #14, recategorized
@@ -284,7 +284,7 @@ system from "core" system startup/init code.
   pointers" were gcc's own loop strength reduction of
   `self->records[i].field`. See
   [issues-14-53-60-last-naked.md](../matching/issues-14-53-60-last-naked.md).
-- **`sub_8022EA8`/`sub_8022F2C`** (`src/system/game_loop2.c`, GitHub
+- **`FreezeLevelClock`/`TickLevelClock`** (`src/system/game_loop2.c`, GitHub
   issue #34) - record 47's periodic-trigger setter/decrementer; closed
   with a targeted register-pinning recipe after the ROM's cross-call
   `r4`/`r7` register map was reproduced by pinning only the two values
@@ -293,7 +293,7 @@ system from "core" system startup/init code.
   register pin for the `0x234` field-offset constant, freshly-named
   locals for the second chase to stop register "stickiness", and an
   `addr`/`countdown`/`newCountdown` pin set plus true-branch-first
-  digit-cascade rewrites for `sub_8022F2C`'s front half and `else`
+  digit-cascade rewrites for `TickLevelClock`'s front half and `else`
   branch). Real bytes formerly in `asm/code_3_2_17_22ea8.s` (now
   removed, folded into `src/system/game_loop2.o`).
 - **`sub_8026628`** (`src/system/game_loop43.c`, new file - dedicated
@@ -309,45 +309,45 @@ system from "core" system startup/init code.
   `sub_8026628`'s Y-axis (floor/ceiling) and X-axis (wall) tile-scan
   resolvers, 208/216 B. Plain C, built with old_agbcc - see [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md) and
   [docs/matching/issue-9-10-41-0x08026628-game-loop.md](../matching/issue-9-10-41-0x08026628-game-loop.md).
-- **`sub_8025FC8`/`sub_802602C`/`sub_802608C`/`sub_80260B4`/`sub_80260D4`/`sub_8026108`/`sub_802612C`/`sub_802613C`/`sub_802614C`/`sub_8026160`/`sub_8026174`/`sub_8026184`/`sub_8026190`/`sub_80261A8`/`sub_80261B0`/`sub_80261B8`/`sub_80261CC`/`sub_8026250`/`sub_8026264`/`sub_80262A4`/`sub_80262E8`/`sub_8026328`/`sub_8026368`/`sub_80263DC`/`sub_80263F8`/`nullsub_26`**
+- **`DrawBgLayerRow`/`RedrawBgLayer`/`ResetBgLayer`/`LoadBgLayerTiles`/`LoadBgLayer`/`sub_8026108`/`sub_802612C`/`sub_802613C`/`sub_802614C`/`sub_8026160`/`sub_8026174`/`sub_8026184`/`sub_8026190`/`sub_80261A8`/`sub_80261B0`/`DestroyBgLayer`/`DrawPooledBgLayerColumn`/`sub_8026250`/`ReleasePooledBgLayerColumn`/`ReleasePooledBgLayerRow`/`ClipPooledBgLayerColumns`/`ClipPooledBgLayerRows`/`DrawPooledBgLayerRow`/`ResetPooledBgLayer`/`LoadPooledBgLayerTiles`/`nullsub_26`**
   (`src/system/bg_scroll_layer_25fc8.c`, new file - GitHub issue #42,
   compiled with **old_agbcc**) - the BG-scroll layer's methods (base
-  table `gStaticData_087E4C14`: destroy, reset, load tiles, draw row,
+  table `gBgLayerVtable`: destroy, reset, load tiles, draw row,
   draw all visible rows), its BGnCNT-shadow setters/getters, the
   32-entry wrap helpers, and the tile-slot-pooled layer-0 overrides
-  (table `gStaticData_087E4C64`: draw row/column through the pool,
+  (table `gPooledBgLayerVtable`: draw row/column through the pool,
   release a row/column, shrink the resident range, reset, load tiles,
-  clamp a scroll step). All plain C; `sub_8025FC8` needed a goto loop.
+  clamp a scroll step). All plain C; `DrawBgLayerRow` needed a goto loop.
   `sub_802612C` was hidden in the old disassembly and `sub_802613E` was
   mislabelled (it starts at `0x0802613C`). `asm/code_3_2_17_25fc8.s`
   removed. See
   [docs/matching/issue-42-bg-scroll-layer.md](../matching/issue-42-bg-scroll-layer.md).
-- **`sub_8026418`/`sub_8026448`/`sub_8026480`/`sub_802648C`/`sub_80264F8`/`sub_80265A0`/`sub_80265FC`/`sub_8026618`**
+- **`DestroyPooledBgLayer`/`InitPooledBgLayer`/`sub_8026480`/`ResetTileSlotPool`/`AcquireTileSlot`/`ReleaseTileSlot`/`sub_80265FC`/`SetTileSlotPoolSource`**
   (`src/system/tile_slot_pool.c`, new file - GitHub issue #43) - BG
   layer 0 of the level-layers singleton (constructor/destructor chaining
-  to the `sub_8025D74` BG-scroll-layer base) and its reference-counted
+  to the `InitBgLayer` BG-scroll-layer base) and its reference-counted
   VRAM tile-slot pool (0x2000 source tiles onto 0x200 slots): reset,
   acquire, release, tile DMA, base setup. Static-inline push/slot-table helpers
   reproduce the ROM's uncached address recomputation; r1-pinned refcount
   temps; a narrow inline-asm `+0x34` bitfield update (same case as
-  `sub_8025D74`); `sub_80264F8` (acquire) needed two more
+  `InitBgLayer`); `AcquireTileSlot` (acquire) needed two more
   three-instruction asm anchors (constant-before-load, refcount update). See
   [docs/matching/issue-43-level-layers.md](../matching/issue-43-level-layers.md).
-- **`sub_80266BC`/`sub_80267A0`/`sub_802680C`/`sub_80268AC`/`sub_80268D0`/`sub_80268F8`/`sub_802692C`/`sub_8026984`/`sub_80269DC`/`sub_80269F8`/`sub_8026A14`**
+- **`LoadRoom`/`InitLevelLayers`/`DestroyLevelLayers`/`GetLevelLayers`/`SetLevelScroll`/`CommitLevelScroll`/`ScrollLevelLayers`/`ResetLevelLayers`/`sub_80269DC`/`sub_80269F8`/`sub_8026A14`**
   (`src/system/level_layers.c`, new file - GitHub issue #43) - the
-  `gUnknown_0300084C` level-layers singleton (also `gUnknown_03001308`):
+  `gLevelLayersSingleton` level-layers singleton (also `gLevelLayers`):
   level load, constructor/get-or-create, destructor, the camera's
-  scroll clamp (`sub_80268D0`), per-layer method-table passes, and two
-  identical predicates. All plain C; only `sub_80268D0` needed separate
+  scroll clamp (`SetLevelScroll`), per-layer method-table passes, and two
+  identical predicates. All plain C; only `SetLevelScroll` needed separate
   per-axis temps. `asm/code_3_2_17_266bc.s` removed.
 - **`sub_8026BC0`** (`src/system/game_loop44.c`, new file - dedicated
   deep investigation) - independently flagged "still raw" by two
   already-documented callers (`sub_800A884`'s camera-probe tail and a
   jump-table dispatch context in `sub_8007634`'s own write-up). A
   56-byte wrapper around the already-matched terrain-tile-cache lookup
-  `sub_8025460` (`game_loop4.c`, GitHub issue #40): converts `(x, y)`
+  `GetTerrainType` (`game_loop4.c`, GitHub issue #40): converts `(x, y)`
   to that cache's lookup units via a plain `>>3` clamped to `>= 0` on
-  each axis independently, then calls `sub_8025460` and returns only
+  each axis independently, then calls `GetTerrainType` and returns only
   the flags byte it also returns directly (the `hi` out-param is
   discarded, unread by either known caller). Matched on the first
   isolated-compile attempt with no register pins needed - see
@@ -359,7 +359,7 @@ system from "core" system startup/init code.
   terrain-height ("floor") probes `sub_800A178`/`sub_800A420`
   (`src/graphics/actor_part110.c`) call. Both `s32 fn(void *player,
   struct probe_pos *pos, s32 *outValue)`: `sub_8026BF8` reads a signed
-  height byte via the raw terrain streamer `sub_80250BC`; `sub_8026C3C`
+  height byte via the raw terrain streamer `GetTerrainHeights`; `sub_8026C3C`
   gets it via the CheckTerrainFlag-style `sub_8025228`. `sub_8026C3C`
   matched on the first isolated-compile attempt; `sub_8026BF8` needed a
   narrow register-pinned inline-asm materialization of `ldrsb` (this
@@ -374,7 +374,7 @@ system from "core" system startup/init code.
   (`src/system/camera_follow.c`, new file - GitHub issue #44) - the
   `gUnknown_030012D4` camera follower: Q8 position eased a quarter-step
   per frame toward `target + look-ahead`, published centered on screen
-  (`- (120 << 8)`, `- (80 << 8)`) through `sub_80268D0`'s level-bounds
+  (`- (120 << 8)`, `- (80 << 8)`) through `SetLevelScroll`'s level-bounds
   clamp. Mode 2 (`sub_8026C90`) steers the look-ahead from `target+0x24`
   direction bits, mode 1 (`sub_8026D8C`) from the `target+0x28` mirror
   flag; `sub_8026DFC` snaps, `sub_8026E6C` is the per-frame dispatcher.
@@ -417,7 +417,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
 - **`sub_8022D50`** (`game_loop40.c`), **`sub_8025A64`** (`game_loop29.c`),
-  **`sub_8025BAC`** (`game_loop14.c`), **`sub_8025E98`**/**`sub_8025F3C`**
+  **`sub_8025BAC`** (`game_loop14.c`), **`ScrollBgLayer`**/**`DrawBgLayerColumn`**
   (`game_loop16.c`), and the other functions above marked "built with
   old_agbcc" - 17 former `NAKED` transcriptions in 0x08022D50-0x08026BC0,
   now plain C. This ROM region was built with old_agbcc; see [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md).
@@ -474,7 +474,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   left. See
   [docs/matching/late-naked-retry-3.md](../matching/late-naked-retry-3.md).
 
-- **Third big NAKED retry:** `sub_80255D4` (`game_loop41.c`, GitHub
+- **Third big NAKED retry:** `SpawnRoomEntities` (`game_loop41.c`, GitHub
   issue #40, 704 bytes, the collision-bitmap refresh + actor link pass)
   promoted from NAKED to real C under old_agbcc (`game_loop41.o` joined
   `OLD_AGBCC_OBJS`). Most of it was loop shape: old_agbcc's loop
@@ -530,7 +530,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   color-cycle animation (`(u16 *)0x05000000`, GBA palette RAM, passed
   as the queue's own `targets` argument) rather than the HUD-digit
   rotation that function's other call sites drive - against
-  `gStaticData_0816C814`/`0816C81E`/`0816C830`/`0816C842`/`0816C862`,
+  `gThemePaletteCycle2`/`0816C81E`/`0816C830`/`0816C842`/`0816C862`,
   now confirmed as plain, tightly-packed `u16[]` index-list arguments
   (each exactly `list_count * 2` bytes, back-to-back in ROM) rather
   than per-level records with their own shape - closing that open
@@ -775,9 +775,9 @@ plain C didn't converge.
   is 61 and 5 halfwords off (register allocation, and one constant
   load's scheduling); their sibling `sub_8025BAC` is matched. See
   [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md).
-- **Now matched as real C (third big NAKED retry, see Matched and docs/matching/big-naked-retry-3.md); entry kept for history.** **`sub_80255D4`** (`src/system/game_loop41.c`, GitHub issue #34/#40/
-  #41) - `self` is `*gUnknown_030012B4`: refreshes the collision
-  bitmaps, spawns `list`'s unseen items through `sub_8025D28`, then
+- **Now matched as real C (third big NAKED retry, see Matched and docs/matching/big-naked-retry-3.md); entry kept for history.** **`SpawnRoomEntities`** (`src/system/game_loop41.c`, GitHub issue #34/#40/
+  #41) - `self` is `*gEntityFlags`: refreshes the collision
+  bitmaps, spawns `list`'s unseen items through `SpawnEntity`, then
   links spawned actors by a `links` array. Plain C under old_agbcc is
   153 halfwords off: everything through the first link pass is
   byte-exact, but the ROM walks the second pass's actor-list searches
@@ -787,7 +787,7 @@ plain C didn't converge.
 - **Now matched as real C (big NAKED retry, see Matched and docs/matching/big-naked-retry.md); entry kept for history.** **`UpdateGameFrame`** (`src/system/game_loop55.c`, GitHub issue #34,
   ROM `0x080225A0`-`0x08022BF0`) - the main per-frame game-loop driver,
   called once a frame from `MainLoop` with `self` =
-  `gUnknown_030012C0`. Traced branch-by-branch: a level-load loop
+  `gLevelState`. Traced branch-by-branch: a level-load loop
   (`LoadLevelGraphics`/`sub_8035E14`/`sub_80354BC`) that spins until the
   level finishes loading; a confirmed 5-case jump table on
   `self->0xc4` (doubling as both the literal player-state enum value
@@ -798,13 +798,13 @@ plain C didn't converge.
   that increments `self->0xc4` past 0x63 frames), case 4 has no gate/
   transition and is unconditional; states past this table's range
   (`self->0xc4 - 0x14 > 4`) instead OR-set a flag byte on
-  `sub_8023404`'s object when `self->0xdc`'s level object is in state
+  `GetCurrentLevelFlags`'s object when `self->0xdc`'s level object is in state
   3. End-of-frame: a double-buffered `self+0xe4`/`self+0x14c` snapshot
   pair (each exactly `0x68` bytes, DMA3 fixed-source zero-filled at
   entry then restored/re-saved every retry-loop pass), an actor-
   category processing loop keyed on an `r8`-resident status flag (0 =
   keep going, 1 = check `sub_803AFEC` for early-out, 2 = done this
-  frame) that ping-pongs the `gUnknown_030012B4` collision-bitmap
+  frame) that ping-pongs the `gEntityFlags` collision-bitmap
   buffer between `self+0x1b4`'s two halves via `sub_8025A5C`/
   `sub_8026EDC(0x408)`, and refreshes the HUD icon (`sub_8028568`) each
   pass. The whole per-category loop, and even the outer state-dispatch
@@ -925,7 +925,7 @@ plain C didn't converge.
   functions, contiguous through to the already-matched `actor_part39.c`.
   `sub_8011448` is a randomized-position spawn/despawn picker;
   `sub_8011548` is an entity-vtable-dispatched velocity integrator
-  (mode 0-3 on `self->0x48`, with a PlaySfx+`sub_8023430`+
+  (mode 0-3 on `self->0x48`, with a PlaySfx+`CollectWumpa`+
   collision-bitmap arrival tail and a `sub_8025CA4` mode-3 spawn);
   `sub_801173C` is the achievement/unlock-icon spawn helper;
   `sub_8011870` is `sub_80111B8`'s alternative; `sub_801191C`/
@@ -973,7 +973,7 @@ plain C didn't converge.
   register, reuse the freed one" idiom for the `self->0x4a` offset
   nudge). `sub_8010F8C` (392B, NAKED) is the mode-dispatched rotating/
   orbiting hazard state machine `docs/rom_map.md` already flagged,
-  duplicating its own "PlaySfx+`sub_8023464`+collision-bitmap" tail per
+  duplicating its own "PlaySfx+`AddLife`+collision-bitmap" tail per
   mode with different register survivors each time (same shape as
   `sub_8011548`). `sub_8011114` (164B, NAKED) is the part-object spawn
   helper extern-declared in `game_loop29.c`, needing the confirmed

@@ -7,10 +7,10 @@
 
 /* The terrain types of the level collision maps (game_loop3.c): a
  * cell's low byte picks one (0x24 and above are solid, 0 is empty, and
- * sub_80250BC stops at 0x23), `modeValue` is a value per collision mode
+ * GetTerrainHeights stops at 0x23), `modeValue` is a value per collision mode
  * (sub_8025228) and `heights` the surface height of each of the cell's
- * 8 pixel columns per mode, 0-7, 0xFF where there is none (sub_80250BC,
- * sub_8025130). game_loop3.c's `struct terrain_type` names only
+ * 8 pixel columns per mode, 0-7, 0xFF where there is none (GetTerrainHeights,
+ * GetSolidTerrainHeights). game_loop3.c's `struct terrain_type` names only
  * `modeValue`. */
 struct terrain_type
 {
@@ -18,7 +18,7 @@ struct terrain_type
     u8 heights[4][8];
 };
 
-const struct terrain_type gStaticData_081725A8[51] = {
+const struct terrain_type gTerrainTypes[51] = {
     { /* 0 */
         { 0xFF, 0xFF, 0xFF, 0xFF },
         {
@@ -480,16 +480,16 @@ const struct terrain_type gStaticData_081725A8[51] = {
     },
 };
 
-/* sub_80250BC and sub_8025130 index the height rows of each collision
- * mode as their own 36-byte-stride tables: gStaticData_081725AC is
- * heights[0] of type 0, gStaticData_081725B4 heights[1] and so on. They
+/* GetTerrainHeights and GetSolidTerrainHeights index the height rows of
+ * each collision mode as their own 36-byte-stride tables: gTerrainHeights0 is
+ * heights[0] of type 0, gTerrainHeights1 heights[1] and so on. They
  * are names for those addresses inside the table above, not objects of
  * their own. */
-asm(".global gStaticData_081725AC\n"
-    ".set gStaticData_081725AC, gStaticData_081725A8 + 0x04\n"
-    ".global gStaticData_081725B4\n"
-    ".set gStaticData_081725B4, gStaticData_081725A8 + 0x0C\n"
-    ".global gStaticData_081725BC\n"
-    ".set gStaticData_081725BC, gStaticData_081725A8 + 0x14\n"
-    ".global gStaticData_081725C4\n"
-    ".set gStaticData_081725C4, gStaticData_081725A8 + 0x1C\n");
+asm(".global gTerrainHeights0\n"
+    ".set gTerrainHeights0, gTerrainTypes + 0x04\n"
+    ".global gTerrainHeights1\n"
+    ".set gTerrainHeights1, gTerrainTypes + 0x0C\n"
+    ".global gTerrainHeights2\n"
+    ".set gTerrainHeights2, gTerrainTypes + 0x14\n"
+    ".global gTerrainHeights3\n"
+    ".set gTerrainHeights3, gTerrainTypes + 0x1C\n");

@@ -23,9 +23,9 @@ struct spawned
 
 extern u32 gUnknown_030007E0;
 extern void *gUnknown_030012BC;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern u8 *gUnknown_030012D8;
-extern void *gUnknown_030012E4;
+extern void *gEntitySpawner;
 extern void *gUnknown_03001304;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern u8 sub_8000760(void *pad);
@@ -102,7 +102,7 @@ static inline void ActSetContact(struct act_part *p, s32 v)
 /* Unless sub_8012A7C reports busy: fire (pressed bit 0) plays action 5's
  * animations and queues action 7; alt (bit 1) hands off to sub_8015398;
  * bit 8 plays animations 0xC/0xF, queues 0x1E, clears the player's +0x94
- * and spawns a 0x29 object from gUnknown_030012E4. Then the D-pad: 0 goes
+ * and spawns a 0x29 object from gEntitySpawner. Then the D-pad: 0 goes
  * through sub_8015780 and queues 0x1D by hand, 2/7/8 play animations
  * 0x10/3 and queue 0x1D. Held bit 9 in state 3 (and sub_80231C4) plays
  * 4/0x18 and queues 0x1B; without it, state 4 hands off to sub_8015460.
@@ -151,7 +151,7 @@ void sub_8012FBC(struct act *self)
             ActQueue27(self, alt, 0x1E);
             gUnknown_030012D8[0x94] = alt;
             gUnknown_030012D8[0x94] = alt;
-            obj = sub_8025B0C(gUnknown_030012E4, 0x29, 1, 0, 0xA, alt, gUnknown_030012D8);
+            obj = sub_8025B0C(gEntitySpawner, 0x29, 1, 0, 0xA, alt, gUnknown_030012D8);
             obj->unk_0C_2 = 0;
             obj->unk_28_0 = 1;
         }
@@ -186,7 +186,7 @@ void sub_8012FBC(struct act *self)
 
         if (held)
         {
-            if (self->state == 3 && sub_80231C4(gUnknown_030012C0))
+            if (self->state == 3 && sub_80231C4(gLevelState))
             {
                 s32 zero;
 

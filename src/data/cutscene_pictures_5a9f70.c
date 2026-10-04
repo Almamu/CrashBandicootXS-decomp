@@ -4,7 +4,7 @@
  * ROM 0x085A9F70-0x0861BADC: the 24 cutscene pictures, each a 256-colour
  * palette directly followed by its Mode 4 bitmap (240x160 8bpp, LZ77).
  * A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette
- * and sub_8024708 (game_loop37.c) finds the bitmap at +0x200, so each
+ * and ShowSlidePicture (game_loop37.c) finds the bitmap at +0x200, so each
  * bitmap must stay right after its palette.
  *
  * The bitmaps are built from graphics/intro/NN_xxxxxx_bitmap.png by
@@ -51,7 +51,7 @@ const u16 gCutscenePicture00[256] __attribute__((aligned(4))) = {
     0x77BD, 0x77BD, 0x77BD, 0x77BD, 0x77BD, 0x77BD, 0x77BD, 0x77BD,
     0x77BD, 0x77BD, 0x77BD, 0x77BD, 0x77BD, 0x77BD, 0x77BD, 0x77BD,
 };
-const u8 gStaticData_085AA170[] = {
+const u8 gCutscenePicture00Bitmap[] = {
 #include "intro/00_5aa170_bitmap.img.bin.lz.inc"
 };
 
@@ -90,7 +90,7 @@ const u16 gCutscenePicture01[256] __attribute__((aligned(4))) = {
     0x18F1, 0x0006, 0xB195, 0xCA5F, 0x001F, 0x0002, 0x1CEB, 0x14A8,
     0x3191, 0xFFFF, 0xBDEF, 0x9CE7, 0x14A5, 0x8842, 0x0000, 0xFFFF,
 };
-const u8 gStaticData_085ADDD4[] = {
+const u8 gCutscenePicture01Bitmap[] = {
 #include "intro/01_5addd4_bitmap.img.bin.lz.inc"
 };
 
@@ -129,7 +129,7 @@ const u16 gCutscenePicture02[256] __attribute__((aligned(4))) = {
     0x959E, 0x94CA, 0x190D, 0x8424, 0x0471, 0x844E, 0x8429, 0x98CB,
     0x94A9, 0xA10B, 0x8001, 0xB9D4, 0x98C6, 0x8421, 0x8000, 0xFFFF,
 };
-const u8 gStaticData_085B36E4[] = {
+const u8 gCutscenePicture02Bitmap[] = {
 #include "intro/02_5b36e4_bitmap.img.bin.lz.inc"
 };
 
@@ -168,7 +168,7 @@ const u16 gCutscenePicture03[256] __attribute__((aligned(4))) = {
     0x22BD, 0x010D, 0x85D9, 0x26BE, 0x1E7E, 0xA65A, 0x923D, 0xBADE,
     0xBA9A, 0x637E, 0x9132, 0xA61D, 0xD6FC, 0x323F, 0xFFFF, 0xFFFF,
 };
-const u8 gStaticData_085B84BC[] = {
+const u8 gCutscenePicture03Bitmap[] = {
 #include "intro/03_5b84bc_bitmap.img.bin.lz.inc"
 };
 
@@ -207,7 +207,7 @@ const u16 gCutscenePicture04[256] __attribute__((aligned(4))) = {
     0x10CC, 0x8CB0, 0x98EE, 0x212B, 0x3192, 0x8004, 0x9096, 0x8001,
     0x1CF3, 0xA956, 0x3DF9, 0xCA58, 0xCE74, 0xFFFF, 0x8000, 0xFFFF,
 };
-const u8 gStaticData_085BC8E8[] = {
+const u8 gCutscenePicture04Bitmap[] = {
 #include "intro/04_5bc8e8_bitmap.img.bin.lz.inc"
 };
 
@@ -246,7 +246,7 @@ const u16 gCutscenePicture05[256] __attribute__((aligned(4))) = {
     0x8023, 0x80FF, 0x8026, 0x00BF, 0x009A, 0x0C67, 0x8435, 0x8005,
     0x8004, 0x8003, 0x8002, 0x884A, 0x8423, 0x8845, 0xFFFF, 0x8000,
 };
-const u8 gStaticData_085C1B38[] = {
+const u8 gCutscenePicture05Bitmap[] = {
 #include "intro/05_5c1b38_bitmap.img.bin.lz.inc"
 };
 
@@ -285,7 +285,7 @@ const u16 gCutscenePicture06[256] __attribute__((aligned(4))) = {
     0x884E, 0x8003, 0x8848, 0x8846, 0x8845, 0x8844, 0x8843, 0xDADF,
     0x8C64, 0xF39D, 0xFBDF, 0xF7BE, 0xFFFF, 0xF39C, 0x8842, 0x0000,
 };
-const u8 gStaticData_085C6950[] = {
+const u8 gCutscenePicture06Bitmap[] = {
 #include "intro/06_5c6950_bitmap.img.bin.lz.inc"
 };
 
@@ -324,7 +324,7 @@ const u16 gCutscenePicture07[256] __attribute__((aligned(4))) = {
     0x152C, 0x88A8, 0x10A5, 0x77DE, 0xA1F7, 0x0DDC, 0x0912, 0xAD8F,
     0x84FD, 0x844D, 0x94A9, 0x8426, 0x0423, 0x0C63, 0x4A52, 0x0421,
 };
-const u8 gStaticData_085CB360[] = {
+const u8 gCutscenePicture07Bitmap[] = {
 #include "intro/07_5cb360_bitmap.img.bin.lz.inc"
 };
 
@@ -363,7 +363,7 @@ const u16 gCutscenePicture08[256] __attribute__((aligned(4))) = {
     0x0459, 0x8431, 0xAD7E, 0x045E, 0x042B, 0x0429, 0x8C7B, 0x0427,
     0x18DF, 0x0425, 0x0C6B, 0x0C69, 0x0423, 0x0C67, 0x0C63, 0x0421,
 };
-const u8 gStaticData_085D00CC[] = {
+const u8 gCutscenePicture08Bitmap[] = {
 #include "intro/08_5d00cc_bitmap.img.bin.lz.inc"
 };
 
@@ -402,7 +402,7 @@ const u16 gCutscenePicture09[256] __attribute__((aligned(4))) = {
     0x055E, 0x212B, 0x8001, 0x10AE, 0x18F1, 0x1D0E, 0x8457, 0x8004,
     0xB9FE, 0x045E, 0x56DE, 0x800E, 0x8009, 0x77BD, 0x8421, 0x8000,
 };
-const u8 gStaticData_085D6734[] = {
+const u8 gCutscenePicture09Bitmap[] = {
 #include "intro/09_5d6734_bitmap.img.bin.lz.inc"
 };
 
@@ -441,7 +441,7 @@ const u16 gCutscenePicture10[256] __attribute__((aligned(4))) = {
     0x0434, 0x842E, 0x842D, 0x8004, 0x8003, 0x8427, 0x8002, 0x086D,
     0x8C6E, 0x086B, 0x8425, 0x8001, 0x8423, 0x8422, 0x8000, 0x084F,
 };
-const u8 gStaticData_085DB968[] = {
+const u8 gCutscenePicture10Bitmap[] = {
 #include "intro/10_5db968_bitmap.img.bin.lz.inc"
 };
 
@@ -480,7 +480,7 @@ const u16 gCutscenePicture11[256] __attribute__((aligned(4))) = {
     0x8D55, 0x08AB, 0x9530, 0xB9D0, 0x8491, 0xADDD, 0x88BD, 0xC65E,
     0x98C9, 0x191E, 0x042B, 0x0423, 0x0C63, 0x1CE7, 0x14A5, 0x0421,
 };
-const u8 gStaticData_085DFCBC[] = {
+const u8 gCutscenePicture11Bitmap[] = {
 #include "intro/11_5dfcbc_bitmap.img.bin.lz.inc"
 };
 
@@ -519,7 +519,7 @@ const u16 gCutscenePicture12[256] __attribute__((aligned(4))) = {
     0x9950, 0x057E, 0x190B, 0xB9D0, 0x04BE, 0x5AFA, 0x94D4, 0x8434,
     0x042B, 0x0423, 0x1CE7, 0xFFFF, 0x2D6B, 0x14A5, 0x0C63, 0x0421,
 };
-const u8 gStaticData_085E570C[] = {
+const u8 gCutscenePicture12Bitmap[] = {
 #include "intro/12_5e570c_bitmap.img.bin.lz.inc"
 };
 
@@ -558,7 +558,7 @@ const u16 gCutscenePicture13[256] __attribute__((aligned(4))) = {
     0x295E, 0x14D1, 0x0C69, 0x0423, 0x2959, 0x39DE, 0xB9DA, 0x14A7,
     0xEB5E, 0xF7BE, 0x2D6B, 0x2529, 0x14A5, 0x0421, 0x8000, 0xFFFF,
 };
-const u8 gStaticData_085EAE44[] = {
+const u8 gCutscenePicture13Bitmap[] = {
 #include "intro/13_5eae44_bitmap.img.bin.lz.inc"
 };
 
@@ -597,7 +597,7 @@ const u16 gCutscenePicture14[256] __attribute__((aligned(4))) = {
     0x98DA, 0x18D6, 0x8C6D, 0x8424, 0x8001, 0x18D1, 0x35DF, 0x8423,
     0xC63F, 0x4E9F, 0xF39F, 0xE319, 0xFFFF, 0x8421, 0x8000, 0x0000,
 };
-const u8 gStaticData_085F0568[] = {
+const u8 gCutscenePicture14Bitmap[] = {
 #include "intro/14_5f0568_bitmap.img.bin.lz.inc"
 };
 
@@ -636,7 +636,7 @@ const u16 gCutscenePicture15[256] __attribute__((aligned(4))) = {
     0x465E, 0x14A7, 0x4A59, 0x5ADE, 0xB18F, 0xE73E, 0x0C63, 0x77BF,
     0x56B5, 0xA109, 0x2D6B, 0x1CE7, 0x14A5, 0x0421, 0x8000, 0xFFFF,
 };
-const u8 gStaticData_085F4EC4[] = {
+const u8 gCutscenePicture15Bitmap[] = {
 #include "intro/15_5f4ec4_bitmap.img.bin.lz.inc"
 };
 
@@ -675,7 +675,7 @@ const u16 gCutscenePicture16[256] __attribute__((aligned(4))) = {
     0x045E, 0x10A7, 0x5ADA, 0x6B5E, 0x0436, 0x042E, 0x0426, 0x0423,
     0x4A5D, 0x0C63, 0x2D6B, 0x1CE7, 0x14A5, 0x0421, 0x8000, 0xFFFF,
 };
-const u8 gStaticData_085FA3D4[] = {
+const u8 gCutscenePicture16Bitmap[] = {
 #include "intro/16_5fa3d4_bitmap.img.bin.lz.inc"
 };
 
@@ -714,7 +714,7 @@ const u16 gCutscenePicture17[256] __attribute__((aligned(4))) = {
     0x0429, 0x0427, 0x0425, 0x8428, 0x0425, 0x884B, 0x0447, 0x884A,
     0x0423, 0x8001, 0x0C67, 0x294A, 0x0421, 0x8000, 0x0000, 0x7FFF,
 };
-const u8 gStaticData_085FF97C[] = {
+const u8 gCutscenePicture17Bitmap[] = {
 #include "intro/17_5ff97c_bitmap.img.bin.lz.inc"
 };
 
@@ -753,7 +753,7 @@ const u16 gCutscenePicture18[256] __attribute__((aligned(4))) = {
     0x0423, 0x0C67, 0x35DE, 0x0C65, 0x673B, 0x6F7B, 0x6739, 0x5EF7,
     0x56B5, 0x4E73, 0x4631, 0x3DEF, 0x35AD, 0x0C63, 0x0421, 0x0000,
 };
-const u8 gStaticData_08603BB4[] = {
+const u8 gCutscenePicture18Bitmap[] = {
 #include "intro/18_603bb4_bitmap.img.bin.lz.inc"
 };
 
@@ -792,7 +792,7 @@ const u16 gCutscenePicture19[256] __attribute__((aligned(4))) = {
     0xBA56, 0x535E, 0xCADB, 0x8045, 0x8047, 0x011F, 0x80B9, 0x8071,
     0x0076, 0x0007, 0x8004, 0x0847, 0x8845, 0x7FFF, 0x0421, 0x294A,
 };
-const u8 gStaticData_08608C50[] = {
+const u8 gCutscenePicture19Bitmap[] = {
 #include "intro/19_608c50_bitmap.img.bin.lz.inc"
 };
 
@@ -831,7 +831,7 @@ const u16 gCutscenePicture20[256] __attribute__((aligned(4))) = {
     0x575F, 0x817F, 0x848A, 0x80AF, 0xEF9F, 0x00F9, 0x1532, 0x807E,
     0x0058, 0x633E, 0x0007, 0x8004, 0x8847, 0x8845, 0x8000, 0xFFFF,
 };
-const u8 gStaticData_0860D778[] = {
+const u8 gCutscenePicture20Bitmap[] = {
 #include "intro/20_60d778_bitmap.img.bin.lz.inc"
 };
 
@@ -870,7 +870,7 @@ const u16 gCutscenePicture21[256] __attribute__((aligned(4))) = {
     0x806E, 0x04B6, 0x8893, 0x8006, 0x10D2, 0x044B, 0x908F, 0xA119,
     0x0C6A, 0x0846, 0x0845, 0x0843, 0xEF7F, 0x294A, 0x0842, 0xBDEF,
 };
-const u8 gStaticData_08611DDC[] = {
+const u8 gCutscenePicture21Bitmap[] = {
 #include "intro/21_611ddc_bitmap.img.bin.lz.inc"
 };
 
@@ -909,7 +909,7 @@ const u16 gCutscenePicture22[256] __attribute__((aligned(4))) = {
     0x088A, 0x675F, 0x8847, 0x18ED, 0x4237, 0x8005, 0x8004, 0x8003,
     0x8002, 0x8425, 0x8424, 0x8001, 0x8423, 0x8422, 0xF39C, 0x8000,
 };
-const u8 gStaticData_08616560[] = {
+const u8 gCutscenePicture22Bitmap[] = {
 #include "intro/22_616560_bitmap.img.bin.lz.inc"
 };
 
@@ -948,6 +948,6 @@ const u16 gCutscenePicture23[256] __attribute__((aligned(4))) = {
     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
 };
-const u8 gStaticData_0861A154[] = {
+const u8 gCutscenePicture23Bitmap[] = {
 #include "intro/23_61a154_bitmap.img.bin.lz.inc"
 };

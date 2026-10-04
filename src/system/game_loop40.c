@@ -85,9 +85,9 @@ struct collision_map
 
 extern void *gUnknown_030012B8;
 extern struct entity_list *gUnknown_030012EC;
-extern struct collision_map *gUnknown_030012B4;
+extern struct collision_map *gEntityFlags;
 
-extern void sub_80231EC(struct level_state *self, s32 arg1);
+extern void SetMaskLevel(struct level_state *self, s32 arg1);
 extern void sub_80087C0(struct slot_part *part);
 extern void sub_80087B4(struct slot_part *part);
 extern void sub_800872C(struct slot_part *part, s32 arg);
@@ -116,7 +116,7 @@ void sub_8022D50(struct level_state *self)
     struct slot_part *part;
     s32 i;
 
-    sub_80231EC(self, 0);
+    SetMaskLevel(self, 0);
     self->unk_8C = 1;
     self->unk_90[0] = 0;
     self->unk_90[1] = 0;
@@ -165,7 +165,7 @@ void sub_8022D50(struct level_state *self)
                     if (a->field_08 != 0xffff)
                     {
                         s32 id = a->field_08;
-                        gUnknown_030012B4->seen[id / 32] |= 1 << (id % 32);
+                        gEntityFlags->seen[id / 32] |= 1 << (id % 32);
                     }
                 }
             }

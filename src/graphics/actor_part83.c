@@ -26,7 +26,7 @@ struct anim_rec
 
 extern u32 gUnknown_030007E0;
 extern void *gUnknown_030012BC;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern struct act_part *gUnknown_030012D8;
 extern void *gUnknown_03001304;
 extern struct anim_rec gStaticData_0816B304[];
@@ -271,7 +271,7 @@ skip:
             if (wait == 0) {
                 switch (dir) {
                 case 3 ... 8:
-                    if ((INPUT_HELD(in) & 0x200) && sub_80231C4(gUnknown_030012C0)) {
+                    if ((INPUT_HELD(in) & 0x200) && sub_80231C4(gLevelState)) {
                         self->unk_29 = 1;
                         ACT_CALL1(self, m20, 4);
                         ACT_CALL2(self, m50, self->part, 0x18);

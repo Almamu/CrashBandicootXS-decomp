@@ -38,7 +38,7 @@ alias.
 the audio context into r0 before calling it, so the local prototype
 passes it.
 
-## `sub_8022468(self, idx)`
+## `PlayCutscene(self, idx)`
 
 `docs/rom_map.md` already read this one ("Into `graphics_loading`'s
 remainder: a BG2-affine screen-effect setup"). It sets the DISPCNT
@@ -47,10 +47,10 @@ shadow `gUnknown_03001288` to 0x40 and calls the
 the 0x200-byte BG palette with DMA3 and resets the BG2 affine registers
 to identity. Next it reloads the tile cache (`sub_8006EA8`) and resets
 the font icon manager `gUnknown_030012DC` (tile base 0x200, then its
-slot-6 method). Finally it runs a stack-allocated `sub_8024948` text
-pager (`game_loop57.c`) over list `gStaticData_0816D1F4[idx]`, with the
-per-level page table `gUnknown_03000834[gUnknown_03000868][idx]` and a
-fixed box (7, 0x7E) + (0xE4, 0x1E), until `sub_8024820` returns. It
+slot-6 method). Finally it runs a stack-allocated `InitCutscenePlayer` text
+pager (`game_loop57.c`) over list `gCutscenes[idx]`, with the
+per-level page table `gCutsceneTexts[gUnknown_03000868][idx]` and a
+fixed box (7, 0x7E) + (0xE4, 0x1E), until `RunCutscenePlayer` returns. It
 restores the shadow and destroys the pager.
 
 Getting it byte-exact took several source-shape choices, each checked
@@ -58,7 +58,7 @@ against the alternatives:
 
 - **One aggregate local** `{ box; fill; pager; }` instead of three
   locals. With `pager` as its own local, every field store after
-  `sub_8024948(&pager)` goes through the register holding `&pager`
+  `InitCutscenePlayer(&pager)` goes through the register holding `&pager`
   (`str r0, [r4, #20]`). The ROM stores them sp-relative
   (`str r0, [sp, #40]`) while keeping `&pager` in r5 only for the calls.
   As fields of one frame object, the field addresses are frame-relative

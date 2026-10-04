@@ -35,7 +35,7 @@ struct tile_cache {
     s32 nextSlot;                    /* 0x1060 */
 };
 
-extern void *sub_8024F24(struct tile_cache *self, s32 recordId);
+extern void *GetCollisionChunk(struct tile_cache *self, s32 recordId);
 
 /* The decoded cell at pixel (x, y): 16x8-pixel tiles, one 256-byte cache
  * slot per tile record. */
@@ -43,13 +43,13 @@ static inline u16 GetCell(struct tile_cache *self, s32 x, s32 y)
 {
     s32 tileX = x >> 4;
     s32 tileY = y >> 3;
-    u16 *buf = sub_8024F24(self, (*(u16 **)self->source)[tileY * self->width + tileX]);
+    u16 *buf = GetCollisionChunk(self, (*(u16 **)self->source)[tileY * self->width + tileX]);
     return buf[(y & 7) * 16 + (x & 0xf)];
 }
 
 /* The low byte of the cell at pixel (x, y), or 0 when out of bounds. The
  * top nibble goes to hiOut and the flag nibble to flagsOut. */
-u16 sub_8025460(struct tile_cache *self, s32 x, s32 y, u8 *flagsOut, s32 *hiOut)
+u16 GetTerrainType(struct tile_cache *self, s32 x, s32 y, u8 *flagsOut, s32 *hiOut)
 {
     u16 cell;
     u8 nibble;

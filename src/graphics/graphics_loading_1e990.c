@@ -3,8 +3,8 @@
 #include "level_state.h"
 #include "level_data.h"
 
-extern struct level_state *gUnknown_030012C0;
-extern void *gUnknown_030012B4;
+extern struct level_state *gLevelState;
+extern void *gEntityFlags;
 extern struct actor *gUnknown_030012D8;
 extern void *gUnknown_030012BC;
 
@@ -20,9 +20,9 @@ extern void PlaySfx(void *bank, s32 arg1, s32 sfxId);
  * `LoadGraphicsPackage` cluster's scratch-buffer-style helper family
  * (issue #30). Two independent, unrelated halves:
  *
- * 1. If `sub_80232F4(gUnknown_030012C0)` (the player's `+0xa8` flag)
+ * 1. If `sub_80232F4(gLevelState)` (the player's `+0xa8` flag)
  *    is set: looks up a per-`z` flags byte via the same
- *    `gUnknown_030012B4 -> *rec` entity parameter table
+ *    `gEntityFlags -> *rec` entity parameter table
  *    (`paramOffsets[]`/`params`, the room's `struct level_entity_list`)
  *    `sub_8021D04` (graphics_loading_21bfc.c) already reads, folds
  *    its bit 1 into the player's `+0x28` bitfield's bit 4, then
@@ -53,14 +53,14 @@ extern void PlaySfx(void *bank, s32 arg1, s32 sfxId);
  * the ROM doesn't have. */
 void sub_801E990(u32 arg0, u16 x, u16 y, u16 z)
 {
-    if (sub_80232F4(gUnknown_030012C0)) {
+    if (sub_80232F4(gLevelState)) {
         register struct level_entity_list *rec asm("r2");
         register u16 *arrayBase asm("r0");
         register s32 addr asm("r1");
         register u8 *tmp asm("r0");
         register struct actor **d8ptr asm("r3");
 
-        rec = *(struct level_entity_list **)gUnknown_030012B4;
+        rec = *(struct level_entity_list **)gEntityFlags;
         arrayBase = (u16 *)rec->paramOffsets;
         addr = (z << 1) + (s32)arrayBase;
         {
@@ -98,22 +98,22 @@ void sub_801E990(u32 arg0, u16 x, u16 y, u16 z)
         }
     }
 
-    if (gUnknown_030012C0->timeTrial != 0) {
+    if (gLevelState->timeTrial != 0) {
         goto end;
     }
     {
-        s32 spawnCount = sub_80232E0(gUnknown_030012C0);
-        s32 cap = sub_8023130(gUnknown_030012C0);
+        s32 spawnCount = sub_80232E0(gLevelState);
+        s32 cap = sub_8023130(gLevelState);
         if (spawnCount >= cap) {
             goto fire;
         }
-        if (sub_803AFEC(gUnknown_030012C0) != 0) {
+        if (sub_803AFEC(gLevelState) != 0) {
             goto end;
         }
-        if (sub_80232B8(gUnknown_030012C0) != 0) {
+        if (sub_80232B8(gLevelState) != 0) {
             goto end;
         }
-        if (gUnknown_030012C0->maskLevel != 0) {
+        if (gLevelState->maskLevel != 0) {
             goto end;
         }
     }

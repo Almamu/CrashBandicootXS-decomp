@@ -8,7 +8,7 @@
  * (src/graphics/graphics_loading_1ea5c.c).
  *
  * Each one tests one "collected" bit of the level progress record
- * (gUnknown_030012C0 + 2). If it is set, the effect only plays a sound:
+ * (gLevelState + 2). If it is set, the effect only plays a sound:
  * sub_801A878 with a per-slot id, or the shared id 0xC when
  * sub_8023278 says so or the record's +0x8C byte is set, handed to
  * sub_80234E8. Otherwise it spawns the full visual effect: a
@@ -41,7 +41,7 @@ struct level_progress
     u8 unk_8C;      // 0x8C
 };
 
-extern struct level_progress *gUnknown_030012C0;
+extern struct level_progress *gLevelState;
 extern u8 ***gUnknown_030012D0;
 extern void *gUnknown_030012EC;
 
@@ -60,17 +60,17 @@ extern void sub_8008E94(void *manager, struct gfx_part *part);
  * stores it from there afterwards. */
 void sub_8020E84(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    u8 bit = gUnknown_030012C0->collected & 1;
+    u8 bit = gLevelState->collected & 1;
 
     if (bit)
     {
         void *snd;
 
-        if (sub_8023278(gUnknown_030012C0) || gUnknown_030012C0->unk_8C)
+        if (sub_8023278(gLevelState) || gLevelState->unk_8C)
             snd = sub_801A878(a0, a1, a2, a3, 0xC);
         else
             snd = sub_801A878(a0, a1, a2, a3, 0xB);
-        sub_80234E8(gUnknown_030012C0, snd);
+        sub_80234E8(gLevelState, snd);
     }
     else
     {
@@ -91,17 +91,17 @@ void sub_8020E84(u32 a0, u16 a1, u16 a2, u16 a3)
 
 void sub_8020F7C(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    u8 bit = gUnknown_030012C0->collected & 2;
+    u8 bit = gLevelState->collected & 2;
 
     if (bit)
     {
         void *snd;
 
-        if (sub_8023278(gUnknown_030012C0) || gUnknown_030012C0->unk_8C)
+        if (sub_8023278(gLevelState) || gLevelState->unk_8C)
             snd = sub_801A878(a0, a1, a2, a3, 0xC);
         else
             snd = sub_801A878(a0, a1, a2, a3, 0x3);
-        sub_80234E8(gUnknown_030012C0, snd);
+        sub_80234E8(gLevelState, snd);
     }
     else
     {
@@ -122,17 +122,17 @@ void sub_8020F7C(u32 a0, u16 a1, u16 a2, u16 a3)
 
 void sub_802107C(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    u8 bit = gUnknown_030012C0->collected & 4;
+    u8 bit = gLevelState->collected & 4;
 
     if (bit)
     {
         void *snd;
 
-        if (sub_8023278(gUnknown_030012C0) || gUnknown_030012C0->unk_8C)
+        if (sub_8023278(gLevelState) || gLevelState->unk_8C)
             snd = sub_801A878(a0, a1, a2, a3, 0xC);
         else
             snd = sub_801A878(a0, a1, a2, a3, 0xA);
-        sub_80234E8(gUnknown_030012C0, snd);
+        sub_80234E8(gLevelState, snd);
     }
     else
     {
@@ -155,17 +155,17 @@ void sub_802107C(u32 a0, u16 a1, u16 a2, u16 a3)
  * it in a callee-saved register for both uses. */
 void sub_802117C(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    u8 bit = gUnknown_030012C0->collected & 8;
+    u8 bit = gLevelState->collected & 8;
 
     if (bit)
     {
         void *snd;
 
-        if (sub_8023278(gUnknown_030012C0) || gUnknown_030012C0->unk_8C)
+        if (sub_8023278(gLevelState) || gLevelState->unk_8C)
             snd = sub_801A878(a0, a1, a2, a3, 0xC);
         else
             snd = sub_801A878(a0, a1, a2, a3, 0x9);
-        sub_80234E8(gUnknown_030012C0, snd);
+        sub_80234E8(gLevelState, snd);
     }
     else
     {

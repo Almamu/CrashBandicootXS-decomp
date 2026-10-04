@@ -207,7 +207,7 @@ void sub_801F170(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
         : "r0", "r1", "r2", "r3", "memory");
 
     {
-        register void *gAddr asm("r0") = &gUnknown_030012B4;
+        register void *gAddr asm("r0") = &gEntityFlags;
 
         asm volatile(
             "ldr r0, [r0]\n\t"

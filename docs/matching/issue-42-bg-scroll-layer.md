@@ -24,21 +24,21 @@ the Makefile's `OLD_AGBCC_OBJS` list. The BGnCNT bitfield setters
 (`sub_802614C`, `sub_8026160`, `sub_8026174`, `sub_8026190`) show the
 tell: `movs r2, #-K` (`movs`/`negs`) comes *before* the `ldrb` it's
 `and`ed with. With the final C, the current agbcc misses 7 of the 26:
-those four, plus `sub_80260B4`, `sub_80260D4` and `sub_80263F8`.
+those four, plus `LoadBgLayerTiles`, `LoadBgLayer` and `LoadPooledBgLayerTiles`.
 old_agbcc matches all 26.
 
 The #43 code right after (`tile_slot_pool.c`) was matched with the current
 agbcc. That needed a constant-before-load inline-asm anchor in
-`sub_80264F8`, plus one for the `+0x34` update in `sub_8026448`. Those are
+`AcquireTileSlot`, plus one for the `+0x34` update in `InitPooledBgLayer`. Those are
 the same old_agbcc symptoms, so that file may really be old_agbcc too. I
 haven't tested it; it's out of scope here.
 
 ## The object
 
 `include/bg_scroll_layer.h` (new) gives the layer a struct:
-`struct bg_scroll_layer` (0x5C bytes, constructor `sub_8025D74`) and
+`struct bg_scroll_layer` (0x5C bytes, constructor `InitBgLayer`) and
 `struct pooled_bg_layer` (0x60 bytes, adds the tile-slot pool at `+0x5C`,
-constructor `sub_8026448`). It also has the method table, whose entries are
+constructor `InitPooledBgLayer`). It also has the method table, whose entries are
 `{s16 this-adjustment, pad, fn}` and are called through
 `sub_803AD7C`/`sub_803AD80`.
 
@@ -57,29 +57,29 @@ constructor `sub_8026448`). It also has the method table, whose entries are
 | 0x54/0x56 | HOFS/VOFS |
 | 0x58 | `&REG_BGnHOFS` |
 
-Method tables (`gStaticData_087E4C14` base / `gStaticData_087E4C64` layer 0):
+Method tables (`gBgLayerVtable` base / `gPooledBgLayerVtable` layer 0):
 
 | slot | base | layer 0 |
 |---|---|---|
-| 0x08 destroy | `sub_80261B8` | `sub_8026418` |
-| 0x10 reset | `sub_802608C` | `sub_80263DC` |
-| 0x18 | `sub_8025E98` | `sub_8025E98` |
+| 0x08 destroy | `DestroyBgLayer` | `DestroyPooledBgLayer` |
+| 0x10 reset | `ResetBgLayer` | `ResetPooledBgLayer` |
+| 0x18 | `ScrollBgLayer` | `ScrollBgLayer` |
 | 0x20 | `sub_8024DCC` | `sub_8026250` (clamp to [-8, 8]) |
-| 0x28 load tiles | `sub_80260B4` | `sub_80263F8` |
-| 0x30 draw row | `sub_8025FC8` | `sub_8026368` |
-| 0x38 draw column | `sub_8025F3C` | `sub_80261CC` |
-| 0x40 clip columns | `sub_8025E70` | `sub_80262E8` |
-| 0x48 clip rows | `sub_8025E84` | `sub_8026328` |
+| 0x28 load tiles | `LoadBgLayerTiles` | `LoadPooledBgLayerTiles` |
+| 0x30 draw row | `DrawBgLayerRow` | `DrawPooledBgLayerRow` |
+| 0x38 draw column | `DrawBgLayerColumn` | `DrawPooledBgLayerColumn` |
+| 0x40 clip columns | `ClipBgLayerColumns` | `ClipPooledBgLayerColumns` |
+| 0x48 clip rows | `ClipBgLayerRows` | `ClipPooledBgLayerRows` |
 
 The base layer copies map entries into the screen block. Layer 0 acquires
-a pool slot for each tile (`sub_80264F8`) and writes the returned map
+a pool slot for each tile (`AcquireTileSlot`) and writes the returned map
 entry. When the resident range shrinks, layer 0 also releases the rows and
-columns that scroll out (`sub_8026264`/`sub_80262A4`, driven by
-`sub_80262E8`/`sub_8026328`). Its `loadTiles` doesn't unpack anything. It
+columns that scroll out (`ReleasePooledBgLayerColumn`/`ReleasePooledBgLayerRow`, driven by
+`ClipPooledBgLayerColumns`/`ClipPooledBgLayerRows`). Its `loadTiles` doesn't unpack anything. It
 just points the pool at the character block and the asset's tile data.
 
-`sub_80260D4` is the per-layer level-load hook that `level_layers.c` calls.
-`sub_802602C` derives the resident ranges from the scroll position (a
+`LoadBgLayer` is the per-layer level-load hook that `level_layers.c` calls.
+`RedrawBgLayer` derives the resident ranges from the scroll position (a
 240x160 screen) and draws every row through the table.
 
 Unused (no caller, not in a method table): `sub_8026108`, `sub_802612C`,
@@ -88,19 +88,19 @@ Unused (no caller, not in a method table): `sub_8026108`, `sub_802612C`,
 
 ## Matching notes
 
-- **`Mod32` inline.** Writing `% 32` directly in `sub_8026108`, `sub_80261CC`
-  and `sub_8025FC8` puts the wrong register or order on the first
+- **`Mod32` inline.** Writing `% 32` directly in `sub_8026108`, `DrawPooledBgLayerColumn`
+  and `DrawBgLayerRow` puts the wrong register or order on the first
   modulo. A `static inline s32 Mod32(s32)` fixes all three. (With
   `sub_802612C`/`sub_802613C` sitting right there, the original likely
   called a small inline helper.)
-- **`sub_8026368`**: the ROM computes `c % 32` before the
-  `sub_80264F8` call, which keeps `dst` in `r8`. Doing it in a separate
+- **`DrawPooledBgLayerRow`**: the ROM computes `c % 32` before the
+  `AcquireTileSlot` call, which keeps `dst` in `r8`. Doing it in a separate
   `s32 i = Mod32(c);` statement gives that order.
-- **`sub_80260D4`**: `self->cnt.bits.priority = desc->cnt` narrows the
+- **`LoadBgLayer`**: `self->cnt.bits.priority = desc->cnt` narrows the
   `u16` load to `ldrb`. A `u16` temp keeps the ROM's `ldrh`.
-- **`sub_80263F8`**: loading `tileData` into a temp before the call gives
+- **`LoadPooledBgLayerTiles`**: loading `tileData` into a temp before the call gives
   the ROM's argument-evaluation order.
-- **`sub_8025FC8` - goto loop.** The ROM loads and stores the
+- **`DrawBgLayerRow` - goto loop.** The ROM loads and stores the
   stack-resident column cursor on every iteration. Every `for`/`while`/
   `do`-`while` form (volatile, arrays, unions, pointer temps,
   inline helpers) lets loop.c's `load_mems` keep the cursor in a register
@@ -108,7 +108,7 @@ Unused (no caller, not in a method table): `sub_8026108`, `sub_802612C`,
   `NOTE_INSN_LOOP_BEG` notes, so a hand-rolled `if (...) return; loop:
   ... if (c <= end) goto loop;` avoids it. Explicit `end = colHi` and
   `mask = 0x3F` locals give the ROM's hoisted `r4`/`r7`. (The sibling
-  `sub_8025F3C`, NAKED in game_loop16.c, does hoist its cursor, so the
+  `DrawBgLayerColumn`, NAKED in game_loop16.c, does hoist its cursor, so the
   goto is specific to this function.)
 - Trailing `asm(".align 2, 0")` for the `0000` pad after `nullsub_26`.
 

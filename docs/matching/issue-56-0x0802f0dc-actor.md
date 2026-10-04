@@ -53,7 +53,7 @@ are named by the lower 5 hex digits of their first function's address
   idle frame if it wasn't already, latches the target position at
   `self+0x1c`/`self+0x20` from the two arguments, and re-arms state 6
   (playing a cue only on the *first* transition into it). While the
-  current game-mode flag at `gUnknown_030012C0+0x8c` is clear and the
+  current game-mode flag at `gLevelState+0x8c` is clear and the
   `gUnknown_030014EC` frame-timer has advanced far enough, drives a
   5-case round-robin (`gUnknown_030014F0`) once every >0xbe-frame
   window via a real `switch` on a dense 0-4 case set - the switch's
@@ -79,7 +79,7 @@ are named by the lower 5 hex digits of their first function's address
 - **`sub_802F0DC`** (`src/graphics/actor_part43.c`) - constructor/
   reset: while the singleton flag (`gUnknown_03001506`) is off, resets
   `self` to state 5/table-index 4, plays a cue, and conditionally
-  fires an extra one-shot effect via `sub_8022EA8`. Matched with the
+  fires an extra one-shot effect via `FreezeLevelClock`. Matched with the
   established "cache the known-zero value in a register, front-load
   sibling constants before either store, reset the anim frame via a
   `register`-pinned halfword/byte pair" idioms already used throughout
@@ -87,7 +87,7 @@ are named by the lower 5 hex digits of their first function's address
 - **`sub_802F3BC`** (`src/graphics/actor_part44.c`) - accumulator-
   drain/reward-dispenser for the `gUnknown_030014FC` accumulator
   `sub_802F540` fills: while the singleton flag is set, fully drains
-  it via repeated `sub_8023430` calls; otherwise, once a
+  it via repeated `CollectWumpa` calls; otherwise, once a
   `gUnknown_030014F8` cooldown elapses, dispenses one of four tiers of
   reward sized by the accumulator's own magnitude. Needed `self`
   explicitly pinned to `r1` - this compiler's default allocation put a

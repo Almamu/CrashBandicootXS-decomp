@@ -1,11 +1,11 @@
 #include "core.h"
 #include "memory.h"
 
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern s32 gUnknown_03000868;
 extern s32 *gUnknown_03000850[];
 
-extern void *sub_8023738(void);
+extern void *GetLevelState(void);
 extern void sub_802369C(void);
 extern void sub_8023674(void *state);
 extern void sub_8037620(void);
@@ -16,7 +16,7 @@ extern void UpdateGameFrame(void *state);
 
 /* The game's top-level loop (called once from `AgbMain`, see
  * src/system/main.c): sets up the central per-level state object
- * (`gUnknown_030012C0`, see docs/rom_map.md's "hud"/"game_loop"
+ * (`gLevelState`, see docs/rom_map.md's "hud"/"game_loop"
  * investigations for what its fields mean), the on-screen counter
  * widget (`sub_8037620`/`sub_80371B4`/`sub_80375EC`, src/audio/
  * counter_selector*.c), then runs `UpdateGameFrame` forever, freeing
@@ -25,17 +25,17 @@ extern void UpdateGameFrame(void *state);
  * `if (MainLoop() != 0)` guard, which this loop never reaches. */
 s32 MainLoop(void)
 {
-    gUnknown_030012C0 = sub_8023738();
+    gLevelState = GetLevelState();
     sub_802369C();
-    sub_8023674(gUnknown_030012C0);
+    sub_8023674(gLevelState);
     sub_8037620();
     gUnknown_03000868 = sub_80371B4();
     sub_80375EC();
-    sub_8023658(gUnknown_030012C0);
+    sub_8023658(gLevelState);
 
     for (;;) {
         mem_free_bytes(MEM_HEAP_BOTH);
-        UpdateGameFrame(gUnknown_030012C0);
+        UpdateGameFrame(gLevelState);
         mem_free_bytes(MEM_HEAP_BOTH);
     }
 }

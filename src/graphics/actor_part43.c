@@ -14,12 +14,12 @@
 
 extern void sub_8029BAC(s32 arg0);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern void sub_8022EA8(void *arg0, s32 arg1);
+extern void FreezeLevelClock(void *arg0, s32 arg1);
 extern s32 sub_802A4D4(void);
 extern s32 sub_803ADB4(s32 arg0, s32 arg1);
-extern s32 sub_8023464(void *self);
+extern s32 AddLife(void *self);
 extern void *gUnknown_030012BC;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern u8 gUnknown_03001504;
 extern u8 gUnknown_03001506;
 extern u8 gUnknown_03001507;
@@ -38,8 +38,8 @@ struct actor_hp {
 
 /* Constructor/reset: while the singleton flag (`gUnknown_03001506`) is
  * off, resets `self` to state 5/table-index 4 (idle-ish), plays a cue,
- * and - only if the current game-mode flag at `gUnknown_030012C0+0x8c`
- * is set - fires an extra one-shot effect via `sub_8022EA8`. */
+ * and - only if the current game-mode flag at `gLevelState+0x8c`
+ * is set - fires an extra one-shot effect via `FreezeLevelClock`. */
 void sub_802F0DC(void *selfArg)
 {
     register struct actor_self *self asm("r4") = selfArg;
@@ -69,8 +69,8 @@ void sub_802F0DC(void *selfArg)
         }
         self->animTime = zero;
         PlaySfx(gUnknown_030012BC, 0x3b, 0x100);
-        if (*((u8 *)gUnknown_030012C0 + 0x8c) != 0) {
-            sub_8022EA8(gUnknown_030012C0, 0x2710);
+        if (*((u8 *)gLevelState + 0x8c) != 0) {
+            FreezeLevelClock(gLevelState, 0x2710);
         }
     }
 }
@@ -81,7 +81,7 @@ void sub_802F0DC(void *selfArg)
  * frame if it wasn't already, latches the target position at `self+0x1c`/
  * `self+0x20` from the two arguments, and re-arms state 6 (playing a cue
  * only on the *first* transition into it). While the current game-mode
- * flag at `gUnknown_030012C0+0x8c` is clear and the `gUnknown_030014EC`
+ * flag at `gLevelState+0x8c` is clear and the `gUnknown_030014EC`
  * frame-timer has advanced far enough (>0x14 frames since the last pass),
  * drives a 5-case round-robin (`gUnknown_030014F0`, wrapping 0-4) once
  * every >0xbe-frame window: cases 0-2 feed the `gUnknown_030014FC` reward
@@ -133,7 +133,7 @@ void sub_802F164(void *selfArg, s32 xArg, s32 yArg)
         self->base.stateTime = zero;
     }
 
-    paused = *((u8 *)gUnknown_030012C0 + 0x8c);
+    paused = *((u8 *)gLevelState + 0x8c);
     if (paused != 0) {
         return;
     }
@@ -148,7 +148,7 @@ void sub_802F164(void *selfArg, s32 xArg, s32 yArg)
 
     switch (gUnknown_030014F0) {
     case 0:
-        if (*((u8 *)gUnknown_030012C0 + 0x8c) == 0) {
+        if (*((u8 *)gLevelState + 0x8c) == 0) {
             if (gUnknown_030014FC == 0) {
                 gUnknown_030014F8 = 0xf;
             }
@@ -156,7 +156,7 @@ void sub_802F164(void *selfArg, s32 xArg, s32 yArg)
         }
         break;
     case 1:
-        if (*((u8 *)gUnknown_030012C0 + 0x8c) == 0) {
+        if (*((u8 *)gLevelState + 0x8c) == 0) {
             if (gUnknown_030014FC == 0) {
                 gUnknown_030014F8 = 0xf;
             }
@@ -164,7 +164,7 @@ void sub_802F164(void *selfArg, s32 xArg, s32 yArg)
         }
         break;
     case 2:
-        if (*((u8 *)gUnknown_030012C0 + 0x8c) == 0) {
+        if (*((u8 *)gLevelState + 0x8c) == 0) {
             if (gUnknown_030014FC == 0) {
                 gUnknown_030014F8 = 0xf;
             }
@@ -189,8 +189,8 @@ void sub_802F164(void *selfArg, s32 xArg, s32 yArg)
         }
         break;
     case 4:
-        if (*((u8 *)gUnknown_030012C0 + 0x8c) == 0) {
-            sub_8023464(gUnknown_030012C0);
+        if (*((u8 *)gLevelState + 0x8c) == 0) {
+            AddLife(gLevelState);
             PlaySfx(gUnknown_030012BC, 7, 0x100);
         }
         break;

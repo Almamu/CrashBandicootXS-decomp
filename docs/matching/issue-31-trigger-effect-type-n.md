@@ -38,16 +38,16 @@ picks up the other three next.
 
 ## What got fixed this pass (new techniques, not tried in the third pass)
 
-- **The `gUnknown_030012C0` address survives across the `sub_8023278`
+- **The `gLevelState` address survives across the `sub_8023278`
   call for free once pinned to `r9` via a *plain C* `register void
-  *self asm("r0") = (void *)&gUnknown_030012C0;` initializer** - letting
+  *self asm("r0") = (void *)&gLevelState;` initializer** - letting
   the compiler's own address-of codegen manage the literal-pool
   placement (landing it in the function's single combined pool,
   matching every other reference in this file) rather than a hand-
   written `ldr r0, =symbol` pseudo-op inside `asm volatile`. This is a
   **new, previously-undocumented gotcha** for this project's established
   "spell out the literal load in an asm island" idiom: a hand-written
-  `ldr r0, =gUnknown_030012C0` inside `asm volatile` pools at the *far
+  `ldr r0, =gLevelState` inside `asm volatile` pools at the *far
   end of the whole translation unit* (GAS's default deferred-pool
   behavior for the `=expr` pseudo-op, since nothing in this file forces
   an early `.ltorg`), not at the natural per-function position the ROM
@@ -68,7 +68,7 @@ picks up the other three next.
 - **The `sub_8023278(...) || ...+0x8c` branch needs explicit `goto`s,
   not a plain `||` expression.** A plain `||` compiles both operands as
   independent "if true, branch to the shared target" tests; the ROM's
-  second operand (`gUnknown_030012C0+0x8c` test) is inverted and
+  second operand (`gLevelState+0x8c` test) is inverted and
   *falls through* into the first operand's target instead of branching
   to it (saving one instruction). Restructuring as `if (A) goto
   id_c; if (!B) goto id_b;` (fallthrough to `id_c`) reproduces the
@@ -81,7 +81,7 @@ picks up the other three next.
   shaped this way, matching the ROM's single `bl sub_801A878` call site
   exactly (not two separate calls).
 - **The `+0x8c` re-check after the `sub_8023278` call re-derefs
-  `gUnknown_030012C0` through the `r9`-pinned address**, not by reusing
+  `gLevelState` through the `r9`-pinned address**, not by reusing
   `self` (whose own register, `r0`, was clobbered by the call) - a
   fresh `register void **tmp asm("r3") = pAddr; register u8 val
   asm("r0") = *((u8 *)*tmp + 0x8c);` pair reproduces the ROM's exact
@@ -187,7 +187,7 @@ suma coincide` (default build fully unaffected).
 ### `sub_8020F7C`/`sub_802107C`: the exact same two blockers, transferring unchanged
 
 These two share one register shape, distinct from `sub_8020E84`'s own:
-`self` lives in r1 (not r0), the address-of `gUnknown_030012C0` stays
+`self` lives in r1 (not r0), the address-of `gLevelState` stays
 pinned to r8 (not r9) as `pAddr`, and the bit-test result lives in r9
 (not r8). The mask constant is still materialized *before* the byte
 load (same gotcha as `sub_8020E84`), but here the AND's destination is
@@ -359,7 +359,7 @@ Only one thing needed care. The sound arm is two separate `sub_801A878`
 calls, one per sound id:
 
 ```c
-if (sub_8023278(gUnknown_030012C0) || gUnknown_030012C0->unk_8C)
+if (sub_8023278(gLevelState) || gLevelState->unk_8C)
     snd = sub_801A878(a0, a1, a2, a3, 0xC);
 else
     snd = sub_801A878(a0, a1, a2, a3, 0xB);
@@ -370,7 +370,7 @@ both arms and then shares the rest of the call. That is gcc cross-jumping
 two identical call tails. It merges backwards from the end of each call
 and stops at the differing `mov r1, #id`. A single call with an `id`
 variable only truncates `a0` once, after the join. That version also
-loads `gUnknown_030012C0` for the `sub_80234E8` call early and pushes
+loads `gLevelState` for the `sub_80234E8` call early and pushes
 `sl`, so it misses by 89 halfwords.
 
 The "`self` in r1 vs r0" and "mask in `sl`" register differences between
@@ -386,7 +386,7 @@ constant, `8`, so they share one register.
 | `sub_802107C` | 4 | 0xA | 6 | 19 halfwords off | match |
 | `sub_802117C` | 8 | 0x9 | 8 | 40 halfwords off | match |
 
-`gUnknown_030012C0` is typed with a file-local `struct level_progress`
+`gLevelState` is typed with a file-local `struct level_progress`
 (`collected` at +2, `unk_8C` at +0x8C) instead of raw byte offsets.
 Verified with `make NON_MATCHING=1 report` and a full clean
 `make compare`.

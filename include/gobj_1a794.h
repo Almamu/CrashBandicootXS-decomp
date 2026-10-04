@@ -206,10 +206,10 @@ struct spawn_rec
 };
 
 extern struct gobj *gUnknown_030012D8;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern void *gUnknown_030012B8;
 extern void *gUnknown_030012EC;
-extern u8 *gUnknown_030012B4;
+extern u8 *gEntityFlags;
 extern u8 ***gUnknown_030012D0;
 extern u32 gUnknown_0300082C;
 extern struct vec_pair gStaticData_0816C418[];

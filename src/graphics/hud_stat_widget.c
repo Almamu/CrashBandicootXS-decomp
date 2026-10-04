@@ -2,7 +2,7 @@
 #include "actor.h"
 #include "hud.h"
 
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern s32 gUnknown_0300086C;
 
 extern void sub_80270E0(struct hud_digit_part *part, s32 x, s32 y);
@@ -43,18 +43,18 @@ void sub_80274EC(struct hud_counter *self)
 
     sub_8027838(sself);
 
-    if (sub_80233B4(gUnknown_030012C0) != -1) {
+    if (sub_80233B4(gLevelState) != -1) {
         sub_802757C(sself);
         return;
     }
 
-    if (sub_80232B8(gUnknown_030012C0)) {
+    if (sub_80232B8(gLevelState)) {
         gUnknown_0300086C = 0;
         sub_8008044((struct actor *)((u8 *)sself->parts + 0x880));
         sub_80270E0((struct hud_digit_part *)((u8 *)sself->parts + 0x880), 0, 0);
     }
 
-    if (*((u8 *)gUnknown_030012C0 + 0x8c) != 0 && sself->mode == 0 && sself->field_08 == 0) {
+    if (*((u8 *)gLevelState + 0x8c) != 0 && sself->mode == 0 && sself->field_08 == 0) {
         sub_802763C(sself);
     }
 

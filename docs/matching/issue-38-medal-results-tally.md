@@ -9,24 +9,24 @@ work done against that list.
 Two loosely related families sharing the same ROM neighborhood:
 
 1. **The medal-results tally chain** (`sub_8024278`-`sub_802455C`,
-   `sub_8024464`), extending the `gStaticData_0816C86C`/`sub_8025894`
+   `sub_8024464`), extending the `gLevelTable`/`sub_8025894`
    chain docs/rom_map.md already documents ("A per-level completion-time
-   cascade, and a medal-table tally chain"). `gStaticData_0816C86C`'s
+   cascade, and a medal-table tally chain"). `gLevelTable`'s
    confirmed 36-slot medal table gets two more of its `unused` bytes
    resolved here: `+0x04` (a byte offset into the per-level sound-cue-ID
-   table `gStaticData_0816CD80`, `sub_8024498`) and `+0x20` (a pointer
+   table `gThemeMusicCues`, `sub_8024498`) and `+0x20` (a pointer
    to a small `struct MedalItemList { count; items[]; extra1; extra2; }`
    header, `sub_8024278`). Each `items[]`/`extra1`/`extra2` entry is
    itself a `struct MedalListItem` with a `type` selector (0-2 dispatch
    to `sub_8025894`, 3 to `sub_802968C`, matching sub_8024278's own
    earlier-documented dispatch) and a nested `linkedObj->0x1c` pointer
    feeding both of those.
-2. **A sound-channel-handle helper family** (`sub_8024590`-
-   `sub_8024790`, plus the `sub_802425C`/`sub_80247EC` teardown wrapper
-   pair and the `sub_8024804` constructor) managing `gUnknown_030012BC`
+2. **A sound-channel-handle helper family** (`BeginSlide`-
+   `EndSlide`, plus the `sub_802425C`/`DestroySlideshow` teardown wrapper
+   pair and the `ResetSlideshow` constructor) managing `gUnknown_030012BC`
    playback state for a small per-screen item list, alongside a
    VRAM-bank-toggling asset streamer + palette DMA + a second `DISPCNT`
-   writer (`sub_8024708`, alongside the already-documented
+   writer (`ShowSlidePicture`, alongside the already-documented
    `sub_8001614`/`gUnknown_03001288` one).
 
 ## Matched (19 functions, full clean `make compare` passing)
@@ -49,8 +49,8 @@ dispatch body), `sub_8024498` (medal-results sound-cue resolver),
 `src/system/game_loop19.c`: `sub_8024784` (trivial `gUnknown_03001314`
 setter).
 
-`src/system/game_loop20.c`: `sub_80247EC` (the `sub_802425C`-shaped
-teardown wrapper), `sub_8024804` (trivial constructor).
+`src/system/game_loop20.c`: `DestroySlideshow` (the `sub_802425C`-shaped
+teardown wrapper), `ResetSlideshow` (trivial constructor).
 
 ### Gotchas worth recording
 
@@ -70,9 +70,9 @@ teardown wrapper), `sub_8024804` (trivial constructor).
   three times rather than calling a shared helper) and the standalone
   `sub_8024464`.
 - **Struct-field access order matters when a value first has to be
-  loaded from memory.** Every function keying off `gStaticData_0816C86C
+  loaded from memory.** Every function keying off `gLevelTable
   [self->0]` byte-matched only once the array index was written inline
-  (`gStaticData_0816C86C[*(s32 *)s].itemList`) instead of through a
+  (`gLevelTable[*(s32 *)s].itemList`) instead of through a
   named `s32 idx = *(s32 *)s;` local declared first - the latter makes
   the compiler load `idx` before the table's own base address, the
   former (matching the ROM) loads the table's pool address first, the
@@ -98,7 +98,7 @@ teardown wrapper), `sub_8024804` (trivial constructor).
   upper 24 bits rather than trusting a clean 0/1 return. Matches this
   codebase's established `(u8)funcCall(...) != 0` idiom (see e.g.
   `src/graphics/actor_part38c.c`) once applied here too.
-- **`sub_8024708`'s `& ~0x10`/negated-constant idiom.** The ROM computes
+- **`ShowSlidePicture`'s `& ~0x10`/negated-constant idiom.** The ROM computes
   `gUnknown_03001314`'s low byte as `(byte & -0x11) | ((toggle&1)<<4)`
   - `-0x11` (`0xFFFFFFEF`) is numerically identical to `~0x10`, and is
   how this compiler materializes a plain `& ~0x10` bit-clear via
@@ -134,27 +134,27 @@ left as a clear target for a future pass instead.
   reproduce even with `register ... asm("r1")`/`asm("r3")` pins on the
   intermediate `table`/`v` values (which *did* fix a separate, smaller
   register mismatch in the same function).
-- **`sub_8024590`/`sub_8024640`/`sub_80246D8`/`sub_8024708`**
+- **`BeginSlide`/`RunSlideshow`/`SkipSlides`/`ShowSlidePicture`**
   (`asm/code_3_2_17_24590.s`) - a linked group managing a small
-  per-screen item list's sound-channel handles (`sub_8024590`: start/
+  per-screen item list's sound-channel handles (`BeginSlide`: start/
   re-select a cue via `sub_8001B54`, then either play a secondary sfx
   immediately or busy-poll `sub_8001AB8` until the channel reports the
-  requested id before playing it), its driver loop (`sub_8024640`:
-  calls `sub_8024708`/`sub_8024590` per index, polls input via
+  requested id before playing it), its driver loop (`RunSlideshow`:
+  calls `ShowSlidePicture`/`BeginSlide` per index, polls input via
   `sub_80010E0`, ducks music, nudges a delay value, plays a completion
-  sfx, then advances via `sub_80246D8`), the "find next `+0x10==1`
-  item" index scanner (`sub_80246D8`), and the VRAM-bank-toggling tile-
-  asset streamer + palette DMA + second `DISPCNT` writer (`sub_8024708`,
+  sfx, then advances via `SkipSlides`), the "find next `+0x10==1`
+  item" index scanner (`SkipSlides`), and the VRAM-bank-toggling tile-
+  asset streamer + palette DMA + second `DISPCNT` writer (`ShowSlidePicture`,
   see the gotcha above - that part *did* get byte-matched in isolation
-  before this whole group was reverted back to raw, since `sub_8024708`
+  before this whole group was reverted back to raw, since `ShowSlidePicture`
   alone wasn't enough to keep the group's `.c` file boundaries simple
   without also matching its three siblings). The remaining gap in all
   four is register-allocation-level (which register holds the item-list
   base pointer vs. the loop index vs. the per-item pointer at any given
   point), not a semantic one - every field offset and call argument is
   confirmed against the ROM.
-- **`sub_8024790`** (`asm/code_3_2_17_24790.s`) - the tail half of
-  `sub_8024640`'s per-item body (music duck / delay nudge / completion
+- **`EndSlide`** (`asm/code_3_2_17_24790.s`) - the tail half of
+  `RunSlideshow`'s per-item body (music duck / delay nudge / completion
   sfx) reused standalone against a caller-supplied index, same shape and
   same open gap as the group above.
 
@@ -172,9 +172,9 @@ matched/parked/raw lists this updates.
 
 **Update:** a follow-up pass matched `sub_8024344` and two of the six
 functions this doc's "Left raw" section lists as-is
-(`sub_8024640`/`sub_80246D8`/`sub_8024790`, all now real C), and produced
+(`RunSlideshow`/`SkipSlides`/`EndSlide`, all now real C), and produced
 NON_MATCHING C reconstructions for the remaining two
-(`sub_8024590`/`sub_8024708`) - see
+(`BeginSlide`/`ShowSlidePicture`) - see
 [docs/matching/issue-38-sound-channel-family.md](./issue-38-sound-channel-family.md)
 for the full write-up. This doc's own "Left raw" entries above are kept
 as historical record of the earlier pass and are no longer accurate.

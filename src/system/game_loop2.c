@@ -9,7 +9,7 @@ extern struct tile_asset_cache *gUnknown_030012B8;
 
 extern u8 sub_80232B8(struct level_state *self);
 extern u8 sub_8023290(struct level_state *self);
-extern u8 *sub_8023404(struct level_state *self);
+extern u8 *GetCurrentLevelFlags(struct level_state *self);
 extern void sub_801EB04(s32 a, u16 b, u16 c, u16 d);
 extern void sub_8028474(void *state);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
@@ -19,7 +19,7 @@ extern void sub_8006DA0(struct tile_asset_cache *self, s32 index);
 
 /* Record 47's periodic-trigger setter (docs/rom_map.md, "An
  * achievement/unlock-icon spawner family, tied to gStaticData_084A5600
- * record 47") - `sub_8022F2C` is its decrementer/consumer.
+ * record 47") - `TickLevelClock` is its decrementer/consumer.
  *
  * The ROM keeps `&gUnknown_030012D0` and `&gUnknown_030012B8` alive
  * across the `sub_8006DF8` call in `r4`/`r7` (only 4 low registers
@@ -46,7 +46,7 @@ extern void sub_8006DA0(struct tile_asset_cache *self, s32 index);
  * (`&gUnknown_030012B8`), or `slot` - they land in `r5`/`r7`/`r6`
  * purely from the resulting register pressure, matching the ROM
  * exactly. */
-void sub_8022EA8(struct level_state *self, s32 seconds)
+void FreezeLevelClock(struct level_state *self, s32 seconds)
 {
     register s32 off asm("r2");
     struct tile_asset_cache *base;
@@ -81,14 +81,14 @@ void sub_8022EA8(struct level_state *self, s32 seconds)
 
 /* Countdown-gated periodic event trigger (docs/rom_map.md, "A per-level
  * completion-time cascade..."): decrements `self+0xa0`'s countdown and,
- * on reaching 0, fires record 47's spawn (`sub_8022EA8`'s sibling,
+ * on reaching 0, fires record 47's spawn (`FreezeLevelClock`'s sibling,
  * reusing `+0x30` for both the lookup and the slot-fill argument this
  * time). While the countdown is already 0, instead runs a cascading
  * digit-counter carry over `self+0x9c`/`0x98`/`0x94`/`0x90` (thresholds
  * `5`/`9`/`0x3b`/`0x63`) - shaped like a minutes:seconds:centiseconds
  * odometer, saturating (not wrapping) once the top field hits its cap.
  *
- * The trigger half uses the same `sub_8022EA8` register-pinning recipe
+ * The trigger half uses the same `FreezeLevelClock` register-pinning recipe
  * (see its comment above) for the `sub_8006DF8`/`sub_8006D08` cross-
  * call pair. Two more pins close the rest: `addr`/`countdown` pinned
  * to `r1`/`r3` reproduce the ROM's exact front-of-function map (the
@@ -112,7 +112,7 @@ void sub_8022EA8(struct level_state *self, s32 seconds)
  * rather than re-reading `*addr` for the increment - without that, gcc
  * re-emits a redundant `ldr` in the `else` (increment) arm instead of
  * reusing the register the comparison already loaded. */
-void sub_8022F2C(struct level_state *self)
+void TickLevelClock(struct level_state *self)
 {
     register s32 *addr asm("r1") = &self->countdown;
     register s32 countdown asm("r3") = *addr;
@@ -201,7 +201,7 @@ void sub_8022FEC(struct level_state *self)
             struct level_category *level = self->cat;
 
             if (level->kind == 3) {
-                u8 *flags = sub_8023404(self);
+                u8 *flags = GetCurrentLevelFlags(self);
                 /* Register pins reproduce the ROM's "build the OR
                  * mask before loading the byte" order - a plain
                  * `*flags |= 2;` loads the byte first regardless of
@@ -242,7 +242,7 @@ void sub_802306C(struct level_state *self)
         struct level_category *level = self->cat;
 
         if (level->kind == 3) {
-            u8 *flags = sub_8023404(self);
+            u8 *flags = GetCurrentLevelFlags(self);
             register s32 mask asm("r1") = 2;
             register s32 value asm("r2") = *flags;
             mask |= value;
@@ -385,7 +385,7 @@ s32 sub_80231C4(struct level_state *self)
 
 /* GitHub issues #35/#36: 0x080231CC-0x08023488, the remainder of the
  * UpdateGameFrame-MainLoop cluster's "level" object accessor family
- * (`gUnknown_030012C0`) - fully contiguous with the functions above (no
+ * (`gLevelState`) - fully contiguous with the functions above (no
  * ldscript.txt change needed, this is still the same self type and
  * still the same object file). See docs/matching/issue-35-36-0x080231cc-game-loop.md
  * for the full write-up. Bit-7 getter for the `self+2` flags byte this
@@ -402,12 +402,12 @@ void sub_80231D4(struct level_state *self)
     self->unk_70 = 0;
 }
 
-void sub_80231DC(struct level_state *self)
+void ResetWumpa(struct level_state *self)
 {
     self->wumpa = 0;
 }
 
-void sub_80231E4(struct level_state *self)
+void ResetLives(struct level_state *self)
 {
     self->lives = 5;
 }
@@ -421,7 +421,7 @@ extern void sub_8024498(void *self);
  * gUnknown_030012BC, 0x12)`) and skips the rest; leaving level 3 re-fires
  * `sub_8024498(&self->level)` once. Either way `maskLevel` ends up
  * holding `state`. */
-void sub_80231EC(void *selfArg, s32 stateArg)
+void SetMaskLevel(void *selfArg, s32 stateArg)
 {
     /* Register-pinned so the ROM's own `adds r4,r0,#0` (self) /
      * `adds r5,r1,#0` (state) copy order is reproduced - a plain pair
@@ -439,18 +439,18 @@ void sub_80231EC(void *selfArg, s32 stateArg)
     self->maskLevel = state;
 }
 
-/* Plain setter for the same `self+0x74` field `sub_80231E4` above
+/* Plain setter for the same `self+0x74` field `ResetLives` above
  * hardcodes to `5`. */
-void sub_8023220(struct level_state *self, s32 value)
+void SetLives(struct level_state *self, s32 value)
 {
     self->lives = value;
 }
 
-/* Advances the `self+0x78` latch by one via `sub_80231EC`. */
-void sub_8023224(struct level_state *self)
+/* Advances the `self+0x78` latch by one via `SetMaskLevel`. */
+void RaiseMaskLevel(struct level_state *self)
 {
     s32 next = self->maskLevel + 1;
-    sub_80231EC(self, next);
+    SetMaskLevel(self, next);
 }
 
 extern void sub_80284A4(void *state);
@@ -458,7 +458,7 @@ extern void sub_80284A4(void *state);
 /* Outside time trials (`timeTrial`, +0x8c): loses a life (`lives`,
  * +0x74) and, while any are left, pings `gUnknown_03001318`
  * (`sub_80284A4`). */
-void sub_8023234(struct level_state *self)
+void LoseLife(struct level_state *self)
 {
     if (self->timeTrial == 0) {
         s32 v = self->lives - 1;
@@ -470,27 +470,27 @@ void sub_8023234(struct level_state *self)
     }
 }
 
-/* Getter for `self+0x6c`, the counter `sub_80231DC` clears. */
-s32 sub_802325C(struct level_state *self)
+/* Getter for `self+0x6c`, the counter `ResetWumpa` clears. */
+s32 GetWumpa(struct level_state *self)
 {
     return self->wumpa;
 }
 
 /* Getters for the "seconds"/"minutes" tier of the digit-cascade odometer
- * `sub_8022F2C` above already documents (`self+0x9c`/`0x98`/`0x94`/
+ * `TickLevelClock` above already documents (`self+0x9c`/`0x98`/`0x94`/
  * `0x90`, thresholds 5/9/0x3b/0x63) - this trio covers its bottom three
  * tiers. */
-s32 sub_8023260(struct level_state *self)
+s32 GetClockTenths(struct level_state *self)
 {
     return self->tenths;
 }
 
-s32 sub_8023268(struct level_state *self)
+s32 GetClockSeconds(struct level_state *self)
 {
     return self->seconds;
 }
 
-s32 sub_8023270(struct level_state *self)
+s32 GetClockMinutes(struct level_state *self)
 {
     return self->minutes;
 }
@@ -559,7 +559,7 @@ void sub_80232D0(struct level_state *self)
     self->unk_a9 = 0;
 }
 
-void sub_80232D8(struct level_state *self)
+void ClearTimeTrial(struct level_state *self)
 {
     self->timeTrial = 0;
 }
@@ -607,18 +607,18 @@ void sub_8023318(struct level_state *self, struct level_state_1c8 *value)
 
 /* Plain getter/getter/setter trio for `self+0xc8`/`self+0xc4` - the
  * latter is the "current index" field `sub_8023378`/`sub_80233B4`/
- * `sub_8023404`/`sub_8023418` below all read. */
+ * `GetCurrentLevelFlags`/`sub_8023418` below all read. */
 s32 sub_8023324(struct level_state *self)
 {
     return self->unk_c8;
 }
 
-s32 sub_802332C(struct level_state *self)
+s32 GetCurrentLevel(struct level_state *self)
 {
     return self->level;
 }
 
-void sub_8023334(struct level_state *self, s32 value)
+void SetCurrentLevel(struct level_state *self, s32 value)
 {
     self->level = value;
 }
@@ -723,18 +723,18 @@ s32 sub_80233B4(struct level_state *self)
 }
 
 /* Address-of-slot helper: level `idx`'s word in `levelFlags`. */
-u8 *sub_80233FC(struct level_state *self, s32 idx)
+u8 *GetLevelFlags(struct level_state *self, s32 idx)
 {
     return (u8 *)&self->levelFlags[idx];
 }
 
 /* Resolves the "current index" field (`self+0xc4`) into its own slot
- * address via `sub_80233FC` - the address this file's `sub_8022FEC`/
+ * address via `GetLevelFlags` - the address this file's `sub_8022FEC`/
  * `sub_802306C`/`sub_8023484` all call "flags" and OR a bit into. */
-u8 *sub_8023404(struct level_state *self)
+u8 *GetCurrentLevelFlags(struct level_state *self)
 {
     s32 idx = self->level;
-    return sub_80233FC(self, idx);
+    return GetLevelFlags(self, idx);
 }
 
 /* Getter for `self+0x70`, the counter `sub_80231D4` resets. */
@@ -761,7 +761,7 @@ extern void sub_80284D4(void *state);
  * adds a life (`lives`, +0x74, capped at 99) with a ping to
  * `gUnknown_03001318` via `sub_80284A4`; either way, always pings it
  * again via `sub_80284D4`. */
-void sub_8023430(struct level_state *self)
+void CollectWumpa(struct level_state *self)
 {
     s32 v = self->wumpa + 1;
 
@@ -777,8 +777,8 @@ void sub_8023430(struct level_state *self)
 }
 
 /* Just the "add a life (`lives`), ping `sub_80284A4`" half of
- * `sub_8023430` above, standalone. */
-void sub_8023464(struct level_state *self)
+ * `CollectWumpa` above, standalone. */
+void AddLife(struct level_state *self)
 {
     if (self->lives <= 0x62) {
         self->lives += 1;
@@ -793,10 +793,10 @@ void sub_8023464(struct level_state *self)
  * alongside `sub_802306C`/`sub_8022FEC`'s own threshold-cross paths
  * above (identical shape: gated by the same `self+0x70 == self+0xbc`
  * counter/threshold pair, `sub_80232B8`/`sub_8023290` readiness checks,
- * then either OR a bit into `sub_8023404`'s slot or forward
+ * then either OR a bit into `GetCurrentLevelFlags`'s slot or forward
  * `self+0x1c0`/`0x1c4` to `sub_801EB04`). Only caller is
  * `sub_8023A1C`'s dispatch opener (`game_loop56.c`), which passes
- * `*gUnknown_030012C0` as `self`. */
+ * `*gLevelState` as `self`. */
 void sub_8023484(void *selfArg)
 {
     register struct level_state *self asm("r4") = selfArg;
@@ -806,7 +806,7 @@ void sub_8023484(void *selfArg)
         struct level_category *level = self->cat;
 
         if (level->kind == 3) {
-            u8 *flags = sub_8023404(self);
+            u8 *flags = GetCurrentLevelFlags(self);
             register s32 mask asm("r1") = 2;
             register s32 value asm("r2") = *flags;
             mask |= value;

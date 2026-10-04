@@ -90,11 +90,12 @@ extern void sub_80221BC();
 extern void sub_80221D4();
 
 /* The unified 92-slot function-pointer dispatch array (docs/rom_map.md
- * "Major correction: there is no second table"): the per-level
- * menu/text handlers followed by the trigger-effect handlers.
- * sub_8022208 (graphics_loading_21d80.c) hands it to sub_8025D4C
- * with a count of 0x5c. */
-void (*const gStaticData_0816C6A4[92])() = {
+ * "Major correction: there is no second table"): the spawn function of
+ * each entity type of the room data (docs/levels.md, "Entities").
+ * CreateEntitySpawner (graphics_loading_21d80.c) hands it to sub_8025D4C
+ * with a count of 0x5c, as gEntitySpawner; SpawnEntity calls entry
+ * `type` with the entity's id, x, y and param. */
+void (*const gEntitySpawnFuncs[92])() = {
     sub_801E990,
     sub_80221D4,
     sub_80221BC,

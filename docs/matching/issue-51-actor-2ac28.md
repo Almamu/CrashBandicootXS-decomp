@@ -61,7 +61,7 @@ lists them in that order.
 
 **`sub_802B218(spawn, useBonus, zOffset)`** picks the kind from the
 level's spawn record (`struct actor_spawn`: kind/altKind/bonusKind bytes
-and x/y/z in tiles). In the `gUnknown_030012C0+0x8C` mode it uses
+and x/y/z in tiles). In the `gLevelState+0x8C` mode it uses
 `altKind`, returns NULL for 11 and folds 3/8/28-31/35 to 1. Otherwise it
 takes `bonusKind` when `useBonus` is set. It skips kinds 0, 32-34 and 62,
 and calls the factory with the position scaled by 256 (plus `zOffset` on

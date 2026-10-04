@@ -4,7 +4,7 @@
 #include "gba/types.h"
 
 /*
- * The cutscenes (src/data/cutscenes_16d1c8.c): sub_8022468
+ * The cutscenes (src/data/cutscenes_16d1c8.c): PlayCutscene
  * (graphics_loading_22354.c) plays cutscene `idx` as a sequence of
  * slides, each a full-screen picture shown with its page of text in the
  * current language. The code reads the same records through its own
@@ -16,14 +16,14 @@
 struct cutscene_slide
 {
     const u16 *picture;     // 0x00 - a 256-colour palette, followed by the
-                            //        LZ77 Mode 4 bitmap (sub_8024708 reads
+                            //        LZ77 Mode 4 bitmap (ShowSlidePicture reads
                             //        it at +0x200)
     s32 wait;               // 0x04 - sub_80010E0's frame count
     s32 fade;               // 0x08 - sub_800132C flags (| 0x80) as the
                             //        slide starts
     s32 fadeAfter;          // 0x0C - sub_800132C flags after it, -1 = none
     u8 buttons;             // 0x10 - sub_80010E0's checkButtons; 1 = the
-                            //        slide is skipped past (sub_80246D8)
+                            //        slide is skipped past (SkipSlides)
     u8 duckMusic;           // 0x11 - sub_8001AC4 after the slide
     u8 rearmSfx;            // 0x12 - replay `sfx` after the slide
     u32 cue;                // 0x14 - music cue (sub_8001B54)

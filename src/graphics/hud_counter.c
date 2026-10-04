@@ -1,7 +1,7 @@
 #include "core.h"
 #include "hud.h"
 
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern s32 gUnknown_0300086C;
 
 extern void sub_80270E0(struct hud_digit_part *part, s32 x, s32 y);
@@ -21,7 +21,7 @@ void sub_8027838(struct hud_counter *counter)
     }
 
     {
-        register void **state_slot asm("r4") = &gUnknown_030012C0;
+        register void **state_slot asm("r4") = &gLevelState;
         register s32 value asm("r0");
 
         if (sub_803AFEC(*state_slot) > 0) {

@@ -308,7 +308,7 @@ compare` (`La suma coincide` - the guarded real bytes still assemble
 unchanged).
 
 `sub_801E990` (the sound-trigger dispatcher docs/rom_map.md already
-partially read - 3 Q8.8-shifted x/y/z args, a `gUnknown_030012C0`-gated
+partially read - 3 Q8.8-shifted x/y/z args, a `gLevelState`-gated
 position/flag write into `gUnknown_030012D8+0x28`, then a conditional
 `PlaySfx`) was read in full this pass too, but not attempted: its second
 half calls into several still-unread helpers
@@ -326,7 +326,7 @@ third pass's characterization), for whoever picks this up next.
 Picked up `sub_801E990` (the sound-trigger dispatcher the third pass
 flagged its unresolved helper calls for). All five previously-unread
 helpers turned out to already be matched elsewhere in the tree as
-plain one-line field accessors on the same `gUnknown_030012C0`-rooted
+plain one-line field accessors on the same `gLevelState`-rooted
 player struct: `sub_80232F4`/`sub_80232E0`/`sub_8023130`/`sub_803AFEC`
 (`+0xa8`/`+0x7c`/`+0x84`/`+0x74` respectively - the first three in
 `asm/code_3_2_17_231cc.s`'s still-raw accessor cluster, the fourth
@@ -344,7 +344,7 @@ before an ordinary-looking `sub_803AD88(addr, arg1, arg2, arg3)` call.
 With every operand pinned down, the function's full semantics are:
 
 1. If the player's `+0xa8` flag (`sub_80232F4`) is set: looks up a
-   per-`z` flags byte via the `gUnknown_030012B4 -> *rec -> {+8
+   per-`z` flags byte via the `gEntityFlags -> *rec -> {+8
    offsets[], +0xc base}` table - the exact same table
    `sub_8021D04` (`graphics_loading_21bfc.c`, issue #33) already reads,
    indexed the same way (`offsets[z]`, then `base[offsets[z]]`) - folds
@@ -364,7 +364,7 @@ With every operand pinned down, the function's full semantics are:
 A plain-C reconstruction with this exact meaning compiles cleanly and
 was confirmed instruction-for-instruction correct against the ROM in
 isolation for every operation, field offset and call - except one
-section: the `gUnknown_030012B4` table-resolution plus `+0x28`
+section: the `gEntityFlags` table-resolution plus `+0x28`
 bitfield-pack block never converged on the ROM's own register choices
 (`byte` staying in r0 across the shift, the shifted bit landing in r2,
 the `-0x11` clear mask materializing via a `movs r0,#1`/`subs
@@ -373,7 +373,7 @@ r0,#0x12` derivation that reuses the register still holding an earlier
 explicit intermediate variables, or the negative-constant idiom used
 elsewhere in this project - every restructuring tried shuffled the
 register assignment without landing on the ROM's exact one. This is
-the identical `gUnknown_030012B4 -> *rec -> {+8, +0xc}` resolution
+the identical `gEntityFlags -> *rec -> {+8, +0xc}` resolution
 shape already documented as unmatchable via plain C for `sub_8021D04`
 (issue #33) for the same underlying reason, strongly suggesting this
 specific table-lookup-into-bitfield-pack shape is a recurring gcc-2.9
@@ -404,7 +404,7 @@ two families, both worth flagging precisely for whoever picks this up
 next:
 
 - **`sub_801EA5C`-`sub_801EE3C`** (5 functions): the same "trigger
-  effect type N" bit-test (`sub_8023404`)/`sub_8008434`-spawn shape
+  effect type N" bit-test (`GetCurrentLevelFlags`)/`sub_8008434`-spawn shape
   already parked as `NAKED` in `trigger_effect.c`
   (`sub_8020E84`-`sub_802117C`, issue #31/#33) - the same register-
   rotation gap that resisted plain C there is likely to resist here
@@ -416,7 +416,7 @@ next:
   (`graphics_loading_1fdec.c`, issue #31) already matched as **real,
   byte-exact C** - `sub_8009ED0` allocation, `sub_800CA74` style
   lookup, two `sub_803AD80` trampoline calls, and the same
-  `gUnknown_030012B4`-rooted "collected bits" pack this pass's
+  `gEntityFlags`-rooted "collected bits" pack this pass's
   `sub_801E990` write-up above also resolves the table shape for. This
   is the more promising real-C target of the two remaining families -
   `sub_801FDEC`'s own matched C is the template to start from.
@@ -685,19 +685,19 @@ spawners reached through the trigger dispatch table at
 `game_loop2.c`):
 
 - `sub_801EA5C`/`sub_801EB04`/`sub_801EBF0` test bit 0/1/2 of the byte
-  `sub_8023404(gUnknown_030012C0)` returns a pointer to. If it is clear
+  `GetCurrentLevelFlags(gLevelState)` returns a pointer to. If it is clear
   they spawn a `sub_8008434` part, point its animation bank at
   `**gUnknown_030012D0 + 0x1BC` (`sub_801EA5C`) or `+ 0x180`, set its
   tag (+0x2D) and type byte (+0x0A: 0x1B/0x1D/0x1E), run the
   `sub_80087C0`/`sub_80087B4`/`sub_800872C` trio, store `sub_800815C`'s
   frame nibble and register the part with the `gUnknown_030012EC`
   manager. `sub_801EB04` additionally spawns effect 0x2B through
-  `sub_8025BAC(gUnknown_030012E4, ...)` and sets bits 0-1 of its +0x28
+  `sub_8025BAC(gEntitySpawner, ...)` and sets bits 0-1 of its +0x28
   to 1 and clears its "hidden" flag bit.
 - `sub_801EC9C`/`sub_801ED6C`/`sub_801EE3C` first call
-  `sub_80233B4(gUnknown_030012C0)`; if that returns 1 they hand the
+  `sub_80233B4(gLevelState)`; if that returns 1 they hand the
   spawn to `sub_8018D70` (`actor_part_188d0.c`) with kind 0/1/2.
-  Otherwise they test bit 0/2/1 of `gUnknown_030012C0+2` and spawn the
+  Otherwise they test bit 0/2/1 of `gLevelState+2` and spawn the
   same way (tags 3/2/0, types 0x1F/0x20/0x22).
 
 The only things the C has to get right:

@@ -13,7 +13,7 @@ extern void *gUnknown_030012D8;
 extern void *gUnknown_030012D4;
 extern void *gUnknown_030012C8;
 extern void *gUnknown_03001300;
-extern u8 *gUnknown_03001308;
+extern u8 *gLevelLayers;
 extern void *gUnknown_03001318;
 extern void *gUnknown_030012F0;
 extern void *gUnknown_030012F4;
@@ -25,7 +25,7 @@ extern struct tile_asset_cache *gUnknown_030012B8;
 
 extern void sub_8006DC8(struct tile_asset_cache *self);
 extern void sub_8026E6C(void *self);
-extern void sub_802692C(void *self);
+extern void ScrollLevelLayers(void *self);
 extern void sub_8026F54(void *self);
 extern void sub_80274EC(void *self);
 extern void sub_8008DC0(struct dual_array_manager *manager);
@@ -34,10 +34,10 @@ extern void sub_800944C(void *managerArg);
 extern void sub_8006A48(struct oam_shadow_buffer *arg0);
 extern void sub_80006A8(void);
 extern void sub_8006AAC(struct oam_shadow_buffer *arg0);
-extern void sub_80268F8(void *self);
+extern void CommitLevelScroll(void *self);
 extern void FlushVramDmaQueue(void);
 
-/* Runs the DMA3/`sub_8006DC8`+`sub_8026984` refresh pass over every
+/* Runs the DMA3/`sub_8006DC8`+`ResetLevelLayers` refresh pass over every
  * currently-active dual-array manager, then flushes the VRAM DMA
  * queue - only while `self->0x0` is still within the "near start of
  * level" range (`<= 0x1000`), otherwise this is a no-op. */
@@ -45,7 +45,7 @@ void sub_802400C(void *self)
 {
     sub_8006DC8(gUnknown_030012B8);
     sub_8026E6C(gUnknown_030012D4);
-    sub_802692C(gUnknown_03001308);
+    ScrollLevelLayers(gLevelLayers);
     sub_8026F54(gUnknown_030012C8);
 
     if (*(s32 *)self <= 0x1000) {
@@ -70,7 +70,7 @@ void sub_802400C(void *self)
         sub_8006A48(gUnknown_03001300);
         sub_80006A8();
         sub_8006AAC(gUnknown_03001300);
-        sub_80268F8(gUnknown_03001308);
+        CommitLevelScroll(gLevelLayers);
         FlushVramDmaQueue();
     }
 }
@@ -93,18 +93,18 @@ struct level_ctx
 };
 
 /* Rebuilds the gUnknown_03001280 BLDCNT/BLDALPHA shadow from the level's
- * blend settings and sets gUnknown_03001308's +0x2b flag in mode 1. With
+ * blend settings and sets gLevelLayers's +0x2b flag in mode 1. With
  * no blend effect, the shadow gets a fixed 16/16 alpha pattern. */
 void sub_80240E4(struct level_ctx *self)
 {
     union blend *b = &gUnknown_03001280;
 
     b->raw = 0;
-    gUnknown_03001308[0x2b] = 0;
+    gLevelLayers[0x2b] = 0;
     if (self->blend->effect != 0)
     {
         if (self->blend->mode == 1)
-            gUnknown_03001308[0x2b] = 1;
+            gLevelLayers[0x2b] = 1;
         b->bits.effect = *(u8 *)&self->blend->effect;
         b->bits.eva = self->blend->eva;
         b->bits.evb = self->blend->evb;

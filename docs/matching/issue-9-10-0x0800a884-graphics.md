@@ -52,15 +52,15 @@ family already covered at length by
   "reentrancy guard"-shaped wrapper (only runs while `self+0xc` bit 7
   is set): fires `self->table+0x70`'s trampoline via `sub_803AD7C`
   (matched), then calls `sub_800A0FC` (still raw, its own return value
-  discarded) with the global `gUnknown_03001308+0x2a` flag held set
+  discarded) with the global `gLevelLayers+0x2a` flag held set
   for the call's duration. If `self+0xac` (a pointer, cleared here)
   was non-null, sets `self+0x68` bit 3 and clears the
   `+0x100`/`+0x102`/`+0x103` flag bytes `actor_part48.c`'s doc comment
-  already introduced. Then dispatches on `gUnknown_03001308+0x29` (a
+  already introduced. Then dispatches on `gLevelLayers+0x29` (a
   pending-action "kind" byte the ROM's own 10-entry jump table reads,
   cleared back to `0` by every path here): kind `0` additionally
   resets `+0x100`/`+0x102`/`+0x103` if `self+0x68` reads exactly `8`;
-  kind `1` sets `self+0xc` bit 6, clears `+0x8c`, calls `sub_80231EC`
+  kind `1` sets `self+0xc` bit 6, clears `+0x8c`, calls `SetMaskLevel`
   (still raw) and fires the `self->table+0x68` trampoline with code
   `1`; kinds `5`/`7`/`10` each set one of the `+0x100`/`+0x102`/`+0x103`
   flags; the rest are no-ops beyond the shared kind-reset. Finally
@@ -219,7 +219,7 @@ family already covered at length by
 3. **A local variable that's live across multiple calls needs an
    explicit register pin, or its scope silently widens far past where
    it's actually needed and pulls in extra high registers.** An early
-   draft computed `gUnknown_03001308+0x29`'s address once, up front,
+   draft computed `gLevelLayers+0x29`'s address once, up front,
    into a plain (unpinned) `u8 *kindAddr` local kept alive across the
    `sub_803AD7C`/`sub_800A0FC` calls purely so it could be reused much
    later in the function - this compiler's allocator responded by
@@ -227,7 +227,7 @@ family already covered at length by
    `r8`/`r9`, needing a `push {r8, r9}`-equivalent prologue the ROM's
    own function (a true `r0`-`r7`-only leaf-register user, `push
    {r4,r5,r6,r7,lr}` only) never has. Fixed by *not* introducing that
-   named variable at all - `gUnknown_03001308` is instead re-dereferenced
+   named variable at all - `gLevelLayers` is instead re-dereferenced
    fresh, inline, at each of its actual use sites (the `+0x2a` flag
    sets around the `sub_800A0FC` call, the `kind` read, and the final
    kind-reset store), letting this compiler's own local CSE reuse a
@@ -269,16 +269,16 @@ family already covered at length by
   38-case jump-table player action-state dispatcher (the same shape
   `docs/status/actor.md` already flags as "left raw, out of scope" for
   `sub_8018008`, GitHub issue #22); calls a dozen still-unexamined
-  state-transition functions (`sub_8023404`, `sub_8022D50`,
-  `sub_8025BAC`, `sub_80231EC`, `sub_80232E4`, `sub_8023224`,
-  `sub_8022EA8`, `sub_80241A4`, `sub_802352C`, `sub_8023510`,
+  state-transition functions (`GetCurrentLevelFlags`, `sub_8022D50`,
+  `sub_8025BAC`, `SetMaskLevel`, `sub_80232E4`, `RaiseMaskLevel`,
+  `FreezeLevelClock`, `sub_80241A4`, `sub_802352C`, `sub_8023510`,
   `sub_8028504`, and others). Left raw per this project's established
   policy for this exact dispatcher shape.
 - **`sub_800AFF4`** (`asm/code_3_2_16.s`, ROM `0x0800AFF4`, ~636 B) -
   high register-pressure (`sb`/`sl`/`r8`/`ip` all live simultaneously)
   hitbox-record lookup/commit logic referencing the `+0x20`/`+0x2d`
   convention from `docs/rom_map.md`'s physics/collision write-up, but
-  gated on `gUnknown_030012C0+0x78` state values and
+  gated on `gLevelState+0x78` state values and
   `gStaticData_0816A820` (a per-state table not independently
   confirmed). Left raw for the same reason the issue-9 write-up
   originally gave.
@@ -326,7 +326,7 @@ this doc already covers, not a separate one).
 resolved the whole function:
 
 ```c
-extern u16 sub_8025460(void *self, s32 x, s32 y, u8 *flagsOut, s32 *hiOut);
+extern u16 GetTerrainType(void *self, s32 x, s32 y, u8 *flagsOut, s32 *hiOut);
 
 s32 sub_8026BC0(void *arg0, s32 x, s32 y)
 {
@@ -340,21 +340,21 @@ s32 sub_8026BC0(void *arg0, s32 x, s32 y)
     if (tileY < 0)
         tileY = 0;
 
-    sub_8025460(*(void **)((u8 *)arg0 + 0x20), tileX, tileY, &flagsOut, &hiOut);
+    GetTerrainType(*(void **)((u8 *)arg0 + 0x20), tileX, tileY, &flagsOut, &hiOut);
 
     return flagsOut;
 }
 ```
 
 It's a thin wrapper around the already-matched terrain-tile-cache
-lookup `sub_8025460` (`src/system/game_loop4.c`, GitHub issue #40):
-`arg0+0x20` is `gUnknown_03001308`'s own tile-cache-pointer field (the
+lookup `GetTerrainType` (`src/system/game_loop4.c`, GitHub issue #40):
+`arg0+0x20` is `gLevelLayers`'s own tile-cache-pointer field (the
 same global whose `+0x29`/`+0x2a` fields this doc's own leading block
 already established), `x`/`y` get divided by 8 and clamped to a
 non-negative minimum independently per axis (not a single combined
 clamp - each axis can hit zero on its own), and the two out-parameters
-`sub_8025460` writes through (`flagsOut`, `hiOut`) are both zero-
-initialized locals. Only `flagsOut` - which `sub_8025460` also returns
+`GetTerrainType` writes through (`flagsOut`, `hiOut`) are both zero-
+initialized locals. Only `flagsOut` - which `GetTerrainType` also returns
 directly as its own `u16` return value - is returned here; `hiOut`
 (the decoded cell's top nibble) is written but never read back,
 exactly the "discarded outValue" idiom `sub_8026628`'s own
@@ -366,7 +366,7 @@ This confirms the caller-side reading above: the "camera-probe" in
 `>>8`, same convention as `sub_8026628`'s own `pos`), and
 `sub_8026BC0` itself does the pixel-to-tile-cache-lookup-unit
 conversion, so the `code == 6` test in the caller really is just
-"did `sub_8025460` report terrain type 6 at this tile" - an opaque
+"did `GetTerrainType` report terrain type 6 at this tile" - an opaque
 enum comparison, not a geometric hit-test of its own.
 
 Matched as real C on the **first isolated-compile attempt** - no
@@ -376,7 +376,7 @@ precedent right next door in the same file. Confirmed byte-identical
 to the ROM's own instructions (register for register, operand for
 operand) via the isolated `cpp`/`agbcc`/`as` + `objcopy`/`cmp`
 pipeline against `baserom.gba`'s raw bytes at `0x08026BC0`-`0x08026BF8`
-(the only difference being the `bl sub_8025460` relocation site, which
+(the only difference being the `bl GetTerrainType` relocation site, which
 resolves correctly once linked), plus a full clean `rm -rf build &&
 make NON_MATCHING=1 report` (no warnings) and `rm -rf build
 crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
@@ -393,7 +393,7 @@ carved out of this same file). `src/system/game_loop44.c` (new file)
 holds the matched `sub_8026BC0`. The remainder - `sub_8026BF8` onward,
 still raw/unexamined this session (including `sub_8026C90`,
 `sub_8026D8C`, `sub_8026DFC`, `sub_8026E6C` and others referencing
-`gUnknown_03001308` and per-object velocity-style fields) - moved
+`gLevelLayers` and per-object velocity-style fields) - moved
 unchanged to the new `asm/code_3_2_17_26bf8.s`, inserted between the
 two in `ldscript.txt`:
 

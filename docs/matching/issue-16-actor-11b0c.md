@@ -89,7 +89,7 @@ updated to place all three pieces (`code_3_2_17_e560.o`,
   (384 px) of `self` on both axes, calls `sub_8008364` (already
   matched, `actor_part5.c`); otherwise sets `self->flags` bit 0 and,
   unless `self->field_08 == 0xFFFF`, marks its bit in the same
-  `gUnknown_030012B4+0x108` bitmap `actor_part2.c` already writes,
+  `gEntityFlags+0x108` bitmap `actor_part2.c` already writes,
   reusing that file's exact register-pinned `>> 5` idiom. By far the
   most register-pinning of this batch's functions - the ROM keeps a
   raw load and its shifted result in two different registers at three

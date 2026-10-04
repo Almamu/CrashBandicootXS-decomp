@@ -55,11 +55,11 @@ extern s32 sub_803AD7C(void *self, void *fn);
 extern s32 sub_80233B4(void *state);
 extern s32 sub_8031784(void);
 extern void sub_8008044(struct hud_digit_part *part);
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern struct hud_pos gStaticData_08174C6C[];
 extern void sub_80270E0(struct hud_digit_part *part, s32 x, s32 y);
 extern s32 sub_8023414(void *state);
-extern s32 sub_802325C(void *state);
+extern s32 GetWumpa(void *state);
 extern s32 sub_803ADB4(s32 a, s32 b);
 extern s32 sub_803AE4C(s32 a, s32 b);
 
@@ -117,7 +117,7 @@ void sub_8027940(struct hud_counter *selfArg)
 
     if (self->mode_a == 0)
         return;
-    self->value_a = sub_8023414(gUnknown_030012C0);
+    self->value_a = sub_8023414(gLevelState);
     if (self->mode_a == 1 || self->mode_a == 3)
         gUnknown_0300086C = self->layout_a * 2 - 0x28;
     else
@@ -222,7 +222,7 @@ void sub_8027940(struct hud_counter *selfArg)
 
 /* A smaller sibling of `sub_8027940` above: one 2-digit display
  * (`self->field_20`/`self->field_44` change-detection pair, slots
- * `0xb0*4`/`0xc0*4`), sourced from `sub_802325C` (`sub_8027940` used
+ * `0xb0*4`/`0xc0*4`), sourced from `GetWumpa` (`sub_8027940` used
  * `sub_8023414` for its own primary counter) rather than a mode/layout
  * pair like the dispatcher's other callees - always refreshes one more
  * slot (`self->parts + 0xd0*4`) up front via `sub_8008044`/
@@ -239,7 +239,7 @@ void sub_8027D5C(struct hud_counter *selfArg)
         gUnknown_0300086C = self->layout_b * 2 - 0x28;
     else
         gUnknown_0300086C = 0;
-    self->value_c = sub_802325C(gUnknown_030012C0);
+    self->value_c = GetWumpa(gLevelState);
     sub_8008044(&self->parts[13]);
     sub_80270E0(&self->parts[13], 0, 0);
 
@@ -345,7 +345,7 @@ void sub_8027E88(struct hud_counter *selfArg)
     sub_80270E0(&self->parts[28], 0, 0);
     self->shown_d = self->value_d;
 
-    if (sub_80233B4(gUnknown_030012C0) != -1)
+    if (sub_80233B4(gLevelState) != -1)
         return;
     if ((self->value_e = sub_8031784()) == -1)
         return;

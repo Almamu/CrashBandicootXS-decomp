@@ -21,13 +21,13 @@ struct hud_pos
 };
 
 extern s32 gUnknown_0300086C;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern struct hud_pos gStaticData_08174C6C[];
 extern void sub_80270E0(struct hud_digit_part *part, s32 x, s32 y);
 extern s32 sub_8023378(void *state);
-extern s32 sub_8023270(void *state);
-extern s32 sub_8023268(void *state);
-extern s32 sub_8023260(void *state);
+extern s32 GetClockMinutes(void *state);
+extern s32 GetClockSeconds(void *state);
+extern s32 GetClockTenths(void *state);
 extern s32 sub_8037E54(s32 value, s32 divisor);
 extern s32 sub_803AF1C(s32 value, s32 divisor);
 
@@ -58,7 +58,7 @@ void sub_802757C(struct hud_counter *self)
     CLAMP_FRAME(part, self->parts[22].anim_index, 0);
     sub_80270E0(part, 0, 0);
 
-    count = sub_8023378(gUnknown_030012C0);
+    count = sub_8023378(gLevelState);
     if (count > 0)
     {
         struct hud_digit_part *second = &self->parts[23];
@@ -71,7 +71,7 @@ void sub_802757C(struct hud_counter *self)
 
 /* Three more digit/icon widgets, gated by their own change-detection
  * caches (`sync_value_a`/`b`/`c`, `include/hud.h`) against
- * `sub_8023270`/`sub_8023268`/`sub_8023260`. The first two split their
+ * `GetClockMinutes`/`GetClockSeconds`/`GetClockTenths`. The first two split their
  * value into tens/ones digits (`sub_8037E54`/`sub_803AF1C`, div/mod by
  * 10) across a slot pair each (14/15, 17/18); the third does not split
  * at all - slot 20 gets the raw value as its desired frame, slot 21
@@ -86,33 +86,33 @@ void sub_802763C(struct hud_counter *self)
     struct hud_digit_part *parts;
 
     gUnknown_0300086C = 0;
-    if (self->sync_value_a != sub_8023270(gUnknown_030012C0))
+    if (self->sync_value_a != GetClockMinutes(gLevelState))
     {
         s32 f;
 
-        self->sync_value_a = sub_8023270(gUnknown_030012C0);
+        self->sync_value_a = GetClockMinutes(gLevelState);
         f = sub_8037E54(self->sync_value_a, 10);
         parts = self->parts;
         CLAMP_FRAME(&parts[14], parts[14].anim_index, f);
         f = sub_803AF1C(self->sync_value_a, 10);
         CLAMP_FRAME(&parts[15], parts[15].anim_index, f);
     }
-    if (self->sync_value_b != sub_8023268(gUnknown_030012C0))
+    if (self->sync_value_b != GetClockSeconds(gLevelState))
     {
         s32 f;
 
-        self->sync_value_b = sub_8023268(gUnknown_030012C0);
+        self->sync_value_b = GetClockSeconds(gLevelState);
         f = sub_8037E54(self->sync_value_b, 10);
         parts = self->parts;
         CLAMP_FRAME(&parts[17], parts[17].anim_index, f);
         f = sub_803AF1C(self->sync_value_b, 10);
         CLAMP_FRAME(&parts[18], parts[18].anim_index, f);
     }
-    if (self->sync_value_c != sub_8023260(gUnknown_030012C0))
+    if (self->sync_value_c != GetClockTenths(gLevelState))
     {
         s32 f;
 
-        self->sync_value_c = f = sub_8023260(gUnknown_030012C0);
+        self->sync_value_c = f = GetClockTenths(gLevelState);
         parts = self->parts;
         CLAMP_FRAME(&parts[20], parts[20].anim_index, f);
         CLAMP_FRAME(&parts[21], parts[21].anim_index, 0);

@@ -22,7 +22,7 @@
  *   screen: it builds the menu (sub_801BC28), runs it (sub_801C96C)
  *   and returns the chosen level through `*arg`. Five levels per page
  *   (`arg / 5`, `arg % 5`); each level's fixed record (name text, three
- *   time-trial thresholds) is gStaticData_0816C86C, its saved record a
+ *   time-trial thresholds) is gLevelTable, its saved record a
  *   bitfield word (cleared flag, two more flags, best time). The screen
  *   keeps shadow copies of BLDCNT/BLDALPHA/BLDY/DISPCNT and commits them
  *   with the scroll registers every frame (`CommitDisplay`).
@@ -147,7 +147,7 @@ struct hit_box
     s32 unk_0C;
 };
 
-/* One level's fixed data (`gStaticData_0816C86C`, 36-byte records,
+/* One level's fixed data (`gLevelTable`, 36-byte records,
  * indexed by level id). */
 struct level_info
 {
@@ -271,7 +271,7 @@ struct level_menu
     s32 lastIndex;              // 0x04 - last valid `index` on this page
     s32 index;                  // 0x08 - cursor, 0-5
     s32 world;                  // 0x0C - page
-    s32 levelId;                // 0x10 - gStaticData_0816C86C index
+    s32 levelId;                // 0x10 - gLevelTable index
     s32 nameText;               // 0x14 - the level name's text
     struct xy_pair *positions;  // 0x18 - cursor position per index
     void *bg1;                  // 0x1C - sub_801D7F8, BG1
@@ -330,7 +330,7 @@ extern void ***gUnknown_030012D0;
 extern void *gUnknown_030012F0;
 extern struct tile_cache *gUnknown_030012B8;
 extern void *gUnknown_030012BC;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern struct icon_manager *gUnknown_030012DC;
 extern struct icon_manager *gUnknown_030012E0;
 extern struct vram_cursor *gUnknown_030012FC;
@@ -341,7 +341,7 @@ extern u8 gUnknown_03000824;
 extern union key_state gUnknown_030007E0;
 extern u8 gStaticData_087E4ABC[];
 extern u8 gStaticData_087E4B34[];
-extern struct level_info gStaticData_0816C86C[];
+extern struct level_info gLevelTable[];
 extern u8 gStaticData_0816C56C[];
 extern u8 gStaticData_0816C484[];
 extern u32 gStaticData_0816C548[];
@@ -869,7 +869,7 @@ struct level_menu *sub_801BC28(struct level_menu *self, s32 arg)
         self->index = 5;
     }
     self->nameText = 0;
-    self->save = sub_80236EC(gUnknown_030012C0);
+    self->save = sub_80236EC(gLevelState);
     self->result = 0;
     self->bg1 = sub_801D7F8(sub_8026EDC(0x28), 0, 0x1D);
     sub_801E644(bg0cnt, 2, 0x1E, 2, 3);
@@ -1161,7 +1161,7 @@ void sub_801C3E8(struct level_menu *self, u32 time)
 
     sub_8008890(self->sprites[5], -self->unk_80, self->unk_90);
     sub_8008890(self->sprites[6], -self->unk_80, self->unk_94);
-    info = &gStaticData_0816C86C[self->levelId];
+    info = &gLevelTable[self->levelId];
     if (time != 0 && time <= info->time2)
     {
         struct icon_slot *slot;
@@ -1217,7 +1217,7 @@ void sub_801C51C(struct level_menu *self)
                 struct level_info *info;
 
                 self->levelId = sub_801DE2C(it);
-                info = &gStaticData_0816C86C[self->levelId];
+                info = &gLevelTable[self->levelId];
                 sub_801DD80(self->bg2, info->unk_04);
                 self->nameText = sub_8026F38(info->nameText);
             }
@@ -1263,15 +1263,15 @@ void sub_801C608(struct level_menu *self)
     struct level_save *sv;
 
     *rank = 5;
-    if (sub_802336C(gUnknown_030012C0, self->levelId))
+    if (sub_802336C(gLevelState, self->levelId))
         *rank = 0;
-    if (sub_8023360(gUnknown_030012C0, self->levelId))
+    if (sub_8023360(gLevelState, self->levelId))
         *rank = 1;
-    if (sub_8023354(gUnknown_030012C0, self->levelId))
+    if (sub_8023354(gLevelState, self->levelId))
         *rank = 2;
-    if (sub_8023348(gUnknown_030012C0, self->levelId))
+    if (sub_8023348(gLevelState, self->levelId))
         *rank = 3;
-    if (sub_802333C(gUnknown_030012C0, self->levelId))
+    if (sub_802333C(gLevelState, self->levelId))
         *rank = 4;
     self->unk_84 = 0;
     self->unk_88 = 0;
@@ -1322,7 +1322,7 @@ void sub_801C608(struct level_menu *self)
     }
     if (sv->cleared)
     {
-        struct level_info *entry = &gStaticData_0816C86C[self->levelId];
+        struct level_info *entry = &gLevelTable[self->levelId];
         struct level_info *info = entry;
 
         FormatCentiseconds(info->time0, self->recordText);
@@ -1374,7 +1374,7 @@ s32 sub_801C96C(struct level_menu *self)
 
     self->result = 0;
     self->levelId = sub_801DE2C(self->items[self->index]);
-    info = &gStaticData_0816C86C[self->levelId];
+    info = &gLevelTable[self->levelId];
     sub_801DD80(self->bg2, info->unk_04);
     self->nameText = sub_8026F38(info->nameText);
     while (!sub_801DD18(self->bg2))

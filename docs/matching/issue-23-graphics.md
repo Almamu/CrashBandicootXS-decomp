@@ -42,7 +42,7 @@ controller `+0x44`.
   pairs. `sub_8018948` has no caller anywhere (no `bl`, no Thumb pointer in
   the ROM) - **UNUSED**, matched anyway.
 - `sub_80188FC`: once the part's animation finishes, the inlined "mark
-  gone" sequence (`sub_80072D8`'s flags bit 0 + `gUnknown_030012B4+0x108`
+  gone" sequence (`sub_80072D8`'s flags bit 0 + `gEntityFlags+0x108`
   bitmap bit).
 - `sub_8018978`: mirror the part towards `self+0x30`, reset two counters
   to 26 and store the part's offset from `self+0x30/0x34`.

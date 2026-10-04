@@ -34,7 +34,7 @@ struct popup_part
     struct popup_hdr *hdr;      // 0x44
 };
 
-/* One level record, at `bytes + offsets[id]` in gUnknown_030012B4's
+/* One level record, at `bytes + offsets[id]` in gEntityFlags's
  * table. */
 struct level_record
 {
@@ -94,7 +94,7 @@ struct popup_hdr
 };
 
 extern void ***gUnknown_030012D0;
-extern struct level_record_table **gUnknown_030012B4;
+extern struct level_record_table **gEntityFlags;
 extern void *gUnknown_030012F0;
 
 extern struct popup_part *sub_8009ED0(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
@@ -119,8 +119,8 @@ extern void sub_800872C(struct popup_part *part, s32 arg);
                 (hdr)->vtable->attach.fn)
 
 #define LEVEL_RECORD(id)                                                       \
-    ((struct level_record *)((*gUnknown_030012B4)->bytes +                     \
-                             (*gUnknown_030012B4)->offsets[id]))
+    ((struct level_record *)((*gEntityFlags)->bytes +                     \
+                             (*gEntityFlags)->offsets[id]))
 
 /* The setters below are inline because old_agbcc schedules a store's
  * value before its address only when the value arrives as an inline

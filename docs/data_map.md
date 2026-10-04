@@ -76,7 +76,7 @@ the appendix.
 | `084A5600`-`084C0006` | 109,062 | sprite-bank table ("master asset table"): header, 56 banks, 2,429 frames | `sub_8004D74`, `sub_8022230`, every `**gUnknown_030012D0` user | high | **converted** (C) |
 | `084C0006`-`0855BCB4` | 638,126 | GAX2 sound-effect data set: 88 instruments, 87 8-bit samples, sample table, the SFX voice handler type | `PlaySfx`/`GAX_fx_ex` voices via `GaxSongHeader.sfxTypes` (`sub_80017BC`) | high | **converted** (`gax_audio.py --sfx`) |
 | `085A4C5C`-`086ECCD2` | 28,979 | 111 labels between the built intro/tileset1 LZ77 blobs: GAX2 tables and strings, libgcc `__clz_tab` x2, EEPROM tables, 23 intro palettes, 67 alignment pads | direct / slide packages | high | easy (the pads and palettes **done**) |
-| `086C127C`-`086D9CAC` | 100,912 | raw level asset (room `0825E7DC`) | `sub_80266BC` -> `sub_80254F8`/`sub_8024CF0` | high | **done** (decoded tilemaps) |
+| `086C127C`-`086D9CAC` | 100,912 | raw level asset (room `0825E7DC`) | `LoadRoom` -> `SetCollisionSource`/`SetBgStreamerSource` | high | **done** (decoded tilemaps) |
 | `086ECCD2`-`087E3BEC` | 1,011,482 | 2 B pad + 6 raw level assets | same | high | **done** (the pad is gbagfx's padding) |
 | `087E3BEC`-`087E55E4` | 6,648 | 93 gcc 2.x vtables | constructors (`sub_8009ED0`, ...) | high | easy |
 | `087E55E4`-`087E5FCC` | 2,536 | IWRAM image (ARM code + data, copied by `crt0`) | `crt0.s` | high | **converted** (`asm/intr_main.s`, `src/iwram/`; the code counts as code, 540 B of data) |
@@ -262,19 +262,19 @@ as a `u16[16]`, like its three siblings just before it. Everything else
 is reached through two pointer graphs.
 
 **1. Level data.** The level table's room lists (after
-`gStaticData_0816C86C`) point at 48 room records of 0x14 bytes, 41 of
+`gLevelTable`) point at 48 room records of 0x14 bytes, 41 of
 them rooms: `{u16 (*palette)[256]; struct level_desc *desc; s32 kind;
 ...; u16 catIndex @0x10}` (now `struct level_room` in
 `src/data/level_table_16c814.c`). The same record is `struct level_load_args` in
 `level_layers.c` (first two fields), `gl_widget_kind` in `game_loop56.c`
 (`kind`), and `MedalListItem` in `game_loop18.c` (`linkedObj` is the
 `desc`, and `linkedObj->0x1C` is the descriptor's object list). A room
-record is the `self->widget` that `sub_8023A1C` hands to `sub_80266BC`.
+record is the `self->widget` that `sub_8023A1C` hands to `LoadRoom`.
 Walking them:
 
 - `struct level_desc` (0x24): `layerData[3]`, `layer0Data`, `tileData`
   (all `bg_layer_desc *`), `asset`, `u8 assetPacked`, and the two object
-  lists passed to `sub_80255D4`. The 41 descriptors sit at `0824C400`
+  lists passed to `SpawnRoomEntities`. The 41 descriptors sit at `0824C400`
   ... `08270BCC` (33) and `082B9ED0` ... `082BEADC` (8).
 - `struct bg_layer_desc` (0x20, `bg_scroll_layer_25fc8.c`): `u16 *chunkGrid`,
   `u32 assetOffset` (the streamers use `level asset + assetOffset` as
@@ -284,7 +284,7 @@ Walking them:
 - `tileData` is either one of the built LZ77 tile sets
   (`graphics/tileset1/21`-`26`), or one of **five tag-0x00 raw assets in
   this blob**. The pooled layer 0 reads those at `tiles + 4`, 64 bytes
-  per tile, i.e. 8bpp (`tile_slot_pool.c`, `sub_8026618`).
+  per tile, i.e. 8bpp (`tile_slot_pool.c`, `SetTileSlotPoolSource`).
 - `asset` is either an LZ77 blob between the intro graphics
   (`assetPacked = 1`, formerly `graphics/tileset1/27`-`60`), or one of
   **seven raw level assets** in `gStaticData_086C127C`/`gStaticData_086ECCD2`
@@ -421,8 +421,8 @@ are the same bytes, stored twice), unlike the music's.
 
 Each is a `level_desc.asset` with `assetPacked = 0`: the uncompressed form
 of what `graphics/tileset1/27`-`60` hold LZ77-packed. The asset is the
-"chunk stream" pack read by the custom RLE/delta decoders `sub_8024960`
-(visual layers) and `sub_8025334` (terrain cache, 16x8 `u16` chunks). It
+"chunk stream" pack read by the custom RLE/delta decoders `DecodeLayerChunk`
+(visual layers) and `DecodeCollisionChunk` (terrain cache, 16x8 `u16` chunks). It
 starts with a `u16` offset table (offsets x 4). Each layer reads it at
 `asset + bg_layer_desc.assetOffset`.
 
@@ -742,20 +742,20 @@ vtable shapes).
 | `0816C634` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801E190` | high | done |
 | `0816C644` | 0x30 | table of s32 (`s32` x 12). **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801E688`, `sub_801E788` | high | done |
 | `0816C674` | 0x30 | table of s32 (`s32` x 12). **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801E688`, `sub_801E788` | high | done |
-| `0816C6A4` | 0x170 | function-pointer table: 92 Thumb function pointers (menu/trigger-effect dispatch) (`void (*)(void)` x 92) | `sub_8022208` | high | easy |
-| `0816C814` | 0xA | `u16[5]` palette-entry list of a level-start colour cycle. **Converted** (`src/data/level_table_16c814.c`) | `sub_8023A1C` | high | done |
-| `0816C81E` | 0x12 | `u16[9]` colour-cycle list. **Converted** (same) | `sub_8023A1C` | high | done |
-| `0816C830` | 0x12 | `u16[9]` colour-cycle list. **Converted** (same) | `sub_8023A1C` | high | done |
-| `0816C842` | 0x20 | `u16[16]` colour-cycle list (palette entries 0x20-0x2F, not a palette). **Converted** (same) | `sub_8023A1C` | high | done |
-| `0816C862` | 0xA | `u16[5]` colour-cycle list. **Converted** (same) | `sub_8023A1C` | high | done |
-| `0816C86C` | 0x514 | level table: 25 x 0x24 `struct level_info`, then 25 x 0x10 room lists `{count, rooms**, extra1, extra2}`. **Converted** (same) | `sub_800599C`, `sub_8005D44`, `sub_80067EC` +17 | high | done |
-| `0816CD80` | 0x474 | `u8[11]` theme music cues, 17 room records (0x14 each), the room lists' pointer arrays, 31 more room records. **Converted** (same); its last 0x2C bytes are the English cutscene table `0816D1C8` | `sub_8024498` | high | done |
-| `0816D1F4` | 0x53B4 | the cutscenes: 11 slide lists `{slides*, count}` (`struct cutscene_slides`), the English pages, 5 more language tables, slide arrays, text strings and pointer arrays of 6 languages, 24 slides (0x1C, `struct cutscene_slide`). **Converted** (`src/data/cutscenes_16d1c8.c`, from `0816D1C8`) | `sub_8022468` | high | done |
-| `081725A8` | 0x4 | 51 `struct terrain_type` {u8 modeValue[4]; u8 heights[4][8]} (the rest of the old blob is the UI text, see `081725C4`). **Converted** (`src/data/terrain_1725a8.c`) | `sub_8025228` | high | done |
-| `081725AC` | 0x8 | name for heights[0] of terrain type 0 (an `asm` `.set` alias into gStaticData_081725A8). **Converted** (`src/data/terrain_1725a8.c`) | `sub_80250BC`, `sub_8025130` | medium | done |
-| `081725B4` | 0x8 | name for heights[1] of terrain type 0 (alias). **Converted** (`src/data/terrain_1725a8.c`) | `sub_8025130` | medium | done |
-| `081725BC` | 0x8 | name for heights[2] of terrain type 0 (alias). **Converted** (`src/data/terrain_1725a8.c`) | `sub_8025130` | medium | done |
-| `081725C4` | 0x261C | heights[3] of terrain type 0 (alias); the old label ran on through the terrain table and then the game's UI text: 367 strings and the six 70-entry language tables `gUiTextEnglish`...`gUiTextDutch` (`src/data/ui_text_172cd4.c`). **Converted** (`src/data/terrain_1725a8.c, src/data/ui_text_172cd4.c`) | `sub_8025130` | medium | done |
+| `0816C6A4` (`gEntitySpawnFuncs`) | 0x170 | function-pointer table: 92 Thumb function pointers (menu/trigger-effect dispatch) (`void (*)(void)` x 92) | `CreateEntitySpawner` | high | easy |
+| `0816C814` (`gThemePaletteCycle2`) | 0xA | `u16[5]` palette-entry list of a level-start colour cycle. **Converted** (`src/data/level_table_16c814.c`) | `sub_8023A1C` | high | done |
+| `0816C81E` (`gThemePaletteCycle1A`) | 0x12 | `u16[9]` colour-cycle list. **Converted** (same) | `sub_8023A1C` | high | done |
+| `0816C830` (`gThemePaletteCycle1B`) | 0x12 | `u16[9]` colour-cycle list. **Converted** (same) | `sub_8023A1C` | high | done |
+| `0816C842` (`gThemePaletteCycle3`) | 0x20 | `u16[16]` colour-cycle list (palette entries 0x20-0x2F, not a palette). **Converted** (same) | `sub_8023A1C` | high | done |
+| `0816C862` (`gThemePaletteCycle5`) | 0xA | `u16[5]` colour-cycle list. **Converted** (same) | `sub_8023A1C` | high | done |
+| `0816C86C` (`gLevelTable`) | 0x514 | level table: 25 x 0x24 `struct level_info`, then 25 x 0x10 room lists `{count, rooms**, extra1, extra2}`. **Converted** (same) | `sub_800599C`, `sub_8005D44`, `sub_80067EC` +17 | high | done |
+| `0816CD80` (`gThemeMusicCues`) | 0x474 | `u8[11]` theme music cues, 17 room records (0x14 each), the room lists' pointer arrays, 31 more room records. **Converted** (same); its last 0x2C bytes are the English cutscene table `0816D1C8` | `sub_8024498` | high | done |
+| `0816D1F4` (`gCutscenes`) | 0x53B4 | the cutscenes: 11 slide lists `{slides*, count}` (`struct cutscene_slides`), the English pages, 5 more language tables, slide arrays, text strings and pointer arrays of 6 languages, 24 slides (0x1C, `struct cutscene_slide`). **Converted** (`src/data/cutscenes_16d1c8.c`, from `0816D1C8`) | `PlayCutscene` | high | done |
+| `081725A8` (`gTerrainTypes`) | 0x4 | 51 `struct terrain_type` {u8 modeValue[4]; u8 heights[4][8]} (the rest of the old blob is the UI text, see `081725C4`). **Converted** (`src/data/terrain_1725a8.c`) | `sub_8025228` | high | done |
+| `081725AC` (`gTerrainHeights0`) | 0x8 | name for heights[0] of terrain type 0 (an `asm` `.set` alias into gTerrainTypes). **Converted** (`src/data/terrain_1725a8.c`) | `GetTerrainHeights`, `GetSolidTerrainHeights` | medium | done |
+| `081725B4` (`gTerrainHeights1`) | 0x8 | name for heights[1] of terrain type 0 (alias). **Converted** (`src/data/terrain_1725a8.c`) | `GetSolidTerrainHeights` | medium | done |
+| `081725BC` (`gTerrainHeights2`) | 0x8 | name for heights[2] of terrain type 0 (alias). **Converted** (`src/data/terrain_1725a8.c`) | `GetSolidTerrainHeights` | medium | done |
+| `081725C4` (`gTerrainHeights3`) | 0x261C | heights[3] of terrain type 0 (alias); the old label ran on through the terrain table and then the game's UI text: 367 strings and the six 70-entry language tables `gUiTextEnglish`...`gUiTextDutch` (`src/data/ui_text_172cd4.c`). **Converted** (`src/data/terrain_1725a8.c, src/data/ui_text_172cd4.c`) | `GetSolidTerrainHeights` | medium | done |
 | `08174BE0` | 0x8C | table of u32 (`u32` x 35). **Converted** (`src/data/hud_fonts_174be0.c`) | `sub_8027138`, `sub_802732C` | high | done |
 | `08174C6C` | 0x118 | table of struct hud_pos. **Converted** (`src/data/hud_fonts_174be0.c`) | `sub_8027138`, `sub_802732C`, `sub_802757C` +2 | high | done |
 | `08174D84` | 0x50 | HUD font A's characters in glyph order (a string, Latin-1). **Converted** (`src/data/hud_fonts_174be0.c`) | `InitHudIconWidgetA` | medium | done |
@@ -858,29 +858,29 @@ vtable shapes).
 | `085A9EF8` | 0xC | `struct EepromConfig` of the 4 Kbit chip. **Converted** (`src/data/eeprom_5a9eec.c`) | `sub_803A968` | high | done |
 | `085A9F04` | 0xC | `struct EepromConfig` of the 64 Kbit chip. **Converted** | `sub_803A968` | high | done |
 | `085A9F10` | 0x260 | EEPROM write timeout `u16[3]` + pad, then the library's 22 address constants (`gEepromLibraryAddresses`, no reader), then the palette of cutscene picture 00. **Converted** (`eeprom_5a9eec.c`, `cutscene_pictures_5a9f70.c`) | `sub_803AC04` | high | done |
-| `085ADBD1` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 01), bit 15 set in many entries. **Converted** (`gCutscenePicture01`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
-| `085B34E1` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 02), bit 15 set in many entries. **Converted** (`gCutscenePicture02`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
-| `085B82BC` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 03), bit 15 set in many entries. **Converted** (`gCutscenePicture03`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
-| `085BC6E8` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 04), bit 15 set in many entries. **Converted** (`gCutscenePicture04`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
-| `085C1936` | 0x202 | 2 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 05), bit 15 set in many entries. **Converted** (`gCutscenePicture05`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
-| `085C674D` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 06), bit 15 set in many entries. **Converted** (`gCutscenePicture06`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
-| `085CB15D` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 07), bit 15 set in many entries. **Converted** (`gCutscenePicture07`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
-| `085CFECA` | 0x202 | 2 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 08), bit 15 set in many entries. **Converted** (`gCutscenePicture08`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
-| `085D6531` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 09), bit 15 set in many entries. **Converted** (`gCutscenePicture09`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
-| `085DB765` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 10), bit 15 set in many entries. **Converted** (`gCutscenePicture10`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
-| `085DFABC` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 11), bit 15 set in many entries. **Converted** (`gCutscenePicture11`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
-| `085E550B` | 0x201 | 1 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 12), bit 15 set in many entries. **Converted** (`gCutscenePicture12`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
-| `085EAC44` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 13), bit 15 set in many entries. **Converted** (`gCutscenePicture13`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
-| `085F0367` | 0x201 | 1 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 14), bit 15 set in many entries. **Converted** (`gCutscenePicture14`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
-| `085F4CC1` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 15), bit 15 set in many entries. **Converted** (`gCutscenePicture15`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
-| `085FA1D2` | 0x202 | 2 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 16), bit 15 set in many entries. **Converted** (`gCutscenePicture16`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
-| `085FF779` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 17), bit 15 set in many entries. **Converted** (`gCutscenePicture17`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
-| `086039B2` | 0x202 | 2 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 18), bit 15 set in many entries. **Converted** (`gCutscenePicture18`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
-| `08608A50` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 19), bit 15 set in many entries. **Converted** (`gCutscenePicture19`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
-| `0860D577` | 0x201 | 1 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 20), bit 15 set in many entries. **Converted** (`gCutscenePicture20`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
-| `08611BD9` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 21), bit 15 set in many entries. **Converted** (`gCutscenePicture21`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
-| `08616360` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 22), bit 15 set in many entries. **Converted** (`gCutscenePicture22`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
-| `08619F51` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 23), bit 15 set in many entries. **Converted** (`gCutscenePicture23`, `src/data/cutscene_pictures_5a9f70.c`) | `gStaticData_0816D1F4 (slide packages)` | high | done |
+| `085ADBD1` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 01), bit 15 set in many entries. **Converted** (`gCutscenePicture01`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |
+| `085B34E1` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 02), bit 15 set in many entries. **Converted** (`gCutscenePicture02`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |
+| `085B82BC` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 03), bit 15 set in many entries. **Converted** (`gCutscenePicture03`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |
+| `085BC6E8` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 04), bit 15 set in many entries. **Converted** (`gCutscenePicture04`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |
+| `085C1936` | 0x202 | 2 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 05), bit 15 set in many entries. **Converted** (`gCutscenePicture05`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |
+| `085C674D` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 06), bit 15 set in many entries. **Converted** (`gCutscenePicture06`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |
+| `085CB15D` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 07), bit 15 set in many entries. **Converted** (`gCutscenePicture07`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |
+| `085CFECA` | 0x202 | 2 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 08), bit 15 set in many entries. **Converted** (`gCutscenePicture08`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |
+| `085D6531` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 09), bit 15 set in many entries. **Converted** (`gCutscenePicture09`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |
+| `085DB765` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 10), bit 15 set in many entries. **Converted** (`gCutscenePicture10`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |
+| `085DFABC` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 11), bit 15 set in many entries. **Converted** (`gCutscenePicture11`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |
+| `085E550B` | 0x201 | 1 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 12), bit 15 set in many entries. **Converted** (`gCutscenePicture12`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |
+| `085EAC44` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 13), bit 15 set in many entries. **Converted** (`gCutscenePicture13`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |
+| `085F0367` | 0x201 | 1 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 14), bit 15 set in many entries. **Converted** (`gCutscenePicture14`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |
+| `085F4CC1` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 15), bit 15 set in many entries. **Converted** (`gCutscenePicture15`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |
+| `085FA1D2` | 0x202 | 2 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 16), bit 15 set in many entries. **Converted** (`gCutscenePicture16`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |
+| `085FF779` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 17), bit 15 set in many entries. **Converted** (`gCutscenePicture17`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |
+| `086039B2` | 0x202 | 2 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 18), bit 15 set in many entries. **Converted** (`gCutscenePicture18`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |
+| `08608A50` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 19), bit 15 set in many entries. **Converted** (`gCutscenePicture19`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |
+| `0860D577` | 0x201 | 1 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 20), bit 15 set in many entries. **Converted** (`gCutscenePicture20`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |
+| `08611BD9` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 21), bit 15 set in many entries. **Converted** (`gCutscenePicture21`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |
+| `08616360` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 22), bit 15 set in many entries. **Converted** (`gCutscenePicture22`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |
+| `08619F51` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 23), bit 15 set in many entries. **Converted** (`gCutscenePicture23`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |
 | `0861BF2E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
 | `0861C182` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
 | `0861C309` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
@@ -943,12 +943,12 @@ vtable shapes).
 | `086A8349` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
 | `086AF12B` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
 | `086BACB3` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
-| `086C127C` | 0x18A30 | raw (unpacked) level asset for room 0x0825E7DC: u16 chunk offset table + chunk token streams (custom RLE/delta, sub_8024960/sub_8025334) | `sub_80266BC`, `sub_80254F8`, `sub_8024CF0` +2 | high | **converted** |
+| `086C127C` | 0x18A30 | raw (unpacked) level asset for room 0x0825E7DC: u16 chunk offset table + chunk token streams (custom RLE/delta, DecodeLayerChunk/DecodeCollisionChunk) | `LoadRoom`, `SetCollisionSource`, `SetBgStreamerSource` +2 | high | **converted** |
 | `086E044B` | 0x1 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
 | `086E2212` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
 | `086E3541` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
 | `086EA0C9` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
-| `086ECCD2` | 0xF6F1A | 6 raw (unpacked) level assets, same format as 0x086C127C | `sub_80266BC`, `sub_80254F8`, `sub_8024CF0` +2 | high | **converted** (the 2 B pad is gbagfx's padding) |
+| `086ECCD2` | 0xF6F1A | 6 raw (unpacked) level assets, same format as 0x086C127C | `LoadRoom`, `SetCollisionSource`, `SetBgStreamerSource` +2 | high | **converted** (the 2 B pad is gbagfx's padding) |
 | `087E3BEC` | 0x58 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80071E4`, `sub_800725C`, `sub_80073BC` +2 | high | easy |
 | `087E3C44` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8008434`, `sub_80084A4` | high | easy |
 | `087E3CAC` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80088F0`, `sub_8008904` | high | easy |
@@ -988,10 +988,10 @@ vtable shapes).
 | `087E4ABC` | 0x78 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801B91C`, `sub_801B940` | high | easy |
 | `087E4B34` | 0x78 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801B984`, `sub_801BAB0`, `sub_801BAD0` | high | easy |
 | `087E4BAC` | 0x30 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801DF98`, `sub_801DFEC` | high | easy |
-| `087E4BDC` | 0x10 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8024D0C`, `sub_8024D38` | high | easy |
-| `087E4BEC` | 0x28 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8024D74`, `sub_8024DAC` | high | easy |
-| `087E4C14` | 0x50 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8025D74`, `sub_80261B8`, `sub_8026418` | high | easy |
-| `087E4C64` | 0x50 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8026418`, `sub_8026448` | high | easy |
+| `087E4BDC` (`gBgStreamerVtable`) | 0x10 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyBgStreamer`, `InitBgStreamer` | high | easy |
+| `087E4BEC` (`gBgLayerBaseVtable`) | 0x28 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyBgLayerBase`, `InitBgLayerBase` | high | easy |
+| `087E4C14` (`gBgLayerVtable`) | 0x50 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `InitBgLayer`, `DestroyBgLayer`, `DestroyPooledBgLayer` | high | easy |
+| `087E4C64` (`gPooledBgLayerVtable`) | 0x50 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyPooledBgLayer`, `InitPooledBgLayer` | high | easy |
 | `087E4CB4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_802710C`, `sub_8027120` | high | easy |
 | `087E4D1C` | 0x48 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `InitHudIconWidgetB`, `sub_803AFF0` | high | easy |
 | `087E4D64` | 0x48 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `InitHudIconWidgetA`, `sub_803B024` | high | easy |

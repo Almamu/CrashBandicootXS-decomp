@@ -182,14 +182,14 @@ struct gfx_level
     struct { u8 unk_00[0x10]; s32 width; s32 height; } *layer0;
 };
 
-extern void *gUnknown_030012B4;
+extern void *gEntityFlags;
 extern void *gUnknown_030012BC;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern u8 ***gUnknown_030012D0;
 extern struct gfx_player *gUnknown_030012D8;
 extern struct gfx_list *gUnknown_030012F0;
 extern void *gUnknown_030012F4;
-extern struct gfx_level *gUnknown_03001308;
+extern struct gfx_level *gLevelLayers;
 extern u8 gStaticData_087E4494[];
 extern u8 gStaticData_087E44FC[];
 extern u8 gStaticData_087E4564[];
@@ -366,7 +366,7 @@ static inline void SetFrame(struct gfx_part *part, s32 frame)
     } while (0)
 
 /* "Mark part gone": set flags bit 0, then unless its id is 0xFFFF set the
- * id's bit in the gUnknown_030012B4+0x108 bitmap - the same sequence as
+ * id's bit in the gEntityFlags+0x108 bitmap - the same sequence as
  * sub_80072D8 (graphics.c) and sub_80178EC (actor_part_17524.c), inlined.
  * The id is re-read (`volatile`) after the 0xFFFF test, and the word index
  * is a *signed* division of that zero-extended value, which is what gives
@@ -413,7 +413,7 @@ static inline void SetFrame(struct gfx_part *part, s32 frame)
             if (_cur != _none)                                                 \
             {                                                                  \
                 register s32 _id asm("r3") = *(vu16 *)&(t)->id;                \
-                register u8 *_base asm(R_BASE) = gUnknown_030012B4;            \
+                register u8 *_base asm(R_BASE) = gEntityFlags;            \
                 register s32 _word asm("r0") = _id;                            \
                 s32 _off;                                                      \
                 u32 *_slot;                                                    \
@@ -548,7 +548,7 @@ void sub_8018A30(struct gfx_pair_ctrl *self, struct gfx_part *part)
         part->flipX = n >= 0;
         self->childA->flipX = n >= 0;
         {
-            s32 w = gUnknown_03001308->layer0->width << 8;
+            s32 w = gLevelLayers->layer0->width << 8;
 
             n = sub_8037E54(Abs(n) * 12, w);
         }
@@ -573,9 +573,9 @@ void sub_8018A30(struct gfx_pair_ctrl *self, struct gfx_part *part)
     case 3:
         self->childA->pos.y += 0x80;
         part->pos.y += 0x80;
-        if (part->pos.y >= (gUnknown_03001308->layer0->height << 8) + 0x4000)
+        if (part->pos.y >= (gLevelLayers->layer0->height << 8) + 0x4000)
         {
-            if (sub_80231C4(gUnknown_030012C0))
+            if (sub_80231C4(gLevelState))
                 sub_80241A4();
             sub_8019770(self, part, 4);
         }
@@ -852,8 +852,8 @@ void sub_8019094(struct gfx_mover *self, struct gfx_part *part, s32 mode)
     switch (mode)
     {
     case 8:
-        sub_80196B8(self, part, (u32)(gUnknown_03001308->layer0->width << 8) >> 1,
-                    (gUnknown_03001308->layer0->height << 8) + 0x2000);
+        sub_80196B8(self, part, (u32)(gLevelLayers->layer0->width << 8) >> 1,
+                    (gLevelLayers->layer0->height << 8) + 0x2000);
         break;
     case 1:
     {
@@ -871,7 +871,7 @@ void sub_8019094(struct gfx_mover *self, struct gfx_part *part, s32 mode)
         self->high = mode;
         self->top = zero;
     }
-        sub_80196B8(self, part, (gUnknown_03001308->layer0->width << 8) - 0x400, 0x9800);
+        sub_80196B8(self, part, (gLevelLayers->layer0->width << 8) - 0x400, 0x9800);
         self->nextState = 2;
         break;
     case 2:
@@ -885,7 +885,7 @@ void sub_8019094(struct gfx_mover *self, struct gfx_part *part, s32 mode)
             if (x - 0x1800 <= 0x400)
                 self->dirLeft = 0;
         }
-        else if (x + 0x1C00 >= gUnknown_03001308->layer0->width << 8)
+        else if (x + 0x1C00 >= gLevelLayers->layer0->width << 8)
         {
             self->nextState = 5;
         }

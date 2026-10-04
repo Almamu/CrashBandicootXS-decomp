@@ -175,12 +175,12 @@ typedef void (*hop_fn3)(void *self, s32 a, s32 b, s32 c);
     } while (0)
 
 extern void *gUnknown_030012BC;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern u8 ***gUnknown_030012D0;
 extern struct hop_player *gUnknown_030012D8;
 extern struct hop_list *gUnknown_030012EC;
 extern void *gUnknown_030012F0;
-extern struct hop_level *gUnknown_03001308;
+extern struct hop_level *gLevelLayers;
 extern u8 gStaticData_0816C308[];
 extern u8 gStaticData_0816C30B[];
 
@@ -320,7 +320,7 @@ void sub_8018008(struct hopper *self, struct hop_part *part)
         PlaySfx(gUnknown_030012BC, 0x2A, 0x100);
         if (self->state == 15)
         {
-            if (sub_80231B4(gUnknown_030012C0))
+            if (sub_80231B4(gLevelState))
                 sub_80241A4();
             sub_8018400(self, part, 16);
         }
@@ -531,7 +531,7 @@ void sub_8018400(struct hopper *self, struct hop_part *part, s32 next)
         s32 x = anchor->x;
         s32 y = anchor->y - 0x1800;
 
-        if (!sub_80231B4(gUnknown_030012C0))
+        if (!sub_80231B4(gLevelState))
             sub_8021DFC(0xFFFF, x >> 8, y >> 8, 0);
         break;
     }
@@ -540,7 +540,7 @@ void sub_8018400(struct hopper *self, struct hop_part *part, s32 next)
         s32 x = part->x;
 
         self->x = x;
-        self->y = (gUnknown_03001308->layer0->height << 8) + 0x4000;
+        self->y = (gLevelLayers->layer0->height << 8) + 0x4000;
         self->x = x + 0x6400;
         sub_8018978(self, part);
         break;
@@ -631,7 +631,7 @@ void sub_80186F0(struct hopper *self, struct hop_part *part, s32 n)
         s32 y;
 
         x = x0 + (gUnknown_030012D8->x - x0) * (n - 1) / 3;
-        y = gUnknown_03001308->layer0->unk_04 << 8;
+        y = gLevelLayers->layer0->unk_04 << 8;
         p->x = x;
         p->y = y;
     }

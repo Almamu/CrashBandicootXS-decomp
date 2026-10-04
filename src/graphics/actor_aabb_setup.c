@@ -30,7 +30,7 @@ void sub_803AFE4(struct aabb *dest, s32 x, s32 y)
 }
 asm(".align 2, 0");
 
-/* Lives getter of the level state (`gUnknown_030012C0`; read by
+/* Lives getter of the level state (`gLevelState`; read by
  * game_loop55.c, hud_counter.c, actor_part101.c and
  * graphics_loading_1e990.c). */
 s32 sub_803AFEC(struct level_state *self)

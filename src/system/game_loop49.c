@@ -85,9 +85,9 @@ extern u8 gStaticData_0816BB94[];
  * same three-call pattern).
  *
  * Looks up `gStaticData_0816BB98[self+0x4e]` and, if nonzero, calls
- * `sub_8022FEC(gUnknown_030012C0)` (an external subsystem, unread -
+ * `sub_8022FEC(gLevelState)` (an external subsystem, unread -
  * likely a screen-shake/particle trigger). Sets a bit in
- * `gUnknown_030012B4`'s 32x32 collision-cell bitmap from `self+8`'s
+ * `gEntityFlags`'s 32x32 collision-cell bitmap from `self+8`'s
  * position (`>>5` row, `&0x1f` column - the same cell-grid convention
  * `sub_0800D18C` itself uses for `gUnknown_030012D8`'s own state), then
  * plays a fixed sound (`gUnknown_030012BC`, id 4). Calls
@@ -136,7 +136,7 @@ void sub_800EEF0(struct phys_obj *self, u8 near)
     } else
         PhysSetTag(self, 0x21);
     if (gStaticData_0816BB98[self->kind])
-        sub_8022FEC(gUnknown_030012C0);
+        sub_8022FEC(gLevelState);
     PHYS_SET_ID_BIT(self->id);
     PlaySfx(gUnknown_030012BC, 4, 0x100);
     sub_800EDBC(self);
@@ -342,7 +342,7 @@ void sub_800F258(void)
  * or combo-counter bump) and plays a fixed sound
  * (`gUnknown_030012BC`, id 4). Sets `self+0x48 = 1` (arms the sub-state
  * timer `sub_800F06C` later drains back to `-1`) and calls
- * `sub_802306C(gUnknown_030012C0)` (external, unread). */
+ * `sub_802306C(gLevelState)` (external, unread). */
 
 void sub_800F2BC(struct phys_obj *self)
 {
@@ -365,7 +365,7 @@ void sub_800F2BC(struct phys_obj *self)
         sub_8028474(gUnknown_03001318);
         PlaySfx(gUnknown_030012BC, 4, 0x100);
         self->u48.n = one;
-        sub_802306C(gUnknown_030012C0);
+        sub_802306C(gLevelState);
     }
 }
 
@@ -383,7 +383,7 @@ void sub_800F2BC(struct phys_obj *self)
  * tags `self+0x2d = 0x22` (this case's own state constant), and runs
  * the same `sub_80087C0`/`sub_80087B4`/`sub_800872C` triplet plus the
  * `sub_8006DF8`-driven `self+0x29` nibble update `sub_800F2BC` uses.
- * Calls `sub_8025A0C(gUnknown_030012B4, self+8)` (marks `self`'s
+ * Calls `sub_8025A0C(gEntityFlags, self+8)` (marks `self`'s
  * position in the same 32x32 collision-cell bitmap `sub_800EEF0`
  * touches).
  *
@@ -427,7 +427,7 @@ void sub_800F368(struct phys_obj *self)
 
         self->slot = sub_8006DF8(gUnknown_030012B8, rec->unk_14);
     }
-    sub_8025A0C(gUnknown_030012B4, self->id);
+    sub_8025A0C(gEntityFlags, self->id);
 
     i = 0;
     if (i < gUnknown_0300130C->count) {
@@ -439,7 +439,7 @@ void sub_800F368(struct phys_obj *self)
                     found[n] = o;
                     n++;
                     n &= 0x1f;
-                    sub_8025A0C(gUnknown_030012B4, o->id);
+                    sub_8025A0C(gEntityFlags, o->id);
                 }
             }
             i++;
@@ -657,7 +657,7 @@ void sub_800F6B8(s32 x, s32 y, s32 dist, s32 height)
  * helpers) to remove `self` from the list. Unless `self+0x4e == 1`,
  * marks `self` "visited this frame" in `gUnknown_030012B0`'s per-cell
  * bitmap (the same 32x32-grid convention `sub_800EEF0`/`sub_800F368`
- * use, here against `gUnknown_030012B4`) and walks
+ * use, here against `gEntityFlags`) and walks
  * `gUnknown_030012D8+0x94`'s "recently touched" ring buffer
  * (`sub_0800D18C`'s own 5-slot buffer, per game_loop47.c's doc comment)
  * clearing each slot's `+0x94` re-visit flag once it matches `self`.

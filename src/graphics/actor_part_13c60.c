@@ -19,7 +19,7 @@ asm(".set _call_via_r2, sub_803AD80\n"
 
 extern u32 gUnknown_030007E0;
 extern void *gUnknown_030012BC;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern void *gUnknown_03001304;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern u8 sub_8000760(void *pad);
@@ -83,7 +83,7 @@ void sub_8013C60(struct act *self)
         self->part->contact = 0;
         return;
     }
-    if (sub_80231B4(gUnknown_030012C0) && (INPUT_PRESSED(in) & 2) && self->unk_26 == 0)
+    if (sub_80231B4(gLevelState) && (INPUT_PRESSED(in) & 2) && self->unk_26 == 0)
     {
         if (++self->charge > 3)
             self->charge = 3;
@@ -117,7 +117,7 @@ void sub_8013D94(struct act *self)
         sub_8013C60(self);
         return;
     }
-    if (sub_80231B4(gUnknown_030012C0) && (INPUT_PRESSED(in) & 2) && self->unk_26 == 0)
+    if (sub_80231B4(gLevelState) && (INPUT_PRESSED(in) & 2) && self->unk_26 == 0)
     {
         if (++self->charge > 3)
             self->charge = 3;
@@ -184,7 +184,7 @@ void sub_8013EAC(struct act *self)
         self->part->contact = 0;
         return;
     }
-    if (sub_80231B4(gUnknown_030012C0) && (INPUT_PRESSED(in) & 2) && self->unk_26 == 0)
+    if (sub_80231B4(gLevelState) && (INPUT_PRESSED(in) & 2) && self->unk_26 == 0)
     {
         if (++self->charge > 3)
             self->charge = 3;

@@ -9,7 +9,7 @@ extern s32 gUnknown_03001388;
 extern s32 gUnknown_0300138C;
 extern s32 gUnknown_03001390;
 extern s32 gUnknown_03000878;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 
 extern s32 sub_802A4E0(void);
 extern void sub_8022CA0(void *arg0);
@@ -24,7 +24,7 @@ void sub_8029748(s32 arg0)
     gUnknown_03000878 = arg0 - sub_802A4E0();
     gUnknown_03001384 = 0;
     gUnknown_03001388 = 0;
-    sub_8022CA0(gUnknown_030012C0);
+    sub_8022CA0(gLevelState);
     gUnknown_03001390 = gUnknown_0300138C;
     sub_802AB34();
 }

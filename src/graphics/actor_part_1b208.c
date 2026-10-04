@@ -98,7 +98,7 @@ static inline struct vec3 *MoverVec(struct mover *self)
  * Kinds 5/6/7 add timed behaviour: kind 5 fires method +0x60 60 ticks
  * after the player lands and then wobbles the owner +-3px, kinds 6/7
  * freeze the owner's animation until its +0x38 trigger fires (kind 7 then
- * marks the owner gone in the gUnknown_030012B4+0x108 bitmap, as
+ * marks the owner gone in the gEntityFlags+0x108 bitmap, as
  * sub_80072D8 does). Finally sub_801B624 drags the player along.
  *
  * Every `register ... asm()` below pins a value to the register the ROM
@@ -323,7 +323,7 @@ void sub_801B304(struct mover *self, struct gobj *objArg)
                 if (cur != none)
                 {
                     register s32 id asm("r3") = *(vu16 *)&obj->id;
-                    u8 *base = gUnknown_030012B4;
+                    u8 *base = gEntityFlags;
                     register s32 word asm("r0") = id;
                     s32 off;
                     u32 *slot;

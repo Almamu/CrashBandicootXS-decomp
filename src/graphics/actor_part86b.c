@@ -20,7 +20,7 @@ struct spawned
 
 extern void *gUnknown_03001304;
 extern u32 gUnknown_0300082C;
-extern void *gUnknown_030012E4;
+extern void *gEntitySpawner;
 extern u8 sub_8000760(void *arg);
 extern s32 sub_8000E1C(s32 max);
 extern struct spawned *sub_8025BAC(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
@@ -67,7 +67,7 @@ void sub_8015DF8(struct player_ctrl *self)
         s32 x = t->x >> 8;
         s32 y = (t->y >> 8) - 20;
         s32 flip = t->f28.flipX;
-        struct spawned *obj = sub_8025BAC(gUnknown_030012E4, 40, 4, x, y, flip);
+        struct spawned *obj = sub_8025BAC(gEntitySpawner, 40, 4, x, y, flip);
 
         if (obj != NULL)
             obj->unk_0C_2 = 0;

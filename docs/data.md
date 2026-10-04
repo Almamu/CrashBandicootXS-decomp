@@ -615,7 +615,7 @@ offsets) is computed from the sources again. `include/level_data.h` has
 the types.
 
 The records that point at the rooms are hand-written C in
-`src/data/level_table_16c814.c`: the level table `gStaticData_0816C86C`
+`src/data/level_table_16c814.c`: the level table `gLevelTable`
 (25 `struct level_info`, indexed by level id), one `struct
 level_room_list` per level (the rooms played in order, `gLevelNNRooms`,
 and up to two extra rooms), and the 48 `struct level_room` records
@@ -633,19 +633,19 @@ through its own local views (`MedalTableEntry`, `threshold_table_entry`,
 The 11 cutscenes (the intro, the story scenes between worlds, the
 endings) are `src/data/cutscenes_16d1c8.c` (`0x0816D1C8`-`0x081725A8`,
 types in `include/cutscene.h`) and `src/data/cutscene_pictures_5a9f70.c`
-(`0x085A9F70`-`0x0861BADC`). `sub_8022468` plays cutscene `idx`: the
-slides of `gStaticData_0816D1F4[idx]` (`struct cutscene_slides`), each a
+(`0x085A9F70`-`0x0861BADC`). `PlayCutscene` plays cutscene `idx`: the
+slides of `gCutscenes[idx]` (`struct cutscene_slides`), each a
 `struct cutscene_slide` (picture, timing, fades, music cue, sound
 effect), shown with the page of text at the same index of the current
 language's `struct cutscene_page` array. The six language tables
-(`gStaticData_0816D1C8` is English, then French, German, Spanish,
-Italian and Dutch) are listed by `gUnknown_03000834`, a pointer table in
+(`gCutsceneTextEnglish` is English, then French, German, Spanish,
+Italian and Dutch) are listed by `gCutsceneTexts`, a pointer table in
 the IWRAM image (`src/iwram/iwram_data.c`). The text is plain C strings (Latin-1, all lower case),
 each page's strings in a `const u8 *const []`, and page and slide counts
 are `ARRAY_COUNT()`s.
 
 A picture is a 256-colour palette followed directly by its LZ77 Mode 4
-bitmap: a slide points at the palette and `sub_8024708` reads the bitmap
+bitmap: a slide points at the palette and `ShowSlidePicture` reads the bitmap
 at `+0x200`. The bitmaps are the grit-built `graphics/intro/*_bitmap.png`
 (the Mode 4 row of the table above). The palettes are written out in C
 (`gCutscenePictureNN`), because about half of their entries have bit 15
@@ -689,7 +689,7 @@ Placement is the same as for a hand-written table (see "Layout" above).
 `data/data.s` drops the asset's label and `.incbin`, leaves a
 `@ ...: src/data/<file>.c` comment, and starts a new `.section` for what
 follows; `ldscript.txt` links the object's `.rodata` in between (the
-first asset done this way was the intro bitmap `gStaticData_085AA170`,
+first asset done this way was the intro bitmap `gCutscenePicture00Bitmap`,
 now part of `cutscene_pictures_5a9f70.c`). agbcc doesn't align a `u8`
 array, so whatever follows starts right at the array's end, which is
 what the ROM has for these unaligned stream lengths.
@@ -717,16 +717,16 @@ was an `.incbin` of the gbagfx output, so converting it doesn't change
 
 ### Terrain types and UI text
 
-The old `gStaticData_081725C4` was two things. First
-`src/data/terrain_1725a8.c`: 51 terrain types (`struct terrain_type`,
-36 bytes: a value per collision mode, then the height of each of a
-cell's 8 pixel columns per mode). The code reads the height rows of each
-mode as their own 36-byte-stride tables through the labels
-`gStaticData_081725AC`/`B4`/`BC`/`C4`, which point 4, 12, 20 and 28
-bytes into the first record. Those stay as symbols (the code and
-`expected/` use them), defined with `asm(".set ...")` in the C file as
-names for addresses inside the table: they aren't objects, so the
-report doesn't count them.
+The old raw blob `gStaticData_081725C4` was two things. First
+`src/data/terrain_1725a8.c`: 51 terrain types (`gTerrainTypes`, `struct
+terrain_type`, 36 bytes: a value per collision mode, then the height of
+each of a cell's 8 pixel columns per mode). The code reads the height
+rows of each mode as their own 36-byte-stride tables through the labels
+`gTerrainHeights0`..`gTerrainHeights3` (formerly `gStaticData_081725AC`/
+`B4`/`BC`/`C4`), which point 4, 12, 20 and 28 bytes into the first
+record. Those stay as symbols (the code uses them), defined with
+`asm(".set ...")` in the C file as names for addresses inside the
+table: they aren't objects, so the report doesn't count them.
 
 Then `src/data/ui_text_172cd4.c`: the game's own text (menus, level
 names, popups) in six languages, 70 strings each. `sub_8026F38` looks a

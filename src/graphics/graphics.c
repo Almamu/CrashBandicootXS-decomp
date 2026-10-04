@@ -639,7 +639,7 @@ void nullsub_1(void)
 asm(".align 2, 0");
 
 extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
-extern void *gUnknown_03001308;
+extern void *gLevelLayers;
 
 /* `self` uses the shared `struct actor` layout (see actor.h) - the
  * "field_18 -> {s16 offset; ...; void *text}" convention docs/rom_map.md
@@ -665,7 +665,7 @@ u8 sub_8006FE4(struct actor *self)
         buf[2] = a;
         buf[3] = b;
 
-        subObj = *(void **)((u8 *)gUnknown_03001308 + 0x10);
+        subObj = *(void **)((u8 *)gLevelLayers + 0x10);
         c = (*(s32 *)subObj << 8) + (s32)0xFFFF9C00;
         d = (*(s32 *)((u8 *)subObj + 4) << 8) + (s32)0xFFFFC400;
         buf[0] = c;
@@ -877,7 +877,7 @@ s32 sub_8007114(struct actor *self, struct aabb *box)
 asm(".align 2, 0");
 
 /* `arg0` is unused by the ROM - overwritten as scratch before its
- * incoming value is ever read. `gUnknown_03001308`'s sub-object here
+ * incoming value is ever read. `gLevelLayers`'s sub-object here
  * is the same one sub_8006FE4 reads, but as two raw s32 fields
  * (dx/dy) sign-extended from their low 24 bits, not the record table
  * sub_8006FE4 uses - a different part of the same object. */
@@ -886,7 +886,7 @@ void sub_8007174(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4)
     void *subObj;
     s32 dx, dy;
 
-    subObj = *(void **)((u8 *)gUnknown_03001308 + 0x10);
+    subObj = *(void **)((u8 *)gLevelLayers + 0x10);
     dx = (*(s32 *)subObj << 8) >> 8;
     dy = (*(s32 *)((u8 *)subObj + 4) << 8) >> 8;
     *arg3 = arg1 - dx;
@@ -907,7 +907,7 @@ void sub_800719C(void *arg0, s32 *arg1, s32 *arg2)
     if (y & 0x80) {
         y += 0x80;
     }
-    subObj = *(void **)((u8 *)gUnknown_03001308 + 0x10);
+    subObj = *(void **)((u8 *)gLevelLayers + 0x10);
     subX = *(s32 *)subObj << 8;
     subY = *(s32 *)((u8 *)subObj + 4) << 8;
     *arg1 = (x - subX) >> 8;
@@ -1087,11 +1087,11 @@ void sub_80072CC(struct actor *self)
     self->flags = result;
 }
 
-extern void *gUnknown_030012B4;
+extern void *gEntityFlags;
 
 /* Always sets self->flags bit0; if self->field_08 (an id) isn't the
  * sentinel 0xFFFF, also sets bit `field_08 & 0x1F` of a 32-bit-word
- * bitmap at `*gUnknown_030012B4 + 0x108`, word-indexed by
+ * bitmap at `*gEntityFlags + 0x108`, word-indexed by
  * `field_08 >> 5` - looks like "mark this object's slot as active" in
  * some external allocation-tracking table. Several register-pinned
  * blocks below reproduce the ROM's exact instruction order/register
@@ -1116,7 +1116,7 @@ void sub_80072D8(struct actor *self)
         id = pSelf->field_08;
         if (id != cmpVal) {
             s32 rawId = pSelf->field_08;
-            void *base = gUnknown_030012B4;
+            void *base = gEntityFlags;
             /* `word` is pinned to r0 and reused as the running
              * accumulator for the rest of the block (word<<5, then
              * rawId-word) - a fresh local for the subtraction's

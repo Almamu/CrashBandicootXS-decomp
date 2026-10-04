@@ -4,7 +4,7 @@
 /* Text-popup variants with their own header constructors, ROM
  * 0x08021280-0x08021668. Built with old_agbcc; see include/text_popup.h. */
 
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern void *gUnknown_030012F4;
 
 extern struct popup_hdr *sub_801A838(void *block, u16 arg1, u16 arg2);
@@ -25,13 +25,13 @@ struct spawn_part
     u8 field_0A;
 };
 
-extern struct level_guard gStaticData_0816C86C[];
+extern struct level_guard gLevelTable[];
 extern u8 *gUnknown_030012D8;
 extern void *gUnknown_030012E8;
 extern u8 sub_8023290(void *self);
 extern u8 sub_80232B8(void *self);
 extern s32 sub_8023324(void *self);
-extern s32 sub_802332C(void *self);
+extern s32 GetCurrentLevel(void *self);
 extern struct spawn_part *sub_80071E4(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
 extern void sub_80070EC(struct spawn_part *part, s32 w, s32 h);
 extern s32 *sub_801A878(u16 x, u16 y, u16 w, u16 h, s32 id);
@@ -50,9 +50,9 @@ extern void sub_8023500(void *self, s32 *point);
  * input before `y` is loaded - reproduces it. */
 void sub_8021280(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    if (!sub_8023290(gUnknown_030012C0) && !sub_80232B8(gUnknown_030012C0)
-        && !sub_8023324(gUnknown_030012C0)
-        && gStaticData_0816C86C[sub_802332C(gUnknown_030012C0)].guard == 0)
+    if (!sub_8023290(gLevelState) && !sub_80232B8(gLevelState)
+        && !sub_8023324(gLevelState)
+        && gLevelTable[GetCurrentLevel(gLevelState)].guard == 0)
     {
         struct spawn_part *part = sub_80071E4(arg0, arg1, arg2, arg3);
 
@@ -74,7 +74,7 @@ void sub_8021280(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         y = py - 0x1E;
         point[0] = x;
         point[1] = y;
-        sub_8023500(gUnknown_030012C0, point);
+        sub_8023500(gLevelState, point);
     }
     else
     {
@@ -107,7 +107,7 @@ void sub_8021388(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr = sub_801A838(sub_8026EDC(0x30), arg1, arg2);
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    sub_8023318(gUnknown_030012C0, hdr);
+    sub_8023318(gLevelState, hdr);
 }
 
 /* "Two-line text popup" variant whose header comes from sub_80189EC
@@ -131,7 +131,7 @@ void sub_8021480(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->unk_28_5 = rec->flags >> 2 & 1;
     part->base.flags |= 0x10;
     sub_8008E94(gUnknown_030012F0, part);
-    sub_8023318(gUnknown_030012C0, hdr);
+    sub_8023318(gLevelState, hdr);
 }
 
 /* "Two-line text popup" variant with the OAM-trio setup: animation 1 at
@@ -160,5 +160,5 @@ void sub_802155C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.flags |= 0x10;
     sub_8008E94(gUnknown_030012F4, part);
     part->unk_2A[2] = 0;
-    sub_8023318(gUnknown_030012C0, hdr);
+    sub_8023318(gLevelState, hdr);
 }

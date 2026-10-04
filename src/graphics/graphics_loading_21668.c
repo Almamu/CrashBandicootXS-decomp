@@ -5,7 +5,7 @@
  * Built with old_agbcc; see include/text_popup.h. */
 
 extern void *gUnknown_030012B8;
-extern u8 *gUnknown_030012C0;
+extern u8 *gLevelState;
 extern void *gUnknown_030012E8;
 extern void *gUnknown_030012F8;
 
@@ -159,18 +159,18 @@ void sub_80218E8(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     sub_801A878(arg0, arg1, arg2, arg3, 6);
 }
 
-/* Spawns a sub_801A878 part with id 7 if sub_80232A0(gUnknown_030012C0)
- * is set or gUnknown_030012C0+0x8C is nonzero, else id 5, and hands the
+/* Spawns a sub_801A878 part with id 7 if sub_80232A0(gLevelState)
+ * is set or gLevelState+0x8C is nonzero, else id 5, and hands the
  * result to sub_80234F4. */
 void sub_802190C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     s32 result;
 
-    if (sub_80232A0(gUnknown_030012C0) || gUnknown_030012C0[0x8c])
+    if (sub_80232A0(gLevelState) || gLevelState[0x8c])
         result = sub_801A878(arg0, arg1, arg2, arg3, 7);
     else
         result = sub_801A878(arg0, arg1, arg2, arg3, 5);
-    sub_80234F4(gUnknown_030012C0, result);
+    sub_80234F4(gLevelState, result);
 }
 
 /* Plain `sub_801A878` trampoline, id `2`. */

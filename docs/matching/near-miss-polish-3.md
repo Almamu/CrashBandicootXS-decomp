@@ -46,7 +46,7 @@ but puts the address in a fresh register; `volatile u8 *p` gets both.
 **A second local for a spilled copy (`sub_801C608`).** The ROM keeps the
 level record pointer in r5 and also stores it to `sp+0`, reloading it
 from there only for the `time0` test. That is two variables:
-`entry = &gStaticData_0816C86C[levelId]; info = entry;`, with the
+`entry = &gLevelTable[levelId]; info = entry;`, with the
 `time0` test reading `entry`. `entry` is live across all the calls with
 few uses, so it loses its register and is spilled. An `asm` copy in
 either direction gives `entry` a register (or computes into the wrong

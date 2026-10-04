@@ -12,7 +12,7 @@ extern void *sub_8022230(void *arg0);
  * with either matched neighbor without splitting the ROM-contiguous
  * layout. */
 extern void *gUnknown_03000828;
-void *sub_8023738(void)
+void *GetLevelState(void)
 {
     if (gUnknown_03000828 == NULL) {
         gUnknown_03000828 = sub_8022230(sub_8026EDC(0x1cc));

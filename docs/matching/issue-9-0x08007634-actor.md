@@ -221,8 +221,8 @@ this file's original writing - see the update note on the entry below.
   38-case jump-table player action-state dispatcher (the same shape
   `docs/status/actor.md` already flags as "left raw, out of scope" for
   `sub_8018008` in GitHub issue #22); calls a dozen still-unexamined
-  state-transition functions (`sub_8023404`, `sub_8022D50`,
-  `sub_8025BAC`, `sub_80231EC`, `sub_80232E4`, `sub_8023224`, and
+  state-transition functions (`GetCurrentLevelFlags`, `sub_8022D50`,
+  `sub_8025BAC`, `SetMaskLevel`, `sub_80232E4`, `RaiseMaskLevel`, and
   others).
 - **`sub_800AFF4`** (`asm/code_3_2_16.s`, ROM `0x0800AFF4`, ~636 B) -
   high register-pressure (`sb`/`sl`/`r8` all live simultaneously)

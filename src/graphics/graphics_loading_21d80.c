@@ -2,11 +2,11 @@
 #include "actor.h"
 #include "sprite_bank.h"
 
-extern void *gUnknown_030012C0;
-extern void *gUnknown_030012B4;
+extern void *gLevelState;
+extern void *gEntityFlags;
 extern void ***gUnknown_030012D0;
 extern void *gUnknown_030012EC;
-extern void *gUnknown_030012E4;
+extern void *gEntitySpawner;
 
 extern void *sub_8026EDC(s32 size);
 extern struct actor *sub_8008434(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
@@ -123,13 +123,13 @@ extern struct actor *sub_8011B0C(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
 
 /* Gated spawn (see `sub_802200C` below for the sibling shape), but
  * built via `sub_8011B0C` instead of `sub_8008434`, gated by
- * `sub_8023418(gUnknown_030012C0)` being true instead of a flag-bit
+ * `sub_8023418(gLevelState)` being true instead of a flag-bit
  * test, table offset `table_base + 0x1b0`, tag `0`, `+0xa = 0x1c`, and
  * an extra `flags |= 0x10` on the constructed object before
  * registering it. */
 void sub_8021F70(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    if (sub_8023418(gUnknown_030012C0)) {
+    if (sub_8023418(gLevelState)) {
         register struct actor *part asm("r4") = sub_8011B0C(arg0, arg1, arg2, arg3);
 
         *(void **)((u8 *)part + 0x20) = (u8 *)(**gUnknown_030012D0) + 0x1b0;
@@ -156,7 +156,7 @@ void sub_8021F70(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
 /* Same spawn shape as `sub_8021D80`'s family above (record 32 -
  * `table_base + 0x180`, tag `4`, `+0xa = 0x21`), but gated: does
- * nothing at all unless bit 3 of `gUnknown_030012C0+2` is clear. Does
+ * nothing at all unless bit 3 of `gLevelState+2` is clear. Does
  * not return the spawned object (the ROM's shared exit pops straight
  * into `r0` from the stack, discarding whatever was last computed
  * there - matches a `void` return exactly). */
@@ -165,7 +165,7 @@ void sub_802200C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     register u8 tag asm("r5");
     register u8 field0A asm("r6");
     struct actor *part;
-    register u8 *gv asm("r1") = gUnknown_030012C0;
+    register u8 *gv asm("r1") = gLevelState;
     register s32 mask asm("r0") = 8;
     register u8 byte asm("r1");
 
@@ -193,7 +193,7 @@ extern void sub_8023500(void *self, s32 *point);
  * (matches the ROM, which never touches r0/r3), packs `arg1`/`arg2`
  * into a stack `{x, y}` pair and calls `sub_8023500` (already matched
  * in game_loop10.c), which just stores them into
- * `gUnknown_030012C0->0x1c0`/`->0x1c4`. The ROM truncates both u16
+ * `gLevelState->0x1c0`/`->0x1c4`. The ROM truncates both u16
  * args in one batch (`lsl r1,r1 / lsl r2,r2` then `lsr r3,r1 / lsr
  * r4,r2`) landing the truncated values in different registers (r1->r3,
  * r2->r4) than plain C produces here - gcc instead coalesces the
@@ -219,7 +219,7 @@ void sub_802209C(u32 arg0, u32 arg1, u32 arg2, u16 arg3)
         : "=r" (x), "=r" (y), "+r" (rx), "+r" (ry));
     point[0] = x;
     point[1] = y;
-    sub_8023500(gUnknown_030012C0, point);
+    sub_8023500(gLevelState, point);
 }
 
 /* Same overall spawn shape as `sub_8021D80`'s family above, but with
@@ -247,13 +247,13 @@ extern void sub_801173C(u16 arg0);
 
 /* Only conditionally calls `sub_801173C(arg0)` (the achievement/
  * unlock-icon family spawner, docs/rom_map.md) when
- * `gUnknown_030012C0+0x8c` is clear - `arg1`/`arg2`/`arg3` are
+ * `gLevelState+0x8c` is clear - `arg1`/`arg2`/`arg3` are
  * truncated (matching every other 4-arg dispatch-table slot in this
  * chunk) but never read. */
 void sub_8022158(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     asm volatile("" :: "r" (arg1), "r" (arg2), "r" (arg3));
-    if (*((u8 *)gUnknown_030012C0 + 0x8c) == 0) {
+    if (*((u8 *)gLevelState + 0x8c) == 0) {
         sub_801173C(arg0);
     }
 }
@@ -305,19 +305,19 @@ void nullsub_23(void)
 
 extern void sub_8025D54(void *self, u32 flags);
 
-/* Constructor/consumer pair (docs/rom_map.md): frees `gUnknown_030012E4`
+/* Constructor/consumer pair (docs/rom_map.md): frees `gEntitySpawner`
  * (via `sub_8025D54`'s conditional `sub_8026ED0`, gated bit 0) if
  * already allocated. */
-void sub_80221F0(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void DestroyEntitySpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    if (gUnknown_030012E4 != 0) {
-        sub_8025D54(gUnknown_030012E4, 3);
+    if (gEntitySpawner != 0) {
+        sub_8025D54(gEntitySpawner, 3);
     }
 }
 
 extern void sub_8025D6C(void *self);
 extern void sub_8025D4C(void *self, void *base, s32 count);
-extern u8 gStaticData_0816C6A4[];
+extern u8 gEntitySpawnFuncs[];
 
 /* Allocates an 8-byte `{table_base, count}` descriptor
  * (docs/rom_map.md disproves the earlier "local vtable copy"
@@ -328,14 +328,14 @@ extern u8 gStaticData_0816C6A4[];
  * `sub_8022230`'s `nullsub_2`/`nullsub_1` calls, `sub_8025D6C` is
  * void and the ROM leaves the freshly-allocated pointer in `r0`
  * across the call rather than saving it - same inline-asm technique. */
-void sub_8022208(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void CreateEntitySpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    void **addr = &gUnknown_030012E4;
+    void **addr = &gEntitySpawner;
     register void *obj asm("r0") = sub_8026EDC(8);
 
     asm volatile("bl sub_8025D6C" : "+r" (obj) :: "r1", "r2", "r3", "lr", "cc");
     *addr = obj;
-    sub_8025D4C(obj, gStaticData_0816C6A4, 0x5c);
+    sub_8025D4C(obj, gEntitySpawnFuncs, 0x5c);
 }
 
 extern void *sub_80016DC(u32 size);
@@ -365,7 +365,7 @@ extern void sub_8001614(void);
 extern u8 gStaticData_084A5600[];
 
 /* `sub_8022230` (docs/rom_map.md, "Found the origin point"): the
- * function `sub_8023738` calls once at the top of the game loop to
+ * function `GetLevelState` calls once at the top of the game loop to
  * construct essentially every hot IWRAM global this whole ROM region
  * references - `gUnknown_030012BC` (an 8340-byte `AudioContext`
  * allocation), `030012CC`/`D0`/`B8`/`DC`/`E0`/`03001300`/`FC`/
@@ -455,7 +455,7 @@ void *sub_8022230(void *self)
         *addr = tmp;
     }
     {
-        void **addr = (void **)&gUnknown_030012B4;
+        void **addr = (void **)&gEntityFlags;
         register void *tmp asm("r0") = sub_8026EDC(0x81 << 3);
 
         asm volatile("bl sub_8025A5C" : "+r" (tmp) :: "r1", "r2", "r3", "lr", "cc");

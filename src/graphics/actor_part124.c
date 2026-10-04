@@ -391,7 +391,7 @@ void sub_800CB60(struct timed_trigger *self, s32 a)
     self->unk_1c = a;
 }
 
-extern void *gUnknown_030012B4;
+extern void *gEntityFlags;
 extern void *sub_803AD7C(void *addr, void *fn);
 
 /* `self` (the first argument) is never read - only `other` matters.
@@ -403,7 +403,7 @@ extern void *sub_803AD7C(void *addr, void *fn);
  * probe reports *no* hit - runs the "flag active + bitmap-set" idiom
  * on `other` (`other+0xc` |= bit 0; unless `other+8`'s id sentinel-
  * checks as `0xffff`, also sets bit `other+8 & 0x1f` of word
- * `other+8 >> 5` in the `gUnknown_030012B4+0x108` bitmap) - the exact
+ * `other+8 >> 5` in the `gEntityFlags+0x108` bitmap) - the exact
  * idiom `actor_part27c.c`'s `sub_8018884` already matches as real C.
  *
  * Needed the same `[[matching_decomp_register_pinning]]` treatment
@@ -443,7 +443,7 @@ void sub_800CB64(void *selfArg, void *otherArg)
 
             if (val != sentinel) {
                 register u16 val2 asm("r3") = *(u16 volatile *)(other + 8);
-                register u8 *base asm("r2") = gUnknown_030012B4;
+                register u8 *base asm("r2") = gEntityFlags;
                 register s32 idx asm("r0");
                 s32 idxOffset;
                 s32 *bitmap;

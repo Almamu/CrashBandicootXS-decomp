@@ -12,11 +12,11 @@
  * - sub_8022354 (UNUSED): the destructor matching sub_8022230 - frees every
  *   subsystem singleton that constructor built and clears the context
  *   pointer gUnknown_03000828.
- * - sub_8022468: shows one page of a per-level text list (docs/rom_map.md,
- *   "Into graphics_loading's remainder: a BG2-affine screen-effect
- *   setup"): blanks the palette, resets the BG2 affine transform, then
- *   runs a stack-allocated sub_8024948 text pager over
- *   gStaticData_0816D1F4[idx] until it finishes.
+ * - PlayCutscene: plays cutscene `idx` (include/cutscene.h): blanks the
+ *   palette, resets the BG2 affine transform, then runs a stack-allocated
+ *   cutscene player (InitCutscenePlayer/RunCutscenePlayer) over the
+ *   slides gCutscenes[idx] and the current language's pages until it
+ *   finishes.
  *
  * Both match under either compiler; built with the current agbcc like
  * their neighbours. */
@@ -32,20 +32,20 @@ extern struct icon_manager *gUnknown_030012DC;
 extern void *gUnknown_030012CC;
 extern void *gUnknown_030012D0;
 extern void *gUnknown_030012B8;
-extern void *gUnknown_030012B4;
+extern void *gEntityFlags;
 extern void *gUnknown_030012C8;
-extern u32 *gUnknown_03000834[];
+extern u32 *gCutsceneTexts[];
 extern s32 gUnknown_03000868;
 
-/* gStaticData_0816D1F4: {list, count} headers, one per text list
- * (docs/rom_map.md, "gStaticData_0816D1F4 is a header array of
+/* gCutscenes: {list, count} headers, one per text list
+ * (docs/rom_map.md, "gCutscenes is a header array of
  * variable-length lists"). */
 struct text_list
 {
     void **items;
     s32 count;
 };
-extern struct text_list gStaticData_0816D1F4[];
+extern struct text_list gCutscenes[];
 
 extern void FreeVramDmaQueue(void);
 extern void sub_8006AF4(void *self, u32 flags);
@@ -108,8 +108,8 @@ void sub_8022354(void *self, s32 flags)
         sub_8006FC8(gUnknown_030012D0, 3);
     if (gUnknown_030012B8 != NULL)
         sub_8006F94(gUnknown_030012B8, 3);
-    if (gUnknown_030012B4 != NULL)
-        sub_8025A44(gUnknown_030012B4, 3);
+    if (gEntityFlags != NULL)
+        sub_8025A44(gEntityFlags, 3);
     if (gUnknown_030012C8 != NULL)
         sub_80270A8(gUnknown_030012C8, 3);
     gUnknown_03000828 = NULL;
@@ -129,7 +129,7 @@ struct text_rect
     struct text_vec size;
 };
 
-/* The text pager sub_8024948 constructs and sub_8024820 runs
+/* The text pager InitCutscenePlayer constructs and RunCutscenePlayer runs
  * (game_loop57.c): the +0/+4 item list, the +0x10 per-item page table,
  * the font (an icon manager) at +0x14 and the text box at +0x18. */
 struct text_pager
@@ -149,10 +149,10 @@ extern void sub_8001614(void);
 extern void sub_8006EA8(void *cache);
 extern void sub_8006DC8(void *cache);
 extern void sub_8028A40(struct icon_manager *self);
-extern void sub_8024948(struct text_pager *self);
+extern void InitCutscenePlayer(struct text_pager *self);
 extern void sub_8024784(u32 value);
-extern void sub_8024820(struct text_pager *self);
-extern void sub_802493C(struct text_pager *self, s32 flags);
+extern void RunCutscenePlayer(struct text_pager *self);
+extern void DestroyCutscenePlayer(struct text_pager *self, s32 flags);
 
 typedef void (*method_fn)(void *self);
 
@@ -167,7 +167,7 @@ static inline struct text_vec MakeVec(s32 x, s32 y)
     return v;
 }
 
-void sub_8022468(void *self, s32 idx)
+void PlayCutscene(void *self, s32 idx)
 {
     /* One aggregate so that every field access stays sp-relative: as
      * separate locals, the pager's field stores go through the register
@@ -214,7 +214,7 @@ void sub_8022468(void *self, s32 idx)
     }
     sub_8028A40(gUnknown_030012DC);
     sub_8006DC8(gUnknown_030012B8);
-    sub_8024948(&f.pager);
+    InitCutscenePlayer(&f.pager);
     f.pager.font = gUnknown_030012DC;
     {
         /* f.pager.box = f.box, spelled out: the ROM stores the two x
@@ -233,11 +233,11 @@ void sub_8022468(void *self, s32 idx)
         d[3] = y1;
     }
     sub_8024784(*(u32 *)dispcnt);
-    f.pager.items = gStaticData_0816D1F4[idx].items;
-    f.pager.count = gStaticData_0816D1F4[idx].count;
-    f.pager.pages = (u32 *)gUnknown_03000834[gUnknown_03000868][idx];
-    sub_8024820(&f.pager);
+    f.pager.items = gCutscenes[idx].items;
+    f.pager.count = gCutscenes[idx].count;
+    f.pager.pages = (u32 *)gCutsceneTexts[gUnknown_03000868][idx];
+    RunCutscenePlayer(&f.pager);
     *dispcnt = mode;
     sub_8001614();
-    sub_802493C(&f.pager, 2);
+    DestroyCutscenePlayer(&f.pager, 2);
 }

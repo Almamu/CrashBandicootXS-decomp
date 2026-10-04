@@ -451,8 +451,8 @@ Twentieth matched function: `sub_8006864` (ROM `0x08006864`, immediately
 before `sub_80068A8` - joined `src/graphics/oam_count.c` above it, no new split).
 Another 20-record loop, this time a genuine **range check** rather than
 a bit test: for each record, take the halfword at `+4`, shift right by
-3, and - if nonzero - count it only if it falls in `(gStaticData_0816C86C[i].min, gStaticData_0816C86C[i].max]`,
-where the per-record bounds live in a *parallel* table (`gStaticData_0816C86C`,
+3, and - if nonzero - count it only if it falls in `(gLevelTable[i].min, gLevelTable[i].max]`,
+where the per-record bounds live in a *parallel* table (`gLevelTable`,
 stride `0x24`, `max` at `+8`, `min` at `+0xC`) indexed by the *loop
 position*, not by anything read from the record itself.
 
@@ -464,12 +464,12 @@ plain-C rewrite tried (a local copy of the base pointer, restructuring
 associativity, `volatile`-qualifying the pointer, splitting into nested
 `if`s) still let gcc reuse it, which doesn't match the ROM: the ROM
 recomputes the full `base + bias + offset` chain from scratch for *each*
-bound, and even reloads the `gStaticData_0816C86C` address from its
+bound, and even reloads the `gLevelTable` address from its
 literal pool **inside the loop** (after the first bit-test branch, not
 hoisted to the preheader) rather than once up front. Fixed with two
 inline-asm blocks, one per bound, each spelling out the exact three-`ADD`
 chain (`add %0,%1,#0` / `add %0,%0,#N` / `add %0,%2,%0`) with the
-*symbol itself* (`gStaticData_0816C86C`, not a locally-cached pointer
+*symbol itself* (`gLevelTable`, not a locally-cached pointer
 variable) as an input operand - since nothing hoists the symbol's address
 out of the conditional block it's used in, the literal-pool load lands
 exactly where the ROM has it, and since each inline-asm block is opaque
@@ -482,21 +482,21 @@ freshly-loaded value and its transformed result in different registers.
 Twenty-first and twenty-second matched functions: `sub_8006820` and
 `sub_80067EC` (ROM `0x08006820` and `0x080067EC`, immediately before
 `sub_8006864` - joined `src/graphics/oam_count.c` above it, no new split). Two
-more members of the same `gStaticData_0816C86C` range-check family:
+more members of the same `gLevelTable` range-check family:
 `sub_8006820` is `sub_8006864` with different field offsets (`+0xC`/
 `+0x10` instead of `+8`/`+0xC` - same anti-CSE inline-asm technique
 reused verbatim, just changing the two constants), while `sub_80067EC`
 is a **simpler single-bound variant**: only checks `val <= table[i].field_at_0x10`
 (no lower bound), and - unlike the other two - the ROM computes the
-bound as a **persistent, pre-biased pointer** (`gStaticData_0816C86C + 0x10`,
+bound as a **persistent, pre-biased pointer** (`gLevelTable + 0x10`,
 computed once before the loop and incremented by the `0x24` stride each
 iteration) rather than recomputing `base + bias + offset` fresh every
 time. Matched byte-exact with no register pins at all: the only fix
 needed was introducing a plain local pointer variable for the base
-address before adding the `+0x10` bias (`base = gStaticData_0816C86C;
-bound = base + 0x10;` instead of `bound = gStaticData_0816C86C + 0x10;`
+address before adding the `+0x10` bias (`base = gLevelTable;
+bound = base + 0x10;` instead of `bound = gLevelTable + 0x10;`
 directly) - writing it as one combined expression let gcc fold the `+0x10`
-straight into the literal-pool constant (`.word gStaticData_0816C86C+0x10`,
+straight into the literal-pool constant (`.word gLevelTable+0x10`,
 a single load), whereas the ROM does it as three separate runtime `ADD`s
 against the plain unbiased symbol. A cheaper alternative to the inline-asm
 anchor from the two entries above, worth trying first when the ROM
@@ -1560,7 +1560,7 @@ edit below):
     how the other functions already treat it) and used as the parameter
     type everywhere in the cluster, including the ones that still need
     raw pointer casts internally for volatile/register-pinning reasons.
-  - A new `struct threshold_table_entry` documents `gStaticData_0816C86C`'s
+  - A new `struct threshold_table_entry` documents `gLevelTable`'s
     layout for `sub_8006820`/`sub_8006864`/`sub_80067EC`. `sub_80067EC`
     now indexes through it with a typed pointer instead of a bare `u8 *`
     (confirmed this doesn't change codegen - the pre-biased-pointer
@@ -1723,7 +1723,7 @@ void *text}` shape docs/rom_map.md has been seeing repeatedly in this
 zone) that early-returns a flag byte or otherwise builds a 4-word
 buffer and tail-calls `sub_803AD80(self + offset, buf, text)`. Two
 real bugs surfaced only by compiling and diffing against the ROM
-bytes: an extra dereference on `gUnknown_03001308` (the bare global
+bytes: an extra dereference on `gLevelLayers` (the bare global
 name already yields the stored pointer - no further `*` needed) and a
 *missing* dereference on `self + 0x18` (that field itself holds a
 pointer to another struct - `ldr r1, [r2, #0x18]` is a real load, not
@@ -1827,7 +1827,7 @@ register wrangling so far in this cluster:
 
 **`sub_8007174`**: matched on the first attempt. Ignores its own first
 parameter entirely (overwritten as scratch before ever being read),
-reads the same `gUnknown_03001308` sub-object `sub_8006FE4` uses but
+reads the same `gLevelLayers` sub-object `sub_8006FE4` uses but
 as two raw sign-extended-24-bit `s32` fields (dx/dy) rather than
 through the record table - a different part of the same object.
 
@@ -1924,7 +1924,7 @@ raw-pointer-cast form, including through the existing register pins
 and inline asm blocks (pinning wraps whichever C expression computes
 the address/value, so the struct doesn't interact with it).
 
-`gUnknown_03001308`'s own sub-object (read by `sub_8006FE4`/
+`gLevelLayers`'s own sub-object (read by `sub_8006FE4`/
 `sub_8007174`/`sub_800719C`) is a *different*, still-unidentified
 object (looks camera/viewport-offset-shaped given how it's used, but
 that's not confirmed) - deliberately left untyped rather than folded
@@ -1955,7 +1955,7 @@ body comes out already 4-aligned, no padding fix needed this time.
 
 **`sub_80072D8`**: always sets `self->flags` bit0; if `self->field_08`
 (an id) isn't the sentinel `0xFFFF`, also sets a bit in an external
-32-bit-word bitmap (`*gUnknown_030012B4 + 0x108`, word-indexed by
+32-bit-word bitmap (`*gEntityFlags + 0x108`, word-indexed by
 `field_08 >> 5`, bit-indexed by `field_08 & 0x1F`) - looks like
 "mark this object active" in some allocation-tracking table. The
 most register-pin-heavy function in this cluster so far:
@@ -2446,11 +2446,11 @@ convention as `sub_800B37C` in `graphics.c`). On collision: sets
 instead of `self->field_0A` - strong confirmation both functions share
 the same "table+0x68 offset, table+4 unused field" convention), sets
 `part->flags` bit 0, and - if `part->field_08` isn't the `0xFFFF`
-sentinel - marks a bit in the `gUnknown_030012B4` 32-bit-word bitmap at
+sentinel - marks a bit in the `gEntityFlags` 32-bit-word bitmap at
 `+0x108` (identical to `sub_80072D8`'s convention). Finally,
 `part->field_0A - 0x1b` (0-7) selects one of six "kind" values (1, 6,
 5, 0, 3, 4 for cases 2/3, 6, 4, 7, 5, 0 respectively; case 1 and any
-out-of-range value spawn nothing) passed to `sub_8025BAC(gUnknown_030012E4,
+out-of-range value spawn nothing) passed to `sub_8025BAC(gEntitySpawner,
 0x2b, kind, part->x>>8, part->y>>8, 0)` - "spawn an object from a pool
 at this position" is the working theory, not confirmed. If something
 spawned, its `+0x28` bits 0-1 get set to `01` and its `+0xc` bit 2
@@ -2504,7 +2504,7 @@ as `sub_8007B00`/`sub_8007B98` above.
 shape as `sub_8006FE4` in `graphics.c` - `part+0x25 == 1` is a fast
 "always visible" override; otherwise `part+0xd` bit 2 gates a call to
 `sub_803AD80` with a 4-word "region" built from
-`gUnknown_03001308`'s sub-object (two Q8 fields) plus the GBA's fixed
+`gLevelLayers`'s sub-object (two Q8 fields) plus the GBA's fixed
 screen width/height (`0xf0<<8`/`0xa0<<8`), using the same
 `table+N`/`table+N+4` offset/pointer slot convention `sub_8006FE4`
 reads at `table+0x40` - here at `table+0x30`, a second confirmed slot
@@ -2518,7 +2518,7 @@ one register, shift/mask into another, matching the ROM's own
 (`u32`, not `s32`) shifted value - a signed right-shift of a loaded
 byte compiles to `asr` even though the value is always 0-255, so the
 `u32` cast was needed to get the ROM's `lsr`; pinning the
-`gUnknown_03001308` sub-object pointer to `r0` so it stays in the same
+`gLevelLayers` sub-object pointer to `r0` so it stays in the same
 register across all three of its dereferences (address-of-global,
 value, `+0x10` field) rather than moving to a fresh register, matching
 `sub_8006FE4`'s own single-register reuse; and grouping each pair of
@@ -2973,9 +2973,9 @@ padding). Confirmed byte-identical via isolated compile plus
 `0x080083B8`, then via full clean `make compare`.
 
 **`sub_8008408`** (ROM `0x08008408`, right after `sub_80083B8`, new
-`src/graphics/actor_part6.c`): the same `gUnknown_03001308` sub-object
+`src/graphics/actor_part6.c`): the same `gLevelLayers` sub-object
 convention used throughout this ROM region (`sub_8007F78`/
-`sub_8006FE4`) - if `gUnknown_03001308+0x2b` is nonzero, returns the
+`sub_8006FE4`) - if `gLevelLayers+0x2b` is nonzero, returns the
 sub-object's `+0x34` byte's low 2 bits minus 1; otherwise returns
 those bits unmodified. Matched on the second attempt: the first draft
 had the compiler lay out the `if`/`else` bodies in the opposite order
@@ -3382,11 +3382,11 @@ system: `self` is a manager over an array of `part`-like objects
 (`self+0xc`, length `self+0x4`) that gets filtered/compacted into a
 second output array (`self+0x10`, length `self+0x8`) each call.
 
-Builds two `gUnknown_03001308`-sub-object-centered boxes first: an
+Builds two `gLevelLayers`-sub-object-centered boxes first: an
 "extended" 440x280 region 100/60 px past the sub-object's own position
 (`boxA`), and the plain 240x160 screen region at the sub-object's own
 position (`boxB` - the GBA's exact visible area in Q8, `0xf0<<8` /
-`0xa0<<8`) - reusing the same `gUnknown_03001308+0x10` sub-object
+`0xa0<<8`) - reusing the same `gLevelLayers+0x10` sub-object
 convention documented throughout this ROM region (see
 `sub_8007F78`/`sub_8006FE4`).
 
@@ -3584,7 +3584,7 @@ and the player (`gUnknown_030012D8`) against the incoming
 itself is never read - a dead parameter kept for a uniform call
 signature with `sub_8008D80`'s sibling.
 
-If `gUnknown_030012C0`'s mode field (`+0x78`) is 3: tests `part`
+If `gLevelState`'s mode field (`+0x78`) is 3: tests `part`
 against the box via `sub_8009FF4` (already matched in
 `actor_part9.c`); if it misses entirely, returns. Otherwise fires a
 `part->table+0x68`-driven trampoline via `sub_803AD88` with the
@@ -3638,15 +3638,15 @@ C has no way to express directly.
 `sub_8008AD8`... no wait, right after the *parked* `sub_8008AD8`, new
 `src/graphics/actor_part10.c`): the same "extended screen box" filter
 shape as `sub_800891C`'s own `boxB` pass - the plain 240x160 GBA
-screen region, in Q8, at the `gUnknown_03001308` sub-object's own
+screen region, in Q8, at the `gLevelLayers` sub-object's own
 position - iterating `manager`'s array (`manager+0xc` base,
 `manager+4` count), filtering each `part` whose `table+0x30/0x34`-
 driven trampoline passes into a second output array (`manager+0x10`
 base, `manager+8` count).
 
 Needed the same register-chain-reuse pattern established throughout
-this ROM region for the `gUnknown_03001308` sub-object double-deref
-(`register void *P asm("r0") = gUnknown_03001308; register void
+this ROM region for the `gLevelLayers` sub-object double-deref
+(`register void *P asm("r0") = gLevelLayers; register void
 *subObj asm("r0"); subObj = *(void **)((u8 *)P + 0x10);` - keeping the
 whole chain in `r0`, matching the ROM's own self-referencing
 `ldr r0,[r0]; ldr r0,[r0,#0x10]`), plus a "compute both fields, then
@@ -3723,7 +3723,7 @@ Continuing past `sub_8008D80` (parked), the next six functions turned
 out to be a self-contained family of small, clearly-understood
 "manager" array utilities (the same capacity/count/base-pointer struct
 shape used throughout `actor_part10.c`), not the murkier
-`gUnknown_030012C0`/`gUnknown_030012D8`-touching dispatch logic - so
+`gLevelState`/`gUnknown_030012D8`-touching dispatch logic - so
 all six were matched rather than parked or skipped:
 
 - **`sub_8008DC0`**: fires a `part->table+0x20/0x24`-driven trampoline
@@ -3851,7 +3851,7 @@ without more context. Left raw rather than guess.
 file's own matched functions, per docs/workflow.md step 4's "needs its
 own new .c file" case): the same "extended screen box" filter shape as
 `sub_8008C80` (the plain 240x160 GBA screen region, in Q8, at the
-`gUnknown_03001308` sub-object's own position), but instead of
+`gLevelLayers` sub-object's own position), but instead of
 filtering into a second array, iterates `manager`'s spatial hash grid
 buckets directly - a fixed `[baseIdx, baseIdx+2]` 3-bucket window, NOT
 a full 0-255 sweep, where `baseIdx` is the screen-box's own X position
@@ -3974,7 +3974,7 @@ NAKED" rather than "parked, NON_MATCHING").
 the parked `sub_8009528`, `src/graphics/actor_part11.c`): `sub_8008AD8`'s
 twin, confirmed by reading its disassembly directly against
 `sub_8008AD8`'s own - byte-identical collision-hit resolution logic
-(mode dispatch via `gUnknown_030012C0`, AABB push-out via
+(mode dispatch via `gLevelState`, AABB push-out via
 `sub_8007B98`/`sub_8007CF8`/`sub_8001688`, and `sub_803AD88`
 trampoline calls with the same "dead read" idiom), just called from
 this spatial-hash-grid cluster instead of the plain array manager.
@@ -4161,7 +4161,7 @@ gated by a mix of flag bits and a periodic "fast path" check against
 `docs/rom_map.md`) - if `part->flags` bit 2 is set and the player's
 `+0x8c` field is ahead of the frame counter (an **unsigned**
 comparison - using a signed one here produced a real, full-rebuild-
-caught mismatch) and `gUnknown_030012C0`'s mode (`+0x78`) is 3, or
+caught mismatch) and `gLevelState`'s mode (`+0x78`) is 3, or
 independently if `part`'s `+0xd` byte bit 3 is set and the mode is 3,
 builds `part`'s primary AABB via `sub_8007C30` (already matched) and
 tests it against the player via `sub_800B37C` (already matched); on a
@@ -4193,7 +4193,7 @@ isolated per-function compile looked correct both times.
 **Parked, not matched: `sub_8009D5C`** (ROM `0x08009D5C`, right after
 `sub_8009CA0`, `src/graphics/actor_part13.c`): fires a
 `part->table+0x68`-driven trampoline (the established "dead read"
-idiom) based on `gUnknown_030012C0`'s mode: mode 0 fires it on the
+idiom) based on `gLevelState`'s mode: mode 0 fires it on the
 player with `(0, part->field_0A, 0)`; modes 1-2 fire it on the player
 with the same arguments, then again on `part` itself with `(1, 1,
 0)`; mode 3 fires it on `part` alone with `(1, 1, 0)`; any other mode
@@ -5186,7 +5186,7 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
 
 **Matched (`src/system/game_loop2.c`, 20 functions):**
 
-- **`sub_8022EA8`/`sub_8022F2C`**: record 47's periodic-trigger
+- **`FreezeLevelClock`/`TickLevelClock`**: record 47's periodic-trigger
   setter/decrementer (see `docs/rom_map.md`, "An achievement/unlock-
   icon spawner family, tied to `gStaticData_084A5600` record 47").
   Closed after the initial blanket-register-pin attempt (pinning every
@@ -5211,7 +5211,7 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
   `slot`). No pin at all was needed for `self`, `&gUnknown_030012B8`,
   or `slot` - all three land in `r5`/`r7`/`r6` purely from the
   resulting register pressure, matching the ROM exactly.
-  `sub_8022F2C` reuses the same recipe for its own
+  `TickLevelClock` reuses the same recipe for its own
   `sub_8006DF8`/`sub_8006D08` cross-call pair, plus three more
   pins/rewrites for the rest of the function: `addr`/`countdown` pinned
   to `r1`/`r3` reproduce the ROM's front-of-function map, and that same
@@ -5239,13 +5239,13 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
   counter, and when it reaches `self+0xbc`'s limit, either flag the
   level as done (`self->levelPtr->mode == 3`) or fire an out-of-time
   animation (`sub_801EB04(0xffff, self+0x1c0, self+0x1c4, 0)`" - both
-  needed `sub_8023404` (a `self+0xc4`-record accessor) re-derived as a
+  needed `GetCurrentLevelFlags` (a `self+0xc4`-record accessor) re-derived as a
   **one-argument** function; the ROM's caller sets no second argument
-  before `bl sub_8023404` at all - reading `sub_8023404`'s own body
-  (`adds r1,r0,#0; adds r1,#0xc4; ldr r1,[r1]; bl sub_80233FC`) shows
+  before `bl GetCurrentLevelFlags` at all - reading `GetCurrentLevelFlags`'s own body
+  (`adds r1,r0,#0; adds r1,#0xc4; ldr r1,[r1]; bl GetLevelFlags`) shows
   it *overwrites* `r1` from `r0` before ever reading the incoming
   value, confirming the real signature really is `void
-  *sub_8023404(void *self)`. Also needed the field-order fix already
+  *GetCurrentLevelFlags(void *self)`. Also needed the field-order fix already
   described in `docs/workflow.md` step 3/its many prior entries: `count
   == limit` compiles cheapest (no extra register, matching the ROM's
   bare `push {r4,lr}`) only when the increment (`self->field_0x70 +=
@@ -5290,7 +5290,7 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
   helper (called recursively by `sub_8022BF0` itself, and again from
   `UpdateGameFrame`). All field offsets/calls/arguments confirmed,
   including `sub_8022BF0`'s `self+0x6c`-exceeds-99 carry-into-`+0x74`
-  loop and the two `gUnknown_030012B4`-bitmap `sub_803A94C` (BIOS
+  loop and the two `gEntityFlags`-bitmap `sub_803A94C` (BIOS
   `CpuSet`) spans `sub_8022CA0` syncs. `sub_8022BF0` needs four field
   addresses (`self+0x70`/`0x6c`/`0x74`/`0xbc`) live across several
   calls, and this compiler spills them into `r8`/`r9`/`sl` where the
@@ -5312,7 +5312,7 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
   5-case jump table dispatching on the player's current state
   (`sub_80231BC`/`80231A8`/`80231B4`/`80231C4`/`80231CC` gating,
   `sub_8023190`/`8184`/`819C`/`80231A8` transitioning), and an
-  end-of-frame block juggling `gUnknown_030012B4`/`030012B8`/
+  end-of-frame block juggling `gEntityFlags`/`030012B8`/
   `03001318`/`0300082C` plus several still-uncharacterized SP-relative
   locals (8 stack slots). `docs/rom_map.md` has extensive prior
   characterization of the surrounding cluster, but not enough of this
@@ -5327,8 +5327,8 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
   `0x90`-`0xa0`, tears down two actor slots at `self+0x1bc`/`0x1c0` via
   `sub_80087C0`/`sub_80087B4`/`sub_800872C` when non-null, then walks
   `gUnknown_030012EC`'s array firing `sub_803AD7C` table trampolines
-  and setting bits in the `gUnknown_030012B4` collision bitmap. Several
-  callees (`sub_80231EC`, `sub_8010804`, `sub_803AD7C`, `sub_8011448`)
+  and setting bits in the `gEntityFlags` collision bitmap. Several
+  callees (`SetMaskLevel`, `sub_8010804`, `sub_803AD7C`, `sub_8011448`)
   aren't characterized precisely enough yet to commit a confident
   reconstruction.
 
@@ -5337,8 +5337,8 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
 `code_3_2_17_225a0.s` (raw `UpdateGameFrame`), `code_3_2_17_22bf0.s`
 (raw twin for the two parked `game_loop.c` functions, `.if
 NON_MATCHING == 0`), `game_loop.o`, `code_3_2_17_22d50.s` (raw
-`sub_8022D50`), `game_loop2.o` (now covering `sub_8022EA8`/
-`sub_8022F2C` too - `code_3_2_17_22ea8.s`, their former raw twin, is
+`sub_8022D50`), `game_loop2.o` (now covering `FreezeLevelClock`/
+`TickLevelClock` too - `code_3_2_17_22ea8.s`, their former raw twin, is
 removed), and finally `code_3_2_17_231cc.s` (the original file's
 unchanged remainder, from `sub_80231CC` on) - see `ldscript.txt` and
 `tools/report_units.py`'s `game_loop` category, both updated to match.
@@ -5358,7 +5358,7 @@ chunk's biggest, least-understood cluster in one pass.
 
 - **`MainLoop`** (ROM `0x08026EEC`): the game's actual top-level loop,
   called once from `AgbMain` (`src/system/main.c`). Sets up the central
-  per-level state object (`gUnknown_030012C0`, via `sub_8023738`/
+  per-level state object (`gLevelState`, via `GetLevelState`/
   `sub_802369C`/`sub_8023674`/`sub_8023658` - none of those four are
   understood beyond "state setup", left as opaque `extern` calls), the
   on-screen counter widget (`sub_8037620`/`sub_80371B4`/`sub_80375EC`,
@@ -6280,11 +6280,11 @@ picked the most tractable-looking four, the confirmed twin family
 that table), and worked them through the real matching loop.
 
 **Semantics** (all four, differing only in the bit tested/sound ids/tag
-value): tests one bit of `gUnknown_030012C0+2` (bit 0/1/2/3
+value): tests one bit of `gLevelState+2` (bit 0/1/2/3
 respectively). If set, plays a sound only via `sub_801A878` +
 `sub_80234E8` - the sound id is `0xB`/`3`/`0xA`/`9` normally, or the
-shared fallback `0xC` if either `sub_8023278(gUnknown_030012C0)` is
-true or `gUnknown_030012C0+0x8c` is nonzero. If clear, spawns a full
+shared fallback `0xC` if either `sub_8023278(gLevelState)` is
+true or `gLevelState+0x8c` is nonzero. If clear, spawns a full
 visual effect instead: allocates a part-object via `sub_8008434`,
 points its `+0x20` table pointer at `gStaticData_084A5600`'s own first
 field (reached through `gUnknown_030012D0`'s pointer-to-pointer, the
@@ -6350,7 +6350,7 @@ resisted every further technique tried this pass:
    which just broke register allocation elsewhere in the function -
    `bit`'s own natural register collided with a pin on `arg2`) changed
    gcc's pick.
-2. The `gUnknown_030012C0+2` bit-test/`sub_8023278` call at function
+2. The `gLevelState+2` bit-test/`sub_8023278` call at function
    entry: the ROM computes the global's address once into `sb`/`r9`,
    dereferences straight into `r0`, and reuses that exact `r0` for the
    `sub_8023278` argument with no intervening move. Every shape tried

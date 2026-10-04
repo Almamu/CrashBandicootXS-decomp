@@ -4,7 +4,7 @@
 
 extern void *sub_803AD7C(void *arg0, void *fn);
 extern s32 sub_803AD80(void *arg0, void *arg1, void *fn);
-extern void *gUnknown_03001308;
+extern void *gLevelLayers;
 
 /* The spatial-hash-grid pool manager struct `sub_8008F20` initializes
  * and `actor_part12.c` operates on - see that file (and
@@ -21,7 +21,7 @@ struct pool_manager {
 };
 
 /* Same "extended screen box" filter shape as `sub_8008C80` (the plain
- * 240x160 GBA screen region, in Q8, at the `gUnknown_03001308`
+ * 240x160 GBA screen region, in Q8, at the `gLevelLayers`
  * sub-object's own position), but instead of filtering into a second
  * array, iterates `manager`'s spatial hash grid buckets directly (from
  * `baseIdx+2` down to `baseIdx` inclusive - a fixed 3-bucket window,
@@ -66,7 +66,7 @@ void sub_800944C(void *managerArg)
 {
     register struct pool_manager *manager asm("r3") = managerArg;
     s32 box[4];
-    register void *P asm("r0") = gUnknown_03001308;
+    register void *P asm("r0") = gLevelLayers;
     register void *subObj asm("r2") = *(void **)((u8 *)P + 0x10);
     register s32 v0 asm("r1") = *(s32 *)subObj << 8;
     register s32 v1 asm("r0") = *(s32 *)((u8 *)subObj + 4) << 8;

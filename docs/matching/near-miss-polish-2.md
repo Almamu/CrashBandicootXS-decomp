@@ -9,7 +9,7 @@ the first near-miss pass ([near-miss-polish.md](near-miss-polish.md)),
 |---|---|---|---|---|
 | `sub_8001F50` | `src/system/link_cable.c` | old_agbcc (both match) | 37 | `asm("" : "+r"(one1))` keeps a second 1; `asm("" : "+r"(arm3))` between `^` and `&` blocks the `bic` fold |
 | `sub_8004D74` | `src/graphics/settings_menu15.c` | agbcc | 54 (4 bytes short) | `static inline` accessor for `field_12c` so CSE doesn't share the 0x12c offset; two locals fix load order |
-| `sub_8025334` | `src/system/game_loop3.c` | old_agbcc | 33 | explicit `<< 24 >> 24` sign extensions through `s32` locals; `asm("" : : "r"(n))` fixes the r4/r5 swap |
+| `DecodeCollisionChunk` | `src/system/game_loop3.c` | old_agbcc | 33 | explicit `<< 24 >> 24` sign extensions through `s32` locals; `asm("" : : "r"(n))` fixes the r4/r5 swap |
 | `sub_8029890` | `src/graphics/actor_part95.c` | agbcc (both match) | 37 | `asm("" : "=r"(reload) : "0"(a4))` copies the address used for the reload; evaluation-order tweaks |
 | `SelectActorCategory` | `src/graphics/actor_part102.c` | agbcc (both match) | 125 (4 bytes long) | local pointer to `gUnknown_03001404` plus one `asm("" : : "r"(idx))` so it outranks `base` |
 
@@ -19,7 +19,7 @@ use.
 ## What worked
 
 **Extra references, as in the first pass.** `SelectActorCategory` and
-`sub_8025334` were plain priority swaps. A global's address can't take
+`DecodeCollisionChunk` were plain priority swaps. A global's address can't take
 an `asm` operand directly, so `SelectActorCategory` stores through a
 local `s32 *idx = &gUnknown_03001404`, and the reference goes on `idx`.
 Its scan loops still have to use the global by name. With `idx` in the
@@ -48,7 +48,7 @@ rebuilds the 0x12c offset (`movs r1, #150; lsls r1, #1`) for every
 sharing it, which frees the register it held. The five callee-saved
 pointers then fall into the ROM's r4-r7.
 
-**Sign extensions as shifts (`sub_8025334`).** The ROM interleaves
+**Sign extensions as shifts (`DecodeCollisionChunk`).** The ROM interleaves
 `(s8)pair`'s `lsl #24`/`asr #24` around `acc`'s own `lsl #16`/`asr #16`.
 `acc += (s8)pair` emits the pair's shifts back to back. Writing
 

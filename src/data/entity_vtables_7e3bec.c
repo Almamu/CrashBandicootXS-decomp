@@ -168,27 +168,27 @@ extern void sub_801DE30();
 extern void sub_801DEA4();
 extern void sub_801DF70();
 extern void sub_801DF98();
-extern void sub_8024D0C();
-extern void sub_8024D74();
+extern void DestroyBgStreamer();
+extern void DestroyBgLayerBase();
 extern void sub_8024DCC();
-extern void sub_8024E68();
-extern void sub_8024E90();
-extern void sub_8025E70();
-extern void sub_8025E84();
-extern void sub_8025E98();
-extern void sub_8025F3C();
-extern void sub_8025FC8();
-extern void sub_802608C();
-extern void sub_80260B4();
-extern void sub_80261B8();
-extern void sub_80261CC();
+extern void ScrollBgLayerBase();
+extern void ResetBgLayerBase();
+extern void ClipBgLayerColumns();
+extern void ClipBgLayerRows();
+extern void ScrollBgLayer();
+extern void DrawBgLayerColumn();
+extern void DrawBgLayerRow();
+extern void ResetBgLayer();
+extern void LoadBgLayerTiles();
+extern void DestroyBgLayer();
+extern void DrawPooledBgLayerColumn();
 extern void sub_8026250();
-extern void sub_80262E8();
-extern void sub_8026328();
-extern void sub_8026368();
-extern void sub_80263DC();
-extern void sub_80263F8();
-extern void sub_8026418();
+extern void ClipPooledBgLayerColumns();
+extern void ClipPooledBgLayerRows();
+extern void DrawPooledBgLayerRow();
+extern void ResetPooledBgLayer();
+extern void LoadPooledBgLayerTiles();
+extern void DestroyPooledBgLayer();
 extern void sub_802710C();
 extern void sub_80285C4();
 extern void sub_8028808();
@@ -1007,48 +1007,48 @@ const struct vtable_slot gStaticData_087E4BAC[6] = {
 };
 
 /* Used by game_loop57.c. */
-const struct vtable_slot gStaticData_087E4BDC[2] = {
+const struct vtable_slot gBgStreamerVtable[2] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_8024D0C),
+    VTABLE_SLOT(DestroyBgStreamer),
 };
 
 /* Used by game_loop57.c. */
-const struct vtable_slot gStaticData_087E4BEC[5] = {
+const struct vtable_slot gBgLayerBaseVtable[5] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_8024D74),
-    VTABLE_SLOT(sub_8024E90),
-    VTABLE_SLOT(sub_8024E68),
+    VTABLE_SLOT(DestroyBgLayerBase),
+    VTABLE_SLOT(ResetBgLayerBase),
+    VTABLE_SLOT(ScrollBgLayerBase),
     VTABLE_SLOT(sub_8024DCC),
 };
 
-/* Used by bg_scroll_layer_25fc8.c (sub_80261B8), game_loop15.c
- * (sub_8025D74), tile_slot_pool.c (sub_8026418), bg_scroll_layer.h. */
-const struct vtable_slot gStaticData_087E4C14[10] = {
+/* Used by bg_scroll_layer_25fc8.c (DestroyBgLayer), game_loop15.c
+ * (InitBgLayer), tile_slot_pool.c (DestroyPooledBgLayer), bg_scroll_layer.h. */
+const struct vtable_slot gBgLayerVtable[10] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_80261B8),
-    VTABLE_SLOT(sub_802608C),
-    VTABLE_SLOT(sub_8025E98),
+    VTABLE_SLOT(DestroyBgLayer),
+    VTABLE_SLOT(ResetBgLayer),
+    VTABLE_SLOT(ScrollBgLayer),
     VTABLE_SLOT(sub_8024DCC),
-    VTABLE_SLOT(sub_80260B4),
-    VTABLE_SLOT(sub_8025FC8),
-    VTABLE_SLOT(sub_8025F3C),
-    VTABLE_SLOT(sub_8025E70),
-    VTABLE_SLOT(sub_8025E84),
+    VTABLE_SLOT(LoadBgLayerTiles),
+    VTABLE_SLOT(DrawBgLayerRow),
+    VTABLE_SLOT(DrawBgLayerColumn),
+    VTABLE_SLOT(ClipBgLayerColumns),
+    VTABLE_SLOT(ClipBgLayerRows),
 };
 
-/* Used by bg_scroll_layer_25fc8.c, tile_slot_pool.c (sub_8026418),
+/* Used by bg_scroll_layer_25fc8.c, tile_slot_pool.c (DestroyPooledBgLayer),
  * bg_scroll_layer.h. */
-const struct vtable_slot gStaticData_087E4C64[10] = {
+const struct vtable_slot gPooledBgLayerVtable[10] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_8026418),
-    VTABLE_SLOT(sub_80263DC),
-    VTABLE_SLOT(sub_8025E98),
+    VTABLE_SLOT(DestroyPooledBgLayer),
+    VTABLE_SLOT(ResetPooledBgLayer),
+    VTABLE_SLOT(ScrollBgLayer),
     VTABLE_SLOT(sub_8026250),
-    VTABLE_SLOT(sub_80263F8),
-    VTABLE_SLOT(sub_8026368),
-    VTABLE_SLOT(sub_80261CC),
-    VTABLE_SLOT(sub_80262E8),
-    VTABLE_SLOT(sub_8026328),
+    VTABLE_SLOT(LoadPooledBgLayerTiles),
+    VTABLE_SLOT(DrawPooledBgLayerRow),
+    VTABLE_SLOT(DrawPooledBgLayerColumn),
+    VTABLE_SLOT(ClipPooledBgLayerColumns),
+    VTABLE_SLOT(ClipPooledBgLayerRows),
 };
 
 /* Used by hud_icon_slot.c (sub_802710C). */

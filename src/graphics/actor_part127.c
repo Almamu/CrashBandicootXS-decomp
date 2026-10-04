@@ -19,7 +19,7 @@
  * other function here matches under both compilers - see
  * docs/matching/issue-51-54-naked-retry.md. */
 
-/* The gUnknown_030012C0 fields read here. */
+/* The gLevelState fields read here. */
 struct game_state {
     u8 unk_00[0x78];
     s32 mode;           // 0x78 - the current hazard tier (0-3)
@@ -27,7 +27,7 @@ struct game_state {
     u8 paused;          // 0x8C
 };
 
-extern struct game_state *gUnknown_030012C0;
+extern struct game_state *gLevelState;
 extern void *gUnknown_030012BC;
 extern void *gUnknown_03001490;
 extern void *gUnknown_03001494;
@@ -46,13 +46,13 @@ extern struct held_pressed_pair gUnknown_030007E0;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 extern void sub_8029BAC(s32 arg0);
-extern void sub_8023234(void *arg0);
+extern void LoseLife(void *arg0);
 extern void sub_802DFBC(void);
 extern s32 sub_802D4B0(void *self);
 extern void *sub_802AC28(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern void *AllocVramTileBlock(s32 size);
 extern s32 sub_8000E1C(s32 max);
-extern s32 sub_80231EC(void *arg0, s32 arg1);
+extern s32 SetMaskLevel(void *arg0, s32 arg1);
 extern void sub_802BC68(void *selfArg);
 extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
 
@@ -114,7 +114,7 @@ void sub_802B364(struct actor_self *self)
         ACTOR_SET_STATE(self, 10, 10);
     }
     if (gUnknown_0300149C != 0 && --gUnknown_0300149C != 0 && gUnknown_030014A0 == 0
-        && gUnknown_030012C0->mode != 3)
+        && gLevelState->mode != 3)
         self->unk_2C[0] = ((u32)gUnknown_0300149C >> 2) & 1;
     else
         self->unk_2C[0] = 1;
@@ -165,7 +165,7 @@ void sub_802B364(struct actor_self *self)
     if (gUnknown_03001494 != NULL) {
         sub_802D3A8(gUnknown_03001494, self->x, self->y, self->z);
     } else {
-        s32 tier = gUnknown_030012C0->mode;
+        s32 tier = gLevelState->mode;
 
         gUnknown_03001494 = sub_802B1A8(self->x, self->y, self->z, tier);
         if (sub_8029794())
@@ -251,10 +251,10 @@ void sub_802B5B4(struct actor_self *self)
  * `gUnknown_0300148x`/`gUnknown_030014Bx` cluster): if the shared
  * "used" respawn timer (`gUnknown_0300149C`) is already counting down,
  * reports "still used" (1) without doing anything. Otherwise, while
- * the current hazard tier (`gUnknown_030012C0->0x78`) is clear, plays
+ * the current hazard tier (`gLevelState->0x78`) is clear, plays
  * a cue, DMAs a gauge strip, resets `self` to state 6/table-index 5,
  * arms `gUnknown_03001480`, kicks the game-mode transition
- * (`sub_8023234`) if not already paused, clears
+ * (`LoseLife`) if not already paused, clears
  * `gUnknown_030014A3`/arms `gUnknown_030014A0`, and fires
  * `sub_8029BAC(0)`/`sub_802DFBC()` - or, while a tier is already
  * active, arms a fixed `gUnknown_0300149C` countdown and forwards to
@@ -268,7 +268,7 @@ void sub_802B5B4(struct actor_self *self)
  * per the `goto`-shared-tail idiom in
  * `docs/matching/issue-52-gap-b364.md`. The three addresses this
  * function keeps alive throughout (`gUnknown_0300149C`, `gUnknown_
- * 03001494`, `&gUnknown_030012C0`) are each read once into their own
+ * 03001494`, `&gLevelState`) are each read once into their own
  * pointer local and reused from there, matching the ROM's own register
  * lifetime (never re-deriving an address it already has); `self`
  * itself is reused for the unrelated `1` constant once its own fields
@@ -286,7 +286,7 @@ s32 sub_802B730(void *selfArg)
 
     {
         register void **effectAddr asm("r2") = &gUnknown_03001494;
-        void **playerAddr = (void **)&gUnknown_030012C0;
+        void **playerAddr = (void **)&gLevelState;
         s32 tier = ((struct game_state *)*playerAddr)->mode;
 
         if (tier == 0) {
@@ -316,7 +316,7 @@ s32 sub_802B730(void *selfArg)
                             struct game_state *player = *playerAddr;
 
                             if (player->paused == 0) {
-                                sub_8023234(player);
+                                LoseLife(player);
                             }
                         }
                         gUnknown_030014A3 = zero;
@@ -362,7 +362,7 @@ s32 sub_802B7E0(void *selfArg)
 
     {
         register void **effectAddr asm("r4") = &gUnknown_03001494;
-        void **playerAddr = (void **)&gUnknown_030012C0;
+        void **playerAddr = (void **)&gLevelState;
         s32 tier = ((struct game_state *)*playerAddr)->mode;
 
         if (tier == 0) {
@@ -665,8 +665,8 @@ void sub_802BB4C(void *selfArg)
                 self->animTime = zero;
             }
         }
-        if (gUnknown_030012C0->paused == 0) {
-            sub_8023234(gUnknown_030012C0);
+        if (gLevelState->paused == 0) {
+            LoseLife(gLevelState);
         }
     } else if (counter & 4) {
         QueueVramDmaTransfer(gStaticData_0817A728, (void *)OBJ_PLTT, 0x20, 0x10);
@@ -690,10 +690,10 @@ void sub_802BBE4(struct actor_self *self)
         ACTOR_SET_STATE(self, 8, 7);
         gUnknown_03001480 = 1;
         {
-            struct game_state *player = gUnknown_030012C0;
+            struct game_state *player = gLevelState;
 
             if (player->paused == 0)
-                sub_8023234(player);
+                LoseLife(player);
         }
     }
 }

@@ -1,11 +1,11 @@
-# Third big NAKED retry: `sub_80255D4`, `sub_8011548`, `sub_8002114`
+# Third big NAKED retry: `SpawnRoomEntities`, `sub_8011548`, `sub_8002114`
 
 Three large NAKED functions. One closed. The other two now have C
 drafts that are the same size as the ROM.
 
 | Function | File | Issue | Size | Result |
 |---|---|---|---|---|
-| `sub_80255D4` | `src/system/game_loop41.c` | #40 | 704 bytes | matched, old_agbcc (object added to `OLD_AGBCC_OBJS`) |
+| `SpawnRoomEntities` | `src/system/game_loop41.c` | #40 | 704 bytes | matched, old_agbcc (object added to `OLD_AGBCC_OBJS`) |
 | `sub_8011548` | `src/system/game_loop53.c` | #15 | 500 bytes | still NAKED; draft size-exact, 21 halfwords off (was 84 bytes too long) |
 | `sub_8002114` | `src/system/link_cable.c` | #4 | 1488 bytes | still NAKED; first draft, size-exact, 514 halfwords off |
 
@@ -35,7 +35,7 @@ decided most of the work here:
   (`if (missing) break; to = next;`) is rotated whole: the ROM's
   `b top; next: to = next; top: ...` shape.
 
-## `sub_80255D4` (219 -> 0 halfwords)
+## `SpawnRoomEntities` (219 -> 0 halfwords)
 
 The draft was already the right size. The layout fixes are the three
 loop points above. The rest:

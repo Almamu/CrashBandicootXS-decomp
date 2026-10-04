@@ -12,10 +12,10 @@
 
 extern void *gUnknown_03000884;
 extern void *gUnknown_030012BC;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern u8 sub_802A6EC(void *self);
 extern void sub_8022FEC(void *self);
-extern void sub_8022EA8(void *arg0, s32 arg1);
+extern void FreezeLevelClock(void *arg0, s32 arg1);
 extern void sub_802C078(void *arg0, s32 delta);
 extern void sub_802C4C8(void *selfArg);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
@@ -34,7 +34,7 @@ extern u8 gStaticData_087E4F74[];
 /* Extends the type-byte event dispatch family (`sub_8031D7C`/etc, per
  * docs/rom_map.md; the `sub_802C540` shape in actor_part19g.c) with
  * values `5`-`7`. On proximity (`sub_802A6EC`), plays a sound, ties the
- * lap counter, then dispatches `sub_8022EA8` with a tier argument keyed
+ * lap counter, then dispatches `FreezeLevelClock` with a tier argument keyed
  * off `self+0x30`'s type byte (`5`->1, `6`->2, `7`->anything else
  * dispatches nothing) before the shared "used" state transition;
  * tail-calls `sub_802C4C8`. */
@@ -46,19 +46,19 @@ void sub_802C99C(void *selfArg)
         s32 typeByte;
 
         PlaySfx(gUnknown_030012BC, 3, 0x100);
-        sub_8022FEC(gUnknown_030012C0);
+        sub_8022FEC(gLevelState);
 
         typeByte = **(u8 **)((u8 *)self + 0x30);
 
         switch (typeByte) {
         case 5:
-            sub_8022EA8(gUnknown_030012C0, 1);
+            FreezeLevelClock(gLevelState, 1);
             break;
         case 6:
-            sub_8022EA8(gUnknown_030012C0, 2);
+            FreezeLevelClock(gLevelState, 2);
             break;
         case 7:
-            sub_8022EA8(gUnknown_030012C0, 3);
+            FreezeLevelClock(gLevelState, 3);
             break;
         }
 
@@ -87,7 +87,7 @@ void sub_802CA28(void *selfArg)
 
     if (self->animIndex != 0x12) {
         PlaySfx(gUnknown_030012BC, 4, 0x100);
-        sub_8022FEC(gUnknown_030012C0);
+        sub_8022FEC(gLevelState);
         {
             register s32 zero2 asm("r2") = 0;
 
@@ -115,7 +115,7 @@ void sub_802CA6C(void *selfArg)
 
     if (self->animIndex != 0x12 && sub_802A6EC(self)) {
         PlaySfx(gUnknown_030012BC, 3, 0x100);
-        sub_8022FEC(gUnknown_030012C0);
+        sub_8022FEC(gLevelState);
         sub_802C078(gUnknown_03000884, 4);
         self->animIndex = 0x12;
         {
@@ -140,7 +140,7 @@ void sub_802CAD0(void *selfArg)
 
     if (self->animIndex != 0x12 && sub_802A6EC(self)) {
         PlaySfx(gUnknown_030012BC, 3, 0x100);
-        sub_8022FEC(gUnknown_030012C0);
+        sub_8022FEC(gLevelState);
         sub_802C078(gUnknown_03000884, 1);
         self->animIndex = 0x12;
         {

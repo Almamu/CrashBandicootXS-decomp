@@ -29,7 +29,7 @@ struct level_layer_desc
 };
 
 /* One entity spawn record: `type` indexes the spawn-function table
- * (gUnknown_030012E4, dispatched by sub_8025D28), which gets the entity's
+ * (gEntitySpawner, dispatched by SpawnEntity), which gets the entity's
  * id, x, y and param; `param` indexes the room's parameter records
  * (`struct level_entity_list.paramOffsets`). */
 struct level_entity
@@ -90,7 +90,7 @@ struct level_desc
 
 /*
  * One room record of the level table (src/data/level_table_16c814.c):
- * the record sub_8023A1C hands to sub_80266BC (level_layers.c's
+ * the record sub_8023A1C hands to LoadRoom (level_layers.c's
  * `struct level_load_args`, the palette and descriptor), `MedalListItem`
  * in game_loop17.c/game_loop18.c, `gl_widget_kind` in game_loop56.c.
  */
@@ -116,7 +116,7 @@ struct level_room_list
 };
 
 /*
- * One level (gStaticData_0816C86C). The code's views: `level_info`
+ * One level (gLevelTable). The code's views: `level_info`
  * (actor_part_1b85c.c), `threshold_table_entry` (settings_menu6.c,
  * oam_count.c), `MedalTableEntry` (game_loop17.c, game_loop18.c),
  * `level_guard` (graphics_loading_21280.c), `gl_level_entry`
@@ -127,7 +127,7 @@ struct level_info
     s32 nameText;       // 0x00 - text id of the level's name (sub_8026F38)
     u32 theme;          // 0x04 - picks the level-start colour cycle
                         //        (sub_8023A1C) and indexes the music cues
-                        //        gStaticData_0816CD80 (sub_8024498)
+                        //        gThemeMusicCues (sub_8024498)
     u32 times[3];       // 0x08 - time-trial thresholds, centiseconds,
                         //        loosest first
     s32 unk_14;         // 0x14 - sub_8023118

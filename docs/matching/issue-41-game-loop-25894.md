@@ -3,7 +3,7 @@
 Source: `asm/code_3_2_17_255d4.s` at issue-generation time; by the time
 this was picked up the file had already been further split by earlier
 matched work in this neighborhood, so the real functions lived in
-`asm/code_3_2_17_255d4.s` (the tail beyond `sub_80255D4`).
+`asm/code_3_2_17_255d4.s` (the tail beyond `SpawnRoomEntities`).
 
 This chunk turned out to be two interleaved families:
 
@@ -23,23 +23,23 @@ This chunk turned out to be two interleaved families:
    out when written as three separate C statements in that same order.
 
 2. A **BG-scroll-layer / tile-streaming family**
-   (`sub_8025D74`/`sub_8025DE8`/`sub_8025E2C`/`sub_8025E70`/
-   `sub_8025E84`/`sub_8025E98`/`sub_8025F24`/`sub_8025F3C`) - a
+   (`InitBgLayer`/`GrowBgLayerRows`/`GrowBgLayerColumns`/`ClipBgLayerColumns`/
+   `ClipBgLayerRows`/`ScrollBgLayer`/`CommitBgLayerScroll`/`DrawBgLayerColumn`) - a
    per-BG scroll-layer object (distinct from, but structurally similar
    to, `game_loop6.c`'s viewport/parallax-scroll-layer family) that
    caches hardware `BGnCNT`/`BGnHOFS` register addresses at
-   construction (`sub_8025D74`), grows a streamed tile range one row/
+   construction (`InitBgLayer`), grows a streamed tile range one row/
    column at a time firing a per-layer trampoline on each step
-   (`sub_8025DE8`/`sub_8025E2C`, with `sub_8025E70`/`sub_8025E84` as
+   (`GrowBgLayerRows`/`GrowBgLayerColumns`, with `ClipBgLayerColumns`/`ClipBgLayerRows` as
    their plain-clamp-only counterparts), computes the four screen-edge
    tile coordinates and drives the whole streaming update each frame
-   (`sub_8025E98`), and separately streams decoded tile data into a
-   circular row buffer (`sub_8025F3C`) before the final hardware-
-   register write (`sub_8025F24`).
+   (`ScrollBgLayer`), and separately streams decoded tile data into a
+   circular row buffer (`DrawBgLayerColumn`) before the final hardware-
+   register write (`CommitBgLayerScroll`).
 
 3. A **part-object spawn family**
    (`sub_8025A64`/`sub_8025B0C`/`sub_8025BAC`/`sub_8025CA4`) and one
-   **table-indexed function-pointer dispatcher** (`sub_8025D28`) and a
+   **table-indexed function-pointer dispatcher** (`SpawnEntity`) and a
    **jump-table list counter** (`sub_8025894`) - these reuse the
    `struct actor` + `gUnknown_030012D0` triple-indirection convention
    already established in `actor_part8.c`/`trigger_effect.c`.
@@ -48,13 +48,13 @@ This chunk turned out to be two interleaved families:
 
 `sub_8025944`, `sub_8025968`, `sub_802599C` (game_loop12.c),
 `sub_8025A0C`, `sub_8025A3C`, `sub_8025A44`, `sub_8025A5C`
-(game_loop13.c), `sub_8025D28`, `sub_8025D4C`, `sub_8025D54`,
-`sub_8025D6C` (game_loop14.c), `sub_8025DE8`, `sub_8025E2C`,
-`sub_8025E70`, `sub_8025E84` (game_loop15.c), `sub_8025F24`
+(game_loop13.c), `SpawnEntity`, `sub_8025D4C`, `sub_8025D54`,
+`sub_8025D6C` (game_loop14.c), `GrowBgLayerRows`, `GrowBgLayerColumns`,
+`ClipBgLayerColumns`, `ClipBgLayerRows` (game_loop15.c), `CommitBgLayerScroll`
 (game_loop16.c). All confirmed via the full clean `make compare`
 cycle, not just isolated compiles.
 
-`sub_8025D28` is worth calling out: it's a table-indexed
+`SpawnEntity` is worth calling out: it's a table-indexed
 function-pointer dispatch (`fn(self, p1, p2, p3)`), and on real
 hardware an indirect call through a stored function pointer has to go
 through one of this ROM's fixed per-register interworking trampolines
@@ -64,7 +64,7 @@ the C source picks - it falls out purely of which register this
 compiler's allocator happens to land the function pointer in for that
 particular call, matching `sub_803AD80`'s existing use in
 `actor_part8.c`'s `sub_8009F1C` (there, naturally in `r2`, the 3rd
-AAPCS argument register). For `sub_8025D28`'s case the ROM picked
+AAPCS argument register). For `SpawnEntity`'s case the ROM picked
 `r5`/`sub_803AD8C`, which required:
 
 - `register void *fn asm("r5") = ...;` to force the fn-pointer local
@@ -111,30 +111,30 @@ BYTE-MATCHING` doc comment at the definition explaining what was tried:
   to hold at that point - an implicit stack-reuse coincidence not
   fully resolved here (passed as `0`/`0` in the C reconstruction,
   flagged with a `NOTE` at the call site).
-- **`sub_8025D74`** (game_loop15.c) - the BG-scroll-layer hardware-
+- **`InitBgLayer`** (game_loop15.c) - the BG-scroll-layer hardware-
   register/bitfield initializer. Every field/offset confirmed; two
   small gaps remain in the `& -0x20`/`& -0xd` bitfield masks and in
   hoisting `bgIndex+0x1c` into a register that stays live across the
-  `sub_8024DAC` call (see the function's own doc comment for detail).
-- **`sub_8025E98`/`sub_8025F3C`** (game_loop16.c) - the screen-edge
+  `InitBgLayerBase` call (see the function's own doc comment for detail).
+- **`ScrollBgLayer`/`DrawBgLayerColumn`** (game_loop16.c) - the screen-edge
   tile-coordinate computer/streaming driver, and the circular-buffer
   decoded-tile streaming loop. Both are large, register-heavy
-  functions (`sub_8025E98` keeps `r8` live across most of its body);
+  functions (`ScrollBgLayer` keeps `r8` live across most of its body);
   not iterated to an exact allocation within this chunk's scope.
 
 ## Build layout
 
-`asm/code_3_2_17_255d4.s` (which held `sub_80255D4` through
-`sub_8025FC8` and beyond) got split into six raw fragments around the
+`asm/code_3_2_17_255d4.s` (which held `SpawnRoomEntities` through
+`DrawBgLayerRow` and beyond) got split into six raw fragments around the
 five matched runs, per `docs/workflow.md`'s "everything before,
 everything after" rule:
 
-- `asm/code_3_2_17_255d4.s` (truncated) - `sub_80255D4`, `sub_8025894`
+- `asm/code_3_2_17_255d4.s` (truncated) - `SpawnRoomEntities`, `sub_8025894`
 - `asm/code_3_2_17_259d4.s` (new) - `sub_80259D4`
 - `asm/code_3_2_17_25a64.s` (new) - `sub_8025A64`-`sub_8025CA4`
-- `asm/code_3_2_17_25d74.s` (new) - `sub_8025D74`
-- `asm/code_3_2_17_25e98.s` (new) - `sub_8025E98`
-- `asm/code_3_2_17_25f3c.s` (new) - `sub_8025F3C` onward (everything
+- `asm/code_3_2_17_25d74.s` (new) - `InitBgLayer`
+- `asm/code_3_2_17_25e98.s` (new) - `ScrollBgLayer`
+- `asm/code_3_2_17_25f3c.s` (new) - `DrawBgLayerColumn` onward (everything
   after this issue's range, still raw, untouched)
 
 Each parked function's `NON_MATCHING` C reconstruction lives in the
@@ -158,7 +158,7 @@ padding at all.
 Full clean `make compare` passes: `crashbandicootxs.gba: La suma
 coincide`.
 
-## Update: narrowed (but not closed) gaps on `sub_80259D4`/`sub_8025D74`
+## Update: narrowed (but not closed) gaps on `sub_80259D4`/`InitBgLayer`
 
 A later pass over this issue's remaining parked functions made real
 progress on two of them without reaching a byte-exact match on either
@@ -180,7 +180,7 @@ progress on two of them without reaching a byte-exact match on either
   place (conflicts with `mask` needing that same register later), so
   parked with it unpinned - two swapped instructions, identical total
   size, everything else byte-for-byte.
-- **`sub_8025D74`**: hoisting `bgIndex + 0x1c` into its own `t` local
+- **`InitBgLayer`**: hoisting `bgIndex + 0x1c` into its own `t` local
   turned out not to need an extra callee-saved register after all,
   contrary to the original parked note - this compiler fits it into a
   scratch register (`r3`) alongside the ROM's still-3-register
@@ -236,7 +236,7 @@ C has no way to work around on this toolchain:
   than the ROM's genuine two-instruction `movs`/`rsbs` pair. Now
   `NAKED`.
 - **`sub_8025B0C`/`sub_8025BAC`/`sub_8025CA4`** (game_loop14.c, prepended
-  ahead of the already-matched `sub_8025D28` run - their real addresses
+  ahead of the already-matched `SpawnEntity` run - their real addresses
   turned out to be exactly contiguous with it once split out of
   `asm/code_3_2_17_25b0c.s`, so no new file was needed) - `sub_8025BAC`
   alone repeats the exact same `& -0x10 | (result & 0xf)` unfixable
@@ -246,19 +246,19 @@ C has no way to work around on this toolchain:
   `flag6`-in-`r7` shape (identical to `sub_8025A64`'s), that this pass
   transcribed all three directly rather than re-discovering the same
   wall three more times. Now `NAKED`.
-- **`sub_8025D74`** (game_loop15.c) - unchanged from the "Update:
+- **`InitBgLayer`** (game_loop15.c) - unchanged from the "Update:
   narrowed" finding above (the `& -0x20`/`& -0xd` mask-folding gap);
   now `NAKED` instead of left `NON_MATCHING`. **Since matched as real
   C** - see
   [naked-sub_8025d74-matched.md](./naked-sub_8025d74-matched.md); this
   entry is left as-is since it's a frozen historical record of why the
   function was originally parked.
-- **`sub_8025E98`/`sub_8025F3C`** (game_loop16.c) - both large,
-  register-heavy functions (`sub_8025E98` keeps `r8` live for the
+- **`ScrollBgLayer`/`DrawBgLayerColumn`** (game_loop16.c) - both large,
+  register-heavy functions (`ScrollBgLayer` keeps `r8` live for the
   screen-edge X-tile-max value computed early but not consumed until
-  the very end; `sub_8025F3C` keeps `r8` live across its whole streaming
+  the very end; `DrawBgLayerColumn` keeps `r8` live across its whole streaming
   loop alongside a stack-resident column cursor) - transcribed directly
-  given the established pattern above. `sub_8025F3C`'s doc comment was
+  given the established pattern above. `DrawBgLayerColumn`'s doc comment was
   also corrected while transcribing it: the tile-index wraparound at the
   end of each row is a genuine floor-divide/mod by `0x400`, using the
   same negative-adjust-then-shift idiom as the function's other two
@@ -291,14 +291,14 @@ address):
 - `asm/code_3_2_17_25a64.s` - deleted; `sub_8025A64` is now `NAKED` in
   the new `game_loop29.c`, `sub_8025B0C`/`sub_8025BAC`/`sub_8025CA4` are
   now `NAKED` in `game_loop14.c` (prepended ahead of the already-matched
-  `sub_8025D28` run, since the addresses turned out contiguous)
-- `asm/code_3_2_17_25d74.s` - deleted (`sub_8025D74` is now `NAKED` in
+  `SpawnEntity` run, since the addresses turned out contiguous)
+- `asm/code_3_2_17_25d74.s` - deleted (`InitBgLayer` is now `NAKED` in
   `game_loop15.c`, its file's only function)
-- `asm/code_3_2_17_25e98.s` - deleted (`sub_8025E98` is now `NAKED` in
+- `asm/code_3_2_17_25e98.s` - deleted (`ScrollBgLayer` is now `NAKED` in
   `game_loop16.c`, its file's only function)
 - `asm/code_3_2_17_25f3c.s` - renamed to `asm/code_3_2_17_25fc8.s`
-  (`sub_8025F3C` is now `NAKED` in `game_loop16.c`; the file's
-  remainder, `sub_8025FC8` onward, is still genuinely raw and out of
+  (`DrawBgLayerColumn` is now `NAKED` in `game_loop16.c`; the file's
+  remainder, `DrawBgLayerRow` onward, is still genuinely raw and out of
   this issue's scope)
 
 Full clean `make compare` passes again after this restructuring:
@@ -389,8 +389,8 @@ crashbandicootxs.map && make compare` confirms
 stayed genuinely `NON_MATCHING` (never even converted to `NAKED`) - it
 is now matched. GitHub issue #41 itself stays open: six of the
 NAKED-transcribed functions from the earlier pass (`sub_8025A64`,
-`sub_8025B0C`/`sub_8025BAC`/`sub_8025CA4`, `sub_8025E98`/`sub_8025F3C`)
-still owe a real C match; `sub_80259D4` and `sub_8025D74` have already
+`sub_8025B0C`/`sub_8025BAC`/`sub_8025CA4`, `ScrollBgLayer`/`DrawBgLayerColumn`)
+still owe a real C match; `sub_80259D4` and `InitBgLayer` have already
 been closed (see their own linked write-ups above).
 
 ## Later pass (strag1)

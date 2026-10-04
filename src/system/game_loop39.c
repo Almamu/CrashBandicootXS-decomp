@@ -2,12 +2,12 @@
 #include "actor.h"
 #include "level_data.h"
 
-extern void sub_8022208(void);
+extern void CreateEntitySpawner(void);
 extern void sub_8024198(void);
 extern void *sub_8026EDC(s32 size);
 extern struct dual_array_manager *sub_8008EE4(struct dual_array_manager *manager, s32 count);
 extern struct pool_manager *sub_8008F20(struct pool_manager *manager, s32 count);
-extern void *sub_80268AC(void);
+extern void *GetLevelLayers(void);
 extern void *sub_800B3F0();
 extern void sub_8007398(struct actor *self, s32 arg1, s32 arg2);
 extern void sub_8026ED0(void *self);
@@ -20,10 +20,10 @@ extern void sub_80087C0(void *part);
 extern void sub_80087B4(void *part);
 extern void sub_800872C(void *part, u8 val);
 extern s32 sub_8023A1C(void *self);
-extern void sub_802680C(void *self, s32 flag);
+extern void DestroyLevelLayers(void *self, s32 flag);
 extern void sub_8008EB4(struct dual_array_manager *manager, s32 flags);
 extern void sub_8009B9C(struct pool_manager *manager, s32 flags);
-extern void sub_80221F0(void);
+extern void DestroyEntitySpawner(void);
 
 extern struct dual_array_manager *gUnknown_030012E8;
 extern struct dual_array_manager *gUnknown_030012EC;
@@ -32,7 +32,7 @@ extern struct dual_array_manager *gUnknown_030012F0;
 extern struct dual_array_manager *gUnknown_030012F8;
 extern struct dual_array_manager *gUnknown_030012F4;
 extern void *gUnknown_030012D4;
-extern void *gUnknown_03001308;
+extern void *gLevelLayers;
 extern void *gUnknown_030012D8;
 extern void *gUnknown_03001310;
 extern void ***gUnknown_030012D0;
@@ -76,7 +76,7 @@ struct widget {
  * `actor_part11.c`/`actor_part12.c`: `gUnknown_030012E8/EC/F0/F8/F4` are
  * `dual_array_manager`s, `gUnknown_0300130C` a `pool_manager`), the
  * player actor itself (`gUnknown_030012D8`, `sub_800B3F0`), and the
- * text-box singleton (`gUnknown_03001308`, `sub_80268AC`). Dispatches on
+ * text-box singleton (`gLevelLayers`, `GetLevelLayers`). Dispatches on
  * the level-state record's (`self->0x18`) own `+8` "widget kind" field
  * to construct one of three HUD counter/ring-buffer widgets
  * (`gStaticData_0816B92C`/`0816B934`/`0816B93C`, still-uncharacterized
@@ -96,7 +96,7 @@ s32 sub_802375C(void *selfArg)
     s32 mode;
     s32 result;
 
-    sub_8022208();
+    CreateEntitySpawner();
     sub_8024198();
 
     {
@@ -128,7 +128,7 @@ s32 sub_802375C(void *selfArg)
         *slot = sub_8026EDC(0x18);
     }
 
-    gUnknown_03001308 = sub_80268AC();
+    gLevelLayers = GetLevelLayers();
 
     d8 = &gUnknown_030012D8;
     *d8 = sub_800B3F0(sub_8026EDC(0x350), 0xffff, 0, 0, 0);
@@ -267,8 +267,8 @@ s32 sub_802375C(void *selfArg)
 
     result = sub_8023A1C(self);
 
-    if (gUnknown_03001308 != NULL) {
-        sub_802680C(gUnknown_03001308, 3);
+    if (gLevelLayers != NULL) {
+        DestroyLevelLayers(gLevelLayers, 3);
     }
     sub_8026ED0(gUnknown_030012D4);
 
@@ -298,7 +298,7 @@ s32 sub_802375C(void *selfArg)
         sub_8008EB4(gUnknown_030012E8, 3);
     }
 
-    sub_80221F0();
+    DestroyEntitySpawner();
 
     return result;
 }

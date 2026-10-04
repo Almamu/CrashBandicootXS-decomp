@@ -44,7 +44,7 @@ only in a handful of embedded constants:
    across a store" behavior documented elsewhere in this file.
 5. Marks itself active (`part->0xa = 1`), clears its own top flag bit
    (`part->0xc &= 0x7f`).
-6. Looks up two "collected" bits via a `gUnknown_030012B4`-rooted
+6. Looks up two "collected" bits via a `gEntityFlags`-rooted
    `{u16 offsets[], u8 bytes[]}` pair, indexed by `arg3`, and packs them
    into `part->0x28`'s bits 4/5.
 7. Registers itself into `gUnknown_030012F0`'s manager
@@ -105,7 +105,7 @@ function's address before it was accepted as matched - see
   second bit both ANDs are directly adjacent, which this compiler's own
   peephole folds into a single instruction when phrased as plain C
   (`x &= 1; x &= 1;` collapses to one `and`). Two `asm volatile` blocks
-  (split so the `gUnknown_030012B4` address load - itself letting the
+  (split so the `gEntityFlags` address load - itself letting the
   compiler manage its own literal-pool placement, keeping it in the
   function's single combined pool alongside the other 3 symbols instead
   of an inline `ldr r0, =symbol` splitting off its own mid-function
@@ -347,7 +347,7 @@ fixes were needed over the first plain-C draft:
 ### `sub_802190C` - parked as NAKED
 
 A gated `sub_801A878`/`sub_80234F4` dispatcher: picks id `7` if
-`sub_80232A0(gUnknown_030012C0)` is true or `gUnknown_030012C0+0x8c` is
+`sub_80232A0(gLevelState)` is true or `gLevelState+0x8c` is
 nonzero, else id `5` - the same OR-gated shape the twin family in
 `trigger_effect.c` uses for its own sound-id choice, just feeding
 `sub_80234F4` (`self->0x1b8` setter, `src/system/game_loop10.c`)
@@ -382,7 +382,7 @@ pass's writeup carried forward:
 
 - **`sub_8021280`** is a *different* function entirely - not part of
   the popup family. It dispatches on `sub_8023290`/`sub_80232B8`/
-  `sub_8023324`/`sub_802332C` (a `gStaticData_0816C86C`-indexed guard
+  `sub_8023324`/`GetCurrentLevel` (a `gLevelTable`-indexed guard
   check) into one of three arms: two calls to `sub_80071E4` +
   `sub_80070EC` (a differently-sized spawn, tag `0x12`, registering into
   `gUnknown_030012E8`), or a `sub_801A878` position-probe feeding
@@ -392,14 +392,14 @@ pass's writeup carried forward:
 - **`sub_8021388`**, **`sub_8021480`**, **`sub_802155C`** genuinely
   *are* 3 more popup-family instances (same `sub_8009ED0` constructor,
   `+0x20` table offset, `sub_800815C`/`UPDATE_PART_FRAME_NIBBLE` nibble
-  update, `gUnknown_030012B4` two-bit collected pack, `sub_803AD80`
+  update, `gEntityFlags` two-bit collected pack, `sub_803AD80`
   trampoline via an allocated header, tag/manager-register tail -
   `sub_8021480`/`sub_802155C` skip the flags-mask step `sub_8021388`
   has and use a plain `flags |= 0x10` instead, and `sub_802155C` adds
   the OAM trio like `sub_8021668`). All three additionally call a
   header-construction helper (`sub_801A838(block, arg1, arg2)` for
   `sub_8021388`, `sub_80189EC()` for `sub_8021480`, `sub_80197DC()` for
-  `sub_802155C`) and a closing `sub_8023318(gUnknown_030012C0, hdr)`
+  `sub_802155C`) and a closing `sub_8023318(gLevelState, hdr)`
   neither `sub_801FDEC` nor `sub_8021668` have. `sub_8021388` got the
   furthest this pass: every instruction's *operation* matches the ROM
   (confirmed via isolated compile, using the same collected-bits-pack
@@ -521,8 +521,8 @@ from the ROM disassembly instead:
 
 - **`sub_8021280`** - a three-way dispatcher (not part of the "two-line
   text popup" family): if `sub_8023290`/`sub_80232B8`/`sub_8023324`
-  (`gUnknown_030012C0`) all say "no" and the current level's
-  `gStaticData_0816C86C`-indexed threshold-table entry's guard field
+  (`gLevelState`) all say "no" and the current level's
+  `gLevelTable`-indexed threshold-table entry's guard field
   (offset `+4`, meaning not otherwise understood) is zero, spawns a
   `sub_80071E4`-built part sized `0x64`x`0x64` tagged `0x12`, registering
   into `gUnknown_030012E8`. Otherwise, if the byte at
@@ -567,7 +567,7 @@ that wrote that note - this pass is that follow-up. Semantics for all
 one allocates via `sub_8009ED0` (or, for `sub_801F680`, the bigger
 `sub_800A604` constructor), hooks its own fixed offset into the
 `gUnknown_030012D0`-rooted table at `+0x20`, updates its `+0x29` frame
-nibble via `sub_800815C`, packs the `gUnknown_030012B4` "collected" bits
+nibble via `sub_800815C`, packs the `gEntityFlags` "collected" bits
 into `+0x28`, registers into `gUnknown_030012F0`, and closes with one of
 several tail shapes this cluster's earlier passes already catalogued
 (a single header write, a "second `header->0x84` rewrite plus a
@@ -699,7 +699,7 @@ range called it "most of the rest of the chunk 31 range"). All 13 are
 one more set of "two-line text popup" family instances, same numbered
 skeleton as documented at the top of this file: a `sub_8009ED0`-built
 part object, a `gUnknown_030012D0`-rooted `+0x20` table offset, a
-`sub_800815C` frame-nibble update, a `gUnknown_030012B4` two-bit
+`sub_800815C` frame-nibble update, a `gEntityFlags` two-bit
 "collected" pack into `+0x28`, a `gUnknown_030012F0` manager
 registration, and a header (`sub_800CA74`) with one or two `sub_803AD80`
 trampoline calls - varying only the embedded offsets/constants and tail

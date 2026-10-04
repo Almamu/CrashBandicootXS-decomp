@@ -42,11 +42,11 @@ r1/r2/r3/r4" thunks), like issue #21's `input_ctrl`.
 - **`struct gobj`** (0x80 bytes, method table `gStaticData_087E49DC`):
   `sub_801A878(id, x, y, index, kind)` allocates and constructs one (it
   inlines the constructor `sub_801B2E4`), looks its spawn record up through
-  the level header at `*gUnknown_030012B4` (u16 offset table at +8, records
+  the level header at `*gEntityFlags` (u16 offset table at +8, records
   at +0xC), derives `type` (+0x78) from the record or forces it from `kind`
   (3/9-12 -> 4, 4 -> 2, 5 -> 3, 6 -> 6, 8 -> 7), and for types 1/5/6/7
   attaches a `struct mover` (type 6 uses `sub_801961C` instead when
-  `sub_80233B4(gUnknown_030012C0) == 1`). Callers: `trigger_effect.c`,
+  `sub_80233B4(gLevelState) == 1`). Callers: `trigger_effect.c`,
   `graphics_loading_21280.c`, `graphics_loading_21668.c`.
   - `sub_801AB34` (+0x0C) gates `sub_801AB98` on the player
     (`gUnknown_030012D8`) being active and within 0x7FFF on both axes.
@@ -58,7 +58,7 @@ r1/r2/r3/r4" thunks), like issue #21's `input_ctrl`.
     sets `carried` (+0xAC) / `+0x68 = 8` when landing, and fires the
     player's method +0x68 (`sub_803AD88`) with event 0x0C/0x0F/0x10/0x11
     depending on the object type (the 3/4 variants gated on
-    `sub_80232A0`/`sub_8023278` and `gUnknown_030012C0+0x8C`). Without
+    `sub_80232A0`/`sub_8023278` and `gLevelState+0x8C`). Without
     overlap it only refreshes `carried` or clears the mover's `active`.
   - `sub_801B208` (+0x1C) steps or destroys the object and forwards to its
     mover; `sub_801B29C`/`sub_801B2A8` read/write bit 4 of +0x0D

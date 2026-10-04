@@ -4,8 +4,8 @@
  * (which matched this function's only caller, `sub_802375C`, in
  * `game_loop39.c`, but left this one "not yet confidently understood
  * branch-by-branch"). `self` (r7) is the level object `sub_802375C`
- * itself received; `gUnknown_030012C0` is the separate "level" object
- * most of its own callees take. `gStaticData_0816C86C` is the confirmed
+ * itself received; `gLevelState` is the separate "level" object
+ * most of its own callees take. `gLevelTable` is the confirmed
  * 36-slot, 0x24-byte-stride per-level master table (see
  * `settings_menu19.c`/`oam_count.c`/`game_loop17.c`'s own struct views
  * of it) - here indexed by `self+0`, reading its `+0x1c` "already
@@ -20,7 +20,7 @@
  * - **state 1 or 6** (cases 0 and 5 share one code block): resets the
  *   `gUnknown_030012C8` "fx queue" (`sub_8027088`, the `hud_fx_queue`
  *   struct `hud_icon_slot.c` documents) then fires it **twice** via
- *   `sub_8027018(queue, (u16 *)0x05000000, gStaticData_0816C81E, 0x10,
+ *   `sub_8027018(queue, (u16 *)0x05000000, gThemePaletteCycle1A, 0x10,
  *   9, 0)` and `sub_8027018(queue, (u16 *)0x05000000, gStaticData_
  *   0816C830, 0x14, 9, 0)` - `(u16 *)0x05000000` is GBA palette RAM
  *   itself passed as the queue's `targets` argument, so this is a
@@ -31,12 +31,12 @@
  *   in the ROM itself - not a coincidence this transcription
  *   reproduces, see the NAKED note below.
  * - **state 2**: single call, `sub_8027018(queue, (u16 *)0x05000000,
- *   gStaticData_0816C814, 6, 5, 1)` (`direction=1`, the only case that
+ *   gThemePaletteCycle2, 6, 5, 1)` (`direction=1`, the only case that
  *   sets it).
  * - **state 3**: single call, `sub_8027018(queue, (u16 *)0x05000000,
- *   gStaticData_0816C842, 0xa, 0x10, 0)`.
+ *   gThemePaletteCycle3, 0xa, 0x10, 0)`.
  * - **state 5**: single call, `sub_8027018(queue, (u16 *)0x05000000,
- *   gStaticData_0816C862, 0x14, 5, 0)` - shares its `angle=0x14; bl
+ *   gThemePaletteCycle5, 0x14, 5, 0)` - shares its `angle=0x14; bl
  *   sub_8027018` tail instruction-for-instruction with state 1/6's
  *   second call, per the note above.
  * - **default** (state 0, state 4, or anything `>6`): skips the reset
@@ -44,8 +44,8 @@
  *   `active` byte directly.
  *
  * All five non-default cases fall into one shared tail. **This closes
- * the "`gStaticData_0816C81E`/`0816C830`/`0816C842`/`0816C862`" open
- * question from the issue doc**: these (plus `gStaticData_0816C814`,
+ * the "`gThemePaletteCycle1A`/`0816C830`/`0816C842`/`0816C862`" open
+ * question from the issue doc**: these (plus `gThemePaletteCycle2`,
  * a fifth table the same neighborhood the jump-table trace hadn't
  * previously reached) are not per-level records with their own shape -
  * they're plain, tightly-packed `u16[]` "permutation index list"
@@ -69,7 +69,7 @@
  * `docs/matching.md`) and fires `sub_8006D08` against the tile-asset
  * cache using a `player+0x20`-table lookup indexed by `player+0x2d*7`
  * (0x1c-byte stride), flushes the scratch block (`sub_8026DFC`) and
- * text-box singleton (`sub_8026984`).
+ * text-box singleton (`ResetLevelLayers`).
  *
  * If the widget kind is `0`: probes `sub_80232B8`/`sub_8024404` or
  * `sub_8023290`/`sub_80243E0` (level-object and self-based readiness
@@ -95,13 +95,13 @@
  * 030007E0` input-flag-gated `sub_8028504` ping, `sub_800891C` on
  * three ring-buffer managers, `sub_803AD7C` trampoline probes against
  * the player's own `+0x18`/`+0x38`-`/+0x18` tables, `sub_80091D4` on
- * `gUnknown_0300130C`, `sub_8028400`, and a `gUnknown_030012C0+0x8c`-
- * gated `sub_8022F2C` call) before looping back. Once ready, fires the
+ * `gUnknown_0300130C`, `sub_8028400`, and a `gLevelState+0x8c`-
+ * gated `TickLevelClock` call) before looping back. Once ready, fires the
  * fade (`sub_80014A4`) - the concrete trigger `rom_map.md` originally
  * traced this function down to find.
  *
  * **Post-fade** (`_08023E82` onward, converging at `_08023F92`): sets
- * the return value to `0`, then tries two `sub_802356C` "spawn"
+ * the return value to `0`, then tries two `SetCheckpoint` "spawn"
  * dispatches gated by `sub_8024404`/`sub_80232B8`/`sub_8023104` or
  * `sub_80243E0`/`sub_8023290` (both skip straight to the flush tail on
  * failure); falling through both, loops `gUnknown_0300130C` counting
@@ -254,8 +254,8 @@ union gl_input
 
 extern struct gl_player *gUnknown_030012D8;
 extern struct gl_scratch *gUnknown_030012D4;
-extern void *gUnknown_03001308;
-extern struct gl_level *gUnknown_030012C0;
+extern void *gLevelLayers;
+extern struct gl_level *gLevelState;
 extern u8 *gUnknown_030012C8;
 extern void *gUnknown_030012B8;
 extern void *gUnknown_030012BC;
@@ -269,15 +269,15 @@ extern void *gUnknown_03001304;
 extern struct gl_entity_list *gUnknown_0300130C;
 extern s32 gUnknown_0300082C;
 extern union gl_input gUnknown_030007E0;
-extern struct gl_level_entry gStaticData_0816C86C[];
-extern u16 gStaticData_0816C814[];
-extern u16 gStaticData_0816C81E[];
-extern u16 gStaticData_0816C830[];
-extern u16 gStaticData_0816C842[];
-extern u16 gStaticData_0816C862[];
+extern struct gl_level_entry gLevelTable[];
+extern u16 gThemePaletteCycle2[];
+extern u16 gThemePaletteCycle1A[];
+extern u16 gThemePaletteCycle1B[];
+extern u16 gThemePaletteCycle3[];
+extern u16 gThemePaletteCycle5[];
 
 extern void sub_800A810(void *player);
-extern void sub_80266BC(void *box, void *widget);
+extern void LoadRoom(void *box, void *widget);
 extern void sub_8023484(void *level);
 extern u8 sub_80232C8(void *level);
 extern void sub_800F1B8(void);
@@ -309,7 +309,7 @@ extern void sub_800872C(void *part, s32 arg);
 extern s32 sub_800815C(void *part);
 extern void sub_8006D08(void *cache, s32 slot, s32 recordId);
 extern void sub_8026DFC(void *scratch);
-extern void sub_8026984(void *box);
+extern void ResetLevelLayers(void *box);
 extern u8 sub_80232B8(void *level);
 extern u8 sub_8023290(void *level);
 extern u8 sub_8024404(struct gl_self *self);
@@ -331,12 +331,12 @@ extern void sub_80241BC(struct gl_self *self);
 extern void sub_800891C(void *mgr);
 extern void sub_80091D4(void *list);
 extern void sub_8028400(void *arg);
-extern void sub_8022F2C(struct gl_level *level);
+extern void TickLevelClock(struct gl_level *level);
 extern u8 sub_80241B0(void);
 extern void sub_80014A4(void);
 extern s32 *sub_8023104(void *level);
 extern s32 sub_801B29C(s32 *arg);
-extern void sub_802356C(void *level, s32 arg, s32 *point);
+extern void SetCheckpoint(void *level, s32 arg, s32 *point);
 extern void sub_8023140(void *level, s32 count);
 extern void sub_8008CEC(void *mgr);
 extern void sub_8009914(void *list);
@@ -369,8 +369,8 @@ static inline void SpawnNearPlayer(s32 x, s32 y)
 
     point.x = x;
     point.y = y;
-    level = gUnknown_030012C0;
-    sub_802356C(level, sub_801B29C(sub_8023104(level)), &point.x);
+    level = gLevelState;
+    SetCheckpoint(level, sub_801B29C(sub_8023104(level)), &point.x);
 }
 
 static inline void RestartPlayerAnim(struct gl_player *p, s32 anim)
@@ -397,33 +397,33 @@ s32 sub_8023A1C(struct gl_self *self)
     sub_800A810(gUnknown_030012D8);
     gUnknown_030012D4->player = gUnknown_030012D8;
     gUnknown_030012D4->unk_14 = ret;
-    sub_80266BC(gUnknown_03001308, self->widget);
-    if (!gStaticData_0816C86C[self->level].initialized)
-        sub_8023484(gUnknown_030012C0);
-    if (sub_80232C8(gUnknown_030012C0))
+    LoadRoom(gLevelLayers, self->widget);
+    if (!gLevelTable[self->level].initialized)
+        sub_8023484(gLevelState);
+    if (sub_80232C8(gLevelState))
         sub_800F1B8();
-    sub_8023118(gUnknown_030012C0, gStaticData_0816C86C[self->level].unk_14);
-    sub_8023110(gUnknown_030012C0, gStaticData_0816C86C[self->level].unk_18);
+    sub_8023118(gLevelState, gLevelTable[self->level].unk_14);
+    sub_8023110(gLevelState, gLevelTable[self->level].unk_18);
 
-    switch (gStaticData_0816C86C[self->level].state)
+    switch (gLevelTable[self->level].state)
     {
     case 2:
         sub_8027088(gUnknown_030012C8);
-        FX_CYCLE(gStaticData_0816C814, 6, 5, 1);
+        FX_CYCLE(gThemePaletteCycle2, 6, 5, 1);
         break;
     case 1:
     case 6:
         sub_8027088(gUnknown_030012C8);
-        FX_CYCLE(gStaticData_0816C81E, 0x10, 9, 0);
-        FX_CYCLE(gStaticData_0816C830, 0x14, 9, 0);
+        FX_CYCLE(gThemePaletteCycle1A, 0x10, 9, 0);
+        FX_CYCLE(gThemePaletteCycle1B, 0x14, 9, 0);
         break;
     case 3:
         sub_8027088(gUnknown_030012C8);
-        FX_CYCLE(gStaticData_0816C842, 0xA, 0x10, 0);
+        FX_CYCLE(gThemePaletteCycle3, 0xA, 0x10, 0);
         break;
     case 5:
         sub_8027088(gUnknown_030012C8);
-        FX_CYCLE(gStaticData_0816C862, 0x14, 5, 0);
+        FX_CYCLE(gThemePaletteCycle5, 0x14, 5, 0);
         break;
     default:
         *gUnknown_030012C8 = 0;
@@ -440,12 +440,12 @@ s32 sub_8023A1C(struct gl_self *self)
     gUnknown_030012D8->frameNibble = sub_800815C(gUnknown_030012D8);
     RefreshPlayerTiles();
     sub_8026DFC(gUnknown_030012D4);
-    sub_8026984(gUnknown_03001308);
+    ResetLevelLayers(gLevelLayers);
 
     if (self->widget->kind == 0)
     {
-        if ((sub_80232B8(gUnknown_030012C0) && sub_8024404(self))
-            || (sub_8023290(gUnknown_030012C0) && sub_80243E0(self)))
+        if ((sub_80232B8(gLevelState) && sub_8024404(self))
+            || (sub_8023290(gLevelState) && sub_80243E0(self)))
         {
             struct gl_attach *a;
 
@@ -507,8 +507,8 @@ s32 sub_8023A1C(struct gl_self *self)
         sub_800891C(gUnknown_030012F0);
         sub_800891C(gUnknown_030012F8);
         sub_8028400(gUnknown_03001318);
-        if (gUnknown_030012C0->busy)
-            sub_8022F2C(gUnknown_030012C0);
+        if (gLevelState->busy)
+            TickLevelClock(gLevelState);
         gUnknown_0300082C++;
     }
 fade:
@@ -516,19 +516,19 @@ fade:
     if (sub_80241B0())
     {
         ret = 0;
-        if (!sub_8024404(self) && sub_80232B8(gUnknown_030012C0))
+        if (!sub_8024404(self) && sub_80232B8(gLevelState))
         {
             struct gl_point point;
             s32 x;
 
-            x = *sub_8023104(gUnknown_030012C0) + -0x1E00;
+            x = *sub_8023104(gLevelState) + -0x1E00;
             i = gUnknown_030012D8->pos.y + 0x1200;
             point.x = x;
             point.y = i;
-            x = (s32)gUnknown_030012C0;
-            sub_802356C((void *)x, sub_801B29C(sub_8023104((void *)x)), &point.x);
+            x = (s32)gLevelState;
+            SetCheckpoint((void *)x, sub_801B29C(sub_8023104((void *)x)), &point.x);
         }
-        else if (!sub_80243E0(self) && sub_8023290(gUnknown_030012C0))
+        else if (!sub_80243E0(self) && sub_8023290(gLevelState))
         {
             struct gl_point point;
             struct gl_player *pl;
@@ -545,7 +545,7 @@ fade:
             asm("" : : "r"(hold));
             asm("" : : "r"(hold1));
             point = pl->pos;
-            sub_802356C(gUnknown_030012C0, 0, &point.x);
+            SetCheckpoint(gLevelState, 0, &point.x);
         }
         else
         {
@@ -565,7 +565,7 @@ fade:
                     i++;
                 } while (i < (*list)->count);
             }
-            sub_8023140(gUnknown_030012C0, count);
+            sub_8023140(gLevelState, count);
         }
     }
     sub_8008CEC(gUnknown_030012E8);

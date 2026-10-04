@@ -36,7 +36,7 @@ struct hud_pos
 };
 
 extern void ***gUnknown_030012D0;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern u8 *gUnknown_030012B8;
 extern u32 gStaticData_08174BE0[];
 extern struct hud_pos gStaticData_08174C6C[];
@@ -120,7 +120,7 @@ struct hud_counter *sub_8027138(struct hud_counter *self)
         }
         if (i == 0x16)
         {
-            s32 life = sub_80233B4(gUnknown_030012C0);
+            s32 life = sub_80233B4(gLevelState);
 
             slot = &SLOTS(self)[i];
             SLOTS(self)[0x16].anim_index = life + 6;
@@ -212,7 +212,7 @@ void sub_802732C(struct hud_counter *self, u8 iconFlag)
 
         if (i == 0x16)
         {
-            s32 life = sub_80233B4(gUnknown_030012C0);
+            s32 life = sub_80233B4(gLevelState);
             struct hud_slot *slot = &SLOTS(self)[i];
 
             SLOTS(self)[0x16].anim_index = life + 6;
@@ -223,7 +223,7 @@ void sub_802732C(struct hud_counter *self, u8 iconFlag)
         {
         case 0x16:
         case 0x17:
-            if (sub_80233B4(gUnknown_030012C0) == -1)
+            if (sub_80233B4(gLevelState) == -1)
                 break;
             goto get;
         case 0x1D:
@@ -237,7 +237,7 @@ void sub_802732C(struct hud_counter *self, u8 iconFlag)
             break;
         }
 
-        if (sub_80233B4(gUnknown_030012C0) == -1 && self->icon_flag)
+        if (sub_80233B4(gLevelState) == -1 && self->icon_flag)
         {
             switch (i)
             {

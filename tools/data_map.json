@@ -2817,9 +2817,9 @@
   {
    "address": "0x0816C6A4",
    "size": 368,
-   "name": "gStaticData_0816C6A4",
+   "name": "gEntitySpawnFuncs",
    "consumers": [
-    "sub_8022208"
+    "CreateEntitySpawner"
    ],
    "consumer_files": [
     "graphics/graphics_loading_21d80.c"
@@ -2841,7 +2841,7 @@
   {
    "address": "0x0816C814",
    "size": 10,
-   "name": "gStaticData_0816C814",
+   "name": "gThemePaletteCycle2",
    "consumers": [
     "sub_8023A1C"
    ],
@@ -2865,7 +2865,7 @@
   {
    "address": "0x0816C81E",
    "size": 18,
-   "name": "gStaticData_0816C81E",
+   "name": "gThemePaletteCycle1A",
    "consumers": [
     "sub_8023A1C"
    ],
@@ -2889,7 +2889,7 @@
   {
    "address": "0x0816C830",
    "size": 18,
-   "name": "gStaticData_0816C830",
+   "name": "gThemePaletteCycle1B",
    "consumers": [
     "sub_8023A1C"
    ],
@@ -2913,7 +2913,7 @@
   {
    "address": "0x0816C842",
    "size": 32,
-   "name": "gStaticData_0816C842",
+   "name": "gThemePaletteCycle3",
    "consumers": [
     "sub_8023A1C"
    ],
@@ -2937,7 +2937,7 @@
   {
    "address": "0x0816C862",
    "size": 10,
-   "name": "gStaticData_0816C862",
+   "name": "gThemePaletteCycle5",
    "consumers": [
     "sub_8023A1C"
    ],
@@ -2961,7 +2961,7 @@
   {
    "address": "0x0816C86C",
    "size": 1300,
-   "name": "gStaticData_0816C86C",
+   "name": "gLevelTable",
    "consumers": [
     "sub_800599C",
     "sub_8005D44",
@@ -3017,7 +3017,7 @@
   {
    "address": "0x0816CD80",
    "size": 1140,
-   "name": "gStaticData_0816CD80",
+   "name": "gThemeMusicCues",
    "consumers": [
     "sub_8024498"
    ],
@@ -3030,7 +3030,7 @@
    "c_decls": [
     "u8 X[]"
    ],
-   "format": "u8[11] theme music cues (+1 B pad), 17 extra-room records (struct level_room, 0x14), the per-level room pointer arrays (31 pointers), 31 room records (24 rooms + 7 actor-category stages); the last 0x2C bytes are the English cutscene text table (label gStaticData_0816D1C8)",
+   "format": "u8[11] theme music cues (+1 B pad), 17 extra-room records (struct level_room, 0x14), the per-level room pointer arrays (31 pointers), 31 room records (24 rooms + 7 actor-category stages); the last 0x2C bytes are the English cutscene text table (label gCutsceneTextEnglish)",
    "effort": "medium",
    "confidence": "high",
    "notes": "Room records point at the palettes and level_desc objects of src/data/level_rooms_*.c by symbol.",
@@ -3039,9 +3039,9 @@
   {
    "address": "0x0816D1F4",
    "size": 21428,
-   "name": "gStaticData_0816D1F4",
+   "name": "gCutscenes",
    "consumers": [
-    "sub_8022468"
+    "PlayCutscene"
    ],
    "consumer_files": [
     "graphics/graphics_loading_22354.c"
@@ -3058,13 +3058,13 @@
    "format": "cutscenes: struct cutscene_slides[11] (slide lists), then per language (English, French, German, Spanish, Italian, Dutch) struct cutscene_page arrays and 11-entry tables, the slide pointer arrays, 24 struct cutscene_slide records (0x1C) and the Latin-1 text strings with their pointer arrays",
    "effort": "medium",
    "confidence": "high",
-   "notes": "The language tables (English at 0x0816D1C8, then 0x0816D36C, 0x0816D398, 0x0816D3C4, 0x0816D3F0, 0x0816D41C) are referenced from the IWRAM image (gUnknown_03000834).",
+   "notes": "The language tables (English at 0x0816D1C8, then 0x0816D36C, 0x0816D398, 0x0816D3C4, 0x0816D3F0, 0x0816D41C) are referenced from the IWRAM image (gCutsceneTexts).",
    "status": "converted: src/data/cutscenes_16d1c8.c"
   },
   {
    "address": "0x081725A8",
    "size": 4,
-   "name": "gStaticData_081725A8",
+   "name": "gTerrainTypes",
    "consumers": [
     "sub_8025228"
    ],
@@ -3088,10 +3088,10 @@
   {
    "address": "0x081725AC",
    "size": 8,
-   "name": "gStaticData_081725AC",
+   "name": "gTerrainHeights0",
    "consumers": [
-    "sub_80250BC",
-    "sub_8025130"
+    "GetTerrainHeights",
+    "GetSolidTerrainHeights"
    ],
    "consumer_files": [
     "system/game_loop3.c"
@@ -3110,9 +3110,9 @@
   {
    "address": "0x081725B4",
    "size": 8,
-   "name": "gStaticData_081725B4",
+   "name": "gTerrainHeights1",
    "consumers": [
-    "sub_8025130"
+    "GetSolidTerrainHeights"
    ],
    "consumer_files": [
     "system/game_loop3.c"
@@ -3131,9 +3131,9 @@
   {
    "address": "0x081725BC",
    "size": 8,
-   "name": "gStaticData_081725BC",
+   "name": "gTerrainHeights2",
    "consumers": [
-    "sub_8025130"
+    "GetSolidTerrainHeights"
    ],
    "consumer_files": [
     "system/game_loop3.c"
@@ -3152,9 +3152,9 @@
   {
    "address": "0x081725C4",
    "size": 9756,
-   "name": "gStaticData_081725C4",
+   "name": "gTerrainHeights3",
    "consumers": [
-    "sub_8025130"
+    "GetSolidTerrainHeights"
    ],
    "consumer_files": [
     "system/game_loop3.c"
@@ -4992,15 +4992,15 @@
    "format": "composite: level BG tile sets (raw tag-0x00 assets), per-room level data, sprite-bank tile pool",
    "effort": "medium",
    "confidence": "high",
-   "notes": "Tag-0x00 raw assets confirmed: the three pairs of consecutive assets chain exactly (each ends where the next begins). Room data is reached through 41 room records {palette, level_desc*, kind} in gStaticData_0816CD80.",
+   "notes": "Tag-0x00 raw assets confirmed: the three pairs of consecutive assets chain exactly (each ends where the next begins). Room data is reached through 41 room records {palette, level_desc*, kind} after gThemeMusicCues (0x0816CD80).",
    "consumers_indirect": [
     "sub_8037388",
-    "sub_80266BC",
-    "sub_80260D4",
-    "sub_80254F8",
-    "sub_8024CF0",
+    "LoadRoom",
+    "LoadBgLayer",
+    "SetCollisionSource",
+    "SetBgStreamerSource",
     "LoadTaggedAsset",
-    "sub_8026618",
+    "SetTileSlotPoolSource",
     "sub_80083A8",
     "sub_8006C84"
    ],
@@ -5689,7 +5689,7 @@
    "element_type": "u16",
    "element_size": 2,
    "element_count": 304,
-   "format": "EEPROM configuration pointers/table (0x60), then at 0x085A9F70 the 256-colour palette of the first cutscene picture (bitmap gStaticData_085AA170)",
+   "format": "EEPROM configuration pointers/table (0x60), then at 0x085A9F70 the 256-colour palette of the first cutscene picture (bitmap gCutscenePicture00Bitmap)",
    "effort": "easy",
    "confidence": "high",
    "notes": "",
@@ -5707,9 +5707,9 @@
    "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 01)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
-    "gStaticData_0816D1F4 (slide packages)"
+    "gCutscenes (slide packages)"
    ],
    "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture01)"
   },
@@ -5725,9 +5725,9 @@
    "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 02)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
-    "gStaticData_0816D1F4 (slide packages)"
+    "gCutscenes (slide packages)"
    ],
    "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture02)"
   },
@@ -5743,9 +5743,9 @@
    "format": "256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 03)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
-    "gStaticData_0816D1F4 (slide packages)"
+    "gCutscenes (slide packages)"
    ],
    "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture03)"
   },
@@ -5761,9 +5761,9 @@
    "format": "256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 04)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
-    "gStaticData_0816D1F4 (slide packages)"
+    "gCutscenes (slide packages)"
    ],
    "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture04)"
   },
@@ -5779,9 +5779,9 @@
    "format": "2 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 05)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
-    "gStaticData_0816D1F4 (slide packages)"
+    "gCutscenes (slide packages)"
    ],
    "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture05)"
   },
@@ -5797,9 +5797,9 @@
    "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 06)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
-    "gStaticData_0816D1F4 (slide packages)"
+    "gCutscenes (slide packages)"
    ],
    "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture06)"
   },
@@ -5815,9 +5815,9 @@
    "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 07)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
-    "gStaticData_0816D1F4 (slide packages)"
+    "gCutscenes (slide packages)"
    ],
    "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture07)"
   },
@@ -5833,9 +5833,9 @@
    "format": "2 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 08)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
-    "gStaticData_0816D1F4 (slide packages)"
+    "gCutscenes (slide packages)"
    ],
    "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture08)"
   },
@@ -5851,9 +5851,9 @@
    "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 09)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
-    "gStaticData_0816D1F4 (slide packages)"
+    "gCutscenes (slide packages)"
    ],
    "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture09)"
   },
@@ -5869,9 +5869,9 @@
    "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 10)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
-    "gStaticData_0816D1F4 (slide packages)"
+    "gCutscenes (slide packages)"
    ],
    "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture10)"
   },
@@ -5887,9 +5887,9 @@
    "format": "256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 11)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
-    "gStaticData_0816D1F4 (slide packages)"
+    "gCutscenes (slide packages)"
    ],
    "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture11)"
   },
@@ -5905,9 +5905,9 @@
    "format": "1 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 12)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
-    "gStaticData_0816D1F4 (slide packages)"
+    "gCutscenes (slide packages)"
    ],
    "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture12)"
   },
@@ -5923,9 +5923,9 @@
    "format": "256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 13)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
-    "gStaticData_0816D1F4 (slide packages)"
+    "gCutscenes (slide packages)"
    ],
    "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture13)"
   },
@@ -5941,9 +5941,9 @@
    "format": "1 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 14)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
-    "gStaticData_0816D1F4 (slide packages)"
+    "gCutscenes (slide packages)"
    ],
    "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture14)"
   },
@@ -5959,9 +5959,9 @@
    "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 15)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
-    "gStaticData_0816D1F4 (slide packages)"
+    "gCutscenes (slide packages)"
    ],
    "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture15)"
   },
@@ -5977,9 +5977,9 @@
    "format": "2 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 16)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
-    "gStaticData_0816D1F4 (slide packages)"
+    "gCutscenes (slide packages)"
    ],
    "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture16)"
   },
@@ -5995,9 +5995,9 @@
    "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 17)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
-    "gStaticData_0816D1F4 (slide packages)"
+    "gCutscenes (slide packages)"
    ],
    "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture17)"
   },
@@ -6013,9 +6013,9 @@
    "format": "2 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 18)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
-    "gStaticData_0816D1F4 (slide packages)"
+    "gCutscenes (slide packages)"
    ],
    "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture18)"
   },
@@ -6031,9 +6031,9 @@
    "format": "256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 19)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
-    "gStaticData_0816D1F4 (slide packages)"
+    "gCutscenes (slide packages)"
    ],
    "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture19)"
   },
@@ -6049,9 +6049,9 @@
    "format": "1 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 20)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
-    "gStaticData_0816D1F4 (slide packages)"
+    "gCutscenes (slide packages)"
    ],
    "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture20)"
   },
@@ -6067,9 +6067,9 @@
    "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 21)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
-    "gStaticData_0816D1F4 (slide packages)"
+    "gCutscenes (slide packages)"
    ],
    "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture21)"
   },
@@ -6085,9 +6085,9 @@
    "format": "256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 22)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
-    "gStaticData_0816D1F4 (slide packages)"
+    "gCutscenes (slide packages)"
    ],
    "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture22)"
   },
@@ -6103,9 +6103,9 @@
    "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 23)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; sub_8024708 reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
-    "gStaticData_0816D1F4 (slide packages)"
+    "gCutscenes (slide packages)"
    ],
    "status": "converted: src/data/cutscene_pictures_5a9f70.c (gCutscenePicture23)"
   },
@@ -6986,16 +6986,16 @@
    "ptr_words_code": 33,
    "ptr_words_data": 766,
    "incoming_data_ptrs": 5,
-   "format": "raw (unpacked) level asset for room 0x0825E7DC: u16 chunk offset table + chunk token streams (custom RLE/delta, sub_8024960/sub_8025334)",
+   "format": "raw (unpacked) level asset for room 0x0825E7DC: u16 chunk offset table + chunk token streams (custom RLE/delta, DecodeLayerChunk/DecodeCollisionChunk)",
    "effort": "medium",
    "confidence": "high",
    "notes": "level_desc 0x0825E7DC has asset=0x086C127C, assetPacked=0; the other 34 rooms point at LZ77 copies of the same format (formerly graphics/tileset1/27-60.bin, now built from data/levels/ too).",
    "consumers_indirect": [
-    "sub_80266BC",
-    "sub_80254F8",
-    "sub_8024CF0",
-    "sub_8024960",
-    "sub_8025334"
+    "LoadRoom",
+    "SetCollisionSource",
+    "SetBgStreamerSource",
+    "DecodeLayerChunk",
+    "DecodeCollisionChunk"
    ],
    "regions": [
     {
@@ -7078,11 +7078,11 @@
    "confidence": "high",
    "notes": "Each start is the asset field of one level_desc with assetPacked=0; they tile the blob exactly.",
    "consumers_indirect": [
-    "sub_80266BC",
-    "sub_80254F8",
-    "sub_8024CF0",
-    "sub_8024960",
-    "sub_8025334"
+    "LoadRoom",
+    "SetCollisionSource",
+    "SetBgStreamerSource",
+    "DecodeLayerChunk",
+    "DecodeCollisionChunk"
    ],
    "regions": [
     {
@@ -8137,10 +8137,10 @@
   {
    "address": "0x087E4BDC",
    "size": 16,
-   "name": "gStaticData_087E4BDC",
+   "name": "gBgStreamerVtable",
    "consumers": [
-    "sub_8024D0C",
-    "sub_8024D38"
+    "DestroyBgStreamer",
+    "InitBgStreamer"
    ],
    "consumer_files": [
     "system/game_loop57.c"
@@ -8162,10 +8162,10 @@
   {
    "address": "0x087E4BEC",
    "size": 40,
-   "name": "gStaticData_087E4BEC",
+   "name": "gBgLayerBaseVtable",
    "consumers": [
-    "sub_8024D74",
-    "sub_8024DAC"
+    "DestroyBgLayerBase",
+    "InitBgLayerBase"
    ],
    "consumer_files": [
     "system/game_loop57.c"
@@ -8187,11 +8187,11 @@
   {
    "address": "0x087E4C14",
    "size": 80,
-   "name": "gStaticData_087E4C14",
+   "name": "gBgLayerVtable",
    "consumers": [
-    "sub_8025D74",
-    "sub_80261B8",
-    "sub_8026418"
+    "InitBgLayer",
+    "DestroyBgLayer",
+    "DestroyPooledBgLayer"
    ],
    "consumer_files": [
     "system/bg_scroll_layer_25fc8.c",
@@ -8215,10 +8215,10 @@
   {
    "address": "0x087E4C64",
    "size": 80,
-   "name": "gStaticData_087E4C64",
+   "name": "gPooledBgLayerVtable",
    "consumers": [
-    "sub_8026418",
-    "sub_8026448"
+    "DestroyPooledBgLayer",
+    "InitPooledBgLayer"
    ],
    "consumer_files": [
     "system/tile_slot_pool.c"

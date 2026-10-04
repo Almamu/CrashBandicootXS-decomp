@@ -202,14 +202,14 @@ static inline void PhysSetFrame(struct phys_obj *obj, s32 idx)
     obj->frame = idx;
 }
 
-/* Sets bit `id` of the gUnknown_030012B4+0x108 bitmap - the same
+/* Sets bit `id` of the gEntityFlags+0x108 bitmap - the same
  * sequence (and the same do/while(0) trick) as actor_part_16048.c's
  * SET_ID_BIT. */
 #define PHYS_SET_ID_BIT(idExpr)                                                \
     do                                                                         \
     {                                                                          \
         s32 _id = (idExpr);                                                    \
-        u8 *_base = gUnknown_030012B4;                                         \
+        u8 *_base = gEntityFlags;                                         \
         s32 _word = _id / 32;                                                  \
         s32 _off = _word * 4;                                                  \
         u32 *_slot = (u32 *)(_base + 0x108);                                   \

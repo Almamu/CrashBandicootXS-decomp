@@ -22,7 +22,7 @@ struct here either, for the same reason those files give: most of its
 fields are only ever touched by functions still raw elsewhere) -
 camera-position setters, checkpoint/level-transition snapshot helpers
 that stash and restore a `0x68`-byte block at `self+0xe4`, a packed
-bitfield accessor pair at `self+0x14c`/`0x14d`, the `sub_8022468`
+bitfield accessor pair at `self+0x14c`/`0x14d`, the `PlayCutscene`
 mode-trampoline family, a DMA3/VRAM refresh pass gating on
 `self+0x0 <= 0x1000` ("near start of level"), a `REG_BLDCNT`/
 `REG_BLDALPHA` shadow-word rebuild (see `src/graphics/aabb_util.c`'s
@@ -41,18 +41,18 @@ pass's scope, so left completely untouched.
 `sub_80234E8`/`sub_80234F4` (camera-position field setters),
 `sub_8023500` (two-word position setter), `sub_8023510`/`sub_802352C`
 (busy-flag setters gated on `sub_8023290`/`sub_80232B8`),
-`sub_8023548`/`sub_802356C` (checkpoint snapshot restore/stash pair,
-the latter also flushing two spans of the `gUnknown_030012B4` bitmap
+`RestoreCheckpoint`/`SetCheckpoint` (checkpoint snapshot restore/stash pair,
+the latter also flushing two spans of the `gEntityFlags` bitmap
 via the `CpuSet` wrapper), `sub_80235E4` (progress-accumulate-or-reset
 dispatcher), `sub_802364C`/`sub_8023658`/`sub_802369C` (the
-`sub_8022468` mode-trampoline family, one of them also playing a fixed
+`PlayCutscene` mode-trampoline family, one of them also playing a fixed
 SFX), `sub_8023674` (allocates a `0x44c`-byte block and hands it to
 `sub_8037154`), `nullsub_24` (empty stub), `sub_80236AC` (bitfield
 unpacker, refreshing its own snapshot first), `sub_80236EC` (its
 packer inverse - see the update below, added after this doc's original
 pass).
 
-`src/system/game_loop11.c`: `sub_8023738` (lazy-allocates and returns
+`src/system/game_loop11.c`: `GetLevelState` (lazy-allocates and returns
 `gUnknown_03000828`) - its own file since the still-raw
 `sub_802375C`/`sub_8023A1C` pair sits on both sides of it in ROM order.
 
@@ -69,7 +69,7 @@ vram-upload-cursor/OAM-shadow flush tail both `sub_802400C` and
 
 ### Gotchas worth recording
 
-- **`sub_8023500`/`sub_802356C`'s two-word field copies**: writing
+- **`sub_8023500`/`SetCheckpoint`'s two-word field copies**: writing
   `dst->field0 = x; dst->field1 = y;` as two independent raw-offset
   stores makes this compiler compute two full addresses from scratch.
   The ROM computes the base pointer once and uses immediate-offset
@@ -77,7 +77,7 @@ vram-upload-cursor/OAM-shadow flush tail both `sub_802400C` and
   and indexing `dst[0]`/`dst[1]` instead of re-deriving the address
   each time (see also the pre-load-both-then-store-both ordering below,
   needed when the *source* is also a two-word read).
-- **`sub_802356C`'s repeated `0x04000040` `sub_803A94C` control word**:
+- **`SetCheckpoint`'s repeated `0x04000040` `sub_803A94C` control word**:
   a plain literal used identically in two nearby calls gets CSE'd into
   one shared register held live across both calls, unlike the ROM
   (which reloads it from its literal pool each time). Fixed with a
@@ -90,11 +90,11 @@ vram-upload-cursor/OAM-shadow flush tail both `sub_802400C` and
   `void *b = ...` locals for the pointer arguments, immediately before
   the call, reproduced the ROM's exact "compute both addresses, then
   load the control word right before `bl`" order. This one is the
-  reason `sub_802356C` isn't in the first commit of this branch's
+  reason `SetCheckpoint` isn't in the first commit of this branch's
   history - the isolated per-function compile looked identical to the
   ROM but the full-ROM `make compare` (as `docs/workflow.md` step 6
   warns) caught the real byte offset.
-- **`sub_8023548`/`sub_802356C`'s "read-then-relocate-pointer" byte
+- **`RestoreCheckpoint`/`SetCheckpoint`'s "read-then-relocate-pointer" byte
   copies** (`self->0xa9 = self->0xd0`, `self->0xd0 = self->0xa9`):
   writing the assignment directly lets the compiler compute the
   destination address before reading the source in one case, or fuse a
@@ -151,7 +151,7 @@ vram-upload-cursor/OAM-shadow flush tail both `sub_802400C` and
   widget set, run a per-frame update loop gated on `sub_80241B0`,
   react to a completion signal from `sub_8004D74`) is legible, but
   several callees (the `gStaticData_0816C8xx` tables' exact record
-  shape, `sub_8027018`'s 6-argument signature, `sub_80266BC`,
+  shape, `sub_8027018`'s 6-argument signature, `LoadRoom`,
   `sub_800B3F0`, `sub_8026F54`) aren't characterized precisely enough
   yet to commit to a byte-exact reconstruction of this size with
   confidence - left untouched rather than force a low-confidence
@@ -198,7 +198,7 @@ closing out the last of the original 25-function chunk. `asm/code_3_2_17_22bf0.s
   3. The `self+0xd4`/`self+0xd8` two-word position store (`x`/`y` from
      `gUnknown_030012D8`) had the exact same "two independent
      raw-offset stores recompute the address twice" gotcha as
-     `sub_8023500`/`sub_802356C` above - fixed the same way, with a
+     `sub_8023500`/`SetCheckpoint` above - fixed the same way, with a
      local `s32 *dst = (s32 *)(self + 0xd4); dst[0] = x; dst[1] = y;`
      so the second store reuses `[r0, #4]` off the first store's base
      register instead of an extra `adds r0, #4`. This one was only
@@ -207,7 +207,7 @@ closing out the last of the original 25-function chunk. `asm/code_3_2_17_22bf0.s
      looked byte-identical operand-by-operand and only the *size* was
      off, exactly the kind of gap `docs/workflow.md` step 3 warns an
      isolated compile can't catch.
-  The `0x04000040` control-word-reload-per-call and `gUnknown_030012B4`-
+  The `0x04000040` control-word-reload-per-call and `gEntityFlags`-
   in-`r4` fixes from the original parked note both held up unchanged.
 
 ## Update: `sub_80236EC` matched
@@ -312,7 +312,7 @@ suffix"), but `neg` assembles to the identical encoding. Every other
 suffixed ROM mnemonic (`movs`/`ands`/`orrs`/`lsls`) translated to its
 suffix-less form (`mov`/`and`/`orr`/`lsl`) with no issue. A `.pool`
 right after the `if`-branch's trailing `b 3f` forces the
-`gUnknown_03001280`/`gUnknown_03001308` literals (loaded via the
+`gUnknown_03001280`/`gLevelLayers` literals (loaded via the
 assembler's own `=symbol` syntax) to group in the same ROM-matching
 mid-function gap the ROM's own `.align 2, 0` + two `.4byte` entries
 occupy, right before the `else`-branch, instead of at the function's

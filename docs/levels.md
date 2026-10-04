@@ -19,7 +19,7 @@ each part is named in its section.
 
 ## The pointer graph
 
-The level table `gStaticData_0816C86C` (`struct level_info`, one per
+The level table `gLevelTable` (`struct level_info`, one per
 level) gives each level a room list: the rooms played in order and up
 to two extra rooms, each a `struct level_room` record
 `{const u16 *palette; const struct level_desc *desc; s32 kind; ...}`
@@ -27,10 +27,10 @@ to two extra rooms, each a `struct level_room` record
 one record per room (`gLevelRoom00`..`gLevelRoom40`) plus seven records
 of kind 3 for the stages played in an actor category, which have no
 room data. The room record is the widget `sub_8023A1C` hands to
-`sub_80266BC` (`level_layers.c`), which loads a room: it unpacks or
+`LoadRoom` (`level_layers.c`), which loads a room: it unpacks or
 references the asset, feeds each layer its descriptor, feeds the terrain
 cache the collision layer, hands the entity list and links to
-`sub_80255D4` (`game_loop41.c`) and DMAs the palette to BG palette RAM.
+`SpawnRoomEntities` (`game_loop41.c`) and DMAs the palette to BG palette RAM.
 The rooms are numbered here in the order of their records
 (`room00`..`room40`); the directory names add the descriptor's ROM
 offset (`room17_25e7dc` is the room whose `level_desc` is at
@@ -43,13 +43,13 @@ struct names the code's own local views of the same record.
 
 | Offset | Field | Consumer |
 |---|---|---|
-| 0x00 | `layers[3]`: BG1-3 layer descriptors (NULL = layer unused) | `sub_80260D4` via `sub_80266BC` |
+| 0x00 | `layers[3]`: BG1-3 layer descriptors (NULL = layer unused) | `LoadBgLayer` via `LoadRoom` |
 | 0x0C | `layer0`: BG0 (tile-slot pooled, 8bpp) | same |
-| 0x10 | `collision`: the collision layer | `sub_80254F8` (terrain cache) |
-| 0x14 | `asset`: the level asset | `sub_80266BC` |
+| 0x10 | `collision`: the collision layer | `SetCollisionSource` (terrain cache) |
+| 0x14 | `asset`: the level asset | `LoadRoom` |
 | 0x18 | `u8 assetPacked`: 1 = LZ77 stream (unpacked to the heap), 0 = used in place | same |
-| 0x1C | `entities`: `struct level_entity_list` | `sub_80255D4`, `sub_8025894`, `sub_801A878`, ... |
-| 0x20 | `links`: `struct level_link_list` or NULL | `sub_80255D4` |
+| 0x1C | `entities`: `struct level_entity_list` | `SpawnRoomEntities`, `sub_8025894`, `sub_801A878`, ... |
+| 0x20 | `links`: `struct level_link_list` or NULL | `SpawnRoomEntities` |
 | 0x24 | 12 zero bytes in every room | - |
 
 ### `struct level_layer_desc` (0x20)
@@ -62,7 +62,7 @@ stream_source` in `game_loop57.c`, the terrain cache's `source`.
 | 0x00 | `chunkGrid`: `u16[gridWidth * gridHeight]`, row-major chunk ids |
 | 0x04 | `assetOffset`: the layer's section in the asset |
 | 0x08 | `tileData`: the BG tile set (NULL for the collision layer) |
-| 0x0C | `scaleX`, `scaleY` (`s32`, Q8): parallax factors (`sub_8024DFC`) |
+| 0x0C | `scaleX`, `scaleY` (`s32`, Q8): parallax factors (`ScaleBgLayerScroll`) |
 | 0x14 | `u16 cnt`: BGnCNT bits; only the priority is used |
 | 0x16 | `u16 gridWidth`, `gridHeight`: in chunks |
 | 0x1A | `u16 widthTiles`, `heightTiles`: the scrollable size |
@@ -78,14 +78,14 @@ sets (`graphics/level_tilesets/`).
 Every layer's cells are `u16`:
 
 - **BG1-3**: a BG screen entry (tile 0-9, h/v flip 10-11, palette bank
-  12-15), copied straight into the screen block (`sub_8025FC8`).
+  12-15), copied straight into the screen block (`DrawBgLayerRow`).
 - **BG0**: a source tile id (bits 0-13, into the 8bpp tile set) with the
-  h/v flip in bits 14-15. `sub_80264F8` (`tile_slot_pool.c`) gives the
+  h/v flip in bits 14-15. `AcquireTileSlot` (`tile_slot_pool.c`) gives the
   tile a VRAM slot and returns the screen entry.
 - **Collision**: terrain type in bits 0-7 (types 1-0x23 are the
-  non-solid ones `sub_80250BC` returns, above that the solid shapes of the
-  `gStaticData_081725AC` tables), a flag nibble in bits 8-11, and in bits
-  12-15 the per-collision-mode "not solid" bits `sub_8025130`/`sub_8025228`
+  non-solid ones `GetTerrainHeights` returns, above that the solid shapes of the
+  `gTerrainTypes` table), a flag nibble in bits 8-11, and in bits
+  12-15 the per-collision-mode "not solid" bits `GetSolidTerrainHeights`/`sub_8025228`
   test (mode 0: 4, 1: 1, 2: 8, 3: 2). One cell is one 8x8 tile.
 
 ## The level asset
@@ -101,8 +101,8 @@ chunks are numbered in order of first appearance in the grid (row-major),
 and no two are equal, so the grid and the chunk set are both determined
 by the layer's full tilemap.
 
-A chunk stream decodes to exactly 128 cells, row-major. `sub_8024960`
-(visual layers, into the 64x32 ring buffer) and `sub_8025334` (terrain
+A chunk stream decodes to exactly 128 cells, row-major. `DecodeLayerChunk`
+(visual layers, into the 64x32 ring buffer) and `DecodeCollisionChunk` (terrain
 cache, into a 256-byte slot) run the same loop: read a `u16` token, `n` =
 its low byte, subtract `n` from a budget of 0x7F, stop once it goes
 negative.
@@ -151,11 +151,11 @@ one.
 | 0x0C | `params`: the parameter records |
 | 0x10 | `typeCounts`: `u16[93]`, entities per type |
 
-An entity is `{u16 type, x, y, param}`. `sub_80255D4` walks the columns
+An entity is `{u16 type, x, y, param}`. `SpawnRoomEntities` walks the columns
 from the last to the first and gives each entity, in that order, a
-running id (its bit in the `gUnknown_030012B4` bitmaps, and the id the
+running id (its bit in the `gEntityFlags` bitmaps, and the id the
 links use), and unless that bit is set calls the spawn function `type`
-of the table at `gUnknown_030012E4` (`sub_8025D28`) with the id, x, y and
+of the table at `gEntitySpawner` (`SpawnEntity`) with the id, x, y and
 `param`. `param` indexes the parameter records: a flags word (bits 1 and
 2 go to the spawned object's `+0x28` flags: `sub_8021D04`, `sub_801E990`,
 `actor_part_1967c.c`) and per-type words, e.g. `struct spawn_rec` of
@@ -173,7 +173,7 @@ In the ROM:
   `typeCounts` is the histogram of `type`.
 
 `struct level_link_list` is `{s32 count; {s32 from, to} links[count]}`:
-`sub_80255D4` chains entity `from` to entity `to` after spawning.
+`SpawnRoomEntities` chains entity `from` to entity `to` after spawning.
 
 ## ROM layout
 
